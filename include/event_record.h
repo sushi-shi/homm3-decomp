@@ -38,10 +38,15 @@ enum type_event_record_type {
 // Dreamcast supplies the class and `player_id` identity at the same offset.
 // Virtual layout (byte-proven from the type_record_* vtables): slot 0 is the
 // scalar deleting destructor, slot 1 get_type, then load/save/replay/undo.
+// get_type is PURE: slot 1 of the base vtable (0x63de74) is 0x617d9a, which
+// is the CRT's __purecall stub (`push 0x19 / call __amsg_exit`) and nothing
+// else. Slots 4 and 5 are the empty bodies at 0x485d80 (`ret 4`) and
+// 0x5bc690 (`ret`), both /OPT:ICF folds shared with unrelated compilands, so
+// neither replay nor undo has a body this TU can own.
 class type_event_record {
 public:
     virtual ~type_event_record();
-    virtual type_event_record_type get_type();
+    virtual type_event_record_type get_type() = 0;
     virtual unsigned char load(TAbstractFile* infile, int version);
     virtual unsigned char save(TAbstractFile* outfile);
     virtual void replay(unsigned char draw);
@@ -68,9 +73,13 @@ public:
     type_point destination;      // +0x12
 };
 
+// Teleport reuses move_hero's whole serializer and its undo: slots 2, 3 and
+// 5 of its vtable (0x63dea4) are literally move_hero's addresses. Only
+// get_type and replay differ.
 class type_record_teleport : public type_record_move_hero {
 public:
     virtual type_event_record_type get_type() OVERRIDE;
+    virtual void replay(unsigned char draw) OVERRIDE;
 };
 
 // Retail serializes these four fields in address order except that the two
@@ -196,8 +205,11 @@ public:
 
     virtual type_event_record_type get_type() OVERRIDE;
     virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
+    virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
+    virtual void replay(unsigned char draw) OVERRIDE;
+    virtual void undo() OVERRIDE;
 
-    std::vector<type_shroud_change> changes;
+    std::vector<type_shroud_change> changes;  // +0x08 (allocator at +0x08)
 };
 
 // --- globals ---
