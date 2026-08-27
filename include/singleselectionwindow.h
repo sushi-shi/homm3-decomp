@@ -69,6 +69,15 @@ public:
         return -1;
     }
 
+    // DC GetGamePos; GetHeroFace expands it for IsFaceTaken's exclude.
+    int GetGamePos(unsigned long dpid)
+    {
+        int net = GetNetPos(dpid);
+        if (net != -1)
+            return humanPlayers[net].playerPos;
+        return -1;
+    }
+
     bool DeletePlayer(unsigned long dpid);
     CNetPlayerHandlerPlayer* GetPlayerInPos(int pos);
     CNetPlayerHandlerPlayer* GetPlayer(unsigned long dpid);

@@ -2584,6 +2584,7 @@ singleselectionwindow	?DisplayChat@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0
 singleselectionwindow	?DoModal@TSingleSelectionWindow@@UAEHE@Z	100.0000	100.0000	100.0000	0x184bf0
 singleselectionwindow	?Draw@CChatWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x17ca90
 singleselectionwindow	?ExitDialog@TSingleSelectionWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x187bc0
+singleselectionwindow	?GetHeroFace@TSingleSelectionWindow@@QAEXHPAVCNetPlayerHandlerPlayer@@@Z	65.6968	65.6968	65.6968	0x18af20
 singleselectionwindow	?GetPlayer@CNetPlayerHandler@@QAEPAVCNetPlayerHandlerPlayer@@K@Z	100.0000	100.0000	100.0000	0x177ce0
 singleselectionwindow	?GetPlayerInPos@CNetPlayerHandler@@QAEPAVCNetPlayerHandlerPlayer@@H@Z	100.0000	100.0000	100.0000	0x177bb0
 singleselectionwindow	?Go@CNewPlayerUpdateProc@@UAEXXZ	100.0000	100.0000	100.0000	0x177d70
@@ -2598,7 +2599,7 @@ singleselectionwindow	?OnBadVersionMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@
 singleselectionwindow	?OnGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	99.6237	99.6237	99.6237	0x189b20
 singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0
 singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0
-singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	99.8710	100.0000	0x17cee0
+singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0
 singleselectionwindow	?OnNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	97.5366	97.5366	97.5366	0x18b510
 singleselectionwindow	?OnNewSetupInfoMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x189c60
 singleselectionwindow	?OnPingMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x1894d0
@@ -2620,7 +2621,6 @@ singleselectionwindow	CNewPlayerUpdateProc_HandleRequests	0.0000	0.0000	0.0000	0
 singleselectionwindow	CSingleSelectionNetMsgHandler_HandleNetMsg	0.0000	0.0000	0.0000	0x18e340
 singleselectionwindow	SaveValid	0.0000	0.0000	0.0000	0x177360
 singleselectionwindow	TSingleSelectionWindow_DrawHeroAdvancedOption	0.0000	0.0000	0.0000	0x18d510
-singleselectionwindow	TSingleSelectionWindow_GetHeroFace	0.0000	0.0000	0.0000	0x18af20
 singleselectionwindow	TSingleSelectionWindow_MakeHeroFilter	0.0000	0.0000	0.0000	0x183890
 singleselectionwindow	TSingleSelectionWindow_OnDeleteFile	0.0000	0.0000	0.0000	0x18dfb0
 singleselectionwindow	TSingleSelectionWindow_OnGameHeaderInfoInitMsg	0.0000	0.0000	0.0000	0x18a440
