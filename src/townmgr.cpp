@@ -3575,19 +3575,24 @@ int TMageGuildWindow::WindowHandler(message* msg)
 // tail.
 
 // E:\gamedcs\townmgr.cpp
-// Residual (97.4888%): two dead three-instruction blocks. At each of the two
-// GetHero sites this compile emits `cmp ecx,-1 / je <arm> / jne <join> /
-// xor edi,edi / jmp <join>` - the `jne` immediately after a `je` on the same
-// flags is unreachable, and it is the inlined accessor's own `id == -1 ->
-// return 0` arm that VC6 kept without folding. Retail folds it against the
-// caller's `!= -1` gate and emits `cmp ecx,-1 / je <arm>` alone. The two
-// NormalDialog argument slots and the general-text row are now retail's.
+// EXACT (2026-08-27). Previously 97.4888%: at each GetHero site this compile
+// emitted a dead three-instruction block `cmp ecx,-1 / je <arm> / jne <join> /
+// xor edi,edi / jmp <join>` - the inlined accessor's own `id == -1 -> return 0`
+// arm that VC6 kept without folding against the caller's `!= -1` gate. The
+// lever was the STATEMENT FORM, not the gate: written as a TERNARY
+// (`p = cond ? GetHero(a) : GetHero(b)`) VC6 does not propagate the branch
+// condition into the inlined guard; the plain IF/ELSE form - the exact shape
+// the sibling handle_hall_click uses to reach 100.0 - folds the visiting arm's
+// guard away and leaves the garrison arm's real `je`, matching retail's
+// `cmp ecx,-1 / je <arm>` at both sites.
 VA(0x005ce560, 0x2CC)  // anchor-callee(TMageGuildWindow ctor 0x5cc980 + SetupMage 0x5d6ef0) + anchor-caller(Main 0x5d3240) + arity(bare ret), dc 0x171320
 void townManager::handle_mage_guild_click()
 {
-    hero* pHero = townToView->visitingHeroId != -1
-                      ? gpGame->GetHero(townToView->visitingHeroId)
-                      : gpGame->GetHero(townToView->garrisonHeroId);
+    hero* pHero;
+    if (townToView->visitingHeroId != -1)
+        pHero = gpGame->GetHero(townToView->visitingHeroId);
+    else
+        pHero = gpGame->GetHero(townToView->garrisonHeroId);
 
     if (pHero && !pHero->HasArtifact(0) && gpCurrentPlayer->IsLocalHuman()) {
         if (gbUnk69774c
