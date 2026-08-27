@@ -455,6 +455,30 @@ public:
     virtual unsigned char write(TAbstractFile* outfile) const;
 };
 
+// The re-requested-row reply (subtype RS_GAME_HEADER_INFO through the
+// t_complex_net_message subtype ctor 0x512c50): the same
+// flag/number/header payload as the transfer stream. Retail widened
+// DC's (headerNbr, pHeader) ctor with the list-select flag and
+// expands it in HandleRequests - base ctor and the header's member
+// assign (the 0x578440 COMDAT) stay calls, the member default
+// construction and the flag/number stores inline.
+class CGameHeaderInfoMsg : public t_complex_net_message {
+public:
+    unsigned char m_flag;                 // +0x18
+    char pad_19[3];
+    int m_number;                         // +0x1c
+    GameSelectionHeadersStruct m_header;  // +0x20
+
+    CGameHeaderInfoMsg(unsigned char flag, int number,
+                       GameSelectionHeadersStruct* pHeader)
+        : t_complex_net_message(RS_GAME_HEADER_INFO)
+    {
+        m_flag = flag;
+        m_number = number;
+        m_header = *pHeader;
+    }
+};
+
 // The full-roster broadcast (DC ctor takes both player arrays); the
 // receiver reads the human records at +0x14 and the computer block at
 // +0x3f4.

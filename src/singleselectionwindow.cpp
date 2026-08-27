@@ -594,14 +594,40 @@ drain_and_confirm:
 
 #if 0  // @carcass
 
+#endif  // @carcass
+
+// Drain the queued header re-requests: answer each with the full row
+// (announced list or transfer list by the flag) through the complex-
+// message DPID send, then flush the queue.
+// Residual (79.9): the msg's block-scoped teardown - retail expands
+// ~CGameHeaderInfoMsg one member-dtor level (twelve out-of-line calls:
+// _Tidy(1) per string, the SCampaign pool/vector dtors 0x45f560/
+// 0x45f7b0, ~NewSMapHeader, the map dtor 0x46a650 x3, and the ??_M
+// walk over playerSlotAttributes) while ours mixes depths (string
+// refcount internals inline + a direct operator delete, ~SCampaign as
+// one call). Same model-level family as ??1GameSelectionHeadersStruct
+// (35%); an if(0) mass probe is byte-flat at N=5 and N=20, so it is
+// not the /Ob2 numerator. A depth-0 pin is the block-scoped-local
+// counterindication.
 // E:\gamedcs\singleselectionwindow.cpp:1375
 VA(0x00578010, 0x272)  // anchor-callee Tick drains the m_requests vector through it at both of its non-empty checks, dc 0x1483f8
 void CNewPlayerUpdateProc::HandleRequests()
 {
-    // @stub
+    int count = m_requests.size();
+    if (count == 0)
+        return;
+    for (int i = 0; i < count; ++i) {
+        GameSelectionHeadersStruct* row;
+        if (m_requests[i].m_flag)
+            row = &gUnnamed69fbe8->TransferHeaders[m_requests[i].m_number];
+        else
+            row = &gUnnamed69fbe8->HeadersA[m_requests[i].m_number];
+        CGameHeaderInfoMsg msg(m_requests[i].m_flag,
+                               m_requests[i].m_number, row);
+        msg.RemoteFn_00512C80(m_dpid, 1, 1);
+    }
+    m_requests.clear();
 }
-
-#endif  // @carcass
 
 // The compiler-generated GameSelectionHeadersStruct member family the
 // vector machinery calls. 0x578760 (the third pre-ctor row) is the
@@ -4259,7 +4285,11 @@ unsigned char TSingleSelectionWindow::HighlightFile(char* filename)
 // resource-bonus pick in place (no town chosen -> the seat's record is
 // rewritten to random). A -1 position recomputes the visible row the
 // same way CalcPosition (DC-only) does.
-// Residual (90.6): the register-homing/scheduling family. Retail homes
+// Residual (90.6, round 3: the MakeHeroFilter-precedent inline_depth(0)
+// pin on the town condition keeps HasMultipleTowns retail's CALL,
+// +0.78; why-reg v2 reports first-def bindings AGREEING - the
+// remaining 361-slot distance is all downstream homing): the
+// register-homing/scheduling family. Retail homes
 // the arm-scoped locals in the dead parameter slots ([ebp+8] iconY,
 // [ebp+0x10] alignment/q, [ebp+0xb] canChooseHero) and re-reads them
 // per site, while our CL keeps register copies - the resource-bonus
@@ -4360,6 +4390,7 @@ void TSingleSelectionWindow::DrawHeroAdvancedOption(int playerPos,
         {
             CMapHeaderData::TPlayerSlotAttributes* slot =
                 &gpGame->mapHeader.playerSlotAttributes[playerPos];
+#pragma inline_depth(0)
             if (slot->HasRandomAlignment != 0
                     || HasMultipleTowns(playerPos))
                 town = q->townIndex;
@@ -4367,6 +4398,7 @@ void TSingleSelectionWindow::DrawHeroAdvancedOption(int playerPos,
                 town = pick_alignment(
                     static_cast<unsigned short>(slot->legalAlignments),
                     1);
+#pragma inline_depth()
         }
         widget* townLeft = GetWidget(playerPos + 215);
         widget* townRight = GetWidget(playerPos + 223);
