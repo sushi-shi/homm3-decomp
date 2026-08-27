@@ -12,6 +12,19 @@
 #include "textresource.h"
 #include "gametypewindow.h"
 #include "winfile.h"
+#include "netgame.h"
+#include "kb.h"
+#include "kbwin.h"
+#define HOMM3_MULTIPLAYERWINDOW_OWNS_DXPLAY_TYPES
+#include "remote.h"
+#undef HOMM3_MULTIPLAYERWINDOW_OWNS_DXPLAY_TYPES
+#include "dplaycaps.h"
+
+#include <direct.h>
+
+unsigned char InitRemote(eNetGameType netGameType, const char* userName);
+unsigned char InitConnection(char* address, _DPCOMPORTADDRESS* comportInfo);
+void RemoteCleanup();
 
 #if 0  // @carcass: untouched bodies before the admitted CHotSeatDlg tail
 
@@ -731,13 +744,178 @@ void TMultiPlayerWindow::Update()
     gpWindowManager->UpdateScreen(x, y, width, height);
 }
 
-#if 0  // @carcass
+// Residual (98.1%): the executable CFG, instruction counts and offsets match
+// through the shared return; five late blocks differ only in VC6 register
+// scheduling (three exit-flag stores, DrawWindow's vtable load and the session
+// index/GetCount pair). Unpromoted helper/data relocation names are cosmetic.
+// Tried and rejected: return-the-assignment, a local bool-reference view of the
+// ABI pointer, commuted session-index operands and inverted success guards.
 VA(0x0050f4e0, 0x458)  // anchor-vtable 0x6400a0 slot 12 (OnWidgetDeselect), dc 0x1009a4
 int TMultiPlayerWindow::OnWidgetDeselect(int id, unsigned char* bExitFlag)
 {
-    // @stub
+    switch (id) {
+    case CANCEL_ID:
+        if (!inSessionList)
+            goto connection_failed;
+        goto return_to_main_menu;
+
+    case IPX_ID: {
+        GoSessionList();
+        iMPNetProtocol = MP_IPX;
+        if (::InitRemote(MP_IPX, playerName->Text.c_str()) &&
+            InitConnection(0, 0)) {
+            DPCAPS caps;
+            pDPlay->GetCaps(&caps, 1);
+            sessionRefreshTimeout = caps.dwTimeout + 100;
+            if (iMPNetProtocol == MP_TCP)
+                sessionRefreshTimeout = 1000;
+
+            if (host)
+                host->send_message(
+                    widget::WIDGET_SET_STATUS,
+                    widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+            join->send_message(widget::WIDGET_SET_STATUS,
+                               widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+            join->enable(0);
+            pSessions->Destroy();
+            pDPlay->EnumSessions(pSessions, sessionRefreshTimeout, 0x52);
+            sessTimer = GameTime::Get();
+            static_cast<slider*>(gameSlider)->UpdateResolution(
+                pSessions->GetCount() - 12);
+            Update();
+            return 1;
+        }
+
+        NormalDialog(gpGeneralText->GetText(461), 1, -1, -1,
+                     -1, 0, -1, 0, -1, 0, -1, 0);
+    }
+
+connection_failed:
+    *bExitFlag = 1;
+    gpWindowManager->dialogReturn = DIALOG_RETURN_CANCEL;
+    RemoteCleanup();
+    return 1;
+
+    case TCP_ID:
+        GoSessionList();
+        if (!OnTCP()) {
+            RemoteCleanup();
+            *bExitFlag = 1;
+            gpWindowManager->dialogReturn = DIALOG_RETURN_CANCEL;
+            return 1;
+        }
+        break;
+
+    case MODEM_ID:
+        GoSessionList();
+        iMPNetProtocol = MP_MODEM;
+        hostJoinScreen = 1;
+        splash->send_message(widget::WIDGET_SET_STATUS,
+                             widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        if (host)
+            host->send_message(widget::WIDGET_SET_STATUS,
+                               widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        join->send_message(widget::WIDGET_SET_STATUS,
+                           widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        join->enable(1);
+        Update();
+        return 1;
+
+    case DIRECT_ID:
+        GoSessionList();
+        iMPNetProtocol = MP_SERIAL;
+        hostJoinScreen = 1;
+        splash->send_message(widget::WIDGET_SET_STATUS,
+                             widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        if (host)
+            host->send_message(widget::WIDGET_SET_STATUS,
+                               widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        join->send_message(widget::WIDGET_SET_STATUS,
+                           widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        join->enable(1);
+        Update();
+        return 1;
+
+    case ONLINE_ID:
+        _chdir("online");
+        ShellExecuteA(hwndApp, "open", "autorun.exe", 0, 0, SW_SHOWNORMAL);
+        ShutDown(0);
+        return 1;
+
+    case HOST_ID:
+        if (OnHost())
+            goto exit_dialog;
+        if (gpWindowManager->dialogReturn != DIALOG_RETURN_CANCEL) {
+            gpWindowManager->dialogReturn = DIALOG_RETURN_CANCEL;
+            RemoteCleanup();
+            *bExitFlag = 1;
+            return 1;
+        }
+        goto check_host_join_screen;
+
+    case JOIN_ID:
+        if (OnJoin()) {
+            *bExitFlag = 1;
+            return 1;
+        }
+
+check_host_join_screen:
+        if (hostJoinScreen)
+            goto return_to_main_menu;
+        break;
+
+    case SEARCH_ID:
+        if (OnSearch())
+            goto exit_dialog;
+        break;
+
+    exit_dialog:
+        *bExitFlag = 1;
+        return 1;
+
+    case HOT_SEAT_ID:
+        if (OnHotSeat()) {
+            *bExitFlag = 1;
+            return 1;
+        }
+        break;
+
+    case FIRST_SESSION_ID:
+    case FIRST_SESSION_ID + 1:
+    case FIRST_SESSION_ID + 2:
+    case FIRST_SESSION_ID + 3:
+    case FIRST_SESSION_ID + 4:
+    case FIRST_SESSION_ID + 5:
+    case FIRST_SESSION_ID + 6:
+    case FIRST_SESSION_ID + 7:
+    case FIRST_SESSION_ID + 8:
+    case FIRST_SESSION_ID + 9:
+    case FIRST_SESSION_ID + 10:
+    case LAST_SESSION_ID: {
+        int game = currentIndex + id - FIRST_SESSION_ID;
+        if (game < pSessions->GetCount()) {
+            currentGame = game;
+            Update();
+        }
+        break;
+    }
+
+    case GAME_SLIDER_ID:
+    case ROLLOVER_ID:
+        break;
+    }
+
+    return 1;
+
+return_to_main_menu:
+    RemoteCleanup();
+    GoMainMenu();
+    DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+    Update();
+    return 1;
 }
 
+#if 0  // @carcass
 VA(0x0050f940, 0xC5)  // anchor-vtable 0x6400a0 slot 9 (WindowHandler); ret 4 = (this,message*)->int.
                       // 197 B vs DC 40: retail inlines the timer-gated session refresh (PollSound +
                       // GameTime::Get) that DC keeps in RefreshSessions/CheckSessions. dc 0x100c1c

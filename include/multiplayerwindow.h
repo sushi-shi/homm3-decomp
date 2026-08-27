@@ -359,6 +359,23 @@ public:
 // textWidget::Text, and narrowing the include set avoids the declarator wall.
 class TMultiPlayerWindow : public CHeroWindowEx {
 public:
+    enum EWidgetId {
+        ONLINE_ID = 101,
+        HOT_SEAT_ID = 102,
+        IPX_ID = 103,
+        TCP_ID = 104,
+        MODEM_ID = 105,
+        DIRECT_ID = 106,
+        HOST_ID = 107,
+        JOIN_ID = 108,
+        SEARCH_ID = 109,
+        FIRST_SESSION_ID = 110,
+        LAST_SESSION_ID = 121,
+        GAME_SLIDER_ID = 122,
+        ROLLOVER_ID = 123,
+        CANCEL_ID = 124
+    };
+
     CSprite* GameState;                     // +0x50
     unsigned char inSessionList;            // +0x54
     unsigned char showSplash;               // +0x55
@@ -394,6 +411,11 @@ public:
     void GoSessionList();
     void GoMainMenu();
     void Update();
+    unsigned char OnHost();
+    unsigned char OnJoin();
+    unsigned char OnTCP();
+    unsigned char OnSearch();
+    unsigned char OnHotSeat();
 };
 SIZE(TMultiPlayerWindow, 0x100);
 

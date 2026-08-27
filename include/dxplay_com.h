@@ -3,6 +3,7 @@
 // Private to dxplay.cpp - NOT included by any other TU. Models the DirectPlay
 // COM interface so retail's __stdcall virtual dispatch reproduces byte-for-byte.
 #include "dxplay.h"
+#include "dplaycaps.h"
 
 // The enum trampolines' backing records: a 0x100-byte name buffer followed by
 // the DPID at +0x100 (0x104 total). AddGroupEnum/AddPlayerEnum new one, strcpy
@@ -150,22 +151,9 @@ struct DPMSG_GENERIC {
     unsigned long dwType;
 };
 
-// DirectPlay value structures consumed only by this TU's wrapper bodies. The
-// DPCAPS extent (0x28) is fixed by GetCaps's memset; DPCHAT (0xc) by SendChat.
-struct DPCAPS {
-    unsigned long dwSize;              // +0x00
-    unsigned long dwFlags;            // +0x04
-    unsigned long dwMaxBufferSize;    // +0x08
-    unsigned long dwMaxQueueSize;     // +0x0c
-    unsigned long dwMaxPlayers;       // +0x10
-    unsigned long dwHundredBaud;      // +0x14
-    unsigned long dwLatency;          // +0x18
-    unsigned long dwMaxLocalPlayers;  // +0x1c
-    unsigned long dwHeaderLength;     // +0x20
-    unsigned long dwTimeout;          // +0x24
-};
-SIZE(DPCAPS, 0x28);
-
+// DirectPlay value structures consumed only by this TU's wrapper bodies.
+// DPCAPS lives in dplaycaps.h because the multiplayer browser consumes it too;
+// DPCHAT stays private and its 0xc extent is fixed by SendChat.
 struct DPCHAT {
     unsigned long dwSize;             // +0x00
     unsigned long dwFlags;            // +0x04
