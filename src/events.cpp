@@ -2370,14 +2370,108 @@ void advManager::DoCustomArtifact(hero* current_hero, NewmapCell* cell, type_poi
 }
 #endif  // @carcass
 
-// E:\gamedcs\events.cpp:760.  Located, not reconstructed.
-#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
-VA(0x0049f7e0, 0x2A4)  // anchor-callee DoCustomArtifact+FightForArtifact, ret 0x10=p5, dc 0x91104
-void advManager::DoEventArtifact(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
+// E:\gamedcs\events.cpp:629. The Dreamcast publishes this private helper;
+// retail has no out-of-line body, and both calls below expand it. The two
+// secondary-skill bytes and both dialog paths are byte-visible in those
+// expansions.
+static inline int get_artifact_price(const NewmapCell* cell)
 {
-    // @stub
+    return static_cast<long>(cell->extraInfo << 28) >> 28;
 }
-#endif  // @carcass
+
+static inline bool is_defended_artifact(const NewmapCell* cell)
+{
+    return (cell->extraInfo & 0xf) == const_artifact_defended;
+}
+
+static inline int get_artifact_index(const NewmapCell* cell)
+{
+    return cell->objectIndex;
+}
+
+inline void advManager::DoArtifactSkillRequirement(
+    hero* current_hero, NewmapCell* cell, type_point point,
+    int skill, const char* dialog_text, bool human_player)
+{
+    if (current_hero->skillLevel[skill]) {
+        if (human_player)
+            NormalDialog(dialog_text, 1, -1, -1,
+                         8, get_artifact_index(cell),
+                         -1, 0, -1, 0, -1, 0);
+        GiveArtifact(current_hero, point, human_player);
+    } else if (human_player) {
+        sprintf(gText, dialog_text,
+                akArtifactTraits[get_artifact_index(cell)].name);
+        NormalDialog(gText, 1, -1, -1,
+                     -1, 0, -1, 0, -1, 0, -1, 0);
+    }
+}
+
+// E:\gamedcs\events.cpp:760. The Dreamcast signature and helper roster
+// identify the source surface; retail fixes the price-arm order, costs and
+// text indices. This is the ordinary artifact event dispatcher.
+VA(0x0049f7e0, 0x2A4)  // anchor-callee DoCustomArtifact+FightForArtifact, ret 0x10=p5, dc 0x91104
+void advManager::DoEventArtifact(hero* current_hero, NewmapCell* cell,
+                                 type_point point, bool human_player)
+{
+    if (current_hero->get_number_in_backpack(1) >= 64) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_BACKPACK_FULL),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return;
+    }
+
+    if (cell->IsCustomized()) {
+        DoCustomArtifact(current_hero, cell, point, human_player);
+        return;
+    }
+    if (is_defended_artifact(cell)) {
+        FightForArtifact(current_hero, cell, point, human_player);
+        return;
+    }
+
+    switch (get_artifact_price(cell)) {
+    case const_free_artifact:
+        if (human_player)
+            NormalDialog(gArtifactEventText[get_artifact_index(cell)],
+                         1, -1, -1, 8, get_artifact_index(cell),
+                         -1, 0, -1, 0, -1, 0);
+        GiveArtifact(current_hero, point, human_player);
+        break;
+    case const_artifact_requires_wisdom:
+        DoArtifactSkillRequirement(
+            current_hero, cell, point, eSecSkillWisdom,
+            gpAdventureEventText->GetText(ADV_EVENT_TEXT_ARTIFACT_WISDOM),
+            human_player);
+        break;
+    case const_artifact_requires_leadership:
+        DoArtifactSkillRequirement(
+            current_hero, cell, point, eSecSkillLeadership,
+            gpAdventureEventText->GetText(
+                ADV_EVENT_TEXT_ARTIFACT_LEADERSHIP),
+            human_player);
+        break;
+    case const_artifact_costs_2000:
+        PayForArtifact(current_hero, cell, point,
+                       gpAdventureEventText->GetText(
+                           ADV_EVENT_TEXT_ARTIFACT_COST_2000),
+                       2000, 0, human_player);
+        break;
+    case const_artifact_costs_2500:
+        PayForArtifact(current_hero, cell, point,
+                       gpAdventureEventText->GetText(
+                           ADV_EVENT_TEXT_ARTIFACT_COST_2500),
+                       2500, 3, human_player);
+        break;
+    case const_artifact_costs_3000:
+        PayForArtifact(current_hero, cell, point,
+                       gpAdventureEventText->GetText(
+                           ADV_EVENT_TEXT_ARTIFACT_COST_3000),
+                       3000, 5, human_player);
+        break;
+    }
+}
 
 // E:\gamedcs\events.cpp:852.  Located, not reconstructed.
 #if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate

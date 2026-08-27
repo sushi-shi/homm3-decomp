@@ -1503,6 +1503,20 @@ public:
     // re-fetches the cell itself.
     void GiveArtifact(class hero* current_hero, type_point point,
                       bool human_player);
+    void FightForArtifact(class hero* current_hero, NewmapCell* cell,
+                          type_point point, bool human_player);
+    void PayForArtifact(class hero* current_hero, NewmapCell* cell,
+                        type_point point, const char* dialog_text,
+                        short gold_cost, short resource_cost,
+                        bool human_player);
+    void DoArtifactSkillRequirement(class hero* current_hero,
+                                    NewmapCell* cell, type_point point,
+                                    int skill, const char* dialog_text,
+                                    bool human_player);
+    void DoCustomArtifact(class hero* current_hero, NewmapCell* cell,
+                          type_point point, bool human_player);
+    void DoEventArtifact(class hero* current_hero, NewmapCell* cell,
+                         type_point point, bool human_player);
     // Pandora's Box (jump-table arm 0x06). Four arguments and `ret 0x10`,
     // the Dreamcast's own signature.
     void DoEventBlackBox(class hero* current_hero, NewmapCell* cell,
