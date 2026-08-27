@@ -3078,22 +3078,30 @@ long split_army(armyGroup* current_army, short index, short limit,
                 short open_slots);
 
 // E:\gamedcs\ai_player.cpp:2817
-// Residual (79.53%): the merge, combat-value census and both split passes are
-// reconstructed; retail allocates the loop indices differently and duplicates
-// the final AI_arrange_army exit that this compiler cross-jumps.
+// Residual (83.62%): closed since 79.53 by duplicating the AI_arrange_army
+// exit into the second split loop's ==0 arm (+1.5) and rewriting the merge
+// as the canonical first/duplicate consolidate loop (+2.6, retail's
+// lea/cmp-6 back edge). Remaining delta is register homing: retail keeps
+// the enemy-census counter in a recycled param slot and the int-to-float
+// product temp in a negative local, and holds open_slots in EDI across the
+// split loops where we re-home it - tried and rejected: named-local
+// respellings of the census counter.
 VA(0x0042db20, 0x249)  // retail callee set + arity, dc 0x32670
 void split_armies(hero* current_hero, const hero* enemy_hero,
                   const armyGroup* enemy)
 {
     armyGroup* army = &current_hero->army;
-    for (int i = 1; i < 7; ++i) {
-        TCreatureType type = army->armyTypes[i - 1];
-        if (type == CREATURE_NONE)
-            continue;
-        for (int j = i; j < 7; ++j) {
-            if (army->armyTypes[j] == type) {
-                army->numTroops[i - 1] += army->numTroops[j];
-                army->Dismiss(j);
+    for (int first = 0; first < armyGroup::ARMY_GROUP_SLOT_COUNT - 1;
+         ++first) {
+        TCreatureType type = army->armyTypes[first];
+        if (type != CREATURE_NONE) {
+            for (int duplicate = first + 1;
+                 duplicate < armyGroup::ARMY_GROUP_SLOT_COUNT;
+                 ++duplicate) {
+                if (army->armyTypes[duplicate] == type) {
+                    army->numTroops[first] += army->numTroops[duplicate];
+                    army->Dismiss(duplicate);
+                }
             }
         }
     }
@@ -3170,8 +3178,10 @@ void split_armies(hero* current_hero, const hero* enemy_hero,
                             open_slots -= split_army(army, slot,
                                                      enemy_max_value,
                                                      open_slots);
-                            if (open_slots == 0)
-                                break;
+                            if (open_slots == 0) {
+                                AI_arrange_army(army);
+                                return;
+                            }
                         }
                     }
                 }
