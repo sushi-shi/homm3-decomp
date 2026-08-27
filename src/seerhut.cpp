@@ -1768,28 +1768,21 @@ void type_resource_quest::TakePayment(hero* current_hero)
 // (player treasury, quest price, localized resource name) into pointers, then
 // builds both the missing-requirement strings and their dialog pictures.
 //
-// Residual (87.1048%): all 25 blocks, all 12 branches and the 0x6c frame
-// agree. Keeping the dialog record at function scope is load-bearing: it
-// prevents the later text-format local from reusing the record's two slots
-// and recovers retail's complete temporary layout (86.9301 -> 87.1048).
-// What remains is register homing: our VC6 promotes `i` in EBX and homes
-// `this` at -0x10; retail keeps `this` in EBX and recycles the dead hero
-// parameter slot for `i`, moving eleven otherwise-corresponding blocks.
-// for/while forms, scalar declaration order and an explicit `this` alias are
-// byte-flat; an expression-temporary format string breaks the CFG and falls
-// to 80.2795%. Retain the source-shaped lifetime rather than fake the homes.
+// Computing the five-column quest group once fixes the former function-wide
+// register cascade. With that lookup shape in place, keeping the loop index in
+// the for initializer gives VC6 retail's parameter-home reuse; all 25 blocks,
+// all 12 branches and the 0x6c frame then agree exactly.
 VA(0x00571840, 0x29D)  // anchor-vtable + player-resource stride, retail-only
 void type_resource_quest::DoProposalDialog(hero* current_hero)
 {
     std::vector<std::string> requirements;
     std::string text;
     std::vector<type_dialog_resource> dialogResources;
-    int i = 0;
     type_dialog_resource resource;
     long* playerResources =
         gpGame->players[current_hero->owner].resources;
 
-    while (i <= 6) {
+    for (int i = 0; i <= 6; ++i) {
         if (playerResources[i] < resources[i]) {
             text = format_string(
                 DATA_COMPGEN(0x006778a4, resourceQuantityFormat, "%d %s"),
@@ -1800,11 +1793,11 @@ void type_resource_quest::DoProposalDialog(hero* current_hero)
             resource.qualifier = resources[i];
             dialogResources.push_back(resource);
         }
-        ++i;
     }
 
     if (progressText.length() == 0) {
-        std::string textFormat = quest_text(QUEST_TEXT_PROGRESS);
+        const std::string* texts = quest_texts();
+        std::string textFormat = texts[QUEST_TEXT_PROGRESS];
         text = format_string(
             textFormat.c_str(),
             join_quest_requirements(requirements).c_str());
