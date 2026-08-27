@@ -31,6 +31,61 @@ public:
         eContextNeither = 2
     };
 
+    // Dreamcast CodeView's class-local widget domain. Complete doubles the
+    // spell rows per page but retains this complete 200..249 ID layout.
+    enum EOtherWidgetIDs {
+        BACKGROUND_ID = 200,
+        SPELL_LEVEL_0_ID = 201,
+        SPELL_LEVEL_1_ID = 202,
+        SPELL_LEVEL_2_ID = 203,
+        SPELL_LEVEL_3_ID = 204,
+        SPELL_LEVEL_4_ID = 205,
+        SPELL_LEVEL_5_ID = 206,
+        SPELL_LEVEL_6_ID = 207,
+        SPELL_LEVEL_7_ID = 208,
+        SPELL_LEVEL_8_ID = 209,
+        SPELL_LEVEL_9_ID = 210,
+        SPELL_LEVEL_10_ID = 211,
+        SPELL_LEVEL_11_ID = 212,
+        SPELL_0_ID = 213,
+        SPELL_1_ID = 214,
+        SPELL_2_ID = 215,
+        SPELL_3_ID = 216,
+        SPELL_4_ID = 217,
+        SPELL_5_ID = 218,
+        SPELL_6_ID = 219,
+        SPELL_7_ID = 220,
+        SPELL_8_ID = 221,
+        SPELL_9_ID = 222,
+        SPELL_10_ID = 223,
+        SPELL_11_ID = 224,
+        SCHOOL_TABS_ID = 225,
+        AIR_SCHOOL_ID = 226,
+        FIRE_SCHOOL_ID = 227,
+        WATER_SCHOOL_ID = 228,
+        EARTH_SCHOOL_ID = 229,
+        ALL_SCHOOL_ID = 230,
+        COMBAT_SPELLS_ID = 231,
+        ADVENTURE_SPELLS_ID = 232,
+        SPELL_POINTS_ID = 233,
+        PREVIOUS_PAGE_ID = 234,
+        NEXT_PAGE_ID = 235,
+        SCHOOL_HEADING_ID = 236,
+        SPELL_0_NAME_ID = 237,
+        SPELL_1_NAME_ID = 238,
+        SPELL_2_NAME_ID = 239,
+        SPELL_3_NAME_ID = 240,
+        SPELL_4_NAME_ID = 241,
+        SPELL_5_NAME_ID = 242,
+        SPELL_6_NAME_ID = 243,
+        SPELL_7_NAME_ID = 244,
+        SPELL_8_NAME_ID = 245,
+        SPELL_9_NAME_ID = 246,
+        SPELL_10_NAME_ID = 247,
+        SPELL_11_NAME_ID = 248,
+        ROLLOVER_ID = 249
+    };
+
     enum { SPELLS_PER_PAGE = 12 };
 
     class TSpellbookEntry {
@@ -66,6 +121,8 @@ public:
 
 private:
     static int LastPage;
+    static TSpellContext LastContext;
+    static TSpellSchool LastSchool;
 
     std::string get_spell_description(SpellID spell,
                                       const hero* current_hero,

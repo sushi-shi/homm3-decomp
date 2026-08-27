@@ -9,11 +9,17 @@
 #include "border.h"
 #include "hero.h"
 #include "iconwdgt.h"
+#include "inputmgr.h"
 #include "kb.h"
+#include "mousemgr.h"
+#include "prefs.h"
+#include "smackmgr.h"
+#include "soundmgr.h"
 #include "spellbookwindow.h"
 #include "textresource.h"
 #include "textwdgt.h"
 #include "widget.h"
+#include "winmgr.h"
 
 // Source-private active-window slot. Retail's constructor stores `this` at
 // 0x59be77 and the destructor clears the same address before widget teardown.
@@ -22,6 +28,22 @@ DATA(0x006a34ec) static TSpellbookWindow* gpSpellbookWindow;
 // Complete retains the DC static member and initializes it to the same
 // sentinel used for every empty SpellMap slot.
 DATA(0x00684b40) int TSpellbookWindow::LastPage = -1;
+DATA(0x00684b44) TSpellbookWindow::TSpellContext
+    TSpellbookWindow::LastContext = TSpellbookWindow::eContextInvalid;
+
+// Complete places the current school in zero-fill storage immediately
+// before get_level_string's five-pointer table.  The handler and constructor
+// both retain it across spellbook instances.
+DATA(0x006a34f4) TSpellSchool TSpellbookWindow::LastSchool;
+
+// Dreamcast names this source-private rollover cache `lastIMHoverID`.
+// Complete's sole two references are both in WindowHandler.
+DATA(0x00684b4c) static int lastIMHoverID = -1;
+
+// Rollover/right-click pairs for the five school tabs, the two context tabs,
+// the mana label, the page arrows, and the close button.  The constructor
+// fills the zero-initialized rows from the spellbook text resource.
+DATA(0x006a52d0) static THelpText gSpellbookHelpText[11];
 
 // Dreamcast names this table `level_sprites`; the retail .rdata relocation
 // run at 0x641d94 fixes both its order and its four literals.
@@ -42,14 +64,13 @@ DATA(0x006a5d48) const char* gSecondarySkillLevels[4];
 static const char* get_level_string(SpellID spell)
 {
     static const char* level_strings[] = {
-        0,
         (*gpGeneralText)[173],
         (*gpGeneralText)[174],
         (*gpGeneralText)[175],
         (*gpGeneralText)[176],
         (*gpGeneralText)[177]
     };
-    return level_strings[akSpellTraits[spell].level];
+    return level_strings[akSpellTraits[spell].level - 1];
 }
 
 #if 0  // @carcass: untouched Dreamcast-only bodies
@@ -291,14 +312,242 @@ int TSpellbookWindow::convertID2HelpID(int id)
     // @stub
 }
 
+#endif  // @carcass
+
+// The two DC helpers above survive out of line on SH4. Complete's /Ob2
+// build folds both into WindowHandler; keeping their bodies inline recreates
+// the retail switch tables without inventing x86 function boundaries.
+inline TSpellSchool TSpellbookWindow::GetSchoolFromPosition(int position)
+{
+    return position < 4 ? (TSpellSchool)(1 << position)
+                        : eSchoolAll;
+}
+
+inline void TSpellbookWindow::DisplayNewSchool(int position)
+{
+    if (School == GetSchoolFromPosition(position))
+        return;
+
+    if (gUnnamed698758.animateSpellBook)
+        VideoPlay(0x25, x + 13, y + 14, -1, -1);
+    School = GetSchoolFromPosition(position);
+    LastSchool = School;
+    GotoPage(0);
+    SchoolTabsWidget->SetIconFrame(position);
+    DrawWindow(1, -65535, 65535);
+}
+
+inline void TSpellbookWindow::SetContext(TSpellContext context)
+{
+    unsigned context_mask = 1 << context;
+    if (ContextMask == context_mask)
+        return;
+
+    if (gUnnamed698758.animateSpellBook)
+        VideoPlay(context == eContextCombat ? 0x24 : 0x25,
+                  x + 13, y + 14, -1, -1);
+    ContextMask = context_mask;
+    LastContext = context;
+    GotoPage(0);
+    DrawWindow(1, -65535, 65535);
+}
+
+inline int TSpellbookWindow::convertID2HelpID(int id)
+{
+    if (id < 0 || id > DIALOG_RETURN_CANCEL)
+        return -1;
+    switch (id) {
+    case AIR_SCHOOL_ID: return 0;
+    case FIRE_SCHOOL_ID: return 1;
+    case WATER_SCHOOL_ID: return 2;
+    case EARTH_SCHOOL_ID: return 3;
+    case ALL_SCHOOL_ID: return 4;
+    case COMBAT_SPELLS_ID: return 5;
+    case ADVENTURE_SPELLS_ID: return 6;
+    case SPELL_POINTS_ID: return 7;
+    case PREVIOUS_PAGE_ID: return 8;
+    case NEXT_PAGE_ID: return 9;
+    case DIALOG_RETURN_CANCEL: return 10;
+    }
+    return -1;
+}
+
+DATA(0x00641da4) static const int school_to_tab[] = {0, 2, 3, 1, 4};
+DATA(0x00641db8) static const int tab_to_school[] = {0, 3, 1, 2, 4};
+
 // E:\gamedcs\spellbookwindow.cpp:755
+// Reconstructed 2026-08-27 (stub -> 67.0455%). The right-click dispatch and
+// key-handler prefix agree instruction-for-instruction through retail block
+// B31; Complete's added mouse-rollover arm and all widget actions are present.
+// The standing residual is VC6 shaping: retail expands the rollover string's
+// copy assignment while this compile keeps the three-argument assign call,
+// and it chooses a different common DrawWindow tail after the first page-key
+// arm. Both differences are downstream of semantically identical source;
+// adding authentic inline PreviousPage/NextPage bodies was measured and
+// rejected (67.0455 -> 59.2443) because it rotates the handler's registers.
 VA(0x0059d040, 0xBA0)  // anchor-callee: calls GotoPage/get_spell_description/GetManaCost/SetIconFrame, msg jump-table, ret 4; absorbs inlined DisplayNewSchool+convertID2HelpID; dc 0x14cecc
 int TSpellbookWindow::WindowHandler(message* msg)
 {
-    // @stub
-}
+    int handled = CAdvPopup::WindowHandler(msg);
+    if (handled)
+        return handled;
 
-#endif  // @carcass
+    PollSound();
+
+    if (msg->qualifier & MESSAGE_MODIFIER_RIGHT) {
+        if (msg->codeX == widget::WIDGET_SELECT
+            || msg->codeX == widget::WIDGET_RIGHT_SELECT) {
+            int id = msg->codeY;
+            if (id >= SPELL_0_ID && id <= SPELL_11_ID) {
+                SpellID spell = SpellMap[id - SPELL_0_ID];
+                NormalDialog(get_spell_description(spell, Hero, 0).c_str(),
+                             4, -1, -1,
+                             9, spell, -1, 0, -1, 0, -1, 0);
+            } else {
+                int help_id = convertID2HelpID(id);
+                if (help_id >= 0)
+                    NormalDialog(gSpellbookHelpText[help_id].rclick,
+                                 4, -1, -1, -1, 0, -1, 0,
+                                 -1, 0, -1, 0);
+            }
+        }
+        return MESSAGE_DISPATCH_CONSUME;
+    }
+
+    if (msg->id == MESSAGE_KEY_DOWN) {
+        switch (msg->codeX) {
+        case KEYCODE_KP_4: // left
+            if (PreviousPageWidget->status & widget::WIDGET_ACTIVE) {
+                if (gUnnamed698758.animateSpellBook)
+                    VideoPlay(0x24, x + 13, y + 14, -1, -1);
+                GotoPage(Page - 1);
+                DrawWindow(1, -65535, 65535);
+            }
+            break;
+
+        case KEYCODE_KP_6: // right
+            if (NextPageWidget->status & widget::WIDGET_ACTIVE) {
+                if (gUnnamed698758.animateSpellBook)
+                    VideoPlay(0x25, x + 13, y + 14, -1, -1);
+                GotoPage(Page + 1);
+                DrawWindow(1, -65535, 65535);
+            }
+            break;
+
+        case KEYCODE_KP_8: { // up
+            int school_position = GetPositionFromSchool(School);
+            int tab = school_to_tab[school_position] - 1;
+            if (tab < 0)
+                tab = 4;
+            DisplayNewSchool(tab_to_school[tab]);
+            break;
+        }
+
+        case KEYCODE_KP_2: { // down
+            int school_position = GetPositionFromSchool(School);
+            int tab = school_to_tab[school_position] + 1;
+            if (tab >= 5)
+                tab = 0;
+            DisplayNewSchool(tab_to_school[tab]);
+            break;
+        }
+
+        case KEYCODE_A: // adventure spells
+            SetContext(eContextAdventure);
+            break;
+
+        case KEYCODE_C: // combat spells
+            SetContext(eContextCombat);
+            break;
+
+        case KEYCODE_ESCAPE:
+        case KEYCODE_ENTER:
+            msg->codeY = DIALOG_RETURN_CANCEL;
+            goto exit_dialog;
+        }
+    } else if (msg->id == MESSAGE_WIDGET) {
+        if (msg->codeX == widget::WIDGET_SELECT) {
+            if (msg->codeY >= SPELL_0_ID && msg->codeY <= SPELL_11_ID) {
+                SpellID spell = SpellMap[msg->codeY - SPELL_0_ID];
+                if ((AllowedContext == eContextCombat && ContextMask == 1)
+                    || (AllowedContext == eContextAdventure
+                        && ContextMask == (1 << eContextAdventure))) {
+                    int mana_cost = const_cast<hero*>(Hero)->GetManaCost(
+                        spell, EnemyGroup, OnMagicPlains);
+                    if (mana_cost <= Hero->mana) {
+                        msg->codeY = spell;
+                        goto exit_dialog;
+                    }
+
+                    sprintf(gText, (*gpGeneralText)[207],
+                            mana_cost, Hero->mana);
+                    NormalDialog(gText, 1, -1, -1, -1, 0, -1, 0,
+                                 -1, 0, -1, 0);
+                } else {
+                    NormalDialog(
+                        get_spell_description(spell, Hero, 0).c_str(),
+                        1, -1, -1, 9, spell, -1, 0,
+                        -1, 0, -1, 0);
+                }
+            } else if (msg->codeY >= AIR_SCHOOL_ID
+                       && msg->codeY <= ALL_SCHOOL_ID) {
+                DisplayNewSchool(msg->codeY - AIR_SCHOOL_ID);
+            } else if (msg->codeY == COMBAT_SPELLS_ID) {
+                SetContext(eContextCombat);
+            } else if (msg->codeY == ADVENTURE_SPELLS_ID) {
+                SetContext(eContextAdventure);
+            } else if (msg->codeY == PREVIOUS_PAGE_ID) {
+                if (gUnnamed698758.animateSpellBook)
+                    VideoPlay(0x24, x + 13, y + 14, -1, -1);
+                GotoPage(Page - 1);
+                DrawWindow(1, -65535, 65535);
+            } else if (msg->codeY == NEXT_PAGE_ID) {
+                if (gUnnamed698758.animateSpellBook)
+                    VideoPlay(0x25, x + 13, y + 14, -1, -1);
+                GotoPage(Page + 1);
+                DrawWindow(1, -65535, 65535);
+            } else if (msg->codeY == DIALOG_RETURN_CANCEL) {
+                goto exit_dialog;
+            }
+        }
+    } else if (msg->id == MESSAGE_MOUSE_MOVE) {
+        int id = findWidget(msg->mouseX, msg->mouseY);
+        if (id == lastIMHoverID)
+            return MESSAGE_DISPATCH_CONSUME;
+
+        std::string rollover;
+        lastIMHoverID = id;
+        if (id == -1) {
+            gpMouseManager->SetPointer(0, mouseManager::DEFAULT_SET);
+            rollover = "";
+        } else {
+            gpMouseManager->SetPointer(1, mouseManager::DEFAULT_SET);
+            if (id >= SPELL_0_ID && id <= SPELL_11_ID) {
+                rollover = get_spell_description(
+                    SpellMap[id - SPELL_0_ID], Hero, 1);
+            } else {
+                int help_id = convertID2HelpID(id);
+                rollover = help_id >= 0
+                    ? gSpellbookHelpText[help_id].text : "";
+            }
+        }
+
+        RolloverWidget->SetText(rollover.c_str());
+        DrawWindow(0, ROLLOVER_ID, ROLLOVER_ID);
+        gpWindowManager->UpdateScreen(
+            x + RolloverWidget->x, y + RolloverWidget->y,
+            RolloverWidget->width, RolloverWidget->height);
+    }
+
+    return MESSAGE_DISPATCH_CONSUME;
+
+exit_dialog:
+    gpWindowManager->dialogReturn = msg->codeY;
+    msg->id = MESSAGE_WIDGET;
+    msg->codeY = 10;
+    msg->codeX = 10;
+    return MESSAGE_DISPATCH_FORWARD;
+}
 
 // E:\gamedcs\spellbookwindow.cpp:82
 DC_ONLY(0x14d3a4, 0x28)
