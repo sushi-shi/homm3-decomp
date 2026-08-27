@@ -2777,15 +2777,15 @@ soundmgr	?WaitEndSampleThread@@YAXPAX@Z	92.0000	92.0000	92.0000	0x19a6b0
 soundmgr	?WaitSample@soundManager@@QAEXPAVds_memsample@@H@Z	100.0000	100.0000	100.0000	0x199ec0
 soundmgr	?launch_sample@@YIXPBDHH@Z	100.0000	100.0000	100.0000	0x19a590
 soundmgr	?service_sounds@soundManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19a7d0
+spellbookwindow	??0TSpellbookWindow@@QAE@PBVhero@@PBVarmyGroup@@W4TSpellContext@0@H@Z	99.9735	99.9735	99.9735	0x19bdf0
 spellbookwindow	??1TSpellbookWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x19c8f0
 spellbookwindow	??MTSpellbookEntry@TSpellbookWindow@@QBE_NABV01@@Z	100.0000	100.0000	100.0000	0x19dbe0
 spellbookwindow	??_GTSpellbookWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x19c8c0
 spellbookwindow	?Close@TSpellbookWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x19c990
 spellbookwindow	?GotoPage@TSpellbookWindow@@QAEXH@Z	88.8745	88.8745	88.8745	0x19c9a0
 spellbookwindow	?Open@TSpellbookWindow@@UAEHHE@Z	100.0000	100.0000	100.0000	0x19c970
-spellbookwindow	?WindowHandler@TSpellbookWindow@@UAEHPAVmessage@@@Z	67.0455	67.0455	67.0455	0x19d040
+spellbookwindow	?WindowHandler@TSpellbookWindow@@UAEHPAVmessage@@@Z	70.8576	70.8576	70.8576	0x19d040
 spellbookwindow	?get_spell_description@TSpellbookWindow@@AAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@HPBVhero@@E@Z	96.8000	96.8000	96.8000	0x19baa0
-spellbookwindow	TSpellbookWindow_TSpellbookWindow	0.0000	0.0000	0.0000	0x19bdf0
 spelldefs	?InitializeSpellTraits@@YIXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	100.0000	100.0000	100.0000	0x19e150
 spelldefs	?InitializeSpellTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0x19e090
 spelldefs	?SpellTargetsASingleArmy@@YIEHH@Z	100.0000	100.0000	100.0000	0x19e060
