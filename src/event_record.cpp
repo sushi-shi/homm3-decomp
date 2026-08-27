@@ -310,6 +310,10 @@ unsigned char type_record_move_hero::save(TAbstractFile* outfile)
 }
 
 // E:\gamedcs\event_record.cpp:161
+// Residual (94.58%): retail SINKS the `gCompleteDrawEnabled = 0` arm past
+// the tail and jumps back into the join; we lay it inline behind a jmp.
+// Tried and rejected: duplicating the store into both guard arms so the
+// cross-jumper merges them, the two-jump-predecessor recipe (92.50).
 // Slot 4 of type_record_move_hero's retail vtable (0x63de8c). The tail is
 // cursor.obj's animate_move with the step deltas computed from the two
 // packed points; gCompleteDrawEnabled and advManager::drawCursor are the
@@ -1390,6 +1394,11 @@ void game::record_claim_town(long id, long new_owner)
 #endif  // @carcass
 
 // E:\gamedcs\event_record.cpp:1061
+// Residual (88.70%): the inlined vector insert. Retail expands _Ufill's
+// single-element fill down to one _Construct call where we stop at a call
+// to _Ufill itself, and the two constructor arguments land in the opposite
+// scratch registers behind that. Tried and rejected: writing the site as
+// insert(end(), 1, x) rather than push_back (70.75).
 // advManager::EraseObj is the caller. Retail expands the whole chain: the
 // 0x18-byte allocation, the two vtable stores, the four field copies out of
 // the cell (evaluated right-to-left - objectIndex, extraInfo,
@@ -1599,8 +1608,11 @@ void game::ResetVisibility(int startX, int startY, int z, int whichPlayer,
         }
     }
 
-    if (record->changes.size() != 0)
-    {
+    // The EMPTY arm is the one retail lays out inline (`jne` forward to the
+    // queue), so the test is spelled == 0, not != 0.
+    if (record->changes.size() == 0) {
+        delete record;
+    } else {
         // Retail CALLS insert(iterator, n, const T&) here where the smaller
         // game::record_* bodies expand it, so the site is pinned - with
         // end() hoisted OUT of the pinned statement, because retail keeps
@@ -1609,8 +1621,6 @@ void game::ResetVisibility(int startX, int startY, int z, int whichPlayer,
 #pragma inline_depth(0)
         eventRecords.insert(at, 1, record);
 #pragma inline_depth()
-    } else {
-        delete record;
     }
 }
 #if 0  // @carcass
