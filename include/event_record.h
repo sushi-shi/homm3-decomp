@@ -238,7 +238,10 @@ public:
     virtual void replay(unsigned char draw) OVERRIDE;
     type_record_player_death() {}
 
-    unsigned char extra;  // +0x08 - second serialized byte (role TBD)
+    // Retail replay sign-extends this serialized byte for both the player-name
+    // lookup and the dialog payload; the role is still unknown, but its
+    // signedness is byte-proven.
+    signed char extra;  // +0x08 - second serialized byte (role TBD)
 };
 
 // show_hero extends hide_hero with the replay and undo map locations followed

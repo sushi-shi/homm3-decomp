@@ -1342,8 +1342,8 @@ void type_record_shroud::replay(unsigned char draw)
         if ((gMapVisibilityBit & change.new_value)
             != (gMapVisibilityBit & change.old_value)) {
             changed = 1;
-            *GetMapExtraPtr(change.x, change.y, change.z) = change.new_value;
         }
+        *GetMapExtraPtr(change.x, change.y, change.z) = change.new_value;
     }
     if (draw && changed) {
         gpAdvManager->CompleteDraw(0);

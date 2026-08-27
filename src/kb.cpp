@@ -970,6 +970,11 @@ void CleanUpMenus()
 VA(0x004f4ba0, 0x5F)  // anchor-caller (remote 0x556780), dc 0xe519c
 int GetNextHumanPlayer(int start)
 {
+    // Residual (95.1191%): after the opening modulo, every instruction and
+    // branch agrees.  Retail defers `mov ebx,ecx` between `and esi,7` and
+    // `jns`; this CL hoists it ahead of the saved-register pushes.  Tried and
+    // rejected: reversing the locals, splitting the modulo assignment, a
+    // preserved initial-seat local, and both together (flat or 66.5476%).
     int checked = 0;
     int player = (start + 1) % 8;
 
