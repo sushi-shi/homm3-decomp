@@ -56,6 +56,22 @@ enum EKeyCodes {
     KEYCODE_KP_2 = 0x50,
     KEYCODE_KP_3 = 0x51,
     KEYCODE_KP_0 = 0x52,
+    // The filename-charset rows CSaveGameEdit::IgnoreKey (0x57cfe0)
+    // dispatches: its 0x53-entry byte-index table files exactly these
+    // scan codes into its reject / shift-reject arms, fixing each
+    // value. They are the standard set-1 codes for the digit and
+    // punctuation keys whose (shifted) characters are illegal in DOS
+    // filenames.
+    KEYCODE_2 = 0x03,
+    KEYCODE_5 = 0x06,
+    KEYCODE_8 = 0x09,
+    KEYCODE_SEMICOLON = 0x27,
+    KEYCODE_APOSTROPHE = 0x28,
+    KEYCODE_GRAVE = 0x29,
+    KEYCODE_BACKSLASH = 0x2b,
+    KEYCODE_COMMA = 0x33,
+    KEYCODE_PERIOD = 0x34,
+    KEYCODE_SLASH = 0x35,
     // The numpad Del/decimal key, one past KP_0 - the caret editor's
     // forward-delete arm. Its value is forced by the same dense jump
     // table that fixes KP_1/KP_4/KP_6/KP_7: textEntryWidget::OnKeyPress

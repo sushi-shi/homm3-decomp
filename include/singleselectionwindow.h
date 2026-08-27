@@ -87,7 +87,15 @@ public:
     char pad_60[0x64 - 0x60];
     unsigned char m_flag64;            // 0x64
     unsigned char m_flag65;            // 0x65
-    char pad_66[0x1064 - 0x66];
+    char pad_66[0x374 - 0x66];
+    // DC currentMap/durationIndex (dc offsets 868/872, the same adjacent
+    // pair). Retail bytes prove both: CSaveGameEdit::OnKeyPress compares
+    // +0x374 against -1 before its SetCurrentMap(-1, 1) call, and the
+    // duration-slider callback 0x57c7f0 stores its state to +0x378
+    // alongside gpGame->setup.turnDuration.
+    int currentMap;                    // 0x374
+    int durationIndex;                 // 0x378
+    char pad_37c[0x1064 - 0x37c];
     CNetPlayerHandler m_players;       // 0x1064
     char pad_1834[0x1840 - 0x1834];
     slider* m_fileSlider;              // 0x1840
@@ -102,6 +110,9 @@ public:
     void UpdatePlayerPositions(unsigned char updateCurPlayer);
     int Update();
     unsigned char OnGameTransmitInitMsg(CNetMsg* pNetMsg);
+    void SetCurrentMap(int map, unsigned char bUpdate);
+    void DrawHeroAdvancedOption(int playerPos, unsigned char update,
+                                int position);
 
 private:
     CNetPlayerHandlerPlayer* GetThisPlayer();
