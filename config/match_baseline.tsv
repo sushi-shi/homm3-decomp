@@ -240,6 +240,7 @@ ai_player	?buy_mage_guild@type_AI_player@@QAEXPAVhero@@PAVtown@@@Z	100.0000	100.
 ai_player	?calculate_demand@type_AI_player@@QAEXXZ	97.4340	97.4340	97.4340	0x28740
 ai_player	?calculate_reserve@type_AI_player@@QAEXXZ	96.4566	96.4566	96.4566	0x29ad0
 ai_player	?can_take_town@@YIEPBVhero@@PBVtown@@@Z	100.0000	100.0000	100.0000	0x28410
+ai_player	?can_trade_resources@type_AI_player@@QAE_NPBHPAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	81.3465	81.3465	81.3465	0x2a580
 ai_player	?check_towns@type_town_threat_checker@@QAEXXZ	100.0000	100.0000	100.0000	0x280e0
 ai_player	?check_trade_supply@type_AI_player@@QAE_NPBHJPAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	85.8333	85.8333	85.8333	0x2a2b0
 ai_player	?choose_weakest_army@type_AI_creature_swapper@@IAEJ_N0@Z	88.3357	88.3357	88.3357	0x2c690
@@ -304,11 +305,10 @@ ai_player	?trade_resources@type_AI_player@@QAEXPBHJ@Z	90.1171	90.1171	90.1171	0x
 ai_player	?value_of_adding_army@type_AI_creature_swapper@@IAEJW4TCreatureType@@FAAF_N@Z	89.0856	89.0856	89.0856	0x2c830
 ai_player	?value_of_dwelling@@YIJPAVtown@@FPAEPAH@Z	100.0000	100.0000	100.0000	0x2b520
 ai_player	?value_of_dwelling_upgrade@@YIJPAVtown@@FPAH@Z	100.0000	100.0000	100.0000	0x2b5b0
+ai_player	?value_of_hiring@@YIJPAVtown@@PAVhero@@PAVsearchArray@@@Z	99.9522	99.9522	99.9522	0x31bd0
 ai_player	?value_of_horde@@YIJPAVtown@@W4type_building_id@@PAEPAH@Z	100.0000	100.0000	100.0000	0x2b790
 ai_player	?value_of_horde_upgrade@@YIJPAVtown@@W4type_building_id@@PAEPAH@Z	100.0000	100.0000	100.0000	0x2b800
-ai_player	type_AI_player_can_trade_resources	0.0000	0.0000	0.0000	0x2a580
 ai_player	type_AI_player_purchase_building	0.0000	0.0000	0.0000	0x2ae00
-ai_player	value_of_hiring	0.0000	0.0000	0.0000	0x31bd0
 ai_tactical	??0army@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x37a00
 ai_tactical	??0type_AI_attack_hex_chooser@@QAE@PBVarmy@@0PBJPAVsearchArray@@PBUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x360c0
 ai_tactical	??0type_AI_combat_parameters@@QAE@PBVcombatManager@@J@Z	100.0000	100.0000	100.0000	0x35ec0
