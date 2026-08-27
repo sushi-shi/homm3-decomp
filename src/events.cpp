@@ -5433,7 +5433,6 @@ unsigned char AI_choose_resource_or_experience(hero* current_hero,
 // transposition (retail this=EBX surviving to GiveExperience,
 // current_hero=EDI; ours edi/esi) plus the AI-arm branch polarity. A
 // register-homing wall - no local spelling reaches the pseudo order.
-VA(0x004a6440, 0xD8)  // dc-bracket forced, ret 0xc=p4, dc 0x962dc
 // Residual (83.04%): the merged-return class (path.obj/AppWndProc
 // family), in the direction where RETAIL DUPLICATES. Our source already
 // writes GiveResource(GOLD, amount); return; twice (the CHOICE_1 arm
@@ -5444,6 +5443,7 @@ VA(0x004a6440, 0xD8)  // dc-bracket forced, ret 0xc=p4, dc 0x962dc
 // No structured respelling changes which copy survives; the register
 // story (this in ebx vs our edi, amount edi vs esi) is downstream of
 // that extra exit's pressure. 2026-08-27.
+VA(0x004a6440, 0xD8)  // dc-bracket forced, ret 0xc=p4, dc 0x962dc
 void advManager::DoTreasureDialog(hero* current_hero, int amount,
                                   bool human_player)
 {
@@ -5707,7 +5707,6 @@ int IsBaseCreature(TCreatureType type);
 // immediates and counts the resource loop DOWN (dec/jne), where our CL
 // materializes -1 into EDI and counts up; current_hero binds the other
 // register. Register-homing/loop-form wall on a 298 B leaf.
-VA(0x004a6b30, 0x12A)  // dc-bracket forced, ret 0xc=p4, dc 0x96994
 // Residual (88.61%): a -1-pooling register cascade. Retail compares
 // reward->Artifact against an IMMEDIATE -1 and pushes immediate -1
 // dialog arguments, loading current_hero from [ebp+8] only after that
@@ -5717,6 +5716,7 @@ VA(0x004a6b30, 0x12A)  // dc-bracket forced, ret 0xc=p4, dc 0x96994
 // down-counter and denies human_player its callee-saved bl home.
 // The two-arg type_artifact ctor (seerhut precedent) measured
 // byte-flat and is kept as the cleaner spelling. 2026-08-27.
+VA(0x004a6b30, 0x12A)  // dc-bracket forced, ret 0xc=p4, dc 0x96994
 void advManager::monsters_give_reward(hero* current_hero, NewmapCell* cell,
                                       bool human_player)
 {
