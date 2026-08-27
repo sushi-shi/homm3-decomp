@@ -484,31 +484,13 @@ unsigned char type_record_show_boat::load(TAbstractFile* infile, int version)
 
 // E:\gamedcs\event_record.cpp:488
 // Slot 3 of type_record_show_boat's retail vtable (0x63df04). Unlike load,
-// which CALLS the base, save spells the base's six writes out in line and
-// appends the two points - the same block-scoped temps in the dead outfile
-// parameter home that hide_boat::save uses.
+// which retail CALLS, the base save is EXPANDED here and its discarded
+// `return 0` degenerates into a jump past the middle four writes straight to
+// the point pair - that `jne` into the tail is what proves the inline.
 VA(0x0049afa0, 0x9F)  // anchor-vtable, dc 0x8d110
 unsigned char type_record_show_boat::save(TAbstractFile* outfile)
 {
-    outfile->Write(&player_id, 1);
-    if (outfile->Write(&current_boat->id, 1) != 1)
-        return 0;
-    {
-        unsigned char b = field_0d;
-        outfile->Write(&b, 1);
-    }
-    {
-        unsigned char b = field_0c;
-        outfile->Write(&b, 1);
-    }
-    {
-        short s = field_14;
-        outfile->Write(&s, sizeof(s));
-    }
-    {
-        short s = field_10;
-        outfile->Write(&s, sizeof(s));
-    }
+    type_record_hide_boat::save(outfile);
     outfile->Write(&location, sizeof(location));
     unsigned char ok = outfile->Write(&previous_location, sizeof(previous_location))
                        == sizeof(previous_location);
