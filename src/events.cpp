@@ -2224,6 +2224,12 @@ void advManager::EraseAndFizzle(NewmapCell* eventCell, type_point point,
 }
 
 // E:\gamedcs\events.cpp:317.
+// [2026-08-27] Residual (91.93%): retail packs boat_point's three
+// bitfields with an interleaved XOR-into-word idiom reading z through the
+// point parameter's own packed dword (4*p / sar 2); our field-by-field
+// short stores are close but order the packing differently. The 3-arg
+// type_point constructor measured WORSE (85.51). A packed-bitfield store
+// ordering wall.
 VA(0x0049e2e0, 0x38B)  // dc-bracket forced, ret 0xc=p4, dc 0x903b4
 void advManager::DoEventShipyard(NewmapCell* cell, type_point point, unsigned char human_player)
 {
@@ -4960,6 +4966,13 @@ void advManager::DoEventSkeleton(hero* current_hero, ExtraInfoUnion* cell,
 // fixes the packed spell as the signed ten-bit lane at bits 13..22.  The
 // three refusal tails are advevent.txt rows 174 (already known), 131 (no
 // spellbook), and 130 (insufficient Wisdom).
+// [2026-08-27] Residual (89.67%): retail's SetInfoFlag expansion here
+// CALLS game::GetTeam for the initial team lookup, where game.h's inline
+// reads mapHeader.teamInfo[playerNum] directly (its own note records the
+// direct read, and DispatchEvent's arms depend on it). Reconciling would
+// be a shared-header change risking every SetInfoFlag consumer. The
+// remainder is human_player homing (retail reloads the stack byte) and an
+// esi/edi swap.
 VA(0x004a5610, 0x346)  // DC identity + unique call/CFG stream, dc 0x957fc
 void advManager::DoEventShrine(hero* current_hero, NewmapCell* cell,
                                const char* prompt, GlobalInfoFlags type,
@@ -5347,6 +5360,10 @@ unsigned char AI_choose_resource_or_experience(hero* current_hero,
 
 // E:\gamedcs\events.cpp:3377. The gold-or-experience offer shared by the
 // treasure chest and the campfire-style pickups.
+// [2026-08-27] Residual (83.04%): a whole-body current_hero/this register
+// transposition (retail this=EBX surviving to GiveExperience,
+// current_hero=EDI; ours edi/esi) plus the AI-arm branch polarity. A
+// register-homing wall - no local spelling reaches the pseudo order.
 VA(0x004a6440, 0xD8)  // dc-bracket forced, ret 0xc=p4, dc 0x962dc
 void advManager::DoTreasureDialog(hero* current_hero, int amount,
                                   bool human_player)
@@ -5607,6 +5624,10 @@ int IsBaseCreature(TCreatureType type);
 
 // E:\gamedcs\events.cpp:3579. Pays out the artifact and resource reward from
 // the customized wandering-monster record selected by the cell.
+// [2026-08-27] Residual (88.61%): retail pushes the -1 dialog args as
+// immediates and counts the resource loop DOWN (dec/jne), where our CL
+// materializes -1 into EDI and counts up; current_hero binds the other
+// register. Register-homing/loop-form wall on a 298 B leaf.
 VA(0x004a6b30, 0x12A)  // dc-bracket forced, ret 0xc=p4, dc 0x96994
 void advManager::monsters_give_reward(hero* current_hero, NewmapCell* cell,
                                       bool human_player)
