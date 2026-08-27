@@ -3043,7 +3043,7 @@ townmgr	?WindowHandler@type_garrison_base_window@@UAEHPAVmessage@@@Z	95.6600	95.
 townmgr	?do_monster_join_dialog@@YIXPAVhero@@PAVarmyGroup@@H@Z	100.0000	100.0000	100.0000	0x1d12b0
 townmgr	?do_monster_join_dialog@@YIXPAVhero@@W4TCreatureType@@H@Z	100.0000	100.0000	100.0000	0x1d11d0
 townmgr	?handle_hall_click@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d30d0
-townmgr	?handle_mage_guild_click@townManager@@QAEXXZ	97.4888	97.4888	97.4888	0x1ce560
+townmgr	?handle_mage_guild_click@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1ce560
 townmgr	?select_army@townManager@@QAEXPAVstrip@@HE@Z	100.0000	100.0000	100.0000	0x1c8080
 townmgr	?set_bonus_display@TTownScreenWindow@@QAEXPAVtown@@@Z	87.9325	87.9325	87.9325	0x1c5b40
 townmgr	?set_prerequisite_text@TBuyBuildWindow@@QAEXPBVtown@@H@Z	87.4164	87.4164	87.4164	0x1d5be0

@@ -3575,19 +3575,24 @@ int TMageGuildWindow::WindowHandler(message* msg)
 // tail.
 
 // E:\gamedcs\townmgr.cpp
-// Residual (97.4888%): two dead three-instruction blocks. At each of the two
-// GetHero sites this compile emits `cmp ecx,-1 / je <arm> / jne <join> /
-// xor edi,edi / jmp <join>` - the `jne` immediately after a `je` on the same
-// flags is unreachable, and it is the inlined accessor's own `id == -1 ->
-// return 0` arm that VC6 kept without folding. Retail folds it against the
-// caller's `!= -1` gate and emits `cmp ecx,-1 / je <arm>` alone. The two
-// NormalDialog argument slots and the general-text row are now retail's.
+// EXACT (2026-08-27). Previously 97.4888%: at each GetHero site this compile
+// emitted a dead three-instruction block `cmp ecx,-1 / je <arm> / jne <join> /
+// xor edi,edi / jmp <join>` - the inlined accessor's own `id == -1 -> return 0`
+// arm that VC6 kept without folding against the caller's `!= -1` gate. The
+// lever was the STATEMENT FORM, not the gate: written as a TERNARY
+// (`p = cond ? GetHero(a) : GetHero(b)`) VC6 does not propagate the branch
+// condition into the inlined guard; the plain IF/ELSE form - the exact shape
+// the sibling handle_hall_click uses to reach 100.0 - folds the visiting arm's
+// guard away and leaves the garrison arm's real `je`, matching retail's
+// `cmp ecx,-1 / je <arm>` at both sites.
 VA(0x005ce560, 0x2CC)  // anchor-callee(TMageGuildWindow ctor 0x5cc980 + SetupMage 0x5d6ef0) + anchor-caller(Main 0x5d3240) + arity(bare ret), dc 0x171320
 void townManager::handle_mage_guild_click()
 {
-    hero* pHero = townToView->visitingHeroId != -1
-                      ? gpGame->GetHero(townToView->visitingHeroId)
-                      : gpGame->GetHero(townToView->garrisonHeroId);
+    hero* pHero;
+    if (townToView->visitingHeroId != -1)
+        pHero = gpGame->GetHero(townToView->visitingHeroId);
+    else
+        pHero = gpGame->GetHero(townToView->garrisonHeroId);
 
     if (pHero && !pHero->HasArtifact(0) && gpCurrentPlayer->IsLocalHuman()) {
         if (gbUnk69774c
@@ -9720,6 +9725,21 @@ void townManager::SetupWell(TCastleWindow* wellWin)
 // tables and every coordinate below are read straight out of the
 // retail image; the guild-count -> category-count ladder is the
 // 9/8/6/4/2 chain with the ==2 arm's sbb ternary.
+//
+// Residual (87.33%): a C1 front-end handle-state register permutation,
+// model-confirmed CAPPED (why-reg v2 --model, 2026-08-27). The three
+// call-crossing pseudos bind ESI/EDI/EBX on our side and EBX/ESI/EDI on
+// retail's - the SAME pseudos fed to the allocator in a DIFFERENT
+// processing order - and that transposition cascades through the whole
+// per-column tail (reg-distance 1014 dominates the 175 flow-distance).
+// The model's creation-order candidates do not move the binding (the
+// order is copy-propagated / fed by C1 handle numbering, not a source
+// decl order). predict-inline is uninformative here: retail names the
+// vector<widget*> insert/push_back internals with synth labels our side
+// can never emit, so its 93-vs-95 call delta is 56 name-unresolvable
+// pairs, not a nameable over-inline. why-branch's whole D-catalog is
+// byte-flat. Not source-reachable; waits on TU-state / handle-order
+// evidence.
 // E:\gamedcs\townmgr.cpp:9296
 VA(0x005dda10, 0x145F)  // order-map(SetupWell 0x5dd390 .. GetCategoryStats 0x5dee70) + anchor-callee(GetNumThievesGuilds/GetLocalPlayerGamePos) + arity(ret 4), dc 0x180204
 void TThievesGuildWindow::SetupThievesGuild(int iThievesGuilds)
