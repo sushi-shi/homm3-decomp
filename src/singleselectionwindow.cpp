@@ -969,21 +969,33 @@ int TSingleSelectionWindow::GetFileSpecNbr()
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:3475
-DC_ONLY(0x137da8, 0x916)
+VA(0x00582B40, 0x345)  // anchor-global dir ternary m_flag66/64/65 over "random_maps"(0x6836ac)/"maps"(0x6772d0)/"games"(0x677d70) + _chdir - the directory-scan opener; order-map GetHeaders..MakeHeroFilter onto 0x582b40..0x583890 (GetFileSpecNbr excluded by arity below), size 0.36x dc 0x916, dc 0x137da8
 void TSingleSelectionWindow::GetHeaders()
 {
     // @stub
 }
 
+// Retail-only list mirror: assigns SelectionHeaders (+0x1050,
+// self-assign-guarded vector<GameSelectionHeadersStruct> assign - the
+// 0xCA4 magic divide) from a header-vector argument. No DC slot fits
+// this bracket: GetFileSpecNbr is the only unlocated DC row in it and
+// is no-arg, while this takes one stack arg (ret 4). Provisional name.
+VA(0x00582E90, 0x2DB)  // retail-only; anchor-callee calls the header lists' own element-copy COMDAT 0x58f160
+void TSingleSelectionWindow::WindowFn_00582e90(
+    std::vector<GameSelectionHeadersStruct>* pList)
+{
+    // @stub
+}
+
 // E:\gamedcs\singleselectionwindow.cpp:3739
-DC_ONLY(0x1386c0, 0x9D0)
-int TSingleSelectionWindow::GetHeader(char* cFilename, GameSelectionHeadersStruct* pHeader)
+VA(0x00583170, 0x40E)  // anchor-callee OnMapFileNameMsg 0x589710 calls it (dir, msg->fileName, &hdrTemp) behind its _access gate; body fills the temp (??0NewSMapHeader 0x457cb0, SavedGameHeader::Load at +0x700, GetFileTime -> +0x6f8) - DC's (cFilename, pHeader) widened with dir, size 0.41x dc 0x9D0, dc 0x1386c0
+int TSingleSelectionWindow::GetHeader(char* dir, char* cFilename, GameSelectionHeadersStruct* pHeader)
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:3871
-DC_ONLY(0x139090, 0x408)
+VA(0x00583580, 0x30C)  // anchor-global copies the selected header's planes into gpGame (+0x1f6a0 header band, +0x4df18 setup band) off the SelectionHeaders row - the DC UpdateGameVars body shape; size 0.76x dc 0x408, dc 0x139090
 void TSingleSelectionWindow::UpdateGameVars()
 {
     // @stub
@@ -1540,11 +1552,11 @@ void TSingleSelectionWindow::OnSortMaps(int how)
 }
 
 // Retail-only (no DC row fits: SetupNewGameMode 1.34x is the nearest
-// and unproven): gated on m_flag65, calls RefreshFileList 0x583580
+// and unproven): gated on m_flag65, calls UpdateGameVars 0x583580
 // first, clears every seat's playerPos and the disabled slots'
 // CanBeHuman, then re-seats under the net-mode gates. OnNewPlayerMsg's
 // non-advanced arm calls it no-arg. Ordinal placeholder name.
-VA(0x00584C40, 0x40D)  // anchor-callee OnNewPlayerMsg 0x589fa0 calls it no-arg on this; head calls RefreshFileList 0x583580 + walks m_players at 0x7c stride
+VA(0x00584C40, 0x40D)  // anchor-callee OnNewPlayerMsg 0x589fa0 calls it no-arg on this; head calls UpdateGameVars 0x583580 + walks m_players at 0x7c stride
 void TSingleSelectionWindow::WindowFn_00584c40()
 {
     // @stub
@@ -1620,7 +1632,7 @@ void TSingleSelectionWindow::SortMaps(int how, unsigned char sendSortMsg,
         TransmitRemoteDataDPID(&msg, 0, false, true);
     }
     if (GetMapCount() != 0)
-        RefreshFileList();
+        UpdateGameVars();
     fileSlider->SetState(currentIndex);
     if (bUpdate) {
         DrawWindow(0, 0xffff0001, 0xffff);
@@ -1746,7 +1758,7 @@ void TSingleSelectionWindow::SetFilter(int size)
     }
     if (GetMapCount() != 0) {
         pCurrentHeader = SelectionHeaders.begin();
-        RefreshFileList();
+        UpdateGameVars();
     }
     message msg;
     msg.qualifier = 0;
@@ -2305,7 +2317,7 @@ unsigned char TSingleSelectionWindow::HandleNetMsg(CNetMsg* pNetMsg, unsigned ch
         // statement pin imposes the split.
 #pragma inline_depth(0)
         if (SelectionHeaders.size() > 0)
-            RefreshFileList();
+            UpdateGameVars();
 #pragma inline_depth()
         DrawWindow(0, 0xffff0001, 0xffff);
         Update();
@@ -2640,17 +2652,71 @@ unsigned char TSingleSelectionWindow::CheckMissingHeaders(unsigned long dpidHost
     return missing;
 }
 
-#if 0  // @carcass
-
+// Re-read one broadcast row's header from disk and mirror it into the
+// announced list plus the SelectionHeaders copy; when the file is
+// missing or stale (fileTime disagrees), ask the sender for the wire
+// header instead. The directory ternary is written out twice - retail
+// reloads all three literals at both sites. Both chdir("..") returns
+// stay per-arm (the miss arm carries its own). The pinned third assign
+// is retail's call (both arm assigns expand, the mirror is called);
+// the subscript is hoisted out of the pin per doctrine.
+// Residual (90.2): (1) the stale-arm CMapHeaderRequestMsg base ctor -
+// we expand CNetMsg(int,ulong)'s five stores in place, retail calls
+// its 0x4f2930 COMDAT (the tail arm's twin site already calls); a pin
+// on that statement takes the DERIVED ctor out of line too and loses
+// 12.6 (77.60, measured). (2) push ebx sits in our prologue where
+// retail defers it past the head guards (declaring pMsg after the
+// chdir is byte-flat - not the lever). (3) the third-site &temp push
+// precedes retail's index math, ours follows it. (4) cosmetic reloc
+// names: ??0NewSMapHeader/??0SGameSetupOptions/??4NewSMapHeader/
+// ??4SavedGameHeader COMDATs unclaimed at 0x45a7a0/0x45ac20/0x45cd10/
+// 0x5792c0.
 // E:\gamedcs\singleselectionwindow.cpp:6723. The 6-byte DC body is the
-// VMU stub; retail's is the real one (owns the 'Random Maps' path).
+// VMU stub; retail's is the real one (owns the random_maps path).
 VA(0x00589710, 0x40F)  // anchor-callee HandleNetMsg's RS_MAP_FILE_NAME arm forwards the msg, dc 0x140664
-void TSingleSelectionWindow::OnMapFileNameMsg(CNetMsg* pNetMsg)
+unsigned char TSingleSelectionWindow::OnMapFileNameMsg(CNetMsg* pNetMsg)
 {
-    // @stub
+    if (HeadersA.size() == 0)
+        return 1;
+    if (!receivingMaps)
+        return 1;
+    _chdir(m_flag66 ? DATA_COMPGEN(0x006836ac, randomMapsDir, "random_maps")
+                    : (m_flag64 || m_flag65
+                           ? DATA_COMPGEN(0x00677d70, gamesDir, "games")
+                           : DATA_COMPGEN(0x006772d0, mapsDir, "maps")));
+    CMapFileNameMsg* pMsg = static_cast<CMapFileNameMsg*>(pNetMsg);
+    if (_access(pMsg->m_fileName, 0) == 0) {
+        _chdir("..");
+        GameSelectionHeadersStruct temp;
+        GetHeader(m_flag66
+                      ? DATA_COMPGEN(0x006836ac, randomMapsDir, "random_maps")
+                      : (m_flag64 || m_flag65
+                             ? DATA_COMPGEN(0x00677d70, gamesDir, "games")
+                             : DATA_COMPGEN(0x006772d0, mapsDir, "maps")),
+                  pMsg->m_fileName, &temp);
+        if (memcmp(&temp.fileTime, &pMsg->m_fileTimeLow, 8) == 0) {
+            memcpy(temp.setup.alignment, pMsg->m_townTypes,
+                   sizeof(pMsg->m_townTypes));
+            if (pMsg->m_flag)
+                TransferHeaders[pMsg->m_number] = temp;
+            else
+                HeadersA[pMsg->m_number] = temp;
+            GameSelectionHeadersStruct& sel =
+                SelectionHeaders[pMsg->m_number];
+#pragma inline_depth(0)
+            sel = temp;
+#pragma inline_depth()
+        } else {
+            CMapHeaderRequestMsg msg(pMsg->m_flag, pMsg->m_number);
+            TransmitRemoteDataDPID(&msg, pNetMsg->field_04, false, true);
+        }
+        return 1;
+    }
+    _chdir("..");
+    CMapHeaderRequestMsg msg(pMsg->m_flag, pMsg->m_number);
+    TransmitRemoteDataDPID(&msg, pNetMsg->field_04, false, true);
+    return 1;
 }
-
-#endif  // @carcass
 
 #if 0  // @carcass
 

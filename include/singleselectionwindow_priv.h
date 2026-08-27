@@ -33,14 +33,16 @@ namespace ResourceManager {
 // closure - the ResourceManager::GetText precedent above.
 unsigned long get_available_disk_space();
 
-// The three CRT entries SaveValid touches, declared file-locally
-// instead of including <io.h>/<direct.h>: those two system headers
-// cost HandleNetMsg 90.16 -> 86.33 through the include-set wall
-// (measured 2026-08-27); three declarators do not.
+// The CRT entries SaveValid/OnMapFileNameMsg touch, declared
+// file-locally instead of including <io.h>/<direct.h>: those two
+// system headers cost HandleNetMsg 90.16 -> 86.33 through the
+// include-set wall (measured 2026-08-27); a few declarators do not.
+// _access = retail CRT 0x61a26e (OnMapFileNameMsg's existence gate).
 extern "C" {
 int __cdecl _chdir(const char* path);
 int __cdecl _open(const char* filename, int oflag, ...);
 int __cdecl _close(int handle);
+int __cdecl _access(const char* path, int mode);
 }
 
 // The five difficulty names at .bss 0x6a77ec, indexed by the header's
@@ -505,12 +507,14 @@ public:
     int m_number;          // +0x18
 
     // Retail widened the DC (nbr) ctor with the list-select flag; both
-    // CheckMissingHeaders expansions fix the field order.
+    // CheckMissingHeaders expansions fix the field order - and the
+    // STORE order: number lands before flag on every expansion (the
+    // CheckMissingHeaders pair and OnMapFileNameMsg's mismatch arm).
     CMapHeaderRequestMsg(unsigned char flag, int number)
         : CNetMsg(RS_MAP_HEADER_REQUEST, 0x1c)
     {
-        m_flag = flag;
         m_number = number;
+        m_flag = flag;
     }
 };
 
