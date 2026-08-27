@@ -65,7 +65,10 @@ struct GameSelectionHeadersStruct {
     // Second ctor-zeroed text band (extent = the second fill); role
     // unexercised by reconstructed bodies - provisional name.
     char description[0x6f6 - 0x5c9];  // +0x5c9
-    char pad_6f6[2];
+    // +0x6f6..+0x6f8 is an UNNAMED alignment hole: retail's synthesized
+    // operator= copies description's 0x12d bytes then stores fileTime's
+    // two dwords directly (OnMapFileNameMsg's two expansions) - a named
+    // pad array here adds a fourth byte-copy loop retail lacks.
     // The row's file stamp - a real FILETIME: DrawBasicMapInfo hands
     // its address to FileTimeToLocalFileTime.
     _FILETIME fileTime;               // +0x6f8
@@ -395,7 +398,8 @@ public:
     void OnGameHeaderInfoInitMsgEx(CNetMsg* pNetMsg);
     // Returns 0 when the row number is out of range (retail sets al).
     unsigned char OnGameHeaderInfoMsg(CNetMsg* pNetMsg);
-    void OnMapFileNameMsg(CNetMsg* pNetMsg);
+    // Always returns 1 (retail sets al on every exit); DC agrees.
+    unsigned char OnMapFileNameMsg(CNetMsg* pNetMsg);
     void OnNewHostMsg(CNetMsg* pNetMsg);
     unsigned char OnUpdatePlayerPosMsg(CNetMsg* pNetMsg);
     void OnSetAsHostMsg(CNetMsg* pNetMsg);
@@ -432,9 +436,22 @@ public:
     // drop arm caches at +0x1898. DC's GetPlayerCount takes a filter
     // byte; retail's takes none. Provisional.
     int GetPlayerCount();
-    // Retail 0x583580 - rebuilt after the header transfer completes.
-    // Name provisional.
-    void RefreshFileList();
+    // Retail 0x583580: copies the selected header's planes into
+    // gpGame (+0x1f6a0 header band, +0x4df18 setup band) - the DC
+    // UpdateGameVars role (dc 0x139090, void()). Called after the
+    // header transfer completes.
+    void UpdateGameVars();
+#ifdef HOMM3_SSWINDOW_HEADER_VECTORS
+    // The disk header reader family around it, visible only to the
+    // owning TU (the vectors gate): GetHeaders scans the picked
+    // directory ("random_maps"/"games"/"maps" by mode) into the lists;
+    // GetHeader fills one row's header temp from (dir, filename) -
+    // retail widened DC's (cFilename, pHeader) with the dir argument
+    // its chdir dance needs.
+    void GetHeaders();
+    int GetHeader(char* dir, char* cFilename,
+                  GameSelectionHeadersStruct* pHeader);
+#endif
 
 private:
     CNetPlayerHandlerPlayer* GetThisPlayer();
