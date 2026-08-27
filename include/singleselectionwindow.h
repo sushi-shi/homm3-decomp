@@ -118,7 +118,13 @@ public:
     textEntryWidget* saveGameEdit;     // 0x380
     char pad_384[0x388 - 0x384];
     CNewPlayerUpdateMan* pNewPlayerUpdateMan;  // 0x388
-    char pad_38c[0x1044 - 0x38c];
+    char pad_38c[0x1034 - 0x38c];
+    // A third header vector (same stride); CheckMissingHeaders scans it
+    // with request-flag 0 where the +0x1044 one takes flag 1. Role
+    // naming provisional.
+    GameSelectionHeadersStruct* HeadersAFirst;          // 0x1034
+    GameSelectionHeadersStruct* HeadersALast;           // 0x1038
+    char pad_103c[0x1044 - 0x103c];
     // A second header vector at +0x1040 (same 0xCA4 stride, proven by
     // CNewPlayerUpdateProc::Go's size() expansion feeding the header-count
     // init msg). Role naming provisional: the transfer path counts THIS
@@ -149,7 +155,11 @@ public:
     slider* durationSlider;            // 0x1840
     slider* nameSlider;                // 0x1844
     CChatWidget* chatWidget;           // 0x1848 (DC chatWidget)
-    char pad_184c[0x1865 - 0x184c];
+    char pad_184c[0x185c - 0x184c];
+    // 0x185c: DC chatEdit (a CCombatChatEdit there); OnNewHostMsg nulls
+    // it on the host handover. Base-typed until its widget lands.
+    textEntryWidget* chatEdit;
+    char pad_1860[0x1865 - 0x1860];
     unsigned char field_1865;          // 0x1865, gates the 179 widget show
     char pad_1866[0x186c - 0x1866];
     unsigned char field_186c;          // 0x186c, cleared on header-end
@@ -208,6 +218,10 @@ public:
     void GetHeroFace(int which, CNetPlayerHandlerPlayer* pPlayer);
     void MakeHeroFilter();
     void CheckFaces();
+    void TurnOffScenarioOptions();
+    void TurnOffAdvancedOptions();
+    void TurnChatOn(unsigned char update);
+    void TurnChatOff(unsigned char update);
     // DC takes TTownType; spelled int here so the public closure needs no
     // town.h - retype when the body lands.
     void UpdateTown(int pos, int town, unsigned char inPopup);

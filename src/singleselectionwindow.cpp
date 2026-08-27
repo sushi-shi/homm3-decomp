@@ -550,6 +550,13 @@ void CChatWidget::Draw()
     textWidget::Draw();
 }
 
+// NOTE (2026-08-27): OnKeyPress/OnKillFocus banked 100.0000 at the
+// delink generation where the carcass DrawHeroAdvancedOption claim
+// paired against this TU's undefined mangled symbol; the generation
+// after the TurnOff*/TurnChat* claims landed, the pairing reverted to
+// the flat name and both sit at 99.89/99.87 (max accepted downward,
+// hist keeps the peak). They return to exact when
+// DrawHeroAdvancedOption is compiled for real.
 // The shared name-commit helper both CEnterNameEdit overrides expand. DC
 // keeps it out of line (dc 0x149238, 88 B); retail has no row for it - the
 // two overrides carry its whole body - so the definition is `inline`.
@@ -697,14 +704,14 @@ void TSingleSelectionWindow::SetupAdvancedOptions()
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:3126
-DC_ONLY(0x136bf4, 0x2A0)
+VA(0x005819a0, 0x171)  // anchor-callee OnNewHostMsg + ctor call it no-arg back-to-back with its DC neighbor below (adjacent rows = the DC adjacency), pure GetWidget/send_message body, dc 0x136bf4
 void TSingleSelectionWindow::TurnOffScenarioOptions()
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:3166
-DC_ONLY(0x136e94, 0x368)
+VA(0x00581b20, 0x253)  // anchor-callee adjacent pair with 0x5819a0 (DC-adjacent TurnOff pair); adds the SetFocus clear, dc 0x136e94
 void TSingleSelectionWindow::TurnOffAdvancedOptions()
 {
     // @stub
@@ -1794,12 +1801,50 @@ void TSingleSelectionWindow::OnPingResponseMsg(CNetMsg* pNetMsg, unsigned char i
 
 #if 0  // @carcass
 
+#endif  // @carcass
+
+// Walk both header lists and re-request every row whose received flag
+// is still clear; reports whether anything is outstanding.
 // E:\gamedcs\singleselectionwindow.cpp:6689
-VA(0x005895C0, 0x14F)  // anchor-callee HandleNetMsg's RS_REQ_HEADER_CONFIRM arm gates its confirm reply on this; owns the 'missing header %d' log line, dc 0x140588
+VA(0x005895C0, 0x14F)  // anchor-callee HandleNetMsg's RS_REQ_HEADER_CONFIRM arm gates its confirm reply on this; owns the 'Missing Header [%d]' log line, dc 0x140588
 unsigned char TSingleSelectionWindow::CheckMissingHeaders(unsigned long dpidHost)
 {
-    // @stub
+    unsigned char missing = 0;
+    unsigned int i;
+    for (i = 0;
+         i < (HeadersAFirst == 0
+                  ? 0
+                  : static_cast<unsigned int>(HeadersALast
+                                              - HeadersAFirst));
+         ++i) {
+        if (HeadersAFirst[i].received == 0) {
+            CMapHeaderRequestMsg msg(0, i);
+            TransmitRemoteDataDPID(&msg, dpidHost, false, true);
+            logFile.Log(DATA_COMPGEN(0x006838d8, missingHeaderLog,
+                            "Missing Header [%d]"),
+                        i);
+            missing = 1;
+        }
+    }
+    for (i = 0;
+         i < (TransferHeadersFirst == 0
+                  ? 0
+                  : static_cast<unsigned int>(TransferHeadersLast
+                                              - TransferHeadersFirst));
+         ++i) {
+        if (TransferHeadersFirst[i].received == 0) {
+            CMapHeaderRequestMsg msg(1, i);
+            TransmitRemoteDataDPID(&msg, dpidHost, false, true);
+            logFile.Log(DATA_COMPGEN(0x006838d8, missingHeaderLog,
+                            "Missing Header [%d]"),
+                        i);
+            missing = 1;
+        }
+    }
+    return missing;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:6723. The 6-byte DC body is the
 // VMU stub; retail's is the real one (owns the 'Random Maps' path).
@@ -2012,20 +2057,6 @@ unsigned char TSingleSelectionWindow::IsMultiPlayer()
 // E:\gamedcs\singleselectionwindow.cpp:7900
 DC_ONLY(0x142cc0, 0x17C)
 void TSingleSelectionWindow::UpdateNameLists()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:7935
-DC_ONLY(0x142e3c, 0x170)
-void TSingleSelectionWindow::TurnChatOn(unsigned char update)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:7964
-DC_ONLY(0x142fac, 0x11E)
-void TSingleSelectionWindow::TurnChatOff(unsigned char update)
 {
     // @stub
 }
@@ -2310,12 +2341,41 @@ void TSingleSelectionWindow::OnSetAsHostMsg(CNetMsg* pNetMsg)
     // @stub
 }
 
+#endif  // @carcass
+
+// Host handover: reset the transfer/list state, drop the scenario and
+// advanced panes, force chat on, and announce the new host.
 // E:\gamedcs\singleselectionwindow.cpp:7417
 VA(0x0058B510, 0x10D)  // anchor-callee RS_NEW_HOST arm's single call, size 0.85x dc 0x13e, dc 0x141d5c
 void TSingleSelectionWindow::OnNewHostMsg(CNetMsg* pNetMsg)
 {
-    // @stub
+    receivedMaps = 0;
+    field_186c = 1;
+    if (field_1865)
+        GetWidget(179)->send_message(widget::WIDGET_CLEAR_STATUS,
+                                     widget::WIDGET_ACTIVE
+                                         | widget::WIDGET_DRAWN);
+    currentIndex = 0;
+    currentMap = 0;
+    sortDirection = 1;
+    chatEdit = 0;
+    TurnOffScenarioOptions();
+    TurnOffAdvancedOptions();
+    TurnChatOn(1);
+    char text[0x100];
+    CNetPlayerHandlerPlayer* p =
+        m_players.GetPlayer(static_cast<CNewHostMsg*>(pNetMsg)->m_dpidNewHost);
+    if (p)
+        sprintf(text, gpGeneralText->GetText(529), p->sName);
+    else
+        sprintf(text, gpGeneralText->GetText(529),
+                DATA_COMPGEN(0x00683958, unknownHostName, "????????????"));
+    SystemMsg(&chatMan, text);
+    DrawWindow(0, 0xffff0001, 0xffff);
+    Update();
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:7591
 VA(0x0058BA40, 0x175)  // anchor-callee RS_UPDATE_PLAYER_POS arm's single call, size 0.41x dc 0x38c, dc 0x1421a8
@@ -2323,6 +2383,21 @@ unsigned char TSingleSelectionWindow::OnUpdatePlayerPosMsg(CNetMsg* pNetMsg)
 {
     // @stub
 }
+
+// E:\gamedcs\singleselectionwindow.cpp:7935
+VA(0x0058ca80, 0x162)  // anchor-callee OnNewHostMsg calls it (1) on host handover; adjacent pair with TurnChatOff mirrors the DC adjacency, dc 0x142e3c
+void TSingleSelectionWindow::TurnChatOn(unsigned char update)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7964
+VA(0x0058cbf0, 0x152)  // anchor-callee adjacent pair with TurnChatOn 0x58ca80 (DC-adjacent), dc 0x142fac
+void TSingleSelectionWindow::TurnChatOff(unsigned char update)
+{
+    // @stub
+}
+
 
 #endif  // @carcass
 
