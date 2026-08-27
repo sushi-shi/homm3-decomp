@@ -3201,10 +3201,14 @@ unsigned char consider_hiring(long player_id, hero* candidate)
 // Reattributed from the DC ctor (0x361c8): a VC6 ctor returns this in eax
 // and this 7-byte body never writes eax; its sole caller is the shared
 // scalar deleting dtor 0x433080. The ctor is retail-inlined (/Ob2).
+// auto_inline(off): retail's ??_G (0x433080) CALLS this dtor; without the
+// pin our synthesized ??_G inlines the 7-byte body (vtable store) instead.
+#pragma auto_inline(off)
 VA(0x00432500, 0x7)  // anchor-callee (0x433080 ??_G) + no this-return, dc 0x361f4
 type_artifact_effect::~type_artifact_effect()
 {
 }
+#pragma auto_inline(on)
 
 // E:\gamedcs\ai_player.cpp:5065
 VA(0x00432510, 0x24)  // artifact get_value cluster order-map + get_AI_value, dc 0x36258
@@ -3571,6 +3575,12 @@ long type_spell_artifact::get_value(const hero* owner, unsigned char equipped,
     long value = caster.get_raw_spell_value(spell);
     return value;
 }
+
+// Every artifact-effect vtable's slot 0 points here (/OPT:ICF folded all
+// concrete classes' ??_G onto the base's: each reduces to `call
+// ??1type_artifact_effect / conditional delete` once the trivial derived
+// dtors inline to nothing).
+VA_COMPGEN(0x00433080, 0x21, SCALAR_DELETING_DTOR, type_artifact_effect)
 
 VA(0x004330b0, 0x73)  // vtable-slot 0x63b758 (provisional type), retail-only
 long type_shooter_bonus_artifact::get_value(const hero* owner, unsigned char, unsigned char) const
