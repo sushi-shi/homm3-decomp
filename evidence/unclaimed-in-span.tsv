@@ -2,8 +2,8 @@
 # Functions inside an EXISTING unit's inferred link-order
 # span that no match_baseline row claims.
 unit	functions	bytes
-singleselectionwindow	109	71571
-ai_player	28	14560
+singleselectionwindow	70	43035
+ai_player	21	11673
 swapmgr	15	11006
 multiplayerwindow	22	6842
 game	5	6158
