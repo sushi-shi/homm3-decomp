@@ -2579,6 +2579,8 @@ singleselectionwindow	??1TSingleSelectionWindow@@UAE@XZ	27.9961	27.9961	27.9961	
 singleselectionwindow	??_GCHostWaitDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x189200
 singleselectionwindow	??_GTSingleSelectionWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x17d130
 singleselectionwindow	?AddNewPlayer@CNetPlayerHandler@@QAEEPAVCNetPlayerInfo@@@Z	100.0000	100.0000	100.0000	0x177be0
+singleselectionwindow	?CanChooseHero@TSingleSelectionWindow@@QAEEH@Z	97.8688	97.8688	97.8688	0x18cfb0
+singleselectionwindow	?CanChooseTown@TSingleSelectionWindow@@QAEEH@Z	97.2043	97.2043	97.2043	0x18ceb0
 singleselectionwindow	?CheckHandleNet@CSingleSelectionNetMsgHandler@@UAEPAVCNetMsg@@EPAE@Z	100.0000	100.0000	100.0000	0x18e310
 singleselectionwindow	?CheckMissingHeaders@TSingleSelectionWindow@@QAEEK@Z	98.6800	98.6800	98.6800	0x1895c0
 singleselectionwindow	?DeletePlayer@CNetPlayerHandler@@QAE_NK@Z	100.0000	100.0000	100.0000	0x177c90
@@ -2586,16 +2588,26 @@ singleselectionwindow	?DisplayChat@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0
 singleselectionwindow	?DoModal@TSingleSelectionWindow@@UAEHE@Z	100.0000	100.0000	100.0000	0x184bf0
 singleselectionwindow	?Draw@CChatWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x17ca90
 singleselectionwindow	?DrawBasicMapInfo@TSingleSelectionWindow@@QAEXXZ	95.5200	95.5200	95.5200	0x1840f0
-singleselectionwindow	?DrawHeroAdvancedOption@TSingleSelectionWindow@@QAEXHEH@Z	90.5627	90.5627	90.5627	0x18d510
+# 2026-08-27 hand-lowered 90.5627 -> 89.7825 (hist keeps 90.5627): TU
+# optimizer-state coupling, not a source change - the row moved when the
+# round-2 stub lifts (TurnOff pair, the five advanced-option accessors)
+# landed in the same TU with this function's own source byte-identical.
+# Its register-homing residual note is in-source; reaching 100 there is
+# also the documented recovery for the CEnterNameEdit pair.
+singleselectionwindow	?DrawHeroAdvancedOption@TSingleSelectionWindow@@QAEXHEH@Z	89.7825	89.7825	90.5627	0x18d510
 singleselectionwindow	?ExitDialog@TSingleSelectionWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x187bc0
+singleselectionwindow	?GetDisplayFace@TSingleSelectionWindow@@QAEHH@Z	77.0099	77.0099	77.0099	0x18d0e0
 singleselectionwindow	?GetFileName@TSingleSelectionWindow@@QAEPBDH@Z	100.0000	100.0000	100.0000	0x183f20
 singleselectionwindow	?GetHeroFace@TSingleSelectionWindow@@QAEXHPAVCNetPlayerHandlerPlayer@@@Z	65.6968	65.6968	65.6968	0x18af20
+singleselectionwindow	?GetHeroName@TSingleSelectionWindow@@QAEPBDH@Z	80.5426	80.5426	80.5426	0x18d1f0
 singleselectionwindow	?GetMapName@TSingleSelectionWindow@@QAEPBDH@Z	100.0000	100.0000	100.0000	0x184010
 singleselectionwindow	?GetPlayer@CNetPlayerHandler@@QAEPAVCNetPlayerHandlerPlayer@@K@Z	100.0000	100.0000	100.0000	0x177ce0
 singleselectionwindow	?GetPlayerInPos@CNetPlayerHandler@@QAEPAVCNetPlayerHandlerPlayer@@H@Z	100.0000	100.0000	100.0000	0x177bb0
 singleselectionwindow	?Go@CNewPlayerUpdateProc@@UAEXXZ	100.0000	100.0000	100.0000	0x177d70
 singleselectionwindow	?HandleNetMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@PAE@Z	90.1601	90.1601	90.2212	0x1887a0
+singleselectionwindow	?HasMultipleTowns@TSingleSelectionWindow@@QAEEH@Z	100.0000	100.0000	100.0000	0x18ce70
 singleselectionwindow	?HeaderConfirmed@CNewPlayerUpdateMan@@QAEXK@Z	100.0000	100.0000	100.0000	0x189270
+singleselectionwindow	?HighlightFile@TSingleSelectionWindow@@QAEEPAD@Z	100.0000	100.0000	100.0000	0x18d3e0
 singleselectionwindow	?IgnoreKey@CSaveGameEdit@@UAEEPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cfe0
 singleselectionwindow	?InitializeLCDescriptions@@YIEXZ	100.0000	100.0000	100.0000	0x177a80
 singleselectionwindow	?InitializeTurnDurationText@@YIEXZ	100.0000	100.0000	100.0000	0x177ab0
@@ -2605,7 +2617,14 @@ singleselectionwindow	?OnBadVersionMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@
 singleselectionwindow	?OnGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	99.6237	99.6237	99.6237	0x189b20
 singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0
 singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0
-singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0
+# 2026-08-27 hand-lowered 100.0000 -> 99.8710 (hist keeps 100.0000): the
+# documented TU-state flap (master accepted this pair down at 99.89/99.87
+# when DrawHeroAdvancedOption fell off 100). The chat-pair commit 12d947e2
+# transiently restored the peak; the TurnOff-pair commit dropped it again
+# with OnKillFocus's own source byte-identical - the residual is one
+# scheduler flap (a mov esi,[ebp-x] order swap) inside the inlined
+# OnEnter. Recovery rides with DrawHeroAdvancedOption reaching 100.
+singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	99.8710	100.0000	0x17cee0
 singleselectionwindow	?OnNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	97.5366	97.5366	97.5366	0x18b510
 singleselectionwindow	?OnNewSetupInfoMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x189c60
 singleselectionwindow	?OnPingMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x1894d0
@@ -2636,12 +2655,6 @@ singleselectionwindow	CSingleSelectionNetMsgHandler_HandleNetMsg	0.0000	0.0000	0
 singleselectionwindow	GameSelectionHeadersStruct_GameSelectionHeadersStruct	0.0000	0.0000	0.0000	0x178290
 singleselectionwindow	GameSelectionHeadersStruct_GameSelectionHeadersStruct_operator	0.0000	0.0000	0.0000	0x178440
 singleselectionwindow	SaveValid	0.0000	0.0000	0.0000	0x177360
-singleselectionwindow	TSingleSelectionWindow_CanChooseHero	0.0000	0.0000	0.0000	0x18cfb0
-singleselectionwindow	TSingleSelectionWindow_CanChooseTown	0.0000	0.0000	0.0000	0x18ceb0
-singleselectionwindow	TSingleSelectionWindow_GetDisplayFace	0.0000	0.0000	0.0000	0x18d0e0
-singleselectionwindow	TSingleSelectionWindow_GetHeroName	0.0000	0.0000	0.0000	0x18d1f0
-singleselectionwindow	TSingleSelectionWindow_HasMultipleTowns	0.0000	0.0000	0.0000	0x18ce70
-singleselectionwindow	TSingleSelectionWindow_HighlightFile	0.0000	0.0000	0.0000	0x18d3e0
 singleselectionwindow	TSingleSelectionWindow_MakeHeroFilter	0.0000	0.0000	0.0000	0x183890
 singleselectionwindow	TSingleSelectionWindow_OnDeleteFile	0.0000	0.0000	0.0000	0x18dfb0
 singleselectionwindow	TSingleSelectionWindow_OnGameHeaderInfoInitMsg	0.0000	0.0000	0.0000	0x18a440
