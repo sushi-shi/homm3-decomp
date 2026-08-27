@@ -3898,6 +3898,11 @@ void advManager::DoEventPrison(hero* current_hero, NewmapCell* cell,
     gpGame->record_show_hero(prisoner, current_hero->owner, point, 0);
     prisoner->owner = current_hero->owner;
     gpGame->heroAvailability[heroId] = current_hero->owner;
+    // [2026-08-27] Residual (99.9540%): after the expanded bitset _Xran
+    // guard, retail reloads the two spilled values in home-slot order
+    // ([ebp-0xc] pointer, then [ebp-0x8] position); our CL reloads in use
+    // order. Tried and rejected: a named bitset<8>& (byte-flat), .set()
+    // (99.88, call form), the [i]=1 form below is the ceiling.
     gpGame->heroPoolMap[heroId][current_hero->owner] = 1;
     gpCurrentPlayer->heroes[gpCurrentPlayer->numHeroes] = heroId;
     ++gpCurrentPlayer->numHeroes;
@@ -7266,6 +7271,13 @@ int advManager::CombatMonsterEvent(hero* who, int monType, int* numMons,
 
     who->army.get_AI_value();
     who->get_primary_skill_total();
+    // [2026-08-27] Residual (99.2966%): one fld slot - retail colours the
+    // ratio home, the int->double divisor temp and the quotient into ONE
+    // reused qword ([ebp-0xc]) by reloading ratio BEFORE converting the
+    // divisor; our CL hoists the divisor conversion above the reload, so
+    // the two homes must coexist and the frame gains a slot. Tried and
+    // rejected (all byte-flat): `ratio = ratio / combat_value`, a
+    // block-scoped named double divisor, compound `/=`.
     double ratio = who->army.get_AI_value();
     ratio /= combat_value;
 
