@@ -1832,10 +1832,15 @@ void TSellCreatureWindow::SetWidgetDisabled(short id)
 // enable-dim state, the Artifact-Merchant and Freelancer's-Guild tab gates, and
 // the two-column loop over the sell and buy resources (icon, stock, exchange
 // ratio, highlight). The final repaint is bUpdate-gated.
-// Match plateau: 86.1010%; calls are 49/49 and branches are 38/38. The two
-// remaining branch differences are early jle cross-jumps (77 vs 76 blocks);
-// generated AST/flow/register searches found no source-backed improvement.
-// The why-reg volatile proposal is intentionally rejected as a compiler hack.
+// Match plateau: 86.6466 (was 86.1010 before the ctor reconstruction moved
+// the TU closure); calls are 49/49 and branches are 38/38. The two remaining
+// branch differences are early jle cross-jumps (77 vs 76 blocks): the
+// then-arm wordLeft ternary emits a third `mov esi, ecx` block where retail
+// cross-jumps into the else arm's `mov edx, [eax+0x288]` - the word values'
+// register assignment differs, so the shareable copy does not exist in our
+// else arm. Generated AST/flow/register searches found no source-backed
+// improvement; word decl-order swap measured byte-flat (2026-08-27). The
+// why-reg volatile proposal is intentionally rejected as a compiler hack.
 VA(0x005ea6e0, 0x862)  // ordermap clean run + arity ret 4, dc 0x188fa4
 void TTradeResourceWindow::Update(unsigned char bUpdate)
 {
