@@ -8424,6 +8424,7 @@ void advManager::SendHeroTownData(type_point point, hero* leftHero, armyGroup* l
         combatInitMsg.m_leftGold =
             gpGame->players[leftHero->owner].resources[GOLD];
     } else {
+        combatInitMsg.m_leftOwner = -1;
         combatInitMsg.m_leftGold = 0;
     }
     combatInitMsg.m_rightOwner = right_player;
