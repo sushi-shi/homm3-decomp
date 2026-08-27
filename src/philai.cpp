@@ -2306,10 +2306,11 @@ long get_value_of_well(const hero* current_hero, unsigned short move_cost)
     if (current_hero->flags & 1)
         return 0;
 
-    type_point target;
-    target.x = current_hero->pathTargetX;
-    target.y = current_hero->pathTargetY;
-    target.z = current_hero->pathTargetZ;
+    type_point path;
+    path.x = current_hero->pathTargetX;
+    path.y = current_hero->pathTargetY;
+    path.z = current_hero->pathTargetZ;
+    type_point target = path;
     if (target.is_valid() && move_cost > 300) {
         NewmapCell* cell = gpGame->worldMap.cell(target);
         if (cell->type != MAGIC_WELL && cell->type != MAGIC_SPRING)
@@ -2693,24 +2694,23 @@ int ValueOfTree(const hero* current_hero, NewmapCell* cell)
     ExtraInfoUnion* info =
         static_cast<ExtraInfoUnion*>(static_cast<void*>(cell));
     if (current_hero->TreeOfKnowledgeFlags
-            & (1 << (cell->extraInfo & 0x1f)))
+            & (1 << (static_cast<unsigned char>(cell->extraInfo) & 0x1f)))
         return 0;
 
+    int increment = hero::GetExperienceIncrement(current_hero->level);
     playerData* player = const_cast<hero*>(current_hero)->get_player();
-    int level_value = static_cast<int>(
-        static_cast<float>(
-            hero::GetExperienceIncrement(current_hero->level))
+    int level_value = static_cast<int>(static_cast<float>(increment)
         * current_hero->turnExperienceToRVRatio);
 
     if (cell->PlayerKnowsCell(current_hero->owner)) {
         switch (info->tree_info.price) {
         case 1:
-            if (player->resources[GOLD] < 2000)
+            if (gpCurrentPlayer->resources[GOLD] < 2000)
                 return 0;
             return static_cast<int>(level_value
                 - player->resourceValue[GOLD] * 2000.0);
         case 2:
-            if (player->resources[GEMS] < 10)
+            if (gpCurrentPlayer->resources[GEMS] < 10)
                 return 0;
             return static_cast<int>(level_value
                 - player->resourceValue[GEMS] * 10.0);
@@ -2772,13 +2772,16 @@ VA(0x0052b810, 0xe1)  // anchor: spring-full bit + pathTarget cell probe + value
 long get_value_of_spring(const hero* current_hero, const NewmapCell* cell,
                          unsigned short move_cost)
 {
-    if (!(cell->extraInfo >> 6 & 1))
+    const ExtraInfoUnion* info = static_cast<const ExtraInfoUnion*>(
+        static_cast<const void*>(cell));
+    if (!info->MagicSpringIsFull())
         return 0;
 
-    type_point target;
-    target.x = current_hero->pathTargetX;
-    target.y = current_hero->pathTargetY;
-    target.z = current_hero->pathTargetZ;
+    type_point path;
+    path.x = current_hero->pathTargetX;
+    path.y = current_hero->pathTargetY;
+    path.z = current_hero->pathTargetZ;
+    type_point target = path;
     if (target.is_valid() && move_cost > 300) {
         NewmapCell* destination = gpGame->worldMap.cell(target);
         if (destination->type != MAGIC_WELL
