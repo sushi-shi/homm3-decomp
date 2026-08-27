@@ -14,6 +14,7 @@
 #include "winfile.h"
 #include "netgame.h"
 #include "netplayer.h"
+#include "inputmgr.h"
 #include "kb.h"
 #include "kbwin.h"
 #include "soundmgr.h"
@@ -276,12 +277,7 @@ void CMPEdit::SetPrevEdit(CMPEdit* pPrevEdit)
     // @stub
 }
 
-// E:\gamedcs\multiplayerwindow.cpp:279
-DC_ONLY(0x1020c4, 0x98)
-int CMPEdit::OnKeyPress(message* msg)
-{
-    // @stub
-}
+// OnKeyPress promoted to a VA claim (retail-located block).
 
 // OnNextEdit promoted to a VA claim (retail-located block).
 
@@ -1156,6 +1152,33 @@ CMPEdit::CMPEdit(int x, int y, int w, int h, int textSize, const char* text,
 {
     nextEdit = 0;
     prevEdit = 0;
+}
+
+// Slot 15 first rejects input while this edit lacks focus. The Win32 HIWORD
+// spelling accounts for retail's sign-extend/logical-shift sequence around
+// GetKeyState: Shift+Tab and keypad Up select the next link, while plain Tab,
+// Enter and keypad Down select the previous link. Every other key reaches the
+// text-entry base editor directly.
+// E:\gamedcs\multiplayerwindow.cpp:279
+VA(0x005107d0, 0x73)  // dc 0x1020c4; focus/key dispatch + direct base fallback
+int CMPEdit::OnKeyPress(message* msg)
+{
+    if (!bHasFocus)
+        return 0;
+
+    if ((HIWORD(GetKeyState(VK_SHIFT)) && msg->codeX == KEYCODE_TAB)
+        || msg->codeX == KEYCODE_KP_8) {
+        OnNextEdit();
+        return 1;
+    }
+
+    if (msg->codeX == KEYCODE_TAB || msg->codeX == KEYCODE_ENTER
+        || msg->codeX == KEYCODE_KP_2) {
+        OnPrevEdit();
+        return 1;
+    }
+
+    return textEntryWidget::OnKeyPress(msg);
 }
 
 // Byte-exact navigation pair. Each method follows its adjacent edit only when
