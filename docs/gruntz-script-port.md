@@ -260,6 +260,18 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-27 — the multiplayer session-refresh handler is byte-exact.**
+  Retail `TMultiPlayerWindow::WindowHandler` at `0x50f940` polls sound, gates
+  session enumeration on the elapsed refresh timeout, tears down the old
+  session array, refreshes DirectPlay, updates the slider and window, then
+  delegates to `CHeroWindowEx::WindowHandler`. The 197-byte body inlines the
+  array teardown exactly. A named copy of the pre-call session timestamp is
+  the final source fact: VC6 keeps it in EDI across `GameTime::Get` and then
+  reuses that saved register for `pSessions`; direct member reads reload the
+  timestamp and produce a 200-byte body. The synchronized report reaches
+  **2511/3079 functions exact**, **92.90% fuzzy**, and **60.58% executable
+  coverage**.
+
 - **2026-08-27 — the Complete multiplayer deselect dispatcher is reconstructed
   at a bounded 98.1199%.** Retail `0x50f4e0` is the 1,112-byte
   `TMultiPlayerWindow::OnWidgetDeselect` switch over the main connection
