@@ -97,12 +97,7 @@ unsigned char TMultiPlayerWindow::OnModemHost()
     // @stub
 }
 
-// E:\gamedcs\multiplayerwindow.cpp:1495
-DC_ONLY(0x100f94, 0xC4)
-unsigned char TMultiPlayerWindow::OnDirectHost()
-{
-    // @stub
-}
+// OnDirectHost promoted to a VA claim (retail-located block).
 
 // E:\gamedcs\multiplayerwindow.cpp:1540
 DC_ONLY(0x101058, 0x15E)
@@ -421,6 +416,12 @@ inline bool CHeroSessions::GetSessionInfo(unsigned long index, char* sessName,
 DATA(0x0069880a) char gLoadedGameName[13];
 DATA(0x00698817) char gLocalPlayerName[21];
 DATA(0x006a6578) THelpText gMultiPlayerHelp[30];
+
+// Armed by all three retail host paths before they create a DirectPlay
+// session. No public symbol survives for the dword, so the name is ordinal.
+DATA(0x0069927c) int gUnnamed69927c;
+
+const long DPLAY_ERROR_USER_CANCEL = 0x88770118;
 
 // The sole retail read at 0x50fade promotes the DirectPlay session from the
 // mandatory migrate-host flag to migrate-host|keep-alive. No public symbol
@@ -1016,6 +1017,38 @@ unsigned char TMultiPlayerWindow::InitRemote(eNetGameType netGameType, const cha
     sessionRefreshTimeout = dpCaps.dwTimeout + 100;
     if (iMPNetProtocol == MP_TCP)
         sessionRefreshTimeout = 1000;
+    return 1;
+}
+
+// Byte-exact. The member InitRemote expands into the complete serial-port
+// setup, while retail fixes the host flags, cursor/dialog cleanup paths and
+// the DirectPlay user-cancel exception. DC supplies the signature and xrefs.
+// Complete emits this after absorbing OnModemHost into OnHost, so the retail
+// order differs from the older Dreamcast compiland.
+VA(0x0050fc50, 0x14F)  // anchor-protocol/callees/globals, dc 0x100f94
+unsigned char TMultiPlayerWindow::OnDirectHost()
+{
+    if (!InitRemote(MP_SERIAL, 0, 0)) {
+        NormalDialog(gpGeneralText->GetText(450), 1, -1, -1,
+                     -1, 0, -1, 0, -1, 0, -1, 0);
+        return 0;
+    }
+
+    gUnnamed69927c = 1;
+    gUnnamed6994e4 = 1;
+    ShowCursor(1);
+
+    if (!HostSession(gpGeneralText->GetText(451), 0)) {
+        ShowCursor(0);
+        if (pDPlay->GetLastError() != DPLAY_ERROR_USER_CANCEL)
+            NormalDialog(gpGeneralText->GetText(452), 1, -1, -1,
+                         -1, 0, -1, 0, -1, 0, -1, 0);
+        gpWindowManager->dialogReturn = DIALOG_RETURN_CANCEL;
+        RemoteCleanup();
+        return 0;
+    }
+
+    ShowCursor(0);
     return 1;
 }
 

@@ -423,6 +423,7 @@ public:
     unsigned char HostSession(const char* sessName, const char* password);
     unsigned char InitRemote(eNetGameType netGameType, const char* sExtra,
                              _DPCOMPORTADDRESS* comportInfo);
+    unsigned char OnDirectHost();
 };
 SIZE(TMultiPlayerWindow, 0x100);
 

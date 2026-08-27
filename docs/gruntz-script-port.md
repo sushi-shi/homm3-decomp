@@ -260,6 +260,20 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-27 — the direct-serial multiplayer host path is byte-exact.**
+  Retail `TMultiPlayerWindow::OnDirectHost` at `0x50fc50` expands the complete
+  `MP_SERIAL` initialization, arms the two host-state dwords, balances the
+  cursor around session creation, and treats DirectPlay's user-cancel result
+  separately from reportable failures before restoring the dialog result and
+  network state. Dreamcast CodeView supplies the member signature and its
+  distinctive `InitRemote`/`HostSession`/`GetLastError`/dialog xref set;
+  retail fixes the three general-text indices and complete 12-block CFG. This
+  cross-check also proves that Complete absorbed `OnModemHost` into `OnHost`
+  and emitted `OnDirectHost` earlier than the older Dreamcast compiland. The
+  resulting 335-byte VC6 body is exact. The synchronized report reaches
+  **2515/3081 functions exact**, **92.93% fuzzy**, and **60.62% executable
+  coverage**.
+
 - **2026-08-27 — the multiplayer session-join path is byte-exact.** Retail
   `TMultiPlayerWindow::JoinSession` at `0x50fa10` joins through the selected
   session's instance GUID, creates the local DirectPlay player with the
