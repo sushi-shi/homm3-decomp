@@ -52,7 +52,11 @@ struct GameSelectionHeadersStruct {
     // 0x304 + 0x1cc + 0xbc + 0x3d + 0x12d + 2 + 8 + 0x5a4 exactly.
     NewSMapHeader header;             // +0x000
     SGameSetupOptions setup;          // +0x304
-    char pad_4d0[0x58c - 0x4d0];
+    // The synthesized operator='s copy shapes split this band: a
+    // dword loop copies eight ints at +0x4d0, a byte loop the 0x9c
+    // band after them. Roles unexercised - ordinal placeholders.
+    int field_4d0[8];                 // +0x4d0
+    char pad_4f0[0x58c - 0x4f0];
     // The row's display title: the name getters return it for the
     // single-player list and the net-mode selected panel, and the name
     // comparator ranks it against the "autosave" prefix rule. Extent =
@@ -67,22 +71,21 @@ struct GameSelectionHeadersStruct {
     _FILETIME fileTime;               // +0x6f8
     SavedGameHeader saved;            // +0x700
 
-    // Expanded at the resize temps exactly as retail has it: member
-    // ctors stay calls, the body's fills and difficulty store inline.
-    GameSelectionHeadersStruct()
-    {
-        memset(title, 0, sizeof(title));
-        memset(description, 0, sizeof(description));
-        setup.difficulty = 1;
-    }
-    // The copy ctor and memberwise operator= (retail COMDATs 0x578440
-    // op=; SortMaps' erase move-loop calls it per element) stay
-    // DECLARED-ONLY so every call site keeps retail's out-of-line call
-    // (the declare-but-do-not-define lever).
+    // Defined out of class in the TU (plain, not inline-marked): /Ob2
+    // expands it at the transfer-opener resize temps exactly as retail
+    // does (member ctors stay calls, the fills and difficulty store
+    // inline) while OnGameHeaderInfoMsg's wire-message construction
+    // keeps retail's call to the 0x578e00 COMDAT.
+    GameSelectionHeadersStruct();
+    // The copy ctor stays DECLARED-ONLY so its call sites keep
+    // retail's out-of-line call (the declare-but-do-not-define
+    // lever). operator= is IMPLICIT: the synthesized memberwise body
+    // is retail's 0x578440 COMDAT, and /Ob2 then reproduces retail's
+    // per-site split - called in SortMaps'/OnDeleteFile's move loops
+    // and the SelectionHeaders mirror, expanded for
+    // OnGameHeaderInfoMsg's source-list row.
     GameSelectionHeadersStruct(const GameSelectionHeadersStruct& that);
     ~GameSelectionHeadersStruct();
-    GameSelectionHeadersStruct& operator=(
-        const GameSelectionHeadersStruct& that);
 };
 SIZE(GameSelectionHeadersStruct, 0xCA4);
 
@@ -359,6 +362,9 @@ public:
     // Retail-only (no DC row): refreshes the filter panel's widget
     // statuses from field_18A0; Update calls it under inFilterOptions.
     void UpdateFilterWidgets();
+    // Retail 0x584c40 (no DC row proven): the post-join roster
+    // re-seat OnNewPlayerMsg's non-advanced arm runs. Ordinal name.
+    void WindowFn_00584c40();
     // The advanced-options row accessors (DC names; retail
     // 0x58ce70/0x58ceb0/0x58cfb0/0x58d0e0/0x58d1f0). DC returns
     // THeroID from GetDisplayFace; spelled int so the public closure
@@ -387,7 +393,8 @@ public:
     // Provisional spelling: the SoD-only 0x43b init arm's handler; DC has
     // a single OnGameHeaderInfoInitMsg.
     void OnGameHeaderInfoInitMsgEx(CNetMsg* pNetMsg);
-    void OnGameHeaderInfoMsg(CNetMsg* pNetMsg);
+    // Returns 0 when the row number is out of range (retail sets al).
+    unsigned char OnGameHeaderInfoMsg(CNetMsg* pNetMsg);
     void OnMapFileNameMsg(CNetMsg* pNetMsg);
     void OnNewHostMsg(CNetMsg* pNetMsg);
     unsigned char OnUpdatePlayerPosMsg(CNetMsg* pNetMsg);
@@ -412,7 +419,11 @@ public:
     // Retail 0x58e700 (past the stale span end) hands the whole incoming
     // record to the seat assigner; DC's SetNewPlayerSlot takes the dpid
     // alone. Provisional widening.
-    unsigned char SetNewPlayerSlot(CNetPlayerHandlerPlayer* pPlayer);
+    // Retail 0x58e700 (past the stale span end) takes the incoming
+    // CNetPlayerInfo record itself: OnNewPlayerMsg hands it
+    // &pMsg->m_playerInfo and OnUpdatePlayerPosMsg a full seat record
+    // (derived-to-base). DC's takes the dpid alone.
+    unsigned char SetNewPlayerSlot(CNetPlayerInfo* pPlayer);
     // DC takes TTownType; spelled int here so the public closure needs no
     // town.h - retype when the body lands.
     void UpdateTown(int pos, int town, unsigned char inPopup);
