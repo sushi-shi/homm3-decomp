@@ -148,6 +148,11 @@ public:
     type_AI_creature_purchaser(long player, TCreatureType type,
                                short* amount, unsigned char is_free);
     void set(town* current_town);
+    // DC 0x31ffc (ai_player.cpp:2524): the single-candidate overload.
+    // No retail out-of-line body (set(town) ends 0x42d418, next row
+    // 0x42d420); every caller inlines its clear + one push_back.
+    void set(TCreatureType new_type, short* new_amount,
+             unsigned char new_is_free);
     void do_purchase(armyGroup* new_army, short new_morale,
                      armyGroup* new_adjacent_army, long* new_funds,
                      unsigned char allow_trade,
@@ -162,6 +167,9 @@ public:
 SIZE(type_AI_creature_purchaser, 0x3c);
 
 void AI_consolidate_army(armyGroup* current_army);
+// 0x42d8e0 - do_swap's tail call (0x42c485), also reached from
+// buy_creatures (0x42bbae), split_armies (0x42dd47/5b) and 0x431d9d.
+void AI_arrange_army(armyGroup* current_army);
 
 // Dreamcast records this exact 12-byte sort key; retail calculate_reserve
 // copies it three dwords at a time and compares the value at +4.
@@ -222,6 +230,7 @@ public:
     void reset_magus_hut_value();                 // 0x429ab0
     void calculate_reserve();                     // 0x429ad0
     long get_total_value(long basic_value, int* cost);  // 0x42a150
+    void buy_creatures(hero* current_hero, town* current_town);  // 0x42ba60
     void buy_mage_guild(hero* current_hero, town* current_town); // 0x42beb0
     unsigned char purchase_buildings(unsigned char* prohibited_creatures);
     unsigned char hire_heroes();

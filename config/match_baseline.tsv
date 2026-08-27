@@ -232,6 +232,7 @@ ai_player	?AI_swap_artifacts@@YIXPAVhero@@0@Z	100.0000	100.0000	100.0000	0x33fe0
 ai_player	?add_artifact@@YIEPAVhero@@Utype_artifact@@PAJ0J2J@Z	100.0000	100.0000	100.0000	0x33e20
 ai_player	?add_creatures@type_AI_creature_swapper@@IAEXW4TCreatureType@@FF@Z	100.0000	100.0000	100.0000	0x2c130
 ai_player	?build_markets@type_AI_player@@QAE_NPAH@Z	100.0000	100.0000	100.0000	0x2ab40
+ai_player	?buy_creatures@type_AI_player@@QAEXPAVhero@@PAVtown@@@Z	74.2046	74.2046	74.2046	0x2ba60
 ai_player	?buy_mage_guild@type_AI_player@@QAEXPAVhero@@PAVtown@@@Z	100.0000	100.0000	100.0000	0x2beb0
 ai_player	?calculate_demand@type_AI_player@@QAEXXZ	97.4340	97.4340	97.4340	0x28740
 ai_player	?calculate_reserve@type_AI_player@@QAEXXZ	96.4566	96.4566	96.4566	0x29ad0
@@ -244,6 +245,7 @@ ai_player	?do_best_purchase@type_AI_creature_purchaser@@IAEJ_N@Z	97.2740	97.2740
 ai_player	?do_best_swap@type_AI_creature_swapper@@IAEJ_N@Z	100.0000	100.0000	100.0000	0x2c280
 ai_player	?do_purchase@type_AI_creature_purchaser@@QAEXPAVarmyGroup@@F0PAJEE@Z	97.5333	97.5333	97.5333	0x2d690
 ai_player	?do_resource_trade@type_AI_player@@QAEXPAH@Z	100.0000	100.0000	100.0000	0x2ac20
+ai_player	?do_swap@type_AI_creature_swapper@@QAEXPAVhero@@PAVarmyGroup@@0E@Z	100.0000	100.0000	100.0000	0x2c3b0
 ai_player	?dump_extra_creature@type_AI_creature_swapper@@IAEXXZ	100.0000	100.0000	100.0000	0x2c5b0
 ai_player	?end_turn@type_AI_player@@QAEXXZ	89.5263	89.5263	89.5263	0x28dd0
 ai_player	?fill_prohibited_array@@YIXPAVplayerData@@PAE@Z	99.9035	99.9035	99.9035	0x29d50
@@ -300,7 +302,6 @@ ai_player	consider_hiring	0.0000	0.0000	0.0000	0x31800
 ai_player	find_all_destinations	0.0000	0.0000	0.0000	0x2edd0
 ai_player	mark_destinations	0.0000	0.0000	0.0000	0x2f570
 ai_player	net_value_of_location	0.0000	0.0000	0.0000	0x2f980
-ai_player	type_AI_player_buy_creatures	0.0000	0.0000	0.0000	0x2ba60
 ai_player	type_AI_player_can_trade_resources	0.0000	0.0000	0.0000	0x2a580
 ai_player	type_AI_player_purchase_building	0.0000	0.0000	0.0000	0x2ae00
 ai_tactical	??0army@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x37a00
