@@ -238,6 +238,17 @@ public:
         TOWN_CHEAT_BUILD_EXTRA = 0x37
     };
 
+    // The guild-count ladder SetupThievesGuild maps onto category
+    // counts (2/4/6/8/9 rows for 1/2/3/4/5+ guilds), and the player
+    // column bound its skip-disabled scan runs to. Names INVENTED -
+    // the values are the retail compares.
+    enum EThievesGuildCounts {
+        GUILD_COUNT_2 = 2,
+        GUILD_COUNT_3 = 3,
+        GUILD_COUNT_4 = 4,
+        GUILD_PLAYER_COLUMNS = 8
+    };
+
     // The DC field list's nested enum (LF_ENUM 0x71A1, 85 enumerators),
     // transcribed whole: every id townManager::SetCommandAndText
     // dispatches on is named here, and the values are the widget ids
@@ -398,10 +409,12 @@ public:
     // owners[player] == GetLocalPlayerGamePos(), so only the local player's own
     // column opens the detail view.
     int owners[8];
-    // +0x80: attested only as the destructor's first teardown - deleted
-    // through slot 0 before the widget list, so it is an owned object
-    // with a virtual destructor and nothing else about it is proven.
-    widget* field_80;
+    // +0x80: SetupThievesGuild's last act builds it -
+    // `new TResourceDisplay(this, 1)` stored here and Update(0,0)'d -
+    // and the destructor deletes it through slot 0 before the widget
+    // list. Retyped from widget* 2026-08-27 (rename-free; the virtual
+    // teardown is unchanged).
+    TResourceDisplay* field_80;
 
     TThievesGuildWindow(int num_guilds);
     virtual ~TThievesGuildWindow();
