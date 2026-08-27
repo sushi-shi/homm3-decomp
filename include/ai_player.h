@@ -244,6 +244,9 @@ public:
     void buy_creatures(hero* current_hero, town* current_town);  // 0x42ba60
     void buy_mage_guild(hero* current_hero, town* current_town); // 0x42beb0
     unsigned char purchase_buildings(unsigned char* prohibited_creatures);
+    // DC LF_ONEMETHOD protected; retail 0x42ae00 (the per-town pricing
+    // pass purchase_buildings drives).
+    unsigned char purchase_building(unsigned char* prohibited_creatures);
     unsigned char hire_heroes();
     bool check_trade_supply(const int* cost, long number, int* supply,
                             std::vector<long>& trade_qty);

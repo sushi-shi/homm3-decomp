@@ -663,6 +663,11 @@ enum EVictoryConditionType {
     // enumerators count against the include-set declarator wall for
     // every consumer of this header.
     VICTORY_CONDITION_TOTAL_CREATURES = 1,
+#endif
+#if defined(HOMM3_VLC_CHECKS_VIEW) || defined(HOMM3_AI_PLAYER_OBJ_DECLS)
+    // ai_player.obj joins for purchase_building's two inlined helpers:
+    // value_of_castle_upgrade and value_of_hall both price the 5,000,000
+    // upgrade-town victory bonus behind `cmp Type,3`.
     VICTORY_CONDITION_UPGRADE_TOWN = 3,
 #endif
 #if defined(HOMM3_VLC_CHECKS_VIEW) || defined(HOMM3_TOWN_OBJ_DECLS) \
@@ -871,11 +876,15 @@ public:
     int TownX;
     int TownY;
     int TownZ;
-#ifdef HOMM3_VLC_CHECKS_VIEW
+#if defined(HOMM3_VLC_CHECKS_VIEW) || defined(HOMM3_AI_PLAYER_OBJ_DECLS)
     // CheckForUpgradedTown (0x5f1d40) dispatches both of its switches
     // with `movsx` BYTE reads at +0x24/+0x25 - retail kept the DC pair
     // HallLevel/CastleLevel char-sized where it widened the neighbours.
-    // Gated like the pad_03 slice above.
+    // Gated like the pad_03 slice above. ai_player.obj joins for the
+    // same two purchase_building helpers as the enumerator above:
+    // value_of_hall reads HallLevel + HALL_TOWN_ID as its victory bar,
+    // value_of_castle_upgrade indexes bitNumber[CASTLE_FORT_ID +
+    // CastleLevel].
     signed char HallLevel;
     signed char CastleLevel;
     char pad_26[2];

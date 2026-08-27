@@ -108,6 +108,13 @@ inline SpellID spell_id_from_int(int value)
     return spell;
 }
 
+inline type_building_id building_id_from_int(int value)
+{
+    type_building_id building;
+    memcpy(&building, &value, sizeof building);
+    return building;
+}
+
 const unsigned int CTA_SHOOTER = 0x4;
 
 // struct.h's original three-coordinate constructor was header-inline.  This
@@ -1171,44 +1178,8 @@ int value_of_castle_upgrade(town* current_town, int* extra_cost)
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:1045
-DC_ONLY(0x2f998, 0x24)
-long value_of_silo(town* current_town, playerData* player)
-{
-    // @stub
-}
-
 // value_of_horde (dc 0x2f9bc) promoted to VA(0x0042b790) in RVA order above.
 // value_of_horde_upgrade (dc 0x2fa88) promoted to VA(0x0042b800) above.
-
-// E:\gamedcs\ai_player.cpp:1109
-DC_ONLY(0x2fb2c, 0x280)
-long value_of_hall(town* current_town, type_building_id building)
-{
-    // @stub
-}
-
-// Retail 0x00433130 is an artifact virtual; this DC body remains unlocated.
-// E:\gamedcs\ai_player.cpp:1147
-DC_ONLY(0x2fdac, 0x29c)
-long value_of_building(town* current_town, type_building_id building, unsigned char* prohibited_creatures, int* extra_cost)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:1279
-DC_ONLY(0x30048, 0x106)
-__int64 get_requirements(const town* current_town, type_building_id building)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:1313
-DC_ONLY(0x30150, 0x74)
-void get_full_cost(const town* current_town, int* result, __int64 requirements)
-{
-    // @stub
-}
 
 #endif  // @carcass
 
@@ -1239,17 +1210,6 @@ long type_AI_player::get_total_value(long basic_value, int* cost)
             total_cost + cost[resource] * resource_value[resource]);
     return basic_value * 1000 / total_cost;
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\ai_player.cpp:1367
-DC_ONLY(0x302e0, 0x54)
-void mark_values(long* full_value, long total_value, __int64 requirements)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_player.cpp:1383
 VA(0x0042a2b0, 0x1BF)  // retail link order + arity, dc 0x30334
@@ -1492,23 +1452,289 @@ void type_AI_player::do_resource_trade(int* supply)
     calculate_demand();
 }
 
-#if 0  // @carcass
+// Forward prototypes: the value helpers keep retail bodies at
+// 0x42b520..0x42b8b0, after purchase_building in RVA order; the two
+// philai externs follow the events.cpp local-prototype pattern.
+long value_of_dwelling(town* current_town, short dwelling,
+                       unsigned char* prohibited, int* extra_cost);
+long value_of_dwelling_upgrade(town* current_town, short dwelling,
+                               int* extra_cost);
+int value_of_castle_upgrade(town* current_town, int* extra_cost);
+long value_of_horde(town* current_town, type_building_id building,
+                    unsigned char* prohibited, int* extra_cost);
+long value_of_horde_upgrade(town* current_town, type_building_id building,
+                            unsigned char* prohibited, int* extra_cost);
+long value_of_hall(town* current_town, type_building_id building);
+int AI_resource_cost(const playerData* player, const int* resources);
+int CanBuy(const town* currTown, int buildingId);
 
-// E:\gamedcs\ai_player.cpp:1620
-DC_ONLY(0x30a70, 0x2FA)
-void type_AI_player::do_resource_trade(int* supply)
+// E:\gamedcs\ai_player.cpp:1045
+// Single-call-site static: /Ob2 folds it into value_of_building below,
+// which is itself folded into purchase_building - no retail body.
+DC_ONLY(0x2f998, 0x24)
+static long value_of_silo(town* current_town, playerData* player)
 {
-    // @stub
+    return 7 * AI_resource_cost(player, current_town->get_silo_income());
+}
+
+// E:\gamedcs\ai_player.cpp:1147
+// Prices one candidate building for the town, seeding extra_cost with the
+// creature costs the dwelling/horde helpers accumulate. -1 refuses
+// illegal, built, and Grail slots and every threatened growth building.
+// The faction switch keeps retail's source order (Stronghold's arm sits
+// between Tower's and Necropolis'). Single call site - no retail body.
+DC_ONLY(0x2fdac, 0x29c)
+static long value_of_building(town* current_town, type_building_id building,
+                              unsigned char* prohibited_creatures,
+                              int* extra_cost)
+{
+    playerData* player = &gpGame->players[current_town->owner];
+    switch (building) {
+    case CASTLE_CITADEL_ID:
+    case CASTLE_CASTLE_ID:
+        return value_of_castle_upgrade(current_town, extra_cost);
+    case HALL_VILLAGE_ID:
+    case HALL_TOWN_ID:
+    case HALL_CITY_ID:
+    case HALL_CAPITOL_ID:
+        return value_of_hall(current_town, building);
+    case MARKETPLACE_SILO_ID:
+        if (current_town->threatening_heroes)
+            return -1;
+        return value_of_silo(current_town, player);
+    case HORDE_ID:
+    case HORDE_2_ID:
+        if (current_town->threatening_heroes)
+            return -1;
+        return value_of_horde(current_town, building, prohibited_creatures,
+                              extra_cost);
+    case HORDE_UPG_ID:
+    case HORDE_2_UPG_ID:
+        if (current_town->threatening_heroes)
+            return -1;
+        return value_of_horde_upgrade(current_town, building,
+                                      prohibited_creatures, extra_cost);
+    case DWELLING_0_ID:
+    case DWELLING_1_ID:
+    case DWELLING_2_ID:
+    case DWELLING_3_ID:
+    case DWELLING_4_ID:
+    case DWELLING_5_ID:
+    case DWELLING_6_ID:
+        if (current_town->threatening_heroes)
+            return -1;
+        return value_of_dwelling(current_town, building - DWELLING_0_ID,
+                                 prohibited_creatures, extra_cost);
+    case DWELLING_0_UPG_ID:
+    case DWELLING_1_UPG_ID:
+    case DWELLING_2_UPG_ID:
+    case DWELLING_3_UPG_ID:
+    case DWELLING_4_UPG_ID:
+    case DWELLING_5_UPG_ID:
+    case DWELLING_6_UPG_ID:
+        if (current_town->threatening_heroes)
+            return -1;
+        return value_of_dwelling_upgrade(current_town,
+                                         building - DWELLING_0_ID,
+                                         extra_cost);
+    default:
+        switch (current_town->type) {
+        case TOWN_RAMPART:
+            if (building == EXTRA_1_ID) {
+                if (gpGame->field_1f63e == 7)
+                    return static_cast<long>(
+                        player->resources[GOLD]
+                        * player->resourceValue[GOLD] / 10.0);
+            } else if (building == SPECIAL_BUILDING_ID) {
+                return 2 * player->averageResourceValue;
+            }
+            break;
+        case TOWN_TOWER:
+            if (building == EXTRA_0_ID)
+                return 100;
+            break;
+        case TOWN_STRONGHOLD:
+            if (building == SPECIAL_BUILDING_ID
+                && current_town->threatening_heroes
+                && current_town->garrisonHeroId >= 0)
+                return 5000;
+            break;
+        case TOWN_NECROPOLIS:
+            if (building == EXTRA_0_ID) {
+                long value = 0;
+                for (int i = 0; i < player->numHeroes; ++i) {
+                    if (gpGame->GetHero(player->heroes[i])->heroClass
+                        == eClassNecromancer)
+                        value += 1000;
+                }
+                return value;
+            } else if (building == SPECIAL_BUILDING_ID) {
+                return 10;
+            }
+            break;
+        case TOWN_FORTRESS:
+            if ((building == EXTRA_0_ID || building == EXTRA_1_ID)
+                && current_town->threatening_heroes)
+                return const_cast<armyGroup*>(
+                           &static_cast<const town*>(current_town)
+                                ->get_army())
+                           ->get_AI_value() / 10;
+            break;
+        }
+        return 0;
+    }
+}
+
+// E:\gamedcs\ai_player.cpp:1279
+// Chases the requirement chain: starting from the building's own bit,
+// every unmet requirement pulls its faction row from gHierarchyMask,
+// drops what the town already built or the chain already holds, and
+// rescans from zero. Returns the chain, or 0 when a link is not legal
+// here. Single call site - no retail body.
+DC_ONLY(0x30048, 0x106)
+static __int64 get_requirements(const town* current_town,
+                                type_building_id building)
+{
+    __int64 requirements = bitNumber[building];
+    __int64 seen = 0;
+    int k = 0;
+    while (k < MAX_BUILDING_TYPE) {
+        if (requirements & bitNumber[k]) {
+            if (!current_town->is_legal_building(building_id_from_int(k)))
+                return 0;
+            seen |= bitNumber[k];
+            requirements |= gHierarchyMask[current_town->type][k];
+            requirements &= ~current_town->active;
+            requirements &= ~seen;
+            k = 0;
+        } else {
+            ++k;
+        }
+    }
+    return seen;
+}
+
+// E:\gamedcs\ai_player.cpp:1313
+// Single call site - no retail body.
+DC_ONLY(0x30150, 0x74)
+static void get_full_cost(const town* current_town, int* result,
+                          __int64 requirements)
+{
+    for (int k = 0; k < MAX_BUILDING_TYPE; ++k) {
+        if (requirements & bitNumber[k]) {
+            int* costs = current_town->get_build_cost_array(
+                building_id_from_int(k));
+            for (int i = 0; i < 7; ++i)
+                result[i] += costs[i];
+        }
+    }
+}
+
+// E:\gamedcs\ai_player.cpp:1367
+// Single call site - no retail body.
+DC_ONLY(0x302e0, 0x54)
+static void mark_values(long* full_value, long total_value,
+                        __int64 requirements)
+{
+    for (unsigned int k = 0; k < MAX_BUILDING_TYPE; ++k) {
+        if (requirements & bitNumber[k])
+            full_value[k] += total_value;
+    }
 }
 
 // E:\gamedcs\ai_player.cpp:1686
+// Prices every candidate building in every town: value_of_building seeds
+// basic_value/extra_costs per building, get_requirements resolves the
+// build chain, get_full_cost adds the chain's resource bill, and
+// get_total_value's affordability-scaled score is spread over the chain
+// by mark_values. The best buildable-this-turn candidate across all
+// towns is bought after a trade pass, gated by CanBuy for the
+// hall/marketplace band and by reserved funds everywhere else.
 VA(0x0042ae00, 0x718)  // retail callee set + arity, dc 0x30d6c
-unsigned char type_AI_player::purchase_building(unsigned char* prohibited_creatures)
+unsigned char type_AI_player::purchase_building(
+    unsigned char* prohibited_creatures)
 {
-    // @stub
-}
+    int extra_costs[MAX_BUILDING_TYPE][7];
+    long full_value[MAX_BUILDING_TYPE];
+    long basic_value[MAX_BUILDING_TYPE];
+    long best_value = 0;
+    town* best_town = 0;
+    int best_building = MAX_BUILDING_TYPE;
+    __int64 requirements;
+    playerData* player = &gpGame->players[team];
 
-#endif  // @carcass
+    for (short town_index = 0; town_index < player->numTowns;
+         ++town_index) {
+        town* current_town = gpGame->GetTown(player->townIds[town_index]);
+        __int64 build_mask = current_town->get_buildable_mask();
+        if (gpGame->towns[current_town->id].field_02)
+            continue;
+
+        memset(extra_costs, 0, sizeof(extra_costs));
+        int building;
+        for (building = 0; building < MAX_BUILDING_TYPE; ++building) {
+            if (!current_town->is_legal_building(
+                    building_id_from_int(building))
+                || (current_town->active & bitNumber[building])
+                || building == HOLY_GRAIL_ID) {
+                basic_value[building] = -1;
+                continue;
+            }
+            basic_value[building] = value_of_building(
+                current_town, building_id_from_int(building),
+                prohibited_creatures, extra_costs[building]);
+        }
+
+        memset(full_value, 0, sizeof(full_value));
+        for (building = 0; building < MAX_BUILDING_TYPE; ++building) {
+            if (basic_value[building] <= 0)
+                continue;
+            requirements = get_requirements(
+                current_town, building_id_from_int(building));
+            if (requirements == 0)
+                continue;
+            get_full_cost(current_town, extra_costs[building],
+                          requirements);
+            long total_value = get_total_value(basic_value[building],
+                                               extra_costs[building]);
+            if (total_value < 0)
+                continue;
+            mark_values(full_value, total_value, requirements);
+        }
+
+        for (building = 0; building < MAX_BUILDING_TYPE; ++building) {
+            if ((build_mask & bitNumber[building])
+                && full_value[building] > best_value) {
+                best_value = full_value[building];
+                best_town = current_town;
+                best_building = building;
+            }
+        }
+    }
+
+    if (!best_town)
+        return 0;
+
+    int cost[7];
+    best_town->get_build_cost(building_id_from_int(best_building), cost);
+    trade_resources(cost, 1);
+    if (gpGame->towns[best_town->id].field_02)
+        return 0;
+    if (best_building >= HALL_VILLAGE_ID
+        && best_building <= MARKETPLACE_SILO_ID) {
+        if (!CanBuy(best_town, best_building))
+            return 0;
+    } else {
+        for (short i = 0; i < 7; ++i) {
+            if (reserved_funds[i] + cost[i] > player->resources[i])
+                return 0;
+        }
+    }
+    if (!best_town->buy_building(building_id_from_int(best_building)))
+        return 0;
+    calculate_demand();
+    return 1;
+}
 
 // Retail relocated the value_of_* building-value helpers here, directly after
 // their purchase_building/value_of_building caller region (DC source order puts
@@ -1553,6 +1779,38 @@ long value_of_dwelling_upgrade(town* current_town, short dwelling, int* extra_co
     return (upgraded_traits.AI_value - base_traits.AI_value) * amount;
 }
 
+// E:\gamedcs\ai_player.cpp:1006
+// Prices the Citadel/Castle slot: the 5,000,000 upgrade-town victory
+// bonus when this is the victory town and the required castle tier is
+// still missing, plus - from day 5 - one growth-week of every producing
+// dwelling (costs into extra_cost, AI value into the result).
+VA(0x0042b670, 0x111)  // anchor-callee (purchase_building citadel/castle arm), dc 0x2f8a0
+int value_of_castle_upgrade(town* current_town, int* extra_cost)
+{
+    long value = 0;
+    if (gpGame->mapHeader.victoryCondition.Type
+            == VICTORY_CONDITION_UPGRADE_TOWN
+        && gpGame->mapHeader.victoryCondition.TownX == current_town->mapX
+        && gpGame->mapHeader.victoryCondition.TownY == current_town->mapY
+        && gpGame->mapHeader.victoryCondition.TownZ == current_town->mapZ
+        && !(bitNumber[CASTLE_FORT_ID
+                       + gpGame->mapHeader.victoryCondition.CastleLevel]
+             & current_town->active))
+        value = 5000000;
+    if (gpGame->field_1f63e >= 5) {
+        for (short dwelling = 0; dwelling < 14; ++dwelling) {
+            if (current_town->get_growth_rate(dwelling) > 0) {
+                int creature = gTownDwellingCreatures[
+                    current_town->type * 14 + dwelling];
+                for (int i = 0; i < 7; ++i)
+                    extra_cost[i] += akCreatureTypeTraits[creature].cost[i];
+                value += akCreatureTypeTraits[creature].AI_value;
+            }
+        }
+    }
+    return value;
+}
+
 // E:\gamedcs\ai_player.cpp:1056
 VA(0x0042b790, 0x62)  // get_horde_effect + ret8/p4; pairs with horde_upgrade, dc 0x2f9bc
 long value_of_horde(town* current_town, type_building_id building, unsigned char* prohibited, int* extra_cost)
@@ -1583,6 +1841,44 @@ long value_of_horde_upgrade(town* current_town, type_building_id building, unsig
     for (int i = 0; i < 7; i++)
         extra_cost[i] += horde->bonus * traits.cost[i];
     return traits.AI_value * horde->bonus;
+}
+
+// E:\gamedcs\ai_player.cpp:1109
+// Prices a hall tier as a week of its gold-income delta at the player's
+// gold valuation, on top of the 5,000,000 upgrade-town victory bonus
+// when this is the victory town and the tier reaches the required hall
+// level. Threatened towns refuse outright.
+VA(0x0042b8b0, 0x130)  // anchor-callee (purchase_building hall arm), dc 0x2fb2c
+long value_of_hall(town* current_town, type_building_id building)
+{
+    long value = 0;
+    if (current_town->threatening_heroes > 0)
+        return -1;
+    if (gpGame->mapHeader.victoryCondition.Type
+            == VICTORY_CONDITION_UPGRADE_TOWN
+        && gpGame->mapHeader.victoryCondition.TownX == current_town->mapX
+        && gpGame->mapHeader.victoryCondition.TownY == current_town->mapY
+        && gpGame->mapHeader.victoryCondition.TownZ == current_town->mapZ
+        && building >= gpGame->mapHeader.victoryCondition.HallLevel
+                           + HALL_TOWN_ID)
+        value = 5000000;
+    playerData* player = &gpGame->players[current_town->owner];
+    switch (building) {
+    case HALL_VILLAGE_ID:
+        return static_cast<long>(
+            player->resourceValue[GOLD] * 3500.0 + value);
+    case HALL_TOWN_ID:
+        return static_cast<long>(
+            player->resourceValue[GOLD] * 3500.0 + value);
+    case HALL_CITY_ID:
+        return static_cast<long>(
+            player->resourceValue[GOLD] * 7000.0 + value);
+    case HALL_CAPITOL_ID:
+        return static_cast<long>(
+            player->resourceValue[GOLD] * 14000.0 + value);
+    default:
+        return value;
+    }
 }
 
 // E:\gamedcs\game.h:1370
