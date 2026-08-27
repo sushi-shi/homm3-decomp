@@ -2378,7 +2378,7 @@ seerhut	?DoProposalDialog@type_defeat_hero_quest@@UAEXPAVhero@@@Z	100.0000	100.0
 seerhut	?DoProposalDialog@type_experience_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x16d4b0
 seerhut	?DoProposalDialog@type_monster_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x16ec00
 seerhut	?DoProposalDialog@type_resource_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x171840
-seerhut	?DoProposalDialog@type_skill_quest@@UAEXPAVhero@@@Z	56.5135	56.5135	56.5135	0x16dad0
+seerhut	?DoProposalDialog@type_skill_quest@@UAEXPAVhero@@@Z	57.7297	57.7297	57.7297	0x16dad0
 seerhut	?DoSeerEvent@TSeerHut@@QAEXPAVhero@@_N@Z	39.0772	39.0772	39.0772	0x173670
 seerhut	?GetAIValue@type_artifact_quest@@UAEHH@Z	100.0000	100.0000	100.0000	0x16f5a0
 seerhut	?GetAIValue@type_creature_quest@@UAEHH@Z	100.0000	100.0000	100.0000	0x170480
