@@ -384,7 +384,26 @@ public:
 class CBadVersionMsg : public CNetMsg {
 public:
     char m_version[20];   // +0x14
-    char m_errText[1];    // +0x28, format string (extent unmodeled)
+    // Extent 80 byte-proven by OnGameHeaderInfoInitMsg's reply: the
+    // strncpy bound 0x50 AND the inlined ctor's 0x78 size dword agree.
+    char m_errText[80];   // +0x28, format string
+
+    CBadVersionMsg()
+        : CNetMsg(RS_BAD_VERSION, sizeof(CBadVersionMsg))
+    {
+    }
+};
+
+// The 1024-path long form of the header-transfer opener: count, the
+// net-mode byte and the sender's 20-char version. The receiver
+// distinguishes the two forms by the size dword (0x30 long vs the
+// version-less EX short form) and falls back to "1.0".
+class CGameHeaderInfoInitLongMsg : public CNetMsg {
+public:
+    unsigned long m_numMaps;   // +0x14
+    unsigned char m_netGame;   // +0x18
+    char pad_19[3];
+    char m_version[20];        // +0x1c
 };
 
 // The full-roster broadcast (DC ctor takes both player arrays); the
@@ -420,11 +439,11 @@ public:
     {
         m_flag = flag;
         m_number = number;
-        strncpy(m_fileName, hdr->fileName, 0x3c);
+        strncpy(m_fileName, hdr->setup.filename, 0x3c);
         m_fileTimeLow = hdr->fileTime.dwLowDateTime;
         m_fileTimeHigh = hdr->fileTime.dwHighDateTime;
         for (int i = 0; i < 8; ++i)
-            m_townTypes[i] = hdr->slotAlignments[i];
+            m_townTypes[i] = hdr->setup.alignment[i];
     }
 };
 

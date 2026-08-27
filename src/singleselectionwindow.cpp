@@ -600,18 +600,22 @@ void CNewPlayerUpdateProc::HandleRequests()
 
 #endif  // @carcass
 
-#if 0  // @carcass
-
 // The compiler-generated GameSelectionHeadersStruct member family the
-// vector machinery calls (declared-only in the struct; see the gated
-// header block). 0x578760 (the third pre-ctor row) is the
+// vector machinery calls. 0x578760 (the third pre-ctor row) is the
 // ~CNewMapHeaderInfoMsg-shaped dtor destroying an embedded header at
-// this+0x20 - unclaimed until that msg class is modeled.
+// this+0x20 - unclaimed until that msg class is modeled. The empty
+// user body below IS the definition: the compgen teardown (saved's
+// string/SCampaign members, header's CMapHeaderData members) is the
+// whole 0x1AB retail COMDAT (0x58f080's per-element loop calls exactly
+// this row), and having a definition is what lets the resize temps in
+// OnGameHeaderInfoInitMsg expand their destruction into retail's
+// direct ??1SavedGameHeader/??1NewSMapHeader pair.
 VA(0x00578290, 0x1AB)  // anchor-callee _Destroy 0x58f080 + ~vector 0x58ea70 loop over it per element; EH-framed teardown of the +0x700 SavedGameHeader-shaped tail, dc-none (compiler-generated)
 GameSelectionHeadersStruct::~GameSelectionHeadersStruct()
 {
-    // @stub
 }
+
+#if 0  // @carcass
 
 VA(0x00578440, 0x312)  // anchor-callee SortMaps' erase move-loop calls it per element (thiscall, one stack arg); memberwise head copies the version/isPlayable/difficulty/numPlayers run, dc-none (compiler-generated)
 GameSelectionHeadersStruct& GameSelectionHeadersStruct::operator=(
@@ -1118,7 +1122,7 @@ const char* TSingleSelectionWindow::GetFileName(int which)
     if (which == -1)
         return gpGame->mapHeader.mapName.c_str();
     if (m_flag64 == 0 && m_flag65 == 0)
-        return SelectionHeaders[which].fileName;
+        return SelectionHeaders[which].setup.filename;
     const char* name;
     if (GetMapCount() != 0
             && GetMapCount() > static_cast<unsigned int>(which))
@@ -1149,7 +1153,7 @@ const char* TSingleSelectionWindow::GetMapName(int which)
             name = gpGeneralText->GetText(509);
         return name;
     }
-    return SelectionHeaders[which].fileName;
+    return SelectionHeaders[which].setup.filename;
 }
 
 #if 0  // @carcass
@@ -1341,7 +1345,7 @@ int TSingleSelectionWindow::Update()
                         GameSelectionHeadersStruct* hdr =
                             &SelectionHeaders[currentIndex + i];
                         int frame;
-                        switch (hdr->version) {
+                        switch (hdr->header.version) {
                         case MAP_FORMAT_RESTORATION_OF_ERATHIA:
                             frame = 0;
                             break;
@@ -1349,13 +1353,13 @@ int TSingleSelectionWindow::Update()
                             frame = 1;
                             break;
                         default:
-                            frame = hdr->version == MAP_FORMAT_SHADOW_OF_DEATH
+                            frame = hdr->header.version == MAP_FORMAT_SHADOW_OF_DEATH
                                 ? 2 : -1;
                             break;
                         }
                         if ((m_flag65 != 0 || m_flag64 != 0)
-                                && hdr->isCampaign != 0) {
-                            switch (hdr->campaignIndex) {
+                                && hdr->saved.campaignGame != 0) {
+                            switch (hdr->saved.campaign.currentCampaign) {
                             case CAMPAIGN_ROE_0:
                             case CAMPAIGN_ROE_1:
                             case CAMPAIGN_ROE_2:
@@ -1388,16 +1392,16 @@ int TSingleSelectionWindow::Update()
                         sprintf(text,
                                 DATA_COMPGEN(0x00679dc8, mapPlayersFormat,
                                              "%d/%d"),
-                                hdr->numPlayers, hdr->maxNumHumanPlayers);
+                                hdr->header.numPlayers, hdr->header.maxNumHumanPlayers);
                         gUnnamed698a08->DrawBoundedString(
                             text, gpWindowManager->screenBitmap,
                             26, y - 1, 30, 25, color, 5, -1);
                         const char* sizeText;
-                        if (hdr->Size == MAP_DIMENSION_SMALL)
+                        if (hdr->header.Size == MAP_DIMENSION_SMALL)
                             sizeText = gpGeneralText->GetText(512);
-                        else if (hdr->Size == MAP_DIMENSION_MEDIUM)
+                        else if (hdr->header.Size == MAP_DIMENSION_MEDIUM)
                             sizeText = gpGeneralText->GetText(513);
-                        else if (hdr->Size == MAP_DIMENSION_LARGE)
+                        else if (hdr->header.Size == MAP_DIMENSION_LARGE)
                             sizeText = gpGeneralText->GetText(514);
                         else
                             sizeText = gpGeneralText->GetText(515);
@@ -1413,10 +1417,10 @@ int TSingleSelectionWindow::Update()
                             GetMapName(currentIndex + i),
                             gpWindowManager->screenBitmap,
                             125, y - 1, 184, 25, color, 5, -1);
-                        if (hdr->victoryConditionType >= 0
-                                && hdr->victoryConditionType <= 11)
+                        if (hdr->header.victoryCondition.Type >= 0
+                                && hdr->header.victoryCondition.Type <= 11)
                             victoryConditionIcons->Draw(0,
-                                hdr->victoryConditionType, 0, 0,
+                                hdr->header.victoryCondition.Type, 0, 0,
                                 victoryConditionIcons->Width,
                                 victoryConditionIcons->Height,
                                 gpWindowManager->screenBitmap, 309, y, 0, 1);
@@ -1425,9 +1429,9 @@ int TSingleSelectionWindow::Update()
                                 victoryConditionIcons->Width,
                                 victoryConditionIcons->Height,
                                 gpWindowManager->screenBitmap, 309, y, 0, 1);
-                        if (hdr->lossConditionType >= 0)
+                        if (hdr->header.lossCondition.Type >= 0)
                             lossConditionIcons->Draw(0,
-                                hdr->lossConditionType, 0, 0,
+                                hdr->header.lossCondition.Type, 0, 0,
                                 lossConditionIcons->Width,
                                 lossConditionIcons->Height,
                                 gpWindowManager->screenBitmap, 342, y, 0, 1);
@@ -1576,7 +1580,7 @@ void TSingleSelectionWindow::SortMaps(int how, unsigned char sendSortMsg,
     }
     SelectionHeaders.clear();
     for (unsigned int i = 0; i < src->size(); ++i) {
-        if (mapSizeFilter == 0 || mapSizeFilter == (*src)[i].Size) {
+        if (mapSizeFilter == 0 || mapSizeFilter == (*src)[i].header.Size) {
             // Retail calls the insert COMDAT (0x58ebe0) while keeping
             // end() and the element address inline - the pin imposes
             // the refusal and the named locals hoist what stays inline
@@ -1709,7 +1713,7 @@ void TSingleSelectionWindow::SetFilter(int size)
     std::vector<GameSelectionHeadersStruct>& dst = SelectionHeaders;
     dst.clear();
     for (unsigned int i = 0; i < src->size(); ++i) {
-        if (mapSizeFilter == 0 || mapSizeFilter == (*src)[i].Size) {
+        if (mapSizeFilter == 0 || mapSizeFilter == (*src)[i].header.Size) {
             std::vector<GameSelectionHeadersStruct>::iterator w =
                 dst.end();
             const GameSelectionHeadersStruct& v = (*src)[i];
@@ -2083,7 +2087,7 @@ commit:
                     gpGame->setup.alignment[i] = p->townIndex;
                 else if (p->dpid != 0)
                     gpGame->setup.alignment[i] =
-                        pCurrentHeader->slotAlignments[i];
+                        pCurrentHeader->setup.alignment[i];
                 else if (gpGame->setup.playerPos[i] >= 0)
                     gpGame->setup.alignment[i] = pick_alignment(
                         gpGame->mapHeader.playerSlotAttributes[i]
@@ -2586,7 +2590,7 @@ unsigned char TSingleSelectionWindow::CheckMissingHeaders(unsigned long dpidHost
     unsigned char missing = 0;
     unsigned int i;
     for (i = 0; i < HeadersA.size(); ++i) {
-        if (HeadersA[i].received == 0) {
+        if (HeadersA[i].setup.fileInitialized == 0) {
             CMapHeaderRequestMsg msg(0, i);
             TransmitRemoteDataDPID(&msg, dpidHost, false, true);
             logFile.Log(DATA_COMPGEN(0x006838d8, missingHeaderLog,
@@ -2596,7 +2600,7 @@ unsigned char TSingleSelectionWindow::CheckMissingHeaders(unsigned long dpidHost
         }
     }
     for (i = 0; i < TransferHeaders.size(); ++i) {
-        if (TransferHeaders[i].received == 0) {
+        if (TransferHeaders[i].setup.fileInitialized == 0) {
             CMapHeaderRequestMsg msg(1, i);
             TransmitRemoteDataDPID(&msg, dpidHost, false, true);
             logFile.Log(DATA_COMPGEN(0x006838d8, missingHeaderLog,
@@ -2639,13 +2643,6 @@ unsigned char TSingleSelectionWindow::OnHeaderConfirmMsg(CNetMsg* pNetMsg)
 // E:\gamedcs\singleselectionwindow.cpp:6709
 DC_ONLY(0x14060c, 0x56)
 unsigned char TSingleSelectionWindow::OnReqHeaderConfirmMsg(CNetMsg* pNetMsg)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:6861
-DC_ONLY(0x1409d4, 0xA0)
-unsigned char TSingleSelectionWindow::IsVersionCompatible(const char* otherVersion)
 {
     // @stub
 }
@@ -2968,6 +2965,47 @@ unsigned char TSingleSelectionWindow::OnNewSetupInfoMsg(CNetMsg* pNetMsg)
     return 1;
 }
 
+// LOCATED round 2: DC IsVersionCompatible (dc 0x1409d4) is retail
+// 0x589d30 - the version-compatibility matrix both transfer-opener
+// arms and OnNewPlayerMsg gate on. Anything older than "1.0" or an
+// exact (case-blind) match passes; otherwise the {1.4, 3.2, 4.0} and
+// {1.3, 3.1} families are each mutually compatible. _strcmpi stays a
+// call, the case-exact compares are the strcmp intrinsic.
+// E:\gamedcs\singleselectionwindow.cpp:6861
+VA(0x00589D30, 0x265)  // anchor-callee called (version) by OnNewPlayerMsg 0x589fa0 + both header-info-init arms - the DC edges; owns the 1.0/1.3/1.4/3.1/3.2/4.0 version pool, size 2.4x dc 0xA0, dc 0x1409d4
+unsigned char TSingleSelectionWindow::IsVersionCompatible(const char* otherVersion)
+{
+    if (_strcmpi(gameVersion,
+                 DATA_COMPGEN(0x00683900, defaultRemoteVersion, "1.0"))
+            < 0)
+        return 1;
+    if (_strcmpi(gameVersion, otherVersion) == 0)
+        return 1;
+    if (strcmp(gameVersion,
+               DATA_COMPGEN(0x006838fc, versionComplete14, "1.4")) == 0
+            || strcmp(gameVersion,
+                      DATA_COMPGEN(0x006838f8, versionComplete32, "3.2"))
+                == 0
+            || strcmp(gameVersion,
+                      DATA_COMPGEN(0x006838f4, versionComplete40, "4.0"))
+                == 0) {
+        if (strcmp(otherVersion, "1.4") == 0
+                || strcmp(otherVersion, "3.2") == 0
+                || strcmp(otherVersion, "4.0") == 0)
+            return 1;
+    }
+    if (strcmp(gameVersion,
+               DATA_COMPGEN(0x006838f0, versionClassic13, "1.3")) == 0
+            || strcmp(gameVersion,
+                      DATA_COMPGEN(0x006838ec, versionClassic31, "3.1"))
+                == 0) {
+        if (strcmp(otherVersion, "1.3") == 0
+                || strcmp(otherVersion, "3.1") == 0)
+            return 1;
+    }
+    return 0;
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:6884
@@ -2977,20 +3015,78 @@ unsigned char TSingleSelectionWindow::OnNewPlayerMsg(CNetMsg* pNetMsg)
     // @stub
 }
 
+#endif  // @carcass
+
+// The transfer opener: version-gate the sender (the short EX form
+// carries none - "1.0" stands in), build the never-sent CBadVersionMsg
+// reply and show the mismatch dialog on failure; otherwise arm the
+// transfer state and resize both header lists to the announced count
+// (the temps expand this ctor with the member ctors called - the
+// composition proof), then clear every row's received flag.
+// Residual (81.3): three inline-boundary/cosmetic classes - (1) the
+// clears: retail expands HeadersA's erase but keeps its degenerate
+// copy(Last,Last,First) as a CALL to the 787 B copy COMDAT 0x58f160,
+// and spells SelectionHeaders' teardown through the erase COMDAT
+// 0x58ef20 (a hoist+pin spelling of the second one measured 77.69 -
+// worse - the iterators' formation drifted); (2) size(): retail calls
+// the 0x58eab0 COMDAT five times where we fold two of the compares
+// inline; (3) the reply arm zero-registers: our CNetMsg ctor homes 0
+// in edi (callee-saved, reused for NormalDialog's zero pushes) where
+// retail uses eax and pushes immediates.
 // E:\gamedcs\singleselectionwindow.cpp:7017
 VA(0x0058A440, 0x33E)  // anchor-callee RS_GAME_HEADER_INFO_INIT (1024) arm calls it and cancels on failure, size 1.65x dc 0x1f8, dc 0x140f24
 unsigned char TSingleSelectionWindow::OnGameHeaderInfoInitMsg(CNetMsg* pNetMsg)
 {
-    // @stub
+    CGameHeaderInfoInitLongMsg* pMsg =
+        static_cast<CGameHeaderInfoInitLongMsg*>(pNetMsg);
+    const char* version =
+        DATA_COMPGEN(0x00683900, defaultRemoteVersion, "1.0");
+    if (pMsg->size == 0x30)
+        version = pMsg->m_version;
+    if (!IsVersionCompatible(version)) {
+        CBadVersionMsg reply;
+        strncpy(reply.m_version, version, 20);
+        strncpy(reply.m_errText, gpGeneralText->GetText(666), 80);
+        RemoteCleanup();
+        sprintf(gText, reply.m_errText, gameVersion, reply.m_version);
+        NormalDialog(gText, 1, 20000, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return 0;
+    }
+    receivedMaps = 0;
+    receivingMaps = 1;
+    m_flag64 = pMsg->m_netGame;
+    int count = pMsg->m_numMaps;
+    HeadersA.clear();
+    HeadersA.resize(count);
+    SelectionHeaders.clear();
+    SelectionHeaders.resize(count);
+    for (int i = 0; i < count; ++i)
+        HeadersA[i].setup.fileInitialized = 0;
+    return 1;
 }
 
-// The SoD-only 0x43b init arm's handler (provisional Ex spelling; DC has
-// one OnGameHeaderInfoInitMsg and no 1083 rung). retail-only
+// The SoD-only 1083 arm's handler (provisional Ex spelling; DC has
+// one OnGameHeaderInfoInitMsg and no 1083 rung). retail-only. The
+// version-less twin of the 1024 opener working on TransferHeaders -
+// no gate, no net-mode store, same clear/resize pair and the same
+// received-flag sweep. Shares the 1024 body's residual classes.
 VA(0x0058A780, 0x2BA)  // anchor-callee the 1083 arm's single call
 void TSingleSelectionWindow::OnGameHeaderInfoInitMsgEx(CNetMsg* pNetMsg)
 {
-    // @stub
+    CGameHeaderInfoInitMsg* pMsg =
+        static_cast<CGameHeaderInfoInitMsg*>(pNetMsg);
+    receivedMaps = 0;
+    receivingMaps = 1;
+    int count = pMsg->m_numMaps;
+    TransferHeaders.clear();
+    TransferHeaders.resize(count);
+    SelectionHeaders.clear();
+    SelectionHeaders.resize(count);
+    for (int i = 0; i < count; ++i)
+        TransferHeaders[i].setup.fileInitialized = 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:7077
 VA(0x0058AA40, 0x3AE)  // anchor-callee RS_GAME_HEADER_INFO arm; owns the "rec'd game header %d" log line, size 1.96x dc 0x1e0, dc 0x14111c
@@ -3498,7 +3594,7 @@ unsigned char TSingleSelectionWindow::HighlightFile(char* filename)
     int len = strlen(filename);
     int i = 0;
     while (static_cast<unsigned int>(i) < GetMapCount()) {
-        if (_strnicmp(filename, SelectionHeaders[i].fileName, len)
+        if (_strnicmp(filename, SelectionHeaders[i].setup.filename, len)
                 == 0) {
             currentIndex = i;
             currentMap = i;
@@ -3813,7 +3909,7 @@ void TSingleSelectionWindow::OnDeleteFile()
         return;
     if (!m_flag64 && !m_flag65)
         return;
-    char* fileName = SelectionHeaders[currentMap].fileName;
+    char* fileName = SelectionHeaders[currentMap].setup.filename;
     sprintf(gText, gpGeneralText->GetText(688), fileName);
     NormalDialog(gText, 2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT)
@@ -3823,7 +3919,7 @@ void TSingleSelectionWindow::OnDeleteFile()
     _chdir("..");
     int i = 0;
     while (static_cast<unsigned int>(i) < HeadersA.size()) {
-        if (strcmp(HeadersA[i].fileName, fileName) == 0)
+        if (strcmp(HeadersA[i].setup.filename, fileName) == 0)
             break;
         ++i;
     }
