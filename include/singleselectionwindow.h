@@ -110,14 +110,24 @@ public:
     textEntryWidget* saveGameEdit;     // 0x380
     char pad_384[0x388 - 0x384];
     CNewPlayerUpdateMan* pNewPlayerUpdateMan;  // 0x388
-    char pad_38c[0x1054 - 0x38c];
+    char pad_38c[0x1044 - 0x38c];
+    // A second header vector at +0x1040 (same 0xCA4 stride, proven by
+    // CNewPlayerUpdateProc::Go's size() expansion feeding the header-count
+    // init msg). Role naming provisional: the transfer path counts THIS
+    // one, the scroll arms walk the +0x1050 one.
+    GameSelectionHeadersStruct* TransferHeadersFirst;   // 0x1044
+    GameSelectionHeadersStruct* TransferHeadersLast;    // 0x1048
+    char pad_104c[0x1054 - 0x104c];
     // DC SelectionHeaders (a plain pointer there) is a std::vector here:
     // allocator/_First/_Last/_End at +0x1050..+0x105c. Only the two
     // pointers the size() expansions read are named; the element stride
     // 0xCA4 is fixed by the size() magic-multiply in every consumer.
     GameSelectionHeadersStruct* SelectionHeadersFirst;  // 0x1054
     GameSelectionHeadersStruct* SelectionHeadersLast;   // 0x1058
-    char pad_105c[0x1064 - 0x105c];
+    char pad_105c[0x1060 - 0x105c];
+    // The header row of the currently selected map/save;
+    // UpdatePlayerPositions reads the per-slot alignments through it.
+    GameSelectionHeadersStruct* pCurrentHeader;         // 0x1060
     CNetPlayerHandler m_players;       // 0x1064
     char pad_1834[0x1838 - 0x1834];
     // The DC chatSlider/fileSlider/durationSlider/nameSlider run (dc
