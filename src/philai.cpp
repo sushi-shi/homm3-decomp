@@ -42,6 +42,9 @@ long type_AI_creature_swapper::get_swap_value(
 long AI_value_of_combat(const hero* attacking_hero, const hero* defending_hero,
     const armyGroup& defending_army, const town* defending_town,
     NewmapCell* cell);
+int CalcTerrainCost(const NewmapCell* cell, int dir, int points_left,
+    long iPathfinding, long end_road, long flying, long water_walking,
+    long native_terrain, unsigned char param_9);
 
 #if 0  // @carcass
 
@@ -1631,27 +1634,100 @@ long ValueOfResource(const hero* current_hero, NewmapCell* cell, playerData* pla
 // E:\gamedcs\philai.cpp:2931.  Exact cross-TU callee set {hero::get_number_in_backpack,
 // hero::get_player}; value_of_black_market (subset, single callee) ruled out by the
 // two-element exact match.
+#endif  // @carcass
+
 VA(0x0052a870, 0x4F)  // anchor-callee, dc 0x1123ac
 int ValueOfSeaChest(const hero* current_hero, NewmapCell* cell)
 {
-    // @stub
+    playerData* player = const_cast<hero*>(current_hero)->get_player();
+    if (const_cast<hero*>(current_hero)->get_number_in_backpack(1) < 64)
+        return static_cast<int>(player->turnValueOfAvgArtifact / 10.0f
+            + player->resourceValue[GOLD] * 1200.0);
+    return static_cast<int>(player->resourceValue[GOLD] * 1200.0);
 }
 
+#if 0  // @carcass -- philai body-evidence claims, retail RVA order (divergent from DC link order)
+
 // E:\gamedcs\philai.cpp:2964
+#endif  // @carcass
+
 VA(0x0052a8c0, 0x9a)  // anchor-callee, dc 0x112510
 int ValueOfScroll(const hero* current_hero, NewmapCell* cell)
 {
-    // @stub
+    int spell;
+    if (const_cast<hero*>(current_hero)->get_number_in_backpack(1) >= 64)
+        return 0;
+
+    int value = 10;
+    spell = cell->extraInfo;
+    if (cell->IsCustomized()) {
+        TreasureData* treasure = gpAdvManager->get_treasure_data(cell);
+        spell = cell->extraInfo & 0xff;
+        if (treasure->HasCustomGuardians
+                && treasure->Guardians.GetNumArmies() != 0)
+            value += AI_value_of_combat(current_hero, 0,
+                treasure->Guardians, 0, cell);
+    }
+
+    type_artifact artifact(ARTIFACT_SPELL_SCROLL);
+    artifact.extra = spell;
+    if (!current_hero->SpellIsAvailable(spell))
+        value += AI_get_value_of_artifact(artifact, current_hero, false, false);
+    return value;
 }
 
-// E:\gamedcs\philai.cpp:1833.  Value of upgrading a creature stack: unique cross-TU
-// edge hero::CreatureTypeCount (called by exactly this DC philai fn and this retail
-// row, twice - source and destination type counts).
-VA(0x0052aac0, 0xB9)  // anchor-callee, dc 0x1102e4
-int ComputeUpgradeValue(hero* current_hero, int iSourceType, int iDestType)
+#if 0  // @carcass -- philai body-evidence claims, retail RVA order (divergent from DC link order)
+
+#endif  // @carcass
+
+// E:\gamedcs\philai.cpp:3044.  Retail inlines the two DC callees
+// AI_VisitSirens and value_of_experience but keeps their source-level shape.
+VA(0x0052a960, 0x158)  // exact DC callee set + army copy, dc 0x1126d0
+int ValueOfSirens(const hero* current_hero)
 {
-    // @stub
+    armyGroup army = current_hero->army;
+    int old_value = army.get_AI_value();
+    int experience = AI_VisitSirens(current_hero, &army);
+    int value = (old_value - army.get_AI_value())
+        * (const_cast<hero*>(current_hero)->get_primary_skill_total() + 40)
+        / 40;
+    if (current_hero->turnExperienceToRVRatio == 0.0f)
+        return -value;
+    return static_cast<int>(value_of_experience(current_hero, &army)
+        * experience - value);
 }
+
+// E:\gamedcs\philai.cpp:3069.  The two fixed CreatureTypeCount queries are
+// the Cavalier/Champion pair used by the Stables event; the gpGame calendar
+// word and gStablesMovementBonus independently tie the body to ValueOfStables.
+VA(0x0052aac0, 0xB9)  // anchor-callee + data-xrefs, dc 0x11276c
+int ValueOfStables(const hero* current_hero, long* move_cost)
+{
+    int value = 0;
+    if (!(current_hero->flags & 2)) {
+        short movement_value = static_cast<short>(
+            (8 - gpGame->field_1f63e) * gStablesMovementBonus / 2);
+        if (*move_cost >= movement_value) {
+            *move_cost -= movement_value;
+            value = 50;
+        } else {
+            *move_cost = 0;
+            value = 10000;
+        }
+    }
+
+    int number = const_cast<hero*>(current_hero)->CreatureTypeCount(10);
+    if (number == 0)
+        return value;
+
+    int upgrade_value = (akCreatureTypeTraits[11].AI_value
+            - akCreatureTypeTraits[10].AI_value) * number;
+    if (const_cast<hero*>(current_hero)->CreatureTypeCount(11) != 0)
+        upgrade_value = static_cast<int>(upgrade_value * 0.5);
+    return upgrade_value + value;
+}
+
+#if 0  // @carcass -- philai body-evidence claims, retail RVA order (divergent from DC link order)
 
 // E:\gamedcs\philai.cpp:3131
 VA(0x0052ab80, 0x505)  // anchor-callee, dc 0x112914
@@ -1694,16 +1770,51 @@ long value_of_reinforcing(hero* current_hero, town* current_town, short move_cos
     return purchase_value + swap_value / 2;
 }
 
-#if 0  // @carcass -- philai body-evidence claims
-
 // E:\gamedcs\philai.cpp:4126
-VA(0x0052b9c0, 0x20c)  // anchor-callee, dc 0x1147ac
-void AI_examine_map()
-{
-    // @stub
-}
+DATA(0x00681860)
+static double gAIPathfindingMapFactor[3] = {1.0, 1.0, 1.0};
+DATA(0x00681878)
+static double gAIWaterMapFraction = 1.0;
 
-#endif  // @carcass
+VA(0x0052b9c0, 0x20c)  // anchor-callee, dc 0x1147ac
+void __cdecl AI_examine_map()
+{
+    type_point point;
+    point.z = 0;
+    long passable_cells = 0;
+    long water_cells = 0;
+    long extra_movement[3] = {0, 0, 0};
+
+    for (; point.z < gpGame->worldMap.HasTwoLevels + 1; point.z++) {
+        for (point.x = 0; point.x < gMapWidth; point.x++) {
+            for (point.y = 0; point.y < gMapHeight; point.y++) {
+                NewmapCell* cell = &gpGame->worldMap.cellData[
+                    (point.z * gpGame->worldMap.Size + point.y)
+                        * gpGame->worldMap.Size + point.x];
+                if ((cell->flags_00_11 & 0x40)
+                        && cell->GroundSet != eTerrainRock) {
+                    passable_cells++;
+                    if (cell->GroundSet == eTerrainWater) {
+                        water_cells++;
+                    } else {
+                        for (int skill = 0; skill < 3; skill++) {
+                            if (CalcTerrainCost(cell, 0, 9999, skill, 0,
+                                    -1, -1, -1, 0) <= 100)
+                                break;
+                            extra_movement[skill]++;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    gAIWaterMapFraction = static_cast<double>(water_cells)
+        / passable_cells;
+    for (int skill = 0; skill < 3; skill++)
+        gAIPathfindingMapFactor[skill]
+            = static_cast<double>(extra_movement[skill]) / passable_cells;
+}
 
 // E:\gamedcs\philai.cpp:4180.  Pick between two offered secondary
 // skills.  When the hero either knows both or knows neither, the two

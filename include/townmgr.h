@@ -842,6 +842,8 @@ public:
 
 extern townManager* gpTownManager;  // retail .bss 0x6994fc
 
+void DoShipyard(int type);
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\townmgr.cpp:5180, dc 0x17320c) void DoEventGarrison(hero* inHero, garrison* thisGarrison);
 // CODEVIEW(E:\gamedcs\townmgr.cpp:5187, dc 0x173238) void do_monster_join_dialog(hero* inHero, TCreatureType type, int amount);

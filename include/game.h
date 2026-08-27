@@ -1586,6 +1586,9 @@ public:
     // set_owner below carries.
     inline void remove_bonus();
     inline void set_owner(long owner);
+    // Dreamcast's generator-event xref records three calls to get_owner;
+    // retail expands the signed owner-byte load and has no out-of-line row.
+    inline long get_owner() { return playerOwner; }
     void Initialize(long new_owner);
     // `ret 4` in retail against the Dreamcast's zero-parameter
     // prototype - one of the four calibrated "retail carries one more
@@ -1757,7 +1760,7 @@ public:
     char ai_pad_124[4];
     double resourceValue[7];
     int averageResourceValue;
-    char ai_rest_164[4];
+    float turnValueOfAvgArtifact;
 
     playerData();
     ~playerData();
@@ -2092,6 +2095,7 @@ public:
     int SetupPuzzlePieces(int whichPlayer, int countOnly);
     int GetTownId(int x, int y, int z);                      // 0x4bb870
     int GetGeneratorId(int x, int y, int z);                 // 0x4bb900
+    int GetBoatsBuilt();                                     // 0x4cce30
     void GiveArmy(armyGroup* thisMonInfo, int iMonType,
                   int iMonNum, int slot);                    // 0x4ca340
     void InsertObject(int x, int y, int z, int objType,
@@ -2306,7 +2310,6 @@ public:
                      NewSMapHeader* mapHeader, TAbstractFile* infile);
     void ResetGame(int difficulty, int version, NewSMapHeader* mapHeader);
     void CancelComputerScreen();
-    int GetBoatsBuilt();
     void SetCannedRumour();
     void SetMapRumour();
     void SetSpecialRumour();
@@ -2595,7 +2598,7 @@ extern int gNetworkActive69954c;
 // E:\gamedcs\philai.cpp:4126, `?AI_examine_map@@YAXXZ`); declared here
 // because game::Load is the caller that needs it and philai.h is not in
 // this TU's include closure. Declared, not claimed.
-void AI_examine_map();
+void __cdecl AI_examine_map();
 // hero.cpp owns the DATA claim on 0x698400 (name unattested,
 // address-ordinal placeholder) and game.obj is a second reader, so this
 // is an extern-only declaration - the gMapWidth/gpCurrentPlayer pattern.

@@ -1403,6 +1403,8 @@ public:
     // cell is never read.
     void DoEventCoverOfDarkness(NewmapCell* cell, type_point point,
                                 bool human_player);
+    void DoEventCreatureBank(class hero* current_hero, NewmapCell* cell,
+                             type_point point, bool human_player);
     // The Dragon Utopia (jump-table arm 0x19 = OBJECT_DRAGON_UTOPIA), the
     // one creature bank with a handler of its own. Four parameters and
     // `ret 0x10`, the DC's own order, and the cell stays a NewmapCell*
@@ -1664,6 +1666,8 @@ public:
                                   type_point point, bool human_player);
     void DoEventWanderingMonster(NewmapCell* cell, class hero* current_hero,
                                  type_point point, bool human_player);
+    void GeneratorEvent(class hero* who, NewmapCell* eventCell,
+                        type_point point);
     void EraseAndFizzle(NewmapCell* eventCell, type_point point,
                         int fizzleSound);
     void EraseObj(NewmapCell* thisCell, type_point point,

@@ -3379,12 +3379,52 @@ long type_income_artifact::get_value(const hero* owner, unsigned char __formal, 
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_player.cpp:5505
 VA(0x00432d70, 0x219)  // artifact get_value cluster order-map, dc 0x3704c
-long type_creature_growth_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
+long type_creature_growth_artifact::get_value(const hero* owner,
+                                               unsigned char,
+                                               unsigned char exact) const
 {
-    // @stub
+    long value = 0;
+    playerData* player = &gpGame->players[owner->owner];
+
+    if (exact) {
+        int townId = gpGame->GetTownId(owner->x, owner->y, owner->z);
+        if (townId < 0)
+            return 0;
+
+        town* currentTown = gpGame->GetTown(townId);
+        if (!currentTown->HasBuilding(DWELLING_0_ID + bonus, 1))
+            return 0;
+        if (currentTown->garrisonHeroId != owner->id)
+            return 1;
+
+        int dwelling = bonus;
+        if (currentTown->HasBuilding(DWELLING_0_UPG_ID + bonus, 1))
+            dwelling += TOWN_DWELLING_COUNT;
+        TCreatureType creature = gTownDwellingCreatures[
+            currentTown->type * TOWN_DWELLING_SLOTS + dwelling];
+        return akCreatureTypeTraits[creature].AI_value * growthBonus;
+    }
+
+    for (int i = 0; i < player->numTowns; ++i) {
+        town* currentTown = gpGame->GetTown(player->townIds[i]);
+        if (currentTown->HasBuilding(DWELLING_0_ID + bonus, 1)) {
+            int dwelling = bonus;
+            if (currentTown->HasBuilding(DWELLING_0_UPG_ID + bonus, 1))
+                dwelling += TOWN_DWELLING_COUNT;
+            TCreatureType creature = gTownDwellingCreatures[
+                currentTown->type * TOWN_DWELLING_SLOTS + dwelling];
+            value = _cpp_max(
+                value, akCreatureTypeTraits[creature].AI_value * growthBonus);
+        }
+    }
+    return value;
 }
+
+#if 0  // @carcass
 
 // Retail-only artifact-effect get_value virtuals (Complete/SoD added 6 concrete
 // types beyond the DC 18). Each is proven a virtual get_value by its type-vftable
@@ -3431,13 +3471,68 @@ long type_angelic_alliance_artifact::get_value(const hero* owner, unsigned char 
     // @stub
 }
 
-VA(0x004333a0, 0x174)  // vtable-slot 0x63b768 (provisional type), retail-only
-long type_undead_king_cloak_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
-{
-    // @stub
-}
-
 #endif  // @carcass
+
+// Residual (96.78%): all 29 blocks and all 12 branches agree. The remaining
+// code delta is the first `/ 250` return's quotient register schedule (retail
+// keeps it in edx across the split epilogue; this compiler spelling moves it
+// through eax), plus cosmetic names for two float constants and the creature
+// traits relocation. The later `/ 250` arm is instruction-exact.
+VA(0x004333a0, 0x174)  // vtable-slot 0x63b768 (provisional type), retail-only
+long type_undead_king_cloak_artifact::get_value(const hero* owner,
+                                                unsigned char equipped,
+                                                unsigned char) const
+{
+    int necromancy;
+    if (owner->skillLevel[12] == 0) {
+        necromancy = static_cast<int>(
+            (1.0f - const_cast<hero*>(owner)->GetNecromancyFactor(0)) * 100.0f);
+        if (equipped) {
+            if (necromancy > 0)
+                necromancy = 0;
+            necromancy += bonus;
+        } else {
+            necromancy = _cpp_min(necromancy, static_cast<int>(bonus));
+        }
+        if (necromancy <= 0)
+            return 0;
+        return const_cast<hero*>(owner)->army.get_AI_value() * necromancy / 250;
+    }
+
+    TCreatureType creature;
+    switch (owner->skillLevel[12]) {
+    case SKILL_MASTERY_BASIC:
+        creature = CREATURE_WALKING_DEAD;
+        break;
+    case SKILL_MASTERY_ADVANCED:
+        creature = CREATURE_WIGHT;
+        break;
+    case SKILL_MASTERY_EXPERT:
+        creature = CREATURE_LICH;
+        break;
+    }
+
+    float multiplier =
+        (static_cast<float>(akCreatureTypeTraits[creature].AI_value) -
+         static_cast<float>(akCreatureTypeTraits[CREATURE_SKELETON].AI_value)) /
+        static_cast<float>(akCreatureTypeTraits[CREATURE_SKELETON].AI_value);
+    necromancy = static_cast<int>(
+        (1.0f - const_cast<hero*>(owner)->GetNecromancyFactor(0)) * 100.0f);
+    if (equipped) {
+        if (necromancy > 0)
+            necromancy = 0;
+        necromancy += bonus;
+    } else {
+        necromancy = _cpp_min(necromancy, static_cast<int>(bonus));
+    }
+
+    long value;
+    if (necromancy <= 0)
+        value = 0;
+    else
+        value = const_cast<hero*>(owner)->army.get_AI_value() * necromancy / 250;
+    return static_cast<long>(value * multiplier);
+}
 
 VA(0x00433520, 0x5a)  // vtable-slot 0x63b77c (provisional type), retail-only
 long type_elixir_of_life_artifact::get_value(const hero* owner, unsigned char, unsigned char) const
@@ -3477,21 +3572,139 @@ long total_artifact_value(const hero* our_hero, unsigned char equipped, unsigned
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_player.cpp:5708
 VA(0x00433c60, 0x1b3)  // anchor-callee unique (armyGroup::GetArmyMorale), dc 0x37588
 long get_full_value(const hero* our_hero)
 {
-    // @stub
+    type_spellvalue caster(our_hero);
+    long value = 0;
+
+    for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
+        TCreatureType creature = our_hero->army.armyTypes[i];
+        if (creature != CREATURE_NONE) {
+            unsigned char hasAlliance;
+            if (our_hero->owner >= 0)
+                hasAlliance = gpGame->players[our_hero->owner]
+                                  .hasGivenArtifact(ARTIFACT_ANGELIC_ALLIANCE);
+            else
+                hasAlliance = const_cast<hero*>(our_hero)->IsWieldingArtifact(
+                    ARTIFACT_ANGELIC_ALLIANCE);
+
+            int morale = const_cast<armyGroup*>(&our_hero->army)
+                             ->GetArmyMorale(i, our_hero, 0, -1,
+                                             hasAlliance, 1);
+            int luck = const_cast<armyGroup*>(&our_hero->army)
+                           ->GetArmyLuck(i, our_hero, 0, -1, 1);
+            value = static_cast<long>(
+                (AI_value_of_morale(0, morale) + 1.0) *
+                    (AI_value_of_luck(0, luck) + 1.0) *
+                    (akCreatureTypeTraits[creature].AI_value *
+                     our_hero->army.numTroops[i]) +
+                value);
+        }
+    }
+
+    value = static_cast<long>(
+        value * const_cast<hero*>(our_hero)->get_combat_value_modifier());
+    value += caster.get_best_spell_value(
+        SPELL_VALUE_CLASS_MASK ^ SPELL_VALUE_SPECIAL);
+    value += caster.get_best_spell_value(SPELL_VALUE_SPECIAL);
+
+    for (int slot = 0; slot < 19; ++slot) {
+        type_artifact artifact = *our_hero->get_artifact(slot);
+        if (artifact.artifactId != -1)
+            value += AI_get_value_of_artifact(artifact, our_hero, 1, 1);
+    }
+    return value;
 }
+
+#if 0  // @carcass
 
 // add_artifact: retail 447B ~= DC 448 (r=0.998); calls hero::equip_artifact,
 // add_to_backpack, get_number_in_backpack, get_full_value - the DC add_artifact
 // callee set. ret 0x18 = 6 stack dwords (type_artifact passed by value spans two).
+#endif  // @carcass
+
 VA(0x00433e20, 0x1bf)  // anchor-callee + size (add_to_backpack/equip_artifact), dc 0x37898
-unsigned char add_artifact(hero* our_hero, type_artifact artifact, long* base_value, hero* source_hero, TArtifactSlot source_slot, long* source_value, long best_change)
+unsigned char add_artifact(hero* our_hero, type_artifact artifact,
+                           long* base_value, hero* source_hero,
+                           long source_slot, long* source_value,
+                           long best_change)
 {
-    // @stub
+    if (our_hero->get_number_in_backpack(1) >= HERO_BACKPACK_CAPACITY)
+        return 0;
+
+    type_artifact oldArtifact;
+    int bestSlot = THeroScreenWindow::ARTIFACT_SLOT_COUNT;
+    long bestValue;
+    long bestSourceValue;
+    unsigned char bestIsSwap;
+    long newSourceValue = 0;
+
+    for (int slot = 0; slot < 17; ++slot) {
+        if (!our_hero->HeroFn_004E2840(artifact.artifactId, slot))
+            continue;
+
+        oldArtifact = our_hero->equipped[slot];
+        long value = 0;
+        unsigned char isSwap = 0;
+        if (source_value)
+            newSourceValue = *source_value;
+
+        if (oldArtifact.artifactId != ARTIFACT_NONE) {
+            our_hero->remove_artifact(slot);
+            if (source_hero &&
+                source_hero->HeroFn_004E2840(oldArtifact.artifactId,
+                                             source_slot)) {
+                source_hero->equip_artifact(&oldArtifact, source_slot);
+                newSourceValue = get_full_value(source_hero);
+                if (newSourceValue > *source_value) {
+                    value = newSourceValue - *source_value;
+                    isSwap = 1;
+                }
+                source_hero->remove_artifact(source_slot);
+            }
+        }
+
+        our_hero->equip_artifact(&artifact, slot);
+        long newValue = get_full_value(our_hero);
+        value += newValue - *base_value;
+        our_hero->remove_artifact(slot);
+        if (oldArtifact.artifactId != ARTIFACT_NONE)
+            our_hero->equip_artifact(&oldArtifact, slot);
+
+        if (value > best_change) {
+            bestValue = newValue;
+            best_change = value;
+            bestSlot = slot;
+            bestSourceValue = newSourceValue;
+            bestIsSwap = isSwap;
+        }
+        if (oldArtifact.artifactId == ARTIFACT_NONE)
+            break;
+    }
+
+    if (bestSlot == THeroScreenWindow::ARTIFACT_SLOT_COUNT)
+        return 0;
+
+    oldArtifact = our_hero->equipped[bestSlot];
+    if (oldArtifact.artifactId != ARTIFACT_NONE) {
+        our_hero->remove_artifact(bestSlot);
+        if (bestIsSwap) {
+            source_hero->equip_artifact(&oldArtifact, source_slot);
+            *source_value = bestSourceValue;
+        } else {
+            our_hero->add_to_backpack(&oldArtifact, -1);
+        }
+    }
+    our_hero->equip_artifact(&artifact, bestSlot);
+    *base_value = bestValue;
+    return 1;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\ai_player.cpp:5967
 VA(0x00433fe0, 0xf5)  // anchor-callee + arity, dc 0x37acc
