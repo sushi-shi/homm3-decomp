@@ -8,6 +8,15 @@
 #include "advmgr.h"
 #include "kb.h"
 
+// Dreamcast CodeView attests this inline wrapper (Hero.h:196) and game.cpp
+// carries the same local definition. It is what makes VC6 zero-extend the
+// byte boat id into the long parameter, which is exactly the
+// `xor eax,eax / mov al,[boat+0x19]` pair hide_boat::undo emits.
+inline void boat::obscure_cell()
+{
+    type_obscuring_object::obscure_cell(BOAT, id);
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:36
@@ -125,11 +134,24 @@ void type_record_move_hero::replay(unsigned char draw)
 }
 
 // E:\gamedcs\event_record.cpp:186
-DC_ONLY(0x8c9ec, 0x66)
+#endif  // @carcass
+
+// Slot 5 of type_record_move_hero's retail vtable (0x63de8c), shared with
+// type_record_teleport. The hero's `valid` byte is sampled BEFORE
+// restore_cell clears it, which is what the leading `mov bl,[hero+6]` proves.
+VA(0x0049a910, 0x65)  // anchor-vtable, dc 0x8c9ec
 void type_record_move_hero::undo()
 {
-    // @stub
+    unsigned char was_on_map = current_hero->valid;
+    current_hero->restore_cell();
+    current_hero->facing = restore_flag;
+    current_hero->x = source.x;
+    current_hero->y = source.y;
+    current_hero->z = source.z;
+    if (was_on_map)
+        current_hero->obscure_cell();
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:204
 DC_ONLY(0x8ca54, 0x70)
@@ -152,14 +174,27 @@ type_event_record_type type_record_teleport::get_type()
 {
     return RECORD_TELEPORT;
 }
-#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:227
-DC_ONLY(0x8caf0, 0x3C)
+// Slot 4 of type_record_teleport's retail vtable (0x63dea4). The tail call
+// is advspells.obj's advManager::TeleportTo with a null sample name, no
+// remote flag, the caller's draw flag and the replay flag set.
+VA(0x0049a9c0, 0x7B)  // anchor-vtable, dc 0x8caf0
 void type_record_teleport::replay(unsigned char draw)
 {
-    // @stub
+    int player = player_id;
+    if (gNetLocalGamePos != player) {
+        gpAdvManager->DeactivateCurrTown(0);
+        gpAdvManager->DeactivateCurrHero(0);
+    }
+
+    gNetLocalGamePos = player;
+    gpCurrentPlayer = &gpGame->players[player];
+    gUnnamed69ccc4 = 1 << player;
+
+    gpAdvManager->TeleportTo(current_hero, destination, 0, 0, draw, 1);
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:237
 DC_ONLY(0x8cb2c, 0x5C)
@@ -207,21 +242,40 @@ unsigned char type_record_claim_mine::save(TAbstractFile* outfile)
     unsigned char ok = outfile->Write(&new_owner, 1) == 1;
     return ok;
 }
-#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:292
-DC_ONLY(0x8cc6c, 0x6C)
+// Slot 4 of type_record_claim_mine's retail vtable (0x63debc). The action
+// type is const_recorded_action, the only one of the four that fits the
+// literal 3 retail pushes here.
+VA(0x0049ab40, 0x74)  // anchor-vtable, dc 0x8cc6c
 void type_record_claim_mine::replay(unsigned char draw)
 {
-    // @stub
+    gpGame->ClaimMine(id, new_owner, const_recorded_action);
+    if (draw) {
+        mine& claimed = gpGame->mines[id];
+        if (GetMapExtra(claimed.mapX, claimed.mapY, claimed.mapZ)
+            & gMapVisibilityBit) {
+            gpAdvManager->CompleteDraw(0);
+            gpAdvManager->UpdateScreen(0, 0);
+        }
+    }
 }
 
 // E:\gamedcs\event_record.cpp:312
-#endif  // @carcass
 VA(0x0049abc0, 0x19)  // anchor-vtable, dc 0x8ccd8
 void type_record_claim_mine::undo()
 {
     gpGame->mines[id].playerOwner = old_owner;
+}
+
+// E:\gamedcs\event_record.cpp:44. The base destructor, out of source order
+// because the linker placed its COMDAT here. Every derived class's implicit
+// destructor collapses to the same `mov [ecx],&type_event_record::vftable /
+// ret` and /OPT:ICF folded all twelve onto this one body - the derived
+// scalar-deleting wrappers at 0x49a620 and 0x49bbd0 both call it.
+VA(0x0049abe0, 0x7)  // anchor-vtable (slot 0 callee), dc 0x8c658
+type_event_record::~type_event_record()
+{
 }
 #if 0  // @carcass
 
@@ -240,21 +294,35 @@ type_event_record* type_record_claim_town::create()
 }
 
 // E:\gamedcs\event_record.cpp:339
+// type_record_claim_town::get_type has no retail body of its own: slot 1 of
+// its vtable (0x63ded4) is 0x16ebc0, outside this compiland's span, where
+// /OPT:ICF folded the `mov eax,4 / ret` onto an identical body elsewhere.
 DC_ONLY(0x8cd84, 0x54)
 type_event_record_type type_record_claim_town::get_type()
 {
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\event_record.cpp:347
-DC_ONLY(0x8cdd8, 0x70)
+// Slot 4 of type_record_claim_town's retail vtable (0x63ded4). The town is
+// re-subscripted for the visibility test: retail forms &towns[id] twice.
+VA(0x0049ac20, 0x7E)  // anchor-vtable, dc 0x8cdd8
 void type_record_claim_town::replay(unsigned char draw)
 {
-    // @stub
+    gpGame->towns[id].owner = new_owner;
+    if (draw) {
+        town& claimed = gpGame->towns[id];
+        if (GetMapExtra(claimed.mapX, claimed.mapY, claimed.mapZ)
+            & gMapVisibilityBit) {
+            gpAdvManager->CompleteDraw(0);
+            gpAdvManager->UpdateScreen(0, 0);
+        }
+    }
 }
 
 // E:\gamedcs\event_record.cpp:367
-#endif  // @carcass
 VA(0x0049aca0, 0x1D)  // anchor-vtable, dc 0x8ce48
 void type_record_claim_town::undo()
 {
@@ -285,13 +353,43 @@ type_event_record_type type_record_hide_boat::get_type()
 }
 
 // E:\gamedcs\event_record.cpp:400
-#if 0  // @carcass
-DC_ONLY(0x8cedc, 0x4E)
+// Slot 2 of type_record_hide_boat's retail vtable (0x63deec). The two temps
+// are block-scoped so their non-overlapping lifetimes land in the dead
+// parameter homes retail uses - the byte at [ebp+0xb], the short at
+// [ebp+0xa] - and the version gate is the four-compare chain retail emits.
+VA(0x0049ad00, 0xE7)  // anchor-vtable, dc 0x8cedc
 unsigned char type_record_hide_boat::load(TAbstractFile* infile, int version)
 {
-    // @stub
+    if (infile->Read(&player_id, 1) != 1)
+        return 0;
+    signed char boat_id;
+    if (infile->Read(&boat_id, 1) != 1)
+        return 0;
+    if (version >= 0x12 && version != 0x1c
+        && (version <= 0x1e || version >= 0x23)) {
+        {
+            unsigned char flag;
+            infile->Read(&flag, 1);
+            field_0d = flag != 0;
+            infile->Read(&flag, 1);
+            field_0c = flag != 0;
+        }
+        {
+            short coord;
+            infile->Read(&coord, sizeof(coord));
+            field_14 = coord;
+            infile->Read(&coord, sizeof(coord));
+            field_10 = coord;
+        }
+    } else {
+        field_0d = 0;
+        field_0c = 1;
+        field_14 = -1;
+        field_10 = -1;
+    }
+    current_boat = &gpGame->boats[boat_id];
+    return 1;
 }
-#endif  // @carcass
 
 // E:\gamedcs\event_record.cpp:415
 VA(0x0049adf0, 0x8A)  // anchor-vtable, dc 0x8cf2c
@@ -320,21 +418,34 @@ unsigned char type_record_hide_boat::save(TAbstractFile* outfile)
     }
     return 1;
 }
-#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:427
-DC_ONLY(0x8cf64, 0x2E)
+// Slot 4 of type_record_hide_boat's retail vtable (0x63deec): the boat's
+// occupancy pair is restored from the +0xc/+0x10 snapshot, then the cell is
+// given back to the map.
+VA(0x0049ae80, 0x44)  // anchor-vtable, dc 0x8cf64
 void type_record_hide_boat::replay(unsigned char draw)
 {
-    // @stub
+    current_boat->occupied = field_0c;
+    current_boat->occupying_hero = field_10;
+    current_boat->restore_cell();
+    if (draw) {
+        gpAdvManager->CompleteDraw(0);
+        gpAdvManager->UpdateScreen(0, 0);
+    }
 }
 
 // E:\gamedcs\event_record.cpp:440
-DC_ONLY(0x8cf94, 0x12)
+// Slot 5 of the same vtable, the mirror of replay: the +0xd/+0x14 snapshot
+// and boat::obscure_cell, whose BOAT/id argument pair retail spells out.
+VA(0x0049aed0, 0x23)  // anchor-vtable, dc 0x8cf94
 void type_record_hide_boat::undo()
 {
-    // @stub
+    current_boat->occupied = field_0d;
+    current_boat->occupying_hero = field_14;
+    current_boat->obscure_cell();
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:449
 DC_ONLY(0x8cfa8, 0x9A)
@@ -623,14 +734,30 @@ void type_record_show_hero::replay(unsigned char draw)
         gpAdvManager->UpdateScreen(0, 0);
     }
 }
-#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:817
-DC_ONLY(0x8d9f4, 0x8C)
+// Slot 5 of type_record_show_hero's retail vtable (0x63df4c) and the mirror
+// of replay above: the SECOND point/boat pair (+0x14/+0x19) is the one undo
+// restores, and the two advManager latches are cleared only for the seat
+// that owns the record.
+VA(0x0049b960, 0x9E)  // anchor-vtable, dc 0x8d9f4
 void type_record_show_hero::undo()
 {
-    // @stub
+    current_hero->restore_cell();
+    if (gNetLocalGamePos == new_owner) {
+        gpAdvManager->drawCursor = 0;
+        gpAdvManager->inDialog = 0;
+    }
+    current_hero->owner = prev_owner;
+    current_hero->x = previous_location.x;
+    current_hero->y = previous_location.y;
+    current_hero->z = previous_location.z;
+    if (previous_boat)
+        current_hero->flags |= 0x40000;
+    else
+        current_hero->flags &= ~0x40000;
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:842
 DC_ONLY(0x8da80, 0x40)
@@ -734,35 +861,72 @@ unsigned char type_record_shroud::load(TAbstractFile* infile, int version)
     }
     return 1;
 }
-#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:960
-DC_ONLY(0x8dd88, 0x62)
-unsigned char type_record_shroud::save(void* outfile)
+// Slot 3 of type_record_shroud's retail vtable (0x63df7c). The count is a
+// SHORT local in the dead outfile parameter home and the loop re-reads it
+// (`movsx edx,word [ebp+8]`) on every back edge, so it must stay a named
+// short rather than a hoisted int.
+VA(0x0049bdf0, 0x66)  // anchor-vtable, dc 0x8dd88
+unsigned char type_record_shroud::save(TAbstractFile* outfile)
 {
-    // @stub
+    outfile->Write(&player_id, 1);
+    short count = changes.size();
+    outfile->Write(&count, sizeof(count));
+    for (int i = 0; i < count; ++i)
+        outfile->Write(&changes[i], sizeof(type_shroud_change));
+    return 1;
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:978
+// NO RETAIL BODY: the carve leaves no row between save (0x49bdf0) and
+// replay (0x49be60), and the vtable accounts for both. Whatever the PC
+// revision spelled here, SetVisibility/ResetVisibility reach the change
+// list without an out-of-line helper.
 DC_ONLY(0x8ddec, 0x84)
 void type_record_shroud::add_change(int x, int y, int z, short old_value, short new_value)
 {
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\event_record.cpp:993
-DC_ONLY(0x8de70, 0xF0)
+// Slot 4 of the shroud vtable. The walk runs BACKWARDS over the change
+// list - retail keeps both `size` and `size-1` live, the reverse-scan tell -
+// and the per-entry test masks both stored values with the acting player's
+// visibility bit before comparing them.
+VA(0x0049be60, 0xBA)  // anchor-vtable, dc 0x8de70
 void type_record_shroud::replay(unsigned char draw)
 {
-    // @stub
+    unsigned char changed = 0;
+    for (int i = changes.size() - 1; i >= 0; --i) {
+        type_shroud_change change = changes[i];
+        if ((gMapVisibilityBit & change.new_value)
+            != (gMapVisibilityBit & change.old_value)) {
+            changed = 1;
+            *GetMapExtraPtr(change.x, change.y, change.z) = change.new_value;
+        }
+    }
+    if (draw && changed) {
+        gpAdvManager->CompleteDraw(0);
+        gpAdvManager->UpdateScreen(0, 0);
+    }
 }
 
 // E:\gamedcs\event_record.cpp:1018
-DC_ONLY(0x8df60, 0x7E)
+// Slot 5 of the shroud vtable, replay's mirror: the same backwards walk with
+// the old value restored unconditionally.
+VA(0x0049bf20, 0x6E)  // anchor-vtable, dc 0x8df60
 void type_record_shroud::undo()
 {
-    // @stub
+    for (int i = changes.size() - 1; i >= 0; --i) {
+        type_shroud_change change = changes[i];
+        *GetMapExtraPtr(change.x, change.y, change.z) = change.old_value;
+    }
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:1034
 DC_ONLY(0x8dfe0, 0x78)
