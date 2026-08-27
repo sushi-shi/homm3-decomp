@@ -47,6 +47,10 @@ DATA(0x00698a04) extern font* gpTinyFont;
 // passes it to CAnimatedDlg::Setup; scoped because adding declarations to
 // a shared header is a measured VC6 include-set trigger in this tree.
 DATA(0x00698a0c) extern font* gpMediumFont;
+// The fourth cell of the run (bigfont.fnt): the lobby window's panel
+// titles (TSingleSelectionWindow::Update, 0x584550) draw with it. Same
+// scoping rule as gpMediumFont above.
+DATA(0x00698a10) extern font* gpBigFont;
 #endif
 
 // Retail map-extra accessor used by the adventure-map adjacency scan.
