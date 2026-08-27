@@ -31,6 +31,11 @@ public:
         eContextNeither = 2
     };
 
+    enum TSpellContextMask {
+        eCombatContextMask = 1,
+        eAdventureContextMask = 2
+    };
+
     // Dreamcast CodeView's class-local widget domain. Complete doubles the
     // spell rows per page but retains this complete 200..249 ID layout.
     enum EOtherWidgetIDs {
