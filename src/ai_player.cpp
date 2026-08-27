@@ -1320,16 +1320,111 @@ void type_AI_player::trade_resources(const int* cost, long number)
     do_resource_trade(supply);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_player.cpp:1474
+// Prices whether the surplus resources can cover every shortfall: markets
+// (built, or buildable while wood production holds) set the trade
+// efficiency; base_cost[j]/unit_cost[j] accumulate, per trade_qty
+// candidate, the market value of what candidate j still lacks and its
+// per-unit price; market_value totals what selling the surplus earns. The
+// largest affordable candidate is refined by whole units of unit_cost and
+// the supply shortfalls are relaxed to what that quantity leaves out.
+// Residual (81.35%): the call multiset is 2 apart - retail folds the
+// (_M < size()) compare/max of base_cost's fresh-vector insert (its size()
+// inlines and folds against the ctor constants; ours stays the out-of-line
+// COMDAT call, +2 size calls) - and the register story downstream of the
+// players[team] address: retail computes it ONCE into the [ebp-0x18] temp,
+// reloads it per use, and rebases the same temp by +0x9c as the resources
+// walker, with markets in EDI / flag in BL; every spelling tried gives the
+// address a callee-saved register instead. Tried and rejected: named
+// playerData* player (78.94/79.42 - grabs EDI), markets/flag declared
+// first (byte-flat on the grab), hoisted int town_index (79.42), unnaming
+// efficiency (82.79 fuzzy but byte-FALSE: it moves the table read into
+// the loop as fmul dword, where retail flds once into the named qword
+// home - do not resurrect), why-reg volatile proposals (doctrine).
 VA(0x0042a580, 0x5BE)  // retail link order + arity, dc 0x305b4
-unsigned char type_AI_player::can_trade_resources(const int* cost, int* supply, std::vector<long,std::allocator<long>* trade_qty)
+bool type_AI_player::can_trade_resources(const int* cost, int* supply,
+                                         std::vector<long>& trade_qty)
 {
-    // @stub
-}
+    long markets = 0;
+    unsigned char can_build_market = 0;
+    if (supply[0] >= 0
+        && gpGame->players[team].turnProductionResource[0] > 0)
+        can_build_market = 1;
 
-#endif  // @carcass
+    for (int town_index = 0; town_index < gpGame->players[team].numTowns;
+         ++town_index) {
+        town* current_town = gpGame->GetTown(
+            gpGame->players[team].townIds[town_index]);
+        if ((current_town->active & bitNumber[MARKETPLACE_ID])
+            || (can_build_market
+                && current_town->can_build(MARKETPLACE_ID)))
+            ++markets;
+    }
+
+    markets = _cpp_min(markets, 10L);
+    if (markets == 0)
+        return false;
+    double efficiency = fTradingPostEfficency[markets];
+    long market_value = 0;
+
+    std::vector<long> base_cost;
+    std::vector<long> unit_cost;
+    base_cost.insert(base_cost.begin(), trade_qty.size(), 0);
+    unit_cost.insert(unit_cost.begin(), trade_qty.size(), 0);
+
+    int i;
+    for (i = 0; i < 7; ++i) {
+        if (supply[i] > 0) {
+            market_value = static_cast<long>(
+                get_market_value(game_resource_from_int(i)) * supply[i]
+                * efficiency + market_value);
+        } else if (supply[i] < 0) {
+            long on_hand = gpGame->players[team].resources[i];
+            long value = get_market_value(game_resource_from_int(i));
+            for (unsigned int j = 0; j < trade_qty.size(); ++j) {
+                if (trade_qty[j] * cost[i] > on_hand) {
+                    base_cost[j] += (trade_qty[j] * cost[i] - on_hand)
+                        * value;
+                    unit_cost[j] += cost[i] * value;
+                }
+            }
+        }
+    }
+
+    int j;
+    for (j = static_cast<int>(base_cost.size()) - 1; j >= 0; --j) {
+        if (base_cost[j] <= market_value)
+            break;
+    }
+    if (j < 0)
+        return false;
+
+    if (j == static_cast<int>(trade_qty.size()) - 1)
+        return true;
+
+    long qty = trade_qty[j];
+    if (j + 1 < static_cast<int>(trade_qty.size())
+        && trade_qty[j] + 1 < trade_qty[j + 1]) {
+        qty += (market_value - base_cost[j]) / unit_cost[j];
+        if (qty >= trade_qty[j + 1])
+            qty = trade_qty[j + 1] - 1;
+    }
+
+    long remaining = trade_qty.back() - qty;
+    for (int k = 0; k < 7; ++k) {
+        if (supply[k] < 0) {
+            supply[k] += cost[k] * remaining;
+            if (supply[k] > 0)
+                supply[k] = 0;
+        }
+    }
+    // Retail calls ~vector<long> for both locals at this exit only, while
+    // expanding the teardown at the two earlier ones - the return-statement
+    // pin reaches the scope-exit destructors of function-scoped locals.
+#pragma inline_depth(0)
+    return true;
+#pragma inline_depth()
+}
 
 // E:\gamedcs\ai_player.cpp:1587
 VA(0x0042ab40, 0xD1)  // dc 0x309d4
