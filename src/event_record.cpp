@@ -2182,13 +2182,18 @@ unsigned char game::load_recorded_events(TAbstractFile* infile, int version)
     clear_event_records();
     eventRecords.reserve(count);
 
+    // Both locals are FUNCTION-scoped: retail homes them at [ebp-1] and
+    // [ebp-0x18] rather than in the dead parameter slots block scope would
+    // have earned them. `type` is also SIGNED - the gate is jle/jg and the
+    // table index a movsx.
+    char type;
+    type_event_record* record;
     while (count--) {
-        unsigned char type;
         if (infile->Read(&type, 1) != 1)
             return 0;
         if (type <= 0 || type > RECORD_SHROUD)
             return 0;
-        type_event_record* record = (*gRecordCreators[type])();
+        record = (*gRecordCreators[type])();
         if (!record->load(infile, version))
             return 0;
         eventRecords.push_back(record);
