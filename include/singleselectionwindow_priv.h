@@ -276,6 +276,13 @@ enum ESortMapsColumn {
     SORT_MAPS_BY_LOSS = 5
 };
 
+// field_18A0[6] selects one of the first three filter buttons; the fourth
+// button is the aggregate choice. The underlying category names are not yet
+// attested, so only the byte-proven aggregate member is named.
+enum EScenarioFilterCategory {
+    SCENARIO_FILTER_CATEGORY_ANY = 3
+};
+
 // The six std::sort predicates SortMaps instantiates - retail's band at
 // 0x590070..0x591cf0 is six Dinkumware _Sort instantiations (the
 // one-line sort() wrapper inlines to the observed 4-arg
