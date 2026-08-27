@@ -14,6 +14,8 @@ enum eRS_Messages {
     // CEndPlacementPhaseMsg's retail inline constructor stores 0x3f0;
     // the gapless DC message ladder names that value.
     RS_END_PLACEMENT_PHASE = 0x3f0,
+    RS_COMBAT_MAIN = 1006,
+    RS_COMBAT_END_PLACEMENT = 1008,
 #endif
     RS_COMBAT_TYPE = 0x3f1,
     // GATED for exactly the reason RS_ERASE_OBJECT below is - see that
@@ -128,6 +130,13 @@ public:
 SIZE(CEndPlacementPhaseMsg, 0x14);
 #endif
 
+#if defined(HOMM3_REMOTE_WAIT_READY_DECLS) \
+        || defined(HOMM3_COMMAND_GRID_VIEW)
+// The header-inline owner delegates to the process-wide recycler. remote.cpp
+// can see and inline that wrapper down to delete; command.cpp retains the
+// retail out-of-line DestroyMsg call.
+void DestroyMsg(CNetMsg* pNetMsg);
+
 #ifdef HOMM3_REMOTE_WAIT_READY_DECLS
 class CReadyToPlayMsg : public CNetMsg {
 public:
@@ -148,18 +157,19 @@ public:
     }
 };
 SIZE(CAllReadyToPlayMsg, 0x14);
+#endif
 
 // remote.h:537 in DC. This four-byte owner exists solely to release a
-// dequeued message on every return arm of the ready-dialog dispatcher.
+// dequeued message on every return arm of the owning dispatcher.
 // Its ctor and dtor are header inline in the original and retail expands
-// both into CWaitForReadyPlayersDlg::handle_message.
+// both into their command/remote callers.
 class CMessageKill {
 public:
     CMessageKill(CNetMsg* pNetMsg) : m_pNetMsg(pNetMsg) {}
     ~CMessageKill()
     {
         if (m_pNetMsg)
-            delete m_pNetMsg;
+            DestroyMsg(m_pNetMsg);
     }
 
     void SetMessage(CNetMsg* pNetMsg) { m_pNetMsg = pNetMsg; }
@@ -168,6 +178,37 @@ private:
     CNetMsg* m_pNetMsg;
 };
 SIZE(CMessageKill, 0x4);
+#endif
+
+#ifdef HOMM3_COMMAND_GRID_VIEW
+// Dreamcast publishes this exact five-dword payload and its names. Retail
+// Main copies the first four words into the pending action tuple, logs them,
+// and seeds the combat RNG from the fifth.
+class CCombatMainMsg : public CNetMsg {
+public:
+    int m_nextAction;
+    int m_nextActionExtra;
+    int m_nextActionGridIndex;
+    int m_nextActionGridIndex2;
+    int m_seed;
+
+    CCombatMainMsg(int nextAction, int nextActionExtra,
+                   int nextActionGridIndex, int nextActionGridIndex2,
+                   int seed)
+    {
+        subType = RS_COMBAT_MAIN;
+        field_00 = -1;
+        field_04 = 0;
+        field_10 = 0;
+        size = sizeof(CCombatMainMsg);
+        m_nextAction = nextAction;
+        m_nextActionExtra = nextActionExtra;
+        m_nextActionGridIndex = nextActionGridIndex;
+        m_nextActionGridIndex2 = nextActionGridIndex2;
+        m_seed = seed;
+    }
+};
+SIZE(CCombatMainMsg, 0x28);
 #endif
 
 #ifdef HOMM3_REMOTE_WAIT_READY_DECLS
@@ -247,7 +288,8 @@ public:
     int m_gamePos;
 };
 
-#ifdef HOMM3_REMOTE_CDPLAYHEROES_LAYOUT
+#if defined(HOMM3_REMOTE_CDPLAYHEROES_LAYOUT) \
+        || defined(HOMM3_COMMAND_GRID_VIEW)
 // netmsg.h:423 in the DC roster. Retail's CDPlayHeroes drop paths prove the
 // duplicated DPID: DirectPlay's sender cell at +4 and the message payload at
 // +0x14 both receive the dropped id.

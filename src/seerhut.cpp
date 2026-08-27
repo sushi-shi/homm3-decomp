@@ -2383,7 +2383,7 @@ int TQuestGuard::load(TAbstractFile* infile, int saveVersion)
 
 // E:\gamedcs\seerhut.cpp
 VA(0x005734e0, 0x3B)  // anchor-callee(create_quest 0x573240 + quest slot 12) + arity(ret 4), retail-only
-int TQuestGuard::read(TAbstractFile* infile)
+void TQuestGuard::read(TAbstractFile* infile)
 {
     unsigned char questType;
 
@@ -2391,20 +2391,6 @@ int TQuestGuard::read(TAbstractFile* infile)
     quest = create_quest(questType, 0);
     if (quest)
         quest->LoadFromMap(infile);
-    // Residual (96.2963%): ONE surplus instruction, the `xor eax,eax` this
-    // `return 0` emits between `pop edi` and `pop esi`. Every other byte of
-    // the body is exact, including retail's recycled parameter home - the
-    // type byte is read straight into [ebp+8] over the now-dead `infile`
-    // slot and reloaded as a masked dword. Retail sets NO return register
-    // here: it falls off the end and ships whatever the last call left in
-    // EAX (create_quest's pointer on the null path, LoadFromMap's leftovers
-    // otherwise). VC6 makes that a hard C4716 error in C++, not a warning,
-    // so the shape is only reachable by retyping this declarator - either to
-    // `void`, or by making quest slot 12 int-valued so the tail can read
-    // `return quest->LoadFromMap(infile);`. Both are non-additive edits to a
-    // header mapcell.cpp and game.cpp also include, so they are out of a
-    // matcher lane's reach; noted for whoever owns the quest vtable model.
-    return 0;
 }
 
 // E:\gamedcs\seerhut.cpp

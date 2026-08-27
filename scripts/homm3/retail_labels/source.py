@@ -707,7 +707,14 @@ def _demangle_key(mangled: str):
             cls = owner.split("@@", 1)[0].split("@")[0]
         return f"{cls}__vbase_destructor".lower()
     if mangled.startswith("??0") or mangled.startswith("??1"):
-        cls = mangled[3:].split("@@", 1)[0].split("@")[0]
+        owner = mangled[3:]
+        if owner.startswith("?$"):
+            # Ordinary ctors/dtors of a global class template use
+            # `??[01]?$Class@...`; retain only the stable template name,
+            # exactly as the member and deleting-dtor arms above do.
+            cls = owner[2:].split("@", 1)[0]
+        else:
+            cls = owner.split("@@", 1)[0].split("@")[0]
         key = f"{cls}_{cls}".lower()
         return f"{key}@dtor" if mangled.startswith("??1") else key
     if mangled.startswith("??4"):
@@ -1460,6 +1467,14 @@ def selftest() -> list[str]:
             "?GetCount@?$CAutoArray@VCDPlayAddressElement@@@@UAEKXZ") != \
             "cautoarray_getcount":
         failures.append("global class-template member key regressed")
+    if _demangle_key(
+            "??0?$CAutoArray@VCDPlayAddressElement@@@@QAE@XZ") != \
+            "cautoarray_cautoarray":
+        failures.append("global class-template constructor key regressed")
+    if _demangle_key(
+            "??1?$CAutoArray@VCDPlayAddressElement@@@@UAE@XZ") != \
+            "cautoarray_cautoarray@dtor":
+        failures.append("global class-template destructor key regressed")
     if _demangle_key("??_Gios_base@std@@UAEPAXI@Z") != \
             "ios_base_ios_base@gdtor":
         failures.append("MSVC scalar deleting destructor key regressed")

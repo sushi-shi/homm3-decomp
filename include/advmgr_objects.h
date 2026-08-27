@@ -224,8 +224,51 @@ public:
 };
 SIZE(CObject, 0xc);
 
+#ifdef HOMM3_MAPCELL_OBJECT_TYPE_TABLE_VIEW
+// Map-editor/RMG object template consumed by the retail-identical
+// CObjectType conversion constructor at 0x506080. The public names are from
+// the HD structural bridge; retail independently fixes the 0x4c stride and
+// every offset read by that constructor.
+struct TObjectType {
+    struct TPoint {
+        int x;
+        int y;
+    };
+    struct TImageInfo {
+        TPoint objectSize;
+        std::bitset<48> drawMask;
+        std::bitset<48> shadowMask;
+    };
+
+    int imageNumber;
+    std::bitset<48> passableMask;
+    std::bitset<48> triggerMask;
+    std::bitset<10> terrainMask;
+    std::bitset<10> recommendedTerrainMask;
+    TAdventureObjectType objectType;
+    int subtype;
+    int slotCategory;
+    unsigned char isUnderlay;
+    unsigned char hasTrigger;
+    TPoint triggerCell;
+    TImageInfo imageInfo;
+};
+SIZE(TObjectType, 0x4c);
+
+class TObjectTypeTable {
+public:
+    std::vector<TObjectType> objectTypes;
+    void load(char* filename);
+};
+SIZE(TObjectTypeTable, 0x10);
+#endif
+
 class CObjectType {
 public:
+#ifdef HOMM3_MAPCELL_OBJECT_TYPE_TABLE_VIEW
+    CObjectType() {}
+    CObjectType(TObjectType* source);                         // 0x506080
+#endif
     // The DC field list names every member of this record - ImageName,
     // Width, Height, then the FOUR 48-cell masks PlacementMask,
     // PassableMask, ShadowMask, TriggerMask, then Type/Extra/IsUnderlay -

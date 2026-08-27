@@ -30,6 +30,7 @@
 // pick_alignment.
 //
 #define HOMM3_MAPCELL_MAGIC_TERRAIN_VIEW
+#define HOMM3_MAPCELL_OBJECT_TYPE_TABLE_VIEW
 #define HOMM3_MAPCELL_UPGRADE_VIEW
 #define HOMM3_QUEST_GUARD_LOAD_DECLS
 #include <stdio.h>
@@ -5777,7 +5778,6 @@ int NewfullMap::PlaceObject(int objectIndex, unsigned char setExtraInfo)
     return 0;
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
 // NewfullMap map-object-data broadcast twin at 0x505d20, immediately after
 // PlaceObject in the mapcell link-order bracket and owned by this TU: `this`
 // reaches the std::vector at +0xb0 (mapObjectData, game.h:278), walks it
@@ -5785,17 +5785,14 @@ int NewfullMap::PlaceObject(int objectIndex, unsigned char setExtraInfo)
 // CMapObjectData virtual per element (slot +0x24) with two stack arguments
 // (ret 8).  Not in the DC mapcell.cpp roster (the Dreamcast build inlined the
 // broadcast into its callers); retail emits it out of line.
-// BLOCKED ON A SHARED HEADER: unlike its +0x28 twin 0x505d60 (declared in
-// game.h below), this member has NO declaration in game.h's NewfullMap class,
-// so reconstructing it needs a NEW `NewfullMapFn_00505D20` declarator there,
-// which is out of this lane's scope.
-VA(0x00505d20, 0x3F)  // linkorder + this@+0xb0=mapObjectData; broadcasts CMapObjectData vslot+0x24 to every record, retail-only (DC-inlined); BLOCKED: needs a game.h NewfullMap declaration
-void NewfullMap::NewfullMapFn_00505D20()
+// EXACT 2026-08-27: the source-identical +0x28 twin below differs only in its
+// virtual slot displacement, just as the two retail bodies do.
+VA(0x00505d20, 0x3F)  // linkorder + this@+0xb0=mapObjectData; broadcasts CMapObjectData vslot+0x24 to every record, retail-only (DC-inlined)
+void NewfullMap::NewfullMapFn_00505D20(int heroId, int player)
 {
-    // @stub
+    for (unsigned int i = 0; i < mapObjectData.size(); ++i)
+        mapObjectData[i]->NewMapVFn24(heroId, player);
 }
-
-#endif  // @carcass
 
 // 0x505d60 (declared game.h:461) broadcasts virtual slot +0x28 across the
 // mapObjectData vector (+0xb0), handing every record a (point, player) pair.
@@ -5811,23 +5808,30 @@ void NewfullMap::NewfullMapFn_00505D60(type_point point, int player)
         mapObjectData[i]->NewMapVFn28(point, player);
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
 // The objects.txt object-type loader at 0x505da0, run once from startup
 // (LoadMenu/WinMain path) to populate NewfullMap::objectTypeIndex: `this`
 // reaches the same +0xdc array (`lea ecx,[esi+edx+0xdc]` /
 // `mov edx,[esi+edx+0xe4]`), it EH-guards a per-record parse it delegates to
 // 0x506080, and destroys a std::string temporary per row.
-// BLOCKED ON A SHARED HEADER: this member has NO declaration in game.h's
-// NewfullMap class, so it needs a NEW `NewfullMapFn_00505DA0` declarator
-// there, out of this lane's scope.  Its parse callee 0x506080 (and that
-// callee's small helpers 0x506780 / 0x5067e0 / 0x506820) are the rest of this
-// family, for a lane that can confirm whether they are members or statics.
-VA(0x00505da0, 0xF8)  // linkorder + this@+0xdc=objectTypeIndex; objects.txt loader, startup caller, retail-only (DC-inlined); BLOCKED: needs a game.h NewfullMap declaration
+// The retail-identical HD structural bridge names that parse callee as
+// CObjectType(TObjectType*) and fixes TObjectType's 0x4c layout; retail fixes
+// the only field this loop reads (_type at +0x1c) and the vector stride.
+// EXACT 2026-08-27: spelling that field read before the temporary constructor
+// preserves retail's ESI type index and EAX source pointer through the call.
+VA(0x00505da0, 0xF8)  // linkorder + this@+0xdc=objectTypeIndex; objects.txt loader, startup caller, retail-only (DC-inlined)
 void NewfullMap::NewfullMapFn_00505DA0()
 {
-    // @stub
+    TObjectTypeTable objectTypeTable;
+    objectTypeTable.load(
+        DATA_COMPGEN(0x0067fb84, objectTypeTableFilename, "objects.txt"));
+
+    for (unsigned int i = 0; i < objectTypeTable.objectTypes.size(); ++i) {
+        TAdventureObjectType objectType =
+            objectTypeTable.objectTypes[i].objectType;
+        objectTypeIndex[objectType].push_back(
+            CObjectType(&objectTypeTable.objectTypes[i]));
+    }
 }
-#endif  // @carcass
 
 // 0x505ea0 (game::ConvertObject's helper, declared game.h:475) reverse-scans
 // objectTypeIndex[objectType] for the record whose `extra` (CObjectType+0x3c)

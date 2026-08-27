@@ -1015,7 +1015,11 @@ public:
     // SetCombatDirections fills twelve direction/hex pairs here. Retail
     // addresses the second row exactly 0x30 bytes after the first.
     int combatDirections[2][12];      // +0x133cc
-    char pad_1342c[0xc];
+    // CheckSetMouseDirection caches the current combat cursor frame here and
+    // only calls mouseManager::SetPointer when the selected direction maps
+    // to a different frame. No roster names the storage, so it stays ordinal.
+    int field_1342c;                  // +0x1342c
+    char pad_13430[0x8];
     unsigned char field_13438[2][20]; // +0x13438
     // Sliced in place off PowEffect, which zeroes it beside field_13438
     // and then asks it, after the death sweep, whether MakeCreaturesVanish
@@ -1343,7 +1347,8 @@ public:
     void LearnSpellFromEagleEye(int side);
     static unsigned char LoadWallTraitsTable();
     int UpdateGrid(int bPostGridIsClean, int bSetupGrid);
-#ifdef HOMM3_DRAWING_UPDATE_GRID_DECLS
+#if defined(HOMM3_DRAWING_UPDATE_GRID_DECLS) \
+        || defined(HOMM3_COMMAND_GRID_VIEW)
     // Complete's nullary adapter at 0x474ba0 selects the acting stack and
     // forwards it to the one-argument body at 0x474bf0. UpdateGrid is its
     // only retail caller; DC retains the nullary source signature.
@@ -1805,6 +1810,10 @@ public:
     // it at +0x34 (creatureType), +0xf4 (combatSide) and +0x288
     // (hypnotizeFlag) and hands it to army::get_owner.
     unsigned char is_computer_action(const army* current_army);
+    // DC publishes void(int,int,int); Complete's x86 body changes the result
+    // to an unsigned-byte "pointer changed" flag. Its retail field/call graph
+    // fixes the three arguments as mouse x, mouse y and combat hex.
+    unsigned char CheckSetMouseDirection(int x, int y, int hex);
     // 0x47a100. Claims the first free (or expendable) slot on a side,
     // initialises the stack there and optionally fizzles it in.
     army* AddArmy(int iSide, int iMonType, int iMonQty, int iGridIndex,
@@ -2184,9 +2193,18 @@ public:
     // six pushes at army::cast_caliph_spell (0x447ee0) match that arity
     // exactly. TSkillMastery is spelled int here because its typedef
     // lives in a header this one does not include. Not claimed.
+#ifdef HOMM3_ARMY_COMMAND_ACTION_VIEW
+    // command.cpp stores the heterogeneous pending-action payload in an int
+    // slot. Keeping that source type here avoids an artificial enum cast;
+    // the ABI is unchanged because SpellID is int-sized.
+    void CastSpell(int spellId, int targetIndex,
+                   unsigned char bIsMonsterSpell, int secondaryIndex,
+                   int monster_skill, long monster_power);   // 0x59fe30
+#else
     void CastSpell(SpellID spellId, int targetIndex,
                    unsigned char bIsMonsterSpell, int secondaryIndex,
                    int monster_skill, long monster_power);   // 0x59fe30
+#endif
     // WHO cast the spell ShowSpellMessage is about to announce. The DC
     // roster calls the parameter `bIsMonsterSpell`, but retail's body
     // (0x5a8950) is a three-way `dec eax / je` chain, not a bool test,
@@ -2393,6 +2411,10 @@ public:
     void ResetMouse();
 #ifdef HOMM3_COMMAND_GRID_VIEW
     unsigned char automate_first_aid_tent();
+    virtual int Main(message& msg);
+    int ProcessCombatMsg(message& msg);
+    int ProcessNextAction(message& msg, unsigned char automaticTurn);
+    unsigned char NextArmy(unsigned char checking_for_bad_morale);
     // MATCHING_DEBT: command-only declaration view; broad exposure perturbs
     // VC6 member-handle allocation in unrelated combat translation units.
     void SetCombatDirections(int hex);
@@ -2407,6 +2429,10 @@ public:
     void ResetCyclingCreatures();
     void SetCombatGrid(int showEntireGrid, int showMouseHex, int gridLevel,
                        unsigned char drawNow);
+#ifdef HOMM3_COMMAND_ANIMATION_VIEW
+    void do_animations();
+    void CycleCombatScreen();
+#endif
 #endif
 #ifdef HOMM3_COMMAND_TOWER_STRING_VIEW
 private:
@@ -2429,17 +2455,17 @@ extern combatManager* gpCombatManager;
 // rule they encode. Neither is defined here; cmbtmgr is only a reader.
 // Two GameTime stamps Open takes on its way in, both shared with other
 // compilands - 0x698998 with advmgr.obj's own Open/Main/ProcessKeyPress
-// and with command.obj's combatManager::Main frame pacer, 0x6989b8 with
-// Main and CycleCombatScreen. Behind a view because a single file-scope
-// extern added to this header is its own measured include-set trigger
-// (the field_132a0 bisection), and cmbtmgr.obj is the only consumer
-// that needs them today.
+// and command.obj's animation frame pacer, 0x6989b8 with Main and
+// CycleCombatScreen. Behind views because a single file-scope extern added
+// to this header is its own measured include-set trigger (the field_132a0
+// bisection).
 #ifdef HOMM3_COMMAND_GRID_VIEW
 // CheckGetAIMove caches the displayed surrender price here. No surviving
 // retail or Dreamcast symbol supplies a public spelling, so the name keeps
-// its address ordinal. This substitutes a command-unused extern one-for-one.
+// its address ordinal.
 DATA(0x00695030) extern long gSurrenderCost695030;
-#else
+#endif
+#if !defined(HOMM3_COMMAND_GRID_VIEW) || defined(HOMM3_COMMAND_ANIMATION_VIEW)
 DATA(0x00698998) extern unsigned long gCombatStamp698998;
 #endif
 DATA(0x006989b8) extern unsigned long gCombatStamp6989b8;

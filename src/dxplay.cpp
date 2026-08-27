@@ -530,16 +530,189 @@ unsigned char CDPlay::AddConnectionEnum(const GUID* lpguidSP, void* lpConnection
     return 1;
 }
 
-#if 0  // @carcass -- located @stub bodies, PROVEN, in retail RVA order
-
 // E:\gamedcs\dxplay.cpp:687
 VA(0x00497c50, 0x57B)  // anchor-vtable CDPlay slot35 (GetErrorDesc); DPERR switch, dc 0x8aad4
 void CDPlay::GetErrorDesc(long error, char* sDesc)
 {
-    // @stub
-}
+    const char* description =
+        DATA_COMPGEN(0x006776a0, dplayUnknownErrorText, "Unknown error?");
 
-#endif  // @carcass
+    switch (error) {
+    case DPERR_ALREADYINITIALIZED:
+        description = DATA_COMPGEN(0x00677660, dplayAlreadyInitializedText, "Already initialized");
+        break;
+    case DPERR_ACCESSDENIED:
+        description = DATA_COMPGEN(0x00677628, dplayAccessDeniedText, "Access Denied");
+        break;
+    case DPERR_ACTIVEPLAYERS:
+        description = DATA_COMPGEN(0x00677618, dplayActivePlayersText, "Active Players");
+        break;
+    case DPERR_BUFFERTOOSMALL:
+        description = DATA_COMPGEN(0x00677604, dplayBufferTooSmallText, "Buffer too small");
+        break;
+    case DPERR_CANTADDPLAYER:
+        description = DATA_COMPGEN(0x006775f4, dplayCantAddPlayerText, "Cant add player");
+        break;
+    case DPERR_CANTCREATEGROUP:
+        description = DATA_COMPGEN(0x006775e0, dplayCantCreateGroupText, "Cant create group");
+        break;
+    case DPERR_CANTCREATEPLAYER:
+        description = DATA_COMPGEN(0x006775cc, dplayCantCreatePlayerText, "Cant create player");
+        break;
+    case DPERR_CANTCREATESESSION:
+        description = DATA_COMPGEN(0x006775b8, dplayCantCreateSessionText, "Cant create session");
+        break;
+    case DPERR_CAPSNOTAVAILABLEYET:
+        description = DATA_COMPGEN(0x006775a0, dplayCapsNotAvailableYetText, "Caps not available yet");
+        break;
+    case DPERR_EXCEPTION:
+        description = DATA_COMPGEN(0x00677594, dplayExceptionText, "Exception");
+        break;
+    case DPERR_GENERIC:
+        description = DATA_COMPGEN(0x00677674, dplayGenericText, "Generic");
+        break;
+    case DPERR_INVALIDFLAGS:
+        description = DATA_COMPGEN(0x00677584, dplayInvalidFlagsText, "Invalid flags");
+        break;
+    case DPERR_INVALIDOBJECT:
+        description = DATA_COMPGEN(0x00677574, dplayInvalidObjectText, "Invalid object");
+        break;
+    case DPERR_INVALIDPARAM:
+        description = DATA_COMPGEN(0x00677648, dplayInvalidParametersText, "Invalid parameter(s)");
+        break;
+    case DPERR_INVALIDPLAYER:
+        description = DATA_COMPGEN(0x00677564, dplayInvalidPlayerText, "Invalid player");
+        break;
+    case DPERR_INVALIDGROUP:
+        description = DATA_COMPGEN(0x00677554, dplayInvalidGroupText, "Invalid group");
+        break;
+    case DPERR_NOCAPS:
+        description = DATA_COMPGEN(0x0067754c, dplayNoCapsText, "No caps");
+        break;
+    case DPERR_NOCONNECTION:
+        description = DATA_COMPGEN(0x0067753c, dplayNoConnectionText, "No connection");
+        break;
+    case DPERR_NOMEMORY:
+        description = DATA_COMPGEN(0x00677638, dplayOutOfMemoryText, "Out of memory");
+        break;
+    case DPERR_NOMESSAGES:
+        description = DATA_COMPGEN(0x00677530, dplayNoMessagesText, "No messages");
+        break;
+    case DPERR_NONAMESERVERFOUND:
+        description = DATA_COMPGEN(0x00677518, dplayNoNameServerFoundText, "No name server found");
+        break;
+    case DPERR_NOPLAYERS:
+        description = DATA_COMPGEN(0x0067750c, dplayNoPlayersText, "No players");
+        break;
+    case DPERR_NOSESSIONS:
+        description = DATA_COMPGEN(0x00677500, dplayNoSessionsText, "No sessions");
+        break;
+    case DPERR_PENDING:
+        description = DATA_COMPGEN(0x0067767c, dplayPendingText, "Pending");
+        break;
+    case DPERR_SENDTOOBIG:
+        description = DATA_COMPGEN(0x006774f4, dplaySendToBigText, "Send to big");
+        break;
+    case DPERR_TIMEOUT:
+        description = DATA_COMPGEN(0x006774ec, dplayTimeoutText, "Timeout");
+        break;
+    case DPERR_UNAVAILABLE:
+        description = DATA_COMPGEN(0x006774e0, dplayUnavailableText, "Unavailable");
+        break;
+    case DPERR_UNSUPPORTED:
+        description = DATA_COMPGEN(0x00677684, dplayUnsupportedText, "Unsupported");
+        break;
+    case DPERR_BUSY:
+        description = DATA_COMPGEN(0x006774d8, dplayBusyText, "Busy");
+        break;
+    case DPERR_USERCANCEL:
+        description = DATA_COMPGEN(0x006774cc, dplayUserCancelText, "User cancel");
+        break;
+    case DPERR_NOINTERFACE:
+        description = DATA_COMPGEN(0x00677690, dplayNoInterfaceText, "No interface");
+        break;
+    case DPERR_CANNOTCREATESERVER:
+        description = DATA_COMPGEN(0x006774b4, dplayCannotCreateServerText, "Cannot create server");
+        break;
+    case DPERR_PLAYERLOST:
+        description = DATA_COMPGEN(0x006774a8, dplayPlayerLostText, "Player lost");
+        break;
+    case DPERR_SESSIONLOST:
+        description = DATA_COMPGEN(0x00677498, dplaySessionLostText, "Session lost");
+        break;
+    case DPERR_UNINITIALIZED:
+        description = DATA_COMPGEN(0x00677488, dplayUninitializedText, "Uninitialized");
+        break;
+    case DPERR_NONEWPLAYERS:
+        description = DATA_COMPGEN(0x00677478, dplayNoNewPlayersText, "No new players");
+        break;
+    case DPERR_INVALIDPASSWORD:
+        description = DATA_COMPGEN(0x00677464, dplayInvalidPasswordText, "Invalid password");
+        break;
+    case DPERR_CONNECTING:
+        description = DATA_COMPGEN(0x00677430, dplayConnectingText, "Connecting");
+        break;
+    case DPERR_BUFFERTOOLARGE:
+        description = DATA_COMPGEN(0x0067743c, dplayBufferTooLargeText, "Buffer too large");
+        break;
+    case DPERR_CANTCREATEPROCESS:
+        description = DATA_COMPGEN(0x00677450, dplayCantCreateProcessText, "Cant create process");
+        break;
+    case DPERR_APPNOTSTARTED:
+        description = DATA_COMPGEN(0x00677420, dplayAppNotStartedText, "App not started");
+        break;
+    case DPERR_INVALIDINTERFACE:
+        description = DATA_COMPGEN(0x006773f8, dplayInvalidInterfaceText, "Invalid interface");
+        break;
+    case DPERR_NOSERVICEPROVIDER:
+        description = DATA_COMPGEN(0x0067740c, dplayNoServiceProviderText, "No service provider");
+        break;
+    case DPERR_UNKNOWNAPPLICATION:
+        description = DATA_COMPGEN(0x006773e4, dplayUnknownApplicationText, "Unknown application");
+        break;
+    case DPERR_NOTLOBBIED:
+        description = DATA_COMPGEN(0x006773ac, dplayNotLobbiedText, "Not lobbied");
+        break;
+    case DPERR_SERVICEPROVIDERLOADED:
+        description = DATA_COMPGEN(0x006773b8, dplayServiceProviderLoadedText, "Service provider loaded");
+        break;
+    case DPERR_ALREADYREGISTERED:
+        description = DATA_COMPGEN(0x006773d0, dplayAlreadyRegisteredText, "Already registered");
+        break;
+    case DPERR_NOTREGISTERED:
+        description = DATA_COMPGEN(0x0067739c, dplayNotRegisteredText, "Not registered");
+        break;
+    case DPERR_AUTHENTICATIONFAILED:
+        description = DATA_COMPGEN(0x00677374, dplayAuthenticationFailedText, "Authentication failed");
+        break;
+    case DPERR_CANTLOADSSPI:
+        description = DATA_COMPGEN(0x0067738c, dplayCantLoadSspiText, "Cant load sspi");
+        break;
+    case DPERR_ENCRYPTIONFAILED:
+        description = DATA_COMPGEN(0x00677360, dplayEncryptionFailedText, "Encryption failed");
+        break;
+    case DPERR_SIGNFAILED:
+        description = DATA_COMPGEN(0x00677354, dplaySignFailedText, "Sign failed");
+        break;
+    case DPERR_CANTLOADSECURITYPACKAGE:
+        description = DATA_COMPGEN(0x00677338, dplayCantLoadSecurityPackageText, "Cant load security package");
+        break;
+    case DPERR_ENCRYPTIONNOTSUPPORTED:
+        description = DATA_COMPGEN(0x0067731c, dplayEncryptionNotSupportedText, "Encryption not supported");
+        break;
+    case DPERR_CANTLOADCAPI:
+        description = DATA_COMPGEN(0x0067730c, dplayCantLoadCapiText, "Cant load capi");
+        break;
+    case DPERR_NOTLOGGEDIN:
+        description = DATA_COMPGEN(0x006772fc, dplayNotLoggedInText, "Not logged in");
+        break;
+    case DPERR_LOGONDENIED:
+        description = DATA_COMPGEN(0x006772ec, dplayLogonDeniedText, "Logon denied");
+        break;
+    }
+
+    strcpy(sDesc, description);
+}
 
 // E:\gamedcs\dxplay.cpp:878
 VA(0x004981d0, 0x8)  // anchor-vtable CDPlay slot55 (SysMsgHost), dc 0x8af3c
@@ -1286,6 +1459,9 @@ int __stdcall EnumPlayersCallback(unsigned long dpid, unsigned long dwPlayerType
 #if 0  // @carcass -- located @stub bodies, PROVEN, in retail RVA order
 
 // E:\gamedcs\array.h:46
+// EXACT 2026-08-27: the header template already emits the retail body; this
+// claim-only row binds that COMDAT to its retail slot without a duplicate
+// specialization definition.
 VA(0x00499f00, 0x5B)  // anchor-body: stores CAutoArray vtable (0x63de44) + inlined Destroy loop, no flags param (plain dtor), dc 0x8c148
 void CAutoArray<CDPlayAddressElement>::~CAutoArray<CDPlayAddressElement>()
 {
