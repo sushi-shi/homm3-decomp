@@ -22,6 +22,10 @@
 // adventuremapwindow precedent. Set before every include because
 // widget.h is reached through townmgr.h first.
 #define HOMM3_WIDGET_SET_VISIBLE_INLINE
+// The town-screen / resource-bar widget-id enums this compiland
+// dispatches on; gated to keep the declarators out of the other seven
+// includers of townmgr.h (the recruitUnit::Update include-set canary).
+#define HOMM3_TOWNMGR_WIDGET_IDS
 #include "townmgr.h"
 // advspells.obj's TeleportTo declarator, for the MoveHero that
 // DoTownGate expands inline. Gated so no other includer of advmgr.h
@@ -431,6 +435,49 @@ DATA(0x006a5da8) extern const char* gUnnamed6a5da8;
 DATA(0x006a5d88) extern const char* gUnnamed6a5d88;
 DATA(0x006a5d8c) extern const char* gUnnamed6a5d8c;
 DATA(0x006a5d98) extern const char* gUnnamed6a5d98;
+// SetCommandAndText's rollover pool, on the same standing as the four
+// above: one .bss text cell per town-screen thing under the cursor,
+// every image-wide reference landing in this compiland's bracket and
+// no writer anywhere in the admitted surface. The building band maps
+// 0..4 -> dbc (the five mage-guild levels share one line), 5 -> dc4,
+// 6/20 -> dc8, 9 -> dcc, 16 -> dd0, 10..13 -> dd4/ddc/de0/de4,
+// 14 -> dec, 15 -> df0, 7 -> df4, 8 -> df8; dd8 is the one-name
+// dwelling FORMAT the creature arms sprintf a plural name into; de8 is
+// the widget-50 arm's line; e04 the visiting-portrait exchange format.
+DATA(0x006a5dbc) extern const char* gUnnamed6a5dbc;
+DATA(0x006a5dc4) extern const char* gUnnamed6a5dc4;
+DATA(0x006a5dc8) extern const char* gUnnamed6a5dc8;
+DATA(0x006a5dcc) extern const char* gUnnamed6a5dcc;
+DATA(0x006a5dd0) extern const char* gUnnamed6a5dd0;
+DATA(0x006a5dd4) extern const char* gUnnamed6a5dd4;
+DATA(0x006a5dd8) extern const char* gUnnamed6a5dd8;
+DATA(0x006a5ddc) extern const char* gUnnamed6a5ddc;
+DATA(0x006a5de0) extern const char* gUnnamed6a5de0;
+DATA(0x006a5de4) extern const char* gUnnamed6a5de4;
+DATA(0x006a5de8) extern const char* gUnnamed6a5de8;
+DATA(0x006a5dec) extern const char* gUnnamed6a5dec;
+DATA(0x006a5df0) extern const char* gUnnamed6a5df0;
+DATA(0x006a5df4) extern const char* gUnnamed6a5df4;
+DATA(0x006a5df8) extern const char* gUnnamed6a5df8;
+// (0x6a5e04, the exchange format, is already declared with select_army's
+// pool a few lines below.)
+// Retail .data 0x68a364 / 0x68a378: per-town-type dwelling slots for
+// the two horde-building pairs, [type][id - HORDE_ID] and
+// [type][id - HORDE_2_ID]. Values read from the pinned image:
+// {2,9},{1,8},{1,8},{0,7}x6 and {0,0},{4,11},{0,0},{2,9},{0,0}x5 -
+// Castle's Griffin Bastion is dwelling 2/9, Rampart's dwarves 1/8 and
+// dendroids 4/11, and so on. SetCommandAndText's HORDE arms fold the
+// -HORDE_ID bias into the relocation (0x68a352 / 0x68a360). Names
+// INVENTED (no DC symbol); owner TU unlocated - declared, not defined.
+DATA(0x0068a364) extern const unsigned char gHordeDwellingSlot[TOWN_TYPE_COUNT][2];
+DATA(0x0068a378) extern const unsigned char gHorde2DwellingSlot[TOWN_TYPE_COUNT][2];
+// The fort page's shared pair (see the survey block ahead of
+// TCastleWindow::SetRolloverText below for the evidence): 0x6a56e0 is
+// a per-building eight-byte record whose first dword is the building's
+// name, 0x642e70 the eight-int hotspot->building map read at two
+// addends. SetCommandAndText's resource band is the second reader.
+DATA(0x006a56e0) extern const char* gUnnamed6a56e0[];
+DATA(0x00642e70) extern const int gUnnamed642e70[8];
 DATA(0x006a5e04) extern const char* gUnnamed6a5e04;
 DATA(0x006a5e08) extern const char* gUnnamed6a5e08;
 DATA(0x006a5e0c) extern const char* gUnnamed6a5e0c;
@@ -646,8 +693,8 @@ TTownScreenWindow::TTownScreenWindow()
     if (field_4c < 0)
         field_4c = 0;
 
-    field_50 = new char[height * width * 2];
-    memset(field_50, 0, height * width * 2);
+    zBuffer = new unsigned short[height * width];
+    memset(zBuffer, 0, height * width * 2);
 
     Widgets.reserve(96);
 
@@ -820,13 +867,13 @@ TTownScreenWindow::~TTownScreenWindow()
         if (*it)
             delete *it;
     }
-    // The guard is retail's, not `delete`'s: field_50 is a raw allocation
+    // The guard is retail's, not `delete`'s: zBuffer is a raw allocation
     // with no destructor, so VC6's own `delete` emits no null test - the
     // `test eax,eax` in front of it is an explicit source-level if, and
     // the clear sits inside it.
-    if (field_50) {
-        delete field_50;
-        field_50 = 0;
+    if (zBuffer) {
+        delete zBuffer;
+        zBuffer = 0;
     }
 }
 
@@ -1823,17 +1870,349 @@ void townManager::SetArmyCommand(int splitEnabled, unsigned char join_dialog)
     field_19c = 3;
 }
 
-// Located, not reconstructed: SetCommandAndText sits between SetArmyCommand
-// (0x5c7400) and select_army (0x5c8080) in retail link order;
-// SetCommandAndText2 (dc 0x16ceb4) has no distinct retail carve row here.
-#if 0  // @carcass: located, not reconstructed
+// The town page's rollover-and-command line: one arm per thing under
+// the cursor. codeY 0..MAX-1 is a panorama click, remapped through the
+// town screen's zBuffer word under the mouse (hotspot id, minus one)
+// and re-checked against the same band; the remap result feeds the
+// immersion pop and the .bss latch at 0x6aa9e8, -1 on either failure.
+// The switch then runs on the merged code - building ids up to the
+// dwelling band, TTownScreenWindow widget ids above it - and every
+// plain arm picks a rollover cell for the shared strcpy; the hero,
+// army, divide and town-locator arms format or dispatch instead
+// (SetHeroCommand / SetArmyCommand / select_army). SetCommandAndText2
+// (dc 0x16ceb4) has no distinct retail carve row here. The tail is
+// townManager::ShowText INLINED (/Ob2's single-call-site rule, the
+// TCastleWindow::SetRolloverText precedent) - spelling it as a member
+// would force the out-of-line copy retail does not have.
+// Residual (92.05%): register-role transpositions with the structure
+// exact - the CFG, the cluster tree (dword table -1-biased, two byte
+// maps, the range-tested resource/exit chain) and every arm's content
+// agree. Retail's dispatch keeps `code` in EDI and takes EAX for the
+// biased table index; ours indexes on EDI unbiased (the case -1 label
+// merged into default loses the -1 cluster bound - a SEPARATE case -1
+// arm restores the bias but costs 0.6 overall, measured and reverted).
+// Downstream every -1 materialisation (`or ecx,-1` vs `or eax,-1`) and
+// the hall/castle-icon mask tests swap scratch roles the same way.
+// Measured byte-flat: bitNumber[id] & built vs HasBuilding(id, 0) (the
+// & canonicalisation law). Measured wins banked in this shape: retail
+// arm order (72.74 -> 90.36 with the Duff-shared HALL/CASTLE labels
+// and case -1 on default), field_138/field_128 stored before their
+// strip partners in the crest arm, hero* locals for the two name
+// sprintfs, and the shared `field_19c = 0` after both (+1.68).
 // E:\gamedcs\townmgr.cpp:3383
 VA(0x005c77a0, 0x8DD)  // order-map + anchor-callee(SetHeroCommand 0x5c7250) + arity(ret 4, message*), dc 0x16c940
 void townManager::SetCommandAndText(message* msg)
 {
-    // @stub
+    int code = msg->codeY;
+    if (code >= 0 && code <= DWELLING_6_UPG_ID
+        && (code = static_cast<TTownScreenWindow*>(TownWindow)
+                       ->zBuffer[msg->mouseY * 800 + msg->mouseX] - 1) >= 0
+        && code <= DWELLING_6_UPG_ID) {
+        gUnnamed6aa9e8 = code;
+        PlayImmEffect(DATA_COMPGEN(0x0068c210, guiPopEffectName, "GuiPop"), 1);
+    } else {
+        gUnnamed6aa9e8 = -1;
+    }
+
+    field_19c = -2;
+    switch (code) {
+    case MAGE_GUILD_ID:
+    case MAGE_GUILD2_ID:
+    case MAGE_GUILD3_ID:
+    case MAGE_GUILD4_ID:
+    case MAGE_GUILD5_ID:
+        strcpy(statusText, gUnnamed6a5dbc);
+        break;
+    case TAVERN_ID:
+        strcpy(statusText, gUnnamed6a5dc4);
+        break;
+    case DOCK_ID:
+    case DOCK_WITH_BOAT_ID:
+        strcpy(statusText, gUnnamed6a5dc8);
+        break;
+    case CASTLE_CASTLE_ID:
+        strcpy(statusText, gUnnamed6a5dcc);
+        break;
+    case BLACKSMITH_ID:
+        strcpy(statusText, gUnnamed6a5dd0);
+        break;
+    case HALL_CITY_ID:
+        strcpy(statusText, gUnnamed6a5de0);
+        break;
+    case HALL_CAPITOL_ID:
+        strcpy(statusText, gUnnamed6a5de4);
+        break;
+    case MARKETPLACE_ID:
+        strcpy(statusText, gUnnamed6a5dec);
+        break;
+    case MARKETPLACE_SILO_ID:
+        strcpy(statusText, gUnnamed6a5df0);
+        break;
+    case HORDE_ID:
+    case HORDE_UPG_ID: {
+        TCreatureType creature = gTownDwellingCreatures[
+            townToView->type * TOWN_DWELLING_SLOTS
+            + gHordeDwellingSlot[townToView->type][code - HORDE_ID]];
+        const char* name;
+        if (creature >= 0 && creature <= 0x96)
+            name = akCreatureTypeTraits[creature].m_plural_name;
+        else
+            name = emptyRolloverText;
+        sprintf(statusText, gUnnamed6a5dd8, name);
+        break;
+    }
+    case HORDE_2_ID:
+    case HORDE_2_UPG_ID: {
+        TCreatureType creature = gTownDwellingCreatures[
+            townToView->type * TOWN_DWELLING_SLOTS
+            + gHorde2DwellingSlot[townToView->type][code - HORDE_2_ID]];
+        const char* name;
+        if (creature >= 0 && creature <= 0x96)
+            name = akCreatureTypeTraits[creature].m_plural_name;
+        else
+            name = emptyRolloverText;
+        sprintf(statusText, gUnnamed6a5dd8, name);
+        break;
+    }
+    case SPECIAL_BUILDING_ID:
+    case EXTRA_0_ID:
+    case EXTRA_1_ID:
+    case EXTRA_2_ID:
+    case HOLY_GRAIL_ID:
+        strcpy(statusText,
+               gBuildingNamesTown[townToView->type * 11 + code]);
+        break;
+    case TTownScreenWindow::CREST_ID:
+    case TTownScreenWindow::GARRISON_PORTRAIT_ID:
+    case TTownScreenWindow::GARRISON_PORTRAIT_SELECTOR_ID:
+        if (field_130 == -1) {
+            field_138 = -1;
+            field_134 = field_11c;
+            SetHeroCommand();
+        } else {
+            field_128 = -1;
+            selectedStrip = field_11c;
+            if (townToView->garrisonHeroId == -1) {
+                strcpy(statusText, gUnnamed6a5db0);
+                field_19c = -2;
+            } else {
+                hero* garrison = &gpGame->heroes[townToView->garrisonHeroId];
+                sprintf(statusText, gUnnamed6a5db4, garrison->name);
+                field_19c = 0;
+            }
+        }
+        break;
+    case TTownScreenWindow::TOWN_GARRISON_0_SELECTOR_ID:
+    case TTownScreenWindow::TOWN_GARRISON_1_SELECTOR_ID:
+    case TTownScreenWindow::TOWN_GARRISON_2_SELECTOR_ID:
+    case TTownScreenWindow::TOWN_GARRISON_3_SELECTOR_ID:
+    case TTownScreenWindow::TOWN_GARRISON_4_SELECTOR_ID:
+    case TTownScreenWindow::TOWN_GARRISON_5_SELECTOR_ID:
+    case TTownScreenWindow::TOWN_GARRISON_6_SELECTOR_ID: {
+        int shift = msg->qualifier & 3;
+        int slot = code - TTownScreenWindow::TOWN_GARRISON_0_SELECTOR_ID;
+        if (field_11c->group) {
+            if (field_130 < 0 || field_12c->owner != gNetLocalGamePos) {
+                select_army(field_11c, slot, 0);
+            } else {
+                field_134 = field_11c;
+                field_138 = slot;
+                if (field_1c4 == 0 && shift == 0)
+                    SetArmyCommand(0, 0);
+                else
+                    SetArmyCommand(1, 0);
+            }
+        }
+        break;
+    }
+    case TTownScreenWindow::PORTRAIT_ID:
+    case TTownScreenWindow::VISITING_PORTRAIT_SELECTOR_ID:
+        if (field_130 == -1
+            && field_120->owner == gpGame->GetLocalPlayerGamePos()) {
+            field_134 = field_120;
+            field_138 = -1;
+            SetHeroCommand();
+        } else if (townToView->visitingHeroId == -1) {
+            strcpy(statusText, gUnnamed6a5db0);
+        } else {
+            hero* visiting;
+            field_128 = -1;
+            selectedStrip = field_120;
+            visiting = (townToView->visitingHeroId == -1)
+                           ? 0
+                           : &gpGame->heroes[townToView->visitingHeroId];
+            sprintf(statusText, gUnnamed6a5e04, visiting->name);
+            field_19c = 0;
+        }
+        break;
+    case TTownScreenWindow::HERO_ARMY_0_SELECTOR_ID:
+    case TTownScreenWindow::HERO_ARMY_1_SELECTOR_ID:
+    case TTownScreenWindow::HERO_ARMY_2_SELECTOR_ID:
+    case TTownScreenWindow::HERO_ARMY_3_SELECTOR_ID:
+    case TTownScreenWindow::HERO_ARMY_4_SELECTOR_ID:
+    case TTownScreenWindow::HERO_ARMY_5_SELECTOR_ID:
+    case TTownScreenWindow::HERO_ARMY_6_SELECTOR_ID: {
+        int shift = msg->qualifier & 3;
+        int slot = code - TTownScreenWindow::HERO_ARMY_0_SELECTOR_ID;
+        if (field_120->group) {
+            if (field_130 < 0 || field_12c->owner != gNetLocalGamePos) {
+                select_army(field_120, slot, 0);
+            } else {
+                field_134 = field_120;
+                field_138 = slot;
+                if (field_1c4 == 0 && shift == 0)
+                    SetArmyCommand(0, 0);
+                else
+                    SetArmyCommand(1, 0);
+            }
+        }
+        break;
+    }
+    case TTownScreenWindow::TOWN_WIDGET_50_ID:
+        strcpy(statusText, gUnnamed6a5de8);
+        break;
+    case TTownScreenWindow::DIVIDE_ID:
+        if (field_130 == -2 || field_130 < 0) {
+            strcpy(statusText, gUnnamed6a5d90);
+        } else {
+            int id = field_12c->group->armies[field_130];
+            const char* name;
+            if (id >= 0 && id <= 0x96)
+                name = akCreatureTypeTraits[id].m_plural_name;
+            else
+                name = emptyRolloverText;
+            sprintf(statusText, gUnnamed6a5d84, name);
+        }
+        break;
+    case DWELLING_0_ID:
+    case DWELLING_1_ID:
+    case DWELLING_2_ID:
+    case DWELLING_3_ID:
+    case DWELLING_4_ID:
+    case DWELLING_5_ID:
+    case DWELLING_6_ID:
+    case DWELLING_0_UPG_ID:
+    case DWELLING_1_UPG_ID:
+    case DWELLING_2_UPG_ID:
+    case DWELLING_3_UPG_ID:
+    case DWELLING_4_UPG_ID:
+    case DWELLING_5_UPG_ID:
+    case DWELLING_6_UPG_ID: {
+        TCreatureType creature = gTownDwellingCreatures[
+            townToView->type * TOWN_DWELLING_SLOTS + code - DWELLING_0_ID];
+        const char* name;
+        if (creature >= 0 && creature <= 0x96)
+            name = akCreatureTypeTraits[creature].m_plural_name;
+        else
+            name = emptyRolloverText;
+        sprintf(statusText, gUnnamed6a5dd8, name);
+        break;
+    }
+    case TTownScreenWindow::TOWN_0_ID:
+    case TTownScreenWindow::TOWN_1_ID:
+    case TTownScreenWindow::TOWN_2_ID: {
+        playerData* player = gpGame->GetLocalPlayer();
+        sprintf(statusText, gUnnamed6a5d94,
+                gpGame->towns[player->townIds[
+                    static_cast<TTownScreenWindow*>(TownWindow)->field_4c
+                    + code - TTownScreenWindow::TOWN_0_ID]].cName.c_str());
+        break;
+    }
+    case TTownScreenWindow::BONUS_0_ID:
+    case TTownScreenWindow::BONUS_1_ID:
+    case TTownScreenWindow::BONUS_2_ID:
+    case TTownScreenWindow::BONUS_3_ID:
+    case TTownScreenWindow::BONUS_4_ID:
+    case TTownScreenWindow::BONUS_5_ID:
+    case TTownScreenWindow::BONUS_6_ID:
+        strcpy(statusText,
+               static_cast<TTownScreenWindow*>(TownWindow)
+                   ->growth_bonus_icon[code - TTownScreenWindow::BONUS_0_ID]
+                   ->get_help_text());
+        break;
+    case TTownScreenWindow::HALL_ICON_ID:
+        if (townToView->HasBuilding(HALL_VILLAGE_ID, 0)) {
+    case HALL_VILLAGE_ID:
+            strcpy(statusText, gUnnamed6a5dd4);
+        } else if (townToView->HasBuilding(HALL_TOWN_ID, 0)) {
+    case HALL_TOWN_ID:
+            strcpy(statusText, gUnnamed6a5ddc);
+        } else if (townToView->HasBuilding(HALL_CITY_ID, 0)) {
+            strcpy(statusText, gUnnamed6a5de0);
+        } else {
+            strcpy(statusText, gUnnamed6a5de4);
+        }
+        break;
+    case TTownScreenWindow::CASTLE_ICON_ID:
+        if (townToView->HasBuilding(CASTLE_FORT_ID, 0)) {
+    case CASTLE_FORT_ID:
+            strcpy(statusText, gUnnamed6a5df4);
+        } else if (townToView->HasBuilding(CASTLE_CITADEL_ID, 0)) {
+    case CASTLE_CITADEL_ID:
+            strcpy(statusText, gUnnamed6a5df8);
+        } else if (townToView->HasBuilding(CASTLE_CASTLE_ID, 0)) {
+            strcpy(statusText, gUnnamed6a5dcc);
+        } else {
+            strcpy(statusText, emptyRolloverText);
+        }
+        break;
+    case TTownScreenWindow::INCOME_TEXT_ID:
+        strcpy(statusText, gpGeneralText->GetText(256));
+        break;
+    case TTownScreenWindow::BONUS_0_TEXT_ID:
+    case TTownScreenWindow::BONUS_1_TEXT_ID:
+    case TTownScreenWindow::BONUS_2_TEXT_ID:
+    case TTownScreenWindow::BONUS_3_TEXT_ID:
+    case TTownScreenWindow::BONUS_4_TEXT_ID:
+    case TTownScreenWindow::BONUS_5_TEXT_ID:
+    case TTownScreenWindow::BONUS_6_TEXT_ID:
+        strcpy(statusText,
+               static_cast<TTownScreenWindow*>(TownWindow)
+                   ->growth_bonus_icon[code
+                                       - TTownScreenWindow::BONUS_0_TEXT_ID]
+                   ->get_help_text());
+        break;
+    case TResourceDisplay::RESOURCE_TEXT_0_ID:
+    case TResourceDisplay::RESOURCE_TEXT_1_ID:
+    case TResourceDisplay::RESOURCE_TEXT_2_ID:
+    case TResourceDisplay::RESOURCE_TEXT_3_ID:
+    case TResourceDisplay::RESOURCE_TEXT_4_ID:
+    case TResourceDisplay::RESOURCE_TEXT_5_ID:
+    case TResourceDisplay::RESOURCE_TEXT_6_ID:
+    case TResourceDisplay::RESOURCE_TEXT_7_ID:
+        strcpy(statusText,
+               gUnnamed6a56e0[2 * gUnnamed642e70[
+                   code - TResourceDisplay::RESOURCE_TEXT_0_ID]]);
+        break;
+    case TResourceDisplay::RESOURCE_BORDER_0_ID:
+    case TResourceDisplay::RESOURCE_BORDER_1_ID:
+    case TResourceDisplay::RESOURCE_BORDER_2_ID:
+    case TResourceDisplay::RESOURCE_BORDER_3_ID:
+    case TResourceDisplay::RESOURCE_BORDER_4_ID:
+    case TResourceDisplay::RESOURCE_BORDER_5_ID:
+    case TResourceDisplay::RESOURCE_BORDER_6_ID:
+        strcpy(statusText,
+               gUnnamed6a56e0[2 * gUnnamed642e70[
+                   code - TResourceDisplay::RESOURCE_BORDER_0_ID]]);
+        break;
+    case TTownScreenWindow::TOWN_HOTSPOT_NONE:
+    default:
+        strcpy(statusText, emptyRolloverText);
+        break;
+    case TTownScreenWindow::EXIT_BUTTON_ID:
+        strcpy(statusText, gUnnamed6a5da4);
+        break;
+    }
+
+    message textMessage = { 0, 0, 0, 0, 0, 0, 0, 0 };
+    textMessage.id = MESSAGE_WIDGET;
+    textMessage.codeX = widget::WIDGET_SET_TEXT;
+    textMessage.codeY = 0x97;
+    textMessage.extraText = statusText;
+    TownWindow->BroadcastMessage(&textMessage);
+    TownWindow->DrawWindow(0, 0x97, 0x97);
+    gpWindowManager->UpdateScreen(7, 0x22b, 0x2de, 0x13);
 }
-#endif  // @carcass
 
 // The thieves' guild scoreboard, the widest dialog in the compiland: a
 // full-screen CAdvPopup with eight player columns and thirteen category
@@ -5076,7 +5455,7 @@ void townManager::MoveHeroFromGarrison()
 VA(0x005d5410, 0x11C)  // anchor-caller(DoHall/BuildObj tails) + order-map ahead of ResetStrips, dc 0x176eb0
 void townManager::RedrawTownScreen()
 {
-    memset(static_cast<TTownScreenWindow*>(TownWindow)->field_50, 0,
+    memset(static_cast<TTownScreenWindow*>(TownWindow)->zBuffer, 0,
            WINDOW_SCREEN_WIDTH * WINDOW_SCREEN_HEIGHT * 2);
     static_cast<bitmapBorder16*>(field_3c)->Draw2();
     PollSound();
@@ -5632,7 +6011,7 @@ void townManager::CycleOutline(int objectIndex, int x, int y, int w, int h)
         unsigned long nextFrame = GameTime::Get() + 100;
         pal.data[96] = gSystemPalette->data[i];
 
-        memset(static_cast<TTownScreenWindow*>(TownWindow)->field_50, 0,
+        memset(static_cast<TTownScreenWindow*>(TownWindow)->zBuffer, 0,
                800 * 600 * 2);
         static_cast<bitmapBorder16*>(field_3c)->Draw2();
         PollSound();
@@ -5648,7 +6027,7 @@ void townManager::CycleOutline(int objectIndex, int x, int y, int w, int h)
 
     pal.data[96] = saved;
 
-    memset(static_cast<TTownScreenWindow*>(TownWindow)->field_50, 0,
+    memset(static_cast<TTownScreenWindow*>(TownWindow)->zBuffer, 0,
            800 * 600 * 2);
     static_cast<bitmapBorder16*>(field_3c)->Draw2();
     PollSound();
@@ -5760,7 +6139,7 @@ void townManager::BuildObj(int buildingId)
         int boxH = _cpp_max(hall->y + hall->h, extra->y + extra->h) - boxY;
         gpWindowManager->SaveFizzleSourceX(boxX, boxY, boxW, boxH);
 
-        memset(static_cast<TTownScreenWindow*>(TownWindow)->field_50, 0,
+        memset(static_cast<TTownScreenWindow*>(TownWindow)->zBuffer, 0,
                800 * 600 * 2);
         static_cast<bitmapBorder16*>(field_3c)->Draw2();
         PollSound();
@@ -5785,7 +6164,7 @@ void townManager::BuildObj(int buildingId)
                                            TownObjects[builtIndex]->w,
                                            TownObjects[builtIndex]->h);
 
-        memset(static_cast<TTownScreenWindow*>(TownWindow)->field_50, 0,
+        memset(static_cast<TTownScreenWindow*>(TownWindow)->zBuffer, 0,
                800 * 600 * 2);
         static_cast<bitmapBorder16*>(field_3c)->Draw2();
         PollSound();
@@ -6311,7 +6690,7 @@ void townManager::SetArmyCommand(int splitEnabled, unsigned char join_dialog)
 //
 // PREAMBLE. `code = msg->codeY`; when that is in 0..MAX_BUILDING_TYPE the
 // body REPLACES it with the town panorama's hotspot under the cursor -
-// `TTownScreenWindow::field_50[msg->mouseY * 800 + msg->mouseX]` read as a
+// `TTownScreenWindow::zBuffer[msg->mouseY * 800 + msg->mouseX]` read as a
 // 16-bit word, minus one - and re-checks the same range. On either
 // failure the .bss cell at 0x6aa9e8 takes -1; on success it takes the
 // hotspot and 0x4b69f0 is called with a string at 0x68c210 and 1. Then
@@ -7961,12 +8340,9 @@ TCastleWindow::~TCastleWindow()
 //             the second column stays unmodelled.
 DATA(0x006a5c28) extern const char* gUnnamed6a5c28[6];
 DATA(0x006a5c40) extern const char* gUnnamed6a5c40;
-DATA(0x006a56e0) extern const char* gUnnamed6a56e0[];
-// Retail .rdata 0x642e70, eight building ids in town-screen hotspot
-// order. SetRolloverText reads it at TWO addends - `[code - 0x3e9]` for
-// the eight-wide band and `[code - 0x3f1]` for the seven-wide one - and
-// castle.obj keeps its own copy of the same eight values at 0x63bcc8.
-DATA(0x00642e70) extern const int gUnnamed642e70[8];
+// gUnnamed6a56e0 / gUnnamed642e70 are declared with the status-line
+// pool near the top of the file: townManager::SetCommandAndText reads
+// both long before this page does.
 
 // E:\gamedcs\townmgr.cpp:8776
 // The fort page's rollover line. `msg->codeY` is the widget under the

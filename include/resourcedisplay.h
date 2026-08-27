@@ -19,6 +19,34 @@ class textWidget;
 // the derived head byte at +0x34.
 class TResourceDisplay : public TSubWindow {
 public:
+#ifdef HOMM3_TOWNMGR_WIDGET_IDS
+    // GATED to townmgr.cpp with the town-screen widget ids (see
+    // townmgr.h): the include-set wall, recruitUnit::Update canary.
+    // The widget-id bands the constructor stamps in its resource loop
+    // (0x3e9 + i on the seven textWidgets, 0x3f1 + i on the seven
+    // borders). townManager::SetCommandAndText dispatches rollover
+    // text on both bands one id wider - the shared building-record
+    // table it indexes carries eight rows. Names INVENTED from the
+    // constructor's own loop; no DC symbol covers the ids.
+    enum EWidgetIDs {
+        RESOURCE_TEXT_0_ID = 0x3e9,
+        RESOURCE_TEXT_1_ID = 0x3ea,
+        RESOURCE_TEXT_2_ID = 0x3eb,
+        RESOURCE_TEXT_3_ID = 0x3ec,
+        RESOURCE_TEXT_4_ID = 0x3ed,
+        RESOURCE_TEXT_5_ID = 0x3ee,
+        RESOURCE_TEXT_6_ID = 0x3ef,
+        RESOURCE_TEXT_7_ID = 0x3f0,
+        RESOURCE_BORDER_0_ID = 0x3f1,
+        RESOURCE_BORDER_1_ID = 0x3f2,
+        RESOURCE_BORDER_2_ID = 0x3f3,
+        RESOURCE_BORDER_3_ID = 0x3f4,
+        RESOURCE_BORDER_4_ID = 0x3f5,
+        RESOURCE_BORDER_5_ID = 0x3f6,
+        RESOURCE_BORDER_6_ID = 0x3f7
+    };
+#endif  /* HOMM3_TOWNMGR_WIDGET_IDS */
+
     unsigned char isSmall;
     char pad_35[3];
     textWidget* resourceWidgets[7];
