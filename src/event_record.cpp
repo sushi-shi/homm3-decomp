@@ -13,6 +13,10 @@
 #undef HOMM3_EVENT_RECORD_CLEAR_DECL
 #include "abstractfile.h"
 #include "cursor.h"
+#include "inputmgr.h"
+#include "kbwin.h"
+#include "message.h"
+#include "prefs.h"
 #define HOMM3_EVENT_RECORD_MOVE_DECLS
 #include "advmgr.h"
 #undef HOMM3_EVENT_RECORD_MOVE_DECLS
@@ -195,12 +199,25 @@ unsigned char type_event_record::save(TAbstractFile* outfile)
 
 #if 0  // @carcass
 
-// E:\gamedcs\event_record.cpp:65
-DC_ONLY(0x8c6b8, 0x50)
-void set_player(char new_player)
+#endif  // @carcass
+
+// E:\gamedcs\event_record.cpp:65. NO RETAIL BODY: a file-scope static VC6
+// expands at its call site and then drops. Its `char` parameter is what
+// narrows play_recorded_events' saved seat back to a byte
+// (`movsx esi, byte ptr [ebp-0x18]` off an int local); the four record
+// replay bodies spell the same three stores out in line, which is what
+// their exact bytes show.
+static void set_player(char new_player)
 {
-    // @stub
+    if (gNetLocalGamePos != new_player) {
+        gpAdvManager->DeactivateCurrTown(0);
+        gpAdvManager->DeactivateCurrHero(0);
+    }
+    gNetLocalGamePos = new_player;
+    gpCurrentPlayer = &gpGame->players[new_player];
+    gUnnamed69ccc4 = 1 << new_player;
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:81
 DC_ONLY(0x8c708, 0x4)
@@ -1614,14 +1631,100 @@ void game::clear_event_records(char player_id)
         delete eventRecords[j];
     eventRecords.erase(eventRecords.begin(), eventRecords.begin() + i);
 }
-#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:1282
-DC_ONLY(0x8e830, 0x258)
+// Rewinds every queued record newest-first, then replays them all forward
+// while polling the input queue - the first key or button press stops the
+// DRAWING (each later record still replays, with draw = 0). The acting
+// seat, the current hero/town context and two preference latches are saved
+// across the whole run and restored at the end.
+VA(0x0049d7a0, 0x2C1)  // linkorder dc-label + adventure-options edge, dc 0x8e830
 void game::play_recorded_events()
 {
-    // @stub
+    int savedPlayer = gNetLocalGamePos;
+    playerData* actingPlayer = gpCurrentPlayer;
+
+    hero* currHero;
+    if (actingPlayer->currHeroId != -1)
+        currHero = &gpGame->heroes[actingPlayer->currHeroId];
+    else
+        currHero = 0;
+
+    gCompleteDrawMessageBypass = 1;
+
+    town* currTown;
+    if (actingPlayer->currTownId >= 0 && actingPlayer->currTownId != -1)
+        currTown = &gpGame->towns[actingPlayer->currTownId];
+    else
+        currTown = 0;
+
+    if (currHero == 0 && currTown == 0) {
+        if (actingPlayer->numHeroes > 0) {
+            if (actingPlayer->heroes[0] == -1)
+                currHero = 0;
+            else
+                currHero = &gpGame->heroes[actingPlayer->heroes[0]];
+        } else {
+            if (actingPlayer->townIds[0] == -1)
+                currTown = 0;
+            else
+                currTown = &gpGame->towns[actingPlayer->townIds[0]];
+        }
+    }
+
+    int i = eventRecords.size();
+    while (i--)
+        eventRecords[i]->undo();
+
+    gpAdvManager->CompleteDraw(0);
+    gpAdvManager->UpdateScreen(0, 0);
+
+    int count = eventRecords.size();
+    unsigned char interrupted = 0;
+    unsigned char savedSuppress = gUnnamed698790 != 0;
+    int savedWalkSpeed = gUnnamed698758.computerWalkSpeed;
+    if (gUnnamed698758.computerWalkSpeed > 4)
+        gUnnamed698758.computerWalkSpeed = 4;
+    gUnnamed698790 = 0;
+
+    for (int j = 0; j < count; ++j) {
+        unsigned char draw;
+        if (!interrupted) {
+            draw = 1;
+            if (eventRecords[j]->player_id == savedPlayer)
+                draw = 0;
+        } else {
+            draw = 0;
+        }
+        eventRecords[j]->replay(draw);
+
+        message msg = gpInputManager->GetEvent();
+        if (msg.id != MESSAGE_NONE) {
+            if (msg.id == MESSAGE_KEY_DOWN
+                || msg.id == MESSAGE_LEFT_BUTTON_DOWN
+                || msg.id == MESSAGE_RIGHT_BUTTON_DOWN
+                || msg.id == MESSAGE_WIDGET)
+                interrupted = 1;
+            else
+                Process1WindowsMessage();
+        }
+    }
+
+    gCompleteDrawMessageBypass = 0;
+    gCompleteDrawEnabled = 1;
+    set_player(savedPlayer);
+
+    if (currHero != 0)
+        gpAdvManager->SetHeroContext(currHero->id, 0, 0, 1);
+    if (currTown != 0)
+        gpAdvManager->SetTownContext(currTown->id, 0, 1);
+
+    gUnnamed698758.computerWalkSpeed = savedWalkSpeed;
+    gUnnamed698790 = savedSuppress;
+    gpAdvManager->CompleteDraw(0);
+    gpAdvManager->UpdateScreen(0, 0);
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:1367
 DC_ONLY(0x8ea88, 0x46)
