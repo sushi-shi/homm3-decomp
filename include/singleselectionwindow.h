@@ -396,7 +396,9 @@ public:
     void UpdateFilterWidgets();
     // Retail 0x584c40 (no DC row proven): the post-join roster
     // re-seat OnNewPlayerMsg's non-advanced arm runs. Ordinal name.
-    void WindowFn_00584c40();
+    // DC SetHumanSlot (dc 0x13b22c, 0.84x): re-seat the human players
+    // against the refreshed slot attributes.
+    void SetHumanSlot();
     // The advanced-options row accessors (DC names; retail
     // 0x58ce70/0x58ceb0/0x58cfb0/0x58d0e0/0x58d1f0). DC returns
     // THeroID from GetDisplayFace; spelled int so the public closure

@@ -2675,6 +2675,7 @@ singleselectionwindow	?PlayerDropped@CNewPlayerUpdateMan@@QAEXK@Z	100.0000	100.0
 singleselectionwindow	?SaveValid@@YIEPBD@Z	100.0000	100.0000	100.0000	0x177360
 singleselectionwindow	?SetCurrentMap@TSingleSelectionWindow@@QAEXHE@Z	99.6650	99.6650	99.6650	0x185500
 singleselectionwindow	?SetFilter@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x185d90
+singleselectionwindow	?SetHumanSlot@TSingleSelectionWindow@@QAEXXZ	19.8438	19.8438	19.8438	0x184c40
 singleselectionwindow	?SetNextPlayer@CNetPlayerHandler@@QAEEH@Z	96.2353	96.2353	96.2353	0x177ae0
 singleselectionwindow	?SetResolution@CChatSlider@@UAEXH@Z	100.0000	100.0000	100.0000	0x17c9d0
 singleselectionwindow	?SetState@CChatSlider@@UAEXH@Z	100.0000	100.0000	100.0000	0x17ca00
@@ -2706,7 +2707,6 @@ singleselectionwindow	TSingleSelectionWindow_TSingleSelectionWindow	0.0000	0.000
 singleselectionwindow	TSingleSelectionWindow_UpdateFilterWidgets	0.0000	0.0000	0.0000	0x17ef70
 singleselectionwindow	TSingleSelectionWindow_UpdateGameVars	0.0000	0.0000	0.0000	0x183580
 singleselectionwindow	TSingleSelectionWindow_WindowFn_00582e90	0.0000	0.0000	0.0000	0x182e90
-singleselectionwindow	TSingleSelectionWindow_WindowFn_00584c40	0.0000	0.0000	0.0000	0x184c40
 slider	??0slider@@QAE@HHHHHHP6IXHPAVheroWindow@@@ZW4EGraphics@0@HE@Z	100.0000	100.0000	100.0000	0x1960d0
 slider	??1slider@@UAE@XZ	100.0000	100.0000	100.0000	0x196180
 slider	??_Gslider@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x196020
