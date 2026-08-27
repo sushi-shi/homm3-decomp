@@ -2364,12 +2364,54 @@ void TSingleSelectionWindow::DisplayChat()
 
 #if 0  // @carcass
 
+#endif  // @carcass
+
+// Residual (65.7): branch census agrees 27=27 and every arm offset
+// lines up; retail keeps the walking index in ecx and re-reads pPlayer
+// from its arg slot, ours spills the index into that slot instead -
+// the register-homing family.
+// Step the player's face selection backward or forward (by the sign of
+// `which`), wrapping an unset index and giving up with -1 once the
+// walk returns to its start, skipping every face another seat holds.
 // E:\gamedcs\singleselectionwindow.cpp:7245
 VA(0x0058AF20, 0x182)  // anchor-callee RS_REQUEST_HERO_FACE arm calls it (which, pPlayer) - the DC signature, size 1.18x dc 0x146, dc 0x141824
 void TSingleSelectionWindow::GetHeroFace(int which, CNetPlayerHandlerPlayer* pPlayer)
 {
-    // @stub
+    int count = pPlayer->availableHeroesCount;
+    int idx = pPlayer->heroIndex;
+    if (count == 0)
+        return;
+    if (which < 0) {
+        do {
+            if (idx > 0)
+                --idx;
+            else if (idx == -1)
+                idx = count - 1;
+            else {
+                pPlayer->heroIndex = -1;
+                return;
+            }
+        } while (m_players.IsFaceTaken(
+                     pPlayer->availableHeroes[idx],
+                     m_players.GetGamePos(pPlayer->dpid)));
+    } else {
+        do {
+            if (idx < count - 1 && idx >= 0)
+                ++idx;
+            else if (idx == -1)
+                idx = 0;
+            else {
+                pPlayer->heroIndex = -1;
+                return;
+            }
+        } while (m_players.IsFaceTaken(
+                     pPlayer->availableHeroes[idx],
+                     m_players.GetGamePos(pPlayer->dpid)));
+    }
+    pPlayer->heroIndex = idx;
 }
+
+#if 0  // @carcass
 
 #endif  // @carcass
 
