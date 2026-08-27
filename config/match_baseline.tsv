@@ -2573,7 +2573,7 @@ singleselectionpopups	?Main@CSpriteWidget@@UAEHPAVmessage@@@Z	100.0000	100.0000	
 singleselectionpopups	?handle_message@CSingleSelPopup@@UAEHAAVmessage@@@Z	99.9636	99.9636	99.9636	0x175430
 singleselectionwindow	??0lobby_message@@QAE@XZ	100.0000	100.0000	100.0000	0x189190
 singleselectionwindow	??1CHostWaitDlg@@UAE@XZ	0.0000	0.0000	0.0000	0x189230
-singleselectionwindow	??1CNewPlayerUpdateProc@@QAE@XZ	72.2222	72.2222	72.2222	0x183ef0
+singleselectionwindow	??1CNewPlayerUpdateProc@@QAE@XZ	100.0000	100.0000	100.0000	0x183ef0
 singleselectionwindow	??_GCHostWaitDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x189200
 singleselectionwindow	??_GTSingleSelectionWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x17d130
 singleselectionwindow	?AddNewPlayer@CNetPlayerHandler@@QAEEPAVCNetPlayerInfo@@@Z	100.0000	100.0000	100.0000	0x177be0
@@ -2609,13 +2609,14 @@ singleselectionwindow	?PlayerDropped@CNewPlayerUpdateMan@@QAEXK@Z	100.0000	100.0
 singleselectionwindow	?SetNextPlayer@CNetPlayerHandler@@QAEEH@Z	96.2353	96.2353	96.2353	0x177ae0
 singleselectionwindow	?SetResolution@CChatSlider@@UAEXH@Z	100.0000	100.0000	100.0000	0x17c9d0
 singleselectionwindow	?SetState@CChatSlider@@UAEXH@Z	100.0000	100.0000	100.0000	0x17ca00
+singleselectionwindow	?Tick@CNewPlayerUpdateProc@@UAEXXZ	62.4785	62.4785	62.4785	0x177de0
 singleselectionwindow	?UpdateAllyEnemyFlags@TSingleSelectionWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x185300
 singleselectionwindow	?UpdatePlayerPositions@TSingleSelectionWindow@@QAEXE@Z	70.4601	70.4601	70.4601	0x188330
 singleselectionwindow	?UpdateTown@TSingleSelectionWindow@@QAEXHHE@Z	100.0000	100.0000	100.0000	0x18cd50
 singleselectionwindow	?WindowHandler@TSingleSelectionWindow@@UAEHPAVmessage@@@Z	90.0247	90.0247	90.0247	0x187d00
 singleselectionwindow	?handle_message@CHostWaitDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1891b0
 singleselectionwindow	CNewPlayerUpdateMan_HeaderRequested	0.0000	0.0000	0.0000	0x1892b0
-singleselectionwindow	CNewPlayerUpdateProc_Tick	0.0000	0.0000	0.0000	0x177de0
+singleselectionwindow	CNewPlayerUpdateProc_HandleRequests	0.0000	0.0000	0.0000	0x178010
 singleselectionwindow	CSingleSelectionNetMsgHandler_HandleNetMsg	0.0000	0.0000	0.0000	0x18e340
 singleselectionwindow	SaveValid	0.0000	0.0000	0.0000	0x177360
 singleselectionwindow	TSingleSelectionWindow_DrawHeroAdvancedOption	0.0000	0.0000	0.0000	0x18d510

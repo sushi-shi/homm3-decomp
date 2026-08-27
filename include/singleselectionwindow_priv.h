@@ -7,6 +7,8 @@
 #ifndef HOMM3_SINGLESELECTIONWINDOW_PRIV_H
 #define HOMM3_SINGLESELECTIONWINDOW_PRIV_H
 
+#include <vector>
+
 #include "inputmgr.h"
 #include "slider.h"
 #include "textresource.h"
@@ -129,11 +131,18 @@ struct GameSelectionHeadersStruct {
     // UpdatePlayerPositions copies the slot's town alignment out of the
     // selected header through this row (int, 8 slots at +0x314).
     int slotAlignments[8];
-    char pad_334[0x4a5 - 0x334];
+    char pad_334[0x33d - 0x334];
+    // Tick's CMapFileNameMsg expansion strncpy's the row's filename from
+    // here (0x3c-byte bound).
+    char fileName[0x3c + 0x2c];  // +0x33d (full extent unmodeled)
+    char pad_3a5[0x4a5 - 0x3a5];
     // CheckMissingHeaders requests every row whose byte here is still
     // clear - the received flag of the transfer.
     unsigned char received;  // +0x4a5
-    char pad_4a6[0xCA4 - 0x4a6];
+    char pad_4a6[0x6f8 - 0x4a6];
+    unsigned int fileTimeLow;   // +0x6f8, the row's FILETIME pair
+    unsigned int fileTimeHigh;  // +0x6fc
+    char pad_700[0xCA4 - 0x700];
 };
 SIZE(GameSelectionHeadersStruct, 0xCA4);
 
@@ -266,6 +275,42 @@ public:
 // (cell 0x6a7800, owner unclaimed).
 extern char* gUnnamed6a7800[];
 
+// The per-row header broadcast Tick streams (subtype 0x406, 0x84 B);
+// retail's inline expansion fixes every field offset. DC's ctor takes
+// (nbr, fileName, townType, fileTime); retail reads them all from the
+// header row plus the list-select flag.
+class CMapFileNameMsg : public CNetMsg {
+public:
+    unsigned char m_flag;         // +0x14
+    char pad_15[3];
+    int m_number;                 // +0x18
+    char m_fileName[0x40];        // +0x1c
+    int m_townTypes[8];           // +0x5c
+    unsigned int m_fileTimeLow;   // +0x7c
+    unsigned int m_fileTimeHigh;  // +0x80
+
+    CMapFileNameMsg(unsigned char flag, int number,
+                    GameSelectionHeadersStruct* hdr)
+        : CNetMsg(RS_MAP_FILE_NAME, sizeof(CMapFileNameMsg))
+    {
+        m_flag = flag;
+        m_number = number;
+        strncpy(m_fileName, hdr->fileName, 0x3c);
+        m_fileTimeLow = hdr->fileTimeLow;
+        m_fileTimeHigh = hdr->fileTimeHigh;
+        for (int i = 0; i < 8; ++i)
+            m_townTypes[i] = hdr->slotAlignments[i];
+    }
+};
+
+class CReqHeaderConfirmMsg : public CNetMsg {
+public:
+    CReqHeaderConfirmMsg()
+        : CNetMsg(RS_REQ_HEADER_CONFIRM, 0x14)
+    {
+    }
+};
+
 class CNewHostMsg : public CNetMsg {
 public:
     unsigned long m_dpidNewHost;  // +0x14
@@ -302,6 +347,14 @@ public:
     }
 };
 
+// One queued header re-request (CMapHeaderRequestMsg's payload pair);
+// CNewPlayerUpdateProc::HandleRequests drains a vector of these.
+struct SHeaderRequest {
+    int m_number;
+    unsigned char m_flag;
+    char pad_5[3];
+};
+
 // One per-joining-player header-transfer job. Retail vtable 0x641d38
 // (stored by the ctor at 0x589240): slot 0 Go (0x577d70), slot 1 Tick
 // (0x577de0) - the slot WindowHandler's inlined CNewPlayerUpdateMan::Tick
@@ -321,16 +374,17 @@ public:
     virtual void _vslot03();    // slot 3, 0x5789f0
     virtual void _vslot04();    // slot 4, 0x578a90
     virtual void _vslot05();    // slot 5, 0x5795a0
+    void HandleRequests();      // retail 0x578010
     ~CNewPlayerUpdateProc();
 
-    unsigned long m_dpid;        // +0x04
-    int field_08;                // +0x08
-    unsigned char field_0C;      // +0x0c
-    GameSelectionHeadersStruct* m_buffer;  // +0x10, freed by the dtor
-    int field_14;                // +0x14
-    int field_18;                // +0x18
-    int field_1C;                // +0x1c
-    unsigned char m_finished;    // +0x20, Tick-loop delete gate
+    unsigned long m_dpid;           // +0x04
+    int m_nextHeader;               // +0x08, next row to send
+    // +0x0c..+0x1c: allocator byte + _First/_Last/_End - Tick's
+    // (_Last-_First)>>3 emptiness test fixes the 8-byte element, and the
+    // dtor's deallocate+zero triple is the inlined vector teardown.
+    std::vector<SHeaderRequest> m_requests;
+    unsigned long m_lastSendTime;   // +0x1c, Tick's 75-tick throttle
+    unsigned char m_finished;       // +0x20, Tick-loop delete gate
 
     unsigned char IsFinished() const { return m_finished; }
 };

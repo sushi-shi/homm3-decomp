@@ -467,14 +467,85 @@ void CNewPlayerUpdateProc::Go()
     TransmitRemoteDataDPID(&msg, m_dpid, false, true);
 }
 
+// Stream up to five header rows per throttle window at the joining
+// player; when the list is exhausted, drain any queued re-requests and
+// ask for confirmation.
+//
+// Residual (62.5): retail runs the drain-arm exhaustion check ONCE with
+// the loop back edge re-entering at the send (10 branches to our 11);
+// hoisting the check out of the loop drops to 37.7 both times because
+// the arm layout then inverts - the same block-placement class as
+// UpdatePlayerPositions. The two confirm arms are goto-shared at the
+// end exactly as retail lays them.
+// E:\gamedcs\singleselectionwindow.cpp:1282
+VA(0x00577DE0, 0x228)  // anchor-vtable vtbl 0x641d38 slot1 - the slot WindowHandler's inlined Man::Tick dispatches; owns 'Requesting confirmation: %d' + GameTime::Get, size 1.06x dc 0x208, dc 0x148130
+void CNewPlayerUpdateProc::Tick()
+{
+    if (static_cast<int>(GameTime::Get() - m_lastSendTime) < 75)
+        return;
+    for (int k = 0; k < 5; ++k) {
+        if (m_nextHeader
+                >= (gUnnamed69fbe8->TransferHeadersFirst == 0
+                        ? 0
+                        : static_cast<unsigned int>(
+                              gUnnamed69fbe8->TransferHeadersLast
+                              - gUnnamed69fbe8->TransferHeadersFirst)))
+            goto drain_and_confirm;
+        {
+            CMapFileNameMsg msg(
+                1, m_nextHeader,
+                &gUnnamed69fbe8->TransferHeadersFirst[m_nextHeader]);
+            TransmitRemoteDataDPID(&msg, m_dpid, true, false);
+        }
+        ++m_nextHeader;
+        if (m_requests.size() != 0)
+            HandleRequests();
+        if (m_nextHeader
+                >= (gUnnamed69fbe8->TransferHeadersFirst == 0
+                        ? 0
+                        : static_cast<unsigned int>(
+                              gUnnamed69fbe8->TransferHeadersLast
+                              - gUnnamed69fbe8->TransferHeadersFirst)))
+            goto confirm;
+    }
+    m_lastSendTime = GameTime::Get();
+    return;
+
+confirm:
+    {
+        logFile.Log(DATA_COMPGEN(0x006834d0, requestingConfirmLog,
+                        "Requesting confirmation: %d"),
+                    m_dpid);
+        CReqHeaderConfirmMsg msg;
+        TransmitRemoteDataDPID(&msg, m_dpid, false, true);
+        m_lastSendTime = GameTime::Get();
+        return;
+    }
+
+drain_and_confirm:
+    if (m_requests.size() != 0)
+        HandleRequests();
+    logFile.Log(DATA_COMPGEN(0x006834d0, requestingConfirmLog,
+                    "Requesting confirmation: %d"),
+                m_dpid);
+    CReqHeaderConfirmMsg msg;
+    TransmitRemoteDataDPID(&msg, m_dpid, false, true);
+    m_lastSendTime = GameTime::Get();
+}
+
 #if 0  // @carcass
 
-// E:\gamedcs\singleselectionwindow.cpp:1282
-VA(0x00577de0, 0x228)  // anchor-vtable vtbl 0x641d38 slot1 - the slot WindowHandler's inlined Man::Tick dispatches; owns 'Requesting confirmation: %d' + GameTime::Get, size 1.06x dc 0x208, dc 0x148130
-void CNewPlayerUpdateProc::Tick()
+// E:\gamedcs\singleselectionwindow.cpp:1375
+VA(0x00578010, 0x272)  // anchor-callee Tick drains the m_requests vector through it at both of its non-empty checks, dc 0x1483f8
+void CNewPlayerUpdateProc::HandleRequests()
 {
     // @stub
 }
+
+#endif  // @carcass
+
+#if 0  // @carcass
+
 
 // E:\gamedcs\singleselectionwindow.cpp:1953
 VA(0x00579960, 0x2d63)  // anchor-callee CAdvPopup base ctor (??0CAdvPopup@@QAE@HHHHI@Z) + SavedGameHeader member ctor at this+0x38c+0x700, fs:[0] EH frame, ret4, dc 0x1309f0
@@ -813,21 +884,15 @@ int TSingleSelectionWindow::MaxPlayers()
 // The header-transfer job teardown: frees the staging buffer and zeroes
 // the buffer triple. Non-virtual - WindowHandler's inlined Tick deletes
 // through a direct call to this body.
-// Residual (72.2%): retail spills the freed pointer to a dead [ebp-4]
-// temp inside an ebp frame; volatile reproduces the store (plus one
-// re-read our CL adds) - tried and rejected: plain delete / delete[] /
-// named local (DCE'd) / struct-ptr delete / empty-dtor element type
-// (adds a null test, 38.9).
+// The whole body is the m_requests vector teardown (deallocate + the
+// zeroed triple) - the +0x10 members are a std::vector, so the user
+// dtor is empty. novtable (see the class) is what keeps the vptr
+// unstored, exactly as retail's bytes have it.
 // E:\gamedcs\singleselectionwindow.cpp:1553
 #pragma auto_inline(off)
 VA(0x00583ef0, 0x26)  // anchor-callee direct dtor call in WindowHandler's delete site + in ??_G-shaped 0x583ec0 + Man::PlayerDropped 0x589480, dc 0x148a28
 CNewPlayerUpdateProc::~CNewPlayerUpdateProc()
 {
-    GameSelectionHeadersStruct* volatile buffer = m_buffer;
-    delete buffer;
-    m_buffer = 0;
-    field_14 = 0;
-    field_18 = 0;
 }
 #pragma auto_inline(on)
 
