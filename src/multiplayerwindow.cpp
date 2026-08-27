@@ -81,14 +81,7 @@ void TMultiPlayerWindow::RefreshSessions()
     // @stub
 }
 
-// E:\gamedcs\multiplayerwindow.cpp:1359
-DC_ONLY(0x100ca0, 0x6A)
-unsigned char TMultiPlayerWindow::JoinSession(CDPlaySession* pSession, const char* password)
-{
-    // @stub
-}
-
-// HostSession / InitRemote promoted to VA claims (retail-located block).
+// JoinSession / HostSession / InitRemote promoted to VA claims (retail-located block).
 
 // E:\gamedcs\multiplayerwindow.cpp:1449
 DC_ONLY(0x100e94, 0x3A)
@@ -942,6 +935,29 @@ int TMultiPlayerWindow::WindowHandler(message* msg)
     }
 
     return CHeroWindowEx::WindowHandler(msg);
+}
+
+// Byte-exact. The DC roster fixes the signature and nearby emission order.
+// Retail proves the session GUID field, DirectPlay virtuals, player-info
+// writes and the last-error gate independently in the complete PC flow.
+VA(0x0050fa10, 0x9F)  // anchor-callees/globals + dc-order-map, dc 0x100ca0
+unsigned char TMultiPlayerWindow::JoinSession(CDPlaySession* pSession, const char* password)
+{
+    if (!pDPlay->JoinSession(&pSession->guidInstance,
+                             const_cast<char*>(password)))
+        return 0;
+
+    int version = *gpVideoGameState;
+    gsThisNetPlayerInfo.dpid = pDPlay->CreatePlayer(
+        gLocalPlayerName, &version, sizeof(version), 0);
+    strcpy(gsThisNetPlayerInfo.sName, gLocalPlayerName);
+    gsThisNetPlayerInfo.version = version;
+
+    if (pDPlay->GetLastError())
+        return 0;
+
+    sessTimer = 0;
+    return 1;
 }
 
 // Byte-exact. The DC roster supplies the signature and 256-byte sFullName
