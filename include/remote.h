@@ -83,6 +83,26 @@ protected:
 };
 SIZE(CNetMsgHandler, 0x0c);
 
+#ifdef HOMM3_COMMAND_PLAYER_DROP_VIEW
+// Narrow command-TU view of the pause handler installed in combatManager.
+// Its full definition normally lives in remotedlg.h, whose dialog closure
+// command.cpp deliberately does not include. Main only needs the inherited
+// abort-message setter; retaining the complete base-plus-pointer layout makes
+// that relationship explicit without broadening the include closure.
+class CNetMsgHandlerPause : public CNetMsgHandler {
+public:
+    CNetMsgHandlerPause();
+    virtual ~CNetMsgHandlerPause();
+    virtual CNetMsg* CheckHandleNet(unsigned char inPopup,
+                                    unsigned char* msgReceived);
+    virtual CNetMsg* HandleNetMsg(CNetMsg* pNetMsg);
+
+protected:
+    CNetMsgHandler* m_pNetMsgHandlerSave;
+};
+SIZE(CNetMsgHandlerPause, 0x10);
+#endif
+
 // Adventure-map network dispatch. Retail's trade handler reads the inherited
 // m_inPopup byte through IsInPopup; the DC roster supplies the class and
 // method names but no additional data members.

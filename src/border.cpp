@@ -73,75 +73,78 @@ border::~border()
 // with backward jumps, so the `returnZero:` label idiom carries over from
 // iconWidget::Main verbatim.
 //
-// Residual (91.98%): the SAME tail-merge divergence iconWidget::Main
-// carries, in the same TU family. Retail leaves the merged return-0 block
-// sitting where the field_2C guard puts it (`jle` hops over it) and
-// reaches the four later exits with backward jumps; this C2 sinks the
-// block to the LEFT_BUTTON_UP selected gate and inverts both polarities
-// to reach it. `--branches` reports 16/7 against retail 15/7. Tried and
-// rejected 2026-08-14: deleting the `returnZero:` label and spelling all
-// five exits as plain `return 0;` (91.7822%). Not source-reachable - the
-// merged-return generation class.
+// Residual (94.95%): retail shares the field_2C return-0 epilogue with the
+// four later zero exits. Duplicating that epilogue in source keeps the first
+// copy at retail's exact +0x0f position, but this C2 leaves one second copy at
+// the LEFT_BUTTON_UP selected gate: `--branches` reports 16 branches/8 rets
+// against retail's 15/7. Tried and rejected: all exits as plain returns
+// (92.38% in this structure; 91.78% measured 2026-08-14), a single labelled
+// epilogue (91.98%), a negated goto-over guard (92.52%), and an indirect
+// trampoline back to the early label (91.98%). The remaining duplicate is
+// the merged-return compiler-generation class.
 VA(0x0044ff60, 0x1CD)  // anchor-vtable (slot 2 of 0x63ba24), dc 0x54440
 int border::Main(message* msg)
 {
-    if (field_2C > 0) {
-returnZero:
+    if (field_2C > 0)
         return 0;
-    }
 
-    if (!(status & WIDGET_ACTIVE)) {
-        if (msg->id != MESSAGE_WIDGET)
-            goto returnZero;
+    {
+        if (!(status & WIDGET_ACTIVE)) {
+            if (msg->id != MESSAGE_WIDGET)
+                goto returnZero;
+            return widget::Main(msg);
+        }
+
+        unsigned char isDisabled = 0;
+        if (status & WIDGET_DISABLED)
+            isDisabled = 1;
+
+        switch (msg->id) {
+        case MESSAGE_LEFT_BUTTON_DOWN:
+            if (isDisabled)
+                break;
+            // fall through
+        case MESSAGE_RIGHT_BUTTON_DOWN: {
+            short mouseX = msg->codeX - parentWindow->x;
+            short mouseY = msg->codeY - parentWindow->y;
+            if (mouseX < x || mouseY < y || mouseX >= x + width
+                || mouseY >= y + height)
+                goto returnZero;
+            if (msg->id == MESSAGE_RIGHT_BUTTON_DOWN) {
+                msg->qualifier = MESSAGE_MODIFIER_RIGHT;
+                msg->codeX = WIDGET_RIGHT_SELECT;
+            } else {
+                status |= WIDGET_SELECTED;
+                msg->codeX = WIDGET_SELECT;
+            }
+            if (handle_click(1, msg->id == MESSAGE_RIGHT_BUTTON_DOWN))
+                return 1;
+            msg->id = MESSAGE_WIDGET;
+            msg->codeY = id;
+            return 2;
+        }
+
+        case MESSAGE_LEFT_BUTTON_UP:
+            if (isDisabled)
+                break;
+            // fall through
+        case MESSAGE_RIGHT_BUTTON_UP:
+            if (!(status & WIDGET_SELECTED))
+                goto returnZero;
+            status &= ~WIDGET_SELECTED;
+            if (handle_click(0, msg->id == MESSAGE_RIGHT_BUTTON_UP))
+                return 1;
+            msg->id = MESSAGE_WIDGET;
+            msg->codeX = WIDGET_DESELECT;
+            msg->codeY = id;
+            return 2;
+        }
+
         return widget::Main(msg);
     }
 
-    unsigned char isDisabled = 0;
-    if (status & WIDGET_DISABLED)
-        isDisabled = 1;
-
-    switch (msg->id) {
-    case MESSAGE_LEFT_BUTTON_DOWN:
-        if (isDisabled)
-            break;
-        // fall through
-    case MESSAGE_RIGHT_BUTTON_DOWN: {
-        short mouseX = msg->codeX - parentWindow->x;
-        short mouseY = msg->codeY - parentWindow->y;
-        if (mouseX < x || mouseY < y || mouseX >= x + width
-            || mouseY >= y + height)
-            goto returnZero;
-        if (msg->id == MESSAGE_RIGHT_BUTTON_DOWN) {
-            msg->qualifier = MESSAGE_MODIFIER_RIGHT;
-            msg->codeX = WIDGET_RIGHT_SELECT;
-        } else {
-            status |= WIDGET_SELECTED;
-            msg->codeX = WIDGET_SELECT;
-        }
-        if (handle_click(1, msg->id == MESSAGE_RIGHT_BUTTON_DOWN))
-            return 1;
-        msg->id = MESSAGE_WIDGET;
-        msg->codeY = id;
-        return 2;
-    }
-
-    case MESSAGE_LEFT_BUTTON_UP:
-        if (isDisabled)
-            break;
-        // fall through
-    case MESSAGE_RIGHT_BUTTON_UP:
-        if (!(status & WIDGET_SELECTED))
-            goto returnZero;
-        status &= ~WIDGET_SELECTED;
-        if (handle_click(0, msg->id == MESSAGE_RIGHT_BUTTON_UP))
-            return 1;
-        msg->id = MESSAGE_WIDGET;
-        msg->codeX = WIDGET_DESELECT;
-        msg->codeY = id;
-        return 2;
-    }
-
-    return widget::Main(msg);
+returnZero:
+    return 0;
 }
 
 // E:\gamedcs\border.cpp:201 - promoted from DC_ONLY 2026-08-14, the

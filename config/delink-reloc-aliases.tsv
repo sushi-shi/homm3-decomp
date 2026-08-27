@@ -10,3 +10,4 @@ function_rva	target_rva	site_rva	owner	addend	occurrences
 0x00093cf0	0x0026d8b4	0x00093de7	?akWallTraits@combatManager@@2PAY0BC@UTWallTraits@1@A	0x6c	1
 0x00095090	0x00299280	0x0009514b	?gpWindowManager@@3PAVheroWindowManager@@A	0x0	1
 0x00095090	0x002aacb0	0x00095151	?gSystemPalette@@3PAVTPalette16@@A	0x0	1
+0x0009be60	0x0029ccbc	0x0009be90	?gMapVisibilityBit@@3EA	0x0	1

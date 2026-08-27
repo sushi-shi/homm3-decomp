@@ -38,7 +38,7 @@ public:
     // The h3m reader, reached from readObject's QUEST_GUARD arm with the
     // stream as its one argument. DECLARED, not defined: the body is an
     // unclaimed carve row outside this compiland.
-    int read(TAbstractFile* infile);
+    void read(TAbstractFile* infile);
 
     // TWO TEXT BUILDERS, NOT ONE (2026-08-20). 0x572e40 and 0x573040 are
     // 511 B each and byte-identical apart from ONE relocation - the

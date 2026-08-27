@@ -1233,7 +1233,8 @@ public:
     // per-stack "this side has one of these" marker whose meaning that
     // latch does not name either. Behind the pow view, which the same
     // TU already defines.
-#if defined(HOMM3_ARMY_POW_VIEW) || defined(HOMM3_ARMY_COPY_VIEW)
+#if defined(HOMM3_ARMY_POW_VIEW) || defined(HOMM3_ARMY_COPY_VIEW) \
+        || defined(HOMM3_ARMY_COMMAND_ACTION_VIEW)
     unsigned char field_4d8;      // +0x4d8
 #ifndef HOMM3_ARMY_COPY_VIEW
     char pad_4d9[0x3];
@@ -1519,6 +1520,12 @@ public:
     // recorded here and NOT acted on: the access move is the same
     // whole-family pass simple_move's note above is waiting on.
     void attack_wall(TWallTargetId wall, long levelsDestroyed);
+#endif
+#ifdef HOMM3_ARMY_COMMAND_ACTION_VIEW
+    // ProcessNextAction's two dispatch-only army calls. The owning army.cpp
+    // views carry the larger member families; command.cpp needs only these.
+    void AttackWall(int iTargetGridIndex);
+    void cast_spell(long hex);
 #endif
     // The shooting pair. 0x440160 is the public no-argument entry - it
     // resolves groupToAttack/indexToAttack into the target stack, turns
