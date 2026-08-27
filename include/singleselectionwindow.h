@@ -99,6 +99,9 @@ public:
     virtual ~TSingleSelectionWindow();
     virtual int DoModal(unsigned char fadeIn);
     void UpdateAllyEnemyFlags(unsigned char update);
+    void UpdatePlayerPositions(unsigned char updateCurPlayer);
+    int Update();
+    unsigned char OnGameTransmitInitMsg(CNetMsg* pNetMsg);
 
 private:
     CNetPlayerHandlerPlayer* GetThisPlayer();

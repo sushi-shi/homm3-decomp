@@ -3,6 +3,7 @@
 // 265 functions in link order; 20 compiler-generated $-thunks omitted.
 #include <string.h>
 #include <va.h>
+#include "advmgr.h"
 #include "game.h"
 #include "singleselectionwindow.h"
 #include "singleselectionwindow_priv.h"
@@ -100,6 +101,14 @@ DATA(0x0069fbf4) static TTextResource* gpLossConditionText;
 DATA(0x0069fc18) static char* gLossConditionDesc[4];
 DATA(0x0069fb14) static TTextResource* gpTurnDurationText;
 DATA(0x0069fb44) static char* gTurnDurationText[11];
+DATA(0x00641ae8) static const int gTurnDurationMinutes[10] = {
+    1, 2, 4, 6, 8, 10, 15, 20, 25, 30
+};
+
+// kb.cpp owns these two located bodies. Keeping their declarations local
+// avoids perturbing the public include closure for this one consumer.
+void ShowProgressBar();
+void UnloadProgressBar();
 
 // E:\gamedcs\singleselectionwindow.cpp:821
 VA(0x00577a50, 0x30)  // anchor-callee ResourceManager::GetText + vcdesc resource key (data_2834ac) + 0x38-byte copy loop, ret0, dc 0x12ff40
@@ -922,20 +931,6 @@ unsigned char TSingleSelectionWindow::OnMapFileNameMsg(CNetMsg* pNetMsg)
     // @stub
 }
 
-// E:\gamedcs\singleselectionwindow.cpp:6773
-DC_ONLY(0x140670, 0x7C)
-void UpdateTurnDuration()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:6778
-VA(0x00589b20, 0x13C)  // anchor-callee mutual call-graph: calls UpdatePlayerPositions(0x588330) per DC edge; fingerprint w2.50 + monotone, dc 0x1406ec
-unsigned char TSingleSelectionWindow::OnGameTransmitInitMsg(CNetMsg* pNetMsg)
-{
-    // @stub
-}
-
 // E:\gamedcs\singleselectionwindow.cpp:6837
 DC_ONLY(0x140898, 0x13A)
 unsigned char TSingleSelectionWindow::OnNewSetupInfoMsg(CNetMsg* pNetMsg)
@@ -1336,6 +1331,69 @@ void CSingleSelectionNetMsgHandler::CSingleSelectionNetMsgHandler()
 }
 
 #endif  // @carcass
+
+// E:\gamedcs\singleselectionwindow.cpp:6773. The DC build retains this
+// helper out of line; Complete expands its sole operation at all three known
+// call sites and has no corresponding x86 function row.
+static inline void UpdateTurnDuration()
+{
+    gTurnDuration69d630.SetDuration(
+        gTurnDurationMinutes[gpGame->setup.turnDuration] * 60000);
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:6778
+// The DC local roster proves the calendar snapshots and the typed transmit
+// message. Complete's bytes additionally fix the local-seat/visibility
+// restoration after the temporary orig.dat round trip. The source-authentic
+// calendar declaration order reproduces all three retail CFG blocks, the
+// branch and both returns, and every instruction. The remaining 99.6237%
+// object score consists only of canonical source names versus the delinker's
+// raw names for the same callees/data cells; the executable operands agree.
+// Ten generated ordinary declaration/expression trees were flat, while the
+// semantically wrong calendar permutations were rejected despite a higher
+// object-label score.
+VA(0x00589b20, 0x13C)  // ReceiveSaveGame + UpdatePlayerPositions + dc 0x1406ec
+unsigned char TSingleSelectionWindow::OnGameTransmitInitMsg(CNetMsg* pNetMsg)
+{
+    CGameTransmitInitMsg* pMsg =
+        static_cast<CGameTransmitInitMsg*>(pNetMsg);
+
+    ShowProgressBar();
+    gNetLocalGamePos = pMsg->field_00;
+    gpCurrentPlayer = &gpGame->players[gNetLocalGamePos];
+    UpdatePlayerPositions(0);
+
+    int iReturn = gpGame->ReceiveSaveGame(
+        pMsg->m_fileSize, pMsg->m_fullGameCRC, pMsg->field_00,
+        0, pMsg->m_isDiff);
+    if (!iReturn) {
+        UnloadProgressBar();
+        DrawWindow(1, 0xffff0001, 0xffff);
+        Update();
+        return 0;
+    }
+
+    int iMonthTypeExtra = giMonthTypeExtra;
+    int iMonthType = giMonthType;
+    int iWeekType = giWeekType;
+    int iWeekTypeExtra = giWeekTypeExtra;
+
+    gpGame->LoadGame(
+        DATA_COMPGEN(0x00660410, remoteOriginalSaveName, "orig.dat"), 0, 1);
+    gpGame->SaveGame(
+        DATA_COMPGEN(0x00660410, remoteOriginalSaveName, "orig.dat"),
+        0, 0, 0, 1);
+
+    giWeekTypeExtra = iWeekTypeExtra;
+    giMonthType = iMonthType;
+    giMonthTypeExtra = iMonthTypeExtra;
+    giWeekType = iWeekType;
+    gUnnamed69d810 = gNetLocalGamePos;
+    gUnnamed69778c = gLocalGamePos;
+    gMapVisibilityBit = 1 << gLocalGamePos;
+    UpdateTurnDuration();
+    return 1;
+}
 
 // E:\gamedcs\singleselectionwindow.cpp:8764
 VA(0x0058e310, 0x21)  // anchor-vtable CSingleSelectionNetMsgHandler vtbl 0x241ce8 slot1 (CheckHandleNet; cf CNetMsgHandler layout), dc 0x1451a0

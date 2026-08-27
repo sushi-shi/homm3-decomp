@@ -246,11 +246,11 @@ CNetMsg* CAdvMgrNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
         }
         CGameTransmitInitMsg* pMsg =
             static_cast<CGameTransmitInitMsg*>(pNetMsg);
-        if (gpGame->GameFn_004CBD40(pMsg->m_field_14, pMsg->m_field_18,
-                                    pMsg->field_00, 1, pMsg->m_field_20)) {
-            if (pMsg->m_field_1c)
+        if (gpGame->ReceiveSaveGame(pMsg->m_fileSize, pMsg->m_fullGameCRC,
+                                    pMsg->field_00, 1, pMsg->m_isDiff)) {
+            if (pMsg->m_thisPlayerDead)
                 KbFn_004F4C00(pMsg->field_00, 1);
-            gpAdvManager->LoadRemote(pMsg->m_field_21);
+            gpAdvManager->LoadRemote(pMsg->m_makeOrig);
         }
         break;
     }

@@ -182,6 +182,7 @@ enum TArtifact {
     ARTIFACT_RING_OF_LIFE = 0x5f,
     ARTIFACT_VIAL_OF_LIFEBLOOD = 0x60,
     ARTIFACT_ELIXIR_OF_LIFE = 0x83,
+    ARTIFACT_COUNT = 144,
     ARTIFACT_NECKLACE_OF_SWIFTNESS = 0x61,
     ARTIFACT_CAPE_OF_VELOCITY = 0x63,
     // The ONE artifact hero::get_spell_level (0x4e5080) and

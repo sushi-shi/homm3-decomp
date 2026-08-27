@@ -4939,6 +4939,7 @@ void advManager::DoEventWagon(hero* current_hero, ExtraInfoUnion* cell,
 // the body proves and is PROVISIONAL; the row is not claimed here.
 TCreatureType UpgradedCreatureType(TCreatureType type);
 TCreatureType DowngradedCreatureType(TCreatureType type);
+int IsBaseCreature(TCreatureType type);
 
 // E:\gamedcs\events.cpp:3579. Pays out the artifact and resource reward from
 // the customized wandering-monster record selected by the cell.
@@ -6347,14 +6348,187 @@ void advManager::do_event_undead_lair(hero* current_hero, NewmapCell* cell, cons
 }
 #endif  // @carcass
 
-// E:\gamedcs\events.cpp:5851.  Located, not reconstructed.
-#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+// E:\gamedcs\events.cpp:5851.
 VA(0x004ac580, 0x3A7)  // dc-bracket forced, ret 0x2c=p12 (unique), dc 0x9af34
-int advManager::CombatMonsterEvent(hero* who, TCreatureType monType, int* numMons, NewmapCell* eventCell, type_point point, TCreatureType monType2, int numMons2, int numGroups2, TCreatureType monType3, int numMons3, int numGroups3)
+int advManager::CombatMonsterEvent(hero* who, int monType, int* numMons,
+                                   NewmapCell* eventCell, type_point point,
+                                   TCreatureType monType2, int numMons2,
+                                   int numGroups2, TCreatureType monType3,
+                                   int numMons3, int numGroups3)
 {
-    // @stub
+    static double threshold[6] = { 3.0, 2.0, 1.5, 1.0, 0.67, 0.5 };
+    static const int reorder_map[7][7][7] = {
+        {
+            { 0, 0, 0, 0, 0, 0, 0 },
+            { 0, 0, 0, 0, 0, 0, 0 },
+            { 0, 0, 0, 0, 0, 0, 0 },
+            { 0, 0, 0, 0, 0, 0, 0 },
+            { 0, 0, 0, 0, 0, 0, 0 },
+            { 0, 0, 0, 0, 0, 0, 0 },
+            { 0, 0, 0, 0, 0, 0, 0 }
+        },
+        {
+            { 1, 2, 3, 0, 4, 5, 6 },
+            { 1, 2, 0, 3, 6, 4, 5 },
+            { 1, 5, 2, 0, 3, 6, 4 },
+            { 1, 4, 2, 0, 5, 3, 6 },
+            { 3, 1, 4, 0, 5, 2, 6 },
+            { 2, 3, 0, 4, 1, 5, 6 },
+            { 1, 2, 3, 0, 4, 5, 6 }
+        },
+        {
+            { 2, 3, 0, 4, 1, 5, 6 },
+            { 2, 0, 3, 6, 4, 1, 5 },
+            { 2, 0, 5, 3, 6, 1, 4 },
+            { 4, 0, 2, 5, 3, 1, 6 },
+            { 3, 0, 4, 2, 5, 1, 6 },
+            { 2, 3, 0, 4, 1, 5, 6 },
+            { 0, 0, 0, 0, 0, 0, 0 }
+        },
+        {
+            { 3, 0, 4, 1, 5, 2, 6 },
+            { 0, 3, 1, 6, 4, 2, 5 },
+            { 0, 3, 5, 1, 6, 4, 2 },
+            { 0, 4, 1, 3, 5, 2, 6 },
+            { 3, 0, 4, 1, 5, 2, 6 },
+            { 0, 0, 0, 0, 0, 0, 0 },
+            { 0, 0, 0, 0, 0, 0, 0 }
+        },
+        {
+            { 0, 4, 1, 5, 2, 6, 3 },
+            { 0, 4, 1, 6, 2, 5, 3 },
+            { 0, 5, 1, 4, 2, 6, 3 },
+            { 0, 4, 1, 5, 2, 6, 3 },
+            { 0, 0, 0, 0, 0, 0, 0 },
+            { 0, 0, 0, 0, 0, 0, 0 },
+            { 0, 0, 0, 0, 0, 0, 0 }
+        },
+        {
+            { 0, 1, 5, 2, 6, 3, 4 },
+            { 0, 1, 5, 2, 6, 3, 4 },
+            { 0, 1, 5, 2, 6, 3, 4 },
+            { 0, 0, 0, 0, 0, 0, 0 },
+            { 0, 0, 0, 0, 0, 0, 0 },
+            { 0, 0, 0, 0, 0, 0, 0 },
+            { 0, 0, 0, 0, 0, 0, 0 }
+        },
+        {
+            { 0, 1, 2, 6, 3, 4, 5 },
+            { 0, 1, 2, 6, 3, 4, 5 },
+            { 0, 0, 0, 0, 0, 0, 0 },
+            { 0, 0, 0, 0, 0, 0, 0 },
+            { 0, 0, 0, 0, 0, 0, 0 },
+            { 0, 0, 0, 0, 0, 0, 0 },
+            { 0, 0, 0, 0, 0, 0, 0 }
+        }
+    };
+
+    DemobilizeCurrHero(0, 1);
+
+    int event_seed = point.x * 0x3c907 + point.z * 0x4bb5f
+                     + point.y * 0x4386d + 0x25ea7;
+    SRand(event_seed);
+
+    int combat_value = akCreatureTypeTraits[monType].AI_value * *numMons;
+    if (monType2 != CREATURE_NONE)
+        combat_value += akCreatureTypeTraits[monType2].AI_value * numMons2;
+    if (monType3 != CREATURE_NONE)
+        combat_value += akCreatureTypeTraits[monType3].AI_value * numMons3;
+
+    who->army.get_AI_value();
+    who->get_primary_skill_total();
+    double ratio = who->army.get_AI_value();
+    ratio /= combat_value;
+
+    int numGroups = 7;
+    for (int thresholdIndex = 5;
+         thresholdIndex > 0 && ratio >= threshold[thresholdIndex];
+         --thresholdIndex)
+        --numGroups;
+
+    int chance = Random(1, 100);
+    if (chance <= 20)
+        --numGroups;
+    if (chance >= 80 && numGroups < 7)
+        ++numGroups;
+
+    if (monType2 != CREATURE_NONE)
+        numGroups -= numGroups2;
+    if (monType3 != CREATURE_NONE)
+        numGroups -= numGroups3;
+    if (numGroups < 1)
+        numGroups = 1;
+    if (numGroups > *numMons)
+        numGroups = *numMons;
+
+    armyGroup army_group;
+    for (int i = 0; i < numGroups; ++i) {
+        army_group.armies[i] = monType;
+        army_group.numTroops[i] = *numMons / numGroups
+                                  + (*numMons % numGroups > i);
+    }
+
+    if ((gpGame->f_1f698
+         || (monType != CREATURE_AIR_ELEMENTAL
+             && monType != CREATURE_EARTH_ELEMENTAL
+             && monType != CREATURE_FIRE_ELEMENTAL
+             && monType != CREATURE_WATER_ELEMENTAL))
+        && static_cast<unsigned char>(
+               IsBaseCreature(creature_type_from_int(monType)))
+        && numGroups > 1
+        && monType2 == CREATURE_NONE
+        && monType3 == CREATURE_NONE
+        && Random(1, 100) <= 50) {
+        TCreatureType upgraded;
+        if (!gpGame->f_1f698
+            && (monType == CREATURE_AIR_ELEMENTAL
+                || monType == CREATURE_EARTH_ELEMENTAL
+                || monType == CREATURE_FIRE_ELEMENTAL
+                || monType == CREATURE_WATER_ELEMENTAL))
+            upgraded = CREATURE_NONE;
+        else
+            upgraded = UpgradedCreatureType(creature_type_from_int(monType));
+        army_group.armyTypes[numGroups / 2] = upgraded;
+    }
+
+    int totalGroups = numGroups;
+    if (monType2 != CREATURE_NONE) {
+        for (int i = 0; i < numGroups2; ++i) {
+            army_group.armyTypes[numGroups + i] = monType2;
+            army_group.numTroops[numGroups + i] =
+                numMons2 / numGroups2 + (numMons2 % numGroups2 > i);
+        }
+        totalGroups += numGroups2;
+    }
+
+    if (monType3 != CREATURE_NONE) {
+        for (int i = 0; i < numGroups3; ++i) {
+            army_group.armyTypes[totalGroups + i] = monType3;
+            army_group.numTroops[totalGroups + i] =
+                numMons3 / numGroups3 + (numMons3 % numGroups3 > i);
+        }
+    }
+
+    if (monType2 != CREATURE_NONE || monType3 != CREATURE_NONE) {
+        int tempNumTroops[7];
+        TCreatureType tempArmies[7];
+        memcpy(tempNumTroops, army_group.numTroops, sizeof(tempNumTroops));
+        memcpy(tempArmies, army_group.armyTypes, sizeof(tempArmies));
+        for (int i = 0; i < 7; ++i) {
+            army_group.armyTypes[i] =
+                tempArmies[reorder_map[numGroups][numGroups3][i]];
+            army_group.numTroops[i] =
+                tempNumTroops[reorder_map[numGroups][numGroups3][i]];
+        }
+    }
+
+    int result = DoCombat(point, who, &who->army, -1, 0, 0,
+                          &army_group, event_seed, 1, 0);
+    *numMons = army_group.get_creature_total(
+        creature_type_from_int(monType));
+    MobilizeCurrHero(0, 0, 1);
+    return result;
 }
-#endif  // @carcass
 
 // E:\gamedcs\events.cpp:6007.  Retires a hero from the adventure map -
 // combat loss, whirlpool, or any other vanishing - and then asks whether

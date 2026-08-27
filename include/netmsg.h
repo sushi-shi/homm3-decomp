@@ -203,11 +203,11 @@ SIZE(CHeroLevelUpdateMsg, 0x3c);
 // roster has not been consulted. Gated to advmgr's view.
 class CGameTransmitInitMsg : public CNetMsg {
 public:
-    unsigned long m_field_14;
-    unsigned long m_field_18;
-    unsigned long m_field_1c;
-    unsigned char m_field_20;
-    unsigned char m_field_21;
+    unsigned long m_fileSize;
+    unsigned long m_fullGameCRC;
+    unsigned long m_thisPlayerDead;
+    unsigned char m_isDiff;
+    unsigned char m_makeOrig;
 };
 
 class CChatMsg : public CNetMsg {
