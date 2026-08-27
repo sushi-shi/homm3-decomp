@@ -506,7 +506,8 @@ unsigned char type_skill_quest::is_satisfied(hero* current_hero)
 // formats the missing-skill list into the table's progress column and appends
 // the common deadline suffix before showing the same pictures.
 //
-// Residual (56.5135%): the semantic body is complete, but the current STL
+// Residual (57.7297%): the semantic body is complete, and computing the
+// five-column quest group once recovers the retail text-copy schedule. The STL
 // view gives VC6 44 CFG blocks and three cleanup exits against retail's 30
 // blocks and one exit. The original natural vector spelling inlined its
 // constructor/destructor and scored 46.5225%; source-local inline_depth(0)
@@ -552,8 +553,9 @@ void type_skill_quest::DoProposalDialog(hero* current_hero)
     } else {
         std::string requirement = skill_requirement_text(missing);
         const char* requirementPointer = requirement.c_str();
+        const std::string* texts = quest_texts();
         std::string text = format_string(
-            quest_text(QUEST_TEXT_PROGRESS).c_str(), requirementPointer);
+            texts[QUEST_TEXT_PROGRESS].c_str(), requirementPointer);
         text += get_time_limit_text();
         const char* textPointer = text.c_str();
 
