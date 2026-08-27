@@ -86,9 +86,38 @@ public:
 // would take the add-fix form retail lacks). The DC record
 // (SingleSelectionWindow.h:73) awaits field reconstruction.
 struct GameSelectionHeadersStruct {
-    char pad_0[0xCA4];
+    char pad_0[0x314];
+    // UpdatePlayerPositions copies the slot's town alignment out of the
+    // selected header through this row (int, 8 slots at +0x314).
+    int slotAlignments[8];
+    char pad_334[0xCA4 - 0x334];
 };
 SIZE(GameSelectionHeadersStruct, 0xCA4);
+
+// The lobby-only message subtypes past the DC eRS_Messages ladder's
+// 1081 end (SoD renumbered/extended the header-transfer family). Values
+// byte-proven at their build sites in this TU; TU-private so the shared
+// netmsg.h ladder - a measured include-set trigger - is untouched.
+enum eRS_LobbyMessages {
+    RS_NEW_SETUP_INFO_EX = 0x402,       // 1026 DC RS_NEW_SETUP_INFO
+    RS_SETUP_PING_EX = 0x417,           // 1047 DC RS_SETUP_PING
+    RS_SETUP_PING_RESPONSE_EX = 0x418,  // 1048 DC RS_SETUP_PING_RESPONSE
+    RS_GAME_HEADER_INFO_INIT = 0x43b    // 1083, CGameHeaderInfoInitMsg
+};
+
+// DC SingleSelectionWindow.h's header-transfer opener (dc 0x1478a4 takes
+// numMaps/loadGameMode/msgSize; retail's inline expansion at Go varies
+// only the count - the mode rides the zeroed base field).
+class CGameHeaderInfoInitMsg : public CNetMsg {
+public:
+    unsigned long m_numMaps;  // +0x14
+
+    CGameHeaderInfoInitMsg(unsigned long numMaps)
+        : CNetMsg(RS_GAME_HEADER_INFO_INIT, sizeof(CGameHeaderInfoInitMsg))
+    {
+        m_numMaps = numMaps;
+    }
+};
 
 // One per-joining-player header-transfer job. Retail vtable 0x641d38
 // (stored by the ctor at 0x589240): slot 0 Go (0x577d70), slot 1 Tick

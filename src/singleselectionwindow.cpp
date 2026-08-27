@@ -3,9 +3,14 @@
 // 265 functions in link order; 20 compiler-generated $-thunks omitted.
 #include <string.h>
 #include <va.h>
+// UpdatePlayerPositions reaches SetupFirstPlayer and the new-map bonus
+// array, both scoped behind game.h's new-map view gate.
+#define HOMM3_GAME_NEW_MAP_DECLS
 #include "advmgr.h"
 #include "game.h"
 #include "kb.h"
+#include "newgame.h"
+#include "savegame.h"
 #include "text.h"
 #include "singleselectionwindow.h"
 #include "singleselectionwindow_priv.h"
@@ -431,12 +436,24 @@ int CNetPlayerHandler::GetPlayerCount(unsigned char assignedOnly)
     // @stub
 }
 
+
+#endif  // @carcass
+
+// Opens the header transfer to the joining player: announce how many
+// headers will follow.
 // E:\gamedcs\singleselectionwindow.cpp:1272
-VA(0x00577d70, 0x6C)  // anchor-vtable CNewPlayerUpdateProc vtbl 0x641d38 slot0; sends the 0x43b progress msg from the +0x1044/+0x1048 pair, size 1.08x dc 0x64, dc 0x1480cc
+VA(0x00577d70, 0x6C)  // anchor-vtable CNewPlayerUpdateProc vtbl 0x641d38 slot0; sends the 0x43b header-count msg from the +0x1044/+0x1048 pair, size 1.08x dc 0x64, dc 0x1480cc
 void CNewPlayerUpdateProc::Go()
 {
-    // @stub
+    TSingleSelectionWindow* win = gUnnamed69fbe8;
+    CGameHeaderInfoInitMsg msg(
+        win->TransferHeadersFirst == 0
+            ? 0
+            : win->TransferHeadersLast - win->TransferHeadersFirst);
+    TransmitRemoteDataDPID(&msg, m_dpid, false, true);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:1282
 VA(0x00577de0, 0x228)  // anchor-vtable vtbl 0x641d38 slot1 - the slot WindowHandler's inlined Man::Tick dispatches; owns 'Requesting confirmation: %d' + GameTime::Get, size 1.06x dc 0x208, dc 0x148130
@@ -776,8 +793,8 @@ int TSingleSelectionWindow::MaxPlayers()
 // the buffer triple. Non-virtual - WindowHandler's inlined Tick deletes
 // through a direct call to this body.
 // E:\gamedcs\singleselectionwindow.cpp:1553
-VA(0x00583ef0, 0x26)  // anchor-callee direct dtor call in WindowHandler's delete site + in ??_G-shaped 0x583ec0 + Man::PlayerDropped 0x589480, dc 0x148a28
 #pragma auto_inline(off)
+VA(0x00583ef0, 0x26)  // anchor-callee direct dtor call in WindowHandler's delete site + in ??_G-shaped 0x583ec0 + Man::PlayerDropped 0x589480, dc 0x148a28
 // Residual (72.2%): retail spills the freed pointer to a dead [ebp-4]
 // temp inside an ebp frame; volatile reproduces the store (plus one
 // re-read our CL adds) - tried and rejected: plain delete / delete[] /
@@ -1198,11 +1215,124 @@ int TSingleSelectionWindow::GetThisPlayerGamePos()
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:6301
+#endif  // @carcass
+
+// Residual (70.5): branch census agrees 33=33 and every block matches
+// internally, but our CL places the solo-seat arm INLINE and the
+// assign-seats arm out of line where retail has the reverse - four
+// structurally different spellings (||-if/else, &&-swapped, single goto,
+// nested-if + forward goto) all canonicalize to the same inverted
+// layout, so this is the block-placement/stale-CL-generation class, not
+// a spelling. The solo arm's null-join is also thread-folded where
+// retail keeps the two-step xor/test join.
+// Rebuilds the per-seat game state from the lobby roster: clears the
+// non-host players' local/human flags, assigns or clears each seat's
+// net identity (with the hotseat mode-3 special), commits the roster's
+// names/bonus/handicap/alignment picks into gpGame->setup, then
+// re-derives the acting-player globals and the visibility mask.
+// E:\gamedcs\singleselectionwindow.cpp:6301
 VA(0x00588330, 0x462)  // anchor-callee mutual call-graph: OnGameTransmitInitMsg(0x589b20) calls this per DC edge; fingerprint w4.14 + monotone, dc 0x13f770
 void TSingleSelectionWindow::UpdatePlayerPositions(unsigned char updateCurPlayer)
 {
-    // @stub
+    gUnnamed699274 = 0;
+    for (int i = 0; i < 8; ++i) {
+        gpGame->players[i].isLocal = 0;
+        gpGame->players[i].isHuman = 0;
+    }
+
+    if (!bVideoPaused) {
+        if (gUnnamed6989f0 != WINDOW_MODE_6989F0_3)
+            goto solo_seat;
+    }
+    {
+        for (int i = 0; i < 8; ++i) {
+            CNetPlayerHandlerPlayer* p = m_players.GetPlayerInPos(i);
+            if (!p)
+                p = &m_players.computerPlayers[i];
+            if (p && p->dpid != 0) {
+                gpGame->players[i].AssignNetInfo(p);
+                if (gUnnamed6989f0 == WINDOW_MODE_6989F0_3) {
+                    gpGame->players[i].isLocal = 1;
+                    gpGame->players[i].isHuman = 1;
+                }
+                ++gUnnamed699274;
+            } else {
+                gpGame->players[i].ClearNetInfo();
+            }
+        }
+        if (gUnnamed6989f0 != WINDOW_MODE_6989F0_3) {
+            int pos = m_players.GetNetPos(gsThisNetPlayerInfo.dpid);
+            if (pos != -1)
+                pos = m_players.humanPlayers[pos].playerPos;
+            gLocalGamePos = pos;
+            if (pos != -1) {
+                gpGame->players[gLocalGamePos].isLocal = 1;
+                gpGame->players[gLocalGamePos].isHuman = 1;
+            }
+            if (!bVideoPaused || pDPlay->IsHost()) {
+                if (updateCurPlayer)
+                    gNetLocalGamePos = gLocalGamePos;
+            }
+        }
+        goto commit;
+    }
+
+solo_seat:
+    {
+        gUnnamed699274 = 0;
+        CNetPlayerHandlerPlayer* p =
+            m_players.GetPlayer(gsThisNetPlayerInfo.dpid);
+        if (p) {
+            gLocalGamePos = p->playerPos;
+            gpGame->players[gLocalGamePos].isHuman = 1;
+            gpGame->players[gLocalGamePos].isLocal = 1;
+            gUnnamed699274 = 1;
+        }
+    }
+
+commit:
+    for (i = 0; i < 8; ++i) {
+        strcpy(gpGame->players[i].cName, gpGeneralText->GetText(469));
+        CNetPlayerHandlerPlayer* p = m_players.GetPlayerInPos(i);
+        if (p)
+            strcpy(gpGame->players[i].cName, p->sName);
+        else
+            p = &m_players.computerPlayers[i];
+        if (p) {
+            gNewMapStartingBonus[i] = p->startBonusIndex;
+            if (!m_flag64) {
+                gpGame->setup.startingBonus[i] =
+                    static_cast<signed char>(p->startBonusIndex);
+                gpGame->setup.startingHero[i] = -1;
+                if (p->townIndex != -1)
+                    gpGame->setup.alignment[i] = p->townIndex;
+                else if (p->dpid != 0)
+                    gpGame->setup.alignment[i] =
+                        pCurrentHeader->slotAlignments[i];
+                else if (gpGame->setup.playerPos[i] >= 0)
+                    gpGame->setup.alignment[i] = pick_alignment(
+                        gpGame->mapHeader.playerSlotAttributes[i]
+                            .legalAlignments, 0);
+            }
+            if (!m_flag64)
+                gpGame->setup.handicap[i] =
+                    static_cast<signed char>(p->handicap);
+        }
+    }
+
+    if (updateCurPlayer)
+        gpGame->SetupFirstPlayer();
+
+    if (gUnnamed6989f0 == WINDOW_MODE_6989F0_3)
+        gUnnamed69778c = gNetLocalGamePos;
+    else
+        gUnnamed69778c = gLocalGamePos;
+    gMapVisibilityBit = 1 << gUnnamed69778c;
+    gCompleteDrawEnabled = gpGame->IsLocalHuman(gNetLocalGamePos);
 }
+
+#if 0  // @carcass
+
 
 // E:\gamedcs\singleselectionwindow.cpp:6443 - relocated for RVA order.
 VA(0x005887a0, 0x9ED)  // anchor-callee WindowHandler's net pump calls it (pMsg, &cancel) right after GetRemoteData(1,0) - the DC signature; size 1.5x dc 0x6a0, dc 0x13fd74
