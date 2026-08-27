@@ -3640,6 +3640,18 @@ void TBuyArtifactWindow::SetRolloverText(int codeY)
 // backpack scroll arrows (re-blitting the visible icons), or posts a tab
 // command; subtype 0xe right-clicks a slot into its info popup. Hover copies
 // the rollover string.
+//
+// Residual (86.57%): retail lays the deselect arms deal, arrows, exit and
+// keeps the shared Update(1)/bExit tail as the DEAL arm's fall-through
+// (+0x1c2), with NormalDialog sunk past the artifact-select expansion.
+// The goto-merge below reproduced the arrows' shared SetupNewTrade
+// expansion (carried by the second arm, +2.44) and the resource-select
+// pin its out-of-line ComputeTradeRatios (+2.96), but the labeled tail
+// still sinks to the end and the exit arm still lays between deal and
+// arrows. Tried and rejected: exit-cases-after-arrows source order
+// (80.25 pre-goto, 82.01 in the goto config - layout is NOT source order
+// for this chain), bUpdate-flag removal alone (byte-inert; VC6 already
+// const-folds the always-1 flag).
 VA(0x005edf60, 0x75f)  // anchor-vtable 0x643aac slot 9, dc 0x18c00c
 int TSellArtifactWindow::WindowHandler(message* msg)
 {
