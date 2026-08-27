@@ -1034,6 +1034,7 @@ event_record	?undo@type_record_hide_hero@@UAEXXZ	100.0000	100.0000	100.0000	0x9b
 events	?DoEvent@advManager@@QAEXPAVNewmapCell@@Utype_point@@@Z	100.0000	100.0000	100.0000	0xaaaa0
 events	?DoEventAnchor@advManager@@QAEXPAVhero@@_N@Z	100.0000	100.0000	100.0000	0x9e670
 events	?DoEventArena@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0x9e7d0
+events	?DoEventArtifact@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	78.1174	78.1174	78.1174	0x9f7e0
 events	?DoEventBlackBox@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa0c50
 events	?DoEventBoat@advManager@@QAEXPAVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0xa1010
 events	?DoEventCampfire@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa1120
@@ -1128,7 +1129,6 @@ events	advManager_DoCombat	0.0000	0.0000	0.0000	0xad470
 events	advManager_DoCustomArtifact	0.0000	0.0000	0.0000	0x9f070
 events	advManager_DoCustomResource	0.0000	0.0000	0.0000	0xa4780
 events	advManager_DoCustomSpellScroll	0.0000	0.0000	0.0000	0xa5a80
-events	advManager_DoEventArtifact	0.0000	0.0000	0.0000	0x9f7e0
 events	advManager_DoEventCreatureBank	0.0000	0.0000	0.0000	0xa15a0
 events	advManager_DoEventCreatureGenerator	0.0000	0.0000	0.0000	0xa18b0
 events	advManager_DoEventPrison	0.0000	0.0000	0.0000	0xa3eb0
