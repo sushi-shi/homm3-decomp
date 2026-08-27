@@ -20,6 +20,8 @@ enum EKeyCodes {
     KEYCODE_ESCAPE = 0x01,
     KEYCODE_TAB = 0x0f,
     KEYCODE_ENTER = 0x1c,
+    KEYCODE_A = 0x1e,
+    KEYCODE_C = 0x2e,
     // The nine letter/space rows advManager::ProcessKeyPress's byte-index
     // table names. Each value is read straight off that table (the index
     // is codeX - 1) and the arm behind it confirms the letter: T next
