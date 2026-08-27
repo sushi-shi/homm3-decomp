@@ -3648,7 +3648,6 @@ int TSellArtifactWindow::WindowHandler(message* msg)
         return r;
 
     int bExit = 0;
-    int bUpdate = 0;
 
     if (msg->id != MESSAGE_MOUSE_MOVE) {
         if (msg->id != MESSAGE_WIDGET)
@@ -3665,9 +3664,19 @@ int TSellArtifactWindow::WindowHandler(message* msg)
                 if (resource == gLeftResource)
                     return 1;
                 gLeftResource = resource;
-                if (gSelectedArtifact != -1)
-                    SetupNewTrade();
-                break;
+                if (gSelectedArtifact != -1) {
+                    // Retail expands SetupNewTrade here but keeps its
+                    // interior ComputeTradeRatios OUT of line (the one
+                    // call at +0x50e); the sibling artifact-select arm
+                    // expands both levels. Hand-duplicated with the
+                    // statement pin to split the two decisions.
+#pragma inline_depth(0)
+                    ComputeTradeRatios(gSelectedArtifact, gLeftResource,
+                        &gGiveQuantity, &gRatioInverted, &gMaxTradeUnits);
+#pragma inline_depth()
+                    gRightAmount = 1;
+                }
+                goto update;
             }
             case MARKET_ARTIFACT_SLOT_13_ID: case MARKET_ARTIFACT_SLOT_14_ID:
             case MARKET_ARTIFACT_SLOT_15_ID: case MARKET_ARTIFACT_SLOT_16_ID:
@@ -3690,13 +3699,11 @@ int TSellArtifactWindow::WindowHandler(message* msg)
                 gSelectedArtifact = slot;
                 if (gLeftResource != -1)
                     SetupNewTrade();
-                break;
+                goto update;
             }
             default:
                 return 1;
             }
-            bUpdate = 1;
-            break;
 
         case widget::WIDGET_DESELECT:
             switch (msg->codeY) {
@@ -3718,7 +3725,13 @@ int TSellArtifactWindow::WindowHandler(message* msg)
                 gLeftDenominated = 1;
                 gLeftResource = -1;
                 gSelectedArtifact = -1;
-                break;
+update:
+                Update(1);
+                if (bExit) {
+                    msg->codeX = msg->codeY = widget::WIDGET_END_DIALOG;
+                    return 2;
+                }
+                return 1;
             case MARKET_LEFT_COUNT_ID:
             case MARKET_LEFT_LABEL_ID:
             case MARKET_RIGHT_LABEL_ID:
@@ -3727,20 +3740,18 @@ int TSellArtifactWindow::WindowHandler(message* msg)
                 gLeftResource = -1;
                 gSelectedArtifact = -1;
                 gLeftDenominated = 0;
-                break;
+                goto update;
             case MARKET_ARTIFACT_LEFT_ARROW_ID:
                 decrement_backpack_start();
                 SetupNewTrade();
-                break;
+                goto update;
             case MARKET_ARTIFACT_RIGHT_ARROW_ID:
                 increment_backpack_start();
                 SetupNewTrade();
-                break;
+                goto update;
             default:
                 return 1;
             }
-            bUpdate = 1;
-            break;
 
         case widget::WIDGET_RIGHT_SELECT:
             switch (msg->codeY) {
@@ -3775,13 +3786,6 @@ int TSellArtifactWindow::WindowHandler(message* msg)
             return 1;
         }
 
-        if (bUpdate)
-            Update(1);
-        if (bExit) {
-            msg->codeX = msg->codeY = widget::WIDGET_END_DIALOG;
-            return 2;
-        }
-        return 1;
     }
 
     gpWindowManager->ConvertToHover(*msg);
