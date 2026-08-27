@@ -1498,15 +1498,103 @@ void type_AI_player::purchase_buildings()
     // @stub
 }
 
+// E:\gamedcs\ai_player.cpp:1954
+#endif  // @carcass
+
 // E:\gamedcs\ai_player.cpp:1850
+// Retail expands the purchaser ctor, do_swap, both set overloads,
+// TownAlreadyBuiltOn (towns[id].field_02) and is_human_ally in place while
+// keeping set(town-ctor path)/do_purchase/get_purchase_value/AI_arrange_army
+// out of line. The dwelling scan walks bitNumber[DWELLING_0_ID..DWELLING_6_ID]
+// against get_buildable_mask and prices each candidate through the
+// single-candidate set overload with the leftover supply as funds.
 VA(0x0042ba60, 0x447)  // retail callee set + arity, dc 0x310f4
 void type_AI_player::buy_creatures(hero* current_hero, town* current_town)
 {
-    // @stub
-}
+    playerData* player = &gpGame->players[team];
+    type_AI_creature_purchaser purchaser(current_hero->owner, current_town);
 
-// E:\gamedcs\ai_player.cpp:1954
-#endif  // @carcass
+    hero* garrison_hero = 0;
+    if (current_town->garrisonHeroId > -1)
+        garrison_hero = gpGame->GetHero(current_town->garrisonHeroId);
+
+    unsigned char alliance = gpGame->players[current_hero->owner]
+        .hasGivenArtifact(ARTIFACT_ANGELIC_ALLIANCE);
+    purchaser.do_swap(current_hero,
+                      const_cast<armyGroup*>(
+                          &static_cast<const town*>(current_town)->get_army()),
+                      garrison_hero, alliance);
+
+    long* funds = player->resources;
+    purchaser.set_subtract_mode(0);
+    purchaser.do_purchase(&current_hero->army,
+                          current_hero->GetMorale(0, 0, 1),
+                          const_cast<armyGroup*>(
+                              &static_cast<const town*>(current_town)
+                                   ->get_army()),
+                          funds, 1, alliance);
+
+    // Residual note: retail's inlined TownAlreadyBuiltOn (dc 0x3803c)
+    // materialises the byte in BL before testing; a named local AND a
+    // single-call-site static both fold back to the direct cmp (74.20 /
+    // 74.18 - measured 2026-08-27).
+    if (!gpGame->towns[current_town->id].field_02) {
+        if (gpGame->setup.difficulty
+            || gpGame->is_human_ally(gNetLocalGamePos)) {
+            long best_value = 0;
+            union {
+                int index;
+                type_building_id id;
+            } building, best_building;
+            __int64 buildable = current_town->get_buildable_mask();
+            int morale = current_hero->GetMorale(0, 0, 1);
+            for (building.index = DWELLING_0_ID;
+                 building.index <= DWELLING_6_ID; building.index++) {
+                if (buildable & bitNumber[building.index]) {
+                    TCreatureType creature = gTownDwellingCreatures[
+                        current_town->type * TOWN_DWELLING_SLOTS
+                        + building.index - DWELLING_0_ID];
+                    const TCreatureTypeTraits& traits =
+                        akCreatureTypeTraits[creature];
+                    int* cost = current_town->get_build_cost_array(building.id);
+                    long supply[7];
+                    unsigned char affordable = 1;
+                    for (int resource = 0; resource < 7; ++resource) {
+                        supply[resource] = funds[resource] - cost[resource];
+                        if (supply[resource] < 0)
+                            affordable = 0;
+                    }
+                    if (affordable) {
+                        short growth = traits.growthRate;
+                        purchaser.set(creature, &growth, 0);
+                        long value = purchaser.get_purchase_value(
+                            &current_hero->army, morale,
+                            &static_cast<const town*>(current_town)
+                                 ->get_army(),
+                            supply, alliance);
+                        if (value > best_value) {
+                            best_value = value;
+                            best_building.index = building.index;
+                        }
+                    }
+                }
+            }
+            if (best_value > 0) {
+                int* cost =
+                    current_town->get_build_cost_array(best_building.id);
+                current_town->BuildBuilding(best_building.index, 1, 1);
+                for (int resource = 0; resource < 7; ++resource)
+                    funds[resource] -= cost[resource];
+                purchaser.set(current_town);
+                purchaser.do_purchase(&current_hero->army, morale,
+                                      const_cast<armyGroup*>(
+                                          &static_cast<const town*>(
+                                               current_town)->get_army()),
+                                      funds, 1, alliance);
+            }
+        }
+    }
+    }
 
 VA(0x0042beb0, 0x187)  // retail callee set + arity, dc 0x31398
 void type_AI_player::buy_mage_guild(hero* current_hero, town* current_town)
@@ -1589,12 +1677,8 @@ short calculate_improvement(const hero* current_hero, const hero* second_hero)
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:2187
-DC_ONLY(0x31808, 0x5C)
-void type_AI_creature_swapper::do_swap(hero* current_hero, armyGroup* source_army, hero* second_hero)
-{
-    // @stub
-}
+// do_swap (dc 0x31808) promoted to VA(0x0042c3b0) in RVA order below;
+// Complete adds the Angelic-Alliance parameter the philai callers pass.
 
 // E:\gamedcs\ai_player.cpp:2209
 DC_ONLY(0x31864, 0xC0)
@@ -2370,6 +2454,47 @@ long type_AI_creature_swapper::do_best_swap(bool can_take_all)
     return best_value;
 }
 
+static __forceinline void AI_consolidate_army_impl(armyGroup* current_army);
+
+// Complete widens the DC do_swap (0x31808, 92 B) with the Angelic-Alliance
+// flag its philai callers pass, inlines calculate_improvement (dc 0x317d4)
+// and AI_consolidate_army, and arranges the merged army out of line.
+VA(0x0042c3b0, 0xe3)  // anchor-callee (philai 0x524370/0x52539f/0x525e53 + dump/do_best_swap/AI_arrange_army), dc 0x31808
+inline void type_AI_creature_swapper::do_swap(hero* current_hero,
+                                       armyGroup* source_army,
+                                       hero* second_hero,
+                                       unsigned char new_has_angelic_alliance)
+{
+    has_angelic_alliance = new_has_angelic_alliance;
+    army = &current_hero->army;
+    adjacent_army = source_army;
+    morale = current_hero->GetMorale(0, 0, 1);
+    short new_improvement = current_hero->get_primary_skill_total();
+    if (second_hero)
+        new_improvement -= second_hero->get_primary_skill_total();
+    if (new_improvement < 0)
+        new_improvement = 0;
+    improvement = new_improvement;
+    // Spelled as the plain call: the standalone body auto-inlines it, while
+    // buy_creatures' inline copy of do_swap leaves it out of line - exactly
+    // retail's two shapes. The forceinline impl would weld it inline in both.
+    AI_consolidate_army(army);
+    dump_extra_creature();
+    do {
+    } while (do_best_swap(adjacent_army->GetNumArmies() > 1) > 0);
+    AI_arrange_army(army);
+}
+
+// The definition above is `inline` so /Ob2 expands it into buy_creatures (a
+// plain out-of-class definition of this size is never an auto-inline
+// candidate - the 740 B TObstacleVector::insert precedent); the philai
+// callers still emit retail's out-of-line call because their small bodies
+// sit at the 1000 budget floor. The address-take forces the COMDAT emission
+// the claimed 0x42c3b0 row diffs against.
+void (type_AI_creature_swapper::* g_emit_do_swap)(
+    hero*, armyGroup*, hero*, unsigned char) =
+    &type_AI_creature_swapper::do_swap;
+
 // DC proves this method's identity, signature, and call graph. Retail adds a
 // separate get_alignments call after temporarily dismissing each candidate;
 // the surrounding capacity checks and the restore/add split are byte-visible.
@@ -2671,6 +2796,19 @@ void type_AI_creature_purchaser::set(town* current_town)
     }
 }
 
+// The single-candidate overload (dc 0x31ffc, ai_player.cpp:2524). No retail
+// out-of-line body exists - set(town) ends at 0x42d418 and the next carve row
+// is 0x42d420 - so every retail caller expands it (buy_creatures 0x42bx: the
+// erase(begin,end) + one insert(end, source) pair). Unclaimed by design.
+void type_AI_creature_purchaser::set(TCreatureType new_type,
+                                     short* new_amount,
+                                     unsigned char new_is_free)
+{
+    creatures.clear();
+    creatures.push_back(
+        type_creature_source(new_type, new_amount, new_is_free));
+}
+
 // DC proves the method, signature, and the add_creatures/value_of_adding_army
 // edges. Retail proves the Complete purchaser tail: two independent cost
 // arrays, optional resource trading, a seven-resource affordability cap, and
@@ -2863,10 +3001,29 @@ long type_AI_creature_purchaser::get_purchase_value(
 // DC proves the function and its nested merge walk. Retail's /Gr profile
 // carries the sole army pointer in ECX; every duplicate stack is folded into
 // the first occurrence and then dismissed in place.
+// Written as the literal loop, NOT as an AI_consolidate_army_impl call: the
+// /Ob2 inliner prices the WRAPPER (one statement, free) before forceinline
+// substitutes the loop, so the wrapper form got this body nested-inlined
+// into buy_creatures' do_swap copy where retail's real-cost body is refused
+// and stays a call.
 VA(0x0042d870, 0x67)  // DC function/body + retail caller bracket; dc 0x323bc
 void AI_consolidate_army(armyGroup* current_army)
 {
-    AI_consolidate_army_impl(current_army);
+    for (int first = 0; first < armyGroup::ARMY_GROUP_SLOT_COUNT - 1;
+         ++first) {
+        TCreatureType type = current_army->armyTypes[first];
+        if (type != CREATURE_NONE) {
+            for (int duplicate = first + 1;
+                duplicate < armyGroup::ARMY_GROUP_SLOT_COUNT;
+                ++duplicate) {
+                if (current_army->armyTypes[duplicate] == type) {
+                    current_army->numTroops[first] +=
+                        current_army->numTroops[duplicate];
+                    current_army->Dismiss(duplicate);
+                }
+            }
+        }
+    }
 }
 
 // These two helpers are DC-roster neighbours of split_armies. Their bodies
@@ -3089,14 +3246,27 @@ int game::GetTeam(int playerNum)
     // @stub
 }
 
-// E:\gamedcs\game.h:1370
-DC_ONLY(0x37fd8, 0x28)
-unsigned char game::is_human_ally(int player_number)
-{
-    // @stub
-}
+// is_human_ally (dc 0x37fd8, game.h:1370) has no retail out-of-line body:
+// every retail caller expands it (buy_creatures 0x42b7db..0x42b826 shows the
+// full GetTeam guard + IsHumanTeam scan inline). Defined for real below the
+// carcass so same-TU callers can inline it; unclaimed by design.
 
 #endif  // @carcass
+
+// GetTeam's guard is spelled inline here because its one retail body is the
+// COMDAT copy events.obj selected (0x4a5960) - a cross-TU call could never
+// reproduce buy_creatures' inline expansion.
+bool game::is_human_ally(int player_number) const
+{
+    int team;
+    if (player_number < 0)
+        team = player_number;
+    else
+        team = mapHeader.teamInfo[player_number];
+    if (team >= 0)
+        return IsHumanTeam(team);
+    return false;
+}
 
 // E:\gamedcs\game.h:1380
 VA(0x0042ed80, 0x4D)  // anchor-global, dc 0x38000
