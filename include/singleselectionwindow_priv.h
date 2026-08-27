@@ -28,6 +28,11 @@ namespace ResourceManager {
     TTextResource* GetText(const char* name);
 }
 
+// misc.cpp's free-space probe (retail 0x50c7a0), declared file-locally
+// for SaveValid's disk gate rather than pulling misc.h into this
+// closure - the ResourceManager::GetText precedent above.
+unsigned long get_available_disk_space();
+
 // The five difficulty names at .bss 0x6a77ec, indexed by the header's
 // difficulty byte in DrawBasicMapInfo's bottom row. Owner TU unlocated -
 // extern only, no DATA claim; house unnamed-cell spelling.
@@ -458,11 +463,14 @@ public:
 };
 
 // One queued header re-request (CMapHeaderRequestMsg's payload pair);
-// CNewPlayerUpdateProc::HandleRequests drains a vector of these.
+// CNewPlayerUpdateProc::HandleRequests drains a vector of these. Field
+// order is byte-proven by both ends: HeaderRequested's push_back fills
+// the byte at +0 and the dword at +4, and HandleRequests reads
+// [elem+8*i] as the transfer flag and [elem+8*i+4] as the row number.
 struct SHeaderRequest {
-    int m_number;
     unsigned char m_flag;
-    char pad_5[3];
+    char pad_1[3];
+    int m_number;
 };
 
 // One per-joining-player header-transfer job. Retail vtable 0x641d38
