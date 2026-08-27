@@ -93,6 +93,10 @@ extern int gUnnamed6989f0;
 // kbwin.h into this closure, the same reason hero.h states for its own copy.
 extern int bVideoPaused;
 
+// The local network identity. remote.cpp owns the address claim; the
+// selection window reads its dpid when choosing the current lobby player.
+extern CNetPlayerInfo gsThisNetPlayerInfo;
+
 // The free game-selection message pump (retail dialogDrawFunction, dc
 // 0x145128), passed by address to DoDialogDraw alongside HeroWindowHandler.
 // message& (not message*) so it binds the int(*)(message&) TDialogHandler.
