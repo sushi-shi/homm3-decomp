@@ -30,4 +30,8 @@ public:
 };
 SIZE(CNetPlayerInfo, 32);
 
+// Network-layer singleton defined by remote.cpp. Retail's multiplayer host
+// path writes the DPID, name, and version fields through this complete view.
+extern CNetPlayerInfo gsThisNetPlayerInfo;
+
 #endif /* HOMM3_NETPLAYER_H */

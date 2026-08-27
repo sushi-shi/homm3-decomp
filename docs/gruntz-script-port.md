@@ -260,6 +260,19 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-27 — the multiplayer session-host path is byte-exact.** Retail
+  `TMultiPlayerWindow::HostSession` at `0x50fab0` formats the advertised name
+  as `"%s%c%s"` with the `0xfa` separator and local player name, derives the
+  DirectPlay migrate/keep-alive/protocol flags, hosts an eight-player session,
+  and creates the local player with the current game-version dword. Success
+  copies the player name and version into `gsThisNetPlayerInfo`; TCP alone
+  queries the local IP address into the window's 80-byte buffer. Dreamcast
+  CodeView supplies the member signature and 256-byte `sFullName` local, while
+  retail fixes the PC object fields, five-branch/three-return CFG and every
+  virtual call. The resulting 262-byte VC6 body is exact. The synchronized
+  report reaches **2513/3079 functions exact**, **92.93% fuzzy**, and **60.60%
+  executable coverage**.
+
 - **2026-08-27 — the multiplayer DirectPlay initializer is byte-exact.**
   Retail `TMultiPlayerWindow::InitRemote` at `0x50fbc0` first records the
   selected network protocol, passes the player-name widget's string to the
