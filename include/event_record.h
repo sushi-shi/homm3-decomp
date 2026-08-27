@@ -45,6 +45,7 @@ enum type_event_record_type {
 // neither replay nor undo has a body this TU can own.
 class type_event_record {
 public:
+    type_event_record();
     virtual ~type_event_record();
     virtual type_event_record_type get_type() = 0;
     virtual unsigned char load(TAbstractFile* infile, int version);
@@ -206,6 +207,8 @@ public:
         unsigned short old_value;
         unsigned short new_value;
     };
+
+    static type_event_record* create();
 
     virtual type_event_record_type get_type() OVERRIDE;
     virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
