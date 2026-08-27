@@ -1056,6 +1056,7 @@ event_record	?replay@type_record_erase@@UAEXE@Z	100.0000	100.0000	100.0000	0x9b2
 event_record	?replay@type_record_hide_boat@@UAEXE@Z	100.0000	100.0000	100.0000	0x9ae80
 event_record	?replay@type_record_hide_hero@@UAEXE@Z	100.0000	100.0000	100.0000	0x9b570
 event_record	?replay@type_record_move_hero@@UAEXE@Z	94.5833	94.5833	94.5833	0x9a7c0
+event_record	?replay@type_record_player_death@@UAEXE@Z	94.2308	94.2308	94.2308	0x9bab0
 event_record	?replay@type_record_show_boat@@UAEXE@Z	100.0000	100.0000	100.0000	0x9b040
 event_record	?replay@type_record_show_hero@@UAEXE@Z	100.0000	100.0000	100.0000	0x9b800
 event_record	?replay@type_record_shroud@@UAEXE@Z	98.2143	98.2143	98.2143	0x9be60

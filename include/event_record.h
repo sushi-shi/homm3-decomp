@@ -235,6 +235,7 @@ public:
     virtual type_event_record_type get_type() OVERRIDE;
     virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
+    virtual void replay(unsigned char draw) OVERRIDE;
     type_record_player_death() {}
 
     unsigned char extra;  // +0x08 - second serialized byte (role TBD)
