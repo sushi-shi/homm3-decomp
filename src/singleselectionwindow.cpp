@@ -819,19 +819,84 @@ void TSingleSelectionWindow::SetupAdvancedOptions()
     // @stub
 }
 
+#endif  // @carcass
+
+// Drop the scenario-options pane: the two title widgets, one hide per
+// visible file row (the bound re-read from gUnnamed69fdc8 every
+// iteration, exactly as retail does), the file slider, the six sort
+// column headers, the six filter widgets, then clear the mode byte.
 // E:\gamedcs\singleselectionwindow.cpp:3126
 VA(0x005819a0, 0x171)  // anchor-callee OnNewHostMsg + ctor call it no-arg back-to-back with its DC neighbor below (adjacent rows = the DC adjacency), pure GetWidget/send_message body, dc 0x136bf4
 void TSingleSelectionWindow::TurnOffScenarioOptions()
 {
-    // @stub
+    int i;
+
+    GetWidget(101)->hide();
+    GetWidget(361)->hide();
+    for (i = 0; i < gUnnamed69fdc8; ++i)
+        GetWidget(i + 142)->hide();
+    fileSlider->hide();
+    GetWidget(137)->hide();
+    GetWidget(138)->hide();
+    GetWidget(139)->hide();
+    GetWidget(140)->hide();
+    GetWidget(141)->hide();
+    GetWidget(190)->hide();
+    GetWidget(191)->hide();
+    GetWidget(192)->hide();
+    GetWidget(193)->hide();
+    GetWidget(194)->hide();
+    GetWidget(195)->hide();
+    inScenarioOptions = 0;
 }
 
+// Drop the advanced-options pane. The double net-mode guard brackets
+// the body (return-early, then the SetFocus clear and the per-seat
+// 353 strip both re-test it), eight seats of fourteen row widgets
+// each, the four title widgets around the field_189c one, then the
+// handler's seat cursor and the mode byte reset.
 // E:\gamedcs\singleselectionwindow.cpp:3166
 VA(0x00581b20, 0x253)  // anchor-callee adjacent pair with 0x5819a0 (DC-adjacent TurnOff pair); adds the SetFocus clear, dc 0x136e94
 void TSingleSelectionWindow::TurnOffAdvancedOptions()
 {
-    // @stub
+    int i;
+
+    if (m_flag64 && !bVideoPaused
+            && gUnnamed6989f0 != WINDOW_MODE_6989F0_3)
+        return;
+    if (m_flag65)
+        return;
+    if (!bVideoPaused && gUnnamed6989f0 != WINDOW_MODE_6989F0_3)
+        SetFocus(-1);
+    GetWidget(102)->hide();
+    durationSlider->hide();
+    for (i = 0; i < 8; ++i) {
+        GetWidget(i + 199)->hide();
+        GetWidget(i + 207)->hide();
+        GetWidget(i + 345)->hide();
+        GetWidget(i + 263)->hide();
+        if (!bVideoPaused && gUnnamed6989f0 != WINDOW_MODE_6989F0_3)
+            GetWidget(i + 353)->hide();
+        GetWidget(i + 215)->hide();
+        GetWidget(i + 223)->hide();
+        GetWidget(i + 231)->hide();
+        GetWidget(i + 239)->hide();
+        GetWidget(i + 247)->hide();
+        GetWidget(i + 255)->hide();
+        GetWidget(i + 362)->hide();
+        GetWidget(i + 370)->hide();
+        GetWidget(i + 378)->hide();
+    }
+    GetWidget(339)->hide();
+    GetWidget(340)->hide();
+    GetWidget(field_189c)->hide();
+    GetWidget(343)->hide();
+    GetWidget(344)->hide();
+    m_players.playerPos = -1;
+    inAdvancedOptions = 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:3219
 VA(0x005822d0, 0x868)  // anchor-vtable TSingleSelectionWindow vtbl 0x241cac slot11 (ProcessRightSelect override; cf sibling THeroScreenWindow slot11 ProcessRightSelect@CHeroWindowEx), dc 0x1371fc

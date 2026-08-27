@@ -338,7 +338,10 @@ public:
     char gameVersion[20];              // 0x1874
     char pad_1888[0x1898 - 0x1888];
     int field_1898;                    // 0x1898, player count cached on drop
-    char pad_189c[0x18a0 - 0x189c];
+    // A widget id the advanced pane records: TurnOffAdvancedOptions
+    // hides GetWidget(field_189c) between the 340 and 343 titles.
+    // Ordinal placeholder.
+    int field_189c;                    // 0x189c
     // Eight setup dwords CNewSetupInfoMsg carries behind the
     // SGameSetupOptions copy; the duration slider reads them back out.
     // Role unattested - ordinal placeholder.
