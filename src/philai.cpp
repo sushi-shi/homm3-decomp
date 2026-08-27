@@ -2123,6 +2123,13 @@ int ValueOfMagicSchool(const hero* current_hero, NewmapCell* cell)
 // and the body walks gpGame->mines' 0x40-stride records - owner byte,
 // yield type byte, guard army at +4.  Extern for emission while the arm
 // is a stub.
+// Residual (94.20%): retail materialises the OnSameTeam inline's byte
+// through a memory temp and widens it back (mov byte/mov 0 join, and
+// 0xff, store, je); our CL branch-threads the constant arm however the
+// result is named - int local, uchar local and uchar-then-int all
+// measured byte-flat.  The shared game.h inline cannot be respelled
+// per-site (ai_player's negated callers are exact against the current
+// body).
 VA(0x0052a010, 0x12a)  // anchor: mines-vector record walk + gMineCharacteristics + MINE arm, dc 0x111970
 int ValueOfMine(const hero* current_hero, NewmapCell* cell)
 {
@@ -2197,6 +2204,13 @@ int value_of_move_source(const hero* current_hero, long flag, short increase,
 // bytes (the alignment note there), so the bit-preserving memcpy bridge
 // is the house crossing.  Extern for emission while the OBELISK arm is a
 // stub.
+// Residual (86.14%): instruction multiset aligns after the word-bridge
+// respell (retail's direct odd-offset word reads reproduced); what stays
+// is the register-homing family - retail keeps gpGame in EAX and reloads
+// it after the artifact call while our CL homes it in ESI, and the
+// si/ax extract roles transpose behind that.  The playerData model's
+// char[4] puzzle_guess (alignment note there) rules out the packed
+// type_point member retail's source evidently had.
 VA(0x0052a2b0, 0xc5)  // anchor: obeliskFlags + ultimateArtifact triple + OBELISK arm, dc 0x111d68
 int value_of_obelisk(NewmapCell* cell, long player_id)
 {
@@ -2329,6 +2343,10 @@ long get_value_of_well(const hero* current_hero, unsigned short move_cost)
 // its outrun bounty are value_of_move_source's shape written in line, and
 // the raw morale/luck curves are added on top.  Extern for emission while
 // the RALLY_FLAG arm is a stub.
+// Residual (92.56%): after sinking the outrun arm the remaining delta is
+// per-arm register saves - retail pushes/pops EBX inside the credited
+// arm (and its undead exit materialises the inlined MoraleIncreaseValue
+// return through EAX before the pop); our CL saves EBX at function scope.
 VA(0x0052a5f0, 0x108)  // anchor: hero flag 0x10000 + morale/luck pair + RALLY_FLAG arm, dc 0x1120e8
 int ValueOfRallyFlag(const hero* current_hero, long* move_cost)
 {
@@ -2658,6 +2676,11 @@ long value_of_town_buildings(const hero* current_hero, town* current_town)
 // plus the slim artifact chance at a twentieth of the player's average
 // artifact valuation.  Extern for emission while the TREASURE_CHEST arm
 // is a stub.
+// Residual (87.50%): retail memory-homes `value` ([ebp-4] with add-mem
+// RMWs) and gives the player pointer EDI; our CL coalesces value into a
+// callee-saved register.  Tried and rejected byte-flat: block-scoped
+// pair locals, fresh pair locals, and the store-then-conditional-store
+// first pair (x = a; if (a <= b) x = b).
 VA(0x0052b4e0, 0xbf)  // anchor: three ratio/gold max pairs + turnValueOfAvgArtifact, TREASURE arm, dc 0x112f6c
 int ValueOfTreasure(const hero* current_hero)
 {
