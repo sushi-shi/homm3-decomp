@@ -5,13 +5,20 @@
 #include "event_record.h"
 #include "game.h"
 #include "abstractfile.h"
+#define HOMM3_EVENT_RECORD_MOVE_DECLS
 #include "advmgr.h"
+#undef HOMM3_EVENT_RECORD_MOVE_DECLS
 #include "kb.h"
 
 // Dreamcast CodeView attests this inline wrapper (Hero.h:196) and game.cpp
 // carries the same local definition. It is what makes VC6 zero-extend the
 // byte boat id into the long parameter, which is exactly the
 // `xor eax,eax / mov al,[boat+0x19]` pair hide_boat::undo emits.
+// The one save-file revision inside the [0x12,0x1e] window that omits the
+// boat record's flag/coordinate tail; type_record_hide_boat::load has to
+// step over it, and the cleanliness floor wants the domain named.
+const int SAVE_VERSION_BOAT_FIELDS_ABSENT = 0x1c;
+
 inline void boat::obscure_cell()
 {
     type_obscuring_object::obscure_cell(BOAT, id);
@@ -121,17 +128,46 @@ unsigned char type_record_move_hero::save(TAbstractFile* outfile)
     unsigned char ok = outfile->Write(&destination, sizeof(destination)) == sizeof(destination);
     return ok;
 }
-#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:161
-DC_ONLY(0x8c91c, 0xCE)
+// Slot 4 of type_record_move_hero's retail vtable (0x63de8c). The tail is
+// cursor.obj's animate_move with the step deltas computed from the two
+// packed points; gCompleteDrawEnabled and advManager::drawCursor are the
+// pair the sunk else-arm zeroes.
+VA(0x0049a7c0, 0x144)  // anchor-vtable, dc 0x8c91c
 void type_record_move_hero::replay(unsigned char draw)
 {
-    // @stub
+    int player = player_id;
+    if (gNetLocalGamePos != player) {
+        gpAdvManager->DeactivateCurrTown(0);
+        gpAdvManager->DeactivateCurrHero(0);
+    }
+
+    gNetLocalGamePos = player;
+    gpCurrentPlayer = &gpGame->players[player];
+    gUnnamed69ccc4 = 1 << player;
+
+    if (gpCurrentPlayer->currHeroId != current_hero->id
+        || !gpAdvManager->inDialog) {
+        gpAdvManager->SetHeroContext(current_hero->id, 1, 0, draw);
+    }
+
+    current_hero->facing = direction;
+    if (draw && gpAdvManager->GetMoveShowIt(current_hero, direction)) {
+        gCompleteDrawEnabled = 1;
+        gpAdvManager->drawCursor = 1;
+    } else {
+        gCompleteDrawEnabled = 0;
+    }
+
+    if (gpAdvManager->cursorDirection != direction)
+        gpAdvManager->TurnTo(direction);
+    gpAdvManager->animate_move(current_hero, direction,
+                               destination.x - source.x,
+                               destination.y - source.y);
 }
 
 // E:\gamedcs\event_record.cpp:186
-#endif  // @carcass
 
 // Slot 5 of type_record_move_hero's retail vtable (0x63de8c), shared with
 // type_record_teleport. The hero's `valid` byte is sampled BEFORE
@@ -362,7 +398,7 @@ unsigned char type_record_hide_boat::load(TAbstractFile* infile, int version)
     signed char boat_id;
     if (infile->Read(&boat_id, 1) != 1)
         return 0;
-    if (version >= 0x12 && version != 0x1c
+    if (version >= 0x12 && version != SAVE_VERSION_BOAT_FIELDS_ABSENT
         && (version <= 0x1e || version >= 0x23)) {
         {
             unsigned char flag;

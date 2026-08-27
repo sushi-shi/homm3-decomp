@@ -1922,6 +1922,22 @@ public:
     // the two flags that decide whether a flier may leave the water.
     int ValidMove(class hero* who, int direction, int bComputerMove,
                   unsigned char bLandOnly);
+#ifdef HOMM3_EVENT_RECORD_MOVE_DECLS
+    // MATCHING_DEBT: one event_record-only declaration view. The first and
+    // fourth entries of that same cursor.obj order-map, DECLARED and not
+    // defined here for the same reason as the pair above: both are reached
+    // from event_record.obj's type_record_move_hero::replay (0x49a7c0),
+    // which calls 0x480000 with (hero, direction) and tail-calls 0x480380
+    // with (hero, direction, destination.x - source.x,
+    // destination.y - source.y). The Dreamcast names GetMoveShowIt's two
+    // parameters currHero/direction and animate_move's four
+    // curr/direction/xInc/yInc, in that order.
+    // GATED, and the gate is MEASURED: exposing the pair to this header's
+    // whole closure costs recruitUnit::Update 90.8376 -> 88.2360, the
+    // declarator-count wall's own signature pair of numbers.
+    int GetMoveShowIt(class hero* currHero, int direction);
+    void animate_move(class hero* curr, int direction, int xInc, int yInc);
+#endif
     // events.obj's 0x49e2e0 (events.cpp:317, dc 0x903b4). `ret 0xc` =
     // three stack arguments, matching the DC prototype; the shipyard arm
     // hands it the trigger cell, a second copy of the map point and
