@@ -211,12 +211,158 @@ public:
         EXIT_BUTTON_ID = 0x7800
     };
 
+#ifdef HOMM3_TOWNMGR_WIDGET_IDS
+    // (This gate also carries gCombatStamp698998's declaration at the
+    // bottom of the file - townmgr.cpp's private view of the shared
+    // frame-pacing stamp, kept out of cmbtmgr.h's include weight.)
+    // The declarators below are GATED to townmgr.cpp, their one
+    // consumer: ungated they moved recruitUnit::Update 90.84 -> 88.24
+    // through the include-set wall (townmgr.h reaches recruit.cpp),
+    // the bitmap16.h channel-mask precedent to the digit.
+    enum {
+        // Widget 50: townManager::SetCommandAndText's 0x32 arm reads a
+        // rollover cell for it, but no admitted town-screen constructor
+        // creates the id and the DC EWidgetIDs roster below starts at
+        // 100 - domain unresolved, neutral ordinal name.
+        TOWN_WIDGET_50_ID = 0x32,
+        // The failed hotspot remap's sentinel: SetCommandAndText's
+        // switch carries it as a real case (the -1-biased dispatch
+        // table proves it), sharing the default's empty line.
+        TOWN_HOTSPOT_NONE = -1,
+        // The build-cheat latch's domain (gUnnamed67832c, drained by
+        // Main): 100 = build everything the town may ever build; 0x37
+        // is a value past MAX_BUILDING_TYPE that Main's eligibility
+        // test admits unconditionally - both compares are retail's,
+        // names INVENTED.
+        TOWN_CHEAT_BUILD_ALL = 100,
+        TOWN_CHEAT_BUILD_EXTRA = 0x37
+    };
+
+    // The guild-count ladder SetupThievesGuild maps onto category
+    // counts (2/4/6/8/9 rows for 1/2/3/4/5+ guilds), and the player
+    // column bound its skip-disabled scan runs to. Names INVENTED -
+    // the values are the retail compares.
+    enum EThievesGuildCounts {
+        GUILD_COUNT_2 = 2,
+        GUILD_COUNT_3 = 3,
+        GUILD_COUNT_4 = 4,
+        GUILD_PLAYER_COLUMNS = 8
+    };
+
+    // The DC field list's nested enum (LF_ENUM 0x71A1, 85 enumerators),
+    // transcribed whole: every id townManager::SetCommandAndText
+    // dispatches on is named here, and the values are the widget ids
+    // the constructor builds (100 crest, 164+i / 172+i bonus row...).
+    enum EWidgetIDs {
+        CREST_ID = 100,
+        TOWN_GARRISON_0_ID = 101,
+        TOWN_GARRISON_1_ID = 102,
+        TOWN_GARRISON_2_ID = 103,
+        TOWN_GARRISON_3_ID = 104,
+        TOWN_GARRISON_4_ID = 105,
+        TOWN_GARRISON_5_ID = 106,
+        TOWN_GARRISON_6_ID = 107,
+        TOWN_GARRISON_0_TEXT_ID = 108,
+        TOWN_GARRISON_1_TEXT_ID = 109,
+        TOWN_GARRISON_2_TEXT_ID = 110,
+        TOWN_GARRISON_3_TEXT_ID = 111,
+        TOWN_GARRISON_4_TEXT_ID = 112,
+        TOWN_GARRISON_5_TEXT_ID = 113,
+        TOWN_GARRISON_6_TEXT_ID = 114,
+        TOWN_GARRISON_0_SELECTOR_ID = 115,
+        TOWN_GARRISON_1_SELECTOR_ID = 116,
+        TOWN_GARRISON_2_SELECTOR_ID = 117,
+        TOWN_GARRISON_3_SELECTOR_ID = 118,
+        TOWN_GARRISON_4_SELECTOR_ID = 119,
+        TOWN_GARRISON_5_SELECTOR_ID = 120,
+        TOWN_GARRISON_6_SELECTOR_ID = 121,
+        GARRISON_PORTRAIT_ID = 122,
+        GARRISON_PORTRAIT_SELECTOR_ID = 123,
+        PORTRAIT_ID = 124,
+        VISITING_PORTRAIT_SELECTOR_ID = 125,
+        HERO_ARMY_0_ID = 126,
+        HERO_ARMY_1_ID = 127,
+        HERO_ARMY_2_ID = 128,
+        HERO_ARMY_3_ID = 129,
+        HERO_ARMY_4_ID = 130,
+        HERO_ARMY_5_ID = 131,
+        HERO_ARMY_6_ID = 132,
+        HERO_ARMY_0_TEXT_ID = 133,
+        HERO_ARMY_1_TEXT_ID = 134,
+        HERO_ARMY_2_TEXT_ID = 135,
+        HERO_ARMY_3_TEXT_ID = 136,
+        HERO_ARMY_4_TEXT_ID = 137,
+        HERO_ARMY_5_TEXT_ID = 138,
+        HERO_ARMY_6_TEXT_ID = 139,
+        HERO_ARMY_0_SELECTOR_ID = 140,
+        HERO_ARMY_1_SELECTOR_ID = 141,
+        HERO_ARMY_2_SELECTOR_ID = 142,
+        HERO_ARMY_3_SELECTOR_ID = 143,
+        HERO_ARMY_4_SELECTOR_ID = 144,
+        HERO_ARMY_5_SELECTOR_ID = 145,
+        HERO_ARMY_6_SELECTOR_ID = 146,
+        PANORAMA_ID = 147,
+        TOWN_BOTTOM_ID = 148,
+        TOWN_NAME_ID = 149,
+        TOWN_PORTRAIT_ID = 150,
+        TOWN_TEXT_ID = 151,
+        TOWN_UP_ARROW_ID = 152,
+        TOWN_DOWN_ARROW_ID = 153,
+        DIVIDE_ID = 154,
+        TOWN_0_ID = 155,
+        TOWN_1_ID = 156,
+        TOWN_2_ID = 157,
+        HALL_ICON_ID = 158,
+        CASTLE_ICON_ID = 159,
+        INCOME_TEXT_ID = 160,
+        CREST_ICONS = 161,
+        HERO_ICONS = 162,
+        SELECTOR_ID = 163,
+        BONUS_0_ID = 164,
+        BONUS_1_ID = 165,
+        BONUS_2_ID = 166,
+        BONUS_3_ID = 167,
+        BONUS_4_ID = 168,
+        BONUS_5_ID = 169,
+        BONUS_6_ID = 170,
+        BONUS_7_ID = 171,
+        BONUS_0_TEXT_ID = 172,
+        BONUS_1_TEXT_ID = 173,
+        BONUS_2_TEXT_ID = 174,
+        BONUS_3_TEXT_ID = 175,
+        BONUS_4_TEXT_ID = 176,
+        BONUS_5_TEXT_ID = 177,
+        BONUS_6_TEXT_ID = 178,
+        BONUS_7_TEXT_ID = 179,
+        TOWN_POP_ID = 180,
+        HALL_DOWN = 181,
+        HALL_UP = 182,
+        GARRISON_ID = 183,
+        NUM_TOWN_BUTTONS = 2
+    };
+#endif  /* HOMM3_TOWNMGR_WIDGET_IDS */
+
     int field_4c;    // +0x4c  town-list scroll offset (UpdateTownLocators)
-    char* field_50;  // +0x50  raw allocation, freed with plain operator delete
-    // +0x54 and +0x74: the resource row the constructor builds in one
+    // +0x50: the panorama's hotspot buffer, one word per pixel, freed
+    // with plain operator delete. DC name and type (zBuffer,
+    // T_32PUSHORT); SetCommandAndText reads the word under the mouse
+    // as the building hotspot id.
+    unsigned short* zBuffer;
+    // +0x54 and +0x74: the growth-bonus row the constructor builds in one
     // eight-iteration loop, each widget kept by the window as it is made.
-    iconWidget* resourceIcons[8];
-    textWidget* resourceTexts[8];
+    // Names are the DC field list's (growth_bonus_icon / growth_bonus_text
+    // at DC offsets 76/108; the old resourceIcons/resourceTexts names were
+    // invented).
+    iconWidget* growth_bonus_icon[8];
+    textWidget* growth_bonus_text[8];
+    // +0x94: the creature shown in each bonus slot, seeded -1 and written
+    // by set_bonus_display (DC `bonus_creatures`, offset 140). BYTE-PROVEN
+    // by townManager::Open's `push 0xb4` operator-new size (the class ends
+    // at 0x94 without it) and by set_bonus_display's eight-dword -1 fill
+    // at +0x94. The DC element type is TCreatureType; spelled int because
+    // armygrp.h is outside this header's include closure and the enum's
+    // loads/stores are int-identical under VC6.
+    int bonus_creatures[8];
 
     TTownScreenWindow();
     virtual ~TTownScreenWindow();
@@ -263,10 +409,12 @@ public:
     // owners[player] == GetLocalPlayerGamePos(), so only the local player's own
     // column opens the detail view.
     int owners[8];
-    // +0x80: attested only as the destructor's first teardown - deleted
-    // through slot 0 before the widget list, so it is an owned object
-    // with a virtual destructor and nothing else about it is proven.
-    widget* field_80;
+    // +0x80: SetupThievesGuild's last act builds it -
+    // `new TResourceDisplay(this, 1)` stored here and Update(0,0)'d -
+    // and the destructor deletes it through slot 0 before the widget
+    // list. Retyped from widget* 2026-08-27 (rename-free; the virtual
+    // teardown is unchanged).
+    TResourceDisplay* field_80;
 
     TThievesGuildWindow(int num_guilds);
     virtual ~TThievesGuildWindow();
@@ -605,6 +753,7 @@ class strip;
 class townObject;
 class heroWindow;
 class widget;
+class bitmapBorder16;
 class CUnnamed69d808_f0;
 class CSprite;
 class TResourceDisplay;
@@ -627,7 +776,12 @@ class CTownNetMsgHandler;
 class townManager : public baseManager {
 public:
     town* townToView;             // +0x38
-    widget* field_3c;             // +0x3c
+    // +0x3c: the panorama background, a bitmapBorder16 -
+    // UpdateTownInfo builds it with `new bitmapBorder16(0, 0, 800,
+    // 374, 147, gText, 0x800)` and Main paces its animation with the
+    // non-virtual Draw2. Retyped from widget* 2026-08-27 (rename-free:
+    // every existing site assigns or deletes it).
+    bitmapBorder16* field_3c;     // +0x3c
     // +0x40, NAMED AND TYPED 2026-08-14. The Dreamcast fieldlist's
     // `MonPix` is an LF_ARRAY of seven CSprite* at its own 72, which is
     // this offset under the same -8 shift that puts currTown/panorama/
@@ -1018,5 +1172,13 @@ void DoShipyard(int type);
 // CODEVIEW(E:\gamedcs\townmgr.cpp:5136, dc 0x172f34) void type_monster_join_window::type_monster_join_window(hero* inHero, armyGroup* monsters);
 // CODEVIEW(E:\gamedcs\townmgr.cpp:5156, dc 0x181604) void* type_monster_join_window::`scalar deleting destructor'(unsigned __flags);
 // CODEVIEW(E:\gamedcs\townmgr.cpp:5156, dc 0x181638) void type_monster_join_window::~type_monster_join_window();
+
+#ifdef HOMM3_TOWNMGR_WIDGET_IDS
+// The shared frame-pacing stamp at .bss 0x698998. cmbtmgr.h owns the
+// DATA claim (advmgr's Open/Main and drawing.cpp share the cell);
+// townManager::Main paces the panorama animation with it. Gated so no
+// other includer of this header gains the declarator.
+extern unsigned long gCombatStamp698998;
+#endif  /* HOMM3_TOWNMGR_WIDGET_IDS */
 
 #endif  /* HOMM3_TOWNMGR_H */

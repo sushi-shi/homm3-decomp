@@ -1087,6 +1087,13 @@ events	?CombatMonsterEvent@advManager@@QAEHPAVhero@@HPAHPAVNewmapCell@@Utype_poi
 events	?CreatureBankEvent@advManager@@QAEHPAVhero@@PAVNewmapCell@@PBDUtype_point@@E@Z	89.3406	89.3406	89.3406	0xabdc0
 events	?DispatchEvent@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	99.9881	99.9881	99.9911	0xa84f0
 events	?DoAIEvent@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@@Z	100.0000	100.0000	100.0000	0xacca0
+# DoCombat max ACCEPTED 99.0481 -> 98.5741 (2026-08-27, townmgr lane):
+# the 99.0481 peak was minted by THIS lane's own earlier delink
+# generation ("2 max raised" at the set_bonus_display integration) and
+# the next generation - ~30 new townmgr VA/DATA claims renaming the
+# synth PDB - returned the row to master's own 98.5741 to the digit
+# with events.cpp untouched. Cross-generation noise, the
+# recruit::Update revert-control precedent; hist keeps 99.1139.
 events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	98.5741	98.5741	99.1139	0xad470
 events	?DoCustomArtifact@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	99.1492	99.1492	99.1492	0x9f070
 events	?DoCustomResource@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa4780
@@ -1195,6 +1202,13 @@ events	?monsters_join@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@
 # a later lane, not lost work. Do NOT hunt a local spelling: see the
 # initialize_game_data block further down for the sweep that
 # established the class is non-monotonic and not source-nameable.
+# monsters_sell_out max ACCEPTED 100.0000 -> 99.9517 AGAIN (2026-08-27,
+# townmgr lane): the identical value the spells lane accepted 2026-08-20
+# (block above) and this row's own checked-in cur - the one-declarator
+# include-set step from townmgr.h's byte-proven bonus_creatures member
+# (push 0xb4 in townManager::Open), layout-required and not gateable
+# per-TU. hist keeps 100.0000; the saturation law says a later
+# declarator can carry it back.
 events	?monsters_sell_out@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	100.0000	100.0000	100.0000	0xa7250
 events	?show_rewards@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@2@J@Z	100.0000	100.0000	100.0000	0xa0b00
 exec	?AddManager@executive@@QAEHPAVbaseManager@@H@Z	100.0000	100.0000	100.0000	0xb0b20
@@ -2931,14 +2945,16 @@ townmgr	?GetBuildingInfo@@YIPADPBVtown@@HEE@Z	99.9592	99.9592	99.9592	0x1d2a40
 townmgr	?GetCategoryStats@@YIXHPAJPAC@Z	100.0000	100.0000	100.0000	0x1dee70
 townmgr	?GetText@TTextResource@@QBEPBDH@Z	100.0000	100.0000	100.0000	0x1cc8d0
 townmgr	?HandleGiftMsg@CTownNetMsgHandler@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x1c66b0
+townmgr	?Main@townManager@@UAEHAAVmessage@@@Z	66.8064	66.8064	66.8064	0x1d3240
 townmgr	?MoveHeroFromGarrison@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d5220
 townmgr	?NewStrips@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c6e10
 townmgr	?Open@TTavernWindow@@UAEHHE@Z	100.0000	100.0000	100.0000	0x1d7e20
-townmgr	?Open@townManager@@UAEHH@Z	99.9951	99.9951	99.9951	0x1c63c0
+townmgr	?Open@townManager@@UAEHH@Z	100.0000	100.0000	100.0000	0x1c63c0
 townmgr	?Recruit@TCastleWindow@@QAEXH@Z	96.4286	96.4286	96.4286	0x1dce50
 townmgr	?RedrawTownScreen@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d5410
 townmgr	?ResetStrips@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d5530
 townmgr	?SetArmyCommand@townManager@@QAEXHE@Z	100.0000	100.0000	100.0000	0x1c7400
+townmgr	?SetCommandAndText@townManager@@QAEXPAVmessage@@@Z	92.0510	92.0510	92.0510	0x1c77a0
 townmgr	?SetCommandAndText@type_garrison_base_window@@QAEXPAVmessage@@@Z	95.6856	95.6856	95.6856	0x1d05f0
 townmgr	?SetHeroCommand@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c7250
 townmgr	?SetRightClickText@TBlacksmithWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1d1aa0
@@ -2949,6 +2965,7 @@ townmgr	?SetRolloverText@TTavernWindow@@QAEXH@Z	81.4136	81.4136	81.4136	0x1d7920
 townmgr	?SetRolloverText@TThievesGuildWindow@@QAEXH@Z	94.1758	94.1758	94.1758	0x1c9710
 townmgr	?SetupExtraStuff@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c33f0
 townmgr	?SetupMage@townManager@@QAEXPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1d6ef0
+townmgr	?SetupThievesGuild@TThievesGuildWindow@@QAEXH@Z	87.3294	87.3294	87.3294	0x1dda10
 townmgr	?SetupTown@townManager@@QAEXE@Z	98.0945	98.0945	98.0945	0x1c6870
 townmgr	?SetupWell@townManager@@QAEXPAVTCastleWindow@@@Z	98.5801	98.5801	98.5801	0x1dd390
 townmgr	?SortStats@@YIXPAJPAC@Z	100.0000	100.0000	100.0000	0x1df160
@@ -2970,11 +2987,8 @@ townmgr	?do_monster_join_dialog@@YIXPAVhero@@W4TCreatureType@@H@Z	100.0000	100.0
 townmgr	?handle_hall_click@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d30d0
 townmgr	?handle_mage_guild_click@townManager@@QAEXXZ	97.4888	97.4888	97.4888	0x1ce560
 townmgr	?select_army@townManager@@QAEXPAVstrip@@HE@Z	100.0000	100.0000	100.0000	0x1c8080
+townmgr	?set_bonus_display@TTownScreenWindow@@QAEXPAVtown@@@Z	87.9325	87.9325	87.9325	0x1c5b40
 townmgr	?set_prerequisite_text@TBuyBuildWindow@@QAEXPBVtown@@H@Z	87.4164	87.4164	87.4164	0x1d5be0
-townmgr	TThievesGuildWindow_SetupThievesGuild	0.0000	0.0000	0.0000	0x1dda10
-townmgr	TTownScreenWindow_set_bonus_display	0.0000	0.0000	0.0000	0x1c5b40
-townmgr	townManager_Main	0.0000	0.0000	0.0000	0x1d3240
-townmgr	townManager_SetCommandAndText	0.0000	0.0000	0.0000	0x1c77a0
 tradpost	??0TBuyArtifactWindow@@QAE@HH@Z	100.0000	100.0000	100.0000	0x1e3730
 tradpost	??0TGiveResourceWindow@@QAE@HH@Z	100.0000	100.0000	100.0000	0x1e16c0
 tradpost	??0TSellArtifactWindow@@QAE@HH@Z	100.0000	100.0000	100.0000	0x1e5730
