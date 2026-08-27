@@ -109,6 +109,14 @@ DATA(0x00641ae8) static const int gTurnDurationMinutes[10] = {
 // avoids perturbing the public include closure for this one consumer.
 void ShowProgressBar();
 void UnloadProgressBar();
+// misc.cpp owns the located body (0x50c1b0); same local-declaration rule.
+void WritePrefs();
+
+// The live TSingleSelectionWindow (set for the dialog's lifetime; every
+// widget callback and net handler reaches the window through it). All 35
+// retail references sit inside this TU's span, so the cell is file-static.
+// No name is attested anywhere readable - house unnamed-cell spelling.
+DATA(0x0069fbe8) static TSingleSelectionWindow* gUnnamed69fbe8;
 
 // E:\gamedcs\singleselectionwindow.cpp:821
 VA(0x00577a50, 0x30)  // anchor-callee ResourceManager::GetText + vcdesc resource key (data_2834ac) + 0x38-byte copy loop, ret0, dc 0x12ff40
@@ -479,35 +487,109 @@ void CChatWidget::Draw()
     textWidget::Draw();
 }
 
-#if 0  // @carcass
+// The shared name-commit helper both CEnterNameEdit overrides expand. DC
+// keeps it out of line (dc 0x149238, 88 B); retail has no row for it - the
+// two overrides carry its whole body - so the definition is `inline`.
+// The committed name lands in three places: the lobby slot record, the
+// persisted prefs nickname, and the row's read-only name text widget
+// (id pos+345). player->sName on the not-found path is address arithmetic
+// only, exactly as retail compiles it.
+inline int CEnterNameEdit::OnEnter()
+{
+    int pos = id - 353;
+    send_message(WIDGET_CLEAR_STATUS, WIDGET_ACTIVE | WIDGET_DRAWN);
+    const char* text = Text.c_str();
+    TSingleSelectionWindow* win = gUnnamed69fbe8;
+    CNetPlayerHandlerPlayer* player = win->m_players.GetPlayerInPos(pos);
+    win->SetFocus(-1);
+    if (player) {
+        strcpy(player->sName, text);
+        strcpy(gLocalPlayerName, text);
+        WritePrefs();
+    }
+    static_cast<textWidget*>(win->GetWidget(pos + 345))
+        ->SetText(player->sName);
+    win->DrawHeroAdvancedOption(pos, 1, -1);
+    return 1;
+}
 
 // E:\gamedcs\singleselectionwindow.cpp:1810
 VA(0x0057cdc0, 0x11D)  // anchor-vtable CEnterNameEdit vtbl 0x241c14 slot15 (OnKeyPress override vs textEntryWidget base), dc 0x1491e0
 int CEnterNameEdit::OnKeyPress(message* msg)
 {
-    // @stub
+    if (GetCharPressed(msg) == KEYCODE_ENTER)
+        return OnEnter();
+    return textEntryWidget::OnKeyPress(msg);
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:1830
 VA(0x0057cee0, 0xFD)  // anchor-vtable CEnterNameEdit vtbl 0x241c14 slot11 (OnKillFocus override), dc 0x149290
 void CEnterNameEdit::OnKillFocus()
 {
-    // @stub
+    OnEnter();
+    textEntryWidget::OnKillFocus();
 }
 
+// The filename-charset filter. A jump-table switch (source arm order is
+// retail's layout order: Del first, period, the shift-reject row, the
+// always-reject row). The period arm returns 1 on BOTH paths - retail
+// keeps the two returns separate (its shift branch cross-jumps into the
+// always-reject arm's ret-1 while the fall-through emits its own), so the
+// GetKeyState call is live and the duplication is source-faithful.
 // E:\gamedcs\singleselectionwindow.cpp:1892
 VA(0x0057cfe0, 0xCF)  // anchor-vtable CSaveGameEdit vtbl 0x241c60 slot16 (IgnoreKey override vs textEntryWidget base), dc 0x1493c8
 unsigned char CSaveGameEdit::IgnoreKey(message* msg)
 {
-    // @stub
+    switch (msg->codeX) {
+    case KEYCODE_KP_DECIMAL:
+        if (HIWORD(GetKeyState(VK_CONTROL)))
+            return 1;
+        break;
+    case KEYCODE_PERIOD:
+        if (HIWORD(GetKeyState(VK_SHIFT)))
+            goto ignore;
+        return 1;
+    case KEYCODE_2:
+    case KEYCODE_5:
+    case KEYCODE_8:
+    case KEYCODE_SEMICOLON:
+    case KEYCODE_APOSTROPHE:
+    case KEYCODE_GRAVE:
+    case KEYCODE_COMMA:
+        if (HIWORD(GetKeyState(VK_SHIFT)))
+            return 1;
+        break;
+    case KEYCODE_ESCAPE:
+    case KEYCODE_TAB:
+    case KEYCODE_ENTER:
+    case KEYCODE_BACKSLASH:
+    case KEYCODE_SLASH:
+    case KEYCODE_KP_8:
+    case KEYCODE_KP_9:
+    case KEYCODE_KP_2:
+    case KEYCODE_KP_3:
+    ignore:
+        return 1;
+    }
+    return 0;
 }
 
+// Typing any name other than the stock NEWGAME.gm1 deselects the
+// highlighted file so the new name saves fresh.
 // E:\gamedcs\singleselectionwindow.cpp:1931
 VA(0x0057d0b0, 0x50)  // anchor-vtable CSaveGameEdit vtbl 0x241c60 slot15 (OnKeyPress override), dc 0x149514
 int CSaveGameEdit::OnKeyPress(message* msg)
 {
-    // @stub
+    int ret = textEntryWidget::OnKeyPress(msg);
+    if (_strcmpi(Text.c_str(),
+                 DATA_COMPGEN(0x0068333c, defaultNewGameFileName,
+                              "NEWGAME.gm1")) != 0
+            && gUnnamed69fbe8->currentMap != -1)
+        gUnnamed69fbe8->SetCurrentMap(-1, 1);
+    return ret;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:2635
 DC_ONLY(0x13575c, 0x348)
@@ -787,7 +869,7 @@ void TSingleSelectionWindow::UpdateAllyEnemyFlags(unsigned char update)
 #if 0  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:4773
-DC_ONLY(0x13bc60, 0x7D2)
+VA(0x00585500, 0x889)  // anchor-callee CSaveGameEdit::OnKeyPress calls it (-1, 1) behind the currentMap!=-1 guard; body owns the 'NEWGAME.gm1'+'Arrogance.h3m' literals (default-map reset), size 1.09x dc 0x7d2, dc 0x13bc60
 void TSingleSelectionWindow::SetCurrentMap(int map, unsigned char bUpdate)
 {
     // @stub
@@ -1288,13 +1370,6 @@ unsigned char TSingleSelectionWindow::HighlightFile(char* filename)
     // @stub
 }
 
-// E:\gamedcs\singleselectionwindow.cpp:8297
-DC_ONLY(0x143a7c, 0x158A)
-void TSingleSelectionWindow::DrawHeroAdvancedOption(int playerPos, unsigned char update, int position)
-{
-    // @stub
-}
-
 // E:\gamedcs\singleselectionwindow.cpp:8643
 DC_ONLY(0x145008, 0xA0)
 int TSingleSelectionWindow::CalcPosition(int playerPos)
@@ -1394,6 +1469,17 @@ unsigned char TSingleSelectionWindow::OnGameTransmitInitMsg(CNetMsg* pNetMsg)
     UpdateTurnDuration();
     return 1;
 }
+
+#if 0  // @carcass - relocated here for RVA order (claims ascend per file)
+
+// E:\gamedcs\singleselectionwindow.cpp:8297
+VA(0x0058d510, 0xA40)  // anchor-callee both CEnterNameEdit overrides call it (pos, 1, -1) after the name commit, matching DC OnNameChange->DrawHeroAdvancedOption; also called from WindowHandler per DC edge; size 0.48x dc 0x158a, dc 0x143a7c
+void TSingleSelectionWindow::DrawHeroAdvancedOption(int playerPos, unsigned char update, int position)
+{
+    // @stub
+}
+
+#endif  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:8764
 VA(0x0058e310, 0x21)  // anchor-vtable CSingleSelectionNetMsgHandler vtbl 0x241ce8 slot1 (CheckHandleNet; cf CNetMsgHandler layout), dc 0x1451a0

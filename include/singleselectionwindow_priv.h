@@ -7,6 +7,7 @@
 #ifndef HOMM3_SINGLESELECTIONWINDOW_PRIV_H
 #define HOMM3_SINGLESELECTIONWINDOW_PRIV_H
 
+#include "inputmgr.h"
 #include "slider.h"
 #include "textresource.h"
 #include "remotedlg.h"
@@ -77,6 +78,31 @@ public:
 
     CChatSave* m_save;  // +0x50
 };
+
+// The lobby player-name editor (one per name row, widget ids 353..360).
+// vtable 0x241c14 overrides slot 11 (OnKillFocus) and slot 15 (OnKeyPress);
+// both bodies expand the shared commit helper OnEnter, which DC keeps out
+// of line (dc 0x149238) and retail fully inlines - no retail row exists
+// for it, so its definition must be `inline` (cpp-local, this TU only).
+class CEnterNameEdit : public textEntryWidget {
+public:
+    virtual void OnKillFocus();            // slot 11
+    virtual int OnKeyPress(message* msg);  // slot 15
+    int OnEnter();
+};
+
+// The save-filename editor. vtable 0x241c60 overrides slot 15 (OnKeyPress)
+// and slot 16 (IgnoreKey).
+class CSaveGameEdit : public textEntryWidget {
+public:
+    virtual int OnKeyPress(message* msg);           // slot 15
+    virtual unsigned char IgnoreKey(message* msg);  // slot 16
+};
+
+// The persisted multiplayer nickname (prefs "Network Name").
+// multiplayerwindow.cpp owns the DATA claim at 0x698817; the name editors
+// commit into it before calling WritePrefs.
+extern char gLocalPlayerName[21];
 
 // A cross-module dword at 0x6989f0 the game-selection window branches on
 // during teardown; DoModal and ExitDialog each take a distinct path when it
