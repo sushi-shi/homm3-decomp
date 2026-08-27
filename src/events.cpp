@@ -3123,14 +3123,132 @@ void advManager::DoEventCreatureBank(hero* current_hero, NewmapCell* cell,
                       human_player);
 }
 
-// E:\gamedcs\events.cpp:1505.  Located, not reconstructed.
-#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+// E:\gamedcs\events.cpp:1505.  The creature dwelling (jump-table arms
+// 0x11 and 0x14): fight the guards if an enemy owns it, claim it, then
+// either sweep the free growth (GeneratorEvent's own loop, with a line
+// per outcome) or fall through to the recruit window when a leveled
+// dwelling is present. The Dreamcast publishes the locals - the two
+// rollover-name tables pick generator_name, the guarded prompt is a
+// block-scoped string destroyed before the combat, and the AI tail hands
+// an owned-or-unowned dwelling to AI_PurchaseCreatures.
+// [2026-08-27] Residual (99.0902%): our CL keeps `&guards` (lea ebx+0x1c)
+// live in EDI across the HasCreatures call and reuses it for the scan
+// loop; retail recomputes the lea at both sites and stores the prompt's
+// EH state as an immediate. why-reg: bindings agree at every first def,
+// divergence past them (allocator CSE state, 11 slots). The
+// generatorType/index locals, the inverted CREATURE_GENERATOR_1 arm and
+// the shared GeneratorEvent tail above are measured (74.81 -> 99.09).
 VA(0x004a18b0, 0x79A)  // dc-bracket forced, ret 0x10=p5, dc 0x92814
-void advManager::DoEventCreatureGenerator(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
+void advManager::DoEventCreatureGenerator(hero* current_hero, NewmapCell* cell,
+                                          type_point point, bool human_player)
 {
-    // @stub
+    int generatorType = cell->type;
+    int index = cell->objectIndex;
+    const char* generator_name;
+    if (generatorType == CREATURE_GENERATOR_1)
+        generator_name = gCreatureGenerator1RolloverNames[index];
+    else
+        generator_name = gCreatureGenerator4RolloverNames[index];
+
+    int id = gpGame->GetGeneratorId(point.x, point.y, point.z);
+    generator& currentGenerator = gpGame->generators[id];
+
+    if (!gpGame->OnSameTeam(currentGenerator.get_owner(), gNetLocalGamePos)) {
+        if (currentGenerator.guards.HasCreatures()) {
+            if (human_player) {
+                std::string prompt;
+                int i;
+                for (i = 0; i < 7; i++) {
+                    if (currentGenerator.guards.armies[i] != CREATURE_NONE)
+                        break;
+                }
+                int guard_type = currentGenerator.guards.armies[i];
+                long guard_qty = currentGenerator.guards.get_creature_total();
+                OverrideBottomView(BOTTOM_VIEW_DEFAULT, -1);
+                UpdBottomView(0, 1, 1);
+                prompt = format_string(
+                    gpGeneralText->GetText(422), generator_name,
+                    armyGroup::GetArmySizeName(guard_qty, 2),
+                    GetArmyName(guard_type, 2));
+                NormalDialog(prompt.c_str(),
+                             2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                if (gpWindowManager->dialogReturn == DIALOG_RETURN_DECLINE)
+                    return;
+            } else if (AI_value_of_event(current_hero, point) <= 0) {
+                return;
+            }
+            if (DoCombat(point, current_hero, &current_hero->army, -1, 0, 0,
+                         &currentGenerator.guards, -1, 1, 0))
+                return;
+        }
+        if (!gpGame->OnSameTeam(currentGenerator.get_owner(),
+                                gNetLocalGamePos))
+            gpGame->ClaimGenerator(id, gNetLocalGamePos);
+    }
+
+    if (human_player) {
+        if (generatorType != CREATURE_GENERATOR_1) {
+            if (generatorType == CREATURE_GENERATOR_4) {
+                sprintf(gText, gpAdventureEventText->GetText(36),
+                        generator_name,
+                        GetArmyName(currentGenerator.type[0], 2),
+                        GetArmyName(currentGenerator.type[1], 2),
+                        GetArmyName(currentGenerator.type[2], 2),
+                        GetArmyName(currentGenerator.type[3], 2));
+            }
+        } else {
+            sprintf(gText, gpAdventureEventText->GetText(35),
+                    generator_name,
+                    GetArmyName(currentGenerator.type[0], 2));
+        }
+        NormalDialog(gText, 2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        if (gpWindowManager->dialogReturn == DIALOG_RETURN_DECLINE)
+            return;
+
+        if (currentGenerator.get_owner() == gNetLocalGamePos) {
+            bool canRecruit = false;
+            std::string result;
+            for (int i = 0; i < 4; i++) {
+                TCreatureType creature = currentGenerator.type[i];
+                if (creature == CREATURE_NONE)
+                    continue;
+
+                if (akCreatureTypeTraits[creature].level != 0) {
+                    canRecruit = true;
+                    continue;
+                }
+
+                if (currentGenerator.population[i] == 0) {
+                    result += format_string(gpGeneralText->GetText(423),
+                        akCreatureTypeTraits[creature].m_plural_name);
+                } else if (!current_hero->army.Add(
+                               creature, currentGenerator.population[i],
+                               -1)) {
+                    result += format_string(gpGeneralText->GetText(426),
+                        GetArmyName(creature,
+                                    currentGenerator.population[i]));
+                } else {
+                    result += format_string(gpGeneralText->GetText(424),
+                        currentGenerator.population[i],
+                        GetArmyName(creature,
+                                    currentGenerator.population[i]));
+                    currentGenerator.population[i] = 0;
+                }
+            }
+
+            if (result.length() > 0)
+                NormalDialog(result.c_str(),
+                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            if (!canRecruit)
+                return;
+        }
+        GeneratorEvent(current_hero, cell, point);
+    } else {
+        if (currentGenerator.get_owner() == gNetLocalGamePos
+            || currentGenerator.get_owner() < 0)
+            AI_PurchaseCreatures(current_hero, &currentGenerator);
+    }
 }
-#endif  // @carcass
 
 // E:\gamedcs\events.cpp:1649.  The Marletto Tower: +1 Defense forever,
 // once per hero, and the visit is remembered on the HERO rather than on

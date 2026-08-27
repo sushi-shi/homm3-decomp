@@ -1414,8 +1414,7 @@ public:
     // (0x4a18b0) stays claimed from events.cpp's carcass until its body
     // lands.
     void DoEventCreatureGenerator(class hero* current_hero, NewmapCell* cell,
-                                  type_point point,
-                                  unsigned char human_player);
+                                  type_point point, bool human_player);
     // The Dragon Utopia (jump-table arm 0x19 = OBJECT_DRAGON_UTOPIA), the
     // one creature bank with a handler of its own. Four parameters and
     // `ret 0x10`, the DC's own order, and the cell stays a NewmapCell*
