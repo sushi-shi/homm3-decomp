@@ -2213,7 +2213,17 @@ public:
     int TransmitSaveGame(int iToWho, int thisPlayerDead,
                          unsigned char inGame, unsigned char makeOrig);
     void DoNewTurn();
-    void clear_event_records(char playerId);
+#endif
+// SPLIT around the declarator below rather than moved, so the preprocessed
+// text every HOMM3_GAME_NEW_MAP_DECLS consumer sees is unchanged, line for
+// line - GameFn_004CA780's pattern. event_record.obj owns 0x49d6c0's body
+// and needs this ONE declarator; taking the whole gate would put nine more
+// into its class-type stream at once.
+#if defined(HOMM3_GAME_NEW_MAP_DECLS) \
+    || defined(HOMM3_EVENT_RECORD_CLEAR_DECL)
+    void clear_event_records(char playerId);              // 0x49d6c0
+#endif
+#ifdef HOMM3_GAME_NEW_MAP_DECLS
     // Game.h:1390 in the DC roster. Retail expands this short calendar
     // accessor at every game.obj call site and retains no standalone row.
     short get_current_turn()
@@ -2336,7 +2346,30 @@ public:
     TCreatureType GetRandomMonster(int minLevel, int maxLevel);  // 0x4c92c0
     void ProcessRandomObjects();                                 // 0x4c9dd0
     void record_show_hero(hero* who, signed char player, type_point point,
-                          unsigned char reset);
+                          unsigned char reset);                  // 0x49cb20
+#ifdef HOMM3_EVENT_RECORD_DECLS
+    // The four remaining recorders, all located by the same vtable-store
+    // evidence as their claimed siblings: each expands `new type_record_X`
+    // in line and the class it constructs is named by the derived vftable
+    // it stores last (0x63deec / 0x63df34 / 0x63de8c / 0x63dea4). Arity is
+    // retail's own `ret` immediate - 0xc, 0xc, 0xc, 8. GATED to
+    // event_record.obj until a real caller elsewhere needs one: game.h
+    // rides in every compiland's closure and this header's declarator
+    // population is codegen-sensitive.
+    void record_hide_boat(boat* current_boat, unsigned char occupied,
+                          int occupying_hero);                   // 0x49c560
+    void record_hide_hero(hero* who, char new_owner,
+                          unsigned char town_garrison);          // 0x49c720
+    void record_move(hero* who, int direction,
+                     type_point destination);                    // 0x49cd50
+    void record_teleport(hero* who, type_point destination);     // 0x49cf50
+    // DC game.h:877 (dc 0x8f270, event_record.obj): the visibility bit of
+    // every player sharing whichPlayer's team. Retail has NO out-of-line
+    // row for it - both visibility sweeps expand it at their head, and
+    // SetVisibility's own range guard is what lets VC6 drop the internal
+    // one there while ResetVisibility keeps it.
+    unsigned char GetTeamMask(int playerNum);
+#endif
     // Retail-only 0x4f32a0 / 0x4f3540, the standalone morale and luck
     // describe dialogs THeroScreenWindow::WindowHandler opens for widgets
     // 0x74 and 0x75. Both are `ret 8` taking (hero*, dialogType); the
