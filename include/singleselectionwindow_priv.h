@@ -129,7 +129,11 @@ struct GameSelectionHeadersStruct {
     // UpdatePlayerPositions copies the slot's town alignment out of the
     // selected header through this row (int, 8 slots at +0x314).
     int slotAlignments[8];
-    char pad_334[0xCA4 - 0x334];
+    char pad_334[0x4a5 - 0x334];
+    // CheckMissingHeaders requests every row whose byte here is still
+    // clear - the received flag of the transfer.
+    unsigned char received;  // +0x4a5
+    char pad_4a6[0xCA4 - 0x4a6];
 };
 SIZE(GameSelectionHeadersStruct, 0xCA4);
 
@@ -249,11 +253,25 @@ public:
     char m_errText[1];    // +0x28, format string (extent unmodeled)
 };
 
+class CNewHostMsg : public CNetMsg {
+public:
+    unsigned long m_dpidNewHost;  // +0x14
+};
+
 class CMapHeaderRequestMsg : public CNetMsg {
 public:
     unsigned char m_flag;  // +0x14
     char pad_15[3];
     int m_number;          // +0x18
+
+    // Retail widened the DC (nbr) ctor with the list-select flag; both
+    // CheckMissingHeaders expansions fix the field order.
+    CMapHeaderRequestMsg(unsigned char flag, int number)
+        : CNetMsg(RS_MAP_HEADER_REQUEST, 0x1c)
+    {
+        m_flag = flag;
+        m_number = number;
+    }
 };
 
 // DC SingleSelectionWindow.h's header-transfer opener (dc 0x1478a4 takes
