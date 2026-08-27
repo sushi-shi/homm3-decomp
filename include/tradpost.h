@@ -28,10 +28,11 @@
 // referenced exactly twice image-wide - by its own constructor and its own
 // destructor - so none of these rows is an /OPT:ICF fold.
 //
-// Only the vptr, the heroWindow::Widgets teardown and the CAdvPopup base
-// call are attested by the destructors, so no member is modelled and no
-// size is asserted; the constructors that would prove the tails are 8 KB
-// EH-bearing rows still deferred.
+// All five constructors are reconstructed byte-exact (2026-08-27): each is
+// CAdvPopup(x2, y2, 601, 593, 0x12), Widgets.reserve(144) (Give: 151), a
+// fixed widget list, the slider member store where one exists, and the
+// AddWidget/MemError sweep. The slider callbacks live in the three
+// after-the-ctor gaps (0x5e1600/0x5e3670/0x5e9c60).
 // The three dialogs that build a `slider` (TradeResourceSlider,
 // GiveResourceSlider, SellCreatureSlider) hold its widget pointer as a member;
 // forward-declared here for the pointer, defined where the ctor `new`s it.
