@@ -2596,7 +2596,7 @@ singleselectionwindow	?InitializeVCDescriptions@@YIEXZ	100.0000	100.0000	100.000
 singleselectionwindow	?IsFaceTaken@CNetPlayerHandler@@QAEEHH@Z	100.0000	100.0000	100.0000	0x177d10
 singleselectionwindow	?OnBadVersionMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18df50
 singleselectionwindow	?OnGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	99.6237	99.6237	99.6237	0x189b20
-singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	99.8868	99.8868	100.0000	0x17cdc0
+singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0
 singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0
 singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	99.8710	100.0000	0x17cee0
 singleselectionwindow	?OnNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	97.5366	97.5366	97.5366	0x18b510
@@ -2604,6 +2604,7 @@ singleselectionwindow	?OnNewSetupInfoMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@
 singleselectionwindow	?OnPingMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x1894d0
 singleselectionwindow	?OnPingResponseMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@E@Z	88.8387	88.8387	88.8387	0x189510
 singleselectionwindow	?OnRequestHeroFaceReplyMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@E@Z	100.0000	100.0000	100.0000	0x18b0b0
+singleselectionwindow	?OnUpdatePlayerPosMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	98.9925	98.9925	98.9925	0x18ba40
 singleselectionwindow	?PlayerDropped@CNewPlayerUpdateMan@@QAEXK@Z	100.0000	100.0000	100.0000	0x189480
 singleselectionwindow	?SetNextPlayer@CNetPlayerHandler@@QAEEH@Z	96.2353	96.2353	96.2353	0x177ae0
 singleselectionwindow	?SetResolution@CChatSlider@@UAEXH@Z	100.0000	100.0000	100.0000	0x17c9d0
@@ -2627,7 +2628,6 @@ singleselectionwindow	TSingleSelectionWindow_OnGameHeaderInfoMsg	0.0000	0.0000	0
 singleselectionwindow	TSingleSelectionWindow_OnMapFileNameMsg	0.0000	0.0000	0.0000	0x189710
 singleselectionwindow	TSingleSelectionWindow_OnNewPlayerMsg	0.0000	0.0000	0.0000	0x189fa0
 singleselectionwindow	TSingleSelectionWindow_OnSetAsHostMsg	0.0000	0.0000	0.0000	0x18b120
-singleselectionwindow	TSingleSelectionWindow_OnUpdatePlayerPosMsg	0.0000	0.0000	0.0000	0x18ba40
 singleselectionwindow	TSingleSelectionWindow_OnWidgetDeselect	0.0000	0.0000	0.0000	0x1865b0
 singleselectionwindow	TSingleSelectionWindow_ProcessRightSelect	0.0000	0.0000	0.0000	0x1822d0
 singleselectionwindow	TSingleSelectionWindow_SetCurrentMap	0.0000	0.0000	0.0000	0x185500
@@ -2639,6 +2639,7 @@ singleselectionwindow	TSingleSelectionWindow_TurnChatOn	0.0000	0.0000	0.0000	0x1
 singleselectionwindow	TSingleSelectionWindow_TurnOffAdvancedOptions	0.0000	0.0000	0.0000	0x181b20
 singleselectionwindow	TSingleSelectionWindow_TurnOffScenarioOptions	0.0000	0.0000	0.0000	0x1819a0
 singleselectionwindow	TSingleSelectionWindow_Update	0.0000	0.0000	0.0000	0x184550
+singleselectionwindow	TSingleSelectionWindow_UpdateNameLists	0.0000	0.0000	0.0000	0x18c960
 slider	??0slider@@QAE@HHHHHHP6IXHPAVheroWindow@@@ZW4EGraphics@0@HE@Z	100.0000	100.0000	100.0000	0x1960d0
 slider	??1slider@@UAE@XZ	100.0000	100.0000	100.0000	0x196180
 slider	??_Gslider@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x196020

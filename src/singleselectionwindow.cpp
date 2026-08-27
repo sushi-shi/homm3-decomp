@@ -1336,8 +1336,7 @@ commit:
                             .legalAlignments, 0);
             }
             if (!m_flag64)
-                gpGame->setup.handicap[i] =
-                    static_cast<signed char>(p->handicap);
+                gpGame->setup.handicap[i] = p->handicap;
         }
     }
 
@@ -2054,13 +2053,6 @@ unsigned char TSingleSelectionWindow::IsMultiPlayer()
     // @stub
 }
 
-// E:\gamedcs\singleselectionwindow.cpp:7900
-DC_ONLY(0x142cc0, 0x17C)
-void TSingleSelectionWindow::UpdateNameLists()
-{
-    // @stub
-}
-
 // E:\gamedcs\singleselectionwindow.cpp:7990
 DC_ONLY(0x1430cc, 0x6C)
 void TSingleSelectionWindow::OnTownUpdateMsg(CNetMsg* pNetMsg, unsigned char inPopup)
@@ -2378,8 +2370,58 @@ void TSingleSelectionWindow::OnNewHostMsg(CNetMsg* pNetMsg)
 #if 0  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:7591
+#endif  // @carcass
+
+// The host's authoritative roster lands: clear every seat, merge each
+// live human record (creating seats for newcomers), take the computer
+// block wholesale, then retitle the handicap labels and redraw.
 VA(0x0058BA40, 0x175)  // anchor-callee RS_UPDATE_PLAYER_POS arm's single call, size 0.41x dc 0x38c, dc 0x1421a8
 unsigned char TSingleSelectionWindow::OnUpdatePlayerPosMsg(CNetMsg* pNetMsg)
+{
+    UpdateNameLists();
+    for (int i = 0; i < 8; ++i)
+        m_players.humanPlayers[i].playerPos = -1;
+    CUpdatePlayerPosMsg* pMsg = static_cast<CUpdatePlayerPosMsg*>(pNetMsg);
+    for (i = 0; i < 8; ++i) {
+        CNetPlayerHandlerPlayer* rec = &pMsg->m_players[i];
+        if (rec->dpid != 0) {
+            CNetPlayerHandlerPlayer* p = m_players.GetPlayer(rec->dpid);
+            if (!p) {
+                SetNewPlayerSlot(rec);
+                UpdateNameLists();
+                p = m_players.GetPlayer(rec->dpid);
+            }
+            if (p)
+                *p = *rec;
+        }
+    }
+    memcpy(m_players.computerPlayers, pMsg->m_compPlayers,
+           sizeof(m_players.computerPlayers));
+    for (i = 0; i < 8; ++i) {
+        CNetPlayerHandlerPlayer* p = m_players.GetPlayerInPos(i);
+        if (!p)
+            p = &m_players.computerPlayers[i];
+        if (p) {
+            message update;
+            update.extraText = gUnnamed6a7800[p->handicap];
+            GetWidget(p->playerPos + 207)->send_message(
+                widget::WIDGET_SET_TEXT, update.extra);
+        }
+    }
+    if (!field_186c) {
+        MakeHeroFilter();
+        UpdateAllyEnemyFlags(0);
+        DrawWindow(0, 0xffff0001, 0xffff);
+        Update();
+    }
+    return 1;
+}
+
+#if 0  // @carcass
+
+// E:\gamedcs\singleselectionwindow.cpp:7900
+VA(0x0058C960, 0x11C)  // anchor-callee called by the RS_PLAYER_DROPPED arm before DisplayChat and twice by OnUpdatePlayerPosMsg - the DC call edges; size 0.75x dc 0x17c, dc 0x142cc0
+void TSingleSelectionWindow::UpdateNameLists()
 {
     // @stub
 }

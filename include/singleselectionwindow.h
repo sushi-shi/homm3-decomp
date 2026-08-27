@@ -35,7 +35,10 @@ public:
     int startBonusIndex;       // +0x6c
     int playerPos;             // +0x70
     int color;                 // +0x74
-    int handicap;              // +0x78
+    // A byte in retail: the ctor 0x57c790 stores it with a byte mov and
+    // OnUpdatePlayerPosMsg re-reads it movsx.
+    signed char handicap;      // +0x78
+    char pad_79[3];
 
     void Clear()
     {
@@ -222,6 +225,10 @@ public:
     void TurnOffAdvancedOptions();
     void TurnChatOn(unsigned char update);
     void TurnChatOff(unsigned char update);
+    // Retail 0x58e700 (past the stale span end) hands the whole incoming
+    // record to the seat assigner; DC's SetNewPlayerSlot takes the dpid
+    // alone. Provisional widening.
+    unsigned char SetNewPlayerSlot(CNetPlayerHandlerPlayer* pPlayer);
     // DC takes TTownType; spelled int here so the public closure needs no
     // town.h - retype when the body lands.
     void UpdateTown(int pos, int town, unsigned char inPopup);
