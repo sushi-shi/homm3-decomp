@@ -1201,14 +1201,13 @@ void type_artifact_quest::TakePayment(hero* current_hero)
 // inline_depth(0) to that statement restores the complete CFG without also
 // outlining operator[] and push_back.
 //
-// Five block sizes remain different. They are one quest-text register
-// schedule plus a coherent Dinkumware inline-budget class: this compile
+// Residual (89.1000%): computing the five-column group once fixes the retail
+// quest-text copy schedule. The remaining Dinkumware inline-budget class
 // inlines both dialog-vector destructors and the final trivial artifact-vector
 // destroy where retail calls them, and selects the count-taking insert in the
 // custom arm where retail selects the position/value overload. Extending the
-// depth limit through either dialog scope regresses to 33 blocks / 86.4222%;
-// branch-local versus function-scoped text pointers is byte-flat. Retain the
-// source-shaped lifetime instead of manufacturing storage or cleanup flow.
+// depth limit through either dialog scope regresses; retain the source-shaped
+// lifetime instead of manufacturing storage or cleanup flow.
 // E:\gamedcs\seerhut.cpp
 VA(0x0056f8a0, 0x313)  // anchor-vtable 0x641878 slot 4 + artifact picture class, retail-only
 void type_artifact_quest::DoProposalDialog(hero* current_hero)
@@ -1224,7 +1223,8 @@ void type_artifact_quest::DoProposalDialog(hero* current_hero)
     }
 
     if (progressText.length() == 0) {
-        std::string textFormat = quest_text(QUEST_TEXT_PROGRESS);
+        const std::string* texts = quest_texts();
+        std::string textFormat = texts[QUEST_TEXT_PROGRESS];
         std::string text = format_string(
             textFormat.c_str(),
             join_quest_requirements(requirements).c_str());
