@@ -829,11 +829,9 @@ void TSingleSelectionWindow::SetupAdvancedOptions()
 VA(0x005819a0, 0x171)  // anchor-callee OnNewHostMsg + ctor call it no-arg back-to-back with its DC neighbor below (adjacent rows = the DC adjacency), pure GetWidget/send_message body, dc 0x136bf4
 void TSingleSelectionWindow::TurnOffScenarioOptions()
 {
-    int i;
-
     GetWidget(101)->hide();
     GetWidget(361)->hide();
-    for (i = 0; i < gUnnamed69fdc8; ++i)
+    for (int i = 0; i < gUnnamed69fdc8; ++i)
         GetWidget(i + 142)->hide();
     fileSlider->hide();
     GetWidget(137)->hide();
@@ -859,8 +857,6 @@ void TSingleSelectionWindow::TurnOffScenarioOptions()
 VA(0x00581b20, 0x253)  // anchor-callee adjacent pair with 0x5819a0 (DC-adjacent TurnOff pair); adds the SetFocus clear, dc 0x136e94
 void TSingleSelectionWindow::TurnOffAdvancedOptions()
 {
-    int i;
-
     if (m_flag64 && !bVideoPaused
             && gUnnamed6989f0 != WINDOW_MODE_6989F0_3)
         return;
@@ -870,7 +866,7 @@ void TSingleSelectionWindow::TurnOffAdvancedOptions()
         SetFocus(-1);
     GetWidget(102)->hide();
     durationSlider->hide();
-    for (i = 0; i < 8; ++i) {
+    for (int i = 0; i < 8; ++i) {
         GetWidget(i + 199)->hide();
         GetWidget(i + 207)->hide();
         GetWidget(i + 345)->hide();
@@ -3135,55 +3131,221 @@ void TSingleSelectionWindow::UpdateTown(int pos, int town, unsigned char inPopup
     }
 }
 
-#if 0  // @carcass - the DC cpp-order rows 8018..8273, relocated here
-// for RVA order (claims ascend per file)
-
 // E:\gamedcs\singleselectionwindow.cpp:8018
 VA(0x0058CE70, 0x40)  // anchor-callee DrawHeroAdvancedOption's town pick ORs it with slot.HasRandomAlignment; body reads the same playerSlotAttributes row (+0xa0 band off gpGame->mapHeader), size 0.73x dc 0x58, dc 0x1431bc
 unsigned char TSingleSelectionWindow::HasMultipleTowns(int gamePos)
 {
-    // @stub
+    CMapHeaderData::TPlayerSlotAttributes* slot =
+        &gpGame->mapHeader.playerSlotAttributes[gamePos];
+    if (slot->HasRandomAlignment)
+        return 0;
+    unsigned char many =
+        get_alignment_count(
+            static_cast<unsigned short>(slot->legalAlignments)) > 1;
+    return many;
 }
 
+// A seat's town is choosable when the seat is the local player's (or
+// unclaimed under mode-3), and the slot either rolls a random
+// alignment or admits more than one. GetPlayerInPos and
+// HasMultipleTowns both expand in place.
+// Residual (97.2): the inlined HasMultipleTowns' `> 1` feeds the ||
+// directly in retail (`jg`); ours carries the callee's byte local
+// through setg/test. The local IS what makes the standalone body
+// exact (setg al), so the pair cannot both close from one spelling -
+// same story in CanChooseHero below. if/return-1/return-0 measured
+// 97.04 and is rejected.
 // E:\gamedcs\singleselectionwindow.cpp:8034
 VA(0x0058CEB0, 0xF7)  // anchor-callee DrawHeroAdvancedOption gates the town arrows (0xd7/0xdf ids) and the bonus arrows on it; head tests m_flag64 first, size 0.88x dc 0x116, dc 0x143214
 unsigned char TSingleSelectionWindow::CanChooseTown(int gamePos)
 {
-    // @stub
+    if (m_flag64)
+        return 0;
+    CMapHeaderData::TPlayerSlotAttributes* slot =
+        &gpGame->mapHeader.playerSlotAttributes[gamePos];
+    CNetPlayerHandlerPlayer* p = m_players.GetPlayerInPos(gamePos);
+    unsigned char isMode3 = gUnnamed6989f0 == WINDOW_MODE_6989F0_3;
+    if (!p)
+        p = m_players.GetCompPlayerInPos(gamePos);
+    if (!isMode3) {
+        if (p->dpid != 0 && p->dpid != gsThisNetPlayerInfo.dpid)
+            return 0;
+        if (p->dpid == 0) {
+            if (bVideoPaused) {
+                if (!pDPlay->IsHost())
+                    return 0;
+            }
+        }
+    }
+    return slot->HasRandomAlignment || HasMultipleTowns(gamePos);
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:8067
+// Residual (97.9): the same inlined-HasMultipleTowns jg fold as
+// CanChooseTown above - everything else is exact.
 VA(0x0058CFB0, 0x129)  // anchor-callee DrawHeroAdvancedOption gates the hero arrows (0xe7/0xef ids) on it; same m_flag64 head as its town sibling, size 1.06x dc 0x116, dc 0x14332c
 unsigned char TSingleSelectionWindow::CanChooseHero(int gamePos)
 {
-    // @stub
+    if (m_flag64)
+        return 0;
+    CMapHeaderData::TPlayerSlotAttributes* slot =
+        &gpGame->mapHeader.playerSlotAttributes[gamePos];
+    CNetPlayerHandlerPlayer* p = m_players.GetPlayerInPos(gamePos);
+    if (!p)
+        p = m_players.GetCompPlayerInPos(gamePos);
+    if (gUnnamed6989f0 != WINDOW_MODE_6989F0_3 && p->dpid != 0
+            && p->dpid != gsThisNetPlayerInfo.dpid)
+        return 0;
+    CNetPlayerHandlerPlayer* shown = m_players.GetPlayerInPos(gamePos);
+    if (!shown)
+        shown = m_players.GetCompPlayerInPos(gamePos);
+    int town;
+    if (slot->HasRandomAlignment || HasMultipleTowns(gamePos))
+        town = shown->townIndex;
+    else
+        town = pick_alignment(
+            static_cast<unsigned short>(slot->legalAlignments), 1);
+    if (town == -1)
+        return 0;
+    if (p->dpid == 0)
+        return 0;
+    if (slot->GenerateHero)
+        return 1;
+    unsigned char randomHero = slot->hasRandomHero != 0;
+    return randomHero;
 }
 
+// The shown portrait: the slot's custom portrait when one is fixed,
+// the committed setup hero on the network arm, the seat's picked
+// available hero otherwise - then the per-hero setup pool may remap
+// it to a scenario portrait.
+// Residual (77.0): the find inline boundary. Retail expands map::find
+// one level (CALLS lower_bound 0x58f110 and end() 0x58eb50 twice); our
+// CL goes one deeper (inlines the lower_bound wrapper, calls _Lbound,
+// folds end() to the _Head read). Same class as GetHeroName's site 2
+// and the button.cpp/hero.cpp _Grow walls. Tried and rejected: a dead
+// second find site (75.99 - the collector moves the wrong way).
 // E:\gamedcs\singleselectionwindow.cpp:8107
 VA(0x0058D0E0, 0x10A)  // anchor-callee DrawHeroAdvancedOption calls it (gamePos) in both mode arms and indexes the heroFaces plates with the result (-1 = the random/none plates); head is the GetPlayerInPos scan, size 1.02x dc 0x104, dc 0x143444
 int TSingleSelectionWindow::GetDisplayFace(int gamePos)
 {
-    // @stub
+    CNetPlayerHandlerPlayer* p = m_players.GetPlayerInPos(gamePos);
+    if (!p)
+        p = m_players.GetCompPlayerInPos(gamePos);
+    CMapHeaderData::TPlayerSlotAttributes* slot =
+        &gpGame->mapHeader.playerSlotAttributes[gamePos];
+    int heroId;
+    if (m_flag64) {
+        heroId = slot->nonRandomHeroCustomPortrait;
+        if (heroId != -1)
+            return heroId;
+        heroId = gpGame->setup.startingHero[gamePos];
+    } else if (slot->GenerateHero || slot->hasRandomHero) {
+        if (p->heroIndex == -1)
+            return -1;
+        heroId = p->availableHeroes[p->heroIndex];
+    } else {
+        heroId = slot->nonRandomHeroCustomPortrait;
+        if (heroId != -1)
+            return heroId;
+    }
+    std::map<int, type_map_hero_info>::iterator it =
+        gpGame->mapHeader.heroPlayerSetups.find(heroId);
+    if (it != gpGame->mapHeader.heroPlayerSetups.end()
+            && it->second.field_00 != -1)
+        heroId = it->second.field_00;
+    return heroId;
 }
 
-// E:\gamedcs\singleselectionwindow.cpp:8201
 // Retail 0x58d1f0's 1.4x growth over the DC row absorbs GetHeroInPos
-// (dc 0xB0, no retail row of its own - the two DC_ONLY rows above stay
-// unlocated).
+// (dc 0xB0, no retail row of its own). The network arm's heroId is a
+// [ebp-4] local; the local arm's recycles the spent gamePos slot -
+// two block-scoped locals, not one. general-text 524 is the no-hero
+// row; the setup-pool name wins over the static hero table when the
+// map carries one.
+// Residual (80.5): retail CALLS map::find (0x58eb60) at both sites;
+// our CL calls it at site 1 and expands it at site 2 (the lower_bound
+// call inside is the tell), and the two heroId locals swap homes
+// ([ebp-4] vs the recycled [ebp+8]) behind that. The find boundary is
+// the same /Ob2 collector class as GetDisplayFace above. A function-
+// scoped iterator vs two block-scoped ones is byte-flat.
+// E:\gamedcs\singleselectionwindow.cpp:8201
 VA(0x0058D1F0, 0x1E7)  // anchor-callee DrawHeroAdvancedOption pushes its return as the hero-name text in both mode arms; head reads the same playerSlotAttributes band, size 1.4x dc 0x15C, dc 0x1436b4
 const char* TSingleSelectionWindow::GetHeroName(int gamePos)
 {
-    // @stub
+    std::map<int, type_map_hero_info>::iterator it;
+    CMapHeaderData::TPlayerSlotAttributes* slot =
+        &gpGame->mapHeader.playerSlotAttributes[gamePos];
+    if (m_flag64) {
+        if (slot->nonRandomHeroId != -1) {
+            if (strlen(slot->nonRandomHeroCustomName) != 0)
+                return slot->nonRandomHeroCustomName;
+        }
+        int heroId = gpGame->setup.startingHero[gamePos];
+        if (heroId == -1)
+            return gpGeneralText->GetText(524);
+        it = gpGame->mapHeader.heroPlayerSetups.find(heroId);
+        if (it != gpGame->mapHeader.heroPlayerSetups.end()
+                && it->second.field_04.size() != 0)
+            return it->second.field_04.c_str();
+        return gpGame->GetHero(heroId)->name;
+    } else {
+        CNetPlayerHandlerPlayer* p = m_players.GetPlayerInPos(gamePos);
+        if (!p)
+            p = m_players.GetCompPlayerInPos(gamePos);
+        int heroId;
+        if (!slot->GenerateHero && !slot->hasRandomHero) {
+            if (slot->nonRandomHeroId != -1)
+                heroId = slot->nonRandomHeroId;
+            else
+                heroId = p->availableHeroes[p->heroIndex];
+        } else if (p->heroIndex != -1) {
+            heroId = p->availableHeroes[p->heroIndex];
+        } else {
+            heroId = -1;
+        }
+        if (heroId == -1)
+            return gpGeneralText->GetText(524);
+        if (slot->nonRandomHeroId != -1) {
+            if (strlen(slot->nonRandomHeroCustomName) != 0)
+                return slot->nonRandomHeroCustomName;
+        }
+        if (slot->nonRandomHeroId != -1 && !slot->GenerateHero
+                && !slot->hasRandomHero)
+            heroId = slot->nonRandomHeroId;
+        it = gpGame->mapHeader.heroPlayerSetups.find(heroId);
+        if (it != gpGame->mapHeader.heroPlayerSetups.end()
+                && it->second.field_04.size() != 0)
+            return it->second.field_04.c_str();
+        return gpGame->GetHero(heroId)->name;
+    }
 }
 
+// Case-blind prefix search over the filtered list; on a hit the row
+// becomes both the selection and the top row, clamped so a full page
+// stays visible, and the slider follows.
 // E:\gamedcs\singleselectionwindow.cpp:8273
 VA(0x0058D3E0, 0x122)  // arity ret4 on a char* it strlens at entry (the flat carve name records the 0x57f330 SetupNewGameMode-band caller); monotone slot between GetHeroName and DrawHeroAdvancedOption, size 0.98x dc 0x128, dc 0x143954
 unsigned char TSingleSelectionWindow::HighlightFile(char* filename)
 {
-    // @stub
+    int len = strlen(filename);
+    int i = 0;
+    while (static_cast<unsigned int>(i) < GetMapCount()) {
+        if (_strnicmp(filename, SelectionHeaders[i].fileName, len)
+                == 0) {
+            currentIndex = i;
+            currentMap = i;
+            if (i + gUnnamed69fdc8 > GetMapCount())
+                currentIndex = GetMapCount() - gUnnamed69fdc8;
+            if (currentIndex < 0)
+                currentIndex = 0;
+            fileSlider->SetState(currentIndex);
+            return 1;
+        }
+        ++i;
+    }
+    return 0;
 }
-
-#endif  // @carcass
 
 // One advanced-options seat row: the row highlight and flag plate, then
 // per-column art and arrows. The network arm (m_flag64) paints the
