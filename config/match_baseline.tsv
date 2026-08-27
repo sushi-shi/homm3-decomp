@@ -2614,6 +2614,7 @@ singleselectionwindow	?InitializeLCDescriptions@@YIEXZ	100.0000	100.0000	100.000
 singleselectionwindow	?InitializeTurnDurationText@@YIEXZ	100.0000	100.0000	100.0000	0x177ab0
 singleselectionwindow	?InitializeVCDescriptions@@YIEXZ	100.0000	100.0000	100.0000	0x177a50
 singleselectionwindow	?IsFaceTaken@CNetPlayerHandler@@QAEEHH@Z	100.0000	100.0000	100.0000	0x177d10
+singleselectionwindow	?MakeHeroFilter@TSingleSelectionWindow@@QAEXXZ	87.3429	87.3429	87.3429	0x183890
 singleselectionwindow	?OnBadVersionMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18df50
 singleselectionwindow	?OnGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	99.6237	99.6237	99.6237	0x189b20
 singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0
@@ -2655,7 +2656,6 @@ singleselectionwindow	CNewPlayerUpdateProc_HandleRequests	0.0000	0.0000	0.0000	0
 singleselectionwindow	CSingleSelectionNetMsgHandler_HandleNetMsg	0.0000	0.0000	0.0000	0x18e340
 singleselectionwindow	GameSelectionHeadersStruct_GameSelectionHeadersStruct	0.0000	0.0000	0.0000	0x178290
 singleselectionwindow	GameSelectionHeadersStruct_GameSelectionHeadersStruct_operator	0.0000	0.0000	0.0000	0x178440
-singleselectionwindow	TSingleSelectionWindow_MakeHeroFilter	0.0000	0.0000	0.0000	0x183890
 singleselectionwindow	TSingleSelectionWindow_OnDeleteFile	0.0000	0.0000	0.0000	0x18dfb0
 singleselectionwindow	TSingleSelectionWindow_OnGameHeaderInfoInitMsg	0.0000	0.0000	0.0000	0x18a440
 singleselectionwindow	TSingleSelectionWindow_OnGameHeaderInfoInitMsgEx	0.0000	0.0000	0.0000	0x18a780

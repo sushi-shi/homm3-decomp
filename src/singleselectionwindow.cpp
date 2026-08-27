@@ -974,12 +974,118 @@ void TSingleSelectionWindow::UpdateGameVars()
     // @stub
 }
 
+#endif  // @carcass
+
+// Rebuild every occupied seat's pickable-hero list: resolve the shown
+// town (attribute band or pick_alignment - the inline_depth(0) pin
+// keeps HasMultipleTowns retail's CALL), map it to its two hero
+// classes (the per-case operand order is source-faithful:
+// Rampart/Tower name the caster class first, the rest the might
+// class; the duplicated Castle/default arms are what give retail's
+// 0..8 jump table with entry 0 on the shared block), then admit up to
+// 16 heroes whose class matches, whose pool byte is free, and whose
+// scenario setup row - when one exists - grants this seat in its
+// availability bitset.
+// Residual (87.3): pure register-homing - every switch arm stores
+// classB as an immediate to [ebp-4] in retail while our CL promotes
+// it to edi; branch sequences agree 25/25. Function-scope vs
+// block-scope classB is byte-flat; the family is the documented
+// register-homing residual class.
 // E:\gamedcs\singleselectionwindow.cpp:3927
 VA(0x00583890, 0x2B0)  // anchor-callee UpdateTown calls it no-arg right after the town commit - the DC call edge; size 1.2x dc 0x23e, dc 0x139498
 void TSingleSelectionWindow::MakeHeroFilter()
 {
-    // @stub
+    if (m_flag65)
+        return;
+    for (int i = 0; i < 8; ++i) {
+        if (gpGame->setup.playerPos[i] < 0)
+            continue;
+        if (m_flag64 && gpGame->playerDisabled[i])
+            continue;
+        CNetPlayerHandlerPlayer* p = m_players.GetPlayerInPos(i);
+        if (!p)
+            continue;
+        CNetPlayerHandlerPlayer* shown = m_players.GetPlayerInPos(i);
+        if (!shown)
+            shown = m_players.GetCompPlayerInPos(i);
+        CMapHeaderData::TPlayerSlotAttributes* slot =
+            &gpGame->mapHeader.playerSlotAttributes[i];
+        int town;
+#pragma inline_depth(0)
+        if (slot->HasRandomAlignment || HasMultipleTowns(i))
+            town = shown->townIndex;
+        else
+            town = pick_alignment(
+                static_cast<unsigned short>(slot->legalAlignments), 1);
+#pragma inline_depth()
+        if (town == -1)
+            continue;
+        int classA;
+        int classB;
+        switch (town) {
+        case TOWN_RAMPART:
+            classA = eClassDruid;
+            classB = eClassRanger;
+            break;
+        case TOWN_TOWER:
+            classA = eClassWizard;
+            classB = eClassAlchemist;
+            break;
+        case TOWN_INFERNO:
+            classA = eClassPagan;
+            classB = eClassHeretic;
+            break;
+        case TOWN_NECROPOLIS:
+            classA = eClassDeathKnight;
+            classB = eClassNecromancer;
+            break;
+        case TOWN_DUNGEON:
+            classA = eClassOverlord;
+            classB = eClassWarlock;
+            break;
+        case TOWN_STRONGHOLD:
+            classA = eClassBarbarian;
+            classB = eClassBattleMage;
+            break;
+        case TOWN_FORTRESS:
+            classA = eClassBeastmaster;
+            classB = eClassWitch;
+            break;
+        case TOWN_CONFLUX:
+            classA = eClassPlanesWalker;
+            classB = eClassElementalist;
+            break;
+        case TOWN_CASTLE:
+            classA = eClassKnight;
+            classB = eClassCleric;
+            break;
+        default:
+            classA = eClassKnight;
+            classB = eClassCleric;
+            break;
+        }
+        p->availableHeroesCount = 0;
+        for (int h = 0; h < 156; ++h) {
+            if (gpGame->heroAvailability[h] != -1)
+                continue;
+            if (akHeroTraits[h].heroClass != classA
+                    && akHeroTraits[h].heroClass != classB)
+                continue;
+            std::map<int, type_map_hero_info>::iterator it =
+                gpGame->mapHeader.heroPlayerSetups.find(h);
+            if (it != gpGame->mapHeader.heroPlayerSetups.end()) {
+                if (!it->second.field_14.test(i))
+                    continue;
+            }
+            p->availableHeroes[p->availableHeroesCount] = h;
+            ++p->availableHeroesCount;
+            if (p->availableHeroesCount >= 16)
+                break;
+        }
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:4012
 VA(0x00583b40, 0x37D)  // anchor-callee the claimed ??_G (0x57d130) calls exactly this row (its only callee besides operator delete), size 1.06x dc 0x348, dc 0x1396d8
