@@ -2363,6 +2363,12 @@ public:
     void record_move(hero* who, int direction,
                      type_point destination);                    // 0x49cd50
     void record_teleport(hero* who, type_point destination);     // 0x49cf50
+    // DC game.h:877 (dc 0x8f270, event_record.obj): the visibility bit of
+    // every player sharing whichPlayer's team. Retail has NO out-of-line
+    // row for it - both visibility sweeps expand it at their head, and
+    // SetVisibility's own range guard is what lets VC6 drop the internal
+    // one there while ResetVisibility keeps it.
+    unsigned char GetTeamMask(int playerNum);
 #endif
     // Retail-only 0x4f32a0 / 0x4f3540, the standalone morale and luck
     // describe dialogs THeroScreenWindow::WindowHandler opens for widgets
