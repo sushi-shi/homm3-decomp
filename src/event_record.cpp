@@ -5,10 +5,13 @@
 #include "event_record.h"
 #define HOMM3_EVENT_RECORD_CLEAR_DECL
 #define HOMM3_EVENT_RECORD_DECLS
+#define HOMM3_EVENT_RECORD_NETMSG_DECLS
 #include "game.h"
+#undef HOMM3_EVENT_RECORD_NETMSG_DECLS
 #undef HOMM3_EVENT_RECORD_DECLS
 #undef HOMM3_EVENT_RECORD_CLEAR_DECL
 #include "abstractfile.h"
+#include "cursor.h"
 #define HOMM3_EVENT_RECORD_MOVE_DECLS
 #include "advmgr.h"
 #undef HOMM3_EVENT_RECORD_MOVE_DECLS
@@ -1291,19 +1294,31 @@ void type_record_shroud::undo()
 }
 #if 0  // @carcass
 
+#endif  // @carcass
+
 // E:\gamedcs\event_record.cpp:1034
-DC_ONLY(0x8dfe0, 0x78)
+// The map-change message is built on the stack and sent before the record
+// is queued; retail expands both the CNetMsg base constructor (field order
+// subType / field_00 / size / field_04 / field_10) and the record's own.
+VA(0x0049bf90, 0x1F1)  // anchor-global (0x41c subtype + 0x63debc), dc 0x8dfe0
 void game::record_claim_mine(long id, long new_owner)
 {
-    // @stub
+    CMCClaimMine msg(id, new_owner);
+    SendMapChange(&msg);
+    eventRecords.push_back(new type_record_claim_mine(id, new_owner));
 }
 
 // E:\gamedcs\event_record.cpp:1049
-DC_ONLY(0x8e058, 0x60)
+// record_claim_mine's twin, differing only in the 0x41d subtype and in the
+// pool the old owner is snapshotted from.
+VA(0x0049c190, 0x1FE)  // anchor-global (0x41d subtype + 0x63ded4), dc 0x8e058
 void game::record_claim_town(long id, long new_owner)
 {
-    // @stub
+    CMCClaimTown msg(id, new_owner);
+    SendMapChange(&msg);
+    eventRecords.push_back(new type_record_claim_town(id, new_owner));
 }
+#if 0  // @carcass
 
 #endif  // @carcass
 
