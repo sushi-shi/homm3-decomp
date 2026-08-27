@@ -572,11 +572,68 @@ void move_hero(hero* current_hero, unsigned char is_last_hero, unsigned char* ex
 }
 
 // E:\gamedcs\philai.cpp:1156
+#endif  // @carcass
+
 VA(0x00526a90, 0x1d4)  // anchor-callee, dc 0x10eeb0
 hero* DetermineHeroToMove(int player_id, unsigned char* is_last_hero)
 {
-    // @stub
+    hero* selected_hero = 0;
+    short lowest_sum = 0;
+    playerData* player = &gpGame->players[player_id];
+    *is_last_hero = 1;
+
+    for (short hero_index = 0; hero_index < player->numHeroes; ++hero_index) {
+        hero* current_hero =
+            &gpGame->heroes[static_cast<short>(player->heroes[hero_index])];
+        if (current_hero->movePoints > 0 && !current_hero->field_11c) {
+            if (selected_hero)
+                *is_last_hero = 0;
+
+            short skill_sum = 0;
+            for (short skill = 0; skill < 4; ++skill)
+                skill_sum += current_hero->GetPrimarySkill(skill);
+
+            if (!selected_hero
+                || (!(current_hero->patrolX != hero::kPatrolNone
+                         && selected_hero->patrolX == hero::kPatrolNone)
+                    && ((current_hero->patrolX == hero::kPatrolNone
+                             && selected_hero->patrolX
+                                    != hero::kPatrolNone)
+                        || skill_sum < lowest_sum))) {
+                selected_hero = current_hero;
+                lowest_sum = skill_sum;
+            }
+        }
+    }
+
+    if (selected_hero)
+        return selected_hero;
+
+    *is_last_hero = 0;
+    gpAdvManager->DemobilizeCurrHero(0, 1);
+    player->currHeroId = -1;
+    if (player->numHeroes < playerData::HERO_SLOT_COUNT) {
+        for (short town_index = 0; town_index < player->numTowns;
+             ++town_index) {
+            town* current_town = gpGame->GetTown(player->townIds[town_index]);
+            short garrison_hero_id =
+                static_cast<short>(current_town->garrisonHeroId);
+            if (garrison_hero_id >= 0 && current_town->visitingHeroId < 0) {
+                hero* current_hero = gpGame->GetHero(garrison_hero_id);
+                if (current_hero->army.get_creature_total()
+                    && current_hero->movePoints
+                    && !current_hero->field_11c) {
+                    current_town->remove_garrison_hero();
+                    selected_hero = current_hero;
+                    break;
+                }
+            }
+        }
+    }
+    return selected_hero;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\philai.cpp:1339.  The spell-appraisal object's constructor; retail
 // inlines fill_creature_value_list / get_summoning_value / get_value_of_increase

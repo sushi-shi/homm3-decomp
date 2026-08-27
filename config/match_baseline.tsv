@@ -1994,6 +1994,7 @@ philai	?AI_bribe_monsters@@YIEPBVhero@@PAVNewmapCell@@W4TCreatureType@@FJ@Z	100.
 philai	?AI_choose_secondary_skill@@YI?AW4TSecondarySkill@@PBVhero@@W41@1E@Z	100.0000	100.0000	100.0000	0x12bbd0
 philai	?AI_get_spell_value@@YIJPBVhero@@H@Z	100.0000	100.0000	100.0000	0x127640
 philai	?AI_visit_war_factory@@YIXPAVhero@@@Z	100.0000	100.0000	100.0000	0x124fc0
+philai	?DetermineHeroToMove@@YIPAVhero@@HPAE@Z	100.0000	100.0000	100.0000	0x126a90
 philai	?LuckIncreaseValue@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0x127d80
 philai	?MoraleIncreaseValue@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0x127cf0
 philai	?SoD_get_seer_skill_value@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0x124630
@@ -2019,7 +2020,6 @@ philai	AI_visit_hill_fort	0.0000	0.0000	0.0000	0x127bb0
 philai	AI_visit_university	0.0000	0.0000	0.0000	0x124ed0
 philai	CheckDoMain	0.0000	0.0000	0.0000	0x1242d0
 philai	ComputeUpgradeValue	0.0000	0.0000	0.0000	0x12aac0
-philai	DetermineHeroToMove	0.0000	0.0000	0.0000	0x126a90
 philai	MoveHero	0.0000	0.0000	0.0000	0x1261f0
 philai	ValueOfGenerator	0.0000	0.0000	0.0000	0x129a30
 philai	ValueOfScroll	0.0000	0.0000	0.0000	0x12a8c0
