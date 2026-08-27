@@ -24,6 +24,11 @@ namespace ResourceManager {
     TTextResource* GetText(const char* name);
 }
 
+// The five difficulty names at .bss 0x6a77ec, indexed by the header's
+// difficulty byte in DrawBasicMapInfo's bottom row. Owner TU unlocated -
+// extern only, no DATA claim; house unnamed-cell spelling.
+extern const char* gUnnamed6a77ec[];
+
 // The starting-bonus name table at .bss 0x6a5e14 (rows 0..2 =
 // Artifact/Gold/Resource; the random rung draws general-text 523
 // instead), read by DrawHeroAdvancedOption's bonus column in both
@@ -397,8 +402,8 @@ public:
         m_flag = flag;
         m_number = number;
         strncpy(m_fileName, hdr->fileName, 0x3c);
-        m_fileTimeLow = hdr->fileTimeLow;
-        m_fileTimeHigh = hdr->fileTimeHigh;
+        m_fileTimeLow = hdr->fileTime.dwLowDateTime;
+        m_fileTimeHigh = hdr->fileTime.dwHighDateTime;
         for (int i = 0; i < 8; ++i)
             m_townTypes[i] = hdr->slotAlignments[i];
     }

@@ -69,8 +69,9 @@ struct GameSelectionHeadersStruct {
     // single-player list and the net-mode selected panel, and the name
     // comparator ranks it against the "autosave" prefix rule.
     char title[0x6f8 - 0x58c];  // +0x58c (full extent unmodeled)
-    unsigned int fileTimeLow;   // +0x6f8, the row's FILETIME pair
-    unsigned int fileTimeHigh;  // +0x6fc
+    // The row's file stamp - a real FILETIME: DrawBasicMapInfo hands
+    // its address to FileTimeToLocalFileTime.
+    _FILETIME fileTime;         // +0x6f8
     char pad_700[0xbe0 - 0x700];
     // Multiplayer rows only: the campaign flag and ordinal Update's
     // version-icon remap (the jump-table switch) dispatches on.
