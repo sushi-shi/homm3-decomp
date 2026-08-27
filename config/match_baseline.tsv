@@ -295,6 +295,7 @@ ai_player	?mark_town@type_garrison_purchaser@@UAEXPAVtown@@@Z	100.0000	100.0000	
 ai_player	?mark_town@type_town_threat_checker@@UAEXPAVtown@@@Z	100.0000	100.0000	100.0000	0x28570
 ai_player	?mark_towns@type_town_threat_checker@@IAEXPAVhero@@PAVsearchArray@@@Z	99.9554	99.9554	99.9554	0x282b0
 ai_player	?net_value_of_location@@YIHPAVhero@@PAUHeroDestination@@PAJPAUpathCell@@PAVsearchArray@@@Z	85.3476	85.3476	85.3476	0x2f980
+ai_player	?purchase_building@type_AI_player@@QAEEPAE@Z	96.1947	96.1947	96.1947	0x2ae00
 ai_player	?remove_negative_artifacts@@YIJPAVhero@@@Z	100.0000	100.0000	100.0000	0x33bb0
 ai_player	?reset_magus_hut_value@type_AI_player@@QAEXXZ	100.0000	100.0000	100.0000	0x29ab0
 ai_player	?set@type_AI_creature_purchaser@@QAEXPAVtown@@@Z	100.0000	100.0000	100.0000	0x2d1b0
@@ -303,12 +304,13 @@ ai_player	?split_army@@YIJPAVarmyGroup@@FFF@Z	100.0000	100.0000	100.0000	0x2dd70
 ai_player	?start_turn@type_AI_player@@QAEXXZ	100.0000	100.0000	100.0000	0x297c0
 ai_player	?trade_resources@type_AI_player@@QAEXPBHJ@Z	90.1171	90.1171	90.1171	0x2a470
 ai_player	?value_of_adding_army@type_AI_creature_swapper@@IAEJW4TCreatureType@@FAAF_N@Z	89.0856	89.0856	89.0856	0x2c830
+ai_player	?value_of_castle_upgrade@@YIHPAVtown@@PAH@Z	95.4598	95.4598	95.4598	0x2b670
 ai_player	?value_of_dwelling@@YIJPAVtown@@FPAEPAH@Z	100.0000	100.0000	100.0000	0x2b520
 ai_player	?value_of_dwelling_upgrade@@YIJPAVtown@@FPAH@Z	100.0000	100.0000	100.0000	0x2b5b0
+ai_player	?value_of_hall@@YIJPAVtown@@W4type_building_id@@@Z	99.9524	99.9524	99.9524	0x2b8b0
 ai_player	?value_of_hiring@@YIJPAVtown@@PAVhero@@PAVsearchArray@@@Z	99.9522	99.9522	99.9522	0x31bd0
 ai_player	?value_of_horde@@YIJPAVtown@@W4type_building_id@@PAEPAH@Z	100.0000	100.0000	100.0000	0x2b790
 ai_player	?value_of_horde_upgrade@@YIJPAVtown@@W4type_building_id@@PAEPAH@Z	100.0000	100.0000	100.0000	0x2b800
-ai_player	type_AI_player_purchase_building	0.0000	0.0000	0.0000	0x2ae00
 ai_tactical	??0army@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x37a00
 ai_tactical	??0type_AI_attack_hex_chooser@@QAE@PBVarmy@@0PBJPAVsearchArray@@PBUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x360c0
 ai_tactical	??0type_AI_combat_parameters@@QAE@PBVcombatManager@@J@Z	100.0000	100.0000	100.0000	0x35ec0

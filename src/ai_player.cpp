@@ -86,6 +86,11 @@ inline const _TYPE& _cpp_limit(_TYPE _Lo, _TYPE _V, _TYPE _Hi)
 // `typedef int TSkillMastery` is a hard C2371 against herospec.h's enum).
 const int SECONDARY_SKILL_WISDOM = 7;
 
+// events.h publishes the same seventh-day member for its adventure-event
+// readers. Keep this TU's narrow include set while naming the calendar value
+// used by Rampart's treasury appraisal below.
+const unsigned short AI_DAY_OF_WEEK_SUNDAY = 7;
+
 // Retail 0x526cc0: /Gr fastcall, player id in ECX and the seven-resource
 // vector in EDX. The owning philai TU is not yet reconstructed.
 int AI_resource_cost(long player_id, const int* resources);
@@ -1541,7 +1546,7 @@ static long value_of_building(town* current_town, type_building_id building,
         switch (current_town->type) {
         case TOWN_RAMPART:
             if (building == EXTRA_1_ID) {
-                if (gpGame->field_1f63e == 7)
+                if (gpGame->field_1f63e == AI_DAY_OF_WEEK_SUNDAY)
                     return static_cast<long>(
                         player->resources[GOLD]
                         * player->resourceValue[GOLD] / 10.0);
