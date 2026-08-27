@@ -126,8 +126,12 @@ public:
     int field_14;            // +0x14 - coord (serialized as 16-bit; default -1)
 };
 
-// show_boat extends hide_boat with two trailing dwords (+0x18/+0x1c). load calls
-// hide_boat::load then reads them; save inlines hide_boat::save then writes them.
+// show_boat extends hide_boat with two trailing type_points (+0x18/+0x1c).
+// load calls hide_boat::load then reads them; save inlines hide_boat::save
+// then writes them. The two are four bytes apiece and serialized whole, which
+// is why they read as dwords in load/save - but replay unpacks +0x18 into the
+// boat's x/y/z and undo unpacks +0x1c, both with the 10/10/4 bitfield shifts,
+// and that is what types them.
 class type_record_show_boat : public type_record_hide_boat {
 public:
     virtual type_event_record_type get_type() OVERRIDE;
@@ -135,8 +139,8 @@ public:
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
     virtual void undo() OVERRIDE;
-    int field_18;            // +0x18
-    int field_1c;            // +0x1c
+    type_point location;           // +0x18 - replay destination
+    type_point previous_location;  // +0x1c - restored by undo
 };
 
 // A recorded object erasure. load/save (0x49b190/0x49b220) serialize four
