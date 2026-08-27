@@ -455,8 +455,20 @@ enum WitchHutSkillEncoding {
 //        set to `1 << extra`, the levels still coming off the stream.
 // All three of the 216..218 arms append to the SAME 16-byte-element pool at
 // NewfullMap+0xc0 that the retail-only resolution pass at 0x502b60 walks.
+// The three cartographer variants, indexed by NewmapCell::objectIndex.
+// DispatchEvent's cartographer arm shows one map plane per value, matching
+// the three-wide cartographerMask/cartographerFlags arrays.
+enum ECartographerType {
+    CARTOGRAPHER_WATER = 0,
+    CARTOGRAPHER_LAND = 1,
+    CARTOGRAPHER_UNDERGROUND = 2
+};
+
 enum EAdvmgrRetailObjectType {
     BORDER_GATE = 212,
+    // 213: DispatchEvent's 0xd5 arm gates DoFreelancersGuild(hero*) on
+    // human_player - the map-object entry of tradpost's guild pair.
+    FREELANCERS_GUILD = 213,
     HERO_PLACEHOLDER = 214,
     QUEST_GUARD = 215,
     RANDOM_DWELLING = 216,
@@ -1406,6 +1418,12 @@ public:
                                 bool human_player);
     void DoEventCreatureBank(class hero* current_hero, NewmapCell* cell,
                              type_point point, bool human_player);
+    // The creature dwelling (jump-table arms 0x11 and 0x14 share the one
+    // call). Four parameters and `ret 0x10`, the DC's own order; the row
+    // (0x4a18b0) stays claimed from events.cpp's carcass until its body
+    // lands.
+    void DoEventCreatureGenerator(class hero* current_hero, NewmapCell* cell,
+                                  type_point point, bool human_player);
     // The Dragon Utopia (jump-table arm 0x19 = OBJECT_DRAGON_UTOPIA), the
     // one creature bank with a handler of its own. Four parameters and
     // `ret 0x10`, the DC's own order, and the cell stays a NewmapCell*
@@ -1727,8 +1745,11 @@ public:
                              signed char* winner,
                              unsigned char* retreatWin,
                              unsigned char* combatSurrender);
+    // human_player is spelled bool: the body forwards it dword-wide to a
+    // dozen bool-parameter handlers, and an unsigned char here makes VC6
+    // renormalize (`test dl,dl / setne al`) at every one of those sites.
     void DispatchEvent(class hero* current_hero, NewmapCell* cell,
-                       type_point point, unsigned char human_player);
+                       type_point point, bool human_player);
     void EventSound(int eventID, int extraInfo);
     // HeroView (0x4e1800) calls this on the dismiss path. hero.obj takes
     // the ONE declarator through its own gate rather than joining the

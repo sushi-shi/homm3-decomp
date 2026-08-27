@@ -10,6 +10,10 @@
 
 class hero;
 class town;
+class garrison;
+class generator;
+struct TBlackMarket;
+struct type_university;
 
 // The Dreamcast class roster has no data members for this coordinator;
 // its three public methods are the complete method roster.  Retail DoAI
@@ -40,6 +44,21 @@ long AI_get_spell_value(const hero* our_hero, SpellID spell);
 // path..philai link bracket whose only candidate compilands are path.obj
 // and philai.obj. The row is not claimed from here.
 void AI_enter_town(hero* current_hero, town* current_town);
+
+// The five object visitors advManager::DispatchEvent's AI arms call.
+// The Dreamcast roster supplies every signature (philai.cpp:182 / 389 /
+// 583 / 2513 / 3744); retail's /Gr fastcalls inside 0x4a84f0 agree
+// register-for-register (0x524370 / 0x5243f0 / hill fort / university /
+// war factory). None of the rows is claimed from here.
+void AI_enter_garrison(hero* current_hero, garrison* our_garrison);
+// The dwelling purchaser DoEventCreatureGenerator's AI tail calls
+// (dc AI_PurchaseCreatures, philai.obj); retail 0x527b00, /Gr
+// (hero in ECX, generator in EDX). Not claimed from here.
+void AI_PurchaseCreatures(hero* current_hero, generator* current_generator);
+void AI_visit_black_market(hero* current_hero, TBlackMarket* black_market);
+void AI_visit_hill_fort(hero* current_hero);
+void AI_visit_university(hero* current_hero, type_university* university);
+void AI_visit_war_factory(hero* current_hero);
 
 // Retail .data 0x678370, the row immediately after tradpost.h's
 // fTradingPostEfficency (0x678344): three consecutive eleven-float rows
