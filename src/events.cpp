@@ -4306,14 +4306,44 @@ void advManager::DoEventTrainingGrounds(hero* current_hero, NewmapCell* cell,
     current_hero->CheckLevel();
 }
 
-// E:\gamedcs\events.cpp:3377.  Located, not reconstructed.
-#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+// The AI arm of DoTreasureDialog reaches this philai helper before the
+// declaration accompanying its later tree-of-knowledge callers.
+unsigned char AI_choose_resource_or_experience(hero* current_hero,
+                                               EGameResource resource,
+                                               int cost, int value);
+
+// E:\gamedcs\events.cpp:3377. The gold-or-experience offer shared by the
+// treasure chest and the campfire-style pickups.
 VA(0x004a6440, 0xD8)  // dc-bracket forced, ret 0xc=p4, dc 0x962dc
-void advManager::DoTreasureDialog(hero* current_hero, int amount, unsigned char human_player)
+void advManager::DoTreasureDialog(hero* current_hero, int amount,
+                                  bool human_player)
 {
-    // @stub
+    int experience = static_cast<int>(current_hero->GetExperienceBonusFactor()
+                                      * (amount - 500));
+
+    if (human_player) {
+        OverrideBottomView(BOTTOM_VIEW_DEFAULT, -1);
+        UpdBottomView(0, 1, 1);
+        NormalDialog(gpAdventureEventText->GetText(146), 7, -1, -1, GOLD,
+                     amount, 0x11, experience, 1, 0, -1, 0);
+        if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT) {
+            if (gpWindowManager->dialogReturn == DIALOG_RETURN_CHOICE_1) {
+                current_hero->GiveResource(GOLD, amount);
+                return;
+            }
+            goto give_experience;
+        }
+    } else if (!AI_choose_resource_or_experience(current_hero, GOLD, amount,
+                                                 experience)) {
+        goto give_experience;
+    }
+
+    current_hero->GiveResource(GOLD, amount);
+    return;
+
+give_experience:
+    current_hero->GiveExperience(experience, 0, 1);
 }
-#endif  // @carcass
 
 // E:\gamedcs\events.cpp:3414.  The treasure chest (jump-table arm 0x65):
 // either an artifact or a pile of gold, and the gold arm is also where an
@@ -4375,10 +4405,6 @@ void advManager::DoEventTreasure(hero* current_hero, NewmapCell* cell,
 // object's two AI price arms. The return stays `unsigned char` where the
 // Dreamcast decorates it `_N`: retail tests AL and the war school is exact
 // with that spelling. The row is not claimed here.
-unsigned char AI_choose_resource_or_experience(hero* current_hero,
-                                               EGameResource resource,
-                                               int cost, int value);
-
 // E:\gamedcs\events.cpp:3454.  The Tree of Knowledge (jump-table arm
 // 0x66): one level's worth of experience, once per tree per hero, for
 // nothing, for 2000 gold or for ten gems - which of the three the tree
@@ -4545,14 +4571,43 @@ void advManager::DoEventWagon(hero* current_hero, ExtraInfoUnion* cell,
 TCreatureType UpgradedCreatureType(TCreatureType type);
 TCreatureType DowngradedCreatureType(TCreatureType type);
 
-// E:\gamedcs\events.cpp:3579.  Located, not reconstructed.
-#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+// E:\gamedcs\events.cpp:3579. Pays out the artifact and resource reward from
+// the customized wandering-monster record selected by the cell.
 VA(0x004a6b30, 0x12A)  // dc-bracket forced, ret 0xc=p4, dc 0x96994
-void advManager::monsters_give_reward(hero* current_hero, NewmapCell* cell, unsigned char human_player)
+void advManager::monsters_give_reward(hero* current_hero, NewmapCell* cell,
+                                      bool human_player)
 {
-    // @stub
+    if (!cell->IsCustomized())
+        return;
+
+    MonsterData* reward = &fullMap->CustomMonsterList[cell->monster_info.index];
+    if (reward->Artifact != ARTIFACT_NONE) {
+        if (current_hero->get_number_in_backpack(1) >= 64) {
+            if (human_player)
+                NormalDialog(gpAdventureEventText->GetText(2), 1, -1, -1,
+                             -1, 0, -1, 0, -1, 0, -1, 0);
+        } else {
+            if (human_player)
+                NormalDialog(emptyRolloverText, 1, -1, -1, 8,
+                             reward->Artifact, -1, 0, -1, 0, -1, 0);
+            type_artifact artifact;
+            artifact.artifactId = reward->Artifact;
+            artifact.extra = -1;
+            current_hero->GiveArtifact(&artifact, 1, 1);
+            if (!human_player)
+                AI_equip_artifacts(current_hero);
+        }
+    }
+
+    for (int i = 0; i < 7; ++i) {
+        if (reward->ResQty[i]) {
+            if (human_player)
+                NormalDialog(emptyRolloverText, 1, -1, -1, i,
+                             reward->ResQty[i], -1, 0, -1, 0, -1, 0);
+            current_hero->GiveResource(i, reward->ResQty[i]);
+        }
+    }
 }
-#endif  // @carcass
 
 // E:\gamedcs\events.cpp:3627.  The wandering stack is fought. The combat
 // itself is CombatMonsterEvent; what belongs to this body is the count
