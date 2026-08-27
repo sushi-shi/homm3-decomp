@@ -151,12 +151,7 @@ unsigned char TMultiPlayerWindow::OnSearch()
     // @stub
 }
 
-// E:\gamedcs\multiplayerwindow.cpp:2009
-DC_ONLY(0x101c00, 0x4A)
-unsigned char TMultiPlayerWindow::OnHotSeat()
-{
-    // @stub
-}
+// OnHotSeat promoted to a VA claim (retail-located block).
 
 // E:\gamedcs\multiplayerwindow.cpp:2025
 DC_ONLY(0x101c4c, 0x56)
@@ -1296,6 +1291,21 @@ void CMPInputDlg::UpdateOK()
 
 // E:\gamedcs\multiplayerwindow.cpp:523
 VA_COMPGEN(0x005109e0, 0x21, SCALAR_DELETING_DTOR, CMPInputDlg)
+
+// E:\gamedcs\multiplayerwindow.cpp:2009
+// Byte-exact. The local dialog's result selects either the cancel return or
+// hot-seat protocol. Its compiler-generated cleanup paths account for the two
+// explicit CHotSeatDlg teardown sequences in retail.
+VA(0x00511d40, 0xD1)  // CHotSeatDlg ctor/DoModal/dtor + iMPNetProtocol store, dc 0x101c00
+unsigned char TMultiPlayerWindow::OnHotSeat()
+{
+    CHotSeatDlg dlg;
+    dlg.DoModal(0);
+    if (gpWindowManager->dialogReturn == DIALOG_RETURN_CANCEL)
+        return 0;
+    iMPNetProtocol = MP_HOTSEAT;
+    return 1;
+}
 
 // E:\gamedcs\multiplayerwindow.cpp:629
 VA(0x00511e20, 0x5A1)  // anchor-vtable 0x6401d8 into this + CHeroWindowEx base + muhotsea.pcx, dc 0x1028c4

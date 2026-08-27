@@ -260,6 +260,15 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-27 — the multiplayer hot-seat dispatcher is byte-exact.**
+  Retail `TMultiPlayerWindow::OnHotSeat` at `0x511d40` opens a stack-local
+  `CHotSeatDlg`, returns false on the cancel result, or selects
+  `MP_HOTSEAT` and returns true. The two result paths each carry the exact
+  compiler-generated dialog/widget teardown and `heroWindow` destruction
+  sequence; all 209 VC6 bytes and three control-flow blocks are exact. The
+  synchronized report reaches **2525/3091 functions exact**, **92.94%
+  fuzzy**, and **60.69% executable coverage**.
+
 - **2026-08-27 — the CHeroSessions destructor pair is byte-exact.**
   Retail's scalar deleting destructor at `0x50ede0` calls the implicit
   `CHeroSessions` destructor at `0x558350`, then conditionally frees the
