@@ -3919,7 +3919,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
 // The creature-type reads are UNCHECKED and the troop counts are not - that
 // asymmetry is retail's, not a transcription slip.  game::LoadGarrisonPool
 // (0x4b96f0) is the save-file twin of this loop and already exact; the field
-// names and the `pad_3c` flag come from there.
+// names and the `removableTroops` flag come from there.
 //
 // Residual (99.9632%): reloc NAMES only - the delinked side spells `gpGame`
 // as `bss_2994e8` and vector<garrison>::insert as `game_b9340_sub01_d0ba0`
@@ -3966,11 +3966,11 @@ int NewfullMap::readGarrisonData(TAbstractFile* infile, CObject* garrisonObject,
     }
 
     if (gpGame->mapHeader.version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-        newGarrison.pad_3c = 1;
+        newGarrison.removableTroops = 1;
     } else {
         unsigned char value;
         infile->Read(&value, sizeof(value));
-        newGarrison.pad_3c = value != 0;
+        newGarrison.removableTroops = value != 0;
     }
 
     int triggerX;
