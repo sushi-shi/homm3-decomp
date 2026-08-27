@@ -202,6 +202,13 @@ public:
     double resource_value[7];
 
     static float get_attack_bonus(short player);  // 0x428710
+    // DC ai_player.h:278 (dc 0x37df8, ?...@@QBANW4EGameResource@@@Z);
+    // inlined into type_income_artifact::get_value, whose by-value double
+    // return temp at [ebp-8] is what the retail bytes home under /Op.
+    double get_resource_value(enum EGameResource resource) const
+    {
+        return resource_value[resource];
+    }
     static void set_attack_bonuses(float computer_bonus,
                                    float human_bonus)
     {
@@ -737,6 +744,7 @@ public:
 
 class type_combat_artifact : public type_artifact_effect {
 public:
+    type_combat_artifact(long new_bonus);
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 
@@ -884,6 +892,21 @@ public:
                            unsigned char exact) const;
 
     TSpellSchool school;
+};
+
+// Retail get_value (0x432d20) prices amount * the owning AI player's
+// resource_value[resource] * 3; the DC ctor (0x36ee8) stores the amount
+// at +4 and the resource id at +8. EGameResource is town.h's enum, seen
+// here through the elaborated specifier (the advmgr.h pattern) because
+// every consumer includes ai_player.h before town.h.
+class type_income_artifact : public type_artifact_effect {
+public:
+    type_income_artifact(long new_amount, enum EGameResource new_resource);
+    virtual long get_value(const hero* owner, unsigned char equipped,
+                           unsigned char exact) const;
+
+    long amount;
+    enum EGameResource resource;
 };
 
 // --- type_artifact_effect ---
