@@ -228,12 +228,7 @@ void CMultiPlayerWindowEdit::CMultiPlayerWindowEdit(int textWidgetX, int textWid
     // @stub
 }
 
-// E:\gamedcs\multiplayerwindow.cpp:145
-DC_ONLY(0x101e98, 0x50)
-int CMultiPlayerWindowEdit::OnKeyPress(message* msg)
-{
-    // @stub
-}
+// CMultiPlayerWindowEdit::OnKeyPress promoted to a VA claim below.
 
 // E:\gamedcs\multiplayerwindow.cpp:156
 DC_ONLY(0x101ee8, 0x34)
@@ -548,6 +543,25 @@ VA(0x0050ed50, 0x7)  // anchor-vtable 0x6400a0 slot 13 (GetRolloverWidget), dc 0
 textWidget* TMultiPlayerWindow::GetRolloverWidget()
 {
     return RolloverWidget;
+}
+
+// Byte-exact. Slot 15 suppresses Enter in the player-name field. Other keys
+// use the base editor; a consumed key then redraws the multiplayer window so
+// the session list reflects the new local name. DC supplies the class/method
+// identity and three callees, while retail vtable 0x640054 fixes the slot and
+// PC address.
+// E:\gamedcs\multiplayerwindow.cpp:145
+VA(0x0050ed60, 0x43)  // vtable slot 15 + GetCharPressed/base/Update calls, dc 0x101e98
+int CMultiPlayerWindowEdit::OnKeyPress(message* msg)
+{
+    if (GetCharPressed(msg) == KEYCODE_ENTER)
+        return 0;
+
+    int result = textEntryWidget::OnKeyPress(msg);
+    if (!result)
+        return 0;
+    gpMultiPlayerWindow->Update();
+    return result;
 }
 
 VA_COMPGEN(0x0050edb0, 0x21, SCALAR_DELETING_DTOR, TMultiPlayerWindow)

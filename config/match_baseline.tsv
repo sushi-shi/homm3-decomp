@@ -2043,6 +2043,7 @@ multiplayerwindow	?JoinSession@TMultiPlayerWindow@@QAEEPAVCDPlaySession@@PBD@Z	1
 multiplayerwindow	?OnDirectHost@TMultiPlayerWindow@@QAEEXZ	100.0000	100.0000	100.0000	0x10fc50
 multiplayerwindow	?OnHost@TMultiPlayerWindow@@QAEEXZ	100.0000	100.0000	100.0000	0x10fda0
 multiplayerwindow	?OnKeyPress@CMPEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1107d0
+multiplayerwindow	?OnKeyPress@CMultiPlayerWindowEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x10ed60
 multiplayerwindow	?OnNextEdit@CMPEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x110850
 multiplayerwindow	?OnOK@CHotSeatDlg@@QAEEXZ	100.0000	100.0000	100.0000	0x112470
 multiplayerwindow	?OnPrevEdit@CMPEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x110870
