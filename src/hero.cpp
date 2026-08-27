@@ -5575,23 +5575,25 @@ int hero::GetNthSS(int iWhich)
 // backpack half's remove_backpack_artifact is INLINED (its `short`
 // parameter is why the counter is narrowed with `mov ecx,edi` /
 // `movsx eax,cx`).
-// Residual (98.0%): two rows, neither a spelling. (1) post-RA
-// SCHEDULING in the backpack loop's slot copy - identical byte
-// multiset, retail sinks `cmp eax,-1` one slot later so the
-// `mov [ebp-0x10],eax` store lands before the `mov ecx,[ebx+4]` load
-// instead of after. The equipped loop's identical copy already
-// matches, so this is the scheduler, not the source. (2) the
-// remove_artifact call's reloc still reads the flat carve name
-// `hero_remove_artifact` on the target side, because 0x4e2bd0 is
-// still a stub and the delinker has no symbol to learn; it resolves
-// itself when that body lands.
+// CLOSED 2026-08-27 (98.0 -> 100.0000): the slot copy is ONE
+// function-scoped `type_artifact artifact` reused across both loops, not
+// two block-scoped copies. Retail keeps it at [ebp-0x10]/[ebp-0xc] in
+// BOTH loops (a single shared slot), which is the whole 4-byte frame
+// surplus (our sub esp,0x14 against retail's 0x10) AND the backpack
+// loop's `mov [ebp-0x10],eax` scheduling: with two coalesced-but-distinct
+// locals VC6 deferred the first-dword store one slot; with one declared
+// local it stores immediately as retail does. The old "scheduler, not
+// source" verdict here was the missing-source-element trap. The stale
+// second row (a flat-carve `hero_remove_artifact` reloc) resolved on its
+// own once remove_artifact(long) landed.
 VA(0x004e23d0, 0x176)  // anchor-global, dc 0xd38ec
 void hero::TransferArtifacts(hero* src)
 {
     if (!src)
         return;
+    type_artifact artifact;
     for (int slot = 0; slot < 19; slot++) {
-        type_artifact artifact = src->equipped[slot];
+        artifact = src->equipped[slot];
         if (artifact.artifactId == ARTIFACT_NONE ||
             artifact.artifactId == ARTIFACT_HOLY_GRAIL ||
             artifact.artifactId == ARTIFACT_SPELLBOOK ||
@@ -5605,7 +5607,7 @@ void hero::TransferArtifacts(hero* src)
         src->remove_artifact(slot);
     }
     for (int index = 63; index >= 0; index--) {
-        type_artifact artifact = src->backpack[index];
+        artifact = src->backpack[index];
         if (artifact.artifactId == ARTIFACT_NONE ||
             artifact.artifactId == ARTIFACT_HOLY_GRAIL ||
             artifact.artifactId == ARTIFACT_SPELLBOOK ||
