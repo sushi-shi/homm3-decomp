@@ -79,6 +79,61 @@ public:
     CChatSave* m_save;  // +0x50
 };
 
+// One cached map/save header row of the file list. Only the stride is
+// modeled: 0xCA4 is fixed by the size() magic-multiply in every
+// vector<GameSelectionHeadersStruct>::size() expansion (WindowHandler's
+// scroll arms): 0x5102371 * 2^-38 is 1/3236 exactly (the /3235 constant
+// would take the add-fix form retail lacks). The DC record
+// (SingleSelectionWindow.h:73) awaits field reconstruction.
+struct GameSelectionHeadersStruct {
+    char pad_0[0xCA4];
+};
+SIZE(GameSelectionHeadersStruct, 0xCA4);
+
+// One per-joining-player header-transfer job. Retail vtable 0x641d38
+// (stored by the ctor at 0x589240): slot 0 Go (0x577d70), slot 1 Tick
+// (0x577de0) - the slot WindowHandler's inlined CNewPlayerUpdateMan::Tick
+// dispatches - then four more virtuals (0x578930/0x5789f0/0x578a90/
+// 0x5795a0) not yet order-mapped onto the DC HeaderRequested/
+// HeaderConfirmed/RequestConfirmation/HandleRequests/Finish roster;
+// placeholders keep the slot arithmetic honest. The destructor is
+// NON-virtual: retail deletes through a direct call to 0x583ef0.
+// Member offsets are the ctor's stores (dpid +4, the +0x10..+0x18
+// buffer triple the dtor frees and zeroes, m_finished +0x20).
+class __declspec(novtable) CNewPlayerUpdateProc {
+public:
+    CNewPlayerUpdateProc(unsigned long dpid);
+    virtual void Go();          // slot 0, 0x577d70
+    virtual void Tick();        // slot 1, 0x577de0
+    virtual void _vslot02();    // slot 2, 0x578930
+    virtual void _vslot03();    // slot 3, 0x5789f0
+    virtual void _vslot04();    // slot 4, 0x578a90
+    virtual void _vslot05();    // slot 5, 0x5795a0
+    ~CNewPlayerUpdateProc();
+
+    unsigned long m_dpid;        // +0x04
+    int field_08;                // +0x08
+    unsigned char field_0C;      // +0x0c
+    GameSelectionHeadersStruct* m_buffer;  // +0x10, freed by the dtor
+    int field_14;                // +0x14
+    int field_18;                // +0x18
+    int field_1C;                // +0x1c
+    unsigned char m_finished;    // +0x20, Tick-loop delete gate
+
+    unsigned char IsFinished() const { return m_finished; }
+};
+
+// The per-lobby set of header-transfer jobs: eight slots, ticked from
+// WindowHandler every pump. Tick is defined out of class in the TU
+// (retail keeps an out-of-line copy and expands it into WindowHandler).
+class CNewPlayerUpdateMan {
+public:
+    CNewPlayerUpdateProc* m_procs[8];
+
+    void Tick();
+    void PlayerDropped(unsigned long dpid);  // retail 0x589480
+};
+
 // The lobby player-name editor (one per name row, widget ids 353..360).
 // vtable 0x241c14 overrides slot 11 (OnKillFocus) and slot 15 (OnKeyPress);
 // both bodies expand the shared commit helper OnEnter, which DC keeps out
