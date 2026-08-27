@@ -838,26 +838,29 @@ void TSingleSelectionWindow::UpdateFilterWidgets()
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:2635
-DC_ONLY(0x13575c, 0x348)
+VA(0x0057F330, 0x3E3)  // anchor-callee the 11.6KB ctor calls it at +0x2bc4, back-to-back with its DC neighbor below - the DC adjacency; size 1.13x dc 0x348, dc 0x13575c
 void TSingleSelectionWindow::SetupLoadGameMode()
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:2727
-DC_ONLY(0x135aa4, 0x304)
+VA(0x0057F740, 0x3D5)  // anchor-callee ctor call site +0x2bd4, adjacent pair with SetupLoadGameMode above (DC-adjacent); both call the tiny shared 0x57f720 helper (the GetFileSpecNbr shape), size 1.27x dc 0x304, dc 0x135aa4
 void TSingleSelectionWindow::SetupNewGameMode()
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:2809
-DC_ONLY(0x135da8, 0xD8)
+VA(0x0057FB20, 0x66)  // anchor-callee OnSetAsHostMsg 0x58b120 is its only caller (ShowWidget(0xba) before the empty-list disable) - extern linkage keeps the single-call-site body emitted, size 0.47x dc 0xD8, dc 0x135da8
 void TSingleSelectionWindow::ShowWidget(int id)
 {
     // @stub
 }
 
+// No retail row fits UpdateMainWindow (the 0x57fb90 slot is 6x its DC
+// size): retail spells the DrawWindow(1, 0xffff0001, 0xffff)+Update()
+// pair inline at its former call sites (OnSetAsHostMsg's tail).
 // E:\gamedcs\singleselectionwindow.cpp:2821
 DC_ONLY(0x135e80, 0x84)
 void TSingleSelectionWindow::UpdateMainWindow()
@@ -866,14 +869,14 @@ void TSingleSelectionWindow::UpdateMainWindow()
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:2838
-DC_ONLY(0x135f04, 0x484)
-void TSingleSelectionWindow::SetupScenarioOptions()
+VA(0x00580A70, 0x68B)  // anchor-callee OnSetAsHostMsg calls it (0) exactly where DC's calls SetupScenarioOptions; head is the inScenarioOptions early-out into TurnOffScenarioOptions 0x5819a0; retail widened with the random-maps byte it compares/stores at m_flag66, size 1.45x dc 0x484, dc 0x135f04
+void TSingleSelectionWindow::SetupScenarioOptions(unsigned char randomMaps)
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:2933
-DC_ONLY(0x136388, 0x86C)
+VA(0x00581100, 0x897)  // anchor-callee OnWidgetDeselect 0x5865b0 calls it (site 0x586d43) - the DC edge; size 1.02x dc 0x86C, dc 0x136388
 void TSingleSelectionWindow::SetupAdvancedOptions()
 {
     // @stub
@@ -3384,16 +3387,97 @@ void TSingleSelectionWindow::OnRequestHeroFaceReplyMsg(CNetMsg* pNetMsg, unsigne
     }
 }
 
-#if 0  // @carcass
-
+// Become the host: announce it (general-text 471) and broadcast the
+// CNewHostMsg, tear the scenario pane down through the widened
+// SetupScenarioOptions(0), reseat the duration state from the game
+// setup, re-register every other seat with the update manager, then
+// re-arm the eight lobby buttons (0x82 only on the game-context
+// feature bit) and the chat toggle. The DrawWindow(1,...)+Update tail
+// is DC's UpdateMainWindow spelled inline (no retail row fits it).
 // E:\gamedcs\singleselectionwindow.cpp:7377
 VA(0x0058B120, 0x3E8)  // anchor-callee RS_SET_AS_HOST arm calls it behind the gbRestrictedGameTypeMenu gate, size 2.2x dc 0x1c4, dc 0x141b98
-void TSingleSelectionWindow::OnSetAsHostMsg(CNetMsg* pNetMsg)
+unsigned char TSingleSelectionWindow::OnSetAsHostMsg(CNetMsg* pNetMsg)
 {
-    // @stub
+    SystemMsg(&chatMan, gpGeneralText->GetText(471));
+    DisplayChat();
+    CNewHostMsg msg(gsThisNetPlayerInfo.dpid);
+    TransmitRemoteDataDPID(&msg, 0, false, true);
+    scenarioOptionsStarted = 0;
+    inScenarioOptions = 0;
+    gUnnamed69fda0 = 0;
+    SetupScenarioOptions(0);
+    currentIndex = 0;
+    durationIndex = gpGame->setup.turnDuration;
+    SetCurrentMap(0, 0);
+    fileSlider->SetResolution(GetMapCount() - gUnnamed69fdc8 + 1);
+    for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
+        if (m_players.humanPlayers[i].dpid != 0
+                && m_players.humanPlayers[i].dpid
+                       != gsThisNetPlayerInfo.dpid)
+            pNewPlayerUpdateMan->NewPlayer(m_players.humanPlayers[i].dpid);
+    }
+    widget* w = GetWidget(128);
+    if (w) {
+        w->send_message(widget::WIDGET_SET_STATUS,
+                        widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        w->enable(!bVideoPaused || pDPlay->IsHost() || m_flag65);
+    }
+    w = GetWidget(129);
+    if (w) {
+        w->send_message(widget::WIDGET_SET_STATUS,
+                        widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        w->enable(!bVideoPaused || pDPlay->IsHost() || m_flag65);
+    }
+    if (gGameContextFeatures[*gpVideoGameState].test(1)) {
+        w = GetWidget(130);
+        if (w) {
+            w->send_message(widget::WIDGET_SET_STATUS,
+                            widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+            w->enable(!bVideoPaused || pDPlay->IsHost() || m_flag65);
+        }
+    }
+    w = GetWidget(107);
+    if (w) {
+        w->send_message(widget::WIDGET_SET_STATUS,
+                        widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        w->enable(!bVideoPaused || pDPlay->IsHost() || m_flag65);
+    }
+    w = GetWidget(108);
+    if (w) {
+        w->send_message(widget::WIDGET_SET_STATUS,
+                        widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        w->enable(!bVideoPaused || pDPlay->IsHost() || m_flag65);
+    }
+    w = GetWidget(109);
+    if (w) {
+        w->send_message(widget::WIDGET_SET_STATUS,
+                        widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        w->enable(!bVideoPaused || pDPlay->IsHost() || m_flag65);
+    }
+    w = GetWidget(110);
+    if (w) {
+        w->send_message(widget::WIDGET_SET_STATUS,
+                        widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        w->enable(!bVideoPaused || pDPlay->IsHost() || m_flag65);
+    }
+    w = GetWidget(111);
+    if (w) {
+        w->send_message(widget::WIDGET_SET_STATUS,
+                        widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        w->enable(!bVideoPaused || pDPlay->IsHost() || m_flag65);
+    }
+    ShowWidget(186);
+    // Retail calls the out-of-line size() COMDAT (0x58eab0) here while
+    // expanding it at the SetResolution site above - the condition-only
+    // pin reproduces the split.
+#pragma inline_depth(0)
+    if (SelectionHeaders.size() == 0 && m_flag64)
+#pragma inline_depth()
+        GetWidget(186)->enable(0);
+    DrawWindow(1, 0xffff0001, 0xffff);
+    Update();
+    return 1;
 }
-
-#endif  // @carcass
 
 // Host handover: reset the transfer/list state, drop the scenario and
 // advanced panes, force chat on, and announce the new host.
