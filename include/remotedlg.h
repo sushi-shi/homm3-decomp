@@ -171,6 +171,9 @@ protected:
 
     int m_fromWho;                        // +0x78
     CNetMsgHandlerPause m_netMsgHandler;  // +0x7c
+    // Public: advManager::DoCombat re-runs the local CheckLevel when the
+    // remote player dropped mid-pick. Access-only change.
+public:
     unsigned char m_playerDropped;        // +0x8c
 };
 SIZE(CLevelPickWaitDlg, 0x90);
@@ -243,6 +246,13 @@ SIZE(CCombatInitMsg, 0xb40);
 class CWaitForRemoteBattleDlg : public CAnimatedDlg {
 public:
     CWaitForRemoteBattleDlg();
+    // USER-DEFINED, and the DC proves it: E:\gamedcs\events.cpp:6709
+    // (dc 0x9cf24) is ~CWaitForRemoteBattleDlg, an events.cpp body.
+    // Defined there with a pinned interior so the member teardown CALLS
+    // ~CNetMsgHandlerPause / ~CCombatInitMsg (retail 0x4ad130) /
+    // ~CAnimatedDlg, retail's exact expansion at DoCombat's one
+    // invocation site.
+    virtual ~CWaitForRemoteBattleDlg();
     void Wait(int playerPos);
     virtual int handle_message(message& msg);  // slot 3
 
@@ -251,8 +261,15 @@ protected:
 
     int m_playerPos;                         // +0x78
     CCombatInitMsg* m_pCombatInitMsg;        // +0x7c (DC name)
+
+    // Public tail: advManager::DoCombat reads the received flag and
+    // hands the payload message straight to ReceiveHeroTownData.
+    // Access-only change - no member moved, no declarator added.
+public:
     CCombatInitMsg m_combatInitMsg;          // +0x80 (retail by-value copy)
+protected:
     CNetMsgHandlerPause m_netMsgHandler;     // +0xbc0
+public:
     unsigned char m_combatInitMsgReceived;   // +0xbd0
 };
 // CCombatInitMsg gives the containing dialog eight-byte alignment, so the

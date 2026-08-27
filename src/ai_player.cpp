@@ -72,6 +72,12 @@ inline const _TYPE& _cpp_limit(_TYPE _Lo, _TYPE _V, _TYPE _Hi)
     return (_V < _Lo ? _Lo : (_Hi < _V ? _Hi : _V));
 }
 
+// hero::skillLevel slot 7 (herospec.h's eSecSkillWisdom). Named locally,
+// the ai_combat.cpp SECONDARY_SKILL_TACTICS precedent: herospec.h cannot
+// enter this TU (ai_combat.h pulls ai_tactical.h, whose
+// `typedef int TSkillMastery` is a hard C2371 against herospec.h's enum).
+const int SECONDARY_SKILL_WISDOM = 7;
+
 // Retail 0x526cc0: /Gr fastcall, player id in ECX and the seven-resource
 // vector in EDX. The owning philai TU is not yet reconstructed.
 int AI_resource_cost(long player_id, const int* resources);
@@ -1467,7 +1473,7 @@ void type_AI_player::buy_mage_guild(hero* current_hero, town* current_town)
     building.index = current_town->field_14;
 
     if (building.index >= 5
-        || building.index >= current_hero->wisdomLevel + 2
+        || building.index >= current_hero->skillLevel[SECONDARY_SKILL_WISDOM] + 2
         || !current_town->can_build(building.index))
         return;
 
@@ -1487,7 +1493,7 @@ void type_AI_player::buy_mage_guild(hero* current_hero, town* current_town)
             town* other_town = gpGame->GetTown(player->townIds[town_index]);
             int other_level = other_town->field_14;
             if (other_level > building.index
-                && other_level < current_hero->wisdomLevel + 2
+                && other_level < current_hero->skillLevel[SECONDARY_SKILL_WISDOM] + 2
                 && other_town->can_build(other_town->field_14))
                 return;
         }
@@ -3245,7 +3251,7 @@ long type_spellcaster_artifact::get_value(const hero* owner, unsigned char, unsi
 {
     if (owner->value_of_power == 0)
         return 0;
-    if (owner->wisdomLevel == 0)
+    if (owner->skillLevel[SECONDARY_SKILL_WISDOM] == 0)
         return 0;
     return const_cast<hero*>(owner)->army.get_AI_value() * bonus / 100;
 }

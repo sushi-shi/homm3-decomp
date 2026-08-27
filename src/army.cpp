@@ -5764,7 +5764,7 @@ inline TWallTargetId wall_target_from_int(int value)
 // written). DO NOT INVENT A DEFAULT: the uninitialized read IS the
 // retail bytes, and any arm that writes `level` displaces them.
 //
-// `controller->ballisticsLevel` is DC's
+// `controller->skillLevel[eSecSkillSiegeBallistics]` is DC's
 // `get_secondary_skill(SKILL_BALLISTICS)`, a hero.h header inline this
 // tree does not model; the byte-proven +0xd3 field read is the same
 // signed-char movsx retail emits.
@@ -5779,7 +5779,7 @@ void army::AttackWall(int iTargetGridIndex)
     long level;
     switch (creatureType) {
     case CREATURE_CATAPULT:
-        level = controller->ballisticsLevel;
+        level = controller->skillLevel[eSecSkillSiegeBallistics];
         break;
 
     case ARMY_CREATURE_CYCLOPS:

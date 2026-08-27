@@ -7,6 +7,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
+#include "herospec.h"  // TSecondarySkill, for the skillLevel slot names
 #include "seerhut.h"
 #include "hero.h"
 #include "quest.h"
@@ -2776,7 +2777,7 @@ void TSeerReward::giveReward(hero* currentHero, bool humanPlayer)
     case eRewardSpell:
         if (currentHero->IsWieldingArtifact(ARTIFACT_SPELLBOOK)
             && akSpellTraits[value.dwords[0]].level
-                <= currentHero->wisdomLevel + 2
+                <= currentHero->skillLevel[eSecSkillWisdom] + 2
             && !currentHero->in_spellbook[value.dwords[0]])
             currentHero->AddSpell(value.dwords[0]);
         break;
