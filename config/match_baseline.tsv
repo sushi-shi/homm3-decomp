@@ -2593,19 +2593,20 @@ singleselectionpopups	?GetTeams@CTeamAlignmentDlg@@QAEXXZ	100.0000	100.0000	100.
 singleselectionpopups	?Main@CHotspotWidget@@UAEHPAVmessage@@@Z	94.2771	94.2771	94.2771	0x175290
 singleselectionpopups	?Main@CSpriteWidget@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x175a10
 singleselectionpopups	?handle_message@CSingleSelPopup@@UAEHAAVmessage@@@Z	99.9636	99.9636	99.9636	0x175430
+singleselectionwindow	??0CNetPlayerHandlerPlayer@@QAE@XZ	100.0000	100.0000	100.0000	0x17c790
 singleselectionwindow	??0lobby_message@@QAE@XZ	100.0000	100.0000	100.0000	0x189190
 singleselectionwindow	??1CHostWaitDlg@@UAE@XZ	0.0000	0.0000	0.0000	0x189230
 singleselectionwindow	??1CNewPlayerUpdateProc@@QAE@XZ	100.0000	100.0000	100.0000	0x183ef0
 singleselectionwindow	??1GameSelectionHeadersStruct@@QAE@XZ	35.0465	35.0465	35.0465	0x178290
-singleselectionwindow	??1TSingleSelectionWindow@@UAE@XZ	32.4825	32.4825	32.4825	0x183b40
-singleselectionwindow	??4GameSelectionHeadersStruct@@QAEAAU0@ABU0@@Z	12.6564	12.6564	12.6564	0x178440
+singleselectionwindow	??1TSingleSelectionWindow@@UAE@XZ	33.7160	33.7160	33.7160	0x183b40
+singleselectionwindow	??4GameSelectionHeadersStruct@@QAEAAU0@ABU0@@Z	15.0396	15.0396	15.0396	0x178440
 singleselectionwindow	??_GCHostWaitDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x189200
 singleselectionwindow	??_GTSingleSelectionWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x17d130
 singleselectionwindow	?AddNewPlayer@CNetPlayerHandler@@QAEEPAVCNetPlayerInfo@@@Z	100.0000	100.0000	100.0000	0x177be0
 singleselectionwindow	?CanChooseHero@TSingleSelectionWindow@@QAEEH@Z	97.8688	97.8688	97.8688	0x18cfb0
 singleselectionwindow	?CanChooseTown@TSingleSelectionWindow@@QAEEH@Z	97.2043	97.2043	97.2043	0x18ceb0
 singleselectionwindow	?CheckHandleNet@CSingleSelectionNetMsgHandler@@UAEPAVCNetMsg@@EPAE@Z	100.0000	100.0000	100.0000	0x18e310
-singleselectionwindow	?CheckMissingHeaders@TSingleSelectionWindow@@QAEEK@Z	98.6800	98.6800	98.6800	0x1895c0
+singleselectionwindow	?CheckMissingHeaders@TSingleSelectionWindow@@QAEEK@Z	100.0000	100.0000	100.0000	0x1895c0
 singleselectionwindow	?DeletePlayer@CNetPlayerHandler@@QAE_NK@Z	100.0000	100.0000	100.0000	0x177c90
 singleselectionwindow	?DisplayChat@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x18ae80
 singleselectionwindow	?DoModal@TSingleSelectionWindow@@UAEHE@Z	100.0000	100.0000	100.0000	0x184bf0
@@ -2617,7 +2618,7 @@ singleselectionwindow	?DrawBasicMapInfo@TSingleSelectionWindow@@QAEXXZ	95.5200	9
 # landed in the same TU with this function's own source byte-identical.
 # Its register-homing residual note is in-source; reaching 100 there is
 # also the documented recovery for the CEnterNameEdit pair.
-singleselectionwindow	?DrawHeroAdvancedOption@TSingleSelectionWindow@@QAEXHEH@Z	89.7825	89.7825	90.5627	0x18d510
+singleselectionwindow	?DrawHeroAdvancedOption@TSingleSelectionWindow@@QAEXHEH@Z	90.5627	90.5627	90.5627	0x18d510
 singleselectionwindow	?ExitDialog@TSingleSelectionWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x187bc0
 singleselectionwindow	?GetDisplayFace@TSingleSelectionWindow@@QAEHH@Z	77.0099	77.0099	77.0099	0x18d0e0
 singleselectionwindow	?GetFileName@TSingleSelectionWindow@@QAEPBDH@Z	100.0000	100.0000	100.0000	0x183f20
@@ -2628,6 +2629,7 @@ singleselectionwindow	?GetPlayer@CNetPlayerHandler@@QAEPAVCNetPlayerHandlerPlaye
 singleselectionwindow	?GetPlayerInPos@CNetPlayerHandler@@QAEPAVCNetPlayerHandlerPlayer@@H@Z	100.0000	100.0000	100.0000	0x177bb0
 singleselectionwindow	?Go@CNewPlayerUpdateProc@@UAEXXZ	100.0000	100.0000	100.0000	0x177d70
 singleselectionwindow	?HandleNetMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@PAE@Z	90.1601	90.1601	90.2212	0x1887a0
+singleselectionwindow	?HandleRequests@CNewPlayerUpdateProc@@QAEXXZ	79.9379	79.9379	79.9379	0x178010
 singleselectionwindow	?HasMultipleTowns@TSingleSelectionWindow@@QAEEH@Z	100.0000	100.0000	100.0000	0x18ce70
 singleselectionwindow	?HeaderConfirmed@CNewPlayerUpdateMan@@QAEXK@Z	100.0000	100.0000	100.0000	0x189270
 singleselectionwindow	?HeaderRequested@CNewPlayerUpdateMan@@QAEXKEH@Z	88.6223	88.6223	88.6223	0x1892b0
@@ -2644,9 +2646,15 @@ singleselectionwindow	?OnBadVersionMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@
 singleselectionwindow	?OnDeleteFile@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x18dfb0
 singleselectionwindow	?OnGameHeaderInfoInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	81.3049	81.3049	81.3049	0x18a440
 singleselectionwindow	?OnGameHeaderInfoInitMsgEx@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18a780
-singleselectionwindow	?OnGameHeaderInfoMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	81.0700	81.0700	81.0700	0x18aa40
+singleselectionwindow	?OnGameHeaderInfoMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2802	90.2802	90.2802	0x18aa40
 singleselectionwindow	?OnGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	99.6237	99.6237	99.6237	0x189b20
-singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0
+# 2026-08-27 (round 3) hand-lowered 100.0000 -> 99.8868 (hist keeps
+# 100.0000): the same documented TU-state flap as OnKillFocus below -
+# this interim's full build had re-banked the transient peak, and the
+# SetCurrentMap/OnSetAsHostMsg bodies landing in the TU dropped the
+# pair again with both sources byte-identical. Recovery rides with
+# DrawHeroAdvancedOption reaching 100.
+singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	99.8868	99.8868	100.0000	0x17cdc0
 singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0
 # 2026-08-27 hand-lowered 100.0000 -> 99.8710 (hist keeps 100.0000): the
 # documented TU-state flap (master accepted this pair down at 99.89/99.87
@@ -2658,17 +2666,24 @@ singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100
 # 2026-08-27 (later): hand-lowered a second time after an interim full
 # build re-banked the transient peak; the flap recurred with each body
 # landing in the TU. Twin OnKeyPress sits AT 100 in the same build.
-singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0
+# 2026-08-27 (round 3): the interim full build re-banked the transient
+# peak a third time; re-lowered with the round's bodies landed. Same
+# scheduler flap, same recovery path.
+singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	99.8710	100.0000	0x17cee0
+singleselectionwindow	?OnMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2193	90.2193	90.2193	0x189710
 singleselectionwindow	?OnNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	97.5366	97.5366	97.5366	0x18b510
-singleselectionwindow	?OnNewPlayerMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	79.5112	79.5112	79.5112	0x189fa0
+singleselectionwindow	?OnNewPlayerMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	97.0628	97.0628	97.0628	0x189fa0
 singleselectionwindow	?OnNewSetupInfoMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x189c60
 singleselectionwindow	?OnPingMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x1894d0
 singleselectionwindow	?OnPingResponseMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@E@Z	88.8387	88.8387	88.8387	0x189510
 singleselectionwindow	?OnRequestHeroFaceReplyMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@E@Z	100.0000	100.0000	100.0000	0x18b0b0
-singleselectionwindow	?OnUpdatePlayerPosMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	98.9925	98.9925	98.9925	0x18ba40
+singleselectionwindow	?OnSetAsHostMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18b120
+singleselectionwindow	?OnUpdatePlayerPosMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	99.2537	99.2537	99.2537	0x18ba40
 singleselectionwindow	?PlayerDropped@CNewPlayerUpdateMan@@QAEXK@Z	100.0000	100.0000	100.0000	0x189480
 singleselectionwindow	?SaveValid@@YIEPBD@Z	100.0000	100.0000	100.0000	0x177360
+singleselectionwindow	?SetCurrentMap@TSingleSelectionWindow@@QAEXHE@Z	99.6650	99.6650	99.6650	0x185500
 singleselectionwindow	?SetFilter@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x185d90
+singleselectionwindow	?SetHumanSlot@TSingleSelectionWindow@@QAEXXZ	19.8438	19.8438	19.8438	0x184c40
 singleselectionwindow	?SetNextPlayer@CNetPlayerHandler@@QAEEH@Z	96.2353	96.2353	96.2353	0x177ae0
 singleselectionwindow	?SetResolution@CChatSlider@@UAEXH@Z	100.0000	100.0000	100.0000	0x17c9d0
 singleselectionwindow	?SetState@CChatSlider@@UAEXH@Z	100.0000	100.0000	100.0000	0x17ca00
@@ -2685,16 +2700,20 @@ singleselectionwindow	?UpdatePlayerPositions@TSingleSelectionWindow@@QAEXE@Z	70.
 singleselectionwindow	?UpdateTown@TSingleSelectionWindow@@QAEXHHE@Z	100.0000	100.0000	100.0000	0x18cd50
 singleselectionwindow	?WindowHandler@TSingleSelectionWindow@@UAEHPAVmessage@@@Z	97.6901	97.6901	97.6901	0x187d00
 singleselectionwindow	?handle_message@CHostWaitDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1891b0
-singleselectionwindow	CNewPlayerUpdateProc_HandleRequests	0.0000	0.0000	0.0000	0x178010
 singleselectionwindow	CSingleSelectionNetMsgHandler_HandleNetMsg	0.0000	0.0000	0.0000	0x18e340
-singleselectionwindow	TSingleSelectionWindow_OnMapFileNameMsg	0.0000	0.0000	0.0000	0x189710
-singleselectionwindow	TSingleSelectionWindow_OnSetAsHostMsg	0.0000	0.0000	0.0000	0x18b120
+singleselectionwindow	TSingleSelectionWindow_GetHeader	0.0000	0.0000	0.0000	0x183170
+singleselectionwindow	TSingleSelectionWindow_GetHeaders	0.0000	0.0000	0.0000	0x182b40
 singleselectionwindow	TSingleSelectionWindow_OnWidgetDeselect	0.0000	0.0000	0.0000	0x1865b0
 singleselectionwindow	TSingleSelectionWindow_ProcessRightSelect	0.0000	0.0000	0.0000	0x1822d0
-singleselectionwindow	TSingleSelectionWindow_SetCurrentMap	0.0000	0.0000	0.0000	0x185500
+singleselectionwindow	TSingleSelectionWindow_SetupAdvancedOptions	0.0000	0.0000	0.0000	0x181100
+singleselectionwindow	TSingleSelectionWindow_SetupLoadGameMode	0.0000	0.0000	0.0000	0x17f330
+singleselectionwindow	TSingleSelectionWindow_SetupNewGameMode	0.0000	0.0000	0.0000	0x17f740
+singleselectionwindow	TSingleSelectionWindow_SetupScenarioOptions	0.0000	0.0000	0.0000	0x180a70
+singleselectionwindow	TSingleSelectionWindow_ShowWidget	0.0000	0.0000	0.0000	0x17fb20
 singleselectionwindow	TSingleSelectionWindow_TSingleSelectionWindow	0.0000	0.0000	0.0000	0x179960
 singleselectionwindow	TSingleSelectionWindow_UpdateFilterWidgets	0.0000	0.0000	0.0000	0x17ef70
-singleselectionwindow	TSingleSelectionWindow_WindowFn_00584c40	0.0000	0.0000	0.0000	0x184c40
+singleselectionwindow	TSingleSelectionWindow_UpdateGameVars	0.0000	0.0000	0.0000	0x183580
+singleselectionwindow	TSingleSelectionWindow_WindowFn_00582e90	0.0000	0.0000	0.0000	0x182e90
 slider	??0slider@@QAE@HHHHHHP6IXHPAVheroWindow@@@ZW4EGraphics@0@HE@Z	100.0000	100.0000	100.0000	0x1960d0
 slider	??1slider@@UAE@XZ	100.0000	100.0000	100.0000	0x196180
 slider	??_Gslider@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x196020
