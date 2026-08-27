@@ -2562,14 +2562,103 @@ TreasureData* advManager::get_treasure_data(NewmapCell* cell) const
     return &fullMap->customTreasure[index];
 }
 
-// E:\gamedcs\events.cpp:656.  Located, not reconstructed.
-#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+// E:\gamedcs\events.cpp:656.  The customised artifact: the editor record
+// may put a message OR a composed guardian roster in front of the pickup.
+// The Dreamcast publishes the locals - treasure, the short artifact id,
+// the four message strings (first_guard_amount / guards / first_guard /
+// msg, declared up front and assigned after, which is what keeps _Tidy
+// and the assigns out of line) and the guard_list armyGroup. Both exits
+// inline advManager::GiveArtifact whole and cross-jump onto one final
+// CheckLevel; the guarded copy keeps FizzleCenter as a call and the
+// plain one folds it, exactly as DoCustomSpellScroll's pair does.
+// [2026-08-27] Residual (99.1492%): five head instructions - retail
+// schedules the fullMap/_First chain ahead of the extraInfo read and
+// sinks the objectIndex word-read below both (we emit source order).
+// The same bounded head-interleave class as DoCustomSpellScroll's; the
+// artifactId-before-treasure declaration order above is measured
+// (+0.91 over the reverse) and load-bearing.
 VA(0x0049f070, 0x765)  // dc-bracket forced, ret 0x10=p5, dc 0x90d34
-void advManager::DoCustomArtifact(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
+void advManager::DoCustomArtifact(hero* current_hero, NewmapCell* cell,
+                                  type_point point, bool human_player)
 {
-    // @stub
+    short artifactId = cell->objectIndex;
+    TreasureData* treasure = get_treasure_data(cell);
+
+    if (treasure->HasCustomGuardians && treasure->Guardians.GetNumArmies()) {
+        if (human_player) {
+            if (treasure->Message.length() > 0) {
+                OverrideBottomView(BOTTOM_VIEW_DEFAULT, -1);
+                UpdBottomView(0, 1, 1);
+                NormalDialog(treasure->Message.c_str(),
+                             2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            } else {
+                std::string first_guard_amount;
+                std::string guards;
+                std::string first_guard;
+                std::string msg;
+                armyGroup guard_list;
+                guard_list.Initialize();
+                for (int i = 0; i < 7; i++) {
+                    if (treasure->Guardians.armies[i] != CREATURE_NONE)
+                        guard_list.Add(treasure->Guardians.armies[i],
+                                       treasure->Guardians.numTroops[i], -1);
+                }
+                int num_armies = guard_list.GetNumArmies();
+                first_guard_amount =
+                    armyGroup::GetArmySizeName(guard_list.numTroops[0], 2);
+                guards = GetArmyName(guard_list.armies[0], 2);
+                first_guard = guards;
+                if (num_armies > 1) {
+                    first_guard = gpGeneralText->GetText(44);
+                    for (int i = 1; i < num_armies; i++) {
+                        if (i == num_armies - 1)
+                            guards += gpGeneralText->GetText(142);
+                        else
+                            guards += ", ";
+                        guards += armyGroup::GetArmySizeName(
+                            guard_list.numTroops[i], 2);
+                        guards += " ";
+                        guards += GetArmyName(guard_list.armies[i], 2);
+                    }
+                }
+                msg = format_string(gpGeneralText->GetText(421),
+                                    first_guard_amount.c_str(),
+                                    guards.c_str(), first_guard.c_str());
+                NormalDialog(msg.c_str(),
+                             2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            }
+            if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT)
+                return;
+        } else if (AI_value_of_event(current_hero, point) <= 0) {
+            return;
+        }
+
+        if (DoCombat(point, current_hero, &current_hero->army, -1, 0, 0,
+                     &treasure->Guardians, -1, 1, 0))
+            return;
+        current_hero->CheckLevel();
+        if (human_player) {
+            sprintf(gText,
+                    gpAdventureEventText->GetText(
+                        ADV_EVENT_TEXT_CUSTOM_GUARDED),
+                    akArtifactTraits[artifactId].name);
+            NormalDialog(gText, 1, -1, -1, 8, artifactId,
+                         -1, 0, -1, 0, -1, 0);
+        }
+        GiveArtifact(current_hero, point, human_player);
+        return;
+    }
+
+    if (human_player) {
+        if (treasure->Message.length() > 0)
+            NormalDialog(treasure->Message.c_str(),
+                         1, -1, -1, 8, artifactId, -1, 0, -1, 0, -1, 0);
+        else
+            NormalDialog(gArtifactEventText[artifactId],
+                         1, -1, -1, 8, artifactId, -1, 0, -1, 0, -1, 0);
+    }
+    GiveArtifact(current_hero, point, human_player);
 }
-#endif  // @carcass
 
 // E:\gamedcs\events.cpp:629. The Dreamcast publishes this private helper;
 // retail has no out-of-line body, and both calls below expand it. The two
@@ -4617,7 +4706,7 @@ void advManager::DoCustomSpellScroll(hero* current_hero, NewmapCell* cell,
         if (human_player) {
             sprintf(gText,
                     gpAdventureEventText->GetText(
-                        ADV_EVENT_TEXT_SPELL_SCROLL_GUARDED),
+                        ADV_EVENT_TEXT_CUSTOM_GUARDED),
                     akSpellTraits[spell].name);
             NormalDialog(gText, 1, -1, -1, 9, spell, -1, 0, -1, 0, -1, 0);
         }
