@@ -148,6 +148,11 @@ public:
     type_AI_creature_purchaser(long player, TCreatureType type,
                                short* amount, unsigned char is_free);
     void set(town* current_town);
+    // DC 0x31ffc (ai_player.cpp:2524): the single-candidate overload.
+    // No retail out-of-line body (set(town) ends 0x42d418, next row
+    // 0x42d420); every caller inlines its clear + one push_back.
+    void set(TCreatureType new_type, short* new_amount,
+             unsigned char new_is_free);
     void do_purchase(armyGroup* new_army, short new_morale,
                      armyGroup* new_adjacent_army, long* new_funds,
                      unsigned char allow_trade,
@@ -162,6 +167,9 @@ public:
 SIZE(type_AI_creature_purchaser, 0x3c);
 
 void AI_consolidate_army(armyGroup* current_army);
+// 0x42d8e0 - do_swap's tail call (0x42c485), also reached from
+// buy_creatures (0x42bbae), split_armies (0x42dd47/5b) and 0x431d9d.
+void AI_arrange_army(armyGroup* current_army);
 
 // Dreamcast records this exact 12-byte sort key; retail calculate_reserve
 // copies it three dwords at a time and compares the value at +4.
@@ -178,6 +186,17 @@ struct type_creature_value {
     {
         return value > arg.value;
     }
+};
+
+// DC classes.csv: 16 B - point, value(+4), move_cost(+8), is_nearby(+12),
+// is_critical(+13). net_value_of_location (0x42f980) adjusts move_cost and
+// sets is_critical; find_all_destinations vectors these records.
+struct HeroDestination {
+    type_point point;
+    long value;
+    long move_cost;
+    unsigned char is_nearby;
+    unsigned char is_critical;
 };
 
 // Full DC layout (classes.csv: 152 B, 6 members, 2 statics) and every
@@ -202,6 +221,13 @@ public:
     double resource_value[7];
 
     static float get_attack_bonus(short player);  // 0x428710
+    // DC ai_player.h:278 (dc 0x37df8, ?...@@QBANW4EGameResource@@@Z);
+    // inlined into type_income_artifact::get_value, whose by-value double
+    // return temp at [ebp-8] is what the retail bytes home under /Op.
+    double get_resource_value(enum EGameResource resource) const
+    {
+        return resource_value[resource];
+    }
     static void set_attack_bonuses(float computer_bonus,
                                    float human_bonus)
     {
@@ -215,6 +241,7 @@ public:
     void reset_magus_hut_value();                 // 0x429ab0
     void calculate_reserve();                     // 0x429ad0
     long get_total_value(long basic_value, int* cost);  // 0x42a150
+    void buy_creatures(hero* current_hero, town* current_town);  // 0x42ba60
     void buy_mage_guild(hero* current_hero, town* current_town); // 0x42beb0
     unsigned char purchase_buildings(unsigned char* prohibited_creatures);
     unsigned char hire_heroes();
@@ -248,6 +275,15 @@ void fill_prohibited_array(playerData* player, unsigned char* prohibited);
 
 extern const char* gResourceNames[7];
 extern char gAIResourceWarningFormat[];
+
+// Retail .bss 0x693718, one byte per TAdventureObjectType.
+// find_all_destinations tests it for each trigger destination and, when
+// set, requires the friendly-distance map to cover the cell at least as
+// cheaply - a "wait for backup" class of objects. No DC symbol reaches
+// it; named in the gUnnamed69ccc4 style. ai_player.obj is the nearest
+// admitted consumer.
+DATA(0x00693718)
+extern unsigned char gUnnamed693718[];
 
 // 0x432220 - find_magus_hut_value's only callee, reached with
 // (point, player_id, 10). /Gr leaves the 4-byte struct on the stack and
@@ -737,6 +773,7 @@ public:
 
 class type_combat_artifact : public type_artifact_effect {
 public:
+    type_combat_artifact(long new_bonus);
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 
@@ -884,6 +921,21 @@ public:
                            unsigned char exact) const;
 
     TSpellSchool school;
+};
+
+// Retail get_value (0x432d20) prices amount * the owning AI player's
+// resource_value[resource] * 3; the DC ctor (0x36ee8) stores the amount
+// at +4 and the resource id at +8. EGameResource is town.h's enum, seen
+// here through the elaborated specifier (the advmgr.h pattern) because
+// every consumer includes ai_player.h before town.h.
+class type_income_artifact : public type_artifact_effect {
+public:
+    type_income_artifact(long new_amount, enum EGameResource new_resource);
+    virtual long get_value(const hero* owner, unsigned char equipped,
+                           unsigned char exact) const;
+
+    long amount;
+    enum EGameResource resource;
 };
 
 // --- type_artifact_effect ---

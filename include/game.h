@@ -660,8 +660,10 @@ enum EVictoryConditionType {
     VICTORY_CONDITION_TOTAL_CREATURES = 1,
     VICTORY_CONDITION_UPGRADE_TOWN = 3,
 #endif
-#if defined(HOMM3_VLC_CHECKS_VIEW) || defined(HOMM3_TOWN_OBJ_DECLS)
-    // town.obj joins for initialize_buildings' Grail-slot gate.
+#if defined(HOMM3_VLC_CHECKS_VIEW) || defined(HOMM3_TOWN_OBJ_DECLS) \
+    || defined(HOMM3_AI_PLAYER_OBJ_DECLS)
+    // town.obj joins for initialize_buildings' Grail-slot gate;
+    // ai_player.obj for find_all_destinations' fixed grail-spot value.
     VICTORY_CONDITION_BUILD_GRAIL = 4,
 #endif
 #ifdef HOMM3_VLC_CHECKS_VIEW
