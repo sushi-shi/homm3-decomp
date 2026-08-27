@@ -9,11 +9,15 @@
 #include "advmgr_popup.h"
 #include "va.h"
 
-// Forward-declared for TSingleSelectionWindow's file-list slider member
-// (+0x1840); the full slider layout stays in the private header so this
+// Forward-declared for TSingleSelectionWindow's slider members
+// (+0x1838..+0x1844); the full layouts stay in the private header so this
 // public header's include closure is unchanged for advmgr/townmgr.
 class slider;
 class CSaveScreen;
+class textEntryWidget;
+class CNewPlayerUpdateMan;
+class CChatWidget;
+struct GameSelectionHeadersStruct;
 
 // DC supplies the source identities and member names.  Retail independently
 // proves the Windows layout used here: DeletePlayer walks eight records with
@@ -31,7 +35,10 @@ public:
     int startBonusIndex;       // +0x6c
     int playerPos;             // +0x70
     int color;                 // +0x74
-    int handicap;              // +0x78
+    // A byte in retail: the ctor 0x57c790 stores it with a byte mov and
+    // OnUpdatePlayerPosMsg re-reads it movsx.
+    signed char handicap;      // +0x78
+    char pad_79[3];
 
     void Clear()
     {
@@ -62,6 +69,15 @@ public:
         return -1;
     }
 
+    // DC GetGamePos; GetHeroFace expands it for IsFaceTaken's exclude.
+    int GetGamePos(unsigned long dpid)
+    {
+        int net = GetNetPos(dpid);
+        if (net != -1)
+            return humanPlayers[net].playerPos;
+        return -1;
+    }
+
     bool DeletePlayer(unsigned long dpid);
     CNetPlayerHandlerPlayer* GetPlayerInPos(int pos);
     CNetPlayerHandlerPlayer* GetPlayer(unsigned long dpid);
@@ -87,21 +103,152 @@ public:
     char pad_60[0x64 - 0x60];
     unsigned char m_flag64;            // 0x64
     unsigned char m_flag65;            // 0x65
-    char pad_66[0x1064 - 0x66];
+    char pad_66[0x36c - 0x66];
+    // The DC currentIndex/currentMap/durationIndex run (dc offsets
+    // 864/868/872) followed by the two option-mode bytes, the save-name
+    // editor and the update-proc manager (dc 876/877/880/888) - the whole
+    // block sits at DC+0x10 here. Retail bytes prove each: the
+    // WindowHandler scroll arms read/write +0x370 and gate on +0x37d,
+    // CSaveGameEdit::OnKeyPress compares +0x374 against -1 before its
+    // SetCurrentMap(-1, 1) call, the duration-slider callback 0x57c7f0
+    // stores its state to +0x378 alongside gpGame->setup.turnDuration,
+    // WindowHandler's Enter arm reads the editor's text through +0x380,
+    // and its net pump ticks the manager at +0x388.
+    unsigned char sortDirection;       // 0x36c (DC sortDirection, a byte here)
+    char pad_36d[0x370 - 0x36d];
+    int currentIndex;                  // 0x370, top visible file row
+    int currentMap;                    // 0x374
+    int durationIndex;                 // 0x378
+    unsigned char inAdvancedOptions;   // 0x37c
+    unsigned char inScenarioOptions;   // 0x37d
+    char pad_37e[0x37f - 0x37e];
+    // 0x37f: a setup byte the duration slider snapshots into
+    // CNewSetupInfoMsg and OnNewSetupInfoMsg writes back. Role
+    // unattested - ordinal placeholder.
+    unsigned char field_37F;
+
+    textEntryWidget* saveGameEdit;     // 0x380
+    char pad_384[0x388 - 0x384];
+    CNewPlayerUpdateMan* pNewPlayerUpdateMan;  // 0x388
+    char pad_38c[0x1034 - 0x38c];
+    // A third header vector (same stride); CheckMissingHeaders scans it
+    // with request-flag 0 where the +0x1044 one takes flag 1. Role
+    // naming provisional.
+    GameSelectionHeadersStruct* HeadersAFirst;          // 0x1034
+    GameSelectionHeadersStruct* HeadersALast;           // 0x1038
+    char pad_103c[0x1044 - 0x103c];
+    // A second header vector at +0x1040 (same 0xCA4 stride, proven by
+    // CNewPlayerUpdateProc::Go's size() expansion feeding the header-count
+    // init msg). Role naming provisional: the transfer path counts THIS
+    // one, the scroll arms walk the +0x1050 one.
+    GameSelectionHeadersStruct* TransferHeadersFirst;   // 0x1044
+    GameSelectionHeadersStruct* TransferHeadersLast;    // 0x1048
+    char pad_104c[0x1054 - 0x104c];
+    // DC SelectionHeaders (a plain pointer there) is a std::vector here:
+    // allocator/_First/_Last/_End at +0x1050..+0x105c. Only the two
+    // pointers the size() expansions read are named; the element stride
+    // 0xCA4 is fixed by the size() magic-multiply in every consumer.
+    GameSelectionHeadersStruct* SelectionHeadersFirst;  // 0x1054
+    GameSelectionHeadersStruct* SelectionHeadersLast;   // 0x1058
+    char pad_105c[0x1060 - 0x105c];
+    // The header row of the currently selected map/save;
+    // UpdatePlayerPositions reads the per-slot alignments through it.
+    GameSelectionHeadersStruct* pCurrentHeader;         // 0x1060
     CNetPlayerHandler m_players;       // 0x1064
-    char pad_1834[0x1840 - 0x1834];
-    slider* m_fileSlider;              // 0x1840
-    char pad_1844[0x1870 - 0x1844];
+    unsigned char receivedMaps;        // 0x1834 (DC receivedMaps)
+    char pad_1835[0x1838 - 0x1835];
+    // The DC chatSlider/fileSlider/durationSlider/nameSlider run (dc
+    // 2832..2844). fileSlider is the one the WindowHandler scroll arms
+    // SetState through (+0x183c); +0x1840 - previously misfiled as the
+    // file slider - is the DURATION slider DoModal resets to state 11
+    // (the unlimited-turn index) on teardown.
+    slider* chatSlider;                // 0x1838
+    slider* fileSlider;                // 0x183c
+    slider* durationSlider;            // 0x1840
+    slider* nameSlider;                // 0x1844
+    CChatWidget* chatWidget;           // 0x1848 (DC chatWidget)
+    char pad_184c[0x185c - 0x184c];
+    // 0x185c: DC chatEdit (a CCombatChatEdit there); OnNewHostMsg nulls
+    // it on the host handover. Base-typed until its widget lands.
+    textEntryWidget* chatEdit;
+    char pad_1860[0x1865 - 0x1860];
+    unsigned char field_1865;          // 0x1865, gates the 179 widget show
+    char pad_1866[0x186c - 0x1866];
+    unsigned char field_186c;          // 0x186c, cleared on header-end
+    char pad_186d[0x1870 - 0x186d];
     CSaveScreen* flagBack;             // 0x1870, DC-attested name
-    char pad_1874[0x1970 - 0x1874];
+    // DC gameVersion (a 20-byte TFileVersionInfo product string there);
+    // OnBadVersionMsg formats it against the offender's.
+    char gameVersion[20];              // 0x1874
+    char pad_1888[0x1898 - 0x1888];
+    int field_1898;                    // 0x1898, player count cached on drop
+    char pad_189c[0x18a0 - 0x189c];
+    // Eight setup dwords CNewSetupInfoMsg carries behind the
+    // SGameSetupOptions copy; the duration slider reads them back out.
+    // Role unattested - ordinal placeholder.
+    int field_18A0[8];                 // 0x18a0
+    char pad_18c0[0x1970 - 0x18c0];
 
     TSingleSelectionWindow(int gameMode);
     virtual ~TSingleSelectionWindow();
     virtual int DoModal(unsigned char fadeIn);
+    virtual int WindowHandler(message* msg);  // slot 9
+    virtual int ExitDialog(message* msg);   // slot 14
     void UpdateAllyEnemyFlags(unsigned char update);
     void UpdatePlayerPositions(unsigned char updateCurPlayer);
     int Update();
     unsigned char OnGameTransmitInitMsg(CNetMsg* pNetMsg);
+    unsigned char HandleNetMsg(CNetMsg* pNetMsg, unsigned char* cancel);
+    int OnWidgetDeselect(message* msg, unsigned char* bExitFlag,
+                         unsigned char remoteClick);
+    void OnDeleteFile();
+    void SetCurrentMap(int map, unsigned char bUpdate);
+    void DrawHeroAdvancedOption(int playerPos, unsigned char update,
+                                int position);
+    unsigned int GetMapCount() const;
+    unsigned char OnNewSetupInfoMsg(CNetMsg* pNetMsg);
+    unsigned char OnNewPlayerMsg(CNetMsg* pNetMsg);
+    unsigned char OnGameHeaderInfoInitMsg(CNetMsg* pNetMsg);
+    // Provisional spelling: the SoD-only 0x43b init arm's handler; DC has
+    // a single OnGameHeaderInfoInitMsg.
+    void OnGameHeaderInfoInitMsgEx(CNetMsg* pNetMsg);
+    void OnGameHeaderInfoMsg(CNetMsg* pNetMsg);
+    void OnMapFileNameMsg(CNetMsg* pNetMsg);
+    void OnNewHostMsg(CNetMsg* pNetMsg);
+    unsigned char OnUpdatePlayerPosMsg(CNetMsg* pNetMsg);
+    void OnSetAsHostMsg(CNetMsg* pNetMsg);
+    unsigned char OnBadVersionMsg(CNetMsg* pNetMsg);
+    void OnPingMsg(CNetMsg* pNetMsg);
+    void OnPingResponseMsg(CNetMsg* pNetMsg, unsigned char inPopup);
+    void OnRequestHeroFaceReplyMsg(CNetMsg* pNetMsg,
+                                   unsigned char inPopup);
+    unsigned char CheckMissingHeaders(unsigned long dpidHost);
+    void SortMaps(int how, unsigned char sendSortMsg,
+                  unsigned char bUpdate);
+    void SetFilter(int size);
+    void DisplayChat();
+    void GetHeroFace(int which, CNetPlayerHandlerPlayer* pPlayer);
+    void MakeHeroFilter();
+    void CheckFaces();
+    void TurnOffScenarioOptions();
+    void TurnOffAdvancedOptions();
+    void TurnChatOn(unsigned char update);
+    void TurnChatOff(unsigned char update);
+    // Retail 0x58e700 (past the stale span end) hands the whole incoming
+    // record to the seat assigner; DC's SetNewPlayerSlot takes the dpid
+    // alone. Provisional widening.
+    unsigned char SetNewPlayerSlot(CNetPlayerHandlerPlayer* pPlayer);
+    // DC takes TTownType; spelled int here so the public closure needs no
+    // town.h - retype when the body lands.
+    void UpdateTown(int pos, int town, unsigned char inPopup);
+    void UpdateNameLists();
+    // Retail 0x58ea00 (past the stale span end) - the no-arg count the
+    // drop arm caches at +0x1898. DC's GetPlayerCount takes a filter
+    // byte; retail's takes none. Provisional.
+    int GetPlayerCount();
+    // Retail 0x583580 - rebuilt after the header transfer completes.
+    // Name provisional.
+    void RefreshFileList();
 
 private:
     CNetPlayerHandlerPlayer* GetThisPlayer();
