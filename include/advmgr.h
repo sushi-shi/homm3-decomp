@@ -1915,6 +1915,11 @@ public:
                                  enum TCreatureType creature);
     // cursor.obj's 0x47f7d0 (cursor.cpp:85, dc 0x79a84).
     void StopCursor(unsigned char standEnd);
+    // cursor.obj's 0x480000; ai_player's attempt_step (0x42fc50) calls it
+    // to gate the HidePointer that precedes an AI move. The DC census
+    // names it ConsiderHidingMouse; the int return is the bare
+    // `test eax,eax` at that call site.
+    int ConsiderHidingMouse(class hero* current_hero, int direction);
     // The two out-of-compiland members DoAdvCommand reaches, DECLARED
     // and not defined here - each is defined in its own TU and a call
     // relocation's symbol name is not scored.

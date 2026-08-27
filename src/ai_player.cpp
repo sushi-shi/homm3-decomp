@@ -28,6 +28,7 @@
 #include "ai_combat.h"
 #include "ai_spellvalue.h"
 #include "armygrp.h"
+#include "mousemgr.h"
 #include "findpath.h"
 #include "exec.h"
 #include "game.h"
@@ -3489,14 +3490,105 @@ int net_value_of_location(hero* current_hero, HeroDestination* destination,
 
 #if 0  // @carcass
 
-// E:\gamedcs\ai_player.cpp:3832
-VA(0x0042fc50, 0x285)  // anchor-callee unique (NewmapCell::cell_is_trigger), dc 0x341f4
-unsigned char attempt_step(hero* current_hero, pathCell* path_cell, unsigned char bStandEnd, unsigned char first_step)
-{
-    // @stub
-}
-
 #endif  // @carcass
+
+// philai.obj's what-if probe (0x527760); the philai.cpp:31 local
+// declaration pattern.
+void AI_set_hero_bonuses(hero* our_hero);
+// Defined below at its 0x430f80 retail slot; attempt_step precedes it in
+// RVA order.
+void AI_build_ship(const hero* our_hero, long x, long y, long z);
+
+// Residual (52.95%): calls, guards and block roster all agree; why-branch
+// names D6 (retail keeps 6 exits to our 4 - its bNoMove/bFought return-0s
+// share ONE eax-wide epilogue while the boat/owner/currHero exits stay
+// al-wide and distinct, a width split no uchar-return spelling reaches)
+// plus a mid-body ecx<->edx rename family. Tried and rejected: the
+// else-restructured tail (52.21), unsigned-char retypes of
+// direction/saved_x/saved_y (why-branch, no movement).
+// E:\gamedcs\ai_player.cpp:3832
+// One step of an AI hero's path: optionally hide the mouse, summon or
+// build a boat when stepping onto water without one, retarget the path
+// while flying over a stoppable trigger, MoveHero, then run the landed
+// cell's event. The magus-hut arm clears the owner's cached hut value.
+VA(0x0042fc50, 0x285)  // anchor-callee unique (NewmapCell::cell_is_trigger), dc 0x341f4
+unsigned char attempt_step(hero* current_hero, pathCell* path_cell,
+                           unsigned char bStandEnd, unsigned char first_step)
+{
+    int direction = path_cell->direction;
+    if (gpMouseManager->field_68 == 0
+        && gpAdvManager->ConsiderHidingMouse(current_hero, direction)) {
+        int save_draw = gCompleteDrawEnabled;
+        gCompleteDrawEnabled = 1;
+        gpMouseManager->HidePointer();
+        gCompleteDrawEnabled = save_draw;
+    }
+
+    type_point point = path_cell->point;
+    NewmapCell* cell = gpGame->get_cell(point);
+
+    if (path_cell->in_boat && !(current_hero->flags & 0x40000)) {
+        if (!(cell->type == BOAT && cell->is_trigger)) {
+            gpAdvManager->StopCursor(1);
+            if (current_hero->can_summon_boat()) {
+                if (first_step)
+                    gpAdvManager->CastSpell(SPELL_SUMMON_BOAT);
+                return 0;
+            }
+            // can_build_ship is bit 11 of the proven cellFlags word (the
+            // header pools bits 10-11; this is the first admitted reader).
+            if (cell->cellFlags & 0x800)
+                AI_build_ship(current_hero, point.x, point.y, point.z);
+        }
+    }
+
+    int saved_x = current_hero->pathTargetX;
+    int saved_y = current_hero->pathTargetY;
+    int saved_z = current_hero->pathTargetZ;
+
+    unsigned char retargeted;
+    if (path_cell->flying && path_cell->last_can_stop && cell->is_trigger) {
+        current_hero->pathTargetX = point.x;
+        current_hero->pathTargetY = point.y;
+        current_hero->pathTargetZ = point.z;
+        retargeted = 1;
+    } else {
+        retargeted = 0;
+    }
+
+    int bNoMove;
+    int bFoughtBattle;
+    NewmapCell* event_cell = gpAdvManager->MoveHero(
+        path_cell->direction, bStandEnd, &point, &bNoMove, 1,
+        &bFoughtBattle, 0);
+    if (retargeted) {
+        current_hero->pathTargetX = saved_x;
+        current_hero->pathTargetY = saved_y;
+        current_hero->pathTargetZ = saved_z;
+    }
+
+    if (current_hero->owner != gNetLocalGamePos)
+        return 0;
+
+    if (event_cell == 0) {
+        if (bNoMove != 0) {
+            current_hero->movePoints = 0;
+            return 0;
+        }
+        if (bFoughtBattle != 0)
+            return 0;
+        return 1;
+    }
+
+    gpAdvManager->DoAIEvent(event_cell, current_hero, point);
+    if (gpCurrentPlayer->currHeroId == -1)
+        return 0;
+    if (event_cell->get_map_object() == HUT_OF_MAGI
+        && event_cell->cell_is_trigger())
+        gAIPlayers[current_hero->owner].magus_hut_value = 0;
+    AI_set_hero_bonuses(current_hero);
+    return 0;
+}
 
 // E:\gamedcs\ai_player.cpp:4607
 // A computer hero may buy and launch from either an owned town dock or a
