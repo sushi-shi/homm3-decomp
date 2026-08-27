@@ -638,10 +638,10 @@ enum EVictoryCastleLevel {
 #endif
 
 enum EVictoryConditionType {
-#ifdef HOMM3_VLC_CHECKS_VIEW
     // 0x5f1610 CheckForArtifactWin's main arm gates on `cmp Type,0`,
     // the map-format acquire-artifact ordinal.
     VICTORY_CONDITION_ARTIFACT = 0,
+#ifdef HOMM3_VLC_CHECKS_VIEW
     // 0x5f1b10 CheckForTotalCreatures gates on `cmp Type,1` and
     // 0x5f1d40 CheckForUpgradedTown on `cmp Type,3`; the values agree
     // with the map-format victory-condition ordinal (0 artifact,
@@ -660,14 +660,14 @@ enum EVictoryConditionType {
     // map-format defeat-monster ordinal, 11 the engine's
     // every-monster-dead sweep of the same routine.
     VICTORY_CONDITION_DEFEAT_MONSTER = 7,
-    // 0x5f2860 CheckForArtifactTransportWin gates on `cmp Type,0xa`,
-    // the map-format transport-artifact ordinal.
-    VICTORY_CONDITION_TRANSPORT_ARTIFACT = 10,
     VICTORY_CONDITION_DEFEAT_ALL_MONSTERS = 11,
     // Complete adds the survive-until victory immediately after the
     // original map-format range. 0x5f2810 gates on `cmp Type,0xc`.
     VICTORY_CONDITION_SURVIVE_TIME = 12,
 #endif
+    // 0x5f2860 CheckForArtifactTransportWin and AI_get_value_of_artifact
+    // gate on `cmp Type,0xa`, the map-format transport-artifact ordinal.
+    VICTORY_CONDITION_TRANSPORT_ARTIFACT = 10,
     VICTORY_CONDITION_TOTAL_RESOURCES = 2,
     VICTORY_CONDITION_DEFEAT_HERO = 5,
     VICTORY_CONDITION_CAPTURE_TOWN = 6,
@@ -831,6 +831,10 @@ public:
     signed char Type;
     signed char AllowNormalVictory;
     signed char AppliesToComputer;
+    char pad_03;
+    // CheckForArtifactTransportWin and AI_get_value_of_artifact both read
+    // the full retail dword at +4 as the requested artifact ordinal.
+    int ArtifactNum;
 #ifdef HOMM3_VLC_CHECKS_VIEW
     // The Dreamcast field list (dump 0x3e34) orders ArtifactNum,
     // CreatureType, NumCreatures between AppliesToComputer and
@@ -838,18 +842,13 @@ public:
     // CheckForTotalCreatures (0x5f1b10) pushes the dword at +0x8
     // straight into armyGroup::get_creature_total(TCreatureType) and
     // compares the summed total against the dword at +0xc, fixing both
-    // offsets. ArtifactNum's exact retail slot within +3..+7 is still
-    // unproven, so that band stays a pad. Gated: member declarators
-    // count against the include-set wall for every consumer.
-    char pad_03;
-    // CheckForArtifactTransportWin (0x5f2860) hands the dword at +0x4
-    // to hero::HasArtifact and scales it by the 32-byte
-    // TArtifactTraits stride - the DC ArtifactNum, int-widened.
-    int ArtifactNum;
+    // offsets. ArtifactNum is exposed above from its independent +4 retail
+    // reads. Gated: member declarators count against the include-set wall
+    // for every consumer.
     TCreatureType CreatureType;
     int NumCreatures;
 #else
-    char pad_03[0xd];
+    char pad_08[8];
 #endif
     int ResourceType;
     int ResourceAmount;
@@ -2189,11 +2188,10 @@ public:
     // and the same hero, town, mine, generator, garrison and shipyard
     // sweeps. The retail row is 0x4c7c50.
     void ResetAllPlayerVisibility();
-    // Retail-only 0x4cbd40, an ordinal placeholder: HandleNetMsg's
-    // game-transmit-init arm hands it the message's three leading
-    // payload dwords, a set flag and the trailing byte; nonzero answer
-    // lets the remote-load path run. Not claimed here.
-    int GameFn_004CBD40(int a, int b, int c, int d, unsigned char e);
+    // DC game.cpp:10587 names the received-save body. Retail's transmit-init
+    // handlers independently prove the five arguments and 0x4cbd40 entry.
+    int ReceiveSaveGame(int iFileSize, int iFullGameCRC, int iFromWho,
+                        unsigned char inGame, unsigned char isDiff);
     // game.cpp:9660 in the Dreamcast roster (dc 0xb635c). Retail preserves
     // the computer-turn widget/update sweep at 0x4ca5b0; advManager::Open
     // calls it when the incoming player is not the local human.
@@ -2579,6 +2577,12 @@ DATA(0x0069951c) extern unsigned char gUnnamed69951c;
 // gUnnamed69950c's precedent rather than inventing a role name.
 DATA(0x0069fb24) extern int gUnnamed69fb24[8];
 extern playerData* gpCurrentPlayer;
+// Dreamcast public `iCurHourGlassPhase`; game.cpp owns the retail word and
+// philAI::DoAI advances it as computer heroes are processed.
+extern int iCurHourGlassPhase;
+// Retail-only companion word cleared beside the hourglass phase by
+// philAI::GetTurnAIVars. It has no surviving source symbol or other reader.
+extern int gUnnamed691680;
 // Retail .bss 0x69ccc4, and the SIBLING of advmgr.h's gMapVisibilityBit
 // (0x69ccbc) rather than an alias of it - it has 38 relocation sites of
 // its own, and advManager::ProcessHover gates fog on it with the same

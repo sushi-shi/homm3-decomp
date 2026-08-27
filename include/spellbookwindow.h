@@ -62,6 +62,10 @@ public:
     static void Reset();
 
 private:
+    std::string get_spell_description(SpellID spell,
+                                      const hero* current_hero,
+                                      unsigned char rollover);
+
     const TSpellContext AllowedContext;       // +0x60
     const hero* Hero;                         // +0x64
     const armyGroup* EnemyGroup;              // +0x68

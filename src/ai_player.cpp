@@ -22,6 +22,7 @@
 #include <va.h>
 #include <algorithm>
 #include <functional>
+#include <math.h>
 #include "ai_player.h"
 #include "ai_combat.h"
 #include "ai_spellvalue.h"
@@ -74,6 +75,7 @@ inline const _TYPE& _cpp_limit(_TYPE _Lo, _TYPE _V, _TYPE _Hi)
 // Retail 0x526cc0: /Gr fastcall, player id in ECX and the seven-resource
 // vector in EDX. The owning philai TU is not yet reconstructed.
 int AI_resource_cost(long player_id, const int* resources);
+long AI_get_spell_value(const hero* our_hero, SpellID spell);
 const std::bitset<9>& ArmyGrpFn_0044A460();
 int CanBuy(const town* currTown, int buildingId);
 double get_trade_ratio(EGameResource source, EGameResource dest,
@@ -84,6 +86,14 @@ inline EGameResource game_resource_from_int(int value)
     memcpy(&resource, &value, sizeof resource);
     return resource;
 }
+
+inline SpellID spell_id_from_int(int value)
+{
+    SpellID spell;
+    memcpy(&spell, &value, sizeof spell);
+    return spell;
+}
+
 const unsigned int CTA_SHOOTER = 0x4;
 
 // struct.h's original three-coordinate constructor was header-inline.  This
@@ -3453,8 +3463,6 @@ long type_shooter_bonus_artifact::get_value(const hero* owner, unsigned char, un
     return bonus * total / 100;
 }
 
-#if 0  // @carcass
-
 // CORRECTION (2026-08-26): 0x33130 was claimed value_of_building on a unique-pair
 // heuristic (it calls armyGroup::get_AI_value AND town::get_army, and DC
 // value_of_building calls both). But 0x33130 is slot 1 of the artifact type-vftable
@@ -3466,12 +3474,71 @@ long type_shooter_bonus_artifact::get_value(const hero* owner, unsigned char, un
 // army-value-dependent). value_of_building (dc 0x2fdac) has no proven retail body
 // here (likely inlined into purchase_building); withdrawn to DC_ONLY below.
 VA(0x00433130, 0x26f)  // vtable-slot 0x63b760 + get_army/get_AI_value + elimination, retail-only
-long type_angelic_alliance_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
+long type_angelic_alliance_artifact::get_value(
+    const hero* owner, unsigned char, unsigned char exact) const
 {
-    // @stub
-}
+    std::bitset<9> alliedAlignments = ArmyGrpFn_0044A460();
+    playerData* player = &gpGame->players[owner->owner];
+    long total = 0;
+    int heroIndex = 0;
 
-#endif  // @carcass
+    for (; heroIndex < player->numHeroes; ++heroIndex) {
+        hero* currentHero = gpGame->GetHero(player->heroes[heroIndex]);
+        for (int heroSlot = 0;
+             heroSlot < armyGroup::ARMY_GROUP_SLOT_COUNT;
+             ++heroSlot) {
+            int creature = currentHero->army.armies[heroSlot];
+            if (creature == CREATURE_NONE)
+                continue;
+            if (gpGame->f_1f698 == 0
+                && (creature == CREATURE_AIR_ELEMENTAL
+                    || creature == CREATURE_EARTH_ELEMENTAL
+                    || creature == CREATURE_FIRE_ELEMENTAL
+                    || creature == CREATURE_WATER_ELEMENTAL)) {
+                continue;
+            }
+            int alignment = akCreatureTypeTraits[creature].townType;
+            if (alignment != -1 && alliedAlignments.test(alignment)) {
+                total += akCreatureTypeTraits[creature].AI_value
+                         * currentHero->army.numTroops[heroSlot];
+            }
+        }
+    }
+
+    for (int townIndex = 0; townIndex < player->numTowns; ++townIndex) {
+        const armyGroup& townArmy =
+            static_cast<const town*>(
+                gpGame->GetTown(player->townIds[townIndex]))->get_army();
+        for (int townSlot = 0;
+             townSlot < armyGroup::ARMY_GROUP_SLOT_COUNT;
+             ++townSlot) {
+            int creature = townArmy.armies[townSlot];
+            if (creature == CREATURE_NONE)
+                continue;
+            if (gpGame->f_1f698 == 0
+                && (creature == CREATURE_AIR_ELEMENTAL
+                    || creature == CREATURE_EARTH_ELEMENTAL
+                    || creature == CREATURE_FIRE_ELEMENTAL
+                    || creature == CREATURE_WATER_ELEMENTAL)) {
+                continue;
+            }
+            int alignment = akCreatureTypeTraits[creature].townType;
+            if (alignment != -1 && alliedAlignments.test(alignment)) {
+                total += akCreatureTypeTraits[creature].AI_value
+                         * townArmy.numTroops[townSlot];
+            }
+        }
+    }
+
+    long ownArmyValue;
+    if (exact) {
+        ownArmyValue = 0;
+    } else {
+        ownArmyValue = const_cast<hero*>(owner)->army.get_AI_value()
+                      * bonus / 40;
+    }
+    return ownArmyValue + total * 5 / 100;
+}
 
 // Residual (96.78%): all 29 blocks and all 12 branches agree. The remaining
 // code delta is the first `/ 250` return's quotient register schedule (retail
@@ -3546,33 +3613,177 @@ long type_elixir_of_life_artifact::get_value(const hero* owner, unsigned char, u
     return total / 8;
 }
 
-#if 0  // @carcass
-
 VA(0x00433580, 0x13a)  // vtable-slot 0x63b774 (provisional type), retail-only
-long type_statue_of_legion_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
+long type_statue_of_legion_artifact::get_value(
+    const hero* owner, unsigned char, unsigned char) const
 {
-    // @stub
+    long total = 0;
+    playerData* player = &gpGame->players[owner->owner];
+    for (int townIndex = 0; townIndex < player->numTowns; ++townIndex) {
+        const town* currentTown =
+            gpGame->GetTown(player->townIds[townIndex]);
+        for (int dwelling = 0; dwelling < TOWN_DWELLING_COUNT; ++dwelling) {
+            if (!(currentTown->active
+                  & bitNumber[DWELLING_0_ID + dwelling])) {
+                continue;
+            }
+
+            int dwellingSlot = dwelling;
+            if (currentTown->active
+                & bitNumber[DWELLING_0_UPG_ID + dwelling]) {
+                dwellingSlot += TOWN_DWELLING_COUNT;
+            }
+            TCreatureType creature = gTownDwellingCreatures[
+                currentTown->type * TOWN_DWELLING_SLOTS + dwellingSlot];
+            long growth = akCreatureTypeTraits[creature].growthRate;
+            growth += currentTown->get_castle_growth_bonus(creature);
+            total += akCreatureTypeTraits[creature].AI_value * growth / 2;
+        }
+    }
+    return total;
 }
 
 // E:\gamedcs\ai_player.cpp:5557
+// Retail's /Gr call sites put owner/equipped in ECX/DL and the two-dword
+// artifact plus exact on the stack. The contiguous 1..6 jump table separates
+// the scroll and three war-machine appraisals from the ordinary effect-vector
+// path; Dreamcast independently names the function, its four parameters and
+// const_artifact_effects. The current ordinary-C++ reconstruction has retail's
+// 28/28 branch stream and all eight returns. Residual (92.7585%) is confined to
+// first-aid temporary homes and the two effect-vector loop schedules; 42 of 55
+// CFG blocks are instruction-exact. An authentic inline first-aid helper was
+// tested and rejected (88.3639%).
 VA(0x004336c0, 0x320)  // anchor-callee unique (hero::GetFirstAidFactor), dc 0x37194
 long AI_get_value_of_artifact(type_artifact artifact, const hero* owner, unsigned char equipped, unsigned char exact)
 {
-    // @stub
+    if (artifact.artifactId == ARTIFACT_NONE)
+        return 0;
+
+    long value = 0;
+    switch (artifact.artifactId) {
+    case ARTIFACT_SPELL_SCROLL:
+        if (owner->in_spellbook[artifact.extra])
+            return 0;
+        if (!equipped && owner->available_spells[artifact.extra])
+            return 0;
+        return AI_get_spell_value(owner, spell_id_from_int(artifact.extra));
+
+    case ARTIFACT_HOLY_GRAIL:
+    case ARTIFACT_CATAPULT:
+        break;
+
+    case ARTIFACT_BALLISTA: {
+        value = static_cast<long>(
+            sqrt(static_cast<double>(owner->GetPrimarySkill(0) + 1))
+            * 500.0);
+        value += value * owner->skillLevel[20] / 2;
+        long army_value =
+            const_cast<armyGroup*>(&owner->army)->get_AI_value()
+            * (const_cast<hero*>(owner)->get_primary_skill_total() + 40)
+            / 40;
+        return army_value * value / (army_value + value);
+    }
+
+    case ARTIFACT_AMMO_CART: {
+        for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
+            TCreatureType creature = owner->army.armyTypes[i];
+            if (creature != CREATURE_NONE
+                && (akCreatureTypeTraits[creature].attributes & CTA_SHOOTER)) {
+                value += akCreatureTypeTraits[creature].AI_value
+                         * owner->army.numTroops[i] / 40;
+            }
+        }
+        return value;
+    }
+
+    case ARTIFACT_FIRST_AID_TENT: {
+        int first_aid = static_cast<int>(
+            const_cast<hero*>(owner)->GetFirstAidFactor() * 25.0f);
+        for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
+            TCreatureType creature = owner->army.armyTypes[i];
+            if (creature != CREATURE_NONE) {
+                const TCreatureTypeTraits& traits =
+                    akCreatureTypeTraits[creature];
+                if (first_aid >= traits.hitPoints)
+                    value = _cpp_max(value,
+                                     static_cast<long>(traits.AI_value));
+                else
+                    value = _cpp_max(
+                        value, static_cast<long>(
+                                   traits.AI_value * first_aid
+                                   / traits.hitPoints));
+            }
+        }
+        return value;
+    }
+    }
+
+    signed char victory_type = gpGame->mapHeader.victoryCondition.Type;
+    if ((victory_type == VICTORY_CONDITION_ARTIFACT
+         || victory_type == VICTORY_CONDITION_TRANSPORT_ARTIFACT)
+        && gpGame->mapHeader.victoryCondition.ArtifactNum
+               == artifact.artifactId) {
+        value = 1968;
+    }
+
+    for (unsigned int i = 0;
+         i < const_artifact_effects[artifact.artifactId].size(); ++i) {
+        value += const_artifact_effects[artifact.artifactId][i]->get_value(
+            owner, equipped, exact);
+    }
+
+    int combination = akArtifactTraits[artifact.artifactId].comboType;
+    if (combination != -1) {
+        for (int component = 0; component < 144; ++component) {
+            if (gCombinationArtifacts[combination].components[component]) {
+                std::vector<type_artifact_effect*>::iterator effect =
+                    const_artifact_effects[component].begin();
+                while (effect != const_artifact_effects[component].end()) {
+                    value += (*effect)->get_value(owner, equipped, exact);
+                    ++effect;
+                }
+            }
+        }
+    }
+    return value;
 }
 
-// total_artifact_value: loops the hero's 0x13 equipped slots calling
-// AI_get_value_of_artifact (0x336c0) and the hero worn/backpack iterators
-// HeroFn_004E2550/004E2840; size 184 ~= DC 188 (r=0.98). ret 8 (4 dwords) vs DC
-// p2 - Complete extended the signature (equipped/exact), same as the other AI
-// artifact-value entries.
-VA(0x004339e0, 0xb8)  // anchor-callee (AI_get_value_of_artifact) + size, dc 0x35400
-long total_artifact_value(const hero* our_hero, unsigned char equipped, unsigned char exact)
+// E:\gamedcs\ai_player.cpp:5643
+// The old `total_artifact_value` claim came from the contradicted HD/NH3API
+// address map. Retail proves this is AI_get_equip_value instead: the caller at
+// 0x433aa0 passes a candidate artifact by value, a hero in ECX and exact in
+// DL, exactly the DC signature; the body finds an allowable equipped slot and
+// subtracts the value of the displaced artifact. Its 184 bytes also track the
+// DC row's 174 far better than total_artifact_value's unrelated 188-byte body.
+VA(0x004339e0, 0xb8)  // retail ABI/body + DC signature/callee set; dc 0x37464
+long AI_get_equip_value(type_artifact artifact, const hero* our_hero,
+                        unsigned char exact)
 {
-    // @stub
-}
+    int slot;
+    for (slot = 0; slot < 19; ++slot) {
+        if (const_cast<hero*>(our_hero)->HeroFn_004E2550(
+                artifact.artifactId, slot)) {
+            break;
+        }
+    }
 
-#endif  // @carcass
+    long value = _cpp_max(
+        AI_get_value_of_artifact(artifact, our_hero, 0, exact), 0L);
+    if (slot >= 19) {
+        long replaced_value = 0;
+        const type_artifact* equipped = our_hero->equipped;
+        for (int equipped_slot = 0; equipped_slot < 19;
+             ++equipped_slot, ++equipped) {
+            if (const_cast<hero*>(our_hero)->HeroFn_004E2840(
+                    artifact.artifactId, equipped_slot)) {
+                replaced_value = AI_get_value_of_artifact(
+                    *equipped, our_hero, 1, exact);
+            }
+        }
+        value = _cpp_max(0L, value - replaced_value);
+    }
+    return value;
+}
 
 // E:\gamedcs\ai_player.cpp:5708
 VA(0x00433c60, 0x1b3)  // anchor-callee unique (armyGroup::GetArmyMorale), dc 0x37588

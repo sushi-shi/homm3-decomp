@@ -19,6 +19,9 @@ struct type_artifact;
 
 long AI_get_value_of_artifact(type_artifact artifact, const hero* owner,
                               unsigned char equipped, unsigned char exact);
+void AI_swap_artifacts(hero* source, hero* destination);
+long AI_get_equip_value(type_artifact artifact, const hero* our_hero,
+                        unsigned char exact);
 
 // The two gift messages extend the shared 20-byte network-message head.
 // Their subtype and total-size constants are the immediates retail stores at
@@ -116,6 +119,9 @@ protected:
 
 public:
     type_AI_creature_swapper();
+    void do_swap(hero* current_hero, armyGroup* source_army,
+                 hero* second_hero,
+                 unsigned char new_has_angelic_alliance);
     long get_swap_value(const hero* current_hero,
                         const armyGroup* source_army,
                         const hero* second_hero,
@@ -192,6 +198,12 @@ public:
     double resource_value[7];
 
     static float get_attack_bonus(short player);  // 0x428710
+    static void set_attack_bonuses(float computer_bonus,
+                                   float human_bonus)
+    {
+        attack_computer_bonus = computer_bonus;
+        attack_human_bonus = human_bonus;
+    }
     void calculate_demand();                      // 0x428740
     void end_turn();                              // 0x428dd0
     void make_gift(long player_id);               // 0x429110
@@ -707,6 +719,11 @@ public:
                            unsigned char exact) const;
 };
 
+// Dreamcast names this table `const_artifact_effects`; retail indexes the
+// 144 vector objects directly with a 16-byte stride.
+DATA(0x00692e18)
+extern std::vector<type_artifact_effect*> const_artifact_effects[144];
+
 class type_scouting_artifact : public type_artifact_effect {
 public:
     virtual long get_value(const hero* owner, unsigned char equipped,
@@ -821,7 +838,19 @@ public:
                            unsigned char exact) const;
 };
 
+class type_angelic_alliance_artifact : public type_artifact_effect {
+public:
+    virtual long get_value(const hero* owner, unsigned char equipped,
+                           unsigned char exact) const;
+};
+
 class type_elixir_of_life_artifact : public type_artifact_effect {
+public:
+    virtual long get_value(const hero* owner, unsigned char equipped,
+                           unsigned char exact) const;
+};
+
+class type_statue_of_legion_artifact : public type_artifact_effect {
 public:
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;

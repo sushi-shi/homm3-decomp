@@ -13,6 +13,9 @@
 #include "recruit.h"
 #include "advmgr.h"  // gpAdvManager + advManager::get_treasure_data, for the
                      // adventure-object appraisals (custom item / scroll / ...)
+#include "kb.h"
+#include "mousemgr.h"
+#include "soundmgr.h"
 
 // ai_tactical.h's current TSkillMastery view collides with herospec.h's
 // independently reconstructed enum, already included through philai.h.
@@ -24,6 +27,7 @@ double AI_value_of_luck(long luck, long change);
 long AI_get_value_of_artifact(type_artifact artifact, const hero* owner,
                               bool equipped, bool exact);
 long AI_get_value_of_artifact(const type_artifact& artifact, long player_id);
+void AI_set_hero_bonuses(hero* our_hero);
 void AI_equip_artifacts(hero* current_hero);
 long get_artifact_purchase_price(TArtifact artifact, long market_count,
                                  EGameResource* best_resource);
@@ -287,6 +291,13 @@ inline EGameResource game_resource_from_int(int value)
     return resource;
 }
 
+inline TArtifact artifact_from_int(int value)
+{
+    TArtifact artifact;
+    memcpy(&artifact, &value, sizeof artifact);
+    return artifact;
+}
+
 static long get_artifact_purchase_value(
     TArtifact artifact_id, long market_count, long* funds)
 {
@@ -509,14 +520,71 @@ static long value_of_war_factory(const hero* current_hero,
 }
 #pragma auto_inline(on)
 
-#if 0  // @carcass -- philai body-evidence claims
-
-// E:\gamedcs\philai.cpp:687
+// E:\gamedcs\philai.cpp:687.  The unique DC callee set
+// {GetHero, type_AI_creature_swapper::{ctor,do_swap},
+// armyGroup::{Initialize,merge_armies}, hero::get_primary_skill_total,
+// town::get_army} maps to the 0x525200 retail row.  Retail additionally
+// exposes Complete's Angelic-Alliance argument on do_swap and gates the
+// exchange on the capture-town victory target at the highest difficulty.
 VA(0x00525200, 0x1d0)  // anchor-callee, dc 0x10e334
 void consider_garrisoning(hero* current_hero, town* current_town)
 {
-    // @stub
+    if (gpCurrentPlayer->numHeroes < 2
+        || !gpGame->setup.difficulty
+        || current_town->threatening_heroes > 0)
+        return;
+
+    hero* second_hero = 0;
+    if (current_town->garrisonHeroId != -1)
+        second_hero = gpGame->GetHero(current_town->garrisonHeroId);
+    if (second_hero
+        && second_hero->get_primary_skill_total()
+               >= current_hero->get_primary_skill_total())
+        return;
+
+    VictoryConditionStruct& victory = gpGame->mapHeader.victoryCondition;
+    if (victory.Type != VICTORY_CONDITION_CAPTURE_TOWN)
+        return;
+    int town_id = gpGame->GetTownId(victory.TownX, victory.TownY,
+                                    victory.TownZ);
+    if (town_id < 0 || town_id != current_town->id)
+        return;
+
+    playerData* player = &gpGame->players[gNetLocalGamePos];
+    hero* best_hero = 0;
+    int best_skill = 0;
+    for (int i = 0; i < player->numHeroes; ++i) {
+        hero* candidate = gpGame->GetHero(player->heroes[i]);
+        int skill = candidate->get_primary_skill_total();
+        if (skill >= best_skill) {
+            best_skill = skill;
+            best_hero = candidate;
+        }
+    }
+    if (current_hero == best_hero)
+        return;
+
+    current_hero->movePoints = 0;
+    unsigned char has_angelic_alliance =
+        gpGame->players[current_hero->owner].hasGivenArtifact(
+            ARTIFACT_ANGELIC_ALLIANCE);
+    type_AI_creature_swapper swapper;
+    swapper.do_swap(
+        current_hero,
+        const_cast<armyGroup*>(
+            &static_cast<const town*>(current_town)->get_army()),
+        second_hero, has_angelic_alliance);
+
+    if (!second_hero) {
+        current_hero->army.merge_armies(
+            const_cast<armyGroup*>(
+                &static_cast<const town*>(current_town)->get_army()));
+        const_cast<armyGroup*>(
+            &static_cast<const town*>(current_town)->get_army())->Initialize();
+    }
 }
+
+#if 0  // @carcass -- philai body-evidence claims
 
 // E:\gamedcs\philai.cpp:732
 VA(0x005253d0, 0x60c)  // anchor-callee, dc 0x10e3f8
@@ -532,11 +600,46 @@ void buy_special_building(const hero* current_hero, town* current_town)
     // @stub
 }
 
-// E:\gamedcs\philai.cpp:594
+#endif  // @carcass
+
+// E:\gamedcs\philai.cpp:594.  Retail's call stream preserves the DC
+// artifact/building roles and adds a second affordability check after a
+// newly purchased war-machine building has consumed resources.
 VA(0x00525ca0, 0x11e)  // anchor-callee, dc 0x10e118
-void buy_siege_engine(hero* current_hero, town* current_town, type_building_id building, TArtifact engine)
+void buy_siege_engine(hero* current_hero, town* current_town,
+                      type_building_id building, TArtifact engine)
 {
-    // @stub
+    if (current_hero->HasArtifact(engine))
+        return;
+
+    long value = AI_get_value_of_artifact(
+        type_artifact(engine, -1), current_hero, false, true);
+    TCreatureType creature = siege_artifact_to_creature(engine);
+    int* costs = gCreatureRecords
+        + creature * CREATURE_RECORD_DWORDS + CREATURE_RECORD_COST_DWORD;
+    if (!value)
+        return;
+
+    for (int resource = 0; resource < 7; ++resource) {
+        if (gpCurrentPlayer->resources[resource] < costs[resource])
+            return;
+    }
+
+    if (!current_town->HasBuilding(building, 1)) {
+        if (!current_town->buy_building(building))
+            return;
+        for (int check_resource = 0; check_resource < 7; ++check_resource) {
+            if (gpCurrentPlayer->resources[check_resource]
+                    < costs[check_resource])
+                return;
+        }
+    }
+
+    for (int cost_resource = 0; cost_resource < 7; ++cost_resource)
+        gpCurrentPlayer->resources[cost_resource] -= costs[cost_resource];
+
+    type_artifact artifact(engine, -1);
+    current_hero->GiveArtifact(&artifact, 1, 1);
 }
 
 // E:\gamedcs\philai.cpp:811.  Two friendly heroes meeting exchange creatures
@@ -547,18 +650,167 @@ void buy_siege_engine(hero* current_hero, town* current_town, type_building_id b
 VA(0x00525dc0, 0xB1)  // anchor-callee, dc 0x10e678
 void AI_friendly_hero_meeting(hero* current_hero, hero* second_hero)
 {
-    // @stub
+    type_AI_creature_swapper swapper;
+    short current_skill = current_hero->get_primary_skill_total();
+    short second_skill = second_hero->get_primary_skill_total();
+
+    if (second_skill < current_skill) {
+        unsigned char has_angelic_alliance =
+            gpGame->players[current_hero->owner].hasGivenArtifact(
+                ARTIFACT_ANGELIC_ALLIANCE);
+        swapper.do_swap(current_hero, &second_hero->army, second_hero,
+                        has_angelic_alliance);
+    } else if (second_skill > current_skill) {
+        unsigned char has_angelic_alliance =
+            gpGame->players[second_hero->owner].hasGivenArtifact(
+                ARTIFACT_ANGELIC_ALLIANCE);
+        swapper.do_swap(second_hero, &current_hero->army, current_hero,
+                        has_angelic_alliance);
+    }
+
+    AI_swap_artifacts(current_hero, second_hero);
+    AI_swap_artifacts(second_hero, current_hero);
 }
 
 // E:\gamedcs\philai.cpp:1261.  Retail inlines the whole per-hero move loop
 // (move_all_heroes / DetermineHeroToMove path) into DoAI, so the body is ~4.5x
 // the DC size; identity is proven by the philai-unique start_turn/end_turn/
 // UpdBottomView edges, not by size.
+void MoveHero(hero* current_hero, long* danger_zones,
+              unsigned char is_last_hero, unsigned char* explore_mode);
+hero* DetermineHeroToMove(int player_id, unsigned char* is_last_hero);
+
 VA(0x00525e80, 0x362)  // anchor-callee, dc 0x10f16c
 void philAI::DoAI(int whichPlayer)
 {
-    // @stub
+    PollSound();
+    gpAdvManager->UpdBottomView(0, 1, 1);
+
+    if (!gbGameOver
+        && (!gUnnamed6994f0 || whichPlayer == gUnnamed6994f0)) {
+        long* danger_zones = new long[
+            gMapWidth * gMapHeight * gpGame->worldMap.GetNumLevels()];
+        type_AI_player* ai_player = &gAIPlayers[whichPlayer];
+        ai_player->start_turn();
+        GetTurnAIVars(whichPlayer);
+
+        ++iCurHourGlassPhase;
+        int num_heroes = gpCurrentPlayer->numHeroes;
+        if (num_heroes == ONE_ACTIVE_HERO)
+            iCurHourGlassPhase += TWO_ACTIVE_HEROES;
+        else if (num_heroes == TWO_ACTIVE_HEROES) {
+            if (iCurHourGlassPhase != ONE_ACTIVE_HERO)
+                ++iCurHourGlassPhase;
+        } else if (num_heroes == THREE_ACTIVE_HEROES) {
+            if (iCurHourGlassPhase == THIRD_HOURGLASS_PHASE
+                || iCurHourGlassPhase == SIXTH_HOURGLASS_PHASE)
+                ++iCurHourGlassPhase;
+        }
+        if (iCurHourGlassPhase > LAST_HOURGLASS_PHASE)
+            iCurHourGlassPhase = LAST_HOURGLASS_PHASE;
+
+        unsigned char is_last_hero = 0;
+        unsigned char explore_mode = 1;
+        if (!gpGame->setup.difficulty || !gpCurrentPlayer->numTowns)
+            explore_mode = 0;
+
+        hero* current_hero =
+            DetermineHeroToMove(whichPlayer, &is_last_hero);
+        while (current_hero) {
+            MoveHero(current_hero, danger_zones, is_last_hero,
+                     &explore_mode);
+            if (gbGameOver)
+                break;
+            current_hero =
+                DetermineHeroToMove(whichPlayer, &is_last_hero);
+        }
+        gpAdvManager->DemobilizeCurrHero(0, 1);
+        ai_player->end_turn();
+
+        explore_mode = 1;
+        if (!gpGame->setup.difficulty || !gpCurrentPlayer->numTowns)
+            explore_mode = 0;
+
+        // VC6 expands the selector into the second copy of the source helper,
+        // although it retains the selector call in the first copy above.
+        // Spell this call site out so that legitimate nested-inline decision
+        // remains visible without forcing DetermineHeroToMove everywhere.
+        for (;;) {
+            hero* selected_hero = 0;
+            short lowest_sum = 0;
+            playerData* player = &gpGame->players[whichPlayer];
+            unsigned char is_last_hero = 1;
+
+            for (short hero_index = 0;
+                 hero_index < player->numHeroes; ++hero_index) {
+                hero* current_hero = &gpGame->heroes[
+                    static_cast<short>(player->heroes[hero_index])];
+                if (current_hero->movePoints > 0
+                    && !current_hero->field_11c) {
+                    if (selected_hero)
+                        is_last_hero = 0;
+
+                    short skill_sum = 0;
+                    for (short skill = 0; skill < 4; ++skill)
+                        skill_sum += current_hero->GetPrimarySkill(skill);
+
+                    if (!selected_hero
+                        || (!(current_hero->patrolX != hero::kPatrolNone
+                                 && selected_hero->patrolX
+                                        == hero::kPatrolNone)
+                            && ((current_hero->patrolX == hero::kPatrolNone
+                                     && selected_hero->patrolX
+                                            != hero::kPatrolNone)
+                                || skill_sum < lowest_sum))) {
+                        selected_hero = current_hero;
+                        lowest_sum = skill_sum;
+                    }
+                }
+            }
+
+            if (!selected_hero) {
+                is_last_hero = 0;
+                gpAdvManager->DemobilizeCurrHero(0, 1);
+                player->currHeroId = -1;
+                if (player->numHeroes < playerData::HERO_SLOT_COUNT) {
+                    for (short town_index = 0;
+                         town_index < player->numTowns; ++town_index) {
+                        town* current_town =
+                            gpGame->GetTown(player->townIds[town_index]);
+                        short garrison_hero_id = static_cast<short>(
+                            current_town->garrisonHeroId);
+                        if (garrison_hero_id >= 0
+                            && current_town->visitingHeroId < 0) {
+                            hero* current_hero =
+                                gpGame->GetHero(garrison_hero_id);
+                            if (current_hero->army.get_creature_total()
+                                && current_hero->movePoints
+                                && !current_hero->field_11c) {
+                                current_town->remove_garrison_hero();
+                                selected_hero = current_hero;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (!selected_hero)
+                break;
+            MoveHero(selected_hero, danger_zones, is_last_hero,
+                     &explore_mode);
+            if (gbGameOver)
+                break;
+        }
+        gpAdvManager->DemobilizeCurrHero(0, 1);
+        delete [] danger_zones;
+    }
+
+    gpGame->CheckHeroConsistency();
+    gpMouseManager->ShowPointer(1);
 }
+
+#if 0  // @carcass -- philai body-evidence claims
 
 // E:\gamedcs\philai.cpp:1056
 VA(0x005261f0, 0x5ba)  // anchor-callee, dc 0x10ec58
@@ -938,6 +1190,46 @@ float value_of_experience(const hero* current_hero, const armyGroup* current_arm
     return (static_cast<float>(const_cast<armyGroup*>(current_army)->get_AI_value())
             + gHeroGoldCost)
         / static_cast<float>(increment * 40);
+}
+
+// E:\gamedcs\philai.cpp:1770. Retail retains the DC hero-bonus sweep and
+// extends its artifact appraisal across Complete's full 144-entry table.
+VA(0x00527960, 0x140)  // anchor-callee, dc 0x110018
+void philAI::GetTurnAIVars(int whichPlayer)
+{
+    iCurHourGlassPhase = 0;
+    gUnnamed691680 = 0;
+
+    for (int hero_index = 0;
+         hero_index < gpCurrentPlayer->numHeroes; ++hero_index) {
+        AI_set_hero_bonuses(
+            gpGame->GetHero(gpCurrentPlayer->heroes[hero_index]));
+    }
+
+    long artifact_count = 0;
+    long total_artifact_value = 0;
+    for (int artifact_id = ARTIFACT_FIRST_AID_TENT + 1;
+         artifact_id < ARTIFACT_COUNT; ++artifact_id) {
+        if (!akArtifactTraits[artifact_id].disabled) {
+            ++artifact_count;
+            type_artifact artifact(artifact_from_int(artifact_id), -1);
+            total_artifact_value +=
+                AI_get_value_of_artifact(artifact, whichPlayer);
+        }
+    }
+    gpCurrentPlayer->turnValueOfAvgArtifact =
+        static_cast<float>(static_cast<double>(total_artifact_value)
+                           / static_cast<double>(artifact_count));
+
+    if (!gpGame->setup.difficulty) {
+        type_AI_player::set_attack_bonuses(1.0f, -0.4f);
+        return;
+    }
+
+    float difficulty = static_cast<float>(gpGame->setup.difficulty);
+    float human_bonus = (difficulty + 1.0f) * 0.25f;
+    float computer_bonus = 0.75f - difficulty * 0.25f;
+    type_AI_player::set_attack_bonuses(computer_bonus, human_bonus);
 }
 
 // E:\gamedcs\philai.cpp:1945

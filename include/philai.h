@@ -11,6 +11,25 @@
 class hero;
 class town;
 
+// The Dreamcast class roster has no data members for this coordinator;
+// its three public methods are the complete method roster.  Retail DoAI
+// likewise uses `this` only to dispatch GetTurnAIVars.
+class philAI {
+public:
+    enum {
+        ONE_ACTIVE_HERO = 1,
+        TWO_ACTIVE_HEROES = 2,
+        THREE_ACTIVE_HEROES = 3,
+        THIRD_HOURGLASS_PHASE = 3,
+        SIXTH_HOURGLASS_PHASE = 6,
+        LAST_HOURGLASS_PHASE = 9
+    };
+
+    philAI();
+    void DoAI(int whichPlayer);
+    void GetTurnAIVars(int whichPlayer);
+};
+
 long AI_get_spell_value(const hero* our_hero, SpellID spell);
 
 // 0x5253d0. DECLARED, not defined - advManager::TownEvent is the caller

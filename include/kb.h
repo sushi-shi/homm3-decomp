@@ -112,6 +112,10 @@ unsigned char DisplayLCWinLoss(LossConditionStruct* lossCondition,
 // this consumer; kb.h reaches it and its include-set sensitivity counts
 // declarations of every kind. Measured both ways 2026-08-14.
 extern int gbGameOver;
+// PC-only zero-fill storage.  The command-line initialization path clears
+// this word and philAI::DoAI is its only reader; no source symbol survives,
+// so keep the address-ordinal spelling instead of inventing a role name.
+extern int gUnnamed6994f0;
 // The retail entry at 0x4f1190 is the five-byte public thunk used by
 // questlogwindow; the implementation body follows at 0x4f1820.
 int TrueFalseDialogHandler(message* msg);

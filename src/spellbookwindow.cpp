@@ -4,12 +4,31 @@
 #include <va.h>
 #include <string.h>
 #include "armygrp.h"
+#include "hero.h"
+#include "kb.h"
 #include "spellbookwindow.h"
+#include "textresource.h"
 #include "widget.h"
 
 // Source-private active-window slot. Retail's constructor stores `this` at
 // 0x59be77 and the destructor clears the same address before widget teardown.
 DATA(0x006a34ec) static TSpellbookWindow* gpSpellbookWindow;
+
+// Dreamcast retains this source-private helper out of line at dc 0x14bc80;
+// Complete /Ob2 folds it into get_spell_description.  The five adjacent
+// TextResource rows and the guarded pointer array are byte-proven by retail.
+static const char* get_level_string(SpellID spell)
+{
+    static const char* level_strings[] = {
+        0,
+        (*gpGeneralText)[173],
+        (*gpGeneralText)[174],
+        (*gpGeneralText)[175],
+        (*gpGeneralText)[176],
+        (*gpGeneralText)[177]
+    };
+    return level_strings[akSpellTraits[spell].level];
+}
 
 #if 0  // @carcass: untouched Dreamcast-only bodies
 // E:\gamedcs\spellbookwindow.cpp:69
@@ -18,20 +37,49 @@ void TSpellbookWindow::Reset()
 {
     // @stub
 }
-
-// E:\gamedcs\spellbookwindow.cpp:115
-DC_ONLY(0x14bc80, 0x74)
-const char* get_level_string(SpellID spell)
-{
-    // @stub
-}
+#endif
 
 // E:\gamedcs\spellbookwindow.cpp:128
-VA(0x0059baa0, 0x341)  // anchor-callee: called by WindowHandler 0x59d040; EH std::string, ret 0x10 = UDT-ret+3 args; dc 0x14bcf4
-std::basic_string<char,std::char_traits<char>,std::allocator<char> TSpellbookWindow::get_spell_description(__$ReturnUdt, SpellID spell, const hero* current_hero, unsigned char rollover)
+VA(0x0059baa0, 0x341)  // retail widens DC's magic-plains byte to the Complete magic-terrain field at +0x6c; dc 0x14bcf4
+std::string TSpellbookWindow::get_spell_description(
+    SpellID spell, const hero* current_hero, unsigned char rollover)
 {
-    // @stub
+    // 96.8000%: all 36 blocks, 21 branches and the return agree.  The only
+    // residual is VC6 inlining the returned string's initial _Tidy while
+    // retail calls it out of line; twelve generated ordinary-source trees
+    // were flat or worse.  A second substr raises the numeric score but is
+    // absent from the DC xref graph, so the source-authentic return stays.
+    const SSpellTraits* traits = &akSpellTraits[spell];
+    std::string result;
+    int mastery = 0;
+    if (current_hero)
+        mastery = const_cast<hero*>(current_hero)->get_spell_level(
+            spell, OnMagicPlains);
+    result = traits->levelDescriptions[mastery];
+
+    if (rollover) {
+        for (unsigned int i = 0; i < result.size(); ++i) {
+            if (result[i] == '\n') {
+                result = result.substr(0, i);
+                break;
+            }
+        }
+        result += " (";
+        result += get_level_string(spell);
+        result += ")";
+    } else if (current_hero && (traits->field_c & 0x200)) {
+        int power = current_hero->GetPrimarySkill(2);
+        int damage = const_cast<hero*>(current_hero)->modify_spell_damage(
+            spell,
+            traits->power_factor * power + traits->mastery_bonus[mastery],
+            0);
+        sprintf(gText, (*gpGeneralText)[344], damage);
+        result += gText;
+    }
+    return result;
 }
+
+#if 0  // @carcass: untouched Dreamcast-only bodies
 
 // E:\gamedcs\spellbookwindow.cpp:180
 VA(0x0059bdf0, 0xAC9)  // anchor-bracket: immediately precedes scalar-del-dtor 0x59c8c0; EH, ret 0x10 = 4 args; spelback.pcx setup; dc 0x14be88
