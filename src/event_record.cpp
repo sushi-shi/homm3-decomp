@@ -4,7 +4,9 @@
 #include <va.h>
 #include "event_record.h"
 #define HOMM3_EVENT_RECORD_CLEAR_DECL
+#define HOMM3_EVENT_RECORD_DECLS
 #include "game.h"
+#undef HOMM3_EVENT_RECORD_DECLS
 #undef HOMM3_EVENT_RECORD_CLEAR_DECL
 #include "abstractfile.h"
 #define HOMM3_EVENT_RECORD_MOVE_DECLS
@@ -24,6 +26,105 @@ const int SAVE_VERSION_BOAT_FIELDS_ABSENT = 0x1c;
 inline void boat::obscure_cell()
 {
     type_obscuring_object::obscure_cell(BOAT, id);
+}
+
+inline type_point::type_point(short new_x, short new_y, short new_z)
+{
+    x = new_x;
+    y = new_y;
+    z = new_z;
+}
+
+// The record constructors. NONE of them has a retail body: every one is
+// expanded at its single game::record_* call site, which is also the only
+// evidence for their shapes. `inline` is load-bearing - VC6's /Ob2
+// auto-inliner does not reliably take a plain out-of-class definition, and
+// an unreferenced inline simply disappears, which is what retail shows.
+inline type_record_move_hero::type_record_move_hero(hero* who, char _direction,
+                                                    type_point _destination)
+{
+    current_hero = who;
+    restore_flag = who->facing;
+    direction = _direction;
+    source = type_point(who->x, who->y, who->z);
+    destination = _destination;
+}
+
+// record_teleport reads hero+0x47 twice - once here for the argument and
+// once inside the base body for restore_flag.
+inline type_record_teleport::type_record_teleport(hero* who,
+                                                  type_point _destination)
+    : type_record_move_hero(who, who->facing, _destination)
+{
+}
+
+inline type_record_claim_mine::type_record_claim_mine(long _id, char _new_owner)
+{
+    id = _id;
+    new_owner = _new_owner;
+    old_owner = gpGame->mines[_id].playerOwner;
+}
+
+// NOT a delegation to the base: the town variant reads its old owner out of
+// gpGame->towns, so it runs the empty default base constructor and assigns
+// all three members itself - which is also why retail elides the
+// intermediate claim_mine vptr store here but keeps hide_boat's below.
+inline type_record_claim_town::type_record_claim_town(long _id, char _new_owner)
+{
+    id = _id;
+    new_owner = _new_owner;
+    old_owner = gpGame->towns[_id].owner;
+}
+
+inline type_record_hide_boat::type_record_hide_boat(boat* _current_boat,
+                                                    unsigned char _occupied,
+                                                    int _occupying_hero)
+{
+    current_boat = _current_boat;
+    field_0c = _occupied;
+    field_0d = _current_boat->occupied;
+    field_10 = _occupying_hero;
+    field_14 = _current_boat->occupying_hero;
+}
+
+inline type_record_show_boat::type_record_show_boat(boat* _current_boat,
+                                                    type_point _location)
+    : type_record_hide_boat(_current_boat, 0, _current_boat->occupying_hero)
+{
+    previous_location = type_point(_current_boat->x, _current_boat->y,
+                                   _current_boat->z);
+    location = _location;
+}
+
+inline type_record_erase::type_record_erase(type_point _location,
+                                            long _object_id,
+                                            unsigned long _extra_info,
+                                            long _object_index)
+{
+    location = _location;
+    object_id = _object_id;
+    extra_info = _extra_info;
+    object_index = _object_index;
+}
+
+inline type_record_hide_hero::type_record_hide_hero(hero* who, char _new_owner,
+                                                    unsigned char _town_garrison)
+{
+    current_hero = who;
+    new_owner = _new_owner;
+    prev_owner = who->owner;
+    town_garrison = _town_garrison;
+}
+
+inline type_record_show_hero::type_record_show_hero(hero* who, char _new_owner,
+                                                    type_point _location,
+                                                    unsigned char _on_boat)
+    : type_record_hide_hero(who, _new_owner, 0)
+{
+    previous_boat = (who->flags >> 18) & 1;
+    on_boat = _on_boat;
+    previous_location = type_point(who->x, who->y, who->z);
+    location = _location;
 }
 
 // E:\gamedcs\event_record.cpp:36. NO RETAIL BODY of its own - every
@@ -1204,61 +1305,113 @@ void game::record_claim_town(long id, long new_owner)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\event_record.cpp:1061
-DC_ONLY(0x8e0b8, 0x4E)
+// advManager::EraseObj is the caller. Retail expands the whole chain: the
+// 0x18-byte allocation, the two vtable stores, the four field copies out of
+// the cell (evaluated right-to-left - objectIndex, extraInfo,
+// object_type_index) and the vector's insert.
+VA(0x0049c390, 0x1C2)  // anchor-vtable (constructs 0x63df1c), dc 0x8e0b8
 void game::record_erase_object(NewmapCell* cell, type_point point)
 {
-    // @stub
+    eventRecords.push_back(new type_record_erase(point,
+                                                 cell->object_type_index,
+                                                 cell->extraInfo,
+                                                 cell->objectIndex));
 }
+#if 0  // @carcass
+
+#endif  // @carcass
 
 // E:\gamedcs\event_record.cpp:1071
-DC_ONLY(0x8e108, 0x3E)
-void game::record_hide_boat(boat* current_boat)
+// Retail takes THREE arguments (`ret 0xc`), not the Dreamcast's one: the
+// replay state goes in the record's +0xc/+0x10 pair while the constructor
+// snapshots the boat's current state into +0xd/+0x14 for undo.
+VA(0x0049c560, 0x1B8)  // anchor-vtable (constructs 0x63deec), dc 0x8e108
+void game::record_hide_boat(boat* current_boat, unsigned char occupied,
+                            int occupying_hero)
 {
-    // @stub
+    eventRecords.push_back(new type_record_hide_boat(current_boat, occupied,
+                                                     occupying_hero));
 }
+#if 0  // @carcass
+
+#endif  // @carcass
 
 // E:\gamedcs\event_record.cpp:1079
-DC_ONLY(0x8e148, 0x44)
-void game::record_hide_hero(hero* current_hero, char old_owner)
+// `ret 0xc`: three arguments, the third being the town-garrison flag the
+// record's +0xe holds and hide_hero::undo consults.
+VA(0x0049c720, 0x1DD)  // anchor-vtable (constructs 0x63df34), dc 0x8e148
+void game::record_hide_hero(hero* who, char new_owner,
+                            unsigned char town_garrison)
 {
-    // @stub
+    eventRecords.push_back(new type_record_hide_hero(who, new_owner,
+                                                     town_garrison));
 }
+#if 0  // @carcass
+
+#endif  // @carcass
 
 // E:\gamedcs\event_record.cpp:1087
-DC_ONLY(0x8e18c, 0x42)
+// The boat's occupying-hero slot is read TWICE - once at the call site for
+// the base constructor's argument and once inside that constructor for the
+// undo snapshot - which is what separates the two.
+VA(0x0049c900, 0x217)  // anchor-vtable (constructs 0x63df04), dc 0x8e18c
 void game::record_show_boat(boat* current_boat, type_point point)
 {
-    // @stub
+    eventRecords.push_back(new type_record_show_boat(current_boat, point));
 }
+#if 0  // @carcass
+
+#endif  // @carcass
 
 // E:\gamedcs\event_record.cpp:1096
-DC_ONLY(0x8e1d0, 0xA0)
-void game::record_show_hero(hero* current_hero, char owner, type_point location, unsigned char is_boat)
+VA(0x0049cb20, 0x226)  // anchor-vtable (constructs 0x63df4c), dc 0x8e1d0
+void game::record_show_hero(hero* who, signed char player, type_point point,
+                            unsigned char reset)
 {
-    // @stub
+    eventRecords.push_back(new type_record_show_hero(who, player, point,
+                                                     reset));
 }
+#if 0  // @carcass
+
+#endif  // @carcass
 
 // E:\gamedcs\event_record.cpp:1106
-DC_ONLY(0x8e270, 0x4A)
-void game::record_move(hero* current_hero, int direction, type_point destination)
+VA(0x0049cd50, 0x1FA)  // anchor-vtable (constructs 0x63de8c), dc 0x8e270
+void game::record_move(hero* who, int direction, type_point destination)
 {
-    // @stub
+    eventRecords.push_back(new type_record_move_hero(who, direction,
+                                                     destination));
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:1115
+// NO RETAIL BODY. The nine recorders between shroud::undo and SetVisibility
+// pair one-for-one onto the DC roster's other nine by the derived vftable
+// each stores, and no row is left for this one: the carve's 0x49cf50 stores
+// type_record_teleport's 0x63dea4, not type_record_player_death's 0x63df64.
+// Whatever the PC revision does on player death, it does not go through an
+// out-of-line recorder here.
 DC_ONLY(0x8e2bc, 0x3C)
 void game::record_player_death(char player_id)
 {
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\event_record.cpp:1123
-DC_ONLY(0x8e2f8, 0x42)
-void game::record_teleport(hero* current_hero, type_point destination)
+// The last of the nine recorders and the one that pins the census: its
+// derived vptr store is type_record_teleport's 0x63dea4, so
+// record_player_death above has no retail row at all.
+VA(0x0049cf50, 0x20B)  // anchor-vtable (constructs 0x63dea4), dc 0x8e2f8
+void game::record_teleport(hero* who, type_point destination)
 {
-    // @stub
+    eventRecords.push_back(new type_record_teleport(who, destination));
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:1136
 // RETAIL_LOCATED(0x0049d160, 0x268)  // anchor-global, dc 0x8e33c
