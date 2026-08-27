@@ -4,8 +4,11 @@
 #define HOMM3_ARMY_CYCLE_VIEW
 #define HOMM3_ARMY_COMMAND_ROUND_VIEW
 #define HOMM3_ARMY_FIRST_AID_VIEW
+#define HOMM3_ARMY_BERSERK_VIEW
+#define HOMM3_ARMY_COMMAND_ACTION_VIEW
 #define HOMM3_ARMY_PROCESS_MOVE_VIEW
 #define HOMM3_CMBTMGR_CYCLE_VIEW
+#define HOMM3_COMMAND_ANIMATION_VIEW
 #define HOMM3_COMMAND_GRID_VIEW
 #define HOMM3_COMMAND_PLAYER_DROP_VIEW
 #define HOMM3_COMMAND_TOWER_STRING_VIEW
@@ -17,6 +20,7 @@
 #include "command.h"
 #include "combatresultswindow.h"
 #include "combatwindow.h"
+#include "drawing.h"
 #include "findpath.h"
 #include "game.h"
 #include "hero.h"
@@ -30,6 +34,19 @@
 #include "soundmgr.h"
 #include "textresource.h"
 #include "winmgr.h"
+
+// The remaining pending-action rungs, byte-proven by ProcessNextAction's
+// twelve-entry switch. Kept as command-local integral constants instead of
+// enlarging EAIOrder: this TU has a measured VC6 enum-population wall.
+static const int kCombatActionCastHeroSpell = 1;
+static const int kCombatActionMove = 2;
+static const int kCombatActionDefend = 3;
+static const int kCombatActionRetreat = 4;
+static const int kCombatActionSurrender = 5;
+static const int kCombatActionWait = 8;
+static const int kCombatActionAttackWall = 9;
+static const int kCombatActionCastCreatureSpell = 10;
+static const int kCombatActionFirstAid = 11;
 
 // E:\gamedcs\command.cpp:63
 // Dreamcast CodeView names this private nullary member and its two static
@@ -200,23 +217,199 @@ unsigned char combatManager::automate_first_aid_tent()
     return 1;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\command.cpp:266
+// Retail's two signed elapsed-time tests gate the sound/frame pacer and the
+// combat action pump independently. The existing GameTime inlines reproduce
+// both subtraction shapes and the max(interval, lag) timestamp update exactly.
 VA(0x00474040, 0x8C)  // anchor-callee: PollSound/CycleCombatScreen/GameTime frame loop + order-map, dc 0x6b268
 void combatManager::do_animations()
 {
-    // @stub
+    if (static_cast<const combatManager*>(this)->IsQuickCombat())
+        return;
+
+    if (GameTime::ElapsedSince(gCombatStamp698998) >= 0) {
+        PollSound();
+        long interval = static_cast<long>(
+            gCombatSpeedFactors[gUnnamed698758.combatSpeed] * 100.0f);
+        gCombatStamp698998 =
+            GameTime::NextFrameTime(gCombatStamp698998, interval);
+    }
+
+    if (GameTime::ElapsedSince(gCombatStamp6989b8) >= 0
+            && !gbProcessingCombatAction) {
+        gbProcessingCombatAction = 1;
+        CycleCombatScreen();
+        gbProcessingCombatAction = 0;
+    }
 }
 
 // E:\gamedcs\command.cpp:291
+// Dreamcast names the dispatcher, its message-owner local, and every called
+// helper; retail fixes the Complete-only DirectPlay cases and payload offsets.
+// Residual: 96.2267%, with all 78 basic blocks and their flow kinds agreeing.
+// The remaining bytes are VC6 code-shape debt: scratch-register choices in
+// the queued-input, tower and ProcessNextAction arms; the human/AI blocks are
+// laid out in the opposite order despite the same successors; and the EH
+// descriptor/jump-table placement follows those code offsets.
 VA(0x004740d0, 0x5AB)  // anchor-vtable combatManager slot02 + dispatcher: calls automate_catapult/first_aid + ProcessCombatMsg/CheckWin/ResetRound, dc 0x6b318
-int combatManager::Main(message* msg)
+int combatManager::Main(message& msg)
 {
-    // @stub
-}
+    int result = 1;
+    do_animations();
 
-#endif  // @carcass
+    unsigned char automaticTurn = 0;
+    if (!static_cast<const combatManager*>(this)->IsQuickCombat()
+            && field_132b4 && (field_132c4 || gbUnk691209)) {
+        if (static_cast<const combatManager*>(this)->IsQuickCombat()
+                || is_computer_action(get_current_army())) {
+            while (msg.id != MESSAGE_KEY_DOWN
+                    && msg.id != MESSAGE_LEFT_BUTTON_DOWN
+                    && msg.id != MESSAGE_LEFT_BUTTON_UP
+                    && msg.id != MESSAGE_RIGHT_BUTTON_DOWN
+                    && msg.id != MESSAGE_RIGHT_BUTTON_UP
+                    && msg.id != MESSAGE_NONE)
+                msg = gpInputManager->GetEvent();
+
+            if (msg.id != MESSAGE_NONE) {
+                gpInputManager->Flush();
+                field_132c4 = 0;
+                GetControl();
+            }
+        }
+    }
+
+    if (!bCreaturePlacement && field_3c == 0 && field_132b4) {
+        automaticTurn = automate_first_aid_tent();
+
+        unsigned char towerTurn;
+        if (field_132f4 < COMBAT_FORTIFICATION_CITADEL) {
+            towerTurn = 0;
+        } else {
+            army* currentArmy = get_current_army();
+            if (currentArmy->creatureType != CREATURE_ARROW_TOWER) {
+                towerTurn = 0;
+            } else {
+                int wall;
+                switch (currentArmy->gridIndex) {
+                case COMBAT_HEX_LOWER_TOWER:
+                    wall = 13;
+                    break;
+                case COMBAT_HEX_KEEP:
+                    wall = 14;
+                    break;
+                case COMBAT_HEX_UPPER_TOWER:
+                    wall = 5;
+                    break;
+                }
+
+                if (wallStrength[wall] == 0) {
+                    currentArmy->creatureId |= 0x200000;
+                    field_3c = 12;
+                    towerTurn = 1;
+                } else if (static_cast<const combatManager*>(this)->IsQuickCombat()
+                        || is_computer_action(get_current_army())) {
+                    Unnamed465f20();
+#pragma inline_depth(0)
+                    ResetMouse();
+#pragma inline_depth()
+                    towerTurn = 1;
+                } else {
+                    towerTurn = 0;
+                }
+            }
+        }
+
+        automaticTurn |= towerTurn | automate_catapult();
+    }
+
+    if (CheckWin(&msg))
+        return MESSAGE_DISPATCH_FORWARD;
+
+    if (!static_cast<const combatManager*>(this)->IsQuickCombat()
+            && !automaticTurn) {
+        // The retail command header retains the Dreamcast two-argument
+        // prototype even though remote.cpp's Complete wrapper ignores the
+        // compression out-parameter.
+        CNetMsg* GetRemoteData(unsigned char removeFromQueue,
+                               unsigned char* wasCompressed);
+        void ReceiveChat(char* chat, int fromWho);
+
+        CNetMsg* netMsg = GetRemoteData(1, 0);
+        if (netMsg) {
+            CMessageKill killMsg(netMsg);
+            switch (netMsg->subType) {
+            case RS_COMBAT_MAIN: {
+                CCombatMainMsg* combatMsg =
+                    static_cast<CCombatMainMsg*>(netMsg);
+                field_3c = combatMsg->m_nextAction;
+                field_40 = combatMsg->m_nextActionExtra;
+                field_44 = combatMsg->m_nextActionGridIndex;
+                field_48 = combatMsg->m_nextActionGridIndex2;
+                logFile.Log(
+                    DATA_COMPGEN(0x00670218, receivedCombatActionLog,
+                                 "Received action [%d]--> [%d,%d,%d]"),
+                    field_3c, field_40, field_44, field_48);
+                SRand(combatMsg->m_seed);
+                goto process_action;
+            }
+
+            case RS_CHAT_MSG:
+                ReceiveChat(static_cast<CChatMsg*>(netMsg)->m_text,
+                            netMsg->field_00);
+                break;
+
+            case RS_COMBAT_END_PLACEMENT:
+                if (bCreaturePlacement) {
+                    actingSlot = 0;
+                    field_13d6c = 0;
+                    bCreaturePlacement = 0;
+                    actingSide = 1;
+                    if (!static_cast<const combatManager*>(this)->IsQuickCombat())
+                        combatWindow->EndPlacementPhase();
+                    ResetRound();
+                }
+                NextArmy(1);
+                break;
+
+            case RS_PLAYER_DROPPED:
+                if (HandleCombatPlayerDrop(
+                        static_cast<CPlayerDropMsg*>(netMsg)->m_dpid, &msg)) {
+                    killMsg.SetMessage(0);
+                    field_38->SetAbortPopupMsg(netMsg);
+                    return MESSAGE_DISPATCH_FORWARD;
+                }
+                break;
+            }
+        }
+
+        if (!field_132b4)
+            return ProcessCombatMsg(msg);
+    }
+
+    if (field_132b4) {
+        army* currentArmy = get_current_army();
+        if (currentArmy->berserkFlag) {
+            currentArmy->GoBerserk();
+            if (CheckWin(&msg))
+                return MESSAGE_DISPATCH_FORWARD;
+        }
+    }
+
+process_action:
+    if (field_3c == 0) {
+        if (!static_cast<const combatManager*>(this)->IsQuickCombat()
+                && !is_computer_action(get_current_army())) {
+            result = ProcessCombatMsg(msg);
+        } else {
+            CheckGetAIMove();
+        }
+    }
+
+    if (field_3c != 0)
+        result = ProcessNextAction(msg, automaticTurn);
+
+    return result;
+}
 
 // E:\gamedcs\command.cpp:475
 // Build the twelve legal approach records around the selected target hex.
@@ -390,6 +583,87 @@ int combatManager::GetPointer(int inCombatCommand, int iHexIndex)
 }
 
 #endif  // @carcass
+
+// E:\gamedcs\command.cpp header inline in the DC build. DC publishes three
+// int arguments; Complete adds an unsigned-byte "pointer changed" result.
+// The standalone retail body is independently fixed by its exact field graph:
+// convert the mouse/hex tuple into one of the twelve SetCombatDirections
+// slots, cache that slot's destination hex, and select its combat cursor frame
+// only when the frame changes. Residual: 85.8951%. The arithmetic, constants,
+// field accesses and branch semantics agree; candidate binds `this` to EDI and
+// direction to ESI while retail transposes them. why-reg v2 measured identical
+// definition slots, exhausted its three model-ranked declaration probes, and
+// classifies the transpose as C1 front-end state rather than source-reachable
+// handle order. The same state gives the ratio conversion a different scratch
+// home and accounts for the remaining local instruction scheduling.
+VA(0x00474a00, 0x198)  // anchor-fields combatDirections/field_132d8 + SetPointer, dc member type 0x4c8e
+unsigned char combatManager::CheckSetMouseDirection(int x, int y, int hex)
+{
+    int direction;
+    float slope;
+
+    if (!static_cast<const combatManager*>(this)->IsQuickCombat()
+            && !is_computer_action(get_current_army()))
+        goto determine_direction;
+    return 0;
+
+determine_direction:
+    int xDifference = x - (hex % 17) * 44 - 14;
+    int row = hex / 17;
+    if (!(row & 1))
+        xDifference -= 22;
+    xDifference -= 22;
+    int yDifference = y - row * 42 - 112;
+
+    direction = 0;
+    if (xDifference < 0) {
+        if (yDifference < 0)
+            direction = 9;
+        else
+            direction = 6;
+    } else if (yDifference >= 0) {
+        direction = 3;
+    }
+
+    if (abs(yDifference) == 0)
+        slope = 100.0f;
+    else {
+        slope = static_cast<float>(abs(xDifference));
+        slope = slope / abs(yDifference);
+    }
+
+    if (direction != COMBAT_ATTACK_ANGLE_0
+            && direction != COMBAT_ATTACK_ANGLE_6) {
+        if (slope < 0.58)
+            direction += 2;
+        else if (slope < 1.73)
+            direction++;
+    } else {
+        if (slope > 1.73)
+            direction += 2;
+        else if (slope > 0.58)
+            direction++;
+    }
+
+    field_132d8 = combatDirections[1][direction];
+    if (combatDirections[0][direction] == field_1342c)
+        return 0;
+
+    field_1342c = combatDirections[0][direction];
+    gpMouseManager->SetPointer(combatDirections[0][direction],
+                               mouseManager::COMBAT_SET);
+    return 1;
+}
+
+// Complete keeps the DC nullary source method as a 74-byte adapter and moves
+// the actual policy into the following one-argument overload. Exact.
+VA(0x00474ba0, 0x4A)  // anchor-callee IsQuickCombat + current-army forwarding, dc source signature
+unsigned char combatManager::is_computer_action()
+{
+    if (static_cast<const combatManager*>(this)->IsQuickCombat())
+        return 1;
+    return is_computer_action(get_current_army());
+}
 
 // E:\gamedcs\command.cpp:928
 // NINE PARAMETERS' WORTH OF EVIDENCE IN ONE BYTE: `ret 4`. The DC
@@ -2152,19 +2426,237 @@ void combatManager::process_first_aid(army* currentArmy)
     }
 }
 
-// E:\gamedcs\command.cpp:3461 - located, not yet reconstructed (4180 B).
-// Single command.cpp function between process_first_aid (0x6f824) and
-// ResetCyclingCreatures (0x701b0); retail body's callee set matches DC
-// ProcessNextAction exhaustively (IsQuickCombat, CheckWin, NextArmy,
-// CheckApplyGoodMorale, process_move_then_attack, process_first_aid,
-// ResetRound, CheckChangeSelector, ResetMouse, DrawFrame, ...).
-#if 0  // @carcass
+// E:\gamedcs\command.cpp:3461. The DC statement table fixes the local roles,
+// switch domain and source calls. Retail independently fixes all twelve
+// pending-action arms and shows that VC6 expanded ResetMouse,
+// ResetCycleTimers and CheckChangeSelector into this body.
 VA(0x00478d80, 0x1054)  // anchor-callee exhaustive + single-fn gap, dc 0x6f984
-int combatManager::ProcessNextAction(message* msg, unsigned char automaticTurn)
+int combatManager::ProcessNextAction(message& msg, unsigned char automaticTurn)
 {
-    // @stub
+    if (!static_cast<const combatManager*>(this)->IsQuickCombat()) {
+        combatWindow->ClearCombatMessages();
+        combatWindow->heroSubWindows[0]->UnShow();
+        combatWindow->heroSubWindows[1]->UnShow();
+        combatWindow->creatureSubWindows[0]->UnShow();
+        combatWindow->creatureSubWindows[1]->UnShow();
+        combatWindow->creatureSubWindows[2]->UnShow();
+        combatWindow->creatureSubWindows[3]->UnShow();
+    }
+
+    gbProcessingCombatAction = 1;
+    if (!static_cast<const combatManager*>(this)->IsQuickCombat()) {
+        if (field_3c)
+            gpMouseManager->SetPointer(6, mouseManager::COMBAT_SET);
+        UpdateMouseGrid(-1, 1);
+        memset(field_0107, 0, sizeof(field_0107));
+        if (UpdateGrid(0, 0))
+            DrawFrame(1, 0, 0, 0, 1, 0);
+    }
+
+    if (field_132b4 && gNetworkActive69954c
+            && playerIds[0] >= 0 && playerIds[1] >= 0
+            && gpGame->IsHuman(playerIds[1])
+            && gpGame->IsHuman(playerIds[0])) {
+        int seed = GameTime::Get();
+        SRand(seed);
+        CCombatMainMsg combatMsg(field_3c, field_40, field_44, field_48,
+                                 seed);
+        logFile.Log(
+            DATA_COMPGEN(0x00670278, sendingCombatActionLog,
+                         "Sending action [%d]--> [%d,%d,%d]"),
+            field_3c, field_40, field_44, field_48);
+        if (!TransmitRemoteData(&combatMsg,
+                                iCombatControlNetPos[1 - currentSide],
+                                false, true))
+            ShutDown(0);
+    }
+
+    army* currentArmy = get_current_army();
+    int iReturn = 0;
+
+    if (CheckWin(&msg)) {
+        gbProcessingCombatAction = 0;
+        ResetMouse();
+        return 1;
+    }
+
+    switch (field_3c) {
+    case kCombatActionCastHeroSpell:
+        field_14030[0] = 1;
+        ResetCyclingCreatures();
+        CastSpell(field_40, field_44, 0, field_48, 0, 3);
+        if (currentArmy->numTroops <= 0)
+            iReturn = 1;
+        ResetCycleTimers();
+        break;
+
+    case kCombatActionMove:
+        field_14030[0] = 1;
+        ResetCyclingCreatures();
+        currentArmy->move_to(field_44, 1);
+        currentArmy->joustBonus = 0;
+        currentArmy->creatureId |= 0x04000000;
+        if (CheckWin(&msg)) {
+            gbProcessingCombatAction = 0;
+            ResetMouse();
+            return 2;
+        }
+        CheckApplyGoodMorale(actingSide, actingSlot);
+        iReturn = 1;
+        ResetCycleTimers();
+        break;
+
+    case AI_ORDER_SHOOT:
+        field_14030[0] = 1;
+        ResetCyclingCreatures();
+        currentArmy->attack_hex(field_44, 1);
+        currentArmy->creatureId |= 0x04000000;
+        if (CheckWin(&msg)) {
+            gbProcessingCombatAction = 0;
+            ResetMouse();
+            return 2;
+        }
+        if (currentArmy->creatureType != CREATURE_ARROW_TOWER) {
+            CheckApplyGoodMorale(actingSide, actingSlot);
+            memset(field_14030 + 1, 0, COMBAT_GRID_CELLS);
+            currentArmy->check_obstacle_attacks(0);
+        }
+        iReturn = 1;
+        ResetCycleTimers();
+        break;
+
+    case kCombatActionCastCreatureSpell:
+        field_14030[0] = 1;
+        ResetCyclingCreatures();
+        currentArmy->cast_spell(field_44);
+        currentArmy->creatureId |= 0x04000000;
+        CheckApplyGoodMorale(actingSide, actingSlot);
+        iReturn = 1;
+        ResetCycleTimers();
+        break;
+
+    case AI_ORDER_MOVE_AND_ATTACK:
+        field_14030[0] = 1;
+        if (process_move_then_attack(&msg))
+            return 2;
+        iReturn = 1;
+        break;
+
+    case kCombatActionRetreat:
+        if ((heroes[0] && heroes[0]->IsWieldingArtifact(125))
+                || (heroes[1] && heroes[1]->IsWieldingArtifact(125))) {
+            sprintf(gText, gpGeneralText->GetText(341),
+                    heroes[currentSide]->name);
+            NormalDialog(gText, 1, -1, -1, -1, 0, -1, 0,
+                         -1, 0, -1, 0);
+        } else {
+            field_14030[0] = 1;
+            field_132b0[currentSide] = 1;
+            ResetCycleTimers();
+        }
+        break;
+
+    case kCombatActionSurrender:
+        if ((heroes[0] && heroes[0]->IsWieldingArtifact(125))
+                || (heroes[1] && heroes[1]->IsWieldingArtifact(125))) {
+            sprintf(gText, gpGeneralText->GetText(342),
+                    heroes[currentSide]->name);
+            NormalDialog(gText, 1, -1, -1, -1, 0, -1, 0,
+                         -1, 0, -1, 0);
+        } else {
+            field_14030[0] = 1;
+            field_132b2[currentSide] = 1;
+            gpGame->players[playerIds[currentSide]].resources[6] -= field_40;
+            gpGame->players[playerIds[1 - currentSide]].resources[6] += field_40;
+            ResetCycleTimers();
+        }
+        break;
+
+    case kCombatActionDefend:
+        if (!(currentArmy->creatureId & 0x0c000000)) {
+            currentArmy->creatureId |= 0x04000000;
+            if (!bCreaturePlacement && !(currentArmy->Is(6) & 1)) {
+                std::string message;
+                currentArmy->creatureId |= 0x08000000;
+                currentArmy->field_4dc = std::_cpp_max(
+                    currentArmy->defenseSkill * 20 / 100, 1);
+
+                if (currentArmy->numTroops == 1)
+                    message = format_string(gpGeneralText->GetText(121),
+                                            currentArmy->GetName(),
+                                            currentArmy->field_4dc);
+                else
+                    message = format_string(gpGeneralText->GetText(122),
+                                            currentArmy->GetName(),
+                                            currentArmy->field_4dc);
+                combatWindow->combat_message(message.c_str(), 1, 0);
+            } else {
+                currentArmy->field_4dc = 0;
+            }
+            currentArmy->defenseSkill += currentArmy->field_4dc;
+        }
+        memset(field_14030 + 1, 0, COMBAT_GRID_CELLS);
+        currentArmy->check_obstacle_attacks(0);
+        iReturn = 1;
+        break;
+
+    case kCombatActionWait: {
+        currentArmy->creatureId |= 0x02000000;
+        if (!bCreaturePlacement) {
+            std::string message;
+            if (currentArmy->numTroops == 1)
+                message = format_string(gpGeneralText->GetText(137),
+                                        currentArmy->GetName());
+            else
+                message = format_string(gpGeneralText->GetText(138),
+                                        currentArmy->GetName());
+            combatWindow->combat_message(message.c_str(), 1, 0);
+        }
+        memset(field_14030 + 1, 0, COMBAT_GRID_CELLS);
+        currentArmy->check_obstacle_attacks(0);
+        iReturn = 1;
+        break;
+    }
+
+    case kCombatActionAttackWall:
+        ResetCyclingCreatures();
+        field_14030[0] = 1;
+        currentArmy->AttackWall(field_44);
+        currentArmy->creatureId |= 0x04000000;
+        CheckApplyGoodMorale(actingSide, actingSlot);
+        iReturn = 1;
+        ResetCycleTimers();
+        break;
+
+    case kCombatActionFirstAid:
+        process_first_aid(currentArmy);
+        iReturn = 1;
+        break;
+
+    case AI_ORDER_NONE:
+        currentArmy->creatureId |= 0x04000000;
+        iReturn = 1;
+        break;
+    }
+
+    field_3c = 0;
+    if (CheckWin(&msg)) {
+        gbProcessingCombatAction = 0;
+        ResetMouse();
+        return 2;
+    }
+
+    RaiseDoor();
+    if (iReturn) {
+        while (!NextArmy(1))
+            ResetRound();
+    }
+    CheckChangeSelector();
+    UpdateArmyLuckAndMorale();
+    gbProcessingCombatAction = 0;
+    ResetMouse();
+    return 1;
 }
-#endif  // @carcass
 
 // E:\gamedcs\command.cpp:3742. Retail expands army::Is and the Complete-era
 // MarkCreatureEffect tower arm inside the first walk. If any live stack was

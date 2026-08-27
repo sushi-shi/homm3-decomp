@@ -40,7 +40,10 @@ public:
         int Mastery;
 
         TSpellbookEntry(SpellID id, TSpellSchool school,
-                        int mastery);
+                        int mastery)
+            : Id(id), School(school), Mastery(mastery)
+        {
+        }
         bool operator<(const TSpellbookEntry& y) const;
     };
 
@@ -62,6 +65,8 @@ public:
     static void Reset();
 
 private:
+    static int LastPage;
+
     std::string get_spell_description(SpellID spell,
                                       const hero* current_hero,
                                       unsigned char rollover);
