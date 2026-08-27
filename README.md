@@ -62,3 +62,13 @@ homm3 build           # configure + ninja: compile every manifest unit
 homm3 link            # OPT-IN candidate link (layout study; the EXE is not runnable)
 homm3 clean           # nuke build/ entirely; `homm3 init` restores it
 ```
+
+## License
+
+Project-authored reconstruction source and tooling are dedicated to the public
+domain under [CC0 1.0](LICENSE), to the extent the contributors can do so.
+Files carrying separate copyright or license notices — notably everything under
+`vendor/` — retain those terms. No binary game assets are stored in this
+repository; retail inputs and build outputs incorporating them are not covered
+by this dedication. Thanks to [NH3API](https://github.com/void2012/NH3API),
+whose names and signatures inform the symbol reconstruction.
