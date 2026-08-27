@@ -97,6 +97,9 @@ const unsigned int AI_SPELL_CLASS_MASK = 0x1f8000;
 // channels one fifth of the spent mana to its hero (Familiar).
 const int ARTIFACT_RECANTERS_CLOAK = 0x53;
 const int CREATURE_FAMILIAR = 0x2b;
+const int SECONDARY_SKILL_WISDOM = 7;
+const int SECONDARY_SKILL_SIEGE_BALLISTICS = 10;
+const int SECONDARY_SKILL_EAGLE_EYE = 11;
 const int SECONDARY_SKILL_TACTICS = 19;
 
 // Attribute roles byte-proven by initialize_creatures. Kept TU-local for
@@ -495,7 +498,7 @@ void type_AI_combat_data::check_wall_archery_penalty(const town* enemy_town)
             penalty_distance = 0;
         }
         if (penalty_distance > 0) {
-            penalty_distance = static_cast<short>(penalty_distance - my_hero->ballisticsLevel);
+            penalty_distance = static_cast<short>(penalty_distance - my_hero->skillLevel[SECONDARY_SKILL_SIEGE_BALLISTICS]);
             if (penalty_distance < 2)
                 penalty_distance = 2;
         }
@@ -1575,18 +1578,18 @@ void type_AI_combat_data::do_aftermath(type_AI_combat_data* defender, const town
 
         if (defeatedHero) {
             hero* victoriousHero = my_hero;
-            if (victoriousHero->eagleEyeLevel > 0
+            if (victoriousHero->skillLevel[SECONDARY_SKILL_EAGLE_EYE] > 0
                 && victoriousHero->IsWieldingArtifact(ARTIFACT_SPELLBOOK)) {
                 for (short spell = 0; spell < hero::NUM_SPELLS; ++spell) {
                     if (!defeatedHero->available_spells[spell]
                         || victoriousHero->available_spells[spell])
                         continue;
                     const SSpellTraits& traits = akSpellTraits[spell];
-                    if (victoriousHero->eagleEyeLevel + 1 < traits.level)
+                    if (victoriousHero->skillLevel[SECONDARY_SKILL_EAGLE_EYE] + 1 < traits.level)
                         continue;
                     if (!(traits.field_c & 1))
                         continue;
-                    if (traits.level <= victoriousHero->wisdomLevel + 2) {
+                    if (traits.level <= victoriousHero->skillLevel[SECONDARY_SKILL_WISDOM] + 2) {
                         victoriousHero->AddSpell(spell);
                         break;
                     }

@@ -393,8 +393,17 @@ CNetMsg* CAdvMgrNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
             return 0;
         }
         CTradeHeroesMsg* pMsg = static_cast<CTradeHeroesMsg*>(pNetMsg);
+        // Retail CALLS the compiler-generated ??4hero COMDAT at both
+        // trade copies; unpinned, our /Ob2 expands the 0x492-byte
+        // memberwise assign twice (100.00 -> 32.00). The pin replaces
+        // hero.h's old declare-but-do-not-define device, whose extra
+        // class declarator taxed mapcell's whole COMDAT family and
+        // recruitUnit::Update through the include-set wall (16 rows
+        // returned to exact when it left).
+#pragma inline_depth(0)
         gpGame->heroes[pMsg->m_hero1.id] = pMsg->m_hero1;
         gpGame->heroes[pMsg->m_hero2.id] = pMsg->m_hero2;
+#pragma inline_depth()
         gpAdvManager->HeroSwap(&gpGame->heroes[pMsg->m_hero1.id],
                                &gpGame->heroes[pMsg->m_hero2.id]);
         break;

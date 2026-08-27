@@ -171,6 +171,11 @@ SIZE(CMessageKill, 0x4);
 // extent and every PC offset while copying the two skill bands into a hero.
 class CHeroLevelUpdateMsg : public CNetMsg {
 public:
+    // DC netmsg.h:488 header inline (dc 0x9cb78, attributed to
+    // events.obj); DoCombat expands it in place. Body in events.cpp.
+    CHeroLevelUpdateMsg(int hero, int numSSs, signed char* ssLevel,
+                        signed char* stats);
+
     int m_hero;                    // +0x14
     signed char m_ssLevel[28];     // +0x18
     signed char m_stats[4];        // +0x34

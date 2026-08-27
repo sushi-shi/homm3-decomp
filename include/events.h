@@ -17,6 +17,62 @@ class hero;
 // recruit.cpp's own +0x1b0 note records the same trade).
 void DoEventGarrison(hero* inHero, garrison* thisGarrison);
 
+// Retail .data 0x691208, the byte directly ahead of gUnnamed691209 (the
+// "gosolo" handed-to-AI byte advmgr.h declares and documents). DoCombat's
+// fast-path guard reads the two TOGETHER - `gUnnamed691209 &&
+// gUnnamed691208` gates the quick-combat shortcut off - so this is the
+// pair's second arm, plausibly "a replay/sub-battle is being watched".
+// Name ordinal. Declared HERE rather than beside its sibling because
+// advmgr.h rides in ~40 closures and events.h in two; DoCombat is the
+// first consumer, so events.h holds the claim until the producer is
+// decoded (the iCombatControlNetPos / command.h precedent).
+DATA(0x00691208) extern unsigned char gUnnamed691208;
+
+// DoCombat's two AI callees, declared HERE on the DoEventGarrison
+// precedent above: their owning headers cannot enter events.cpp's
+// closure (ai_combat.h drags ai_tactical.h, whose TSkillMastery model
+// collides with herospec.h's), and a declarator in either would ride
+// into every AI TU's closure besides. ai_combat.cpp / ai_player.cpp
+// keep the defining claims.
+class armyGroup;
+class town;
+class NewmapCell;
+
+// The domain of combatManager::field_13d48 (+0x13d48), the post-combat
+// verdict DoCombat returns and switches its finish-heroes teardown on:
+// 0 = the left (attacking) side won, 1 = the right (defending) side won,
+// -1 = nobody did (retreat / surrender / mutual destruction). Declared
+// HERE rather than in cmbtmgr.h because three enumerators in that
+// header's closure are exactly the include-set perturbation command's
+// GetCommand row has twice measured; move them beside field_13d48 when
+// the field's cmbtmgr writers reconstruct.
+enum ECombatWinner {
+    COMBAT_WINNER_NONE = -1,
+    COMBAT_WINNER_LEFT = 0,
+    COMBAT_WINNER_RIGHT = 1
+};
+
+// E:\gamedcs\events.cpp:6248/6261 (dc 0x9ce40 / 0x9ceb0) - the RAII
+// turn-duration pause DoCombat holds across a whole battle. Both
+// bodies are events.cpp's own (their DC lines are events.cpp lines);
+// only the shape lives here, and only for the one TU that uses it:
+// ungated, its two declarators cost events' monsters_sell_out
+// 100.0000 -> 99.95 (the include-set canary that row's own history
+// documents) through town.cpp's shared view of this header.
+#ifdef HOMM3_EVENTS_TURN_PAUSE_DECL
+class CTurnDurationPause {
+public:
+    CTurnDurationPause();
+    ~CTurnDurationPause();
+};
+#endif
+
+unsigned char AI_quick_combat(hero* attacking_hero, hero* defending_hero,
+                              armyGroup* defending_army, town* defending_town,
+                              NewmapCell* cell);
+void split_armies(hero* current_hero, const hero* enemy_hero,
+                  const armyGroup* enemy);
+
 // The six ordinary artifact pickup conditions plus the defended sentinel.
 // Dreamcast publishes this enum as ArtifactPrices; retail's
 // advManager::DoEventArtifact sign-extends the low four bits and dispatches
@@ -515,6 +571,14 @@ enum EStablesResult {
 // ValueOfStables (0x52aac0) appraises a visit as
 // `(8 - dayOfWeek) * this / 2`, the movement still to be had this week.
 DATA(0x00698a94) extern int gStablesMovementBonus;
+
+// Retail .bss 0x699540. DoCombat raises it across the whole interactive
+// battle (set to 1 right after the mouse pointer swap, cleared just
+// before the final ShowPointer) - an "a combat is on screen" latch by
+// role. Name ordinal; DoCombat is the first consumer, so events.h holds
+// the claim until the band's producer is decoded (the gUnnamed691208
+// rationale above).
+DATA(0x00699540) extern int gUnnamed699540;
 
 // advManager::FizzleCenter's (0x4acbb0) sound selector, also the second
 // argument of advManager::HeroLoses. Retail lowers the two arms as a

@@ -457,6 +457,15 @@ public:
     // 0x505a10. advManager::EraseObj re-derives every touched cell's extra
     // info through it once the object's entry has been spliced out.
     void CalculateCellExtra(NewmapCell* cell, unsigned char setExtraInfo);
+    // Retail-only helper at 0x505d20, the +0x24-slot twin of 0x505d60
+    // below: same walk over the +0xb0 CMapObjectData vector, same two
+    // stack arguments (ret 8), but broadcasting virtual slot +0x24 and
+    // taking a HERO ID where its sibling takes a packed point. DoCombat
+    // (0x4ad470) calls it at 0x4ae499 with (hero->id, opposing player)
+    // for whichever hero left the map; mapcell.cpp holds the body claim
+    // (its carcass note used to read BLOCKED on this declarator).
+    // Declared 2026-08-27 for DoCombat's reconstruction.
+    void NewfullMapFn_00505D20(int heroId, int player);
     // Retail-only helper at 0x505d60, and RETAIL-ONLY IS LITERAL HERE: it
     // walks the +0xb0 vector of CMapObjectData pointers - the member the
     // Dreamcast's NewfullMap does not have at all, its nine STLport

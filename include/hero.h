@@ -196,15 +196,20 @@ extern const char* gLuckTexts[25];
 
 class hero : public type_obscuring_object {
 public:
-    // DECLARED, NOT DEFINED 2026-08-20: forcing the copy assignment
-    // out of line. Retail keeps ONE ??4hero body - the string-bearing
-    // memberwise copier at 0x406480 inside advmgr.obj's band, the row
-    // the HandleGiftRequestMsg withdrawal note reads instruction by
-    // instruction - and HandleNetMsg's trade arm CALLS it twice where
-    // an implicit (inline-candidate) operator= gets expanded. An
-    // undefined declaration reproduces the call without fabricating
-    // the body; the linker never runs over these objects.
-    hero& operator=(const hero& other);
+    // RETIRED 2026-08-27: the declare-but-do-not-define device that
+    // stood here ("hero& operator=(const hero&);", landed 2026-08-20
+    // for HandleNetMsg's trade arm) is GONE, and it must not return.
+    // The declarator was an include-set tax on every TU seeing this
+    // class: removing it returned mapcell's whole COMDAT family
+    // (5 x ??4, 7 x vector::erase, 3 x insert, std::copy) to
+    // 100.0000, recovered recruitUnit::Update's remembered 88.24 ->
+    // 90.8376 peak, and let ReceiveHeroTownData reach 100.0000 - the
+    // synthesized ??4hero body re-enters each TU's /Ob2 collector as
+    // a candidate, which re-prices sibling sites to retail's
+    // decisions. HandleNetMsg's trade arm keeps retail's two
+    // out-of-line ??4hero CALLS via statement-scoped
+    // `#pragma inline_depth(0)` in advmgr.cpp instead (the documented
+    // drop-in replacement for a view gate; costs no declarator).
 
     // Dreamcast names this header inline; hide-hero undo proves its retail
     // expansion as the base operation with the hero object type and id.
@@ -455,28 +460,19 @@ public:
     // 0x4e22d0 GiveSS): all three address the band as
     // `[iWhichSS + this + 0xc9]`, load it with `movsx`, and TakeSS's
     // companion sweep over the 0xe5 band runs `cmp ebx,0x1c` - 28.
-    // The union's second arm exists only so the three byte-proven named
-    // slots above keep their spelling for consumers outside this TU;
-    // it adds no field the array does not already describe.
-    union {
-        signed char skillLevel[28];     // +0xc9
-        struct {
-            char pad_0c9[0x7];
-            signed char wisdomLevel;    // +0xd0 == skillLevel[7]
-            char pad_0d1[0x2];
-            signed char ballisticsLevel;// +0xd3 == skillLevel[10]
-            signed char eagleEyeLevel;  // +0xd4 == skillLevel[11]
-            // +0xdd, skillLevel[eSecSkillBattlefieldBallistics], is the
-            // Artillery mastery: army::get_unit_combat_value (0x442a50)
-            // doubles a ballista's value above 1 and scales it by the
-            // level-indexed factor table at 0x63b7f0. Read through the
-            // ARRAY arm rather than sliced - the slice's two extra
-            // declarators alone cost events' monsters_sell_out
-            // 100.0000 -> 99.9517 (measured 2026-08-20, include-set
-            // class) and the array spelling is byte-identical.
-            char pad_0d5[0x10];
-        };
-    };
+    // PLAIN ARRAY, and it must stay one: the union that used to carry a
+    // named-slot second arm (wisdomLevel/ballisticsLevel/eagleEyeLevel
+    // over pad arrays) made VC6's synthesized memberwise operator=
+    // copy the band ONCE PER UNION ARM - DoCombat's inline hero copies
+    // showed the 28-byte loop followed by the pads' 7/2/16-byte loops
+    // over the same bytes, where retail runs the single 0x1c loop
+    // (found 2026-08-27; the town.h pad-array retirement is the same
+    // disease). Consumers spell the proven slots through the enum:
+    // skillLevel[eSecSkillWisdom] +0xd0, [eSecSkillSiegeBallistics]
+    // +0xd3, [eSecSkillEagleEye] +0xd4, and Artillery
+    // [eSecSkillBattlefieldBallistics] +0xdd - all byte-identical
+    // addressing (see the trio note above for the slot proofs).
+    signed char skillLevel[28];     // +0xc9
     // Acquisition-order band, 28 entries at +0xe5, read UNSIGNED
     // (TakeSS's renumbering sweep compares with `jbe`, not `jle`).
     // GetNthSS scans it for order iWhich+1 and returns the slot index;
