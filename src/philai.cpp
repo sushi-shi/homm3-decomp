@@ -2716,6 +2716,13 @@ int ValueOfTreasure(const hero* current_hero)
 // gold or 10 gems when this player has already learned which, or the
 // three-way expected price (capped at two thirds of the level's worth)
 // when he has not.  Extern for emission while the TREE arm is a stub.
+// type_tree_info::price's domain, named the way PYRAMID_SPELL_LEVEL is:
+// TU-local consts rather than a header enum - three enumerators in
+// advmgr.h cross the include-set wall (recruitUnit::Update 90.84 ->
+// 88.24, measured 2026-08-27, the bitmap16 narrowing precedent), and
+// philai.h is itself in game.h's closure.
+const int TREE_PRICE_GOLD = 1;
+const int TREE_PRICE_GEMS = 2;
 VA(0x0052b5a0, 0x161)  // anchor: TreeOfKnowledgeFlags + tree price switch + TREE arm, dc 0x1130cc
 int ValueOfTree(const hero* current_hero, NewmapCell* cell)
 {
@@ -2732,12 +2739,12 @@ int ValueOfTree(const hero* current_hero, NewmapCell* cell)
 
     if (cell->PlayerKnowsCell(current_hero->owner)) {
         switch (info->tree_info.price) {
-        case 1:
+        case TREE_PRICE_GOLD:
             if (gpCurrentPlayer->resources[GOLD] < 2000)
                 return 0;
             return static_cast<int>(level_value
                 - player->resourceValue[GOLD] * 2000.0);
-        case 2:
+        case TREE_PRICE_GEMS:
             if (gpCurrentPlayer->resources[GEMS] < 10)
                 return 0;
             return static_cast<int>(level_value
