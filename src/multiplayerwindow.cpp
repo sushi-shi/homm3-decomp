@@ -346,12 +346,7 @@ unsigned char CMPInputDlg::OnOK()
     // @stub
 }
 
-// E:\gamedcs\multiplayerwindow.cpp:508
-DC_ONLY(0x1027f4, 0x78)
-void CMPInputDlg::UpdateOK()
-{
-    // @stub
-}
+// UpdateOK promoted to a VA claim (retail-located block).
 
 // E:\gamedcs\multiplayerwindow.cpp:521
 DC_ONLY(0x10286c, 0x24)
@@ -1222,6 +1217,23 @@ VA(0x00510970, 0x4)  // anchor-vtable 0x6400f4 slot 13 (GetRolloverWidget), dc 0
 textWidget* CMPInputDlg::GetRolloverWidget()
 {
     return rollover;
+}
+
+// Byte-exact. The active first edit selects the disabled/enabled OK branch;
+// both paths deliberately repeat GetWidget before the common virtual enable
+// call, then redraw the full dialog. DC supplies the member identity and
+// retail fixes the status bit, widget id and empty-first branch polarity.
+// E:\gamedcs\multiplayerwindow.cpp:508
+VA(0x00510980, 0x5D)  // bracketed by getter/sdd + field1/status/widget calls, dc 0x1027f4
+void CMPInputDlg::UpdateOK()
+{
+    if (field1->status & widget::WIDGET_ACTIVE) {
+        if (!strlen(field1->Text.c_str()))
+            GetWidget(OKAY_ID)->enable(0);
+        else
+            GetWidget(OKAY_ID)->enable(1);
+        DrawWindow(1, 0xffff0001, 0xffff);
+    }
 }
 
 // E:\gamedcs\multiplayerwindow.cpp:523

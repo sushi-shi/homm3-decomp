@@ -260,6 +260,16 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-27 — the multiplayer input-dialog OK updater is byte-exact.**
+  Retail `CMPInputDlg::UpdateOK` at `0x510980` checks whether the first edit is
+  active, explicitly disables or enables widget 505 from the edit string's
+  emptiness, and redraws the full dialog. Dreamcast CodeView supplies the
+  member identity and field roles; the retail bytes fix the active bit,
+  duplicated `GetWidget` calls and empty-first branch polarity. The resulting
+  93-byte, eight-block VC6 body is exact. The synchronized report reaches
+  **2517/3083 functions exact**, **92.93% fuzzy**, and **60.66% executable
+  coverage**.
+
 - **2026-08-27 — the complete multiplayer host dispatcher is byte-exact.**
   Retail `TMultiPlayerWindow::OnHost` at `0x50fda0` dispatches modem hosting,
   delegates the serial path to `OnDirectHost`, and opens the generic
