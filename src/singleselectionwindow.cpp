@@ -164,6 +164,12 @@ DATA(0x0069fdc8) static int gUnnamed69fdc8;
 // through it.
 DATA(0x00683470) static int lastIMHoverID = -1;
 
+// The five per-difficulty score ratings DrawBasicMapInfo formats as
+// "%d%%" - .data (non-const in retail), values read from the image.
+DATA(0x00683440) static int gDifficultyRatingPercent[5] = {
+    80, 100, 130, 160, 200
+};
+
 // E:\gamedcs\singleselectionwindow.cpp:821
 VA(0x00577a50, 0x30)  // anchor-callee ResourceManager::GetText + vcdesc resource key (data_2834ac) + 0x38-byte copy loop, ret0, dc 0x12ff40
 unsigned char InitializeVCDescriptions()
@@ -638,9 +644,11 @@ void CChatWidget::Draw()
 }
 
 // NOTE (2026-08-27, round 2): DrawHeroAdvancedOption compiling for real
-// restored OnKeyPress to 100.0000. OnKillFocus holds 99.87 on a pure
-// data-name pairing deadlock (max accepted downward, hist keeps the
-// peak): its bytes are exact and the two deltas are reloc names only -
+// restored OnKeyPress once; since then BOTH rows of the pair OSCILLATE
+// between 100.0000 and 99.89/99.87 per delink generation on a pure
+// data-name pairing deadlock (max accepted downward as needed, hist
+// keeps the peaks): the bytes are exact and the deltas are reloc names
+// only -
 // (a) our compile references the Dinkumware `_Nullstr` "" COMDAT while
 // the delinker names the merged retail cell 0x63a608 after
 // adventuremapwindow's DATA_COMPGEN claim (one shared pooled literal,
@@ -942,12 +950,89 @@ void GetLCText(LossConditionStruct* lc, char* sText)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\singleselectionwindow.cpp:4141
+// Residual (95.5): the loss-condition strcpy join. Retail lays the
+// sprintf arm's fall-in copy and the plain arm's copy out as two
+// unmerged expansions with the draw pushes scheduled into the second;
+// our CL keeps one shared copy. Tried and rejected: writing the copy
+// in both arms (92.57 - the arms cross-jump back into one tail plus a
+// stub). The rest is the same masked-cosmetic drift as the row's
+// neighbors.
 VA(0x005840f0, 0x45C)  // anchor-callee Update's first body call (no-arg, this); selects GetMapName/GetFileName by mode for the title at (0x1a6,0x2d) and owns the save-date format literal (flat name game_d_d_d_d_02d), size 0.71x dc 0x62A, dc 0x139ccc
 void TSingleSelectionWindow::DrawBasicMapInfo()
 {
-    // @stub
+    if (GetMapCount() == 0 && m_flag65 == 0)
+        return;
+    NewSMapHeader* hdr = &gpGame->mapHeader;
+    VictoryConditionStruct* vc = &gpGame->mapHeader.victoryCondition;
+    LossConditionStruct* lc = &gpGame->mapHeader.lossCondition;
+    const char* name;
+    if (m_flag64 == 0 && m_flag65 == 0)
+        name = GetMapName(currentMap);
+    else
+        name = GetFileName(currentMap);
+    gpBigFont->DrawBoundedString(name, gpWindowManager->screenBitmap,
+                                 422, 45, 324, 30, 8, 0, -1);
+    if (currentMap != -1
+            && (m_flag64 != 0 || m_flag65 != 0 || m_flag66 != 0)) {
+        _FILETIME localTime;
+        _SYSTEMTIME st;
+        char dateBuf[100];
+        FileTimeToLocalFileTime(&HeadersA[currentMap].fileTime,
+                                &localTime);
+        FileTimeToSystemTime(&localTime, &st);
+        sprintf(dateBuf,
+                DATA_COMPGEN(0x006837c0, saveDateFormat,
+                             "%d/%d/%d - %d:%02d"),
+                st.wMonth, st.wDay, st.wYear, st.wHour, st.wMinute);
+        gUnnamed698a08->DrawBoundedString(dateBuf,
+            gpWindowManager->screenBitmap, 422, 27, 278, 18, 4, 6, -1);
+    }
+    gUnnamed698a08->DrawBoundedString(gUnnamed6a77ec[hdr->difficulty],
+        gpWindowManager->screenBitmap, 414, 454, 89, 48, 4, 5, -1);
+    char ratingBuf[256];
+    sprintf(ratingBuf, DATA_COMPGEN(0x006831e4, percentFormat, "%d%%"),
+            gDifficultyRatingPercent[gpGame->setup.difficulty]);
+    gUnnamed698a08->DrawBoundedString(ratingBuf,
+        gpWindowManager->screenBitmap, 666, 454, 83, 48, 4, 5, -1);
+    if (field_1865 != 0)
+        return;
+    char vcText[256];
+    signed char vcType = vc->Type;
+    const char* desc = gVictoryConditionDesc[vcType + 1];
+    strcpy(vcText, desc);
+    if (vcType != -1 && vc->AllowNormalVictory != 0)
+        sprintf(vcText,
+                DATA_COMPGEN(0x006837b4, vcOrFormat, "%s %s %s"),
+                desc, gpGeneralText->GetText(5),
+                gVictoryConditionDesc[0]);
+    char lcText[256];
+    strcpy(lcText, gLossConditionDesc[lc->Type + 1]);
+    gUnnamed698a08->DrawBoundedString(vcText,
+        gpWindowManager->screenBitmap, 456, 305, 288, 32, 4, 4, -1);
+    gUnnamed698a08->DrawBoundedString(lcText,
+        gpWindowManager->screenBitmap, 456, 364, 288, 32, 4, 4, -1);
+    if (vc->Type >= 0 && vc->Type <= 11)
+        victoryConditionIcons->Draw(0, vc->Type, 0, 0,
+            victoryConditionIcons->Width, victoryConditionIcons->Height,
+            gpWindowManager->screenBitmap, 420, 308, 0, 1);
+    else
+        victoryConditionIcons->Draw(0, 11, 0, 0,
+            victoryConditionIcons->Width, victoryConditionIcons->Height,
+            gpWindowManager->screenBitmap, 420, 308, 0, 1);
+    if (lc->Type >= 0)
+        lossConditionIcons->Draw(0, lc->Type, 0, 0,
+            lossConditionIcons->Width, lossConditionIcons->Height,
+            gpWindowManager->screenBitmap, 420, 365, 0, 1);
+    else
+        lossConditionIcons->Draw(0, 3, 0, 0,
+            lossConditionIcons->Width, lossConditionIcons->Height,
+            gpWindowManager->screenBitmap, 420, 365, 0, 1);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:4219
 DC_ONLY(0x13a2f8, 0x86)
