@@ -2763,9 +2763,6 @@ void TSellCreatureWindow::Update(bool bUpdate)
                 msg.extra = gLeftResource;
                 msg.codeY = 11;
                 BroadcastMessage(&msg);
-                msg.codeX = 3;
-                msg.codeY = 12;
-                msg.extraText = gText;
                 if (gRatioInverted)
                     sprintf(gText,
                             DATA_COMPGEN(0x00660a1c, decimalFormat,
@@ -2776,6 +2773,9 @@ void TSellCreatureWindow::Update(bool bUpdate)
                             DATA_COMPGEN(0x00660a1c, decimalFormat,
                                          "%d"),
                             gRightAmount);
+                msg.codeX = 3;
+                msg.codeY = 12;
+                msg.extraText = gText;
             }
             BroadcastMessage(&msg);
         }
