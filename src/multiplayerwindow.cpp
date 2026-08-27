@@ -13,6 +13,7 @@
 #include "gametypewindow.h"
 #include "winfile.h"
 #include "netgame.h"
+#include "netplayer.h"
 #include "kb.h"
 #include "kbwin.h"
 #include "soundmgr.h"
@@ -427,6 +428,11 @@ inline bool CHeroSessions::GetSessionInfo(unsigned long index, char* sessName,
 DATA(0x0069880a) char gLoadedGameName[13];
 DATA(0x00698817) char gLocalPlayerName[21];
 DATA(0x006a6578) THelpText gMultiPlayerHelp[30];
+
+// The sole retail read at 0x50fade promotes the DirectPlay session from the
+// mandatory migrate-host flag to migrate-host|keep-alive. No public symbol
+// survives for the byte, so its name remains ordinal until stronger evidence.
+DATA(0x00681628) static unsigned char gUnnamed681628 = 1;
 
 // The rollover/right-click help pointers the CMPInputDlg and CHotSeatDlg
 // constructors hand to widget::set_help_text. The OK/Back pair (0x6a7760/
@@ -938,14 +944,41 @@ int TMultiPlayerWindow::WindowHandler(message* msg)
     return CHeroWindowEx::WindowHandler(msg);
 }
 
-#if 0  // @carcass
-VA(0x0050fab0, 0x106)  // anchor-callee: 2-arg member (ret 8) called from every host flow (0x50fc50/0x50fda0); sprintf-formats a 256B session-name buffer, size 0.98x DC, dc 0x100d0c
+// Byte-exact. The DC roster supplies the signature and 256-byte sFullName
+// local; retail fixes the delimiter, flag construction, DirectPlay virtuals,
+// CNetPlayerInfo writes and TCP-only address query in the complete PC CFG.
+VA(0x0050fab0, 0x106)  // anchor-callee: ret 8 + three independent host-flow callers, dc 0x100d0c
 unsigned char TMultiPlayerWindow::HostSession(const char* sessName, const char* password)
 {
-    // @stub
-}
+    char sFullName[256];
+    sprintf(sFullName,
+            DATA_COMPGEN(0x006816e4, multiplayerSessionNameFormat, "%s%c%s"),
+            sessName, 0xfa, gLocalPlayerName);
 
-#endif
+    unsigned long flags = 4;
+    if (gUnnamed681628)
+        flags |= 0x40;
+    if (iMPNetProtocol != MP_TCP)
+        flags |= 0x2000;
+
+    if (!pDPlay->HostSession(sFullName, flags, 8,
+                             const_cast<char*>(password)))
+        return 0;
+
+    int version = *gpVideoGameState;
+    gsThisNetPlayerInfo.dpid = pDPlay->CreatePlayer(
+        gLocalPlayerName, &version, sizeof(version), 0);
+    if (!gsThisNetPlayerInfo.dpid)
+        return 0;
+
+    strcpy(gsThisNetPlayerInfo.sName, gLocalPlayerName);
+    gsThisNetPlayerInfo.version = version;
+
+    if (iMPNetProtocol == MP_TCP)
+        pDPlay->GetIPAddress(gsThisNetPlayerInfo.dpid, localIPAddress);
+
+    return 1;
+}
 
 // Byte-exact. Retail initializes the protocol and player name first, then the
 // protocol-specific DirectPlay connection. Only a fully initialized pair

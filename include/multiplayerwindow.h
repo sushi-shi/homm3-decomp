@@ -419,6 +419,7 @@ public:
     unsigned char OnTCP();
     unsigned char OnSearch();
     unsigned char OnHotSeat();
+    unsigned char HostSession(const char* sessName, const char* password);
     unsigned char InitRemote(eNetGameType netGameType, const char* sExtra,
                              _DPCOMPORTADDRESS* comportInfo);
 };
