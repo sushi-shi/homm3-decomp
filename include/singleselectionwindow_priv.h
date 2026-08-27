@@ -16,6 +16,10 @@
 #include "textntry.h"
 #include "netmsg.h"
 #include "winmgr.h"
+// TurnChatOn/TurnChatOff relabel chatToggle through textButton's
+// inherited header-inline SetText (retail expands the std::string
+// assign in place, calling only _Grow/_Eos - the button.h shape).
+#include "button.h"
 
 // The namespace-level text-resource loader (retail body 0x55bdd0), fastcall
 // under /Gr. Declared file-locally rather than pulling resourcemanager.h into

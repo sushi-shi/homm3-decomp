@@ -4,6 +4,12 @@
 #include <algorithm>
 #include <string.h>
 #include <va.h>
+// The TurnChatOn/TurnChatOff widget runs are widget::show()/hide()
+// expansions (DC calls the Widget.h pair out of line; retail expands
+// them - the seven candidate sites are ALSO what starves the /Ob2
+// collector so basic_string::_Grow/_Eos stay retail's out-of-line
+// calls in both functions).
+#define HOMM3_WIDGET_HIDE_SHOW_INLINE
 // UpdatePlayerPositions reaches SetupFirstPlayer and the new-map bonus
 // array, both scoped behind game.h's new-map view gate; HandleNetMsg
 // reads the incoming chat text through netmsg.h's gated CChatMsg shape.
@@ -997,7 +1003,7 @@ void TSingleSelectionWindow::DrawBasicMapInfo()
             gDifficultyRatingPercent[gpGame->setup.difficulty]);
     gUnnamed698a08->DrawBoundedString(ratingBuf,
         gpWindowManager->screenBitmap, 666, 454, 83, 48, 4, 5, -1);
-    if (field_1865 != 0)
+    if (chatShowing != 0)
         return;
     char vcText[256];
     signed char vcType = vc->Type;
@@ -2043,8 +2049,8 @@ unsigned char TSingleSelectionWindow::HandleNetMsg(CNetMsg* pNetMsg, unsigned ch
         receivedMaps = 1;
         currentIndex = 0;
         currentMap = 0;
-        field_186c = 0;
-        if (field_1865)
+        receivingMaps = 0;
+        if (chatShowing)
             GetWidget(179)->send_message(
                 widget::WIDGET_SET_STATUS,
                 widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
@@ -2777,7 +2783,7 @@ void TSingleSelectionWindow::DisplayChat()
         chatMan.UpdateWidget(chatWidget, 0, 8);
         chatSlider->SetResolution(chatMan.msgCount);
         chatSlider->SetState(chatMan.position);
-        if (field_1865) {
+        if (chatShowing) {
             chatWidget->Draw();
             chatSlider->Draw();
             DrawWindow(1, chatWidget->id, chatWidget->id);
@@ -2873,15 +2879,15 @@ VA(0x0058B510, 0x10D)  // anchor-callee RS_NEW_HOST arm's single call, size 0.85
 void TSingleSelectionWindow::OnNewHostMsg(CNetMsg* pNetMsg)
 {
     receivedMaps = 0;
-    field_186c = 1;
-    if (field_1865)
+    receivingMaps = 1;
+    if (chatShowing)
         GetWidget(179)->send_message(widget::WIDGET_CLEAR_STATUS,
                                      widget::WIDGET_ACTIVE
                                          | widget::WIDGET_DRAWN);
     currentIndex = 0;
     currentMap = 0;
     sortDirection = 1;
-    chatEdit = 0;
+    sortWhich = 0;
     TurnOffScenarioOptions();
     TurnOffAdvancedOptions();
     TurnChatOn(1);
@@ -2939,7 +2945,7 @@ unsigned char TSingleSelectionWindow::OnUpdatePlayerPosMsg(CNetMsg* pNetMsg)
                 widget::WIDGET_SET_TEXT, update.extra);
         }
     }
-    if (!field_186c) {
+    if (!receivingMaps) {
         MakeHeroFilter();
         UpdateAllyEnemyFlags(0);
         DrawWindow(0, 0xffff0001, 0xffff);
@@ -2948,31 +2954,88 @@ unsigned char TSingleSelectionWindow::OnUpdatePlayerPosMsg(CNetMsg* pNetMsg)
     return 1;
 }
 
-#if 0  // @carcass
-
+// Rebuild the two 4-seat name columns: each human seat's name on its
+// own line ("%s\n" - the pooled literal advmgr owns as
+// turnPopupLineFormat), columns split 0..3 / 4..7, pushed through the
+// textWidget SetText virtual. Retail keeps the loop counter homed in
+// [ebp-4] under the inlined strcat's register pressure.
 // E:\gamedcs\singleselectionwindow.cpp:7900
 VA(0x0058C960, 0x11C)  // anchor-callee called by the RS_PLAYER_DROPPED arm before DisplayChat and twice by OnUpdatePlayerPosMsg - the DC call edges; size 0.75x dc 0x17c, dc 0x142cc0
 void TSingleSelectionWindow::UpdateNameLists()
 {
-    // @stub
+    char names[256];
+    char line[256];
+    int i;
+
+    names[0] = 0;
+    for (i = 0; i < 4; ++i) {
+        if (m_players.humanPlayers[i].dpid != 0) {
+            sprintf(line, "%s\n", m_players.humanPlayers[i].sName);
+            strcat(names, line);
+        }
+    }
+    nameList1->SetText(names);
+    names[0] = 0;
+    for (i = 4; i < 8; ++i) {
+        if (m_players.humanPlayers[i].dpid != 0) {
+            sprintf(line, "%s\n", m_players.humanPlayers[i].sName);
+            strcat(names, line);
+        }
+    }
+    nameList2->SetText(names);
 }
 
+// Swap the right pane to chat: relabel the toggle from general-text
+// row 532, hide the scenario pair (105 + field_196c), show the five
+// chat widgets and both name columns, focus the input line, and
+// redraw when asked. The runs are Widget.h show()/hide() expansions -
+// the DC body CALLS widget::show x6 / hide x1 out of line.
 // E:\gamedcs\singleselectionwindow.cpp:7935
 VA(0x0058ca80, 0x162)  // anchor-callee OnNewHostMsg calls it (1) on host handover; adjacent pair with TurnChatOff mirrors the DC adjacency, dc 0x142e3c
 void TSingleSelectionWindow::TurnChatOn(unsigned char update)
 {
-    // @stub
+    chatToggle->SetText(gpGeneralText->GetText(532));
+    GetWidget(105)->hide();
+    field_196c->hide();
+    GetWidget(181)->show();
+    GetWidget(180)->show();
+    GetWidget(336)->show();
+    GetWidget(179)->show();
+    GetWidget(389)->show();
+    UpdateNameLists();
+    nameList1->show();
+    nameList2->show();
+    chatShowing = 1;
+    SetFocus(chatEdit->id);
+    if (update) {
+        DrawWindow(0, 0xffff0001, 0xffff);
+        Update();
+    }
 }
 
-// E:\gamedcs\singleselectionwindow.cpp:7964
+// The exact inverse: relabel from row 533, show the scenario pair,
+// hide the chat set, drop the focus. No name-list rebuild on the way
+// out. E:\gamedcs\singleselectionwindow.cpp:7964
 VA(0x0058cbf0, 0x152)  // anchor-callee adjacent pair with TurnChatOn 0x58ca80 (DC-adjacent), dc 0x142fac
 void TSingleSelectionWindow::TurnChatOff(unsigned char update)
 {
-    // @stub
+    chatToggle->SetText(gpGeneralText->GetText(533));
+    GetWidget(105)->show();
+    field_196c->show();
+    GetWidget(181)->hide();
+    GetWidget(180)->hide();
+    GetWidget(336)->hide();
+    GetWidget(179)->hide();
+    GetWidget(389)->hide();
+    nameList1->hide();
+    nameList2->hide();
+    SetFocus(-1);
+    chatShowing = 0;
+    if (update) {
+        DrawWindow(0, 0xffff0001, 0xffff);
+        Update();
+    }
 }
-
-
-#endif  // @carcass
 
 // Every face is re-validated against the roster; DC keeps this out of
 // line, retail expands it into UpdateTown (no retail row exists), so
