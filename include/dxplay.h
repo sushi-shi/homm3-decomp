@@ -396,6 +396,7 @@ SIZE(CDPlayConnection, 0x98);
 // the shared method bodies at 0x499fc0..0x512670.  The small bodies stay in
 // the header: VC6 inlines them into remote::HandleMPlayerLaunch exactly as it
 // did in retail.
+#ifndef HOMM3_MULTIPLAYERWINDOW_OWNS_DXPLAY_TYPES
 template<class T>
 class CAutoArray {
 public:
@@ -520,6 +521,7 @@ public:
     unsigned long dwUser4;      // +0x108
 };
 SIZE(CDPlaySession, 0x10c);
+#endif
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\dxplay.cpp:1941, dc 0x8bba4) int EnumAddressCallback(const _GUID* guidDataType, unsigned long dwDataSize, const void* lpData, void* lpContext);

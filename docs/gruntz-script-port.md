@@ -260,6 +260,25 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-27 — the Complete multiplayer deselect dispatcher is reconstructed
+  at a bounded 98.1199%.** Retail `0x50f4e0` is the 1,112-byte
+  `TMultiPlayerWindow::OnWidgetDeselect` switch over the main connection
+  choices, host/join/search flows, twelve session rows, slider/rollover no-ops,
+  and cancel. The recovered source reproduces the complete CFG, instruction
+  count, block offsets, jump tables, DirectPlay caps/session enumeration, and
+  all shared cleanup/return tails. Five late blocks retain only VC6 register-
+  scheduling differences: three exit-flag stores, the return-to-menu virtual
+  draw, and the session-index/GetCount pair; remaining unpaired helper/data
+  relocation names are cosmetic.
+
+  The DirectPlay calls use the canonical `CDPlayHeroes` vtable instead of a
+  TU-local shell. `DPCAPS` now has one shared, retail-proven 0x28-byte owner
+  declaration, while the multiplayer header's already-proven
+  `CAutoArray<CDPlaySession>` implementation is selected narrowly to avoid its
+  duplicate dxplay definition in this TU. The synchronized build reports
+  **2510/3079 functions exact**, **92.88% fuzzy**, and **60.57% executable
+  coverage**, with the ratchet, single-view, and cleanliness gates clean.
+
 - **2026-08-26 — `NewfullMap::NewfullMapFn_00505F20` closes at 100%.** The
   settled candidate already agreed with retail in all 19 blocks and 10
   branches; its 343-byte body differed only in four frame-slot encoding bytes.
