@@ -99,12 +99,7 @@ unsigned char TMultiPlayerWindow::OnModemHost()
 
 // OnDirectHost promoted to a VA claim (retail-located block).
 
-// E:\gamedcs\multiplayerwindow.cpp:1540
-DC_ONLY(0x101058, 0x15E)
-unsigned char TMultiPlayerWindow::OnHost()
-{
-    // @stub
-}
+// OnHost promoted to a VA claim (retail-located block).
 
 // E:\gamedcs\multiplayerwindow.cpp:1588
 DC_ONLY(0x1011b8, 0x1BC)
@@ -436,6 +431,13 @@ DATA(0x006a7758) char* gHotSeatEditRollover;
 DATA(0x006a775c) char* gHotSeatEditRightClick;
 DATA(0x006a7760) char* gDialogOkHelp;
 DATA(0x006a7768) char* gDialogBackHelp;
+
+// The generic network host dialog supplies separate help strings for its two
+// edit controls and a label for the session-name field. Retail proves their
+// cells and uses; no public names survive, so these remain ordinal.
+DATA(0x006a7770) char* gUnnamed6a7770;
+DATA(0x006a7778) char* gUnnamed6a7778;
+DATA(0x006a7780) char* gUnnamed6a7780;
 
 // E:\gamedcs\multiplayerwindow.cpp:1005
 // Slider callback for the session list; scrolls the displayed window of games.
@@ -1020,6 +1022,31 @@ unsigned char TMultiPlayerWindow::InitRemote(eNetGameType netGameType, const cha
     return 1;
 }
 
+// E:\gamedcs\multiplayerwindow.cpp:1461
+// Complete inlines this body into OnHost. Keeping the source boundary is
+// material: VC6 leaves the nested member InitRemote call out of line, exactly
+// as retail does.
+unsigned char TMultiPlayerWindow::OnModemHost()
+{
+    if (!InitRemote(iMPNetProtocol, 0, 0)) {
+        NormalDialog(gpGeneralText->GetText(448), 1, -1, -1,
+                     -1, 0, -1, 0, -1, 0, -1, 0);
+        return 0;
+    }
+
+    gUnnamed69927c = 1;
+    gUnnamed6994e4 = 1;
+    ShowCursor(1);
+    if (!HostSession(gpGeneralText->GetText(449), 0)) {
+        ShowCursor(0);
+        gpWindowManager->dialogReturn = DIALOG_RETURN_CANCEL;
+        RemoteCleanup();
+        return 0;
+    }
+    ShowCursor(0);
+    return 1;
+}
+
 // Byte-exact. The member InitRemote expands into the complete serial-port
 // setup, while retail fixes the host flags, cursor/dialog cleanup paths and
 // the DirectPlay user-cancel exception. DC supplies the signature and xrefs.
@@ -1049,6 +1076,44 @@ unsigned char TMultiPlayerWindow::OnDirectHost()
     }
 
     ShowCursor(0);
+    return 1;
+}
+
+// Byte-exact. Complete inlines the modem-host helper one level (preserving
+// its nested InitRemote call), delegates serial hosting, and uses the generic
+// two-field dialog for every other protocol. Retail fixes all text/help cells,
+// the empty-password null conversion, and the seven destructor-bearing return
+// paths; DC supplies the signature, local-dialog identity and call graph.
+// E:\gamedcs\multiplayerwindow.cpp:1540
+VA(0x0050fda0, 0x2B7)  // anchor-protocol/callees/dialog-vtable, dc 0x101058
+unsigned char TMultiPlayerWindow::OnHost()
+{
+    if (iMPNetProtocol == MP_MODEM)
+        return OnModemHost();
+
+    if (iMPNetProtocol == MP_SERIAL)
+        return OnDirectHost();
+
+    gUnnamed69927c = 1;
+    gUnnamed6994e4 = 1;
+    strcpy(gLocalPlayerName, playerName->Text.c_str());
+
+    CMPInputDlg sessDlg(20, 20);
+    sessDlg.field1->SetText(gpGeneralText->GetText(453));
+    sessDlg.header1->SetText(gUnnamed6a7780);
+    sessDlg.header2->SetText(gpGeneralText->GetText(454));
+    sessDlg.field1->set_help_text(gUnnamed6a7770, 0, 0);
+    sessDlg.field2->set_help_text(gUnnamed6a7778, 0, 0);
+    sessDlg.DoModal(0);
+
+    if (gpWindowManager->dialogReturn == DIALOG_RETURN_CANCEL)
+        return 0;
+
+    const char* password = sessDlg.field2->Text.c_str();
+    if (!strlen(password))
+        password = 0;
+    if (!HostSession(sessDlg.field1->Text.c_str(), password))
+        return 0;
     return 1;
 }
 

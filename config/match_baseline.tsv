@@ -2041,6 +2041,7 @@ multiplayerwindow	?HostSession@TMultiPlayerWindow@@QAEEPBD0@Z	100.0000	100.0000	
 multiplayerwindow	?InitRemote@TMultiPlayerWindow@@QAEEW4eNetGameType@@PBDPAU_DPCOMPORTADDRESS@@@Z	100.0000	100.0000	100.0000	0x10fbc0
 multiplayerwindow	?JoinSession@TMultiPlayerWindow@@QAEEPAVCDPlaySession@@PBD@Z	100.0000	100.0000	100.0000	0x10fa10
 multiplayerwindow	?OnDirectHost@TMultiPlayerWindow@@QAEEXZ	100.0000	100.0000	100.0000	0x10fc50
+multiplayerwindow	?OnHost@TMultiPlayerWindow@@QAEEXZ	100.0000	100.0000	100.0000	0x10fda0
 multiplayerwindow	?OnOK@CHotSeatDlg@@QAEEXZ	100.0000	100.0000	100.0000	0x112470
 multiplayerwindow	?OnWidgetDeselect@CHotSeatDlg@@UAEHHPAE@Z	100.0000	100.0000	100.0000	0x112420
 multiplayerwindow	?OnWidgetDeselect@CMPInputDlg@@UAEHHPAE@Z	83.3750	83.3750	83.3750	0x1108f0
