@@ -956,7 +956,7 @@ void TSingleSelectionWindow::UpdateFilterWidgets()
         WidgetSetStatus(std::_cpp_min(n, field_18A0[5]) + 0x13d, 0x10);
     for (i = 0x146; i <= 0x149; ++i)
         WidgetClearStatus(i, 0x10);
-    if (field_18A0[6] == 3)
+    if (field_18A0[6] == SCENARIO_FILTER_CATEGORY_ANY)
         WidgetSetStatus(0x149, 0x10);
     else
         WidgetSetStatus(field_18A0[6] + 0x146, 0x10);
