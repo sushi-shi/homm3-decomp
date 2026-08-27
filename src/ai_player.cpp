@@ -1235,14 +1235,54 @@ void mark_values(long* full_value, long total_value, __int64 requirements)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_player.cpp:1383
 VA(0x0042a2b0, 0x1BF)  // retail link order + arity, dc 0x30334
-unsigned char type_AI_player::check_trade_supply(const int* cost, long number, int* supply, std::vector<long,std::allocator<long>* trade_qty)
+bool type_AI_player::check_trade_supply(const int* cost, long number,
+                                        int* supply,
+                                        std::vector<long>& trade_qty)
 {
-    // @stub
-}
+    unsigned char trade_needed = 0;
+    unsigned char supply_available = 0;
+    playerData* player = &gpGame->players[team];
+    long limit;
 
-#endif  // @carcass
+    trade_qty.push_back(number);
+    for (int resource = 0; resource < 7; ++resource) {
+        supply[resource] =
+            player->resources[resource] - cost[resource] * number;
+        if (supply[resource] < 0 && cost[resource] > 0) {
+            trade_needed = 1;
+            limit = player->resources[resource] / cost[resource] + 1;
+            trade_qty.push_back(limit);
+        } else {
+            int reserve = reserved_funds[resource];
+            if (reserve < 20)
+                reserve = 20;
+            supply[resource] -= reserve;
+
+            int available = static_cast<int>(resource_supply[resource]
+                                             - resource_demand[resource]);
+            if (supply[resource] > available)
+                supply[resource] = available;
+            if (supply[resource] <= 0)
+                supply[resource] = 0;
+            else
+                supply_available = 1;
+        }
+    }
+
+    if (!trade_needed || !supply_available)
+        return false;
+
+    std::sort(trade_qty.begin(), trade_qty.end());
+    for (int i = static_cast<int>(trade_qty.size()) - 1; i >= 1; --i) {
+        if (trade_qty[i] == trade_qty[i - 1])
+            trade_qty.erase(trade_qty.begin() + i);
+    }
+    return true;
+}
 
 // E:\gamedcs\ai_player.cpp:1446
 // Residual (90.12%): control flow, callees and vector cleanup agree; the
@@ -3374,14 +3414,34 @@ long type_antiluck_artifact::get_value(const hero* owner, unsigned char, unsigne
     return result;
 }
 
-#if 0  // @carcass
 // E:\gamedcs\ai_player.cpp:5441
 VA(0x00432c20, 0xf5)  // artifact get_value order-map + get_raw_spell_value/akSpellTraits, dc 0x36e28
-long type_tome_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
+long type_tome_artifact::get_value(const hero* owner, unsigned char equipped,
+                                   unsigned char exact) const
 {
-    // @stub
+    if (exact)
+        return 0;
+
+    type_spellvalue caster(owner);
+    if (!caster.can_cast_spells())
+        return 0;
+
+    long best_value = 0;
+    for (SpellID spell = 0; spell < 70; spell++) {
+        if (owner->in_spellbook[spell])
+            continue;
+        if (!equipped && owner->available_spells[spell])
+            continue;
+        if (!(akSpellTraits[spell].schoolBits & school))
+            continue;
+
+        long value = caster.get_raw_spell_value(spell);
+        best_value = _cpp_max(value, best_value);
+    }
+    return best_value;
 }
 
+#if 0  // @carcass
 // E:\gamedcs\ai_player.cpp:5486
 VA(0x00432d20, 0x49)  // artifact get_value cluster order-map, dc 0x36f54
 long type_income_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char __formal)
@@ -3434,8 +3494,6 @@ long type_creature_growth_artifact::get_value(const hero* owner,
     return value;
 }
 
-#if 0  // @carcass
-
 // Retail-only artifact-effect get_value virtuals (Complete/SoD added 6 concrete
 // types beyond the DC 18). Each is proven a virtual get_value by its type-vftable
 // slot in .rdata at 0x63b6b0.. (slot 0 = the shared ICF-folded scalar deleting
@@ -3444,12 +3502,22 @@ long type_creature_growth_artifact::get_value(const hero* owner,
 // provisional (carve/NH3API elimination) except where noted; the RVA/size and the
 // get_value CATEGORY are vtable-proven. No DC offset (post-DC types).
 VA(0x00432f90, 0xe4)  // vtable-slot 0x63b750 + get_raw_spell_value, retail-only
-long type_spell_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
+long type_spell_artifact::get_value(const hero* owner, unsigned char equipped,
+                                    unsigned char exact) const
 {
-    // @stub
-}
+    if (exact)
+        return 0;
+    if (owner->in_spellbook[spell])
+        return 0;
+    if (!equipped && owner->available_spells[spell])
+        return 0;
 
-#endif  // @carcass
+    type_spellvalue caster(owner);
+    if (!caster.can_cast_spells())
+        return 0;
+    long value = caster.get_raw_spell_value(spell);
+    return value;
+}
 
 VA(0x004330b0, 0x73)  // vtable-slot 0x63b758 (provisional type), retail-only
 long type_shooter_bonus_artifact::get_value(const hero* owner, unsigned char, unsigned char) const
@@ -3785,6 +3853,35 @@ long AI_get_equip_value(type_artifact artifact, const hero* our_hero,
     return value;
 }
 
+// E:\gamedcs\ai_player.cpp:5792
+VA(0x00433bb0, 0xad)  // AI_swap_artifacts direct callee + DC size/signature, dc 0x377f0
+long remove_negative_artifacts(hero* our_hero)
+{
+    type_artifact artifact;
+    long best_value = get_full_value(our_hero);
+    if (our_hero->get_number_in_backpack(1) >= HERO_BACKPACK_CAPACITY)
+        return best_value;
+
+    for (int slot = 0; slot < 17; ++slot) {
+        artifact = our_hero->equipped[slot];
+        if (artifact.artifactId != ARTIFACT_NONE) {
+            our_hero->remove_artifact(slot);
+            long value = get_full_value(our_hero);
+            if (value <= best_value) {
+                our_hero->equip_artifact(&artifact, slot);
+            } else {
+                our_hero->add_to_backpack(&artifact, -1);
+                best_value = value;
+                if (our_hero->get_number_in_backpack(1)
+                    >= HERO_BACKPACK_CAPACITY) {
+                    return best_value;
+                }
+            }
+        }
+    }
+    return best_value;
+}
+
 // E:\gamedcs\ai_player.cpp:5708
 VA(0x00433c60, 0x1b3)  // anchor-callee unique (armyGroup::GetArmyMorale), dc 0x37588
 long get_full_value(const hero* our_hero)
@@ -3915,15 +4012,38 @@ unsigned char add_artifact(hero* our_hero, type_artifact artifact,
     return 1;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_player.cpp:5967
 VA(0x00433fe0, 0xf5)  // anchor-callee + arity, dc 0x37acc
 void AI_swap_artifacts(hero* source, hero* dest)
 {
-    // @stub
+    type_artifact artifact;
+    long source_value = remove_negative_artifacts(source);
+    long dest_value = remove_negative_artifacts(dest);
+
+    for (int slot = 0; slot < 17; ++slot) {
+        artifact = source->equipped[slot];
+        if (artifact.artifactId != ARTIFACT_NONE) {
+            source->remove_artifact(slot);
+            long new_source_value = get_full_value(source);
+            if (add_artifact(dest, artifact, &dest_value, source, slot,
+                             &new_source_value,
+                             source_value - new_source_value)) {
+                source_value = new_source_value;
+            } else {
+                source->equip_artifact(&artifact, -1);
+            }
+        }
+    }
+
+    int backpack_slot = source->get_last_backpack_index() + 1;
+    while (backpack_slot-- > 0) {
+        artifact = source->backpack[backpack_slot];
+        if (artifact.artifactId != ARTIFACT_NONE
+            && add_artifact(dest, artifact, &dest_value, 0, 19, 0, 0)) {
+            source->remove_backpack_artifact(backpack_slot);
+        }
+    }
 }
-#endif  // @carcass
 
 #if 0  // @carcass
 

@@ -264,7 +264,7 @@ CNetMsg* CAdvMgrNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
             m_pAbortPopupMsg = pNetMsg;
             return 0;
         }
-        gpAdvManager->AdvmgrFn_004ACD70(pNetMsg);
+        gpAdvManager->DoNetCombat(pNetMsg);
         break;
     case RS_TURN_UPDATE: {
         CTurnUpdateMsg* pMsg = static_cast<CTurnUpdateMsg*>(pNetMsg);

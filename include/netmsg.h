@@ -155,29 +155,6 @@ private:
 SIZE(CMessageKill, 0x4);
 #endif
 
-#ifdef HOMM3_COMBAT_INIT_MSG_DECLS
-class TAbstractFile;
-
-// Retail's complex wire-message base is a vptr followed by an ordinary
-// 20-byte CNetMsg image. The subtype constructor at 0x512c50 writes exactly
-// that layout, and 0x512e00 copies a received header into netmsg before
-// dispatching the remaining payload through virtual read(). The ordinal name
-// is retained because neither retail nor DC names that PC-only bridge.
-class t_complex_net_message {
-public:
-    t_complex_net_message(int subType);
-    virtual unsigned char read(TAbstractFile* infile);
-    virtual unsigned char write(TAbstractFile* outfile) const;
-    unsigned char RemoteFn_00512E00(CNetMsg* pNetMsg);
-
-protected:
-    CNetMsg netmsg;  // +0x04
-};
-SIZE(t_complex_net_message, 0x18);
-
-class CCombatInitMsg;
-#endif
-
 #ifdef HOMM3_REMOTE_WAIT_READY_DECLS
 // DC netmsg.h:488 supplies the class and all four payload names. Retail's
 // CLevelPickWaitDlg dispatcher independently proves the 0x3c-byte wire

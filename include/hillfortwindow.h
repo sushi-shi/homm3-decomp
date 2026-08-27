@@ -10,6 +10,8 @@
 
 class message;
 
+extern const float afUpgradeCostFactor[7];
+
 // Retail vtable 0x63eb68 has heroWindow's nine-slot shape; the constructor
 // invokes heroWindow directly and installs that derived vptr.
 //

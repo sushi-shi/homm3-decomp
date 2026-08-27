@@ -1238,8 +1238,13 @@ public:
     // what this body does - a retail-side refactor, and the reason the
     // 38/132 size ratio of the wrapper's own slot sits outside the
     // SH4->x86 band without the attribution being wrong.
+    void Unnamed46a520(army* stack);
     unsigned char check_obstacle_attacks(army* this_army,
                                          unsigned char is_walking);
+    unsigned char check_landmine(long hex, army* current_army,
+                                 unsigned char is_walking);
+    unsigned char check_fire_wall(long hex, army* current_army,
+                                  unsigned char is_walking);
     unsigned char should_lower_door(army* this_army, long hex) const;
     void MakeCreaturesVanish();
     void LowerDoor();

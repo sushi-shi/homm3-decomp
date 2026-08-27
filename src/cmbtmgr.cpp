@@ -2830,15 +2830,14 @@ void combatManager::InitializeArchers()
 // asymmetry, not a mis-slice: one loop steps the byte arrays by 20 and
 // the army index by 21, and ResetLimitCreature memsets exactly 2x20.
 //
-// Residual (96.8312%): one CSE asymmetry in the extent capture. Retail
-// loads drawbridgeBounds.values[1] TWICE - once for `top` and again for
-// the height subtraction - while CSE-ing values[0] between `left` and
-// the width subtraction; our CL does the mirror image, CSE-ing values[1]
-// and reloading values[0], for four loads against retail's five.
-// Spelling the width subtraction as `values[2] - left + 1` to force the
-// first CSE explicitly emits byte-identical code (96.8312 either way),
-// so the asymmetry is the optimiser's own and not reachable from the
-// source side.
+// Generated scheduling search (2026-08-27): moving the width capture before
+// `top` raises 96.8312 -> 97.3713 while preserving all 27 branches. The 21
+// depth-1 variants found that winner; all 218 depth-2 interactions around
+// the retained body were flat or worse. Retail still captures top and left
+// before computing either extent, reloads top for the height subtraction,
+// and consequently assigns the four SaveFizzle arguments to a different
+// caller-saved ordering. That remaining CSE/register schedule is the whole
+// executable residual; the other printed differences are relocation names.
 VA(0x00466e00, 0x323)  // anchor-global, dc 0x60ce0
 void combatManager::MakeCreaturesVanish()
 {
@@ -2874,8 +2873,8 @@ void combatManager::MakeCreaturesVanish()
         }
         ComputeMaxExtent();
         left = drawbridgeBounds.values[0];
-        top = drawbridgeBounds.values[1];
         width = drawbridgeBounds.values[2] - drawbridgeBounds.values[0] + 1;
+        top = drawbridgeBounds.values[1];
         height = drawbridgeBounds.values[3] - drawbridgeBounds.values[1] + 1;
     }
 
@@ -4777,26 +4776,58 @@ bool combatManager::IsQuickCombat() const
 // COMBAT_GRID_CELLS) then marks the stack's primary grid index ([army+0x38])
 // and, when the stack's second-hex flag ([army+0x84] & 1) is set, its
 // army::get_second_grid_index cell. Called from army.obj (carve 0x45950).
-VA(0x0046a520, 0x44)  // corroborates: [this+0x14031] grid write + army* arg, retail-only
-unsigned char combatManager::Unnamed46a520(army* stack)
+#endif  // @carcass claim
+
+// The caller ignores the result, and retail leaves EAX unspecified: this is a
+// void manager-side setup split out of the DC army implementation. Its 187
+// scratch bytes span the complete combat grid.
+VA(0x0046a520, 0x44)  // caller + scratch grid shape, retail-only
+void combatManager::Unnamed46a520(army* stack)
 {
-    // @stub
+    memset(field_14030 + 1, 0, COMBAT_GRID_CELLS);
+    field_14030[stack->gridIndex + 1] = 1;
+    if (stack->creatureId & 1)
+        field_14030[stack->get_second_grid_index() + 1] = 1;
 }
 
-// 0x46a570 (224 B, `ret 8`): combatManager::check_obstacle_attacks, the
-// landmine / fire-wall worker already declared at cmbtmgr.h:1227 and proven
-// there. army::check_obstacle_attacks (0x441f70) forwards to it as
-// gpCombatManager->check_obstacle_attacks(this, is_walking); the arity
-// matches (two stack args, army* + walking flag) and it writes the same
-// [this+0x14031] grid map. Declaration already exists, so no header edit.
+// Complete split the DC army-side obstacle checks into this manager worker.
+// Each occupied hex is visited once, and a two-hex stack suppresses a second
+// moat strike after the first cell already triggered one.
 VA(0x0046a570, 0xE0)  // anchor-callee: army::check_obstacle_attacks fwd, retail-only
 unsigned char combatManager::check_obstacle_attacks(army* this_army,
                                                     unsigned char is_walking)
 {
-    // @stub
-}
+    unsigned char attacked = 0;
+    unsigned char moat_attacked = 0;
+    int hex = this_army->gridIndex;
 
-#endif  // @carcass claim
+    if (!field_14030[hex + 1]) {
+        field_14030[hex + 1] = 1;
+        if (check_fire_wall(hex, this_army, is_walking))
+            attacked = 1;
+        if (check_landmine(hex, this_army, is_walking))
+            attacked = 1;
+        if (Unnamed469e50(hex, this_army, is_walking)) {
+            attacked = 1;
+            moat_attacked = 1;
+        }
+    }
+
+    if (this_army->creatureId & 1) {
+        hex = this_army->get_second_grid_index();
+        if (!field_14030[hex + 1]) {
+            field_14030[hex + 1] = 1;
+            if (check_fire_wall(hex, this_army, is_walking))
+                attacked = 1;
+            if (check_landmine(hex, this_army, is_walking))
+                attacked = 1;
+            if (!moat_attacked
+                    && Unnamed469e50(hex, this_army, is_walking))
+                attacked = 1;
+        }
+    }
+    return attacked;
+}
 
 #if 0  // @carcass
 
