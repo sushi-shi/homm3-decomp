@@ -14,6 +14,8 @@
 #include "abstractfile.h"
 #include "cursor.h"
 #include "inputmgr.h"
+#include "misc.h"
+#include "textresource.h"
 #include "kbwin.h"
 #include "message.h"
 #include "prefs.h"
@@ -1201,12 +1203,26 @@ unsigned char type_record_player_death::save(TAbstractFile* outfile)
 }
 #if 0  // @carcass
 
+#endif  // @carcass
+
 // E:\gamedcs\event_record.cpp:889
-DC_ONLY(0x8db94, 0x8A)
+// Slot 4 of type_record_player_death's retail vtable (0x63df64), and the
+// only EH-bearing body in the compiland: the announcement string is built
+// with format_string, ASSIGNED into a default-constructed local (which is
+// what puts basic_string::assign out of line at 0x404860) and shown through
+// kb.obj's centred dialog with a five-second timeout.
+VA(0x0049bab0, 0x11A)  // anchor-vtable, dc 0x8db94
 void type_record_player_death::replay(unsigned char draw)
 {
-    // @stub
+    if (draw) {
+        std::string text;
+        text = format_string(gpGeneralText->GetText(6),
+                             gpGame->GetPlayerName(extra));
+        NormalDialog(text.c_str(), 1, -1, -1, 10, extra, -1, -1, -1, 5000,
+                     -1, 0);
+    }
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:905
 DC_ONLY(0x8dc20, 0x4)
