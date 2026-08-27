@@ -2504,6 +2504,7 @@ singleselectionwindow	?IsFaceTaken@CNetPlayerHandler@@QAEEHH@Z	100.0000	100.0000
 singleselectionwindow	?SetNextPlayer@CNetPlayerHandler@@QAEEH@Z	96.2353	96.2353	96.2353	0x177ae0
 singleselectionwindow	?SetResolution@CChatSlider@@UAEXH@Z	100.0000	100.0000	100.0000	0x17c9d0
 singleselectionwindow	?SetState@CChatSlider@@UAEXH@Z	100.0000	100.0000	100.0000	0x17ca00
+singleselectionwindow	?UpdateAllyEnemyFlags@TSingleSelectionWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x185300
 singleselectionwindow	?handle_message@CHostWaitDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1891b0
 singleselectionwindow	CEnterNameEdit_OnKeyPress	0.0000	0.0000	0.0000	0x17cdc0
 singleselectionwindow	CEnterNameEdit_OnKillFocus	0.0000	0.0000	0.0000	0x17cee0
@@ -2514,7 +2515,6 @@ singleselectionwindow	TSingleSelectionWindow_ExitDialog	0.0000	0.0000	0.0000	0x1
 singleselectionwindow	TSingleSelectionWindow_OnGameTransmitInitMsg	0.0000	0.0000	0.0000	0x189b20
 singleselectionwindow	TSingleSelectionWindow_ProcessRightSelect	0.0000	0.0000	0.0000	0x1822d0
 singleselectionwindow	TSingleSelectionWindow_TSingleSelectionWindow	0.0000	0.0000	0.0000	0x179960
-singleselectionwindow	TSingleSelectionWindow_UpdateAllyEnemyFlags	0.0000	0.0000	0.0000	0x185300
 singleselectionwindow	TSingleSelectionWindow_UpdatePlayerPositions	0.0000	0.0000	0.0000	0x188330
 singleselectionwindow	TSingleSelectionWindow_WindowHandler	0.0000	0.0000	0.0000	0x187d00
 slider	??0slider@@QAE@HHHHHHP6IXHPAVheroWindow@@@ZW4EGraphics@0@HE@Z	100.0000	100.0000	100.0000	0x1960d0

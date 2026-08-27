@@ -3,6 +3,7 @@
 // 265 functions in link order; 20 compiler-generated $-thunks omitted.
 #include <string.h>
 #include <va.h>
+#include "game.h"
 #include "singleselectionwindow.h"
 #include "singleselectionwindow_priv.h"
 
@@ -702,11 +703,79 @@ void TSingleSelectionWindow::SortMaps(int how, unsigned char sendSortMsg, unsign
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:4704
+#endif  // @carcass
+
+inline CNetPlayerHandlerPlayer* TSingleSelectionWindow::GetThisPlayer()
+{
+    if (gUnnamed6989f0 == WINDOW_MODE_6989F0_3)
+        return &m_players.humanPlayers[0];
+    return m_players.GetPlayer(gsThisNetPlayerInfo.dpid);
+}
+
 VA(0x00585300, 0x1FA)  // anchor-callee cross-module fingerprint w4.07 (CChatManager 0x157350/0x157390/0x157400 refs) + monotone order + size 0.84x, dc 0x13b9fc
 void TSingleSelectionWindow::UpdateAllyEnemyFlags(unsigned char update)
 {
-    // @stub
+    int ally_count = 0;
+    int enemy_count = 0;
+    int playerPos;
+    CNetPlayerHandlerPlayer* player;
+
+    if (m_flag65
+        || (m_flag64 && !bVideoPaused
+            && gUnnamed6989f0 != WINDOW_MODE_6989F0_3))
+        return;
+
+    if (!flagBack->IsSaved())
+        flagBack->Save(456, 402);
+    else if (update)
+        flagBack->Restore(0);
+
+    if (m_flag65) {
+        playerPos = gpGame->GetLocalPlayerGamePos();
+    } else {
+        player = GetThisPlayer();
+        if (!player)
+            return;
+        playerPos = player->playerPos;
+    }
+
+    widget* flag;
+    for (int i = 0; i < 8; ++i) {
+        flag = GetWidget(i + 120);
+        flag->send_message(widget::WIDGET_CLEAR_STATUS,
+                           widget::WIDGET_CLEAR_STATUS);
+        flag = GetWidget(i + 112);
+        flag->send_message(widget::WIDGET_CLEAR_STATUS,
+                           widget::WIDGET_CLEAR_STATUS);
+
+        if (gpGame->setup.playerPos[i] < 0)
+            continue;
+
+        if (gpGame->OnSameTeam(i, playerPos)) {
+            flag = GetWidget(ally_count + 112);
+            flag->send_message(widget::WIDGET_SET_STATUS,
+                               widget::WIDGET_CLEAR_STATUS);
+            GetWidget(ally_count + 112)->send_message(
+                widget::WIDGET_SET_ICON_FRAME, i);
+            ++ally_count;
+        } else {
+            flag = GetWidget(enemy_count + 120);
+            flag->send_message(widget::WIDGET_SET_STATUS,
+                               widget::WIDGET_CLEAR_STATUS);
+            GetWidget(enemy_count + 120)->send_message(
+                widget::WIDGET_SET_ICON_FRAME, i);
+            ++enemy_count;
+        }
+    }
+
+    if (update) {
+        DrawWindow(0, 112, 127);
+        DrawWindow(0, 386, 386);
+        gpWindowManager->UpdateScreen(456, 402, 290, 25);
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:4773
 DC_ONLY(0x13bc60, 0x7D2)

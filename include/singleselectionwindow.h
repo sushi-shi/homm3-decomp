@@ -13,6 +13,7 @@
 // (+0x1840); the full slider layout stays in the private header so this
 // public header's include closure is unchanged for advmgr/townmgr.
 class slider;
+class CSaveScreen;
 
 // DC supplies the source identities and member names.  Retail independently
 // proves the Windows layout used here: DeletePlayer walks eight records with
@@ -77,9 +78,10 @@ SIZE(CNetPlayerHandler, 0x7d0);
 // the ones the reconstructed methods reach and each is retail-byte proven:
 // two mode bytes at +0x64/+0x65 (DoModal/ExitDialog test them), the embedded
 // CNetPlayerHandler at +0x1064 (ExitDialog walks it at a 0x7c stride) and the
-// file-list slider* at +0x1840 (DoModal calls its SetState). The ctor at
-// 0x579960 and destructor at 0x583b40 remain the reconstruction the pads
-// still block.
+// file-list slider* at +0x1840 (DoModal calls its SetState). The exact
+// UpdateAllyEnemyFlags body adds the DC-named saved-background pointer
+// flagBack at +0x1870. The ctor at 0x579960 and destructor at 0x583b40 remain
+// the reconstruction the pads still block.
 class TSingleSelectionWindow : public CAdvPopup {
 public:
     char pad_60[0x64 - 0x60];
@@ -89,11 +91,17 @@ public:
     CNetPlayerHandler m_players;       // 0x1064
     char pad_1834[0x1840 - 0x1834];
     slider* m_fileSlider;              // 0x1840
-    char pad_1844[0x1970 - 0x1844];
+    char pad_1844[0x1870 - 0x1844];
+    CSaveScreen* flagBack;             // 0x1870, DC-attested name
+    char pad_1874[0x1970 - 0x1874];
 
     TSingleSelectionWindow(int gameMode);
     virtual ~TSingleSelectionWindow();
     virtual int DoModal(unsigned char fadeIn);
+    void UpdateAllyEnemyFlags(unsigned char update);
+
+private:
+    CNetPlayerHandlerPlayer* GetThisPlayer();
 };
 SIZE(TSingleSelectionWindow, 0x1970);
 
