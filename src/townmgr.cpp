@@ -16,6 +16,12 @@
 // Opens town.h's SetSummoningGenerator declarator for TCastleWindow's
 // constructor, and only for it: town.cpp never defines this.
 #define HOMM3_TOWNMGR_MESSAGE_CTOR_CARRIER
+// widget.h's set_visible header inline (DC Widget.h:263), for
+// set_bonus_display's six show/hide sites - retail folds each into
+// `send_message(WIDGET_{SET,CLEAR}_STATUS, WIDGET_DRAWN)` in place, the
+// adventuremapwindow precedent. Set before every include because
+// widget.h is reached through townmgr.h first.
+#define HOMM3_WIDGET_SET_VISIBLE_INLINE
 #include "townmgr.h"
 // advspells.obj's TeleportTo declarator, for the MoveHero that
 // DoTownGate expands inline. Gated so no other includer of advmgr.h
@@ -677,14 +683,14 @@ TTownScreenWindow::TTownScreenWindow()
                                      font::PRIMARY, 160, 5, 0, 8));
 
     for (int i = 0; i < 8; i++) {
-        resourceIcons[i] = new iconWidget(
+        growth_bonus_icon[i] = new iconWidget(
             gResourceIconPos[i][0], gResourceIconPos[i][1], 32, 32, 164 + i,
             "cprsmall.def", 0, 0, 0, 0, 0x10);
-        Widgets.push_back(resourceIcons[i]);
-        resourceTexts[i] = new textWidget(
+        Widgets.push_back(growth_bonus_icon[i]);
+        growth_bonus_text[i] = new textWidget(
             gResourceIconPos[i][0], gResourceIconPos[i][1] + 32, 32, 20,
             emptyRolloverText, "smalfont.fnt", font::WHITE, 172 + i, 1, 0, 8);
-        Widgets.push_back(resourceTexts[i]);
+        Widgets.push_back(growth_bonus_text[i]);
     }
 
     Widgets.push_back(new iconWidget(305, 387, 58, 64, 101, "twcrport.def",
@@ -924,19 +930,203 @@ void TTownScreenWindow::UpdateTownLocators()
     DrawWindow(0, 0x9b, 0xa3);
 }
 
-// Located, not reconstructed: the bonus-display formatter. It sits between
-// UpdateTownLocators (0x5c5aa0) and Open (0x5c63c0) in retail link order;
-// the two DC helpers DoTownKnob/bonus_right_click that precede it have no
-// distinct retail carve row (inlined here).
-#if 0  // @carcass: located, not reconstructed
+// The bonus-display formatter: one growth-bonus slot per built dwelling
+// plus Dungeon's summoning portal, each an icon (creature portrait), a
+// "+N" text, and a right-click breakdown of every growth modifier -
+// castle/citadel, the Legion artifacts, the horde building, the
+// generator bonus and the Grail. The two DC helpers
+// DoTownKnob/bonus_right_click that precede it have no distinct retail
+// carve row (inlined here). Locals and their scopes follow the DC
+// symbol records (help_text/right_text/iOffsetToMon/i/creature).
+// Residual (87.93%): a whole-tail register transposition - retail keeps
+// `count` in EBX and the text-widget walk pointer in EDI from the main
+// loop's bottom through the summoning arm and the hide loop; this
+// compile swaps the two roles (`[edi+4*ebx+X]` vs our `[ebx+4*edi+X]`)
+// and everything downstream renames with it. Two join `jmp`s ride on
+// the same choice: retail maintains `slot` in EBX across the owner
+// arm's join into the horde call (duplicating the `[ebp+8]` reload on
+// the owner<0 path) and `count` in EBX at the per-dwelling join. The
+// fork is at the prologue: retail clobbers `this` with `add ebx,0x74`
+// for the walk-pointer base where ours preserves it via
+// `lea edx,[ebx+0x74]`. Measured: count declared before the strings
+// (+0.33, kept - reproduces retail's early [ebp-0x18] zero store);
+// count between the strings (87.63); function-scope creature
+// (byte-flat, kept - DC lists creature at proc scope); the named
+// growth/building_name/horde_building locals, the artifact = -1
+// preassignment without a default arm, and the two split bonus locals
+// were each structural wins (83.53 -> 87.93 combined). No local
+// spelling reached the EBX/EDI tie-break.
 // E:\gamedcs\townmgr.cpp:2562
 VA(0x005c5b40, 0x878)  // order-map(UpdateTownLocators 0x5c5aa0 .. HandleGiftMsg 0x5c66b0) + body(get_growth_rate/get_castle_growth_bonus/GetBuildingName/format_string) + arity(ret 4, town*), dc 0x16b0e8
 void TTownScreenWindow::set_bonus_display(town* currTown)
 {
-    // @stub
-}
+    int count = 0;
+    std::string help_text;
+    std::string right_text;
+    TCreatureType creature;
 
-#endif  // @carcass
+    for (int j = 0; j < 8; j++)
+        bonus_creatures[j] = CREATURE_NONE;
+
+    for (int i = 0; i < TOWN_DWELLING_COUNT; i++) {
+        if (currTown->HasBuilding(DWELLING_0_ID + i, 1)) {
+            int slot = i;
+            if (currTown->HasBuilding(DWELLING_0_UPG_ID + i, 1))
+                slot = i + TOWN_DWELLING_COUNT;
+
+            creature = gTownDwellingCreatures[
+                currTown->type * (2 * TOWN_DWELLING_COUNT) + slot];
+            long growth = akCreatureTypeTraits[creature].growthRate;
+            int iOffsetToMon = currTown->get_growth_rate(slot) - growth;
+            const char* name;
+            if (creature >= 0 && creature <= 0x96)
+                name = akCreatureTypeTraits[creature].m_name;
+            else
+                name = emptyRolloverText;
+
+            help_text = format_string(gpGeneralText->GetText(589), name);
+            right_text = format_string(gpGeneralText->GetText(590), name,
+                                       iOffsetToMon + growth);
+            if (iOffsetToMon > 0)
+                right_text += format_string(gpGeneralText->GetText(591),
+                                            growth);
+
+            if (currTown->get_castle_growth_bonus(creature) > 0) {
+                int building;
+                if (currTown->HasBuilding(CASTLE_CASTLE_ID, 0))
+                    building = CASTLE_CASTLE_ID;
+                else if (currTown->HasBuilding(CASTLE_CITADEL_ID, 0))
+                    building = CASTLE_CITADEL_ID;
+                else
+                    building = CASTLE_FORT_ID;
+                const char* building_name =
+                    GetBuildingName(currTown->type, building);
+                right_text += format_string(
+                    DATA_COMPGEN(0x0068c1f0, signedBonusFormat, "\n%s %+d"),
+                    building_name,
+                    currTown->get_castle_growth_bonus(creature));
+                iOffsetToMon -= currTown->get_castle_growth_bonus(creature);
+            }
+
+            if (currTown->owner >= 0) {
+                long legion_bonus = currTown->get_legion_bonus(slot);
+                if (legion_bonus > 0) {
+                    right_text += format_string(
+                        DATA_COMPGEN(0x0068c1e8, plusBonusFormat, "\n%s +%d"),
+                        akArtifactTraits[0x85].name, legion_bonus);
+                    iOffsetToMon -= legion_bonus;
+                }
+                long generator_bonus = currTown->TownFn_005BF900(slot);
+                if (generator_bonus > 0) {
+                    // Tier n's growth artifact, eArtifactLegsOfLegion
+                    // (0x76) .. eArtifactHeadOfLegion (0x7a) in DC
+                    // enum order. The dispatch domain is the dwelling
+                    // INDEX (tier - 1, TownFn_005BF900's dwelling%7+1
+                    // read backwards); retail's jump table is biased by
+                    // exactly that -1, so the labels spell it.
+                    // switch (i + 1) over the plain tier enumerators
+                    // measured 86.94 against 87.93 - the bias moves
+                    // into an lea and the dispatch drifts.
+                    int artifact = -1;
+                    switch (i) {
+                    case TOWN_DWELLING_TIER_2 - 1:
+                        artifact = 0x76;
+                        break;
+                    case TOWN_DWELLING_TIER_3 - 1:
+                        artifact = 0x77;
+                        break;
+                    case TOWN_DWELLING_TIER_4 - 1:
+                        artifact = 0x78;
+                        break;
+                    case TOWN_DWELLING_TIER_5 - 1:
+                        artifact = 0x79;
+                        break;
+                    case TOWN_DWELLING_TIER_6 - 1:
+                        artifact = 0x7a;
+                        break;
+                    }
+                    right_text += format_string(
+                        DATA_COMPGEN(0x0068c1e8, plusBonusFormat, "\n%s +%d"),
+                        akArtifactTraits[artifact].name, generator_bonus);
+                    iOffsetToMon -= generator_bonus;
+                }
+            }
+
+            if (currTown->get_horde_bonus(slot) > 0) {
+                int horde_building = currTown->get_horde(slot);
+                right_text += format_string(
+                    DATA_COMPGEN(0x0068c1e8, plusBonusFormat, "\n%s +%d"),
+                    GetBuildingName(currTown->type, horde_building),
+                    currTown->get_horde_bonus(slot));
+                iOffsetToMon -= currTown->get_horde_bonus(slot);
+            }
+
+            if (currTown->generatorBonus[slot] > 0) {
+                right_text += format_string(gpGeneralText->GetText(592),
+                                            currTown->generatorBonus[slot]);
+                iOffsetToMon -= currTown->generatorBonus[slot];
+            }
+
+            if (iOffsetToMon > 0 && currTown->HasBuilding(HOLY_GRAIL_ID, 1))
+                right_text += format_string(
+                    DATA_COMPGEN(0x0068c1f0, signedBonusFormat, "\n%s %+d"),
+                    GetBuildingName(currTown->type, HOLY_GRAIL_ID),
+                    iOffsetToMon);
+
+            growth_bonus_icon[count]->SetIconFrame(creature + 2);
+            growth_bonus_icon[count]->set_help_text(help_text.c_str(),
+                                                    right_text.c_str(), 1);
+            growth_bonus_icon[count]->set_visible(1);
+            sprintf(gText, DATA_COMPGEN(0x006817c0, plusDecimalFormat, "+%d"),
+                    currTown->get_growth_rate(slot));
+            growth_bonus_text[count]->SetText(gText);
+            growth_bonus_text[count]->set_help_text(help_text.c_str(),
+                                                    right_text.c_str(), 1);
+            growth_bonus_text[count]->set_visible(1);
+            bonus_creatures[count] = creature;
+            count++;
+        }
+    }
+
+    if (currTown->type == TOWN_DUNGEON
+        && currTown->HasBuilding(EXTRA_1_ID, 0)) {
+        if (currTown->summoningType == CREATURE_NONE)
+            currTown->SetSummoningGenerator();
+        if (currTown->summoningType != CREATURE_NONE) {
+            const char* name;
+            if (currTown->summoningType >= 0
+                && currTown->summoningType <= 0x96)
+                name = akCreatureTypeTraits[currTown->summoningType].m_name;
+            else
+                name = emptyRolloverText;
+
+            help_text = format_string(gpGeneralText->GetText(589), name);
+            right_text = format_string(gpGeneralText->GetText(590), name, 0);
+
+            growth_bonus_icon[count]->SetIconFrame(
+                currTown->summoningType + 2);
+            growth_bonus_icon[count]->set_help_text(help_text.c_str(),
+                                                    right_text.c_str(), 1);
+            growth_bonus_icon[count]->set_visible(1);
+            growth_bonus_text[count]->SetText(
+                DATA_COMPGEN(0x006817bc, plusZeroText, "+0"));
+            growth_bonus_text[count]->set_help_text(help_text.c_str(),
+                                                    right_text.c_str(), 1);
+            growth_bonus_text[count]->set_visible(1);
+            bonus_creatures[count] = currTown->summoningType;
+            count++;
+        }
+    }
+
+    for (i = count; i < 8; i++) {
+        growth_bonus_icon[i]->set_visible(0);
+        growth_bonus_icon[i]->set_help_text(emptyRolloverText,
+                                            emptyRolloverText, 1);
+        growth_bonus_text[i]->set_visible(0);
+        growth_bonus_text[i]->set_help_text(emptyRolloverText,
+                                            emptyRolloverText, 1);
+    }
+}
 
 // E:\gamedcs\townmgr.cpp:2716
 VA(0x005c63c0, 0x2E1)  // anchor-caller(the three pure managers Open/Close/Main) + order-map + arity(ret 4, int), dc 0x16b718

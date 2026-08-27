@@ -213,10 +213,21 @@ public:
 
     int field_4c;    // +0x4c  town-list scroll offset (UpdateTownLocators)
     char* field_50;  // +0x50  raw allocation, freed with plain operator delete
-    // +0x54 and +0x74: the resource row the constructor builds in one
+    // +0x54 and +0x74: the growth-bonus row the constructor builds in one
     // eight-iteration loop, each widget kept by the window as it is made.
-    iconWidget* resourceIcons[8];
-    textWidget* resourceTexts[8];
+    // Names are the DC field list's (growth_bonus_icon / growth_bonus_text
+    // at DC offsets 76/108; the old resourceIcons/resourceTexts names were
+    // invented).
+    iconWidget* growth_bonus_icon[8];
+    textWidget* growth_bonus_text[8];
+    // +0x94: the creature shown in each bonus slot, seeded -1 and written
+    // by set_bonus_display (DC `bonus_creatures`, offset 140). BYTE-PROVEN
+    // by townManager::Open's `push 0xb4` operator-new size (the class ends
+    // at 0x94 without it) and by set_bonus_display's eight-dword -1 fill
+    // at +0x94. The DC element type is TCreatureType; spelled int because
+    // armygrp.h is outside this header's include closure and the enum's
+    // loads/stores are int-identical under VC6.
+    int bonus_creatures[8];
 
     TTownScreenWindow();
     virtual ~TTownScreenWindow();

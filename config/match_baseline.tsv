@@ -2894,7 +2894,7 @@ townmgr	?HandleGiftMsg@CTownNetMsgHandler@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	
 townmgr	?MoveHeroFromGarrison@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d5220
 townmgr	?NewStrips@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c6e10
 townmgr	?Open@TTavernWindow@@UAEHHE@Z	100.0000	100.0000	100.0000	0x1d7e20
-townmgr	?Open@townManager@@UAEHH@Z	99.9951	99.9951	99.9951	0x1c63c0
+townmgr	?Open@townManager@@UAEHH@Z	100.0000	100.0000	100.0000	0x1c63c0
 townmgr	?Recruit@TCastleWindow@@QAEXH@Z	96.4286	96.4286	96.4286	0x1dce50
 townmgr	?RedrawTownScreen@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d5410
 townmgr	?ResetStrips@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d5530
@@ -2930,9 +2930,9 @@ townmgr	?do_monster_join_dialog@@YIXPAVhero@@W4TCreatureType@@H@Z	100.0000	100.0
 townmgr	?handle_hall_click@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d30d0
 townmgr	?handle_mage_guild_click@townManager@@QAEXXZ	97.4888	97.4888	97.4888	0x1ce560
 townmgr	?select_army@townManager@@QAEXPAVstrip@@HE@Z	100.0000	100.0000	100.0000	0x1c8080
+townmgr	?set_bonus_display@TTownScreenWindow@@QAEXPAVtown@@@Z	87.9325	87.9325	87.9325	0x1c5b40
 townmgr	?set_prerequisite_text@TBuyBuildWindow@@QAEXPBVtown@@H@Z	87.4164	87.4164	87.4164	0x1d5be0
 townmgr	TThievesGuildWindow_SetupThievesGuild	0.0000	0.0000	0.0000	0x1dda10
-townmgr	TTownScreenWindow_set_bonus_display	0.0000	0.0000	0.0000	0x1c5b40
 townmgr	townManager_Main	0.0000	0.0000	0.0000	0x1d3240
 townmgr	townManager_SetCommandAndText	0.0000	0.0000	0.0000	0x1c77a0
 tradpost	??0TBuyArtifactWindow@@QAE@HH@Z	100.0000	100.0000	100.0000	0x1e3730
