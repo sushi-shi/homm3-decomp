@@ -3796,19 +3796,48 @@ unsigned char TSingleSelectionWindow::OnBadVersionMsg(CNetMsg* pNetMsg)
     return 1;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\singleselectionwindow.cpp:8675. The DC body is the 6-byte
 // VMU stub; retail's is the real 800-byte delete flow (owns the 'games'
 // literal, calls DeleteFileA), dispatched from WindowHandler's KP_DECIMAL
-// key arm.
+// key arm. Confirm through NormalDialog's ACCEPT slot, delete the file
+// inside the games directory, then erase the row from BOTH lists -
+// SelectionHeaders by the current index, HeadersA by the case-exact
+// filename scan - and rewire the slider/selection (empty list drops to
+// the -1 selection with a full redraw; otherwise re-sort by version).
 VA(0x0058dfb0, 0x320)  // anchor-callee WindowHandler key arm 5 calls it no-arg; anchor-import DeleteFileA + 'games' literal, dc 0x145120
 void TSingleSelectionWindow::OnDeleteFile()
 {
-    // @stub
+    if (GetMapCount() == 0)
+        return;
+    if (bVideoPaused && !m_flag65)
+        return;
+    if (!m_flag64 && !m_flag65)
+        return;
+    char* fileName = SelectionHeaders[currentMap].fileName;
+    sprintf(gText, gpGeneralText->GetText(688), fileName);
+    NormalDialog(gText, 2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT)
+        return;
+    _chdir("games");
+    DeleteFileA(fileName);
+    _chdir("..");
+    int i = 0;
+    while (static_cast<unsigned int>(i) < HeadersA.size()) {
+        if (strcmp(HeadersA[i].fileName, fileName) == 0)
+            break;
+        ++i;
+    }
+    SelectionHeaders.erase(SelectionHeaders.begin() + currentMap);
+    HeadersA.erase(HeadersA.begin() + i);
+    fileSlider->SetResolution(GetMapCount() - gUnnamed69fdc8 + 1);
+    if (GetMapCount() != 0) {
+        SortMaps(SORT_MAPS_BY_VERSION, 1, 1);
+        SetCurrentMap(0, 1);
+    } else {
+        DrawWindow(0, 0xffff0001, 0xffff);
+        SetCurrentMap(-1, 1);
+    }
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:8764
 VA(0x0058e310, 0x21)  // anchor-vtable CSingleSelectionNetMsgHandler vtbl 0x241ce8 slot1 (CheckHandleNet; cf CNetMsgHandler layout), dc 0x1451a0
