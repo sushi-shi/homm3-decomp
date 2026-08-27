@@ -196,15 +196,20 @@ extern const char* gLuckTexts[25];
 
 class hero : public type_obscuring_object {
 public:
-    // DECLARED, NOT DEFINED 2026-08-20: forcing the copy assignment
-    // out of line. Retail keeps ONE ??4hero body - the string-bearing
-    // memberwise copier at 0x406480 inside advmgr.obj's band, the row
-    // the HandleGiftRequestMsg withdrawal note reads instruction by
-    // instruction - and HandleNetMsg's trade arm CALLS it twice where
-    // an implicit (inline-candidate) operator= gets expanded. An
-    // undefined declaration reproduces the call without fabricating
-    // the body; the linker never runs over these objects.
-    hero& operator=(const hero& other);
+    // RETIRED 2026-08-27: the declare-but-do-not-define device that
+    // stood here ("hero& operator=(const hero&);", landed 2026-08-20
+    // for HandleNetMsg's trade arm) is GONE, and it must not return.
+    // The declarator was an include-set tax on every TU seeing this
+    // class: removing it returned mapcell's whole COMDAT family
+    // (5 x ??4, 7 x vector::erase, 3 x insert, std::copy) to
+    // 100.0000, recovered recruitUnit::Update's remembered 88.24 ->
+    // 90.8376 peak, and let ReceiveHeroTownData reach 100.0000 - the
+    // synthesized ??4hero body re-enters each TU's /Ob2 collector as
+    // a candidate, which re-prices sibling sites to retail's
+    // decisions. HandleNetMsg's trade arm keeps retail's two
+    // out-of-line ??4hero CALLS via statement-scoped
+    // `#pragma inline_depth(0)` in advmgr.cpp instead (the documented
+    // drop-in replacement for a view gate; costs no declarator).
 
     // Dreamcast names this header inline; hide-hero undo proves its retail
     // expansion as the base operation with the hero object type and id.

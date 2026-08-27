@@ -8470,8 +8470,8 @@ void advManager::ReceiveHeroTownData(CCombatInitMsg* pCombatInitMsg, int* iFromW
     *iFromWho = pCombatInitMsg->netmsg.field_00;
     *point = pCombatInitMsg->m_point;
     int hasLeftHero = pCombatInitMsg->m_leftHero;
-    int hasRightHero = pCombatInitMsg->m_rightHero;
     int hasRightTown = pCombatInitMsg->m_rightTown;
+    int hasRightHero = pCombatInitMsg->m_rightHero;
     *iSeed = pCombatInitMsg->m_seed;
     *iWinner = pCombatInitMsg->m_winner;
     *bRetreatWin = pCombatInitMsg->m_retreatWin;
@@ -8480,9 +8480,10 @@ void advManager::ReceiveHeroTownData(CCombatInitMsg* pCombatInitMsg, int* iFromW
     if (pCombatInitMsg->m_leftOwner > 0)
         gpGame->players[pCombatInitMsg->m_leftOwner].resources[GOLD] =
             pCombatInitMsg->m_leftGold;
-    *right_player = pCombatInitMsg->m_rightOwner;
-    if (pCombatInitMsg->m_rightOwner > 0)
-        gpGame->players[pCombatInitMsg->m_rightOwner].resources[GOLD] =
+    int rightOwner = pCombatInitMsg->m_rightOwner;
+    *right_player = rightOwner;
+    if (rightOwner > 0)
+        gpGame->players[rightOwner].resources[GOLD] =
             pCombatInitMsg->m_rightGold;
 
     *leftArmyGroup = new armyGroup;
