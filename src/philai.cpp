@@ -76,12 +76,51 @@ void ShowStatus()
     // @stub
 }
 
-// E:\gamedcs\philai.cpp:115
-DC_ONLY(0x10d514, 0x4)
-void philAI::philAI()
+#endif  // @carcass
+
+// E:\gamedcs\philai.cpp:115.  The stateless coordinator's constructor:
+// retail keeps the 3-byte `mov eax,ecx / ret` an empty body emits.
+VA(0x00524360, 0x3)  // anchor-bracket + empty-ctor shape, dc 0x10d514
+philAI::philAI()
 {
-    // @stub
 }
+
+// E:\gamedcs\philai.cpp:182.  Move the garrison's troops onto the hero.
+// Identity: the only DC philai row with a garrison parameter, and the body
+// is consider_garrisoning's own swap tail - hasGivenArtifact(Angelic
+// Alliance) into type_AI_creature_swapper::do_swap - behind the garrison
+// gates (matching owner, removable troops, and the campaign-progress gate
+// Complete added).
+VA(0x00524370, 0x73)  // anchor-callee {swapper ctor+do_swap, hasGivenArtifact}, dc 0x10d640
+void AI_enter_garrison(hero* current_hero, garrison* our_garrison)
+{
+    if (current_hero->owner != our_garrison->playerOwner)
+        return;
+    if (!our_garrison->removableTroops)
+        return;
+    if (gbUnk69774c && gpGame->campaign.currentCampaign < 7)
+        return;
+
+    unsigned char has_angelic_alliance =
+        gpGame->players[current_hero->owner].hasGivenArtifact(
+            ARTIFACT_ANGELIC_ALLIANCE);
+    type_AI_creature_swapper swapper;
+    swapper.do_swap(current_hero, &our_garrison->garrisonArmy, 0,
+                    has_angelic_alliance);
+}
+
+void buy_artifacts(hero* current_hero, TArtifact* artifact_list,
+                   long market_count);
+
+// E:\gamedcs\philai.cpp:389.  The black market is a five-marketplace
+// artifact shop: hand its seven-slot tray to the marketplace purchaser.
+VA(0x005243f0, 0x8)  // anchor-callee buy_artifacts + market_count 5, dc 0x10db64
+void AI_visit_black_market(hero* current_hero, TBlackMarket* black_market)
+{
+    buy_artifacts(current_hero, black_market->artifacts, 5);
+}
+
+#if 0  // @carcass
 
 // E:\gamedcs\philai.cpp:123
 DC_ONLY(0x10d518, 0x62)
@@ -100,13 +139,6 @@ void RestoreMouse(unsigned char mouse_was_visible)
 // E:\gamedcs\philai.cpp:165
 DC_ONLY(0x10d5b4, 0x8C)
 void check_for_town(hero* current_hero)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:182
-DC_ONLY(0x10d640, 0x42)
-void AI_enter_garrison(hero* current_hero, garrison* our_garrison)
 {
     // @stub
 }
@@ -139,23 +171,9 @@ long value_of_black_market(const hero* current_hero, const NewmapCell* cell)
     // @stub
 }
 
-// E:\gamedcs\philai.cpp:389
-DC_ONLY(0x10db64, 0x10)
-void AI_visit_black_market(hero* current_hero, TBlackMarket* black_market)
-{
-    // @stub
-}
-
 // E:\gamedcs\philai.cpp:397
 DC_ONLY(0x10db74, 0x150)
 void buy_artifacts(hero* current_hero, town* current_town)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:551
-DC_ONLY(0x10e028, 0x3C)
-long value_of_war_factory(const hero* current_hero, long move_cost)
 {
     // @stub
 }
@@ -202,20 +220,6 @@ void move_all_heroes(long player_id, long* danger_zones)
     // @stub
 }
 
-// E:\gamedcs\philai.cpp:1319
-DC_ONLY(0x10f22c, 0xCA)
-int AI_resource_cost(const playerData* player, const int* resources)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:1330
-DC_ONLY(0x10f2f8, 0x84)
-int AI_resource_cost(long player_id, const int* resources)
-{
-    // @stub
-}
-
 // E:\gamedcs\philai.cpp:1529
 DC_ONLY(0x10f94c, 0x136)
 long type_spellvalue::get_summoning_value(long damage, long times_castable)
@@ -230,30 +234,10 @@ void type_spellvalue::fill_creature_value_list()
     // @stub
 }
 
-// E:\gamedcs\philai.cpp:1699
-DC_ONLY(0x10fe64, 0x52)
-long type_spellvalue::get_value_of_increase(long base_value, long power_change, long duration_change, long mana_change)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:1725
-DC_ONLY(0x10fef4, 0x124)
-void AI_set_hero_bonuses(hero* our_hero)
-{
-    // @stub
-}
 
 // E:\gamedcs\philai.cpp:1770
 DC_ONLY(0x110018, 0x15A)
 void philAI::GetTurnAIVars(int whichPlayer)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:1815
-DC_ONLY(0x110174, 0x170)
-int NetValueOfArtifact(const hero* current_hero, int artifact_value, int gold_cost, int resource_cost, EGameResource resource_type)
 {
     // @stub
 }
@@ -464,6 +448,31 @@ void AI_visit_university(hero* current_hero, NewmapCell* cell)
 }
 
 #endif  // @carcass
+
+// E:\gamedcs\philai.cpp:3444.  A magic-school skill's worth: bump the school
+// skill on the hero, re-ask the per-hero spell valuer, restore.  Identity:
+// the delinked target names this row a get_skill_value helper and retail's
+// four call sites are all inside 0x524690 - DC get_skill_value's own four
+// school probes.  Spelled extern rather than retail's static: its only
+// callers are still carcass stubs, an uncalled static is dropped by VC6
+// entirely, and extern linkage emits the identical /Gr body unconditionally.
+VA(0x00524d20, 0xa3)  // anchor-callee {type_spellvalue ctor, get_best_spell_value x2} + caller bracket, dc 0x11350c
+long get_school_value(const hero* our_hero, TSecondarySkill skill)
+{
+    type_spellvalue value(our_hero);
+    long base_value = value.get_best_spell_value(SPELL_VALUE_CLASS_MASK);
+
+    int old_level = our_hero->skillLevel[skill];
+    if (old_level == 0)
+        const_cast<hero*>(our_hero)->skillLevel[skill] = 3;
+    else
+        const_cast<hero*>(our_hero)->skillLevel[skill] = old_level + 1;
+
+    long school_value =
+        value.get_best_spell_value(SPELL_VALUE_CLASS_MASK) - base_value;
+    const_cast<hero*>(our_hero)->skillLevel[skill] = old_level;
+    return school_value;
+}
 
 // E:\gamedcs\philai.cpp:3645. Complete passes both the university's int-width
 // skill ids and complex_choice unchanged. The 28-entry score/index arrays are
@@ -688,6 +697,39 @@ void buy_special_building(const hero* current_hero, town* current_town)
 }
 
 #endif  // @carcass
+
+// E:\gamedcs\philai.cpp:3708.  What the four offered skills are worth to
+// this hero, gated on a free skill slot and (when the caller says the
+// lesson must be paid for) 2,000 gold.  Identity: AI_value_of_event's
+// UNIVERSITY arm calls it on ExtraInfoUnion::get_university's result with
+// must_pay 1, and the value_of_town helper at 0x52b1e0 builds a local
+// type_university for the town university - the same Complete
+// NewmapCell*->type_university* correction AI_visit_university above
+// carries.  Extern for emission while both callers are stubs (the
+// get_school_value note); AI_visit_university (0x524ed0, exact) is the
+// sibling whose loop shape this body reuses.
+VA(0x00525bf0, 0xac)  // anchor-callee {wants_skill, get_skill_value} + akHeroClasses row walk, dc 0x113c1c
+long value_of_university(const hero* current_hero,
+                         type_university* university,
+                         unsigned char must_pay)
+{
+    if (current_hero->skillCount >= 8)
+        return 0;
+    if (must_pay && gpCurrentPlayer->resources[GOLD] < 2000)
+        return 0;
+
+    const THeroClassTraits* traits =
+        &akHeroClasses[current_hero->heroClass];
+    long total = 0;
+    for (int i = 0; i < 4; i++) {
+        int skill = university->skills[i];
+        if (traits->gainSecondarySkillChance[skill]
+            && current_hero->skillLevel[skill] <= 0
+            && wants_skill(current_hero, skill, 1))
+            total += get_skill_value(current_hero, skill, 1);
+    }
+    return total;
+}
 
 // E:\gamedcs\philai.cpp:594.  Retail's call stream preserves the DC
 // artifact/building roles and adds a second affordability check after a
@@ -973,6 +1015,46 @@ hero* DetermineHeroToMove(int player_id, unsigned char* is_last_hero)
         }
     }
     return selected_hero;
+}
+
+// E:\gamedcs\philai.cpp:1319.  Price a seven-column resource row in the
+// player's own per-resource valuations.  Retail emits the out-of-line copy
+// at 0x526c70 for its cross-TU callers (purchase_building, consider_hiring,
+// AI_enter_town, AI_value_of_event) while still expanding it into the
+// value_of_town appraisals below - extern linkage plus /Ob2 gives exactly
+// that arrangement.
+VA(0x00526c70, 0x48)  // anchor: resourceValue walk at playerData+0x128, dc 0x10f22c
+int AI_resource_cost(const playerData* player, const int* resources)
+{
+    int value = 0;
+    for (int resource = 0; resource < NUM_RESOURCES; resource++)
+        value += resources[resource] * player->resourceValue[resource];
+    return value;
+}
+
+// E:\gamedcs\philai.cpp:1330.  The player-id overload prices the row for
+// gpGame->players[player_id]; retail keeps the players-array walk inline
+// rather than routing through the playerData overload.
+VA(0x00526cc0, 0x55)  // anchor: players-array resourceValue walk at game+0x20bf8, dc 0x10f2f8
+int AI_resource_cost(long player_id, const int* resources)
+{
+    int value = 0;
+    for (int resource = 0; resource < NUM_RESOURCES; resource++)
+        value += resources[resource]
+            * gpGame->players[player_id].resourceValue[resource];
+    return value;
+}
+
+// Retail-only 0x526d20 (no DC row): the computer-owner purchase shim
+// town::buy_building runs over a cost row before charging it - route the
+// row through the owning AI player's resource trader.  town.h owns the
+// declaration and the house ordinal name; its "owner TU unlocated" note is
+// retired by this row (the body sits in philai's span, between the
+// AI_resource_cost pair and the spellvalue constructor).
+VA(0x00526d20, 0x1e)  // anchor-callee type_AI_player::trade_resources + sole caller town::buy_building 0x5bf3c0
+void Unnamed526d20(int playerId, int* costs, int flag)
+{
+    gAIPlayers[playerId].trade_resources(costs, flag);
 }
 
 #if 0  // @carcass
@@ -1279,6 +1361,73 @@ float value_of_experience(const hero* current_hero, const armyGroup* current_arm
         / static_cast<float>(increment * 40);
 }
 
+// E:\gamedcs\philai.cpp:1699.  The what-if probe AI_set_hero_bonuses runs
+// six times: bump the valuer's power/duration/mana, re-ask the best spell
+// value, restore, and report the delta against the caller's baseline.
+// Defined here as the DC build does; retail keeps no out-of-line row -
+// every site is expanded - and objdiff prices an unclaimed base-only
+// symbol at nothing.
+long type_spellvalue::get_value_of_increase(long base_value,
+    long power_change, long duration_change, long mana_change)
+{
+    power += power_change;
+    duration += duration_change;
+    mana += mana_change;
+    long increased = get_best_spell_value(SPELL_VALUE_CLASS_MASK);
+    power -= power_change;
+    duration -= duration_change;
+    mana -= mana_change;
+    return increased - base_value;
+}
+
+// The Dinkumware max shape retail expands around the two floored
+// valuations below: by-value parameters, const-reference result, so the
+// picked side comes back by address (advmgr.cpp precedent).
+template <class _TYPE>
+inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
+{
+    return (_X > _Y ? _X : _Y);
+}
+
+// E:\gamedcs\philai.cpp:1725.  Refresh the per-hero AI valuations: the
+// experience-to-value ratio (value_of_experience expanded over the hero's
+// own army), then the five stat/pool bonuses through the what-if probe -
+// +1 power (with +1 duration, floored at 10), +1 duration, +30 mana
+// (a knowledge point, third-shared and floored at 10), and the well and
+// spring refills against the hero's current pool.
+VA(0x00527760, 0x1f2)  // anchor-callee {spellvalue ctor, get_best_spell_value x7, GetExperienceIncrement, get_AI_value}, dc 0x10fef4
+void AI_set_hero_bonuses(hero* our_hero)
+{
+    type_spellvalue value(our_hero);
+
+    our_hero->turnExperienceToRVRatio =
+        value_of_experience(our_hero, &our_hero->army);
+
+    long base_value = value.get_best_spell_value(SPELL_VALUE_CLASS_MASK);
+    our_hero->value_of_power =
+        _cpp_max<long>(value.get_value_of_increase(base_value, 1, 1, 0), 10);
+    our_hero->value_of_duration =
+        value.get_value_of_increase(base_value, 0, 1, 0);
+    our_hero->value_of_knowledge = _cpp_max<long>(
+        value.get_value_of_increase(base_value, 0, 0, 30) / 3, 10);
+
+    long initial_mana = value.get_mana();
+    value.set_mana(our_hero->mana);
+    base_value = value.get_best_spell_value(SPELL_VALUE_CLASS_MASK);
+
+    if (our_hero->mana >= initial_mana)
+        our_hero->value_of_well = 0;
+    else
+        our_hero->value_of_well = value.get_value_of_increase(
+            base_value, 0, 0, initial_mana - our_hero->mana);
+
+    if (our_hero->mana >= 2 * initial_mana)
+        our_hero->value_of_spring = 0;
+    else
+        our_hero->value_of_spring = value.get_value_of_increase(
+            base_value, 0, 0, 2 * initial_mana - our_hero->mana);
+}
+
 // E:\gamedcs\philai.cpp:1770. Retail retains the DC hero-bonus sweep and
 // extends its artifact appraisal across Complete's full 144-entry table.
 VA(0x00527960, 0x140)  // anchor-callee, dc 0x110018
@@ -1330,14 +1479,27 @@ int hero::ValueOfSpell(SpellID spell) const
     return 0;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\philai.cpp:1959
-DC_ONLY(0x1105ac, 0x2C)
-long value_of_learning(const hero* current_hero, SpellID spell)
+// E:\gamedcs\philai.cpp:2183.  Buy from a visited creature generator:
+// price the offer against the hero's own army, morale and the current
+// player's funds.  Identity: advManager::DoEventCreatureGenerator
+// (0x4a18b0) is the sole caller, and the body is the purchaser ctor
+// (player, generator) plus Complete's six-argument do_purchase carrying
+// the Angelic-Alliance flag.
+VA(0x00527b00, 0xa4)  // anchor-callee {purchaser ctor(generator), GetMorale, do_purchase} + caller DoEventCreatureGenerator, dc 0x110c04
+void AI_PurchaseCreatures(hero* current_hero, generator* current_generator)
 {
-    // @stub
+    type_AI_creature_purchaser purchaser(current_hero->owner,
+                                         current_generator);
+    unsigned char has_angelic_alliance =
+        gpGame->players[current_hero->owner].hasGivenArtifact(
+            ARTIFACT_ANGELIC_ALLIANCE);
+    purchaser.do_purchase(&current_hero->army,
+                          current_hero->GetMorale(0, 0, 1), 0,
+                          gpCurrentPlayer->resources, 1,
+                          has_angelic_alliance);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\philai.cpp:1972
 DC_ONLY(0x1105d8, 0x230)
@@ -1349,13 +1511,6 @@ int ValueOfBlackBox(const hero* current_hero, NewmapCell* cell)
 // E:\gamedcs\philai.cpp:2115
 DC_ONLY(0x1108e0, 0xD6)
 int ValueOfCampfire(playerData* player, NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:2183
-DC_ONLY(0x110c04, 0x52)
-void AI_PurchaseCreatures(hero* current_hero, generator* current_generator)
 {
     // @stub
 }
@@ -1437,30 +1592,9 @@ int ValueOfLighthouse(NewmapCell* cell)
     // @stub
 }
 
-// E:\gamedcs\philai.cpp:2579
-DC_ONLY(0x111808, 0x2A)
-TPrimarySkill AI_ChooseMagicSkill(hero* current_hero)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:2593
-DC_ONLY(0x111834, 0xC4)
-int ValueOfMagicSchool(const hero* current_hero, NewmapCell* cell)
-{
-    // @stub
-}
-
 // E:\gamedcs\philai.cpp:2615
 DC_ONLY(0x1118f8, 0x78)
 int ValueOfMercenaryCamp(const hero* current_hero, NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:2626
-DC_ONLY(0x111970, 0x12C)
-int ValueOfMine(const hero* current_hero, NewmapCell* cell)
 {
     // @stub
 }
@@ -1472,13 +1606,6 @@ int MoraleIncreaseValue(const hero* current_hero, int value)
     // @stub
 }
 
-// E:\gamedcs\philai.cpp:2711
-DC_ONLY(0x111c44, 0x34)
-int value_of_move_source(const hero* current_hero, long flag, short increase, long* move_cost)
-{
-    // @stub
-}
-
 // E:\gamedcs\philai.cpp:2728
 DC_ONLY(0x111c78, 0xF0)
 int LuckIncreaseValue(const hero* current_hero, int value)
@@ -1486,51 +1613,9 @@ int LuckIncreaseValue(const hero* current_hero, int value)
     // @stub
 }
 
-// E:\gamedcs\philai.cpp:2752
-DC_ONLY(0x111d68, 0xAE)
-int value_of_obelisk(NewmapCell* cell, long player_id)
-{
-    // @stub
-}
-
 // E:\gamedcs\philai.cpp:2775
 DC_ONLY(0x111e18, 0x1C)
 long value_of_magus_hut(long player_id)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:2784
-DC_ONLY(0x111e34, 0x6E)
-int ValueOfPowerSchool(const hero* current_hero, NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:2845
-DC_ONLY(0x11206c, 0x7C)
-long get_value_of_well(const hero* current_hero, unsigned short move_cost)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:2865
-DC_ONLY(0x1120e8, 0xD0)
-int ValueOfRallyFlag(const hero* current_hero, long* move_cost)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:2879
-DC_ONLY(0x1121b8, 0x50)
-int ValueOfRefugeeCamp(const hero* current_hero, NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:2891
-DC_ONLY(0x112208, 0x58)
-void AI_RecruitRefugees(hero* current_hero, TCreatureType type, short* number)
 {
     // @stub
 }
@@ -1564,69 +1649,6 @@ int ValueOfStables(const hero* current_hero, long* move_cost)
     // @stub
 }
 
-
-// E:\gamedcs\philai.cpp:3297
-DC_ONLY(0x112ee0, 0x8A)
-unsigned char AI_choose_resource_or_experience(const hero* current_hero, EGameResource resource, int amount, int experience)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:3307
-DC_ONLY(0x112f6c, 0x160)
-int ValueOfTreasure(const hero* current_hero)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:3339
-DC_ONLY(0x1130cc, 0x258)
-int ValueOfTree(const hero* current_hero, NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:3383
-DC_ONLY(0x113324, 0x5C)
-int value_of_wagon(NewmapCell* cell, long player_id)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:3402
-DC_ONLY(0x113380, 0x10A)
-int value_of_war_school(const hero* current_hero, NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:3424
-DC_ONLY(0x11348c, 0x7E)
-long get_value_of_spring(const hero* current_hero, const NewmapCell* cell, unsigned short move_cost)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:3444
-DC_ONLY(0x11350c, 0xA0)
-long get_school_value(const hero* our_hero, TSecondarySkill skill)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:3708
-DC_ONLY(0x113c1c, 0xA0)
-long value_of_university(const hero* current_hero, NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:3796
-DC_ONLY(0x113da0, 0x84)
-int value_of_witch_hut(const hero* current_hero, NewmapCell* cell)
-{
-    // @stub
-}
 
 #endif  // @carcass
 
@@ -1674,6 +1696,21 @@ void AI_visit_hill_fort(hero* current_hero)
     }
 }
 
+// E:\gamedcs\philai.cpp:2579.  Which of the two magic stats a School of
+// Magic visit should raise.  Identity: advManager::DoEventMagicSchool
+// (0x4a33e0) is the sole caller, and the body is the one-compare pick over
+// the AI_set_hero_bonuses stat valuations at hero+0x47e/+0x486.  The
+// return is spelled int to match the events.cpp declaration and the
+// retail mangling (the DC TPrimarySkill enum has no retail-proven
+// definition in this tree); 2 is power, 3 is knowledge in the primary
+// skill order every trainer dialog uses.
+VA(0x00527cd0, 0x1b)  // anchor: value_of_power/knowledge compare + caller DoEventMagicSchool, dc 0x111808
+int AI_ChooseMagicSkill(hero* current_hero)
+{
+    return current_hero->value_of_power < current_hero->value_of_knowledge
+        ? 3 : 2;
+}
+
 // E:\gamedcs\philai.cpp:2692. Retail changes the DC static's explicit
 // hero parameter into the receiver, but preserves its statement shape:
 // undead armies get no morale credit, the morale curve supplies the only
@@ -1710,6 +1747,24 @@ int hero::LuckIncreaseValue(int value)
     value_added *= (get_primary_skill_total() + 40)
                    * army.get_AI_value() / 40;
     return static_cast<int>(value_added);
+}
+
+// E:\gamedcs\philai.cpp:2891.  Hire the refugee camp's weekly offer.
+// Identity: advManager::DoEventRefugeeCamp (0x4a4600) is the sole caller,
+// and the body is AI_PurchaseCreatures' twin through the
+// (player, type, amount, is_free 0) purchaser constructor.
+VA(0x00527e10, 0xab)  // anchor-callee {purchaser ctor(type, amount, 0), GetMorale, do_purchase} + caller DoEventRefugeeCamp, dc 0x112208
+void AI_RecruitRefugees(hero* current_hero, TCreatureType type, short* number)
+{
+    type_AI_creature_purchaser purchaser(current_hero->owner, type, number,
+                                         0);
+    unsigned char has_angelic_alliance =
+        gpGame->players[current_hero->owner].hasGivenArtifact(
+            ARTIFACT_ANGELIC_ALLIANCE);
+    purchaser.do_purchase(&current_hero->army,
+                          current_hero->GetMorale(0, 0, 1), 0,
+                          gpCurrentPlayer->resources, 1,
+                          has_angelic_alliance);
 }
 
 // E:\gamedcs\philai.cpp:3007.  Sirens grant experience for sacrificed troops.
@@ -1755,6 +1810,25 @@ unsigned char AI_bribe_monsters(const hero* current_hero, NewmapCell* cell,
     return bribe_worth > fight_worth;
 }
 
+// E:\gamedcs\philai.cpp:3297.  Pick between an offered resource pile and
+// experience: each is scaled into the AI's value domain - experience by the
+// hero's own per-point ratio, the pile by the player's per-resource
+// valuation.  Identity: the three events-side choice dialogs
+// (DoTreasureDialog, DoEventTreeOfKnowledge, DoEventWarSchool) are the
+// retail callers, and the two-argument frame matches ret 8.
+VA(0x00527fe0, 0x51)  // anchor-callee get_player + turnExperienceToRVRatio, three events.obj callers, dc 0x112ee0
+unsigned char AI_choose_resource_or_experience(const hero* current_hero,
+    EGameResource resource, int amount, int experience)
+{
+    long experience_value = static_cast<long>(
+        static_cast<float>(experience)
+        * current_hero->turnExperienceToRVRatio);
+    playerData* player = const_cast<hero*>(current_hero)->get_player();
+    long resource_value = static_cast<long>(
+        static_cast<double>(amount) * player->resourceValue[resource]);
+    return resource_value > experience_value;
+}
+
 #if 0  // @carcass -- philai body-evidence claims, retail RVA order (divergent from DC link order)
 
 // E:\gamedcs\philai.cpp:3834.  The per-map-object event valuator: a giant
@@ -1770,6 +1844,42 @@ long AI_value_of_event(const hero* current_hero, type_point point, long* move_co
 
 #endif  // @carcass
 
+// E:\gamedcs\philai.cpp:551.  A map war-machine factory's worth: the three
+// engines' purchase values summed at this trip's move cost.  Identity:
+// AI_value_of_event's WAR_MACHINE_FACTORY arm is the sole retail caller,
+// and the body is three calls into the auto_inline(off) three-argument
+// appraisal above with the tent/cart/ballista artifact ids.  Extern for
+// emission while the caller is a stub (the get_school_value note).
+VA(0x005297d0, 0x36)  // anchor-callee value_of_war_factory(engine) x3 {6,5,4}, dc 0x10e028
+long value_of_war_factory(const hero* current_hero, long move_cost)
+{
+    return value_of_war_factory(current_hero, ARTIFACT_FIRST_AID_TENT,
+                                move_cost)
+        + value_of_war_factory(current_hero, ARTIFACT_AMMO_CART, move_cost)
+        + value_of_war_factory(current_hero, ARTIFACT_BALLISTA, move_cost);
+}
+
+// E:\gamedcs\philai.cpp:1815.  An artifact's worth net of its gold and
+// resource price, zero when the owning player cannot cover either column.
+// Identity: the DC_ONLY signature matches the retail frame exactly (ret
+// 0xc, three stack arguments) and AI_value_of_event's ARTIFACT arm calls
+// it at three sites - the three priced-artifact classes.  Extern for
+// emission while that arm is a stub.
+VA(0x00529810, 0x7c)  // anchor: players-array funds gates + resourceValue math, 3 ARTIFACT-arm sites, dc 0x110174
+int NetValueOfArtifact(const hero* current_hero, int artifact_value,
+    int gold_cost, int resource_cost, EGameResource resource_type)
+{
+    playerData* player = &gpGame->players[current_hero->owner];
+    if (player->resources[GOLD] < gold_cost
+        || player->resources[resource_type] < resource_cost)
+        return 0;
+    return static_cast<int>(
+        static_cast<double>(artifact_value)
+        - static_cast<double>(gold_cost) * player->resourceValue[GOLD]
+        - static_cast<double>(resource_cost)
+            * player->resourceValue[resource_type]);
+}
+
 // E:\gamedcs\philai.cpp:1867.  A map object carrying a custom artifact reward:
 // its value is the item's own worth plus, when the map maker gave it custom
 // guardians, what beating those guardians is worth.
@@ -1781,6 +1891,23 @@ long value_of_custom_item(const hero* current_hero, NewmapCell* cell, long item_
         return AI_value_of_combat(current_hero, 0, treasure->Guardians, 0, cell)
             + item_value;
     return item_value;
+}
+
+// E:\gamedcs\philai.cpp:1959.  What learning one spell is worth: gated on
+// Wisdom (spell level at most wisdom+2), the spell not already known, and
+// a spellbook to put it in - hero::ValueOfSpell's free-function twin, with
+// the guards split so retail's tail-call into AI_get_spell_value survives.
+// Identity: AI_value_of_event calls it from both the SHRINE and the
+// BLACK_BOX arms.  Extern for emission while both arms are stubs.
+VA(0x005298d0, 0x4b)  // anchor-callee {IsWieldingArtifact, AI_get_spell_value tail-call}, SHRINE + BLACK_BOX arm sites, dc 0x1105ac
+long value_of_learning(const hero* current_hero, SpellID spell)
+{
+    if (akSpellTraits[spell].level > current_hero->wisdomLevel + 2
+        || current_hero->in_spellbook[spell]
+        || !const_cast<hero*>(current_hero)->IsWieldingArtifact(
+               ARTIFACT_SPELLBOOK))
+        return 0;
+    return AI_get_spell_value(current_hero, spell);
 }
 
 #if 0  // @carcass -- philai body-evidence claims, retail RVA order (divergent from DC link order)
@@ -1890,14 +2017,6 @@ int ValueOfGenerator(const hero* current_hero, int x, int y, int z, NewmapCell* 
     return value;
 }
 
-inline int AI_resource_cost(const playerData* player, const int* resources)
-{
-    int value = 0;
-    for (int resource = 0; resource < NUM_RESOURCES; resource++)
-        value += resources[resource] * player->resourceValue[resource];
-    return value;
-}
-
 #if 0  // @carcass -- philai body-evidence claims, retail RVA order (divergent from DC link order)
 
 // E:\gamedcs\philai.cpp:2306
@@ -1970,6 +2089,65 @@ long value_of_enemy_town(const hero* current_hero, const town* enemy_town, short
     return combat_value + town_value;
 }
 
+// E:\gamedcs\philai.cpp:2593.  A School of Magic visit's worth: the better
+// of the two magic-stat valuations AI_set_hero_bonuses keeps on the hero,
+// less the 1,000-gold tuition, once per school per hero.  Identity: the
+// MAGIC_SCHOOL dispatch arm of AI_value_of_event is the sole caller and
+// the visit mask is the hero's own MagicSchoolFlags dword.  Extern for
+// emission while that arm is a stub.
+VA(0x00529f90, 0x72)  // anchor: MagicSchoolFlags + value_of_power/knowledge + MAGIC_SCHOOL arm, dc 0x111834
+int ValueOfMagicSchool(const hero* current_hero, NewmapCell* cell)
+{
+    if ((1 << cell->extraInfo) & current_hero->MagicSchoolFlags)
+        return 0;
+    playerData* player = const_cast<hero*>(current_hero)->get_player();
+    if (player->resources[GOLD] < 1000)
+        return 0;
+
+    long knowledge_value = current_hero->value_of_knowledge;
+    long power_value = current_hero->value_of_power;
+    return static_cast<int>(
+        (power_value < knowledge_value ? knowledge_value : power_value)
+        - player->resourceValue[GOLD] * 1000.0);
+}
+
+// E:\gamedcs\philai.cpp:2626.  A mine's worth: the guard fight (skipped
+// when hopeless), twice the mine's daily yield in the player's own
+// valuation scaled by the AI difficulty bonus, and the flag-all-mines
+// victory bounty.  Identity: the MINE dispatch arm is the sole caller,
+// and the body walks gpGame->mines' 0x40-stride records - owner byte,
+// yield type byte, guard army at +4.  Extern for emission while the arm
+// is a stub.
+VA(0x0052a010, 0x12a)  // anchor: mines-vector record walk + gMineCharacteristics + MINE arm, dc 0x111970
+int ValueOfMine(const hero* current_hero, NewmapCell* cell)
+{
+    mine* current_mine = &gpGame->mines[cell->extraInfo];
+    int mine_type = current_mine->type;
+    if (gpGame->OnSameTeam(current_mine->playerOwner, gNetLocalGamePos))
+        return 0;
+
+    long value = 0;
+    if (current_mine->guards.HasCreatures()) {
+        value = AI_value_of_combat(current_hero, 0, current_mine->guards, 0,
+                                   cell);
+        if (value <= -500000000)
+            return value;
+    }
+
+    playerData* player = const_cast<hero*>(current_hero)->get_player();
+    int income = static_cast<int>(
+        static_cast<double>(gMineCharacteristics[mine_type])
+        * player->resourceValue[mine_type] * 2.0);
+    value += static_cast<int>(static_cast<float>(income)
+        * (type_AI_player::get_attack_bonus(current_mine->playerOwner)
+           + 1.0f));
+
+    if (gpGame->mapHeader.victoryCondition.Type
+            == VICTORY_CONDITION_FLAG_ALL_MINES)
+        value += 5000000 / gpGame->mines.size();
+    return value;
+}
+
 #if 0  // @carcass -- philai body-evidence claims, retail RVA order (divergent from DC link order)
 
 // E:\gamedcs\philai.cpp:2668.  Value a wandering monster stack: exact cross-TU
@@ -1982,6 +2160,69 @@ long value_of_monsters(const hero* current_hero, NewmapCell* cell, type_point po
 }
 
 #endif  // @carcass
+
+// E:\gamedcs\philai.cpp:2711.  A one-per-hero movement bonus source (the
+// Oasis and Watering Hole arms call it with their hero-flag masks and
+// bonuses): credit the bonus against this trip's cost - an object whose
+// bonus outruns the trip is nearly free and highly prized - then add the
+// morale worth Complete folded into this helper (the DC 52-byte body
+// carried only the movement credit; the signature is the DC one).
+// Extern for emission while both arms are stubs.
+VA(0x0052a1e0, 0xc3)  // anchor: hero flags mask + move_cost credit + OASIS/WATERING_HOLE arms, dc 0x111c44
+int value_of_move_source(const hero* current_hero, long flag, short increase,
+                         long* move_cost)
+{
+    if (current_hero->flags & flag)
+        return 0;
+    if (*move_cost < increase) {
+        *move_cost = 0;
+        return 10000;
+    }
+    *move_cost -= increase;
+    return const_cast<hero*>(current_hero)->MoraleIncreaseValue(1);
+}
+
+// E:\gamedcs\philai.cpp:2752.  An obelisk's worth: nothing once this
+// player's visit bit is set, the grail is absent, or the puzzle guess
+// already sits on the ultimate artifact; otherwise one obelisk's share of
+// the grail artifact's value.  The puzzle-guess compare goes through a
+// type_point copy: playerData models the odd-offset +0x39 slot as raw
+// bytes (the alignment note there), so the bit-preserving memcpy bridge
+// is the house crossing.  Extern for emission while the OBELISK arm is a
+// stub.
+VA(0x0052a2b0, 0xc5)  // anchor: obeliskFlags + ultimateArtifact triple + OBELISK arm, dc 0x111d68
+int value_of_obelisk(NewmapCell* cell, long player_id)
+{
+    if (gpGame->obeliskFlags[cell->extraInfo] & (1 << player_id))
+        return 0;
+    if (!gpGame->ultimateArtifactPresent)
+        return 0;
+
+    playerData* player = &gpGame->players[player_id];
+    type_point guess;
+    memcpy(&guess, player->puzzle_guess, sizeof guess);
+    if (guess.x == gpGame->ultimateArtifactX
+        && guess.y == gpGame->ultimateArtifactY
+        && guess.z == gpGame->ultimateArtifactZ)
+        return 0;
+
+    type_artifact grail_artifact(ARTIFACT_HOLY_GRAIL, -1);
+    // field_4e3e8 is the DC-named numObelisks (see its game.h note).
+    return AI_get_value_of_artifact(grail_artifact, player_id)
+        / gpGame->field_4e3e8;
+}
+
+// E:\gamedcs\philai.cpp:2784.  A Star Axis (the POWER_SCHOOL object)
+// grants +1 power once per hero: worth the hero's own power valuation
+// until its visit bit is set.  Extern for emission while the arm is a
+// stub.
+VA(0x0052a380, 0x1c)  // anchor: PowerSchoolFlags + value_of_power + POWER_SCHOOL arm, dc 0x111e34
+int ValueOfPowerSchool(const hero* current_hero, NewmapCell* cell)
+{
+    if ((1 << cell->extraInfo) & current_hero->PowerSchoolFlags)
+        return 0;
+    return current_hero->value_of_power;
+}
 
 // E:\gamedcs\philai.cpp:2794.  A Prison holds a hero to free; its value is the
 // freed army's strength.  Exact cross-TU callee set {armyGroup::get_AI_value} -
@@ -2041,6 +2282,72 @@ long value_of_pyramid(const hero* current_hero, NewmapCell* cell)
     }
 
     return AI_value_of_combat(current_hero, 0, guardians, 0, cell) + value;
+}
+
+// E:\gamedcs\philai.cpp:2845.  A Magic Well's worth: nothing if the hero
+// already drank this turn (hero flag bit 0), and nothing on a long trip
+// whose planned destination is not itself a well or spring - mana
+// regenerates on the way.  Otherwise the well valuation
+// AI_set_hero_bonuses keeps on the hero.  Extern for emission while the
+// MAGIC_WELL arm (which passes the low word of *move_cost) is a stub.
+VA(0x0052a510, 0xdf)  // anchor: hero flag bit 0 + pathTarget cell probe + value_of_well, dc 0x11206c
+long get_value_of_well(const hero* current_hero, unsigned short move_cost)
+{
+    if (current_hero->flags & 1)
+        return 0;
+
+    type_point target;
+    target.x = current_hero->pathTargetX;
+    target.y = current_hero->pathTargetY;
+    target.z = current_hero->pathTargetZ;
+    if (target.is_valid() && move_cost > 300) {
+        NewmapCell* cell = gpGame->worldMap.cell(target);
+        if (cell->type != MAGIC_WELL && cell->type != MAGIC_SPRING)
+            return 0;
+    }
+    return current_hero->value_of_well;
+}
+
+// E:\gamedcs\philai.cpp:2865.  The Rally Flag: +1 morale, +1 luck and a
+// movement bonus, once per hero (flag bit 16).  The movement credit and
+// its outrun bounty are value_of_move_source's shape written in line, and
+// the raw morale/luck curves are added on top.  Extern for emission while
+// the RALLY_FLAG arm is a stub.
+VA(0x0052a5f0, 0x108)  // anchor: hero flag 0x10000 + morale/luck pair + RALLY_FLAG arm, dc 0x1120e8
+int ValueOfRallyFlag(const hero* current_hero, long* move_cost)
+{
+    if (current_hero->flags & 0x10000)
+        return 0;
+
+    int value;
+    if (*move_cost < 200) {
+        *move_cost = 0;
+        value = 10000;
+    } else {
+        *move_cost -= 200;
+        value = const_cast<hero*>(current_hero)->MoraleIncreaseValue(1);
+    }
+    return static_cast<int>(
+        AI_value_of_morale(
+            const_cast<hero*>(current_hero)->GetMorale(0, 0, 1), 1)
+        + AI_value_of_luck(
+            const_cast<hero*>(current_hero)->GetLuck(0, 0, 1), 1)
+        + value);
+}
+
+long value_of_recruiting(const hero* current_hero, TCreatureType creature,
+                         short amount);
+
+// E:\gamedcs\philai.cpp:2879.  The refugee camp prices its weekly offer
+// through the recruiting appraisal: the creature rides the cell's
+// objectIndex slot and the head count the extra-info low word.  Extern
+// for emission while the REFUGEE_CAMP arm is a stub.
+VA(0x0052a700, 0x10)  // anchor-callee value_of_recruiting + REFUGEE_CAMP arm, dc 0x1121b8
+int ValueOfRefugeeCamp(const hero* current_hero, NewmapCell* cell)
+{
+    return value_of_recruiting(current_hero,
+        creature_type_from_int(cell->objectIndex),
+        static_cast<short>(cell->extraInfo));
 }
 
 #if 0  // @carcass
@@ -2246,6 +2553,252 @@ long value_of_reinforcing(hero* current_hero, town* current_town, short move_cos
         return 0;
 
     return purchase_value + swap_value / 2;
+}
+
+// Retail-only 0x52b1e0, value_of_town's building appraisal, split out of
+// the DC single body (value_of_town calls it twice; DC's own 1214-byte
+// value_of_town carries the same HasBuilding x6 / GetExperienceIncrement
+// x2 census in line).  What a visiting hero gains from the town: the
+// Conflux university, the mage guild's unlearned spells (or a 500-gold
+// spellbook, valued 1000), and the once-per-hero special-building stat
+// bonuses ledgered in TownSpecialGrantedMask.  PROVISIONAL house name;
+// extern for emission while value_of_town is a stub.
+VA(0x0052b1e0, 0x2f4)  // anchor-callee {type_university ctor, value_of_university, AI_get_spell_value, bitset _Xran}, 2 sites in value_of_town, retail-only
+long value_of_town_buildings(const hero* current_hero, town* current_town)
+{
+    long value = 0;
+    if (current_town->type == TOWN_CONFLUX
+        && current_town->HasBuilding(EXTRA_0_ID, 1)) {
+        type_university university;
+        value = value_of_university(current_hero, &university, 1);
+    }
+
+    if (current_town->HasBuilding(MAGE_GUILD_ID, 1)) {
+        if (!const_cast<hero*>(current_hero)->IsWieldingArtifact(
+                ARTIFACT_SPELLBOOK)) {
+            if (gpCurrentPlayer->resources[GOLD] >= 500)
+                value += 1000;
+        } else {
+            for (int level = 0;
+                 level < current_hero->wisdomLevel + 2; level++) {
+                if (level > current_town->field_14)
+                    break;
+                for (int slot = 0;
+                     slot < current_town->mageGuildSpellCounts[level];
+                     slot++) {
+                    int spell = current_town->mageGuildSpells[level][slot];
+                    if (!current_hero->in_spellbook[spell])
+                        value += AI_get_spell_value(current_hero, spell);
+                }
+            }
+        }
+    }
+
+    if (const_cast<hero*>(current_hero)->TownSpecialGrantedMask.test(
+            current_town->id))
+        return value;
+
+    switch (current_town->type) {
+    case TOWN_TOWER:
+        if (current_town->HasBuilding(EXTRA_2_ID, 1))
+            value += current_hero->value_of_knowledge;
+        break;
+    case TOWN_INFERNO:
+        if (current_town->HasBuilding(EXTRA_2_ID, 1))
+            value += current_hero->value_of_power;
+        break;
+    case TOWN_DUNGEON:
+        if (current_town->HasBuilding(EXTRA_2_ID, 1))
+            value = static_cast<long>(
+                current_hero->turnExperienceToRVRatio * 1000.0f
+                + static_cast<float>(value));
+        break;
+    case TOWN_STRONGHOLD:
+        if (current_town->HasBuilding(EXTRA_2_ID, 1))
+            value = static_cast<long>(
+                static_cast<float>(hero::GetExperienceIncrement(
+                    current_hero->level))
+                * current_hero->turnExperienceToRVRatio
+                + static_cast<float>(value));
+        break;
+    case TOWN_FORTRESS:
+        if (current_town->HasBuilding(SPECIAL_BUILDING_ID, 1))
+            value = static_cast<long>(
+                static_cast<float>(hero::GetExperienceIncrement(
+                    current_hero->level))
+                * current_hero->turnExperienceToRVRatio
+                + static_cast<float>(value));
+        break;
+    }
+    return value;
+}
+
+// E:\gamedcs\philai.cpp:3307.  A treasure chest: three equally weighted
+// gold-or-experience fills, each priced as the better of its two halves,
+// plus the slim artifact chance at a twentieth of the player's average
+// artifact valuation.  Extern for emission while the TREASURE_CHEST arm
+// is a stub.
+VA(0x0052b4e0, 0xbf)  // anchor: three ratio/gold max pairs + turnValueOfAvgArtifact, TREASURE arm, dc 0x112f6c
+int ValueOfTreasure(const hero* current_hero)
+{
+    playerData* player = const_cast<hero*>(current_hero)->get_player();
+    int value = static_cast<int>(
+        current_hero->turnExperienceToRVRatio * 160.0f);
+    int gold_part = static_cast<int>(player->resourceValue[GOLD] * 320.0);
+    if (value <= gold_part)
+        value = gold_part;
+
+    int experience_part = static_cast<int>(
+        current_hero->turnExperienceToRVRatio * 320.0f);
+    gold_part = static_cast<int>(player->resourceValue[GOLD] * 480.0);
+    if (experience_part > gold_part)
+        value += experience_part;
+    else
+        value += gold_part;
+
+    experience_part = static_cast<int>(
+        current_hero->turnExperienceToRVRatio * 465.0f);
+    gold_part = static_cast<int>(player->resourceValue[GOLD] * 620.0);
+    if (experience_part > gold_part)
+        value += experience_part;
+    else
+        value += gold_part;
+
+    return static_cast<int>(player->turnValueOfAvgArtifact / 20.0f
+        + static_cast<float>(value));
+}
+
+// E:\gamedcs\philai.cpp:3339.  A Tree of Knowledge: one level's worth of
+// experience, once per hero per tree, less the tree's price - free, 2,000
+// gold or 10 gems when this player has already learned which, or the
+// three-way expected price (capped at two thirds of the level's worth)
+// when he has not.  Extern for emission while the TREE arm is a stub.
+VA(0x0052b5a0, 0x161)  // anchor: TreeOfKnowledgeFlags + tree price switch + TREE arm, dc 0x1130cc
+int ValueOfTree(const hero* current_hero, NewmapCell* cell)
+{
+    ExtraInfoUnion* info =
+        static_cast<ExtraInfoUnion*>(static_cast<void*>(cell));
+    if (current_hero->TreeOfKnowledgeFlags
+            & (1 << (cell->extraInfo & 0x1f)))
+        return 0;
+
+    playerData* player = const_cast<hero*>(current_hero)->get_player();
+    int level_value = static_cast<int>(
+        static_cast<float>(
+            hero::GetExperienceIncrement(current_hero->level))
+        * current_hero->turnExperienceToRVRatio);
+
+    if (cell->PlayerKnowsCell(current_hero->owner)) {
+        switch (info->tree_info.price) {
+        case 1:
+            if (player->resources[GOLD] < 2000)
+                return 0;
+            return static_cast<int>(level_value
+                - player->resourceValue[GOLD] * 2000.0);
+        case 2:
+            if (player->resources[GEMS] < 10)
+                return 0;
+            return static_cast<int>(level_value
+                - player->resourceValue[GEMS] * 10.0);
+        default:
+            return level_value;
+        }
+    }
+
+    int expected_price = static_cast<int>(
+        (player->resourceValue[GOLD] * 2000.0
+         + player->resourceValue[GEMS] * 10.0) / 3.0);
+    int price_cap = level_value * 2 / 3;
+    if (expected_price > price_cap)
+        expected_price = price_cap;
+    return level_value - expected_price;
+}
+
+// E:\gamedcs\philai.cpp:3383.  A wagon: once a player has looted it he
+// knows it is empty; otherwise it is worth the average of its 2..5
+// random-resource fill plus half the average artifact.  Extern for
+// emission while the WAGON arm is a stub.
+VA(0x0052b710, 0x7e)  // anchor: PlayerKnowsCell + averageResourceValue*7/4 + WAGON arm, dc 0x113324
+int value_of_wagon(NewmapCell* cell, long player_id)
+{
+    if (cell->PlayerKnowsCell(static_cast<short>(player_id)))
+        return 0;
+    int resource_part =
+        gpGame->players[player_id].averageResourceValue * 7 / 4;
+    return static_cast<int>(
+        gpCurrentPlayer->turnValueOfAvgArtifact * 2.0f / 5.0f
+        + static_cast<float>(resource_part));
+}
+
+// E:\gamedcs\philai.cpp:3402.  A School of War visit priced like the
+// magic school - once per hero, 1,000 gold - but valued as a level's
+// worth of experience.  Extern for emission while the WAR_SCHOOL arm is
+// a stub.
+VA(0x0052b790, 0x71)  // anchor: WarSchoolFlags + level-worth less 1000 gold + WAR_SCHOOL arm, dc 0x113380
+int value_of_war_school(const hero* current_hero, NewmapCell* cell)
+{
+    if ((1 << cell->extraInfo) & current_hero->WarSchoolFlags)
+        return 0;
+    playerData* player = const_cast<hero*>(current_hero)->get_player();
+    if (player->resources[GOLD] < 1000)
+        return 0;
+    return static_cast<int>(
+        static_cast<float>(
+            hero::GetExperienceIncrement(current_hero->level))
+        * current_hero->turnExperienceToRVRatio
+        - player->resourceValue[GOLD] * 1000.0);
+}
+
+// E:\gamedcs\philai.cpp:3424.  A Magic Spring's worth: nothing when
+// already drunk this week, and get_value_of_well's destination probe
+// otherwise - mana regenerates on a long trip unless the trip itself
+// ends at a well or spring.  Extern for emission while the MAGIC_SPRING
+// arm is a stub.
+VA(0x0052b810, 0xe1)  // anchor: spring-full bit + pathTarget cell probe + value_of_spring, dc 0x11348c
+long get_value_of_spring(const hero* current_hero, const NewmapCell* cell,
+                         unsigned short move_cost)
+{
+    if (!(cell->extraInfo >> 6 & 1))
+        return 0;
+
+    type_point target;
+    target.x = current_hero->pathTargetX;
+    target.y = current_hero->pathTargetY;
+    target.z = current_hero->pathTargetZ;
+    if (target.is_valid() && move_cost > 300) {
+        NewmapCell* destination = gpGame->worldMap.cell(target);
+        if (destination->type != MAGIC_WELL
+            && destination->type != MAGIC_SPRING)
+            return 0;
+    }
+    return current_hero->value_of_spring;
+}
+
+// E:\gamedcs\philai.cpp:3796.  A witch hut: an unknown hut is priced as a
+// level's worth of experience; a known hut is the offered skill's worth
+// when the hero has a slot, lacks the skill and wants it.  Extern for
+// emission while the WITCH_HUT arm is a stub.
+VA(0x0052b900, 0xb6)  // anchor: PlayerKnowsCell + witch_hut_info.skill + wants_skill/get_skill_value, dc 0x113da0
+int value_of_witch_hut(const hero* current_hero, NewmapCell* cell)
+{
+    ExtraInfoUnion* info =
+        static_cast<ExtraInfoUnion*>(static_cast<void*>(cell));
+    if (cell->PlayerKnowsCell(current_hero->owner)) {
+        if (current_hero->skillCount >= 8)
+            return 0;
+        int skill = info->witch_hut_info.skill;
+        if (skill == -1)
+            return 0;
+        if (current_hero->skillLevel[skill])
+            return 0;
+        if (!wants_skill(current_hero, skill, 1))
+            return 0;
+        return get_skill_value(current_hero, skill, 1);
+    }
+    return static_cast<int>(
+        static_cast<float>(
+            hero::GetExperienceIncrement(current_hero->level))
+        * current_hero->turnExperienceToRVRatio);
 }
 
 // E:\gamedcs\philai.cpp:4126
