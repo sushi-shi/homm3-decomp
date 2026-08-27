@@ -238,6 +238,16 @@ class CScrollMsg : public CNetMsg {
 public:
     int m_map;    // +0x14
     int m_index;  // +0x18
+
+    // SetCurrentMap's host-broadcast site expands it (the
+    // CMapHeaderRequestMsg pattern); the higher-offset store lands
+    // first there, as in that ctor.
+    CScrollMsg(int map, int index)
+        : CNetMsg(RS_SCROLL, sizeof(CScrollMsg))
+    {
+        m_index = index;
+        m_map = map;
+    }
 };
 
 class CSortMapsMsg : public CNetMsg {
@@ -465,8 +475,26 @@ public:
 };
 
 // The per-handicap label pointers the seat rows are retitled from
-// (cell 0x6a7800, owner unclaimed).
-extern char* gUnnamed6a7800[];
+// (cell 0x6a7800, owner unclaimed). Declared as int cells: the only
+// consumer (SetCurrentMap's seat loop) feeds them verbatim into
+// send_message's int payload, and the int view spells that without a
+// pointer cast.
+extern int gUnnamed6a7800[];
+
+// The scenario-description scroller class of the +0x196c widget
+// (retail band 0x5ba600..0x5ba920, between text.obj and textntry.obj;
+// no DC roster counterpart). SetText (retail 0x5ba6e0, thiscall ret 4)
+// refills the lines vector from the font; only that entry is modeled,
+// and the class stays abstract - it exists to type the call.
+class CScrollTextWidget : public widget {
+public:
+    void SetText(const char* text);
+};
+
+// The selected row's difficulty mirror at .data 0x683454 (initial 1).
+// Owner is this TU; unclaimed pending the data phase - the
+// gUnnamed6a77ec precedent.
+extern int gUnnamed683454;
 
 // The per-row header broadcast Tick streams (subtype 0x406, 0x84 B);
 // retail's inline expansion fixes every field offset. DC's ctor takes

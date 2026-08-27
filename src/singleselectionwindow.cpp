@@ -642,6 +642,31 @@ void TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     // @stub
 }
 
+#endif  // @carcass
+
+// The seat-record reset: dpid/name cleared, version seeded from the
+// game-context cell, every selection field back to its idle value.
+// Defined out of class (see the header note) so /Ob2 reproduces
+// retail's per-site inline/call split.
+// E:\gamedcs\struct.h:352
+VA(0x0057C790, 0x40)  // anchor-global reads *gpVideoGameState (0x69923c) into +0x1c and presets the 0x7c record exactly as both CUpdatePlayerPosMsg expansions do; called per element by OnNewPlayerMsg's init loop + address-taken by its ??_L call
+CNetPlayerHandlerPlayer::CNetPlayerHandlerPlayer()
+{
+    dpid = 0;
+    sName[0] = 0;
+    version = *gpVideoGameState;
+    heroIndex = -1;
+    townIndex = -1;
+    availableHeroesCount = 0;
+    startBonusIndex = 3;
+    playerPos = -1;
+    color = -1;
+    handicap = 0;
+    memset(availableHeroes, 0, sizeof(availableHeroes));
+}
+
+#if 0  // @carcass
+
 // --- Member-widget class virtual overrides, relocated here for RVA order.
 // --- All vtable-proven: the TSingleSelectionWindow ctor stores each class's
 // --- vtable, and the overridden slot is named from the exact base-class
@@ -1720,16 +1745,213 @@ void TSingleSelectionWindow::UpdateAllyEnemyFlags(unsigned char update)
     }
 }
 
-#if 0  // @carcass
-
+// Select a file row (-1 = none): retarget pCurrentHeader (the window's
+// local row when field_37F holds the setup copy), mirror the name and
+// difficulty into the mode's scratch cells, refresh the game vars and
+// the seat state, broadcast the size-icon update, and push the change
+// to the peers (RS_SCROLL when hosting; the full seat snapshot when
+// the row really moved). The version compares run SoD/RoE/AB - the
+// source || order.
 // E:\gamedcs\singleselectionwindow.cpp:4773
-VA(0x00585500, 0x889)  // anchor-callee CSaveGameEdit::OnKeyPress calls it (-1, 1) behind the currentMap!=-1 guard; body owns the 'NEWGAME.gm1'+'Arrogance.h3m' literals (default-map reset), size 1.09x dc 0x7d2, dc 0x13bc60
+VA(0x00585500, 0x889)  // anchor-callee CSaveGameEdit::OnKeyPress calls it (-1, 1) behind the currentMap!=-1 guard; body owns the 'NEWGAME.gm1'+'Arrogance.h3m' defaults (the mode scratch buffers), size 1.09x dc 0x7d2, dc 0x13bc60
 void TSingleSelectionWindow::SetCurrentMap(int map, unsigned char bUpdate)
 {
-    // @stub
+    if (map >= static_cast<int>(GetMapCount()))
+        return;
+    message msg;
+    msg.id = 0;
+    msg.codeX = 0;
+    msg.codeY = 0;
+    msg.qualifier = 0;
+    msg.mouseX = 0;
+    msg.mouseY = 0;
+    msg.extra = 0;
+    msg.window = 0;
+    mapChanged = currentMap != map || m_flag65;
+    currentMap = map;
+    if (map == -1 && !field_37F) {
+        if (m_flag65) {
+            UpdateGameVars();
+            msg.id = 0x200;
+            msg.codeY = 189;
+            msg.codeX = 4;
+            switch (gpGame->mapHeader.Size) {
+            case MAP_DIMENSION_SMALL:
+                msg.extra = 0;
+                break;
+            case MAP_DIMENSION_MEDIUM:
+                msg.extra = 1;
+                break;
+            case MAP_DIMENSION_LARGE:
+                msg.extra = 2;
+                break;
+            case MAP_DIMENSION_EXTRA_LARGE:
+                msg.extra = 3;
+                break;
+            default:
+                msg.extra = 4;
+                break;
+            }
+            BroadcastMessage(&msg);
+            static_cast<CScrollTextWidget*>(field_196c)
+                ->SetText(gpGame->mapHeader.mapDescription.c_str());
+        } else {
+            static_cast<CScrollTextWidget*>(field_196c)->SetText("");
+        }
+    } else {
+        if (field_37F)
+            pCurrentHeader = &m_localHeader;
+        else
+            pCurrentHeader = &SelectionHeaders[map];
+        if (m_flag65) {
+            strcpy(DATA_COMPGEN(0x0068333c, defaultNewGameFileName,
+                                "NEWGAME.gm1"),
+                   pCurrentHeader->setup.filename);
+            strtok(DATA_COMPGEN(0x0068333c, defaultNewGameFileName,
+                                "NEWGAME.gm1"),
+                   DATA_COMPGEN(0x006603ec, saveExtensionDot, "."));
+            gUnnamed683454 = pCurrentHeader->setup.difficulty;
+        } else if (m_flag64) {
+            strcpy(DATA_COMPGEN(0x0068333c, defaultNewGameFileName,
+                                "NEWGAME.gm1"),
+                   pCurrentHeader->setup.filename);
+            gUnnamed683454 = pCurrentHeader->setup.difficulty;
+            durationIndex = pCurrentHeader->setup.turnDuration;
+            if (durationSlider)
+                durationSlider->SetState(durationIndex);
+        } else {
+            strcpy(DATA_COMPGEN(0x00683238, defaultMapFileName,
+                                "Arrogance.h3m"),
+                   pCurrentHeader->setup.filename);
+        }
+        UpdateGameVars();
+        for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
+            m_players.humanPlayers[i].heroIndex = -1;
+            m_players.humanPlayers[i].townIndex = -1;
+            m_players.computerPlayers[i].heroIndex = -1;
+            m_players.computerPlayers[i].townIndex = -1;
+        }
+        WindowFn_00584c40();
+        MakeHeroFilter();
+        if (m_flag65) {
+            saveGameEdit->SetText(DATA_COMPGEN(0x0068333c,
+                                               defaultNewGameFileName,
+                                               "NEWGAME.gm1"));
+            saveGameEdit->Draw();
+        }
+        msg.id = 0x200;
+        msg.codeY = 189;
+        msg.codeX = 4;
+        switch (pCurrentHeader->header.Size) {
+        case MAP_DIMENSION_SMALL:
+            msg.extra = 0;
+            break;
+        case MAP_DIMENSION_MEDIUM:
+            msg.extra = 1;
+            break;
+        case MAP_DIMENSION_LARGE:
+            msg.extra = 2;
+            break;
+        case MAP_DIMENSION_EXTRA_LARGE:
+            msg.extra = 3;
+            break;
+        default:
+            msg.extra = 4;
+            break;
+        }
+        BroadcastMessage(&msg);
+        if (!bVideoPaused || pDPlay->IsHost())
+            UpdateAllyEnemyFlags(bUpdate);
+        if (bVideoPaused && !m_flag65 && pDPlay->IsHost()
+                && !field_37F) {
+            CScrollMsg scrollMsg(currentMap, currentIndex);
+            TransmitRemoteDataDPID(&scrollMsg, 0, false, true);
+        }
+    }
+    if (!bVideoPaused || pDPlay->IsHost()) {
+        widget* w = GetWidget(186);
+        if (w) {
+            if (!m_flag64 && !m_flag65
+                    && gpGame->mapHeader.version
+                           != MAP_FORMAT_SHADOW_OF_DEATH
+                    && gpGame->mapHeader.version
+                           != MAP_FORMAT_RESTORATION_OF_ERATHIA
+                    && gpGame->mapHeader.version
+                           != MAP_FORMAT_ARMAGEDDONS_BLADE)
+                w->enable(0);
+            else if (m_flag64 && HeadersA.size() == 0)
+                w->enable(0);
+            else
+                w->enable(1);
+            w->Draw();
+        }
+    }
+    if (m_flag64 || m_flag65) {
+        message deselect;
+        deselect.id = 0x200;
+        deselect.qualifier = 0;
+        deselect.mouseX = 0;
+        deselect.mouseY = 0;
+        deselect.window = 0;
+        deselect.codeX = 6;
+        deselect.extra = 0x10;
+        for (int i = 107; i <= 111; ++i) {
+            deselect.codeY = i;
+            GetWidget(i)->Main(&deselect);
+        }
+        deselect.codeX = 5;
+        deselect.codeY = 107 + gpGame->setup.difficulty;
+        BroadcastMessage(&deselect);
+    }
+    if (bUpdate) {
+        if (mapChanged) {
+            DrawWindow(0, 0xffff0001, 0xffff);
+        } else {
+            widget* w = GetWidget(101);
+            if (w->status & widget::WIDGET_ACTIVE) {
+                w->Draw();
+                GetWidget(361)->Draw();
+                DrawWindow(0, 137, 141);
+                DrawWindow(0, 190, 195);
+                DrawWindow(0, fileSlider->id, fileSlider->id);
+            }
+            if (m_flag65) {
+                GetWidget(388)->Draw();
+                saveGameEdit->Draw();
+            }
+        }
+        Update();
+    }
+    if (m_flag64) {
+        for (int pos = 0; pos < CNetPlayerHandler::MAX_PLAYERS; ++pos) {
+            CNetPlayerHandlerPlayer* p = m_players.GetPlayerInPos(pos);
+            if (!p)
+                p = m_players.GetCompPlayerInPos(pos);
+            // Residual (99.66): one SIB base/index swap - retail
+            // encodes this read [gpGame+pos+disp] with gpGame as base,
+            // our CL picks pos; the pointer-add respelling is
+            // byte-flat (measured). Everything else is reloc-name
+            // cosmetics.
+            p->handicap = gpGame->setup.handicap[pos];
+            widget* w = GetWidget(207 + pos);
+            if (w) {
+                int saved = w->status;
+                w->status |= widget::WIDGET_ACTIVE;
+                w->send_message(widget::WIDGET_SET_TEXT,
+                                gUnnamed6a7800[p->handicap]);
+                w->status = saved;
+            }
+        }
+    }
+    if (bVideoPaused && pDPlay->IsHost() && mapChanged) {
+        CUpdatePlayerPosMsg posMsg;
+        memcpy(posMsg.m_players, m_players.humanPlayers,
+               sizeof(posMsg.m_players));
+        memcpy(posMsg.m_compPlayers, m_players.computerPlayers,
+               sizeof(posMsg.m_compPlayers));
+        TransmitRemoteDataDPID(&posMsg, 0, true, true);
+    }
 }
-
-#endif  // @carcass
 
 // Store the size filter, rebuild SelectionHeaders from the source list
 // through it, tell the filter widget row (the 0x200/189 broadcast whose
@@ -3117,6 +3339,8 @@ unsigned char TSingleSelectionWindow::IsVersionCompatible(const char* otherVersi
 // the reply arm's GetText loads scheduled above the first strncpy
 // (the same shape OnGameHeaderInfoInitMsg's reply arm carries; a
 // named-local hoist measured WORSE there).
+static void BroadcastPlayerPositions(TSingleSelectionWindow* pWindow);
+
 // E:\gamedcs\singleselectionwindow.cpp:6884
 VA(0x00589FA0, 0x2D9)  // anchor-callee RS_NEW_PLAYER arm; owns the 'OnNewPlayerMsg %d' log line, size 1.37x dc 0x214, dc 0x140a74
 unsigned char TSingleSelectionWindow::OnNewPlayerMsg(CNetMsg* pNetMsg)
@@ -3131,9 +3355,10 @@ unsigned char TSingleSelectionWindow::OnNewPlayerMsg(CNetMsg* pNetMsg)
                 DATA_COMPGEN(0x00683904, incompatibleVersionLog,
                              "New Player has incompatible version #%s"),
                 pMsg->m_version);
+            const char* errText = gpGeneralText->GetText(666);
             CBadVersionMsg reply;
             strncpy(reply.m_version, gameVersion, 20);
-            strncpy(reply.m_errText, gpGeneralText->GetText(666), 80);
+            strncpy(reply.m_errText, errText, 80);
             TransmitRemoteDataDPID(&reply, pNetMsg->field_04, 0, 1);
             return 1;
         }
@@ -3165,17 +3390,35 @@ unsigned char TSingleSelectionWindow::OnNewPlayerMsg(CNetMsg* pNetMsg)
         } else {
             WindowFn_00584c40();
         }
-        CUpdatePlayerPosMsg msg;
-        memcpy(msg.m_players, m_players.humanPlayers,
-               sizeof(msg.m_players));
-        memcpy(msg.m_compPlayers, m_players.computerPlayers,
-               sizeof(msg.m_compPlayers));
-        TransmitRemoteDataDPID(&msg, 0, 1, 1);
+        // Residual (97.1): the caller-shrink static is what flips the
+        // seat-record ctor to retail's out-of-line split (62.4 -> 92.0
+        // measured without it, 67.2 with only the errText hoist); the
+        // one remaining structural delta is the SECOND array's init -
+        // retail emits the ??_L vector-iterator call there where our
+        // minimum static budget (clamp floor 1000) still buys the
+        // call-per-element loop. Plus tail register naming at the
+        // PlayerEnterMsg gpGeneralText reload.
+        BroadcastPlayerPositions(this);
     }
     PlayerEnterMsg(&chatMan, gpGeneralText->GetText(526),
                    pMsg->m_playerInfo.sName);
     DisplayChat();
     return 1;
+}
+
+// Single-call-site caller-shrink helper (numerator lever): dropping
+// the broadcast block out of OnNewPlayerMsg's collected mass is what
+// makes /Ob2 refuse the seat-record ctor expansions inside the
+// CUpdatePlayerPosMsg local, reproducing retail's call-per-element
+// loop + ??_L split; the static inlines back unconditionally.
+static void BroadcastPlayerPositions(TSingleSelectionWindow* pWindow)
+{
+    CUpdatePlayerPosMsg msg;
+    memcpy(msg.m_players, pWindow->m_players.humanPlayers,
+           sizeof(msg.m_players));
+    memcpy(msg.m_compPlayers, pWindow->m_players.computerPlayers,
+           sizeof(msg.m_compPlayers));
+    TransmitRemoteDataDPID(&msg, 0, 1, 1);
 }
 
 // DC NewPlayer, LOCATED round 2 (dc 0x14870c -> retail 0x58a280, 123 B
@@ -3546,10 +3789,8 @@ unsigned char TSingleSelectionWindow::OnUpdatePlayerPosMsg(CNetMsg* pNetMsg)
         if (!p)
             p = &m_players.computerPlayers[i];
         if (p) {
-            message update;
-            update.extraText = gUnnamed6a7800[p->handicap];
             GetWidget(p->playerPos + 207)->send_message(
-                widget::WIDGET_SET_TEXT, update.extra);
+                widget::WIDGET_SET_TEXT, gUnnamed6a7800[p->handicap]);
         }
     }
     if (!receivingMaps) {
