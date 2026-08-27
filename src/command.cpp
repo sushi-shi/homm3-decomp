@@ -30,21 +30,176 @@
 #include "textresource.h"
 #include "winmgr.h"
 
-#if 0  // @carcass
-
 // E:\gamedcs\command.cpp:63
+// Dreamcast CodeView names this private nullary member and its two static
+// TWallTargetId arrays. Retail fixes the Complete-build fourth tower target,
+// the x86 unsigned-char return ABI, and every branch below. The first scan
+// rejects a siege with no live target. Trained Ballistics then aims at the
+// keep when the action is automatic; otherwise a basic catapult chooses a
+// random weakest wall, while the remaining cases prefer surviving towers.
+// Every successful arm writes the catapult order and its target combat hex.
 VA(0x00473c00, 0x29F)  // anchor-callee: Main's only automate callee w/ Random discriminator + order-map, dc 0x6af98
 unsigned char combatManager::automate_catapult()
 {
-    // @stub
+    DATA(0x0063d54c) static const TWallTargetId walls[4] = {
+        WALL_TARGET_1, WALL_TARGET_2, WALL_TARGET_4, WALL_TARGET_5
+    };
+
+    army* current_army = get_current_army();
+    if (current_army->creatureType != CREATURE_CATAPULT)
+        return 0;
+
+    if (field_132f4 == COMBAT_FORTIFICATION_NONE) {
+        field_3c = AI_ORDER_NONE;
+        return 1;
+    }
+
+    long target;
+    for (target = WALL_TARGET_0; target < WALL_TARGET_COUNT; target++) {
+        if ((target == WALL_TARGET_0 || target == WALL_TARGET_6)
+                && field_132f4 < COMBAT_FORTIFICATION_CASTLE)
+            continue;
+        if (target == WALL_TARGET_7
+                && field_132f4 < COMBAT_FORTIFICATION_CITADEL)
+            continue;
+        if (wallStrength[gWallTargets[target].wall_id] > 0)
+            break;
+    }
+    if (target == WALL_TARGET_COUNT) {
+        field_3c = AI_ORDER_NONE;
+        return 1;
+    }
+
+    long count;
+    hero* controller = current_army->get_controller();
+    long skill = controller->ballisticsLevel;
+    if (static_cast<const combatManager*>(this)->IsQuickCombat()
+            || is_computer_action(get_current_army())) {
+        if (skill > 0
+                && wallStrength[gWallTargets[WALL_TARGET_3].wall_id] > 0) {
+            target = WALL_TARGET_3;
+            goto target_chosen;
+        }
+    } else if (skill > 0) {
+        return 0;
+    }
+
+    count = 0;
+    { for (long i = 0; i < 4; i++) {
+            long wall = gWallTargets[walls[i]].wall_id;
+            if (wallStrength[wall] > 0)
+                count++;
+        }
+    }
+
+    if (count > 0 && (skill == 0 || count == sizeof(walls) / sizeof(walls[0]))) {
+        long weakest = 100;
+        count = 0;
+        { for (long i = 0; i < 4; i++) {
+                long strength = wallStrength[gWallTargets[walls[i]].wall_id];
+                if (strength <= 0 || strength > weakest)
+                    continue;
+                if (strength < weakest)
+                    count = 0;
+                count++;
+                weakest = strength;
+            }
+        }
+
+        long choice = Random(1, count);
+        long index = 0;
+        for (; index < 4; index++) {
+            long strength = wallStrength[gWallTargets[walls[index]].wall_id];
+            if (strength == weakest && --choice == 0)
+                break;
+        }
+        target = walls[index];
+    } else {
+        DATA(0x00670198) static TWallTargetId towers[4] = {
+            WALL_TARGET_3, WALL_TARGET_7, WALL_TARGET_0, WALL_TARGET_6
+        };
+
+        long index;
+        for (index = 0; index < 4; index++) {
+            if (valid_wall_target(towers[index]))
+                break;
+        }
+        if (index < 4) {
+            target = towers[index];
+        } else {
+            for (target = WALL_TARGET_0; target < WALL_TARGET_COUNT; target++) {
+                if ((target == WALL_TARGET_0 || target == WALL_TARGET_6)
+                        && field_132f4 < COMBAT_FORTIFICATION_CASTLE)
+                    continue;
+                if (target == WALL_TARGET_7
+                        && field_132f4 < COMBAT_FORTIFICATION_CITADEL)
+                    continue;
+                if (wallStrength[gWallTargets[target].wall_id] > 0)
+                    break;
+            }
+        }
+    }
+
+target_chosen:
+    field_3c = 9;
+    field_44 = gWallTargets[target].hex;
+    field_40 = -1;
+    return 1;
 }
 
-// E:\gamedcs\command.cpp:193
+// E:\gamedcs\command.cpp:193. The DC signature and sole local identify
+// the current-stack scan; retail fixes the target filters and command tuple.
+// Residual at 98.1203%: all 23 blocks and 14 branches agree; only the
+// get-current-army argument and final target-index scratch registers differ.
 VA(0x00473ea0, 0x196)  // anchor-callee: Main's other automate callee (no-Random sibling) + order-map, dc 0x6b12c
 unsigned char combatManager::automate_first_aid_tent()
 {
-    // @stub
+    army* current_army = get_current_army();
+    int side = current_army->hypnotizeFlag
+        ? 1 - current_army->combatSide
+        : current_army->combatSide;
+
+    if (current_army->creatureType != CREATURE_FIRST_AID_TENT)
+        return 0;
+
+    int best_index = -1;
+    int best_damage = 0;
+    for (int i = 0; i < numArmies[side]; ++i) {
+        army* target = &armies[side][i];
+        if (target->creatureId & 0x200040)
+            continue;
+        if (target->topCreatureDamage == 0)
+            continue;
+
+        if (target->creatureType == CREATURE_WIGHT
+                || target->creatureType == CREATURE_WIGHT + 1) {
+            if (target->topCreatureDamage < best_damage)
+                continue;
+        } else if (target->topCreatureDamage < best_damage)
+            continue;
+
+        best_index = i;
+        best_damage = target->topCreatureDamage;
+    }
+
+    if (best_index < 0) {
+        field_3c = 3;
+        return 1;
+    }
+
+    if (!static_cast<const combatManager*>(this)->IsQuickCombat()
+            && !is_computer_action(get_current_army())
+            && current_army->get_controller()->skillLevel[27] > 0)
+        return 0;
+
+    field_3c = 11;
+    int grid_index = armies[side][best_index].gridIndex;
+    field_40 = -1;
+    field_44 = grid_index;
+    return 1;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\command.cpp:266
 VA(0x00474040, 0x8C)  // anchor-callee: PollSound/CycleCombatScreen/GameTime frame loop + order-map, dc 0x6b268

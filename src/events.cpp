@@ -2303,6 +2303,11 @@ void advManager::DoEventArena(hero* current_hero, NewmapCell* cell,
 // declarator claims nothing.
 void AI_equip_artifacts(hero* current_hero);
 
+// philai.obj's two-argument event appraisal (dc 0x114b44). Retail's
+// 0x52bd10 is the /Gr wrapper taking the hero in ECX and the packed point
+// on the stack.
+long AI_value_of_event(const hero* current_hero, type_point point);
+
 // E:\gamedcs\events.cpp:478.  The artifact hand-over every arm of
 // DoEventArtifact (0x49f7e0) ends on: fetch the cell back out of the map,
 // give the hero whatever artifact it names, and pick the object up.
@@ -2345,14 +2350,57 @@ void advManager::FightForArtifact(hero* current_hero, NewmapCell* cell, type_poi
 }
 #endif  // @carcass
 
-// E:\gamedcs\events.cpp:570.  Located, not reconstructed.
-#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
-VA(0x0049ed50, 0x2E8)  // dc-bracket forced, ret 0x1c=p8 (unique), dc 0x90ad8
-void advManager::PayForArtifact(hero* current_hero, NewmapCell* cell, type_point point, const char* dialog_text, short gold_cost, short resource_cost, unsigned char human_player)
+// E:\gamedcs\events.cpp:570. Dreamcast names the two locals as an
+// EGameResource and char[50], and its xrefs publish the artifact/resource
+// accessors, GiveArtifact, the AI appraisal, and three NormalDialog calls.
+VA(0x0049ed50, 0x2E8)  // unique ret 0x1c + DC/retail call stream, dc 0x90ad8
+void advManager::PayForArtifact(hero* current_hero, NewmapCell* cell,
+                                type_point point, const char* dialog_text,
+                                short gold_cost, short resource_cost,
+                                bool human_player)
 {
-    // @stub
+    int resource_type =
+        static_cast<long>(cell->extraInfo << 15) >> 28;
+
+    if (human_player) {
+        short artifact = cell->objectIndex;
+        if (resource_cost > 0) {
+            char resource_name[50];
+            strcpy(resource_name, gResourceNames[resource_type]);
+            resource_name[0] = tolower(resource_name[0]);
+            sprintf(gText, dialog_text,
+                    akArtifactTraits[artifact].name,
+                    resource_name);
+        } else {
+            sprintf(gText, dialog_text,
+                    akArtifactTraits[artifact].name);
+        }
+        NormalDialog(gText, 2, -1, -1, 8, artifact,
+                     -1, 0, -1, 0, -1, 0);
+        if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT) {
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_ARTIFACT_DECLINED),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            return;
+        }
+    } else if (AI_value_of_event(current_hero, point) <= 0) {
+        return;
+    }
+
+    long* resources = gpGame->players[current_hero->owner].resources;
+    if (resources[GOLD] < gold_cost ||
+        resources[resource_type] < resource_cost) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_ARTIFACT_CANT_AFFORD),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return;
+    }
+
+    resources[GOLD] -= gold_cost;
+    resources[resource_type] -= resource_cost;
+    GiveArtifact(current_hero, point, human_player);
 }
-#endif  // @carcass
 
 VA(0x0049f040, 0x23)  // decorated identity + event-pool index arithmetic
 TreasureData* advManager::get_treasure_data(NewmapCell* cell) const
@@ -2488,16 +2536,6 @@ BlackBoxData* advManager::get_black_box(const ExtraInfoUnion* cell) const
     unsigned index = cell->value & 0x3ff;
     return &fullMap->blackBoxes[index];
 }
-
-// philai.obj's two-argument event appraisal (dc 0x114b44), and the whole
-// of the AI arm's decision at five call sites in this file. Retail's
-// 0x52bd10 is a /Gr fastcall taking the hero in ECX and the packed point
-// on the STACK - type_point is a struct, so it cannot ride a register -
-// and returning long; its own body is a nine-instruction wrapper that
-// zeroes a local move-cost and forwards to the three-argument overload at
-// 0x528040. Declared file-locally at its FIRST consumer; the rest of the
-// xref evidence is in the note above monsters_flee.
-long AI_value_of_event(const hero* current_hero, type_point point);
 
 // E:\gamedcs\events.cpp:1123.  Pandora's Box (jump-table arm 0x06): the
 // map-maker's own message, a yes/no prompt, the guardians it may carry,
