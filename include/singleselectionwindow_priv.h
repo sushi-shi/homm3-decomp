@@ -33,6 +33,16 @@ namespace ResourceManager {
 // closure - the ResourceManager::GetText precedent above.
 unsigned long get_available_disk_space();
 
+// The three CRT entries SaveValid touches, declared file-locally
+// instead of including <io.h>/<direct.h>: those two system headers
+// cost HandleNetMsg 90.16 -> 86.33 through the include-set wall
+// (measured 2026-08-27); three declarators do not.
+extern "C" {
+int __cdecl _chdir(const char* path);
+int __cdecl _open(const char* filename, int oflag, ...);
+int __cdecl _close(int handle);
+}
+
 // The five difficulty names at .bss 0x6a77ec, indexed by the header's
 // difficulty byte in DrawBasicMapInfo's bottom row. Owner TU unlocated -
 // extern only, no DATA claim; house unnamed-cell spelling.
