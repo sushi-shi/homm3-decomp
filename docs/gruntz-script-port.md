@@ -260,6 +260,16 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-27 — the multiplayer edit key dispatcher is byte-exact.**
+  Retail `CMPEdit::OnKeyPress` at `0x5107d0` rejects keys while the edit lacks
+  focus, sends Shift+Tab and keypad Up through virtual slot 20, sends plain
+  Tab, Enter and keypad Down through slot 19, and calls the text-entry base
+  handler for every other key. The Win32 `HIWORD(GetKeyState(VK_SHIFT))`
+  spelling reproduces retail's distinctive sign-extend/logical-shift test;
+  all 115 VC6 bytes and 11 control-flow blocks are exact. The synchronized
+  report reaches **2521/3087 functions exact**, **92.94% fuzzy**, and
+  **60.67% executable coverage**.
+
 - **2026-08-27 — the multiplayer edit-navigation trio is byte-exact.**
   Retail `CMPEdit::OnNextEdit`, `OnPrevEdit`, and `SetFocus` at
   `0x510850`, `0x510870`, and `0x510890` follow the active adjacent edit via
