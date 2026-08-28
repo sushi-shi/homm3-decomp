@@ -738,6 +738,12 @@ long value_of_university(const hero* current_hero,
 // E:\gamedcs\philai.cpp:594.  Retail's call stream preserves the DC
 // artifact/building roles and adds a second affordability check after a
 // newly purchased war-machine building has consumed resources.
+// EXACT (99.9362 -> 100.0000): Dreamcast puts the final type_artifact
+// construction in the GiveArtifact statement. Naming it separately grew the
+// frame from retail's 0xc to 0x10; the unnamed temporary restores every code
+// byte. The two HasBuilding table rows are the paired bitNumber+{0,4}
+// aggregate versus retail data_26cd98/data_26cd9c field-symbol forms, which
+// resolve to the same fixed-base addresses and are canonicalized as such.
 VA(0x00525ca0, 0x11e)  // anchor-callee, dc 0x10e118
 void buy_siege_engine(hero* current_hero, town* current_town,
                       type_building_id building, TArtifact engine)
@@ -771,8 +777,7 @@ void buy_siege_engine(hero* current_hero, town* current_town,
     for (int cost_resource = 0; cost_resource < 7; ++cost_resource)
         gpCurrentPlayer->resources[cost_resource] -= costs[cost_resource];
 
-    type_artifact artifact(engine, -1);
-    current_hero->GiveArtifact(&artifact, 1, 1);
+    current_hero->GiveArtifact(&type_artifact(engine, -1), 1, 1);
 }
 
 // E:\gamedcs\philai.cpp:811.  Two friendly heroes meeting exchange creatures
