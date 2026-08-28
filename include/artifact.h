@@ -308,6 +308,12 @@ extern const TArtifactTraits* akArtifactTraits;
 extern const TCombinationArtifact* gCombinationArtifacts;
 extern const TArtifactSlotTraits* akArtifactSlotTraits;
 
+// Retail .data 0x6aa9f8, defined by townmgr.cpp and consumed by the AI
+// town-entry path. The record itself is completed by hero.h; an extern
+// array of unknown bound can retain that single owning declaration here.
+struct type_artifact;
+extern type_artifact gBlacksmithArtifacts[];
+
 // Four signed primary-skill deltas per artifact. remove_artifact walks all
 // 144 rows when dismantling a combination; the adjacent address is a real
 // retail data symbol and is used as the pointer-loop bound.
