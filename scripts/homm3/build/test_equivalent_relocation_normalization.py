@@ -18,6 +18,7 @@ from homm3.build.test_eh_handler_normalization import (
 
 def _base(*, literal: int = 0x00401020,
           field_addend: int = 4, anchor_addend: int = 0,
+          source_name: str = "source",
           literal_relocation_type: int | None = None) -> bytes:
     text = (b"\x05" + struct.pack("<I", literal) +
             b"\xa1" + struct.pack("<I", field_addend) +
@@ -30,28 +31,33 @@ def _base(*, literal: int = 0x00401020,
         (FixtureSection(".text", text, tuple(relocations)),),
         (
             _symbol("probe", 0, 1, FUNCTION_TYPE, 2),
-            _symbol("source", 0, 0, 0, 2),
+            _symbol(source_name, 0, 0, 0, 2),
         ),
     )
 
 
 def _target(*, literal_addend: int = 0x20,
-            field_addend: int = 0, anchor_addend: int = 0) -> bytes:
+            field_addend: int = 0, anchor_addend: int = 0,
+            owner_name: str = "owner",
+            extra_owner_name: str | None = None) -> bytes:
     text = (b"\x05" + struct.pack("<I", literal_addend) +
             b"\xa1" + struct.pack("<I", field_addend) +
             b"\xa1" + struct.pack("<I", anchor_addend) + b"\xc3")
+    symbols = (
+        _symbol("probe", 0, 1, FUNCTION_TYPE, 2),
+        _symbol("code", 0, 0, 0, 2),
+        _symbol("field", 0, 0, 0, 2),
+        _symbol(owner_name, 0, 0, 0, 2),
+    )
+    if extra_owner_name is not None:
+        symbols += (_symbol(extra_owner_name, 0, 0, 0, 2),)
     return _coff(
         (FixtureSection(".text", text, (
             (1, 1, DIR32),
             (6, 2, DIR32),
             (11, 3, DIR32),
         )),),
-        (
-            _symbol("probe", 0, 1, FUNCTION_TYPE, 2),
-            _symbol("code", 0, 0, 0, 2),
-            _symbol("field", 0, 0, 0, 2),
-            _symbol("owner", 0, 0, 0, 2),
-        ),
+        symbols,
     )
 
 
@@ -144,6 +150,104 @@ class EquivalentRelocationNormalizationTest(unittest.TestCase):
         after, _literals, aggregates = \
             _canonicalize_equivalent_relocations(
                 _base(), before, AUTHORITY)
+        self.assertEqual(aggregates, 0)
+        original = CoffObject(before)
+        normalized = CoffObject(after)
+        self.assert_same_relocation_semantics(
+            next(row for row in original.relocations if row.site == 6),
+            next(row for row in normalized.relocations if row.site == 6))
+
+    def test_reviewed_owner_base_replaces_missing_equal_addend_anchor(self):
+        authority = dict(AUTHORITY)
+        authority["source"] = (0x2000, "data")
+        before = _target(anchor_addend=8)
+        after, _literals, aggregates = \
+            _canonicalize_equivalent_relocations(
+                _base(), before, authority)
+        self.assertEqual(aggregates, 1)
+        normalized = CoffObject(after)
+        rows = {row.site: row for row in normalized.relocations}
+        text = normalized.section_bytes(normalized.sections[0])
+        field, = struct.unpack_from("<I", text, 6)
+        self.assertEqual(field, 4)
+        self.assertEqual(normalized.symbols[rows[6].symbol_index].name,
+                         "owner")
+
+    def test_reviewed_owner_keeps_different_field_address_visible(self):
+        authority = dict(AUTHORITY)
+        authority["source"] = (0x2000, "data")
+        authority["field"] = (0x2010, "data")
+        before = _target()
+        after, _literals, aggregates = \
+            _canonicalize_equivalent_relocations(
+                _base(), before, authority)
+        self.assertEqual(aggregates, 0)
+        original = CoffObject(before)
+        normalized = CoffObject(after)
+        self.assert_same_relocation_semantics(
+            next(row for row in original.relocations if row.site == 6),
+            next(row for row in normalized.relocations if row.site == 6))
+
+    def test_reviewed_owner_accepts_known_generated_target_name(self):
+        authority = {
+            "code": (0x1000, "code"),
+            "field": (0x204, "data"),
+            "source": (0x200, "data"),
+        }
+        before = _target(anchor_addend=8, owner_name="data_200")
+        after, _literals, aggregates = \
+            _canonicalize_equivalent_relocations(
+                _base(), before, authority)
+        self.assertEqual(aggregates, 1)
+        normalized = CoffObject(after)
+        row = next(row for row in normalized.relocations if row.site == 6)
+        self.assertEqual(normalized.symbols[row.symbol_index].name,
+                         "data_200")
+
+    def test_reviewed_owner_accepts_duplicate_indices_of_one_name(self):
+        authority = {
+            "code": (0x1000, "code"),
+            "field": (0x204, "data"),
+            "source": (0x200, "data"),
+        }
+        before = _target(
+            anchor_addend=8, owner_name="data_200",
+            extra_owner_name="data_200")
+        _after, _literals, aggregates = \
+            _canonicalize_equivalent_relocations(
+                _base(), before, authority)
+        self.assertEqual(aggregates, 1)
+
+    def test_reviewed_owner_rejects_two_names_at_one_rva(self):
+        authority = {
+            "code": (0x1000, "code"),
+            "field": (0x204, "data"),
+            "source": (0x200, "data"),
+            "other": (0x200, "data"),
+        }
+        before = _target(
+            anchor_addend=8, owner_name="data_200",
+            extra_owner_name="other")
+        after, _literals, aggregates = \
+            _canonicalize_equivalent_relocations(
+                _base(), before, authority)
+        self.assertEqual(aggregates, 0)
+        original = CoffObject(before)
+        normalized = CoffObject(after)
+        self.assert_same_relocation_semantics(
+            next(row for row in original.relocations if row.site == 6),
+            next(row for row in normalized.relocations if row.site == 6))
+
+    def test_unknown_generated_target_name_stays_visible(self):
+        authority = {
+            "code": (0x1000, "code"),
+            "field": (0x204, "data"),
+            "source": (0x200, "data"),
+        }
+        before = _target(anchor_addend=8, owner_name="data_210")
+        after, _literals, aggregates = \
+            _canonicalize_equivalent_relocations(
+                _base(), before, authority)
         self.assertEqual(aggregates, 0)
         original = CoffObject(before)
         normalized = CoffObject(after)

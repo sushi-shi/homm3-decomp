@@ -30,8 +30,9 @@ normalize_objs
              + paired false-literal removal only when the candidate has no
              relocation and equals the target's resolved VA
              + paired aggregate+addend/field-symbol normalization only from
-             one equal-addend retail-data anchor; every transform reparses
-             COFF and verifies unrelated sections, symbols and relocations
+               a reviewed owner base or one equal-addend retail-data anchor;
+               every transform reparses COFF and verifies unrelated sections,
+               symbols and relocations
 
 delink       THE LOOP (explicit invocation only, never in `homm3 build`):
              labels -> model -> synth_pdb -> data_manifest -> vostok
