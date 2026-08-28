@@ -203,16 +203,20 @@ and still did not inline it; the source-level reason is unidentified.
 - status: OPEN — highest-value single unexplained inliner decision in the corpus
 - probe: `a04_auto_inline_off.cpp` (instrument only, as A11)
 
-### A13. Scoped `inline_depth` as the retail-shape instrument (4 byte-proven uses)
+### A13. Scoped `inline_depth` as the retail-shape instrument
 `mousemgr::CheckUpdate` EXACT (block-scoped depth-0 around only the inner
 `TCSLock` declaration; emits the byte-exact 25-B ctor COMDAT at `0x50d890`);
-`armygrp::TSplitWindow` ctor 98.40 (depth-0 `AppendSplitWidget` adapter);
 `ai_player::make_gift` (scoped depth-0 reproduces the called
 `string::append` instantiation at `0x41b250`).
-- evidence: `src/mousemgr.cpp:583-588,620-622`, `src/armygrp.cpp:177-192`, `src/ai_player.cpp:381-394,457-459`
+- evidence: `src/mousemgr.cpp:583-588,620-622`, `src/ai_player.cpp:381-394,457-459`
 - status: explained-lever; strong evidence the true budget is lexically/positionally scoped
 - probe: `a05_inline_depth_scope.cpp` (PASS — depth(0) pins `call ?mid` in
   one function while a depth(255) sibling in the same TU fully inlines)
+
+The old `TSplitWindow` depth-0 `AppendSplitWidget` entry was a 98.40% local
+maximum, not a source fact. It was removed after the Dreamcast dossier proved
+thirteen ordinary `push_back` statements; the natural source is exact as of
+2026-08-28.
 
 ### A14. Emission order of deferred bodies
 VC6 defers the out-of-line copies of inline-expanded functions to the end of
@@ -771,15 +775,17 @@ instead of else = 97.06).
 
 ### D6. The opposite direction: retail duplicates where we merge
 `ai_tactical` 75.5 → 95.9 (three guards goto INTO the third one's body; `||`
-sinks the value/10 block); `armygrp::TSplitWindow::WindowHandler` 99.917
-(duplicating the end-dialog stores in source lets VC6 cross-jump into
-retail's layout, all 34 blocks agree); `armygrp::modify_spell_damage` EXACT
+sinks the value/10 block); `armygrp::TSplitWindow::WindowHandler` EXACT
+(the source-false duplicated end-dialog spelling was only a 99.917 local
+maximum; Dreamcast's two state values, one shared slider update, and positive
+changed-hover scope with its own return make VC6 select retail's duplicated
+tail layout); `armygrp::modify_spell_damage` EXACT
 (mutate in each arm + break to shared return makes VC6 duplicate precisely
 retail's epilogues); `town::get_legion_bonus` 81.7 OPEN (retail's FOURTH exit
 carries a dead `xor eax,eax` no spelling reproduces — an allocator tie-break,
 not statement order; sweeps 73.87 / 81.07 / 73.87 / 81.73, four source
 returns re-merged to three).
-- status: mixed (levers explained; get_legion_bonus OPEN)
+- status: mixed (`WindowHandler` CLOSED 2026-08-28; get_legion_bonus OPEN)
 - probe: none (each shape is a retail-contrast; the duplication our CL
   performs is covered by d05)
 
@@ -956,13 +962,19 @@ WORSE (72.13) and is rejected on evidence grounds. Flow agrees 4/4.
 state/addend spellings); `executive::CallManager`: the three try/catch scopes
 reproduce the 11-block body closely but VC6 emits the funclets in the base
 COFF section — objdiff charges them to the symbol (58.29) vs the EH-free body
-kept at 68.37. EH-bearing functions can't close until the synth-PDB EH scope
-lands (P2.2). Corpus fact: 5,125 tiny entries from RVA 0x227240 are VC6
+kept at 68.37. Corpus fact: 5,125 tiny entries from RVA 0x227240 are VC6
 parent-EBP cleanup/dtor funclets (2,621 dtor tail jumps, 2,327 cleanup calls,
 80 two-object, 61 vector, 36 guarded).
-- evidence: `src/exec.cpp:183-195`; attempt-1 `docs/compiler-toolchain.md:116-123`
-- status: blocked on P2.2 tooling
-- probe: none (comparison-infrastructure artifact, not codegen)
+- evidence: `src/exec.cpp:183-195`; `scripts/homm3/build/normalize_objs.py`;
+  `scripts/homm3/build/test_eh_handler_normalization.py`; attempt-1
+  `docs/compiler-toolchain.md:116-123`
+- status: representation subcase CLOSED 2026-08-28; source/topology cases remain
+- probe: the paired normalizer admits only the exact VC6 EH prologue, an
+  associative `.text$x`, its final ten-byte handler thunk, and a retail unwind
+  owner whose addend equals the measured final-funclet size. It preserves the
+  resolved target. The corpus admitted 551 equivalent relocations and left 18
+  different cleanup sizes visible; four hermetic controls cover the positive
+  form, wrong retail size, malformed thunk, and missing funclet.
 
 ### D21. Relocation/decode representation (excluded from the codegen model)
 `mousemgr` 94.17 (interleaved POINT +4 reloc vs base+displacement); `recruit`
@@ -971,8 +983,20 @@ parent-EBP cleanup/dtor funclets (2,621 dtor tail jumps, 2,327 cleanup calls,
 alignment NOPs); `armygrp::GetMorale` (`ArmyGrpFn_0044A460+0x60` vs `_$E20`
 at addend zero — no source statement differs); `hero.cpp:1220` (flat carve
 name).
-- status: excluded from the model's domain
-- probe: none
+- evidence: `scripts/homm3/build/normalize_objs.py` and
+  `scripts/homm3/build/test_equivalent_relocation_normalization.py`
+- status: two resolved-address subcases CLOSED 2026-08-28; other decode/name
+  classes remain excluded from the codegen model, not waived
+- probe: the paired normalizer removes a stripped-target DIR32 only when the
+  candidate has no relocation of any type at the same function-relative site
+  and its literal equals the generated retail symbol RVA plus addend. It
+  rewrites aggregate+addend versus synthesized field-symbol+addend only after
+  one unambiguous equal-addend data anchor proves the candidate aggregate's
+  retail RVA and both forms resolve identically. A corpus pass removed 6 false
+  literal rows and normalized 243 field splits, closing
+  `AI_value_of_combat`, `mark_towns`, and `value_of_hall`. Five hermetic
+  controls keep wrong literals, candidate relocation sites, missing anchors,
+  and different field addresses visible.
 
 ### D22. Excluded classes (never claim / never model as code)
 cinit-pattern rows (guard byte `0x6abaa0` / atexit / ~95 B ten-iteration
@@ -1036,7 +1060,9 @@ so none carry probes (the pinned toolchain is not MSVC 4.2).
 2. **Register-homing family** (`smackmgr` VideoPlay/DrawRects, `widget`
    send_message/enable) — retail memory-homes a value our CL promotes (or
    vice versa); order sweeps plateau. → §B2/B3 (unprobeable standalone).
-3. **EH-bearing functions** — blocked on the synth-PDB EH scope (P2.2). → D20.
+3. **EH-bearing functions** — direct-handler versus last-funclet+size
+   representation is closed; genuine state, scope, and funclet-topology
+   differences remain source work. → D20.
 4. **Include-set sensitivity** — → C1 (image-level by definition).
 5. **STLport surface — CLOSED** 2026-08-07 (retail links Dinkumware); bodies
    parked on the old premise are reachable.

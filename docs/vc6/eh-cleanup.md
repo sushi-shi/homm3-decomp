@@ -58,6 +58,14 @@ Retail's side: the funclet group sits under `<Class>_<fn>_unwindNN` labels in
 `build/gen/symbol_names.csv`, and the second push of the EH prologue is
 `<group>+<n>`, the handler thunk just past the last funclet.
 
+The disposable comparison-object pass now canonicalizes this representational
+difference. It rewrites VC6's direct handler-label relocation to retail's
+last-funclet owner plus size only after proving the associative COMDAT, exact
+EH prologue, final ten-byte handler thunk, unchanged resolved target, and an
+equal retail addend. A different cleanup size or topology is deliberately not
+normalized. See `homm3.build.test_eh_handler_normalization` for the negative
+controls.
+
 Worked example — `Bitmap816`:
 
 ```

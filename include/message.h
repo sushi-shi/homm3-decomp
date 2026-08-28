@@ -81,9 +81,9 @@ enum EMessageModifiers {
 // Dreamcast roster: id, codeX, codeY, qualifier, mouseX, mouseY,
 // extra, window, oldX@32, oldY@36 (40 B). The retail frames in
 // widget::send_message/enable are 0x20 B - retail dropped oldX/oldY.
-// DC shows two ctors (heroWindow*, int, uchar / heroWindow*) and no
-// default; the retail widget bodies build locals member-by-member with
-// no ctor call, so none is modeled yet.
+// The Dreamcast xref graph also proves the default constructor at dc 0x2d58.
+// Keep its concrete inline view consumer-scoped because many reconstructed
+// retail sites still model already-optimized member stores directly.
 class message {
 public:
     int id;
@@ -97,6 +97,25 @@ public:
         const char* extraText;
     };
     heroWindow* window;
+#if defined(HOMM3_HERO_MESSAGE_CTOR_VIEW) || \
+    defined(HOMM3_ARMYGRP_MESSAGE_CTOR_VIEW)
+    // The Dreamcast CodeView body at struct.h:42 zeroes the fields in
+    // declaration order.  Keep this TU-scoped because other reconstructed
+    // units still use aggregate initializers; hero.obj's attested sites need
+    // the real constructor shape and VC6 removes fields overwritten before
+    // their first read.
+    message()
+    {
+        id = 0;
+        codeX = 0;
+        codeY = 0;
+        qualifier = 0;
+        mouseX = 0;
+        mouseY = 0;
+        extra = 0;
+        window = 0;
+    }
+#endif
 };
 SIZE(message, 32);
 

@@ -25,6 +25,13 @@ canonicalize_data_symbols
 normalize_objs
              thin driver: build/objdiff/{base,target} ->
              build/objdiff/normalized/ + .symbols.tsv sidecars
+             + paired, resolved-target-preserving normalization of VC6's
+             direct EH handler label against retail's last-funclet+size form
+             + paired false-literal removal only when the candidate has no
+             relocation and equals the target's resolved VA
+             + paired aggregate+addend/field-symbol normalization only from
+             one equal-addend retail-data anchor; every transform reparses
+             COFF and verifies unrelated sections, symbols and relocations
 
 delink       THE LOOP (explicit invocation only, never in `homm3 build`):
              labels -> model -> synth_pdb -> data_manifest -> vostok
@@ -33,10 +40,11 @@ delink       THE LOOP (explicit invocation only, never in `homm3 build`):
              objdiff.json against the normalized copies
 build        the `homm3 build` command (homm3.build.build): configure ->
              ninja -> normalize -> objdiff report -> overall line ->
-             [normal tier] baseline raise + ratchet check (FATAL on a drop)
-             + README score block + stale-delink warning. --fast stops
-             after the %% line. The ratchet lives in homm3.match.status
-             (config/match_baseline.tsv).
+             [normal tier] checkpoint-ledger refresh + observational dip
+             report + fatal evidence/source gates + README score block +
+             stale-delink warning. --fast stops after the %% line. The score
+             ledger lives in homm3.match.status (config/match_baseline.tsv);
+             a local percentage maximum is never a build gate.
 ```
 
 `homm3 delink` runs the loop; `homm3 status` prints the per-unit table.

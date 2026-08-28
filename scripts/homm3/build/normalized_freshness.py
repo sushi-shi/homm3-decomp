@@ -21,8 +21,14 @@ from pathlib import Path
 STAMP_SUFFIX = ".stamp.json"
 # 2: text-pad trim; 3: non-code sections dropped (functions-only scope);
 # 4: paired base/target padding normalization; 5: source-owned compiler-
-# function manifest participates in semantic `$E<n>` canonicalization.
-STAMP_SCHEMA = 5
+# function manifest participates in semantic `$E<n>` canonicalization;
+# 6: paired EH handler-owner relocation canonicalization; 7: semantic retail
+# unwind-owner names join the equivalent candidate cleanup funclets; 8 was
+# the initial equivalent-relocation schema; 9 skips the generated name map's
+# provenance preamble; 10 removes proved false-literal rows rather than using
+# an objdiff-unsupported ABSOLUTE placeholder; 11 refuses any candidate-side
+# relocation at a literal site and requires one unambiguous aggregate anchor.
+STAMP_SCHEMA = 11
 
 _HASH_CACHE: dict[str, tuple[tuple[int, int], str]] = {}
 

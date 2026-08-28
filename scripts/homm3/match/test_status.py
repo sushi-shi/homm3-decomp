@@ -5,7 +5,8 @@ from __future__ import annotations
 import unittest
 
 from homm3.match.banked_rows import missing_rows, parse_history, selftest
-from homm3.match.status import MatchRow, seed_historical_maxima, update_rows
+from homm3.match.status import (MatchRow, checkpoint_dips,
+                                seed_historical_maxima, update_rows)
 
 
 class UpdateRowsTest(unittest.TestCase):
@@ -20,13 +21,13 @@ class UpdateRowsTest(unittest.TestCase):
         self.assertNotIn(("unit", "flat_name"), rows)
         self.assertEqual(stats["migrated"], 1)
 
-    def test_accept_lowers_max_but_never_history(self):
+    def test_dip_never_lowers_checkpoint_or_history(self):
         key = ("unit", "function")
         old = {key: MatchRow(98.0, 98.0, 99.0, 0x5678)}
-        rows, stats = update_rows({key: 80.0}, old, {key: 0x5678}, True)
+        rows, stats = update_rows({key: 80.0}, old, {key: 0x5678})
         self.assertEqual((rows[key].cur, rows[key].max, rows[key].hist),
-                         (80.0, 80.0, 99.0))
-        self.assertEqual(stats["lowered"], 1)
+                         (80.0, 98.0, 99.0))
+        self.assertNotIn("lowered", stats)
 
     def test_unaccepted_drop_keeps_max(self):
         key = ("unit", "function")
@@ -34,6 +35,12 @@ class UpdateRowsTest(unittest.TestCase):
         rows, _stats = update_rows({key: 80.0}, old, {key: 0x5678})
         self.assertEqual((rows[key].cur, rows[key].max, rows[key].hist),
                          (80.0, 98.0, 98.0))
+
+    def test_checkpoint_dip_is_observational_data(self):
+        key = ("unit", "function")
+        rows = {key: MatchRow(80.0, 98.0, 99.0, 0x5678)}
+        self.assertEqual(checkpoint_dips({key: 80.0}, rows),
+                         [(key, 98.0, 80.0)])
 
     def test_missing_legacy_zero_row_is_retired(self):
         old = {("unit", "obsolete_flat_name"): MatchRow(0.0, 0.0, 0.0)}

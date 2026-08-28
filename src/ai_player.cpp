@@ -180,11 +180,10 @@ void type_town_threat_checker::clear_marks()
 // slots.  A town contributes only when the enemy hero's seeded search reached
 // its cell and the combat simulation says the hero can take it; the fixed
 // five-million reward is shared across the player's signed town count.
-// INSTRUCTION-EXACT 2026-08-24. The 99.9554% report is one synthetic DIR32
-// relocation: stripped-image recovery treats the honest integer 5,000,000 as
-// a code address because it equals VA 0x4c4b40. This is the same proven,
-// source-unreachable cap documented on AI_value_of_combat; all 16 blocks,
-// instructions, operands and branches otherwise agree.
+// EXACT 2026-08-28. The paired comparison normalizer proves that the one
+// stripped-image DIR32 row is the honest integer 5,000,000: the candidate has
+// no relocation there and its literal equals the target symbol+addend VA.
+// All 16 blocks, instructions, operands and branches agree.
 VA(0x004282b0, 0x157)  // retail body/call graph + DC signature/xrefs; dc 0x2deac
 void type_town_threat_checker::mark_towns(hero* enemy_hero,
                                           searchArray* search_array)
@@ -254,9 +253,8 @@ void type_town_threat_checker::mark_towns(hero* enemy_hero,
 // unreconstructed, already converted, or a Dreamcast-only factoring:
 //   advManager::DoAdvCommand / TownQuickView / SetTownContext, and
 //     advspells' advManager::TownGate - all four score 0.0, not reconstructed
-//   type_town_threat_checker::mark_towns - reconstructed at 99.9554% with a
-//     direct inline constructor expansion; it does not consume this by-value
-//     helper (the sole residual is the false 5,000,000 DIR32 relocation)
+//   type_town_threat_checker::mark_towns - exact with a direct inline
+//     constructor expansion; it does not consume this by-value helper
 //   searchArray::check_town_portal - no reconstructed row
 //   townManager::MoveHero - another lane's unit
 //   town::PlaceInMap - ALREADY 100.0000 without it
