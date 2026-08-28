@@ -87,6 +87,14 @@ TSpreadsheetResource* GetSpreadsheet(const char* name);
 // increment are repeated inline at the tail of GetSpreadsheet.
 void AddToCache(resource* value);
 
+// Dreamcast retains this cache sweep out of line and calls it from window
+// construction/destruction sites. Complete has neither that body nor emitted
+// call instructions at those sites, so model the source boundary as a
+// retail-neutral inline no-op for the PC build.
+inline void del_Spr_from_Cache()
+{
+}
+
 // Retail body 0x55cf50, 131 B, fastcall under /Gr like its GetSprite
 // neighbours. It walks the archive list the 24-byte rows at 0x69e538
 // describe - count at +0, LODFile-index list at +4 - calling

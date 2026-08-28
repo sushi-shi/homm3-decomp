@@ -14,6 +14,7 @@
 #include "kb.h"
 #include "mousemgr.h"
 #include "prefs.h"
+#include "resourcemanager.h"
 #include "smackmgr.h"
 #include "soundmgr.h"
 #include "spellbookwindow.h"
@@ -148,16 +149,13 @@ std::string TSpellbookWindow::get_spell_description(
 }
 
 // E:\gamedcs\spellbookwindow.cpp:180
-// Reconstructed 2026-08-27 (stub -> 99.9735%). All 141 CFG blocks and every
-// instruction after the standard constructor prologue agree. The lone
-// normalized delta is the EH-handler relocation addend (`push 0` versus
-// retail's `push 0xb`); it does not alter the recovered widget recipe or
-// runtime control flow. Dreamcast independently proves the four SetContext,
-// four SetSchool, and four GetPositionFromSchool source sites. Restoring the
-// header-inline setters also supplies the /Ob2 divisor that leaves reserve's
-// empty-range _Destroy out of line exactly as retail does. The explicit
-// right-page id resets, Hero-member mana reload, and short-lived background
-// local are each required by retail's register and stack-slot schedule.
+// Reconstructed 2026-08-27/28 (stub -> 100%). Dreamcast proves the initial
+// del_Spr_from_Cache boundary, the four SetContext/SetSchool/position sites,
+// and the three widget-index locals. Retail additionally proves the Complete
+// font/sprite data identities and that RolloverWidget's initial text pointer
+// is null rather than an empty-string address. The header-inline setters,
+// explicit right-page id resets, Hero-member mana reload, and short-lived
+// background local reproduce VC6's retail register, slot, and EH schedule.
 VA(0x0059bdf0, 0xAC9)  // anchor-bracket: immediately precedes scalar-del-dtor 0x59c8c0; EH, ret 0x10 = 4 args; spelback.pcx setup; dc 0x14be88
 TSpellbookWindow::TSpellbookWindow(const hero* h, const armyGroup* g, TSpellbookWindow::TSpellContext context, int magic_terrain)
     : CAdvPopup(90, 2, 620, 595, 0x12),
@@ -166,6 +164,8 @@ TSpellbookWindow::TSpellbookWindow(const hero* h, const armyGroup* g, TSpellbook
       EnemyGroup(g),
       OnMagicPlains(magic_terrain)
 {
+    ResourceManager::del_Spr_from_Cache();
+
     if (h->id != lastSpellbookHeroId) {
         LastPage = -1;
         LastSchool = (TSpellSchool)0;
@@ -231,7 +231,9 @@ TSpellbookWindow::TSpellbookWindow(const hero* h, const armyGroup* g, TSpellbook
     for (row = 154; row < 442; row += 96) {
         for (column = 113; column < 285; column += 86) {
             Widgets.push_back(new textWidget(
-                column, row, 86, 36, 0, 0, font::PRIMARY, id++,
+                column, row, 86, 36, 0,
+                DATA_COMPGEN(0x00660cb4, spellbookTinyFont, "tiny.fnt"),
+                font::PRIMARY, id++,
                 1, 0, 8));
         }
     }
@@ -239,18 +241,24 @@ TSpellbookWindow::TSpellbookWindow(const hero* h, const armyGroup* g, TSpellbook
     for (row = 154; row < 442; row += 96) {
         for (column = 329; column < 501; column += 86) {
             Widgets.push_back(new textWidget(
-                column, row, 86, 36, 0, 0, font::PRIMARY, id++,
+                column, row, 86, 36, 0,
+                DATA_COMPGEN(0x00660cb4, spellbookTinyFont, "tiny.fnt"),
+                font::PRIMARY, id++,
                 1, 0, 8));
         }
     }
 
     HeadingWidget = new iconWidget(
-        117, 74, 160, 96, SCHOOL_HEADING_ID, 0, 0, 0, 0, 0,
+        117, 74, 160, 96, SCHOOL_HEADING_ID,
+        DATA_COMPGEN(0x00684bc0, spellbookSchools, "schools.def"),
+        0, 0, 0, 0,
         iconWidget::ICON_STYLE_PLAIN);
     Widgets.push_back(HeadingWidget);
 
     SchoolTabsWidget = new iconWidget(
-        524, 88, 83, 294, SCHOOL_TABS_ID, 0, 0, 0, 0, 0,
+        524, 88, 83, 294, SCHOOL_TABS_ID,
+        DATA_COMPGEN(0x00684bb4, spellbookTabs, "SpelTab.def"),
+        0, 0, 0, 0,
         iconWidget::ICON_STYLE_PLAIN);
     Widgets.push_back(SchoolTabsWidget);
 
@@ -277,9 +285,13 @@ TSpellbookWindow::TSpellbookWindow(const hero* h, const armyGroup* g, TSpellbook
     Widgets.push_back(new border(
         353, 405, 35, 41, ADVENTURE_SPELLS_ID, 1));
 
-    sprintf(gText, "%d", Hero->mana);
+    sprintf(gText,
+        DATA_COMPGEN(0x00660a1c, spellbookDecimalFormat, "%d"),
+        Hero->mana);
     Widgets.push_back(new textWidget(
-        417, 405, 36, 45, gText, "smalfont.fnt", font::HEADING,
+        417, 405, 36, 45, gText,
+        DATA_COMPGEN(0x0065f2f8, spellbookSmallFont, "smalfont.fnt"),
+        font::HEADING,
         SPELL_POINTS_ID, 5, 0, 8));
 
     Widgets.push_back(new border(
@@ -287,8 +299,8 @@ TSpellbookWindow::TSpellbookWindow(const hero* h, const armyGroup* g, TSpellbook
 
     RolloverWidget = new bitmapBackedTextWidget(
         8, 569, 605, 19,
-        DATA_COMPGEN(0x00691210, adventureRolloverEmptyText, ""),
-        "smalfont.fnt",
+        0,
+        DATA_COMPGEN(0x0065f2f8, spellbookSmallFont, "smalfont.fnt"),
         DATA_COMPGEN(0x00684b84, spellbookRollover, "spelroll.pcx"),
         font::PRIMARY, ROLLOVER_ID, 1, 8);
     Widgets.push_back(RolloverWidget);
