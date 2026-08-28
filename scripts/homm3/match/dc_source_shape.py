@@ -150,6 +150,15 @@ PROVEN_CALL_TRANSFERS: dict[tuple[str, int, str], CallTransfer] = {
             r"switch\s*\(\s*gpWindowManager\s*->\s*dialogReturn\s*\)"
             r".*?case\s+TAdventureOptionsWindow\s*::\s*VIEW_SCENARIO_ID"
             r"\s*:\s*gpGame\s*->\s*ShowScenInfo\s*\(\s*\)\s*;\s*break\s*;"),
+    ("philai.obj", 0x10E3F8, "buy_artifacts"):
+        CallTransfer(
+            "Complete transfers AI_enter_town's separate artifact-market "
+            "purchase into the exact buy_special_building receiver",
+            "src/philai.cpp", "buy_special_building", 0x005259E0,
+            r"\bbuy_special_building\s*\(\s*current_hero\s*,\s*"
+            r"current_town\s*\)\s*;",
+            r"\bbuy_artifacts\s*\(\s*current_hero\s*,\s*gpGame\s*->\s*"
+            r"field_1f664\s*,\s*market_count\s*\)\s*;"),
 }
 
 
@@ -1353,6 +1362,38 @@ case TAdventureOptionsWindow::VIEW_SCENARIO_ID:
     if groups_without_transfers(transfer_groups, lambda _callee: False) \
             != transfer_groups:
         failures.append("unproved transfer disappeared from call groups")
+    artifact_transfer = PROVEN_CALL_TRANSFERS[
+        ("philai.obj", 0x10E3F8, "buy_artifacts")]
+    artifact_caller = """\
+upgrade_creatures(current_hero, current_town);
+buy_special_building(current_hero, current_town);
+"""
+    artifact_receiver = """\
+if (!current_town->HasBuilding(SPECIAL_BUILDING_ID, 1)) {
+    current_town->buy_building(SPECIAL_BUILDING_ID);
+}
+buy_artifacts(current_hero, gpGame->field_1f664, market_count);
+"""
+    if not transfer_satisfied(
+            artifact_transfer, artifact_caller, artifact_receiver,
+            {artifact_transfer.receiver_va}):
+        failures.append("exact artifact-market call transfer did not pass")
+    if transfer_satisfied(
+            artifact_transfer, artifact_caller, artifact_receiver, set()):
+        failures.append("non-exact artifact-market receiver passed")
+    if transfer_satisfied(
+            artifact_transfer, artifact_caller,
+            artifact_receiver.replace(
+                "buy_artifacts(current_hero, gpGame->field_1f664, "
+                "market_count);", ""),
+            {artifact_transfer.receiver_va}):
+        failures.append("erased receiver buy_artifacts call passed")
+    if transfer_satisfied(
+            artifact_transfer,
+            artifact_caller.replace(
+                "buy_special_building(current_hero, current_town);", ""),
+            artifact_receiver, {artifact_transfer.receiver_va}):
+        failures.append("erased AI_enter_town forwarding call passed")
     experience_key = ("philai.obj", 0x10FEB8)
     experience_probe = """\
 int increment = current_hero->GetExperienceIncrement();

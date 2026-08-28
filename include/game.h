@@ -1911,7 +1911,8 @@ public:
     short field_1f640;
     short field_1f642;
     char field_1f644[0x20];
-#ifdef HOMM3_GAME_NEW_MAP_DECLS
+#if defined(HOMM3_GAME_NEW_MAP_DECLS) \
+ || defined(HOMM3_PHILAI_ARTIFACT_DECLS)
     TArtifact field_1f664[7];
 #else
     char field_1f664[0x1c];
