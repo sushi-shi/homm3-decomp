@@ -481,6 +481,9 @@ long get_school_value(const hero* our_hero, TSecondarySkill skill)
 // std::swap edge is inlined in the ascending selection sort. The descending
 // pass ignores already-known skills and tests `first` against the hero's
 // remaining secondary-skill capacity.
+// EXACT 2026-08-28. The descending walk is the pre-body post-decrement form
+// `i-- > 0`; the conventional `i >= 0; i--` spelling was byte-close but gave
+// VC6 a different branch shape.
 VA(0x00524dd0, 0xF3)  // anchor-callee + frame, dc 0x113ae4
 unsigned char wants_skill(const hero* our_hero, int first, int complex_choice)
 {
@@ -508,7 +511,7 @@ unsigned char wants_skill(const hero* our_hero, int first, int complex_choice)
     }
 
     open_slots = 8 - our_hero->skillCount;
-    for (i = 27; i >= 0; i--) {
+    for (i = 28; i-- > 0;) {
         int skill = skill_index[i];
         if (our_hero->skillLevel[skill] == 0) {
             if (skill == first)

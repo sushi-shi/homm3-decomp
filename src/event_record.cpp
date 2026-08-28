@@ -153,9 +153,11 @@ inline type_record_erase::type_record_erase(type_point _location,
 inline type_record_hide_hero::type_record_hide_hero(hero* who, char _new_owner,
                                                     unsigned char _town_garrison)
 {
+    // DC preserves this helper boundary; the two retail inline expansions
+    // prove the snapshot is written before the requested replacement owner.
     current_hero = who;
-    new_owner = _new_owner;
     prev_owner = who->owner;
+    new_owner = _new_owner;
     town_garrison = _town_garrison;
 }
 
@@ -1433,6 +1435,8 @@ void game::record_hide_boat(boat* current_boat, unsigned char occupied,
 // E:\gamedcs\event_record.cpp:1079
 // `ret 0xc`: three arguments, the third being the town-garrison flag the
 // record's +0xe holds and hide_hero::undo consults.
+// EXACT 2026-08-28 after restoring the DC constructor boundary's
+// prev_owner-before-new_owner statement order.
 VA(0x0049c720, 0x1DD)  // anchor-vtable (constructs 0x63df34), dc 0x8e148
 void game::record_hide_hero(hero* who, char new_owner,
                             unsigned char town_garrison)
@@ -1458,6 +1462,8 @@ void game::record_show_boat(boat* current_boat, type_point point)
 #endif  // @carcass
 
 // E:\gamedcs\event_record.cpp:1096
+// EXACT 2026-08-28. This second inline consumer closes with the same base
+// constructor ordering as record_hide_hero.
 VA(0x0049cb20, 0x226)  // anchor-vtable (constructs 0x63df4c), dc 0x8e1d0
 void game::record_show_hero(hero* who, signed char player, type_point point,
                             unsigned char reset)
