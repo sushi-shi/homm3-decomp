@@ -173,13 +173,9 @@ CTeamAlignmentDlg::~CTeamAlignmentDlg()
 // stays per-block, +12.8) and the netmsg chain nests inside the id!=0x40 arm
 // so the default `return` sinks between the two arms (+45 over the flat form).
 //
-// Residual (99.96%): every instruction byte matches; the only deltas are
-// three reloc-NAME cosmetics the model does not resolve here - bVideoPaused
-// (data_29954c) and pDPlay (data_29d808) are unnamed tree-wide (their owning
-// objs delink them to working labels too), and the tail call names the folded
-// heroWindow::handle_message where the model carries only its ICF twin
-// inputManager::Main (0x4ec560). Reloc-name-only, not source-reachable from
-// this TU (the names live in shared headers / other objs).
+// EXACT 2026-08-28. Both end-dialog arms assign codeY before codeX. Applying
+// that equal-value store order to only one arm prevents VC6 from merging the
+// shared tail; preserving it in both arms reproduces retail's cross-jump.
 VA(0x00575430, 0x8f)  // anchor-vtable CSingleSelPopup::handle_message = shared slot3 of all four dialog vtables, ret 4, dc 0x12ef28
 int CSingleSelPopup::handle_message(message& msg)
 {
@@ -191,8 +187,8 @@ int CSingleSelPopup::handle_message(message& msg)
                 if (handler->GetAbortPopupMsg()) {
                     msg.id = MESSAGE_WIDGET;
                     gpWindowManager->dialogReturn = msg.codeY;
-                    msg.codeX = widget::WIDGET_END_DIALOG;
                     msg.codeY = widget::WIDGET_END_DIALOG;
+                    msg.codeX = widget::WIDGET_END_DIALOG;
                     return 2;
                 }
             }
@@ -201,8 +197,8 @@ int CSingleSelPopup::handle_message(message& msg)
     }
     msg.id = MESSAGE_WIDGET;
     gpWindowManager->dialogReturn = msg.codeY;
-    msg.codeX = widget::WIDGET_END_DIALOG;
     msg.codeY = widget::WIDGET_END_DIALOG;
+    msg.codeX = widget::WIDGET_END_DIALOG;
     return 2;
 }
 

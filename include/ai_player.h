@@ -139,7 +139,7 @@ protected:
     unsigned char subtract_cost_mode;
     std::vector<type_creature_source> creatures;
 
-    long do_best_purchase(bool trade_allowed);
+    long do_best_purchase(unsigned char trade_allowed);
 
 public:
     type_AI_creature_purchaser(long player,

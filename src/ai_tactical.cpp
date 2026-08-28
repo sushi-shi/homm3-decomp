@@ -3796,30 +3796,23 @@ long type_AI_spellcaster::get_clone_value(const army* our_army, type_enchant_dat
 // Traits row +0x1684 = 42*136 + 0x34 and the work-chance leaf is pushed
 // the literal 0x2a - both SPELL_CURSE.
 //
-// Residual (99.9%): ONE register-homing delta left, no instruction,
-// branch or immediate difference at all (compared unmasked). The
-// shared SpellCastWorkChance EAX/EDX tie-break closed 2026-08-08 by
-// naming the flag (see get_disease_value); what remains is frame-slot
-// colouring of the three 8-byte double slots - retail lays `average`
-// at [ebp-0x18], `damage` at [ebp-0x10] and `scale` at [ebp-0x8], our
-// CL starts the same sequence one slot higher. Same class as
-// get_attack_skill_value's
-// residual, where declaration hoisting was already measured to change
-// nothing (VC6 colours these by live range).
-// Tried and rejected: separate `total` and `value` locals (99.60) -
-// retail shares the dead `enemy` parameter slot between them.
+// EXACT 2026-08-28. The Dreamcast S_REGREL32 inventory names three distinct
+// ratio-stage locals (`old_average`, `new_average`, `decrease`). Restoring
+// those source lifetimes gives VC6 the retail frame-slot colouring. The old
+// two-local `average`/`damage` spelling was semantically equivalent but left
+// this body at 99.87%.
 VA(0x0043b370, 0x18E)  // anchor-vtable, dc 0x41624
 long type_AI_spellcaster::get_curse_value(const army* enemy, type_enchant_data caster)
 {
     if ((field_14 & (1 << enemy->bitIndex)) != 0 && !params.kills_only && !field_1c) {
         long value = enemy->get_total_combat_value(params.lowest_attack,
                                                    params.lowest_defense);
-        double average = enemy->get_average_damage();
-        double damage = enemy->minDamage - akSpellTraits[SPELL_CURSE].mastery_bonus[caster.mastery];
-        if (damage < 1.0)
-            damage = 1.0;
-        damage = damage / average;
-        value = static_cast<long>(value - sqrt(damage) * value);
+        double old_average = enemy->get_average_damage();
+        double new_average = enemy->minDamage - akSpellTraits[SPELL_CURSE].mastery_bonus[caster.mastery];
+        if (new_average < 1.0)
+            new_average = 1.0;
+        double decrease = new_average / old_average;
+        value = static_cast<long>(value - sqrt(decrease) * value);
         double portion;
         if (caster.duration >= params.odds)
             portion = 1.0;

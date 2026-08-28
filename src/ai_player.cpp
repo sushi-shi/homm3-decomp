@@ -3257,12 +3257,13 @@ static int __cdecl MaxBuyableCreatures(
     return limit;
 }
 
-// Residual (97.27%): 217 of 219 instructions agree; the remaining delta is
-// VC6 stack-slot coloring around the best-source state (`why-reg` distance
-// 70), after equivalent declaration and expression orders were exhausted.
+// DC's parameter is an unsigned char, not C++ bool. Residual (97.27%): 217
+// of 219 instructions agree; the remaining delta is VC6 stack-slot coloring
+// around the best-source state (`why-reg` distance 70), after equivalent
+// declaration and expression orders were exhausted.
 VA(0x0042d420, 0x264)  // DC method/callgraph + exact retail caller; dc 0x32038
 long type_AI_creature_purchaser::do_best_purchase(
-    bool trade_allowed)
+    unsigned char trade_allowed)
 {
     int resource_cost[7];
     short source_index;
@@ -3333,9 +3334,11 @@ long type_AI_creature_purchaser::do_best_purchase(
 // last parameter is stored at base +8, while allow_trade is forwarded to
 // do_best_purchase. Duplicate creature stacks are merged before purchasing,
 // then every source's final count is written back through its saved pointer.
-// Residual (97.53%): the 90-instruction multiset and CFG are exact. Retail
-// transposes one reload across an adjacent reload; `why-reg` distance 2 and
-// the exhausted declaration/loop spellings classify it as post-RA scheduling.
+// DC also proves do_best_purchase takes a byte. Restoring that callee
+// boundary removes the bool normalization at this call and raises this body
+// from 97.53% to 99.87%. The only remaining delta is one independent reload
+// transposed across its neighbour after Dismiss; `why-reg` distance 2 and the
+// exhausted declaration/loop spellings classify it as post-RA scheduling.
 VA(0x0042d690, 0xE1)  // mark_town caller + DC method/callgraph; dc 0x32288
 void type_AI_creature_purchaser::do_purchase(
     armyGroup* new_army, short new_morale, armyGroup* new_adjacent_army,
