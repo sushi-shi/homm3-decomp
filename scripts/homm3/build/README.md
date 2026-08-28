@@ -50,6 +50,19 @@ build        the `homm3 build` command (homm3.build.build): configure ->
 
 `homm3 delink` runs the loop; `homm3 status` prints the per-unit table.
 
+The Dreamcast source-shape gate (`python3 -m
+homm3.match.dc_source_shape`) joins each reconstructed caller to
+`evidence/dc-xref-graph.tsv`. An ordinary named helper call must remain a
+named C++ call even when retail `/Ob2` inlines it into anonymous loads or
+tests; manually substituting the helper body is source flattening, not a
+match. `config/dc-source-shape-baseline.tsv` freezes the unfinished backlog by
+stable Dreamcast caller/callee or source-contract identity. Every new missing
+identity is fatal regardless of objdiff percentage or the aggregate defect
+count, while a pass removes restored identities from the baseline down-only.
+Use `--backlog` to inspect known/new/stale rows. `--write-baseline` is the
+explicit upward bless and is never part of normal matching; the bounded
+proof-carrying Complete transfer table is the sole ordinary-call exception.
+
 The annotation macros live in `include/va.h` (absolute VAs in source, rvas
 in every artifact). The delinker never runs inside `homm3 build`; explicit
 invocation only, homm2-style.

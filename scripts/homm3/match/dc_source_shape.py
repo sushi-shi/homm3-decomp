@@ -16,9 +16,14 @@ line rather than by emitting object, because `/Ob2` may inline every retail
 copy and because one header body can be shared by several TUs.
 
 There is no score threshold or score-based waiver: a local byte maximum cannot
-override an attested source fact.  The embedded negative controls cover the
-SetupHeroView defect that caused this gate to land, reordered helpers inside
-one CodeView group, and flattening two distinct breakpoint groups together.
+override an attested source fact.  The unfinished reconstruction backlog is
+frozen per Dreamcast caller/callee or source-contract identity.  A new omission
+is fatal even when another omission disappeared in the same build, while a
+clean pass rolls the backlog down-only so a restored helper can never be
+flattened again.  The embedded negative controls cover that ratchet as well as
+the SetupHeroView defect that caused this gate to land, reordered helpers
+inside one CodeView group, and flattening two distinct breakpoint groups
+together.
 """
 from __future__ import annotations
 
@@ -38,6 +43,7 @@ from homm3.vc6 import _source
 
 
 XREFS = common.HOMM3_DIR / "evidence/dc-xref-graph.tsv"
+BASELINE = common.HOMM3_DIR / "config/dc-source-shape-baseline.tsv"
 BUILD_REPORT_LIMIT = 25
 PROVENANCE_RE = re.compile(
     r"(?m)^[ \t]*//[ \t]*([^:\r\n]+:\\[^:\r\n]+):(\d+)[^\r\n]*$")
@@ -129,6 +135,10 @@ class XrefCall:
 class DecodedShape:
     offsets: frozenset[int]
     groups: tuple[CallGroup, ...]
+
+
+Violation = MissingCall | MissingDefinition | MisgroupedCalls \
+    | ContractViolation | FileContractViolation
 
 
 # Dreamcast sometimes places one operation in two cooperating functions while
@@ -1308,6 +1318,34 @@ def army_class_roster_violations(text: str) -> list[tuple[int, str]]:
 def selftest() -> list[str]:
     """Negative controls: the gate must detect the real defect class."""
     failures = []
+    frozen_call = MissingCall(
+        0x00401230, "sample.obj", 0x1230, "src/sample.cpp", 10,
+        "Caller", "hero::HasSecondarySkill", "HasSecondarySkill")
+    moved_call = MissingCall(
+        None, "sample.obj", 0x1230, "src/renamed.cpp", 900,
+        "PromotedCaller", "hero::HasSecondarySkill", "HasSecondarySkill")
+    replacement_debt = MissingCall(
+        0x00401230, "sample.obj", 0x1230, "src/sample.cpp", 10,
+        "Caller", "hero::GetHeroSpellBonus", "GetHeroSpellBonus")
+    frozen = {violation_key(frozen_call)}
+    if violation_key(frozen_call) != violation_key(moved_call):
+        failures.append("ratchet identity changed with source location/label")
+    if new_violations([moved_call], frozen):
+        failures.append("frozen caller/callee edge was treated as new")
+    if new_violations([replacement_debt], frozen) != [replacement_debt]:
+        failures.append("new flattened helper edge was not fatal")
+    # Restoring one frozen edge cannot pay for flattening another: identities,
+    # not the aggregate omission count, are the ratchet currency.
+    if not new_violations([replacement_debt], frozen):
+        failures.append("equal-count source-shape debt trade passed")
+    if ratcheted_backlog([], frozen):
+        failures.append("retired source-shape debt did not ratchet down")
+    file_contract = FileContractViolation(
+        "include/game.h", 10, "GetHero keeps its helper boundary")
+    moved_contract = FileContractViolation(
+        "include/game.h", 800, "GetHero keeps its helper boundary")
+    if violation_key(file_contract) != violation_key(moved_contract):
+        failures.append("file-contract ratchet identity depended on line")
     attested = ["hero::HasSecondarySkill"]
     direct = "if (currentHero->skillOrder[eSecSkillBattleTactics] > 0) {}"
     if missing_from_body(direct, attested) != [
@@ -2760,8 +2798,85 @@ def scan() -> tuple[
     return checked, sorted(missing, key=order)
 
 
-def render(row: MissingCall | MissingDefinition | MisgroupedCalls |
-           ContractViolation | FileContractViolation) -> str:
+def violation_key(row: Violation) -> tuple[str, str, str, str]:
+    """Stable ratchet identity, deliberately independent of retail score.
+
+    Source paths and current line numbers move during reconstruction, and
+    retail labels can be promoted without changing the Dreamcast source
+    fact.  The Dreamcast module/offset plus callee or statement group is the
+    durable identity for graph defects; direct file contracts use their file
+    and description because they have no outgoing Dreamcast edge.
+    """
+    if isinstance(row, FileContractViolation):
+        return "file-contract", row.source, "-", row.description
+    location = f"0x{row.dc_offset:x}"
+    if isinstance(row, MissingDefinition):
+        return "definition", row.dc_module, location, "-"
+    if isinstance(row, MissingCall):
+        return "call", row.dc_module, location, row.callee
+    if isinstance(row, MisgroupedCalls):
+        detail = f"{row.group.line}:" + "|".join(row.group.callees)
+        return "group", row.dc_module, location, detail
+    return "contract", row.dc_module, location, row.rule.description
+
+
+def violation_keys(rows: list[Violation]) -> set[tuple[str, str, str, str]]:
+    return {violation_key(row) for row in rows}
+
+
+def load_backlog() -> set[tuple[str, str, str, str]]:
+    if not BASELINE.is_file():
+        return set()
+    out: set[tuple[str, str, str, str]] = set()
+    for line_number, line in enumerate(BASELINE.read_text().splitlines(), 1):
+        if not line or line.startswith("#"):
+            continue
+        columns = line.split("\t")
+        if len(columns) != 4:
+            raise ValueError(
+                f"{BASELINE.name}:{line_number}: expected four columns")
+        out.add((columns[0], columns[1], columns[2], columns[3]))
+    return out
+
+
+def write_backlog_keys(keys: set[tuple[str, str, str, str]]) -> None:
+    head = (
+        "# KNOWN Dreamcast source-shape backlog. Each row is one stable\n"
+        "# caller/callee, statement-group, or direct-contract identity.\n"
+        "# The build rolls rows DOWN-only; --write-baseline is the only\n"
+        "# deliberate way to admit new debt. Retail score is never a waiver.\n"
+        "# kind\tdc-module-or-source\tdc-offset\tcallee-or-contract\n")
+    BASELINE.write_text(head + "".join(
+        "\t".join(key) + "\n" for key in sorted(keys)))
+
+
+def write_backlog(rows: list[Violation]) -> None:
+    write_backlog_keys(violation_keys(rows))
+
+
+def new_violations(rows: list[Violation],
+                   backlog: set[tuple[str, str, str, str]]) \
+        -> list[Violation]:
+    """Return one diagnostic row for every unbaselined source fact."""
+    out: list[Violation] = []
+    seen: set[tuple[str, str, str, str]] = set()
+    for row in rows:
+        key = violation_key(row)
+        if key not in backlog and key not in seen:
+            out.append(row)
+            seen.add(key)
+    return out
+
+
+def ratcheted_backlog(
+        rows: list[Violation],
+        backlog: set[tuple[str, str, str, str]]) \
+        -> set[tuple[str, str, str, str]]:
+    """Down-only baseline after the currently restored facts are removed."""
+    return backlog & violation_keys(rows)
+
+
+def render(row: Violation) -> str:
     if isinstance(row, FileContractViolation):
         return (f"DC SOURCE SHAPE: {row.source}:{row.line} violates "
                 f"source contract: {row.description}")
@@ -2791,22 +2906,44 @@ def render(row: MissingCall | MissingDefinition | MisgroupedCalls |
             f"{row.source}:{row.line})")
 
 
+def _ratchet_gate(checked: int, missing: list[Violation]) -> list[str]:
+    try:
+        backlog = load_backlog()
+    except ValueError as error:
+        return [f"dc-source-shape BASELINE BROKEN: {error}"]
+    fresh = new_violations(missing, backlog)
+    if not fresh:
+        current = violation_keys(missing)
+        stale = backlog - current
+        if stale:
+            # Down-only: a normal gate invocation may bank a restoration but
+            # can never bless a newly missing helper. The rewritten file is
+            # visible in review and should be committed with the restoration.
+            write_backlog_keys(ratcheted_backlog(missing, backlog))
+        summary = (f"[build] dc-source-shape: {checked} DC source "
+                   f"definitions; {len(current)} known-backlog defect(s)")
+        if stale:
+            summary += f"; ratcheted {len(stale)} retired row(s)"
+        print(summary + " - no new source flattening")
+        return []
+    shown = [render(row) for row in fresh[:BUILD_REPORT_LIMIT]]
+    remainder = len(fresh) - len(shown)
+    if remainder:
+        shown.append(
+            f"DC SOURCE SHAPE: {remainder} additional NEW defect(s) hidden; "
+            "run `python3 -m homm3.match.dc_source_shape --backlog` for "
+            "the full ratchet report")
+    shown.append(
+        f"DC SOURCE SHAPE RATCHET: {len(fresh)} new defect(s); retail "
+        "percentage cannot waive an attested helper boundary")
+    return shown
+
+
 def run_gate() -> list[str]:
     broken = selftest()
     if broken:
         return [f"dc-source-shape SELFTEST BROKEN: {item}" for item in broken]
-    checked, missing = scan()
-    if not missing:
-        print(f"[build] dc-source-shape: {checked} DC source definitions; "
-              "no missing ordinary helpers")
-        return []
-    shown = [render(row) for row in missing[:BUILD_REPORT_LIMIT]]
-    remainder = len(missing) - len(shown)
-    if remainder:
-        shown.append(
-            f"DC SOURCE SHAPE: {remainder} additional omission(s) hidden; "
-            "run `python3 -m homm3.match.dc_source_shape` for the full list")
-    return shown
+    return _ratchet_gate(*scan())
 
 
 def main(argv=None) -> int:
@@ -2817,12 +2954,39 @@ def main(argv=None) -> int:
             print(f"SELFTEST BROKEN: {item}", file=sys.stderr)
         print("selftest OK" if not broken else "selftest FAILED")
         return 2 if broken else 0
+    broken = selftest()
+    if broken:
+        for item in broken:
+            print(f"SELFTEST BROKEN: {item}", file=sys.stderr)
+        return 2
     checked, missing = scan()
-    for row in missing:
-        print(render(row))
-    print(f"checked {checked} DC source definitions; "
-          f"{len(missing)} source-shape defect(s)")
-    return 1 if missing else 0
+    if "--write-baseline" in argv:
+        write_backlog(missing)
+        print(f"Dreamcast source-shape backlog frozen: "
+              f"{len(violation_keys(missing))} row(s) -> "
+              f"{BASELINE.relative_to(common.HOMM3_DIR)}")
+        return 0
+    try:
+        backlog = load_backlog()
+    except ValueError as error:
+        print(f"BASELINE BROKEN: {error}", file=sys.stderr)
+        return 2
+    if "--backlog" in argv:
+        current = violation_keys(missing)
+        for row in missing:
+            tag = "known" if violation_key(row) in backlog else "NEW  "
+            print(f"{tag} {render(row)}")
+        for key in sorted(backlog - current):
+            print("stale DC SOURCE SHAPE: " + "\t".join(key))
+        fresh = new_violations(missing, backlog)
+        print(f"checked {checked} DC source definitions; "
+              f"{len(current & backlog)} known, {len(fresh)} new, "
+              f"{len(backlog - current)} stale source-shape defect(s)")
+        return 1 if fresh else 0
+    fatal = _ratchet_gate(checked, missing)
+    for line in fatal:
+        print(line, file=sys.stderr)
+    return 1 if fatal else 0
 
 
 if __name__ == "__main__":
