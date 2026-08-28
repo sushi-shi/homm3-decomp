@@ -1,0 +1,139 @@
+"""Hermetic tests for `homm3 dreamcast` selector and corpus logic."""
+from __future__ import annotations
+
+import struct
+import unittest
+
+from homm3.analysis import dc_asm, dreamcast
+
+
+def _fn(offset: str, name: str, module: str = "unit.obj", cb: str = "12"):
+    return {
+        "offset": offset, "cb": cb, "kind": "global", "name": name,
+        "module": module, "file": r"E:\gamedcs\unit.cpp", "line": "10",
+        "debug_start": "0", "debug_end": cb, "params": "0", "locals": "0",
+    }
+
+
+def _bridge(rva: str, offset: str, name: str, module: str = "unit.obj"):
+    return {
+        "rva": rva, "size": "20", "role": "anchor-global", "name": name,
+        "signature": f"void {name}()", "dc_module": module,
+        "dc_offset": offset, "dc_cb": "12", "source": r"E:\gamedcs\unit.cpp:10",
+    }
+
+
+class CorpusResolutionTest(unittest.TestCase):
+    def setUp(self):
+        self.functions = [
+            _fn("0x100", "Widget::Open"),
+            _fn("0x120", "Widget::Close"),
+            _fn("0x140", "Other::Open", "other.obj"),
+        ]
+        self.corpus = dreamcast.Corpus(
+            functions=self.functions, variables=[],
+            bridges=[_bridge("0x2000", "0x100", "Widget::Open")],
+            claims=[dreamcast.Claim(0x403000, "unit.obj", 0x120,
+                                    "src/unit.cpp", 44)])
+
+    def test_explicit_dc_and_module_offsets(self):
+        self.assertEqual(self.corpus.resolve("dc:0x100")["name"], "Widget::Open")
+        self.assertEqual(self.corpus.resolve("other.obj:0x140")["name"],
+                         "Other::Open")
+
+    def test_retail_rva_va_bridge_and_source_claim(self):
+        self.assertEqual(self.corpus.resolve("0x2000")["name"], "Widget::Open")
+        self.assertEqual(self.corpus.resolve("0x402000")["name"], "Widget::Open")
+        self.assertEqual(self.corpus.resolve("0x403000")["name"], "Widget::Close")
+
+    def test_exact_name_wins_and_substring_ambiguity_is_explicit(self):
+        self.assertEqual(self.corpus.resolve("Widget::Open")["module"], "unit.obj")
+        with self.assertRaisesRegex(dreamcast.DreamcastError, "ambiguous"):
+            self.corpus.resolve("Open")
+
+    def test_bare_numeric_is_never_silently_treated_as_dc_offset(self):
+        with self.assertRaisesRegex(dreamcast.DreamcastError, "use dc:0xOFF"):
+            self.corpus.resolve("0x100")
+
+    def test_find_normalizes_module_suffix(self):
+        rows = self.corpus.find("open", "unit")
+        self.assertEqual([row["name"] for row in rows], ["Widget::Open"])
+
+
+class ClassificationTest(unittest.TestCase):
+    def test_lifetime_and_tiny_helper_classification(self):
+        self.assertEqual(dreamcast._call_kind("Widget::Widget", 40), "constructor")
+        self.assertEqual(dreamcast._call_kind("Widget::~Widget", 40), "destructor")
+        self.assertEqual(dreamcast._call_kind("??0Widget@@QAA@XZ", 40),
+                         "constructor")
+        self.assertEqual(dreamcast._call_kind("??1Widget@@QAA@XZ", 40),
+                         "destructor")
+        self.assertEqual(dreamcast._call_kind(
+            "std::basic_string<char,std::allocator<char> >::basic_string<char>",
+            40), "constructor")
+        self.assertEqual(dreamcast._call_kind("Widget::size", 4), "tiny-helper")
+        self.assertEqual(dreamcast._call_kind("Widget::Draw", 80), "call")
+
+
+class CfgTest(unittest.TestCase):
+    @staticmethod
+    def _decoder(rows):
+        def decode(address):
+            mnemonic, operands = rows[address]
+            return dc_asm.Instruction(address, 2, b"\0\0", mnemonic, operands)
+        return decode
+
+    def test_conditional_and_delayed_jump_form_blocks(self):
+        rows = {
+            0: ("bt", "0x8"),
+            2: ("mov", "r0,r1"),
+            4: ("bra", "0x10"),
+            6: ("nop", ""),
+            8: ("mov", "r2,r3"),
+            10: ("rts", ""),
+            12: ("nop", ""),
+            16: ("rts", ""),
+            18: ("nop", ""),
+        }
+        blocks = dc_asm.build_cfg(0, 20, self._decoder(rows))
+        by_start = {block.start: block for block in blocks}
+        self.assertEqual(sorted(by_start), [0, 2, 8, 16])
+        self.assertEqual(by_start[0].successors, [2, 8])
+        self.assertEqual(by_start[2].successors, [16])
+        self.assertEqual([ins.address for ins in by_start[2].instructions],
+                         [2, 4, 6])
+
+    def test_uncovered_breakpoint_recovers_indirect_jump_arm(self):
+        rows = {
+            0: ("jmp", "@r1"),
+            2: ("nop", ""),
+            8: ("rts", ""),
+            10: ("nop", ""),
+        }
+        blocks = dc_asm.build_cfg(0, 12, self._decoder(rows), extra_roots=[8])
+        self.assertEqual([block.start for block in blocks], [0, 8])
+
+    def test_dreamcast_fpu_words_are_decoded_as_sh4_instructions(self):
+        # 0xfe17 is one of the common SH4 FPU words Capstone rejects unless
+        # CS_MODE_SHFPU is explicitly combined with CS_MODE_SH4.
+        data = bytearray(dc_asm.dc_lines.TEXT_RAW + 2)
+        data[dc_asm.dc_lines.TEXT_RAW:] = bytes.fromhex("17fe")
+        ins = dc_asm._decode_capstone(bytes(data))(0)
+        self.assertNotEqual(ins.mnemonic, ".word")
+
+    def test_control_events_resolve_pool_call_without_scanning_pool_as_code(self):
+        target = dc_asm.dc_lines.POOL_BASE + 0x100
+        data = bytearray(dc_asm.dc_lines.TEXT_RAW + 8)
+        data[dc_asm.dc_lines.TEXT_RAW:dc_asm.dc_lines.TEXT_RAW + 4] = \
+            bytes.fromhex("00d00b40")  # mov.l @(0,pc),r0; jsr @r0
+        data[dc_asm.dc_lines.TEXT_RAW + 4:] = struct.pack("<I", target)
+        view = {"blocks": [{"instructions": [
+            {"address": 0, "bytes": "00d0", "mnemonic": "mov.l"},
+            {"address": 2, "bytes": "0b40", "mnemonic": "jsr"},
+        ]}]}
+        events = dc_asm.control_events(view, bytes(data))
+        self.assertEqual(events, {2: {"call_target_va": target}})
+
+
+if __name__ == "__main__":
+    unittest.main()

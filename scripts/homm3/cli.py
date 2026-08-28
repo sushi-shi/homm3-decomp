@@ -56,6 +56,11 @@ Subcommands
         disassembly of ANY retail function, address dossiers, literal
         evidence. Every invocation logs one line to build/homm3_sema.log.
 
+  dreamcast <show|asm|find|stats> ...
+        Read-only source-shape navigation over the older WinCE/SH4 pressing:
+        joined CodeView names/signatures/locals/scopes, breakpoint-labelled SH4
+        assembly and CFG blocks, and explicitly qualified retail correlations.
+
   link [<homm3.build.link args>] [-- <extra link flags>]
         OPT-IN candidate link (also `ninja candidate`): genuine VC6 link.exe
         over the base objs with /FORCE /NODEFAULTLIB /MAP into
@@ -149,6 +154,10 @@ def cmd_sema(args) -> int:
     return run_module("homm3.sema", *args.sema_args)
 
 
+def cmd_dreamcast(args) -> int:
+    return run_module("homm3.analysis.dreamcast", *args.dreamcast_args)
+
+
 def cmd_vc6(args) -> int:
     return run_module("homm3.vc6", *args.vc6_args)
 
@@ -191,6 +200,14 @@ def cmd_clean(args) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
+    argv = list(sys.argv[1:] if argv is None else argv)
+    # argparse does not reliably pass option-looking tokens through a
+    # REMAINDER positional (notably ``homm3 dreamcast --help``).  Dreamcast is
+    # a complete nested CLI, so hand it its argv before the umbrella parser
+    # gets a chance to consume or reject any of those options.
+    if argv and argv[0] == "dreamcast":
+        return run_module("homm3.analysis.dreamcast", *argv[1:])
+
     ap = argparse.ArgumentParser(
         prog="homm3", description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -238,6 +255,12 @@ def main(argv: list[str] | None = None) -> int:
                        "disasm / rva / strings (homm3.sema, logged)")
     p.add_argument("sema_args", nargs=argparse.REMAINDER)
     p.set_defaults(fn=cmd_sema)
+
+    p = sub.add_parser("dreamcast", add_help=False,
+                       help="Dreamcast CodeView source-shape tools: "
+                       "show / asm / find / stats (read-only)")
+    p.add_argument("dreamcast_args", nargs=argparse.REMAINDER)
+    p.set_defaults(fn=cmd_dreamcast)
 
     p = sub.add_parser("vc6", help="compiler model + solvers: argv / il-diff / "
                        "predict-inline / why-reg / oracle / check (homm3.vc6)")
