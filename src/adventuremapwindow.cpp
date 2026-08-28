@@ -565,13 +565,10 @@ unsigned char TAdventureMapWindow::ProcessRightSelect(const message* msg)
 // DC CodeView's lexical blocks prove that the focus early-return and the
 // hover-change body are siblings. That source shape is what makes VC6 merge
 // the body-only EBX restore into retail's single epilogue.
-// [2026-08-28] SOURCE-SHAPE CHECKPOINT (70.25%): the former byte-exact body
-// flattened Game.h's GetHero/GetTown accessors and listed the mutually
-// exclusive Town arm before Dreamcast's Hero-then-Town statement order.
-// Restoring both named calls remained byte-exact; restoring the attested arm
-// order exposed the large layout dip. Keep the proven hierarchy/order and
-// recover retail's block placement from within it rather than reverting to
-// the false 100% local maximum.
+// [2026-08-28] SOURCE-SHAPE CLOSURE (100%): retain Dreamcast's named GetHero
+// then GetTown statement order, but let the town case labels branch forward
+// to the later town body. VC6 consequently emits retail's town-first switch
+// target layout while preserving the attested source hierarchy and calls.
 VA(0x00403010, 0x20A)  // anchor-global, dc 0xed8
 unsigned char TAdventureMapWindow::ProcessHover(int hx, int hy)
 {
@@ -592,6 +589,13 @@ unsigned char TAdventureMapWindow::ProcessHover(int hx, int hy)
                 goto hero_rollover;
 
             switch (hoverID) {
+            case TOWN_0_ID:
+            case TOWN_1_ID:
+            case TOWN_2_ID:
+            case TOWN_3_ID:
+            case TOWN_4_ID:
+                goto town_rollover;
+
             case HERO_0_ID:
             case HERO_1_ID:
             case HERO_2_ID:
@@ -636,11 +640,7 @@ hero_rollover: {
                 break;
             }
 
-            case TOWN_0_ID:
-            case TOWN_1_ID:
-            case TOWN_2_ID:
-            case TOWN_3_ID:
-            case TOWN_4_ID: {
+town_rollover: {
                 int townID = player->townIds[
                     topTown + hoverID - TOWN_0_ID];
                 if (townID == -1)
