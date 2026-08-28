@@ -2186,7 +2186,6 @@ call	textwdgt.obj	0x165258	min
 call	town.obj	0x165d5c	town::HasBuilding
 call	town.obj	0x165da4	generator::get_owner
 call	town.obj	0x16654c	town::get_army
-call	town.obj	0x1665a0	town::HasBuilding
 call	town.obj	0x166688	townManager::SetTown
 call	town.obj	0x166864	game::record_hide_hero
 call	town.obj	0x166950	town::HasBuilding
