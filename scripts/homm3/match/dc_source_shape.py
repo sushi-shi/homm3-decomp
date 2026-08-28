@@ -850,6 +850,30 @@ def type_point_header_violations(text: str) -> list[tuple[int, str]]:
              "member taking const type_point& and compare x, y, z in order")]
 
 
+def game_get_hero_header_violations(text: str) -> list[tuple[int, str]]:
+    """Audit Game.h:972's no-call GetHero inline source shape.
+
+    CodeView supplies the ``which`` parameter and the three source rows: the
+    -1 branch, its null return, then the hero-array pointer return.  The SH4
+    lowering forms the member base before adding the scaled index, but cannot
+    distinguish ``heroes + which`` from ``&heroes[which]``; both spellings are
+    therefore accepted by the proof gate.
+    """
+    masked = _source.mask(text)
+    pattern = (
+        r"\bhero\s*\*\s*GetHero\s*\(\s*int\s+which\s*\)\s*\{\s*"
+        r"if\s*\(\s*which\s*==\s*-\s*1\s*\)\s*return\s+0\s*;\s*"
+        r"return\s+(?:heroes\s*\+\s*which|&\s*heroes\s*\[\s*which\s*"
+        r"\])\s*;\s*\}")
+    if re.search(pattern, masked, re.DOTALL) is not None:
+        return []
+    token = re.search(r"\bGetHero\s*\(", masked)
+    line = text.count("\n", 0, token.start()) + 1 if token else 1
+    return [(line,
+             "Game.h:972 game::GetHero must retain Dreamcast's int which "
+             "parameter, -1 null arm, and direct heroes-index return")]
+
+
 def split_window_header_violations(text: str) -> list[tuple[int, str]]:
     """Audit the Dreamcast-proven TSplitWindow creature domain types."""
     masked = _source.mask(text)
@@ -2050,6 +2074,32 @@ bool operator==(const type_point& arg) const {
     if any(not type_point_header_violations(probe)
            for probe in bad_type_point_probes):
         failures.append("broken type_point equality source shape passed")
+    get_hero_probe = """\
+hero* GetHero(int which)
+{
+    if (which == -1)
+        return 0;
+    return heroes + which;
+}
+"""
+    if game_get_hero_header_violations(get_hero_probe):
+        failures.append("aligned Game.h GetHero source shape did not pass")
+    indexed_get_hero = get_hero_probe.replace(
+        "return heroes + which;", "return &heroes[which];")
+    if game_get_hero_header_violations(indexed_get_hero):
+        failures.append("equivalent indexed Game.h GetHero shape did not pass")
+    broken_get_hero_probes = (
+        get_hero_probe.replace("int which", "int heroId").replace(
+            "which", "heroId"),
+        get_hero_probe.replace(
+            "    if (which == -1)\n        return 0;\n", ""),
+        get_hero_probe.replace(
+            "    return heroes + which;",
+            "    hero* result = heroes + which;\n    return result;"),
+    )
+    if any(not game_get_hero_header_violations(probe)
+           for probe in broken_get_hero_probes):
+        failures.append("broken Game.h GetHero source shape passed")
     split_header_probe = """\
 TCreatureType creature;
 slider* splitSlider;
@@ -2603,6 +2653,14 @@ def scan() -> tuple[
     missing.extend(FileContractViolation("include/struct.h", line,
                                          description)
                    for line, description in type_point_defects)
+
+    game_header = common.HOMM3_DIR / "include/game.h"
+    game_text = game_header.read_text(errors="replace")
+    get_hero_defects = game_get_hero_header_violations(game_text)
+    checked += 1
+    missing.extend(FileContractViolation("include/game.h", line,
+                                         description)
+                   for line, description in get_hero_defects)
 
     split_header = common.HOMM3_DIR / "include/armygrp_split.h"
     split_text = split_header.read_text(errors="replace")

@@ -2516,11 +2516,11 @@ public:
     // its callers: town::HasGarrison reaches it after its own
     // `garrisonHeroId < 0` gate and STILL emits the redundant
     // `cmp edx,-1`, which is what proves the test lives inside here.
-    hero* GetHero(int heroId)
+    hero* GetHero(int which)
     {
-        if (heroId == -1)
+        if (which == -1)
             return 0;
-        return &heroes[heroId];
+        return heroes + which;
     }
     // DC-attested inline Game.h member (dc 0x2f18). Retail CheckCastSpell
     // expands it to the acting player's widened currHero load; no standalone
