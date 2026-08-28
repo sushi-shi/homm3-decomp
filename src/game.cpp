@@ -1248,9 +1248,11 @@ int game::SaveSignPool(TAbstractFile* outfile)
 // and the three trailing bytes is also visible in retail's single [ebp-8]
 // home. A separate scoped poolCount was a 99.9487% local maximum. Restoring
 // char_buffer's function lifetime keeps its [ebp+0xb] byte live across the
-// inlined resize, prevents VC6 from borrowing that argument word, and closes
-// all 25 blocks to 100.0000%. Retail requires unsigned x here: the DC int
-// changes Complete's resize/loop inline graph and measures 93.58%.
+// inlined resize and prevents VC6 from borrowing that argument word, closing
+// all 25 blocks. Source-shape debt remains: Dreamcast records x as int, while
+// this exact spelling needs unsigned int. Both a plain signed comparison and
+// an explicit unsigned comparison with int x change the resize inline graph
+// and measure 93.58%; that negative result does not by itself prove skew.
 VA(0x004b9340, 0x240)  // anchor-global (ClaimMine vector) + read-slot, dc 0xa3e5c
 int game::LoadMinePool(TAbstractFile* infile, int saveVersion)
 {

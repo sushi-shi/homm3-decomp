@@ -158,6 +158,12 @@ PROVEN_CALL_TRANSFERS: dict[tuple[str, int, str], CallTransfer] = {
 # graph: inlined accessors/operators, a source order hidden by scheduling, and
 # nesting within a single attested statement group.
 SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
+    ("game.obj", 0xA3E5C): (
+        SourceRule(
+            "LoadMinePool retains Dreamcast's signed int x local; an exact "
+            "unsigned spelling is byte proof but not source-shape closure",
+            r"(?m)^[ \t]*int[ \t]+x[ \t]*;"),
+    ),
     ("philai.obj", 0x10FEB8): (
         SourceRule(
             "value_of_experience keeps Dreamcast's no-argument const hero "
@@ -1368,6 +1374,12 @@ return (float(gHeroGoldCost) + army_value) / float(increment * 40);
                for rule in contract_violations(static_increment,
                                                 experience_key)):
         failures.append("static value_of_experience increment call passed")
+    mine_pool_key = ("game.obj", 0xA3E5C)
+    if contract_violations("int count;\nint x;\n", mine_pool_key):
+        failures.append("aligned LoadMinePool signed x local did not pass")
+    if not contract_violations(
+            "int count;\nunsigned int x;\n", mine_pool_key):
+        failures.append("unsigned LoadMinePool x escaped source-shape gate")
     hero_bonuses_key = ("philai.obj", 0x10FEF4)
     hero_bonuses_probe = """\
 type_spellvalue caster(our_hero);
