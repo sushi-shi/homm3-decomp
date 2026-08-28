@@ -714,7 +714,7 @@ static void upgrade_creatures(hero* current_hero, const town* current_town)
 
     for (dwelling = 0; dwelling < TOWN_DWELLING_COUNT; ++dwelling) {
         if (!current_town->HasBuilding(
-                building_id_from_int(DWELLING_0_UPG_ID + dwelling), 1))
+                DWELLING_0_UPG_ID + dwelling, 1))
             continue;
 
         TCreatureType upgrade = gTownUpgradedDwellingCreatures[
