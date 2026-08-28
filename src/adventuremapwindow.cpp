@@ -565,6 +565,13 @@ unsigned char TAdventureMapWindow::ProcessRightSelect(const message* msg)
 // DC CodeView's lexical blocks prove that the focus early-return and the
 // hover-change body are siblings. That source shape is what makes VC6 merge
 // the body-only EBX restore into retail's single epilogue.
+// [2026-08-28] SOURCE-SHAPE CHECKPOINT (70.25%): the former byte-exact body
+// flattened Game.h's GetHero/GetTown accessors and listed the mutually
+// exclusive Town arm before Dreamcast's Hero-then-Town statement order.
+// Restoring both named calls remained byte-exact; restoring the attested arm
+// order exposed the large layout dip. Keep the proven hierarchy/order and
+// recover retail's block placement from within it rather than reverting to
+// the false 100% local maximum.
 VA(0x00403010, 0x20A)  // anchor-global, dc 0xed8
 unsigned char TAdventureMapWindow::ProcessHover(int hx, int hy)
 {
@@ -585,29 +592,6 @@ unsigned char TAdventureMapWindow::ProcessHover(int hx, int hy)
                 goto hero_rollover;
 
             switch (hoverID) {
-            case TOWN_0_ID:
-            case TOWN_1_ID:
-            case TOWN_2_ID:
-            case TOWN_3_ID:
-            case TOWN_4_ID: {
-                int townID = player->townIds[
-                    topTown + hoverID - TOWN_0_ID];
-                if (townID == -1)
-                    break;
-
-                const town* mapTown = &gpGame->towns[townID];
-                const char* townName = DATA_COMPGEN(
-                    0x0063a608, adventureTownRolloverEmptyText, "");
-                const char* actualTownName = mapTown->cName.begin();
-                if (actualTownName)
-                    townName = actualTownName;
-                sprintf(gText, DATA_COMPGEN(
-                    0x0065f3d4, adventureTownRolloverFormat, "%s, %s"),
-                    townName, mapTown->GetTypeName());
-                rolloverText = gText;
-                break;
-            }
-
             case HERO_0_ID:
             case HERO_1_ID:
             case HERO_2_ID:
@@ -643,11 +627,34 @@ hero_rollover: {
                 if (heroID == -1)
                     break;
 
-                hero* mapHero = &gpGame->heroes[heroID];
+                hero* mapHero = gpGame->GetHero(heroID);
                 sprintf(gText,
                     gpGeneralText->GetText(
                         GENERAL_TEXT_HERO_ROLLOVER_FORMAT),
                     mapHero->name, mapHero->HeroFn_004D8F70());
+                rolloverText = gText;
+                break;
+            }
+
+            case TOWN_0_ID:
+            case TOWN_1_ID:
+            case TOWN_2_ID:
+            case TOWN_3_ID:
+            case TOWN_4_ID: {
+                int townID = player->townIds[
+                    topTown + hoverID - TOWN_0_ID];
+                if (townID == -1)
+                    break;
+
+                const town* mapTown = gpGame->GetTown(townID);
+                const char* townName = DATA_COMPGEN(
+                    0x0063a608, adventureTownRolloverEmptyText, "");
+                const char* actualTownName = mapTown->cName.begin();
+                if (actualTownName)
+                    townName = actualTownName;
+                sprintf(gText, DATA_COMPGEN(
+                    0x0065f3d4, adventureTownRolloverFormat, "%s, %s"),
+                    townName, mapTown->GetTypeName());
                 rolloverText = gText;
                 break;
             }
