@@ -803,9 +803,10 @@ void AI_enter_town(hero* current_hero, town* current_town)
                 int* cost =
                     current_town->get_build_cost_array(EXTRA_2_ID);
                 int value = current_hero->value_of_knowledge;
+                int owner = current_hero->owner;
 #pragma inline_depth(0)
                 if (value > AI_resource_cost(
-                        &gpGame->players[current_hero->owner], cost))
+                        &gpGame->players[owner], cost))
                     current_town->buy_building(EXTRA_2_ID);
 #pragma inline_depth()
                 break;
@@ -816,9 +817,10 @@ void AI_enter_town(hero* current_hero, town* current_town)
                 int* cost =
                     current_town->get_build_cost_array(EXTRA_2_ID);
                 int value = current_hero->value_of_power;
+                int owner = current_hero->owner;
 #pragma inline_depth(0)
                 if (value > AI_resource_cost(
-                        &gpGame->players[current_hero->owner], cost))
+                        &gpGame->players[owner], cost))
                     current_town->buy_building(EXTRA_2_ID);
 #pragma inline_depth()
                 break;
@@ -828,9 +830,10 @@ void AI_enter_town(hero* current_hero, town* current_town)
                     break;
                 int* cost =
                     current_town->get_build_cost_array(EXTRA_2_ID);
+                int owner = current_hero->owner;
 #pragma inline_depth(0)
                 int resource_cost = AI_resource_cost(
-                    &gpGame->players[current_hero->owner], cost);
+                    &gpGame->players[owner], cost);
 #pragma inline_depth()
                 if (current_hero->turnExperienceToRVRatio * 1000.0f
                     > resource_cost)
