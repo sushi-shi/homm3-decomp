@@ -630,6 +630,35 @@ public:
     long value_of_spring;
     long value_of_well;
 
+    // Dreamcast keeps these five source-visible setter boundaries. Retail
+    // /Ob2 folds them into AI_set_hero_bonuses, but the calls remain
+    // authoritative source shape rather than anonymous stores.
+    // E:\gamedcs\Hero.h:1021
+    __forceinline void set_value_of_duration(long arg)
+    {
+        value_of_duration = arg;
+    }
+    // E:\gamedcs\Hero.h:1026
+    __forceinline void set_value_of_knowledge(long arg)
+    {
+        value_of_knowledge = arg;
+    }
+    // E:\gamedcs\Hero.h:1031
+    __forceinline void set_value_of_power(long arg)
+    {
+        value_of_power = arg;
+    }
+    // E:\gamedcs\Hero.h:1036
+    __forceinline void set_value_of_spring(long arg)
+    {
+        value_of_spring = arg;
+    }
+    // E:\gamedcs\Hero.h:1041
+    __forceinline void set_value_of_well(long arg)
+    {
+        value_of_well = arg;
+    }
+
     // DC-attested inline accessor (ai_combat.h roster, dc 0x2c690).
     // Retail has no out-of-line row; AI_value_of_combat expands this
     // one-field return and preserves its float temporary before widening.
@@ -809,6 +838,13 @@ public:
     // 0x4da420 - STATIC for the same two reasons, and its whole body is
     // GetExperience inlined twice.
     static int GetExperienceIncrement(int level);
+    // E:\gamedcs\Hero.h:976. Dreamcast keeps this const header wrapper as
+    // a separate public; Complete folds it at each use into the retail-proven
+    // static overload above.
+    __forceinline int GetExperienceIncrement() const
+    {
+        return GetExperienceIncrement(level);
+    }
     // 0x4e4390 - Estates gold per day, the int twin of the five
     // specialty-factor getters.
     int GetEstatesBonus();

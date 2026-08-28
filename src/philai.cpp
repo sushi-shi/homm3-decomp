@@ -1348,21 +1348,15 @@ long AI_get_spell_value(const hero* our_hero, SpellID spell)
 // What one experience level is worth to this army: the gold-equivalent reward
 // (the hero-purchase constant plus the army's own strength) divided by the
 // experience the hero's next level costs, forty of which one visit grants.
-// The numerator adds in FLOAT (each operand converted separately), so the
-// army value is cast to float and gHeroGoldCost promoted into the add.
-//
-// Residual (99.93%): sole delta is the data reloc NAME - our claimed
-// ?gHeroGoldCost@@3HA vs the delinker's generic data_27814c at the same
-// 0x67814c. Every TU that reads gHeroGoldCost (town/hero/townmgr) delinks
-// it the same generic way, so this is the DoDialog data-name cosmetic, not
-// a code-byte difference.
+// Dreamcast splits the army conversion (line 1719) from the add/divide
+// return (line 1721), and calls the no-argument const hero accessor. Keeping
+// those source boundaries selects retail's two float homes and is exact.
 VA(0x00527710, 0x4C)  // anchor-callee, dc 0x10feb8
 float value_of_experience(const hero* current_hero, const armyGroup* current_army)
 {
-    int increment = hero::GetExperienceIncrement(current_hero->level);
-    return (static_cast<float>(const_cast<armyGroup*>(current_army)->get_AI_value())
-            + gHeroGoldCost)
-        / static_cast<float>(increment * 40);
+    int increment = current_hero->GetExperienceIncrement();
+    float army_value = float(current_army->get_AI_value());
+    return (float(gHeroGoldCost) + army_value) / float(increment * 40);
 }
 
 // E:\gamedcs\philai.cpp:1699.  The what-if probe AI_set_hero_bonuses runs
@@ -1384,6 +1378,25 @@ long type_spellvalue::get_value_of_increase(long base_value,
     return increased - base_value;
 }
 
+#ifdef max
+#undef max
+#endif
+
+namespace dc_max_source {
+// E:\\gamedcs\\DC_precompiledheaders.h:33
+inline const int& _cpp_max(const int& _X, const int& _Y)
+{
+    return (_X < _Y ? _Y : _X);
+}
+}
+
+// E:\gamedcs\includes.h:97. The source-visible wrapper used by
+// AI_set_hero_bonuses; retail VC6 folds it and _cpp_max into the caller.
+inline int max(int a, int b)
+{
+    return dc_max_source::_cpp_max(a, b);
+}
+
 // E:\gamedcs\includes.h:124 - the reference-returning max the tree's
 // other personalities carry (advmgr/quicktownwindow/armygrp precedent):
 // by-value parameters, const-reference result, so the picked side comes
@@ -1394,47 +1407,48 @@ inline const _TYPE& max_ref(_TYPE _X, _TYPE _Y)
     return (_X < _Y ? _Y : _X);
 }
 
-// E:\gamedcs\philai.cpp:1725.  Refresh the per-hero AI valuations: the
-// experience-to-value ratio (value_of_experience expanded over the hero's
-// own army), then the five stat/pool bonuses through the what-if probe -
+// E:\gamedcs\philai.cpp:1725.  Refresh the per-hero AI valuations: call
+// value_of_experience for the hero's own army, then set the five stat/pool
+// bonuses through the what-if probe -
 // +1 power (with +1 duration, floored at 10), +1 duration, +30 mana
 // (a knowledge point, third-shared and floored at 10), and the well and
-// spring refills against the hero's current pool.
+// spring refills against the hero's current pool. The Dreamcast calculation
+// and setter breakpoint groups remain separate statements. This is the
+// closure that deliberately crossed 99.987% -> 95.88% -> 100% instead of
+// preserving the source-false high-score plateau.
 VA(0x00527760, 0x1f2)  // anchor-callee {spellvalue ctor, get_best_spell_value x7, GetExperienceIncrement, get_AI_value}, dc 0x10fef4
 void AI_set_hero_bonuses(hero* our_hero)
 {
-    type_spellvalue value(our_hero);
+    type_spellvalue caster(our_hero);
 
-    // value_of_experience expanded over the hero's own army; the direct
-    // member store is what keeps retail's fdiv result out of a temp.
-    int increment = hero::GetExperienceIncrement(our_hero->level);
     our_hero->turnExperienceToRVRatio =
-        (static_cast<float>(our_hero->army.get_AI_value()) + gHeroGoldCost)
-        / static_cast<float>(increment * 40);
+        value_of_experience(our_hero, &our_hero->army);
 
-    long base_value = value.get_best_spell_value(SPELL_VALUE_CLASS_MASK);
-    our_hero->value_of_power =
-        max_ref<long>(value.get_value_of_increase(base_value, 1, 1, 0), 10);
-    our_hero->value_of_duration =
-        value.get_value_of_increase(base_value, 0, 1, 0);
-    our_hero->value_of_knowledge = max_ref<long>(
-        value.get_value_of_increase(base_value, 0, 0, 30) / 3, 10);
+    long base_value = caster.get_best_spell_value(SPELL_VALUE_CLASS_MASK);
+    long value =
+        max(caster.get_value_of_increase(base_value, 1, 1, 0), 10);
+    our_hero->set_value_of_power(value);
+    value = caster.get_value_of_increase(base_value, 0, 1, 0);
+    our_hero->set_value_of_duration(value);
+    value = max(
+        caster.get_value_of_increase(base_value, 0, 0, 30) / 3, 10);
+    our_hero->set_value_of_knowledge(value);
 
-    long initial_mana = value.get_mana();
-    value.set_mana(our_hero->mana);
-    base_value = value.get_best_spell_value(SPELL_VALUE_CLASS_MASK);
+    long initial_mana = caster.get_mana();
+    caster.set_mana(our_hero->mana);
+    base_value = caster.get_best_spell_value(SPELL_VALUE_CLASS_MASK);
 
     if (our_hero->mana >= initial_mana)
-        our_hero->value_of_well = 0;
+        our_hero->set_value_of_well(0);
     else
-        our_hero->value_of_well = value.get_value_of_increase(
-            base_value, 0, 0, initial_mana - our_hero->mana);
+        our_hero->set_value_of_well(caster.get_value_of_increase(
+            base_value, 0, 0, initial_mana - our_hero->mana));
 
     if (our_hero->mana >= 2 * initial_mana)
-        our_hero->value_of_spring = 0;
+        our_hero->set_value_of_spring(0);
     else
-        our_hero->value_of_spring = value.get_value_of_increase(
-            base_value, 0, 0, 2 * initial_mana - our_hero->mana);
+        our_hero->set_value_of_spring(caster.get_value_of_increase(
+            base_value, 0, 0, 2 * initial_mana - our_hero->mana));
 }
 
 // E:\gamedcs\philai.cpp:1770. Retail retains the DC hero-bonus sweep and
