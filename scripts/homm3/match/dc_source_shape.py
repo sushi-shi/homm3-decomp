@@ -18,9 +18,10 @@ copy and because one header body can be shared by several TUs.
 There is no score threshold or score-based waiver: a local byte maximum cannot
 override an attested source fact.  The unfinished reconstruction backlog is
 frozen per Dreamcast caller/callee or source-contract identity.  A new omission
-is fatal even when another omission disappeared in the same build, while a
-clean pass rolls the backlog down-only so a restored helper can never be
-flattened again.  The embedded negative controls cover that ratchet as well as
+is fatal even when another omission disappeared in the same build.  Every pass
+rolls restored rows down-only, even while unrelated new omissions keep the gate
+red, so concurrent defects cannot delay banking a restored helper.  The
+embedded negative controls cover that ratchet as well as
 the SetupHeroView defect that caused this gate to land, reordered helpers
 inside one CodeView group, and flattening two distinct breakpoint groups
 together.
@@ -139,6 +140,21 @@ class DecodedShape:
 
 Violation = MissingCall | MissingDefinition | MisgroupedCalls \
     | ContractViolation | FileContractViolation
+AuditScope = tuple[str, str, str]
+
+
+def _dc_audit_scope(key: tuple[str, int]) -> AuditScope:
+    return "dc", key[0], f"0x{key[1]:x}"
+
+
+def _file_audit_scope(source: str) -> AuditScope:
+    return "file", source, "-"
+
+
+def _key_audit_scope(key: tuple[str, str, str, str]) -> AuditScope:
+    if key[0] == "file-contract":
+        return _file_audit_scope(key[1])
+    return "dc", key[1], key[2]
 
 
 # Dreamcast sometimes places one operation in two cooperating functions while
@@ -1340,6 +1356,13 @@ def selftest() -> list[str]:
         failures.append("equal-count source-shape debt trade passed")
     if ratcheted_backlog([], frozen):
         failures.append("retired source-shape debt did not ratchet down")
+    if ratcheted_backlog([replacement_debt], frozen):
+        failures.append("fresh debt delayed retirement or entered baseline")
+    audited = {_key_audit_scope(violation_key(frozen_call))}
+    if ratcheted_backlog([replacement_debt], frozen, audited):
+        failures.append("audited restoration was not banked on a red gate")
+    if ratcheted_backlog([], frozen, set()) != frozen:
+        failures.append("unaudited debt was retired on a red gate")
     file_contract = FileContractViolation(
         "include/game.h", 10, "GetHero keeps its helper boundary")
     moved_contract = FileContractViolation(
@@ -2490,8 +2513,9 @@ def _definitions_between(masked: str, fn: str, start: int, end: int):
 
 def scan() -> tuple[
         int, list[MissingCall | MissingDefinition | MisgroupedCalls |
-                  ContractViolation | FileContractViolation]]:
-    """Return ``(DC source definitions audited, source-shape defects)``."""
+                  ContractViolation | FileContractViolation],
+        set[AuditScope]]:
+    """Return ``(definitions audited, defects, safely audited scopes)``."""
     current = _current_functions()
     exact_vas = _current_exact_vas()
     calls = _xref_calls()
@@ -2499,6 +2523,7 @@ def scan() -> tuple[
     checked = 0
     missing: list[MissingCall | MissingDefinition | MisgroupedCalls |
                   ContractViolation | FileContractViolation] = []
+    audited: set[AuditScope] = set()
     cache: dict[str, tuple[str, str, list[int]]] = {}
     decoded_cache: dict[tuple[str, int], DecodedShape] = {}
     decoder = None
@@ -2575,6 +2600,7 @@ def scan() -> tuple[
         if span is None:
             continue
         checked += 1
+        audited.add(_dc_audit_scope(key))
         body = text[span[0] + 1:span[1]]
         preliminary = missing_from_body(body, [ref.name for ref in refs])
         names = attested(key, refs) if preliminary else set()
@@ -2632,6 +2658,7 @@ def scan() -> tuple[
                 if not definitions:
                     continue
                 checked += 1
+                audited.add(_dc_audit_scope(key))
                 definition = definitions[0]
                 body = text[definition.body_open + 1:definition.body_close]
                 refs = calls[key]
@@ -2666,6 +2693,7 @@ def scan() -> tuple[
     is_paths.extend(sorted((common.HOMM3_DIR / "src").glob("*.cpp")))
     for path in is_paths:
         relpath = str(path.relative_to(common.HOMM3_DIR))
+        audited.add(_file_audit_scope(relpath))
         text = path.read_text(errors="replace")
         defects = army_is_contract_violations(
             text, header=relpath == "include/army.h")
@@ -2678,6 +2706,7 @@ def scan() -> tuple[
 
     cmbtmgr_header = common.HOMM3_DIR / "include/cmbtmgr.h"
     cmbtmgr_text = cmbtmgr_header.read_text(errors="replace")
+    audited.add(_file_audit_scope("include/cmbtmgr.h"))
     cmbtmgr_defects = combat_manager_header_violations(cmbtmgr_text)
     checked += 1
     missing.extend(FileContractViolation("include/cmbtmgr.h", line,
@@ -2686,6 +2715,7 @@ def scan() -> tuple[
 
     struct_header = common.HOMM3_DIR / "include/struct.h"
     struct_text = struct_header.read_text(errors="replace")
+    audited.add(_file_audit_scope("include/struct.h"))
     type_point_defects = type_point_header_violations(struct_text)
     checked += 1
     missing.extend(FileContractViolation("include/struct.h", line,
@@ -2694,6 +2724,7 @@ def scan() -> tuple[
 
     game_header = common.HOMM3_DIR / "include/game.h"
     game_text = game_header.read_text(errors="replace")
+    audited.add(_file_audit_scope("include/game.h"))
     get_hero_defects = game_get_hero_header_violations(game_text)
     checked += 1
     missing.extend(FileContractViolation("include/game.h", line,
@@ -2702,6 +2733,7 @@ def scan() -> tuple[
 
     split_header = common.HOMM3_DIR / "include/armygrp_split.h"
     split_text = split_header.read_text(errors="replace")
+    audited.add(_file_audit_scope("include/armygrp_split.h"))
     split_defects = split_window_header_violations(split_text)
     checked += 1
     missing.extend(FileContractViolation("include/armygrp_split.h", line,
@@ -2710,6 +2742,7 @@ def scan() -> tuple[
 
     window_header = common.HOMM3_DIR / "include/window.h"
     window_text = window_header.read_text(errors="replace")
+    audited.add(_file_audit_scope("include/window.h"))
     window_defects = window_header_violations(window_text)
     checked += 1
     missing.extend(FileContractViolation("include/window.h", line,
@@ -2758,6 +2791,7 @@ def scan() -> tuple[
                 if not enforced:
                     continue
                 checked += 1
+                audited.add(_dc_audit_scope(key))
                 definitions = _definitions_between(
                     masked, row["name"], mark.end(), end)
                 if not definitions:
@@ -2795,7 +2829,7 @@ def scan() -> tuple[
         callee = row.callee if isinstance(row, MissingCall) else ""
         return (va is None, va or 0, row.dc_module, row.dc_offset, callee)
 
-    return checked, sorted(missing, key=order)
+    return checked, sorted(missing, key=order), audited
 
 
 def violation_key(row: Violation) -> tuple[str, str, str, str]:
@@ -2870,10 +2904,20 @@ def new_violations(rows: list[Violation],
 
 def ratcheted_backlog(
         rows: list[Violation],
-        backlog: set[tuple[str, str, str, str]]) \
+        backlog: set[tuple[str, str, str, str]],
+        audited: set[AuditScope] | None = None) \
         -> set[tuple[str, str, str, str]]:
-    """Down-only baseline after the currently restored facts are removed."""
-    return backlog & violation_keys(rows)
+    """Down-only baseline after audited, currently restored facts disappear.
+
+    ``audited`` is mandatory for a red-gate write: a missing definition or
+    temporarily unresolvable claim must not look like a restoration merely
+    because its old violation row was never reached by the scan.
+    """
+    current = violation_keys(rows)
+    if audited is None:
+        return backlog & current
+    return {key for key in backlog
+            if key in current or _key_audit_scope(key) not in audited}
 
 
 def render(row: Violation) -> str:
@@ -2906,20 +2950,22 @@ def render(row: Violation) -> str:
             f"{row.source}:{row.line})")
 
 
-def _ratchet_gate(checked: int, missing: list[Violation]) -> list[str]:
+def _ratchet_gate(checked: int, missing: list[Violation],
+                  audited: set[AuditScope]) -> list[str]:
     try:
         backlog = load_backlog()
     except ValueError as error:
         return [f"dc-source-shape BASELINE BROKEN: {error}"]
+    current = violation_keys(missing)
+    ratcheted = ratcheted_backlog(missing, backlog, audited)
+    stale = backlog - ratcheted
+    if stale:
+        # Down-only even on a red build: removing an absent backlog identity
+        # cannot bless any fresh defect, and delaying this write would let an
+        # unrelated dirty file keep a restored helper eligible for flattening.
+        write_backlog_keys(ratcheted)
     fresh = new_violations(missing, backlog)
     if not fresh:
-        current = violation_keys(missing)
-        stale = backlog - current
-        if stale:
-            # Down-only: a normal gate invocation may bank a restoration but
-            # can never bless a newly missing helper. The rewritten file is
-            # visible in review and should be committed with the restoration.
-            write_backlog_keys(ratcheted_backlog(missing, backlog))
         summary = (f"[build] dc-source-shape: {checked} DC source "
                    f"definitions; {len(current)} known-backlog defect(s)")
         if stale:
@@ -2933,9 +2979,11 @@ def _ratchet_gate(checked: int, missing: list[Violation]) -> list[str]:
             f"DC SOURCE SHAPE: {remainder} additional NEW defect(s) hidden; "
             "run `python3 -m homm3.match.dc_source_shape --backlog` for "
             "the full ratchet report")
-    shown.append(
-        f"DC SOURCE SHAPE RATCHET: {len(fresh)} new defect(s); retail "
-        "percentage cannot waive an attested helper boundary")
+    summary = (f"DC SOURCE SHAPE RATCHET: {len(fresh)} new defect(s); retail "
+               "percentage cannot waive an attested helper boundary")
+    if stale:
+        summary += f"; ratcheted {len(stale)} independently retired row(s)"
+    shown.append(summary)
     return shown
 
 
@@ -2959,7 +3007,7 @@ def main(argv=None) -> int:
         for item in broken:
             print(f"SELFTEST BROKEN: {item}", file=sys.stderr)
         return 2
-    checked, missing = scan()
+    checked, missing, audited = scan()
     if "--write-baseline" in argv:
         write_backlog(missing)
         print(f"Dreamcast source-shape backlog frozen: "
@@ -2983,7 +3031,7 @@ def main(argv=None) -> int:
               f"{len(current & backlog)} known, {len(fresh)} new, "
               f"{len(backlog - current)} stale source-shape defect(s)")
         return 1 if fresh else 0
-    fatal = _ratchet_gate(checked, missing)
+    fatal = _ratchet_gate(checked, missing, audited)
     for line in fatal:
         print(line, file=sys.stderr)
     return 1 if fatal else 0
