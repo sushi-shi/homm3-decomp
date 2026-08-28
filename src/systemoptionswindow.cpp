@@ -545,8 +545,17 @@ int TSystemOptionsWindow::WindowHandler(message* msg)
         goto consume;
 
     switch (msg->codeX) {
-    case widget::WIDGET_SELECT:
-        goto handle_select;
+    case widget::WIDGET_SELECT: {
+        int id = findWidget(msg->mouseX, msg->mouseY);
+        if (id >= SHOW_PATH_ID && id <= ANIMATE_SPELLBOOK_ID
+                && button::click_sample) {
+            button::click_sample->field_2c = 0x40;
+            button::click_sample->field_30 = one;
+            button::click_sample->field_28 = 3;
+            gpSoundManager->MemorySample(button::click_sample);
+        }
+        return one;
+    }
     case widget::WIDGET_DESELECT:
         break;
     default:
@@ -733,18 +742,6 @@ translate_command:
         msg->codeY = widget::WIDGET_END_DIALOG;
         msg->codeX = widget::WIDGET_END_DIALOG;
         return MESSAGE_DISPATCH_FORWARD;
-    }
-
-handle_select:
-    {
-        int id = findWidget(msg->mouseX, msg->mouseY);
-        if (id >= SHOW_PATH_ID && id <= ANIMATE_SPELLBOOK_ID
-                && button::click_sample) {
-            button::click_sample->field_2c = 0x40;
-            button::click_sample->field_30 = one;
-            button::click_sample->field_28 = 3;
-            gpSoundManager->MemorySample(button::click_sample);
-        }
     }
 
 consume:

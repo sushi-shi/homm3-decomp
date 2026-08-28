@@ -8,9 +8,11 @@ every active unclaimed definition retaining its ``E:\\gamedcs`` provenance
 line, this gate checks that each source-visible game helper from
 ``evidence/dc-xref-graph.tsv`` is still named in the reconstructed C++ body.
 The only exceptions are proof-carrying Complete changes: a transfer requires
-both the old caller's forwarding shape and an exact retail receiver, while a
-bounded call-spelling substitution requires its caller itself to remain exact.
-These are stricter than waivers and record independently proved source changes.
+both the old caller's forwarding shape and an exact retail receiver, a bounded
+call-spelling substitution requires its caller itself to remain exact, and a
+DC-only helper order requires an exact retail caller plus the independently
+measured Complete source shape.  These are stricter than waivers and record
+independently proved source changes.
 Provenance-marked header definitions are audited by original source file and
 line rather than by emitting object, because `/Ob2` may inline every retail
 copy and because one header body can be shared by several TUs.
@@ -116,6 +118,14 @@ class CallSpelling:
 
 
 @dataclass(frozen=True)
+class ProvenOrderSkew:
+    description: str
+    caller_va: int
+    retail_pattern: str
+    dc_only_helpers: tuple[str, ...]
+
+
+@dataclass(frozen=True)
 class ContractViolation:
     va: int | None
     dc_module: str
@@ -206,6 +216,48 @@ PROVEN_CALL_SPELLINGS: dict[tuple[str, int], tuple[CallSpelling, ...]] = {
             "Complete SaveGame replaces the Dreamcast custom strnicmp with "
             "the CRT _strnicmp import at both reserved-name checks",
             0x004BEEA0, "strnicmp", r"\b_strnicmp(?=\s*\()", "strnicmp"),
+    ),
+}
+
+
+# A different lexical order is admitted only after the Complete caller was
+# exact, the Dreamcast ordering was imposed and measured, and that older shape
+# broke the exact lowering.  Keep the named helpers themselves mandatory; only
+# their cross-statement order is classified DC-only while the exact caller and
+# the bounded Complete source pattern both survive.
+PROVEN_ORDER_SKEWS: dict[tuple[str, int], tuple[ProvenOrderSkew, ...]] = {
+    ("spells.obj", 0x152DEC): (
+        ProvenOrderSkew(
+            "find_spell_target's Complete switch is RESURRECTION / "
+            "ANIMATE_DEAD / SACRIFICE, not Dreamcast's SACRIFICE / "
+            "RESURRECTION / ANIMATE_DEAD order",
+            0x005A3950,
+            r"case\s+SPELL_RESURRECTION\s*:.*?"
+            r"\bfind_resurrection_target\s*\(.*?"
+            r"case\s+SPELL_ANIMATE_DEAD\s*:.*?"
+            r"\bfind_animate_dead_target\s*\(.*?"
+            r"case\s+SPELL_SACRIFICE\s*:.*?"
+            r"\bfind_resurrection_target\s*\(.*?\bbreak\s*;.*?"
+            r"\}\s*return\s+cells\s*\[\s*hex\s*\]\s*\.\s*"
+            r"get_army\s*\(",
+            ("combatManager::find_resurrection_target",
+             "combatManager::find_animate_dead_target",
+             "hexcell::get_army")),
+    ),
+    ("townmgr.obj", 0x176634): (
+        ProvenOrderSkew(
+            "DoCommand's Complete hero cases are SWAP / FROM / TO, not "
+            "Dreamcast's TO / FROM / SWAP order",
+            0x005D4C10,
+            r"case\s+TOWN_COMMAND_SWAP_HEROES\s*:.*?"
+            r"\bSwapHeroes\s*\(.*?"
+            r"case\s+TOWN_COMMAND_MOVE_HERO_FROM_GARRISON\s*:.*?"
+            r"\bMoveHeroFromGarrison\s*\(.*?"
+            r"case\s+TOWN_COMMAND_MOVE_HERO_TO_GARRISON\s*:.*?"
+            r"\bMoveHeroToGarrison\s*\(",
+            ("townManager::MoveHeroToGarrison",
+             "townManager::MoveHeroFromGarrison",
+             "townManager::SwapHeroes")),
     ),
 }
 
@@ -1122,14 +1174,22 @@ def misgrouped_from_body(body: str, groups: tuple[CallGroup, ...]) \
     so helpers in one group may map to the same or increasing C++ chunks.
     Their SH4 order must be preserved when they occupy different chunks.  If
     they share one chunk, argument evaluation and nesting may reverse lexical
-    token order.  Distinct breakpoint groups must map to distinct, increasing
-    chunks.
+    token order.  Distinct breakpoint groups introducing a helper must map to
+    distinct, increasing chunks.  Repeated occurrences of an already-mapped
+    helper are not an equal-call-count invariant: Complete may remove an
+    older-revision statement while retaining the shared helper boundary
+    elsewhere (the byte-exact SetupHeroView palette-message reduction is the
+    motivating case).  Missing helpers are audited separately by
+    ``missing_from_body``.
     """
     chunks = _statement_chunks(_source.mask(body))
     cursor = 0
+    mapped_helpers: set[str] = set()
     for group in groups:
         helpers = [helper for callee in group.callees
                    if (helper := _helper_token(callee)) is not None]
+        helpers = list(dict.fromkeys(
+            helper for helper in helpers if helper not in mapped_helpers))
         if not helpers:
             continue
         counts = [Counter({
@@ -1150,6 +1210,7 @@ def misgrouped_from_body(body: str, groups: tuple[CallGroup, ...]) \
             last = chunk_index
         if last is None:
             return group
+        mapped_helpers.update(helpers)
         cursor = last + 1
     return None
 
@@ -1192,6 +1253,35 @@ def apply_proven_call_spellings(
         canonical = re.sub(
             spelling.retail_pattern, spelling.canonical_name, canonical)
     return canonical
+
+
+def proven_dc_only_order_helpers(
+        key: tuple[str, int], body: str, va: int | None,
+        exact_vas: set[int]) -> tuple[frozenset[str], tuple[str, ...]]:
+    """Return bounded helper-order facts proved DC-only for this caller."""
+    if va is None or va not in exact_vas:
+        return frozenset(), ()
+    active = _source.mask(body)
+    helpers: set[str] = set()
+    descriptions: list[str] = []
+    for skew in PROVEN_ORDER_SKEWS.get(key, ()):
+        if va != skew.caller_va \
+                or re.search(skew.retail_pattern, active, re.DOTALL) is None:
+            continue
+        helpers.update(skew.dc_only_helpers)
+        descriptions.append(skew.description)
+    return frozenset(helpers), tuple(descriptions)
+
+
+def groups_without_helpers(groups: tuple[CallGroup, ...],
+                           omitted: frozenset[str]) \
+        -> tuple[CallGroup, ...]:
+    """Remove only explicitly classified helper tokens from call groups."""
+    filtered = tuple(
+        CallGroup(group.line, tuple(
+            callee for callee in group.callees if callee not in omitted))
+        for group in groups)
+    return tuple(group for group in filtered if group.callees)
 
 
 def groups_without_transfers(
@@ -1593,6 +1683,49 @@ case TAdventureOptionsWindow::VIEW_SCENARIO_ID:
         spelling_key, spelling_body, spelling_va, set())
     if not missing_from_body(unproved, ["strnicmp"]):
         failures.append("non-exact call spelling bypassed source-shape gate")
+    order_key = ("spells.obj", 0x152DEC)
+    order_va = PROVEN_ORDER_SKEWS[order_key][0].caller_va
+    complete_order = """\
+switch (spell) {
+case SPELL_RESURRECTION:
+    return find_resurrection_target(side, hex, creature_spell);
+case SPELL_ANIMATE_DEAD:
+    return find_animate_dead_target(side, hex);
+case SPELL_SACRIFICE:
+    if (first_target)
+        return find_resurrection_target(side, hex, creature_spell);
+    break;
+}
+return cells[hex].get_army();
+"""
+    order_helpers, order_descriptions = proven_dc_only_order_helpers(
+        order_key, complete_order, order_va, {order_va})
+    if order_helpers != frozenset(
+            PROVEN_ORDER_SKEWS[order_key][0].dc_only_helpers) \
+            or len(order_descriptions) != 1:
+        failures.append("exact Complete helper-order skew did not classify")
+    if proven_dc_only_order_helpers(
+            order_key, complete_order, order_va, set())[0]:
+        failures.append("non-exact helper-order skew classified DC-only")
+    dreamcast_order = complete_order.replace(
+        "case SPELL_RESURRECTION:\n"
+        "    return find_resurrection_target(side, hex, creature_spell);\n"
+        "case SPELL_ANIMATE_DEAD:\n"
+        "    return find_animate_dead_target(side, hex);\n"
+        "case SPELL_SACRIFICE:",
+        "case SPELL_SACRIFICE:")
+    if proven_dc_only_order_helpers(
+            order_key, dreamcast_order, order_va, {order_va})[0]:
+        failures.append("unproved helper order classified DC-only")
+    order_groups = (
+        CallGroup(2606, ("combatManager::ValidHex",)),
+        CallGroup(2615, ("combatManager::find_resurrection_target",)),
+        CallGroup(2617, ("hexcell::get_army",)),
+        CallGroup(2625, ("combatManager::find_animate_dead_target",)),
+    )
+    if groups_without_helpers(order_groups, order_helpers) != (
+            CallGroup(2606, ("combatManager::ValidHex",)),):
+        failures.append("DC-only order filter erased an unrelated helper")
     artifact_transfer = PROVEN_CALL_TRANSFERS[
         ("philai.obj", 0x10E3F8, "buy_artifacts")]
     artifact_caller = """\
@@ -1913,6 +2046,9 @@ widget* findWidgetPtr(int mx, int my) const;
     separate = (CallGroup(20, ("A",)), CallGroup(21, ("B",)))
     if misgrouped_from_body("A() + B();", separate) != separate[1]:
         failures.append("distinct breakpoint groups were flattened together")
+    repeated = (CallGroup(20, ("A",)), CallGroup(21, ("A",)))
+    if misgrouped_from_body("A();", repeated):
+        failures.append("repeated DC-only helper occurrence required equal count")
     nested = (CallGroup(12, ("inner", "outer")),)
     if misgrouped_from_body("return outer(inner());", nested):
         failures.append("nested call evaluation order was treated as lexical")
@@ -2738,8 +2874,8 @@ def _definitions_between(masked: str, fn: str, start: int, end: int):
 def scan() -> tuple[
         int, list[MissingCall | MissingDefinition | MisgroupedCalls |
                   ContractViolation | FileContractViolation],
-        set[AuditScope]]:
-    """Return ``(definitions audited, defects, safely audited scopes)``."""
+        set[AuditScope], set[str]]:
+    """Return audited definitions, defects, scopes and proved DC-only facts."""
     current = _current_functions()
     exact_vas = _current_exact_vas()
     calls = _xref_calls()
@@ -2748,6 +2884,7 @@ def scan() -> tuple[
     missing: list[MissingCall | MissingDefinition | MisgroupedCalls |
                   ContractViolation | FileContractViolation] = []
     audited: set[AuditScope] = set()
+    dc_only: set[str] = set()
     cache: dict[str, tuple[str, str, list[int]]] = {}
     decoded_cache: dict[tuple[str, int], DecodedShape] = {}
     decoder = None
@@ -2773,7 +2910,8 @@ def scan() -> tuple[
             return _attested_names(refs, set())
         return _attested_names(refs, set(decoded(key, refs).offsets))
 
-    def group_defect(key: tuple[str, int], refs: list[XrefCall], body: str) \
+    def group_defect(key: tuple[str, int], refs: list[XrefCall], body: str,
+                     va: int | None) \
             -> CallGroup | None:
         ordinary_calls = sum(ref.pool_refs + ref.bsr_calls for ref in refs
                              if _helper_token(ref.name) is not None)
@@ -2782,6 +2920,11 @@ def scan() -> tuple[
         groups = groups_without_transfers(
             decoded(key, refs).groups,
             lambda callee: transferred(key, callee, body))
+        helpers, descriptions = proven_dc_only_order_helpers(
+            key, body, va, exact_vas)
+        if helpers:
+            groups = groups_without_helpers(groups, helpers)
+            dc_only.update(descriptions)
         return misgrouped_from_body(body, groups)
 
     def add_contract_defects(va: int | None, key: tuple[str, int],
@@ -2842,7 +2985,7 @@ def scan() -> tuple[
                 claim.va, claim.module, claim.dc_offset, claim.path,
                 claim.line, identity[1], callee, helper))
         if not body_missing and (group := group_defect(
-                key, refs, shape_body)):
+                key, refs, shape_body, claim.va)):
             missing.append(MisgroupedCalls(
                 claim.va, claim.module, claim.dc_offset, claim.path,
                 claim.line, identity[1], group))
@@ -2903,7 +3046,7 @@ def scan() -> tuple[
                         text.count("\n", 0, definition.head) + 1,
                         row["name"], callee, helper))
                 if not body_missing and (group := group_defect(
-                        key, refs, body)):
+                        key, refs, body, None)):
                     missing.append(MisgroupedCalls(
                         None, key[0], key[1], relpath,
                         text.count("\n", 0, definition.head) + 1,
@@ -3038,7 +3181,7 @@ def scan() -> tuple[
                         text.count("\n", 0, definition.head) + 1,
                         row["name"], callee, helper))
                 if not body_missing and (group := group_defect(
-                        key, refs, body)):
+                        key, refs, body, None)):
                     missing.append(MisgroupedCalls(
                         None, key[0], key[1], relpath,
                         text.count("\n", 0, definition.head) + 1,
@@ -3057,7 +3200,7 @@ def scan() -> tuple[
         callee = row.callee if isinstance(row, MissingCall) else ""
         return (va is None, va or 0, row.dc_module, row.dc_offset, callee)
 
-    return checked, sorted(missing, key=order), audited
+    return checked, sorted(missing, key=order), audited, dc_only
 
 
 def violation_key(row: Violation) -> tuple[str, str, str, str]:
@@ -3179,7 +3322,7 @@ def render(row: Violation) -> str:
 
 
 def _ratchet_gate(checked: int, missing: list[Violation],
-                  audited: set[AuditScope]) -> list[str]:
+                  audited: set[AuditScope], dc_only: set[str]) -> list[str]:
     try:
         backlog = load_backlog()
     except ValueError as error:
@@ -3196,6 +3339,8 @@ def _ratchet_gate(checked: int, missing: list[Violation],
     if not fresh:
         summary = (f"[build] dc-source-shape: {checked} DC source "
                    f"definitions; {len(current)} known-backlog defect(s)")
+        if dc_only:
+            summary += f"; {len(dc_only)} proved dc-only order fact(s)"
         if stale:
             summary += f"; ratcheted {len(stale)} retired row(s)"
         print(summary + " - no new source flattening")
@@ -3209,6 +3354,8 @@ def _ratchet_gate(checked: int, missing: list[Violation],
             "the full ratchet report")
     summary = (f"DC SOURCE SHAPE RATCHET: {len(fresh)} new defect(s); retail "
                "percentage cannot waive an attested helper boundary")
+    if dc_only:
+        summary += f"; {len(dc_only)} separate order fact(s) proved dc-only"
     if stale:
         summary += f"; ratcheted {len(stale)} independently retired row(s)"
     shown.append(summary)
@@ -3235,7 +3382,7 @@ def main(argv=None) -> int:
         for item in broken:
             print(f"SELFTEST BROKEN: {item}", file=sys.stderr)
         return 2
-    checked, missing, audited = scan()
+    checked, missing, audited, dc_only = scan()
     if "--write-baseline" in argv:
         write_backlog(missing)
         print(f"Dreamcast source-shape backlog frozen: "
@@ -3254,12 +3401,14 @@ def main(argv=None) -> int:
             print(f"{tag} {render(row)}")
         for key in sorted(backlog - current):
             print("stale DC SOURCE SHAPE: " + "\t".join(key))
+        for description in sorted(dc_only):
+            print("dc-only DC SOURCE SHAPE: " + description)
         fresh = new_violations(missing, backlog)
         print(f"checked {checked} DC source definitions; "
               f"{len(current & backlog)} known, {len(fresh)} new, "
               f"{len(backlog - current)} stale source-shape defect(s)")
         return 1 if fresh else 0
-    fatal = _ratchet_gate(checked, missing, audited)
+    fatal = _ratchet_gate(checked, missing, audited, dc_only)
     for line in fatal:
         print(line, file=sys.stderr)
     return 1 if fatal else 0

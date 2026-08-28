@@ -998,8 +998,9 @@ void CSpriteFrame::DrawAdvObjImpl(int sx, int sy, int sw, int sh,
 // `Draw(sw, sy, sw, ...)`; spelling that positive fact alone scores 81.4249%
 // because C1 then homes `this` in EDI across the whole body.  Swapping the two
 // leading declarations and replacing the local constant with the existing
-// code-7 enumerator are byte-flat paired probes, so the 83.2115% high-water
-// spelling remains pending a real source fact that restores retail's EDX home.
+// code-7 enumerator are byte-flat paired probes.  The proven call spelling is
+// retained despite that expected checkpoint dip while the surrounding source
+// shape needed to restore retail's EDX home remains under reconstruction.
 VA(0x0047dd40, 0xAD8) // retail raw/tileset decoder + DC source identity
 void CSpriteFrame::DrawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                             int dx, int dy, int dw, int dh, int dpitch,
@@ -1010,7 +1011,7 @@ void CSpriteFrame::DrawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
     static const unsigned char kOpaqueRunCode = 7;
 
     if (EncodingMethod == eEncodeGeneralRLE) {
-        Draw(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip, 1);
+        Draw(sw, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip, 1);
         return;
     }
     if (EncodingMethod == eEncodeAdvObjRLE) {

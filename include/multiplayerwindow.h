@@ -217,12 +217,12 @@ public:
     unsigned long dwUser3;      // +0x104
     unsigned long dwUser4;      // +0x108
 
-    __forceinline unsigned char IsJoinDisabled()
+    inline unsigned char IsJoinDisabled()
     {
         if (dwFlags & 0x20)
-            return true;
+            return 1;
         if (dwFlags & 1)
-            return true;
+            return 1;
         unsigned char disabled = playerCount == maxPlayers;
         return disabled;
     }
@@ -232,9 +232,11 @@ public:
         return (dwFlags & 0x21) || playerCount == maxPlayers;
     }
 
-    inline bool IsPasswordProtected()
+    inline unsigned char IsPasswordProtected()
     {
-        return dwFlags & 0x400;
+        if (dwFlags & 0x400)
+            return 1;
+        return 0;
     }
 };
 SIZE(CDPlaySession, 0x10c);

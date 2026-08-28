@@ -341,9 +341,7 @@ inline bool CHeroSessions::GetSessionInfo(unsigned long index, char* sessName,
 
     numPlayers = session->playerCount;
     status = open;
-#pragma inline_depth(0)
     if (session->IsJoinDisabled())
-#pragma inline_depth()
         status = closed;
     else if (session->dwFlags & 0x400)
         status = password;
@@ -699,7 +697,7 @@ void TMultiPlayerWindow::Update()
             if (count > 0) {
                 wy = wy + 0x70;
                 do {
-                    if (!pSessions->GetSessionInfoInline(
+                    if (!pSessions->GetSessionInfo(
                             nRow + currentIndex, nameBuf, userBuf, numPlayers,
                             status))
                         return;
@@ -1118,7 +1116,7 @@ unsigned char TMultiPlayerWindow::OnHost()
 
     gUnnamed69927c = 1;
     gUnnamed6994e4 = 1;
-    strcpy(gLocalPlayerName, playerName->Text.c_str());
+    strcpy(gLocalPlayerName, playerName->GetText());
 
 #pragma inline_depth(0)
     CMPInputDlg sessDlg(20, 20);
@@ -1342,7 +1340,7 @@ unsigned char TMultiPlayerWindow::OnJoin()
     gUnnamed69927c = 2;
     gUnnamed6994e4 = 1;
     gUnnamed699288 = 1;
-    strcpy(gLocalPlayerName, playerName->Text.c_str());
+    strcpy(gLocalPlayerName, playerName->GetText());
 
     char userName[256];
     char sessName[256];
@@ -1360,7 +1358,7 @@ unsigned char TMultiPlayerWindow::OnJoin()
 #pragma inline_depth(0)
     CMPInputDlg dlg(20, 20);
 #pragma inline_depth()
-    if (session->dwFlags & 0x400) {
+    if (session->IsPasswordProtected()) {
         dlg.header1->SetText(gUnnamed6a7780);
         dlg.header2->SetText((*gpGeneralText)[454]);
         dlg.field1->enable(0);

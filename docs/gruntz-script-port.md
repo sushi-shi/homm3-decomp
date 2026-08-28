@@ -322,10 +322,19 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   from 83.2115% to 81.4249% because SP3 then carries `this` in EDI through all
   four direction arms instead of retail's EDX. Swapping the two leading
   declarations and replacing the local code-7 constant with the existing enum
-  are byte-flat in combination. The score-lowering spelling was therefore
-  reverted under the retail ratchet; the positive call fact remains banked for
-  a future paired source-shape change rather than being misclassified as an
-  unknown semantic difference.
+  are byte-flat in combination. The score-lowering spelling is retained as a
+  positive shared-source and retail semantic fact; its 83.2115% historical
+  checkpoint remains recorded while the surrounding source shape needed to
+  recover retail's EDX home is reconstructed coherently.
+
+  `combatManager::DrawWallAt` is now **byte-exact** (796 bytes, 54/54
+  blocks), superseding its 99.95% selector-layout plateau. Dreamcast lines
+  1459..1470 recover a positive three-cover guard containing the direct
+  main/lower/upper `if`/`else if`/`else` selection. The former synthetic
+  inline helper retained retail's second lower-tower comparison but made VC6
+  place the upper selector before the main selector. Restoring the recovered
+  lexical shape retains that comparison and emits retail's lower, main, upper
+  physical order; every normalized instruction and branch edge now agrees.
 
   The independent `no_std` Rust blitter fixed one real semantic defect found
   by this comparison: packed encoding controls are always transparent in the

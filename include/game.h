@@ -2362,7 +2362,9 @@ public:
     // matching the original header's definition order. The events compiland
     // selects the exact retail COMDAT when one expansion remains uninlined.
 #ifdef HOMM3_EVENTS_GAME_INLINE_HELPERS
-    VA(0x004a5960, 0x16)  // exact selected COMDAT, dc 0x37fbc
+    // The exact selected COMDAT's source-authority VA claim is carried by
+    // the owning events TU between its 0x4a5610 and 0x4a5980 claims. Header
+    // VA sites do not enter per-TU claim fragments.
     int GetTeam(int playerNum) const
     {
         if (playerNum < 0)

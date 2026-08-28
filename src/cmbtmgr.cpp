@@ -4332,7 +4332,7 @@ void combatManager::damage_message(const char* attacker, long attacker_qty, long
         std::string deathText;
         const char* name;
         if (defender) {
-            name = GetArmyName(defender->creatureType, deaths);
+            name = defender->GetName(deaths);
             if (defender->Is(1u << 6)) {
                 deathText = format_string(
                     gpGeneralText->GetText(GENERAL_TEXT_COMBAT_STACK_WIPED_OUT),
