@@ -72,12 +72,13 @@ inline int min(int a, int b)
 // vector organically, which is why several vector<widget*>::insert
 // expansions sit inline in the body while the rest stay out of line.
 //
-// CURRENT (99.71843%; retained through the Dreamcast-backed dip from the
-// 99.84615% local peak): every widget, literal, id, coordinate and text index
-// below is retail's, and the branch structure agrees exactly: 147 conditional
-// branches and one return on both sides. The lower score preserves the
-// CodeView-proven function-scope locals and the original inline call spelling;
-// a percentage checkpoint is not allowed to erase either source fact.
+// CURRENT (99.86018%; past the former 99.84615% local peak): every widget,
+// literal, id, coordinate and text index below is retail's, and both the
+// instruction count and branch structure agree exactly: 2067 real
+// instructions, 147 conditional branches and one return on both sides. The
+// improvement came from restoring Dreamcast line 280's one positive lexical
+// scope around loss aggregation after retaining the CodeView-proven shared
+// `amount`. A percentage checkpoint is not allowed to erase either fact.
 //
 // Three source facts closed 92.77% -> 96.23%, all of them the same lesson -
 // VC6's induction-variable machinery reads the SPELLING, not the value:
@@ -106,14 +107,14 @@ inline int min(int a, int b)
 // the subtraction differently". It was the spelling.
 //
 // What is left is stack coloring only. Both sides allocate the exact 0x1cc
-// frame and use the same arrays at [ebp-0x1d8], [ebp-0xd4] and [ebp-0x34].
-// The candidate has 2066 real instructions against retail's 2067 and the
-// sole net retail instruction is the loss-display counter reload. The first
-// broader divergence is a slot permutation: retail coalesces `my_hero` into
-// the dead attacker home [ebp+8] and `amount` into [ebp-0x10], while this
-// compile assigns them [ebp-0x14] and [ebp+8]. Splitting Dreamcast's one
-// function-scope `amount` into two arm locals recovers 99.84615%, but that is
-// the local maximum deliberately not retained. The raw CodeView inventory and
+// frame, contain 2067 real instructions, and use the same arrays at
+// [ebp-0x1d8], [ebp-0xd4] and [ebp-0x34]. The first broader divergence is a
+// slot permutation: retail coalesces `my_hero` into the dead attacker home
+// [ebp+8] and `amount` into [ebp-0x10], while this compile assigns them
+// [ebp-0x14] and [ebp+8]. Splitting Dreamcast's one function-scope `amount`
+// into two arm locals recovered 99.84615%, but that false source hypothesis
+// was only a local maximum. Restoring Dreamcast's positive loss scope while
+// keeping the shared local passes it at 99.86018%. The raw CodeView inventory and
 // zero-emission declaration windows instead prove, in order, `long amount`,
 // `TCreatureType type`, the two [2][20] arrays, `my_hero`, iTtlDeadArmies,
 // cText[100], and firstX. cTemp is independently type-proven char[150]; fixing
@@ -212,15 +213,14 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
         int numMons = 0;
         for (int slot = 0; slot < 20; slot++) {
             army& stack = gpCombatManager->armies[0][slot];
-            if (stack.creatureType == -1)
-                continue;
-            if (stack.creatureType == CREATURE_ARROW_TOWER)
-                continue;
-            numMons++;
-            int value = stack.monInfoAIValue;
-            if (value > amount) {
-                amount = value;
-                type = TCreatureType(slot);
+            if (stack.creatureType != -1 &&
+                    stack.creatureType != CREATURE_ARROW_TOWER) {
+                numMons++;
+                int value = stack.monInfoAIValue;
+                if (value > amount) {
+                    amount = value;
+                    type = TCreatureType(slot);
+                }
             }
         }
         Widgets.push_back(new textWidget(
@@ -253,15 +253,14 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
         int numMons = 0;
         for (int slot = 0; slot < 20; slot++) {
             army& stack = gpCombatManager->armies[1][slot];
-            if (stack.creatureType == -1)
-                continue;
-            if (stack.creatureType == CREATURE_ARROW_TOWER)
-                continue;
-            numMons++;
-            int value = stack.monInfoAIValue;
-            if (value > amount) {
-                amount = value;
-                type = TCreatureType(slot);
+            if (stack.creatureType != -1 &&
+                    stack.creatureType != CREATURE_ARROW_TOWER) {
+                numMons++;
+                int value = stack.monInfoAIValue;
+                if (value > amount) {
+                    amount = value;
+                    type = TCreatureType(slot);
+                }
             }
         }
         Widgets.push_back(new textWidget(
@@ -297,7 +296,6 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
 
     int videoId;
     if (my_side == winning_side) {
-        char cTemp[150];
         if (gCombatFlag697744)
             strcpy(gText, (*gpGeneralText)[303]);
         else if (gCombatFlag6985a3)
@@ -305,6 +303,7 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
         else
             strcpy(gText, (*gpGeneralText)[305]);
         if (my_hero) {
+            char cTemp[150];
             sprintf(cTemp, (*gpGeneralText)[306],
                 my_hero->name, experience);
             strcat(gText, cTemp);
@@ -371,20 +370,18 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
             int creature = gpCombatManager->armies[side][slot].creatureType;
             int lost = gpCombatManager->armies[side][slot].origNumTroops
                 - gpCombatManager->armies[side][slot].numTroops;
-            if (creature == -1)
-                continue;
-            if (lost <= 0)
-                continue;
-            int row;
-            for (row = 0; row < iTtlDeadArmies[side]; row++)
-                if (iDeadArmyTypes[side][row] == creature)
-                    break;
-            if (row < iTtlDeadArmies[side]) {
-                iDeadArmyNumTroops[side][row] += lost;
-            } else {
-                iDeadArmyTypes[side][row] = creature;
-                iDeadArmyNumTroops[side][row] = lost;
-                iTtlDeadArmies[side]++;
+            if (creature != -1 && lost > 0) {
+                int row;
+                for (row = 0; row < iTtlDeadArmies[side]; row++)
+                    if (iDeadArmyTypes[side][row] == creature)
+                        break;
+                if (row < iTtlDeadArmies[side]) {
+                    iDeadArmyNumTroops[side][row] += lost;
+                } else {
+                    iDeadArmyTypes[side][row] = creature;
+                    iDeadArmyNumTroops[side][row] = lost;
+                    iTtlDeadArmies[side]++;
+                }
             }
         }
     }
