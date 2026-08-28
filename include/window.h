@@ -121,8 +121,8 @@ public:
     int SaveBackground();
     void RestoreBackground(unsigned char update);
     void CenterWindow(int centerX, int centerY);
-    int findWidget(int mx, int my);
-    widget* findWidgetPtr(int mx, int my);
+    int findWidget(int mx, int my) const;
+    widget* findWidgetPtr(int mx, int my) const;
     void SetFocus(int id);
     // DC: protected STATIC (no vfptr slot). /Gr makes it fastcall, which
     // is exactly the TDialogHandler shape DoModal hands to DoDialog.

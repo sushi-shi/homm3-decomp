@@ -781,7 +781,10 @@ maximum; Dreamcast's two state values, one shared slider update, and positive
 changed-hover scope with its own return make VC6 select retail's duplicated
 tail layout); `armygrp::modify_spell_damage` EXACT
 (mutate in each arm + break to shared return makes VC6 duplicate precisely
-retail's epilogues); `town::get_legion_bonus` 81.7 OPEN (retail's FOURTH exit
+retail's epilogues); `adventureoptionswindow::WindowHandler` EXACT (99.9367
+duplicated the source tail and looked like a mouseX register wall; Dreamcast's
+explicit exit state plus one shared tail selects retail's register staging);
+`town::get_legion_bonus` 81.7 OPEN (retail's FOURTH exit
 carries a dead `xor eax,eax` no spelling reproduces — an allocator tie-break,
 not statement order; sweeps 73.87 / 81.07 / 73.87 / 81.73, four source
 returns re-merged to three).

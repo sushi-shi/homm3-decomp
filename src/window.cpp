@@ -503,7 +503,7 @@ void heroWindow::CenterWindow(int centerX, int centerY)
 
 // E:\gamedcs\window.cpp:855
 VA(0x005ff3b0, 0x23)  // anchor-global, dc 0x197ad0
-int heroWindow::findWidget(int mx, int my)
+int heroWindow::findWidget(int mx, int my) const
 {
     widget* found = findWidgetPtr(mx, my);
     if (found)
@@ -515,11 +515,11 @@ int heroWindow::findWidget(int mx, int my)
 // Hit-tests the Widgets vector BACK-of-vector first; a hit must be
 // ACTIVE, not DIMMED, and not DIMMED_NODRAW.
 VA(0x005ff3e0, 0x7D)  // anchor-global, dc 0x197aec
-widget* heroWindow::findWidgetPtr(int mx, int my)
+widget* heroWindow::findWidgetPtr(int mx, int my) const
 {
     mx -= x;
     my -= y;
-    for (widget** it = Widgets.end(); it != Widgets.begin(); --it) {
+    for (widget* const* it = Widgets.end(); it != Widgets.begin(); --it) {
         widget* found = it[-1];
         if (mx >= found->x && my >= found->y
             && mx < found->x + found->width
