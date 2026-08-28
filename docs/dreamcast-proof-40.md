@@ -33,8 +33,8 @@ is the more meaningful measure.
 |---:|---|---:|---|
 | 1 | `philai::AI_set_hero_bonuses` `0x527760` | 99.9870 | No source delta: only PDB/relocation names; branch bytes already agree. |
 | 2 | `CSingleSelPopup::handle_message` `0x575430` | 99.9636 | **Exact.** Retail required codeY-before-codeX in both symmetric arms; keeping both arms alike also preserves VC6 tail merging. DC scoped the two statement groups. |
-| 3 | `type_AI_player::mark_towns` `0x4282b0` | 99.9554 | Delinker symbol-plus-addend presentation, not a literal/source difference. |
-| 4 | `type_AI_player::value_of_hall` `0x42b8b0` | 99.9524 | Same symbol-plus-addend class; raw retail operand is already accounted for. |
+| 3 | `type_AI_player::mark_towns` `0x4282b0` | **Exact.** | Paired resolved-address normalization removes the proved false literal relocation. |
+| 4 | `type_AI_player::value_of_hall` `0x42b8b0` | **Exact.** | Paired aggregate/field normalization closes the same representation class. |
 | 5 | `philai::buy_siege_engine` `0x525ca0` | 99.9362 | Named temporary/scope probes were byte-flat; remaining stack/register selection. |
 | 6 | `army::do_multi_head_attack` `0x440310` | 99.9351 | Semantically identical effective-address/SIB commutation. |
 | 7 | `philai::value_of_experience` `0x527710` | 99.9310 | Relocation-name difference (`gHeroGoldCost`), not source-reachable here. |
@@ -101,4 +101,7 @@ retail Complete bytes, retail wins.
 The practical policy is therefore to use Dreamcast as a second structural
 target, not a second byte target: query signatures, locals, scopes and
 per-statement call/branch groups first; formulate a VC6 source hypothesis;
-then keep it only if the retail x86 match ratchets.
+then test it against retail x86. The score is a checkpoint, not a veto: keep
+positive Dreamcast facts through a temporary local dip unless retail bytes
+directly disprove them, and restore the surrounding source coherently until
+the retail lowering closes.

@@ -3,8 +3,8 @@
 
     configure -> ninja (base objs) -> normalize comparison copies ->
     configure (objdiff.json sees new normalized paths) -> objdiff report
-    -> overall line -> [normal tier] baseline raise + ratchet check
-    (FATAL on regression) + banked-rows check (FATAL when a previously
+    -> overall line -> [normal tier] checkpoint-ledger refresh + dip report
+    (OBSERVATIONAL) + banked-rows check (FATAL when a previously
     banked RVA left the baseline entirely) + cleanliness board (FATAL
     when a ratcheted source metric rises above its committed floor -
     C-style casts are banned at 0) + README score block + stale-delink
@@ -80,25 +80,31 @@ def main(argv=None) -> int:
     print(f"[build] report: {status.REPORT.relative_to(ROOT)}")
 
     if fast:
-        print("[build] fast: ratchet + README + delink probe skipped - "
+        print("[build] fast: checkpoint ledger + gates + README + delink "
+              "probe skipped - "
               "run `homm3 build` before committing")
         return 0
 
     status.cmd_update(report)
-    # EVERY gate runs, even after one fails. Chaining these with early
-    # returns meant a red ratchet hid the three downstream gates
-    # entirely - a lane that inherited a ratchet regression never saw
-    # its own cleanliness/va-claim/single-view breakage, reported the
-    # build as "failing only on inherited rows", and the damage landed
-    # at merge time (2026-08-08). Collect, report everything, fail once.
-    failed = bool(status.cmd_check(report, gate=True))
+    # A byte score is a checkpoint, not an admissibility invariant. Coherent
+    # restoration of a Dreamcast-proven source shape may lower several local
+    # scores before the surrounding class/TU reaches the retail lowering.
+    # Report those dips and preserve the peaks, but never make them fatal or
+    # recommend lowering the checkpoint to get a green build.
+    status.cmd_check(report)
+
+    # EVERY evidence/source gate runs, even after one fails. Collect, report
+    # everything, fail once; these gates, not a local objdiff maximum, decide
+    # whether the reconstruction is admissible.
+    failed = False
 
     # banked_rows runs alongside cmd_check, not inside it: the ratchet
     # compares the rows that ARE in the baseline, this one asks whether a
     # row that used to be there still is. Clean ratchet + lost row is
     # exactly how army::can_shoot left the ledger green (2026-08-15).
-    from homm3.match import banked_rows, single_view, verify_va_claims
-    for gate in (banked_rows, verify_va_claims, single_view):
+    from homm3.match import (banked_rows, dc_source_shape, single_view,
+                             verify_va_claims)
+    for gate in (banked_rows, verify_va_claims, single_view, dc_source_shape):
         fatal = gate.run_gate()
         if fatal:
             failed = True

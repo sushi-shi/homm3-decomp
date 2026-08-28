@@ -260,6 +260,67 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-28 — Dreamcast source shape breaks the
+  `TSplitWindow::WindowHandler` local maximum and closes all 735 bytes.** The
+  old 99.9170% candidate duplicated the end-dialog source tail and deleted the
+  two state variables solely to induce retail's cross-jump. Restoring the
+  CodeView-proven entry state and one shared tail deliberately fell to
+  70.4149%; restoring the single shared `splitSlider->SetState` at line 291
+  raised it to 94.9378%. The final five-instruction residual was not retail
+  skew: Dreamcast lines 313-318 prove a positive changed-hover scope followed
+  by that mouse arm's own return. That source shape makes VC6 assign the two
+  semantically identical return tails exactly as retail does. The result is
+  34/34 aligned blocks and a 100.0% source-labelled diff. The recovered
+  `UpdateSplitArmy` and `SetRolloverText` helper boundaries also remain explicit
+  in source and inline exactly. Fatal source-shape rules now reject removed
+  close/update state, duplicated slider or end-dialog source, an inverted
+  hover early-return, and missing shared consumers. This is the campaign's
+  concrete anti-local-minimum control: a score dip cannot waive Dreamcast
+  facts, and an isolated failed spelling cannot be classified as version skew.
+  Exact count rises **2533 -> 2534/3097**.
+
+- **2026-08-28 — paired relocation proof closes three false plateaus without
+  changing source shape.** `AI_value_of_combat`,
+  `type_town_threat_checker::mark_towns`, and `value_of_hall` were already
+  instruction-identical but remained at 99.95% because stripped-image
+  recovery represented honest literals as DIR32 rows or named an interior
+  field instead of the candidate aggregate plus addend. The paired normalizer
+  now removes a target relocation only when the candidate has no relocation
+  of any type at that function-relative site and its literal equals the
+  target symbol+addend VA. Aggregate/field rewrites require one unambiguous
+  equal-addend retail-data anchor and equal resolved addresses. It compacts
+  relocation tables in place, reparses COFF, and checks every unrelated
+  section, symbol and relocation. Five negative controls cover wrong literals,
+  candidate relocations, missing anchors, and different field addresses. The
+  corpus admits 6 false literals and 243 field splits; exact count rises
+  **2530 -> 2533/3097**. At that checkpoint the deliberately preserved
+  Dreamcast-aligned `TSplitWindow::WindowHandler` valley remained open; the
+  later source-shape closure above completes it.
+
+- **2026-08-28 — Dreamcast-aligned `TSplitWindow::TSplitWindow` is byte-exact,
+  and its former 99.9912% ceiling is removed in tooling.** The Dreamcast
+  CodeView dossier proves the `TCreatureType` parameter/member, thirteen
+  ordinary `Widgets.push_back` statements, the canonical `slider` constructor,
+  and a null text argument in the status-bar `textWidget`. Restoring those
+  facts first crossed a deliberate 79.13% valley because VC6 recursively
+  expanded the final vector insertions. A Complete-only elemental-background
+  helper restored all 57 body blocks without reintroducing the old
+  `AppendSplitWidget`, `insert`, or fabricated `TSplitSliderView` forms. The
+  final source correction from `""` to the Dreamcast- and retail-proven null
+  argument removes the last instruction-width difference.
+
+  The remaining EH prologue residual was a COFF representation difference:
+  VC6 names the handler thunk directly, while Vostok names the last cleanup
+  funclet with its size as addend. The paired normalizer now checks the exact
+  EH prologue, associative `.text$x`, final handler thunk, equal retail
+  addend, and unchanged resolved target before applying the semantic retail
+  unwind-owner name. It admitted 551 equivalent corpus relocations and left
+  18 differing cleanup topologies untouched; four hermetic controls prevent
+  over-normalization. A fatal Dreamcast source-shape contract now rejects the
+  adapter/insert local maximum, non-thirteen push counts, the empty-string
+  argument, the invented slider class, and the erased enum domain. The report
+  reaches **2530/3097 functions exact**.
+
 - **2026-08-28 — the complete TCP session-search path is reconstructed at
   91.32%.** Retail `TMultiPlayerWindow::OnSearch` at `0x511660` opens the
   address dialog, disables OK until the address is valid, replaces the current
@@ -2478,11 +2539,12 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   mark, searches each opposing hero with 800 bonus mobility, clears that
   hero's bounty and scans the acting player's towns; its first admitted
   spelling is byte-exact over 369 bytes. `mark_towns` reproduces all 343
-  bytes, 16 blocks and every instruction, but reports **99.9554%** because
+  bytes, 16 blocks and every instruction, but then reported **99.9554%** because
   stripped-image relocation recovery classifies the honest integer
   5,000,000 as a DIR32 code reference: it numerically equals VA 0x4c4b40.
-  This is the same source-unreachable relocation class already proven on
-  `AI_value_of_combat`, so the integer spelling remains honest. The adjacent
+  The integer spelling therefore remains honest. **Superseded 2026-08-28:**
+  paired resolved-address normalization proves that representation and now
+  reports the function exact. The adjacent
   town bracket then fixes 0x5bd750 as `town::SetSummoningGenerator`; the DC
   locals name its generator copy and candidate vector, while retail proves
   the owner filter, two uniform random choices and growth-rate assignment.
@@ -4148,8 +4210,10 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   access regressed `SetRolloverText` (89.71% to 89.50%) and
   `get_creature_bank_help_text` (87.28% to 87.13%) and were reverted; the two
   adventure object-renderer overlays and Seer Hut/Quest Guard vector access
-  retain the previously documented VC6 regressions. `TSplitSliderView` is a
-  genuine game class, not an overlay. The later herodefs proof also made the
+  retain the previously documented VC6 regressions. The contemporary claim
+  that `TSplitSliderView` was a genuine class is superseded by the 2026-08-28
+  Dreamcast/retail proof: the source and retail call canonical `slider` and no
+  Dreamcast class record exists. The later herodefs proof also made the
   custom-name fields and methods plus the 144-bit combination-artifact
   component set canonical everywhere;
   all 37 dependent units and the full ratchet stayed neutral.
@@ -4710,8 +4774,9 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   superseded: with the current combined type population both canonical fields
   retain every established maximum. Seven compatibility layouts remain
   deliberately: the two large object renderers, `SetRolloverText`, and the
-  creature-bank helper each regress under their removal, while
-  `TSplitSliderView` is an actual game class rather than an overlay. The final
+  creature-bank helper each regress under their removal. The contemporary
+  `TSplitSliderView` claim is superseded by the 2026-08-28 canonical `slider`
+  closure. The final
   full build remains at 813/1240 exact, 48.61% fuzzy, with all 1,240 ratchets
   clean and every cleanliness counter at zero.
 
@@ -5312,12 +5377,13 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   ruleset guard. The remaining source rows stay carcasses; no external
   implementation body was used.
 
-- **2026-08-11 — `TSplitWindow::WindowHandler` remains a measured 99.9170%
-  compiler-state plateau.** Its 34 blocks and 17 branches already agree; the
-  only instruction delta is the documented EAX/EDX scratch swap around
-  `splitSlider->SetState`. A fresh `why-reg` v2 run reduces it to caller-saved
-  pseudo ordering, finds no valid source-nameable B14 edit, and caps the
-  remainder as front-end handle state. Correct source is retained unchanged.
+- **2026-08-11 — `TSplitWindow::WindowHandler` was measured at 99.9170%.** Its
+  34 blocks and 17 branches agreed and the visible delta looked like an EAX/EDX
+  scratch swap around `splitSlider->SetState`. A `why-reg` v2 run found no
+  source-nameable B14 edit. **Superseded 2026-08-28:** the candidate itself had
+  deleted Dreamcast-proven state and duplicated a source tail. Preserving those
+  facts through a 70.4149% valley, then restoring the line-291 shared slider
+  call and lines-313-318 positive hover scope, closes the function exactly.
 
 - **2026-08-11 — `global.obj`'s two Dreamcast source rows are retail-dropped,
   but its retail-only family remains open.** Both rows are STLport bitset
@@ -7094,7 +7160,9 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   relocation recovery treats integer 5,000,000 as a DIR32 reference because
   it numerically equals VA 0x4c4b40, and splits the 0x6604d0 double array at
   its +4 interior read (the open DATA-size decision-point family). Source
-  keeps honest integer/aggregate spellings. `decomp-attempt-1` was surveyed
+  keeps honest integer/aggregate spellings. **Superseded 2026-08-28:** paired
+  literal and aggregate/field normalization proves both representations and
+  the function is now exact. `decomp-attempt-1` was surveyed
   read-only as requested and supplied no code or layout to this change.
 - **2026-08-09 — `type_cell_adjuster`'s cleanup and trigger resolver are
   admitted byte-exact as `QuickInfo` scaffolding.** Dreamcast CodeView fixes
@@ -7302,7 +7370,8 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   progression. The remaining cursor/register permutation did not respond to
   declaration order, register hints, shared alliance indices, or extra
   scopes, so those byte-inert probes were reverted. This extends the same
-  tightly scoped inline-budget method used for TSplitWindow and mousemgr;
+  tightly scoped inline-budget method used for mousemgr (the historical
+  TSplitWindow adapter comparison was superseded on 2026-08-28);
   retail bytes remained the authority and no external implementation was
   used.
 
@@ -7315,8 +7384,9 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   byte-exact 25-byte `??0TCSLock` COMDAT. The existing reviewed carcass claim
   at 0x50d890 then binds to that public symbol on the fresh label/delink pass
   and also becomes exact; no annotation-contract extension is needed. This
-  is the same local inline-budget technique that closed TSplitWindow's final
-  vector insertion, applied to a constructor lifetime rather than an STL
+  local inline-budget technique was historically compared with TSplitWindow's
+  adapter, which was superseded by its natural-source closure on 2026-08-28;
+  here it applies to a constructor lifetime rather than an STL
   call. Retail bytes remained the verdict; `decomp-attempt-1` supplied
   nothing.
 
@@ -7357,6 +7427,10 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   `push_back` otherwise triggers in this compile. All 57 blocks and 25 branches
   agree. Direct insert, named-value, constructor-wide inline-depth and reserve
   adapter probes regressed or were inert and were reverted.
+
+  **Superseded 2026-08-28:** this was a local maximum. Dreamcast proves
+  thirteen ordinary `push_back` statements and the canonical `slider`; the
+  adapter and final `insert` are removed, and the constructor is exact.
 
 - **2026-08-09 — `soundManager::MemorySample` rises 98.7963% ->
   99.7840%.** The guarded explicit cursor repeated the empty-range test.
@@ -7405,6 +7479,10 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   cross-jumper recover retail's exact 34-block layout. Only one local
   EAX/EDX carrier swap at the destination slider call remains; named value
   and pointer probes were inert and reverted.
+
+  **Superseded 2026-08-28:** duplicating the stores was a source-false local
+  maximum. Dreamcast's state, shared slider statement, and positive mouse arm
+  with its own return reproduce the same retail topology and close at 100.0%.
 
 - **2026-08-09 — soundmgr reaches 20/21 exact; `MemorySample` rises
   92.0309% -> 98.7963%.** `ConvertVolume` becomes exact by recovering the

@@ -407,7 +407,13 @@ def find_definitions(text: str, fn: str) -> list[Definition]:
     """
     s = mask(text)
     for name in source_names(fn):
-        pat = re.compile(r"(?<![\w:~])" + re.escape(name))
+        # An undecorated member selector (``UpdateArmies``) must also find
+        # ``hero::UpdateArmies``.  `_definition_at` rejects declarations and
+        # call sites, so allowing a preceding scope colon for a bare name is
+        # safe and keeps the convenient CLI spelling from silently becoming
+        # diagnosis-only.  Qualified selectors retain the stricter boundary.
+        boundary = r"(?<![\w:~])" if "::" in name else r"(?<![\w~])"
+        pat = re.compile(boundary + re.escape(name))
         found = [d for m in pat.finditer(s)
                  if (d := _definition_at(s, m.start(), name)) is not None]
         if found:

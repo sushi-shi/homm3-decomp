@@ -30,8 +30,12 @@ lengths equal; a genuinely longer or shorter function is left alone.
 """
 from __future__ import annotations
 
+import csv
+from collections import Counter
+import re
 import struct
 import sys
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 from homm3.build import canonicalize_data_symbols as canon
@@ -42,8 +46,600 @@ OBJDIFF = common.HOMM3_DIR / "build/objdiff"
 COMPGEN_MANIFEST = common.HOMM3_DIR / "build/gen/compgen_claims.tsv"
 
 CNT_CODE = 0x00000020
+DIR32 = 0x0006
 FUNCTION_TYPE = 0x0020
+EXTERNAL_STORAGE = 2
+STATIC_STORAGE = 3
+LABEL_STORAGE = 6
+REL32 = 0x0014
 TEXT_PAD_TRIM_LIMIT = 15
+ASSOCIATIVE_COMDAT = 5
+UNWIND_OWNER = re.compile(r"(?:^|_)unwind[0-9]+$")
+SYMBOL_NAMES = common.HOMM3_DIR / "build/gen/symbol_names.csv"
+IMAGE_BASE = 0x00400000
+
+
+@dataclass(frozen=True)
+class EhHandlerOwnerRewrite:
+    """One proved direct-handler -> last-funclet+size canonicalization."""
+
+    function: str
+    parent_section: int
+    child_section: int
+    relocation_offset: int
+    relocation_site: int
+    handler_symbol: int
+    funclet_symbol: int
+    handler_offset: int
+    funclet_offset: int
+    funclet_size: int
+    canonical_name: str = ""
+
+
+def _retail_symbol_rvas(path: Path = SYMBOL_NAMES) -> dict[str, tuple[int, str]]:
+    """Load the generated retail name -> (RVA, kind) authority map."""
+    result: dict[str, tuple[int, str]] = {}
+    if not path.is_file():
+        return result
+    with path.open(newline="") as stream:
+        rows = (line for line in stream if not line.startswith("#"))
+        for row in csv.DictReader(rows):
+            name = row.get("name", "")
+            if not name:
+                continue
+            value = (int(row["rva"], 0), row.get("kind", ""))
+            previous = result.setdefault(name, value)
+            if previous != value:
+                raise ValueError(
+                    f"conflicting retail addresses for symbol {name}: "
+                    f"{previous} vs {value}")
+    return result
+
+
+def _site_context_matches(base_bytes: bytes, base_site: int,
+                          target_bytes: bytes, target_site: int) -> bool:
+    """Require the instruction bytes around a proposed operand to agree."""
+    before = min(1, base_site, target_site)
+    after = min(1, len(base_bytes) - base_site - 4,
+                len(target_bytes) - target_site - 4)
+    return (before >= 1 and after >= 0 and
+            base_bytes[base_site - before:base_site] ==
+            target_bytes[target_site - before:target_site] and
+            base_bytes[base_site + 4:base_site + 4 + after] ==
+            target_bytes[target_site + 4:target_site + 4 + after])
+
+
+def _canonicalize_equivalent_relocations(
+        base_payload: bytes, target_payload: bytes,
+        symbol_rvas: dict[str, tuple[int, str]],
+        ) -> tuple[bytes, int, int]:
+    """Normalize two stripped-image relocation representations.
+
+    First, vostok can classify an honest 32-bit literal as DIR32 when its
+    numeric value happens to be a retail VA.  When the paired candidate has
+    no relocation and its operand is exactly the target symbol+addend resolved
+    VA, the false target relocation is removed and the resolved literal is
+    written back.
+
+    Second, vostok can name an interior data field while VC6 names the owning
+    aggregate plus an addend.  A same-addend paired relocation first anchors
+    the candidate external symbol to a generated retail data RVA.  Other
+    relocations using that candidate symbol are rewritten on the target side
+    only when both forms resolve to the identical RVA.
+
+    Both transforms are paired, function-relative, and context-checked.
+    Symbols and section/file layout stay fixed; only proved false-literal rows
+    reduce a section's relocation count. Different resolved addresses stay
+    visible.
+    """
+    base = canon.CoffObject(base_payload)
+    target = canon.CoffObject(target_payload)
+    base_ranges = canon._function_ranges(base)
+    target_ranges = canon._function_ranges(target)
+
+    base_functions: dict[str, list[canon.Symbol]] = {}
+    target_functions: dict[str, list[canon.Symbol]] = {}
+    for coff, table in ((base, base_functions), (target, target_functions)):
+        for symbol in coff.symbols.values():
+            if (symbol.section > 0 and symbol.typ == FUNCTION_TYPE and
+                    symbol.storage_class == EXTERNAL_STORAGE):
+                table.setdefault(symbol.name, []).append(symbol)
+
+    base_pairs: dict[tuple[str, int], canon.Relocation] = {}
+    target_pairs: dict[tuple[str, int], canon.Relocation] = {}
+    for coff, ranges, pairs in ((base, base_ranges, base_pairs),
+                                (target, target_ranges, target_pairs)):
+        for relocation in coff.relocations:
+            if relocation.typ != DIR32:
+                continue
+            owner = canon._function_owner(
+                ranges, relocation.section, relocation.site)
+            if owner is None:
+                continue
+            pairs[(owner.name, relocation.site - owner.value)] = relocation
+
+    base_relocation_sites: set[tuple[str, int]] = set()
+    for relocation in base.relocations:
+        owner = canon._function_owner(
+            base_ranges, relocation.section, relocation.site)
+        if owner is not None:
+            base_relocation_sites.add(
+                (owner.name, relocation.site - owner.value))
+
+    # Infer a candidate external's retail base only from an equal-addend
+    # paired data relocation. Conflicting observations make that symbol
+    # ineligible rather than choosing one.
+    observations: dict[int, set[tuple[int, int]]] = {}
+    for key, base_relocation in base_pairs.items():
+        target_relocation = target_pairs.get(key)
+        if target_relocation is None:
+            continue
+        target_symbol = target.symbols[target_relocation.symbol_index]
+        authority = symbol_rvas.get(target_symbol.name)
+        if authority is None or authority[1] != "data":
+            continue
+        base_section = base.sections[base_relocation.section - 1]
+        target_section = target.sections[target_relocation.section - 1]
+        base_addend, = struct.unpack_from(
+            "<I", base.section_bytes(base_section), base_relocation.site)
+        target_addend, = struct.unpack_from(
+            "<I", target.section_bytes(target_section), target_relocation.site)
+        if base_addend != target_addend:
+            continue
+        observations.setdefault(base_relocation.symbol_index, set()).add(
+            (authority[0], target_relocation.symbol_index))
+    anchors = {
+        symbol: next(iter(rows)) for symbol, rows in observations.items()
+        if len(rows) == 1
+    }
+
+    data = bytearray(target_payload)
+    admitted: dict[int, tuple[int, int, int, str]] = {}
+    literal_count = aggregate_count = 0
+
+    # Aggregate+addend versus synthesized field-symbol+zero.
+    for key, base_relocation in base_pairs.items():
+        target_relocation = target_pairs.get(key)
+        anchor = anchors.get(base_relocation.symbol_index)
+        if target_relocation is None or anchor is None:
+            continue
+        target_symbol = target.symbols[target_relocation.symbol_index]
+        authority = symbol_rvas.get(target_symbol.name)
+        if authority is None or authority[1] != "data":
+            continue
+        base_owner = base_functions.get(key[0], ())
+        target_owner = target_functions.get(key[0], ())
+        if len(base_owner) != 1 or len(target_owner) != 1:
+            continue
+        base_section = base.sections[base_relocation.section - 1]
+        target_section = target.sections[target_relocation.section - 1]
+        base_bytes = base.section_bytes(base_section)
+        target_bytes = target.section_bytes(target_section)
+        base_addend, = struct.unpack_from("<I", base_bytes,
+                                          base_relocation.site)
+        target_addend, = struct.unpack_from("<I", target_bytes,
+                                            target_relocation.site)
+        # This pass is specifically for aggregate+offset versus a synthesized
+        # field symbol. Equal addends are already the same source form and do
+        # not establish that a different retail name should be hidden.
+        if base_addend == target_addend:
+            continue
+        anchor_rva, anchor_symbol = anchor
+        if ((anchor_rva + base_addend) & 0xFFFFFFFF) != \
+                ((authority[0] + target_addend) & 0xFFFFFFFF):
+            continue
+        if not _site_context_matches(base_bytes, base_relocation.site,
+                                     target_bytes, target_relocation.site):
+            continue
+        if (target_addend == base_addend and
+                target_relocation.symbol_index == anchor_symbol):
+            continue
+        operand = target_section.raw_offset + target_relocation.site
+        struct.pack_into("<I", data, operand, base_addend)
+        struct.pack_into("<I", data, target_relocation.offset + 4,
+                         anchor_symbol)
+        admitted[target_relocation.offset] = (
+            anchor_symbol, DIR32, base_addend, "aggregate")
+        aggregate_count += 1
+
+    # Honest literal versus a false stripped-image DIR32 classification.
+    for key, target_relocation in target_pairs.items():
+        if key in base_relocation_sites:
+            continue
+        target_symbol = target.symbols[target_relocation.symbol_index]
+        authority = symbol_rvas.get(target_symbol.name)
+        if authority is None:
+            continue
+        base_owner = base_functions.get(key[0], ())
+        target_owner = target_functions.get(key[0], ())
+        if len(base_owner) != 1 or len(target_owner) != 1:
+            continue
+        base_function = base_owner[0]
+        target_function = target_owner[0]
+        base_site = base_function.value + key[1]
+        target_site = target_function.value + key[1]
+        base_section = base.sections[base_function.section - 1]
+        target_section = target.sections[target_function.section - 1]
+        base_bytes = base.section_bytes(base_section)
+        target_bytes = target.section_bytes(target_section)
+        if base_site + 4 > len(base_bytes) or target_site + 4 > len(target_bytes):
+            continue
+        target_addend, = struct.unpack_from("<I", target_bytes, target_site)
+        resolved = (IMAGE_BASE + authority[0] + target_addend) & 0xFFFFFFFF
+        base_operand, = struct.unpack_from("<I", base_bytes, base_site)
+        if base_operand != resolved or not _site_context_matches(
+                base_bytes, base_site, target_bytes, target_site):
+            continue
+        operand = target_section.raw_offset + target_site
+        struct.pack_into("<I", data, operand, resolved)
+        admitted[target_relocation.offset] = (
+            target_relocation.symbol_index, DIR32, resolved, "literal")
+        literal_count += 1
+
+    # COFF has no objdiff-supported "ignored" x86 relocation type. Remove
+    # admitted false-literal rows by compacting each relocation table inside
+    # its existing allocation. This deliberately leaves every following file
+    # offset fixed; the unused tail is zero fill.
+    literal_offsets = {
+        offset for offset, (_symbol, _typ, _addend, kind) in admitted.items()
+        if kind == "literal"
+    }
+    removed_by_section: dict[int, int] = {}
+    for section in target.sections:
+        rows = [row for row in target.relocations
+                if row.section == section.index]
+        removed = [row for row in rows if row.offset in literal_offsets]
+        if not removed:
+            continue
+        if section.characteristics & canon.LNK_NRELOC_OVFL:
+            raise RuntimeError(
+                "equivalent-relocation normalization does not rewrite "
+                "overflow relocation tables")
+        kept = b"".join(bytes(data[row.offset:row.offset + 10])
+                        for row in rows if row.offset not in literal_offsets)
+        allocated_end = section.reloc_offset + len(rows) * 10
+        data[section.reloc_offset:section.reloc_offset + len(kept)] = kept
+        data[section.reloc_offset + len(kept):allocated_end] = bytes(
+            allocated_end - section.reloc_offset - len(kept))
+        new_count = section.reloc_count - len(removed)
+        struct.pack_into("<H", data, section.header_offset + 32, new_count)
+        removed_by_section[section.index] = len(removed)
+
+    normalized = canon.CoffObject(bytes(data))
+    if (target.section_count != normalized.section_count or
+            target.symbol_count != normalized.symbol_count or
+            len(target.relocations) - literal_count !=
+            len(normalized.relocations)):
+        raise RuntimeError("equivalent-relocation normalization changed COFF topology")
+
+    for original, changed in zip(target.sections, normalized.sections):
+        removed = removed_by_section.get(original.index, 0)
+        if ((original.name, original.raw_size, original.raw_offset,
+             original.reloc_offset, original.reloc_count - removed,
+             original.characteristics) !=
+                (changed.name, changed.raw_size, changed.raw_offset,
+                 changed.reloc_offset, changed.reloc_count,
+                 changed.characteristics)):
+            raise RuntimeError(
+                "equivalent-relocation normalization changed section metadata")
+
+    expected_relocations = Counter()
+    for original in target.relocations:
+        rewrite = admitted.get(original.offset)
+        if rewrite is not None and rewrite[3] == "literal":
+            continue
+        symbol_index = rewrite[0] if rewrite is not None else original.symbol_index
+        typ = rewrite[1] if rewrite is not None else original.typ
+        expected_relocations[(original.section, original.site,
+                              symbol_index, typ)] += 1
+    actual_relocations = Counter(
+        (row.section, row.site, row.symbol_index, row.typ)
+        for row in normalized.relocations)
+    if expected_relocations != actual_relocations:
+        raise RuntimeError(
+            "equivalent-relocation normalization changed unrelated relocations")
+
+    normalized_by_site: dict[tuple[int, int], list[canon.Relocation]] = {}
+    for row in normalized.relocations:
+        normalized_by_site.setdefault((row.section, row.site), []).append(row)
+    before = bytearray(target_payload[:target.string_offset])
+    after = bytearray(data[:normalized.string_offset])
+    for section_index in removed_by_section:
+        original = target.sections[section_index - 1]
+        changed = normalized.sections[section_index - 1]
+        before[original.header_offset + 32:original.header_offset + 34] = bytes(2)
+        after[changed.header_offset + 32:changed.header_offset + 34] = bytes(2)
+        table_end = original.reloc_offset + original.reloc_count * 10
+        before[original.reloc_offset:table_end] = bytes(
+            table_end - original.reloc_offset)
+        after[changed.reloc_offset:table_end] = bytes(
+            table_end - changed.reloc_offset)
+    for offset, (symbol_index, typ, addend, kind) in admitted.items():
+        original = next(row for row in target.relocations if row.offset == offset)
+        section = target.sections[original.section - 1]
+        operand = section.raw_offset + original.site
+        before[operand:operand + 4] = bytes(4)
+        after[operand:operand + 4] = bytes(4)
+        if original.section not in removed_by_section:
+            before[offset:offset + 10] = bytes(10)
+            after[offset:offset + 10] = bytes(10)
+        changed_rows = normalized_by_site.get(
+            (original.section, original.site), ())
+        if kind == "literal":
+            if changed_rows:
+                raise RuntimeError(
+                    "false-literal relocation was not removed")
+            changed_addend, = struct.unpack_from(
+                "<I", normalized.section_bytes(
+                    normalized.sections[original.section - 1]), original.site)
+        else:
+            matching = [row for row in changed_rows
+                        if row.symbol_index == symbol_index and row.typ == typ]
+            if len(matching) != 1:
+                raise RuntimeError(
+                    "equivalent aggregate relocation was not rewritten")
+            changed_addend, = struct.unpack_from(
+                "<I", normalized.section_bytes(
+                    normalized.sections[original.section - 1]), original.site)
+        if changed_addend != addend:
+            raise RuntimeError("equivalent relocation postcondition failed")
+    if before != after:
+        raise RuntimeError(
+            "equivalent-relocation normalization changed unexpected COFF bytes")
+    for index, original in target.symbols.items():
+        if original != normalized.symbols[index]:
+            raise RuntimeError(
+                "equivalent-relocation normalization changed a symbol")
+    return bytes(data), literal_count, aggregate_count
+
+
+def _associative_parents(coff: canon.CoffObject) -> dict[int, int]:
+    """Read IMAGE_COMDAT_SELECT_ASSOCIATIVE parents from section aux rows."""
+    result = {}
+    for symbol in coff.symbols.values():
+        if (symbol.section <= 0 or symbol.storage_class != STATIC_STORAGE or
+                not symbol.aux_count):
+            continue
+        section = coff.sections[symbol.section - 1]
+        if symbol.name != section.name:
+            continue
+        aux = symbol.offset + canon.SYMBOL_SIZE
+        parent, = struct.unpack_from("<H", coff.data, aux + 12)
+        selection = coff.data[aux + 14]
+        if selection != ASSOCIATIVE_COMDAT:
+            continue
+        if not 1 <= parent <= coff.section_count or parent == symbol.section:
+            raise ValueError(
+                f"invalid associative COMDAT parent {parent} for section "
+                f"{symbol.section}")
+        previous = result.setdefault(symbol.section, parent)
+        if previous != parent:
+            raise ValueError(
+                f"conflicting associative COMDAT parents for section "
+                f"{symbol.section}")
+    return result
+
+
+def _eh_handler_candidates(coff: canon.CoffObject) -> tuple[EhHandlerOwnerRewrite, ...]:
+    """Find canonical VC6 EH prologues whose operand names the handler thunk.
+
+    VC6 puts cleanup funclets and the ten-byte CxxFrameHandler thunk in an
+    associative ``.text$x`` COMDAT. The compiler object relocates the second
+    prologue push directly to that final thunk. Vostok instead expresses the
+    same byte as ``last cleanup funclet + cleanup size``. This recognizer is
+    intentionally structural: parent association, exact EH prologue, final
+    local label, exact handler-thunk shape, and both thunk relocations must all
+    agree before a candidate is returned.
+    """
+    parents = _associative_parents(coff)
+    ranges = canon._function_ranges(coff)
+    relocations_by_section: dict[int, list[canon.Relocation]] = {}
+    for relocation in coff.relocations:
+        relocations_by_section.setdefault(relocation.section, []).append(relocation)
+    local_labels: dict[int, list[canon.Symbol]] = {}
+    for symbol in coff.symbols.values():
+        if (symbol.section > 0 and symbol.typ == 0 and
+                symbol.storage_class == LABEL_STORAGE):
+            local_labels.setdefault(symbol.section, []).append(symbol)
+
+    candidates = []
+    for relocation in coff.relocations:
+        if relocation.typ != DIR32:
+            continue
+        owner = canon._function_owner(ranges, relocation.section, relocation.site)
+        if owner is None or relocation.site != owner.value + 6:
+            continue
+        parent = coff.sections[relocation.section - 1]
+        parent_bytes = coff.section_bytes(parent)
+        if parent_bytes[owner.value:owner.value + 6] != b"\x55\x8b\xec\x6a\xff\x68":
+            continue
+        handler = coff.symbols[relocation.symbol_index]
+        if (handler.section <= 0 or
+                parents.get(handler.section) != relocation.section or
+                handler.typ != 0 or handler.storage_class != LABEL_STORAGE):
+            continue
+        child = coff.sections[handler.section - 1]
+        if (child.name != ".text$x" or
+                not child.characteristics & CNT_CODE):
+            continue
+        labels = sorted(local_labels.get(handler.section, ()),
+                        key=lambda row: row.value)
+        if not labels or labels[-1].index != handler.index:
+            continue
+        prior = [row for row in labels if row.value < handler.value]
+        if not prior:
+            continue
+        funclet = prior[-1]
+        child_bytes = coff.section_bytes(child)
+        if (handler.value + 10 != child.raw_size or
+                child_bytes[handler.value] != 0xB8 or
+                child_bytes[handler.value + 5] != 0xE9):
+            continue
+        thunk_relocations = [
+            row for row in relocations_by_section.get(handler.section, ())
+            if handler.value <= row.site < handler.value + 10
+        ]
+        if (len(thunk_relocations) != 2 or
+                sorted((row.site - handler.value, row.typ)
+                       for row in thunk_relocations) != [(1, DIR32), (6, REL32)]):
+            continue
+        operand = struct.unpack_from(
+            "<I", parent_bytes, relocation.site)[0]
+        if operand != 0:
+            continue
+        candidates.append(EhHandlerOwnerRewrite(
+            owner.name, relocation.section, handler.section,
+            relocation.offset, relocation.site, handler.index, funclet.index,
+            handler.value, funclet.value, handler.value - funclet.value,
+        ))
+    return tuple(candidates)
+
+
+def _canonicalize_matching_eh_handler_owners(
+        base_payload: bytes, target_payload: bytes,
+        ) -> tuple[bytes, tuple[EhHandlerOwnerRewrite, ...]]:
+    """Mirror retail's proved ``last funclet + size`` EH relocation form.
+
+    This is deliberately paired. A structurally valid VC6 handler is changed
+    only when the unique retail counterpart has the same EH prologue and its
+    relocation addend equals the candidate's measured final-funclet size.
+    Different cleanup topology therefore remains visible to objdiff.
+    """
+    base = canon.CoffObject(base_payload)
+    target = canon.CoffObject(target_payload)
+    target_functions: dict[str, list[canon.Symbol]] = {}
+    for symbol in target.symbols.values():
+        if (symbol.section > 0 and symbol.typ == FUNCTION_TYPE and
+                symbol.storage_class == EXTERNAL_STORAGE):
+            target_functions.setdefault(symbol.name, []).append(symbol)
+    target_relocations = {
+        (row.section, row.site): row for row in target.relocations
+        if row.typ == DIR32
+    }
+
+    data = bytearray(base_payload)
+    admitted = []
+    for rewrite in _eh_handler_candidates(base):
+        counterparts = target_functions.get(rewrite.function, ())
+        if len(counterparts) != 1:
+            continue
+        counterpart = counterparts[0]
+        target_section = target.sections[counterpart.section - 1]
+        target_bytes = target.section_bytes(target_section)
+        target_site = counterpart.value + 6
+        if (target_bytes[counterpart.value:counterpart.value + 6] !=
+                b"\x55\x8b\xec\x6a\xff\x68"):
+            continue
+        target_relocation = target_relocations.get(
+            (counterpart.section, target_site))
+        if target_relocation is None:
+            continue
+        target_owner = target.symbols[target_relocation.symbol_index]
+        if (target_owner.section != 0 or target_owner.typ != FUNCTION_TYPE or
+                target_owner.storage_class != EXTERNAL_STORAGE or
+                not UNWIND_OWNER.search(target_owner.name)):
+            continue
+        target_addend, = struct.unpack_from("<I", target_bytes, target_site)
+        if target_addend != rewrite.funclet_size:
+            continue
+
+        base_section = base.sections[rewrite.parent_section - 1]
+        operand_offset = base_section.raw_offset + rewrite.relocation_site
+        before_addend, = struct.unpack_from("<I", base.data, operand_offset)
+        handler = base.symbols[rewrite.handler_symbol]
+        funclet = base.symbols[rewrite.funclet_symbol]
+        before_resolved = (handler.section,
+                           (handler.value + before_addend) & 0xFFFFFFFF)
+        after_resolved = (funclet.section,
+                          (funclet.value + rewrite.funclet_size) & 0xFFFFFFFF)
+        if before_resolved != after_resolved or before_resolved != (
+                rewrite.child_section, rewrite.handler_offset):
+            raise RuntimeError(
+                "EH handler-owner normalization changed the resolved target")
+        collision = next((
+            symbol for symbol in base.symbols.values()
+            if symbol.name == target_owner.name and
+            symbol.index != rewrite.funclet_symbol
+        ), None)
+        if collision is not None:
+            continue
+        struct.pack_into("<I", data, operand_offset, rewrite.funclet_size)
+        struct.pack_into("<I", data, rewrite.relocation_offset + 4,
+                         rewrite.funclet_symbol)
+        admitted.append(replace(
+            rewrite, canonical_name=target_owner.name))
+
+    relocation_normalized = canon.CoffObject(bytes(data))
+    renames = {
+        row.funclet_symbol: row.canonical_name for row in admitted
+    }
+    if len(renames) != len(admitted):
+        raise RuntimeError("duplicate EH handler-owner funclet rewrite")
+    data = bytearray(canon._rewrite_names(relocation_normalized, renames))
+    normalized = canon.CoffObject(bytes(data))
+    admitted_by_offset = {row.relocation_offset: row for row in admitted}
+    if len(admitted_by_offset) != len(admitted):
+        raise RuntimeError("duplicate EH handler-owner relocation rewrite")
+    if (base.section_count != normalized.section_count or
+            base.symbol_count != normalized.symbol_count or
+            len(base.relocations) != len(normalized.relocations)):
+        raise RuntimeError("EH handler-owner normalization changed COFF topology")
+    before = bytearray(base_payload[:base.string_offset])
+    after = bytearray(data[:normalized.string_offset])
+    for original, changed in zip(base.sections, normalized.sections):
+        before[original.header_offset:original.header_offset + 8] = bytes(8)
+        after[changed.header_offset:changed.header_offset + 8] = bytes(8)
+        if ((original.name, original.raw_size, original.raw_offset,
+             original.reloc_offset, original.reloc_count,
+             original.characteristics) !=
+                (changed.name, changed.raw_size, changed.raw_offset,
+                 changed.reloc_offset, changed.reloc_count,
+                 changed.characteristics)):
+            raise RuntimeError(
+                "EH handler-owner normalization changed section metadata")
+    for index, original in base.symbols.items():
+        changed = normalized.symbols[index]
+        before[original.offset:original.offset + 8] = bytes(8)
+        after[changed.offset:changed.offset + 8] = bytes(8)
+    normalized_relocations = {row.offset: row for row in normalized.relocations}
+    for rewrite in admitted:
+        section = base.sections[rewrite.parent_section - 1]
+        operand = section.raw_offset + rewrite.relocation_site
+        before[operand:operand + 4] = bytes(4)
+        after[operand:operand + 4] = bytes(4)
+        before[rewrite.relocation_offset + 4:
+               rewrite.relocation_offset + 8] = bytes(4)
+        after[rewrite.relocation_offset + 4:
+              rewrite.relocation_offset + 8] = bytes(4)
+        row = normalized_relocations[rewrite.relocation_offset]
+        if row.symbol_index != rewrite.funclet_symbol:
+            raise RuntimeError("EH handler-owner relocation target was not rewritten")
+        addend, = struct.unpack_from("<I", data, operand)
+        if addend != rewrite.funclet_size:
+            raise RuntimeError("EH handler-owner addend was not rewritten")
+    if before != after:
+        raise RuntimeError(
+            "EH handler-owner normalization changed unexpected COFF bytes")
+    for original, changed in zip(base.relocations, normalized.relocations):
+        rewrite = admitted_by_offset.get(original.offset)
+        expected_symbol = (rewrite.funclet_symbol if rewrite else
+                           original.symbol_index)
+        if ((original.section, original.site, original.typ) !=
+                (changed.section, changed.site, changed.typ) or
+                changed.symbol_index != expected_symbol):
+            raise RuntimeError(
+                "EH handler-owner normalization changed an unexpected relocation")
+    for index, original in base.symbols.items():
+        changed = normalized.symbols[index]
+        expected_name = renames.get(index, original.name)
+        if (changed.name != expected_name or
+                (original.value, original.section, original.typ,
+                 original.storage_class, original.aux_count) !=
+                (changed.value, changed.section, changed.typ,
+                 changed.storage_class, changed.aux_count)):
+            raise RuntimeError(
+                "EH handler-owner normalization changed an unexpected symbol")
+    return bytes(data), tuple(admitted)
 
 
 def _drop_data_sections(payload: bytes) -> bytes:
@@ -184,6 +780,10 @@ def main(argv=None) -> int:
             write_stamp(out, stamp_inputs)
             wrote += 1
     retained = 0
+    eh_rewritten = 0
+    literal_rewritten = 0
+    aggregate_rewritten = 0
+    symbol_rvas = _retail_symbol_rvas()
     base_root = OBJDIFF / "base"
     for base_obj in sorted(base_root.rglob("*.obj")):
         rel = base_obj.relative_to(base_root)
@@ -197,8 +797,20 @@ def main(argv=None) -> int:
         padded, count = _retain_matching_target_padding(
             normalized_base.read_bytes(), normalized_target.read_bytes())
         if count:
-            normalized_base.write_bytes(padded)
             retained += count
+        paired_target, literal_count, aggregate_count = \
+            _canonicalize_equivalent_relocations(
+                padded, normalized_target.read_bytes(), symbol_rvas)
+        literal_rewritten += literal_count
+        aggregate_rewritten += aggregate_count
+        normalized, rewrites = _canonicalize_matching_eh_handler_owners(
+            padded, paired_target)
+        if rewrites:
+            eh_rewritten += len(rewrites)
+        if count or rewrites:
+            normalized_base.write_bytes(normalized)
+        if literal_count or aggregate_count:
+            normalized_target.write_bytes(paired_target)
         # Padding is a paired normalization decision, so the base copy is
         # stale whenever either raw input changes, even when this run found no
         # suffix to retain.
@@ -206,9 +818,16 @@ def main(argv=None) -> int:
         if COMPGEN_MANIFEST.is_file():
             stamp_inputs["compgen_manifest"] = COMPGEN_MANIFEST
         write_stamp(normalized_base, stamp_inputs)
+        target_stamp_inputs = {"raw": target_obj, "base": base_obj}
+        if COMPGEN_MANIFEST.is_file():
+            target_stamp_inputs["compgen_manifest"] = COMPGEN_MANIFEST
+        write_stamp(normalized_target, target_stamp_inputs)
 
     print(f"[build normalize_objs] {wrote} normalized, {skipped} fresh, "
           f"{retained} target-padding span(s) retained "
+          f"{eh_rewritten} EH handler-owner relocation(s) canonicalized "
+          f"{literal_rewritten} false-literal relocation(s) removed "
+          f"{aggregate_rewritten} aggregate/field relocation(s) canonicalized "
           f"-> {OBJDIFF / 'normalized'}")
     return 0
 

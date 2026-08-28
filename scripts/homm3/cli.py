@@ -21,9 +21,9 @@ Subcommands
   build [--fast] [-- <ninja args>]
         The loop tail (homm3.build.build): configure -> ninja (base objs via
         the pinned `wine cl`) -> normalize comparison copies -> objdiff
-        report -> overall %% line -> baseline raise + RATCHET check (a
-        function below its recorded best FAILS the build) + README score
-        block + a warning when the synth-PDB inputs are newer than the PDB.
+        report -> overall %% line -> checkpoint-ledger refresh + observational
+        dip report + fatal evidence/source gates + README score block + a
+        warning when the synth-PDB inputs are newer than the PDB.
         --fast stops after the %% line (the inner matching loop).
 
   labels [--unit U ...|--all]
@@ -44,10 +44,10 @@ Subcommands
         labels -> model -> synth PDB -> data manifests -> vostok ->
         per-unit target objs -> normalize -> objdiff.json.
 
-  status [functions [FILTER...]|update [--accept-regressions]|check [--gate]]
+  status [functions [FILTER...]|update|check]
         Scoreboard (homm3.match.status): per-unit table; `functions` shows
         cur/max/hist; `update` regenerates config/match_baseline.tsv; `check`
-        reports functions below their enforced max.
+        reports functions below their high-water checkpoint without gating.
 
   sema <xref|diff|disasm|rva|strings> ...
         Read-only navigation over the retail image (homm3.sema): caller
@@ -222,7 +222,7 @@ def main(argv: list[str] | None = None) -> int:
     p.set_defaults(fn=cmd_configure)
 
     p = sub.add_parser(
-        "build", help="configure + ninja + report + ratchet (homm3.build.build)")
+        "build", help="configure + ninja + report + evidence/source gates")
     p.add_argument("--fast", action="store_true",
                    help="inner loop: stop after the objdiff %% line")
     p.add_argument("ninja_args", nargs=argparse.REMAINDER)
@@ -247,7 +247,7 @@ def main(argv: list[str] | None = None) -> int:
                        "(homm3.build.delink)")
     p.set_defaults(fn=cmd_delink)
 
-    p = sub.add_parser("status", help="objdiff scoreboard + cur/max/hist ratchet")
+    p = sub.add_parser("status", help="objdiff scoreboard + checkpoint ledger")
     p.add_argument("status_args", nargs=argparse.REMAINDER)
     p.set_defaults(fn=cmd_status)
 
