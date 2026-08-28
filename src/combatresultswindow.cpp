@@ -72,12 +72,12 @@ inline int min(int a, int b)
 // vector organically, which is why several vector<widget*>::insert
 // expansions sit inline in the body while the rest stay out of line.
 //
-// CURRENT (99.845184%, from 96.37881% on 2026-08-21): every widget, literal,
-// id, coordinate and text index below is retail's, and the branch and call
-// structure now agrees exactly: 147 conditional branches, one return and 154
-// out-of-line calls on both sides. The old "register homing only" diagnosis at
-// 96.38% was premature; six structural branches remained in the two hotkey
-// vector-growth paths. The correction is recorded below.
+// CURRENT (99.71843%; retained through the Dreamcast-backed dip from the
+// 99.84615% local peak): every widget, literal, id, coordinate and text index
+// below is retail's, and the branch structure agrees exactly: 147 conditional
+// branches and one return on both sides. The lower score preserves the
+// CodeView-proven function-scope locals and the original inline call spelling;
+// a percentage checkpoint is not allowed to erase either source fact.
 //
 // Three source facts closed 92.77% -> 96.23%, all of them the same lesson -
 // VC6's induction-variable machinery reads the SPELLING, not the value:
@@ -106,54 +106,37 @@ inline int min(int a, int b)
 // the subtraction differently". It was the spelling.
 //
 // What is left is stack coloring only. Both sides allocate the exact 0x1cc
-// frame and use the same arrays at [ebp-0x1d8], [ebp-0xd4] and [ebp-0x34],
-// but the early, dead-before-the-arrays text[100] buffer aliases [ebp-0x98]
-// here against retail's [ebp-0xcc]. The loss walk consequently permutes
-// [ebp-0x10]/[ebp-0x1c] and dead parameter homes [ebp+0xc]/[ebp+0x10]. The
-// compiled body has 2066 instructions against retail's 2067; why-reg's 48
-// source mutations find no improvement. Retail recycles dead parameter slots
-// ([ebp+0x14] for `row`, [ebp+0x1c] for `rowX`), so the [ebp-]/[ebp+] choice
-// follows the coloring rather than causing it. Tried and rejected:
-// `row++, rowX += 42` in the
-// for-increment clause (92.77%, keeps the basic IV); naming `int creature`
-// in the loss aggregation walk (spills the running maximum, -0.7%);
-// `my_side ? defender : attacker` for the narrated hero (inverts the
-// branch, -0.16%). The DC local roster's distinct `cText[100]` and
-// `cTemp[100]` were also restored at function entry and at their first-use
-// region, in both declaration orders: every form scores 96.37397%, slightly
-// below the two scoped buffers at 96.37881%. Release-elided call-shaped
-// diagnostics are not the honest mass supply here either: 1/2/3 entry sites
-// score 95.50169/96.11950/95.41026%. Conventional ASSERT/TRACE history is
-// therefore bounded independently of the earlier byte-inert pad sweep.
-// Parameter-home forcing is bounded too (2026-08-21). Moving `our_hero`
-// after the portrait arms falls to 94.33672%. An explicit entry if/else
-// reproduces retail's branch-and-store prologue byte-for-byte but changes the
-// later inline phase and scores 95.50169%. Reusing the attacker parameter
-// home explicitly, with the original pointer held for the portrait, scores
-// 95.18916% as a ternary and 95.35462% as if/else. The compiler removes the
-// self-store in both parameter-reuse forms; forcing the early home is not a
-// whole-function win.
+// frame and use the same arrays at [ebp-0x1d8], [ebp-0xd4] and [ebp-0x34].
+// The candidate has 2066 real instructions against retail's 2067 and the
+// sole net retail instruction is the loss-display counter reload. The first
+// broader divergence is a slot permutation: retail coalesces `my_hero` into
+// the dead attacker home [ebp+8] and `amount` into [ebp-0x10], while this
+// compile assigns them [ebp-0x14] and [ebp+8]. Splitting Dreamcast's one
+// function-scope `amount` into two arm locals recovers 99.84615%, but that is
+// the local maximum deliberately not retained. The raw CodeView inventory and
+// zero-emission declaration windows instead prove, in order, `long amount`,
+// `TCreatureType type`, the two [2][20] arrays, `my_hero`, iTtlDeadArmies,
+// cText[100], and firstX. cTemp is independently type-proven char[150]; fixing
+// the former char[100] guess made the complete winner sprintf/strcat region
+// exact. There is no leading source-line gap, so this function has no entry
+// ASSERT clue. The remaining mismatch is an allocator/handle-state problem,
+// not evidence for retail semantic skew.
 // A release VERIFY of `Widgets.size()` is bounded separately from the
 // elided TRACE/ASSERT-shaped carrier sweep (2026-08-21). Placing the retained
 // inline accessor before the last two inserts, between them, or immediately
 // before the final insert scores 89.66957%, 88.85438%, and 90.499275%
 // respectively. All three perturb the /Ob2 phase far below 96.37881%.
 //
-// The remaining DC-roster type/scope leads are bounded too (2026-08-21).
-// Spelling both strongest-stack accumulators as DC's `long amount` regresses
-// to 95.335266; sharing one function-scope int accumulator/index pair across
-// the mirrored attacker/defender arms scores 96.251090. Retail x86 already
-// uses the slot index in ESI after each walk, so DC's TCreatureType `type`
-// local is a port-specific source difference, not a compatible x86 type.
-// Dreamcast lines 322 and 323 prove two source calls to the header-inline
-// `button::set_hotkey`. The old 96.37881% wrapper experiment conflated that
-// boundary with the header's three-argument `insert` spelling. Giving this TU
-// the independently proven `push_back` arm preserves both named calls while
-// producing the same 99.845184% body, exact 147-branch / 154-call ledger, and
-// no movement in the other six functions in the compiland. Moving either key
-// into the button constructor remains byte-disproved. The local declarations
-// below follow DC's creature/count/total/text record order; that order is
-// byte-flat at 99.845184% but is the evidence-backed tie-break.
+// Dreamcast lines 101/107/108/110/111 also settle the strongest-stack source
+// shape: one shared `amount`, one shared enum-typed `type`, scoped `numMons`,
+// and a separately loaded AI value. The SH4 line-111 assignment copies the
+// loop slot into `type`, exactly matching retail's retained ESI slot; the odd
+// enum type is therefore shared source, not a port difference. Dreamcast also
+// proves TTextResource::operator[] at all eighteen text sites, two source
+// calls to header-inline button::set_hotkey, and twenty-two Widgets.push_back
+// calls. The source-shape ratchet now protects all of these boundaries. This
+// TU's independently proved push_back arm lets both hotkey wrappers lower to
+// retail's vector paths without flattening the named calls.
 //
 // The compiland's DC roster carries no helper members beyond the six
 // already landed, re-checked 2026-08-14: no HighlightX-style extraction is
@@ -185,8 +168,17 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
 {
     gpCombatResultsWindow = this;
 
+    long amount;
+    TCreatureType type;
+    int iDeadArmyTypes[2][20];
+    int iDeadArmyNumTroops[2][20];
+
     // The hero whose result the window narrates.
-    const hero* our_hero = my_side == 0 ? attacker : defender;
+    const hero* my_hero = my_side == 0 ? attacker : defender;
+
+    int iTtlDeadArmies[2];
+    char cText[100];
+    int firstX;
 
     Widgets.push_back(new bitmapBorder(
         0, 0, 470, 561, BACKGROUND_ID, "CPResult.pcx", 0x800));
@@ -194,13 +186,13 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
         gpGame->GetLocalPlayerGamePos());
 
     Widgets.push_back(new textWidget(
-        0, 290, 466, 100, gpGeneralText->GetText(408), "BigFont.fnt",
+        0, 290, 466, 100, (*gpGeneralText)[408], "BigFont.fnt",
         font::HEADING_HIGHLIGHT, BACKGROUND_ID, 1, 0, 8));
     Widgets.push_back(new textWidget(
-        0, 320, 466, 100, gpGeneralText->GetText(409), "BigFont.fnt",
+        0, 320, 466, 100, (*gpGeneralText)[409], "BigFont.fnt",
         font::WHITE, BACKGROUND_ID, 1, 0, 8));
     Widgets.push_back(new textWidget(
-        0, 412, 466, 100, gpGeneralText->GetText(410), "BigFont.fnt",
+        0, 412, 466, 100, (*gpGeneralText)[410], "BigFont.fnt",
         font::WHITE, BACKGROUND_ID, 1, 0, 8));
 
     if (attacker) {
@@ -215,33 +207,33 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
         // instead, ranked by the embedded traits row's AI value, and say it
         // in the plural as soon as more than one stack is alive. The war
         // machine (0x95) never counts.
-        int bestValue = 0;
-        int bestSlot = 0;
-        int liveStacks = 0;
+        amount = 0;
+        type = TCreatureType(0);
+        int numMons = 0;
         for (int slot = 0; slot < 20; slot++) {
             army& stack = gpCombatManager->armies[0][slot];
             if (stack.creatureType == -1)
                 continue;
             if (stack.creatureType == CREATURE_ARROW_TOWER)
                 continue;
-            liveStacks++;
+            numMons++;
             int value = stack.monInfoAIValue;
-            if (value > bestValue) {
-                bestValue = value;
-                bestSlot = slot;
+            if (value > amount) {
+                amount = value;
+                type = TCreatureType(slot);
             }
         }
         Widgets.push_back(new textWidget(
             89, 37, 115, 20,
-            liveStacks > 1
-                ? gpCombatManager->armies[0][bestSlot].monInfoPluralName
-                : gpCombatManager->armies[0][bestSlot].monInfoName,
+            numMons > 1
+                ? gpCombatManager->armies[0][type].monInfoPluralName
+                : gpCombatManager->armies[0][type].monInfoName,
             "smalfont.fnt", font::WHITE, ATTACKER_NAME, 0, 0, 8));
         Widgets.push_back(new iconWidget(
             21, 38, 58, 64, ATTACKER_PORTRAIT, "TwCrPort.def",
             0, 0, 0, 0, 0x10));
         static_cast<iconWidget*>(Widgets.back())->SetIconFrame(
-            gpCombatManager->armies[0][bestSlot].creatureType + 2);
+            gpCombatManager->armies[0][type].creatureType + 2);
     }
 
     Widgets.push_back(new textWidget(
@@ -256,33 +248,33 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
             392, 38, 58, 64, DEFENDER_PORTRAIT,
             akHeroTraits[defender->portrait].largePortraitName, 0x800));
     } else {
-        int bestValue = 0;
-        int bestSlot = 0;
-        int liveStacks = 0;
+        amount = 0;
+        type = TCreatureType(0);
+        int numMons = 0;
         for (int slot = 0; slot < 20; slot++) {
             army& stack = gpCombatManager->armies[1][slot];
             if (stack.creatureType == -1)
                 continue;
             if (stack.creatureType == CREATURE_ARROW_TOWER)
                 continue;
-            liveStacks++;
+            numMons++;
             int value = stack.monInfoAIValue;
-            if (value > bestValue) {
-                bestValue = value;
-                bestSlot = slot;
+            if (value > amount) {
+                amount = value;
+                type = TCreatureType(slot);
             }
         }
         Widgets.push_back(new textWidget(
             266, 37, 115, 20,
-            liveStacks > 1
-                ? gpCombatManager->armies[1][bestSlot].monInfoPluralName
-                : gpCombatManager->armies[1][bestSlot].monInfoName,
+            numMons > 1
+                ? gpCombatManager->armies[1][type].monInfoPluralName
+                : gpCombatManager->armies[1][type].monInfoName,
             "smalfont.fnt", font::WHITE, DEFENDER_NAME, 2, 0, 8));
         Widgets.push_back(new iconWidget(
             392, 38, 58, 64, DEFENDER_PORTRAIT, "TwCrPort.def",
             0, 0, 1, 0, 0x10));
         static_cast<iconWidget*>(Widgets.back())->SetIconFrame(
-            gpCombatManager->armies[1][bestSlot].creatureType + 2);
+            gpCombatManager->armies[1][type].creatureType + 2);
     }
 
     // Retail's defender status text repeats the defender NAME rectangle
@@ -294,44 +286,44 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
 
     Widgets.push_back(new textWidget(
         17, 116, 84, 20,
-        winning_side == 0 ? gpGeneralText->GetText(411)
-                          : gpGeneralText->GetText(412),
+        winning_side == 0 ? (*gpGeneralText)[411]
+                          : (*gpGeneralText)[412],
         "smalfont.fnt", font::PRIMARY, BACKGROUND_ID, 1, 0, 8));
     Widgets.push_back(new textWidget(
         367, 116, 84, 20,
-        winning_side == 1 ? gpGeneralText->GetText(411)
-                          : gpGeneralText->GetText(412),
+        winning_side == 1 ? (*gpGeneralText)[411]
+                          : (*gpGeneralText)[412],
         "smalfont.fnt", font::PRIMARY, BACKGROUND_ID, 1, 0, 8));
 
     int videoId;
     if (my_side == winning_side) {
-        char text[100];
+        char cTemp[150];
         if (gCombatFlag697744)
-            strcpy(gText, gpGeneralText->GetText(303));
+            strcpy(gText, (*gpGeneralText)[303]);
         else if (gCombatFlag6985a3)
-            strcpy(gText, gpGeneralText->GetText(304));
+            strcpy(gText, (*gpGeneralText)[304]);
         else
-            strcpy(gText, gpGeneralText->GetText(305));
-        if (our_hero) {
-            sprintf(text, gpGeneralText->GetText(306),
-                our_hero->name, experience);
-            strcat(gText, text);
+            strcpy(gText, (*gpGeneralText)[305]);
+        if (my_hero) {
+            sprintf(cTemp, (*gpGeneralText)[306],
+                my_hero->name, experience);
+            strcat(gText, cTemp);
         }
-        if (is_siege && our_hero == defender) {
+        if (is_siege && my_hero == defender) {
             videoId = 4;
             gCombatResultFlag695014 = 2;
         } else {
             videoId = 0;
             gCombatResultFlag695014 = 0;
         }
-    } else if (our_hero) {
+    } else if (my_hero) {
         if (gCombatFlag697744)
-            sprintf(gText, gpGeneralText->GetText(307), our_hero->name);
+            sprintf(gText, (*gpGeneralText)[307], my_hero->name);
         else if (gCombatFlag6985a3)
-            sprintf(gText, gpGeneralText->GetText(308), our_hero->name);
+            sprintf(gText, (*gpGeneralText)[308], my_hero->name);
         else
-            sprintf(gText, gpGeneralText->GetText(309), our_hero->name);
-        if (is_siege && our_hero == defender) {
+            sprintf(gText, (*gpGeneralText)[309], my_hero->name);
+        if (is_siege && my_hero == defender) {
             videoId = 1;
             gCombatResultFlag695014 = 5;
         } else if (gCombatFlag697744) {
@@ -346,11 +338,11 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
         }
     } else {
         if (gCombatFlag697744)
-            strcpy(gText, gpGeneralText->GetText(310));
+            strcpy(gText, (*gpGeneralText)[310]);
         else if (gCombatFlag6985a3)
-            strcpy(gText, gpGeneralText->GetText(311));
+            strcpy(gText, (*gpGeneralText)[311]);
         else
-            strcpy(gText, gpGeneralText->GetText(312));
+            strcpy(gText, (*gpGeneralText)[312]);
         if (is_siege) {
             videoId = 1;
             gCombatResultFlag695014 = 5;
@@ -373,13 +365,8 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
     // Losses, aggregated per side into (creature, count) rows: the display
     // is data-driven, so every icon and every count text it emits carries
     // BACKGROUND_ID rather than one of the Dreamcast-only LOSS ids.
-    int lossCreature[2][20];
-    int lossCount[2][20];
-    int lossRows[2];
-    char text[100];
-
     for (int side = 0; side < 2; side++) {
-        lossRows[side] = 0;
+        iTtlDeadArmies[side] = 0;
         for (int slot = 0; slot < 20; slot++) {
             int creature = gpCombatManager->armies[side][slot].creatureType;
             int lost = gpCombatManager->armies[side][slot].origNumTroops
@@ -389,35 +376,35 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
             if (lost <= 0)
                 continue;
             int row;
-            for (row = 0; row < lossRows[side]; row++)
-                if (lossCreature[side][row] == creature)
+            for (row = 0; row < iTtlDeadArmies[side]; row++)
+                if (iDeadArmyTypes[side][row] == creature)
                     break;
-            if (row < lossRows[side]) {
-                lossCount[side][row] += lost;
+            if (row < iTtlDeadArmies[side]) {
+                iDeadArmyNumTroops[side][row] += lost;
             } else {
-                lossCreature[side][row] = creature;
-                lossCount[side][row] = lost;
-                lossRows[side]++;
+                iDeadArmyTypes[side][row] = creature;
+                iDeadArmyNumTroops[side][row] = lost;
+                iTtlDeadArmies[side]++;
             }
         }
     }
 
     for (int lossSide = 0; lossSide < 2; lossSide++) {
         int rowY = lossSide ? 440 : 343;
-        if (lossRows[lossSide] <= 0)
+        if (iTtlDeadArmies[lossSide] <= 0)
             Widgets.push_back(new textWidget(
-                42, rowY + 10, 384, 36, gpGeneralText->GetText(32),
+                42, rowY + 10, 384, 36, (*gpGeneralText)[32],
                 "smalfont.fnt", font::PRIMARY, BACKGROUND_ID, 1, 0, 8));
-        int shown = min(lossRows[lossSide], 7);
-        int rowLeft = (468 - 42 * shown) / 2 + 11;
-        for (int row = 0; row < shown; row++) {
-            int rowX = rowLeft + 42 * row;
+        int iMaxToShow = min(iTtlDeadArmies[lossSide], 7);
+        firstX = (468 - 42 * iMaxToShow) / 2 + 11;
+        for (int row = 0; row < iMaxToShow; row++) {
+            int x = firstX + 42 * row;
             Widgets.push_back(new iconWidget(
-                rowX, rowY, 32, 32, BACKGROUND_ID, "cprsmall.def",
-                lossCreature[lossSide][row] + 2, 0, 0, 0, 0x10));
-            sprintf(text, "%d", lossCount[lossSide][row]);
+                x, rowY, 32, 32, BACKGROUND_ID, "cprsmall.def",
+                iDeadArmyTypes[lossSide][row] + 2, 0, 0, 0, 0x10));
+            sprintf(cText, "%d", iDeadArmyNumTroops[lossSide][row]);
             Widgets.push_back(new textWidget(
-                rowX - 5, rowY + 38, 32, 32, text, "smalfont.fnt",
+                x - 5, rowY + 38, 32, 32, cText, "smalfont.fnt",
                 font::PRIMARY, BACKGROUND_ID, 1, 0, 8));
         }
     }
