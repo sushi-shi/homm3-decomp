@@ -123,19 +123,9 @@ unsigned char TMultiPlayerWindow::OnJoin()
     // @stub
 }
 
-// E:\gamedcs\multiplayerwindow.cpp:1822
-DC_ONLY(0x101780, 0x4)
-unsigned char GetIPAddress(char* sIPAddress)
-{
-    // @stub
-}
+// GetIPAddress promoted to a VA claim (retail-located block).
 
-// E:\gamedcs\multiplayerwindow.cpp:1884
-DC_ONLY(0x101784, 0x166)
-unsigned char TMultiPlayerWindow::OnTCP()
-{
-    // @stub
-}
+// OnTCP promoted to a VA claim (retail-located block).
 
 // E:\gamedcs\multiplayerwindow.cpp:1924
 DC_ONLY(0x1018ec, 0x7E)
@@ -1291,6 +1281,101 @@ void CMPInputDlg::UpdateOK()
 
 // E:\gamedcs\multiplayerwindow.cpp:523
 VA_COMPGEN(0x005109e0, 0x21, SCALAR_DELETING_DTOR, CMPInputDlg)
+
+// Byte-exact. Complete retains the PC Winsock implementation behind the
+// four-byte DC stub: create a nonblocking UDP socket, resolve the machine
+// hostname, copy the first IPv4 address's dotted form to the caller, and close
+// the socket.
+// E:\gamedcs\multiplayerwindow.cpp:1822
+VA(0x005112e0, 0x101)  // WSAStartup/socket/bind/ioctlsocket/hostname chain, dc 0x101780
+unsigned char GetIPAddress(char* sIPAddress)
+{
+    WSADATA wsaData;
+    char hostName[256];
+    TIPv4SocketAddress address;
+
+    if (WSAStartup(MAKEWORD(1, 1), &wsaData))
+        return 0;
+
+    SOCKET socketHandle = socket(AF_INET, SOCK_DGRAM, 0);
+    if (socketHandle == INVALID_SOCKET)
+        return 0;
+
+    address.internet.sin_family = AF_INET;
+    address.internet.sin_port = htons(2000);
+    address.internet.sin_addr.s_addr = htonl(INADDR_ANY);
+    if (bind(socketHandle, &address.generic, sizeof(address.internet))
+        == SOCKET_ERROR)
+        return 0;
+    u_long nonBlocking = 1;
+    if (ioctlsocket(socketHandle, FIONBIO, &nonBlocking) == SOCKET_ERROR)
+        return 0;
+    if (gethostname(hostName, 255) == SOCKET_ERROR)
+        return 0;
+
+    hostent* host = gethostbyname(hostName);
+    in_addr internetAddress;
+    memcpy(&internetAddress, host->h_addr_list[0], sizeof(internetAddress));
+    strcpy(sIPAddress, inet_ntoa(internetAddress));
+    closesocket(socketHandle);
+    return 1;
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:1884
+// Source-complete residual. All 20 semantic blocks, calls, stack offsets and
+// per-block instructions agree with retail. VC6 schedules the connection-
+// failure dialog at the function tail here; retail places that cold return
+// between the textWidget constructor and its null-allocation continuation.
+// TCP setup activates the host/join/search controls, publishes the local
+// address once, refreshes the DirectPlay session array and redraws the browser.
+VA(0x005113f0, 0x263)  // TCP InitRemote/GetIPAddress/session-enum flow, dc 0x101784
+unsigned char TMultiPlayerWindow::OnTCP()
+{
+    char ipAddress[80];
+
+    iMPNetProtocol = MP_TCP;
+    if (!::InitRemote(MP_TCP, playerName->Text.c_str())
+        || !InitConnection(0, 0)) {
+        NormalDialog(gpGeneralText->GetText(459), 1, -1, -1,
+                     -1, 0, -1, 0, -1, 0, -1, 0);
+        return 0;
+    }
+
+    DPCAPS caps;
+    pDPlay->GetCaps(&caps, 1);
+    sessionRefreshTimeout = caps.dwTimeout + 100;
+    if (iMPNetProtocol == MP_TCP)
+        sessionRefreshTimeout = 1000;
+
+    if (host)
+        host->send_message(widget::WIDGET_SET_STATUS,
+                           widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    join->send_message(widget::WIDGET_SET_STATUS,
+                       widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    search->send_message(widget::WIDGET_SET_STATUS,
+                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    search->enable(1);
+    join->enable(0);
+
+    if (GetIPAddress(ipAddress) && !GetWidget(IP_ADDRESS_ID)) {
+        char addressText[256];
+        textWidget* ipWidget = new textWidget(
+            0, 16, width, 50, 0, "bigfont.fnt", font::PRIMARY,
+            IP_ADDRESS_ID, 1, 0, 8);
+        Widgets.insert(Widgets.end(), ipWidget);
+        AddWidget(ipWidget, -1);
+        sprintf(addressText, gpGeneralText->GetText(460), ipAddress);
+        ipWidget->SetText(addressText);
+    }
+
+    pSessions->Destroy();
+    pDPlay->EnumSessions(pSessions, sessionRefreshTimeout, 0x52);
+    sessTimer = GameTime::Get();
+    static_cast<slider*>(gameSlider)->UpdateResolution(
+        pSessions->GetCount() - 12);
+    Update();
+    return 1;
+}
 
 // E:\gamedcs\multiplayerwindow.cpp:2009
 // Byte-exact. The local dialog's result selects either the cancel return or

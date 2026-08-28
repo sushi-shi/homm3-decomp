@@ -103,6 +103,7 @@ register-homing (why-reg)	176	91.6097	2101	mapcell	?readHeroData@NewfullMap@@QAE
 inliner (predict-inline)	172	87.8496	1413	game	??0game@@QAE@XZ	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 2 over-inline (5 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	163	90.4657	1714	viewarmywindow	??0TViewArmyWindow@@QAE@PAVarmyGroup@@HPBVhero@@PBVtown@@HHHEEE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline, 1 over-inline (21 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	162	91.6489	1939	hero	?get_morale_description@hero@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	predict-inline	callee expanded on one side only (A8/A9/A12): 3 under-inline, 1 over-inline (28 name-unresolvable pair(s) discounted)
+control-flow (why-branch)	161	73.5825	611	multiplayerwindow	?OnTCP@TMultiPlayerWindow@@QAEEXZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	155	85.9057	1102	fly	?Fly@army@@QAEHH@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 register-homing (why-reg)	155	84.9579	1032	spells	?Earthquake@combatManager@@QAEXH@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 inliner (predict-inline)	155	81.3049	830	singleselectionwindow	?OnGameHeaderInfoInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 3 under-inline, 2 over-inline (17 name-unresolvable pair(s) discounted)

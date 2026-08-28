@@ -15,6 +15,15 @@
 
 struct _DPCOMPORTADDRESS;
 
+// Cast-free storage for the Winsock bind call in GetIPAddress. Both views are
+// the same 16-byte IPv4 socket-address record; keeping the union in the domain
+// header avoids a TU-local layout view.
+union TIPv4SocketAddress {
+    sockaddr_in internet;
+    sockaddr generic;
+};
+SIZE(TIPv4SocketAddress, 0x10);
+
 // DC's nested char[21][8] type gives this class its complete 0xac-byte
 // layout. Retail OnOK independently proves the same 21-byte stride and the
 // eight-player bound while inlining both the constructor and AddPlayer.
@@ -380,7 +389,9 @@ public:
         LAST_SESSION_ID = 121,
         GAME_SLIDER_ID = 122,
         ROLLOVER_ID = 123,
-        CANCEL_ID = 124
+        CANCEL_ID = 124,
+        PLAYER_NAME_ID = 125,
+        IP_ADDRESS_ID = 126
     };
 
     CSprite* GameState;                     // +0x50
