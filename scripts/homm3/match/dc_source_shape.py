@@ -268,6 +268,17 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             "Widgets.push_back source calls",
             r"\bWidgets\s*\.\s*push_back\s*\(", 22, 22),
         SourceRule(
+            "TCombatResultsWindow keeps Dreamcast line 319's accept-box "
+            "allocation, construction and push in one statement group",
+            r"Widgets\s*\.\s*push_back\s*\(\s*new\s+bitmapBorder\s*\(\s*"
+            r"384\s*,\s*506\s*,\s*66\s*,\s*32\s*,.*?"
+            r"0x800\s*\)\s*\)\s*;"),
+        SourceRule(
+            "TCombatResultsWindow keeps source-gap line 320's zero-emission "
+            "accept initializer before line 321's construction assignment",
+            r"button\s*\*\s*accept\s*=\s*0\s*;\s*"
+            r"accept\s*=\s*new\s+button\s*\("),
+        SourceRule(
             "TCombatResultsWindow keeps both Dreamcast button::set_hotkey "
             "source calls",
             r"\bset_hotkey\s*\(", 2, 2),
@@ -1634,7 +1645,11 @@ if (stack.creatureType != -1 &&
 """ + "\n".join(
         "const char* text%d = (*gpGeneralText)[%d];" % (index, index)
         for index in range(18)) + "\n" + "\n".join(
-        "Widgets.push_back(widget%d);" % index for index in range(22)) + """
+        "Widgets.push_back(widget%d);" % index for index in range(21)) + """
+Widgets.push_back(new bitmapBorder(
+    384, 506, 66, 32, BACKGROUND_ID, "Box64x30.pcx", 0x800));
+button* accept = 0;
+accept = new button();
 accept->set_hotkey(28);
 accept->set_hotkey(1);
 int iMaxToShow = min(iTtlDeadArmies[0], 7);
@@ -1688,6 +1703,23 @@ if (creature != -1 && lost > 0) { int row; }
                for rule in contract_violations(
                    split_strongest_gate, combat_results_key)):
         failures.append("split combat-results strongest-stack gates passed")
+    split_accept_box = combat_results_probe.replace(
+        "Widgets.push_back(new bitmapBorder(\n"
+        "    384, 506, 66, 32, BACKGROUND_ID, \"Box64x30.pcx\", 0x800));",
+        "bitmapBorder* acceptBox = new bitmapBorder(\n"
+        "    384, 506, 66, 32, BACKGROUND_ID, \"Box64x30.pcx\", 0x800);\n"
+        "Widgets.push_back(acceptBox);")
+    if not any("line 319's accept-box" in rule.description
+               for rule in contract_violations(
+                   split_accept_box, combat_results_key)):
+        failures.append("split combat-results accept-box group passed")
+    collapsed_accept = combat_results_probe.replace(
+        "button* accept = 0;\naccept = new button();",
+        "button* accept = new button();")
+    if not any("source-gap line 320" in rule.description
+               for rule in contract_violations(
+                   collapsed_accept, combat_results_key)):
+        failures.append("collapsed combat-results accept initializer passed")
     upgrade_key = ("philai.obj", 0x10D684)
     upgrade_probe = """\
 int difference[NUM_RESOURCES];

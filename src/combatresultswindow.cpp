@@ -72,13 +72,16 @@ inline int min(int a, int b)
 // vector organically, which is why several vector<widget*>::insert
 // expansions sit inline in the body while the rest stay out of line.
 //
-// CURRENT (99.86018%; past the former 99.84615% local peak): every widget,
-// literal, id, coordinate and text index below is retail's, and both the
-// instruction count and branch structure agree exactly: 2067 real
-// instructions, 147 conditional branches and one return on both sides. The
-// improvement came from restoring Dreamcast line 280's one positive lexical
-// scope around loss aggregation after retaining the CodeView-proven shared
-// `amount`. A percentage checkpoint is not allowed to erase either fact.
+// CURRENT (99.860664%; past every prior local maximum): every widget,
+// literal, id, coordinate and text index below is retail's. Restoring
+// Dreamcast line 280's one positive lexical scope around loss aggregation
+// first carried the shared CodeView-proven `amount` past the old 99.84615%
+// maximum. Restoring line 319's one statement group then dipped to 99.65748;
+// source-gap line 320 supplied the optimized-away `accept = 0` initializer
+// before line 321's construction assignment and recovered 2067 vs 2067 real
+// instructions at 99.860664%. The former named `acceptBox` split was only a
+// percentage lever, not the attested source. A checkpoint is not allowed to
+// erase any of these facts.
 //
 // Three source facts closed 92.77% -> 96.23%, all of them the same lesson -
 // VC6's induction-variable machinery reads the SPELLING, not the value:
@@ -106,8 +109,9 @@ inline int min(int a, int b)
 // value was absent "because it had no free register, not because it spelled
 // the subtraction differently". It was the spelling.
 //
-// What is left is stack coloring only. Both sides allocate the exact 0x1cc
-// frame, contain 2067 real instructions, and use the same arrays at
+// Before restoring line 319, what remained was stack coloring only. Both
+// sides allocated the exact 0x1cc frame, contained 2067 real instructions,
+// and used the same arrays at
 // [ebp-0x1d8], [ebp-0xd4] and [ebp-0x34]. The first broader divergence is a
 // slot permutation: retail coalesces `my_hero` into the dead attacker home
 // [ebp+8] and `amount` into [ebp-0x10], while this compile assigns them
@@ -148,8 +152,10 @@ inline int min(int a, int b)
 // has NO reserve)" - true, but that is the DIVISOR axis alone, and the
 // caller's own cb had never been swept here. It is live: at k=0, one to
 // three byte-inert pad statements at the head of the body are worth 96.3793,
-// and the honest supply is naming the accept box before pushing it (96.3788,
-// the same plateau to within a byte). Full grid, pad statements ahead of
+// and naming the accept box before pushing it reaches 96.3788, the same
+// plateau to within a byte. Dreamcast line 319 later disproved that split as
+// shared source, so it is retained here only as a negative result. Full grid,
+// pad statements ahead of
 // `gpCombatResultsWindow = this` x xx_nop sites past the last push_back:
 //     M\k        0         1         2         3
 //     0     96.2269   90.1925   90.8916   84.5239
@@ -406,11 +412,11 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
         }
     }
 
-    bitmapBorder* acceptBox = new bitmapBorder(
-        384, 506, 66, 32, BACKGROUND_ID, "Box64x30.pcx", 0x800);
-    Widgets.push_back(acceptBox);
+    Widgets.push_back(new bitmapBorder(
+        384, 506, 66, 32, BACKGROUND_ID, "Box64x30.pcx", 0x800));
 
-    button* accept = new button(
+    button* accept = 0;
+    accept = new button(
         385, 507, 64, 30, DIALOG_RETURN_SPLIT_ACCEPT, "iOkay.def",
         0, 1, 0, 0, 2);
     accept->set_hotkey(28);
