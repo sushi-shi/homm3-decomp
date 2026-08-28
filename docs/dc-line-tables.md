@@ -67,7 +67,40 @@ parameter and local `S_REGREL32` records ahead of it — those name the
 **original parameter list**, which is independently useful (they proved
 `get_luck_description`'s DC signature had no `creature` parameter at all).
 
+## What the artifact proves about optimization
+
+It does **not** prove a `/Od`-equivalent build. The embedded object paths name
+the configuration `Win32__WCE_SH4__Release_with_debug`, and `S_COMPILE` names
+Microsoft's SH compiler, but CodeView does not preserve the command-line
+optimization switch. Existing corpus provenance therefore classifies this as
+an optimized release build with full debug information. The defensible claim
+is narrower and more useful: this older SH compiler/build preserved many more
+helper calls, scopes, lifetimes, and statement boundaries than retail VC6
+`/O2 /Ob2` did. Tool output exposes those surviving facts without assuming
+that every non-inlined helper was caused by optimization being completely off.
+
 ## The tool
+
+The public entry point is `homm3 dreamcast`. It joins the roster, retail
+bridge, parameters/locals, lexical scopes and statement call/branch stream:
+
+```sh
+homm3 dreamcast show 0x00403ee0
+homm3 dreamcast asm dc:0x1190
+homm3 dreamcast asm dc:0x1190 --blocks
+homm3 dreamcast find ClearBottomView
+homm3 dreamcast stats
+```
+
+Every view labels the result as cross-pressing analysis rather than retail
+evidence. `show` and `asm` accept `module.obj:0xOFF` and an exact or
+unambiguous function name. Use `--json` for machine-readable dossiers and
+assembly/CFG records. Assembly line-program entries are labelled `bp`,
+following Vostok's debugger-breakpoint terminology. `scope` labels are
+CodeView `S_BLOCK32` lexical scopes; `B0`, `B1`, ... are separately inferred
+SH4 basic blocks.
+
+The lower-level statement renderer remains available for development:
 
 `scripts/homm3/analysis/dc_lines.py` does the whole join — line table +
 scope tree + capstone SH4 + pool-symbol resolution — so no round of this
