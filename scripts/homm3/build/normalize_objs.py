@@ -278,10 +278,11 @@ def _canonicalize_equivalent_relocations(
     written back.
 
     Second, vostok can name an interior data field while VC6 names the owning
-    aggregate plus an addend.  A same-addend paired relocation first anchors
-    the candidate external symbol to a generated retail data RVA.  Other
-    relocations using that candidate symbol are rewritten on the target side
-    only when both forms resolve to the identical RVA.
+    aggregate plus an addend.  A reviewed retail name at the candidate
+    aggregate's base, or otherwise one unambiguous same-addend paired
+    relocation, anchors the candidate external symbol to a generated retail
+    data RVA.  Other relocations using that candidate symbol are rewritten on
+    the target side only when both forms resolve to the identical RVA.
 
     Both transforms are paired, function-relative, and context-checked.
     Symbols and section/file layout stay fixed; only proved false-literal rows
@@ -344,10 +345,51 @@ def _canonicalize_equivalent_relocations(
             continue
         observations.setdefault(base_relocation.symbol_index, set()).add(
             (authority[0], target_relocation.symbol_index))
-    anchors = {
+    inferred_anchors = {
         symbol: next(iter(rows)) for symbol, rows in observations.items()
         if len(rows) == 1
     }
+
+    # A reviewed reloc-alias owner is stronger than the equal-addend
+    # heuristic and remains usable when one stripped object contains several
+    # synthesized zero-addend field names for the same candidate aggregate.
+    # The target must still contain one unique data symbol at that exact owner
+    # RVA; otherwise there is no symbol index to rewrite to and the mismatch
+    # stays visible.
+    known_data_rvas = {
+        rva for rva, kind in symbol_rvas.values() if kind == "data"
+    }
+    target_data_symbols: dict[int, dict[str, set[int]]] = {}
+    for symbol in target.symbols.values():
+        authority = symbol_rvas.get(symbol.name)
+        if authority is None:
+            placeholder = re.fullmatch(
+                r"(?:data|bss)_([0-9a-fA-F]+)", symbol.name)
+            if placeholder is not None:
+                placeholder_rva = int(placeholder.group(1), 16)
+                if placeholder_rva in known_data_rvas:
+                    authority = placeholder_rva, "data"
+        if authority is not None and authority[1] == "data":
+            target_data_symbols.setdefault(authority[0], {}).setdefault(
+                symbol.name, set()).add(symbol.index)
+    reviewed_anchors: dict[int, tuple[int, int]] = {}
+    for symbol in base.symbols.values():
+        authority = symbol_rvas.get(symbol.name)
+        if authority is None or authority[1] != "data":
+            continue
+        targets = target_data_symbols.get(authority[0], {})
+        if len(targets) == 1:
+            indices = next(iter(targets.values()))
+            reviewed_anchors[symbol.index] = (
+                authority[0], min(indices))
+
+    anchors = dict(inferred_anchors)
+    for symbol, reviewed in reviewed_anchors.items():
+        inferred = inferred_anchors.get(symbol)
+        if inferred is not None and inferred[0] != reviewed[0]:
+            anchors.pop(symbol, None)
+            continue
+        anchors[symbol] = reviewed
 
     data = bytearray(target_payload)
     admitted: dict[int, tuple[int, int, int, str]] = {}
@@ -974,11 +1016,19 @@ def main(argv=None) -> int:
         # Padding is a paired normalization decision, so the base copy is
         # stale whenever either raw input changes, even when this run found no
         # suffix to retain.
-        stamp_inputs = {"raw": base_obj, "target": target_obj}
+        stamp_inputs = {
+            "raw": base_obj,
+            "target": target_obj,
+            "symbol_names": SYMBOL_NAMES,
+        }
         if COMPGEN_MANIFEST.is_file():
             stamp_inputs["compgen_manifest"] = COMPGEN_MANIFEST
         write_stamp(normalized_base, stamp_inputs)
-        target_stamp_inputs = {"raw": target_obj, "base": base_obj}
+        target_stamp_inputs = {
+            "raw": target_obj,
+            "base": base_obj,
+            "symbol_names": SYMBOL_NAMES,
+        }
         if COMPGEN_MANIFEST.is_file():
             target_stamp_inputs["compgen_manifest"] = COMPGEN_MANIFEST
         write_stamp(normalized_target, target_stamp_inputs)

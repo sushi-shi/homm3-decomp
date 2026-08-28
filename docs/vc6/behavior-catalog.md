@@ -994,12 +994,16 @@ name).
   candidate has no relocation of any type at the same function-relative site
   and its literal equals the generated retail symbol RVA plus addend. It
   rewrites aggregate+addend versus synthesized field-symbol+addend only after
-  one unambiguous equal-addend data anchor proves the candidate aggregate's
-  retail RVA and both forms resolve identically. A corpus pass removed 6 false
-  literal rows and normalized 243 field splits, closing
-  `AI_value_of_combat`, `mark_towns`, and `value_of_hall`. Five hermetic
-  controls keep wrong literals, candidate relocation sites, missing anchors,
-  and different field addresses visible.
+  either a reviewed exact relocation alias proves the candidate aggregate's
+  retail base or one unambiguous equal-addend data anchor does, and both forms
+  resolve identically. Generated `data_`/`bss_` owner spellings are accepted
+  only when their encoded RVA is already in that authority; duplicate COFF
+  indices of one name are harmless, while two names at one base fail closed.
+  The reviewed `AI_enter_town` sites at retail RVAs `0x12555d` and `0x125698`
+  resolve `bitNumber+0x128/+0x160`, removing B18/B33 representation noise.
+  Hermetic controls keep wrong literals, candidate relocation sites, missing
+  or ambiguous anchors, unknown generated names, and different field addresses
+  visible.
 
 ### D22. Excluded classes (never claim / never model as code)
 cinit-pattern rows (guard byte `0x6abaa0` / atexit / ~95 B ten-iteration
