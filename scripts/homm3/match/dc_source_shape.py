@@ -7,6 +7,10 @@ named helper.  For every function carrying a ``dc 0x...`` source claim, and
 every active unclaimed definition retaining its ``E:\\gamedcs`` provenance
 line, this gate checks that each source-visible game helper from
 ``evidence/dc-xref-graph.tsv`` is still named in the reconstructed C++ body.
+The only exception is a proof-carrying Complete transfer: both the old caller's
+forwarding shape and an exact retail receiver must retain the operation.  This
+is stricter than a waiver and records an independently proved cross-function
+source change.
 Provenance-marked header definitions are audited by original source file and
 line rather than by emitting object, because `/Ob2` may inline every retail
 copy and because one header body can be shared by several TUs.
@@ -86,6 +90,16 @@ class SourceRule:
 
 
 @dataclass(frozen=True)
+class CallTransfer:
+    description: str
+    receiver_path: str
+    receiver_name: str
+    receiver_va: int
+    caller_pattern: str
+    receiver_pattern: str
+
+
+@dataclass(frozen=True)
 class ContractViolation:
     va: int | None
     dc_module: str
@@ -117,11 +131,76 @@ class DecodedShape:
     groups: tuple[CallGroup, ...]
 
 
+# Dreamcast sometimes places one operation in two cooperating functions while
+# Complete moves the whole operation into one of them.  Admit such a move only
+# as a bounded, proof-carrying transfer: the old caller must retain the exact
+# forwarding protocol, the receiver source must retain the helper, and that
+# receiver must be byte-exact against retail.  A percentage alone can never
+# create an entry here.
+PROVEN_CALL_TRANSFERS: dict[tuple[str, int, str], CallTransfer] = {
+    ("adventureoptionswindow.obj", 0x5204, "game::ShowScenInfo"):
+        CallTransfer(
+            "Complete moves campaign scenario-info dispatch from the dialog "
+            "handler into advManager::DoAdventureOptions",
+            "src/advmgr.cpp", "advManager::DoAdventureOptions", 0x0041AB00,
+            r"gpWindowManager\s*->\s*dialogReturn\s*=\s*msg\s*->\s*codeY"
+            r"\s*;.*?msg\s*->\s*codeY\s*=\s*widget\s*::\s*"
+            r"WIDGET_END_DIALOG\s*;.*?msg\s*->\s*codeX\s*=\s*widget\s*::\s*"
+            r"WIDGET_END_DIALOG\s*;.*?return\s+MESSAGE_DISPATCH_FORWARD\s*;",
+            r"switch\s*\(\s*gpWindowManager\s*->\s*dialogReturn\s*\)"
+            r".*?case\s+TAdventureOptionsWindow\s*::\s*VIEW_SCENARIO_ID"
+            r"\s*:\s*gpGame\s*->\s*ShowScenInfo\s*\(\s*\)\s*;\s*break\s*;"),
+}
+
+
 # Named calls cover most recoverable shape automatically. These bounded
 # contracts preserve source-visible facts that disappear before the SH4 xref
 # graph: inlined accessors/operators, a source order hidden by scheduling, and
 # nesting within a single attested statement group.
 SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
+    ("adventureoptionswindow.obj", 0x5204): (
+        SourceRule(
+            "TAdventureOptionsWindow::WindowHandler keeps explicit close "
+            "state before PollSound (Dreamcast lines 153 and 237-242)",
+            r"\b(?:bool|int|unsigned\s+char)\s+closeDialog\s*=\s*"
+            r"(?:false|0)\s*;\s*PollSound\s*\(\s*\)\s*;"),
+        SourceRule(
+            "TAdventureOptionsWindow::WindowHandler keeps the mouse "
+            "coordinates as direct findWidget arguments in their one "
+            "Dreamcast line-211 statement",
+            r"\bfindWidget\s*\(\s*msg\s*->\s*mouseX\s*,\s*"
+            r"msg\s*->\s*mouseY\s*\)"),
+        SourceRule(
+            "TAdventureOptionsWindow::WindowHandler sets close state once "
+            "for the selected option",
+            r"\bcloseDialog\s*=\s*(?:true|1)\s*;", 1, 1),
+        SourceRule(
+            "TAdventureOptionsWindow::WindowHandler keeps widget dispatch "
+            "before the mouse else-if arm (Dreamcast lines 169 then 211)",
+            r"if\s*\(\s*msg\s*->\s*id\s*==\s*MESSAGE_WIDGET\s*\)\s*\{"
+            r".*?closeDialog\s*=\s*(?:true|1)\s*;.*?\}\s*else\s+if\s*"
+            r"\(\s*msg\s*->\s*id\s*==\s*MESSAGE_MOUSE_MOVE\s*\)"),
+        SourceRule(
+            "TAdventureOptionsWindow::WindowHandler consumes close state in "
+            "one shared tail after the mouse arm (Dreamcast lines 237-242)",
+            r"DrawWindow\s*\([^;]*\)\s*;.*?\}\s*\}\s*if\s*\(\s*"
+            r"closeDialog\s*\)\s*\{\s*msg\s*->\s*id\s*=\s*"
+            r"MESSAGE_WIDGET\s*;\s*gpWindowManager\s*->\s*dialogReturn\s*"
+            r"=\s*msg\s*->\s*codeY\s*;.*?return\s+"
+            r"MESSAGE_DISPATCH_FORWARD\s*;\s*\}"),
+        SourceRule(
+            "TAdventureOptionsWindow::WindowHandler keeps one shared "
+            "forward return instead of the 99.9367% duplicated-tail plateau",
+            r"return\s+MESSAGE_DISPATCH_FORWARD\s*;", 1, 1),
+        SourceRule(
+            "TAdventureOptionsWindow::WindowHandler keeps one shared consume "
+            "return instead of the 99.9367% early-return plateau",
+            r"return\s+MESSAGE_DISPATCH_CONSUME\s*;", 1, 1),
+        SourceRule(
+            "TAdventureOptionsWindow uses its distinct attested options-help "
+            "table in both help paths",
+            r"\bgAdventureOptionsHelp\s*\[", 2, 2),
+    ),
     ("armygrp.obj", 0x4E428): (
         SourceRule(
             "TSplitWindow::WindowHandler keeps explicit close/update state "
@@ -694,6 +773,29 @@ def split_window_header_violations(text: str) -> list[tuple[int, str]]:
     return defects
 
 
+def window_header_violations(text: str) -> list[tuple[int, str]]:
+    """Audit the const-qualified Dreamcast findWidget helper pair."""
+    masked = _source.mask(text)
+    rules = (
+        ("findWidget",
+         "heroWindow::findWidget must retain its attested const qualifier",
+         r"\bint\s+findWidget\s*\(\s*int\s+\w+\s*,\s*int\s+\w+\s*\)"
+         r"\s*const\s*;"),
+        ("findWidgetPtr",
+         "heroWindow::findWidgetPtr must retain its attested const qualifier",
+         r"\bwidget\s*\*\s*findWidgetPtr\s*\(\s*int\s+\w+\s*,\s*"
+         r"int\s+\w+\s*\)\s*const\s*;"),
+    )
+    defects = []
+    for token_name, description, pattern in rules:
+        if re.search(pattern, masked, re.DOTALL) is not None:
+            continue
+        token = re.search(r"\b" + token_name + r"\b", masked)
+        line = text.count("\n", 0, token.start()) + 1 if token else 1
+        defects.append((line, description))
+    return defects
+
+
 def _helper_token(name: str) -> str | None:
     """Return the source-call identifier worth enforcing, or ``None``.
 
@@ -817,6 +919,29 @@ def contract_violations(body: str, key: tuple[str, int]) -> list[SourceRule]:
                 or rule.maximum is not None and count > rule.maximum:
             defects.append(rule)
     return defects
+
+
+def transfer_satisfied(transfer: CallTransfer, caller_body: str,
+                       receiver_body: str, exact_vas: set[int]) -> bool:
+    """Whether one explicit cross-function source transfer still holds."""
+    if transfer.receiver_va not in exact_vas:
+        return False
+    caller = _source.mask(caller_body)
+    receiver = _source.mask(receiver_body)
+    return re.search(transfer.caller_pattern, caller, re.DOTALL) is not None \
+        and re.search(transfer.receiver_pattern, receiver, re.DOTALL) is not None
+
+
+def groups_without_transfers(
+        groups: tuple[CallGroup, ...], is_transferred) \
+        -> tuple[CallGroup, ...]:
+    """Remove only individually proved transferred calls from DC groups."""
+    filtered = tuple(
+        CallGroup(group.line, tuple(
+            callee for callee in group.callees
+            if not is_transferred(callee)))
+        for group in groups)
+    return tuple(group for group in filtered if group.callees)
 
 
 def army_is_contract_violations(text: str, *, header: bool = False) \
@@ -1119,6 +1244,110 @@ const char* GetName(int count) const;
     if missing_from_body("return traits[type].name;", ["GetArmyName"]) != [
             ("GetArmyName", "GetArmyName")]:
         failures.append("flattened free helper call was not detected")
+    transfer = PROVEN_CALL_TRANSFERS[
+        ("adventureoptionswindow.obj", 0x5204, "game::ShowScenInfo")]
+    transfer_caller = """\
+gpWindowManager->dialogReturn = msg->codeY;
+msg->codeY = widget::WIDGET_END_DIALOG;
+msg->codeX = widget::WIDGET_END_DIALOG;
+return MESSAGE_DISPATCH_FORWARD;
+"""
+    transfer_receiver = """\
+switch (gpWindowManager->dialogReturn) {
+case TAdventureOptionsWindow::VIEW_SCENARIO_ID:
+    gpGame->ShowScenInfo();
+    break;
+}
+"""
+    if not transfer_satisfied(transfer, transfer_caller, transfer_receiver,
+                              {transfer.receiver_va}):
+        failures.append("proven cross-function call transfer did not pass")
+    if transfer_satisfied(transfer, transfer_caller, transfer_receiver, set()):
+        failures.append("non-exact transfer receiver passed")
+    if transfer_satisfied(
+            transfer, transfer_caller,
+            transfer_receiver.replace("gpGame->ShowScenInfo();", ""),
+            {transfer.receiver_va}):
+        failures.append("transfer with erased receiver helper passed")
+    if transfer_satisfied(
+            transfer,
+            transfer_caller.replace(
+                "gpWindowManager->dialogReturn = msg->codeY;", ""),
+            transfer_receiver, {transfer.receiver_va}):
+        failures.append("transfer with erased caller forwarding passed")
+    transfer_groups = (CallGroup(187, ("game::ShowScenInfo",)),
+                       CallGroup(211, ("heroWindow::findWidget",)))
+    filtered_groups = groups_without_transfers(
+        transfer_groups, lambda callee: callee == "game::ShowScenInfo")
+    if filtered_groups != (CallGroup(
+            211, ("heroWindow::findWidget",)),):
+        failures.append("proved transfer did not leave other call groups intact")
+    if groups_without_transfers(transfer_groups, lambda _callee: False) \
+            != transfer_groups:
+        failures.append("unproved transfer disappeared from call groups")
+    adventure_options_key = ("adventureoptionswindow.obj", 0x5204)
+    adventure_options_probe = """\
+unsigned char closeDialog = false;
+PollSound();
+const char* a = gAdventureOptionsHelp[0].text;
+const char* b = gAdventureOptionsHelp[1].text;
+if (msg->id == MESSAGE_WIDGET) {
+    closeDialog = true;
+} else if (msg->id == MESSAGE_MOUSE_MOVE) {
+    int hoverID = findWidget(msg->mouseX, msg->mouseY);
+    if (hoverID) {
+        DrawWindow(1, 2, 3);
+    }
+}
+if (closeDialog) {
+    msg->id = MESSAGE_WIDGET;
+    gpWindowManager->dialogReturn = msg->codeY;
+    msg->codeY = widget::WIDGET_END_DIALOG;
+    msg->codeX = widget::WIDGET_END_DIALOG;
+    return MESSAGE_DISPATCH_FORWARD;
+}
+return MESSAGE_DISPATCH_CONSUME;
+"""
+    if contract_violations(adventure_options_probe, adventure_options_key):
+        failures.append("aligned adventure-options state contract did not pass")
+    split_hover = adventure_options_probe.replace(
+        "int hoverID = findWidget(msg->mouseX, msg->mouseY);",
+        "int mouseY = msg->mouseY, mouseX = msg->mouseX;\n"
+        "    int hoverID = findWidget(mouseX, mouseY);")
+    if not any("direct findWidget arguments" in rule.description for rule in
+               contract_violations(split_hover, adventure_options_key)):
+        failures.append("split adventure-options coordinate locals passed")
+    removed_close_state = adventure_options_probe.replace(
+        "unsigned char closeDialog = false;\n", "").replace(
+            "    closeDialog = true;\n", "").replace(
+                "if (closeDialog) {", "if (msg->id == MESSAGE_WIDGET) {")
+    if not any("explicit close state" in rule.description for rule in
+               contract_violations(removed_close_state,
+                                   adventure_options_key)):
+        failures.append("adventure-options erased close state passed")
+    early_mouse_return = adventure_options_probe.replace(
+        "        DrawWindow(1, 2, 3);",
+        "        DrawWindow(1, 2, 3);\n"
+        "        return MESSAGE_DISPATCH_CONSUME;")
+    if not any("one shared consume return" in rule.description for rule in
+               contract_violations(early_mouse_return,
+                                   adventure_options_key)):
+        failures.append("adventure-options early mouse return passed")
+    wrong_help_table = adventure_options_probe.replace(
+        "gAdventureOptionsHelp", "gAdventureWindowHelp")
+    if not any("distinct attested options-help" in rule.description for rule in
+               contract_violations(wrong_help_table,
+                                   adventure_options_key)):
+        failures.append("adventure-options wrong help table passed")
+    window_header_probe = """\
+int findWidget(int mx, int my) const;
+widget* findWidgetPtr(int mx, int my) const;
+"""
+    if window_header_violations(window_header_probe):
+        failures.append("const findWidget header pair did not pass")
+    nonconst_window = window_header_probe.replace(" const;", ";")
+    if len(window_header_violations(nonconst_window)) != 2:
+        failures.append("non-const findWidget header pair passed")
     groups = (CallGroup(10, ("A", "B")), CallGroup(11, ("C",)))
     if misgrouped_from_body("int x = A() + B(); C();", groups):
         failures.append("aligned statement helper groups did not pass")
@@ -1867,6 +2096,16 @@ def _current_functions() -> dict[int, tuple[str, str]]:
     return {rvas[key]: key for key in status.fn_fuzzy(report) if key in rvas}
 
 
+def _current_exact_vas() -> set[int]:
+    if not status.REPORT.is_file():
+        return set()
+    report = json.loads(status.REPORT.read_text())
+    scores = status.fn_fuzzy(report)
+    rvas = status.function_rvas()
+    return {common.IMAGE_BASE + rvas[key] for key, score in scores.items()
+            if key in rvas and score >= 100.0}
+
+
 def _line_starts(text: str) -> list[int]:
     starts = [0]
     starts.extend(match.end() for match in re.finditer("\n", text))
@@ -1921,6 +2160,7 @@ def scan() -> tuple[
                   ContractViolation | FileContractViolation]]:
     """Return ``(DC source definitions audited, source-shape defects)``."""
     current = _current_functions()
+    exact_vas = _current_exact_vas()
     calls = _xref_calls()
     corpus = dreamcast.Corpus()
     checked = 0
@@ -1957,7 +2197,10 @@ def scan() -> tuple[
                              if _helper_token(ref.name) is not None)
         if ordinary_calls < 2:
             return None
-        return misgrouped_from_body(body, decoded(key, refs).groups)
+        groups = groups_without_transfers(
+            decoded(key, refs).groups,
+            lambda callee: transferred(key, callee, body))
+        return misgrouped_from_body(body, groups)
 
     def add_contract_defects(va: int | None, key: tuple[str, int],
                              source: str, line: int, caller: str,
@@ -1965,6 +2208,22 @@ def scan() -> tuple[
         for rule in contract_violations(body, key):
             missing.append(ContractViolation(
                 va, key[0], key[1], source, line, caller, rule))
+
+    def transferred(key: tuple[str, int], callee: str,
+                    caller_body: str) -> bool:
+        transfer = PROVEN_CALL_TRANSFERS.get((key[0], key[1], callee))
+        if transfer is None:
+            return False
+        path = common.HOMM3_DIR / transfer.receiver_path
+        text = path.read_text(errors="replace")
+        definitions = _source.find_definitions(text, transfer.receiver_name)
+        if len(definitions) != 1:
+            return False
+        definition = definitions[0]
+        receiver_body = text[
+            definition.body_open + 1:definition.body_close]
+        return transfer_satisfied(
+            transfer, caller_body, receiver_body, exact_vas)
 
     seen_keys: set[tuple[str, int]] = set()
     for claim in dreamcast._source_claims():
@@ -1989,6 +2248,8 @@ def scan() -> tuple[
         body_missing = False
         for callee, helper in preliminary:
             if callee not in names:
+                continue
+            if transferred(key, callee, body):
                 continue
             body_missing = True
             missing.append(MissingCall(
@@ -2105,6 +2366,14 @@ def scan() -> tuple[
     missing.extend(FileContractViolation("include/armygrp_split.h", line,
                                          description)
                    for line, description in split_defects)
+
+    window_header = common.HOMM3_DIR / "include/window.h"
+    window_text = window_header.read_text(errors="replace")
+    window_defects = window_header_violations(window_text)
+    checked += 1
+    missing.extend(FileContractViolation("include/window.h", line,
+                                         description)
+                   for line, description in window_defects)
 
     # Header inlines are source bodies, not TU-local compiler knobs. Index
     # them by original CodeView location: one body may be instantiated in

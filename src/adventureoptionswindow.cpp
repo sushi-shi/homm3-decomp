@@ -15,9 +15,10 @@
 #include "widget.h"
 #include "winmgr.h"
 
-// DC public gAdventureWindowHelp; retail consumers prove seven THelpText
+// DC public gAdventureOptionsHelp; retail consumers prove seven THelpText
 // rows at 0x6a6530 (the sixth row is unused by this dialog's ID mapping).
-DATA(0x006a6530) extern THelpText gAdventureWindowHelp[7];
+// Do not conflate it with Dreamcast's separate gAdventureWindowHelp table.
+DATA(0x006a6530) extern THelpText gAdventureOptionsHelp[7];
 
 // File-static hover latch: the retail initializer at 0x65f46c is -1 and the
 // handler is its only image-wide reader/writer.
@@ -173,6 +174,20 @@ int TAdventureOptionsWindow::convertID2HelpID(int id) const
 #endif
 
 // E:\gamedcs\adventureoptionswindow.cpp:143
+// EXACT 2026-08-28 (99.9367 -> 99.8734 -> 100.0). The old near-match erased
+// Dreamcast's explicit exit-state carrier and duplicated its shared tail;
+// restoring closeDialog also selects retail's EAX/ECX argument staging for
+// the direct line-211 findWidget call. The attested const findWidget pair and
+// distinct gAdventureOptionsHelp identity are restored as well.
+//
+// Complete moves the campaign-side ShowScenInfo work from this handler into
+// advManager::DoAdventureOptions: retail forwards the selected code through
+// dialogReturn here, and the byte-exact outer switch handles VIEW_SCENARIO_ID
+// unconditionally. Dreamcast splits the same operation between this handler
+// (campaign) and the outer function (non-campaign). This is a paired retail
+// contradiction of the older helper location, not a score-based skew claim.
+// Retail also selects the rollover field for right-click help where Dreamcast
+// loads the other THelpText field; both are direct byte-level Complete changes.
 VA(0x00405730, 0x1FC)  // derived vtable slot 9, dc 0x5204
 int TAdventureOptionsWindow::WindowHandler(message* msg)
 {
@@ -180,6 +195,7 @@ int TAdventureOptionsWindow::WindowHandler(message* msg)
     if (result)
         return result;
 
+    unsigned char closeDialog = false;
     PollSound();
 
     if (msg->qualifier & MESSAGE_MODIFIER_RIGHT) {
@@ -189,42 +205,23 @@ int TAdventureOptionsWindow::WindowHandler(message* msg)
                 int helpID = convertID2HelpID(msg->codeY);
                 if (helpID == -1)
                     goto consume;
-                NormalDialog(gAdventureWindowHelp[helpID].rclick,
+                NormalDialog(gAdventureOptionsHelp[helpID].text,
                     4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             }
         }
-consume:
-        return MESSAGE_DISPATCH_CONSUME;
+        goto consume;
     }
 
     if (msg->id == MESSAGE_WIDGET) {
         if (msg->codeX == widget::WIDGET_DESELECT
             && (msg->codeY == ADVENTURE_OPTION_ACCEPT_ID
                 || (msg->codeY > 0 && msg->codeY <= 5))) {
-            msg->id = MESSAGE_WIDGET;
-            gpWindowManager->dialogReturn = msg->codeY;
-            msg->codeY = widget::WIDGET_END_DIALOG;
-            msg->codeX = widget::WIDGET_END_DIALOG;
-            return MESSAGE_DISPATCH_FORWARD;
+            closeDialog = true;
+        } else {
+            goto consume;
         }
-        goto consume;
-    }
-
-    if (msg->id == MESSAGE_MOUSE_MOVE) {
-        // Residual (99.94%): retail loads mouseX into ECX while this VC6 SP3
-        // build coalesces the now-dead msg/ESI home into mouseX; every branch,
-        // epilogue, and remaining instruction agrees. Tried and rejected:
-        // direct member arguments, split declarations, moving hoverID's
-        // declaration ahead of the coordinates, and an unused symbol-order
-        // perturbation. 2026-08-14 two-axis /Ob2 re-test: HELD - pad
-        // statements ahead of the CAdvPopup call x xx_nop sites at the tail
-        // are 99.9367 in all fifteen cells of M in {0,2,4,8,16} x k in
-        // {0,1,2}. (The other flagged row, `[8*eax+4]` against retail's
-        // `[8*eax]` at the right-click NormalDialog, is the unscored
-        // relocation-addend split - our reloc names gAdventureWindowHelp with
-        // addend 4, retail's names the field directly with addend 0.)
-        int mouseY = msg->mouseY, mouseX = msg->mouseX;
-        int hoverID = findWidget(mouseX, mouseY);
+    } else if (msg->id == MESSAGE_MOUSE_MOVE) {
+        int hoverID = findWidget(msg->mouseX, msg->mouseY);
         if (hoverID != lastIMHoverID) {
             lastIMHoverID = hoverID;
             const char* rollover = "";
@@ -233,16 +230,24 @@ consume:
                 if (hoverID >= 0 && hoverID <= ADVENTURE_OPTION_ACCEPT_ID) {
                     int helpID = convertID2HelpID(hoverID);
                     if (helpID != -1)
-                        rollover = gAdventureWindowHelp[helpID].text;
+                        rollover = gAdventureOptionsHelp[helpID].text;
                 }
             } else {
                 gpMouseManager->SetPointer(0, mouseManager::DEFAULT_SET);
             }
             RolloverWidget->SetText(rollover);
             DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-            return MESSAGE_DISPATCH_CONSUME;
         }
     }
 
-    goto consume;
+    if (closeDialog) {
+        msg->id = MESSAGE_WIDGET;
+        gpWindowManager->dialogReturn = msg->codeY;
+        msg->codeY = widget::WIDGET_END_DIALOG;
+        msg->codeX = widget::WIDGET_END_DIALOG;
+        return MESSAGE_DISPATCH_FORWARD;
+    }
+
+consume:
+    return MESSAGE_DISPATCH_CONSUME;
 }
