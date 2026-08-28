@@ -111,6 +111,7 @@ type_point AI_attempt_puzzle_guess(long player);
 #include "recruit.h"
 #include "quicktownwindow.h"
 #include "imm_mouse.h"
+#include "timer.h"
 #if defined(_MSC_VER) && !defined(__clang__)
 #undef _MT
 #endif
@@ -4505,35 +4506,32 @@ int compare_heroes(const void* arg1, const void* arg2)
 // two reserved general-text names, and write the game through a zlib
 // stream.
 //
-// Dreamcast's local roster names `saveGameTimer` and `compression`, and its
-// xref graph shows CTimer::start/stop. Complete inlines that instrumentation
-// into two otherwise-dead timeGetTime samples. The volatile two-dword spelling
-// is a PC codegen claim: plain storage removes the stores, while importing the
-// wider 16-byte Dreamcast timer semantics adds state work retail x86 lacks.
-// The independently named `compression` local is decisive codegen evidence;
-// spelling the mode as a ternary leaves the function at 98.7787%, while the
-// named default-plus-override form reaches 99.9057%.
+// Dreamcast's local roster names `saveGameTimer` and `compression`, proves the
+// timer's 16-byte layout, and groups CTimer::start/stop at lines 3672/3777.
+// Restoring that full object closes 99.9057% to exact: Complete /O2 propagates
+// enabled/running state, discards the unobserved elapsed state, and retains
+// only the two timeGetTime stores while the 16-byte lifetime supplies retail's
+// missing eight frame bytes. The earlier 96.33% "full timer" experiment was
+// therefore a spelling/visibility local minimum, not a source contradiction.
+// The independently named `compression` local is also decisive: spelling the
+// mode as a ternary leaves the function at 98.7787%.
 //
 // The normal path is followed by a typed TOpenFailure catch at 0x4bf107
 // and its shared zero-return continuation at 0x4bf181. Retail's HandlerType
 // record points at the catch, whose EBP-relative filename and locals prove it
 // belongs to this frame rather than being an independent function.
 //
-// Residual (99.9057%): all 27 CFG blocks and all 244 instruction sequences are
-// aligned. Retail reserves a 0x448-byte frame and keeps the two timer samples
-// at -0x24/-0x20; VC6 rebuilds a 0x440-byte frame, overlaps them with the later
-// TGzFile lifetime, and shifts every larger local by eight bytes. why-reg finds
-// no applicable source mutation. A full Dreamcast CTimer view fell to 96.33%,
-// and a synthetic two-field timer object to 99.43%; both were removed.
+// Exact: all 27 CFG blocks and all 244 instruction sequences align, including
+// the 0x448-byte frame and timer fields at -0x24/-0x20.
 VA(0x004beea0, 0x2F6)  // arity + save paths + typed catch extent, dc 0xa99d0
 unsigned char game::SaveGame(const char* filename, unsigned char bDetermineSuffix, unsigned char bCampaignWinMode, unsigned char compressIt, unsigned char xferFile)
 {
     char nameNoExtension[351] = {0};
     char saveName[351] = {0};
     char fullPath[351];
-    volatile unsigned long timerSamples[2];
+    CTimer saveGameTimer(1);
 
-    timerSamples[0] = timeGetTime();
+    saveGameTimer.start();
     if (!bCampaignWinMode)
         gpAdvManager->DemobilizeCurrHero(0, 1);
 
@@ -4586,7 +4584,7 @@ unsigned char game::SaveGame(const char* filename, unsigned char bDetermineSuffi
             TGzFile outfile(fullPath, compression);
             Save(&outfile);
         }
-        timerSamples[1] = timeGetTime();
+        saveGameTimer.stop();
         return 1;
     } catch (TGzFile::TOpenFailure) {
         NormalDialog(
