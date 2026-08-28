@@ -96,13 +96,16 @@ public:
     void set_hotkey(int code)
     {
 #if defined(HOMM3_HERO_OBJ_VIEW) || defined(HOMM3_ADVENTUREMAPWINDOW_OBJ_VIEW) \
-    || defined(HOMM3_TRADPOST_OBJ_VIEW)
+    || defined(HOMM3_TRADPOST_OBJ_VIEW) \
+    || defined(HOMM3_COMBATRESULTSWINDOW_OBJ_VIEW)
         // hero.obj owns retail's retained out-of-line COMDAT copy. Its
         // 431-byte body is Dinkumware vector<int>::push_back expanded
         // directly; the insert spelling below is a caller-allocation lever
         // needed only in the TUs where this wrapper itself is inlined.
         // adventuremapwindow.obj's SetSleepImage independently proves the
         // same push_back spelling after it clears the sleep button's keys.
+        // combatresultswindow.obj uses the same arm while retaining the two
+        // Dreamcast-proven set_hotkey calls at source lines 322 and 323.
         // tradpost.obj joins this arm from the other direction: its five
         // marketplace ctors inline set_hotkey AND its interior
         // vector<int>::insert, and only push_back's extra begin()/end()
