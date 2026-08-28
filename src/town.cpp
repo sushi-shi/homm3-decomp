@@ -354,6 +354,9 @@ int town::HasGarrison()
 // all 37 blocks and all 23 branch sequences now agree. The sole instruction
 // difference is at the ordinary Mage Guild loop latch: retail reloads `level`
 // before `this`, while VC6 schedules those two independent loads in reverse.
+// Dreamcast lines 992/994/999 separately guard the hero, spellbook and
+// HasBuilding call. Restoring those nested statement groups is byte-flat and
+// retires the old helper-flattening debt; do not recombine them into one `&&`.
 // A 656-shape tree search plus clean loop, lifetime, condition, and CodeView-
 // backed const-member variants either emit this same order or score worse.
 #endif  // @carcass
@@ -379,25 +382,31 @@ void town::GiveSpells(hero* forceHero)
             currentHero = gpGame->GetHero(heroId);
         }
 
-        if (currentHero && currentHero->IsWieldingArtifact(ARTIFACT_SPELLBOOK)
-            && (active & bitNumber[MAGE_GUILD_ID])) {
-            if (type == TOWN_CONFLUX
-                && (active & bitNumber[HOLY_GRAIL_ID])) {
-                for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
-                    if (!spells.test(spell)
-                        && akSpellTraits[spell].level
-                            < currentHero->skillLevel[eSecSkillWisdom] + 3
-                        && spell != SPELL_TITANS_LIGHTNING_BOLT)
-                        currentHero->AddSpell(spell);
-                }
-            } else {
-                for (int level = 0;
-                     level < currentHero->skillLevel[eSecSkillWisdom] + 2
-                         && level <= field_14;
-                     ++level) {
-                    for (int slot = 0;
-                         slot < mageGuildSpellCounts[level]; ++slot)
-                        currentHero->AddSpell(mageGuildSpells[level][slot]);
+        if (currentHero) {
+            if (currentHero->IsWieldingArtifact(ARTIFACT_SPELLBOOK)) {
+                if (HasBuilding(MAGE_GUILD_ID, 1)) {
+                    if (type == TOWN_CONFLUX
+                        && (active & bitNumber[HOLY_GRAIL_ID])) {
+                        for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+                            if (!spells.test(spell)
+                                && akSpellTraits[spell].level
+                                    < currentHero->skillLevel[
+                                        eSecSkillWisdom] + 3
+                                && spell != SPELL_TITANS_LIGHTNING_BOLT)
+                                currentHero->AddSpell(spell);
+                        }
+                    } else {
+                        for (int level = 0;
+                             level < currentHero->skillLevel[
+                                         eSecSkillWisdom] + 2
+                                 && level <= field_14;
+                             ++level) {
+                            for (int slot = 0;
+                                 slot < mageGuildSpellCounts[level]; ++slot)
+                                currentHero->AddSpell(
+                                    mageGuildSpells[level][slot]);
+                        }
+                    }
                 }
             }
         }
