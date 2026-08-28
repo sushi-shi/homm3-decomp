@@ -113,6 +113,25 @@ leading hole plus every other source-line hole in the selected function;
 without a selector it ranks the whole Dreamcast corpus by leading-hole size.
 `homm3 dreamcast show` includes the leading measurement in the dossier.
 
+**Corpus snapshot, 2026-08-28.** The current line-table scan contains **2,365
+Dreamcast functions with a reliable positive leading gap**, spanning 4,948
+missing source-line numbers. Of those, 1,073 have the strongest simple shape:
+exactly one missing line between the procedure-frame row and the first body
+row. Restricting the scan to functions joined to retail gives **799 Dreamcast
+functions mapping to 800 unique retail VAs** (801 mapping edges), spanning
+1,845 missing entry-line numbers. The exact-one-line subset contains **297
+Dreamcast functions mapping to 298 unique retail VAs**. Those 298 retail
+functions are the first assertion-clue worklist:
+
+```sh
+homm3 dreamcast gaps --exact 1 --retail-only --limit 0
+```
+
+This records 298 candidates, not 298 assertions. The count is deliberately
+defined in terms of the line-table shape so it remains reproducible as the
+retail bridge grows; rerun the command rather than copying a hand-maintained
+function list.
+
 This is a candidate generator, not a source-text decoder. A missing row may be
 a blank, comment, declaration, brace, preprocessor-only line, or a statement
 the optimizer folded away. A release `assert` macro is therefore one important
