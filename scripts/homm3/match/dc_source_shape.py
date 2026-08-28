@@ -7,10 +7,10 @@ named helper.  For every function carrying a ``dc 0x...`` source claim, and
 every active unclaimed definition retaining its ``E:\\gamedcs`` provenance
 line, this gate checks that each source-visible game helper from
 ``evidence/dc-xref-graph.tsv`` is still named in the reconstructed C++ body.
-The only exception is a proof-carrying Complete transfer: both the old caller's
-forwarding shape and an exact retail receiver must retain the operation.  This
-is stricter than a waiver and records an independently proved cross-function
-source change.
+The only exceptions are proof-carrying Complete changes: a transfer requires
+both the old caller's forwarding shape and an exact retail receiver, while a
+bounded call-spelling substitution requires its caller itself to remain exact.
+These are stricter than waivers and record independently proved source changes.
 Provenance-marked header definitions are audited by original source file and
 line rather than by emitting object, because `/Ob2` may inline every retail
 copy and because one header body can be shared by several TUs.
@@ -107,6 +107,15 @@ class CallTransfer:
 
 
 @dataclass(frozen=True)
+class CallSpelling:
+    description: str
+    caller_va: int
+    callee: str
+    retail_pattern: str
+    canonical_name: str
+
+
+@dataclass(frozen=True)
 class ContractViolation:
     va: int | None
     dc_module: str
@@ -185,6 +194,19 @@ PROVEN_CALL_TRANSFERS: dict[tuple[str, int, str], CallTransfer] = {
             r"current_town\s*\)\s*;",
             r"\bbuy_artifacts\s*\(\s*current_hero\s*,\s*gpGame\s*->\s*"
             r"field_1f664\s*,\s*market_count\s*\)\s*;"),
+}
+
+
+# Complete sometimes replaces a Dreamcast project helper with an equivalent
+# runtime spelling. Admit only the individually proved exact caller, and
+# canonicalize the token solely for call-presence/group auditing.
+PROVEN_CALL_SPELLINGS: dict[tuple[str, int], tuple[CallSpelling, ...]] = {
+    ("game.obj", 0xA99D0): (
+        CallSpelling(
+            "Complete SaveGame replaces the Dreamcast custom strnicmp with "
+            "the CRT _strnicmp import at both reserved-name checks",
+            0x004BEEA0, "strnicmp", r"\b_strnicmp(?=\s*\()", "strnicmp"),
+    ),
 }
 
 
@@ -1083,6 +1105,23 @@ def transfer_satisfied(transfer: CallTransfer, caller_body: str,
         and re.search(transfer.receiver_pattern, receiver, re.DOTALL) is not None
 
 
+def apply_proven_call_spellings(
+        key: tuple[str, int], body: str, va: int | None,
+        exact_vas: set[int]) -> str:
+    """Canonicalize bounded Complete call spellings for shape comparison."""
+    if va is None or va not in exact_vas:
+        return body
+    active = _source.mask(body)
+    canonical = body
+    for spelling in PROVEN_CALL_SPELLINGS.get(key, ()):
+        if va != spelling.caller_va \
+                or re.search(spelling.retail_pattern, active) is None:
+            continue
+        canonical = re.sub(
+            spelling.retail_pattern, spelling.canonical_name, canonical)
+    return canonical
+
+
 def groups_without_transfers(
         groups: tuple[CallGroup, ...], is_transferred) \
         -> tuple[CallGroup, ...]:
@@ -1471,6 +1510,17 @@ case TAdventureOptionsWindow::VIEW_SCENARIO_ID:
     if groups_without_transfers(transfer_groups, lambda _callee: False) \
             != transfer_groups:
         failures.append("unproved transfer disappeared from call groups")
+    spelling_key = ("game.obj", 0xA99D0)
+    spelling_va = PROVEN_CALL_SPELLINGS[spelling_key][0].caller_va
+    spelling_body = "return _strnicmp(left, right, 8);"
+    canonical = apply_proven_call_spellings(
+        spelling_key, spelling_body, spelling_va, {spelling_va})
+    if missing_from_body(canonical, ["strnicmp"]):
+        failures.append("exact Complete call spelling did not canonicalize")
+    unproved = apply_proven_call_spellings(
+        spelling_key, spelling_body, spelling_va, set())
+    if not missing_from_body(unproved, ["strnicmp"]):
+        failures.append("non-exact call spelling bypassed source-shape gate")
     artifact_transfer = PROVEN_CALL_TRANSFERS[
         ("philai.obj", 0x10E3F8, "buy_artifacts")]
     artifact_caller = """\
@@ -2602,7 +2652,10 @@ def scan() -> tuple[
         checked += 1
         audited.add(_dc_audit_scope(key))
         body = text[span[0] + 1:span[1]]
-        preliminary = missing_from_body(body, [ref.name for ref in refs])
+        shape_body = apply_proven_call_spellings(
+            key, body, claim.va, exact_vas)
+        preliminary = missing_from_body(
+            shape_body, [ref.name for ref in refs])
         names = attested(key, refs) if preliminary else set()
         body_missing = False
         for callee, helper in preliminary:
@@ -2614,7 +2667,8 @@ def scan() -> tuple[
             missing.append(MissingCall(
                 claim.va, claim.module, claim.dc_offset, claim.path,
                 claim.line, identity[1], callee, helper))
-        if not body_missing and (group := group_defect(key, refs, body)):
+        if not body_missing and (group := group_defect(
+                key, refs, shape_body)):
             missing.append(MisgroupedCalls(
                 claim.va, claim.module, claim.dc_offset, claim.path,
                 claim.line, identity[1], group))
