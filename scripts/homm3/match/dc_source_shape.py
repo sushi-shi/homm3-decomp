@@ -215,6 +215,53 @@ PROVEN_CALL_SPELLINGS: dict[tuple[str, int], tuple[CallSpelling, ...]] = {
 # graph: inlined accessors/operators, a source order hidden by scheduling, and
 # nesting within a single attested statement group.
 SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
+    ("combatresultswindow.obj", 0x68364): (
+        SourceRule(
+            "TCombatResultsWindow keeps Dreamcast's function-scope amount, "
+            "type, loss arrays, selected hero, totals, text and firstX "
+            "locals in CodeView declaration order",
+            r"\A\s*gpCombatResultsWindow\s*=\s*this\s*;\s*"
+            r"long\s+amount\s*;\s*TCreatureType\s+type\s*;\s*"
+            r"int\s+iDeadArmyTypes\s*\[\s*2\s*\]\s*\[\s*20\s*\]\s*;\s*"
+            r"int\s+iDeadArmyNumTroops\s*\[\s*2\s*\]\s*\[\s*20\s*\]"
+            r"\s*;\s*const\s+hero\s*\*\s*my_hero\s*=.*?;\s*"
+            r"int\s+iTtlDeadArmies\s*\[\s*2\s*\]\s*;\s*"
+            r"char\s+cText\s*\[\s*100\s*\]\s*;\s*"
+            r"int\s+firstX\s*;"),
+        SourceRule(
+            "TCombatResultsWindow keeps all eighteen Dreamcast "
+            "TTextResource::operator[] source calls",
+            r"\(\s*\*\s*gpGeneralText\s*\)\s*\[", 18, 18),
+        SourceRule(
+            "TCombatResultsWindow may not de-inline Dreamcast "
+            "TTextResource::operator[] calls into direct GetText calls",
+            r"gpGeneralText\s*->\s*GetText\s*\(", 0, 0),
+        SourceRule(
+            "TCombatResultsWindow keeps Dreamcast's cTemp[150] local",
+            r"\bchar\s+cTemp\s*\[\s*150\s*\]\s*;"),
+        SourceRule(
+            "TCombatResultsWindow keeps both scoped Dreamcast numMons "
+            "locals",
+            r"\bint\s+numMons\s*=\s*0\s*;", 2, 2),
+        SourceRule(
+            "TCombatResultsWindow keeps Dreamcast's iMaxToShow local at the "
+            "min statement",
+            r"\bint\s+iMaxToShow\s*=\s*min\s*\("),
+        SourceRule(
+            "TCombatResultsWindow keeps Dreamcast's inner x local",
+            r"\bint\s+x\s*=\s*firstX\s*\+\s*42\s*\*"),
+        SourceRule(
+            "TCombatResultsWindow keeps all twenty-two Dreamcast "
+            "Widgets.push_back source calls",
+            r"\bWidgets\s*\.\s*push_back\s*\(", 22, 22),
+        SourceRule(
+            "TCombatResultsWindow keeps both Dreamcast button::set_hotkey "
+            "source calls",
+            r"\bset_hotkey\s*\(", 2, 2),
+        SourceRule(
+            "TCombatResultsWindow keeps Dreamcast's source-visible min call",
+            r"(?<![_\w])min\s*\(", 1, 1),
+    ),
     ("philai.obj", 0x10D684): (
         SourceRule(
             "upgrade_creatures keeps Dreamcast's function-scope difference, "
@@ -1553,6 +1600,58 @@ buy_artifacts(current_hero, gpGame->field_1f664, market_count);
                 "buy_special_building(current_hero, current_town);", ""),
             artifact_receiver, {artifact_transfer.receiver_va}):
         failures.append("erased AI_enter_town forwarding call passed")
+    combat_results_key = ("combatresultswindow.obj", 0x68364)
+    combat_results_probe = """\
+gpCombatResultsWindow = this;
+long amount;
+TCreatureType type;
+int iDeadArmyTypes[2][20];
+int iDeadArmyNumTroops[2][20];
+const hero* my_hero = attacker;
+int iTtlDeadArmies[2];
+char cText[100];
+int firstX;
+char cTemp[150];
+if (attacker) { int numMons = 0; }
+if (defender) { int numMons = 0; }
+""" + "\n".join(
+        "const char* text%d = (*gpGeneralText)[%d];" % (index, index)
+        for index in range(18)) + "\n" + "\n".join(
+        "Widgets.push_back(widget%d);" % index for index in range(22)) + """
+accept->set_hotkey(28);
+accept->set_hotkey(1);
+int iMaxToShow = min(iTtlDeadArmies[0], 7);
+int x = firstX + 42 * iMaxToShow;
+"""
+    if contract_violations(combat_results_probe, combat_results_key):
+        failures.append("aligned combat-results source shape did not pass")
+    flattened_text = combat_results_probe.replace(
+        "(*gpGeneralText)[0]", "gpGeneralText->GetText(0)", 1)
+    flattened_rules = contract_violations(
+        flattened_text, combat_results_key)
+    if not any("eighteen" in rule.description for rule in flattened_rules):
+        failures.append("de-inlined combat-results operator[] count passed")
+    if not any("direct GetText" in rule.description
+               for rule in flattened_rules):
+        failures.append("combat-results direct GetText substitution passed")
+    collapsed_amount = combat_results_probe.replace("long amount;\n", "")
+    if not any("function-scope amount" in rule.description for rule in
+               contract_violations(collapsed_amount, combat_results_key)):
+        failures.append("collapsed combat-results amount local passed")
+    short_temp = combat_results_probe.replace(
+        "char cTemp[150];", "char cTemp[100];")
+    if not any("cTemp[150]" in rule.description for rule in
+               contract_violations(short_temp, combat_results_key)):
+        failures.append("short combat-results cTemp passed")
+    renamed_combat_locals = combat_results_probe.replace(
+        "numMons", "liveStacks").replace(
+            "iMaxToShow", "shown").replace("int x =", "int rowX =")
+    renamed_rules = contract_violations(
+        renamed_combat_locals, combat_results_key)
+    for identity in ("numMons", "iMaxToShow", "inner x"):
+        if not any(identity in rule.description for rule in renamed_rules):
+            failures.append("renamed combat-results %s local passed" %
+                            identity)
     upgrade_key = ("philai.obj", 0x10D684)
     upgrade_probe = """\
 int difference[NUM_RESOURCES];
