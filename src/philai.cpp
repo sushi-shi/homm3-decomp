@@ -706,7 +706,13 @@ void consider_garrisoning(hero* current_hero, town* current_town)
 // seven-resource difference/debit loops directly.
 static void upgrade_creatures(hero* current_hero, const town* current_town)
 {
-    for (long dwelling = 0; dwelling < TOWN_DWELLING_COUNT; ++dwelling) {
+    int difference[NUM_RESOURCES];
+    long amount;
+    long dwelling;
+    const int* upgrade_cost;
+    const int* base_cost;
+
+    for (dwelling = 0; dwelling < TOWN_DWELLING_COUNT; ++dwelling) {
         if (!current_town->HasBuilding(
                 building_id_from_int(DWELLING_0_UPG_ID + dwelling), 1))
             continue;
@@ -721,15 +727,14 @@ static void upgrade_creatures(hero* current_hero, const town* current_town)
                         + dwelling])
                 continue;
 
-            const int* base_cost = gCreatureRecords
+            base_cost = gCreatureRecords
                 + current_hero->army.armyTypes[slot]
                     * CREATURE_RECORD_DWORDS
                 + CREATURE_RECORD_COST_DWORD;
-            const int* upgrade_cost = gCreatureRecords
+            upgrade_cost = gCreatureRecords
                 + upgrade * CREATURE_RECORD_DWORDS
                 + CREATURE_RECORD_COST_DWORD;
-            long amount = current_hero->army.numTroops[slot];
-            int difference[NUM_RESOURCES];
+            amount = current_hero->army.numTroops[slot];
 
             int resource;
             for (resource = 0; resource < NUM_RESOURCES; ++resource) {

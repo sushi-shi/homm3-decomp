@@ -167,6 +167,24 @@ PROVEN_CALL_TRANSFERS: dict[tuple[str, int, str], CallTransfer] = {
 # graph: inlined accessors/operators, a source order hidden by scheduling, and
 # nesting within a single attested statement group.
 SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
+    ("philai.obj", 0x10D684): (
+        SourceRule(
+            "upgrade_creatures keeps Dreamcast's function-scope difference, "
+            "amount, dwelling, upgrade_cost and base_cost locals in CodeView "
+            "declaration order",
+            r"\A\s*int\s+difference\s*\[\s*NUM_RESOURCES\s*\]\s*;\s*"
+            r"long\s+amount\s*;\s*long\s+dwelling\s*;\s*const\s+int\s*"
+            r"\*\s*upgrade_cost\s*;\s*const\s+int\s*\*\s*base_cost\s*;"
+            r"\s*for\s*\(\s*dwelling\s*="),
+        SourceRule(
+            "upgrade_creatures keeps Dreamcast's base-cost, upgrade-cost, "
+            "then amount statement order while retaining Complete's "
+            "retail-proven widened cost rows",
+            r"\bbase_cost\s*=\s*gCreatureRecords\b[^;]*;\s*"
+            r"upgrade_cost\s*=\s*gCreatureRecords\b[^;]*;\s*"
+            r"amount\s*=\s*current_hero\s*->\s*army\s*\.\s*numTroops\s*"
+            r"\[\s*slot\s*\]\s*;"),
+    ),
     ("game.obj", 0xA3E5C): (
         SourceRule(
             "LoadMinePool retains Dreamcast's signed int x local; an exact "
@@ -1394,6 +1412,38 @@ buy_artifacts(current_hero, gpGame->field_1f664, market_count);
                 "buy_special_building(current_hero, current_town);", ""),
             artifact_receiver, {artifact_transfer.receiver_va}):
         failures.append("erased AI_enter_town forwarding call passed")
+    upgrade_key = ("philai.obj", 0x10D684)
+    upgrade_probe = """\
+int difference[NUM_RESOURCES];
+long amount;
+long dwelling;
+const int* upgrade_cost;
+const int* base_cost;
+for (dwelling = 0; dwelling < TOWN_DWELLING_COUNT; ++dwelling) {
+    base_cost = gCreatureRecords + base_type * CREATURE_RECORD_DWORDS;
+    upgrade_cost = gCreatureRecords + upgrade * CREATURE_RECORD_DWORDS;
+    amount = current_hero->army.numTroops[slot];
+}
+"""
+    if contract_violations(upgrade_probe, upgrade_key):
+        failures.append("aligned upgrade_creatures local contract did not pass")
+    collapsed_upgrade = upgrade_probe.replace(
+        "int difference[NUM_RESOURCES];\nlong amount;\nlong dwelling;\n"
+        "const int* upgrade_cost;\nconst int* base_cost;\n"
+        "for (dwelling = 0;", "for (long dwelling = 0;")
+    if not any("function-scope" in rule.description for rule in
+               contract_violations(collapsed_upgrade, upgrade_key)):
+        failures.append("collapsed upgrade_creatures locals passed")
+    reordered_upgrade = upgrade_probe.replace(
+        "base_cost = gCreatureRecords + base_type * "
+        "CREATURE_RECORD_DWORDS;\n    upgrade_cost = gCreatureRecords + "
+        "upgrade * CREATURE_RECORD_DWORDS;",
+        "upgrade_cost = gCreatureRecords + upgrade * "
+        "CREATURE_RECORD_DWORDS;\n    base_cost = gCreatureRecords + "
+        "base_type * CREATURE_RECORD_DWORDS;")
+    if not any("base-cost" in rule.description for rule in
+               contract_violations(reordered_upgrade, upgrade_key)):
+        failures.append("reordered upgrade_creatures costs passed")
     experience_key = ("philai.obj", 0x10FEB8)
     experience_probe = """\
 int increment = current_hero->GetExperienceIncrement();
