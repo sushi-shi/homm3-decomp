@@ -218,13 +218,14 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
     ("combatresultswindow.obj", 0x68364): (
         SourceRule(
             "TCombatResultsWindow keeps Dreamcast's function-scope amount, "
-            "type, loss arrays, selected hero, totals, text and firstX "
+            "type, loss arrays, const selected-hero pointer, totals, text "
+            "and firstX "
             "locals in CodeView declaration order",
             r"\A\s*gpCombatResultsWindow\s*=\s*this\s*;\s*"
             r"long\s+amount\s*;\s*TCreatureType\s+type\s*;\s*"
             r"int\s+iDeadArmyTypes\s*\[\s*2\s*\]\s*\[\s*20\s*\]\s*;\s*"
             r"int\s+iDeadArmyNumTroops\s*\[\s*2\s*\]\s*\[\s*20\s*\]"
-            r"\s*;\s*const\s+hero\s*\*\s*my_hero\s*=.*?;\s*"
+            r"\s*;\s*const\s+hero\s*\*\s*const\s+my_hero\s*=.*?;\s*"
             r"int\s+iTtlDeadArmies\s*\[\s*2\s*\]\s*;\s*"
             r"char\s+cText\s*\[\s*100\s*\]\s*;\s*"
             r"int\s+firstX\s*;"),
@@ -1631,7 +1632,7 @@ long amount;
 TCreatureType type;
 int iDeadArmyTypes[2][20];
 int iDeadArmyNumTroops[2][20];
-const hero* my_hero = attacker;
+const hero* const my_hero = attacker;
 int iTtlDeadArmies[2];
 char cText[100];
 int firstX;
@@ -1671,6 +1672,12 @@ if (creature != -1 && lost > 0) { int row; }
     if not any("function-scope amount" in rule.description for rule in
                contract_violations(collapsed_amount, combat_results_key)):
         failures.append("collapsed combat-results amount local passed")
+    mutable_hero_pointer = combat_results_probe.replace(
+        "const hero* const my_hero", "const hero* my_hero")
+    if not any("const selected-hero pointer" in rule.description for rule in
+               contract_violations(mutable_hero_pointer,
+                                   combat_results_key)):
+        failures.append("mutable combat-results my_hero pointer passed")
     short_temp = combat_results_probe.replace(
         "char cTemp[150];", "char cTemp[100];")
     if not any("cTemp[150]" in rule.description for rule in
