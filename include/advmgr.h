@@ -1691,6 +1691,20 @@ public:
                                   type_point point, bool human_player);
     void DoEventWanderingMonster(NewmapCell* cell, class hero* current_hero,
                                  type_point point, bool human_player);
+    void DoEventBorderGuard(type_point point, NewmapCell* cell,
+                            unsigned char human_player);
+    void DoEventBorderTent(NewmapCell* cell, unsigned char human_player);
+    void DoEventBouy(class hero* current_hero, NewmapCell* cell,
+                     unsigned char human_player);
+    void DoEventCloverField(class hero* current_hero, NewmapCell* cell,
+                            unsigned char human_player);
+    void DoEventFaerieRing(class hero* current_hero, NewmapCell* cell,
+                           unsigned char human_player);
+    void DoEventLighthouse(NewmapCell* cell, unsigned char human_player);
+    void DoEventMermaid(class hero* current_hero, NewmapCell* cell,
+                        unsigned char human_player);
+    void do_event_whirlpool(class hero* current_hero, NewmapCell* cell,
+                            unsigned char human_player);
     void GeneratorEvent(class hero* who, NewmapCell* eventCell,
                         type_point point);
     void EraseAndFizzle(NewmapCell* eventCell, type_point point,

@@ -2094,9 +2094,10 @@ public:
     // Game.h:917, GetInfoFlag's setter twin. It marks the whole of
     // playerNum's TEAM, which is why every events.obj handler that
     // visits a global-info object ends in an eight-iteration teamInfo
-    // scan rather than a single OR - the guard is on the ARGUMENT only,
-    // and the loop reads mapHeader.teamInfo directly instead of going
-    // back through GetTeam (no per-iteration `< 0` arm survives).
+    // scan rather than a single OR. The Dreamcast statement/call row names
+    // GetTeam for the source-level team lookup; retail VC6 then decides per
+    // expansion whether that tiny nested helper remains a call or folds to
+    // the signed teamInfo load.
     //
     // `flag` is spelled `int` where the Dreamcast decoration says
     // GlobalInfoFlags purely because that enum is defined in advmgr.h,
@@ -2106,7 +2107,7 @@ public:
     {
         if (playerNum < 0 || playerNum >= 8)
             return;
-        int team = mapHeader.teamInfo[playerNum];
+        int team = GetTeam(playerNum);
         for (int i = 0; i < 8; i++) {
             if (mapHeader.teamInfo[i] == team)
                 globalInfoFlags[flag] |= 1 << i;
@@ -2378,7 +2379,7 @@ public:
     void ProcessRandomObjects();                                 // 0x4c9dd0
     void record_show_hero(hero* who, signed char player, type_point point,
                           unsigned char reset);                  // 0x49cb20
-#ifdef HOMM3_EVENT_RECORD_DECLS
+#if defined(HOMM3_EVENT_RECORD_DECLS)
     // The four remaining recorders, all located by the same vtable-store
     // evidence as their claimed siblings: each expands `new type_record_X`
     // in line and the class it constructs is named by the derived vftable
@@ -2400,6 +2401,21 @@ public:
     // SetVisibility's own range guard is what lets VC6 drop the internal
     // one there while ResetVisibility keeps it.
     unsigned char GetTeamMask(int playerNum);
+#elif defined(HOMM3_EVENTS_GAME_INLINE_HELPERS)
+    // Game.h:877. DispatchEvent's obelisk arm preserves this named helper;
+    // retail /Ob2 folds both it and GetTeam into the arm.
+    unsigned char GetTeamMask(int playerNum)
+    {
+        unsigned char mask = 0;
+        if (playerNum >= 0 && playerNum < 8) {
+            int team = GetTeam(playerNum);
+            for (int i = 0; i < 8; ++i) {
+                if (mapHeader.teamInfo[i] == team)
+                    mask |= 1 << i;
+            }
+        }
+        return mask;
+    }
 #endif
     // Retail-only 0x4f32a0 / 0x4f3540, the standalone morale and luck
     // describe dialogs THeroScreenWindow::WindowHandler opens for widgets
@@ -2471,7 +2487,15 @@ public:
     // TurnOffAIMusic (dc 0xb1fc0). ProcessDeSelect's END_TURN arm calls it
     // once the "heroes can still move" confirm is past.
     void NextPlayer();
+#ifdef HOMM3_EVENTS_GAME_INLINE_HELPERS
+    // Game.h:1056/1380. These source accessors are expanded into
+    // DispatchEvent in retail; their nested vector/map helpers remain
+    // visible so the source hierarchy is not flattened again.
+    garrison* GetGarrison(int which) { return &garrisons[which]; }
+    NewmapCell* get_cell(type_point point);
+#else
     NewmapCell* get_cell(type_point point);      // 0x42ed80 (ai_player.obj)
+#endif
     // DC `game::GetHero`, dc 0x2eb0, 36 B, declared in E:\gamedcs\Game.h
     // line 972 - i.e. an INLINE MEMBER of this header, which is exactly
     // how retail behaves: no out-of-line body exists and every reader
@@ -2489,7 +2513,8 @@ public:
     // expands it to the acting player's widened currHero load; no standalone
     // retail row exists in the adventure-map header-method bracket.
     int GetCurrHeroId();
-#ifdef HOMM3_ADVENTUREMAPWINDOW_OBJ_VIEW
+#if defined(HOMM3_ADVENTUREMAPWINDOW_OBJ_VIEW) \
+    || defined(HOMM3_EVENTS_GAME_INLINE_HELPERS)
     // DC Game.h:1197. The Dreamcast keeps this header helper as a row;
     // retail expands the map's byte flag plus one at both cheat loops.
     int GetNumMapLevels() { return worldMap.GetNumLevels(); }

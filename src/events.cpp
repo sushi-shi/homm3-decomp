@@ -6,6 +6,7 @@
 #include <va.h>
 #define HOMM3_EVENTS_PRISON_DECL
 #define HOMM3_EVENTS_TURN_PAUSE_DECL
+#define HOMM3_EVENTS_GAME_INLINE_HELPERS
 // DoCombat's remote arms: the wait dialog whose payload feeds
 // ReceiveHeroTownData, and the level-update message the winner's side
 // transmits after CheckLevel.
@@ -16,6 +17,7 @@
 #include "swapmgr.h"
 #include "game.h"
 #include "advmgr.h"
+#undef HOMM3_EVENTS_GAME_INLINE_HELPERS
 #undef HOMM3_EVENTS_PRISON_DECL
 // DoCombat needs the full combatManager type (SetupCombat and the
 // result/raised-creature fields); added 2026-08-27 with the DoCombat
@@ -2244,8 +2246,7 @@ bool InitializeRandomSignText()
 // expands its 38-byte cell-stride calculation at the shipyard use site.
 inline NewmapCell* game::get_cell(type_point point)
 {
-    return &worldMap.cellData[(point.z * worldMap.Size + point.y)
-                              * worldMap.Size + point.x];
+    return worldMap.cell(point);
 }
 
 // E:\gamedcs\events.cpp:300.  Removes a picked-up adventure object and
@@ -6647,6 +6648,153 @@ static inline ExtraInfoUnion* cell_extra(NewmapCell* cell)
     return static_cast<ExtraInfoUnion*>(static_cast<void*>(&cell->extraInfo));
 }
 
+// Dreamcast keeps each of these small object visitors as a named source
+// boundary. Retail /Ob2 folds every one into DispatchEvent, so their bodies
+// must be visible here: the calls below are authoritative source shape while
+// the resulting x86 remains the same in-place expansion.
+inline void advManager::DoEventBorderGuard(type_point point, NewmapCell* cell,
+                                           unsigned char human_player)
+{
+    unsigned char visitedFlags =
+        gpGame->borderTentVisitFlags[cell->objectIndex];
+    if (visitedFlags & gUnnamed69ccc4) {
+        if (human_player) {
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_BORDER_GUARD_PROMPT),
+                         2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT)
+                return;
+        }
+        EraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
+    } else if (human_player) {
+        NormalDialog(gpAdventureEventText->GetText(
+                         ADV_EVENT_TEXT_BORDER_GUARD_DENIED),
+                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    }
+}
+
+inline void advManager::DoEventBorderTent(NewmapCell* cell,
+                                          unsigned char human_player)
+{
+    if (gpGame->borderTentVisitFlags[cell->objectIndex]
+        & gUnnamed69ccc4) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_BORDER_TENT_VISITED),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    } else {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_BORDER_TENT),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        gpGame->borderTentVisitFlags[cell->objectIndex] |= gUnnamed69ccc4;
+    }
+}
+
+inline void advManager::DoEventBouy(hero* current_hero, NewmapCell* cell,
+                                    unsigned char human_player)
+{
+    if (current_hero->flags & 4) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_BUOY_VISITED),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    } else {
+        current_hero->flags |= 4;
+        current_hero->field_11a += 1;
+        gpGame->SetInfoFlag(BuoyInfo, gNetLocalGamePos);
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_BUOY),
+                         1, -1, -1, 14, 0, -1, 0, -1, 0, -1, 0);
+    }
+}
+
+inline void advManager::DoEventCloverField(hero* current_hero,
+                                           NewmapCell* cell,
+                                           unsigned char human_player)
+{
+    if (current_hero->flags & 8) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_CLOVER_FIELD_VISITED),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    } else {
+        current_hero->flags |= 8;
+        gpGame->SetInfoFlag(CloverFieldInfo, gNetLocalGamePos);
+        current_hero->field_11b += 2;
+        current_hero->movePoints = 0;
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_CLOVER_FIELD),
+                         1, -1, -1, 11, 0, -1, 0, -1, 0, -1, 0);
+    }
+}
+
+inline void advManager::DoEventFaerieRing(hero* current_hero,
+                                          NewmapCell* cell,
+                                          unsigned char human_player)
+{
+    if (current_hero->flags & 0x2000) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_FAERIE_RING_VISITED),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    } else {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_FAERIE_RING),
+                         1, -1, -1, 11, 0, -1, 0, -1, 0, -1, 0);
+        current_hero->flags |= 0x2000;
+        gpGame->SetInfoFlag(FaerieRingInfo, gNetLocalGamePos);
+        current_hero->field_11b += 1;
+    }
+}
+
+inline void advManager::DoEventLighthouse(NewmapCell* cell,
+                                          unsigned char human_player)
+{
+    if (!gpGame->OnSameTeam(gpGame->mines[cell->extraInfo].playerOwner,
+                            gNetLocalGamePos)) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_LIGHTHOUSE),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        gpGame->ClaimMine(cell->extraInfo, gNetLocalGamePos,
+                          const_normal_action);
+    }
+}
+
+inline void advManager::DoEventMermaid(hero* current_hero, NewmapCell* cell,
+                                       unsigned char human_player)
+{
+    if (current_hero->flags & 0x8000) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_MERMAID_VISITED),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    } else {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_MERMAID),
+                         1, -1, -1, 11, 0, -1, 0, -1, 0, -1, 0);
+        current_hero->flags |= 0x8000;
+        gpGame->SetInfoFlag(MermaidInfo, gNetLocalGamePos);
+        current_hero->field_11b += 1;
+    }
+}
+
+inline void advManager::do_event_whirlpool(hero* current_hero,
+                                           NewmapCell* cell,
+                                           unsigned char human_player)
+{
+    type_point exit_point;
+    if (gpGame->get_random_whirlpool(cell->extraInfo, &exit_point)) {
+        StopCursor(1);
+        TeleportTo(current_hero, exit_point, 0, 0, 1, 0);
+    }
+}
+
 // E:\gamedcs\events.cpp:4302.  The adventure map's object dispatcher: a
 // 94-arm jump-table switch over cell->type, biased by 2 and indexed
 // through a 214-entry byte table.  Fifty-six arms are a single call to a
@@ -6657,14 +6805,18 @@ static inline ExtraInfoUnion* cell_extra(NewmapCell* cell)
 // whirlpool between the two monolith arms - and the five EH states run
 // 0..4 in exactly that order: sacrifice window, hill fort window, thieves
 // guild new, university window, war factory new.
-// [2026-08-27] Residual (99.9911%): three one-byte SIB base/index swaps, all
-// inside SetInfoFlag expansions - the sacrifice arm's loop read (ours
-// [esi+eax], retail [eax+esi]) and the university arm's first/loop pair
-// swapped in opposite directions. why-reg --model reports bindings agree at
-// every first definition (the values already live in the same registers);
-// this is the documented encoder tie-break class (B18), not source-local.
-// Tried and rejected: named flag locals, comparison operand order, g-pointer
-// spellings (each fixed a DIFFERENT byte family and is kept above).
+// [2026-08-28] SOURCE-SHAPE CHECKPOINT (99.29%): the earlier 99.99% source
+// was a local maximum produced by pasting nine Dreamcast event-handler bodies
+// and four game accessors directly into this switch. The fatal DC gate now
+// requires all thirteen calls, plus NewfullMap::cell in the eye sweep and the
+// AI-first university statement order. The inline definitions above and the
+// Game.h views preserve those boundaries while VC6 folds them back into this
+// retail row. Do not trade that proof away for the old score: recover the
+// remaining register/inlining decisions inside the named hierarchy. Restoring
+// SetInfoFlag's own attested GetTeam call raised the coherent checkpoint from
+// 99.05% to 99.29%; inline_depth(1) blocked SetInfoFlag itself (98.36%),
+// inline_depth(2) returned to 99.05%, and the unforced natural declaration
+// plus call produced the current 99.29%.
 VA(0x004a84f0, 0x2542)  // anchor-callee cell->type jump table + ret 0x10=p5 (note above), dc 0x9824c
 void advManager::DispatchEvent(hero* current_hero, NewmapCell* cell, type_point point, bool human_player)
 {
@@ -6710,65 +6862,14 @@ void advManager::DispatchEvent(hero* current_hero, NewmapCell* cell, type_point 
     case BOAT:
         DoEventBoat(current_hero, cell);
         break;
-    case BORDER_GUARD: {
-        unsigned char visitedFlags =
-            gpGame->borderTentVisitFlags[cell->objectIndex];
-        if (visitedFlags & gUnnamed69ccc4) {
-            if (human_player) {
-                NormalDialog(gpAdventureEventText->GetText(
-                                 ADV_EVENT_TEXT_BORDER_GUARD_PROMPT),
-                             2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-                if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT)
-                    break;
-            }
-            EraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
-        } else if (human_player) {
-            NormalDialog(gpAdventureEventText->GetText(
-                             ADV_EVENT_TEXT_BORDER_GUARD_DENIED),
-                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        }
+    case BORDER_GUARD:
+        DoEventBorderGuard(point, cell, human_player);
         break;
-    }
     case BORDER_TENT:
-        if (gpGame->borderTentVisitFlags[cell->objectIndex]
-            & gUnnamed69ccc4) {
-            if (human_player)
-                NormalDialog(gpAdventureEventText->GetText(
-                                 ADV_EVENT_TEXT_BORDER_TENT_VISITED),
-                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        } else {
-            if (human_player)
-                NormalDialog(gpAdventureEventText->GetText(
-                                 ADV_EVENT_TEXT_BORDER_TENT),
-                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-            gpGame->borderTentVisitFlags[cell->objectIndex]
-                |= gUnnamed69ccc4;
-        }
+        DoEventBorderTent(cell, human_player);
         break;
     case BUOY:
-        if (current_hero->flags & 4) {
-            if (human_player)
-                NormalDialog(gpAdventureEventText->GetText(
-                                 ADV_EVENT_TEXT_BUOY_VISITED),
-                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        } else {
-            current_hero->flags |= 4;
-            current_hero->field_11a += 1;
-            game* g = gpGame;
-            if (gNetLocalGamePos >= 0 && gNetLocalGamePos < 8) {
-#pragma inline_depth(0)
-                int team = g->GetTeam(gNetLocalGamePos);
-#pragma inline_depth()
-                for (int i = 0; i < 8; i++) {
-                    if (g->mapHeader.teamInfo[i] == team)
-                        g->globalInfoFlags[BuoyInfo] |= 1 << i;
-                }
-            }
-            if (human_player)
-                NormalDialog(gpAdventureEventText->GetText(
-                                 ADV_EVENT_TEXT_BUOY),
-                             1, -1, -1, 14, 0, -1, 0, -1, 0, -1, 0);
-        }
+        DoEventBouy(current_hero, cell, human_player);
         break;
     case CAMPFIRE:
         DoEventCampfire(current_hero, cell, point, human_player);
@@ -6818,30 +6919,7 @@ void advManager::DispatchEvent(hero* current_hero, NewmapCell* cell, type_point 
         }
         break;
     case CLOVER_FIELD:
-        if (current_hero->flags & 8) {
-            if (human_player)
-                NormalDialog(gpAdventureEventText->GetText(
-                                 ADV_EVENT_TEXT_CLOVER_FIELD_VISITED),
-                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        } else {
-            current_hero->flags |= 8;
-            game* g = gpGame;
-            if (gNetLocalGamePos >= 0 && gNetLocalGamePos < 8) {
-#pragma inline_depth(0)
-                int team = g->GetTeam(gNetLocalGamePos);
-#pragma inline_depth()
-                for (int i = 0; i < 8; i++) {
-                    if (g->mapHeader.teamInfo[i] == team)
-                        g->globalInfoFlags[CloverFieldInfo] |= 1 << i;
-                }
-            }
-            current_hero->field_11b += 2;
-            current_hero->movePoints = 0;
-            if (human_player)
-                NormalDialog(gpAdventureEventText->GetText(
-                                 ADV_EVENT_TEXT_CLOVER_FIELD),
-                             1, -1, -1, 11, 0, -1, 0, -1, 0, -1, 0);
-        }
+        DoEventCloverField(current_hero, cell, human_player);
         break;
     case COVER_OF_DARKNESS:
         DoEventCoverOfDarkness(cell, point, human_player);
@@ -6898,20 +6976,7 @@ void advManager::DispatchEvent(hero* current_hero, NewmapCell* cell, type_point 
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         break;
     case FAERIE_RING:
-        if (current_hero->flags & 0x2000) {
-            if (human_player)
-                NormalDialog(gpAdventureEventText->GetText(
-                                 ADV_EVENT_TEXT_FAERIE_RING_VISITED),
-                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        } else {
-            if (human_player)
-                NormalDialog(gpAdventureEventText->GetText(
-                                 ADV_EVENT_TEXT_FAERIE_RING),
-                             1, -1, -1, 11, 0, -1, 0, -1, 0, -1, 0);
-            current_hero->flags |= 0x2000;
-            gpGame->SetInfoFlag(FaerieRingInfo, gNetLocalGamePos);
-            current_hero->field_11b += 1;
-        }
+        DoEventFaerieRing(current_hero, cell, human_player);
         break;
     case FLOTSAM:
         DoEventFlotsam(current_hero, cell, point, human_player);
@@ -6930,7 +6995,7 @@ void advManager::DispatchEvent(hero* current_hero, NewmapCell* cell, type_point 
     case GARRISON: {
         gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
         gpMouseManager->ShowPointer(1);
-        garrison* thisGarrison = &gpGame->garrisons[cell->extraInfo];
+        garrison* thisGarrison = gpGame->GetGarrison(cell->extraInfo);
         if (!gpGame->OnSameTeam(thisGarrison->playerOwner,
                                 gNetLocalGamePos)) {
             if (thisGarrison->garrisonArmy.HasCreatures()) {
@@ -6976,14 +7041,11 @@ void advManager::DispatchEvent(hero* current_hero, NewmapCell* cell, type_point 
         }
         type_point savedOrigin = radarOrigin;
         DemobilizeCurrHero(0, 1);
-        for (int z = 0; z < gpGame->worldMap.GetNumLevels(); z++) {
+        for (int z = 0; z < gpGame->GetNumMapLevels(); z++) {
             for (int x = 0; x < gMapWidth; x++) {
                 for (int y = 0; y < gMapHeight; y++) {
                     NewmapCell* eyeCell =
-                        &gpGame->worldMap.cellData
-                             [(z * gpGame->worldMap.Size + y)
-                                  * gpGame->worldMap.Size
-                              + x];
+                        gpGame->worldMap.cell(x, y, z);
                     if (eyeCell->type == EYE_OF_MAGI
                         && eyeCell->is_trigger) {
                         gpGame->SetVisibility(x, y, z, gNetLocalGamePos,
@@ -7018,15 +7080,7 @@ void advManager::DispatchEvent(hero* current_hero, NewmapCell* cell, type_point 
         DoEventLibrary(current_hero, cell, human_player);
         break;
     case LIGHTHOUSE:
-        if (!gpGame->OnSameTeam(gpGame->mines[cell->extraInfo].playerOwner,
-                                gNetLocalGamePos)) {
-            if (human_player)
-                NormalDialog(gpAdventureEventText->GetText(
-                                 ADV_EVENT_TEXT_LIGHTHOUSE),
-                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-            gpGame->ClaimMine(cell->extraInfo, gNetLocalGamePos,
-                              const_normal_action);
-        }
+        DoEventLighthouse(cell, human_player);
         break;
     case LITH_ONEWAY_ENTRANCE:
         do_event_lith_one_way(current_hero, cell, human_player);
@@ -7040,15 +7094,10 @@ void advManager::DispatchEvent(hero* current_hero, NewmapCell* cell, type_point 
     case LITH_TWOWAY:
         do_event_lith_two_way(current_hero, cell, human_player);
         break;
-    case WHIRLPOOL: {
+    case WHIRLPOOL:
         DoWhirlpool(current_hero);
-        type_point destination;
-        if (gpGame->get_random_whirlpool(cell->extraInfo, &destination)) {
-            StopCursor(1);
-            gpAdvManager->TeleportTo(current_hero, destination, 0, 0, 1, 0);
-        }
+        do_event_whirlpool(current_hero, cell, human_player);
         break;
-    }
     case MAGIC_SCHOOL:
         DoEventMagicSchool(current_hero, cell, point, human_player);
         break;
@@ -7064,33 +7113,13 @@ void advManager::DispatchEvent(hero* current_hero, NewmapCell* cell, type_point 
 #pragma inline_depth()
         break;
     case MERMAID:
-        if (current_hero->flags & 0x8000) {
-            if (human_player)
-                NormalDialog(gpAdventureEventText->GetText(
-                                 ADV_EVENT_TEXT_MERMAID_VISITED),
-                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        } else {
-            if (human_player)
-                NormalDialog(gpAdventureEventText->GetText(
-                                 ADV_EVENT_TEXT_MERMAID),
-                             1, -1, -1, 11, 0, -1, 0, -1, 0, -1, 0);
-            current_hero->flags |= 0x8000;
-            gpGame->SetInfoFlag(MermaidInfo, gNetLocalGamePos);
-            current_hero->field_11b += 1;
-        }
+        DoEventMermaid(current_hero, cell, human_player);
         break;
     case MINE:
         DoEventMine(cell, current_hero, point, human_player);
         break;
     case MONSTER:
-        movingObjectIndex = cell->object_type_index;
-        movingObjectSequence = cell->objectIndex;
-        movingObjectFrame = current_hero->x < point.x;
-        CompleteDraw(false);
-        UpdateScreen(0, 0);
-        DoWanderingMonsterResult(cell, current_hero, point, human_player);
-        movingObjectIndex = -1;
-        movingObjectSequence = -1;
+        DoEventWanderingMonster(cell, current_hero, point, human_player);
         break;
     case MYSTICAL_GARDEN:
         DoEventMysticalGarden(current_hero, cell_extra(cell), human_player);
@@ -7102,14 +7131,7 @@ void advManager::DispatchEvent(hero* current_hero, NewmapCell* cell, type_point 
         signed char* obeliskFlags =
             &gpGame->obeliskFlags[cell->extraInfo];
         if (!(*obeliskFlags & gUnnamed69ccc4)) {
-            unsigned char teamBits = 0;
-            if (gNetLocalGamePos >= 0 && gNetLocalGamePos < 8) {
-                int team = gpGame->mapHeader.teamInfo[gNetLocalGamePos];
-                for (int i = 0; i < 8; i++) {
-                    if (gpGame->mapHeader.teamInfo[i] == team)
-                        teamBits |= 1 << i;
-                }
-            }
+            unsigned char teamBits = gpGame->GetTeamMask(gNetLocalGamePos);
             *obeliskFlags |= teamBits;
             if (human_player) {
                 NormalDialog(gpAdventureEventText->GetText(
@@ -7340,8 +7362,7 @@ void advManager::DispatchEvent(hero* current_hero, NewmapCell* cell, type_point 
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             break;
         }
-        NewmapCell* exitCell = gpGame->worldMap.cell(
-            exitPoint.x, exitPoint.y, exitPoint.z);
+        NewmapCell* exitCell = gpGame->get_cell(exitPoint);
         if (exitCell->type == HERO) {
             if (gNetworkActive69954c) {
                 CSetVisibilityMsg message(exitPoint, gNetLocalGamePos, 1);
@@ -7358,7 +7379,10 @@ void advManager::DispatchEvent(hero* current_hero, NewmapCell* cell, type_point 
         break;
     }
     case UNIVERSITY:
-        if (human_player && !gbUnk691209) {
+        if (!human_player || gbUnk691209) {
+            AI_visit_university(current_hero,
+                                cell_extra(cell)->get_university());
+        } else {
             gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
             gpMouseManager->ShowPointer(1);
             {
@@ -7368,9 +7392,6 @@ void advManager::DispatchEvent(hero* current_hero, NewmapCell* cell, type_point 
                 universityWindow.DoModal(0);
             }
             gpGame->SetInfoFlag(UniversityInfo, gNetLocalGamePos);
-        } else {
-            AI_visit_university(current_hero,
-                                cell_extra(cell)->get_university());
         }
         break;
     case WAGON:
@@ -8925,4 +8946,3 @@ CWaitForRemoteBattleDlg::~CWaitForRemoteBattleDlg()
 #pragma inline_depth(0)
 }
 #pragma inline_depth()
-
