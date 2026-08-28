@@ -72,12 +72,13 @@ void NormalDialogTimeOut(const char* cText, int iMBType, int timeOut,
 void extended_dialog(const char* text,
     std::vector<type_dialog_resource>& resources,
     long x, long y, long timeout);                              // 0x4f6cf0
-void get_quickview_size(const char* text, int* width, int* height); // 0x4f5f30
-// Retail 0x4f62a0. Three callers pass text in ECX, width in EDX and height
-// on the stack; the body lays out wrapped dialog text and writes both sizes.
-// The role is proven while the spelling remains provisional.
-void __fastcall CalculateDialogTextSize(const char* text, int* width,
-                                        int* height);
+// Dreamcast kb.cpp:5441 names this get_quickview_size. Retail independently
+// proves its Complete ABI and entry: the three callers pass text in ECX,
+// width in EDX and height on the stack to 0x4f62a0. The old 0x4f5f30 note
+// came from the contradicted external address map; that byte lies inside the
+// 0x4f5d80 function and is not a boundary on this image.
+void __fastcall get_quickview_size(const char* text, int* width,
+                                   int* height);                 // 0x4f62a0
 // Located kb.cpp bodies kbwin's WinMain / AppWndProc call (bodies not
 // yet reconstructed; the declarators match the kbwin call sites).
 int InitMainClasses();                                   // 0x4ed650

@@ -554,7 +554,7 @@ unsigned char TAdventureMapWindow::ProcessRightSelect(const message* msg)
         const char* text = gQuickViewText[helpID].text;
         int width;
         int height;
-        CalculateDialogTextSize(text, &width, &height);
+        get_quickview_size(text, &width, &height);
         NormalDialog(text, 4, 592 - width, (600 - height) / 2 - 10,
             -1, 0, -1, 0, -1, 0, -1, 0);
         return 1;

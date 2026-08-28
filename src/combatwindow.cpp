@@ -318,7 +318,7 @@ unsigned char TCombatWindow::ProcessRightSelect(const message* msg)
     const char* text = gCombatSubWindowHelp[helpID].rclick;
     int width;
     int height;
-    CalculateDialogTextSize(text, &width, &height);
+    get_quickview_size(text, &width, &height);
     NormalDialog(text, 4, (WINDOW_SCREEN_WIDTH - width) / 2,
         (WINDOW_SCREEN_HEIGHT - height) / 2,
         -1, 0, -1, 0, -1, 0, -1, 0);
