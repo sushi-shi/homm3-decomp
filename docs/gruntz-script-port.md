@@ -260,6 +260,40 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-28 — the complete TCP session-search path is reconstructed at
+  91.32%.** Retail `TMultiPlayerWindow::OnSearch` at `0x511660` opens the
+  address dialog, disables OK until the address is valid, replaces the current
+  DirectPlay connection with TCP, performs one five-second session enumeration,
+  joins the first result, and reports the four proven failure cases. Dreamcast's
+  less-optimized 660-byte body supplies unusually strong source-shape evidence:
+  one `DisableOK` call, four `NormalDialog` calls, five `CMPInputDlg`
+  destructor calls (the five logical returns), and three `CHourGlass`
+  destructor calls (all post-enumeration returns). Its line and block records
+  additionally prove that `sErr[256]` belongs to the join-failure block and
+  that `GetLastError` runs before dialog 456; the SH4 call order independently
+  confirms the latter. Complete expands the ordinary two-argument dialog
+  constructor at this site; marking that real constructor forced-inline while
+  pinning the exact `OnHost` call site preserves both existing 100% functions.
+  The DC header helpers `DisableOK`, `GetText`, and `TTextResource::operator[]`
+  are now represented directly, while Complete's mangled `QAEEXZ` name retains
+  its authoritative `unsigned char` return despite DC's `_N` (`bool`) variant.
+
+  Pinning the nested network calls and three late destructor boundaries yields
+  all 13 retail branch tests. Hoisting the saved DirectPlay error before its
+  dialog raises the 1,638-byte body from **90.94% to 91.32%**. The residual is a
+  coupled C1 front-end-state wall: `why-reg` sees the same definition slots and
+  order, but the candidate binds ESI=`this`, EDI=`-1` where retail binds
+  EDI=`this`, ESI=`-1`. When the failure block reuses ESI for the error, the
+  candidate spills `this`, grows its frame from retail's `0x188` to `0x18c`,
+  and merges two late false cleanup tails (three returns versus four). The
+  DC-shaped negative join condition reproduces the retail branch sequence but
+  regresses to 89.81%; caller locals and a used constructor sentinel parameter
+  are copy-propagated byte-flat, confirming this is not a statement-level
+  naming lever. The nested positive `if/else` retains the higher score while
+  preserving the proven `sErr` scope. The
+  synchronized report reaches **2526/3094 functions exact**, **92.93% fuzzy**,
+  and **60.80% executable coverage**.
+
 - **2026-08-28 — the multiplayer TCP initialization pair is reconstructed;
   its Winsock helper is byte-exact.** Retail `GetIPAddress` at `0x5112e0`
   retains the Complete-only Winsock path behind Dreamcast's four-byte stub:

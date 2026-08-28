@@ -394,6 +394,10 @@ DATA(0x006a7768) char* gDialogBackHelp;
 DATA(0x006a7770) char* gUnnamed6a7770;
 DATA(0x006a7778) char* gUnnamed6a7778;
 DATA(0x006a7780) char* gUnnamed6a7780;
+// The TCP search dialog's address field uses a distinct rollover string. The
+// second field reuses gUnnamed6a7778, while the generic OK/Back buttons keep
+// the shared pair above.
+DATA(0x006a7788) char* gSearchAddressHelp;
 
 // E:\gamedcs\multiplayerwindow.cpp:1005
 // Slider callback for the session list; scrolls the displayed window of games.
@@ -1081,7 +1085,9 @@ unsigned char TMultiPlayerWindow::OnHost()
     gUnnamed6994e4 = 1;
     strcpy(gLocalPlayerName, playerName->Text.c_str());
 
+#pragma inline_depth(0)
     CMPInputDlg sessDlg(20, 20);
+#pragma inline_depth()
     sessDlg.field1->SetText(gpGeneralText->GetText(453));
     sessDlg.header1->SetText(gUnnamed6a7780);
     sessDlg.header2->SetText(gpGeneralText->GetText(454));
@@ -1102,7 +1108,7 @@ unsigned char TMultiPlayerWindow::OnHost()
 
 // E:\gamedcs\multiplayerwindow.cpp:418
 VA(0x00510060, 0x6F7)  // anchor-vtable 0x6400f4 into this + CHeroWindowEx base + mudialog.pcx, dc 0x1022f4
-CMPInputDlg::CMPInputDlg(int maxChars1, int maxChars2)
+__forceinline CMPInputDlg::CMPInputDlg(int maxChars1, int maxChars2)
     : CHeroWindowEx(284, 194, 232, 212, 18)
 {
     Widgets.reserve(6);
@@ -1375,6 +1381,89 @@ unsigned char TMultiPlayerWindow::OnTCP()
         pSessions->GetCount() - 12);
     Update();
     return 1;
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:1944
+// Complete expands CMPInputDlg's constructor at this site, asks for a TCP
+// address, tears down the browser's current DirectPlay connection, and runs
+// one bounded session enumeration. The four failure dialogs are pinned by
+// their folded general-text indices (459, 463, 456, then GetErrorDesc), and
+// the Dreamcast xref graph independently records exactly four NormalDialog
+// calls plus JoinSession, InitRemote, CAutoArray::Destroy and CHourGlass.
+VA(0x00511660, 0x666)  // caller slot + complete TCP search flow, dc 0x10196c
+unsigned char TMultiPlayerWindow::OnSearch()
+{
+    // Residual (91.324%): all 13 retail branch tests are present, but C1 feeds
+    // the allocator the first two call-crossing pseudos in the opposite order:
+    // candidate ESI=this/EDI=-1 versus retail EDI=this/ESI=-1. Reusing ESI for
+    // the saved DirectPlay error therefore spills this, grows the frame by four
+    // bytes, and lets VC6 merge the two late false cleanup tails (3 emitted
+    // returns versus retail's 4). DC proves the saved error precedes dialog 456
+    // and scopes sErr inside the join-failure block; applying both raised the
+    // prior 90.94% plateau. Its negative join spelling gets the branch sequence
+    // exact but regresses to 89.81% under this C1 state. Naming/parameterizing
+    // the -1 sentinel is copy-propagated byte-flat, as the register model
+    // predicts; the remaining role swap is not a statement-level lever.
+    CMPInputDlg searchDlg(20, 20);
+    searchDlg.header1->SetText((*gpGeneralText)[179]);
+    searchDlg.header2->SetText((*gpGeneralText)[462]);
+    searchDlg.field1->set_help_text(gSearchAddressHelp, 0, 0);
+    searchDlg.field2->set_help_text(gUnnamed6a7778, 0, 0);
+    searchDlg.DisableOK();
+    searchDlg.DoModal(0);
+
+    if (gpWindowManager->dialogReturn == DIALOG_RETURN_CANCEL)
+        return 0;
+
+    RemoteCleanup();
+    const char* address = searchDlg.field1->GetText();
+#pragma inline_depth(0)
+    if (!InitRemote(MP_TCP, address, 0)) {
+#pragma inline_depth()
+        NormalDialog((*gpGeneralText)[459], 1, -1, -1,
+                     -1, 0, -1, 0, -1, 0, -1, 0);
+        return 0;
+    }
+
+    CHourGlass hourGlass(1);
+#pragma inline_depth(0)
+    pSessions->Destroy();
+#pragma inline_depth()
+    pDPlay->EnumSessions(pSessions, 5000, 0x42);
+
+    if (!pSessions->GetCount()) {
+        NormalDialog((*gpGeneralText)[463], 1, -1, -1,
+                     -1, 0, -1, 0, -1, 0, -1, 0);
+        RemoteCleanup();
+#pragma inline_depth(0)
+        InitRemote(MP_TCP, 0, 0);
+#pragma inline_depth()
+#pragma inline_depth(0)
+        return 0;
+#pragma inline_depth()
+    }
+
+#pragma inline_depth(0)
+    if (JoinSession(pSessions->Get(0), 0)) {
+        return 1;
+    }
+#pragma inline_depth()
+    else {
+        char sErr[256];
+        long lastError = pDPlay->GetLastError();
+        NormalDialog((*gpGeneralText)[456], 1, -1, -1,
+                     -1, 0, -1, 0, -1, 0, -1, 0);
+        pDPlay->GetErrorDesc(lastError, sErr);
+        NormalDialog(sErr, 1, -1, -1,
+                     -1, 0, -1, 0, -1, 0, -1, 0);
+        RemoteCleanup();
+#pragma inline_depth(0)
+        InitRemote(MP_TCP, 0, 0);
+#pragma inline_depth()
+#pragma inline_depth(0)
+        return 0;
+#pragma inline_depth()
+    }
 }
 
 // E:\gamedcs\multiplayerwindow.cpp:2009

@@ -2051,6 +2051,7 @@ multiplayerwindow	?OnKeyPress@CMultiPlayerWindowEdit@@UAEHPAVmessage@@@Z	100.000
 multiplayerwindow	?OnNextEdit@CMPEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x110850
 multiplayerwindow	?OnOK@CHotSeatDlg@@QAEEXZ	100.0000	100.0000	100.0000	0x112470
 multiplayerwindow	?OnPrevEdit@CMPEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x110870
+multiplayerwindow	?OnSearch@TMultiPlayerWindow@@QAEEXZ	91.3243	91.3243	91.3243	0x111660
 multiplayerwindow	?OnTCP@TMultiPlayerWindow@@QAEEXZ	73.5825	73.5825	73.5825	0x1113f0
 multiplayerwindow	?OnWidgetDeselect@CHotSeatDlg@@UAEHHPAE@Z	100.0000	100.0000	100.0000	0x112420
 multiplayerwindow	?OnWidgetDeselect@CMPInputDlg@@UAEHHPAE@Z	83.3750	83.3750	83.3750	0x1108f0
