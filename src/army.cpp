@@ -20,6 +20,7 @@
 #define HOMM3_ARMY_ELEMENTAL_RULE_VIEW
 #define HOMM3_ARMY_MIDPOINT_DECL
 #define HOMM3_ARMY_MIDPOINT_FIELD_VIEW
+#define HOMM3_ARMY_MEMBER_NAME_VIEW
 #define HOMM3_ARMY_MOVE_VIEW
 #define HOMM3_ARMY_MULTI_HEAD_VIEW
 #define HOMM3_ARMY_NEW_TURN_DECL
@@ -57,6 +58,8 @@
 // SSpellTraits' m_sample slice: army.cpp is its only consumer and this
 // header sits inside initialize.cpp's include closure (see the field).
 #include "armygrp.h"
+#define HOMM3_CREATURE_NAME_VIEW
+#include "creaturetype.h"
 #include "bitmap16.h"
 #include "cmbtmgr.h"
 #include "combatwindow.h"
@@ -102,6 +105,53 @@ template <class _TYPE>
 inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
 {
     return (_X < _Y ? _Y : _X);
+}
+
+#ifdef min
+#undef min
+#endif
+#ifdef max
+#undef max
+#endif
+
+namespace dc_min_source {
+// E:\gamedcs\DC_precompiledheaders.h:41
+inline const int& _cpp_min(const int& _X, const int& _Y)
+{
+    return (_Y < _X ? _Y : _X);
+}
+}
+
+// E:\gamedcs\includes.h:114
+// The Dreamcast body is the one-statement wrapper `return _cpp_min(a, b)`.
+// Keeping that source boundary matters even when retail VC6 folds both this
+// wrapper and _cpp_min into the caller.
+inline int min(int a, int b)
+{
+    return dc_min_source::_cpp_min(a, b);
+}
+
+namespace dc_max_source {
+// E:\\gamedcs\\DC_precompiledheaders.h:33
+inline const int& _cpp_max(const int& _X, const int& _Y)
+{
+    return (_X < _Y ? _Y : _X);
+}
+}
+
+// E:\\gamedcs\\includes.h:97
+// The Dreamcast body is the one-statement wrapper `return _cpp_max(a, b)`.
+inline int max(int a, int b)
+{
+    return dc_max_source::_cpp_max(a, b);
+}
+
+// CheckLuck's Dreamcast source calls SRandom, while the retail call target is
+// the exact Random body at 0x50b230. Keep the source-visible boundary and let
+// VC6 fold this Complete-side adapter so the retail relocation remains Random.
+inline int SRandom(int lower, int upper)
+{
+    return Random(lower, upper);
 }
 
 #if 0  // @carcass
@@ -331,7 +381,7 @@ void army::initialize(int type, long number, const hero* owner,
     else
         field_4d8 = 0;
     if (field_4d8) {
-        if (!(Is(6) & 1))
+        if (!(Is(1u << 6)))
             field_c4++;
         attackSkill++;
         defenseSkill++;
@@ -366,7 +416,7 @@ void army::initialize(int type, long number, const hero* owner,
 //
 // THE SECOND HEX IS SPELLED OUT rather than routed through
 // get_second_grid_index (0x4466a0), and the bytes say so: the enclosing
-// `if` has already tested `Is(0) & 1` and retail's second-hex block
+// `if` has already tested `Is(1u << 0)` and retail's second-hex block
 // carries NO second copy of that test - only the bare
 // `gridIndex + OffsetToFront(-1)` the accessor's own tail is. gridIndex
 // is reloaded there too, and gpCombatManager is loaded a SECOND time
@@ -388,7 +438,7 @@ void army::Init(int armyId, int newNumTroops, const hero* owner, int side,
         cell->armySide = static_cast<signed char>(combatSide);
         cell->armySlot = static_cast<signed char>(bitIndex);
         cell->field_1a = -1;
-        if (Is(0) & 1) {
+        if (Is(1u << 0)) {
             hexcell* second =
                 &gpCombatManager->cells[gridIndex + OffsetToFront(-1)];
             second->armySide = static_cast<signed char>(combatSide);
@@ -406,7 +456,7 @@ void army::Init(int armyId, int newNumTroops, const hero* owner, int side,
         retaliationCount = 5000;
     if (spellInfluence[SPELL_COUNTERSTRIKE])
         retaliationCount += counterstrokeBonus;
-    if (Is(6) & 1)
+    if (Is(1u << 6))
         retaliationCount = 0;
 }
 
@@ -447,7 +497,7 @@ void army::LoadResources()
     origWalkCycleTime = frameInfoWalkCycleTime;
 
     sample* s;
-    if (!(Is(6) & 1)) {
+    if (!(Is(1u << 6))) {
         sprintf(gText, DATA_COMPGEN(0x00660a10, moveSampleFormat,
                                     "%smove.82M"),
                 monInfoSamplePrefix);
@@ -465,7 +515,7 @@ void army::LoadResources()
         sprintf(gText, DATA_COMPGEN(0x00660a04, shotSampleFormat,
                                     "%sshot.82M"),
                 monInfoSamplePrefix);
-    else if (Is(6) & 1)
+    else if (Is(1u << 6))
         sprintf(gText, DATA_COMPGEN(0x006609f8, winceSampleFormat,
                                     "%swnce.82M"),
                 monInfoSamplePrefix);
@@ -494,7 +544,7 @@ void army::LoadResources()
         armySample[DIE_SAMPLE]->Dispose();
     armySample[DIE_SAMPLE] = s;
 
-    if (Is(6) & 1)
+    if (Is(1u << 6))
         sprintf(gText, DATA_COMPGEN(0x006609f8, winceSampleFormat,
                                     "%swnce.82M"),
                 monInfoSamplePrefix);
@@ -507,7 +557,7 @@ void army::LoadResources()
         armySample[DEFEND_SAMPLE]->Dispose();
     armySample[DEFEND_SAMPLE] = s;
 
-    if ((Is(2) & 1) || creatureType == CREATURE_MASTER_GENIE
+    if ((Is(1u << 2)) || creatureType == CREATURE_MASTER_GENIE
         || creatureType == CREATURE_OGRE_MAGE) {
         sprintf(gText, DATA_COMPGEN(0x00660a04, shotSampleFormat,
                                     "%sshot.82M"),
@@ -565,7 +615,7 @@ void army::LoadResources()
     stdIcon = icon;
     image_height = 267 - stdIcon->s[cs_wait]->f[0]->CroppedY;
 
-    if (Is(2) & 1) {
+    if (Is(1u << 2)) {
         const char* missileName;
         switch (creatureType) {
         case CREATURE_ARCHER:
@@ -758,7 +808,7 @@ void army::SetMorale(const hero* ownerHero, const armyGroup* ownerGroup,
                      unsigned char groupAlignments)
 {
     int value = 0;
-    if (magicTerrain == MAGIC_TERRAIN_CURSED_GROUND || (Is(17) & 1))
+    if (magicTerrain == MAGIC_TERRAIN_CURSED_GROUND || (Is(1u << 17)))
         goto store_morale;
 
     if (ownerGroup) {
@@ -879,7 +929,7 @@ void army::DrawToBuffer(int x, int y, int bNumBoxOnly)
 
     y += field_100;
     x += field_104;
-    if (currFrameType == cs_walk && !(Is(1) & 1)) {
+    if (currFrameType == cs_walk && !(Is(1u << 1))) {
         long frames = stdIcon->GetNumFrames(0);
         long stepY = currFrameIndex * 42 / frames;
         long stepX = currFrameIndex * 44 / frames;
@@ -933,14 +983,14 @@ void army::DrawToBuffer(int x, int y, int bNumBoxOnly)
 
         TPalette16 saved;
         unsigned char bRestore = 0;
-        if (Is(29) & 1) {
+        if (Is(1u << 29)) {
             memcpy(saved.data, stdIcon->GetPalette(), 0x200);
             TPalette16 tinted(stdIcon->GetPalette());
             tinted.AdjustHSV(0, PaletteEffect, PaletteEffect + 1.0f,
                              PaletteEffect + 1.0f);
             memcpy(stdIcon->GetPalette(), tinted.data, 0x200);
             bRestore = 1;
-        } else if (Is(30) & 1) {
+        } else if (Is(1u << 30)) {
             memcpy(saved.data, stdIcon->GetPalette(), 0x200);
             TPalette16 tinted(stdIcon->GetPalette());
             tinted.AdjustSaturation(PaletteEffect);
@@ -952,7 +1002,7 @@ void army::DrawToBuffer(int x, int y, int bNumBoxOnly)
             tinted.Gray();
             memcpy(stdIcon->GetPalette(), tinted.data, 0x200);
             bRestore = 1;
-        } else if (Is(23) & 1) {
+        } else if (Is(1u << 23)) {
             memcpy(saved.data, stdIcon->GetPalette(), 0x200);
             TPalette16 tinted(stdIcon->GetPalette());
             tinted.AdjustHSV(0.67f, 1.0f, 2.0f, 2.0f);
@@ -972,7 +1022,7 @@ void army::DrawToBuffer(int x, int y, int bNumBoxOnly)
     }
 
     if (gpCombatManager->field_13d34 != 0
-        || (!(Is(21) & 1) && !(Is(6) & 1) && !IsMoving
+        || (!(Is(1u << 21)) && !(Is(1u << 6)) && !IsMoving
             && (currFrameType == cs_wait
                 || currFrameType == cs_fidget))) {
         long step = 1;
@@ -1185,7 +1235,7 @@ void erase_item(std::vector<army*>& array, const army* arg)
 // stack IS a unicorn every adjacent ally of its own becomes one.
 //
 // THE DC LINE TABLE IS THE STRUCTURE (dc 0x44f0c): 951-954 an if/else
-// on Is(0) picking 8 directions for a wide stack and 6 for a one-hex
+// on Is(1u << 0) picking 8 directions for a wide stack and 6 for a one-hex
 // one - retail flattens the pair into the branchless `neg / sbb /
 // and 2 / add 6` selector - 956 the same `while (i-- > 0)` counter the
 // teardowns use, 958 the adjacent hex, 959 the bounds test, 961 the
@@ -1213,13 +1263,13 @@ void erase_item(std::vector<army*>& array, const army* arg)
 // it either way, because there nothing branchy stands between the
 // operand and the compare.
 //
-// Is(21) is the death bit ProcessDeath raises (0x200000); a corpse
+// Is(1u << 21) is the death bit ProcessDeath raises (0x200000); a corpse
 // neither gives nor takes an aura.
 VA(0x0043ea70, 0x1DD)  // anchor-global, dc 0x44f0c
 void army::add_aura()
 {
     long count;
-    if (Is(0) & 1)
+    if (Is(1u << 0))
         count = 8;
     else
         count = 6;
@@ -1234,14 +1284,14 @@ void army::add_aura()
         if ((other->creatureType == ARMY_CREATURE_UNICORN
              || other->creatureType == ARMY_CREATURE_WAR_UNICORN)
             && other->get_controlling_side() == get_owning_side()
-            && !(other->Is(21) & 1)) {
+            && !(other->Is(1u << 21))) {
             add_item(other->aura_clients, this);
             add_item(aura_sources, other);
         }
         if ((creatureType == ARMY_CREATURE_UNICORN
              || creatureType == ARMY_CREATURE_WAR_UNICORN)
             && other->get_owning_side() == get_controlling_side()
-            && !(other->Is(21) & 1)) {
+            && !(other->Is(1u << 21))) {
             add_item(other->aura_sources, this);
             add_item(aura_clients, other);
         }
@@ -1400,7 +1450,7 @@ void army::EndWalk()
 //     no retail out-of-line copy, so /Ob2 took them here. The DC passes
 //     OffsetToFront the constant -1 and retail folds its two id-range
 //     tests away, leaving only `facing ? 1 : -1`.
-//   - `Is(0)` is the two-hex marker. The Dreamcast build passes its own
+//   - `Is(1u << 0)` is the two-hex marker. The Dreamcast build passes its own
 //     Is the MASK 1 for the same bit, exactly as range_attack's site
 //     passes 0x8000 for bit 15.
 //   - play_sample (0x43d540) expands three times, each keeping its own
@@ -1427,7 +1477,7 @@ void army::Walk(int direction, unsigned char end_walk,
     giWalkingFrom = gridIndex;
     giWalkingTo = next_cell;
     giWalkingYMod = 0;
-    if (Is(0) & 1) {
+    if (Is(1u << 0)) {
         giWalkingFrom2 = gridIndex + OffsetToFront(-1);
         giWalkingTo2 = next_cell + OffsetToFront(-1);
     } else {
@@ -1470,7 +1520,7 @@ void army::Walk(int direction, unsigned char end_walk,
 // One missile, from muzzle flash to impact: aim at the target stack's
 // hex (the two-hex center shift), play the ranged pose the
 // GetMissileStartingPosition search picks, then fly it - the Enchanter
-// resolves through spells.obj's 0x59fde0 instead, the Is(11) shooters
+// resolves through spells.obj's 0x59fde0 instead, the Is(1u << 11) shooters
 // throw a DoBolt lightning (Arch Mage green, the eye/psychic family
 // violet), and everyone else gets the pixel flight ShootBallisticMissile
 // also uses: a Bitmap16Bit backing store grabbed and restored per step,
@@ -1540,7 +1590,7 @@ void army::animate_missile(army* armyToAttack)
         gpCombatManager->Unnamed59FDE0(startX, startY, armyToAttack);
         return;
     }
-    if (Is(11) & 1) {
+    if (Is(1u << 11)) {
         GameTime::Delay(static_cast<long>(
             gCombatSpeedFactors[gUnnamed698758.combatSpeed] * 115.0f));
         long color;
@@ -1648,24 +1698,23 @@ void army::animate_missile(army* armyToAttack)
     gpWindowManager->UpdateScreen(x, y, width, height);
 }
 
-// DC army::WaitSample (army.cpp:109, dc 0x438a8): wait out one combat
-// sample. NO retail slot - the carve leaves no gap for it - so on this
-// build it is fully inlined into range_attack, its one caller. A static
-// helper for the same two reasons CancelAllSpells_ above is one: the
-// call is what sizes the caller's /Ob2 budget, and an inlined
-// single-call static emits no body.
-static void WaitSample_(army* that, army::TSampleID which)
+// E:\gamedcs\army.cpp:109
+// No retail out-of-line copy survives, but the Dreamcast call graph proves
+// this member boundary in range_attack. VC6 folds the inline definition into
+// that caller.
+inline void army::WaitSample(army::TSampleID which)
 {
     if (!static_cast<const combatManager*>(gpCombatManager)
             ->IsQuickCombat()
-        && that->armySample[which]) {
-        gpSoundManager->WaitSample(that->armySample[which]->field_1c, -1);
+        && armySample[which]) {
+        gpSoundManager->WaitSample(armySample[which]->field_1c, -1);
     }
 }
 
 // E:\gamedcs\army.cpp:1356
 // One landed volley. The luck preamble is do_attack's statement for
-// statement (same pinned get_controlling_side, same GetText(46)
+// statement (same pinned get_controlling_side, same
+// TTextResource::operator[](46)
 // message); then the missile flies (animate_missile, still a carcass
 // callee), the ammo counts down unless the owner wields the Ammo Cart,
 // and the damage routes three ways: the Magog's fireball and the two
@@ -1677,7 +1726,7 @@ static void WaitSample_(army* that, army::TSampleID which)
 //
 // FAITHFUL ARTIFACTS, all three transcribed from the bytes - do not
 // repair: the splash arms read `a->creatureType` (magog, the
-// first/multiple bookkeeping) and `a->Is(4)` (lich, the undead filter)
+// first/multiple bookkeeping) and `a->Is(1u << 4)` (lich, the undead filter)
 // BEFORE any null test; and the per-hex `dmg`/`killedNow` pair is only
 // assigned under `if (a)`, so an armyless hex adds the PREVIOUS
 // iteration's values into the totals.
@@ -1715,33 +1764,10 @@ static void WaitSample_(army* that, army::TSampleID which)
 VA(0x0043f900, 0x7F9)  // dc-bracket forced, dc 0x458a0
 void army::range_attack(army* armyToAttack)
 {
-    iLuckStatus = 0;
-#pragma inline_depth(0)
-    long striking_side = get_controlling_side();
-#pragma inline_depth()
-    if (gpCombatManager->heroes[striking_side] != 0 && luck > 0) {
-        if (Random(1, 24) <= _cpp_min(luck, 3)) {
-            iLuckStatus = 1;
-            if (!static_cast<const combatManager*>(gpCombatManager)
-                     ->IsQuickCombat()) {
-                launch_sample(DATA_COMPGEN(0x00660a20, goodLuckSampleName,
-                                           "goodluck.82m"),
-                              -1, 3);
-                const char* creature_name;
-#pragma inline_depth(0)
-                creature_name = GetName(creatureType, numTroops);
-#pragma inline_depth()
-                sprintf(gText, gpGeneralText->GetText(46), creature_name);
-                gpCombatManager->combatWindow->combat_message(gText, 1, 0);
-                gpCombatManager->SpellEffect(
-                    combatManager::eSpellEffectFortune, this, 100, 0);
-            }
-        }
-    }
+    CheckLuck();
     animate_missile(armyToAttack);
-    if (gpCombatManager->heroes[combatSide] == 0
-        || !gpCombatManager->heroes[combatSide]->IsWieldingArtifact(
-               ARTIFACT_AMMO_CART))
+    if (!get_owner()
+        || !get_owner()->IsWieldingArtifact(ARTIFACT_AMMO_CART))
         shotsLeft--;
     if (creatureType == CREATURE_MAGOG) {
         long effect = akSpellTraits[SPELL_FIREBALL].m_effect;
@@ -1752,14 +1778,11 @@ void army::range_attack(army* armyToAttack)
             CSprite* spr =
                 ResourceManager::GetSprite(akSpellEffectTraits[effect]
                                                .m_name);
-            long x = gpCombatManager->cells[armyToAttack->gridIndex]
-                         .field_00;
-            if (armyToAttack->creatureId & 1)
-                x += armyToAttack->facing ? 22 : -22;
-            x -= spr->Width / 2;
-            long y = gpCombatManager->cells[armyToAttack->gridIndex]
-                         .field_02
-                     - armyToAttack->image_height / 2 - spr->Height / 2;
+            long x = armyToAttack->MidX() - spr->GetWidth() / 2;
+            long y = armyToAttack->MidY() - spr->GetHeight() / 2;
+            gpCombatManager->ScrollTo(
+                x + spr->GetWidth() / 2,
+                y + spr->GetHeight() / 2, 1, 1, 1);
             for (long frame = 0; frame < spr->GetNumFrames(0); frame++) {
                 gpCombatManager->DrawFrame(0, 0, 0, 50, 1, 1);
                 gpCombatManager->DrawSpellEffect(spr, frame, x, y, 0, 0);
@@ -1773,8 +1796,8 @@ void army::range_attack(army* armyToAttack)
         long damage = 0;
         army* first = 0;
         unsigned char multiple = 0;
-        long dmg;
-        long killedNow;
+        int dmg;
+        int killedNow;
         for (long i = 0; i < 7; i++) {
             long hex;
             if (i == COMBAT_DIRECTION_COUNT)
@@ -1782,9 +1805,7 @@ void army::range_attack(army* armyToAttack)
             else
                 hex = GetAdjacentCellIndexNoArmy(pathTarget, i);
             hexcell* cell = &gpCombatManager->cells[hex];
-            if (hex < 0 || hex >= COMBAT_GRID_CELLS)
-                continue;
-            if (cell->armySide < 0)
+            if (!gpCombatManager->ValidHex(hex) || !cell->HasArmy())
                 continue;
             // SLOT IS DECLARED FIRST, in both of this body's two scan
             // loops: retail's `movsx edx,byte [ecx+0x1b]` for the slot lands
@@ -1801,14 +1822,7 @@ void army::range_attack(army* armyToAttack)
                 first = a;
             else if (first->creatureType != a->creatureType)
                 multiple = 1;
-            long fire_damage = 0;
-            if (a) {
-                long base = ComputeBaseDamage(0);
-                dmg = adjust_damage(a, base, 1, 0, joustBonus,
-                                    &fire_damage);
-                killedNow = a->Damage(dmg);
-                iLuckStatus = 0;
-            }
+            DamageEnemy(a, &dmg, &killedNow, 1);
             damage += dmg;
             killed += killedNow;
         }
@@ -1823,8 +1837,7 @@ void army::range_attack(army* armyToAttack)
             army* reported = first;
             if (multiple)
                 reported = 0;
-            gpCombatManager->damage_message(GetName(creatureType,
-                                                    numTroops),
+            gpCombatManager->damage_message(GetName(),
                                             numTroops, damage, reported,
                                             killed);
             gpCombatManager->PowEffect(effect, 1);
@@ -1840,14 +1853,8 @@ void army::range_attack(army* armyToAttack)
             CSprite* spr =
                 ResourceManager::GetSprite(akSpellEffectTraits[effect]
                                                .m_name);
-            long x = gpCombatManager->cells[armyToAttack->gridIndex]
-                         .field_00;
-            if (armyToAttack->creatureId & 1)
-                x += armyToAttack->facing ? 22 : -22;
-            x -= spr->Width / 2;
-            long y = gpCombatManager->cells[armyToAttack->gridIndex]
-                         .field_02
-                     - armyToAttack->image_height / 2 - spr->Height / 2;
+            long x = armyToAttack->MidX() - spr->GetWidth() / 2;
+            long y = armyToAttack->MidY() - spr->GetHeight() / 2;
             for (long frame = 0; frame < spr->GetNumFrames(0); frame++) {
                 gpCombatManager->DrawFrame(0, 0, 0, 100, 1, 1);
                 gpCombatManager->DrawSpellEffect(spr, frame, x, y, 0, 0);
@@ -1861,8 +1868,8 @@ void army::range_attack(army* armyToAttack)
         long damage = 0;
         army* first = 0;
         unsigned char multiple = 0;
-        long dmg;
-        long killedNow;
+        int dmg;
+        int killedNow;
         for (long i = 0; i < 7; i++) {
             long hex;
             if (i == COMBAT_DIRECTION_COUNT)
@@ -1870,26 +1877,17 @@ void army::range_attack(army* armyToAttack)
             else
                 hex = GetAdjacentCellIndexNoArmy(pathTarget, i);
             hexcell* cell = &gpCombatManager->cells[hex];
-            if (hex < 0 || hex >= COMBAT_GRID_CELLS)
-                continue;
-            if (cell->armySide < 0)
+            if (!gpCombatManager->ValidHex(hex) || !cell->HasArmy())
                 continue;
             long slot = cell->armySlot;
             long side = cell->armySide;
             army* a = cell->get_army();
-            if (i != COMBAT_DIRECTION_COUNT && !(a->Is(4) & 1))
+            if (i != COMBAT_DIRECTION_COUNT && !(a->Is(1u << 4)))
                 continue;
             if (gpCombatManager->effected[side][slot] != 0)
                 continue;
             gpCombatManager->effected[side][slot] = 1;
-            long fire_damage = 0;
-            if (a) {
-                long base = ComputeBaseDamage(0);
-                dmg = adjust_damage(a, base, 1, 0, joustBonus,
-                                    &fire_damage);
-                killedNow = a->Damage(dmg);
-                iLuckStatus = 0;
-            }
+            DamageEnemy(a, &dmg, &killedNow, 1);
             damage += dmg;
             killed += killedNow;
             if (first == 0)
@@ -1900,30 +1898,22 @@ void army::range_attack(army* armyToAttack)
         if (damage > 0) {
             if (multiple)
                 first = 0;
-            gpCombatManager->damage_message(GetName(creatureType,
-                                                    numTroops),
+            gpCombatManager->damage_message(GetName(),
                                             numTroops, damage, first,
                                             killed);
             gpCombatManager->PowEffect(-1, 1);
         }
     } else {
-        long killed = 0;
-        long dmg;
-        if (armyToAttack != 0) {
-            long base = ComputeBaseDamage(0);
-            dmg = adjust_damage(armyToAttack, base, 1, 0, joustBonus,
-                                &killed);
-            killed = armyToAttack->Damage(dmg);
-            iLuckStatus = 0;
-        }
+        int iKilled;
+        int iDamage;
+        DamageEnemy(armyToAttack, &iDamage, &iKilled, 1);
         gpCombatManager->PowEffect(-1, 0);
-        gpCombatManager->damage_message(GetName(creatureType, numTroops),
-                                        numTroops, dmg, armyToAttack,
-                                        killed);
+        gpCombatManager->damage_message(GetName(), numTroops, iDamage,
+                                        armyToAttack, iKilled);
         if (static_cast<const combatManager*>(gpCombatManager)
                 ->IsQuickCombat())
             return;
-        WaitSample_(this, SHOOT_SAMPLE);
+        WaitSample(SHOOT_SAMPLE);
     }
 }
 
@@ -1952,37 +1942,29 @@ void army::range_attack(army* armyToAttack)
 
 #endif  // @carcass
 
-// E:\gamedcs\army.cpp:1541
-VA(0x00440100, 0x3E)  // anchor-global (HD masked-byte identity + body:
-                      // akCreatureTypeTraits +0x14/+0x18 name pair, two
-                      // fastcall register arguments), retail-only slot
-const char* army::GetName(int type, long count)
+// CreatureType.h:296 proves this is a header inline. Keep its source body in
+// creaturetype.h and only give the surviving army.obj COMDAT its retail home
+// here; source-label extraction deliberately rejects executable VA claims in
+// headers because a header has no unique owning TU.
+#if 0  // @carcass: claim-only home for the CreatureType.h COMDAT
+VA(0x00440100, 0x3E)  // two-register /Gr ABI + singular/plural trait lookup
+const char* GetArmyName(int type, int count)
 {
-    if (type >= 0 && type <= ARMY_CREATURE_LAST) {
-        if (count == 1)
-            return akCreatureTypeTraits[type].m_name;
-        return akCreatureTypeTraits[type].m_plural_name;
-    }
-    return DATA_COMPGEN(0x00691210, emptyCreatureName, "");
+    // @stub
 }
+#endif
 
-// The 31-byte slot between GetName and range_attack(), and the ONE
-// body in this TU that answers "whose stack is this right now": the
-// same five instructions appear inlined verbatim in get_controller
-// (0x442690), is_enemy (0x442880) and ComputeBaseDamage (0x443160),
-// all later in the link order, which is the /Ob2 extern-linkage case
-// (out-of-line copy emitted unconditionally, inlined at every site).
-// Arity refutes the carcass's `get_clockwise(long)` outright - this
-// is a bare `ret`. Name is NH3API's army::get_controlling_side, whose
-// own spelling of is_enemy (`get_controlling_side() != other->group`)
-// is exactly the asymmetric compare retail emits there.
+// Army.h:800 proves this is a class-body inline. The active out-of-class
+// definition that stood here changed the source form to retain the current
+// local score. Keep only the retail-address claim; VC6 must decide where the
+// header COMDAT survives from the coherent class source.
+#if 0  // claim-only home for the Army.h COMDAT
 VA(0x00440140, 0x1F)  // anchor-callee + body identity, retail-only slot
 int army::get_controlling_side() const
 {
-    if (hypnotizeFlag)
-        return 1 - combatSide;
-    return combatSide;
+    // @stub
 }
+#endif
 
 // One stack's whole shooting turn: resolve the target it was told to
 // attack, turn to face it, fire between one and three volleys, turn
@@ -1992,7 +1974,7 @@ int army::get_controlling_side() const
 // the yModify clear, 1548 and 1549 the two SPLIT early-outs, 1554 the
 // target cell's x, 1557 get_second_grid_index, 1559 our own cell's x,
 // 1564 and 1570 the two facing corrections, 1579 the first volley,
-// 1583 the double-shot volley behind Is(15), 1591 a FOUR-BRANCH
+// 1583 the double-shot volley behind Is(1u << 15), 1591 a FOUR-BRANCH
 // condition calling get_controller TWICE, 1593 the artillery volley,
 // 1601 the turn back and 1607 the cancellation. Retail follows it
 // statement for statement.
@@ -2012,7 +1994,7 @@ int army::get_controlling_side() const
 //     emission rule, so the constant-folded call is the proof rather
 //     than a coincidence.
 //
-// `Is(15)` is the double-shot bit: retail spells it `shr eax,0xf /
+// `Is(1u << 15)` is the double-shot bit: retail spells it `shr eax,0xf /
 // test al,1` off creatureId, which is this tree's Is(bit) inline, and
 // the Dreamcast build passes its own Is the MASK 0x8000 for the same
 // bit. The artillery gate is a NEW BYTE PROOF for the secondary-skill
@@ -2049,7 +2031,7 @@ void army::range_attack()
         Turn(1);
     }
     range_attack(target);
-    if ((Is(15) & 1) && target->numTroops > 0)
+    if ((Is(1u << 15)) && target->numTroops > 0)
         range_attack(target);
     if (creatureType == ARMY_CREATURE_BALLISTA && target->numTroops > 0
         && get_controller() && get_controller()->skillLevel[eSecSkillBattlefieldBallistics] > 1) {
@@ -2141,8 +2123,7 @@ void army::do_multi_head_attack(unsigned attackMask, int* damage, int* killed,
                                 long* fire_damage)
 {
     army* first_target = 0;
-    long iTempFire;
-    long iTempDamage;
+    int iTempDamage;
     int iTempKilled;
     unsigned char bMixedTypes = 0;
     for (int i = 0; i < 8; i++) {
@@ -2154,16 +2135,10 @@ void army::do_multi_head_attack(unsigned attackMask, int* damage, int* killed,
         army* target = gpCombatManager->cells[hex].get_army();
         if (!target || target->hitByCreature)
             continue;
-        iTempFire = 0;
-        int base_damage = ComputeBaseDamage(0);
-        iTempDamage = adjust_damage(target, base_damage, 0, 0,
-                                    joustBonus, &iTempFire);
-        iTempKilled = target->Damage(iTempDamage);
-        long fire = iTempFire;
-        iLuckStatus = 0;
-        if (fire > 0) {
+        long iTempFire = DamageEnemy(target, &iTempDamage, &iTempKilled, 0);
+        if (iTempFire > 0) {
             target->show_fire_shield = 1;
-            *fire_damage += fire;
+            *fire_damage += iTempFire;
         }
         *damage += iTempDamage;
         *killed += iTempKilled;
@@ -2177,7 +2152,7 @@ void army::do_multi_head_attack(unsigned attackMask, int* damage, int* killed,
     }
     if (bMixedTypes)
         first_target = 0;
-    gpCombatManager->damage_message(GetName(creatureType, numTroops), numTroops,
+    gpCombatManager->damage_message(GetName(), numTroops,
                                     *damage, first_target, *killed);
 }
 
@@ -2210,7 +2185,7 @@ unsigned char army::check_special_attack(army* target)
 {
     switch (creatureType) {
     case CREATURE_GHOST_DRAGON:
-        if (target->Is(4) & 1 && Random(1, 100) <= 20
+        if (target->Is(1u << 4) && Random(1, 100) <= 20
             && target->numTroops > 0
             && gpCombatManager->SpellCastWorks(SPELL_AGE,
                                                get_controlling_side(),
@@ -2218,7 +2193,7 @@ unsigned char army::check_special_attack(army* target)
             target->iPostPowSpellToCast = SPELL_AGE;
         return 0;
     case CREATURE_ZOMBIE:
-        if (target->Is(4) & 1 && Random(1, 100) <= 20
+        if (target->Is(1u << 4) && Random(1, 100) <= 20
             && target->numTroops > 0
             && gpCombatManager->SpellCastWorks(SPELL_DISEASE,
                                                get_controlling_side(),
@@ -2268,7 +2243,7 @@ unsigned char army::check_special_attack(army* target)
             target->iPostPowSpellToCast = SPELL_ACID_BREATH_DEFENSE;
         return 0;
     case CREATURE_WYVERN_MONARCH:
-        if (target->Is(4) & 1 && Random(1, 100) <= 30
+        if (target->Is(1u << 4) && Random(1, 100) <= 30
             && target->numTroops > 0
             && gpCombatManager->SpellCastWorks(SPELL_POISON,
                                                get_controlling_side(),
@@ -2440,7 +2415,7 @@ void army::do_post_attack(army* target, int iDamage, int iKilled,
 {
     switch (creatureType) {
     case CREATURE_VAMPIRE_LORD:
-        if (target->Is(4) & 1) {
+        if (target->Is(1u << 4)) {
             long resurrected = 0;
             long heal = drain_amount(hitPoints, origNumTroops, numTroops,
                                      topCreatureDamage, iDamage, total_life);
@@ -2454,16 +2429,16 @@ void army::do_post_attack(army* target, int iDamage, int iKilled,
             if (heal > 0) {
                 std::string text;
                 const char* target_name =
-                    GetName(target->creatureType,
+                    ::GetArmyName(target->creatureType,
                             target->numTroops + iKilled);
                 if (numTroops - resurrected == 1)
                     text = format_string(gpGeneralText->GetText(362),
-                                         GetName(creatureType,
+                                         ::GetArmyName(creatureType,
                                                  numTroops - resurrected),
                                          heal, target_name);
                 else
                     text = format_string(gpGeneralText->GetText(363),
-                                         GetName(creatureType,
+                                         ::GetArmyName(creatureType,
                                                  numTroops - resurrected),
                                          heal, target_name);
                 if (resurrected > 0) {
@@ -2488,7 +2463,7 @@ void army::do_post_attack(army* target, int iDamage, int iKilled,
         break;
 
     case CREATURE_MIGHTY_GORGON:
-        if (target->Is(4) & 1) {
+        if (target->Is(1u << 4)) {
             int stares = roll_death_stares(this);
             long dead = _cpp_min((numTroops + 9) / 10,
                                  _cpp_min(stares, target->numTroops));
@@ -2498,16 +2473,16 @@ void army::do_post_attack(army* target, int iDamage, int iKilled,
                 std::string text;
                 if (dead == 1)
                     text = format_string(gpGeneralText->GetText(119),
-                                         GetName(target->creatureType,
+                                         ::GetArmyName(target->creatureType,
                                                  dead),
-                                         GetName(creatureType,
+                                         ::GetArmyName(creatureType,
                                                  numTroops));
                 else
                     text = format_string(gpGeneralText->GetText(120),
                                          dead,
-                                         GetName(target->creatureType,
+                                         ::GetArmyName(target->creatureType,
                                                  dead),
-                                         GetName(creatureType,
+                                         ::GetArmyName(creatureType,
                                                  numTroops));
                 SAMPLE2 sample;
                 if (!static_cast<const combatManager*>(gpCombatManager)
@@ -2543,7 +2518,7 @@ void army::do_post_attack(army* target, int iDamage, int iKilled,
                              ->IsQuickCombat()) {
                         text = format_string(
                             gpGeneralText->GetText(368),
-                            GetName(target->creatureType,
+                            ::GetArmyName(target->creatureType,
                                     target->numTroops));
                         gpCombatManager->combatWindow->combat_message(
                             text.c_str(), 1, 0);
@@ -2654,25 +2629,28 @@ void army::do_post_attack(army* target, int iDamage, int iKilled,
 VA(0x00441610, 0x6A0)  // corroborates, dc 0x46bec
 unsigned char army::do_attack(army* armyToAttack, int direction)
 {
-    army* behind = 0;
-    gpCombatManager->ResetHitByCreature();
     unsigned attackMask;
-    if (Is(19) & 1) {
+    army* behind;
+    gpCombatManager->ResetHitByCreature();
+    behind = 0;
+    if (Is(1u << 19)) {
         if (berserkFlag)
             attackMask = GetAttackMask(gridIndex, 2, -1);
         else
             attackMask = GetAttackMask(gridIndex, 1, -1);
         if (creatureType == CREATURE_CERBERUS) {
-            unsigned mask = ~(1u << direction) & 0xff;
+            unsigned mask = 0xff;
+            mask &= ~(1u << direction);
             mask &= ~(1u << get_counter_clockwise(direction));
-            attackMask |= mask & ~(1u << get_clockwise(direction));
+            mask &= ~(1u << get_clockwise(direction));
+            attackMask |= mask;
         }
     } else {
         armyToAttack->hitByCreature = 1;
-        if (Is(3) & 1) {
+        if (Is(1u << 3)) {
             int adjacent_hex = get_adjacent_hex(gridIndex, direction);
             long behind_hex = GetAdjacentCellIndex(adjacent_hex, direction);
-            if (behind_hex >= 0 && behind_hex < COMBAT_GRID_CELLS) {
+            if (gpCombatManager->ValidHex(behind_hex)) {
                 behind = gpCombatManager->cells[behind_hex].get_army();
                 if (behind) {
                     if (behind->hitByCreature)
@@ -2684,80 +2662,29 @@ unsigned char army::do_attack(army* armyToAttack, int direction)
         }
     }
     gpCombatManager->ResetLimitCreature();
-    gpCombatManager->MarkCreatureEffect(combatSide, bitIndex);
-    iLuckStatus = 0;
-#pragma inline_depth(0)
-    long striking_side = get_controlling_side();
-#pragma inline_depth()
-    if (gpCombatManager->heroes[striking_side] != 0 && luck > 0) {
-        if (Random(1, 24) <= _cpp_min(luck, 3)) {
-            iLuckStatus = 1;
-            if (!static_cast<const combatManager*>(gpCombatManager)
-                     ->IsQuickCombat()) {
-                launch_sample(DATA_COMPGEN(0x00660a20, goodLuckSampleName,
-                                           "goodluck.82m"),
-                              -1, 3);
-                const char* creature_name;
-#pragma inline_depth(0)
-                creature_name = GetName(creatureType, numTroops);
-#pragma inline_depth()
-                sprintf(gText, gpGeneralText->GetText(46), creature_name);
-                gpCombatManager->combatWindow->combat_message(gText, 1, 0);
-                gpCombatManager->SpellEffect(
-                    combatManager::eSpellEffectFortune, this, 100, 0);
-            }
-        }
-    }
-    int damage = 0;
-    int killed = 0;
-    int damage2 = 0;
+    gpCombatManager->MarkCreatureEffect(get_owning_side(), bitIndex);
+    CheckLuck();
+    int iDamage = 0;
+    int iKilled = 0;
+    int iNextDamage = 0;
+    int iNextKilled = 0;
+    long fire_damage = 0;
     long total_life = 0;
-    long fire_shield_damage = 0;
-    int killed2 = 0;
-    if (Is(19) & 1) {
-        do_multi_head_attack(attackMask, &damage, &killed,
-                             &fire_shield_damage);
+    if (Is(1u << 19)) {
+        do_multi_head_attack(attackMask, &iDamage, &iKilled,
+                             &fire_damage);
     } else {
-        {
-            int marked_side = armyToAttack->combatSide;
-            int marked_index = armyToAttack->bitIndex;
-            gpCombatManager->MarkCreatureEffect(marked_side, marked_index);
-        }
-        if (behind) {
-            int marked_side = behind->combatSide;
-            int marked_index = behind->bitIndex;
-            gpCombatManager->MarkCreatureEffect(marked_side, marked_index);
-        }
-        long life;
-        if (armyToAttack->Is(23) & 1)
-            life = 1;
-        else
-            life = armyToAttack->hitPoints * armyToAttack->numTroops
-                   - armyToAttack->topCreatureDamage;
-        total_life = life;
-        {
-            long shield_charge = 0;
-            if (!armyToAttack) {
-                shield_charge = 0;
-            } else {
-                int base_damage = ComputeBaseDamage(0);
-                damage = adjust_damage(armyToAttack, base_damage, 0, 0,
-                                       joustBonus, &shield_charge);
-                killed = armyToAttack->Damage(damage);
-                iLuckStatus = 0;
-            }
-            fire_shield_damage = shield_charge;
-            if (shield_charge > 0)
-                armyToAttack->show_fire_shield = 1;
-            if (behind) {
-                shield_charge = 0;
-                int base_damage = ComputeBaseDamage(0);
-                damage2 = adjust_damage(behind, base_damage, 0, 0,
-                                        joustBonus, &shield_charge);
-                killed2 = behind->Damage(damage2);
-                iLuckStatus = 0;
-            }
-        }
+        gpCombatManager->MarkCreatureEffect(armyToAttack->get_owning_side(),
+                                            armyToAttack->bitIndex);
+        if (behind)
+            gpCombatManager->MarkCreatureEffect(behind->get_owning_side(),
+                                                behind->bitIndex);
+        total_life = armyToAttack->get_total_hit_points(0);
+        fire_damage = DamageEnemy(armyToAttack, &iDamage, &iKilled, 0);
+        if (fire_damage > 0)
+            armyToAttack->show_fire_shield = 1;
+        if (behind)
+            DamageEnemy(behind, &iNextDamage, &iNextKilled, 0);
     }
     gpCombatManager->ComputeMaxExtent();
     bShowAttackFrames = 1;
@@ -2767,8 +2694,7 @@ unsigned char army::do_attack(army* armyToAttack, int direction)
         if (direction == COMBAT_DIRECTION_WIDE_UPPER
             || direction == COMBAT_DIRECTION_5
             || direction == COMBAT_DIRECTION_0) {
-            if (behind && stdIcon->numSequences > cs_special_ur
-                && stdIcon->validSeqMask[cs_special_ur] != 0)
+            if (behind && stdIcon->IsValidSeq(cs_special_ur))
                 iShowAttackFrameType = cs_special_ur;
             else if (creatureType == ARMY_CREATURE_BALLISTA)
                 iShowAttackFrameType = cs_range_ur;
@@ -2776,8 +2702,7 @@ unsigned char army::do_attack(army* armyToAttack, int direction)
                 iShowAttackFrameType = cs_attack_ur;
         } else if (direction == COMBAT_DIRECTION_1
                    || direction == COMBAT_DIRECTION_4) {
-            if (behind && stdIcon->numSequences > cs_special_r
-                && stdIcon->validSeqMask[cs_special_r] != 0) {
+            if (behind && stdIcon->IsValidSeq(cs_special_r)) {
                 iShowAttackFrameType = cs_special_r;
             } else if (creatureType == ARMY_CREATURE_BALLISTA) {
                 iShowAttackFrameType = cs_range_r;
@@ -2785,8 +2710,7 @@ unsigned char army::do_attack(army* armyToAttack, int direction)
                 iShowAttackFrameType = cs_attack_r;
             }
         } else {
-            if (behind && stdIcon->numSequences > cs_special_dr
-                && stdIcon->validSeqMask[cs_special_dr] != 0)
+            if (behind && stdIcon->IsValidSeq(cs_special_dr))
                 iShowAttackFrameType = cs_special_dr;
             else if (creatureType == ARMY_CREATURE_BALLISTA)
                 iShowAttackFrameType = cs_range_dr;
@@ -2798,19 +2722,18 @@ unsigned char army::do_attack(army* armyToAttack, int direction)
     }
     unsigned char special = check_special_attack(armyToAttack);
     gpCombatManager->PowEffect(-1, 0);
-    if (!(Is(19) & 1)) {
+    if (!(Is(1u << 19))) {
         if (behind && behind->creatureType != armyToAttack->creatureType)
             gpCombatManager->damage_message(
-                GetName(creatureType, numTroops), numTroops,
-                damage + damage2, 0, killed + killed2);
+                GetName(), numTroops,
+                iDamage + iNextDamage, 0, iKilled + iNextKilled);
         else
             gpCombatManager->damage_message(
-                GetName(creatureType, numTroops), numTroops, damage,
-                armyToAttack, killed);
+                GetName(), numTroops, iDamage, armyToAttack, iKilled);
     }
-    do_post_attack(armyToAttack, damage, killed, total_life);
-    if (fire_shield_damage > 0)
-        do_fire_shield(fire_shield_damage);
+    do_post_attack(armyToAttack, iDamage, iKilled, total_life);
+    if (fire_damage > 0)
+        do_fire_shield(fire_damage);
     if (armyToAttack->residualBlindness && armyToAttack->blindFactor == 0.0)
         return 1;
     return special;
@@ -2886,13 +2809,13 @@ void army::do_attack(int direction)
     }
     armyToAttack->residualBlindness = 0;
     armyToAttack->residualParalyze = 0;
-    if ((Is(15) & 1) && armyToAttack->numTroops > 0 && !(Is(2) & 1)
+    if ((Is(1u << 15)) && armyToAttack->numTroops > 0 && !(Is(1u << 2))
         && !IsIncapacitated() && numTroops > 0) {
         GameTime::Delay(static_cast<int>(
             gCombatSpeedFactors[gUnnamed698758.combatSpeed] * 150.0f));
         do_attack(armyToAttack, direction);
     }
-    if (!(armyToAttack->Is(21) & 1)) {
+    if (!(armyToAttack->Is(1u << 21))) {
         if (savedArmyToAttackFacing != armyToAttack->facing) {
             int saved_side = gpCombatManager->actingSide;
             int saved_slot = gpCombatManager->actingSlot;
@@ -3107,21 +3030,32 @@ unsigned char army::WalkTo(int destIndex, unsigned char restore_facing)
     }
     IsMoving = 0;
     gpCombatManager->DrawFrame(1, 0, 0, 0, 1, 0);
-    gpCombatManager->RaiseDoor();
+    gpCombatManager->TestRaiseDoor();
     return succeeded;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\army.cpp:2528
-DC_ONLY(0x475ec, 0xA4)
-void army::CheckLuck()
+inline void army::CheckLuck()
 {
-    // @stub
+    iLuckStatus = 0;
+    if (get_controller() && luck > 0) {
+        if (SRandom(1, 24) <= min(luck, 3)) {
+            iLuckStatus = 1;
+            if (!static_cast<const combatManager*>(gpCombatManager)
+                     ->IsQuickCombat()) {
+                launch_sample(DATA_COMPGEN(0x00660a20, goodLuckSampleName,
+                                           "goodluck.82m"),
+                              -1, 3);
+                sprintf(gText, (*gpGeneralText)[46], GetName());
+                gpCombatManager->combatWindow->combat_message(gText, 1, 0);
+                gpCombatManager->SpellEffect(
+                    combatManager::eSpellEffectFortune, this, 100, 0);
+            }
+        }
+    }
 }
 
 // E:\gamedcs\army.cpp:2575
-#endif  // @carcass
 
 VA(0x00442410, 0x13B)  // anchor-global, dc 0x47690
 long army::get_adjusted_attack(const army* enemy,
@@ -3136,9 +3070,9 @@ long army::get_adjusted_attack(const army* enemy,
             attack += bloodlustAmount;
     }
     if (slayerRounds && enemy) {
-        if (((enemy->Is(7) & 1) && slayerLevel >= 0)
-            || ((enemy->Is(8) & 1) && slayerLevel >= 2)
-            || ((enemy->Is(9) & 1) && slayerLevel >= 3)) {
+        if (((enemy->Is(1u << 7)) && slayerLevel >= 0)
+            || ((enemy->Is(1u << 8)) && slayerLevel >= 2)
+            || ((enemy->Is(1u << 9)) && slayerLevel >= 3)) {
             attack += 8;
             // The controlling side's hero is derived TWICE (retail
             // inlines get_controlling_side at both sites) and the
@@ -3376,14 +3310,14 @@ long army::get_average_damage(const army* enemy, unsigned char ranged_attack, lo
                                 static_cast<long>(amount * average),
                                 ranged_attack, 1, distance, 0);
     long total_life;
-    if (enemy->Is(23) & 1)
+    if (enemy->Is(1u << 23))
         total_life = 1;
     else
         total_life = enemy->hitPoints * enemy->numTroops
                      - enemy->topCreatureDamage;
     if (damage < 1)
         damage = 1;
-    if (ranged_attack && (Is(15) & 1))
+    if (ranged_attack && (Is(1u << 15)))
         damage += damage;
     if (limit_damage && damage > total_life)
         damage = total_life;
@@ -3418,7 +3352,7 @@ unsigned char army::is_enemy(const army* arg) const
 // RECONSTRUCTED AND WITHDRAWN 2026-08-14, body kept for the next lane.
 // The predicate below is verified instruction-for-instruction against
 // the retail slot - the ballista and the arrow tower shoot
-// unconditionally; otherwise the creature's shooter bit Is(2) and a
+// unconditionally; otherwise the creature's shooter bit Is(1u << 2) and a
 // positive shotsLeft are required; then, unless the controlling hero
 // carries the Bow of the Sharpshooter, an adjacent enemy on EITHER hex
 // disqualifies the shot; and finally advanced-or-better Forgetfulness
@@ -3439,7 +3373,7 @@ unsigned char army::is_enemy(const army* arg) const
 //   1. THE TWO HEAD EARLY-OUTS ARE ONE GUARD. Written as two separate
 //      `if (...) return 0;` statements our CL materialises an epilogue
 //      at each; `||` in one guard - or the equivalent positive
-//      `if ((Is(2) & 1) && shotsLeft > 0) { ... }` wrapper, measured
+//      `if ((Is(1u << 2)) && shotsLeft > 0) { ... }` wrapper, measured
 //      byte-identical at 73.5366 - sinks them into the ONE `xor al,al`
 //      block retail jumps to from both. Worth 13.54.
 //   2. THE LATE ARMS SHARE ONE RESULT AND ONE RETURN (89.6098, +16.07).
@@ -3560,7 +3494,7 @@ inline unsigned char army::can_shoot(const army* excluded) const
     if (creatureType == ARMY_CREATURE_BALLISTA
         || creatureType == ARMY_CREATURE_ARROW_TOWER)
         return 1;
-    if (!(Is(2) & 1) || shotsLeft <= 0)
+    if (!(Is(1u << 2)) || shotsLeft <= 0)
         return 0;
     hero* controller = get_controller();
     int bCanShoot = 1;
@@ -3695,7 +3629,7 @@ double army::get_unit_combat_value(long lowest_attack, long lowest_defense,
     if (ranged) {
         if (creatureType != ARMY_CREATURE_BALLISTA
             && creatureType != ARMY_CREATURE_ARROW_TOWER) {
-            if (!(Is(2) & 1) || shotsLeft <= 0) {
+            if (!(Is(1u << 2)) || shotsLeft <= 0) {
                 ranged = 0;
             } else {
 #pragma inline_depth(0)
@@ -3713,7 +3647,7 @@ double army::get_unit_combat_value(long lowest_attack, long lowest_defense,
         }
     }
     double attack_value = attack_diff * 0.05 + 1.0;
-    if (!ranged && (Is(2) & 1))
+    if (!ranged && (Is(1u << 2)))
         attack_value = attack_value * 0.5;
     if (creatureType == ARMY_CREATURE_BALLISTA) {
         if (gpCombatManager->heroes[get_controlling_side()]) {
@@ -3740,13 +3674,13 @@ double army::get_unit_combat_value(long lowest_attack, long lowest_defense,
             average = base_average;
         attack_value = average / base_average * attack_value;
     }
-    if (ranged && (Is(15) & 1))
+    if (ranged && (Is(1u << 15)))
         attack_value = attack_value + attack_value;
     double value = sqrt(attack_value * defense_value)
                    * akCreatureTypeTraits[creatureType].baseFightValue;
     if (creatureId & 0x400040) {
         long total;
-        if (Is(23) & 1)
+        if (Is(1u << 23))
             total = 1;
         else
             total = hitPoints * numTroops - topCreatureDamage;
@@ -3754,7 +3688,7 @@ double army::get_unit_combat_value(long lowest_attack, long lowest_defense,
         for (long i = 0; i < gpCombatManager->numArmies[combatSide]; i++) {
             if (!(gpCombatManager->armies[combatSide][i].creatureId
                   & 0x1d0)) {
-                if (gpCombatManager->armies[combatSide][i].Is(23) & 1)
+                if (gpCombatManager->armies[combatSide][i].Is(1u << 23))
                     sum += 1;
                 else
                     sum += gpCombatManager->armies[combatSide][i].hitPoints
@@ -3817,7 +3751,7 @@ long army::get_total_combat_value(long lowest_attack, long lowest_defense) const
     unsigned char ranged = can_shoot(0);
     double value = get_unit_combat_value(lowest_attack, lowest_defense,
                                          ranged, 0);
-    if (Is(23) & 1)
+    if (Is(1u << 23))
         return static_cast<long>(numTroops * value / 5.0);
     return static_cast<long>((hitPoints * numTroops - topCreatureDamage)
                              * value / hitPoints);
@@ -3835,7 +3769,7 @@ long army::get_loss_combat_value(long lowest_attack, long lowest_defense,
 {
     double value = get_unit_combat_value(lowest_attack, lowest_defense,
                                          ranged, 0);
-    if (Is(23) & 1)
+    if (Is(1u << 23))
         return static_cast<long>(numTroops * value / 5.0);
     if (kills_only)
         value = 1000.0;
@@ -3854,12 +3788,12 @@ VA(0x00443080, 0x50)  // anchor-global, dc 0x48454
 long army::get_total_hit_points(unsigned char simulated) const
 {
     long total;
-    if (Is(23) & 1)
+    if (Is(1u << 23))
         total = 1;
     else
         total = hitPoints * numTroops - topCreatureDamage;
     if (simulated)
-        total = _cpp_max(total - AI_expected_damage, 0);
+        total = max(total - AI_expected_damage, 0);
     return total;
 }
 
@@ -3909,7 +3843,7 @@ VA(0x00443160, 0x1BF)  // anchor-global, dc 0x48524
 int army::ComputeBaseDamage(unsigned char simulate_only) const
 {
     int num;
-    if (forgetfulnessRounds > 0 && (Is(2) & 1))
+    if (forgetfulnessRounds > 0 && (Is(1u << 2)))
         num = _cpp_max(numTroops / 2, 1);
     else
         num = numTroops;
@@ -4051,14 +3985,14 @@ int army::compute_attacker_bonus(int base_damage, unsigned char is_shooting,
                     if (numTroops == 1)
                         text = format_string(
                             gpGeneralText->GetText(369),
-                            GetName(creatureType, numTroops),
-                            GetName(defender->creatureType,
+                            ::GetArmyName(creatureType, numTroops),
+                            ::GetArmyName(defender->creatureType,
                                     defender->numTroops));
                     else
                         text = format_string(
                             gpGeneralText->GetText(370),
-                            GetName(creatureType, numTroops),
-                            GetName(defender->creatureType,
+                            ::GetArmyName(creatureType, numTroops),
+                            ::GetArmyName(defender->creatureType,
                                     defender->numTroops));
                     gpCombatManager->combatWindow->combat_message(
                         text.c_str(), 1, 0);
@@ -4154,7 +4088,7 @@ int army::ComputeAttackerDamageBonuses(int base_damage,
                 std::string text;
                 const char* creature_name;
 #pragma inline_depth(0)
-                creature_name = GetName(creatureType, numTroops);
+                creature_name = ::GetArmyName(creatureType, numTroops);
 #pragma inline_depth()
                 text = format_string(gpGeneralText->GetText(366),
                                      creature_name);
@@ -4173,10 +4107,10 @@ int army::ComputeAttackerDamageBonuses(int base_damage,
                 std::string text;
                 if (numTroops == 1)
                     text = format_string(gpGeneralText->GetText(366),
-                                         GetName(creatureType, numTroops));
+                                         ::GetArmyName(creatureType, numTroops));
                 else
                     text = format_string(gpGeneralText->GetText(367),
-                                         GetName(creatureType, numTroops));
+                                         ::GetArmyName(creatureType, numTroops));
                 gpCombatManager->combatWindow->combat_message(
                     text.c_str(), 1, 0);
                 SAMPLE2 sample = LoadPlaySample(
@@ -4193,17 +4127,13 @@ int army::ComputeAttackerDamageBonuses(int base_damage,
     return result;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\army.cpp:3230
-DC_ONLY(0x48c10, 0x50)
-int army::ComputeDefenderDamageBonuses(int base_damage) const
+inline int army::ComputeDefenderDamageBonuses(int base_damage) const
 {
-    // @stub
+    return 0;
 }
 
 // E:\gamedcs\army.cpp:3243
-#endif  // @carcass
 
 // Everything that scales an ATTACKER's swing down, in retail's order:
 // the defence differential first, then the two elemental match-ups, the
@@ -4237,7 +4167,7 @@ double army::ComputeAttackerDamageReduction(const army* defender,
         reduction = factor;
     }
     if (creatureType == ARMY_CREATURE_PSYCHIC_ELEMENTAL
-            && (defender->Is(10) & 1))
+            && (defender->Is(1u << 10)))
         reduction *= 0.5;
     if (creatureType == ARMY_CREATURE_MAGIC_ELEMENTAL
             && (defender->creatureType == ARMY_CREATURE_MAGIC_ELEMENTAL
@@ -4252,7 +4182,7 @@ double army::ComputeAttackerDamageReduction(const army* defender,
         if (gpCombatManager->ShotIsNotOptimal(this, defender))
             reduction *= 0.5;
     }
-    if ((Is(2) & 1) && !is_shooting && !(Is(12) & 1))
+    if ((Is(1u << 2)) && !is_shooting && !(Is(1u << 12)))
         reduction *= 0.5;
     if (residualBlindness && residualParalyze) {
         double penalty = _cpp_min<double>(
@@ -4365,39 +4295,39 @@ long army::adjust_damage(army* enemy, long base_damage, unsigned char bIsShot,
         *fire_damage = 0;
     if (!enemy)
         return 0;
-    long damage = base_damage
-        + ComputeAttackerDamageBonuses(base_damage, bIsShot, enemy, simulated,
-                                       distance);
+    int total_damage = base_damage
+        + ComputeAttackerDamageBonuses(
+            base_damage, bIsShot, enemy, simulated, distance)
+        + enemy->ComputeDefenderDamageBonuses(base_damage);
     if (fire_damage) {
-        long total_life;
-        if (enemy->Is(23) & 1)
-            total_life = 1;
-        else
-            total_life = enemy->hitPoints * enemy->numTroops
-                         - enemy->topCreatureDamage;
         *fire_damage = gpCombatManager->compute_fire_shield_damage(
-            damage, this, enemy, total_life);
+            total_damage, this, enemy, enemy->get_total_hit_points(0));
     }
-    damage = static_cast<long>(damage
-                               * ComputeAttackerDamageReduction(enemy, bIsShot));
-    damage = static_cast<long>(damage
-                               * enemy->ComputeDefenderDamageReduction(bIsShot));
-    if (damage <= 0)
-        damage = 1;
-    return damage;
+    total_damage = static_cast<long>(
+        total_damage * ComputeAttackerDamageReduction(enemy, bIsShot));
+    total_damage = static_cast<long>(
+        total_damage * enemy->ComputeDefenderDamageReduction(bIsShot));
+    if (total_damage <= 0)
+        total_damage = 1;
+    return total_damage;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\army.cpp:3406
-DC_ONLY(0x49260, 0x68)
-long army::DamageEnemy(army* enemy, int* iDamage, int* iKilled, unsigned char bIsShot)
+inline long army::DamageEnemy(army* enemy, int* iDamage, int* iKilled,
+                              unsigned char bIsShot)
 {
-    // @stub
+    long fire_damage = 0;
+    if (!enemy)
+        return 0;
+    long damage = ComputeBaseDamage(0);
+    *iDamage = adjust_damage(enemy, damage, bIsShot, 0, joustBonus,
+                             &fire_damage);
+    *iKilled = enemy->Damage(*iDamage);
+    iLuckStatus = 0;
+    return fire_damage;
 }
 
 // E:\gamedcs\army.cpp:3441
-#endif  // @carcass
 
 VA(0x00444090, 0x8F)  // anchor-global, dc 0x492c8
 int army::Damage(int damage)
@@ -4405,7 +4335,7 @@ int army::Damage(int damage)
     int total = damage + topCreatureDamage;
     int killed = total / hitPoints;
     topCreatureDamage = total % hitPoints;
-    if (Is(23) & 1) {
+    if (Is(1u << 23)) {
         killed = numTroops;
         topCreatureDamage = 0;
     }
@@ -4465,7 +4395,7 @@ unsigned long army::Strength()
 //
 // THE DC LINE MAP (dc 0x493a0, forward read), retail agreeing at every
 // point checked:
-//   3493  if (Is(21) & 1) return;          retail's entry test, and the
+//   3493  if (Is(1u << 21)) return;          retail's entry test, and the
 //         tail recursion at the bottom re-enters PAST it (0x44413c).
 //   3494  remove_aura();     INLINED by retail (both vector walks and
 //         both erase_item calls are open-coded here); the body already
@@ -4488,7 +4418,7 @@ unsigned long army::Strength()
 //         two rejects jump to the FUNCTION epilogue, so this block runs
 //         to the end of the body, mirror links included.
 //   3522    hexcell* pCell = &gpCombatManager->cells[gridIndex];
-//   3529    if (Is(0) & 1) {          (the two-hex marker)
+//   3529    if (Is(1u << 0)) {          (the two-hex marker)
 //   3531      iGI2 = gridIndex + OffsetToFront(-1);
 //   3532      pCell2 = &gpCombatManager->cells[iGI2];   }
 //         BOTH ARE FUNCTION-SCOPE LOCALS ASSIGNED ONLY IN THAT ARM:
@@ -4502,7 +4432,7 @@ unsigned long army::Strength()
 //   3544      gpCombatManager->field_13460 = 1;
 //   3558    } else {
 //   3562      if (pCell->field_1c < 14
-//                  && (!(Is(0) & 1) || pCell2->field_1c < 14)) {
+//                  && (!(Is(1u << 0)) || pCell2->field_1c < 14)) {
 //   3566        if (pCell->HasArmy()) {        (armySide >= 0, inlined)
 //   3568..3571   the three dead-list rows plus the count bump - and the
 //                THIRD array is retail-only surface: hexcell's
@@ -4512,7 +4442,7 @@ unsigned long army::Strength()
 //   3574..3582   the identical block for pCell2.
 //   3592..3603   gpCombatManager->field_132cc = 0, the two cell
 //                identities set back to -1, and the same pair on the
-//                second hex behind another Is(0).
+//                second hex behind another Is(1u << 0).
 //   3607..3619   the CLONE LINK, and the DC member table names both
 //                halves: army@36 iMirrorSourceIndex is retail +0x24 and
 //                army@40 iMirrorDestIndex is +0x28 (this band is
@@ -4548,7 +4478,7 @@ static void CancelAllSpells_(army* that)
 //     local would have kept its register), and the guards CSE onto the
 //     same longhand expression, which is what shares the one `mov cl`
 //     between the test and the first store.
-//   - The two LATE two-hex guards re-read `Is(0) & 1` from the object
+//   - The two LATE two-hex guards re-read `Is(1u << 0)` from the object
 //     (`test byte [esi+0x84], 1`) where the dead-list condition reads
 //     the byte local back from [ebp-1]: the local covers only the
 //     declaration, the pCell2 assignment arm and the 3562 condition.
@@ -4567,7 +4497,7 @@ static void CancelAllSpells_(army* that)
 VA(0x00444120, 0x3A6)  // anchor-callee + arity, dc 0x493a0
 void army::ProcessDeath(int bFadeElementals)
 {
-    if (Is(21) & 1)
+    if (Is(1u << 21))
         return;
 
     remove_aura();
@@ -4591,7 +4521,7 @@ void army::ProcessDeath(int bFadeElementals)
 
     if (gpCombatManager->ValidHex(gridIndex)) {
         hexcell* pCell = &gpCombatManager->cells[gridIndex];
-        unsigned char twoHex = Is(0) & 1;
+        unsigned char twoHex = Is(1u << 0);
         hexcell* pCell2;
         int iGI2;
         if (twoHex) {
@@ -4613,7 +4543,7 @@ void army::ProcessDeath(int bFadeElementals)
                         gpCombatManager->cells[gridIndex].field_1a;
                     pCell->iBodiesInHex++;
                 }
-                if (Is(0) & 1) {
+                if (Is(1u << 0)) {
                     if (gpCombatManager->cells[iGI2].HasArmy()) {
                         pCell2->deadArmySide[pCell2->iBodiesInHex] =
                             gpCombatManager->cells[iGI2].armySide;
@@ -4628,7 +4558,7 @@ void army::ProcessDeath(int bFadeElementals)
             gpCombatManager->field_132cc = 0;
             pCell->armySide = -1;
             pCell->armySlot = -1;
-            if (Is(0) & 1) {
+            if (Is(1u << 0)) {
                 pCell2->armySide = -1;
                 pCell2->armySlot = -1;
             }
@@ -4781,11 +4711,11 @@ void army::CancelIndividualSpell(int spell)
     case SPELL_PRAYER:
         attackSkill -= prayerBonus;
         defenseSkill -= prayerBonus;
-        if (!(Is(6) & 1))
+        if (!(Is(1u << 6)))
             field_c4 -= prayerBonus;
         break;
     case SPELL_HASTE:
-        if (!(Is(6) & 1)) {
+        if (!(Is(1u << 6))) {
             field_c4 -= tailwindBonus;
             frameInfoWalkCycleTime = origWalkCycleTime;
         }
@@ -4912,9 +4842,11 @@ static long spell_influence_rounds(const army* self, int spell, int power)
     }
 }
 
-// SetSpellInfluence's Hypnotize teardown, lifted out for the /Ob2 BUDGET
-// probe above.  This is the dose that crosses the threshold: +0.98 alone,
-// and without it the other two are byte-flat.
+// Rejected local-maximum scaffold. Dreamcast army.cpp:4055 proves that
+// SetSpellInfluence calls the named remove_aura boundary here, followed by
+// add_aura on line 4056. Keep the exhausted spelling only as negative
+// evidence; it may not replace the proven helper again.
+#if 0
 static void drop_aura_links(army* self)
 {
     long i = self->aura_sources.size();
@@ -4966,6 +4898,7 @@ static void drop_aura_links(army* self)
 #pragma inline_depth()
     }
 }
+#endif
 
 // Put one spell ON this stack: pick how many rounds it stands (255 for
 // the three that never time out on their own, "until your next turn"
@@ -5100,7 +5033,7 @@ void army::SetSpellInfluence(int spell, int power, int mastery,
                 spell, monInfoLevel, amount);
         attackSkill = attackSkill + prayerBonus;
         defenseSkill = defenseSkill + prayerBonus;
-        if (!(Is(6) & 1))
+        if (!(Is(1u << 6)))
             field_c4 = field_c4 + prayerBonus;
         break;
     case SPELL_MIRTH:
@@ -5119,7 +5052,7 @@ void army::SetSpellInfluence(int spell, int power, int mastery,
         luckPenalty = amount;
         break;
     case SPELL_HASTE:
-        if (!(Is(6) & 1)) {
+        if (!(Is(1u << 6))) {
             CancelIndividualSpell(SPELL_SLOW);
             tailwindBonus = amount;
             if (casting_hero)
@@ -5131,7 +5064,7 @@ void army::SetSpellInfluence(int spell, int power, int mastery,
         }
         break;
     case SPELL_SLOW:
-        if (!(Is(6) & 1)) {
+        if (!(Is(1u << 6))) {
             CancelIndividualSpell(SPELL_HASTE);
             slowFactor = amount / 100.0;
             frameInfoWalkCycleTime =
@@ -5153,7 +5086,7 @@ void army::SetSpellInfluence(int spell, int power, int mastery,
         break;
     case SPELL_HYPNOTIZE:
         CancelIndividualSpell(SPELL_BERSERK);
-        drop_aura_links(this);
+        remove_aura();
         add_aura();
         break;
     case SPELL_BLIND:
@@ -5276,7 +5209,7 @@ inline unsigned char army::can_shoot_flagform(const army* excluded) const
     if (creatureType == ARMY_CREATURE_BALLISTA
         || creatureType == ARMY_CREATURE_ARROW_TOWER)
         return 1;
-    if (!(Is(2) & 1) || shotsLeft <= 0)
+    if (!(Is(1u << 2)) || shotsLeft <= 0)
         return 0;
     hero* controller = get_controller();
     int bCanShoot = 1;
@@ -5311,7 +5244,7 @@ void army::get_berserk_targets(std::vector<army*>& armies) const
         other = gpCombatManager->armies[side];
         long count = gpCombatManager->numArmies[side];
         for (long i = 0; i < count; i++, other++) {
-            if (other->Is(21) & 1)
+            if (other->Is(1u << 21))
                 continue;
             if (other == this)
                 continue;
@@ -5388,7 +5321,7 @@ void army::GoBerserk()
     hero* controller;
     if (creatureType == ARMY_CREATURE_BALLISTA
         || creatureType == ARMY_CREATURE_ARROW_TOWER
-        || ((Is(2) & 1) && shotsLeft > 0
+        || ((Is(1u << 2)) && shotsLeft > 0
             && ((controller = get_controller()) != 0
                     && controller->IsWieldingArtifact(
                            ARTIFACT_BOW_OF_THE_SHARPSHOOTER)
@@ -5491,7 +5424,7 @@ unsigned char army::simple_move(int hex, unsigned char restore_facing)
     gpCombatManager->TurnOffHighlighter(1);
     gpCombatManager->mark_moving_army(this);
     unsigned char moved;
-    if (Is(1) & 1) {
+    if (Is(1u << 1)) {
         pathTarget = hex;
         moved = ValidFlight(hex, 0);
         if (moved) {
@@ -5599,7 +5532,7 @@ unsigned char army::attack_hex(int hex, unsigned char restore_facing)
     } else {
         int direction = -1;
         for (int i = 0; i < 8; i++) {
-            if (i >= COMBAT_DIRECTION_COUNT && !(Is(0) & 1))
+            if (i >= COMBAT_DIRECTION_COUNT && !(Is(1u << 0)))
                 continue;
             long adjacent = get_adjacent_hex(gridIndex, i);
             if (!gpCombatManager->ValidHex(adjacent))
@@ -5623,7 +5556,7 @@ unsigned char army::attack_hex(int hex, unsigned char restore_facing)
                 turned = 0;
             }
             do_attack(direction);
-            if (!(Is(21) & 1) && turned) {
+            if (!(Is(1u << 21)) && turned) {
                 SetupAnimation();
                 Turn(1);
             }
@@ -6247,7 +6180,7 @@ int army::OtherArmyAdjacent(int OAgroup, int OAindex)
 // in the prologue and turning retail's `test al, 1` / `mov [cell], 1`
 // into `test bl, al` / `mov [cell], bl` - because the value is used
 // three times per arm. Retail materializes it at every site instead.
-// Rejected, all byte-identical to the spelling kept: `Is(0) & 1` for
+// Rejected, all byte-identical to the spelling kept: `Is(1u << 0)` for
 // the two-hex test (retail's separate `mov al, byte ptr [esi+0x84]`
 // looked like that shape), literal 0/1 in place of FACING_ATTACKER /
 // FACING_DEFENDER, both of those together, and hexcell::field_1a
@@ -6494,7 +6427,7 @@ void army::new_turn()
     if (field_4f0 != 0)
         return;
     field_4f0 = 1;
-    if (Is(27) & 1) {
+    if (Is(1u << 27)) {
         defenseSkill -= field_4dc;
         creatureId &= ~0x08000000;
     }
@@ -6521,11 +6454,11 @@ void army::new_turn()
                 if (numTroops == 1)
                     text = format_string(
                         gpGeneralText->GetText(371),
-                        GetName(creatureType, numTroops));
+                        ::GetArmyName(creatureType, numTroops));
                 else
                     text = format_string(
                         gpGeneralText->GetText(372),
-                        GetName(creatureType, numTroops));
+                        ::GetArmyName(creatureType, numTroops));
                 gpCombatManager->combatWindow->combat_message(
                     text.c_str(), 1, 0);
                 gpCombatManager->SpellEffect(
@@ -6572,7 +6505,7 @@ void army::ResetRound()
         retaliationCount = 5000;
     if (spellInfluence[SPELL_COUNTERSTRIKE])
         retaliationCount += counterstrokeBonus;
-    if (Is(6) & 1)
+    if (Is(1u << 6))
         retaliationCount = 0;
 
     if (gpCombatManager->bCreaturePlacement)
@@ -6641,7 +6574,7 @@ long army::get_resurrection_size(const army* target) const
 // get_resurrection_size just above (retail expands it here rather than
 // calling it).
 VA(0x004473d0, 0x13D)  // anchor-bracket, dc 0x4be64
-unsigned char army::can_cast_resurrect(long hex) const
+bool army::can_cast_resurrect(long hex) const
 {
     if ((creatureType != CREATURE_ARCHANGEL
          && creatureType != ARMY_CREATURE_PIT_LORD)
@@ -6726,7 +6659,7 @@ void army::FaerieDragonSpell()
                 : DATA_COMPGEN(0x00660aac, faerieReadyFormat,
                                "The %s ready %s (press F to cast)");
         gpCombatManager->combatWindow->combat_message(
-            format_string(fmt, GetName(creatureType, numTroops),
+            format_string(fmt, ::GetArmyName(creatureType, numTroops),
                           akSpellTraits[field_4e0].name)
                 .c_str(),
             1, 0);
@@ -6855,8 +6788,8 @@ unsigned char army::can_cast_spell(long hex) const
 // count-copy retail has); `1 - side` must be a NAMED LOCAL `group` in
 // all three loop arms or the front end folds numArmies/armies into
 // two different displacement constants where retail indexes both off
-// one register; Prayer needs the uchar cast `(uchar)~Is(26) & 1` for
-// retail's `not al` (bare `~Is(26)&1` emits `not eax`); the
+// one register; Prayer needs the uchar cast `(uchar)~Is(1u << 26)` for
+// retail's `not al` (bare `~Is(1u << 26)` emits `not eax`); the
 // protections arm must RETURN the `&&` expression (the int
 // materialization `mov eax,1`/`xor eax,eax` retail has - the
 // early-return spelling emits byte `xor al,al` and a private
@@ -6915,12 +6848,12 @@ unsigned char spell_is_valid_on_target(int spell, const army* target)
     case SPELL_CURE:
         return target->topCreatureDamage > 0;
     case SPELL_PRAYER:
-        return static_cast<unsigned char>(~target->Is(26)) & 1;
+        return static_cast<unsigned char>(~target->Is(1u << 26)) & 1;
     case SPELL_SLAYER: {
         long group = 1 - side;
         long i = gpCombatManager->numArmies[group];
         while (i-- > 0) {
-            if (gpCombatManager->armies[group][i].Is(7) & 1)
+            if (gpCombatManager->armies[group][i].Is(1u << 7))
                 return 1;
         }
         return 0;
@@ -6932,7 +6865,7 @@ unsigned char spell_is_valid_on_target(int spell, const army* target)
         while (i-- > 0) {
             army* enemy = &gpCombatManager->armies[group][i];
             if (!enemy->disabled_290 && !enemy->disabled_2b0
-                && !enemy->disabled_2c0 && !(enemy->Is(21) & 1)
+                && !enemy->disabled_2c0 && !(enemy->Is(1u << 21))
                 && enemy->creatureType != CREATURE_FIRST_AID_TENT
                 && enemy->creatureType != CREATURE_AMMO_CART) {
 #pragma inline_depth(0)
@@ -6949,7 +6882,7 @@ unsigned char spell_is_valid_on_target(int spell, const army* target)
         while (i-- > 0) {
             army* enemy = &gpCombatManager->armies[group][i];
             if (!enemy->disabled_290 && !enemy->disabled_2b0
-                && !enemy->disabled_2c0 && !(enemy->Is(21) & 1)
+                && !enemy->disabled_2c0 && !(enemy->Is(1u << 21))
                 && enemy->creatureType != CREATURE_FIRST_AID_TENT
                 && enemy->creatureType != CREATURE_AMMO_CART) {
 #pragma inline_depth(0)
@@ -6967,7 +6900,7 @@ unsigned char spell_is_valid_on_target(int spell, const army* target)
         if (target->creatureType == army::ARMY_CREATURE_BALLISTA
             || target->creatureType == army::ARMY_CREATURE_ARROW_TOWER) {
             shoots = 1;
-        } else if (!(target->Is(2) & 1) || target->shotsLeft <= 0) {
+        } else if (!(target->Is(1u << 2)) || target->shotsLeft <= 0) {
             shoots = 0;
         } else {
             hero* controller = target->get_controller();
@@ -7222,7 +7155,7 @@ unsigned char army::Unnamed447fe0()
                 && stack->spellInfluence[SPELL_BLIND] == 0
                 && stack->spellInfluence[SPELL_STONE] == 0
                 && stack->spellInfluence[SPELL_PARALYZE] == 0
-                && !(stack->Is(21) & 1)) {
+                && !(stack->Is(1u << 21))) {
                 stack->bShowAttackFrames = 1;
                 stack->iShowAttackFrameType = cs_range_r;
             }
@@ -7400,7 +7333,7 @@ int army::get_mirror_effect() const
 // expands them so far, and it expands each exactly once.
 inline long army::get_clockwise(long direction) const
 {
-    if (Is(0) & 1)
+    if (Is(1u << 0))
         return akWideDirectionRingOrder[
             (akWideDirectionRingIndex[direction] + 1) % 8];
     return (direction + 1) % COMBAT_DIRECTION_COUNT;
@@ -7408,7 +7341,7 @@ inline long army::get_clockwise(long direction) const
 
 inline long army::get_counter_clockwise(long direction) const
 {
-    if (Is(0) & 1)
+    if (Is(1u << 0))
         return akWideDirectionRingOrder[
             (akWideDirectionRingIndex[direction] + 7) % 8];
     return (direction + 5) % COMBAT_DIRECTION_COUNT;
@@ -7482,7 +7415,7 @@ void army::consider_attack(const army* enemy, long value, long attack_distance)
 // chain (82.2772).
 //
 // The two-hex flag inside get_clockwise / get_counter_clockwise is
-// `Is(0) & 1`, NOT `creatureId & 1`: retail CSEs it into a BYTE
+// `Is(1u << 0)`, NOT `creatureId & 1`: retail CSEs it into a BYTE
 // (`mov bl,[ebx+0x84] / and bl,1`, tested twice), and the dword
 // spelling every other body in this TU uses gives `mov edi,dword ... /
 // and edi,1` instead. A plain `& 1` is fine where it is only TESTED -
@@ -7556,7 +7489,7 @@ int army::GetSpeed() const
 {
     int speed = field_c4;
     if (slowRounds) {
-        if (Is(6) & 1)
+        if (Is(1u << 6))
             return 0;
         speed = static_cast<long>(speed * slowFactor);
         if (speed <= 0)
@@ -7590,7 +7523,7 @@ double min(double a, double b)
 
 // E:\gamedcs\Army.h:760
 DC_ONLY(0x4c9ec, 0x20)
-unsigned char army::NeedToTurn(int direction) const
+bool army::NeedToTurn(int direction) const
 {
     // @stub
 }
@@ -7618,7 +7551,7 @@ long army::get_attack_direction(const army* enemy) const
 
 // E:\gamedcs\Army.h:875
 DC_ONLY(0x4ca60, 0x1C)
-unsigned char army::LeavesNoBody() const
+bool army::LeavesNoBody() const
 {
     // @stub
 }

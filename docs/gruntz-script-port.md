@@ -260,6 +260,176 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-28 — Rust DEF parity now uses the real reconstructed candidate
+  for every encoding, with retail packet grammar admitted independently.**
+  The former test-only `DrawTile`/`DrawAdvObjImpl` stubs are gone. Live claims
+  at `0x47dd40` and `0x47d0a0` reconstruct raw rows, word-indexed packed rows,
+  32-pixel adventure cells, horizontal/vertical tile branches, literal code 7,
+  optional adventure flag code 5, and transparent packed controls. The
+  mandatory Dreamcast dossiers (`dc:0x76988`, `dc:0x76060`) supplied the helper,
+  local, scope, and repeated-statement shape; retail x86 supplied the actual
+  tables, tags, effects, dispatch, and verdict. Restoring the four duplicated
+  direction arms raised `DrawTile` from 36.848793% to 52.23191%; the
+  eight-statement Duff loop proved by both line tables and retail jump tables
+  raised it to 73.22727%; and the DC-attested raw do/while rows plus indexed
+  encoded for-rows raised it to 79.04174%. Split packet load/increment and
+  block-scoped row destinations now raise it to **83.2115%**, with all 81
+  branches and 10 returns agreeing. The recovered `kOpaqueRunCode` and raw-row
+  declaration order are byte-flat positive facts; the remaining four-arm
+  delta is explicitly a non-exact C1 register permutation.
+
+  `DrawAdvObjImpl` is now **byte-exact** (1,099 bytes): unsigned cell-line
+  arithmetic, split packet load/increment, and a block-scoped row destination
+  recover retail's logical shift, packet schedule, and dead-hflip parameter
+  home. The adjacent general-RLE `CSpriteFrame::Draw` is also **byte-exact**
+  (1,125 bytes): declaring its DC-attested dword table at function scope,
+  assigning it only inside the positive render guard, and using block-scoped
+  row destinations close all 88 blocks. These closures supersede the earlier
+  92.91832% and 94.35% C1-wall classifications.
+
+  The specialized general-RLE creature path advances **93.77% -> 95.90%**.
+  CodeView restores the public `CSpriteFrame::div2mask`/`div4mask` ownership,
+  older ushort view, const `kOpaqueRunCode`, and local-before-static symbol
+  order. Complete then exposes the missing C1 lever: `div2mask` is written as
+  a word but selected operations read a dword whose low word alone is stored,
+  while `div4mask` remains word-wide. A cast-free union storage view at the
+  first alpha loop makes every forward blend/shade block instruction-exact
+  and aligns both CFGs at 128 blocks. The
+  residual is confined to Clip/setup register homes and reverse-loop tail
+  scheduling; renewed line-table, row-destination, direct-expression, and all
+  four reverse-width combinations are measured regressions.
+
+  The raw Dreamcast CodeView records further recover the renderer's original
+  function-scope aliases: `TOffset` is `unsigned int` and `TDstPixel` is
+  `unsigned short` (`DrawTile` uses an `unsigned short` `TOffset`). Typing the
+  creature row table through `TOffset` is retail-byte-flat. Pairing the
+  guarded row-table assignment with one or both `TDstPixel` reverse-shade
+  temporaries measures 94.72%/95.69%, below the retained 95.90% high water;
+  those score-lowering forms remain rejected.
+
+  `CSpriteFrame::SetPixelFormat` is now **byte-exact** (247 bytes, 13/13
+  blocks). The previous source named `rMax`, `gMax`, and `bMax`, forcing their
+  lifetimes to overlap all three channel-bit counts; VC6 consequently used a
+  12-byte frame and issued the three shifts before their consumers. Repeating
+  the maxima directly in the half- and quarter-mask expressions lets C1 recover
+  retail's cross-statement CSE, sequential EAX scratch, and 8-byte frame. The
+  source-labelled diff is fully identical.
+
+  A fresh `DrawTile` audit also corrected the scope of its remaining wall.
+  Retail and Dreamcast independently prove the surprising general-RLE fallback
+  call `Draw(sw, sy, sw, ...)`, not the natural `Draw(sx, sy, sw, ...)`.
+  Spelling that fact fixes the call site but lowers the whole-function score
+  from 83.2115% to 81.4249% because SP3 then carries `this` in EDI through all
+  four direction arms instead of retail's EDX. Swapping the two leading
+  declarations and replacing the local code-7 constant with the existing enum
+  are byte-flat in combination. The score-lowering spelling was therefore
+  reverted under the retail ratchet; the positive call fact remains banked for
+  a future paired source-shape change rather than being misclassified as an
+  unknown semantic difference.
+
+  The independent `no_std` Rust blitter fixed one real semantic defect found
+  by this comparison: packed encoding controls are always transparent in the
+  ordinary renderer; the `tblit` option applies only to general-RLE fills. The
+  opt-in gate compiles `src/cspriteframe.cpp` itself and passes 512 generated
+  cases per encoding (2,048 total), including multi-cell adventure rectangles.
+  A second environment-selected test parses and inflates legally installed
+  LODs, then differentials one deterministic clipped full-frame draw for every
+  member frame. All **39,939/39,939** Steam frames agree: 665 raw, 26,849
+  general RLE, 187 tileset RLE, and 12,238 adventure RLE. Game bytes remain
+  external, and the C++ differential remains corroboration rather than a
+  substitute for retail-byte proof. The supplied original-media corpus adds
+  independently clean gates for RoE 1.0 (29,393), RoE 1.1 (29,393), the AB
+  supplement (5,599), and SoD (34,324) frames.
+
+- **2026-08-28 — all retail-accepted saved games get a separate
+  allocation-free parser.**
+  `homm3-save` consumes the full inflated `H3SVG`/`H3SVC` stream for versions
+  16–18 and 25–42, exactly the revisions `SavedGameHeader::Load` accepts:
+  saved header and setup, campaign carry-over records, map cells and attached
+  objects, object templates and placements, black boxes, quests, both event
+  lists, game object pools, all player/town/hero records, map-extra and point
+  pools, universities, creature banks, and all eleven recorded-action types.
+  The implementation follows the retail serializers and their reconstructed
+  mirrors, with Dreamcast dossiers used only for positive helper/source-shape
+  facts. Retail-specific quirks stay literal: version 16's coordinate-form
+  loss-hero payload; the fixed 0x66a9-byte campaign snapshot below version 28;
+  narrow pre-25 creature ids; the 128/156 hero split; versioned equipment,
+  town-name, quest, timed-event, and recorded-boat fields; narrowed scalars;
+  the 70-byte town bitset dump; and dword hero ids in replay records. The
+  library is `no_std`, dependency-free, allocation-free, and forbids unsafe
+  code; gzip and recursive GM/TGM/CGM discovery live in `homm3-oracle saves`.
+  Generated full streams for all 21 revisions, non-empty probes for every
+  historical width family, every truncation of the current stream, and a
+  hostile deterministic corpus are gates. Revisions 1–15, 19–24, and above
+  42 are rejected at retail's version boundary. The Steam installation still
+  supplies no real saves, so no revision is called corpus-closed.
+
+- **2026-08-28 — complete H3M bodies join the allocation-free resource
+  oracle, with retail's class remap table admitted explicitly.**
+  `homm3-map::MapBody` now consumes every placed-object payload, quest and
+  Seer reward variant, nested town event, global timed event, and the installed
+  maps' 124-byte zero editor trailer. The retail initializer at `0x41b500`
+  first gives all 232 adventure-trait rows identity dispatch values, then
+  applies the 46 key/value overrides stored at `0x63a6e4..0x63a854`: raw
+  terrain ids 165..205 map onto their runtime classes, while 219/220/221/223/
+  230 map to 33/53/99/21/46. This is why the Complete-only Garrison II and
+  Abandoned Mine records must use the reconstructed garrison and mine readers;
+  treating the initialization loop alone as proof of identity is rejected.
+  The independent EOF gate is clean for 160 standalone maps and all 113 H3C
+  embedded maps. The fixed zero trailer is corpus-format evidence—the retail
+  `NewfullMap::Read` path returns after the timed-event list and does not
+  consume it—not a promoted retail reader claim.
+
+- **2026-08-28 — the independent resource oracle follows the sibling
+  `no_std`-core/`std`-edge architecture and admits formats by explicit retail
+  dialect.** Allocation-free, dependency-free Rust crates now own LOD,
+  SND/VID, gzip envelopes, DEF, engine-owned LOD payloads, IFF/XMIDI, H3C
+  descriptors, and the three `NewSMapHeader::Read` generations; filesystem,
+  inflation, reporting, and PNG work stay in the CLI. External WAV/MP3/SMK/
+  BIK/IFR codecs close only at the byte-exact handoff boundary that retail
+  owns. The ledger in `docs/resource-format-matrix.md` distinguishes retail
+  proof, candidate parity, Dreamcast-only hypotheses, corpus support,
+  and open world/save semantics. Corpus success cannot promote a guessed
+  dialect: twelve `SGTWMTA/B` DEF frames use a separately named
+  interleaved-compact-header manifest, while the default retail dialect
+  continues to reject them as a negative control. The original US RoE 1.0 CD
+  proves this layout belongs to the initial release rather than Steam; RoE 1.1
+  and SoD repeat it. Every DEF frame passes the reconstructed C++ draw oracle:
+  29,393 in each RoE pressing, 5,599 in the AB supplement, and 34,324 in SoD.
+  All 251 standalone maps and the installed/loose SND/VID sets also pass. The
+  same pass adds the original RoE H3C generation: a direct version-1 header
+  with compact `(name, gzip size, prerequisite mask)` region records followed
+  by map members, versus the later gzipped version-4/5/6 full header. Both
+  forms remain allocation-free in `homm3-map`; envelope inflation stays in the
+  `std` oracle. Across the four discs, all 42 campaign observations, 175 region
+  descriptors, and 159 embedded maps validate to EOF. The selector is now
+  `known-interleaved` (`steam` remains an input alias). No game bytes enter the
+  repository.
+
+- **2026-08-28 — `TAdventureOptionsWindow::WindowHandler` closes exactly after
+  restoring the Dreamcast exit state hidden by its 99.9367% local maximum.**
+  The old source duplicated the end-dialog stores and returned directly from
+  the mouse arm. Dreamcast instead initializes one exit carrier before
+  dispatch, sets it for selected options, and consumes it in the shared
+  lines-237-242 tail. Restoring that state first preserves the direct
+  line-211 `findWidget(msg->mouseX, msg->mouseY)` statement through a measured
+  99.8734% dip, then makes VC6 select retail's EAX/ECX argument staging and all
+  508 bytes match. The same pass restores CodeView's const-qualified
+  `findWidget`/`findWidgetPtr` pair and the distinct
+  `gAdventureOptionsHelp` identity; both helper bodies remain exact after the
+  required delink refresh.
+
+  The one missing Dreamcast call is now a proof-carrying Complete transfer,
+  not a free skew label. Dreamcast calls `ShowScenInfo` in the handler only for
+  campaigns and in `advManager::DoAdventureOptions` only outside campaigns;
+  retail forwards the selected id from the handler and its exact outer switch
+  calls `ShowScenInfo` unconditionally. The fatal gate suppresses the old-call
+  defect only while that forwarding shape, receiver call, and receiver's exact
+  retail score all hold. Negative controls remove each proof leg separately.
+  Additional rules reject erased exit state, early/duplicated returns, split
+  coordinate locals, the wrong help table, and non-const helper declarations.
+  Exact count rises **2534 -> 2535/3097**.
+
 - **2026-08-28 — Dreamcast source shape breaks the
   `TSplitWindow::WindowHandler` local maximum and closes all 735 bytes.** The
   old 99.9170% candidate duplicated the end-dialog source tail and deleted the
@@ -2766,8 +2936,9 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   adds one exact row and advances the linked inventory from 1818/2207 to
   **1819/2208 exact at 96.75% fuzzy**; all gates remain clean.
 
-- **2026-08-23 — `CSpriteFrame::DrawCreatureImpl` is semantically closed at a
-  bounded 93.77% C1 scheduling wall, retiring its DC-only view.** With alpha
+- **2026-08-23 — `CSpriteFrame::DrawCreatureImpl` was semantically closed at a
+  bounded 93.77% C1 scheduling wall; superseded by the 95.90% 2026-08-28
+  ratchet above.** With alpha
   zero, retail dispatches raw/tile encodings to `DrawTile` and encoding 3 to
   `DrawAdvObjImpl`; the general path otherwise clips and decodes the same
   dword-offset scanlines as `Draw`. Literal runs either install palette pixels
@@ -2785,8 +2956,8 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   classifying the residual as later C1 handle state rather than a
   source-nameable ordering edit. The admitted inventory is now 1818/2207 exact.
 
-- **2026-08-23 — `CSpriteFrame::Draw` is semantically closed at a bounded
-  94.35% C1 scheduling wall, retiring its final DC-only view.** Retail selects
+- **2026-08-23 — `CSpriteFrame::Draw` was semantically closed at a bounded
+  94.35% C1 scheduling wall; superseded by the exact 2026-08-28 closure.** Retail selects
   the tile renderer for raw/tile encodings and the adventure-object renderer
   for encoding 3, then clips and decodes encoding-1 scanlines from a dword
   offset table. Each run is `(code,count-minus-one)`; the TU-installed 255
@@ -2800,11 +2971,12 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   Dreamcast CodeView independently proves the sole named local is `const
   unsigned int* aLineOffset`; placing it before the guarded literal-run static
   gives the best score. Entry-, post-static-, post-Clip-, block-scope and
-  shared-map variants are flat or worse. `why-reg --model --il-order` finds
+  shared-map variants were flat or worse before the later row-destination
+  lifetime changed C1 state. `why-reg --model --il-order` found
   identical first callee-saved definitions (EDI=sw, EBX=sx, ESI=dx), bounding
   the five remaining size-only blocks to later C1 handle state rather than a
-  source-nameable creation-order edit. The admitted inventory is now
-  1818/2206 exact with this additional bounded claim.
+  source-nameable creation-order edit at that plateau. The later exact closure
+  invalidates this historical residual classification.
 
 - **2026-08-23 — fourteen adjacent `CSprite` draw adapters are exact.** The
   retail bodies select a `CSpriteFrame` through the sequence/frame arrays and
@@ -4890,8 +5062,10 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   adding two branches and changing downstream scheduling. The same template
   instantiation's depth, adapter, local-order, and type-population probes were
   already exhausted in the quick-info and split-window lanes, so the residual
-  is recorded rather than re-ground. The destructor pair remains exact and
-  `WindowHandler` remains at its documented 99.9367% register-homing wall.
+  is recorded rather than re-ground. The destructor pair remains exact.
+  **Superseded 2026-08-28:** `WindowHandler`'s 99.9367% register symptom came
+  from erased Dreamcast exit state and a duplicated source tail; restoring the
+  state closes all 508 bytes.
 
 - **2026-08-11 — `executive::CallManager` advanced 68.3663% ->
   98.1387%, and its three contiguous catch-handler splits were retired.**
@@ -5483,6 +5657,10 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   retail vtable, allocation size, globals, calls, and bytes proved the x86
   layout and implementation. The adjacent 0x405680 slot-3 forwarder is shared
   by 42 vtables and is deliberately left with its header-inline ownership.
+
+  **Superseded 2026-08-28:** the mouseX register was not an allocator wall.
+  Dreamcast's shared exit-state tail, direct hover statement, const helper
+  signatures, and distinct options-help table close the handler at 100.0%.
 
 - **2026-08-11 — `campaignmap` CLOSED 2/2 exact (functions-only), and
   volatile compiler-function normalization completed.** The sole source

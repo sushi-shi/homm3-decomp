@@ -962,15 +962,15 @@ void combatManager::UpdateArmyGroup(int whichSide)
         if (current.numTroops <= 0)
             continue;
 
-        if (current.Is(21) & 1)
+        if (current.Is(1u << 21))
             continue;
         if (playerIds[whichSide] != -1) {
-            if (current.Is(22) & 1)
+            if (current.Is(1u << 22))
                 continue;
         }
-        if (current.Is(23) & 1)
+        if (current.Is(1u << 23))
             continue;
-        if (current.Is(6) & 1)
+        if (current.Is(1u << 6))
             continue;
         if (current.originalIndex < 0
             || current.originalIndex >= armyGroup::ARMY_GROUP_SLOT_COUNT)
@@ -1324,13 +1324,13 @@ void combatManager::CheckApplyGoodMorale(int group, int index)
     army* stack = &armies[group][index];
     if (bCreaturePlacement)
         return;
-    if (stack->Is(27) & 1)
+    if (stack->Is(1u << 27))
         return;
-    if (stack->Is(24) & 1)
+    if (stack->Is(1u << 24))
         return;
     if (!stack->numTroops)
         return;
-    if (Random(1, 24) > _cpp_clamp(stack->morale, 3, -3))
+    if (Random(1, 24) > stack->GetMorale(1))
         return;
     stack->creatureId = (stack->creatureId & ~0x04000000) | 0x01000000;
     if (!IsQuickCombat()) {
@@ -1365,7 +1365,7 @@ int combatManager::CheckApplyBadMorale(int group, int index)
 {
     if (group >= 0 && index >= 0) {
         army* stack = &armies[group][index];
-        if (Random(1, 12) <= -_cpp_clamp(stack->morale, 3, -3)) {
+        if (Random(1, 12) <= -stack->GetMorale(1)) {
             if (sideIsAI[group] || Random(1, 4) != 1) {
                 stack->creatureId |= 0x04000000;
                 if (!IsQuickCombat()) {
@@ -1405,7 +1405,7 @@ int combatManager::CheckApplyBadMorale(int group, int index)
 VA(0x00464d40, 0x20D)  // NextArmy sole caller + Fear.wav/body, retail-only
 unsigned char combatManager::Unnamed464d40(army* selected)
 {
-    if (selected->Is(17) & 1)
+    if (selected->Is(1u << 17))
         return 0;
     if (selected->creatureType == CREATURE_AZURE_DRAGON)
         return 0;
@@ -1450,8 +1450,8 @@ VA(0x00464f50, 0x123)  // NextArmy sole caller + GetSpeed pair, retail-only
 unsigned char combatManager::Unnamed464f50(
     const army* incumbent, const army* candidate)
 {
-    if ((incumbent->Is(24) & 1) != (candidate->Is(24) & 1))
-        return incumbent->Is(24) & 1;
+    if ((incumbent->Is(1u << 24)) != (candidate->Is(1u << 24)))
+        return incumbent->Is(1u << 24);
 
     int incumbentSpecial = incumbent->creatureType == CREATURE_ARROW_TOWER;
     int candidateSpecial = candidate->creatureType == CREATURE_ARROW_TOWER;
@@ -1502,20 +1502,14 @@ unsigned char combatManager::NextArmy(unsigned char checking_for_bad_morale)
         for (int side = 0; side < 2; side++) {
             for (int i = 0; i < numArmies[side]; i++) {
                 army* stack = &armies[side][i];
-                if (stack->Is(26) & 1)
+                if (stack->Is(1u << 26))
                     continue;
-                if (stack->Is(21) & 1)
+                if (stack->Is(1u << 21))
                     continue;
-                if (stack->Is(25) & 1)
+                if (stack->Is(1u << 25))
                     continue;
-                if (stack->field_4f0) {
-                    if (stack->disabled_290)
-                        continue;
-                    if (stack->disabled_2b0)
-                        continue;
-                    if (stack->disabled_2c0)
-                        continue;
-                }
+                if (stack->IsIncapacitated())
+                    continue;
                 if (bCreaturePlacement) {
                     if (!stack->field_c4)
                         continue;
@@ -1528,7 +1522,7 @@ unsigned char combatManager::NextArmy(unsigned char checking_for_bad_morale)
                 }
                 if (stack->creatureType == CREATURE_AMMO_CART)
                     continue;
-                if (bCreaturePlacement && (stack->Is(6) & 1))
+                if (bCreaturePlacement && (stack->Is(1u << 6)))
                     continue;
                 if (best && Unnamed464f50(best, stack))
                     continue;
@@ -2886,7 +2880,7 @@ void combatManager::MakeCreaturesVanish()
             const army& stack = armies[side][index];
             cells[stack.gridIndex].armySide = -1;
             cells[stack.gridIndex].armySlot = -1;
-            if (stack.Is(0) & 1) {
+            if (stack.Is(1u << 0)) {
                 cells[stack.gridIndex + (stack.facing ? 1 : -1)].armySide = -1;
                 cells[stack.gridIndex + (stack.facing ? 1 : -1)].armySlot = -1;
             }
@@ -3759,7 +3753,7 @@ static const long& MaxOf(const long& x, const long& y)
 //   * the frame budget is four chained MaxOf selects ending on
 //     `wince + attack - 1`, which retail forms with one
 //     `lea eax,[esi+edi-1]`;
-//   * `iNextFrameType = cs_wince + (Is(27) & 1)` is ARITHMETIC, not a
+//   * `iNextFrameType = cs_wince + (Is(1u << 27))` is ARITHMETIC, not a
 //     ternary - retail emits `setne cl` straight into `add ecx,3`;
 //   * walk 4 is MakeCreaturesVanish's own first walk verbatim, down to
 //     the three-way arrow-tower switch on gridIndex;
@@ -3812,7 +3806,7 @@ void combatManager::PowEffect(int spellEffect, int bResetLimitCreature)
                         stack.iNextFrameType = cs_death;
                     else
                         stack.iNextFrameType = static_cast<signed char>(
-                            cs_wince + ((stack.Is(27) & 1) != 0));
+                            cs_wince + ((stack.Is(1u << 27)) != 0));
                     stack.iRemainingFramesToPlay = static_cast<signed char>(
                         stack.stdIcon->GetNumFrames(stack.iNextFrameType));
                     if (stack.iNextFrameType == stack.currFrameType)
@@ -3869,7 +3863,7 @@ void combatManager::PowEffect(int spellEffect, int bResetLimitCreature)
         for (side = 0; side < 2; side++) {
             for (slot = 0; slot < numArmies[side]; slot++) {
                 army& stack = armies[side][slot];
-                if (stack.Is(21) & 1)
+                if (stack.Is(1u << 21))
                     continue;
                 if (!stack.bSomeUnitsDamaged && !stack.bShowAttackFrames
                         && !stack.bShowRangeFrames)
@@ -4020,7 +4014,7 @@ play_frame:
             army& stack = armies[side][slot];
             if (stack.bAllUnitsKilled) {
                 stack.ProcessDeath(0);
-                if (stack.Is(6) & 1)
+                if (stack.Is(1u << 6))
                     heroes[side]->DestroySiegeWeaponArtifact(
                         stack.creatureType);
             }
@@ -4075,9 +4069,9 @@ void combatManager::CheckRebirth()
         army* stack = &armies[side][0];
         for (int slot = 0; slot < numArmies[side]; slot++, stack++) {
             if (stack->creatureType != CREATURE_PHOENIX
-                    || !(stack->Is(21) & 1)
+                    || !(stack->Is(1u << 21))
                     || stack->numSpellCasts <= 0
-                    || (stack->Is(23) & 1))
+                    || (stack->Is(1u << 23)))
                 continue;
 
             stack->numSpellCasts--;
@@ -4338,8 +4332,8 @@ void combatManager::damage_message(const char* attacker, long attacker_qty, long
         std::string deathText;
         const char* name;
         if (defender) {
-            name = army::GetName(defender->creatureType, deaths);
-            if (defender->Is(6) & 1) {
+            name = GetArmyName(defender->creatureType, deaths);
+            if (defender->Is(1u << 6)) {
                 deathText = format_string(
                     gpGeneralText->GetText(GENERAL_TEXT_COMBAT_STACK_WIPED_OUT),
                     name);

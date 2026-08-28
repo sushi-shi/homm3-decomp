@@ -137,10 +137,10 @@ long get_area_attack_value(const army* current_army, long hex, long our_group,
 // CODEVIEW(E:\gamedcs\ai.cpp:2397, dc 0x273d8) void simulate_simple_attack(army* current_army, army* target, long distance, unsigned char ranged, unsigned char breath_attack);
 
 // --- army ---
-// CODEVIEW(E:\gamedcs\Army.h:718, dc 0x27c78) unsigned char army::can_cast_resurrect();
+// CODEVIEW(E:\gamedcs\Army.h:718, dc 0x27c78) bool army::can_cast_resurrect();
 // CODEVIEW(E:\gamedcs\Army.h:736, dc 0x27c9c) int army::OffsetToFront(int direction);
 // CODEVIEW(E:\gamedcs\Army.h:752, dc 0x27ccc) void army::clear_AI_values();
-// CODEVIEW(E:\gamedcs\Army.h:765, dc 0x27ce4) unsigned char army::Is(unsigned attribute);
+// CODEVIEW(E:\gamedcs\Army.h:765, dc 0x27ce4) bool army::Is(unsigned attribute);
 // CODEVIEW(E:\gamedcs\Army.h:770, dc 0x27cf4) long army::get_AI_expected_damage();
 // CODEVIEW(E:\gamedcs\Army.h:775, dc 0x27cfc) const army* army::get_AI_target();
 // CODEVIEW(E:\gamedcs\Army.h:780, dc 0x27d04) long army::get_AI_target_value();
@@ -149,10 +149,10 @@ long get_area_attack_value(const army* current_army, long hex, long our_group,
 // CODEVIEW(E:\gamedcs\Army.h:795, dc 0x27d3c) int army::get_owning_side();
 // CODEVIEW(E:\gamedcs\Army.h:800, dc 0x27d44) int army::get_controlling_side();
 // CODEVIEW(E:\gamedcs\Army.h:820, dc 0x27d74) long army::get_spell_time(SpellID spell);
-// CODEVIEW(E:\gamedcs\Army.h:830, dc 0x27d88) unsigned char army::IsActive();
+// CODEVIEW(E:\gamedcs\Army.h:830, dc 0x27d88) bool army::IsActive();
 // CODEVIEW(E:\gamedcs\Army.h:840, dc 0x27d9c) unsigned char army::IsIncapacitated();
-// CODEVIEW(E:\gamedcs\Army.h:847, dc 0x27dd8) unsigned char army::can_retaliate(const army* attacker);
-// CODEVIEW(E:\gamedcs\Army.h:855, dc 0x27e1c) unsigned char army::cannot_attack();
+// CODEVIEW(E:\gamedcs\Army.h:847, dc 0x27dd8) bool army::can_retaliate(const army* attacker);
+// CODEVIEW(E:\gamedcs\Army.h:855, dc 0x27e1c) bool army::cannot_attack();
 // CODEVIEW(E:\gamedcs\Army.h:864, dc 0x27e70) long army::get_adjacent_hex(long direction);
 // CODEVIEW(E:\gamedcs\ai.cpp:1786, dc 0x28068) void army::~army();
 

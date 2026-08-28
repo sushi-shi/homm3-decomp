@@ -303,8 +303,10 @@ public:
     virtual ~TTextResource();
 
     virtual unsigned int GetSize() const;
+    // E:\gamedcs\TextResource.h:66
     const char* GetText(int r) const { return Text[r]; }
-    const char* operator[](int i) const { return Text[i]; }
+    // E:\gamedcs\TextResource.h:73
+    const char* operator[](int i) const { return GetText(i); }
 
 public:
     // Canonical backing vector. Public while the decompilation still has

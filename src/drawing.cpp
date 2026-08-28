@@ -1136,7 +1136,7 @@ void combatManager::DrawOccupant(int index, int iDrawPriority,
             || (field_53a9 && index == gOuterMoatColumns[row]))
         DrawMoatOverlay(index);
 
-    if (occupant->Is(0) & 1) {
+    if (occupant->Is(1u << 0)) {
         int front = index + occupant->OffsetToFront(-1);
         if (front == gMoatColumns[row]
                 || (field_53a9 && front == gOuterMoatColumns[row]))
@@ -1718,7 +1718,7 @@ void combatManager::CycleCombatScreen()
     for (side = 0; side < 2; side++) {
         for (int slot = 0; slot < numArmies[side]; slot++) {
             army* stack = &armies[side][slot];
-            if (!(stack->Is(21) & 1)
+            if (!(stack->Is(1u << 21))
                     && !stack->IsIncapacitated()
                     && stack->creatureType != army::ARMY_CREATURE_ARROW_TOWER
                     && (stack->currFrameType == cs_fidget
@@ -2052,7 +2052,7 @@ bool SLimitData::IsEmpty() const
 
 // E:\gamedcs\Army.h:881
 DC_ONLY(0x872f4, 0xA)
-unsigned char army::is_in_area_highlight()
+bool army::is_in_area_highlight()
 {
     // @stub
 }

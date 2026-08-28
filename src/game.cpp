@@ -1890,6 +1890,7 @@ int playerData::load(TAbstractFile* infile, int saveVersion)
 VA(0x004ba670, 0x36A)  // anchor-global, dc 0xa55a8
 int playerData::save(TAbstractFile* outfile)
 {
+    int x;
     unsigned long flags;
     int number;
     int count;
@@ -1906,8 +1907,8 @@ int playerData::save(TAbstractFile* outfile)
     if (outfile->Write(&value, sizeof(value)) < sizeof(value))
         return -1;
 
-    for (count = 0; count < 8; count++) {
-        value = static_cast<char>(heroes[count]);
+    for (x = 0; x < 8; x++) {
+        value = static_cast<char>(heroes[x]);
         if (outfile->Write(&value, sizeof(value)) < sizeof(value))
             return -1;
     }

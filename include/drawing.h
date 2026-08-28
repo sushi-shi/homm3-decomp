@@ -97,7 +97,7 @@ extern const float gCombatSpeedFactors[3];
 // CODEVIEW(E:\gamedcs\CombatControlSubWindow.h:148, dc 0x87344) unsigned char TCombatHeroSubWindow::IsShown();
 
 // --- army ---
-// CODEVIEW(E:\gamedcs\Army.h:881, dc 0x872f4) unsigned char army::is_in_area_highlight();
+// CODEVIEW(E:\gamedcs\Army.h:881, dc 0x872f4) bool army::is_in_area_highlight();
 
 // --- combatManager ---
 // CODEVIEW(E:\gamedcs\drawing.cpp:178, dc 0x8354c) unsigned char combatManager::show_creature_spell_error(char* buffer, const army* current_army);

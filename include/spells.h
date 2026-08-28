@@ -60,7 +60,7 @@ enum EBoltSpanDepth {
 // CODEVIEW(E:\gamedcs\spells.cpp:5890, dc 0x158090) TCreatureType get_elemental_type(SpellID spell);
 
 // --- army ---
-// CODEVIEW(E:\gamedcs\Army.h:835, dc 0x158180) unsigned char army::is_in_aura();
+// CODEVIEW(E:\gamedcs\Army.h:835, dc 0x158180) bool army::is_in_aura();
 
 // --- combatManager ---
 // CODEVIEW(E:\gamedcs\spells.cpp:97, dc 0x14ea14) SpellID combatManager::ViewSpells();

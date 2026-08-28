@@ -116,12 +116,7 @@ unsigned char TMultiPlayerWindow::OnDirectJoin()
     // @stub
 }
 
-// E:\gamedcs\multiplayerwindow.cpp:1744
-DC_ONLY(0x101510, 0x26E)
-unsigned char TMultiPlayerWindow::OnJoin()
-{
-    // @stub
-}
+// OnJoin promoted to a retail claim below.
 
 // GetIPAddress promoted to a VA claim (retail-located block).
 
@@ -164,12 +159,7 @@ unsigned char TMultiPlayerWindow::IsNT()
     // @stub
 }
 
-// E:\gamedcs\dxplay.h:82
-DC_ONLY(0x101d58, 0x2A)
-unsigned char CDPlaySession::IsJoinDisabled()
-{
-    // @stub
-}
+// IsJoinDisabled promoted to a retail selected-COMDAT claim below.
 
 // E:\gamedcs\dxplay.h:96
 DC_ONLY(0x101d84, 0x14)
@@ -281,7 +271,12 @@ void CMPEdit::~CMPEdit()
 
 // E:\gamedcs\multiplayerwindow.cpp:383
 DC_ONLY(0x102210, 0x98)
-void CMPInputEdit::CMPInputEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, font::EJustify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
+void CMPInputEdit::CMPInputEdit(int x, int y, int w, int h, int textSize,
+                                const char* text, const char* fontName,
+                                font::TColor color, unsigned justification,
+                                const char* backgroundIcon,
+                                int backgroundFrame, int id, int style,
+                                int readType, int insetX, int insetY)
 {
     // @stub
 }
@@ -346,7 +341,43 @@ inline bool CHeroSessions::GetSessionInfo(unsigned long index, char* sessName,
 
     numPlayers = session->playerCount;
     status = open;
+#pragma inline_depth(0)
     if (session->IsJoinDisabled())
+#pragma inline_depth()
+        status = closed;
+    else if (session->dwFlags & 0x400)
+        status = password;
+    return true;
+}
+
+// Update and OnJoin inline the same source helper but make opposite nested
+// IsJoinDisabled decisions in retail. Keep a caller-specific copy so VC6 can
+// expand the status test in Update without changing OnJoin's out-of-line call.
+inline bool CHeroSessions::GetSessionInfoInline(
+    unsigned long index, char* sessName, char* userName, int& numPlayers,
+    eSessionStatus& status)
+{
+    CDPlaySession* session = Get(index);
+    if (!session)
+        return false;
+
+    char separator[2];
+    separator[0] = static_cast<char>(0xfa);
+    separator[1] = 0;
+    char* split = strstr(session->sessionName, separator);
+    int nameLength = strlen(session->sessionName);
+    if (split)
+        nameLength = split - session->sessionName;
+    strncpy(sessName, session->sessionName, nameLength);
+    sessName[nameLength] = 0;
+    if (split)
+        strcpy(userName, &session->sessionName[nameLength + 1]);
+    else
+        userName[0] = 0;
+
+    numPlayers = session->playerCount;
+    status = open;
+    if (session->IsJoinDisabledInline())
         status = closed;
     else if (session->dwFlags & 0x400)
         status = password;
@@ -371,6 +402,10 @@ DATA(0x006a6578) THelpText gMultiPlayerHelp[30];
 // Armed by all three retail host paths before they create a DirectPlay
 // session. No public symbol survives for the dword, so the name is ordinal.
 DATA(0x0069927c) int gUnnamed69927c;
+
+// Armed beside the two known multiplayer start flags by Complete's generic
+// join path. Its only other retail writes are in the adjacent host flows.
+DATA(0x00699288) int gUnnamed699288;
 
 const long DPLAY_ERROR_USER_CANCEL = 0x88770118;
 
@@ -664,7 +699,7 @@ void TMultiPlayerWindow::Update()
             if (count > 0) {
                 wy = wy + 0x70;
                 do {
-                    if (!pSessions->GetSessionInfo(
+                    if (!pSessions->GetSessionInfoInline(
                             nRow + currentIndex, nameBuf, userBuf, numPlayers,
                             status))
                         return;
@@ -1288,6 +1323,81 @@ void CMPInputDlg::UpdateOK()
 // E:\gamedcs\multiplayerwindow.cpp:523
 VA_COMPGEN(0x005109e0, 0x21, SCALAR_DELETING_DTOR, CMPInputDlg)
 
+// E:\gamedcs\multiplayerwindow.cpp:1744
+// The generic join path dispatches the two serial transports, splits the
+// selected DirectPlay session's embedded 0xfa name pair, asks for a password
+// only when the session advertises one, then expands JoinSession and reports
+// its two Complete error cases. Dreamcast supplies the five local identities
+// and statement order; the retail body independently fixes all PC globals,
+// flags, dialog indices and the selected-session accesses.
+VA(0x00510f40, 0x380)  // protocol dispatch + selected-session join, dc 0x101510
+unsigned char TMultiPlayerWindow::OnJoin()
+{
+    if (iMPNetProtocol == MP_MODEM)
+        return OnModemJoin();
+    if (iMPNetProtocol == MP_SERIAL)
+        return OnDirectJoin();
+
+    gpWindowManager->dialogReturn = DIALOG_RETURN_OK;
+    gUnnamed69927c = 2;
+    gUnnamed6994e4 = 1;
+    gUnnamed699288 = 1;
+    strcpy(gLocalPlayerName, playerName->Text.c_str());
+
+    char userName[256];
+    char sessName[256];
+    int numPlayers;
+    CHeroSessions::eSessionStatus status;
+    if (!pSessions->GetSessionInfo(currentGame, sessName, userName,
+                                   numPlayers, status))
+        return 0;
+
+    CDPlaySession* session = pSessions->Get(currentGame);
+    if (!session)
+        return 0;
+
+    const char* password = 0;
+#pragma inline_depth(0)
+    CMPInputDlg dlg(20, 20);
+#pragma inline_depth()
+    if (session->dwFlags & 0x400) {
+        dlg.header1->SetText(gUnnamed6a7780);
+        dlg.header2->SetText((*gpGeneralText)[454]);
+        dlg.field1->enable(0);
+        dlg.field1->SetText(sessName);
+        dlg.DrawWindow(1, 0xffff0001, 0xffff);
+        dlg.SetFocus(dlg.field2->id);
+        dlg.field1->set_help_text(gUnnamed6a7780, 0, 0);
+        dlg.field2->set_help_text(gUnnamed6a7778, 0, 0);
+        dlg.DoModal(0);
+        if (gpWindowManager->dialogReturn == DIALOG_RETURN_CANCEL)
+            return 0;
+        password = dlg.field2->GetText();
+    }
+
+    if (JoinSession(session, password))
+        return 1;
+
+    const char* errorText = (*gpGeneralText)[456];
+    if (pDPlay->GetLastError() == static_cast<long>(0x88770154))
+        errorText = (*gpGeneralText)[458];
+    NormalDialog(errorText, 1, -1, -1,
+                 -1, 0, -1, 0, -1, 0, -1, 0);
+    return 0;
+}
+
+// E:\gamedcs\dxplay.h:82
+// OnJoin's expanded GetSessionInfo leaves this header helper out of line.
+// Retail tests the two disabled flag bits separately, then compares the
+// current and maximum player counts exactly as the header definition does.
+#if 0  // @carcass: claim-only - definition lives in multiplayerwindow.h
+VA(0x005112c0, 0x1C)  // exact selected COMDAT, dc 0x101d58
+unsigned char CDPlaySession::IsJoinDisabled()
+{
+    // @stub
+}
+#endif  // @carcass
+
 // Byte-exact. Complete retains the PC Winsock implementation behind the
 // four-byte DC stub: create a nonblocking UDP socket, resolve the machine
 // hostname, copy the first IPv4 address's dotted form to the caller, and close
@@ -1465,6 +1575,26 @@ unsigned char TMultiPlayerWindow::OnSearch()
 #pragma inline_depth()
     }
 }
+
+// Retail selects the header-inline CMPInputEdit constructor's /Gy COMDAT
+// immediately after OnSearch. Its 98 meaningful bytes are the same forwarding
+// constructor as DC 0x102210: all sixteen arguments pass to textEntryWidget,
+// then the derived vtable replaces CMPEdit's and the two edit links are
+// cleared. The definition stays in multiplayerwindow.h because CMPInputDlg's
+// inline constructor needs the same body for OnSearch; this claim-only
+// declarator owns the selected copy without changing that inlining decision.
+#if 0  // @carcass: claim-only - definition lives in multiplayerwindow.h
+VA(0x00511cd0, 0x62)  // exact body + selected-COMDAT ownership, dc 0x102210
+void CMPInputEdit::CMPInputEdit(int x, int y, int w, int h, int textSize,
+                                const char* text, const char* fontName,
+                                font::TColor color, unsigned justification,
+                                const char* backgroundIcon,
+                                int backgroundFrame, int id, int style,
+                                int readType, int insetX, int insetY)
+{
+    // @stub
+}
+#endif  // @carcass
 
 // E:\gamedcs\multiplayerwindow.cpp:2009
 // Byte-exact. The local dialog's result selects either the cancel return or

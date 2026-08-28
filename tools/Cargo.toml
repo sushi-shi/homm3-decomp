@@ -1,0 +1,45 @@
+[workspace]
+resolver = "2"
+members = [
+  "homm3-lod",
+  "homm3-archive",
+  "homm3-def",
+  "homm3-map",
+  "homm3-save",
+  "homm3-resource",
+  "homm3-oracle",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.82"
+license = "CC0-1.0"
+publish = false
+
+[workspace.dependencies]
+homm3-lod = { path = "homm3-lod" }
+homm3-archive = { path = "homm3-archive" }
+homm3-def = { path = "homm3-def" }
+homm3-map = { path = "homm3-map" }
+homm3-save = { path = "homm3-save" }
+homm3-resource = { path = "homm3-resource" }
+clap = { version = "4.6.4", features = ["derive"] }
+flate2 = { version = "1.1.9", default-features = false, features = ["rust_backend"] }
+png = "0.17.16"
+
+# The libraries are no_std, allocation-free, dependency-free readers and
+# codecs. File IO, zlib inflation, reporting and PNG output belong to the
+# binary. Keeping that boundary explicit makes the Rust side a useful
+# independent format oracle instead of another wrapper around game code.
+
+[workspace.lints.rust]
+missing_docs = "warn"
+unsafe_code = "deny"
+
+[workspace.lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+
+[profile.release]
+debug = true
+overflow-checks = true

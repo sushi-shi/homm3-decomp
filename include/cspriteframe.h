@@ -16,14 +16,10 @@ class TPalette16;
 // through map@0x44; retail omits that build's DirectDraw tail, leaving a
 // 0x48-byte resource.  Retail vtable 0x63d6bc has the ordinary resource
 // trio: scalar deleting destructor, Dispose, and the memory-size query.
-// The two 16-bit blend masks every CSpriteFrame draw routine reads
-// (retail .bss 0x6968a4 and 0x6968aa).  SetPixelFormat below is their
-// sole writer; no claimed TU owns their storage yet, so they stay
-// declaration-only here.  Names describe the value - one bit dropped
-// per channel and two bits dropped per channel - not an attested
-// spelling.
-extern unsigned short gHalfIntensityMask;     // 0x6968a4
-extern unsigned short gQuarterIntensityMask;  // 0x6968aa
+// The blend masks live at retail .bss 0x6968a4 and 0x6968aa. Dreamcast
+// CodeView proves their public static-member ownership, names, and older
+// unsigned-short view. Complete preserves word writes and a word div4mask,
+// while selected div2mask operations provably read a dword.
 
 // Dreamcast CodeView enum 0x1772. Retail GetSprite passes the on-disk value
 // through both CSpriteFrame constructor overloads, proving the same 32-bit
@@ -34,6 +30,14 @@ enum TEncodingMethod {
     eEncodeTilesetRLE = 2,
     eEncodeAdvObjRLE = 3,
     kNumEncodingMethods = 4
+};
+
+// Complete writes div2mask as a word but selected blend paths read a dword
+// and retain only its low half. The union makes both retail widths explicit
+// without introducing cast debt into the source tree.
+union TBlendMask {
+    unsigned short word;
+    unsigned int dword;
 };
 
 #ifdef HOMM3_CSPRITEFRAME_DRAW_METHODS
@@ -47,13 +51,29 @@ enum TRleControlCode {
     eRleControlOutline6 = 6,
     eRleControlOutline7 = 7
 };
+
+// Duff-loop entry selected by a raw row's width modulo eight. A zero
+// remainder enters the full eight-pixel arm.
+enum TRawRowUnrollEntry {
+    eRawRowUnroll8 = 0,
+    eRawRowUnroll1 = 1,
+    eRawRowUnroll2 = 2,
+    eRawRowUnroll3 = 3,
+    eRawRowUnroll4 = 4,
+    eRawRowUnroll5 = 5,
+    eRawRowUnroll6 = 6,
+    eRawRowUnroll7 = 7
+};
 #endif
 
 class CSpriteFrame : public resource {
 public:
+    static TBlendMask div2mask;
+    static unsigned short div4mask;
+
     int DataSize;
     int ImageSize;
-    int EncodingMethod;
+    TEncodingMethod EncodingMethod;
     int Width;
     int Height;
     int CroppedWidth;
@@ -92,6 +112,16 @@ public:
                           int dh, int dpitch, TPalette16& pal,
                           unsigned char hflip, unsigned short outcolor,
                           unsigned char alpha) const;
+    // CSpriteFrame.h:147-148. Dreamcast emits this header wrapper as a
+    // standalone function; retail inlines its fixed zero-alpha forwarding.
+    void DrawCreature(int sx, int sy, int sw, int sh,
+                      unsigned short* dst, int dx, int dy, int dw, int dh,
+                      int dpitch, TPalette16& pal, unsigned char hflip,
+                      unsigned short outcolor) const
+    {
+        DrawCreatureImpl(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch,
+                         pal, hflip, outcolor, 0);
+    }
     void DrawAdvObjImpl(int sx, int sy, int sw, int sh,
                         unsigned short* dst, int dx, int dy, int dw, int dh,
                         int dpitch, TPalette16& pal, unsigned char hflip,

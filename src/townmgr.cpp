@@ -4928,22 +4928,18 @@ void townManager::DoPortalOfSummoning()
 // return their description straight. The result is prefixed with the bracketed
 // building name when bIncludeTitle, and returned through gInfoText.
 //
-// Residual (99.96%): BYTE-IDENTICAL - the masked instruction diff is empty.
-// The gap is compgen string-literal reloc naming only: our base emits the
-// pooled "\n\n"/"{%s}\n\n" literals as local ??_C@ COMDATs and the c_str()
-// null fallback as _Nullstr, where the delinked target names them
-// advmgr/townmgr $-compgen symbols and adventureTownRolloverEmptyText. Same
-// class the multiplayerwindow OnWidgetDeselect note calls cosmetic; the sibling
-// castle::GetBuildingName reaches 100.0 because it carries no string literals.
-// The format_string result MUST be an unnamed temporary
-// (`format_string(...).c_str()`), not a named std::string - the named form
-// spills the COW _Ptr to a slot and costs the whole arm (92.94 -> 96.34 was
-// the >=30 sink, 96.34 -> 99.96 was the temporary).
+// Byte-exact. Dreamcast names the sole local `cTemp`; retail fixes it as the
+// original 400-byte character array. Together with the 28 bytes needed by the
+// format_string temporary and compiler bookkeeping, that produces retail's
+// 0x1ac-byte frame and every inlined strcpy/strcat destination. The
+// format_string result MUST remain an unnamed temporary
+// (`format_string(...).c_str()`), not a named std::string: the named form
+// spills the COW _Ptr to a second slot and changes the whole custom-text arm.
 // E:\gamedcs\townmgr.cpp:5586
 VA(0x005d2a40, 0x335)  // anchor-global(retail symbol GetBuildingInfo) + anchor-callee(GetBuildingName/format_string) + arity(ret 8, 4 args, /Gr fastcall), dc 0x174f78
 char* GetBuildingInfo(const town* this_town, int buildingId, unsigned char bIncludeTitle, unsigned char extended)
 {
-    char buffer[0x1ac];
+    char buffer[400];
     int type = this_town->type;
 
     if (buildingId < SPECIAL_BUILDING_ID) {

@@ -1,0 +1,26 @@
+[package]
+name = "homm3-oracle"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+description = "Corpus and rendering oracle for Heroes III LOD and DEF resources"
+
+[[bin]]
+name = "homm3-oracle"
+path = "src/main.rs"
+
+[dependencies]
+homm3-archive.workspace = true
+homm3-lod.workspace = true
+homm3-def.workspace = true
+homm3-map.workspace = true
+homm3-save.workspace = true
+homm3-resource.workspace = true
+clap.workspace = true
+flate2.workspace = true
+png.workspace = true
+
+[lints]
+workspace = true

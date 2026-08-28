@@ -279,7 +279,7 @@ long get_area_attack_value(const army* current_army, long hex, long our_group, t
     gpCombatManager->mark_hex_area_effect(hex, 1, 1, targets);
     for (unsigned i = targets.size(); i-- != 0; ) {
         army* target = targets[i];
-        if ((current_army->Is(18) & 1) && (target->Is(18) & 1)
+        if ((current_army->Is(1u << 18)) && (target->Is(1u << 18))
                 && target->gridIndex != hex
                 && target->get_second_grid_index() != hex)
             continue;
@@ -329,7 +329,7 @@ unsigned char combatManager::choose_cyclops_action(long best_value, long side, t
     count = 0;
     { for (long i = 0; i < numArmies[side]; i++) {
             army* current_army = &armies[side][i];
-            if (!current_army->AI_target)
+            if (!current_army->get_AI_target())
                 count += current_army->get_total_combat_value(
                     estimate->lowest_attack, estimate->lowest_defense);
         }
@@ -385,7 +385,7 @@ void combatManager::choose_shooter_action(const army* current_army, unsigned cha
     data.simulated = simulated;
     find_AI_targets(1 - side, 0, 0, &data, 0);
     long action_value = choose_shooter_target(current_army, &data, &best_value);
-    if (!simulated && (current_army->Is(5) & 1)
+    if (!simulated && (current_army->Is(1u << 5))
             && choose_cyclops_action(best_value, side, &data))
         return;
     if (action_value < 0) {
@@ -530,33 +530,20 @@ long get_attack_value(const army* current_army, const army* enemy, long enemy_hi
 // gates; (b) the identical test appears INLINED at 23 further sites
 // across ai/ai_tactical/army, which is what a header inline looks like
 // after /OPT:ICF folds the duplicate COMDATs down to one copy; (c) the
-// caller tests AL while the callee materialises a full EAX - exactly
-// an `unsigned char` return whose expression is an int `||` chain.
-// The `#pragma auto_inline(off)` is a CODEGEN PIN, not a semantic
-// claim. Retail calls this body from its ONE image-wide call site
-// (0x41f1ee, inside the get_move_order chain inlined into
-// find_move_order - verified by an E8-rel32 sweep of the whole .text:
-// exactly one hit), where our CL applies the /Ob2 single-call-site rule
-// and expands it, CSE-ing the two disabled counters the surrounding
-// `> 1` guards already loaded. That one decision costs find_move_order
-// 15.6 points and spills its loop counter; nothing else about the two
-// bodies differs. Definition ORDER does not move it - the expansion is
-// identical with this definition placed before or after its caller
-// (measured 2026-08-08), so no source arrangement reproduces retail's
-// choice. Re-measured when choose_shooter_target landed on 2026-08-13:
-// removing the pin correctly inlines both of that function's predicate
-// evaluations, but also inlines this sole retail call and drops
-// find_move_order from 100% to 84.39%. The shooter source-expands the exact
-// same three-field predicate above, leaving this proven out-of-line body and
-// its only retail call intact.
-#pragma auto_inline(off)
-// E:\gamedcs\Army.h:840
+// caller tests AL while the callee materialises a full EAX. Dreamcast's
+// S_PUB32 identity ?IsIncapacitated@army@@QBA_NXZ proves the source return
+// is bool; the previous unsigned-char spelling was another score scaffold.
+// The earlier reconstruction forced this header inline out of line with
+// `#pragma auto_inline(off)` to preserve one exact caller. That was a local
+// score maximum, not source evidence. Army.h now owns the unconditional
+// class-body definition; this disabled form retains only the retail claim.
+#if 0  // claim-only home for the Army.h COMDAT
 VA(0x0041f380, 0x27)  // anchor-callee, dc 0x27d9c
-unsigned char army::IsIncapacitated() const
+bool army::IsIncapacitated() const
 {
-    return static_cast<unsigned char>(disabled_290 || disabled_2b0 || disabled_2c0);
+    // @stub
 }
-#pragma auto_inline(on)
+#endif
 
 // E:\gamedcs\ai.cpp:731
 // "How much more of this enemy would my SIDE kill if I did not take it
@@ -602,7 +589,7 @@ long combatManager::get_attack_change(const army* current_army, const army* enem
     for (long i = 0; i < numArmies[currentSide]; i++, friendly++) {
         if (friendly->creatureType == CREATURE_ARROW_TOWER)
             continue;
-        if ((friendly->AI_possible_targets & (1 << enemy->bitIndex)) == 0)
+        if ((friendly->get_AI_possible_targets() & (1 << enemy->bitIndex)) == 0)
             continue;
         long friendly_hits = friendly->get_total_hit_points(data->simulated);
         long damage = AI_get_attack_damage(friendly, friendly_hits, enemy, 0, 0);
@@ -617,8 +604,8 @@ long combatManager::get_attack_change(const army* current_army, const army* enem
         } else {
             value = damage * unit_value / enemy->hitPoints;
         }
-        long change = static_cast<long>(value) - friendly->AI_target_value;
-        if (friendly->AI_target == enemy && change > 0)
+        long change = static_cast<long>(value) - friendly->get_AI_target_value();
+        if (friendly->get_AI_target() == enemy && change > 0)
             committed += change;
         else if (change > best_other)
             best_other = change;
@@ -841,10 +828,10 @@ long combatManager::get_area_effect(long side, const army* our_army, long marked
     for (long i = 0; i < numArmies[side]; i++, enemy++) {
         if ((marked_enemies & (1 << enemy->bitIndex)) == 0)
             continue;
-        if ((enemy->Is(20) & 1) && enemy->can_shoot(0))
+        if ((enemy->Is(1u << 20)) && enemy->can_shoot(0))
             total += enemy->get_average_damage(our_army, 1, enemy->numTroops,
                                                1, 0);
-        if (enemy->Is(3) & 1)
+        if (enemy->Is(1u << 3))
             total += enemy->get_average_damage(our_army, 0, enemy->numTroops,
                                                1, 0);
     }
@@ -923,14 +910,14 @@ void combatManager::mark_friendly_armies(const army* our_army, long* enemy_attac
             our_army->can_shoot(0), hit_points, 0);
     const army* friendly = armies[estimate->side];
     for (long i = 0; i < numArmies[estimate->side]; i++, friendly++) {
-        if (friendly->Is(21) & 1)
+        if (friendly->Is(1u << 21))
             continue;
         if (friendly->creatureType == CREATURE_ARROW_TOWER)
             continue;
         if (friendly == our_army)
             continue;
         long melee_value;
-        if (friendly->Is(3) & 1) {
+        if (friendly->Is(1u << 3)) {
             long damage = friendly->get_average_damage(our_army, 0,
                                                        friendly->numTroops,
                                                        1, 0);
@@ -942,7 +929,7 @@ void combatManager::mark_friendly_armies(const army* our_army, long* enemy_attac
         }
         if (area_effect == 0 && melee_value == 0)
             continue;
-        long count = (friendly->Is(0) & 1) ? 8 : 6;
+        long count = (friendly->Is(1u << 0)) ? 8 : 6;
         for (long direction = count; direction-- > 0; ) {
             long hex = friendly->get_adjacent_hex(friendly->gridIndex,
                                                   direction);
@@ -958,7 +945,7 @@ void combatManager::mark_friendly_armies(const army* our_army, long* enemy_attac
                 if (enemy_attacks[hex] < floor_value)
                     enemy_attacks[hex] = floor_value;
             }
-            if (friendly->Is(3) & 1) {
+            if (friendly->Is(1u << 3)) {
                 long far_hex = friendly->GetAdjacentCellIndex(hex, direction);
                 if (far_hex < 0 || far_hex >= COMBAT_GRID_CELLS)
                     continue;
@@ -1004,7 +991,7 @@ void find_attack_hexes(const army* our_army, long target_hex, long start,
 DC_ONLY(0x253a8, 0xA4)
 static void find_attack_hexes(const army* our_army, const army* enemy, const searchArray* search_array, std::vector<long>* result)
 {
-    long sides = (our_army->Is(0) & 1) ? 8 : 6;
+    long sides = (our_army->Is(1u << 0)) ? 8 : 6;
     find_attack_hexes(our_army, our_army->gridIndex, 0, sides,
                       enemy->GetSpeed(), search_array, result);
     if (enemy->creatureId & 1) {
@@ -1059,7 +1046,7 @@ void combatManager::mark_multiheaded_enemy(const army* our_army, const army* ene
     unsigned char priced[COMBAT_GRID_CELLS];
     memset(priced, 0, COMBAT_GRID_CELLS);
     for (long i = numArmies[estimate->side]; i-- > 0; other++) {
-        if (other->Is(21) & 1)
+        if (other->Is(1u << 21))
             continue;
         if (other == our_army)
             continue;
@@ -1082,7 +1069,7 @@ void combatManager::mark_multiheaded_enemy(const army* our_army, const army* ene
             long hex = hexes[j];
             long directions = enemy->get_multi_head_directions(
                     hex, other, other->gridIndex);
-            long count = (enemy->Is(0) & 1) ? 8 : 6;
+            long count = (enemy->Is(1u << 0)) ? 8 : 6;
             for (long direction = count; direction-- > 0; ) {
                 if ((directions & (1 << direction)) == 0)
                     continue;
@@ -1182,7 +1169,7 @@ void combatManager::mark_enemy_attacks(const army* our_army, long* enemy_attacks
             continue;
         if (enemy->disabled_2c0)
             continue;
-        if (enemy->Is(21) & 1)
+        if (enemy->Is(1u << 21))
             continue;
         if (enemy->creatureType == CREATURE_FIRST_AID_TENT
                 || enemy->creatureType == CREATURE_AMMO_CART
@@ -1198,7 +1185,7 @@ void combatManager::mark_enemy_attacks(const army* our_army, long* enemy_attacks
         long j;
         const army* friendly = armies[side];
         for (j = 0; j < numArmies[side]; j++, friendly++) {
-            if (friendly->Is(21) & 1)
+            if (friendly->Is(1u << 21))
                 continue;
             if (friendly->creatureType == CREATURE_ARROW_TOWER)
                 continue;
@@ -1211,7 +1198,7 @@ void combatManager::mark_enemy_attacks(const army* our_army, long* enemy_attacks
         }
         if (j < numArmies[side]) {
             *dangerous_enemies |= 1 << enemy->bitIndex;
-            if ((enemy->Is(19) & 1) && gpGame->setup.difficulty >= 2
+            if ((enemy->Is(1u << 19)) && gpGame->setup.difficulty >= 2
                     && !sideIsAI[side])
                 mark_multiheaded_enemy(our_army, enemy, enemy_attacks,
                                        floor_value, gpSearchArray, estimate);
@@ -1360,14 +1347,14 @@ unsigned char combatManager::attempt_shooter_defense(const army* current_army, s
     long best_time = 0;
     long best_value = 0;
     for (long i = 0; i < numArmies[currentSide]; i++, client++) {
-        if (client->Is(21) & 1)
+        if (client->Is(1u << 21))
             continue;
         if (client->creatureType == CREATURE_ARROW_TOWER
                 || client->creatureType == CREATURE_CATAPULT)
             continue;
         if (!client->can_shoot(0))
             continue;
-        if (client->Is(12) & 1)
+        if (client->Is(1u << 12))
             continue;
         if (!choose_defense_hex(current_army, client, &hex, &open_hexes,
                                 search_array))
@@ -1502,7 +1489,7 @@ unsigned char combatManager::has_ranged_advantage(type_AI_combat_parameters* dat
         total_value[side] = 0;
         const army* stack = armies[side];
         for (long i = 0; i < numArmies[side]; i++, stack++) {
-            if (!(stack->Is(21) & 1)
+            if (!(stack->Is(1u << 21))
                     && !stack->disabled_290 && !stack->disabled_2b0
                     && !stack->disabled_2c0
                     && stack->creatureType != CREATURE_ARROW_TOWER) {
@@ -1741,7 +1728,7 @@ unsigned char combatManager::choose_resurrect_action(const army* current_army, l
                 if (find_animate_dead_target(estimate->side, hex) != target)
                     continue;
             }
-            if ((target->Is(21) & 1) == 0)
+            if ((target->Is(1u << 21)) == 0)
                 continue;
         } else {
             if (find_resurrection_target(estimate->side, hex, 1) != target) {
@@ -1866,7 +1853,7 @@ unsigned char combatManager::should_stay_in_castle(type_AI_combat_parameters* es
         return 0;
     const army* our_army = &armies[estimate->side][0];
     for (long i = 0; i < numArmies[estimate->side]; i++, our_army++) {
-        if ((our_army->Is(21) & 1) == 0
+        if ((our_army->Is(1u << 21)) == 0
                 && our_army->creatureType != CREATURE_ARROW_TOWER
                 && !InCastle(our_army->gridIndex))
             return 0;
@@ -2156,7 +2143,7 @@ unsigned char combatManager::choose_melee_target(const army* current_army, unsig
 
     for (long i = 0; i < numArmies[estimate->enemy_side]; i++) {
         const army* enemy = &armies[estimate->enemy_side][i];
-        if (enemy->Is(21) & 1)
+        if (enemy->Is(1u << 21))
             continue;
         if (enemy->creatureType == CREATURE_ARROW_TOWER)
             continue;
@@ -2181,10 +2168,10 @@ unsigned char combatManager::choose_melee_target(const army* current_army, unsig
                 && !current_army->disabled_290
                 && !current_army->disabled_2b0
                 && !current_army->disabled_2c0
-                && !(current_army->Is(21) & 1)
+                && !(current_army->Is(1u << 21))
                 && current_army->creatureType != CREATURE_FIRST_AID_TENT
                 && current_army->creatureType != CREATURE_AMMO_CART
-                && !(enemy->Is(19) & 1)) {
+                && !(enemy->Is(1u << 19))) {
             const pathCell* reach = gpSearchArray->cellData == 0
                     ? 0
                     : &gpSearchArray->cellData[enemy->gridIndex];
@@ -2198,7 +2185,7 @@ unsigned char combatManager::choose_melee_target(const army* current_army, unsig
             continue;
         if (!current_army->disabled_290 && !current_army->disabled_2b0
                 && !current_army->disabled_2c0
-                && !(current_army->Is(21) & 1)
+                && !(current_army->Is(1u << 21))
                 && current_army->creatureType != CREATURE_FIRST_AID_TENT
                 && current_army->creatureType != CREATURE_AMMO_CART) {
             long distance = 0;
@@ -2212,7 +2199,7 @@ unsigned char combatManager::choose_melee_target(const army* current_army, unsig
                                                          distance);
         }
 
-        if (chooser.best_value <= 0 || (current_army->Is(22) & 1)
+        if (chooser.best_value <= 0 || (current_army->Is(1u << 22))
                 || (gpGame->setup.difficulty == 0 && !sideIsAI[side])) {
             change += chooser.best_value;
         } else if (current_army->creatureType == CREATURE_HARPY
@@ -2328,7 +2315,7 @@ unsigned char combatManager::choose_melee_target(const army* current_army, unsig
             return 1;
         }
     } else if (best_value < 0 && best_value < best_time
-               && !(current_army->Is(22) & 1)
+               && !(current_army->Is(1u << 22))
                && (gpGame->setup.difficulty > 0 || sideIsAI[side])
                && has_ranged_advantage(estimate)) {
         // Deliberately empty: a shooter that would lose the exchange
@@ -2486,7 +2473,7 @@ void combatManager::place_shooter(const army* current_army)
             army* other = cells[adjacent].get_army();
             if (other == 0 || other == current_army)
                 value++;
-            else if (other->Is(2) & 1)
+            else if (other->Is(1u << 2))
                 value = 1000;
         }
         if (value > best_open_hexes)
@@ -2547,7 +2534,7 @@ void combatManager::DoCompAI(int whichGroup)
             || current_army->creatureType == CREATURE_BALLISTA)
         action = 1;
     else
-        action = (current_army->Is(1) & 1) ? 2 : 3;
+        action = (current_army->Is(1u << 1)) ? 2 : 3;
     field_3c = 3;
     if (action == 1) {
         if (bCreaturePlacement)
@@ -2717,7 +2704,7 @@ void type_spellvalue::set_stack_value(long arg)
 
 // E:\gamedcs\Army.h:718
 DC_ONLY(0x27c78, 0x24)
-unsigned char army::can_cast_resurrect() const
+bool army::can_cast_resurrect() const
 {
     // @stub
 }
@@ -2738,7 +2725,7 @@ void army::clear_AI_values()
 
 // E:\gamedcs\Army.h:765
 DC_ONLY(0x27ce4, 0xE)
-unsigned char army::Is(unsigned attribute)
+bool army::Is(unsigned attribute)
 {
     // @stub
 }
@@ -2801,7 +2788,7 @@ long army::get_spell_time(SpellID spell)
 
 // E:\gamedcs\Army.h:830
 DC_ONLY(0x27d88, 0x14)
-unsigned char army::IsActive()
+bool army::IsActive()
 {
     // @stub
 }
@@ -2810,14 +2797,14 @@ unsigned char army::IsActive()
 
 // E:\gamedcs\Army.h:847
 DC_ONLY(0x27dd8, 0x44)
-unsigned char army::can_retaliate(const army* attacker)
+bool army::can_retaliate(const army* attacker)
 {
     // @stub
 }
 
 // E:\gamedcs\Army.h:855
 DC_ONLY(0x27e1c, 0x54)
-unsigned char army::cannot_attack()
+bool army::cannot_attack()
 {
     // @stub
 }

@@ -368,7 +368,7 @@ TViewArmyWindow::TViewArmyWindow(const army* this_army, int x0, int y0,
                                  - this_army->topCreatureDamage);
     create_speed_widget(type_traits->speed, this_army->GetSpeed());
 
-    morale = this_army->morale;
+    morale = this_army->GetMorale(0);
     create_morale_widget(morale);
 
     int side = this_army->combatSide;
@@ -398,7 +398,7 @@ TViewArmyWindow::TViewArmyWindow(const army* this_army, int x0, int y0,
         group_alignments);
 #pragma inline_depth()
 
-    luck = this_army->luck;
+    luck = this_army->GetLuck(0);
     create_luck_widget(luck);
 #pragma inline_depth(0)
     luck_help = our_group->get_luck_description(

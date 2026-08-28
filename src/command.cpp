@@ -461,7 +461,7 @@ void combatManager::SetCombatDirections(int hex)
             cells[first_hex].field_4a
             && current_army->CanFit(first_hex, 0, 0)
             && !gpSearchArray->is_moat(first_hex);
-        if (first_is_valid && (current_army->Is(0) & 1)
+        if (first_is_valid && (current_army->Is(1u << 0))
                 && gpSearchArray->is_moat(
                     first_hex + (current_army->facing ? 1 : -1)))
             first_is_valid = 0;
@@ -472,7 +472,7 @@ void combatManager::SetCombatDirections(int hex)
             combatDirections[0][attack_angle] = target_group + 7;
         }
 
-        if (!(current_army->Is(0) & 1))
+        if (!(current_army->Is(1u << 0)))
             continue;
 
         second_hex = first_hex - (current_army->facing ? 1 : -1);
@@ -480,7 +480,7 @@ void combatManager::SetCombatDirections(int hex)
             cells[second_hex].field_4a
             && current_army->CanFit(second_hex, 0, 0)
             && !gpSearchArray->is_moat(second_hex);
-        if (second_is_valid && (current_army->Is(0) & 1)
+        if (second_is_valid && (current_army->Is(1u << 0))
                 && gpSearchArray->is_moat(
                     second_hex + (current_army->facing ? 1 : -1)))
             second_is_valid = 0;
@@ -974,7 +974,7 @@ void combatManager::auto_resolve_combat()
         for (int slot = 0; slot < numArmies[side]; slot++) {
             army* stack = &armies[side][slot];
             if (stack->numTroops > 0
-                    && !(stack->Is(6) & 1)
+                    && !(stack->Is(1u << 6))
                     && stack->originalIndex >= 0) {
                 stack->numTroops =
                     localArmies[side].numTroops[stack->originalIndex];
@@ -1156,7 +1156,7 @@ int combatManager::GetCommand(int newIndex)
 
     if (field_132f4 >= COMBAT_FORTIFICATION_CASTLE
             && newIndex == COMBAT_HEX_UPPER_TOWER) {
-        if ((currentArmy->Is(5) & 1) && currentSide == 0
+        if ((currentArmy->Is(1u << 5)) && currentSide == 0
                 && !bCreaturePlacement
                 && valid_wall_target(WALL_TARGET_0)) {
             currentArmy->slot = COMBAT_HEX_UPPER_TOWER;
@@ -1168,7 +1168,7 @@ int combatManager::GetCommand(int newIndex)
 
     if (field_132f4 >= COMBAT_FORTIFICATION_CITADEL
             && newIndex == COMBAT_HEX_KEEP) {
-        if ((currentArmy->Is(5) & 1) && currentSide == 0
+        if ((currentArmy->Is(1u << 5)) && currentSide == 0
                 && !bCreaturePlacement
                 && valid_wall_target(WALL_TARGET_7)) {
             currentArmy->slot = COMBAT_HEX_KEEP;
@@ -1207,7 +1207,7 @@ int combatManager::GetCommand(int newIndex)
         if (targetSide == currentSide
                 && currentArmy->creatureType == CREATURE_FIRST_AID_TENT
                 && target->topCreatureDamage > 0
-                && (target->Is(6) & 1) == 0)
+                && (target->Is(1u << 6)) == 0)
             return COMBAT_COMMAND_FIRST_AID;
         if (targetSide == currentSide)
             return COMBAT_COMMAND_VIEW_ARMY;
@@ -1233,7 +1233,7 @@ int combatManager::GetCommand(int newIndex)
         return COMBAT_COMMAND_NONE;
     }
 
-    if ((currentArmy->Is(5) & 1)
+    if ((currentArmy->Is(1u << 5))
             && field_132f4 > COMBAT_FORTIFICATION_NONE
             && currentSide == 0
             && !bCreaturePlacement) {
@@ -1265,7 +1265,7 @@ int combatManager::GetCommand(int newIndex)
                                           currentArmy->field_c4,
                                           bCreaturePlacement, -1);
         if (cells[newIndex].field_4a || cells[newIndex].field_4b)
-            return (currentArmy->Is(1) & 1) ? COMBAT_COMMAND_FLY
+            return (currentArmy->Is(1u << 1)) ? COMBAT_COMMAND_FLY
                                             : COMBAT_COMMAND_WALK;
     }
 
@@ -1394,7 +1394,7 @@ void combatManager::DoCommand(int command)
     case COMBAT_COMMAND_FLY:
         field_3c = 2;
         field_44 = field_132d4;
-        if ((currentArmy->Is(0) & 1) && cells[field_132d4].field_4b)
+        if ((currentArmy->Is(1u << 0)) && cells[field_132d4].field_4b)
             field_44 = field_132d4 - (currentArmy->facing ? 1 : -1);
         field_40 = -1;
         break;
@@ -1833,7 +1833,7 @@ long combatManager::get_surrender_cost()
         army* currentArmy = &armies[side][slot];
         if (currentArmy->creatureType >= 0
             && currentArmy->numTroops > 0
-            && !(currentArmy->Is(22) & 1)
+            && !(currentArmy->Is(1u << 22))
             && currentArmy->numTroops
                 > currentArmy->numTroopsBattleResurrected) {
             cost += (currentArmy->numTroops
@@ -1974,7 +1974,7 @@ void combatManager::CheckChangeSelector()
 
     UpdateGrid(0, 1);
     lastMovedArmy = currentArmy;
-    if (!(currentArmy->Is(21) & 1)
+    if (!(currentArmy->Is(1u << 21))
             && currentArmy->currFrameType != cs_wait) {
         currentArmy->currFrameType = cs_wait;
         currentArmy->currFrameIndex = 0;
@@ -1993,7 +1993,7 @@ void combatManager::TurnOffSelector(unsigned char drawIt)
 
     if (drawIt) {
         ResetLimitCreature();
-        if (!(lastMovedArmy->Is(21) & 1))
+        if (!(lastMovedArmy->Is(1u << 21)))
             MarkCreatureEffect(lastMovedArmy->combatSide,
                                lastMovedArmy->bitIndex);
     }
@@ -2343,11 +2343,11 @@ unsigned char combatManager::process_move_then_attack(message* msg)
     currentArmy->joustBonus = 0;
     if (field_40 != -1 && oldGridIndex != field_40) {
         if (currentArmy->move_to(field_40, 0)) {
-            if (!(currentArmy->Is(21) & 1))
+            if (!(currentArmy->Is(1u << 21)))
                 currentArmy->attack_hex(field_44, 0);
         }
     } else {
-        if (!(currentArmy->Is(21) & 1))
+        if (!(currentArmy->Is(1u << 21)))
             currentArmy->attack_hex(field_44, 0);
         memset(field_14030 + 1, 0, COMBAT_GRID_CELLS);
         currentArmy->check_obstacle_attacks(0);
@@ -2359,7 +2359,7 @@ unsigned char combatManager::process_move_then_attack(message* msg)
             && (currentArmy->creatureType == army::ARMY_CREATURE_HARPY
                 || currentArmy->creatureType
                        == army::ARMY_CREATURE_HARPY_HAG)
-            && !(currentArmy->Is(21) & 1)
+            && !(currentArmy->Is(1u << 21))
             && currentArmy->disabled_290 == 0
             && currentArmy->disabled_2b0 == 0
             && currentArmy->disabled_2c0 == 0) {
@@ -2367,7 +2367,7 @@ unsigned char combatManager::process_move_then_attack(message* msg)
     }
 
     if (oldFacing != currentArmy->facing
-            && !(currentArmy->Is(21) & 1)) {
+            && !(currentArmy->Is(1u << 21))) {
         currentArmy->SetupAnimation();
         currentArmy->Turn(1);
     }
@@ -2381,18 +2381,6 @@ unsigned char combatManager::process_move_then_attack(message* msg)
     CheckApplyGoodMorale(actingSide, actingSlot);
     ResetCycleTimers();
     return 0;
-}
-
-// Kept adjacent to its only two expansions so this header-inline body does
-// not perturb command.obj's earlier GetCommand compiler-handle state.
-inline const char* army::GetName() const
-{
-    if (creatureType >= 0 && creatureType <= ARMY_CREATURE_LAST) {
-        if (numTroops == 1)
-            return akCreatureTypeTraits[creatureType].m_name;
-        return akCreatureTypeTraits[creatureType].m_plural_name;
-    }
-    return DATA_COMPGEN(0x00691210, emptyCreatureName, "");
 }
 
 // E:\gamedcs\command.cpp:3431. Retail expands ValidHex, both creature-name
@@ -2575,7 +2563,7 @@ int combatManager::ProcessNextAction(message& msg, unsigned char automaticTurn)
     case kCombatActionDefend:
         if (!(currentArmy->creatureId & 0x0c000000)) {
             currentArmy->creatureId |= 0x04000000;
-            if (!bCreaturePlacement && !(currentArmy->Is(6) & 1)) {
+            if (!bCreaturePlacement && !(currentArmy->Is(1u << 6))) {
                 std::string message;
                 currentArmy->creatureId |= 0x08000000;
                 currentArmy->field_4dc = std::_cpp_max(
@@ -2646,7 +2634,7 @@ int combatManager::ProcessNextAction(message& msg, unsigned char automaticTurn)
         return 2;
     }
 
-    RaiseDoor();
+    TestRaiseDoor();
     if (iReturn) {
         while (!NextArmy(1))
             ResetRound();
@@ -2669,7 +2657,7 @@ void combatManager::ResetCyclingCreatures()
     for (int side = 0; side < 2; side++) {
         for (int slot = 0; slot < numArmies[side]; slot++) {
             army* stack = &armies[side][slot];
-            if (!(stack->Is(21) & 1)
+            if (!(stack->Is(1u << 21))
                     && stack->currFrameType == cs_fidget) {
                 cyclingCreatures++;
                 MarkCreatureEffect(side, slot);
@@ -2682,7 +2670,7 @@ void combatManager::ResetCyclingCreatures()
         for (int side = 0; side < 2; side++) {
             for (int slot = 0; slot < numArmies[side]; slot++) {
                 army* stack = &armies[side][slot];
-                if (!(stack->Is(21) & 1)) {
+                if (!(stack->Is(1u << 21))) {
                     stack->currFrameType = cs_wait;
                     stack->currFrameIndex = 0;
                     stack->iLastFidgetTime = GameTime::Get();
