@@ -3330,14 +3330,15 @@ long type_AI_creature_purchaser::do_best_purchase(
 // Complete extends the five-argument DC routine with a final byte carrying
 // the Angelic-Alliance result. Retail proves both bytes independently: the
 // last parameter is stored at base +8, while allow_trade is forwarded to
-// do_best_purchase. Duplicate creature stacks are merged before purchasing,
-// then every source's final count is written back through its saved pointer.
-// DC also proves do_best_purchase takes a byte. Restoring that callee
-// boundary removes the bool normalization at this call and raises this body
-// from 97.53% to 99.87%. The only remaining delta is one independent reload
-// transposed across its neighbour after Dismiss; `why-reg` distance 2 and the
-// exhausted declaration/loop spellings classify it as post-RA scheduling.
+// do_best_purchase. DC line 2633 proves that stack merging is the separate
+// AI_consolidate_army call; restoring that boundary closes this body from
+// 99.87% to exact. It also proves do_best_purchase takes a byte. The scoped
+// auto-inline pin preserves retail's calls to this now-smaller routine:
+// without it mark_town falls from exact to zero, buy_creatures from 73.66%
+// to 53.78%, and value_of_hiring from 99.95% to 79.22%. The helper itself
+// and all three callers retain their prior scores with the pin.
 VA(0x0042d690, 0xE1)  // mark_town caller + DC method/callgraph; dc 0x32288
+#pragma auto_inline(off)
 void type_AI_creature_purchaser::do_purchase(
     armyGroup* new_army, short new_morale, armyGroup* new_adjacent_army,
     long* new_funds, unsigned char allow_trade,
@@ -3349,28 +3350,7 @@ void type_AI_creature_purchaser::do_purchase(
     funds = new_funds;
     has_angelic_alliance = new_has_angelic_alliance;
 
-    int slot = 1;
-    int* creature = new_army->armies;
-    int* count = new_army->numTroops;
-    for (; slot - 1 < armyGroup::ARMY_GROUP_SLOT_COUNT - 1;
-        ++slot, ++creature, ++count) {
-        int type = *creature;
-        if (type != CREATURE_NONE) {
-            int duplicate = slot;
-            if (duplicate < armyGroup::ARMY_GROUP_SLOT_COUNT) {
-                int* candidate = creature + 1;
-                do {
-                    if (*candidate == type) {
-                        *count += candidate[
-                            armyGroup::ARMY_GROUP_SLOT_COUNT];
-                        new_army->Dismiss(duplicate);
-                    }
-                    ++duplicate;
-                    ++candidate;
-                } while (duplicate < armyGroup::ARMY_GROUP_SLOT_COUNT);
-            }
-        }
-    }
+    AI_consolidate_army(new_army);
 
     dump_extra_creature();
     do {
@@ -3379,6 +3359,7 @@ void type_AI_creature_purchaser::do_purchase(
     for (short source = 0; source < creatures.size(); ++source)
         *creatures[source].ptr = creatures[source].number;
 }
+#pragma auto_inline(on)
 
 // Complete adds the final Angelic-Alliance byte to the DC signature. Retail
 // copies both armies and all seven resources, so the valuation can run the
