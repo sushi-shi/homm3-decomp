@@ -237,12 +237,20 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             "TTextResource::operator[] calls into direct GetText calls",
             r"gpGeneralText\s*->\s*GetText\s*\(", 0, 0),
         SourceRule(
-            "TCombatResultsWindow keeps Dreamcast's cTemp[150] local",
-            r"\bchar\s+cTemp\s*\[\s*150\s*\]\s*;"),
+            "TCombatResultsWindow keeps Dreamcast's cTemp[150] local in the "
+            "my_hero sprintf scope",
+            r"if\s*\(\s*my_hero\s*\)\s*\{\s*"
+            r"char\s+cTemp\s*\[\s*150\s*\]\s*;\s*sprintf\s*\("),
         SourceRule(
             "TCombatResultsWindow keeps both scoped Dreamcast numMons "
             "locals",
             r"\bint\s+numMons\s*=\s*0\s*;", 2, 2),
+        SourceRule(
+            "TCombatResultsWindow keeps both Dreamcast positive "
+            "strongest-stack scopes around Complete's arrow-tower test",
+            r"if\s*\(\s*stack\.creatureType\s*!=\s*-\s*1\s*&&\s*"
+            r"stack\.creatureType\s*!=\s*CREATURE_ARROW_TOWER\s*\)\s*"
+            r"\{\s*numMons\s*\+\+\s*;", 2, 2),
         SourceRule(
             "TCombatResultsWindow keeps Dreamcast's iMaxToShow local at the "
             "min statement",
@@ -250,6 +258,11 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
         SourceRule(
             "TCombatResultsWindow keeps Dreamcast's inner x local",
             r"\bint\s+x\s*=\s*firstX\s*\+\s*42\s*\*"),
+        SourceRule(
+            "TCombatResultsWindow keeps Dreamcast line 280's one positive "
+            "loss-aggregation scope",
+            r"if\s*\(\s*creature\s*!=\s*-\s*1\s*&&\s*lost\s*>\s*0\s*"
+            r"\)\s*\{\s*int\s+row\s*;"),
         SourceRule(
             "TCombatResultsWindow keeps all twenty-two Dreamcast "
             "Widgets.push_back source calls",
@@ -1611,9 +1624,13 @@ const hero* my_hero = attacker;
 int iTtlDeadArmies[2];
 char cText[100];
 int firstX;
-char cTemp[150];
-if (attacker) { int numMons = 0; }
-if (defender) { int numMons = 0; }
+if (my_hero) { char cTemp[150]; sprintf(cTemp, format); }
+if (attacker) { int numMons = 0; army& stack = armies[0];
+if (stack.creatureType != -1 &&
+    stack.creatureType != CREATURE_ARROW_TOWER) { numMons++; } }
+if (defender) { int numMons = 0; army& stack = armies[1];
+if (stack.creatureType != -1 &&
+    stack.creatureType != CREATURE_ARROW_TOWER) { numMons++; } }
 """ + "\n".join(
         "const char* text%d = (*gpGeneralText)[%d];" % (index, index)
         for index in range(18)) + "\n" + "\n".join(
@@ -1622,6 +1639,7 @@ accept->set_hotkey(28);
 accept->set_hotkey(1);
 int iMaxToShow = min(iTtlDeadArmies[0], 7);
 int x = firstX + 42 * iMaxToShow;
+if (creature != -1 && lost > 0) { int row; }
 """
     if contract_violations(combat_results_probe, combat_results_key):
         failures.append("aligned combat-results source shape did not pass")
@@ -1652,6 +1670,24 @@ int x = firstX + 42 * iMaxToShow;
         if not any(identity in rule.description for rule in renamed_rules):
             failures.append("renamed combat-results %s local passed" %
                             identity)
+    split_loss_gate = combat_results_probe.replace(
+        "if (creature != -1 && lost > 0) { int row; }",
+        "if (creature == -1) continue;\nif (lost <= 0) continue;\n"
+        "int row;")
+    if not any("positive loss-aggregation scope" in rule.description
+               for rule in contract_violations(
+                   split_loss_gate, combat_results_key)):
+        failures.append("split combat-results loss gates passed")
+    split_strongest_gate = combat_results_probe.replace(
+        "if (stack.creatureType != -1 &&\n"
+        "    stack.creatureType != CREATURE_ARROW_TOWER) { numMons++; }",
+        "if (stack.creatureType == -1) continue;\n"
+        "if (stack.creatureType == CREATURE_ARROW_TOWER) continue;\n"
+        "numMons++;")
+    if not any("positive strongest-stack scopes" in rule.description
+               for rule in contract_violations(
+                   split_strongest_gate, combat_results_key)):
+        failures.append("split combat-results strongest-stack gates passed")
     upgrade_key = ("philai.obj", 0x10D684)
     upgrade_probe = """\
 int difference[NUM_RESOURCES];
