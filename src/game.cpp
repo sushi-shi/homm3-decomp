@@ -1243,39 +1243,42 @@ int game::SaveSignPool(TAbstractFile* outfile)
 // E:\gamedcs\game.cpp:896
 #endif  // @carcass
 
-// Residual (99.9487%): all 25 blocks, branches and operations agree. Giving
-// the initial pool count its true short lifetime lets VC6 place the inlined
-// growth's saved end pointer in retail's later loop-counter slot. The only
-// remaining delta is the initial count itself: retail homes it at [ebp-8],
-// while this compile reuses the dead infile argument home at [ebp+8]. Index
-// declaration positions are byte-flat; plausible resize helpers change the
-// inlining boundary and fall to 83%.
+// Dreamcast proves function-scope count, x and char_buffer locals; Complete
+// adds the saved-game-version branch below. Reusing count for the pool byte
+// and the three trailing bytes is also visible in retail's single [ebp-8]
+// home. A separate scoped poolCount was a 99.9487% local maximum. Restoring
+// char_buffer's function lifetime keeps its [ebp+0xb] byte live across the
+// inlined resize, prevents VC6 from borrowing that argument word, and closes
+// all 25 blocks to 100.0000%. Retail requires unsigned x here: the DC int
+// changes Complete's resize/loop inline graph and measures 93.58%.
 VA(0x004b9340, 0x240)  // anchor-global (ClaimMine vector) + read-slot, dc 0xa3e5c
 int game::LoadMinePool(TAbstractFile* infile, int saveVersion)
 {
-    {
-        int poolCount;
-        if (infile->Read(&poolCount, sizeof(unsigned char)) < sizeof(unsigned char))
+    int count;
+    unsigned int x;
+    char char_buffer;
+    if (infile->Read(&count, sizeof(unsigned char)) < sizeof(unsigned char))
+        return -1;
+    mines.resize(static_cast<unsigned char>(count));
+
+    for (x = 0; x < mines.size(); ++x) {
+        if (infile->Read(&char_buffer, sizeof(char_buffer))
+            < sizeof(char_buffer))
             return -1;
-        mines.resize(static_cast<unsigned char>(poolCount));
-    }
-    for (unsigned int i = 0; i < mines.size(); ++i) {
-        int count;
-        unsigned char value;
-        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        mines[x].playerOwner = char_buffer;
+        if (infile->Read(&char_buffer, sizeof(char_buffer))
+            < sizeof(char_buffer))
             return -1;
-        mines[i].playerOwner = value;
-        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        mines[x].type = char_buffer;
+        if (infile->Read(&char_buffer, sizeof(char_buffer))
+            < sizeof(char_buffer))
             return -1;
-        mines[i].type = value;
-        if (infile->Read(&value, sizeof(value)) < sizeof(value))
-            return -1;
-        mines[i].field_02 = value != 0;
+        mines[x].field_02 = char_buffer != 0;
 
         if (saveVersion >= 25) {
-            mines[i].guards.load(infile);
+            mines[x].guards.load(infile);
         } else {
-            armyGroup* guards = &mines[i].guards;
+            armyGroup* guards = &mines[x].guards;
             guards->Initialize();
             volatile legacyMineGuard legacy;
             infile->Read(const_cast<signed char*>(&legacy.type),
@@ -1290,13 +1293,13 @@ int game::LoadMinePool(TAbstractFile* infile, int saveVersion)
 
         if (infile->Read(&count, sizeof(unsigned char)) < sizeof(unsigned char))
             return -1;
-        mines[i].field_3c = static_cast<unsigned char>(count);
+        mines[x].field_3c = static_cast<unsigned char>(count);
         if (infile->Read(&count, sizeof(unsigned char)) < sizeof(unsigned char))
             return -1;
-        mines[i].field_3d = static_cast<unsigned char>(count);
+        mines[x].field_3d = static_cast<unsigned char>(count);
         if (infile->Read(&count, sizeof(unsigned char)) < sizeof(unsigned char))
             return -1;
-        mines[i].field_3e = static_cast<unsigned char>(count);
+        mines[x].field_3e = static_cast<unsigned char>(count);
     }
     return 0;
 }
