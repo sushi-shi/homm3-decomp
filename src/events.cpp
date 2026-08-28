@@ -4472,8 +4472,9 @@ void advManager::DoEventPrison(hero* current_hero, NewmapCell* cell,
     // [2026-08-27] Residual (99.9540%): after the expanded bitset _Xran
     // guard, retail reloads the two spilled values in home-slot order
     // ([ebp-0xc] pointer, then [ebp-0x8] position); our CL reloads in use
-    // order. Tried and rejected: a named bitset<8>& (byte-flat), .set()
-    // (99.88, call form), the [i]=1 form below is the ceiling.
+    // order. Tried and rejected: a named bitset<8>&, named reference proxy and
+    // single-site inline helper (all byte-flat), .set() (99.88, call form);
+    // the [i]=1 form below is the ceiling.
     gpGame->heroPoolMap[heroId][current_hero->owner] = 1;
     gpCurrentPlayer->heroes[gpCurrentPlayer->numHeroes] = heroId;
     ++gpCurrentPlayer->numHeroes;
@@ -5090,6 +5091,15 @@ void advManager::DoEventShrine(hero* current_hero, NewmapCell* cell,
                      9, spell, -1, 0, -1, 0, -1, 0);
     current_hero->AddSpell(spell);
 }
+
+#if 0  // @carcass: source-authority claim for game.h's emitted inline COMDAT
+// E:\gamedcs\game.h:865
+VA(0x004a5960, 0x16)  // exact selected events.obj COMDAT, dc 0x37fbc
+int game::GetTeam(int playerNum) const
+{
+    // @stub - active definition is the HOMM3_EVENTS_GAME_INLINE_HELPERS body
+}
+#endif
 
 // philai.obj's Sirens visit (dc 0x11260c), located by its only caller
 // below: DoEventSiren's single philai callee, a /Gr two-register fastcall

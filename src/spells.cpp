@@ -416,6 +416,13 @@ int HandleGetTeleportDestination(message* msg)
 // and VC6 lands that return right there. The three sibling finders below
 // use the same guard and all three reach it the same way. The split's
 // other win survives: the switch arms still come out DEF/ANIM/RES.
+//
+// Dreamcast source order is SACRIFICE / RESURRECTION / ANIMATE_DEAD and
+// spells the SACRIFICE fallback as a second get_army return.  That is
+// positive evidence for the older build, but not for Complete: imposing
+// it here takes this retail-exact body to 81.46342%.  Complete's bytes
+// therefore prove revision skew in this switch; retain the retail-exact
+// RESURRECTION / ANIMATE_DEAD / SACRIFICE lexical order below.
 VA(0x005a3950, 0x68)  // order-map+arity+anchor-callee, dc 0x152dec
 army* combatManager::find_spell_target(SpellID spell, long side, long hex,
                                        unsigned char first_target,
@@ -3115,30 +3122,26 @@ long combatManager::ModifySpellDamage(long base_damage, SpellID iSpellType,
                 message = format_string(
                     gpGeneralText->GetText(
                         GENERAL_TEXT_COMBAT_SPELL_DAMAGE_LOWERED_ONE),
-                    GetArmyName(targetArmy->creatureType,
-                                  targetArmy->numTroops),
+                    targetArmy->GetName(),
                     -delta);
             else
                 message = format_string(
                     gpGeneralText->GetText(
                         GENERAL_TEXT_COMBAT_SPELL_DAMAGE_LOWERED_MANY),
-                    GetArmyName(targetArmy->creatureType,
-                                  targetArmy->numTroops),
+                    targetArmy->GetName(),
                     -delta);
         } else {
             if (targetArmy->numTroops == 1)
                 message = format_string(
                     gpGeneralText->GetText(
                         GENERAL_TEXT_COMBAT_SPELL_DAMAGE_RAISED_ONE),
-                    CreatureName(targetArmy->creatureType,
-                                 targetArmy->numTroops),
+                    targetArmy->GetName(),
                     delta);
             else
                 message = format_string(
                     gpGeneralText->GetText(
                         GENERAL_TEXT_COMBAT_SPELL_DAMAGE_RAISED_MANY),
-                    CreatureName(targetArmy->creatureType,
-                                 targetArmy->numTroops),
+                    targetArmy->GetName(),
                     delta);
         }
         combatWindow->combat_message(message.c_str(), 1, 0);
@@ -3759,8 +3762,7 @@ void combatManager::ShowSpellMessage(int bIsMonsterSpell, SpellID spellId,
 
     const char* targetName;
     if (targetArmy)
-        targetName = GetArmyName(targetArmy->creatureType,
-                                   targetArmy->numTroops);
+        targetName = targetArmy->GetName();
     else
         targetName = 0;
     const char* spellName = akSpellTraits[spellId].name;

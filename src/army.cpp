@@ -2429,17 +2429,14 @@ void army::do_post_attack(army* target, int iDamage, int iKilled,
             if (heal > 0) {
                 std::string text;
                 const char* target_name =
-                    ::GetArmyName(target->creatureType,
-                            target->numTroops + iKilled);
+                    target->GetName(target->numTroops + iKilled);
                 if (numTroops - resurrected == 1)
                     text = format_string(gpGeneralText->GetText(362),
-                                         ::GetArmyName(creatureType,
-                                                 numTroops - resurrected),
+                                         GetName(numTroops - resurrected),
                                          heal, target_name);
                 else
                     text = format_string(gpGeneralText->GetText(363),
-                                         ::GetArmyName(creatureType,
-                                                 numTroops - resurrected),
+                                         GetName(numTroops - resurrected),
                                          heal, target_name);
                 if (resurrected > 0) {
                     if (resurrected == 1)
@@ -2473,17 +2470,13 @@ void army::do_post_attack(army* target, int iDamage, int iKilled,
                 std::string text;
                 if (dead == 1)
                     text = format_string(gpGeneralText->GetText(119),
-                                         ::GetArmyName(target->creatureType,
-                                                 dead),
-                                         ::GetArmyName(creatureType,
-                                                 numTroops));
+                                         target->GetName(dead),
+                                         GetName());
                 else
                     text = format_string(gpGeneralText->GetText(120),
                                          dead,
-                                         ::GetArmyName(target->creatureType,
-                                                 dead),
-                                         ::GetArmyName(creatureType,
-                                                 numTroops));
+                                         target->GetName(dead),
+                                         GetName());
                 SAMPLE2 sample;
                 if (!static_cast<const combatManager*>(gpCombatManager)
                          ->IsQuickCombat()) {
@@ -2518,8 +2511,7 @@ void army::do_post_attack(army* target, int iDamage, int iKilled,
                              ->IsQuickCombat()) {
                         text = format_string(
                             gpGeneralText->GetText(368),
-                            ::GetArmyName(target->creatureType,
-                                    target->numTroops));
+                            target->GetName());
                         gpCombatManager->combatWindow->combat_message(
                             text.c_str(), 1, 0);
                         sample = LoadPlaySample(
@@ -4088,7 +4080,7 @@ int army::ComputeAttackerDamageBonuses(int base_damage,
                 std::string text;
                 const char* creature_name;
 #pragma inline_depth(0)
-                creature_name = ::GetArmyName(creatureType, numTroops);
+                creature_name = GetName();
 #pragma inline_depth()
                 text = format_string(gpGeneralText->GetText(366),
                                      creature_name);
@@ -4107,10 +4099,10 @@ int army::ComputeAttackerDamageBonuses(int base_damage,
                 std::string text;
                 if (numTroops == 1)
                     text = format_string(gpGeneralText->GetText(366),
-                                         ::GetArmyName(creatureType, numTroops));
+                                         GetName());
                 else
                     text = format_string(gpGeneralText->GetText(367),
-                                         ::GetArmyName(creatureType, numTroops));
+                                         GetName());
                 gpCombatManager->combatWindow->combat_message(
                     text.c_str(), 1, 0);
                 SAMPLE2 sample = LoadPlaySample(
@@ -6454,11 +6446,11 @@ void army::new_turn()
                 if (numTroops == 1)
                     text = format_string(
                         gpGeneralText->GetText(371),
-                        ::GetArmyName(creatureType, numTroops));
+                        GetName());
                 else
                     text = format_string(
                         gpGeneralText->GetText(372),
-                        ::GetArmyName(creatureType, numTroops));
+                        GetName());
                 gpCombatManager->combatWindow->combat_message(
                     text.c_str(), 1, 0);
                 gpCombatManager->SpellEffect(

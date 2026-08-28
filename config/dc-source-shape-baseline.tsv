@@ -224,15 +224,11 @@ call	ai.obj	0x240e4	army::IsIncapacitated
 call	ai.obj	0x240e4	type_AI_combat_parameters::get_enemy_group
 call	ai.obj	0x240e4	type_AI_combat_parameters::get_group
 call	ai.obj	0x2429c	SRandom
-call	ai.obj	0x2429c	army::get_AI_target
 call	ai.obj	0x2429c	combatManager::get_wall_strength
 call	ai.obj	0x24604	army::Is
 call	ai.obj	0x24604	army::get_spell_time
 call	ai.obj	0x24604	combatManager::is_in_second_phase
 call	ai.obj	0x24694	army::Is
-call	ai.obj	0x24a34	army::get_AI_possible_targets
-call	ai.obj	0x24a34	army::get_AI_target
-call	ai.obj	0x24a34	army::get_AI_target_value
 call	ai.obj	0x24a34	army::get_spell_time
 call	ai.obj	0x24a34	get_attack_value
 call	ai.obj	0x24b64	army::Is
@@ -347,7 +343,6 @@ call	ai_player.obj	0x31808	calculate_improvement
 call	ai_player.obj	0x31924	armyGroup::GetAlignments
 call	ai_player.obj	0x31af4	min
 call	ai_player.obj	0x32038	armyGroup::GetAlignments
-call	ai_player.obj	0x32288	AI_consolidate_army
 call	ai_player.obj	0x322f8	AI_consolidate_army
 call	ai_player.obj	0x32894	searchArray::get_visited_cell
 call	ai_player.obj	0x32894	searchArray::get_visited_count
@@ -394,10 +389,8 @@ call	ai_tactical.obj	0x3c708	min
 call	ai_tactical.obj	0x3c854	AI_get_attack_damage
 call	ai_tactical.obj	0x3c8dc	army::Is
 call	ai_tactical.obj	0x3c8dc	army::can_retaliate
-call	ai_tactical.obj	0x3c9ac	army::get_AI_expected_damage
 call	ai_tactical.obj	0x3cae4	army::IsIncapacitated
 call	ai_tactical.obj	0x3cae4	army::cannot_attack
-call	ai_tactical.obj	0x3cae4	army::get_AI_target
 call	ai_tactical.obj	0x3ceb8	AI_get_attack_damage
 call	ai_tactical.obj	0x3d154	searchArray::is_moat
 call	ai_tactical.obj	0x3d1e4	army::Is
@@ -413,7 +406,6 @@ call	ai_tactical.obj	0x3d7b0	army::IsIncapacitated
 call	ai_tactical.obj	0x3d7b0	combatManager::get_current_army
 call	ai_tactical.obj	0x3d838	army::Is
 call	ai_tactical.obj	0x3d838	army::IsIncapacitated
-call	ai_tactical.obj	0x3d838	army::get_AI_target
 call	ai_tactical.obj	0x3d838	combatManager::get_current_army
 call	ai_tactical.obj	0x3d838	type_AI_spellcaster::is_last_action
 call	ai_tactical.obj	0x3d96c	army::Is
@@ -423,49 +415,34 @@ call	ai_tactical.obj	0x3dc50	combatManager::InInvisibleColumn
 call	ai_tactical.obj	0x3dc50	type_enchant_data::get_mastery_value
 call	ai_tactical.obj	0x3dcc4	combatManager::ValidHex
 call	ai_tactical.obj	0x3dde8	army::Is
-call	ai_tactical.obj	0x3e17c	army::get_AI_target
 call	ai_tactical.obj	0x3e17c	type_AI_spellcaster::get_attack_boost_value
 call	ai_tactical.obj	0x3e280	AI_get_attack_damage
 call	ai_tactical.obj	0x3e280	army::Is
-call	ai_tactical.obj	0x3e280	army::get_AI_target
 call	ai_tactical.obj	0x3e280	type_AI_spellcaster::get_attack_boost_value
 call	ai_tactical.obj	0x3e3bc	army::get_adjusted_attack
 call	ai_tactical.obj	0x3e3bc	army::get_adjusted_defense
 call	ai_tactical.obj	0x3e3bc	combatManager::ComputeDamageModifier
 call	ai_tactical.obj	0x3e3bc	type_AI_spellcaster::get_attack_boost_value
-call	ai_tactical.obj	0x3e4a0	army::get_AI_target
-call	ai_tactical.obj	0x3e50c	army::GetMorale
 call	ai_tactical.obj	0x3e50c	army::Is
 call	ai_tactical.obj	0x3e50c	type_AI_spellcaster::get_duration
-call	ai_tactical.obj	0x3e658	army::GetMorale
 call	ai_tactical.obj	0x3e658	army::Is
 call	ai_tactical.obj	0x3e658	type_AI_spellcaster::get_duration
-call	ai_tactical.obj	0x3e87c	army::GetLuck
-call	ai_tactical.obj	0x3e87c	army::get_AI_target
 call	ai_tactical.obj	0x3e87c	type_AI_spellcaster::get_attack_boost_value
-call	ai_tactical.obj	0x3e9d8	army::get_AI_expected_damage
 call	ai_tactical.obj	0x3e9d8	type_AI_spellcaster::get_duration
 call	ai_tactical.obj	0x3ec10	army::get_adjusted_attack
 call	ai_tactical.obj	0x3ec10	army::get_adjusted_defense
 call	ai_tactical.obj	0x3ec10	combatManager::ComputeDamageModifier
-call	ai_tactical.obj	0x3eea8	army::get_AI_target
-call	ai_tactical.obj	0x3ef24	army::get_AI_target
 call	ai_tactical.obj	0x3f158	army::Is
-call	ai_tactical.obj	0x3f158	army::get_AI_target
-call	ai_tactical.obj	0x3f22c	army::get_AI_target
 call	ai_tactical.obj	0x3f408	army::get_total_combat_value
 call	ai_tactical.obj	0x3f408	combatManager::SpellCastWorkChance
-call	ai_tactical.obj	0x3f5f0	army::GetLuck
 call	ai_tactical.obj	0x3f5f0	army::Is
 call	ai_tactical.obj	0x3f5f0	type_AI_spellcaster::get_duration
 call	ai_tactical.obj	0x3f7f0	army::Is
 call	ai_tactical.obj	0x3f7f0	type_AI_spellcaster::get_duration
 call	ai_tactical.obj	0x3fa24	army::Is
 call	ai_tactical.obj	0x3fa24	army::cannot_attack
-call	ai_tactical.obj	0x3fa24	army::get_AI_target
 call	ai_tactical.obj	0x3fa24	type_AI_spellcaster::get_move_order_change_value
 call	ai_tactical.obj	0x3fc80	army::Is
-call	ai_tactical.obj	0x3fc80	army::get_AI_target
 call	ai_tactical.obj	0x3fc80	type_AI_spellcaster::get_move_order_change_value
 call	ai_tactical.obj	0x3fde4	army::Is
 call	ai_tactical.obj	0x3fde4	hero::SpellIsAvailable
@@ -474,7 +451,6 @@ call	ai_tactical.obj	0x400b8	type_enchant_data::get_mastery_value
 call	ai_tactical.obj	0x400f4	type_enchant_data::get_mastery_value
 call	ai_tactical.obj	0x40248	army::get_spell_level
 call	ai_tactical.obj	0x40248	army::get_spell_time
-call	ai_tactical.obj	0x403c0	army::get_AI_expected_damage
 call	ai_tactical.obj	0x403c0	min
 call	ai_tactical.obj	0x40628	AI_get_attack_damage
 call	ai_tactical.obj	0x40628	army::Is
@@ -508,24 +484,20 @@ call	ai_tactical.obj	0x41278	type_AI_spellcaster::is_last_action
 call	ai_tactical.obj	0x41278	type_enchant_data::get_mastery_value
 call	ai_tactical.obj	0x414a0	army::Is
 call	ai_tactical.obj	0x41558	army::Is
-call	ai_tactical.obj	0x41558	army::get_AI_target
 call	ai_tactical.obj	0x41624	army::Is
 call	ai_tactical.obj	0x41624	type_AI_spellcaster::get_duration
 call	ai_tactical.obj	0x41890	army::Is
 call	ai_tactical.obj	0x41890	type_AI_spellcaster::get_duration
 call	ai_tactical.obj	0x41c30	army::Is
 call	ai_tactical.obj	0x41c30	army::cannot_attack
-call	ai_tactical.obj	0x41c30	army::get_AI_target
 call	ai_tactical.obj	0x41c30	combatManager::get_wall_strength
 call	ai_tactical.obj	0x41c30	min
 call	ai_tactical.obj	0x41c30	type_enchant_data::get_mastery_value
 call	ai_tactical.obj	0x41ed4	type_AI_spellcaster::consider_summon
 call	ai_tactical.obj	0x420ac	army::cannot_attack
-call	ai_tactical.obj	0x420ac	army::get_AI_target
 call	ai_tactical.obj	0x420ac	army::get_spell_time
 call	ai_tactical.obj	0x4227c	army::Is
 call	ai_tactical.obj	0x4227c	army::cannot_attack
-call	ai_tactical.obj	0x4227c	army::get_AI_possible_targets
 call	ai_tactical.obj	0x4227c	army::get_spell_time
 call	ai_tactical.obj	0x4227c	type_AI_spellcaster::add_enemy
 call	ai_tactical.obj	0x4227c	type_AI_spellcaster::set_worst_enemies
@@ -559,25 +531,9 @@ call	army.obj	0x453c8	army::MidX
 call	army.obj	0x453c8	army::MidY
 call	army.obj	0x453c8	combatManager::ScrollTo
 call	army.obj	0x453c8	combatManager::UpdateCombatArea
-call	army.obj	0x458a0	CSprite::GetHeight
-call	army.obj	0x458a0	CSprite::GetWidth
-call	army.obj	0x458a0	army::CheckLuck
-call	army.obj	0x458a0	army::DamageEnemy
-call	army.obj	0x458a0	army::MidX
-call	army.obj	0x458a0	army::MidY
-call	army.obj	0x458a0	army::WaitSample
-call	army.obj	0x458a0	army::get_owner
-call	army.obj	0x458a0	combatManager::ScrollTo
-call	army.obj	0x458a0	combatManager::ValidHex
-call	army.obj	0x458a0	hexcell::HasArmy
-call	army.obj	0x46050	army::DamageEnemy
 call	army.obj	0x461a0	SRandom
 call	army.obj	0x46658	SRandom
 call	army.obj	0x46658	min
-call	army.obj	0x46bec	army::CheckLuck
-call	army.obj	0x46bec	army::DamageEnemy
-call	army.obj	0x46bec	army::get_total_hit_points
-call	army.obj	0x46bec	combatManager::ValidHex
 call	army.obj	0x47270	army::Is
 call	army.obj	0x47270	army::get_second_grid_index
 call	army.obj	0x47270	combatManager::check_fire_wall
@@ -588,7 +544,6 @@ call	army.obj	0x472f4	army::Is
 call	army.obj	0x472f4	army::OffsetToFront
 call	army.obj	0x472f4	army::remove_aura
 call	army.obj	0x472f4	combatManager::GetObstacle
-call	army.obj	0x472f4	combatManager::TestRaiseDoor
 call	army.obj	0x472f4	searchArray::get_path_steps
 call	army.obj	0x472f4	searchArray::get_step
 call	army.obj	0x472f4	searchArray::is_moat
@@ -609,7 +564,6 @@ call	army.obj	0x47cf4	army::get_defense_modifier
 call	army.obj	0x47cf4	army::get_total_hit_points
 call	army.obj	0x47cf4	hero::get_secondary_skill
 call	army.obj	0x48168	army::get_total_hit_points
-call	army.obj	0x48454	max
 call	army.obj	0x48524	SRandom
 call	army.obj	0x48524	max
 call	army.obj	0x4868c	SRandom
@@ -625,14 +579,11 @@ call	army.obj	0x48c60	army::get_controlling_side
 call	army.obj	0x48c60	army::get_second_grid_index
 call	army.obj	0x48c60	min
 call	army.obj	0x48fc4	army::get_controller
-call	army.obj	0x490f4	army::ComputeDefenderDamageBonuses
-call	army.obj	0x490f4	army::get_total_hit_points
 call	army.obj	0x492c8	army::CancelSpellType
 call	army.obj	0x493a0	army::CancelAllSpells
 call	army.obj	0x49748	army::adjust_hitpoints
 call	army.obj	0x49748	army::remove_aura
 call	army.obj	0x499e8	army::adjust_hitpoints
-call	army.obj	0x499e8	army::remove_aura
 call	army.obj	0x499e8	combatManager::get_current_army
 call	army.obj	0x499e8	min
 call	army.obj	0x4a348	army::can_shoot
@@ -775,13 +726,10 @@ call	cmbtmgr.obj	0x5f058	SLimitData::Contains
 call	cmbtmgr.obj	0x5f058	combatManager::GetHexIndex
 call	cmbtmgr.obj	0x5f058	combatManager::RowIsOdd
 call	cmbtmgr.obj	0x5f2b0	SRandom
-call	cmbtmgr.obj	0x5f2b0	army::GetMorale
 call	cmbtmgr.obj	0x5f2b0	army::GetName
 call	cmbtmgr.obj	0x5f3c4	SRandom
-call	cmbtmgr.obj	0x5f3c4	army::GetMorale
 call	cmbtmgr.obj	0x5f3c4	army::GetName
 call	cmbtmgr.obj	0x5f518	army::GetSpeed
-call	cmbtmgr.obj	0x5f518	army::IsIncapacitated
 call	cmbtmgr.obj	0x5f518	combatManager::CheckCastleAttack
 call	cmbtmgr.obj	0x5f934	army::GetName
 call	cmbtmgr.obj	0x5f934	army::get_controlling_side
@@ -917,7 +865,6 @@ call	command.obj	0x6f664	army::get_spell_time
 call	command.obj	0x6f824	SRandom
 call	command.obj	0x6f824	min
 call	command.obj	0x6f984	combatManager::FullUpdate
-call	command.obj	0x6f984	combatManager::TestRaiseDoor
 call	command.obj	0x6f984	max
 call	command.obj	0x70474	army::Is
 call	command.obj	0x70474	combatManager::MarkCreatureEffect
@@ -1248,23 +1195,6 @@ call	findpath.obj	0xa0b18	searchArray::get_hex
 call	findpath.obj	0xa0f54	combatManager::ValidHex
 call	findpath.obj	0xa0f54	searchArray::get_hex
 call	findpath.obj	0xa10c4	searchArray::get_hex
-call	fly.obj	0xa1430	army::Is
-call	fly.obj	0xa1430	combatManager::ValidHex
-call	fly.obj	0xa1514	combatManager::TestRaiseDoor
-call	fly.obj	0xa1514	combatManager::ValidHex
-call	fly.obj	0xa1590	SLimitData::Height
-call	fly.obj	0xa1590	SLimitData::Include
-call	fly.obj	0xa1590	SLimitData::Width
-call	fly.obj	0xa1590	army::Is
-call	fly.obj	0xa1590	army::OffsetToFront
-call	fly.obj	0xa1590	combatManager::GridX
-call	fly.obj	0xa1590	combatManager::ScrollTo
-call	fly.obj	0xa1590	combatManager::UpdateCombatArea
-call	fly.obj	0xa19a0	combatManager::TestRaiseDoor
-call	fly.obj	0xa19a0	combatManager::ValidHex
-call	fly.obj	0xa1a7c	army::Is
-call	fly.obj	0xa1a7c	army::OffsetToFront
-call	fly.obj	0xa1a7c	combatManager::GridX
 call	font.obj	0xa1d58	Bitmap16Bit::GetMap
 call	font.obj	0xa1d58	Bitmap16Bit::GetPitch
 call	font.obj	0xa1e5c	font::DrawCursor
@@ -1412,9 +1342,6 @@ call	hero.obj	0xcbe80	hero::SetPrimarySkill
 call	hero.obj	0xcc300	max
 call	hero.obj	0xcc4e0	hero::UpdateArmies
 call	hero.obj	0xcc4e0	heroWindowManager::BroadcastMessage
-call	hero.obj	0xcc540	heroWindow::BroadcastMessage
-call	hero.obj	0xcc540	heroWindow::WidgetClearStatus
-call	hero.obj	0xcc540	heroWindow::WidgetSetStatus
 call	hero.obj	0xcc708	hero::GetPrimarySkill
 call	hero.obj	0xcc800	game::record_hide_hero
 call	hero.obj	0xcc800	type_obscuring_object::get_location
@@ -1432,7 +1359,6 @@ call	hero.obj	0xce648	town::HasBuilding
 call	hero.obj	0xcf54c	THeroScreenWindow::ShowWidgets
 call	hero.obj	0xcf54c	THeroScreenWindow::show_skills
 call	hero.obj	0xcf54c	hero::GetNthSS
-call	hero.obj	0xcf54c	hero::UpdateArmies
 call	hero.obj	0xcf54c	hero::ViewStat
 call	hero.obj	0xcf54c	heroWindowManager::UpdateScreen
 call	hero.obj	0xd0184	ResourceManager::del_Spr_from_Cache
@@ -1440,10 +1366,6 @@ call	hero.obj	0xd2be8	ResourceManager::del_Spr_from_Cache
 call	hero.obj	0xd2d58	limit
 call	hero.obj	0xd2e80	THeroScreenWindow::ShowWidgets
 call	hero.obj	0xd2e80	type_obscuring_object::get_location
-call	hero.obj	0xd30b0	THeroScreenWindow::UpdateHeroLocators
-call	hero.obj	0xd30b0	hero::HasSecondarySkill
-call	hero.obj	0xd30b0	hero::UpdateArmies
-call	hero.obj	0xd30b0	type_obscuring_object::obscures_town
 call	hero.obj	0xd39d8	artifactAllowedInSlot
 call	hero.obj	0xd39d8	hero::AdjustPrimarySkill
 call	hero.obj	0xd3ad0	hero::AdjustPrimarySkill
@@ -1455,17 +1377,11 @@ call	hero.obj	0xd4390	town::HasBuilding
 call	hero.obj	0xd4b50	UpgradedCreatureType
 call	hero.obj	0xd4b50	hero::GetLogisticsFactor
 call	hero.obj	0xd4b50	hero::GetNavigationFactor
-call	hero.obj	0xd4df0	NewmapCell::get_special_terrain
-call	hero.obj	0xd4df0	game::get_cell
-call	hero.obj	0xd4df0	type_obscuring_object::get_location
-call	hero.obj	0xd4f64	hero::GetSpellSchoolLevel
-call	hero.obj	0xd4f64	hero::HasArmy
 call	hero.obj	0xd50a0	hero::GetPrimarySkill
 call	hero.obj	0xd524c	hero::GetManaCost
 call	hero.obj	0xd524c	hero::SpellIsAvailable
 call	hero.obj	0xd524c	hero::get_spell_level
 call	hero.obj	0xd53a0	hero::GetSorceryFactor
-call	hero.obj	0xd5488	hero::GetManaCost
 call	hero.obj	0xd5548	game::get_cell
 call	hero.obj	0xd5548	type_obscuring_object::get_location
 call	hero.obj	0xd55c0	hero::GetSpellSchoolLevel
@@ -1629,7 +1545,6 @@ call	philai.obj	0x10d47c	GameTime::IsPast
 call	philai.obj	0x10d47c	PollSound
 call	philai.obj	0x10d47c	Process1WindowsMessage
 call	philai.obj	0x10e334	should_garrison_town
-call	philai.obj	0x10e3f8	buy_artifacts
 call	philai.obj	0x10e9a8	AI_AttemptMove
 call	philai.obj	0x10e9a8	AI_choose_destination
 call	philai.obj	0x10e9a8	GetMapExtra
@@ -2160,7 +2075,6 @@ call	spells.obj	0x156ec4	combatManager::get_wall_strength
 call	spells.obj	0x157354	army::get_controlling_side
 call	spells.obj	0x157354	army::get_owning_side
 call	spells.obj	0x157354	army::get_spell_time
-call	spells.obj	0x157354	army::is_in_aura
 call	spells.obj	0x157354	combatManager::get_current_army
 call	spells.obj	0x157354	hero::GetSpellSchoolLevel
 call	spells.obj	0x157828	SRandom
@@ -2399,8 +2313,6 @@ call	victorylossconditions.obj	0x190538	game::IsHumanTeam
 call	victorylossconditions.obj	0x190538	game::OnSameTeam
 call	victorylossconditions.obj	0x190620	game::GetTeam
 call	victorylossconditions.obj	0x190620	game::IsHumanTeam
-call	viewarmywindow.obj	0x190abc	army::GetLuck
-call	viewarmywindow.obj	0x190abc	army::GetMorale
 call	viewarmywindow.obj	0x190abc	army::GetName
 call	viewarmywindow.obj	0x190abc	army::get_owning_side
 call	viewarmywindow.obj	0x190abc	max
@@ -2444,310 +2356,25 @@ call	winmgr.obj	0x19c3b8	Bitmap16Bit::GetMap
 call	winmgr.obj	0x19c3b8	Bitmap16Bit::GetPitch
 call	winmgr.obj	0x19c3b8	heroWindowManager::BlitToScreenWithPointer
 call	winmgr.obj	0x19c3b8	heroWindowManager::BlitToScreenWithPointerX
-contract	army.obj	0x46bec	ResetHitByCreature precedes the behind zeroing (Dreamcast source lines 2048 then 2052)
-contract	army.obj	0x46bec	all three effect marks use get_owning_side
-contract	army.obj	0x46bec	three source-visible CSprite::IsValidSeq tests
-contract	army.obj	0x490f4	attacker and defender bonuses remain one total_damage expression
-contract	army.obj	0x490f4	get_total_hit_points stays nested in the fire-shield statement
-contract	fly.obj	0xa1430	ValidFlight keeps the cmbtmgr.h static ValidHex boundary
-contract	fly.obj	0xa1430	ValidFlight keeps the line-78 literal-path predicate
-contract	fly.obj	0xa1430	ValidFlight keeps the line-95 else before the enemy path
-contract	fly.obj	0xa1430	ValidFlight keeps the nested line-97/100/101 failure form
-contract	fly.obj	0xa1514	FlyTo keeps the Dreamcast-proven TestRaiseDoor boundary
-contract	fly.obj	0xa1514	FlyTo keeps the cmbtmgr.h static ValidHex boundary
-contract	fly.obj	0xa1590	Fly creates TtlExtent at the top of the inner frame scope
-contract	fly.obj	0xa1590	Fly keeps Is(mask) and OffsetToFront in the wide-stack arm
-contract	fly.obj	0xa1590	Fly keeps Width and Height in the combat-area Draw statement
-contract	fly.obj	0xa1590	Fly keeps both Dreamcast GridX statements
-contract	fly.obj	0xa1590	Fly keeps the ScrollTo/Include/timer/UpdateCombatArea group
-contract	fly.obj	0xa1590	Fly keeps the const int FLY_PERIOD local identity
-contract	fly.obj	0xa1590	Fly keeps the iLoop local identity and lifetime
-contract	fly.obj	0xa1590	Fly keeps the iTtlLoops local identity
-contract	fly.obj	0xa1590	Fly keeps the numFlapFrames local identity
-contract	fly.obj	0xa19a0	TeleportTo keeps the Dreamcast-proven TestRaiseDoor boundary
-contract	fly.obj	0xa19a0	TeleportTo keeps the cmbtmgr.h static ValidHex boundary
-contract	fly.obj	0xa1a7c	Teleport keeps Is(mask) and OffsetToFront in the wide-stack arm
-contract	fly.obj	0xa1a7c	Teleport keeps both Dreamcast GridX statements
 contract	game.obj	0xa3e5c	LoadMinePool retains Dreamcast's signed int x local; an exact unsigned spelling is byte proof but not source-shape closure
-contract	hero.obj	0xd4df0	get_special_terrain keeps get_cell and the cell accessor as separate Dreamcast statements
-contract	hero.obj	0xd4df0	get_special_terrain keeps the get_location local
-contract	hero.obj	0xd4df0	get_special_terrain tests its invalid sentinel through type_point::operator==
-contract	hero.obj	0xd4f64	GetManaCost keeps both Dreamcast HasArmy wrappers
-contract	hero.obj	0xd4f64	GetManaCost keeps the direct GetSpellSchoolLevel source boundary after the Armageddon arm
-contract	hero.obj	0xd5488	Fly keeps GetManaCost nested in UseSpell after flightLevel
 definition	events.obj	0x9ce40	-
 definition	philai.obj	0x10fe64	-
 definition	philai.obj	0x1147ac	-
 definition	textntry.obj	0x163750	-
-file-contract	include/army.h	-	Army.h:718 can_cast_resurrect must have exactly one active out-of-class header definition
-file-contract	include/army.h	-	Army.h:724 GetMorale must have exactly one active out-of-class header definition
-file-contract	include/army.h	-	Army.h:730 GetLuck must have exactly one active out-of-class header definition
-file-contract	include/army.h	-	Army.h:736 OffsetToFront must have exactly one active out-of-class header definition
-file-contract	include/army.h	-	Army.h:752 clear_AI_values must have exactly one active out-of-class header definition
-file-contract	include/army.h	-	Army.h:760 NeedToTurn must have exactly one active out-of-class header definition
-file-contract	include/army.h	-	Army.h:765 Is must have exactly one active out-of-class header definition
-file-contract	include/army.h	-	Army.h:770 get_AI_expected_damage must have exactly one active out-of-class header definition
-file-contract	include/army.h	-	Army.h:775 get_AI_target must have exactly one active out-of-class header definition
-file-contract	include/army.h	-	Army.h:780 get_AI_target_value must have exactly one active out-of-class header definition
-file-contract	include/army.h	-	Army.h:785 get_AI_target_time must have exactly one active out-of-class header definition
-file-contract	include/army.h	-	Army.h:790 get_AI_possible_targets must have exactly one active out-of-class header definition
-file-contract	include/army.h	-	Army.h:795 get_owning_side must have exactly one active out-of-class header definition
-file-contract	include/army.h	-	Army.h:800 get_controlling_side must have exactly one active out-of-class header definition
-file-contract	include/army.h	-	Army.h:810 GetName must have exactly one active out-of-class header definition
-file-contract	include/army.h	-	Army.h:815 GetName(count) must have exactly one active out-of-class header definition
-file-contract	include/army.h	-	Army.h:820 get_spell_time must have exactly one active out-of-class header definition
-file-contract	include/army.h	-	Army.h:825 get_spell_level must have exactly one active out-of-class header definition
-file-contract	include/army.h	-	Army.h:830 IsActive must have exactly one active out-of-class header definition
-file-contract	include/army.h	-	Army.h:835 is_in_aura must have exactly one active out-of-class header definition
-file-contract	include/army.h	-	Army.h:840 IsIncapacitated must have exactly one active out-of-class header definition
-file-contract	include/army.h	-	Army.h:847 can_retaliate must have exactly one active out-of-class header definition
-file-contract	include/army.h	-	Army.h:855 cannot_attack must have exactly one active out-of-class header definition
-file-contract	include/army.h	-	Army.h:864 get_adjacent_hex(direction) must have exactly one active out-of-class header definition
-file-contract	include/army.h	-	Army.h:869 get_attack_direction(enemy) must have exactly one active out-of-class header definition
-file-contract	include/army.h	-	Army.h:875 LeavesNoBody must have exactly one active out-of-class header definition
-file-contract	include/army.h	-	Army.h:881 is_in_area_highlight must have exactly one active out-of-class header definition
-file-contract	include/army.h	-	LF_FIELDLIST army::BottomY declaration is missing or hidden by a TU view
-file-contract	include/army.h	-	LF_FIELDLIST army::CancelAllSpells declaration is missing or hidden by a TU view
-file-contract	include/army.h	-	LF_FIELDLIST army::CheckLuck declaration is missing or hidden by a TU view
-file-contract	include/army.h	-	LF_FIELDLIST army::ComputeDefenderDamageBonuses declaration is missing or hidden by a TU view
-file-contract	include/army.h	-	LF_FIELDLIST army::ComputeKarma declaration is missing or hidden by a TU view
-file-contract	include/army.h	-	LF_FIELDLIST army::DamageEnemy declaration is missing or hidden by a TU view
-file-contract	include/army.h	-	LF_FIELDLIST army::DecrementSpellRounds declaration is missing or hidden by a TU view
-file-contract	include/army.h	-	LF_FIELDLIST army::DoHydraAttack declaration is missing or hidden by a TU view
-file-contract	include/army.h	-	LF_FIELDLIST army::EndWalk declaration is missing or hidden by a TU view
-file-contract	include/army.h	-	LF_FIELDLIST army::FreeResources declaration is missing or hidden by a TU view
-file-contract	include/army.h	-	LF_FIELDLIST army::FrontX declaration is missing or hidden by a TU view
-file-contract	include/army.h	-	LF_FIELDLIST army::GetBestDirection declaration is missing or hidden by a TU view
-file-contract	include/army.h	-	LF_FIELDLIST army::GetLuck declaration is missing or hidden by a TU view
-file-contract	include/army.h	-	LF_FIELDLIST army::GetMorale declaration is missing or hidden by a TU view
-file-contract	include/army.h	-	LF_FIELDLIST army::IsActive declaration is missing or hidden by a TU view
-file-contract	include/army.h	-	LF_FIELDLIST army::LeavesNoBody is private, not public
-file-contract	include/army.h	-	LF_FIELDLIST army::LeftX declaration is missing or hidden by a TU view
-file-contract	include/army.h	-	LF_FIELDLIST army::OtherArmyAdjacent declaration is missing or hidden by a TU view
-file-contract	include/army.h	-	LF_FIELDLIST army::ResetPath declaration is missing or hidden by a TU view
-file-contract	include/army.h	-	LF_FIELDLIST army::RightX declaration is missing or hidden by a TU view
-file-contract	include/army.h	-	LF_FIELDLIST army::Strength declaration is missing or hidden by a TU view
-file-contract	include/army.h	-	LF_FIELDLIST army::TopY declaration is missing or hidden by a TU view
-file-contract	include/army.h	-	LF_FIELDLIST army::ValidRange declaration is missing or hidden by a TU view
-file-contract	include/army.h	-	LF_FIELDLIST army::WaitSample declaration is missing or hidden by a TU view
-file-contract	include/army.h	-	LF_FIELDLIST army::adjust_hitpoints declaration is missing or hidden by a TU view
-file-contract	include/army.h	-	LF_FIELDLIST army::animate_missile is private, not public
-file-contract	include/army.h	-	LF_FIELDLIST army::attack_wall is private, not public
-file-contract	include/army.h	-	LF_FIELDLIST army::cannot_attack declaration is missing or hidden by a TU view
-file-contract	include/army.h	-	LF_FIELDLIST army::cast_demonic_resurrect declaration is missing or hidden by a TU view
-file-contract	include/army.h	-	LF_FIELDLIST army::cast_resurrect declaration is missing or hidden by a TU view
-file-contract	include/army.h	-	LF_FIELDLIST army::clear_AI_values declaration is missing or hidden by a TU view
-file-contract	include/army.h	-	LF_FIELDLIST army::do_fire_shield is private, not public
-file-contract	include/army.h	-	LF_FIELDLIST army::do_post_attack is private, not public
-file-contract	include/army.h	-	LF_FIELDLIST army::find_flyer_attack_cell declaration is missing or hidden by a TU view
-file-contract	include/army.h	-	LF_FIELDLIST army::get_AI_expected_damage declaration is missing or hidden by a TU view
-file-contract	include/army.h	-	LF_FIELDLIST army::get_AI_possible_targets declaration is missing or hidden by a TU view
-file-contract	include/army.h	-	LF_FIELDLIST army::get_AI_target declaration is missing or hidden by a TU view
-file-contract	include/army.h	-	LF_FIELDLIST army::get_AI_target_value declaration is missing or hidden by a TU view
-file-contract	include/army.h	-	LF_FIELDLIST army::get_defense_damage_modifier declaration is missing or hidden by a TU view
-file-contract	include/army.h	-	LF_FIELDLIST army::get_spell_level declaration is missing or hidden by a TU view
-file-contract	include/army.h	-	LF_FIELDLIST army::get_spell_time declaration is missing or hidden by a TU view
-file-contract	include/army.h	-	LF_FIELDLIST army::get_valid_caliph_spells declaration is missing or hidden by a TU view
-file-contract	include/army.h	-	LF_FIELDLIST army::is_in_aura declaration is missing or hidden by a TU view
-file-contract	include/army.h	-	LF_FIELDLIST army::set_retaliation_count declaration is missing or hidden by a TU view
-file-contract	include/army.h	-	LF_FIELDLIST army::simple_move is private, not public
-file-contract	include/army.h	-	LF_FIELDLIST field AI_expected_damage is private, not public
-file-contract	include/army.h	-	LF_FIELDLIST field AI_possible_targets is private, not public
-file-contract	include/army.h	-	LF_FIELDLIST field AI_target is private, not public
-file-contract	include/army.h	-	LF_FIELDLIST field AI_target_distance is private, not public
-file-contract	include/army.h	-	LF_FIELDLIST field AI_target_value is private, not public
-file-contract	include/army.h	-	LF_FIELDLIST field aura_clients is private, not public
-file-contract	include/army.h	-	LF_FIELDLIST field aura_sources is private, not public
-file-contract	include/army.h	-	LF_FIELDLIST field binders is private, not public
-file-contract	include/army.h	-	LF_FIELDLIST field bound_armies is private, not public
-file-contract	include/army.h	-	LF_FIELDLIST field iLuck is private, not public
-file-contract	include/army.h	-	LF_FIELDLIST field iMorale is private, not public
-file-contract	include/army.h	-	LF_FIELDLIST field is_area_effect_target is private, not public
-file-contract	include/army.h	-	LF_FIELDLIST field reset_this_round is private, not public
-file-contract	include/army.h	-	LF_FIELDLIST marks ~army compgen; do not declare it as an explicit source member
-file-contract	include/army.h	-	LF_FIELDLIST methods must follow the public data run
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::AttackWall after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::CanFit after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::CancelIndividualSpell after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::CancelSpellType after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::ComputeAttackerDamageBonuses after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::ComputeAttackerDamageReduction after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::ComputeBaseDamage after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::ComputeDefenderDamageReduction after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::Cure after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::Damage after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::DrawToBuffer after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::FindPath after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::Fly after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::FlyTo after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::GetAdjacentCellIndex after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::GetAttackMask after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::GetName after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::GetSpeed after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::GoBerserk after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::Is after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::IsIncapacitated after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::LeavesNoBody after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::LoadResources after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::MidX after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::MidY after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::NeedToTurn after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::OffsetToFront after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::PlayAnimation after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::ProcessDeath after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::ResetRound after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::SetLuck after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::SetMorale after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::SetSpellInfluence after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::SetupAnimation after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::Teleport after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::TeleportTo after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::Turn after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::ValidAttack after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::ValidFlight after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::ValidPath after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::Walk after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::WalkTo after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::add_aura after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::adjust_damage after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::animate_missile after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::attack_hex after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::attack_wall after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::can_cast_resurrect after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::can_cast_spell after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::can_retaliate after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::can_shoot after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::cast_caliph_spell after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::cast_spell after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::check_obstacle_attacks after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::check_special_attack after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::consider_attack after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::do_attack after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::do_fire_shield after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::do_multi_head_attack after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::do_post_attack after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::enemy_is_adjacent after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::get_AI_target_time after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::get_adjacent_hex after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::get_adjusted_attack after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::get_adjusted_defense after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::get_attack_direction after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::get_attack_modifier after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::get_average_damage after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::get_berserk_targets after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::get_clockwise after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::get_controller after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::get_controlling_side after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::get_counter_clockwise after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::get_defense_modifier after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::get_fire_shield_strength after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::get_loss_combat_value after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::get_multi_head_directions after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::get_owner after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::get_owning_side after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::get_resurrection_size after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::get_second_grid_index after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::get_total_combat_value after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::get_total_hit_points after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::get_unit_combat_value after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::initialize after army::Init
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::is_adjacent after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::is_enemy after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::is_in_area_highlight after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::move_to after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::new_turn after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::play_sample after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::range_attack after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::remove_aura after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::remove_binding after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::set_AI_expected_damage after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::set_inside_area_effect after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::simple_move after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires army::stop_sample after army::InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires field AI_expected_damage after InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires field AI_possible_targets after InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires field AI_target after InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires field AI_target_distance after InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires field AI_target_value after InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires field aura_clients after InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires field aura_sources after InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires field binders after InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires field bound_armies after InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires field iLuck after InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires field iMorale after InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires field is_area_effect_target after InitClean
-file-contract	include/army.h	-	LF_FIELDLIST order requires field reset_this_round after InitClean
-file-contract	include/army.h	-	LF_FIELDLIST/S_PUB32: Is returns bool
-file-contract	include/army.h	-	LF_FIELDLIST/S_PUB32: IsActive returns bool
-file-contract	include/army.h	-	LF_FIELDLIST/S_PUB32: IsIncapacitated returns bool
-file-contract	include/army.h	-	LF_FIELDLIST/S_PUB32: LeavesNoBody returns bool
-file-contract	include/army.h	-	LF_FIELDLIST/S_PUB32: NeedToTurn returns bool
-file-contract	include/army.h	-	LF_FIELDLIST/S_PUB32: both can_cast_resurrect overloads return bool
-file-contract	include/army.h	-	LF_FIELDLIST/S_PUB32: both find_flyer_attack_cell overloads return bool
-file-contract	include/army.h	-	LF_FIELDLIST/S_PUB32: can_retaliate returns bool
-file-contract	include/army.h	-	LF_FIELDLIST/S_PUB32: cannot_attack returns bool
-file-contract	include/army.h	-	LF_FIELDLIST/S_PUB32: is_in_area_highlight returns bool
-file-contract	include/army.h	-	LF_FIELDLIST/S_PUB32: is_in_aura returns bool
-file-contract	include/army.h	-	army::Is must retain both mask-based header arms
-file-contract	include/army.h	-	constant army::Is call passes a bit index, not a mask
-file-contract	include/army.h	-	get_owning_side may not be hidden by a TU view
-file-contract	include/cmbtmgr.h	-	Complete's inline TestRaiseDoor boundary must remain a wrapper around RaiseDoor
-file-contract	include/cmbtmgr.h	-	cmbtmgr.h:1460 ValidHex must remain static bool with the attested two-bound predicate
-file-contract	include/cmbtmgr.h	-	cmbtmgr.h:1500 GetHexIndex must remain static int with the row-stride expression
-file-contract	include/cmbtmgr.h	-	cmbtmgr.h:1506 RowIsOdd must remain a const bool member with its low-bit test
-file-contract	include/cmbtmgr.h	-	cmbtmgr.h:1519 GridX must remain static int with its row-stride remainder
-file-contract	include/cmbtmgr.h	-	cmbtmgr.h:1525 InInvisibleColumn must remain static bool and call ValidHex then GridX
-file-contract	include/struct.h	-	struct.h type_point::operator== must remain a bool const member taking const type_point& and compare x, y, z in order
-file-contract	src/ai.cpp	-	constant army::Is call passes a bit index, not a mask
-file-contract	src/army.cpp	-	constant army::Is call passes a bit index, not a mask
-file-contract	src/cmbtmgr.cpp	-	constant army::Is call passes a bit index, not a mask
-file-contract	src/command.cpp	-	constant army::Is call passes a bit index, not a mask
-file-contract	src/drawing.cpp	-	constant army::Is call passes a bit index, not a mask
-file-contract	src/spells.cpp	-	constant army::Is call passes a bit index, not a mask
 group	adventuremapwindow.obj	0x3b0	115:hero::GiveExperience
-group	ai_player.obj	0x2e7d8	475:game::OnSameTeam
 group	ai_player.obj	0x2f998	1048:AI_resource_cost
-group	ai_tactical.obj	0x3cf50	560:army::get_unit_combat_value
-group	border.obj	0x54744	265:border::Main
 group	border.obj	0x54a20	373:bitmapBorder::SetPalette
-group	bottomviewsubwindow.obj	0x55df4	402:town::HasBuilding
 group	bottomviewsubwindow.obj	0x56bbc	655:hero::GetMobility
 group	cmbtmgr.obj	0x5eca8	1658:combatManager::GetCell|combatManager::RowIsOdd
 group	combatoptionswindow.obj	0x67b7c	344:SetDefaultCombatOptions
 group	drawing.obj	0x85478	1522:combatManager::GridY|combatManager::RowIsOdd|combatManager::GridY
-group	drawing.obj	0x867bc	2514:GameTime::ElapsedSince
-group	events.obj	0x902b0	274:TTextResource::GetText
-group	events.obj	0x902fc	293:TTextResource::GetText
-group	events.obj	0x903b4	365:NormalDialog
-group	events.obj	0x923b0	1421:game::SetInfoFlag
-group	events.obj	0x953cc	2948:NormalDialog
 group	events.obj	0x960ac	3317:game::SetInfoFlag
 group	events.obj	0x99d98	5246:game::IsHuman
 group	events.obj	0x99eb0	5268:game::GetTown
 group	events.obj	0x9b448	6034:hero::IsWieldingArtifact
-group	font.obj	0xa246c	483:font::GetCharacterWidth
 group	game.obj	0xb1828	7416:SendMapChange
 group	game.obj	0xba040	11362:game::get_current_turn
-group	hero.obj	0xcc75c	1724:type_artifact::get_description|NormalDialog
-group	multiplayerwindow.obj	0x101058	1571:textWidget::GetText
 group	multiplayerwindow.obj	0x1028c4	679:textWidget::GetText
 group	philai.obj	0x10da30	362:AI_equip_artifacts
-group	philai.obj	0x1126d0	3056:hero::get_primary_skill_total
-group	quicktownwindow.obj	0x117e48	116:town::HasBuilding
-group	remote.obj	0x11d490	1641:CSprite::GetCroppedWidth
-group	singleselectionpopups.obj	0x12eb24	387:CTeamAlignmentDlg::CountNumPlayers
-group	singleselectionwindow.obj	0x12ff40	830:TTextResource::GetText
-group	singleselectionwindow.obj	0x12ffa4	850:TTextResource::GetText
-group	singleselectionwindow.obj	0x130008	876:TTextResource::GetText
-group	singleselectionwindow.obj	0x136bf4	3153:heroWindow::GetWidget|widget::hide
-group	spells.obj	0x152dec	2621:combatManager::find_resurrection_target
-group	spells.obj	0x156c30	5114:army::GetName|format_string
-group	systemoptionswindow.obj	0x160770	323:NormalDialog
 group	textntry.obj	0x162f2c	452:heroWindow::SetFocus
 group	townmgr.obj	0x171118	4704:heroWindowManager::ConvertToHover
-group	townmgr.obj	0x172cf4	5092:townManager::DoCommand
-group	townmgr.obj	0x176634	6758:playerData::IsLocalHuman
-group	townmgr.obj	0x176f24	6899:heroWindowManager::BroadcastMessage
-group	townmgr.obj	0x17ad8c	8118:game::GetHero
-group	townmgr.obj	0x1810b0	9675:game::GetTown
-group	tradpost.obj	0x18a550	2001:TSellCreatureWindow::SetWidgetOff

@@ -24,9 +24,20 @@ class CSprite;
 // Complete's extended creature-id bound.
 const char* GetArmyName(int type, int count);
 
-// E:\gamedcs\includes.h:134. Army.h's GetMorale/GetLuck class-body
-// accessors call this ordinary helper; a declaration is all the header had.
-int limit(int minimum, int value, int maximum);
+// E:\gamedcs\includes.h:124/134. Army.h's GetMorale/GetLuck class-body
+// accessors see the shared reference-returning template and its ordinary
+// by-value wrapper through the original common-header include order.
+template<class T>
+inline const T& t_limit(const T& minimum, const T& value, const T& maximum)
+{
+    return value < minimum ? minimum
+                           : (maximum < value ? maximum : value);
+}
+
+inline int limit(int minimum, int value, int maximum)
+{
+    return t_limit(minimum, value, maximum);
+}
 
 #ifdef HOMM3_ARMY_COPY_VIEW
 // Retail army copies retain each loaded sprite/sample by incrementing the

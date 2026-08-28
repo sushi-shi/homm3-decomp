@@ -245,8 +245,8 @@ public:
     CScrollMsg(int map, int index)
         : CNetMsg(RS_SCROLL, sizeof(CScrollMsg))
     {
-        m_index = index;
         m_map = map;
+        m_index = index;
     }
 };
 

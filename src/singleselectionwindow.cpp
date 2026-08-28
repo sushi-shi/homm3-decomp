@@ -2149,11 +2149,14 @@ void TSingleSelectionWindow::SetCurrentMap(int map, unsigned char bUpdate)
             CNetPlayerHandlerPlayer* p = m_players.GetPlayerInPos(pos);
             if (!p)
                 p = m_players.GetCompPlayerInPos(pos);
-            // Residual (99.66): one SIB base/index swap - retail
+            // Residual (99.67003): one SIB base/index swap - retail
             // encodes this read [gpGame+pos+disp] with gpGame as base,
             // our CL picks pos; the pointer-add respelling is
-            // byte-flat (measured). Everything else is reloc-name
-            // cosmetics.
+            // byte-flat (measured). The two CUpdatePlayerPosMsg array
+            // constructor loops also schedule CNetMsg::field_04's zero
+            // store one instruction early. The shared base constructor
+            // already follows DC netmsg.h:169,172..175 exactly, so that
+            // two-site scheduler artifact is not a sound broad lever.
             p->handicap = gpGame->setup.handicap[pos];
             widget* w = GetWidget(207 + pos);
             if (w) {

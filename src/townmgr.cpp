@@ -4086,16 +4086,6 @@ int type_garrison_base_window::WindowHandler(message* msg)
         static_cast<type_garrison_base_window*>(msg->window);
 
     switch (msg->id) {
-    case MESSAGE_MOUSE_MOVE:
-        gpWindowManager->ConvertToHover(*msg);
-        if (msg->codeY != win->lastHover
-            || msg->qualifier != win->lastQualifier) {
-            win->lastHover = msg->codeY;
-            win->lastQualifier = msg->qualifier;
-            win->SetCommandAndText(msg);
-        }
-        return 1;
-
     case MESSAGE_WIDGET:
         switch (msg->codeX) {
         case widget::WIDGET_SELECT:
@@ -4116,18 +4106,6 @@ int type_garrison_base_window::WindowHandler(message* msg)
             case BOTTOM_SLOT_FIRST_ID + 6:
                 gpTownManager->DoCommand(gpTownManager->field_19c, 1, win);
                 win->SetCommandAndText(msg);
-                return 1;
-            }
-            break;
-
-        case widget::WIDGET_DESELECT:
-            if (msg->codeY == DIVIDE_BUTTON_ID) {
-                townManager* mgr = gpTownManager;
-                enum TCreatureType creature = creature_type_from_int(
-                    mgr->field_12c->group->armies[mgr->field_130]);
-                mgr->field_1c4 = 1;
-                gpTownManager->field_11c->Draw(creature);
-                gpTownManager->field_120->Draw(creature);
                 return 1;
             }
             break;
@@ -4170,8 +4148,30 @@ int type_garrison_base_window::WindowHandler(message* msg)
                 }
             }
             return 1;
+
+        case widget::WIDGET_DESELECT:
+            if (msg->codeY == DIVIDE_BUTTON_ID) {
+                townManager* mgr = gpTownManager;
+                enum TCreatureType creature = creature_type_from_int(
+                    mgr->field_12c->group->armies[mgr->field_130]);
+                mgr->field_1c4 = 1;
+                gpTownManager->field_11c->Draw(creature);
+                gpTownManager->field_120->Draw(creature);
+                return 1;
+            }
+            break;
         }
         break;
+
+    case MESSAGE_MOUSE_MOVE:
+        gpWindowManager->ConvertToHover(*msg);
+        if (msg->codeY != win->lastHover
+            || msg->qualifier != win->lastQualifier) {
+            win->lastHover = msg->codeY;
+            win->lastQualifier = msg->qualifier;
+            win->SetCommandAndText(msg);
+        }
+        return 1;
     }
     return 1;
 }
@@ -6174,6 +6174,9 @@ void townManager::DoCommand(int inCommand, unsigned char isGarrison,
         }
         break;
 
+    // Dreamcast orders these final arms TO / FROM / SWAP.  Complete does
+    // not: imposing that older source order takes this retail-exact body
+    // to 89.26039%.  The exact Complete ordering is SWAP / FROM / TO.
     case TOWN_COMMAND_SWAP_HEROES:
         if (gpCurrentPlayer->IsLocalHuman()) {
             SwapHeroes();

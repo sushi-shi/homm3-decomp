@@ -356,19 +356,6 @@ static inline int DrawingControllingSide(const army* stack)
     return stack->combatSide;
 }
 
-// Modelling the tower choice as a single-call-site inline makes VC6 retain
-// retail's otherwise redundant lower-tower comparison. The conditional
-// expression gives that comparison retail's branch polarity; only the
-// source-equivalent main/upper selector-block order remains (99.95%).
-static inline void DrawingTowerArcher(
-    combatManager::TArcher*& archer,
-    combatManager::TArcher* archers,
-    int wall)
-{
-    archer = wall == combatManager::eWallSectionLowerTowerCover
-        ? &archers[1] : &archers[2];
-}
-
 // EXACT. Dreamcast fixes the statement/lexical shape and retail adds the
 // arrow-tower exclusion plus the Complete combat-grid preference as an
 // alternate gate for the placement-phase latch. The output row marks the
@@ -982,10 +969,13 @@ background_ready:
         field_13d30 = 0;
 }
 
-// Retail's wall row selects one of five preloaded images from each of the
-// defending town's eighteen TWallTraits records. Ordinary rows are clipped
+// EXACT. Retail's wall row selects one of five preloaded images from each of
+// the defending town's eighteen TWallTraits records. Ordinary rows are clipped
 // against the selected battlefield hex; the keep and tower rows optionally
-// insert their defending archer before the foreground cover is drawn.
+// insert their defending archer before the foreground cover is drawn. DC lines
+// 1459..1470 recover the positive three-cover guard and direct if/else-if/else
+// archer selector; that source shape gives VC6 retail's lower/main/upper block
+// placement and retains its second lower-tower comparison.
 // E:\gamedcs\drawing.cpp:1426
 VA(0x00494c20, 0x31c)  // callee-set + exact arity, dc 0x85478
 void combatManager::DrawWallAt(int hex_index, int dx)
@@ -1054,16 +1044,16 @@ draw_special_wall:
         if (hex_index != wall_hex)
             continue;
 
-        {
-            TArcher* archer = 0;
-            if (wall != eWallSectionMainBuildingCover) {
-                if (wall != eWallSectionLowerTowerCover
-                        && wall != eWallSectionUpperTowerCover)
-                    goto draw_wall_image;
-                DrawingTowerArcher(archer, archers, wall);
-            } else {
+        if (wall == eWallSectionMainBuildingCover
+                || wall == eWallSectionLowerTowerCover
+                || wall == eWallSectionUpperTowerCover) {
+            TArcher* archer;
+            if (wall == eWallSectionMainBuildingCover)
                 archer = &archers[0];
-            }
+            else if (wall == eWallSectionLowerTowerCover)
+                archer = &archers[1];
+            else
+                archer = &archers[2];
 
             if (archer->sprite) {
                 int draw_x;
@@ -1095,7 +1085,6 @@ draw_special_wall:
             }
         }
 
-draw_wall_image:
         DrawWall(image, 0, 0, image->GetWidth(), image->GetHeight(),
                  traits.x, traits.y);
     }
