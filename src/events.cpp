@@ -5091,17 +5091,6 @@ void advManager::DoEventShrine(hero* current_hero, NewmapCell* cell,
     current_hero->AddSpell(spell);
 }
 
-// Declared inline in the original Game.h (DC line 865); this is the retail
-// COMDAT copy selected into events.obj. Negative player ids are their own
-// team sentinel, while real slots use the signed team byte in the map header.
-VA(0x004a5960, 0x16)  // exact body + selected-COMDAT ownership, dc 0x37fbc
-inline int game::GetTeam(int playerNum) const
-{
-    if (playerNum < 0)
-        return playerNum;
-    return mapHeader.teamInfo[playerNum];
-}
-
 // philai.obj's Sirens visit (dc 0x11260c), located by its only caller
 // below: DoEventSiren's single philai callee, a /Gr two-register fastcall
 // taking (hero*, armyGroup*) in exactly the Dreamcast's parameter order

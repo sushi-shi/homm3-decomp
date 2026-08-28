@@ -2091,28 +2091,6 @@ public:
             return 0;
         return (globalInfoFlags[flag] & (1 << playerNum)) != 0;
     }
-    // Game.h:917, GetInfoFlag's setter twin. It marks the whole of
-    // playerNum's TEAM, which is why every events.obj handler that
-    // visits a global-info object ends in an eight-iteration teamInfo
-    // scan rather than a single OR. The Dreamcast statement/call row names
-    // GetTeam for the source-level team lookup; retail VC6 then decides per
-    // expansion whether that tiny nested helper remains a call or folds to
-    // the signed teamInfo load.
-    //
-    // `flag` is spelled `int` where the Dreamcast decoration says
-    // GlobalInfoFlags purely because that enum is defined in advmgr.h,
-    // which events.cpp includes AFTER this header; every call site still
-    // passes the enumerator, so the domain is not lost.
-    void SetInfoFlag(int flag, const int playerNum)
-    {
-        if (playerNum < 0 || playerNum >= 8)
-            return;
-        int team = GetTeam(playerNum);
-        for (int i = 0; i < 8; i++) {
-            if (mapHeader.teamInfo[i] == team)
-                globalInfoFlags[flag] |= 1 << i;
-        }
-    }
     int GetGamePosFromDPID(unsigned long dpid);  // 0x4cec20
     // Same `_N`-and-const family as playerData's pair above.
     bool IsLastHuman(int gamePos) const;         // 0x4cec50
@@ -2379,6 +2357,20 @@ public:
     void ProcessRandomObjects();                                 // 0x4c9dd0
     void record_show_hero(hero* who, signed char player, type_point point,
                           unsigned char reset);                  // 0x49cb20
+    // DC game.h:865. Keep the body ahead of the two helpers that call it,
+    // matching the original header's definition order. The events compiland
+    // selects the exact retail COMDAT when one expansion remains uninlined.
+#ifdef HOMM3_EVENTS_GAME_INLINE_HELPERS
+    VA(0x004a5960, 0x16)  // exact selected COMDAT, dc 0x37fbc
+    int GetTeam(int playerNum) const
+    {
+        if (playerNum < 0)
+            return playerNum;
+        return mapHeader.teamInfo[playerNum];
+    }
+#else
+    int GetTeam(int playerNum) const;
+#endif
 #if defined(HOMM3_EVENT_RECORD_DECLS)
     // The four remaining recorders, all located by the same vtable-store
     // evidence as their claimed siblings: each expands `new type_record_X`
@@ -2400,11 +2392,11 @@ public:
     // row for it - both visibility sweeps expand it at their head, and
     // SetVisibility's own range guard is what lets VC6 drop the internal
     // one there while ResetVisibility keeps it.
-    unsigned char GetTeamMask(int playerNum);
+    unsigned char GetTeamMask(int playerNum) const;
 #elif defined(HOMM3_EVENTS_GAME_INLINE_HELPERS)
     // Game.h:877. DispatchEvent's obelisk arm preserves this named helper;
     // retail /Ob2 folds both it and GetTeam into the arm.
-    unsigned char GetTeamMask(int playerNum)
+    unsigned char GetTeamMask(int playerNum) const
     {
         unsigned char mask = 0;
         if (playerNum >= 0 && playerNum < 8) {
@@ -2417,6 +2409,27 @@ public:
         return mask;
     }
 #endif
+    // Game.h:917, GetInfoFlag's setter twin. It marks the whole of
+    // playerNum's TEAM, which is why every events.obj handler that
+    // visits a global-info object ends in an eight-iteration teamInfo
+    // scan rather than a single OR. The Dreamcast statement/call row names
+    // GetTeam for the source-level team lookup; retail VC6 then decides per
+    // expansion whether that tiny nested helper remains a call or folds to
+    // the signed teamInfo load.
+    //
+    // As with GetInfoFlag above, VC6 accepts the elaborated enum before
+    // advmgr.h supplies its definition, retaining the attested parameter
+    // domain even in this include order.
+    void SetInfoFlag(enum GlobalInfoFlags flag, const int playerNum)
+    {
+        if (playerNum < 0 || playerNum >= 8)
+            return;
+        int team = GetTeam(playerNum);
+        for (int i = 0; i < 8; i++) {
+            if (mapHeader.teamInfo[i] == team)
+                globalInfoFlags[flag] |= 1 << i;
+        }
+    }
     // Retail-only 0x4f32a0 / 0x4f3540, the standalone morale and luck
     // describe dialogs THeroScreenWindow::WindowHandler opens for widgets
     // 0x74 and 0x75. Both are `ret 8` taking (hero*, dialogType); the
@@ -2443,11 +2456,6 @@ public:
             return 0;
         return mapHeader.teamInfo[player1] == mapHeader.teamInfo[player2];
     }
-#ifdef HOMM3_EVENTS_GAME_INLINE_HELPERS
-    inline int GetTeam(int playerNum) const;
-#else
-    int GetTeam(int playerNum) const;
-#endif
     // 0x4cce30 (dc 0xb9a34): counts thieves guilds across the player's
     // towns; the advmgr quick views gate their view level on its 1/2
     // thresholds.

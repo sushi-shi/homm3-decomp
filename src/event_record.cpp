@@ -55,7 +55,7 @@ inline const _TYPE& max_ref(_TYPE _X, _TYPE _Y)
 }
 
 // dc 0x8f270 (game.h:877). No retail row: both sweeps expand it.
-inline unsigned char game::GetTeamMask(int playerNum)
+inline unsigned char game::GetTeamMask(int playerNum) const
 {
     unsigned char mask = 0;
     if (playerNum >= 0 && playerNum < 8) {
