@@ -1315,7 +1315,6 @@ call	game.obj	0xa8cd0	min
 call	game.obj	0xa8cd0	playerData::IsHuman
 call	game.obj	0xa8cd0	type_obscuring_object::is_on_map
 call	game.obj	0xa8cd0	type_obscuring_object::restore_cell
-call	game.obj	0xa99d0	strnicmp
 call	game.obj	0xaa0d0	game::SetMapSize
 call	game.obj	0xaa0d0	strnicmp
 call	game.obj	0xaa3f0	game::get_current_turn
