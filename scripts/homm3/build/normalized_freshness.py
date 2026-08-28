@@ -27,8 +27,10 @@ STAMP_SUFFIX = ".stamp.json"
 # the initial equivalent-relocation schema; 9 skips the generated name map's
 # provenance preamble; 10 removes proved false-literal rows rather than using
 # an objdiff-unsupported ABSOLUTE placeholder; 11 refuses any candidate-side
-# relocation at a literal site and requires one unambiguous aggregate anchor.
-STAMP_SCHEMA = 11
+# relocation at a literal site and requires one unambiguous aggregate anchor;
+# 12 removes paired candidate ``__except_list`` relocations that retail proves
+# are fixed-base literal-zero operands.
+STAMP_SCHEMA = 12
 
 _HASH_CACHE: dict[str, tuple[tuple[int, int], str]] = {}
 
