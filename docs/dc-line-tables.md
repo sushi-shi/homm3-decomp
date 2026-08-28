@@ -89,6 +89,9 @@ homm3 dreamcast show 0x00403ee0
 homm3 dreamcast asm dc:0x1190
 homm3 dreamcast asm dc:0x1190 --blocks
 homm3 dreamcast find ClearBottomView
+homm3 dreamcast gaps game::GetHero
+homm3 dreamcast gaps --minimum 2 --limit 50
+homm3 dreamcast gaps --exact 1 --retail-only --limit 0
 homm3 dreamcast stats
 ```
 
@@ -99,6 +102,51 @@ assembly/CFG records. Assembly line-program entries are labelled `bp`,
 following Vostok's debugger-breakpoint terminology. `scope` labels are
 CodeView `S_BLOCK32` lexical scopes; `B0`, `B1`, ... are separately inferred
 SH4 basic blocks.
+
+### Vostok-style empty source-line gaps
+
+NB11 preserves the same clue Vostok's PDB carcass uses. The first line-program
+row at a procedure boundary supplies the **procedure-frame line**, and the next
+lexical row supplies the **first body line**. If those are lines 20 and 22, line
+21 had no emitted line-program row. `homm3 dreamcast gaps SELECTOR` reports that
+leading hole plus every other source-line hole in the selected function;
+without a selector it ranks the whole Dreamcast corpus by leading-hole size.
+`homm3 dreamcast show` includes the leading measurement in the dossier.
+
+This is a candidate generator, not a source-text decoder. A missing row may be
+a blank, comment, declaration, brace, preprocessor-only line, or a statement
+the optimizer folded away. A release `assert` macro is therefore one important
+possibility, especially when adding a zero-emission assertion changes VC6's
+front-end inline budget while leaving emitted bytes unchanged, but the gap does
+not identify that spelling by itself. Corroborate it with an assertion callee or
+string, a sibling build/source, a source-line operand, or a controlled compiler
+experiment. Minimal four-byte SH4 `rts; nop` bodies are excluded from leading-gap
+inference so a closing-frame row cannot become a large false candidate.
+
+Two vendored-zlib controls define the limits. `deflateInit_@16` has Dreamcast
+boundary line 194 and first body line 196; zlib 1.1.3 line 195 is the opening
+brace, so even a one-line leading hole is not intrinsically an assertion. In the
+other direction, `_tr_flush_block`'s known release-disabled
+`Assert(buf != (char*)0, "lost buf")` at `trees.cpp:964` **does retain an NB11
+line row** at dc `0x18dc76`. The row owns 12 bytes of neighbouring branch/setup
+code but contains no conditional assertion path or call; the assertion string
+and `z_error` symbol are absent from the executable. This proves that a
+compiled-out assertion can leak as a **ghost line attribution**, rather than as
+an absent row or runtime assertion. Gap candidates and zero/borrowed statement
+rows must therefore both be considered.
+
+A full Dreamcast CodeView name/public/string scan found no generic `assert`,
+`_wassert`, `DebugBreak`, or assertion-failure runtime signature. The surviving
+`File`/`Line` format strings are adjacent to named DirectPlay and DirectDraw
+error messages. There is currently no evidence that the Dreamcast game kept a
+generic runtime assertion implementation; the proven leak is line metadata.
+
+Unlike Vostok's per-symbol `lines_for_symbol()` view, the dumped NB11 line table
+is flat per compiland. A preceding procedure's closing row can land exactly on
+the next procedure's address. The scanner rejects a boundary row when it is
+source-line-coherent with the preceding contiguous procedure rather than the
+new body, and reports the leading gap as unavailable; this prevents those
+borrowed braces from becoming high-ranked false assertion candidates.
 
 The lower-level statement renderer remains available for development:
 
