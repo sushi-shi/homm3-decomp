@@ -5095,7 +5095,7 @@ void advManager::DoEventShrine(hero* current_hero, NewmapCell* cell,
 // COMDAT copy selected into events.obj. Negative player ids are their own
 // team sentinel, while real slots use the signed team byte in the map header.
 VA(0x004a5960, 0x16)  // exact body + selected-COMDAT ownership, dc 0x37fbc
-int game::GetTeam(int playerNum) const
+inline int game::GetTeam(int playerNum) const
 {
     if (playerNum < 0)
         return playerNum;
@@ -6791,7 +6791,7 @@ inline void advManager::do_event_whirlpool(hero* current_hero,
     type_point exit_point;
     if (gpGame->get_random_whirlpool(cell->extraInfo, &exit_point)) {
         StopCursor(1);
-        TeleportTo(current_hero, exit_point, 0, 0, 1, 0);
+        gpAdvManager->TeleportTo(current_hero, exit_point, 0, 0, 1, 0);
     }
 }
 
@@ -6805,7 +6805,7 @@ inline void advManager::do_event_whirlpool(hero* current_hero,
 // whirlpool between the two monolith arms - and the five EH states run
 // 0..4 in exactly that order: sacrifice window, hill fort window, thieves
 // guild new, university window, war factory new.
-// [2026-08-28] SOURCE-SHAPE CHECKPOINT (99.29%): the earlier 99.99% source
+// [2026-08-28] SOURCE-SHAPE CHECKPOINT (99.37%): the earlier 99.99% source
 // was a local maximum produced by pasting nine Dreamcast event-handler bodies
 // and four game accessors directly into this switch. The fatal DC gate now
 // requires all thirteen calls, plus NewfullMap::cell in the eye sweep and the
@@ -6816,7 +6816,13 @@ inline void advManager::do_event_whirlpool(hero* current_hero,
 // SetInfoFlag's own attested GetTeam call raised the coherent checkpoint from
 // 99.05% to 99.29%; inline_depth(1) blocked SetInfoFlag itself (98.36%),
 // inline_depth(2) returned to 99.05%, and the unforced natural declaration
-// plus call produced the current 99.29%.
+// plus call produced 99.29%. Naming gpAdvManager as the whirlpool receiver
+// closed that expansion, and restoring the dossier's single direct obelisk
+// update (no invented pointer/mask locals) raised the checkpoint to 99.37%.
+// Border-tent operand order/force-inline and a named faerie-ring game receiver
+// were byte-flat; force-inlining GetTeam regressed this row to 99.13% and its
+// independently exact COMDAT to zero, so only its attested inline declaration
+// is retained.
 VA(0x004a84f0, 0x2542)  // anchor-callee cell->type jump table + ret 0x10=p5 (note above), dc 0x9824c
 void advManager::DispatchEvent(hero* current_hero, NewmapCell* cell, type_point point, bool human_player)
 {
@@ -7127,12 +7133,10 @@ void advManager::DispatchEvent(hero* current_hero, NewmapCell* cell, type_point 
     case OASIS:
         DoEventOasis(current_hero, cell, human_player);
         break;
-    case OBELISK: {
-        signed char* obeliskFlags =
-            &gpGame->obeliskFlags[cell->extraInfo];
-        if (!(*obeliskFlags & gUnnamed69ccc4)) {
-            unsigned char teamBits = gpGame->GetTeamMask(gNetLocalGamePos);
-            *obeliskFlags |= teamBits;
+    case OBELISK:
+        if (!(gpGame->obeliskFlags[cell->extraInfo] & gUnnamed69ccc4)) {
+            gpGame->obeliskFlags[cell->extraInfo]
+                |= gpGame->GetTeamMask(gNetLocalGamePos);
             if (human_player) {
                 NormalDialog(gpAdventureEventText->GetText(
                                  ADV_EVENT_TEXT_OBELISK),
@@ -7147,7 +7151,6 @@ void advManager::DispatchEvent(hero* current_hero, NewmapCell* cell, type_point 
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
         break;
-    }
     case OBSERVATORY:
         if (human_player)
             NormalDialog(gpAdventureEventText->GetText(

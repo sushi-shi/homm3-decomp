@@ -2443,7 +2443,11 @@ public:
             return 0;
         return mapHeader.teamInfo[player1] == mapHeader.teamInfo[player2];
     }
+#ifdef HOMM3_EVENTS_GAME_INLINE_HELPERS
+    inline int GetTeam(int playerNum) const;
+#else
     int GetTeam(int playerNum) const;
+#endif
     // 0x4cce30 (dc 0xb9a34): counts thieves guilds across the player's
     // towns; the advmgr quick views gate their view level on its 1/2
     // thresholds.
