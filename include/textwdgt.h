@@ -42,6 +42,10 @@ public:
     // definition, so callers dispatch through the slot (the
     // widget::Close idiom).
     virtual void SetText(const char* new_text);  // slot 13, retail 0x57c6d0
+
+    // E:\gamedcs\TextWdgt.h:67; DC emits this header helper out of line,
+    // while Complete folds the c_str() access into its callers.
+    __forceinline const char* GetText() { return Text.c_str(); }
 };
 
 class Bitmap816;

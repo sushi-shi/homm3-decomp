@@ -182,13 +182,16 @@ public:
     textWidget* header2;   // +0x5c
     textWidget* rollover;  // +0x60
 
-    CMPInputDlg(int maxChars1, int maxChars2);
+    __forceinline CMPInputDlg(int maxChars1, int maxChars2);
     virtual ~CMPInputDlg();
     virtual int OnWidgetDeselect(int id, unsigned char* bExitFlag);
     virtual textWidget* GetRolloverWidget();
     unsigned char OnOK();
     void UpdateOK();
-    void DisableOK();
+    __forceinline void DisableOK()
+    {
+        GetWidget(OKAY_ID)->enable(0);
+    }
 };
 SIZE(CMPInputDlg, 0x64);
 
@@ -552,7 +555,7 @@ DATA(0x0069ca28) extern TMultiPlayerWindow* gpMultiPlayerWindow;
 // CODEVIEW(E:\gamedcs\multiplayerwindow.cpp:1744, dc 0x101510) unsigned char TMultiPlayerWindow::OnJoin();
 // CODEVIEW(E:\gamedcs\multiplayerwindow.cpp:1884, dc 0x101784) unsigned char TMultiPlayerWindow::OnTCP();
 // CODEVIEW(E:\gamedcs\multiplayerwindow.cpp:1924, dc 0x1018ec) unsigned char TMultiPlayerWindow::OnIPX();
-// CODEVIEW(E:\gamedcs\multiplayerwindow.cpp:1944, dc 0x10196c) unsigned char TMultiPlayerWindow::OnSearch();
+// CODEVIEW(E:\gamedcs\multiplayerwindow.cpp:1944, dc 0x10196c) bool TMultiPlayerWindow::OnSearch();
 // CODEVIEW(E:\gamedcs\multiplayerwindow.cpp:2009, dc 0x101c00) unsigned char TMultiPlayerWindow::OnHotSeat();
 // CODEVIEW(E:\gamedcs\multiplayerwindow.cpp:2025, dc 0x101c4c) unsigned char TMultiPlayerWindow::OnModem();
 // CODEVIEW(E:\gamedcs\multiplayerwindow.cpp:2043, dc 0x101ca4) unsigned char TMultiPlayerWindow::OnDirect();
