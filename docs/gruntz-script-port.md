@@ -260,6 +260,22 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-28 — the multiplayer TCP initialization pair is reconstructed;
+  its Winsock helper is byte-exact.** Retail `GetIPAddress` at `0x5112e0`
+  retains the Complete-only Winsock path behind Dreamcast's four-byte stub:
+  it creates and binds a nonblocking UDP socket, resolves the local hostname,
+  copies the first IPv4 address, and closes the socket. All 257 VC6 bytes and
+  11 control-flow blocks are exact. Retail `TMultiPlayerWindow::OnTCP` at
+  `0x5113f0` initializes DirectPlay, activates the host/join/search controls,
+  publishes that address, clears and re-enumerates the session array, updates
+  the slider and redraws. Its 611-byte reconstruction has the same 20 logical
+  block bodies, stack offsets, call and relocation sites, and per-block
+  instructions; the measured residual is physical block order only: VC6
+  places the connection-failure dialog at the tail, while retail interposes
+  that cold return between the `textWidget` constructor and its null-allocation
+  continuation. The synchronized report reaches **2526/3093 functions
+  exact**, **92.93% fuzzy**, and **60.73% executable coverage**.
+
 - **2026-08-27 — the multiplayer hot-seat dispatcher is byte-exact.**
   Retail `TMultiPlayerWindow::OnHotSeat` at `0x511d40` opens a stack-local
   `CHotSeatDlg`, returns false on the cancel result, or selects

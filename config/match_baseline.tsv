@@ -2034,6 +2034,7 @@ multiplayerwindow	??_GCHeroSessions@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x10ed
 multiplayerwindow	??_GCHotSeatDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x112540
 multiplayerwindow	??_GCMPInputDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1109e0
 multiplayerwindow	??_GTMultiPlayerWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x10edb0
+multiplayerwindow	?GetIPAddress@@YIEPAD@Z	100.0000	100.0000	100.0000	0x1112e0
 multiplayerwindow	?GetRolloverWidget@CHotSeatDlg@@UAEPAVtextWidget@@XZ	100.0000	100.0000	100.0000	0x112530
 multiplayerwindow	?GetRolloverWidget@CMPInputDlg@@UAEPAVtextWidget@@XZ	100.0000	100.0000	100.0000	0x110970
 multiplayerwindow	?GetRolloverWidget@TMultiPlayerWindow@@UAEPAVtextWidget@@XZ	100.0000	100.0000	100.0000	0x10ed50
@@ -2050,6 +2051,7 @@ multiplayerwindow	?OnKeyPress@CMultiPlayerWindowEdit@@UAEHPAVmessage@@@Z	100.000
 multiplayerwindow	?OnNextEdit@CMPEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x110850
 multiplayerwindow	?OnOK@CHotSeatDlg@@QAEEXZ	100.0000	100.0000	100.0000	0x112470
 multiplayerwindow	?OnPrevEdit@CMPEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x110870
+multiplayerwindow	?OnTCP@TMultiPlayerWindow@@QAEEXZ	73.5825	73.5825	73.5825	0x1113f0
 multiplayerwindow	?OnWidgetDeselect@CHotSeatDlg@@UAEHHPAE@Z	100.0000	100.0000	100.0000	0x112420
 multiplayerwindow	?OnWidgetDeselect@CMPInputDlg@@UAEHHPAE@Z	83.3750	83.3750	83.3750	0x1108f0
 multiplayerwindow	?OnWidgetDeselect@TMultiPlayerWindow@@UAEHHPAE@Z	98.1199	98.1199	98.1199	0x10f4e0
