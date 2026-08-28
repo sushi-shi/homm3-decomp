@@ -158,6 +158,68 @@ PROVEN_CALL_TRANSFERS: dict[tuple[str, int, str], CallTransfer] = {
 # graph: inlined accessors/operators, a source order hidden by scheduling, and
 # nesting within a single attested statement group.
 SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
+    ("philai.obj", 0x10FEB8): (
+        SourceRule(
+            "value_of_experience keeps Dreamcast's no-argument const hero "
+            "accessor at line 1718",
+            r"\bint\s+increment\s*=\s*current_hero\s*->\s*"
+            r"GetExperienceIncrement\s*\(\s*\)\s*;"),
+        SourceRule(
+            "value_of_experience keeps the line-1719 army conversion as a "
+            "separate statement before the line-1721 return",
+            r"\bfloat\s+army_value\s*=\s*float\s*\(\s*current_army\s*->\s*"
+            r"get_AI_value\s*\(\s*\)\s*\)\s*;\s*return\b"),
+        SourceRule(
+            "value_of_experience keeps the retail-exact line-1721 float "
+            "gold/add/divide expression",
+            r"return\s*\(\s*float\s*\(\s*gHeroGoldCost\s*\)\s*\+\s*"
+            r"army_value\s*\)\s*/\s*float\s*\(\s*increment\s*\*\s*40\s*"
+            r"\)\s*;"),
+    ),
+    ("philai.obj", 0x10FEF4): (
+        SourceRule(
+            "AI_set_hero_bonuses keeps Dreamcast's sole caster local and "
+            "the value_of_experience statement before spell valuation",
+            r"\btype_spellvalue\s+caster\s*\(\s*our_hero\s*\)\s*;\s*"
+            r"our_hero\s*->\s*turnExperienceToRVRatio\s*=\s*"
+            r"value_of_experience\s*\(\s*our_hero\s*,\s*&\s*"
+            r"our_hero\s*->\s*army\s*\)\s*;\s*long\s+base_value\s*=\s*"
+            r"caster\s*\.\s*get_best_spell_value\s*\("),
+        SourceRule(
+            "AI_set_hero_bonuses keeps both source-visible max wrappers",
+            r"(?<![_\w])max\s*\(", 2, 2),
+        SourceRule(
+            "AI_set_hero_bonuses calls set_value_of_power exactly once",
+            r"\bset_value_of_power\s*\(", 1, 1),
+        SourceRule(
+            "AI_set_hero_bonuses calls set_value_of_duration exactly once",
+            r"\bset_value_of_duration\s*\(", 1, 1),
+        SourceRule(
+            "AI_set_hero_bonuses calls set_value_of_knowledge exactly once",
+            r"\bset_value_of_knowledge\s*\(", 1, 1),
+        SourceRule(
+            "AI_set_hero_bonuses calls set_value_of_well in both source arms",
+            r"\bset_value_of_well\s*\(", 2, 2),
+        SourceRule(
+            "AI_set_hero_bonuses calls set_value_of_spring in both source arms",
+            r"\bset_value_of_spring\s*\(", 2, 2),
+        SourceRule(
+            "AI_set_hero_bonuses may not flatten the five attested setters "
+            "back into direct field assignments",
+            r"our_hero\s*->\s*value_of_(?:power|duration|knowledge|well|spring)"
+            r"\s*=", 0, 0),
+        SourceRule(
+            "AI_set_hero_bonuses keeps the line-1735/1737, 1739/1740, "
+            "and 1742/1744 calculation/setter statement splits",
+            r"\blong\s+value\s*=\s*max\s*\(\s*caster\."
+            r"get_value_of_increase\s*\([^;]*;\s*our_hero\s*->\s*"
+            r"set_value_of_power\s*\(\s*value\s*\)\s*;\s*value\s*=\s*"
+            r"caster\.get_value_of_increase\s*\([^;]*;\s*our_hero\s*->\s*"
+            r"set_value_of_duration\s*\(\s*value\s*\)\s*;\s*value\s*=\s*"
+            r"max\s*\(\s*caster\.get_value_of_increase\s*\([^;]*;\s*"
+            r"our_hero\s*->\s*set_value_of_knowledge\s*\(\s*value\s*\)"
+            r"\s*;"),
+    ),
     ("adventureoptionswindow.obj", 0x5204): (
         SourceRule(
             "TAdventureOptionsWindow::WindowHandler keeps explicit close "
@@ -1285,6 +1347,72 @@ case TAdventureOptionsWindow::VIEW_SCENARIO_ID:
     if groups_without_transfers(transfer_groups, lambda _callee: False) \
             != transfer_groups:
         failures.append("unproved transfer disappeared from call groups")
+    experience_key = ("philai.obj", 0x10FEB8)
+    experience_probe = """\
+int increment = current_hero->GetExperienceIncrement();
+float army_value = float(current_army->get_AI_value());
+return (float(gHeroGoldCost) + army_value) / float(increment * 40);
+"""
+    if contract_violations(experience_probe, experience_key):
+        failures.append("aligned value_of_experience contract did not pass")
+    flattened_experience = experience_probe.replace(
+        "float army_value = float(current_army->get_AI_value());\n", "").replace(
+            "army_value", "float(current_army->get_AI_value())")
+    if not any("separate statement" in rule.description for rule in
+               contract_violations(flattened_experience, experience_key)):
+        failures.append("flattened value_of_experience conversion passed")
+    static_increment = experience_probe.replace(
+        "current_hero->GetExperienceIncrement()",
+        "hero::GetExperienceIncrement(current_hero->level)")
+    if not any("no-argument const hero accessor" in rule.description
+               for rule in contract_violations(static_increment,
+                                                experience_key)):
+        failures.append("static value_of_experience increment call passed")
+    hero_bonuses_key = ("philai.obj", 0x10FEF4)
+    hero_bonuses_probe = """\
+type_spellvalue caster(our_hero);
+our_hero->turnExperienceToRVRatio =
+    value_of_experience(our_hero, &our_hero->army);
+long base_value = caster.get_best_spell_value(SPELL_VALUE_CLASS_MASK);
+long value = max(caster.get_value_of_increase(base_value, 1, 1, 0), 10);
+our_hero->set_value_of_power(value);
+value = caster.get_value_of_increase(base_value, 0, 1, 0);
+our_hero->set_value_of_duration(value);
+value = max(caster.get_value_of_increase(base_value, 0, 0, 30) / 3, 10);
+our_hero->set_value_of_knowledge(value);
+if (our_hero->mana >= initial_mana)
+    our_hero->set_value_of_well(0);
+else
+    our_hero->set_value_of_well(caster.get_value_of_increase(
+        base_value, 0, 0, initial_mana - our_hero->mana));
+if (our_hero->mana >= 2 * initial_mana)
+    our_hero->set_value_of_spring(0);
+else
+    our_hero->set_value_of_spring(caster.get_value_of_increase(
+        base_value, 0, 0, 2 * initial_mana - our_hero->mana));
+"""
+    if contract_violations(hero_bonuses_probe, hero_bonuses_key):
+        failures.append("aligned AI_set_hero_bonuses contract did not pass")
+    flattened_bonus = hero_bonuses_probe.replace(
+        "our_hero->set_value_of_power(value);",
+        "our_hero->value_of_power = value;")
+    flattened_rules = contract_violations(
+        flattened_bonus, hero_bonuses_key)
+    if not any("set_value_of_power exactly once" in rule.description
+               for rule in flattened_rules):
+        failures.append("flattened hero power setter passed")
+    if not any("direct field assignments" in rule.description
+               for rule in flattened_rules):
+        failures.append("direct hero bonus field assignment passed")
+    old_maximum = hero_bonuses_probe.replace("max(", "max_ref<long>(")
+    if not any("both source-visible max wrappers" in rule.description
+               for rule in contract_violations(old_maximum,
+                                                hero_bonuses_key)):
+        failures.append("AI_set_hero_bonuses max_ref plateau passed")
+    renamed_caster = hero_bonuses_probe.replace("caster", "value")
+    if not any("sole caster local" in rule.description for rule in
+               contract_violations(renamed_caster, hero_bonuses_key)):
+        failures.append("renamed AI_set_hero_bonuses caster local passed")
     adventure_options_key = ("adventureoptionswindow.obj", 0x5204)
     adventure_options_probe = """\
 unsigned char closeDialog = false;

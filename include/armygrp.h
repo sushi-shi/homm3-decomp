@@ -829,7 +829,15 @@ public:
     unsigned char IsMember(TCreatureType monType);
     int CanJoin(int monType);
     int GetAlignments(unsigned char* alignments);
+    // Complete keeps the emitted implementation as the non-const overload.
     long get_AI_value();
+    // Dreamcast public ?get_AI_value@armyGroup@@QBAJXZ proves the const
+    // source-facing boundary used by AI valuation. Retail folds this adapter
+    // into its callers, leaving the implementation call ABI unchanged.
+    __forceinline long get_AI_value() const
+    {
+        return const_cast<armyGroup*>(this)->get_AI_value();
+    }
     TTerrainType GetNativeTerrain();
     void SplitArmy(int srcIndex, armyGroup* ag, int destIndex,
                    unsigned char inSrcRestricted,
