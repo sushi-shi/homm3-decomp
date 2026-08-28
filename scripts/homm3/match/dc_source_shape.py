@@ -184,6 +184,12 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"upgrade_cost\s*=\s*gCreatureRecords\b[^;]*;\s*"
             r"amount\s*=\s*current_hero\s*->\s*army\s*\.\s*numTroops\s*"
             r"\[\s*slot\s*\]\s*;"),
+        SourceRule(
+            "upgrade_creatures passes Dreamcast line 221's integer dwelling "
+            "expression directly to HasBuilding without a non-attested enum "
+            "bridge",
+            r"\bHasBuilding\s*\(\s*DWELLING_0_UPG_ID\s*\+\s*dwelling\s*,"
+            r"\s*1\s*\)"),
     ),
     ("game.obj", 0xA3E5C): (
         SourceRule(
@@ -1420,6 +1426,8 @@ long dwelling;
 const int* upgrade_cost;
 const int* base_cost;
 for (dwelling = 0; dwelling < TOWN_DWELLING_COUNT; ++dwelling) {
+    if (!current_town->HasBuilding(DWELLING_0_UPG_ID + dwelling, 1))
+        continue;
     base_cost = gCreatureRecords + base_type * CREATURE_RECORD_DWORDS;
     upgrade_cost = gCreatureRecords + upgrade * CREATURE_RECORD_DWORDS;
     amount = current_hero->army.numTroops[slot];
@@ -1444,6 +1452,12 @@ for (dwelling = 0; dwelling < TOWN_DWELLING_COUNT; ++dwelling) {
     if not any("base-cost" in rule.description for rule in
                contract_violations(reordered_upgrade, upgrade_key)):
         failures.append("reordered upgrade_creatures costs passed")
+    bridged_upgrade = upgrade_probe.replace(
+        "HasBuilding(DWELLING_0_UPG_ID + dwelling, 1)",
+        "HasBuilding(building_id_from_int(DWELLING_0_UPG_ID + dwelling), 1)")
+    if not any("non-attested enum bridge" in rule.description for rule in
+               contract_violations(bridged_upgrade, upgrade_key)):
+        failures.append("non-attested upgrade_creatures enum bridge passed")
     experience_key = ("philai.obj", 0x10FEB8)
     experience_probe = """\
 int increment = current_hero->GetExperienceIncrement();
