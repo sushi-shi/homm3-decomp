@@ -4,6 +4,7 @@
 #include <va.h>
 #include <stdio.h>
 #include <string.h>
+#define HOMM3_COMBATRESULTSWINDOW_OBJ_VIEW
 #include "combatresultswindow.h"
 #include "border.h"
 #include "button.h"
@@ -26,16 +27,24 @@
 // body in this admitted subset that touches the active-window slot.
 DATA(0x00694fbc) static TCombatResultsWindow* gpCombatResultsWindow;
 
-// Retail's `min` is the by-value / const-reference-returning helper this tree
-// already carries file-locally in ai_combat.cpp and ai_tactical.cpp: the loss
-// row cap at 0x470d51 stores BOTH operands to stack temps and selects between
-// their ADDRESSES with two LEAs, which no value-returning spelling produces.
-// Declared here for the same reason those TUs declare it - so the unit does
-// not pull the STL surface in for one call.
+// Dreamcast line 307 calls the source-private `int min(int, int)` from
+// includes.h:114; its own body calls this const-reference `_cpp_min` from
+// DC_precompiledheaders.h:41. Retail corroborates the two-layer source shape:
+// the loss-row cap at 0x470d51 stores both by-value wrapper arguments to stack
+// temps, then selects between their addresses with two LEAs. Keep the wrapper
+// instead of collapsing the proven call into the template.
 template <class _TYPE>
-inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
+inline const _TYPE& _cpp_min(const _TYPE& _X, const _TYPE& _Y)
 {
     return (_Y < _X ? _Y : _X);
+}
+
+#ifdef min
+#undef min
+#endif
+inline int min(int a, int b)
+{
+    return _cpp_min(a, b);
 }
 
 // genrltxt.txt rows this dialog narrates itself with. They are consumed
@@ -136,18 +145,15 @@ inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
 // the mirrored attacker/defender arms scores 96.251090. Retail x86 already
 // uses the slot index in ESI after each walk, so DC's TCreatureType `type`
 // local is a port-specific source difference, not a compatible x86 type.
-// The hotkey spelling was the remaining structural lever. The DC xref graph's
-// one edge to the header-inline `button::set_hotkey` is an OUT-OF-LINE edge,
-// not a source-call census; treating it as proof that retail used the wrapper
-// once was wrong. Retail x86 passes zero as the button constructor's hotkey
-// and its two growth paths are selected by direct
-// `hotKeyCodes.push_back(28/1)`. With both wrappers the body was 96.37881%,
-// 153 branches and 152 calls. Making only 28 direct reached 98.01112% /
-// 150 / 153; the reversed one-direct spelling reached 97.33962% / 151;
-// making both direct reaches 99.845184% and retail's exact 147 / 154 ledger.
-// Moving either key into the constructor remains byte-disproved. The local
-// declarations below now follow DC's creature/count/total/text record order;
-// that order is byte-flat at 99.845184% but is the evidence-backed tie-break.
+// Dreamcast lines 322 and 323 prove two source calls to the header-inline
+// `button::set_hotkey`. The old 96.37881% wrapper experiment conflated that
+// boundary with the header's three-argument `insert` spelling. Giving this TU
+// the independently proven `push_back` arm preserves both named calls while
+// producing the same 99.845184% body, exact 147-branch / 154-call ledger, and
+// no movement in the other six functions in the compiland. Moving either key
+// into the button constructor remains byte-disproved. The local declarations
+// below follow DC's creature/count/total/text record order; that order is
+// byte-flat at 99.845184% but is the evidence-backed tie-break.
 //
 // The compiland's DC roster carries no helper members beyond the six
 // already landed, re-checked 2026-08-14: no HighlightX-style extraction is
@@ -402,7 +408,7 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
             Widgets.push_back(new textWidget(
                 42, rowY + 10, 384, 36, gpGeneralText->GetText(32),
                 "smalfont.fnt", font::PRIMARY, BACKGROUND_ID, 1, 0, 8));
-        int shown = _cpp_min(lossRows[lossSide], 7);
+        int shown = min(lossRows[lossSide], 7);
         int rowLeft = (468 - 42 * shown) / 2 + 11;
         for (int row = 0; row < shown; row++) {
             int rowX = rowLeft + 42 * row;
@@ -423,8 +429,8 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
     button* accept = new button(
         385, 507, 64, 30, DIALOG_RETURN_SPLIT_ACCEPT, "iOkay.def",
         0, 1, 0, 0, 2);
-    accept->hotKeyCodes.push_back(28);
-    accept->hotKeyCodes.push_back(1);
+    accept->set_hotkey(28);
+    accept->set_hotkey(1);
     Widgets.push_back(accept);
 
     for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {

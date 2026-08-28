@@ -860,8 +860,6 @@ call	cmbtmgr.obj	0x6388c	combatManager::ExperienceValueOfStack
 call	combatcontrolsubwindow.obj	0x64fcc	button::set_disabled_frame
 call	combatcontrolsubwindow.obj	0x65c84	combatManager::UpdateCombatArea
 call	combatoptionswindow.obj	0x67a40	UpdateCombatOptions
-call	combatresultswindow.obj	0x68364	button::set_hotkey
-call	combatresultswindow.obj	0x68364	min
 call	combatresultswindow.obj	0x69268	combatManager::MoveCursorCombatXY
 call	combatresultswindow.obj	0x692cc	GameTime::IsPast
 call	combatwindow.obj	0x69638	army::ProcessDeath
