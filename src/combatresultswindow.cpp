@@ -120,8 +120,10 @@ inline int min(int a, int b)
 // was only a local maximum. Restoring Dreamcast's positive loss scope while
 // keeping the shared local passes it at 99.86018%. The raw CodeView inventory and
 // zero-emission declaration windows instead prove, in order, `long amount`,
-// `TCreatureType type`, the two [2][20] arrays, `my_hero`, iTtlDeadArmies,
-// cText[100], and firstX. cTemp is independently type-proven char[150]; fixing
+// `TCreatureType type`, the two [2][20] arrays, `const hero* const my_hero`,
+// iTtlDeadArmies, cText[100], and firstX. The pointer-level const comes from
+// raw type 0x2072, distinct from the parameters' 0x1AA2 pointer-to-const.
+// cTemp is independently type-proven char[150]; fixing
 // the former char[100] guess made the complete winner sprintf/strcat region
 // exact. There is no leading source-line gap, so this function has no entry
 // ASSERT clue. The remaining mismatch is an allocator/handle-state problem,
@@ -181,7 +183,7 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
     int iDeadArmyNumTroops[2][20];
 
     // The hero whose result the window narrates.
-    const hero* my_hero = my_side == 0 ? attacker : defender;
+    const hero* const my_hero = my_side == 0 ? attacker : defender;
 
     int iTtlDeadArmies[2];
     char cText[100];
