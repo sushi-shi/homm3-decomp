@@ -33,6 +33,61 @@ that reproduces the retail MSVC 6.0 object code.
 - Local retail copies live outside every repo at `../orig/` (safekeeping;
   hash-verify before use). The repo never contains game bytes; `build/` is gitignored.
 
+## Primary matching instrument: Dreamcast source shape
+
+**`homm3 dreamcast` is the campaign's most important reconstruction tool.** For every
+non-exact game function with a Dreamcast counterpart, run the Dreamcast evidence pass
+before speculative C++ rewrites. It recovers source facts that retail VC6 `/O2 /Ob2`
+erased and that x86 disassembly alone cannot recover:
+
+- original helper boundaries and names;
+- signatures, parameter types, and a lower-bound local-variable inventory;
+- lexical scopes and likely local lifetimes;
+- statement order and grouping, with per-statement calls and branch counts;
+- accessor calls that retail inlined into anonymous loads or tests;
+- constructor, destructor, and RAII boundaries folded out of retail; and
+- separation between shared RoE-era code, WinCE-specific code, and later Complete edits.
+
+The mandatory first-pass workflow is:
+
+```sh
+homm3 dreamcast show 0x00524dd0
+homm3 dreamcast asm 0x00524dd0 --blocks
+homm3 sema diff 0x00524dd0 --source
+```
+
+`show` is the compact function dossier. `asm --blocks` labels SH4 assembly with
+CodeView `bp` line/breakpoint boundaries, lexical `scope` boundaries, and inferred
+basic blocks (`B0`, `B1`, ...). It is the detailed view for aligning original statement
+groups to the retail and candidate control-flow graphs. Selectors may also be exact or
+unambiguous names, `module.obj:0xOFF`, or `dc:0xOFF`; use `homm3 dreamcast find NAME`
+to locate a function and `homm3 dreamcast stats` to audit corpus coverage.
+
+The campaign loop is **Dreamcast dossier -> retail source-labelled diff -> C++
+hypothesis -> VC6 retail ratchet**. Start with signatures, locals, scopes, helper calls,
+and statement groups named by the dossier. Do not start with blind source permutation
+when this evidence is available. If a hypothesis changes a claim or decorated signature,
+run `homm3 build`, `homm3 delink`, then `homm3 build` again. Keep a source change only
+when retail improves or matches, and record useful negative classifications such as
+register allocation, scheduling, relocation naming, or version skew so the next matcher
+does not repeat an exhausted sweep.
+
+This remains a cross-architecture, older-revision source oracle, **not a second byte
+target**. A missing Dreamcast statement or call never proves retail lacks it, and
+Dreamcast source shape must be rejected when Complete's x86 bytes disagree. Retail is
+always the verdict. See `docs/dc-line-tables.md` for interpretation and
+`docs/dreamcast-proof-40.md` for the first bounded proof: four exact cohort closures,
+one exact spillover, and one signature-driven near-closure from 40 non-exact functions.
+
+Any future static verifier must therefore be **asymmetric**. It may flag our source for
+violating a positive DC fact—an incompatible shared parameter type, a missing recovered
+helper/RAII boundary, reversed shared-statement order, or an impossible scope/lifetime.
+It must not require equal instruction, basic-block, branch, call, statement, local, or
+scope counts; equal addresses; or the absence of retail-only code. Report findings as
+`agree`, `retail-only`, `dc-only`, or `unknown`, and make only explicitly admitted
+positive invariants fatal. Architecture/compiler codegen and revision skew are expected,
+not exceptions to be explained away.
+
 ## Toolchain
 
 - Compiler: VC6 SP3 `CL.EXE` under Wine; linker: VC6 `LINK.EXE` 6.00.8447 (the
