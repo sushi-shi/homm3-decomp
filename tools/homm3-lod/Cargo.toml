@@ -1,0 +1,15 @@
+[package]
+name = "homm3-lod"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+description = "Allocation-free reader for Heroes III LOD resource archives"
+
+[lib]
+path = "src/lib.rs"
+
+[lints]
+workspace = true
+

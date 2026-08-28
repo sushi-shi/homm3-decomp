@@ -85,6 +85,36 @@
         '';
       };
 
+      homm3-rust-tools = nightly-rustPlatform.buildRustPackage {
+        pname = "homm3-rust-tools";
+        version = "0.1.0";
+        src = ./.;
+        cargoRoot = "tools";
+        buildAndTestSubdir = "tools";
+        cargoLock.lockFile = ./tools/Cargo.lock;
+        cargoBuildFlags = [ "--workspace" "--all-targets" ];
+        cargoTestFlags = [
+          "--workspace"
+          "--all-targets"
+          "--features"
+          "homm3-def/cxx-parity"
+        ];
+        nativeBuildInputs = [ pkgs.clang ];
+        CXX = "${pkgs.clang}/bin/clang++";
+        postCheck = ''
+          RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps --offline
+          cargo clippy --workspace --all-targets \
+            --features homm3-def/cxx-parity --offline -- -D warnings
+          cargo fmt --all -- --check
+        '';
+        installPhase = ''
+          runHook preInstall
+          install -Dm755 target/release/homm3-oracle \
+            "$out/bin/homm3-oracle"
+          runHook postInstall
+        '';
+      };
+
       homm3-cli = pkgs.writeShellScriptBin "homm3" ''
         project_dir="''${HOMM3_DIR:-$PWD}"
         export PYTHONDONTWRITEBYTECODE=1
@@ -147,9 +177,11 @@
       '';
     in {
       packages.${system} = {
-        inherit vostok-delinker objdiff objdiff-cli;
+        inherit vostok-delinker objdiff objdiff-cli homm3-rust-tools;
         default = vostok-delinker;
       };
+
+      checks.${system}.rust-tools = homm3-rust-tools;
 
       devShells.${system} = {
         default = pkgs.mkShell {

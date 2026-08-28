@@ -278,16 +278,12 @@ CSpriteFrame::~CSpriteFrame()
 // three counting loops share one induction variable and each rebuilds
 // its own `1 << i` in a fresh register.
 //
-// Residual (88.24%): all three loops and both packing expressions are
-// instruction-identical; retail schedules the three `(1 << n) - 1`
-// computations through ONE scratch (eax, `lea reg, [eax-1]` each time)
-// and so never homes gBits, while our CL issues the three shifts up
-// front into esi/edi/ebx and spills gBits to make room.  `homm3 vc6
-// why-reg --model` reports the first definitions binding IDENTICALLY
-// (esi/ebx/edi) and the divergence arriving later - i.e. past the
-// creation-order slice any source edit can reach.  Tried and rejected:
-// a named `rShift = gBits + bBits` local (88.12), `int i` declared
-// first, and a shared `bit` temporary feeding all three maxima.
+// Exact (247 B): the three `(1 << n) - 1` maxima are repeated expression
+// subtrees shared by the half- and quarter-mask stores, not named locals.
+// Letting C1 perform that cross-statement CSE gives retail's sequential EAX
+// scratch, two-slot frame, EDI `(gBits + bBits)` shift count, and all 13 exact
+// blocks.  Naming the maxima makes their lifetimes overlap the three bit
+// counts, grows the frame to three slots, and schedules all shifts up front.
 VA(0x0047c460, 0xF7)  // anchor-global, dc 0x74918
 void CSpriteFrame::SetPixelFormat(unsigned rmask, unsigned gmask,
                                   unsigned bmask)
@@ -306,13 +302,12 @@ void CSpriteFrame::SetPixelFormat(unsigned rmask, unsigned gmask,
         if (bmask & (1 << i))
             bBits++;
 
-    int rMax = (1 << rBits) - 1;
-    int gMax = (1 << gBits) - 1;
-    int bMax = (1 << bBits) - 1;
-    gHalfIntensityMask = ((rMax / 2) << (gBits + bBits))
-        | ((gMax / 2) << bBits) | (bMax / 2);
-    gQuarterIntensityMask = ((rMax / 4) << (gBits + bBits))
-        | ((gMax / 4) << bBits) | (bMax / 4);
+    div2mask.word = ((((1 << rBits) - 1) / 2) << (gBits + bBits))
+        | ((((1 << gBits) - 1) / 2) << bBits)
+        | (((1 << bBits) - 1) / 2);
+    div4mask = ((((1 << rBits) - 1) / 4) << (gBits + bBits))
+        | ((((1 << gBits) - 1) / 4) << bBits)
+        | (((1 << bBits) - 1) / 4);
 }
 
 VA(0x0047c560, 0x07)  // vtable slot 2: fixed object extent + owned bytes
@@ -326,10 +321,12 @@ inline void CSpriteFrame::Clip(int& sx, int& sy, int& sw, int& sh,
                                unsigned char hflip,
                                unsigned char vflip) const
 {
+    int deltaX;
+
     if (hflip)
-        sx = Width - (sw + sx);
+        sx = Width - sx - sw;
     if (vflip)
-        sy = Height - (sh + sy);
+        sy = Height - sy - sh;
 
     if (dx < 0) {
         if (!hflip)
@@ -354,32 +351,31 @@ inline void CSpriteFrame::Clip(int& sx, int& sy, int& sw, int& sh,
         sh = dh - dy;
     }
 
-    int clipped;
     if (sx < CroppedX) {
-        clipped = CroppedX - sx;
+        deltaX = CroppedX - sx;
         if (!hflip)
-            dx += clipped;
-        sw -= clipped;
+            dx += deltaX;
+        sw -= deltaX;
         sx = CroppedX;
     }
     if (sy < CroppedY) {
-        clipped = CroppedY - sy;
+        deltaX = CroppedY - sy;
         if (!vflip)
-            dy += clipped;
-        sh -= clipped;
+            dy += deltaX;
+        sh -= deltaX;
         sy = CroppedY;
     }
-    clipped = CroppedWidth + CroppedX;
-    if (sw + sx > clipped) {
+    deltaX = CroppedWidth + CroppedX;
+    if (sw + sx > deltaX) {
         if (hflip)
-            dx += sw + sx - clipped;
-        sw = clipped - sx;
+            dx += sw + sx - deltaX;
+        sw = deltaX - sx;
     }
-    clipped = CroppedHeight + CroppedY;
-    if (sh + sy > clipped) {
+    deltaX = CroppedHeight + CroppedY;
+    if (sh + sy > deltaX) {
         if (vflip)
-            dy += sh + sy - clipped;
-        sh = clipped - sy;
+            dy += sh + sy - deltaX;
+        sh = deltaX - sy;
     }
 
     sx -= CroppedX;
@@ -392,18 +388,10 @@ inline void CSpriteFrame::Clip(int& sx, int& sy, int& sw, int& sh,
 // other codes denote a repeated palette index.  Raw/tile and adventure-object
 // encodings dispatch to their specialized renderers before this path.
 //
-// Residual (94.35%): all 44 branches, four returns and 88 CFG blocks agree.
-// Moving the output cursor ahead of the decoder state reproduces retail's
-// EDI/homed-skipped allocation and makes 83 block sizes exact.  The remaining
-// five size-only blocks are one hoisted map load plus four equivalent
-// address/schedule differences around the line-offset induction variable.
-// Dreamcast CodeView proves `aLineOffset` is the sole named local and has type
-// `const unsigned int*`; declaration before the guarded static is the best
-// retail score.  Declarations at entry, after the static, after Clip, and in
-// the render block score 94.32/93.84; a shared byte-map local scores 91.62.
-// `why-reg --model --il-order` finds identical first definitions
-// (EDI=sw, EBX=sx, ESI=dx) and classifies the divergence as later C1 handle
-// state rather than a source-nameable creation-order permutation.
+// Exact (1125 B): the DC-attested dword line table is declared at function
+// scope but assigned only inside the positive render guard.  Together with a
+// block-scoped row destination, this gives retail's one-slot frame, delayed
+// map load, parameter-home reuse, and all 88 exact CFG blocks.
 VA(0x0047c570, 0x465)  // unique PC/DC renderer identity; retail byte verdict
 void CSpriteFrame::Draw(int sx, int sy, int sw, int sh,
                         unsigned short* dst, int dx, int dy, int dw, int dh,
@@ -415,25 +403,27 @@ void CSpriteFrame::Draw(int sx, int sy, int sw, int sh,
                  pal, hflip, 0);
         return;
     }
-    if (EncodingMethod == eEncodeAdvObjRLE) {
+    else if (EncodingMethod == eEncodeAdvObjRLE) {
         DrawAdvObjImpl(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch,
                        pal, hflip, 0);
         return;
     }
 
-    const unsigned int* aLineOffset =
-        static_cast<const unsigned int*>(static_cast<const void*>(map));
-    static unsigned char literalRunCode = gRleLiteralRunCode;
+    const unsigned int* aLineOffset;
+    static const unsigned char kOpaqueRunCode = gRleLiteralRunCode;
     Clip(sx, sy, sw, sh, dx, dy, dw, dh, hflip, 0);
 
     if (sw > 0 && sh > 0) {
+        aLineOffset =
+            static_cast<const unsigned int*>(static_cast<const void*>(map));
         if (!hflip) {
-            dst = static_cast<unsigned short*>(static_cast<void*>(
+            unsigned short* lineDst =
+                static_cast<unsigned short*>(static_cast<void*>(
                 static_cast<unsigned char*>(static_cast<void*>(dst))
                 + dy * dpitch + dx * 2));
 
             for (int y = sy; y < sy + sh; ++y) {
-                unsigned short* out = dst;
+                unsigned short* out = lineDst;
                 unsigned int skipped = 0;
                 const unsigned char* src = map + aLineOffset[y];
                 unsigned char code = *src++;
@@ -441,21 +431,21 @@ void CSpriteFrame::Draw(int sx, int sy, int sw, int sh,
 
                 while (skipped + run <= static_cast<unsigned int>(sx)) {
                     skipped += run;
-                    if (code == literalRunCode)
+                    if (code == kOpaqueRunCode)
                         src += run;
                     code = *src++;
                     run = *src++ + 1;
                 }
 
                 run += skipped - sx;
-                if (code == literalRunCode)
+                if (code == kOpaqueRunCode)
                     src += sx - skipped;
 
                 unsigned int remaining = sw;
                 do {
                     if (run > remaining)
                         run = remaining;
-                    if (code == literalRunCode) {
+                    if (code == kOpaqueRunCode) {
                         unsigned int count = run;
                         do {
                             *out++ = pal.data[*src++];
@@ -476,17 +466,18 @@ void CSpriteFrame::Draw(int sx, int sy, int sw, int sh,
                     run = *src++ + 1;
                 } while (remaining);
 
-                dst = static_cast<unsigned short*>(static_cast<void*>(
-                    static_cast<unsigned char*>(static_cast<void*>(dst))
+                lineDst = static_cast<unsigned short*>(static_cast<void*>(
+                    static_cast<unsigned char*>(static_cast<void*>(lineDst))
                     + dpitch));
             }
         } else {
-            dst = static_cast<unsigned short*>(static_cast<void*>(
+            unsigned short* lineDst =
+                static_cast<unsigned short*>(static_cast<void*>(
                 static_cast<unsigned char*>(static_cast<void*>(dst))
                 + dy * dpitch + (dx + sw) * 2));
 
             for (int y = sy; y < sy + sh; ++y) {
-                unsigned short* out = dst;
+                unsigned short* out = lineDst;
                 unsigned int skipped = 0;
                 const unsigned char* src = map + aLineOffset[y];
                 unsigned char code = *src++;
@@ -494,21 +485,21 @@ void CSpriteFrame::Draw(int sx, int sy, int sw, int sh,
 
                 while (skipped + run <= static_cast<unsigned int>(sx)) {
                     skipped += run;
-                    if (code == literalRunCode)
+                    if (code == kOpaqueRunCode)
                         src += run;
                     code = *src++;
                     run = *src++ + 1;
                 }
 
                 run += skipped - sx;
-                if (code == literalRunCode)
+                if (code == kOpaqueRunCode)
                     src += sx - skipped;
 
                 unsigned int remaining = sw;
                 do {
                     if (run > remaining)
                         run = remaining;
-                    if (code == literalRunCode) {
+                    if (code == kOpaqueRunCode) {
                         unsigned int count = run;
                         do {
                             *--out = pal.data[*src++];
@@ -529,8 +520,8 @@ void CSpriteFrame::Draw(int sx, int sy, int sw, int sh,
                     run = *src++ + 1;
                 } while (remaining);
 
-                dst = static_cast<unsigned short*>(static_cast<void*>(
-                    static_cast<unsigned char*>(static_cast<void*>(dst))
+                lineDst = static_cast<unsigned short*>(static_cast<void*>(
+                    static_cast<unsigned char*>(static_cast<void*>(lineDst))
                     + dpitch));
             }
         }
@@ -542,16 +533,23 @@ void CSpriteFrame::Draw(int sx, int sy, int sw, int sh,
 // half-alpha blending.  Encoded control runs darken the destination by one
 // half or one quarter-plus-half, or install the caller's outline color.
 //
-// Residual (93.77%): the dispatch, clipping, scanline decoder, both switch
-// domains and forward/reverse effects agree semantically.  Case-local run
-// counts recover the retail switch bodies; promoted color temporaries give
-// the closest half-shade loops.  The remaining delta is later C1 scheduling:
-// block-scoping the dword line table recovers the three displaced setup-block
-// sizes but falls to 93.58%, direct half-shade expressions recover reverse
-// default-tail merging but fall to 92.47%, and explicit 32-bit alpha operands
-// fall to 88.55%.  Mask-first expressions are byte-flat.  `why-reg --model
-// --il-order` finds identical first definitions (EDI=sw, ESI=sx, EBX=sh) and
-// no source-nameable creation-order edit past them.
+// Residual (95.90%): the dispatch, clipping, decoder, and every forward shade
+// block now agree instruction-for-instruction. Retail deliberately widens one
+// ushort blend-mask access to a dword AND whose low half alone is stored; the
+// explicit dword view below recovers that C1 value-range decision and aligns
+// both CFGs at 128 blocks. The cast-free `TBlendMask` view records Complete's
+// word write/dword read while retaining CodeView's static-member name and
+// ownership; CodeView also proves the function-scope `TOffset`/`TDstPixel`
+// identities (`unsigned int`/`unsigned short`) and that `aLineOffset` precedes
+// the const `kOpaqueRunCode`. Using `TOffset` for the row table is byte-flat.
+// The remaining delta is the
+// Clip/setup register permutation and reverse half-shade/default-tail
+// scheduling. After this new allocator lever, moving the line table into the
+// positive guard scores 95.83%, block-scoping the row destination 95.54%, and
+// all one-sided/symmetric reverse ushort or direct-expression variants score
+// lower. `why-reg --model --il-order` still finds identical first definitions
+// (EDI=sw, ESI=sx, EBX=sh), bounding the residual past the minimum source-order
+// slice.
 VA(0x0047c9e0, 0x6BC)  // unique PC/DC renderer identity; retail byte verdict
 void CSpriteFrame::DrawCreatureImpl(int sx, int sy, int sw, int sh,
                                     unsigned short* dst, int dx, int dy,
@@ -560,6 +558,9 @@ void CSpriteFrame::DrawCreatureImpl(int sx, int sy, int sw, int sh,
                                     unsigned short outcolor,
                                     unsigned char alpha) const
 {
+    typedef unsigned int TOffset;
+    typedef unsigned short TDstPixel;
+
     if (!alpha) {
         if (EncodingMethod == eEncodeTilesetRLE ||
             EncodingMethod == eEncodeRaw) {
@@ -574,12 +575,12 @@ void CSpriteFrame::DrawCreatureImpl(int sx, int sy, int sw, int sh,
         }
     }
 
-    static unsigned char literalRunCode = gRleLiteralRunCode;
-    const unsigned int* aLineOffset;
+    const TOffset* aLineOffset;
+    static const unsigned char kOpaqueRunCode = gRleLiteralRunCode;
     Clip(sx, sy, sw, sh, dx, dy, dw, dh, hflip, 0);
 
     aLineOffset =
-        static_cast<const unsigned int*>(static_cast<const void*>(map));
+        static_cast<const TOffset*>(static_cast<const void*>(map));
     if (sw > 0 && sh > 0) {
         if (!hflip) {
             dst = static_cast<unsigned short*>(static_cast<void*>(
@@ -595,21 +596,21 @@ void CSpriteFrame::DrawCreatureImpl(int sx, int sy, int sw, int sh,
 
                 while (skipped + run <= static_cast<unsigned int>(sx)) {
                     skipped += run;
-                    if (code == literalRunCode)
+                    if (code == kOpaqueRunCode)
                         src += run;
                     code = *src++;
                     run = *src++ + 1;
                 }
 
                 run += skipped - sx;
-                if (code == literalRunCode)
+                if (code == kOpaqueRunCode)
                     src += sx - skipped;
 
                 unsigned int remaining = sw;
                 do {
                     if (run > remaining)
                         run = remaining;
-                    if (code == literalRunCode) {
+                    if (code == kOpaqueRunCode) {
                         unsigned int count = run;
                         if (!alpha) {
                             do {
@@ -617,9 +618,9 @@ void CSpriteFrame::DrawCreatureImpl(int sx, int sy, int sw, int sh,
                             } while (--count);
                         } else {
                             do {
-                                *out = (gHalfIntensityMask
+                                *out = (div2mask.dword
                                         & (pal.data[*src++] >> 1))
-                                     + (gHalfIntensityMask & (*out >> 1));
+                                     + (div2mask.word & (*out >> 1));
                                 ++out;
                             } while (--count);
                         }
@@ -629,8 +630,8 @@ void CSpriteFrame::DrawCreatureImpl(int sx, int sy, int sw, int sh,
                         case eRleControlOutline7: {
                             unsigned int count = run;
                             do {
-                                *out = ((*out >> 2) & gQuarterIntensityMask)
-                                     + ((*out >> 1) & gHalfIntensityMask);
+                                *out = ((*out >> 2) & div4mask)
+                                     + ((*out >> 1) & div2mask.word);
                                 ++out;
                             } while (--count);
                             break;
@@ -640,7 +641,7 @@ void CSpriteFrame::DrawCreatureImpl(int sx, int sy, int sw, int sh,
                             unsigned int count = run;
                             do {
                                 unsigned int color = *out;
-                                *out = (color >> 1) & gHalfIntensityMask;
+                                *out = (color >> 1) & div2mask.word;
                                 ++out;
                             } while (--count);
                             break;
@@ -654,8 +655,8 @@ void CSpriteFrame::DrawCreatureImpl(int sx, int sy, int sw, int sh,
                         case eRleControlShadow75: {
                             unsigned int count = run;
                             do {
-                                *out = ((*out >> 2) & gQuarterIntensityMask)
-                                     + ((*out >> 1) & gHalfIntensityMask);
+                                *out = ((*out >> 2) & div4mask)
+                                     + ((*out >> 1) & div2mask.word);
                                 ++out;
                             } while (--count);
                             break;
@@ -664,7 +665,7 @@ void CSpriteFrame::DrawCreatureImpl(int sx, int sy, int sw, int sh,
                             unsigned int count = run;
                             do {
                                 unsigned int color = *out;
-                                *out = (color >> 1) & gHalfIntensityMask;
+                                *out = (color >> 1) & div2mask.word;
                                 ++out;
                             } while (--count);
                             break;
@@ -708,21 +709,21 @@ void CSpriteFrame::DrawCreatureImpl(int sx, int sy, int sw, int sh,
 
                 while (skipped + run <= static_cast<unsigned int>(sx)) {
                     skipped += run;
-                    if (code == literalRunCode)
+                    if (code == kOpaqueRunCode)
                         src += run;
                     code = *src++;
                     run = *src++ + 1;
                 }
 
                 run += skipped - sx;
-                if (code == literalRunCode)
+                if (code == kOpaqueRunCode)
                     src += sx - skipped;
 
                 unsigned int remaining = sw;
                 do {
                     if (run > remaining)
                         run = remaining;
-                    if (code == literalRunCode) {
+                    if (code == kOpaqueRunCode) {
                         unsigned int count = run;
                         if (!alpha) {
                             do {
@@ -731,9 +732,9 @@ void CSpriteFrame::DrawCreatureImpl(int sx, int sy, int sw, int sh,
                         } else {
                             do {
                                 --out;
-                                *out = (gHalfIntensityMask
+                                *out = (div2mask.dword
                                         & (pal.data[*src++] >> 1))
-                                     + (gHalfIntensityMask & (*out >> 1));
+                                     + (div2mask.dword & (*out >> 1));
                             } while (--count);
                         }
                     } else if (!outcolor) {
@@ -743,8 +744,8 @@ void CSpriteFrame::DrawCreatureImpl(int sx, int sy, int sw, int sh,
                             unsigned int count = run;
                             do {
                                 --out;
-                                *out = ((*out >> 2) & gQuarterIntensityMask)
-                                     + ((*out >> 1) & gHalfIntensityMask);
+                                *out = ((*out >> 2) & div4mask)
+                                     + ((*out >> 1) & div2mask.dword);
                             } while (--count);
                             break;
                         }
@@ -754,7 +755,7 @@ void CSpriteFrame::DrawCreatureImpl(int sx, int sy, int sw, int sh,
                             do {
                                 unsigned int color = out[-1];
                                 --out;
-                                *out = (color >> 1) & gHalfIntensityMask;
+                                *out = (color >> 1) & div2mask.dword;
                             } while (--count);
                             break;
                         }
@@ -768,8 +769,8 @@ void CSpriteFrame::DrawCreatureImpl(int sx, int sy, int sw, int sh,
                             unsigned int count = run;
                             do {
                                 --out;
-                                *out = ((*out >> 2) & gQuarterIntensityMask)
-                                     + ((*out >> 1) & gHalfIntensityMask);
+                                *out = ((*out >> 2) & div4mask)
+                                     + ((*out >> 1) & div2mask.dword);
                             } while (--count);
                             break;
                         }
@@ -778,7 +779,7 @@ void CSpriteFrame::DrawCreatureImpl(int sx, int sy, int sw, int sh,
                             do {
                                 unsigned int color = out[-1];
                                 --out;
-                                *out = (color >> 1) & gHalfIntensityMask;
+                                *out = (color >> 1) & div2mask.dword;
                             } while (--count);
                             break;
                         }
@@ -806,6 +807,623 @@ void CSpriteFrame::DrawCreatureImpl(int sx, int sy, int sw, int sh,
                 dst = static_cast<unsigned short*>(static_cast<void*>(
                     static_cast<unsigned char*>(static_cast<void*>(dst))
                     + dpitch));
+            }
+        }
+    }
+}
+
+// E:\gamedcs\cspriteframe.cpp:2234.  Adventure-object rows are divided into
+// 32-pixel cells.  Each cell has a word offset into map and contains packed
+// (three-bit control, five-bit count-minus-one) runs.  Control seven carries
+// literal palette indexes; control five optionally draws the caller's flag
+// colour, and the remaining controls are transparent in this renderer.
+//
+// Exact (1099 B): unsigned cell-line arithmetic, split packet load/increment,
+// and a block-scoped row destination reproduce retail's logical shift,
+// packet schedule, and dead-hflip parameter-home reuse in both direction arms.
+// The Rust gate also compiles this body directly and differentials generated
+// and installed DEF streams; retail bytes remain the match verdict.
+VA(0x0047d0a0, 0x44B) // retail packed-cell decoder + DC source identity
+void CSpriteFrame::DrawAdvObjImpl(int sx, int sy, int sw, int sh,
+                                  unsigned short* dst, int dx, int dy, int dw,
+                                  int dh, int dpitch, TPalette16& pal,
+                                  unsigned char hflip,
+                                  unsigned short flagcolor) const
+{
+    unsigned short* palette;
+    unsigned int cellsPerLine;
+    unsigned short* aCellOffset;
+
+    if (EncodingMethod == eEncodeGeneralRLE) {
+        // Retail passes sw in the first source-coordinate slot at 0x47d0e6.
+        DrawCreature(sw, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip,
+                     flagcolor);
+        return;
+    }
+    if (EncodingMethod == eEncodeTilesetRLE || EncodingMethod == eEncodeRaw) {
+        DrawTile(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip, 0);
+        return;
+    }
+
+    Clip(sx, sy, sw, sh, dx, dy, dw, dh, hflip, 0);
+    if (sw > 0) {
+        if (sh > 0) {
+
+            cellsPerLine = static_cast<unsigned int>(CroppedWidth) >> 5;
+            aCellOffset = static_cast<unsigned short*>(static_cast<void*>(map));
+            palette = pal.data;
+
+            if (!hflip) {
+                unsigned short* lineDst =
+                    static_cast<unsigned short*>(static_cast<void*>(
+                    static_cast<unsigned char*>(static_cast<void*>(dst)) +
+                    dy * dpitch + dx * 2));
+
+                for (int y = sy; y < sy + sh; ++y) {
+                    unsigned short* out = lineDst;
+                    unsigned int skipped = static_cast<unsigned int>(sx) & ~31U;
+                    const unsigned char* src =
+                        map + aCellOffset[y * cellsPerLine +
+                                          (static_cast<unsigned int>(sx) >> 5)];
+                    unsigned char packet = *src;
+                    unsigned char code = packet >> 5;
+                    unsigned int run = (packet & 31) + 1;
+                    ++src;
+
+                    while (skipped + run <= static_cast<unsigned int>(sx)) {
+                        skipped += run;
+                        if (code == eRleControlOutline7)
+                            src += run;
+                        packet = *src;
+                        code = packet >> 5;
+                        run = (packet & 31) + 1;
+                        ++src;
+                    }
+
+                    run += skipped - sx;
+                    if (code == eRleControlOutline7)
+                        src += sx - skipped;
+
+                    unsigned int remaining = sw;
+                    do {
+                        if (run > remaining)
+                            run = remaining;
+                        if (code == eRleControlOutline7) {
+                            unsigned int count = run;
+                            do {
+                                *out++ = palette[*src++];
+                            } while (--count);
+                        } else if (code == eRleControlOutline5 && flagcolor) {
+                            unsigned int count = run;
+                            do {
+                                *out++ = flagcolor;
+                            } while (--count);
+                        } else {
+                            out += run;
+                        }
+                        remaining -= run;
+                        if (!remaining)
+                            break;
+                        packet = *src;
+                        code = packet >> 5;
+                        run = (packet & 31) + 1;
+                        ++src;
+                    } while (remaining);
+
+                    lineDst =
+                        static_cast<unsigned short*>(static_cast<void*>(
+                            static_cast<unsigned char*>(
+                                static_cast<void*>(lineDst)) +
+                            dpitch));
+                }
+            } else {
+                unsigned short* lineDst =
+                    static_cast<unsigned short*>(static_cast<void*>(
+                    static_cast<unsigned char*>(static_cast<void*>(dst)) +
+                    dy * dpitch + (dx + sw) * 2));
+
+                for (int y = sy; y < sy + sh; ++y) {
+                    unsigned short* out = lineDst;
+                    unsigned int skipped = static_cast<unsigned int>(sx) & ~31U;
+                    const unsigned char* src =
+                        map + aCellOffset[y * cellsPerLine +
+                                          (static_cast<unsigned int>(sx) >> 5)];
+                    unsigned char packet = *src;
+                    unsigned char code = packet >> 5;
+                    unsigned int run = (packet & 31) + 1;
+                    ++src;
+
+                    while (skipped + run <= static_cast<unsigned int>(sx)) {
+                        skipped += run;
+                        if (code == eRleControlOutline7)
+                            src += run;
+                        packet = *src;
+                        code = packet >> 5;
+                        run = (packet & 31) + 1;
+                        ++src;
+                    }
+
+                    run += skipped - sx;
+                    if (code == eRleControlOutline7)
+                        src += sx - skipped;
+
+                    unsigned int remaining = sw;
+                    do {
+                        if (run > remaining)
+                            run = remaining;
+                        if (code == eRleControlOutline7) {
+                            unsigned int count = run;
+                            do {
+                                *--out = palette[*src++];
+                            } while (--count);
+                        } else if (code == eRleControlOutline5 && flagcolor) {
+                            unsigned int count = run;
+                            do {
+                                *--out = flagcolor;
+                            } while (--count);
+                        } else {
+                            out -= run;
+                        }
+                        remaining -= run;
+                        if (!remaining)
+                            break;
+                        packet = *src;
+                        code = packet >> 5;
+                        run = (packet & 31) + 1;
+                        ++src;
+                    } while (remaining);
+
+                    lineDst =
+                        static_cast<unsigned short*>(static_cast<void*>(
+                            static_cast<unsigned char*>(
+                                static_cast<void*>(lineDst)) +
+                            dpitch));
+                }
+            }
+        }
+    }
+}
+
+// E:\gamedcs\cspriteframe.cpp:2856.  Raw tiles are palette-indexed rows;
+// encoded tiles use a word row-offset table and the same packed packet byte as
+// adventure cells.  Only code seven carries pixels in this renderer.
+//
+// Residual (83.2115%): four DC/retail direction arms, the eight-statement Duff
+// loop, raw do/while rows, and indexed encoded for-rows recover all behavior.
+// Split packet load/increment and block-scoped row destinations further match
+// retail's packet schedule and dead-vflip parameter-home reuse.  The recovered
+// `kOpaqueRunCode` and raw-row declaration order are byte-flat positive facts;
+// the surviving delta is a C1 register permutation replicated in four arms.
+// Retail and Dreamcast also agree on the surprising general-RLE delegation
+// `Draw(sw, sy, sw, ...)`; spelling that positive fact alone scores 81.4249%
+// because C1 then homes `this` in EDI across the whole body.  Swapping the two
+// leading declarations and replacing the local constant with the existing
+// code-7 enumerator are byte-flat paired probes, so the 83.2115% high-water
+// spelling remains pending a real source fact that restores retail's EDX home.
+VA(0x0047dd40, 0xAD8) // retail raw/tileset decoder + DC source identity
+void CSpriteFrame::DrawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
+                            int dx, int dy, int dw, int dh, int dpitch,
+                            TPalette16& pal, unsigned char hflip,
+                            unsigned char vflip) const
+{
+    const unsigned short* aLineOffset;
+    static const unsigned char kOpaqueRunCode = 7;
+
+    if (EncodingMethod == eEncodeGeneralRLE) {
+        Draw(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip, 1);
+        return;
+    }
+    if (EncodingMethod == eEncodeAdvObjRLE) {
+        DrawAdvObjImpl(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip,
+                       0);
+        return;
+    }
+
+    Clip(sx, sy, sw, sh, dx, dy, dw, dh, hflip, vflip);
+    if (sw > 0) {
+        if (sh > 0) {
+            aLineOffset = static_cast<const unsigned short*>(
+                static_cast<const void*>(map));
+            if (!vflip) {
+                if (!hflip) {
+                    unsigned short* lineDst =
+                        static_cast<unsigned short*>(static_cast<void*>(
+                        static_cast<unsigned char*>(static_cast<void*>(dst)) +
+                        dy * dpitch + dx * 2));
+
+                    if (EncodingMethod == eEncodeRaw) {
+                        const unsigned char* line = map + sy * Pitch + sx;
+                        do {
+                            int remaining = sw;
+                            unsigned short* out = lineDst;
+                            const unsigned char* src = line;
+                            switch (remaining & 7) {
+                            case eRawRowUnroll8:
+                                do {
+                                    *out++ = pal.data[*src++];
+                                    --remaining;
+                                case eRawRowUnroll7:
+                                    *out++ = pal.data[*src++];
+                                    --remaining;
+                                case eRawRowUnroll6:
+                                    *out++ = pal.data[*src++];
+                                    --remaining;
+                                case eRawRowUnroll5:
+                                    *out++ = pal.data[*src++];
+                                    --remaining;
+                                case eRawRowUnroll4:
+                                    *out++ = pal.data[*src++];
+                                    --remaining;
+                                case eRawRowUnroll3:
+                                    *out++ = pal.data[*src++];
+                                    --remaining;
+                                case eRawRowUnroll2:
+                                    *out++ = pal.data[*src++];
+                                    --remaining;
+                                case eRawRowUnroll1:
+                                    *out++ = pal.data[*src++];
+                                    --remaining;
+                                } while (remaining > 0);
+                            }
+                            line += Pitch;
+                            lineDst =
+                                static_cast<unsigned short*>(static_cast<void*>(
+                                    static_cast<unsigned char*>(
+                                        static_cast<void*>(lineDst)) +
+                                    dpitch));
+                        } while (--sh > 0);
+                    } else {
+                        for (int y = sy; y < sy + sh; ++y) {
+                            unsigned short* out = lineDst;
+                            const unsigned char* src = map + aLineOffset[y];
+                            unsigned int skipped = 0;
+                            unsigned char packet = *src;
+                            unsigned char code = packet >> 5;
+                            unsigned int run = (packet & 31) + 1;
+                            ++src;
+
+                            while (skipped + run <=
+                                   static_cast<unsigned int>(sx)) {
+                                skipped += run;
+                                if (code == kOpaqueRunCode)
+                                    src += run;
+                                packet = *src;
+                                code = packet >> 5;
+                                run = (packet & 31) + 1;
+                                ++src;
+                            }
+                            run += skipped - sx;
+                            if (code == kOpaqueRunCode)
+                                src += sx - skipped;
+
+                            unsigned int remaining = sw;
+                            do {
+                                if (run > remaining)
+                                    run = remaining;
+                                if (code == kOpaqueRunCode) {
+                                    unsigned int count = run;
+                                    do {
+                                        *out++ = pal.data[*src++];
+                                    } while (--count);
+                                } else {
+                                    out += run;
+                                }
+                                remaining -= run;
+                                if (!remaining)
+                                    break;
+                                packet = *src;
+                                code = packet >> 5;
+                                run = (packet & 31) + 1;
+                                ++src;
+                            } while (remaining);
+
+                            lineDst =
+                                static_cast<unsigned short*>(static_cast<void*>(
+                                    static_cast<unsigned char*>(
+                                        static_cast<void*>(lineDst)) +
+                                    dpitch));
+                        }
+                    }
+                } else {
+                    unsigned short* lineDst =
+                        static_cast<unsigned short*>(static_cast<void*>(
+                        static_cast<unsigned char*>(static_cast<void*>(dst)) +
+                        dy * dpitch + (dx + sw) * 2));
+
+                    if (EncodingMethod == eEncodeRaw) {
+                        const unsigned char* line = map + sy * Pitch + sx;
+                        do {
+                            int remaining = sw;
+                            unsigned short* out = lineDst;
+                            const unsigned char* src = line;
+                            switch (remaining & 7) {
+                            case eRawRowUnroll8:
+                                do {
+                                    *--out = pal.data[*src++];
+                                    --remaining;
+                                case eRawRowUnroll7:
+                                    *--out = pal.data[*src++];
+                                    --remaining;
+                                case eRawRowUnroll6:
+                                    *--out = pal.data[*src++];
+                                    --remaining;
+                                case eRawRowUnroll5:
+                                    *--out = pal.data[*src++];
+                                    --remaining;
+                                case eRawRowUnroll4:
+                                    *--out = pal.data[*src++];
+                                    --remaining;
+                                case eRawRowUnroll3:
+                                    *--out = pal.data[*src++];
+                                    --remaining;
+                                case eRawRowUnroll2:
+                                    *--out = pal.data[*src++];
+                                    --remaining;
+                                case eRawRowUnroll1:
+                                    *--out = pal.data[*src++];
+                                    --remaining;
+                                } while (remaining > 0);
+                            }
+                            line += Pitch;
+                            lineDst =
+                                static_cast<unsigned short*>(static_cast<void*>(
+                                    static_cast<unsigned char*>(
+                                        static_cast<void*>(lineDst)) +
+                                    dpitch));
+                        } while (--sh > 0);
+                    } else {
+                        for (int y = sy; y < sy + sh; ++y) {
+                            unsigned short* out = lineDst;
+                            const unsigned char* src = map + aLineOffset[y];
+                            unsigned int skipped = 0;
+                            unsigned char packet = *src;
+                            unsigned char code = packet >> 5;
+                            unsigned int run = (packet & 31) + 1;
+                            ++src;
+
+                            while (skipped + run <=
+                                   static_cast<unsigned int>(sx)) {
+                                skipped += run;
+                                if (code == kOpaqueRunCode)
+                                    src += run;
+                                packet = *src;
+                                code = packet >> 5;
+                                run = (packet & 31) + 1;
+                                ++src;
+                            }
+                            run += skipped - sx;
+                            if (code == kOpaqueRunCode)
+                                src += sx - skipped;
+
+                            unsigned int remaining = sw;
+                            do {
+                                if (run > remaining)
+                                    run = remaining;
+                                if (code == kOpaqueRunCode) {
+                                    unsigned int count = run;
+                                    do {
+                                        *--out = pal.data[*src++];
+                                    } while (--count);
+                                } else {
+                                    out -= run;
+                                }
+                                remaining -= run;
+                                if (!remaining)
+                                    break;
+                                packet = *src;
+                                code = packet >> 5;
+                                run = (packet & 31) + 1;
+                                ++src;
+                            } while (remaining);
+
+                            lineDst =
+                                static_cast<unsigned short*>(static_cast<void*>(
+                                    static_cast<unsigned char*>(
+                                        static_cast<void*>(lineDst)) +
+                                    dpitch));
+                        }
+                    }
+                }
+            } else {
+                if (!hflip) {
+                    unsigned short* lineDst =
+                        static_cast<unsigned short*>(static_cast<void*>(
+                        static_cast<unsigned char*>(static_cast<void*>(dst)) +
+                        (dy + sh - 1) * dpitch + dx * 2));
+
+                    if (EncodingMethod == eEncodeRaw) {
+                        const unsigned char* line = map + sy * Pitch + sx;
+                        do {
+                            int remaining = sw;
+                            unsigned short* out = lineDst;
+                            const unsigned char* src = line;
+                            switch (remaining & 7) {
+                            case eRawRowUnroll8:
+                                do {
+                                    *out++ = pal.data[*src++];
+                                    --remaining;
+                                case eRawRowUnroll7:
+                                    *out++ = pal.data[*src++];
+                                    --remaining;
+                                case eRawRowUnroll6:
+                                    *out++ = pal.data[*src++];
+                                    --remaining;
+                                case eRawRowUnroll5:
+                                    *out++ = pal.data[*src++];
+                                    --remaining;
+                                case eRawRowUnroll4:
+                                    *out++ = pal.data[*src++];
+                                    --remaining;
+                                case eRawRowUnroll3:
+                                    *out++ = pal.data[*src++];
+                                    --remaining;
+                                case eRawRowUnroll2:
+                                    *out++ = pal.data[*src++];
+                                    --remaining;
+                                case eRawRowUnroll1:
+                                    *out++ = pal.data[*src++];
+                                    --remaining;
+                                } while (remaining > 0);
+                            }
+                            line += Pitch;
+                            lineDst =
+                                static_cast<unsigned short*>(static_cast<void*>(
+                                    static_cast<unsigned char*>(
+                                        static_cast<void*>(lineDst)) -
+                                    dpitch));
+                        } while (--sh > 0);
+                    } else {
+                        for (int y = sy; y < sy + sh; ++y) {
+                            unsigned short* out = lineDst;
+                            const unsigned char* src = map + aLineOffset[y];
+                            unsigned int skipped = 0;
+                            unsigned char packet = *src;
+                            unsigned char code = packet >> 5;
+                            unsigned int run = (packet & 31) + 1;
+                            ++src;
+
+                            while (skipped + run <=
+                                   static_cast<unsigned int>(sx)) {
+                                skipped += run;
+                                if (code == kOpaqueRunCode)
+                                    src += run;
+                                packet = *src;
+                                code = packet >> 5;
+                                run = (packet & 31) + 1;
+                                ++src;
+                            }
+                            run += skipped - sx;
+                            if (code == kOpaqueRunCode)
+                                src += sx - skipped;
+
+                            unsigned int remaining = sw;
+                            do {
+                                if (run > remaining)
+                                    run = remaining;
+                                if (code == kOpaqueRunCode) {
+                                    unsigned int count = run;
+                                    do {
+                                        *out++ = pal.data[*src++];
+                                    } while (--count);
+                                } else {
+                                    out += run;
+                                }
+                                remaining -= run;
+                                if (!remaining)
+                                    break;
+                                packet = *src;
+                                code = packet >> 5;
+                                run = (packet & 31) + 1;
+                                ++src;
+                            } while (remaining);
+
+                            lineDst =
+                                static_cast<unsigned short*>(static_cast<void*>(
+                                    static_cast<unsigned char*>(
+                                        static_cast<void*>(lineDst)) -
+                                    dpitch));
+                        }
+                    }
+                } else {
+                    unsigned short* lineDst =
+                        static_cast<unsigned short*>(static_cast<void*>(
+                        static_cast<unsigned char*>(static_cast<void*>(dst)) +
+                        (dy + sh - 1) * dpitch + (dx + sw) * 2));
+
+                    if (EncodingMethod == eEncodeRaw) {
+                        const unsigned char* line = map + sy * Pitch + sx;
+                        do {
+                            int remaining = sw;
+                            unsigned short* out = lineDst;
+                            const unsigned char* src = line;
+                            switch (remaining & 7) {
+                            case eRawRowUnroll8:
+                                do {
+                                    *--out = pal.data[*src++];
+                                    --remaining;
+                                case eRawRowUnroll7:
+                                    *--out = pal.data[*src++];
+                                    --remaining;
+                                case eRawRowUnroll6:
+                                    *--out = pal.data[*src++];
+                                    --remaining;
+                                case eRawRowUnroll5:
+                                    *--out = pal.data[*src++];
+                                    --remaining;
+                                case eRawRowUnroll4:
+                                    *--out = pal.data[*src++];
+                                    --remaining;
+                                case eRawRowUnroll3:
+                                    *--out = pal.data[*src++];
+                                    --remaining;
+                                case eRawRowUnroll2:
+                                    *--out = pal.data[*src++];
+                                    --remaining;
+                                case eRawRowUnroll1:
+                                    *--out = pal.data[*src++];
+                                    --remaining;
+                                } while (remaining > 0);
+                            }
+                            line += Pitch;
+                            lineDst =
+                                static_cast<unsigned short*>(static_cast<void*>(
+                                    static_cast<unsigned char*>(
+                                        static_cast<void*>(lineDst)) -
+                                    dpitch));
+                        } while (--sh > 0);
+                    } else {
+                        for (int y = sy; y < sy + sh; ++y) {
+                            unsigned short* out = lineDst;
+                            const unsigned char* src = map + aLineOffset[y];
+                            unsigned int skipped = 0;
+                            unsigned char packet = *src;
+                            unsigned char code = packet >> 5;
+                            unsigned int run = (packet & 31) + 1;
+                            ++src;
+
+                            while (skipped + run <=
+                                   static_cast<unsigned int>(sx)) {
+                                skipped += run;
+                                if (code == kOpaqueRunCode)
+                                    src += run;
+                                packet = *src;
+                                code = packet >> 5;
+                                run = (packet & 31) + 1;
+                                ++src;
+                            }
+                            run += skipped - sx;
+                            if (code == kOpaqueRunCode)
+                                src += sx - skipped;
+
+                            unsigned int remaining = sw;
+                            do {
+                                if (run > remaining)
+                                    run = remaining;
+                                if (code == kOpaqueRunCode) {
+                                    unsigned int count = run;
+                                    do {
+                                        *--out = pal.data[*src++];
+                                    } while (--count);
+                                } else {
+                                    out -= run;
+                                }
+                                remaining -= run;
+                                if (!remaining)
+                                    break;
+                                packet = *src;
+                                code = packet >> 5;
+                                run = (packet & 31) + 1;
+                                ++src;
+                            } while (remaining);
+
+                            lineDst =
+                                static_cast<unsigned short*>(static_cast<void*>(
+                                    static_cast<unsigned char*>(
+                                        static_cast<void*>(lineDst)) -
+                                    dpitch));
+                        }
+                    }
+                }
             }
         }
     }

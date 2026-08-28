@@ -72,7 +72,7 @@ public:
     int Width;
     int Height;
 
-#ifdef HOMM3_DRAWING_ARCHER_DECLS
+#if defined(HOMM3_DRAWING_ARCHER_DECLS) || defined(HOMM3_ARMY_RANGE_VIEW)
     // CSprite.h:145. DrawWallAt expands this DC header accessor at its
     // archer site; the retail load is the Width dword above.
     int GetWidth() const { return Width; }
@@ -101,6 +101,15 @@ public:
         if (seq < numSequences && validSeqMask[seq] != 0)
             return s[seq]->numFrames;
         return 0;
+    }
+
+    // E:\gamedcs\CSprite.h:294
+    // The attack-frame chooser uses this header boundary rather than reading
+    // numSequences/validSeqMask directly. Retail VC6 folds it back to the
+    // same two loads and tests at each constant-sequence call site.
+    int IsValidSeq(int seqnum) const
+    {
+        return seqnum < numSequences && validSeqMask[seqnum] != 0;
     }
 
     // CSprite.h:148-151.  The Dreamcast image carries out-of-line copies;

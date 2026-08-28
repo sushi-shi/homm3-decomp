@@ -25,6 +25,18 @@ struct type_point {
     type_point() {}
     type_point(short new_x, short new_y, short new_z);
     unsigned char operator==(const type_point* arg);
+    // Dreamcast S_PUB32 is ??8type_point@@QBA_NABU0@@Z: bool return,
+    // const member, const-reference operand. Keep the pointer overload above
+    // temporarily for older reconstructed callers while source-aligned sites
+    // use the proven operator.
+#ifdef HOMM3_HERO_OBJ_VIEW
+    bool operator==(const type_point& arg) const
+    {
+        return x == arg.x && y == arg.y && z == arg.z;
+    }
+#else
+    bool operator==(const type_point& arg) const;
+#endif
     unsigned char is_valid();
 };
 

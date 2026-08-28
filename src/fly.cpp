@@ -3,6 +3,9 @@
 // 7 functions in link order.
 #include <va.h>
 #include <math.h>
+#define HOMM3_SLIMITDATA_VIEW
+#define HOMM3_DRAWING_UPDATE_GRID_DECLS
+#define HOMM3_DRAWING_UPDATE_MOUSE_GRID_DECLS
 #include "army.h"
 #include "cmbtmgr.h"
 #include "csprite.h"
@@ -13,6 +16,22 @@
 #include "sample.h"
 #include "soundmgr.h"
 #include "winmgr.h"
+
+// Complete retains the Dreamcast source boundaries in Fly but folds both
+// drawing helpers away. ScrollTo is a no-op for the fixed PC combat viewport;
+// UpdateCombatArea expands to the one retail UpdateScreen call. Keeping the
+// inline names here restores the cross-TU source calls without inventing x86
+// bodies which retail does not contain.
+inline bool combatManager::ScrollTo(SLimitData, bool, bool, bool)
+{
+    return false;
+}
+
+inline void combatManager::UpdateCombatArea(const SLimitData& area)
+{
+    gpWindowManager->UpdateScreen(
+        area.iMinX, area.iMinY, area.Width(), area.Height());
+}
 
 // GameTime, glTimers and gCombatAreaLimits all reach this TU through
 // their owners' headers: retail's fly.cpp saw GameTime for free (the DC
@@ -49,12 +68,10 @@ unsigned char army::find_flyer_attack_cell(int target)
 // fly.obj block.
 //
 // RECONSTRUCTED 2026-08-13. The 761 retail bytes are FOUR copies of the
-// same six-step adjacency scan, which is exactly the two DC
-// find_flyer_attack_cell overloads expanded by /Ob2: the scan is spelled
-// once here as a file-local static so VC6 folds it back the way retail's
-// helper was folded, and the static then has no out-of-line body of its
-// own - the same emission rule initialize.obj's two inlined creators
-// established.
+// same six-step adjacency scan, which is exactly the two private DC
+// find_flyer_attack_cell member overloads expanded by /Ob2. Their source
+// bodies stay member definitions even though retail retained no out-of-line
+// copy; /Ob2 decides the emission, not a file-local replacement helper.
 //
 // WHAT THE FOUR COPIES VARY. The pair (start, target) walks
 // (this hex, enemy hex), (this second hex, enemy hex),
@@ -72,83 +89,80 @@ unsigned char army::find_flyer_attack_cell(int target)
 // the resulting stack, and the -1 pair is the "no target selected" case
 // that falls through to the literal reachability test.
 //
-// Residual (89.1%): two classes, both bounded, no third.
-// (1) The entry pair of bound checks. Retail emits ONE `return 0` block
-//     between the two tests and jumps into it from both (`jl` twice);
-//     split ifs give us TWO inline copies and the `||` spelling sinks a
-//     shared block to the tail, which is worse still (86.08 vs 89.14) -
-//     the known merged-return class, and split-if is the closest of the
-//     three as the doctrine already records.
-// (2) Reassociation inside the scan, four times over. Retail computes
-//     `hex` starting FROM the adjacency word (`mov ebx,[this+0x38]`,
-//     `mov edi,edx`, `sub edi,start`, `add edi,ebx`); our CL shortens the
-//     dependency chain to `(gridIndex - start) + adjacent` and so creates
-//     the pseudo straight out of the member load. Tried and rejected,
-//     all three exactly 89.1445: splitting the expression into
-//     `hex = adjacent; hex -= start; hex += gridIndex;`, the two-step
-//     `hex = adjacent - start; hex += gridIndex;`, and hoisting
-//     gridIndex into its own local ahead of the adjacency read. The
-//     reassociation is C2's, not reachable from the statement order.
-static unsigned char find_flyer_attack_cell(const army* self, long start,
-                                            long target)
+// CLOSED 2026-08-28 (100.00%). The old 89.1445 candidate was a local
+// maximum assembled from individually high-scoring substitutions: split raw
+// bounds instead of the cmbtmgr.h `static bool ValidHex`, a direct creatureId
+// bit test instead of `enemy->Is(1u << 0)`, two positive early returns instead
+// of the line-97/100/101 nested failure, and the line-84/86 literal arm placed
+// after the enemy arm instead of before its line-95 `else`. Restoring all four
+// Dreamcast source facts as one
+// coherent unit first reached 93.71, then 94.82, then exact. The final source
+// has one line-104 success return, and VC6 shares it across the selected-enemy
+// and literal-target arms exactly as retail does. The source-shape gate carries
+// a negative control for these facts so the isolated local maxima cannot be
+// reintroduced.
+// E:\gamedcs\fly.cpp:35
+inline bool army::find_flyer_attack_cell(int start, int target) const
 {
     for (long dir = 0; dir < 6; dir++) {
         long adjacent = gpCombatManager->adjacentCells[target][dir];
-        long hex = adjacent - start + self->gridIndex;
+        long hex = adjacent - start + gridIndex;
         if (adjacent >= 0 && hex >= 0 && hex < COMBAT_GRID_CELLS
-                && get_distance(start, adjacent) <= self->GetSpeed()
-                && self->CanFit(hex, 0, 0))
+                && get_distance(start, adjacent) <= GetSpeed()
+                && CanFit(hex, 0, 0))
             return 1;
     }
+    return 0;
+}
+
+// E:\gamedcs\fly.cpp:58
+inline bool army::find_flyer_attack_cell(int target) const
+{
+    if (find_flyer_attack_cell(gridIndex, target))
+        return 1;
+    if (Is(1u << 0)
+            && find_flyer_attack_cell(get_second_grid_index(), target))
+        return 1;
     return 0;
 }
 
 VA(0x004b46c0, 0x2F9)  // simple_move call + ordered fly block, dc 0xa1430
 unsigned char army::ValidFlight(int destIndex, unsigned char bLiteralTest) const
 {
-    if (destIndex < 0)
-        return 0;
-    if (destIndex >= COMBAT_GRID_CELLS)
+    if (!combatManager::ValidHex(destIndex))
         return 0;
 
-    if (!bLiteralTest && side != -1 && slot != -1) {
+    if (bLiteralTest || side == -1 || slot == -1) {
+        if (get_distance(gridIndex, destIndex) > GetSpeed()
+                && !gpCombatManager->bCreaturePlacement)
+            return 0;
+        if (!CanFit(destIndex, 0, 0))
+            return 0;
+    } else {
         const army* enemy = &gpCombatManager->armies[side][slot];
         long enemyHex = enemy->gridIndex;
-        if (find_flyer_attack_cell(this, gridIndex, enemyHex))
-            return 1;
-        if (creatureId & 1) {
-            if (find_flyer_attack_cell(this, get_second_grid_index(), enemyHex))
-                return 1;
+        if (!find_flyer_attack_cell(enemyHex)) {
+            if (!enemy->Is(1u << 0)
+                    || !find_flyer_attack_cell(
+                    enemy->get_second_grid_index()))
+                return 0;
         }
-        if (enemy->creatureId & 1) {
-            long enemySecondHex = enemy->get_second_grid_index();
-            if (find_flyer_attack_cell(this, gridIndex, enemySecondHex))
-                return 1;
-            if (creatureId & 1) {
-                if (find_flyer_attack_cell(this, get_second_grid_index(),
-                                           enemySecondHex))
-                    return 1;
-            }
-        }
-        return 0;
     }
-
-    if (get_distance(gridIndex, destIndex) > GetSpeed()
-            && !gpCombatManager->bCreaturePlacement)
-        return 0;
-    if (!CanFit(destIndex, 0, 0))
-        return 0;
     return 1;
 }
 
 // E:\gamedcs\fly.cpp:114
-// Exact (118/118). The stand animation is unconditional: only the corrective
-// turn is gated by a facing change and restore_facing. That retail CFG also
-// determines the destination/old-facing EBX/EDI allocation.
+// Exact (118/118), source-aligned after restoring the Dreamcast-proven
+// ValidHex and TestRaiseDoor boundaries. Complete has folded TestRaiseDoor's
+// occupancy guards into RaiseDoor, so the header's trivial inline preserves
+// the original call spelling and still lowers to retail's direct call. The
+// stand animation is unconditional: only the corrective turn is gated by a
+// facing change and restore_facing. That retail CFG also determines the
+// destination/old-facing EBX/EDI allocation.
 VA(0x004b49c0, 0x76)  // ordered successor + call to Fly, dc 0xa1514
 int army::FlyTo(int destIndex, unsigned char restore_facing)
 {
-    if (destIndex >= 0 && destIndex < 187) {
+    if (combatManager::ValidHex(destIndex)) {
         int oldFacing = facing;
         remove_aura();
         remove_binding();
@@ -158,7 +172,7 @@ int army::FlyTo(int destIndex, unsigned char restore_facing)
             Turn(1);
         PlayAnimation(2, 1, 0);
         check_obstacle_attacks(0);
-        gpCombatManager->RaiseDoor();
+        gpCombatManager->TestRaiseDoor();
     }
     return 0;
 }
@@ -244,8 +258,8 @@ VA(0x004b4a40, 0x44E)  // FlyTo call + ordered fly block, dc 0xa1590
 int army::Fly(int destIndex)
 {
     unsigned char turn;
-    int sourceX = gridIndex % 17;
-    int destX = destIndex % 17;
+    int sourceX = combatManager::GridX(gridIndex);
+    int destX = combatManager::GridX(destIndex);
 
     if (sourceX > destX)
         turn = facing == FACING_DEFENDER;
@@ -261,27 +275,30 @@ int army::Fly(int destIndex)
         gpCombatManager->LowerDoor();
     }
 
-    if ((creatureId & 1) && turn)
-        destIndex += facing ? 1 : -1;
+    if (Is(1u << 0) && turn)
+        destIndex += OffsetToFront(-1);
 
     SetupAnimation();
     if (turn)
         Turn(1);
 
-    long startY = gpCombatManager->cells[gridIndex].field_02;
     long startX = gpCombatManager->cells[gridIndex].field_00;
-    long spanY = gpCombatManager->cells[destIndex].field_02 - startY;
+    long startY = gpCombatManager->cells[gridIndex].field_02;
     long spanX = gpCombatManager->cells[destIndex].field_00 - startX;
-    long steps = static_cast<long>(
-        sqrt(static_cast<double>(spanY * spanY + spanX * spanX)));
+    long spanY = gpCombatManager->cells[destIndex].field_02 - startY;
+    long iTtlLoops = static_cast<long>(
+        sqrt(static_cast<double>(spanX * spanX + spanY * spanY)));
     if (frameInfoFlightPixelSpan > 0)
-        steps = (steps + frameInfoFlightPixelSpan / 2)
-                / frameInfoFlightPixelSpan;
+        iTtlLoops = (iTtlLoops + frameInfoFlightPixelSpan / 2)
+                    / frameInfoFlightPixelSpan;
     else
-        steps = 1;
+        iTtlLoops = 1;
 
-    float stepX = static_cast<float>(spanX) / static_cast<float>(steps);
-    float stepY = static_cast<float>(spanY) / static_cast<float>(steps);
+    float stepX = static_cast<float>(spanX)
+                  / static_cast<float>(iTtlLoops);
+    float stepY = static_cast<float>(spanY)
+                  / static_cast<float>(iTtlLoops);
+    long iLoop;
 
     if (!static_cast<const combatManager*>(gpCombatManager)->IsQuickCombat()) {
         IsMoving = 1;
@@ -291,34 +308,28 @@ int army::Fly(int destIndex)
         gpCombatManager->RemoveArmyFromGrid(*this);
 
         currFrameType = 0;
-        long frameCount = stdIcon->GetNumFrames(cs_walk);
+        long numFlapFrames = stdIcon->GetNumFrames(cs_walk);
         float x = static_cast<float>(startX);
         float y = static_cast<float>(startY);
-        float frames = static_cast<float>(frameCount);
-        long frameDelay = static_cast<long>(
+        const int FLY_PERIOD = static_cast<long>(
             static_cast<float>(frameInfoWalkCycleTime)
-            * gCombatSpeedFactors[gUnnamed698758.combatSpeed] / frames);
+            * gCombatSpeedFactors[gUnnamed698758.combatSpeed]
+            / static_cast<float>(numFlapFrames));
 
-        { for (long step = 0; step < steps; step++) {
-            for (currFrameIndex = 0; currFrameIndex < frameCount;
+        { for (iLoop = 0; iLoop < iTtlLoops; iLoop++) {
+            for (currFrameIndex = 0; currFrameIndex < numFlapFrames;
                     currFrameIndex++) {
-                long limitLeft = gpCombatManager->drawbridgeBounds.values[0];
-                long limitTop = gpCombatManager->drawbridgeBounds.values[1];
-                long limitRight = gpCombatManager->drawbridgeBounds.values[2];
-                long limitBottom = gpCombatManager->drawbridgeBounds.values[3];
-                x += stepX / frames;
-                y += stepY / frames;
-                gpCombatManager->field_53b0->Draw(gpCombatManager->drawbridgeBounds.values[0],
-                           gpCombatManager->drawbridgeBounds.values[1],
-                           gpCombatManager->drawbridgeBounds.values[2]
-                               - gpCombatManager->drawbridgeBounds.values[0]
-                               + 1,
-                           gpCombatManager->drawbridgeBounds.values[3]
-                               - gpCombatManager->drawbridgeBounds.values[1]
-                               + 1,
+                SLimitData TtlExtent = gpCombatManager->drawbridgeBounds;
+                x += stepX / static_cast<float>(numFlapFrames);
+                y += stepY / static_cast<float>(numFlapFrames);
+                gpCombatManager->field_53b0->Draw(
+                           gpCombatManager->drawbridgeBounds.iMinX,
+                           gpCombatManager->drawbridgeBounds.iMinY,
+                           gpCombatManager->drawbridgeBounds.Width(),
+                           gpCombatManager->drawbridgeBounds.Height(),
                            gpWindowManager->screenBitmap->map,
-                           gpCombatManager->drawbridgeBounds.values[0],
-                           gpCombatManager->drawbridgeBounds.values[1],
+                           gpCombatManager->drawbridgeBounds.iMinX,
+                           gpCombatManager->drawbridgeBounds.iMinY,
                            gpWindowManager->screenBitmap->Width,
                            gpWindowManager->screenBitmap->Height,
                            gpWindowManager->screenBitmap->Pitch,
@@ -327,19 +338,13 @@ int army::Fly(int destIndex)
                 gpCombatManager->field_13d2c = 1;
                 DrawToBuffer(static_cast<int>(x), static_cast<int>(y), 0);
                 gpCombatManager->field_13d2c = 0;
-                if (limitLeft > gpCombatManager->drawbridgeBounds.values[0])
-                    limitLeft = gpCombatManager->drawbridgeBounds.values[0];
-                if (limitTop > gpCombatManager->drawbridgeBounds.values[1])
-                    limitTop = gpCombatManager->drawbridgeBounds.values[1];
-                if (limitRight < gpCombatManager->drawbridgeBounds.values[2])
-                    limitRight = gpCombatManager->drawbridgeBounds.values[2];
-                if (limitBottom < gpCombatManager->drawbridgeBounds.values[3])
-                    limitBottom = gpCombatManager->drawbridgeBounds.values[3];
+                bool scrolled = gpCombatManager->ScrollTo(
+                    gpCombatManager->drawbridgeBounds, true, true, true);
+                TtlExtent.Include(gpCombatManager->drawbridgeBounds);
                 GameTime::DelayTil(glTimers[0]);
-                glTimers[0] = GameTime::NextFrameTime(glTimers[0], frameDelay);
-                gpWindowManager->UpdateScreen(limitLeft, limitTop,
-                                              limitRight - limitLeft + 1,
-                                              limitBottom - limitTop + 1);
+                glTimers[0] = GameTime::NextFrameTime(glTimers[0], FLY_PERIOD);
+                if (!scrolled)
+                    gpCombatManager->UpdateCombatArea(TtlExtent);
             }
         } }
     }
@@ -360,11 +365,12 @@ int army::Fly(int destIndex)
 }
 
 // E:\gamedcs\fly.cpp:300
-// Exact (118/118), with the same unconditional stand-animation CFG as FlyTo.
+// Exact (118/118), source-aligned with the same ValidHex/TestRaiseDoor
+// boundaries and unconditional stand-animation CFG as FlyTo.
 VA(0x004b4e90, 0x76)  // ordered successor + call to Teleport, dc 0xa19a0
 int army::TeleportTo(int destIndex, unsigned char restore_facing)
 {
-    if (destIndex >= 0 && destIndex < 187) {
+    if (combatManager::ValidHex(destIndex)) {
         int oldFacing = facing;
         remove_aura();
         remove_binding();
@@ -374,7 +380,7 @@ int army::TeleportTo(int destIndex, unsigned char restore_facing)
             Turn(1);
         PlayAnimation(2, 1, 0);
         check_obstacle_attacks(0);
-        gpCombatManager->RaiseDoor();
+        gpCombatManager->TestRaiseDoor();
     }
     return 0;
 }
@@ -384,8 +390,8 @@ VA(0x004b4f10, 0x102)  // exact: facing/wide adjustment, quick-combat animation 
 int army::Teleport(int destIndex)
 {
     unsigned char turn;
-    int sourceX = gridIndex % 17;
-    int destX = destIndex % 17;
+    int sourceX = combatManager::GridX(gridIndex);
+    int destX = combatManager::GridX(destIndex);
 
     if (sourceX > destX)
         turn = facing == FACING_DEFENDER;
@@ -394,8 +400,8 @@ int army::Teleport(int destIndex)
     else
         turn = 0;
 
-    if ((creatureId & 1) && turn)
-        destIndex += facing ? 1 : -1;
+    if (Is(1u << 0) && turn)
+        destIndex += OffsetToFront(-1);
 
     SetupAnimation();
     if (turn)

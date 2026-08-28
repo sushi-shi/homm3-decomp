@@ -638,8 +638,8 @@ unsigned char combatManager::ValidSpellTargetArmy(SpellID spellId,
 //     starts at iBodiesInHex - 1 and counts down - and each body is
 //     accepted on the same attribute bit plus a two-hex clearance test.
 // The attribute bit is the ONLY semantic difference between the
-// resurrection pair and the animate-dead one: Is(4) for the living,
-// Is(18) for the undead, spelled through army.h's own Is() inline
+// resurrection pair and the animate-dead one: Is(1u << 4) for the living,
+// Is(1u << 18) for the undead, spelled through army.h's own Is() inline
 // (`shr <word>, n / test al, 1`) exactly as every other reader here.
 //
 // THE TWO-HEX CLEARANCE TEST IS WHAT DECODES hexcell::deadPartOfDouble.
@@ -663,7 +663,7 @@ army* combatManager::find_resurrection_target(int side, int hex,
         army* target = cell->get_army();
         if (target->combatSide != side)
             return 0;
-        if (!(target->Is(4) & 1))
+        if (!(target->Is(1u << 4)))
             return 0;
         if (target->numTroops >= target->origNumTroops)
             return 0;
@@ -682,7 +682,7 @@ army* combatManager::find_resurrection_target(int side, int hex,
                               [cell->deadArmySlot[i]];
         if (cell->deadArmySide[i] != side)
             goto next;
-        if (!(corpse->Is(4) & 1))
+        if (!(corpse->Is(1u << 4)))
             goto next;
         if (cell->deadPartOfDouble[i] == 0) {
             if (cells[hex + 1].armySide >= 0)
@@ -725,7 +725,7 @@ army* combatManager::find_demonic_resurrection_target(int side, int hex)
         int dead_slot = cell->deadArmySlot[i];
         if (dead_side != side)
             continue;
-        if (!(armies[dead_side][dead_slot].Is(4) & 1))
+        if (!(armies[dead_side][dead_slot].Is(1u << 4)))
             continue;
         if (cell->deadPartOfDouble[i] == 0) {
             if (cells[hex + 1].armySide >= 0)
@@ -754,7 +754,7 @@ army* combatManager::find_animate_dead_target(int side, int hex)
         army* target = cell->get_army();
         if (target->combatSide != side)
             return 0;
-        if (!(target->Is(18) & 1))
+        if (!(target->Is(1u << 18)))
             return 0;
         if (target->numTroops >= target->origNumTroops)
             return 0;
@@ -773,7 +773,7 @@ army* combatManager::find_animate_dead_target(int side, int hex)
                               [cell->deadArmySlot[i]];
         if (cell->deadArmySide[i] != side)
             goto next;
-        if (!(corpse->Is(18) & 1))
+        if (!(corpse->Is(1u << 18)))
             goto next;
         if (cell->deadPartOfDouble[i] == 0) {
             if (cells[hex + 1].armySide >= 0)
@@ -976,7 +976,7 @@ void combatManager::mark_wall_area_effect(long target_hex, TSkillMastery mastery
 // The hex list is walked BACKWARDS, and `hexes.size()` is the guarded
 // form the toolchain's own <vector> carries -
 // `_First == 0 ? 0 : _Last - _First` - which is why retail tests _First
-// against zero before taking the pointer difference. `Is(21)` is the
+// against zero before taking the pointer difference. `Is(1u << 21)` is the
 // magic-immunity bit ai_tactical's get_damage_value screens on first.
 VA(0x005a46f0, 0x113)  // order-map+arity, dc 0x153904
 void combatManager::mark_hex_area_effect(long hex, long radius,
@@ -993,7 +993,7 @@ void combatManager::mark_hex_area_effect(long hex, long radius,
         army* target = cells[hexes[i]].get_army();
         if (target == 0)
             continue;
-        if (target->Is(21) & 1)
+        if (target->Is(1u << 21))
             continue;
         if (effected[target->combatSide][target->bitIndex])
             continue;
@@ -1016,7 +1016,7 @@ void combatManager::mark_berserk_area_effect(long hex, long mastery,
         army* target = cells[hexes[i]].get_army();
         if (target == 0)
             continue;
-        if (target->Is(21) & 1)
+        if (target->Is(1u << 21))
             continue;
         if (effected[target->combatSide][target->bitIndex])
             continue;
@@ -1342,7 +1342,7 @@ void combatManager::Armageddon(int level, int power)
                 // is what stops VC6 folding the test back into a
                 // `test dword ptr [mem], imm` on the member - the same
                 // lever that closed SpellCastWorkChance's register wall.
-                if (pArmy->Is(6) & 1)
+                if (pArmy->Is(1u << 6))
                     heroes[side]->DestroySiegeWeaponArtifact(
                         pArmy->creatureType);
                 bDeaths = 1;
@@ -2533,7 +2533,7 @@ void combatManager::ShowMassSpell(const unsigned char (*bEffected)[20],
             army& stack = armies[side][i];
             if (bEffected[side][i] && stack.numTroops == 0) {
                 stack.ProcessDeath(0);
-                if (stack.Is(6) & 1)
+                if (stack.Is(1u << 6))
                     heroes[side]->DestroySiegeWeaponArtifact(
                         stack.creatureType);
                 anyDied = 1;
@@ -2606,7 +2606,7 @@ void combatManager::MirrorImage(int targetIndex, int level)
                 if (iDirCount == 0) {
                     iSourceHexIndex = source->gridIndex;
                 } else {
-                    if (!(source->Is(0) & 1))
+                    if (!(source->Is(1u << 0)))
                         continue;
                     iSourceHexIndex =
                         source->gridIndex + (source->facing ? 1 : -1);
@@ -2871,7 +2871,7 @@ void combatManager::demonic_resurrection(const army* caster, army* target)
 
     remove_corpse(&cells[target->gridIndex], target->combatSide,
                   target->bitIndex);
-    if (target->Is(0) & 1)
+    if (target->Is(1u << 0))
         remove_corpse(&cells[target->get_second_grid_index()],
                       target->combatSide, target->bitIndex);
 
@@ -2961,7 +2961,7 @@ void combatManager::Resurrect(army* target_army, long hit_points_resurrected,
         PlaceArmyInGrid(*target_army, hex);
         remove_corpse(&cells[target_army->gridIndex],
                       target_army->combatSide, target_army->bitIndex);
-        if (target_army->Is(0) & 1)
+        if (target_army->Is(1u << 0))
             remove_corpse(&cells[target_army->get_second_grid_index()],
                           target_army->combatSide, target_army->bitIndex);
     }
@@ -3115,14 +3115,14 @@ long combatManager::ModifySpellDamage(long base_damage, SpellID iSpellType,
                 message = format_string(
                     gpGeneralText->GetText(
                         GENERAL_TEXT_COMBAT_SPELL_DAMAGE_LOWERED_ONE),
-                    army::GetName(targetArmy->creatureType,
+                    GetArmyName(targetArmy->creatureType,
                                   targetArmy->numTroops),
                     -delta);
             else
                 message = format_string(
                     gpGeneralText->GetText(
                         GENERAL_TEXT_COMBAT_SPELL_DAMAGE_LOWERED_MANY),
-                    army::GetName(targetArmy->creatureType,
+                    GetArmyName(targetArmy->creatureType,
                                   targetArmy->numTroops),
                     -delta);
         } else {
@@ -3498,7 +3498,7 @@ float combatManager::SpellCastWorkChance(SpellID spell, long side,
         && traits->level < target->antiMagicSpellLevel
         && !(traits->field_c & 0x8))
         return 0.0f;
-    if ((target->Is(21) & 1) && spell != SPELL_RESURRECTION
+    if ((target->Is(1u << 21)) && spell != SPELL_RESURRECTION
         && spell != SPELL_ANIMATE_DEAD && spell != SPELL_SACRIFICE)
         return 0.0f;
     if (target->bAllUnitsKilled)
@@ -3535,11 +3535,11 @@ float combatManager::SpellCastWorkChance(SpellID spell, long side,
             return 0.0f;
         break;
     case SPELL_ANTI_MAGIC:
-        if (target->Is(23) & 1)
+        if (target->Is(1u << 23))
             return 0.0f;
         break;
     case SPELL_CLONE:
-        if ((target->Is(23) & 1) || target->iMirrorDestIndex != -1)
+        if ((target->Is(1u << 23)) || target->iMirrorDestIndex != -1)
             return 0.0f;
         if (target->monInfoLevel + 1
             > akSpellTraits[SPELL_CLONE].mastery_bonus[
@@ -3569,20 +3569,20 @@ float combatManager::SpellCastWorkChance(SpellID spell, long side,
         break;
     }
     case SPELL_SACRIFICE:
-        if (!(target->Is(4) & 1))
+        if (!(target->Is(1u << 4)))
             return 0.0f;
-        if (target->Is(22) & 1)
+        if (target->Is(1u << 22))
             return 0.0f;
         if (first_target) {
             if (target->numTroops >= target->origNumTroops)
                 return 0.0f;
-        } else if ((target->Is(18) & 1) || target->numTroops <= 0) {
+        } else if ((target->Is(1u << 18)) || target->numTroops <= 0) {
             return 0.0f;
         }
         break;
     }
 
-    if (benefit <= 0 && target->aura_sources.size() > 0)
+    if (benefit <= 0 && target->is_in_aura())
         return get_spell_work_chance(spell, creature, casting_hero,
                                      target_hero)
             * 0.8f;
@@ -3759,7 +3759,7 @@ void combatManager::ShowSpellMessage(int bIsMonsterSpell, SpellID spellId,
 
     const char* targetName;
     if (targetArmy)
-        targetName = army::GetName(targetArmy->creatureType,
+        targetName = GetArmyName(targetArmy->creatureType,
                                    targetArmy->numTroops);
     else
         targetName = 0;
@@ -3953,7 +3953,7 @@ int combatManager::GetSpellWallHex(int base_index, int row_offset, int side)
 
 // E:\gamedcs\Army.h:835
 DC_ONLY(0x158180, 0x20)
-unsigned char army::is_in_aura()
+bool army::is_in_aura()
 {
     // @stub
 }

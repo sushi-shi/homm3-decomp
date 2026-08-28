@@ -11,6 +11,28 @@ int IsBaseCreature(TCreatureType monType);
 unsigned char IsSiegeWeapon(TCreatureType creature);
 TCreatureType UpgradedCreatureType(TCreatureType type);
 
+// Complete extends the Dreamcast creature-name domain through id 0x96.
+// GetArmyName's retail range guard proves the inclusive upper bound.
+const int CREATURE_TYPE_LAST = 0x96;
+
+#ifdef HOMM3_CREATURE_NAME_VIEW
+// E:\gamedcs\CreatureType.h:296
+inline const char* GetArmyName(int type, int count)
+{
+    if (type < 0 || type > CREATURE_TYPE_LAST) {
+        return DATA_COMPGEN(0x00691210, emptyCreatureName, "");
+    } else {
+        if (count == 1) {
+            return akCreatureTypeTraits[type].m_name;
+        } else {
+            return akCreatureTypeTraits[type].m_plural_name;
+        }
+    }
+}
+#else
+const char* GetArmyName(int type, int count);
+#endif
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\creaturetype.cpp:202, dc 0x718dc) TCreatureType GetBaseCreature(TTownType townType, int baseCreatureNbr);
 // CODEVIEW(E:\gamedcs\creaturetype.cpp:213, dc 0x718fc) int IsBaseCreature(TCreatureType monType);

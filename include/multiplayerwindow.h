@@ -217,7 +217,17 @@ public:
     unsigned long dwUser3;      // +0x104
     unsigned long dwUser4;      // +0x108
 
-    inline bool IsJoinDisabled()
+    __forceinline unsigned char IsJoinDisabled()
+    {
+        if (dwFlags & 0x20)
+            return true;
+        if (dwFlags & 1)
+            return true;
+        unsigned char disabled = playerCount == maxPlayers;
+        return disabled;
+    }
+
+    inline bool IsJoinDisabledInline()
     {
         return (dwFlags & 0x21) || playerCount == maxPlayers;
     }
@@ -337,6 +347,9 @@ public:
 
     bool GetSessionInfo(unsigned long index, char* sessName, char* userName,
                         int& numPlayers, eSessionStatus& status);
+    bool GetSessionInfoInline(unsigned long index, char* sessName,
+                              char* userName, int& numPlayers,
+                              eSessionStatus& status);
 };
 SIZE(CHeroSessions, 0x14);
 
@@ -443,6 +456,8 @@ public:
                              _DPCOMPORTADDRESS* comportInfo);
     unsigned char OnModemHost();
     unsigned char OnDirectHost();
+    unsigned char OnModemJoin();
+    unsigned char OnDirectJoin();
 };
 SIZE(TMultiPlayerWindow, 0x100);
 

@@ -64,13 +64,20 @@ unambiguous names, `module.obj:0xOFF`, or `dc:0xOFF`; use `homm3 dreamcast find 
 to locate a function and `homm3 dreamcast stats` to audit corpus coverage.
 
 The campaign loop is **Dreamcast dossier -> retail source-labelled diff -> C++
-hypothesis -> VC6 retail ratchet**. Start with signatures, locals, scopes, helper calls,
+hypothesis -> VC6 retail checkpoint**. Start with signatures, locals, scopes, helper calls,
 and statement groups named by the dossier. Do not start with blind source permutation
 when this evidence is available. If a hypothesis changes a claim or decorated signature,
-run `homm3 build`, `homm3 delink`, then `homm3 build` again. Keep a source change only
-when retail improves or matches, and record useful negative classifications such as
-register allocation, scheduling, relocation naming, or version skew so the next matcher
-does not repeat an exhausted sweep.
+run `homm3 build`, `homm3 delink`, then `homm3 build` again. Objdiff percentages are
+checkpoints, not admissibility invariants: restoring a coherent Dreamcast-proven class,
+helper, scope, or statement shape may temporarily lower several local scores before the
+surrounding source reaches retail's lowering. Do not remove a positive Dreamcast fact or
+invent "retail skew" merely because an isolated rewrite scores lower. Reject Dreamcast
+shape only when retail bytes directly contradict its semantics, ABI, layout, or CFG—not
+when the current candidate has a lower similarity percentage. The fatal source-shape
+gate must remain raised while a positive Dreamcast fact is omitted. Preserve prior score
+peaks as history, continue coherent reconstruction through expected dips, and record
+useful negative codegen classifications so the next matcher does not repeat an exhausted
+sweep.
 
 This remains a cross-architecture, older-revision source oracle, **not a second byte
 target**. A missing Dreamcast statement or call never proves retail lacks it, and

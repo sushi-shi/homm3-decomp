@@ -78,7 +78,7 @@ SCRATCH = _common.REPO / "build/vc6/whyreg"
 GAME_FLAGS = ["/O2", "/Ob2", "/Oy-", "/Op", "/ML", "/Gr", "/GX", "/GR-",
               "/D_WINDOWS"]
 
-MAX_MUTATIONS = 48
+MAX_MUTATIONS = 64
 
 # --- compile + slice ---------------------------------------------------------------
 
@@ -399,6 +399,47 @@ def _mut_reorder(body: str):
                "\n".join(swapped))
 
 
+def _mut_reorder_store_runs(body: str):
+    """Move one store across an independent three-to-six statement run.
+
+    Adjacent swaps are insufficient for C3 handle-state plateaus: the
+    scheduler may recover its original order after one swap while a value
+    created at the opposite end of the source run changes the later ready
+    queue.  Keep this bounded to small, plain, pairwise-independent store
+    runs; the pinned compiler remains the verdict for every candidate.
+    """
+    lines = body.split("\n")
+    i = 0
+    while i < len(lines):
+        run = []
+        j = i
+        while j < len(lines) and len(run) < 6:
+            m = _SIMPLE_ASSIGN.match(lines[j])
+            if not m or _DECL.match(lines[j]) \
+                    or not _SIMPLE_VALUE.fullmatch(m.group("e")):
+                break
+            run.append((lines[j], m.group("lhs")))
+            j += 1
+        if len(run) >= 3 and all(
+                not _crossref(run[a][1], run[b][0])
+                for a in range(len(run)) for b in range(len(run)) if a != b):
+            block = [line for line, _lhs in run]
+            for src in range(len(block)):
+                for dst in range(len(block)):
+                    if src == dst:
+                        continue
+                    moved = block[:]
+                    line = moved.pop(src)
+                    moved.insert(dst, line)
+                    yield (f"move store '{run[src][1]}' from {src} to {dst} "
+                           f"in {len(block)}-store run", "C3",
+                           "\n".join(lines[:i] + moved + lines[j:]))
+            reversed_block = list(reversed(block))
+            yield (f"reverse independent {len(block)}-store run", "C3",
+                   "\n".join(lines[:i] + reversed_block + lines[j:]))
+        i = max(j, i + 1)
+
+
 def _mut_volatile(body: str):
     """Make a homed local `volatile` (B23): forces the memory residency the
     reference keeps where our CL promotes to a register. Value-inert - only
@@ -498,7 +539,8 @@ def _mutations(src_text: str, fn: str) -> list:
     open_b, close_b = span
     body = src_text[open_b + 1:close_b]
     out, seen = [], {body}
-    for gen in (_mut_unname, _mut_name_expr, _mut_reorder, _mut_reorder_wide,
+    for gen in (_mut_unname, _mut_name_expr, _mut_reorder,
+                _mut_reorder_store_runs, _mut_reorder_wide,
                 _mut_hoist_zero, _mut_chain, _mut_volatile):
         for label, catalog, new_body in gen(body):
             if new_body in seen:

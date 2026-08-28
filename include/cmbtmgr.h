@@ -448,6 +448,13 @@ enum CombatHeroFrameType {
 
 class combatManager : public baseManager {
 public:
+#ifdef HOMM3_ARMY_RANGE_VIEW
+    // drawing.cpp:666, Dreamcast dc 0x841d4. range_attack uses this
+    // five-argument overload to center the Magog effect before animating it.
+    unsigned char ScrollTo(int x, int y, unsigned char draw,
+                           unsigned char doscroll_x,
+                           unsigned char doscroll_y);
+#endif
 #if defined(HOMM3_COMMAND_TOWER_STRING_VIEW) \
         || defined(HOMM3_DRAWING_ARCHER_DECLS)
     // DC CmbtMgr.h's complete nested enum. Command's get_tower_string takes
@@ -1253,6 +1260,12 @@ public:
     void MakeCreaturesVanish();
     void LowerDoor();
     void RaiseDoor();
+    // Dreamcast keeps TestRaiseDoor as an out-of-line occupancy guard which
+    // calls RaiseDoor.  Complete moved those guards into RaiseDoor itself:
+    // no separate x86 body survives, while WalkTo, FlyTo, TeleportTo and
+    // ProcessNextAction lower to direct RaiseDoor calls.  Keep the attested
+    // source boundary as the trivial header inline produced by that refactor.
+    void TestRaiseDoor() { RaiseDoor(); }
     bool IsQuickCombat() const;
     void CalculateGainedExperience(int side, int* experience_gained);
     // The winner's post-combat sweep of the loser's artifacts. The vector
@@ -1384,6 +1397,11 @@ public:
                          unsigned char forceUpdate);
     void UpdateMouseGrid(int gridIndex, int allowDuringAction);
 #ifdef HOMM3_SLIMITDATA_VIEW
+    // Fly's two Complete-era header folds. The retail viewport never scrolls,
+    // so ScrollTo is supplied as a TU inline there; UpdateCombatArea expands
+    // to UpdateScreen, matching drawing.cpp's retained inline copy.
+    bool ScrollTo(SLimitData extent, bool draw,
+                  bool doscroll_x, bool doscroll_y);
     // drawing.cpp:513, DC 0x83ec0. DC's body takes the extent by value;
     // Complete has no out-of-line copy, and the exact retail expansion in
     // UpdateMouseGrid proves its const-reference form here.
@@ -1446,22 +1464,45 @@ public:
                               const char* const* file_names);
     void ShootMissile(int startX, int startY, int destX, int destY,
                       const float* angles, const CSprite* missile);
-    // DC header inline (CmbtMgr.h:1542, dc 0x27fa0). Retail re-loads
-    // obstacles_begin here rather than reusing the copy RemoveObstacle's
-    // own guards just tested; routing the call through this inline does
-    // NOT reproduce that (VC6 CSEs the second load away either way) -
-    // it is kept because the DC roster attests the accessor, not as a
-    // matching lever.
-    TObstacle& GetObstacle(int index) { return obstacles.begin[index]; }
-    // DC header inlines (CmbtMgr.h:1506/1537). Neither has a retail
-    // out-of-line body; GenerateMap folds both into its 11x17 walk.
-    unsigned char RowIsOdd(int y) const
+    // DC header inline (cmbtmgr.h:1460, dc 0x27ec8, 18 B). Its S_PUB32
+    // identity is ?ValidHex@combatManager@@SA_NH@Z: static bool. No retail
+    // body; place_shooter (0x422060) carries two copies of it, one on
+    // the loop index (which VC6 strength-reduces onto the same 30-byte
+    // induction variable the cellData walk uses, so it reads as a
+    // `test/jl` plus `cmp 0x15ea/jge` pair) and one on the adjacent hex.
+    static bool ValidHex(int iHex)
     {
-        return static_cast<unsigned char>(y & 1);
+        return iHex >= 0 && iHex < COMBAT_GRID_CELLS;
     }
-    int GetHexIndex(int x, int y) const
+    // DC header inline (cmbtmgr.h:1478, dc 0x27efc); the DC xref graph
+    // lists it among DoCompAI's callees and retail carries no
+    // out-of-line copy, so it is the /Ob2 inline-away case.
+    army* get_current_army() { return &armies[actingSide][actingSlot]; }
+    // Dreamcast S_PUB32 fixes this entire inline band: GetHexIndex and GridX
+    // are static int helpers, RowIsOdd is a const bool member, and
+    // InInvisibleColumn is static bool. Their CodeView lines also fix this
+    // definition order (1500, 1506, 1519, 1525, 1537, 1542).
+    static int GetHexIndex(int x, int y)
     {
-        return y * 17 + x;
+        return y * COMBAT_GRID_ROW_STRIDE + x;
+    }
+    bool RowIsOdd(int y) const
+    {
+        return (y & 1) != 0;
+    }
+    static int GridX(int index)
+    {
+        return index % COMBAT_GRID_ROW_STRIDE;
+    }
+    // DC header inline (cmbtmgr.h:1525, dc 0x27f64). mark_teleport's
+    // retail expansion retains the ValidHex bounds checks and the two
+    // invisible edge columns, 0 and 16 of each 17-cell row.
+    static bool InInvisibleColumn(int index)
+    {
+        if (!ValidHex(index))
+            return false;
+        int column = GridX(index);
+        return column == 0 || column == COMBAT_GRID_LAST_COLUMN;
     }
     // Returns a REFERENCE on its own public
     // (?GetCell@combatManager@@QAAAAVhexcell@@HH@Z); the roster text
@@ -1471,29 +1512,13 @@ public:
     {
         return cells[GetHexIndex(x, y)];
     }
-    // DC header inline (cmbtmgr.h:1460, dc 0x27ec8, 18 B). No retail
-    // body; place_shooter (0x422060) carries two copies of it, one on
-    // the loop index (which VC6 strength-reduces onto the same 30-byte
-    // induction variable the cellData walk uses, so it reads as a
-    // `test/jl` plus `cmp 0x15ea/jge` pair) and one on the adjacent hex.
-    unsigned char ValidHex(int iHex) const
-    {
-        return iHex >= 0 && iHex < COMBAT_GRID_CELLS;
-    }
-    // DC header inline (cmbtmgr.h:1525, dc 0x27f64). mark_teleport's
-    // retail expansion retains the ValidHex bounds checks and the two
-    // invisible edge columns, 0 and 16 of each 17-cell row.
-    unsigned char InInvisibleColumn(int index) const
-    {
-        if (!ValidHex(index))
-            return 0;
-        int column = index % COMBAT_GRID_ROW_STRIDE;
-        return column == 0 || column == COMBAT_GRID_LAST_COLUMN;
-    }
-    // DC header inline (cmbtmgr.h:1478, dc 0x27efc); the DC xref graph
-    // lists it among DoCompAI's callees and retail carries no
-    // out-of-line copy, so it is the /Ob2 inline-away case.
-    army* get_current_army() { return &armies[actingSide][actingSlot]; }
+    // DC header inline (CmbtMgr.h:1542, dc 0x27fa0). Retail re-loads
+    // obstacles_begin here rather than reusing the copy RemoveObstacle's
+    // own guards just tested; routing the call through this inline does
+    // NOT reproduce that (VC6 CSEs the second load away either way) -
+    // it is kept because the DC roster attests the accessor, not as a
+    // matching lever.
+    TObstacle& GetObstacle(int index) { return obstacles.begin[index]; }
     // 0x477e10, an unclaimed cmbtmgr-side body. NAME IS THE DREAMCAST
     // XREF GRAPH'S: the DC dump lists combatManager::TurnOffHighlighter
     // (command.obj, dc 0x6ed18) as one of DoCompAI's eight callees and

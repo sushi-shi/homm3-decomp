@@ -1,0 +1,24 @@
+[package]
+name = "homm3-def"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+description = "Allocation-free Heroes III DEF sprite parser, decoder, and blitter"
+
+[features]
+default = []
+# Compiles the reconstructed C++ DEF renderers only for differential tests.
+# The no_std library itself never depends on a C++ compiler or runtime.
+cxx-parity = []
+
+[lib]
+path = "src/lib.rs"
+
+[dev-dependencies]
+flate2.workspace = true
+homm3-lod.workspace = true
+
+[lints]
+workspace = true

@@ -2327,6 +2327,11 @@ int ValueOfGenerator(const hero* current_hero, int x, int y, int z, NewmapCell* 
 // E:\gamedcs\philai.cpp:2306
 #endif  // @carcass
 
+// Residual (99.9561%): all 35 CFG blocks and every instruction agree except
+// the final commutative LEA's SIB spelling (`[ebx+ecx]` versus retail's
+// `[ecx+ebx]`). Reversing the return operands, splitting/reordering the
+// optimized `town_value` declaration, and both accumulate-then-return forms
+// are byte-flat under VC6 SP3, so no semantic source change is retained.
 VA(0x00529cb0, 0x2d9)  // anchor-callee, dc 0x11105c
 long value_of_enemy_town(const hero* current_hero, const town* enemy_town, short move_cost, NewmapCell* cell)
 {

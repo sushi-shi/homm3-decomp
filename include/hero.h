@@ -140,11 +140,27 @@ struct type_obscuring_object {
 
     type_obscuring_object();
     void initialize();
+    // Dreamcast proves this Hero.h helper boundary. Retail SetupHeroView
+    // folds it to the same three field tests; keep the call in source so
+    // an exact lowering cannot erase the attested source shape again.
+    __forceinline unsigned char obscures_town() const
+    {
+        return valid && was_trigger && obscuredType == TOWN;
+    }
     class town* get_obscured_town();
     void obscure_cell(TAdventureObjectType new_type, long id);
     void restore_cell();
     bool load(void* infile);
     bool save(void* outfile);
+    // E:\gamedcs\Hero.h:157
+    // The DC header inline returns the packed location through the
+    // three-argument type_point constructor. Its ordinary inline body remains
+    // context-sensitive: the standalone terrain helper expands it, while the
+    // deeper Fly copy retains the retail constructor call.
+    __forceinline type_point get_location() const
+    {
+        return type_point(x, y, z);
+    }
 };
 SIZE(type_obscuring_object, 0x18);
 
@@ -175,6 +191,10 @@ std::string ReadLengthPrefixedString(TAbstractFile* infile);
 // cleanliness-floor violation, and here rather than by including
 // kbwin.h / philai.h, whose closures hero.obj does not otherwise need.
 extern const char* gSkillMasteryNames[3];
+// Retail SetupHeroView indexes mastery values 1..3 from the pointer cell
+// immediately before gSkillMasteryNames, giving that biased view its own
+// relocation at 0x6a756c.
+DATA(0x006a756c) extern const char* gSkillMasteryNamesBiased[4];
 extern int bVideoPaused;
 // 0x6aa9d8. DECLARATION ONLY - src/townmgr.cpp:163 owns the DATA claim,
 // and a second claim on one RVA is a fatal duplicate at delink. hero.obj
@@ -689,6 +709,12 @@ public:
     }
 
     unsigned char HasArtifact(int whichArtifact);
+    // Dreamcast hero.cpp:4689 proves the helper and its positive
+    // skillOrder test. Retail /Ob2 folds it into SetupHeroView.
+    __forceinline unsigned char HasSecondarySkill(int iWhich) const
+    {
+        return skillOrder[iWhich] > 0;
+    }
     // 0x4d9330 - sets both per-spell byte tables for one spell.
     void AddSpell(int whichSpell);
     // 0x4d95d0 - rebuilds available_spells after artifact changes.
@@ -745,11 +771,10 @@ public:
     // body takes ONE and views an ARTIFACT, so the name here is an
     // ORDINAL PLACEHOLDER and the arity is settled from the bytes (see
     // the arity-divergence note in hero.cpp).
-    // 0x4d97f0, `ret 0` with no arguments and `this` a HERO - it walks
-    // army.armies and the hero-screen army widgets together. The DC row
-    // owning the slot is THeroScreenWindow::HeroMessageUpdate(char*);
-    // ORDINAL PLACEHOLDER name, arity settled from the bytes.
-    void HeroFn_004D97F0();
+    // 0x4d97f0, `ret 0` with no arguments and `this` a HERO. Its message
+    // construction, seven-slot loop and widget branches are the retail
+    // lowering of Dreamcast hero::UpdateArmies (dc 0xcc540).
+    void UpdateArmies();
     // 0x4d8b30, `ret 4`, a hero MEMBER: it copies one map/scenario setup
     // record into this hero. The Dreamcast keeps the counterpart as the
     // free function initialize_hero(hero*, const HeroExtra*)
@@ -765,12 +790,12 @@ public:
     // row owning the slot is ViewArtifact (three parameters); ORDINAL
     // PLACEHOLDER name, arity settled from the bytes.
     int HeroFn_004D9CC0(int artifact);
-    // 0x4d9a00, third member of the same arity-divergent block: `ret 8`,
-    // `this` unused, an artifact RECORD and the quick-view flag in. It
-    // pops the artifact's own description, adding the spell icon
-    // (resource type 9, extra = the scroll's spell) only for a spell
-    // scroll. The DC row owning the slot is UpdateArmies and takes one
-    // parameter; ORDINAL PLACEHOLDER name, arity settled from the bytes.
+    // 0x4d9a00, `ret 8`, `this` unused, an artifact RECORD and the
+    // quick-view flag in. It pops the artifact's own description, adding
+    // the spell icon (resource type 9, extra = the scroll's spell) only
+    // for a spell scroll. Its old UpdateArmies assignment was a disproven
+    // positional-map artifact; ORDINAL PLACEHOLDER name, arity settled
+    // from the bytes.
     void HeroFn_004D9A00(type_artifact* artifact, int isQuickView);
     // 0x4e16d0 - repaints the hero screen's four primary-stat texts and
     // its luck and morale icon frames. Same gate, same reason.
@@ -996,7 +1021,14 @@ public:
     // while the DC-named get_special_terrain at 0x4e4fa0 returns retail's
     // integer magic-terrain id.
     TAdventureObjectType HeroFn_004E4EC0();
+#ifdef HOMM3_HERO_OBJ_VIEW
+    // Fly sees the Complete body later in hero.cpp and retail inlines it at
+    // that site. Earlier hero.obj callers see only this declaration and keep
+    // the out-of-line body, so its independently exact retail symbol remains.
+    inline int get_special_terrain();
+#else
     int get_special_terrain();
+#endif
     // 0x431160, unclaimed. findpath's TestPossibleDirections calls it with
     // the hero in ECX and one packed type_point on the stack, and folds the
     // result into pathCell::barrier_value - i.e. it prices a map square for
@@ -1060,6 +1092,29 @@ public:
     TSpellSchool GetHighestSchool(TSpellSchool school_mask) const;
     int GetManaCost(int iWhichSpell, const class armyGroup* enemy,
                     int magic_terrain);
+#ifdef HOMM3_HERO_OBJ_VIEW
+    // E:\gamedcs\Hero.h:702
+    // The header helper used by GetManaCost's own-stack discount. Complete
+    // folds it back to the same armyGroup::IsMember bytes.
+    unsigned char HasArmy(TCreatureType type)
+    {
+        return army.IsMember(type);
+    }
+    // E:\gamedcs\Hero.h:707
+    // The two calls on Hero.h:708 are one statement in the Dreamcast line
+    // table. Complete's get_special_terrain returns the full terrain domain,
+    // which the widened three-argument overload consumes directly. Both DC
+    // publics are const; the Complete non-const out-of-line overload above
+    // remains a separate, independently byte-proven body.
+    int GetManaCost(int iWhichSpell, const class armyGroup* enemy,
+                    int magic_terrain) const;
+    int GetManaCost(int iWhichSpell) const
+    {
+        return GetManaCost(
+            iWhichSpell, 0,
+            const_cast<hero*>(this)->get_special_terrain());
+    }
+#endif
     float get_combat_value_modifier();
     // ai_combat's create_skeletons (0x426df0) calls both back to back:
     // the factor with a pushed 1, then the creature type with no
@@ -1361,6 +1416,7 @@ public:
     // WindowHandler's declarator beside it.
     void UpdateHeroScreenStatusBar(class message* msg);
     void UpdateHeroLocator(int iWhich);
+    void UpdateHeroLocators();
     // 0x4e1a50, thiscall with no arguments and NOT virtual (absent from
     // vtable 0x63eae8). It dereferences no THeroScreenWindow member at
     // all - `this` only ever feeds member calls - so the layout above
