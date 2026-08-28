@@ -28,6 +28,12 @@ Subcommands
         required; boundaries, module, source location and any retail bridge
         are shown.
 
+  gaps [SELECTOR] [--minimum N|--exact N] [--retail-only] [--limit N] [--json]
+        Reconstruct Vostok-style leading source-line gaps: the procedure-frame
+        line is known, the first body line is known, and absent line numbers
+        between them are zero-emission source candidates.  With no selector,
+        rank the whole corpus by leading-gap size.
+
   stats [--json]
         Corpus coverage and bridge counts.
 
@@ -62,6 +68,11 @@ DC_EXE_SHA256 = \
     "cdbc7e75bd7d057171fa12b728aaaee01c1db133fff350b034950dd21dd07736"
 DC_EXE_SIZE = 8425752
 AUTHORITY = "Dreamcast RoE/WinCE reference; analysis output, not retail evidence"
+GAP_CAUTION = (
+    "A missing line-program row can be a blank, comment, declaration, brace, "
+    "preprocessor-only line, or compiled-out statement (including an assert); "
+    "it is a candidate, never assert proof."
+)
 
 
 class DreamcastError(ValueError):
@@ -146,6 +157,20 @@ class Corpus:
         for claim in self.claims:
             self.claims_by_key[(claim.module, claim.dc_offset)].append(claim)
             self.claims_by_va[claim.va].append(claim)
+
+        # NB11's SRCLINES table is flat per compiland.  A previous procedure's
+        # closing-brace row can therefore sit exactly at the next procedure's
+        # address.  Keep source-local predecessor identity so the line-gap view
+        # can reject that borrowed boundary instead of reporting a giant gap.
+        self.previous_by_key: dict[tuple[str, int], dict[str, str]] = {}
+        by_source: dict[tuple[str, str], list[dict[str, str]]] = defaultdict(list)
+        for function in self.functions:
+            source = function["file"].replace("/", "\\").lower()
+            by_source[(function["module"], source)].append(function)
+        for functions in by_source.values():
+            functions.sort(key=lambda item: _integer(item["offset"]))
+            for previous, current in zip(functions, functions[1:]):
+                self.previous_by_key[self.key(current)] = previous
 
     @staticmethod
     def key(row: dict[str, str]) -> tuple[str, int]:
@@ -312,6 +337,8 @@ def build_dossier(corpus: Corpus, row: dict[str, str]) -> dict[str, Any]:
     data = _gate_dc_exe(dc_lines.EXE)
     symbols = dc_lines.symbol_map(dump)
     statements = dc_lines.line_table(dump, off, cb)
+    line_shape = _source_line_shape(
+        row, previous_row=corpus.previous_by_key.get(key))
     bounds = [addr for addr, _line, _file in statements] + [off + cb]
     try:
         asm_view = dc_asm.build_view(row, dump, data)
@@ -378,7 +405,7 @@ def build_dossier(corpus: Corpus, row: dict[str, str]) -> dict[str, Any]:
             "name": row["name"], "module": row["module"],
             "kind": row["kind"], "dc_offset": off, "dc_size": cb,
             "dc_end": off + cb, "source": row["file"],
-            "declaration_line": _integer(row["line"]),
+            "boundary_line": _integer(row["line"]),
             "debug_start": _integer(row["debug_start"]),
             "debug_end": _integer(row["debug_end"]),
         },
@@ -390,6 +417,7 @@ def build_dossier(corpus: Corpus, row: dict[str, str]) -> dict[str, Any]:
         "locals": locals_,
         "scopes": [{"start": start, "end": start + size, "size": size}
                    for start, size in blocks],
+        "source_line_shape": line_shape,
         "statements": statement_rows,
         "summary": {
             "statement_rows": len(statement_rows),
@@ -421,7 +449,8 @@ def render_dossier(dossier: dict[str, Any], out: TextIO = sys.stdout) -> None:
     print(file=out)
     print(fn["name"], file=out)
     print(f"  module       {fn['module']} ({fn['kind']})", file=out)
-    print(f"  source       {fn['source']}:{fn['declaration_line']}", file=out)
+    print(f"  source       {fn['source']}:{fn['boundary_line']} (boundary row)",
+          file=out)
     print(f"  dc text      {_hex(fn['dc_offset'], 8)}..{_hex(fn['dc_end'], 8)} "
           f"({fn['dc_size']} B SH4)", file=out)
     print(f"  debug body   +{_hex(fn['debug_start'])}..+{_hex(fn['debug_end'])}",
@@ -454,6 +483,25 @@ def render_dossier(dossier: dict[str, Any], out: TextIO = sys.stdout) -> None:
     for scope in dossier["scopes"]:
         print(f"  {_hex(scope['start'], 8)}..{_hex(scope['end'], 8)}  "
               f"{scope['size']} B", file=out)
+
+    shape = dossier["source_line_shape"]
+    print("\nSource-line gaps (zero-emission candidates):", file=out)
+    if shape["bodyless"]:
+        print("  minimal 4-byte SH4 body; no body-line inference", file=out)
+    elif not shape["procedure_line_reliable"]:
+        print(f"  unavailable: boundary line {shape['boundary_line']} is coherent "
+              "with the preceding procedure's closing row", file=out)
+    elif shape["first_body_line"] is None:
+        print("  first body line unavailable", file=out)
+    else:
+        missing = shape["leading_gap_lines"]
+        span = _line_span(shape["procedure_line"] + 1,
+                          shape["first_body_line"] - 1)
+        detail = f"; absent {span}" if missing else ""
+        print(f"  leading: frame line {shape['procedure_line']} -> first body line "
+              f"{shape['first_body_line']}: {missing} absent line(s){detail}",
+              file=out)
+    print(f"  {GAP_CAUTION}", file=out)
 
     print(f"\nStatements ({len(dossier['statements'])} line/address rows):", file=out)
     for statement in dossier["statements"]:
@@ -491,6 +539,183 @@ def _mapped_vas(corpus: Corpus, row: dict[str, str]) -> list[int]:
               for item in corpus.bridges_by_key.get(key, ())}
     values.update(claim.va for claim in corpus.claims_by_key.get(key, ()))
     return sorted(values)
+
+
+def _source_key(path: str) -> str:
+    return path.replace("/", "\\").lower()
+
+
+def _line_span(first: int, last: int) -> str:
+    if first == last:
+        return str(first)
+    return f"{first}..{last}"
+
+
+def _source_line_shape(
+        row: dict[str, str],
+        module_rows: Iterable[tuple[str, int, int]] | None = None,
+        previous_row: dict[str, str] | None = None,
+) -> dict[str, Any]:
+    """Recover source-line holes using the same frame/body idea as Vostok.
+
+    The first CodeView line at the procedure boundary is the procedure-frame
+    row.  The next lexical source line represented inside the procedure is the
+    first body row.  Missing integers between the two are source lines for which
+    the optimized compiland emitted no line-program row.
+
+    This is deliberately source-only evidence.  It cannot distinguish an empty
+    line, comment, declaration, brace, preprocessor line, or folded statement.
+    A four-byte SH4 body is just ``rts; nop`` and is treated as body-less rather
+    than turning its closing-frame line into a giant false leading gap.
+    """
+    off, cb = _integer(row["offset"]), _integer(row["cb"])
+    boundary_line = _integer(row["line"]) if row.get("line") else None
+    if module_rows is None:
+        module_rows = dc_srclines._load_srclines().get(row["module"], ())
+    source = _source_key(row["file"])
+    records = [(line, addr) for filename, line, addr in module_rows
+               if source == _source_key(filename) and off <= addr < off + cb]
+    records.sort(key=lambda item: item[1])
+
+    # Preserve distinct (line,address) rows: two rows on one source line can be
+    # the frame and a one-line body, while exact duplicate dump rows add nothing.
+    seen: set[tuple[int, int]] = set()
+    unique_records = []
+    for item in records:
+        if item not in seen:
+            seen.add(item)
+            unique_records.append(item)
+    records = unique_records
+    if boundary_line is None and records:
+        boundary_line = records[0][0]
+
+    line_counts = Counter(line for line, _addr in records)
+    lexical_lines = sorted({line for line, _addr in records
+                            if boundary_line is None or line >= boundary_line})
+    bodyless = cb == 4
+    first_body_line: int | None = None
+    first_body_address: int | None = None
+    if not bodyless and boundary_line is not None:
+        if line_counts[boundary_line] > 1:
+            first_body_line = boundary_line
+        else:
+            first_body_line = next(
+                (line for line in lexical_lines if line > boundary_line), None)
+        if first_body_line is not None:
+            first_body_address = next(
+                (addr for line, addr in records if line == first_body_line), None)
+
+    previous_last_line = None
+    boundary_borrowed = False
+    previous_end = None
+    if previous_row is not None:
+        previous_end = (_integer(previous_row["offset"])
+                        + _integer(previous_row["cb"]))
+    if (previous_row is not None and boundary_line is not None
+            and first_body_line is not None and first_body_line > boundary_line
+            and line_counts[boundary_line] == 1
+            # SH4 procedures are four-byte aligned, so the preceding closing
+            # row can land after its two-byte pad at the next aligned entry.
+            and previous_end is not None and 0 <= off - previous_end <= 2):
+        previous_off = _integer(previous_row["offset"])
+        previous_lines = [line for filename, line, addr in module_rows
+                          if source == _source_key(filename)
+                          and previous_off <= addr < previous_end]
+        if previous_lines:
+            previous_last_line = max(previous_lines)
+            distance_to_previous = abs(boundary_line - previous_last_line)
+            distance_to_body = first_body_line - boundary_line
+            boundary_borrowed = distance_to_previous < distance_to_body
+
+    procedure_line = None if boundary_borrowed else boundary_line
+    if boundary_borrowed:
+        lexical_lines = [line for line in lexical_lines if line > boundary_line]
+
+    gaps = []
+    for before, after in zip(lexical_lines, lexical_lines[1:]):
+        missing = after - before - 1
+        if missing > 0:
+            gaps.append({
+                "after_line": before,
+                "before_line": after,
+                "missing_lines": missing,
+                "first_missing_line": before + 1,
+                "last_missing_line": after - 1,
+                "leading": procedure_line is not None and before == procedure_line,
+            })
+
+    leading_gap = None
+    if procedure_line is not None and first_body_line is not None:
+        leading_gap = max(0, first_body_line - procedure_line - 1)
+    return {
+        "source": row["file"],
+        "boundary_line": boundary_line,
+        "procedure_line": procedure_line,
+        "procedure_line_reliable": procedure_line is not None,
+        "borrowed_boundary_line": boundary_borrowed,
+        "previous_body_last_line": previous_last_line,
+        "procedure_address": off,
+        "first_body_line": first_body_line,
+        "first_body_address": first_body_address,
+        "leading_gap_lines": leading_gap,
+        "bodyless": bodyless,
+        "gaps": gaps,
+        "caution": GAP_CAUTION,
+    }
+
+
+def _gap_payload(corpus: Corpus, row: dict[str, str]) -> dict[str, Any]:
+    shape = _source_line_shape(
+        row, previous_row=corpus.previous_by_key.get(corpus.key(row)))
+    return {
+        "name": row["name"],
+        "module": row["module"],
+        "dc_offset": _integer(row["offset"]),
+        "dc_size": _integer(row["cb"]),
+        "retail_vas": _mapped_vas(corpus, row),
+        **shape,
+    }
+
+
+def _render_gaps(rows: list[dict[str, Any]], *, selected: bool,
+                 out: TextIO = sys.stdout) -> None:
+    print("DREAMCAST LEADING SOURCE-LINE GAPS — ANALYSIS OUTPUT, NOT RETAIL EVIDENCE",
+          file=out)
+    print(GAP_CAUTION, file=out)
+    if not rows:
+        print("no qualifying leading gaps", file=out)
+        return
+    for row in rows:
+        gap = row["leading_gap_lines"]
+        gap_text = "unavailable" if gap is None else str(gap)
+        retail = ",".join(_hex(va, 8) for va in row["retail_vas"]) or "-"
+        print(f"\n{gap_text:>11} absent  {row['module']}:{_hex(row['dc_offset'])}  "
+              f"retail={retail}", file=out)
+        print(f"  {row['name']}", file=out)
+        if row["bodyless"]:
+            print(f"  {_basename(row['source'])}:{row['boundary_line']}  "
+                  "minimal 4-byte SH4 body", file=out)
+        elif not row["procedure_line_reliable"]:
+            print(f"  {_basename(row['source'])}: boundary {row['boundary_line']} "
+                  f"borrowed from preceding body ending near "
+                  f"{row['previous_body_last_line']}; leading gap unavailable",
+                  file=out)
+        elif row["first_body_line"] is None:
+            print(f"  {_basename(row['source'])}:{row['boundary_line']}  "
+                  "first body line unavailable", file=out)
+        else:
+            first = row["procedure_line"] + 1
+            last = row["first_body_line"] - 1
+            span = f"; absent {_line_span(first, last)}" if gap else ""
+            print(f"  {_basename(row['source'])}: frame {row['procedure_line']} -> "
+                  f"body {row['first_body_line']}{span}", file=out)
+        if selected and row["gaps"]:
+            print("  all source-line gaps:", file=out)
+            for item in row["gaps"]:
+                tag = " leading" if item["leading"] else ""
+                span = _line_span(item["first_missing_line"],
+                                  item["last_missing_line"])
+                print(f"    {span} ({item['missing_lines']} line(s)){tag}", file=out)
 
 
 def _find_payload(corpus: Corpus, rows: list[dict[str, str]]) -> list[dict[str, Any]]:
@@ -580,6 +805,22 @@ def _build_parser() -> argparse.ArgumentParser:
                       help="maximum rows (default 50; 0 = all)")
     find.add_argument("--json", action="store_true", help="machine-readable output")
 
+    gaps = sub.add_parser("gaps", help="Vostok-style leading source-line gaps")
+    gaps.add_argument("selector", nargs="?",
+                      help="optional retail VA/RVA, dc:OFF, module:OFF, or name")
+    gap_filter = gaps.add_mutually_exclusive_group()
+    gap_filter.add_argument(
+        "--minimum", type=int, default=1,
+        help="minimum absent leading lines in corpus mode (default 1)")
+    gap_filter.add_argument(
+        "--exact", type=int,
+        help="require exactly N absent leading lines in corpus mode")
+    gaps.add_argument("--retail-only", action="store_true",
+                      help="only procedures carrying a retail bridge or claim")
+    gaps.add_argument("--limit", type=int, default=50,
+                      help="maximum corpus rows (default 50; 0 = all)")
+    gaps.add_argument("--json", action="store_true", help="machine-readable output")
+
     stats = sub.add_parser("stats", help="corpus and retail-bridge coverage")
     stats.add_argument("--json", action="store_true", help="machine-readable output")
     return ap
@@ -644,6 +885,39 @@ def main(argv: list[str] | None = None) -> int:
                 print()
             else:
                 _render_find(payload)
+        elif args.command == "gaps":
+            if args.minimum < 0:
+                raise DreamcastError("--minimum must be >= 0")
+            if args.exact is not None and args.exact < 0:
+                raise DreamcastError("--exact must be >= 0")
+            if args.limit < 0:
+                raise DreamcastError("--limit must be >= 0")
+            if args.selector:
+                rows = [_gap_payload(corpus, corpus.resolve(args.selector))]
+            else:
+                rows = [_gap_payload(corpus, row) for row in corpus.functions]
+                rows = [row for row in rows
+                        if row["leading_gap_lines"] is not None
+                        and ((args.exact is not None
+                              and row["leading_gap_lines"] == args.exact)
+                             or (args.exact is None
+                                 and row["leading_gap_lines"] >= args.minimum))
+                        and (not args.retail_only or row["retail_vas"])]
+                rows.sort(key=lambda row: (-row["leading_gap_lines"],
+                                           row["module"], row["dc_offset"]))
+                if args.limit:
+                    rows = rows[:args.limit]
+            payload = {
+                "authority": AUTHORITY,
+                "caution": GAP_CAUTION,
+                "selected": bool(args.selector),
+                "candidates": rows,
+            }
+            if args.json:
+                json.dump(payload, sys.stdout, indent=2, sort_keys=True)
+                print()
+            else:
+                _render_gaps(rows, selected=bool(args.selector))
         else:
             payload = _stats(corpus)
             if args.json:

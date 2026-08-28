@@ -75,6 +75,67 @@ class ClassificationTest(unittest.TestCase):
         self.assertEqual(dreamcast._call_kind("Widget::Draw", 80), "call")
 
 
+class SourceLineGapTest(unittest.TestCase):
+    def test_leading_gap_uses_procedure_frame_and_first_body_line(self):
+        row = _fn("0x100", "Widget::Open", cb="32")
+        rows = [
+            (r"E:\gamedcs\unit.cpp", 20, 0x100),
+            (r"E:\gamedcs\unit.cpp", 22, 0x108),
+            (r"E:\gamedcs\unit.cpp", 27, 0x114),
+        ]
+        row["line"] = "20"
+        shape = dreamcast._source_line_shape(row, rows)
+        self.assertEqual(shape["first_body_line"], 22)
+        self.assertEqual(shape["leading_gap_lines"], 1)
+        self.assertEqual(shape["gaps"], [
+            {"after_line": 20, "before_line": 22, "missing_lines": 1,
+             "first_missing_line": 21, "last_missing_line": 21,
+             "leading": True},
+            {"after_line": 22, "before_line": 27, "missing_lines": 4,
+             "first_missing_line": 23, "last_missing_line": 26,
+             "leading": False},
+        ])
+
+    def test_same_line_body_has_no_leading_gap(self):
+        row = _fn("0x100", "Widget::Open", cb="12")
+        rows = [
+            (r"E:\gamedcs\unit.cpp", 10, 0x100),
+            (r"E:\gamedcs\unit.cpp", 10, 0x104),
+            (r"E:\gamedcs\unit.cpp", 11, 0x108),
+        ]
+        shape = dreamcast._source_line_shape(row, rows)
+        self.assertEqual(shape["first_body_line"], 10)
+        self.assertEqual(shape["leading_gap_lines"], 0)
+
+    def test_minimal_sh4_body_does_not_turn_close_line_into_body(self):
+        row = _fn("0x100", "Widget::Open", cb="4")
+        rows = [
+            (r"E:\gamedcs\unit.cpp", 10, 0x100),
+            (r"E:\gamedcs\unit.cpp", 90, 0x100),
+        ]
+        shape = dreamcast._source_line_shape(row, rows)
+        self.assertTrue(shape["bodyless"])
+        self.assertIsNone(shape["first_body_line"])
+        self.assertIsNone(shape["leading_gap_lines"])
+
+    def test_previous_closing_row_at_boundary_is_not_a_leading_gap(self):
+        previous = _fn("0xe0", "Widget::Previous", cb="30")
+        previous["line"] = "10"
+        row = _fn("0x100", "Widget::Open", cb="32")
+        row["line"] = "20"
+        rows = [
+            (r"E:\gamedcs\unit.cpp", 10, 0xe0),
+            (r"E:\gamedcs\unit.cpp", 18, 0xfc),
+            (r"E:\gamedcs\unit.cpp", 20, 0x100),
+            (r"E:\gamedcs\unit.cpp", 70, 0x108),
+            (r"E:\gamedcs\unit.cpp", 71, 0x114),
+        ]
+        shape = dreamcast._source_line_shape(row, rows, previous)
+        self.assertTrue(shape["borrowed_boundary_line"])
+        self.assertFalse(shape["procedure_line_reliable"])
+        self.assertIsNone(shape["leading_gap_lines"])
+
+
 class CfgTest(unittest.TestCase):
     @staticmethod
     def _decoder(rows):

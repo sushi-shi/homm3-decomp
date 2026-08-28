@@ -184,7 +184,7 @@ def _report(row: dict, args) -> None:
                     if _basename(f).lower() == own)
     print(f"{row['name']}")
     print(f"  {module} dc {off:#x} cb={cb} ({cb} B SH4)  "
-          f"decl {_basename(row['file'])}:{row['line']}  "
+          f"boundary-line {_basename(row['file'])}:{row['line']}  "
           f"params={row['params']} locals={row['locals']}")
     print(f"  LINES: {own_lines} in the owning .cpp, {total} total "
           f"across {len(by_file)} file(s)")
