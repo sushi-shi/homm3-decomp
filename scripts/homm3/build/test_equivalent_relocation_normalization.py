@@ -8,6 +8,7 @@ import unittest
 from homm3.build.canonicalize_data_symbols import CoffObject
 from homm3.build.normalize_objs import (
     DIR32, FUNCTION_TYPE,
+    _canonicalize_except_list_literals,
     _canonicalize_equivalent_relocations,
 )
 from homm3.build.test_eh_handler_normalization import (
@@ -59,6 +60,35 @@ AUTHORITY = {
     "field": (0x2004, "data"),
     "owner": (0x2000, "data"),
 }
+
+
+def _except_base(*, symbol_name: str = "__except_list",
+                 operand: int = 0, prefix: bytes = b"\x64\xa1") -> bytes:
+    text = prefix + struct.pack("<I", operand) + b"\xc3"
+    short_name = symbol_name if len(symbol_name) <= 8 else "except"
+    payload = bytearray(_coff(
+        (FixtureSection(".text", text, ((len(prefix), 1, DIR32),)),),
+        (
+            _symbol("probe", 0, 1, FUNCTION_TYPE, 2),
+            _symbol(short_name, 0, 0, 0, 2),
+        ),
+    ))
+    if len(symbol_name) > 8:
+        symbol_offset, = struct.unpack_from("<I", payload, 8)
+        payload[symbol_offset + 18:symbol_offset + 26] = struct.pack(
+            "<II", 0, 4)
+        encoded = symbol_name.encode("ascii") + b"\0"
+        payload[-4:] = struct.pack("<I", 4 + len(encoded)) + encoded
+    return bytes(payload)
+
+
+def _except_target(*, operand: int = 0,
+                   prefix: bytes = b"\x64\xa1") -> bytes:
+    text = prefix + struct.pack("<I", operand) + b"\xc3"
+    return _coff(
+        (FixtureSection(".text", text, ()),),
+        (_symbol("probe", 0, 1, FUNCTION_TYPE, 2),),
+    )
 
 
 class EquivalentRelocationNormalizationTest(unittest.TestCase):
@@ -134,6 +164,33 @@ class EquivalentRelocationNormalizationTest(unittest.TestCase):
         self.assert_same_relocation_semantics(
             next(row for row in original.relocations if row.site == 6),
             next(row for row in normalized.relocations if row.site == 6))
+
+    def test_except_list_literal_zero_is_canonicalized(self):
+        normalized_payload, count = _canonicalize_except_list_literals(
+            _except_base(), _except_target())
+        self.assertEqual(count, 1)
+        self.assertEqual(CoffObject(normalized_payload).relocations, ())
+
+    def test_nonzero_retail_except_list_operand_stays_visible(self):
+        before = _except_base()
+        after, count = _canonicalize_except_list_literals(
+            before, _except_target(operand=4))
+        self.assertEqual(count, 0)
+        self.assertEqual(after, before)
+
+    def test_other_candidate_symbol_stays_visible(self):
+        before = _except_base(symbol_name="ordinary")
+        after, count = _canonicalize_except_list_literals(
+            before, _except_target())
+        self.assertEqual(count, 0)
+        self.assertEqual(after, before)
+
+    def test_non_fs_operand_stays_visible(self):
+        before = _except_base(prefix=b"\x90\xa1")
+        after, count = _canonicalize_except_list_literals(
+            before, _except_target(prefix=b"\x90\xa1"))
+        self.assertEqual(count, 0)
+        self.assertEqual(after, before)
 
 
 if __name__ == "__main__":

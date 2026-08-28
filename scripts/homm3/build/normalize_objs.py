@@ -109,6 +109,162 @@ def _site_context_matches(base_bytes: bytes, base_site: int,
             target_bytes[target_site + 4:target_site + 4 + after])
 
 
+def _except_list_operand(bytes_: bytes, site: int) -> bool:
+    """Recognize an x86 ``fs:[imm32]`` operand used by VC6 EH setup."""
+    if site >= 2 and bytes_[site - 2:site] == b"\x64\xa1":
+        return True
+    if site < 3 or bytes_[site - 3:site - 1] not in (
+            b"\x64\x89", b"\x64\x8b"):
+        return False
+    return bytes_[site - 1] & 0xC7 == 0x05
+
+
+def _canonicalize_except_list_literals(
+        base_payload: bytes, target_payload: bytes,
+        ) -> tuple[bytes, int]:
+    """Remove proved candidate-only ``__except_list`` relocations.
+
+    VC6 represents the absolute exception-chain head as an undefined external
+    named ``__except_list`` whose linker value is zero. Vostok reconstructs
+    the fixed-base retail operand as the literal zero and therefore emits no
+    relocation. Remove the candidate row only when the same named function,
+    function-relative site, x86 ``fs:[imm32]`` context, and zero operand all
+    agree, and retail has no relocation at that site. Any semantic difference
+    remains visible.
+    """
+    base = canon.CoffObject(base_payload)
+    target = canon.CoffObject(target_payload)
+    base_ranges = canon._function_ranges(base)
+    target_ranges = canon._function_ranges(target)
+
+    target_functions: dict[str, list[canon.Symbol]] = {}
+    for symbol in target.symbols.values():
+        if (symbol.section > 0 and symbol.typ == FUNCTION_TYPE and
+                symbol.storage_class == EXTERNAL_STORAGE):
+            target_functions.setdefault(symbol.name, []).append(symbol)
+
+    target_relocation_sites: set[tuple[str, int]] = set()
+    for relocation in target.relocations:
+        owner = canon._function_owner(
+            target_ranges, relocation.section, relocation.site)
+        if owner is not None:
+            target_relocation_sites.add(
+                (owner.name, relocation.site - owner.value))
+
+    admitted: set[int] = set()
+    for relocation in base.relocations:
+        if relocation.typ != DIR32:
+            continue
+        symbol = base.symbols[relocation.symbol_index]
+        if (symbol.name != "__except_list" or symbol.value != 0 or
+                symbol.section != 0 or symbol.typ != 0 or
+                symbol.storage_class != EXTERNAL_STORAGE):
+            continue
+        owner = canon._function_owner(
+            base_ranges, relocation.section, relocation.site)
+        if owner is None:
+            continue
+        relative_site = relocation.site - owner.value
+        key = (owner.name, relative_site)
+        if key in target_relocation_sites:
+            continue
+        counterparts = target_functions.get(owner.name, ())
+        if len(counterparts) != 1:
+            continue
+        target_owner = counterparts[0]
+        target_site = target_owner.value + relative_site
+        base_section = base.sections[relocation.section - 1]
+        target_section = target.sections[target_owner.section - 1]
+        base_bytes = base.section_bytes(base_section)
+        target_bytes = target.section_bytes(target_section)
+        if (relocation.site + 4 > len(base_bytes) or
+                target_site + 4 > len(target_bytes)):
+            continue
+        base_operand, = struct.unpack_from(
+            "<I", base_bytes, relocation.site)
+        target_operand, = struct.unpack_from("<I", target_bytes, target_site)
+        if (base_operand != 0 or target_operand != 0 or
+                not _except_list_operand(base_bytes, relocation.site) or
+                not _except_list_operand(target_bytes, target_site) or
+                not _site_context_matches(
+                    base_bytes, relocation.site, target_bytes, target_site)):
+            continue
+        admitted.add(relocation.offset)
+
+    if not admitted:
+        return base_payload, 0
+
+    data = bytearray(base_payload)
+    removed_by_section: dict[int, int] = {}
+    for section in base.sections:
+        rows = [row for row in base.relocations
+                if row.section == section.index]
+        removed = [row for row in rows if row.offset in admitted]
+        if not removed:
+            continue
+        if section.characteristics & canon.LNK_NRELOC_OVFL:
+            raise RuntimeError(
+                "except-list normalization does not rewrite overflow "
+                "relocation tables")
+        kept = b"".join(bytes(data[row.offset:row.offset + 10])
+                        for row in rows if row.offset not in admitted)
+        allocated_end = section.reloc_offset + len(rows) * 10
+        data[section.reloc_offset:section.reloc_offset + len(kept)] = kept
+        data[section.reloc_offset + len(kept):allocated_end] = bytes(
+            allocated_end - section.reloc_offset - len(kept))
+        struct.pack_into(
+            "<H", data, section.header_offset + 32,
+            section.reloc_count - len(removed))
+        removed_by_section[section.index] = len(removed)
+
+    normalized = canon.CoffObject(bytes(data))
+    if (base.section_count != normalized.section_count or
+            base.symbol_count != normalized.symbol_count or
+            len(base.relocations) - len(admitted) !=
+            len(normalized.relocations)):
+        raise RuntimeError("except-list normalization changed COFF topology")
+    for original, changed in zip(base.sections, normalized.sections):
+        removed = removed_by_section.get(original.index, 0)
+        if ((original.name, original.raw_size, original.raw_offset,
+             original.reloc_offset, original.reloc_count - removed,
+             original.characteristics) !=
+                (changed.name, changed.raw_size, changed.raw_offset,
+                 changed.reloc_offset, changed.reloc_count,
+                 changed.characteristics)):
+            raise RuntimeError(
+                "except-list normalization changed section metadata")
+
+    expected = Counter(
+        (row.section, row.site, row.symbol_index, row.typ)
+        for row in base.relocations if row.offset not in admitted)
+    actual = Counter(
+        (row.section, row.site, row.symbol_index, row.typ)
+        for row in normalized.relocations)
+    if expected != actual:
+        raise RuntimeError(
+            "except-list normalization changed unrelated relocations")
+
+    before = bytearray(base_payload[:base.string_offset])
+    after = bytearray(data[:normalized.string_offset])
+    for section_index in removed_by_section:
+        original = base.sections[section_index - 1]
+        changed = normalized.sections[section_index - 1]
+        before[original.header_offset + 32:original.header_offset + 34] = bytes(2)
+        after[changed.header_offset + 32:changed.header_offset + 34] = bytes(2)
+        table_end = original.reloc_offset + original.reloc_count * 10
+        before[original.reloc_offset:table_end] = bytes(
+            table_end - original.reloc_offset)
+        after[changed.reloc_offset:table_end] = bytes(
+            table_end - changed.reloc_offset)
+    if before != after:
+        raise RuntimeError(
+            "except-list normalization changed unexpected COFF bytes")
+    for index, original in base.symbols.items():
+        if original != normalized.symbols[index]:
+            raise RuntimeError("except-list normalization changed a symbol")
+    return bytes(data), len(admitted)
+
+
 def _canonicalize_equivalent_relocations(
         base_payload: bytes, target_payload: bytes,
         symbol_rvas: dict[str, tuple[int, str]],
@@ -798,16 +954,20 @@ def main(argv=None) -> int:
             normalized_base.read_bytes(), normalized_target.read_bytes())
         if count:
             retained += count
+        paired_base, base_literal_count = \
+            _canonicalize_except_list_literals(
+                padded, normalized_target.read_bytes())
+        literal_rewritten += base_literal_count
         paired_target, literal_count, aggregate_count = \
             _canonicalize_equivalent_relocations(
-                padded, normalized_target.read_bytes(), symbol_rvas)
+                paired_base, normalized_target.read_bytes(), symbol_rvas)
         literal_rewritten += literal_count
         aggregate_rewritten += aggregate_count
         normalized, rewrites = _canonicalize_matching_eh_handler_owners(
-            padded, paired_target)
+            paired_base, paired_target)
         if rewrites:
             eh_rewritten += len(rewrites)
-        if count or rewrites:
+        if count or base_literal_count or rewrites:
             normalized_base.write_bytes(normalized)
         if literal_count or aggregate_count:
             normalized_target.write_bytes(paired_target)
