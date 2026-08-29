@@ -260,6 +260,26 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-29 — `playerData::save` restores and ratchets Dreamcast's named
+  serialization locals instead of preserving a byte-flat flattened form.**
+  The CodeView roster and SH4 statement stream distinguish the write-result
+  `count` from the signed loop index `x`: all twenty original `gzwrite`
+  statements assign `count`, while the heroes, town-id and resource loops
+  reuse `x`. Complete's `TAbstractFile::Write` wrapper lowers those assignments
+  away, so the coherent reconstruction remains **99.9557%** with the same 49
+  blocks, 385 instructions and branches as retail. A fatal source rule plus
+  negative controls now reject direct `Write` comparisons, a reordered local
+  roster, or reuse of `count` as the loop index even though each can be
+  byte-flat.
+
+  The remaining mismatch is confined to one Complete-only stack-home cycle:
+  candidate `x/flags/bits` use `-0xc/-0x8/-0x4`, while retail uses
+  `-0x8/-0xc/-0x6`. Moving the two-byte buffer to function scope and changing
+  the bitset pointer to a const reference are byte-flat; direct member access
+  falls to 98.2109%. The synchronized build -> delink -> build checkpoint stays
+  **2,554/3,100 linked functions exact, 93.10% fuzzy, and 61.21% filtered
+  executable coverage**, with every fatal gate green.
+
 - **2026-08-28 — Rust DEF parity now uses the real reconstructed candidate
   for every encoding, with retail packet grammar admitted independently.**
   The former test-only `DrawTile`/`DrawAdvObjImpl` stubs are gone. Live claims

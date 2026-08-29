@@ -380,6 +380,23 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             "unsigned spelling is byte proof but not source-shape closure",
             r"(?m)^[ \t]*int[ \t]+x[ \t]*;"),
     ),
+    ("game.obj", 0xA55A8): (
+        SourceRule(
+            "playerData::save keeps Dreamcast's function-scope uint buffer, "
+            "int buffer, write count, loop x, unsigned-char buffer and "
+            "char buffer in CodeView declaration order",
+            r"\A\s*unsigned\s+long\s+flags\s*;\s*int\s+number\s*;\s*"
+            r"int\s+count\s*;\s*int\s+x\s*;\s*unsigned\s+char\s+flag\s*;"
+            r"\s*char\s+value\s*;"),
+        SourceRule(
+            "playerData::save keeps all twenty Dreamcast write results in "
+            "the named count local",
+            r"\bcount\s*=\s*outfile\s*->\s*Write\s*\(", 20, 20),
+        SourceRule(
+            "playerData::save reuses Dreamcast's x local for all three "
+            "original serialization loops",
+            r"for\s*\(\s*x\s*=", 3, 3),
+    ),
     ("philai.obj", 0x10FEB8): (
         SourceRule(
             "value_of_experience keeps Dreamcast's no-argument const hero "
@@ -2295,6 +2312,37 @@ return (float(gHeroGoldCost) + army_value) / float(increment * 40);
     if not contract_violations(
             "int count;\nunsigned int x;\n", mine_pool_key):
         failures.append("unsigned LoadMinePool x escaped source-shape gate")
+    player_save_key = ("game.obj", 0xA55A8)
+    player_save_probe = """\
+unsigned long flags;
+int number;
+int count;
+int x;
+unsigned char flag;
+char value;
+""" + "count = outfile->Write(&value, sizeof(value));\n" * 20 + """\
+for (x = 0; x < 8; x++) {}
+for (x = 0; x < 0x48; x++) {}
+for (x = 0; x < 7; x++) {}
+"""
+    if contract_violations(player_save_probe, player_save_key):
+        failures.append("aligned playerData::save count/x shape did not pass")
+    reordered_player_save = player_save_probe.replace(
+        "int count;\nint x;", "int x;\nint count;")
+    if not any("declaration order" in rule.description for rule in
+               contract_violations(reordered_player_save, player_save_key)):
+        failures.append("reordered playerData::save locals passed")
+    flattened_player_save = player_save_probe.replace(
+        "count = outfile->Write(&value, sizeof(value));\n", "", 1)
+    if not any("twenty Dreamcast write results" in rule.description
+               for rule in contract_violations(flattened_player_save,
+                                                player_save_key)):
+        failures.append("flattened playerData::save Write result passed")
+    reused_count_loop = player_save_probe.replace(
+        "for (x =", "for (count =")
+    if not any("all three" in rule.description for rule in
+               contract_violations(reused_count_loop, player_save_key)):
+        failures.append("playerData::save count-as-loop-index passed")
     hero_bonuses_key = ("philai.obj", 0x10FEF4)
     hero_bonuses_probe = """\
 type_spellvalue caster(our_hero);
