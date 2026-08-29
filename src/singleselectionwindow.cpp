@@ -4460,69 +4460,66 @@ unsigned char TSingleSelectionWindow::HasMultipleTowns(int gamePos)
 // unclaimed under mode-3), and the slot either rolls a random
 // alignment or admits more than one. GetPlayerInPos and
 // HasMultipleTowns both expand in place.
-// Residual (97.2): the inlined HasMultipleTowns' `> 1` feeds the ||
-// directly in retail (`jg`); ours carries the callee's byte local
-// through setg/test. The local IS what makes the standalone body
-// exact (setg al), so the pair cannot both close from one spelling -
-// same story in CanChooseHero below. if/return-1/return-0 measured
-// 97.04 and is rejected.
+// Dreamcast's mp/slotAtt/player/isHotSeat locals and its IsHuman/IsHost
+// boundaries are restored; VC6 reproduces the previous bytes. Residual
+// (97.2): the inlined HasMultipleTowns' `> 1` feeds the || directly in
+// retail (`jg`); ours carries the callee's byte local through setg/test.
+// The local IS what makes the standalone body exact (setg al), so the pair
+// cannot both close from one spelling - same story in CanChooseHero below.
+// DC's two final return groups measure 51.77 in the otherwise-restored body;
+// Complete's merged boolean return restores retail's CFG and 97.20 peak.
 // E:\gamedcs\singleselectionwindow.cpp:8034
 VA(0x0058CEB0, 0xF7)  // anchor-callee DrawHeroAdvancedOption gates the town arrows (0xd7/0xdf ids) and the bonus arrows on it; head tests m_flag64 first, size 0.88x dc 0x116, dc 0x143214
 unsigned char TSingleSelectionWindow::CanChooseTown(int gamePos)
 {
     if (m_flag64)
         return 0;
-    CMapHeaderData::TPlayerSlotAttributes* slot =
-        &gpGame->mapHeader.playerSlotAttributes[gamePos];
-    CNetPlayerHandlerPlayer* p = m_players.GetPlayerInPos(gamePos);
-    unsigned char isMode3 = gUnnamed6989f0 == WINDOW_MODE_6989F0_3;
-    if (!p)
-        p = m_players.GetCompPlayerInPos(gamePos);
-    if (!isMode3) {
-        if (p->dpid != 0 && p->dpid != gsThisNetPlayerInfo.dpid)
+    CMapHeaderData* mp = &gpGame->mapHeader;
+    CMapHeaderData::TPlayerSlotAttributes* slotAtt =
+        &mp->playerSlotAttributes[gamePos];
+    CNetPlayerHandlerPlayer* player = m_players.GetPlayerInPos(gamePos);
+    unsigned char isHotSeat =
+        gUnnamed6989f0 == WINDOW_MODE_6989F0_3;
+    if (!player)
+        player = m_players.GetCompPlayerInPos(gamePos);
+    if (!isHotSeat) {
+        if (player->IsHuman()
+                && player->dpid != gsThisNetPlayerInfo.dpid)
             return 0;
-        if (p->dpid == 0) {
-            if (bVideoPaused) {
-                if (!pDPlay->IsHost())
-                    return 0;
-            }
-        }
+        if (!player->IsHuman() && !IsHost())
+            return 0;
     }
-    return slot->HasRandomAlignment || HasMultipleTowns(gamePos);
+    return slotAtt->HasRandomAlignment || HasMultipleTowns(gamePos);
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:8067
-// Residual (97.9): the same inlined-HasMultipleTowns jg fold as
-// CanChooseTown above - everything else is exact.
+// Residual (97.9): the Dreamcast mp/slotAtt/player/isHotSeat locals plus
+// both IsHuman calls and GetDisplayTown boundary are restored byte-flat.
+// The only remaining delta is the same inlined-HasMultipleTowns jg fold as
+// CanChooseTown above.
 VA(0x0058CFB0, 0x129)  // anchor-callee DrawHeroAdvancedOption gates the hero arrows (0xe7/0xef ids) on it; same m_flag64 head as its town sibling, size 1.06x dc 0x116, dc 0x14332c
 unsigned char TSingleSelectionWindow::CanChooseHero(int gamePos)
 {
     if (m_flag64)
         return 0;
-    CMapHeaderData::TPlayerSlotAttributes* slot =
-        &gpGame->mapHeader.playerSlotAttributes[gamePos];
-    CNetPlayerHandlerPlayer* p = m_players.GetPlayerInPos(gamePos);
-    if (!p)
-        p = m_players.GetCompPlayerInPos(gamePos);
-    if (gUnnamed6989f0 != WINDOW_MODE_6989F0_3 && p->dpid != 0
-            && p->dpid != gsThisNetPlayerInfo.dpid)
+    CMapHeaderData* mp = &gpGame->mapHeader;
+    CMapHeaderData::TPlayerSlotAttributes* slotAtt =
+        &mp->playerSlotAttributes[gamePos];
+    CNetPlayerHandlerPlayer* player = m_players.GetPlayerInPos(gamePos);
+    if (!player)
+        player = m_players.GetCompPlayerInPos(gamePos);
+    unsigned char isHotSeat =
+        gUnnamed6989f0 == WINDOW_MODE_6989F0_3;
+    if (!isHotSeat && player->IsHuman()
+            && player->dpid != gsThisNetPlayerInfo.dpid)
         return 0;
-    CNetPlayerHandlerPlayer* shown = m_players.GetPlayerInPos(gamePos);
-    if (!shown)
-        shown = m_players.GetCompPlayerInPos(gamePos);
-    int town;
-    if (slot->HasRandomAlignment || HasMultipleTowns(gamePos))
-        town = shown->townIndex;
-    else
-        town = pick_alignment(
-            static_cast<unsigned short>(slot->legalAlignments), 1);
-    if (town == -1)
+    if (GetDisplayTown(gamePos) == -1)
         return 0;
-    if (p->dpid == 0)
+    if (!player->IsHuman())
         return 0;
-    if (slot->GenerateHero)
+    if (slotAtt->GenerateHero)
         return 1;
-    unsigned char randomHero = slot->hasRandomHero != 0;
+    unsigned char randomHero = slotAtt->hasRandomHero != 0;
     return randomHero;
 }
 
@@ -4566,6 +4563,24 @@ int TSingleSelectionWindow::GetDisplayFace(int gamePos)
             && it->second.field_00 != -1)
         heroId = it->second.field_00;
     return heroId;
+}
+
+// The selected seat's town. Dreamcast falls back to pick_alignment when a
+// multi-town slot has no committed town; Complete's retail CanChooseHero
+// directly proves that its shared helper returns the -1 instead. The named
+// boundary and its HasMultipleTowns call remain common source facts.
+// E:\gamedcs\singleselectionwindow.cpp:8166
+inline int TSingleSelectionWindow::GetDisplayTown(int gamePos)
+{
+    CNetPlayerHandlerPlayer* player = m_players.GetPlayerInPos(gamePos);
+    if (!player)
+        player = m_players.GetCompPlayerInPos(gamePos);
+    CMapHeaderData::TPlayerSlotAttributes* slotAtt =
+        &gpGame->mapHeader.playerSlotAttributes[gamePos];
+    if (slotAtt->HasRandomAlignment || HasMultipleTowns(gamePos))
+        return player->townIndex;
+    return pick_alignment(
+        static_cast<unsigned short>(slotAtt->legalAlignments), 1);
 }
 
 // Retail 0x58d1f0's 1.4x growth over the DC row absorbs GetHeroInPos

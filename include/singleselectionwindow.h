@@ -129,6 +129,14 @@ public:
         heroIndex = -1;
     }
 
+    // E:\gamedcs\SingleSelectionWindow.h:122
+    unsigned char IsHuman()
+    {
+        if (dpid)
+            return 1;
+        return 0;
+    }
+
 #ifdef HOMM3_SSWINDOW_HEADER_VECTORS
     // DC's seat-record ctor. Declared here, DEFINED OUT OF CLASS in the
     // TU (retail 0x57c790): /Ob2 then reproduces retail's per-site
@@ -418,6 +426,9 @@ public:
     unsigned char CanChooseTown(int gamePos);
     unsigned char CanChooseHero(int gamePos);
     int GetDisplayFace(int gamePos);
+    // DC returns TTownType; spelled int for the same public-closure reason
+    // as UpdateTown. Retail keeps this source helper fully inlined.
+    int GetDisplayTown(int gamePos);
     const char* GetHeroName(int gamePos);
     int GetThisPlayerGamePos();
     unsigned char HighlightFile(char* filename);
