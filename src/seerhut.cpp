@@ -242,8 +242,8 @@ TSeerHut* std::__copy_backward(TSeerHut* __first, TSeerHut* __last, TSeerHut* __
 // Retail-only rows: no Dreamcast roster entry corresponds to any of them.
 
 // ai.obj's per-artifact valuation, 0x433aa0: an 8-byte type_artifact record
-// in ecx and the player index in edx.
-int AI_get_value_of_artifact(const type_artifact* artifact, int player);
+// by const reference in ecx and the player index in edx.
+int AI_get_artifact_player_value(const type_artifact& artifact, int player);
 
 // The AI's resource valuation, 0x526cc0: player index in ecx, a seven-entry
 // cost vector in edx, summed against the per-player multiplier table the
@@ -1143,7 +1143,7 @@ int type_artifact_quest::GetAIValue(int player)
         // dead initialisation, and needs no header edit.
         type_artifact wanted(artifacts[i], -1);
 
-        total += AI_get_value_of_artifact(&wanted, player);
+        total += AI_get_artifact_player_value(wanted, player);
     }
     return total;
 }
@@ -2605,19 +2605,16 @@ void TSeerHut::DoSeerEvent(hero* current_hero, bool human_player)
 // the Luck arm calls its appraisal but falls through into Resource instead
 // of returning that result. The primary-skill sub-switch values are the DC
 // TPrimarySkill roster and the five hero tail weights retain their DC names.
-// Residual (99.9839%): all 18 CFG blocks and every body instruction agree;
-// retail reserves separate locals for `artifact` at [ebp-8] and the
-// resource conversion's unnamed double at [ebp-0x10], while this VC6 SP3
-// compile colors their non-overlapping lifetimes onto [ebp-8]. Thus only
-// `sub esp,8` versus `sub esp,0x10` and the double's two stack displacements
-// differ. The HD 5.3 IDB independently preserves those two frame members.
-// Tried and rejected: function- and case-scoped doubles (byte-identical), a
-// volatile double (same frame plus wrong scheduling), `double[1]`
-// (byte-identical), and a function-scoped default-constructed artifact
-// (separate slots, but adds two entry-time -1 stores absent from retail).
-// Raw storage or a dummy no-init tag could impose the frame but would not be
-// a source reconstruction; keep this compiler-generation/local-coloring
-// plateau instead.
+// EXACT 2026-08-29. The artifact arm passes a constructed temporary to
+// retail's real `AI_get_artifact_player_value(const type_artifact&, int)`
+// boundary. The const-reference temporary occupies [ebp-8], so VC6 retains
+// the resource conversion's double separately at [ebp-0x10], reproducing
+// the target's 16-byte frame and all 18 CFG blocks. The former pointer alias
+// plus named local generated identical call semantics but let VC6 color the
+// two non-overlapping objects onto [ebp-8], leaving a three-operand residual.
+// Dreamcast has no counterpart for this Complete-era dispatcher; its
+// GiveReward body independently corroborates the artifact construction and
+// ten-arm reward order without supplying an x86 function identity.
 VA(0x00573a70, 0x210)  // anchor-global, HD name map 0x573e40
 int TSeerReward::getValue(const hero* currentHero)
 {
@@ -2669,8 +2666,8 @@ int TSeerReward::getValue(const hero* currentHero)
     case eRewardArtifact: {
         if (const_cast<hero*>(currentHero)->get_number_in_backpack(1) >= 64)
             return 0;
-        type_artifact artifact(value.dwords[0], -1);
-        return AI_get_value_of_artifact(&artifact, currentHero->owner);
+        return AI_get_artifact_player_value(
+            type_artifact(value.dwords[0], -1), currentHero->owner);
     }
 
     case eRewardSpell:

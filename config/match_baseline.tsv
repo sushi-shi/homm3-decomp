@@ -2578,7 +2578,7 @@ seerhut	?TakePayment@type_resource_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.
 seerhut	?create_quest@@YIPAVtype_quest@@HE@Z	100.0000	100.0000	100.0000	0x173240
 seerhut	?getSeerLogText@TSeerHut@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x174070
 seerhut	?getValue@TSeerHut@@QAEHPAVhero@@@Z	100.0000	100.0000	100.0000	0x1735a0
-seerhut	?getValue@TSeerReward@@QAEHPBVhero@@@Z	99.9839	99.9839	99.9839	0x173a70
+seerhut	?getValue@TSeerReward@@QAEHPBVhero@@@Z	100.0000	100.0000	100.0000	0x173a70
 seerhut	?giveReward@TSeerReward@@QAEXPAVhero@@_N@Z	100.0000	100.0000	100.0000	0x173c80
 seerhut	?is_satisfied@type_artifact_quest@@UAEEPAVhero@@@Z	100.0000	100.0000	100.0000	0x16f800
 seerhut	?is_satisfied@type_be_hero_quest@@UAEEPAVhero@@@Z	100.0000	100.0000	100.0000	0x171f00
