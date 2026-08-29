@@ -1891,7 +1891,6 @@ call	singleselectionwindow.obj	0x13b9fc	TSingleSelectionWindow::IsMultiPlayer
 call	singleselectionwindow.obj	0x13b9fc	widget::hide
 call	singleselectionwindow.obj	0x13b9fc	widget::show
 call	singleselectionwindow.obj	0x13bc60	GetDateTime
-call	singleselectionwindow.obj	0x13bc60	TSingleSelectionWindow::SendPlayerPositions
 call	singleselectionwindow.obj	0x13bc60	TSingleSelectionWindow::SetDifficultyHiLite
 call	singleselectionwindow.obj	0x13ebc0	TSingleSelectionWindow::MaxPlayers
 call	singleselectionwindow.obj	0x13ebc0	TSingleSelectionWindow::OnDurationSlider
