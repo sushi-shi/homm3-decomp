@@ -1893,94 +1893,119 @@ int playerData::save(TAbstractFile* outfile)
     unsigned long flags;
     int number;
     int count;
+    int x;
     unsigned char flag;
     char value;
 
     value = color;
-    if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+    count = outfile->Write(&value, sizeof(value));
+    if (count < sizeof(value))
         return -1;
     value = numHeroes;
-    if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+    count = outfile->Write(&value, sizeof(value));
+    if (count < sizeof(value))
         return -1;
     value = static_cast<char>(currHeroId);
-    if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+    count = outfile->Write(&value, sizeof(value));
+    if (count < sizeof(value))
         return -1;
 
-    for (count = 0; count < 8; count++) {
-        value = static_cast<char>(heroes[count]);
-        if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+    for (x = 0; x < 8; x++) {
+        value = static_cast<char>(heroes[x]);
+        count = outfile->Write(&value, sizeof(value));
+        if (count < sizeof(value))
             return -1;
     }
 
     value = static_cast<char>(recruits[0]);
-    if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+    count = outfile->Write(&value, sizeof(value));
+    if (count < sizeof(value))
         return -1;
     value = static_cast<char>(recruits[1]);
-    if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+    count = outfile->Write(&value, sizeof(value));
+    if (count < sizeof(value))
         return -1;
 
     flag = startingNumHeroes;
-    if (outfile->Write(&flag, sizeof(flag)) < sizeof(flag))
+    count = outfile->Write(&flag, sizeof(flag));
+    if (count < sizeof(flag))
         return -1;
 
     number = personality;
-    if (outfile->Write(&number, sizeof(number)) < sizeof(number))
+    count = outfile->Write(&number, sizeof(number));
+    if (count < sizeof(number))
         return -1;
 
     value = extraPuzzlePieces;
-    if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+    count = outfile->Write(&value, sizeof(value));
+    if (count < sizeof(value))
         return -1;
 
-    if (outfile->Write(puzzle_guess, sizeof(puzzle_guess)) < sizeof(puzzle_guess))
+    count = outfile->Write(puzzle_guess, sizeof(puzzle_guess));
+    if (count < sizeof(puzzle_guess))
         return -1;
 
     value = iDeathCountDown;
-    if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+    count = outfile->Write(&value, sizeof(value));
+    if (count < sizeof(value))
         return -1;
     value = numTowns;
-    if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+    count = outfile->Write(&value, sizeof(value));
+    if (count < sizeof(value))
         return -1;
     value = currTownId;
-    if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+    count = outfile->Write(&value, sizeof(value));
+    if (count < sizeof(value))
         return -1;
 
-    for (count = 0; count < 0x48; count++) {
-        value = townIds[count];
-        if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+    for (x = 0; x < 0x48; x++) {
+        value = townIds[x];
+        count = outfile->Write(&value, sizeof(value));
+        if (count < sizeof(value))
             return -1;
     }
 
-    for (count = 0; count < 7; count++) {
-        number = resources[count];
-        if (outfile->Write(&number, sizeof(number)) < sizeof(number))
+    for (x = 0; x < 7; x++) {
+        number = resources[x];
+        count = outfile->Write(&number, sizeof(number));
+        if (count < sizeof(number))
             return -1;
     }
 
     flags = MysticalGardenFlags;
-    if (outfile->Write(&flags, sizeof(flags)) < sizeof(flags))
+    count = outfile->Write(&flags, sizeof(flags));
+    if (count < sizeof(flags))
         return -1;
     flags = MagicSpringFlags;
-    if (outfile->Write(&flags, sizeof(flags)) < sizeof(flags))
+    count = outfile->Write(&flags, sizeof(flags));
+    if (count < sizeof(flags))
         return -1;
     flags = DeadGuyFlags;
-    if (outfile->Write(&flags, sizeof(flags)) < sizeof(flags))
+    count = outfile->Write(&flags, sizeof(flags));
+    if (count < sizeof(flags))
         return -1;
     flags = LeanToFlags;
-    if (outfile->Write(&flags, sizeof(flags)) < sizeof(flags))
+    count = outfile->Write(&flags, sizeof(flags));
+    if (count < sizeof(flags))
         return -1;
 
     flag = placement_help_enabled;
-    if (outfile->Write(&flag, sizeof(flag)) < sizeof(flag))
+    count = outfile->Write(&flag, sizeof(flag));
+    if (count < sizeof(flag))
         return -1;
 
     // Residual (99.9557%): all 49 blocks, every branch and every opcode agree.
-    // The remaining operand deltas are one stack-home cycle: this compile puts
-    // count/flags/bits at -0xc/-0x8/-0x4, retail at -0x8/-0xc/-0x6. The int
-    // buffer at -0x10 and both byte buffers are exact. Dreamcast proves the
-    // top-scope uint_buffer/int_buffer/count/x/uchar_buffer/char_buffer roster;
-    // scoped counters and every declaration ordering measured flat or worse.
-    // The flat relocation view also spells the same bitset<12>::_Xran callee
-    // with a synthetic target label because its retail row is unclaimed.
+    // Dreamcast proves the top-scope uint_buffer/int_buffer/count/x/
+    // uchar_buffer/char_buffer roster, all twenty named count = Write(...)
+    // statements, and reuse of x by the three original loops; those facts are
+    // restored above and ratcheted even though VC6 lowers them byte-flat. The
+    // remaining operands are one Complete-era stack-home cycle: this compile
+    // puts x/flags/bits at -0xc/-0x8/-0x4, retail at -0x8/-0xc/-0x6. The int
+    // buffer at -0x10 and both byte buffers are exact. Moving bits to function
+    // scope and a const-reference combinations alias are byte-flat; removing
+    // the alias for a direct member call falls to 98.2109%. The flat relocation
+    // view also names the same bitset<12>::_Xran callee through a synthetic
+    // target label because its retail row is unclaimed.
     unsigned char bits[2];
     const std::bitset<12>* combinations = &assembledCombinations;
     unsigned int bit = 0;
