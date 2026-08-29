@@ -2406,9 +2406,12 @@ long sacrifice_value(TCreatureType creature)
 // Residual: all 42 blocks, branch targets and instruction counts agree. VC6
 // colors four early string-return temporaries at ebp-0x30 instead of
 // retail's ebp-0x40; the later help_text/result slots themselves agree.
-// Hoisting the DC local roster, spelling explicit assign calls, and widening
-// help_text's conditional scope either changed unwind flow or left the same
-// slot choice, so this is banked as a stack-slot-coloring residual.
+// Dreamcast's nested line-955/958 arm scopes are restored and ratcheted even
+// though their braces are byte-flat. Hoisting help_text to the procedure scope
+// suggested by its raw S_REGREL32 placement is retail-refuted: it constructs
+// at entry, adds cleanup paths and falls to 85.65495%. Declaration order, a
+// release-VERIFY probe, and splitting total_hits declaration/assignment are
+// byte-flat, so the remaining difference is an unresolved stack-coloring tie.
 VA(0x00562da0, 0x3a2)  // dc order/name/signature + retail field graph
 void type_sacrifice_window::update_creature_offering(
     type_creature_offering* creature)
@@ -2436,10 +2439,11 @@ void type_sacrifice_window::update_creature_offering(
 
         creature->icon_widget->SetIconFrame(creature_type + 2);
         creature->icon_widget->set_visible(1);
-        if (!creature->field_04)
+        if (!creature->field_04) {
             result = convert_with_commas(creature->amount);
-        else
+        } else {
             result = convert_with_commas(available);
+        }
         creature->field_08->SetText(result.c_str());
         creature->field_08->set_visible(1);
 
