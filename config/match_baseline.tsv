@@ -2717,6 +2717,7 @@ singleselectionwindow	?Tick@CNewPlayerUpdateProc@@UAEXXZ	62.4785	62.4785	62.4785
 singleselectionwindow	?TurnChatOff@TSingleSelectionWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x18cbf0
 singleselectionwindow	?TurnChatOn@TSingleSelectionWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x18ca80
 singleselectionwindow	?TurnOffAdvancedOptions@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x181b20
+singleselectionwindow	?TurnOffFilterOptions@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x181d80
 singleselectionwindow	?TurnOffScenarioOptions@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1819a0
 singleselectionwindow	?Update@TSingleSelectionWindow@@QAEHXZ	98.9811	98.9811	98.9811	0x184550
 singleselectionwindow	?UpdateAllyEnemyFlags@TSingleSelectionWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x185300

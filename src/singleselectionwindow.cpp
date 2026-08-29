@@ -1088,6 +1088,79 @@ void TSingleSelectionWindow::TurnOffAdvancedOptions()
     inAdvancedOptions = 0;
 }
 
+// Complete split the filter-pane teardown out of SetupAdvancedOptions:
+// the caller at 0x581100 invokes this member immediately after
+// TurnOffScenarioOptions, while the constructor is its other retail caller.
+// Every widget call and the final +0x37e clear are direct byte evidence.
+// The source name is provisional because the older Dreamcast revision keeps
+// this statement group inside SetupAdvancedOptions.
+VA(0x00581D80, 0x550)  // anchor-callee SetupAdvancedOptions + ctor; retail-only extracted helper
+void TSingleSelectionWindow::TurnOffFilterOptions()
+{
+    if (m_flag65 || (m_flag64 && !bVideoPaused
+                     && gUnnamed6989f0 != WINDOW_MODE_6989F0_3))
+        return;
+
+    GetWidget(103)->hide();
+    GetWidget(280)->hide();
+    GetWidget(281)->hide();
+    GetWidget(282)->hide();
+    GetWidget(283)->hide();
+    GetWidget(284)->hide();
+    GetWidget(285)->hide();
+    GetWidget(286)->hide();
+    GetWidget(287)->hide();
+    GetWidget(288)->hide();
+    GetWidget(289)->hide();
+    GetWidget(290)->hide();
+    GetWidget(291)->hide();
+    GetWidget(292)->hide();
+    GetWidget(293)->hide();
+    GetWidget(294)->hide();
+    GetWidget(295)->hide();
+    GetWidget(296)->hide();
+    GetWidget(297)->hide();
+    GetWidget(298)->hide();
+    GetWidget(299)->hide();
+    GetWidget(300)->hide();
+    GetWidget(301)->hide();
+    GetWidget(302)->hide();
+    GetWidget(303)->hide();
+    GetWidget(304)->hide();
+    GetWidget(305)->hide();
+    GetWidget(306)->hide();
+    GetWidget(307)->hide();
+    GetWidget(308)->hide();
+    GetWidget(309)->hide();
+    GetWidget(310)->hide();
+    GetWidget(311)->hide();
+    GetWidget(312)->hide();
+    GetWidget(313)->hide();
+    GetWidget(314)->hide();
+    GetWidget(315)->hide();
+    GetWidget(316)->hide();
+    GetWidget(317)->hide();
+    GetWidget(318)->hide();
+    GetWidget(319)->hide();
+    GetWidget(320)->hide();
+    GetWidget(321)->hide();
+    GetWidget(322)->hide();
+    GetWidget(323)->hide();
+    GetWidget(324)->hide();
+    GetWidget(325)->hide();
+    GetWidget(326)->hide();
+    GetWidget(327)->hide();
+    GetWidget(328)->hide();
+    GetWidget(329)->hide();
+    GetWidget(330)->hide();
+    GetWidget(331)->hide();
+    GetWidget(332)->hide();
+    GetWidget(333)->hide();
+    GetWidget(334)->hide();
+    GetWidget(335)->hide();
+    inFilterOptions = 0;
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:3219

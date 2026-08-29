@@ -488,6 +488,10 @@ public:
     // is OnSetAsHostMsg - extern linkage keeps it emitted).
     void SetupScenarioOptions(unsigned char randomMaps);
     void ShowWidget(int id);
+    // Complete-only pane helper at retail 0x581d80. The name is
+    // provisional; its caller and body prove the out-of-line member
+    // boundary, the filter-widget range, and the cleared mode byte.
+    void TurnOffFilterOptions();
 #endif
 
 private:
