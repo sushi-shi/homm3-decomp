@@ -2326,9 +2326,8 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   coverage**; all ratchet, claim, banked-row, single-view and cleanliness
   gates pass.
 
-- **2026-08-24 — the 528-byte `TSeerReward::getValue` dispatcher and its
-  three retail-only philai dependencies are reconstructed; three helpers are
-  exact and the dispatcher retains only a two-slot VC6 coloring residual.**
+- **2026-08-24/29 — the 528-byte `TSeerReward::getValue` dispatcher and its
+  three retail-only philai dependencies are reconstructed exactly.**
   Retail 0x527cf0/0x527d80 prove that Complete changed Dreamcast's file-local
   `MoraleIncreaseValue(const hero*, int)` and `LuckIncreaseValue` helpers to
   thiscalls: the hero is in ECX, the award is the sole stack argument, and
@@ -2348,19 +2347,20 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   Resource appraisal. Retail also proves the Complete-only hero tail weights
   `value_of_power` and `value_of_knowledge`; the surrounding five-dword band
   is split with the matching Dreamcast names after a retail writer scan
-  confirms every dword boundary. The resulting 528-byte body has the exact
-  18-block CFG and every executable instruction except three stack operands.
-  Retail/HD keep `artifact` at `[ebp-8]` and an unnamed resource-conversion
-  double at `[ebp-0x10]`; this VC6 SP3 compile colors the non-overlapping
-  lifetimes together at `[ebp-8]`, giving `sub esp,8` instead of `0x10`.
-  Function- and case-scoped doubles, `volatile`, a one-element array and a
-  function-scoped artifact were measured; the first two natural forms
-  coalesce, `volatile` also perturbs scheduling, and the last creates two
-  entry-time `-1` stores absent from retail. Raw storage/dummy-tag scaffolding
-  was rejected as non-source. The bounded local-coloring plateau is
-  **99.9839%**. After synchronized build -> delink -> build, the inventory is
-  1,872/2,273 exact at 96.77% fuzzy and 41.98% filtered executable coverage;
-  all ratchet, claim, banked-row, single-view and cleanliness gates pass.
+  confirms every dword boundary. The resulting 528-byte body originally had
+  the exact 18-block CFG and every executable instruction except three stack
+  operands. The last source fact was visible in retail's relocation all
+  along: it calls
+  `AI_get_artifact_player_value(const type_artifact&, long)`, not the local
+  pointer-shaped alias used by the first reconstruction. Passing the
+  constructed artifact as the actual const-reference temporary preserves it
+  at `[ebp-8]`; VC6 then keeps the resource-conversion double separately at
+  `[ebp-0x10]`, reproducing retail's `sub esp,0x10` and closing all 528 bytes.
+  The neighboring `type_artifact_quest::GetAIValue` caller adopts the same
+  real helper boundary and remains exact. The synchronized build -> delink
+  -> build checkpoint is **2,553/3,100 linked functions exact (82.4%),
+  93.10% fuzzy, and 61.21% filtered executable coverage**; all ratchet,
+  claim, banked-row, single-view, source-shape and cleanliness gates pass.
 
 - **2026-08-24 — retail's 188-byte `TSeerReward::GetRewardExtra` switch is
   admitted and exact; generated tiny-row lookalikes remain unclaimed.**
