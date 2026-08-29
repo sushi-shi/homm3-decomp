@@ -2672,7 +2672,7 @@ singleselectionwindow	?OnDeleteFile@TSingleSelectionWindow@@QAEXXZ	100.0000	100.
 singleselectionwindow	?OnGameHeaderInfoInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	81.3049	81.3049	81.3049	0x18a440
 singleselectionwindow	?OnGameHeaderInfoInitMsgEx@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18a780
 singleselectionwindow	?OnGameHeaderInfoMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2802	90.2802	90.2802	0x18aa40
-singleselectionwindow	?OnGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	99.6237	99.6237	99.6237	0x189b20
+singleselectionwindow	?OnGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x189b20
 # 2026-08-27 (round 3) hand-lowered 100.0000 -> 99.8868 (hist keeps
 # 100.0000): the same documented TU-state flap as OnKillFocus below -
 # this interim's full build had re-banked the transient peak, and the
