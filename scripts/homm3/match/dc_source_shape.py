@@ -738,6 +738,15 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"flightLevel\s*=\s*level\s*;\s*UseSpell\s*\(\s*"
             r"GetManaCost\s*\(\s*SPELL_FLY\s*\)\s*\)\s*;"),
     ),
+    ("sacrifice_window.obj", 0x125E08): (
+        SourceRule(
+            "update_creature_offering keeps Dreamcast lines 955-958's "
+            "two nested assignment-arm scopes",
+            r"if\s*\(\s*!\s*creature\s*->\s*field_04\s*\)\s*\{\s*"
+            r"result\s*=\s*convert_with_commas\s*\(\s*creature\s*->\s*"
+            r"amount\s*\)\s*;\s*\}\s*else\s*\{\s*result\s*=\s*"
+            r"convert_with_commas\s*\(\s*available\s*\)\s*;\s*\}"),
+    ),
     ("singleselectionwindow.obj", 0x136388): (
         SourceRule(
             "SetupAdvancedOptions keeps Dreamcast's reset-loop i local "
@@ -1919,6 +1928,24 @@ UpdateTurnDuration();
     if any(not contract_violations(probe, transmit_key)
            for probe in transmit_mutations):
         failures.append("reordered OnGameTransmitInitMsg source shape passed")
+    sacrifice_key = ("sacrifice_window.obj", 0x125E08)
+    sacrifice_probe = """\
+if (!creature->field_04) {
+    result = convert_with_commas(creature->amount);
+} else {
+    result = convert_with_commas(available);
+}
+"""
+    if contract_violations(sacrifice_probe, sacrifice_key):
+        failures.append("aligned update_creature_offering scopes did not pass")
+    flattened_sacrifice = """\
+if (!creature->field_04)
+    result = convert_with_commas(creature->amount);
+else
+    result = convert_with_commas(available);
+"""
+    if not contract_violations(flattened_sacrifice, sacrifice_key):
+        failures.append("flattened update_creature_offering scopes passed")
     commented = "// currentHero->HasSecondarySkill(0);\nif (flag) {}"
     if not missing_from_body(commented, attested):
         failures.append("commented helper call was treated as source shape")
