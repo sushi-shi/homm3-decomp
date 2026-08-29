@@ -138,6 +138,16 @@ public:
     // call). Gated to the owning TU: a user ctor makes the record
     // non-POD for every includer.
     CNetPlayerHandlerPlayer();
+
+    // DC SingleSelectionWindow.h:138. Complete keeps the same source
+    // helper but expands both calls in SetupAdvancedOptions; the reverse
+    // store schedule in the x86 body is VC6's lowering of this order.
+    void ResetAdvancedOptions()
+    {
+        heroIndex = -1;
+        playerPos = -1;
+        townIndex = -1;
+    }
 #endif
 };
 SIZE(CNetPlayerHandlerPlayer, 0x7c);
@@ -487,6 +497,9 @@ public:
     // stores it there). ShowWidget = retail 0x57fb20 (its only caller
     // is OnSetAsHostMsg - extern linkage keeps it emitted).
     void SetupScenarioOptions(unsigned char randomMaps);
+    void SetupAdvancedOptions();
+    unsigned char SendPlayerPositions(unsigned long dpidTo);
+    unsigned char IsMultiPlayer();
     void ShowWidget(int id);
     // Complete-only pane helper at retail 0x581d80. The name is
     // provisional; its caller and body prove the out-of-line member

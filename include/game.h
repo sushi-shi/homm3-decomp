@@ -1457,6 +1457,15 @@ public:
 };
 #endif
 
+// Product generation recorded in SavedGameHeader::gameVersion.  The save
+// loader derives the same three rungs from the on-disk format version when an
+// older header does not carry the field explicitly.
+enum EGameVersion {
+    GAME_VERSION_ROE = 0,
+    GAME_VERSION_AB = 1,
+    GAME_VERSION_SOD = 2
+};
+
 class SavedGameHeader {
 public:
     char id[8];
