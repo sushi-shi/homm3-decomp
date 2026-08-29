@@ -2703,7 +2703,7 @@ singleselectionwindow	?OnPingMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.
 singleselectionwindow	?OnPingResponseMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@E@Z	88.8387	88.8387	88.8387	0x189510
 singleselectionwindow	?OnRequestHeroFaceReplyMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@E@Z	100.0000	100.0000	100.0000	0x18b0b0
 singleselectionwindow	?OnSetAsHostMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18b120
-singleselectionwindow	?OnUpdatePlayerPosMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	99.2537	99.2537	99.2537	0x18ba40
+singleselectionwindow	?OnUpdatePlayerPosMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18ba40
 singleselectionwindow	?PlayerDropped@CNewPlayerUpdateMan@@QAEXK@Z	100.0000	100.0000	100.0000	0x189480
 singleselectionwindow	?SaveValid@@YIEPBD@Z	100.0000	100.0000	100.0000	0x177360
 singleselectionwindow	?SetCurrentMap@TSingleSelectionWindow@@QAEXHE@Z	99.6700	99.6700	99.6700	0x185500

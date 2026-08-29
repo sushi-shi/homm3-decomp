@@ -4259,7 +4259,7 @@ void TSingleSelectionWindow::OnNewHostMsg(CNetMsg* pNetMsg)
 // live human record (creating seats for newcomers), take the computer
 // block wholesale, then retitle the handicap labels and redraw.
 VA(0x0058BA40, 0x175)  // anchor-callee RS_UPDATE_PLAYER_POS arm's single call, size 0.41x dc 0x38c, dc 0x1421a8
-unsigned char TSingleSelectionWindow::OnUpdatePlayerPosMsg(CNetMsg* pNetMsg)
+void TSingleSelectionWindow::OnUpdatePlayerPosMsg(CNetMsg* pNetMsg)
 {
     UpdateNameLists();
     for (int i = 0; i < 8; ++i)
@@ -4295,7 +4295,6 @@ unsigned char TSingleSelectionWindow::OnUpdatePlayerPosMsg(CNetMsg* pNetMsg)
         DrawWindow(0, 0xffff0001, 0xffff);
         Update();
     }
-    return 1;
 }
 
 // Rebuild the two 4-seat name columns: each human seat's name on its
