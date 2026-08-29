@@ -2679,7 +2679,7 @@ singleselectionwindow	?OnGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNet
 # SetCurrentMap/OnSetAsHostMsg bodies landing in the TU dropped the
 # pair again with both sources byte-identical. Recovery rides with
 # DrawHeroAdvancedOption reaching 100.
-singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0
+singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	99.8868	100.0000	100.0000	0x17cdc0
 singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0
 # 2026-08-27 hand-lowered 100.0000 -> 99.8710 (hist keeps 100.0000): the
 # documented TU-state flap (master accepted this pair down at 99.89/99.87
@@ -2694,7 +2694,7 @@ singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100
 # 2026-08-27 (round 3): the interim full build re-banked the transient
 # peak a third time; re-lowered with the round's bodies landed. Same
 # scheduler flap, same recovery path.
-singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0
+singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0
 singleselectionwindow	?OnMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2193	90.2193	90.2193	0x189710
 singleselectionwindow	?OnNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	97.5366	97.5366	97.5366	0x18b510
 singleselectionwindow	?OnNewPlayerMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	97.0628	97.0628	97.0628	0x189fa0
@@ -2712,6 +2712,7 @@ singleselectionwindow	?SetHumanSlot@TSingleSelectionWindow@@QAEXXZ	19.8438	19.84
 singleselectionwindow	?SetNextPlayer@CNetPlayerHandler@@QAEEH@Z	96.2353	96.2353	96.2353	0x177ae0
 singleselectionwindow	?SetResolution@CChatSlider@@UAEXH@Z	100.0000	100.0000	100.0000	0x17c9d0
 singleselectionwindow	?SetState@CChatSlider@@UAEXH@Z	100.0000	100.0000	100.0000	0x17ca00
+singleselectionwindow	?SetupAdvancedOptions@TSingleSelectionWindow@@QAEXXZ	97.1358	97.1358	97.1358	0x181100
 singleselectionwindow	?SortMaps@TSingleSelectionWindow@@QAEXHEE@Z	91.6682	91.6682	91.6682	0x185050
 singleselectionwindow	?Tick@CNewPlayerUpdateProc@@UAEXXZ	62.4785	62.4785	62.4785	0x177de0
 singleselectionwindow	?TurnChatOff@TSingleSelectionWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x18cbf0
@@ -2732,7 +2733,6 @@ singleselectionwindow	TSingleSelectionWindow_GetHeader	0.0000	0.0000	0.0000	0x18
 singleselectionwindow	TSingleSelectionWindow_GetHeaders	0.0000	0.0000	0.0000	0x182b40
 singleselectionwindow	TSingleSelectionWindow_OnWidgetDeselect	0.0000	0.0000	0.0000	0x1865b0
 singleselectionwindow	TSingleSelectionWindow_ProcessRightSelect	0.0000	0.0000	0.0000	0x1822d0
-singleselectionwindow	TSingleSelectionWindow_SetupAdvancedOptions	0.0000	0.0000	0.0000	0x181100
 singleselectionwindow	TSingleSelectionWindow_SetupLoadGameMode	0.0000	0.0000	0.0000	0x17f330
 singleselectionwindow	TSingleSelectionWindow_SetupNewGameMode	0.0000	0.0000	0.0000	0x17f740
 singleselectionwindow	TSingleSelectionWindow_SetupScenarioOptions	0.0000	0.0000	0.0000	0x180a70

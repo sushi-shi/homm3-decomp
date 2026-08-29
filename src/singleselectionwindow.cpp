@@ -1008,14 +1008,197 @@ void TSingleSelectionWindow::SetupScenarioOptions(unsigned char randomMaps)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\singleselectionwindow.cpp:2933
 VA(0x00581100, 0x897)  // anchor-callee OnWidgetDeselect 0x5865b0 calls it (site 0x586d43) - the DC edge; size 1.02x dc 0x86C, dc 0x136388
 void TSingleSelectionWindow::SetupAdvancedOptions()
 {
-    // @stub
-}
+    if (m_flag64 && !IsMultiPlayer())
+        return;
+    if (m_flag65)
+        return;
+    if (inAdvancedOptions) {
+        TurnOffAdvancedOptions();
+        return;
+    }
 
-#endif  // @carcass
+    if (bVideoPaused) {
+        if (m_flag64) {
+            int gameVersionClass;
+            if (pCurrentHeader->saved.gameVersion == GAME_VERSION_SOD)
+                gameVersionClass = GAME_VERSION_SOD;
+            else
+                gameVersionClass =
+                    pCurrentHeader->saved.gameVersion == GAME_VERSION_AB;
+
+            if (!static_cast<const std::bitset<4>&>(
+                    gGameContextFeatures[field_1898])[gameVersionClass]) {
+                if (bVideoPaused && !pDPlay->IsHost())
+                    return;
+                const char* gameType;
+                if (*gpVideoGameState == 1)
+                    gameType = gpGeneralText->Text[746];
+                else
+                    gameType = gpGeneralText->Text[747];
+                NormalDialog(
+                    format_string(
+                        gpGeneralText->Text[744],
+                        gameType).c_str(),
+                    1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                return;
+            }
+        } else if (!field_37F) {
+            int mapVersionClass;
+            if (gpGame->mapHeader.version > 21)
+                mapVersionClass = 2;
+            else
+                mapVersionClass = gpGame->mapHeader.version > 14;
+
+            if (field_1898 < mapVersionClass) {
+                if (!pDPlay->IsHost())
+                    return;
+                const char* gameType;
+                if (*gpVideoGameState == 1)
+                    gameType = gpGeneralText->Text[746];
+                else
+                    gameType = gpGeneralText->Text[747];
+                NormalDialog(
+                    format_string(
+                        gpGeneralText->Text[745],
+                        gameType).c_str(),
+                    1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                return;
+            }
+        }
+    }
+
+    TurnOffScenarioOptions();
+    TurnOffFilterOptions();
+
+    durationSlider->show();
+    if (!m_flag64) {
+        unsigned char enableDuration;
+        if (!bVideoPaused)
+            enableDuration = 1;
+        else
+            enableDuration = pDPlay->IsHost();
+        durationSlider->enable(enableDuration);
+    }
+    GetWidget(102)->show();
+    GetWidget(339)->show();
+    GetWidget(340)->show();
+    GetWidget(field_189c)->show();
+    GetWidget(343)->show();
+    GetWidget(344)->show();
+    durationSlider->SetState(durationIndex);
+    durationSlider->SetState(durationIndex);
+
+    if (mapChanged) {
+        for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
+            m_players.humanPlayers[i].ResetAdvancedOptions();
+            m_players.computerPlayers[i].ResetAdvancedOptions();
+        }
+        SetHumanSlot();
+        mapChanged = 0;
+    }
+
+    int nextColor = 0;
+    UpdateGameVars();
+    int strNbr = 0;
+    for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS;
+         ++i, strNbr += sizeof(CMapHeaderData::TPlayerSlotAttributes)) {
+        if (gpGame->setup.playerPos[i] < 0)
+            continue;
+        if (m_flag64 && gpGame->playerDisabled[i])
+            continue;
+
+        widget* playerName = GetWidget(i + 199);
+        widget* playerType = GetWidget(i + 207);
+        widget* playerFlag = GetWidget(i + 345);
+        widget* townButton = GetWidget(i + 263);
+        widget* townLeft = GetWidget(i + 362);
+        widget* townRight = GetWidget(i + 370);
+        widget* heroButton = GetWidget(i + 378);
+        textEntryWidget* nameEdit = 0;
+        if (!IsMultiPlayer())
+            nameEdit = static_cast<textEntryWidget*>(GetWidget(i + 353));
+        widget* bonusLeft = GetWidget(i + 215);
+        widget* bonusRight = GetWidget(i + 223);
+
+        bonusLeft->y = nextColor * 50 + 133;
+        bonusRight->y = nextColor * 50 + 133;
+        townButton->y = nextColor * 50 - y + 130;
+
+        widget* townIcon = GetWidget(i + 231);
+        widget* heroIcon = GetWidget(i + 247);
+        widget* heroLeft = GetWidget(i + 239);
+        widget* heroRight = GetWidget(i + 255);
+        townIcon->y = nextColor * 50 + 133;
+        heroIcon->y = nextColor * 50 + 133;
+        heroLeft->y = nextColor * 50 + 133;
+        heroRight->y = nextColor * 50 + 133;
+
+        playerName->y = nextColor * 50 + 151;
+        playerType->y = nextColor * 50 + 151;
+        playerFlag->y = nextColor * 50 + 130;
+        heroButton->y = nextColor * 50 + 130;
+        townLeft->y = nextColor * 50 + 130;
+        townRight->y = nextColor * 50 + 130;
+        if (!IsMultiPlayer()) {
+            nameEdit->y = nextColor * 50 + 130;
+            nameEdit->boxY = nextColor * 50 + 130;
+        }
+
+        if (gpGame->mapHeader.playerSlotAttributes[i].CanBeHuman) {
+            townButton->show();
+            unsigned char enableTown;
+            if (!bVideoPaused)
+                enableTown = 1;
+            else
+                enableTown = pDPlay->IsHost();
+            townButton->enable(enableTown);
+        }
+        playerName->show();
+        playerType->show();
+        playerFlag->show();
+        townRight->show();
+        townLeft->show();
+        heroButton->show();
+
+        if (!IsMultiPlayer()) {
+            playerType->send_message(widget::WIDGET_CLEAR_STATUS,
+                                     widget::WIDGET_ACTIVE);
+            nameEdit->hide();
+        } else if (bVideoPaused && !pDPlay->IsHost()) {
+            playerType->send_message(widget::WIDGET_CLEAR_STATUS,
+                                     widget::WIDGET_ACTIVE);
+        }
+        if (m_flag64)
+            playerType->send_message(widget::WIDGET_CLEAR_STATUS,
+                                     widget::WIDGET_ACTIVE);
+
+        int playerTypeText;
+        if (gpGame->mapHeader.playerSlotAttributes[i].CanBeHuman
+            && gpGame->mapHeader.playerSlotAttributes[i].CanBeComputer)
+            playerTypeText = 0;
+        else if (gpGame->mapHeader.playerSlotAttributes[i].CanBeHuman)
+            playerTypeText = 1;
+        else
+            playerTypeText = 2;
+        static_cast<textWidget*>(playerName)->SetText(
+            gUnnamed6a7e18[playerTypeText]);
+        ++nextColor;
+    }
+
+    MakeHeroFilter();
+    CheckFaces();
+
+    if (bVideoPaused && pDPlay->IsHost()) {
+        SendPlayerPositions(0);
+    }
+    inAdvancedOptions = 1;
+}
 
 // Drop the scenario-options pane: the two title widgets, one hide per
 // visible file row (the bound re-read from gUnnamed69fdc8 every

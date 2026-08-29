@@ -33,6 +33,7 @@ namespace ResourceManager {
 // for SaveValid's disk gate rather than pulling misc.h into this
 // closure - the ResourceManager::GetText precedent above.
 unsigned long get_available_disk_space();
+std::string format_string(const char* format, ...);
 
 // The game-context feature bits and their index cell (game.cpp/
 // resourcemanager.cpp own the claims); OnSetAsHostMsg gates the
@@ -512,6 +513,11 @@ public:
 // pointer cast.
 extern int gUnnamed6a7800[];
 
+// The three advanced-options seat-kind labels (human-or-computer,
+// human-only, computer-only) at .bss 0x6a7e18. No published source name
+// survives, so the address-based spelling remains provisional.
+extern const char* gUnnamed6a7e18[];
+
 // The scenario-description scroller class of the +0x196c widget
 // (retail band 0x5ba600..0x5ba920, between text.obj and textntry.obj;
 // no DC roster counterpart). SetText (retail 0x5ba6e0, thiscall ret 4)
@@ -753,6 +759,29 @@ extern int gUnnamed6989f0;
 // (kbwin.cpp owns the DATA claim); declared here rather than by pulling
 // kbwin.h into this closure, the same reason hero.h states for its own copy.
 extern int bVideoPaused;
+
+// DC keeps both helpers out of line; retail VC6 expands them at the advanced-
+// options call sites.  Keep the source boundaries visible while allowing the
+// retail TU to reproduce that lowering.
+inline unsigned char TSingleSelectionWindow::IsMultiPlayer()
+{
+    if (bVideoPaused)
+        return 1;
+    if (gUnnamed6989f0 == WINDOW_MODE_6989F0_3)
+        return 1;
+    return 0;
+}
+
+inline unsigned char TSingleSelectionWindow::SendPlayerPositions(
+    unsigned long dpidTo)
+{
+    CUpdatePlayerPosMsg msg;
+    memcpy(msg.m_players, m_players.humanPlayers, sizeof(msg.m_players));
+    memcpy(msg.m_compPlayers, m_players.computerPlayers,
+           sizeof(msg.m_compPlayers));
+    TransmitRemoteDataDPID(&msg, dpidTo, true, true);
+    return 1;
+}
 
 // The local network identity. remote.cpp owns the address claim; the
 // selection window reads its dpid when choosing the current lobby player.
