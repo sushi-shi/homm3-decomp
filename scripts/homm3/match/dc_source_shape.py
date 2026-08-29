@@ -1193,6 +1193,34 @@ def single_selection_window_contract_violations(
              "and ordered memcpy statements")]
 
 
+def update_player_pos_signature_violations(
+        header_text: str, source_text: str) -> list[tuple[int, str]]:
+    """Audit OnUpdatePlayerPosMsg's shared void signature.
+
+    Dreamcast CodeView records ``QAAXPAVCNetMsg@@@Z`` and a void procedure at
+    line 7591.  Retail independently carries the same decorated name and has
+    no return-value materialisation.  Bind the source check to the admitted
+    retail VA so the disabled Dreamcast carcass cannot satisfy it.
+    """
+    header = _source.mask(header_text)
+    source = _source.mask(source_text)
+    declaration = (
+        r"\bvoid\s+OnUpdatePlayerPosMsg\s*\(\s*CNetMsg\s*\*\s*"
+        r"pNetMsg\s*\)\s*;")
+    definition = (
+        r"\bVA\s*\(\s*0x0058BA40\s*,\s*0x175\s*\).*?"
+        r"\bvoid\s+TSingleSelectionWindow\s*::\s*OnUpdatePlayerPosMsg\s*"
+        r"\(\s*CNetMsg\s*\*\s*pNetMsg\s*\)")
+    if (re.search(declaration, header, re.DOTALL) is not None
+            and re.search(definition, source, re.DOTALL) is not None):
+        return []
+    token = re.search(r"\bOnUpdatePlayerPosMsg\b", header)
+    line = header_text.count("\n", 0, token.start()) + 1 if token else 1
+    return [(line,
+             "OnUpdatePlayerPosMsg must retain Dreamcast's void declaration "
+             "and the void retail definition at VA 0x0058BA40")]
+
+
 def _helper_token(name: str) -> str | None:
     """Return the source-call identifier worth enforcing, or ``None``.
 
@@ -2795,6 +2823,31 @@ inline CUpdatePlayerPosMsg::CUpdatePlayerPosMsg(
     if any(not single_selection_window_contract_violations(header, source)
            for header, source in broken_update_probes):
         failures.append("broken CUpdatePlayerPosMsg constructor shape passed")
+    update_pos_header_probe = """\
+void OnUpdatePlayerPosMsg(CNetMsg* pNetMsg);
+"""
+    update_pos_source_probe = """\
+VA(0x0058BA40, 0x175)
+void TSingleSelectionWindow::OnUpdatePlayerPosMsg(CNetMsg* pNetMsg)
+{
+}
+"""
+    if update_player_pos_signature_violations(
+            update_pos_header_probe, update_pos_source_probe):
+        failures.append("aligned OnUpdatePlayerPosMsg signature did not pass")
+    broken_update_pos_probes = (
+        (update_pos_header_probe.replace("void ", "unsigned char "),
+         update_pos_source_probe),
+        (update_pos_header_probe,
+         update_pos_source_probe.replace(
+             "void TSingleSelectionWindow",
+             "unsigned char TSingleSelectionWindow")),
+        (update_pos_header_probe,
+         update_pos_source_probe.replace("0x0058BA40", "0x0058BA44")),
+    )
+    if any(not update_player_pos_signature_violations(header, source)
+           for header, source in broken_update_pos_probes):
+        failures.append("broken OnUpdatePlayerPosMsg signature passed")
     split_header_probe = """\
 TCreatureType creature;
 slider* splitSlider;
@@ -3407,6 +3460,18 @@ def scan() -> tuple[
     missing.extend(FileContractViolation(selection_relpath, line,
                                          description)
                    for line, description in selection_defects)
+
+    selection_public_header = (common.HOMM3_DIR
+                               / "include/singleselectionwindow.h")
+    selection_public_text = selection_public_header.read_text(errors="replace")
+    selection_public_relpath = "include/singleselectionwindow.h"
+    audited.add(_file_audit_scope(selection_public_relpath))
+    selection_signature_defects = update_player_pos_signature_violations(
+        selection_public_text, selection_source_text)
+    checked += 1
+    missing.extend(FileContractViolation(selection_public_relpath, line,
+                                         description)
+                   for line, description in selection_signature_defects)
 
     # Header inlines are source bodies, not TU-local compiler knobs. Index
     # them by original CodeView location: one body may be instantiated in

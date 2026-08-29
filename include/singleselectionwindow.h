@@ -443,7 +443,7 @@ public:
     // Always returns 1 (retail sets al on every exit); DC agrees.
     unsigned char OnMapFileNameMsg(CNetMsg* pNetMsg);
     void OnNewHostMsg(CNetMsg* pNetMsg);
-    unsigned char OnUpdatePlayerPosMsg(CNetMsg* pNetMsg);
+    void OnUpdatePlayerPosMsg(CNetMsg* pNetMsg);
     unsigned char OnSetAsHostMsg(CNetMsg* pNetMsg);
     unsigned char OnBadVersionMsg(CNetMsg* pNetMsg);
     void OnPingMsg(CNetMsg* pNetMsg);
