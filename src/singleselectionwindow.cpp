@@ -2430,6 +2430,9 @@ void TSingleSelectionWindow::SetCurrentMap(int map, unsigned char bUpdate)
             // store one instruction early. The shared base constructor
             // already follows DC netmsg.h:169,172..175 exactly, so that
             // two-site scheduler artifact is not a sound broad lever.
+            // DC's SendPlayerPositions boundary is restored below; VC6
+            // expands it to the same bytes, so this residual does not
+            // justify flattening the helper again.
             p->handicap = gpGame->setup.handicap[pos];
             widget* w = GetWidget(207 + pos);
             if (w) {
@@ -2442,12 +2445,7 @@ void TSingleSelectionWindow::SetCurrentMap(int map, unsigned char bUpdate)
         }
     }
     if (bVideoPaused && pDPlay->IsHost() && mapChanged) {
-        CUpdatePlayerPosMsg posMsg;
-        memcpy(posMsg.m_netPlayer, m_players.humanPlayers,
-               sizeof(posMsg.m_netPlayer));
-        memcpy(posMsg.m_compPlayer, m_players.computerPlayers,
-               sizeof(posMsg.m_compPlayer));
-        TransmitRemoteDataDPID(&posMsg, 0, true, true);
+        SendPlayerPositions(0);
     }
 }
 
