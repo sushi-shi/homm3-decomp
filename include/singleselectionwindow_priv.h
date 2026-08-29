@@ -492,8 +492,8 @@ public:
 // +0x3f4.
 class CUpdatePlayerPosMsg : public CNetMsg {
 public:
-    CNetPlayerHandlerPlayer m_players[8];      // +0x014
-    CNetPlayerHandlerPlayer m_compPlayers[8];  // +0x3f4
+    CNetPlayerHandlerPlayer m_netPlayer[8];   // +0x014
+    CNetPlayerHandlerPlayer m_compPlayer[8];  // +0x3f4
 
     // OnNewPlayerMsg's broadcast site proves the pair: sizeof is the
     // 0x7d4 size dword. Retail also runs the CNetPlayerHandlerPlayer
@@ -504,6 +504,10 @@ public:
         : CNetMsg(RS_UPDATE_PLAYER_POS, sizeof(CUpdatePlayerPosMsg))
     {
     }
+
+    // E:\gamedcs\singleselectionwindow.cpp:717
+    CUpdatePlayerPosMsg(CNetPlayerHandlerPlayer* pNetPlayers,
+                        CNetPlayerHandlerPlayer* pCompPlayers);
 };
 
 // The per-handicap label pointers the seat rows are retitled from
@@ -759,39 +763,6 @@ extern int gUnnamed6989f0;
 // (kbwin.cpp owns the DATA claim); declared here rather than by pulling
 // kbwin.h into this closure, the same reason hero.h states for its own copy.
 extern int bVideoPaused;
-
-// DC keeps these helpers out of line; retail VC6 expands them at the advanced-
-// options call sites. Keep the source boundaries visible while allowing the
-// retail TU to reproduce that lowering.
-// E:\gamedcs\singleselectionwindow.cpp:7131
-inline unsigned char TSingleSelectionWindow::IsHost()
-{
-    if (!bVideoPaused)
-        return 1;
-    return pDPlay->IsHost();
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:7889
-inline unsigned char TSingleSelectionWindow::IsMultiPlayer()
-{
-    if (bVideoPaused)
-        return 1;
-    if (gUnnamed6989f0 == WINDOW_MODE_6989F0_3)
-        return 1;
-    return 0;
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:6980
-inline unsigned char TSingleSelectionWindow::SendPlayerPositions(
-    unsigned long dpidTo)
-{
-    CUpdatePlayerPosMsg msg;
-    memcpy(msg.m_players, m_players.humanPlayers, sizeof(msg.m_players));
-    memcpy(msg.m_compPlayers, m_players.computerPlayers,
-           sizeof(msg.m_compPlayers));
-    TransmitRemoteDataDPID(&msg, dpidTo, true, true);
-    return 1;
-}
 
 // The local network identity. remote.cpp owns the address claim; the
 // selection window reads its dpid when choosing the current lobby player.

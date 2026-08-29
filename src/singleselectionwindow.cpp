@@ -164,6 +164,18 @@ unsigned char HasRandomHero(int gamePos)
 
 #endif  // @carcass
 
+// The Dreamcast CodeView constructor boundary precedes the selection-window
+// body in this same TU. Retail expands it at every surviving Windows call.
+// E:\gamedcs\singleselectionwindow.cpp:717
+inline CUpdatePlayerPosMsg::CUpdatePlayerPosMsg(
+    CNetPlayerHandlerPlayer* pNetPlayers,
+    CNetPlayerHandlerPlayer* pCompPlayers)
+    : CNetMsg(RS_UPDATE_PLAYER_POS, sizeof(CUpdatePlayerPosMsg))
+{
+    memcpy(m_netPlayer, pNetPlayers, sizeof(m_netPlayer));
+    memcpy(m_compPlayer, pCompPlayers, sizeof(m_compPlayer));
+}
+
 // The three game-selection description tables: each caches a fixed-count
 // prefix of a text resource into a flat char*[] the info panels index. The
 // copy loop mirrors events.obj's InitializeArtifactEventText - the induction
@@ -1106,26 +1118,36 @@ void TSingleSelectionWindow::SetupAdvancedOptions()
     }
 
     int nextColor = 0;
+    widget* playerName;
+    widget* playerType;
+    widget* playerFlag;
+    widget* townButton;
+    widget* townLeft;
+    widget* townRight;
+    widget* heroButton;
+    textEntryWidget* nameEdit;
+    widget* bonusLeft;
+    widget* bonusRight;
     UpdateGameVars();
-    int strNbr;
-    for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
+    int i;
+    for (i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
+        int strNbr = 0;
         if (gpGame->setup.playerPos[i] < 0)
             continue;
         if (m_flag64 && gpGame->playerDisabled[i])
             continue;
 
-        widget* playerName = GetWidget(i + 199);
-        widget* playerType = GetWidget(i + 207);
-        widget* playerFlag = GetWidget(i + 345);
-        widget* townButton = GetWidget(i + 263);
-        widget* townLeft = GetWidget(i + 362);
-        widget* townRight = GetWidget(i + 370);
-        widget* heroButton = GetWidget(i + 378);
-        textEntryWidget* nameEdit;
+        playerName = GetWidget(i + 199);
+        playerType = GetWidget(i + 207);
+        playerFlag = GetWidget(i + 345);
+        townButton = GetWidget(i + 263);
+        townLeft = GetWidget(i + 362);
+        townRight = GetWidget(i + 370);
+        heroButton = GetWidget(i + 378);
         if (!IsMultiPlayer())
             nameEdit = static_cast<textEntryWidget*>(GetWidget(i + 353));
-        widget* bonusLeft = GetWidget(i + 215);
-        widget* bonusRight = GetWidget(i + 223);
+        bonusLeft = GetWidget(i + 215);
+        bonusRight = GetWidget(i + 223);
 
         bonusLeft->y = nextColor * 50 + 133;
         bonusRight->y = nextColor * 50 + 133;
@@ -2421,10 +2443,10 @@ void TSingleSelectionWindow::SetCurrentMap(int map, unsigned char bUpdate)
     }
     if (bVideoPaused && pDPlay->IsHost() && mapChanged) {
         CUpdatePlayerPosMsg posMsg;
-        memcpy(posMsg.m_players, m_players.humanPlayers,
-               sizeof(posMsg.m_players));
-        memcpy(posMsg.m_compPlayers, m_players.computerPlayers,
-               sizeof(posMsg.m_compPlayers));
+        memcpy(posMsg.m_netPlayer, m_players.humanPlayers,
+               sizeof(posMsg.m_netPlayer));
+        memcpy(posMsg.m_compPlayer, m_players.computerPlayers,
+               sizeof(posMsg.m_compPlayer));
         TransmitRemoteDataDPID(&posMsg, 0, true, true);
     }
 }
@@ -3890,10 +3912,10 @@ unsigned char TSingleSelectionWindow::OnNewPlayerMsg(CNetMsg* pNetMsg)
 static void BroadcastPlayerPositions(TSingleSelectionWindow* pWindow)
 {
     CUpdatePlayerPosMsg msg;
-    memcpy(msg.m_players, pWindow->m_players.humanPlayers,
-           sizeof(msg.m_players));
-    memcpy(msg.m_compPlayers, pWindow->m_players.computerPlayers,
-           sizeof(msg.m_compPlayers));
+    memcpy(msg.m_netPlayer, pWindow->m_players.humanPlayers,
+           sizeof(msg.m_netPlayer));
+    memcpy(msg.m_compPlayer, pWindow->m_players.computerPlayers,
+           sizeof(msg.m_compPlayer));
     TransmitRemoteDataDPID(&msg, 0, 1, 1);
 }
 
@@ -4246,7 +4268,7 @@ unsigned char TSingleSelectionWindow::OnUpdatePlayerPosMsg(CNetMsg* pNetMsg)
         m_players.humanPlayers[i].playerPos = -1;
     CUpdatePlayerPosMsg* pMsg = static_cast<CUpdatePlayerPosMsg*>(pNetMsg);
     for (i = 0; i < 8; ++i) {
-        CNetPlayerHandlerPlayer* rec = &pMsg->m_players[i];
+        CNetPlayerHandlerPlayer* rec = &pMsg->m_netPlayer[i];
         if (rec->dpid != 0) {
             CNetPlayerHandlerPlayer* p = m_players.GetPlayer(rec->dpid);
             if (!p) {
@@ -4258,7 +4280,7 @@ unsigned char TSingleSelectionWindow::OnUpdatePlayerPosMsg(CNetMsg* pNetMsg)
                 *p = *rec;
         }
     }
-    memcpy(m_players.computerPlayers, pMsg->m_compPlayers,
+    memcpy(m_players.computerPlayers, pMsg->m_compPlayer,
            sizeof(m_players.computerPlayers));
     for (i = 0; i < 8; ++i) {
         CNetPlayerHandlerPlayer* p = m_players.GetPlayerInPos(i);
@@ -4361,6 +4383,27 @@ void TSingleSelectionWindow::TurnChatOff(unsigned char update)
     }
 }
 
+// DC keeps these helpers out of line; retail VC6 expands them at the advanced-
+// options call sites. Keep the original cpp boundaries visible while allowing
+// the retail TU to reproduce that lowering.
+// E:\gamedcs\singleselectionwindow.cpp:6980
+inline unsigned char TSingleSelectionWindow::SendPlayerPositions(
+    unsigned long dpidTo)
+{
+    CUpdatePlayerPosMsg msg(m_players.humanPlayers,
+                            m_players.computerPlayers);
+    TransmitRemoteDataDPID(&msg, dpidTo, true, true);
+    return 1;
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7131
+inline unsigned char TSingleSelectionWindow::IsHost()
+{
+    if (!bVideoPaused)
+        return 1;
+    return pDPlay->IsHost();
+}
+
 // Every face is re-validated against the roster; DC keeps this out of
 // line, retail expands it into UpdateTown (no retail row exists), so
 // the definition is `inline`. E:\gamedcs\singleselectionwindow.cpp:7665
@@ -4373,6 +4416,16 @@ inline void TSingleSelectionWindow::CheckFaces()
                        p->availableHeroes[p->heroIndex], i))
             GetHeroFace(1, p);
     }
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7889
+inline unsigned char TSingleSelectionWindow::IsMultiPlayer()
+{
+    if (bVideoPaused)
+        return 1;
+    if (gUnnamed6989f0 == WINDOW_MODE_6989F0_3)
+        return 1;
+    return 0;
 }
 
 // Commit a seat's town pick, rebuild the hero filter, re-validate every
