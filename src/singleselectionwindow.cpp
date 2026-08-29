@@ -3703,13 +3703,11 @@ static inline void UpdateTurnDuration()
 // The DC local roster proves the calendar snapshots and the typed transmit
 // message. Complete's bytes additionally fix the local-seat/visibility
 // restoration after the temporary orig.dat round trip. The source-authentic
-// calendar declaration order reproduces all three retail CFG blocks, the
-// branch and both returns, and every instruction. The remaining 99.6237%
-// object score consists only of canonical source names versus the delinker's
-// raw names for the same callees/data cells; the executable operands agree.
-// Ten generated ordinary declaration/expression trees were flat, while the
-// semantically wrong calendar permutations were rejected despite a higher
-// object-label score.
+// month/month-extra/week/week-extra snapshots and restorations, followed by
+// DC's watch-player/visibility/player-turn sequence in Complete's widened
+// globals, reproduce all three retail CFG blocks and every instruction.
+// Closure: 100.0000% after the statement-order repair; the former 99.6237%
+// tail used the opposite eax/edx allocation and a one-byte-longer store.
 VA(0x00589b20, 0x13C)  // ReceiveSaveGame + UpdatePlayerPositions + dc 0x1406ec
 unsigned char TSingleSelectionWindow::OnGameTransmitInitMsg(CNetMsg* pNetMsg)
 {
@@ -3731,8 +3729,8 @@ unsigned char TSingleSelectionWindow::OnGameTransmitInitMsg(CNetMsg* pNetMsg)
         return 0;
     }
 
-    int iMonthTypeExtra = giMonthTypeExtra;
     int iMonthType = giMonthType;
+    int iMonthTypeExtra = giMonthTypeExtra;
     int iWeekType = giWeekType;
     int iWeekTypeExtra = giWeekTypeExtra;
 
@@ -3742,13 +3740,13 @@ unsigned char TSingleSelectionWindow::OnGameTransmitInitMsg(CNetMsg* pNetMsg)
         DATA_COMPGEN(0x00660410, remoteOriginalSaveName, "orig.dat"),
         0, 0, 0, 1);
 
-    giWeekTypeExtra = iWeekTypeExtra;
     giMonthType = iMonthType;
     giMonthTypeExtra = iMonthTypeExtra;
     giWeekType = iWeekType;
-    gUnnamed69d810 = gNetLocalGamePos;
+    giWeekTypeExtra = iWeekTypeExtra;
     gUnnamed69778c = gLocalGamePos;
     gMapVisibilityBit = 1 << gLocalGamePos;
+    gUnnamed69d810 = gNetLocalGamePos;
     UpdateTurnDuration();
     return 1;
 }

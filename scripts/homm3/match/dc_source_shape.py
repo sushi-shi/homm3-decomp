@@ -765,6 +765,28 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"TransmitRemoteDataDPID\s*\(\s*&\s*msg\s*,\s*dpidTo\s*,"
             r"\s*true\s*,\s*true\s*\)\s*;", 1, 1),
     ),
+    ("singleselectionwindow.obj", 0x1406EC): (
+        SourceRule(
+            "OnGameTransmitInitMsg keeps Dreamcast lines 6807-6810's "
+            "month, month-extra, week, week-extra snapshot order",
+            r"\bint\s+iMonthType\s*=\s*giMonthType\s*;\s*"
+            r"int\s+iMonthTypeExtra\s*=\s*giMonthTypeExtra\s*;\s*"
+            r"int\s+iWeekType\s*=\s*giWeekType\s*;\s*"
+            r"int\s+iWeekTypeExtra\s*=\s*giWeekTypeExtra\s*;"),
+        SourceRule(
+            "OnGameTransmitInitMsg keeps Dreamcast lines 6818-6828's "
+            "calendar restoration, watch-player, visibility-bit, "
+            "player-turn, duration-update order in Complete's retail-"
+            "proved globals",
+            r"\bgiMonthType\s*=\s*iMonthType\s*;\s*"
+            r"giMonthTypeExtra\s*=\s*iMonthTypeExtra\s*;\s*"
+            r"giWeekType\s*=\s*iWeekType\s*;\s*"
+            r"giWeekTypeExtra\s*=\s*iWeekTypeExtra\s*;\s*"
+            r"gUnnamed69778c\s*=\s*gLocalGamePos\s*;\s*"
+            r"gMapVisibilityBit\s*=\s*1\s*<<\s*gLocalGamePos\s*;\s*"
+            r"gUnnamed69d810\s*=\s*gNetLocalGamePos\s*;\s*"
+            r"UpdateTurnDuration\s*\(\s*\)\s*;"),
+    ),
 }
 
 
@@ -1758,6 +1780,40 @@ return 1;
 """
     if not contract_violations(flattened_send, send_key):
         failures.append("flattened SendPlayerPositions constructor passed")
+    transmit_key = ("singleselectionwindow.obj", 0x1406EC)
+    transmit_probe = """\
+int iMonthType = giMonthType;
+int iMonthTypeExtra = giMonthTypeExtra;
+int iWeekType = giWeekType;
+int iWeekTypeExtra = giWeekTypeExtra;
+giMonthType = iMonthType;
+giMonthTypeExtra = iMonthTypeExtra;
+giWeekType = iWeekType;
+giWeekTypeExtra = iWeekTypeExtra;
+gUnnamed69778c = gLocalGamePos;
+gMapVisibilityBit = 1 << gLocalGamePos;
+gUnnamed69d810 = gNetLocalGamePos;
+UpdateTurnDuration();
+"""
+    if contract_violations(transmit_probe, transmit_key):
+        failures.append("aligned OnGameTransmitInitMsg order did not pass")
+    transmit_mutations = (
+        transmit_probe.replace(
+            "int iMonthType = giMonthType;\n"
+            "int iMonthTypeExtra = giMonthTypeExtra;",
+            "int iMonthTypeExtra = giMonthTypeExtra;\n"
+            "int iMonthType = giMonthType;"),
+        transmit_probe.replace(
+            "gUnnamed69778c = gLocalGamePos;\n"
+            "gMapVisibilityBit = 1 << gLocalGamePos;\n"
+            "gUnnamed69d810 = gNetLocalGamePos;",
+            "gUnnamed69d810 = gNetLocalGamePos;\n"
+            "gUnnamed69778c = gLocalGamePos;\n"
+            "gMapVisibilityBit = 1 << gLocalGamePos;"),
+    )
+    if any(not contract_violations(probe, transmit_key)
+           for probe in transmit_mutations):
+        failures.append("reordered OnGameTransmitInitMsg source shape passed")
     commented = "// currentHero->HasSecondarySkill(0);\nif (flag) {}"
     if not missing_from_body(commented, attested):
         failures.append("commented helper call was treated as source shape")
