@@ -140,13 +140,14 @@ public:
     CNetPlayerHandlerPlayer();
 
     // DC SingleSelectionWindow.h:138. Complete keeps the same source
-    // helper but expands both calls in SetupAdvancedOptions; the reverse
-    // store schedule in the x86 body is VC6's lowering of this order.
+    // helper but expands both calls in SetupAdvancedOptions.  Retail x86
+    // directly proves that Complete changed the three independent stores
+    // from DC's hero/player/town statement order to town/player/hero.
     void ResetAdvancedOptions()
     {
-        heroIndex = -1;
-        playerPos = -1;
         townIndex = -1;
+        playerPos = -1;
+        heroIndex = -1;
     }
 #endif
 };
@@ -499,6 +500,7 @@ public:
     void SetupScenarioOptions(unsigned char randomMaps);
     void SetupAdvancedOptions();
     unsigned char SendPlayerPositions(unsigned long dpidTo);
+    unsigned char IsHost();
     unsigned char IsMultiPlayer();
     void ShowWidget(int id);
     // Complete-only pane helper at retail 0x581d80. The name is

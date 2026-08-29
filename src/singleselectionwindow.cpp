@@ -1036,14 +1036,18 @@ void TSingleSelectionWindow::SetupAdvancedOptions()
                     gGameContextFeatures[field_1898])[gameVersionClass]) {
                 if (bVideoPaused && !pDPlay->IsHost())
                     return;
+                char** text;
                 const char* gameType;
-                if (*gpVideoGameState == 1)
-                    gameType = gpGeneralText->Text[746];
-                else
-                    gameType = gpGeneralText->Text[747];
+                if (*gpVideoGameState == 1) {
+                    text = gpGeneralText->Text.begin();
+                    gameType = text[746];
+                } else {
+                    text = gpGeneralText->Text.begin();
+                    gameType = text[747];
+                }
                 NormalDialog(
                     format_string(
-                        gpGeneralText->Text[744],
+                        text[744],
                         gameType).c_str(),
                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 return;
@@ -1058,14 +1062,18 @@ void TSingleSelectionWindow::SetupAdvancedOptions()
             if (field_1898 < mapVersionClass) {
                 if (!pDPlay->IsHost())
                     return;
+                char** text;
                 const char* gameType;
-                if (*gpVideoGameState == 1)
-                    gameType = gpGeneralText->Text[746];
-                else
-                    gameType = gpGeneralText->Text[747];
+                if (*gpVideoGameState == 1) {
+                    text = gpGeneralText->Text.begin();
+                    gameType = text[746];
+                } else {
+                    text = gpGeneralText->Text.begin();
+                    gameType = text[747];
+                }
                 NormalDialog(
                     format_string(
-                        gpGeneralText->Text[745],
+                        text[745],
                         gameType).c_str(),
                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 return;
@@ -1077,14 +1085,8 @@ void TSingleSelectionWindow::SetupAdvancedOptions()
     TurnOffFilterOptions();
 
     durationSlider->show();
-    if (!m_flag64) {
-        unsigned char enableDuration;
-        if (!bVideoPaused)
-            enableDuration = 1;
-        else
-            enableDuration = pDPlay->IsHost();
-        durationSlider->enable(enableDuration);
-    }
+    if (!m_flag64)
+        durationSlider->enable(IsHost());
     GetWidget(102)->show();
     GetWidget(339)->show();
     GetWidget(340)->show();
@@ -1105,9 +1107,8 @@ void TSingleSelectionWindow::SetupAdvancedOptions()
 
     int nextColor = 0;
     UpdateGameVars();
-    int strNbr = 0;
-    for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS;
-         ++i, strNbr += sizeof(CMapHeaderData::TPlayerSlotAttributes)) {
+    int strNbr;
+    for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
         if (gpGame->setup.playerPos[i] < 0)
             continue;
         if (m_flag64 && gpGame->playerDisabled[i])
@@ -1120,7 +1121,7 @@ void TSingleSelectionWindow::SetupAdvancedOptions()
         widget* townLeft = GetWidget(i + 362);
         widget* townRight = GetWidget(i + 370);
         widget* heroButton = GetWidget(i + 378);
-        textEntryWidget* nameEdit = 0;
+        textEntryWidget* nameEdit;
         if (!IsMultiPlayer())
             nameEdit = static_cast<textEntryWidget*>(GetWidget(i + 353));
         widget* bonusLeft = GetWidget(i + 215);
@@ -1152,12 +1153,7 @@ void TSingleSelectionWindow::SetupAdvancedOptions()
 
         if (gpGame->mapHeader.playerSlotAttributes[i].CanBeHuman) {
             townButton->show();
-            unsigned char enableTown;
-            if (!bVideoPaused)
-                enableTown = 1;
-            else
-                enableTown = pDPlay->IsHost();
-            townButton->enable(enableTown);
+            townButton->enable(IsHost());
         }
         playerName->show();
         playerType->show();
@@ -1170,7 +1166,7 @@ void TSingleSelectionWindow::SetupAdvancedOptions()
             playerType->send_message(widget::WIDGET_CLEAR_STATUS,
                                      widget::WIDGET_ACTIVE);
             nameEdit->hide();
-        } else if (bVideoPaused && !pDPlay->IsHost()) {
+        } else if (!IsHost()) {
             playerType->send_message(widget::WIDGET_CLEAR_STATUS,
                                      widget::WIDGET_ACTIVE);
         }
@@ -1178,23 +1174,22 @@ void TSingleSelectionWindow::SetupAdvancedOptions()
             playerType->send_message(widget::WIDGET_CLEAR_STATUS,
                                      widget::WIDGET_ACTIVE);
 
-        int playerTypeText;
         if (gpGame->mapHeader.playerSlotAttributes[i].CanBeHuman
             && gpGame->mapHeader.playerSlotAttributes[i].CanBeComputer)
-            playerTypeText = 0;
+            strNbr = 0;
         else if (gpGame->mapHeader.playerSlotAttributes[i].CanBeHuman)
-            playerTypeText = 1;
+            strNbr = 1;
         else
-            playerTypeText = 2;
+            strNbr = 2;
         static_cast<textWidget*>(playerName)->SetText(
-            gUnnamed6a7e18[playerTypeText]);
+            gUnnamed6a7e18[strNbr]);
         ++nextColor;
     }
 
     MakeHeroFilter();
     CheckFaces();
 
-    if (bVideoPaused && pDPlay->IsHost()) {
+    if (bVideoPaused && IsHost()) {
         SendPlayerPositions(0);
     }
     inAdvancedOptions = 1;

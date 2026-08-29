@@ -220,6 +220,17 @@ PROVEN_CALL_SPELLINGS: dict[tuple[str, int], tuple[CallSpelling, ...]] = {
 }
 
 
+# A lexical helper name is normally the most the source-shape pass can prove:
+# same-class methods may legitimately be called on a peer object.  Require a
+# self receiver only for individually decoded SH4 call sites.  At all four
+# IsHost calls below, SetupAdvancedOptions reloads its saved ``this`` into r4
+# immediately before the jsr; pDPlay->IsHost() is therefore not that edge.
+PROVEN_SELF_CALLS = frozenset({
+    ("singleselectionwindow.obj", 0x136388,
+     "TSingleSelectionWindow::IsHost"),
+})
+
+
 # A different lexical order is admitted only after the Complete caller was
 # exact, the Dreamcast ordering was imposed and measured, and that older shape
 # broke the exact lowering.  Keep the named helpers themselves mandatory; only
@@ -1118,15 +1129,56 @@ def _helper_token(name: str) -> str | None:
     return helper if re.fullmatch(r"[A-Za-z_]\w*", helper) else None
 
 
-def missing_from_body(body: str, callees: list[str]) -> list[tuple[str, str]]:
-    """Return ``[(callee, helper)]`` not named in one active source body."""
+def _same_owner_call_present(active: str, helper: str, owner: str) -> bool:
+    """Whether ``helper(...)`` names the current class rather than a peer.
+
+    An unqualified call in a member body and an explicit ``this->``/class
+    qualification preserve the current class's helper boundary.  A call on
+    another explicit receiver does not: ``pDPlay->IsHost()`` cannot satisfy a
+    Dreamcast edge to ``TSingleSelectionWindow::IsHost`` merely because the
+    final identifier happens to agree.
+    """
+    pattern = re.compile(r"\b" + re.escape(helper) + r"\s*\(")
+    for match in pattern.finditer(active):
+        prefix = active[:match.start()]
+        if re.search(r"\bthis\s*->\s*$", prefix):
+            return True
+        if re.search(r"(?:->|\.)\s*$", prefix):
+            continue
+        qualifier = re.search(
+            r"([A-Za-z_]\w*(?:::[A-Za-z_]\w*)*)\s*::\s*$", prefix)
+        if qualifier is None:
+            return True
+        if qualifier.group(1).split("::")[-1] == owner:
+            return True
+    return False
+
+
+def missing_from_body(body: str, callees: list[str],
+                      key: tuple[str, int] | None = None) \
+        -> list[tuple[str, str]]:
+    """Return ``[(callee, helper)]`` not named in one active source body.
+
+    Only decoded ``PROVEN_SELF_CALLS`` are receiver-aware.  Other edges retain
+    the conservative identifier check because a same-class call can target a
+    different instance and the lexical pass has no general receiver proof.
+    """
     active = _source.mask(body)
     missing = []
     for callee in sorted(set(callees)):
         helper = _helper_token(callee)
         if helper is None:
             continue
-        if not re.search(r"\b" + re.escape(helper) + r"\s*\(", active):
+        if key is not None and (key[0], key[1], callee) \
+                in PROVEN_SELF_CALLS:
+            callee_scopes = dreamcast._top_level_scopes(callee)
+            callee_owner = callee_scopes[-2].split("<", 1)[0]
+            present = _same_owner_call_present(
+                active, helper, callee_owner)
+        else:
+            present = re.search(
+                r"\b" + re.escape(helper) + r"\s*\(", active) is not None
+        if not present:
             missing.append((callee, helper))
     return missing
 
@@ -1578,6 +1630,22 @@ def selftest() -> list[str]:
     aligned = "if (currentHero->HasSecondarySkill(eSecSkillBattleTactics)) {}"
     if missing_from_body(aligned, attested):
         failures.append("attested HasSecondarySkill call did not pass")
+    host_edge = ["TSingleSelectionWindow::IsHost"]
+    host_key = ("singleselectionwindow.obj", 0x136388)
+    wrong_host = "if (pDPlay->IsHost()) SendPlayerPositions(0);"
+    if missing_from_body(wrong_host, host_edge, host_key) != [
+            ("TSingleSelectionWindow::IsHost", "IsHost")]:
+        failures.append("namesake receiver hid proven self-call IsHost")
+    if missing_from_body(
+            "if (IsHost()) SendPlayerPositions(0);", host_edge,
+            host_key):
+        failures.append("unqualified proven self-call IsHost did not pass")
+    if missing_from_body(
+            "if (this->IsHost()) SendPlayerPositions(0);", host_edge,
+            host_key):
+        failures.append("this-qualified proven self-call IsHost did not pass")
+    if missing_from_body(wrong_host, host_edge):
+        failures.append("unproved peer receiver became globally fatal")
     commented = "// currentHero->HasSecondarySkill(0);\nif (flag) {}"
     if not missing_from_body(commented, attested):
         failures.append("commented helper call was treated as source shape")
@@ -2972,7 +3040,7 @@ def scan() -> tuple[
         shape_body = apply_proven_call_spellings(
             key, body, claim.va, exact_vas)
         preliminary = missing_from_body(
-            shape_body, [ref.name for ref in refs])
+            shape_body, [ref.name for ref in refs], key)
         names = attested(key, refs) if preliminary else set()
         body_missing = False
         for callee, helper in preliminary:
@@ -3034,7 +3102,7 @@ def scan() -> tuple[
                 body = text[definition.body_open + 1:definition.body_close]
                 refs = calls[key]
                 preliminary = missing_from_body(
-                    body, [ref.name for ref in refs])
+                    body, [ref.name for ref in refs], key)
                 names = attested(key, refs) if preliminary else set()
                 body_missing = False
                 for callee, helper in preliminary:
@@ -3174,7 +3242,8 @@ def scan() -> tuple[
                 body = text[definition.body_open + 1:definition.body_close]
                 body_missing = False
                 for callee, helper in missing_from_body(
-                        body, [callee for callee, _ in enforced]):
+                        body, [callee for callee, _ in enforced],
+                        key):
                     body_missing = True
                     missing.append(MissingCall(
                         None, key[0], key[1], relpath,

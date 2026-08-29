@@ -760,9 +760,18 @@ extern int gUnnamed6989f0;
 // kbwin.h into this closure, the same reason hero.h states for its own copy.
 extern int bVideoPaused;
 
-// DC keeps both helpers out of line; retail VC6 expands them at the advanced-
-// options call sites.  Keep the source boundaries visible while allowing the
+// DC keeps these helpers out of line; retail VC6 expands them at the advanced-
+// options call sites. Keep the source boundaries visible while allowing the
 // retail TU to reproduce that lowering.
+// E:\gamedcs\singleselectionwindow.cpp:7131
+inline unsigned char TSingleSelectionWindow::IsHost()
+{
+    if (!bVideoPaused)
+        return 1;
+    return pDPlay->IsHost();
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7889
 inline unsigned char TSingleSelectionWindow::IsMultiPlayer()
 {
     if (bVideoPaused)
@@ -772,6 +781,7 @@ inline unsigned char TSingleSelectionWindow::IsMultiPlayer()
     return 0;
 }
 
+// E:\gamedcs\singleselectionwindow.cpp:6980
 inline unsigned char TSingleSelectionWindow::SendPlayerPositions(
     unsigned long dpidTo)
 {
