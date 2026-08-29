@@ -738,6 +738,33 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"flightLevel\s*=\s*level\s*;\s*UseSpell\s*\(\s*"
             r"GetManaCost\s*\(\s*SPELL_FLY\s*\)\s*\)\s*;"),
     ),
+    ("singleselectionwindow.obj", 0x136388): (
+        SourceRule(
+            "SetupAdvancedOptions keeps Dreamcast's reset-loop i local "
+            "inside the mapChanged scope",
+            r"if\s*\(\s*mapChanged\s*\)\s*\{\s*for\s*\(\s*int\s+i\s*="
+            r"\s*0\s*;\s*i\s*<\s*CNetPlayerHandler\s*::\s*MAX_PLAYERS"),
+        SourceRule(
+            "SetupAdvancedOptions keeps Dreamcast's function-scope "
+            "nextColor and main-loop i in their recovered source order",
+            r"\bint\s+nextColor\s*=\s*0\s*;.*?\bUpdateGameVars\s*\(\s*\)"
+            r"\s*;\s*int\s+i\s*;\s*for\s*\(\s*i\s*=\s*0\s*;\s*i\s*<"
+            r"\s*CNetPlayerHandler\s*::\s*MAX_PLAYERS"),
+        SourceRule(
+            "SetupAdvancedOptions keeps Dreamcast's strNbr local and "
+            "compiled-out zero initializer inside the main loop",
+            r"for\s*\(\s*i\s*=\s*0\s*;[^)]*\)\s*\{\s*int\s+strNbr\s*="
+            r"\s*0\s*;", 1, 1),
+    ),
+    ("singleselectionwindow.obj", 0x140D74): (
+        SourceRule(
+            "SendPlayerPositions keeps Dreamcast's explicit two-array "
+            "CUpdatePlayerPosMsg construction before transmission",
+            r"\bCUpdatePlayerPosMsg\s+msg\s*\(\s*m_players\.humanPlayers\s*,"
+            r"\s*m_players\.computerPlayers\s*\)\s*;\s*"
+            r"TransmitRemoteDataDPID\s*\(\s*&\s*msg\s*,\s*dpidTo\s*,"
+            r"\s*true\s*,\s*true\s*\)\s*;", 1, 1),
+    ),
 }
 
 
@@ -1102,6 +1129,46 @@ def window_header_violations(text: str) -> list[tuple[int, str]]:
         line = text.count("\n", 0, token.start()) + 1 if token else 1
         defects.append((line, description))
     return defects
+
+
+def single_selection_window_contract_violations(
+        header_text: str, source_text: str) -> list[tuple[int, str]]:
+    """Audit the Dreamcast-proven CUpdatePlayerPosMsg source boundary.
+
+    Constructor calls are implicit source forms and are deliberately outside
+    the generic helper-token pass.  CodeView nevertheless proves this exact
+    two-pointer constructor, its two named array members, the CNetMsg base
+    construction, and the two memcpy statement rows.  Retail independently
+    corroborates the layout and accepts this boundary byte-for-byte.
+    """
+    header = _source.mask(header_text)
+    declaration = (
+        r"\bCNetPlayerHandlerPlayer\s+m_netPlayer\s*\[\s*8\s*\]\s*;\s*"
+        r"CNetPlayerHandlerPlayer\s+m_compPlayer\s*\[\s*8\s*\]\s*;.*?"
+        r"\bCUpdatePlayerPosMsg\s*\(\s*CNetPlayerHandlerPlayer\s*\*\s*"
+        r"pNetPlayers\s*,\s*CNetPlayerHandlerPlayer\s*\*\s*pCompPlayers"
+        r"\s*\)\s*;")
+    source = _source.mask(source_text)
+    definition = (
+        r"\b(?:inline\s+)?CUpdatePlayerPosMsg\s*::\s*"
+        r"CUpdatePlayerPosMsg\s*\(\s*CNetPlayerHandlerPlayer\s*\*\s*"
+        r"pNetPlayers\s*,\s*CNetPlayerHandlerPlayer\s*\*\s*pCompPlayers"
+        r"\s*\)\s*:\s*CNetMsg\s*\(\s*RS_UPDATE_PLAYER_POS\s*,\s*"
+        r"sizeof\s*\(\s*CUpdatePlayerPosMsg\s*\)\s*\)\s*\{\s*"
+        r"memcpy\s*\(\s*m_netPlayer\s*,\s*pNetPlayers\s*,\s*sizeof\s*"
+        r"\(\s*m_netPlayer\s*\)\s*\)\s*;\s*memcpy\s*\(\s*"
+        r"m_compPlayer\s*,\s*pCompPlayers\s*,\s*sizeof\s*\(\s*"
+        r"m_compPlayer\s*\)\s*\)\s*;\s*\}")
+    if re.search(declaration, header, re.DOTALL) is not None \
+            and re.search(definition, source, re.DOTALL) is not None:
+        return []
+    token = re.search(r"\bCUpdatePlayerPosMsg\b", header)
+    line = header_text.count("\n", 0, token.start()) + 1 if token else 1
+    return [(line,
+             "CUpdatePlayerPosMsg must retain Dreamcast's m_netPlayer and "
+             "m_compPlayer arrays and two-pointer declaration in the header, "
+             "with its cpp constructor boundary, CNetMsg base initializer, "
+             "and ordered memcpy statements")]
 
 
 def _helper_token(name: str) -> str | None:
@@ -1646,6 +1713,51 @@ def selftest() -> list[str]:
         failures.append("this-qualified proven self-call IsHost did not pass")
     if missing_from_body(wrong_host, host_edge):
         failures.append("unproved peer receiver became globally fatal")
+    setup_probe = """\
+if (mapChanged) {
+    for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {}
+}
+int nextColor = 0;
+widget* playerName;
+UpdateGameVars();
+int i;
+for (i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
+    int strNbr = 0;
+}
+"""
+    if contract_violations(setup_probe, host_key):
+        failures.append("aligned SetupAdvancedOptions local scopes did not pass")
+    setup_mutations = (
+        (setup_probe.replace("for (int i = 0;", "for (i = 0;", 1),
+         "reset-loop i"),
+        (setup_probe.replace("int i;\nfor (i = 0;", "for (int i = 0;"),
+         "function-scope"),
+        (setup_probe.replace("int strNbr = 0;", "int strNbr;"),
+         "strNbr"),
+    )
+    for probe, description in setup_mutations:
+        if not any(description in rule.description for rule in
+                   contract_violations(probe, host_key)):
+            failures.append("broken SetupAdvancedOptions " + description
+                            + " source shape passed")
+    send_key = ("singleselectionwindow.obj", 0x140D74)
+    send_probe = """\
+CUpdatePlayerPosMsg msg(m_players.humanPlayers,
+                        m_players.computerPlayers);
+TransmitRemoteDataDPID(&msg, dpidTo, true, true);
+return 1;
+"""
+    if contract_violations(send_probe, send_key):
+        failures.append("aligned SendPlayerPositions constructor did not pass")
+    flattened_send = """\
+CUpdatePlayerPosMsg msg;
+memcpy(msg.m_netPlayer, m_players.humanPlayers, sizeof(msg.m_netPlayer));
+memcpy(msg.m_compPlayer, m_players.computerPlayers, sizeof(msg.m_compPlayer));
+TransmitRemoteDataDPID(&msg, dpidTo, true, true);
+return 1;
+"""
+    if not contract_violations(flattened_send, send_key):
+        failures.append("flattened SendPlayerPositions constructor passed")
     commented = "// currentHero->HasSecondarySkill(0);\nif (flag) {}"
     if not missing_from_body(commented, attested):
         failures.append("commented helper call was treated as source shape")
@@ -2589,6 +2701,44 @@ hero* GetHero(int which)
     if any(not game_get_hero_header_violations(probe)
            for probe in broken_get_hero_probes):
         failures.append("broken Game.h GetHero source shape passed")
+    update_msg_probe = """\
+class CUpdatePlayerPosMsg : public CNetMsg {
+    CNetPlayerHandlerPlayer m_netPlayer[8];
+    CNetPlayerHandlerPlayer m_compPlayer[8];
+    CUpdatePlayerPosMsg(CNetPlayerHandlerPlayer* pNetPlayers,
+                        CNetPlayerHandlerPlayer* pCompPlayers);
+};
+"""
+    update_msg_source_probe = """\
+inline CUpdatePlayerPosMsg::CUpdatePlayerPosMsg(
+    CNetPlayerHandlerPlayer* pNetPlayers,
+    CNetPlayerHandlerPlayer* pCompPlayers)
+    : CNetMsg(RS_UPDATE_PLAYER_POS, sizeof(CUpdatePlayerPosMsg))
+{
+    memcpy(m_netPlayer, pNetPlayers, sizeof(m_netPlayer));
+    memcpy(m_compPlayer, pCompPlayers, sizeof(m_compPlayer));
+}
+"""
+    if single_selection_window_contract_violations(
+            update_msg_probe, update_msg_source_probe):
+        failures.append("aligned CUpdatePlayerPosMsg constructor did not pass")
+    broken_update_probes = (
+        (update_msg_probe.replace("m_netPlayer[8]", "m_players[8]"),
+         update_msg_source_probe),
+        (update_msg_probe, update_msg_source_probe.replace(
+            ": CNetMsg(RS_UPDATE_PLAYER_POS, sizeof(CUpdatePlayerPosMsg))",
+            "")),
+        (update_msg_probe, update_msg_source_probe.replace(
+            "memcpy(m_netPlayer, pNetPlayers, sizeof(m_netPlayer));\n"
+            "    memcpy(m_compPlayer, pCompPlayers, "
+            "sizeof(m_compPlayer));",
+            "memcpy(m_compPlayer, pCompPlayers, sizeof(m_compPlayer));\n"
+            "    memcpy(m_netPlayer, pNetPlayers, "
+            "sizeof(m_netPlayer));")),
+    )
+    if any(not single_selection_window_contract_violations(header, source)
+           for header, source in broken_update_probes):
+        failures.append("broken CUpdatePlayerPosMsg constructor shape passed")
     split_header_probe = """\
 TCreatureType creature;
 slider* splitSlider;
@@ -3187,6 +3337,20 @@ def scan() -> tuple[
     missing.extend(FileContractViolation("include/window.h", line,
                                          description)
                    for line, description in window_defects)
+
+    selection_header = (common.HOMM3_DIR
+                        / "include/singleselectionwindow_priv.h")
+    selection_text = selection_header.read_text(errors="replace")
+    selection_source = common.HOMM3_DIR / "src/singleselectionwindow.cpp"
+    selection_source_text = selection_source.read_text(errors="replace")
+    selection_relpath = "include/singleselectionwindow_priv.h"
+    audited.add(_file_audit_scope(selection_relpath))
+    selection_defects = single_selection_window_contract_violations(
+        selection_text, selection_source_text)
+    checked += 1
+    missing.extend(FileContractViolation(selection_relpath, line,
+                                         description)
+                   for line, description in selection_defects)
 
     # Header inlines are source bodies, not TU-local compiler knobs. Index
     # them by original CodeView location: one body may be instantiated in
