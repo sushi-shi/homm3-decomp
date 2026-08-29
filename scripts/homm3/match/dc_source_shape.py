@@ -765,6 +765,37 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"TransmitRemoteDataDPID\s*\(\s*&\s*msg\s*,\s*dpidTo\s*,"
             r"\s*true\s*,\s*true\s*\)\s*;", 1, 1),
     ),
+    ("singleselectionwindow.obj", 0x143214): (
+        SourceRule(
+            "CanChooseTown keeps Dreamcast's mp, slotAtt, player, and "
+            "isHotSeat locals in recovered order",
+            r"\bCMapHeaderData\s*\*\s*mp\s*=\s*&\s*gpGame->mapHeader\s*;"
+            r"\s*CMapHeaderData\s*::\s*TPlayerSlotAttributes\s*\*\s*"
+            r"slotAtt\s*=.*?\bCNetPlayerHandlerPlayer\s*\*\s*player\s*="
+            r".*?\bunsigned\s+char\s+isHotSeat\s*="),
+        SourceRule(
+            "CanChooseTown keeps both Dreamcast IsHuman calls",
+            r"\bplayer\s*->\s*IsHuman\s*\(", 2, 2),
+        SourceRule(
+            "CanChooseTown keeps Dreamcast's self IsHost helper boundary",
+            r"!\s*IsHost\s*\(\s*\)"),
+    ),
+    ("singleselectionwindow.obj", 0x14332C): (
+        SourceRule(
+            "CanChooseHero keeps Dreamcast's mp, slotAtt, player, and "
+            "isHotSeat locals in recovered order",
+            r"\bCMapHeaderData\s*\*\s*mp\s*=\s*&\s*gpGame->mapHeader\s*;"
+            r"\s*CMapHeaderData\s*::\s*TPlayerSlotAttributes\s*\*\s*"
+            r"slotAtt\s*=.*?\bCNetPlayerHandlerPlayer\s*\*\s*player\s*="
+            r".*?\bunsigned\s+char\s+isHotSeat\s*="),
+        SourceRule(
+            "CanChooseHero keeps both Dreamcast IsHuman calls",
+            r"\bplayer\s*->\s*IsHuman\s*\(", 2, 2),
+        SourceRule(
+            "CanChooseHero keeps Dreamcast's GetDisplayTown boundary in "
+            "the rejected-town guard",
+            r"if\s*\(\s*GetDisplayTown\s*\(\s*gamePos\s*\)\s*==\s*-1\s*\)"),
+    ),
     ("singleselectionwindow.obj", 0x1406EC): (
         SourceRule(
             "OnGameTransmitInitMsg keeps Dreamcast lines 6807-6810's "
@@ -1808,6 +1839,52 @@ return 1;
 """
     if not contract_violations(flattened_send, send_key):
         failures.append("flattened SendPlayerPositions constructor passed")
+    choose_town_key = ("singleselectionwindow.obj", 0x143214)
+    choose_town_probe = """\
+CMapHeaderData* mp = &gpGame->mapHeader;
+CMapHeaderData::TPlayerSlotAttributes* slotAtt =
+    &mp->playerSlotAttributes[gamePos];
+CNetPlayerHandlerPlayer* player = m_players.GetPlayerInPos(gamePos);
+unsigned char isHotSeat = mode == 3;
+if (player->IsHuman() && player->dpid != localDpid) return 0;
+if (!player->IsHuman() && !IsHost()) return 0;
+"""
+    if contract_violations(choose_town_probe, choose_town_key):
+        failures.append("aligned CanChooseTown helper shape did not pass")
+    broken_choose_town_probes = (
+        choose_town_probe.replace(
+            "if (!player->IsHuman() && !IsHost()) return 0;", ""),
+        choose_town_probe.replace("!IsHost()", "!pDPlay->IsHost()"),
+        choose_town_probe.replace(
+            "CNetPlayerHandlerPlayer* player = m_players.GetPlayerInPos(gamePos);\n"
+            "unsigned char isHotSeat = mode == 3;",
+            "unsigned char isHotSeat = mode == 3;\n"
+            "CNetPlayerHandlerPlayer* player = m_players.GetPlayerInPos(gamePos);"),
+    )
+    if any(not contract_violations(probe, choose_town_key)
+           for probe in broken_choose_town_probes):
+        failures.append("broken CanChooseTown helper shape passed")
+    choose_hero_key = ("singleselectionwindow.obj", 0x14332C)
+    choose_hero_probe = choose_town_probe + """\
+if (GetDisplayTown(gamePos) == -1) return 0;
+"""
+    if contract_violations(choose_hero_probe, choose_hero_key):
+        failures.append("aligned CanChooseHero helper shape did not pass")
+    broken_choose_hero_probes = (
+        choose_hero_probe.replace(
+            "if (!player->IsHuman() && !IsHost()) return 0;", ""),
+        choose_hero_probe.replace(
+            "if (GetDisplayTown(gamePos) == -1) return 0;",
+            "int town = player->townIndex;\nif (town == -1) return 0;"),
+        choose_hero_probe.replace(
+            "CNetPlayerHandlerPlayer* player = m_players.GetPlayerInPos(gamePos);\n"
+            "unsigned char isHotSeat = mode == 3;",
+            "unsigned char isHotSeat = mode == 3;\n"
+            "CNetPlayerHandlerPlayer* player = m_players.GetPlayerInPos(gamePos);"),
+    )
+    if any(not contract_violations(probe, choose_hero_key)
+           for probe in broken_choose_hero_probes):
+        failures.append("broken CanChooseHero helper shape passed")
     transmit_key = ("singleselectionwindow.obj", 0x1406EC)
     transmit_probe = """\
 int iMonthType = giMonthType;

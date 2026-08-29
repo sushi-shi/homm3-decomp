@@ -1928,9 +1928,6 @@ call	singleselectionwindow.obj	0x1421a8	CNetPlayerHandler::GetCompPlayerInPos
 call	singleselectionwindow.obj	0x1421a8	CNetPlayerHandlerPlayer::IsHuman
 call	singleselectionwindow.obj	0x142cc0	CNetPlayerHandlerPlayer::IsHuman
 call	singleselectionwindow.obj	0x143138	CNetPlayerHandler::GetCompPlayerInPos
-call	singleselectionwindow.obj	0x143214	CNetPlayerHandlerPlayer::IsHuman
-call	singleselectionwindow.obj	0x14332c	CNetPlayerHandlerPlayer::IsHuman
-call	singleselectionwindow.obj	0x14332c	TSingleSelectionWindow::GetDisplayTown
 call	singleselectionwindow.obj	0x1436b4	TSingleSelectionWindow::GetDisplayFace
 call	singleselectionwindow.obj	0x143954	strnicmp
 call	singleselectionwindow.obj	0x143a7c	Bitmap816::GetHeight
