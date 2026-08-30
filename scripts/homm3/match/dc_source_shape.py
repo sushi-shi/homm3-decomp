@@ -567,6 +567,13 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"thisArmy\s*\.\s*Init\s*\(.*?\)\s*;\s*"
             r"thisArmy\s*\.\s*LoadResources\s*\(\s*\)\s*;"),
     ),
+    ("cmbtmgr.obj", 0x5F518): (
+        SourceRule(
+            "NextArmy keeps Complete's field_4f0 guard around the "
+            "Dreamcast army::IsIncapacitated helper boundary",
+            r"if\s*\(\s*stack\s*->\s*field_4f0\s*&&\s*stack\s*->\s*"
+            r"IsIncapacitated\s*\(\s*\)\s*\)\s*continue\s*;"),
+    ),
     ("cmbtmgr.obj", 0x5F934): (
         SourceRule(
             "SetNextArmy keeps both Dreamcast army::get_controlling_side "
@@ -4007,6 +4014,25 @@ for (side = 0; side < 2; side++) {
     if not any("army-reference thisArmy" in rule.description for rule in
                contract_violations(direct_army_access, load_armies_key)):
         failures.append("flattened LoadArmies thisArmy reference passed")
+    next_army_key = ("cmbtmgr.obj", 0x5F518)
+    next_army_probe = """\
+if (stack->field_4f0 && stack->IsIncapacitated())
+    continue;
+"""
+    if contract_violations(next_army_probe, next_army_key):
+        failures.append("aligned NextArmy incapacity gate did not pass")
+    unguarded_incapacity = next_army_probe.replace(
+        "stack->field_4f0 && ", "")
+    if not any("field_4f0 guard" in rule.description for rule in
+               contract_violations(unguarded_incapacity, next_army_key)):
+        failures.append("unguarded NextArmy incapacity helper passed")
+    flattened_incapacity = next_army_probe.replace(
+        "stack->IsIncapacitated()",
+        "stack->disabled_290 || stack->disabled_2b0 || "
+        "stack->disabled_2c0")
+    if not any("helper boundary" in rule.description for rule in
+               contract_violations(flattened_incapacity, next_army_key)):
+        failures.append("flattened NextArmy incapacity helper passed")
     attacker_bonus_key = ("army.obj", 0x4868C)
     attacker_bonus_probe = """\
 std::string text;

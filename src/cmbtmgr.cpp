@@ -1517,7 +1517,7 @@ unsigned char combatManager::NextArmy(unsigned char checking_for_bad_morale)
                     continue;
                 if (stack->Is(1u << 25))
                     continue;
-                if (stack->IsIncapacitated())
+                if (stack->field_4f0 && stack->IsIncapacitated())
                     continue;
                 if (bCreaturePlacement) {
                     if (!stack->field_c4)
