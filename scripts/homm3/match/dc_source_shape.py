@@ -407,12 +407,31 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"get_location\s*\(\s*\)\s*;\s*location\s*=\s*"
             r"_location\s*;", 1, 1),
     ),
+    ("event_record.obj", 0x8C710): (
+        SourceRule(
+            "type_record_move_hero keeps Dreamcast's current hero, facing "
+            "snapshot, direction, get_location helper and destination "
+            "statements in recovered order",
+            r"\A\s*current_hero\s*=\s*_hero\s*;\s*"
+            r"restore_flag\s*=\s*_hero\s*->\s*facing\s*;\s*"
+            r"direction\s*=\s*_direction\s*;\s*source\s*=\s*"
+            r"_hero\s*->\s*get_location\s*\(\s*\)\s*;\s*"
+            r"destination\s*=\s*_destination\s*;\s*\Z", 1, 1),
+    ),
     ("event_record.obj", 0x8E18C): (
         SourceRule(
             "record_show_boat keeps Dreamcast's direct show-record "
             "construction inside one eventRecords push_back statement",
             r"\beventRecords\s*\.\s*push_back\s*\(\s*new\s+"
             r"type_record_show_boat\s*\(\s*current_boat\s*,\s*point\s*"
+            r"\)\s*\)\s*;", 1, 1),
+    ),
+    ("event_record.obj", 0x8E2F8): (
+        SourceRule(
+            "record_teleport keeps Dreamcast's direct teleport-record "
+            "construction inside one eventRecords push_back statement",
+            r"\beventRecords\s*\.\s*push_back\s*\(\s*new\s+"
+            r"type_record_teleport\s*\(\s*who\s*,\s*destination\s*"
             r"\)\s*\)\s*;", 1, 1),
     ),
     ("events.obj", 0x94760): (
@@ -2023,6 +2042,24 @@ def type_point_header_violations(text: str) -> list[tuple[int, str]]:
              "member taking const type_point& and compare x, y, z in order")]
 
 
+def hero_get_location_header_violations(text: str) -> list[tuple[int, str]]:
+    """Audit Hero.h:157's ordinary in-class packed-point accessor."""
+    masked = _source.mask(text)
+    pattern = (
+        r"(?m)^[ \t]{4}type_point\s+get_location\s*\(\s*\)\s*const"
+        r"\s*\{\s*return\s+type_point\s*\(\s*x\s*,\s*y\s*,\s*z\s*"
+        r"\)\s*;\s*\}")
+    if re.search(pattern, masked, re.DOTALL) is not None:
+        return []
+    token = re.search(r"\bget_location\s*\(\s*\)\s*const", masked)
+    line = text.count("\n", 0, token.start()) + 1 if token else 1
+    return [(line,
+             "Hero.h:157 type_obscuring_object::get_location must remain "
+             "an ordinary in-class const type_point construction from "
+             "x, y, z; __forceinline changes the attested callers' VC6 "
+             "inliner state")]
+
+
 def hero_get_target_header_violations(text: str) -> list[tuple[int, str]]:
     """Audit Hero.h:986's packed-point helper boundary and field order."""
     masked = _source.mask(text)
@@ -2055,6 +2092,50 @@ def cmc_hide_hero_header_violations(text: str) -> list[tuple[int, str]]:
              "netmsg.h:717 CMCHideHero must retain Dreamcast's CMapChange "
              "base-constructor boundary before the separate heroId body "
              "assignment")]
+
+
+def event_record_constructor_violations(text: str) -> list[tuple[int, str]]:
+    """Audit the two recovered event_record constructor definition sites."""
+    marks = list(PROVENANCE_RE.finditer(text))
+    specs = (
+        (96,
+         "event_record.cpp:96 move-record constructor must remain an "
+         "ordinary inline definition at its recovered source position",
+         r"\A\s*inline\s+type_record_move_hero\s*::\s*"
+         r"type_record_move_hero\s*\(\s*hero\s*\*\s*_hero\s*,\s*"
+         r"char\s+_direction\s*,\s*type_point\s+_destination\s*\)\s*"
+         r"\{"),
+        (204,
+         "event_record.cpp:204 teleport constructor must remain an ordinary "
+         "inline definition delegating to type_record_move_hero with the "
+         "hero's facing byte",
+         r"\A\s*inline\s+type_record_teleport\s*::\s*"
+         r"type_record_teleport\s*\(\s*hero\s*\*\s*_hero\s*,\s*"
+         r"type_point\s+_destination\s*\)\s*:\s*"
+         r"type_record_move_hero\s*\(\s*_hero\s*,\s*"
+         r"_hero\s*->\s*facing\s*,\s*_destination\s*\)\s*\{\s*\}"),
+    )
+    defects: list[tuple[int, str]] = []
+    for original_line, description, pattern in specs:
+        selected = None
+        selected_index = -1
+        for index, mark in enumerate(marks):
+            source = mark.group(1).replace("/", "\\").lower()
+            if source.endswith("\\event_record.cpp") \
+                    and int(mark.group(2)) == original_line:
+                selected = mark
+                selected_index = index
+                break
+        if selected is None:
+            defects.append((1, description))
+            continue
+        end = marks[selected_index + 1].start() \
+            if selected_index + 1 < len(marks) else len(text)
+        segment = _source.mask(text[selected.end():end])
+        if re.search(pattern, segment, re.DOTALL) is None:
+            defects.append((text.count("\n", 0, selected.start()) + 1,
+                            description))
+    return defects
 
 
 def game_get_hero_header_violations(text: str) -> list[tuple[int, str]]:
@@ -4652,6 +4733,68 @@ eventRecords.push_back(record);
                for rule in contract_violations(split_record_show_boat,
                                                 record_show_boat_key)):
         failures.append("split record_show_boat construction passed")
+    move_record_ctor_key = ("event_record.obj", 0x8C710)
+    move_record_ctor_probe = """\
+current_hero = _hero;
+restore_flag = _hero->facing;
+direction = _direction;
+source = _hero->get_location();
+destination = _destination;
+"""
+    if contract_violations(move_record_ctor_probe, move_record_ctor_key):
+        failures.append("aligned move-record constructor shape did not pass")
+    broken_move_record_probes = (
+        move_record_ctor_probe.replace(
+            "_hero->get_location()", "type_point(_hero->x, _hero->y, _hero->z)"),
+        move_record_ctor_probe.replace(
+            "direction = _direction;\nsource = _hero->get_location();",
+            "source = _hero->get_location();\ndirection = _direction;"),
+    )
+    if any(not contract_violations(probe, move_record_ctor_key)
+           for probe in broken_move_record_probes):
+        failures.append("broken move-record constructor source shape passed")
+    record_teleport_key = ("event_record.obj", 0x8E2F8)
+    record_teleport_probe = """\
+eventRecords.push_back(new type_record_teleport(who, destination));
+"""
+    if contract_violations(record_teleport_probe, record_teleport_key):
+        failures.append("aligned record_teleport shape did not pass")
+    split_record_teleport = """\
+type_record_teleport* record =
+    new type_record_teleport(who, destination);
+eventRecords.push_back(record);
+"""
+    if not any("inside one eventRecords push_back" in rule.description
+               for rule in contract_violations(split_record_teleport,
+                                                record_teleport_key)):
+        failures.append("split record_teleport construction passed")
+    event_record_ctor_probe = r"""
+// E:\gamedcs\event_record.cpp:96
+inline type_record_move_hero::type_record_move_hero(
+    hero* _hero, char _direction, type_point _destination)
+{
+}
+// E:\gamedcs\event_record.cpp:204
+inline type_record_teleport::type_record_teleport(
+    hero* _hero, type_point _destination)
+    : type_record_move_hero(_hero, _hero->facing, _destination)
+{
+}
+// E:\gamedcs\event_record.cpp:211
+"""
+    if event_record_constructor_violations(event_record_ctor_probe):
+        failures.append("aligned event-record constructor sites did not pass")
+    broken_event_record_ctor_probes = (
+        event_record_ctor_probe.replace(
+            "inline type_record_move_hero::type_record_move_hero(",
+            "__forceinline type_record_move_hero::type_record_move_hero("),
+        event_record_ctor_probe.replace(
+            ": type_record_move_hero(_hero, _hero->facing, _destination)",
+            ""),
+    )
+    if any(not event_record_constructor_violations(probe)
+           for probe in broken_event_record_ctor_probes):
+        failures.append("broken event-record constructor site passed")
     combat_monster_key = ("events.obj", 0x9AF34)
     combat_monster_probe = """\
 DemobilizeCurrHero(0, 1);
@@ -5292,6 +5435,24 @@ bool operator==(const type_point& arg) const {
     if any(not type_point_header_violations(probe)
            for probe in bad_type_point_probes):
         failures.append("broken type_point equality source shape passed")
+    get_location_probe = """\
+    type_point get_location() const
+    {
+        return type_point(x, y, z);
+    }
+"""
+    if hero_get_location_header_violations(get_location_probe):
+        failures.append("aligned Hero.h get_location shape did not pass")
+    broken_get_location_probes = (
+        get_location_probe.replace(
+            "    type_point get_location() const",
+            "    __forceinline type_point get_location() const"),
+        get_location_probe.replace("x, y, z", "x, z, y"),
+        get_location_probe.replace("() const", "()"),
+    )
+    if any(not hero_get_location_header_violations(probe)
+           for probe in broken_get_location_probes):
+        failures.append("broken Hero.h get_location source shape passed")
     get_target_probe = """\
 __forceinline type_point get_target() const
 {
@@ -6053,10 +6214,24 @@ def scan() -> tuple[
     hero_text = hero_header.read_text(errors="replace")
     audited.add(_file_audit_scope("include/hero.h"))
     get_target_defects = hero_get_target_header_violations(hero_text)
-    checked += 1
+    get_location_defects = hero_get_location_header_violations(hero_text)
+    checked += 2
     missing.extend(FileContractViolation("include/hero.h", line,
                                          description)
                    for line, description in get_target_defects)
+    missing.extend(FileContractViolation("include/hero.h", line,
+                                         description)
+                   for line, description in get_location_defects)
+
+    event_record_source = common.HOMM3_DIR / "src/event_record.cpp"
+    event_record_text = event_record_source.read_text(errors="replace")
+    audited.add(_file_audit_scope("src/event_record.cpp"))
+    event_record_defects = event_record_constructor_violations(
+        event_record_text)
+    checked += 2
+    missing.extend(FileContractViolation("src/event_record.cpp", line,
+                                         description)
+                   for line, description in event_record_defects)
 
     netmsg_header = common.HOMM3_DIR / "include/netmsg.h"
     netmsg_text = netmsg_header.read_text(errors="replace")

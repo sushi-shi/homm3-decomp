@@ -157,7 +157,7 @@ struct type_obscuring_object {
     // three-argument type_point constructor. Its ordinary inline body remains
     // context-sensitive: the standalone terrain helper expands it, while the
     // deeper Fly copy retains the retail constructor call.
-    __forceinline type_point get_location() const
+    type_point get_location() const
     {
         return type_point(x, y, z);
     }

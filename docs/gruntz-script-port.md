@@ -368,6 +368,45 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   (642 B): all **60/60** CFG blocks and every branch agree, with only the
   already-isolated EAX/ECX scheduling around the Complete-only `gpGame` gate.
 
+- **2026-08-30 — `game::record_teleport` and its two accessor-sharing
+  recorder siblings reach 100% by removing a source-false force-inline
+  override.** The mandatory wrapper dossier for retail `0x0049cf50` /
+  `event_record.obj:0x8e2f8` records no locals or lexical scopes and one
+  line-1124 statement containing `operator new`, the
+  `type_record_teleport` constructor, and `eventRecords.push_back`. Its nested
+  constructor at `dc:0x8ca54` has no locals or scopes and delegates on line
+  204 to `type_record_move_hero`. That base constructor's seven rows at
+  `dc:0x8c710` preserve `current_hero`, the facing snapshot, direction,
+  `type_obscuring_object::get_location`, and destination in that order.
+  Raw NB11 independently records only the five constructor parameters and no
+  source locals; retail corroborates the helper by expanding its packed x/y/z
+  result exactly at both recorder sites.
+
+  The prior source hoisted both constructors, flattened the accessor, and
+  declared the recovered Hero.h accessor `__forceinline`. Restoring the two
+  definitions to lines 96/204 and the named helper first exposed an honest
+  **98.1726% -> 94.4416%** dip: the complete allocation/construction prefix
+  remained exact, while VC6 changed only the later vector-growth schedule.
+  Ordinary versus forced recorder constructors and hoisting either or both
+  constructors back to the old location were byte-flat at 94.4416%, isolating
+  the header attribute rather than the recovered statement order. Restoring
+  Hero.h:157's ordinary in-class inline contract then produces
+  **100.0000%** for `record_teleport` (523 B), `record_move` (506 B), and the
+  previously ratcheted `record_show_boat`: every x86 block, branch, operation,
+  and relocation agrees. This is the concrete local-minimum case the
+  Dreamcast gate is meant to prevent: deleting the helper looked locally
+  better only because our invented force-inline attribute poisoned the
+  caller's later inliner state.
+
+  The evidence classification is asymmetric. Constructor delegation, the
+  five ordered base assignments, the named accessor and the direct
+  construction/push statement **agree**; no incompatible Complete-only or
+  dc-only source fact was needed; the earlier vector schedule is now resolved
+  rather than waived. Fatal source contracts and negative controls reject
+  re-hoisting either constructor, flattening or reordering the accessor row,
+  splitting the push statement, removing the delegation, or restoring the
+  source-false `__forceinline` attribute.
+
 - **2026-08-30 — `game::ClaimTown` reaches 100% by restoring the
   Dreamcast-proven `IsComputerTeam` boundary.** The mandatory dossier
   (`game.obj:0xb1230`) records 38 breakpoint rows, 50 SH4 blocks, and the
@@ -468,6 +507,12 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   negative controls now reject flattening `get_location`, reversing its
   statement order, or splitting the direct construction out of the one
   `eventRecords.push_back` statement.
+
+  **Later closure:** the `record_teleport` lane above proved that this was not
+  an STL source residual. Removing the invented `__forceinline` attribute
+  from Hero.h:157's ordinary in-class `get_location` accessor restores the
+  retail vector schedule and raises `record_show_boat` to **100.0000%**
+  without removing any Dreamcast fact.
 
 - **2026-08-30 — `SetCurrentMap` reaches 99.987404% by restoring the
   inherited constructor and broadcast boundaries.** The mandatory Dreamcast
