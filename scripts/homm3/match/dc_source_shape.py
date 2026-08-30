@@ -434,6 +434,24 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"\s*old_owner\s*=\s*gpGame\s*->\s*towns\s*\[\s*_id\s*"
             r"\]\s*\.\s*owner\s*;\s*\Z", 1, 1),
     ),
+    ("event_record.obj", 0x8DFE0): (
+        SourceRule(
+            "record_claim_mine keeps Dreamcast's separate mine lookup and "
+            "location construction rows in recovered order",
+            r"\bmine\s*&\s*(?P<claim_mine_ref>[A-Za-z_]\w*)\s*=\s*"
+            r"mines\s*\[\s*id\s*\]\s*;\s*type_point\s+location\s*"
+            r"\(\s*(?P=claim_mine_ref)\s*\.\s*mapX\s*,\s*"
+            r"(?P=claim_mine_ref)\s*\.\s*mapY\s*,\s*"
+            r"(?P=claim_mine_ref)\s*\.\s*mapZ\s*\)\s*;", 1, 1),
+        SourceRule(
+            "record_claim_mine keeps Dreamcast's stack message, send and "
+            "direct claim-record push in recovered order",
+            r"\bCMCClaimMine\s+msg\s*\(\s*id\s*,\s*new_owner\s*\)\s*;"
+            r"\s*SendMapChange\s*\(\s*&\s*msg\s*\)\s*;\s*"
+            r"eventRecords\s*\.\s*push_back\s*\(\s*new\s+"
+            r"type_record_claim_mine\s*\(\s*id\s*,\s*new_owner\s*"
+            r"\)\s*\)\s*;", 1, 1),
+    ),
     ("event_record.obj", 0x8E18C): (
         SourceRule(
             "record_show_boat keeps Dreamcast's direct show-record "
@@ -5259,6 +5277,46 @@ old_owner = gpGame->towns[_id].owner;
         "gpGame->towns[_id].owner", "gpGame->mines[_id].playerOwner")
     if not contract_violations(flattened_claim_town, claim_town_ctor_key):
         failures.append("wrong claim-town owner snapshot passed")
+    record_claim_mine_key = ("event_record.obj", 0x8DFE0)
+    record_claim_mine_probe = """\
+mine& current_mine = mines[id];
+type_point location(current_mine.mapX, current_mine.mapY, current_mine.mapZ);
+CMCClaimMine msg(id, new_owner);
+SendMapChange(&msg);
+eventRecords.push_back(new type_record_claim_mine(id, new_owner));
+"""
+    if contract_violations(record_claim_mine_probe, record_claim_mine_key):
+        failures.append("aligned record_claim_mine shape did not pass")
+    broken_record_claim_mine_probes = (
+        record_claim_mine_probe.replace(
+            "mine& current_mine = mines[id];\n", ""),
+        record_claim_mine_probe.replace(
+            "mine& current_mine = mines[id];\n"
+            "type_point location(current_mine.mapX, current_mine.mapY, "
+            "current_mine.mapZ);",
+            "type_point location(mines[id].mapX, mines[id].mapY, "
+            "mines[id].mapZ);"),
+        record_claim_mine_probe.replace("current_mine.mapZ",
+                                        "current_mine.mapY"),
+        record_claim_mine_probe.replace(
+            "CMCClaimMine msg(id, new_owner);\nSendMapChange(&msg);",
+            "SendMapChange(&msg);\nCMCClaimMine msg(id, new_owner);"),
+        record_claim_mine_probe.replace(
+            "eventRecords.push_back(new type_record_claim_mine(id, "
+            "new_owner));",
+            "type_record_claim_mine* record = new "
+            "type_record_claim_mine(id, new_owner);\n"
+            "eventRecords.push_back(record);"),
+    )
+    if any(not contract_violations(probe, record_claim_mine_key)
+           for probe in broken_record_claim_mine_probes):
+        failures.append("broken record_claim_mine source shape passed")
+    retail_only_record_claim_mine = (
+        "GetMine(id);\n" + record_claim_mine_probe)
+    if contract_violations(retail_only_record_claim_mine,
+                           record_claim_mine_key):
+        failures.append(
+            "record_claim_mine asymmetric rules rejected an extra statement")
     record_claim_town_key = ("event_record.obj", 0x8E058)
     record_claim_town_probe = """\
 GetTown(id);

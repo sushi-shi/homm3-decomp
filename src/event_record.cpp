@@ -1353,12 +1353,19 @@ void type_record_shroud::undo()
 #endif  // @carcass
 
 // E:\gamedcs\event_record.cpp:1034
-// The map-change message is built on the stack and sent before the record
-// is queued; retail expands both the CNetMsg base constructor (field order
+// Dreamcast first binds mines[id] and constructs the recovered `location`
+// local from its map triple. VC6 erases both statements, but their front-end
+// state is load-bearing for the later vector-growth lowering: without them
+// this body stops at 95.0269%; with them all 19 retail blocks are exact. The
+// map-change message remains stack-built and sent before the direct record
+// push; retail expands both the CNetMsg base constructor (field order
 // subType / field_00 / size / field_04 / field_10) and the record's own.
 VA(0x0049bf90, 0x1F1)  // anchor-global (0x41c subtype + 0x63debc), dc 0x8dfe0
 void game::record_claim_mine(long id, long new_owner)
 {
+    mine& current_mine = mines[id];
+    type_point location(current_mine.mapX, current_mine.mapY,
+                        current_mine.mapZ);
     CMCClaimMine msg(id, new_owner);
     SendMapChange(&msg);
     eventRecords.push_back(new type_record_claim_mine(id, new_owner));

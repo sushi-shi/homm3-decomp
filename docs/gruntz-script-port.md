@@ -284,6 +284,44 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   controls, now preserve the two positive calls without requiring equal
   cross-revision call counts.
 
+- **2026-08-30 — `game::record_claim_mine` reaches 100% by restoring two
+  optimized-away Dreamcast rows.** The mandatory dossier at retail
+  `0x0049bf90` / `event_record.obj:0x8dfe0` records three parameters, one
+  lower-bound local (`type_point location` at `sp+0x14`), no lexical scopes,
+  and six line rows. Before the stack `CMCClaimMine`, `SendMapChange` and
+  direct claim-record push, lines 1035-1036 call `mines.operator[](id)` and
+  construct `location` from the returned mine's `mapX`, `mapY` and `mapZ`.
+  Raw NB11 has no second local, and the generated xref graph names those two
+  callees but no `game::GetMine`; unlike `record_claim_town`, a `GetMine(id)`
+  validation is therefore not admitted. The identifier of the optimized-out
+  mine reference remains unknown.
+
+  Restoring a reference binding followed by the recovered `location`
+  construction emits no retail instructions but raises the wrapper from
+  **95.0269% to 100.0000%**. Before restoration, the common prefix was exact
+  and the first mismatch was exclusively the final event-vector expansion
+  (22 retail blocks versus 19 candidate blocks). Afterwards all **19 / 19**
+  aligned blocks are byte-identical, and `--branches` reports **12 / 12**
+  branches plus **3 / 3** returns with identical symbolic targets. This is
+  the same VC6 front-end-state mechanism as the town recorder, but the
+  positive source fact is different: an indexed mine reference and a named
+  point local, not a helper call. The nested parameterized record constructor
+  at `dc:0x8cb2c` independently preserves base construction then id,
+  new-owner and mine-owner assignment rows; `CMCClaimMine` at `dc:0x8f2c8`
+  preserves base construction then separate id/player assignments. Those
+  already-ratcheted constructor facts remain unchanged.
+
+  Evidence classification: the signature, stack message/send/direct-push
+  order and nested field assignments **agree** with retail; the mine lookup
+  and `location` construction are positive shared-source facts whose emitted
+  work is **DC-only** but whose compiler-state effect is required for exact
+  retail bytes; SH4's four-block CFG versus retail x86's 19-block STL
+  expansion is expected **retail-only** lowering; the optimized reference's
+  original identifier is **unknown**. Asymmetric fatal rules with embedded
+  negative controls now reject deleting, collapsing, reordering or changing
+  the recovered lookup/location rows and reject flattening the message or
+  direct push, while explicitly allowing unrelated extra statements.
+
 - **2026-08-30 — `game::record_claim_town` reaches 100% from a Dreamcast
   statement that emits no retail bytes.** The mandatory wrapper dossier at
   retail `0x0049c190` / `event_record.obj:0x8e058` records no locals or
