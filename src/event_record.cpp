@@ -78,29 +78,6 @@ inline type_point::type_point(short new_x, short new_y, short new_z)
     z = new_z;
 }
 
-// The record constructors. NONE of them has a retail body: every one is
-// expanded at its single game::record_* call site, which is also the only
-// evidence for their shapes. `inline` is load-bearing - VC6's /Ob2
-// auto-inliner does not reliably take a plain out-of-class definition, and
-// an unreferenced inline simply disappears, which is what retail shows.
-inline type_record_move_hero::type_record_move_hero(hero* who, char _direction,
-                                                    type_point _destination)
-{
-    current_hero = who;
-    restore_flag = who->facing;
-    direction = _direction;
-    source = type_point(who->x, who->y, who->z);
-    destination = _destination;
-}
-
-// record_teleport reads hero+0x47 twice - once here for the argument and
-// once inside the base body for restore_flag.
-inline type_record_teleport::type_record_teleport(hero* who,
-                                                  type_point _destination)
-    : type_record_move_hero(who, who->facing, _destination)
-{
-}
-
 inline type_record_claim_mine::type_record_claim_mine(long _id, char _new_owner)
 {
     id = _id;
@@ -217,12 +194,25 @@ void type_event_record::undo()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\event_record.cpp:96
-DC_ONLY(0x8c710, 0xAE)
-void type_record_move_hero::type_record_move_hero(hero* _hero, char _direction, type_point _destination)
+// NO RETAIL BODY: VC6 expands this constructor at record_move and
+// record_teleport. Dreamcast gives seven ordered source rows and proves that
+// line 100 obtains source through type_obscuring_object::get_location; retail
+// corroborates the same packed x/y/z loads at both inline sites.
+inline type_record_move_hero::type_record_move_hero(hero* _hero,
+                                                    char _direction,
+                                                    type_point _destination)
 {
-    // @stub
+    current_hero = _hero;
+    restore_flag = _hero->facing;
+    direction = _direction;
+    source = _hero->get_location();
+    destination = _destination;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:108
 DC_ONLY(0x8c7c0, 0x26)
@@ -350,14 +340,18 @@ void type_record_move_hero::undo()
     if (was_on_map)
         current_hero->obscure_cell();
 }
-#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:204
-DC_ONLY(0x8ca54, 0x70)
-void type_record_teleport::type_record_teleport(hero* _hero, type_point _destination)
+// NO RETAIL BODY: the complete construction is expanded into record_teleport.
+// Dreamcast line 204 proves this remains a derived-to-base delegation rather
+// than a flattened duplicate of type_record_move_hero's assignments.
+inline type_record_teleport::type_record_teleport(hero* _hero,
+                                                  type_point _destination)
+    : type_record_move_hero(_hero, _hero->facing, _destination)
 {
-    // @stub
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:211
 DC_ONLY(0x8cac4, 0x26)
