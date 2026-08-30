@@ -39,6 +39,12 @@ public:
 // virtuals. Retail's destructor walks the inherited Widgets vector verbatim.
 class TSwapWindow : public heroWindow {
 public:
+    int field_4c;       // +0x4c
+    int field_50;       // +0x50
+    widget* field_54;   // +0x54  left-army count arrow
+    widget* field_58;   // +0x58  right-army count arrow
+    widget* field_5c;   // +0x5c  transfer control
+
     virtual ~TSwapWindow();
     void UpdateArrows();
 };
@@ -75,6 +81,8 @@ public:
     virtual int Main(message& msg);     // slot 2
     bool IsLeftHero();
     void DrawSelector();
+    void UpdateBackpackItem(int iHero, int i);
+    void UpdateBackpack(int iHero);
     void SwapMons();
     unsigned char CanModHero(int hero);
 };

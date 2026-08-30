@@ -485,6 +485,7 @@ public:
     // town.h - retype when the body lands.
     void UpdateTown(int pos, int town, unsigned char inPopup);
     void UpdateNameLists();
+    void SetupLoadGameMode();
     void SetupNewGameMode();
     // Retail 0x58ea00 (past the stale span end) - the no-arg count the
     // drop arm caches at +0x1898. DC's GetPlayerCount takes a filter

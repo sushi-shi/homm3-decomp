@@ -40,10 +40,13 @@
 // draws and the columns render through the shared font cells;
 // DrawHeroAdvancedOption blits the flag/portrait plates.
 #include "bitmap816.h"
+#include "crt_process.h"
 #include "csprite.h"
 #include "font.h"
+#include "mousemgr.h"
 #include "singleselectionwindow.h"
 #include "singleselectionwindow_priv.h"
+#include "soundmgr.h"
 
 #if 0  // @carcass: untouched bodies outside the admitted retail function
 
@@ -118,36 +121,74 @@ unsigned char SaveValid(const char* filename)
     return valid;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\singleselectionwindow.cpp:268
+#if 0  // @carcass
 DC_ONLY(0x12f9c8, 0x3A0)
 void BackupGameHeaders(gGat* dest, gGat* src)
 {
     // @stub
 }
+#endif  // @carcass
+
+// Dreamcast names both globals in this TU. Retail independently fixes their
+// addresses through every CreateEvent/_beginthreadex and stop-path reference.
+DATA(0x0069fdcc) HANDLE hMouseThread;
+DATA(0x0069fdd0) HANDLE hEndMouseThreadEvent;
 
 // E:\gamedcs\singleselectionwindow.cpp:299
-DC_ONLY(0x12fd68, 0x4E)
-unsigned long ProcessMouse(void* nothing)
+VA(0x00577740, 0x4E)  // exact physical row between SaveValid and StartMouseThread; callback xref + dc 0x12fd68
+unsigned __stdcall ProcessMouse(void* nothing)
 {
-    // @stub
+    while (WaitForSingleObject(hEndMouseThreadEvent, 41) == WAIT_TIMEOUT &&
+           !bShutDownDone)
+        gpMouseManager->CheckUpdate();
+    _endthreadex(0);
+    return 0;
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:314
-DC_ONLY(0x12fdb8, 0x1C)
+VA(0x00577790, 0x7B)  // beginthreadex callback/global/callee proof, dc 0x12fdb8
 void StartMouseThread()
 {
-    // @stub
+    unsigned threadId;
+
+    if (!hMouseThread) {
+        gpMouseManager->SetPointer(1, mouseManager::ADVENTURE_SET);
+        hEndMouseThreadEvent = CreateEvent(0, TRUE, FALSE, 0);
+        if (hEndMouseThreadEvent) {
+            gpSoundManager->service_sounds();
+            hMouseThread = (HANDLE)_beginthreadex(
+                0, 0, ProcessMouse, 0, 0, &threadId);
+            if (!hMouseThread) {
+                CloseHandle(hEndMouseThreadEvent);
+                hEndMouseThreadEvent = 0;
+            }
+        }
+    }
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:344
-DC_ONLY(0x12fdd4, 0x1C)
+// Retail keeps this helper out of line at SetupScenarioOptions even though
+// StartMouseThread immediately above expands there.  Marking this body
+// non-inlinable preserves the Dreamcast-proven helper boundary and that
+// asymmetric retail lowering without changing either function's source order.
+#pragma auto_inline(off)
+VA(0x00577810, 0x61)  // event/handle teardown and pointer restore, dc 0x12fdd4
 void StopMouseThread()
 {
-    // @stub
+    if (hMouseThread) {
+        SetEvent(hEndMouseThreadEvent);
+        WaitForSingleObject(hMouseThread, INFINITE);
+        CloseHandle(hMouseThread);
+        hMouseThread = 0;
+        CloseHandle(hEndMouseThreadEvent);
+        hEndMouseThreadEvent = 0;
+        gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+    }
 }
+#pragma auto_inline(on)
 
+#if 0  // @carcass
 // E:\gamedcs\singleselectionwindow.cpp:368
 DC_ONLY(0x12fdf0, 0x92)
 void GetGameVersion(char* version)
@@ -1205,16 +1246,69 @@ void TSingleSelectionWindow::UpdateFilterWidgets()
         WidgetSetStatus(field_18A0[7] + 0x14b, 0x10);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\singleselectionwindow.cpp:2635
-VA(0x0057F330, 0x3E3)  // anchor-callee the 11.6KB ctor calls it at +0x2bc4, back-to-back with its DC neighbor below - the DC adjacency; size 1.13x dc 0x348, dc 0x13575c
+// Dreamcast proves the same player-enumeration, scoped temporary-player,
+// seat-assignment and final host-selection shape as SetupNewGameMode below.
+// Complete widens the older AddNewPlayer(dpid) calls to SetNewPlayerSlot with
+// the full CNetPlayerInfo record. Retail adds the final slider disable.
+VA(0x0057F330, 0x3E3)  // anchor-callee the 11.6KB ctor calls it at +0x2bc4, back-to-back with its DC neighbor below - the DC adjacency; size 1.13x, SH4 size 0x348, dc 0x13575c
 void TSingleSelectionWindow::SetupLoadGameMode()
 {
-    // @stub
-}
+    durationIndex = gpGame->setup.turnDuration;
 
-#endif  // @carcass
+    if (bVideoPaused) {
+        GetWidget(105)->hide();
+        if (IsHost()) {
+            SetNewPlayerSlot(&gsThisNetPlayerInfo);
+        } else {
+            gpGame->SetupOrigData();
+            scenarioOptionsStarted = 1;
+            if (chatShowing)
+                GetWidget(179)->hide();
+
+            CNewPlayerMsg msg(&gsThisNetPlayerInfo, gameVersion);
+            TransmitRemoteDataDPID(&msg, 0, false, true);
+
+            CAutoArray<CDPlayPlayer> playerArray;
+            pDPlay->EnumPlayers(&playerArray, 0, 0);
+            for (int i = 0; i < playerArray.GetCount(); ++i) {
+                CDPlayPlayer* curr = playerArray.Get(i);
+                TAutoPtr<int> version(static_cast<int*>(
+                    pDPlay->GetPlayerData(curr->GetId(), 0, 0)));
+                if (!version.get())
+                    continue;
+                CNetPlayerInfo player(curr->GetName(), curr->GetId());
+                SetNewPlayerSlot(&player);
+            }
+        }
+    } else if (iMPNetProtocol == MP_HOTSEAT) {
+        for (int i = 0; i < gpHotSeatMan->playerCount; ++i) {
+            CNetPlayerInfo player(gpHotSeatMan->GetName(i), i + 1);
+            SetNewPlayerSlot(&player);
+        }
+        gsThisNetPlayerInfo.dpid = 1;
+        strcpy(gsThisNetPlayerInfo.sName, gpGame->players[0].cName);
+        gsThisNetPlayerInfo.version = *gpVideoGameState;
+        delete gpHotSeatMan;
+        gpHotSeatMan = 0;
+    } else {
+        gsThisNetPlayerInfo.dpid = 1;
+        strcpy(gsThisNetPlayerInfo.sName, gLocalPlayerName);
+        gsThisNetPlayerInfo.version = *gpVideoGameState;
+        SetNewPlayerSlot(&gsThisNetPlayerInfo);
+    }
+
+    if (IsHost()) {
+        GetHeaders(&HeadersA);
+        scenarioOptionsStarted = 1;
+        HighlightFile(DATA_COMPGEN(0x0068333c, defaultNewGameFileName,
+                                   "NEWGAME.gm1"));
+        SetCurrentMap(currentMap, false);
+    }
+
+    if (durationSlider)
+        durationSlider->enable(false);
+}
 
 // The inline constructor is defined ahead of all consumers above. VC6 emits
 // its retained public COMDAT at the first out-of-line site in this run.
@@ -1303,15 +1397,95 @@ void TSingleSelectionWindow::UpdateMainWindow()
 {
     // @stub
 }
+#endif  // @carcass
 
+// Dreamcast fixes the early TurnOffScenarioOptions return, the following
+// TurnOffAdvancedOptions boundary, the ShowWidget loop/call family, and the
+// final draw/update/header-selection helper family. Complete inverts the
+// final condition, so its lexical order is SetupOrigData then GetHeaders
+// rather than Dreamcast's GetHeaders then SetupOrigData. Complete also adds the
+// filter pane, random-map transfer list, request message and m_flag65 host
+// override. Retail also proves the asymmetric mouse-thread lowering:
+// StartMouseThread expands here while StopMouseThread remains a call.
+// DC's loadGameMode && IsMultiPlayer widget-333..339 show/hide branch is
+// revision-only: exact Complete replaces that whole branch with the
+// ShowWidget(137..141, 190..195) scenario group below.
 // E:\gamedcs\singleselectionwindow.cpp:2838
-VA(0x00580A70, 0x68B)  // anchor-callee OnSetAsHostMsg calls it (0) exactly where DC's calls SetupScenarioOptions; head is the inScenarioOptions early-out into TurnOffScenarioOptions 0x5819a0; retail widened with the random-maps byte it compares/stores at m_flag66, size 1.45x dc 0x484, dc 0x135f04
+VA(0x00580A70, 0x68B)  // anchor-callee OnSetAsHostMsg calls it (0) exactly where DC's calls SetupScenarioOptions; head is the inScenarioOptions early-out into TurnOffScenarioOptions 0x5819a0; retail widened with the random-maps byte it compares/stores at m_flag66, size 1.45x, SH4 size 0x484, dc 0x135f04
 void TSingleSelectionWindow::SetupScenarioOptions(unsigned char randomMaps)
 {
-    // @stub
-}
+    if (inScenarioOptions) {
+        TurnOffScenarioOptions();
+        return;
+    }
 
-#endif  // @carcass
+    TurnOffFilterOptions();
+    TurnOffAdvancedOptions();
+    field_37F = 0;
+
+    if (m_flag66 != randomMaps) {
+        m_flag66 = randomMaps;
+        if (randomMaps) {
+            if (TransferHeaders.size() == 0) {
+                if (bVideoPaused && !pDPlay->IsHost()) {
+                    CNetMsg msg(RS_HEADERS_REQUEST, sizeof(CNetMsg));
+                    TransmitRemoteDataDPID(&msg, 0, false, true);
+                } else {
+                    GetHeaders(&TransferHeaders);
+                }
+            }
+        }
+        SortMaps(2, false, false);
+    }
+
+    GetWidget(101)->show();
+    GetWidget(361)->show();
+    for (int i = 0; i < gUnnamed69fdc8; ++i)
+        ShowWidget(i + 142);
+
+    fileSlider->show();
+    fileSlider->SetResolution(
+        SelectionHeaders.size() - gUnnamed69fdc8 + 1);
+    // Complete reuses its added random-map byte after the list-selection arm;
+    // retail writes the enable result back to the incoming [ebp+8] slot before
+    // passing it to the slider.  Dreamcast's no-argument predecessor has only
+    // the corresponding host-dependent enable statement.
+    if (!bVideoPaused)
+        randomMaps = true;
+    else
+        randomMaps = pDPlay->IsHost();
+    fileSlider->enable(randomMaps);
+    fileSlider->SetState(currentIndex);
+
+    ShowWidget(137);
+    ShowWidget(138);
+    ShowWidget(139);
+    ShowWidget(140);
+    ShowWidget(141);
+    ShowWidget(190);
+    ShowWidget(191);
+    ShowWidget(192);
+    ShowWidget(193);
+    ShowWidget(194);
+    ShowWidget(195);
+
+    if (!scenarioOptionsStarted) {
+        StartMouseThread();
+        DrawWindow(0, 0xffff0001, 0xffff);
+        gUnnamed698a08->DrawBoundedString(
+            gpGeneralText->GetText(503), gpWindowManager->screenBitmap,
+            123, 122, 184, 25, 4, 5, -1);
+        Update();
+        inScenarioOptions = 1;
+        if (bVideoPaused && !pDPlay->IsHost() && !m_flag65)
+            gpGame->SetupOrigData();
+        else
+            GetHeaders(&HeadersA);
+        scenarioOptionsStarted = 1;
+        StopMouseThread();
+    }
+    inScenarioOptions = 1;
+}
 
 // Raw NB11 places the main-loop i and nextColor at procedure scope, in that
 // order; the other i belongs to the nested mapChanged reset loop. It also
@@ -4755,24 +4929,21 @@ unsigned char TSingleSelectionWindow::HasMultipleTowns(int gamePos)
         &gpGame->mapHeader.playerSlotAttributes[gamePos];
     if (slot->HasRandomAlignment)
         return 0;
-    unsigned char many =
-        get_alignment_count(
-            static_cast<unsigned short>(slot->legalAlignments)) > 1;
-    return many;
+    long alignmentCount = get_alignment_count(
+        static_cast<unsigned short>(slot->legalAlignments));
+    if (alignmentCount > 1)
+        return 1;
+    return 0;
 }
 
 // A seat's town is choosable when the seat is the local player's (or
 // unclaimed under mode-3), and the slot either rolls a random
 // alignment or admits more than one. GetPlayerInPos and
-// HasMultipleTowns both expand in place.
-// Dreamcast's mp/slotAtt/player/isHotSeat locals and its IsHuman/IsHost
-// boundaries are restored; VC6 reproduces the previous bytes. Residual
-// (97.2): the inlined HasMultipleTowns' `> 1` feeds the || directly in
-// retail (`jg`); ours carries the callee's byte local through setg/test.
-// The local IS what makes the standalone body exact (setg al), so the pair
-// cannot both close from one spelling - same story in CanChooseHero below.
-// DC's two final return groups measure 51.77 in the otherwise-restored body;
-// Complete's merged boolean return restores retail's CFG and 97.20 peak.
+// HasMultipleTowns both expand in place. Dreamcast's mp/slotAtt/player/
+// isHotSeat locals and its IsHuman/IsHost boundaries are restored. Its
+// alignmentCount local in HasMultipleTowns is important here: keeping the
+// count as a long lets the inlined comparison feed retail's branch directly.
+// DC's two final return groups differ from Complete's merged boolean return.
 // E:\gamedcs\singleselectionwindow.cpp:8034
 VA(0x0058CEB0, 0xF7)  // anchor-callee DrawHeroAdvancedOption gates the town arrows (0xd7/0xdf ids) and the bonus arrows on it; head tests m_flag64 first, size 0.88x dc 0x116, dc 0x143214
 unsigned char TSingleSelectionWindow::CanChooseTown(int gamePos)
@@ -4798,10 +4969,9 @@ unsigned char TSingleSelectionWindow::CanChooseTown(int gamePos)
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:8067
-// Residual (97.9): the Dreamcast mp/slotAtt/player/isHotSeat locals plus
-// both IsHuman calls and GetDisplayTown boundary are restored byte-flat.
-// The only remaining delta is the same inlined-HasMultipleTowns jg fold as
-// CanChooseTown above.
+// Dreamcast proves the mp/slotAtt/player/isHotSeat locals, both IsHuman
+// calls and the GetDisplayTown boundary. The shared HasMultipleTowns
+// alignmentCount local preserves retail's direct signed comparison here.
 VA(0x0058CFB0, 0x129)  // anchor-callee DrawHeroAdvancedOption gates the hero arrows (0xe7/0xef ids) on it; same m_flag64 head as its town sibling, size 1.06x dc 0x116, dc 0x14332c
 unsigned char TSingleSelectionWindow::CanChooseHero(int gamePos)
 {

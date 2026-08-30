@@ -428,6 +428,14 @@ unsigned char CDPlay::FlushReceiveQueue()
     return 1;
 }
 
+#if 0  // @carcass: the active header-inline body emits this COMDAT
+VA(0x00497790, 0x21)  // annotation-only anchor for the active header-inline COMDAT
+void CDPlayMsg::~CDPlayMsg()
+{
+    Destroy();
+}
+#endif
+
 inline CDPlaySession::CDPlaySession(const DPSESSIONDESC2* lpSession)
 {
     if (lpSession) {
@@ -1528,10 +1536,11 @@ VA_COMPGEN(0x0049a020, 0x73, SCALAR_DELETING_DTOR, CAutoArray)
 //    0x8b8a8): no physical slot in the gap - inlined into their remote.obj
 //    callers (only Connect survived out of line, claimed above at 0x498cd0).
 //  - operator== (dc 0x8bc84): inlined/not located.
-// NEXT LANE - two physical gap functions remain unclaimed inside the span:
-//    0x497790 (33B): frees [this]+0/[this]+4 via scalar delete - ~CDPlayMsg or
-//      CDPlayMsg::Destroy (ICF-folded pair; the scalar delete disagrees with the
-//      header's delete[], resolve before claiming).
+// The 33-byte physical row at 0x497790 is CDPlayMsg::~CDPlayMsg. Dreamcast's
+// destructor calls Destroy; retail inlines that helper after discarding its
+// return value, leaving the guard, scalar delete and two field clears. The
+// VC6 header-inline destructor emits that body as the ??1CDPlayMsg COMDAT.
+// NEXT LANE - one physical gap function remains unclaimed inside the span:
 //    0x49a0c0 (249B, ret 4, EH, called from 0x1b500): substantial, unidentified
 //      1-param value-class method/dtor variant.
 
@@ -1609,13 +1618,6 @@ void CDPlayConnection::~CDPlayConnection()
 // E:\gamedcs\dxplay.h:137
 DC_ONLY(0x8bda8, 0xA)
 void CDPlayMsg::CDPlayMsg()
-{
-    // @stub
-}
-
-// E:\gamedcs\dxplay.h:145
-DC_ONLY(0x8bdb4, 0x18)
-void CDPlayMsg::~CDPlayMsg()
 {
     // @stub
 }

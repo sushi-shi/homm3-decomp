@@ -99,7 +99,8 @@ public:
     heroWindow* window;
 #if defined(HOMM3_HERO_MESSAGE_CTOR_VIEW) || \
     defined(HOMM3_ARMYGRP_MESSAGE_CTOR_VIEW) || \
-    defined(HOMM3_RECRUIT_MESSAGE_CTOR_VIEW)
+    defined(HOMM3_RECRUIT_MESSAGE_CTOR_VIEW) || \
+    defined(HOMM3_SWAPMGR_MESSAGE_CTOR_VIEW)
     // The Dreamcast CodeView body at struct.h:42 zeroes the fields in
     // declaration order.  Keep this TU-scoped because other reconstructed
     // units still use aggregate initializers; the attested consumer sites

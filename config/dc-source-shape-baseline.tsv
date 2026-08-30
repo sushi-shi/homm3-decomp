@@ -1406,9 +1406,6 @@ call	iconwdgt.obj	0xd9d90	iconWidget::SetIconFrame
 call	iconwdgt.obj	0xd9d90	iconWidget::SetIconSequence
 call	iconwdgt.obj	0xd9ee8	iconWidget::SetIconFrame
 call	iconwdgt.obj	0xd9ee8	iconWidget::SetIconSequence
-call	initialize.obj	0xdc614	create_building_masks
-call	initialize.obj	0xdc614	create_included_masks
-call	initialize.obj	0xdc614	town::initialize_hordes
 call	inputmgr.obj	0xdc894	DSetCursorPos
 call	inputmgr.obj	0xdc894	inputManager::FocusTheWidget
 call	inputmgr.obj	0xdc894	inputManager::GetCurrQuals
@@ -1736,10 +1733,6 @@ call	resourcemanager.obj	0x122320	LODFile::pointAt
 call	resourcemanager.obj	0x122320	ResourceManager::GetFromCache
 call	resourcemanager.obj	0x122984	resource::AddRef
 call	resourcemanager.obj	0x122984	resource::get_Name
-call	sacrifice_window.obj	0x1258ac	format_string
-call	sacrifice_window.obj	0x125a4c	iconWidget::SetIconFrame
-call	sacrifice_window.obj	0x125a4c	widget::set_help_text
-call	sacrifice_window.obj	0x125a4c	widget::set_visible
 call	sacrifice_window.obj	0x125aac	update_artifact_widget
 call	sacrifice_window.obj	0x125b3c	artifactAllowedInSlot
 call	sacrifice_window.obj	0x125b3c	hero::get_artifact
@@ -1908,12 +1901,8 @@ call	singleselectionwindow.obj	0x143a7c	townManager::GetTownTypeName
 call	singleselectionwindow.obj	0x143a7c	widget::hide
 call	singleselectionwindow.obj	0x143a7c	widget::show
 call	singleselectionwindow.obj	0x145128	TSingleSelectionWindow::Update
-call	singleselectionwindow.obj	0x1451e8	DestroyMsg
 call	singleselectionwindow.obj	0x1451e8	GetRemoteData
-call	singleselectionwindow.obj	0x1451e8	TSingleSelectionWindow::OnPingMsg
-call	singleselectionwindow.obj	0x1451e8	TSingleSelectionWindow::OnPingResponseMsg
 call	singleselectionwindow.obj	0x1451e8	TSingleSelectionWindow::OnRequestHeroFaceMsg
-call	singleselectionwindow.obj	0x1451e8	TSingleSelectionWindow::OnRequestHeroFaceReplyMsg
 call	singleselectionwindow.obj	0x1451e8	TSingleSelectionWindow::OnSetAGRMsg
 call	singleselectionwindow.obj	0x1451e8	TSingleSelectionWindow::OnTownUpdateMsg
 call	singleselectionwindow.obj	0x1451e8	TSingleSelectionWindow::ReceiveChat

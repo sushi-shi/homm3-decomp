@@ -219,12 +219,8 @@ void upgrade_creatures(hero* current_hero, const town* current_town)
     // @stub
 }
 
-// E:\gamedcs\philai.cpp:298
-DC_ONLY(0x10d91c, 0x114)
-long get_artifact_purchase_value(TArtifact artifact, long market_count, long* funds)
-{
-    // @stub
-}
+// get_artifact_purchase_value promoted to a retail claim below. Its active
+// definition remains here in Dreamcast source order.
 
 // E:\gamedcs\philai.cpp:326
 // Retail claim promoted to the reconstructed body below; DC identity retained.
@@ -385,7 +381,11 @@ inline type_building_id building_id_from_int(int value)
     return building;
 }
 
-static long get_artifact_purchase_value(
+// DC records internal linkage. Complete's only surviving out-of-line caller
+// is the still-carcassed AI_value_of_event, so keep external linkage only as
+// an emission aid until that caller lands; /Ob2 still expands the two active
+// same-TU calls exactly as before.
+long get_artifact_purchase_value(
     TArtifact artifact_id, long market_count, long* funds)
 {
     if (artifact_id == ARTIFACT_NONE)
@@ -2250,6 +2250,14 @@ long AI_value_of_event(const hero* current_hero, type_point point, long* move_co
 }
 
 #endif  // @carcass
+
+// E:\gamedcs\philai.cpp:298. The annotated redeclaration lives in retail
+// RVA order while its canonical definition stays above in original source
+// order. The verifier's current next-brace heuristic cannot follow this
+// identity yet; root owns the narrow name-based lookup repair.
+VA(0x00529750, 0x78)  // AI_value_of_event callee + exact retail FPU flow, dc 0x10d91c
+long get_artifact_purchase_value(
+    TArtifact artifact_id, long market_count, long* funds);
 
 // E:\gamedcs\philai.cpp:551.  A map war-machine factory's worth: the three
 // engines' purchase values summed at this trip's move cost.  Identity:

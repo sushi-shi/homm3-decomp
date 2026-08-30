@@ -102,19 +102,9 @@ unsigned char TMultiPlayerWindow::OnModemHost()
 
 // OnHost promoted to a VA claim (retail-located block).
 
-// E:\gamedcs\multiplayerwindow.cpp:1588
-DC_ONLY(0x1011b8, 0x1BC)
-unsigned char TMultiPlayerWindow::OnModemJoin()
-{
-    // @stub
-}
+// OnModemJoin promoted to a VA claim (retail-located block).
 
-// E:\gamedcs\multiplayerwindow.cpp:1665
-DC_ONLY(0x101374, 0x19C)
-unsigned char TMultiPlayerWindow::OnDirectJoin()
-{
-    // @stub
-}
+// OnDirectJoin promoted to a VA claim (retail-located block).
 
 // OnJoin promoted to a retail claim below.
 
@@ -1320,6 +1310,103 @@ void CMPInputDlg::UpdateOK()
 
 // E:\gamedcs\multiplayerwindow.cpp:523
 VA_COMPGEN(0x005109e0, 0x21, SCALAR_DELETING_DTOR, CMPInputDlg)
+
+// Dreamcast proves the InitRemote, session-array cleanup, retry-loop and
+// JoinSession boundaries. Complete inlines InitRemote and JoinSession, while
+// retail fixes the PC retry count, dialog strings and player-info writes.
+// E:\gamedcs\multiplayerwindow.cpp:1588
+VA(0x00510a10, 0x298)  // OnJoin protocol-5 callee + complete session flow, dc 0x1011b8
+unsigned char TMultiPlayerWindow::OnModemJoin()
+{
+    if (!InitRemote(MP_MODEM, 0, 0)) {
+        if (pDPlay->GetLastError() != DPLAY_ERROR_USER_CANCEL)
+            NormalDialog(gpGeneralText->GetText(448), 1, -1, -1,
+                         -1, 0, -1, 0, -1, 0, -1, 0);
+        return 0;
+    }
+
+    ShowCursor(1);
+    pSessions->Destroy();
+    for (int retry = 0; retry < 3; ++retry) {
+        pDPlay->EnumSessions(pSessions, 0, 0x42);
+        if (pDPlay->GetLastError() == DPLAY_ERROR_USER_CANCEL)
+            break;
+        if (!retry)
+            gpWindowManager->UpdateScreen(0, 0, 800, 600);
+        if (pSessions->GetCount() > 0)
+            break;
+    }
+
+    if (!pSessions->GetCount()) {
+        ShowCursor(0);
+        if (pDPlay->GetLastError() != DPLAY_ERROR_USER_CANCEL)
+            NormalDialog(gpGeneralText->GetText(455), 1, -1, -1,
+                         -1, 0, -1, 0, -1, 0, -1, 0);
+        return 0;
+    }
+
+    ShowCursor(0);
+    CDPlaySession* session = pSessions->Get(0);
+    Sleep(1000);
+    if (!JoinSession(session, 0)) {
+        if (pDPlay->GetLastError() != DPLAY_ERROR_USER_CANCEL)
+            NormalDialog(gpGeneralText->GetText(456), 1, -1, -1,
+                         -1, 0, -1, 0, -1, 0, -1, 0);
+        return 0;
+    }
+    return 1;
+}
+
+// Dreamcast proves the InitRemote, session-array cleanup, two-pass enum loop
+// and JoinSession boundaries. Complete keeps that shared source skeleton but
+// always reports the empty-list failure after the loop; DC suppresses that
+// dialog when the last enumeration itself failed. Retail fixes the PC dialog
+// strings, timeout, protocol reset and inlined helper bodies.
+// E:\gamedcs\multiplayerwindow.cpp:1665
+VA(0x00510cb0, 0x282)  // OnJoin protocol-4 callee + complete session flow, dc 0x101374
+unsigned char TMultiPlayerWindow::OnDirectJoin()
+{
+    if (!InitRemote(MP_SERIAL, 0, 0)) {
+        NormalDialog(gpGeneralText->GetText(450), 1, -1, -1,
+                     -1, 0, -1, 0, -1, 0, -1, 0);
+        return 0;
+    }
+
+    pSessions->Destroy();
+    ShowCursor(1);
+    for (int retry = 0; retry < 2; ++retry) {
+        unsigned char enumFailed = !pDPlay->EnumSessions(
+            pSessions, sessionRefreshTimeout, 0x42);
+        if (pDPlay->GetLastError() == DPLAY_ERROR_USER_CANCEL)
+            break;
+        if (enumFailed)
+            break;
+        if (!retry)
+            gpWindowManager->UpdateScreen(0, 0, 800, 600);
+        if (pSessions->GetCount() > 0)
+            break;
+        if (!retry)
+            Sleep(500);
+    }
+
+    if (!pSessions->GetCount()) {
+        ShowCursor(0);
+        NormalDialog(gpGeneralText->GetText(457), 1, -1, -1,
+                     -1, 0, -1, 0, -1, 0, -1, 0);
+        RemoteCleanup();
+        iMPNetProtocol = MP_SERIAL;
+        return 0;
+    }
+
+    ShowCursor(0);
+    CDPlaySession* session = pSessions->Get(0);
+    if (!JoinSession(session, 0)) {
+        NormalDialog(gpGeneralText->GetText(456), 1, -1, -1,
+                     -1, 0, -1, 0, -1, 0, -1, 0);
+        return 0;
+    }
+    return 1;
+}
 
 // E:\gamedcs\multiplayerwindow.cpp:1744
 // The generic join path dispatches the two serial transports, splits the

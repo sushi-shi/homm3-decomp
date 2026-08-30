@@ -339,14 +339,12 @@ class CDPlayMsg {
 public:
     CDPlayMsg() : pData(0), dataSize(0) {}
     unsigned char AllocSize(unsigned long dSize);
+    unsigned char Destroy();
 
+    // CODEVIEW(E:\gamedcs\dxplay.h:145, dc 0x8bdb4)
     ~CDPlayMsg()
     {
-        if (pData) {
-            delete [] pData;
-            pData = 0;
-            dataSize = 0;
-        }
+        Destroy();
     }
 
     unsigned char* pData;
@@ -360,6 +358,17 @@ inline unsigned char CDPlayMsg::AllocSize(unsigned long dSize)
         delete [] pData;
     pData = new unsigned char[dSize];
     dataSize = dSize;
+    return 1;
+}
+
+// CODEVIEW(E:\gamedcs\dxplay.h:164, dc 0x8be0c)
+inline unsigned char CDPlayMsg::Destroy()
+{
+    if (!pData)
+        return 0;
+    delete [] pData;
+    pData = 0;
+    dataSize = 0;
     return 1;
 }
 
@@ -664,9 +673,7 @@ SIZE(CDPlaySession, 0x10c);
 
 // --- CDPlayMsg ---
 // CODEVIEW(E:\gamedcs\dxplay.h:137, dc 0x8bda8) void CDPlayMsg::CDPlayMsg();
-// CODEVIEW(E:\gamedcs\dxplay.h:145, dc 0x8bdb4) void CDPlayMsg::~CDPlayMsg();
 // CODEVIEW(E:\gamedcs\dxplay.h:150, dc 0x8bdcc) unsigned char CDPlayMsg::AllocSize(unsigned long dSize);
-// CODEVIEW(E:\gamedcs\dxplay.h:164, dc 0x8be0c) unsigned char CDPlayMsg::Destroy();
 // CODEVIEW(E:\gamedcs\dxplay.h:177, dc 0x8be38) unsigned long CDPlayMsg::GetId();
 
 // --- CDPlayPlayer ---
