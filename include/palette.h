@@ -61,6 +61,13 @@ SIZE(TPalette24, 0x31c);
 
 class TPalette16 : public resource {
 public:
+    // Dreamcast CodeView names these three class statics directly. Retail's
+    // SetPixelFormat stores its red/green/blue arguments at the corresponding
+    // three addresses, and every 16-bit palette transform reads them back.
+    static unsigned int red_mask;
+    static unsigned int green_mask;
+    static unsigned int blue_mask;
+
     union {
         unsigned short data[256];
         palette colors;

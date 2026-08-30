@@ -1352,6 +1352,46 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             "service_sounds helper call",
             r"\bservice_sounds\s*\(", 1, 1),
     ),
+    ("palette.obj", 0x10B7AC): (
+        SourceRule(
+            "TPalette16::Gray keeps Dreamcast's three const unsigned "
+            "normalization locals and their red, green, blue source-row "
+            "order",
+            r"\A\s*const\s+unsigned\s+int\s+red_norm\s*=\s*"
+            r"std\s*::\s*numeric_limits\s*<\s*int\s*>\s*::\s*max\s*"
+            r"\(\s*\)\s*/\s*red_mask\s*;\s*"
+            r"const\s+unsigned\s+int\s+green_norm\s*=\s*"
+            r"std\s*::\s*numeric_limits\s*<\s*int\s*>\s*::\s*max\s*"
+            r"\(\s*\)\s*/\s*green_mask\s*;\s*"
+            r"const\s+unsigned\s+int\s+blue_norm\s*=\s*"
+            r"std\s*::\s*numeric_limits\s*<\s*int\s*>\s*::\s*max\s*"
+            r"\(\s*\)\s*/\s*blue_mask\s*;", 1, 1),
+        SourceRule(
+            "TPalette16::Gray keeps Dreamcast's entry-10 loop, three "
+            "channel statements and nested max(max(red, green), blue) "
+            "boundary",
+            r"for\s*\(\s*int\s+i\s*=\s*10\s*;\s*i\s*<\s*256\s*;\s*"
+            r"\+\+\s*i\s*\)\s*\{\s*"
+            r"unsigned\s+int\s+red\s*=\s*\(\s*data\s*\[\s*i\s*\]"
+            r"\s*&\s*red_mask\s*\)\s*\*\s*red_norm\s*;\s*"
+            r"unsigned\s+int\s+green\s*=\s*\(\s*data\s*\[\s*i\s*\]"
+            r"\s*&\s*green_mask\s*\)\s*\*\s*green_norm\s*;\s*"
+            r"unsigned\s+int\s+blue\s*=\s*\(\s*data\s*\[\s*i\s*\]"
+            r"\s*&\s*blue_mask\s*\)\s*\*\s*blue_norm\s*;\s*"
+            r"unsigned\s+int\s+gray\s*=\s*max\s*\(\s*max\s*\(\s*"
+            r"red\s*,\s*green\s*\)\s*,\s*blue\s*\)\s*;", 1, 1),
+        SourceRule(
+            "TPalette16::Gray keeps Dreamcast's single packed write with "
+            "red, green and blue normalization/mask pairings",
+            r"data\s*\[\s*i\s*\]\s*=\s*static_cast\s*<\s*"
+            r"unsigned\s+short\s*>\s*\(\s*"
+            r"\(\s*\(\s*gray\s*/\s*red_norm\s*\)\s*&\s*red_mask\s*\)"
+            r"\s*\|\s*"
+            r"\(\s*\(\s*gray\s*/\s*green_norm\s*\)\s*&\s*"
+            r"green_mask\s*\)\s*\|\s*"
+            r"\(\s*\(\s*gray\s*/\s*blue_norm\s*\)\s*&\s*"
+            r"blue_mask\s*\)\s*\)\s*;", 1, 1),
+    ),
     ("resourcemanager.obj", 0x121EC8): (
         SourceRule(
             "GetPalette24 keeps Dreamcast's char[24] header and TRGBA[256] "
@@ -3519,6 +3559,55 @@ if (m_flag64) {
         if not any(description in rule.description for rule in
                    contract_violations(probe, current_map_key)):
             failures.append("broken SetCurrentMap " + description
+                            + " source shape passed")
+    palette_gray_key = ("palette.obj", 0x10B7AC)
+    palette_gray_probe = """\
+const unsigned int red_norm =
+    std::numeric_limits<int>::max() / red_mask;
+const unsigned int green_norm =
+    std::numeric_limits<int>::max() / green_mask;
+const unsigned int blue_norm =
+    std::numeric_limits<int>::max() / blue_mask;
+for (int i = 10; i < 256; ++i) {
+    unsigned int red = (data[i] & red_mask) * red_norm;
+    unsigned int green = (data[i] & green_mask) * green_norm;
+    unsigned int blue = (data[i] & blue_mask) * blue_norm;
+    unsigned int gray = max(max(red, green), blue);
+    data[i] = static_cast<unsigned short>(
+        ((gray / red_norm) & red_mask) |
+        ((gray / green_norm) & green_mask) |
+        ((gray / blue_norm) & blue_mask));
+}
+"""
+    if contract_violations(palette_gray_probe, palette_gray_key):
+        failures.append("aligned TPalette16::Gray source shape did not pass")
+    palette_gray_mutations = (
+        (palette_gray_probe.replace(
+            "const unsigned int red_norm =\n"
+            "    std::numeric_limits<int>::max() / red_mask;\n"
+            "const unsigned int green_norm =\n"
+            "    std::numeric_limits<int>::max() / green_mask;",
+            "const unsigned int green_norm =\n"
+            "    std::numeric_limits<int>::max() / green_mask;\n"
+            "const unsigned int red_norm =\n"
+            "    std::numeric_limits<int>::max() / red_mask;"),
+         "normalization locals"),
+        (palette_gray_probe.replace("int i = 10", "int i = 0"),
+         "entry-10 loop"),
+        (palette_gray_probe.replace(
+            "max(max(red, green), blue)",
+            "red > green ? (red > blue ? red : blue) : "
+            "(green > blue ? green : blue)"),
+         "nested max"),
+        (palette_gray_probe.replace(
+            "((gray / blue_norm) & blue_mask)",
+            "((gray / blue_norm) & red_mask)"),
+         "packed write"),
+    )
+    for probe, description in palette_gray_mutations:
+        if not any(description in rule.description for rule in
+                   contract_violations(probe, palette_gray_key)):
+            failures.append("broken TPalette16::Gray " + description
                             + " source shape passed")
     send_key = ("singleselectionwindow.obj", 0x140D74)
     send_probe = """\
