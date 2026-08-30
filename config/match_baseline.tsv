@@ -1124,7 +1124,7 @@ events	?DoAIEvent@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@@Z	100.00
 # synth PDB - returned the row to master's own 98.5741 to the digit
 # with events.cpp untouched. Cross-generation noise, the
 # recruit::Update revert-control precedent; hist keeps 99.1139.
-events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	99.0481	99.0481	99.1139	0xad470
+events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	98.5741	99.0481	99.1139	0xad470
 events	?DoCustomArtifact@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	99.1492	99.1492	99.1492	0x9f070
 events	?DoCustomResource@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa4780
 events	?DoCustomSpellScroll@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	97.4451	97.4451	97.4451	0xa5a80
@@ -2925,6 +2925,7 @@ swapmgr	?SwapMons@swapManager@@QAEXXZ	79.2453	79.2453	79.2453	0x1b0da0
 swapmgr	?Update@swapManager@@QAEXXZ	89.3496	89.3496	89.3496	0x1b0ef0
 swapmgr	?UpdateArrows@TSwapWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1ae430
 swapmgr	?UpdateBackpack@swapManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x1af150
+swapmgr	?handle_artifact_click@swapManager@@QAEXJJE@Z	87.8106	87.8106	87.8106	0x1af590
 swapmgr	?handle_backpack_click@swapManager@@QAEXJJE@Z	94.3147	94.3147	94.3147	0x1af990
 systemoptionswindow	??0TSystemOptionsWindow@@QAE@XZ	98.1326	98.1326	98.1326	0x1b1790
 systemoptionswindow	??1TSystemOptionsWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1b3040

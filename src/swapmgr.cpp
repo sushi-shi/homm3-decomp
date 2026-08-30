@@ -5,7 +5,9 @@
 #define HOMM3_SWAPMGR_MESSAGE_CTOR_VIEW
 #include <va.h>
 #include "swapmgr.h"
+#define HOMM3_VLC_CHECKS_VIEW
 #include "game.h"
+#undef HOMM3_VLC_CHECKS_VIEW
 #include "hero.h"
 #include "advmgr.h"
 #include "bitmap816.h"
@@ -14,6 +16,7 @@
 #include "winmgr.h"
 #include "netgame.h"
 #include "mousemgr.h"
+#include "textresource.h"
 
 DATA(0x006a3d08) static int gUnnamed6a3d08;
 // swapmgr singleton (bss 0x6a3d30): the ctor stores `this`, Reset/Open/Close consult it.
@@ -407,14 +410,123 @@ void swapManager::HandleMonster(int iHero, int iMonster, int bRightMouse, unsign
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\swapmgr.cpp:1106
-DC_ONLY(0x15d150, 0x190)
+// Dreamcast proves the two source locals and the get/view/remove/equip/
+// Update/SetPointer/Reset helper order. Complete retains that shared shape
+// and adds combination-artifact handling plus the campaign scenario guard.
+VA(0x005af590, 0x3F7)  // Main roster/callees + full retail body, dc 0x15d150
 void swapManager::handle_artifact_click(long side, long id, unsigned char right_click)
 {
-    // @stub
+    TArtifactSlot slot =
+        static_cast<TArtifactSlot>(id) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
+    hero* our_hero = heroes[side];
+    type_artifact old_artifact = *our_hero->get_artifact(slot);
+
+    if (gHeroScreenDraggedArtifact.artifactId == ARTIFACT_NONE) {
+        if (old_artifact.artifactId == ARTIFACT_NONE)
+            return;
+
+        if (right_click) {
+            if (old_artifact.artifactId == ARTIFACT_SPELLBOOK) {
+                NormalDialog(gpGeneralText->GetText(22), 4, -1, 28,
+                             -1, 0, -1, 0, -1, 0, -1, 0);
+                return;
+            }
+
+            if (gpGame->f_1f698 >= 2) {
+                int targetCombo =
+                    akArtifactTraits[old_artifact.artifactId].targetCombo;
+                if (akArtifactTraits[old_artifact.artifactId].comboType
+                    != -1) {
+                    if (our_hero->HeroFn_004D9B30(
+                            old_artifact.artifactId)
+                        == DIALOG_RETURN_ACCEPT) {
+                        our_hero->HeroFn_004DC070(slot);
+                        Update();
+                        DrawSwapWin();
+                    }
+                    return;
+                }
+
+                if (targetCombo != -1
+                    && our_hero->HeroFn_004DBE80(targetCombo)) {
+                    if (our_hero->HeroFn_004D9CC0(
+                            old_artifact.artifactId)
+                        == DIALOG_RETURN_ACCEPT) {
+                        our_hero->HeroFn_004DBF30(targetCombo, slot);
+                        Update();
+                        DrawSwapWin();
+                    }
+                    return;
+                }
+
+                our_hero->ViewArtifact(&old_artifact, right_click);
+                return;
+            }
+
+            our_hero->ViewArtifact(&old_artifact, right_click);
+            return;
+        }
+
+        if (slot == eArtifactSlotSpellbook
+            || slot == eArtifactSlotWarMachine4) {
+            NormalDialog(gpGeneralText->GetText(22), 1, -1, -1,
+                         -1, 0, -1, 0, -1, 0, -1, 0);
+            return;
+        }
+
+        if (CanModHero(side)) {
+            gHeroScreenDraggedArtifact = old_artifact;
+            our_hero->remove_artifact(slot);
+            Update();
+            gpMouseManager->SetPointer(
+                gHeroScreenDraggedArtifact.artifactId,
+                mouseManager::ARTIFACT_SET);
+            Reset();
+        }
+        return;
+    }
+
+    if (right_click)
+        return;
+    if (!our_hero->HeroFn_004E2840(
+            gHeroScreenDraggedArtifact.artifactId, slot))
+        return;
+
+    if (gCampaignMode
+        && old_artifact.artifactId == ARTIFACT_ARMAGEDDONS_BLADE
+        && gpGame->campaign.currentCampaign == ARMAGEDDONS_BLADE_CAMPAIGN
+        && gpGame->campaign.currentMap == ARMAGEDDONS_BLADE_MAP
+        && our_hero->id != ARMAGEDDONS_BLADE_EXEMPT_HERO) {
+        NormalDialog(gpGeneralText->GetText(762), 1, -1, -1,
+                     -1, 0, -1, 0, -1, 0, -1, 0);
+        return;
+    }
+
+    if (old_artifact.artifactId == ARTIFACT_NONE) {
+        our_hero->equip_artifact(&gHeroScreenDraggedArtifact, slot);
+        if (gpGame->f_1f698 >= 2)
+            our_hero->HeroFn_004DC100(slot);
+        gHeroScreenDraggedArtifact.artifactId = ARTIFACT_NONE;
+        Update();
+        gpMouseManager->SetPointer(0, mouseManager::DEFAULT_SET);
+        Reset();
+    } else if (CanModHero(side)) {
+        our_hero->remove_artifact(slot);
+        our_hero->equip_artifact(&gHeroScreenDraggedArtifact, slot);
+        if (gpGame->f_1f698 >= 2)
+            our_hero->HeroFn_004DC100(slot);
+        gHeroScreenDraggedArtifact = old_artifact;
+        Update();
+        gpMouseManager->SetPointer(
+            gHeroScreenDraggedArtifact.artifactId,
+            mouseManager::ARTIFACT_SET);
+        Reset();
+    }
 }
 
-#endif  // @carcass
 
 // E:\gamedcs\swapmgr.cpp:1168
 // The exact UpdateBackpack/SendHeroUpdate bracket fixes this third handler at
