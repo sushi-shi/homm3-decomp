@@ -260,6 +260,38 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-30 — Dreamcast's original `CNewPlayerUpdateProc::Go` maps
+  directly to Complete retail `0x005789f0` and closes at 100%.** The earlier
+  working attribution put `singleselectionwindow.obj:0x1480cc` on the exact
+  `t_map_list_update::Go` at `0x00577d70` because its compact vector-count
+  opener had the closest size. The newly recovered two-vtable hierarchy
+  exposed the real base slot, and the evidence is decisive: Dreamcast
+  CodeView records one `initMsg` local, construction through
+  `CGameHeaderInfoInitMsgEx(version, numMaps, loadGameMode)`, then
+  `TransmitRemoteDataDPID`. Its constructor dossier separately proves the
+  nested `CGameHeaderInfoInitMsg(numMaps, loadGameMode, msgSize)` boundary,
+  followed by ordered `memset` and `strncpy` statements.
+
+  Complete retail `0x005789f0` expands that exact source hierarchy. It reads
+  `gameVersion`, the `HeadersA` count and `m_flag64`, materializes the
+  0x30-byte subtype-1024 record at the DC-proven offsets, copies 19 version
+  bytes after clearing the 20-byte band, then sends it to `m_dpid` with
+  `(false, true)`. Reconstructing those source boundaries produced
+  **100.0000% across all 158 bytes and all 4 / 4 source-labelled blocks on
+  the first compiled hypothesis**. Removing an invented window-pointer local
+  retained the exact x86 and restored CodeView's sole-local shape.
+  `t_map_list_update::Go` remains exact as Complete's separate subtype-1083
+  `TransferHeaders` override; it no longer carries the DC address claim.
+
+  Two asymmetric function rules now require the `initMsg` constructor and
+  send order. A file contract preserves both message-class boundaries, their
+  field/statement order, the exact base-slot definition and its retail send
+  arguments; five negative controls prove the contract catches flattening,
+  reordering and protocol substitution. The full build's only apparent exact
+  dip is the already documented `OnKillFocus` pooled-data-name/delink
+  oscillation: its historical 100% peak remains banked and no update-family
+  row regressed.
+
 - **2026-08-30 — `CNewPlayerUpdateMan::NewPlayer` closes only after the
   two-vtable constructor schedule is modeled as source structure.** The
   mandatory Dreamcast pass at `singleselectionwindow.obj:0x14870c` proves the
@@ -288,8 +320,8 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   slots, construction sites, and ordering come directly from retail.
 
   This coherent model makes `NewPlayer` **100.0000% with all 9 / 9 source-
-  labelled blocks identical**, keeps the teardown and the Dreamcast-shaped
-  first `Go` exact, and promotes the previously unclaimed 47-byte
+  labelled blocks identical**, keeps the teardown and Complete's derived
+  1083-path `Go` exact, and promotes the previously unclaimed 47-byte
   `t_map_list_update` constructor at `0x00589240` at **100.0000%**. The
   asymmetric function rule preserves Dreamcast's local/helper order; a file
   contract with negative controls now preserves the retail-proved inheritance,
