@@ -1585,7 +1585,6 @@ call	philai.obj	0x111e34	hero::get_value_of_power
 call	philai.obj	0x11206c	game::get_cell
 call	philai.obj	0x11206c	hero::get_target
 call	philai.obj	0x11206c	hero::get_value_of_well
-call	philai.obj	0x1120e8	value_of_move_source
 call	philai.obj	0x11276c	ComputeUpgradeValue
 call	philai.obj	0x112830	type_AI_creature_swapper::get_army_increase
 call	philai.obj	0x112914	AI_get_value_of_artifact

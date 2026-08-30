@@ -2746,33 +2746,21 @@ long get_value_of_well(const hero* current_hero, unsigned short move_cost)
 
 // E:\gamedcs\philai.cpp:2865.  The Rally Flag: +1 morale, +1 luck and a
 // movement bonus, once per hero (flag bit 16).  The movement credit and
-// its outrun bounty are value_of_move_source's shape written in line, and
-// the raw morale/luck curves are added on top.  Extern for emission while
-// the RALLY_FLAG arm is a stub.
-// Residual (92.56%): after sinking the outrun arm the remaining delta is
-// per-arm register saves - retail pushes/pops EBX inside the credited
-// arm (and its undead exit materialises the inlined MoraleIncreaseValue
-// return through EAX before the pop); our CL saves EBX at function scope.
+// its outrun bounty keep the source-real value_of_move_source boundary, and
+// the raw luck/morale curves follow in Dreamcast line-2872 order. Retail /Ob2
+// expands the movement helper here; do not replace it with its body.
 VA(0x0052a5f0, 0x108)  // anchor: hero flag 0x10000 + morale/luck pair + RALLY_FLAG arm, dc 0x1120e8
 int ValueOfRallyFlag(const hero* current_hero, long* move_cost)
 {
     if (current_hero->flags & 0x10000)
         return 0;
 
-    int value;
-    if (*move_cost >= 200) {
-        *move_cost -= 200;
-        value = const_cast<hero*>(current_hero)->MoraleIncreaseValue(1);
-    } else {
-        *move_cost = 0;
-        value = 10000;
-    }
     return static_cast<int>(
-        AI_value_of_morale(
-            const_cast<hero*>(current_hero)->GetMorale(0, 0, 1), 1)
+        value_of_move_source(current_hero, 0x10000, 200, move_cost)
         + AI_value_of_luck(
             const_cast<hero*>(current_hero)->GetLuck(0, 0, 1), 1)
-        + value);
+        + AI_value_of_morale(
+            const_cast<hero*>(current_hero)->GetMorale(0, 0, 1), 1));
 }
 
 long value_of_recruiting(const hero* current_hero, TCreatureType creature,
