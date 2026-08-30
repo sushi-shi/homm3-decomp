@@ -12140,6 +12140,17 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   was NOT rebased into the new queue; HEROES3's `.text`-embedded data may
   want it later — watch upstream.
 
+- **2026-08-30 — reviewed data owners outrank dense `src-DATA` placeholders.**
+  `DATA()` still proves only an address and emits `data_<rva>`, but a
+  site/occurrence-checked reloc-alias may upgrade that placeholder to the
+  source-level owner. The paired normalizer may then canonicalize an
+  unadmitted synthesized interior `data_<rva>` to owner+addend only when both
+  resolve to the identical retail RVA; a wrong-address negative control must
+  remain visible. DrawBolt supplied the bounded proof: three RGB tables and
+  three shared masks now render with identical owners/addends on both sides,
+  while its 89.316536% score stayed flat, separating relocation diagnostics
+  from the remaining body-codegen mismatch.
+
 - **2026-07-23 — repo + toolchain distribution.** Private GitHub repo
   `sushi-shi/homm3-decomp` created and pushed; toolchain tarball published as
   release `toolchain-vc6-sp3`. `homm3 init` now downloads it via `gh` when

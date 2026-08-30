@@ -1558,11 +1558,10 @@ static unsigned char gBoltSpectrumColors[15][3] = {
 // either within 2 pixels or has started moving AWAY again (further than
 // field_48 + 1), bAtDestination goes up and DoBolt stops re-aiming it.
 //
-// RGBto16's THREE TERMS ARE EMITTED RIGHT-TO-LEFT, and that reading was
-// worth 71.63 -> 76.90 on its own: `(r) | (g) | (b)` in source order
-// puts the BLUE term's mask load FIRST in the object, which is retail's
-// order in all ten expansions. Writing the return the other way round
-// reverses every one of them.
+// RGBto16 retains its recovered helper boundary and three-statement colour
+// accumulator. Dreamcast exposes the three emitted source rows and the later
+// return; that spelling also closes mouseManager::LoadFrame byte-exactly.
+// Its inlined expansions here load BLUE, GREEN, then RED, as retail does.
 //
 // 76.8992 -> 94.9073 (2026-08-21): the old B1 "unreachable parameter
 // binding" diagnosis was wrong because the inherited source roster was
@@ -1578,19 +1577,32 @@ static unsigned char gBoltSpectrumColors[15][3] = {
 // improvement, so it stays as inherited statement-order evidence rather
 // than being trimmed merely because most declarations emit no bytes.
 //
-// Residual (94.91%): the first EBX/EDI/ESI definitions and all 27
-// conditional-branch tokens now agree. The remaining shape difference is
-// one reload-only fall-through block (60 blocks vs retail's 59): our
-// compiler converges the switch arms, then reloads psBolt from [ebp+8],
-// while retail has already restored EBX on every clobbering arm. The four
-// persistent frame homes are also one cycle apart: base assigns
+// 2026-08-30 source-shape checkpoint: Dreamcast line 3714 calls sin for fX
+// and line 3715 calls cos for fY; retail's two runtime call targets and the
+// byte-exact HoMM2 source agree. The inherited cos/sin spelling was therefore
+// source-false even though it sat at the historical 94.9073 peak. Restoring
+// the proven RGBto16 accumulator and sin/cos order leaves the current score
+// at 89.316536% while max/history correctly retain 94.9073.
+//
+// Current residual: all 27 conditional branches and both returns agree. The
+// first EBX/EDI/ESI definitions agree, but the candidate has 62 CFG blocks
+// versus retail's 59 and reloads psBolt after the switch where retail keeps
+// EBX live. The four persistent frame homes are also one cycle apart: base assigns
 // spanFirst/spanLast/lastX/lastY to -0xc/-0x10/-0x14/-0x18, retail uses
 // spanLast/lastX/lastY/spanFirst there. Rejected on the improved shape:
 // field-based spanFirst (79.1532), field-based spanLast (93.6996), a
-// 32-bit color (83.2561), and why-reg's previous-coordinate store swap
-// (94.8911 actual fuzzy despite a better masked distance). Block-scoping
+// 32-bit color (83.2561), and swapping the previous-X/previous-Y stores:
+// why-reg improves its masked distance 176 -> 170, but Dreamcast lines
+// 3740..3746 retain X before Y, so the percentage-only mutation is rejected.
+// Block-scoping
 // color and implicit versus explicit narrowing are byte-flat; why-branch's
 // five case-order mutations are flat or worse.
+//
+// Relocation inspection control (2026-08-30): every bolt-table byte and all
+// 45 RGB-mask references now compare as the same owner+addend on both sides.
+// The relocation-aware delink/normalization was score-flat, proving those
+// former `data_<interior>` diagnostics were tooling spellings rather than
+// body-codegen differences.
 //
 // ASSERT/TRACE NEGATIVE CONTROL (2026-08-21): identical release-elided
 // call carriers at 1/3/5/8/10/20 sites, distinct format strings at 3/8
@@ -1623,9 +1635,9 @@ void combatManager::DrawBolt(SBolt* psBolt, int iDrawLength)
 
     { for (i = 0; i < iDrawLength; i++) {
         psBolt->fX = static_cast<float>(
-            cos(static_cast<double>(psBolt->fAngle)) + psBolt->fX);
+            sin(static_cast<double>(psBolt->fAngle)) + psBolt->fX);
         psBolt->fY = static_cast<float>(
-            sin(static_cast<double>(psBolt->fAngle)) + psBolt->fY);
+            cos(static_cast<double>(psBolt->fAngle)) + psBolt->fY);
         psBolt->iX = static_cast<long>(psBolt->fX);
         psBolt->iY = static_cast<long>(psBolt->fY);
         if (psBolt->iX < 0) {

@@ -2893,7 +2893,7 @@ swapmgr	??_GTSwapWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1ae390
 swapmgr	?Close@swapManager@@UAEXXZ	100.0000	100.0000	100.0000	0x1aed20
 swapmgr	?DrawSelector@swapManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1aedc0
 swapmgr	?IsLeftHero@swapManager@@QAE_NXZ	100.0000	100.0000	100.0000	0x1b1380
-swapmgr	?OnWidgetDeselect@swapManager@@QAEXAAVmessage@@AAH@Z	88.4550	88.4550	88.4550	0x1b10d0
+swapmgr	?OnWidgetDeselect@swapManager@@QAEXAAVmessage@@AAH@Z	99.9650	99.9650	99.9650	0x1b10d0
 swapmgr	?SendChat@CSwapManagerChatEdit@@UAEXPBDH@Z	100.0000	100.0000	100.0000	0x1ae370
 swapmgr	?SwapMons@swapManager@@QAEXXZ	79.2453	79.2453	79.2453	0x1b0da0
 swapmgr	?UpdateArrows@TSwapWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1ae430
