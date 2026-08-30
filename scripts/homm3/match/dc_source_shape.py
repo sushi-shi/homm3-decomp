@@ -405,6 +405,17 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"\blong\s+choice\s*;.*?\blong\s+i\s*;.*?"
             r"\bTSecondarySkill\s+skill\s*;"),
     ),
+    ("town.obj", 0x1664B0): (
+        SourceRule(
+            "initialize_hordes keeps Dreamcast lines 954/957/958/959/960's "
+            "base dwelling, upgraded slot, creature, dwelling and bonus "
+            "statement order",
+            r"\beffect\s*->\s*dwelling\s*=\s*slot\s*;.*?"
+            r"\bslot\s*\+=\s*TOWN_DWELLING_COUNT\s*;.*?"
+            r"\beffect\s*\[\s*1\s*\]\s*\.\s*creature\s*=.*?;.*?"
+            r"\beffect\s*\[\s*1\s*\]\s*\.\s*dwelling\s*=\s*slot\s*;"
+            r".*?\beffect\s*\[\s*1\s*\]\s*\.\s*bonus\s*="),
+    ),
     ("philai.obj", 0x10FEB8): (
         SourceRule(
             "value_of_experience keeps Dreamcast's no-argument const hero "
@@ -2374,6 +2385,28 @@ TSecondarySkill skill;
     if not contract_violations(int_randomize_skill,
                                randomize_university_key):
         failures.append("int randomize_university skill escaped shape gate")
+    initialize_hordes_key = ("town.obj", 0x1664B0)
+    initialize_hordes_probe = """\
+effect->dwelling = slot;
+slot += TOWN_DWELLING_COUNT;
+effect[1].creature = gTownDwellingCreatures[creatureBase + slot];
+effect[1].dwelling = slot;
+const short* bonus = &effect->bonus;
+effect[1].bonus = *bonus;
+"""
+    if contract_violations(initialize_hordes_probe,
+                           initialize_hordes_key):
+        failures.append(
+            "aligned initialize_hordes statement order did not pass")
+    reordered_initialize_hordes = initialize_hordes_probe.replace(
+        "effect[1].dwelling = slot;\nconst short* bonus = &effect->bonus;\n"
+        "effect[1].bonus = *bonus;",
+        "effect[1].bonus = effect->bonus;\n"
+        "effect[1].dwelling = slot;")
+    if not contract_violations(reordered_initialize_hordes,
+                               initialize_hordes_key):
+        failures.append(
+            "reordered initialize_hordes dwelling/bonus stores passed")
     hero_bonuses_key = ("philai.obj", 0x10FEF4)
     hero_bonuses_probe = """\
 type_spellvalue caster(our_hero);

@@ -260,6 +260,25 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-30 — Dreamcast-first reconstruction closes
+  `town::initialize_hordes` exactly after deliberately leaving its
+  source-false local maximum.** The former **99.7778%** spelling ordered the
+  upgraded horde writes `creature, bonus, dwelling`, because that happened to
+  leave only an AX/DX register tie. Dreamcast breakpoint rows 958/959/960
+  positively prove `creature, dwelling, bonus`; restoring that order first
+  dipped to **96.8444%**, with the high-water score preserved only as history.
+  A const pointer to the base entry's bonus, declared after the dwelling
+  statement, then prevents C2 from moving the bonus load across the creature
+  store. The result is **100.0000% across all 118 bytes**, with all 11 blocks
+  and all 5 branches exact. A fatal source-order rule and negative control now
+  reject the old percentage-seeking reversal.
+
+  Controls bound the spelling: a post-dwelling short value local remains at
+  96.8444%, while a named reference to the upgraded entry falls to 85.9778%.
+  This is the campaign's concrete demonstration that a Dreamcast-proven
+  source correction may need to pass through a lower local score before the
+  retail-exact lowering becomes reachable.
+
 - **2026-08-30 — `game::randomize_university` now preserves the compatible
   Dreamcast local facts across its remaining C1 register wall.** CodeView
   types `choice` and `i` as `long` and `skill` as `TSecondarySkill`, in that

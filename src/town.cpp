@@ -277,23 +277,15 @@ town::town()
 // gTownDwellingCreatures, then synthesise the upgraded twin from the
 // same slot + 7. `effect[1]` is the pair's upgrade entry - retail steps
 // the cursor by 0x10 (two entries) exactly twice per row, nine rows.
-// Residual (99.8%): two instructions - retail copies the bonus through
-// ax (free after the [ecx+0xe] store), our CL through dx (free after the
-// [ecx+8] store). Register-homing family. All four statement orders for
-// the {creature, bonus, dwelling} triple were swept: creature/bonus/
-// dwelling is the best at 99.78, creature/dwelling/bonus 96.84,
-// bonus/creature/dwelling 89.16, the two dwelling-first orders 84.98.
-// Also tried and rejected: a separate `upgradeSlot` short, `slot +=`
-// vs an explicit cast, and reading the bonus through effect[0]. A
-// second pass 2026-08-08 added five more, none better: hoisting the
-// bonus into a short local before the stores (99.78, byte-identical),
-// an `effect + 1` cursor local (82.87), the dwelling/creature/bonus
-// order (94.51), inlining `slot + 7` at both uses instead of `slot +=`
-// (88.00), and moving effect[1].dwelling ahead of the bonus copy
-// (96.84). Both registers are dead at that point (eax after the
-// [ecx+0xe] store, edx after [ecx+8]); retail takes the one freed
-// FIRST and our CL the one freed LAST, which no operand spelling
-// reaches.
+// Exact closure (2026-08-30): Dreamcast line rows 958/959/960 prove the
+// final source order is creature, dwelling, bonus.  The former 99.7778%
+// local maximum reversed the last two statements merely because that made
+// SP3 schedule them closer to retail; restoring the positive source fact
+// first dipped to 96.8444%.  Keeping the bonus source address in a const
+// pointer after the dwelling statement prevents that load crossing the
+// creature store, and produces all 118 retail bytes exactly.  A direct
+// post-dwelling short local is byte-identical to the 96.8444% control; an
+// upgraded-entry reference falls to 85.9778%.
 VA(0x005bdf60, 0x76)  // linkorder, dc 0x1664b0
 void town::initialize_hordes()
 {
@@ -310,8 +302,9 @@ void town::initialize_hordes()
                 effect->dwelling = slot;
                 slot += TOWN_DWELLING_COUNT;
                 effect[1].creature = gTownDwellingCreatures[creatureBase + slot];
-                effect[1].bonus = effect->bonus;
                 effect[1].dwelling = slot;
+                const short* bonus = &effect->bonus;
+                effect[1].bonus = *bonus;
             }
             effect += 2;
         }
