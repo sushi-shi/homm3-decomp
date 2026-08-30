@@ -26,7 +26,10 @@ public:
         THREE_ACTIVE_HEROES = 3,
         THIRD_HOURGLASS_PHASE = 3,
         SIXTH_HOURGLASS_PHASE = 6,
-        LAST_HOURGLASS_PHASE = 9
+        LAST_HOURGLASS_PHASE = 9,
+        // Retail's calendar word is compared with the final weekday before
+        // a low-value destination puts the AI hero to sleep.
+        AI_HERO_MOVE_SLEEP_DAY = 7
     };
 
     philAI();

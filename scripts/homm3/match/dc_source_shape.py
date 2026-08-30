@@ -296,12 +296,6 @@ NONEXACT_RETAIL_PROVEN_CALL_SPELLINGS: dict[
             0x005AF590, "artifactAllowedInSlot",
             r"\bHeroFn_004E2840(?=\s*\()", "artifactAllowedInSlot"),
     ),
-    ("philai.obj", 0x10E9A8): (
-        CallSpelling(
-            "Complete move_hero's decoded 1000-point cap spells the "
-            "Dreamcast min helper as VC6's _cpp_min template",
-            0x005267B0, "min", r"\b_cpp_min(?=\s*\()", "min"),
-    ),
 }
 
 
@@ -418,20 +412,7 @@ PROVEN_REVISION_REMOVALS: dict[
 # same expression and rejects the older helper, omission and flattening.  This
 # is deliberately not a general name substitution or score-based waiver.
 RETAIL_BYTE_PROVEN_REVISION_REMOVALS: dict[
-        tuple[str, int], tuple[ProvenRevisionRemoval, ...]] = {
-    ("philai.obj", 0x10E9A8): (
-        ProvenRevisionRemoval(
-            "Complete move_hero changes Dreamcast's initial max movement "
-            "floor to retail's decoded 1000-point min cap",
-            0x005267B0,
-            r"max_distance\s*=\s*_cpp_min\s*\(\s*1000\s*,\s*"
-            r"current_hero\s*->\s*movePoints\s*\+\s*"
-            r"static_cast\s*<\s*unsigned\s+short\s*>\s*\(\s*"
-            r"current_hero\s*->\s*field_041\s*\)\s*\+\s*200\s*\)"
-            r"\s*;",
-            ("max",)),
-    ),
-}
+        tuple[str, int], tuple[ProvenRevisionRemoval, ...]] = {}
 
 
 # Named calls cover most recoverable shape automatically. These bounded
@@ -1006,17 +987,14 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
     ),
     ("philai.obj", 0x10E9A8): (
         SourceRule(
-            "move_hero keeps Complete's retail-decoded 1000-point min cap "
-            "with the unsigned field_041 addend",
-            r"max_distance\s*=\s*_cpp_min\s*\(\s*1000\s*,\s*"
+            "move_hero keeps Dreamcast's max helper with the unsigned "
+            "field_041 addend and retail-decoded 1000-point floor",
+            r"max_distance\s*=\s*max\s*\(\s*"
             r"current_hero\s*->\s*movePoints\s*\+\s*"
             r"static_cast\s*<\s*unsigned\s+short\s*>\s*\(\s*"
-            r"current_hero\s*->\s*field_041\s*\)\s*\+\s*200\s*\)"
+            r"current_hero\s*->\s*field_041\s*\)\s*\+\s*200\s*,\s*"
+            r"1000\s*\)"
             r"\s*;", 1, 1),
-        SourceRule(
-            "move_hero may not restore Dreamcast's retail-contradicted max "
-            "movement floor",
-            r"(?<![_\w])max\s*\(", 0, 0),
     ),
     ("philai.obj", 0x10D684): (
         SourceRule(
@@ -5840,55 +5818,25 @@ ShowWidget(195);
             removal_key, removal_body.replace("ShowWidget(195);", ""),
             removal_va, {removal_va})[0]:
         failures.append("erased Complete replacement group classified")
-    retail_removal_key = ("philai.obj", 0x10E9A8)
-    retail_removal_va = RETAIL_BYTE_PROVEN_REVISION_REMOVALS[
-        retail_removal_key][0].caller_va
-    retail_removal_body = """\
+    move_hero_key = ("philai.obj", 0x10E9A8)
+    move_hero_body = """\
 long max_distance = 1000;
-max_distance = _cpp_min(
-    1000, current_hero->movePoints
-          + static_cast<unsigned short>(current_hero->field_041) + 200);
+max_distance = max(
+    current_hero->movePoints
+        + static_cast<unsigned short>(current_hero->field_041) + 200,
+    1000);
 """
-    retail_removed, retail_removal_descriptions = \
-        retail_proven_dc_only_removed_helpers(
-            retail_removal_key, retail_removal_body, retail_removal_va)
-    if retail_removed != frozenset(("max",)) \
-            or len(retail_removal_descriptions) != 1 \
-            or contract_violations(retail_removal_body, retail_removal_key):
-        failures.append("retail-proved max-to-min revision did not pass")
-    retail_groups = (
-        CallGroup(963, ("max",)),
-        CallGroup(975, ("AI_choose_destination",)),
+    if contract_violations(move_hero_body, move_hero_key):
+        failures.append("retail-proved move_hero max floor did not pass")
+    move_hero_mutations = (
+        move_hero_body.replace("max(", "min("),
+        move_hero_body.replace("max(", "identity("),
+        move_hero_body.replace("unsigned short", "short"),
+        move_hero_body.replace("1000);", "999);"),
     )
-    if groups_without_helpers(retail_groups, retail_removed) != (
-            CallGroup(975, ("AI_choose_destination",)),):
-        failures.append(
-            "retail-proved removal did not filter statement groups")
-    retail_canonical = apply_proven_call_spellings(
-        retail_removal_key, retail_removal_body, retail_removal_va, set())
-    if missing_from_body(retail_canonical, ["min"]):
-        failures.append("retail-proved _cpp_min spelling did not canonicalize")
-    retail_removal_mutations = (
-        retail_removal_body.replace("_cpp_min", "max"),
-        retail_removal_body.replace(
-            "max_distance = _cpp_min(\n"
-            "    1000, current_hero->movePoints\n"
-            "          + static_cast<unsigned short>(current_hero->field_041)"
-            " + 200);\n", ""),
-        retail_removal_body.replace(
-            "_cpp_min(\n    1000, current_hero->movePoints\n"
-            "          + static_cast<unsigned short>(current_hero->field_041)"
-            " + 200)",
-            "current_hero->movePoints < 1000 ? "
-            "current_hero->movePoints : 1000"),
-        retail_removal_body.replace("1000,", "999,"),
-    )
-    for mutation in retail_removal_mutations:
-        if retail_proven_dc_only_removed_helpers(
-                retail_removal_key, mutation, retail_removal_va)[0] \
-                or not contract_violations(mutation, retail_removal_key):
-            failures.append(
-                "broken retail-proved max-to-min revision passed")
+    for mutation in move_hero_mutations:
+        if not contract_violations(mutation, move_hero_key):
+            failures.append("broken retail-proved move_hero max floor passed")
             break
     update_slots_key = ("swapmgr.obj", 0x15CDBC)
     update_slots_probe = """\

@@ -2122,7 +2122,7 @@ philai	?AI_bribe_monsters@@YIEPBVhero@@PAVNewmapCell@@W4TCreatureType@@FJ@Z	100.
 philai	?AI_choose_resource_or_experience@@YIEPBVhero@@W4EGameResource@@HH@Z	100.0000	100.0000	100.0000	0x127fe0
 philai	?AI_choose_secondary_skill@@YI?AW4TSecondarySkill@@PBVhero@@W41@1E@Z	100.0000	100.0000	100.0000	0x12bbd0
 philai	?AI_enter_garrison@@YIXPAVhero@@PAVgarrison@@@Z	100.0000	100.0000	100.0000	0x124370
-philai	?AI_enter_town@@YIXPAVhero@@PAVtown@@@Z	99.4848	99.5109	99.5109	0x1253d0
+philai	?AI_enter_town@@YIXPAVhero@@PAVtown@@@Z	99.5109	99.5109	99.5109	0x1253d0
 philai	?AI_examine_map@@YAXXZ	100.0000	100.0000	100.0000	0x12b9c0
 philai	?AI_friendly_hero_meeting@@YIXPAVhero@@0@Z	100.0000	100.0000	100.0000	0x125dc0
 philai	?AI_get_spell_value@@YIJPBVhero@@H@Z	100.0000	100.0000	100.0000	0x127640
@@ -2135,7 +2135,7 @@ philai	?AI_visit_university@@YIXPAVhero@@PAUtype_university@@@Z	100.0000	100.000
 philai	?AI_visit_war_factory@@YIXPAVhero@@@Z	100.0000	100.0000	100.0000	0x124fc0
 philai	?CheckDoMain@@YIXHH@Z	100.0000	100.0000	100.0000	0x1242d0
 philai	?DetermineHeroToMove@@YIPAVhero@@HPAE@Z	100.0000	100.0000	100.0000	0x126a90
-philai	?DoAI@philAI@@QAEXH@Z	89.4816	89.4816	89.4816	0x125e80
+philai	?DoAI@philAI@@QAEXH@Z	90.2537	90.2537	90.2537	0x125e80
 philai	?GetTurnAIVars@philAI@@QAEXH@Z	97.8723	97.8723	97.8723	0x127960
 philai	?LuckIncreaseValue@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0x127d80
 philai	?MoraleIncreaseValue@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0x127cf0
@@ -2172,7 +2172,7 @@ philai	?get_school_value@@YIJPBVhero@@W4TSecondarySkill@@@Z	100.0000	100.0000	10
 philai	?get_skill_value@@YIJPBVhero@@W4TSecondarySkill@@E@Z	78.1958	78.1958	78.1958	0x124690
 philai	?get_value_of_spring@@YIJPBVhero@@PBVNewmapCell@@G@Z	100.0000	100.0000	100.0000	0x12b810
 philai	?get_value_of_well@@YIJPBVhero@@G@Z	100.0000	100.0000	100.0000	0x12a510
-philai	?move_hero@@YIXPAVhero@@EPAE@Z	98.3655	98.3655	98.3655	0x1267b0
+philai	?move_hero@@YIXPAVhero@@EAAE@Z	100.0000	100.0000	100.0000	0x1267b0
 philai	?value_of_bank@@YIJPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x129920
 philai	?value_of_custom_item@@YIJPBVhero@@PAVNewmapCell@@J@Z	100.0000	100.0000	100.0000	0x129890
 philai	?value_of_enemy_town@@YIJPBVhero@@PBVtown@@FPAVNewmapCell@@@Z	99.9561	99.9561	99.9561	0x129cb0

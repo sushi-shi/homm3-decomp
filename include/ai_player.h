@@ -204,6 +204,11 @@ struct HeroDestination {
     long move_cost;
     unsigned char is_nearby;
     unsigned char is_critical;
+#ifdef HOMM3_PHILAI_OBJ_DECLS
+    // E:\\gamedcs\\ai_player.h:233 (dc 0x380f0). The source constructor is
+    // empty; Complete's /Ob2 therefore erases move_hero's call entirely.
+    HeroDestination() {}
+#endif
 };
 
 // Full DC layout (classes.csv: 152 B, 6 members, 2 statics) and every

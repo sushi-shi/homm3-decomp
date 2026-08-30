@@ -1533,7 +1533,6 @@ call	philai.obj	0x10ec58	playerData::add_garrison_hero
 call	philai.obj	0x10ec58	searchArray::set_danger_zones
 call	philai.obj	0x10ec58	town::SwapHeroes
 call	philai.obj	0x10ec58	town::get_army
-call	philai.obj	0x10f16c	IncrementHourGlass
 call	philai.obj	0x10f16c	ShowStatus
 call	philai.obj	0x10f16c	game::GetNumMapLevels
 call	philai.obj	0x10f16c	move_all_heroes

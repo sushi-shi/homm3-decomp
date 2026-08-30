@@ -9,7 +9,6 @@
 #include <string.h>
 #include "philai.h"
 #include "ai_spellvalue.h"
-#include "findpath.h"
 #include "hero.h"
 #include "town.h"
 #include "tradpost.h"
@@ -17,6 +16,7 @@
 #include "recruit.h"
 #include "advmgr.h"  // gpAdvManager + advManager::get_treasure_data, for the
                      // adventure-object appraisals (custom item / scroll / ...)
+#include "findpath.h"
 #include "kb.h"
 #include "kbwin.h"
 #include "mousemgr.h"
@@ -39,6 +39,13 @@ long AI_get_equip_value(type_artifact artifact, const hero* our_hero,
                         unsigned char exact);
 void AI_set_hero_bonuses(hero* our_hero);
 void AI_equip_artifacts(hero* current_hero);
+int AI_choose_destination(hero* current_hero, long max_distance,
+                          HeroDestination& best_point,
+                          long& best_raw_value,
+                          unsigned char allow_spells,
+                          unsigned char explore_mode);
+void AI_AttemptMove(hero* current_hero, HeroDestination& best_point,
+                    long& best_raw_value, unsigned char explore_mode);
 long get_artifact_purchase_price(TArtifact artifact, long market_count,
                                  EGameResource* best_resource);
 TCreatureType siege_artifact_to_creature(TArtifact engine);
@@ -99,13 +106,6 @@ long AI_value_of_combat(const hero* attacking_hero, const hero* defending_hero,
 long value_of_reinforcing(hero* current_hero, town* current_town,
                           short move_cost);
 long value_of_town_buildings(const hero* current_hero, town* current_town);
-int AI_choose_destination(hero* current_hero, long max_distance,
-                          HeroDestination& best_point,
-                          long& best_raw_value,
-                          unsigned char allow_spells,
-                          unsigned char explore_mode);
-void AI_AttemptMove(hero* current_hero, HeroDestination& best_point,
-                    long& best_raw_value, unsigned char explore_mode);
 int CalcTerrainCost(const NewmapCell* cell, int dir, int points_left,
     long iPathfinding, long end_road, long flying, long water_walking,
     long native_terrain, unsigned char param_9);
@@ -141,6 +141,41 @@ template <class T>
 inline const T& _cpp_min(T left, T right)
 {
     return right < left ? right : left;
+}
+
+#ifdef min
+#undef min
+#endif
+#ifdef max
+#undef max
+#endif
+
+namespace dc_min_source {
+// E:\\gamedcs\\DC_precompiledheaders.h:41
+inline const int& _cpp_min(const int& left, const int& right)
+{
+    return right < left ? right : left;
+}
+}
+
+// E:\\gamedcs\\includes.h:97,114. move_hero's widening bounds retain
+// these source-visible wrappers; Complete expands the reference selectors.
+inline int min(int a, int b)
+{
+    return dc_min_source::_cpp_min(a, b);
+}
+
+namespace dc_max_source {
+// E:\\gamedcs\\DC_precompiledheaders.h:33
+inline const int& _cpp_max(const int& left, const int& right)
+{
+    return left < right ? right : left;
+}
+}
+
+inline int max(int a, int b)
+{
+    return dc_max_source::_cpp_max(a, b);
 }
 
 // E:\gamedcs\philai.cpp:58
@@ -229,12 +264,13 @@ void AI_visit_black_market(hero* current_hero, TBlackMarket* black_market)
     buy_artifacts(current_hero, black_market->artifacts, 5);
 }
 
-// E:\gamedcs\philai.cpp:123.  Both attested callers keep this source helper;
-// Complete's /Ob2 expands it into their bodies and retains no standalone row.
-static void IncrementHourGlass()
+// E:\gamedcs\philai.cpp:123
+// Complete expands both known calls; the helper boundary is retained from
+// the Dreamcast source rather than flattening the phase adjustment twice.
+__forceinline void IncrementHourGlass()
 {
-    ++iCurHourGlassPhase;
     int num_heroes = gpCurrentPlayer->numHeroes;
+    ++iCurHourGlassPhase;
     if (num_heroes == philAI::ONE_ACTIVE_HERO)
         iCurHourGlassPhase += philAI::TWO_ACTIVE_HEROES;
     else if (num_heroes == philAI::TWO_ACTIVE_HEROES) {
@@ -1401,20 +1437,7 @@ void philAI::DoAI(int whichPlayer)
         ai_player->start_turn();
         GetTurnAIVars(whichPlayer);
 
-        ++iCurHourGlassPhase;
-        int num_heroes = gpCurrentPlayer->numHeroes;
-        if (num_heroes == ONE_ACTIVE_HERO)
-            iCurHourGlassPhase += TWO_ACTIVE_HEROES;
-        else if (num_heroes == TWO_ACTIVE_HEROES) {
-            if (iCurHourGlassPhase != ONE_ACTIVE_HERO)
-                ++iCurHourGlassPhase;
-        } else if (num_heroes == THREE_ACTIVE_HEROES) {
-            if (iCurHourGlassPhase == THIRD_HOURGLASS_PHASE
-                || iCurHourGlassPhase == SIXTH_HOURGLASS_PHASE)
-                ++iCurHourGlassPhase;
-        }
-        if (iCurHourGlassPhase > LAST_HOURGLASS_PHASE)
-            iCurHourGlassPhase = LAST_HOURGLASS_PHASE;
+        IncrementHourGlass();
 
         unsigned char is_last_hero = 0;
         unsigned char explore_mode = 1;
@@ -1529,13 +1552,12 @@ void MoveHero(hero* current_hero, long* danger_zones, unsigned char is_last_hero
 #endif  // @carcass
 
 // E:\gamedcs\philai.cpp:934
-// DC supplies the five-local inventory and every helper/statement group.
-// Complete keeps that shared shape but reverses the first movement clamp:
-// retail 0x5267e7..0x526807 selects min(1000, move+field+200), where DC calls
-// max.  The three-int GetMapExtra overload is likewise fixed by both retail
-// relocations.  All other missing calls below are ordinary VC6 /Ob2 folds.
-VA(0x005267b0, 0x2da)  // anchor-callee pair + retail body, dc 0x10e9a8
-void move_hero(hero* current_hero, unsigned char is_last_hero, unsigned char* explore_mode)
+// Complete tests the full-width pathTargetX rather than old_target.x, but the
+// DC-proven get_target statement remains source-real: because its result is
+// unused in this revision, /O2 erases the packed temporary completely.
+VA(0x005267b0, 0x2da)  // anchor-callee, dc 0x10e9a8
+void move_hero(hero* current_hero, unsigned char is_last_hero,
+               unsigned char& explore_mode)
 {
     HeroDestination destination;
     type_point old_target = current_hero->get_target();
@@ -1552,10 +1574,11 @@ void move_hero(hero* current_hero, unsigned char is_last_hero, unsigned char* ex
 
     long max_distance = 1000;
     if (current_hero->pathTargetX >= 0) {
-        max_distance = _cpp_min(
-            1000, current_hero->movePoints
-                  + static_cast<unsigned short>(current_hero->field_041)
-                  + 200);
+        max_distance = max(
+            current_hero->movePoints
+                + static_cast<unsigned short>(current_hero->field_041)
+                + 200,
+            1000);
     }
     if (is_last_hero)
         max_distance = 32000;
@@ -1565,18 +1588,18 @@ void move_hero(hero* current_hero, unsigned char is_last_hero, unsigned char* ex
             * (abs(current_hero->x - current_hero->patrolX)
                + abs(current_hero->y - current_hero->patrolY)
                + current_hero->patrolRadius);
-        max_distance = _cpp_min(max_distance, maximum_distance);
+        max_distance = min(max_distance, maximum_distance);
     }
 
     for (int attempt = 0; attempt < 5; ++attempt) {
         rv = AI_choose_destination(current_hero, max_distance, destination,
-                                   raw_value, 1, *explore_mode);
+                                   raw_value, 1, explore_mode);
         if (!((destination.point.x < 0
                || (rv < 0 && !destination.is_critical))
               && gpSearchArray->limit_was_reached()
               && max_distance < maximum_distance))
             break;
-        max_distance = _cpp_min(max_distance * 2L, maximum_distance);
+        max_distance = min(max_distance * 2, maximum_distance);
     }
 
     if (current_hero->maxMovePoints == current_hero->movePoints)
@@ -1590,28 +1613,32 @@ void move_hero(hero* current_hero, unsigned char is_last_hero, unsigned char* ex
     }
 
     original_destination = destination.point;
-    unsigned char destination_was_hidden =
+    unsigned char destination_was_unvisited =
         !(GetMapExtra(original_destination.x, original_destination.y,
-                      original_destination.z) & gUnnamed69ccc4);
+                      original_destination.z)
+          & gUnnamed69ccc4);
     int town_id = gpGame->GetTownId(current_hero->x, current_hero->y,
                                     current_hero->z);
     if (town_id != -1) {
-        town* current_town = gpGame->GetTown(town_id);
+        gpGame->GetTown(town_id);
         if (rv < 75
-            && gpGame->field_1f63e == DAY_OF_WEEK_SUNDAY) {
+            && gpGame->field_1f63e == philAI::AI_HERO_MOVE_SLEEP_DAY) {
             current_hero->field_11c = 1;
             return;
         }
     }
 
+    // Dreamcast's public name for retail 0x69ccd4 is
+    // giShowComputerRoute; this tree still carries its ordinal spelling.
     gUnnamed69ccd4 = 1;
-    AI_AttemptMove(current_hero, destination, raw_value, *explore_mode);
+    AI_AttemptMove(current_hero, destination, raw_value, explore_mode);
 
-    if (destination_was_hidden && *explore_mode
+    if (destination_was_unvisited && explore_mode
         && (GetMapExtra(original_destination.x, original_destination.y,
-                        original_destination.z) & gUnnamed69ccc4)) {
+                        original_destination.z)
+            & gUnnamed69ccc4)) {
         gAIPlayers[gNetLocalGamePos].reset_magus_hut_value();
-        *explore_mode = 0;
+        explore_mode = 0;
         for (int i = 0; i < gpCurrentPlayer->numHeroes; ++i)
             gpGame->GetHero(gpCurrentPlayer->heroes[i])->field_11c = 0;
     }
@@ -2073,25 +2100,6 @@ long type_spellvalue::get_value_of_increase(long base_value,
     duration -= duration_change;
     mana -= mana_change;
     return increased - base_value;
-}
-
-#ifdef max
-#undef max
-#endif
-
-namespace dc_max_source {
-// E:\\gamedcs\\DC_precompiledheaders.h:33
-inline const int& _cpp_max(const int& _X, const int& _Y)
-{
-    return (_X < _Y ? _Y : _X);
-}
-}
-
-// E:\gamedcs\includes.h:97. The source-visible wrapper used by
-// AI_set_hero_bonuses; retail VC6 folds it and _cpp_max into the caller.
-inline int max(int a, int b)
-{
-    return dc_max_source::_cpp_max(a, b);
 }
 
 // E:\gamedcs\includes.h:124 - the reference-returning max the tree's
