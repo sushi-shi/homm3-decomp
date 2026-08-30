@@ -260,6 +260,26 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-30 — the boat-pool load/save pair restores its symmetric
+  Dreamcast serialization locals; the exact save path remains exact.** Raw
+  NB11 records `unsigned short ushort_buffer`, `int count`, `int x`,
+  `unsigned char uchar_buffer`, and `char char_buffer` at procedure scope in
+  that order in both `game::LoadBoatPool` and `game::SaveBoatPool`. Breakpoint
+  rows and SH4 operands further identify eight result-bearing I/O statements:
+  two byte-unsigned buffers, five char buffers, and one unsigned-short buffer.
+  The former load source instead read bytes through `int count`, used an
+  unsigned `i`, and nested invented value/hero buffers; the former save source
+  had the analogous exact-but-source-false simplification.
+
+  Restoring the proved roster, typed buffers, shared `count` result, and field
+  order is byte-flat in both functions. `SaveBoatPool` remains **100.0000%**
+  across all 429 bytes. `LoadBoatPool` remains **99.6447%**, with all 25 blocks
+  and branches/instructions aligned except seven scale-one SIB encoder choices
+  (`[edi+index+field]` versus `[index+edi+field]`). Earlier pointer-addition
+  and `why-reg` controls leave the same post-allocation address-fold tie. Fatal
+  rules and negative controls now reject the old buffer reuse even though it
+  had the same percentage.
+
 - **2026-08-30 — `combatManager::AreaEffect` restores its Dreamcast local
   roster and banks the honest 99.8565% register-allocation plateau.** The
   mandatory dossier (`dc:0x153b60`) proves the function-scope
