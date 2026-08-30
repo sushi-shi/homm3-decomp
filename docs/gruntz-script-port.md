@@ -260,6 +260,25 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-30 — `game::ClaimTown` reaches 100% by restoring the
+  Dreamcast-proven `IsComputerTeam` boundary.** The mandatory dossier
+  (`game.obj:0xb1230`) records 38 breakpoint rows, 50 SH4 blocks, and the
+  procedure locals `thisTown`, `old_owner`, and one shared `long i` for both
+  generator sweeps. Its line 7317 call group names `GetTeam`,
+  `IsComputerTeam`, `GetTeam`, and `IsHumanTeam`; the `IsComputerTeam`
+  dossier (`Game.h:856`, `dc:0xbce7c`) independently proves the inline
+  negative-team arm and materialized logical negation.
+
+  The prior **99.3282%** plateau flattened that boundary to
+  `!is_human_ally(team)`, so VC6 folded retail's
+  `test al / sete al / test al / je` into `test al / jne`. Restoring the
+  inline `IsComputerTeam(team)` spelling while retaining Complete's exact
+  `is_human_ally` COMDAT produces **100.0000%**: all 76 x86 blocks and every
+  compared instruction agree. This directly demonstrates why a local score
+  maximum cannot justify removing a positive Dreamcast fact. Fatal source
+  rules and negative controls now preserve the three NB11 locals, the shared
+  loop index, the caller boundary, and the header-inline body.
+
 - **2026-08-30 — `SetCurrentMap` reaches 99.987404% by restoring the
   inherited constructor and broadcast boundaries.** The mandatory Dreamcast
   pass (`dc:0x13bc60`) records 109 breakpoint rows, 78 inferred blocks, and

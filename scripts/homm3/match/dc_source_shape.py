@@ -759,6 +759,24 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"\blong\s+choice\s*;.*?\blong\s+i\s*;.*?"
             r"\bTSecondarySkill\s+skill\s*;"),
     ),
+    ("game.obj", 0xB1230): (
+        SourceRule(
+            "ClaimTown keeps raw NB11's thisTown, old_owner and shared i "
+            "procedure locals in recovered name, type and declaration order",
+            r"\A\s*town\s*\*\s*thisTown\s*=\s*&\s*towns\s*\[\s*"
+            r"townId\s*\]\s*;\s*long\s+old_owner\s*=\s*thisTown\s*->\s*"
+            r"owner\s*;\s*long\s+i\s*;"),
+        SourceRule(
+            "ClaimTown keeps Dreamcast's IsComputerTeam source boundary "
+            "inside the nonnegative old-team arm",
+            r"if\s*\(\s*team\s*>=\s*0\s*&&\s*IsComputerTeam\s*\(\s*"
+            r"team\s*\)\s*\)"),
+        SourceRule(
+            "ClaimTown reuses raw NB11's sole i local for both generator "
+            "sweeps instead of splitting their lifetimes",
+            r"for\s*\(\s*i\s*=\s*0\s*;\s*i\s*<\s*generators\s*\.\s*"
+            r"size\s*\(\s*\)\s*;\s*i\+\+\s*\)", 2, 2),
+    ),
     ("game.obj", 0xB41E0): (
         SourceRule(
             "PerWeek keeps Dreamcast's ten procedure-scope locals in raw "
@@ -1773,6 +1791,25 @@ def game_get_hero_header_violations(text: str) -> list[tuple[int, str]]:
     return [(line,
              "Game.h:972 game::GetHero must retain Dreamcast's int which "
              "parameter, -1 null arm, and direct heroes-index return")]
+
+
+def game_is_computer_team_header_violations(
+        text: str) -> list[tuple[int, str]]:
+    """Audit the DC boundary and Complete-proven IsComputerTeam lowering."""
+    masked = _source.mask(text)
+    pattern = (
+        r"\binline\s+unsigned\s+char\s+IsComputerTeam\s*\(\s*"
+        r"int\s+teamNum\s*\)\s*const\s*\{\s*"
+        r"if\s*\(\s*teamNum\s*<\s*0\s*\)\s*return\s+0\s*;\s*"
+        r"return\s+!\s*is_human_ally\s*\(\s*teamNum\s*\)\s*;\s*\}")
+    if re.search(pattern, masked, re.DOTALL) is not None:
+        return []
+    token = re.search(r"\bIsComputerTeam\s*\(", masked)
+    line = text.count("\n", 0, token.start()) + 1 if token else 1
+    return [(line,
+             "Game.h:856 game::IsComputerTeam must retain Dreamcast's "
+             "unsigned-char const inline boundary and negative-team arm, "
+             "with Complete's retail-proven is_human_ally negation")]
 
 
 def split_window_header_violations(text: str) -> list[tuple[int, str]]:
@@ -3246,6 +3283,35 @@ switch (type) {}
                for rule in contract_violations(flattened_load_victory,
                                                 load_victory_key)):
         failures.append("flattened loadVictoryCondition count reads passed")
+    claim_town_key = ("game.obj", 0xB1230)
+    claim_town_probe = """\
+town* thisTown = &towns[townId];
+long old_owner = thisTown->owner;
+long i;
+if (old_owner == newPlayerOwner) return;
+for (i = 0; i < generators.size(); i++) { remove_bonus(); }
+int team = claim_town_team(this, thisTown->owner);
+if (team >= 0 && IsComputerTeam(team)) { update_team(); }
+for (i = 0; i < generators.size(); i++) { update_bonus(); }
+"""
+    if contract_violations(claim_town_probe, claim_town_key):
+        failures.append("aligned ClaimTown source shape did not pass")
+    renamed_claim_town = claim_town_probe.replace(
+        "thisTown", "whichTown").replace("old_owner", "oldOwner")
+    if not any("thisTown, old_owner" in rule.description for rule in
+               contract_violations(renamed_claim_town, claim_town_key)):
+        failures.append("renamed ClaimTown NB11 locals passed")
+    flattened_computer_team = claim_town_probe.replace(
+        "IsComputerTeam(team)", "!is_human_ally(team)")
+    if not any("IsComputerTeam source boundary" in rule.description
+               for rule in contract_violations(
+                   flattened_computer_team, claim_town_key)):
+        failures.append("flattened ClaimTown IsComputerTeam boundary passed")
+    split_claim_town_i = claim_town_probe.replace(
+        "for (i = 0;", "for (long i = 0;")
+    if not any("sole i local" in rule.description for rule in
+               contract_violations(split_claim_town_i, claim_town_key)):
+        failures.append("split ClaimTown generator-loop i locals passed")
     prison_key = ("events.obj", 0x94760)
     prison_probe = """\
 int heroID = cell->extraInfo;
@@ -4551,6 +4617,25 @@ hero* GetHero(int which)
     if any(not game_get_hero_header_violations(probe)
            for probe in broken_get_hero_probes):
         failures.append("broken Game.h GetHero source shape passed")
+    computer_team_probe = """\
+inline unsigned char IsComputerTeam(int teamNum) const
+{
+    if (teamNum < 0)
+        return 0;
+    return !is_human_ally(teamNum);
+}
+"""
+    if game_is_computer_team_header_violations(computer_team_probe):
+        failures.append("aligned Game.h IsComputerTeam shape did not pass")
+    broken_computer_team_probes = (
+        computer_team_probe.replace("unsigned char", "bool"),
+        computer_team_probe.replace(
+            "    if (teamNum < 0)\n        return 0;\n", ""),
+        computer_team_probe.replace("is_human_ally", "IsHumanTeam"),
+    )
+    if any(not game_is_computer_team_header_violations(probe)
+           for probe in broken_computer_team_probes):
+        failures.append("broken Game.h IsComputerTeam shape passed")
     update_msg_probe = """\
 class CUpdatePlayerPosMsg : public CNetMsg {
     CNetPlayerHandlerPlayer m_netPlayer[8];
@@ -5230,10 +5315,12 @@ def scan() -> tuple[
     game_text = game_header.read_text(errors="replace")
     audited.add(_file_audit_scope("include/game.h"))
     get_hero_defects = game_get_hero_header_violations(game_text)
-    checked += 1
+    computer_team_defects = game_is_computer_team_header_violations(game_text)
+    checked += 2
     missing.extend(FileContractViolation("include/game.h", line,
                                          description)
-                   for line, description in get_hero_defects)
+                   for line, description in
+                   get_hero_defects + computer_team_defects)
 
     split_header = common.HOMM3_DIR / "include/armygrp_split.h"
     split_text = split_header.read_text(errors="replace")

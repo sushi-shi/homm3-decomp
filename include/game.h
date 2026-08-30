@@ -2165,6 +2165,16 @@ public:
     // `unsigned char` the CODEVIEW line in ai_player.h carries. Declared
     // for ClaimTown; the body is a carcass stub in ai_player.cpp.
     bool is_human_ally(int player_number) const;
+    // Dreamcast Game.h:856 proves ClaimTown's source-visible
+    // IsComputerTeam boundary. Complete keeps the same boundary but its
+    // retail lowering calls the exact is_human_ally COMDAT above; retaining
+    // the wrapper is what preserves the materialized logical negation.
+    inline unsigned char IsComputerTeam(int teamNum) const
+    {
+        if (teamNum < 0)
+            return 0;
+        return !is_human_ally(teamNum);
+    }
     // event_record.cpp:1061 in the DC roster (dc 0x8e0b8). advManager::
     // EraseObj is its caller and pins the retail row: a 0x18-byte record
     // built with `new`, two vtable stores and the cell's +0x00/+0x22/+0x24

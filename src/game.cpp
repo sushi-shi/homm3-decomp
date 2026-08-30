@@ -8417,40 +8417,39 @@ static int claim_town_team(game* thisGame, int playerNum)
 // Reusing that single index for both generator sweeps fixes the second
 // sweep's frame slot and raises 97.8269 -> 97.9199.
 //
-// Residual (99.3282%, 2026-08-26): the unbounded loop with an explicit
+// EXACT (100.0000%, 2026-08-30): the unbounded loop with an explicit
 // bottom break reproduces retail's `jge exit; jmp loop` miss path and also
-// puts both inlined HasBuilding masks into their exact schedule. All 76
-// blocks and the complete CFG now agree. The sole residual block is the
-// negated is_human_ally result: retail materialises it as
-// `test/sete/test/je`, while this CL folds it to `test/jne`. `== false`,
-// scoped bool/unsigned-char locals, and a force-inlined result adapter are
-// byte-flat, so the remaining delta is front-end boolean folding rather than
-// a missing operation.
+// puts both inlined HasBuilding masks into their exact schedule. The final
+// gap was source shape, not a compiler quirk: Dreamcast line 7317 proves the
+// IsComputerTeam boundary. Restoring that inline wrapper around Complete's
+// exact is_human_ally COMDAT preserves retail's `test/sete/test/je` lowering;
+// flattening it to `!is_human_ally(team)` folds back to `test/jne` and
+// 99.3282%. All 76 blocks and every compared instruction now agree.
 VA(0x004c61e0, 0x4A8)  // anchor-global, dc 0xb1230
 void game::ClaimTown(int townId, int newPlayerOwner, unsigned char bIsRemoteMove, unsigned char check_end_game)
 {
-    town* whichTown = &towns[townId];
-    int oldOwner = whichTown->owner;
+    town* thisTown = &towns[townId];
+    long old_owner = thisTown->owner;
     long i;
-    if (oldOwner == newPlayerOwner)
+    if (old_owner == newPlayerOwner)
         return;
 
     if (!gbInSetup698400 && !bIsRemoteMove)
         record_claim_town(townId, newPlayerOwner);
 
-    whichTown->field_32 = 0;
+    thisTown->field_32 = 0;
 
     if (!bIsRemoteMove) {
         for (i = 0; i < generators.size(); i++) {
-            if (generators[i].playerOwner == oldOwner
+            if (generators[i].playerOwner == old_owner
                 || generators[i].playerOwner == newPlayerOwner)
                 generators[i].remove_bonus();
         }
     }
 
-    if (whichTown->owner != -1) {
-        int team = claim_town_team(this, whichTown->owner);
-        if (team >= 0 && !is_human_ally(team)) {
+    if (thisTown->owner != -1) {
+        int team = claim_town_team(this, thisTown->owner);
+        if (team >= 0 && IsComputerTeam(team)) {
             int newTeam = claim_town_team(this, newPlayerOwner);
             if (newTeam >= 0) {
                 int player = 0;
@@ -8458,7 +8457,7 @@ void game::ClaimTown(int townId, int newPlayerOwner, unsigned char bIsRemoteMove
                 for (;;) {
                     if (teams[player] == newTeam
                         && gpGame->IsHuman(player)) {
-                        whichTown->field_02 = 0;
+                        thisTown->field_02 = 0;
                         break;
                     }
                     ++player;
@@ -8470,7 +8469,7 @@ void game::ClaimTown(int townId, int newPlayerOwner, unsigned char bIsRemoteMove
         gpGame->GetTown(townId)->Deallocate();
     }
 
-    whichTown->owner = newPlayerOwner;
+    thisTown->owner = newPlayerOwner;
     if (bIsRemoteMove)
         return;
 
@@ -8480,26 +8479,26 @@ void game::ClaimTown(int townId, int newPlayerOwner, unsigned char bIsRemoteMove
     // get_army onto one row, so the const mangling is what the target
     // side names and the codegen is identical either way.
     const_cast<armyGroup&>(
-        static_cast<const town*>(whichTown)->get_army()).Initialize();
-    if (whichTown->owner != -1) {
+        static_cast<const town*>(thisTown)->get_army()).Initialize();
+    if (thisTown->owner != -1) {
         players[newPlayerOwner].townIds[players[newPlayerOwner].numTowns] =
             static_cast<char>(townId);
         players[newPlayerOwner].numTowns++;
 
         if (check_end_game
-            && mapHeader.victoryCondition.IsTownCaptureTarget(whichTown)
+            && mapHeader.victoryCondition.IsTownCaptureTarget(thisTown)
             && mapHeader.victoryCondition.CheckForTownCaptureWin())
             CheckEndGame(0);
 
         SetVisibility(towns[townId].mapX, towns[townId].mapY,
                       towns[townId].mapZ, newPlayerOwner, 5, 0);
 
-        if (whichTown->type == TOWN_TOWER) {
-            if (whichTown->HasBuilding(EXTRA_0_ID, 0))
-                gpGame->SetVisibility(whichTown->mapX, whichTown->mapY,
-                                      whichTown->mapZ, newPlayerOwner,
+        if (thisTown->type == TOWN_TOWER) {
+            if (thisTown->HasBuilding(EXTRA_0_ID, 0))
+                gpGame->SetVisibility(thisTown->mapX, thisTown->mapY,
+                                      thisTown->mapZ, newPlayerOwner,
                                       20, 0);
-            if (whichTown->HasBuilding(HOLY_GRAIL_ID, 0)) {
+            if (thisTown->HasBuilding(HOLY_GRAIL_ID, 0)) {
                 gpGame->SetVisibility(gMapWidth / 2, gMapHeight / 2, 0,
                                       newPlayerOwner, gMapWidth, 0);
                 if (gpGame->worldMap.HasTwoLevels + 1 > 1)
@@ -8510,7 +8509,7 @@ void game::ClaimTown(int townId, int newPlayerOwner, unsigned char bIsRemoteMove
     }
 
     for (i = 0; i < generators.size(); i++) {
-        if (generators[i].playerOwner == oldOwner
+        if (generators[i].playerOwner == old_owner
             || generators[i].playerOwner == newPlayerOwner) {
             generator* thisGenerator = &generators[i];
             if (thisGenerator->playerOwner < 0)
