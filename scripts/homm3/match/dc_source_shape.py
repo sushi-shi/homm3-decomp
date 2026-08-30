@@ -702,6 +702,37 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             "TCombatResultsWindow keeps Dreamcast's source-visible min call",
             r"(?<![_\w])min\s*\(", 1, 1),
     ),
+    ("philai.obj", 0x10D47C): (
+        SourceRule(
+            "CheckDoMain keeps Dreamcast's one-time frame-rate timer flag "
+            "guard, bit set and initial GameTime::Get statement order",
+            r"\A\s*if\s*\(\s*!\s*\(\s*gUnnamed69cca4\s*&\s*1\s*\)\s*"
+            r"\)\s*\{\s*gUnnamed69cca4\s*\|=\s*1\s*;\s*"
+            r"iLastFrameRateTimer\s*=\s*GameTime\s*::\s*Get\s*"
+            r"\(\s*\)\s*;\s*\}"),
+        SourceRule(
+            "CheckDoMain keeps Dreamcast's elapsed-or-animation-deadline "
+            "guard followed by Process1WindowsMessage then PollSound",
+            r"if\s*\(\s*GameTime\s*::\s*ElapsedSince\s*\(\s*"
+            r"iLastFrameRateTimer\s*\)\s*>\s*15\s*\|\|\s*"
+            r"GameTime\s*::\s*IsPast\s*\(\s*glTimers\s*\[\s*"
+            r"GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT\s*\]\s*\)\s*\)\s*"
+            r"\{\s*Process1WindowsMessage\s*\(\s*\)\s*;\s*"
+            r"PollSound\s*\(\s*\)\s*;"),
+        SourceRule(
+            "CheckDoMain keeps Dreamcast's nested animation-deadline scope, "
+            "bMouseOnly cursor clear, +180 deadline and final frame-rate "
+            "timer refresh in recovered order",
+            r"PollSound\s*\(\s*\)\s*;\s*if\s*\(\s*GameTime\s*::\s*"
+            r"IsPast\s*\(\s*glTimers\s*\[\s*"
+            r"GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT\s*\]\s*\)\s*\)\s*"
+            r"\{\s*if\s*\(\s*!\s*bMouseOnly\s*\)\s*"
+            r"bSpecialHideCursor\s*=\s*0\s*;\s*glTimers\s*\[\s*"
+            r"GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT\s*\]\s*=\s*"
+            r"GameTime\s*::\s*Get\s*\(\s*\)\s*\+\s*180\s*;\s*\}\s*"
+            r"iLastFrameRateTimer\s*=\s*GameTime\s*::\s*Get\s*"
+            r"\(\s*\)\s*;"),
+    ),
     ("philai.obj", 0x10E3F8): (
         SourceRule(
             "AI_enter_town keeps Dreamcast's nested Grail possession, "
@@ -3697,6 +3728,49 @@ return cells[hex].get_army();
     if groups_without_helpers(order_groups, order_helpers) != (
             CallGroup(2606, ("combatManager::ValidHex",)),):
         failures.append("DC-only order filter erased an unrelated helper")
+    check_do_main_key = ("philai.obj", 0x10D47C)
+    check_do_main_probe = """\
+if (!(gUnnamed69cca4 & 1)) {
+    gUnnamed69cca4 |= 1;
+    iLastFrameRateTimer = GameTime::Get();
+}
+if (GameTime::ElapsedSince(iLastFrameRateTimer) > 15
+    || GameTime::IsPast(glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT])) {
+    Process1WindowsMessage();
+    PollSound();
+    if (GameTime::IsPast(
+            glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT])) {
+        if (!bMouseOnly)
+            bSpecialHideCursor = 0;
+        glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] =
+            GameTime::Get() + 180;
+    }
+    iLastFrameRateTimer = GameTime::Get();
+}
+"""
+    if contract_violations(check_do_main_probe, check_do_main_key):
+        failures.append("aligned CheckDoMain source shape did not pass")
+    reordered_check_do_main = check_do_main_probe.replace(
+        "    Process1WindowsMessage();\n    PollSound();",
+        "    PollSound();\n    Process1WindowsMessage();")
+    if not any("Process1WindowsMessage then PollSound" in rule.description
+               for rule in contract_violations(
+                   reordered_check_do_main, check_do_main_key)):
+        failures.append("reordered CheckDoMain pump helpers passed")
+    flattened_check_do_main = check_do_main_probe.replace(
+        "GameTime::ElapsedSince(iLastFrameRateTimer) > 15",
+        "static_cast<long>(GameTime::Get() - iLastFrameRateTimer) > 15")
+    if not any("elapsed-or-animation-deadline" in rule.description
+               for rule in contract_violations(
+                   flattened_check_do_main, check_do_main_key)):
+        failures.append("flattened CheckDoMain ElapsedSince boundary passed")
+    wrong_mouse_gate = check_do_main_probe.replace(
+        "if (!bMouseOnly)\n            bSpecialHideCursor = 0;",
+        "if (!bForceMouseCheck)\n            bSpecialHideCursor = 0;")
+    if not any("bMouseOnly cursor clear" in rule.description
+               for rule in contract_violations(
+                   wrong_mouse_gate, check_do_main_key)):
+        failures.append("wrong CheckDoMain mouse-gate parameter passed")
     artifact_transfer = PROVEN_CALL_TRANSFERS[
         ("philai.obj", 0x10E3F8, "buy_artifacts")]
     artifact_caller = """\

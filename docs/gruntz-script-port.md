@@ -260,6 +260,37 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-30 — the first out-of-sample empty-body reconstruction,
+  `CheckDoMain`, closes at 100% from Dreamcast source shape.** The starting
+  state was a genuinely unreconstructed `#if 0 // @carcass` body: retail
+  `0x005242d0` was present only as the 130-byte flat claim `CheckDoMain` at
+  **0.0000%**, and `homm3 sema diff --source` correctly reported no candidate
+  symbol. The mandatory Dreamcast dossier at `philai.obj:0x10d47c` exposes
+  two int parameters, no recorded locals, 12 line/address rows, 14 lexical
+  scopes and 13 inferred SH4 blocks. Its positive statement stream is a
+  one-time flag/timer initialization, an `ElapsedSince > 15 || IsPast`
+  pacing guard, `Process1WindowsMessage`, `PollSound`, a nested `IsPast`
+  deadline update, the `bMouseOnly`-guarded `bSpecialHideCursor` clear,
+  `Get() + 180`, and the final timer refresh.
+
+  Translating that source shape directly produces retail's exact lowering on
+  the first measured candidate. VC6 `/Ob2` expands `ElapsedSince` and
+  `IsPast` into their signed `Get() - stamp` tests, so the x86 body has ten
+  CFG blocks rather than SH4's thirteen; this is expected compiler/ISA shape,
+  not a missing source fact. `homm3 sema diff 0x005242d0 --source` reports all
+  **10 / 10 aligned blocks identical**, and objdiff reports **100.0000% over
+  all 130 bytes**. The project gains one exact function, **2,562 -> 2,563 /
+  3,100**, without modifying an already reconstructed non-exact body.
+
+  Three asymmetric fatal contracts now preserve the initialization order,
+  outer timer/helper order, and nested mouse/deadline scope. Embedded
+  negative controls prove that swapping the message pump with `PollSound`,
+  flattening the named `ElapsedSince` helper, or testing
+  `bForceMouseCheck` instead of the recovered `bMouseOnly` fails the gate.
+  Activating the body also retires all five frozen call omissions for this
+  function (`Get`, `ElapsedSince`, `IsPast`, `Process1WindowsMessage`, and
+  `PollSound`) from the down-only Dreamcast source-shape backlog.
+
 - **2026-08-30 — the complete Dreamcast-public `armyGroup` read-query
   surface is restored as const, and max/history explicitly banks its one
   collateral compiler-state dip.** The Dreamcast public-symbol table is
