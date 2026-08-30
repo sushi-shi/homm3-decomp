@@ -5,6 +5,18 @@
 #ifndef HOMM3_GAME_H
 #define HOMM3_GAME_H
 
+#if defined(HOMM3_EVENTS_GAME_INLINE_HELPERS) \
+    || defined(HOMM3_PHILAI_OBJ_DECLS)
+// The one decoded value of game::field_1f63e shared by events.obj and
+// philai.obj: Sunday is the seventh day.  DoEventTemple doubles its morale
+// reward on this rung; move_hero stops a low-value full-hourglass move on it.
+// Keep the enum in the shared domain header while limiting its compiler view
+// to the two source compilands that use the recovered name.
+enum EDayOfWeek {
+    DAY_OF_WEEK_SUNDAY = 7
+};
+#endif
+
 #include <map>
 #include <vector>
 #include "mapcell.h"

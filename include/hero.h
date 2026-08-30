@@ -982,7 +982,8 @@ public:
     void HeroScreenUpdate(int whichStat, int isQuickView);
     // 0x004d9110 - the idle frame for the hero's current facing.
     hero_seqid GetStandSequence();
-#ifdef HOMM3_ADVMGR_GET_TARGET_VIEW
+#if defined(HOMM3_ADVMGR_GET_TARGET_VIEW) \
+    || defined(HOMM3_PHILAI_OBJ_DECLS)
     // E:\gamedcs\Hero.h:986, dc 0x1fd30. SetHeroContext preserves this
     // header helper in source; retail folds its packed-point construction
     // into the caller.
