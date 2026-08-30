@@ -391,16 +391,40 @@ public:
     }
 };
 
-// The 1024-path long form of the header-transfer opener: count, the
-// net-mode byte and the sender's 20-char version. The receiver
-// distinguishes the two forms by the size dword (0x30 long vs the
-// version-less EX short form) and falls back to "1.0".
-class CGameHeaderInfoInitLongMsg : public CNetMsg {
+// DC's original 1024 header-transfer opener. CodeView proves the base
+// CGameHeaderInfoInitMsg(numMaps, loadGameMode, msgSize) boundary and the
+// derived CGameHeaderInfoInitMsgEx(version, numMaps, loadGameMode) boundary;
+// Complete retail expands both into CNewPlayerUpdateProc::Go. The receiver
+// independently proves the resulting count/mode/version layout and 0x30
+// extent. Keep these source boundaries even though VC6 /Ob2 erases them.
+class CGameHeaderInfoInitMsg : public CNetMsg {
 public:
     unsigned long m_numMaps;   // +0x14
     unsigned char m_netGame;   // +0x18
     char pad_19[3];
+
+    CGameHeaderInfoInitMsg(unsigned long numMaps,
+                           unsigned char loadGameMode,
+                           unsigned long msgSize)
+        : CNetMsg(RS_GAME_HEADER_INFO_INIT, msgSize)
+    {
+        m_numMaps = numMaps;
+        m_netGame = loadGameMode;
+    }
+};
+
+class CGameHeaderInfoInitMsgEx : public CGameHeaderInfoInitMsg {
+public:
     char m_version[20];        // +0x1c
+
+    CGameHeaderInfoInitMsgEx(const char* version, unsigned long numMaps,
+                             unsigned char loadGameMode)
+        : CGameHeaderInfoInitMsg(numMaps, loadGameMode,
+                                 sizeof(CGameHeaderInfoInitMsgEx))
+    {
+        memset(m_version, 0, sizeof(m_version));
+        strncpy(m_version, version, sizeof(m_version) - 1);
+    }
 };
 
 // The join announcement: the joining player's full CNetPlayerInfo
@@ -570,16 +594,15 @@ public:
     }
 };
 
-// DC SingleSelectionWindow.h's header-transfer opener (dc 0x1478a4 takes
-// numMaps/loadGameMode/msgSize; retail's inline expansion at Go varies
-// only the count - the mode rides the zeroed base field).
-class CGameHeaderInfoInitMsg : public CNetMsg {
+// Complete's retail-only 1083 opener for TransferHeaders. It is the compact
+// count-only sibling of DC's original 1024 message above.
+class CTransferHeaderInfoInitMsg : public CNetMsg {
 public:
     unsigned long m_numMaps;  // +0x14
 
-    CGameHeaderInfoInitMsg(unsigned long numMaps)
+    CTransferHeaderInfoInitMsg(unsigned long numMaps)
         : CNetMsg(RS_GAME_HEADER_INFO_INIT_EX,
-                  sizeof(CGameHeaderInfoInitMsg))
+                  sizeof(CTransferHeaderInfoInitMsg))
     {
         m_numMaps = numMaps;
     }
@@ -604,9 +627,10 @@ struct SHeaderRequest {
 //
 // The names of the concrete tables come from secondary IDA evidence; their
 // separation, slot contents and construction sites are retail-byte facts.
-// Dreamcast had only CNewPlayerUpdateProc and its Go/Tick source shape is the
-// close counterpart of Complete's t_map_list_update overrides. Constructor
-// scheduling proves an inheritance chain rather than two siblings: the
+// Dreamcast had only CNewPlayerUpdateProc. Its Go source shape survives in
+// Complete's 0x5789f0 base implementation; Complete adds the
+// t_map_list_update overrides for the separate 1083 TransferHeaders path.
+// Constructor scheduling proves an inheritance chain rather than two siblings: the
 // 0x641d44 vptr is written after shared member construction but before
 // CNewPlayerUpdateProc's field-initializing body, while t_map_list_update's
 // 0x641d38 override is written after that body. novtable belongs on the shared
@@ -635,7 +659,8 @@ public:
 
 // Complete's CNewPlayerUpdateProc implementation. NewPlayer constructs it
 // inline, proving both the 0x641d44 vptr and its placement before this body.
-// Its three retail-only method bodies remain to recover.
+// Go retains the Dreamcast constructor/send shape and is exact at 0x5789f0;
+// Tick and Finish remain to recover.
 class CNewPlayerUpdateProc : public CNewPlayerUpdateTask {
 public:
     CNewPlayerUpdateProc(unsigned long dpid)
@@ -650,9 +675,9 @@ public:
     virtual void Finish();   // slot 2, 0x5795a0
 };
 
-// Complete's derived map-list implementation. Its Go/Tick bodies are the
-// close retail descendants of Dreamcast CNewPlayerUpdateProc::Go/Tick; the
-// retail-only subclass is why those bodies moved behind a second vtable.
+// Complete's derived map-list implementation for the added 1083
+// TransferHeaders protocol. Its separate vtable and constructor are retail-
+// only; Go is exact, while Tick/Finish retain their documented residuals.
 class t_map_list_update : public CNewPlayerUpdateProc {
 public:
     t_map_list_update(unsigned long dpid);

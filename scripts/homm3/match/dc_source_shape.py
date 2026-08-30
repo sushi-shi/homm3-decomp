@@ -2328,6 +2328,23 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"\s*\)\s*;\s*if\s*\(\s*w\s*\)\s*\{\s*"
             r"int\s+saveStatus\s*=\s*w\s*->\s*status\s*;"),
     ),
+    ("singleselectionwindow.obj", 0x1480CC): (
+        SourceRule(
+            "CNewPlayerUpdateProc::Go keeps Dreamcast's sole initMsg local "
+            "and CGameHeaderInfoInitMsgEx constructor boundary with the "
+            "version, HeadersA count, and network-mode arguments in order",
+            r"\A\s*CGameHeaderInfoInitMsgEx\s+initMsg\s*\(\s*"
+            r"gUnnamed69fbe8\s*->\s*gameVersion\s*,\s*"
+            r"gUnnamed69fbe8\s*->\s*HeadersA\.size\s*\(\s*\)\s*,\s*"
+            r"gUnnamed69fbe8\s*->\s*m_flag64\s*\)\s*;", 1, 1),
+        SourceRule(
+            "CNewPlayerUpdateProc::Go keeps Dreamcast's constructor then "
+            "TransmitRemoteDataDPID statement order and retail's dpid/flag "
+            "arguments",
+            r"CGameHeaderInfoInitMsgEx\s+initMsg\s*\([^;]*\)\s*;\s*"
+            r"TransmitRemoteDataDPID\s*\(\s*&\s*initMsg\s*,\s*m_dpid\s*,"
+            r"\s*false\s*,\s*true\s*\)\s*;", 1, 1),
+    ),
     ("singleselectionwindow.obj", 0x14870C): (
         SourceRule(
             "CNewPlayerUpdateMan::NewPlayer keeps Dreamcast's sole index "
@@ -3263,6 +3280,62 @@ def new_player_update_contract_violations(
              "task, CNewPlayerUpdateProc field-initializing level, derived "
              "t_map_list_update override, interface-pointer manager, exact "
              "0x00589240 derived constructor boundary, and shared teardown")]
+
+
+def game_header_info_init_contract_violations(
+        header_text: str, source_text: str) -> list[tuple[int, str]]:
+    """Audit the nested DC message constructors retained by exact retail Go.
+
+    CodeView proves a CGameHeaderInfoInitMsg base constructor followed by a
+    CGameHeaderInfoInitMsgEx constructor whose two body statements are memset
+    and strncpy. Complete retail expands the full chain in
+    CNewPlayerUpdateProc::Go and independently proves every field, argument,
+    store, and send flag. The helper boundaries are source facts even though
+    /Ob2 leaves no out-of-line x86 copy.
+    """
+    header = _source.mask(header_text)
+    source = _source.mask(source_text)
+    base = (
+        r"class\s+CGameHeaderInfoInitMsg\s*:\s*public\s+CNetMsg\s*\{.*?"
+        r"unsigned\s+long\s+m_numMaps\s*;.*?"
+        r"unsigned\s+char\s+m_netGame\s*;.*?"
+        r"CGameHeaderInfoInitMsg\s*\(\s*unsigned\s+long\s+numMaps\s*,"
+        r"\s*unsigned\s+char\s+loadGameMode\s*,\s*unsigned\s+long\s+"
+        r"msgSize\s*\)\s*:\s*CNetMsg\s*\(\s*RS_GAME_HEADER_INFO_INIT\s*,"
+        r"\s*msgSize\s*\)\s*\{\s*m_numMaps\s*=\s*numMaps\s*;\s*"
+        r"m_netGame\s*=\s*loadGameMode\s*;\s*\}\s*\};")
+    derived = (
+        r"class\s+CGameHeaderInfoInitMsgEx\s*:\s*public\s+"
+        r"CGameHeaderInfoInitMsg\s*\{.*?char\s+m_version\s*\[\s*20\s*\]"
+        r"\s*;.*?CGameHeaderInfoInitMsgEx\s*\(\s*const\s+char\s*\*\s*"
+        r"version\s*,\s*unsigned\s+long\s+numMaps\s*,\s*unsigned\s+char"
+        r"\s+loadGameMode\s*\)\s*:\s*CGameHeaderInfoInitMsg\s*\(\s*"
+        r"numMaps\s*,\s*loadGameMode\s*,\s*sizeof\s*\(\s*"
+        r"CGameHeaderInfoInitMsgEx\s*\)\s*\)\s*\{\s*"
+        r"memset\s*\(\s*m_version\s*,\s*0\s*,\s*sizeof\s*\(\s*"
+        r"m_version\s*\)\s*\)\s*;\s*strncpy\s*\(\s*m_version\s*,\s*"
+        r"version\s*,\s*sizeof\s*\(\s*m_version\s*\)\s*-\s*1\s*\)"
+        r"\s*;\s*\}\s*\};")
+    go = (
+        r"VA\s*\(\s*0x005789F0\s*,\s*0x9E\s*\).*?"
+        r"CNewPlayerUpdateProc\s*::\s*Go\s*\(\s*\)\s*\{\s*"
+        r"CGameHeaderInfoInitMsgEx\s+initMsg\s*\(\s*"
+        r"gUnnamed69fbe8\s*->\s*gameVersion\s*,\s*"
+        r"gUnnamed69fbe8\s*->\s*HeadersA\.size\s*\(\s*\)\s*,\s*"
+        r"gUnnamed69fbe8\s*->\s*m_flag64\s*\)\s*;\s*"
+        r"TransmitRemoteDataDPID\s*\(\s*&\s*initMsg\s*,\s*m_dpid\s*,"
+        r"\s*false\s*,\s*true\s*\)\s*;\s*\}")
+    if (re.search(base, header, re.DOTALL) is not None
+            and re.search(derived, header, re.DOTALL) is not None
+            and re.search(go, source, re.DOTALL) is not None):
+        return []
+    token = re.search(r"\bCGameHeaderInfoInitMsg\b", header)
+    line = header_text.count("\n", 0, token.start()) + 1 if token else 1
+    return [(line,
+             "the 1024 opener must retain Dreamcast's nested "
+             "CGameHeaderInfoInitMsg/CGameHeaderInfoInitMsgEx constructor "
+             "boundaries, ordered count/mode and memset/strncpy statements, "
+             "and exact 0x005789f0 constructor-then-send body")]
 
 
 def netplayer_constructor_contract_violations(
@@ -4419,6 +4492,30 @@ if (s != 0.0f) {
                    contract_violations(probe, hsv_to_rgb_key)):
             failures.append("broken HSVToRGB " + description
                             + " source shape passed")
+    update_go_key = ("singleselectionwindow.obj", 0x1480CC)
+    update_go_probe = """\
+CGameHeaderInfoInitMsgEx initMsg(
+    gUnnamed69fbe8->gameVersion,
+    gUnnamed69fbe8->HeadersA.size(),
+    gUnnamed69fbe8->m_flag64);
+TransmitRemoteDataDPID(&initMsg, m_dpid, false, true);
+"""
+    if contract_violations(update_go_probe, update_go_key):
+        failures.append("aligned CNewPlayerUpdateProc::Go shape did not pass")
+    update_go_mutations = (
+        ("TSingleSelectionWindow* win = gUnnamed69fbe8;\n"
+         + update_go_probe.replace("gUnnamed69fbe8->", "win->"),
+         "sole initMsg local"),
+        (update_go_probe.replace("HeadersA", "TransferHeaders"),
+         "version, HeadersA count, and network-mode arguments in order"),
+        (update_go_probe.replace("false, true", "true, false"),
+         "constructor then TransmitRemoteDataDPID statement order"),
+    )
+    for probe, description in update_go_mutations:
+        if not any(description in rule.description for rule in
+                   contract_violations(probe, update_go_key)):
+            failures.append("broken CNewPlayerUpdateProc::Go "
+                            + description + " source shape passed")
     new_player_key = ("singleselectionwindow.obj", 0x14870C)
     new_player_probe = """\
 int index = GetFirstAvailable();
@@ -7821,6 +7918,71 @@ CNewPlayerUpdateTask::~CNewPlayerUpdateTask()
     if any(not new_player_update_contract_violations(header, source)
            for header, source in broken_update_task_probes):
         failures.append("broken NewPlayer update type chain passed")
+    update_msg_header_probe = """\
+class CGameHeaderInfoInitMsg : public CNetMsg {
+public:
+    unsigned long m_numMaps;
+    unsigned char m_netGame;
+    CGameHeaderInfoInitMsg(unsigned long numMaps,
+                           unsigned char loadGameMode,
+                           unsigned long msgSize)
+        : CNetMsg(RS_GAME_HEADER_INFO_INIT, msgSize)
+    {
+        m_numMaps = numMaps;
+        m_netGame = loadGameMode;
+    }
+};
+class CGameHeaderInfoInitMsgEx : public CGameHeaderInfoInitMsg {
+public:
+    char m_version[20];
+    CGameHeaderInfoInitMsgEx(const char* version, unsigned long numMaps,
+                             unsigned char loadGameMode)
+        : CGameHeaderInfoInitMsg(numMaps, loadGameMode,
+                                 sizeof(CGameHeaderInfoInitMsgEx))
+    {
+        memset(m_version, 0, sizeof(m_version));
+        strncpy(m_version, version, sizeof(m_version) - 1);
+    }
+};
+"""
+    update_msg_source_probe = """\
+VA(0x005789F0, 0x9E)
+void CNewPlayerUpdateProc::Go()
+{
+    CGameHeaderInfoInitMsgEx initMsg(
+        gUnnamed69fbe8->gameVersion,
+        gUnnamed69fbe8->HeadersA.size(),
+        gUnnamed69fbe8->m_flag64);
+    TransmitRemoteDataDPID(&initMsg, m_dpid, false, true);
+}
+"""
+    if game_header_info_init_contract_violations(
+            update_msg_header_probe, update_msg_source_probe):
+        failures.append("aligned 1024 header-init message chain did not pass")
+    broken_update_msg_probes = (
+        (update_msg_header_probe.replace(
+            "class CGameHeaderInfoInitMsgEx : public "
+            "CGameHeaderInfoInitMsg",
+            "class CGameHeaderInfoInitMsgEx : public CNetMsg"),
+         update_msg_source_probe),
+        (update_msg_header_probe.replace(
+            "m_numMaps = numMaps;\n        m_netGame = loadGameMode;",
+            "m_netGame = loadGameMode;\n        m_numMaps = numMaps;"),
+         update_msg_source_probe),
+        (update_msg_header_probe.replace(
+            "memset(m_version, 0, sizeof(m_version));\n"
+            "        strncpy(m_version, version, sizeof(m_version) - 1);",
+            "strncpy(m_version, version, sizeof(m_version) - 1);\n"
+            "        memset(m_version, 0, sizeof(m_version));"),
+         update_msg_source_probe),
+        (update_msg_header_probe,
+         update_msg_source_probe.replace("HeadersA", "TransferHeaders")),
+        (update_msg_header_probe,
+         update_msg_source_probe.replace("false, true", "true, false")),
+    )
+    if any(not game_header_info_init_contract_violations(header, source)
+           for header, source in broken_update_msg_probes):
+        failures.append("broken 1024 header-init message chain passed")
     netplayer_header_probe = """\
 class CNetPlayerInfo {
 public:
@@ -8630,7 +8792,9 @@ def scan() -> tuple[
         selection_text, selection_source_text)
     selection_defects.extend(new_player_update_contract_violations(
         selection_text, selection_source_text))
-    checked += 2
+    selection_defects.extend(game_header_info_init_contract_violations(
+        selection_text, selection_source_text))
+    checked += 3
     missing.extend(FileContractViolation(selection_relpath, line,
                                          description)
                    for line, description in selection_defects)

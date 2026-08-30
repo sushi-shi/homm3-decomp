@@ -550,11 +550,11 @@ int CNetPlayerHandler::GetPlayerCount(unsigned char assignedOnly)
 // Opens the header transfer to the joining player: announce how many
 // headers will follow.
 // E:\gamedcs\singleselectionwindow.cpp:1272
-VA(0x00577d70, 0x6C)  // anchor-vtable t_map_list_update vtbl 0x641d38 slot0; sends the 0x43b header-count msg from the +0x1044/+0x1048 pair, size 1.08x dc 0x64, dc 0x1480cc
+VA(0x00577d70, 0x6C)  // anchor-vtable t_map_list_update vtbl 0x641d38 slot0; Complete-only 0x43b header-count msg from the +0x1044/+0x1048 pair
 void t_map_list_update::Go()
 {
     TSingleSelectionWindow* win = gUnnamed69fbe8;
-    CGameHeaderInfoInitMsg msg(
+    CTransferHeaderInfoInitMsg msg(
         win->TransferHeaders.size());
     TransmitRemoteDataDPID(&msg, m_dpid, false, true);
 }
@@ -688,6 +688,26 @@ GameSelectionHeadersStruct& GameSelectionHeadersStruct::operator=(
 {
     // @stub
 }
+
+#endif  // @carcass
+
+// DC CNewPlayerUpdateProc::Go and its message constructors survive here as
+// the original 1024-path alongside Complete's derived 1083 transfer path.
+// CodeView proves the single initMsg local and the ordered constructor/send
+// statements; retail independently proves the HeadersA count, m_flag64 mode,
+// gameVersion source, 0x30 message layout, dpid destination and send flags.
+// E:\gamedcs\singleselectionwindow.cpp:1272
+VA(0x005789F0, 0x9E)  // anchor-vtable CNewPlayerUpdateProc vtbl 0x641d44 slot0, dc 0x1480cc
+void CNewPlayerUpdateProc::Go()
+{
+    CGameHeaderInfoInitMsgEx initMsg(
+        gUnnamed69fbe8->gameVersion,
+        gUnnamed69fbe8->HeadersA.size(),
+        gUnnamed69fbe8->m_flag64);
+    TransmitRemoteDataDPID(&initMsg, m_dpid, false, true);
+}
+
+#if 0  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:1953
 VA(0x00579960, 0x2d63)  // anchor-callee CAdvPopup base ctor (??0CAdvPopup@@QAE@HHHHI@Z) + SavedGameHeader member ctor at this+0x38c+0x700, fs:[0] EH frame, ret4, dc 0x1309f0
@@ -3942,11 +3962,11 @@ void CNewPlayerUpdateMan::NewPlayer(unsigned long dpid)
 VA(0x0058A440, 0x33E)  // anchor-callee RS_GAME_HEADER_INFO_INIT (1024) arm calls it and cancels on failure, size 1.65x dc 0x1f8, dc 0x140f24
 unsigned char TSingleSelectionWindow::OnGameHeaderInfoInitMsg(CNetMsg* pNetMsg)
 {
-    CGameHeaderInfoInitLongMsg* pMsg =
-        static_cast<CGameHeaderInfoInitLongMsg*>(pNetMsg);
+    CGameHeaderInfoInitMsgEx* pMsg =
+        static_cast<CGameHeaderInfoInitMsgEx*>(pNetMsg);
     const char* version =
         DATA_COMPGEN(0x00683900, defaultRemoteVersion, "1.0");
-    if (pMsg->size == sizeof(CGameHeaderInfoInitLongMsg))
+    if (pMsg->size == sizeof(CGameHeaderInfoInitMsgEx))
         version = pMsg->m_version;
     if (!IsVersionCompatible(version)) {
         CBadVersionMsg reply;
@@ -3978,8 +3998,8 @@ unsigned char TSingleSelectionWindow::OnGameHeaderInfoInitMsg(CNetMsg* pNetMsg)
 VA(0x0058A780, 0x2BA)  // anchor-callee the 1083 arm's single call
 void TSingleSelectionWindow::OnGameHeaderInfoInitMsgEx(CNetMsg* pNetMsg)
 {
-    CGameHeaderInfoInitMsg* pMsg =
-        static_cast<CGameHeaderInfoInitMsg*>(pNetMsg);
+    CTransferHeaderInfoInitMsg* pMsg =
+        static_cast<CTransferHeaderInfoInitMsg*>(pNetMsg);
     receivedMaps = 0;
     receivingMaps = 1;
     int count = pMsg->m_numMaps;
