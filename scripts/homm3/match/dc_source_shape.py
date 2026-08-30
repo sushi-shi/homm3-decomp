@@ -681,6 +681,31 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"if\s*\(\s*HasBuilding\s*\(\s*MAGE_GUILD_ID\s*,\s*1\s*"
             r"\)\s*\)\s*\{"),
     ),
+    ("victorylossconditions.obj", 0x190124): (
+        SourceRule(
+            "CheckForGrailBuildingWin keeps the recovered grail_town_loc "
+            "and any_town_loc identities in Dreamcast constructor order",
+            r"type_point\s+any_town_loc\s*\(\s*-1\s*,\s*-1\s*,\s*-1"
+            r"\s*\)\s*;\s*type_point\s+grail_town_loc\s*\(\s*TownX\s*,"
+            r"\s*TownY\s*,\s*TownZ\s*\)\s*;"),
+        SourceRule(
+            "CheckForGrailBuildingWin keeps the game::OnSameTeam boundary",
+            r"gpGame\s*->\s*OnSameTeam\s*\(\s*player\s*,\s*"
+            r"gNetLocalGamePos\s*\)"),
+        SourceRule(
+            "CheckForGrailBuildingWin keeps this_town_loc and both "
+            "Dreamcast const-reference equality expressions",
+            r"type_point\s+this_town_loc\s*\(\s*thisTown\s*->\s*mapX\s*,"
+            r"\s*thisTown\s*->\s*mapY\s*,\s*thisTown\s*->\s*mapZ\s*\)"
+            r"\s*;\s*if\s*\(\s*this_town_loc\s*==\s*grail_town_loc\s*"
+            r"\|\|\s*grail_town_loc\s*==\s*any_town_loc\s*\)"),
+        SourceRule(
+            "CheckForGrailBuildingWin keeps the active-mask HasBuilding "
+            "boundary inside the matching-location arm",
+            r"if\s*\(\s*this_town_loc\s*==.*?\)\s*\{\s*if\s*\(\s*"
+            r"thisTown\s*->\s*HasBuilding\s*\(\s*HOLY_GRAIL_ID\s*,\s*1"
+            r"\s*\)\s*\)"),
+    ),
     ("spells.obj", 0x153B60): (
         SourceRule(
             "AreaEffect keeps Dreamcast's casting_hero, multiple_targets, "
@@ -3262,6 +3287,37 @@ if (currentHero
 """
     if not contract_violations(flattened_give_spells, give_spells_key):
         failures.append("flattened GiveSpells guard scopes passed")
+    grail_win_key = ("victorylossconditions.obj", 0x190124)
+    grail_win_probe = """\
+type_point any_town_loc(-1, -1, -1);
+type_point grail_town_loc(TownX, TownY, TownZ);
+if (gpGame->OnSameTeam(player, gNetLocalGamePos)) {
+    type_point this_town_loc(thisTown->mapX, thisTown->mapY, thisTown->mapZ);
+    if (this_town_loc == grail_town_loc
+        || grail_town_loc == any_town_loc) {
+        if (thisTown->HasBuilding(HOLY_GRAIL_ID, 1)) {
+            win();
+        }
+    }
+}
+"""
+    if contract_violations(grail_win_probe, grail_win_key):
+        failures.append("aligned Grail victory source shape did not pass")
+    grail_win_mutations = (
+        grail_win_probe.replace("grail_town_loc", "target"),
+        grail_win_probe.replace(
+            "gpGame->OnSameTeam(player, gNetLocalGamePos)",
+            "same_team(gpGame, player, gNetLocalGamePos)"),
+        grail_win_probe.replace(
+            "this_town_loc == grail_town_loc",
+            "this_town_loc.operator==(&grail_town_loc)"),
+        grail_win_probe.replace(
+            "thisTown->HasBuilding(HOLY_GRAIL_ID, 1)",
+            "thisTown->active & bitNumber[HOLY_GRAIL_ID]"),
+    )
+    if any(not contract_violations(probe, grail_win_key)
+           for probe in grail_win_mutations):
+        failures.append("flattened Grail victory source shape passed")
     area_effect_key = ("spells.obj", 0x153B60)
     area_effect_probe = """\
 hero* casting_hero;

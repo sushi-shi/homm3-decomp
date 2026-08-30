@@ -260,6 +260,27 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-30 — `CheckForGrailBuildingWin` restores two named helpers and
+  its complete Dreamcast point-local shape.** Raw NB11 for `dc:0x190124`
+  records procedure locals `any_town_loc` then `grail_town_loc`, a nested
+  `this_town_loc`, and breakpoint rows that construct the wildcard before
+  the configured target. The xref graph proves `game::OnSameTeam`, two
+  const-reference `type_point::operator==` expressions, and
+  `town::HasBuilding`. The former Windows source had renamed all three
+  points, replaced OnSameTeam with a local mask helper, flattened HasBuilding
+  into `active & bitNumber[...]`, and used the temporary pointer equality
+  overload.
+
+  Restoring the two named helpers raises the 515-byte function from
+  **99.2692% to 99.2821%**; VC6 `/Ob2` expands both to retail's code and the
+  two frozen missing-call rows retire. Restoring the original names,
+  any-before-grail construction order, and canonical reference equality is
+  byte-flat. All 24 Windows blocks and branch targets remain aligned. The
+  residual is one extra move in the first packed equality plus one exchange
+  of the two procedure-local stack homes. Fatal rules and negative controls
+  preserve the local identities/order, both equality expressions, helper
+  arguments, and the active-mask `HasBuilding(..., 1)` boundary.
+
 - **2026-08-30 — `consider_single_enchantment` banks its sole raw-NB11
   local at the honest 99.5673% plateau.** The Dreamcast dossier
   (`dc:0x40bb8`) records exactly one optimized local lower bound:
