@@ -271,6 +271,7 @@ ai_player	?get_cell@game@@QAEPAVNewmapCell@@Utype_point@@@Z	100.0000	100.0000	10
 ai_player	?get_danger_value@searchArray@@QBEJUtype_point@@@Z	100.0000	100.0000	100.0000	0x2ed30
 ai_player	?get_full_value@@YIJPBVhero@@@Z	100.0000	100.0000	100.0000	0x33c60
 ai_player	?get_purchase_value@type_AI_creature_purchaser@@QAEJPBVarmyGroup@@F0PBJE@Z	97.3256	97.3256	97.3256	0x2d780
+ai_player	?get_swap_value@type_AI_creature_swapper@@QAEJPBVhero@@PBVarmyGroup@@0E@Z	92.5052	92.5052	92.5052	0x2c4a0
 ai_player	?get_total_value@type_AI_player@@QAEJJPAH@Z	100.0000	100.0000	100.0000	0x2a150
 ai_player	?get_value@type_angelic_alliance_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x33130
 ai_player	?get_value@type_antiluck_artifact@@UBEJPBVhero@@EE@Z	90.6818	90.6818	90.6818	0x32ba0
@@ -2165,6 +2166,7 @@ philai	?get_enchantment_value@type_spellvalue@@IBEJHHJ@Z	100.0000	100.0000	100.0
 philai	?get_mass_damage_spell_value@type_spellvalue@@IBEJHHJ@Z	100.0000	100.0000	100.0000	0x1271c0
 philai	?get_raw_spell_value@type_spellvalue@@QBEJH@Z	100.0000	100.0000	100.0000	0x1273d0
 philai	?get_school_value@@YIJPBVhero@@W4TSecondarySkill@@@Z	100.0000	100.0000	100.0000	0x124d20
+philai	?get_skill_value@@YIJPBVhero@@W4TSecondarySkill@@E@Z	78.1958	78.1958	78.1958	0x124690
 philai	?get_value_of_spring@@YIJPBVhero@@PBVNewmapCell@@G@Z	100.0000	100.0000	100.0000	0x12b810
 philai	?get_value_of_well@@YIJPBVhero@@G@Z	100.0000	100.0000	100.0000	0x12a510
 philai	?value_of_bank@@YIJPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x129920
@@ -2192,9 +2194,7 @@ philai	ExtraInfoUnion_PlayerKnowsCell	0.0000	0.0000	0.0000	0x129690
 philai	MoveHero	0.0000	0.0000	0.0000	0x1261f0
 philai	game_OnSameTeam	0.0000	0.0000	0.0000	0x1296d0
 philai	game_UpgradedCreatureType	0.0000	0.0000	0.0000	0x129710
-philai	get_skill_value	0.0000	0.0000	0.0000	0x124690
 philai	move_hero	0.0000	0.0000	0.0000	0x1267b0
-philai	type_AI_creature_swapper_get_swap_value	0.0000	0.0000	0.0000	0x2c4a0
 philai	type_spellvalue_type_spellvalue_126d40	0.0000	0.0000	0.0000	0x126d40
 puzzlewindow	??0TPuzzleWindow@@QAE@H@Z	100.0000	100.0000	100.0000	0x12c1e0
 puzzlewindow	??0type_AI_puzzle_tile@@QAE@PAVNewmapCell@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x12c770

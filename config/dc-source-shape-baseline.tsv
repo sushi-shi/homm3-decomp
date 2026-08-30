@@ -338,7 +338,6 @@ call	ai_player.obj	0x310f4	game::TownAlreadyBuiltOn
 call	ai_player.obj	0x31398	game::TownAlreadyBuiltOn
 call	ai_player.obj	0x315d8	move_creatures
 call	ai_player.obj	0x3166c	armyGroup::GetAlignments
-call	ai_player.obj	0x31808	calculate_improvement
 call	ai_player.obj	0x31924	armyGroup::GetAlignments
 call	ai_player.obj	0x31af4	min
 call	ai_player.obj	0x32038	armyGroup::GetAlignments
@@ -1592,12 +1591,6 @@ call	philai.obj	0x1130cc	ExtraInfoUnion::GetTreePrice
 call	philai.obj	0x11348c	game::get_cell
 call	philai.obj	0x11348c	hero::get_target
 call	philai.obj	0x11348c	hero::get_value_of_spring
-call	philai.obj	0x1135ac	get_school_value
-call	philai.obj	0x1135ac	hero::GetPrimarySkill
-call	philai.obj	0x1135ac	hero::IsWieldingArtifact
-call	philai.obj	0x1135ac	hero::get_value_of_knowledge
-call	philai.obj	0x1135ac	hero::get_value_of_power
-call	philai.obj	0x1135ac	type_AI_player::get_resource_value
 call	philai.obj	0x113c1c	ExtraInfoUnion::get_university
 call	philai.obj	0x113cbc	ExtraInfoUnion::get_university
 call	philai.obj	0x113da0	ExtraInfoUnion::get_witch_skill

@@ -77,7 +77,7 @@ extern float fArtifactPurchaseEfficency[];
 // they cannot be declared static here: VC6 rejects a static function that
 // is declared and called but never defined (C2129). Move them back into
 // philai.cpp as statics when the bodies land.
-long get_skill_value(const hero* our_hero, int skill,
+long get_skill_value(const hero* our_hero, TSecondarySkill skill,
                      unsigned char complex_choice);
 unsigned char wants_skill(const hero* our_hero, int skill,
                           unsigned char complex_choice);
