@@ -9,6 +9,7 @@
 #include "hero.h"
 #include "advmgr.h"
 #include "bitmap816.h"
+#include "kb.h"
 #include "winmgr.h"
 #include "netgame.h"
 
@@ -236,15 +237,9 @@ void swapManager::UpdateSlot(int iHero, TArtifactSlot slot)
 }
 
 // E:\gamedcs\swapmgr.cpp:962
-DC_ONLY(0x15cdbc, 0x64)
-void swapManager::update_all_slots()
-{
-    // @stub
-}
-
-// E:\gamedcs\swapmgr.cpp:977
 #endif  // @carcass
 
+// E:\gamedcs\swapmgr.cpp:977
 // Dreamcast preserves this source helper boundary; Complete /Ob2 expands its
 // sole call into UpdateBackpack, where the parameterized subscript is what
 // produces retail's stride-eight induction variable.
@@ -547,6 +542,82 @@ void swapManager::SwapMons()
     if (CanModHero(field_4c)
         || destination->armies[field_54] == CREATURE_NONE)
         source->Swap(field_50, destination, field_54);
+}
+
+// E:\gamedcs\swapmgr.cpp:962
+// Complete prepends the per-side army-widget refresh. Dreamcast independently
+// proves the trailing nested loop and the retained UpdateSlot helper boundary.
+VA(0x005b0ef0, 0x1D4)  // body/callee corroborates, dc 0x15cdbc
+void swapManager::update_all_slots()
+{
+    message msg;
+    msg.id = MESSAGE_WIDGET;
+
+    int i;
+    for (int side = 0; side < 2; ++side)
+    {
+        msg.codeX = 3;
+        msg.extraText = gText;
+        for (i = 0; i < 4; ++i)
+        {
+            msg.codeY = 3 + side * 5 + i;
+            int val = heroes[side]->GetPrimarySkill(i);
+            sprintf(gText,
+                    DATA_COMPGEN(0x00660a1c, swapDecimalFormat, "%d"),
+                    val);
+            parent->BroadcastMessage(&msg);
+        }
+
+        for (i = 0; i < 7; ++i)
+        {
+            msg.codeY = 0xd + side * 7 + i;
+            if (heroes[side]->army.armies[i] == CREATURE_NONE)
+            {
+                msg.codeX = 6;
+                msg.extra = 4;
+            }
+            else
+            {
+                msg.codeX = 5;
+                msg.extra = 4;
+                parent->BroadcastMessage(&msg);
+                msg.codeX = 4;
+                msg.extra = heroes[side]->army.armies[i] + 2;
+            }
+            parent->BroadcastMessage(&msg);
+        }
+
+        for (i = 0; i < 7; ++i)
+        {
+            msg.codeY = 0x41 + side * 7 + i;
+            if (heroes[side]->army.armies[i] == CREATURE_NONE)
+            {
+                msg.codeX = 6;
+                msg.extra = 4;
+            }
+            else
+            {
+                msg.codeX = 5;
+                msg.extra = 4;
+                parent->BroadcastMessage(&msg);
+                msg.codeX = 3;
+                sprintf(gText,
+                        DATA_COMPGEN(0x00660a1c, swapDecimalFormat, "%d"),
+                        heroes[side]->army.numTroops[i]);
+                msg.extraText = gText;
+            }
+            parent->BroadcastMessage(&msg);
+        }
+    }
+
+    for (int iHero = 0; iHero < 2; ++iHero)
+        for (int slot = const_first_artifact_slot;
+             slot < kNumArtifactSlots + 1;
+             slot++)
+            // Complete adds ordinal 18 to Dreamcast's public TArtifactSlot
+            // domain; keep the proved callee ABI and make that revision
+            // boundary explicit instead of flattening UpdateSlot to int.
+            UpdateSlot(iHero, static_cast<TArtifactSlot>(slot) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
 }
 
 // E:\gamedcs\swapmgr.cpp:2231

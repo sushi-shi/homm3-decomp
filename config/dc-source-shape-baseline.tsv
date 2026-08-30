@@ -2211,12 +2211,6 @@ call	tradpost.obj	0x189aac	TBuyArtifactWindow::ComputeTradeRatios
 call	tradpost.obj	0x189aac	TBuyArtifactWindow::SetWidgetDisabled
 call	tradpost.obj	0x189aac	TBuyArtifactWindow::SetWidgetOff
 call	tradpost.obj	0x189aac	TBuyArtifactWindow::SetWidgetOn
-call	tradpost.obj	0x18a02c	TSellArtifactWindow::ComputeTradeRatios
-call	tradpost.obj	0x18a02c	TSellArtifactWindow::SetWidgetDisabled
-call	tradpost.obj	0x18a02c	TSellArtifactWindow::SetWidgetOff
-call	tradpost.obj	0x18a02c	TSellArtifactWindow::SetWidgetOn
-call	tradpost.obj	0x18a02c	hero::get_artifact
-call	tradpost.obj	0x18a02c	hero::get_backpack
 call	tradpost.obj	0x18afd4	hero::get_artifact
 call	tradpost.obj	0x18afd4	hero::get_backpack
 call	tradpost.obj	0x18b540	TTradeResourceWindow::SetupNewTrade

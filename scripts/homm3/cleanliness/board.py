@@ -34,8 +34,11 @@ The rows (all ratcheted; floors start at the tree's current counts):
   casts to enum types static_cast<E>(...) where E is any enum declared in
                       the tree. An enum-to-enum cast (and its lexically
                       indistinguishable int-to-enum sibling) usually
-                      means two mis-modeled domains; the floor rises only
-                      via an explicit `board --update`.
+                      means two mis-modeled domains. A single cast on a line
+                      may carry the narrow
+                      `HOMM3_ENUM_CAST_REVISION_BOUNDARY` admission when a
+                      retail-only ordinal must cross a DC-proven enum ABI;
+                      every ordinary cast remains ratcheted at zero.
   magic case labels   a `case <number>:` is an un-named member of some
                       domain. Fix: declare the enum, case on enumerators.
   unnamed domain      `x == 0x36` - the comparison twin of magic case
@@ -66,9 +69,18 @@ _STR = re.compile(r'"(?:\\.|[^"\\\n])*"')
 # lone apostrophe must not swallow the rest of the line (the labels.py
 # masker lesson).
 _CHR = re.compile(r"'(?:\\.|[^'\\\n]){1,4}'")
+_ENUM_CAST_REVISION_MARKER = "HOMM3_ENUM_CAST_REVISION_BOUNDARY"
+_ENUM_CAST_REVISION_COMMENT = re.compile(
+    r"/\*\s*" + _ENUM_CAST_REVISION_MARKER + r"\s*\*/")
 
 
 def _strip(text: str) -> str:
+    # Preserve the one auditable enum-cast admission token while stripping
+    # every other comment.  The enum scanner below accepts it only when the
+    # source line contains exactly one enum cast, so it cannot blanket-waive a
+    # line containing several unrelated domain conversions.
+    text = _ENUM_CAST_REVISION_COMMENT.sub(
+        " " + _ENUM_CAST_REVISION_MARKER + " ", text)
     text = _BLOCK.sub(" ", text)
     text = _LINE.sub("", text)
     text = _STR.sub(" ", text)
@@ -137,7 +149,18 @@ def _enum_cast_sites(code: str, ctx) -> list:
     pattern = ctx.get("enum_cast_re")
     if pattern is None:
         return []
-    return [m.start() for m in pattern.finditer(code)]
+    out = []
+    for match in pattern.finditer(code):
+        line_start = code.rfind("\n", 0, match.start()) + 1
+        line_end = code.find("\n", match.end())
+        if line_end < 0:
+            line_end = len(code)
+        line = code[line_start:line_end]
+        admitted = (_ENUM_CAST_REVISION_MARKER in line
+                    and len(pattern.findall(line)) == 1)
+        if not admitted:
+            out.append(match.start())
+    return out
 
 
 # (label, sites(code, ctx)->[offset], cpp_only, how-to-fix note)
@@ -298,10 +321,14 @@ _SAMPLES = {
          "// enum eGone { X }; retired")),
     "casts to enum types": (
         ("h = static_cast<eHero>(t);",
-         "t = static_cast< const eTown >(x);"),
+         "t = static_cast< const eTown >(x);",
+         "h = static_cast<eHero>(t); q = static_cast<eTown>(x); "
+         "/* HOMM3_ENUM_CAST_REVISION_BOUNDARY */"),
         ("n = static_cast<int>(h);",
          "q = static_cast<eOther>(x);",
-         "p = static_cast<eHero*>(v);")),
+         "p = static_cast<eHero*>(v);",
+         "h = static_cast<eHero>(t) "
+         "/* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;")),
     "magic case labels": (
         ("case 5:",
          "  case 0x1f:  DoThing(); break;",

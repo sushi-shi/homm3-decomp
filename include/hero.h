@@ -87,6 +87,32 @@ enum EHeroBackpackLimit {
     HERO_BACKPACK_CAPACITY = 64
 };
 
+// Dreamcast's public wearable-position type. Complete adds a nineteenth
+// equipped position, but retains the same dword parameter ABI and may pass
+// that retail-only ordinal through functions which use this shared type.
+enum TArtifactSlot {
+    eArtifactSlotHead = 0,
+    eArtifactSlotShoulders,
+    eArtifactSlotNeck,
+    eArtifactSlotRightHand,
+    eArtifactSlotLeftHand,
+    eArtifactSlotTorso,
+    eArtifactSlotRightRing,
+    eArtifactSlotLeftRing,
+    eArtifactSlotFeet,
+    eArtifactSlotMisc1,
+    eArtifactSlotMisc2,
+    eArtifactSlotMisc3,
+    eArtifactSlotMisc4,
+    eArtifactSlotWarMachine1,
+    eArtifactSlotWarMachine2,
+    eArtifactSlotWarMachine3,
+    eArtifactSlotWarMachine4,
+    eArtifactSlotSpellbook,
+    kNumArtifactSlots,
+    const_first_artifact_slot = eArtifactSlotHead
+};
+
 // The 8-byte artifact record - what an equipped slot or a backpack
 // slot actually holds. NAME CORRECTED 2026-08-08: this header used to
 // call it TArtifactSlot, but on the Dreamcast build TArtifactSlot is

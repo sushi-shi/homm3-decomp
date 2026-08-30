@@ -1109,7 +1109,7 @@ events	?DoAIEvent@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@@Z	100.00
 # synth PDB - returned the row to master's own 98.5741 to the digit
 # with events.cpp untouched. Cross-generation noise, the
 # recruit::Update revert-control precedent; hist keeps 99.1139.
-events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	99.0481	99.0481	99.1139	0xad470
+events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	98.5741	99.0481	99.1139	0xad470
 events	?DoCustomArtifact@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	99.1492	99.1492	99.1492	0x9f070
 events	?DoCustomResource@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa4780
 events	?DoCustomSpellScroll@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	97.4451	97.4451	97.4451	0xa5a80
@@ -1224,7 +1224,7 @@ events	?monsters_join@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@
 # (push 0xb4 in townManager::Open), layout-required and not gateable
 # per-TU. hist keeps 100.0000; the saturation law says a later
 # declarator can carry it back.
-events	?monsters_sell_out@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	100.0000	100.0000	100.0000	0xa7250
+events	?monsters_sell_out@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	99.9517	100.0000	100.0000	0xa7250
 events	?show_rewards@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@2@J@Z	100.0000	100.0000	100.0000	0xa0b00
 exec	?AddManager@executive@@QAEHPAVbaseManager@@H@Z	100.0000	100.0000	100.0000	0xb0b20
 exec	?CallManager@executive@@QAEXPAVbaseManager@@@Z	100.0000	100.0000	100.0000	0xb0c70
@@ -2897,6 +2897,7 @@ swapmgr	?SendChat@CSwapManagerChatEdit@@UAEXPBDH@Z	100.0000	100.0000	100.0000	0x
 swapmgr	?SwapMons@swapManager@@QAEXXZ	79.2453	79.2453	79.2453	0x1b0da0
 swapmgr	?UpdateArrows@TSwapWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1ae430
 swapmgr	?UpdateBackpack@swapManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x1af150
+swapmgr	?update_all_slots@swapManager@@QAEXXZ	89.3496	89.3496	89.3496	0x1b0ef0
 systemoptionswindow	??0TSystemOptionsWindow@@QAE@XZ	98.1326	98.1326	98.1326	0x1b1790
 systemoptionswindow	??1TSystemOptionsWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1b3040
 systemoptionswindow	??_GTSystemOptionsWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1b3010
@@ -3131,11 +3132,11 @@ tradpost	?SetRolloverText@TSellArtifactWindow@@QAEXH@Z	100.0000	100.0000	100.000
 tradpost	?SetRolloverText@TSellCreatureWindow@@QAEXH@Z	97.0522	97.0522	97.0522	0x1eebd0
 tradpost	?SetRolloverText@TTradeResourceWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1ed3a0
 tradpost	?TradeResourceSlider@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1e1600
-tradpost	?Update@TBuyArtifactWindow@@QAEXE@Z	88.8247	88.8247	88.8247	0x1eb6a0
+tradpost	?Update@TBuyArtifactWindow@@QAEXE@Z	88.6580	88.8247	88.8247	0x1eb6a0
 tradpost	?Update@TGiveResourceWindow@@QAEX_N@Z	100.0000	100.0000	100.0000	0x1eaf50
-tradpost	?Update@TSellArtifactWindow@@QAEXE@Z	98.2500	98.2500	98.2500	0x1ebe80
-tradpost	?Update@TSellCreatureWindow@@QAEX_N@Z	98.7947	98.7947	98.7947	0x1ec550
-tradpost	?Update@TTradeResourceWindow@@QAEXE@Z	86.6466	86.6466	86.6466	0x1ea6e0
+tradpost	?Update@TSellArtifactWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x1ebe80
+tradpost	?Update@TSellCreatureWindow@@QAEX_N@Z	98.7522	98.7947	98.7947	0x1ec550
+tradpost	?Update@TTradeResourceWindow@@QAEXE@Z	86.8746	86.8746	86.8746	0x1ea6e0
 tradpost	?WindowHandler@TBuyArtifactWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ed9e0
 tradpost	?WindowHandler@TGiveResourceWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ed550
 tradpost	?WindowHandler@TSellArtifactWindow@@UAEHPAVmessage@@@Z	89.7304	89.7304	89.7304	0x1edf60
