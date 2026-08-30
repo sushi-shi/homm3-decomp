@@ -405,7 +405,7 @@ army	?AttackWall@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x45d30
 army	?CanFit@army@@QBEHHHPAH@Z	100.0000	100.0000	100.0000	0x46c40
 army	?CancelIndividualSpell@army@@QAEXH@Z	96.2713	96.2713	96.2713	0x44510
 army	?CancelSpellType@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x444d0
-army	?ComputeAttackerDamageBonuses@army@@QBEHHEPAV1@EJ@Z	99.1372	100.0000	100.0000	0x43840
+army	?ComputeAttackerDamageBonuses@army@@QBEHHEPAV1@EJ@Z	100.0000	100.0000	100.0000	0x43840
 army	?ComputeAttackerDamageReduction@army@@QBENPBV1@E@Z	100.0000	100.0000	100.0000	0x43b90
 army	?ComputeBaseDamage@army@@QBEHE@Z	100.0000	100.0000	100.0000	0x43160
 army	?ComputeDefenderDamageReduction@army@@QBENE@Z	100.0000	100.0000	100.0000	0x43d90

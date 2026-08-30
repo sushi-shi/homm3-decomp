@@ -4054,9 +4054,9 @@ static const int kArtilleryDoubleChances[4] = { 0, 50, 75, 100 };
 // GetText(366|367) message, the death blow adding Deathblo.wav and the
 // id-73 effect over the defender. The /GX frame covers the message
 // strings, operator= from format_string's temporary exactly as
-// new_turn's; GetName is a CALL in the ballista arm and INLINED in
-// both death-blow arms with its count test folded by the dominating
-// numTroops compare - the same budget drain LoadResources records.
+// new_turn's. All three arms retain the Dreamcast-proven GetName call in
+// source; VC6 expands that wrapper to GetArmyName, with the death-blow
+// count tests folded by the dominating numTroops compare.
 VA(0x00443840, 0x344)  // anchor-global + dc-callgraph, dc 0x4868c
 int army::ComputeAttackerDamageBonuses(int base_damage,
                                        unsigned char is_shooting,
@@ -4079,9 +4079,7 @@ int army::ComputeAttackerDamageBonuses(int base_damage,
                      ->IsQuickCombat()) {
                 std::string text;
                 const char* creature_name;
-#pragma inline_depth(0)
                 creature_name = GetName();
-#pragma inline_depth()
                 text = format_string(gpGeneralText->GetText(366),
                                      creature_name);
                 gpCombatManager->combatWindow->combat_message(
