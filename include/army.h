@@ -1747,6 +1747,12 @@ public:
         ARMY_CREATURE_PSYCHIC_ELEMENTAL = 0x78,
         ARMY_CREATURE_MAGIC_ELEMENTAL = 0x79,
         ARMY_CREATURE_PIT_LORD = 0x33,
+        // Complete's cannot_attack adds the two non-attacking war machines.
+        // Keep these aliases in army's local creature-id view: army.h is
+        // parsed before armygrp.h's complete TCreatureType declaration in
+        // several retail TUs.
+        ARMY_CREATURE_FIRST_AID_TENT = 0x93,
+        ARMY_CREATURE_AMMO_CART = 0x94,
         // The two creatures with a retaliation rule of their own, and
         // ResetRound (0x447120) is what proves both: id 4 gets a
         // retaliation allowance of 2 and id 5 gets 5000, which is
@@ -2357,11 +2363,14 @@ inline bool army::can_retaliate(const army& attacker) const
     }
 
     // E:\gamedcs\Army.h:855
+// Complete's inlined copy in consider_single_enchantment keeps the recovered
+// incapacity/attribute prefix but directly contradicts Dreamcast's final
+// Psychic/Magic Elemental pair: retail compares First Aid Tent and Ammo Cart.
 inline bool army::cannot_attack() const
     {
         return IsIncapacitated() || Is(1u << 21)
-               || creatureType == ARMY_CREATURE_PSYCHIC_ELEMENTAL
-               || creatureType == ARMY_CREATURE_MAGIC_ELEMENTAL;
+               || creatureType == ARMY_CREATURE_FIRST_AID_TENT
+               || creatureType == ARMY_CREATURE_AMMO_CART;
     }
 
     // E:\gamedcs\Army.h:864

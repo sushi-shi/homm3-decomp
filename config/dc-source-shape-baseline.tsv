@@ -462,10 +462,6 @@ call	ai_tactical.obj	0x40ac0	army::Is
 call	ai_tactical.obj	0x40ac0	army::cannot_attack
 call	ai_tactical.obj	0x40ac0	max
 call	ai_tactical.obj	0x40ac0	min
-call	ai_tactical.obj	0x40bb8	army::cannot_attack
-call	ai_tactical.obj	0x40bb8	army::get_spell_time
-call	ai_tactical.obj	0x40bb8	combatManager::get_current_army
-call	ai_tactical.obj	0x40bb8	type_AI_spellcaster::is_last_action
 call	ai_tactical.obj	0x40dc8	army::cannot_attack
 call	ai_tactical.obj	0x40dc8	army::get_spell_time
 call	ai_tactical.obj	0x40ec0	army::Is

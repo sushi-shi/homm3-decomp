@@ -3313,28 +3313,17 @@ void type_AI_spellcaster::consider_single_enchantment(type_spell_choice* choice,
     const army* best = 0;
     for (long i = 0; i < gpCombatManager->numArmies[group]; i++) {
         const army* target = &gpCombatManager->armies[group][i];
-        if (target->disabled_290)
-            continue;
-        if (target->disabled_2b0)
-            continue;
-        if (target->disabled_2c0)
-            continue;
-        unsigned char immune = static_cast<unsigned char>(
-            static_cast<unsigned>(target->creatureId) >> 21);
-        if (immune & 1)
-            continue;
-        if (target->creatureType == CREATURE_FIRST_AID_TENT)
-            continue;
-        if (target->creatureType == CREATURE_AMMO_CART)
+        if (target->cannot_attack())
             continue;
         long creature_cast = creature_spell != 0;
         if (!gpCombatManager->ValidSpellTargetArmy(choice->spell, side, target, 1,
                                              creature_cast))
             continue;
-        if (target->spellInfluence[choice->spell])
+        if (target->get_spell_time(choice->spell))
             continue;
         long value = (this->*value_func)(target, *choice);
-        if (target->magicMirrorRounds && group != side && value > 0
+        if (target->get_spell_time(SPELL_MAGIC_MIRROR)
+                && group != side && value > 0
                 && choice->spell != SPELL_DISPEL)
             value = (50 - target->get_mirror_effect()) * value * 2 / 100;
         if (value > choice->value) {
@@ -3345,42 +3334,13 @@ void type_AI_spellcaster::consider_single_enchantment(type_spell_choice* choice,
     }
     if (best == 0)
         return;
-    unsigned char act_now;
     if (group == side) {
-        const army* current = &gpCombatManager->armies[gpCombatManager->actingSide]
-                                                      [gpCombatManager->actingSlot];
-        if (best != current) {
-            long total = gpCombatManager->numArmies[side];
-            for (long j = 0; j < total; j++) {
-                const army* other = &gpCombatManager->armies[side][j];
-                if (other->creatureId & 0x200040)
-                    continue;
-                if (other->disabled_290)
-                    continue;
-                if (other->disabled_2b0)
-                    continue;
-                if (other->disabled_2c0)
-                    continue;
-                unsigned char idle = static_cast<unsigned char>(
-                    static_cast<unsigned>(other->creatureId) >> 26);
-                if (idle & 1)
-                    continue;
-                if (other != current) {
-                    if ((akSpellTraits[choice->spell].field_c & 0x4000) == 0) {
-                        act_now = 0;
-                        goto decided;
-                    }
-                    break;
-                }
-            }
-        }
-        act_now = 1;
-decided:
-        ;
+        choice->field_20 = best == gpCombatManager->get_current_army()
+                || is_last_action()
+                || (akSpellTraits[choice->spell].field_c & 0x4000);
     } else {
-        act_now = should_attack_now(best);
+        choice->field_20 = should_attack_now(best);
     }
-    choice->field_20 = act_now;
     if (choice->spell == SPELL_HASTE)
         choice->field_20 = 1;
 }

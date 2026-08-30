@@ -2823,8 +2823,12 @@ ARMY_HEADER_BODY_RULES: dict[int, tuple[SourceRule, ...]] = {
                      r"attacker\s*\.\s*Is\s*\(\s*1u\s*<<\s*16\s*\)"),
           SourceRule("can_retaliate keeps Stone and retaliation tests",
                      r"spellInfluence\s*\[\s*70\s*\][^;]*retaliationCount\s*>\s*0")),
-    855: (SourceRule("cannot_attack keeps incapacity, mask, and both ids",
-                     r"IsIncapacitated\s*\(\s*\)[^;]*Is\s*\(\s*1u\s*<<\s*21\s*\)[^;]*creatureType\s*==\s*ARMY_CREATURE_PSYCHIC_ELEMENTAL[^;]*creatureType\s*==\s*ARMY_CREATURE_MAGIC_ELEMENTAL"),),
+    # Complete directly revises the final pair: the cannot_attack expansion
+    # inside retail consider_single_enchantment has the shared incapacity/Is
+    # prefix followed by First Aid Tent and Ammo Cart, contradicting the old
+    # Dreamcast Psychic/Magic Elemental comparisons.
+    855: (SourceRule("cannot_attack keeps Complete's incapacity, mask, and both war-machine ids",
+                     r"IsIncapacitated\s*\(\s*\)[^;]*Is\s*\(\s*1u\s*<<\s*21\s*\)[^;]*creatureType\s*==\s*ARMY_CREATURE_FIRST_AID_TENT[^;]*creatureType\s*==\s*ARMY_CREATURE_AMMO_CART"),),
     864: (SourceRule("one-argument get_adjacent_hex forwards gridIndex",
                      r"get_adjacent_hex\s*\(\s*gridIndex\s*,\s*direction\s*\)"),),
     869: (SourceRule("one-argument attack direction forwards gridIndex",
