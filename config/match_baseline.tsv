@@ -239,6 +239,7 @@ ai_player	?AI_get_value_of_artifact@@YIJUtype_artifact@@PBVhero@@EE@Z	92.7585	92
 ai_player	?AI_swap_artifacts@@YIXPAVhero@@0@Z	100.0000	100.0000	100.0000	0x33fe0
 ai_player	?AI_value_of_observatory@@YIJUtype_point@@JJ@Z	100.0000	100.0000	100.0000	0x32220
 ai_player	?GetHero@game@@QAEPAVhero@@H@Z	100.0000	100.0000	100.0000	0x317d0
+ai_player	?HasBuilding@town@@QBE_NH_N@Z	100.0000	100.0000	100.0000	0x305a0
 ai_player	?add_artifact@@YIEPAVhero@@Utype_artifact@@PAJ0J2J@Z	100.0000	100.0000	100.0000	0x33e20
 ai_player	?add_creatures@type_AI_creature_swapper@@IAEXW4TCreatureType@@FF@Z	100.0000	100.0000	100.0000	0x2c130
 ai_player	?attempt_step@@YIEPAVhero@@PAUpathCell@@EE@Z	52.9459	52.9459	52.9459	0x2fc50
@@ -323,7 +324,6 @@ ai_player	?value_of_horde_upgrade@@YIJPAVtown@@W4type_building_id@@PAEPAH@Z	100.
 ai_player	bool_type_point_operator	0.0000	0.0000	0.0000	0x2ec20
 ai_player	game_GetTown	0.0000	0.0000	0.0000	0x2ba30
 ai_player	searchArray_get_cell	0.0000	0.0000	0.0000	0x2ecc0
-ai_player	town_HasBuilding	0.0000	0.0000	0.0000	0x305a0
 ai_player	type_obscuring_object_get_location	0.0000	0.0000	0.0000	0x2ec70
 ai_tactical	??0army@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x37a00
 ai_tactical	??0type_AI_attack_hex_chooser@@QAE@PBVarmy@@0PBJPAVsearchArray@@PBUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x360c0
