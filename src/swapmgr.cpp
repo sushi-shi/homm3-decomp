@@ -18,6 +18,23 @@ DATA(0x006a3d08) static int gUnnamed6a3d08;
 // swapmgr singleton (bss 0x6a3d30): the ctor stores `this`, Reset/Open/Close consult it.
 DATA(0x006a3d30) swapManager* gpSwapManager;
 
+// The shared includes.h helper is named by Reset's four Dreamcast xrefs
+// (dc 0x1ef5c), once around each morale/luck call. Retail's inlined clamp
+// selects one of the argument addresses, matching the reference-returning
+// template independently proved by the other TUs.
+template <class T>
+static inline const T& t_limit(const T& minimum, const T& value,
+                               const T& maximum)
+{
+    return value < minimum ? minimum
+                           : (maximum < value ? maximum : value);
+}
+
+static inline int limit(int minimum, int value, int maximum)
+{
+    return t_limit(minimum, value, maximum);
+}
+
 // E:\gamedcs\swapmgr.cpp:120. Dreamcast proves the class identity and
 // constructor signature; retail independently proves the CNetMsg base plus
 // two complete hero snapshots and the 0x938-byte wire extent.
@@ -138,16 +155,45 @@ swapManager::swapManager(hero* leftHero, hero* rightHero)
     gpSwapManager = this;
     field_64 = 0;
 }
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
 // E:\gamedcs\swapmgr.cpp:617
-DC_ONLY(0x15c534, 0x114)
+// Dreamcast proves the single message local, the six BroadcastMessage
+// statement boundaries, and the four limit(GetMorale/GetLuck)+3 expressions.
+// Complete shifts this widget band by two and VC6 inlines both message's
+// constructor and the shared reference-returning limit helper.
+VA(0x005ae5b0, 0x19B)  // ctor/Open bracket + full DC statement roster, dc 0x15c534
 void swapManager::Reset()
 {
-    // @stub
-}
+    message msg;
 
-#endif  // @carcass
+    field_48 = field_4c = field_58 = field_50 = field_54 = -1;
+    gUnnamed6a3d08 = 0;
+
+    msg.id = MESSAGE_WIDGET;
+    msg.codeX = widget::WIDGET_SET_STATUS;
+    msg.extra = widget::WIDGET_DIMMED_NODRAW;
+    msg.codeY = 103;
+    parent->BroadcastMessage(&msg);
+
+    msg.codeY = 104;
+    parent->BroadcastMessage(&msg);
+
+    msg.codeX = widget::WIDGET_SET_ICON_FRAME;
+    msg.codeY = 107;
+    msg.extra = limit(-3, heroes[0]->GetMorale(0, 0, 1), 3) + 3;
+    parent->BroadcastMessage(&msg);
+
+    msg.codeY = 108;
+    msg.extra = limit(-3, heroes[1]->GetMorale(0, 0, 1), 3) + 3;
+    parent->BroadcastMessage(&msg);
+
+    msg.codeY = 109;
+    msg.extra = limit(-3, heroes[0]->GetLuck(0, 0, 1), 3) + 3;
+    parent->BroadcastMessage(&msg);
+
+    msg.codeY = 110;
+    msg.extra = limit(-3, heroes[1]->GetLuck(0, 0, 1), 3) + 3;
+    parent->BroadcastMessage(&msg);
+}
 
 // E:\gamedcs\swapmgr.cpp:655
 // The WinCE no-argument screen update became an explicit full-screen update
