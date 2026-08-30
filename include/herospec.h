@@ -31,6 +31,7 @@
 // Wisdom 7, Ballistics 10, Eagle Eye 11 - agree with the same ladder.
 enum TSecondarySkill {
     eSecSkillNone = -1,
+    kNumSecSkillsPerHero = 8,
     eSecSkillPathfinding = 0,
     eSecSkillArchery = 1,
     eSecSkillLogistics = 2,

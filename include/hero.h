@@ -713,6 +713,17 @@ public:
     {
         value_of_power = arg;
     }
+    // Dreamcast hero.h:1001/1006. Retail folds both one-field accessors into
+    // get_skill_value; retaining the source boundaries still emits the direct
+    // loads proved at +0x47e/+0x486.
+    __forceinline long get_value_of_power() const
+    {
+        return value_of_power;
+    }
+    __forceinline long get_value_of_knowledge() const
+    {
+        return value_of_knowledge;
+    }
     // E:\gamedcs\Hero.h:1036
     __forceinline void set_value_of_spring(long arg)
     {

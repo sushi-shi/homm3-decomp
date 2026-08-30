@@ -2934,6 +2934,22 @@ long type_AI_creature_swapper::do_best_swap(bool can_take_all)
 
 static __forceinline void AI_consolidate_army_impl(armyGroup* current_army);
 
+// E:\gamedcs\ai_player.cpp:2171. Dreamcast retains this source helper;
+// Complete's /Ob2 folds it into both swap entry points. Retail independently
+// proves the two short totals, optional subtraction, and zero floor.
+static __forceinline short calculate_improvement(
+    const hero* current_hero, const hero* second_hero)
+{
+    short improvement =
+        const_cast<hero*>(current_hero)->get_primary_skill_total();
+    if (second_hero)
+        improvement -=
+            const_cast<hero*>(second_hero)->get_primary_skill_total();
+    if (improvement < 0)
+        improvement = 0;
+    return improvement;
+}
+
 // Complete widens the DC do_swap (0x31808, 92 B) with the Angelic-Alliance
 // flag its philai callers pass, inlines calculate_improvement (dc 0x317d4)
 // and AI_consolidate_army, and arranges the merged army out of line.
@@ -2947,12 +2963,7 @@ inline void type_AI_creature_swapper::do_swap(hero* current_hero,
     army = &current_hero->army;
     adjacent_army = source_army;
     morale = current_hero->GetMorale(0, 0, 1);
-    short new_improvement = current_hero->get_primary_skill_total();
-    if (second_hero)
-        new_improvement -= second_hero->get_primary_skill_total();
-    if (new_improvement < 0)
-        new_improvement = 0;
-    improvement = new_improvement;
+    improvement = calculate_improvement(current_hero, second_hero);
     // Spelled as the plain call: the standalone body auto-inlines it, while
     // buy_creatures' inline copy of do_swap leaves it out of line - exactly
     // retail's two shapes. The lexical pin is deliberately here rather than
@@ -2977,6 +2988,42 @@ inline void type_AI_creature_swapper::do_swap(hero* current_hero,
 void (type_AI_creature_swapper::* g_emit_do_swap)(
     hero*, armyGroup*, hero*, unsigned char) =
     &type_AI_creature_swapper::do_swap;
+
+// E:\gamedcs\ai_player.cpp:2209. The two 56-byte locals, six helper
+// boundaries, and positive-value loop come from the Dreamcast dossier.
+// Complete adds the Angelic-Alliance byte used by the three philai callers;
+// retail proves its store at +8 and folds calculate_improvement plus the
+// consolidation helper into this selected body.
+// Residual (92.5052%): all calls and computations agree. The candidate
+// promotes `value` into EDI after the consolidation loop, splitting one exit
+// edge (16 blocks versus retail's 15); retail keeps it at [ebp-4]. A volatile
+// control forced 15 blocks but changed the surrounding allocation and fell to
+// 80.38%, so the source-false qualifier is rejected.
+VA(0x0042c4a0, 0x108)  // DC method/locals + Complete parameter, dc 0x31864
+long type_AI_creature_swapper::get_swap_value(
+    const hero* current_hero, const armyGroup* source_army,
+    const hero* second_hero, unsigned char new_has_angelic_alliance)
+{
+    armyGroup local_army(current_hero->army);
+    armyGroup local_source(*source_army);
+    long value = 0;
+
+    has_angelic_alliance = new_has_angelic_alliance;
+    army = &local_army;
+    adjacent_army = &local_source;
+    morale = const_cast<hero*>(current_hero)->GetMorale(0, 0, 1);
+    improvement = calculate_improvement(current_hero, second_hero);
+
+    AI_consolidate_army(&local_army);
+    dump_extra_creature();
+
+    long swap_value;
+    do {
+        swap_value = do_best_swap(adjacent_army->GetNumArmies() > 1);
+        value += swap_value;
+    } while (swap_value > 0);
+    return value;
+}
 
 // DC proves this method's identity, signature, and call graph. Retail adds a
 // separate get_alignments call after temporarily dismissing each candidate;

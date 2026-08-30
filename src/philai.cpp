@@ -42,8 +42,8 @@ TCreatureType siege_artifact_to_creature(TArtifact engine);
 TCreatureType UpgradedCreatureType(TCreatureType type);
 
 // Complete-only game.h inline retained by AI_value_of_event. The later
-// claim-only declaration assigns the selected philai.obj COMDAT its retail
-// address while this definition remains beside the helper it delegates to.
+// claim-only declaration records the selected philai.obj COMDAT in retail
+// RVA order while this source definition stays beside its free helper.
 inline TCreatureType game::UpgradedCreatureType(TCreatureType creature) const
 {
     if (f_1f698 == 0
@@ -55,7 +55,23 @@ inline TCreatureType game::UpgradedCreatureType(TCreatureType creature) const
     return ::UpgradedCreatureType(creature);
 }
 
-long get_skill_value(const hero* our_hero, int skill, int complex_choice);
+long get_skill_value(const hero* our_hero, TSecondarySkill skill,
+                     unsigned char complex_choice);
+long get_school_value(const hero* our_hero, TSecondarySkill skill);
+// Complete passes several int-width university/witch-hut slots into the
+// Dreamcast-typed helper. Keep that revision adapter source-visible while
+// forcing it away at every call site; TSecondarySkill remains int-width.
+__forceinline long get_skill_value(const hero* our_hero, int skill,
+                                   int complex_choice)
+{
+    union {
+        int value;
+        TSecondarySkill skill;
+    } typed_skill;
+    typed_skill.value = skill;
+    return get_skill_value(our_hero, typed_skill.skill,
+                           static_cast<unsigned char>(complex_choice));
+}
 int AI_resource_cost(const playerData* player, const int* resources);
 int AI_resource_cost(long player_id, const int* resources);
 long value_of_university(const hero* current_hero,
@@ -65,7 +81,6 @@ void buy_special_building(hero* current_hero, town* current_town);
 void buy_siege_engine(hero* current_hero, town* current_town,
                       type_building_id building, TArtifact engine);
 
-VA(0x0042c4a0, 0x108)
 long type_AI_creature_swapper::get_swap_value(
     const hero* current_hero, const armyGroup* source_army,
     const hero* second_hero, unsigned char new_has_angelic_alliance);
@@ -528,21 +543,166 @@ int hero::SoD_get_seer_skill_value(int skill, int level)
         if (!wants_skill(this, typed_skill.skill, 1))
             return 0;
     }
-    return get_skill_value(this, typed_skill.skill, 1);
+    return get_skill_value(
+        this, typed_skill.skill, static_cast<unsigned char>(1));
 }
-
-#if 0  // @carcass -- philai body-evidence claims, retail RVA order (divergent from DC link order)
 
 // E:\gamedcs\philai.cpp:3469.  Retail 0x524690/1668 B: (ecx=hero, edx=skill,
 // stack=complex_choice) returning a long, opening on `skillLevel[skill]` and
 // walking the seven army slots - the DC get_skill_value shape exactly,
 // 1334 -> 1668 B.  AI_choose_secondary_skill (0x52bbd0) calls it twice, at the
 // two sites DC's own body has.
+DATA(0x00681860)
+static double gAIPathfindingMapFactor[3] = {1.0, 1.0, 1.0};
+DATA(0x00681878)
+static double gAIWaterMapFraction = 1.0;
+
 VA(0x00524690, 0x684)  // anchor-callee, dc 0x1135ac
-long get_skill_value(const hero* our_hero, TSecondarySkill skill, unsigned char complex_choice)
+long get_skill_value(const hero* our_hero, TSecondarySkill skill,
+                     unsigned char complex_choice)
 {
-    // @stub
+    signed char level = our_hero->skillLevel[skill];
+    if (level == eMasteryExpert)
+        return 0;
+    if (level == eMasteryNone
+        && our_hero->skillCount == kNumSecSkillsPerHero)
+        return 0;
+
+    long army_value = 1000;
+    long ranged_value = 500;
+    if (complex_choice) {
+        for (int group = 0; group < armyGroup::ARMY_GROUP_SLOT_COUNT;
+             group++) {
+            TCreatureType creature = our_hero->army.armyTypes[group];
+            if (creature != CREATURE_NONE) {
+                long value = akCreatureTypeTraits[creature].AI_value
+                    * our_hero->army.numTroops[group];
+                army_value += value;
+                if (akCreatureTypeTraits[creature].attributes & 4)
+                    ranged_value += value;
+            }
+        }
+    }
+
+    switch (skill) {
+    case eSecSkillPathfinding:
+        return static_cast<long>(
+            army_value * gAIPathfindingMapFactor[level] / 4.0);
+    case eSecSkillArchery: {
+        DATA(0x00640380)
+        static const int const_archery_value[3] = {16, 7, 11};
+        return const_archery_value[level] * ranged_value / 100;
+    }
+    case eSecSkillLogistics:
+        return army_value / 10;
+    case eSecSkillScouting:
+        return army_value / 20;
+    case eSecSkillDiplomacy:
+        return army_value / 100;
+    case eSecSkillNavigation:
+        return static_cast<long>(
+            army_value * gAIWaterMapFraction / 2.0);
+    case eSecSkillLeadership:
+        return army_value / 50;
+    case eSecSkillWisdom:
+        if (complex_choice)
+            return our_hero->GetPrimarySkill(2)
+                * our_hero->get_value_of_power() / 2;
+        return our_hero->GetPrimarySkill(2) * 25;
+    case eSecSkillMysticism:
+        if (complex_choice)
+            return our_hero->get_value_of_knowledge() / 10;
+        return 1;
+    case eSecSkillLuck:
+        return army_value / 50;
+    case eSecSkillSiegeBallistics:
+        return army_value / 8;
+    case eSecSkillEagleEye:
+        if (!our_hero->skillLevel[eSecSkillWisdom])
+            return 0;
+        if (complex_choice)
+            return our_hero->get_value_of_power() / 5;
+        return 2;
+    case eSecSkillNecromancy:
+        return army_value / 20;
+    case eSecSkillEstates: {
+        DATA(0x0064038c)
+        static const int const_estate_value[3] = {725, 725, 1550};
+        if (complex_choice)
+            return static_cast<long>(
+                const_estate_value[level]
+                * gAIPlayers[our_hero->owner].get_resource_value(GOLD));
+        return const_estate_value[level];
+    }
+    case eSecSkillSchoolOfFireMagic:
+        if (complex_choice)
+            return get_school_value(our_hero, skill);
+        if (!our_hero->skillLevel[eSecSkillWisdom])
+            return 0;
+        return our_hero->GetPrimarySkill(2) * 10;
+    case eSecSkillSchoolOfAirMagic:
+        if (complex_choice)
+            return get_school_value(our_hero, skill);
+        if (!our_hero->skillLevel[eSecSkillWisdom])
+            return 25;
+        return our_hero->GetPrimarySkill(2) * 10;
+    case eSecSkillSchoolOfWaterMagic:
+        if (complex_choice)
+            return get_school_value(our_hero, skill);
+        if (!our_hero->skillLevel[eSecSkillWisdom])
+            return 3;
+        return our_hero->GetPrimarySkill(2) * 10;
+    case eSecSkillSchoolOfEarthMagic:
+        if (complex_choice)
+            return get_school_value(our_hero, skill);
+        if (!our_hero->skillLevel[eSecSkillWisdom])
+            return 30;
+        return our_hero->GetPrimarySkill(2) * 10;
+    case eSecSkillMagicScholar:
+        if (!our_hero->skillLevel[eSecSkillWisdom])
+            return 0;
+        if (complex_choice)
+            return our_hero->GetPrimarySkill(2)
+                * our_hero->get_value_of_power() / 10;
+        return our_hero->GetPrimarySkill(2) * 5;
+    case eSecSkillBattleTactics:
+        return army_value / 50;
+    case eSecSkillBattlefieldBallistics:
+        if (complex_choice
+            && !const_cast<hero*>(our_hero)->IsWieldingArtifact(
+                   ARTIFACT_BALLISTA))
+            return 0;
+        return our_hero->GetPrimarySkill(0) * 10;
+    case eSecSkillLearning:
+        return army_value / 20;
+    case eSecSkillOffense:
+        return army_value * 7 / 100;
+    case eSecSkillDefense:
+        return army_value * 7 / 100;
+    case eSecSkillIntelligence:
+        if (complex_choice)
+            return our_hero->GetPrimarySkill(3)
+                * our_hero->get_value_of_knowledge() / 4;
+        return our_hero->GetPrimarySkill(3) * 10;
+    case eSecSkillSorcery:
+        if (complex_choice)
+            return our_hero->GetPrimarySkill(2)
+                * our_hero->get_value_of_power() / 20;
+        return our_hero->GetPrimarySkill(2) * 2;
+    case eSecSkillMagicResistance:
+        return army_value / 40;
+    case eSecSkillFirstAid:
+        if (complex_choice
+            && !const_cast<hero*>(our_hero)->IsWieldingArtifact(
+                   ARTIFACT_FIRST_AID_TENT))
+            return 0;
+        return 250;
+    default:
+        return 0;
+    }
 }
+
+#if 0  // @carcass -- philai body-evidence claims, retail RVA order (divergent from DC link order)
 
 // E:\gamedcs\philai.cpp:3645.  Retail 0x524dd0/243 B: same three-argument
 // shape returning a byte, sweeping the 28 skill slots against the hero class's
@@ -2286,8 +2446,10 @@ bool game::OnSameTeam(int player1, int player2) const
 }
 
 // Complete-only game member: reject the four base-set elementals when
-// f_1f698 is zero, otherwise tail into the free UpgradedCreatureType helper.
-VA(0x00529710, 0x34)  // hd-crossbuild + sole AI_value_of_event caller
+// f_1f698 is zero, otherwise tail into the free helper. This claim remains
+// inactive until selected-inline COMDAT ownership has a first-class source
+// annotation that does not violate philai.cpp's strict retail VA order.
+VA(0x00529710, 0x34)  // retail-only + sole AI_value_of_event caller
 TCreatureType game::UpgradedCreatureType(TCreatureType creature) const
 {
     // @stub - active inline definition remains in source order above
@@ -3402,11 +3564,6 @@ int value_of_witch_hut(const hero* current_hero, NewmapCell* cell)
 }
 
 // E:\gamedcs\philai.cpp:4126
-DATA(0x00681860)
-static double gAIPathfindingMapFactor[3] = {1.0, 1.0, 1.0};
-DATA(0x00681878)
-static double gAIWaterMapFraction = 1.0;
-
 VA(0x0052b9c0, 0x20c)  // anchor-callee, dc 0x1147ac
 void __cdecl AI_examine_map()
 {
