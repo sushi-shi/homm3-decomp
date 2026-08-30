@@ -2413,7 +2413,7 @@ resourcemanager	?SetPixelFormat@ResourceManager@@YIXKKK@Z	100.0000	100.0000	100.
 resourcemanager	?Write@t_stdio_file_adapter@ResourceManager@@UAEHPBXH@Z	100.0000	100.0000	100.0000	0x159140
 resourcemanager	?find@TCacheMap@ResourceManager@@QAE?AUTCacheIterator@2@ABUTCacheMapKey@2@@Z	100.0000	100.0000	100.0000	0x15d3b0
 resourcemanager	?find_tree@TCacheMap@ResourceManager@@QAE?AUTCacheIterator@2@ABUTCacheMapKey@2@@Z	100.0000	100.0000	100.0000	0x15e330
-resourcemanager	?insert_wrapper@TCacheMap@ResourceManager@@QAE?AUTCacheInsertResult@2@ABUTCacheValue@2@@Z	99.7222	99.7222	99.7222	0x15d380
+resourcemanager	?insert_wrapper@TCacheMap@ResourceManager@@QAE?AUTCacheInsertResult@2@ABUTCacheValue@2@@Z	100.0000	100.0000	100.0000	0x15d380
 resourcemanager	?lower_bound_iterator@TCacheMap@ResourceManager@@QAEPAUTCacheIterator@2@PAU32@ABUTCacheMapKey@2@@Z	100.0000	100.0000	100.0000	0x15e740
 resourcemanager	@game_null_159510@12	77.3910	77.3910	77.3910	0x159510
 resourcemanager	@game_sprite_1599e0@12	70.5441	70.5441	70.5441	0x1599e0

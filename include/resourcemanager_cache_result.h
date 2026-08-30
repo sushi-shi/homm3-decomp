@@ -10,7 +10,7 @@ namespace ResourceManager {
 // perturbing unrelated consumers of the public ResourceManager surface.
 struct TCacheTreeInsertResult {
     TCacheIterator first;
-    unsigned int second;
+    bool second;
 };
 
 }

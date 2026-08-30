@@ -16,8 +16,8 @@
 namespace ResourceManager {
 
 inline TCacheInsertResult::TCacheInsertResult(
-    const TCacheTreeInsertResult& other)
-    : first(other.first), second(other.second) {}
+    const TCacheIterator& firstValue, const bool& secondValue)
+    : first(firstValue), second(secondValue) {}
 
 inline TCacheValue::TCacheValue(resource* value)
     : first(value->Name), second(value) {}
@@ -2826,15 +2826,16 @@ void CSprite::Dispose()
 // Dinkumware's public map layer returns the underlying tree insertion pair
 // through a second hidden-result temporary. Retail keeps this wrapper as a
 // call in GetBitmap816's early branch and inlines it at later sites.
-// WALL (99.7222%): all 44 bytes agree except the load width of the returned
-// success flag (`mov al,[eax+4]` vs retail's `mov eax,[eax+4]`). Volatile and
-// explicit transport temporaries add instructions; RTM C2 is byte-flat.
+// Exact: this deliberately mirrors VC6 <map>'s `_Imp::_Pairib _Ans = ...;
+// return _Pairib(_Ans.first, _Ans.second);`. Both pair flags are `bool`, and
+// the two-reference constructor boundary makes C1 retain retail's widened
+// dword load before storing the low byte into the public result temporary.
 VA(0x0055d380, 0x2C)
 ResourceManager::TCacheInsertResult
 ResourceManager::TCacheMap::insert_wrapper(const TCacheValue& value)
 {
-    TCacheInsertResult result(insert(value));
-    return result;
+    TCacheTreeInsertResult answer = insert(value);
+    return TCacheInsertResult(answer.first, answer.second);
 }
 
 // Dinkumware's public map::find facade. The inlined twin above is retained

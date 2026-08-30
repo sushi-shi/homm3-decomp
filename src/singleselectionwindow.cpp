@@ -2438,7 +2438,8 @@ void TSingleSelectionWindow::SetCurrentMap(int map, unsigned char bUpdate)
             // commutative SIB base/index encoding in this read. Retail uses
             // gpGame as the SIB base and i as the index; this compiler run
             // chooses the reverse fields. Array-index, pointer-add, named
-            // pointer and named game-pointer spellings are byte-flat.
+            // pointer, named game-pointer and named loaded-value spellings are
+            // byte-flat.
             player->handicap = gpGame->setup.handicap[i];
             widget* w = GetWidget(207 + i);
             if (w) {
