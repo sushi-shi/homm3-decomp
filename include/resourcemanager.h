@@ -162,9 +162,10 @@ struct TCacheTreeInsertResult;
 
 struct TCacheInsertResult {
     TCacheIterator first;
-    unsigned char second;
+    bool second;
 
-    TCacheInsertResult(const TCacheTreeInsertResult& other);
+    TCacheInsertResult(const TCacheIterator& firstValue,
+                       const bool& secondValue);
 };
 
 class TCacheMap {
