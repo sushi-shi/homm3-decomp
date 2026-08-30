@@ -689,6 +689,11 @@ void AI_visit_war_factory(hero* current_hero)
 VA(0x00525120, 0xE0)
 // MATCHING_DEBT: retail keeps this helper out of all three expansions of
 // visit_war_factory; preserve that decision explicitly until understood.
+// CHECKPOINT (88.5062 -> 96.5185): Dreamcast lines 525-530 restore the typed
+// creature-cost row before the accumulator. Retail additionally proves a
+// cached resourceValue row. All blocks, branches and bytes through the funds
+// test are exact; the residual is only the order of six loop-tail induction
+// updates after __ftol (same instruction multiset, registers and total size).
 #pragma auto_inline(off)
 static long value_of_war_factory(const hero* current_hero,
                                  TArtifact engine, long move_cost)
@@ -698,17 +703,13 @@ static long value_of_war_factory(const hero* current_hero,
         long artifact_value = AI_get_value_of_artifact(
             type_artifact(engine), current_hero, false, true);
         TCreatureType creature = siege_artifact_to_creature(engine);
-        playerData* player = gpCurrentPlayer;
+        const double* resource_values = gpCurrentPlayer->resourceValue;
+        const int* costs = akCreatureTypeTraits[creature].cost;
         long resource_cost = 0;
-        int* costs = gCreatureRecords
-            + creature * CREATURE_RECORD_DWORDS + CREATURE_RECORD_COST_DWORD;
-        for (int resource = 0; resource < 7; resource++) {
-            long cost = costs[resource];
-            if (player->resources[resource] < cost)
+        for (int resource = 0; resource < 7; ++resource) {
+            if (gpCurrentPlayer->resources[resource] < costs[resource])
                 return 0;
-            resource_cost = static_cast<long>(
-                static_cast<double>(cost) * player->resourceValue[resource]
-                + static_cast<double>(resource_cost));
+            resource_cost += costs[resource] * resource_values[resource];
         }
 
         if (move_cost <= 500)

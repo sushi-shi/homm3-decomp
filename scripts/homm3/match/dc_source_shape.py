@@ -733,6 +733,20 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"iLastFrameRateTimer\s*=\s*GameTime\s*::\s*Get\s*"
             r"\(\s*\)\s*;"),
     ),
+    ("philai.obj", 0x10DEA8): (
+        SourceRule(
+            "value_of_war_factory keeps Dreamcast lines 525-530 as the "
+            "siege-artifact conversion followed by a typed creature-cost "
+            "row before the resource accumulator",
+            r"\bTCreatureType\s+creature\s*=\s*"
+            r"siege_artifact_to_creature\s*\(\s*engine\s*\)\s*;.*?"
+            r"akCreatureTypeTraits\s*\[\s*creature\s*\]\s*\.\s*cost"
+            r"[^;]*;\s*long\s+resource_cost\s*=\s*0\s*;"),
+        SourceRule(
+            "value_of_war_factory may not flatten Dreamcast's typed "
+            "TCreatureTypeTraits cost row into the raw record view",
+            r"\bgCreatureRecords\b", 0, 0),
+    ),
     ("philai.obj", 0x10E3F8): (
         SourceRule(
             "AI_enter_town keeps Dreamcast's nested Grail possession, "
@@ -3794,6 +3808,32 @@ if (GameTime::ElapsedSince(iLastFrameRateTimer) > 15
                for rule in contract_violations(
                    wrong_mouse_gate, check_do_main_key)):
         failures.append("wrong CheckDoMain mouse-gate parameter passed")
+    war_factory_key = ("philai.obj", 0x10DEA8)
+    war_factory_probe = """\
+TCreatureType creature = siege_artifact_to_creature(engine);
+const double* resource_values = gpCurrentPlayer->resourceValue;
+const int* costs = akCreatureTypeTraits[creature].cost;
+long resource_cost = 0;
+"""
+    if contract_violations(war_factory_probe, war_factory_key):
+        failures.append("aligned value_of_war_factory contract did not pass")
+    raw_war_factory = war_factory_probe.replace(
+        "const int* costs = akCreatureTypeTraits[creature].cost;",
+        "const int* costs = gCreatureRecords + creature * 29 + 8;")
+    raw_war_factory_rules = contract_violations(
+        raw_war_factory, war_factory_key)
+    if not any("raw record view" in rule.description
+               for rule in raw_war_factory_rules):
+        failures.append("raw value_of_war_factory cost row passed")
+    reordered_war_factory = war_factory_probe.replace(
+        "const int* costs = akCreatureTypeTraits[creature].cost;\n"
+        "long resource_cost = 0;",
+        "long resource_cost = 0;\n"
+        "const int* costs = akCreatureTypeTraits[creature].cost;")
+    if not any("before the resource accumulator" in rule.description
+               for rule in contract_violations(
+                   reordered_war_factory, war_factory_key)):
+        failures.append("reordered value_of_war_factory cost row passed")
     artifact_transfer = PROVEN_CALL_TRANSFERS[
         ("philai.obj", 0x10E3F8, "buy_artifacts")]
     artifact_caller = """\
