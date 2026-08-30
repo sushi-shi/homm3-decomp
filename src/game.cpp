@@ -204,6 +204,16 @@ inline EGameResource game_resource_from_int(int value)
     return converted.resource;
 }
 
+inline TSecondarySkill secondary_skill_from_int(int value)
+{
+    union {
+        int integer;
+        TSecondarySkill skill;
+    } converted;
+    converted.integer = value;
+    return converted.skill;
+}
+
 #if defined(_MSC_VER) && !defined(__clang__)
 std::pair<const int, type_map_hero_info>::~pair() {}
 #endif
@@ -5371,36 +5381,42 @@ static __forceinline type_university* university_skills_record(int* skills)
 // count agree.  The explicit-code residual is one whole-loop register tie:
 // retail keeps the cached availability bound in EBX and each Random ordinal
 // in EDI; this compile assigns those two non-overlapping values the other way
-// round.  Dreamcast CodeView attests university/used/choice/i/skill, and
-// restoring its indexed i loop raised 93.08 -> 99.75.  Exhausted byte-inert
-// levers: reset vs set(false), int/unsigned/register bounds, cached-count vs
-// explicit-highest formulations, split declaration/initialization orders,
-// and pre/post-reset induction ordering.  The direct count-in-loop spelling
-// duplicates the popcount loop and falls to 87.05.
+// round.  Dreamcast CodeView attests university/used/choice/i and the
+// TSecondarySkill type of skill.  Restoring its indexed i loop raised 93.08
+// -> 99.75; restoring the shared local order and enum type is byte-flat and
+// source-shape-ratcheted.  The DC university aggregate itself is revision
+// skew: Complete's model has an out-of-line default constructor, and declaring
+// that local directly emits the absent ctor call and falls to 97.8623%.
+// why-reg confirms equal pseudo-definition slots but a different C1 processing
+// order.  Exhausted byte-inert levers: reset vs set(false), int/unsigned/
+// register bounds, cached-count vs explicit-highest formulations, split
+// declaration/initialization orders, and pre/post-reset induction ordering.
+// The direct count-in-loop spelling duplicates the popcount loop and falls to
+// 87.05.
 VA(0x004c06f0, 0x179)  // dc-order + member receiver, dc 0xac048
 void game::randomize_university(NewmapCell* cell)
 {
     int selectedSkills[4];
     std::bitset<28> availableSkills;
+    long choice;
     long i;
+    TSecondarySkill skill;
     for (i = 0; i < 28; ++i)
         availableSkills.set(i, !gpGame->field_4e658[i]);
 
     int availableCount = availableSkills.count();
-    long choice;
-    int skill;
     for (i = 0; i < 4; ++i) {
         choice = Random(0, availableCount - 1);
-        skill = 0;
+        skill = eSecSkillPathfinding;
         for (;;) {
             if (!availableSkills.test(skill)) {
-                ++skill;
+                skill = secondary_skill_from_int(skill + 1);
                 continue;
             }
             if (choice == 0)
                 break;
             --choice;
-            ++skill;
+            skill = secondary_skill_from_int(skill + 1);
         }
 
         selectedSkills[i] = skill;
