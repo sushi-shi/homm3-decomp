@@ -1377,6 +1377,46 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"data\s*\[\s*0\s*\]\s*\)\s*\)\s*;\s*"
             r"data\s*\[\s*begin\s*\]\s*=\s*saved\s*;", 1, 1),
     ),
+    ("palette.obj", 0x10B1EC): (
+        SourceRule(
+            "TPalette16::AdjustSaturation keeps Dreamcast's red, green and "
+            "blue const normalization statements in source-row order",
+            r"\A\s*const\s+unsigned\s+int\s+red_norm\s*=\s*"
+            r"std\s*::\s*numeric_limits\s*<\s*int\s*>\s*::\s*max\s*"
+            r"\(\s*\)\s*/\s*red_mask\s*;\s*"
+            r"const\s+unsigned\s+int\s+green_norm\s*=\s*"
+            r"std\s*::\s*numeric_limits\s*<\s*int\s*>\s*::\s*max\s*"
+            r"\(\s*\)\s*/\s*green_mask\s*;\s*"
+            r"const\s+unsigned\s+int\s+blue_norm\s*=\s*"
+            r"std\s*::\s*numeric_limits\s*<\s*int\s*>\s*::\s*max\s*"
+            r"\(\s*\)\s*/\s*blue_mask\s*;", 1, 1),
+        SourceRule(
+            "TPalette16::AdjustSaturation keeps Dreamcast's entry-10 loop, "
+            "r/g/b channel statements, h/s/v lifetime and RGBToHSV boundary",
+            r"for\s*\(\s*int\s+i\s*=\s*10\s*;\s*i\s*<\s*256\s*;\s*"
+            r"\+\+\s*i\s*\)\s*\{\s*"
+            r"unsigned\s+int\s+r\s*=\s*\(\s*data\s*\[\s*i\s*\]\s*&"
+            r"\s*red_mask\s*\)\s*\*\s*red_norm\s*;\s*"
+            r"unsigned\s+int\s+g\s*=\s*\(\s*data\s*\[\s*i\s*\]\s*&"
+            r"\s*green_mask\s*\)\s*\*\s*green_norm\s*;\s*"
+            r"unsigned\s+int\s+b\s*=\s*\(\s*data\s*\[\s*i\s*\]\s*&"
+            r"\s*blue_mask\s*\)\s*\*\s*blue_norm\s*;\s*"
+            r"float\s+h\s*;\s*float\s+s\s*;\s*float\s+v\s*;\s*"
+            r"RGBToHSV\s*\(\s*r\s*,\s*g\s*,\s*b\s*,\s*&\s*h\s*,\s*"
+            r"&\s*s\s*,\s*&\s*v\s*\)\s*;", 1, 1),
+        SourceRule(
+            "TPalette16::AdjustSaturation keeps Dreamcast's <=1 multiply "
+            "and >1 reciprocal arms before HSVToRGB and the packed write",
+            r"if\s*\(\s*amount\s*<=\s*1\.0f\s*\)\s*\{\s*"
+            r"s\s*\*=\s*amount\s*;\s*\}\s*else\s*\{\s*"
+            r"s\s*=\s*1\.0f\s*-\s*\(\s*1\.0f\s*-\s*s\s*\)\s*/\s*"
+            r"amount\s*;\s*\}\s*HSVToRGB\s*\(\s*h\s*,\s*s\s*,\s*v"
+            r"\s*,\s*&\s*r\s*,\s*&\s*g\s*,\s*&\s*b\s*\)\s*;.*?"
+            r"\(\s*\(\s*r\s*/\s*red_norm\s*\)\s*&\s*red_mask\s*\)"
+            r"\s*\|\s*\(\s*\(\s*g\s*/\s*green_norm\s*\)\s*&\s*"
+            r"green_mask\s*\)\s*\|\s*\(\s*\(\s*b\s*/\s*blue_norm"
+            r"\s*\)\s*&\s*blue_mask\s*\)", 1, 1),
+    ),
     ("palette.obj", 0x10B7AC): (
         SourceRule(
             "TPalette16::Gray keeps Dreamcast's three const unsigned "
@@ -3624,6 +3664,67 @@ if (step > 0) {
                    contract_violations(probe, palette_cycle_key)):
             failures.append("broken TPalette16::Cycle " + description
                             + " source shape passed")
+    palette_saturation_key = ("palette.obj", 0x10B1EC)
+    palette_saturation_probe = """\
+const unsigned int red_norm =
+    std::numeric_limits<int>::max() / red_mask;
+const unsigned int green_norm =
+    std::numeric_limits<int>::max() / green_mask;
+const unsigned int blue_norm =
+    std::numeric_limits<int>::max() / blue_mask;
+for (int i = 10; i < 256; ++i) {
+    unsigned int r = (data[i] & red_mask) * red_norm;
+    unsigned int g = (data[i] & green_mask) * green_norm;
+    unsigned int b = (data[i] & blue_mask) * blue_norm;
+    float h;
+    float s;
+    float v;
+    RGBToHSV(r, g, b, &h, &s, &v);
+    if (amount <= 1.0f) {
+        s *= amount;
+    } else {
+        s = 1.0f - (1.0f - s) / amount;
+    }
+    HSVToRGB(h, s, v, &r, &g, &b);
+    data[i] = static_cast<unsigned short>(
+        ((r / red_norm) & red_mask) |
+        ((g / green_norm) & green_mask) |
+        ((b / blue_norm) & blue_mask));
+}
+"""
+    if contract_violations(palette_saturation_probe,
+                           palette_saturation_key):
+        failures.append(
+            "aligned TPalette16::AdjustSaturation source shape did not pass")
+    palette_saturation_mutations = (
+        (palette_saturation_probe.replace(
+            "const unsigned int red_norm =\n"
+            "    std::numeric_limits<int>::max() / red_mask;\n"
+            "const unsigned int green_norm =\n"
+            "    std::numeric_limits<int>::max() / green_mask;",
+            "const unsigned int green_norm =\n"
+            "    std::numeric_limits<int>::max() / green_mask;\n"
+            "const unsigned int red_norm =\n"
+            "    std::numeric_limits<int>::max() / red_mask;"),
+         "normalization statements"),
+        (palette_saturation_probe.replace("int i = 10", "int i = 0"),
+         "entry-10 loop"),
+        (palette_saturation_probe.replace(
+            "RGBToHSV(r, g, b, &h, &s, &v);",
+            "s = static_cast<float>(g);"),
+         "RGBToHSV boundary"),
+        (palette_saturation_probe.replace("amount <= 1.0f",
+                                          "amount < 1.0f"),
+         "<=1 multiply"),
+        (palette_saturation_probe.replace(
+            "HSVToRGB(h, s, v, &r, &g, &b);", "r = g = b;"),
+         "HSVToRGB"),
+    )
+    for probe, description in palette_saturation_mutations:
+        if not any(description in rule.description for rule in
+                   contract_violations(probe, palette_saturation_key)):
+            failures.append("broken TPalette16::AdjustSaturation "
+                            + description + " source shape passed")
     palette_gray_key = ("palette.obj", 0x10B7AC)
     palette_gray_probe = """\
 const unsigned int red_norm =

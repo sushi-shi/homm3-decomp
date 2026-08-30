@@ -17,6 +17,13 @@ struct TRGBA {
 };
 SIZE(TRGBA, 4);
 
+// Dreamcast CodeView prototypes; the retail palette transforms at
+// 0x522a10/0x522b50 call the same two global conversion boundaries.
+void RGBToHSV(unsigned int r, unsigned int g, unsigned int b,
+              float* h, float* s, float* v);
+void HSVToRGB(float h, float s, float v,
+              unsigned int* r, unsigned int* g, unsigned int* b);
+
 // Bootstrap VIEW of the 16-bit palette resource: the RGB555 table
 // lives at +0x1c past the resource head (same shape CSprite::GetPalette
 // exposes); Dispose is the shared resource slot 1.
