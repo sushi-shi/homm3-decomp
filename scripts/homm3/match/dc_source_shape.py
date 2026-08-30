@@ -1539,8 +1539,7 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"if\s*\(\s*HasSomeUndead\s*\(\s*\)\s*\)\s*"
             r"result\s*\.\s*append\s*\(\s*gUndeadMoraleText\s*\)\s*;"
             r"\s*TCreatureType\s+angelType\s*=\s*CREATURE_NONE\s*;\s*"
-            r"if\s*\(\s*const_cast\s*<\s*armyGroup\s*\*\s*>\s*"
-            r"\(\s*this\s*\)\s*->\s*IsMember\s*\("),
+            r"if\s*\(\s*IsMember\s*\("),
     ),
     ("armygrp.obj", 0x4DBB8): (
         SourceRule(
@@ -2525,6 +2524,76 @@ def armygroup_has_some_undead_violations(
             line,
             "armygrp.cpp:668 HasSomeUndead must remain the Dreamcast-proven "
             "seven-slot member loop with CREATURE_NONE skip and undead test"))
+    return defects
+
+
+def armygroup_const_query_violations(
+        header_text: str, source_text: str) -> list[tuple[int, str]]:
+    """Audit the coherent Dreamcast-public const query surface."""
+    header_masked = _source.mask(header_text)
+    source_masked = _source.mask(source_text)
+    defects: list[tuple[int, str]] = []
+    names = (
+        "HasCreatures", "HasAllUndead", "HasSomeUndead", "IsMember",
+        "CanJoin", "GetAlignments", "get_AI_value", "GetNativeTerrain",
+        "GetNumArmies", "GetMorale", "GetArmyMorale", "GetLuck",
+        "GetArmyLuck", "get_morale_description", "get_luck_description",
+    )
+
+    def line_for(text: str, masked: str, name: str) -> int:
+        token = re.search(r"\b" + re.escape(name) + r"\b", masked)
+        return text.count("\n", 0, token.start()) + 1 if token else 1
+
+    for name in names:
+        escaped = re.escape(name)
+        header_pattern = (
+            r"\b" + escaped + r"\s*\([^;{}]*\)\s*const\s*;")
+        if re.search(header_pattern, header_masked, re.DOTALL) is None:
+            defects.append((
+                line_for(header_text, header_masked, name),
+                f"armyGroup::{name} must retain its Dreamcast-public QB "
+                "const declaration"))
+        source_pattern = (
+            r"\barmyGroup\s*::\s*" + escaped
+            + r"\s*\([^;{}]*\)\s*const\s*\{")
+        if re.search(source_pattern, source_masked, re.DOTALL) is None:
+            defects.append((
+                line_for(source_text, source_masked, name),
+                f"armyGroup::{name} must retain its Dreamcast-public QB "
+                "const definition"))
+
+    total_header = re.findall(
+        r"\bget_creature_total\s*\(([^;{}]*)\)\s*const\s*;",
+        header_masked, re.DOTALL)
+    total_source = re.findall(
+        r"\barmyGroup\s*::\s*get_creature_total\s*"
+        r"\(([^;{}]*)\)\s*const\s*\{",
+        source_masked, re.DOTALL)
+    for text, masked, matches, location in (
+            (header_text, header_masked, total_header, "declarations"),
+            (source_text, source_masked, total_source, "definitions")):
+        normalized = [re.sub(r"\s+", " ", value).strip()
+                      for value in matches]
+        if (len(normalized) != 2 or "" not in normalized
+                or not any(re.search(r"\bTCreatureType\b", value)
+                           for value in normalized)):
+            defects.append((
+                line_for(text, masked, "get_creature_total"),
+                "both armyGroup::get_creature_total overloads must retain "
+                f"their Dreamcast-public QB const {location}"))
+
+    homogeneity_pattern = (
+        r"\barmyGroup\s*::\s*GetHomogeneityMoraleAdjust\s*"
+        r"\(\s*\)\s*const\s*\{")
+    # The function is an explicitly retained DC_ONLY carcass.  Lexically
+    # mask comments/strings without discarding its #if 0 evidence block.
+    lexical_source = _source._mask_lex(source_text)
+    if re.search(homogeneity_pattern, lexical_source) is None:
+        defects.append((
+            line_for(source_text, source_masked,
+                     "GetHomogeneityMoraleAdjust"),
+            "DC-only armyGroup::GetHomogeneityMoraleAdjust must retain its "
+            "Dreamcast-public QB const definition"))
     return defects
 
 
@@ -5914,7 +5983,7 @@ if (IsMember(CREATURE_ANGEL) || IsMember(CREATURE_ARCHANGEL))
 if (HasSomeUndead())
     result.append(gUndeadMoraleText);
 TCreatureType angelType = CREATURE_NONE;
-if (const_cast<armyGroup*>(this)->IsMember(CREATURE_ANGEL))
+if (IsMember(CREATURE_ANGEL))
     angelType = CREATURE_ANGEL;
 """
     if contract_violations(morale_description_probe,
@@ -6405,6 +6474,48 @@ unsigned char armyGroup::HasSomeUndead() const
     if any(not armygroup_has_some_undead_violations(header, source)
            for header, source in broken_undead_probes):
         failures.append("broken HasSomeUndead member boundary passed")
+    const_query_names = (
+        "HasCreatures", "HasAllUndead", "HasSomeUndead", "IsMember",
+        "CanJoin", "GetAlignments", "get_AI_value", "GetNativeTerrain",
+        "GetNumArmies", "GetMorale", "GetArmyMorale", "GetLuck",
+        "GetArmyLuck", "get_morale_description", "get_luck_description",
+    )
+    const_query_header_probe = "\n".join(
+        f"int {name}(int value) const;" for name in const_query_names)
+    const_query_header_probe += (
+        "\nint get_creature_total() const;\n"
+        "int get_creature_total(TCreatureType type) const;\n")
+    const_query_source_probe = "\n".join(
+        f"int armyGroup::{name}(int value) const {{ return value; }}"
+        for name in const_query_names)
+    const_query_source_probe += (
+        "\nint armyGroup::get_creature_total() const { return 0; }\n"
+        "int armyGroup::get_creature_total(TCreatureType type) const "
+        "{ return type; }\n"
+        "int armyGroup::GetHomogeneityMoraleAdjust() const { return 0; }\n")
+    if armygroup_const_query_violations(
+            const_query_header_probe, const_query_source_probe):
+        failures.append("aligned armyGroup QB const-query surface did not pass")
+    nonconst_query_header = const_query_header_probe.replace(
+        "int HasCreatures(int value) const;",
+        "int HasCreatures(int value);")
+    if not armygroup_const_query_violations(
+            nonconst_query_header, const_query_source_probe):
+        failures.append("non-const armyGroup query declaration passed")
+    nonconst_query_source = const_query_source_probe.replace(
+        "int armyGroup::get_AI_value(int value) const",
+        "int armyGroup::get_AI_value(int value)")
+    if not armygroup_const_query_violations(
+            const_query_header_probe, nonconst_query_source):
+        failures.append("non-const armyGroup query definition passed")
+    adapter_query_header = const_query_header_probe.replace(
+        "int get_AI_value(int value) const;",
+        "int get_AI_value(int value);\n"
+        "int get_AI_value(int value) const { return "
+        "const_cast<armyGroup*>(this)->get_AI_value(value); }")
+    if not armygroup_const_query_violations(
+            adapter_query_header, const_query_source_probe):
+        failures.append("armyGroup non-const query plus const adapter passed")
     cmbtmgr_inline_probe = """\
 static bool ValidHex(int iHex) {
     return iHex >= 0 && iHex < COMBAT_GRID_CELLS;
@@ -7038,10 +7149,13 @@ def scan() -> tuple[
     audited.add(_file_audit_scope("include/armygrp.h"))
     undead_defects = armygroup_has_some_undead_violations(
         armygrp_header_text, armygrp_source_text)
-    checked += 2
+    const_query_defects = armygroup_const_query_violations(
+        armygrp_header_text, armygrp_source_text)
+    checked += 20
     missing.extend(FileContractViolation("include/armygrp.h", line,
                                          description)
-                   for line, description in undead_defects)
+                   for line, description in
+                   undead_defects + const_query_defects)
 
     window_header = common.HOMM3_DIR / "include/window.h"
     window_text = window_header.read_text(errors="replace")

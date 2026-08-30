@@ -1109,13 +1109,10 @@ void game::calculate_production()
                 production[i] += siloIncome[i];
         }
 
-        // OVERLOAD, NOT A CAST. `currentTown` is `town*`, so
-        // `currentTown->get_army()` picks the NON-const overload and the
-        // const_cast in front of it is a no-op; retail's relocation names
-        // ?get_army@town@@QBEABVarmyGroup@@XZ, the CONST one. The
-        // static_cast on the receiver is what selects it.
-        if (const_cast<armyGroup&>(
-                static_cast<const town*>(currentTown)->get_army())
+        // `currentTown` is `town*`; the static_cast selects retail's
+        // const get_army overload, and the Dreamcast-public QB query then
+        // consumes its const armyGroup directly.
+        if (static_cast<const town*>(currentTown)->get_army()
                 .get_creature_total(
                 creature_type_from_int(PRODUCTION_CREATURE_CRYSTAL_DRAGON)) > 0)
             crystalDragonIncome[currentTown->owner] = 1;

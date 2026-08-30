@@ -260,6 +260,43 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-30 — the complete Dreamcast-public `armyGroup` read-query
+  surface is restored as const, and max/history explicitly banks its one
+  collateral compiler-state dip.** The Dreamcast public-symbol table is
+  unambiguous: `HasCreatures`, `HasAllUndead`, `HasSomeUndead`, `IsMember`,
+  `GetAlignments`, `CanJoin`, `get_AI_value`, both `get_creature_total`
+  overloads, `GetNumArmies`, all morale/luck queries and descriptions, and
+  `GetNativeTerrain` are `QB` const members. The DC-only older
+  `GetHomogeneityMoraleAdjust` body is `QB` too. Retail independently
+  corroborates that every active body is read-only; x86 thiscall code bytes
+  cannot distinguish the qualifier, so there is no retail ABI or semantic
+  contradiction. The prior non-const `get_AI_value` implementation plus an
+  inline const forwarding adapter was therefore a source-false local-minimum
+  workaround, not an admissible Complete skew.
+
+  All thirteen formerly non-const active declarations and definitions now
+  carry the recovered qualifier, and const callers consume them without
+  `const_cast`. A source-authoritative delink migrates their decorated `QA`
+  identities to `QB`. Eleven migrated bodies remain **100.0000%**;
+  `GetMorale` remains **98.5654%** and `GetArmyMorale` remains **96.5625%**.
+  The previously const query bodies and descriptions retain their scores,
+  apart from the already banked `get_morale_description` movement from
+  **93.0566% to 91.4613%** when its three direct member calls were first
+  restored. The coherent header edit also changes VC6 front-end state in an
+  including TU: the otherwise untouched
+  `type_sacrifice_window::create_artifact_widgets` moves from exact to
+  **99.5935%**. That is evidence for keeping the header campaign banked, not
+  for reverting a positive source fact. The project remains green at
+  **2,561 / 3,100** linked functions exact and **93.10%** fuzzy.
+
+  The asymmetric source-shape gate now audits the whole `QB` declaration and
+  definition roster, including both overloads and the retained DC-only
+  carcass. Embedded negative controls remove const from a declaration, remove
+  it from a definition, and restore the rejected non-const-plus-adapter
+  pattern. Thus later percentage work may recover either banked dip, but
+  cannot do so by silently deinlining or falsifying the Dreamcast-proven
+  public interface.
+
 - **2026-08-30 — the Dreamcast `armyGroup::HasSomeUndead` member boundary is
   restored byte-flat at both Complete morale consumers.** Raw CodeView proves
   a public `unsigned char HasSomeUndead() const` body at

@@ -1701,8 +1701,7 @@ long AI_value_of_combat(const hero* attacking_hero, const hero* defending_hero,
         * experience);
 
     create_skeletons(attacking_hero, &defending_army, &local_army);
-    long original_value = const_cast<armyGroup&>(
-        attacking_hero->army).get_AI_value();
+    long original_value = attacking_hero->army.get_AI_value();
     long army_loss = original_value - local_army.get_AI_value();
     value -= army_loss;
     if (value < 0 && army_loss * 4 < original_value)
@@ -1715,8 +1714,7 @@ long AI_value_of_combat(const hero* attacking_hero, const hero* defending_hero,
         if (defending_town)
             defender_player = defending_town->owner;
         value = static_cast<long>(
-            static_cast<float>(
-                const_cast<armyGroup&>(defending_army).get_AI_value())
+            static_cast<float>(defending_army.get_AI_value())
             * type_AI_player::get_attack_bonus(defender_player)
             + static_cast<float>(value));
 
@@ -1761,7 +1759,7 @@ long AI_approximate_strength(const hero* current_hero)
 VA(0x00427690, 0x2F)  // corroborates (hd-crossbuild + ida), dc 0x2c628
 long AI_approximate_strength(const hero* current_hero, const armyGroup* current_army)
 {
-    long value = const_cast<armyGroup*>(current_army)->get_AI_value();
+    long value = current_army->get_AI_value();
     if (current_hero == 0)
         return value;
     return static_cast<long>(const_cast<hero*>(current_hero)->get_combat_value_modifier() * value);

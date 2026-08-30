@@ -7246,8 +7246,8 @@ int hero::GetManaCost(int iWhichSpell, const armyGroup* enemy,
             akSpellTraits[iWhichSpell].school, magic_terrain);
     int cost = akSpellTraits[iWhichSpell].mana_cost[mastery];
     if (enemy) {
-        if (const_cast<armyGroup*>(enemy)->IsMember(CREATURE_PEGASUS)
-            || const_cast<armyGroup*>(enemy)->IsMember(CREATURE_SILVER_PEGASUS))
+        if (enemy->IsMember(CREATURE_PEGASUS)
+            || enemy->IsMember(CREATURE_SILVER_PEGASUS))
             cost += 2;
         if (HasArmy(CREATURE_MAGE) || HasArmy(CREATURE_ARCH_MAGE))
             cost -= 2;
@@ -7271,9 +7271,8 @@ inline int hero::GetManaCost(int iWhichSpell, const armyGroup* enemy,
             iWhichSpell, magic_terrain)];
 #pragma inline_depth()
     if (enemy) {
-        if (const_cast<armyGroup*>(enemy)->IsMember(CREATURE_PEGASUS)
-            || const_cast<armyGroup*>(enemy)->IsMember(
-                CREATURE_SILVER_PEGASUS))
+        if (enemy->IsMember(CREATURE_PEGASUS)
+            || enemy->IsMember(CREATURE_SILVER_PEGASUS))
             cost += 2;
         if (const_cast<hero*>(this)->army.IsMember(CREATURE_MAGE)
             || const_cast<hero*>(this)->army.IsMember(CREATURE_ARCH_MAGE))

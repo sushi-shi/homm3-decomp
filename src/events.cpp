@@ -7615,7 +7615,7 @@ void advManager::TownEvent(NewmapCell* cell, type_point point,
             thisTown->View(0);
         else
             AI_enter_town(currentHero, thisTown);
-    } else if (!const_cast<armyGroup&>(thisTown->get_army()).HasCreatures()
+    } else if (!thisTown->get_army().HasCreatures()
                && (thisTown->visitingHeroId < 0
                    || thisTown->visitingHeroId == currentHero->id)) {
         if (thisTown->garrisonHeroId > -1) {

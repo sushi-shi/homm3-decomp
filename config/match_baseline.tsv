@@ -501,30 +501,30 @@ armygrp	??1TSplitWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x49e20
 armygrp	??_GTSplitWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x49df0
 armygrp	?Add@armyGroup@@QAEHHHH@Z	100.0000	100.0000	100.0000	0x4ace0
 armygrp	?ArmyGrpFn_0044A460@@YIABV?$bitset@$08@std@@XZ	100.0000	100.0000	100.0000	0x4a460
-armygrp	?CanJoin@armyGroup@@QAEHH@Z	100.0000	100.0000	100.0000	0x4ac50
+armygrp	?CanJoin@armyGroup@@QBEHH@Z	100.0000	100.0000	100.0000	0x4ac50
 armygrp	?Dismiss@armyGroup@@QAEXH@Z	100.0000	100.0000	100.0000	0x4ab60
-armygrp	?GetAlignments@armyGroup@@QAEHPAE@Z	100.0000	100.0000	100.0000	0x4abb0
-armygrp	?GetArmyLuck@armyGroup@@QAEHHPBVhero@@PBVtown@@HE@Z	100.0000	100.0000	100.0000	0x4b3c0
-armygrp	?GetArmyMorale@armyGroup@@QAEHHPBVhero@@PBVtown@@HEE@Z	96.5625	96.5625	96.5625	0x4b100
+armygrp	?GetAlignments@armyGroup@@QBEHPAE@Z	100.0000	100.0000	100.0000	0x4abb0
+armygrp	?GetArmyLuck@armyGroup@@QBEHHPBVhero@@PBVtown@@HE@Z	100.0000	100.0000	100.0000	0x4b3c0
+armygrp	?GetArmyMorale@armyGroup@@QBEHHPBVhero@@PBVtown@@HEE@Z	96.5625	96.5625	96.5625	0x4b100
 armygrp	?GetArmySizeName@armyGroup@@SIPBDHH@Z	100.0000	100.0000	100.0000	0x4ade0
-armygrp	?GetLuck@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EE@Z	100.0000	100.0000	100.0000	0x4b2d0
-armygrp	?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z	98.5654	98.5654	98.5654	0x4ae60
-armygrp	?GetNativeTerrain@armyGroup@@QAE?AW4TTerrainType@@XZ	100.0000	100.0000	100.0000	0x4c590
+armygrp	?GetLuck@armyGroup@@QBEHPBVhero@@PBVtown@@0PBV1@EE@Z	100.0000	100.0000	100.0000	0x4b2d0
+armygrp	?GetMorale@armyGroup@@QBEHPBVhero@@PBVtown@@0PBV1@EEE@Z	98.5654	98.5654	98.5654	0x4ae60
+armygrp	?GetNativeTerrain@armyGroup@@QBE?AW4TTerrainType@@XZ	100.0000	100.0000	100.0000	0x4c590
 armygrp	?GetNumArmies@armyGroup@@QBEHXZ	100.0000	100.0000	100.0000	0x4acc0
-armygrp	?HasAllUndead@armyGroup@@QAEEXZ	100.0000	100.0000	100.0000	0x4ab20
-armygrp	?HasCreatures@armyGroup@@QAEEXZ	100.0000	100.0000	100.0000	0x496a0
+armygrp	?HasAllUndead@armyGroup@@QBEEXZ	100.0000	100.0000	100.0000	0x4ab20
+armygrp	?HasCreatures@armyGroup@@QBEEXZ	100.0000	100.0000	100.0000	0x496a0
 armygrp	?Initialize@armyGroup@@QAEXXZ	100.0000	100.0000	100.0000	0x4ab00
-armygrp	?IsMember@armyGroup@@QAEEW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x4ab80
+armygrp	?IsMember@armyGroup@@QBEEW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x4ab80
 armygrp	?Merge@armyGroup@@QAEEPAV1@@Z	84.8547	84.8547	84.8547	0x4b620
 armygrp	?SplitArmy@armyGroup@@QAEXHPAV1@HEE@Z	100.0000	100.0000	100.0000	0x49e90
 armygrp	?SplitSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x496c0
 armygrp	?Swap@armyGroup@@QAEXHPAV1@H@Z	100.0000	100.0000	100.0000	0x4ad60
 armygrp	?WindowHandler@TSplitWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x4a180
-armygrp	?get_AI_value@armyGroup@@QAEJXZ	100.0000	100.0000	100.0000	0x4ac80
-armygrp	?get_creature_total@armyGroup@@QAEHW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x4adc0
-armygrp	?get_creature_total@armyGroup@@QAEHXZ	100.0000	100.0000	100.0000	0x4ada0
+armygrp	?get_AI_value@armyGroup@@QBEJXZ	100.0000	100.0000	100.0000	0x4ac80
+armygrp	?get_creature_total@armyGroup@@QBEHW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x4adc0
+armygrp	?get_creature_total@armyGroup@@QBEHXZ	100.0000	100.0000	100.0000	0x4ada0
 armygrp	?get_luck_description@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@H@Z	92.3623	92.3623	92.3623	0x4c1c0
-armygrp	?get_morale_description@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@HE@Z	93.0566	93.0566	93.0566	0x4b960
+armygrp	?get_morale_description@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@HE@Z	91.4613	93.0566	93.0566	0x4b960
 # Retail-ordered switch bodies, the creature-record cursor, the direct
 # spell-table field_c access, and the byte-proven attrs 0x400 gate raised
 # this from 53.1589 to 88.5071 (2026-08-09).
@@ -2432,7 +2432,7 @@ sacrifice_window	?all_creatures@type_skeleton_window@@CIHAAVmessage@@@Z	100.0000
 sacrifice_window	?artifact_click@type_sacrifice_window@@QAEXJE@Z	100.0000	100.0000	100.0000	0x1632a0
 sacrifice_window	?backpack_click@type_sacrifice_window@@QAEXJE@Z	86.1308	86.1308	86.1308	0x1636c0
 sacrifice_window	?convert_with_commas@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@J@Z	100.0000	100.0000	100.0000	0x162660
-sacrifice_window	?create_artifact_widgets@type_sacrifice_window@@AAEXAAJH@Z	100.0000	100.0000	100.0000	0x160380
+sacrifice_window	?create_artifact_widgets@type_sacrifice_window@@AAEXAAJH@Z	99.5935	100.0000	100.0000	0x160380
 sacrifice_window	?create_creature_icons@type_sacrifice_window@@AAEJJJJJJAAJPAPAViconWidget@@1PAPAVtextWidget@@E@Z	100.0000	100.0000	100.0000	0x161f70
 sacrifice_window	?create_creature_icons@type_skeleton_window@@AAEXJJJJJJAAJPAPAViconWidget@@1PAPAVtextWidget@@@Z	100.0000	100.0000	100.0000	0x166760
 sacrifice_window	?create_creature_widgets@type_sacrifice_window@@AAEXAAJH@Z	100.0000	100.0000	100.0000	0x1610f0

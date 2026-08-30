@@ -824,25 +824,17 @@ public:
     armyGroup();
     armyGroup(TCreatureType type, int amount);
     void Initialize();
-    unsigned char HasCreatures();
-    unsigned char HasAllUndead();
+    unsigned char HasCreatures() const;
+    unsigned char HasAllUndead() const;
     // Dreamcast armygrp.cpp:668. Complete retains the same source helper at
     // its morale consumers; VC6 /Ob2 expands the loop and /OPT:REF removes
     // the unreferenced out-of-line copy from retail.
     unsigned char HasSomeUndead() const;
-    unsigned char IsMember(TCreatureType monType);
-    int CanJoin(int monType);
-    int GetAlignments(unsigned char* alignments);
-    // Complete keeps the emitted implementation as the non-const overload.
-    long get_AI_value();
-    // Dreamcast public ?get_AI_value@armyGroup@@QBAJXZ proves the const
-    // source-facing boundary used by AI valuation. Retail folds this adapter
-    // into its callers, leaving the implementation call ABI unchanged.
-    __forceinline long get_AI_value() const
-    {
-        return const_cast<armyGroup*>(this)->get_AI_value();
-    }
-    TTerrainType GetNativeTerrain();
+    unsigned char IsMember(TCreatureType monType) const;
+    int CanJoin(int monType) const;
+    int GetAlignments(unsigned char* alignments) const;
+    long get_AI_value() const;
+    TTerrainType GetNativeTerrain() const;
     void SplitArmy(int srcIndex, armyGroup* ag, int destIndex,
                    unsigned char inSrcRestricted,
                    unsigned char inDestRestricted);
@@ -854,15 +846,16 @@ public:
     // typed form 0x44adc0 (`ret 4`, dc 0x4efb8, 2 params). Both walk
     // the seven slots adding numTroops; the difference is only the
     // slot predicate.
-    int get_creature_total();
-    int get_creature_total(TCreatureType monType);
+    int get_creature_total() const;
+    int get_creature_total(TCreatureType monType) const;
     // Param 4 is a full int MODE in retail (dword load, sentinel
     // values 2 and 5) - the DC prototype's on_cursed_ground uchar
     // name does not survive the bytes; class forward-decls suffice
     // for the const pointers.
     int GetLuck(const class hero* ownerHero, const class town* ownerTown,
                 const class hero* otherHero, const armyGroup* otherGroup,
-                unsigned char on_cursed_ground, unsigned char apply_limits);
+                unsigned char on_cursed_ground,
+                unsigned char apply_limits) const;
     // SEVEN params in retail (GetArmyMorale's call site pushes seven;
     // the DC six-param prototype is wrong). Roles resolved by the
     // 0x44ae60 decode: 5 is the cursed-ground short circuit (a BYTE
@@ -872,15 +865,17 @@ public:
     int GetMorale(const class hero* ownerHero, const class town* ownerTown,
                   const class hero* otherHero, const armyGroup* otherGroup,
                   unsigned char on_cursed_ground,
-                  unsigned char group_alignments, unsigned char apply_limits);
+                  unsigned char group_alignments,
+                  unsigned char apply_limits) const;
     // SIX params in retail (ret 0x18; the DC five-param prototype is
     // wrong): mode int with sentinels, arg5 forwarded to GetMorale.
     int GetArmyMorale(int index, const class hero* ownerHero,
                       const class town* ownerTown, int mode,
-                      unsigned char arg5, unsigned char apply_limits);
+                      unsigned char arg5,
+                      unsigned char apply_limits) const;
     int GetArmyLuck(int index, const class hero* ownerHero,
                     const class town* ownerTown, int mode,
-                    unsigned char apply_limits);
+                    unsigned char apply_limits) const;
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
         get_morale_description(TCreatureType creature, int morale,
                                const class hero* ownerHero,

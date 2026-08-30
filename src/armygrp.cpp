@@ -139,7 +139,7 @@ inline void TSplitWindow::UpdateSplitArmy(unsigned char update)
 
 // E:\gamedcs\armygrp.cpp:54
 VA(0x004496a0, 0x16)  // anchor-global, dc 0x4dae4
-unsigned char armyGroup::HasCreatures()
+unsigned char armyGroup::HasCreatures() const
 {
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
         if (armies[i] != CREATURE_NONE)
@@ -925,7 +925,7 @@ void armyGroup::Initialize()
 
 // E:\gamedcs\armygrp.cpp:653
 VA(0x0044ab20, 0x3A)  // anchor-global, dc 0x4eb50
-unsigned char armyGroup::HasAllUndead()
+unsigned char armyGroup::HasAllUndead() const
 {
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
         if (armies[i] == CREATURE_NONE)
@@ -968,7 +968,7 @@ void armyGroup::Dismiss(int whichIndex)
 
 // E:\gamedcs\armygrp.cpp:691
 VA(0x0044ab80, 0x21)  // anchor-global, dc 0x4ebd0
-unsigned char armyGroup::IsMember(TCreatureType monType)
+unsigned char armyGroup::IsMember(TCreatureType monType) const
 {
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
         if (armies[i] == monType)
@@ -988,7 +988,7 @@ unsigned char armyGroup::IsMember(TCreatureType monType)
 // neighbor GetHomogeneityMoraleAdjust has no retail slot (eliminated
 // or inline-only), which had left the bracket ambiguous.
 VA(0x0044abb0, 0x97)  // byte-identity, dc 0x4ebf0
-int armyGroup::GetAlignments(unsigned char* alignments)
+int armyGroup::GetAlignments(unsigned char* alignments) const
 {
     unsigned char local[10];
     if (!alignments)
@@ -1019,7 +1019,7 @@ int armyGroup::GetAlignments(unsigned char* alignments)
 
 // E:\gamedcs\armygrp.cpp:748
 DC_ONLY(0x4ec98, 0x16)
-int armyGroup::GetHomogeneityMoraleAdjust()
+int armyGroup::GetHomogeneityMoraleAdjust() const
 {
     // @stub
 }
@@ -1028,7 +1028,7 @@ int armyGroup::GetHomogeneityMoraleAdjust()
 
 // E:\gamedcs\armygrp.cpp:768
 VA(0x0044ac50, 0x2E)  // anchor-global, dc 0x4ecb0
-int armyGroup::CanJoin(int monType)
+int armyGroup::CanJoin(int monType) const
 {
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
         if (armies[i] == monType || armies[i] == CREATURE_NONE)
@@ -1043,7 +1043,7 @@ int armyGroup::CanJoin(int monType)
 
 // E:\gamedcs\armygrp.cpp:785
 VA(0x0044ac80, 0x39)  // anchor-global, dc 0x4ecdc
-long armyGroup::get_AI_value()
+long armyGroup::get_AI_value() const
 {
     long value = 0;
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
@@ -1138,7 +1138,7 @@ void armyGroup::DamageGroup(float casualtyRate)
 // exist take zero and one stack argument respectively - matching the
 // overloads exactly.
 VA(0x0044ada0, 0x16)  // dc-bracket + arity, dc 0x4ef88
-int armyGroup::get_creature_total()
+int armyGroup::get_creature_total() const
 {
     int total = 0;
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; i++) {
@@ -1150,7 +1150,7 @@ int armyGroup::get_creature_total()
 
 // E:\gamedcs\armygrp.cpp:935
 VA(0x0044adc0, 0x20)  // dc-bracket + arity, dc 0x4efb8
-int armyGroup::get_creature_total(TCreatureType monType)
+int armyGroup::get_creature_total(TCreatureType monType) const
 {
     int total = 0;
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; i++) {
@@ -1247,7 +1247,7 @@ int armyGroup::GetMorale(const hero* ownerHero, const town* ownerTown,
                          const hero* otherHero, const armyGroup* otherGroup,
                          unsigned char on_cursed_ground,
                          unsigned char group_alignments,
-                         unsigned char apply_limits)
+                         unsigned char apply_limits) const
 {
     if (on_cursed_ground)
         return 0;
@@ -1273,9 +1273,8 @@ int armyGroup::GetMorale(const hero* ownerHero, const town* ownerTown,
     if (IsMember(CREATURE_ANGEL) || IsMember(CREATURE_ARCHANGEL))
         morale++;
     if (otherGroup
-        && (const_cast<armyGroup*>(otherGroup)->IsMember(CREATURE_BONE_DRAGON)
-            || const_cast<armyGroup*>(otherGroup)
-                   ->IsMember(CREATURE_GHOST_DRAGON)))
+        && (otherGroup->IsMember(CREATURE_BONE_DRAGON)
+            || otherGroup->IsMember(CREATURE_GHOST_DRAGON)))
         morale--;
     if (ownerTown) {
         if (ownerTown->HasBuilding(TAVERN_ID, 0))
@@ -1313,7 +1312,7 @@ int armyGroup::GetMorale(const hero* ownerHero, const town* ownerTown,
 // allocation mirror (retail homes `this` in EDI and shrink-wraps ESI for
 // morale after the early returns). `register` hints on either value are inert.
 VA(0x0044b100, 0x1C9)  // anchor-global, dc 0x4f160
-int armyGroup::GetArmyMorale(int index, const hero* ownerHero, const town* ownerTown, int mode, unsigned char arg5, unsigned char apply_limits)
+int armyGroup::GetArmyMorale(int index, const hero* ownerHero, const town* ownerTown, int mode, unsigned char arg5, unsigned char apply_limits) const
 {
     if (mode == MAGIC_TERRAIN_CURSED_GROUND)
         return 0;
@@ -1387,7 +1386,7 @@ evil_done:
 // gate are exact. limit(low,value,high) supplies the final retail
 // low/high/value homes and reference-selecting return.
 VA(0x0044b2d0, 0xEB)  // anchor-global, dc 0x4f20c
-int armyGroup::GetLuck(const hero* ownerHero, const town* ownerTown, const hero* otherHero, const armyGroup* otherGroup, unsigned char on_cursed_ground, unsigned char apply_limits)
+int armyGroup::GetLuck(const hero* ownerHero, const town* ownerTown, const hero* otherHero, const armyGroup* otherGroup, unsigned char on_cursed_ground, unsigned char apply_limits) const
 {
     if (on_cursed_ground)
         return 0;
@@ -1400,8 +1399,8 @@ int armyGroup::GetLuck(const hero* ownerHero, const town* ownerTown, const hero*
     if (ownerHero)
         luck = const_cast<hero*>(ownerHero)->GetLuck(otherHero, 0, 0);
     if (otherGroup
-        && (const_cast<armyGroup*>(otherGroup)->IsMember(CREATURE_DEVIL)
-            || const_cast<armyGroup*>(otherGroup)->IsMember(CREATURE_ARCH_DEVIL)))
+        && (otherGroup->IsMember(CREATURE_DEVIL)
+            || otherGroup->IsMember(CREATURE_ARCH_DEVIL)))
         luck--;
     if (ownerTown && ownerTown->type == TOWN_RAMPART
         && ownerTown->HasBuilding(EXTRA_0_ID, 1))
@@ -1421,7 +1420,7 @@ int armyGroup::GetLuck(const hero* ownerHero, const town* ownerTown, const hero*
 // index reuse and shrink-wrapped EBX save around the game-state test; the
 // explicit no-bonus/+2 labels preserve its compressed town selector.
 VA(0x0044b3c0, 0xED)  // anchor-global, dc 0x4f2e8
-int armyGroup::GetArmyLuck(int index, const hero* ownerHero, const town* ownerTown, int mode, unsigned char apply_limits)
+int armyGroup::GetArmyLuck(int index, const hero* ownerHero, const town* ownerTown, int mode, unsigned char apply_limits) const
 {
     if (mode == MAGIC_TERRAIN_CURSED_GROUND)
         return 0;
@@ -1925,7 +1924,7 @@ std::string armyGroup::get_morale_description(
     if (akCreatureTypeTraits[creature].attributes & CTA_NO_MORALE)
         return gNoMoraleCreatureText;
 
-    int currentMorale = const_cast<armyGroup*>(this)->GetMorale(
+    int currentMorale = GetMorale(
         ownerHero, ownerTown, otherHero, otherGroup, 0,
         groupAlignments, 0);
     std::string result;
@@ -1938,8 +1937,7 @@ std::string armyGroup::get_morale_description(
                                currentMorale, result);
 
     unsigned char alignments[10];
-    int numAlignments =
-        const_cast<armyGroup*>(this)->GetAlignments(alignments);
+    int numAlignments = GetAlignments(alignments);
     if (groupAlignments) {
         int grouped = 0;
         for (int alignment = -1; alignment < 9; ++alignment) {
@@ -1963,9 +1961,9 @@ std::string armyGroup::get_morale_description(
         result.append(gUndeadMoraleText);
 
     TCreatureType angelType = CREATURE_NONE;
-    if (const_cast<armyGroup*>(this)->IsMember(CREATURE_ANGEL))
+    if (IsMember(CREATURE_ANGEL))
         angelType = CREATURE_ANGEL;
-    if (const_cast<armyGroup*>(this)->IsMember(CREATURE_ARCHANGEL))
+    if (IsMember(CREATURE_ARCHANGEL))
         angelType = CREATURE_ARCHANGEL;
     if (angelType != CREATURE_NONE)
         result += format_string(gAngelMoraleFormat,
@@ -1973,11 +1971,9 @@ std::string armyGroup::get_morale_description(
 
     if (otherGroup) {
         TCreatureType dragonType = CREATURE_NONE;
-        if (const_cast<armyGroup*>(otherGroup)->IsMember(
-                CREATURE_BONE_DRAGON))
+        if (otherGroup->IsMember(CREATURE_BONE_DRAGON))
             dragonType = CREATURE_BONE_DRAGON;
-        if (const_cast<armyGroup*>(otherGroup)->IsMember(
-                CREATURE_GHOST_DRAGON))
+        if (otherGroup->IsMember(CREATURE_GHOST_DRAGON))
             dragonType = CREATURE_GHOST_DRAGON;
         if (dragonType != CREATURE_NONE)
             result += format_string(
@@ -2197,7 +2193,7 @@ std::string armyGroup::get_luck_description(
                                  ARTIFACT_HOURGLASS_OF_THE_EVIL_HOUR].name);
     }
 
-    int currentLuck = const_cast<armyGroup*>(this)->GetLuck(
+    int currentLuck = GetLuck(
         ourHero, ourTown, enemyHero, enemyGroup, 0, 0);
     std::string result;
     if (ourHero)
@@ -2207,10 +2203,9 @@ std::string armyGroup::get_luck_description(
 
     if (enemyGroup) {
         TCreatureType devilType = CREATURE_NONE;
-        if (const_cast<armyGroup*>(enemyGroup)->IsMember(CREATURE_DEVIL))
+        if (enemyGroup->IsMember(CREATURE_DEVIL))
             devilType = CREATURE_DEVIL;
-        if (const_cast<armyGroup*>(enemyGroup)->IsMember(
-                CREATURE_ARCH_DEVIL))
+        if (enemyGroup->IsMember(CREATURE_ARCH_DEVIL))
             devilType = CREATURE_ARCH_DEVIL;
         if (devilType != CREATURE_NONE)
             result += format_string(gEnemyCreatureStatFormat,
@@ -2241,7 +2236,7 @@ std::string armyGroup::get_luck_description(
 
 // E:\gamedcs\armygrp.cpp:1516
 VA(0x0044c590, 0x76)  // anchor-global, dc 0x4fc98
-TTerrainType armyGroup::GetNativeTerrain()
+TTerrainType armyGroup::GetNativeTerrain() const
 {
     TTerrainType native = TERRAIN_NONE;
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {

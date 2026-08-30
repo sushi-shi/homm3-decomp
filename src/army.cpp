@@ -750,7 +750,7 @@ void army::SetLuck(const hero* ownerHero, const armyGroup* ownerGroup,
     }
 
     if (ownerGroup) {
-        value = const_cast<armyGroup*>(ownerGroup)->GetLuck(
+        value = ownerGroup->GetLuck(
             ownerHero, ownerTown, otherHero, otherGroup, 0, 0);
     }
     if (luckBonusRounds)
@@ -812,7 +812,7 @@ void army::SetMorale(const hero* ownerHero, const armyGroup* ownerGroup,
         goto store_morale;
 
     if (ownerGroup) {
-        value = const_cast<armyGroup*>(ownerGroup)->GetMorale(
+        value = ownerGroup->GetMorale(
             ownerHero, ownerTown, otherHero, otherGroup, 0,
             groupAlignments, 0);
     }
