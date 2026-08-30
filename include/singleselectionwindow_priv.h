@@ -211,12 +211,7 @@ public:
     // SetCurrentMap's host-broadcast site expands it (the
     // CMapHeaderRequestMsg pattern); the higher-offset store lands
     // first there, as in that ctor.
-    CScrollMsg(int map, int index)
-        : CNetMsg(RS_SCROLL, sizeof(CScrollMsg))
-    {
-        m_map = map;
-        m_index = index;
-    }
+    CScrollMsg(int map, int index);
 };
 
 class CSortMapsMsg : public CNetMsg {
@@ -319,11 +314,7 @@ public:
     int m_size;  // +0x14
 
     // SetFilter expands this ctor at its host-broadcast site.
-    CSetFilterMsg(int size)
-        : CNetMsg(RS_SET_FILTER, sizeof(CSetFilterMsg))
-    {
-        m_size = size;
-    }
+    CSetFilterMsg(int size);
 };
 
 class CRequestHeroFaceMsg : public CNetMsg {
@@ -359,9 +350,15 @@ public:
     }
 };
 
+class CGameHeaderInfoEndMsg : public CNetMsg {
+public:
+    CGameHeaderInfoEndMsg();
+};
+
 class CClickMsg : public CNetMsg {
 public:
     int m_widgetId;  // +0x14
+    CClickMsg(int widgetId);
 };
 
 class CTownUpdateMsg : public CNetMsg {
@@ -376,6 +373,8 @@ public:
     unsigned char m_flag;       // +0x1e0, the window's +0x37f byte
     char pad_1e1[3];
     int m_extras[8];            // +0x1e4, the window's +0x18a0 run
+
+    CNewSetupInfoMsg(SGameSetupOptions* setup);
 };
 
 class CBadVersionMsg : public CNetMsg {
@@ -657,8 +656,8 @@ public:
 // Complete's CNewPlayerUpdateProc implementation. NewPlayer constructs it
 // inline, proving both the 0x641d44 vptr and its placement before this body.
 // Go retains the Dreamcast constructor/send shape and is exact at 0x5789f0;
-// Tick retains the complete Dreamcast CFG at 86.6723%; Finish remains to
-// recover.
+// Tick and Finish retain their complete Dreamcast CFGs at 86.6723% and
+// 87.0155% respectively (Finish's rejected wrong-boundary peak is 89.5855%).
 class CNewPlayerUpdateProc : public CNewPlayerUpdateTask {
 public:
     CNewPlayerUpdateProc(unsigned long dpid)

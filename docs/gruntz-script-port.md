@@ -260,6 +260,44 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-30 — the Windows `CNewPlayerUpdateProc::Finish` slot is
+  identified at `0x005795a0`, reconstructs the complete Dreamcast source
+  graph at 87.0155%, and closes `SendPlayerFaces` at 100%.** Vtable
+  `0x00641d44` fixes the retail identity: slot 2 is the 714-byte body at
+  `0x005795a0`. The old IDA name at `0x00579920` is disproved because that
+  address lies inside the adjacent `CUpdatePlayerPosMsg` constructor. The
+  mandatory dossier at `singleselectionwindow.obj:0x1484c8` proves the six
+  message locals, end/filter/scroll/setup sequence, advanced/scenario click
+  scopes, final difficulty click, `SendPlayerPositions`, `CheckFaces`, and
+  `SendPlayerFaces` in order. Retail independently proves Complete's third
+  filter-pane click and its widget ids 129/128/130.
+
+  Restoring the five message constructors as plain out-of-class `.cpp`
+  boundaries preserves the original non-flattened source convention; making
+  them header bodies or adding `inline` is byte-flat and therefore no reason
+  to erase the positive Dreamcast fact. Complete's `SendSetupInfo` extension
+  assigns its mode byte and eight filter dwords individually. With those
+  statements and the retail `(currentMap, currentIndex)` scroll order,
+  **all 14 aligned blocks and all 7 symbolic branches agree**, and every
+  instruction outside two mutually exclusive click-constructor sites is
+  exact. The remaining VC6 decision is bounded: retail expands
+  `CClickMsg` but calls its `CNetMsg` base in the Complete-only filter arm;
+  this compiler does the inverse across the scenario/filter pair. A
+  statement-local `inline_depth(0)` on the added filter constructor raises
+  the percentage **87.0155% → 89.5855%**, but is deliberately rejected: it
+  calls the whole `CClickMsg` while retail calls only the nested base and it
+  perturbs later register/stack scheduling. The higher result remains banked
+  as history, not as source. Nested scope and `inline_depth(1)` controls were
+  byte-flat. This is the precise local-minimum case the MAX/history policy is
+  for: carry the coherent source through the expected dip toward exactness.
+
+  The final helper at `0x0058bc70` is now independently reconstructed from
+  its Dreamcast `i` / `pPlayer` / `msg` scopes and retail's seat-1..7 scan:
+  **100.0000% across all 102 bytes and 3 / 3 symbolic branches**. New
+  asymmetric rules and negative controls preserve the complete Finish
+  sequence, constructor bodies, pane scopes and exact helper loop without
+  demanding cross-architecture count equality.
+
 - **2026-08-30 — `CNewPlayerUpdateProc::Tick` restores the complete
   Dreamcast control-flow shape at 86.6723%, and its two named helpers are
   now owned by the correct base class.** The mandatory dossier at
