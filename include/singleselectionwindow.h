@@ -511,6 +511,8 @@ public:
     void SetupScenarioOptions(unsigned char randomMaps);
     void SetupAdvancedOptions();
     unsigned char SendPlayerPositions(unsigned long dpidTo);
+    unsigned char SendSetupInfo(unsigned long dpid);
+    void SendPlayerFaces();
     unsigned char IsHost();
     unsigned char IsMultiPlayer();
     void ShowWidget(int id);

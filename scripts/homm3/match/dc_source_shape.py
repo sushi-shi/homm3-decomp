@@ -2382,6 +2382,43 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"m_lastSendTime\s*=\s*GameTime\s*::\s*Get\s*\(\s*\)\s*;",
             1, 1),
     ),
+    ("singleselectionwindow.obj", 0x1484C8): (
+        SourceRule(
+            "CNewPlayerUpdateProc::Finish keeps Dreamcast's end, filter, "
+            "scroll, and setup messages in recovered statement order",
+            r"\A\s*CGameHeaderInfoEndMsg\s+endMsg\s*;\s*"
+            r"TransmitRemoteDataDPID\s*\(\s*&\s*endMsg\s*,\s*m_dpid\s*,"
+            r"\s*false\s*,\s*true\s*\)\s*;\s*"
+            r"CSetFilterMsg\s+filterMsg\s*\(.*?\)\s*;\s*"
+            r"TransmitRemoteDataDPID\s*\(\s*&\s*filterMsg\s*,\s*"
+            r"m_dpid\s*,\s*false\s*,\s*true\s*\)\s*;\s*"
+            r"CScrollMsg\s+scrollMsg\s*\(.*?\)\s*;\s*"
+            r"TransmitRemoteDataDPID\s*\(\s*&\s*scrollMsg\s*,\s*"
+            r"m_dpid\s*,\s*false\s*,\s*true\s*\)\s*;\s*"
+            r"gUnnamed69fbe8\s*->\s*SendSetupInfo\s*\(\s*m_dpid\s*\)"
+            r"\s*;", 1, 1),
+        SourceRule(
+            "CNewPlayerUpdateProc::Finish keeps Dreamcast's advanced and "
+            "scenario pane click-message scopes before Complete's "
+            "retail-proved filter pane extension",
+            r"if\s*\(\s*gUnnamed69fbe8\s*->\s*inAdvancedOptions\s*\)"
+            r"\s*\{\s*CClickMsg\s+clickMsg\s*\(\s*129\s*\)\s*;.*?"
+            r"inScenarioOptions\s*\)\s*\{\s*CClickMsg\s+clickMsg\s*"
+            r"\(\s*128\s*\)\s*;.*?inFilterOptions\s*\)\s*\{\s*"
+            r"CClickMsg\s+clickMsg\s*\(\s*130\s*\)\s*;", 1, 1),
+        SourceRule(
+            "CNewPlayerUpdateProc::Finish keeps Dreamcast's final click, "
+            "player-position send, face validation, and face broadcast "
+            "in recovered order",
+            r"CClickMsg\s+clickMsg\s*\(\s*gpGame\s*->\s*setup\."
+            r"difficulty\s*\+\s*107\s*\)\s*;\s*"
+            r"TransmitRemoteDataDPID\s*\(\s*&\s*clickMsg\s*,\s*m_dpid"
+            r"\s*,\s*false\s*,\s*true\s*\)\s*;\s*"
+            r"gUnnamed69fbe8\s*->\s*SendPlayerPositions\s*\(\s*m_dpid"
+            r"\s*\)\s*;\s*gUnnamed69fbe8\s*->\s*CheckFaces\s*\(\s*\)"
+            r"\s*;\s*gUnnamed69fbe8\s*->\s*SendPlayerFaces\s*\(\s*\)"
+            r"\s*;", 1, 1),
+    ),
     ("singleselectionwindow.obj", 0x14870C): (
         SourceRule(
             "CNewPlayerUpdateMan::NewPlayer keeps Dreamcast's sole index "
@@ -2404,6 +2441,50 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"\s*m_players\.computerPlayers\s*\)\s*;\s*"
             r"TransmitRemoteDataDPID\s*\(\s*&\s*msg\s*,\s*dpidTo\s*,"
             r"\s*true\s*,\s*true\s*\)\s*;", 1, 1),
+    ),
+    ("singleselectionwindow.obj", 0x1425F0): (
+        SourceRule(
+            "SendPlayerFaces keeps Dreamcast's i/pPlayer/msg scopes and "
+            "retail-proved occupied-human-seat bounds",
+            r"\A\s*for\s*\(\s*int\s+i\s*=\s*1\s*;\s*i\s*<\s*8\s*;"
+            r"\s*\+\+\s*i\s*\)\s*\{\s*CNetPlayerHandlerPlayer\s*\*"
+            r"\s*pPlayer\s*=\s*&\s*m_players\.humanPlayers\s*\[\s*i"
+            r"\s*\]\s*;\s*if\s*\(\s*pPlayer\s*->\s*IsHuman\s*\(\s*"
+            r"\)\s*&&\s*pPlayer\s*->\s*playerPos\s*!=\s*-\s*1\s*\)"
+            r"\s*\{\s*CRequestHeroFaceReplyMsg\s+msg\s*\(\s*"
+            r"pPlayer\s*->\s*playerPos\s*,\s*pPlayer\s*->\s*heroIndex"
+            r"\s*\)\s*;\s*TransmitRemoteDataDPID\s*\(\s*&\s*msg\s*,"
+            r"\s*0\s*,\s*false\s*,\s*true\s*\)\s*;", 1, 1),
+    ),
+    ("singleselectionwindow.obj", 0x147ACC): (
+        SourceRule(
+            "CGameHeaderInfoEndMsg keeps its recovered empty derived body",
+            r"\A\s*\Z", 1, 1),
+    ),
+    ("singleselectionwindow.obj", 0x147AF4): (
+        SourceRule(
+            "CNewSetupInfoMsg keeps its recovered CNetMsg boundary and "
+            "setup assignment",
+            r"\A\s*m_setup\s*=\s*\*\s*setup\s*;\s*\Z", 1, 1),
+    ),
+    ("singleselectionwindow.obj", 0x147BF0): (
+        SourceRule(
+            "CScrollMsg keeps its recovered map-then-index constructor "
+            "statements",
+            r"\A\s*m_map\s*=\s*map\s*;\s*m_index\s*=\s*index\s*;\s*"
+            r"\Z", 1, 1),
+    ),
+    ("singleselectionwindow.obj", 0x147DA4): (
+        SourceRule(
+            "CSetFilterMsg keeps its recovered CNetMsg constructor and "
+            "size assignment",
+            r"\A\s*m_size\s*=\s*size\s*;\s*\Z", 1, 1),
+    ),
+    ("singleselectionwindow.obj", 0x147F28): (
+        SourceRule(
+            "CClickMsg keeps its recovered CNetMsg constructor and widget "
+            "assignment",
+            r"\A\s*m_widgetId\s*=\s*widgetId\s*;\s*\Z", 1, 1),
     ),
     ("singleselectionwindow.obj", 0x143214): (
         SourceRule(
@@ -3424,6 +3505,49 @@ def map_file_name_message_contract_violations(
              "fileName, townTypes and by-value FILETIME constructor inputs "
              "and ordered number/strncpy/FILETIME/memcpy statements, with "
              "Complete's independently proved leading transfer flag")]
+
+
+def finish_message_constructor_contract_violations(
+        source_text: str) -> list[tuple[int, str]]:
+    """Keep Finish's recovered out-of-class message constructor heads.
+
+    Function-body rules preserve the ordered statements, but a constructor's
+    base initializer lies outside those braces. Audit it directly so moving
+    these definitions back into a flattened header view or dropping CNetMsg
+    cannot hide in the historical generic-call backlog.
+    """
+    source = _source.mask(source_text)
+    patterns = (
+        r"CGameHeaderInfoEndMsg\s*::\s*"
+        r"CGameHeaderInfoEndMsg\s*\(\s*\)\s*:\s*CNetMsg\s*\(\s*"
+        r"RS_GAME_HEADER_INFO_END\s*,\s*sizeof\s*\(\s*"
+        r"CGameHeaderInfoEndMsg\s*\)\s*\)\s*\{\s*\}",
+        r"CNewSetupInfoMsg\s*::\s*CNewSetupInfoMsg\s*\(\s*"
+        r"SGameSetupOptions\s*\*\s*setup\s*\)\s*:\s*CNetMsg\s*\(\s*"
+        r"RS_NEW_SETUP_INFO\s*,\s*sizeof\s*\(\s*CNewSetupInfoMsg\s*\)"
+        r"\s*\)\s*\{\s*m_setup\s*=\s*\*\s*setup\s*;\s*\}",
+        r"CScrollMsg\s*::\s*CScrollMsg\s*\(\s*int\s+map\s*,"
+        r"\s*int\s+index\s*\)\s*:\s*CNetMsg\s*\(\s*RS_SCROLL\s*,\s*"
+        r"sizeof\s*\(\s*CScrollMsg\s*\)\s*\)\s*\{\s*m_map\s*=\s*"
+        r"map\s*;\s*m_index\s*=\s*index\s*;\s*\}",
+        r"CSetFilterMsg\s*::\s*CSetFilterMsg\s*\(\s*int\s+"
+        r"size\s*\)\s*:\s*CNetMsg\s*\(\s*RS_SET_FILTER\s*,\s*sizeof"
+        r"\s*\(\s*CSetFilterMsg\s*\)\s*\)\s*\{\s*m_size\s*=\s*size"
+        r"\s*;\s*\}",
+        r"CClickMsg\s*::\s*CClickMsg\s*\(\s*int\s+widgetId"
+        r"\s*\)\s*:\s*CNetMsg\s*\(\s*RS_CLICK\s*,\s*sizeof\s*\(\s*"
+        r"CClickMsg\s*\)\s*\)\s*\{\s*m_widgetId\s*=\s*widgetId\s*;"
+        r"\s*\}",
+    )
+    if all(re.search(pattern, source, re.DOTALL) is not None
+           for pattern in patterns):
+        return []
+    token = re.search(r"\bCGameHeaderInfoEndMsg\s*::", source)
+    line = source_text.count("\n", 0, token.start()) + 1 if token else 1
+    return [(line,
+             "Finish message constructors must remain out-of-class .cpp "
+             "boundaries with their recovered CNetMsg initializers and "
+             "ordered derived statements")]
 
 
 def netplayer_constructor_contract_violations(
@@ -4665,6 +4789,139 @@ m_lastSendTime = GameTime::Get();
                    contract_violations(probe, update_tick_key)):
             failures.append("broken CNewPlayerUpdateProc::Tick "
                             + description + " source shape passed")
+    finish_key = ("singleselectionwindow.obj", 0x1484C8)
+    finish_probe = """\
+CGameHeaderInfoEndMsg endMsg;
+TransmitRemoteDataDPID(&endMsg, m_dpid, false, true);
+CSetFilterMsg filterMsg(gUnnamed69fbe8->mapSizeFilter);
+TransmitRemoteDataDPID(&filterMsg, m_dpid, false, true);
+CScrollMsg scrollMsg(gUnnamed69fbe8->currentMap,
+                     gUnnamed69fbe8->currentIndex);
+TransmitRemoteDataDPID(&scrollMsg, m_dpid, false, true);
+gUnnamed69fbe8->SendSetupInfo(m_dpid);
+if (gUnnamed69fbe8->inAdvancedOptions) {
+    CClickMsg clickMsg(129);
+    TransmitRemoteDataDPID(&clickMsg, m_dpid, false, true);
+} else {
+    if (gUnnamed69fbe8->inScenarioOptions) {
+        CClickMsg clickMsg(128);
+        TransmitRemoteDataDPID(&clickMsg, m_dpid, false, true);
+    } else if (gUnnamed69fbe8->inFilterOptions) {
+        CClickMsg clickMsg(130);
+        TransmitRemoteDataDPID(&clickMsg, m_dpid, false, true);
+    }
+}
+CClickMsg clickMsg(gpGame->setup.difficulty + 107);
+TransmitRemoteDataDPID(&clickMsg, m_dpid, false, true);
+gUnnamed69fbe8->SendPlayerPositions(m_dpid);
+gUnnamed69fbe8->CheckFaces();
+gUnnamed69fbe8->SendPlayerFaces();
+"""
+    if contract_violations(finish_probe, finish_key):
+        failures.append("aligned CNewPlayerUpdateProc::Finish shape did not pass")
+    finish_mutations = (
+        (finish_probe.replace(
+            "CGameHeaderInfoEndMsg endMsg;\n"
+            "TransmitRemoteDataDPID(&endMsg, m_dpid, false, true);\n",
+            ""), "end, filter, scroll, and setup messages"),
+        (finish_probe.replace("inScenarioOptions", "chatShowing"),
+         "advanced and scenario pane click-message scopes"),
+        (finish_probe.replace(
+            "gUnnamed69fbe8->CheckFaces();\n"
+            "gUnnamed69fbe8->SendPlayerFaces();",
+            "gUnnamed69fbe8->SendPlayerFaces();\n"
+            "gUnnamed69fbe8->CheckFaces();"),
+         "final click, player-position send, face validation"),
+    )
+    for probe, description in finish_mutations:
+        if not any(description in rule.description for rule in
+                   contract_violations(probe, finish_key)):
+            failures.append("broken CNewPlayerUpdateProc::Finish "
+                            + description + " source shape passed")
+
+    send_faces_key = ("singleselectionwindow.obj", 0x1425F0)
+    send_faces_probe = """\
+for (int i = 1; i < 8; ++i) {
+    CNetPlayerHandlerPlayer* pPlayer = &m_players.humanPlayers[i];
+    if (pPlayer->IsHuman() && pPlayer->playerPos != -1) {
+        CRequestHeroFaceReplyMsg msg(pPlayer->playerPos,
+                                     pPlayer->heroIndex);
+        TransmitRemoteDataDPID(&msg, 0, false, true);
+    }
+}
+"""
+    if contract_violations(send_faces_probe, send_faces_key):
+        failures.append("aligned SendPlayerFaces shape did not pass")
+    for probe in (
+            send_faces_probe.replace("int i = 1", "int i = 0"),
+            send_faces_probe.replace("pPlayer->IsHuman() && ", ""),
+            send_faces_probe.replace("pPlayer->heroIndex", "i"),
+            send_faces_probe.replace("&msg, 0, false, true",
+                                     "&msg, m_dpid, false, true")):
+        if not contract_violations(probe, send_faces_key):
+            failures.append("broken SendPlayerFaces source shape passed")
+
+    constructor_body_controls = (
+        (("singleselectionwindow.obj", 0x147ACC), "", "m_flag = 0;"),
+        (("singleselectionwindow.obj", 0x147AF4),
+         "m_setup = *setup;", "memcpy(&m_setup, setup, sizeof(m_setup));"),
+        (("singleselectionwindow.obj", 0x147BF0),
+         "m_map = map;\nm_index = index;",
+         "m_index = index;\nm_map = map;"),
+        (("singleselectionwindow.obj", 0x147DA4),
+         "m_size = size;", "m_size = 0;"),
+        (("singleselectionwindow.obj", 0x147F28),
+         "m_widgetId = widgetId;", "m_widgetId = 0;"),
+    )
+    for key, aligned, broken in constructor_body_controls:
+        if contract_violations(aligned, key):
+            failures.append("aligned Finish message constructor did not pass")
+        if not contract_violations(broken, key):
+            failures.append("broken Finish message constructor passed")
+    finish_constructor_source_probe = """\
+CGameHeaderInfoEndMsg::CGameHeaderInfoEndMsg()
+    : CNetMsg(RS_GAME_HEADER_INFO_END, sizeof(CGameHeaderInfoEndMsg))
+{
+}
+CNewSetupInfoMsg::CNewSetupInfoMsg(SGameSetupOptions* setup)
+    : CNetMsg(RS_NEW_SETUP_INFO, sizeof(CNewSetupInfoMsg))
+{
+    m_setup = *setup;
+}
+CScrollMsg::CScrollMsg(int map, int index)
+    : CNetMsg(RS_SCROLL, sizeof(CScrollMsg))
+{
+    m_map = map;
+    m_index = index;
+}
+CSetFilterMsg::CSetFilterMsg(int size)
+    : CNetMsg(RS_SET_FILTER, sizeof(CSetFilterMsg))
+{
+    m_size = size;
+}
+CClickMsg::CClickMsg(int widgetId)
+    : CNetMsg(RS_CLICK, sizeof(CClickMsg))
+{
+    m_widgetId = widgetId;
+}
+"""
+    if finish_message_constructor_contract_violations(
+            finish_constructor_source_probe):
+        failures.append("aligned Finish constructor file contract did not pass")
+    finish_constructor_mutations = (
+        finish_constructor_source_probe.replace(
+            "RS_GAME_HEADER_INFO_END", "RS_HEADER_CONFIRM", 1),
+        finish_constructor_source_probe.replace(
+            "m_setup = *setup;", "memcpy(&m_setup, setup, sizeof(m_setup));"),
+        finish_constructor_source_probe.replace(
+            "m_map = map;\n    m_index = index;",
+            "m_index = index;\n    m_map = map;"),
+        finish_constructor_source_probe.replace(
+            "CClickMsg::CClickMsg", "CClickMsg::Init"),
+    )
+    if any(not finish_message_constructor_contract_violations(probe)
+           for probe in finish_constructor_mutations):
+        failures.append("broken Finish constructor file contract passed")
     new_player_key = ("singleselectionwindow.obj", 0x14870C)
     new_player_probe = """\
 int index = GetFirstAvailable();
@@ -9013,7 +9270,9 @@ def scan() -> tuple[
         selection_text, selection_source_text))
     selection_defects.extend(map_file_name_message_contract_violations(
         selection_text))
-    checked += 4
+    selection_defects.extend(finish_message_constructor_contract_violations(
+        selection_source_text))
+    checked += 9
     missing.extend(FileContractViolation(selection_relpath, line,
                                          description)
                    for line, description in selection_defects)

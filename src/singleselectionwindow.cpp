@@ -179,6 +179,34 @@ inline CNetPlayerInfo::CNetPlayerInfo()
     version = *gpVideoGameState;
 }
 
+// E:\gamedcs\singleselectionwindow.cpp:532
+CGameHeaderInfoEndMsg::CGameHeaderInfoEndMsg()
+    : CNetMsg(RS_GAME_HEADER_INFO_END, sizeof(CGameHeaderInfoEndMsg))
+{
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:544
+CNewSetupInfoMsg::CNewSetupInfoMsg(SGameSetupOptions* setup)
+    : CNetMsg(RS_NEW_SETUP_INFO, sizeof(CNewSetupInfoMsg))
+{
+    m_setup = *setup;
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:557
+CScrollMsg::CScrollMsg(int map, int index)
+    : CNetMsg(RS_SCROLL, sizeof(CScrollMsg))
+{
+    m_map = map;
+    m_index = index;
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:651
+CSetFilterMsg::CSetFilterMsg(int size)
+    : CNetMsg(RS_SET_FILTER, sizeof(CSetFilterMsg))
+{
+    m_size = size;
+}
+
 // E:\gamedcs\singleselectionwindow.cpp:717
 inline CUpdatePlayerPosMsg::CUpdatePlayerPosMsg(
     CNetPlayerHandlerPlayer* pNetPlayers,
@@ -187,6 +215,13 @@ inline CUpdatePlayerPosMsg::CUpdatePlayerPosMsg(
 {
     memcpy(m_netPlayer, pNetPlayers, sizeof(m_netPlayer));
     memcpy(m_compPlayer, pCompPlayers, sizeof(m_compPlayer));
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:730
+CClickMsg::CClickMsg(int widgetId)
+    : CNetMsg(RS_CLICK, sizeof(CClickMsg))
+{
+    m_widgetId = widgetId;
 }
 
 // The three game-selection description tables: each caches a fixed-count
@@ -760,6 +795,75 @@ void CNewPlayerUpdateProc::Tick()
     }
 
     m_lastSendTime = GameTime::Get();
+}
+
+// DC keeps this source helper out of line. Complete's larger setup message
+// adds the window's mode byte and eight filter dwords; VC6 expands this call
+// into Finish while retaining the CNewSetupInfoMsg constructor boundary.
+// E:\gamedcs\singleselectionwindow.cpp:7009
+inline unsigned char TSingleSelectionWindow::SendSetupInfo(
+    unsigned long dpid)
+{
+    CNewSetupInfoMsg msg(&gpGame->setup);
+    msg.m_flag = field_37F;
+    msg.m_extras[0] = field_18A0[0];
+    msg.m_extras[1] = field_18A0[1];
+    msg.m_extras[2] = field_18A0[2];
+    msg.m_extras[3] = field_18A0[3];
+    msg.m_extras[4] = field_18A0[4];
+    msg.m_extras[5] = field_18A0[5];
+    msg.m_extras[6] = field_18A0[6];
+    msg.m_extras[7] = field_18A0[7];
+    TransmitRemoteDataDPID(&msg, dpid, false, true);
+    return 1;
+}
+
+// Complete retail preserves Dreamcast's end/filter/scroll/setup message
+// sequence, mutually exclusive pane click, current-difficulty click, roster
+// transfer, face validation and final face broadcast. The three pane widget
+// ids and the difficulty bias are Complete's independently visible revision.
+// Residual (87.0155; historical max 89.5855): all 14 blocks and all 7
+// symbolic branches agree, and every instruction outside the scenario/filter
+// click constructors is exact. Retail expands CClickMsg but calls its CNetMsg
+// base in the Complete-only filter arm; our /Ob2 does the inverse across the
+// pair. A filter-site inline_depth(0) raised the percentage but called the
+// WHOLE CClickMsg and perturbed later scheduling, so it is rejected: retail
+// keeps only the nested child out of line. Moving the class body inline,
+// nesting the else scope and inline_depth(1) were byte-flat.
+// E:\gamedcs\singleselectionwindow.cpp:1393
+VA(0x005795A0, 0x2CA)  // anchor-vtable CNewPlayerUpdateProc vtbl 0x641d44 slot2, dc 0x1484c8
+void CNewPlayerUpdateProc::Finish()
+{
+    CGameHeaderInfoEndMsg endMsg;
+    TransmitRemoteDataDPID(&endMsg, m_dpid, false, true);
+
+    CSetFilterMsg filterMsg(gUnnamed69fbe8->mapSizeFilter);
+    TransmitRemoteDataDPID(&filterMsg, m_dpid, false, true);
+
+    CScrollMsg scrollMsg(gUnnamed69fbe8->currentMap,
+                         gUnnamed69fbe8->currentIndex);
+    TransmitRemoteDataDPID(&scrollMsg, m_dpid, false, true);
+
+    gUnnamed69fbe8->SendSetupInfo(m_dpid);
+
+    if (gUnnamed69fbe8->inAdvancedOptions) {
+        CClickMsg clickMsg(129);
+        TransmitRemoteDataDPID(&clickMsg, m_dpid, false, true);
+    } else {
+        if (gUnnamed69fbe8->inScenarioOptions) {
+            CClickMsg clickMsg(128);
+            TransmitRemoteDataDPID(&clickMsg, m_dpid, false, true);
+        } else if (gUnnamed69fbe8->inFilterOptions) {
+            CClickMsg clickMsg(130);
+            TransmitRemoteDataDPID(&clickMsg, m_dpid, false, true);
+        }
+    }
+
+    CClickMsg clickMsg(gpGame->setup.difficulty + 107);
+    TransmitRemoteDataDPID(&clickMsg, m_dpid, false, true);
+    gUnnamed69fbe8->SendPlayerPositions(m_dpid);
+    gUnnamed69fbe8->CheckFaces();
+    gUnnamed69fbe8->SendPlayerFaces();
 }
 
 #if 0  // @carcass
@@ -4360,6 +4464,24 @@ void TSingleSelectionWindow::OnUpdatePlayerPosMsg(CNetMsg* pNetMsg)
         UpdateAllyEnemyFlags(0);
         DrawWindow(0, 0xffff0001, 0xffff);
         Update();
+    }
+}
+
+// Broadcast the chosen hero face for each occupied human seat after the
+// transfer has settled. DC proves i/pPlayer/msg and the guarded constructor /
+// transmit scopes; retail narrows the scan to seats 1..7 and carries the
+// selected hero index directly.
+// E:\gamedcs\singleselectionwindow.cpp:7682
+VA(0x0058BC70, 0x66)  // anchor-callee CNewPlayerUpdateProc::Finish final call, dc 0x1425f0
+void TSingleSelectionWindow::SendPlayerFaces()
+{
+    for (int i = 1; i < 8; ++i) {
+        CNetPlayerHandlerPlayer* pPlayer = &m_players.humanPlayers[i];
+        if (pPlayer->IsHuman() && pPlayer->playerPos != -1) {
+            CRequestHeroFaceReplyMsg msg(pPlayer->playerPos,
+                                         pPlayer->heroIndex);
+            TransmitRemoteDataDPID(&msg, 0, false, true);
+        }
     }
 }
 
