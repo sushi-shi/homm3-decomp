@@ -278,6 +278,37 @@ PROVEN_ORDER_SKEWS: dict[tuple[str, int], tuple[ProvenOrderSkew, ...]] = {
 # graph: inlined accessors/operators, a source order hidden by scheduling, and
 # nesting within a single attested statement group.
 SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
+    ("advmgr.obj", 0x1A878): (
+        SourceRule(
+            "SetHeroContext keeps Dreamcast's player, curr and cell local "
+            "identities across the local-player and hero lookup statements",
+            r"\bplayerData\s*\*\s*player\s*=\s*gpCurrentPlayer\s*;\s*"
+            r"if\s*\(\s*waitingPlayer\s*\)\s*player\s*=\s*gpGame\s*->\s*"
+            r"GetLocalPlayer\s*\(\s*\)\s*;\s*else\s*inDialog\s*=\s*1\s*;"
+            r"\s*player\s*->\s*currHeroId\s*=\s*heroId\s*;\s*"
+            r"hero\s*\*\s*curr\s*=\s*&\s*gpGame\s*->\s*heroes\s*"
+            r"\[\s*heroId\s*\]\s*;\s*NewmapCell\s*\*\s*cell\s*;"),
+        SourceRule(
+            "SetHeroContext keeps Dreamcast's found local around FindHero, "
+            "the fallback slot and UpdateHeroLocators",
+            r"\bint\s+found\s*=\s*player\s*->\s*FindHero\s*\(\s*heroId"
+            r"\s*\)\s*;\s*if\s*\(\s*found\s*==\s*-\s*1\s*\)\s*"
+            r"found\s*=\s*0\s*;.*?UpdateHeroLocators\s*\(\s*found\s*,"),
+        SourceRule(
+            "SetHeroContext keeps Dreamcast's get_target helper boundary "
+            "inside the guarded routeTarget scope before SeedTo and ShowRoute",
+            r"\bseedingValid\s*=\s*0\s*;\s*if\s*\(\s*curr\s*->\s*"
+            r"pathTargetX\s*>=\s*0\s*\)\s*\{\s*type_point\s+routeTarget\s*"
+            r"=\s*curr\s*->\s*get_target\s*\(\s*\)\s*;\s*SeedTo\s*"
+            r"\(\s*routeTarget\s*\)\s*;\s*\}\s*ShowRoute\s*\("),
+        SourceRule(
+            "SetHeroContext keeps Dreamcast's cell local live through the "
+            "tail ground-set test and ambient-music update",
+            r"if\s*\(\s*cell\s*->\s*GroundSet\s*!=\s*field_58\s*&&\s*"
+            r"draw_changes\s*\)\s*\{\s*field_58\s*=\s*cell\s*->\s*"
+            r"GroundSet\s*;\s*gpSoundManager\s*->\s*SwitchAmbientMusic\s*"
+            r"\(\s*gTerrainMusicIds\s*\[\s*field_58\s*\]\s*\)\s*;"),
+    ),
     ("ai_tactical.obj", 0x40BB8): (
         SourceRule(
             "consider_single_enchantment keeps Dreamcast's sole recorded "
@@ -1915,6 +1946,22 @@ def type_point_header_violations(text: str) -> list[tuple[int, str]]:
     return [(line,
              "struct.h type_point::operator== must remain a bool const "
              "member taking const type_point& and compare x, y, z in order")]
+
+
+def hero_get_target_header_violations(text: str) -> list[tuple[int, str]]:
+    """Audit Hero.h:986's packed-point helper boundary and field order."""
+    masked = _source.mask(text)
+    pattern = (
+        r"\b__forceinline\s+type_point\s+get_target\s*\(\s*\)\s*const"
+        r"\s*\{\s*return\s+type_point\s*\(\s*pathTargetX\s*,\s*"
+        r"pathTargetY\s*,\s*pathTargetZ\s*\)\s*;\s*\}")
+    if re.search(pattern, masked, re.DOTALL) is not None:
+        return []
+    token = re.search(r"\bget_target\s*\(", masked)
+    line = text.count("\n", 0, token.start()) + 1 if token else 1
+    return [(line,
+             "Hero.h:986 hero::get_target must retain Dreamcast's const "
+             "inline type_point construction from pathTargetX, Y, Z")]
 
 
 def game_get_hero_header_violations(text: str) -> list[tuple[int, str]]:
@@ -4332,6 +4379,55 @@ AddWidget(statusWidget, -1);
                                    resource_display_key)):
         failures.append(
             "flattened TResourceDisplay status-widget arms passed")
+    set_hero_context_key = ("advmgr.obj", 0x1A878)
+    set_hero_context_probe = """\
+playerData* player = gpCurrentPlayer;
+if (waitingPlayer)
+    player = gpGame->GetLocalPlayer();
+else
+    inDialog = 1;
+player->currHeroId = heroId;
+hero* curr = &gpGame->heroes[heroId];
+NewmapCell* cell;
+int found = player->FindHero(heroId);
+if (found == -1)
+    found = 0;
+advWindow->UpdateHeroLocators(found, draw_changes, 0);
+seedingValid = 0;
+if (curr->pathTargetX >= 0) {
+    type_point routeTarget = curr->get_target();
+    SeedTo(routeTarget);
+}
+ShowRoute(0, 0, 1);
+if (cell->GroundSet != field_58 && draw_changes) {
+    field_58 = cell->GroundSet;
+    gpSoundManager->SwitchAmbientMusic(gTerrainMusicIds[field_58]);
+}
+"""
+    if contract_violations(set_hero_context_probe, set_hero_context_key):
+        failures.append("aligned SetHeroContext shape did not pass")
+    broken_set_hero_context_probes = (
+        (set_hero_context_probe.replace("hero* curr =", "hero* activeHero ="),
+         "player, curr and cell local identities"),
+        (set_hero_context_probe.replace("int found =", "int heroSlot ="),
+         "found local around FindHero"),
+        (set_hero_context_probe.replace(
+            "type_point routeTarget = curr->get_target();",
+            "type_point routeTarget(curr->pathTargetX, curr->pathTargetY, "
+            "curr->pathTargetZ);"),
+         "get_target helper boundary"),
+        (set_hero_context_probe.replace(
+            "if (cell->GroundSet != field_58 && draw_changes) {\n"
+            "    field_58 = cell->GroundSet;",
+            "if (fullMap->cellData->GroundSet != field_58 && draw_changes) "
+            "{\n    field_58 = fullMap->cellData->GroundSet;"),
+         "cell local live through the tail"),
+    )
+    for probe, description in broken_set_hero_context_probes:
+        if not any(description in rule.description for rule in
+                   contract_violations(probe, set_hero_context_key)):
+            failures.append("broken SetHeroContext " + description
+                            + " source shape passed")
     combat_monster_key = ("events.obj", 0x9AF34)
     combat_monster_probe = """\
 DemobilizeCurrHero(0, 1);
@@ -4972,6 +5068,19 @@ bool operator==(const type_point& arg) const {
     if any(not type_point_header_violations(probe)
            for probe in bad_type_point_probes):
         failures.append("broken type_point equality source shape passed")
+    get_target_probe = """\
+__forceinline type_point get_target() const
+{
+    return type_point(pathTargetX, pathTargetY, pathTargetZ);
+}
+"""
+    if hero_get_target_header_violations(get_target_probe):
+        failures.append("aligned Hero.h get_target source shape did not pass")
+    broken_get_target = get_target_probe.replace(
+        "pathTargetX, pathTargetY, pathTargetZ",
+        "pathTargetX, pathTargetZ, pathTargetY")
+    if not hero_get_target_header_violations(broken_get_target):
+        failures.append("broken Hero.h get_target field order passed")
     get_hero_probe = """\
 hero* GetHero(int which)
 {
@@ -5691,6 +5800,15 @@ def scan() -> tuple[
     missing.extend(FileContractViolation("include/struct.h", line,
                                          description)
                    for line, description in type_point_defects)
+
+    hero_header = common.HOMM3_DIR / "include/hero.h"
+    hero_text = hero_header.read_text(errors="replace")
+    audited.add(_file_audit_scope("include/hero.h"))
+    get_target_defects = hero_get_target_header_violations(hero_text)
+    checked += 1
+    missing.extend(FileContractViolation("include/hero.h", line,
+                                         description)
+                   for line, description in get_target_defects)
 
     game_header = common.HOMM3_DIR / "include/game.h"
     game_text = game_header.read_text(errors="replace")

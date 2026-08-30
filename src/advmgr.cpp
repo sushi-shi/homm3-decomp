@@ -51,6 +51,7 @@
 // third 5-param help builder, so its call surface keeps an ordinal placeholder
 // and its body remains unclaimed. See the help-text note further down.
 #define HOMM3_NEWFULLMAP_CELL_OUTOFLINE  // owns the 0x408770 COMDAT copy of cell(x,y,z)
+#define HOMM3_ADVMGR_GET_TARGET_VIEW
 #include <va.h>
 #include <stdio.h>
 #include <string.h>
@@ -8186,7 +8187,7 @@ void advManager::SetTownContext(int townId, unsigned char waitingPlayer, unsigne
 //     though retail writes all of them through the same [ebp-0x20] slot.
 //     One function-scope point keeps that slot live across the visibility
 //     scan, so the scan's loop bound needs a slot of its own (frame 0x2c
-//     against retail's 0x28) and the spill cascades from there: heroSlot
+//     against retail's 0x28) and the spill cascades from there: found
 //     loses EBX to the parameter slot and the scan's x loses its register
 //     too. Scoping the three lets VC6 coalesce them onto one slot AND
 //     overlap the loop bound on it, exactly as retail does. 90.56 -> 99.27.
@@ -8200,12 +8201,16 @@ void advManager::SetTownContext(int townId, unsigned char waitingPlayer, unsigne
 // schedules `mov cx,ax` first and keeps the guard's value, then loads the
 // old word (`mov cx,ax / mov ax,[ebp-0x20] / xor cx,ax`). Commutative and
 // identical in effect - it is the SCHEDULE, not the operand order, that
-// differs. Nine spellings measured and rejected: named int locals for the
+// differs. Eleven spellings measured and rejected: named int locals for the
 // three coordinates (96.14), the same as shorts (99.27), y/x/z order
 // (96.89), z/y/x order (96.73), an explicit short cast (99.27), sharing one
 // point between the route target and the view centre (99.27), a `!= -1`
 // guard (99.02), a `!(x < 0)` guard (99.27), and hoisting the point's
-// declaration above the guard (99.27).
+// declaration above the guard (99.27), default construction followed by
+// separate x/y/z assignments (99.27), and eliding the named routeTarget
+// temporary at the SeedTo call (99.27). Dreamcast nevertheless proves the
+// named hero::get_target boundary before SeedTo; restoring that inline
+// helper is byte-flat and is source-shape truth rather than a score lever.
 VA(0x00417b20, 0x63E)  // anchor-global, dc 0x1a878
 void advManager::SetHeroContext(int heroId, int bInMove, unsigned char waitingPlayer, unsigned char draw_changes)
 {
@@ -8244,27 +8249,27 @@ void advManager::SetHeroContext(int heroId, int bInMove, unsigned char waitingPl
 
     player->currHeroId = heroId;
 
-    hero* newHero = &gpGame->heroes[heroId];
-    NewmapCell* heroCell;
+    hero* curr = &gpGame->heroes[heroId];
+    NewmapCell* cell;
     {
-        type_point heroPoint(newHero->x, newHero->y, newHero->z);
+        type_point heroPoint(curr->x, curr->y, curr->z);
 
         type_point cellPoint = heroPoint;
         if (!cellPoint.is_valid())
-            heroCell = fullMap->cellData;
+            cell = fullMap->cellData;
         else
             // LONGHAND for the same reason as ProcessMapSelect's copy:
             // retail expands the index arithmetic and emits no call.
-            heroCell = &fullMap->cellData[
+            cell = &fullMap->cellData[
                 (cellPoint.z * fullMap->Size + cellPoint.y) * fullMap->Size
                 + cellPoint.x];
     }
 
     if (!waitingPlayer) {
-        cursorType = (newHero->flags & 0x40000) ? CURSOR_TYPE_8
-                                                : CURSOR_TYPE_34;
-        cursorDirection = newHero->facing;
-        cursorSequence = newHero->GetStandSequence();
+        cursorType = (curr->flags & 0x40000) ? CURSOR_TYPE_8
+                                             : CURSOR_TYPE_34;
+        cursorDirection = curr->facing;
+        cursorSequence = curr->GetStandSequence();
         cursorFrameCount = 0;
         if (bVideoPaused && !gbFollowPlayerMode && !gCompleteDrawMessageBypass) {
             if (gpCurrentPlayer->IsHuman()) {
@@ -8275,35 +8280,35 @@ void advManager::SetHeroContext(int heroId, int bInMove, unsigned char waitingPl
                     return;
             }
         }
-        newHero->restore_cell();
+        curr->restore_cell();
     }
 
     if ((player->IsLocalHuman() || !gUnnamed698790)
-        && MapExtraPosAndAdjacentsSet(newHero->x, newHero->y, newHero->z,
+        && MapExtraPosAndAdjacentsSet(curr->x, curr->y, curr->z,
                                       gMapVisibilityBit)) {
         if (draw_changes)
             gCompleteDrawEnabled = 1;
         if (!waitingPlayer && draw_changes)
             drawCursor = 1;
-        radarOrigin.x = newHero->x - 9;
-        radarOrigin.y = newHero->y - 8;
-        radarOrigin.z = newHero->z;
+        radarOrigin.x = curr->x - 9;
+        radarOrigin.y = curr->y - 8;
+        radarOrigin.z = curr->z;
         if (advWindow->SetElevationToggleImage(radarOrigin.z))
             gpAdvManager->RedrawAdvScreen(0, 0);
     }
 
-    int heroSlot = player->FindHero(heroId);
-    if (heroSlot == -1)
-        heroSlot = 0;
+    int found = player->FindHero(heroId);
+    if (found == -1)
+        found = 0;
 
     if (waitingPlayer
         || (draw_changes && gpCurrentPlayer->IsLocalHuman()
             && !gCompleteDrawMessageBypass)) {
-        advWindow->UpdateHeroLocators(heroSlot, draw_changes, 0);
+        advWindow->UpdateHeroLocators(found, draw_changes, 0);
         advWindow->UpdateTownLocators(-1, draw_changes, 0);
-        advWindow->UpdateSpellButton(newHero);
-        advWindow->SetSleepImage(newHero->field_11c);
-        advWindow->UpdateSleepButton(newHero);
+        advWindow->UpdateSpellButton(curr);
+        advWindow->SetSleepImage(curr->field_11c);
+        advWindow->UpdateSleepButton(curr);
         advWindow->UpdateResourceDisplay(1, 0);
         advWindow->DrawWindow(0, -65535, 65535);
     }
@@ -8311,9 +8316,8 @@ void advManager::SetHeroContext(int heroId, int bInMove, unsigned char waitingPl
     if (draw_changes && !bInMove
         && (status == STATUS_ACTIVE || gpCurrentPlayer->IsLocalHuman())) {
         seedingValid = 0;
-        if (newHero->pathTargetX >= 0) {
-            type_point routeTarget(newHero->pathTargetX, newHero->pathTargetY,
-                                   newHero->pathTargetZ);
+        if (curr->pathTargetX >= 0) {
+            type_point routeTarget = curr->get_target();
             SeedTo(routeTarget);
         }
         ShowRoute(0, 0, 1);
@@ -8345,8 +8349,8 @@ void advManager::SetHeroContext(int heroId, int bInMove, unsigned char waitingPl
     viewCentre.z = centreZ;
     SetEnvironmentOrigin(viewCentre, 1);
 
-    if (heroCell->GroundSet != field_58 && draw_changes) {
-        field_58 = heroCell->GroundSet;
+    if (cell->GroundSet != field_58 && draw_changes) {
+        field_58 = cell->GroundSet;
         gpSoundManager->SwitchAmbientMusic(gTerrainMusicIds[field_58]);
     }
 
