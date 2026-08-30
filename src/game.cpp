@@ -2337,19 +2337,20 @@ void ComputeUALoc(int whichPlayer)
 // round-trips of the division; we emit both round-trips and then the
 // load. Measured three cast placements - on the numerator, on the
 // denominator, on both - all 98.9637, so the order is not source-
-// reachable. The other rows are cosmetic reloc names (gpGame, the two
-// float pool constants and puzzlePiecesRemoved are unnamed on the
-// target side).
+// reachable. The remaining rows are relocation-symbol presentation:
+// gpGame and the float pools are unnamed on the target side, while the
+// candidate's puzzlePiecesRemoved+4 and target's synthetic bss_2976ec+0
+// denote the same second dword. Do not model that delinker split in C++.
 VA(0x004baf00, 0x25A)  // linkorder, dc 0xa6350
 int game::SetupPuzzlePieces(int whichPlayer, int countOnly)
 {
-    int i;
-    long j;
     long piece;
-    int iExtraPieces;
-    int iPiecesRemoved;
     float fPercentObelisksFound;
     float fPercentExtraPieces;
+    int i;
+    long j;
+    int iExtraPieces;
+    int iPiecesRemoved;
 
     iPiecesRemoved = GetNumObelisks(whichPlayer);
     iExtraPieces = OBELISK_COUNT - field_4e3e8;

@@ -260,6 +260,25 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-30 — `game::SetupPuzzlePieces` banks Dreamcast's complete
+  seven-local declaration roster without sacrificing its score.** CodeView
+  proves, in order, `long piece`, the two percentage floats, `int i`,
+  `long j`, `int iExtraPieces`, and `int iPiecesRemoved`. The previous source
+  had grouped the loop indexes and integer counters ahead of the floats;
+  restoring the recovered order is byte-flat at **98.9637%**. A fatal source
+  rule and negative control now prevent that compatible positive fact from
+  being traded away during later codegen experiments.
+
+  The explicit-code residual remains one `/Op` scheduling transposition:
+  retail loads the numerator between the two int-to-float rounding trips,
+  while all three honest cast placements emit both trips before the load.
+  The apparent bitset discrepancy is not a source mismatch: candidate
+  `puzzlePiecesRemoved+4` and target `bss_2976ec+0` address the same second
+  dword. It is the known target data-topology split caused by a size-less
+  aggregate claim, so the source is not distorted to imitate it. Resolving
+  aggregate symbol extents remains the separately recorded P0.2 annotation-
+  contract decision.
+
 - **2026-08-30 — Dreamcast-first reconstruction closes
   `town::initialize_hordes` exactly after deliberately leaving its
   source-false local maximum.** The former **99.7778%** spelling ordered the

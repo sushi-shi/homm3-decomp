@@ -434,6 +434,18 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             "original serialization loops",
             r"for\s*\(\s*x\s*=", 3, 3),
     ),
+    ("game.obj", 0xA6350): (
+        SourceRule(
+            "SetupPuzzlePieces keeps Dreamcast's piece, two percentage "
+            "floats, i, j, iExtraPieces and iPiecesRemoved locals in "
+            "CodeView declaration order",
+            r"\A\s*long\s+piece\s*;\s*"
+            r"float\s+fPercentObelisksFound\s*;\s*"
+            r"float\s+fPercentExtraPieces\s*;\s*"
+            r"int\s+i\s*;\s*long\s+j\s*;\s*"
+            r"int\s+iExtraPieces\s*;\s*"
+            r"int\s+iPiecesRemoved\s*;"),
+    ),
     ("game.obj", 0xAC048): (
         SourceRule(
             "randomize_university keeps Dreamcast's shared choice, i and "
@@ -2474,6 +2486,28 @@ for (x = 0; x < 7; x++) {}
     if not any("all three" in rule.description for rule in
                contract_violations(reused_count_loop, player_save_key)):
         failures.append("playerData::save count-as-loop-index passed")
+    setup_puzzle_key = ("game.obj", 0xA6350)
+    setup_puzzle_probe = """\
+long piece;
+float fPercentObelisksFound;
+float fPercentExtraPieces;
+int i;
+long j;
+int iExtraPieces;
+int iPiecesRemoved;
+"""
+    if contract_violations(setup_puzzle_probe, setup_puzzle_key):
+        failures.append(
+            "aligned SetupPuzzlePieces local declaration order did not pass")
+    reordered_setup_puzzle = setup_puzzle_probe.replace(
+        "long piece;\nfloat fPercentObelisksFound;\n"
+        "float fPercentExtraPieces;\nint i;\nlong j;\n"
+        "int iExtraPieces;\nint iPiecesRemoved;",
+        "int i;\nlong j;\nlong piece;\nint iExtraPieces;\n"
+        "int iPiecesRemoved;\nfloat fPercentObelisksFound;\n"
+        "float fPercentExtraPieces;")
+    if not contract_violations(reordered_setup_puzzle, setup_puzzle_key):
+        failures.append("reordered SetupPuzzlePieces locals passed")
     randomize_university_key = ("game.obj", 0xAC048)
     randomize_university_probe = """\
 long choice;
