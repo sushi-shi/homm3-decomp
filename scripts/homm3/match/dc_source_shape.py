@@ -948,6 +948,42 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"if\s*\(\s*gGraphicsSaturated\s*\)\s*"
             r"result\s*->\s*AdjustHSV\s*\(", 2, 2),
     ),
+    ("resourcedisplay.obj", 0x120C54): (
+        SourceRule(
+            "TResourceDisplay constructor keeps Dreamcast's paired size "
+            "arms with initialize before the matching resource background "
+            "construction",
+            r"if\s*\(\s*(?:isSmall|is_small)\s*\)\s*\{\s*"
+            r"initialize\s*\(\s*7\s*,\s*0x23f\s*,\s*0x2e2\s*,\s*"
+            r"0x16\s*,\s*parent\s*\)\s*;\s*resourceBackground\s*=\s*"
+            r"new\s+bitmapBorder\s*\([^;]*0x2e2[^;]*\)\s*;\s*"
+            r"\}\s*else\s*\{\s*initialize\s*\(\s*3\s*,\s*0x23f\s*,"
+            r"\s*0x31a\s*,\s*0x16\s*,\s*parent\s*\)\s*;\s*"
+            r"resourceBackground\s*=\s*new\s+bitmapBorder\s*\([^;]*"
+            r"0x31a[^;]*\)\s*;\s*\}", 1, 1),
+        SourceRule(
+            "TResourceDisplay constructor keeps the palette statement before "
+            "one seven-resource text/add/border/add loop",
+            r"resourceBackground\s*->\s*SetPlayerPaletteColors\s*\(\s*"
+            r"gpGame\s*->\s*GetLocalPlayerGamePos\s*\(\s*\)\s*\)\s*;"
+            r".*?for\s*\(\s*int\s+i\s*=\s*0\s*;\s*i\s*<\s*"
+            r"NUM_RESOURCES\s*;\s*\+\+i\s*\)\s*\{\s*"
+            r"resourceWidgets\s*\[\s*i\s*\]\s*=\s*new\s+textWidget"
+            r"\s*\([^;]*\)\s*;\s*AddWidget\s*\(\s*resourceWidgets"
+            r"\s*\[\s*i\s*\]\s*,\s*-\s*1\s*\)\s*;\s*"
+            r"resourceBorders\s*\[\s*i\s*\]\s*=\s*new\s+border"
+            r"\s*\([^;]*\)\s*;\s*AddWidget\s*\(\s*resourceBorders"
+            r"\s*\[\s*i\s*\]\s*,\s*-\s*1\s*\)\s*;[^}]*\}",
+            1, 1),
+        SourceRule(
+            "TResourceDisplay constructor keeps the final flag-selected "
+            "status-widget constructions before one shared AddWidget",
+            r"if\s*\([^{};]*(?:isSmall|is_small)[^{};]*\)\s*\{\s*"
+            r"statusWidget\s*=\s*new\s+textWidget\s*\([^;]*\)\s*;\s*"
+            r"\}\s*else\s*\{\s*statusWidget\s*=\s*new\s+textWidget"
+            r"\s*\([^;]*\)\s*;\s*\}\s*AddWidget\s*\(\s*statusWidget"
+            r"\s*,\s*-\s*1\s*\)\s*;", 1, 1),
+    ),
     ("philai.obj", 0x10FEB8): (
         SourceRule(
             "value_of_experience keeps Dreamcast's no-argument const hero "
@@ -3992,6 +4028,72 @@ TRGBA rgba[256];
                for rule in contract_violations(flattened_palette24,
                                                 palette24_key)):
         failures.append("flattened GetPalette24 constructor passed")
+    resource_display_key = ("resourcedisplay.obj", 0x120C54)
+    resource_display_probe = """\
+if (isSmall) {
+    initialize(7, 0x23f, 0x2e2, 0x16, parent);
+    resourceBackground = new bitmapBorder(
+        0, 0, 0x2e2, 0x16, 1000, "kresbar.pcx", 0x800);
+} else {
+    initialize(3, 0x23f, 0x31a, 0x16, parent);
+    resourceBackground = new bitmapBorder(
+        0, 0, 0x31a, 0x16, 1000, "aresbar.pcx", 0x800);
+}
+resourceBackground->SetPlayerPaletteColors(
+    gpGame->GetLocalPlayerGamePos());
+AddWidget(resourceBackground, -1);
+for (int i = 0; i < NUM_RESOURCES; ++i) {
+    resourceWidgets[i] = new textWidget(textX, i);
+    AddWidget(resourceWidgets[i], -1);
+    resourceBorders[i] = new border(textX, i);
+    AddWidget(resourceBorders[i], -1);
+    textX += spacing;
+}
+if (static_cast<volatile unsigned char&>(is_small)) {
+    statusWidget = new textWidget(0x22b, 3);
+} else {
+    statusWidget = new textWidget(0x25f, 3);
+}
+AddWidget(statusWidget, -1);
+"""
+    if contract_violations(resource_display_probe, resource_display_key):
+        failures.append(
+            "aligned TResourceDisplay constructor shape did not pass")
+    reordered_resource_background = resource_display_probe.replace(
+        "    initialize(7, 0x23f, 0x2e2, 0x16, parent);\n"
+        "    resourceBackground = new bitmapBorder(\n"
+        "        0, 0, 0x2e2, 0x16, 1000, \"kresbar.pcx\", 0x800);",
+        "    resourceBackground = new bitmapBorder(\n"
+        "        0, 0, 0x2e2, 0x16, 1000, \"kresbar.pcx\", 0x800);\n"
+        "    initialize(7, 0x23f, 0x2e2, 0x16, parent);")
+    if not any("paired size arms" in rule.description for rule in
+               contract_violations(reordered_resource_background,
+                                   resource_display_key)):
+        failures.append(
+            "reordered TResourceDisplay background arm passed")
+    flattened_resource_loop = resource_display_probe.replace(
+        "    AddWidget(resourceWidgets[i], -1);\n"
+        "    resourceBorders[i] = new border(textX, i);",
+        "    resourceBorders[i] = new border(textX, i);\n"
+        "    AddWidget(resourceWidgets[i], -1);")
+    if not any("seven-resource" in rule.description for rule in
+               contract_violations(flattened_resource_loop,
+                                   resource_display_key)):
+        failures.append(
+            "reordered TResourceDisplay construction loop passed")
+    flattened_resource_status = resource_display_probe.replace(
+        "    statusWidget = new textWidget(0x22b, 3);",
+        "    statusWidget = new textWidget(0x22b, 3);\n"
+        "    AddWidget(statusWidget, -1);").replace(
+        "    statusWidget = new textWidget(0x25f, 3);",
+        "    statusWidget = new textWidget(0x25f, 3);\n"
+        "    AddWidget(statusWidget, -1);").replace(
+        "}\nAddWidget(statusWidget, -1);", "}")
+    if not any("shared AddWidget" in rule.description for rule in
+               contract_violations(flattened_resource_status,
+                                   resource_display_key)):
+        failures.append(
+            "flattened TResourceDisplay status-widget arms passed")
     enemy_town_key = ("philai.obj", 0x11105C)
     enemy_town_probe = """\
 int creature_cost[NUM_RESOURCES];
