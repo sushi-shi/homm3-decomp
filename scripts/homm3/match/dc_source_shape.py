@@ -1059,6 +1059,32 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"if\s*\(\s*Is\s*\(\s*1u\s*<<\s*0\s*\)\s*&&\s*turn\s*\)"
             r"\s*destIndex\s*\+=\s*OffsetToFront\s*\(\s*-1\s*\)\s*;"),
     ),
+    ("mapcell.obj", 0xF2C20): (
+        SourceRule(
+            "readMapObjects keeps retail's Complete-only nullary object-"
+            "type-index rebuild as one explicit helper call; the Dreamcast "
+            "caller omits this later-revision region",
+            r"\bNewfullMapFn_005042C0\s*\(\s*\)\s*;", 1, 1),
+        SourceRule(
+            "readMapObjects keeps the retail-only rebuild after the "
+            "readObjectType loop and before the following progress tick",
+            r"\breadObjectType\s*\([^;]*\)\s*;.*?\}\s*"
+            r"NewfullMapFn_005042C0\s*\(\s*\)\s*;\s*"
+            r"IncProgressBar\s*\(\s*1\s*\)\s*;"),
+    ),
+    ("mapcell.obj", 0xF318C): (
+        SourceRule(
+            "loadMapObjects keeps retail's Complete-only nullary object-"
+            "type-index rebuild as one explicit helper call; the Dreamcast "
+            "caller omits this later-revision region",
+            r"\bNewfullMapFn_005042C0\s*\(\s*\)\s*;", 1, 1),
+        SourceRule(
+            "loadMapObjects keeps the retail-only rebuild after the "
+            "loadObjectType loop and its following progress tick",
+            r"\bloadObjectType\s*\([^;]*\).*?\}\s*"
+            r"IncProgressBar\s*\(\s*1\s*\)\s*;\s*"
+            r"NewfullMapFn_005042C0\s*\(\s*\)\s*;"),
+    ),
     ("hero.obj", 0xD4DF0): (
         SourceRule(
             "get_special_terrain keeps the get_location local",
@@ -2932,6 +2958,57 @@ for (spell = 10; spell < 70; spell++) {
         "count = get_valid_caliph_spells(target);")
     if not contract_violations(reordered_cast_caliph, cast_caliph_key):
         failures.append("reordered cast_caliph_spell helper call passed")
+    read_map_objects_key = ("mapcell.obj", 0xF2C20)
+    read_map_objects_probe = """\
+for (int i = 0; i < objectTypes.size(); ++i) {
+    int status = readObjectType(infile, &objectTypes[i]);
+}
+NewfullMapFn_005042C0();
+IncProgressBar(1);
+"""
+    if contract_violations(read_map_objects_probe, read_map_objects_key):
+        failures.append(
+            "aligned readMapObjects Complete rebuild boundary did not pass")
+    flattened_read_rebuild = read_map_objects_probe.replace(
+        "NewfullMapFn_005042C0();\n", "")
+    if not any("explicit helper call" in rule.description for rule in
+               contract_violations(flattened_read_rebuild,
+                                   read_map_objects_key)):
+        failures.append(
+            "flattened readMapObjects Complete rebuild boundary passed")
+    early_read_rebuild = read_map_objects_probe.replace(
+        "for (int i", "NewfullMapFn_005042C0();\nfor (int i").replace(
+            "\nNewfullMapFn_005042C0();\nIncProgressBar", "\nIncProgressBar")
+    if not any("after the readObjectType loop" in rule.description for rule in
+               contract_violations(early_read_rebuild,
+                                   read_map_objects_key)):
+        failures.append("early readMapObjects Complete rebuild passed")
+    load_map_objects_key = ("mapcell.obj", 0xF318C)
+    load_map_objects_probe = """\
+for (int i = 0; i < objectTypes.size(); ++i) {
+    if (loadObjectType(infile, &objectTypes[i]) < 0)
+        return -1;
+}
+IncProgressBar(1);
+NewfullMapFn_005042C0();
+"""
+    if contract_violations(load_map_objects_probe, load_map_objects_key):
+        failures.append(
+            "aligned loadMapObjects Complete rebuild boundary did not pass")
+    flattened_load_rebuild = load_map_objects_probe.replace(
+        "NewfullMapFn_005042C0();\n", "")
+    if not any("explicit helper call" in rule.description for rule in
+               contract_violations(flattened_load_rebuild,
+                                   load_map_objects_key)):
+        failures.append(
+            "flattened loadMapObjects Complete rebuild boundary passed")
+    early_load_rebuild = load_map_objects_probe.replace(
+        "IncProgressBar(1);\nNewfullMapFn_005042C0();",
+        "NewfullMapFn_005042C0();\nIncProgressBar(1);")
+    if not any("following progress tick" in rule.description for rule in
+               contract_violations(early_load_rebuild,
+                                   load_map_objects_key)):
+        failures.append("early loadMapObjects Complete rebuild passed")
     load_boats_key = ("game.obj", 0xA46E8)
     load_boats_probe = """\
 unsigned short ushort_buffer;

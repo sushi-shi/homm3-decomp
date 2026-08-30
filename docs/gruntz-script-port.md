@@ -3705,13 +3705,26 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   deserialization by both readMapObjects and loadMapObjects. It first clears
   the resolved 16-bit index in every record of the 232 per-class vectors,
   then searches the appropriate vector backwards for each main objectTypes
-  record by `(extra, ImageName)` and writes the main-vector index. The
+  record by `(extra, ImageName)` and writes the main-vector index. Raw NB11
+  closes the Dreamcast-attribution question: the mapcell procedure roster
+  has only `$E482..$E485` between `loadObjectType` and `readMapObjects`, and
+  both DC callers proceed directly from deserialization to sprite rebuilding.
+  `readMapObjects` records function locals `int_buffer`, `numObjects`,
+  `count`, `x`, and `i`, plus block-local `v`; `loadMapObjects` records only
+  `int_buffer`, `count`, and `x`. None owns this lookup's locals or scopes.
+  The helper is therefore a Complete-only boundary proved by the two retail
+  calls, not a missing Dreamcast symbol. Fatal source rules on both callers
+  preserve the explicit call and its retail-proved placement while making no
+  claim about a DC-local inventory for the helper itself. The
   reconstructed body reaches 99.88535% with the same 32-block CFG and the
   same 157-instruction multiset. Its sole code delta is a post-RA transpose
   of one ESI reload across the adjacent EAX/EDI reloads; `why-reg` confirms
   no binding divergence, and the tested expression, condition, index-scope,
   signedness and declaration-order spellings either leave the schedule
-  unchanged or worsen it. The other asm-report row is a symbolic-only
+  unchanged or worsen it. A 2026-08-30 bounded recheck made a named
+  `CObjectType&` and split guard byte-flat at 99.88535%; moving `extra` after
+  `typeIndex` retained 421 bytes but fell to 95.93630%. The other asm-report
+  row is a symbolic-only
   relocation: mapcell's Dinkumware `_Nullstr` and the target's pooled
   source-owned empty literal both resolve to 0x63a608, whose physical
   DATA_COMPGEN owner is another compiland. This is a documented compiler /
