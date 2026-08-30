@@ -278,6 +278,15 @@ PROVEN_ORDER_SKEWS: dict[tuple[str, int], tuple[ProvenOrderSkew, ...]] = {
 # graph: inlined accessors/operators, a source order hidden by scheduling, and
 # nesting within a single attested statement group.
 SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
+    ("ai_tactical.obj", 0x40BB8): (
+        SourceRule(
+            "consider_single_enchantment keeps Dreamcast's sole recorded "
+            "value_func local and its member-function invocation boundary",
+            r"\A\s*TEnchantValue\s+value_func\s*=\s*"
+            r"get_enchantment_function\s*\(\s*choice\s*->\s*spell\s*\)"
+            r"\s*;.*?\(\s*this\s*->\s*\*\s*value_func\s*\)\s*\(\s*"
+            r"target\s*,\s*\*\s*choice\s*\)"),
+    ),
     ("ai_player.obj", 0x34FB8): (
         SourceRule(
             "value_of_hiring keeps Dreamcast's player_id, player, hero_army, "
@@ -2800,6 +2809,20 @@ gUnnamed67f574 = OldColorCycling;
                for rule in contract_violations(swapped_prison_coords,
                                                 prison_key)):
         failures.append("reordered DoEventPrison coordinates passed")
+    single_enchantment_key = ("ai_tactical.obj", 0x40BB8)
+    single_enchantment_probe = """\
+TEnchantValue value_func = get_enchantment_function(choice->spell);
+long value = (this->*value_func)(target, *choice);
+"""
+    if contract_violations(single_enchantment_probe,
+                           single_enchantment_key):
+        failures.append(
+            "aligned consider_single_enchantment value_func did not pass")
+    renamed_value_func = single_enchantment_probe.replace(
+        "value_func", "value_of")
+    if not contract_violations(renamed_value_func, single_enchantment_key):
+        failures.append(
+            "renamed consider_single_enchantment value_func passed")
     hiring_value_key = ("ai_player.obj", 0x34FB8)
     hiring_value_probe = """\
 short player_id = current_town->owner;

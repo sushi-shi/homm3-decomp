@@ -260,6 +260,26 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-30 — `consider_single_enchantment` banks its sole raw-NB11
+  local at the honest 99.5673% plateau.** The Dreamcast dossier
+  (`dc:0x40bb8`) records exactly one optimized local lower bound:
+  `value_func`, the pointer-to-member returned by
+  `get_enchantment_function`. The Windows source now preserves that name and
+  invokes the recovered member-function boundary directly. A fatal rule and
+  negative control reject renaming or flattening it.
+
+  All 40 Windows blocks already align. The residual is two byte-width
+  materializations (`mov al,1`/`xor al,al` versus retail's EAX forms) and a
+  three-instruction register-homing difference around `should_attack_now`
+  and the Haste override. Bounded tests reject `bool act_now` at
+  **98.6058%** and separate field assignments in the two decision arms at
+  **95.4327%**; the previously tested `long` form is **97.4808%**. SH4 emits
+  separate stores, but the absence of a recorded `act_now` is not proof that
+  no optimized-out local existed, so the cross-compiler store shape is not
+  promoted to a fatal invariant. The current CFG-coherent 99.5673% spelling
+  remains the measured Windows peak without weakening the positive local
+  fact.
+
 - **2026-08-30 — the Dreamcast helper boundary closes
   `army::can_cast_spell` from 99.7059% to 100%.** The mandatory dossier
   (`dc:0x4beec`) places `hexcell::get_army` and

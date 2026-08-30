@@ -3264,6 +3264,9 @@ long type_AI_spellcaster::get_hypnotize_value(const army* enemy, type_enchant_da
 //     0 the moment another of our stacks can still act, this one asks
 //     the spell's own traits word (bit 14 of +0xc) whether it is worth
 //     casting anyway. Haste overrides the whole answer to 1.
+// Raw NB11 records one function local: the get_enchantment_function result
+// under its original `value_func` name. That name and the member-function
+// invocation boundary are fatal source-shape facts.
 //
 // 83.5240 -> 99.5673 (2026-08-20) on the SHAPE of that answer, in two
 // steps, and both are reusable:
@@ -3285,7 +3288,11 @@ long type_AI_spellcaster::get_hypnotize_value(const army* enemy, type_enchant_da
 //     of control transfer, so there is nothing to fold. +5.26.
 // Tried and rejected: `long act_now` instead of `unsigned char`
 // (97.4808 - it costs the loop-exit and traits arms their byte forms
-// without buying retail's dword ones).
+// without buying retail's dword ones); `bool act_now` (98.6058); and direct
+// field assignments in the two decision arms (95.4327). The latter is a
+// valid reading of SH4's two store sites, but CodeView's optimized-local
+// inventory is only a lower bound and retail's common store does not prove
+// that cross-compiler source spelling.
 // Residual (99.57%): retail materialises the two constants in the full
 // register (`mov eax,1` / `xor eax,eax`) where our byte-typed flag uses
 // `mov al,1` / `xor al,al`, and re-reads `choice->spell` through a
@@ -3294,7 +3301,7 @@ long type_AI_spellcaster::get_hypnotize_value(const army* enemy, type_enchant_da
 VA(0x0043a670, 0x291)  // anchor-global, dc 0x40bb8
 void type_AI_spellcaster::consider_single_enchantment(type_spell_choice* choice, long group)
 {
-    TEnchantValue value_of = get_enchantment_function(choice->spell);
+    TEnchantValue value_func = get_enchantment_function(choice->spell);
     const army* best = 0;
     for (long i = 0; i < gpCombatManager->numArmies[group]; i++) {
         const army* target = &gpCombatManager->armies[group][i];
@@ -3318,7 +3325,7 @@ void type_AI_spellcaster::consider_single_enchantment(type_spell_choice* choice,
             continue;
         if (target->spellInfluence[choice->spell])
             continue;
-        long value = (this->*value_of)(target, *choice);
+        long value = (this->*value_func)(target, *choice);
         if (target->magicMirrorRounds && group != side && value > 0
                 && choice->spell != SPELL_DISPEL)
             value = (50 - target->get_mirror_effect()) * value * 2 / 100;
