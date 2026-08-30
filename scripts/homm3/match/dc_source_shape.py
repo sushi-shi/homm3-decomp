@@ -397,6 +397,14 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             "original serialization loops",
             r"for\s*\(\s*x\s*=", 3, 3),
     ),
+    ("game.obj", 0xAC048): (
+        SourceRule(
+            "randomize_university keeps Dreamcast's shared choice, i and "
+            "TSecondarySkill skill locals in recovered order while allowing "
+            "Complete-only locals between them",
+            r"\blong\s+choice\s*;.*?\blong\s+i\s*;.*?"
+            r"\bTSecondarySkill\s+skill\s*;"),
+    ),
     ("philai.obj", 0x10FEB8): (
         SourceRule(
             "value_of_experience keeps Dreamcast's no-argument const hero "
@@ -2343,6 +2351,29 @@ for (x = 0; x < 7; x++) {}
     if not any("all three" in rule.description for rule in
                contract_violations(reused_count_loop, player_save_key)):
         failures.append("playerData::save count-as-loop-index passed")
+    randomize_university_key = ("game.obj", 0xAC048)
+    randomize_university_probe = """\
+long choice;
+int availableCount;
+long i;
+TSecondarySkill skill;
+"""
+    if contract_violations(randomize_university_probe,
+                           randomize_university_key):
+        failures.append(
+            "aligned randomize_university shared-local shape did not pass")
+    reordered_randomize_university = randomize_university_probe.replace(
+        "long i;\nTSecondarySkill skill;",
+        "TSecondarySkill skill;\nlong i;")
+    if not contract_violations(reordered_randomize_university,
+                               randomize_university_key):
+        failures.append(
+            "reordered randomize_university shared locals passed")
+    int_randomize_skill = randomize_university_probe.replace(
+        "TSecondarySkill skill;", "int skill;")
+    if not contract_violations(int_randomize_skill,
+                               randomize_university_key):
+        failures.append("int randomize_university skill escaped shape gate")
     hero_bonuses_key = ("philai.obj", 0x10FEF4)
     hero_bonuses_probe = """\
 type_spellvalue caster(our_hero);

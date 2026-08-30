@@ -260,6 +260,25 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-30 — `game::randomize_university` now preserves the compatible
+  Dreamcast local facts across its remaining C1 register wall.** CodeView
+  types `choice` and `i` as `long` and `skill` as `TSecondarySkill`, in that
+  order. Restoring the enum type and recovered order is byte-flat at the
+  existing **99.7464%** peak, with all 24 blocks, all 11 branches, and all 377
+  retail instructions still aligned; a fatal source rule and negative
+  controls now prevent a percentage-neutral retreat to `int skill` or a
+  reordered shared roster. Complete's disabled-secondary-skill handling is
+  independently retail-proved and remains retail-only.
+
+  The older DC `type_university university` local does not transfer to the
+  Complete source: under the retail-proved Complete class model it emits a
+  call to `type_university::type_university`, while retail has no such call,
+  and the control falls to 97.8623%. The raw four-int record is therefore
+  retained. The sole explicit-code residual remains an EBX/EDI role swap
+  between `availableCount` and `choice`; `why-reg` finds identical definition
+  slots and no successful source-local creation-order mutation, classifying it
+  as C1 front-end state rather than permission to remove a positive DC fact.
+
 - **2026-08-29 — `playerData::save` restores and ratchets Dreamcast's named
   serialization locals instead of preserving a byte-flat flattened form.**
   The CodeView roster and SH4 statement stream distinguish the write-result
