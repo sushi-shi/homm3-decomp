@@ -658,6 +658,33 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"\[\s*target\s*->\s*bitIndex\s*\]\s*=\s*0\s*;.*?"
             r"\bdamage\s*=\s*ComputeSpellDamage\s*\("),
     ),
+    ("soundmgr.obj", 0x14B528): (
+        SourceRule(
+            "MemorySample keeps Dreamcast lines 815/817's next-slot advance "
+            "and one-statement wrapped first/next assignment",
+            r"\bslot\s*=\s*range\s*->\s*next\s*\+\+\s*;\s*"
+            r"if\s*\(\s*range\s*->\s*next\s*>=\s*range\s*->\s*last\s*"
+            r"\)\s*\{\s*slot\s*=\s*range\s*->\s*next\s*=\s*"
+            r"range\s*->\s*first\s*;"),
+        SourceRule(
+            "MemorySample keeps Dreamcast's StopSample helper boundary on "
+            "the selected channel instead of expanding its body",
+            r"\bStopSample\s*\(\s*sampleHandles\s*\[\s*slot\s*\]\s*"
+            r"\)\s*;", 1, 1),
+        SourceRule(
+            "MemorySample keeps Dreamcast's StopSample, ConvertVolume, "
+            "volume application, sample start, handle store and return "
+            "statement order through Complete's Miles adapters",
+            r"\bStopSample\s*\(.*?\bAIL_set_sample_volume\s*\(\s*"
+            r"handle\s*,\s*ConvertVolume\s*\(.*?\)\s*\)\s*;.*?"
+            r"\bAIL_start_sample\s*\(\s*handle\s*\)\s*;.*?"
+            r"\bsPtr\s*->\s*field_1c\s*=\s*handle\s*;.*?"
+            r"\breturn\s+handle\s*;"),
+        SourceRule(
+            "MemorySample keeps exactly one Dreamcast ConvertVolume helper "
+            "call in the volume-selection statement group",
+            r"\bConvertVolume\s*\(", 1, 1),
+    ),
     ("resourcemanager.obj", 0x121EC8): (
         SourceRule(
             "GetPalette24 keeps Dreamcast's char[24] header and TRGBA[256] "
@@ -3034,6 +3061,52 @@ if (victim) {
                contract_violations(erased_area_effect_clear,
                                    area_effect_key)):
         failures.append("erased AreaEffect effected clear passed")
+    memory_sample_key = ("soundmgr.obj", 0x14B528)
+    memory_sample_probe = """\
+slot = range->next++;
+if (range->next >= range->last) {
+    slot = range->next = range->first;
+}
+StopSample(sampleHandles[slot]);
+if (gUnk698764)
+    AIL_set_sample_volume(handle, ConvertVolume(sPtr->field_2c, 100));
+else
+    AIL_set_sample_volume(handle, 0);
+AIL_start_sample(handle);
+sPtr->field_1c = handle;
+ServeSampleStream();
+return handle;
+"""
+    if contract_violations(memory_sample_probe, memory_sample_key):
+        failures.append("aligned MemorySample source shape did not pass")
+    split_memory_sample_wrap = memory_sample_probe.replace(
+        "slot = range->next = range->first;",
+        "slot = range->first;\n    range->next = range->first;")
+    if not any("one-statement wrapped" in rule.description for rule in
+               contract_violations(split_memory_sample_wrap,
+                                   memory_sample_key)):
+        failures.append("split MemorySample wrap assignment passed")
+    expanded_memory_sample_stop = memory_sample_probe.replace(
+        "StopSample(sampleHandles[slot]);",
+        "AIL_end_sample(sampleHandles[slot]);")
+    if not any("StopSample helper boundary" in rule.description for rule in
+               contract_violations(expanded_memory_sample_stop,
+                                   memory_sample_key)):
+        failures.append("expanded MemorySample StopSample passed")
+    reordered_memory_sample_start = memory_sample_probe.replace(
+        "AIL_start_sample(handle);", "").replace(
+            "if (gUnk698764)", "AIL_start_sample(handle);\nif (gUnk698764)")
+    if not any("statement order" in rule.description for rule in
+               contract_violations(reordered_memory_sample_start,
+                                   memory_sample_key)):
+        failures.append("reordered MemorySample start passed")
+    duplicated_memory_sample_volume = memory_sample_probe.replace(
+        "AIL_set_sample_volume(handle, 0);",
+        "AIL_set_sample_volume(handle, ConvertVolume(0, 100));")
+    if not any("exactly one Dreamcast ConvertVolume" in rule.description
+               for rule in contract_violations(
+                   duplicated_memory_sample_volume, memory_sample_key)):
+        failures.append("duplicated MemorySample ConvertVolume passed")
     palette24_key = ("resourcemanager.obj", 0x121EC8)
     palette24_path = """\
 streamInterface->Read(header, sizeof(header));

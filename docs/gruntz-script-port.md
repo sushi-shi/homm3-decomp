@@ -334,6 +334,40 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   **99.8359%**. Complete's saved-version hero remap and selective read checks
   remain retail-only revision facts rather than being forced to the older DC
   counts.
+- **2026-08-30 — `soundManager::MemorySample` restores and ratchets its raw
+  NB11 statement shape at the honest 99.7840% allocator plateau.** The
+  mandatory Dreamcast pass (`dc:0x14b528`) records the `sPtr` parameter, no
+  post-argument S_REGREL32 locals, 24 breakpoint rows, 27 lexical scopes and
+  25 SH4 blocks. Raw line 817 emits the wrapped slot's current/next update as
+  one statement, and line 821 groups channel selection with the named
+  `StopSample` helper. The source and public declaration now use `sPtr`, the
+  wrap is the recovered chained assignment, and `StopSample` consumes the
+  selected channel directly. The raw line table jumps from boundary line 759
+  to body line 769, but the gap classifier marks that boundary unavailable
+  because it is coherent with the preceding procedure's closing row; it is
+  not admitted as an assert clue. Fatal asymmetric source rules and negative
+  controls reject splitting the chain, expanding StopSample, duplicating
+  ConvertVolume, or reordering the shared stop / volume / start / handle-
+  return sequence.
+
+  Complete retail independently rejects two older/platform-specific shapes.
+  Dreamcast's separate early-return scopes score **66.07407%** under the PC
+  compiler; preserving separate guards with a shared failure label reaches
+  only **93.88889%**, while retail's seven PC checks have one shared tail.
+  Dreamcast's byte-taking SetVolume has one post-selection statement, whereas
+  Complete's int-taking Miles adapter needs two call arms to emit retail's
+  per-arm argument pushes; a shared int result and a ternary both score
+  **98.51234%**. These are measured DC-only/platform spellings, not excuses to
+  remove compatible facts.
+
+  Candidate and retail remain 475 bytes with 30 blocks, 21 branches and two
+  returns in agreement. The sole residual is ten register-visible slots in
+  the PC-only inlined stream-service tail: retail chooses EAX/EDX/ECX where
+  this C1 state chooses EDX/ECX/EDX. Earlier and function-scoped handle
+  declarations, direct tail expansion, short-lived manager locals, nested MP3
+  scopes, named stream and split section-pointer lifetimes are byte-flat at
+  **99.78395%**; the synchronized allocator model finds no source-addressable
+  improvement. No register-forcing distortion is retained.
 
 - **2026-08-30 — `combatManager::AreaEffect` restores its Dreamcast local
   roster and banks the honest 99.8565% register-allocation plateau.** The

@@ -555,12 +555,31 @@ void soundManager::SwitchAmbientMusic(int newMusicFileId)
 }
 
 // E:\gamedcs\soundmgr.cpp:759
-// Residual (99.7840%): a natural indexed scan lets VC6 synthesize retail's
-// cursor stack home after a single range test; all 30 blocks and 21 branches
-// now agree. Loading `handle` before writing gAilDriverState and spelling the
-// volume selection as two calls preserve the exact main allocation. Only an
-// EAX/EDX/ECX scratch rotation in the inlined ServeSampleStream tail remains;
-// named stream and split section-pointer lifetimes are byte-inert.
+// DREAMCAST SOURCE SHAPE (dc 0x14b528): raw NB11 records the recovered `sPtr`
+// parameter and no S_REGREL32 locals after S_ENDARG, plus 24 breakpoint rows,
+// 27 lexical scopes and 25 SH4 blocks. Line 817 emits both channel-wrap stores
+// as one statement (`slot = range->next = range->first`), and line 821 groups
+// Channel with the named StopSample helper. Both byte-flat restorations are
+// literal below and protected by the asymmetric source-shape gate, together
+// with the shared StopSample / ConvertVolume / volume / start / handle-return
+// order. The declaration now uses the recovered `sPtr` name too.
+//
+// Two DC shapes do not transfer to Complete. Its four separate early-return
+// scopes become seven PC admission tests; spelling those as separate returns
+// scores 66.07407%, and separate guards targeting one shared label score
+// 93.88889%. Retail's one shared failure tail therefore keeps the combined
+// condition. DC's single SetVolume statement follows its byte parameter;
+// Complete's int-taking Miles adapter requires two source call arms to emit
+// retail's per-arm push before the cross-jumped call. A shared int result and
+// a ternary each score 98.51234% and are rejected platform spellings.
+//
+// Residual (99.78395%): candidate and retail are both 475 bytes with all 30
+// blocks, 21 branches and 2 returns agreeing. Only an EAX/EDX/ECX scratch
+// rotation in the inlined PC-only ServeSampleStream tail remains. Earlier and
+// function-scope handle declarations, a direct tail expansion, a short-lived
+// stream-manager local, nested MP3 scopes, named stream and split section-
+// pointer lifetimes are byte-flat. The synchronized allocator model finds the
+// same ten register-visible slots and no source-addressable improvement.
 // E:\gamedcs\soundmgr.cpp:759
 VA(0x0059a210, 0x1DB)  // anchor-global, dc 0x14b528
 ds_memsample* soundManager::MemorySample(sample* sPtr)
@@ -586,16 +605,12 @@ ds_memsample* soundManager::MemorySample(sample* sPtr)
             }
             slot = range->next++;
             if (range->next >= range->last) {
-                slot = range->first;
-                range->next = range->first;
+                slot = range->next = range->first;
             }
-            // Named, not re-indexed: retail loads the slot once into a
-            // callee-saved register and tests/ends that value. The two
-            // names are deliberately separate locals - one variable
-            // spanning both blocks stretches the live range far enough
-            // that VC6 spills it to the frame.
-            ds_memsample* prevHandle = sampleHandles[slot];
-            StopSample(prevHandle);
+            // Direct, not expanded: retail loads this slot once into a
+            // callee-saved register and the DC line group retains the
+            // StopSample helper boundary around that selected channel.
+            StopSample(sampleHandles[slot]);
         }
 
         ds_memsample* handle = sampleHandles[slot];
