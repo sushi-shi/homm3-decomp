@@ -3,7 +3,6 @@
 // 78 functions in link order; 20 compiler-generated $-thunks omitted.
 #define HOMM3_ARMY_CYCLE_VIEW
 #define HOMM3_ARMY_COMMAND_ROUND_VIEW
-#define HOMM3_ARMY_FIRST_AID_VIEW
 #define HOMM3_ARMY_BERSERK_VIEW
 #define HOMM3_ARMY_COMMAND_ACTION_VIEW
 #define HOMM3_ARMY_PROCESS_MOVE_VIEW
