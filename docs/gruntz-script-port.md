@@ -260,29 +260,40 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
-- **2026-08-30 — `CNewPlayerUpdateMan::NewPlayer` exposes a conflated
-  two-vtable model; the tempting one-for-one exact trade is rejected.** The
+- **2026-08-30 — `CNewPlayerUpdateMan::NewPlayer` closes only after the
+  two-vtable constructor schedule is modeled as source structure.** The
   mandatory Dreamcast pass at `singleselectionwindow.obj:0x14870c` proves the
   `index` local, `GetFirstAvailable`, guarded `CNewPlayerUpdateProc`
   construction and subsequent virtual `Go` boundary. Complete retail at
   `0x0058a280` has the same nine-block flow and every ordinary instruction;
-  its sole extra instruction is a relocation-backed store of vtable
-  `0x00641d44`, raising the current body from **95.3860% to 100%** when
-  `__declspec(novtable)` is removed.
+  its initial residual was the relocation-backed store of vtable
+  `0x00641d44`. Merely removing `__declspec(novtable)` from the old one-class
+  view made `NewPlayer` exact but added an invented vptr reset to exact
+  teardown `0x00583ef0`, lowering that row to **93.6111%**. That one-for-one
+  score trade was rejected and retained only as the historical 100% target.
 
-  That apparent closure is not admissible in isolation. Retail constructor
+  Retail constructor
   `0x00589240` stores the distinct vtable `0x00641d38`; the two tables each
   contain three different function addresses (`0x577d70/0x577de0/0x578930`
-  versus `0x5789f0/0x578a90/0x5795a0`). The current header incorrectly joins
-  both families as one `CNewPlayerUpdateProc`. Removing `novtable` also adds
-  a vptr reset to the exact non-virtual destructor at `0x00583ef0`, lowering
-  it to **93.6111%**. The build therefore stays at the honest 95.3860% /
-  exact-destructor state until those dynamic types are split. Secondary IDA
-  names the `0x641d38` family `t_map_list_update`; that name is a hypothesis,
-  while the two retail vtable identities and the need for a split are direct
-  byte/relocation facts. A source-shape ratchet preserves Dreamcast's local
-  and helper order so the later type campaign cannot "fix" this by flattening
-  the constructor or virtual call.
+  versus `0x5789f0/0x578a90/0x5795a0`). Their store positions prove the
+  lowering order. `CNewPlayerUpdateProc` construction initializes the shared
+  vector, writes `0x641d44`, then executes the dpid/counter/finished/time body.
+  `t_map_list_update` repeats that base work and writes `0x641d38` only at the
+  end, proving a derived override rather than a sibling with duplicated
+  state. The admitted source is therefore a `novtable`
+  `CNewPlayerUpdateTask` state/interface, concrete `CNewPlayerUpdateProc`, and
+  derived `t_map_list_update`. The manager stores interface pointers and its
+  direct non-virtual delete retains the exact shared teardown. Secondary IDA
+  independently supplies the two concrete vtable names; table identity,
+  slots, construction sites, and ordering come directly from retail.
+
+  This coherent model makes `NewPlayer` **100.0000% with all 9 / 9 source-
+  labelled blocks identical**, keeps the teardown and the Dreamcast-shaped
+  first `Go` exact, and promotes the previously unclaimed 47-byte
+  `t_map_list_update` constructor at `0x00589240` at **100.0000%**. The
+  asymmetric function rule preserves Dreamcast's local/helper order; a file
+  contract with negative controls now preserves the retail-proved inheritance,
+  vtable ownership, constructor boundary, and shared teardown.
 
 - **2026-08-30 — the first out-of-sample empty-body reconstruction,
   `CheckDoMain`, closes at 100% from Dreamcast source shape.** The starting

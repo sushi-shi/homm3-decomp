@@ -2626,8 +2626,9 @@ singleselectionpopups	?Main@CSpriteWidget@@UAEHPAVmessage@@@Z	100.0000	100.0000	
 singleselectionpopups	?handle_message@CSingleSelPopup@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x175430
 singleselectionwindow	??0CNetPlayerHandlerPlayer@@QAE@XZ	100.0000	100.0000	100.0000	0x17c790
 singleselectionwindow	??0lobby_message@@QAE@XZ	100.0000	100.0000	100.0000	0x189190
+singleselectionwindow	??0t_map_list_update@@QAE@K@Z	100.0000	100.0000	100.0000	0x189240
 singleselectionwindow	??1CHostWaitDlg@@UAE@XZ	0.0000	0.0000	0.0000	0x189230
-singleselectionwindow	??1CNewPlayerUpdateProc@@QAE@XZ	100.0000	100.0000	100.0000	0x183ef0
+singleselectionwindow	??1CNewPlayerUpdateTask@@QAE@XZ	100.0000	100.0000	100.0000	0x183ef0
 singleselectionwindow	??1GameSelectionHeadersStruct@@QAE@XZ	35.0465	35.0465	35.0465	0x178290
 singleselectionwindow	??1TSingleSelectionWindow@@UAE@XZ	33.7160	33.7160	33.7160	0x183b40
 singleselectionwindow	??4GameSelectionHeadersStruct@@QAEAAU0@ABU0@@Z	15.0396	15.0396	15.0396	0x178440
@@ -2658,9 +2659,9 @@ singleselectionwindow	?GetHeroName@TSingleSelectionWindow@@QAEPBDH@Z	80.5426	80.
 singleselectionwindow	?GetMapName@TSingleSelectionWindow@@QAEPBDH@Z	100.0000	100.0000	100.0000	0x184010
 singleselectionwindow	?GetPlayer@CNetPlayerHandler@@QAEPAVCNetPlayerHandlerPlayer@@K@Z	100.0000	100.0000	100.0000	0x177ce0
 singleselectionwindow	?GetPlayerInPos@CNetPlayerHandler@@QAEPAVCNetPlayerHandlerPlayer@@H@Z	100.0000	100.0000	100.0000	0x177bb0
-singleselectionwindow	?Go@CNewPlayerUpdateProc@@UAEXXZ	100.0000	100.0000	100.0000	0x177d70
+singleselectionwindow	?Go@t_map_list_update@@UAEXXZ	100.0000	100.0000	100.0000	0x177d70
 singleselectionwindow	?HandleNetMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@PAE@Z	90.1601	90.1601	90.2212	0x1887a0
-singleselectionwindow	?HandleRequests@CNewPlayerUpdateProc@@QAEXXZ	79.9379	79.9379	79.9379	0x178010
+singleselectionwindow	?HandleRequests@t_map_list_update@@QAEXXZ	79.9379	79.9379	79.9379	0x178010
 singleselectionwindow	?HasMultipleTowns@TSingleSelectionWindow@@QAEEH@Z	100.0000	100.0000	100.0000	0x18ce70
 singleselectionwindow	?HeaderConfirmed@CNewPlayerUpdateMan@@QAEXK@Z	100.0000	100.0000	100.0000	0x189270
 singleselectionwindow	?HeaderRequested@CNewPlayerUpdateMan@@QAEXKEH@Z	88.6223	88.6223	88.6223	0x1892b0
@@ -2672,7 +2673,7 @@ singleselectionwindow	?InitializeVCDescriptions@@YIEXZ	100.0000	100.0000	100.000
 singleselectionwindow	?IsFaceTaken@CNetPlayerHandler@@QAEEHH@Z	100.0000	100.0000	100.0000	0x177d10
 singleselectionwindow	?IsVersionCompatible@TSingleSelectionWindow@@QAEEPBD@Z	100.0000	100.0000	100.0000	0x189d30
 singleselectionwindow	?MakeHeroFilter@TSingleSelectionWindow@@QAEXXZ	87.3429	87.3429	87.3429	0x183890
-singleselectionwindow	?NewPlayer@CNewPlayerUpdateMan@@QAEXK@Z	95.3860	100.0000	100.0000	0x18a280
+singleselectionwindow	?NewPlayer@CNewPlayerUpdateMan@@QAEXK@Z	100.0000	100.0000	100.0000	0x18a280
 singleselectionwindow	?OnBadVersionMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18df50
 singleselectionwindow	?OnDeleteFile@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x18dfb0
 singleselectionwindow	?OnGameHeaderInfoInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	81.3049	81.3049	81.3049	0x18a440
@@ -2700,7 +2701,7 @@ singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100
 # 2026-08-27 (round 3): the interim full build re-banked the transient
 # peak a third time; re-lowered with the round's bodies landed. Same
 # scheduler flap, same recovery path.
-singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0
+singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0
 singleselectionwindow	?OnMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2193	90.2193	90.2193	0x189710
 singleselectionwindow	?OnNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	97.5366	97.5366	97.5366	0x18b510
 singleselectionwindow	?OnNewPlayerMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	97.0628	97.0628	97.0628	0x189fa0
@@ -2720,7 +2721,7 @@ singleselectionwindow	?SetResolution@CChatSlider@@UAEXH@Z	100.0000	100.0000	100.
 singleselectionwindow	?SetState@CChatSlider@@UAEXH@Z	100.0000	100.0000	100.0000	0x17ca00
 singleselectionwindow	?SetupAdvancedOptions@TSingleSelectionWindow@@QAEXXZ	99.3846	99.3846	99.3846	0x181100
 singleselectionwindow	?SortMaps@TSingleSelectionWindow@@QAEXHEE@Z	91.6682	91.6682	91.6682	0x185050
-singleselectionwindow	?Tick@CNewPlayerUpdateProc@@UAEXXZ	62.4785	62.4785	62.4785	0x177de0
+singleselectionwindow	?Tick@t_map_list_update@@UAEXXZ	62.4785	62.4785	62.4785	0x177de0
 singleselectionwindow	?TurnChatOff@TSingleSelectionWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x18cbf0
 singleselectionwindow	?TurnChatOn@TSingleSelectionWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x18ca80
 singleselectionwindow	?TurnOffAdvancedOptions@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x181b20

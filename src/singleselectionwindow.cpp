@@ -550,8 +550,8 @@ int CNetPlayerHandler::GetPlayerCount(unsigned char assignedOnly)
 // Opens the header transfer to the joining player: announce how many
 // headers will follow.
 // E:\gamedcs\singleselectionwindow.cpp:1272
-VA(0x00577d70, 0x6C)  // anchor-vtable CNewPlayerUpdateProc vtbl 0x641d38 slot0; sends the 0x43b header-count msg from the +0x1044/+0x1048 pair, size 1.08x dc 0x64, dc 0x1480cc
-void CNewPlayerUpdateProc::Go()
+VA(0x00577d70, 0x6C)  // anchor-vtable t_map_list_update vtbl 0x641d38 slot0; sends the 0x43b header-count msg from the +0x1044/+0x1048 pair, size 1.08x dc 0x64, dc 0x1480cc
+void t_map_list_update::Go()
 {
     TSingleSelectionWindow* win = gUnnamed69fbe8;
     CGameHeaderInfoInitMsg msg(
@@ -571,7 +571,7 @@ void CNewPlayerUpdateProc::Go()
 // end exactly as retail lays them.
 // E:\gamedcs\singleselectionwindow.cpp:1282
 VA(0x00577DE0, 0x228)  // anchor-vtable vtbl 0x641d38 slot1 - the slot WindowHandler's inlined Man::Tick dispatches; owns 'Requesting confirmation: %d' + GameTime::Get, size 1.06x dc 0x208, dc 0x148130
-void CNewPlayerUpdateProc::Tick()
+void t_map_list_update::Tick()
 {
     if (static_cast<int>(GameTime::Get() - m_lastSendTime) < 75)
         return;
@@ -636,7 +636,7 @@ drain_and_confirm:
 // counterindication.
 // E:\gamedcs\singleselectionwindow.cpp:1375
 VA(0x00578010, 0x272)  // anchor-callee Tick drains the m_requests vector through it at both of its non-empty checks, dc 0x1483f8
-void CNewPlayerUpdateProc::HandleRequests()
+void t_map_list_update::HandleRequests()
 {
     int count = m_requests.size();
     if (count == 0)
@@ -1543,17 +1543,17 @@ void TSingleSelectionWindow::~TSingleSelectionWindow()
 
 #endif  // @carcass
 
-// The header-transfer job teardown: frees the staging buffer and zeroes
-// the buffer triple. Non-virtual - WindowHandler's inlined Tick deletes
-// through a direct call to this body.
+// The shared header-transfer task teardown: frees the staging buffer and
+// zeroes the buffer triple. Non-virtual - WindowHandler's inlined Tick
+// deletes either concrete implementation through a direct call to this body.
 // The whole body is the m_requests vector teardown (deallocate + the
-// zeroed triple) - the +0x10 members are a std::vector, so the user
+// zeroed triple) - the +0x10 members are a std::vector, so the task's
 // dtor is empty. novtable (see the class) is what keeps the vptr
 // unstored, exactly as retail's bytes have it.
 // E:\gamedcs\singleselectionwindow.cpp:1553
 #pragma auto_inline(off)
 VA(0x00583ef0, 0x26)  // anchor-callee direct dtor call in WindowHandler's delete site + in ??_G-shaped 0x583ec0 + Man::PlayerDropped 0x589480, dc 0x148a28
-CNewPlayerUpdateProc::~CNewPlayerUpdateProc()
+CNewPlayerUpdateTask::~CNewPlayerUpdateTask()
 {
 }
 #pragma auto_inline(on)
@@ -2931,13 +2931,11 @@ unsigned char TSingleSelectionWindow::HandleNetMsg(CNetMsg* pNetMsg, unsigned ch
             CNewPlayerUpdateMan* man = pNewPlayerUpdateMan;
             int slot = man->GetFirstAvailable();
             if (slot != -1) {
-                // Retail CALLS the derived proc ctor 0x589240 here
-                // while Man::NewPlayer expands it; the pin keeps this
-                // site retail's call now that the ctor has an inline
-                // body (ungated it cost this row 90.16 -> 88.14).
+                // Retail calls the 0x641d38 t_map_list_update ctor at
+                // 0x589240 here. NewPlayer separately expands the
+                // 0x641d44 CNewPlayerUpdateProc constructor.
 #pragma inline_depth(0)
-                CNewPlayerUpdateProc* proc =
-                    new CNewPlayerUpdateProc(dpid);
+                t_map_list_update* proc = new t_map_list_update(dpid);
 #pragma inline_depth()
                 man->m_procs[slot] = proc;
                 proc->Go();
@@ -3262,14 +3260,25 @@ CHostWaitDlg::~CHostWaitDlg()
 {
 }
 
+// Complete's retail-only map-list specialization. The empty derived body is
+// significant: VC6 expands CNewPlayerUpdateProc's member construction and
+// field initialization, then installs the overriding 0x641d38 vptr last.
+// That schedule distinguishes it from NewPlayer's inline construction of the
+// 0x641d44 base implementation.
+VA(0x00589240, 0x2F)  // anchor-callee HandleNetMsg's RS_HEADERS_REQUEST arm; vptr 0x641d38, retail-only
+t_map_list_update::t_map_list_update(unsigned long dpid)
+    : CNewPlayerUpdateProc(dpid)
+{
+}
+
 // E:\gamedcs\singleselectionwindow.cpp:1484
 VA(0x00589270, 0x3E)  // anchor-callee HandleNetMsg's RS_HEADER_CONFIRM arm calls it with the sender dpid before its 'Header confirmed' log line, dc 0x148838
 void CNewPlayerUpdateMan::HeaderConfirmed(unsigned long dpid)
 {
-    CNewPlayerUpdateProc* proc = GetProc(dpid);
+    CNewPlayerUpdateTask* proc = GetProc(dpid);
     if (proc) {
         proc->m_finished = 1;
-        proc->_vslot02();
+        proc->Finish();
     }
 }
 
@@ -3290,7 +3299,7 @@ void CNewPlayerUpdateMan::HeaderConfirmed(unsigned long dpid)
 VA(0x005892b0, 0x1C1)  // anchor-callee HandleNetMsg's RS_MAP_HEADER_REQUEST arm forwards (dpid, flag, number) to it on the update manager, dc 0x14886c
 void CNewPlayerUpdateMan::HeaderRequested(unsigned long dpid, unsigned char flag, int number)
 {
-    CNewPlayerUpdateProc* proc = GetProc(dpid);
+    CNewPlayerUpdateTask* proc = GetProc(dpid);
     if (proc) {
         SHeaderRequest req;
         req.m_flag = flag;
@@ -3899,11 +3908,10 @@ unsigned char TSingleSelectionWindow::OnNewPlayerMsg(CNetMsg* pNetMsg)
 // vs dc 132): take the first free transfer slot and start a job for
 // the joining dpid - GetFirstAvailable and the proc ctor expand in
 // place (retail even keeps the unguarded Go through a null new).
-// Residual (95.3860%): retail's constructor expansion stores vtable
-// 0x641d44. The provisional header conflates that family with the distinct
-// 0x641d38 family constructed at 0x589240. Removing novtable makes this body
-// exact but injects a vptr reset into exact destructor 0x583ef0; do not bank
-// that one-for-one trade. Split the dynamic types first.
+// Exact after splitting Complete's retail-only inheritance chain: shared
+// member construction, the CNewPlayerUpdateProc 0x641d44 vptr, then its
+// field-initializing body. The derived t_map_list_update constructor at
+// 0x589240 performs the same base work and installs 0x641d38 last.
 VA(0x0058A280, 0x7B)  // anchor-callee OnNewPlayerMsg calls it (dpid) on pNewPlayerUpdateMan; body news the 0x24-byte proc + vcalls slot 0 (Go), size 0.93x dc 0x84, dc 0x14870c
 void CNewPlayerUpdateMan::NewPlayer(unsigned long dpid)
 {

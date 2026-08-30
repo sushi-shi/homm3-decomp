@@ -3200,6 +3200,71 @@ def single_selection_window_contract_violations(
              "and ordered memcpy statements")]
 
 
+def new_player_update_contract_violations(
+        header_text: str, source_text: str) -> list[tuple[int, str]]:
+    """Audit the DC-derived, retail-corroborated two-vtable type chain.
+
+    Dreamcast proves the CNewPlayerUpdateProc construction/virtual-operation
+    boundaries. Complete retail proves that common state is shared by two
+    concrete three-slot vtables and, through the position of their vptr
+    stores, that t_map_list_update is the derived override. The novtable task
+    boundary is what keeps the directly-called non-virtual teardown exact.
+    """
+    header = _source.mask(header_text)
+    source = _source.mask(source_text)
+    task = (
+        r"class\s+__declspec\s*\(\s*novtable\s*\)\s*"
+        r"CNewPlayerUpdateTask\s*\{.*?"
+        r"virtual\s+void\s+Go\s*\(\s*\)\s*=\s*0\s*;\s*"
+        r"virtual\s+void\s+Tick\s*\(\s*\)\s*=\s*0\s*;\s*"
+        r"virtual\s+void\s+Finish\s*\(\s*\)\s*=\s*0\s*;.*?"
+        r"~\s*CNewPlayerUpdateTask\s*\(\s*\)\s*;.*?"
+        r"unsigned\s+long\s+m_dpid\s*;.*?int\s+m_nextHeader\s*;.*?"
+        r"vector\s*<\s*SHeaderRequest\s*>\s+m_requests\s*;.*?"
+        r"unsigned\s+long\s+m_lastSendTime\s*;.*?"
+        r"unsigned\s+char\s+m_finished\s*;")
+    proc = (
+        r"class\s+CNewPlayerUpdateProc\s*:\s*public\s+"
+        r"CNewPlayerUpdateTask\s*\{.*?"
+        r"CNewPlayerUpdateProc\s*\(\s*unsigned\s+long\s+dpid\s*\)"
+        r"\s*\{\s*m_dpid\s*=\s*dpid\s*;\s*"
+        r"m_nextHeader\s*=\s*0\s*;\s*m_finished\s*=\s*0\s*;\s*"
+        r"m_lastSendTime\s*=\s*0\s*;\s*\}.*?"
+        r"virtual\s+void\s+Go\s*\(\s*\)\s*;\s*"
+        r"virtual\s+void\s+Tick\s*\(\s*\)\s*;\s*"
+        r"virtual\s+void\s+Finish\s*\(\s*\)\s*;")
+    derived = (
+        r"class\s+t_map_list_update\s*:\s*public\s+"
+        r"CNewPlayerUpdateProc\s*\{.*?"
+        r"t_map_list_update\s*\(\s*unsigned\s+long\s+dpid\s*\)\s*;"
+        r".*?virtual\s+void\s+Go\s*\(\s*\)\s*;\s*"
+        r"virtual\s+void\s+Tick\s*\(\s*\)\s*;\s*"
+        r"virtual\s+void\s+Finish\s*\(\s*\)\s*;")
+    manager = (
+        r"class\s+CNewPlayerUpdateMan\s*\{.*?"
+        r"CNewPlayerUpdateTask\s*\*\s*m_procs\s*\[\s*8\s*\]\s*;")
+    definitions = (
+        r"VA\s*\(\s*0x00589240\s*,\s*0x2F\s*\).*?"
+        r"t_map_list_update\s*::\s*t_map_list_update\s*"
+        r"\(\s*unsigned\s+long\s+dpid\s*\)\s*:\s*"
+        r"CNewPlayerUpdateProc\s*\(\s*dpid\s*\)\s*\{\s*\}",
+        r"CNewPlayerUpdateTask\s*::\s*~\s*CNewPlayerUpdateTask\s*"
+        r"\(\s*\)\s*\{\s*\}",
+    )
+    if (all(re.search(pattern, header, re.DOTALL) is not None
+            for pattern in (task, proc, derived, manager))
+            and all(re.search(pattern, source, re.DOTALL) is not None
+                    for pattern in definitions)):
+        return []
+    token = re.search(r"\bCNewPlayerUpdateTask\b", header)
+    line = header_text.count("\n", 0, token.start()) + 1 if token else 1
+    return [(line,
+             "the NewPlayer update model must retain the novtable shared "
+             "task, CNewPlayerUpdateProc field-initializing level, derived "
+             "t_map_list_update override, interface-pointer manager, exact "
+             "0x00589240 derived constructor boundary, and shared teardown")]
+
+
 def netplayer_constructor_contract_violations(
         header_text: str, source_text: str) -> list[tuple[int, str]]:
     """Audit the shared CNetPlayerInfo base-constructor boundary.
@@ -7685,6 +7750,77 @@ inline CUpdatePlayerPosMsg::CUpdatePlayerPosMsg(
     if any(not single_selection_window_contract_violations(header, source)
            for header, source in broken_update_probes):
         failures.append("broken CUpdatePlayerPosMsg constructor shape passed")
+    update_task_header_probe = """\
+class __declspec(novtable) CNewPlayerUpdateTask {
+public:
+    virtual void Go() = 0;
+    virtual void Tick() = 0;
+    virtual void Finish() = 0;
+    ~CNewPlayerUpdateTask();
+    unsigned long m_dpid;
+    int m_nextHeader;
+    std::vector<SHeaderRequest> m_requests;
+    unsigned long m_lastSendTime;
+    unsigned char m_finished;
+};
+class CNewPlayerUpdateProc : public CNewPlayerUpdateTask {
+public:
+    CNewPlayerUpdateProc(unsigned long dpid) {
+        m_dpid = dpid;
+        m_nextHeader = 0;
+        m_finished = 0;
+        m_lastSendTime = 0;
+    }
+    virtual void Go();
+    virtual void Tick();
+    virtual void Finish();
+};
+class t_map_list_update : public CNewPlayerUpdateProc {
+public:
+    t_map_list_update(unsigned long dpid);
+    virtual void Go();
+    virtual void Tick();
+    virtual void Finish();
+};
+class CNewPlayerUpdateMan {
+public:
+    CNewPlayerUpdateTask* m_procs[8];
+};
+"""
+    update_task_source_probe = """\
+VA(0x00589240, 0x2F)
+t_map_list_update::t_map_list_update(unsigned long dpid)
+    : CNewPlayerUpdateProc(dpid)
+{
+}
+CNewPlayerUpdateTask::~CNewPlayerUpdateTask()
+{
+}
+"""
+    if new_player_update_contract_violations(
+            update_task_header_probe, update_task_source_probe):
+        failures.append("aligned NewPlayer update type chain did not pass")
+    broken_update_task_probes = (
+        (update_task_header_probe.replace("__declspec(novtable) ", ""),
+         update_task_source_probe),
+        (update_task_header_probe.replace(
+            "class t_map_list_update : public CNewPlayerUpdateProc",
+            "class t_map_list_update : public CNewPlayerUpdateTask"),
+         update_task_source_probe),
+        (update_task_header_probe.replace(
+            "CNewPlayerUpdateTask* m_procs[8]",
+            "CNewPlayerUpdateProc* m_procs[8]"),
+         update_task_source_probe),
+        (update_task_header_probe, update_task_source_probe.replace(
+            ": CNewPlayerUpdateProc(dpid)",
+            ": CNewPlayerUpdateTask()")),
+        (update_task_header_probe, update_task_source_probe.replace(
+            "CNewPlayerUpdateTask::~CNewPlayerUpdateTask()",
+            "CNewPlayerUpdateProc::~CNewPlayerUpdateProc()")),
+    )
+    if any(not new_player_update_contract_violations(header, source)
+           for header, source in broken_update_task_probes):
+        failures.append("broken NewPlayer update type chain passed")
     netplayer_header_probe = """\
 class CNetPlayerInfo {
 public:
@@ -8492,7 +8628,9 @@ def scan() -> tuple[
     audited.add(_file_audit_scope(selection_relpath))
     selection_defects = single_selection_window_contract_violations(
         selection_text, selection_source_text)
-    checked += 1
+    selection_defects.extend(new_player_update_contract_violations(
+        selection_text, selection_source_text))
+    checked += 2
     missing.extend(FileContractViolation(selection_relpath, line,
                                          description)
                    for line, description in selection_defects)
