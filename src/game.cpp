@@ -9600,6 +9600,18 @@ void game::replace_recruit(int playerPos, long recruitSlot)
     }
 }
 
+// E:\gamedcs\Town.h:337
+// Keep this accessor source-visible: the Dreamcast line/xref
+// record proves three HasBuilding calls, while Complete's VC6 /Ob2 build
+// expands the helper into the neutral-town pass below. Defining it adjacent to
+// its recovered caller avoids perturbing earlier game.obj front-end state.
+inline bool town::IsCastle() const
+{
+    return HasBuilding(CASTLE_FORT_ID, 0)
+        || HasBuilding(CASTLE_CITADEL_ID, 0)
+        || HasBuilding(CASTLE_CASTLE_ID, 0);
+}
+
 // E:\gamedcs\game.cpp:8398
 // Complete's weekly pass retains the Dreamcast phase order and call graph,
 // but its creature domain includes the Complete roster and its map-cell
@@ -9607,19 +9619,29 @@ void game::replace_recruit(int playerPos, long recruitSlot)
 // relationship from PerDay and predecessor relationship to PerMonth close the
 // otherwise ambiguous Dreamcast bracket.
 //
-// Residual (99.7274%): the full 128-block retail CFG and every operation agree.
-// The opening creature-week scan has the C1 handle-state ESI/EDI permutation
-// (`this` versus `i`) that why-reg proves source-unaddressable, and the neutral
-// fortification test retains one D3/D13 cross-jumped `jne` versus retail's
-// `je`. The remaining printed differences are cosmetic relocation names.
+// Residual (99.8370%): all 128 retail blocks, branch targets, operations and
+// relocations agree. Restoring the Dreamcast-proven IsCastle source boundary
+// made the entire neutral-town arm exact; Complete's retail bytes separately
+// select HasBuilding's built-mask lane for the Summoning Portal test. The sole
+// residual is the opening creature-week scan's C1 handle-state ESI/EDI role
+// permutation (`this` versus `i`), which why-reg proves source-unaddressable.
 VA(0x004c8780, 0x7B7)  // PerDay/PerMonth bracket + dc lines/callees, dc 0xb41e0
 void game::PerWeek()
 {
-    TCreatureType bonus_creature = CREATURE_NONE;
-    TCreatureType alternate_bonus = CREATURE_NONE;
-    long bonus_amount;
+    hero* obscuring_hero;
     int iAlign;
-    int i = 0;
+    TCreatureType alternate_bonus;
+    long bonus_amount;
+    int x;
+    int y;
+    int i;
+    int z;
+    TCreatureType bonus_creature;
+    NewmapCell* map_cell;
+
+    bonus_creature = CREATURE_NONE;
+    alternate_bonus = CREATURE_NONE;
+    i = 0;
 
     giWeekType = WEEK_TYPE_NORMAL;
     giWeekTypeExtra = Random(0, WEEK_NAME_LAST);
@@ -9713,13 +9735,6 @@ void game::PerWeek()
 #pragma inline_depth()
     }
 
-    int x;
-    int y;
-    int z;
-    NewmapCell* map_cell;
-    hero* obscuring_hero;
-    int luck_bonus;
-
     for (z = 0; z < worldMap.GetNumLevels(); ++z) {
         y = 0;
         if (gMapHeight > 0) {
@@ -9798,7 +9813,7 @@ void game::PerWeek()
                 }
 
                 case FOUNTAIN_OF_FORTUNE: {
-                    luck_bonus = Random(0, 3);
+                    int luck_bonus = Random(0, 3);
                     if (luck_bonus == 0)
                         map_cell->extraInfo =
                             map_cell->extraInfo | 0x1e000;
@@ -9834,9 +9849,7 @@ void game::PerWeek()
 
     for (i = 0; i < towns.size(); ++i) {
         if (towns[i].owner < 0) {
-            if ((towns[i].built & bitNumber[CASTLE_FORT_ID])
-                || (towns[i].built & bitNumber[CASTLE_CITADEL_ID])
-                || (towns[i].built & bitNumber[CASTLE_CASTLE_ID])) {
+            if (towns[i].IsCastle()) {
                 if (Random(0, 100)
                     < NEUTRAL_TOWN_FORTIFIED_REINFORCEMENT_CHANCE)
                     GiveTroopsToNeutralTown(i);
@@ -9853,7 +9866,7 @@ void game::PerWeek()
             for (int j = 0; j < players[i].numTowns; ++j) {
                 town* current_town = GetTown(players[i].townIds[j]);
                 if (current_town->type == TOWN_DUNGEON
-                    && current_town->HasBuilding(EXTRA_1_ID, 1))
+                    && current_town->HasBuilding(EXTRA_1_ID, 0))
                     current_town->SetSummoningGenerator();
             }
         }

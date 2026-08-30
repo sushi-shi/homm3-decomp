@@ -260,6 +260,36 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-30 — `game::PerWeek` restores the inlined `town::IsCastle`
+  source boundary and makes the complete neutral-town tail exact.** The
+  mandatory dossier for `PerWeek` (`dc:0xb41e0`) ends with the older
+  `GiveTroopsToNeutralTowns` helper. Its own dossier (`dc:0xaa6f8`) proves
+  that the source tests `town::IsCastle`, then applies the 80-percent
+  fortified roll or the 40-percent open roll. `town::IsCastle`
+  (`dc:0xbcc40`) in turn has one breakpoint statement containing three
+  ordered `HasBuilding` calls. The former Windows source had flattened that
+  whole positive helper chain into direct 64-bit mask expressions. Restoring
+  the helper and letting VC6 `/Ob2` expand it raises `PerWeek` from
+  **99.7274% to 99.8370%** and makes all 26 instructions and three branch
+  targets in the fort/citadel/castle decision exact. The companion retail
+  check also fixes the later Summoning Portal test to `HasBuilding(..., 0)`:
+  target reads `built` at +0x150/+0x154, not `active` at +0x158/+0x15c.
+
+  Raw NB11 separately proves ten procedure-scope locals in this order:
+  `obscuring_hero`, `iAlign`, `alternate_bonus`, `bonus_amount`, `x`, `y`,
+  `i`, `z`, `bonus_creature`, and `map_cell`. It places `iCount`/
+  `iIncrease`, `luck_bonus`, and `currHero` in their respective monster,
+  fountain, and hero-loop scopes. Restoring that exact procedure/nested
+  distinction is byte-flat. Fatal rules and negative controls now reject the
+  previous local reordering, hoisted nested locals, direct-mask de-inlining,
+  a flattened `IsCastle` definition, and the wrong Summoning Portal mask.
+  Candidate and retail have the same 1,976-byte extent, all 128 blocks, and
+  every branch, operation, and relocation aligned. The only residual is the
+  opening creature-week scan's ESI/EDI role permutation between `this` and
+  `i`; why-reg measures 61 unpaired register-visible slots, finds identical
+  definition slots/order, and caps its legal creation-order edit byte-flat as
+  C1 front-end state.
+
 - **2026-08-30 — the boat-pool load/save pair restores its symmetric
   Dreamcast serialization locals; the exact save path remains exact.** Raw
   NB11 records `unsigned short ushort_buffer`, `int count`, `int x`,
