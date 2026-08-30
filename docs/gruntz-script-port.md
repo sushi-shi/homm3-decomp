@@ -383,6 +383,39 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   volatility fence delays independent loop setup; NB11 proves the source
   local was not volatile. Fatal asymmetric rules and one negative control per
   rule now preserve the positive source facts without blessing that probe.
+
+- **2026-08-30 — `game::record_show_boat` restores its nested Dreamcast
+  helper shape at the honest 98.1818% STL optimizer plateau.** The mandatory
+  dossier for `event_record.obj:0x8e18c` records no locals or lexical scopes
+  and one line-1088 statement containing `operator new`,
+  `type_record_show_boat::type_record_show_boat`, and
+  `eventRecords.push_back`. The nested constructor dossier and raw NB11 at
+  `dc:0x8cfa8` add the missing line-450
+  `type_obscuring_object::get_location` boundary before the destination
+  assignment. Retail corroborates it by expanding the accessor into the exact
+  packed x/y/z load sequence.
+
+  The prior source flattened that helper into three field reads and hoisted
+  both boat constructors away from their recovered lines 376/449. Moving the
+  active definitions back to those provenance sites and restoring
+  `previous_location = _current_boat->get_location()` is byte-flat at
+  **98.181816%**, but converts two inactive Dreamcast stubs into audited source
+  definitions and retains the original helper boundary. The older DC
+  `type_record_hide_boat(boat*)` signature is not imposed on Complete: the
+  latter's added replay/undo fields, `record_hide_boat`'s three retail
+  arguments, and the first `occupying_hero` load before either base-vtable
+  store corroborate the revised three-argument constructor.
+
+  The allocation and complete derived construction are instruction-exact.
+  The sole residual is the inlined vector-growth arm: retail duplicates
+  `size()` when current capacity exceeds one, while this C1 schedule reuses
+  the equivalent distance. Both sides retain 12 branches and three returns;
+  ordinary-inline and force-inline constructor probes are byte-flat, while
+  the obsolete one-argument form falls to 95.79%. Fatal asymmetric rules and
+  negative controls now reject flattening `get_location`, reversing its
+  statement order, or splitting the direct construction out of the one
+  `eventRecords.push_back` statement.
+
 - **2026-08-30 — `SetCurrentMap` reaches 99.987404% by restoring the
   inherited constructor and broadcast boundaries.** The mandatory Dreamcast
   pass (`dc:0x13bc60`) records 109 breakpoint rows, 78 inferred blocks, and
