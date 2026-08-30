@@ -23,6 +23,11 @@ inline unsigned char type_point::operator==(const type_point* arg)
     return arg->x == x && arg->y == y && arg->z == z;
 }
 
+inline bool type_point::operator==(const type_point& arg) const
+{
+    return x == arg.x && y == arg.y && z == arg.z;
+}
+
 static int get_team(game* thisGame, int playerNum)
 {
     if (playerNum < 0)
@@ -318,20 +323,26 @@ unsigned char VictoryConditionStruct::CheckForUpgradedTown()
 
 // Walks every same-team player's towns looking for one at the target
 // coordinate (or any town when the target is the wildcard) whose Grail
-// building is active. target and wildcard are built once before the
-// walk; the townLocation pack and both operator== compares are the
-// IsGrailTarget idiom repeated per town, wildcard test unhoisted. The
+// building is active. Raw NB11 names `any_town_loc`, `grail_town_loc` and
+// the loop-scoped `this_town_loc`; its lines construct the wildcard before
+// the target. Both comparisons use Dreamcast's const-reference
+// type_point::operator==, while team membership and the active Grail test
+// retain the named game::OnSameTeam and town::HasBuilding boundaries.
+// The wildcard test remains unhoisted. The
 // j bound stays IN the condition: the call-free loop body lets VC6 LICM
 // the numTowns read itself, and the hoisted address is what anchors the
 // outer strength-reduced player pointer at +0x3e (a hand-hoisted local
 // anchored it at townIds' +0x40 instead, 98.49 vs 99.27). The outer
 // loop is for(;;) with the bound-return inside - a rotated for(<8)
 // emits jl-top where retail has jge-exit/jmp-top.
-// Residual (99.2692%): one extra mov in the townLocation==target y
-// compare (base routes target-hi through ESI, retail loads it into EDX
-// directly). All four operator receiver/argument combos and both
-// operand orders inside the inline operator== measure identically; the
-// same C1 register-rotation class as IsGrailTarget's standing residual.
+// 99.2692 -> 99.2821 (2026-08-30): restoring OnSameTeam and HasBuilding
+// lets /Ob2 inline both to retail while retiring two source-shape omissions.
+// The const-reference equality spelling and all three recovered local names
+// are byte-flat. Residual: one extra mov in the this_town_loc/grail_town_loc
+// y compare plus a grail_town_loc/any_town_loc stack-home exchange. All four
+// receiver/argument combinations and both operand orders inside the inline
+// equality measured identically; this is the same C1 register-rotation class
+// as IsGrailTarget's standing residual.
 // E:\gamedcs\victorylossconditions.cpp:184
 VA(0x005f1ef0, 0x203)  // anchor-global, dc 0x190124
 unsigned char VictoryConditionStruct::CheckForGrailBuildingWin()
@@ -341,20 +352,20 @@ unsigned char VictoryConditionStruct::CheckForGrailBuildingWin()
         || gpGame->playerDisabled[gNetLocalGamePos])
         return 0;
 
-    type_point target(TownX, TownY, TownZ);
-    type_point wildcard(-1, -1, -1);
+    type_point any_town_loc(-1, -1, -1);
+    type_point grail_town_loc(TownX, TownY, TownZ);
 
     int player = 0;
     for (;;) {
-        if (same_team(gpGame, player, gNetLocalGamePos)) {
+        if (gpGame->OnSameTeam(player, gNetLocalGamePos)) {
             for (int j = 0; j < gpGame->players[player].numTowns; ++j) {
                 town* thisTown = gpGame->GetTown(
                     gpGame->players[player].townIds[j]);
-                type_point townLocation(thisTown->mapX, thisTown->mapY,
-                                        thisTown->mapZ);
-                if (townLocation.operator==(&target)
-                    || target.operator==(&wildcard)) {
-                    if (thisTown->active & bitNumber[HOLY_GRAIL_ID]) {
+                type_point this_town_loc(thisTown->mapX, thisTown->mapY,
+                                         thisTown->mapZ);
+                if (this_town_loc == grail_town_loc
+                    || grail_town_loc == any_town_loc) {
+                    if (thisTown->HasBuilding(HOLY_GRAIL_ID, 1)) {
                         playerWinner = thisTown->owner;
                         GameWon = 1;
                         return 1;

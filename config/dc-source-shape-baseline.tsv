@@ -2294,8 +2294,6 @@ call	victorylossconditions.obj	0x18fe98	game::IsHumanTeam
 call	victorylossconditions.obj	0x18ff84	game::GetTeam
 call	victorylossconditions.obj	0x18ff84	game::IsHumanTeam
 call	victorylossconditions.obj	0x190038	town::HasBuilding
-call	victorylossconditions.obj	0x190124	game::OnSameTeam
-call	victorylossconditions.obj	0x190124	town::HasBuilding
 call	victorylossconditions.obj	0x19037c	game::GetTeam
 call	victorylossconditions.obj	0x19037c	game::IsHumanTeam
 call	victorylossconditions.obj	0x190488	game::GetTeam

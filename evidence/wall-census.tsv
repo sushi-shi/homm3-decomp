@@ -5,7 +5,6 @@ class	recoverable	fuzzy	size	unit	fn	route	knob
 unclaimed (no source binding)	11619	0.0000	11619	singleselectionwindow	TSingleSelectionWindow_TSingleSelectionWindow	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 unclaimed (no source binding)	5704	0.0000	5704	philai	AI_value_of_event	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 unclaimed (no source binding)	5100	0.0000	5100	singleselectionwindow	TSingleSelectionWindow_OnWidgetDeselect	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
-unclaimed (no source binding)	2199	0.0000	2199	singleselectionwindow	TSingleSelectionWindow_SetupAdvancedOptions	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 inliner (predict-inline)	2193	66.8064	6608	townmgr	?Main@townManager@@UAEHAAVmessage@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 5 under-inline, 5 over-inline (34 name-unresolvable pair(s) discounted)
 unclaimed (no source binding)	2152	0.0000	2152	singleselectionwindow	TSingleSelectionWindow_ProcessRightSelect	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 unclaimed (no source binding)	1675	0.0000	1675	singleselectionwindow	TSingleSelectionWindow_SetupScenarioOptions	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
@@ -357,6 +356,7 @@ inliner (predict-inline)	26	98.4726	1682	campaignwindow	??0TCampaignWindow@@QAE@
 register-homing (why-reg)	25	92.8767	354	window	?CenterWindow@heroWindow@@QAEXHH@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 control-flow (why-branch)	25	95.5486	565	ai_tactical	?consider_teleport@type_AI_spellcaster@@QAEXPAUtype_spell_choice@@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	25	97.6325	1055	resourcemanager	?GetBitmap816@ResourceManager@@YIPAVBitmap816@@PBD@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
+register-homing (why-reg)	25	98.8733	2199	singleselectionwindow	?SetupAdvancedOptions@TSingleSelectionWindow@@QAEXXZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 inliner (predict-inline)	25	95.0269	497	event_record	?record_claim_mine@game@@QAEXJJ@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline (11 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	25	95.5075	550	singleselectionpopups	?CreateWin@CBonusDlg@@QAEEPBDPAVBitmap816@@00@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 unclassified	24	88.9254	217	smackmgr	?VideoRealignBuffers@@YIXXZ	why-reg	run why-reg / why-branch for the full search
@@ -495,7 +495,6 @@ unclassified	6	99.0596	623	town	?show_creature_rewards@@YIXPBVtown@@PAV?$vector@
 register-homing (why-reg)	6	98.3451	352	game	?match_underground_gates@game@@QAEXXZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 unclassified	6	95.3860	123	singleselectionwindow	?NewPlayer@CNewPlayerUpdateMan@@QAEXK@Z	why-reg	run why-reg / why-branch for the full search
 unclassified	6	98.9849	548	ai_tactical	?get_frenzy_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	why-reg	run why-reg / why-branch for the full search
-control-flow (why-branch)	5	99.7274	1976	game	?PerWeek@game@@QAEXXZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	5	98.7064	414	remote	?OnPlayerDropUpdateMsg@@YIXK@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (4 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	5	97.9750	257	recruit	??0recruitUnit@@QAE@PAVarmyGroup@@EW4TCreatureType@@PAF121212@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 unclassified	5	98.0247	251	townmgr	?WindowHandler@TBuyBuildWindow@@UAEHPAVmessage@@@Z	why-reg	run why-reg / why-branch for the full search
@@ -504,21 +503,20 @@ inliner (predict-inline)	4	99.6497	1270	cmbtmgr	?SetNextArmy@combatManager@@QAEX
 register-homing (why-reg)	4	98.1013	228	hero	?GetExperienceIncrement@hero@@SIHH@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	4	99.3919	673	resourcedisplay	??0TResourceDisplay@@QAE@PAVheroWindow@@E@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	4	98.5227	257	army	?get_estimated_damage@army@@QBEJPBV1@JEJ@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
-register-homing (why-reg)	4	99.2692	515	victorylossconditions	?CheckForGrailBuildingWin@VictoryConditionStruct@@QAEEXZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	4	98.6813	284	hero	?IsInIdentifyRange@hero@@QAEEPBUtype_point@@@Z	why-reg	register-homing knob (B-family)
+register-homing (why-reg)	4	99.2820	515	victorylossconditions	?CheckForGrailBuildingWin@VictoryConditionStruct@@QAEEXZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 inliner (predict-inline)	4	98.9923	359	game	?add_garrison_hero@playerData@@QAEEPAVtown@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (1 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	4	96.5278	104	hero	?DestroySiegeWeaponArtifact@hero@@QAEXH@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 register-homing (why-reg)	4	99.0992	389	ai	?choose_defense_hex@combatManager@@QAEEPBVarmy@@0PAJ1PAVsearchArray@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 unclassified	3	99.3421	500	dxplay	?CreateSerialConnection@CDPlayLobby@@QAEPAVCDPlayConnection@@PADPAU_DPCOMPORTADDRESS@@@Z	(none)	run why-reg / why-branch for the full search
 unclassified	3	99.4444	590	dxplay	?CreateModemConnection@CDPlayLobby@@QAEPAVCDPlayConnection@@PAD00@Z	(none)	run why-reg / why-branch for the full search
+register-homing (why-reg)	3	99.8370	1976	game	?PerWeek@game@@QAEXXZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 unclassified	3	98.4697	208	ai	?DoCompAI@combatManager@@QAEXH@Z	why-reg	run why-reg / why-branch for the full search
 register-homing (why-reg)	3	99.5679	725	seerhut	?DoProgressDialog@type_creature_quest@@UAEXXZ	why-reg	register-homing knob (B-family)
 unclassified	3	99.6923	969	dxplay	?CreateTCPIPConnection@CDPlayLobby@@QAEPAVCDPlayConnection@@PAD0PAV2@@Z	(none)	run why-reg / why-branch for the full search
 unclassified	3	96.7742	92	resourcemanager	?GetBitmapResourceSize@ResourceManager@@YIHPBD@Z	why-reg	run why-reg / why-branch for the full search
 unclassified	3	99.6575	854	dxplay	?CreateIPXConnection@CDPlayLobby@@QAEPAVCDPlayConnection@@PADPAV2@@Z	(none)	run why-reg / why-branch for the full search
 register-homing (why-reg)	3	99.5673	657	ai_tactical	?consider_single_enchantment@type_AI_spellcaster@@QAEXPAUtype_spell_choice@@J@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
-register-homing (why-reg)	3	99.7059	954	army	?can_cast_spell@army@@QBEEJ@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
-unclassified	3	99.2537	373	singleselectionwindow	?OnUpdatePlayerPosMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	why-reg	run why-reg / why-branch for the full search
 inliner (predict-inline)	3	99.4737	494	mapcell	?Read@TTimedEvent@@QAEHPAVTAbstractFile@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline
 register-homing (why-reg)	3	99.3103	363	mousemgr	?LoadFrame@mouseManager@@QAEXH@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	2	99.6447	569	game	?LoadBoatPool@game@@QAEHPAVTAbstractFile@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
@@ -526,13 +524,11 @@ register-homing (why-reg)	2	99.1053	210	ai_tactical	?get_simple_attack_effect@ty
 unclassified	2	99.4444	320	puzzlewindow	??0type_AI_puzzle_tile@@QAE@PAVNewmapCell@@Utype_point@@@Z	why-reg	run why-reg / why-branch for the full search
 register-homing (why-reg)	2	99.8359	996	game	?loadVictoryCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@H@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 unclassified	2	99.4000	262	game	?NewMap@game@@QAEEPBD0PAHH@Z	why-reg	run why-reg / why-branch for the full search
-register-homing (why-reg)	1	99.6237	316	singleselectionwindow	?OnGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	1	99.7840	475	soundmgr	?MemorySample@soundManager@@QAEPAVds_memsample@@PAVsample@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
-register-homing (why-reg)	1	99.9035	1017	ai_player	?fill_prohibited_array@@YIXPAVplayerData@@PAE@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 inliner (predict-inline)	1	99.7464	377	game	?randomize_university@game@@QAEXPAVNewmapCell@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline
 unclassified	1	99.8469	600	town	?TownFn_005BF900@town@@QAEJJ@Z	why-reg	run why-reg / why-branch for the full search
 register-homing (why-reg)	1	99.8565	585	spells	?AreaEffect@combatManager@@QAEXJHJJ@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
-register-homing (why-reg)	1	99.9522	1611	ai_player	?value_of_hiring@@YIJPAVtown@@PAVhero@@PAVsearchArray@@@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
+inliner (predict-inline)	1	99.9522	1611	ai_player	?value_of_hiring@@YIJPAVtown@@PAVhero@@PAVsearchArray@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (2 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	1	99.6429	197	diff	?Apply@CDiffFile@@QAEPAXPAEH@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	1	99.9273	721	resourcemanager	?GetPalette24@ResourceManager@@YIPAVTPalette24@@PBD@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 register-homing (why-reg)	0	99.8854	421	mapcell	?NewfullMapFn_005042C0@NewfullMap@@QAEXXZ	why-reg	register-homing knob (B-family)
@@ -540,9 +536,8 @@ register-homing (why-reg)	0	99.9540	886	events	?DoEventPrison@advManager@@QAEXPA
 register-homing (why-reg)	0	99.9557	874	game	?save@playerData@@QAEHPAVTAbstractFile@@@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 register-homing (why-reg)	0	99.9216	467	town	?GiveSpells@town@@QAEXPAVhero@@@Z	why-reg	register-homing knob (B-family)
 register-homing (why-reg)	0	99.8846	307	hero	?HeroFn_004DBF30@hero@@QAEEHJ@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
+register-homing (why-reg)	0	99.9678	1017	ai_player	?fill_prohibited_array@@YIXPAVplayerData@@PAE@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	0	99.9561	729	philai	?value_of_enemy_town@@YIJPBVhero@@PBVtown@@FPAVNewmapCell@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
-register-homing (why-reg)	0	99.7778	118	town	?initialize_hordes@town@@SIXXZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 unclassified	0	99.9744	930	sacrifice_window	?update_creature_offering@type_sacrifice_window@@QAEXPAUtype_creature_offering@@@Z	why-reg	run why-reg / why-branch for the full search
 register-homing (why-reg)	0	99.5833	56	hero	?get_primary_skill_total@hero@@QAEFXZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 unclassified	0	99.7222	44	resourcemanager	?insert_wrapper@TCacheMap@ResourceManager@@QAE?AUTCacheInsertResult@2@ABUTCacheValue@2@@Z	why-reg	run why-reg / why-branch for the full search
-inliner (predict-inline)	0	99.9839	528	seerhut	?getValue@TSeerReward@@QAEHPBVhero@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline
