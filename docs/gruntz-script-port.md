@@ -345,6 +345,23 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   late register-allocation class; no Dreamcast fact was traded for that
   percentage.
 
+- **2026-08-30 — `combatManager::LoadArmies` restores all five surviving
+  NB11 locals without moving its 99.3528% score.** The Dreamcast procedure
+  (`dc:0x5e09c`) records procedure-scope `int side`; then const
+  `unsigned char grouped` and const `int layout` in the outer side scope;
+  and `int hex` followed by `army& thisArmy` in each occupied-slot scope.
+  The SH4 line/xref stream corroborates that `thisArmy` receives the
+  `army::Init` and `army::LoadResources` calls.
+
+  Windows previously used loop-scoped `side`, mutable
+  `tight_formation`/`last`, and repeated direct `armies[side][placed]`
+  receivers. Restoring the recovered names, const qualifiers, lifetimes,
+  declaration order, and reference receiver is byte-flat: all 36 candidate
+  and retail blocks still align, and the sole residual remains retail's
+  `cmp eax,esi` versus candidate `test eax,eax` zero-test selection. Three
+  fatal asymmetric rules and three negative controls now reject loop-scoping
+  `side`, dropping the const recorded locals, or flattening `thisArmy`.
+
 - **2026-08-30 — `game::PerWeek` restores the inlined `town::IsCastle`
   source boundary and makes the complete neutral-town tail exact.** The
   mandatory dossier for `PerWeek` (`dc:0xb41e0`) ends with the older
