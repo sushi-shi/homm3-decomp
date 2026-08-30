@@ -78,24 +78,6 @@ inline type_point::type_point(short new_x, short new_y, short new_z)
     z = new_z;
 }
 
-inline type_record_claim_mine::type_record_claim_mine(long _id, char _new_owner)
-{
-    id = _id;
-    new_owner = _new_owner;
-    old_owner = gpGame->mines[_id].playerOwner;
-}
-
-// NOT a delegation to the base: the town variant reads its old owner out of
-// gpGame->towns, so it runs the empty default base constructor and assigns
-// all three members itself - which is also why retail elides the
-// intermediate claim_mine vptr store here but keeps hide_boat's below.
-inline type_record_claim_town::type_record_claim_town(long _id, char _new_owner)
-{
-    id = _id;
-    new_owner = _new_owner;
-    old_owner = gpGame->towns[_id].owner;
-}
-
 inline type_record_erase::type_record_erase(type_point _location,
                                             long _object_id,
                                             unsigned long _extra_info,
@@ -400,14 +382,19 @@ void type_record_teleport::replay(unsigned char draw)
 
     gpAdvManager->TeleportTo(current_hero, destination, 0, 0, draw, 1);
 }
-#if 0  // @carcass
-
 // E:\gamedcs\event_record.cpp:237
-DC_ONLY(0x8cb2c, 0x5C)
-void type_record_claim_mine::type_record_claim_mine(long _id, char _owner)
+// NO RETAIL BODY: expanded into record_claim_mine. record_claim_town instead
+// invokes the distinct default constructor at dc:0x8eda0. Dreamcast preserves
+// this definition site and the id/new-owner/mine-owner statement order.
+inline type_record_claim_mine::type_record_claim_mine(long _id,
+                                                      char _new_owner)
 {
-    // @stub
+    id = _id;
+    new_owner = _new_owner;
+    old_owner = gpGame->mines[_id].playerOwner;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:247
 DC_ONLY(0x8cb88, 0x26)
@@ -496,14 +483,22 @@ VA(0x0049abe0, 0x7)  // anchor-vtable (slot 0 callee), dc 0x8c658
 type_event_record::~type_event_record()
 {
 }
-#if 0  // @carcass
-
 // E:\gamedcs\event_record.cpp:321
-DC_ONLY(0x8ccfc, 0x60)
-void type_record_claim_town::type_record_claim_town(long _id, char _new_owner)
+// Dreamcast resolves the base boundary specifically to the default header
+// constructor at dc:0x8eda0, not the parameterized constructor at dc:0x8cb2c.
+// The derived body then assigns the three claim fields, with old_owner coming
+// from gpGame->towns. Retail corroborates that final assignment sequence and
+// elides the intermediate claim_mine vptr store.
+inline type_record_claim_town::type_record_claim_town(long _id,
+                                                      char _new_owner)
+    : type_record_claim_mine()
 {
-    // @stub
+    id = _id;
+    new_owner = _new_owner;
+    old_owner = gpGame->towns[_id].owner;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:331
 DC_ONLY(0x8cd5c, 0x26)
@@ -1370,19 +1365,21 @@ void game::record_claim_mine(long id, long new_owner)
 }
 
 // E:\gamedcs\event_record.cpp:1049
-// record_claim_mine's twin, differing only in the 0x41d subtype and in the
-// pool the old owner is snapshotted from.
+// Dreamcast retains an otherwise-unused GetTown statement before the message
+// construction. VC6 inlines and erases that lookup, but its front-end state is
+// load-bearing: omitting it changes the later vector-growth CFG and leaves the
+// function at 98.1053%. With the recovered call, constructor sites and header
+// statement rows restored, all 20 retail blocks are exact. The remaining
+// semantic differences from record_claim_mine are the 0x41d subtype and the
+// town pool used for the old-owner snapshot.
 VA(0x0049c190, 0x1FE)  // anchor-global (0x41d subtype + 0x63ded4), dc 0x8e058
 void game::record_claim_town(long id, long new_owner)
 {
+    GetTown(id);
     CMCClaimTown msg(id, new_owner);
     SendMapChange(&msg);
     eventRecords.push_back(new type_record_claim_town(id, new_owner));
 }
-#if 0  // @carcass
-
-#endif  // @carcass
-
 // E:\gamedcs\event_record.cpp:1061
 // Residual (88.70%): the inlined vector insert. Retail expands _Ufill's
 // single-element fill down to one _Construct call where we stop at a call

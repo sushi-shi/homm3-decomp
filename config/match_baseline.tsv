@@ -1056,7 +1056,7 @@ event_record	?load@type_record_shroud@@UAEEPAVTAbstractFile@@H@Z	84.0350	84.0350
 event_record	?load_recorded_events@game@@QAEEPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x9dac0
 event_record	?play_recorded_events@game@@QAEXXZ	98.1031	98.1031	98.1031	0x9d7a0
 event_record	?record_claim_mine@game@@QAEXJJ@Z	95.0269	95.0269	95.0269	0x9bf90
-event_record	?record_claim_town@game@@QAEXJJ@Z	98.1053	98.1053	98.1053	0x9c190
+event_record	?record_claim_town@game@@QAEXJJ@Z	100.0000	100.0000	100.0000	0x9c190
 event_record	?record_erase_object@game@@QAEXPAVNewmapCell@@Utype_point@@@Z	88.7023	88.7023	88.7023	0x9c390
 event_record	?record_hide_boat@game@@QAEXPAVboat@@EH@Z	88.9253	88.9253	88.9253	0x9c560
 event_record	?record_hide_hero@game@@QAEXPAVhero@@DE@Z	100.0000	100.0000	100.0000	0x9c720

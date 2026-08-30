@@ -260,6 +260,36 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-30 — `game::record_claim_town` reaches 100% from a Dreamcast
+  statement that emits no retail bytes.** The mandatory wrapper dossier at
+  retail `0x0049c190` / `event_record.obj:0x8e058` records no locals or
+  lexical scopes, but its five rows preserve `GetTown(id)`, stack
+  `CMCClaimTown` construction, `SendMapChange`, and the direct
+  `eventRecords.push_back(new type_record_claim_town(...))` in that order.
+  SH4 calls `GetTown` and discards its return. The nested claim-town
+  constructor at `dc:0x8ccfc` resolves its line-321 base boundary to the
+  default header constructor at `dc:0x8eda0`, not the parameterized
+  claim-mine constructor at `dc:0x8cb2c`, then records the id, new owner and
+  town-owner snapshot as three rows. The parameterized claim-mine body is
+  independently fixed at recovered line 237. The two net-message
+  constructors likewise have one `CMapChange` row followed by separate id
+  and player-position rows.
+
+  Restoring only the constructor positions, default-base spelling and header
+  body assignments is byte-flat at **98.1053%**. A deliberately incorrect
+  parameterized-base control makes the vector-growth CFG exact but emits nine
+  extra superseded base instructions, proving that pre-vector front-end state
+  is the mechanism rather than a different STL expression. Restoring the
+  missing `GetTown(id);` statement then produces **100.0000%**: VC6 inlines
+  and eliminates the lookup itself, while its compiler-state effect restores
+  all 20 retail blocks and every instruction in the later vector expansion.
+  This is direct evidence that an optimized-away positive Dreamcast fact can
+  be necessary for byte identity. Fatal asymmetric source, provenance and
+  header contracts with negative controls now reject removing or reordering
+  that call, hoisting either constructor, selecting the wrong base overload,
+  collapsing the two message members into initializer lists, or splitting
+  the direct record push.
+
 - **2026-08-30 — `town::destroy_extra_capitol` restores three positive
   Dreamcast helper boundaries byte-flat at 96.4595%.** The dossier at
   `town.obj+0x166ed8` has no surviving locals but records two

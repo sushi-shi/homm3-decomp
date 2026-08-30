@@ -418,6 +418,22 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"_hero\s*->\s*get_location\s*\(\s*\)\s*;\s*"
             r"destination\s*=\s*_destination\s*;\s*\Z", 1, 1),
     ),
+    ("event_record.obj", 0x8CB2C): (
+        SourceRule(
+            "type_record_claim_mine keeps Dreamcast's id, new-owner and "
+            "mine-owner snapshot statements in recovered order",
+            r"\A\s*id\s*=\s*_id\s*;\s*new_owner\s*=\s*_new_owner\s*;"
+            r"\s*old_owner\s*=\s*gpGame\s*->\s*mines\s*\[\s*_id\s*"
+            r"\]\s*\.\s*playerOwner\s*;\s*\Z", 1, 1),
+    ),
+    ("event_record.obj", 0x8CCFC): (
+        SourceRule(
+            "type_record_claim_town keeps Dreamcast's id, new-owner and "
+            "town-owner snapshot statements in recovered order",
+            r"\A\s*id\s*=\s*_id\s*;\s*new_owner\s*=\s*_new_owner\s*;"
+            r"\s*old_owner\s*=\s*gpGame\s*->\s*towns\s*\[\s*_id\s*"
+            r"\]\s*\.\s*owner\s*;\s*\Z", 1, 1),
+    ),
     ("event_record.obj", 0x8E18C): (
         SourceRule(
             "record_show_boat keeps Dreamcast's direct show-record "
@@ -433,6 +449,18 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"\beventRecords\s*\.\s*push_back\s*\(\s*new\s+"
             r"type_record_teleport\s*\(\s*who\s*,\s*destination\s*"
             r"\)\s*\)\s*;", 1, 1),
+    ),
+    ("event_record.obj", 0x8E058): (
+        SourceRule(
+            "record_claim_town keeps Dreamcast's otherwise optimized-away "
+            "GetTown validation before message construction, send and "
+            "direct record push",
+            r"\A\s*GetTown\s*\(\s*id\s*\)\s*;\s*"
+            r"CMCClaimTown\s+msg\s*\(\s*id\s*,\s*new_owner\s*\)\s*;"
+            r"\s*SendMapChange\s*\(\s*&\s*msg\s*\)\s*;\s*"
+            r"eventRecords\s*\.\s*push_back\s*\(\s*new\s+"
+            r"type_record_claim_town\s*\(\s*id\s*,\s*new_owner\s*"
+            r"\)\s*\)\s*;\s*\Z", 1, 1),
     ),
     ("events.obj", 0x94760): (
         SourceRule(
@@ -2094,8 +2122,38 @@ def cmc_hide_hero_header_violations(text: str) -> list[tuple[int, str]]:
              "assignment")]
 
 
+def cmc_claim_header_violations(text: str) -> list[tuple[int, str]]:
+    """Audit the two NB11 base-then-member claim message constructors."""
+    masked = _source.mask(text)
+    specs = (
+        ("CMCClaimMine", "mineId", "RS_CLAIM_MINE"),
+        ("CMCClaimTown", "townId", "RS_CLAIM_TOWN"),
+    )
+    defects: list[tuple[int, str]] = []
+    for class_name, id_member, subtype in specs:
+        pattern = (
+            r"\bclass\s+" + class_name +
+            r"\s*:\s*public\s+CMapChange\s*\{.*?\bsigned\s+char\s+" +
+            id_member + r"\s*;\s*int\s+playerPos\s*;.*?\b" + class_name +
+            r"\s*\(\s*signed\s+char\s+id\s*,\s*int\s+player\s*\)\s*"
+            r":\s*CMapChange\s*\(\s*" + subtype +
+            r"\s*,\s*sizeof\s*\(\s*" + class_name +
+            r"\s*\)\s*\)\s*\{\s*" + id_member +
+            r"\s*=\s*id\s*;\s*playerPos\s*=\s*player\s*;\s*\}")
+        if re.search(pattern, masked, re.DOTALL) is not None:
+            continue
+        token = re.search(r"\b" + class_name + r"\s*\(", masked)
+        line = text.count("\n", 0, token.start()) + 1 if token else 1
+        defects.append((
+            line,
+            "netmsg.h " + class_name + " must retain Dreamcast's "
+            "CMapChange base-constructor boundary followed by separate " +
+            id_member + " and playerPos body assignments"))
+    return defects
+
+
 def event_record_constructor_violations(text: str) -> list[tuple[int, str]]:
-    """Audit the two recovered event_record constructor definition sites."""
+    """Audit recovered event_record constructor definition sites."""
     marks = list(PROVENANCE_RE.finditer(text))
     specs = (
         (96,
@@ -2113,7 +2171,21 @@ def event_record_constructor_violations(text: str) -> list[tuple[int, str]]:
          r"type_record_teleport\s*\(\s*hero\s*\*\s*_hero\s*,\s*"
          r"type_point\s+_destination\s*\)\s*:\s*"
          r"type_record_move_hero\s*\(\s*_hero\s*,\s*"
-         r"_hero\s*->\s*facing\s*,\s*_destination\s*\)\s*\{\s*\}"),
+          r"_hero\s*->\s*facing\s*,\s*_destination\s*\)\s*\{\s*\}"),
+        (237,
+         "event_record.cpp:237 claim-mine constructor must remain an "
+         "ordinary inline definition at its recovered source position",
+         r"\A\s*inline\s+type_record_claim_mine\s*::\s*"
+         r"type_record_claim_mine\s*\(\s*long\s+_id\s*,\s*char\s+"
+         r"_new_owner\s*\)\s*\{"),
+        (321,
+         "event_record.cpp:321 claim-town constructor must remain an "
+         "ordinary inline definition at its recovered source position and "
+         "use Dreamcast's default claim-mine base boundary",
+         r"\A\s*inline\s+type_record_claim_town\s*::\s*"
+         r"type_record_claim_town\s*\(\s*long\s+_id\s*,\s*char\s+"
+         r"_new_owner\s*\)\s*:\s*type_record_claim_mine\s*\(\s*\)"
+         r"\s*\{"),
     )
     defects: list[tuple[int, str]] = []
     for original_line, description, pattern in specs:
@@ -4768,6 +4840,54 @@ eventRecords.push_back(record);
                for rule in contract_violations(split_record_teleport,
                                                 record_teleport_key)):
         failures.append("split record_teleport construction passed")
+    claim_mine_ctor_key = ("event_record.obj", 0x8CB2C)
+    claim_mine_ctor_probe = """\
+id = _id;
+new_owner = _new_owner;
+old_owner = gpGame->mines[_id].playerOwner;
+"""
+    if contract_violations(claim_mine_ctor_probe, claim_mine_ctor_key):
+        failures.append("aligned claim-mine constructor body did not pass")
+    if not contract_violations(claim_mine_ctor_probe.replace(
+            "id = _id;\nnew_owner = _new_owner;",
+            "new_owner = _new_owner;\nid = _id;"), claim_mine_ctor_key):
+        failures.append("reordered claim-mine constructor body passed")
+    claim_town_ctor_key = ("event_record.obj", 0x8CCFC)
+    claim_town_ctor_probe = """\
+id = _id;
+new_owner = _new_owner;
+old_owner = gpGame->towns[_id].owner;
+"""
+    if contract_violations(claim_town_ctor_probe, claim_town_ctor_key):
+        failures.append("aligned claim-town constructor body did not pass")
+    flattened_claim_town = claim_town_ctor_probe.replace(
+        "gpGame->towns[_id].owner", "gpGame->mines[_id].playerOwner")
+    if not contract_violations(flattened_claim_town, claim_town_ctor_key):
+        failures.append("wrong claim-town owner snapshot passed")
+    record_claim_town_key = ("event_record.obj", 0x8E058)
+    record_claim_town_probe = """\
+GetTown(id);
+CMCClaimTown msg(id, new_owner);
+SendMapChange(&msg);
+eventRecords.push_back(new type_record_claim_town(id, new_owner));
+"""
+    if contract_violations(record_claim_town_probe, record_claim_town_key):
+        failures.append("aligned record_claim_town shape did not pass")
+    broken_record_claim_town_probes = (
+        record_claim_town_probe.replace("GetTown(id);\n", ""),
+        record_claim_town_probe.replace(
+            "CMCClaimTown msg(id, new_owner);\nSendMapChange(&msg);",
+            "SendMapChange(&msg);\nCMCClaimTown msg(id, new_owner);"),
+        record_claim_town_probe.replace(
+            "eventRecords.push_back(new type_record_claim_town(id, "
+            "new_owner));",
+            "type_record_claim_town* record = new "
+            "type_record_claim_town(id, new_owner);\n"
+            "eventRecords.push_back(record);"),
+    )
+    if any(not contract_violations(probe, record_claim_town_key)
+           for probe in broken_record_claim_town_probes):
+        failures.append("broken record_claim_town source shape passed")
     event_record_ctor_probe = r"""
 // E:\gamedcs\event_record.cpp:96
 inline type_record_move_hero::type_record_move_hero(
@@ -4781,6 +4901,19 @@ inline type_record_teleport::type_record_teleport(
 {
 }
 // E:\gamedcs\event_record.cpp:211
+// E:\gamedcs\event_record.cpp:237
+inline type_record_claim_mine::type_record_claim_mine(
+    long _id, char _new_owner)
+{
+}
+// E:\gamedcs\event_record.cpp:247
+// E:\gamedcs\event_record.cpp:321
+inline type_record_claim_town::type_record_claim_town(
+    long _id, char _new_owner)
+    : type_record_claim_mine()
+{
+}
+// E:\gamedcs\event_record.cpp:331
 """
     if event_record_constructor_violations(event_record_ctor_probe):
         failures.append("aligned event-record constructor sites did not pass")
@@ -4791,6 +4924,10 @@ inline type_record_teleport::type_record_teleport(
         event_record_ctor_probe.replace(
             ": type_record_move_hero(_hero, _hero->facing, _destination)",
             ""),
+        event_record_ctor_probe.replace(
+            "inline type_record_claim_mine::type_record_claim_mine(",
+            "__forceinline type_record_claim_mine::type_record_claim_mine("),
+        event_record_ctor_probe.replace(": type_record_claim_mine()", ""),
     )
     if any(not event_record_constructor_violations(probe)
            for probe in broken_event_record_ctor_probes):
@@ -5490,6 +5627,46 @@ public:
     if any(not cmc_hide_hero_header_violations(probe)
            for probe in broken_hide_hero_probes):
         failures.append("broken CMCHideHero constructor shape passed")
+    claim_message_probe = """\
+class CMCClaimMine : public CMapChange {
+public:
+    signed char mineId;
+    int playerPos;
+    CMCClaimMine(signed char id, int player)
+        : CMapChange(RS_CLAIM_MINE, sizeof(CMCClaimMine))
+    {
+        mineId = id;
+        playerPos = player;
+    }
+};
+class CMCClaimTown : public CMapChange {
+public:
+    signed char townId;
+    int playerPos;
+    CMCClaimTown(signed char id, int player)
+        : CMapChange(RS_CLAIM_TOWN, sizeof(CMCClaimTown))
+    {
+        townId = id;
+        playerPos = player;
+    }
+};
+"""
+    if cmc_claim_header_violations(claim_message_probe):
+        failures.append("aligned claim-message constructors did not pass")
+    broken_claim_message_probes = (
+        claim_message_probe.replace(
+            "    {\n        mineId = id;\n        playerPos = player;\n    }",
+            ", mineId(id), playerPos(player) {}"),
+        claim_message_probe.replace(
+            "        townId = id;\n        playerPos = player;",
+            "        playerPos = player;\n        townId = id;"),
+        claim_message_probe.replace(
+            "CMapChange(RS_CLAIM_TOWN, sizeof(CMCClaimTown))",
+            "CMapChange()"),
+    )
+    if any(not cmc_claim_header_violations(probe)
+           for probe in broken_claim_message_probes):
+        failures.append("broken claim-message constructor shape passed")
     get_hero_probe = """\
 hero* GetHero(int which)
 {
@@ -6228,7 +6405,7 @@ def scan() -> tuple[
     audited.add(_file_audit_scope("src/event_record.cpp"))
     event_record_defects = event_record_constructor_violations(
         event_record_text)
-    checked += 2
+    checked += 4
     missing.extend(FileContractViolation("src/event_record.cpp", line,
                                          description)
                    for line, description in event_record_defects)
@@ -6237,10 +6414,12 @@ def scan() -> tuple[
     netmsg_text = netmsg_header.read_text(errors="replace")
     audited.add(_file_audit_scope("include/netmsg.h"))
     hide_hero_defects = cmc_hide_hero_header_violations(netmsg_text)
-    checked += 1
+    claim_message_defects = cmc_claim_header_violations(netmsg_text)
+    checked += 3
     missing.extend(FileContractViolation("include/netmsg.h", line,
                                          description)
-                   for line, description in hide_hero_defects)
+                   for line, description in
+                   hide_hero_defects + claim_message_defects)
 
     game_header = common.HOMM3_DIR / "include/game.h"
     game_text = game_header.read_text(errors="replace")

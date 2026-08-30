@@ -374,8 +374,11 @@ public:
     int playerPos;
 
     CMCClaimMine(signed char id, int player)
-        : CMapChange(RS_CLAIM_MINE, sizeof(CMCClaimMine)),
-          mineId(id), playerPos(player) {}
+        : CMapChange(RS_CLAIM_MINE, sizeof(CMCClaimMine))
+    {
+        mineId = id;
+        playerPos = player;
+    }
 };
 SIZE(CMCClaimMine, 0x1c);
 
@@ -385,8 +388,11 @@ public:
     int playerPos;
 
     CMCClaimTown(signed char id, int player)
-        : CMapChange(RS_CLAIM_TOWN, sizeof(CMCClaimTown)),
-          townId(id), playerPos(player) {}
+        : CMapChange(RS_CLAIM_TOWN, sizeof(CMCClaimTown))
+    {
+        townId = id;
+        playerPos = player;
+    }
 };
 SIZE(CMCClaimTown, 0x1c);
 #endif
