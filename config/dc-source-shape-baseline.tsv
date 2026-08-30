@@ -1728,12 +1728,9 @@ call	sacrifice_window.obj	0x125b3c	artifactAllowedInSlot
 call	sacrifice_window.obj	0x125b3c	hero::get_artifact
 call	sacrifice_window.obj	0x125c60	type_sacrifice_window::update_backpack
 call	sacrifice_window.obj	0x1262e4	artifactAllowedInSlot
-call	sacrifice_window.obj	0x1262e4	hero::ViewArtifact
 call	sacrifice_window.obj	0x1262e4	hero::get_artifact
 call	sacrifice_window.obj	0x126420	hero::get_backpack
-call	sacrifice_window.obj	0x1264dc	hero::ViewArtifact
 call	sacrifice_window.obj	0x1264dc	hero::get_backpack
-call	sacrifice_window.obj	0x126640	hero::ViewArtifact
 call	sacrifice_window.obj	0x1268a4	hero::get_backpack
 call	sacrifice_window.obj	0x1269ac	hero::get_artifact
 call	sacrifice_window.obj	0x1270f0	type_sacrifice_window::empty_backpack
@@ -2206,8 +2203,6 @@ call	tradpost.obj	0x18afd4	hero::get_backpack
 call	tradpost.obj	0x18b540	TTradeResourceWindow::SetupNewTrade
 call	tradpost.obj	0x18b8d4	TGiveResourceWindow::SetupNewTrade
 call	tradpost.obj	0x18bc64	TBuyArtifactWindow::SetupNewTrade
-call	tradpost.obj	0x18bc64	hero::ViewArtifact
-call	tradpost.obj	0x18c00c	hero::ViewArtifact
 call	tradpost.obj	0x18c00c	hero::get_backpack
 call	tradpost.obj	0x18c378	hero::get_artifact
 call	tradpost.obj	0x18c378	hero::get_backpack

@@ -1650,7 +1650,6 @@ hero	?HasArtifact@hero@@QAEEH@Z	100.0000	100.0000	100.0000	0xd91b0
 hero	?HeroFn_004D8B30@hero@@QAEXPBVHeroExtra@@@Z	94.6707	94.6707	94.6707	0xd8b30
 hero	?HeroFn_004D8F70@hero@@QAEPBDXZ	100.0000	100.0000	100.0000	0xd8f70
 hero	?HeroFn_004D8FB0@hero@@QAEPBDXZ	100.0000	100.0000	100.0000	0xd8fb0
-hero	?HeroFn_004D9A00@hero@@QAEXPAUtype_artifact@@H@Z	100.0000	100.0000	100.0000	0xd9a00
 hero	?HeroFn_004D9B30@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0xd9b30
 hero	?HeroFn_004D9CC0@hero@@QAEHH@Z	94.1749	94.1749	94.1749	0xd9cc0
 hero	?HeroFn_004DBE80@hero@@QAEEH@Z	100.0000	100.0000	100.0000	0xdbe80
@@ -1680,6 +1679,7 @@ hero	?UpdateHeroScreenStatusBar@THeroScreenWindow@@QAEXPAVmessage@@@Z	100.0000	1
 hero	?UpdateStats@hero@@QAEXXZ	86.0900	86.0900	86.0900	0xe16d0
 hero	?UpgradeCreatures@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xe2370
 hero	?UseSpell@hero@@QAEXH@Z	100.0000	100.0000	100.0000	0xd92d0
+hero	?ViewArtifact@hero@@QAEXPBUtype_artifact@@H@Z	100.0000	100.0000	100.0000	0xd9a00
 hero	?VisitedArena@hero@@QBE_NPBVNewmapCell@@@Z	100.0000	100.0000	100.0000	0xe53c0
 hero	?WalkOnWater@hero@@QAEXH@Z	100.0000	100.0000	100.0000	0xe5dd0
 hero	?WindowHandler@THeroScreenWindow@@UAEHPAVmessage@@@Z	75.4051	75.4051	75.4051	0xdd2d0
@@ -1695,7 +1695,7 @@ hero	?find_summonable_boat@hero@@QAEPAVboat@@XZ	100.0000	100.0000	100.0000	0xe54
 hero	?get_backpack_error@hero@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TArtifact@@@Z	100.0000	100.0000	100.0000	0xe2ed0
 hero	?get_combat_speed_bonus@hero@@QAEJXZ	100.0000	100.0000	100.0000	0xe5aa0
 hero	?get_combat_value_modifier@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe5400
-hero	?get_description@type_artifact@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	88.4025	88.4025	88.4025	0xdb3e0
+hero	?get_description@type_artifact@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	88.4025	88.4025	88.4025	0xdb3e0
 hero	?get_equipped_artifacts@hero@@QAEJE@Z	100.0000	100.0000	100.0000	0xd9070
 hero	?get_hit_point_bonus@hero@@QAEJH@Z	100.0000	100.0000	100.0000	0xe5b80
 hero	?get_last_backpack_index@hero@@QAEJXZ	100.0000	100.0000	100.0000	0xdbd90
@@ -2922,9 +2922,10 @@ swapmgr	?Reset@swapManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1ae5b0
 swapmgr	?SendChat@CSwapManagerChatEdit@@UAEXPBDH@Z	100.0000	100.0000	100.0000	0x1ae370
 swapmgr	?SendHeroUpdate@swapManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1afbf0
 swapmgr	?SwapMons@swapManager@@QAEXXZ	79.2453	79.2453	79.2453	0x1b0da0
+swapmgr	?Update@swapManager@@QAEXXZ	89.3496	89.3496	89.3496	0x1b0ef0
 swapmgr	?UpdateArrows@TSwapWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1ae430
 swapmgr	?UpdateBackpack@swapManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x1af150
-swapmgr	?update_all_slots@swapManager@@QAEXXZ	89.3496	89.3496	89.3496	0x1b0ef0
+swapmgr	?handle_backpack_click@swapManager@@QAEXJJE@Z	94.3147	94.3147	94.3147	0x1af990
 systemoptionswindow	??0TSystemOptionsWindow@@QAE@XZ	98.1326	98.1326	98.1326	0x1b1790
 systemoptionswindow	??1TSystemOptionsWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1b3040
 systemoptionswindow	??_GTSystemOptionsWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1b3010

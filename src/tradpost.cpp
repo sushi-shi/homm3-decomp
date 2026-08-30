@@ -3594,7 +3594,7 @@ int TBuyArtifactWindow::WindowHandler(message* msg)
                 gpMarketArtifacts.asArtifacts[
                     msg->codeY - BUY_ARTIFACT_SLOT_0_ID],
                 -1);
-            gpMarketHero->HeroFn_004D9A00(&artifact, 1);
+            gpMarketHero->ViewArtifact(&artifact, 1);
             return MESSAGE_DISPATCH_CONSUME;
         }
 
@@ -3766,7 +3766,7 @@ int TSellArtifactWindow::WindowHandler(message* msg)
                            % numInBackpack;
                 artifact = gpMarketHero->backpack[slot];
             }
-            gpMarketHero->HeroFn_004D9A00(&artifact, 1);
+            gpMarketHero->ViewArtifact(&artifact, 1);
             return MESSAGE_DISPATCH_CONSUME;
         }
 

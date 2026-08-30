@@ -13,6 +13,7 @@
 #include "questlogwindow.h"
 #include "winmgr.h"
 #include "netgame.h"
+#include "mousemgr.h"
 
 DATA(0x006a3d08) static int gUnnamed6a3d08;
 // swapmgr singleton (bss 0x6a3d30): the ctor stores `this`, Reset/Open/Close consult it.
@@ -33,6 +34,19 @@ static inline const T& t_limit(const T& minimum, const T& value,
 static inline int limit(int minimum, int value, int maximum)
 {
     return t_limit(minimum, value, maximum);
+}
+
+// The dragged-artifact record stores its id as an int while the recovered
+// hero interface keeps the Dreamcast TArtifact parameter.  This established
+// in-tree union bridge preserves that source type without emitting a cast.
+inline TArtifact artifact_from_int(int value)
+{
+    union {
+        int integer;
+        TArtifact artifact;
+    } converted;
+    converted.integer = value;
+    return converted.artifact;
 }
 
 // E:\gamedcs\swapmgr.cpp:120. Dreamcast proves the class identity and
@@ -316,6 +330,20 @@ void swapManager::UpdateSlot(int iHero, TArtifactSlot slot)
 // E:\gamedcs\swapmgr.cpp:962
 #endif  // @carcass
 
+// Dreamcast preserves this helper as the nested two-hero, nineteen-slot
+// UpdateSlot walk. Complete /Ob2 expands it into both known retail callers.
+void swapManager::update_all_slots()
+{
+    for (int iHero = 0; iHero < 2; ++iHero)
+        for (int slot = const_first_artifact_slot;
+             slot < kNumArtifactSlots + 1;
+             slot++)
+            // Complete adds ordinal 18 to Dreamcast's public TArtifactSlot
+            // domain; keep the proved callee ABI and make that revision
+            // boundary explicit instead of flattening UpdateSlot to int.
+            UpdateSlot(iHero, static_cast<TArtifactSlot>(slot) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
+}
+
 // E:\gamedcs\swapmgr.cpp:977
 // Dreamcast preserves this source helper boundary; Complete /Ob2 expands its
 // sole call into UpdateBackpack, where the parameterized subscript is what
@@ -371,21 +399,6 @@ void swapManager::UpdateBackpack(int iHero)
     parent->BroadcastMessage(&msg);
 }
 
-// E:\gamedcs\swapmgr.cpp:1208
-VA(0x005afbf0, 0x17A)  // full retail body + dc signature/order, dc 0x15d440
-void swapManager::SendHeroUpdate()
-{
-    if (gNetworkActive69954c && field_5c && field_5d) {
-        int otherPlayer = GetOtherHero()->owner;
-        if (!field_64->GetAbortPopupMsg()) {
-            hero* leftHero = heroes[0];
-            hero* rightHero = heroes[1];
-            CHeroUpdateMsg msg(leftHero, rightHero);
-            TransmitRemoteData(&msg, otherPlayer, true, true);
-        }
-    }
-}
-
 // E:\gamedcs\swapmgr.cpp:1031
 #if 0  // @carcass
 DC_ONLY(0x15cf54, 0x1FC)
@@ -401,14 +414,66 @@ void swapManager::handle_artifact_click(long side, long id, unsigned char right_
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\swapmgr.cpp:1168
-DC_ONLY(0x15d2e0, 0x160)
+// The exact UpdateBackpack/SendHeroUpdate bracket fixes this third handler at
+// 0x5af990. Dreamcast supplies the two locals, helper boundaries and branch
+// order; retail independently proves the Complete dialog and pointer sets.
+VA(0x005af990, 0x251)  // roster bracket + body/callees, dc 0x15d2e0
 void swapManager::handle_backpack_click(long side, long id, unsigned char right_click)
 {
-    // @stub
+    hero* our_hero = heroes[side];
+    type_artifact old_artifact = *our_hero->get_backpack(id);
+
+    if (gHeroScreenDraggedArtifact.artifactId == ARTIFACT_NONE) {
+        if (old_artifact.artifactId != ARTIFACT_NONE && CanModHero(side)) {
+            if (right_click) {
+                our_hero->ViewArtifact(&old_artifact, right_click);
+                return;
+            }
+            gHeroScreenDraggedArtifact = old_artifact;
+            our_hero->remove_backpack_artifact(id);
+            UpdateBackpack(side);
+            update_all_slots();
+            gpMouseManager->SetPointer(
+                gHeroScreenDraggedArtifact.artifactId,
+                mouseManager::ARTIFACT_SET);
+        }
+    } else if (!right_click) {
+        if (!our_hero->add_to_backpack(&gHeroScreenDraggedArtifact, id)) {
+            NormalDialog(
+                our_hero
+                    ->get_backpack_error(artifact_from_int(
+                        gHeroScreenDraggedArtifact.artifactId))
+                    .c_str(),
+                1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            return;
+        }
+        gHeroScreenDraggedArtifact.artifactId = ARTIFACT_NONE;
+        UpdateBackpack(side);
+        update_all_slots();
+        gpMouseManager->SetPointer(0, mouseManager::DEFAULT_SET);
+    }
+}
+
+// E:\gamedcs\swapmgr.cpp:1208
+VA(0x005afbf0, 0x17A)  // full retail body + dc signature/order, dc 0x15d440
+void swapManager::SendHeroUpdate()
+{
+    if (gNetworkActive69954c && field_5c && field_5d) {
+        int otherPlayer = GetOtherHero()->owner;
+        if (!field_64->GetAbortPopupMsg()) {
+            hero* leftHero = heroes[0];
+            hero* rightHero = heroes[1];
+            CHeroUpdateMsg msg(leftHero, rightHero);
+            TransmitRemoteData(&msg, otherPlayer, true, true);
+        }
+    }
 }
 
 // E:\gamedcs\swapmgr.cpp:1222
+#if 0  // @carcass
 DC_ONLY(0x15d4ac, 0x986)
 int swapManager::Main(message* msg)
 {
@@ -573,11 +638,12 @@ void swapManager::SwapMons()
         source->Swap(field_50, destination, field_54);
 }
 
-// E:\gamedcs\swapmgr.cpp:962
-// Complete prepends the per-side army-widget refresh. Dreamcast independently
-// proves the trailing nested loop and the retained UpdateSlot helper boundary.
-VA(0x005b0ef0, 0x1D4)  // body/callee corroborates, dc 0x15cdbc
-void swapManager::update_all_slots()
+// E:\gamedcs\swapmgr.cpp:2072
+// Dreamcast preserves the message local, primary-skill and army-widget loops,
+// then the update_all_slots helper call in this order. Complete /Ob2 expands
+// that final helper to the same nested UpdateSlot walk seen in both callers.
+VA(0x005b0ef0, 0x1D4)  // body/callee corroborates, dc 0x15ea00
+void swapManager::Update()
 {
     message msg;
     msg.id = MESSAGE_WIDGET;
@@ -639,22 +705,6 @@ void swapManager::update_all_slots()
         }
     }
 
-    for (int iHero = 0; iHero < 2; ++iHero)
-        for (int slot = const_first_artifact_slot;
-             slot < kNumArtifactSlots + 1;
-             slot++)
-            // Complete adds ordinal 18 to Dreamcast's public TArtifactSlot
-            // domain; keep the proved callee ABI and make that revision
-            // boundary explicit instead of flattening UpdateSlot to int.
-            UpdateSlot(iHero, static_cast<TArtifactSlot>(slot) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
-}
-
-// E:\gamedcs\swapmgr.cpp:2072
-// Complete moved the shared widget-refresh loops into update_all_slots;
-// retaining this wrapper preserves the original caller boundary while /Ob2
-// folds it back to the one retail call.
-void swapManager::Update()
-{
     update_all_slots();
 }
 
