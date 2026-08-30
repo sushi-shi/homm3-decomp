@@ -212,10 +212,7 @@ type_AI_puzzle_tile::type_AI_puzzle_tile(NewmapCell* cell, type_point point)
     if (cell->object_type_index >= 0) {
         CObject* cell_object =
             &gpGame->worldMap.objects[cell->object_type_index];
-        CObjectType* objectType = cell_object->get_object_type_ptr();
-
-        const TAdventureObjectType& objectTypeValue = objectType->objectType;
-        object_type = objectTypeValue;
+        object_type = cell_object->get_type();
         object_x = cell_object->x - point.x;
         object_y = cell_object->y - point.y;
     }

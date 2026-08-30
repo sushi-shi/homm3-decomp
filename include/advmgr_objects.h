@@ -219,7 +219,8 @@ public:
         animationOffset = static_cast<unsigned char>(Random(0, 255));
     }
 
-    CObjectType* get_object_type_ptr();
+    CObjectType* get_object_type_ptr() const;
+    TAdventureObjectType get_type() const;
     void FindTrigger(int* resultX, int* resultY);
 };
 SIZE(CObject, 0xc);
@@ -322,6 +323,13 @@ public:
     unsigned short field_42;
 };
 SIZE(CObjectType, 0x44);
+
+// E:\gamedcs\MapCell.h:1269 (dc 0xf4a78). Dreamcast retains an out-of-line
+// copy, while retail /Ob2 expands this header helper at its callers.
+inline TAdventureObjectType CObject::get_type() const
+{
+    return get_object_type_ptr()->objectType;
+}
 
 struct AdvFullMapObjectsView {
     char pad_00[4];
