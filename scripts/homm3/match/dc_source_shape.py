@@ -2290,16 +2290,24 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"if\s*\(\s*mapChanged\s*\)\s*\{\s*for\s*\(\s*int\s+i\s*="
             r"\s*0\s*;\s*i\s*<\s*CNetPlayerHandler\s*::\s*MAX_PLAYERS"),
         SourceRule(
-            "SetupAdvancedOptions keeps Dreamcast's function-scope "
-            "nextColor and main-loop i in their recovered source order",
-            r"\bint\s+nextColor\s*=\s*0\s*;.*?\bUpdateGameVars\s*\(\s*\)"
-            r"\s*;\s*int\s+i\s*;\s*for\s*\(\s*i\s*=\s*0\s*;\s*i\s*<"
+            "SetupAdvancedOptions keeps Dreamcast's function-scope main-loop "
+            "i and nextColor in their raw NB11 symbol order",
+            r"\bint\s+i\s*(?:=\s*0\s*)?;\s*int\s+nextColor\s*=\s*0\s*;.*?"
+            r"\bUpdateGameVars\s*\(\s*\)\s*;\s*for\s*\(\s*(?:i\s*=\s*0)?\s*;"
+            r"\s*i\s*<"
             r"\s*CNetPlayerHandler\s*::\s*MAX_PLAYERS"),
         SourceRule(
             "SetupAdvancedOptions keeps Dreamcast's strNbr local and "
             "compiled-out zero initializer inside the main loop",
             r"for\s*\(\s*i\s*=\s*0\s*;[^)]*\)\s*\{\s*int\s+strNbr\s*="
             r"\s*0\s*;", 1, 1),
+        SourceRule(
+            "SetupAdvancedOptions keeps Dreamcast's dedicated town/hero "
+            "icon-local lexical scope",
+            r"townButton\s*->\s*y\s*=.*?;\s*\{\s*widget\s*\*\s*"
+            r"townIcon\s*=.*?widget\s*\*\s*heroIcon\s*=.*?widget\s*\*\s*"
+            r"heroLeft\s*=.*?widget\s*\*\s*heroRight\s*=.*?"
+            r"heroRight\s*->\s*y\s*=.*?;\s*\}\s*playerName\s*->\s*y\s*="),
     ),
     ("singleselectionwindow.obj", 0x13BC60): (
         SourceRule(
@@ -4168,12 +4176,21 @@ def selftest() -> list[str]:
 if (mapChanged) {
     for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {}
 }
+int i;
 int nextColor = 0;
 widget* playerName;
 UpdateGameVars();
-int i;
 for (i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
     int strNbr = 0;
+    townButton->y = nextColor * 50 - y + 130;
+    {
+        widget* townIcon = GetWidget(i + 231);
+        widget* heroIcon = GetWidget(i + 247);
+        widget* heroLeft = GetWidget(i + 239);
+        widget* heroRight = GetWidget(i + 255);
+        heroRight->y = nextColor * 50 + 133;
+    }
+    playerName->y = nextColor * 50 + 151;
 }
 """
     if contract_violations(setup_probe, host_key):
@@ -4181,10 +4198,16 @@ for (i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
     setup_mutations = (
         (setup_probe.replace("for (int i = 0;", "for (i = 0;", 1),
          "reset-loop i"),
-        (setup_probe.replace("int i;\nfor (i = 0;", "for (int i = 0;"),
-         "function-scope"),
+        (setup_probe.replace("int i;\nint nextColor = 0;",
+                             "int nextColor = 0;\nint i;"),
+         "function-scope main-loop"),
         (setup_probe.replace("int strNbr = 0;", "int strNbr;"),
          "strNbr"),
+        (setup_probe.replace("    {\n        widget* townIcon",
+                             "    widget* townIcon", 1)
+                    .replace("\n    }\n    playerName->y",
+                             "\n    playerName->y", 1),
+         "icon-local lexical scope"),
     )
     for probe, description in setup_mutations:
         if not any(description in rule.description for rule in

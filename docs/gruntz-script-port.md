@@ -260,6 +260,27 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-30 — raw NB11 corrects the `SetupAdvancedOptions` local-scope
+  ratchet without sacrificing its 99.3846% Windows peak.** The high-level
+  dossier listed two locals named `i`, but did not expose their symbol
+  parents. The raw records resolve them: the main-loop `i` and `nextColor`
+  are procedure-scope symbols in that order, while the other `i` is nested
+  under the `mapChanged` reset loop. The previous fatal rule had accidentally
+  assigned those roles backwards. The raw block tree also proves a dedicated
+  lexical scope around the four town/hero icon pointers, ending immediately
+  after their four `y` assignments. Source and the asymmetric gate now retain
+  both positive facts, with negative controls for the corrected order and the
+  icon scope.
+
+  These corrections are byte-flat at **99.3846%**: Windows still aligns all
+  **101 blocks and 56 symbolic branches**. A bounded alternative that
+  initialized the outer `i` at declaration was rejected at **96.1750%**.
+  The remaining residual starts in Complete-only validation code before the
+  shared Dreamcast body and is register/stack scheduling, not permission to
+  flatten either recovered scope. This is also a tooling lesson: duplicate
+  local names must be interpreted with their raw NB11 parent hierarchy, not
+  roster order alone.
+
 - **2026-08-30 — the Windows `CNewPlayerUpdateProc::Finish` slot is
   identified at `0x005795a0`, reconstructs the complete Dreamcast source
   graph at 87.0155%, and closes `SendPlayerFaces` at 100%.** Vtable
