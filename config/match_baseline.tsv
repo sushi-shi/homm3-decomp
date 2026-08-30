@@ -2113,7 +2113,7 @@ philai	?SoD_get_seer_skill_value@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0x124
 philai	?Unnamed526d20@@YIXHPAHH@Z	100.0000	100.0000	100.0000	0x126d20
 philai	?ValueOfGenerator@@YIHPBVhero@@HHHPAVNewmapCell@@H@Z	100.0000	100.0000	100.0000	0x129a30
 philai	?ValueOfMagicSchool@@YIHPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x129f90
-philai	?ValueOfMine@@YIHPBVhero@@PAVNewmapCell@@@Z	94.1961	94.1961	94.1961	0x12a010
+philai	?ValueOfMine@@YIHPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x12a010
 philai	?ValueOfPowerSchool@@YIHPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x12a380
 philai	?ValueOfPrison@@YIHPAVNewmapCell@@PAVplayerData@@@Z	100.0000	100.0000	100.0000	0x12a3a0
 philai	?ValueOfRallyFlag@@YIHPBVhero@@PAJ@Z	92.5556	92.5556	92.5556	0x12a5f0

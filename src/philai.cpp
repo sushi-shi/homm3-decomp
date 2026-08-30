@@ -2533,21 +2533,16 @@ int ValueOfMagicSchool(const hero* current_hero, NewmapCell* cell)
 // and the body walks gpGame->mines' 0x40-stride records - owner byte,
 // yield type byte, guard army at +4.  Extern for emission while the arm
 // is a stub.
-// Residual (94.20%): retail materialises the OnSameTeam inline's byte
-// through a memory temp and widens it back (mov byte/mov 0 join, and
-// 0xff, store, je); our CL branch-threads the constant arm however the
-// result is named - int local, uchar local and uchar-then-int all
-// measured byte-flat.  The shared game.h inline cannot be respelled
-// per-site (ai_player's negated callers are exact against the current
-// body).
+// Dreamcast line 2632 keeps the source-real OnMySide helper boundary. Retail
+// /Ob2 expands it here, including its signed-negative guard and byte-valued
+// OnSameTeam result; do not flatten the call back to game::OnSameTeam.
 VA(0x0052a010, 0x12a)  // anchor: mines-vector record walk + gMineCharacteristics + MINE arm, dc 0x111970
 int ValueOfMine(const hero* current_hero, NewmapCell* cell)
 {
     mine* current_mine = &gpGame->mines[cell->extraInfo];
     long value = 0;
     int mine_type = current_mine->type;
-    int same_team =
-        gpGame->OnSameTeam(current_mine->playerOwner, gNetLocalGamePos);
+    int same_team = OnMySide(current_mine->playerOwner);
     if (same_team)
         return 0;
 
