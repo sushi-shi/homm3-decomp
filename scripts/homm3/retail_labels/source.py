@@ -127,6 +127,12 @@ SIZE_ARG_RE = re.compile(r"0x[0-9a-fA-F]+$|\d+$")
 IDENT_ARG_RE = re.compile(r"[A-Za-z_]\w*$")
 ANNOTATION_RE = re.compile(r"^\s*(?:VA|VA_COMPGEN|DATA|DC_ONLY)\s*\(")
 DECLARATOR_RE = re.compile(r"([~\w:]+(?:<[^<>()]*>)?)\s*\(")
+# A deliberately bounded special-operator spelling.  Generic C++ declarator
+# parsing is still outside this scanner's contract, but operator== is a real
+# source identity carried by VC6's ??8 public and must not collapse to a flat
+# return-type-prefixed working label (`bool_type_point_operator`).
+OPERATOR_EQUAL_RE = re.compile(
+    r"([~\w:]+(?:<[^<>()]*>)?)::operator\s*==\s*\(")
 # MSVC special members render with backticks: Cls::`scalar deleting
 # destructor'(...), `default constructor closure'(...)
 SPECIAL_RE = re.compile(r"([\w:]+)::`([^'`]+)'\s*\(")
@@ -450,11 +456,14 @@ def scan_file(path, functions: set[int],
                 common.die(f"{where}: orphan VA annotation - no "
                            "declaration follows")
             sm = SPECIAL_RE.search(follower)
+            om = OPERATOR_EQUAL_RE.search(follower)
             if sm:
                 raw = f"{sm.group(1)}__{sm.group(2)}"
+            elif om:
+                raw = f"{om.group(1)}::operator_equal"
             else:
                 # full C++ declarator parsing is a tar pit (templates,
-                # operator=, MSVC spellings); everything before the
+                # most operators, MSVC spellings); everything before the
                 # first paren is a stable working label until a
                 # clang-IR channel binds real mangled names
                 raw = follower.split("(", 1)[0]
@@ -600,7 +609,8 @@ def _demangle_key(mangled: str):
     scan produces for `armyGroup::armyGroup`; dtors (??1) key as
     class_class@dtor so an overloaded-ctor group never absorbs its
     dtor. Assignment (??4) keys to the declarator scanner's stable
-    `Class_Class_operator` spelling; other special operators return None."""
+    `Class_Class_operator` spelling. Equality (??8) keys to the bounded
+    `Class_operator_equal` spelling; other special operators return None."""
     tree_value = re.search(
         r"\?\$_Tree@H(?:V|U)\?\$pair@\$\$CBH(?:V|U)([A-Za-z_]\w*)@",
         mangled)
@@ -721,6 +731,9 @@ def _demangle_key(mangled: str):
     if mangled.startswith("??4"):
         cls = mangled[3:].split("@@", 1)[0].split("@")[0]
         return f"{cls}_{cls}_operator".lower()
+    if mangled.startswith("??8"):
+        cls = mangled[3:].split("@@", 1)[0].split("@")[0]
+        return f"{cls}_operator_equal".lower() if cls else None
     m = GLOBAL_TEMPLATE_MEMBER_RE.match(mangled)
     if m:
         # member of a global class template: template_member. Global owners
@@ -1602,6 +1615,26 @@ def selftest() -> list[str]:
     if _demangle_key("??4MonsterData@@QAEAAV0@ABV0@@Z") != \
             "monsterdata_monsterdata_operator":
         failures.append("MSVC implicit copy-assignment key regressed")
+    source_equal = OPERATOR_EQUAL_RE.search(
+        "bool type_point::operator==(const type_point& arg) const")
+    if source_equal is None:
+        failures.append("source operator== declarator was not recognized")
+    else:
+        source_equal_key = IDENT_RE.sub(
+            "_", f"{source_equal.group(1)}::operator_equal").strip("_")
+        if source_equal_key.lower() != "type_point_operator_equal":
+            failures.append("source operator== key regressed")
+    if _demangle_key("??8type_point@@QBE_NABU0@@Z") != \
+            "type_point_operator_equal":
+        failures.append("MSVC operator== key regressed")
+    if OPERATOR_EQUAL_RE.search(
+            "type_point& type_point::operator=(const type_point& arg)"):
+        failures.append("source operator= was confused with operator==")
+    if _demangle_key("??9type_point@@QBE_NABU0@@Z") is not None:
+        failures.append("uncontracted MSVC operator!= gained an equality key")
+    if _demangle_key("??8other_point@@QBE_NABU0@@Z") == \
+            "type_point_operator_equal":
+        failures.append("MSVC operator== key ignored its owning class")
     if _demangle_key(
             "??0logic_error@std@@QAE@ABV?$basic_string@DU?$char_traits@D@"
             "std@@V?$allocator@D@2@@1@@Z") != "logic_error_logic_error":

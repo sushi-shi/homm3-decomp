@@ -122,13 +122,10 @@ unsigned char SaveValid(const char* filename)
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:268
-#if 0  // @carcass
-DC_ONLY(0x12f9c8, 0x3A0)
-void BackupGameHeaders(gGat* dest, gGat* src)
-{
-    // @stub
-}
-#endif  // @carcass
+// Dreamcast publishes this original helper boundary.  Complete retains it
+// at 0x577530 and passes its first two game pointers in ECX/EDX under /Gr.
+VA(0x00577530, 0x20C)
+void BackupGameHeaders(game* dest, game* src);
 
 // Dreamcast names both globals in this TU. Retail independently fixes their
 // addresses through every CreateEvent/_beginthreadex and stop-path reference.
@@ -347,7 +344,10 @@ DATA(0x0069fbe8) static TSingleSelectionWindow* gUnnamed69fbe8;
 DATA(0x0069fda0) static unsigned char gUnnamed69fda0;
 // 0x69fda4: the eight-seat join-order table SetHumanSlot consults in
 // net-new-game mode before the plain unassigned fill.
-DATA(0x0069fda4) static int gUnnamed69fda4[8];
+DATA(0x0069fda4) static int g_wasHuman[8];
+// DC's `campaignMode` byte survives as a TU-local Complete cell.  The
+// selected campaign row forces the unlimited (10) duration after transfer.
+DATA(0x0069fd90) static bool campaignMode;
 DATA(0x0069fdc8) static int gUnnamed69fdc8;
 // DC-attested static name (globals.csv lastIMHoverID, this TU); the
 // WindowHandler mouse arm highlights the hero-face row under the cursor
@@ -1892,14 +1892,64 @@ int TSingleSelectionWindow::GetHeader(char* dir, char* cFilename, GameSelectionH
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\singleselectionwindow.cpp:3871
 VA(0x00583580, 0x30C)  // anchor-global copies the selected header's planes into gpGame (+0x1f6a0 header band, +0x4df18 setup band) off the SelectionHeaders row - the DC UpdateGameVars body shape; size 0.76x dc 0x408, dc 0x139090
 void TSingleSelectionWindow::UpdateGameVars()
 {
-    // @stub
-}
+    if (SelectionHeaders.size() == 0)
+        return;
 
-#endif  // @carcass
+    // Complete's setup-local header has no Dreamcast counterpart.  Retail
+    // duplicates the complete transfer here and returns before the original
+    // currentMap path rather than sharing a lowered tail.
+    if (field_37F) {
+        gpGame->setup = m_localHeader.setup;
+        memcpy(gpGame->heroAvailability, m_localHeader.heroAvailability,
+               sizeof(m_localHeader.heroAvailability));
+        gpGame->mapHeader.AssignData(&m_localHeader.header,
+                                     m_localHeader.title,
+                                     m_localHeader.description);
+        gpGame->setup.turnDuration = static_cast<signed char>(durationIndex);
+        gpGame->setup.difficulty = static_cast<signed char>(lastDiff);
+        static_cast<CScrollTextWidget*>(field_196c)
+            ->SetText(m_localHeader.description);
+        return;
+    }
+
+    if (currentMap == -1) {
+        if (m_flag65) {
+            BackupGameHeaders(gpGame, saveHeader);
+            durationIndex = gpGame->setup.turnDuration;
+            lastDiff = gpGame->setup.difficulty;
+        }
+        return;
+    }
+
+    if (static_cast<unsigned int>(currentMap) >= SelectionHeaders.size())
+        return;
+
+    GameSelectionHeadersStruct& selected = SelectionHeaders[currentMap];
+    gpGame->setup = selected.setup;
+    memcpy(gpGame->heroAvailability, selected.heroAvailability,
+           sizeof(selected.heroAvailability));
+    gpGame->mapHeader.AssignData(&selected.header, selected.title,
+                                 selected.description);
+    gpGame->setup.turnDuration = static_cast<signed char>(durationIndex);
+    gpGame->setup.difficulty = static_cast<signed char>(lastDiff);
+    static_cast<CScrollTextWidget*>(field_196c)->SetText(selected.description);
+
+    if (campaignMode)
+        gpGame->setup.turnDuration = 10;
+
+    if (m_flag64) {
+        memcpy(gpGame->playerDisabled, selected.saved.deadPlayer,
+               sizeof(selected.saved.deadPlayer));
+        memcpy(g_wasHuman, selected.saved.humanPlayer,
+               sizeof(selected.saved.humanPlayer));
+    }
+}
 
 // Rebuild every occupied seat's pickable-hero list: resolve the shown
 // town (attribute band or pick_alignment - the inline_depth(0) pin
@@ -2479,7 +2529,7 @@ void TSingleSelectionWindow::SetHumanSlot()
     if (bVideoPaused || gUnnamed6989f0 == WINDOW_MODE_6989F0_3) {
         if (m_flag64) {
             for (i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
-                if (gUnnamed69fda4[i] && attrs[i].CanBeHuman) {
+                if (g_wasHuman[i] && attrs[i].CanBeHuman) {
                     int n = m_players.GetUnassignedPlayerPos();
                     if (n == -1)
                         break;
@@ -2794,12 +2844,12 @@ void TSingleSelectionWindow::SetCurrentMap(int map, unsigned char bUpdate)
             strtok(DATA_COMPGEN(0x0068333c, defaultNewGameFileName,
                                 "NEWGAME.gm1"),
                    DATA_COMPGEN(0x006603ec, saveExtensionDot, "."));
-            gUnnamed683454 = pCurrentHeader->setup.difficulty;
+            lastDiff = pCurrentHeader->setup.difficulty;
         } else if (m_flag64) {
             strcpy(DATA_COMPGEN(0x0068333c, defaultNewGameFileName,
                                 "NEWGAME.gm1"),
                    pCurrentHeader->setup.filename);
-            gUnnamed683454 = pCurrentHeader->setup.difficulty;
+            lastDiff = pCurrentHeader->setup.difficulty;
             durationIndex = pCurrentHeader->setup.turnDuration;
             if (durationSlider)
                 durationSlider->SetState(durationIndex);

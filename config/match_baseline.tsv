@@ -226,6 +226,7 @@ ai_player	??0type_combat_artifact@@QAE@J@Z	100.0000	100.0000	100.0000	0x32540
 ai_player	??0type_creature_source@@QAE@W4TCreatureType@@PAF_N@Z	100.0000	100.0000	100.0000	0x286b0
 ai_player	??1type_AI_creature_purchaser@@QAE@XZ	100.0000	100.0000	100.0000	0x286e0
 ai_player	??1type_artifact_effect@@UAE@XZ	100.0000	100.0000	100.0000	0x32500
+ai_player	??8type_point@@QBE_NABU0@@Z	100.0000	100.0000	100.0000	0x2ec20
 ai_player	??_F?$vector@PAVtype_artifact_effect@@V?$allocator@PAVtype_artifact_effect@@@std@@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x324b0
 ai_player	??_Gtype_artifact_effect@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x33080
 ai_player	?AI_arrange_army@@YIXPAVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x2d8e0
@@ -239,6 +240,7 @@ ai_player	?AI_get_value_of_artifact@@YIJUtype_artifact@@PBVhero@@EE@Z	92.7585	92
 ai_player	?AI_swap_artifacts@@YIXPAVhero@@0@Z	100.0000	100.0000	100.0000	0x33fe0
 ai_player	?AI_value_of_observatory@@YIJUtype_point@@JJ@Z	100.0000	100.0000	100.0000	0x32220
 ai_player	?GetHero@game@@QAEPAVhero@@H@Z	100.0000	100.0000	100.0000	0x317d0
+ai_player	?GetTown@game@@QAEPAVtown@@H@Z	100.0000	100.0000	100.0000	0x2ba30
 ai_player	?HasBuilding@town@@QBE_NH_N@Z	100.0000	100.0000	100.0000	0x305a0
 ai_player	?add_artifact@@YIEPAVhero@@Utype_artifact@@PAJ0J2J@Z	100.0000	100.0000	100.0000	0x33e20
 ai_player	?add_creatures@type_AI_creature_swapper@@IAEXW4TCreatureType@@FF@Z	100.0000	100.0000	100.0000	0x2c130
@@ -268,8 +270,10 @@ ai_player	?find_magus_hut_value@@YIJJE@Z	100.0000	100.0000	100.0000	0x29910
 ai_player	?get_alignments@type_AI_creature_swapper@@IAEXXZ	100.0000	100.0000	100.0000	0x2c060
 ai_player	?get_attack_bonus@type_AI_player@@SIMF@Z	100.0000	100.0000	100.0000	0x28710
 ai_player	?get_cell@game@@QAEPAVNewmapCell@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x2ed80
+ai_player	?get_cell@searchArray@@QBEPAUpathCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0x2ecc0
 ai_player	?get_danger_value@searchArray@@QBEJUtype_point@@@Z	100.0000	100.0000	100.0000	0x2ed30
 ai_player	?get_full_value@@YIJPBVhero@@@Z	100.0000	100.0000	100.0000	0x33c60
+ai_player	?get_location@type_obscuring_object@@QBE?AUtype_point@@XZ	100.0000	100.0000	100.0000	0x2ec70
 ai_player	?get_purchase_value@type_AI_creature_purchaser@@QAEJPBVarmyGroup@@F0PBJE@Z	97.3256	97.3256	97.3256	0x2d780
 ai_player	?get_swap_value@type_AI_creature_swapper@@QAEJPBVhero@@PBVarmyGroup@@0E@Z	92.5052	92.5052	92.5052	0x2c4a0
 ai_player	?get_total_value@type_AI_player@@QAEJJPAH@Z	100.0000	100.0000	100.0000	0x2a150
@@ -324,10 +328,6 @@ ai_player	?value_of_horde@@YIJPAVtown@@W4type_building_id@@PAEPAH@Z	100.0000	100
 ai_player	?value_of_horde_upgrade@@YIJPAVtown@@W4type_building_id@@PAEPAH@Z	100.0000	100.0000	100.0000	0x2b800
 ai_player	AI_AttemptMove	0.0000	0.0000	0.0000	0x2fee0
 ai_player	AI_choose_destination	0.0000	0.0000	0.0000	0x2e0b0
-ai_player	bool_type_point_operator	0.0000	0.0000	0.0000	0x2ec20
-ai_player	game_GetTown	0.0000	0.0000	0.0000	0x2ba30
-ai_player	searchArray_get_cell	0.0000	0.0000	0.0000	0x2ecc0
-ai_player	type_obscuring_object_get_location	0.0000	0.0000	0.0000	0x2ec70
 ai_tactical	??0army@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x37a00
 ai_tactical	??0type_AI_attack_hex_chooser@@QAE@PBVarmy@@0PBJPAVsearchArray@@PBUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x360c0
 ai_tactical	??0type_AI_combat_parameters@@QAE@PBVcombatManager@@J@Z	100.0000	100.0000	100.0000	0x35ec0
@@ -646,7 +646,7 @@ button	?Select@button@@QAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x56860
 button	?SetPlayerPaletteColors@button@@QAEXH@Z	100.0000	100.0000	100.0000	0x569e0
 button	?_vslot12@button@@UAEXH@Z	100.0000	100.0000	100.0000	0x56a10
 campaignbrief	??1NewSMapHeader@@QAE@XZ	100.0000	100.0000	100.0000	0x5ad00
-campaignbrief	??1TCampaignBrief@@UAE@XZ	98.2083	98.2083	98.2083	0x5afb0
+campaignbrief	??1TCampaignBrief@@UAE@XZ	100.0000	100.0000	100.0000	0x5afb0
 campaignbrief	??_GTCampaignBrief@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x5ae40
 campaignmap	?InitializeCampaignMapTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0x5dee0
 campaignmap	__h3cg$campaignmap$static_dtor$campaignNames	100.0000	100.0000	100.0000	0x5e1f0
@@ -2771,11 +2771,13 @@ singleselectionwindow	?TurnOffScenarioOptions@TSingleSelectionWindow@@QAEXXZ	100
 singleselectionwindow	?Update@TSingleSelectionWindow@@QAEHXZ	98.9811	98.9811	98.9811	0x184550
 singleselectionwindow	?UpdateAllyEnemyFlags@TSingleSelectionWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x185300
 singleselectionwindow	?UpdateFilterWidgets@TSingleSelectionWindow@@QAEXXZ	95.0755	95.0755	95.0755	0x17ef70
+singleselectionwindow	?UpdateGameVars@TSingleSelectionWindow@@QAEXXZ	24.8108	24.8108	24.8108	0x183580
 singleselectionwindow	?UpdateNameLists@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x18c960
 singleselectionwindow	?UpdatePlayerPositions@TSingleSelectionWindow@@QAEXE@Z	70.4601	70.4601	70.4601	0x188330
 singleselectionwindow	?UpdateTown@TSingleSelectionWindow@@QAEXHHE@Z	100.0000	100.0000	100.0000	0x18cd50
 singleselectionwindow	?WindowHandler@TSingleSelectionWindow@@UAEHPAVmessage@@@Z	97.6901	97.6901	97.6901	0x187d00
 singleselectionwindow	?handle_message@CHostWaitDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1891b0
+singleselectionwindow	BackupGameHeaders	0.0000	0.0000	0.0000	0x177530
 singleselectionwindow	CSingleSelectionNetMsgHandler_HandleNetMsg	0.0000	0.0000	0.0000	0x18e340
 singleselectionwindow	SCampaign_GetCurrentScenario	0.0000	0.0000	0.0000	0x17c780
 singleselectionwindow	TSingleSelectionWindow_GetHeader	0.0000	0.0000	0.0000	0x183170
@@ -2783,7 +2785,6 @@ singleselectionwindow	TSingleSelectionWindow_GetHeaders	0.0000	0.0000	0.0000	0x1
 singleselectionwindow	TSingleSelectionWindow_OnWidgetDeselect	0.0000	0.0000	0.0000	0x1865b0
 singleselectionwindow	TSingleSelectionWindow_ProcessRightSelect	0.0000	0.0000	0.0000	0x1822d0
 singleselectionwindow	TSingleSelectionWindow_TSingleSelectionWindow	0.0000	0.0000	0.0000	0x179960
-singleselectionwindow	TSingleSelectionWindow_UpdateGameVars	0.0000	0.0000	0.0000	0x183580
 singleselectionwindow	TSingleSelectionWindow_WindowFn_00582e90	0.0000	0.0000	0.0000	0x182e90
 slider	??0slider@@QAE@HHHHHHP6IXHPAVheroWindow@@@ZW4EGraphics@0@HE@Z	100.0000	100.0000	100.0000	0x1960d0
 slider	??1slider@@UAE@XZ	100.0000	100.0000	100.0000	0x196180

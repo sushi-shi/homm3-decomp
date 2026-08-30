@@ -1950,6 +1950,12 @@ town* game::GetTown(int townId)
 
 #endif  // @carcass
 
+// The source member remains the Game.h inline used by every real caller.
+// Retail selected one out-of-line COMDAT copy into ai_player.obj; taking its
+// address is the same emission anchor used by town::HasBuilding below and
+// does not de-inline any source call site.
+town* (game::* g_emit_GetTown)(int) = &game::GetTown;
+
 #if 0  // @carcass
 
 // E:\gamedcs\ai_player.cpp:1808
@@ -3870,6 +3876,17 @@ pathCell* searchArray::get_cell(type_point point, bool flying) const
 }
 
 #endif  // @carcass
+
+// These remain the canonical header inlines used by their real callers.
+// Retail selected one out-of-line COMDAT copy of each into ai_player.obj in
+// this order.  Typed address-takes materialize those copies without replacing
+// an attested inline call with a source-false out-of-line call.
+bool (type_point::* g_emit_type_point_equal)(
+    const type_point&) const = &type_point::operator==;
+type_point (type_obscuring_object::* g_emit_get_location)() const =
+    &type_obscuring_object::get_location;
+pathCell* (searchArray::* g_emit_get_cell)(type_point, bool) const =
+    &searchArray::get_cell;
 
 // E:\gamedcs\findpath.h:270
 VA(0x0042ed30, 0x4E)  // anchor-global, dc 0x37eec

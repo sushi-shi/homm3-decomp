@@ -1179,6 +1179,17 @@ public:
     }
     ~NewSMapHeader();
     NewSMapHeader& operator=(const NewSMapHeader& that);
+#ifdef HOMM3_SSWINDOW_HEADER_VECTORS
+    // game.h:311 in the Dreamcast line table.  The selection-window TU is
+    // the retail caller too; /Ob2 expands this source boundary there into
+    // the CMapHeaderData assignment and the two string assignments.
+    void AssignData(CMapHeaderData* data, char* name, char* description)
+    {
+        static_cast<CMapHeaderData&>(*this) = *data;
+        mapName.assign(name, strlen(name));
+        mapDescription.assign(description, strlen(description));
+    }
+#endif
     int Save(TAbstractFile* outfile);
 #ifdef HOMM3_GAME_NEW_MAP_DECLS
     // Complete's scenario reader consumes the abstract stream and the

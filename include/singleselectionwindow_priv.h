@@ -525,10 +525,12 @@ public:
     void SetText(const char* text);
 };
 
-// The selected row's difficulty mirror at .data 0x683454 (initial 1).
-// Owner is this TU; unclaimed pending the data phase - the
-// gUnnamed6a77ec precedent.
-extern int gUnnamed683454;
+// Dreamcast names the selected row's difficulty mirror `lastDiff`;
+// Complete retains it at .data 0x683454 (initial 1).
+extern int lastDiff;
+// Shared game snapshot owned by campaignbrief.cpp; Dreamcast publishes this
+// exact `saveHeader` identity at UpdateGameVars' BackupGameHeaders call.
+extern game* saveHeader;
 
 // The per-row header broadcast Tick streams (subtype 0x406, 0x84 B);
 // retail's inline expansion fixes every field offset. DC's ctor takes
