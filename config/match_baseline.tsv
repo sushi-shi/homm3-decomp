@@ -2930,7 +2930,8 @@ town	?SetSummoningGenerator@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1bd750
 # DELIBERATE SOURCE-SHAPE LOWER 2026-08-30. This row's 100.0000 historical
 # peak used a member-first CMCHideHero spelling contradicted by the dependent
 # Dreamcast constructor. The coherent base-first source is 97.7744 here and
-# exact in add_garrison_hero; keep max/history and do not flatten the helper.
+# exact in add_garrison_hero; raw NB11 also fixes CNetMsg/CMapChange/CMCHideHero
+# parameter types and names. Keep max/history and do not flatten the helper.
 town	?SwapHeroes@town@@QAEXXZ	97.7744	100.0000	100.0000	0x1be450
 town	?TownFn_005BF900@town@@QAEJJ@Z	99.8469	99.8469	99.8469	0x1bf900
 town	?UpgradedDwellingID@town@@SIHH@Z	100.0000	100.0000	100.0000	0x1c14a0

@@ -23,7 +23,7 @@ public:
     int m_qty;
 
     TGiveNetMsg(int giver, int resource, int qty)
-        : CNetMsg(0x432, sizeof(TGiveNetMsg)),
+        : CNetMsg(RS_GIFT, sizeof(TGiveNetMsg)),
           m_giver(giver), m_resource(resource), m_qty(qty) {}
 };
 

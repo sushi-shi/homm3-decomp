@@ -194,42 +194,10 @@ enum ECampaignOrdinal {
     CAMPAIGN_SOD_6 = 19
 };
 
-// The lobby-only message subtypes past the DC eRS_Messages ladder's
-// 1081 end (SoD renumbered/extended the header-transfer family). Values
-// byte-proven at their build sites in this TU; TU-private so the shared
-// netmsg.h ladder - a measured include-set trigger - is untouched.
-// The DC eRS_Messages rungs this TU dispatches that the shared
-// netmsg.h ladder does not carry (values are the DC enum verbatim),
-// plus the three retail-only rungs past the DC ladder's 1081 end.
-// TU-private so netmsg.h - a measured include-set trigger - is
-// untouched.
-enum eRS_LobbyMessages {
-    RS_GAME_HEADER_INFO = 1023,
-    RS_GAME_HEADER_INFO_INIT = 1024,
-    RS_GAME_HEADER_INFO_END = 1025,
-    RS_NEW_SETUP_INFO = 1026,
-    RS_SCROLL = 1027,
-    RS_NEW_MAP_HEADER_INFO = 1028,
-    RS_MAP_HEADER_REQUEST = 1029,
-    RS_MAP_FILE_NAME = 1030,
-    RS_SORT_MAPS = 1031,
-    RS_SET_FILTER = 1032,
-    RS_REQUEST_HERO_FACE = 1035,
-    RS_REQUEST_HERO_FACE_REPLY = 1036,
-    RS_SETAGR = 1037,
-    RS_NEW_HOST = 1038,
-    RS_UPDATE_PLAYER_POS = 1039,
-    RS_NEW_PLAYER = 1040,
-    RS_REQ_HEADER_CONFIRM = 1041,
-    RS_HEADER_CONFIRM = 1042,
-    RS_CLICK = 1043,
-    RS_TOWN_UPDATE = 1044,
-    RS_LAUNCHING_GAME = 1045,
-    RS_BAD_VERSION = 1046,
-    RS_GAME_TRANSMIT_PENDING = 1082,     // retail-only hold msg
-    RS_GAME_HEADER_INFO_INIT_EX = 1083,  // retail-only, CGameHeaderInfoInitMsg
-    RS_HEADERS_REQUEST = 1084            // retail-only, starts a transfer job
-};
+// The setup/lobby record ids live on Dreamcast's one eRS_Messages ladder.
+// singleselectionwindow.cpp opens their scoped netmsg.h view before its shared
+// includes. Complete's three post-1081 transfer-control rungs are byte-proven
+// at their build sites in this TU.
 
 // The lobby message shapes HandleNetMsg reads and builds. All are
 // DC-attested class names (SingleSelectionWindow.cpp 473..773); only the

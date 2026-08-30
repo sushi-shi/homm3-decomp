@@ -1034,6 +1034,40 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"if\s*\(\s*HasBuilding\s*\(\s*MAGE_GUILD_ID\s*,\s*1\s*"
             r"\)\s*\)\s*\{"),
     ),
+    ("town.obj", 0x166864): (
+        SourceRule(
+            "SwapHeroes keeps Dreamcast's two resident GetHero statements, "
+            "the intervening exchange group and FindHero in source order",
+            r"GetHero\s*\([^;]*garrisonHeroId[^;]*\)\s*;.*?"
+            r"GetHero\s*\([^;]*visitingHeroId[^;]*\)\s*;.*?"
+            r"std\s*::\s*swap\s*\([^;]*garrisonHeroId\s*,[^;]*"
+            r"visitingHeroId\s*\)\s*;.*?FindHero\s*\([^;]*->\s*id\s*"
+            r"\)\s*;"),
+        SourceRule(
+            "SwapHeroes keeps Dreamcast's record_hide_hero, restore_cell, "
+            "CMCHideHero construction and SendMapChange statement group",
+            r"record_hide_hero\s*\([^;]*\)\s*;\s*[^;]*->\s*"
+            r"restore_cell\s*\(\s*\)\s*;\s*CMCHideHero\s+\w+\s*\("
+            r"[^;]*->\s*id\s*\)\s*;\s*SendMapChange\s*\(\s*&\s*\w+"
+            r"\s*\)\s*;"),
+        SourceRule(
+            "SwapHeroes keeps Dreamcast's roster-shift loop before the "
+            "count decrement and vacated-slot sentinel",
+            r"for\s*\([^;]*;[^;]*numHeroes\s*-\s*1\s*;[^)]*\)\s*"
+            r"[^;]*heroes\s*\[[^]]*\]\s*=\s*[^;]*heroes\s*\[[^]]*"
+            r"\+\s*1\s*\]\s*;\s*--\s*[^;]*numHeroes\s*;\s*[^;]*"
+            r"heroes\s*\[[^]]*numHeroes[^]]*\]\s*=\s*-\s*1\s*;"),
+        SourceRule(
+            "SwapHeroes keeps Dreamcast's nested current/local-owner latch "
+            "scope before the former garrison hero's PlaceInMap tail",
+            r"if\s*\([^)]*currHeroId\s*==[^)]*->\s*id\s*\)\s*\{\s*"
+            r"[^;]*currHeroId\s*=\s*-\s*1\s*;\s*if\s*\(\s*"
+            r"gNetLocalGamePos\s*==[^)]*->\s*owner\s*\)\s*\{\s*"
+            r"[^;]*drawCursor\s*=\s*0\s*;\s*[^;]*inDialog\s*=\s*0"
+            r"\s*;\s*\}\s*\}.*?GetHero\s*\([^;]*->\s*id\s*\)\s*;"
+            r".*?\.\s*x\s*=.*?mapX\s*;\s*.*?\.\s*y\s*=.*?mapY\s*;"
+            r"\s*.*?\.\s*z\s*=.*?mapZ\s*;\s*.*?PlaceInMap\s*\("),
+    ),
     ("town.obj", 0x166B64): (
         SourceRule(
             "set_spells_available keeps Dreamcast's count local inside the "
@@ -2146,21 +2180,68 @@ def hero_get_target_header_violations(text: str) -> list[tuple[int, str]]:
 
 
 def cmc_hide_hero_header_violations(text: str) -> list[tuple[int, str]]:
-    """Audit netmsg.h:717's base construction then hero-id statement."""
+    """Audit the Dreamcast-proven CNetMsg -> CMapChange -> hide chain."""
     masked = _source.mask(text)
-    pattern = (
-        r"\bclass\s+CMCHideHero\s*:\s*public\s+CMapChange\s*\{.*?"
-        r"\bint\s+heroId\s*;.*?\bCMCHideHero\s*\(\s*int\s+id\s*\)"
-        r"\s*:\s*CMapChange\s*\(\s*RS_HIDE_HERO\s*,\s*sizeof\s*\(\s*"
-        r"CMCHideHero\s*\)\s*\)\s*\{\s*heroId\s*=\s*id\s*;\s*\}")
-    if re.search(pattern, masked, re.DOTALL) is not None:
-        return []
-    token = re.search(r"\bCMCHideHero\s*\(", masked)
-    line = text.count("\n", 0, token.start()) + 1 if token else 1
-    return [(line,
-             "netmsg.h:717 CMCHideHero must retain Dreamcast's CMapChange "
-             "base-constructor boundary before the separate heroId body "
-             "assignment")]
+    specs = (
+        (
+            "netmsg.h eRS_Messages must retain the scoped Dreamcast lobby "
+            "roster and Complete's three trailing transfer rungs",
+            r"RS_GAME_HEADER_INFO\s*=\s*1023\s*,\s*"
+            r"RS_GAME_HEADER_INFO_INIT\s*=\s*1024\s*,\s*"
+            r"RS_GAME_HEADER_INFO_END\s*=\s*1025\s*,\s*"
+            r"RS_NEW_SETUP_INFO\s*=\s*1026\s*,\s*RS_SCROLL\s*=\s*1027"
+            r"\s*,\s*RS_NEW_MAP_HEADER_INFO\s*=\s*1028\s*,\s*"
+            r"RS_MAP_HEADER_REQUEST\s*=\s*1029\s*,\s*RS_MAP_FILE_NAME"
+            r"\s*=\s*1030\s*,\s*RS_SORT_MAPS\s*=\s*1031\s*,\s*"
+            r"RS_SET_FILTER\s*=\s*1032\s*,\s*RS_REQUEST_HERO_FACE\s*="
+            r"\s*1035\s*,\s*RS_REQUEST_HERO_FACE_REPLY\s*=\s*1036\s*,"
+            r"\s*RS_SETAGR\s*=\s*1037\s*,\s*RS_NEW_HOST\s*=\s*1038"
+            r"\s*,\s*RS_UPDATE_PLAYER_POS\s*=\s*1039\s*,\s*"
+            r"RS_NEW_PLAYER\s*=\s*1040\s*,\s*RS_REQ_HEADER_CONFIRM\s*="
+            r"\s*1041\s*,\s*RS_HEADER_CONFIRM\s*=\s*1042\s*,\s*"
+            r"RS_CLICK\s*=\s*1043\s*,\s*RS_TOWN_UPDATE\s*=\s*1044\s*,"
+            r"\s*RS_LAUNCHING_GAME\s*=\s*1045\s*,\s*RS_BAD_VERSION\s*="
+            r"\s*1046\s*,\s*RS_GAME_TRANSMIT_PENDING\s*=\s*1082\s*,"
+            r"\s*RS_GAME_HEADER_INFO_INIT_EX\s*=\s*1083\s*,\s*"
+            r"RS_HEADERS_REQUEST\s*=\s*1084\s*,",
+            r"\bRS_GAME_HEADER_INFO\b"),
+        (
+            "netmsg.h:167 CNetMsg must retain Dreamcast's eRS_Messages "
+            "subType and unsigned-long size parameters plus its five "
+            "ordered body assignments",
+            r"\bCNetMsg\s*\(\s*eRS_Messages\s+subType\s*,\s*"
+            r"unsigned\s+long\s+size\s*\)\s*\{\s*this\s*->\s*subType"
+            r"\s*=\s*subType\s*;\s*field_00\s*=\s*-\s*1\s*;\s*"
+            r"this\s*->\s*size\s*=\s*size\s*;\s*field_04\s*=\s*0"
+            r"\s*;\s*field_10\s*=\s*0\s*;\s*\}",
+            r"\bCNetMsg\s*\("),
+        (
+            "netmsg.h:532 CMapChange must retain Dreamcast's id and size "
+            "parameters and distinct CNetMsg(id, size) construction "
+            "boundary",
+            r"\bCMapChange\s*\(\s*eRS_Messages\s+id\s*,\s*unsigned\s+"
+            r"long\s+size\s*\)\s*:\s*CNetMsg\s*\(\s*id\s*,\s*size"
+            r"\s*\)\s*\{\s*\}",
+            r"\bCMapChange\s*\("),
+        (
+            "netmsg.h:717 CMCHideHero must retain Dreamcast's int heroId "
+            "parameter and CMapChange base-constructor boundary before the "
+            "separate shadowed heroId body assignment",
+            r"\bclass\s+CMCHideHero\s*:\s*public\s+CMapChange\s*\{.*?"
+            r"\bint\s+heroId\s*;.*?\bCMCHideHero\s*\(\s*int\s+heroId"
+            r"\s*\)\s*:\s*CMapChange\s*\(\s*RS_HIDE_HERO\s*,\s*"
+            r"sizeof\s*\(\s*CMCHideHero\s*\)\s*\)\s*\{\s*this\s*"
+            r"->\s*heroId\s*=\s*heroId\s*;\s*\}",
+            r"\bCMCHideHero\s*\("),
+    )
+    defects: list[tuple[int, str]] = []
+    for description, pattern, token_pattern in specs:
+        if re.search(pattern, masked, re.DOTALL) is not None:
+            continue
+        token = re.search(token_pattern, masked)
+        line = text.count("\n", 0, token.start()) + 1 if token else 1
+        defects.append((line, description))
+    return defects
 
 
 def cmc_claim_header_violations(text: str) -> list[tuple[int, str]]:
@@ -4454,6 +4535,60 @@ if (currentHero
 """
     if not contract_violations(flattened_give_spells, give_spells_key):
         failures.append("flattened GiveSpells guard scopes passed")
+    swap_heroes_key = ("town.obj", 0x166864)
+    swap_heroes_probe = """\
+hero* garrisonHero = gpGame->GetHero(currentTown->garrisonHeroId);
+hero* visitingHero = gpGame->GetHero(currentTown->visitingHeroId);
+std::swap(currentTown->garrisonHeroId, currentTown->visitingHeroId);
+int rosterIndex = gpCurrentPlayer->FindHero(visitingHero->id);
+gpGame->record_hide_hero(visitingHero, visitingHero->owner, 0);
+visitingHero->restore_cell();
+CMCHideHero hideHero(visitingHero->id);
+SendMapChange(&hideHero);
+for (int i = rosterIndex; i < gpCurrentPlayer->numHeroes - 1; ++i)
+    gpCurrentPlayer->heroes[i] = gpCurrentPlayer->heroes[i + 1];
+--gpCurrentPlayer->numHeroes;
+gpCurrentPlayer->heroes[gpCurrentPlayer->numHeroes] = -1;
+if (gpCurrentPlayer->currHeroId == visitingHero->id) {
+    gpCurrentPlayer->currHeroId = -1;
+    if (gNetLocalGamePos == visitingHero->owner) {
+        gpAdvManager->drawCursor = 0;
+        gpAdvManager->inDialog = 0;
+    }
+}
+hero* placedHero = gpGame->GetHero(garrisonHero->id);
+point.x = currentTown->mapX;
+point.y = currentTown->mapY;
+point.z = currentTown->mapZ;
+placedHero->PlaceInMap(player, point, 0);
+"""
+    if contract_violations(swap_heroes_probe, swap_heroes_key):
+        failures.append("aligned SwapHeroes source shape did not pass")
+    broken_swap_heroes_probes = (
+        (swap_heroes_probe.replace(
+            "hero* garrisonHero = gpGame->GetHero(currentTown->garrisonHeroId);\n"
+            "hero* visitingHero = gpGame->GetHero(currentTown->visitingHeroId);",
+            "hero* visitingHero = gpGame->GetHero(currentTown->visitingHeroId);\n"
+            "hero* garrisonHero = gpGame->GetHero(currentTown->garrisonHeroId);"),
+         "two resident GetHero statements"),
+        (swap_heroes_probe.replace(
+            "record_hide_hero", "GameFn_0049C720"),
+         "record_hide_hero, restore_cell"),
+        (swap_heroes_probe.replace(
+            "--gpCurrentPlayer->numHeroes;\n",
+            "", 1).replace(
+                "for (int i = rosterIndex;",
+                "--gpCurrentPlayer->numHeroes;\nfor (int i = rosterIndex;"),
+         "roster-shift loop before the count decrement"),
+        (swap_heroes_probe.replace(
+            "        gpAdvManager->inDialog = 0;\n", ""),
+         "nested current/local-owner latch scope"),
+    )
+    for probe, description in broken_swap_heroes_probes:
+        if not any(description in rule.description for rule in
+                   contract_violations(probe, swap_heroes_key)):
+            failures.append("broken SwapHeroes " + description
+                            + " source shape passed")
     is_capitol_key = ("game.obj", 0xBCCB4)
     is_capitol_probe = "return HasBuilding(HALL_CAPITOL_ID, 0);"
     if contract_violations(is_capitol_probe, is_capitol_key):
@@ -5807,29 +5942,89 @@ __forceinline type_point get_target() const
     if not hero_get_target_header_violations(broken_get_target):
         failures.append("broken Hero.h get_target field order passed")
     hide_hero_probe = """\
+enum eRS_Messages {
+    RS_GAME_HEADER_INFO = 1023,
+    RS_GAME_HEADER_INFO_INIT = 1024,
+    RS_GAME_HEADER_INFO_END = 1025,
+    RS_NEW_SETUP_INFO = 1026,
+    RS_SCROLL = 1027,
+    RS_NEW_MAP_HEADER_INFO = 1028,
+    RS_MAP_HEADER_REQUEST = 1029,
+    RS_MAP_FILE_NAME = 1030,
+    RS_SORT_MAPS = 1031,
+    RS_SET_FILTER = 1032,
+    RS_REQUEST_HERO_FACE = 1035,
+    RS_REQUEST_HERO_FACE_REPLY = 1036,
+    RS_SETAGR = 1037,
+    RS_NEW_HOST = 1038,
+    RS_UPDATE_PLAYER_POS = 1039,
+    RS_NEW_PLAYER = 1040,
+    RS_REQ_HEADER_CONFIRM = 1041,
+    RS_HEADER_CONFIRM = 1042,
+    RS_CLICK = 1043,
+    RS_TOWN_UPDATE = 1044,
+    RS_LAUNCHING_GAME = 1045,
+    RS_BAD_VERSION = 1046,
+    RS_GAME_TRANSMIT_PENDING = 1082,
+    RS_GAME_HEADER_INFO_INIT_EX = 1083,
+    RS_HEADERS_REQUEST = 1084,
+};
+class CNetMsg {
+public:
+    CNetMsg(eRS_Messages subType, unsigned long size)
+    {
+        this->subType = subType;
+        field_00 = -1;
+        this->size = size;
+        field_04 = 0;
+        field_10 = 0;
+    }
+};
+class CMapChange : public CNetMsg {
+public:
+    CMapChange(eRS_Messages id, unsigned long size)
+        : CNetMsg(id, size) {}
+};
 class CMCHideHero : public CMapChange {
 public:
     int heroId;
-    CMCHideHero(int id)
+    CMCHideHero(int heroId)
         : CMapChange(RS_HIDE_HERO, sizeof(CMCHideHero))
     {
-        heroId = id;
+        this->heroId = heroId;
     }
 };
 """
     if cmc_hide_hero_header_violations(hide_hero_probe):
-        failures.append("aligned CMCHideHero constructor did not pass")
+        failures.append("aligned CNetMsg constructor chain did not pass")
     broken_hide_hero_probes = (
-        hide_hero_probe.replace(
+        (hide_hero_probe.replace("RS_SCROLL = 1027", "RS_SCROLL = 2027"),
+         "netmsg.h eRS_Messages"),
+        (hide_hero_probe.replace(
+            "CNetMsg(eRS_Messages subType, unsigned long size)",
+            "CNetMsg(int new_sub_type, unsigned long new_size)").replace(
+                "this->subType = subType", "subType = new_sub_type").replace(
+                    "this->size = size", "size = new_size"),
+         "netmsg.h:167 CNetMsg"),
+        (hide_hero_probe.replace(
+            "CMapChange(eRS_Messages id, unsigned long size)",
+            "CMapChange(eRS_Messages id, unsigned long messageSize)").replace(
+                "CNetMsg(id, size)", "CNetMsg(id, messageSize)"),
+         "netmsg.h:532 CMapChange"),
+        (hide_hero_probe.replace(
+            "CMCHideHero(int heroId)", "CMCHideHero(int id)").replace(
+                "this->heroId = heroId", "heroId = id"),
+         "netmsg.h:717 CMCHideHero"),
+        (hide_hero_probe.replace(
             ": CMapChange(RS_HIDE_HERO, sizeof(CMCHideHero))",
             ": CMapChange()"),
-        hide_hero_probe.replace(
-            "    {\n        heroId = id;\n    }",
-            ", heroId(id)\n    {}"),
+         "netmsg.h:717 CMCHideHero"),
     )
-    if any(not cmc_hide_hero_header_violations(probe)
-           for probe in broken_hide_hero_probes):
-        failures.append("broken CMCHideHero constructor shape passed")
+    for probe, description in broken_hide_hero_probes:
+        if not any(description in defect for _line, defect in
+                   cmc_hide_hero_header_violations(probe)):
+            failures.append("broken " + description
+                            + " constructor shape passed")
     claim_message_probe = """\
 class CMCClaimMine : public CMapChange {
 public:
@@ -6632,7 +6827,7 @@ def scan() -> tuple[
     audited.add(_file_audit_scope("include/netmsg.h"))
     hide_hero_defects = cmc_hide_hero_header_violations(netmsg_text)
     claim_message_defects = cmc_claim_header_violations(netmsg_text)
-    checked += 3
+    checked += 6
     missing.extend(FileContractViolation("include/netmsg.h", line,
                                          description)
                    for line, description in

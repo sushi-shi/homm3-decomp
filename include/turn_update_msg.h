@@ -12,7 +12,8 @@ public:
     int m_gamePos;
 
     CTurnUpdateMsg(int gamePos)
-        : CNetMsg(0x3f8, sizeof(CTurnUpdateMsg)), m_gamePos(gamePos) {}
+        : CNetMsg(RS_TURN_UPDATE, sizeof(CTurnUpdateMsg)),
+          m_gamePos(gamePos) {}
 };
 SIZE(CTurnUpdateMsg, 24);
 

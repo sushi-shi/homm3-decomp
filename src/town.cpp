@@ -501,8 +501,14 @@ void town::remove_garrison_hero()
 // acting player's roster and map cell, broadcasts the hide change, then
 // places the former garrison hero on the town tile. Retail clears the two
 // adventure-view latches only when the hidden hero was both current and
-// locally owned. `std::swap` is byte-material: its reference-based exchange
-// gives VC6 retail's load/store order and register allocation.
+// locally owned. Dreamcast splits the exchange over lines 1115-1117; the
+// precise source spelling is unknown because no temporary survives CodeView.
+// Retail requires `std::swap`'s reference boundary: a natural temporary plus
+// two assignments makes VC6 retain the already-loaded ids and falls to
+// 88.92481%. The coherent base-first CMCHideHero constructor leaves only its
+// caller-specific zero/id store schedule unmatched (97.77444%); reversing the
+// shared constructor closes this caller but contradicts netmsg.h:717-718 and
+// breaks exact playerData::add_garrison_hero, so that old 100% remains history.
 VA(0x005be450, 0x1AC)  // anchor-global, dc 0x166864
 void town::SwapHeroes()
 {

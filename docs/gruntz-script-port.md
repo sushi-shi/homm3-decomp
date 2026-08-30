@@ -330,6 +330,46 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   constructor flattening, direct plural access, duplicated cost fetches,
   renamed `resCost`/`maxGold`, and lost one-statement grouping fatal.
 
+- **2026-08-30 — `town::SwapHeroes` banks its Dreamcast source graph and
+  leaves the former 100% member-first maximum as history.** The mandatory
+  dossier for retail `0x005be450` / `town.obj:0x166864` records 20 source
+  rows, eight inferred SH4 blocks, seven lexical scopes, no surviving locals,
+  and the ordered `GetHero` pair, exchange group, `FindHero`,
+  `record_hide_hero`, `restore_cell`, `CMCHideHero` / `SendMapChange`, roster
+  compaction and final `PlaceInMap`. Raw dependent records also prove
+  `CNetMsg(eRS_Messages subType, unsigned long size)`,
+  `CMapChange(eRS_Messages id, unsigned long size)`, and
+  `CMCHideHero(int heroId)`, including the five ordered CNetMsg assignments
+  and the base-before-member hide constructor.
+
+  Restoring the three parameter identities and missing enum type is byte-flat
+  at **97.77444%**. All 16 Windows CFG blocks, seven branches and the return
+  still agree; the complete residual is the equivalent zero/id register and
+  stack-store schedule inside the inlined hide constructor. The banked 100%
+  used a source-false member-first constructor and is not admissible.
+  Definition-placement variants for each of the three constructors,
+  `__forceinline`, inline depths 1/2/3, direct/named/reference/pointer id
+  arguments and an intermediate `CMapChange*` were byte-flat. Copy
+  initialization fell to **77.52631%**. Replacing `std::swap` with the natural
+  three-statement temporary fell to **88.92481%** because VC6 retained the two
+  ids across the inlined `GetHero` bodies instead of performing retail's
+  reloads. Four function contracts and four header contracts, each with a
+  negative control, now reject another shape regression.
+
+  Classification is asymmetric: the constructor signatures/parameter names,
+  base-before-member chain, helper order, exchange semantics, roster loop,
+  nested latch scopes and placement tail **agree**; Complete's third recorder
+  argument, dword hero slots and retail-required reference exchange lowering
+  are **retail-only**; Dreamcast's two-argument recorder and signed-char
+  `THeroID` slots are **dc-only**. Restoring CNetMsg's enum signature also
+  retired the provisional private `eRS_LobbyMessages` split: the DC lobby
+  rungs now live in one TU-scoped view of `eRS_Messages`, while already-named
+  turn/gift producers use their enum constants. This causes no checkpoint
+  movement; exact `add_garrison_hero` and `StartLocalPlayerTurn` remain exact.
+  The exact lexical exchange spelling and why
+  retail C2 assigns the inlined id to ECX while the present coherent build
+  assigns it to EAX remain **unknown** compiler-state details.
+
 - **2026-08-30 — `town::destroy_extra_capitol` restores three positive
   Dreamcast helper boundaries byte-flat at 96.4595%.** The dossier at
   `town.obj+0x166ed8` has no surviving locals but records two
