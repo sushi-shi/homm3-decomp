@@ -1238,7 +1238,7 @@ events	?monsters_join@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@
 # (push 0xb4 in townManager::Open), layout-required and not gateable
 # per-TU. hist keeps 100.0000; the saturation law says a later
 # declarator can carry it back.
-events	?monsters_sell_out@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	100.0000	100.0000	100.0000	0xa7250
+events	?monsters_sell_out@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	99.9517	100.0000	100.0000	0xa7250
 events	?show_rewards@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@2@J@Z	100.0000	100.0000	100.0000	0xa0b00
 exec	?AddManager@executive@@QAEHPAVbaseManager@@H@Z	100.0000	100.0000	100.0000	0xb0b20
 exec	?CallManager@executive@@QAEXPAVbaseManager@@@Z	100.0000	100.0000	100.0000	0xb0c70
@@ -2918,6 +2918,7 @@ swapmgr	?Close@swapManager@@UAEXXZ	100.0000	100.0000	100.0000	0x1aed20
 swapmgr	?DrawSelector@swapManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1aedc0
 swapmgr	?IsLeftHero@swapManager@@QAE_NXZ	100.0000	100.0000	100.0000	0x1b1380
 swapmgr	?OnWidgetDeselect@swapManager@@QAEXAAVmessage@@AAH@Z	88.4550	99.9650	99.9650	0x1b10d0
+swapmgr	?Reset@swapManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1ae5b0
 swapmgr	?SendChat@CSwapManagerChatEdit@@UAEXPBDH@Z	100.0000	100.0000	100.0000	0x1ae370
 swapmgr	?SendHeroUpdate@swapManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1afbf0
 swapmgr	?SwapMons@swapManager@@QAEXXZ	79.2453	79.2453	79.2453	0x1b0da0

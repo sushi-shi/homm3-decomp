@@ -115,6 +115,7 @@ public:
     // Do not rely on sizeof(swapManager).
 
     swapManager(hero* leftHero, hero* rightHero);
+    void Reset();
     virtual int Open(int newPriority);  // baseManager vtable slot 0
     virtual void Close();               // slot 1
     virtual int Main(message& msg);     // slot 2
