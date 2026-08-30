@@ -901,9 +901,6 @@ call	drawing.obj	0x84420	army::get_controlling_side
 call	drawing.obj	0x849c4	atexit
 call	drawing.obj	0x84dac	combatManager::InInvisibleColumn
 call	drawing.obj	0x84dac	combatManager::ValidHex
-call	drawing.obj	0x84e2c	combatManager::DrawDeadOccupants
-call	drawing.obj	0x84e2c	combatManager::DrawObstacle
-call	drawing.obj	0x84e2c	combatManager::DrawObstacleAt
 call	drawing.obj	0x85978	CSprite::GetWidth
 call	drawing.obj	0x85978	SLimitData::Intersects
 call	drawing.obj	0x85a48	CSprite::GetHeight

@@ -738,15 +738,12 @@ void combatManager::UpdateMouseGrid(int iNewMouseGridIndex,
     UpdateMouseGrid(iNewMouseGridIndex, hexes, 0);
 }
 
-// Complete keeps the DC six-stage battlefield compositor but expands the
-// small obstacle/dead-stack helpers into the two grid walks. The first pass
+// Complete keeps the DC six-stage battlefield compositor. The first pass
 // draws underlay obstacles, the eight-priority pass interleaves walls, corpses,
 // ordinary obstacles and living stacks, and the tail posts either the full
-// combat area or the accumulated creature-effect extent. All 117 CFG blocks
-// and branch targets agree with retail. Spelling the limited blit directly
-// from drawbridgeBounds restores retail's saved-minimum register schedule.
-// The 98.91% residual is confined to VC6 register lifetimes in the first
-// obstacle walk; there is no control-flow distance.
+// combat area or the accumulated creature-effect extent. Dreamcast's line
+// table preserves the three small helper boundaries which retail /Ob2 folds
+// into these walks.
 // E:\gamedcs\drawing.cpp:1141
 VA(0x00494440, 0x7d5)  // anchor-global + retail arity, dc 0x84e2c
 void combatManager::DrawFrame(unsigned char update,
@@ -778,50 +775,40 @@ void combatManager::DrawFrame(unsigned char update,
                 gpWindowManager->screenBitmap,
                 combatWindow->chatWidget->x,
                 combatWindow->chatWidget->y, false);
-            goto background_ready;
+        } else {
+            DrawBackground();
         }
-    } else {
-        if (!bRefreshBackground)
-            goto background_ready;
+    } else if (bRefreshBackground) {
         if (field_53b8) {
-            if (!bLimitCreatureEffect && !bLimitDraw && !field_13d30) {
-                field_53b0->Draw(0, 0, 800, 556,
-                                 gpWindowManager->screenBitmap,
-                                 0, 0, false);
-            } else {
+            if (bLimitCreatureEffect || bLimitDraw || field_13d30) {
                 field_53b0->Draw(
                     drawbridgeBounds.iMinX, drawbridgeBounds.iMinY,
                     drawbridgeBounds.Width(), drawbridgeBounds.Height(),
                     gpWindowManager->screenBitmap,
                     drawbridgeBounds.iMinX, drawbridgeBounds.iMinY, false);
+            } else {
+                field_53b0->Draw(0, 0, 800, 556,
+                                 gpWindowManager->screenBitmap,
+                                 0, 0, false);
             }
-            goto background_ready;
+        } else {
+            DrawBackground();
         }
     }
-    DrawBackground();
-
-background_ready:
 
     for (int row = 0; row < 11; row++) {
         for (int column = 1; column < COMBAT_GRID_LAST_COLUMN; column++) {
             hexcell& cell = cells[GetHexIndex(column, row)];
             if (cell.field_10 & 1) {
-                int obstacleIndex = cell.field_14;
-                if (obstacles.begin[obstacleIndex].shape->underlay) {
-                    TObstacle& obstacle = obstacles.begin[obstacleIndex];
+                TObstacle& obstacle = obstacles[cell.field_14];
+                if (obstacle.shape->underlay) {
                     if (obstacle.is_visible
                             || (obstacle.owner == currentSide
                                 && sideIsLocalHuman[currentSide])
                             || (obstacle.owner != currentSide
                                 && !sideIsLocalHuman[currentSide])
                             || field_13d75) {
-                        int yOffset =
-                            42 * (obstacle.shape->minRow - 1);
-                        DrawSpriteObject(
-                            obstacle.sprite,
-                            field_13ffc
-                                % obstacle.sprite->GetNumFrames(0),
-                            cell.field_04, cell.field_06 - yOffset, 0);
+                        DrawObstacle(cell);
                     }
                 }
             }
@@ -889,32 +876,9 @@ background_ready:
                         && priority == COMBAT_DRAW_PRIORITY_WALL) {
                     DrawWallAt(index, step);
                 } else if (priority == COMBAT_DRAW_PRIORITY_CORPSE) {
-                    for (int body = 0; body < cell.iBodiesInHex; body++) {
-                        army* dead = cell.get_dead_army(body);
-                        if (cell.deadPartOfDouble[body] != dead->facing)
-                            dead->DrawToBuffer(
-                                cell.field_00, cell.field_02, 0);
-                    }
-                } else if (priority == COMBAT_DRAW_PRIORITY_OBSTACLE
-                           && (cell.field_10 & 1)) {
-                    int obstacleIndex = cell.field_14;
-                    if (!obstacles.begin[obstacleIndex].shape->underlay) {
-                        TObstacle& obstacle = obstacles.begin[obstacleIndex];
-                        if (obstacle.is_visible
-                                || (obstacle.owner == currentSide
-                                    && sideIsLocalHuman[currentSide])
-                                || (obstacle.owner != currentSide
-                                    && !sideIsLocalHuman[currentSide])
-                                || field_13d75) {
-                            int yOffset =
-                                42 * (obstacle.shape->minRow - 1);
-                            DrawSpriteObject(
-                                obstacle.sprite,
-                                field_13ffc
-                                    % obstacle.sprite->GetNumFrames(0),
-                                cell.field_04, cell.field_06 - yOffset, 0);
-                        }
-                    }
+                    DrawDeadOccupants(index);
+                } else if (priority == COMBAT_DRAW_PRIORITY_OBSTACLE) {
+                    DrawObstacleAt(index);
                 }
 
                 if (cells[index].HasArmy())
@@ -967,6 +931,27 @@ background_ready:
 
     if (bLimitCreatureEffect || bLimitDraw)
         field_13d30 = 0;
+}
+
+// Dreamcast drawing.cpp:1399. Complete's /Ob2 build folds this helper into
+// DrawFrame, but the source boundary and statement grouping remain positive
+// CodeView evidence.
+DC_ONLY(0x853f4, 0x84)
+inline void combatManager::DrawObstacleAt(int hex_index)
+{
+    hexcell& cell = cells[hex_index];
+    if (cell.field_10 & 1) {
+        TObstacle& obstacle = obstacles[cell.field_14];
+        if (!obstacle.shape->underlay) {
+            if (obstacle.is_visible
+                    || (obstacle.owner == currentSide
+                        && sideIsLocalHuman[currentSide])
+                    || (obstacle.owner != currentSide
+                        && !sideIsLocalHuman[currentSide])
+                    || field_13d75)
+                DrawObstacle(cell);
+        }
+    }
 }
 
 // EXACT. Retail's wall row selects one of five preloaded images from each of
@@ -1087,6 +1072,20 @@ draw_special_wall:
 
         DrawWall(image, 0, 0, image->GetWidth(), image->GetHeight(),
                  traits.x, traits.y);
+    }
+}
+
+// Dreamcast drawing.cpp:1581. Complete's /Ob2 build folds the corpse walk
+// into DrawFrame; retaining the helper keeps the original local lifetime and
+// statement boundary visible to the compiler.
+DC_ONLY(0x857d4, 0x70)
+inline void combatManager::DrawDeadOccupants(int index)
+{
+    hexcell& cell = cells[index];
+    for (int body = 0; body < cell.iBodiesInHex; body++) {
+        army* dead = cell.get_dead_army(body);
+        if (cell.deadPartOfDouble[body] != dead->facing)
+            dead->DrawToBuffer(cell.field_00, cell.field_02, 0);
     }
 }
 
