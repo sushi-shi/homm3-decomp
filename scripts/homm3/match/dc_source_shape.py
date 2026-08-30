@@ -501,6 +501,39 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"if\s*\(\s*HasBuilding\s*\(\s*MAGE_GUILD_ID\s*,\s*1\s*"
             r"\)\s*\)\s*\{"),
     ),
+    ("spells.obj", 0x153B60): (
+        SourceRule(
+            "AreaEffect keeps Dreamcast's casting_hero, multiple_targets, "
+            "targets and damage locals in CodeView declaration order and "
+            "under their recovered names",
+            r"\A\s*hero\s*\*\s*casting_hero\s*;\s*unsigned\s+char\s+"
+            r"multiple_targets\s*;.*?std\s*::\s*vector\s*<\s*army\s*\*\s*>"
+            r"\s+targets\s*;.*?\blong\s+damage\s*;"),
+        SourceRule(
+            "AreaEffect keeps Dreamcast's initial SpellEffect, targets "
+            "vector construction and mark_area_effect statement order",
+            r"\bSpellEffect\s*\(.*?\)\s*;\s*std\s*::\s*vector\s*<\s*army"
+            r"\s*\*\s*>\s+targets\s*;.*?\bmark_area_effect\s*\(.*?"
+            r"\btargets\s*\)\s*;"),
+        SourceRule(
+            "AreaEffect keeps both Dreamcast ComputeSpellDamage statements "
+            "bound to its recovered casting_hero local",
+            r"\bComputeSpellDamage\s*\([^;]*?\bcasting_hero\b", 2, 2),
+        SourceRule(
+            "AreaEffect keeps Dreamcast's multiple_targets initialization, "
+            "second-victim assignment and final branch order",
+            r"\bmultiple_targets\s*=\s*0\s*;.*?"
+            r"if\s*\(\s*!\s*victim\s*\)\s*victim\s*=\s*target\s*;\s*"
+            r"else\s*multiple_targets\s*=\s*1\s*;.*?"
+            r"if\s*\(\s*victim\s*\)\s*\{\s*"
+            r"if\s*\(\s*multiple_targets\s*\)"),
+        SourceRule(
+            "AreaEffect keeps Dreamcast's failed-target effected clear "
+            "before the successful-target damage statement",
+            r"\beffected\s*\[\s*target\s*->\s*combatSide\s*\]\s*"
+            r"\[\s*target\s*->\s*bitIndex\s*\]\s*=\s*0\s*;.*?"
+            r"\bdamage\s*=\s*ComputeSpellDamage\s*\("),
+    ),
     ("resourcemanager.obj", 0x121EC8): (
         SourceRule(
             "GetPalette24 keeps Dreamcast's char[24] header and TRGBA[256] "
@@ -2636,6 +2669,68 @@ if (currentHero
 """
     if not contract_violations(flattened_give_spells, give_spells_key):
         failures.append("flattened GiveSpells guard scopes passed")
+    area_effect_key = ("spells.obj", 0x153B60)
+    area_effect_probe = """\
+hero* casting_hero;
+unsigned char multiple_targets;
+SpellEffect(akSpellTraits[iSpellType].m_effect, targetCell, 100, 0);
+std::vector<army*> targets;
+long damage;
+mark_area_effect(iSpellType, targetCell, mastery, targets);
+casting_hero = heroes[currentSide];
+multiple_targets = 0;
+effected[target->combatSide][target->bitIndex] = 0;
+damage = ComputeSpellDamage(iSpellType, power, mastery, casting_hero,
+                            target->get_controller(), target, 0);
+if (!victim)
+    victim = target;
+else
+    multiple_targets = 1;
+if (victim) {
+    if (multiple_targets) {
+        damage = ComputeSpellDamage(iSpellType, power, mastery,
+                                    casting_hero, 0, 0, 0);
+    }
+}
+"""
+    if contract_violations(area_effect_probe, area_effect_key):
+        failures.append("aligned AreaEffect source shape did not pass")
+    reordered_area_effect_locals = area_effect_probe.replace(
+        "std::vector<army*> targets;\nlong damage;",
+        "long damage;\nstd::vector<army*> targets;")
+    if not any("declaration order" in rule.description for rule in
+               contract_violations(reordered_area_effect_locals,
+                                   area_effect_key)):
+        failures.append("reordered AreaEffect locals passed")
+    reordered_area_effect_setup = area_effect_probe.replace(
+        "SpellEffect(akSpellTraits[iSpellType].m_effect, targetCell, 100, 0);\n"
+        "std::vector<army*> targets;\nlong damage;\n"
+        "mark_area_effect(iSpellType, targetCell, mastery, targets);",
+        "std::vector<army*> targets;\nlong damage;\n"
+        "mark_area_effect(iSpellType, targetCell, mastery, targets);\n"
+        "SpellEffect(akSpellTraits[iSpellType].m_effect, targetCell, 100, 0);")
+    if not any("statement order" in rule.description for rule in
+               contract_violations(reordered_area_effect_setup,
+                                   area_effect_key)):
+        failures.append("reordered AreaEffect setup statements passed")
+    flattened_area_effect_caster = area_effect_probe.replace(
+        "casting_hero, 0, 0, 0", "heroes[currentSide], 0, 0, 0")
+    if not any("both Dreamcast ComputeSpellDamage" in rule.description
+               for rule in contract_violations(flattened_area_effect_caster,
+                                                area_effect_key)):
+        failures.append("flattened AreaEffect casting_hero use passed")
+    renamed_area_effect_multiple = area_effect_probe.replace(
+        "multiple_targets", "several")
+    if not any("multiple_targets initialization" in rule.description
+               for rule in contract_violations(renamed_area_effect_multiple,
+                                                area_effect_key)):
+        failures.append("renamed AreaEffect multiple_targets local passed")
+    erased_area_effect_clear = area_effect_probe.replace(
+        "effected[target->combatSide][target->bitIndex] = 0;\n", "")
+    if not any("effected clear" in rule.description for rule in
+               contract_violations(erased_area_effect_clear,
+                                   area_effect_key)):
+        failures.append("erased AreaEffect effected clear passed")
     palette24_key = ("resourcemanager.obj", 0x121EC8)
     palette24_path = """\
 streamInterface->Read(header, sizeof(header));
