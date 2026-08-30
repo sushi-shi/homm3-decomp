@@ -2683,9 +2683,12 @@ void TSellArtifactWindow::Update(unsigned char bUpdate)
 VA(0x005ec550, 0x7ba)  // ordermap clean run + arity ret 4, dc 0x18a550
 void TSellCreatureWindow::Update(bool bUpdate)
 {
+    int iTempMaxUnitsToTrade;
+    int bTempLeftDenominated;
+    int iTempTradeRatio;
+    message msg;
     int iRightQty;
     int iLeftQty;
-    message msg;
     msg.id = MESSAGE_WIDGET;
 
     if (gSelectedArtifact != -1 && gLeftResource != -1) {
@@ -2862,9 +2865,6 @@ void TSellCreatureWindow::Update(bool bUpdate)
                 msg.codeY = resource + 77;
                 msg.extraText = gText;
                 if (gSelectedArtifact != -1) {
-                    int iTempTradeRatio;
-                    int bTempLeftDenominated;
-                    int iTempMaxUnitsToTrade;
                     ComputeTradeRatios(gSelectedArtifact, resource,
                                        &iTempTradeRatio,
                                        &bTempLeftDenominated,
