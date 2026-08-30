@@ -542,6 +542,50 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"\blong\s+choice\s*;.*?\blong\s+i\s*;.*?"
             r"\bTSecondarySkill\s+skill\s*;"),
     ),
+    ("game.obj", 0xB41E0): (
+        SourceRule(
+            "PerWeek keeps Dreamcast's ten procedure-scope locals in raw "
+            "NB11 record order",
+            r"\A\s*hero\s*\*\s*obscuring_hero\s*;\s*"
+            r"int\s+iAlign\s*;\s*"
+            r"TCreatureType\s+alternate_bonus\s*;\s*"
+            r"long\s+bonus_amount\s*;\s*"
+            r"int\s+x\s*;\s*int\s+y\s*;\s*int\s+i\s*;\s*"
+            r"int\s+z\s*;\s*TCreatureType\s+bonus_creature\s*;\s*"
+            r"NewmapCell\s*\*\s*map_cell\s*;"),
+        SourceRule(
+            "PerWeek keeps Dreamcast's iCount and iIncrease locals inside "
+            "the MONSTER growth scope",
+            r"case\s+MONSTER\s*:\s*\{\s*if\s*\([^;]*?\)\s*\{\s*"
+            r"int\s+iCount\s*=.*?;\s*int\s+iIncrease\s*="),
+        SourceRule(
+            "PerWeek keeps Dreamcast's luck_bonus local inside the "
+            "FOUNTAIN_OF_FORTUNE scope",
+            r"case\s+FOUNTAIN_OF_FORTUNE\s*:\s*\{\s*"
+            r"int\s+luck_bonus\s*=\s*Random\s*\("),
+        SourceRule(
+            "PerWeek keeps Dreamcast's currHero local inside the weekly "
+            "hero-flag loop",
+            r"for\s*\(\s*i\s*=\s*0\s*;\s*i\s*<\s*HERO_COUNT.*?\)\s*"
+            r"\{\s*hero\s*\*\s*currHero\s*=\s*&\s*heroes\s*\[\s*i\s*\]"),
+        SourceRule(
+            "PerWeek keeps the Dreamcast-proven IsCastle helper boundary "
+            "when Complete folds GiveTroopsToNeutralTowns into the caller",
+            r"\btowns\s*\[\s*i\s*\]\s*\.\s*IsCastle\s*\(\s*\)"),
+        SourceRule(
+            "PerWeek keeps Complete retail's built-mask Summoning Portal "
+            "test rather than the active-mask spelling",
+            r"current_town\s*->\s*HasBuilding\s*\(\s*EXTRA_1_ID\s*,\s*0\s*\)"),
+    ),
+    ("game.obj", 0xBCC40): (
+        SourceRule(
+            "town::IsCastle keeps Dreamcast line 338's three ordered "
+            "HasBuilding helper calls",
+            r"return\s+HasBuilding\s*\(\s*CASTLE_FORT_ID\s*,\s*0\s*\)"
+            r"\s*\|\|\s*HasBuilding\s*\(\s*CASTLE_CITADEL_ID\s*,\s*0\s*\)"
+            r"\s*\|\|\s*HasBuilding\s*\(\s*CASTLE_CASTLE_ID\s*,\s*0\s*\)"
+            r"\s*;"),
+    ),
     ("town.obj", 0x1664B0): (
         SourceRule(
             "initialize_hordes keeps Dreamcast lines 954/957/958/959/960's "
@@ -2665,6 +2709,85 @@ int iPiecesRemoved;
         "float fPercentExtraPieces;")
     if not contract_violations(reordered_setup_puzzle, setup_puzzle_key):
         failures.append("reordered SetupPuzzlePieces locals passed")
+    per_week_key = ("game.obj", 0xB41E0)
+    per_week_probe = """\
+hero* obscuring_hero;
+int iAlign;
+TCreatureType alternate_bonus;
+long bonus_amount;
+int x;
+int y;
+int i;
+int z;
+TCreatureType bonus_creature;
+NewmapCell* map_cell;
+case MONSTER: {
+    if (!(map_cell->extraInfo & 0x40000)) {
+        int iCount = map_cell->extraInfo & 0xfff;
+        int iIncrease = iCount / 10;
+    }
+}
+case FOUNTAIN_OF_FORTUNE: {
+    int luck_bonus = Random(0, 3);
+}
+for (i = 0; i < HERO_COUNT; ++i) {
+    hero* currHero = &heroes[i];
+}
+if (towns[i].IsCastle()) {}
+current_town->HasBuilding(EXTRA_1_ID, 0);
+"""
+    if contract_violations(per_week_probe, per_week_key):
+        failures.append("aligned PerWeek source shape did not pass")
+    reordered_per_week = per_week_probe.replace(
+        "hero* obscuring_hero;\nint iAlign;\n"
+        "TCreatureType alternate_bonus;\nlong bonus_amount;",
+        "TCreatureType alternate_bonus;\nlong bonus_amount;\n"
+        "int iAlign;\nhero* obscuring_hero;")
+    if not any("procedure-scope locals" in rule.description for rule in
+               contract_violations(reordered_per_week, per_week_key)):
+        failures.append("reordered PerWeek procedure locals passed")
+    hoisted_per_week_count = per_week_probe.replace(
+        "case MONSTER: {\n    if (!(map_cell->extraInfo & 0x40000)) {\n"
+        "        int iCount = map_cell->extraInfo & 0xfff;\n"
+        "        int iIncrease = iCount / 10;",
+        "int iCount;\nint iIncrease;\ncase MONSTER: {\n"
+        "    if (!(map_cell->extraInfo & 0x40000)) {")
+    if not any("MONSTER growth scope" in rule.description for rule in
+               contract_violations(hoisted_per_week_count, per_week_key)):
+        failures.append("hoisted PerWeek monster locals passed")
+    hoisted_per_week_luck = per_week_probe.replace(
+        "case FOUNTAIN_OF_FORTUNE: {\n"
+        "    int luck_bonus = Random(0, 3);",
+        "int luck_bonus;\ncase FOUNTAIN_OF_FORTUNE: {\n"
+        "    luck_bonus = Random(0, 3);")
+    if not any("FOUNTAIN_OF_FORTUNE scope" in rule.description for rule in
+               contract_violations(hoisted_per_week_luck, per_week_key)):
+        failures.append("hoisted PerWeek luck local passed")
+    flattened_per_week_castle = per_week_probe.replace(
+        "towns[i].IsCastle()",
+        "towns[i].built & bitNumber[CASTLE_FORT_ID]")
+    if not any("IsCastle helper boundary" in rule.description for rule in
+               contract_violations(flattened_per_week_castle,
+                                   per_week_key)):
+        failures.append("flattened PerWeek IsCastle call passed")
+    active_summoning_portal = per_week_probe.replace(
+        "HasBuilding(EXTRA_1_ID, 0)", "HasBuilding(EXTRA_1_ID, 1)")
+    if not any("built-mask Summoning Portal" in rule.description for rule in
+               contract_violations(active_summoning_portal, per_week_key)):
+        failures.append("active-mask PerWeek Summoning Portal test passed")
+    is_castle_key = ("game.obj", 0xBCC40)
+    is_castle_probe = """\
+return HasBuilding(CASTLE_FORT_ID, 0)
+    || HasBuilding(CASTLE_CITADEL_ID, 0)
+    || HasBuilding(CASTLE_CASTLE_ID, 0);
+"""
+    if contract_violations(is_castle_probe, is_castle_key):
+        failures.append("aligned town::IsCastle body did not pass")
+    flattened_is_castle = is_castle_probe.replace(
+        "HasBuilding(CASTLE_FORT_ID, 0)",
+        "(built & bitNumber[CASTLE_FORT_ID]) != 0")
+    if not contract_violations(flattened_is_castle, is_castle_key):
+        failures.append("flattened town::IsCastle HasBuilding call passed")
     load_boats_key = ("game.obj", 0xA46E8)
     load_boats_probe = """\
 unsigned short ushort_buffer;

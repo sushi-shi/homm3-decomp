@@ -1384,7 +1384,7 @@ game	?NextTown@playerData@@QAEHXZ	100.0000	100.0000	100.0000	0xbab40
 game	?NumOfGivenArtifact@playerData@@QAEHH@Z	100.0000	100.0000	100.0000	0xbabd0
 game	?PerDay@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc7fe0
 game	?PerMonth@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc8f40
-game	?PerWeek@game@@QAEXXZ	99.7274	99.7274	99.7274	0xc8780
+game	?PerWeek@game@@QAEXXZ	99.8370	99.8370	99.8370	0xc8780
 game	?ProcessOnMapHeroes@game@@QAEXXZ	100.0000	100.0000	100.0000	0xcae10
 game	?ProcessOnMapTowns@game@@QAEXXZ	80.3907	80.3907	80.3907	0xcaa70
 game	?ProcessRandomObjects@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc9dd0
