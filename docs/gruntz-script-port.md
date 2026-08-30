@@ -260,6 +260,21 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-30 — `town::GiveSpells` ratchets its Dreamcast-proven nested
+  guards at the honest 99.9216% schedule plateau.** Dreamcast breakpoint
+  rows 992/994/999 and their lexical scopes record the current-hero,
+  spellbook, and Mage Guild tests as three nested statement groups. Retail's
+  37 blocks and 23 branches independently agree with that lowering. A fatal
+  source rule and negative control now reject combining the guards into one
+  percentage-seeking `&&` expression.
+
+  The only remaining instruction delta is the order of two independent
+  reloads at the ordinary Mage Guild loop latch: retail reloads `level`
+  before `this`, while the candidate does the reverse. The prior bounded
+  656-shape loop search and the clean lifetime, condition, and const-member
+  controls either retain this order or score worse. No positive source fact
+  is removed to chase the transposition.
+
 - **2026-08-30 — `game::SetupPuzzlePieces` banks Dreamcast's complete
   seven-local declaration roster without sacrificing its score.** CodeView
   proves, in order, `long piece`, the two percentage floats, `int i`,
