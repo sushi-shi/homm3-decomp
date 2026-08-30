@@ -2116,7 +2116,7 @@ philai	?ValueOfMagicSchool@@YIHPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.
 philai	?ValueOfMine@@YIHPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x12a010
 philai	?ValueOfPowerSchool@@YIHPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x12a380
 philai	?ValueOfPrison@@YIHPAVNewmapCell@@PAVplayerData@@@Z	100.0000	100.0000	100.0000	0x12a3a0
-philai	?ValueOfRallyFlag@@YIHPBVhero@@PAJ@Z	92.5556	92.5556	92.5556	0x12a5f0
+philai	?ValueOfRallyFlag@@YIHPBVhero@@PAJ@Z	100.0000	100.0000	100.0000	0x12a5f0
 philai	?ValueOfRefugeeCamp@@YIHPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x12a700
 philai	?ValueOfResource@@YIJPBVhero@@PAVNewmapCell@@PAVplayerData@@@Z	100.0000	100.0000	100.0000	0x12a7c0
 philai	?ValueOfScroll@@YIHPBVhero@@PAVNewmapCell@@@Z	87.2222	87.2222	87.2222	0x12a8c0
