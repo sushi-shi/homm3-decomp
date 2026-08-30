@@ -596,21 +596,23 @@ struct SHeaderRequest {
     int m_number;
 };
 
-// One per-joining-player header-transfer job. Retail vtable 0x641d38
-// (stored by the ctor at 0x589240): slot 0 Go (0x577d70), slot 1 Tick
-// (0x577de0) - the slot WindowHandler's inlined CNewPlayerUpdateMan::Tick
-// dispatches - then four more virtuals (0x578930/0x5789f0/0x578a90/
-// 0x5795a0) not yet order-mapped onto the DC HeaderRequested/
-// HeaderConfirmed/RequestConfirmation/HandleRequests/Finish roster;
-// placeholders keep the slot arithmetic honest. The destructor is
-// NON-virtual: retail deletes through a direct call to 0x583ef0.
+// One per-joining-player header-transfer job. This view is still a known
+// two-type conflation: retail constructor 0x589240 stores vtable 0x641d38
+// (slots 0x577d70/0x577de0/0x578930), while the inline construction in
+// 0x58a280 stores the distinct vtable 0x641d44
+// (slots 0x5789f0/0x578a90/0x5795a0). The latter is the only family retail
+// directly corroborates for Dreamcast's CNewPlayerUpdateProc identity; the
+// former is separately labelled t_map_list_update by the secondary IDA
+// evidence. Split the two dynamic types before changing novtable: merely
+// removing it trades exact 0x583ef0 for exact 0x58a280 and is source-false.
+// The destructor is non-virtual: retail calls 0x583ef0 directly.
 // Member offsets are the ctor's stores (dpid +4, the +0x10..+0x18
 // buffer triple the dtor frees and zeroes, m_finished +0x20).
 class __declspec(novtable) CNewPlayerUpdateProc {
 public:
-    // Defined inline: Man::NewPlayer expands it (retail 0x58a280's
-    // guts), where the novtable model costs only the 0x641d44 vtbl
-    // store the real derived ctor 0x589240 performs.
+    // Temporary spelling for the conflated view above. The missing
+    // 0x641d44 store in Man::NewPlayer is a type-split defect, not a reason
+    // to falsify the already exact destructor by removing novtable here.
     CNewPlayerUpdateProc(unsigned long dpid)
     {
         m_dpid = dpid;

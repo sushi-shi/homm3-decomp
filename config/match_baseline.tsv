@@ -2672,7 +2672,7 @@ singleselectionwindow	?InitializeVCDescriptions@@YIEXZ	100.0000	100.0000	100.000
 singleselectionwindow	?IsFaceTaken@CNetPlayerHandler@@QAEEHH@Z	100.0000	100.0000	100.0000	0x177d10
 singleselectionwindow	?IsVersionCompatible@TSingleSelectionWindow@@QAEEPBD@Z	100.0000	100.0000	100.0000	0x189d30
 singleselectionwindow	?MakeHeroFilter@TSingleSelectionWindow@@QAEXXZ	87.3429	87.3429	87.3429	0x183890
-singleselectionwindow	?NewPlayer@CNewPlayerUpdateMan@@QAEXK@Z	95.3860	95.3860	95.3860	0x18a280
+singleselectionwindow	?NewPlayer@CNewPlayerUpdateMan@@QAEXK@Z	95.3860	100.0000	100.0000	0x18a280
 singleselectionwindow	?OnBadVersionMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18df50
 singleselectionwindow	?OnDeleteFile@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x18dfb0
 singleselectionwindow	?OnGameHeaderInfoInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	81.3049	81.3049	81.3049	0x18a440

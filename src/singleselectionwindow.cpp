@@ -3899,13 +3899,18 @@ unsigned char TSingleSelectionWindow::OnNewPlayerMsg(CNetMsg* pNetMsg)
 // vs dc 132): take the first free transfer slot and start a job for
 // the joining dpid - GetFirstAvailable and the proc ctor expand in
 // place (retail even keeps the unguarded Go through a null new).
+// Residual (95.3860%): retail's constructor expansion stores vtable
+// 0x641d44. The provisional header conflates that family with the distinct
+// 0x641d38 family constructed at 0x589240. Removing novtable makes this body
+// exact but injects a vptr reset into exact destructor 0x583ef0; do not bank
+// that one-for-one trade. Split the dynamic types first.
 VA(0x0058A280, 0x7B)  // anchor-callee OnNewPlayerMsg calls it (dpid) on pNewPlayerUpdateMan; body news the 0x24-byte proc + vcalls slot 0 (Go), size 0.93x dc 0x84, dc 0x14870c
 void CNewPlayerUpdateMan::NewPlayer(unsigned long dpid)
 {
-    int i = GetFirstAvailable();
-    if (i != -1) {
-        m_procs[i] = new CNewPlayerUpdateProc(dpid);
-        m_procs[i]->Go();
+    int index = GetFirstAvailable();
+    if (index != -1) {
+        m_procs[index] = new CNewPlayerUpdateProc(dpid);
+        m_procs[index]->Go();
     }
 }
 
