@@ -4433,8 +4433,11 @@ void advManager::DoEventPrison(hero* current_hero, NewmapCell* cell,
     const int prisonRescueText = 102;
     const int prisonHeroLimitText = 103;
     const int prisonEmptyText = 104;
-    int heroId = cell->extraInfo;
-    if (gpGame->heroAvailability[heroId]
+    // Dreamcast records this as THeroID (T_INT4).  The shared Windows model
+    // does not yet expose that domain enum, so retain its exact source name
+    // and compatible four-byte type rather than flattening the local away.
+    int heroID = cell->extraInfo;
+    if (gpGame->heroAvailability[heroID]
             != hero::HERO_AVAILABILITY_PRISON) {
         if (human_player)
             NormalDialog(gpAdventureEventText->GetText(
@@ -4457,26 +4460,27 @@ void advManager::DoEventPrison(hero* current_hero, NewmapCell* cell,
                          prisonRescueText),
                      1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
 
-    unsigned char savedFlag = gUnnamed67f574;
+    unsigned char OldColorCycling = gUnnamed67f574;
     gUnnamed67f574 = 0;
-    unsigned char savedPause = animCtrPaused;
+    unsigned char OldAnimCtrPaused = animCtrPaused;
     animCtrPaused = 1;
     CompleteDraw(0);
     UpdateScreen(0, 0);
     EraseObj(cell, point, 1);
 
-    hero* prisoner = &gpGame->heroes[heroId];
+    hero* prisoner = &gpGame->heroes[heroID];
     gpGame->record_show_hero(prisoner, current_hero->owner, point, 0);
     prisoner->owner = current_hero->owner;
-    gpGame->heroAvailability[heroId] = current_hero->owner;
-    // [2026-08-27] Residual (99.9540%): after the expanded bitset _Xran
-    // guard, retail reloads the two spilled values in home-slot order
-    // ([ebp-0xc] pointer, then [ebp-0x8] position); our CL reloads in use
-    // order. Tried and rejected: a named bitset<8>&, named reference proxy and
-    // single-site inline helper (all byte-flat), .set() (99.88, call form);
-    // the [i]=1 form below is the ceiling.
-    gpGame->heroPoolMap[heroId][current_hero->owner] = 1;
-    gpCurrentPlayer->heroes[gpCurrentPlayer->numHeroes] = heroId;
+    gpGame->heroAvailability[heroID] = current_hero->owner;
+    // [2026-08-30] Residual (99.9540%): all 15 blocks, 261 instructions and
+    // seven branches agree.  After the expanded bitset _Xran guard, retail
+    // reloads [ebp-0xc] then [ebp-0x8], while SP3 reloads the same homes in
+    // use order.  `why-reg` tested 41 guided mutations without improvement;
+    // at(), .set(), pointer/reference/proxy locals, a signed owner local, and
+    // both owner/pool declaration orders are flat or worse.  Keep the direct
+    // Complete-only pool update while the surrounding C1 schedule is open.
+    gpGame->heroPoolMap[heroID][current_hero->owner] = 1;
+    gpCurrentPlayer->heroes[gpCurrentPlayer->numHeroes] = heroID;
     ++gpCurrentPlayer->numHeroes;
     prisoner->x = point.x;
     prisoner->y = point.y;
@@ -4490,10 +4494,10 @@ void advManager::DoEventPrison(hero* current_hero, NewmapCell* cell,
     prisoner->obscure_cell();
 
     FizzleCenter(FIZZLE_SOUND_PICKUP);
-    animCtrPaused = savedPause;
-    gUnnamed67f574 = savedFlag;
+    animCtrPaused = OldAnimCtrPaused;
+    gUnnamed67f574 = OldColorCycling;
 
-    CMCTeleportHero change(heroId, point);
+    CMCTeleportHero change(heroID, point);
     SendMapChange(&change);
     advWindow->UpdateHeroLocators(-1, 1, 1);
 }
