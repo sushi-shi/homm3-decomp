@@ -63,32 +63,6 @@ homm3 link            # OPT-IN candidate link (layout study; the EXE is not runn
 homm3 clean           # nuke build/ entirely; `homm3 init` restores it
 ```
 
-## Rust resource oracle
-
-`tools/` contains an independent resource parser and rendering oracle following
-the local HoMM2 and Gruntz split: allocation-free, dependency-free `no_std`
-libraries for format logic, plus a `std` CLI for files, compression, corpus
-reports, and PNG inspection. Current coverage includes LOD/SND/VID archives,
-DEF sprites, engine-owned LOD payloads, IFF/XMIDI envelopes, concatenated H3C
-campaigns, all three retail H3M/TUT header generations, and the map stream
-through every terrain, object-template, placed-object, quest, and timed-event
-record. Every GM/TGM/CGM save revision accepted by retail Complete (16–18 and
-25–42) is also covered by a separate allocation-free parser; the local Steam
-install has no save corpus, so real-file validation remains open. It includes
-deterministic malformed-input coverage and an opt-in differential test against
-the actual reconstructed C++ renderers for every DEF encoding. The generated
-gate covers 2,048 draws, and the local four-LOD Steam gate agrees on all 39,939
-frames. Independent gates over the original US discs agree on every frame in
-RoE 1.0 (29,393), RoE 1.1 (29,393), the Armageddon's Blade supplement (5,599),
-and Shadow of Death (34,324), and validate all 251 standalone maps. They date
-the named interleaved DEF layout to RoE 1.0 and add support for its direct,
-compact version-1 H3C campaign headers. Retail resources are supplied locally
-and are never added to the repository.
-
-See [tools/README.md](tools/README.md) for commands and
-[the resource-format matrix](docs/resource-format-matrix.md) for the evidence
-boundary and remaining semantic work.
-
 ## License
 
 Project-authored reconstruction source and tooling are dedicated to the public
