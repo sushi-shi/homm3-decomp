@@ -540,20 +540,17 @@ public:
     int m_number;                 // +0x18
     char m_fileName[0x40];        // +0x1c
     int m_townTypes[8];           // +0x5c
-    unsigned int m_fileTimeLow;   // +0x7c
-    unsigned int m_fileTimeHigh;  // +0x80
+    FILETIME m_fileTime;          // +0x7c
 
-    CMapFileNameMsg(unsigned char flag, int number,
-                    GameSelectionHeadersStruct* hdr)
+    CMapFileNameMsg(unsigned char flag, int number, const char* fileName,
+                    int* townTypes, FILETIME fileTime)
         : CNetMsg(RS_MAP_FILE_NAME, sizeof(CMapFileNameMsg))
     {
         m_flag = flag;
         m_number = number;
-        strncpy(m_fileName, hdr->setup.filename, 0x3c);
-        m_fileTimeLow = hdr->fileTime.dwLowDateTime;
-        m_fileTimeHigh = hdr->fileTime.dwHighDateTime;
-        for (int i = 0; i < 8; ++i)
-            m_townTypes[i] = hdr->setup.alignment[i];
+        strncpy(m_fileName, fileName, 0x3c);
+        m_fileTime = fileTime;
+        memcpy(m_townTypes, townTypes, sizeof(m_townTypes));
     }
 };
 
@@ -660,7 +657,8 @@ public:
 // Complete's CNewPlayerUpdateProc implementation. NewPlayer constructs it
 // inline, proving both the 0x641d44 vptr and its placement before this body.
 // Go retains the Dreamcast constructor/send shape and is exact at 0x5789f0;
-// Tick and Finish remain to recover.
+// Tick retains the complete Dreamcast CFG at 86.6723%; Finish remains to
+// recover.
 class CNewPlayerUpdateProc : public CNewPlayerUpdateTask {
 public:
     CNewPlayerUpdateProc(unsigned long dpid)
@@ -673,6 +671,8 @@ public:
     virtual void Go();       // slot 0, 0x5789f0
     virtual void Tick();     // slot 1, 0x578a90
     virtual void Finish();   // slot 2, 0x5795a0
+    void RequestConfirmation();  // DC source helper, inlined in retail Tick
+    void HandleRequests();       // retail 0x578010
 };
 
 // Complete's derived map-list implementation for the added 1083
@@ -684,7 +684,6 @@ public:
     virtual void Go();       // slot 0, 0x577d70
     virtual void Tick();     // slot 1, 0x577de0
     virtual void Finish();   // slot 2, 0x578930
-    void HandleRequests();   // retail 0x578010
 };
 
 // The per-lobby set of header-transfer jobs: eight slots, ticked from
