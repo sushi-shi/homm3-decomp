@@ -54,7 +54,7 @@ enum TArtifact {
     ARTIFACT_BALLISTA = 4,
     ARTIFACT_AMMO_CART = 5,
     ARTIFACT_FIRST_AID_TENT = 6,
-#ifdef HOMM3_PHILAI_ARTIFACT_DECLS
+#ifdef HOMM3_PHILAI_OBJ_DECLS
     // value_of_town's Dreamcast-named legion_artifacts table and the
     // retail .rdata row at 0x640558 independently fix this five-piece run.
     ARTIFACT_LEGS_OF_LEGION = 118,

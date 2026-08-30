@@ -1582,7 +1582,6 @@ call	philai.obj	0x111834	hero::get_value_of_knowledge
 call	philai.obj	0x111834	hero::get_value_of_power
 call	philai.obj	0x111834	max
 call	philai.obj	0x111970	OnMySide
-call	philai.obj	0x111a9c	AI_value_of_combat
 call	philai.obj	0x111e34	hero::get_value_of_power
 call	philai.obj	0x11206c	game::get_cell
 call	philai.obj	0x11206c	hero::get_target
