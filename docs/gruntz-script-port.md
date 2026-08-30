@@ -297,7 +297,28 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   between `availableCount` and `choice`; `why-reg` finds identical definition
   slots and no successful source-local creation-order mutation, classifying it
   as C1 front-end state rather than permission to remove a positive DC fact.
+- **2026-08-30 — `advManager::DoEventPrison` banks its Dreamcast source
+  shape at the honest 99.9540% C1-schedule plateau.** Dreamcast CodeView
+  proves the original `heroID` (`THeroID`, underlying `T_INT4`),
+  `OldColorCycling`, and `OldAnimCtrPaused` locals, the color/animation
+  save-disable-restore order, and the rescued-hero statement sequence. The
+  Windows model does not yet expose `THeroID`, so `heroID` retains compatible
+  four-byte `int` storage rather than inventing a local enum view. A fatal
+  asymmetric source contract now preserves those positive facts while
+  allowing Complete's retail-proven `heroPoolMap` statement between the
+  shared Dreamcast statements; negative controls reject a flattened hero id,
+  swapped save locals, and reordered coordinate stores.
 
+  Retail and candidate have the same 886-byte body, 15 blocks, 261
+  instructions, seven branches, and three returns. The only code delta is the
+  order of two independent reloads after the expanded `bitset<8>::_Xran`
+  guard: retail reads the pointer home `[ebp-0xc]` before the position home
+  `[ebp-0x8]`, while VC6 SP3 reads them in use order. The model-guided
+  register pass found no binding divergence and the guided pass measured 41
+  mutations without improvement. Natural `at()`/`set()` spellings,
+  pointer/reference/proxy locals, a signed owner local, and both paired local
+  declaration orders are byte-flat or worse. No semantic distortion is
+  retained to chase that final transposed instruction pair.
 - **2026-08-29 — `playerData::save` restores and ratchets Dreamcast's named
   serialization locals instead of preserving a byte-flat flattened form.**
   The CodeView roster and SH4 statement stream distinguish the write-result

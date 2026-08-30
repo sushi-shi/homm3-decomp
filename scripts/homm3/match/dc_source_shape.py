@@ -278,6 +278,43 @@ PROVEN_ORDER_SKEWS: dict[tuple[str, int], tuple[ProvenOrderSkew, ...]] = {
 # graph: inlined accessors/operators, a source order hidden by scheduling, and
 # nesting within a single attested statement group.
 SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
+    ("events.obj", 0x94760): (
+        SourceRule(
+            "DoEventPrison keeps Dreamcast's THeroID source local under its "
+            "heroID name and compatible T_INT4 storage",
+            r"\bint\s+heroID\s*=\s*cell\s*->\s*extraInfo\s*;"),
+        SourceRule(
+            "DoEventPrison keeps Dreamcast's OldColorCycling and "
+            "OldAnimCtrPaused save/disable and restore order",
+            r"\bunsigned\s+char\s+OldColorCycling\s*=\s*"
+            r"gUnnamed67f574\s*;\s*gUnnamed67f574\s*=\s*0\s*;\s*"
+            r"unsigned\s+char\s+OldAnimCtrPaused\s*=\s*animCtrPaused\s*;"
+            r"\s*animCtrPaused\s*=\s*1\s*;.*?"
+            r"\bFizzleCenter\s*\(\s*FIZZLE_SOUND_PICKUP\s*\)\s*;\s*"
+            r"animCtrPaused\s*=\s*OldAnimCtrPaused\s*;\s*"
+            r"gUnnamed67f574\s*=\s*OldColorCycling\s*;"),
+        SourceRule(
+            "DoEventPrison keeps Dreamcast's rescued-hero statement order "
+            "while permitting Complete-only statements between them",
+            r"\brecord_show_hero\s*\(.*?\)\s*;.*?"
+            r"prisoner\s*->\s*owner\s*=\s*current_hero\s*->\s*owner\s*;"
+            r".*?heroAvailability\s*\[\s*heroID\s*\]\s*=\s*"
+            r"current_hero\s*->\s*owner\s*;.*?"
+            r"gpCurrentPlayer\s*->\s*heroes\s*\[\s*"
+            r"gpCurrentPlayer\s*->\s*numHeroes\s*\]\s*=\s*heroID\s*;"
+            r"\s*\+\+\s*gpCurrentPlayer\s*->\s*numHeroes\s*;.*?"
+            r"prisoner\s*->\s*x\s*=\s*point\s*\.\s*x\s*;\s*"
+            r"prisoner\s*->\s*y\s*=\s*point\s*\.\s*y\s*;\s*"
+            r"prisoner\s*->\s*z\s*=\s*point\s*\.\s*z\s*;\s*"
+            r"prisoner\s*->\s*flags\s*=\s*0\s*;\s*"
+            r"prisoner\s*->\s*facing\s*=\s*hero\s*::\s*kFacingE\s*;"
+            r"\s*prisoner\s*->\s*movePoints\s*=\s*prisoner\s*->\s*"
+            r"GetMobility\s*\(\s*\)\s*;\s*prisoner\s*->\s*"
+            r"maxMovePoints\s*=\s*prisoner\s*->\s*movePoints\s*;\s*"
+            r"cell\s*->\s*is_trigger\s*=\s*0\s*;\s*"
+            r"cell\s*->\s*type_value\s*=\s*0\s*;\s*"
+            r"prisoner\s*->\s*obscure_cell\s*\(\s*\)\s*;"),
+    ),
     ("combatresultswindow.obj", 0x68364): (
         SourceRule(
             "TCombatResultsWindow keeps Dreamcast's function-scope amount, "
@@ -2331,6 +2368,60 @@ return (float(gHeroGoldCost) + army_value) / float(increment * 40);
     if not contract_violations(
             "int count;\nunsigned int x;\n", mine_pool_key):
         failures.append("unsigned LoadMinePool x escaped source-shape gate")
+    prison_key = ("events.obj", 0x94760)
+    prison_probe = """\
+int heroID = cell->extraInfo;
+unsigned char OldColorCycling = gUnnamed67f574;
+gUnnamed67f574 = 0;
+unsigned char OldAnimCtrPaused = animCtrPaused;
+animCtrPaused = 1;
+gpGame->record_show_hero(prisoner, current_hero->owner, point, 0);
+prisoner->owner = current_hero->owner;
+gpGame->heroAvailability[heroID] = current_hero->owner;
+gpGame->heroPoolMap[heroID][current_hero->owner] = 1;
+gpCurrentPlayer->heroes[gpCurrentPlayer->numHeroes] = heroID;
+++gpCurrentPlayer->numHeroes;
+prisoner->x = point.x;
+prisoner->y = point.y;
+prisoner->z = point.z;
+prisoner->flags = 0;
+prisoner->facing = hero::kFacingE;
+prisoner->movePoints = prisoner->GetMobility();
+prisoner->maxMovePoints = prisoner->movePoints;
+cell->is_trigger = 0;
+cell->type_value = 0;
+prisoner->obscure_cell();
+FizzleCenter(FIZZLE_SOUND_PICKUP);
+animCtrPaused = OldAnimCtrPaused;
+gUnnamed67f574 = OldColorCycling;
+"""
+    if contract_violations(prison_probe, prison_key):
+        failures.append("aligned DoEventPrison source shape did not pass")
+    flattened_prison_id = prison_probe.replace(
+        "int heroID = cell->extraInfo;\n", "")
+    if not any("THeroID source local" in rule.description for rule in
+               contract_violations(flattened_prison_id, prison_key)):
+        failures.append("flattened DoEventPrison heroID local passed")
+    swapped_prison_saves = prison_probe.replace(
+        "unsigned char OldColorCycling = gUnnamed67f574;\n"
+        "gUnnamed67f574 = 0;\n"
+        "unsigned char OldAnimCtrPaused = animCtrPaused;\n"
+        "animCtrPaused = 1;",
+        "unsigned char OldAnimCtrPaused = animCtrPaused;\n"
+        "animCtrPaused = 1;\n"
+        "unsigned char OldColorCycling = gUnnamed67f574;\n"
+        "gUnnamed67f574 = 0;")
+    if not any("save/disable and restore order" in rule.description
+               for rule in contract_violations(swapped_prison_saves,
+                                                prison_key)):
+        failures.append("reordered DoEventPrison save locals passed")
+    swapped_prison_coords = prison_probe.replace(
+        "prisoner->x = point.x;\nprisoner->y = point.y;",
+        "prisoner->y = point.y;\nprisoner->x = point.x;")
+    if not any("rescued-hero statement order" in rule.description
+               for rule in contract_violations(swapped_prison_coords,
+                                                prison_key)):
+        failures.append("reordered DoEventPrison coordinates passed")
     player_save_key = ("game.obj", 0xA55A8)
     player_save_probe = """\
 unsigned long flags;
