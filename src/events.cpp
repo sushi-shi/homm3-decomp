@@ -8152,13 +8152,18 @@ int advManager::CombatMonsterEvent(hero* who, int monType, int* numMons,
 
     who->army.get_AI_value();
     who->get_primary_skill_total();
-    // [2026-08-27] Residual (99.2966%): one fld slot - retail colours the
+    // [2026-08-30] Residual (99.2966%): one fld slot - retail colours the
     // ratio home, the int->double divisor temp and the quotient into ONE
     // reused qword ([ebp-0xc]) by reloading ratio BEFORE converting the
     // divisor; our CL hoists the divisor conversion above the reload, so
     // the two homes must coexist and the frame gains a slot. Tried and
     // rejected (all byte-flat): `ratio = ratio / combat_value`, a
-    // block-scoped named double divisor, compound `/=`.
+    // block-scoped named double divisor, compound `/=`, an explicit
+    // static_cast<double> divisor, and a named volatile divisor.  Making
+    // ratio volatile restores the 0x88 frame and every later block, but
+    // scores 98.78% because it fences the two independent numGroups/threshold
+    // setup instructions after the division.  NB11 proves ratio is a plain
+    // T_REAL64 local, so the volatile spelling is only a negative control.
     double ratio = who->army.get_AI_value();
     ratio /= combat_value;
 

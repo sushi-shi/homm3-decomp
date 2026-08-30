@@ -298,7 +298,24 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   maximum cannot justify removing a positive Dreamcast fact. Fatal source
   rules and negative controls now preserve the three NB11 locals, the shared
   loop index, the caller boundary, and the header-inline body.
+- **2026-08-30 — `CombatMonsterEvent` banks its Dreamcast source shape at
+  the honest 99.2966% floating-point-home plateau.** The mandatory dossier
+  for `events.obj:0x9af34` records 56 breakpoint rows, 55 inferred SH4
+  blocks, 41 lexical scopes, and raw NB11 locals `event_seed`, `army_group`,
+  plain `double ratio`, `tempNumTroops`, and `tempArmies`. It also preserves
+  Demobilize/SRand order, the shared primary-skill then army-value sequence,
+  and the two temporary arrays inside the multi-monster arm. Complete's
+  additional leading army-value call remains permitted as retail-only source.
 
+  All 57 Windows CFG blocks align. The sole lowering residual is a four-byte
+  frame difference: retail keeps the ratio, integer-to-double divisor, and
+  quotient in two qword homes, while this VC6 schedule reuses one. Direct,
+  compound, explicit-cast, named-divisor, and block-scoped spellings are
+  byte-flat at **99.2966%**. A volatile ratio restores retail's `0x88` frame
+  and makes every later block exact, but falls to **98.78%** because the
+  volatility fence delays independent loop setup; NB11 proves the source
+  local was not volatile. Fatal asymmetric rules and one negative control per
+  rule now preserve the positive source facts without blessing that probe.
 - **2026-08-30 — `SetCurrentMap` reaches 99.987404% by restoring the
   inherited constructor and broadcast boundaries.** The mandatory Dreamcast
   pass (`dc:0x13bc60`) records 109 breakpoint rows, 78 inferred blocks, and
