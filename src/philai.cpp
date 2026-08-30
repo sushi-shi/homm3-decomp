@@ -65,6 +65,16 @@ inline TCreatureType game::UpgradedCreatureType(TCreatureType creature) const
     return ::UpgradedCreatureType(creature);
 }
 
+// These remain the canonical inline bodies used by all real callers. Retail
+// selected one out-of-line COMDAT copy of each into philai.obj in this order;
+// typed address-takes materialize those copies without replacing any
+// Dreamcast-attested inline call with a source-false out-of-line call.
+bool (ExtraInfoUnion::* g_emit_PlayerKnowsCell)(short) const =
+    &ExtraInfoUnion::PlayerKnowsCell;
+bool (game::* g_emit_OnSameTeam)(int, int) const = &game::OnSameTeam;
+TCreatureType (game::* g_emit_game_UpgradedCreatureType)(TCreatureType) const =
+    &game::UpgradedCreatureType;
+
 long get_skill_value(const hero* our_hero, TSecondarySkill skill,
                      unsigned char complex_choice);
 long get_school_value(const hero* our_hero, TSecondarySkill skill);
@@ -2592,9 +2602,9 @@ bool game::OnSameTeam(int player1, int player2) const
 }
 
 // Complete-only game member: reject the four base-set elementals when
-// f_1f698 is zero, otherwise tail into the free helper. This claim remains
-// inactive until selected-inline COMDAT ownership has a first-class source
-// annotation that does not violate philai.cpp's strict retail VA order.
+// f_1f698 is zero, otherwise tail into the free helper. Its canonical inline
+// and typed emission anchor remain together above; this claim records the
+// selected copy's strict retail VA order.
 VA(0x00529710, 0x34)  // retail-only + sole AI_value_of_event caller
 TCreatureType game::UpgradedCreatureType(TCreatureType creature) const
 {
