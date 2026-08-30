@@ -2206,7 +2206,7 @@ puzzlewindow	?WindowHandler@TPuzzleWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	
 puzzlewindow	?mark_puzzle@Bitmap816@@QAEXPAEJJ@Z	100.0000	100.0000	100.0000	0x12c8b0
 questlogwindow	??1TQuestLogWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x12e1e0
 questlogwindow	??_GTQuestLogWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x12e1b0
-questlogwindow	?DoQuestLog@@YIXH@Z	94.0000	94.0000	94.0000	0x12e430
+questlogwindow	?DoQuestLog@@YIXH@Z	96.5463	96.5463	96.5463	0x12e430
 questlogwindow	?UpdateQuestLocator@TQuestLogWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x12e270
 questlogwindow	?WindowHandler@TQuestLogWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x12e410
 quickherowindow	??0TQuickHeroWindow@@QAE@PAVhero@@W4TViewLevel@0@@Z	92.1471	92.1471	92.1471	0x12ead0
@@ -2917,7 +2917,7 @@ swapmgr	??_GTSwapWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1ae390
 swapmgr	?Close@swapManager@@UAEXXZ	100.0000	100.0000	100.0000	0x1aed20
 swapmgr	?DrawSelector@swapManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1aedc0
 swapmgr	?IsLeftHero@swapManager@@QAE_NXZ	100.0000	100.0000	100.0000	0x1b1380
-swapmgr	?OnWidgetDeselect@swapManager@@QAEXAAVmessage@@AAH@Z	99.9650	99.9650	99.9650	0x1b10d0
+swapmgr	?OnWidgetDeselect@swapManager@@QAEXAAVmessage@@AAH@Z	88.4550	99.9650	99.9650	0x1b10d0
 swapmgr	?SendChat@CSwapManagerChatEdit@@UAEXPBDH@Z	100.0000	100.0000	100.0000	0x1ae370
 swapmgr	?SendHeroUpdate@swapManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1afbf0
 swapmgr	?SwapMons@swapManager@@QAEXXZ	79.2453	79.2453	79.2453	0x1b0da0

@@ -2716,6 +2716,24 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"gUnnamed69d810\s*=\s*gNetLocalGamePos\s*;\s*"
             r"UpdateTurnDuration\s*\(\s*\)\s*;"),
     ),
+    ("swapmgr.obj", 0x15EC58): (
+        SourceRule(
+            "OnWidgetDeselect keeps Dreamcast's trade-done construction "
+            "before GetOtherHero and transmission",
+            r"CTradeRequestDoneMsg\s+requestDone\s*;\s*"
+            r"hero\s*\*\s*otherHero\s*=\s*GetOtherHero\s*\(\s*\)\s*;\s*"
+            r"TransmitRemoteData\s*\(\s*&\s*requestDone\s*,\s*"
+            r"otherHero\s*->\s*owner\s*,\s*0\s*,\s*1\s*\)\s*;", 1, 1),
+    ),
+    ("swapmgr.obj", 0x15EF1C): (
+        SourceRule(
+            "OnReceiveFromAlly keeps Dreamcast's give-me-stuff construction "
+            "before GetOtherHero and transmission",
+            r"CGiveMeStuffMsg\s+giveMeStuff\s*;\s*"
+            r"hero\s*\*\s*otherHero\s*=\s*GetOtherHero\s*\(\s*\)\s*;\s*"
+            r"TransmitRemoteData\s*\(\s*&\s*giveMeStuff\s*,\s*"
+            r"otherHero\s*->\s*owner\s*,\s*0\s*,\s*1\s*\)\s*;", 1, 1),
+    ),
 }
 
 
@@ -4523,6 +4541,38 @@ if (m_flag64) {
                    contract_violations(probe, current_map_key)):
             failures.append("broken SetCurrentMap " + description
                             + " source shape passed")
+    trade_done_key = ("swapmgr.obj", 0x15EC58)
+    trade_done_probe = """\
+CTradeRequestDoneMsg requestDone;
+hero* otherHero = GetOtherHero();
+TransmitRemoteData(&requestDone, otherHero->owner, 0, 1);
+"""
+    if contract_violations(trade_done_probe, trade_done_key):
+        failures.append("aligned trade-done constructor order did not pass")
+    if not contract_violations(
+            trade_done_probe.replace(
+                "CTradeRequestDoneMsg requestDone;\n"
+                "hero* otherHero = GetOtherHero();",
+                "hero* otherHero = GetOtherHero();\n"
+                "CTradeRequestDoneMsg requestDone;"),
+            trade_done_key):
+        failures.append("reversed trade-done constructor order passed")
+    give_stuff_key = ("swapmgr.obj", 0x15EF1C)
+    give_stuff_probe = """\
+CGiveMeStuffMsg giveMeStuff;
+hero* otherHero = GetOtherHero();
+TransmitRemoteData(&giveMeStuff, otherHero->owner, 0, 1);
+"""
+    if contract_violations(give_stuff_probe, give_stuff_key):
+        failures.append("aligned give-me-stuff constructor order did not pass")
+    if not contract_violations(
+            give_stuff_probe.replace(
+                "CGiveMeStuffMsg giveMeStuff;\n"
+                "hero* otherHero = GetOtherHero();",
+                "hero* otherHero = GetOtherHero();\n"
+                "CGiveMeStuffMsg giveMeStuff;"),
+            give_stuff_key):
+        failures.append("reversed give-me-stuff constructor order passed")
     palette_ftol_key = ("palette.obj", 0x10A244)
     palette_ftol_probe = """\
 const unsigned long magic = 0x59c00000;

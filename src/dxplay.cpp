@@ -383,19 +383,17 @@ unsigned char CDPlay::Receive(unsigned long* pFromID, unsigned long* pToID, CDPl
 {
     if (!m_lpDP)
         return 0;
-    unsigned long dwSize = pMsg->dataSize;
-    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->Receive(pFromID, pToID, dwFlags, pMsg->pData, &dwSize);
+    unsigned long buffSize = pMsg->dataSize;
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->Receive(pFromID, pToID, dwFlags, pMsg->pData, &buffSize);
     for (;;) {
         if (m_hRes == DPERR_NOMESSAGES)
             return 0;
         if (m_hRes != DPERR_BUFFERTOOSMALL)
             break;
-        unsigned long dSize = dwSize;
-        if (dSize >= pMsg->dataSize)
-            pMsg->AllocSize(dSize);
+        pMsg->AllocSize(buffSize);
         if (m_hRes != DPERR_BUFFERTOOSMALL)
             break;
-        m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->Receive(pFromID, pToID, dwFlags, pMsg->pData, &dwSize);
+        m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->Receive(pFromID, pToID, dwFlags, pMsg->pData, &buffSize);
     }
     if (m_hRes < 0)
         return 0;

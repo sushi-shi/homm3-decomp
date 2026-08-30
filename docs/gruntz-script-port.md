@@ -260,6 +260,26 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-30 — `DoQuestLog` reaches 96.5463% from source-backed quest
+  access, while two score-flat local corrections remain banked as shape.**
+  The exact `TAdventureMapWindow::UpdateQuestLogButton` sibling proves the
+  guard-pool `quest_texts()[QUEST_TEXT_LOG].length()` spelling.  Retail's
+  seer-pool address formation independently requires a named pointer to the
+  selected quest-text row.  Together they raise `DoQuestLog` from 94.0047%
+  to **96.5463%**, retaining all **38 / 38 CFG blocks** and its exact
+  19-branch / one-return sequence.  The remaining five blocks are two
+  commutative test encodings, two register schedules inside the preserved
+  vector `push_back` boundaries, and one store/LEA scheduling difference.
+
+  Dreamcast's complete six-local roster for
+  `TSellCreatureWindow::Update` is now kept at function scope; it is
+  byte-flat at **98.7522%**.  `CDPlay::Receive` likewise keeps the sole
+  `buffSize` local and calls `CDPlayMsg::AllocSize(buffSize)` directly,
+  removing a source-false caller-side copy of the helper's own size guard;
+  that correction is byte-flat at the current **99.3750%**, while max/history
+  retains the earlier exact checkpoint.  The lower current score is not
+  permission to duplicate the helper's guard in source.
+
 - **2026-08-30 — `swapManager::OnWidgetDeselect` opens a new 680-byte
   Complete body at 88.4550% while preserving every recovered helper
   boundary.**  Dreamcast fixes the source signature as
@@ -272,6 +292,16 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   the two inline network-message constructor schedules and their stack homes,
   not permission to erase `UpdateBackpack`, `DrawSwapWin`, `SendHeroUpdate`,
   `Update`, `DrawSelector`, `OnReceiveFromAlly`, or `GetOtherHero`.
+
+  A later 99.9650% checkpoint was source-false: it placed `GetOtherHero`
+  before both network-message constructions.  Dreamcast lines 2223 and 2294
+  place `CTradeRequestDoneMsg` and `CGiveMeStuffMsg` first on their respective
+  source rows.  Restoring that positive fact returns the current score to
+  **88.4550%** while max/history retains 99.9650%; retail still has all 39
+  blocks, but its optimizer sinks both constructor-store groups past the
+  accessor calls and allocates two distinct 0x14-byte homes.  Fatal asymmetric
+  source rules, with reversed-order negative controls, now prevent recovering
+  the local percentage by reintroducing either source reversal.
 
   Complete relocates the substantial Dreamcast `swapManager::Update` refresh
   loops into `update_all_slots`, but retail retains the `Update()` call in
