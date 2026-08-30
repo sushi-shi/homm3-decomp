@@ -1103,7 +1103,7 @@ public:
     float GetDefenseFactor();
     float GetIntelligenceFactor();
 #if defined(HOMM3_HERO_OBJ_VIEW) || defined(HOMM3_TOWN_OBJ_DECLS) \
- || defined(HOMM3_GAME_NEW_MAP_DECLS)
+ || defined(HOMM3_GAME_NEW_MAP_DECLS) || defined(HOMM3_PHILAI_OBJ_DECLS)
     // Header inline at E:\gamedcs\Hero.h:634 (dc 0x669fc). Dreamcast's
     // xrefs put direct calls in both hero-screen functions; the retail
     // hero.obj sites expand it byte-for-byte under /Ob2.

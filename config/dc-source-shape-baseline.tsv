@@ -1552,12 +1552,6 @@ call	philai.obj	0x10f16c	ShowStatus
 call	philai.obj	0x10f16c	game::GetNumMapLevels
 call	philai.obj	0x10f16c	move_all_heroes
 call	philai.obj	0x10f2f8	AI_resource_cost
-call	philai.obj	0x10f37c	armyGroup::get_AI_value
-call	philai.obj	0x10f37c	hero::GetMaxMana
-call	philai.obj	0x10f37c	hero::GetPrimarySkill
-call	philai.obj	0x10f37c	hero::GetSpellDurationBonus
-call	philai.obj	0x10f37c	hero::IsWieldingArtifact
-call	philai.obj	0x10f37c	type_spellvalue::fill_creature_value_list
 call	philai.obj	0x10fa84	hero::GetSpellSchoolLevel
 call	philai.obj	0x10fa84	type_spellvalue::get_summoning_value
 call	philai.obj	0x10fcf0	hero::SpellIsAvailable
