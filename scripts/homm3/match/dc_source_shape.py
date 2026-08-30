@@ -465,6 +465,16 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"\beffect\s*\[\s*1\s*\]\s*\.\s*dwelling\s*=\s*slot\s*;"
             r".*?\beffect\s*\[\s*1\s*\]\s*\.\s*bonus\s*="),
     ),
+    ("town.obj", 0x1665A0): (
+        SourceRule(
+            "GiveSpells keeps Dreamcast lines 992/994/999's current-hero, "
+            "spellbook and Mage Guild guards as three nested source scopes",
+            r"if\s*\(\s*currentHero\s*\)\s*\{\s*"
+            r"if\s*\(\s*currentHero\s*->\s*IsWieldingArtifact\s*\(\s*"
+            r"ARTIFACT_SPELLBOOK\s*\)\s*\)\s*\{\s*"
+            r"if\s*\(\s*HasBuilding\s*\(\s*MAGE_GUILD_ID\s*,\s*1\s*"
+            r"\)\s*\)\s*\{"),
+    ),
     ("resourcemanager.obj", 0x121EC8): (
         SourceRule(
             "GetPalette24 keeps Dreamcast's char[24] header and TRGBA[256] "
@@ -2553,6 +2563,27 @@ effect[1].bonus = *bonus;
                                initialize_hordes_key):
         failures.append(
             "reordered initialize_hordes dwelling/bonus stores passed")
+    give_spells_key = ("town.obj", 0x1665A0)
+    give_spells_probe = """\
+if (currentHero) {
+    if (currentHero->IsWieldingArtifact(ARTIFACT_SPELLBOOK)) {
+        if (HasBuilding(MAGE_GUILD_ID, 1)) {
+            grant_spells();
+        }
+    }
+}
+"""
+    if contract_violations(give_spells_probe, give_spells_key):
+        failures.append("aligned GiveSpells nested guards did not pass")
+    flattened_give_spells = """\
+if (currentHero
+    && currentHero->IsWieldingArtifact(ARTIFACT_SPELLBOOK)
+    && HasBuilding(MAGE_GUILD_ID, 1)) {
+    grant_spells();
+}
+"""
+    if not contract_violations(flattened_give_spells, give_spells_key):
+        failures.append("flattened GiveSpells guard scopes passed")
     palette24_key = ("resourcemanager.obj", 0x121EC8)
     palette24_path = """\
 streamInterface->Read(header, sizeof(header));
