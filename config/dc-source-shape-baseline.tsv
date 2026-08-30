@@ -91,7 +91,6 @@ call	advmgr.obj	0x1a878	advManager::HideRoute
 call	advmgr.obj	0x1a878	advManager::Reseed
 call	advmgr.obj	0x1a878	advManager::get_map_center
 call	advmgr.obj	0x1a878	game::GetHero
-call	advmgr.obj	0x1a878	hero::get_target
 call	advmgr.obj	0x1a878	type_obscuring_object::get_location
 call	advmgr.obj	0x1b5a8	NewfullMap::cell
 call	advmgr.obj	0x1be10	advManager::CheckLoadSample

@@ -333,6 +333,38 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   maximum cannot justify removing a positive Dreamcast fact. Fatal source
   rules and negative controls now preserve the three NB11 locals, the shared
   loop index, the caller boundary, and the header-inline body.
+- **2026-08-30 — `advManager::SetHeroContext` restores the Dreamcast
+  `hero::get_target` boundary and banks its compatible NB11 local shape at
+  99.274635%.** The mandatory dossier for `advmgr.obj:0x1a878` records 66
+  breakpoint rows, 64 inferred SH4 blocks, 54 lexical scopes, and raw locals
+  `curr`, `player`, `screen_redrawn`, `found`, and `cell`. The shared Complete
+  source now preserves the compatible `curr` / `player` / `found` / `cell`
+  identities and scopes, and the guarded `curr->get_target()` statement before
+  `SeedTo` and `ShowRoute`. The separately inspected header helper at
+  `dc:0x1fd30` constructs the packed `type_point` from pathTargetX/Y/Z; it is
+  exposed only to advmgr's consumer view and VC6 folds it back into the caller.
+  Restoring that source boundary retires its frozen source-shape omission and
+  is deliberately byte-flat rather than score-selected.
+
+  The Windows candidate and retail retain **80 / 80 CFG blocks, 54 / 54
+  branches, and one return**, with 79 blocks byte-exact. The only residual is
+  the packed route-target write: this VC6 schedule retains the guard's X value
+  in AX and copies it before loading the old point word, whereas retail loads
+  that word first and rereads X. Eleven source-shape-preserving spellings have
+  now been exhausted: int and short coordinate locals, y/x/z and z/y/x order,
+  explicit short cast, a shared point, `!= -1` and negated guards, hoisted and
+  default-then-assigned point declarations, and an elided SeedTo temporary.
+  The last two were independently remeasured byte-flat in this lane.
+
+  Classification is asymmetric: the recovered local identities, helper
+  boundary, guarded route scope, and helper order **agree**; Complete's
+  draw-message-bypass and global complete-draw path are **retail-only**;
+  Dreamcast's `screen_redrawn` local belongs to its older redraw path and is
+  **dc-only**; the remaining commutative CSE schedule is **unknown** codegen,
+  not evidence against the shared source. Five fatal contracts, each with an
+  embedded negative control, preserve the admitted local, helper-body, scope,
+  and tail-lifetime facts.
+
 - **2026-08-30 — `CombatMonsterEvent` banks its Dreamcast source shape at
   the honest 99.2966% floating-point-home plateau.** The mandatory dossier
   for `events.obj:0x9af34` records 56 breakpoint rows, 55 inferred SH4
