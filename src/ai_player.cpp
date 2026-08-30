@@ -1578,10 +1578,8 @@ static long value_of_building(town* current_town, type_building_id building,
         case TOWN_FORTRESS:
             if ((building == EXTRA_0_ID || building == EXTRA_1_ID)
                 && current_town->threatening_heroes)
-                return const_cast<armyGroup*>(
-                           &static_cast<const town*>(current_town)
-                                ->get_army())
-                           ->get_AI_value() / 10;
+                return static_cast<const town*>(current_town)
+                           ->get_army().get_AI_value() / 10;
             break;
         }
         return 0;
@@ -4517,7 +4515,7 @@ type_combat_artifact::type_combat_artifact(long new_bonus)
 VA(0x00432560, 0x32)  // artifact get_value cluster order-map + get_AI_value, dc 0x362b8
 long type_combat_artifact::get_value(const hero* owner, unsigned char, unsigned char) const
 {
-    return const_cast<hero*>(owner)->army.get_AI_value() * bonus / 100;
+    return owner->army.get_AI_value() * bonus / 100;
 }
 
 // E:\gamedcs\ai_player.cpp:5098
@@ -4526,7 +4524,7 @@ long type_might_artifact::get_value(const hero* owner, unsigned char, unsigned c
 {
     if (exact)
         return 0;
-    return const_cast<hero*>(owner)->army.get_AI_value() * bonus / 40;
+    return owner->army.get_AI_value() * bonus / 40;
 }
 
 // E:\gamedcs\ai_player.cpp:5116
@@ -4572,14 +4570,14 @@ long type_necromancy_artifact::get_value(const hero* owner, unsigned char equipp
     }
     if (necro <= 0)
         return 0;
-    return const_cast<hero*>(owner)->army.get_AI_value() * necro / 250;
+    return owner->army.get_AI_value() * necro / 250;
 }
 
 // E:\gamedcs\ai_player.cpp:5189
 VA(0x004326e0, 0x38)  // artifact get_value cluster order-map + get_AI_value, dc 0x3652c
 long type_movement_artifact::get_value(const hero* owner, unsigned char, unsigned char) const
 {
-    return (const_cast<hero*>(owner)->army.get_AI_value() + 2500) * bonus / 100;
+    return (owner->army.get_AI_value() + 2500) * bonus / 100;
 }
 
 // E:\gamedcs\ai_player.cpp:5205
@@ -4590,7 +4588,7 @@ long type_spellcaster_artifact::get_value(const hero* owner, unsigned char, unsi
         return 0;
     if (owner->skillLevel[SECONDARY_SKILL_WISDOM] == 0)
         return 0;
-    return const_cast<hero*>(owner)->army.get_AI_value() * bonus / 100;
+    return owner->army.get_AI_value() * bonus / 100;
 }
 
 // The morale/luck effects weight AI_value_of_morale/AI_value_of_luck (fastcall
@@ -4610,7 +4608,7 @@ long type_morale_artifact::get_value(const hero* owner, unsigned char equipped, 
     if (equipped)
         morale -= bonus;
     return static_cast<long>(AI_value_of_morale(morale, bonus)
-                             * const_cast<hero*>(owner)->army.get_AI_value());
+                             * owner->army.get_AI_value());
 }
 
 // E:\gamedcs\ai_player.cpp:5250
@@ -4623,7 +4621,7 @@ long type_luck_artifact::get_value(const hero* owner, unsigned char equipped, un
     if (equipped)
         luck -= bonus;
     return static_cast<long>(AI_value_of_luck(luck, bonus)
-                             * const_cast<hero*>(owner)->army.get_AI_value());
+                             * owner->army.get_AI_value());
 }
 
 // E:\gamedcs\ai_player.cpp:5274
@@ -4690,9 +4688,9 @@ long type_antimagic_artifact::get_value(const hero* owner, unsigned char equippe
 {
     long value;
     if (bonus == 0)
-        value = const_cast<hero*>(owner)->army.get_AI_value() / 5;
+        value = owner->army.get_AI_value() / 5;
     else
-        value = const_cast<hero*>(owner)->army.get_AI_value() / 8;
+        value = owner->army.get_AI_value() / 8;
     if (exact)
         return value;
     if (!equipped)
@@ -4730,7 +4728,7 @@ long type_antimagic_artifact::get_value(const hero* owner, unsigned char equippe
 VA(0x00432b20, 0x78)  // artifact get_value order-map + AI_value_of_morale/GetMorale, dc 0x36afc
 long type_antimorale_artifact::get_value(const hero* owner, unsigned char, unsigned char exact) const
 {
-    long army = const_cast<hero*>(owner)->army.get_AI_value();
+    long army = owner->army.get_AI_value();
     long result = static_cast<long>(AI_value_of_morale(0, 2) * army);
     if (!exact) {
         int morale = const_cast<hero*>(owner)->GetMorale(0, 0, 1);
@@ -4747,7 +4745,7 @@ long type_antimorale_artifact::get_value(const hero* owner, unsigned char, unsig
 VA(0x00432ba0, 0x78)  // artifact get_value order-map + AI_value_of_luck/GetLuck, dc 0x36c90
 long type_antiluck_artifact::get_value(const hero* owner, unsigned char, unsigned char exact) const
 {
-    long army = const_cast<hero*>(owner)->army.get_AI_value();
+    long army = owner->army.get_AI_value();
     long result = static_cast<long>(AI_value_of_luck(0, 2) * army);
     if (!exact) {
         int luck = const_cast<hero*>(owner)->GetLuck(0, 0, 1);
@@ -4954,8 +4952,7 @@ long type_angelic_alliance_artifact::get_value(
     if (exact) {
         ownArmyValue = 0;
     } else {
-        ownArmyValue = const_cast<hero*>(owner)->army.get_AI_value()
-                      * bonus / 40;
+        ownArmyValue = owner->army.get_AI_value() * bonus / 40;
     }
     return ownArmyValue + total * 5 / 100;
 }
@@ -4983,7 +4980,7 @@ long type_undead_king_cloak_artifact::get_value(const hero* owner,
         }
         if (necromancy <= 0)
             return 0;
-        return const_cast<hero*>(owner)->army.get_AI_value() * necromancy / 250;
+        return owner->army.get_AI_value() * necromancy / 250;
     }
 
     TCreatureType creature;
@@ -5017,7 +5014,7 @@ long type_undead_king_cloak_artifact::get_value(const hero* owner,
     if (necromancy <= 0)
         value = 0;
     else
-        value = const_cast<hero*>(owner)->army.get_AI_value() * necromancy / 250;
+        value = owner->army.get_AI_value() * necromancy / 250;
     return static_cast<long>(value * multiplier);
 }
 
@@ -5098,7 +5095,7 @@ long AI_get_value_of_artifact(type_artifact artifact, const hero* owner, unsigne
             * 500.0);
         value += value * owner->skillLevel[20] / 2;
         long army_value =
-            const_cast<armyGroup*>(&owner->army)->get_AI_value()
+            owner->army.get_AI_value()
             * (const_cast<hero*>(owner)->get_primary_skill_total() + 40)
             / 40;
         return army_value * value / (army_value + value);
@@ -5274,11 +5271,10 @@ long get_full_value(const hero* our_hero)
                 hasAlliance = const_cast<hero*>(our_hero)->IsWieldingArtifact(
                     ARTIFACT_ANGELIC_ALLIANCE);
 
-            int morale = const_cast<armyGroup*>(&our_hero->army)
-                             ->GetArmyMorale(i, our_hero, 0, -1,
-                                             hasAlliance, 1);
-            int luck = const_cast<armyGroup*>(&our_hero->army)
-                           ->GetArmyLuck(i, our_hero, 0, -1, 1);
+            int morale = our_hero->army.GetArmyMorale(
+                i, our_hero, 0, -1, hasAlliance, 1);
+            int luck = our_hero->army.GetArmyLuck(
+                i, our_hero, 0, -1, 1);
             value = static_cast<long>(
                 (AI_value_of_morale(0, morale) + 1.0) *
                     (AI_value_of_luck(0, luck) + 1.0) *

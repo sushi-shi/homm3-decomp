@@ -77,7 +77,10 @@ when the current candidate has a lower similarity percentage. The fatal source-s
 gate must remain raised while a positive Dreamcast fact is omitted. Preserve prior score
 peaks as history, continue coherent reconstruction through expected dips, and record
 useful negative codegen classifications so the next matcher does not repeat an exhausted
-sweep.
+sweep. A wide header blast radius is not a reason to avoid an evidence-backed class or
+interface correction: max/history exists to bank the including-TU dips while the coherent
+header state is carried forward. Measure and document that collateral, but do not restore
+a source-false declaration merely to recover a current exact count.
 
 This remains a cross-architecture, older-revision source oracle, **not a second byte
 target**. A missing Dreamcast statement or call never proves retail lacks it, and

@@ -2317,7 +2317,7 @@ int ValueOfGenerator(const hero* current_hero, int x, int y, int z, NewmapCell* 
     if (move_cost >= 400
         && current_generator.playerOwner == gNetLocalGamePos
         && purchaser.get_army_value_increase()
-               < const_cast<hero*>(current_hero)->army.get_AI_value() / 3)
+               < current_hero->army.get_AI_value() / 3)
         purchase_value = 0;
     value += purchase_value;
 
