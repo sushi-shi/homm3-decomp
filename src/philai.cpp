@@ -756,7 +756,24 @@ static void upgrade_creatures(hero* current_hero, const town* current_town)
     }
 }
 
-// E:\gamedcs\philai.cpp:732
+// E:\gamedcs\philai.cpp:732. Raw NB11 records `artifact` as the sole
+// non-optimized local, nested inside the spellbook-purchase scope. The DC
+// breakpoint stream also keeps the Grail helper nest, upgrade/special helper
+// order, difficulty-scoped artifact swaps and siege purchases, then
+// DemobilizeCurrHero before the two special-building effects. Complete's
+// retail bytes add the town-type building switch and Conflux university path,
+// and move buy_artifacts into the exact buy_special_building receiver; those
+// are compatible retail-only additions, not reasons to flatten the shared
+// source shape.
+//
+// Residual (99.51087%): candidate and retail are both 1,548 bytes with all 74
+// blocks and the 43-branch / two-return structure aligned. Every instruction
+// agrees through the final visiting-hero lookup; retail loads gpGame before
+// forming the hero index, while this VC6 state schedules the same load after
+// the first two index operations. A named receiver, a named result, reusing
+// garrison_hero and a procedure-scope result are byte-flat; naming the id
+// falls to 97.01087%. why-reg's three model proposals and nine guided
+// mutations found no improvement, so no register-forcing distortion is kept.
 VA(0x005253d0, 0x60c)  // anchor-callee, dc 0x10e3f8
 void AI_enter_town(hero* current_hero, town* current_town)
 {
