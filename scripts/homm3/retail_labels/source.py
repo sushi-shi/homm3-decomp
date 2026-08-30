@@ -613,7 +613,8 @@ def _demangle_key(mangled: str):
     if mangled.startswith("?_Dec@const_iterator@?$_Tree@") and tree_value:
         return f"{tree_value.group(1).lower()}@tree_const_iterator_dec"
     vector_element = re.search(
-        r"\?\$vector@(?:V|U|W4)?([A-Za-z_]\w*)@", mangled)
+        r"\?\$vector@(?:(?:P[AB][VU])|(?:V|U|W4))?"
+        r"([A-Za-z_]\w*)@", mangled)
     if mangled.startswith("??1?$vector@") and vector_element:
         return f"{vector_element.group(1).lower()}@vector_dtor"
     if mangled.startswith("?size@?$vector@") and vector_element:
@@ -1485,6 +1486,12 @@ def selftest() -> list[str]:
             "??_F?$vector@VCObjectType@@V?$allocator@VCObjectType@@@std@@"
             "@std@@QAEXXZ") != "cobjecttype@fctor":
         failures.append("MSVC default constructor closure key regressed")
+    if _demangle_key(
+            "??_F?$vector@PAVtype_artifact_effect@@"
+            "V?$allocator@PAVtype_artifact_effect@@@std@@@std@@QAEXXZ") \
+            != "type_artifact_effect@fctor":
+        failures.append(
+            "MSVC pointer-vector constructor closure key regressed")
     if _demangle_key(
             "??1?$vector@VBlackBoxData@@V?$allocator@VBlackBoxData@@@std@@"
             "@std@@QAE@XZ") != "blackboxdata@vector_dtor":

@@ -56,7 +56,7 @@ int SCampaign::get_score() const
     int numScores = 0;
 
     for (unsigned int i = 0; i < mapScores.size(); ++i) {
-        if (mapScores[i].active && mapScores[i].score >= 0) {
+        if (mapScores[i].completed && mapScores[i].score >= 0) {
             totalScore += mapScores[i].score;
             ++numScores;
         }
@@ -74,7 +74,7 @@ int SCampaign::get_total_time() const
     int totalTime = 0;
 
     for (unsigned int i = 0; i < mapScores.size(); ++i) {
-        if (mapScores[i].active)
+        if (mapScores[i].completed)
             totalTime += mapScores[i].days;
     }
 

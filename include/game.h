@@ -1290,15 +1290,25 @@ typedef std::vector<std::vector<hero> > SCampaignHeroPoolsView;
 typedef std::vector<std::vector<type_artifact> > SCampaignArtifactPoolsView;
 #endif
 
+// Complete's per-scenario campaign progress record. The name and return type
+// survive in the independently located HD GetCurrentScenario signature;
+// retail fixes the 0x14 stride and the completed/days/score head. The two
+// four-byte tail fields complete the same cross-build record instead of
+// leaving source-visible state as anonymous padding.
+struct CampaignScenarioInfo {
+    bool completed;
+    int days;
+    int score;
+    int index;
+    int complete_order;
+};
+SIZE(CampaignScenarioInfo, 0x14);
+
 class SCampaign {
 public:
-    struct MapScore {
-        unsigned char active;
-        char pad_01[3];
-        int days;
-        int score;
-        char pad_0c[8];
-    };
+    // Compatibility spelling for the already reconstructed vector helpers;
+    // as a typedef it still gives VC6 the authoritative global element type.
+    typedef CampaignScenarioInfo MapScore;
 
 #ifdef HOMM3_CAMPAIGNWINDOW_IMPLICIT_SCAMPAIGN
     // TU-local layout views for retail's split nested teardown boundary.
@@ -1416,8 +1426,14 @@ public:
     // Retail-only load surface at 0x48a310; SavedGameHeader::Load passes the
     // stream and save version and the callee reads both.
     int Load(TAbstractFile* infile, int saveVersion);
+    // Complete-only header accessor selected into singleselectionwindow.obj
+    // at 0x57c780. Retail sign-extends currentMap, indexes the +0x5c vector's
+    // first pointer with the 0x14 CampaignScenarioInfo stride, and returns it.
+    CampaignScenarioInfo* GetCurrentScenario()
+    {
+        return &mapScores[currentMap];
+    }
 };
-SIZE(SCampaign::MapScore, 0x14);
 SIZE(SCampaign, 0x7c);
 
 #ifdef HOMM3_CAMPAIGNWINDOW_IMPLICIT_SCAMPAIGN
@@ -2171,6 +2187,12 @@ public:
     // f_1f698 describes: nonzero keeps elementals on their town
     // alignment, zero censuses them as neutral.
     int get_alignment(int creature) const;
+    // Complete adds a parallel upgrade selector retained at 0x529710 from
+    // philai.obj. When the map has the base-game creature set, the four
+    // base elementals have no upgraded form; every other case delegates to
+    // the free creature-traits helper. The HD cross-build supplies the
+    // surviving member name/signature and retail fixes the body and ABI.
+    TCreatureType UpgradedCreatureType(TCreatureType creature) const;
     // 0x42b9e0 (bracket ai_player..ai_tactical, 69 B). Returns bool -
     // the Dreamcast decoration is `?is_human_ally@game@@QBA_NH@Z` and
     // ClaimTown's `test al,al / sete al` is the !bool shape, against the
@@ -2483,7 +2505,10 @@ public:
     // recruit index; hero::hire uses the same closeout call. The body
     // remains outside the admitted surface.
     void finish_town_hire(long player_id, int recruit_slot);
-    unsigned char OnSameTeam(int player1, int player2)
+    // Dreamcast's public symbol is `?OnSameTeam@game@@QBA_NHH@Z`: bool,
+    // const, with two int parameters. Retail retains this exact helper from
+    // philai.obj at 0x5296d0 and calls it three times from AI_value_of_event.
+    bool OnSameTeam(int player1, int player2) const
     {
         if (player1 < 0 || player2 < 0)
             return 0;
@@ -2542,9 +2567,9 @@ public:
     NewmapCell* get_cell(type_point point);      // 0x42ed80 (ai_player.obj)
 #endif
     // DC `game::GetHero`, dc 0x2eb0, 36 B, declared in E:\gamedcs\Game.h
-    // line 972 - i.e. an INLINE MEMBER of this header, which is exactly
-    // how retail behaves: no out-of-line body exists and every reader
-    // expands it in place. The -1 test is part of the accessor, not of
+    // line 972 - i.e. an INLINE MEMBER of this header. Most retail readers
+    // expand it in place; ai_player.obj also retains the selected COMDAT at
+    // 0x4317d0. The -1 test is part of the accessor, not of
     // its callers: town::HasGarrison reaches it after its own
     // `garrisonHeroId < 0` gate and STILL emits the redundant
     // `cmp edx,-1`, which is what proves the test lives inside here.
@@ -2565,7 +2590,8 @@ public:
     int GetNumMapLevels() { return worldMap.GetNumLevels(); }
 #endif
     // DC `game::GetTown`, dc 0x2f24, declared in E:\gamedcs\Game.h line
-    // 1016 - GetHero's twin, and the same inline-only shape. Its
+    // 1016 - GetHero's twin. ai_player.obj retains its selected COMDAT at
+    // 0x42ba30 while other readers inline it. Its
     // -1 arm is proven by playerData::HasCapitol (0x4b9f40), which
     // reaches it with an id straight out of townIds and STILL emits the
     // `cmp eax,-1` / `xor edx,edx` pair before the 360-byte index -

@@ -40,6 +40,21 @@ long get_artifact_purchase_price(TArtifact artifact, long market_count,
                                  EGameResource* best_resource);
 TCreatureType siege_artifact_to_creature(TArtifact engine);
 TCreatureType UpgradedCreatureType(TCreatureType type);
+
+// Complete-only game.h inline retained by AI_value_of_event. The later
+// claim-only declaration assigns the selected philai.obj COMDAT its retail
+// address while this definition remains beside the helper it delegates to.
+inline TCreatureType game::UpgradedCreatureType(TCreatureType creature) const
+{
+    if (f_1f698 == 0
+        && (creature == CREATURE_AIR_ELEMENTAL
+            || creature == CREATURE_EARTH_ELEMENTAL
+            || creature == CREATURE_FIRE_ELEMENTAL
+            || creature == CREATURE_WATER_ELEMENTAL))
+        return CREATURE_NONE;
+    return ::UpgradedCreatureType(creature);
+}
+
 long get_skill_value(const hero* our_hero, int skill, int complex_choice);
 int AI_resource_cost(const playerData* player, const int* resources);
 int AI_resource_cost(long player_id, const int* resources);
@@ -2251,10 +2266,39 @@ long AI_value_of_event(const hero* current_hero, type_point point, long* move_co
 
 #endif  // @carcass
 
+#if 0  // @carcass: claim-only homes for retained header COMDATs
+
+// MapCell.h:914. Dreamcast's decorated bool/const/short signature and the
+// matching five-block body are independently retained by Complete at three
+// AI_value_of_event call sites; the HD cross-build masks identically.
+VA(0x00529690, 0x33)  // hd-crossbuild + anchor-callee x3, dc 0x1fa40
+bool ExtraInfoUnion::PlayerKnowsCell(short player) const
+{
+    // @stub - active definition is the advmgr.h class-body inline
+}
+
+// game.h:785. Dreamcast fixes the bool const member signature and six source
+// rows; Complete's three callers and HD-masked twin fix this selected copy.
+VA(0x005296d0, 0x37)  // hd-crossbuild + anchor-callee x3, dc 0x1febc
+bool game::OnSameTeam(int player1, int player2) const
+{
+    // @stub - active definition is the game.h class-body inline
+}
+
+// Complete-only game member: reject the four base-set elementals when
+// f_1f698 is zero, otherwise tail into the free UpgradedCreatureType helper.
+VA(0x00529710, 0x34)  // hd-crossbuild + sole AI_value_of_event caller
+TCreatureType game::UpgradedCreatureType(TCreatureType creature) const
+{
+    // @stub - active inline definition remains in source order above
+}
+
+#endif  // @carcass
+
 // E:\gamedcs\philai.cpp:298. The annotated redeclaration lives in retail
 // RVA order while its canonical definition stays above in original source
-// order. The verifier's current next-brace heuristic cannot follow this
-// identity yet; root owns the narrow name-based lookup repair.
+// order. The source-shape verifier resolves the claim through its unique
+// canonical identity rather than following it into the next RVA-order body.
 VA(0x00529750, 0x78)  // AI_value_of_event callee + exact retail FPU flow, dc 0x10d91c
 long get_artifact_purchase_value(
     TArtifact artifact_id, long market_count, long* funds);

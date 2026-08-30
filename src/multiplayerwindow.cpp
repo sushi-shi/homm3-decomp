@@ -1835,6 +1835,38 @@ int CHotSeatDlg::WindowHandler(message* msg)
 
 VA_COMPGEN(0x00512540, 0x21, SCALAR_DELETING_DTOR, CHotSeatDlg)
 
+// E:\gamedcs\array.h:51. DC emits this CDPlaySession specialization from
+// dxplay.obj, while Complete's selected COMDAT physically occupies the
+// multiplayerwindow.obj band and is called by OnSearch. The active template
+// definition remains in multiplayerwindow.h.
+#if 0  // @carcass: claim-only - definition lives in multiplayerwindow.h
+VA(0x00512570, 0x53)  // exact selected COMDAT, dc 0x8c0c0
+void CAutoArray<CDPlaySession>::Destroy(unsigned char deleteData)
+{
+    // @stub
+}
+#endif  // @carcass
+
+// E:\gamedcs\array.h:113,127. These selected CAutoArray<CDPlaySession>
+// COMDATs physically occupy multiplayerwindow.obj and DC records the same
+// specialization in this module. Their active definitions remain in
+// multiplayerwindow.h so the surrounding template instantiation keeps its
+// source shape; these disabled declarators only assign the retail homes.
+#if 0  // @carcass: claim-only - definitions live in multiplayerwindow.h
+VA(0x005125d0, 0x3A)  // exact selected COMDAT, dc 0x103150
+unsigned char CAutoArray<CDPlaySession>::Delete(unsigned long elementNbr)
+{
+    // @stub
+}
+
+VA(0x00512610, 0x5B)  // exact selected COMDAT, dc 0x10318c
+unsigned char CAutoArray<CDPlaySession>::Insert(
+    unsigned long nextElementNbr, CDPlaySession* element)
+{
+    // @stub
+}
+#endif  // @carcass
+
 // Compiler-generated scalar deleting destructor for CAutoArray<CDPlaySession>,
 // emitted by the `new CAutoArray<CDPlaySession>` in the TMultiPlayerWindow
 // constructor above (stores vtable 0x6400d8, inlines the delete-every-element

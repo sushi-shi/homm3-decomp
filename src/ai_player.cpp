@@ -74,6 +74,25 @@ inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
     return (_X < _Y ? _Y : _X);
 }
 
+#ifdef min
+#undef min
+#endif
+#ifdef max
+#undef max
+#endif
+
+// E:\\gamedcs\\includes.h:97,114. Observatory keeps these source-visible
+// by-value wrappers; Complete expands them and the reference selectors.
+inline int min(int a, int b)
+{
+    return _cpp_min(a, b);
+}
+
+inline int max(int a, int b)
+{
+    return _cpp_max(a, b);
+}
+
 template <class _TYPE>
 inline const _TYPE& _cpp_limit(_TYPE _Lo, _TYPE _V, _TYPE _Hi)
 {
@@ -94,7 +113,11 @@ const unsigned short AI_DAY_OF_WEEK_SUNDAY = 7;
 // Retail 0x526cc0: /Gr fastcall, player id in ECX and the seven-resource
 // vector in EDX. The owning philai TU is not yet reconstructed.
 int AI_resource_cost(long player_id, const int* resources);
+int AI_resource_cost(const playerData* player, const int* resources);
 long AI_get_spell_value(const hero* our_hero, SpellID spell);
+long AI_get_artifact_player_value(const type_artifact& artifact,
+                                  long player_id);
+bool consider_hiring(long player_id, hero* candidate);
 const std::bitset<9>& ArmyGrpFn_0044A460();
 int CanBuy(const town* currTown, int buildingId);
 double get_trade_ratio(EGameResource source, EGameResource dest,
@@ -120,7 +143,19 @@ inline type_building_id building_id_from_int(int value)
     return building;
 }
 
+inline TArtifact artifact_from_int(int value)
+{
+    TArtifact artifact;
+    memcpy(&artifact, &value, sizeof artifact);
+    return artifact;
+}
+
 const unsigned int CTA_SHOOTER = 0x4;
+
+// Dreamcast names the 144 vector rows and Complete's initializer passes this
+// address, count and 16-byte stride to the vector-constructor iterator.
+DATA(0x00692e18)
+std::vector<type_artifact_effect*> const_artifact_effects[144];
 
 // struct.h's original three-coordinate constructor was header-inline.  This
 // TU needs both expansions below, while advmgr.obj continues to own the one
@@ -430,7 +465,7 @@ void type_garrison_purchaser::mark_town(town* our_town)
 VA(0x004286b0, 0x21)  // DC signature/layout + retail stores; dc 0x37e08
 type_creature_source::type_creature_source(TCreatureType new_type,
                                            short* new_amount,
-                                           unsigned char _is_free)
+                                           bool _is_free)
 {
     type = new_type;
     ptr = new_amount;
@@ -1901,6 +1936,20 @@ bool game::is_human_ally(int player_number) const
     return false;
 }
 
+#if 0  // @carcass: claim-only home for the game.h COMDAT below
+
+// E:\gamedcs\Game.h:1016. The active header body and its -1/null arm are
+// independently fixed by the DC inline, the exact HD cross-build identity,
+// and retail's five callers. This declarator assigns ai_player.obj's selected
+// copy to its retail slot without creating a second definition.
+VA(0x0042ba30, 0x24)  // hd-crossbuild + exact body/callers x5, dc 0x2f24
+town* game::GetTown(int townId)
+{
+    // @stub
+}
+
+#endif  // @carcass
+
 #if 0  // @carcass
 
 // E:\gamedcs\ai_player.cpp:1808
@@ -2160,7 +2209,7 @@ void type_AI_creature_purchaser::type_AI_creature_purchaser(long player, town* c
 
 // E:\gamedcs\ai_player.cpp:2495
 DC_ONLY(0x31f24, 0x6E)
-void type_AI_creature_purchaser::type_AI_creature_purchaser(long player, TCreatureType type, short* amount, unsigned char is_free)
+void type_AI_creature_purchaser::type_AI_creature_purchaser(long player, TCreatureType type, short* amount, bool is_free)
 {
     // @stub
 }
@@ -2376,7 +2425,7 @@ long AI_get_ship_cost(const hero* our_hero, type_point point)
 
 // E:\gamedcs\ai_player.cpp:4670
 DC_ONLY(0x35ac8, 0x178)
-unsigned char type_AI_player::hire_heroes()
+bool type_AI_player::hire_heroes()
 {
     // @stub
 }
@@ -2666,7 +2715,7 @@ double type_AI_player::get_resource_value(EGameResource resource)
 
 // E:\gamedcs\ai_player.h:299
 DC_ONLY(0x37e08, 0x16)
-void type_creature_source::type_creature_source(TCreatureType new_type, short* new_amount, unsigned char _is_free)
+void type_creature_source::type_creature_source(TCreatureType new_type, short* new_amount, bool _is_free)
 {
     // @stub
 }
@@ -3175,6 +3224,27 @@ long type_AI_creature_swapper::value_of_adding_army(
 // Shared source for the retail out-of-line body and the copy expanded inside
 // get_purchase_value. Keeping the unclaimed helper here preserves the inline
 // context while the two claimed functions remain in retail address order.
+// E:\\gamedcs\\ai_player.cpp:2461. Dreamcast fixes the three scalar
+// initializers and the type/amount/free tuple pushed for every available
+// generator creature. Complete's generator has four slots rather than the
+// older build's five; retail's four-iteration pointer walk proves that skew.
+VA(0x0042cb70, 0x2b9)  // DC source shape + retail four-slot body, dc 0x31e3c
+type_AI_creature_purchaser::type_AI_creature_purchaser(
+    long player, generator* current_generator)
+{
+    player_id = player;
+    funds = 0;
+    subtract_cost_mode = 1;
+    for (short i = 0; i < 4; ++i) {
+        TCreatureType type = current_generator->type[i];
+        if (type != CREATURE_NONE) {
+            creatures.push_back(type_creature_source(
+                type, &current_generator->population[i],
+                akCreatureTypeTraits[type].level == 0));
+        }
+    }
+}
+
 static __forceinline void AI_consolidate_army_impl(armyGroup* current_army)
 {
     for (int first = 0; first < armyGroup::ARMY_GROUP_SLOT_COUNT - 1;
@@ -3207,6 +3277,19 @@ type_AI_creature_purchaser::type_AI_creature_purchaser(
     player_id = player;
     subtract_cost_mode = 1;
     set(current_town);
+}
+
+// E:\\gamedcs\\ai_player.cpp:2495. Both architectures default-construct
+// the swapper base and creature vector, initialize the same scalar tail, and
+// push exactly one source carrying the supplied creature, amount and bool.
+VA(0x0042cf50, 0x25a)  // DC source shape + retail ABI/body, dc 0x31f24
+type_AI_creature_purchaser::type_AI_creature_purchaser(
+    long player, TCreatureType type, short* amount, bool is_free)
+{
+    player_id = player;
+    funds = 0;
+    subtract_cost_mode = 1;
+    creatures.push_back(type_creature_source(type, amount, is_free));
 }
 
 // The constructor and mark_town both expand this routine. Their progressively
@@ -3692,6 +3775,37 @@ void mark_danger_zones(const hero* our_hero, long* danger_zones)
     }
 }
 
+#if 0  // @carcass: claim-only homes for retained header COMDATs
+
+// E:\gamedcs\struct.h:110. Dreamcast's public decoration proves the native-
+// bool, const-reference, const-member ABI; its single expression and retail's
+// five-block body compare the same three packed coordinates. The sole retail
+// caller is the large route evaluator immediately above this COMDAT band.
+VA(0x0042ec20, 0x45)  // exact body + sole caller, dc 0x1ee20
+bool type_point::operator==(const type_point& arg) const
+{
+    // @stub
+}
+
+// E:\gamedcs\Hero.h:157. The DC header statement constructs a type_point
+// from x/y/z; retail's two callers retain that same constructor expansion.
+VA(0x0042ec70, 0x4f)  // exact body/callers x2, dc 0x1fb2c
+type_point type_obscuring_object::get_location() const
+{
+    // @stub
+}
+
+// E:\gamedcs\Findpath.h:202. The DC public symbol proves bool/const and its
+// five source rows prove the null guard plus one index expression. Retail and
+// the HD cross-build retain that same header body in ai_player.obj.
+VA(0x0042ecc0, 0x62)  // hd-crossbuild + exact body/callers x2, dc 0x20064
+pathCell* searchArray::get_cell(type_point point, bool flying) const
+{
+    // @stub
+}
+
+#endif  // @carcass
+
 // E:\gamedcs\findpath.h:270
 VA(0x0042ed30, 0x4E)  // anchor-global, dc 0x37eec
 long searchArray::get_danger_value(type_point point) const
@@ -3885,7 +3999,7 @@ long find_all_destinations(hero* current_hero, searchArray* search_array,
         hero_point.y = current_hero->y;
         hero_point.z = current_hero->z;
         dest.move_cost = cell->cost;
-        if (dest.point == &hero_point)
+        if (dest.point == hero_point)
             continue;
 
         if (gUnnamed693718[map_cell->type]) {
@@ -4070,12 +4184,13 @@ long mark_destinations(hero* current_hero, long max_distance,
     return hero_danger;
 }
 
-// The per-TU inline copy every retail reader expands (game.cpp:131 is the
-// same pattern); ai_player.obj's own selected COMDAT is the unclaimed
-// 69-byte row at 0x42ec20.
-inline unsigned char type_point::operator==(const type_point* arg)
+// The per-TU inline copy used by the reconstructed callers above and below;
+// ai_player.obj's selected COMDAT is claimed at 0x42ec20 in RVA order. The
+// DC public decoration `??8type_point@@QBA_NABU0@@Z` resolves the old
+// pointer/unsigned-char scaffold to bool, const reference and const member.
+inline bool type_point::operator==(const type_point& arg) const
 {
-    return arg->x == x && arg->y == y && arg->z == z;
+    return arg.x == x && arg.y == y && arg.z == z;
 }
 
 // philai.obj's three-argument event appraisal (0x528040, dc 0x113e24);
@@ -4124,7 +4239,7 @@ int net_value_of_location(hero* current_hero, HeroDestination* destination,
         if (gpAdvManager->FindAdjacentMonster(destination->point,
                                               &monster_pos,
                                               destination->point)) {
-            if (!(path_cell->monster == &monster_pos)
+            if (!(path_cell->monster == monster_pos)
                 && value >= -500000000)
                 value += AI_value_of_event(current_hero, monster_pos,
                                            &destination->move_cost);
@@ -4258,6 +4373,19 @@ unsigned char attempt_step(hero* current_hero, pathCell* path_cell,
     return 0;
 }
 
+#if 0  // @carcass: claim-only home for the Town.h COMDAT below
+
+// E:\gamedcs\Town.h:324. The DC public symbol proves bool/bool/const; its
+// statement groups and the retail blocks agree on active versus built and
+// the 64-bit bitNumber test. HD supplies an exact cross-build identity.
+VA(0x004305a0, 0x66)  // hd-crossbuild + exact body/callers x18, dc 0x1fe14
+bool town::HasBuilding(int buildingId, bool check_included) const
+{
+    // @stub
+}
+
+#endif  // @carcass
+
 // E:\gamedcs\ai_player.cpp:4607
 // A computer hero may buy and launch from either an owned town dock or a
 // claimed map shipyard. Human heroes only enter through the remote-move
@@ -4287,6 +4415,127 @@ void AI_build_ship(const hero* our_hero, long x, long y, long z)
     player->resources[WOOD] -= 10;
 }
 
+// E:\\gamedcs\\ai_player.cpp:4643. Dreamcast proves the player/cost locals,
+// the ordered shipyard lookups, the conditional dock cost and the final
+// AI_resource_cost call. Retail expands both lookup helpers, retains the
+// -200000 sentinel, and adds the same ten wood and one-thousand gold before
+// negating the resource valuation.
+VA(0x00431160, 0x1f3)  // DC statement/callee order + retail ABI/body, dc 0x35a10
+long AI_get_ship_cost(const hero* our_hero, type_point point)
+{
+    const playerData* player = &gpGame->players[our_hero->owner];
+    town* shipyard_town =
+        get_shipyard_town(player, point.x, point.y, point.z);
+    int cost[7];
+    memset(cost, 0, sizeof cost);
+
+    if (!shipyard_town) {
+        if (!get_map_shipyard(player, point.x, point.y, point.z))
+            return -200000;
+    } else if (!shipyard_town->HasBuilding(DOCK_ID, 1)) {
+        shipyard_town->get_build_cost(DOCK_ID, cost);
+    }
+
+    cost[WOOD] += 10;
+    cost[GOLD] += 1000;
+    return -AI_resource_cost(player, cost);
+}
+
+// E:\\gamedcs\\ai_player.cpp:4457. The source helper is retained even
+// though Complete inlines both calls into hire_heroes. Complete also guards
+// the null returned by GetHero(-1); the older DC body assumes both tavern
+// recruits exist. Each artifact is intentionally reconstructed from only its
+// id, preserving the constructor's -1 payload before player-wide valuation.
+static __forceinline long total_artifact_value(hero* candidate,
+                                               long player_id)
+{
+    if (!candidate)
+        return 0;
+
+    long total = 0;
+    long slot;
+    for (slot = 0; slot < HERO_BACKPACK_CAPACITY; ++slot) {
+        type_artifact artifact(artifact_from_int(
+            candidate->get_backpack(slot)->artifactId));
+        total += AI_get_artifact_player_value(artifact, player_id);
+    }
+    for (slot = 0; slot < 19; ++slot) {
+        type_artifact artifact(artifact_from_int(
+            candidate->get_artifact(slot)->artifactId));
+        total += AI_get_artifact_player_value(artifact, player_id);
+    }
+    return total;
+}
+
+// E:\\gamedcs\\ai_player.cpp:4670. Dreamcast supplies the cap checks,
+// computer-player census, two recruit valuations and primary-skill
+// tie-break. Retail corroborates those phases, adds the null-safe artifact
+// helper above, and chooses the second recruit when primary totals tie.
+VA(0x00431360, 0x463)  // DC statement/callee order + Complete retail body, dc 0x35ac8
+bool type_AI_player::hire_heroes()
+{
+    playerData* player = &gpGame->players[team];
+    hero* first = 0;
+    hero* second = 0;
+    if (player->numHeroes >= playerData::HERO_SLOT_COUNT)
+        return false;
+    if (player->resources[GOLD] < gHeroGoldCost)
+        return false;
+    if (player->numHeroes >= hero_limits[gpGame->setup.difficulty])
+        return false;
+
+    long global_heroes = 0;
+    for (long player_id = 0; player_id < 8; ++player_id) {
+        if (!gpGame->playerDisabled[player_id]
+            && !gpGame->IsHuman(player_id)) {
+            global_heroes += gpGame->players[player_id].numHeroes;
+        }
+    }
+    if (player->numHeroes > 0
+        && global_heroes >= global_limits[gpGame->setup.difficulty]) {
+        return false;
+    }
+
+    if (player->recruits[0] != -1)
+        first = gpGame->GetHero(player->recruits[0]);
+    long first_value = total_artifact_value(first, team);
+    // Complete does not fetch the second recruit until the first recruit's
+    // expanded artifact valuation has finished.
+    if (player->recruits[1] != -1)
+        second = gpGame->GetHero(player->recruits[1]);
+    long second_value = total_artifact_value(second, team);
+
+    if (second && second_value > first_value)
+        return consider_hiring(team, second);
+    if (first && first_value > second_value)
+        return consider_hiring(team, first);
+    if (first && second) {
+        if (first->get_primary_skill_total()
+            > second->get_primary_skill_total()) {
+            return consider_hiring(team, first);
+        }
+        return consider_hiring(team, second);
+    }
+    if (first)
+        return consider_hiring(team, first);
+    if (second)
+        return consider_hiring(team, second);
+    return false;
+}
+
+#if 0  // @carcass: claim-only home for the game.h COMDAT below
+
+// E:\gamedcs\Game.h:972. The DC header body, exact HD cross-build identity,
+// and retail's fifteen callers all preserve the -1/null arm and 1170-byte
+// hero stride. The compiled definition remains in game.h.
+VA(0x004317d0, 0x26)  // hd-crossbuild + exact body/callers x15, dc 0x2eb0
+hero* game::GetHero(int which)
+{
+    // @stub
+}
+
+#endif  // @carcass
+
 // Local prototypes, the events.cpp pattern: value_of_hiring's body follows
 // consider_hiring below (retail 0x431bd0); AI_resource_cost is philai.obj's
 // long-id overload (philai.cpp:1040); CanBuy is castle.h's free checker.
@@ -4311,7 +4560,7 @@ long AI_get_artifact_player_value(const type_artifact& artifact,
 // town - building its tavern if it must and can - is compared against a
 // numHeroes * gold-value * gHeroGoldCost bar seeded as the initial best.
 VA(0x00431800, 0x3c2)  // anchor-callee unique (town::hire), dc 0x354bc
-unsigned char consider_hiring(long player_id, hero* candidate)
+bool consider_hiring(long player_id, hero* candidate)
 {
     long total = 0;
     playerData* player = &gpGame->players[player_id];
@@ -4496,6 +4745,56 @@ long value_of_hiring(town* current_town, hero* candidate,
     memcpy(current_town->population, population, sizeof(population));
     return (best_hero_value + total_value) / heroes_touched;
 }
+
+// E:\\gamedcs\\ai_player.cpp:4728. The DC line table fixes the rectangle,
+// player visibility bit, half-tile radius and nested point walk. Retail
+// corroborates every field: it skips points outside the circular radius or
+// already visible to the player, counts each newly exposed cell, and adds
+// the object-specific value for trigger cells.
+VA(0x00432220, 0x233)  // DC statement/callee order + retail ABI/body, dc 0x35c40
+long AI_value_of_observatory(type_point origin, long player_id, long range)
+{
+    long value = 0;
+    type_point point;
+    unsigned short bPlayerBit = static_cast<unsigned short>(1 << player_id);
+    double distance = static_cast<double>(range) + 0.5;
+    RECT rect;
+    rect.left = max(static_cast<long>(origin.x) - range, 0);
+    rect.right = min(static_cast<long>(origin.x) + range + 1, gMapWidth);
+    rect.top = max(static_cast<long>(origin.y) - range, 0);
+    rect.bottom = min(static_cast<long>(origin.y) + range + 1, gMapHeight);
+    point.z = origin.z;
+
+    for (point.y = static_cast<short>(rect.top); point.y < rect.bottom;
+         ++point.y) {
+        for (point.x = static_cast<short>(rect.left); point.x < rect.right;
+             ++point.x) {
+            if (sqrt(static_cast<double>((point.x - origin.x)
+                                        * (point.x - origin.x)
+                                        + (point.y - origin.y)
+                                          * (point.y - origin.y))) > distance)
+                continue;
+            if (GetMapExtra(point.x, point.y, point.z) & bPlayerBit)
+                continue;
+
+            ++value;
+            NewmapCell* cell = gpGame->get_cell(point);
+            if (cell->is_trigger)
+                value += AI_event_visibility_values[cell->type];
+        }
+    }
+    return value;
+}
+
+// E:\gamedcs\ai_player.cpp:4924. The 144-row const_artifact_effects array
+// makes VC6 emit this std::vector<type_artifact_effect*> element constructor.
+VA_COMPGEN(0x004324b0, 0x18, DEFAULT_CTOR_CLOSURE, type_artifact_effect)
+
+// E:\gamedcs\ai_player.cpp:5044. Slot zero of the base vtable points at a
+// second base deleting-destructor body here. The current VC6 source emits one
+// public ??_Gtype_artifact_effect body, selected at 0x433080 below; claiming
+// this inlined duplicate as the same public symbol would create two source
+// owners, so 0x4324d0 remains deliberately unclaimed.
 
 // E:\gamedcs\ai_player.cpp:5050
 // Reattributed from the DC ctor (0x361c8): a VC6 ctor returns this in eax
@@ -4876,10 +5175,11 @@ long type_spell_artifact::get_value(const hero* owner, unsigned char equipped,
     return value;
 }
 
-// Every artifact-effect vtable's slot 0 points here (/OPT:ICF folded all
-// concrete classes' ??_G onto the base's: each reduces to `call
-// ??1type_artifact_effect / conditional delete` once the trivial derived
-// dtors inline to nothing).
+// Every derived artifact-effect vtable's slot 0 points here (/OPT:ICF folded
+// bodies that reduce to the base destructor call and conditional delete). The
+// one public deleting-destructor body currently emitted by the VC6 source is
+// the exact byte match for this retail copy; the base-vtable copy at 0x4324d0
+// remains unclaimed above.
 VA_COMPGEN(0x00433080, 0x21, SCALAR_DELETING_DTOR, type_artifact_effect)
 
 VA(0x004330b0, 0x73)  // vtable-slot 0x63b758 (provisional type), retail-only
@@ -5235,6 +5535,34 @@ long AI_get_artifact_player_value(const type_artifact& artifact,
             best = value;
     }
     return best;
+}
+
+// Forward declarations for AI_equip_artifacts; both callees occupy the later
+// retail slots below, preserving their original source order.
+long remove_negative_artifacts(hero* our_hero);
+unsigned char add_artifact(hero* our_hero, type_artifact artifact,
+                           long* base_value, hero* source_hero,
+                           long source_slot, long* source_value,
+                           long best_change);
+
+// E:\gamedcs\ai_player.cpp:5940
+// Dreamcast proves the artifact/base_value locals and the ordered calls to
+// remove_negative_artifacts, the backpack accessors, add_artifact and removal.
+// Retail retains the same reverse walk and expands get_backpack to the direct
+// eight-byte slot copy visible below.
+VA(0x00433b40, 0x6d)  // DC statement/callee census + 19 retail callers, dc 0x37a58
+void AI_equip_artifacts(hero* our_hero)
+{
+    long base_value = remove_negative_artifacts(our_hero);
+    type_artifact artifact;
+    int backpack_slot = our_hero->get_last_backpack_index() + 1;
+    while (backpack_slot-- > 0) {
+        artifact = *our_hero->get_backpack(backpack_slot);
+        if (artifact.artifactId != ARTIFACT_NONE
+            && add_artifact(our_hero, artifact, &base_value, 0, 19, 0, 0)) {
+            our_hero->remove_backpack_artifact(backpack_slot);
+        }
+    }
 }
 
 // E:\gamedcs\ai_player.cpp:5792
