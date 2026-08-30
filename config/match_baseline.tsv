@@ -2012,7 +2012,7 @@ mousemgr	??_GmouseManager@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x10cbc0
 mousemgr	?CheckUpdate@mouseManager@@QAEXXZ	100.0000	100.0000	100.0000	0x10d680
 mousemgr	?Close@mouseManager@@UAEXXZ	100.0000	100.0000	100.0000	0x10cc40
 mousemgr	?HidePointer@mouseManager@@QAEXXZ	100.0000	100.0000	100.0000	0x10d540
-mousemgr	?LoadFrame@mouseManager@@QAEXH@Z	99.3103	99.3103	99.3103	0x10d8b0
+mousemgr	?LoadFrame@mouseManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x10d8b0
 mousemgr	?MouseCoords@mouseManager@@QAEXPAH0@Z	100.0000	100.0000	100.0000	0x10d500
 mousemgr	?Open@mouseManager@@UAEHH@Z	100.0000	100.0000	100.0000	0x10cbf0
 mousemgr	?Reset@mouseManager@@QAEXXZ	100.0000	100.0000	100.0000	0x10cc80
@@ -2840,7 +2840,7 @@ spells	?ChainLightning@combatManager@@QAEXHHH@Z	96.1913	96.1913	96.1913	0x1a6360
 spells	?ClearEffects@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1a66b0
 spells	?ComputeSpellDamage@combatManager@@QAEJHJJPAVhero@@0PBVarmy@@E@Z	100.0000	100.0000	100.0000	0x1a7890
 spells	?DoBolt@combatManager@@QAEXHHHHHHHHHHHHHHHHH@Z	100.0000	100.0000	100.0000	0x1a5c20
-spells	?DrawBolt@combatManager@@QAEXPAUSBolt@@H@Z	94.9073	94.9073	94.9073	0x1a5440
+spells	?DrawBolt@combatManager@@QAEXPAUSBolt@@H@Z	89.3165	94.9073	94.9073	0x1a5440
 spells	?Earthquake@combatManager@@QAEXH@Z	84.9579	84.9579	84.9579	0x1a7c80
 spells	?GetNextChainLightningTarget@combatManager@@QAEJPBVarmy@@J@Z	91.1017	91.1017	91.1017	0x1a61f0
 spells	?HandleGetTeleportDestination@@YIHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1a37d0

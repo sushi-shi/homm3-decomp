@@ -283,16 +283,28 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   bodies, a flattened handler call, or a missing retail identity all fail.
 
 - **2026-08-30 — `WinGraph.h` again owns the shared `RGBto16` source
-  boundary, with no Windows-score sacrifice.**  Dreamcast xrefs prove the
+  boundary, and its recovered accumulator closes `mouseManager::LoadFrame`
+  exactly.**  Dreamcast xrefs prove the
   header helper is consumed by `mouseManager::LoadFrame`,
   `combatManager::DrawBolt`, and the mouse-surface setup in wingraph.  The
   former TU-local facsimiles and hand-expanded two-channel expressions are
-  replaced by one public inline with the shared R/G/B mask domain.  VC6 emits
-  no stray out-of-line body: `LoadFrame` remains **99.3103%** with its exact
-  three-block / one-branch shape, `DrawBolt` remains **94.9073%**, and the
-  815-byte `DDInitGraphics` remains **100.0000%**.  This is a byte-flat but
-  source-positive correction; the recovered boundary is not removed merely
-  because it does not immediately raise a local percentage.
+  replaced by one public inline with the shared R/G/B mask domain.  Merely
+  restoring the header location was byte-flat.  The helper's own dossier then
+  exposed three separate emitting component rows and a later return row, with
+  a non-emitting declaration line between the signature and first component.
+  Restoring that source as one local accumulator, three assignments, and a
+  final return gives retail `0x0050d8b0` **all 363 bytes, all 3 / 3 CFG
+  blocks, and its one-branch / one-return sequence exactly**.  VC6 emits no
+  stray out-of-line helper, and the 815-byte `DDInitGraphics` stays
+  **100.0000%**.
+
+  The authentic accumulator moves the much larger `DrawBolt` from its banked
+  **94.9073%** to a current **89.3165%**, while retaining the exact 27-branch /
+  two-return sequence.  That current dip is observational: max/history keeps
+  the earlier codegen result while source retains the positive Dreamcast fact
+  that actually closed another consumer.  Do not flatten or replace the
+  recovered helper to recover the isolated score; continue the surrounding
+  `DrawBolt` reconstruction from its banked peak and current source truth.
 
 - **2026-08-30 — `advManager::SetHeroContext` restores Dreamcast's initialized
   `screen_redrawn` local at zero code cost.**  Raw source order places
