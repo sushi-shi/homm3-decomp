@@ -405,6 +405,33 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"cell\s*->\s*type_value\s*=\s*0\s*;\s*"
             r"prisoner\s*->\s*obscure_cell\s*\(\s*\)\s*;"),
     ),
+    ("events.obj", 0x9AF34): (
+        SourceRule(
+            "CombatMonsterEvent keeps Dreamcast's event_seed local and "
+            "Demobilize/SRand statement order",
+            r"\bDemobilizeCurrHero\s*\(\s*0\s*,\s*1\s*\)\s*;.*?"
+            r"\bint\s+event_seed\s*=.*?;\s*SRand\s*\(\s*event_seed\s*"
+            r"\)\s*;"),
+        SourceRule(
+            "CombatMonsterEvent keeps Dreamcast's shared primary-skill then "
+            "army-value order and plain double ratio local",
+            r"who\s*->\s*get_primary_skill_total\s*\(\s*\)\s*;.*?"
+            r"double\s+ratio\s*=\s*who\s*->\s*army\s*\.\s*"
+            r"get_AI_value\s*\(\s*\)\s*;\s*ratio\s*/="
+            r"\s*combat_value\s*;"),
+        SourceRule(
+            "CombatMonsterEvent may not replace NB11's plain T_REAL64 ratio "
+            "with a volatile codegen probe",
+            r"\bvolatile\s+double\s+ratio\b", 0, 0),
+        SourceRule(
+            "CombatMonsterEvent keeps Dreamcast's army_group local and the "
+            "scoped tempNumTroops then tempArmies arrays",
+            r"\barmyGroup\s+army_group\s*;.*?"
+            r"if\s*\(\s*monType2\s*!=\s*CREATURE_NONE\s*\|\|\s*"
+            r"monType3\s*!=\s*CREATURE_NONE\s*\)\s*\{\s*"
+            r"int\s+tempNumTroops\s*\[\s*7\s*\]\s*;\s*"
+            r"TCreatureType\s+tempArmies\s*\[\s*7\s*\]\s*;"),
+    ),
     ("cmbtmgr.obj", 0x5E09C): (
         SourceRule(
             "LoadArmies keeps raw NB11's procedure-scope side local before "
@@ -4167,6 +4194,47 @@ AddWidget(statusWidget, -1);
                                    resource_display_key)):
         failures.append(
             "flattened TResourceDisplay status-widget arms passed")
+    combat_monster_key = ("events.obj", 0x9AF34)
+    combat_monster_probe = """\
+DemobilizeCurrHero(0, 1);
+int event_seed = point.x * 0x3c907;
+SRand(event_seed);
+who->army.get_AI_value();
+who->get_primary_skill_total();
+double ratio = who->army.get_AI_value();
+ratio /= combat_value;
+armyGroup army_group;
+if (monType2 != CREATURE_NONE || monType3 != CREATURE_NONE) {
+    int tempNumTroops[7];
+    TCreatureType tempArmies[7];
+}
+"""
+    if contract_violations(combat_monster_probe, combat_monster_key):
+        failures.append("aligned CombatMonsterEvent shape did not pass")
+    broken_combat_monster_probes = (
+        (combat_monster_probe.replace(
+            "int event_seed = point.x * 0x3c907;\nSRand(event_seed);",
+            "int seed = point.x * 0x3c907;\nSRand(seed);"),
+         "event_seed local"),
+        (combat_monster_probe.replace(
+            "who->get_primary_skill_total();\n"
+            "double ratio = who->army.get_AI_value();",
+            "double ratio = who->army.get_AI_value();\n"
+            "who->get_primary_skill_total();"),
+         "primary-skill then army-value"),
+        (combat_monster_probe.replace("double ratio =",
+                                      "volatile double ratio ="),
+         "plain T_REAL64 ratio"),
+        (combat_monster_probe.replace(
+            "int tempNumTroops[7];\n    TCreatureType tempArmies[7];",
+            "TCreatureType tempArmies[7];\n    int tempNumTroops[7];"),
+         "scoped tempNumTroops then tempArmies"),
+    )
+    for probe, description in broken_combat_monster_probes:
+        if not any(description in rule.description for rule in
+                   contract_violations(probe, combat_monster_key)):
+            failures.append("broken CombatMonsterEvent " + description
+                            + " source shape passed")
     enemy_town_key = ("philai.obj", 0x11105C)
     enemy_town_probe = """\
 int creature_cost[NUM_RESOURCES];
