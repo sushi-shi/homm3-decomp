@@ -119,26 +119,6 @@ inline type_record_claim_town::type_record_claim_town(long _id, char _new_owner)
     old_owner = gpGame->towns[_id].owner;
 }
 
-inline type_record_hide_boat::type_record_hide_boat(boat* _current_boat,
-                                                    unsigned char _occupied,
-                                                    int _occupying_hero)
-{
-    current_boat = _current_boat;
-    field_0c = _occupied;
-    field_0d = _current_boat->occupied;
-    field_10 = _occupying_hero;
-    field_14 = _current_boat->occupying_hero;
-}
-
-inline type_record_show_boat::type_record_show_boat(boat* _current_boat,
-                                                    type_point _location)
-    : type_record_hide_boat(_current_boat, 0, _current_boat->occupying_hero)
-{
-    previous_location = type_point(_current_boat->x, _current_boat->y,
-                                   _current_boat->z);
-    location = _location;
-}
-
 inline type_record_erase::type_record_erase(type_point _location,
                                             long _object_id,
                                             unsigned long _extra_info,
@@ -586,14 +566,22 @@ void type_record_claim_town::undo()
 {
     gpGame->towns[id].owner = old_owner;
 }
-#if 0  // @carcass
-
 // E:\gamedcs\event_record.cpp:376
-DC_ONLY(0x8ce74, 0x3A)
-void type_record_hide_boat::type_record_hide_boat(boat* _current_boat)
+// Dreamcast's older record stores only the boat pointer here. Complete adds
+// the replay state at +0xc/+0x10; record_hide_boat's retail `ret 0xc` and the
+// two independent snapshot loads corroborate the revised constructor inputs.
+inline type_record_hide_boat::type_record_hide_boat(boat* _current_boat,
+                                                    unsigned char _occupied,
+                                                    int _occupying_hero)
 {
-    // @stub
+    current_boat = _current_boat;
+    field_0c = _occupied;
+    field_0d = _current_boat->occupied;
+    field_10 = _occupying_hero;
+    field_14 = _current_boat->occupying_hero;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:384
 DC_ONLY(0x8ceb0, 0x26)
@@ -716,14 +704,20 @@ void type_record_hide_boat::undo()
     current_boat->occupying_hero = field_14;
     current_boat->obscure_cell();
 }
-#if 0  // @carcass
-
 // E:\gamedcs\event_record.cpp:449
-DC_ONLY(0x8cfa8, 0x9A)
-void type_record_show_boat::type_record_show_boat(boat* _current_boat, type_point _location)
+// DC line 450 calls type_obscuring_object::get_location. Retail inlines that
+// helper into the packed x/y/z loads, so keep the source boundary even though
+// spelling the three fields directly produces the same candidate bytes.
+inline type_record_show_boat::type_record_show_boat(boat* _current_boat,
+                                                    type_point _location)
+    : type_record_hide_boat(_current_boat, 0,
+                            _current_boat->occupying_hero)
 {
-    // @stub
+    previous_location = _current_boat->get_location();
+    location = _location;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:458
 DC_ONLY(0x8d044, 0x26)
@@ -1451,7 +1445,12 @@ void game::record_hide_hero(hero* who, char new_owner,
 // E:\gamedcs\event_record.cpp:1087
 // The boat's occupying-hero slot is read TWICE - once at the call site for
 // the base constructor's argument and once inside that constructor for the
-// undo snapshot - which is what separates the two.
+// undo snapshot - which is what separates the two. DC line 1088 proves this
+// is one direct type_record_show_boat construction inside eventRecords'
+// push_back. The remaining 98.181816% residual is only _Insert's equivalent
+// capacity-growth spelling: retail duplicates size() on the >1 arm while C1
+// reuses the already-computed distance. Both CFGs have 12 branches/3 returns;
+// direct-field, ordinary-inline and force-inline probes are byte-flat.
 VA(0x0049c900, 0x217)  // anchor-vtable (constructs 0x63df04), dc 0x8e18c
 void game::record_show_boat(boat* current_boat, type_point point)
 {
