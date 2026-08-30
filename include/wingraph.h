@@ -7,9 +7,27 @@
 
 #include <va.h>
 
+// E:\gamedcs\WinGraph.h:55.  Dreamcast keeps this header helper out of
+// line, and its xref graph proves calls from mousemgr, spells, and wingraph.
+// Retail VC6 /Ob2 expands every observed Windows use instead.  Keep the
+// channel declarations with the helper so each consumer sees the same public
+// source boundary rather than a TU-local facsimile.  Retail DrawBolt fixes
+// their order as R/G/B: its green ramp selects only 0x68c864, while Chain
+// Lightning keeps 0x68c868 saturated as its other two components fade.
+extern unsigned long gColorMask68c860;
+extern unsigned long gColorMask68c864;
+extern unsigned long gColorMask68c868;
+
+inline unsigned RGBto16(int r, int g, int b)
+{
+    return ((r * gColorMask68c860 / 255) & gColorMask68c860)
+        | ((g * gColorMask68c864 / 255) & gColorMask68c864)
+        | ((b * gColorMask68c868 / 255) & gColorMask68c868);
+}
+
 // The prefix of DirectDraw's 32-byte pixel-format record at 0x68c850.
-// The three channel masks immediately following it are exposed by
-// mousemgr.h because both wingraph setup and the mouse renderer consume them.
+// The three channel masks immediately following it are declared above with
+// their recovered helper; mousemgr.cpp owns their reviewed DATA definitions.
 struct TPixelFormatPrefix {
     unsigned long size;
     unsigned long flags;
@@ -91,6 +109,7 @@ extern IDirectDrawSurface* gpDDSPrimary;  // .bss 0x6aacbc
 extern IDirectDrawSurface* gpDDSBack;     // .bss 0x6aacc0
 
 // --- globals ---
+// CODEVIEW(E:\gamedcs\WinGraph.h:55, dc 0xff780) unsigned RGBto16(int r, int g, int b);
 // CODEVIEW(E:\gamedcs\wingraph.cpp:72, dc 0x198af4) void SetPlayerPaletteColors(unsigned short* pPalette, int whichPlayer);
 // CODEVIEW(E:\gamedcs\wingraph.cpp:83, dc 0x198b1c) void SetPlayerPaletteColors(TPalette24* pal, int whichPlayer);
 // CODEVIEW(E:\gamedcs\wingraph.cpp:109, dc 0x198b48) void DDCreatePrimary();

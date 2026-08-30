@@ -7,6 +7,7 @@
 
 #include "basemgr.h"
 #include "hero.h"
+#include "netmsg.h"
 #include "window.h"
 
 // MATCHING_DEBT: swapmgr.obj needs the existing chat-edit declaration view
@@ -57,9 +58,38 @@ enum ESwapSelectSide {
     kSwapSelectRight = 1,
 };
 
+// Complete moved the four backpack controls two widget ids above the
+// Dreamcast build and added a second full-refresh id.  The two network ids
+// retain their protocol values across both revisions.
+enum ESwapWidgetId {
+    kSwapLeftQuestLog = 0x55,
+    kSwapRightQuestLog = 0x56,
+    kSwapLeftBackpackLeft = 0x63,
+    kSwapRightBackpackLeft = 0x64,
+    kSwapLeftBackpackRight = 0x65,
+    kSwapRightBackpackRight = 0x66,
+    kSwapRefreshLeft = 0x67,
+    kSwapRefreshRight = 0x68,
+    kSwapReceiveFromAlly = 0x12e,
+    kSwapTradeRequestDone = 0x7800,
+};
+
+class CTradeRequestDoneMsg : public CNetMsg {
+public:
+    CTradeRequestDoneMsg();
+};
+
+class CGiveMeStuffMsg : public CNetMsg {
+public:
+    CGiveMeStuffMsg();
+};
+
+SIZE(CTradeRequestDoneMsg, 0x14);
+SIZE(CGiveMeStuffMsg, 0x14);
+
 class swapManager : public baseManager {
 public:
-    heroWindow* parent;      // +0x38
+    TSwapWindow* parent;     // +0x38
     Bitmap816* border;       // +0x3c
     hero* heroes[2];         // +0x40 / +0x44
     int field_48;            // +0x48  selection state (all -1 at construction)
@@ -79,13 +109,20 @@ public:
     virtual int Open(int newPriority);  // baseManager vtable slot 0
     virtual void Close();               // slot 1
     virtual int Main(message& msg);     // slot 2
+    int DrawSwapWin();
     bool IsLeftHero();
+    unsigned char IsRightHero();
+    hero* GetOtherHero();
     void DrawSelector();
+    void SendHeroUpdate();
     void UpdateSlot(int iHero, TArtifactSlot slot);
     void update_all_slots();
     void UpdateBackpackItem(int iHero, int i);
     void UpdateBackpack(int iHero);
     void SwapMons();
+    void Update();
+    void OnWidgetDeselect(message& msg, int& exitFlag);
+    void OnReceiveFromAlly();
     unsigned char CanModHero(int hero);
 };
 

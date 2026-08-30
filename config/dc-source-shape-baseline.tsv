@@ -1489,7 +1489,6 @@ call	mousemgr.obj	0xff484	GameTime::IsPast
 call	mousemgr.obj	0xff484	GameTime::NextFrameTime
 call	mousemgr.obj	0xff484	mouseManager::ShowSystemCursor
 call	mousemgr.obj	0xff484	mouseManager::isBusy
-call	mousemgr.obj	0xff610	RGBto16
 call	multiplayerwindow.obj	0x100408	TMultiPlayerWindow::Update
 call	multiplayerwindow.obj	0x100498	widget::hide
 call	multiplayerwindow.obj	0x100498	widget::show

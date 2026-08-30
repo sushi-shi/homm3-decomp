@@ -10,12 +10,25 @@
 #include "advmgr.h"
 #include "bitmap816.h"
 #include "kb.h"
+#include "questlogwindow.h"
 #include "winmgr.h"
 #include "netgame.h"
 
 DATA(0x006a3d08) static int gUnnamed6a3d08;
 // swapmgr singleton (bss 0x6a3d30): the ctor stores `this`, Reset/Open/Close consult it.
 DATA(0x006a3d30) swapManager* gpSwapManager;
+
+// E:\gamedcs\swapmgr.cpp:130
+CTradeRequestDoneMsg::CTradeRequestDoneMsg()
+    : CNetMsg(RS_TRADE_REQUEST_DONE, sizeof(CTradeRequestDoneMsg))
+{
+}
+
+// E:\gamedcs\swapmgr.cpp:151
+CGiveMeStuffMsg::CGiveMeStuffMsg()
+    : CNetMsg(RS_GIVE_ME_STUFF, sizeof(CGiveMeStuffMsg))
+{
+}
 
 #if 0  // @carcass -- located/reconstruction-pending bodies
 
@@ -124,12 +137,19 @@ void swapManager::Reset()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\swapmgr.cpp:655
-DC_ONLY(0x15c648, 0x24)
+// The WinCE no-argument screen update became an explicit full-screen update
+// in Complete; the window draw boundary and return value remain shared.
 int swapManager::DrawSwapWin()
 {
-    // @stub
+    parent->DrawWindow(0, 0xffff0001, 0xffff);
+    gpWindowManager->UpdateScreen(0, 0, 800, 600);
+    return 0;
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\swapmgr.cpp:665
 DC_ONLY(0x15c66c, 0x3D8)
@@ -140,6 +160,7 @@ int swapManager::Open(int newPriority)
 
 // E:\gamedcs\swapmgr.cpp:789
 #endif  // @carcass
+
 VA(0x005aed20, 0x9B)  // exact retail teardown, dc 0x15ca44
 void swapManager::Close()
 {
@@ -365,13 +386,6 @@ void swapManager::SwapMons()
     // @stub
 }
 
-// E:\gamedcs\swapmgr.cpp:2072
-DC_ONLY(0x15ea00, 0x190)
-void swapManager::Update()
-{
-    // @stub
-}
-
 // E:\gamedcs\swapmgr.cpp:2140
 DC_ONLY(0x15eb90, 0x1A)
 void swapManager::OnChatUpdate()
@@ -386,30 +400,9 @@ void swapManager::HandleHeroUpdateMsg(CNetMsg* pNetMsg)
     // @stub
 }
 
-// E:\gamedcs\swapmgr.cpp:2165
-DC_ONLY(0x15ec58, 0x1A0)
-void swapManager::OnWidgetDeselect(message* msg, int* exitFlag)
-{
-    // @stub
-}
-
 // E:\gamedcs\swapmgr.cpp:2231
 DC_ONLY(0x15edf8, 0x2A)
 unsigned char swapManager::IsLeftHero()
-{
-    // @stub
-}
-
-// E:\gamedcs\swapmgr.cpp:2241
-DC_ONLY(0x15ee24, 0x2A)
-unsigned char swapManager::IsRightHero()
-{
-    // @stub
-}
-
-// E:\gamedcs\swapmgr.cpp:2251
-DC_ONLY(0x15ee50, 0x22)
-hero* swapManager::GetOtherHero()
 {
     // @stub
 }
@@ -424,13 +417,6 @@ hero* swapManager::GetOurHero()
 // E:\gamedcs\swapmgr.cpp:2267
 DC_ONLY(0x15ee98, 0x82)
 unsigned char swapManager::CanModHero(int hero)
-{
-    // @stub
-}
-
-// E:\gamedcs\swapmgr.cpp:2287
-DC_ONLY(0x15ef1c, 0x44)
-void swapManager::OnReceiveFromAlly()
 {
     // @stub
 }
@@ -452,20 +438,6 @@ void baseManager::SetStatus(short newStatus)
 // E:\gamedcs\swapmgr.cpp:120
 DC_ONLY(0x15efd4, 0x90)
 void CHeroUpdateMsg::CHeroUpdateMsg(hero* left, hero* right)
-{
-    // @stub
-}
-
-// E:\gamedcs\swapmgr.cpp:130
-DC_ONLY(0x15f064, 0x20)
-void CTradeRequestDoneMsg::CTradeRequestDoneMsg()
-{
-    // @stub
-}
-
-// E:\gamedcs\swapmgr.cpp:151
-DC_ONLY(0x15f084, 0x20)
-void CGiveMeStuffMsg::CGiveMeStuffMsg()
 {
     // @stub
 }
@@ -620,6 +592,84 @@ void swapManager::update_all_slots()
             UpdateSlot(iHero, static_cast<TArtifactSlot>(slot) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
 }
 
+// E:\gamedcs\swapmgr.cpp:2072
+// Complete moved the shared widget-refresh loops into update_all_slots;
+// retaining this wrapper preserves the original caller boundary while /Ob2
+// folds it back to the one retail call.
+void swapManager::Update()
+{
+    update_all_slots();
+}
+
+// E:\gamedcs\swapmgr.cpp:2165
+VA(0x005b10d0, 0x2A8)  // switch ids/callees + ret 8, dc 0x15ec58
+void swapManager::OnWidgetDeselect(message& msg, int& exitFlag)
+{
+    switch (msg.codeY)
+    {
+    case kSwapLeftBackpackLeft:
+        heroes[0]->rotate_backpack_left();
+        UpdateBackpack(0);
+        DrawSwapWin();
+        SendHeroUpdate();
+        break;
+
+    case kSwapRightBackpackLeft:
+        heroes[1]->rotate_backpack_left();
+        UpdateBackpack(1);
+        DrawSwapWin();
+        SendHeroUpdate();
+        break;
+
+    case kSwapLeftBackpackRight:
+        heroes[0]->rotate_backpack_right();
+        UpdateBackpack(0);
+        DrawSwapWin();
+        SendHeroUpdate();
+        break;
+
+    case kSwapRightBackpackRight:
+        heroes[1]->rotate_backpack_right();
+        UpdateBackpack(1);
+        DrawSwapWin();
+        SendHeroUpdate();
+        break;
+
+    case kSwapLeftQuestLog:
+        if (IsLeftHero())
+            DoQuestLog(gNetLocalGamePos);
+        break;
+
+    case kSwapRightQuestLog:
+        if (IsRightHero())
+            DoQuestLog(gNetLocalGamePos);
+        break;
+
+    case kSwapRefreshLeft:
+    case kSwapRefreshRight:
+        gUnnamed6a3d08 = 1;
+        Update();
+        DrawSwapWin();
+        DrawSelector();
+        break;
+
+    case kSwapReceiveFromAlly:
+        OnReceiveFromAlly();
+        break;
+
+    case kSwapTradeRequestDone:
+        if (gNetworkActive69954c
+            && gpCurrentPlayer->IsLocalHuman()
+            && field_5c)
+        {
+            CTradeRequestDoneMsg requestDone;
+            TransmitRemoteData(&requestDone, GetOtherHero()->owner, 0, 1);
+        }
+        exitFlag = 1;
+        break;
+    }
+}
+
 // E:\gamedcs\swapmgr.cpp:2231
 VA(0x005b1380, 0x1C)
 bool swapManager::IsLeftHero()
@@ -627,6 +677,22 @@ bool swapManager::IsLeftHero()
     if (heroes[0]->owner == gpGame->GetLocalPlayerGamePos())
         return true;
     return false;
+}
+
+// E:\gamedcs\swapmgr.cpp:2241
+unsigned char swapManager::IsRightHero()
+{
+    if (heroes[1]->owner == gpGame->GetLocalPlayerGamePos())
+        return true;
+    return false;
+}
+
+// E:\gamedcs\swapmgr.cpp:2251
+hero* swapManager::GetOtherHero()
+{
+    if (IsLeftHero())
+        return heroes[1];
+    return heroes[0];
 }
 
 unsigned char swapManager::CanModHero(int whichHero)
@@ -638,4 +704,15 @@ unsigned char swapManager::CanModHero(int whichHero)
     if (field_5c && !field_5d)
         return 0;
     return heroes[whichHero]->owner == gpGame->GetLocalPlayerGamePos();
+}
+
+// E:\gamedcs\swapmgr.cpp:2287
+void swapManager::OnReceiveFromAlly()
+{
+    field_5d = 0;
+    parent->UpdateArrows();
+    DrawSwapWin();
+
+    CGiveMeStuffMsg giveMeStuff;
+    TransmitRemoteData(&giveMeStuff, GetOtherHero()->owner, 0, 1);
 }
