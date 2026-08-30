@@ -1086,7 +1086,6 @@ call	event_record.obj	0x8d52c	game::GetHero
 call	event_record.obj	0x8d5f0	set_player
 call	event_record.obj	0x8d688	game::record_hide_boat
 call	event_record.obj	0x8d8b4	set_player
-call	event_record.obj	0x8e058	game::GetTown
 call	event_record.obj	0x8e33c	max
 call	event_record.obj	0x8e33c	min
 call	event_record.obj	0x8e33c	type_record_shroud::add_change
