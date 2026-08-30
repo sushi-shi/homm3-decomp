@@ -1133,11 +1133,11 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   Dreamcast local facts across its remaining C1 register wall.** CodeView
   types `choice` and `i` as `long` and `skill` as `TSecondarySkill`, in that
   order. Restoring the enum type and recovered order is byte-flat at the
-  existing **99.7464%** peak, with all 24 blocks, all 11 branches, and all 377
-  retail instructions still aligned; a fatal source rule and negative
-  controls now prevent a percentage-neutral retreat to `int skill` or a
-  reordered shared roster. Complete's disabled-secondary-skill handling is
-  independently retail-proved and remains retail-only.
+  existing **99.7464%** peak, with all 24 blocks, all 11 branches, and all 138
+  instructions across 377 retail bytes still aligned; a fatal source rule
+  and negative controls now prevent a percentage-neutral retreat to
+  `int skill` or a reordered shared roster. Complete's disabled-secondary-
+  skill handling is independently retail-proved and remains retail-only.
 
   The older DC `type_university university` local does not transfer to the
   Complete source: under the retail-proved Complete class model it emits a
@@ -1147,6 +1147,27 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   between `availableCount` and `choice`; `why-reg` finds identical definition
   slots and no successful source-local creation-order mutation, classifying it
   as C1 front-end state rather than permission to remove a positive DC fact.
+
+  A follow-up raw-NB11 pass banks two compatible identities omitted above.
+  The procedure record names its 16-byte aggregate `university`; Complete's
+  retail bytes reject constructing the newer class directly but accept the
+  already-proved four-int raw record under that recovered identity with no
+  byte movement. LF_FIELDLIST `0x3edc` also orders
+  `match_underground_gates` before `randomize_university`; restoring that
+  relative order recompiles the game-header consumers but changes **zero
+  function scores**. Rename, resize, reverse-order and wrong-parameter
+  negative controls make both admitted facts fatal.
+
+  The LF_FIELDLIST's private flags are **dc-only**: applying them changes
+  retail's public `QAEX` decorations to private `AAAX`, so both symbols miss
+  at 0%. The compatible aggregate identity and member order **agree**;
+  Complete's bitset availability pass and public access are **retail-only**;
+  the EBX/EDI assignment remains **unknown C1 state**. Width changes, all
+  compatible `availableCount` declaration positions, `register choice`, a
+  zero-emission choice initialization, the two raw local-name restorations
+  separately and together, and the recovered member order are byte-flat.
+  The bounded result remains **99.7464%** over 377 bytes with all 24 blocks
+  and 11 branches exact.
 
 - **2026-08-30 — `advManager::DoEventPrison` banks its Dreamcast source
   shape at the honest 99.9540% C1-schedule plateau.** Dreamcast CodeView
