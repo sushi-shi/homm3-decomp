@@ -3353,6 +3353,25 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   advances the compiled inventory from 1754/2132 to 1762/2140 exact, at
   96.83% fuzzy.
 
+- **2026-08-30 — Dreamcast local order and two Complete team-index encodings
+  are restored in `fill_prohibited_array`; one SIB byte remains.** The
+  mandatory dossier for Dreamcast ai_player.obj+0x2f694 records
+  `human_strength`, `income[7]`, `short i`, and `resources[7]` in that order,
+  followed by the initial income/dwelling-cost phase and the separate
+  `human_strength = 0` statement. The source now preserves those facts, and a
+  fatal source-shape contract plus negative controls rejects either reordered
+  locals or moving the zero into the declaration. Spelling both Complete-only
+  team lookups directly with `gNetLocalGamePos` changes VC6's commutative SIB
+  selection to retail without changing the 1,017-byte function, its 76 blocks,
+  311 instructions, 39 branches, or single return. This raises the function
+  from 99.903534% to 99.96784%. The sole residual is the same base/index choice
+  in `gpGame->playerDisabled[player_index]`; a named load, named `game*`, and
+  reversed subscript are byte-flat, while why-reg classifies the wall as
+  aligned scheduling with a post-first-definition binding difference. The
+  Dreamcast `is_human_ally` calls and 119-creature bound remain explicitly
+  older-revision facts: Complete's x86 body proves team-aware checks and a
+  145-creature pass.
+
 - **2026-08-22 — the last unclaimed ai_player row is closed at a 99.90%
   encoding wall.** Retail 0x429d50 is `fill_prohibited_array`: end_turn's
   unique caller supplies its 145-byte result, the body starts from seven turns
