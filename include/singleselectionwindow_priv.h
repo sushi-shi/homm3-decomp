@@ -434,6 +434,8 @@ class CNewPlayerMsg : public CNetMsg {
 public:
     CNetPlayerInfo m_playerInfo;  // +0x14 (dpid/sName/version int)
     char m_version[20];           // +0x34
+
+    CNewPlayerMsg(CNetPlayerInfo* pPlayerInfo, char* version);
 };
 
 // The per-row header-transfer payload: a t_complex_net_message wrapping

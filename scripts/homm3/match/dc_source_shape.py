@@ -218,6 +218,15 @@ PROVEN_CALL_SPELLINGS: dict[tuple[str, int], tuple[CallSpelling, ...]] = {
             "the CRT _strnicmp import at both reserved-name checks",
             0x004BEEA0, "strnicmp", r"\b_strnicmp(?=\s*\()", "strnicmp"),
     ),
+    ("singleselectionwindow.obj", 0x135AA4): (
+        CallSpelling(
+            "Complete SetupNewGameMode replaces each direct AddNewPlayer "
+            "with SetNewPlayerSlot; retail 0x58e700 begins by calling "
+            "CNetPlayerHandler::AddNewPlayer on the supplied record before "
+            "performing Complete's seat reconciliation",
+            0x0057F740, "CNetPlayerHandler::AddNewPlayer",
+            r"\bSetNewPlayerSlot(?=\s*\()", "AddNewPlayer"),
+    ),
 }
 
 
@@ -227,6 +236,8 @@ PROVEN_CALL_SPELLINGS: dict[tuple[str, int], tuple[CallSpelling, ...]] = {
 # all four SetupAdvancedOptions IsHost sites reload their saved ``this`` into
 # r4 immediately before the jsr; pDPlay->IsHost() is therefore not that edge.
 PROVEN_SELF_CALLS = frozenset({
+    ("singleselectionwindow.obj", 0x135AA4,
+     "TSingleSelectionWindow::IsHost"),
     ("singleselectionwindow.obj", 0x135DA8,
      "TSingleSelectionWindow::IsHost"),
     ("singleselectionwindow.obj", 0x136388,
@@ -240,6 +251,21 @@ PROVEN_SELF_CALLS = frozenset({
 # their cross-statement order is classified DC-only while the exact caller and
 # the bounded Complete source pattern both survive.
 PROVEN_ORDER_SKEWS: dict[tuple[str, int], tuple[ProvenOrderSkew, ...]] = {
+    ("singleselectionwindow.obj", 0x135AA4): (
+        ProvenOrderSkew(
+            "SetupNewGameMode's Complete client setup precedes the one "
+            "retained host UI pass; Dreamcast also has an earlier duplicate "
+            "GetHeaders / HighlightFile / SetCurrentMap pass",
+            0x0057F740,
+            r"\bgpGame\s*->\s*SetupOrigData\s*\(\s*\)\s*;.*?"
+            r"if\s*\(\s*IsHost\s*\(\s*\)\s*\)\s*\{\s*"
+            r"GetHeaders\s*\(\s*&\s*HeadersA\s*\)\s*;.*?"
+            r"HighlightFile\s*\(.*?\)\s*;\s*"
+            r"SetCurrentMap\s*\(\s*currentMap\s*,\s*false\s*\)\s*;",
+            ("TSingleSelectionWindow::GetHeaders",
+             "TSingleSelectionWindow::HighlightFile",
+             "TSingleSelectionWindow::SetCurrentMap")),
+    ),
     ("spells.obj", 0x152DEC): (
         ProvenOrderSkew(
             "find_spell_target's Complete switch is RESURRECTION / "
@@ -5325,6 +5351,24 @@ case TAdventureOptionsWindow::VIEW_SCENARIO_ID:
         spelling_key, spelling_body, spelling_va, set())
     if not missing_from_body(unproved, ["strnicmp"]):
         failures.append("non-exact call spelling bypassed source-shape gate")
+    wrapper_key = ("singleselectionwindow.obj", 0x135AA4)
+    wrapper_va = PROVEN_CALL_SPELLINGS[wrapper_key][0].caller_va
+    wrapper_body = "SetNewPlayerSlot(&player);"
+    canonical = apply_proven_call_spellings(
+        wrapper_key, wrapper_body, wrapper_va, {wrapper_va})
+    if missing_from_body(canonical,
+                         ["CNetPlayerHandler::AddNewPlayer"]):
+        failures.append("proved Complete wrapper did not preserve DC helper")
+    unproved = apply_proven_call_spellings(
+        wrapper_key, wrapper_body, wrapper_va, set())
+    if not missing_from_body(unproved,
+                             ["CNetPlayerHandler::AddNewPlayer"]):
+        failures.append("non-exact Complete wrapper bypassed source gate")
+    erased = apply_proven_call_spellings(
+        wrapper_key, "return 0;", wrapper_va, {wrapper_va})
+    if not missing_from_body(erased,
+                             ["CNetPlayerHandler::AddNewPlayer"]):
+        failures.append("erased Complete wrapper passed source-shape gate")
     order_key = ("spells.obj", 0x152DEC)
     order_va = PROVEN_ORDER_SKEWS[order_key][0].caller_va
     complete_order = """\
@@ -5368,6 +5412,44 @@ return cells[hex].get_army();
     if groups_without_helpers(order_groups, order_helpers) != (
             CallGroup(2606, ("combatManager::ValidHex",)),):
         failures.append("DC-only order filter erased an unrelated helper")
+    setup_order_key = ("singleselectionwindow.obj", 0x135AA4)
+    setup_order_va = PROVEN_ORDER_SKEWS[setup_order_key][0].caller_va
+    setup_complete_order = """\
+gpGame->SetupOrigData();
+if (IsHost()) {
+    GetHeaders(&HeadersA);
+    scenarioOptionsStarted = 1;
+    HighlightFile(defaultMapFileName);
+    SetCurrentMap(currentMap, false);
+}
+"""
+    setup_helpers, setup_descriptions = proven_dc_only_order_helpers(
+        setup_order_key, setup_complete_order, setup_order_va,
+        {setup_order_va})
+    if setup_helpers != frozenset(
+            PROVEN_ORDER_SKEWS[setup_order_key][0].dc_only_helpers) \
+            or len(setup_descriptions) != 1:
+        failures.append("exact SetupNewGameMode order skew did not classify")
+    if proven_dc_only_order_helpers(
+            setup_order_key, setup_complete_order, setup_order_va, set())[0]:
+        failures.append("non-exact SetupNewGameMode order skew classified")
+    setup_erased = setup_complete_order.replace(
+        "    GetHeaders(&HeadersA);\n", "")
+    if proven_dc_only_order_helpers(
+            setup_order_key, setup_erased, setup_order_va,
+            {setup_order_va})[0]:
+        failures.append("erased SetupNewGameMode host pass classified")
+    setup_groups = (
+        CallGroup(2747, ("game::SetupOrigData",)),
+        CallGroup(2789, ("TSingleSelectionWindow::GetHeaders",)),
+        CallGroup(2792, ("TSingleSelectionWindow::HighlightFile",)),
+        CallGroup(2793, ("TSingleSelectionWindow::SetCurrentMap",)),
+        CallGroup(2796, ("TSingleSelectionWindow::ShowWidget",)),
+    )
+    if groups_without_helpers(setup_groups, setup_helpers) != (
+            CallGroup(2747, ("game::SetupOrigData",)),
+            CallGroup(2796, ("TSingleSelectionWindow::ShowWidget",)),):
+        failures.append("SetupNewGameMode order filter erased another call")
     check_do_main_key = ("philai.obj", 0x10D47C)
     check_do_main_probe = """\
 if (!(gUnnamed69cca4 & 1)) {

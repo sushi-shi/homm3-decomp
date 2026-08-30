@@ -15,6 +15,7 @@
 // reads the incoming chat text through netmsg.h's gated CChatMsg shape.
 #define HOMM3_GAME_NEW_MAP_DECLS
 #define HOMM3_REMOTE_SEND_CHAT_DECLS
+#define HOMM3_REMOTE_PLAYER_LIST_DECLS
 // The setup records are members of Dreamcast's one eRS_Messages ladder.
 // Scope the otherwise codegen-sensitive roster to its owning TU.
 #define HOMM3_SINGLESELECTION_LOBBY_MESSAGES
@@ -30,6 +31,9 @@
 #include "kb.h"
 #include "kbwin.h"
 #include "newgame.h"
+#include "hotseat.h"
+#include "netgame.h"
+#include "ownership.h"
 #include "savegame.h"
 #include "text.h"
 // Update draws the scenario rows: the three icon strips are CSprite
@@ -179,6 +183,26 @@ inline CNetPlayerInfo::CNetPlayerInfo()
     version = *gpVideoGameState;
 }
 
+// E:\gamedcs\struct.h:346. Dreamcast proves the parameter order and the
+// dpid-before-name statement order. Complete appends the same version field
+// its default constructor initializes; both SetupNewGameMode loops expand
+// this constructor in place.
+inline CNetPlayerInfo::CNetPlayerInfo(char* _sName, unsigned long _dpid)
+{
+    dpid = _dpid;
+    strcpy(sName, _sName);
+    version = *gpVideoGameState;
+}
+
+// E:\gamedcs\remote.h:207. The DC build retains this tiny accessor call;
+// VC6 expands its bounds guard and 21-byte name stride in the hot-seat loop.
+inline char* CHotSeatMan::GetName(int player)
+{
+    if (player >= playerCount)
+        return 0;
+    return names[player];
+}
+
 // E:\gamedcs\singleselectionwindow.cpp:532
 CGameHeaderInfoEndMsg::CGameHeaderInfoEndMsg()
     : CNetMsg(RS_GAME_HEADER_INFO_END, sizeof(CGameHeaderInfoEndMsg))
@@ -222,6 +246,17 @@ CClickMsg::CClickMsg(int widgetId)
     : CNetMsg(RS_CLICK, sizeof(CClickMsg))
 {
     m_widgetId = widgetId;
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:758. The ctor boundary is expanded
+// into SetupNewGameMode, but its CNetPlayerInfo member's default constructor
+// remains the public Complete COMDAT at 0x57f720.
+inline CNewPlayerMsg::CNewPlayerMsg(CNetPlayerInfo* pPlayerInfo,
+                                    char* version)
+    : CNetMsg(RS_NEW_PLAYER, sizeof(CNewPlayerMsg))
+{
+    m_playerInfo = *pPlayerInfo;
+    strncpy(m_version, version, sizeof(m_version));
 }
 
 // The three game-selection description tables: each caches a fixed-count
@@ -1179,14 +1214,69 @@ void TSingleSelectionWindow::SetupLoadGameMode()
     // @stub
 }
 
+#endif  // @carcass
+
+// The inline constructor is defined ahead of all consumers above. VC6 emits
+// its retained public COMDAT at the first out-of-line site in this run.
+VA_COMPGEN(0x0057F720, 0x18, CLASS_CTOR, CNetPlayerInfo)  // DC's ordered dpid/name stores plus Complete's game-version field, dc 0x11f5e4
+
 // E:\gamedcs\singleselectionwindow.cpp:2727
-VA(0x0057F740, 0x3D5)  // anchor-callee ctor call site +0x2bd4, adjacent pair with SetupLoadGameMode above (DC-adjacent); both call the tiny shared 0x57f720 helper (the GetFileSpecNbr shape), size 1.27x dc 0x304, dc 0x135aa4
+VA(0x0057F740, 0x3D5)  // 100.0000%: 981/981 bytes; anchor-callee ctor call site +0x2bd4, adjacent pair with SetupLoadGameMode above; default CNetPlayerInfo ctor 0x57f720; dc 0x135aa4, 0x304 B SH4
 void TSingleSelectionWindow::SetupNewGameMode()
 {
-    // @stub
-}
+    gpGame->setup.turnDuration = 10;
+    durationIndex = 10;
 
-#endif  // @carcass
+    if (bVideoPaused) {
+        GetWidget(105)->hide();
+        if (IsHost()) {
+            SetNewPlayerSlot(&gsThisNetPlayerInfo);
+        } else {
+            gpGame->SetupOrigData();
+            scenarioOptionsStarted = 1;
+            if (chatShowing)
+                GetWidget(179)->hide();
+
+            CNewPlayerMsg msg(&gsThisNetPlayerInfo, gameVersion);
+            TransmitRemoteDataDPID(&msg, 0, false, true);
+
+            CAutoArray<CDPlayPlayer> playerArray;
+            pDPlay->EnumPlayers(&playerArray, 0, 0);
+            for (int i = 0; i < playerArray.GetCount(); ++i) {
+                CDPlayPlayer* curr = playerArray.Get(i);
+                TAutoPtr<int> version(static_cast<int*>(
+                    pDPlay->GetPlayerData(curr->GetId(), 0, 0)));
+                if (!version.get())
+                    continue;
+                CNetPlayerInfo player(curr->GetName(), curr->GetId());
+                SetNewPlayerSlot(&player);
+            }
+        }
+    } else if (iMPNetProtocol == MP_HOTSEAT) {
+        for (int i = 0; i < gpHotSeatMan->playerCount; ++i) {
+            CNetPlayerInfo player(gpHotSeatMan->GetName(i), i + 1);
+            SetNewPlayerSlot(&player);
+        }
+        gsThisNetPlayerInfo.dpid = 1;
+        strcpy(gsThisNetPlayerInfo.sName, gpGame->players[0].cName);
+        gsThisNetPlayerInfo.version = *gpVideoGameState;
+        delete gpHotSeatMan;
+        gpHotSeatMan = 0;
+    } else {
+        gsThisNetPlayerInfo.dpid = 1;
+        strcpy(gsThisNetPlayerInfo.sName, gLocalPlayerName);
+        gsThisNetPlayerInfo.version = *gpVideoGameState;
+        SetNewPlayerSlot(&gsThisNetPlayerInfo);
+    }
+
+    if (IsHost()) {
+        GetHeaders(&HeadersA);
+        scenarioOptionsStarted = 1;
+        HighlightFile(DATA_COMPGEN(0x00683238, defaultMapFileName,
+                                   "Arrogance.h3m"));
+        SetCurrentMap(currentMap, false);
+    }
+}
 
 // E:\gamedcs\singleselectionwindow.cpp:2809
 // Dreamcast proves the pWidget local, null guard, show call, and the original
@@ -1589,7 +1679,8 @@ int TSingleSelectionWindow::GetFileSpecNbr()
 
 // E:\gamedcs\singleselectionwindow.cpp:3475
 VA(0x00582B40, 0x345)  // anchor-global dir ternary m_flag66/64/65 over "random_maps"(0x6836ac)/"maps"(0x6772d0)/"games"(0x677d70) + _chdir - the directory-scan opener; order-map GetHeaders..MakeHeroFilter onto 0x582b40..0x583890 (GetFileSpecNbr excluded by arity below), size 0.36x dc 0x916, dc 0x137da8
-void TSingleSelectionWindow::GetHeaders()
+void TSingleSelectionWindow::GetHeaders(
+    std::vector<GameSelectionHeadersStruct>* pHeaders)
 {
     // @stub
 }
