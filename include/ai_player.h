@@ -35,7 +35,7 @@ public:
     int m_qty;
 
     CGiftMsg(int niceGuy, int resource, int qty)
-        : CNetMsg(0x432, sizeof(CGiftMsg)), m_niceGuy(niceGuy),
+        : CNetMsg(RS_GIFT, sizeof(CGiftMsg)), m_niceGuy(niceGuy),
           m_resource(resource), m_qty(qty) {}
 };
 
@@ -45,7 +45,8 @@ public:
     int m_resource;
 
     CGiftRequestMsg(int greedyGuy, int resource)
-        : CNetMsg(0x433, sizeof(CGiftRequestMsg)), m_greedyGuy(greedyGuy),
+        : CNetMsg(RS_GIFT_REQUEST, sizeof(CGiftRequestMsg)),
+          m_greedyGuy(greedyGuy),
           m_resource(resource) {}
 };
 

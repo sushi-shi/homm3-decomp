@@ -69,6 +69,36 @@ enum eRS_Messages {
     RS_PLAYER_DEAD = 1018,
     RS_PLAYER_WON = 1019,
     RS_PLAYER_LOST = 1020,
+#ifdef HOMM3_SINGLESELECTION_LOBBY_MESSAGES
+    // The Dreamcast eRS_Messages ladder consumed by the setup/lobby TU.
+    // Keep these on that TU's measured include view; Complete adds the final
+    // three transfer-control rungs after DC's 1081 endpoint.
+    RS_GAME_HEADER_INFO = 1023,
+    RS_GAME_HEADER_INFO_INIT = 1024,
+    RS_GAME_HEADER_INFO_END = 1025,
+    RS_NEW_SETUP_INFO = 1026,
+    RS_SCROLL = 1027,
+    RS_NEW_MAP_HEADER_INFO = 1028,
+    RS_MAP_HEADER_REQUEST = 1029,
+    RS_MAP_FILE_NAME = 1030,
+    RS_SORT_MAPS = 1031,
+    RS_SET_FILTER = 1032,
+    RS_REQUEST_HERO_FACE = 1035,
+    RS_REQUEST_HERO_FACE_REPLY = 1036,
+    RS_SETAGR = 1037,
+    RS_NEW_HOST = 1038,
+    RS_UPDATE_PLAYER_POS = 1039,
+    RS_NEW_PLAYER = 1040,
+    RS_REQ_HEADER_CONFIRM = 1041,
+    RS_HEADER_CONFIRM = 1042,
+    RS_CLICK = 1043,
+    RS_TOWN_UPDATE = 1044,
+    RS_LAUNCHING_GAME = 1045,
+    RS_BAD_VERSION = 1046,
+    RS_GAME_TRANSMIT_PENDING = 1082,
+    RS_GAME_HEADER_INFO_INIT_EX = 1083,
+    RS_HEADERS_REQUEST = 1084,
+#endif
     RS_MAP_CHANGE_START = 1049,
     RS_MAP_CHANGE_END = 1063,
     RS_TRADE_REQUEST = 1064,
@@ -108,11 +138,15 @@ public:
     int field_10;
 
     CNetMsg() {}
-    CNetMsg(int new_sub_type, unsigned long new_size)
+    // Raw Dreamcast CodeView names these parameters `subType` and `size` and
+    // types the first as eRS_Messages (0x2CCD), the same type rendered on the
+    // CMapChange `id` parameter. Keep the five body statements in lines
+    // 169/172-175 order; member-shadow spelling is source material here.
+    CNetMsg(eRS_Messages subType, unsigned long size)
     {
-        subType = new_sub_type;
+        this->subType = subType;
         field_00 = -1;
-        size = new_size;
+        this->size = size;
         field_04 = 0;
         field_10 = 0;
     }
@@ -358,8 +392,10 @@ SIZE(CCombatTypeMsg, 0x18);
 class CMapChange : public CNetMsg {
 public:
     CMapChange() {}
-    CMapChange(eRS_Messages id, unsigned long messageSize)
-        : CNetMsg(id, messageSize) {}
+    // Dreamcast netmsg.h:532 names the parameters `id` and `size` and keeps
+    // this CNetMsg construction as a distinct source boundary.
+    CMapChange(eRS_Messages id, unsigned long size)
+        : CNetMsg(id, size) {}
 };
 
 #ifdef HOMM3_EVENT_RECORD_NETMSG_DECLS
@@ -529,13 +565,16 @@ public:
 
     // Dreamcast netmsg.h:717-718 proves the CMapChange construction boundary
     // is followed by a distinct heroId assignment statement. Retail lowers
-    // this coherently in add_garrison_hero but schedules the same store early
-    // in SwapHeroes because that caller already holds the id in ECX. The
-    // sibling percentage cannot justify reversing the attested source order.
-    CMCHideHero(int id)
+    // this coherently in add_garrison_hero. Retail SwapHeroes schedules the
+    // same store early with the id in ECX; the present coherent caller instead
+    // assigns it EAX and zeros through ECX. That compiler-state residual cannot
+    // justify reversing the attested source order.
+    // Raw CodeView names the T_INT4 parameter `heroId`; the member-shadowing
+    // body assignment is the distinct netmsg.h:718 statement.
+    CMCHideHero(int heroId)
         : CMapChange(RS_HIDE_HERO, sizeof(CMCHideHero))
     {
-        heroId = id;
+        this->heroId = heroId;
     }
 };
 

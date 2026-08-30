@@ -15,6 +15,9 @@
 // reads the incoming chat text through netmsg.h's gated CChatMsg shape.
 #define HOMM3_GAME_NEW_MAP_DECLS
 #define HOMM3_REMOTE_SEND_CHAT_DECLS
+// The setup records are members of Dreamcast's one eRS_Messages ladder.
+// Scope the otherwise codegen-sensitive roster to its owning TU.
+#define HOMM3_SINGLESELECTION_LOBBY_MESSAGES
 // This TU sees the real vector view of the three header lists.
 #define HOMM3_SSWINDOW_HEADER_VECTORS
 // The launch/hold arms hand gpMediumFont to CAnimatedDlg::Setup - the
