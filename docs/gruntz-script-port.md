@@ -260,6 +260,32 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-30 — `TSellArtifactWindow::Update` is byte-exact from the
+  retained Dreamcast helper graph, while `swapManager::update_all_slots`
+  opens a new retail body without flattening its proved enum ABI.**  The
+  tradpost dossier restores the six-local roster, `hero::get_artifact`,
+  `hero::get_backpack`, the three `SetWidget*` helpers, and
+  `ComputeTradeRatios`.  Together with the TU's real `message` constructor,
+  its repeated source-level `id` store, and Complete's independently proved
+  backpack modulo, retail `0x005ebe80` now matches **all 1,739 bytes, all
+  57 / 57 CFG blocks, and its 24-branch / one-return sequence**.  The same
+  helper-name correction intentionally moves `TBuyArtifactWindow::Update`
+  to **88.6580%** and `TSellCreatureWindow::Update` to **98.7522%**; their
+  higher historical scores remain banked instead of restoring source-false
+  helper spellings.
+
+  The newly admitted Complete body at `0x005b0ef0` reaches **89.3496%** with
+  **25 / 25 CFG blocks and its 10-branch / one-return sequence aligned**.
+  Dreamcast proves that its trailing equipment loop calls
+  `UpdateSlot(int, TArtifactSlot)`; Complete independently adds ordinal 18.
+  The public enum and callee boundary therefore remain intact, with one
+  explicit cast at that revision boundary.  The cleanliness board admits
+  only a line containing exactly one cast and the named
+  `HOMM3_ENUM_CAST_REVISION_BOUNDARY` marker; its negative control places two
+  casts on a marked line and proves both still fail the zero floor.  The
+  unreconstructed `UpdateSlot` body remains `DC_ONLY`, so this work does not
+  invent a retail claim merely to wrap or score the caller.
+
 - **2026-08-30 — `TSingleSelectionWindow::SetupNewGameMode` and the retained
   `CNetPlayerInfo` default constructor are byte-exact from Dreamcast source
   shape.** The dossier at `singleselectionwindow.obj:0x135aa4` supplies the

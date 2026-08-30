@@ -6,6 +6,7 @@
 #define HOMM3_SWAPMGR_H
 
 #include "basemgr.h"
+#include "hero.h"
 #include "window.h"
 
 // MATCHING_DEBT: swapmgr.obj needs the existing chat-edit declaration view
@@ -16,7 +17,6 @@
 #undef HOMM3_CHAT_EDIT_DECLS
 
 class Bitmap816;
-class hero;
 class message;
 
 // Dreamcast proves the inheritance and method identities. Retail independently
@@ -81,6 +81,8 @@ public:
     virtual int Main(message& msg);     // slot 2
     bool IsLeftHero();
     void DrawSelector();
+    void UpdateSlot(int iHero, TArtifactSlot slot);
+    void update_all_slots();
     void UpdateBackpackItem(int iHero, int i);
     void UpdateBackpack(int iHero);
     void SwapMons();

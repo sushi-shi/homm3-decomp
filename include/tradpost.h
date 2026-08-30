@@ -96,6 +96,9 @@ class TSellArtifactWindow : public CAdvPopup {
 public:
     TSellArtifactWindow(int x2, int y2);
     void update_sell_artifact_widget(message* msg, long i);
+    void SetWidgetOn(short id);
+    void SetWidgetOff(short id);
+    void SetWidgetDisabled(short id);
     void Update(unsigned char bUpdate);
     void ComputeTradeRatios(int inLeftResource, int inRightResource,
                             int* iInTradeRatio, int* bInLeftDenominated,
