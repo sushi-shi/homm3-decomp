@@ -18,8 +18,6 @@
 // Restore the two source-level get_group() calls recorded for
 // check_adjacent_hexes by the Dreamcast inline-site census.
 #define HOMM3_AI_COMBAT_PARAMS_GROUP_ACCESSOR
-// Likewise for the two inline searchArray::get_hex() sites in that body.
-#define HOMM3_SEARCHARRAY_GET_HEX_VIEW
 // Army.h:847's const inline, used once in check_adjacent_hexes.
 // The enchantment pricers walk army's +0x198 spell-influence row and
 // its +0x2dc mastery twin by spell id, which needs the row form of
