@@ -751,6 +751,34 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"int\s+iExtraPieces\s*;\s*"
             r"int\s+iPiecesRemoved\s*;"),
     ),
+    ("game.obj", 0xA6CD4): (
+        SourceRule(
+            "GetNewHeroId keeps Dreamcast's compatible hero_class, "
+            "total_count, choice, counts, hero_id, weights and "
+            "aligned_count procedure locals in raw NB11 order and at "
+            "function lifetime; retail VC6 requires int storage for the two "
+            "Dreamcast enum identities",
+            r"\A\s*int\s+hero_class\s*;\s*long\s+total_count\s*;\s*"
+            r"long\s+choice\s*=\s*0\s*;\s*long\s+counts\s*\[\s*18\s*\]"
+            r"\s*;\s*int\s+hero_id\s*;\s*long\s+weights\s*\[\s*18\s*\]"
+            r"\s*;\s*long\s+aligned_count\s*;"),
+        SourceRule(
+            "GetNewHeroId keeps Dreamcast's excluded-class suppression and "
+            "prefer_alignment arm as distinct statement groups using the "
+            "recovered parameter and aligned_count identities",
+            r"if\s*\(\s*excluded\s*<\s*kNumHeroClasses\s*&&\s*"
+            r"counts\s*\[\s*excluded\s*\]\s*<\s*total_count\s*\)\s*"
+            r"\{\s*weights\s*\[\s*excluded\s*\]\s*=\s*0\s*;\s*\}"
+            r"\s*if\s*\(\s*prefer_alignment\s*\)\s*\{\s*"
+            r"aligned_count\s*=\s*0\s*;"),
+        SourceRule(
+            "GetNewHeroId keeps Dreamcast's shared choice local across the "
+            "weighted class selection and the later hero selection phases",
+            r"choice\s*=\s*Random\s*\(\s*1\s*,\s*totalWeight\s*\)\s*;"
+            r".*?choice\s*-=\s*weights\s*\[\s*hero_class\s*\]\s*;"
+            r".*?choice\s*=\s*Random\s*\(\s*1\s*,\s*counts\s*\[\s*"
+            r"hero_class\s*\]\s*\)\s*;.*?--\s*choice\s*==\s*0"),
+    ),
     ("game.obj", 0xAC048): (
         SourceRule(
             "randomize_university keeps Dreamcast's shared choice, i and "
@@ -3348,6 +3376,51 @@ for (i = 0; i < generators.size(); i++) { update_bonus(); }
     if not any("sole i local" in rule.description for rule in
                contract_violations(split_claim_town_i, claim_town_key)):
         failures.append("split ClaimTown generator-loop i locals passed")
+    new_hero_key = ("game.obj", 0xA6CD4)
+    new_hero_probe = """\
+int hero_class;
+long total_count;
+long choice = 0;
+long counts[18];
+int hero_id;
+long weights[18];
+long aligned_count;
+total_count = 0;
+if (excluded < kNumHeroClasses && counts[excluded] < total_count) {
+    weights[excluded] = 0;
+}
+if (prefer_alignment) {
+    aligned_count = 0;
+    count_aligned();
+}
+choice = Random(1, totalWeight);
+choice -= weights[hero_class];
+choice = Random(1, counts[hero_class]);
+if (--choice == 0) return hero_id;
+"""
+    if contract_violations(new_hero_probe, new_hero_key):
+        failures.append("aligned GetNewHeroId source shape did not pass")
+    camel_new_hero = new_hero_probe.replace(
+        "hero_class", "heroClass").replace(
+            "total_count", "totalCount").replace(
+                "hero_id", "heroId").replace(
+                    "aligned_count", "alignedCount")
+    if not any("raw NB11 order" in rule.description for rule in
+               contract_violations(camel_new_hero, new_hero_key)):
+        failures.append("renamed GetNewHeroId NB11 locals passed")
+    scoped_new_hero = new_hero_probe.replace(
+        "long aligned_count;\n", "").replace(
+            "    aligned_count = 0;", "    long aligned_count = 0;")
+    if not any("function lifetime" in rule.description for rule in
+               contract_violations(scoped_new_hero, new_hero_key)):
+        failures.append("scoped GetNewHeroId aligned_count local passed")
+    split_new_hero_choice = new_hero_probe.replace(
+        "choice = Random(1, counts[hero_class]);",
+        "long hero_choice = Random(1, counts[hero_class]);").replace(
+            "if (--choice == 0)", "if (--hero_choice == 0)")
+    if not any("shared choice local" in rule.description for rule in
+               contract_violations(split_new_hero_choice, new_hero_key)):
+        failures.append("split GetNewHeroId choice phases passed")
     prison_key = ("events.obj", 0x94760)
     prison_probe = """\
 int heroID = cell->extraInfo;

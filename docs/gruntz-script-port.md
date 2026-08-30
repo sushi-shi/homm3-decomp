@@ -260,6 +260,26 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-30 — `game::GetNewHeroId` now banks its compatible Dreamcast
+  local inventory and selection structure without claiming the older ABI.**
+  The mandatory dossier for retail `0x004bb5e0` / `game.obj:0xa6cd4`
+  records `hero_class`, `total_count`, `choice`, `counts`, `hero_id`,
+  `weights`, and `aligned_count` in that procedure-local order. The source now
+  preserves those identities and `aligned_count`'s function lifetime, plus
+  the distinct excluded-class and preferred-alignment statement groups and
+  the one `choice` local shared by both random-selection phases. Three fatal
+  asymmetric contracts and negative controls reject renamed/reordered or
+  re-scoped locals and a split selection temporary. Complete-only facts remain
+  admitted: player-position-to-alignment lookup, 18 hero classes, the fourth
+  preferred-class parameter, and the Conflux gate. Conversely, the Dreamcast
+  `THeroClass hero_class` storage is explicitly **dc-only/incompatible**:
+  VC6 SP3 rejects the six enum increments with C2676 and there is no attested
+  Windows `operator++`; retail therefore keeps `int` storage while preserving
+  the recovered identity and lifetime. `THeroID` is likewise not yet a
+  modeled Windows type. The score stays honestly byte-flat at **98.98148%**
+  (642 B): all **60/60** CFG blocks and every branch agree, with only the
+  already-isolated EAX/ECX scheduling around the Complete-only `gpGame` gate.
+
 - **2026-08-30 — `game::ClaimTown` reaches 100% by restoring the
   Dreamcast-proven `IsComputerTeam` boundary.** The mandatory dossier
   (`game.obj:0xb1230`) records 38 breakpoint rows, 50 SH4 blocks, and the

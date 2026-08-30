@@ -2079,8 +2079,8 @@ public:
     // CODEVIEW line below.
     int GetStartingHeroId(int alignment, int playerPos,
                           int mapPosition);                     // 0x4bb400
-    int GetNewHeroId(int playerPos, THeroClass excludedClass,
-                     unsigned char preferAlignment,
+    int GetNewHeroId(int playerPos, THeroClass excluded,
+                     unsigned char prefer_alignment,
                      THeroClass preferredClass);               // 0x4bb5e0
     TArtifact GetRandomArtifactId(int artifactClass);          // 0x4c94d0
     SpellID GetRandomSpell(std::bitset<5> spellLevels);        // 0x4c95a0
