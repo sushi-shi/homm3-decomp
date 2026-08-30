@@ -2723,6 +2723,7 @@ singleselectionwindow	?SetNextPlayer@CNetPlayerHandler@@QAEEH@Z	96.2353	96.2353	
 singleselectionwindow	?SetResolution@CChatSlider@@UAEXH@Z	100.0000	100.0000	100.0000	0x17c9d0
 singleselectionwindow	?SetState@CChatSlider@@UAEXH@Z	100.0000	100.0000	100.0000	0x17ca00
 singleselectionwindow	?SetupAdvancedOptions@TSingleSelectionWindow@@QAEXXZ	99.3846	99.3846	99.3846	0x181100
+singleselectionwindow	?ShowWidget@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x17fb20
 singleselectionwindow	?SortMaps@TSingleSelectionWindow@@QAEXHEE@Z	91.6682	91.6682	91.6682	0x185050
 singleselectionwindow	?Tick@CNewPlayerUpdateProc@@UAEXXZ	86.6723	86.6723	86.6723	0x178a90
 singleselectionwindow	?Tick@t_map_list_update@@UAEXXZ	71.8957	71.8957	71.8957	0x177de0
@@ -2747,7 +2748,6 @@ singleselectionwindow	TSingleSelectionWindow_ProcessRightSelect	0.0000	0.0000	0.
 singleselectionwindow	TSingleSelectionWindow_SetupLoadGameMode	0.0000	0.0000	0.0000	0x17f330
 singleselectionwindow	TSingleSelectionWindow_SetupNewGameMode	0.0000	0.0000	0.0000	0x17f740
 singleselectionwindow	TSingleSelectionWindow_SetupScenarioOptions	0.0000	0.0000	0.0000	0x180a70
-singleselectionwindow	TSingleSelectionWindow_ShowWidget	0.0000	0.0000	0.0000	0x17fb20
 singleselectionwindow	TSingleSelectionWindow_TSingleSelectionWindow	0.0000	0.0000	0.0000	0x179960
 singleselectionwindow	TSingleSelectionWindow_UpdateGameVars	0.0000	0.0000	0.0000	0x183580
 singleselectionwindow	TSingleSelectionWindow_WindowFn_00582e90	0.0000	0.0000	0.0000	0x182e90
