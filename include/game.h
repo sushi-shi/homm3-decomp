@@ -1674,10 +1674,10 @@ SIZE(generator, 0x5c);
 // iDeathCountDown (+0x3d), with numTowns pinned at +0x3e from the other
 // side. So retail's type_point is a FOUR-BYTE, ONE-BYTE-ALIGNED type,
 // while the Dreamcast's is two-byte aligned (DC puts the same member at
-// an even 54). struct.h's short-bitfield spelling reproduces the DC
-// alignment, not retail's, so the member is carried here as raw bytes
-// rather than as a type_point - changing struct.h is a tree-wide move
-// that belongs to a deliberate tree-wide decision, not to this slice.
+// an even 54). struct.h's ordinary short-bitfield spelling reproduces the
+// DC alignment. Consumer views with retail proof may select its one-byte
+// alignment and expose this member with the stated source type; other TUs
+// retain the raw representation until their own codegen is audited.
 class playerData {
 public:
     // The width of the `heroes` row below, and the cap the game enforces
@@ -1722,7 +1722,11 @@ public:
     // (x 10 bits in the first unit, y 10 + z 4 in the second) at an
     // ODD base - which is the alignment finding above, from the other
     // side.
+#ifdef HOMM3_PHILAI_OBJ_DECLS
+    type_point puzzle_guess;
+#else
     char puzzle_guess[4];
+#endif
     char iDeathCountDown;          // +0x3d
     // +0x3e / +0x40, the player's town roster, sliced 2026-08-08 for
     // town::Deallocate (0x5be2d0), which is the whole proof: it walks

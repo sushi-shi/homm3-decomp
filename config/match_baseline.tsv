@@ -2146,7 +2146,7 @@ philai	?value_of_experience@@YIMPBVhero@@PBVarmyGroup@@@Z	100.0000	100.0000	100.
 philai	?value_of_learning@@YIJPBVhero@@H@Z	100.0000	100.0000	100.0000	0x1298d0
 philai	?value_of_monsters@@YIJPBVhero@@PAVNewmapCell@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x12a140
 philai	?value_of_move_source@@YIHPBVhero@@JFPAJ@Z	100.0000	100.0000	100.0000	0x12a1e0
-philai	?value_of_obelisk@@YIHPAVNewmapCell@@J@Z	86.1364	86.1364	86.1364	0x12a2b0
+philai	?value_of_obelisk@@YIHPAVNewmapCell@@J@Z	100.0000	100.0000	100.0000	0x12a2b0
 philai	?value_of_pyramid@@YIJPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x12a410
 philai	?value_of_recruiting@@YIJPBVhero@@W4TCreatureType@@F@Z	100.0000	100.0000	100.0000	0x12a710
 philai	?value_of_reinforcing@@YIJPAVhero@@PAVtown@@F@Z	100.0000	100.0000	100.0000	0x12b090
