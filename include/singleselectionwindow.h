@@ -56,7 +56,9 @@ struct GameSelectionHeadersStruct {
     // dword loop copies eight ints at +0x4d0, a byte loop the 0x9c
     // band after them. Roles unexercised - ordinal placeholders.
     int field_4d0[8];                 // +0x4d0
-    char pad_4f0[0x58c - 0x4f0];
+    // The selected row copies this complete 156-byte band to the game's
+    // per-hero availability array before assigning the map header.
+    unsigned char heroAvailability[156];  // +0x4f0
     // The row's display title: the name getters return it for the
     // single-player list and the net-mode selected panel, and the name
     // comparator ranks it against the "autosave" prefix rule. Extent =

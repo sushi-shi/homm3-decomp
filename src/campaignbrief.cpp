@@ -8,9 +8,9 @@
 #include "widget.h"
 
 // Temporary game snapshot made by the retail campaign-brief constructor.
-// Its only constructor-side store is at 0x459154 and the destructor owns
-// every remaining read, delete, and clear.
-DATA(0x0069fdc4) static game* gpCampaignBriefSavedGame;
+// Dreamcast names the same cross-TU cell `saveHeader`; UpdateGameVars hands
+// it back to BackupGameHeaders when the load-game row has no current file.
+DATA(0x0069fdc4) game* saveHeader;
 
 #if 0  // Dreamcast-only carcass; retained as evidence, not emitted for retail.
 // E:\gamedcs\campaignbrief.cpp:202
@@ -134,13 +134,13 @@ VA_COMPGEN(0x0045ae40, 0x21, SCALAR_DELETING_DTOR, TCampaignBrief)
 VA(0x0045afb0, 0x18F)  // anchor-global, dc 0x5a11c
 TCampaignBrief::~TCampaignBrief()
 {
-    if (gpCampaignBriefSavedGame) {
+    if (saveHeader) {
         gUnk698760 = oldVolume;
         gpSoundManager->SwitchAmbientMusic(
             gTerrainMusicIds[gpAdvManager->field_58]);
-        *gpGame = *gpCampaignBriefSavedGame;
-        delete gpCampaignBriefSavedGame;
-        gpCampaignBriefSavedGame = 0;
+        *gpGame = *saveHeader;
+        delete saveHeader;
+        saveHeader = 0;
         gpAdvManager->RedrawAdvScreen(1, 0);
     }
 
