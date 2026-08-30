@@ -1953,7 +1953,15 @@ void type_AI_player::buy_creatures(hero* current_hero, town* current_town)
                                    ->get_army()),
                           funds, 1, alliance);
 
-    // MAX ACCEPTED DOWN 2026-08-27: 74.2046 -> 73.6571 (hist keeps the peak).
+    // SOURCE-SHAPE ACCEPTED DOWN 2026-08-30: 73.6571 -> 72.3890 (hist keeps
+    // the 74.2046 peak). The lexical inline-depth pin inside do_swap keeps
+    // AI_consolidate_army as the retail call in this nested copy while both
+    // standalone helpers remain exact. That removes the five invented loop
+    // branches: compiled CFG 48 -> 42 (retail 42), branches 27 -> 22 (retail
+    // 22), with one return on both sides. A call-site inline_depth(1) control
+    // was byte-flat; the pragma must travel with the nested helper statement.
+    //
+    // Earlier accepted-down context (2026-08-27): 74.2046 -> 73.6571.
     // The peak relied on a FAT game::is_human_ally model with GetTeam folded
     // inside; the real 0x42b9e0 retail body is the simple guarded scan (now
     // claimed and 100.0000), so this call site spells GetTeam as a ternary
@@ -2898,8 +2906,13 @@ inline void type_AI_creature_swapper::do_swap(hero* current_hero,
     improvement = new_improvement;
     // Spelled as the plain call: the standalone body auto-inlines it, while
     // buy_creatures' inline copy of do_swap leaves it out of line - exactly
-    // retail's two shapes. The forceinline impl would weld it inline in both.
+    // retail's two shapes. The lexical pin is deliberately here rather than
+    // at buy_creatures' call site (that control was byte-flat): it permits
+    // this first-level inline in the standalone body and refuses only the
+    // second-level copy. The forceinline impl would weld it inline in both.
+#pragma inline_depth(1)
     AI_consolidate_army(army);
+#pragma inline_depth()
     dump_extra_creature();
     do {
     } while (do_best_swap(adjacent_army->GetNumArmies() > 1) > 0);

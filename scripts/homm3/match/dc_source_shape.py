@@ -127,6 +127,14 @@ class ProvenOrderSkew:
 
 
 @dataclass(frozen=True)
+class ProvenRevisionRemoval:
+    description: str
+    caller_va: int
+    retail_pattern: str
+    dc_only_helpers: tuple[str, ...]
+
+
+@dataclass(frozen=True)
 class ContractViolation:
     va: int | None
     dc_module: str
@@ -227,6 +235,15 @@ PROVEN_CALL_SPELLINGS: dict[tuple[str, int], tuple[CallSpelling, ...]] = {
             0x0057F740, "CNetPlayerHandler::AddNewPlayer",
             r"\bSetNewPlayerSlot(?=\s*\()", "AddNewPlayer"),
     ),
+    ("singleselectionwindow.obj", 0x13575C): (
+        CallSpelling(
+            "Complete SetupLoadGameMode replaces each direct AddNewPlayer "
+            "with SetNewPlayerSlot; exact retail 0x58e700 begins with the "
+            "same CNetPlayerHandler::AddNewPlayer operation before Complete's "
+            "seat reconciliation",
+            0x0057F330, "CNetPlayerHandler::AddNewPlayer",
+            r"\bSetNewPlayerSlot(?=\s*\()", "AddNewPlayer"),
+    ),
 }
 
 
@@ -251,6 +268,19 @@ PROVEN_SELF_CALLS = frozenset({
 # their cross-statement order is classified DC-only while the exact caller and
 # the bounded Complete source pattern both survive.
 PROVEN_ORDER_SKEWS: dict[tuple[str, int], tuple[ProvenOrderSkew, ...]] = {
+    ("singleselectionwindow.obj", 0x135F04): (
+        ProvenOrderSkew(
+            "Complete SetupScenarioOptions spells the host/header choice as "
+            "SetupOrigData then GetHeaders; Dreamcast's inverse conditional "
+            "places GetHeaders then SetupOrigData",
+            0x00580A70,
+            r"if\s*\(\s*bVideoPaused\s*&&\s*!\s*pDPlay\s*->\s*"
+            r"IsHost\s*\(\s*\)\s*&&\s*!\s*m_flag65\s*\)\s*"
+            r"gpGame\s*->\s*SetupOrigData\s*\(\s*\)\s*;\s*else\s*"
+            r"GetHeaders\s*\(\s*&\s*HeadersA\s*\)\s*;",
+            ("game::SetupOrigData",
+             "TSingleSelectionWindow::GetHeaders")),
+    ),
     ("singleselectionwindow.obj", 0x135AA4): (
         ProvenOrderSkew(
             "SetupNewGameMode's Complete client setup precedes the one "
@@ -298,6 +328,28 @@ PROVEN_ORDER_SKEWS: dict[tuple[str, int], tuple[ProvenOrderSkew, ...]] = {
             ("townManager::MoveHeroToGarrison",
              "townManager::MoveHeroFromGarrison",
              "townManager::SwapHeroes")),
+    ),
+}
+
+
+# Complete can replace an entire older-revision statement group rather than
+# merely reorder it. Classify such a call as DC-only only when the Complete
+# caller is byte-exact and its bounded replacement source remains present.
+# This is deliberately separate from order skew: helpers listed here are not
+# mandatory in the reconstructed Complete body.
+PROVEN_REVISION_REMOVALS: dict[
+        tuple[str, int], tuple[ProvenRevisionRemoval, ...]] = {
+    ("singleselectionwindow.obj", 0x135F04): (
+        ProvenRevisionRemoval(
+            "Complete SetupScenarioOptions replaces Dreamcast's "
+            "loadGameMode && IsMultiPlayer widget-333..339 show/hide group "
+            "with the exact Complete scenario-widget group",
+            0x00580A70,
+            r"\bShowWidget\s*\(\s*137\s*\)\s*;.*?"
+            r"\bShowWidget\s*\(\s*141\s*\)\s*;.*?"
+            r"\bShowWidget\s*\(\s*190\s*\)\s*;.*?"
+            r"\bShowWidget\s*\(\s*195\s*\)\s*;",
+            ("TSingleSelectionWindow::IsMultiPlayer", "widget::hide")),
     ),
 }
 
@@ -3892,6 +3944,25 @@ def proven_dc_only_order_helpers(
     return frozenset(helpers), tuple(descriptions)
 
 
+def proven_dc_only_removed_helpers(
+        key: tuple[str, int], body: str, va: int | None,
+        exact_vas: set[int]) -> tuple[frozenset[str], tuple[str, ...]]:
+    """Return calls proved absent from one exact Complete revision body."""
+    if va is None or va not in exact_vas:
+        return frozenset(), ()
+    active = _source.mask(body)
+    helpers: set[str] = set()
+    descriptions: list[str] = []
+    for removal in PROVEN_REVISION_REMOVALS.get(key, ()):
+        if va != removal.caller_va \
+                or re.search(
+                    removal.retail_pattern, active, re.DOTALL) is None:
+            continue
+        helpers.update(removal.dc_only_helpers)
+        descriptions.append(removal.description)
+    return frozenset(helpers), tuple(descriptions)
+
+
 def groups_without_helpers(groups: tuple[CallGroup, ...],
                            omitted: frozenset[str]) \
         -> tuple[CallGroup, ...]:
@@ -4154,6 +4225,25 @@ def army_class_roster_violations(text: str) -> list[tuple[int, str]]:
 def selftest() -> list[str]:
     """Negative controls: the gate must detect the real defect class."""
     failures = []
+    redeclaration_probe = """\
+void wanted() { KeepHelper(); }
+VA(0x00401230, 0x10)
+void wanted();
+void following() { WrongHelper(); }
+"""
+    redeclaration_masked = _source.mask(redeclaration_probe)
+    redeclaration_span = _body_for_claim(
+        redeclaration_masked, _line_starts(redeclaration_probe), 2,
+        "wanted")
+    if redeclaration_span is None:
+        failures.append("RVA-ordered redeclaration lost canonical definition")
+    else:
+        redeclaration_body = redeclaration_probe[
+            redeclaration_span[0] + 1:redeclaration_span[1]]
+        if "KeepHelper" not in redeclaration_body \
+                or "WrongHelper" in redeclaration_body:
+            failures.append(
+                "RVA-ordered redeclaration audited the following function")
     frozen_call = MissingCall(
         0x00401230, "sample.obj", 0x1230, "src/sample.cpp", 10,
         "Caller", "hero::HasSecondarySkill", "HasSecondarySkill")
@@ -5369,6 +5459,28 @@ case TAdventureOptionsWindow::VIEW_SCENARIO_ID:
     if not missing_from_body(erased,
                              ["CNetPlayerHandler::AddNewPlayer"]):
         failures.append("erased Complete wrapper passed source-shape gate")
+    removal_key = ("singleselectionwindow.obj", 0x135F04)
+    removal_va = PROVEN_REVISION_REMOVALS[removal_key][0].caller_va
+    removal_body = """\
+ShowWidget(137);
+ShowWidget(141);
+ShowWidget(190);
+ShowWidget(195);
+"""
+    removed_helpers, removal_descriptions = \
+        proven_dc_only_removed_helpers(
+            removal_key, removal_body, removal_va, {removal_va})
+    if removed_helpers != frozenset(
+            PROVEN_REVISION_REMOVALS[removal_key][0].dc_only_helpers) \
+            or len(removal_descriptions) != 1:
+        failures.append("exact Complete revision removal did not classify")
+    if proven_dc_only_removed_helpers(
+            removal_key, removal_body, removal_va, set())[0]:
+        failures.append("non-exact revision removal classified DC-only")
+    if proven_dc_only_removed_helpers(
+            removal_key, removal_body.replace("ShowWidget(195);", ""),
+            removal_va, {removal_va})[0]:
+        failures.append("erased Complete replacement group classified")
     order_key = ("spells.obj", 0x152DEC)
     order_va = PROVEN_ORDER_SKEWS[order_key][0].caller_va
     complete_order = """\
@@ -9068,6 +9180,29 @@ def _body_after_claim(masked: str, starts: list[int], claim_line: int):
     return (body_open, body_close) if body_close is not None else None
 
 
+def _body_for_claim(masked: str, starts: list[int], claim_line: int,
+                    *identities: str):
+    """Resolve a VA claim to its canonical active definition when possible.
+
+    Most claims annotate a definition directly, but a TU whose original
+    source order differs from retail object order may keep the active body in
+    source order and place only an annotated redeclaration in RVA order.  In
+    that case the old next-brace rule silently audited the following function.
+    A unique name/provenance match is stronger than physical adjacency; retain
+    the latter as the fallback for identities the lightweight locator cannot
+    decode.
+    """
+    for identity in identities:
+        if not identity:
+            continue
+        definitions = _definitions_between(
+            masked, identity, 0, len(masked))
+        if len(definitions) == 1:
+            definition = definitions[0]
+            return definition.body_open, definition.body_close
+    return _body_after_claim(masked, starts, claim_line)
+
+
 def _definitions_between(masked: str, fn: str, start: int, end: int):
     """Active definitions of ``fn`` inside one provenance interval.
 
@@ -9144,6 +9279,11 @@ def scan() -> tuple[
         groups = groups_without_transfers(
             decoded(key, refs).groups,
             lambda callee: transferred(key, callee, body))
+        removed, removal_descriptions = proven_dc_only_removed_helpers(
+            key, body, va, exact_vas)
+        if removed:
+            groups = groups_without_helpers(groups, removed)
+            dc_only.update(removal_descriptions)
         helpers, descriptions = proven_dc_only_order_helpers(
             key, body, va, exact_vas)
         if helpers:
@@ -9187,7 +9327,10 @@ def scan() -> tuple[
             text = (common.HOMM3_DIR / claim.path).read_text(errors="replace")
             cache[claim.path] = text, _source.mask(text), _line_starts(text)
         text, masked, starts = cache[claim.path]
-        span = _body_after_claim(masked, starts, claim.line)
+        row = corpus.by_key.get(key)
+        span = _body_for_claim(
+            masked, starts, claim.line, identity[1],
+            row.get("name", "") if row is not None else "")
         if span is None:
             continue
         checked += 1
@@ -9195,8 +9338,13 @@ def scan() -> tuple[
         body = text[span[0] + 1:span[1]]
         shape_body = apply_proven_call_spellings(
             key, body, claim.va, exact_vas)
+        removed, removal_descriptions = proven_dc_only_removed_helpers(
+            key, body, claim.va, exact_vas)
+        dc_only.update(removal_descriptions)
         preliminary = missing_from_body(
             shape_body, [ref.name for ref in refs], key)
+        preliminary = [(callee, helper) for callee, helper in preliminary
+                       if callee not in removed]
         names = attested(key, refs) if preliminary else set()
         body_missing = False
         for callee, helper in preliminary:

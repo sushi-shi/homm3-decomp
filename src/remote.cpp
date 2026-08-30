@@ -1480,16 +1480,19 @@ VA_COMPGEN(0x00554a80, 0x21, SCALAR_DELETING_DTOR, CAnimatedDlg)
 
 // E:\gamedcs\remote.cpp:1547 - the EH frame, sprite Dispose virtual call and
 // CDialog teardown match retail instruction for instruction.
-// MATCHING_DEBT: the TU's default auto-inlining is required by the later
-// implicit CWaitForReadyPlayersDlg destructor (90.9167% versus 79.75% with
-// this body suppressed).  That caller-specific decision remains coupled to
-// WaitForReadyToPlayMsg's final cleanup.
+// Both retail cleanup paths in WaitForReadyToPlayMsg call this exact body
+// out of line, so suppressing its automatic expansion is load-bearing.  The
+// separately emitted implicit CWaitForReadyPlayersDlg destructor instead
+// wants it expanded (historical 90.9167%, current 79.75%); max/history banks
+// that caller-specific dip while its lowering is solved independently.
+#pragma auto_inline(off)
 VA(0x00554ab0, 0x55)  // anchor-vtable + dc-order-map, dc 0x11d250
 CAnimatedDlg::~CAnimatedDlg()
 {
     if (m_pSprite)
         m_pSprite->Dispose();
 }
+#pragma auto_inline(on)
 
 // E:\gamedcs\remote.cpp:1553
 // Slot 13 records the animation resource/sequence and delegates the text and
@@ -1705,27 +1708,24 @@ int CWaitForReadyPlayersDlg::OnPlayerDrop(CNetMsg* pNetMsg, message& msg)
 // modal at all. Constructor, AllPlayersReady, Wait and the complete
 // destructor chain are all expanded into this retail body by /Ob2.
 //
-// Residual (81.360245%; historical isolated peak 84.02484%): retail expands
-// both CNetMsgHandlerPause cleanups, calls their CNetMsgHandler base at both
-// exits, and calls SetNetMsgHandler only on fall-through. This compile expands
-// the base destructor on the early exit and duplicates the final animated
-// cleanup. Generated trees measured more than 100 ordinary wrapper, literal,
-// scope, and base-destructor spellings. The retained branch-local return is
-// the best form that keeps the separately banked implicit
-// CWaitForReadyPlayersDlg
-// destructor at 90.9167%. Suppressing CAnimatedDlg auto-inlining reaches
-// 88.07453% here but drops that destructor to 79.75%, so the global pragma
-// trade is rejected. Statement pins either remain inert or call the whole
-// pause destructor and are structurally wrong. DC marks the derived destructor
-// compgenx, ruling out an explicit source destructor as a routing device.
+// Residual (84.472046%): Dreamcast's condition/return scope is restored and
+// retail's single final CAnimatedDlg cleanup is now reproduced.  The remaining
+// structural delta is the ready-path CNetMsgHandler base cleanup: retail calls
+// the base destructor, while this compile expands its unhook body and gains two
+// branches.  Measured controls under this source state: inverted `Wait; return`
+// is source-false and 81.360245%; `inline_depth(0)` on the attested return calls
+// the whole derived destructor and falls to 70.465836%; `inline_depth(2)` is
+// byte-flat at 76.18012% without the CAnimatedDlg boundary.  DC marks the
+// derived destructor compgenx, ruling out an explicit source destructor as a
+// routing device.
 VA(0x00554f10, 0x23A)  // anchor-vtable + dc-order-map, dc 0x11d6c8
 void WaitForReadyToPlayMsg()
 {
     CWaitForReadyPlayersDlg dlg;
-    if (!dlg.AllPlayersReady()) {
-        dlg.Wait();
+    if (dlg.AllPlayersReady()) {
         return;
     }
+    dlg.Wait();
 }
 
 // E:\gamedcs\remote.h:632 - CNetMsgHandler::Copy. The popup byte comes off

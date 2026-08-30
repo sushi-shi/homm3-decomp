@@ -3646,61 +3646,51 @@ void TBuyArtifactWindow::SetRolloverText(int codeY)
 // command; subtype 0xe right-clicks a slot into its info popup. Hover copies
 // the rollover string.
 //
-// Residual (86.57%): retail lays the deselect arms deal, arrows, exit and
-// keeps the shared Update(1)/bExit tail as the DEAL arm's fall-through
-// (+0x1c2), with NormalDialog sunk past the artifact-select expansion.
-// The goto-merge below reproduced the arrows' shared SetupNewTrade
-// expansion (carried by the second arm, +2.44) and the resource-select
-// pin its out-of-line ComputeTradeRatios (+2.96), but the labeled tail
-// still sinks to the end and the exit arm still lays between deal and
-// arrows. Tried and rejected: exit-cases-after-arrows source order
-// (80.25 pre-goto, 82.01 in the goto config - layout is NOT source order
-// for this chain), bUpdate-flag removal alone (byte-inert; VC6 already
-// const-folds the always-1 flag).
+// The DC line table fixes the source order as Select -> Quick View ->
+// Activate, with separate exit/update flags and one shared tail. Retail's
+// select jump table is a Complete-only correction: slots 13..17 all reach
+// NormalDialog, whereas the older DC-era reconstruction admitted 13..15.
+// Keep that retail-corroborated semantic skew while preserving the DC
+// scopes, command order, accessor, and named rotation/trade helpers.
+// Residual (89.73%): candidate has 66 CFG blocks versus retail's 65 and
+// four returns versus five. Retail duplicates the Quick View popup/epilogue
+// across its equipped/backpack arms; DC instead proves one type_artifact
+// local followed by one shared ViewArtifact statement, so the shared source
+// call is retained. This hybrid exceeds both the former 86.57% spelling and
+// the discarded 87.20% parent, whose slots 13..15 contradicted retail.
 VA(0x005edf60, 0x75f)  // anchor-vtable 0x643aac slot 9, dc 0x18c00c
 int TSellArtifactWindow::WindowHandler(message* msg)
 {
-    int r = CAdvPopup::WindowHandler(msg);
-    if (r != 0)
-        return r;
+    int result = CAdvPopup::WindowHandler(msg);
+    if (result)
+        return result;
 
-    int bExit = 0;
-
-    if (msg->id != MESSAGE_MOUSE_MOVE) {
-        if (msg->id != MESSAGE_WIDGET)
-            return 1;
-
+    int exitFlag = 0;
+    int updateFlag = 0;
+    switch (msg->id) {
+    case MESSAGE_WIDGET:
         switch (msg->codeX) {
-        case widget::WIDGET_SELECT:
+        case MARKET_WIDGET_SELECT:
             switch (msg->codeY) {
             case MARKET_BUY_WOOD_ID: case MARKET_BUY_MERCURY_ID:
             case MARKET_BUY_ORE_ID: case MARKET_BUY_SULFUR_ID:
             case MARKET_BUY_CRYSTAL_ID: case MARKET_BUY_GEMS_ID:
             case MARKET_BUY_GOLD_ID: {
-                int resource = msg->codeY - MARKET_BUY_WOOD_ID;
-                if (resource == gLeftResource)
-                    return 1;
-                gLeftResource = resource;
+                int destination = msg->codeY - MARKET_BUY_WOOD_ID;
+                if (destination == gLeftResource)
+                    return MESSAGE_DISPATCH_CONSUME;
+                gLeftResource = destination;
+                updateFlag = 1;
                 if (gSelectedArtifact != -1) {
-                    // Retail expands SetupNewTrade here but keeps its
-                    // interior ComputeTradeRatios OUT of line (the one
-                    // call at +0x50e); the sibling artifact-select arm
-                    // expands both levels. Hand-duplicated with the
-                    // statement pin to split the two decisions.
 #pragma inline_depth(0)
                     ComputeTradeRatios(gSelectedArtifact, gLeftResource,
                         &gGiveQuantity, &gRatioInverted, &gMaxTradeUnits);
 #pragma inline_depth()
                     gRightAmount = 1;
                 }
-                goto update;
+                break;
             }
-            case MARKET_ARTIFACT_SLOT_13_ID: case MARKET_ARTIFACT_SLOT_14_ID:
-            case MARKET_ARTIFACT_SLOT_15_ID: case MARKET_ARTIFACT_SLOT_16_ID:
-            case MARKET_ARTIFACT_SLOT_17_ID:
-                NormalDialog((*gpGeneralText)[22], 1, -1, -1, -1, 0, -1, 0,
-                             -1, 0, -1, 0);
-                return 1;
+
             case MARKET_ARTIFACT_SLOT_00_ID: case MARKET_ARTIFACT_SLOT_01_ID:
             case MARKET_ARTIFACT_SLOT_02_ID: case MARKET_ARTIFACT_SLOT_03_ID:
             case MARKET_ARTIFACT_SLOT_04_ID: case MARKET_ARTIFACT_SLOT_05_ID:
@@ -3710,67 +3700,29 @@ int TSellArtifactWindow::WindowHandler(message* msg)
             case MARKET_ARTIFACT_SLOT_12_ID: case MARKET_ARTIFACT_SLOT_18_ID:
             case MARKET_ARTIFACT_SLOT_19_ID: case MARKET_ARTIFACT_SLOT_20_ID:
             case MARKET_ARTIFACT_SLOT_21_ID: case MARKET_ARTIFACT_SLOT_22_ID: {
-                int slot = msg->codeY - MARKET_ARTIFACT_SLOT_00_ID;
-                if (slot == gSelectedArtifact)
-                    return 1;
-                gSelectedArtifact = slot;
+                int artifactSlot = msg->codeY - MARKET_ARTIFACT_SLOT_00_ID;
+                if (artifactSlot == gSelectedArtifact)
+                    return MESSAGE_DISPATCH_CONSUME;
+                gSelectedArtifact = artifactSlot;
+                updateFlag = 1;
                 if (gLeftResource != -1)
                     SetupNewTrade();
-                goto update;
-            }
-            default:
-                return 1;
+                break;
             }
 
-        case widget::WIDGET_DESELECT:
-            switch (msg->codeY) {
-            case MARKET_LEFT_PANEL_ID:
-                if (gRightAmount == 0)
-                    return 1;
-                if (gRatioInverted) {
-                    gpCurrentPlayer->resources[gLeftResource] +=
-                        gGiveQuantity * gRightAmount;
-                    if (gSelectedArtifact < 18) {
-                        gpMarketHero->remove_artifact(static_cast<long>(gSelectedArtifact));
-                    } else {
-                        long numInBackpack = gpMarketHero->get_number_in_backpack(1);
-                        gpMarketHero->remove_backpack_artifact(static_cast<short>(
-                            ((gBackpackStart & 0xff) + gSelectedArtifact - 18)
-                            % numInBackpack));
-                    }
-                }
-                gLeftDenominated = 1;
-                gLeftResource = -1;
-                gSelectedArtifact = -1;
-update:
-                Update(1);
-                if (bExit) {
-                    msg->codeX = msg->codeY = widget::WIDGET_END_DIALOG;
-                    return 2;
-                }
-                return 1;
-            case MARKET_LEFT_COUNT_ID:
-            case MARKET_LEFT_LABEL_ID:
-            case MARKET_RIGHT_LABEL_ID:
-                bExit = 1;
-                gpWindowManager->dialogReturn = msg->codeY - MARKET_LEFT_COUNT_ID;
-                gLeftResource = -1;
-                gSelectedArtifact = -1;
-                gLeftDenominated = 0;
-                goto update;
-            case MARKET_ARTIFACT_LEFT_ARROW_ID:
-                decrement_backpack_start();
-                SetupNewTrade();
-                goto update;
-            case MARKET_ARTIFACT_RIGHT_ARROW_ID:
-                increment_backpack_start();
-                SetupNewTrade();
-                goto update;
-            default:
-                return 1;
-            }
+            case MARKET_ARTIFACT_SLOT_13_ID: case MARKET_ARTIFACT_SLOT_14_ID:
+            case MARKET_ARTIFACT_SLOT_15_ID: case MARKET_ARTIFACT_SLOT_16_ID:
+            case MARKET_ARTIFACT_SLOT_17_ID:
+                NormalDialog((*gpGeneralText)[22], 1, -1, -1, -1, 0, -1, 0,
+                             -1, 0, -1, 0);
+                return MESSAGE_DISPATCH_CONSUME;
 
-        case widget::WIDGET_RIGHT_SELECT:
+            default:
+                return MESSAGE_DISPATCH_CONSUME;
+            }
+            break;
+
+        case MARKET_WIDGET_QUICK_VIEW: {
             switch (msg->codeY) {
             case MARKET_ARTIFACT_SLOT_00_ID: case MARKET_ARTIFACT_SLOT_01_ID:
             case MARKET_ARTIFACT_SLOT_02_ID: case MARKET_ARTIFACT_SLOT_03_ID:
@@ -3782,35 +3734,100 @@ update:
             case MARKET_ARTIFACT_SLOT_14_ID: case MARKET_ARTIFACT_SLOT_15_ID:
             case MARKET_ARTIFACT_SLOT_16_ID: case MARKET_ARTIFACT_SLOT_18_ID:
             case MARKET_ARTIFACT_SLOT_19_ID: case MARKET_ARTIFACT_SLOT_20_ID:
-            case MARKET_ARTIFACT_SLOT_21_ID: case MARKET_ARTIFACT_SLOT_22_ID: {
-                int slot = msg->codeY - MARKET_ARTIFACT_SLOT_00_ID;
-                type_artifact art;
-                if (slot < 18) {
-                    art = *gpMarketHero->get_artifact(slot);
-                } else {
-                    long numInBackpack = gpMarketHero->get_number_in_backpack(1);
-                    art = gpMarketHero->backpack[
-                        ((gBackpackStart & 0xff) + slot - 18) % numInBackpack];
-                }
-                gpMarketHero->HeroFn_004D9A00(&art, 1);
-                return 1;
-            }
+            case MARKET_ARTIFACT_SLOT_21_ID: case MARKET_ARTIFACT_SLOT_22_ID:
+                break;
             default:
-                return 1;
+                return MESSAGE_DISPATCH_CONSUME;
             }
-
-        default:
-            return 1;
+            int artifactSlot = msg->codeY - MARKET_ARTIFACT_SLOT_00_ID;
+            type_artifact artifact;
+            if (artifactSlot < 18) {
+                artifact = *gpMarketHero->get_artifact(artifactSlot);
+            } else {
+                int numInBackpack = gpMarketHero->get_number_in_backpack(1);
+                int slot = ((gBackpackStart & 0xff) + artifactSlot - 18)
+                           % numInBackpack;
+                artifact = gpMarketHero->backpack[slot];
+            }
+            gpMarketHero->HeroFn_004D9A00(&artifact, 1);
+            return MESSAGE_DISPATCH_CONSUME;
         }
 
+        case MARKET_WIDGET_ACTIVATE:
+            switch (msg->codeY) {
+            case MARKET_LEFT_PANEL_ID:
+                if (gRightAmount == 0)
+                    return MESSAGE_DISPATCH_CONSUME;
+                if (gRatioInverted) {
+                    gpCurrentPlayer->resources[gLeftResource] +=
+                        gGiveQuantity * gRightAmount;
+                    if (gSelectedArtifact < 18) {
+                        gpMarketHero->remove_artifact(gSelectedArtifact);
+                    } else {
+                        int numInBackpack =
+                            gpMarketHero->get_number_in_backpack(1);
+                        int slot = ((gBackpackStart & 0xff)
+                                    + gSelectedArtifact - 18)
+                                   % numInBackpack;
+                        gpMarketHero->remove_backpack_artifact(slot);
+                    }
+                }
+                gLeftDenominated = 1;
+                gLeftResource = -1;
+                gSelectedArtifact = -1;
+                updateFlag = 1;
+                break;
+
+            case MARKET_ARTIFACT_LEFT_ARROW_ID:
+                decrement_backpack_start();
+                SetupNewTrade();
+                updateFlag = 1;
+                break;
+
+            case MARKET_ARTIFACT_RIGHT_ARROW_ID:
+                increment_backpack_start();
+                SetupNewTrade();
+                updateFlag = 1;
+                break;
+
+            case MARKET_LEFT_COUNT_ID:
+            case MARKET_LEFT_LABEL_ID:
+            case MARKET_RIGHT_LABEL_ID:
+                gpWindowManager->dialogReturn =
+                    msg->codeY - MARKET_LEFT_COUNT_ID;
+                exitFlag = 1;
+                gLeftResource = -1;
+                gSelectedArtifact = -1;
+                gLeftDenominated = 0;
+                updateFlag = 1;
+                break;
+
+            default:
+                return MESSAGE_DISPATCH_CONSUME;
+            }
+            break;
+
+        default:
+            return MESSAGE_DISPATCH_CONSUME;
+        }
+        break;
+
+    case MESSAGE_MOUSE_MOVE:
+        gpWindowManager->ConvertToHover(*msg);
+        if (msg->codeY != lastHoverId) {
+            lastHoverId = msg->codeY;
+            SetRolloverText(msg->codeY);
+        }
+        break;
     }
 
-    gpWindowManager->ConvertToHover(*msg);
-    if (msg->codeY != lastHoverId) {
-        lastHoverId = msg->codeY;
-        SetRolloverText(msg->codeY);
+    if (updateFlag)
+        Update(true);
+    if (exitFlag) {
+        msg->codeX = msg->codeY = widget::WIDGET_END_DIALOG;
+        return MESSAGE_DISPATCH_FORWARD;
     }
-    return 1;
+    return MESSAGE_DISPATCH_CONSUME;
 }
 
 // E:\gamedcs\tradpost.cpp:3109
