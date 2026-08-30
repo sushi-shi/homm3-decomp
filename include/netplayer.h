@@ -33,6 +33,7 @@ public:
     // shared fields; Complete's added version member belongs to the same
     // base boundary in the retail selection-window TU.
     CNetPlayerInfo();
+    CNetPlayerInfo(char* _sName, unsigned long _dpid);
 #endif
 };
 SIZE(CNetPlayerInfo, 32);

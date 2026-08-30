@@ -260,6 +260,32 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-30 — `TSingleSelectionWindow::SetupNewGameMode` and the retained
+  `CNetPlayerInfo` default constructor are byte-exact from Dreamcast source
+  shape.** The dossier at `singleselectionwindow.obj:0x135aa4` supplies the
+  two setup branches, network-player enumeration, hot-seat roster loop,
+  `CNetPlayerInfo` lifetimes, and final host map-selection pass. Restoring the
+  original `TAutoPtr<int>` owner with an early `continue` was the final
+  lowering fact: it reproduces VC6's distinct loop-cleanup edge. Retail
+  `0x0057f740` now matches **all 981 bytes and all 35 / 35 CFG blocks**;
+  the adjacent default constructor at `0x0057f720` matches **all 24 bytes and
+  its sole CFG block**.
+
+  Complete adds a version dword to Dreamcast's `{dpid, name}` player record
+  and routes each direct `AddNewPlayer` through `SetNewPlayerSlot`. Retail
+  independently proves that the wrapper begins by calling
+  `CNetPlayerHandler::AddNewPlayer`, so the asymmetric source-shape gate
+  canonicalizes that exact caller spelling without discarding the recovered
+  helper boundary. Dreamcast also contains an earlier duplicate
+  `GetHeaders` / `HighlightFile` / `SetCurrentMap` host UI pass; the exact
+  Complete body retains those helpers only in its final host block. A bounded
+  exact-caller order classification keeps all three calls mandatory while
+  admitting only that cross-statement revision skew, with negative controls
+  for a non-exact caller or an erased host pass. Activating the 1,005 exact
+  bytes perturbs the later `CEnterNameEdit::OnKillFocus` checkpoint from
+  100% to **99.8710%**; its 100% high-water remains banked rather than
+  flattening the newly recovered source.
+
 - **2026-08-30 — `TSingleSelectionWindow::ShowWidget` is exact from the
   Dreamcast source shape, and its only caller remains exact through a bounded
   call-site pin.** The dossier at `singleselectionwindow.obj:0x135da8` proves

@@ -2625,6 +2625,7 @@ singleselectionpopups	?Main@CHotspotWidget@@UAEHPAVmessage@@@Z	94.2771	94.2771	9
 singleselectionpopups	?Main@CSpriteWidget@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x175a10
 singleselectionpopups	?handle_message@CSingleSelPopup@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x175430
 singleselectionwindow	??0CNetPlayerHandlerPlayer@@QAE@XZ	100.0000	100.0000	100.0000	0x17c790
+singleselectionwindow	??0CNetPlayerInfo@@QAE@XZ	100.0000	100.0000	100.0000	0x17f720
 singleselectionwindow	??0lobby_message@@QAE@XZ	100.0000	100.0000	100.0000	0x189190
 singleselectionwindow	??0t_map_list_update@@QAE@K@Z	100.0000	100.0000	100.0000	0x189240
 singleselectionwindow	??1CHostWaitDlg@@UAE@XZ	0.0000	0.0000	0.0000	0x189230
@@ -2703,7 +2704,7 @@ singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100
 # 2026-08-27 (round 3): the interim full build re-banked the transient
 # peak a third time; re-lowered with the round's bodies landed. Same
 # scheduler flap, same recovery path.
-singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0
+singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0
 singleselectionwindow	?OnMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2193	90.2193	90.2193	0x189710
 singleselectionwindow	?OnNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	97.5366	97.5366	97.5366	0x18b510
 singleselectionwindow	?OnNewPlayerMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	97.0628	97.0628	97.0628	0x189fa0
@@ -2723,6 +2724,7 @@ singleselectionwindow	?SetNextPlayer@CNetPlayerHandler@@QAEEH@Z	96.2353	96.2353	
 singleselectionwindow	?SetResolution@CChatSlider@@UAEXH@Z	100.0000	100.0000	100.0000	0x17c9d0
 singleselectionwindow	?SetState@CChatSlider@@UAEXH@Z	100.0000	100.0000	100.0000	0x17ca00
 singleselectionwindow	?SetupAdvancedOptions@TSingleSelectionWindow@@QAEXXZ	99.3846	99.3846	99.3846	0x181100
+singleselectionwindow	?SetupNewGameMode@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x17f740
 singleselectionwindow	?ShowWidget@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x17fb20
 singleselectionwindow	?SortMaps@TSingleSelectionWindow@@QAEXHEE@Z	91.6682	91.6682	91.6682	0x185050
 singleselectionwindow	?Tick@CNewPlayerUpdateProc@@UAEXXZ	86.6723	86.6723	86.6723	0x178a90
@@ -2746,7 +2748,6 @@ singleselectionwindow	TSingleSelectionWindow_GetHeaders	0.0000	0.0000	0.0000	0x1
 singleselectionwindow	TSingleSelectionWindow_OnWidgetDeselect	0.0000	0.0000	0.0000	0x1865b0
 singleselectionwindow	TSingleSelectionWindow_ProcessRightSelect	0.0000	0.0000	0.0000	0x1822d0
 singleselectionwindow	TSingleSelectionWindow_SetupLoadGameMode	0.0000	0.0000	0.0000	0x17f330
-singleselectionwindow	TSingleSelectionWindow_SetupNewGameMode	0.0000	0.0000	0.0000	0x17f740
 singleselectionwindow	TSingleSelectionWindow_SetupScenarioOptions	0.0000	0.0000	0.0000	0x180a70
 singleselectionwindow	TSingleSelectionWindow_TSingleSelectionWindow	0.0000	0.0000	0.0000	0x179960
 singleselectionwindow	TSingleSelectionWindow_UpdateGameVars	0.0000	0.0000	0.0000	0x183580

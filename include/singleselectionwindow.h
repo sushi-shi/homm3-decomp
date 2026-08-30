@@ -485,6 +485,7 @@ public:
     // town.h - retype when the body lands.
     void UpdateTown(int pos, int town, unsigned char inPopup);
     void UpdateNameLists();
+    void SetupNewGameMode();
     // Retail 0x58ea00 (past the stale span end) - the no-arg count the
     // drop arm caches at +0x1898. DC's GetPlayerCount takes a filter
     // byte; retail's takes none. Provisional.
@@ -501,7 +502,7 @@ public:
     // GetHeader fills one row's header temp from (dir, filename) -
     // retail widened DC's (cFilename, pHeader) with the dir argument
     // its chdir dance needs.
-    void GetHeaders();
+    void GetHeaders(std::vector<GameSelectionHeadersStruct>* pHeaders);
     int GetHeader(char* dir, char* cFilename,
                   GameSelectionHeadersStruct* pHeader);
     // Retail 0x580a70 widened DC's no-arg SetupScenarioOptions with the
