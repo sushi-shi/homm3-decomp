@@ -278,6 +278,22 @@ PROVEN_ORDER_SKEWS: dict[tuple[str, int], tuple[ProvenOrderSkew, ...]] = {
 # graph: inlined accessors/operators, a source order hidden by scheduling, and
 # nesting within a single attested statement group.
 SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
+    ("ai_player.obj", 0x2F694): (
+        SourceRule(
+            "fill_prohibited_array keeps Dreamcast's human_strength, "
+            "income[7], short i and resources[7] function locals in "
+            "CodeView declaration order",
+            r"\A\s*long\s+human_strength\s*;\s*"
+            r"int\s+income\s*\[\s*7\s*\]\s*;\s*"
+            r"short\s+i\s*;\s*"
+            r"int\s+resources\s*\[\s*7\s*\]\s*;"),
+        SourceRule(
+            "fill_prohibited_array keeps Dreamcast's human_strength zero "
+            "statement after the initial dwelling-growth cost pass",
+            r"\bget_growth_rate\s*\(.*?\bGetMonsterCost\s*\(.*?"
+            r"\bhuman_strength\s*=\s*0\s*;.*?"
+            r"\bsum_player_dwellings\s*\("),
+    ),
     ("events.obj", 0x94760): (
         SourceRule(
             "DoEventPrison keeps Dreamcast's THeroID source local under its "
@@ -2475,6 +2491,32 @@ gUnnamed67f574 = OldColorCycling;
                for rule in contract_violations(swapped_prison_coords,
                                                 prison_key)):
         failures.append("reordered DoEventPrison coordinates passed")
+    prohibited_key = ("ai_player.obj", 0x2F694)
+    prohibited_probe = """\
+long human_strength;
+int income[7];
+short i;
+int resources[7];
+current_town->get_growth_rate(i);
+GetMonsterCost(i, resources);
+human_strength = 0;
+sum_player_dwellings(0);
+"""
+    if contract_violations(prohibited_probe, prohibited_key):
+        failures.append("aligned fill_prohibited_array locals did not pass")
+    reordered_prohibited = prohibited_probe.replace(
+        "long human_strength;\nint income[7];\nshort i;\nint resources[7];",
+        "int income[7];\nshort i;\nint resources[7];\nlong human_strength;")
+    if not any("CodeView declaration order" in rule.description for rule in
+               contract_violations(reordered_prohibited, prohibited_key)):
+        failures.append("reordered fill_prohibited_array locals passed")
+    early_prohibited_zero = prohibited_probe.replace(
+        "long human_strength;", "long human_strength = 0;").replace(
+            "\nhuman_strength = 0;\n", "\n")
+    if not any("after the initial dwelling-growth cost pass" in
+               rule.description for rule in contract_violations(
+                   early_prohibited_zero, prohibited_key)):
+        failures.append("early fill_prohibited_array human_strength passed")
     player_save_key = ("game.obj", 0xA55A8)
     player_save_probe = """\
 unsigned long flags;

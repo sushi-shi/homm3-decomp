@@ -1060,14 +1060,16 @@ static __forceinline long sum_player_dwellings(int player_id)
 // strongest human player's projected creature value. Gold is deliberately
 // excluded from the final affordability veto; the other six resources and
 // the top creature tier can mark each of the 145 creature ids prohibited.
-// Residual wall (99.90%): all 76 blocks and their flow match. The only three
-// differing instructions are byte-equivalent SIB encodings of `game + index`
-// in the two inlined GetTeam reads and the playerDisabled read. Reversed
-// subscript spelling was byte-flat; the remaining distinction is VC6's
-// commutative base/index choice, not missing game behavior.
+// Residual wall (99.97%): all 76 blocks and their flow match. Direct uses of
+// gNetLocalGamePos reproduce retail's SIB choice in both Complete-only team
+// reads. The only remaining byte is the commutative SIB encoding of
+// `game + player_index` in playerDisabled. Naming that load or its game
+// pointer and reversing the subscript were byte-flat; this is a post-RA
+// address-encoding distinction, not missing game behavior.
 VA(0x00429d50, 0x3F9)  // DC identity/caller + retail body; dc 0x2f694
 void fill_prohibited_array(playerData* player, unsigned char* prohibited)
 {
+    long human_strength;
     int income[7];
     short i;
     int resources[7];
@@ -1096,12 +1098,11 @@ void fill_prohibited_array(playerData* player, unsigned char* prohibited)
     }
 
     long local_growth = 0;
-    long human_strength = 0;
+    human_strength = 0;
     if (gpGame->setup.difficulty == 0) {
-        int local_player = gNetLocalGamePos;
-        int local_team = local_player < 0
-            ? local_player
-            : gpGame->mapHeader.teamInfo[local_player];
+        int local_team = gNetLocalGamePos < 0
+            ? gNetLocalGamePos
+            : gpGame->mapHeader.teamInfo[gNetLocalGamePos];
         if (local_team < 0 || !gpGame->IsHumanTeam(local_team)) {
             int player_index = 0;
             int players_left = 8;
@@ -1130,10 +1131,9 @@ void fill_prohibited_array(playerData* player, unsigned char* prohibited)
         } while (--resources_left);
 
         if (gpGame->setup.difficulty == 0) {
-            int local_player = gNetLocalGamePos;
-            int local_team = local_player < 0
-                ? local_player
-                : gpGame->mapHeader.teamInfo[local_player];
+            int local_team = gNetLocalGamePos < 0
+                ? gNetLocalGamePos
+                : gpGame->mapHeader.teamInfo[gNetLocalGamePos];
             if (local_team < 0 || !gpGame->IsHumanTeam(local_team)) {
                     if (akCreatureTypeTraits[creature].level
                         == TOWN_DWELLING_COUNT - 1)
