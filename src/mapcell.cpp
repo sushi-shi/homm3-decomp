@@ -4977,6 +4977,16 @@ static std::vector<int> gMissingMaskTypes;
 // search is byte-visible: retail starts at size(), tests the pre-decrement
 // value, and leaves the successful index in the decremented counter.
 //
+// This is Complete-only source.  The raw Dreamcast NB11 sequence has only
+// $E482..$E485 between loadObjectType and readMapObjects, and neither caller
+// contains the rebuild region.  readMapObjects owns procedure locals
+// int_buffer, numObjects, count, x and i (with v only inside its object-loop
+// block); loadMapObjects owns only int_buffer, count and x.  Consequently no
+// Dreamcast local name or scope can honestly be transferred into this helper.
+// What does transfer is negative revision evidence: do not invent a DC
+// counterpart.  Retail's two calls prove the later helper boundary directly,
+// and fatal caller contracts preserve it against re-inlining.
+//
 // Wall (99.88535%, 2026-08-22): all 32 blocks, all 32 edges, the 157
 // instructions and their register bindings agree.  The only code delta is
 // one post-RA reload schedule after the inlined string comparison: retail
@@ -4986,6 +4996,10 @@ static std::vector<int> gMissingMaskTypes;
 // candidate spellings, && versus split conditions, compare() versus ==,
 // signed/unsigned and reused/block-scoped loop counters, and every adjacent
 // declaration-order mutation either preserve this transpose or get worse.
+// Rechecked 2026-08-30: binding objectTypes[i] to a CObjectType& and splitting
+// the short-circuit into an explicit continue are byte-flat at 99.88535%;
+// declaring extra after typeIndex keeps the 421-byte size but falls to
+// 95.93630%.  The coherent original spelling remains the peak.
 // The other asm-report row is cosmetic: this TU's Dinkumware `_Nullstr`
 // COFF symbol and the target's source-owned pooled empty-literal symbol both
 // resolve to 0x63a608; no DATA_COMPGEN binding exists in mapcell.obj because
