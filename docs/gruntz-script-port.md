@@ -301,6 +301,36 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   remains the measured Windows peak without weakening the positive local
   fact.
 
+- **2026-08-30 — `TBottomViewTown` restores the seventh Dreamcast-proven
+  `town::HasBuilding` call despite the old 98.7476% local maximum.** The
+  mandatory dossier for `bottomviewsubwindow.obj:0x55df4` gives three hall
+  calls with flag 0, three fort calls with flag 0, and a seventh silo call at
+  line 402 with `MARKETPLACE_SILO_ID, 1`, all before `get_silo_income` at
+  line 404. Raw NB11 independently records procedure-scope
+  `town_size_name` and a pointer-sized `resource` local only inside the silo
+  block. The former reconstruction retained the first six calls but flattened
+  the seventh into `active & bitNumber[...]`, explicitly because the two
+  ladders scored 98.7476% and all seven scored 94.0054%. Retail cannot prove
+  that Complete edit: `HasBuilding(..., 1)` expands to the identical mask
+  instructions at this site. The call and recovered local name/scope are now
+  restored, and 98.7476% remains a historical checkpoint rather than a
+  source-shape waiver.
+
+  The current **94.0054%** residual is a measured `/Ob2` census transition,
+  not unexplained semantic drift: six calls produce the same 90 blocks, 41
+  branches, and one return as retail; the seventh shifts earlier inlining and
+  produces 88 blocks, 39 branches, and one return. In the Complete-only
+  quantity-text block, replacing either `std::ends` with the coherent
+  `put(0)` spelling restores the full 90-block/41-branch sequence but only
+  reaches 95.5920%; the exact sibling's `std::ends` evidence keeps that probe
+  rejected. Fatal asymmetric rules now require all seven calls, their
+  recovered order/flags, the copy-initialized `town_size_name`, and the
+  scoped `resource` local, while forbidding the direct-mask de-inlining.
+  Embedded negative controls prove that deleting the silo call, changing its
+  flag, renaming/hoisting its local, or deleting `town_size_name` fails the
+  gate. The remaining compiler-state reconstruction stays open without
+  flattening any positive Dreamcast fact.
+
 - **2026-08-30 — the Dreamcast helper boundary closes
   `army::can_cast_spell` from 99.7059% to 100%.** The mandatory dossier
   (`dc:0x4beec`) places `hexcell::get_army` and

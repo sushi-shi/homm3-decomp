@@ -285,7 +285,7 @@ had spelled by hand, and two more rows moved:
 | row | before -> after |
 |---|---|
 | `bottomviewsubwindow:??0TBottomViewKingdom` | 94.0575 -> **98.5213** |
-| `bottomviewsubwindow:??0TBottomViewTown` (6 of 7 sites) | 97.3638 -> **98.7476** |
+| `bottomviewsubwindow:??0TBottomViewTown` (all 7 source sites; peak retained) | **98.7476 peak -> 94.0054 current** |
 | `quicktownwindow:??0TQuickTownWindow` (7 sites) | 96.3088 -> **98.4193** |
 | `armygrp:?get_morale_description` (2 sites) | 67.5649 -> **74.4820** |
 | `armygrp:?GetMorale`, `?GetLuck`, `?get_luck_description`, `game:?calculate_production`, `?HasCapitol`, `ai_player:?end_turn`, `ai_combat:?check_wall_archery_penalty` | byte-flat |
@@ -303,11 +303,25 @@ Two rules the round adds.
   inline_depth(0)` around `get_growth_rate` was tried first and is
   worse (70.4210): it suppresses expansions that row needs.
 * **When the expansion is byte-identical to the hand-written test, the
-  count is the only evidence there is.** `TBottomViewTown` has seven DC
-  calls; landing all seven scores 94.0054, the two ladders alone 98.7476
-  (subsets: hall 96.8134, fort 97.3638, silo 97.1557, hall+silo 96.0953,
-  fort+silo 97.1960). The silo site is refused on that measurement, and
-  the refusal is recorded in the body's note rather than hidden.
+  percentage cannot arbitrate the source boundary.** `TBottomViewTown` has
+  seven DC calls; all seven score 94.0054 while the two ladders alone peak at
+  98.7476 (subsets: hall 96.8134, fort 97.3638, silo 97.1557, hall+silo
+  96.0953, fort+silo 97.1960). The former reconstruction refused the silo
+  site solely on that measurement. That was a source-shape regression, not a
+  proved Complete edit: DC line 402 passes `MARKETPLACE_SILO_ID, 1`, and raw
+  NB11 places the pointer local `resource` inside the resulting lexical
+  block. Both facts are restored as of 2026-08-30. The 98.7476 peak remains
+  history while a fatal asymmetric contract now rejects six calls, the wrong
+  silo flag, a direct `active` mask, or loss of the scoped `resource` local.
+
+  The restored call is itself instruction-identical at the silo test, but its
+  extra `/Ob2` candidate site changes earlier inlining across the function:
+  the candidate moves from 90 blocks / 41 branches to 88 / 39 while retail
+  remains 90 / 41. Replacing either post-Dreamcast `std::ends` site with a
+  direct `put(0)` was a bounded negative control: it restores the 90-block,
+  41-branch sequence but reaches only 95.5920%, and the exact sibling uses the
+  standard `std::ends` idiom. This residual therefore stays open; it is not a
+  license to delete the seventh source fact again.
 
 ### The negative bound is a real deliverable
 

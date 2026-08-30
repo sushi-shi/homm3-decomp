@@ -588,7 +588,7 @@ bottomviewsubwindow	??0TBottomViewKingdom@@QAE@PAVheroWindow@@@Z	98.5213	98.5213
 bottomviewsubwindow	??0TBottomViewMessage@@QAE@PAVheroWindow@@PBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0x51820
 bottomviewsubwindow	??0TBottomViewNewTurn@@QAE@PAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x50dd0
 bottomviewsubwindow	??0TBottomViewResourceMessage@@QAE@PAVheroWindow@@HHPBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	91.2973	91.2973	91.2973	0x51220
-bottomviewsubwindow	??0TBottomViewTown@@QAE@PAVheroWindow@@@Z	98.7476	98.7476	98.7476	0x521f0
+bottomviewsubwindow	??0TBottomViewTown@@QAE@PAVheroWindow@@@Z	94.0054	98.7476	98.7476	0x521f0
 bottomviewsubwindow	??0ios_base@std@@IAE@XZ	100.0000	100.0000	100.0000	0x515c0
 bottomviewsubwindow	??0strstreambuf@std@@QAE@H@Z	100.0000	100.0000	100.0000	0x51600
 bottomviewsubwindow	??1TBottomViewEnemyTurn@@UAE@XZ	100.0000	100.0000	100.0000	0x53670

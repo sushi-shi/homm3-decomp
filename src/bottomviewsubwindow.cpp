@@ -1004,8 +1004,8 @@ static const int gTownArmyCoords[7][2] = {
 // S_REGREL32 record even names that buffer `quantity_text` - so the
 // ostrstream idiom is post-Dreamcast everywhere it appears.
 //
-// SIX OF THE SEVEN SITES ARE NOW REAL: town::HasBuilding (97.3638 ->
-// 98.7476, 2026-08-15). dc 0x55df4 spells the hall ladder (lines
+// ALL SEVEN SITES ARE SOURCE-REAL: town::HasBuilding (restored
+// 2026-08-30). dc 0x55df4 spells the hall ladder (lines
 // 369/371/373, `mov #11/#12/#13,r5 / mov #0,r6`), the fort ladder
 // (382/384/386, r5 = 7/8/9, r6 = 0) and the silo gate (line 402, r5 =
 // 15, r6 = 1) as calls where this body tested `built`/`active &
@@ -1014,26 +1014,29 @@ static const int gTownArmyCoords[7][2] = {
 // [ecx+0x158] = active) and the inlined expansion is byte-identical to
 // the ladders, so once again only the site count moves.
 //
-// THE SILO SITE IS REFUSED, on measurement and nothing else. The three
-// ladder subsets measure 97.3638 base / 96.8134 hall-only / 97.3638
+// The old source refused the silo site on measurement alone. The three
+// ladder subsets measured 97.3638 base / 96.8134 hall-only / 97.3638
 // fort-only / 97.1557 silo-only / 98.7476 hall+fort / 96.0953
 // hall+silo / 97.1960 fort+silo / 94.0054 all seven, so the DC's own
 // seventh call costs 4.74 points on top of the two ladders. Six sites
 // land on the +2 the probe wanted (98.7476 against the probe's 98.86);
-// seven overshoot it, exactly as the free-probe curve said (flat at
-// +3). The DC is an older revision and the retail bytes cannot
-// arbitrate here - the expansion and the mask test are the same
-// instructions - so the count is the only evidence there is, and it
-// says six. Landing all seven would be a deliberate 3.36-point
-// regression for a spelling no byte proves.
+// seven overshoot it, exactly as the free-probe curve said (flat at +3).
+// That is compiler-state evidence, not a source contradiction: the retail
+// expansion and direct mask are identical at this site, while Dreamcast
+// positively proves the helper. Preserve 98.7476 as score history and keep
+// the seventh call while the surrounding post-Dreamcast quantity-text shape
+// is reconstructed. The fatal DC source-shape gate now prevents this local
+// maximum from flattening the helper again.
 //
-// The silo sweep's own shape is a memory-homed `i`: retail indexes
-// `income[i]` as `[eax + 4*ecx]` and RELOADS `i` from [ebp-0x2c] after
-// every `slots[found++] = i` store, because that store may alias it,
-// where our CL strength-reduces income to a cursor and keeps `i` in a
-// register throughout. Tried and rejected on it: `int i` hoisted out of
+// Raw NB11 also records the pointer-sized local as `resource` inside the
+// silo block (S_REGREL32 sp+0x64, type 0x3fa1), after procedure-scope
+// `town_size_name`. The silo sweep's own shape is a memory-homed `i`:
+// retail indexes `resource[i]` as `[eax + 4*ecx]` and RELOADS `i` from
+// [ebp-0x2c] after every `slots[found++] = i` store, because that store may
+// alias it, where our CL strength-reduces resource to a cursor and keeps `i`
+// in a register throughout. Tried and rejected on it: `int i` hoisted out of
 // the for-statement, `slots[found] = i; found++;` split, `i < 7` for
-// `i <= 6` (94.23), declaring `slots`/`found` before `income` (94.03),
+// `i <= 6` (94.23), declaring `slots`/`found` before `resource` (94.03),
 // a `*slot++ = i` pointer cursor (93.25) and widening `slots` to 3..16
 // entries (94.30-94.33, frame-offset noise only).
 //
@@ -1097,12 +1100,12 @@ TBottomViewTown::TBottomViewTown(heroWindow* parent)
         Widgets.push_back(new bitmapBorder(149, 76, 22, 30, 0x7d8,
             "townqkgh.pcx", 0x800));
 
-    if (which->active & bitNumber[MARKETPLACE_SILO_ID]) {
-        int* income = which->get_silo_income();
+    if (which->HasBuilding(MARKETPLACE_SILO_ID, 1)) {
+        int* resource = which->get_silo_income();
         int slots[2];
         int found = 0;
         for (int i = 0; i <= 6; i++) {
-            if (income[i] != 0)
+            if (resource[i] != 0)
                 slots[found++] = i;
         }
         if (found == BOTTOM_VIEW_SILO_TWO_RESOURCES) {

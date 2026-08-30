@@ -456,6 +456,41 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             "before the named GetControl tail call",
             r"lastMovedArmy\s*=\s*0\s*;\s*GetControl\s*\(\s*\)\s*;"),
     ),
+    ("bottomviewsubwindow.obj", 0x55DF4): (
+        SourceRule(
+            "TBottomViewTown keeps all seven Dreamcast town::HasBuilding "
+            "source calls",
+            r"\bwhich\s*->\s*HasBuilding\s*\(", 7, 7),
+        SourceRule(
+            "TBottomViewTown keeps NB11's procedure-scope copy-initialized "
+            "town_size_name local",
+            r"\A(?:(?!\{).)*?std\s*::\s*string\s+town_size_name\s*=\s*"
+            r"gTownSizeNames\s*\[\s*hallLevel\s*\]\s*;"),
+        SourceRule(
+            "TBottomViewTown keeps Dreamcast's hall, town_size_name, fort "
+            "and silo helper order and each recovered check_included flag",
+            r"\bHasBuilding\s*\(\s*HALL_TOWN_ID\s*,\s*0\s*\).*?"
+            r"\bHasBuilding\s*\(\s*HALL_CITY_ID\s*,\s*0\s*\).*?"
+            r"\bHasBuilding\s*\(\s*HALL_CAPITOL_ID\s*,\s*0\s*\).*?"
+            r"std\s*::\s*string\s+town_size_name\s*=\s*"
+            r"gTownSizeNames\s*\[\s*hallLevel\s*\]\s*;.*?"
+            r"\bHasBuilding\s*\(\s*CASTLE_FORT_ID\s*,\s*0\s*\).*?"
+            r"\bHasBuilding\s*\(\s*CASTLE_CITADEL_ID\s*,\s*0\s*\).*?"
+            r"\bHasBuilding\s*\(\s*CASTLE_CASTLE_ID\s*,\s*0\s*\).*?"
+            r"\bHasBuilding\s*\(\s*MARKETPLACE_SILO_ID\s*,\s*1\s*\)"),
+        SourceRule(
+            "TBottomViewTown keeps NB11's scoped resource local immediately "
+            "after the silo HasBuilding guard and before its indexed sweep",
+            r"if\s*\(\s*which\s*->\s*HasBuilding\s*\(\s*"
+            r"MARKETPLACE_SILO_ID\s*,\s*1\s*\)\s*\)\s*\{\s*"
+            r"int\s*\*\s*resource\s*=\s*which\s*->\s*get_silo_income"
+            r"\s*\(\s*\)\s*;.*?\bresource\s*\[\s*i\s*\]"),
+        SourceRule(
+            "TBottomViewTown may not flatten Dreamcast's silo HasBuilding "
+            "boundary into the active bitset",
+            r"which\s*->\s*active\s*&\s*bitNumber\s*\[\s*"
+            r"MARKETPLACE_SILO_ID\s*\]", 0, 0),
+    ),
     ("combatresultswindow.obj", 0x68364): (
         SourceRule(
             "TCombatResultsWindow keeps Dreamcast's function-scope amount, "
@@ -2495,6 +2530,49 @@ UpdateTurnDuration();
     if any(not contract_violations(probe, transmit_key)
            for probe in transmit_mutations):
         failures.append("reordered OnGameTransmitInitMsg source shape passed")
+    bottom_town_key = ("bottomviewsubwindow.obj", 0x55DF4)
+    bottom_town_probe = """\
+if (which->HasBuilding(HALL_TOWN_ID, 0)) hallLevel = 1;
+else if (which->HasBuilding(HALL_CITY_ID, 0)) hallLevel = 2;
+else if (which->HasBuilding(HALL_CAPITOL_ID, 0)) hallLevel = 3;
+std::string town_size_name = gTownSizeNames[hallLevel];
+if (which->HasBuilding(CASTLE_FORT_ID, 0)) fortLevel = 0;
+else if (which->HasBuilding(CASTLE_CITADEL_ID, 0)) fortLevel = 1;
+else if (which->HasBuilding(CASTLE_CASTLE_ID, 0)) fortLevel = 2;
+if (which->HasBuilding(MARKETPLACE_SILO_ID, 1)) {
+    int* resource = which->get_silo_income();
+    for (int i = 0; i <= 6; ++i) {
+        if (resource[i] != 0) slots[found++] = i;
+    }
+}
+"""
+    if contract_violations(bottom_town_probe, bottom_town_key):
+        failures.append("aligned TBottomViewTown source shape did not pass")
+    bottom_town_mutations = (
+        bottom_town_probe.replace(
+            "which->HasBuilding(MARKETPLACE_SILO_ID, 1)",
+            "which->active & bitNumber[MARKETPLACE_SILO_ID]"),
+        bottom_town_probe.replace(
+            "HasBuilding(MARKETPLACE_SILO_ID, 1)",
+            "HasBuilding(MARKETPLACE_SILO_ID, 0)"),
+        bottom_town_probe.replace("int* resource", "int* income").replace(
+            "resource[i]", "income[i]"),
+        bottom_town_probe.replace(
+            "if (which->HasBuilding(MARKETPLACE_SILO_ID, 1)) {\n"
+            "    int* resource = which->get_silo_income();",
+            "int* resource = which->get_silo_income();\n"
+            "if (which->HasBuilding(MARKETPLACE_SILO_ID, 1)) {"),
+        bottom_town_probe.replace(
+            "std::string town_size_name = gTownSizeNames[hallLevel];\n", ""),
+        bottom_town_probe.replace(
+            "std::string town_size_name = gTownSizeNames[hallLevel];",
+            "if (hallLevel) {\n"
+            "    std::string town_size_name = gTownSizeNames[hallLevel];\n"
+            "}"),
+    )
+    if any(not contract_violations(probe, bottom_town_key)
+           for probe in bottom_town_mutations):
+        failures.append("flattened TBottomViewTown source fact passed")
     sacrifice_key = ("sacrifice_window.obj", 0x125E08)
     sacrifice_probe = """\
 if (!creature->field_04) {
