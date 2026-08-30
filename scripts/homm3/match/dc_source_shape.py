@@ -135,6 +135,20 @@ class ProvenRevisionRemoval:
 
 
 @dataclass(frozen=True)
+class ProvenBodyRelocation:
+    description: str
+    receiver_path: str
+    receiver_name: str
+    receiver_va: int
+    boundary_name: str
+    boundary_va: int
+    caller_pattern: str
+    receiver_pattern: str
+    boundary_pattern: str
+    relocated_helpers: tuple[str, ...]
+
+
+@dataclass(frozen=True)
 class ContractViolation:
     va: int | None
     dc_module: str
@@ -351,6 +365,34 @@ PROVEN_REVISION_REMOVALS: dict[
             r"\bShowWidget\s*\(\s*195\s*\)\s*;",
             ("TSingleSelectionWindow::IsMultiPlayer", "widget::hide")),
     ),
+}
+
+
+# Complete can retain a named helper boundary while moving that helper's
+# substantial body into a cooperating source function.  Unlike a score-based
+# waiver, each entry requires both fixed retail identities, the bounded source
+# body at the receiver, and the original helper call at its caller.  Removing
+# the body from both functions or flattening the caller therefore re-opens the
+# ordinary Dreamcast omissions.
+PROVEN_BODY_RELOCATIONS: dict[
+        tuple[str, int], ProvenBodyRelocation] = {
+    ("swapmgr.obj", 0x15EA00): ProvenBodyRelocation(
+        "Complete relocates swapManager::Update's refresh-loop body into "
+        "update_all_slots while OnWidgetDeselect retains the Update helper "
+        "boundary",
+        "src/swapmgr.cpp", "swapManager::update_all_slots", 0x005B0EF0,
+        "swapManager::OnWidgetDeselect", 0x005B10D0,
+        r"\A\s*update_all_slots\s*\(\s*\)\s*;\s*\Z",
+        r"\bGetPrimarySkill\s*\([^;]*\).*?"
+        r"\bBroadcastMessage\s*\([^;]*\).*?"
+        r"\bUpdateSlot\s*\(",
+        r"case\s+kSwapRefreshLeft\s*:\s*"
+        r"case\s+kSwapRefreshRight\s*:\s*"
+        r"gUnnamed6a3d08\s*=\s*1\s*;\s*"
+        r"Update\s*\(\s*\)\s*;\s*"
+        r"DrawSwapWin\s*\(\s*\)\s*;\s*"
+        r"DrawSelector\s*\(\s*\)\s*;",
+        ("hero::GetPrimarySkill", "heroWindow::BroadcastMessage")),
 }
 
 
@@ -3963,6 +4005,22 @@ def proven_dc_only_removed_helpers(
     return frozenset(helpers), tuple(descriptions)
 
 
+def body_relocation_satisfied(
+        relocation: ProvenBodyRelocation, caller_body: str,
+        receiver_body: str, boundary_body: str,
+        current_vas: set[int]) -> bool:
+    """Whether one independently proved Complete body relocation survives."""
+    if relocation.receiver_va not in current_vas \
+            or relocation.boundary_va not in current_vas:
+        return False
+    return re.search(relocation.caller_pattern, _source.mask(caller_body),
+                     re.DOTALL) is not None \
+        and re.search(relocation.receiver_pattern, _source.mask(receiver_body),
+                      re.DOTALL) is not None \
+        and re.search(relocation.boundary_pattern, _source.mask(boundary_body),
+                      re.DOTALL) is not None
+
+
 def groups_without_helpers(groups: tuple[CallGroup, ...],
                            omitted: frozenset[str]) \
         -> tuple[CallGroup, ...]:
@@ -5481,6 +5539,45 @@ ShowWidget(195);
             removal_key, removal_body.replace("ShowWidget(195);", ""),
             removal_va, {removal_va})[0]:
         failures.append("erased Complete replacement group classified")
+    relocation = PROVEN_BODY_RELOCATIONS[("swapmgr.obj", 0x15EA00)]
+    relocation_caller = "update_all_slots();"
+    relocation_receiver = """\
+int value = heroes[side]->GetPrimarySkill(i);
+parent->BroadcastMessage(&msg);
+UpdateSlot(iHero, slot);
+"""
+    relocation_boundary = """\
+case kSwapRefreshLeft:
+case kSwapRefreshRight:
+    gUnnamed6a3d08 = 1;
+    Update();
+    DrawSwapWin();
+    DrawSelector();
+    break;
+"""
+    relocation_vas = {relocation.receiver_va, relocation.boundary_va}
+    if not body_relocation_satisfied(
+            relocation, relocation_caller, relocation_receiver,
+            relocation_boundary, relocation_vas):
+        failures.append("proved Complete helper-body relocation did not pass")
+    if body_relocation_satisfied(
+            relocation, "", relocation_receiver, relocation_boundary,
+            relocation_vas):
+        failures.append("body relocation with omitted forwarding helper passed")
+    if body_relocation_satisfied(
+            relocation, relocation_caller,
+            relocation_receiver.replace("GetPrimarySkill(i);", "stats[i];"),
+            relocation_boundary, relocation_vas):
+        failures.append("body relocation with helper omitted from both bodies passed")
+    if body_relocation_satisfied(
+            relocation, relocation_caller, relocation_receiver,
+            relocation_boundary.replace("Update();", "update_all_slots();"),
+            relocation_vas):
+        failures.append("flattened relocated Update helper boundary passed")
+    if body_relocation_satisfied(
+            relocation, relocation_caller, relocation_receiver,
+            relocation_boundary, {relocation.receiver_va}):
+        failures.append("body relocation without both retail identities passed")
     order_key = ("spells.obj", 0x152DEC)
     order_va = PROVEN_ORDER_SKEWS[order_key][0].caller_va
     complete_order = """\
@@ -9236,6 +9333,7 @@ def scan() -> tuple[
         set[AuditScope], set[str]]:
     """Return audited definitions, defects, scopes and proved DC-only facts."""
     current = _current_functions()
+    current_vas = {rva + common.IMAGE_BASE for rva in current}
     exact_vas = _current_exact_vas()
     calls = _xref_calls()
     corpus = dreamcast.Corpus()
@@ -9281,9 +9379,12 @@ def scan() -> tuple[
             lambda callee: transferred(key, callee, body))
         removed, removal_descriptions = proven_dc_only_removed_helpers(
             key, body, va, exact_vas)
+        relocated, relocation_descriptions = relocated_body_helpers(key, body)
+        removed = frozenset(set(removed) | set(relocated))
         if removed:
             groups = groups_without_helpers(groups, removed)
             dc_only.update(removal_descriptions)
+            dc_only.update(relocation_descriptions)
         helpers, descriptions = proven_dc_only_order_helpers(
             key, body, va, exact_vas)
         if helpers:
@@ -9314,6 +9415,33 @@ def scan() -> tuple[
         return transfer_satisfied(
             transfer, caller_body, receiver_body, exact_vas)
 
+    def relocated_body_helpers(
+            key: tuple[str, int], caller_body: str) \
+            -> tuple[frozenset[str], tuple[str, ...]]:
+        relocation = PROVEN_BODY_RELOCATIONS.get(key)
+        if relocation is None:
+            return frozenset(), ()
+        path = common.HOMM3_DIR / relocation.receiver_path
+        text = path.read_text(errors="replace")
+        receiver_defs = _source.find_definitions(
+            text, relocation.receiver_name)
+        boundary_defs = _source.find_definitions(
+            text, relocation.boundary_name)
+        if len(receiver_defs) != 1 or len(boundary_defs) != 1:
+            return frozenset(), ()
+        receiver = receiver_defs[0]
+        boundary = boundary_defs[0]
+        receiver_body = text[
+            receiver.body_open + 1:receiver.body_close]
+        boundary_body = text[
+            boundary.body_open + 1:boundary.body_close]
+        if not body_relocation_satisfied(
+                relocation, caller_body, receiver_body, boundary_body,
+                current_vas):
+            return frozenset(), ()
+        return (frozenset(relocation.relocated_helpers),
+                (relocation.description,))
+
     seen_keys: set[tuple[str, int]] = set()
     for claim in dreamcast._source_claims():
         rva = claim.va - common.IMAGE_BASE
@@ -9343,8 +9471,10 @@ def scan() -> tuple[
         dc_only.update(removal_descriptions)
         preliminary = missing_from_body(
             shape_body, [ref.name for ref in refs], key)
+        relocated, relocation_descriptions = relocated_body_helpers(key, body)
+        dc_only.update(relocation_descriptions)
         preliminary = [(callee, helper) for callee, helper in preliminary
-                       if callee not in removed]
+                       if callee not in removed and callee not in relocated]
         names = attested(key, refs) if preliminary else set()
         body_missing = False
         for callee, helper in preliminary:
@@ -9407,6 +9537,12 @@ def scan() -> tuple[
                 refs = calls[key]
                 preliminary = missing_from_body(
                     body, [ref.name for ref in refs], key)
+                relocated, relocation_descriptions = relocated_body_helpers(
+                    key, body)
+                dc_only.update(relocation_descriptions)
+                preliminary = [
+                    (callee, helper) for callee, helper in preliminary
+                    if callee not in relocated]
                 names = attested(key, refs) if preliminary else set()
                 body_missing = False
                 for callee, helper in preliminary:

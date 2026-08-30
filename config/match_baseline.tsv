@@ -1109,7 +1109,7 @@ events	?DoAIEvent@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@@Z	100.00
 # synth PDB - returned the row to master's own 98.5741 to the digit
 # with events.cpp untouched. Cross-generation noise, the
 # recruit::Update revert-control precedent; hist keeps 99.1139.
-events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	98.5741	99.0481	99.1139	0xad470
+events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	99.0481	99.0481	99.1139	0xad470
 events	?DoCustomArtifact@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	99.1492	99.1492	99.1492	0x9f070
 events	?DoCustomResource@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa4780
 events	?DoCustomSpellScroll@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	97.4451	97.4451	97.4451	0xa5a80
@@ -1224,7 +1224,7 @@ events	?monsters_join@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@
 # (push 0xb4 in townManager::Open), layout-required and not gateable
 # per-TU. hist keeps 100.0000; the saturation law says a later
 # declarator can carry it back.
-events	?monsters_sell_out@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	99.9517	100.0000	100.0000	0xa7250
+events	?monsters_sell_out@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	100.0000	100.0000	100.0000	0xa7250
 events	?show_rewards@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@2@J@Z	100.0000	100.0000	100.0000	0xa0b00
 exec	?AddManager@executive@@QAEHPAVbaseManager@@H@Z	100.0000	100.0000	100.0000	0xb0b20
 exec	?CallManager@executive@@QAEXPAVbaseManager@@@Z	100.0000	100.0000	100.0000	0xb0c70
@@ -2893,6 +2893,7 @@ swapmgr	??_GTSwapWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1ae390
 swapmgr	?Close@swapManager@@UAEXXZ	100.0000	100.0000	100.0000	0x1aed20
 swapmgr	?DrawSelector@swapManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1aedc0
 swapmgr	?IsLeftHero@swapManager@@QAE_NXZ	100.0000	100.0000	100.0000	0x1b1380
+swapmgr	?OnWidgetDeselect@swapManager@@QAEXAAVmessage@@AAH@Z	88.4550	88.4550	88.4550	0x1b10d0
 swapmgr	?SendChat@CSwapManagerChatEdit@@UAEXPBDH@Z	100.0000	100.0000	100.0000	0x1ae370
 swapmgr	?SwapMons@swapManager@@QAEXXZ	79.2453	79.2453	79.2453	0x1b0da0
 swapmgr	?UpdateArrows@TSwapWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1ae430

@@ -8283,6 +8283,7 @@ void advManager::SetHeroContext(int heroId, int bInMove, unsigned char waitingPl
         curr->restore_cell();
     }
 
+    unsigned char screen_redrawn = 0;
     if ((player->IsLocalHuman() || !gUnnamed698790)
         && MapExtraPosAndAdjacentsSet(curr->x, curr->y, curr->z,
                                       gMapVisibilityBit)) {

@@ -260,6 +260,48 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-30 — `swapManager::OnWidgetDeselect` opens a new 680-byte
+  Complete body at 88.4550% while preserving every recovered helper
+  boundary.**  Dreamcast fixes the source signature as
+  `void(message&, int&)` and supplies the backpack, quest-log, refresh,
+  receive-from-ally, and trade-completion arms.  Retail independently fixes
+  Complete's shifted widget ids, the two positive `IsLeftHero()` /
+  `IsRightHero()` quest predicates, and the later protocol ids.  The current
+  body at `0x005b10d0` has the target's **39 / 39 CFG-block inventory and
+  exact 17-branch / five-return sequence**.  Its remaining differences are
+  the two inline network-message constructor schedules and their stack homes,
+  not permission to erase `UpdateBackpack`, `DrawSwapWin`, `SendHeroUpdate`,
+  `Update`, `DrawSelector`, `OnReceiveFromAlly`, or `GetOtherHero`.
+
+  Complete relocates the substantial Dreamcast `swapManager::Update` refresh
+  loops into `update_all_slots`, but retail retains the `Update()` call in
+  this handler.  A narrow asymmetric rule admits that one body relocation
+  only when the exact forwarding wrapper, both fixed retail identities, the
+  `GetPrimarySkill` / `BroadcastMessage` / `UpdateSlot` receiver facts, and
+  the `Update` boundary between the proved surrounding statements all remain.
+  Negative controls prove an erased wrapper, a helper omitted from both
+  bodies, a flattened handler call, or a missing retail identity all fail.
+
+- **2026-08-30 — `WinGraph.h` again owns the shared `RGBto16` source
+  boundary, with no Windows-score sacrifice.**  Dreamcast xrefs prove the
+  header helper is consumed by `mouseManager::LoadFrame`,
+  `combatManager::DrawBolt`, and the mouse-surface setup in wingraph.  The
+  former TU-local facsimiles and hand-expanded two-channel expressions are
+  replaced by one public inline with the shared R/G/B mask domain.  VC6 emits
+  no stray out-of-line body: `LoadFrame` remains **99.3103%** with its exact
+  three-block / one-branch shape, `DrawBolt` remains **94.9073%**, and the
+  815-byte `DDInitGraphics` remains **100.0000%**.  This is a byte-flat but
+  source-positive correction; the recovered boundary is not removed merely
+  because it does not immediately raise a local percentage.
+
+- **2026-08-30 — `advManager::SetHeroContext` restores Dreamcast's initialized
+  `screen_redrawn` local at zero code cost.**  Raw source order places
+  `unsigned char screen_redrawn = 0;` between the old-cell restore and the
+  visibility/redraw test.  VC6 removes the unused local completely, so retail
+  `0x00417b20` stays **99.2746% with 80 / 80 CFG blocks and its 54-branch /
+  one-return sequence unchanged**.  The sole residual remains the already
+  classified two-instruction `routeTarget` scheduling difference.
+
 - **2026-08-30 — `TSellArtifactWindow::Update` is byte-exact from the
   retained Dreamcast helper graph, while `swapManager::update_all_slots`
   opens a new retail body without flattening its proved enum ABI.**  The

@@ -702,7 +702,7 @@ void TCSLock::TCSLock(CRITICAL_SECTION* lpCriticalSection)
 // The colorkey is `((G1*255)/255 & G1) | ((G2*255)/255 & G2)` with
 // G1 = [0x68c868], G2 = [0x68c864] read as DWORDS - the 0x80808081
 // multiply/shr-7 pair is the unsigned /255 reciprocal. That is the
-// RGBto16 inline mousemgr.h already attests (DC WinGraph.h:55) with
+// WinGraph.h's RGBto16 inline (DC WinGraph.h:55) with
 // two of its three channel terms surviving; the two globals are the
 // live 16-bit channel masks.
 // The vtable offsets prove IDirectDrawSurface4; the 0x44e250 callee is
@@ -723,9 +723,7 @@ void mouseManager::LoadFrame(int new_frame)
     DDBLTFX fx;
     memset(&fx, 0, sizeof(fx));
     fx.dwSize = sizeof(fx);
-    fx.dwFillColor =
-        ((255 * gColorMask68c864 / 255) & gColorMask68c864) |
-        ((255 * gColorMask68c868 / 255) & gColorMask68c868);
+    fx.dwFillColor = RGBto16(0, 255, 255);
     gpDDSMouseSurface->Blt(0, 0, 0, DDBLT_COLORFILL, &fx);
 
     DDSURFACEDESC surfaceDesc;

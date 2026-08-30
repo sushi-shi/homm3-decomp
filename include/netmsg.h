@@ -102,6 +102,8 @@ enum eRS_Messages {
     RS_MAP_CHANGE_START = 1049,
     RS_MAP_CHANGE_END = 1063,
     RS_TRADE_REQUEST = 1064,
+    RS_TRADE_REQUEST_DONE = 1065,
+    RS_GIVE_ME_STUFF = 1070,
     RS_PLAYER_ACTIVE = 1071,
 #ifdef HOMM3_REMOTE_SEND_CHAT_DECLS
     // SendChat's ping command constructs the next two rungs directly.

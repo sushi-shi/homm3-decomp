@@ -9,11 +9,10 @@
 // hex-taking SpellEffect; armygrp.h keeps that slice behind this view.
 #include "armygrp.h"
 #include "spells.h"
-// DrawBolt writes 16-bit pixels straight into the screen bitmap, so
-// it needs the Bitmap16Bit layout; the channel masks its RGBto16
-// packs them with are declared in spells.h, for a measured reason
-// recorded there.
+// DrawBolt writes 16-bit pixels straight into the screen bitmap, so it needs
+// the Bitmap16Bit layout and WinGraph.h's recovered RGBto16 boundary.
 #include "bitmap16.h"
+#include "wingraph.h"  // DC-proven RGBto16 header helper and channel domain
 // ShowSpellMessage's Age arm reads origHitPoints (+0x6c) and the
 // poisonPenalty multiplier (+0x4a4) to price the hit points the stack
 // just lost; army.h keeps both behind the round view.
@@ -124,23 +123,6 @@ static const char* CreatureName(int type, long count)
     // literal; the linker folds our COMDAT onto it, so the only delta is
     // a reloc NAME (masked).
     return "";
-}
-
-// WinGraph.h:55's RGBto16 (dc 0xff780) as retail's spells.cpp saw it -
-// a header inline with no retail out-of-line body, which DrawBolt
-// expands TEN times. Spelled file-locally for exactly the reason
-// CreatureName below is; mousemgr.cpp already carries its own
-// hand-spelled two-term copy of the same expansion.
-//
-// The `x * mask / 255 & mask` term is byte-exact in both: the divide is
-// the unsigned 0x80808081 reciprocal (`mul` then `shr edx, 7`), which
-// is what fixes the product as UNSIGNED - i.e. the mask, not the
-// component, decides the expression's type.
-static unsigned RGBto16(int r, int g, int b)
-{
-    return ((r * gColorMask68c860 / 255) & gColorMask68c860)
-        | ((g * gColorMask68c864 / 255) & gColorMask68c864)
-        | ((b * gColorMask68c868 / 255) & gColorMask68c868);
 }
 
 // army::get_controlling_side (0x440140) as retail's spells.cpp saw it.

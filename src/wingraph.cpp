@@ -333,9 +333,7 @@ void DDInitGraphics()
              0x28b);
 
     DDCOLORKEY colorKey;
-    unsigned long color =
-        ((255 * gColorMask68c864 / 255) & gColorMask68c864) |
-        ((255 * gColorMask68c868 / 255) & gColorMask68c868);
+    unsigned long color = RGBto16(0, 255, 255);
     colorKey.dwColorSpaceLowValue = color;
     colorKey.dwColorSpaceHighValue = color;
     gpDDSMouseSurface->SetColorKey(DDCKEY_SRCBLT, &colorKey);
