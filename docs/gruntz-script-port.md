@@ -260,6 +260,32 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-30 — `SetCurrentMap` reaches 99.987404% by restoring the
+  inherited constructor and broadcast boundaries.** The mandatory Dreamcast
+  pass (`dc:0x13bc60`) records 109 breakpoint rows, 78 inferred blocks, and
+  nine locals. Raw NB11 specifically names the later widget pointer `temp`
+  and the seat-loop `i`, `player`, `w`, and `saveStatus` locals in nested
+  scopes. Its xref graph also proves the final `SendPlayerPositions` call.
+  The dependent seat-record dossier (`dc:0x147574`) proves that
+  `CNetPlayerHandlerPlayer` first invokes the explicit
+  `CNetPlayerInfo::CNetPlayerInfo` boundary; that base has distinct dpid and
+  name-zeroing statement rows before the derived fields.
+
+  Complete extends the base with the retail-only `version` member. Keeping its
+  initialization in that base boundary makes VC6 schedule the expanded
+  constructor exactly at both `SetCurrentMap` array sites and lifts the
+  2,185-byte function from **99.67003% to 99.987404%**. Replacing
+  `OnNewPlayerMsg`'s artificial `BroadcastPlayerPositions` shim with the
+  Dreamcast-proven `SendPlayerPositions(0)` boundary simultaneously retires
+  its frozen helper omission without changing that caller's **97.06278%**
+  score. The same constructor correction raises `SetupAdvancedOptions` from
+  **98.8733% to 99.38461%**, while the standalone 64-byte derived constructor
+  remains exact. `SetCurrentMap` retains all 101 Windows blocks, 51 branches,
+  and one return; its sole code residual is one commutative SIB base/index
+  encoding in the handicap read. Fatal rules and embedded negative controls
+  preserve the constructor declaration/body/order and all five named
+  `SetCurrentMap` locals/scopes.
+
 - **2026-08-30 — `CheckForGrailBuildingWin` restores two named helpers and
   its complete Dreamcast point-local shape.** Raw NB11 for `dc:0x190124`
   records procedure locals `any_town_loc` then `grail_town_loc`, a nested

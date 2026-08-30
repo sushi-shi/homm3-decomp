@@ -1367,6 +1367,33 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"for\s*\(\s*i\s*=\s*0\s*;[^)]*\)\s*\{\s*int\s+strNbr\s*="
             r"\s*0\s*;", 1, 1),
     ),
+    ("singleselectionwindow.obj", 0x13BC60): (
+        SourceRule(
+            "SetCurrentMap keeps Dreamcast's function-scope msg after the "
+            "map-count guard",
+            r"\A\s*if\s*\(\s*map\s*>=\s*static_cast\s*<\s*int\s*>\s*"
+            r"\(\s*GetMapCount\s*\(\s*\)\s*\)\s*\)\s*return\s*;\s*"
+            r"message\s+msg\s*;"),
+        SourceRule(
+            "SetCurrentMap keeps Dreamcast's bUpdate-scope widget pointer "
+            "under its recovered temp name",
+            r"else\s*\{\s*widget\s*\*\s*temp\s*=\s*GetWidget\s*\(\s*"
+            r"101\s*\)\s*;\s*if\s*\(\s*temp\s*->\s*status\s*&\s*"
+            r"widget\s*::\s*WIDGET_ACTIVE\s*\)\s*\{"),
+        SourceRule(
+            "SetCurrentMap keeps Dreamcast's second i, player, w and "
+            "saveStatus locals in their recovered loop scopes and order",
+            r"if\s*\(\s*m_flag64\s*\)\s*\{\s*for\s*\(\s*int\s+i\s*="
+            r"\s*0\s*;\s*i\s*<\s*CNetPlayerHandler\s*::\s*MAX_PLAYERS"
+            r"\s*;\s*\+\+\s*i\s*\)\s*\{\s*"
+            r"CNetPlayerHandlerPlayer\s*\*\s*player\s*=\s*"
+            r"m_players\.GetPlayerInPos\s*\(\s*i\s*\)\s*;\s*"
+            r"if\s*\(\s*!\s*player\s*\)\s*player\s*=\s*"
+            r"m_players\.GetCompPlayerInPos\s*\(\s*i\s*\)\s*;.*?"
+            r"widget\s*\*\s*w\s*=\s*GetWidget\s*\(\s*207\s*\+\s*i"
+            r"\s*\)\s*;\s*if\s*\(\s*w\s*\)\s*\{\s*"
+            r"int\s+saveStatus\s*=\s*w\s*->\s*status\s*;"),
+    ),
     ("singleselectionwindow.obj", 0x140D74): (
         SourceRule(
             "SendPlayerPositions keeps Dreamcast's explicit two-array "
@@ -1833,6 +1860,43 @@ def single_selection_window_contract_violations(
              "m_compPlayer arrays and two-pointer declaration in the header, "
              "with its cpp constructor boundary, CNetMsg base initializer, "
              "and ordered memcpy statements")]
+
+
+def netplayer_constructor_contract_violations(
+        header_text: str, source_text: str) -> list[tuple[int, str]]:
+    """Audit the shared CNetPlayerInfo base-constructor boundary.
+
+    Dreamcast CodeView records the base constructor in struct.h:340, with
+    separate dpid and sName[0] statement rows, and records the derived
+    CNetPlayerHandlerPlayer constructor calling that boundary before its own
+    fields. Complete adds the version member to the retail base layout. The
+    x86 constructor and all two-array expansions corroborate assigning that
+    member in the base boundary before the derived heroIndex statement.
+    """
+    header = _source.mask(header_text)
+    declaration = (
+        r"\bclass\s+CNetPlayerInfo\s*\{.*?\bint\s+version\s*;.*?"
+        r"\bCNetPlayerInfo\s*\(\s*\)\s*;")
+    source = _source.mask(source_text)
+    base_definition = (
+        r"\binline\s+CNetPlayerInfo\s*::\s*CNetPlayerInfo\s*\(\s*\)"
+        r"\s*\{\s*dpid\s*=\s*0\s*;\s*sName\s*\[\s*0\s*\]\s*=\s*"
+        r"0\s*;\s*version\s*=\s*\*\s*gpVideoGameState\s*;\s*\}")
+    derived_definition = (
+        r"\bCNetPlayerHandlerPlayer\s*::\s*CNetPlayerHandlerPlayer\s*"
+        r"\(\s*\)\s*\{\s*heroIndex\s*=\s*-\s*1\s*;\s*townIndex\s*="
+        r"\s*-\s*1\s*;")
+    if (re.search(declaration, header, re.DOTALL) is not None
+            and re.search(base_definition, source, re.DOTALL) is not None
+            and re.search(derived_definition, source, re.DOTALL) is not None):
+        return []
+    token = re.search(r"\bCNetPlayerInfo\b", header)
+    line = header_text.count("\n", 0, token.start()) + 1 if token else 1
+    return [(line,
+             "CNetPlayerInfo must retain Dreamcast's explicit default-"
+             "constructor declaration and cpp boundary, with ordered dpid, "
+             "sName[0], and Complete-only version initialization before the "
+             "derived seat-record fields")]
 
 
 def update_player_pos_signature_violations(
@@ -2431,6 +2495,56 @@ for (i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
         if not any(description in rule.description for rule in
                    contract_violations(probe, host_key)):
             failures.append("broken SetupAdvancedOptions " + description
+                            + " source shape passed")
+    current_map_key = ("singleselectionwindow.obj", 0x13BC60)
+    current_map_probe = """\
+if (map >= static_cast<int>(GetMapCount()))
+    return;
+message msg;
+if (bUpdate) {
+    if (mapChanged) {
+        DrawWindow(0, 0xffff0001, 0xffff);
+    } else {
+        widget* temp = GetWidget(101);
+        if (temp->status & widget::WIDGET_ACTIVE) {
+            temp->Draw();
+        }
+    }
+}
+if (m_flag64) {
+    for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
+        CNetPlayerHandlerPlayer* player = m_players.GetPlayerInPos(i);
+        if (!player)
+            player = m_players.GetCompPlayerInPos(i);
+        player->handicap = gpGame->setup.handicap[i];
+        widget* w = GetWidget(207 + i);
+        if (w) {
+            int saveStatus = w->status;
+        }
+    }
+}
+"""
+    if contract_violations(current_map_probe, current_map_key):
+        failures.append("aligned SetCurrentMap local scopes did not pass")
+    current_map_mutations = (
+        (current_map_probe.replace("message msg;", "message tempMsg;"),
+         "function-scope msg"),
+        (current_map_probe.replace("widget* temp = GetWidget(101);",
+                                   "widget* w = GetWidget(101);"),
+         "bUpdate-scope widget"),
+        (current_map_probe.replace("for (int i = 0;", "for (int pos = 0;"),
+         "second i"),
+        (current_map_probe.replace("CNetPlayerHandlerPlayer* player =",
+                                   "CNetPlayerHandlerPlayer* p ="),
+         "player"),
+        (current_map_probe.replace("int saveStatus = w->status;",
+                                   "int saved = w->status;"),
+         "saveStatus"),
+    )
+    for probe, description in current_map_mutations:
+        if not any(description in rule.description for rule in
+                   contract_violations(probe, current_map_key)):
+            failures.append("broken SetCurrentMap " + description
                             + " source shape passed")
     send_key = ("singleselectionwindow.obj", 0x140D74)
     send_probe = """\
@@ -4475,6 +4589,46 @@ inline CUpdatePlayerPosMsg::CUpdatePlayerPosMsg(
     if any(not single_selection_window_contract_violations(header, source)
            for header, source in broken_update_probes):
         failures.append("broken CUpdatePlayerPosMsg constructor shape passed")
+    netplayer_header_probe = """\
+class CNetPlayerInfo {
+public:
+    unsigned long dpid;
+    char sName[24];
+    int version;
+    CNetPlayerInfo();
+};
+"""
+    netplayer_source_probe = """\
+inline CNetPlayerInfo::CNetPlayerInfo()
+{
+    dpid = 0;
+    sName[0] = 0;
+    version = *gpVideoGameState;
+}
+CNetPlayerHandlerPlayer::CNetPlayerHandlerPlayer()
+{
+    heroIndex = -1;
+    townIndex = -1;
+}
+"""
+    if netplayer_constructor_contract_violations(
+            netplayer_header_probe, netplayer_source_probe):
+        failures.append("aligned CNetPlayerInfo constructor did not pass")
+    broken_netplayer_probes = (
+        (netplayer_header_probe.replace("CNetPlayerInfo();", ""),
+         netplayer_source_probe),
+        (netplayer_header_probe, netplayer_source_probe.replace(
+            "dpid = 0;\n    sName[0] = 0;",
+            "sName[0] = 0;\n    dpid = 0;")),
+        (netplayer_header_probe, netplayer_source_probe.replace(
+            "version = *gpVideoGameState;\n}",
+            "}\n").replace(
+                "{\n    heroIndex = -1;",
+                "{\n    version = *gpVideoGameState;\n    heroIndex = -1;")),
+    )
+    if any(not netplayer_constructor_contract_violations(header, source)
+           for header, source in broken_netplayer_probes):
+        failures.append("broken CNetPlayerInfo constructor shape passed")
     update_pos_header_probe = """\
 void OnUpdatePlayerPosMsg(CNetMsg* pNetMsg);
 """
@@ -5112,6 +5266,17 @@ def scan() -> tuple[
     missing.extend(FileContractViolation(selection_relpath, line,
                                          description)
                    for line, description in selection_defects)
+
+    netplayer_header = common.HOMM3_DIR / "include/netplayer.h"
+    netplayer_text = netplayer_header.read_text(errors="replace")
+    netplayer_relpath = "include/netplayer.h"
+    audited.add(_file_audit_scope(netplayer_relpath))
+    netplayer_defects = netplayer_constructor_contract_violations(
+        netplayer_text, selection_source_text)
+    checked += 1
+    missing.extend(FileContractViolation(netplayer_relpath, line,
+                                         description)
+                   for line, description in netplayer_defects)
 
     selection_public_header = (common.HOMM3_DIR
                                / "include/singleselectionwindow.h")
