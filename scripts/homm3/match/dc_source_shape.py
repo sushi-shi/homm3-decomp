@@ -405,6 +405,28 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"cell\s*->\s*type_value\s*=\s*0\s*;\s*"
             r"prisoner\s*->\s*obscure_cell\s*\(\s*\)\s*;"),
     ),
+    ("cmbtmgr.obj", 0x5E09C): (
+        SourceRule(
+            "LoadArmies keeps raw NB11's procedure-scope side local before "
+            "the outer loop",
+            r"\A\s*int\s+side\s*;\s*for\s*\(\s*side\s*=\s*0\s*;\s*"
+            r"side\s*<\s*2\s*;\s*side\s*\+\+\s*\)"),
+        SourceRule(
+            "LoadArmies keeps raw NB11's const grouped byte and const "
+            "layout int locals in record order",
+            r"const\s+unsigned\s+char\s+grouped\s*=\s*combat_hero\s*&&"
+            r".*?;\s*const\s+int\s+layout\s*=\s*group\s*->\s*"
+            r"GetNumArmies\s*\(\s*\)\s*-\s*1\s*;"),
+        SourceRule(
+            "LoadArmies keeps raw NB11's per-slot hex then army-reference "
+            "thisArmy locals and invokes Init/LoadResources through it",
+            r"if\s*\(\s*armyGroups\s*\[\s*side\s*\]\s*->\s*armies\s*"
+            r"\[\s*i\s*\]\s*==\s*CREATURE_NONE\s*\)\s*continue\s*;\s*"
+            r"int\s+hex\s*;\s*army\s*&\s*thisArmy\s*=\s*armies\s*\["
+            r"\s*side\s*\]\s*\[\s*placed\s*\]\s*;.*?"
+            r"thisArmy\s*\.\s*Init\s*\(.*?\)\s*;\s*"
+            r"thisArmy\s*\.\s*LoadResources\s*\(\s*\)\s*;"),
+    ),
     ("cmbtmgr.obj", 0x5F934): (
         SourceRule(
             "SetNextArmy keeps both Dreamcast army::get_controlling_side "
@@ -2749,6 +2771,46 @@ if (current_town->visitingHeroId != -1)
     if not any("final nested GetHero" in rule.description for rule in
                contract_violations(split_visiting_effect, enter_town_key)):
         failures.append("split AI_enter_town final helper group passed")
+    load_armies_key = ("cmbtmgr.obj", 0x5E09C)
+    load_armies_probe = """\
+int side;
+for (side = 0; side < 2; side++) {
+    hero* combat_hero = heroes[side];
+    armyGroup* group = armyGroups[side];
+    const unsigned char grouped =
+        combat_hero && (combat_hero->formation & 1) && sideIsAI[side];
+    const int layout = group->GetNumArmies() - 1;
+    for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
+        if (armyGroups[side]->armies[i] == CREATURE_NONE)
+            continue;
+        int hex;
+        army& thisArmy = armies[side][placed];
+        choose_hex(grouped, layout, &hex);
+        thisArmy.Init(group->armies[i], group->numTroops[i], combat_hero,
+                      side, placed, hex, i);
+        thisArmy.LoadResources();
+    }
+}
+"""
+    if contract_violations(load_armies_probe, load_armies_key):
+        failures.append("aligned LoadArmies local shape did not pass")
+    loop_scoped_side = load_armies_probe.replace(
+        "int side;\nfor (side = 0;", "for (int side = 0;")
+    if not any("procedure-scope side" in rule.description for rule in
+               contract_violations(loop_scoped_side, load_armies_key)):
+        failures.append("loop-scoped LoadArmies side passed")
+    mutable_layout = load_armies_probe.replace(
+        "const unsigned char grouped", "unsigned char grouped").replace(
+            "const int layout", "int layout")
+    if not any("const grouped" in rule.description for rule in
+               contract_violations(mutable_layout, load_armies_key)):
+        failures.append("mutable LoadArmies grouped/layout locals passed")
+    direct_army_access = load_armies_probe.replace(
+        "int hex;\n        army& thisArmy = armies[side][placed];",
+        "int hex;").replace("thisArmy.", "armies[side][placed].")
+    if not any("army-reference thisArmy" in rule.description for rule in
+               contract_violations(direct_army_access, load_armies_key)):
+        failures.append("flattened LoadArmies thisArmy reference passed")
     set_next_key = ("cmbtmgr.obj", 0x5F934)
     set_next_probe = """\
 currentSide = stack->get_controlling_side();

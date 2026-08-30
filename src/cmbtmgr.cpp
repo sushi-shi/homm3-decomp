@@ -492,6 +492,15 @@ void combatManager::FreeIcons()
 //     after the two arms rejoin; writing the two-level index inside each
 //     arm duplicates it and costs 95.90 -> 94.18.
 //
+// DREAMCAST LOCALS RESTORED 2026-08-30, byte-flat at 99.35275%. Raw NB11
+// places procedure-scope `side` before the outer loop, then records const
+// unsigned-char `grouped` and const-int `layout` in the side scope. The
+// occupied-slot scope records `hex` followed by an `army& thisArmy`; its
+// Init and LoadResources calls are source-visible in the SH4 line/xref
+// stream. The prior names (`tight_formation`, `last`) and repeated direct
+// array receiver were a score-neutral flattening. Fatal rules now preserve
+// these five names, types, declaration scopes/order and receiver boundary.
+//
 // Residual (99.3528%): one comparison. Retail tests the combat hero with
 // `cmp eax, esi` against the register still holding the zero it has just
 // stored into numArmies[side], where our CL emits `test eax, eax`.
@@ -506,7 +515,8 @@ void combatManager::FreeIcons()
 VA(0x00463600, 0x3D8)  // anchor-callee, dc 0x5e09c
 void combatManager::LoadArmies(unsigned char is_surrounded)
 {
-    for (int side = 0; side < 2; side++) {
+    int side;
+    for (side = 0; side < 2; side++) {
         for (int slot = 0; slot < 20; slot++) {
             armies[side][slot].numTroops = 0;
             armies[side][slot].creatureType = CREATURE_NONE;
@@ -516,29 +526,27 @@ void combatManager::LoadArmies(unsigned char is_surrounded)
         int placed = 0;
         hero* combat_hero = heroes[side];
         armyGroup* group = armyGroups[side];
-        unsigned char tight_formation;
-        if (combat_hero && (combat_hero->formation & 1) && sideIsAI[side])
-            tight_formation = 1;
-        else
-            tight_formation = 0;
-        int last = group->GetNumArmies() - 1;
+        const unsigned char grouped =
+            combat_hero && (combat_hero->formation & 1) && sideIsAI[side];
+        const int layout = group->GetNumArmies() - 1;
         for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
             if (armyGroups[side]->armies[i] == CREATURE_NONE)
                 continue;
             int hex;
+            army& thisArmy = armies[side][placed];
             if (is_surrounded) {
                 hex = gCombatDeploySurroundedHexes63d0e0[side][placed];
             } else {
                 int ordinal;
-                if (tight_formation)
-                    ordinal = gCombatDeploySlots63d1dc[last][placed];
+                if (grouped)
+                    ordinal = gCombatDeploySlots63d1dc[layout][placed];
                 else
-                    ordinal = gCombatDeploySlots63d118[last][placed];
+                    ordinal = gCombatDeploySlots63d118[layout][placed];
                 hex = gCombatDeployHexes63d0a8[side][ordinal];
             }
-            armies[side][placed].Init(group->armies[i], group->numTroops[i],
-                                      combat_hero, side, placed, hex, i);
-            armies[side][placed].LoadResources();
+            thisArmy.Init(group->armies[i], group->numTroops[i], combat_hero,
+                          side, placed, hex, i);
+            thisArmy.LoadResources();
             placed++;
         }
         if (combat_hero && !is_surrounded) {
