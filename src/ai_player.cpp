@@ -4383,14 +4383,18 @@ unsigned char consider_hiring(long player_id, hero* candidate)
 // staged on copies, the candidate is teleported onto the town square, and
 // find_all_destinations prices what the new hero could reach - shared
 // against every own hero whose cell the search touched.
-// Residual (99.95%): every instruction, branch and the frame agree; the
-// delta is the scalar slot-homing permutation {player_id,-0x1c <-> i,-0x14}
-// (their colored partners hero_index/heroes_touched follow) plus the
-// point-temp/monster_cell pair {-0x24/-0x28 <-> -0x28/-0x20}, and the EH
-// unwind-table push addend (reloc addend, not a state count). Tried and
-// rejected: declaration-order hoists (byte-flat, twice), unifying the three
-// loop indices into one int i (98.20 - flips the loop-3 bitfield RMW to
-// memory form), block-scoping cell/monster_cell per loop (94.40).
+// Raw NB11 places all thirteen named DC locals in the procedure scope.  It
+// also names the non-const town::get_army overload; removing the earlier
+// const-receiver cast is byte-flat and the source-shape gate now protects it.
+// Residual (99.95219%): all 56 blocks and 481 instructions agree; only two
+// stack-color classes differ.  Retail uses {player_id,-0x14; i,-0x1c} where
+// our CL swaps them (their later best-value/touched partners follow), and
+// {-0x28 point temp; -0x20 monster_cell} where ours uses {-0x24;-0x28}.
+// The guided why-reg sweep tried all 17 applicable mutations without a gain.
+// Also rejected: declaration/initializer splits and hoists (byte-flat),
+// separate and for-scoped destination indices (byte-flat), swapping the
+// two hero-counter initializers (99.70), unifying all three indices (98.20),
+// and block-scoping cell/monster_cell per loop (94.40).
 VA(0x00431bd0, 0x64b)  // anchor-callee (consider_hiring 0x432bce + AI_arrange_army 0x431d9d), dc 0x34fb8
 long value_of_hiring(town* current_town, hero* candidate,
                      searchArray* search_array)
@@ -4398,7 +4402,7 @@ long value_of_hiring(town* current_town, hero* candidate,
     short player_id = current_town->owner;
     playerData* player = &gpGame->players[current_town->owner];
     armyGroup hero_army = candidate->army;
-    armyGroup town_army = static_cast<const town*>(current_town)->get_army();
+    armyGroup town_army = current_town->get_army();
     type_AI_creature_purchaser purchaser(player_id, current_town);
 
     candidate->turnExperienceToRVRatio = 0;

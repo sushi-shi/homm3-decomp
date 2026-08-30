@@ -278,6 +278,53 @@ PROVEN_ORDER_SKEWS: dict[tuple[str, int], tuple[ProvenOrderSkew, ...]] = {
 # graph: inlined accessors/operators, a source order hidden by scheduling, and
 # nesting within a single attested statement group.
 SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
+    ("ai_player.obj", 0x34FB8): (
+        SourceRule(
+            "value_of_hiring keeps Dreamcast's player_id, player, hero_army, "
+            "town_army and purchaser root-local setup, including the "
+            "non-const town::get_army source call",
+            r"\A\s*short\s+player_id\s*=\s*current_town\s*->\s*owner\s*;"
+            r"\s*playerData\s*\*\s*player\s*=\s*&\s*gpGame\s*->\s*players"
+            r"\s*\[\s*current_town\s*->\s*owner\s*\]\s*;\s*"
+            r"armyGroup\s+hero_army\s*=\s*candidate\s*->\s*army\s*;\s*"
+            r"armyGroup\s+town_army\s*=\s*current_town\s*->\s*get_army"
+            r"\s*\(\s*\)\s*;\s*type_AI_creature_purchaser\s+purchaser"
+            r"\s*\(\s*player_id\s*,\s*current_town\s*\)\s*;"),
+        SourceRule(
+            "value_of_hiring keeps Dreamcast's resources[7] and "
+            "population[14] locals and their save order",
+            r"\bint\s+resources\s*\[\s*7\s*\]\s*;\s*memcpy\s*\(\s*"
+            r"resources\s*,\s*player\s*->\s*resources\s*,\s*sizeof\s*\(\s*"
+            r"resources\s*\)\s*\)\s*;\s*short\s+population\s*\[\s*14"
+            r"\s*\]\s*;\s*memcpy\s*\(\s*population\s*,\s*current_town"
+            r"\s*->\s*population\s*,\s*sizeof\s*\(\s*population\s*\)"
+            r"\s*\)\s*;"),
+        SourceRule(
+            "value_of_hiring keeps Dreamcast's destinations, monsters, "
+            "destination and monster_cell local identities around the two "
+            "destination-pricing passes",
+            r"std\s*::\s*vector\s*<\s*HeroDestination\s*>\s+destinations"
+            r"\s*;.*?std\s*::\s*vector\s*<\s*pathCell\s*\*\s*>\s+monsters"
+            r"\s*;\s*long\s+total_value\s*=\s*0\s*;\s*HeroDestination\s+"
+            r"destination\s*;\s*pathCell\s*\*\s*monster_cell\s*;\s*"
+            r"unsigned\s+int\s+i\s*;\s*for\s*\(\s*i\s*=\s*0\s*;\s*i"
+            r"\s*<\s*destinations\s*\.\s*size\s*\(\s*\)\s*;"),
+        SourceRule(
+            "value_of_hiring keeps Dreamcast's heroes_touched then "
+            "best_hero_value initialization statements before the own-hero "
+            "pass",
+            r"\blong\s+heroes_touched\s*=\s*1\s*;\s*long\s+"
+            r"best_hero_value\s*=\s*0\s*;\s*for\s*\(\s*int\s+hero_index"),
+        SourceRule(
+            "value_of_hiring restores Dreamcast's hero army, resources and "
+            "town population snapshots in their recovered order",
+            r"candidate\s*->\s*owner\s*=\s*-\s*1\s*;\s*candidate\s*->\s*"
+            r"army\s*=\s*hero_army\s*;\s*memcpy\s*\(\s*player\s*->\s*"
+            r"resources\s*,\s*resources\s*,\s*sizeof\s*\(\s*resources\s*"
+            r"\)\s*\)\s*;\s*memcpy\s*\(\s*current_town\s*->\s*"
+            r"population\s*,\s*population\s*,\s*sizeof\s*\(\s*population"
+            r"\s*\)\s*\)\s*;"),
+    ),
     ("ai_player.obj", 0x2F694): (
         SourceRule(
             "fill_prohibited_array keeps Dreamcast's human_strength, "
@@ -2753,6 +2800,49 @@ gUnnamed67f574 = OldColorCycling;
                for rule in contract_violations(swapped_prison_coords,
                                                 prison_key)):
         failures.append("reordered DoEventPrison coordinates passed")
+    hiring_value_key = ("ai_player.obj", 0x34FB8)
+    hiring_value_probe = """\
+short player_id = current_town->owner;
+playerData* player = &gpGame->players[current_town->owner];
+armyGroup hero_army = candidate->army;
+armyGroup town_army = current_town->get_army();
+type_AI_creature_purchaser purchaser(player_id, current_town);
+int resources[7];
+memcpy(resources, player->resources, sizeof(resources));
+short population[14];
+memcpy(population, current_town->population, sizeof(population));
+std::vector<HeroDestination> destinations;
+std::vector<pathCell*> monsters;
+long total_value = 0;
+HeroDestination destination;
+pathCell* monster_cell;
+unsigned int i;
+for (i = 0; i < destinations.size(); ++i) {}
+long heroes_touched = 1;
+long best_hero_value = 0;
+for (int hero_index = 0; hero_index < player->numHeroes; ++hero_index) {}
+candidate->owner = -1;
+candidate->army = hero_army;
+memcpy(player->resources, resources, sizeof(resources));
+memcpy(current_town->population, population, sizeof(population));
+"""
+    if contract_violations(hiring_value_probe, hiring_value_key):
+        failures.append("aligned value_of_hiring source shape did not pass")
+    hiring_value_mutations = (
+        hiring_value_probe.replace(
+            "armyGroup town_army = current_town->get_army();",
+            "armyGroup town_army = "
+            "static_cast<const town*>(current_town)->get_army();"),
+        hiring_value_probe.replace("short player_id", "int player_id", 1),
+        hiring_value_probe.replace("pathCell* monster_cell;", "pathCell* cell;"),
+        hiring_value_probe.replace(
+            "long heroes_touched = 1;\nlong best_hero_value = 0;",
+            "long best_hero_value = 0;\nlong heroes_touched = 1;"),
+        hiring_value_probe.replace("int resources[7];", "int resources[8];"),
+    )
+    if any(not contract_violations(probe, hiring_value_key)
+           for probe in hiring_value_mutations):
+        failures.append("broken value_of_hiring source shape passed")
     prohibited_key = ("ai_player.obj", 0x2F694)
     prohibited_probe = """\
 long human_strength;
