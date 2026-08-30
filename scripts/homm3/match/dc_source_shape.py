@@ -1417,6 +1417,65 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"green_mask\s*\)\s*\|\s*\(\s*\(\s*b\s*/\s*blue_norm"
             r"\s*\)\s*&\s*blue_mask\s*\)", 1, 1),
     ),
+    ("palette.obj", 0x10B484): (
+        SourceRule(
+            "TPalette16::AdjustHSV keeps Dreamcast's three const unsigned "
+            "normalization statements, entry-10 loop, r/g/b and h/s/v "
+            "locals, and RGBToHSV helper boundary in source-row order",
+            r"\A\s*const\s+unsigned\s+int\s+red_norm\s*=\s*"
+            r"std\s*::\s*numeric_limits\s*<\s*int\s*>\s*::\s*max\s*"
+            r"\(\s*\)\s*/\s*red_mask\s*;\s*"
+            r"const\s+unsigned\s+int\s+green_norm\s*=\s*"
+            r"std\s*::\s*numeric_limits\s*<\s*int\s*>\s*::\s*max\s*"
+            r"\(\s*\)\s*/\s*green_mask\s*;\s*"
+            r"const\s+unsigned\s+int\s+blue_norm\s*=\s*"
+            r"std\s*::\s*numeric_limits\s*<\s*int\s*>\s*::\s*max\s*"
+            r"\(\s*\)\s*/\s*blue_mask\s*;.*?"
+            r"for\s*\(\s*int\s+i\s*=\s*10\s*;\s*i\s*<\s*256\s*;\s*"
+            r"\+\+\s*i\s*\)\s*\{\s*"
+            r"unsigned\s+int\s+r\s*=.*?;\s*"
+            r"unsigned\s+int\s+g\s*=.*?;\s*"
+            r"unsigned\s+int\s+b\s*=.*?;\s*"
+            r"float\s+h\s*;\s*float\s+s\s*;\s*float\s+v\s*;\s*"
+            r"RGBToHSV\s*\(\s*r\s*,\s*g\s*,\s*b\s*,\s*&\s*h\s*,\s*"
+            r"&\s*s\s*,\s*&\s*v\s*\)\s*;", 1, 1),
+        SourceRule(
+            "TPalette16::AdjustHSV keeps Dreamcast's nested hue interpolation, "
+            "shortest-path wrap choice, and final unit-interval correction",
+            r"if\s*\(\s*hue_adjust\s*>=\s*0\.0f\s*\)\s*\{\s*"
+            r"float\s+delta\s*=\s*hue\s*-\s*h\s*;\s*"
+            r"h\s*\+=\s*delta\s*\*\s*hue_adjust\s*;\s*"
+            r"if\s*\(\s*fabs\s*\(\s*delta\s*\)\s*>\s*0\.5\s*\)\s*"
+            r"\{\s*if\s*\(\s*delta\s*>\s*0\.0\s*\)\s*\{\s*"
+            r"h\s*\+=\s*1\.0f\s*-\s*hue_adjust\s*;\s*\}\s*else\s*"
+            r"\{\s*h\s*\+=\s*hue_adjust\s*;\s*\}\s*"
+            r"if\s*\(\s*h\s*>=\s*1\.0\s*\)\s*\{\s*"
+            r"h\s*-=\s*1\.0\s*;", 1, 1),
+        SourceRule(
+            "TPalette16::AdjustHSV keeps Dreamcast's independent saturation "
+            "then value guards, each with <=1 multiply and >1 reciprocal arms",
+            r"if\s*\(\s*saturation_adjust\s*>=\s*0\.0f\s*\)\s*\{\s*"
+            r"if\s*\(\s*saturation_adjust\s*<=\s*1\.0f\s*\)\s*\{\s*"
+            r"s\s*\*=\s*saturation_adjust\s*;\s*\}\s*else\s*\{\s*"
+            r"s\s*=\s*1\.0f\s*-\s*\(\s*1\.0f\s*-\s*s\s*\)\s*/\s*"
+            r"saturation_adjust\s*;\s*\}\s*\}\s*"
+            r"if\s*\(\s*value_adjust\s*>=\s*0\.0\s*\)\s*\{\s*"
+            r"if\s*\(\s*value_adjust\s*<=\s*1\.0f\s*\)\s*\{\s*"
+            r"v\s*\*=\s*value_adjust\s*;\s*\}\s*else\s*\{\s*"
+            r"v\s*=\s*1\.0f\s*-\s*\(\s*1\.0f\s*-\s*v\s*\)\s*/\s*"
+            r"value_adjust\s*;", 1, 1),
+        SourceRule(
+            "TPalette16::AdjustHSV keeps Dreamcast's HSVToRGB helper boundary "
+            "before the single retail-corroborated packed palette write",
+            r"HSVToRGB\s*\(\s*h\s*,\s*s\s*,\s*v\s*,\s*&\s*r\s*,\s*"
+            r"&\s*g\s*,\s*&\s*b\s*\)\s*;\s*"
+            r"data\s*\[\s*i\s*\]\s*=\s*static_cast\s*<\s*"
+            r"unsigned\s+short\s*>\s*\(\s*"
+            r"\(\s*\(\s*r\s*/\s*red_norm\s*\)\s*&\s*red_mask\s*\)"
+            r"\s*\|\s*\(\s*\(\s*g\s*/\s*green_norm\s*\)\s*&\s*"
+            r"green_mask\s*\)\s*\|\s*\(\s*\(\s*b\s*/\s*blue_norm"
+            r"\s*\)\s*&\s*blue_mask\s*\)\s*\)\s*;", 1, 1),
+    ),
     ("palette.obj", 0x10B7AC): (
         SourceRule(
             "TPalette16::Gray keeps Dreamcast's three const unsigned "
@@ -3725,6 +3784,90 @@ for (int i = 10; i < 256; ++i) {
                    contract_violations(probe, palette_saturation_key)):
             failures.append("broken TPalette16::AdjustSaturation "
                             + description + " source shape passed")
+    palette_hsv_key = ("palette.obj", 0x10B484)
+    palette_hsv_probe = """\
+const unsigned int red_norm =
+    std::numeric_limits<int>::max() / red_mask;
+const unsigned int green_norm =
+    std::numeric_limits<int>::max() / green_mask;
+const unsigned int blue_norm =
+    std::numeric_limits<int>::max() / blue_mask;
+for (int i = 10; i < 256; ++i) {
+    unsigned int r = (data[i] & red_mask) * red_norm;
+    unsigned int g = (data[i] & green_mask) * green_norm;
+    unsigned int b = (data[i] & blue_mask) * blue_norm;
+    float h;
+    float s;
+    float v;
+    RGBToHSV(r, g, b, &h, &s, &v);
+    if (hue_adjust >= 0.0f) {
+        float delta = hue - h;
+        h += delta * hue_adjust;
+        if (fabs(delta) > 0.5) {
+            if (delta > 0.0) {
+                h += 1.0f - hue_adjust;
+            } else {
+                h += hue_adjust;
+            }
+            if (h >= 1.0) {
+                h -= 1.0;
+            }
+        }
+    }
+    if (saturation_adjust >= 0.0f) {
+        if (saturation_adjust <= 1.0f) {
+            s *= saturation_adjust;
+        } else {
+            s = 1.0f - (1.0f - s) / saturation_adjust;
+        }
+    }
+    if (value_adjust >= 0.0) {
+        if (value_adjust <= 1.0f) {
+            v *= value_adjust;
+        } else {
+            v = 1.0f - (1.0f - v) / value_adjust;
+        }
+    }
+    HSVToRGB(h, s, v, &r, &g, &b);
+    data[i] = static_cast<unsigned short>(
+        ((r / red_norm) & red_mask) |
+        ((g / green_norm) & green_mask) |
+        ((b / blue_norm) & blue_mask));
+}
+"""
+    if contract_violations(palette_hsv_probe, palette_hsv_key):
+        failures.append("aligned TPalette16::AdjustHSV source shape did not pass")
+    palette_hsv_mutations = (
+        (palette_hsv_probe.replace("int i = 10", "int i = 0"),
+         "entry-10 loop"),
+        (palette_hsv_probe.replace(
+            "RGBToHSV(r, g, b, &h, &s, &v);", "h = s = v = 0.0f;"),
+         "RGBToHSV helper"),
+        (palette_hsv_probe.replace("h += delta * hue_adjust;",
+                                   "h = hue * hue_adjust;"),
+         "hue interpolation"),
+        (palette_hsv_probe.replace("fabs(delta) > 0.5",
+                                   "fabs(delta) < 0.5"),
+         "shortest-path wrap"),
+        (palette_hsv_probe.replace(
+            "h += 1.0f - hue_adjust;", "h += hue_adjust;", 1),
+         "wrap choice"),
+        (palette_hsv_probe.replace(
+            "if (saturation_adjust >= 0.0f)",
+            "if (value_adjust >= 0.0f)", 1),
+         "independent saturation"),
+        (palette_hsv_probe.replace("value_adjust >= 0.0",
+                                   "value_adjust >= 0.0f"),
+         "independent saturation then value guards"),
+        (palette_hsv_probe.replace(
+            "HSVToRGB(h, s, v, &r, &g, &b);", "r = g = b;"),
+         "HSVToRGB helper"),
+    )
+    for probe, description in palette_hsv_mutations:
+        if not any(description in rule.description for rule in
+                   contract_violations(probe, palette_hsv_key)):
+            failures.append("broken TPalette16::AdjustHSV " + description
+                            + " source shape passed")
     palette_gray_key = ("palette.obj", 0x10B7AC)
     palette_gray_probe = """\
 const unsigned int red_norm =
