@@ -3,6 +3,7 @@
 // 211 functions in link order; 20 compiler-generated $-thunks omitted.
 #define HOMM3_WIDGET_SET_VISIBLE_DECLS
 #define HOMM3_WIDGET_HIDE_SHOW_INLINE
+#define HOMM3_TYPE_ARTIFACT_EXTRA_FIRST_VIEW
 #include <va.h>
 #include "sacrifice_window.h"
 #include "border.h"

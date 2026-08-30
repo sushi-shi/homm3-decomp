@@ -686,7 +686,6 @@ void AI_visit_war_factory(hero* current_hero)
     visit_war_factory(current_hero, ARTIFACT_AMMO_CART);
 }
 
-VA(0x00525120, 0xE0)
 // MATCHING_DEBT: retail keeps this helper out of all three expansions of
 // visit_war_factory; preserve that decision explicitly until understood.
 // CHECKPOINT (88.5062 -> 96.5185): Dreamcast lines 525-530 restore the typed
@@ -695,6 +694,7 @@ VA(0x00525120, 0xE0)
 // test are exact; the residual is only the order of six loop-tail induction
 // updates after __ftol (same instruction multiset, registers and total size).
 #pragma auto_inline(off)
+VA(0x00525120, 0xE0)
 static long value_of_war_factory(const hero* current_hero,
                                  TArtifact engine, long move_cost)
 {

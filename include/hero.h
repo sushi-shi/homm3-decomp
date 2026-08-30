@@ -110,8 +110,16 @@ struct type_artifact {
     // ordered by record layout.
     explicit type_artifact(TArtifact id)
     {
+#ifdef HOMM3_TYPE_ARTIFACT_EXTRA_FIRST_VIEW
+        // Complete's sacrifice-window builder schedules the equal sentinel
+        // store first. Keep that TU-local codegen view from perturbing the
+        // Dreamcast-proved source order used by the rest of the game.
+        extra = -1;
+        artifactId = id;
+#else
         artifactId = id;
         extra = -1;
+#endif
     }
     // Dreamcast Hero.h:214-218. A spell scroll is represented by artifact
     // id 1 and its SpellID payload; this semantic constructor is distinct
