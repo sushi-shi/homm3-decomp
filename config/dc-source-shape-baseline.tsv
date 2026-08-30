@@ -1273,7 +1273,6 @@ call	game.obj	0xac910	generator::get_owner
 call	game.obj	0xac910	randomize_tomb
 call	game.obj	0xb1230	game::GetNumMapLevels
 call	game.obj	0xb1230	game::GetTeam
-call	game.obj	0xb1230	game::IsComputerTeam
 call	game.obj	0xb1230	game::IsHumanTeam
 call	game.obj	0xb1230	generator::get_owner
 call	game.obj	0xb1230	generator::update_bonus
