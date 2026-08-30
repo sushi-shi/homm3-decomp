@@ -826,6 +826,10 @@ public:
     void Initialize();
     unsigned char HasCreatures();
     unsigned char HasAllUndead();
+    // Dreamcast armygrp.cpp:668. Complete retains the same source helper at
+    // its morale consumers; VC6 /Ob2 expands the loop and /OPT:REF removes
+    // the unreferenced out-of-line copy from retail.
+    unsigned char HasSomeUndead() const;
     unsigned char IsMember(TCreatureType monType);
     int CanJoin(int monType);
     int GetAlignments(unsigned char* alignments);

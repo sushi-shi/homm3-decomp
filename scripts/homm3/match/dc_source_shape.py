@@ -1504,6 +1504,26 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"codeY\s*\)\s*;\s*\}\s*return\s+"
             r"MESSAGE_DISPATCH_CONSUME\s*;"),
     ),
+    ("armygrp.obj", 0x4F078): (
+        SourceRule(
+            "armyGroup::GetMorale keeps Dreamcast's HasSomeUndead member "
+            "boundary after Complete's alignment adjustment and before "
+            "the Angel membership tests",
+            r"morale\s*\+=\s*2\s*-\s*numAlignments\s*;\s*"
+            r"if\s*\(\s*HasSomeUndead\s*\(\s*\)\s*\)\s*"
+            r"morale--\s*;\s*if\s*\(\s*IsMember\s*\("),
+    ),
+    ("armygrp.obj", 0x4F708): (
+        SourceRule(
+            "armyGroup::get_morale_description keeps Dreamcast's "
+            "HasSomeUndead member boundary and undead-text statement before "
+            "the Angel membership group",
+            r"if\s*\(\s*HasSomeUndead\s*\(\s*\)\s*\)\s*"
+            r"result\s*\.\s*append\s*\(\s*gUndeadMoraleText\s*\)\s*;"
+            r"\s*TCreatureType\s+angelType\s*=\s*CREATURE_NONE\s*;\s*"
+            r"if\s*\(\s*const_cast\s*<\s*armyGroup\s*\*\s*>\s*"
+            r"\(\s*this\s*\)\s*->\s*IsMember\s*\("),
+    ),
     ("armygrp.obj", 0x4DBB8): (
         SourceRule(
             "TSplitWindow keeps exactly thirteen direct Widgets.push_back "
@@ -2450,6 +2470,43 @@ def split_window_header_violations(text: str) -> list[tuple[int, str]]:
         token = re.search(r"\b" + token_name + r"\b", masked)
         line = text.count("\n", 0, token.start()) + 1 if token else 1
         defects.append((line, description))
+    return defects
+
+
+def armygroup_has_some_undead_violations(
+        header_text: str, source_text: str) -> list[tuple[int, str]]:
+    """Audit armygrp.cpp:668's const member boundary and loop body."""
+    header_masked = _source.mask(header_text)
+    source_masked = _source.mask(source_text)
+    defects: list[tuple[int, str]] = []
+    header_pattern = (
+        r"\bunsigned\s+char\s+HasSomeUndead\s*\(\s*\)\s*const\s*;")
+    if re.search(header_pattern, header_masked) is None:
+        token = re.search(r"\bHasSomeUndead\b", header_masked)
+        line = (header_text.count("\n", 0, token.start()) + 1
+                if token else 1)
+        defects.append((
+            line,
+            "armygrp.cpp:668 HasSomeUndead must retain Dreamcast's public "
+            "unsigned-char const member declaration"))
+    source_pattern = (
+        r"\bunsigned\s+char\s+armyGroup\s*::\s*HasSomeUndead\s*"
+        r"\(\s*\)\s*const\s*\{\s*"
+        r"for\s*\(\s*int\s+i\s*=\s*0\s*;\s*i\s*<\s*"
+        r"ARMY_GROUP_SLOT_COUNT\s*;\s*\+\+i\s*\)\s*\{\s*"
+        r"if\s*\(\s*armies\s*\[\s*i\s*\]\s*==\s*CREATURE_NONE\s*"
+        r"\)\s*continue\s*;\s*if\s*\(\s*akCreatureTypeTraits\s*\["
+        r"\s*armies\s*\[\s*i\s*\]\s*\]\s*\.\s*attributes\s*&\s*"
+        r"CTA_UNDEAD\s*\)\s*return\s+1\s*;\s*\}\s*return\s+0\s*;"
+        r"\s*\}")
+    if re.search(source_pattern, source_masked, re.DOTALL) is None:
+        token = re.search(r"\bHasSomeUndead\b", source_masked)
+        line = (source_text.count("\n", 0, token.start()) + 1
+                if token else 1)
+        defects.append((
+            line,
+            "armygrp.cpp:668 HasSomeUndead must remain the Dreamcast-proven "
+            "seven-slot member loop with CREATURE_NONE skip and undead test"))
     return defects
 
 
@@ -5775,6 +5832,44 @@ return MESSAGE_DISPATCH_CONSUME;
                for rule in inverted_hover_rules):
         failures.append(
             "TSplitWindow handler inverted-hover local maximum passed")
+    get_morale_key = ("armygrp.obj", 0x4F078)
+    get_morale_probe = """\
+morale += 2 - numAlignments;
+if (HasSomeUndead())
+    morale--;
+if (IsMember(CREATURE_ANGEL) || IsMember(CREATURE_ARCHANGEL))
+    morale++;
+"""
+    if contract_violations(get_morale_probe, get_morale_key):
+        failures.append("aligned GetMorale undead-helper boundary did not pass")
+    flattened_get_morale = get_morale_probe.replace(
+        "if (HasSomeUndead())\n    morale--;",
+        "for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {\n"
+        "    if (akCreatureTypeTraits[armies[i]].attributes & CTA_UNDEAD)\n"
+        "        morale--;\n}")
+    if not any("HasSomeUndead member boundary" in rule.description
+               for rule in contract_violations(flattened_get_morale,
+                                                get_morale_key)):
+        failures.append("flattened GetMorale undead scan passed")
+    morale_description_key = ("armygrp.obj", 0x4F708)
+    morale_description_probe = """\
+if (HasSomeUndead())
+    result.append(gUndeadMoraleText);
+TCreatureType angelType = CREATURE_NONE;
+if (const_cast<armyGroup*>(this)->IsMember(CREATURE_ANGEL))
+    angelType = CREATURE_ANGEL;
+"""
+    if contract_violations(morale_description_probe,
+                           morale_description_key):
+        failures.append(
+            "aligned morale-description undead-helper boundary did not pass")
+    flattened_morale_description = morale_description_probe.replace(
+        "if (HasSomeUndead())",
+        "if (armygrp_has_some_undead(this))")
+    if not any("HasSomeUndead member boundary" in rule.description
+               for rule in contract_violations(
+                   flattened_morale_description, morale_description_key)):
+        failures.append("flattened morale-description undead scan passed")
     split_ctor_key = ("armygrp.obj", 0x4DBB8)
     split_ctor_probe = """\
 sprintf(gText, (*gpGeneralText)[GENERAL_TEXT_SPLIT_CREATURE_ROLLOVER], name);
@@ -6227,6 +6322,31 @@ TSplitWindow(int x2, int y2, TCreatureType thisArmy);
             split_header_probe.replace(
                 "TCreatureType thisArmy", "int thisArmy")):
         failures.append("int TSplitWindow constructor parameter passed")
+    undead_header_probe = "unsigned char HasSomeUndead() const;\n"
+    undead_source_probe = """\
+unsigned char armyGroup::HasSomeUndead() const
+{
+    for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
+        if (armies[i] == CREATURE_NONE)
+            continue;
+        if (akCreatureTypeTraits[armies[i]].attributes & CTA_UNDEAD)
+            return 1;
+    }
+    return 0;
+}
+"""
+    if armygroup_has_some_undead_violations(
+            undead_header_probe, undead_source_probe):
+        failures.append("aligned HasSomeUndead member body did not pass")
+    broken_undead_probes = (
+        (undead_header_probe.replace(" const", ""), undead_source_probe),
+        (undead_header_probe,
+         undead_source_probe.replace("if (armies[i] == CREATURE_NONE)",
+                                     "if (armies[i] != CREATURE_NONE)")),
+    )
+    if any(not armygroup_has_some_undead_violations(header, source)
+           for header, source in broken_undead_probes):
+        failures.append("broken HasSomeUndead member boundary passed")
     cmbtmgr_inline_probe = """\
 static bool ValidHex(int iHex) {
     return iHex >= 0 && iHex < COMBAT_GRID_CELLS;
@@ -6852,6 +6972,18 @@ def scan() -> tuple[
     missing.extend(FileContractViolation("include/armygrp_split.h", line,
                                          description)
                    for line, description in split_defects)
+
+    armygrp_header = common.HOMM3_DIR / "include/armygrp.h"
+    armygrp_header_text = armygrp_header.read_text(errors="replace")
+    armygrp_source = common.HOMM3_DIR / "src/armygrp.cpp"
+    armygrp_source_text = armygrp_source.read_text(errors="replace")
+    audited.add(_file_audit_scope("include/armygrp.h"))
+    undead_defects = armygroup_has_some_undead_violations(
+        armygrp_header_text, armygrp_source_text)
+    checked += 2
+    missing.extend(FileContractViolation("include/armygrp.h", line,
+                                         description)
+                   for line, description in undead_defects)
 
     window_header = common.HOMM3_DIR / "include/window.h"
     window_text = window_header.read_text(errors="replace")
