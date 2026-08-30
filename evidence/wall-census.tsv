@@ -95,6 +95,7 @@ inliner (predict-inline)	187	88.8745	1681	spellbookwindow	?GotoPage@TSpellbookWi
 inliner (predict-inline)	186	89.3406	1744	events	?CreatureBankEvent@advManager@@QAEHPAVhero@@PAVNewmapCell@@PBDUtype_point@@E@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 3 over-inline (15 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	185	87.0391	1427	ai_combat	?cast_spell@type_AI_combat_data@@QAEXAAV1@W4type_speed_catagory@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 control-flow (why-branch)	185	81.7645	1014	hero	?GetMobility@hero@@QAEHE@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
+inliner (predict-inline)	183	91.4613	2140	armygrp	?get_morale_description@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@HE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 6 under-inline, 4 over-inline (22 name-unresolvable pair(s) discounted)
 control-flow (why-branch)	182	82.3404	1029	spells	?MirrorImage@combatManager@@QAEXHH@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	181	80.3907	924	game	?ProcessOnMapTowns@game@@QAEXXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 5 over-inline (2 name-unresolvable pair(s) discounted)
 control-flow (why-branch)	180	92.0510	2269	townmgr	?SetCommandAndText@townManager@@QAEXPAVmessage@@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
@@ -114,7 +115,6 @@ inliner (predict-inline)	155	81.3049	830	singleselectionwindow	?OnGameHeaderInfo
 control-flow (why-branch)	152	88.5071	1326	armygrp	?get_spell_work_chance@@YIMHW4TCreatureType@@PBVhero@@1@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 unclaimed (no source binding)	150	0.0000	150	philai	value_of_monsters	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 inliner (predict-inline)	150	92.5118	1997	game	?Load@NewSMapHeader@@QAEHPAVTAbstractFile@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline (5 name-unresolvable pair(s) discounted)
-inliner (predict-inline)	149	93.0566	2140	armygrp	?get_morale_description@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@HE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 5 under-inline, 4 over-inline (22 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	148	91.0075	1646	ai_combat	?initialize_creatures@type_AI_combat_data@@QAEXNPBVhero@@@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 inliner (predict-inline)	148	78.1174	676	events	?DoEventArtifact@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 6 under-inline, 1 over-inline (5 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	142	91.3243	1638	multiplayerwindow	?OnSearch@TMultiPlayerWindow@@QAEEXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 3 over-inline (28 name-unresolvable pair(s) discounted)
@@ -413,13 +413,14 @@ inliner (predict-inline)	16	93.3333	247	advmgr	?BVResMsg@advManager@@QAEXPBDHH@Z
 register-homing (why-reg)	16	96.3533	450	ai	?get_attack_change@combatManager@@QAEJPBVarmy@@0PBUtype_AI_combat_parameters@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	16	99.1492	1893	events	?DoCustomArtifact@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	16	97.3418	595	advmgr	?AdvmgrFn_0040D670@@YIXPADPAVNewmapCell@@JPBDE@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
-register-homing (why-reg)	16	96.5625	460	armygrp	?GetArmyMorale@armyGroup@@QAEHHPBVhero@@PBVtown@@HEE@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
+register-homing (why-reg)	16	96.5625	460	armygrp	?GetArmyMorale@armyGroup@@QBEHHPBVhero@@PBVtown@@HEE@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 inliner (predict-inline)	16	92.6829	215	advmgr	?BVMessage@advManager@@QAEXPBD@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline
 control-flow (why-branch)	15	96.6429	461	advmgr	?garrison_quick_view@advManager@@QAEXHHH@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 control-flow (why-branch)	15	88.4426	132	slider	?SetKnob@slider@@IAEXH@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	15	97.0930	520	remote	?CheckForWarning@CTurnDuration@@QAEXXZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	15	78.1250	69	remote	??_GCNetMsgHandler@@UAEPAXI@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 register-homing (why-reg)	15	96.7484	461	mapcell	?GenerateHeightMap@NewfullMap@@QAEXPBVCObject@@QAY05C@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
+inliner (predict-inline)	14	99.5935	3431	sacrifice_window	?create_artifact_widgets@type_sacrifice_window@@AAEXAAJH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (72 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	14	94.5177	251	ai	?SOD_choose_faerie_dragon_spell@combatManager@@AAE_NPBVarmy@@AAJAAUtype_AI_combat_parameters@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	14	96.7200	416	hero	?UpdateArmies@hero@@QAEXXZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	14	99.3846	2199	singleselectionwindow	?SetupAdvancedOptions@TSingleSelectionWindow@@QAEXXZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
@@ -451,7 +452,7 @@ register-homing (why-reg)	11	94.7260	205	game	?GetRandomArtifactId@game@@QAE?AW4
 register-homing (why-reg)	11	96.9130	344	philai	?ValueOfSirens@@YIHPBVhero@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	11	96.4286	294	townmgr	?Recruit@TCastleWindow@@QAEXH@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 unclassified	10	97.7949	434	ai_player	?get_value@type_school_artifact@@UBEJPBVhero@@EE@Z	why-reg	run why-reg / why-branch for the full search
-inliner (predict-inline)	10	98.5654	666	armygrp	?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 under-inline, 4 over-inline (7 name-unresolvable pair(s) discounted)
+inliner (predict-inline)	10	98.5654	666	armygrp	?GetMorale@armyGroup@@QBEHPBVhero@@PBVtown@@0PBV1@EEE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 under-inline, 4 over-inline (7 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	10	96.6326	283	remote	?AddChat@@YAXPAVCChatManager@@PBDZZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	10	97.7744	428	town	?SwapHeroes@town@@QAEXXZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	9	98.7864	776	font	?DrawBoundedString@font@@QAEXPBDPAVBitmap16Bit@@HHHHHIH@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
@@ -517,7 +518,6 @@ register-homing (why-reg)	2	99.1053	210	ai_tactical	?get_simple_attack_effect@ty
 unclassified	2	99.4444	320	puzzlewindow	??0type_AI_puzzle_tile@@QAE@PAVNewmapCell@@Utype_point@@@Z	why-reg	run why-reg / why-branch for the full search
 register-homing (why-reg)	2	99.8359	996	game	?loadVictoryCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@H@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 unclassified	2	99.4000	262	game	?NewMap@game@@QAEEPBD0PAHH@Z	why-reg	run why-reg / why-branch for the full search
-register-homing (why-reg)	1	99.7840	475	soundmgr	?MemorySample@soundManager@@QAEPAVds_memsample@@PAVsample@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 inliner (predict-inline)	1	99.7464	377	game	?randomize_university@game@@QAEXPAVNewmapCell@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline
 unclassified	1	99.8469	600	town	?TownFn_005BF900@town@@QAEJJ@Z	why-reg	run why-reg / why-branch for the full search
 register-homing (why-reg)	1	99.8565	585	spells	?AreaEffect@combatManager@@QAEXJHJJ@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
