@@ -107,6 +107,30 @@ TPalette16::~TPalette16()
 {
 }
 
+// Dreamcast supplies the positive/negative two-arm rotation shape, with one
+// memmove and one saved endpoint in each loop. Retail independently fixes the
+// inclusive [begin,end] range and preserves the source step count as a
+// countdown in both arms.
+VA(0x00522950, 0xBE)  // anchor-global, dc 0x10aa98
+void TPalette16::Cycle(int begin, int end, int step)
+{
+    if (step > 0) {
+        for (int i = 0; i < step; ++i) {
+            unsigned short saved = data[begin];
+            memmove(&data[begin], &data[begin + 1],
+                    (end - begin) * sizeof(data[0]));
+            data[end] = saved;
+        }
+    } else {
+        for (int i = 0; i < -step; ++i) {
+            unsigned short saved = data[end];
+            memmove(&data[begin + 1], &data[begin],
+                    (end - begin) * sizeof(data[0]));
+            data[begin] = saved;
+        }
+    }
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\palette.cpp:210
@@ -131,7 +155,7 @@ void TPalette16::ConvertRGBQUADto16(const tagRGBQUAD* quad, int rbits, int rshif
 }
 
 // E:\gamedcs\palette.cpp:288
-// RETAIL_LOCATED(0x00522950, 0xBE): not reconstructed; anchor-global, dc 0x10aa98
+// Retail body reconstructed above at 0x00522950; dc 0x10aa98.
 void TPalette16::Cycle(int begin, int end, int step)
 {
     // @stub
