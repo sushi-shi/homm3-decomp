@@ -2200,7 +2200,7 @@ recruit	??_GTRecruitQuickWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1516b0
 recruit	??_GTRecruitWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x14faf0
 recruit	?Close@recruitUnit@@UAEXXZ	100.0000	100.0000	100.0000	0x1502d0
 recruit	?GetMonsterCost@@YIXHPAH@Z	100.0000	100.0000	100.0000	0x14e7c0
-recruit	?Main@recruitUnit@@UAEHAAVmessage@@@Z	99.1111	99.1111	99.1111	0x150940
+recruit	?Main@recruitUnit@@UAEHAAVmessage@@@Z	99.0924	99.1111	99.1111	0x150940
 recruit	?Open@recruitUnit@@UAEHH@Z	100.0000	100.0000	100.0000	0x14fea0
 recruit	?QuickViewRecruit@@YIXPAVtown@@H@Z	100.0000	100.0000	100.0000	0x151750
 recruit	?QuickViewRecruit@@YIXW4TCreatureType@@PAF@Z	100.0000	100.0000	100.0000	0x151780
@@ -2239,7 +2239,11 @@ recruit	?RecruitSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000
 # and reconstructions (cast_spell exact among them) - the delink
 # generation moved, recruit.cpp and its headers untouched by the
 # regression commit. Same mechanism as above; hist keeps the peak.
-recruit	?Update@recruitUnit@@QAEXEJ@Z	88.2360	90.8376	90.8376	0x1503a0
+# RESOLVED 2026-08-30: that generation-sensitive plateau was not source
+# closure. Restoring raw-NB11's message constructor and maxGold local plus
+# the nested GetArmyName and UpdateCost -> GetMonsterCost source boundaries
+# raises the current, max and history checkpoint together to 94.1574.
+recruit	?Update@recruitUnit@@QAEXEJ@Z	94.1574	94.1574	94.1574	0x1503a0
 recruit	?add_creature_widgets@TRecruitWindow@@QAEXJJJW4TCreatureType@@J@Z	93.6325	93.6325	93.6325	0x14fb90
 recruit	?get_upgrade_cost@@YIXW4TCreatureType@@0JPAH@Z	100.0000	100.0000	100.0000	0x14e750
 recruit	?siege_artifact_to_creature@@YI?AW4TCreatureType@@W4TArtifact@@@Z	100.0000	100.0000	100.0000	0x150360

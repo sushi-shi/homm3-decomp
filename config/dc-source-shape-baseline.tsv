@@ -1704,7 +1704,6 @@ call	questlogwindow.obj	0x116bd8	TSeerHut::GetQuestArtifactName
 call	quickherowindow.obj	0x1170bc	game::get_alignment
 call	quickherowindow.obj	0x1170bc	limit
 call	recruit.obj	0x11994c	GetArmyName
-call	recruit.obj	0x119dcc	GetArmyName
 call	recruit.obj	0x119dcc	min
 call	recruit.obj	0x11a30c	GetArmyName
 call	recruit.obj	0x11a30c	max

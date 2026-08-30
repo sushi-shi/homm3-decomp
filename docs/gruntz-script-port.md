@@ -289,6 +289,46 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   that call, hoisting either constructor, selecting the wrong base overload,
   collapsing the two message members into initializer lists, or splitting
   the direct record push.
+- **2026-08-30 — `recruitUnit::Update` restores three nested Dreamcast
+  source boundaries and raises its banked maximum from 90.8376% to
+  94.1574%.** The mandatory dossier at retail `0x005503a0` / Dreamcast
+  `recruit.obj+0x119dcc` records the exact `(unsigned char new_monster,
+  long slot)` signature, 29 lexical scopes, 105 breakpoint rows and only two
+  surviving locals: `message msg` and `long maxGold`. Raw NB11 additionally
+  makes `message::message` the first body statement. Dreamcast line 521 is
+  one source statement containing `TTextResource::operator[]`,
+  `GetArmyName`, then `sprintf`. The separately inspected
+  `recruitUnit::UpdateCost` dossier (`recruit.obj+0x11ac7c`) records one
+  `resCost` array and a call to `GetMonsterCost` before the gold/alternative
+  resource scan.
+
+  Retail corroborates rather than rejects those facts: its opening eight
+  zero stores are the inlined message constructor; the two text/name helpers
+  reduce to the observed direct loads; and the exact `GetMonsterCost` loop is
+  expanded inside UpdateCost at all four recruitUnit call sites. A
+  recruit.obj-scoped constructor view leaves `recruitUnit::Open` and both
+  `QuickViewRecruit` overloads 100% exact. Restoring the constructor first
+  moved Update **88.2360% -> 90.8325%**; the line-521 helper group moved it to
+  **92.60%**; the nested UpdateCost/GetMonsterCost boundary moved it to
+  **94.1574%**. `long maxGold` is byte-neutral but retained as a positive raw
+  NB11 fact. The complete x86 prologue through the GetArmyName join is now
+  instruction-exact, and the symbolic branch sequence still agrees **24/24**.
+
+  The residual is a bounded VC6 register-colouring choice at the first
+  BroadcastMessage setup: the candidate keeps repeated `WIDGET_SET_TEXT` in
+  ESI, whereas retail stores immediate 3 and keeps ESI for the following
+  creature-trait base. This shifts later switch/table and statement alignment
+  without changing control flow. Earlier direct-record memcpy, direct plural
+  trait read, late message declaration, struct-view fetch and reversed
+  alt-resource polarity are documented negative plateaus, not alternatives
+  to the recovered facts. Classification is asymmetric: signature, locals,
+  constructor, helper boundaries and shared statement order **agree**;
+  Complete's creature domain through 0x96 and its inlined helper codegen are
+  **retail-only** extensions; no incompatible **dc-only** fact was admitted;
+  the remaining register allocation is **unknown/codegen**. Function rules,
+  file-level inline-view contracts and embedded negative controls now make
+  constructor flattening, direct plural access, duplicated cost fetches,
+  renamed `resCost`/`maxGold`, and lost one-statement grouping fatal.
 
 - **2026-08-30 — `town::destroy_extra_capitol` restores three positive
   Dreamcast helper boundaries byte-flat at 96.4595%.** The dossier at
