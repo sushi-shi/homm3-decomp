@@ -1352,6 +1352,25 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             "service_sounds helper call",
             r"\bservice_sounds\s*\(", 1, 1),
     ),
+    ("palette.obj", 0x10A244): (
+        SourceRule(
+            "ftol keeps Dreamcast's const unsigned long magic local and "
+            "retail-corroborated 0x59c00000 value",
+            r"\A\s*const\s+unsigned\s+long\s+magic\s*=\s*"
+            r"0x59c00000\s*;", 1, 1),
+        SourceRule(
+            "ftol keeps Dreamcast's double mutation before the low-word "
+            "return; the union spelling is the gate-clean representation "
+            "of the retail-corroborated type pun",
+            r"TFloatLongBits\s+magic_value\s*;\s*"
+            r"TDoubleLongBits\s+result\s*;\s*"
+            r"result\s*\.\s*value\s*=\s*d\s*;\s*"
+            r"magic_value\s*\.\s*bits\s*=\s*magic\s*;\s*"
+            r"result\s*\.\s*value\s*\+=\s*"
+            r"magic_value\s*\.\s*value\s*;\s*"
+            r"return\s+result\s*\.\s*words\s*\[\s*0\s*\]\s*;",
+            1, 1),
+    ),
     ("palette.obj", 0x10AA98): (
         SourceRule(
             "TPalette16::Cycle keeps Dreamcast's positive-step loop, saved "
@@ -1628,6 +1647,67 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"if\s*\(\s*\*\s*h\s*<\s*0\.0f\s*\)\s*\{\s*"
             r"\*\s*h\s*\+=\s*1\.0f\s*;\s*\}.*?else\s*\{\s*"
             r"\*\s*h\s*=\s*0\.0f\s*;", 1, 1),
+    ),
+    ("palette.obj", 0x10C564): (
+        SourceRule(
+            "HSVToRGB keeps Dreamcast's chromatic scope, sole const f "
+            "local, fmod helper boundary, value scaling and p/q/t "
+            "statement order",
+            r"\A\s*if\s*\(\s*s\s*!=\s*0\.0f\s*\)\s*\{\s*"
+            r"const\s+float\s+f\s*=\s*static_cast\s*<\s*float\s*>"
+            r"\s*\(\s*fmod\s*\(\s*h\s*\*\s*6\.0f\s*,\s*1\.0\s*"
+            r"\)\s*\)\s*;\s*"
+            r"v\s*\*=\s*static_cast\s*<\s*float\s*>\s*\(\s*"
+            r"std\s*::\s*numeric_limits\s*<\s*int\s*>\s*::\s*max"
+            r"\s*\(\s*\)\s*\)\s*;\s*"
+            r"const\s+float\s+p\s*=\s*v\s*\*\s*\(\s*1\.0f\s*-"
+            r"\s*s\s*\)\s*;\s*"
+            r"const\s+float\s+q\s*=\s*v\s*\*\s*\(\s*1\.0f\s*-"
+            r"\s*s\s*\*\s*f\s*\)\s*;\s*"
+            r"const\s+float\s+t\s*=\s*v\s*\*\s*\(\s*1\.0f\s*-"
+            r"\s*s\s*\*\s*\(\s*1\.0f\s*-\s*f\s*\)\s*\)\s*;",
+            1, 1),
+        SourceRule(
+            "HSVToRGB keeps one Dreamcast switch containing the six "
+            "retail-corroborated hue-sector channel mappings",
+            r"switch\s*\(\s*static_cast\s*<\s*int\s*>\s*\(\s*h\s*"
+            r"\*\s*6\.0f\s*\)\s*\)\s*\{\s*"
+            r"case\s+HSV_RED_SECTOR\s*:\s*"
+            r"\*\s*r\s*=\s*ftol\s*\(\s*v\s*\)\s*;\s*"
+            r"\*\s*g\s*=\s*ftol\s*\(\s*t\s*\)\s*;\s*"
+            r"\*\s*b\s*=\s*ftol\s*\(\s*p\s*\)\s*;\s*break\s*;\s*"
+            r"case\s+HSV_YELLOW_SECTOR\s*:\s*"
+            r"\*\s*r\s*=\s*ftol\s*\(\s*q\s*\)\s*;\s*"
+            r"\*\s*g\s*=\s*ftol\s*\(\s*v\s*\)\s*;\s*"
+            r"\*\s*b\s*=\s*ftol\s*\(\s*p\s*\)\s*;\s*break\s*;\s*"
+            r"case\s+HSV_GREEN_SECTOR\s*:\s*"
+            r"\*\s*r\s*=\s*ftol\s*\(\s*p\s*\)\s*;\s*"
+            r"\*\s*g\s*=\s*ftol\s*\(\s*v\s*\)\s*;\s*"
+            r"\*\s*b\s*=\s*ftol\s*\(\s*t\s*\)\s*;\s*break\s*;\s*"
+            r"case\s+HSV_CYAN_SECTOR\s*:\s*"
+            r"\*\s*r\s*=\s*ftol\s*\(\s*p\s*\)\s*;\s*"
+            r"\*\s*g\s*=\s*ftol\s*\(\s*q\s*\)\s*;\s*"
+            r"\*\s*b\s*=\s*ftol\s*\(\s*v\s*\)\s*;\s*break\s*;\s*"
+            r"case\s+HSV_BLUE_SECTOR\s*:\s*"
+            r"\*\s*r\s*=\s*ftol\s*\(\s*t\s*\)\s*;\s*"
+            r"\*\s*g\s*=\s*ftol\s*\(\s*p\s*\)\s*;\s*"
+            r"\*\s*b\s*=\s*ftol\s*\(\s*v\s*\)\s*;\s*break\s*;\s*"
+            r"case\s+HSV_MAGENTA_SECTOR\s*:\s*"
+            r"\*\s*r\s*=\s*ftol\s*\(\s*v\s*\)\s*;\s*"
+            r"\*\s*g\s*=\s*ftol\s*\(\s*p\s*\)\s*;\s*"
+            r"\*\s*b\s*=\s*ftol\s*\(\s*q\s*\)\s*;\s*break\s*;",
+            1, 1),
+        SourceRule(
+            "HSVToRGB keeps all nineteen retail-corroborated expansions of "
+            "Dreamcast's ftol helper boundary",
+            r"\bftol\s*\(", 19, 19),
+        SourceRule(
+            "HSVToRGB keeps Dreamcast's grayscale scope as one "
+            "right-associated write through the ftol helper",
+            r"else\s*\{\s*\*\s*r\s*=\s*\*\s*g\s*=\s*\*\s*b\s*=\s*"
+            r"ftol\s*\(\s*v\s*\*\s*static_cast\s*<\s*float\s*>"
+            r"\s*\(\s*std\s*::\s*numeric_limits\s*<\s*int\s*>\s*::"
+            r"\s*max\s*\(\s*\)\s*\)\s*\)\s*;\s*\}", 1, 1),
     ),
     ("resourcemanager.obj", 0x121EC8): (
         SourceRule(
@@ -3797,6 +3877,35 @@ if (m_flag64) {
                    contract_violations(probe, current_map_key)):
             failures.append("broken SetCurrentMap " + description
                             + " source shape passed")
+    palette_ftol_key = ("palette.obj", 0x10A244)
+    palette_ftol_probe = """\
+const unsigned long magic = 0x59c00000;
+TFloatLongBits magic_value;
+TDoubleLongBits result;
+result.value = d;
+magic_value.bits = magic;
+result.value += magic_value.value;
+return result.words[0];
+"""
+    if contract_violations(palette_ftol_probe, palette_ftol_key):
+        failures.append("aligned ftol source shape did not pass")
+    palette_ftol_mutations = (
+        (palette_ftol_probe.replace("const unsigned long magic",
+                                    "unsigned long magic"),
+         "const unsigned long magic local"),
+        (palette_ftol_probe.replace("0x59c00000", "0x59b00000"),
+         "0x59c00000 value"),
+        (palette_ftol_probe.replace("result.value = d;\n", ""),
+         "double mutation before the low-word return"),
+        (palette_ftol_probe.replace("return result.words[0];",
+                                    "return static_cast<long>(d);"),
+         "low-word return"),
+    )
+    for probe, description in palette_ftol_mutations:
+        if not any(description in rule.description for rule in
+                   contract_violations(probe, palette_ftol_key)):
+            failures.append("broken ftol " + description
+                            + " source shape passed")
     palette_cycle_key = ("palette.obj", 0x10AA98)
     palette_cycle_probe = """\
 if (step > 0) {
@@ -4176,6 +4285,60 @@ if (max - min) {
         if not any(description in rule.description for rule in
                    contract_violations(probe, rgb_to_hsv_key)):
             failures.append("broken RGBToHSV " + description
+                            + " source shape passed")
+    hsv_to_rgb_key = ("palette.obj", 0x10C564)
+    hsv_to_rgb_probe = """\
+if (s != 0.0f) {
+    const float f = static_cast<float>(fmod(h * 6.0f, 1.0));
+    v *= static_cast<float>(std::numeric_limits<int>::max());
+    const float p = v * (1.0f - s);
+    const float q = v * (1.0f - s * f);
+    const float t = v * (1.0f - s * (1.0f - f));
+    switch (static_cast<int>(h * 6.0f)) {
+    case HSV_RED_SECTOR:
+        *r = ftol(v); *g = ftol(t); *b = ftol(p); break;
+    case HSV_YELLOW_SECTOR:
+        *r = ftol(q); *g = ftol(v); *b = ftol(p); break;
+    case HSV_GREEN_SECTOR:
+        *r = ftol(p); *g = ftol(v); *b = ftol(t); break;
+    case HSV_CYAN_SECTOR:
+        *r = ftol(p); *g = ftol(q); *b = ftol(v); break;
+    case HSV_BLUE_SECTOR:
+        *r = ftol(t); *g = ftol(p); *b = ftol(v); break;
+    case HSV_MAGENTA_SECTOR:
+        *r = ftol(v); *g = ftol(p); *b = ftol(q); break;
+    }
+} else {
+    *r = *g = *b = ftol(
+        v * static_cast<float>(std::numeric_limits<int>::max()));
+}
+"""
+    if contract_violations(hsv_to_rgb_probe, hsv_to_rgb_key):
+        failures.append("aligned HSVToRGB source shape did not pass")
+    hsv_to_rgb_mutations = (
+        (hsv_to_rgb_probe.replace("if (s != 0.0f)", "if (s == 0.0f)"),
+         "chromatic scope"),
+        (hsv_to_rgb_probe.replace("fmod(h * 6.0f, 1.0)", "h * 6.0f"),
+         "fmod helper boundary"),
+        (hsv_to_rgb_probe.replace(
+            "const float p = v * (1.0f - s);\n"
+            "    const float q = v * (1.0f - s * f);",
+            "const float q = v * (1.0f - s * f);\n"
+            "    const float p = v * (1.0f - s);"),
+         "p/q/t statement order"),
+        (hsv_to_rgb_probe.replace("*g = ftol(t);", "*g = ftol(q);", 1),
+         "hue-sector channel mappings"),
+        (hsv_to_rgb_probe.replace("*r = ftol(v);",
+                                  "*r = static_cast<unsigned int>(v);", 1),
+         "nineteen"),
+        (hsv_to_rgb_probe.replace("*r = *g = *b = ftol(",
+                                  "*r = *g; *g = *b; *b = ftol("),
+         "right-associated write"),
+    )
+    for probe, description in hsv_to_rgb_mutations:
+        if not any(description in rule.description for rule in
+                   contract_violations(probe, hsv_to_rgb_key)):
+            failures.append("broken HSVToRGB " + description
                             + " source shape passed")
     send_key = ("singleselectionwindow.obj", 0x140D74)
     send_probe = """\

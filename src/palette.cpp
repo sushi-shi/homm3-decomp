@@ -7,6 +7,29 @@
 #include <string.h>
 #include "palette.h"
 
+union TFloatLongBits {
+    unsigned long bits;
+    float value;
+};
+
+union TDoubleLongBits {
+    double value;
+    long words[2];
+};
+
+// Dreamcast exposes this original helper boundary and its sole named local.
+// Retail has no out-of-line copy because VC6 /Ob2 expands it into HSVToRGB.
+static __forceinline long ftol(double d)
+{
+    const unsigned long magic = 0x59c00000;
+    TFloatLongBits magic_value;
+    TDoubleLongBits result;
+    result.value = d;
+    magic_value.bits = magic;
+    result.value += magic_value.value;
+    return result.words[0];
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\palette.cpp:45
@@ -519,6 +542,60 @@ void RGBToHSV(unsigned int r, unsigned int g, unsigned int b,
     }
 }
 
+// Dreamcast recovers the const f local, the chromatic and grayscale scopes,
+// the fmod/numeric-limits/ftol helper boundaries, and one switch statement
+// containing all six hue sectors. Retail corroborates p/q/t evaluation order,
+// the exact sector mapping, and the single right-associated grayscale write.
+VA(0x005232f0, 0x2EC)  // anchor-bracket, dc 0x10c564
+void HSVToRGB(float h, float s, float v,
+              unsigned int* r, unsigned int* g, unsigned int* b)
+{
+    if (s != 0.0f) {
+        const float f = static_cast<float>(fmod(h * 6.0f, 1.0));
+
+        v *= static_cast<float>(std::numeric_limits<int>::max());
+        const float p = v * (1.0f - s);
+        const float q = v * (1.0f - s * f);
+        const float t = v * (1.0f - s * (1.0f - f));
+
+        switch (static_cast<int>(h * 6.0f)) {
+        case HSV_RED_SECTOR:
+            *r = ftol(v);
+            *g = ftol(t);
+            *b = ftol(p);
+            break;
+        case HSV_YELLOW_SECTOR:
+            *r = ftol(q);
+            *g = ftol(v);
+            *b = ftol(p);
+            break;
+        case HSV_GREEN_SECTOR:
+            *r = ftol(p);
+            *g = ftol(v);
+            *b = ftol(t);
+            break;
+        case HSV_CYAN_SECTOR:
+            *r = ftol(p);
+            *g = ftol(q);
+            *b = ftol(v);
+            break;
+        case HSV_BLUE_SECTOR:
+            *r = ftol(t);
+            *g = ftol(p);
+            *b = ftol(v);
+            break;
+        case HSV_MAGENTA_SECTOR:
+            *r = ftol(v);
+            *g = ftol(p);
+            *b = ftol(q);
+            break;
+        }
+    } else {
+        *r = *g = *b = ftol(
+            v * static_cast<float>(std::numeric_limits<int>::max()));
+    }
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\palette.cpp:496
@@ -620,7 +697,7 @@ void RGBToHSV(unsigned r, unsigned g, unsigned b, float* h, float* s, float* v)
 }
 
 // E:\gamedcs\palette.cpp:862
-// RETAIL_LOCATED(0x005232f0, 0x2EC): not reconstructed; anchor-bracket, dc 0x10c564
+// Retail body reconstructed above at 0x005232f0; dc 0x10c564.
 void HSVToRGB(float h, float s, float v, unsigned* r, unsigned* g, unsigned* b)
 {
     // @stub

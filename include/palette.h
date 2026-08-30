@@ -17,6 +17,16 @@ struct TRGBA {
 };
 SIZE(TRGBA, 4);
 
+// The six integer sectors selected by HSVToRGB after scaling hue by 6.
+enum THueSector {
+    HSV_RED_SECTOR,
+    HSV_YELLOW_SECTOR,
+    HSV_GREEN_SECTOR,
+    HSV_CYAN_SECTOR,
+    HSV_BLUE_SECTOR,
+    HSV_MAGENTA_SECTOR
+};
+
 // Dreamcast CodeView prototypes; the retail palette transforms at
 // 0x522a10/0x522b50 call the same two global conversion boundaries.
 void RGBToHSV(unsigned int r, unsigned int g, unsigned int b,
