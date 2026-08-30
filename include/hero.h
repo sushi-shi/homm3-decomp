@@ -113,6 +113,14 @@ struct type_artifact {
         artifactId = id;
         extra = -1;
     }
+    // Dreamcast Hero.h:214-218. A spell scroll is represented by artifact
+    // id 1 and its SpellID payload; this semantic constructor is distinct
+    // from the generic TArtifact constructor above.
+    explicit type_artifact(SpellID spell)
+    {
+        artifactId = ARTIFACT_SPELL_SCROLL;
+        extra = spell;
+    }
     type_artifact(int id, int extraValue)
         : artifactId(id), extra(extraValue) {}
 

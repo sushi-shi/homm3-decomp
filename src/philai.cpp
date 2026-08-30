@@ -2867,12 +2867,11 @@ int ValueOfSeaChest(const hero* current_hero, NewmapCell* cell)
 VA(0x0052a8c0, 0x9a)  // anchor-callee, dc 0x112510
 int ValueOfScroll(const hero* current_hero, NewmapCell* cell)
 {
-    int spell;
+    SpellID spell;
     if (const_cast<hero*>(current_hero)->get_number_in_backpack(1) >= 64)
         return 0;
 
     int value = 10;
-    spell = cell->extraInfo;
     if (cell->IsCustomized()) {
         TreasureData* treasure = gpAdvManager->get_treasure_data(cell);
         spell = cell->extraInfo & 0xff;
@@ -2880,10 +2879,10 @@ int ValueOfScroll(const hero* current_hero, NewmapCell* cell)
                 && treasure->Guardians.GetNumArmies() != 0)
             value += AI_value_of_combat(current_hero, 0,
                 treasure->Guardians, 0, cell);
-    }
+    } else
+        spell = cell->extraInfo;
 
-    type_artifact artifact(ARTIFACT_SPELL_SCROLL);
-    artifact.extra = spell;
+    type_artifact artifact(spell);
     if (!current_hero->SpellIsAvailable(spell))
         value += AI_get_value_of_artifact(artifact, current_hero, false, false);
     return value;
