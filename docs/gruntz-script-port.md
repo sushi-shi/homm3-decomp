@@ -304,7 +304,28 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   encoding in the handicap read. Fatal rules and embedded negative controls
   preserve the constructor declaration/body/order and all five named
   `SetCurrentMap` locals/scopes.
+- **2026-08-30 — `TResourceDisplay::TResourceDisplay` banks the complete
+  Dreamcast construction order at its honest 99.3919% register plateau.**
+  The mandatory dossier and raw NB11 for `resourcedisplay.obj:0x120c54`
+  record the `(heroWindow*, unsigned char)` constructor, 18 lexical scopes
+  and 31 breakpoint rows. They preserve two flag-selected
+  initialize/background-construction arms, the palette statement before one
+  seven-resource loop, that loop's text construction / `AddWidget` / border
+  construction / `AddWidget` sequence, and the two final status-widget arms
+  before one shared `AddWidget`. Complete's extra background `AddWidget`
+  remains allowed as retail-only source; the asymmetric gate does not demand
+  equal call, scope, statement, or block counts.
 
+  All 24 Windows CFG blocks, instruction lengths and ordinary operations
+  align. The residual is the already bounded whole-body `EBX`/`EDI`
+  transposition of `this` and `textX` across 52 register-visible slots.
+  Three additional source-shape-preserving probes — a `register textX`, an
+  optimized `this` alias, and explicit `TSubWindow` helper qualification —
+  are byte-flat at **99.3919%** and were reverted. Fatal rules now preserve
+  the three positive statement-order facts, and embedded negative controls
+  reject reversing an initialization arm, reordering the loop's two
+  construction/add pairs, or duplicating the shared final add into both
+  status arms.
 - **2026-08-30 — `CheckForGrailBuildingWin` restores two named helpers and
   its complete Dreamcast point-local shape.** Raw NB11 for `dc:0x190124`
   records procedure locals `any_town_loc` then `grail_town_loc`, a nested
