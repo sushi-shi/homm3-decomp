@@ -13,6 +13,7 @@
 #include "hero.h"
 #include "kb.h"
 #include "kbwin.h"
+#define HOMM3_RECRUIT_MESSAGE_CTOR_VIEW
 #include "message.h"
 #include "widget.h"
 // Appended AFTER the original set on purpose: recruit.obj is knife-edge
@@ -53,6 +54,7 @@
 #include "winmgr.h"
 #include "mousemgr.h"
 #include "advmgr.h"
+#define HOMM3_CREATURE_NAME_VIEW
 #include "creaturetype.h"
 #include "misc.h"
 #include "viewarmywindow.h"
@@ -109,6 +111,31 @@ void GetMonsterCost(int monId, int* resCost)
         resCost[resource] =
             gCreatureRecords[monId * CREATURE_RECORD_DWORDS
                              + CREATURE_RECORD_COST_DWORD + resource];
+}
+
+// E:\gamedcs\recruit.cpp:1082
+// Dreamcast keeps this source-visible helper out of line; Complete's VC6
+// build expands it at every recruitUnit call site and emits no standalone
+// body.  Raw NB11 names the sole surviving local `resCost`, while the body
+// calls the exact GetMonsterCost helper above before deriving the two costs.
+inline void recruitUnit::UpdateCost()
+{
+    int resCost[7];
+    GetMonsterCost(monsterType, resCost);
+    goldPerTroop = resCost[6];
+
+    int i;
+    for (i = 0; i < 6; i++) {
+        if (resCost[i] != 0)
+            break;
+    }
+    if (i < 6) {
+        altResource = i;
+        resourcesPerTroop = resCost[i];
+    } else {
+        altResource = -1;
+        resourcesPerTroop = 0;
+    }
 }
 
 // ---------------------------------------------------------------------
@@ -429,7 +456,7 @@ void TRecruitWindow::add_creature_widgets(long start_x, long start_y, long name_
 VA(0x0054fea0, 0x42E)  // anchor-callee + anchor-global, dc 0x11994c
 int recruitUnit::Open(int newPriority)
 {
-    message msg = { 0, 0, 0, 0, 0, 0, 0, 0 };
+    message msg;
     int resCost[7];
 
     gpRecruitWindow = new TRecruitWindow(143, 16, altResource, this);
@@ -637,47 +664,35 @@ TCreatureType siege_artifact_to_creature(TArtifact engine)
 // expands as the four-case jump table at 0x5504d4 - note it pairs
 // 0x93->6 and 0x94->5, the opposite way round from
 // siege_artifact_to_creature above.
-// Residual (90.8%): the whole delta is the HEAD, and it is one
-// cost-model decision. Retail recomputes the creature-record index
-// (29*monsterType, scaled by 4 in the addressing mode) separately at
-// all three sites - the inlined UpdateCost fetch, the plural-name
-// read and the siege-flag test - and keeps a zero live in edx across
-// them. Our CL instead materialises the BYTE offset once
-// (`shl ecx,2`), spills it, and reloads it at the other two sites,
-// which then costs it the zero register (`xor eax,eax` -> `test edx,
-// edx` and an immediate 0 where retail writes edx). Everything from
-// the plural-name join onward is byte-identical. Tried and rejected:
-// the struct-view spelling of UpdateCost's fetch
-// (akCreatureTypeTraits[m].cost - 88.2, and it does NOT break the
-// CSE); declaring `message msg` after the slot fixup (88.2);
-// `if (altResource == -1)` in the other polarity (89.2 - the retained
-// polarity is the byte-proven one). Register-homing family.
-// Re-measured 2026-08-08: branch sequences AGREE (24/24), so nothing
-// structural is left. Rewriting UpdateCost's fetch to the pointer-
-// offset form `&gCreatureRecords[29*type] + 8` - the spelling that is
-// byte-proven correct in GetMonsterCost, where it removes exactly this
-// `shl` - is byte-neutral HERE: VC6 still unifies 4*(29*type) with the
-// 116-byte stride of the akCreatureTypeTraits[monsterType] access in
-// the same function and re-materialises the shift. The CSE, not the
-// subscript spelling, is what has to break.
+// Dreamcast's raw NB11 records `message msg` and `long maxGold` as the
+// only surviving locals. Its line 521 is one statement containing
+// TTextResource::operator[], GetArmyName and sprintf; UpdateCost in turn
+// owns a sole `resCost` array and calls GetMonsterCost. Retail independently
+// corroborates all three helper boundaries by expanding their bodies. Keeping
+// those source facts raises the current candidate from 88.2360% to 94.1574%
+// and makes every instruction through the GetArmyName join exact.
+//
+// Residual (94.1574%): the first mismatch is VC6 parking the repeated
+// WIDGET_SET_TEXT value in ESI, while retail stores immediate 3 and reserves
+// ESI for the creature-trait base used by the following siege test. That
+// register-colouring choice shifts the switch/table and later statement
+// alignment, but the symbolic branch sequence remains exact (24/24). The
+// earlier struct-view cost fetch, late message declaration and reversed
+// alt-resource polarity remain rejected lower plateaus; none may replace the
+// now-ratcheted constructor/helper/local facts.
 VA(0x005503a0, 0x594)  // anchor-global, dc 0x119dcc
 void recruitUnit::Update(unsigned char new_monster, long slot)
 {
-    message msg = { 0, 0, 0, 0, 0, 0, 0, 0 };
+    message msg;
 
     if (slot == -1)
         slot = selectedPosition;
 
     UpdateCost();
 
-    const char* creatureName;
-    if (monsterType >= 0 && monsterType <= 150)
-        creatureName = akCreatureTypeTraits[monsterType].m_plural_name;
-    else
-        creatureName = "";
-    const char* recruitTitle =
-        gpGeneralText->GetText(GENERAL_TEXT_RECRUIT_TITLE);
-    sprintf(gText, "%s %s", recruitTitle, creatureName);
+    sprintf(gText, "%s %s",
+        (*gpGeneralText)[GENERAL_TEXT_RECRUIT_TITLE],
+        GetArmyName(monsterType, 2));
     msg.id = MESSAGE_WIDGET;
     msg.codeX = widget::WIDGET_SET_TEXT;
     msg.codeY = 0x226;
@@ -698,12 +713,12 @@ void recruitUnit::Update(unsigned char new_monster, long slot)
     msg.extraText = gText;
     gpRecruitWindow->BroadcastMessage(&msg);
 
-    int byGold = gpCurrentPlayer->resources[6] / goldPerTroop;
+    long maxGold = gpCurrentPlayer->resources[6] / goldPerTroop;
     if (altResource != -1) {
         int byResource = gpCurrentPlayer->resources[altResource] / resourcesPerTroop;
-        maxAvail = byGold < byResource ? byGold : byResource;
+        maxAvail = maxGold < byResource ? maxGold : byResource;
     } else {
-        maxAvail = byGold;
+        maxAvail = maxGold;
     }
     if (maxAvail > *numAvail)
         maxAvail = *numAvail;
@@ -1132,9 +1147,9 @@ exit_dialog:
 
 #if 0  // @carcass
 
-// E:\gamedcs\recruit.cpp:1082 - no retail body of its own; the
-// definition lives in recruit.h and every call site expanded it. See
-// the note there.
+// E:\gamedcs\recruit.cpp:1082 - no retail body of its own; the inline
+// definition lives above, after GetMonsterCost, and every call site expands
+// the nested helper chain. See the note there.
 DC_ONLY(0x11ac7c, 0x88)
 void recruitUnit::UpdateCost()
 {
@@ -1312,7 +1327,7 @@ void QuickViewRecruit(town* newTown, int newDwellingIndex)
 VA(0x00551780, 0x641)  // anchor-callee/window family + literal bracket, dc 0x11b028
 void QuickViewRecruit(TCreatureType MonType, short* numMon)
 {
-    message msg = { 0, 0, 0, 0, 0, 0, 0, 0 };
+    message msg;
     int cost[7];
     GetMonsterCost(MonType, cost);
 

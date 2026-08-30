@@ -1213,6 +1213,47 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"if\s*\(\s*gGraphicsSaturated\s*\)\s*"
             r"result\s*->\s*AdjustHSV\s*\(", 2, 2),
     ),
+    ("recruit.obj", 0x119DCC): (
+        SourceRule(
+            "recruitUnit::Update keeps Dreamcast's root message constructor "
+            "before the slot guard and named UpdateCost boundary",
+            r"\A\s*message\s+msg\s*;\s*if\s*\(\s*slot\s*==\s*-\s*1\s*"
+            r"\)\s*slot\s*=\s*selectedPosition\s*;\s*UpdateCost\s*"
+            r"\(\s*\)\s*;"),
+        SourceRule(
+            "recruitUnit::Update keeps Dreamcast line 521's one-statement "
+            "TTextResource::operator[], GetArmyName and sprintf group",
+            r"sprintf\s*\(\s*gText\s*,[^,]*,\s*"
+            r"\(\s*\*\s*gpGeneralText\s*\)\s*\[\s*"
+            r"GENERAL_TEXT_RECRUIT_TITLE\s*\]\s*,\s*GetArmyName\s*\(\s*"
+            r"monsterType\s*,\s*2\s*\)\s*\)\s*;", 1, 1),
+        SourceRule(
+            "recruitUnit::Update may not flatten Dreamcast's GetArmyName "
+            "boundary back into a creature-trait plural-name read",
+            r"akCreatureTypeTraits\s*\[\s*monsterType\s*\]\s*\.\s*"
+            r"m_plural_name", 0, 0),
+        SourceRule(
+            "recruitUnit::Update keeps raw NB11's long maxGold local and "
+            "the alternative-resource selection order",
+            r"\blong\s+maxGold\s*=\s*gpCurrentPlayer\s*->\s*resources\s*"
+            r"\[\s*6\s*\]\s*/\s*goldPerTroop\s*;\s*if\s*\(\s*"
+            r"altResource\s*!=\s*-\s*1\s*\)\s*\{.*?maxAvail\s*=\s*"
+            r"maxGold\s*<.*?\?.*?\}\s*else\s*\{\s*maxAvail\s*=\s*"
+            r"maxGold\s*;\s*\}"),
+    ),
+    ("recruit.obj", 0x11AC7C): (
+        SourceRule(
+            "UpdateCost keeps raw NB11's sole resCost local and the "
+            "Dreamcast GetMonsterCost helper boundary before gold and scan",
+            r"\A\s*int\s+resCost\s*\[\s*7\s*\]\s*;\s*GetMonsterCost\s*"
+            r"\(\s*monsterType\s*,\s*resCost\s*\)\s*;\s*goldPerTroop\s*"
+            r"=\s*resCost\s*\[\s*6\s*\]\s*;\s*int\s+i\s*;\s*for\s*"
+            r"\(\s*i\s*=\s*0\s*;\s*i\s*<\s*6\s*;\s*i\+\+\s*\)"),
+        SourceRule(
+            "UpdateCost may not replace Dreamcast's GetMonsterCost helper "
+            "with a duplicated record-table memcpy or index loop",
+            r"\b(?:memcpy|gCreatureRecords)\b", 0, 0),
+    ),
     ("resourcedisplay.obj", 0x120C54): (
         SourceRule(
             "TResourceDisplay constructor keeps Dreamcast's paired size "
@@ -2207,6 +2248,60 @@ def event_record_constructor_violations(text: str) -> list[tuple[int, str]]:
         if re.search(pattern, segment, re.DOTALL) is None:
             defects.append((text.count("\n", 0, selected.start()) + 1,
                             description))
+    return defects
+
+
+def recruit_inline_contract_violations(
+        source_text: str, recruit_header_text: str,
+        message_header_text: str) -> list[tuple[int, str]]:
+    """Audit recruit.obj's two Dreamcast-proven inline source boundaries.
+
+    Raw NB11 records ``message::message`` as Update's first body statement.
+    The retail prologue independently contains its eight ordered zero stores,
+    and both other recruit.obj message users remain exact under the same
+    compiland view.  UpdateCost is separately recorded in recruit.cpp with a
+    sole ``resCost`` local and a GetMonsterCost call; retail expands that
+    nested helper chain at every call site and emits no standalone body.
+    """
+    source = _source.mask(source_text)
+    recruit_header = _source.mask(recruit_header_text)
+    message_header = _source.mask(message_header_text)
+    defects: list[tuple[int, str]] = []
+
+    constructor_view = re.search(
+        r"#\s*define\s+HOMM3_RECRUIT_MESSAGE_CTOR_VIEW\s*\r?\n"
+        r"\s*#\s*include\s+\"message\.h\"", source_text) is not None
+    constructor_guard = re.search(
+        r"defined\s*\(\s*HOMM3_RECRUIT_MESSAGE_CTOR_VIEW\s*\)",
+        message_header_text) is not None
+    constructor_body = re.search(
+        r"\bmessage\s*\(\s*\)\s*\{\s*id\s*=\s*0\s*;\s*"
+        r"codeX\s*=\s*0\s*;\s*codeY\s*=\s*0\s*;\s*"
+        r"qualifier\s*=\s*0\s*;\s*mouseX\s*=\s*0\s*;\s*"
+        r"mouseY\s*=\s*0\s*;\s*extra\s*=\s*0\s*;\s*"
+        r"window\s*=\s*0\s*;\s*\}", message_header,
+        re.DOTALL) is not None
+    if not (constructor_view and constructor_guard and constructor_body):
+        token = re.search(r"\bmessage\s+msg\s*;", source)
+        line = source_text.count("\n", 0, token.start()) + 1 if token else 1
+        defects.append((line,
+            "recruit.cpp must retain its TU-scoped message constructor view "
+            "and message.h's ordered eight-field constructor body"))
+
+    inline_declaration = re.search(
+        r"\binline\s+void\s+UpdateCost\s*\(\s*\)\s*;",
+        recruit_header) is not None
+    inline_definition = re.search(
+        r"\binline\s+void\s+recruitUnit\s*::\s*UpdateCost\s*"
+        r"\(\s*\)\s*\{\s*int\s+resCost\s*\[\s*7\s*\]\s*;\s*"
+        r"GetMonsterCost\s*\(\s*monsterType\s*,\s*resCost\s*\)\s*;",
+        source, re.DOTALL) is not None
+    if not (inline_declaration and inline_definition):
+        token = re.search(r"\bUpdateCost\s*\(", source)
+        line = source_text.count("\n", 0, token.start()) + 1 if token else 1
+        defects.append((line,
+            "recruitUnit::UpdateCost must retain its inline recruit.cpp "
+            "definition after GetMonsterCost, with the resCost/helper head"))
     return defects
 
 
@@ -4717,6 +4812,114 @@ AddWidget(statusWidget, -1);
                                    resource_display_key)):
         failures.append(
             "flattened TResourceDisplay status-widget arms passed")
+    recruit_update_key = ("recruit.obj", 0x119DCC)
+    recruit_update_probe = """\
+message msg;
+if (slot == -1)
+    slot = selectedPosition;
+UpdateCost();
+sprintf(gText, "%s %s",
+    (*gpGeneralText)[GENERAL_TEXT_RECRUIT_TITLE],
+    GetArmyName(monsterType, 2));
+long maxGold = gpCurrentPlayer->resources[6] / goldPerTroop;
+if (altResource != -1) {
+    int byResource = resources[altResource] / resourcesPerTroop;
+    maxAvail = maxGold < byResource ? maxGold : byResource;
+} else {
+    maxAvail = maxGold;
+}
+"""
+    if contract_violations(recruit_update_probe, recruit_update_key):
+        failures.append("aligned recruitUnit::Update source shape did not pass")
+    broken_recruit_update_probes = (
+        (recruit_update_probe.replace(
+            "message msg;", "message msg = {0, 0, 0, 0, 0, 0, 0, 0};"),
+         "root message constructor"),
+        (recruit_update_probe.replace(
+            "(*gpGeneralText)[GENERAL_TEXT_RECRUIT_TITLE]",
+            "gpGeneralText->GetText(GENERAL_TEXT_RECRUIT_TITLE)"),
+         "one-statement"),
+        (recruit_update_probe.replace(
+            "GetArmyName(monsterType, 2)",
+            "akCreatureTypeTraits[monsterType].m_plural_name"),
+         "flatten Dreamcast's GetArmyName"),
+        (recruit_update_probe.replace("long maxGold", "int maxGold"),
+         "long maxGold"),
+    )
+    for probe, description in broken_recruit_update_probes:
+        if not any(description in rule.description for rule in
+                   contract_violations(probe, recruit_update_key)):
+            failures.append("broken recruitUnit::Update " + description
+                            + " source shape passed")
+    update_cost_key = ("recruit.obj", 0x11AC7C)
+    update_cost_probe = """\
+int resCost[7];
+GetMonsterCost(monsterType, resCost);
+goldPerTroop = resCost[6];
+int i;
+for (i = 0; i < 6; i++) {
+    if (resCost[i])
+        break;
+}
+"""
+    if contract_violations(update_cost_probe, update_cost_key):
+        failures.append("aligned recruitUnit::UpdateCost shape did not pass")
+    renamed_update_cost = update_cost_probe.replace("resCost", "cost")
+    if not any("sole resCost local" in rule.description for rule in
+               contract_violations(renamed_update_cost, update_cost_key)):
+        failures.append("renamed UpdateCost resCost local passed")
+    flattened_update_cost = update_cost_probe.replace(
+        "GetMonsterCost(monsterType, resCost);",
+        "memcpy(resCost, &gCreatureRecords[monsterType * 29], "
+        "sizeof(resCost));")
+    flattened_rules = contract_violations(flattened_update_cost,
+                                           update_cost_key)
+    if not any("GetMonsterCost helper boundary" in rule.description
+               for rule in flattened_rules):
+        failures.append("flattened UpdateCost helper boundary passed")
+    if not any("duplicated record-table" in rule.description
+               for rule in flattened_rules):
+        failures.append("flattened UpdateCost direct record access passed")
+    recruit_contract_source = """\
+#define HOMM3_RECRUIT_MESSAGE_CTOR_VIEW
+#include "message.h"
+message msg;
+inline void recruitUnit::UpdateCost()
+{
+    int resCost[7];
+    GetMonsterCost(monsterType, resCost);
+}
+"""
+    recruit_contract_header = "inline void UpdateCost();\n"
+    recruit_message_header = """\
+#if defined(HOMM3_RECRUIT_MESSAGE_CTOR_VIEW)
+message() {
+    id = 0; codeX = 0; codeY = 0; qualifier = 0;
+    mouseX = 0; mouseY = 0; extra = 0; window = 0;
+}
+#endif
+"""
+    if recruit_inline_contract_violations(
+            recruit_contract_source, recruit_contract_header,
+            recruit_message_header):
+        failures.append("aligned recruit inline contracts did not pass")
+    broken_recruit_inline_probes = (
+        recruit_contract_source.replace(
+            "#define HOMM3_RECRUIT_MESSAGE_CTOR_VIEW\n", ""),
+        recruit_contract_source.replace(
+            "inline void recruitUnit::UpdateCost()",
+            "void recruitUnit::UpdateCost()"),
+    )
+    for probe in broken_recruit_inline_probes:
+        if not recruit_inline_contract_violations(
+                probe, recruit_contract_header, recruit_message_header):
+            failures.append("broken recruit inline source contract passed")
+    if not recruit_inline_contract_violations(
+            recruit_contract_source, recruit_contract_header,
+            recruit_message_header.replace(
+                "HOMM3_RECRUIT_MESSAGE_CTOR_VIEW",
+                "HOMM3_OTHER_MESSAGE_CTOR_VIEW")):
+        failures.append("missing recruit message constructor guard passed")
     set_hero_context_key = ("advmgr.obj", 0x1A878)
     set_hero_context_probe = """\
 playerData* player = gpCurrentPlayer;
@@ -6409,6 +6612,20 @@ def scan() -> tuple[
     missing.extend(FileContractViolation("src/event_record.cpp", line,
                                          description)
                    for line, description in event_record_defects)
+
+    recruit_source = common.HOMM3_DIR / "src/recruit.cpp"
+    recruit_source_text = recruit_source.read_text(errors="replace")
+    recruit_header = common.HOMM3_DIR / "include/recruit.h"
+    recruit_header_text = recruit_header.read_text(errors="replace")
+    message_header = common.HOMM3_DIR / "include/message.h"
+    message_header_text = message_header.read_text(errors="replace")
+    audited.add(_file_audit_scope("src/recruit.cpp"))
+    recruit_inline_defects = recruit_inline_contract_violations(
+        recruit_source_text, recruit_header_text, message_header_text)
+    checked += 2
+    missing.extend(FileContractViolation("src/recruit.cpp", line,
+                                         description)
+                   for line, description in recruit_inline_defects)
 
     netmsg_header = common.HOMM3_DIR / "include/netmsg.h"
     netmsg_text = netmsg_header.read_text(errors="replace")

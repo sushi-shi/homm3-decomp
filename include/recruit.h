@@ -239,41 +239,11 @@ public:
     void SetRolloverText(int codeY);
 
 
-    // Defined here, not in recruit.cpp, because retail HAS NO
-    // out-of-line body for it: the recruit band's carve rows are all
-    // accounted for by other functions, and the same ~0x60-byte block
-    // (7-dword cost fetch, gold at dword 6, first non-zero of the
-    // other six) is expanded verbatim inside all three constructors
-    // and at the head of recruitUnit::Update. An out-of-line member
-    // with extern linkage would have been emitted unconditionally, so
-    // retail's definition was an inline one.
-    void UpdateCost()
-    {
-        int cost[7];
-        // The +8 stays a POINTER offset, matching the shape byte-proven
-        // in GetMonsterCost: retail addresses the cost row as
-        // base + 4*(29*type) + 0x20, i.e. `&records[29*type] + 8`, NOT
-        // `records[29*type + 8]` (which scales the whole sum and spells
-        // the scale as a separate shift). Byte-neutral at THIS call
-        // site only because Update's `akCreatureTypeTraits[monsterType]`
-        // access shares the product and drags the shift back in - see
-        // Update's residual note.
-        memcpy(cost, &gCreatureRecords[monsterType * CREATURE_RECORD_DWORDS]
-                   + CREATURE_RECORD_COST_DWORD, sizeof(cost));
-        goldPerTroop = cost[6];
-        int i;
-        for (i = 0; i < 6; i++) {
-            if (cost[i] != 0)
-                break;
-        }
-        if (i < 6) {
-            altResource = i;
-            resourcesPerTroop = cost[i];
-        } else {
-            altResource = -1;
-            resourcesPerTroop = 0;
-        }
-    }
+    // The definition follows GetMonsterCost in recruit.cpp, as Dreamcast's
+    // recruit.cpp line table attests.  It remains inline: retail emits no
+    // standalone body and expands the nested GetMonsterCost loop at all four
+    // recruitUnit call sites.
+    inline void UpdateCost();
 };
 SIZE(recruitUnit, 188);
 
