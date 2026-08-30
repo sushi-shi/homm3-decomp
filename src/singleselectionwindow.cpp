@@ -1212,6 +1212,13 @@ void TSingleSelectionWindow::SetupScenarioOptions(unsigned char randomMaps)
 
 #endif  // @carcass
 
+// Raw NB11 places the main-loop i and nextColor at procedure scope, in that
+// order; the other i belongs to the nested mapChanged reset loop. It also
+// opens a dedicated lexical block around the four town/hero icon pointers and
+// closes it after their y assignments. Both facts are source shape even though
+// they are byte-flat at the current 99.3846% checkpoint. All 101 retail blocks
+// and all 56 symbolic branches agree. Initializing the outer i at declaration
+// was tested as a separate lowering and rejected at 96.1750%.
 // E:\gamedcs\singleselectionwindow.cpp:2933
 VA(0x00581100, 0x897)  // anchor-callee OnWidgetDeselect 0x5865b0 calls it (site 0x586d43) - the DC edge; size 1.02x dc 0x86C, dc 0x136388
 void TSingleSelectionWindow::SetupAdvancedOptions()
@@ -1307,6 +1314,7 @@ void TSingleSelectionWindow::SetupAdvancedOptions()
         mapChanged = 0;
     }
 
+    int i;
     int nextColor = 0;
     widget* playerName;
     widget* playerType;
@@ -1319,7 +1327,6 @@ void TSingleSelectionWindow::SetupAdvancedOptions()
     widget* bonusLeft;
     widget* bonusRight;
     UpdateGameVars();
-    int i;
     for (i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
         int strNbr = 0;
         if (gpGame->setup.playerPos[i] < 0)
@@ -1343,14 +1350,16 @@ void TSingleSelectionWindow::SetupAdvancedOptions()
         bonusRight->y = nextColor * 50 + 133;
         townButton->y = nextColor * 50 - y + 130;
 
-        widget* townIcon = GetWidget(i + 231);
-        widget* heroIcon = GetWidget(i + 247);
-        widget* heroLeft = GetWidget(i + 239);
-        widget* heroRight = GetWidget(i + 255);
-        townIcon->y = nextColor * 50 + 133;
-        heroIcon->y = nextColor * 50 + 133;
-        heroLeft->y = nextColor * 50 + 133;
-        heroRight->y = nextColor * 50 + 133;
+        {
+            widget* townIcon = GetWidget(i + 231);
+            widget* heroIcon = GetWidget(i + 247);
+            widget* heroLeft = GetWidget(i + 239);
+            widget* heroRight = GetWidget(i + 255);
+            townIcon->y = nextColor * 50 + 133;
+            heroIcon->y = nextColor * 50 + 133;
+            heroLeft->y = nextColor * 50 + 133;
+            heroRight->y = nextColor * 50 + 133;
+        }
 
         playerName->y = nextColor * 50 + 151;
         playerType->y = nextColor * 50 + 151;
