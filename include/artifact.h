@@ -54,6 +54,15 @@ enum TArtifact {
     ARTIFACT_BALLISTA = 4,
     ARTIFACT_AMMO_CART = 5,
     ARTIFACT_FIRST_AID_TENT = 6,
+#ifdef HOMM3_PHILAI_ARTIFACT_DECLS
+    // value_of_town's Dreamcast-named legion_artifacts table and the
+    // retail .rdata row at 0x640558 independently fix this five-piece run.
+    ARTIFACT_LEGS_OF_LEGION = 118,
+    ARTIFACT_LOINS_OF_LEGION = 119,
+    ARTIFACT_TORSO_OF_LEGION = 120,
+    ARTIFACT_ARMS_OF_LEGION = 121,
+    ARTIFACT_HEAD_OF_LEGION = 122,
+#endif
     // The two campaign combination-quest triples CheckForArtifactWin
     // (0x5f1610) collects into its piece vector: the Armor of the
     // Damned components on campaign 7 map 1, and the two Angelic

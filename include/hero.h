@@ -104,12 +104,14 @@ struct type_artifact {
     int extra;
 
     type_artifact() : artifactId(-1), extra(-1) {}
-    // DC Hero.h:209 names this one-argument form; giveReward's exact retail
-    // store order proves that the auxiliary word is initialized first.
+    // DC Hero.h:211 stores the artifact argument at +0, then line 212 stores
+    // the -1 sentinel at +4. Retail value_of_town preserves that order in
+    // its register allocation even though the eventual by-value pushes are
+    // ordered by record layout.
     explicit type_artifact(TArtifact id)
     {
-        extra = -1;
         artifactId = id;
+        extra = -1;
     }
     type_artifact(int id, int extraValue)
         : artifactId(id), extra(extraValue) {}

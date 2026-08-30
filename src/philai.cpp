@@ -30,6 +30,10 @@ double AI_value_of_luck(long luck, long change);
 long AI_get_value_of_artifact(type_artifact artifact, const hero* owner,
                               unsigned char equipped, unsigned char exact);
 long AI_get_value_of_artifact(const type_artifact& artifact, long player_id);
+long AI_get_artifact_player_value(const type_artifact& artifact,
+                                  long player_id);
+long AI_get_equip_value(type_artifact artifact, const hero* our_hero,
+                        unsigned char exact);
 void AI_set_hero_bonuses(hero* our_hero);
 void AI_equip_artifacts(hero* current_hero);
 long get_artifact_purchase_price(TArtifact artifact, long market_count,
@@ -59,6 +63,9 @@ long type_AI_creature_swapper::get_swap_value(
 long AI_value_of_combat(const hero* attacking_hero, const hero* defending_hero,
     const armyGroup& defending_army, const town* defending_town,
     NewmapCell* cell);
+long value_of_reinforcing(hero* current_hero, town* current_town,
+                          short move_cost);
+long value_of_town_buildings(const hero* current_hero, town* current_town);
 int CalcTerrainCost(const NewmapCell* cell, int dir, int points_left,
     long iPathfinding, long end_road, long flying, long water_walking,
     long native_terrain, unsigned char param_9);
@@ -73,16 +80,36 @@ DATA(0x0069ccac) static unsigned long iLastFrameRateTimer;
 // is its sole retail code reference, so this TU owns the public definition.
 DATA(0x006983f8) int bSpecialHideCursor;
 
-#if 0  // @carcass
-
-// E:\gamedcs\philai.cpp:58
-DC_ONLY(0x10d458, 0x22)
-int OnMySide(int iWhichPlayer)
+// These three header helpers are source-real boundaries in the Dreamcast
+// CodeView corpus. Complete's VC6 /Ob2 expands all three into value_of_town;
+// keep the boundaries in source so later score work cannot flatten away the
+// stronger source-shape evidence.
+inline type_point::type_point(short new_x, short new_y, short new_z)
 {
-    // @stub
+    x = new_x;
+    y = new_y;
+    z = new_z;
 }
 
-#endif  // @carcass
+inline NewmapCell* game::get_cell(type_point point)
+{
+    return &worldMap.cellData[(point.z * worldMap.Size + point.y)
+                              * worldMap.Size + point.x];
+}
+
+template <class T>
+inline const T& _cpp_min(T left, T right)
+{
+    return right < left ? right : left;
+}
+
+// E:\gamedcs\philai.cpp:58
+static int OnMySide(int iWhichPlayer)
+{
+    if (iWhichPlayer < 0)
+        return 0;
+    return gpGame->OnSameTeam(iWhichPlayer, gNetLocalGamePos);
+}
 
 // E:\gamedcs\philai.cpp:67
 // DC preserves the helper boundaries and statement order; retail /Ob2
@@ -227,19 +254,43 @@ void AI_visit_war_factory(hero* current_hero)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\philai.cpp:636
-DC_ONLY(0x10e22c, 0x6A)
-const hero* get_best_hero(long player_id)
+static const hero* get_best_hero(long player_id)
 {
-    // @stub
+    const hero* best_hero = 0;
+    int best_skill = 0;
+    playerData* player = &gpGame->players[player_id];
+    for (int i = 0; i < player->numHeroes; ++i) {
+        hero* candidate = gpGame->GetHero(player->heroes[i]);
+        int skill = candidate->get_primary_skill_total();
+        if (skill >= best_skill) {
+            best_skill = skill;
+            best_hero = candidate;
+        }
+    }
+    return best_hero;
 }
 
 // E:\gamedcs\philai.cpp:662
-DC_ONLY(0x10e298, 0x9A)
-unsigned char should_garrison_town(const hero* current_hero, const town* current_town)
+static unsigned char should_garrison_town(const hero* current_hero,
+                                          const town* current_town)
 {
-    // @stub
+    VictoryConditionStruct& victory = gpGame->mapHeader.victoryCondition;
+    if (victory.Type == VICTORY_CONDITION_CAPTURE_TOWN) {
+        int town_id = gpGame->GetTownId(victory.TownX, victory.TownY,
+                                        victory.TownZ);
+        if (town_id >= 0 && town_id == current_town->id) {
+            const hero* best_hero = get_best_hero(gNetLocalGamePos);
+            if (current_hero != best_hero)
+                return 1;
+        }
+    }
+    return 0;
 }
+
+#if 0  // @carcass -- philai body-evidence claims, retail RVA order (divergent from DC link order)
 
 // E:\gamedcs\philai.cpp:833
 DC_ONLY(0x10e6e8, 0x1AA)
@@ -2905,16 +2956,116 @@ int ValueOfStables(const hero* current_hero, long* move_cost)
     return upgrade_value + value;
 }
 
-#if 0  // @carcass -- philai body-evidence claims, retail RVA order (divergent from DC link order)
+// E:\gamedcs\philai.cpp's CodeView global record names this exact static
+// five-piece row. Retail .rdata 0x640558 is the consecutive 118..122 run,
+// and value_of_town walks it by pointer from begin to one-past-end.
+DATA(0x00640558) static const TArtifact legion_artifacts[5] = {
+    ARTIFACT_LEGS_OF_LEGION, ARTIFACT_LOINS_OF_LEGION,
+    ARTIFACT_TORSO_OF_LEGION, ARTIFACT_ARMS_OF_LEGION,
+    ARTIFACT_HEAD_OF_LEGION
+};
 
 // E:\gamedcs\philai.cpp:3131
 VA(0x0052ab80, 0x505)  // anchor-callee, dc 0x112914
 long value_of_town(const hero* current_hero, int x, int y, int z, short move_cost)
 {
-    // @stub
-}
+    short town_id = static_cast<short>(gpGame->GetTownId(x, y, z));
+    type_point point(static_cast<short>(x), static_cast<short>(y),
+                     static_cast<short>(z));
+    NewmapCell* cell = gpGame->get_cell(point);
+    if (town_id < 0)
+        return 0;
 
-#endif  // @carcass
+    town* current_town = gpGame->GetTown(town_id);
+    if (current_town->owner != current_hero->owner) {
+        if (OnMySide(current_town->owner))
+            return value_of_town_buildings(current_hero, current_town);
+
+        if (current_town->visitingHeroId >= 0) {
+            hero* visiting_hero =
+                gpGame->GetHero(current_town->visitingHeroId);
+            AI_value_of_combat(current_hero, visiting_hero,
+                               visiting_hero->army, 0, cell);
+        }
+        return value_of_enemy_town(current_hero, current_town, move_cost,
+                                   cell);
+    }
+
+    long value = value_of_reinforcing(
+        const_cast<hero*>(current_hero), current_town, move_cost);
+    value += value_of_town_buildings(current_hero, current_town);
+
+    VictoryConditionStruct& victory = gpGame->mapHeader.victoryCondition;
+    if (const_cast<hero*>(current_hero)->HasArtifact(ARTIFACT_HOLY_GRAIL)
+        && current_town->is_legal_building(HOLY_GRAIL_ID)
+        && !current_town->HasBuilding(HOLY_GRAIL_ID, 0)) {
+        if (victory.Type == VICTORY_CONDITION_BUILD_GRAIL) {
+            if (victory.TownX == current_town->mapX
+                && victory.TownY == current_town->mapY
+                && victory.TownZ == current_town->mapZ) {
+                value += 5000000;
+            }
+        } else {
+            type_artifact grail(ARTIFACT_HOLY_GRAIL, -1);
+            value += AI_get_artifact_player_value(grail,
+                                                   current_hero->owner);
+        }
+    }
+
+    if (victory.Type == VICTORY_CONDITION_TRANSPORT_ARTIFACT
+        && static_cast<unsigned char>(
+               victory.applies_to_player(gNetLocalGamePos))
+        && victory.TownX == current_town->mapX
+        && victory.TownY == current_town->mapY
+        && victory.TownZ == current_town->mapZ
+        && const_cast<hero*>(current_hero)->HasArtifact(
+               victory.ArtifactNum)) {
+        value += 5000000;
+    }
+
+    if (current_town->threatening_heroes > 0) {
+        if (victory.Type == VICTORY_CONDITION_CAPTURE_TOWN
+            && victory.TownX == current_town->mapX
+            && victory.TownY == current_town->mapY
+            && victory.TownZ == current_town->mapZ) {
+            value += 5000000;
+        } else {
+            value += 5000000 / gpGame->towns.size();
+        }
+    }
+
+    hero* garrison_hero = 0;
+    if (current_town->garrisonHeroId >= 0)
+        garrison_hero = gpGame->GetHero(current_town->garrisonHeroId);
+
+    if (garrison_hero) {
+        for (int i = 0; i < 5; ++i) {
+            if (const_cast<hero*>(current_hero)->HasArtifact(
+                    legion_artifacts[i])) {
+                type_artifact artifact(legion_artifacts[i]);
+                value += AI_get_equip_value(artifact, garrison_hero, 1);
+            }
+        }
+    }
+
+    if (gpCurrentPlayer->numHeroes > 1 && gpGame->setup.difficulty > 0
+        && (!garrison_hero
+            || garrison_hero->get_primary_skill_total() * 5 / 4
+                   < const_cast<hero*>(current_hero)
+                         ->get_primary_skill_total())
+        && should_garrison_town(current_hero, current_town)) {
+        if (victory.Type == VICTORY_CONDITION_CAPTURE_TOWN
+            && victory.TownX == current_town->mapX
+            && victory.TownY == current_town->mapY
+            && victory.TownZ == current_town->mapZ) {
+            value += 5000000;
+        } else {
+            value += 5000000 / gpGame->towns.size();
+        }
+    }
+
+    return _cpp_min(value, 5000000L);
+}
 
 // E:\gamedcs\philai.cpp:3096
 VA(0x0052b090, 0x14e)  // anchor-callee, dc 0x112830
