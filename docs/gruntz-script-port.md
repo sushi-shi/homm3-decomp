@@ -260,6 +260,27 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-30 — `town::destroy_extra_capitol` restores three positive
+  Dreamcast helper boundaries byte-flat at 96.4595%.** The dossier at
+  `town.obj+0x166ed8` has no surviving locals but records two
+  `town::IsCapitol` calls: the outer self guard at line 1314 and the other-town
+  test after `game::GetTown` at line 1323. It separately records
+  `NewfullMap::cell` immediately before `game::ConvertObject` at lines
+  1329/1330. The prior high-water source flattened both accessors into direct
+  Capitol-bit tests and hand-expanded the row-major map-cell index.
+
+  Moving the already-recovered header-inline accessors before this consumer
+  and restoring all three calls is byte-flat at **96.4595%**: all 111
+  instructions, 13 CFG blocks, seven conditional branches, and the return
+  remain aligned. The residual is still confined to C2's scheduling of the
+  City-Hall OR and Capitol clear. Fourteen catalog mutations were already
+  bounded; only a false volatile loop index reduced register distance, without
+  closing the bytes. Three fatal asymmetric contracts plus negative controls
+  now reject either direct-mask substitution, reordered mask statements, or a
+  re-expanded cell lookup. This is also a concrete header-state result: moving
+  a definition to the source-correct visibility point need not be avoided, and
+  max/history remain available if another consumer temporarily moves.
+
 - **2026-08-30 — `town::BuildBuilding` deliberately leaves a source-false
   99.3036% local maximum and banks the recovered Dreamcast helper graph.**
   The dossier at `town.obj+0x166fc8` records `type_building_id built` as its
