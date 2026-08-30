@@ -1352,6 +1352,31 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             "service_sounds helper call",
             r"\bservice_sounds\s*\(", 1, 1),
     ),
+    ("palette.obj", 0x10AA98): (
+        SourceRule(
+            "TPalette16::Cycle keeps Dreamcast's positive-step loop, saved "
+            "begin endpoint, left memmove and end writeback sequence",
+            r"if\s*\(\s*step\s*>\s*0\s*\)\s*\{\s*"
+            r"for\s*\(\s*int\s+i\s*=\s*0\s*;\s*i\s*<\s*step\s*;\s*"
+            r"\+\+\s*i\s*\)\s*\{\s*"
+            r"unsigned\s+short\s+saved\s*=\s*data\s*\[\s*begin\s*\]"
+            r"\s*;\s*memmove\s*\(\s*&\s*data\s*\[\s*begin\s*\]\s*,"
+            r"\s*&\s*data\s*\[\s*begin\s*\+\s*1\s*\]\s*,\s*"
+            r"\(\s*end\s*-\s*begin\s*\)\s*\*\s*sizeof\s*\(\s*"
+            r"data\s*\[\s*0\s*\]\s*\)\s*\)\s*;\s*"
+            r"data\s*\[\s*end\s*\]\s*=\s*saved\s*;", 1, 1),
+        SourceRule(
+            "TPalette16::Cycle keeps Dreamcast's negative-step loop, saved "
+            "end endpoint, right memmove and begin writeback sequence",
+            r"else\s*\{\s*for\s*\(\s*int\s+i\s*=\s*0\s*;\s*i\s*<\s*"
+            r"-\s*step\s*;\s*\+\+\s*i\s*\)\s*\{\s*"
+            r"unsigned\s+short\s+saved\s*=\s*data\s*\[\s*end\s*\]"
+            r"\s*;\s*memmove\s*\(\s*&\s*data\s*\[\s*begin\s*\+\s*"
+            r"1\s*\]\s*,\s*&\s*data\s*\[\s*begin\s*\]\s*,\s*"
+            r"\(\s*end\s*-\s*begin\s*\)\s*\*\s*sizeof\s*\(\s*"
+            r"data\s*\[\s*0\s*\]\s*\)\s*\)\s*;\s*"
+            r"data\s*\[\s*begin\s*\]\s*=\s*saved\s*;", 1, 1),
+    ),
     ("palette.obj", 0x10B7AC): (
         SourceRule(
             "TPalette16::Gray keeps Dreamcast's three const unsigned "
@@ -3559,6 +3584,45 @@ if (m_flag64) {
         if not any(description in rule.description for rule in
                    contract_violations(probe, current_map_key)):
             failures.append("broken SetCurrentMap " + description
+                            + " source shape passed")
+    palette_cycle_key = ("palette.obj", 0x10AA98)
+    palette_cycle_probe = """\
+if (step > 0) {
+    for (int i = 0; i < step; ++i) {
+        unsigned short saved = data[begin];
+        memmove(&data[begin], &data[begin + 1],
+                (end - begin) * sizeof(data[0]));
+        data[end] = saved;
+    }
+} else {
+    for (int i = 0; i < -step; ++i) {
+        unsigned short saved = data[end];
+        memmove(&data[begin + 1], &data[begin],
+                (end - begin) * sizeof(data[0]));
+        data[begin] = saved;
+    }
+}
+"""
+    if contract_violations(palette_cycle_probe, palette_cycle_key):
+        failures.append("aligned TPalette16::Cycle source shape did not pass")
+    palette_cycle_mutations = (
+        (palette_cycle_probe.replace("i < step", "i < end - begin", 1),
+         "positive-step loop"),
+        (palette_cycle_probe.replace(
+            "memmove(&data[begin], &data[begin + 1]",
+            "memmove(&data[begin + 1], &data[begin]", 1),
+         "left memmove"),
+        (palette_cycle_probe.replace("i < -step", "i < step"),
+         "negative-step loop"),
+        (palette_cycle_probe.replace(
+            "unsigned short saved = data[end];",
+            "unsigned short saved = data[begin];"),
+         "saved end endpoint"),
+    )
+    for probe, description in palette_cycle_mutations:
+        if not any(description in rule.description for rule in
+                   contract_violations(probe, palette_cycle_key)):
+            failures.append("broken TPalette16::Cycle " + description
                             + " source shape passed")
     palette_gray_key = ("palette.obj", 0x10B7AC)
     palette_gray_probe = """\
