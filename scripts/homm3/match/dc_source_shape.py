@@ -956,6 +956,10 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
     ),
     ("game.obj", 0xAC048): (
         SourceRule(
+            "randomize_university keeps Dreamcast's university aggregate "
+            "identity on Complete's retail-compatible four-int raw record",
+            r"\A\s*int\s+university\s*\[\s*4\s*\]\s*;"),
+        SourceRule(
             "randomize_university keeps Dreamcast's shared choice, i and "
             "TSecondarySkill skill locals in recovered order while allowing "
             "Complete-only locals between them",
@@ -2464,6 +2468,29 @@ def game_is_computer_team_header_violations(
              "Game.h:856 game::IsComputerTeam must retain Dreamcast's "
              "unsigned-char const inline boundary and negative-team arm, "
              "with Complete's retail-proven is_human_ally negation")]
+
+
+def game_randomize_header_violations(text: str) -> list[tuple[int, str]]:
+    """Audit the compatible tail order from game LF_FIELDLIST 0x3edc.
+
+    Dreamcast marks both members private, but retail's public decorations
+    directly reject that access flag.  The relative declaration order and
+    the randomize_university parameter survive both revisions; Complete-only
+    declarations are explicitly allowed between the two shared members.
+    """
+    masked = _source.mask(text)
+    pattern = (
+        r"\bvoid\s+match_underground_gates\s*\(\s*\)\s*;.*?"
+        r"\bvoid\s+randomize_university\s*\(\s*"
+        r"NewmapCell\s*\*\s*cell\s*\)\s*;")
+    if re.search(pattern, masked, re.DOTALL) is not None:
+        return []
+    token = re.search(r"\brandomize_university\s*\(", masked)
+    line = text.count("\n", 0, token.start()) + 1 if token else 1
+    return [(line,
+             "game must retain Dreamcast LF_FIELDLIST's compatible "
+             "match_underground_gates-before-randomize_university order "
+             "and NewmapCell* cell parameter; retail proves public access")]
 
 
 def split_window_header_violations(text: str) -> list[tuple[int, str]]:
@@ -4615,6 +4642,8 @@ count = outfile->Write(&char_buffer, sizeof(char_buffer));
         failures.append("discarded SaveBoatPool write result passed")
     randomize_university_key = ("game.obj", 0xAC048)
     randomize_university_probe = """\
+int university[4];
+std::bitset<28> availableSkills;
 long choice;
 int availableCount;
 long i;
@@ -4636,6 +4665,18 @@ TSecondarySkill skill;
     if not contract_violations(int_randomize_skill,
                                randomize_university_key):
         failures.append("int randomize_university skill escaped shape gate")
+    renamed_randomize_university = randomize_university_probe.replace(
+        "int university[4];", "int selectedSkills[4];")
+    if not contract_violations(renamed_randomize_university,
+                               randomize_university_key):
+        failures.append(
+            "renamed randomize_university aggregate escaped shape gate")
+    resized_randomize_university = randomize_university_probe.replace(
+        "int university[4];", "int university[5];")
+    if not contract_violations(resized_randomize_university,
+                               randomize_university_key):
+        failures.append(
+            "resized randomize_university aggregate escaped shape gate")
     initialize_hordes_key = ("town.obj", 0x1664B0)
     initialize_hordes_probe = """\
 effect->dwelling = slot;
@@ -6332,6 +6373,26 @@ inline unsigned char IsComputerTeam(int teamNum) const
     if any(not game_is_computer_team_header_violations(probe)
            for probe in broken_computer_team_probes):
         failures.append("broken Game.h IsComputerTeam shape passed")
+    randomize_header_probe = """\
+void match_underground_gates();
+void CompleteOnlyHelper();
+void randomize_university(NewmapCell* cell);
+"""
+    if game_randomize_header_violations(randomize_header_probe):
+        failures.append("aligned game randomize member order did not pass")
+    broken_randomize_headers = (
+        randomize_header_probe.replace(
+            "void match_underground_gates();\n"
+            "void CompleteOnlyHelper();\n"
+            "void randomize_university(NewmapCell* cell);",
+            "void randomize_university(NewmapCell* cell);\n"
+            "void CompleteOnlyHelper();\n"
+            "void match_underground_gates();"),
+        randomize_header_probe.replace("NewmapCell* cell", "void* cell"),
+    )
+    if any(not game_randomize_header_violations(probe)
+           for probe in broken_randomize_headers):
+        failures.append("broken game randomize member order passed")
     update_msg_probe = """\
 class CUpdatePlayerPosMsg : public CNetMsg {
     CNetPlayerHandlerPlayer m_netPlayer[8];
@@ -7127,11 +7188,13 @@ def scan() -> tuple[
     audited.add(_file_audit_scope("include/game.h"))
     get_hero_defects = game_get_hero_header_violations(game_text)
     computer_team_defects = game_is_computer_team_header_violations(game_text)
-    checked += 2
+    randomize_header_defects = game_randomize_header_violations(game_text)
+    checked += 3
     missing.extend(FileContractViolation("include/game.h", line,
                                          description)
                    for line, description in
-                   get_hero_defects + computer_team_defects)
+                   get_hero_defects + computer_team_defects
+                   + randomize_header_defects)
 
     split_header = common.HOMM3_DIR / "include/armygrp_split.h"
     split_text = split_header.read_text(errors="replace")

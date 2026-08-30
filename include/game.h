@@ -2325,13 +2325,15 @@ public:
     // dataflow prove the PC build made it a member.
     void SetupFirstPlayer();
     int setup_first_player_position(int firstHuman);
-    void randomize_university(NewmapCell* cell);
     bool LoadMap(TAbstractFile* mapFile);
     void apply_map_header_availability();
     void read_map_hero_setups(TAbstractFile* mapFile, int mapVersion);
     void RandomizeHolyGrail();
     void InitRandomArtifacts();
+    // Raw LF_FIELDLIST 0x3edc orders this shared pair as written. Its
+    // private access flag is DC-only: retail decorates both as public QAEX.
     void match_underground_gates();
+    void randomize_university(NewmapCell* cell);
     void RandomizeEvents();
     void ProcessOnMapTowns();
     void ProcessOnMapHeroes();

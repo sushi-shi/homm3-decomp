@@ -5422,9 +5422,11 @@ static __forceinline type_university* university_skills_record(int* skills)
 // round.  Dreamcast CodeView attests university/used/choice/i and the
 // TSecondarySkill type of skill.  Restoring its indexed i loop raised 93.08
 // -> 99.75; restoring the shared local order and enum type is byte-flat and
-// source-shape-ratcheted.  The DC university aggregate itself is revision
+// source-shape-ratcheted.  The DC university aggregate type itself is revision
 // skew: Complete's model has an out-of-line default constructor, and declaring
-// that local directly emits the absent ctor call and falls to 97.8623%.
+// that local directly emits the absent ctor call and falls to 97.8623%.  Its
+// recovered `university` identity remains on the retail-proved raw four-int
+// record below.
 // why-reg confirms equal pseudo-definition slots but a different C1 processing
 // order.  Exhausted byte-inert levers: reset vs set(false), int/unsigned/
 // register bounds, cached-count vs explicit-highest formulations, split
@@ -5434,7 +5436,7 @@ static __forceinline type_university* university_skills_record(int* skills)
 VA(0x004c06f0, 0x179)  // dc-order + member receiver, dc 0xac048
 void game::randomize_university(NewmapCell* cell)
 {
-    int selectedSkills[4];
+    int university[4];
     std::bitset<28> availableSkills;
     long choice;
     long i;
@@ -5457,7 +5459,7 @@ void game::randomize_university(NewmapCell* cell)
             skill = secondary_skill_from_int(skill + 1);
         }
 
-        selectedSkills[i] = skill;
+        university[i] = skill;
         availableSkills.set(skill, false);
         --availableCount;
     }
@@ -5471,7 +5473,7 @@ void game::randomize_university(NewmapCell* cell)
         | (universityIndex << 13);
     type_university* universityTail = universityList->end();
     type_university* universityRecord =
-        university_skills_record(selectedSkills);
+        university_skills_record(university);
 #pragma inline_depth(0)
     universityList->insert(universityTail, 1, *universityRecord);
 #pragma inline_depth()
