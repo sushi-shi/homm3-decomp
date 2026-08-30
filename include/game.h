@@ -672,12 +672,12 @@ enum EVictoryConditionType {
 #endif
 #if defined(HOMM3_VLC_CHECKS_VIEW) || defined(HOMM3_TOWN_OBJ_DECLS) \
     || defined(HOMM3_AI_PLAYER_OBJ_DECLS) \
-    || defined(HOMM3_PHILAI_ARTIFACT_DECLS)
+    || defined(HOMM3_PHILAI_OBJ_DECLS)
     // town.obj joins for initialize_buildings' Grail-slot gate;
     // ai_player.obj for find_all_destinations' fixed grail-spot value.
     VICTORY_CONDITION_BUILD_GRAIL = 4,
 #endif
-#ifdef HOMM3_VLC_CHECKS_VIEW
+#if defined(HOMM3_VLC_CHECKS_VIEW) || defined(HOMM3_PHILAI_OBJ_DECLS)
     // 0x5f2390 CheckForDefeatedMonsterWin dispatches on both: 7 is the
     // map-format defeat-monster ordinal, 11 the engine's
     // every-monster-dead sweep of the same routine.
@@ -856,7 +856,7 @@ public:
     char pad_03;
     // CheckForArtifactTransportWin and AI_get_value_of_artifact both read
     // the full retail dword at +4 as the requested artifact ordinal.
-#ifdef HOMM3_PHILAI_ARTIFACT_DECLS
+#ifdef HOMM3_PHILAI_OBJ_DECLS
     // Dreamcast CodeView carries the source enum type; value_of_town is the
     // first retail consumer whose register schedule distinguishes the typed
     // member from an int-to-enum bridge. Storage remains the same dword.
@@ -864,7 +864,7 @@ public:
 #else
     int ArtifactNum;
 #endif
-#ifdef HOMM3_VLC_CHECKS_VIEW
+#if defined(HOMM3_VLC_CHECKS_VIEW) || defined(HOMM3_PHILAI_OBJ_DECLS)
     // The Dreamcast field list (dump 0x3e34) orders ArtifactNum,
     // CreatureType, NumCreatures between AppliesToComputer and
     // ResourceType; retail widens the trailing pair to ints.
@@ -906,7 +906,7 @@ public:
     char pad_24[0x10];
 #endif
     int HeroID;
-#ifdef HOMM3_VLC_CHECKS_VIEW
+#if defined(HOMM3_VLC_CHECKS_VIEW) || defined(HOMM3_PHILAI_OBJ_DECLS)
     // CheckForDefeatedMonsterWin (0x5f2390) packs the words at
     // +0x38/+0x3c and the byte at +0x40 into a type_point - the DC
     // MonsterX/MonsterY/MonsterZ trio, int-widened like the town trio.
@@ -1929,7 +1929,7 @@ public:
     short field_1f642;
     char field_1f644[0x20];
 #if defined(HOMM3_GAME_NEW_MAP_DECLS) \
- || defined(HOMM3_PHILAI_ARTIFACT_DECLS)
+ || defined(HOMM3_PHILAI_OBJ_DECLS)
     TArtifact field_1f664[7];
 #else
     char field_1f664[0x1c];

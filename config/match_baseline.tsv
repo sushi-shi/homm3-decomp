@@ -2144,6 +2144,7 @@ philai	?value_of_custom_item@@YIJPBVhero@@PAVNewmapCell@@J@Z	100.0000	100.0000	1
 philai	?value_of_enemy_town@@YIJPBVhero@@PBVtown@@FPAVNewmapCell@@@Z	99.9561	99.9561	99.9561	0x129cb0
 philai	?value_of_experience@@YIMPBVhero@@PBVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x127710
 philai	?value_of_learning@@YIJPBVhero@@H@Z	100.0000	100.0000	100.0000	0x1298d0
+philai	?value_of_monsters@@YIJPBVhero@@PAVNewmapCell@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x12a140
 philai	?value_of_move_source@@YIHPBVhero@@JFPAJ@Z	100.0000	100.0000	100.0000	0x12a1e0
 philai	?value_of_obelisk@@YIHPAVNewmapCell@@J@Z	86.1364	86.1364	86.1364	0x12a2b0
 philai	?value_of_pyramid@@YIJPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x12a410
@@ -2164,7 +2165,6 @@ philai	get_skill_value	0.0000	0.0000	0.0000	0x124690
 philai	move_hero	0.0000	0.0000	0.0000	0x1267b0
 philai	type_AI_creature_swapper_get_swap_value	0.0000	0.0000	0.0000	0x2c4a0
 philai	type_spellvalue_type_spellvalue_126d40	0.0000	0.0000	0.0000	0x126d40
-philai	value_of_monsters	0.0000	0.0000	0.0000	0x12a140
 puzzlewindow	??0TPuzzleWindow@@QAE@H@Z	100.0000	100.0000	100.0000	0x12c1e0
 puzzlewindow	??0type_AI_puzzle_tile@@QAE@PAVNewmapCell@@Utype_point@@@Z	99.4444	99.4444	99.4444	0x12c770
 puzzlewindow	??1TPuzzleWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x12c5a0
