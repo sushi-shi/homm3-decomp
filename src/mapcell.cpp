@@ -1711,7 +1711,7 @@ int NewfullMap::readBoatData(void* infile, CObject* boatObject)
 
 // E:\gamedcs\mapcell.cpp:1110
 VA(0x004fec10, 0x1D)  // anchor-global, dc 0xeda1c
-CObjectType* CObject::get_object_type_ptr()
+CObjectType* CObject::get_object_type_ptr() const
 {
     return &gpGame->worldMap.objectTypes[typeIndex];
 }

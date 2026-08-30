@@ -1666,7 +1666,6 @@ call	philai.obj	0x1147ac	game::GetNumMapLevels
 call	philai.obj	0x1147ac	game::get_cell
 call	puzzlewindow.obj	0x1153a8	Bitmap816::GetHeight
 call	puzzlewindow.obj	0x1153a8	Bitmap816::GetWidth
-call	puzzlewindow.obj	0x115538	CObject::get_type
 call	puzzlewindow.obj	0x115f64	create_AI_puzzle_map
 call	puzzlewindow.obj	0x115f64	game::get_cell
 call	puzzlewindow.obj	0x115f64	mark_AI_puzzle
