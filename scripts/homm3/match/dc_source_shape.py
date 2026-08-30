@@ -1516,6 +1516,74 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"\(\s*\(\s*gray\s*/\s*blue_norm\s*\)\s*&\s*"
             r"blue_mask\s*\)\s*\)\s*;", 1, 1),
     ),
+    ("palette.obj", 0x10BFD4): (
+        SourceRule(
+            "TPalette24::AdjustHSV keeps Dreamcast's three channel "
+            "normalization statements, entry-10 loop, r/g/b and h/s/v "
+            "locals, and RGBToHSV helper boundary in source-row order",
+            r"\A\s*const\s+unsigned\s+int\s+red_norm\s*=\s*"
+            r"std\s*::\s*numeric_limits\s*<\s*int\s*>\s*::\s*max\s*"
+            r"\(\s*\)\s*/\s*255\s*;\s*"
+            r"const\s+unsigned\s+int\s+green_norm\s*=\s*"
+            r"std\s*::\s*numeric_limits\s*<\s*int\s*>\s*::\s*max\s*"
+            r"\(\s*\)\s*/\s*255\s*;\s*"
+            r"const\s+unsigned\s+int\s+blue_norm\s*=\s*"
+            r"std\s*::\s*numeric_limits\s*<\s*int\s*>\s*::\s*max\s*"
+            r"\(\s*\)\s*/\s*255\s*;.*?"
+            r"for\s*\(\s*int\s+i\s*=\s*10\s*;\s*i\s*<\s*256\s*;\s*"
+            r"\+\+\s*i\s*\)\s*\{\s*"
+            r"unsigned\s+int\s+r\s*=\s*colors\s*\.\s*data\s*"
+            r"\[\s*i\s*\]\s*\[\s*0\s*\]\s*\*\s*red_norm\s*;\s*"
+            r"unsigned\s+int\s+g\s*=\s*colors\s*\.\s*data\s*"
+            r"\[\s*i\s*\]\s*\[\s*1\s*\]\s*\*\s*green_norm\s*;\s*"
+            r"unsigned\s+int\s+b\s*=\s*colors\s*\.\s*data\s*"
+            r"\[\s*i\s*\]\s*\[\s*2\s*\]\s*\*\s*blue_norm\s*;\s*"
+            r"float\s+h\s*;\s*float\s+s\s*;\s*float\s+v\s*;\s*"
+            r"RGBToHSV\s*\(\s*r\s*,\s*g\s*,\s*b\s*,\s*&\s*h\s*,\s*"
+            r"&\s*s\s*,\s*&\s*v\s*\)\s*;", 1, 1),
+        SourceRule(
+            "TPalette24::AdjustHSV keeps Dreamcast's nested hue interpolation, "
+            "shortest-path wrap choice, and unit-interval correction",
+            r"if\s*\(\s*hue_adjust\s*>=\s*0\.0f\s*\)\s*\{\s*"
+            r"float\s+delta\s*=\s*hue\s*-\s*h\s*;\s*"
+            r"h\s*\+=\s*delta\s*\*\s*hue_adjust\s*;\s*"
+            r"if\s*\(\s*fabs\s*\(\s*delta\s*\)\s*>\s*0\.5\s*\)\s*"
+            r"\{\s*if\s*\(\s*delta\s*>\s*0\.0\s*\)\s*\{\s*"
+            r"h\s*\+=\s*1\.0f\s*-\s*hue_adjust\s*;\s*\}\s*else\s*"
+            r"\{\s*h\s*\+=\s*hue_adjust\s*;\s*\}\s*"
+            r"if\s*\(\s*h\s*>=\s*1\.0\s*\)\s*\{\s*"
+            r"h\s*-=\s*1\.0\s*;", 1, 1),
+        SourceRule(
+            "TPalette24::AdjustHSV keeps Dreamcast's value adjustment before "
+            "saturation adjustment and its dark/high-value saturation arm",
+            r"if\s*\(\s*value_adjust\s*>=\s*0\.0\s*\)\s*\{\s*"
+            r"if\s*\(\s*value_adjust\s*<=\s*1\.0f\s*\)\s*\{\s*"
+            r"v\s*\*=\s*value_adjust\s*;\s*\}\s*else\s*\{\s*"
+            r"v\s*=\s*1\.0f\s*-\s*\(\s*1\.0f\s*-\s*v\s*\)\s*/\s*"
+            r"value_adjust\s*;\s*\}\s*\}\s*"
+            r"if\s*\(\s*saturation_adjust\s*>=\s*0\.0f\s*\)\s*\{\s*"
+            r"if\s*\(\s*saturation_adjust\s*<=\s*1\.0f\s*\)\s*\{\s*"
+            r"s\s*\*=\s*saturation_adjust\s*;\s*\}\s*else\s+if\s*"
+            r"\(\s*v\s*>\s*0\.75\s*&&\s*s\s*<\s*0\.25\s*\)\s*"
+            r"\{\s*s\s*=\s*\(\s*1\.0f\s*-\s*v\s*\)\s*\*\s*s\s*"
+            r"\*\s*saturation_adjust\s*\*\s*4\.0f\s*;\s*\}\s*else\s*"
+            r"\{\s*s\s*=\s*1\.0f\s*-\s*\(\s*1\.0f\s*-\s*s\s*\)"
+            r"\s*/\s*saturation_adjust\s*;", 1, 1),
+        SourceRule(
+            "TPalette24::AdjustHSV keeps Dreamcast's HSVToRGB helper boundary "
+            "before three ordered retail-corroborated channel writes",
+            r"HSVToRGB\s*\(\s*h\s*,\s*s\s*,\s*v\s*,\s*&\s*r\s*,\s*"
+            r"&\s*g\s*,\s*&\s*b\s*\)\s*;\s*"
+            r"colors\s*\.\s*data\s*\[\s*i\s*\]\s*\[\s*0\s*\]\s*=\s*"
+            r"static_cast\s*<\s*unsigned\s+char\s*>\s*"
+            r"\(\s*r\s*/\s*red_norm\s*\)\s*;\s*"
+            r"colors\s*\.\s*data\s*\[\s*i\s*\]\s*\[\s*1\s*\]\s*=\s*"
+            r"static_cast\s*<\s*unsigned\s+char\s*>\s*"
+            r"\(\s*g\s*/\s*green_norm\s*\)\s*;\s*"
+            r"colors\s*\.\s*data\s*\[\s*i\s*\]\s*\[\s*2\s*\]\s*=\s*"
+            r"static_cast\s*<\s*unsigned\s+char\s*>\s*"
+            r"\(\s*b\s*/\s*blue_norm\s*\)\s*;", 1, 1),
+    ),
     ("resourcemanager.obj", 0x121EC8): (
         SourceRule(
             "GetPalette24 keeps Dreamcast's char[24] header and TRGBA[256] "
@@ -3916,6 +3984,92 @@ for (int i = 10; i < 256; ++i) {
         if not any(description in rule.description for rule in
                    contract_violations(probe, palette_gray_key)):
             failures.append("broken TPalette16::Gray " + description
+                            + " source shape passed")
+    palette24_hsv_key = ("palette.obj", 0x10BFD4)
+    palette24_hsv_probe = """\
+const unsigned int red_norm =
+    std::numeric_limits<int>::max() / 255;
+const unsigned int green_norm =
+    std::numeric_limits<int>::max() / 255;
+const unsigned int blue_norm =
+    std::numeric_limits<int>::max() / 255;
+for (int i = 10; i < 256; ++i) {
+    unsigned int r = colors.data[i][0] * red_norm;
+    unsigned int g = colors.data[i][1] * green_norm;
+    unsigned int b = colors.data[i][2] * blue_norm;
+    float h;
+    float s;
+    float v;
+    RGBToHSV(r, g, b, &h, &s, &v);
+    if (hue_adjust >= 0.0f) {
+        float delta = hue - h;
+        h += delta * hue_adjust;
+        if (fabs(delta) > 0.5) {
+            if (delta > 0.0) {
+                h += 1.0f - hue_adjust;
+            } else {
+                h += hue_adjust;
+            }
+            if (h >= 1.0) {
+                h -= 1.0;
+            }
+        }
+    }
+    if (value_adjust >= 0.0) {
+        if (value_adjust <= 1.0f) {
+            v *= value_adjust;
+        } else {
+            v = 1.0f - (1.0f - v) / value_adjust;
+        }
+    }
+    if (saturation_adjust >= 0.0f) {
+        if (saturation_adjust <= 1.0f) {
+            s *= saturation_adjust;
+        } else if (v > 0.75 && s < 0.25) {
+            s = (1.0f - v) * s * saturation_adjust * 4.0f;
+        } else {
+            s = 1.0f - (1.0f - s) / saturation_adjust;
+        }
+    }
+    HSVToRGB(h, s, v, &r, &g, &b);
+    colors.data[i][0] = static_cast<unsigned char>(r / red_norm);
+    colors.data[i][1] = static_cast<unsigned char>(g / green_norm);
+    colors.data[i][2] = static_cast<unsigned char>(b / blue_norm);
+}
+"""
+    if contract_violations(palette24_hsv_probe, palette24_hsv_key):
+        failures.append(
+            "aligned TPalette24::AdjustHSV source shape did not pass")
+    palette24_hsv_mutations = (
+        (palette24_hsv_probe.replace("int i = 10", "int i = 0"),
+         "entry-10 loop"),
+        (palette24_hsv_probe.replace(
+            "RGBToHSV(r, g, b, &h, &s, &v);", "h = s = v = 0.0f;"),
+         "RGBToHSV helper"),
+        (palette24_hsv_probe.replace("h += delta * hue_adjust;",
+                                     "h = hue * hue_adjust;"),
+         "hue interpolation"),
+        (palette24_hsv_probe.replace("fabs(delta) > 0.5",
+                                     "fabs(delta) < 0.5"),
+         "shortest-path wrap"),
+        (palette24_hsv_probe.replace("value_adjust >= 0.0",
+                                     "value_adjust < 0.0", 1),
+         "value adjustment before saturation adjustment"),
+        (palette24_hsv_probe.replace("v > 0.75 && s < 0.25",
+                                     "v > 0.5 && s < 0.25"),
+         "dark/high-value saturation arm"),
+        (palette24_hsv_probe.replace("* 4.0f;", "* 2.0f;"),
+         "dark/high-value saturation arm"),
+        (palette24_hsv_probe.replace(
+            "HSVToRGB(h, s, v, &r, &g, &b);", "r = g = b;"),
+         "HSVToRGB helper"),
+        (palette24_hsv_probe.replace("b / blue_norm", "b / red_norm"),
+         "three ordered"),
+    )
+    for probe, description in palette24_hsv_mutations:
+        if not any(description in rule.description for rule in
+                   contract_violations(probe, palette24_hsv_key)):
+            failures.append("broken TPalette24::AdjustHSV " + description
                             + " source shape passed")
     send_key = ("singleselectionwindow.obj", 0x140D74)
     send_probe = """\

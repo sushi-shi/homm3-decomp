@@ -408,6 +408,72 @@ unsigned int TPalette24::GetSize() const
     return sizeof(*this);
 }
 
+// Dreamcast recovers three separately stated channel normalizations, the
+// r/g/b and h/s/v lifetimes, both conversion helpers, and every nested
+// adjustment scope. Retail corroborates the special dark/high-value
+// saturation scaling arm after the ordinary value adjustment.
+VA(0x00522f80, 0x20E)  // anchor-global, dc 0x10bfd4
+void TPalette24::AdjustHSV(float hue, float hue_adjust,
+                           float saturation_adjust, float value_adjust)
+{
+    const unsigned int red_norm =
+        std::numeric_limits<int>::max() / 255;
+    const unsigned int green_norm =
+        std::numeric_limits<int>::max() / 255;
+    const unsigned int blue_norm =
+        std::numeric_limits<int>::max() / 255;
+
+    for (int i = 10; i < 256; ++i) {
+        unsigned int r = colors.data[i][0] * red_norm;
+        unsigned int g = colors.data[i][1] * green_norm;
+        unsigned int b = colors.data[i][2] * blue_norm;
+
+        float h;
+        float s;
+        float v;
+        RGBToHSV(r, g, b, &h, &s, &v);
+
+        if (hue_adjust >= 0.0f) {
+            float delta = hue - h;
+            h += delta * hue_adjust;
+            if (fabs(delta) > 0.5) {
+                if (delta > 0.0) {
+                    h += 1.0f - hue_adjust;
+                } else {
+                    h += hue_adjust;
+                }
+                if (h >= 1.0) {
+                    h -= 1.0;
+                }
+            }
+        }
+
+        if (value_adjust >= 0.0) {
+            if (value_adjust <= 1.0f) {
+                v *= value_adjust;
+            } else {
+                v = 1.0f - (1.0f - v) / value_adjust;
+            }
+        }
+
+        if (saturation_adjust >= 0.0f) {
+            if (saturation_adjust <= 1.0f) {
+                s *= saturation_adjust;
+            } else if (v > 0.75 && s < 0.25) {
+                s = (1.0f - v) * s * saturation_adjust * 4.0f;
+            } else {
+                s = 1.0f - (1.0f - s) / saturation_adjust;
+            }
+        }
+
+        HSVToRGB(h, s, v, &r, &g, &b);
+
+        colors.data[i][0] = static_cast<unsigned char>(r / red_norm);
+        colors.data[i][1] = static_cast<unsigned char>(g / green_norm);
+        colors.data[i][2] = static_cast<unsigned char>(b / blue_norm);
+    }
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\palette.cpp:496
@@ -495,7 +561,7 @@ void TPalette24::Gray()
 }
 
 // E:\gamedcs\palette.cpp:740
-// RETAIL_LOCATED(0x00522f80, 0x20E): not reconstructed; anchor-global, dc 0x10bfd4
+// Retail body reconstructed above at 0x00522f80; dc 0x10bfd4.
 void TPalette24::AdjustHSV(float hue, float hue_adjust, float saturation_adjust, float value_adjust)
 {
     // @stub
