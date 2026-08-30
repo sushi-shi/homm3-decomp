@@ -1584,6 +1584,51 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"static_cast\s*<\s*unsigned\s+char\s*>\s*"
             r"\(\s*b\s*/\s*blue_norm\s*\)\s*;", 1, 1),
     ),
+    ("palette.obj", 0x10C370): (
+        SourceRule(
+            "RGBToHSV keeps the retail-corroborated static red_hue, "
+            "Dreamcast's named const max, nested extrema, value write and "
+            "single saturation ternary in source order",
+            r"static\s+const\s+float\s+red_hue\s*=\s*0\.0f\s*;\s*"
+            r"const\s+unsigned\s+int\s+max\s*=\s*"
+            r"\(\s*r\s*>\s*g\s*\?\s*r\s*:\s*g\s*\)\s*>\s*b\s*\?\s*"
+            r"\(\s*r\s*>\s*g\s*\?\s*r\s*:\s*g\s*\)\s*:\s*b\s*;\s*"
+            r"const\s+unsigned\s+int\s+min\s*=\s*"
+            r"\(\s*r\s*<\s*g\s*\?\s*r\s*:\s*g\s*\)\s*<\s*b\s*\?\s*"
+            r"\(\s*r\s*<\s*g\s*\?\s*r\s*:\s*g\s*\)\s*:\s*b\s*;\s*"
+            r"\*\s*v\s*=\s*static_cast\s*<\s*float\s*>\s*\(\s*max\s*\)"
+            r"\s*/\s*std\s*::\s*numeric_limits\s*<\s*int\s*>\s*::\s*"
+            r"max\s*\(\s*\)\s*;\s*"
+            r"\*\s*s\s*=\s*max\s*\?\s*static_cast\s*<\s*float\s*>\s*"
+            r"\(\s*max\s*-\s*min\s*\)\s*/\s*static_cast\s*<\s*float\s*>"
+            r"\s*\(\s*max\s*\)\s*:\s*0\.0f\s*;", 1, 1),
+        SourceRule(
+            "RGBToHSV keeps Dreamcast's arithmetic chroma guard and rc, gc, "
+            "bc normalized-complement statements before sector selection",
+            r"if\s*\(\s*max\s*-\s*min\s*\)\s*\{\s*"
+            r"float\s+rc\s*=\s*static_cast\s*<\s*float\s*>\s*"
+            r"\(\s*max\s*-\s*r\s*\)\s*/\s*static_cast\s*<\s*float\s*>\s*"
+            r"\(\s*max\s*-\s*min\s*\)\s*;\s*"
+            r"float\s+gc\s*=\s*static_cast\s*<\s*float\s*>\s*"
+            r"\(\s*max\s*-\s*g\s*\)\s*/\s*static_cast\s*<\s*float\s*>\s*"
+            r"\(\s*max\s*-\s*min\s*\)\s*;\s*"
+            r"float\s+bc\s*=\s*static_cast\s*<\s*float\s*>\s*"
+            r"\(\s*max\s*-\s*b\s*\)\s*/\s*static_cast\s*<\s*float\s*>\s*"
+            r"\(\s*max\s*-\s*min\s*\)\s*;", 1, 1),
+        SourceRule(
+            "RGBToHSV keeps Dreamcast's red, green, blue sector order, the "
+            "retail-corroborated red_hue load, negative wrap and gray arm",
+            r"if\s*\(\s*r\s*==\s*max\s*\)\s*\{\s*"
+            r"\*\s*h\s*=\s*\(\s*bc\s*-\s*gc\s*\)\s*/\s*6\.0f\s*\+\s*"
+            r"red_hue\s*;\s*\}\s*else\s+if\s*\(\s*g\s*==\s*max\s*\)"
+            r"\s*\{\s*\*\s*h\s*=\s*\(\s*rc\s*-\s*bc\s*\)\s*/\s*"
+            r"6\.0f\s*\+\s*1\.0f\s*/\s*3\.0f\s*;\s*\}\s*else\s*\{\s*"
+            r"\*\s*h\s*=\s*\(\s*gc\s*-\s*rc\s*\)\s*/\s*6\.0f\s*\+\s*"
+            r"2\.0f\s*/\s*3\.0f\s*;\s*\}.*?"
+            r"if\s*\(\s*\*\s*h\s*<\s*0\.0f\s*\)\s*\{\s*"
+            r"\*\s*h\s*\+=\s*1\.0f\s*;\s*\}.*?else\s*\{\s*"
+            r"\*\s*h\s*=\s*0\.0f\s*;", 1, 1),
+    ),
     ("resourcemanager.obj", 0x121EC8): (
         SourceRule(
             "GetPalette24 keeps Dreamcast's char[24] header and TRGBA[256] "
@@ -4070,6 +4115,67 @@ for (int i = 10; i < 256; ++i) {
         if not any(description in rule.description for rule in
                    contract_violations(probe, palette24_hsv_key)):
             failures.append("broken TPalette24::AdjustHSV " + description
+                            + " source shape passed")
+    rgb_to_hsv_key = ("palette.obj", 0x10C370)
+    rgb_to_hsv_probe = """\
+static const float red_hue = 0.0f;
+const unsigned int max =
+    (r > g ? r : g) > b ? (r > g ? r : g) : b;
+const unsigned int min =
+    (r < g ? r : g) < b ? (r < g ? r : g) : b;
+*v = static_cast<float>(max) / std::numeric_limits<int>::max();
+*s = max ? static_cast<float>(max - min) / static_cast<float>(max)
+         : 0.0f;
+if (max - min) {
+    float rc = static_cast<float>(max - r) /
+               static_cast<float>(max - min);
+    float gc = static_cast<float>(max - g) /
+               static_cast<float>(max - min);
+    float bc = static_cast<float>(max - b) /
+               static_cast<float>(max - min);
+    if (r == max) {
+        *h = (bc - gc) / 6.0f + red_hue;
+    } else if (g == max) {
+        *h = (rc - bc) / 6.0f + 1.0f / 3.0f;
+    } else {
+        *h = (gc - rc) / 6.0f + 2.0f / 3.0f;
+    }
+    if (*h < 0.0f) {
+        *h += 1.0f;
+    }
+} else {
+    *h = 0.0f;
+}
+"""
+    if contract_violations(rgb_to_hsv_probe, rgb_to_hsv_key):
+        failures.append("aligned RGBToHSV source shape did not pass")
+    rgb_to_hsv_mutations = (
+        (rgb_to_hsv_probe.replace(
+            "static const float red_hue = 0.0f;", ""),
+         "static red_hue"),
+        (rgb_to_hsv_probe.replace(
+            "(r > g ? r : g) > b ? (r > g ? r : g) : b", "r"),
+         "nested extrema"),
+        (rgb_to_hsv_probe.replace("*s = max ?", "*s = (max != 0) ?"),
+         "single saturation ternary"),
+        (rgb_to_hsv_probe.replace("if (max - min)",
+                                  "if (max != min)"),
+         "arithmetic chroma guard"),
+        (rgb_to_hsv_probe.replace(
+            "float rc =", "float bc_temp =", 1),
+         "rc, gc, bc"),
+        (rgb_to_hsv_probe.replace("+ red_hue", "+ 0.0f"),
+         "red_hue load"),
+        (rgb_to_hsv_probe.replace("} else if (g == max) {",
+                                  "} else if (b == max) {"),
+         "red, green, blue sector order"),
+        (rgb_to_hsv_probe.replace("*h += 1.0f;", "*h = 0.0f;", 1),
+         "negative wrap"),
+    )
+    for probe, description in rgb_to_hsv_mutations:
+        if not any(description in rule.description for rule in
+                   contract_violations(probe, rgb_to_hsv_key)):
+            failures.append("broken RGBToHSV " + description
                             + " source shape passed")
     send_key = ("singleselectionwindow.obj", 0x140D74)
     send_probe = """\

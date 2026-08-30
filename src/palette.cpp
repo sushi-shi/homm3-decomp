@@ -474,6 +474,51 @@ void TPalette24::AdjustHSV(float hue, float hue_adjust,
     }
 }
 
+// Dreamcast recovers the const max local, the non-gray/gray hue scopes and
+// the three sector arms. Retail independently fixes the nested extrema
+// expressions, normalized v/s order, rc/gc/bc formulas and sector constants.
+// The explicit zero offset in the red sector is source-significant: both SH4
+// and x86 retain its floating-point addition.
+VA(0x00523190, 0x160)  // anchor-bracket, dc 0x10c370
+void RGBToHSV(unsigned int r, unsigned int g, unsigned int b,
+              float* h, float* s, float* v)
+{
+    static const float red_hue = 0.0f;
+
+    const unsigned int max =
+        (r > g ? r : g) > b ? (r > g ? r : g) : b;
+    const unsigned int min =
+        (r < g ? r : g) < b ? (r < g ? r : g) : b;
+
+    *v = static_cast<float>(max) / std::numeric_limits<int>::max();
+
+    *s = max ? static_cast<float>(max - min) / static_cast<float>(max)
+             : 0.0f;
+
+    if (max - min) {
+        float rc = static_cast<float>(max - r) /
+                   static_cast<float>(max - min);
+        float gc = static_cast<float>(max - g) /
+                   static_cast<float>(max - min);
+        float bc = static_cast<float>(max - b) /
+                   static_cast<float>(max - min);
+
+        if (r == max) {
+            *h = (bc - gc) / 6.0f + red_hue;
+        } else if (g == max) {
+            *h = (rc - bc) / 6.0f + 1.0f / 3.0f;
+        } else {
+            *h = (gc - rc) / 6.0f + 2.0f / 3.0f;
+        }
+
+        if (*h < 0.0f) {
+            *h += 1.0f;
+        }
+    } else {
+        *h = 0.0f;
+    }
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\palette.cpp:496
@@ -568,7 +613,7 @@ void TPalette24::AdjustHSV(float hue, float hue_adjust, float saturation_adjust,
 }
 
 // E:\gamedcs\palette.cpp:827
-// RETAIL_LOCATED(0x00523190, 0x160): not reconstructed; anchor-bracket, dc 0x10c370
+// Retail body reconstructed above at 0x00523190; dc 0x10c370.
 void RGBToHSV(unsigned r, unsigned g, unsigned b, float* h, float* s, float* v)
 {
     // @stub
