@@ -13,6 +13,10 @@
 #include "kb.h"
 #include "path.h"
 
+// ai_player.cpp:4643. Kept local because findpath's narrow include set does
+// not otherwise depend on the ai_player class declarations.
+long AI_get_ship_cost(const hero* our_hero, type_point point);
+
 // VC6's <xutility> reference-returning min, spelled file-locally for
 // the same reason ai_combat.cpp and ai_tactical.cpp spell it: retail
 // materialises BOTH operands into stack temps and then selects between
@@ -780,7 +784,7 @@ static int GetMapExtra(type_point point)
 // THE THREE UNLOCATED CALLEES, all three confirmed against the bytes and
 // now declared (see findpath.h / hero.h for the pairing evidence):
 // searchArray::enter_hostile_trigger (0x56aad0), check_adjacent_monster
-// (0x56a360) and hero::HeroFn_00431160 (0x431160).
+// (0x56a360) and AI_get_ship_cost (0x431160).
 //
 // THE FOG GATE is `GetMapExtra(x, y, z) & gMapVisibilityBit` (the byte at
 // 0x69ccbc, advmgr.h's name), tested twice. Retail's shape is NOT the
@@ -1122,7 +1126,7 @@ void searchArray::TestPossibleDirections(hero* current_hero, pathCell* source,
                 boat_cell.adjusted_cost += 500;
                 if (!(can_summon_boat && !source->magic_forbidden))
                     boat_cell.barrier_value +=
-                        current_hero->HeroFn_00431160(boat_cell.point);
+                        AI_get_ship_cost(current_hero, boat_cell.point);
                 if (pay_transition_costs) {
                     if (source->move_left < boat_cost)
                         boat_cost = source->move_left + land_movement;

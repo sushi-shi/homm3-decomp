@@ -10457,7 +10457,7 @@ unsigned char type_obscuring_object::is_on_map()
 
 // E:\gamedcs\Hero.h:157
 DC_ONLY(0x1fb2c, 0x60)
-type_point type_obscuring_object::get_location(__$ReturnUdt)
+type_point type_obscuring_object::get_location() const
 {
     // @stub
 }
@@ -10527,7 +10527,7 @@ type_point town::get_location(__$ReturnUdt)
 
 // E:\gamedcs\Town.h:324
 DC_ONLY(0x1fe14, 0x98)
-unsigned char town::HasBuilding(int buildingId, unsigned char check_included)
+bool town::HasBuilding(int buildingId, bool check_included) const
 {
     // @stub
 }
@@ -10590,7 +10590,7 @@ TTownType game::get_alignment(int player_id)
 
 // E:\gamedcs\Findpath.h:202
 DC_ONLY(0x20064, 0x84)
-pathCell* searchArray::get_cell(type_point point, unsigned char flying)
+pathCell* searchArray::get_cell(type_point point, bool flying) const
 {
     // @stub
 }

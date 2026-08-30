@@ -17,6 +17,11 @@ class town;
 class generator;
 struct type_artifact;
 
+// Five-entry AI hero caps indexed by game difficulty. Dreamcast names both
+// compiland statics; retail hire_heroes proves these corresponding addresses.
+DATA(0x00660518) extern int hero_limits[5];
+DATA(0x0066052c) extern int global_limits[5];
+
 long AI_get_value_of_artifact(type_artifact artifact, const hero* owner,
                               unsigned char equipped, unsigned char exact);
 void AI_swap_artifacts(hero* source, hero* destination);
@@ -24,6 +29,7 @@ long AI_get_equip_value(type_artifact artifact, const hero* our_hero,
                         unsigned char exact);
 long get_full_value(const hero* our_hero);
 long remove_negative_artifacts(hero* our_hero);
+long AI_get_ship_cost(const hero* our_hero, type_point point);
 
 // The two gift messages extend the shared 20-byte network-message head.
 // Their subtype and total-size constants are the immediates retail stores at
@@ -91,7 +97,7 @@ struct type_creature_source {
     unsigned char is_free;
 
     type_creature_source(TCreatureType new_type, short* new_amount,
-                         unsigned char _is_free);
+                         bool _is_free);
 };
 SIZE(type_creature_source, 12);
 
@@ -147,7 +153,7 @@ public:
                                generator* current_generator);
     type_AI_creature_purchaser(long player, town* current_town);
     type_AI_creature_purchaser(long player, TCreatureType type,
-                               short* amount, unsigned char is_free);
+                               short* amount, bool is_free);
     void set(town* current_town);
     // DC 0x31ffc (ai_player.cpp:2524): the single-candidate overload.
     // No retail out-of-line body (set(town) ends 0x42d418, next row
@@ -248,7 +254,7 @@ public:
     // DC LF_ONEMETHOD protected; retail 0x42ae00 (the per-town pricing
     // pass purchase_buildings drives).
     unsigned char purchase_building(unsigned char* prohibited_creatures);
-    unsigned char hire_heroes();
+    bool hire_heroes();
     bool check_trade_supply(const int* cost, long number, int* supply,
                             std::vector<long>& trade_qty);
     bool can_trade_resources(const int* cost, int* supply,
@@ -288,6 +294,12 @@ extern char gAIResourceWarningFormat[];
 // admitted consumer.
 DATA(0x00693718)
 extern unsigned char gUnnamed693718[];
+
+// Dreamcast publishes this object-value table by name. Retail's
+// AI_value_of_observatory indexes the same dword array with the trigger
+// cell's adventure-object type.
+DATA(0x006925ac)
+extern long AI_event_visibility_values[];
 
 // 0x432220 - find_magus_hut_value's only callee, reached with
 // (point, player_id, 10). /Gr leaves the 4-byte struct on the stack and
@@ -764,7 +776,6 @@ public:
 
 // Dreamcast names this table `const_artifact_effects`; retail indexes the
 // 144 vector objects directly with a 16-byte stride.
-DATA(0x00692e18)
 extern std::vector<type_artifact_effect*> const_artifact_effects[144];
 
 class type_scouting_artifact : public type_artifact_effect {

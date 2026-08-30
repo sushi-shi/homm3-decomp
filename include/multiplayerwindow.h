@@ -282,7 +282,9 @@ public:
 
     virtual unsigned char Delete(unsigned long elementNbr)
     {
-        for (unsigned long i = elementNbr; i + 1 < size; i++)
+        if (elementNbr >= size)
+            return 0;
+        for (unsigned long i = elementNbr; i < size - 1; i++)
             pArray[i] = pArray[i + 1];
         size--;
         return 1;
@@ -290,10 +292,13 @@ public:
 
     virtual unsigned char Insert(unsigned long nextElementNbr, T* element)
     {
-        Add(element);
+        if (nextElementNbr >= size)
+            return 0;
+        T* lastElement = Get(size - 1);
         for (unsigned long i = size - 1; i > nextElementNbr; i--)
             pArray[i] = pArray[i - 1];
-        pArray[nextElementNbr] = element;
+        Put(nextElementNbr, element);
+        Add(lastElement);
         return 1;
     }
 
@@ -301,9 +306,10 @@ public:
 
     void Destroy(unsigned char deleteData = 1)
     {
-        if (deleteData) {
-            for (unsigned long i = 0; i < size; i++)
-                delete Get(i);
+        for (unsigned long i = 0; i < size; i++) {
+            T* element = Get(i);
+            if (deleteData)
+                delete element;
         }
         if (pArray)
             delete pArray;

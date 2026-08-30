@@ -298,7 +298,8 @@ union ExtraInfoUnion {
 
     // The five further MapCell.h accessors the tomb and witch-hut
     // handlers inline. Dreamcast decorations fix every signature:
-    // PlayerKnowsCell is `unsigned char (short) const` (MapCell.h:914),
+    // PlayerKnowsCell is `bool (short) const` (MapCell.h:914; the Dreamcast
+    // public decoration is `?PlayerKnowsCell@ExtraInfoUnion@@QBA_NF@Z`),
     // tomb_is_full `unsigned char () const` (1203), get_tomb_artifact
     // `TArtifact () const` (1198), empty_tomb `void ()` (1193) and
     // get_witch_skill `TSecondarySkill () const` (1246).
@@ -309,7 +310,7 @@ union ExtraInfoUnion {
     // int-wide under VC6, so no truncation barrier exists on either -
     // which is what lets do_event_witch_hut compare the raw skill with
     // `cmp esi,-1` and index the trait table without a `movsx`.
-    unsigned char PlayerKnowsCell(short player) const
+    bool PlayerKnowsCell(short player) const
     {
         if (player < 0 || player >= 8)
             return 0;

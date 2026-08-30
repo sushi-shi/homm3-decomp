@@ -426,10 +426,11 @@ public:
     // `#pragma inline_depth(0)` at each site in town.cpp - which
     // restores both peaks to the digit and costs no declarator anywhere.
     // Do not re-add the gate; and if you move a site, pin it.
-    // Const: the DC mangles it `?HasBuilding@town@@QBA_NH_N@Z` (QB* =
-    // const), and retail's thiscall is identical either way.
-    unsigned char HasBuilding(int buildingId,
-                              unsigned char check_included) const;
+    // The DC public decoration `?HasBuilding@town@@QBA_NH_N@Z` proves the
+    // complete source ABI: const member (QB), native-bool return and native-
+    // bool second parameter (_N ... _N). Retail's thiscall lowering is the
+    // same and its selected ai_player.obj COMDAT returns canonical 0/1.
+    bool HasBuilding(int buildingId, bool check_included) const;
     // DC Town.h:337 / :342 header inlines, declaration-only here
     // (?IsCastle@town@@QBA_NXZ / ?IsCapitol@town@@QBA_NXZ, both kept
     // out of line by the DC linker in game.obj). See the
@@ -670,8 +671,7 @@ extern __int64 bitNumber[];
 
 // The Town.h inline declared above. Placed here because it indexes
 // bitNumber, which the class definition precedes.
-inline unsigned char town::HasBuilding(int buildingId,
-                                       unsigned char check_included) const
+inline bool town::HasBuilding(int buildingId, bool check_included) const
 {
     if (check_included)
         return (active & bitNumber[buildingId]) != 0;

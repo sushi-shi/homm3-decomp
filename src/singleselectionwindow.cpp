@@ -953,6 +953,20 @@ void TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
 
 #endif  // @carcass
 
+#if 0  // @carcass: claim-only home for the game.h COMDAT below
+
+// Complete-only: no Dreamcast procedure exists. Retail's sole huge-constructor
+// caller retains the header accessor, whose signed currentMap index, +0x60
+// vector pointer and 0x14 stride match the independently identical HD body and
+// its CampaignScenarioInfo* signature.
+VA(0x0057C780, 0x0E)  // hd-crossbuild masked identity + sole retail caller
+CampaignScenarioInfo* SCampaign::GetCurrentScenario()
+{
+    // @stub
+}
+
+#endif  // @carcass
+
 // The seat-record reset: the base constructor clears dpid/name and seeds
 // version from the game-context cell, then every derived selection field goes
 // back to its idle value.

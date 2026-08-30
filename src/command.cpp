@@ -416,6 +416,19 @@ process_action:
     return result;
 }
 
+#if 0  // @carcass: claim-only home for the netmsg.h COMDAT below
+
+// E:\gamedcs\remote.h:548. The active definition remains in netmsg.h: its
+// original header-inline null guard and DestroyMsg tail call make command.obj
+// emit the exact retained COMDAT. This carcass row is its RVA-order owner.
+VA(0x00474680, 0xC)  // exact selected header COMDAT, dc 0x70ad0
+void CMessageKill::~CMessageKill()
+{
+    // @stub - active definition is the netmsg.h class-body inline
+}
+
+#endif  // @carcass
+
 // E:\gamedcs\command.cpp:475
 // Build the twelve legal approach records around the selected target hex.
 // Dreamcast proves the local names and the two header-inline army helpers;

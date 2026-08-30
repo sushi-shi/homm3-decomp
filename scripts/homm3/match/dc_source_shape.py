@@ -110,6 +110,13 @@ class CallTransfer:
 
 
 @dataclass(frozen=True)
+class DefinitionOwner:
+    description: str
+    path: str
+    name: str
+
+
+@dataclass(frozen=True)
 class CallSpelling:
     description: str
     caller_va: int
@@ -199,6 +206,18 @@ def _key_audit_scope(key: tuple[str, str, str, str]) -> AuditScope:
     return "dc", key[1], key[2]
 
 
+# A retained RVA-order claim can own a COMDAT whose live source definition is
+# still the original class-body inline in a header.  Redirect only individually
+# proved owners: an absent or ambiguous mapped definition remains a fatal
+# definition defect, and its helper graph is audited like any other body.
+PROVEN_DEFINITION_OWNERS: dict[tuple[str, int], DefinitionOwner] = {
+    ("command.obj", 0x70AD0): DefinitionOwner(
+        "CMessageKill's command.obj COMDAT is emitted from the original "
+        "remote.h class-body inline reconstructed in netmsg.h",
+        "include/netmsg.h", "CMessageKill::~CMessageKill"),
+}
+
+
 # Dreamcast sometimes places one operation in two cooperating functions while
 # Complete moves the whole operation into one of them.  Admit such a move only
 # as a bounded, proof-carrying transfer: the old caller must retain the exact
@@ -227,6 +246,20 @@ PROVEN_CALL_TRANSFERS: dict[tuple[str, int, str], CallTransfer] = {
             r"current_town\s*\)\s*;",
             r"\bbuy_artifacts\s*\(\s*current_hero\s*,\s*gpGame\s*->\s*"
             r"field_1f664\s*,\s*market_count\s*\)\s*;"),
+    ("resourcemanager.obj", 0x121EC8, "LODFile::read"):
+        CallTransfer(
+            "Complete moves GetPalette24's direct archive reads behind the "
+            "exact t_lod_file_adapter::Read boundary",
+            "src/resourcemanager.cpp",
+            "ResourceManager::t_lod_file_adapter::Read", 0x00559110,
+            r"t_lod_file_adapter\s+stream\s*\(\s*lodFile\s*\)\s*;.*?"
+            r"streamInterface\s*=\s*&\s*stream\s*;.*?"
+            r"streamInterface\s*->\s*Read\s*\(\s*header\s*,\s*"
+            r"sizeof\s*\(\s*header\s*\)\s*\)\s*;.*?"
+            r"streamInterface\s*->\s*Read\s*\(\s*rgba\s*,\s*"
+            r"sizeof\s*\(\s*rgba\s*\)\s*\)\s*;",
+            r"return\s+lod_file\s*->\s*read\s*\(\s*data\s*,\s*size\s*"
+            r"\)\s*\?\s*0\s*:\s*size\s*;"),
 }
 
 
@@ -5424,6 +5457,64 @@ void army::CheckLuck() { iLuckStatus = 0; }
                              definitions[0].body_close],
             ["army::get_controller"]):
         failures.append("unclaimed helper could flatten an attested child")
+    carcass_claim_probe = """\
+#if 0
+VA(0x00401000, 0x10) // dc 0x100
+void army::CheckLuck() { get_controller(); }
+#endif
+void army::CheckLuck() { get_controller(); }
+"""
+    carcass_mask = _source.mask(carcass_claim_probe)
+    carcass_body = _body_for_claim(
+        carcass_mask, _line_starts(carcass_claim_probe),
+        2, "army::CheckLuck")
+    if carcass_body is None or missing_from_body(
+            carcass_claim_probe[carcass_body[0] + 1:carcass_body[1]],
+            ["army::get_controller"]):
+        failures.append("RVA-order carcass claim missed its active definition")
+    flattened_claim_probe = """\
+#if 0
+VA(0x00401000, 0x10) // dc 0x100
+void army::CheckLuck() { get_controller(); }
+#endif
+void army::CheckLuck() { iLuckStatus = 0; }
+"""
+    flattened_mask = _source.mask(flattened_claim_probe)
+    flattened_body = _body_for_claim(
+        flattened_mask, _line_starts(flattened_claim_probe),
+        2, "army::CheckLuck")
+    if flattened_body is None or not missing_from_body(
+            flattened_claim_probe[
+                flattened_body[0] + 1:flattened_body[1]],
+            ["army::get_controller"]):
+        failures.append("flattened RVA-order claim helper passed")
+    definition_owner = PROVEN_DEFINITION_OWNERS[
+        ("command.obj", 0x70AD0)]
+    definition_owner_probe = """\
+class CMessageKill {
+    ~CMessageKill()
+    {
+        if (m_pNetMsg)
+            DestroyMsg(m_pNetMsg);
+    }
+};
+"""
+    owner_definition = _definition_for_owner(
+        _source.mask(definition_owner_probe), definition_owner)
+    if owner_definition is None or missing_from_body(
+            definition_owner_probe[
+                owner_definition.body_open + 1:owner_definition.body_close],
+            ["DestroyMsg"]):
+        failures.append("mapped header definition owner was not audited")
+    flattened_owner_probe = definition_owner_probe.replace(
+        "DestroyMsg(m_pNetMsg);", "delete m_pNetMsg;")
+    flattened_owner = _definition_for_owner(
+        _source.mask(flattened_owner_probe), definition_owner)
+    if flattened_owner is None or not missing_from_body(
+            flattened_owner_probe[
+                flattened_owner.body_open + 1:flattened_owner.body_close],
+            ["DestroyMsg"]):
+        failures.append("flattened mapped header definition passed")
     header_probe = """\
 // E:\\gamedcs\\Army.h:810
 const char* GetName() const { return GetArmyName(creatureType, numTroops); }
@@ -7192,6 +7283,26 @@ TRGBA rgba[256];
                for rule in contract_violations(flattened_palette24,
                                                 palette24_key)):
         failures.append("flattened GetPalette24 constructor passed")
+    palette24_transfer = PROVEN_CALL_TRANSFERS[
+        ("resourcemanager.obj", 0x121EC8, "LODFile::read")]
+    palette24_transfer_caller = """\
+t_lod_file_adapter stream(lodFile);
+TAbstractFile* streamInterface = &stream;
+streamInterface->Read(header, sizeof(header));
+streamInterface->Read(rgba, sizeof(rgba));
+"""
+    palette24_transfer_receiver = """\
+return lod_file->read(data, size) ? 0 : size;
+"""
+    if not transfer_satisfied(
+            palette24_transfer, palette24_transfer_caller,
+            palette24_transfer_receiver, {palette24_transfer.receiver_va}):
+        failures.append("GetPalette24 archive-read transfer did not pass")
+    if transfer_satisfied(
+            palette24_transfer, palette24_transfer_caller,
+            palette24_transfer_receiver.replace("lod_file->read", "Read"),
+            {palette24_transfer.receiver_va}):
+        failures.append("flattened GetPalette24 archive receiver passed")
     resource_display_key = ("resourcedisplay.obj", 0x120C54)
     resource_display_probe = """\
 if (isSmall) {
@@ -9300,6 +9411,11 @@ def _body_for_claim(masked: str, starts: list[int], claim_line: int,
     return _body_after_claim(masked, starts, claim_line)
 
 
+def _definition_for_owner(masked: str, owner: DefinitionOwner):
+    definitions = _definitions_between(masked, owner.name, 0, len(masked))
+    return definitions[0] if len(definitions) == 1 else None
+
+
 def _definitions_between(masked: str, fn: str, start: int, end: int):
     """Active definitions of ``fn`` inside one provenance interval.
 
@@ -9456,9 +9572,31 @@ def scan() -> tuple[
             cache[claim.path] = text, _source.mask(text), _line_starts(text)
         text, masked, starts = cache[claim.path]
         row = corpus.by_key.get(key)
-        span = _body_for_claim(
-            masked, starts, claim.line, identity[1],
-            row.get("name", "") if row is not None else "")
+        body_source = claim.path
+        body_line = claim.line
+        owner = PROVEN_DEFINITION_OWNERS.get(key)
+        if owner is not None:
+            if owner.path not in cache:
+                owner_text = (common.HOMM3_DIR / owner.path).read_text(
+                    errors="replace")
+                cache[owner.path] = (
+                    owner_text, _source.mask(owner_text),
+                    _line_starts(owner_text))
+            text, masked, starts = cache[owner.path]
+            definition = _definition_for_owner(masked, owner)
+            if definition is None:
+                checked += 1
+                audited.add(_dc_audit_scope(key))
+                missing.append(MissingDefinition(
+                    key[0], key[1], owner.path, 1, owner.name))
+                continue
+            span = definition.body_open, definition.body_close
+            body_source = owner.path
+            body_line = text.count("\n", 0, definition.head) + 1
+        else:
+            span = _body_for_claim(
+                masked, starts, claim.line, identity[1],
+                row.get("name", "") if row is not None else "")
         if span is None:
             continue
         checked += 1
@@ -9484,14 +9622,14 @@ def scan() -> tuple[
                 continue
             body_missing = True
             missing.append(MissingCall(
-                claim.va, claim.module, claim.dc_offset, claim.path,
-                claim.line, identity[1], callee, helper))
+                claim.va, claim.module, claim.dc_offset, body_source,
+                body_line, identity[1], callee, helper))
         if not body_missing and (group := group_defect(
                 key, refs, shape_body, claim.va)):
             missing.append(MisgroupedCalls(
-                claim.va, claim.module, claim.dc_offset, claim.path,
-                claim.line, identity[1], group))
-        add_contract_defects(claim.va, key, claim.path, claim.line,
+                claim.va, claim.module, claim.dc_offset, body_source,
+                body_line, identity[1], group))
+        add_contract_defects(claim.va, key, body_source, body_line,
                              identity[1], body)
 
     # /Ob2 can fold every copy of a restored helper, leaving no retail VA to

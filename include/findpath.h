@@ -256,7 +256,12 @@ public:
     long get_danger_value(type_point point) const;  // 0x42ed30 (ai_player.obj)
 
     // Header-inline in the DC roster and expanded by ProcessHover in retail.
-    pathCell* get_cell(type_point point, unsigned char flying)
+    // The public decoration is
+    // `?get_cell@searchArray@@QBAPAUpathCell@@Utype_point@@_N@Z`: QB proves
+    // a const member and _N proves the source parameter was native bool.
+    // Retail's selected ai_player.obj COMDAT at 0x42ecc0 independently uses
+    // only the low byte and never writes through this.
+    pathCell* get_cell(type_point point, bool flying) const
     {
         if (!cellData)
             return cellData;

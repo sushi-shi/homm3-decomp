@@ -218,25 +218,32 @@ ai_combat	?initialize_creatures@type_AI_combat_data@@QAEXNPBVhero@@@Z	91.0075	91
 ai_combat	?kill@type_AI_combat_data@@QAEXXZ	100.0000	100.0000	100.0000	0x262b0
 ai_combat	?simulate_combat@type_AI_combat_data@@QAEXAAV1@@Z	100.0000	100.0000	100.0000	0x26bc0
 ai_combat	?take_damage@type_monster_data@@QAEJJ@Z	100.0000	100.0000	100.0000	0x23ea0
+ai_player	??0type_AI_creature_purchaser@@QAE@JPAVgenerator@@@Z	100.0000	100.0000	100.0000	0x2cb70
 ai_player	??0type_AI_creature_purchaser@@QAE@JPAVtown@@@Z	100.0000	100.0000	100.0000	0x2ce30
+ai_player	??0type_AI_creature_purchaser@@QAE@JW4TCreatureType@@PAF_N@Z	100.0000	100.0000	100.0000	0x2cf50
 ai_player	??0type_AI_creature_swapper@@QAE@XZ	100.0000	100.0000	100.0000	0x2c040
 ai_player	??0type_combat_artifact@@QAE@J@Z	100.0000	100.0000	100.0000	0x32540
-ai_player	??0type_creature_source@@QAE@W4TCreatureType@@PAFE@Z	100.0000	100.0000	100.0000	0x286b0
+ai_player	??0type_creature_source@@QAE@W4TCreatureType@@PAF_N@Z	100.0000	100.0000	100.0000	0x286b0
 ai_player	??1type_AI_creature_purchaser@@QAE@XZ	100.0000	100.0000	100.0000	0x286e0
 ai_player	??1type_artifact_effect@@UAE@XZ	100.0000	100.0000	100.0000	0x32500
+ai_player	??_F?$vector@PAVtype_artifact_effect@@V?$allocator@PAVtype_artifact_effect@@@std@@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x324b0
 ai_player	??_Gtype_artifact_effect@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x33080
 ai_player	?AI_arrange_army@@YIXPAVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x2d8e0
 ai_player	?AI_build_ship@@YIXPBVhero@@JJJ@Z	100.0000	100.0000	100.0000	0x30f80
 ai_player	?AI_consolidate_army@@YIXPAVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x2d870
+ai_player	?AI_equip_artifacts@@YIXPAVhero@@@Z	100.0000	100.0000	100.0000	0x33b40
 ai_player	?AI_get_artifact_player_value@@YIJABUtype_artifact@@J@Z	100.0000	100.0000	100.0000	0x33aa0
 ai_player	?AI_get_equip_value@@YIJUtype_artifact@@PBVhero@@E@Z	100.0000	100.0000	100.0000	0x339e0
+ai_player	?AI_get_ship_cost@@YIJPBVhero@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x31160
 ai_player	?AI_get_value_of_artifact@@YIJUtype_artifact@@PBVhero@@EE@Z	92.7585	92.7585	92.7585	0x336c0
 ai_player	?AI_swap_artifacts@@YIXPAVhero@@0@Z	100.0000	100.0000	100.0000	0x33fe0
+ai_player	?AI_value_of_observatory@@YIJUtype_point@@JJ@Z	100.0000	100.0000	100.0000	0x32220
+ai_player	?GetHero@game@@QAEPAVhero@@H@Z	100.0000	100.0000	100.0000	0x317d0
 ai_player	?add_artifact@@YIEPAVhero@@Utype_artifact@@PAJ0J2J@Z	100.0000	100.0000	100.0000	0x33e20
 ai_player	?add_creatures@type_AI_creature_swapper@@IAEXW4TCreatureType@@FF@Z	100.0000	100.0000	100.0000	0x2c130
 ai_player	?attempt_step@@YIEPAVhero@@PAUpathCell@@EE@Z	52.9459	52.9459	52.9459	0x2fc50
 ai_player	?build_markets@type_AI_player@@QAE_NPAH@Z	100.0000	100.0000	100.0000	0x2ab40
-ai_player	?buy_creatures@type_AI_player@@QAEXPAVhero@@PAVtown@@@Z	72.3890	73.6571	74.2046	0x2ba60
+ai_player	?buy_creatures@type_AI_player@@QAEXPAVhero@@PAVtown@@@Z	72.2248	73.6571	74.2046	0x2ba60
 ai_player	?buy_mage_guild@type_AI_player@@QAEXPAVhero@@PAVtown@@@Z	100.0000	100.0000	100.0000	0x2beb0
 ai_player	?calculate_demand@type_AI_player@@QAEXXZ	97.4340	97.4340	97.4340	0x28740
 ai_player	?calculate_reserve@type_AI_player@@QAEXXZ	96.4566	96.4566	96.4566	0x29ad0
@@ -246,7 +253,7 @@ ai_player	?check_towns@type_town_threat_checker@@QAEXXZ	100.0000	100.0000	100.00
 ai_player	?check_trade_supply@type_AI_player@@QAE_NPBHJPAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	85.8333	85.8333	85.8333	0x2a2b0
 ai_player	?choose_weakest_army@type_AI_creature_swapper@@IAEJ_N0@Z	88.3357	88.3357	88.3357	0x2c690
 ai_player	?clear_marks@type_town_threat_checker@@UAEXXZ	100.0000	100.0000	100.0000	0x28260
-ai_player	?consider_hiring@@YIEJPAVhero@@@Z	75.3838	75.3838	75.3838	0x31800
+ai_player	?consider_hiring@@YI_NJPAVhero@@@Z	75.3838	75.3838	75.3838	0x31800
 ai_player	?do_best_purchase@type_AI_creature_purchaser@@IAEJE@Z	97.2740	97.2740	97.2740	0x2d420
 ai_player	?do_best_swap@type_AI_creature_swapper@@IAEJ_N@Z	100.0000	100.0000	100.0000	0x2c280
 ai_player	?do_purchase@type_AI_creature_purchaser@@QAEXPAVarmyGroup@@F0PAJEE@Z	100.0000	100.0000	100.0000	0x2d690
@@ -288,6 +295,7 @@ ai_player	?get_value@type_spellcaster_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0
 ai_player	?get_value@type_statue_of_legion_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x33580
 ai_player	?get_value@type_tome_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x32c20
 ai_player	?get_value@type_undead_king_cloak_artifact@@UBEJPBVhero@@EE@Z	96.7778	96.7778	96.7778	0x333a0
+ai_player	?hire_heroes@type_AI_player@@QAE_NXZ	62.5281	62.9082	62.9082	0x31360
 ai_player	?is_human_ally@game@@QBE_NH@Z	100.0000	100.0000	100.0000	0x2b9e0
 ai_player	?make_gift@type_AI_player@@QAEXJ@Z	84.5868	84.5868	84.5868	0x29110
 ai_player	?mark_danger_zones@@YIXPBVhero@@PAJ@Z	100.0000	100.0000	100.0000	0x2de50
@@ -312,6 +320,11 @@ ai_player	?value_of_hall@@YIJPAVtown@@W4type_building_id@@@Z	100.0000	100.0000	1
 ai_player	?value_of_hiring@@YIJPAVtown@@PAVhero@@PAVsearchArray@@@Z	99.9522	99.9522	99.9522	0x31bd0
 ai_player	?value_of_horde@@YIJPAVtown@@W4type_building_id@@PAEPAH@Z	100.0000	100.0000	100.0000	0x2b790
 ai_player	?value_of_horde_upgrade@@YIJPAVtown@@W4type_building_id@@PAEPAH@Z	100.0000	100.0000	100.0000	0x2b800
+ai_player	bool_type_point_operator	0.0000	0.0000	0.0000	0x2ec20
+ai_player	game_GetTown	0.0000	0.0000	0.0000	0x2ba30
+ai_player	searchArray_get_cell	0.0000	0.0000	0.0000	0x2ecc0
+ai_player	town_HasBuilding	0.0000	0.0000	0.0000	0x305a0
+ai_player	type_obscuring_object_get_location	0.0000	0.0000	0.0000	0x2ec70
 ai_tactical	??0army@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x37a00
 ai_tactical	??0type_AI_attack_hex_chooser@@QAE@PBVarmy@@0PBJPAVsearchArray@@PBUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x360c0
 ai_tactical	??0type_AI_combat_parameters@@QAE@PBVcombatManager@@J@Z	100.0000	100.0000	100.0000	0x35ec0
@@ -524,7 +537,7 @@ armygrp	?get_AI_value@armyGroup@@QBEJXZ	100.0000	100.0000	100.0000	0x4ac80
 armygrp	?get_creature_total@armyGroup@@QBEHW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x4adc0
 armygrp	?get_creature_total@armyGroup@@QBEHXZ	100.0000	100.0000	100.0000	0x4ada0
 armygrp	?get_luck_description@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@H@Z	92.3623	92.3623	92.3623	0x4c1c0
-armygrp	?get_morale_description@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@HE@Z	91.4613	93.0566	93.0566	0x4b960
+armygrp	?get_morale_description@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@HE@Z	93.0566	93.0566	93.0566	0x4b960
 # Retail-ordered switch bodies, the creature-record cursor, the direct
 # spell-table field_c access, and the byte-proven attrs 0x400 gate raised
 # this from 53.1589 to 88.5071 (2026-08-09).
@@ -765,6 +778,7 @@ combatwindow	?scroll_down@TCombatWindow@@SIHAAVmessage@@@Z	100.0000	100.0000	100
 combatwindow	?scroll_rollover@TCombatWindow@@QAEXJ@Z	100.0000	100.0000	100.0000	0x72db0
 combatwindow	?scroll_up@TCombatWindow@@SIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x72df0
 combatwindow	?show_messages@TCombatWindow@@QAEXJ@Z	100.0000	100.0000	100.0000	0x72c30
+command	??1CMessageKill@@QAE@XZ	100.0000	100.0000	100.0000	0x74680
 command	?AddArmy@combatManager@@QAEPAVarmy@@HHHHHH@Z	100.0000	100.0000	100.0000	0x7a100
 command	?CheckChangeHighlighter@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x77c20
 command	?CheckChangeSelector@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x77ac0
@@ -998,7 +1012,7 @@ dxplay	?InitConnection@CDPlay@@UAEEPAVCDPlayConnection@@@Z	100.0000	100.0000	100
 dxplay	?IsHost@CDPlay@@UAEEXZ	100.0000	100.0000	100.0000	0x96cb0
 dxplay	?JoinSession@CDPlay@@UAEEPAU_GUID@@PAD@Z	100.0000	100.0000	100.0000	0x96e60
 dxplay	?Put@?$CAutoArray@VCDPlayAddressElement@@@@UAEEKPAVCDPlayAddressElement@@@Z	100.0000	100.0000	100.0000	0x99fe0
-dxplay	?Receive@CDPlay@@UAEEPAK0PAVCDPlayMsg@@K@Z	100.0000	100.0000	100.0000	0x975b0
+dxplay	?Receive@CDPlay@@UAEEPAK0PAVCDPlayMsg@@K@Z	99.3750	100.0000	100.0000	0x975b0
 dxplay	?ReceiveMsg@CDPlay@@MAEEKKPAVCDPlayMsg@@@Z	100.0000	100.0000	100.0000	0x96cc0
 dxplay	?ReceiveSystemMsg@CDPlay@@MAEEKPAVCDPlayMsg@@@Z	100.0000	100.0000	100.0000	0x97910
 dxplay	?RegisterApp@CDPlayLobby@@UAEEPAD00U_GUID@@0@Z	100.0000	100.0000	100.0000	0x989a0
@@ -1430,7 +1444,7 @@ game	?StartAITheme@@YIXXZ	100.0000	100.0000	100.0000	0xc6f40
 game	?TurnOffAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6fd0
 game	?TurnOnAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6f80
 game	?ValidateVictoryLossConditions@game@@QAEXE@Z	89.0407	89.0407	89.0407	0xbf780
-game	?ViewArmy@game@@QAEXAAVarmyGroup@@HPBVhero@@PBVtown@@HHEE@Z	96.9556	96.9556	96.9556	0xc6c50
+game	?ViewArmy@game@@QAEXAAVarmyGroup@@HPBVhero@@PBVtown@@HHEE@Z	83.8710	96.9556	96.9556	0xc6c50
 game	?WaitForPlayer@game@@QAEXPADH@Z	100.0000	100.0000	100.0000	0xca840
 game	?_Construct@std@@YIXPAUTRumour@game@@ABU23@@Z	100.0000	100.0000	100.0000	0xd3a10
 game	?_Construct@std@@YIXPAUtype_creature_bank@@ABU2@@Z	100.0000	100.0000	100.0000	0xd3d30
@@ -2034,6 +2048,8 @@ multiplayerwindow	??_GCHeroSessions@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x10ed
 multiplayerwindow	??_GCHotSeatDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x112540
 multiplayerwindow	??_GCMPInputDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1109e0
 multiplayerwindow	??_GTMultiPlayerWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x10edb0
+multiplayerwindow	?Delete@?$CAutoArray@VCDPlaySession@@@@UAEEK@Z	100.0000	100.0000	100.0000	0x1125d0
+multiplayerwindow	?Destroy@?$CAutoArray@VCDPlaySession@@@@QAEXE@Z	100.0000	100.0000	100.0000	0x112570
 multiplayerwindow	?GetIPAddress@@YIEPAD@Z	100.0000	100.0000	100.0000	0x1112e0
 multiplayerwindow	?GetRolloverWidget@CHotSeatDlg@@UAEPAVtextWidget@@XZ	100.0000	100.0000	100.0000	0x112530
 multiplayerwindow	?GetRolloverWidget@CMPInputDlg@@UAEPAVtextWidget@@XZ	100.0000	100.0000	100.0000	0x110970
@@ -2042,6 +2058,7 @@ multiplayerwindow	?GoMainMenu@TMultiPlayerWindow@@QAEXXZ	100.0000	100.0000	100.0
 multiplayerwindow	?GoSessionList@TMultiPlayerWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x10eef0
 multiplayerwindow	?HostSession@TMultiPlayerWindow@@QAEEPBD0@Z	100.0000	100.0000	100.0000	0x10fab0
 multiplayerwindow	?InitRemote@TMultiPlayerWindow@@QAEEW4eNetGameType@@PBDPAU_DPCOMPORTADDRESS@@@Z	100.0000	100.0000	100.0000	0x10fbc0
+multiplayerwindow	?Insert@?$CAutoArray@VCDPlaySession@@@@UAEEKPAVCDPlaySession@@@Z	100.0000	100.0000	100.0000	0x112610
 multiplayerwindow	?IsJoinDisabled@CDPlaySession@@QAEEXZ	100.0000	100.0000	100.0000	0x1112c0
 multiplayerwindow	?JoinSession@TMultiPlayerWindow@@QAEEPAVCDPlaySession@@PBD@Z	100.0000	100.0000	100.0000	0x10fa10
 multiplayerwindow	?OnDirectHost@TMultiPlayerWindow@@QAEEXZ	100.0000	100.0000	100.0000	0x10fc50
@@ -2171,7 +2188,10 @@ philai	?value_of_war_school@@YIHPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100
 philai	?value_of_witch_hut@@YIHPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x12b900
 philai	?wants_skill@@YIEPBVhero@@HH@Z	100.0000	100.0000	100.0000	0x124dd0
 philai	AI_value_of_event	0.0000	0.0000	0.0000	0x128040
+philai	ExtraInfoUnion_PlayerKnowsCell	0.0000	0.0000	0.0000	0x129690
 philai	MoveHero	0.0000	0.0000	0.0000	0x1261f0
+philai	game_OnSameTeam	0.0000	0.0000	0.0000	0x1296d0
+philai	game_UpgradedCreatureType	0.0000	0.0000	0.0000	0x129710
 philai	get_skill_value	0.0000	0.0000	0.0000	0x124690
 philai	move_hero	0.0000	0.0000	0.0000	0x1267b0
 philai	type_AI_creature_swapper_get_swap_value	0.0000	0.0000	0.0000	0x2c4a0
@@ -2489,7 +2509,7 @@ scenarioinfo	??1CScenarioInfoDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x169800
 scenarioinfo	??_GCScenarioInfoDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1697d0
 scenarioinfo	?OnWidgetDeselect@CScenarioInfoDlg@@UAEHHPAE@Z	100.0000	100.0000	100.0000	0x1698a0
 scenarioinfo	?UpdateAllyEnemyFlags@CScenarioInfoDlg@@QAEXXZ	100.0000	100.0000	100.0000	0x1698c0
-search	?BuildPath@searchArray@@QAEHPBVhero@@J@Z	86.3333	86.3333	86.3333	0x16a0d0
+search	?BuildPath@searchArray@@QAEHPBVhero@@J@Z	82.5524	86.3333	86.3333	0x16a0d0
 seerhut	??0TQuestGuard@@QAE@XZ	100.0000	100.0000	100.0000	0x172b50
 seerhut	??0TSeerHut@@QAE@XZ	100.0000	100.0000	100.0000	0x173580
 seerhut	??0type_quest@@QAE@E@Z	100.0000	100.0000	100.0000	0x16cb80
@@ -2752,6 +2772,7 @@ singleselectionwindow	?UpdateTown@TSingleSelectionWindow@@QAEXHHE@Z	100.0000	100
 singleselectionwindow	?WindowHandler@TSingleSelectionWindow@@UAEHPAVmessage@@@Z	97.6901	97.6901	97.6901	0x187d00
 singleselectionwindow	?handle_message@CHostWaitDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1891b0
 singleselectionwindow	CSingleSelectionNetMsgHandler_HandleNetMsg	0.0000	0.0000	0.0000	0x18e340
+singleselectionwindow	SCampaign_GetCurrentScenario	0.0000	0.0000	0.0000	0x17c780
 singleselectionwindow	TSingleSelectionWindow_GetHeader	0.0000	0.0000	0.0000	0x183170
 singleselectionwindow	TSingleSelectionWindow_GetHeaders	0.0000	0.0000	0.0000	0x182b40
 singleselectionwindow	TSingleSelectionWindow_OnWidgetDeselect	0.0000	0.0000	0.0000	0x1865b0

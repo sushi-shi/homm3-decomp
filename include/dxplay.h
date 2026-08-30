@@ -330,11 +330,10 @@ private:
 };
 SIZE(CDPlayLobby, 0x60);
 
-// Dreamcast fixes both fields and the eight-byte extent.  Retail's
-// CDPlayHeroes constructor/destructor independently show these two inline
-// members: construction clears both dwords, while destruction frees pData
-// and clears the pair.  Keeping those bodies in the class reproduces the
-// header-inline expansion in remote.obj.
+// Dreamcast fixes both fields and the eight-byte extent. Retail's
+// CDPlayHeroes constructor/destructor independently show these header-inline
+// members: construction clears both dwords, while destruction delegates to
+// Destroy(), which frees pData and clears the pair.
 class CDPlayMsg {
 public:
     CDPlayMsg() : pData(0), dataSize(0) {}
@@ -354,8 +353,10 @@ SIZE(CDPlayMsg, 0x08);
 
 inline unsigned char CDPlayMsg::AllocSize(unsigned long dSize)
 {
+    if (dataSize > dSize)
+        return 1;
     if (pData)
-        delete [] pData;
+        delete pData;
     pData = new unsigned char[dSize];
     dataSize = dSize;
     return 1;
@@ -366,7 +367,7 @@ inline unsigned char CDPlayMsg::Destroy()
 {
     if (!pData)
         return 0;
-    delete [] pData;
+    delete pData;
     pData = 0;
     dataSize = 0;
     return 1;
