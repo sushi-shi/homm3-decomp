@@ -4249,15 +4249,6 @@ long mark_destinations(hero* current_hero, long max_distance,
     return hero_danger;
 }
 
-// The per-TU inline copy used by the reconstructed callers above and below;
-// ai_player.obj's selected COMDAT is claimed at 0x42ec20 in RVA order. The
-// DC public decoration `??8type_point@@QBA_NABU0@@Z` resolves the old
-// pointer/unsigned-char scaffold to bool, const reference and const member.
-inline bool type_point::operator==(const type_point& arg) const
-{
-    return arg.x == x && arg.y == y && arg.z == z;
-}
-
 // philai.obj's three-argument event appraisal (0x528040, dc 0x113e24);
 // declared locally the way events.cpp declares its two-argument wrapper.
 long AI_value_of_event(const hero* current_hero, type_point point,

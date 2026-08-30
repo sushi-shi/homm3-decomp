@@ -32,14 +32,10 @@ struct type_point {
     // const member, const-reference operand. Keep the pointer overload above
     // temporarily for older reconstructed callers while source-aligned sites
     // use the proven operator.
-#ifdef HOMM3_HERO_OBJ_VIEW
     bool operator==(const type_point& arg) const
     {
         return x == arg.x && y == arg.y && z == arg.z;
     }
-#else
-    bool operator==(const type_point& arg) const;
-#endif
     unsigned char is_valid();
 };
 #ifdef HOMM3_PHILAI_OBJ_DECLS
