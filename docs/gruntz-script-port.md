@@ -260,6 +260,23 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-30 — `value_of_enemy_town` escapes a source-false 99.9561%
+  local-lifetime minimum without losing a byte.** The compact dossier's local
+  names were insufficient by themselves; the raw NB11 records show
+  `creature_cost`, `include_growth`, and `creature` as procedure-scope
+  `S_REGREL32` entries before every lexical block, in that record order. The
+  previous high-score source incorrectly declared the cost array and creature
+  enum inside the positive-population branch. Restoring the three proved
+  lifetimes and their order is byte-flat at **99.9561%**. A fatal source rule
+  plus nested-lifetime and reordered negative controls now prevent regression.
+
+  Candidate and retail still agree on all 35 blocks, 18 branches, and every
+  instruction except the encoding order of the final commutative LEA:
+  `[ebx+ecx]` versus `[ecx+ebx]`. The existing return-operand, declaration,
+  and accumulate-then-return controls do not steer that SIB choice. The
+  positive Dreamcast lifetime fact is retained while that compiler tie remains
+  an honest one-instruction residual.
+
 - **2026-08-30 — `town::GiveSpells` ratchets its Dreamcast-proven nested
   guards at the honest 99.9216% schedule plateau.** Dreamcast breakpoint
   rows 992/994/999 and their lexical scopes record the current-hero,
