@@ -281,6 +281,24 @@ PROVEN_CALL_SPELLINGS: dict[tuple[str, int], tuple[CallSpelling, ...]] = {
 }
 
 
+# A stripped Complete caller can prove one revision spelling directly through
+# its retail code relocation even before the whole function is byte-exact.
+# Keep these separate from PROVEN_CALL_SPELLINGS: admission is per caller and
+# the matching SOURCE_RULES entry must require the full receiver/argument
+# shape and reject the obsolete helper, so this cannot become a name waiver.
+RELOCATION_PROVEN_CALL_SPELLINGS: dict[
+        tuple[str, int], tuple[CallSpelling, ...]] = {
+    ("swapmgr.obj", 0x15D150): (
+        CallSpelling(
+            "Complete swapManager::handle_artifact_click replaces the "
+            "Dreamcast free artifactAllowedInSlot helper with the retail "
+            "relocation-proved hero::HeroFn_004E2840 member call",
+            0x005AF590, "artifactAllowedInSlot",
+            r"\bHeroFn_004E2840(?=\s*\()", "artifactAllowedInSlot"),
+    ),
+}
+
+
 # A lexical helper name is normally the most the source-shape pass can prove:
 # same-class methods may legitimately be called on a peer object.  Require a
 # self receiver only for individually decoded SH4 call sites.  ShowWidget and
@@ -2674,6 +2692,21 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"gUnnamed69d810\s*=\s*gNetLocalGamePos\s*;\s*"
             r"UpdateTurnDuration\s*\(\s*\)\s*;"),
     ),
+    ("swapmgr.obj", 0x15D150): (
+        SourceRule(
+            "handle_artifact_click keeps Complete's retail-relocation-proved "
+            "hero::HeroFn_004E2840 replacement as the dragged-id/slot "
+            "rejection predicate",
+            r"if\s*\(\s*!\s*our_hero\s*->\s*HeroFn_004E2840\s*\(\s*"
+            r"gHeroScreenDraggedArtifact\s*\.\s*artifactId\s*,\s*slot\s*"
+            r"\)\s*\)\s*return\s*;",
+            1, 1),
+        SourceRule(
+            "handle_artifact_click may not retain or duplicate Dreamcast's "
+            "obsolete free artifactAllowedInSlot helper after Complete's "
+            "relocation-proved member-call replacement",
+            r"\bartifactAllowedInSlot\s*\(", 0, 0),
+    ),
     ("swapmgr.obj", 0x15CDBC): (
         SourceRule(
             "update_all_slots keeps Dreamcast's nested two-hero, nineteen-"
@@ -3992,11 +4025,18 @@ def apply_proven_call_spellings(
         key: tuple[str, int], body: str, va: int | None,
         exact_vas: set[int]) -> str:
     """Canonicalize bounded Complete call spellings for shape comparison."""
-    if va is None or va not in exact_vas:
+    if va is None:
         return body
     active = _source.mask(body)
     canonical = body
-    for spelling in PROVEN_CALL_SPELLINGS.get(key, ()):
+    if va in exact_vas:
+        for spelling in PROVEN_CALL_SPELLINGS.get(key, ()):
+            if va != spelling.caller_va \
+                    or re.search(spelling.retail_pattern, active) is None:
+                continue
+            canonical = re.sub(
+                spelling.retail_pattern, spelling.canonical_name, canonical)
+    for spelling in RELOCATION_PROVEN_CALL_SPELLINGS.get(key, ()):
         if va != spelling.caller_va \
                 or re.search(spelling.retail_pattern, active) is None:
             continue
@@ -5658,6 +5698,51 @@ return lod_file->read(data, size) ? 0 : size;
     if not missing_from_body(erased,
                              ["CNetPlayerHandler::AddNewPlayer"]):
         failures.append("erased Complete wrapper passed source-shape gate")
+    relocation_spelling_key = ("swapmgr.obj", 0x15D150)
+    relocation_spelling_va = \
+        RELOCATION_PROVEN_CALL_SPELLINGS[relocation_spelling_key][0].caller_va
+    relocation_spelling_body = """\
+if (!our_hero->HeroFn_004E2840(
+        gHeroScreenDraggedArtifact.artifactId, slot))
+    return;
+"""
+    relocation_canonical = apply_proven_call_spellings(
+        relocation_spelling_key, relocation_spelling_body,
+        relocation_spelling_va, set())
+    if missing_from_body(relocation_canonical, ["artifactAllowedInSlot"]) \
+            or contract_violations(
+                relocation_spelling_body, relocation_spelling_key):
+        failures.append(
+            "relocation-proved Complete call spelling did not pass")
+    relocation_omitted = "return;"
+    if not missing_from_body(apply_proven_call_spellings(
+            relocation_spelling_key, relocation_omitted,
+            relocation_spelling_va, set()), ["artifactAllowedInSlot"]):
+        failures.append(
+            "omitted relocation-proved Complete call spelling passed")
+    relocation_old_only = """\
+if (!artifactAllowedInSlot(dragged, slot))
+    return;
+"""
+    if not contract_violations(
+            relocation_old_only, relocation_spelling_key):
+        failures.append("obsolete Dreamcast helper-only spelling passed")
+    relocation_flattened = """\
+if (!(allowable_slots[slot] & dragged_artifact_mask))
+    return;
+"""
+    if not contract_violations(
+            relocation_flattened, relocation_spelling_key):
+        failures.append("flattened Complete artifact predicate passed")
+    relocation_wrong_arguments = """\
+if (!our_hero->HeroFn_004E2840(slot,
+        gHeroScreenDraggedArtifact.artifactId))
+    return;
+"""
+    if not contract_violations(
+            relocation_wrong_arguments, relocation_spelling_key):
+        failures.append(
+            "wrong-argument Complete artifact predicate passed")
     removal_key = ("singleselectionwindow.obj", 0x135F04)
     removal_va = PROVEN_REVISION_REMOVALS[removal_key][0].caller_va
     removal_body = """\

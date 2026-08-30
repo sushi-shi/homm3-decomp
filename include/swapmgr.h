@@ -74,6 +74,14 @@ enum ESwapWidgetId {
     kSwapTradeRequestDone = 0x7800,
 };
 
+// Complete's campaign-only guard in handle_artifact_click. Retail fixes the
+// scenario ordinals and the one exempt hero id directly.
+enum EArmageddonsBladeCampaignGuard {
+    ARMAGEDDONS_BLADE_CAMPAIGN = 7,
+    ARMAGEDDONS_BLADE_MAP = 7,
+    ARMAGEDDONS_BLADE_EXEMPT_HERO = 148
+};
+
 class CTradeRequestDoneMsg : public CNetMsg {
 public:
     CTradeRequestDoneMsg();
@@ -129,6 +137,8 @@ public:
     void update_all_slots();
     void UpdateBackpackItem(int iHero, int i);
     void UpdateBackpack(int iHero);
+    void handle_artifact_click(long side, long id,
+                               unsigned char right_click);
     void handle_backpack_click(long side, long id,
                                unsigned char right_click);
     void SwapMons();
