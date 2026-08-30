@@ -2155,7 +2155,7 @@ philai	?value_of_town_buildings@@YIJPBVhero@@PAVtown@@@Z	100.0000	100.0000	100.0
 philai	?value_of_university@@YIJPBVhero@@PAUtype_university@@E@Z	100.0000	100.0000	100.0000	0x125bf0
 philai	?value_of_wagon@@YIHPAVNewmapCell@@J@Z	100.0000	100.0000	100.0000	0x12b710
 philai	?value_of_war_factory@@YIJPBVhero@@J@Z	100.0000	100.0000	100.0000	0x1297d0
-philai	?value_of_war_factory@@YIJPBVhero@@W4TArtifact@@J@Z	88.5062	88.5062	88.5062	0x125120
+philai	?value_of_war_factory@@YIJPBVhero@@W4TArtifact@@J@Z	96.5185	96.5185	96.5185	0x125120
 philai	?value_of_war_school@@YIHPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x12b790
 philai	?value_of_witch_hut@@YIHPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x12b900
 philai	?wants_skill@@YIEPBVhero@@HH@Z	100.0000	100.0000	100.0000	0x124dd0
