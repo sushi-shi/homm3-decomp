@@ -506,8 +506,8 @@ public:
                   GameSelectionHeadersStruct* pHeader);
     // Retail 0x580a70 widened DC's no-arg SetupScenarioOptions with the
     // random-maps mode byte (the body compares it to m_flag66 and
-    // stores it there). ShowWidget = retail 0x57fb20 (its only caller
-    // is OnSetAsHostMsg - extern linkage keeps it emitted).
+    // stores it there). ShowWidget = retail 0x57fb20; its only caller is
+    // OnSetAsHostMsg, where retail preserves the out-of-line boundary.
     void SetupScenarioOptions(unsigned char randomMaps);
     void SetupAdvancedOptions();
     unsigned char SendPlayerPositions(unsigned long dpidTo);

@@ -1186,12 +1186,23 @@ void TSingleSelectionWindow::SetupNewGameMode()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\singleselectionwindow.cpp:2809
-VA(0x0057FB20, 0x66)  // anchor-callee OnSetAsHostMsg 0x58b120 is its only caller (ShowWidget(0xba) before the empty-list disable) - extern linkage keeps the single-call-site body emitted, size 0.47x dc 0xD8, dc 0x135da8
+// Dreamcast proves the pWidget local, null guard, show call, and the original
+// IsHost helper inside the enable expression. Complete expands IsHost but
+// retains the m_flag65 override visible in retail's final short-circuit arm.
+VA(0x0057FB20, 0x66)  // 100.0000%: 102/102 bytes, 7/7 blocks, 4/4 branches; anchor-callee OnSetAsHostMsg 0x58b120 is its only caller (ShowWidget(0xba) before the empty-list disable), size 0.47x dc 0xD8, dc 0x135da8
 void TSingleSelectionWindow::ShowWidget(int id)
 {
-    // @stub
+    widget* pWidget = GetWidget(id);
+    if (!pWidget)
+        return;
+    pWidget->show();
+    pWidget->enable(IsHost() || m_flag65);
 }
+
+#if 0  // @carcass
 
 // No retail row fits UpdateMainWindow (the 0x57fb90 slot is 6x its DC
 // size): retail spells the DrawWindow(1, 0xffff0001, 0xffff)+Update()
@@ -4384,7 +4395,11 @@ unsigned char TSingleSelectionWindow::OnSetAsHostMsg(CNetMsg* pNetMsg)
                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
         w->enable(!bVideoPaused || pDPlay->IsHost() || m_flag65);
     }
+    // Retail keeps the Dreamcast-proven ShowWidget helper out of line here,
+    // even though this VC6 TU otherwise chooses to expand its small body.
+#pragma inline_depth(0)
     ShowWidget(186);
+#pragma inline_depth()
     // Retail calls the out-of-line size() COMDAT (0x58eab0) here while
     // expanding it at the SetResolution site above - the condition-only
     // pin reproduces the split.

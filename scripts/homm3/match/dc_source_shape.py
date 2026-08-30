@@ -223,10 +223,12 @@ PROVEN_CALL_SPELLINGS: dict[tuple[str, int], tuple[CallSpelling, ...]] = {
 
 # A lexical helper name is normally the most the source-shape pass can prove:
 # same-class methods may legitimately be called on a peer object.  Require a
-# self receiver only for individually decoded SH4 call sites.  At all four
-# IsHost calls below, SetupAdvancedOptions reloads its saved ``this`` into r4
-# immediately before the jsr; pDPlay->IsHost() is therefore not that edge.
+# self receiver only for individually decoded SH4 call sites.  ShowWidget and
+# all four SetupAdvancedOptions IsHost sites reload their saved ``this`` into
+# r4 immediately before the jsr; pDPlay->IsHost() is therefore not that edge.
 PROVEN_SELF_CALLS = frozenset({
+    ("singleselectionwindow.obj", 0x135DA8,
+     "TSingleSelectionWindow::IsHost"),
     ("singleselectionwindow.obj", 0x136388,
      "TSingleSelectionWindow::IsHost"),
 })
@@ -2283,6 +2285,19 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"amount\s*\)\s*;\s*\}\s*else\s*\{\s*result\s*=\s*"
             r"convert_with_commas\s*\(\s*available\s*\)\s*;\s*\}"),
     ),
+    ("singleselectionwindow.obj", 0x135DA8): (
+        SourceRule(
+            "ShowWidget keeps Dreamcast's sole pWidget local, GetWidget "
+            "assignment, and null-return guard in recovered order",
+            r"\A\s*widget\s*\*\s*pWidget\s*=\s*GetWidget\s*\(\s*id\s*\)"
+            r"\s*;\s*if\s*\(\s*!\s*pWidget\s*\)\s*return\s*;"),
+        SourceRule(
+            "ShowWidget keeps Dreamcast's show then enable helper order, "
+            "including the self IsHost and m_flag65 alternatives",
+            r"\bpWidget\s*->\s*show\s*\(\s*\)\s*;\s*"
+            r"pWidget\s*->\s*enable\s*\(\s*IsHost\s*\(\s*\)\s*\|\|\s*"
+            r"m_flag65\s*\)\s*;"),
+    ),
     ("singleselectionwindow.obj", 0x136388): (
         SourceRule(
             "SetupAdvancedOptions keeps Dreamcast's reset-loop i local "
@@ -4172,6 +4187,42 @@ def selftest() -> list[str]:
         failures.append("this-qualified proven self-call IsHost did not pass")
     if missing_from_body(wrong_host, host_edge):
         failures.append("unproved peer receiver became globally fatal")
+    show_widget_key = ("singleselectionwindow.obj", 0x135DA8)
+    show_widget_probe = """\
+widget* pWidget = GetWidget(id);
+if (!pWidget)
+    return;
+pWidget->show();
+pWidget->enable(IsHost() || m_flag65);
+"""
+    if contract_violations(show_widget_probe, show_widget_key):
+        failures.append("aligned ShowWidget source shape did not pass")
+    if missing_from_body(
+            show_widget_probe.replace("IsHost()", "pDPlay->IsHost()"),
+            host_edge, show_widget_key) != [
+                ("TSingleSelectionWindow::IsHost", "IsHost")]:
+        failures.append("ShowWidget peer receiver hid proven self-call IsHost")
+    show_widget_mutations = (
+        (show_widget_probe.replace(
+            "widget* pWidget = GetWidget(id);",
+            "widget* pWidget;\npWidget = GetWidget(id);"),
+         "sole pWidget local"),
+        (show_widget_probe.replace("if (!pWidget)\n    return;\n", ""),
+         "null-return guard"),
+        (show_widget_probe.replace(
+            "pWidget->show();",
+            "pWidget->send_message(widget::WIDGET_SET_STATUS, 6);"),
+         "show then enable helper order"),
+        (show_widget_probe.replace("IsHost() || ", ""),
+         "self IsHost and m_flag65 alternatives"),
+        (show_widget_probe.replace(" || m_flag65", ""),
+         "self IsHost and m_flag65 alternatives"),
+    )
+    for probe, description in show_widget_mutations:
+        if not any(description in rule.description for rule in
+                   contract_violations(probe, show_widget_key)):
+            failures.append("broken ShowWidget " + description
+                            + " source shape passed")
     setup_probe = """\
 if (mapChanged) {
     for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {}

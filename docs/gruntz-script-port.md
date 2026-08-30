@@ -260,6 +260,29 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-30 — `TSingleSelectionWindow::ShowWidget` is exact from the
+  Dreamcast source shape, and its only caller remains exact through a bounded
+  call-site pin.** The dossier at `singleselectionwindow.obj:0x135da8` proves
+  the sole `pWidget` local, `GetWidget(id)` assignment, null-return guard,
+  `pWidget->show()`, and `pWidget->enable(IsHost() || m_flag65)` in that
+  order. Retail independently proves that Complete's `IsHost` expansion adds
+  the video-pause alternative, but does not contradict the original helper
+  expression. The natural C++ reproduces retail `0x0057fb20` at
+  **100.0000% across all 102 bytes, 7 / 7 blocks, and 4 / 4 symbolic
+  branches**. The definition stays in its recovered TU order between
+  `SetupNewGameMode` and `UpdateMainWindow`, rather than being appended after
+  the surrounding carcass.
+
+  Activating the exact body caused VC6 to inline it into the sole
+  `OnSetAsHostMsg` call and temporarily lowered that already-exact caller to
+  **92.6035%**. Retail instead contains a direct `ShowWidget(186)` call there,
+  so a statement-local `inline_depth(0)` fence preserves only that proven
+  caller/callee boundary; both functions are now **100.0000%**. The callee's
+  internal `show`, self-`IsHost`, and `enable` boundaries remain expressed as
+  source and are protected by asymmetric rules plus negative controls for a
+  missing guard, flattened `send_message`, namesake peer receiver, or omitted
+  short-circuit alternative.
+
 - **2026-08-30 — raw NB11 corrects the `SetupAdvancedOptions` local-scope
   ratchet without sacrificing its 99.3846% Windows peak.** The high-level
   dossier listed two locals named `i`, but did not expose their symbol
