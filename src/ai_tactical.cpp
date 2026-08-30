@@ -21,7 +21,6 @@
 // Likewise for the two inline searchArray::get_hex() sites in that body.
 #define HOMM3_SEARCHARRAY_GET_HEX_VIEW
 // Army.h:847's const inline, used once in check_adjacent_hexes.
-#define HOMM3_ARMY_CAN_RETALIATE_VIEW
 // The enchantment pricers walk army's +0x198 spell-influence row and
 // its +0x2dc mastery twin by spell id, which needs the row form of
 // both. Split out of army.cpp's round view so this TU does not also
@@ -30,7 +29,6 @@
 // leaves this TU is the only located caller of.
 // check_adjacent_hexes breaks a tie toward the LONGER approach for the
 // two jousters.
-#define HOMM3_ARMY_SPELL_ROW_VIEW
 #define HOMM3_ARMY_COPY_VIEW
 // The retained army copy constructor at 0x437a00 must see the four actual
 // vector members rather than the byte-layout arm used by TUs that never copy

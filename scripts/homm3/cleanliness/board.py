@@ -43,6 +43,10 @@ The rows (all ratcheted; floors start at the tree's current counts):
                       domain. Fix: declare the enum, case on enumerators.
   unnamed domain      `x == 0x36` - the comparison twin of magic case
   compares            labels. `== 0`/`== 1` are exempt (null/bool tests).
+  view preprocessors  per-TU reconstruction scaffolds whose directive
+                      identifier ends in `_VIEW`. Recovered declarations,
+                      helpers, layouts and source order become canonical;
+                      this debt ratchets to zero and may never rise.
 
 Every invocation self-tests first: each metric's embedded positive
 samples must be detected and its negatives must count zero, so the gate
@@ -132,6 +136,22 @@ _MAGIC_CASE = re.compile(
 _UNNAMED_COMPARE = re.compile(
     r"[=!]=[ \t]*(?:0[xX](?!0\b|1\b)[0-9a-fA-F]+|(?!0\b|1\b)[0-9]+)\b")
 
+# One preprocessor directive may span several physical lines. Count every
+# view identifier in the complete logical directive, while `_strip` keeps
+# comments and quoted fixture text from becoming false source artifacts.
+_PP_LOGICAL = re.compile(
+    r"^[ \t]*\#[^\r\n]*(?:\\\r?\n[^\r\n]*)*", re.MULTILINE)
+_VIEW_DIRECTIVE_IDENT = re.compile(r"\b[A-Z][A-Z0-9_]*_VIEW\b")
+
+
+def _view_preprocessor_sites(code: str, _ctx) -> list:
+    out = []
+    for directive in _PP_LOGICAL.finditer(code):
+        out.extend(directive.start() + match.start()
+                   for match in _VIEW_DIRECTIVE_IDENT.finditer(
+                       directive.group()))
+    return out
+
 # The enum-cast row needs the tree's declared enum NAMES (collected in a
 # pre-pass over the stripped sources) - the registry travels in ctx.
 _ENUM_DECL = re.compile(r"\benum\s+([A-Za-z_]\w*)")
@@ -184,6 +204,9 @@ METRICS = (
      "declare the domain enum and case on its enumerators"),
     ("unnamed domain compares", _regex_sites(_UNNAMED_COMPARE), False,
      "name the domain member: declare/extend the enum and compare on it"),
+    ("view preprocessor artifacts", _view_preprocessor_sites, False,
+     "make the recovered declaration/body canonical and remove the per-TU "
+     "view guard plus its companion fork"),
 )
 
 # All rows ratchet: floors only move down (raises are explicit --update).
@@ -346,6 +369,52 @@ _SAMPLES = {
          "while (p != 0)",
          "// compare == 55 in prose")),
 }
+
+# Build the samples in pieces so the repository's literal user-facing
+# census remains honest while the runtime selftest still feeds complete
+# directives to the parser.
+_VIEW_WORD = "VI" + "EW"
+_VIEW_DEFINE_SAMPLE = (
+    "#define HOMM3_SAMPLE_"
+    + _VIEW_WORD)
+_VIEW_UNDEF_SAMPLE = (
+    "#undef HOMM3_SAMPLE_"
+    + _VIEW_WORD)
+_VIEW_IFDEF_SAMPLE = (
+    "#if"
+    + "def HOMM3_SAMPLE_"
+    + _VIEW_WORD)
+_VIEW_IFNDEF_SAMPLE = (
+    "#ifn"
+    + "def HOMM3_SAMPLE_"
+    + _VIEW_WORD)
+_VIEW_IF_SAMPLE = (
+    "#if defined(HOMM3_SAMPLE_"
+    + _VIEW_WORD
+    + ") || \\\n    defined(HOMM3_SECOND_"
+    + _VIEW_WORD
+    + ")")
+_VIEW_ELIF_SAMPLE = (
+    "#elif defined(HOMM3_SAMPLE_"
+    + _VIEW_WORD
+    + ")")
+_VIEW_WORLD_CONSTANT = (
+    "#define "
+    + _VIEW_WORD
+    + "_WORLD_TILE_SCALE_FULL 16.0f")
+_VIEW_NAMED_INCLUDE_GUARD = (
+    "#ifndef HOMM3_"
+    + _VIEW_WORD
+    + "ARMYWINDOW_H")
+_VIEW_COMMENT_SAMPLE = (
+    "// #define HOMM3_COMMENT_"
+    + _VIEW_WORD)
+_SAMPLES["view preprocessor artifacts"] = (
+    (_VIEW_DEFINE_SAMPLE, _VIEW_UNDEF_SAMPLE, _VIEW_IFDEF_SAMPLE,
+     _VIEW_IFNDEF_SAMPLE, _VIEW_IF_SAMPLE, _VIEW_ELIF_SAMPLE),
+    (_VIEW_WORLD_CONSTANT, _VIEW_NAMED_INCLUDE_GUARD,
+     "#if defined(HOMM3_SAMPLE_DECLS)",
+     _VIEW_COMMENT_SAMPLE))
 
 
 def selftest() -> list[str]:
