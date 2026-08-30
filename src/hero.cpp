@@ -1816,20 +1816,21 @@ void hero::HeroScreenUpdate(int whichStat, int isQuickView)
 
 #endif  // @carcass
 
-// E:\gamedcs\hero.cpp:1632
+// E:\gamedcs\hero.cpp:1717
 // ARITY SETTLED FROM THE BYTES (2026-08-20): `ret 8`, ECX never read,
 // and the first stack argument is a type_artifact RECORD - ECX is set
 // from it for the get_description call and its +4 dword becomes the
 // dialog's resource extra. Its former UpdateArmies assignment was the
-// retired positional-map error; the ordinal name remains until this
-// body's own identity is independently established.
+// retired positional-map error. The Dreamcast ViewArtifact rows at eight
+// independently identified retail callers now establish the public name and
+// the const artifact pointer as well as this body's ABI.
 // The `neg / sbb / and 3 / inc` chain is the quick-view flag turned into
 // the same dialog-type pair HeroScreenUpdate uses (4 quick, 1 normal),
 // and the two arms carry SEPARATE string locals - retail homes them at
 // [ebp-0x1c] and [ebp-0x2c], which is what fixes the duplicated
 // description call rather than one shared temporary.
-VA(0x004d9a00, 0x128)  // retail body; DC identity not yet established
-void hero::HeroFn_004D9A00(type_artifact* artifact, int isQuickView)
+VA(0x004d9a00, 0x128)  // retail body + eight DC caller rows, dc 0xcc75c
+void hero::ViewArtifact(const type_artifact* artifact, int isQuickView)
 {
     if (artifact->artifactId == ARTIFACT_SPELL_SCROLL) {
         NormalDialog(artifact->get_description().c_str(),
@@ -1871,7 +1872,7 @@ int hero::HeroFn_004D9B30(int artifact)
     return gpWindowManager->dialogReturn;
 }
 
-// E:\gamedcs\hero.cpp:1717
+// Retail-only body immediately after the independently mapped ViewArtifact.
 // The ASSEMBLE partner of 0x4d9b30 above, same arity settlement: `ret 4`,
 // ECX untouched, one artifact id in and the dialog reply out. It reads
 // the component's targetCombo, describes the ASSEMBLED artifact, and
@@ -1888,7 +1889,7 @@ int hero::HeroFn_004D9B30(int artifact)
 // Residual (94.2%): prologue instruction SCHEDULING only - the same
 // instructions, permuted around the two pushes - plus the unwind-table
 // addend in the frame push, which is a relocation and not a state count.
-VA(0x004d9cc0, 0x200)  // dc-bracket forced + settled arity, dc 0xcc75c
+VA(0x004d9cc0, 0x200)  // retail body + settled arity; old DC bracket retired
 int hero::HeroFn_004D9CC0(int artifact)
 {
     int assembled =
@@ -2799,7 +2800,7 @@ void type_artifact::get_rollover_text(char* buffer)
 // named `char c` in favour of `*cursor` in both the test and the append
 // (88.40, byte-flat).
 VA(0x004db3e0, 0x277)  // anchor-bracket, dc 0xcd8b8
-std::string type_artifact::get_description()
+std::string type_artifact::get_description() const
 {
     if (artifactId != ARTIFACT_SPELL_SCROLL)
         return akArtifactTraits[artifactId].description;
@@ -3745,7 +3746,7 @@ void THeroScreenWindow::show_skills()
 //
 // They are BYTE-FORCED, not tidiness. Written longhand inside
 // WindowHandler the caller carries so much /Ob2 budget that it also
-// expands update_all_slots, HeroFn_004D9A00, HeroFn_004E2840 and
+// expands update_all_slots, ViewArtifact, HeroFn_004E2840 and
 // bitset<144>::any(), every one of which retail CALLS. Moving these three
 // arms back out is what restores retail's own inline census.
 //
@@ -3876,7 +3877,7 @@ static void handle_artifact_click(long code, unsigned char right_mouse)
                 }
             }
         }
-        gpCurrentHero->HeroFn_004D9A00(&record, right_mouse);
+        gpCurrentHero->ViewArtifact(&record, right_mouse);
         return;
     }
 
@@ -3940,7 +3941,7 @@ static void handle_backpack_click(long code, unsigned char right_mouse)
         return;
 
     if (right_mouse) {
-        gpCurrentHero->HeroFn_004D9A00(&record, right_mouse);
+        gpCurrentHero->ViewArtifact(&record, right_mouse);
         return;
     }
 

@@ -129,6 +129,8 @@ public:
     void update_all_slots();
     void UpdateBackpackItem(int iHero, int i);
     void UpdateBackpack(int iHero);
+    void handle_backpack_click(long side, long id,
+                               unsigned char right_click);
     void SwapMons();
     void Update();
     void OnWidgetDeselect(message& msg, int& exitFlag);

@@ -2579,7 +2579,7 @@ void type_sacrifice_window::artifact_click(
             return;
 
         if (right_click) {
-            current_hero->HeroFn_004D9A00(&old_artifact, right_click);
+            current_hero->ViewArtifact(&old_artifact, right_click);
             return;
         }
 
@@ -2657,7 +2657,7 @@ void type_sacrifice_window::backpack_click(
     if (holding_artifact.artifactId == ARTIFACT_NONE) {
         if (old_artifact.artifactId != ARTIFACT_NONE) {
             if (right_click) {
-                current_hero->HeroFn_004D9A00(
+                current_hero->ViewArtifact(
                     &old_artifact, right_click);
             } else {
                 current_hero->remove_backpack_artifact(slot);
@@ -2711,7 +2711,7 @@ void type_sacrifice_window::offering_click(
     if (holding_artifact.artifactId == ARTIFACT_NONE) {
         if (old_artifact.artifactId != ARTIFACT_NONE) {
             if (right_click) {
-                current_hero->HeroFn_004D9A00(
+                current_hero->ViewArtifact(
                     &old_artifact, right_click);
             } else {
                 artifact_offerings[slot].artifactId = ARTIFACT_NONE;

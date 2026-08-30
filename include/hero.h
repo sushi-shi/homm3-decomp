@@ -160,9 +160,10 @@ struct type_artifact {
 
 // townmgr.cpp's blacksmith right-click text (0x5d1aa0) calls this on a
 // copy of the war machine's artifact record; hero.obj owns the
-// DEFINITION (0x4db3e0).
+// DEFINITION (0x4db3e0). Dreamcast LF_MFUNCTION 0x4d51 carries a const
+// type_artifact this pointer.
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
-        get_description();
+        get_description() const;
     void get_rollover_text(char* buffer);
 };
 
@@ -842,17 +843,19 @@ public:
     // 0x4d9cc0, the ASSEMBLE partner of the row above and the same
     // shape: `ret 4`, `this` unused, one artifact id in. It resolves the
     // component's targetCombo, describes the ASSEMBLED artifact and asks
-    // general text 733 with the component's name formatted in. The DC
-    // row owning the slot is ViewArtifact (three parameters); ORDINAL
-    // PLACEHOLDER name, arity settled from the bytes.
+    // general text 733 with the component's name formatted in. The old DC
+    // bracket assignment to ViewArtifact is disproved by that name's exact
+    // retail identity at 0x4d9a00; this remains an ordinal retail-only name.
     int HeroFn_004D9CC0(int artifact);
     // 0x4d9a00, `ret 8`, `this` unused, an artifact RECORD and the
     // quick-view flag in. It pops the artifact's own description, adding
     // the spell icon (resource type 9, extra = the scroll's spell) only
     // for a spell scroll. Its old UpdateArmies assignment was a disproven
-    // positional-map artifact; ORDINAL PLACEHOLDER name, arity settled
-    // from the bytes.
-    void HeroFn_004D9A00(type_artifact* artifact, int isQuickView);
+    // positional-map artifact; retail settles the ABI and eight mapped
+    // Dreamcast callers settle the ViewArtifact name and const pointer.
+    // Dreamcast hero.cpp line 1717: the eight retail callers pass the same
+    // artifact pointer/quick-view pair at their ViewArtifact rows.
+    void ViewArtifact(const type_artifact* artifact, int isQuickView);
     // 0x4e16d0 - repaints the hero screen's four primary-stat texts and
     // its luck and morale icon frames. Same gate, same reason.
     void UpdateStats();
