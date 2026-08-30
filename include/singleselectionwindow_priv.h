@@ -596,38 +596,30 @@ struct SHeaderRequest {
     int m_number;
 };
 
-// One per-joining-player header-transfer job. This view is still a known
-// two-type conflation: retail constructor 0x589240 stores vtable 0x641d38
-// (slots 0x577d70/0x577de0/0x578930), while the inline construction in
-// 0x58a280 stores the distinct vtable 0x641d44
-// (slots 0x5789f0/0x578a90/0x5795a0). The latter is the only family retail
-// directly corroborates for Dreamcast's CNewPlayerUpdateProc identity; the
-// former is separately labelled t_map_list_update by the secondary IDA
-// evidence. Split the two dynamic types before changing novtable: merely
-// removing it trades exact 0x583ef0 for exact 0x58a280 and is source-false.
-// The destructor is non-virtual: retail calls 0x583ef0 directly.
-// Member offsets are the ctor's stores (dpid +4, the +0x10..+0x18
-// buffer triple the dtor frees and zeroes, m_finished +0x20).
-class __declspec(novtable) CNewPlayerUpdateProc {
+// Shared state/interface for the two retail header-transfer jobs. Complete
+// has two three-slot vtables over this exact 0x24-byte layout:
+//
+//   0x641d38: 0x577d70 / 0x577de0 / 0x578930 (t_map_list_update)
+//   0x641d44: 0x5789f0 / 0x578a90 / 0x5795a0 (CNewPlayerUpdateProc)
+//
+// The names of the concrete tables come from secondary IDA evidence; their
+// separation, slot contents and construction sites are retail-byte facts.
+// Dreamcast had only CNewPlayerUpdateProc and its Go/Tick source shape is the
+// close counterpart of Complete's t_map_list_update overrides. Constructor
+// scheduling proves an inheritance chain rather than two siblings: the
+// 0x641d44 vptr is written after shared member construction but before
+// CNewPlayerUpdateProc's field-initializing body, while t_map_list_update's
+// 0x641d38 override is written after that body. novtable belongs on the shared
+// interface: it suppresses an invented base vptr reset in the directly-called
+// non-virtual teardown at 0x583ef0 while both concrete levels emit their own
+// retail vptr at the source-correct phase.
+class __declspec(novtable) CNewPlayerUpdateTask {
 public:
-    // Temporary spelling for the conflated view above. The missing
-    // 0x641d44 store in Man::NewPlayer is a type-split defect, not a reason
-    // to falsify the already exact destructor by removing novtable here.
-    CNewPlayerUpdateProc(unsigned long dpid)
-    {
-        m_dpid = dpid;
-        m_nextHeader = 0;
-        m_finished = 0;
-        m_lastSendTime = 0;
-    }
-    virtual void Go();          // slot 0, 0x577d70
-    virtual void Tick();        // slot 1, 0x577de0
-    virtual void _vslot02();    // slot 2, 0x578930
-    virtual void _vslot03();    // slot 3, 0x5789f0
-    virtual void _vslot04();    // slot 4, 0x578a90
-    virtual void _vslot05();    // slot 5, 0x5795a0
-    void HandleRequests();      // retail 0x578010
-    ~CNewPlayerUpdateProc();
+    CNewPlayerUpdateTask() {}
+    virtual void Go() = 0;
+    virtual void Tick() = 0;
+    virtual void Finish() = 0;
+    ~CNewPlayerUpdateTask();
 
     unsigned long m_dpid;           // +0x04
     int m_nextHeader;               // +0x08, next row to send
@@ -641,12 +633,41 @@ public:
     unsigned char IsFinished() const { return m_finished; }
 };
 
+// Complete's CNewPlayerUpdateProc implementation. NewPlayer constructs it
+// inline, proving both the 0x641d44 vptr and its placement before this body.
+// Its three retail-only method bodies remain to recover.
+class CNewPlayerUpdateProc : public CNewPlayerUpdateTask {
+public:
+    CNewPlayerUpdateProc(unsigned long dpid)
+    {
+        m_dpid = dpid;
+        m_nextHeader = 0;
+        m_finished = 0;
+        m_lastSendTime = 0;
+    }
+    virtual void Go();       // slot 0, 0x5789f0
+    virtual void Tick();     // slot 1, 0x578a90
+    virtual void Finish();   // slot 2, 0x5795a0
+};
+
+// Complete's derived map-list implementation. Its Go/Tick bodies are the
+// close retail descendants of Dreamcast CNewPlayerUpdateProc::Go/Tick; the
+// retail-only subclass is why those bodies moved behind a second vtable.
+class t_map_list_update : public CNewPlayerUpdateProc {
+public:
+    t_map_list_update(unsigned long dpid);
+    virtual void Go();       // slot 0, 0x577d70
+    virtual void Tick();     // slot 1, 0x577de0
+    virtual void Finish();   // slot 2, 0x578930
+    void HandleRequests();   // retail 0x578010
+};
+
 // The per-lobby set of header-transfer jobs: eight slots, ticked from
 // WindowHandler every pump. Tick is defined out of class in the TU
 // (retail keeps an out-of-line copy and expands it into WindowHandler).
 class CNewPlayerUpdateMan {
 public:
-    CNewPlayerUpdateProc* m_procs[8];
+    CNewPlayerUpdateTask* m_procs[8];
 
     // DC GetFirstAvailable; HandleNetMsg's transfer-start arm expands it.
     int GetFirstAvailable()
@@ -658,7 +679,7 @@ public:
     }
 
     // DC GetProc (protected there); the HeaderConfirmed body expands it.
-    CNewPlayerUpdateProc* GetProc(unsigned long dpid)
+    CNewPlayerUpdateTask* GetProc(unsigned long dpid)
     {
         for (int i = 0; i < 8; ++i)
             if (m_procs[i] && m_procs[i]->m_dpid == dpid)
