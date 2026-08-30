@@ -20,9 +20,12 @@ extern unsigned long gColorMask68c868;
 
 inline unsigned RGBto16(int r, int g, int b)
 {
-    return ((r * gColorMask68c860 / 255) & gColorMask68c860)
-        | ((g * gColorMask68c864 / 255) & gColorMask68c864)
-        | ((b * gColorMask68c868 / 255) & gColorMask68c868);
+    unsigned color;
+    color = (r * gColorMask68c860 / 255) & gColorMask68c860;
+    color |= (g * gColorMask68c864 / 255) & gColorMask68c864;
+    color |= (b * gColorMask68c868 / 255) & gColorMask68c868;
+
+    return color;
 }
 
 // The prefix of DirectDraw's 32-byte pixel-format record at 0x68c850.

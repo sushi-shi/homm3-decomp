@@ -98,6 +98,7 @@ inliner (predict-inline)	178	82.8591	1040	hero	?initialize@hero@@QAEXF@Z	predict
 inliner (predict-inline)	177	78.8428	838	game	??1game@@QAE@XZ	predict-inline	callee expanded on one side only (A8/A9/A12): 2 over-inline (9 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	177	92.1471	2248	quickherowindow	??0TQuickHeroWindow@@QAE@PAVhero@@W4TViewLevel@0@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline, 1 over-inline (35 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	176	91.6097	2101	mapcell	?readHeroData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
+register-homing (why-reg)	172	89.3165	1612	spells	?DrawBolt@combatManager@@QAEXPAUSBolt@@H@Z	why-branch	cache-vs-reload a member/local (B13) / homing (B2/B3)
 inliner (predict-inline)	172	87.8496	1413	game	??0game@@QAE@XZ	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 2 over-inline (5 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	166	76.8787	717	spells	?ModifySpellDamage@combatManager@@QAEJJHPBVhero@@0PBVarmy@@E@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline (4 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	163	90.4657	1714	viewarmywindow	??0TViewArmyWindow@@QAE@PAVarmyGroup@@HPBVhero@@PBVtown@@HHHEEE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline, 1 over-inline (21 name-unresolvable pair(s) discounted)
@@ -188,7 +189,6 @@ register-homing (why-reg)	84	92.7034	1154	advmgr	?DrawUnderlay@advManager@@QAEXH
 control-flow (why-branch)	84	90.2555	860	findpath	?PushCombatPoint@searchArray@@QAEXHHHHH@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	83	94.1574	1428	recruit	?Update@recruitUnit@@QAEXEJ@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 control-flow (why-branch)	83	94.5074	1508	advmgr	?GetSoundId@advManager@@QAE?AW4e_looping_sound_id@@HHH@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
-register-homing (why-reg)	82	94.9073	1612	spells	?DrawBolt@combatManager@@QAEXPAUSBolt@@H@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 register-homing (why-reg)	82	92.1581	1040	army	?get_unit_combat_value@army@@QBENJJEPBV1@@Z	why-reg	spill to dead-parameter slot (B4)
 register-homing (why-reg)	80	90.8771	875	command	?SetCombatDirections@combatManager@@QAEXH@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	80	91.2973	915	bottomviewsubwindow	??0TBottomViewResourceMessage@@QAE@PAVheroWindow@@HHPBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
@@ -495,7 +495,6 @@ unclassified	3	96.7742	92	resourcemanager	?GetBitmapResourceSize@ResourceManager
 unclassified	3	99.6575	854	dxplay	?CreateIPXConnection@CDPlayLobby@@QAEPAVCDPlayConnection@@PADPAV2@@Z	(none)	run why-reg / why-branch for the full search
 register-homing (why-reg)	3	99.5673	657	ai_tactical	?consider_single_enchantment@type_AI_spellcaster@@QAEXPAUtype_spell_choice@@J@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 inliner (predict-inline)	3	99.4737	494	mapcell	?Read@TTimedEvent@@QAEHPAVTAbstractFile@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline
-register-homing (why-reg)	3	99.3103	363	mousemgr	?LoadFrame@mouseManager@@QAEXH@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	2	99.6447	569	game	?LoadBoatPool@game@@QAEHPAVTAbstractFile@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	2	99.1053	210	ai_tactical	?get_simple_attack_effect@type_AI_combat_parameters@@QAEJPBVarmy@@J0JEJ@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 unclassified	2	99.4444	320	puzzlewindow	??0type_AI_puzzle_tile@@QAE@PAVNewmapCell@@Utype_point@@@Z	why-reg	run why-reg / why-branch for the full search
