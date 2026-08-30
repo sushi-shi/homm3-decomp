@@ -940,6 +940,32 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
         SourceRule("CheckLuck uses TTextResource::operator[]",
                    r"\(\s*\*\s*gpGeneralText\s*\)\s*\["),
     ),
+    ("army.obj", 0x4BEEC): (
+        SourceRule(
+            "can_cast_spell keeps the Master Genie target test and "
+            "get_valid_caliph_spells boundary in one return expression",
+            r"case\s+CREATURE_MASTER_GENIE\s*:\s*return\s+target\s*&&\s*"
+            r"get_valid_caliph_spells\s*\(\s*target\s*\)\s*>\s*0\s*;"),
+    ),
+    ("army.obj", 0x4C374): (
+        SourceRule(
+            "get_valid_caliph_spells keeps the 10..69 roster loop and "
+            "is_valid_caliph_spell boundary",
+            r"long\s+count\s*=\s*0\s*;\s*for\s*\(\s*SpellID\s+spell\s*="
+            r"\s*10\s*;\s*spell\s*<\s*70\s*;\s*spell\+\+\s*\)\s*\{\s*"
+            r"if\s*\(\s*is_valid_caliph_spell\s*\(\s*spell\s*,\s*target"
+            r"\s*\)\s*\)\s*count\+\+\s*;\s*\}\s*return\s+count\s*;"),
+    ),
+    ("army.obj", 0x4C3AC): (
+        SourceRule(
+            "cast_caliph_spell keeps get_valid_caliph_spells before the "
+            "zero guard, Random, and selection loop",
+            r"SpellID\s+spell\s*;\s*long\s+count\s*=\s*"
+            r"get_valid_caliph_spells\s*\(\s*target\s*\)\s*;\s*"
+            r"if\s*\(\s*count\s*==\s*0\s*\)\s*return\s*;\s*"
+            r"long\s+pick\s*=\s*Random\s*\(\s*1\s*,\s*count\s*\)\s*;"
+            r"\s*for\s*\(\s*spell\s*=\s*10\s*;"),
+    ),
     ("army.obj", 0x490F4): (
         SourceRule(
             "attacker and defender bonuses remain one total_damage expression",
@@ -2859,6 +2885,53 @@ return HasBuilding(CASTLE_FORT_ID, 0)
         "(built & bitNumber[CASTLE_FORT_ID]) != 0")
     if not contract_violations(flattened_is_castle, is_castle_key):
         failures.append("flattened town::IsCastle HasBuilding call passed")
+    can_cast_spell_key = ("army.obj", 0x4BEEC)
+    can_cast_spell_probe = """\
+case CREATURE_MASTER_GENIE:
+    return target && get_valid_caliph_spells(target) > 0;
+"""
+    if contract_violations(can_cast_spell_probe, can_cast_spell_key):
+        failures.append("aligned can_cast_spell Genie arm did not pass")
+    flattened_can_cast_spell = can_cast_spell_probe.replace(
+        "get_valid_caliph_spells(target) > 0",
+        "count_valid_caliph_spells_inline(target) > 0")
+    if not contract_violations(flattened_can_cast_spell,
+                               can_cast_spell_key):
+        failures.append("flattened can_cast_spell helper boundary passed")
+    valid_caliph_key = ("army.obj", 0x4C374)
+    valid_caliph_probe = """\
+long count = 0;
+for (SpellID spell = 10; spell < 70; spell++) {
+    if (is_valid_caliph_spell(spell, target))
+        count++;
+}
+return count;
+"""
+    if contract_violations(valid_caliph_probe, valid_caliph_key):
+        failures.append("aligned get_valid_caliph_spells body did not pass")
+    shortened_valid_caliph = valid_caliph_probe.replace(
+        "spell < 70", "spell < 69")
+    if not contract_violations(shortened_valid_caliph, valid_caliph_key):
+        failures.append("shortened get_valid_caliph_spells roster passed")
+    cast_caliph_key = ("army.obj", 0x4C3AC)
+    cast_caliph_probe = """\
+SpellID spell;
+long count = get_valid_caliph_spells(target);
+if (count == 0)
+    return;
+long pick = Random(1, count);
+for (spell = 10; spell < 70; spell++) {
+}
+"""
+    if contract_violations(cast_caliph_probe, cast_caliph_key):
+        failures.append("aligned cast_caliph_spell helper shape did not pass")
+    reordered_cast_caliph = cast_caliph_probe.replace(
+        "long count = get_valid_caliph_spells(target);\n"
+        "if (count == 0)\n    return;",
+        "long count = 0;\nif (count == 0)\n    return;\n"
+        "count = get_valid_caliph_spells(target);")
+    if not contract_violations(reordered_cast_caliph, cast_caliph_key):
+        failures.append("reordered cast_caliph_spell helper call passed")
     load_boats_key = ("game.obj", 0xA46E8)
     load_boats_probe = """\
 unsigned short ushort_buffer;

@@ -260,6 +260,29 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-30 — the Dreamcast helper boundary closes
+  `army::can_cast_spell` from 99.7059% to 100%.** The mandatory dossier
+  (`dc:0x4beec`) places `hexcell::get_army` and
+  `army::get_valid_caliph_spells` in the Master Genie arm's two adjacent
+  breakpoint rows, and its SH4 lowering returns the helper's positive test
+  directly. The former Windows reconstruction hand-expanded the helper's
+  10..69 spell loop. That reached a tempting local maximum but left the true
+  path as `mov al,1` where retail uses `mov eax,1`. Restoring the named
+  helper and spelling the arm as `target && get_valid_caliph_spells(target)
+  > 0` lets VC6 `/Ob2` inline the same loop while reproducing the dword
+  result exactly. The same source helper is now restored in the already-
+  exact `cast_caliph_spell` (`dc:0x4c3ac`) with no byte change. Its active
+  definition retains the recovered 10..69 loop and
+  `is_valid_caliph_spell` boundary; it emits no standalone retail slot.
+
+  Both frozen missing-call rows retire down-only. Function-specific fatal
+  rules preserve the Genie return expression, the helper body, and the
+  count/zero-guard/Random/selection-loop order in `cast_caliph_spell`;
+  negative controls prove that flattening the helper, changing its roster
+  range, or moving the call past the zero guard turns the gate red. This is
+  the concrete anti-local-minimum control: the 99.7059% peak is historical
+  evidence, not permission to delete a positive Dreamcast source fact.
+
 - **2026-08-30 — `game::PerWeek` restores the inlined `town::IsCastle`
   source boundary and makes the complete neutral-town tail exact.** The
   mandatory dossier for `PerWeek` (`dc:0xb41e0`) ends with the older
