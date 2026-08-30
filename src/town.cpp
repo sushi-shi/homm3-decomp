@@ -513,7 +513,7 @@ void town::SwapHeroes()
     std::swap(currentTown->garrisonHeroId, currentTown->visitingHeroId);
 
     int rosterIndex = gpCurrentPlayer->FindHero(visitingHero->id);
-    gpGame->GameFn_0049C720(visitingHero, visitingHero->owner, 0);
+    gpGame->record_hide_hero(visitingHero, visitingHero->owner, 0);
     visitingHero->restore_cell();
 
     CMCHideHero hideHero(visitingHero->id);

@@ -796,6 +796,42 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"\bcount\s*=\s*outfile\s*->\s*Write\s*\(\s*&\s*"
             r"ushort_buffer\b", 1, 1),
     ),
+    ("game.obj", 0xA4EE8): (
+        SourceRule(
+            "add_garrison_hero keeps Dreamcast's procedure-scope i, "
+            "our_hero and found locals in raw NB11 order",
+            r"\A\s*int\s+i\s*;\s*hero\s*\*\s*our_hero\s*;\s*"
+            r"int\s+found\s*;\s*if\s*\(\s*our_town\s*->\s*"
+            r"visitingHeroId\s*<\s*0\s*\)"),
+        SourceRule(
+            "add_garrison_hero keeps Dreamcast's GetHero, Merge, "
+            "record_hide_hero and scoped CMCHideHero/SendMapChange order",
+            r"our_hero\s*=\s*gpGame\s*->\s*GetHero\s*\(\s*our_town\s*"
+            r"->\s*visitingHeroId\s*\)\s*;\s*if\s*\(\s*!\s*our_hero\s*"
+            r"->\s*army\s*\.\s*Merge\s*\(.*?get_army\s*\(\s*\)\s*"
+            r"\)\s*\)\s*\)\s*return\s+0\s*;\s*gpGame\s*->\s*"
+            r"record_hide_hero\s*\(\s*our_hero\s*,\s*our_hero\s*->\s*"
+            r"owner\s*,\s*0\s*\)\s*;\s*if\s*\(\s*bVideoPaused\s*\)"
+            r"\s*\{\s*CMCHideHero\s+hideHero\s*\(\s*our_hero\s*->\s*"
+            r"id\s*\)\s*;\s*SendMapChange\s*\(\s*&\s*hideHero\s*\)"
+            r"\s*;\s*\}"),
+        SourceRule(
+            "add_garrison_hero keeps Dreamcast's found assignment, "
+            "restore_cell statement and shared i roster-shift loop",
+            r"found\s*=\s*FindHero\s*\(\s*our_hero\s*->\s*id\s*\)\s*;"
+            r"\s*our_hero\s*->\s*restore_cell\s*\(\s*\)\s*;\s*for\s*"
+            r"\(\s*i\s*=\s*found\s*;\s*i\s*<\s*numHeroes\s*-\s*1"
+            r"\s*;\s*\+\+\s*i\s*\)\s*heroes\s*\[\s*i\s*\]\s*="
+            r"\s*heroes\s*\[\s*i\s*\+\s*1\s*\]\s*;"),
+        SourceRule(
+            "add_garrison_hero keeps Dreamcast's current-hero clear before "
+            "the roster decrement and final town-id stores",
+            r"if\s*\(\s*currHeroId\s*==\s*our_hero\s*->\s*id\s*\)\s*"
+            r"\{\s*currHeroId\s*=\s*-\s*1\s*;.*?\}\s*--\s*numHeroes"
+            r"\s*;\s*our_town\s*->\s*garrisonHeroId\s*=\s*our_hero\s*"
+            r"->\s*id\s*;\s*our_town\s*->\s*visitingHeroId\s*=\s*"
+            r"-\s*1\s*;\s*return\s+1\s*;"),
+    ),
     ("game.obj", 0xA55A8): (
         SourceRule(
             "playerData::save keeps Dreamcast's function-scope uint buffer, "
@@ -2001,6 +2037,24 @@ def hero_get_target_header_violations(text: str) -> list[tuple[int, str]]:
     return [(line,
              "Hero.h:986 hero::get_target must retain Dreamcast's const "
              "inline type_point construction from pathTargetX, Y, Z")]
+
+
+def cmc_hide_hero_header_violations(text: str) -> list[tuple[int, str]]:
+    """Audit netmsg.h:717's base construction then hero-id statement."""
+    masked = _source.mask(text)
+    pattern = (
+        r"\bclass\s+CMCHideHero\s*:\s*public\s+CMapChange\s*\{.*?"
+        r"\bint\s+heroId\s*;.*?\bCMCHideHero\s*\(\s*int\s+id\s*\)"
+        r"\s*:\s*CMapChange\s*\(\s*RS_HIDE_HERO\s*,\s*sizeof\s*\(\s*"
+        r"CMCHideHero\s*\)\s*\)\s*\{\s*heroId\s*=\s*id\s*;\s*\}")
+    if re.search(pattern, masked, re.DOTALL) is not None:
+        return []
+    token = re.search(r"\bCMCHideHero\s*\(", masked)
+    line = text.count("\n", 0, token.start()) + 1 if token else 1
+    return [(line,
+             "netmsg.h:717 CMCHideHero must retain Dreamcast's CMapChange "
+             "base-constructor boundary before the separate heroId body "
+             "assignment")]
 
 
 def game_get_hero_header_violations(text: str) -> list[tuple[int, str]]:
@@ -3728,6 +3782,60 @@ sum_player_dwellings(0);
                rule.description for rule in contract_violations(
                    early_prohibited_zero, prohibited_key)):
         failures.append("early fill_prohibited_array human_strength passed")
+    add_garrison_key = ("game.obj", 0xA4EE8)
+    add_garrison_probe = """\
+int i;
+hero* our_hero;
+int found;
+if (our_town->visitingHeroId < 0)
+    return 0;
+our_hero = gpGame->GetHero(our_town->visitingHeroId);
+if (!our_hero->army.Merge(const_cast<armyGroup*>(
+        &static_cast<const town*>(our_town)->get_army())))
+    return 0;
+gpGame->record_hide_hero(our_hero, our_hero->owner, 0);
+if (bVideoPaused) {
+    CMCHideHero hideHero(our_hero->id);
+    SendMapChange(&hideHero);
+}
+found = FindHero(our_hero->id);
+our_hero->restore_cell();
+for (i = found; i < numHeroes - 1; ++i)
+    heroes[i] = heroes[i + 1];
+if (currHeroId == our_hero->id) {
+    currHeroId = -1;
+    if (gNetLocalGamePos == our_hero->owner) {
+        gpAdvManager->drawCursor = 0;
+    }
+}
+--numHeroes;
+our_town->garrisonHeroId = our_hero->id;
+our_town->visitingHeroId = -1;
+return 1;
+"""
+    if contract_violations(add_garrison_probe, add_garrison_key):
+        failures.append("aligned add_garrison_hero shape did not pass")
+    broken_add_garrison_probes = (
+        (add_garrison_probe.replace(
+            "int i;\nhero* our_hero;\nint found;",
+            "hero* our_hero;\nint found;\nint i;"),
+         "procedure-scope i, our_hero and found locals"),
+        (add_garrison_probe.replace("record_hide_hero", "GameFn_0049C720"),
+         "GetHero, Merge, record_hide_hero"),
+        (add_garrison_probe.replace("for (i = found;", "for (int i = found;"),
+         "shared i roster-shift loop"),
+        (add_garrison_probe.replace(
+            "if (currHeroId == our_hero->id) {",
+            "--numHeroes;\nif (currHeroId == our_hero->id) {").replace(
+                "}\n--numHeroes;\nour_town->garrisonHeroId",
+                "}\nour_town->garrisonHeroId"),
+         "current-hero clear before the roster decrement"),
+    )
+    for probe, description in broken_add_garrison_probes:
+        if not any(description in rule.description for rule in
+                   contract_violations(probe, add_garrison_key)):
+            failures.append("broken add_garrison_hero " + description
+                            + " source shape passed")
     player_save_key = ("game.obj", 0xA55A8)
     player_save_probe = """\
 unsigned long flags;
@@ -5197,6 +5305,30 @@ __forceinline type_point get_target() const
         "pathTargetX, pathTargetZ, pathTargetY")
     if not hero_get_target_header_violations(broken_get_target):
         failures.append("broken Hero.h get_target field order passed")
+    hide_hero_probe = """\
+class CMCHideHero : public CMapChange {
+public:
+    int heroId;
+    CMCHideHero(int id)
+        : CMapChange(RS_HIDE_HERO, sizeof(CMCHideHero))
+    {
+        heroId = id;
+    }
+};
+"""
+    if cmc_hide_hero_header_violations(hide_hero_probe):
+        failures.append("aligned CMCHideHero constructor did not pass")
+    broken_hide_hero_probes = (
+        hide_hero_probe.replace(
+            ": CMapChange(RS_HIDE_HERO, sizeof(CMCHideHero))",
+            ": CMapChange()"),
+        hide_hero_probe.replace(
+            "    {\n        heroId = id;\n    }",
+            ", heroId(id)\n    {}"),
+    )
+    if any(not cmc_hide_hero_header_violations(probe)
+           for probe in broken_hide_hero_probes):
+        failures.append("broken CMCHideHero constructor shape passed")
     get_hero_probe = """\
 hero* GetHero(int which)
 {
@@ -5925,6 +6057,15 @@ def scan() -> tuple[
     missing.extend(FileContractViolation("include/hero.h", line,
                                          description)
                    for line, description in get_target_defects)
+
+    netmsg_header = common.HOMM3_DIR / "include/netmsg.h"
+    netmsg_text = netmsg_header.read_text(errors="replace")
+    audited.add(_file_audit_scope("include/netmsg.h"))
+    hide_hero_defects = cmc_hide_hero_header_violations(netmsg_text)
+    checked += 1
+    missing.extend(FileContractViolation("include/netmsg.h", line,
+                                         description)
+                   for line, description in hide_hero_defects)
 
     game_header = common.HOMM3_DIR / "include/game.h"
     game_text = game_header.read_text(errors="replace")

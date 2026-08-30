@@ -280,6 +280,38 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   re-expanded cell lookup. This is also a concrete header-state result: moving
   a definition to the source-correct visibility point need not be avoided, and
   max/history remain available if another consumer temporarily moves.
+- **2026-08-30 — `playerData::add_garrison_hero` reaches 100% by leaving a
+  source-false sibling maximum and restoring the shared Dreamcast constructor
+  boundary.** The mandatory dossier for retail `0x004b9fc0` /
+  `game.obj:0xa4ee8` records 26 breakpoint rows, 17 inferred SH4 blocks, 15
+  lexical scopes, and procedure locals `i`, `our_hero`, then `found`. Its
+  statement graph preserves `GetHero`, `town::get_army`, `armyGroup::Merge`,
+  `game::record_hide_hero`, the scoped `CMCHideHero` / `SendMapChange` pair,
+  `FindHero`, and `restore_cell` in that order. The dependent constructor at
+  `dc:0xbd3a0` has a `CMapChange(RS_HIDE_HERO, sizeof(CMCHideHero))` boundary
+  on line 717 followed by the separate `heroId = id` statement on line 718.
+
+  The former shared header deliberately reversed that order: it defaulted the
+  base, wrote `heroId` first, then flattened the five base stores. That kept
+  `town::SwapHeroes` exact but left this function at **98.99231%**, even though
+  the comment itself recorded that the coherent base-first form closes it.
+  Restoring the proved boundary, raw local identities/lifetimes, and original
+  `record_hide_hero` name now produces **100.0000%**: all 25 Windows CFG
+  blocks, 13 branches, four returns, and every instruction agree. The exact
+  `game::record_hide_hero` body and `hero::Deallocate` remain exact. As
+  expected from the old A/B control, `town::SwapHeroes` moves from 100% to
+  **97.77444%** because that caller holds the id in a different register; its
+  historical peak remains banked and does not authorize reversing the shared
+  source again. Three frozen `record_hide_hero` omissions retire together.
+
+  Classification is asymmetric: the locals, helper name/order, scoped network
+  record, and constructor statement boundary **agree**; Complete's third
+  recorder argument and const `town::get_army` overload are **retail-only**
+  facts proved by `ret 0xc` and the x86 relocation; Dreamcast's older
+  two-argument recorder and non-const overload are **dc-only**; the sibling's
+  early equivalent hero-id store is **unknown** caller scheduling, not a
+  second source spelling. Four function contracts plus one header contract,
+  each with a negative control, now make the recovered shape fatal.
 
 - **2026-08-30 — `town::BuildBuilding` deliberately leaves a source-false
   99.3036% local maximum and banks the recovered Dreamcast helper graph.**
