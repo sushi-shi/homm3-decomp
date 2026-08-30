@@ -281,12 +281,12 @@ PROVEN_CALL_SPELLINGS: dict[tuple[str, int], tuple[CallSpelling, ...]] = {
 }
 
 
-# A stripped Complete caller can prove one revision spelling directly through
-# its retail code relocation even before the whole function is byte-exact.
-# Keep these separate from PROVEN_CALL_SPELLINGS: admission is per caller and
-# the matching SOURCE_RULES entry must require the full receiver/argument
-# shape and reject the obsolete helper, so this cannot become a name waiver.
-RELOCATION_PROVEN_CALL_SPELLINGS: dict[
+# A non-exact Complete caller can still prove one revision spelling directly
+# through a retail relocation or decoded body. Keep these separate from
+# PROVEN_CALL_SPELLINGS: admission is per caller and the matching SOURCE_RULES
+# entry must require the full expression shape, so this cannot become a name
+# waiver.
+NONEXACT_RETAIL_PROVEN_CALL_SPELLINGS: dict[
         tuple[str, int], tuple[CallSpelling, ...]] = {
     ("swapmgr.obj", 0x15D150): (
         CallSpelling(
@@ -295,6 +295,12 @@ RELOCATION_PROVEN_CALL_SPELLINGS: dict[
             "relocation-proved hero::HeroFn_004E2840 member call",
             0x005AF590, "artifactAllowedInSlot",
             r"\bHeroFn_004E2840(?=\s*\()", "artifactAllowedInSlot"),
+    ),
+    ("philai.obj", 0x10E9A8): (
+        CallSpelling(
+            "Complete move_hero's decoded 1000-point cap spells the "
+            "Dreamcast min helper as VC6's _cpp_min template",
+            0x005267B0, "min", r"\b_cpp_min(?=\s*\()", "min"),
     ),
 }
 
@@ -402,6 +408,28 @@ PROVEN_REVISION_REMOVALS: dict[
             r"\bShowWidget\s*\(\s*190\s*\)\s*;.*?"
             r"\bShowWidget\s*\(\s*195\s*\)\s*;",
             ("TSingleSelectionWindow::IsMultiPlayer", "widget::hide")),
+    ),
+}
+
+
+# Retail can directly contradict one older Dreamcast helper before the whole
+# caller is exact.  Admit that contradiction only when a bounded Complete
+# source expression remains present; SOURCE_RULES independently requires the
+# same expression and rejects the older helper, omission and flattening.  This
+# is deliberately not a general name substitution or score-based waiver.
+RETAIL_BYTE_PROVEN_REVISION_REMOVALS: dict[
+        tuple[str, int], tuple[ProvenRevisionRemoval, ...]] = {
+    ("philai.obj", 0x10E9A8): (
+        ProvenRevisionRemoval(
+            "Complete move_hero changes Dreamcast's initial max movement "
+            "floor to retail's decoded 1000-point min cap",
+            0x005267B0,
+            r"max_distance\s*=\s*_cpp_min\s*\(\s*1000\s*,\s*"
+            r"current_hero\s*->\s*movePoints\s*\+\s*"
+            r"static_cast\s*<\s*unsigned\s+short\s*>\s*\(\s*"
+            r"current_hero\s*->\s*field_041\s*\)\s*\+\s*200\s*\)"
+            r"\s*;",
+            ("max",)),
     ),
 }
 
@@ -975,6 +1003,20 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"-\s*1\s*\)\s*current_town\s*->\s*"
             r"ApplySpecialBuildingEffect\s*\(\s*gpGame\s*->\s*GetHero\s*"
             r"\(\s*current_town\s*->\s*visitingHeroId\s*\)\s*\)\s*;"),
+    ),
+    ("philai.obj", 0x10E9A8): (
+        SourceRule(
+            "move_hero keeps Complete's retail-decoded 1000-point min cap "
+            "with the unsigned field_041 addend",
+            r"max_distance\s*=\s*_cpp_min\s*\(\s*1000\s*,\s*"
+            r"current_hero\s*->\s*movePoints\s*\+\s*"
+            r"static_cast\s*<\s*unsigned\s+short\s*>\s*\(\s*"
+            r"current_hero\s*->\s*field_041\s*\)\s*\+\s*200\s*\)"
+            r"\s*;", 1, 1),
+        SourceRule(
+            "move_hero may not restore Dreamcast's retail-contradicted max "
+            "movement floor",
+            r"(?<![_\w])max\s*\(", 0, 0),
     ),
     ("philai.obj", 0x10D684): (
         SourceRule(
@@ -4036,7 +4078,7 @@ def apply_proven_call_spellings(
                 continue
             canonical = re.sub(
                 spelling.retail_pattern, spelling.canonical_name, canonical)
-    for spelling in RELOCATION_PROVEN_CALL_SPELLINGS.get(key, ()):
+    for spelling in NONEXACT_RETAIL_PROVEN_CALL_SPELLINGS.get(key, ()):
         if va != spelling.caller_va \
                 or re.search(spelling.retail_pattern, active) is None:
             continue
@@ -4073,6 +4115,25 @@ def proven_dc_only_removed_helpers(
     helpers: set[str] = set()
     descriptions: list[str] = []
     for removal in PROVEN_REVISION_REMOVALS.get(key, ()):
+        if va != removal.caller_va \
+                or re.search(
+                    removal.retail_pattern, active, re.DOTALL) is None:
+            continue
+        helpers.update(removal.dc_only_helpers)
+        descriptions.append(removal.description)
+    return frozenset(helpers), tuple(descriptions)
+
+
+def retail_proven_dc_only_removed_helpers(
+        key: tuple[str, int], body: str, va: int | None) \
+        -> tuple[frozenset[str], tuple[str, ...]]:
+    """Return DC calls contradicted by one bounded decoded retail body."""
+    if va is None:
+        return frozenset(), ()
+    active = _source.mask(body)
+    helpers: set[str] = set()
+    descriptions: list[str] = []
+    for removal in RETAIL_BYTE_PROVEN_REVISION_REMOVALS.get(key, ()):
         if va != removal.caller_va \
                 or re.search(
                     removal.retail_pattern, active, re.DOTALL) is None:
@@ -5532,6 +5593,19 @@ void army::CheckLuck() { get_controller(); }
             carcass_claim_probe[carcass_body[0] + 1:carcass_body[1]],
             ["army::get_controller"]):
         failures.append("RVA-order carcass claim missed its active definition")
+    case_distinct_claim_probe = """\
+#if 0
+VA(0x00401000, 0x10) // dc 0x100
+void MoveHero() { DemobilizeCurrHero(); }
+#endif
+void move_hero() { IncrementHourGlass(); }
+"""
+    if _body_for_claim(
+            _source.mask(case_distinct_claim_probe),
+            _line_starts(case_distinct_claim_probe), 2, "MoveHero") \
+            is not None:
+        failures.append(
+            "claim-only function bound to case-distinct next definition")
     flattened_claim_probe = """\
 #if 0
 VA(0x00401000, 0x10) // dc 0x100
@@ -5700,7 +5774,8 @@ return lod_file->read(data, size) ? 0 : size;
         failures.append("erased Complete wrapper passed source-shape gate")
     relocation_spelling_key = ("swapmgr.obj", 0x15D150)
     relocation_spelling_va = \
-        RELOCATION_PROVEN_CALL_SPELLINGS[relocation_spelling_key][0].caller_va
+        NONEXACT_RETAIL_PROVEN_CALL_SPELLINGS[
+            relocation_spelling_key][0].caller_va
     relocation_spelling_body = """\
 if (!our_hero->HeroFn_004E2840(
         gHeroScreenDraggedArtifact.artifactId, slot))
@@ -5765,6 +5840,56 @@ ShowWidget(195);
             removal_key, removal_body.replace("ShowWidget(195);", ""),
             removal_va, {removal_va})[0]:
         failures.append("erased Complete replacement group classified")
+    retail_removal_key = ("philai.obj", 0x10E9A8)
+    retail_removal_va = RETAIL_BYTE_PROVEN_REVISION_REMOVALS[
+        retail_removal_key][0].caller_va
+    retail_removal_body = """\
+long max_distance = 1000;
+max_distance = _cpp_min(
+    1000, current_hero->movePoints
+          + static_cast<unsigned short>(current_hero->field_041) + 200);
+"""
+    retail_removed, retail_removal_descriptions = \
+        retail_proven_dc_only_removed_helpers(
+            retail_removal_key, retail_removal_body, retail_removal_va)
+    if retail_removed != frozenset(("max",)) \
+            or len(retail_removal_descriptions) != 1 \
+            or contract_violations(retail_removal_body, retail_removal_key):
+        failures.append("retail-proved max-to-min revision did not pass")
+    retail_groups = (
+        CallGroup(963, ("max",)),
+        CallGroup(975, ("AI_choose_destination",)),
+    )
+    if groups_without_helpers(retail_groups, retail_removed) != (
+            CallGroup(975, ("AI_choose_destination",)),):
+        failures.append(
+            "retail-proved removal did not filter statement groups")
+    retail_canonical = apply_proven_call_spellings(
+        retail_removal_key, retail_removal_body, retail_removal_va, set())
+    if missing_from_body(retail_canonical, ["min"]):
+        failures.append("retail-proved _cpp_min spelling did not canonicalize")
+    retail_removal_mutations = (
+        retail_removal_body.replace("_cpp_min", "max"),
+        retail_removal_body.replace(
+            "max_distance = _cpp_min(\n"
+            "    1000, current_hero->movePoints\n"
+            "          + static_cast<unsigned short>(current_hero->field_041)"
+            " + 200);\n", ""),
+        retail_removal_body.replace(
+            "_cpp_min(\n    1000, current_hero->movePoints\n"
+            "          + static_cast<unsigned short>(current_hero->field_041)"
+            " + 200)",
+            "current_hero->movePoints < 1000 ? "
+            "current_hero->movePoints : 1000"),
+        retail_removal_body.replace("1000,", "999,"),
+    )
+    for mutation in retail_removal_mutations:
+        if retail_proven_dc_only_removed_helpers(
+                retail_removal_key, mutation, retail_removal_va)[0] \
+                or not contract_violations(mutation, retail_removal_key):
+            failures.append(
+                "broken retail-proved max-to-min revision passed")
+            break
     update_slots_key = ("swapmgr.obj", 0x15CDBC)
     update_slots_probe = """\
 for (int iHero = 0; iHero < 2; ++iHero)
@@ -9512,14 +9637,21 @@ def _body_for_claim(masked: str, starts: list[int], claim_line: int,
     the latter as the fallback for identities the lightweight locator cannot
     decode.
     """
+    decoded_identity = False
     for identity in identities:
         if not identity:
             continue
+        decoded_identity |= bool(_source.source_names(identity))
         definitions = _definitions_between(
             masked, identity, 0, len(masked))
         if len(definitions) == 1:
             definition = definitions[0]
             return definition.body_open, definition.body_close
+    # An exact source identity with no active definition is a claim-only
+    # placeholder.  Do not bind it to the next active function merely because
+    # that function has the next brace (especially MoveHero vs move_hero).
+    if decoded_identity:
+        return None
     return _body_after_claim(masked, starts, claim_line)
 
 
@@ -9595,8 +9727,10 @@ def scan() -> tuple[
         return _attested_names(refs, set(decoded(key, refs).offsets))
 
     def group_defect(key: tuple[str, int], refs: list[XrefCall], body: str,
-                     va: int | None) \
+                     va: int | None, evidence_body: str | None = None) \
             -> CallGroup | None:
+        if evidence_body is None:
+            evidence_body = body
         ordinary_calls = sum(ref.pool_refs + ref.bsr_calls for ref in refs
                              if _helper_token(ref.name) is not None)
         if ordinary_calls < 2:
@@ -9605,12 +9739,17 @@ def scan() -> tuple[
             decoded(key, refs).groups,
             lambda callee: transferred(key, callee, body))
         removed, removal_descriptions = proven_dc_only_removed_helpers(
-            key, body, va, exact_vas)
+            key, evidence_body, va, exact_vas)
+        retail_removed, retail_removal_descriptions = \
+            retail_proven_dc_only_removed_helpers(key, evidence_body, va)
+        removed = frozenset((*removed, *retail_removed))
+        removal_descriptions = (
+            *removal_descriptions, *retail_removal_descriptions)
         if removed:
             groups = groups_without_helpers(groups, removed)
             dc_only.update(removal_descriptions)
         helpers, descriptions = proven_dc_only_order_helpers(
-            key, body, va, exact_vas)
+            key, evidence_body, va, exact_vas)
         if helpers:
             groups = groups_without_helpers(groups, helpers)
             dc_only.update(descriptions)
@@ -9687,6 +9826,11 @@ def scan() -> tuple[
             key, body, claim.va, exact_vas)
         removed, removal_descriptions = proven_dc_only_removed_helpers(
             key, body, claim.va, exact_vas)
+        retail_removed, retail_removal_descriptions = \
+            retail_proven_dc_only_removed_helpers(key, body, claim.va)
+        removed = frozenset((*removed, *retail_removed))
+        removal_descriptions = (
+            *removal_descriptions, *retail_removal_descriptions)
         dc_only.update(removal_descriptions)
         preliminary = missing_from_body(
             shape_body, [ref.name for ref in refs], key)
@@ -9704,7 +9848,7 @@ def scan() -> tuple[
                 claim.va, claim.module, claim.dc_offset, body_source,
                 body_line, identity[1], callee, helper))
         if not body_missing and (group := group_defect(
-                key, refs, shape_body, claim.va)):
+                key, refs, shape_body, claim.va, body)):
             missing.append(MisgroupedCalls(
                 claim.va, claim.module, claim.dc_offset, body_source,
                 body_line, identity[1], group))

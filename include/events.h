@@ -488,16 +488,6 @@ enum EAdventureEventText {
     ADV_EVENT_TEXT_WITCH_HUT_NO_SKILL = 190
 };
 
-// The one value of game::field_1f63e any retail body in this tree pins:
-// DoEventTemple (0x4a6200) doubles its morale award when that word is 7,
-// and paying double on the seventh day of the week is exactly what
-// HoMM3's temple does. Only this member is named - the field itself keeps
-// its ordinal spelling in game.h, whose own note records that the wider
-// calendar role is not yet attested.
-enum EDayOfWeek {
-    DAY_OF_WEEK_SUNDAY = 7
-};
-
 // The Fountain of Fortune's luck tiers, and the domain is closed by
 // construction: DoEventFountain (0x4a2480) range-checks `luck + 1`
 // against 4 and jump-tables the five slots, so nothing outside -1..3 can

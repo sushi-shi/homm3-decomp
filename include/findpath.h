@@ -176,6 +176,14 @@ public:
     // get_travel_time and SeedCombatPosition both spell by hand; the
     // null arm answers 0 and the caller still dereferences it.
     pathCell* getCellData(long pos);
+#ifdef HOMM3_PHILAI_OBJ_DECLS
+    // E:\gamedcs\findpath.h:247, dc 0x37e7c. move_hero keeps this
+    // source-real query boundary; Complete's /Ob2 folds the one-byte load.
+    __forceinline unsigned char limit_was_reached() const
+    {
+        return limit_reached;
+    }
+#endif
 #ifdef HOMM3_SEARCHARRAY_GET_HEX_VIEW
     // FindPath.h:194, dc 0x27fe8. The ai_tactical inline-site census records
     // two expansions in check_adjacent_hexes and no retained retail call.

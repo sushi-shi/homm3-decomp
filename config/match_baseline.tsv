@@ -322,6 +322,8 @@ ai_player	?value_of_hall@@YIJPAVtown@@W4type_building_id@@@Z	100.0000	100.0000	1
 ai_player	?value_of_hiring@@YIJPAVtown@@PAVhero@@PAVsearchArray@@@Z	99.9522	99.9522	99.9522	0x31bd0
 ai_player	?value_of_horde@@YIJPAVtown@@W4type_building_id@@PAEPAH@Z	100.0000	100.0000	100.0000	0x2b790
 ai_player	?value_of_horde_upgrade@@YIJPAVtown@@W4type_building_id@@PAEPAH@Z	100.0000	100.0000	100.0000	0x2b800
+ai_player	AI_AttemptMove	0.0000	0.0000	0.0000	0x2fee0
+ai_player	AI_choose_destination	0.0000	0.0000	0.0000	0x2e0b0
 ai_player	bool_type_point_operator	0.0000	0.0000	0.0000	0x2ec20
 ai_player	game_GetTown	0.0000	0.0000	0.0000	0x2ba30
 ai_player	searchArray_get_cell	0.0000	0.0000	0.0000	0x2ecc0
@@ -2170,6 +2172,7 @@ philai	?get_school_value@@YIJPBVhero@@W4TSecondarySkill@@@Z	100.0000	100.0000	10
 philai	?get_skill_value@@YIJPBVhero@@W4TSecondarySkill@@E@Z	78.1958	78.1958	78.1958	0x124690
 philai	?get_value_of_spring@@YIJPBVhero@@PBVNewmapCell@@G@Z	100.0000	100.0000	100.0000	0x12b810
 philai	?get_value_of_well@@YIJPBVhero@@G@Z	100.0000	100.0000	100.0000	0x12a510
+philai	?move_hero@@YIXPAVhero@@EPAE@Z	98.3655	98.3655	98.3655	0x1267b0
 philai	?value_of_bank@@YIJPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x129920
 philai	?value_of_custom_item@@YIJPBVhero@@PAVNewmapCell@@J@Z	100.0000	100.0000	100.0000	0x129890
 philai	?value_of_enemy_town@@YIJPBVhero@@PBVtown@@FPAVNewmapCell@@@Z	99.9561	99.9561	99.9561	0x129cb0
@@ -2195,7 +2198,6 @@ philai	ExtraInfoUnion_PlayerKnowsCell	0.0000	0.0000	0.0000	0x129690
 philai	MoveHero	0.0000	0.0000	0.0000	0x1261f0
 philai	game_OnSameTeam	0.0000	0.0000	0.0000	0x1296d0
 philai	game_UpgradedCreatureType	0.0000	0.0000	0.0000	0x129710
-philai	move_hero	0.0000	0.0000	0.0000	0x1267b0
 puzzlewindow	??0TPuzzleWindow@@QAE@H@Z	100.0000	100.0000	100.0000	0x12c1e0
 puzzlewindow	??0type_AI_puzzle_tile@@QAE@PAVNewmapCell@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x12c770
 puzzlewindow	??1TPuzzleWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x12c5a0

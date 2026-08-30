@@ -3822,6 +3822,24 @@ void mark_danger_zones(const hero* our_hero, long* danger_zones)
     }
 }
 
+#if 0  // @carcass: claim-only home for move_hero's destination selector
+
+// E:\gamedcs\ai_player.cpp:3645.  The DC decorated signature proves both
+// output operands are references; move_hero's retail /Gr call passes their
+// addresses in the same argument positions.  Link order brackets this large
+// body between mark_danger_zones and the following header-COMDAT band.
+VA(0x0042e0b0, 0xb6e)  // anchor-caller move_hero + order bracket, dc 0x33cf8
+int AI_choose_destination(hero* current_hero, long max_distance,
+                          HeroDestination& best_point,
+                          long& best_raw_value,
+                          unsigned char allow_spells,
+                          unsigned char explore_mode)
+{
+    // @stub
+}
+
+#endif  // @carcass
+
 #if 0  // @carcass: claim-only homes for retained header COMDATs
 
 // E:\gamedcs\struct.h:110. Dreamcast's public decoration proves the native-
@@ -4419,6 +4437,20 @@ unsigned char attempt_step(hero* current_hero, pathCell* path_cell,
     AI_set_hero_bonuses(current_hero);
     return 0;
 }
+
+#if 0  // @carcass: claim-only home for move_hero's move executor
+
+// E:\gamedcs\ai_player.cpp:4179.  The reference pair is fixed by the DC
+// decorated signature and the retail /Gr call at move_hero+0x219.  The body
+// lies after attempt_step and immediately before the Town.h COMDAT band.
+VA(0x0042fee0, 0x6b8)  // anchor-caller move_hero + order bracket, dc 0x34b08
+void AI_AttemptMove(hero* current_hero, HeroDestination& best_point,
+                    long& best_raw_value, unsigned char explore_mode)
+{
+    // @stub
+}
+
+#endif  // @carcass
 
 #if 0  // @carcass: claim-only home for the Town.h COMDAT below
 

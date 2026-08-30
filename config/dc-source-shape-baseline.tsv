@@ -1515,16 +1515,6 @@ call	path.obj	0x10cc80	army::Is
 call	path.obj	0x10cc80	army::OffsetToFront
 call	path.obj	0x10ccdc	combatManager::ValidHex
 call	philai.obj	0x10e334	should_garrison_town
-call	philai.obj	0x10e9a8	AI_AttemptMove
-call	philai.obj	0x10e9a8	AI_choose_destination
-call	philai.obj	0x10e9a8	GetMapExtra
-call	philai.obj	0x10e9a8	IncrementHourGlass
-call	philai.obj	0x10e9a8	game::GetTownId
-call	philai.obj	0x10e9a8	hero::get_target
-call	philai.obj	0x10e9a8	max
-call	philai.obj	0x10e9a8	min
-call	philai.obj	0x10e9a8	searchArray::limit_was_reached
-call	philai.obj	0x10e9a8	type_AI_player::reset_magus_hut_value
 call	philai.obj	0x10ec58	AI_mark_danger_zones
 call	philai.obj	0x10ec58	MapExtraPosAndAdjacentsSet
 call	philai.obj	0x10ec58	RestoreMouse
@@ -1535,7 +1525,6 @@ call	philai.obj	0x10ec58	check_for_town
 call	philai.obj	0x10ec58	clear_shipyards
 call	philai.obj	0x10ec58	game::GetCurrHero
 call	philai.obj	0x10ec58	game::GetNumMapLevels
-call	philai.obj	0x10ec58	game::GetTownId
 call	philai.obj	0x10ec58	game::is_human_ally
 call	philai.obj	0x10ec58	mark_shipyards
 call	philai.obj	0x10ec58	mouseManager::IsVis
