@@ -260,6 +260,38 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-30 — `CNewPlayerUpdateProc::Tick` restores the complete
+  Dreamcast control-flow shape at 86.6723%, and its two named helpers are
+  now owned by the correct base class.** The mandatory dossier at
+  `singleselectionwindow.obj:0x148130` proves the `ElapsedSince` throttle,
+  five-row `i` loop, block-scoped `CGameHeaderInfoMsg` / `CMapFileNameMsg`
+  alternatives, increment, request drain, confirmation and final timestamp
+  in that order. Its local inventory is exactly `i`, `msg`, `msg`; an
+  explicit `pHeader` local was tested, lowered the result from 86.6723% to
+  83.2773%, and was rejected. Complete adds the independently retail-proved
+  list-select flag but retains the shared source graph.
+
+  The old source incorrectly made `HandleRequests` a member of Complete's
+  derived `t_map_list_update`. Dreamcast instead owns both it and
+  `RequestConfirmation` on `CNewPlayerUpdateProc`. Restoring that ownership
+  and allowing VC6 `/Ob2` to expand the base call sites reproduces retail's
+  one-expanded/one-called split. The separate confirmation dossier also
+  proves `logFile.Log(format)` has no invented `m_dpid` vararg. The
+  `CMapFileNameMsg` dossier independently fixes its explicit
+  `(number, fileName, townTypes, FILETIME)` inputs and ordered
+  number/`strncpy`/FILETIME/`memcpy` body; Complete's leading flag is kept.
+
+  Retail and candidate now align **32 / 32 blocks and all 16 branch
+  sequences with identical topology**. The residual is localized to an
+  ESI/EDI role exchange, constructor-argument scheduling, vector-count
+  lowering and anonymous callee relocation names—not a missing source arm.
+  The same corrections raise derived `t_map_list_update::Tick` from
+  **62.4785% to 71.8957%** while preserving its separate Complete protocol.
+  Asymmetric function rules plus file contracts and negative controls now
+  make the throttle, message alternatives, statement order, helper
+  ownership, no-vararg confirmation and explicit map-message constructor
+  fatal if flattened or moved again.
+
 - **2026-08-30 — Dreamcast's original `CNewPlayerUpdateProc::Go` maps
   directly to Complete retail `0x005789f0` and closes at 100%.** The earlier
   working attribution put `singleselectionwindow.obj:0x1480cc` on the exact

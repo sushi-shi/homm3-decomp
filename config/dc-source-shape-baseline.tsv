@@ -1917,8 +1917,6 @@ call	singleselectionwindow.obj	0x1451e8	TSingleSelectionWindow::OnRequestHeroFac
 call	singleselectionwindow.obj	0x1451e8	TSingleSelectionWindow::OnSetAGRMsg
 call	singleselectionwindow.obj	0x1451e8	TSingleSelectionWindow::OnTownUpdateMsg
 call	singleselectionwindow.obj	0x1451e8	TSingleSelectionWindow::ReceiveChat
-call	singleselectionwindow.obj	0x148130	CNewPlayerUpdateProc::RequestConfirmation
-call	singleselectionwindow.obj	0x148130	GameTime::ElapsedSince
 call	singleselectionwindow.obj	0x1483f8	CAutoArray<int>::Destroy
 call	singleselectionwindow.obj	0x1483f8	TransmitRemoteDataDPID
 call	singleselectionwindow.obj	0x148838	CNewPlayerUpdateProc::HeaderConfirmed

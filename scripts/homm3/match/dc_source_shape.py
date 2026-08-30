@@ -2345,6 +2345,43 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"TransmitRemoteDataDPID\s*\(\s*&\s*initMsg\s*,\s*m_dpid\s*,"
             r"\s*false\s*,\s*true\s*\)\s*;", 1, 1),
     ),
+    ("singleselectionwindow.obj", 0x148130): (
+        SourceRule(
+            "CNewPlayerUpdateProc::Tick keeps Dreamcast's ElapsedSince "
+            "throttle as its first statement",
+            r"\A\s*if\s*\(\s*GameTime\s*::\s*ElapsedSince\s*\(\s*"
+            r"m_lastSendTime\s*\)\s*<\s*75\s*\)\s*return\s*;", 1, 1),
+        SourceRule(
+            "CNewPlayerUpdateProc::Tick keeps the five-row i loop and its "
+            "block-scoped CGameHeaderInfoMsg/CMapFileNameMsg alternatives "
+            "over HeadersA in Dreamcast statement order",
+            r"if\s*\(\s*m_nextHeader\s*<\s*gUnnamed69fbe8\s*->\s*"
+            r"HeadersA\.size\s*\(\s*\)\s*\)\s*\{\s*for\s*\(\s*int\s+i"
+            r"\s*=\s*0\s*;\s*i\s*<\s*5\s*;\s*\+\+\s*i\s*\)\s*\{.*?"
+            r"if\s*\(\s*gUnnamed69fbe8\s*->\s*m_flag64\s*\)\s*\{.*?"
+            r"CGameHeaderInfoMsg\s+msg\s*\(.*?HeadersA\s*\[\s*"
+            r"m_nextHeader\s*\].*?RemoteFn_00512C80\s*\(\s*m_dpid\s*,"
+            r"\s*1\s*,\s*1\s*\)\s*;\s*\}\s*else\s*\{.*?"
+            r"CMapFileNameMsg\s+msg\s*\(.*?HeadersA\s*\[\s*"
+            r"m_nextHeader\s*\].*?TransmitRemoteDataDPID\s*\(\s*&\s*"
+            r"msg\s*,\s*m_dpid\s*,\s*true\s*,\s*false\s*\)\s*;",
+            1, 1),
+        SourceRule(
+            "CNewPlayerUpdateProc::Tick keeps increment, HandleRequests, "
+            "exhaustion test, and RequestConfirmation in recovered order",
+            r"\+\+\s*m_nextHeader\s*;.*?m_requests\.size\s*\(\s*\).*?"
+            r"HandleRequests\s*\(\s*\)\s*;.*?m_nextHeader\s*>=\s*"
+            r"gUnnamed69fbe8\s*->\s*HeadersA\.size\s*\(\s*\).*?"
+            r"RequestConfirmation\s*\(\s*\)\s*;\s*break\s*;", 1, 1),
+        SourceRule(
+            "CNewPlayerUpdateProc::Tick keeps the exhausted-list request "
+            "drain before confirmation and refreshes m_lastSendTime last",
+            r"else\s+if\s*\(.*?m_requests\.size\s*\(\s*\).*?\)\s*"
+            r"\{\s*HandleRequests\s*\(\s*\)\s*;\s*"
+            r"RequestConfirmation\s*\(\s*\)\s*;\s*\}\s*"
+            r"m_lastSendTime\s*=\s*GameTime\s*::\s*Get\s*\(\s*\)\s*;",
+            1, 1),
+    ),
     ("singleselectionwindow.obj", 0x14870C): (
         SourceRule(
             "CNewPlayerUpdateMan::NewPlayer keeps Dreamcast's sole index "
@@ -3249,7 +3286,9 @@ def new_player_update_contract_violations(
         r"m_lastSendTime\s*=\s*0\s*;\s*\}.*?"
         r"virtual\s+void\s+Go\s*\(\s*\)\s*;\s*"
         r"virtual\s+void\s+Tick\s*\(\s*\)\s*;\s*"
-        r"virtual\s+void\s+Finish\s*\(\s*\)\s*;")
+        r"virtual\s+void\s+Finish\s*\(\s*\)\s*;\s*"
+        r"void\s+RequestConfirmation\s*\(\s*\)\s*;\s*"
+        r"void\s+HandleRequests\s*\(\s*\)\s*;")
     derived = (
         r"class\s+t_map_list_update\s*:\s*public\s+"
         r"CNewPlayerUpdateProc\s*\{.*?"
@@ -3267,11 +3306,27 @@ def new_player_update_contract_violations(
         r"CNewPlayerUpdateProc\s*\(\s*dpid\s*\)\s*\{\s*\}",
         r"CNewPlayerUpdateTask\s*::\s*~\s*CNewPlayerUpdateTask\s*"
         r"\(\s*\)\s*\{\s*\}",
+        r"inline\s+void\s+CNewPlayerUpdateProc\s*::\s*"
+        r"RequestConfirmation\s*\(\s*\)\s*\{\s*"
+        r"logFile\.Log\s*\(\s*DATA_COMPGEN\s*\(.*?"
+        r"requestingConfirmLog.*?\)\s*\)\s*;\s*"
+        r"CReqHeaderConfirmMsg\s+msg\s*;\s*"
+        r"TransmitRemoteDataDPID\s*\(\s*&\s*msg\s*,\s*m_dpid\s*,\s*"
+        r"false\s*,\s*true\s*\)\s*;\s*\}",
+        r"VA\s*\(\s*0x00578010\s*,\s*0x272\s*\).*?"
+        r"inline\s+void\s+CNewPlayerUpdateProc\s*::\s*HandleRequests\s*"
+        r"\(\s*\)",
     )
+    derived_body = re.search(
+        r"class\s+t_map_list_update\s*:\s*public\s+"
+        r"CNewPlayerUpdateProc\s*\{(.*?)\};", header, re.DOTALL)
+    derived_owns_helper = (derived_body is not None and re.search(
+        r"\bHandleRequests\s*\(", derived_body.group(1)) is not None)
     if (all(re.search(pattern, header, re.DOTALL) is not None
             for pattern in (task, proc, derived, manager))
             and all(re.search(pattern, source, re.DOTALL) is not None
-                    for pattern in definitions)):
+                    for pattern in definitions)
+            and not derived_owns_helper):
         return []
     token = re.search(r"\bCNewPlayerUpdateTask\b", header)
     line = header_text.count("\n", 0, token.start()) + 1 if token else 1
@@ -3279,7 +3334,9 @@ def new_player_update_contract_violations(
              "the NewPlayer update model must retain the novtable shared "
              "task, CNewPlayerUpdateProc field-initializing level, derived "
              "t_map_list_update override, interface-pointer manager, exact "
-             "0x00589240 derived constructor boundary, and shared teardown")]
+             "0x00589240 derived constructor boundary, shared teardown, and "
+             "Dreamcast-owned base RequestConfirmation/HandleRequests "
+             "boundaries (without an invented log vararg)")]
 
 
 def game_header_info_init_contract_violations(
@@ -3336,6 +3393,37 @@ def game_header_info_init_contract_violations(
              "CGameHeaderInfoInitMsg/CGameHeaderInfoInitMsgEx constructor "
              "boundaries, ordered count/mode and memset/strncpy statements, "
              "and exact 0x005789f0 constructor-then-send body")]
+
+
+def map_file_name_message_contract_violations(
+        header_text: str) -> list[tuple[int, str]]:
+    """Audit the DC constructor shape corroborated by both retail Tick arms."""
+    header = _source.mask(header_text)
+    shape = (
+        r"class\s+CMapFileNameMsg\s*:\s*public\s+CNetMsg\s*\{.*?"
+        r"unsigned\s+char\s+m_flag\s*;.*?int\s+m_number\s*;.*?"
+        r"char\s+m_fileName\s*\[\s*0x40\s*\]\s*;.*?"
+        r"int\s+m_townTypes\s*\[\s*8\s*\]\s*;.*?"
+        r"FILETIME\s+m_fileTime\s*;.*?"
+        r"CMapFileNameMsg\s*\(\s*unsigned\s+char\s+flag\s*,\s*int\s+"
+        r"number\s*,\s*const\s+char\s*\*\s*fileName\s*,\s*int\s*\*\s*"
+        r"townTypes\s*,\s*FILETIME\s+fileTime\s*\)\s*:\s*"
+        r"CNetMsg\s*\(\s*RS_MAP_FILE_NAME\s*,\s*sizeof\s*\(\s*"
+        r"CMapFileNameMsg\s*\)\s*\)\s*\{\s*"
+        r"m_flag\s*=\s*flag\s*;\s*m_number\s*=\s*number\s*;\s*"
+        r"strncpy\s*\(\s*m_fileName\s*,\s*fileName\s*,\s*0x3c\s*\)"
+        r"\s*;\s*m_fileTime\s*=\s*fileTime\s*;\s*"
+        r"memcpy\s*\(\s*m_townTypes\s*,\s*townTypes\s*,\s*sizeof\s*"
+        r"\(\s*m_townTypes\s*\)\s*\)\s*;\s*\}\s*\};")
+    if re.search(shape, header, re.DOTALL) is not None:
+        return []
+    token = re.search(r"\bCMapFileNameMsg\b", header)
+    line = header_text.count("\n", 0, token.start()) + 1 if token else 1
+    return [(line,
+             "CMapFileNameMsg must retain Dreamcast's explicit number, "
+             "fileName, townTypes and by-value FILETIME constructor inputs "
+             "and ordered number/strncpy/FILETIME/memcpy statements, with "
+             "Complete's independently proved leading transfer flag")]
 
 
 def netplayer_constructor_contract_violations(
@@ -4515,6 +4603,67 @@ TransmitRemoteDataDPID(&initMsg, m_dpid, false, true);
         if not any(description in rule.description for rule in
                    contract_violations(probe, update_go_key)):
             failures.append("broken CNewPlayerUpdateProc::Go "
+                            + description + " source shape passed")
+    update_tick_key = ("singleselectionwindow.obj", 0x148130)
+    update_tick_probe = """\
+if (GameTime::ElapsedSince(m_lastSendTime) < 75)
+    return;
+if (m_nextHeader < gUnnamed69fbe8->HeadersA.size()) {
+    for (int i = 0; i < 5; ++i) {
+        if (gUnnamed69fbe8->m_flag64) {
+            CGameHeaderInfoMsg msg(
+                0, m_nextHeader,
+                &gUnnamed69fbe8->HeadersA[m_nextHeader]);
+            msg.RemoteFn_00512C80(m_dpid, 1, 1);
+        } else {
+            CMapFileNameMsg msg(
+                0, m_nextHeader,
+                gUnnamed69fbe8->HeadersA[m_nextHeader].setup.filename,
+                gUnnamed69fbe8->HeadersA[m_nextHeader].setup.alignment,
+                gUnnamed69fbe8->HeadersA[m_nextHeader].fileTime);
+            TransmitRemoteDataDPID(&msg, m_dpid, true, false);
+        }
+        ++m_nextHeader;
+        if (static_cast<int>(m_requests.size()) != 0)
+            HandleRequests();
+        if (m_nextHeader >= gUnnamed69fbe8->HeadersA.size()) {
+            RequestConfirmation();
+            break;
+        }
+    }
+} else if (static_cast<int>(m_requests.size()) != 0) {
+    HandleRequests();
+    RequestConfirmation();
+}
+m_lastSendTime = GameTime::Get();
+"""
+    if contract_violations(update_tick_probe, update_tick_key):
+        failures.append("aligned CNewPlayerUpdateProc::Tick shape did not pass")
+    update_tick_mutations = (
+        (update_tick_probe.replace(
+            "GameTime::ElapsedSince(m_lastSendTime)",
+            "GameTime::Get() - m_lastSendTime"),
+         "ElapsedSince throttle"),
+        (update_tick_probe.replace("HeadersA", "TransferHeaders"),
+         "CGameHeaderInfoMsg/CMapFileNameMsg alternatives"),
+        (update_tick_probe.replace(
+            "++m_nextHeader;\n        if (static_cast<int>",
+            "if (static_cast<int>", 1),
+         "increment, HandleRequests, exhaustion test"),
+        (update_tick_probe.replace("HandleRequests();", "m_requests.clear();"),
+         "increment, HandleRequests, exhaustion test"),
+        (update_tick_probe.replace(
+            "HandleRequests();\n    RequestConfirmation();",
+            "RequestConfirmation();\n    HandleRequests();"),
+         "exhausted-list request drain before confirmation"),
+        (update_tick_probe.replace(
+            "m_lastSendTime = GameTime::Get();", "m_lastSendTime = 0;"),
+         "refreshes m_lastSendTime last"),
+    )
+    for probe, description in update_tick_mutations:
+        if not any(description in rule.description for rule in
+                   contract_violations(probe, update_tick_key)):
+            failures.append("broken CNewPlayerUpdateProc::Tick "
                             + description + " source shape passed")
     new_player_key = ("singleselectionwindow.obj", 0x14870C)
     new_player_probe = """\
@@ -7871,6 +8020,8 @@ public:
     virtual void Go();
     virtual void Tick();
     virtual void Finish();
+    void RequestConfirmation();
+    void HandleRequests();
 };
 class t_map_list_update : public CNewPlayerUpdateProc {
 public:
@@ -7891,6 +8042,17 @@ t_map_list_update::t_map_list_update(unsigned long dpid)
 {
 }
 CNewPlayerUpdateTask::~CNewPlayerUpdateTask()
+{
+}
+inline void CNewPlayerUpdateProc::RequestConfirmation()
+{
+    logFile.Log(DATA_COMPGEN(0x006834d0, requestingConfirmLog,
+                            "Requesting confirmation: %d"));
+    CReqHeaderConfirmMsg msg;
+    TransmitRemoteDataDPID(&msg, m_dpid, false, true);
+}
+VA(0x00578010, 0x272)
+inline void CNewPlayerUpdateProc::HandleRequests()
 {
 }
 """
@@ -7914,6 +8076,20 @@ CNewPlayerUpdateTask::~CNewPlayerUpdateTask()
         (update_task_header_probe, update_task_source_probe.replace(
             "CNewPlayerUpdateTask::~CNewPlayerUpdateTask()",
             "CNewPlayerUpdateProc::~CNewPlayerUpdateProc()")),
+        (update_task_header_probe.replace(
+            "    void HandleRequests();\n};\nclass t_map_list_update",
+            "};\nclass t_map_list_update").replace(
+                "    virtual void Finish();\n};\nclass CNewPlayerUpdateMan",
+                "    virtual void Finish();\n"
+                "    void HandleRequests();\n};\n"
+                "class CNewPlayerUpdateMan"),
+         update_task_source_probe),
+        (update_task_header_probe, update_task_source_probe.replace(
+            '"Requesting confirmation: %d"));',
+            '"Requesting confirmation: %d"), m_dpid);')),
+        (update_task_header_probe, update_task_source_probe.replace(
+            "CNewPlayerUpdateProc::HandleRequests()",
+            "t_map_list_update::HandleRequests()")),
     )
     if any(not new_player_update_contract_violations(header, source)
            for header, source in broken_update_task_probes):
@@ -7983,6 +8159,47 @@ void CNewPlayerUpdateProc::Go()
     if any(not game_header_info_init_contract_violations(header, source)
            for header, source in broken_update_msg_probes):
         failures.append("broken 1024 header-init message chain passed")
+    map_file_msg_probe = """\
+class CMapFileNameMsg : public CNetMsg {
+public:
+    unsigned char m_flag;
+    int m_number;
+    char m_fileName[0x40];
+    int m_townTypes[8];
+    FILETIME m_fileTime;
+    CMapFileNameMsg(unsigned char flag, int number, const char* fileName,
+                    int* townTypes, FILETIME fileTime)
+        : CNetMsg(RS_MAP_FILE_NAME, sizeof(CMapFileNameMsg))
+    {
+        m_flag = flag;
+        m_number = number;
+        strncpy(m_fileName, fileName, 0x3c);
+        m_fileTime = fileTime;
+        memcpy(m_townTypes, townTypes, sizeof(m_townTypes));
+    }
+};
+"""
+    if map_file_name_message_contract_violations(map_file_msg_probe):
+        failures.append("aligned CMapFileNameMsg constructor did not pass")
+    broken_map_file_msg_probes = (
+        map_file_msg_probe.replace("FILETIME m_fileTime;",
+                                   "unsigned int m_fileTimeLow;"),
+        map_file_msg_probe.replace(
+            "const char* fileName,\n                    int* townTypes, "
+            "FILETIME fileTime",
+            "GameSelectionHeadersStruct* header"),
+        map_file_msg_probe.replace(
+            "m_number = number;\n        strncpy",
+            "strncpy(m_fileName, fileName, 0x3c);\n        m_number = "
+            "number;\n        strncpy", 1),
+        map_file_msg_probe.replace(
+            "m_fileTime = fileTime;\n        memcpy",
+            "memcpy(m_townTypes, townTypes, sizeof(m_townTypes));\n"
+            "        m_fileTime = fileTime;\n        memcpy", 1),
+    )
+    if any(not map_file_name_message_contract_violations(probe)
+           for probe in broken_map_file_msg_probes):
+        failures.append("broken CMapFileNameMsg constructor passed")
     netplayer_header_probe = """\
 class CNetPlayerInfo {
 public:
@@ -8794,7 +9011,9 @@ def scan() -> tuple[
         selection_text, selection_source_text))
     selection_defects.extend(game_header_info_init_contract_violations(
         selection_text, selection_source_text))
-    checked += 3
+    selection_defects.extend(map_file_name_message_contract_violations(
+        selection_text))
+    checked += 4
     missing.extend(FileContractViolation(selection_relpath, line,
                                          description)
                    for line, description in selection_defects)

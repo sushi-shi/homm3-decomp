@@ -559,16 +559,27 @@ void t_map_list_update::Go()
     TransmitRemoteDataDPID(&msg, m_dpid, false, true);
 }
 
+// DC keeps this source helper out of Tick. Complete VC6 /Ob2 expands its
+// base-Tick call sites; the separate 0x578010 HandleRequests body and derived
+// Tick consume the same boundary.
+// E:\gamedcs\singleselectionwindow.cpp:1369
+inline void CNewPlayerUpdateProc::RequestConfirmation()
+{
+    logFile.Log(DATA_COMPGEN(0x006834d0, requestingConfirmLog,
+                    "Requesting confirmation: %d"));
+    CReqHeaderConfirmMsg msg;
+    TransmitRemoteDataDPID(&msg, m_dpid, false, true);
+}
+
 // Stream up to five header rows per throttle window at the joining
 // player; when the list is exhausted, drain any queued re-requests and
 // ask for confirmation.
 //
-// Residual (62.5): retail runs the drain-arm exhaustion check ONCE with
-// the loop back edge re-entering at the send (10 branches to our 11);
-// hoisting the check out of the loop drops to 37.7 both times because
-// the arm layout then inverts - the same block-placement class as
-// UpdatePlayerPositions. The two confirm arms are goto-shared at the
-// end exactly as retail lays them.
+// Residual (71.8957, up from 62.4785): restoring the DC-owned base helper
+// boundaries and explicit CMapFileNameMsg inputs fixed the message and
+// confirmation lowering without flattening either helper. Candidate and
+// retail now have 10 branches and 3 returns; two symbolic branch targets
+// still differ around the derived loop's exhaustion/teardown placement.
 // E:\gamedcs\singleselectionwindow.cpp:1282
 VA(0x00577DE0, 0x228)  // anchor-vtable vtbl 0x641d38 slot1 - the slot WindowHandler's inlined Man::Tick dispatches; owns 'Requesting confirmation: %d' + GameTime::Get, size 1.06x dc 0x208, dc 0x148130
 void t_map_list_update::Tick()
@@ -582,11 +593,13 @@ void t_map_list_update::Tick()
         {
             CMapFileNameMsg msg(
                 1, m_nextHeader,
-                &gUnnamed69fbe8->TransferHeaders[m_nextHeader]);
+                gUnnamed69fbe8->TransferHeaders[m_nextHeader].setup.filename,
+                gUnnamed69fbe8->TransferHeaders[m_nextHeader].setup.alignment,
+                gUnnamed69fbe8->TransferHeaders[m_nextHeader].fileTime);
             TransmitRemoteDataDPID(&msg, m_dpid, true, false);
         }
         ++m_nextHeader;
-        if (m_requests.size() != 0)
+        if (static_cast<int>(m_requests.size()) != 0)
             HandleRequests();
         if (m_nextHeader
                 >= gUnnamed69fbe8->TransferHeaders.size())
@@ -597,23 +610,15 @@ void t_map_list_update::Tick()
 
 confirm:
     {
-        logFile.Log(DATA_COMPGEN(0x006834d0, requestingConfirmLog,
-                        "Requesting confirmation: %d"),
-                    m_dpid);
-        CReqHeaderConfirmMsg msg;
-        TransmitRemoteDataDPID(&msg, m_dpid, false, true);
+        RequestConfirmation();
         m_lastSendTime = GameTime::Get();
         return;
     }
 
 drain_and_confirm:
-    if (m_requests.size() != 0)
+    if (static_cast<int>(m_requests.size()) != 0)
         HandleRequests();
-    logFile.Log(DATA_COMPGEN(0x006834d0, requestingConfirmLog,
-                    "Requesting confirmation: %d"),
-                m_dpid);
-    CReqHeaderConfirmMsg msg;
-    TransmitRemoteDataDPID(&msg, m_dpid, false, true);
+    RequestConfirmation();
     m_lastSendTime = GameTime::Get();
 }
 
@@ -636,7 +641,7 @@ drain_and_confirm:
 // counterindication.
 // E:\gamedcs\singleselectionwindow.cpp:1375
 VA(0x00578010, 0x272)  // anchor-callee Tick drains the m_requests vector through it at both of its non-empty checks, dc 0x1483f8
-void t_map_list_update::HandleRequests()
+inline void CNewPlayerUpdateProc::HandleRequests()
 {
     int count = m_requests.size();
     if (count == 0)
@@ -705,6 +710,56 @@ void CNewPlayerUpdateProc::Go()
         gUnnamed69fbe8->HeadersA.size(),
         gUnnamed69fbe8->m_flag64);
     TransmitRemoteDataDPID(&initMsg, m_dpid, false, true);
+}
+
+// The original 1024 header stream. Dreamcast CodeView proves the i local,
+// the two block-scoped msg locals, ElapsedSince throttle, conditional
+// CGameHeaderInfoMsg/CMapFileNameMsg constructors, request-drain helper and
+// confirmation helper. Complete retail adds the list-select flag to both
+// message layouts but preserves that source control flow.
+// Residual (86.6723): all 32 aligned blocks, 16 branch sequences and their
+// topology agree. The remaining bands are VC6 scheduling: ESI/EDI exchange
+// roles for zero/m_nextHeader, the CMapFileNameMsg arguments are pushed in a
+// different schedule, and vector count lowering differs. Several callees
+// also still have anonymous relocation names. An explicit pHeader local was
+// tested and rejected: DC lists only i/msg/msg and it lowered the score.
+// E:\gamedcs\singleselectionwindow.cpp:1282
+VA(0x00578A90, 0x370)  // anchor-vtable CNewPlayerUpdateProc vtbl 0x641d44 slot1, dc 0x148130
+void CNewPlayerUpdateProc::Tick()
+{
+    if (GameTime::ElapsedSince(m_lastSendTime) < 75)
+        return;
+
+    if (m_nextHeader < gUnnamed69fbe8->HeadersA.size()) {
+        for (int i = 0; i < 5; ++i) {
+            if (gUnnamed69fbe8->m_flag64) {
+                CGameHeaderInfoMsg msg(
+                    0, m_nextHeader,
+                    &gUnnamed69fbe8->HeadersA[m_nextHeader]);
+                msg.RemoteFn_00512C80(m_dpid, 1, 1);
+            } else {
+                CMapFileNameMsg msg(
+                    0, m_nextHeader,
+                    gUnnamed69fbe8->HeadersA[m_nextHeader].setup.filename,
+                    gUnnamed69fbe8->HeadersA[m_nextHeader].setup.alignment,
+                    gUnnamed69fbe8->HeadersA[m_nextHeader].fileTime);
+                TransmitRemoteDataDPID(&msg, m_dpid, true, false);
+            }
+
+            ++m_nextHeader;
+            if (static_cast<int>(m_requests.size()) != 0)
+                HandleRequests();
+            if (m_nextHeader >= gUnnamed69fbe8->HeadersA.size()) {
+                RequestConfirmation();
+                break;
+            }
+        }
+    } else if (static_cast<int>(m_requests.size()) != 0) {
+        HandleRequests();
+        RequestConfirmation();
+    }
+
+    m_lastSendTime = GameTime::Get();
 }
 
 #if 0  // @carcass
@@ -3451,7 +3506,7 @@ unsigned char TSingleSelectionWindow::OnMapFileNameMsg(CNetMsg* pNetMsg)
                              ? DATA_COMPGEN(0x00677d70, gamesDir, "games")
                              : DATA_COMPGEN(0x006772d0, mapsDir, "maps")),
                   pMsg->m_fileName, &temp);
-        if (memcmp(&temp.fileTime, &pMsg->m_fileTimeLow, 8) == 0) {
+        if (memcmp(&temp.fileTime, &pMsg->m_fileTime, 8) == 0) {
             memcpy(temp.setup.alignment, pMsg->m_townTypes,
                    sizeof(pMsg->m_townTypes));
             if (pMsg->m_flag)
