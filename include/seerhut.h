@@ -60,6 +60,11 @@ public:
     // element with the stream as its one argument. DECLARED, not defined:
     // the body is an unclaimed carve row outside this compiland.
     int save(TAbstractFile* outfile);
+    // Complete retains the Dreamcast TSeerHut predicate on the new shared
+    // quest-guard base.  DoQuestLog proves that its final two tests are the
+    // visited-player bit followed by a fresh quest-pointer read.
+    unsigned char QuestActiveforPlayer(
+        const unsigned char playerNum) const;
 #ifdef HOMM3_QUEST_GUARD_LOAD_DECLS
     int load(TAbstractFile* infile, int saveVersion);
 #endif
@@ -187,6 +192,10 @@ public:
     // same way from NewfullMap::Save. Declared separately because the
     // TQuestGuard base is private here.
     int save(TAbstractFile* outfile);
+    // Dreamcast names this source boundary on TSeerHut.  Complete's quest
+    // log applies the same predicate to both of its quest pools.
+    unsigned char QuestActiveforPlayer(
+        const unsigned char playerNum) const;
 };
 SIZE(TSeerHut, 0x13);
 

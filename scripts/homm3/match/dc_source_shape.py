@@ -237,6 +237,21 @@ PROVEN_CALL_TRANSFERS: dict[tuple[str, int, str], CallTransfer] = {
             r"switch\s*\(\s*gpWindowManager\s*->\s*dialogReturn\s*\)"
             r".*?case\s+TAdventureOptionsWindow\s*::\s*VIEW_SCENARIO_ID"
             r"\s*:\s*gpGame\s*->\s*ShowScenInfo\s*\(\s*\)\s*;\s*break\s*;"),
+    ("resourcemanager.obj", 0x121EC8, "LODFile::read"):
+        CallTransfer(
+            "Complete GetPalette24 routes Dreamcast's two direct LODFile::read "
+            "operations through the exact t_lod_file_adapter::Read receiver; "
+            "retail vtable 0x641128 slot 1 targets 0x559110",
+            "src/resourcemanager.cpp",
+            "ResourceManager::t_lod_file_adapter::Read", 0x00559110,
+            r"\bt_lod_file_adapter\s+stream\s*\(\s*lodFile\s*\)\s*;\s*"
+            r"TAbstractFile\s*\*\s*streamInterface\s*=\s*&\s*stream\s*;\s*"
+            r"streamInterface\s*->\s*Read\s*\(\s*header\s*,\s*"
+            r"sizeof\s*\(\s*header\s*\)\s*\)\s*;\s*"
+            r"streamInterface\s*->\s*Read\s*\(\s*rgba\s*,\s*"
+            r"sizeof\s*\(\s*rgba\s*\)\s*\)\s*;",
+            r"return\s+lod_file\s*->\s*read\s*\(\s*data\s*,\s*size\s*\)"
+            r"\s*\?\s*0\s*:\s*size\s*;"),
     ("philai.obj", 0x10E3F8, "buy_artifacts"):
         CallTransfer(
             "Complete transfers AI_enter_town's separate artifact-market "
@@ -246,20 +261,6 @@ PROVEN_CALL_TRANSFERS: dict[tuple[str, int, str], CallTransfer] = {
             r"current_town\s*\)\s*;",
             r"\bbuy_artifacts\s*\(\s*current_hero\s*,\s*gpGame\s*->\s*"
             r"field_1f664\s*,\s*market_count\s*\)\s*;"),
-    ("resourcemanager.obj", 0x121EC8, "LODFile::read"):
-        CallTransfer(
-            "Complete moves GetPalette24's direct archive reads behind the "
-            "exact t_lod_file_adapter::Read boundary",
-            "src/resourcemanager.cpp",
-            "ResourceManager::t_lod_file_adapter::Read", 0x00559110,
-            r"t_lod_file_adapter\s+stream\s*\(\s*lodFile\s*\)\s*;.*?"
-            r"streamInterface\s*=\s*&\s*stream\s*;.*?"
-            r"streamInterface\s*->\s*Read\s*\(\s*header\s*,\s*"
-            r"sizeof\s*\(\s*header\s*\)\s*\)\s*;.*?"
-            r"streamInterface\s*->\s*Read\s*\(\s*rgba\s*,\s*"
-            r"sizeof\s*\(\s*rgba\s*\)\s*\)\s*;",
-            r"return\s+lod_file\s*->\s*read\s*\(\s*data\s*,\s*size\s*"
-            r"\)\s*\?\s*0\s*:\s*size\s*;"),
 }
 
 
@@ -5569,6 +5570,36 @@ case TAdventureOptionsWindow::VIEW_SCENARIO_ID:
                 "gpWindowManager->dialogReturn = msg->codeY;", ""),
             transfer_receiver, {transfer.receiver_va}):
         failures.append("transfer with erased caller forwarding passed")
+    palette_transfer = PROVEN_CALL_TRANSFERS[
+        ("resourcemanager.obj", 0x121EC8, "LODFile::read")]
+    palette_transfer_caller = """\
+t_lod_file_adapter stream(lodFile);
+TAbstractFile* streamInterface = &stream;
+streamInterface->Read(header, sizeof(header));
+streamInterface->Read(rgba, sizeof(rgba));
+"""
+    palette_transfer_receiver = """\
+return lod_file->read(data, size) ? 0 : size;
+"""
+    if not transfer_satisfied(
+            palette_transfer, palette_transfer_caller,
+            palette_transfer_receiver, {palette_transfer.receiver_va}):
+        failures.append("exact LOD adapter call transfer did not pass")
+    if transfer_satisfied(
+            palette_transfer, palette_transfer_caller,
+            palette_transfer_receiver, set()):
+        failures.append("non-exact LOD adapter receiver passed")
+    if transfer_satisfied(
+            palette_transfer, palette_transfer_caller,
+            palette_transfer_receiver.replace("lod_file->read", "read"),
+            {palette_transfer.receiver_va}):
+        failures.append("flattened LOD adapter receiver passed")
+    if transfer_satisfied(
+            palette_transfer,
+            palette_transfer_caller.replace(
+                "streamInterface->Read(rgba, sizeof(rgba));", ""),
+            palette_transfer_receiver, {palette_transfer.receiver_va}):
+        failures.append("LOD adapter transfer with one caller read passed")
     transfer_groups = (CallGroup(187, ("game::ShowScenInfo",)),
                        CallGroup(211, ("heroWindow::findWidget",)))
     filtered_groups = groups_without_transfers(
@@ -7283,26 +7314,6 @@ TRGBA rgba[256];
                for rule in contract_violations(flattened_palette24,
                                                 palette24_key)):
         failures.append("flattened GetPalette24 constructor passed")
-    palette24_transfer = PROVEN_CALL_TRANSFERS[
-        ("resourcemanager.obj", 0x121EC8, "LODFile::read")]
-    palette24_transfer_caller = """\
-t_lod_file_adapter stream(lodFile);
-TAbstractFile* streamInterface = &stream;
-streamInterface->Read(header, sizeof(header));
-streamInterface->Read(rgba, sizeof(rgba));
-"""
-    palette24_transfer_receiver = """\
-return lod_file->read(data, size) ? 0 : size;
-"""
-    if not transfer_satisfied(
-            palette24_transfer, palette24_transfer_caller,
-            palette24_transfer_receiver, {palette24_transfer.receiver_va}):
-        failures.append("GetPalette24 archive-read transfer did not pass")
-    if transfer_satisfied(
-            palette24_transfer, palette24_transfer_caller,
-            palette24_transfer_receiver.replace("lod_file->read", "Read"),
-            {palette24_transfer.receiver_va}):
-        failures.append("flattened GetPalette24 archive receiver passed")
     resource_display_key = ("resourcedisplay.obj", 0x120C54)
     resource_display_probe = """\
 if (isSmall) {

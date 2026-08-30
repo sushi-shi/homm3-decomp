@@ -1568,6 +1568,9 @@ void combatManager::ResetBoltAngle(SBolt* psBolt)
 // Moving the three bolt arrays to their header declarations and late external
 // definitions is score-flat, but makes the candidate emit retail's real
 // gBoltSpectrumColors+0x2b pointer and reduces register distance 176 -> 164.
+// Restoring the ancestral nested X/Y equality tests and the lexical block that
+// owns the raster loop plus arrival latch is byte-flat at that same checkpoint;
+// it stays because Dreamcast's scopes and the exact HoMM2 source agree on it.
 //
 // Current residual: all 27 conditional branches and both returns agree. The
 // first EBX/EDI/ESI definitions agree, but the candidate has 62 CFG blocks
@@ -1644,93 +1647,98 @@ void combatManager::DrawBolt(SBolt* psBolt, int iDrawLength)
 
         iX = psBolt->iX;
         iY = psBolt->iY;
-        if (iX == iLastX && iY == iLastY)
-            continue;
-        iLastX = iX;
-        iLastY = iY;
-
-        { for (k = iSpanFirst; k <= iSpanLast; k++) {
-            if (psBolt->bShallow)
-                iY = psBolt->iY + k;
-            else
-                iX = psBolt->iX + k;
-            if (iX >= 0 && iX < 800 && iY >= 0 && iY < 556) {
-                if (k < 0)
-                    iFromEdge = k - iSpanFirst;
+        if (psBolt->iX == iLastX) {
+            if (psBolt->iY == iLastY)
+                continue;
+        }
+        {
+            iLastX = psBolt->iX;
+            iLastY = psBolt->iY;
+            for (k = iSpanFirst; k <= iSpanLast; k++) {
+                if (psBolt->bShallow)
+                    iY = psBolt->iY + k;
                 else
-                    iFromEdge = iSpanLast - k;
-
-                switch (psBolt->iColor) {
-                case BOLT_COLOR_4:
-                    gpWindowManager->screenBitmap->map[iY * 800 + iX] =
-                        static_cast<unsigned short>(
-                            RGBto16(gBoltWhiteSpanColors[iFromEdge][0],
-                                    gBoltWhiteSpanColors[iFromEdge][1],
-                                    gBoltWhiteSpanColors[iFromEdge][2]));
-                    break;
-                case BOLT_COLOR_2:
-                    gpWindowManager->screenBitmap->map[iY * 800 + iX] =
-                        static_cast<unsigned short>(
-                            RGBto16(gBoltGreenSpanColors[iFromEdge][0],
-                                    gBoltGreenSpanColors[iFromEdge][1],
-                                    gBoltGreenSpanColors[iFromEdge][2]));
-                    break;
-                case BOLT_COLOR_0:
-                    gpWindowManager->screenBitmap->map[iY * 800 + iX] =
-                        static_cast<unsigned short>(RGBto16(
-                            gBoltSpectrumColors[k - iSpanFirst][0],
-                            gBoltSpectrumColors[k - iSpanFirst][1],
-                            gBoltSpectrumColors[k - iSpanFirst][2]));
-                    break;
-                case BOLT_COLOR_3:
-                    gpWindowManager->screenBitmap->map[iY * 800 + iX] =
-                        static_cast<unsigned short>(RGBto16(
-                            gBoltSpectrumColors[14 - (k - iSpanFirst)][0],
-                            gBoltSpectrumColors[14 - (k - iSpanFirst)][1],
-                            gBoltSpectrumColors[14 - (k - iSpanFirst)][2]));
-                    break;
-                case BOLT_COLOR_CHAIN_LIGHTNING:
-                    // Six hand-written shades rather than a table. The SH4
-                    // compiler tail-merges their calls and attributes the
-                    // shared site to the last source row; retail's extra
-                    // branch proves the Windows source keeps one RGBto16
-                    // assignment in each arm.
-                    if (iFromEdge == BOLT_SPAN_DEPTH_0)
-                        color = RGBto16(255, 255, 255);
-                    else if (iFromEdge == BOLT_SPAN_DEPTH_1)
-                        color = RGBto16(240, 240, 255);
-                    else if (iFromEdge == BOLT_SPAN_DEPTH_2)
-                        color = RGBto16(224, 224, 255);
-                    else if (iFromEdge == BOLT_SPAN_DEPTH_3)
-                        color = RGBto16(216, 216, 255);
-                    else if (iFromEdge == BOLT_SPAN_DEPTH_4)
-                        color = RGBto16(200, 200, 255);
+                    iX = psBolt->iX + k;
+                if (iX < 0 || iX >= 800 || iY < 0 || iY >= 556)
+                    continue;
+                {
+                    if (k < 0)
+                        iFromEdge = k - iSpanFirst;
                     else
-                        color = RGBto16(192, 192, 255);
-                    gpWindowManager->screenBitmap->map[iY * 800 + iX] = color;
-                    break;
-                default:
-                    // Anything outside the six special values is a raw
-                    // 16-bit pixel, written straight through.
-                    gpWindowManager->screenBitmap->map[iY * 800 + iX] =
-                        static_cast<unsigned short>(psBolt->iColor);
-                    break;
+                        iFromEdge = iSpanLast - k;
+
+                    switch (psBolt->iColor) {
+                    case BOLT_COLOR_4:
+                        gpWindowManager->screenBitmap->map[iY * 800 + iX] =
+                            static_cast<unsigned short>(
+                                RGBto16(gBoltWhiteSpanColors[iFromEdge][0],
+                                        gBoltWhiteSpanColors[iFromEdge][1],
+                                        gBoltWhiteSpanColors[iFromEdge][2]));
+                        break;
+                    case BOLT_COLOR_2:
+                        gpWindowManager->screenBitmap->map[iY * 800 + iX] =
+                            static_cast<unsigned short>(
+                                RGBto16(gBoltGreenSpanColors[iFromEdge][0],
+                                        gBoltGreenSpanColors[iFromEdge][1],
+                                        gBoltGreenSpanColors[iFromEdge][2]));
+                        break;
+                    case BOLT_COLOR_0:
+                        gpWindowManager->screenBitmap->map[iY * 800 + iX] =
+                            static_cast<unsigned short>(RGBto16(
+                                gBoltSpectrumColors[k - iSpanFirst][0],
+                                gBoltSpectrumColors[k - iSpanFirst][1],
+                                gBoltSpectrumColors[k - iSpanFirst][2]));
+                        break;
+                    case BOLT_COLOR_3:
+                        gpWindowManager->screenBitmap->map[iY * 800 + iX] =
+                            static_cast<unsigned short>(RGBto16(
+                                gBoltSpectrumColors[14 - (k - iSpanFirst)][0],
+                                gBoltSpectrumColors[14 - (k - iSpanFirst)][1],
+                                gBoltSpectrumColors[14 - (k - iSpanFirst)][2]));
+                        break;
+                    case BOLT_COLOR_CHAIN_LIGHTNING:
+                        // Six hand-written shades rather than a table. The SH4
+                        // compiler tail-merges their calls and attributes the
+                        // shared site to the last source row; retail's extra
+                        // branch proves the Windows source keeps one RGBto16
+                        // assignment in each arm.
+                        if (iFromEdge == BOLT_SPAN_DEPTH_0)
+                            color = RGBto16(255, 255, 255);
+                        else if (iFromEdge == BOLT_SPAN_DEPTH_1)
+                            color = RGBto16(240, 240, 255);
+                        else if (iFromEdge == BOLT_SPAN_DEPTH_2)
+                            color = RGBto16(224, 224, 255);
+                        else if (iFromEdge == BOLT_SPAN_DEPTH_3)
+                            color = RGBto16(216, 216, 255);
+                        else if (iFromEdge == BOLT_SPAN_DEPTH_4)
+                            color = RGBto16(200, 200, 255);
+                        else
+                            color = RGBto16(192, 192, 255);
+                        gpWindowManager->screenBitmap->map[iY * 800 + iX] = color;
+                        break;
+                    default:
+                        // Anything outside the six special values is a raw
+                        // 16-bit pixel, written straight through.
+                        gpWindowManager->screenBitmap->map[iY * 800 + iX] =
+                            static_cast<unsigned short>(psBolt->iColor);
+                        break;
+                    }
                 }
             }
-        } }
 
-        iRemaining = abs(psBolt->iDestY - psBolt->iY)
-            + abs(psBolt->iDestX - psBolt->iX);
-        if (psBolt->bDone) {
-            if (iRemaining > psBolt->field_48 + 1 || iRemaining <= 2) {
-                psBolt->bAtDestination = 1;
-                return;
-            }
-            if (iRemaining < psBolt->field_48)
+            iRemaining = abs(psBolt->iDestY - psBolt->iY)
+                + abs(psBolt->iDestX - psBolt->iX);
+            if (psBolt->bDone) {
+                if (iRemaining > psBolt->field_48 + 1 || iRemaining <= 2) {
+                    psBolt->bAtDestination = 1;
+                    return;
+                } else if (iRemaining < psBolt->field_48) {
+                    psBolt->field_48 = iRemaining;
+                }
+            } else if (iRemaining < 15) {
+                psBolt->bDone = 1;
                 psBolt->field_48 = iRemaining;
-        } else if (iRemaining < 15) {
-            psBolt->bDone = 1;
-            psBolt->field_48 = iRemaining;
+            }
         }
     } }
 }

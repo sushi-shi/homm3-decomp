@@ -25,6 +25,7 @@
 // four, which is exactly the 4-byte error this pair caught.
 class TQuestLogWindow : public CAdvPopup {
 public:
+    TQuestLogWindow();
     std::vector<int> seerHutLogList;
     // Scroll offset of the topmost listed quest: zeroed by the constructor,
     // untouched by the destructor, and read by UpdateQuestLocator (0x52e270)
@@ -41,6 +42,7 @@ public:
     // refreshes one log line; the plural UpdateQuestLocators has no retail
     // body of its own because it inlines this one.
     void UpdateQuestLocator(int i);
+    void UpdateQuestLocators();
 };
 SIZE(TQuestLogWindow, 0x74);
 
