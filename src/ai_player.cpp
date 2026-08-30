@@ -4386,6 +4386,12 @@ bool town::HasBuilding(int buildingId, bool check_included) const
 
 #endif  // @carcass
 
+// The source member remains the Town.h inline used by every real caller.
+// Retail selected one out-of-line COMDAT copy into ai_player.obj; this
+// address-take is the established VC6 emission anchor (the do_swap pattern)
+// and does not force any call site out of line.
+bool (town::* g_emit_HasBuilding)(int, bool) const = &town::HasBuilding;
+
 // E:\gamedcs\ai_player.cpp:4607
 // A computer hero may buy and launch from either an owned town dock or a
 // claimed map shipyard. Human heroes only enter through the remote-move
