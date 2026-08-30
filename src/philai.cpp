@@ -2329,12 +2329,18 @@ int ValueOfGenerator(const hero* current_hero, int x, int y, int z, NewmapCell* 
 
 // Residual (99.9561%): all 35 CFG blocks and every instruction agree except
 // the final commutative LEA's SIB spelling (`[ebx+ecx]` versus retail's
-// `[ecx+ebx]`). Reversing the return operands, splitting/reordering the
-// optimized `town_value` declaration, and both accumulate-then-return forms
-// are byte-flat under VC6 SP3, so no semantic source change is retained.
+// `[ecx+ebx]`). Raw NB11 places creature_cost, include_growth and creature as
+// procedure-scope S_REGREL32 records in that order; restoring those lifetimes
+// from the formerly nested spelling is byte-flat. Reversing the return
+// operands, splitting/reordering the optimized `town_value` declaration, and
+// both accumulate-then-return forms are also byte-flat under VC6 SP3, so no
+// semantic source change is retained.
 VA(0x00529cb0, 0x2d9)  // anchor-callee, dc 0x11105c
 long value_of_enemy_town(const hero* current_hero, const town* enemy_town, short move_cost, NewmapCell* cell)
 {
+    int creature_cost[NUM_RESOURCES];
+    unsigned char include_growth;
+    TCreatureType creature;
     hero* defending_hero;
     playerData* player = const_cast<hero*>(current_hero)->get_player();
     defending_hero = 0;
@@ -2357,7 +2363,7 @@ long value_of_enemy_town(const hero* current_hero, const town* enemy_town, short
         town_value += 3 * AI_resource_cost(player, silo_income);
     }
 
-    unsigned char include_growth = 0;
+    include_growth = 0;
     if ((move_cost - current_hero->movePoints)
                 / current_hero->maxMovePoints
             + gpGame->field_1f63e
@@ -2370,9 +2376,8 @@ long value_of_enemy_town(const hero* current_hero, const town* enemy_town, short
                 dwelling);
 
         if (population > 0) {
-            TCreatureType creature = gTownDwellingCreatures[
+            creature = gTownDwellingCreatures[
                 TOWN_DWELLING_SLOTS * enemy_town->type + dwelling];
-            int creature_cost[NUM_RESOURCES];
             GetMonsterCost(creature, creature_cost);
             long profit = akCreatureTypeTraits[creature].AI_value
                 - AI_resource_cost(player, creature_cost);

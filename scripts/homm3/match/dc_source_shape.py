@@ -411,6 +411,16 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"\bHasBuilding\s*\(\s*DWELLING_0_UPG_ID\s*\+\s*dwelling\s*,"
             r"\s*1\s*\)"),
     ),
+    ("philai.obj", 0x11105C): (
+        SourceRule(
+            "value_of_enemy_town keeps Dreamcast's procedure-scope "
+            "creature_cost, include_growth and creature locals in CodeView "
+            "record order",
+            r"\A(?:(?!\{).)*?\bint\s+creature_cost\s*\[\s*"
+            r"NUM_RESOURCES\s*\]\s*;"
+            r"(?:(?!\{).)*?\bunsigned\s+char\s+include_growth\s*;"
+            r"(?:(?!\{).)*?\bTCreatureType\s+creature\s*;"),
+    ),
     ("game.obj", 0xA3E5C): (
         SourceRule(
             "LoadMinePool retains Dreamcast's signed int x local; an exact "
@@ -2618,6 +2628,37 @@ TRGBA rgba[256];
                for rule in contract_violations(flattened_palette24,
                                                 palette24_key)):
         failures.append("flattened GetPalette24 constructor passed")
+    enemy_town_key = ("philai.obj", 0x11105C)
+    enemy_town_probe = """\
+int creature_cost[NUM_RESOURCES];
+unsigned char include_growth;
+TCreatureType creature;
+hero* defending_hero;
+if (population > 0) {
+    creature = gTownDwellingCreatures[dwelling];
+    GetMonsterCost(creature, creature_cost);
+}
+"""
+    if contract_violations(enemy_town_probe, enemy_town_key):
+        failures.append(
+            "aligned value_of_enemy_town procedure locals did not pass")
+    nested_enemy_town = """\
+unsigned char include_growth;
+if (population > 0) {
+    TCreatureType creature;
+    int creature_cost[NUM_RESOURCES];
+    GetMonsterCost(creature, creature_cost);
+}
+"""
+    if not contract_violations(nested_enemy_town, enemy_town_key):
+        failures.append("nested value_of_enemy_town DC locals passed")
+    reordered_enemy_town = enemy_town_probe.replace(
+        "int creature_cost[NUM_RESOURCES];\n"
+        "unsigned char include_growth;\nTCreatureType creature;",
+        "unsigned char include_growth;\nTCreatureType creature;\n"
+        "int creature_cost[NUM_RESOURCES];")
+    if not contract_violations(reordered_enemy_town, enemy_town_key):
+        failures.append("reordered value_of_enemy_town DC locals passed")
     hero_bonuses_key = ("philai.obj", 0x10FEF4)
     hero_bonuses_probe = """\
 type_spellvalue caster(our_hero);
