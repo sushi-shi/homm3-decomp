@@ -399,6 +399,22 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"\)\s*;\s*victoryCondition\s*\.\s*AppliesToComputer\s*"
             r"=\s*char_buffer\s*!=\s*0\s*;"),
     ),
+    ("event_record.obj", 0x8CFA8): (
+        SourceRule(
+            "type_record_show_boat keeps Dreamcast's get_location helper "
+            "statement before the destination assignment",
+            r"\bprevious_location\s*=\s*_current_boat\s*->\s*"
+            r"get_location\s*\(\s*\)\s*;\s*location\s*=\s*"
+            r"_location\s*;", 1, 1),
+    ),
+    ("event_record.obj", 0x8E18C): (
+        SourceRule(
+            "record_show_boat keeps Dreamcast's direct show-record "
+            "construction inside one eventRecords push_back statement",
+            r"\beventRecords\s*\.\s*push_back\s*\(\s*new\s+"
+            r"type_record_show_boat\s*\(\s*current_boat\s*,\s*point\s*"
+            r"\)\s*\)\s*;", 1, 1),
+    ),
     ("events.obj", 0x94760): (
         SourceRule(
             "DoEventPrison keeps Dreamcast's THeroID source local under its "
@@ -4428,6 +4444,45 @@ if (cell->GroundSet != field_58 && draw_changes) {
                    contract_violations(probe, set_hero_context_key)):
             failures.append("broken SetHeroContext " + description
                             + " source shape passed")
+    show_boat_ctor_key = ("event_record.obj", 0x8CFA8)
+    show_boat_ctor_probe = """\
+previous_location = _current_boat->get_location();
+location = _location;
+"""
+    if contract_violations(show_boat_ctor_probe, show_boat_ctor_key):
+        failures.append("aligned type_record_show_boat shape did not pass")
+    flattened_show_boat_location = show_boat_ctor_probe.replace(
+        "_current_boat->get_location()",
+        "type_point(_current_boat->x, _current_boat->y, "
+        "_current_boat->z)")
+    if not any("get_location helper" in rule.description for rule in
+               contract_violations(flattened_show_boat_location,
+                                   show_boat_ctor_key)):
+        failures.append("flattened show-boat get_location helper passed")
+    reordered_show_boat_location = """\
+location = _location;
+previous_location = _current_boat->get_location();
+"""
+    if not any("before the destination" in rule.description for rule in
+               contract_violations(reordered_show_boat_location,
+                                   show_boat_ctor_key)):
+        failures.append("reordered show-boat location statements passed")
+    record_show_boat_key = ("event_record.obj", 0x8E18C)
+    record_show_boat_probe = """\
+eventRecords.push_back(
+    new type_record_show_boat(current_boat, point));
+"""
+    if contract_violations(record_show_boat_probe, record_show_boat_key):
+        failures.append("aligned record_show_boat shape did not pass")
+    split_record_show_boat = """\
+type_record_show_boat* record =
+    new type_record_show_boat(current_boat, point);
+eventRecords.push_back(record);
+"""
+    if not any("inside one eventRecords push_back" in rule.description
+               for rule in contract_violations(split_record_show_boat,
+                                                record_show_boat_key)):
+        failures.append("split record_show_boat construction passed")
     combat_monster_key = ("events.obj", 0x9AF34)
     combat_monster_probe = """\
 DemobilizeCurrHero(0, 1);
