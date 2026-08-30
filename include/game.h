@@ -671,7 +671,8 @@ enum EVictoryConditionType {
     VICTORY_CONDITION_UPGRADE_TOWN = 3,
 #endif
 #if defined(HOMM3_VLC_CHECKS_VIEW) || defined(HOMM3_TOWN_OBJ_DECLS) \
-    || defined(HOMM3_AI_PLAYER_OBJ_DECLS)
+    || defined(HOMM3_AI_PLAYER_OBJ_DECLS) \
+    || defined(HOMM3_PHILAI_ARTIFACT_DECLS)
     // town.obj joins for initialize_buildings' Grail-slot gate;
     // ai_player.obj for find_all_destinations' fixed grail-spot value.
     VICTORY_CONDITION_BUILD_GRAIL = 4,
@@ -855,7 +856,14 @@ public:
     char pad_03;
     // CheckForArtifactTransportWin and AI_get_value_of_artifact both read
     // the full retail dword at +4 as the requested artifact ordinal.
+#ifdef HOMM3_PHILAI_ARTIFACT_DECLS
+    // Dreamcast CodeView carries the source enum type; value_of_town is the
+    // first retail consumer whose register schedule distinguishes the typed
+    // member from an int-to-enum bridge. Storage remains the same dword.
+    TArtifact ArtifactNum;
+#else
     int ArtifactNum;
+#endif
 #ifdef HOMM3_VLC_CHECKS_VIEW
     // The Dreamcast field list (dump 0x3e34) orders ArtifactNum,
     // CreatureType, NumCreatures between AppliesToComputer and

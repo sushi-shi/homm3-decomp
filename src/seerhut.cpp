@@ -2687,9 +2687,10 @@ int TSeerReward::getValue(const hero* currentHero)
 // and human-player
 // flag. All ten arms use exactly the payload views proven by getValue and
 // GetRewardExtra. Dreamcast's TSeerHut::GiveReward supplies the semantic
-// statement order and the artifact local; the later class/name split is
-// corroborated by the HD structural twin only after the retail receiver is
-// fixed.
+// statement order and the artifact local: line 336 constructs it with the
+// -1 sentinel, then line 337 writes the reward ID before GiveArtifact. The
+// later class/name split is corroborated by the HD structural twin only
+// after the retail receiver is fixed.
 VA(0x00573c80, 0x290)  // anchor-caller 0x573919 + dc semantic twin 0x12d4dc
 void TSeerReward::giveReward(hero* currentHero, bool humanPlayer)
 {
@@ -2750,7 +2751,8 @@ void TSeerReward::giveReward(hero* currentHero, bool humanPlayer)
 
     case eRewardArtifact:
         if (currentHero->get_number_in_backpack(1) < 64) {
-            type_artifact artifact(artifact_from_int(value.dwords[0]));
+            type_artifact artifact(ARTIFACT_NONE);
+            artifact.artifactId = artifact_from_int(value.dwords[0]);
             currentHero->GiveArtifact(&artifact, 1, 1);
             if (!humanPlayer)
                 AI_equip_artifacts(currentHero);
