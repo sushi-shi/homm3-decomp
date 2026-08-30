@@ -606,6 +606,10 @@ public:
         ~TObstacleVector();
 
         void Destroy(TObstacle* first, TObstacle* last);
+        // Dreamcast's DrawFrame line 1211 preserves the Dinkumware
+        // non-const subscript call and its S_PUB32 fixes an unsigned index
+        // with a TObstacle& result. Complete folds this tiny boundary away.
+        TObstacle& operator[](unsigned index) { return begin[index]; }
         // Dinkumware's own null-guarded size(): place_obstacle folds the
         // `begin == 0 ? 0 : end - begin` pair and the 0x2aaaaaab/sar 2
         // divide by sizeof(TObstacle) inline right after the insert.
@@ -1372,11 +1376,13 @@ public:
     void DrawBackground();
 #endif
     void ResetLimitCreature();
-#ifndef HOMM3_COMMAND_PLAYER_DROP_VIEW
+#if !defined(HOMM3_COMMAND_PLAYER_DROP_VIEW) \
+        && !defined(HOMM3_DRAWING_ARCHER_DECLS)
     // command.cpp substitutes HandleCombatPlayerDrop for this unused member,
-    // preserving its measured C1XX member-handle population.
+    // while drawing.cpp restores it at the Dreamcast-attested end of the
+    // renderer declaration band.
     int DrawCreatureAndHeroSubwindows();
-#else
+#elif defined(HOMM3_COMMAND_PLAYER_DROP_VIEW)
     unsigned char HandleCombatPlayerDrop(unsigned long dpid, message* msg);
 #endif
     // 0x493780 (68 B), drawing.obj's no-argument combat-area refresh -
@@ -1409,28 +1415,49 @@ public:
 #endif
 #endif
 #ifdef HOMM3_DRAWING_ARCHER_DECLS
+    // Dreamcast's LF_FIELDLIST fixes this complete renderer band (entries
+    // 197..212). Keep even the helpers which Complete inlines away: their
+    // declaration order and source boundaries are compiler-state evidence.
+    void DrawFrame(unsigned char update,
+                   unsigned char bLimitCreatureEffect,
+                   unsigned char bLimitDraw, int iDelay,
+                   unsigned char bRefreshBackground,
+                   unsigned char bDoDelayTil);
     // Complete extends the DC DrawArcher signature with a trailing palette-row
     // selector. The retail caller passes it immediately after isFlipped.
     int DrawArcher(const CSprite* sprite, int sequence, int frame,
                    int x, int y, SLimitData* limits,
                    unsigned char isFlipped, unsigned char colorRow);
+    int DrawCreature(const CSprite* sprite, int sequence, int frame,
+                     int x, int y, struct SLimitData* psLimitData,
+                     int id, unsigned char isFlipped, int iColor);
+    int DrawCreatureAlpha(const CSprite* sprite, int sequence, int frame,
+                          int x, int y, SLimitData* limits,
+                          unsigned char isFlipped, int iColor);
     int DrawCombatHero(const CSprite* sprite, int sequence, int frame,
                        int x, int y, SLimitData* limits,
                        unsigned char isFlipped);
     int DrawSpriteObject(const CSprite* sprite, int frame, int x, int y,
                          unsigned char isFlipped);
-    int DrawObstacle(const hexcell& cell);
-    void DrawWallAt(int hexIndex, int rowOffset);
+    int DrawSpellEffect(const CSprite* sprite, int frame, int x, int y,
+                        unsigned char isFlipped, unsigned char isAlpha);
     int DrawWall(const Bitmap816* image, int x, int y, int width, int height,
                  int destX, int destY);
-    void DrawOccupant(int index, int iDrawPriority, int bNumBoxOnly);
+    int DrawObject(const Bitmap816* image, int x, int y);
+    int DrawObstacle(const hexcell& cell);
     int DrawMoatOverlay(int index);
+    void DrawOccupant(int index, int iDrawPriority, int bNumBoxOnly);
+    void DrawDeadOccupants(int index);
+    void DrawWallAt(int hexIndex, int rowOffset);
+    void DrawObstacleAt(int hexIndex);
+    int DrawCreatureAndHeroSubwindows();
+
     int GridY(int index) const { return index / COMBAT_GRID_ROW_STRIDE; }
     void ComputeExtent(const CSprite* sprite, int sequence, int frame,
                        int x, int y, SLimitData* limits, int isFlipped,
                        unsigned char saveBiggestExtent);
     void CycleCombatScreen();
-#endif
+#else
     void DrawFrame(unsigned char update,
                    unsigned char bLimitCreatureEffect,
                    unsigned char bLimitDraw, int iDelay,
@@ -1452,6 +1479,7 @@ public:
     // and army::DrawToBuffer supplies the troop-count background; the
     // common three-argument clip/draw body at 0x4958e0 settles the identity.
     int DrawObject(const Bitmap816* image, int x, int y);
+#endif
     // The three missile animators. Every pointer parameter's constness
     // is read off the DC S_PUB32 mangling rather than guessed:
     // ?ShootMissile@combatManager@@QAAXHHHHPBMPBVCSprite@@@Z gives

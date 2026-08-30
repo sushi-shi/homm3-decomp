@@ -462,7 +462,7 @@ army	?check_obstacle_attacks@army@@QAEEE@Z	100.0000	100.0000	100.0000	0x41f70
 army	?check_special_attack@army@@QAEEPAV1@@Z	100.0000	100.0000	100.0000	0x40500
 army	?compute_attacker_bonus@army@@QBEHHEPAV1@EJ@Z	100.0000	100.0000	100.0000	0x43320
 army	?consider_attack@army@@QAEXPBV1@JJ@Z	100.0000	100.0000	100.0000	0x48840
-army	?do_attack@army@@QAEEPAV1@H@Z	98.9251	99.9962	99.9962	0x41610
+army	?do_attack@army@@QAEEPAV1@H@Z	98.8868	99.9962	99.9962	0x41610
 army	?do_attack@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x41cb0
 army	?do_fire_shield@army@@AAEXJ@Z	100.0000	100.0000	100.0000	0x409c0
 army	?do_multi_head_attack@army@@QAEXIPAH0PAJ@Z	100.0000	100.0000	100.0000	0x40310
@@ -928,7 +928,7 @@ drawing	?DrawBackground@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x93cf0
 drawing	?DrawCombatHero@combatManager@@QAEHPBVCSprite@@HHHHPAUSLimitData@@E@Z	100.0000	100.0000	100.0000	0x952b0
 drawing	?DrawCreature@combatManager@@QAEHPBVCSprite@@HHHHPAUSLimitData@@HEH@Z	100.0000	100.0000	100.0000	0x951b0
 drawing	?DrawCreatureAndHeroSubwindows@combatManager@@QAEHXZ	100.0000	100.0000	100.0000	0x95650
-drawing	?DrawFrame@combatManager@@QAEXEEEHEE@Z	98.9130	98.9130	98.9130	0x94440
+drawing	?DrawFrame@combatManager@@QAEXEEEHEE@Z	91.8567	98.9130	98.9130	0x94440
 drawing	?DrawMoatOverlay@combatManager@@QAEHH@Z	100.0000	100.0000	100.0000	0x95a10
 drawing	?DrawObject@combatManager@@QAEHPBVBitmap816@@HH@Z	100.0000	100.0000	100.0000	0x958e0
 drawing	?DrawObstacle@combatManager@@QAEHABVhexcell@@@Z	100.0000	100.0000	100.0000	0x95730
@@ -1124,7 +1124,7 @@ events	?DoAIEvent@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@@Z	100.00
 # synth PDB - returned the row to master's own 98.5741 to the digit
 # with events.cpp untouched. Cross-generation noise, the
 # recruit::Update revert-control precedent; hist keeps 99.1139.
-events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	98.5741	99.0481	99.1139	0xad470
+events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	99.0481	99.0481	99.1139	0xad470
 events	?DoCustomArtifact@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	99.1492	99.1492	99.1492	0x9f070
 events	?DoCustomResource@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa4780
 events	?DoCustomSpellScroll@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	97.4451	97.4451	97.4451	0xa5a80
