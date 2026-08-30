@@ -37,19 +37,18 @@ def _resolve(target: str):
     return unit, target, (_unit.source_for_unit(unit) if unit else None)
 
 
-def _inline_divergence(unit: str, fn: str):
+def _inline_divergence(unit: str, fn: str, ordinal: int = 0):
     """A short 'N under-inline, M over-inline' note if the out-of-line CALL
     multisets of base vs retail differ, else None. Reads built objs; no
     compile."""
-    from homm3.vc6 import reg_model
     base, tgt = _asm.BASE / f"{unit}.obj", _asm.TARGET / f"{unit}.c.obj"
     if not base.is_file() or not tgt.is_file():
         return None
     try:
         bc = inline_model._called(
-            _asm.objdump(base, reg_model._resolve_symbol(base, fn), 0))
+            _asm.objdump(base, fn, ordinal))
         rc = inline_model._called(
-            _asm.objdump(tgt, reg_model._resolve_symbol(tgt, fn), 0))
+            _asm.objdump(tgt, fn, ordinal))
     except (Exception, SystemExit):
         return None
     return inline_model.divergence_note(bc, rc)
@@ -74,11 +73,13 @@ def route(unit: str, fn: str):
     # inline structure first: a diverging out-of-line CALL multiset means a
     # callee is inlined on one side only (the A-family), which reshapes blocks
     # and registers downstream - fix it before any spelling.
-    inline_div = _inline_divergence(unit, fn)
+    compiled_fn = d.get("_symbol", fn)
+    ordinal = d.get("_ordinal", 0)
+    inline_div = _inline_divergence(unit, compiled_fn, ordinal)
     # EH cleanup transcript: object lifetimes, which none of the three solvers
     # reads. A COUNT divergence outranks everything below it - it says a
     # statement (or a throwing callee) is missing, not mis-spelled.
-    eh_div = _eh.divergence(unit, fn)
+    eh_div = _eh.divergence(unit, compiled_fn)
     # routing: eh-cleanup -> inline -> control-flow -> register
     #          (lifetimes, then structure, then spelling)
     routes = []

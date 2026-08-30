@@ -21,6 +21,7 @@ function - this report routes you there.
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 from pathlib import Path
 
@@ -99,16 +100,60 @@ def _route(reg_dist, reg_findings, flow_dist, flow_findings, inline_div=None):
     return cls, knob
 
 
+def _pick_public_symbol(fnspec: str, resolved: str, ordinal: int,
+                        base_names: set[str],
+                        target_names: set[str]) -> tuple[str, int] | None:
+    """Select one symbol both comparison objects can actually disassemble.
+
+    The report contains retail/synth names even for carcass rows whose source
+    still emits no public function. Passing those names to ``objdump`` prints
+    a scary error for an expected unclaimed row. Resolve against the shared
+    public-text set first, silently; only a unique, compiled identity is a
+    solver target.
+    """
+    shared = base_names & target_names
+    candidates = ((resolved, ordinal), (fnspec, 0))
+    for name, occurrence in candidates:
+        if name in shared:
+            return name, occurrence
+    for query, _occurrence in candidates:
+        strong = [name for name in shared
+                  if name.startswith(f"?{query}@@")
+                  or re.fullmatch(rf"[@_]?{re.escape(query)}(@\d+)?", name)]
+        if len(strong) == 1:
+            return strong[0], 0
+        substrings = [name for name in shared if query in name]
+        if len(substrings) == 1:
+            return substrings[0], 0
+    return None
+
+
+def _resolve_public_symbol(unit: str, fnspec: str) -> tuple[str, int] | None:
+    """Resolve *fnspec* only when base and target both expose it as text."""
+    base_obj = _asm.BASE / f"{unit}.obj"
+    tgt_obj = _asm.TARGET / f"{unit}.c.obj"
+    if not base_obj.is_file() or not tgt_obj.is_file():
+        return None
+    try:
+        name, _unit, _rva, _size, ordinal = \
+            get_context().symbols.resolve_fn(fnspec)
+    except Exception:
+        name, ordinal = fnspec, 0
+    return _pick_public_symbol(
+        fnspec, name, ordinal, _asm._public_text_symbols(base_obj),
+        _asm._public_text_symbols(tgt_obj))
+
+
 def _diagnose_one(unit, fnspec):
     base_obj = _asm.BASE / f"{unit}.obj"
     tgt_obj = _asm.TARGET / f"{unit}.c.obj"
     if not base_obj.is_file() or not tgt_obj.is_file():
         return None
-    ctx = get_context()
-    try:
-        name, runit, rva, size, ordinal = ctx.symbols.resolve_fn(fnspec)
-    except Exception:
-        name, ordinal = fnspec, 0
+    resolved = _resolve_public_symbol(unit, fnspec)
+    if resolved is None:
+        return {"error": "no shared public text symbol in built objects",
+                "unclaimed": True}
+    name, ordinal = resolved
     try:
         base_text = _asm.objdump(base_obj, name, ordinal)
         ref_text = _asm.objdump(tgt_obj, name, ordinal)
@@ -127,6 +172,7 @@ def _diagnose_one(unit, fnspec):
                        inline_div)
     return {"reg_dist": reg_dist, "flow_dist": flow_dist,
             "class": cls, "knob": knob,
+            "_symbol": name, "_ordinal": ordinal,
             "reg_top": reg_findings[0]["detail"][:70] if reg_findings else "",
             "flow_top": flow_findings[0]["detail"][:70] if flow_findings else ""}
 
