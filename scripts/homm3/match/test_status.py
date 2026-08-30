@@ -2,10 +2,13 @@
 """Hermetic tests for cur/max/hist baseline evolution."""
 from __future__ import annotations
 
+import contextlib
+import io
 import unittest
+from unittest import mock
 
 from homm3.match.banked_rows import missing_rows, parse_history, selftest
-from homm3.match.status import (MatchRow, checkpoint_dips,
+from homm3.match.status import (MatchRow, checkpoint_dips, cmd_check,
                                 seed_historical_maxima, update_rows)
 
 
@@ -41,6 +44,34 @@ class UpdateRowsTest(unittest.TestCase):
         rows = {key: MatchRow(80.0, 98.0, 99.0, 0x5678)}
         self.assertEqual(checkpoint_dips({key: 80.0}, rows),
                          [(key, 98.0, 80.0)])
+
+    def test_unrelated_dip_with_banked_max_never_fails_check(self):
+        touched = ("touched.obj", "improved")
+        unrelated = ("unrelated.obj", "collateral")
+        previous = {
+            touched: MatchRow(90.0, 90.0, 90.0, 0x1000),
+            unrelated: MatchRow(98.0, 98.0, 99.0, 0x2000),
+        }
+        current = {touched: 100.0, unrelated: 80.0}
+        rows, _stats = update_rows(
+            current, previous, {touched: 0x1000, unrelated: 0x2000})
+        report = {
+            "units": [
+                {"name": unit, "functions": [
+                    {"name": fn, "fuzzy_match_percent": value}
+                ]}
+                for (unit, fn), value in current.items()
+            ]
+        }
+
+        output = io.StringIO()
+        with mock.patch("homm3.match.status.load_baseline",
+                        return_value=rows), contextlib.redirect_stdout(output):
+            self.assertEqual(cmd_check(report), 0)
+
+        self.assertEqual(rows[unrelated].max, 98.0)
+        self.assertIn("CHECKPOINT DIP unrelated.obj collateral", output.getvalue())
+        self.assertIn("This is observational", output.getvalue())
 
     def test_missing_legacy_zero_row_is_retired(self):
         old = {("unit", "obsolete_flat_name"): MatchRow(0.0, 0.0, 0.0)}
