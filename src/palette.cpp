@@ -3,6 +3,7 @@
 // 39 functions in link order.
 #include <va.h>
 #include <limits>
+#include <math.h>
 #include <string.h>
 #include "palette.h"
 
@@ -238,6 +239,73 @@ unsigned int TPalette16::GetSize() const
     return sizeof(*this);
 }
 
+// Dreamcast recovers the three normalization locals, RGB/HSV temporaries,
+// conversion-call boundaries, and the nested hue/saturation/value adjustment
+// scopes. Retail corroborates the same source shape and fixes the Complete
+// palette range at entries 10..255. The hue arm interpolates toward the
+// requested hue, then chooses the shorter circular path when the unwrapped
+// distance crosses half of the unit hue interval.
+VA(0x00522b50, 0x1F5)  // anchor-global, dc 0x10b484
+void TPalette16::AdjustHSV(float hue, float hue_adjust,
+                           float saturation_adjust, float value_adjust)
+{
+    const unsigned int red_norm =
+        std::numeric_limits<int>::max() / red_mask;
+    const unsigned int green_norm =
+        std::numeric_limits<int>::max() / green_mask;
+    const unsigned int blue_norm =
+        std::numeric_limits<int>::max() / blue_mask;
+
+    for (int i = 10; i < 256; ++i) {
+        unsigned int r = (data[i] & red_mask) * red_norm;
+        unsigned int g = (data[i] & green_mask) * green_norm;
+        unsigned int b = (data[i] & blue_mask) * blue_norm;
+
+        float h;
+        float s;
+        float v;
+        RGBToHSV(r, g, b, &h, &s, &v);
+
+        if (hue_adjust >= 0.0f) {
+            float delta = hue - h;
+            h += delta * hue_adjust;
+            if (fabs(delta) > 0.5) {
+                if (delta > 0.0) {
+                    h += 1.0f - hue_adjust;
+                } else {
+                    h += hue_adjust;
+                }
+                if (h >= 1.0) {
+                    h -= 1.0;
+                }
+            }
+        }
+
+        if (saturation_adjust >= 0.0f) {
+            if (saturation_adjust <= 1.0f) {
+                s *= saturation_adjust;
+            } else {
+                s = 1.0f - (1.0f - s) / saturation_adjust;
+            }
+        }
+
+        if (value_adjust >= 0.0) {
+            if (value_adjust <= 1.0f) {
+                v *= value_adjust;
+            } else {
+                v = 1.0f - (1.0f - v) / value_adjust;
+            }
+        }
+
+        HSVToRGB(h, s, v, &r, &g, &b);
+
+        data[i] = static_cast<unsigned short>(
+            ((r / red_norm) & red_mask) |
+            ((g / green_norm) & green_mask) |
+            ((b / blue_norm) & blue_mask));
+    }
+}
+
 // Dreamcast recovers the original three normalization locals, their source
 // rows, the nested max statement and the loop's lexical scope. Retail fixes
 // the Complete bounds: entry 10 through entry 255, i.e. 246 colors. The
@@ -343,7 +411,7 @@ unsigned int TPalette24::GetSize() const
 #if 0  // @carcass
 
 // E:\gamedcs\palette.cpp:496
-// RETAIL_LOCATED(0x00522b50, 0x1F5): not reconstructed; anchor-global, dc 0x10b484
+// Retail body reconstructed above at 0x00522b50; dc 0x10b484.
 void TPalette16::AdjustHSV(float hue, float hue_adjust, float saturation_adjust, float value_adjust)
 {
     // @stub
