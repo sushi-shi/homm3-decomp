@@ -52,10 +52,11 @@ def _locator() -> tuple[bool, str]:
     """Run the hermetic solver suites (positives + negative controls)."""
     import io
     import unittest
-    from homm3.vc6 import test_inline_names, test_locator
+    from homm3.vc6 import test_inline_names, test_locator, \
+        test_report_resolution
     suite = unittest.TestSuite(
         unittest.defaultTestLoader.loadTestsFromModule(m)
-        for m in (test_locator, test_inline_names))
+        for m in (test_locator, test_inline_names, test_report_resolution))
     buf = io.StringIO()
     res = unittest.TextTestRunner(stream=buf, verbosity=0).run(suite)
     bad = res.failures + res.errors

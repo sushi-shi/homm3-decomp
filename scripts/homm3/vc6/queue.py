@@ -246,12 +246,17 @@ def run(args) -> int:
         except Exception as e:  # a solver blowing up must not kill the sweep
             routed, err = None, f"{type(e).__name__}: {e}"
         if routed is None:
-            failed.append((unit, fn, err or "no built objects"))
+            reason = err or "no built objects"
+            unclaimed = "no shared public text symbol" in reason
+            failed.append((unit, fn, reason, unclaimed))
             rows.append({
-                "class": UNCLAIMED, "recoverable": size * (1 - pct / 100),
+                "class": UNCLAIMED if unclaimed else "unclassified",
+                "recoverable": size * (1 - pct / 100),
                 "fuzzy": pct, "size": size, "unit": unit, "fn": fn,
-                "route": "reconstruct", "knob": "no source claim owns this "
-                "address - carve a VA() claim and reconstruct the body",
+                "route": "reconstruct" if unclaimed else "diagnose",
+                "knob": ("no source claim owns this address - carve a VA() "
+                         "claim and reconstruct the body" if unclaimed else
+                         "diagnosis failed: " + reason),
             })
             continue
         d, _eh_div, _inl, routes = routed
@@ -287,9 +292,15 @@ def run(args) -> int:
           f"{in_unit / 1024:.1f} KB recoverable")
     _horizon(in_unit)
     if failed:
-        print(f"[queue] {len(failed)} of those have no source claim, so the "
-              f"router cannot see them; they are counted as {UNCLAIMED!r} "
-              "rather than dropped")
+        unclaimed_count = sum(unclaimed for *_rest, unclaimed in failed)
+        diagnosis_count = len(failed) - unclaimed_count
+        if unclaimed_count:
+            print(f"[queue] {unclaimed_count} of those have no compiled "
+                  "source binding, so the router cannot see them; they are "
+                  f"counted as {UNCLAIMED!r} rather than dropped")
+        if diagnosis_count:
+            print(f"[queue] {diagnosis_count} additional diagnosis failure(s) "
+                  "are retained as inspectable unclassified rows")
     print("\nby wall class:")
     for cls, v in sorted(by_class.items(),
                          key=lambda x: -sum(r["recoverable"] for r in x[1])):
