@@ -1070,7 +1070,7 @@ void combatManager::mark_area_effect(SpellID spell, long hex, long mastery,
 // `effected` byte again, which is how the caller's animation pass learns
 // the spell missed it.
 //
-// THE `victim` / `several` PAIR IS THE MESSAGE SELECTOR. Retail keeps
+// THE `victim` / `multiple_targets` PAIR IS THE MESSAGE SELECTOR. Retail keeps
 // the FIRST stack it damaged and a byte saying whether there was more
 // than one, and the two arms of the tail differ in exactly two
 // arguments: with one victim the message names that stack and reports
@@ -1078,6 +1078,17 @@ void combatManager::mark_area_effect(SpellID spell, long hex, long mastery,
 // recomputes the damage with NO target hero and NO target - i.e. the
 // unmodified figure, since ModifySpellDamage's hero and creature
 // adjustments both need a target.
+//
+// DREAMCAST SOURCE SHAPE (dc 0x153b60) is positive evidence here. Its
+// CodeView local roster is `casting_hero`, `multiple_targets`, `targets`,
+// `damage`, in that order; all four names and their relative declaration
+// order are now literal below. Its statement rows also prove SpellEffect,
+// vector construction, mark_area_effect, per-target damage, victim selection,
+// the multiple-target tail and PowEffect in that order. Complete adds the
+// retail-proven Random/SpellCastWorkChance roll around the shared failed-
+// target clear; this is retail-only revision shape, not a reason to erase the
+// compatible Dreamcast facts. The asymmetric source-shape gate ratchets the
+// recovered locals, call order and shared branch state.
 //
 // ComputeSpellDamage (0x5a7890) is EXPANDED at both sites: the mastery
 // row and the power product appear inline and only ModifySpellDamage
@@ -1099,31 +1110,35 @@ void combatManager::mark_area_effect(SpellID spell, long hex, long mastery,
 // THE LOOP IS `while (i--)`, NOT `while (i-- > 0)` (+1.07 and both
 // branch kinds): retail tests the pre-decrement value with `test/je`
 // and `test/jne`, where the `> 0` form emits the signed `jle`/`jg` pair
-// its siblings two rows up genuinely have. The declaration ORDER of the
-// four accumulators is worth another 3.9 - deaths and victim are
-// initialised BEFORE casting_hero is loaded, and `damage` is never
-// initialised at all.
+// its siblings two rows up genuinely have. The lifetime order is worth
+// another 3.9 - deaths and victim are initialised BEFORE casting_hero is
+// loaded, and `damage` is never initialised at all.
 //
-// Residual (99.86%): a three-register rotation (eax->edx, ecx->eax,
+// Residual (99.85646%, unchanged by the DC-local restoration): candidate and
+// retail are both 585 bytes with 18 blocks, 8 branches and 1 return. Only
+// source-diff B7 differs: a three-register rotation (eax->edx, ecx->eax,
 // edx->ecx) across the five instructions that clear
-// `effected[side][slot]` on a failed roll, instruction-for-instruction
-// identical otherwise - retail computes `side*5` in place
-// (`lea eax,[eax+4*eax]`) where our CL takes a fresh scratch. Catalog
-// B10/B14; `homm3 vc6 why-reg` enumerated ten mutations, four neutral
-// and six worse. Tried and rejected: naming the side, naming the slot,
-// and an if/else in place of the `continue` (all exactly neutral).
+// `effected[side][slot]` on a failed roll. Retail computes `side*5` in place
+// (`lea eax,[eax+4*eax]`) where our CL takes a fresh scratch. The register
+// classifier reports its B10/B14 scratch-preference class; `homm3 vc6
+// why-reg` enumerated ten mutations, four neutral and six worse. Tried and
+// rejected: naming side or slot separately, naming both together, splitting
+// and moving the optimized-out deaths/victim declarations, making the loop
+// target pointer const, and an if/else in place of `continue` (all byte-flat).
 VA(0x005a4970, 0x249)  // order-map+arity, dc 0x153b60
 void combatManager::AreaEffect(long targetCell, SpellID iSpellType,
                                long mastery, long power)
 {
+    hero* casting_hero;
+    unsigned char multiple_targets;
     SpellEffect(akSpellTraits[iSpellType].m_effect, targetCell, 100, 0);
     std::vector<army*> targets;
+    long damage;
     mark_area_effect(iSpellType, targetCell, mastery, targets);
     long deaths = 0;
     army* victim = 0;
-    hero* casting_hero = heroes[currentSide];
-    unsigned char several = 0;
-    long damage;
+    casting_hero = heroes[currentSide];
+    multiple_targets = 0;
     int i = targets.size();
     while (i--) {
         army* target = targets[i];
@@ -1140,10 +1155,10 @@ void combatManager::AreaEffect(long targetCell, SpellID iSpellType,
         if (!victim)
             victim = target;
         else
-            several = 1;
+            multiple_targets = 1;
     }
     if (victim) {
-        if (several) {
+        if (multiple_targets) {
             damage = ComputeSpellDamage(iSpellType, power, mastery,
                                         casting_hero, 0, 0, 0);
             damage_message(akSpellTraits[iSpellType].name, 1, damage, 0,

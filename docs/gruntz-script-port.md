@@ -260,6 +260,30 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-30 — `combatManager::AreaEffect` restores its Dreamcast local
+  roster and banks the honest 99.8565% register-allocation plateau.** The
+  mandatory dossier (`dc:0x153b60`) proves the function-scope
+  `casting_hero`, `multiple_targets`, `targets`, and `damage` locals in that
+  order, plus the shared SpellEffect / vector construction /
+  mark_area_effect / per-target damage / victim-selection / final-effect
+  statement sequence. The reconstruction now carries those names and that
+  relative declaration order literally. Complete's independently
+  retail-proven Random/SpellCastWorkChance guard is retained as retail-only
+  revision shape. Fatal asymmetric source rules and negative controls reject
+  reordered or renamed locals, reordered setup calls, bypassing
+  `casting_hero`, erasing the failed-target clear, or flattening the recovered
+  `multiple_targets` state.
+
+  Candidate and retail remain the same 585-byte extent with 18 basic blocks,
+  eight branches, and one return. Every block except the failed-roll clear is
+  instruction-exact; that block differs only by an EAX/ECX/EDX rotation over
+  five otherwise identical instructions. `homm3 vc6 why-reg` measured ten
+  guided mutations without improvement. Combined named side/slot indices,
+  separated and moved optimized-out deaths/victim declarations, and a const
+  loop target supplement the earlier single-index and if/else probes; all are
+  byte-flat at **99.85646%**. No source-distorting arithmetic spelling is kept
+  for the remaining C1 allocator tie.
+
 - **2026-08-30 — `value_of_enemy_town` escapes a source-false 99.9561%
   local-lifetime minimum without losing a byte.** The compact dossier's local
   names were insufficient by themselves; the raw NB11 records show
