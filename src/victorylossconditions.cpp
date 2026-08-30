@@ -23,11 +23,6 @@ inline unsigned char type_point::operator==(const type_point* arg)
     return arg->x == x && arg->y == y && arg->z == z;
 }
 
-inline bool type_point::operator==(const type_point& arg) const
-{
-    return x == arg.x && y == arg.y && z == arg.z;
-}
-
 static int get_team(game* thisGame, int playerNum)
 {
     if (playerNum < 0)
