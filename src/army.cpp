@@ -6673,19 +6673,14 @@ void army::FaerieDragonSpell()
 // (96.46 -> 99.04 over the if/return spelling, the sivot case-2 lever
 // again).
 //
-// 99.0409 -> 99.7059 (2026-08-21): the Genie arm's failure exit is a
-// `break` to the switch's shared return-0 tail, not its own
-// `return 0;` - the asymmetric control transfer is what stops the
-// whole diamond if-converting to `setg al` (the same lever as the
-// shr/and fold note in the skill doctrine). With the break in place
-// the arm's CFG, its [ebp+8]-homed count and the jle all match.
-// Residual (99.7059%): ONE instruction width - our true path emits
-// `mov al,1` where retail has `mov eax,1`. Tried and rejected: an int
-// local returned (copy-propagated back to al), `return count > 0;`
-// with the guard (folds to the same al constant), without the guard
-// (reconverges on setg, 99.13). C2 narrows every constant-foldable
-// return to the byte; only a genuine int-bool materialization keeps
-// eax and no honest spelling produces one here.
+// 99.0409 -> 99.7059 (2026-08-21): a hand-expanded Genie loop with a
+// shared failure tail recovered every byte except the true-path return
+// width. 99.7059 -> 100.0000 (2026-08-30): the remaining instruction
+// was itself evidence for the missing Dreamcast helper boundary. Restoring
+// `get_valid_caliph_spells` and the dossier's direct `target && helper > 0`
+// return lets /Ob2 expand the helper to the same loop while retaining
+// retail's dword `mov eax,1`. The locally attractive flattened spelling
+// emitted `mov al,1`; it was not the original source shape.
 VA(0x004476c0, 0x3BA)  // anchor-global + dc-callgraph, dc 0x4beec
 unsigned char army::can_cast_spell(long hex) const
 {
@@ -6700,18 +6695,8 @@ unsigned char army::can_cast_spell(long hex) const
     case CREATURE_ARCHANGEL:
     case ARMY_CREATURE_PIT_LORD:
         return can_cast_resurrect(hex);
-    case CREATURE_MASTER_GENIE: {
-        if (!target)
-            return 0;
-        long count = 0;
-        for (SpellID spell = 10; spell < 70; spell++) {
-            if (is_valid_caliph_spell(spell, target))
-                count++;
-        }
-        if (count <= 0)
-            break;
-        return 1;
-    }
+    case CREATURE_MASTER_GENIE:
+        return target && get_valid_caliph_spells(target) > 0;
     case CREATURE_FAERIE_DRAGON:
         return target
                && gpCombatManager->ValidSpellTargetArmy(field_4e0,
@@ -6980,12 +6965,26 @@ unsigned char is_valid_caliph_spell(int spell, const army* target)
     return spell_is_valid_on_target(spell, target);
 }
 
+// E:\gamedcs\army.cpp:5546
+// Complete's x86 optimizer expands this source helper into both callers. The
+// named boundary remains part of the recovered source even though retail has
+// no separate emitted slot for it.
+inline long army::get_valid_caliph_spells(const army* target) const
+{
+    long count = 0;
+    for (SpellID spell = 10; spell < 70; spell++) {
+        if (is_valid_caliph_spell(spell, target))
+            count++;
+    }
+    return count;
+}
+
 // E:\gamedcs\army.cpp:5564
 // Roll one of the caliph spells the stack standing on `hex` is a legal
-// target for, and cast it. Counted first, then picked, then walked
-// again - two passes over the same 10..69 window, which is the shape
-// DC's army::get_valid_caliph_spells (0x4c374, no retail slot) supplies
-// for the first pass and retail expands here.
+// target for, and cast it. Counted first through the Dreamcast-proven
+// get_valid_caliph_spells boundary, then picked, then walked again over
+// the same 10..69 window. /Ob2 expands the helper exactly, so it has no
+// separate retail slot even though the source-level call remains.
 //
 // is_valid_caliph_spell IS EXPANDED, NOT CALLED: the 33-byte wrapper
 // two rows above is exactly the akSpellTraits bit test plus the tail
@@ -7000,11 +6999,7 @@ void army::cast_caliph_spell(long hex)
     if (!target)
         return;
     SpellID spell;
-    long count = 0;
-    for (spell = 10; spell < 70; spell++) {
-        if (is_valid_caliph_spell(spell, target))
-            count++;
-    }
+    long count = get_valid_caliph_spells(target);
     if (count == 0)
         return;
     long pick = Random(1, count);

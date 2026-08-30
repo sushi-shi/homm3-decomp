@@ -628,7 +628,6 @@ call	army.obj	0x4bc84	army::adjust_hitpoints
 call	army.obj	0x4bc84	army::set_retaliation_count
 call	army.obj	0x4bd80	min
 call	army.obj	0x4be64	army::can_cast_resurrect
-call	army.obj	0x4beec	army::get_valid_caliph_spells
 call	army.obj	0x4beec	combatManager::ValidHex
 call	army.obj	0x4c210	army::Is
 call	army.obj	0x4c210	army::can_shoot
@@ -638,7 +637,6 @@ call	army.obj	0x4c210	group_has_dragons
 call	army.obj	0x4c210	group_has_melee
 call	army.obj	0x4c210	group_has_shooters
 call	army.obj	0x4c210	hero::IsWieldingArtifact
-call	army.obj	0x4c3ac	army::get_valid_caliph_spells
 call	army.obj	0x4c3ac	combatManager::ValidHex
 call	army.obj	0x4c468	army::cast_demonic_resurrect
 call	army.obj	0x4c468	army::cast_resurrect
