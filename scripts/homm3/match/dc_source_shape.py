@@ -96,6 +96,7 @@ class SourceRule:
     pattern: str
     minimum: int = 1
     maximum: int | None = None
+    include_directives: bool = False
 
 
 @dataclass(frozen=True)
@@ -1686,6 +1687,21 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
         SourceRule("CheckLuck uses TTextResource::operator[]",
                    r"\(\s*\*\s*gpGeneralText\s*\)\s*\["),
     ),
+    ("army.obj", 0x4868C): (
+        SourceRule(
+            "ComputeAttackerDamageBonuses keeps Dreamcast's ballista-arm "
+            "army::GetName helper boundary before formatting",
+            r"\bconst\s+char\s*\*\s*creature_name\s*;\s*"
+            r"creature_name\s*=\s*GetName\s*\(\s*\)\s*;.*?"
+            r"format_string\s*\([^;]*\bcreature_name\b"),
+        SourceRule(
+            "ComputeAttackerDamageBonuses may not force Dreamcast's "
+            "GetName helper out of line with an inline-depth fence",
+            r"#\s*pragma\s+inline_depth\s*\(\s*0\s*\)"
+            r"(?:(?!#\s*pragma\s+inline_depth\s*\(\s*\)).)*?"
+            r"\bGetName\s*\(\s*\)",
+            0, 0, include_directives=True),
+    ),
     ("army.obj", 0x4BEEC): (
         SourceRule(
             "can_cast_spell keeps the Master Genie target test and "
@@ -3005,9 +3021,16 @@ def misgrouped_from_body(body: str, groups: tuple[CallGroup, ...]) \
 def contract_violations(body: str, key: tuple[str, int]) -> list[SourceRule]:
     """Selected no-call/order/nesting facts not expressible by DC xrefs."""
     active = _source.mask(body)
+    directive_active = None
     defects = []
     for rule in SOURCE_RULES.get(key, ()):
-        count = len(re.findall(rule.pattern, active, re.DOTALL))
+        if rule.include_directives:
+            if directive_active is None:
+                directive_active = _source._mask_lex(body)
+            haystack = directive_active
+        else:
+            haystack = active
+        count = len(re.findall(rule.pattern, haystack, re.DOTALL))
         if count < rule.minimum \
                 or rule.maximum is not None and count > rule.maximum:
             defects.append(rule)
@@ -3984,6 +4007,31 @@ for (side = 0; side < 2; side++) {
     if not any("army-reference thisArmy" in rule.description for rule in
                contract_violations(direct_army_access, load_armies_key)):
         failures.append("flattened LoadArmies thisArmy reference passed")
+    attacker_bonus_key = ("army.obj", 0x4868C)
+    attacker_bonus_probe = """\
+std::string text;
+const char* creature_name;
+creature_name = GetName();
+text = format_string(gpGeneralText->GetText(366), creature_name);
+"""
+    if contract_violations(attacker_bonus_probe, attacker_bonus_key):
+        failures.append("aligned attacker-bonus GetName boundary did not pass")
+    flattened_attacker_name = attacker_bonus_probe.replace(
+        "creature_name = GetName();",
+        "creature_name = GetArmyName(creatureType, numTroops);")
+    if not any("helper boundary" in rule.description for rule in
+               contract_violations(flattened_attacker_name,
+                                   attacker_bonus_key)):
+        failures.append("flattened attacker-bonus GetName boundary passed")
+    fenced_attacker_name = attacker_bonus_probe.replace(
+        "creature_name = GetName();",
+        "#pragma inline_depth(0)\n"
+        "creature_name = GetName();\n"
+        "#pragma inline_depth()")
+    if not any("inline-depth fence" in rule.description for rule in
+               contract_violations(fenced_attacker_name,
+                                   attacker_bonus_key)):
+        failures.append("de-inlined attacker-bonus GetName boundary passed")
     set_next_key = ("cmbtmgr.obj", 0x5F934)
     set_next_probe = """\
 currentSide = stack->get_controlling_side();
