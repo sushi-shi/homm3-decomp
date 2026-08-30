@@ -1735,10 +1735,10 @@ long AI_get_spell_value(const hero* our_hero, SpellID spell)
 // return (line 1721), and calls the no-argument const hero accessor. Keeping
 // those source boundaries selects retail's two float homes and is exact.
 VA(0x00527710, 0x4C)  // anchor-callee, dc 0x10feb8
-float value_of_experience(const hero* current_hero, const armyGroup* current_army)
+float value_of_experience(const hero* current_hero, const armyGroup& current_army)
 {
     int increment = current_hero->GetExperienceIncrement();
-    float army_value = float(current_army->get_AI_value());
+    float army_value = float(current_army.get_AI_value());
     return (float(gHeroGoldCost) + army_value) / float(increment * 40);
 }
 
@@ -1805,7 +1805,7 @@ void AI_set_hero_bonuses(hero* our_hero)
     type_spellvalue caster(our_hero);
 
     our_hero->turnExperienceToRVRatio =
-        value_of_experience(our_hero, &our_hero->army);
+        value_of_experience(our_hero, our_hero->army);
 
     long base_value = caster.get_best_spell_value(SPELL_VALUE_CLASS_MASK);
     long value =
@@ -2179,17 +2179,17 @@ void AI_RecruitRefugees(hero* current_hero, TCreatureType type, short* number)
 // (the remainder stays), and the experience earned is the survivors' hit points
 // scaled by the hero's experience-bonus factor.
 VA(0x00527ec0, 0x93)  // anchor-callee, dc 0x11260c
-int AI_VisitSirens(const hero* current_hero, armyGroup* army)
+int AI_VisitSirens(const hero* current_hero, armyGroup& army)
 {
     long total = 0;
     for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
-        int creature = army->armies[i];
+        int creature = army.armies[i];
         if (creature != CREATURE_NONE) {
-            int troops = army->numTroops[i];
+            int troops = army.numTroops[i];
             if (troops > 1) {
                 short sacrifice = static_cast<short>(
                     static_cast<float>(troops) * 0.7);
-                army->numTroops[i] = sacrifice;
+                army.numTroops[i] = sacrifice;
                 total += akCreatureTypeTraits[creature].hitPoints
                     * (troops - sacrifice);
             }
@@ -2917,13 +2917,14 @@ int ValueOfSirens(const hero* current_hero)
 {
     armyGroup army = current_hero->army;
     int old_value = army.get_AI_value();
-    int experience = AI_VisitSirens(current_hero, &army);
-    int value = (old_value - army.get_AI_value())
+    int experience = AI_VisitSirens(current_hero, army);
+    int value = old_value - army.get_AI_value();
+    value = value
         * (const_cast<hero*>(current_hero)->get_primary_skill_total() + 40)
         / 40;
     if (current_hero->turnExperienceToRVRatio == 0.0f)
         return -value;
-    return static_cast<int>(value_of_experience(current_hero, &army)
+    return static_cast<int>(value_of_experience(current_hero, army)
         * experience - value);
 }
 

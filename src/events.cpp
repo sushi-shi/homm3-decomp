@@ -5113,7 +5113,7 @@ int game::GetTeam(int playerNum) const
 // address AI_approximate_strength already takes - and does the killing
 // INSIDE it, which is why the handler's own body never touches the army.
 // Declared file locally, the AI_approximate_strength precedent.
-int AI_VisitSirens(const hero* current_hero, armyGroup* army);
+int AI_VisitSirens(const hero* current_hero, armyGroup& army);
 
 // E:\gamedcs\events.cpp:3092.  The Sirens, jump-table arm 0x5c =
 // OBJECT_SIRENS: once per hero, and the whole transaction - drown part of
@@ -5136,7 +5136,7 @@ void advManager::DoEventSiren(hero* current_hero, NewmapCell* cell,
         return;
     }
 
-    int experience = AI_VisitSirens(current_hero, &current_hero->army);
+    int experience = AI_VisitSirens(current_hero, current_hero->army);
     if (experience) {
         if (human_player) {
             sprintf(gText,

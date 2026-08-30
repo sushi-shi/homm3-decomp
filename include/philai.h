@@ -117,7 +117,7 @@ unsigned char wants_skill(const hero* our_hero, int skill,
 // CODEVIEW(E:\gamedcs\philai.cpp:1319, dc 0x10f22c) int AI_resource_cost(const playerData* player, const int* resources);
 // CODEVIEW(E:\gamedcs\philai.cpp:1330, dc 0x10f2f8) int AI_resource_cost(long player_id, const int* resources);
 // CODEVIEW(E:\gamedcs\philai.cpp:1667, dc 0x10fd78) long AI_get_spell_value(const hero* our_hero, SpellID spell);
-// CODEVIEW(E:\gamedcs\philai.cpp:1717, dc 0x10feb8) float value_of_experience(const hero* current_hero, const armyGroup* current_army);
+// CODEVIEW(E:\gamedcs\philai.cpp:1717, dc 0x10feb8) float value_of_experience(const hero* current_hero, const armyGroup& current_army);
 // CODEVIEW(E:\gamedcs\philai.cpp:1725, dc 0x10fef4) void AI_set_hero_bonuses(hero* our_hero);
 // CODEVIEW(E:\gamedcs\philai.cpp:1815, dc 0x110174) int NetValueOfArtifact(const hero* current_hero, int artifact_value, int gold_cost, int resource_cost, EGameResource resource_type);
 // CODEVIEW(E:\gamedcs\philai.cpp:1833, dc 0x1102e4) int ComputeUpgradeValue(hero* current_hero, int iSourceType, int iDestType);
@@ -166,7 +166,7 @@ unsigned char wants_skill(const hero* our_hero, int skill,
 // CODEVIEW(E:\gamedcs\philai.cpp:2948, dc 0x112488) int ValueOfSkeleton(const hero* current_hero, NewmapCell* cell);
 // CODEVIEW(E:\gamedcs\philai.cpp:2964, dc 0x112510) int ValueOfScroll(const hero* current_hero, NewmapCell* cell);
 // CODEVIEW(E:\gamedcs\philai.cpp:2997, dc 0x1125ec) int ValueOfShrine(const hero* current_hero, NewmapCell* cell);
-// CODEVIEW(E:\gamedcs\philai.cpp:3007, dc 0x11260c) int AI_VisitSirens(const hero* current_hero, armyGroup* army);
+// CODEVIEW(E:\gamedcs\philai.cpp:3007, dc 0x11260c) int AI_VisitSirens(const hero* current_hero, armyGroup& army);
 // CODEVIEW(E:\gamedcs\philai.cpp:3044, dc 0x1126d0) int ValueOfSirens(const hero* current_hero);
 // CODEVIEW(E:\gamedcs\philai.cpp:3069, dc 0x11276c) int ValueOfStables(const hero* current_hero, long* move_cost);
 // CODEVIEW(E:\gamedcs\philai.cpp:3096, dc 0x112830) long value_of_reinforcing(const hero* current_hero, town* current_town, short move_cost);
