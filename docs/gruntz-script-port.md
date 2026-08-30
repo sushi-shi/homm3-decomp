@@ -297,6 +297,7 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   between `availableCount` and `choice`; `why-reg` finds identical definition
   slots and no successful source-local creation-order mutation, classifying it
   as C1 front-end state rather than permission to remove a positive DC fact.
+
 - **2026-08-30 — `advManager::DoEventPrison` banks its Dreamcast source
   shape at the honest 99.9540% C1-schedule plateau.** Dreamcast CodeView
   proves the original `heroID` (`THeroID`, underlying `T_INT4`),
@@ -319,6 +320,33 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   pointer/reference/proxy locals, a signed owner local, and both paired local
   declaration orders are byte-flat or worse. No semantic distortion is
   retained to chase that final transposed instruction pair.
+
+- **2026-08-30 — `ResourceManager::GetPalette24` restores Dreamcast's named
+  palette locals and banks its source shape at the honest 99.9273% plateau.**
+  The mandatory Dreamcast dossier (`dc:0x121ec8`) proves function-scope
+  `char header[24]` and `TRGBA rgba[256]` locals, in that order, followed by
+  header and rgba reads, direct `TPalette24` construction, and optional
+  `AdjustHSV`. Retail Complete independently proves two platform-expanded
+  copies of that read/construct/adjust sequence: an ordinary-file adapter and
+  an archive/fallback adapter. The reconstruction now uses the attested `rgba`
+  name instead of the byte-flat `paletteData` alias, and fatal source rules
+  with negative controls reject a rename, reversed reads, or replacing the
+  direct constructor boundary with an invented helper.
+
+  Candidate and retail remain the same 721 bytes in extent, with 220 body
+  instructions, 24 blocks, 14 branches, three returns, and paired call/data
+  relocations. The sole residual is an eight-byte VC6 stack-coloring choice:
+  candidate frame `0x444`, retail `0x43c`; retail overlaps the dead path-string
+  slot with eight bytes of the later stdio adapter. The existing 120-form
+  declaration/result/file-lifetime search and eight helper spellings are now
+  supplemented by branch-local results, result/file reordering, shared and
+  reordered adapter-interface declarations, a named fopen result, direct
+  adapter calls, a named path local, and an explicit ordinary/archive `else`.
+  The honest variants are byte-flat or worse (lowest 93.1045%); `why-reg`'s
+  nine guided probes also do not move toward retail. This is recorded as
+  TU/C1 allocator state, not as authority to discard the positive Dreamcast
+  facts for a percentage.
+
 - **2026-08-29 — `playerData::save` restores and ratchets Dreamcast's named
   serialization locals instead of preserving a byte-flat flattened form.**
   The CodeView roster and SH4 statement stream distinguish the write-result
