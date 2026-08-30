@@ -131,6 +131,45 @@ void TPalette16::Cycle(int begin, int end, int step)
     }
 }
 
+// Dreamcast recovers the three normalization statements, r/g/b and h/s/v
+// lifetimes, the RGBToHSV/HSVToRGB boundaries, and the two saturation arms.
+// Retail corroborates that shared shape and fixes the Complete palette range
+// at entries 10..255.
+VA(0x00522a10, 0x122)  // anchor-global, dc 0x10b1ec
+void TPalette16::AdjustSaturation(float amount)
+{
+    const unsigned int red_norm =
+        std::numeric_limits<int>::max() / red_mask;
+    const unsigned int green_norm =
+        std::numeric_limits<int>::max() / green_mask;
+    const unsigned int blue_norm =
+        std::numeric_limits<int>::max() / blue_mask;
+
+    for (int i = 10; i < 256; ++i) {
+        unsigned int r = (data[i] & red_mask) * red_norm;
+        unsigned int g = (data[i] & green_mask) * green_norm;
+        unsigned int b = (data[i] & blue_mask) * blue_norm;
+
+        float h;
+        float s;
+        float v;
+        RGBToHSV(r, g, b, &h, &s, &v);
+
+        if (amount <= 1.0f) {
+            s *= amount;
+        } else {
+            s = 1.0f - (1.0f - s) / amount;
+        }
+
+        HSVToRGB(h, s, v, &r, &g, &b);
+
+        data[i] = static_cast<unsigned short>(
+            ((r / red_norm) & red_mask) |
+            ((g / green_norm) & green_mask) |
+            ((b / blue_norm) & blue_mask));
+    }
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\palette.cpp:210
@@ -176,7 +215,7 @@ void TPalette16::AdjustHue(float hue, float amount)
 }
 
 // E:\gamedcs\palette.cpp:412
-// RETAIL_LOCATED(0x00522a10, 0x122): not reconstructed; anchor-global, dc 0x10b1ec
+// Retail body reconstructed above at 0x00522a10; dc 0x10b1ec.
 void TPalette16::AdjustSaturation(float amount)
 {
     // @stub
