@@ -1404,8 +1404,9 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"GetExperienceIncrement\s*\(\s*\)\s*;"),
         SourceRule(
             "value_of_experience keeps the line-1719 army conversion as a "
-            "separate statement before the line-1721 return",
-            r"\bfloat\s+army_value\s*=\s*float\s*\(\s*current_army\s*->\s*"
+            "separate statement through the attested const-reference before "
+            "the line-1721 return",
+            r"\bfloat\s+army_value\s*=\s*float\s*\(\s*current_army\s*\.\s*"
             r"get_AI_value\s*\(\s*\)\s*\)\s*;\s*return\b"),
         SourceRule(
             "value_of_experience keeps the retail-exact line-1721 float "
@@ -1420,7 +1421,7 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             "the value_of_experience statement before spell valuation",
             r"\btype_spellvalue\s+caster\s*\(\s*our_hero\s*\)\s*;\s*"
             r"our_hero\s*->\s*turnExperienceToRVRatio\s*=\s*"
-            r"value_of_experience\s*\(\s*our_hero\s*,\s*&\s*"
+            r"value_of_experience\s*\(\s*our_hero\s*,\s*"
             r"our_hero\s*->\s*army\s*\)\s*;\s*long\s+base_value\s*=\s*"
             r"caster\s*\.\s*get_best_spell_value\s*\("),
         SourceRule(
@@ -4114,17 +4115,22 @@ for (dwelling = 0; dwelling < TOWN_DWELLING_COUNT; ++dwelling) {
     experience_key = ("philai.obj", 0x10FEB8)
     experience_probe = """\
 int increment = current_hero->GetExperienceIncrement();
-float army_value = float(current_army->get_AI_value());
+float army_value = float(current_army.get_AI_value());
 return (float(gHeroGoldCost) + army_value) / float(increment * 40);
 """
     if contract_violations(experience_probe, experience_key):
         failures.append("aligned value_of_experience contract did not pass")
     flattened_experience = experience_probe.replace(
-        "float army_value = float(current_army->get_AI_value());\n", "").replace(
-            "army_value", "float(current_army->get_AI_value())")
+        "float army_value = float(current_army.get_AI_value());\n", "").replace(
+            "army_value", "float(current_army.get_AI_value())")
     if not any("separate statement" in rule.description for rule in
                contract_violations(flattened_experience, experience_key)):
         failures.append("flattened value_of_experience conversion passed")
+    pointer_experience = experience_probe.replace(
+        "current_army.get_AI_value()", "current_army->get_AI_value()")
+    if not any("const-reference" in rule.description for rule in
+               contract_violations(pointer_experience, experience_key)):
+        failures.append("pointer-shaped value_of_experience army passed")
     static_increment = experience_probe.replace(
         "current_hero->GetExperienceIncrement()",
         "hero::GetExperienceIncrement(current_hero->level)")
@@ -5691,7 +5697,7 @@ if (population > 0) {
     hero_bonuses_probe = """\
 type_spellvalue caster(our_hero);
 our_hero->turnExperienceToRVRatio =
-    value_of_experience(our_hero, &our_hero->army);
+    value_of_experience(our_hero, our_hero->army);
 long base_value = caster.get_best_spell_value(SPELL_VALUE_CLASS_MASK);
 long value = max(caster.get_value_of_increase(base_value, 1, 1, 0), 10);
 our_hero->set_value_of_power(value);
@@ -5732,6 +5738,12 @@ else
     if not any("sole caster local" in rule.description for rule in
                contract_violations(renamed_caster, hero_bonuses_key)):
         failures.append("renamed AI_set_hero_bonuses caster local passed")
+    pointer_bonus = hero_bonuses_probe.replace(
+        "value_of_experience(our_hero, our_hero->army)",
+        "value_of_experience(our_hero, &our_hero->army)")
+    if not any("sole caster local" in rule.description for rule in
+               contract_violations(pointer_bonus, hero_bonuses_key)):
+        failures.append("pointer-shaped AI_set_hero_bonuses call passed")
     adventure_options_key = ("adventureoptionswindow.obj", 0x5204)
     adventure_options_probe = """\
 unsigned char closeDialog = false;

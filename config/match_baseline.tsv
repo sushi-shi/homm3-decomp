@@ -2086,7 +2086,7 @@ philai	??0philAI@@QAE@XZ	100.0000	100.0000	100.0000	0x124360
 philai	?AI_ChooseMagicSkill@@YIHPAVhero@@@Z	100.0000	100.0000	100.0000	0x127cd0
 philai	?AI_PurchaseCreatures@@YIXPAVhero@@PAVgenerator@@@Z	100.0000	100.0000	100.0000	0x127b00
 philai	?AI_RecruitRefugees@@YIXPAVhero@@W4TCreatureType@@PAF@Z	100.0000	100.0000	100.0000	0x127e10
-philai	?AI_VisitSirens@@YIHPBVhero@@PAVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x127ec0
+philai	?AI_VisitSirens@@YIHPBVhero@@AAVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x127ec0
 philai	?AI_bribe_monsters@@YIEPBVhero@@PAVNewmapCell@@W4TCreatureType@@FJ@Z	100.0000	100.0000	100.0000	0x127f60
 philai	?AI_choose_resource_or_experience@@YIEPBVhero@@W4EGameResource@@HH@Z	100.0000	100.0000	100.0000	0x127fe0
 philai	?AI_choose_secondary_skill@@YI?AW4TSecondarySkill@@PBVhero@@W41@1E@Z	100.0000	100.0000	100.0000	0x12bbd0
@@ -2121,7 +2121,7 @@ philai	?ValueOfRefugeeCamp@@YIHPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.
 philai	?ValueOfResource@@YIJPBVhero@@PAVNewmapCell@@PAVplayerData@@@Z	100.0000	100.0000	100.0000	0x12a7c0
 philai	?ValueOfScroll@@YIHPBVhero@@PAVNewmapCell@@@Z	87.2222	87.2222	87.2222	0x12a8c0
 philai	?ValueOfSeaChest@@YIHPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x12a870
-philai	?ValueOfSirens@@YIHPBVhero@@@Z	96.9130	96.9130	96.9130	0x12a960
+philai	?ValueOfSirens@@YIHPBVhero@@@Z	100.0000	100.0000	100.0000	0x12a960
 philai	?ValueOfSpell@hero@@QBEHH@Z	100.0000	100.0000	100.0000	0x127aa0
 philai	?ValueOfStables@@YIHPBVhero@@PAJ@Z	100.0000	100.0000	100.0000	0x12aac0
 philai	?ValueOfTreasure@@YIHPBVhero@@@Z	87.5000	87.5000	87.5000	0x12b4e0
@@ -2142,7 +2142,7 @@ philai	?get_value_of_well@@YIJPBVhero@@G@Z	100.0000	100.0000	100.0000	0x12a510
 philai	?value_of_bank@@YIJPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x129920
 philai	?value_of_custom_item@@YIJPBVhero@@PAVNewmapCell@@J@Z	100.0000	100.0000	100.0000	0x129890
 philai	?value_of_enemy_town@@YIJPBVhero@@PBVtown@@FPAVNewmapCell@@@Z	99.9561	99.9561	99.9561	0x129cb0
-philai	?value_of_experience@@YIMPBVhero@@PBVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x127710
+philai	?value_of_experience@@YIMPBVhero@@ABVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x127710
 philai	?value_of_learning@@YIJPBVhero@@H@Z	100.0000	100.0000	100.0000	0x1298d0
 philai	?value_of_monsters@@YIJPBVhero@@PAVNewmapCell@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x12a140
 philai	?value_of_move_source@@YIHPBVhero@@JFPAJ@Z	100.0000	100.0000	100.0000	0x12a1e0
