@@ -297,6 +297,35 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   cannot do so by silently deinlining or falsifying the Dreamcast-proven
   public interface.
 
+- **2026-08-30 — `soundManager::MemorySample` reaches 100% by restoring the
+  real `service_sounds` member boundary.** The mandatory Dreamcast pass for
+  `soundmgr.obj:0x14b528` retains the already ratcheted `sPtr` signature,
+  24 breakpoint rows, 27 lexical scopes, one-statement wrapped channel
+  update, and named `StopSample`/`ConvertVolume` boundaries. Its PC-only
+  stream-service tail had been factored through an invented file-static
+  `ServeSampleStream` wrapper. Dreamcast independently proves the public
+  `soundManager::service_sounds` member name at `SoundMgr.h:140`
+  (`kb.obj:0xe6ef4`); that WinCE body is empty, while Complete retail keeps
+  the exact non-empty 81-byte Miles implementation at `0x0059a7d0`.
+
+  Complete also contains the same member body expanded after sample startup
+  in both `MemorySample` and `launch_sample`. Replacing the duplicate wrapper
+  with `gpSoundManager->service_sounds()` preserves the exact five-block
+  expansion but restores the member-call C1 state. `MemorySample` moves from
+  **99.78395% to 100.0000%**: its first manager load becomes retail's
+  five-byte EAX form, and the later manager/flag pair becomes EDX/CL.
+  `launch_sample` and the out-of-line `service_sounds` body remain exact, so
+  all three Complete copies now corroborate one coherent helper boundary.
+  The earlier release-VERIFY, unused-aggregate, local-name, why-reg v1/v2,
+  and direct-wrapper probes were byte-flat or worse and are not retained.
+
+  Fatal asymmetric rules now require `MemorySample` to release its own
+  section before the named helper and return, and require `launch_sample` to
+  call the helper after `MemorySample` and before worker launch. Embedded
+  negative controls replace each member call with the former wrapper and
+  prove both omissions fail. The rule does not impose the Complete Miles body
+  on Dreamcast's empty platform implementation.
+
 - **2026-08-30 — the Dreamcast `armyGroup::HasSomeUndead` member boundary is
   restored byte-flat at both Complete morale consumers.** Raw CodeView proves
   a public `unsigned char HasSomeUndead() const` body at
@@ -1034,6 +1063,12 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   scopes, named stream and split section-pointer lifetimes are byte-flat at
   **99.78395%**; the synchronized allocator model finds no source-addressable
   improvement. No register-forcing distortion is retained.
+
+  **Later closure:** the decision-log entry above supersedes this allocator
+  classification. The tail was the `/Ob2` expansion of Complete's real
+  `soundManager::service_sounds` member, not a free helper with an
+  unnameable scratch permutation. Restoring that boundary makes this row
+  exact without disturbing any Dreamcast fact.
 
 - **2026-08-30 — `combatManager::AreaEffect` restores its Dreamcast local
   roster and banks the honest 99.8565% register-allocation plateau.** The

@@ -50,23 +50,6 @@ static int SamplePlaying(soundManager* mgr, ds_memsample* inSample)
     return playing;
 }
 
-// The stream-service tail MemorySample and launch_sample both run
-// after starting a sample. Provisional file-static: /Ob2 inlines it at
-// both sites, so no out-of-line body exists to claim. Name unattested.
-static void ServeSampleStream()
-{
-    // The section is named, the manager is not: retail keeps
-    // `&gpSoundManager->section_sound_call` in one register across the
-    // block but reloads gpSoundManager for the MP3Playing read.
-    CRITICAL_SECTION* section = &gpSoundManager->section_sound_call;
-    EnterCriticalSection(section);
-    AIL_serve();
-    if (gMP3Stream && gpSoundManager->MP3Playing && !bShutDownDone)
-        AIL_service_stream(gMP3Stream, 1);
-    Sleep(1);
-    LeaveCriticalSection(section);
-}
-
 // E:\gamedcs\soundmgr.cpp:69
 // LOCATED 2026-08-07, RECONSTRUCTED 2026-08-08. Location evidence:
 //   * order-map: the DC roster runs SetMusicVolume < ConvertVolume <
@@ -573,13 +556,15 @@ void soundManager::SwitchAmbientMusic(int newMusicFileId)
 // retail's per-arm push before the cross-jumped call. A shared int result and
 // a ternary each score 98.51234% and are rejected platform spellings.
 //
-// Residual (99.78395%): candidate and retail are both 475 bytes with all 30
-// blocks, 21 branches and 2 returns agreeing. Only an EAX/EDX/ECX scratch
-// rotation in the inlined PC-only ServeSampleStream tail remains. Earlier and
-// function-scope handle declarations, a direct tail expansion, a short-lived
-// stream-manager local, nested MP3 scopes, named stream and split section-
-// pointer lifetimes are byte-flat. The synchronized allocator model finds the
-// same ten register-visible slots and no source-addressable improvement.
+// EXACT 2026-08-30: the PC-only tail is not a provisional file-static wrapper.
+// Dreamcast proves the `soundManager::service_sounds` member name in
+// SoundMgr.h, and Complete retail keeps its non-empty 81-byte body at 0x59a7d0.
+// Calling that member on gpSoundManager expands to the same five-block tail
+// here but also restores the member-call C1 state: retail's EAX/EDX/ECX
+// scratch choices replace the wrapper's EDX/ECX/EDX rotation. MemorySample
+// rises 99.78395% -> exact while the exact launch_sample sibling and the
+// out-of-line member remain exact. The asymmetric gate rejects flattening the
+// recovered helper boundary back into a duplicate wrapper.
 // E:\gamedcs\soundmgr.cpp:759
 VA(0x0059a210, 0x1DB)  // anchor-global, dc 0x14b528
 ds_memsample* soundManager::MemorySample(sample* sPtr)
@@ -626,7 +611,7 @@ ds_memsample* soundManager::MemorySample(sample* sPtr)
         sPtr->field_1c = handle;
         LeaveCriticalSection(&section_sound_call);
 
-        ServeSampleStream();
+        gpSoundManager->service_sounds();
         return handle;
     }
     return 0;
@@ -716,7 +701,7 @@ void launch_sample(const char* sample_name, int max_time, int channel)
     launched->sample2.resSample->field_28 = channel;
     launched->sample2.playSample =
         gpSoundManager->MemorySample(launched->sample2.resSample);
-    ServeSampleStream();
+    gpSoundManager->service_sounds();
     if (!bShutDownDone)
         _beginthread(WaitEndSampleThread, 0, launched);
 }
@@ -746,9 +731,10 @@ void __cdecl WaitEndSampleThread(void* arglist)
     _endthread();
 }
 
-// The Dreamcast roster emits this tiny SoundMgr.h service inline from kb.obj;
-// Complete keeps an independently masked-identical out-of-line copy in the
-// sound-manager span. Retail's member offsets and imports prove the body.
+// Dreamcast records this named SoundMgr.h member as an empty WinCE service in
+// kb.obj. Complete gives it the non-empty PC Miles body below: retail keeps an
+// exact out-of-line copy and exact /Ob2 expansions in MemorySample and
+// launch_sample. Those three copies jointly prove the shared member boundary.
 VA(0x0059a7d0, 0x51)  // hd-crossbuild; DC SoundMgr.h:140, dc 0xe6ef4
 void soundManager::service_sounds()
 {

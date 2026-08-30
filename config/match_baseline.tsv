@@ -2777,7 +2777,7 @@ soundmgr	?Close@soundManager@@UAEXXZ	100.0000	100.0000	100.0000	0x199a90
 soundmgr	?ConvertVolume@soundManager@@QAEHHH@Z	100.0000	100.0000	100.0000	0x1996c0
 soundmgr	?GetSampleInfo@soundManager@@QAEHPAVds_memsample@@F@Z	100.0000	100.0000	100.0000	0x19a030
 soundmgr	?LoadPlaySample@@YI?AUSAMPLE2@@PBD@Z	100.0000	100.0000	100.0000	0x19a470
-soundmgr	?MemorySample@soundManager@@QAEPAVds_memsample@@PAVsample@@@Z	99.7840	99.7840	99.7840	0x19a210
+soundmgr	?MemorySample@soundManager@@QAEPAVds_memsample@@PAVsample@@@Z	100.0000	100.0000	100.0000	0x19a210
 soundmgr	?ModifySample@soundManager@@QAEXPAVds_memsample@@FJ@Z	100.0000	100.0000	100.0000	0x199f40
 soundmgr	?MusicPlaying@soundManager@@QAEHXZ	100.0000	100.0000	100.0000	0x19a3f0
 soundmgr	?Open@soundManager@@UAEHH@Z	84.5280	84.5280	84.5280	0x1997d0

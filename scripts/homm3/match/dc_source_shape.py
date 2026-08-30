@@ -1247,6 +1247,25 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             "MemorySample keeps exactly one Dreamcast ConvertVolume helper "
             "call in the volume-selection statement group",
             r"\bConvertVolume\s*\(", 1, 1),
+        SourceRule(
+            "MemorySample keeps Complete's retail-corroborated named "
+            "service_sounds boundary after releasing its sample section",
+            r"\bLeaveCriticalSection\s*\(\s*&\s*section_sound_call\s*\)"
+            r"\s*;\s*gpSoundManager\s*->\s*service_sounds\s*\(\s*\)"
+            r"\s*;\s*return\s+handle\s*;", 1, 1),
+    ),
+    ("soundmgr.obj", 0x14B780): (
+        SourceRule(
+            "launch_sample keeps Complete's retail-corroborated "
+            "MemorySample then service_sounds helper order before worker "
+            "launch",
+            r"gpSoundManager\s*->\s*MemorySample\s*\(.*?\)\s*;\s*"
+            r"gpSoundManager\s*->\s*service_sounds\s*\(\s*\)\s*;\s*"
+            r"if\s*\(\s*!\s*bShutDownDone\s*\)"),
+        SourceRule(
+            "launch_sample keeps exactly one named Complete "
+            "service_sounds helper call",
+            r"\bservice_sounds\s*\(", 1, 1),
     ),
     ("resourcemanager.obj", 0x121EC8): (
         SourceRule(
@@ -4999,7 +5018,8 @@ else
     AIL_set_sample_volume(handle, 0);
 AIL_start_sample(handle);
 sPtr->field_1c = handle;
-ServeSampleStream();
+LeaveCriticalSection(&section_sound_call);
+gpSoundManager->service_sounds();
 return handle;
 """
     if contract_violations(memory_sample_probe, memory_sample_key):
@@ -5032,6 +5052,32 @@ return handle;
                for rule in contract_violations(
                    duplicated_memory_sample_volume, memory_sample_key)):
         failures.append("duplicated MemorySample ConvertVolume passed")
+    flattened_memory_sample_service = memory_sample_probe.replace(
+        "gpSoundManager->service_sounds();", "ServeSampleStream();")
+    if not any("named service_sounds boundary" in rule.description
+               for rule in contract_violations(
+                   flattened_memory_sample_service, memory_sample_key)):
+        failures.append("flattened MemorySample service_sounds passed")
+    launch_sample_key = ("soundmgr.obj", 0x14B780)
+    launch_sample_probe = """\
+launched->sample2.playSample =
+    gpSoundManager->MemorySample(launched->sample2.resSample);
+gpSoundManager->service_sounds();
+if (!bShutDownDone)
+    _beginthread(WaitEndSampleThread, 0, launched);
+"""
+    if contract_violations(launch_sample_probe, launch_sample_key):
+        failures.append("aligned launch_sample helper shape did not pass")
+    flattened_launch_sample_service = launch_sample_probe.replace(
+        "gpSoundManager->service_sounds();", "ServeSampleStream();")
+    launch_service_violations = contract_violations(
+        flattened_launch_sample_service, launch_sample_key)
+    if not any("MemorySample then service_sounds" in rule.description
+               for rule in launch_service_violations):
+        failures.append("flattened launch_sample service order passed")
+    if not any("exactly one named Complete" in rule.description
+               for rule in launch_service_violations):
+        failures.append("flattened launch_sample service count passed")
     palette24_key = ("resourcemanager.obj", 0x121EC8)
     palette24_path = """\
 streamInterface->Read(header, sizeof(header));
