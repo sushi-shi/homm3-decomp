@@ -3,6 +3,8 @@
 // 134 functions in link order; 20 compiler-generated $-thunks omitted.
 #define HOMM3_PHILAI_OBJ_DECLS
 #include <va.h>
+#include <algorithm>
+#include <functional>
 #include <math.h>
 #include <string.h>
 #include "philai.h"
@@ -345,14 +347,6 @@ long type_spellvalue::get_summoning_value(long damage, long times_castable)
 {
     // @stub
 }
-
-// E:\gamedcs\philai.cpp:1610
-DC_ONLY(0x10fc6c, 0x84)
-void type_spellvalue::fill_creature_value_list()
-{
-    // @stub
-}
-
 
 // E:\gamedcs\philai.cpp:1770
 DC_ONLY(0x110018, 0x15A)
@@ -1620,19 +1614,39 @@ void Unnamed526d20(int playerId, int* costs, int flag)
     gAIPlayers[playerId].trade_resources(costs, flag);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\philai.cpp:1339.  The spell-appraisal object's constructor; retail
 // inlines fill_creature_value_list / get_summoning_value / get_value_of_increase
 // into it (134 -> 915 B), so those DC methods have no separate retail body.
-// anchor-global (dc 0x10f37c).
+// Dreamcast fixes the negative artifact guard, four scalar assignments and
+// helper call. Complete additionally expands GetPrimarySkill/GetMaxMana and
+// therefore exposes the byte-proven 1..99 clamps before the helper body.
+// Residual (64.3119%): instructions are exact through the entire seven-slot
+// scan and the 12-call multiset agrees. Inside std::sort, retail calls the
+// short-path _Insertion_sort_1 and expands the long-path copy; VC6 makes the
+// opposite per-site choice (39 versus 37 blocks, one extra branch). Moving
+// the helper back to its DC lexical position and adding explicit `inline`
+// were byte-flat; why-reg's first definitions all agree.
 VA(0x00526d40, 0x393)  // anchor-global, dc 0x10f37c
-void type_spellvalue::type_spellvalue(const hero* new_hero)
+type_spellvalue::type_spellvalue(const hero* new_hero)
 {
-    // @stub
+    our_hero = new_hero;
+    if (!const_cast<hero*>(new_hero)->IsWieldingArtifact(
+            ARTIFACT_SPELLBOOK)
+        || const_cast<hero*>(our_hero)->IsWieldingArtifact(
+            ARTIFACT_ORB_OF_INHIBITION)) {
+        stack_value = 0;
+        power = 0;
+        duration = 0;
+        mana = 0;
+    } else {
+        stack_value = our_hero->army.get_AI_value();
+        power = our_hero->GetPrimarySkill(2);
+        duration = power
+            + const_cast<hero*>(our_hero)->GetSpellDurationBonus();
+        mana = const_cast<hero*>(our_hero)->GetMaxMana();
+        fill_creature_value_list();
+    }
 }
-
-#endif  // @carcass
 
 // The AI's spell-appraisal curve, one 32-byte row per "times castable"
 // step.  Retail reaches all four columns off the same 32-byte stride
@@ -1847,6 +1861,27 @@ long type_spellvalue::get_raw_spell_value(SpellID spell) const
                                   * stack_value));
     }
     return 1;
+}
+
+// E:\\gamedcs\\philai.cpp:1610. Dreamcast preserves this helper boundary,
+// its one type_creature_value local, the seven-slot scan, push_back and the
+// descending sort. Complete's /Ob2 folds the single call into the constructor
+// at 0x526d40; retaining it here in its original lexical position reproduces
+// that expansion without flattening the source.
+void type_spellvalue::fill_creature_value_list()
+{
+    type_creature_value creature;
+    for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
+        creature.type = our_hero->army.armyTypes[i];
+        if (creature.type != CREATURE_NONE) {
+            creature.amount = our_hero->army.numTroops[i];
+            creature.value = akCreatureTypeTraits[creature.type].AI_value
+                * creature.amount;
+            list.push_back(creature);
+        }
+    }
+    std::sort(list.begin(), list.end(),
+              std::greater<type_creature_value>());
 }
 
 // E:\gamedcs\philai.cpp:1632.  The best value the hero could get out of

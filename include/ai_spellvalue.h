@@ -118,6 +118,10 @@ protected:
                                      long times_castable) const;
     long get_enchantment_value(SpellID spell, int mastery,
                                long times_castable) const;
+    // E:\\gamedcs\\philai.cpp:1610. Complete expands this one-call helper
+    // into the constructor, but the Dreamcast member boundary and local
+    // inventory remain authoritative source-shape evidence.
+    void fill_creature_value_list();
 
     const hero* our_hero;   // +0x00
     long stack_value;       // +0x04

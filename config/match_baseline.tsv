@@ -2111,6 +2111,7 @@ path	?ValidAttack@army@@QBEHHHHHPAH@Z	81.0407	81.0407	81.0407	0x123bb0
 path	?ValidPath@army@@QAEEHE@Z	100.0000	100.0000	100.0000	0x123a70
 path	?get_adjacent_hex@army@@QBEJJJ@Z	100.0000	100.0000	100.0000	0x123df0
 philai	??0philAI@@QAE@XZ	100.0000	100.0000	100.0000	0x124360
+philai	??0type_spellvalue@@QAE@PBVhero@@@Z	64.3119	64.3119	64.3119	0x126d40
 philai	?AI_ChooseMagicSkill@@YIHPAVhero@@@Z	100.0000	100.0000	100.0000	0x127cd0
 philai	?AI_PurchaseCreatures@@YIXPAVhero@@PAVgenerator@@@Z	100.0000	100.0000	100.0000	0x127b00
 philai	?AI_RecruitRefugees@@YIXPAVhero@@W4TCreatureType@@PAF@Z	100.0000	100.0000	100.0000	0x127e10
@@ -2195,7 +2196,6 @@ philai	MoveHero	0.0000	0.0000	0.0000	0x1261f0
 philai	game_OnSameTeam	0.0000	0.0000	0.0000	0x1296d0
 philai	game_UpgradedCreatureType	0.0000	0.0000	0.0000	0x129710
 philai	move_hero	0.0000	0.0000	0.0000	0x1267b0
-philai	type_spellvalue_type_spellvalue_126d40	0.0000	0.0000	0.0000	0x126d40
 puzzlewindow	??0TPuzzleWindow@@QAE@H@Z	100.0000	100.0000	100.0000	0x12c1e0
 puzzlewindow	??0type_AI_puzzle_tile@@QAE@PAVNewmapCell@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x12c770
 puzzlewindow	??1TPuzzleWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x12c5a0
