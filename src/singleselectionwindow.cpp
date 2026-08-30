@@ -164,8 +164,18 @@ unsigned char HasRandomHero(int gamePos)
 
 #endif  // @carcass
 
-// The Dreamcast CodeView constructor boundary precedes the selection-window
-// body in this same TU. Retail expands it at every surviving Windows call.
+// Dreamcast keeps the CNetPlayerInfo base-constructor boundary and initializes
+// dpid/name there. Complete extends that base with version; placing its retail-
+// only initialization in the same boundary reproduces the order of all three
+// stores when VC6 expands the derived seat-record constructor.
+// E:\gamedcs\struct.h:340
+inline CNetPlayerInfo::CNetPlayerInfo()
+{
+    dpid = 0;
+    sName[0] = 0;
+    version = *gpVideoGameState;
+}
+
 // E:\gamedcs\singleselectionwindow.cpp:717
 inline CUpdatePlayerPosMsg::CUpdatePlayerPosMsg(
     CNetPlayerHandlerPlayer* pNetPlayers,
@@ -685,17 +695,15 @@ void TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
 
 #endif  // @carcass
 
-// The seat-record reset: dpid/name cleared, version seeded from the
-// game-context cell, every selection field back to its idle value.
+// The seat-record reset: the base constructor clears dpid/name and seeds
+// version from the game-context cell, then every derived selection field goes
+// back to its idle value.
 // Defined out of class (see the header note) so /Ob2 reproduces
 // retail's per-site inline/call split.
 // E:\gamedcs\struct.h:352
 VA(0x0057C790, 0x40)  // anchor-global reads *gpVideoGameState (0x69923c) into +0x1c and presets the 0x7c record exactly as both CUpdatePlayerPosMsg expansions do; called per element by OnNewPlayerMsg's init loop + address-taken by its ??_L call
 CNetPlayerHandlerPlayer::CNetPlayerHandlerPlayer()
 {
-    dpid = 0;
-    sName[0] = 0;
-    version = *gpVideoGameState;
     heroIndex = -1;
     townIndex = -1;
     availableHeroesCount = 0;
@@ -2402,9 +2410,9 @@ void TSingleSelectionWindow::SetCurrentMap(int map, unsigned char bUpdate)
         if (mapChanged) {
             DrawWindow(0, 0xffff0001, 0xffff);
         } else {
-            widget* w = GetWidget(101);
-            if (w->status & widget::WIDGET_ACTIVE) {
-                w->Draw();
+            widget* temp = GetWidget(101);
+            if (temp->status & widget::WIDGET_ACTIVE) {
+                temp->Draw();
                 GetWidget(361)->Draw();
                 DrawWindow(0, 137, 141);
                 DrawWindow(0, 190, 195);
@@ -2418,29 +2426,24 @@ void TSingleSelectionWindow::SetCurrentMap(int map, unsigned char bUpdate)
         Update();
     }
     if (m_flag64) {
-        for (int pos = 0; pos < CNetPlayerHandler::MAX_PLAYERS; ++pos) {
-            CNetPlayerHandlerPlayer* p = m_players.GetPlayerInPos(pos);
-            if (!p)
-                p = m_players.GetCompPlayerInPos(pos);
-            // Residual (99.67003): one SIB base/index swap - retail
-            // encodes this read [gpGame+pos+disp] with gpGame as base,
-            // our CL picks pos; the pointer-add respelling is
-            // byte-flat (measured). The two CUpdatePlayerPosMsg array
-            // constructor loops also schedule CNetMsg::field_04's zero
-            // store one instruction early. The shared base constructor
-            // already follows DC netmsg.h:169,172..175 exactly, so that
-            // two-site scheduler artifact is not a sound broad lever.
-            // DC's SendPlayerPositions boundary is restored below; VC6
-            // expands it to the same bytes, so this residual does not
-            // justify flattening the helper again.
-            p->handicap = gpGame->setup.handicap[pos];
-            widget* w = GetWidget(207 + pos);
+        for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
+            CNetPlayerHandlerPlayer* player =
+                m_players.GetPlayerInPos(i);
+            if (!player)
+                player = m_players.GetCompPlayerInPos(i);
+            // Residual (99.987404): the sole code difference is a
+            // commutative SIB base/index encoding in this read. Retail uses
+            // gpGame as the SIB base and i as the index; this compiler run
+            // chooses the reverse fields. Array-index, pointer-add, named
+            // pointer and named game-pointer spellings are byte-flat.
+            player->handicap = gpGame->setup.handicap[i];
+            widget* w = GetWidget(207 + i);
             if (w) {
-                int saved = w->status;
+                int saveStatus = w->status;
                 w->status |= widget::WIDGET_ACTIVE;
                 w->send_message(widget::WIDGET_SET_TEXT,
-                                gUnnamed6a7800[p->handicap]);
-                w->status = saved;
+                                gUnnamed6a7800[player->handicap]);
+                w->status = saveStatus;
             }
         }
     }
@@ -3826,15 +3829,11 @@ unsigned char TSingleSelectionWindow::IsVersionCompatible(const char* otherVersi
 // them on the advanced pane (first free human-legal seat) or re-seat
 // the main pane, then broadcast the full roster and announce them in
 // chat.
-// Residual (79.5): one missing branch - retail runs the
-// CNetPlayerHandlerPlayer ctor 0x57c790 over the broadcast msg's two
-// seat arrays (an inline 8-loop plus the ??_L vector-ctor-iterator
-// call at 0x4013d0), which the POD record model cannot emit - plus
-// the reply arm's GetText loads scheduled above the first strncpy
-// (the same shape OnGameHeaderInfoInitMsg's reply arm carries; a
-// named-local hoist measured WORSE there).
-static void BroadcastPlayerPositions(TSingleSelectionWindow* pWindow);
-
+// Residual (97.06278): the Dreamcast-proven SendPlayerPositions boundary is
+// restored and expands to both roster copies. Retail constructs its second
+// seat array through the ??_L vector-constructor iterator at 0x4013d0; this
+// compile emits the equivalent call-per-element loop. The other tail delta is
+// register naming around PlayerEnterMsg's gpGeneralText reload.
 // E:\gamedcs\singleselectionwindow.cpp:6884
 VA(0x00589FA0, 0x2D9)  // anchor-callee RS_NEW_PLAYER arm; owns the 'OnNewPlayerMsg %d' log line, size 1.37x dc 0x214, dc 0x140a74
 unsigned char TSingleSelectionWindow::OnNewPlayerMsg(CNetMsg* pNetMsg)
@@ -3884,35 +3883,12 @@ unsigned char TSingleSelectionWindow::OnNewPlayerMsg(CNetMsg* pNetMsg)
         } else {
             SetHumanSlot();
         }
-        // Residual (97.1): the caller-shrink static is what flips the
-        // seat-record ctor to retail's out-of-line split (62.4 -> 92.0
-        // measured without it, 67.2 with only the errText hoist); the
-        // one remaining structural delta is the SECOND array's init -
-        // retail emits the ??_L vector-iterator call there where our
-        // minimum static budget (clamp floor 1000) still buys the
-        // call-per-element loop. Plus tail register naming at the
-        // PlayerEnterMsg gpGeneralText reload.
-        BroadcastPlayerPositions(this);
+        SendPlayerPositions(0);
     }
     PlayerEnterMsg(&chatMan, gpGeneralText->GetText(526),
                    pMsg->m_playerInfo.sName);
     DisplayChat();
     return 1;
-}
-
-// Single-call-site caller-shrink helper (numerator lever): dropping
-// the broadcast block out of OnNewPlayerMsg's collected mass is what
-// makes /Ob2 refuse the seat-record ctor expansions inside the
-// CUpdatePlayerPosMsg local, reproducing retail's call-per-element
-// loop + ??_L split; the static inlines back unconditionally.
-static void BroadcastPlayerPositions(TSingleSelectionWindow* pWindow)
-{
-    CUpdatePlayerPosMsg msg;
-    memcpy(msg.m_netPlayer, pWindow->m_players.humanPlayers,
-           sizeof(msg.m_netPlayer));
-    memcpy(msg.m_compPlayer, pWindow->m_players.computerPlayers,
-           sizeof(msg.m_compPlayer));
-    TransmitRemoteDataDPID(&msg, 0, 1, 1);
 }
 
 // DC NewPlayer, LOCATED round 2 (dc 0x14870c -> retail 0x58a280, 123 B

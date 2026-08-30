@@ -1911,7 +1911,6 @@ call	singleselectionwindow.obj	0x140450	GameTime::ElapsedSince
 call	singleselectionwindow.obj	0x140450	TSingleSelectionWindow::ReceiveChat
 call	singleselectionwindow.obj	0x1409d4	stricmp
 call	singleselectionwindow.obj	0x140a74	CNetPlayerHandler::AddNewPlayer
-call	singleselectionwindow.obj	0x140a74	TSingleSelectionWindow::SendPlayerPositions
 call	singleselectionwindow.obj	0x140f24	TSingleSelectionWindow::OnBadVersionMsg
 call	singleselectionwindow.obj	0x1416f4	CChatManager::GetCount
 call	singleselectionwindow.obj	0x1416f4	CChatManager::GetPosition
