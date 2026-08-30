@@ -1440,51 +1440,62 @@ int game::SaveGarrisonPool(TAbstractFile* outfile)
 // Residual (99.6447%, diagnosed 2026-08-22): the complete instruction and
 // branch streams agree. The seven real rows are scale-1 SIB encoder ties on
 // the loop's boat writes: our object emits `[edi+base+field]`, retail emits
-// `[base+edi+field]`; the addresses and register values are identical. The
-// other rows are unscored names for vector::insert/size/erase. Replacing all
-// subscripts with `(boats.begin()+i)->field` and with the reversed
-// `(i+boats.begin())->field` is byte-flat, and why-reg confirms all first
-// definitions agree. This is post-allocation address-fold state, not a
-// missing source operation.
+// `[base+edi+field]`; the addresses and register values are identical. Raw
+// NB11 proves the function-scope ushort_buffer/count/x/uchar_buffer/
+// char_buffer roster and every typed read/result assignment; restoring it
+// from the score-equivalent int-buffer spelling leaves the same residual.
+// Replacing all subscripts with pointer-addition forms is also byte-flat, and
+// why-reg confirms all first definitions agree. This is post-allocation
+// address-fold state, not a missing source operation.
 VA(0x004b9a00, 0x239)  // anchor-callee (type_obscuring_object::load), dc 0xa46e8
 int game::LoadBoatPool(TAbstractFile* infile)
 {
+    unsigned short ushort_buffer;
     int count;
-    if (infile->Read(&count, sizeof(unsigned char)) < sizeof(unsigned char))
+    int x;
+    unsigned char uchar_buffer;
+    char char_buffer;
+
+    count = infile->Read(&uchar_buffer, sizeof(uchar_buffer));
+    if (count < sizeof(uchar_buffer))
         return -1;
 
     boat defaultBoat;
-    unsigned int i = count & 0xff;
-    boats.resize(i, defaultBoat);
-    for (i = 0; i < boats.size(); ++i) {
-        unsigned char value;
-        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+    boats.resize(uchar_buffer, defaultBoat);
+    for (x = 0; x < boats.size(); ++x) {
+        count = infile->Read(&char_buffer, sizeof(char_buffer));
+        if (count < sizeof(char_buffer))
             return -1;
-        boats[i].allocated = value != 0;
+        boats[x].allocated = char_buffer != 0;
 
-        if (infile->Read(&count, sizeof(unsigned char)) < sizeof(unsigned char))
+        count = infile->Read(&uchar_buffer, sizeof(uchar_buffer));
+        if (count < sizeof(uchar_buffer))
             return -1;
-        boats[i].id = static_cast<unsigned char>(count);
+        boats[x].id = uchar_buffer;
 
-        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        count = infile->Read(&char_buffer, sizeof(char_buffer));
+        if (count < sizeof(char_buffer))
             return -1;
-        boats[i].type = value;
-        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        boats[x].type = char_buffer;
+        count = infile->Read(&char_buffer, sizeof(char_buffer));
+        if (count < sizeof(char_buffer))
             return -1;
-        boats[i].facing = value;
-        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        boats[x].facing = char_buffer;
+        count = infile->Read(&char_buffer, sizeof(char_buffer));
+        if (count < sizeof(char_buffer))
             return -1;
-        boats[i].playerOwner = value;
+        boats[x].playerOwner = char_buffer;
 
-        int occupyingHero;
-        if (infile->Read(&occupyingHero, sizeof(short)) < sizeof(short))
+        count = infile->Read(&ushort_buffer, sizeof(ushort_buffer));
+        if (count < sizeof(ushort_buffer))
             return -1;
-        boats[i].occupying_hero = occupyingHero & 0xffff;
+        boats[x].occupying_hero = ushort_buffer;
 
-        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        count = infile->Read(&char_buffer, sizeof(char_buffer));
+        if (count < sizeof(char_buffer))
             return -1;
-        boats[i].occupied = value != 0;
-        if (!boats[i].load(infile))
+        boats[x].occupied = char_buffer != 0;
+        if (!boats[x].load(infile))
             return -1;
     }
     return 0;
@@ -1495,39 +1506,56 @@ int game::LoadBoatPool(TAbstractFile* infile)
 // E:\gamedcs\game.cpp:1178
 #endif  // @carcass
 
+// Dreamcast NB11 independently records the same five function-scope locals
+// and symmetric typed write sequence as LoadBoatPool. Restoring those facts
+// from the former branch-local buffers remains byte-exact across all 429
+// retail bytes.
 VA(0x004b9c40, 0x1AD)  // anchor-callee (type_obscuring_object::save), dc 0xa4980
 int game::SaveBoatPool(TAbstractFile* outfile)
 {
-    unsigned char count = static_cast<unsigned char>(boats.size());
-    if (outfile->Write(&count, sizeof(count)) < sizeof(count))
+    unsigned short ushort_buffer;
+    int count;
+    int x;
+    unsigned char uchar_buffer;
+    char char_buffer;
+
+    uchar_buffer = static_cast<unsigned char>(boats.size());
+    count = outfile->Write(&uchar_buffer, sizeof(uchar_buffer));
+    if (count < sizeof(uchar_buffer))
         return -1;
 
-    for (unsigned int i = 0; i < boats.size(); ++i) {
-        unsigned char value = boats[i].allocated;
-        if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+    for (x = 0; x < boats.size(); ++x) {
+        char_buffer = boats[x].allocated;
+        count = outfile->Write(&char_buffer, sizeof(char_buffer));
+        if (count < sizeof(char_buffer))
             return -1;
-        count = boats[i].id;
-        if (outfile->Write(&count, sizeof(count)) < sizeof(count))
+        uchar_buffer = boats[x].id;
+        count = outfile->Write(&uchar_buffer, sizeof(uchar_buffer));
+        if (count < sizeof(uchar_buffer))
             return -1;
-        value = boats[i].type;
-        if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+        char_buffer = boats[x].type;
+        count = outfile->Write(&char_buffer, sizeof(char_buffer));
+        if (count < sizeof(char_buffer))
             return -1;
-        value = boats[i].facing;
-        if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+        char_buffer = boats[x].facing;
+        count = outfile->Write(&char_buffer, sizeof(char_buffer));
+        if (count < sizeof(char_buffer))
             return -1;
-        value = boats[i].playerOwner;
-        if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+        char_buffer = boats[x].playerOwner;
+        count = outfile->Write(&char_buffer, sizeof(char_buffer));
+        if (count < sizeof(char_buffer))
             return -1;
 
-        short occupyingHero = static_cast<short>(boats[i].occupying_hero);
-        if (outfile->Write(&occupyingHero, sizeof(occupyingHero))
-                < sizeof(occupyingHero))
+        ushort_buffer = static_cast<unsigned short>(boats[x].occupying_hero);
+        count = outfile->Write(&ushort_buffer, sizeof(ushort_buffer));
+        if (count < sizeof(ushort_buffer))
             return -1;
 
-        value = boats[i].occupied;
-        if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+        char_buffer = boats[x].occupied;
+        count = outfile->Write(&char_buffer, sizeof(char_buffer));
+        if (count < sizeof(char_buffer))
             return -1;
-        if (!boats[i].save(outfile))
+        if (!boats[x].save(outfile))
             return -1;
     }
     return 0;

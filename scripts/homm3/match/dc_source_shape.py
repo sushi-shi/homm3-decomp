@@ -443,6 +443,68 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             "unsigned spelling is byte proof but not source-shape closure",
             r"(?m)^[ \t]*int[ \t]+x[ \t]*;"),
     ),
+    ("game.obj", 0xA46E8): (
+        SourceRule(
+            "LoadBoatPool keeps Dreamcast's function-scope ushort_buffer, "
+            "count, x, uchar_buffer and char_buffer locals in CodeView "
+            "record order",
+            r"\A\s*unsigned\s+short\s+ushort_buffer\s*;\s*"
+            r"int\s+count\s*;\s*int\s+x\s*;\s*"
+            r"unsigned\s+char\s+uchar_buffer\s*;\s*"
+            r"char\s+char_buffer\s*;"),
+        SourceRule(
+            "LoadBoatPool keeps every Dreamcast read result in count",
+            r"\bcount\s*=\s*infile\s*->\s*Read\s*\(", 8, 8),
+        SourceRule(
+            "LoadBoatPool keeps Dreamcast's two uchar, five char and one "
+            "ushort typed read buffers",
+            r"\bcount\s*=\s*infile\s*->\s*Read\s*\(\s*&\s*"
+            r"uchar_buffer\b", 2, 2),
+        SourceRule(
+            "LoadBoatPool keeps Dreamcast's five char-buffer reads",
+            r"\bcount\s*=\s*infile\s*->\s*Read\s*\(\s*&\s*"
+            r"char_buffer\b", 5, 5),
+        SourceRule(
+            "LoadBoatPool keeps Dreamcast's one ushort-buffer read",
+            r"\bcount\s*=\s*infile\s*->\s*Read\s*\(\s*&\s*"
+            r"ushort_buffer\b", 1, 1),
+        SourceRule(
+            "LoadBoatPool keeps Dreamcast's typed boat-field assignment "
+            "sequence",
+            r"\ballocated\s*=\s*char_buffer\s*!=\s*0\s*;.*?"
+            r"\bid\s*=\s*uchar_buffer\s*;.*?"
+            r"\btype\s*=\s*char_buffer\s*;.*?"
+            r"\bfacing\s*=\s*char_buffer\s*;.*?"
+            r"\bplayerOwner\s*=\s*char_buffer\s*;.*?"
+            r"\boccupying_hero\s*=\s*ushort_buffer\s*;.*?"
+            r"\boccupied\s*=\s*char_buffer\s*!=\s*0\s*;"),
+    ),
+    ("game.obj", 0xA4980): (
+        SourceRule(
+            "SaveBoatPool keeps Dreamcast's function-scope ushort_buffer, "
+            "count, x, uchar_buffer and char_buffer locals in CodeView "
+            "record order",
+            r"\A\s*unsigned\s+short\s+ushort_buffer\s*;\s*"
+            r"int\s+count\s*;\s*int\s+x\s*;\s*"
+            r"unsigned\s+char\s+uchar_buffer\s*;\s*"
+            r"char\s+char_buffer\s*;"),
+        SourceRule(
+            "SaveBoatPool keeps every Dreamcast write result in count",
+            r"\bcount\s*=\s*outfile\s*->\s*Write\s*\(", 8, 8),
+        SourceRule(
+            "SaveBoatPool keeps Dreamcast's two uchar, five char and one "
+            "ushort typed write buffers",
+            r"\bcount\s*=\s*outfile\s*->\s*Write\s*\(\s*&\s*"
+            r"uchar_buffer\b", 2, 2),
+        SourceRule(
+            "SaveBoatPool keeps Dreamcast's five char-buffer writes",
+            r"\bcount\s*=\s*outfile\s*->\s*Write\s*\(\s*&\s*"
+            r"char_buffer\b", 5, 5),
+        SourceRule(
+            "SaveBoatPool keeps Dreamcast's one ushort-buffer write",
+            r"\bcount\s*=\s*outfile\s*->\s*Write\s*\(\s*&\s*"
+            r"ushort_buffer\b", 1, 1),
+    ),
     ("game.obj", 0xA55A8): (
         SourceRule(
             "playerData::save keeps Dreamcast's function-scope uint buffer, "
@@ -2603,6 +2665,80 @@ int iPiecesRemoved;
         "float fPercentExtraPieces;")
     if not contract_violations(reordered_setup_puzzle, setup_puzzle_key):
         failures.append("reordered SetupPuzzlePieces locals passed")
+    load_boats_key = ("game.obj", 0xA46E8)
+    load_boats_probe = """\
+unsigned short ushort_buffer;
+int count;
+int x;
+unsigned char uchar_buffer;
+char char_buffer;
+count = infile->Read(&uchar_buffer, sizeof(uchar_buffer));
+count = infile->Read(&char_buffer, sizeof(char_buffer));
+boats[x].allocated = char_buffer != 0;
+count = infile->Read(&uchar_buffer, sizeof(uchar_buffer));
+boats[x].id = uchar_buffer;
+count = infile->Read(&char_buffer, sizeof(char_buffer));
+boats[x].type = char_buffer;
+count = infile->Read(&char_buffer, sizeof(char_buffer));
+boats[x].facing = char_buffer;
+count = infile->Read(&char_buffer, sizeof(char_buffer));
+boats[x].playerOwner = char_buffer;
+count = infile->Read(&ushort_buffer, sizeof(ushort_buffer));
+boats[x].occupying_hero = ushort_buffer;
+count = infile->Read(&char_buffer, sizeof(char_buffer));
+boats[x].occupied = char_buffer != 0;
+"""
+    if contract_violations(load_boats_probe, load_boats_key):
+        failures.append("aligned LoadBoatPool serialization shape did not pass")
+    reordered_load_boats = load_boats_probe.replace(
+        "unsigned short ushort_buffer;\nint count;\nint x;\n"
+        "unsigned char uchar_buffer;\nchar char_buffer;",
+        "int count;\nint x;\nunsigned char uchar_buffer;\n"
+        "char char_buffer;\nunsigned short ushort_buffer;")
+    if not any("CodeView record order" in rule.description for rule in
+               contract_violations(reordered_load_boats, load_boats_key)):
+        failures.append("reordered LoadBoatPool locals passed")
+    direct_load_read = load_boats_probe.replace(
+        "count = infile->Read", "infile->Read", 1)
+    if not any("every Dreamcast read result" in rule.description for rule in
+               contract_violations(direct_load_read, load_boats_key)):
+        failures.append("discarded LoadBoatPool read result passed")
+    wrong_load_field = load_boats_probe.replace(
+        "boats[x].id = uchar_buffer;", "boats[x].id = char_buffer;")
+    if not any("typed boat-field assignment" in rule.description for rule in
+               contract_violations(wrong_load_field, load_boats_key)):
+        failures.append("wrong LoadBoatPool id buffer passed")
+    save_boats_key = ("game.obj", 0xA4980)
+    save_boats_probe = """\
+unsigned short ushort_buffer;
+int count;
+int x;
+unsigned char uchar_buffer;
+char char_buffer;
+count = outfile->Write(&uchar_buffer, sizeof(uchar_buffer));
+count = outfile->Write(&char_buffer, sizeof(char_buffer));
+count = outfile->Write(&uchar_buffer, sizeof(uchar_buffer));
+count = outfile->Write(&char_buffer, sizeof(char_buffer));
+count = outfile->Write(&char_buffer, sizeof(char_buffer));
+count = outfile->Write(&char_buffer, sizeof(char_buffer));
+count = outfile->Write(&ushort_buffer, sizeof(ushort_buffer));
+count = outfile->Write(&char_buffer, sizeof(char_buffer));
+"""
+    if contract_violations(save_boats_probe, save_boats_key):
+        failures.append("aligned SaveBoatPool serialization shape did not pass")
+    reordered_save_boats = save_boats_probe.replace(
+        "unsigned short ushort_buffer;\nint count;\nint x;\n"
+        "unsigned char uchar_buffer;\nchar char_buffer;",
+        "int count;\nint x;\nunsigned char uchar_buffer;\n"
+        "char char_buffer;\nunsigned short ushort_buffer;")
+    if not any("CodeView record order" in rule.description for rule in
+               contract_violations(reordered_save_boats, save_boats_key)):
+        failures.append("reordered SaveBoatPool locals passed")
+    direct_save_write = save_boats_probe.replace(
+        "count = outfile->Write", "outfile->Write", 1)
+    if not any("every Dreamcast write result" in rule.description for rule in
+               contract_violations(direct_save_write, save_boats_key)):
+        failures.append("discarded SaveBoatPool write result passed")
     randomize_university_key = ("game.obj", 0xAC048)
     randomize_university_probe = """\
 long choice;
