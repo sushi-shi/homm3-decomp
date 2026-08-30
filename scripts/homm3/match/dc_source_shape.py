@@ -477,6 +477,63 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             "TCombatResultsWindow keeps Dreamcast's source-visible min call",
             r"(?<![_\w])min\s*\(", 1, 1),
     ),
+    ("philai.obj", 0x10E3F8): (
+        SourceRule(
+            "AI_enter_town keeps Dreamcast's nested Grail possession, "
+            "building-absence and legality guards around the remove, build, "
+            "victory-check and end-game helper sequence",
+            r"if\s*\(\s*current_hero\s*->\s*HasArtifact\s*\(\s*"
+            r"ARTIFACT_HOLY_GRAIL\s*\)\s*&&\s*!\s*current_town\s*->\s*"
+            r"HasBuilding\s*\(\s*HOLY_GRAIL_ID\s*,\s*0\s*\)\s*&&\s*"
+            r"current_town\s*->\s*is_legal_building\s*\(\s*"
+            r"HOLY_GRAIL_ID\s*\)\s*\)\s*\{\s*current_hero\s*->\s*"
+            r"remove_artifact\s*\(\s*ARTIFACT_HOLY_GRAIL\s*\)\s*;\s*"
+            r"current_town\s*->\s*BuildBuilding\s*\(\s*HOLY_GRAIL_ID\s*,"
+            r"\s*1\s*,\s*1\s*\)\s*;\s*if\s*\(\s*gpGame\s*->\s*"
+            r"mapHeader\s*\.\s*victoryCondition\s*\.\s*"
+            r"CheckForGrailBuildingWin\s*\(\s*\)\s*\)\s*"
+            r"CheckEndGame\s*\(\s*0\s*\)\s*;\s*\}"),
+        SourceRule(
+            "AI_enter_town keeps raw NB11's sole artifact local inside the "
+            "spellbook-purchase scope, with construction, GiveArtifact and "
+            "gold debit in Dreamcast statement order",
+            r"if\s*\(\s*player\s*->\s*resources\s*\[\s*GOLD\s*\]\s*"
+            r">=\s*500\s*&&\s*current_town\s*->\s*HasBuilding\s*\(\s*"
+            r"MAGE_GUILD_ID\s*,\s*1\s*\)\s*&&\s*!\s*current_hero\s*->\s*"
+            r"IsWieldingArtifact\s*\(\s*ARTIFACT_SPELLBOOK\s*\)\s*\)\s*"
+            r"\{\s*type_artifact\s+artifact\s*\(\s*ARTIFACT_SPELLBOOK\s*,"
+            r"\s*-\s*1\s*\)\s*;\s*current_hero\s*->\s*GiveArtifact\s*"
+            r"\(\s*&\s*artifact\s*,\s*1\s*,\s*1\s*\)\s*;\s*"
+            r"player\s*->\s*resources\s*\[\s*GOLD\s*\]\s*-=\s*500\s*;"
+            r"\s*\}"),
+        SourceRule(
+            "AI_enter_town keeps Dreamcast's upgrade_creatures then "
+            "buy_special_building order and the difficulty-scoped pair of "
+            "AI_swap_artifacts calls before both siege-engine sites",
+            r"\bupgrade_creatures\s*\(\s*current_hero\s*,\s*current_town\s*"
+            r"\)\s*;.*?\bbuy_special_building\s*\(\s*current_hero\s*,\s*"
+            r"current_town\s*\)\s*;.*?if\s*\(\s*gpGame\s*->\s*setup\s*\."
+            r"\s*difficulty\s*\)\s*\{.*?\bAI_swap_artifacts\s*\(\s*"
+            r"current_hero\s*,\s*garrison_hero\s*\)\s*;\s*"
+            r"AI_swap_artifacts\s*\(\s*garrison_hero\s*,\s*current_hero\s*"
+            r"\)\s*;.*?\bbuy_siege_engine\s*\(\s*current_hero\s*,\s*"
+            r"current_town\s*,\s*BLACKSMITH_ID\s*,.*?\)\s*;\s*"
+            r"if\s*\(\s*current_town\s*->\s*type\s*==\s*TOWN_STRONGHOLD"
+            r"\s*\)\s*buy_siege_engine\s*\(\s*current_hero\s*,\s*"
+            r"current_town\s*,\s*EXTRA_1_ID\s*,\s*ARTIFACT_BALLISTA\s*\)"
+            r"\s*;\s*\}"),
+        SourceRule(
+            "AI_enter_town keeps Dreamcast's DemobilizeCurrHero before the "
+            "garrison effect and its final nested GetHero then "
+            "ApplySpecialBuildingEffect statement",
+            r"gpAdvManager\s*->\s*DemobilizeCurrHero\s*\(\s*0\s*,\s*0\s*"
+            r"\)\s*;\s*if\s*\(\s*garrison_hero\s*\)\s*current_town\s*->"
+            r"\s*ApplySpecialBuildingEffect\s*\(\s*garrison_hero\s*\)\s*;"
+            r"\s*if\s*\(\s*current_town\s*->\s*visitingHeroId\s*!=\s*"
+            r"-\s*1\s*\)\s*current_town\s*->\s*"
+            r"ApplySpecialBuildingEffect\s*\(\s*gpGame\s*->\s*GetHero\s*"
+            r"\(\s*current_town\s*->\s*visitingHeroId\s*\)\s*\)\s*;"),
+    ),
     ("philai.obj", 0x10D684): (
         SourceRule(
             "upgrade_creatures keeps Dreamcast's function-scope difference, "
@@ -2585,6 +2642,84 @@ buy_artifacts(current_hero, gpGame->field_1f664, market_count);
                 "buy_special_building(current_hero, current_town);", ""),
             artifact_receiver, {artifact_transfer.receiver_va}):
         failures.append("erased AI_enter_town forwarding call passed")
+    enter_town_key = ("philai.obj", 0x10E3F8)
+    enter_town_probe = """\
+if (current_hero->HasArtifact(ARTIFACT_HOLY_GRAIL)
+    && !current_town->HasBuilding(HOLY_GRAIL_ID, 0)
+    && current_town->is_legal_building(HOLY_GRAIL_ID)) {
+    current_hero->remove_artifact(ARTIFACT_HOLY_GRAIL);
+    current_town->BuildBuilding(HOLY_GRAIL_ID, 1, 1);
+    if (gpGame->mapHeader.victoryCondition.CheckForGrailBuildingWin())
+        CheckEndGame(0);
+}
+if (player->resources[GOLD] >= 500
+    && current_town->HasBuilding(MAGE_GUILD_ID, 1)
+    && !current_hero->IsWieldingArtifact(ARTIFACT_SPELLBOOK)) {
+    type_artifact artifact(ARTIFACT_SPELLBOOK, -1);
+    current_hero->GiveArtifact(&artifact, 1, 1);
+    player->resources[GOLD] -= 500;
+}
+upgrade_creatures(current_hero, current_town);
+complete_only_building_work();
+buy_special_building(current_hero, current_town);
+if (gpGame->setup.difficulty) {
+    if (garrison_hero) {
+        AI_swap_artifacts(current_hero, garrison_hero);
+        AI_swap_artifacts(garrison_hero, current_hero);
+    }
+    buy_siege_engine(current_hero, current_town, BLACKSMITH_ID,
+                     artifact_from_int(blacksmith_artifact));
+    if (current_town->type == TOWN_STRONGHOLD)
+        buy_siege_engine(current_hero, current_town, EXTRA_1_ID,
+                         ARTIFACT_BALLISTA);
+}
+gpAdvManager->DemobilizeCurrHero(0, 0);
+if (garrison_hero)
+    current_town->ApplySpecialBuildingEffect(garrison_hero);
+if (current_town->visitingHeroId != -1)
+    current_town->ApplySpecialBuildingEffect(
+        gpGame->GetHero(current_town->visitingHeroId));
+"""
+    if contract_violations(enter_town_probe, enter_town_key):
+        failures.append("aligned AI_enter_town source shape did not pass")
+    flattened_grail = enter_town_probe.replace(
+        "if (current_hero->HasArtifact(ARTIFACT_HOLY_GRAIL)\n"
+        "    && !current_town->HasBuilding(HOLY_GRAIL_ID, 0)\n"
+        "    && current_town->is_legal_building(HOLY_GRAIL_ID)) {",
+        "if (!current_hero->HasArtifact(ARTIFACT_HOLY_GRAIL)) return;\n"
+        "if (current_town->HasBuilding(HOLY_GRAIL_ID, 0)) return;\n"
+        "if (!current_town->is_legal_building(HOLY_GRAIL_ID)) return;\n{")
+    if not any("nested Grail" in rule.description for rule in
+               contract_violations(flattened_grail, enter_town_key)):
+        failures.append("flattened AI_enter_town Grail guards passed")
+    hoisted_artifact = enter_town_probe.replace(
+        "if (player->resources[GOLD] >= 500",
+        "type_artifact artifact(ARTIFACT_SPELLBOOK, -1);\n"
+        "if (player->resources[GOLD] >= 500").replace(
+            "    type_artifact artifact(ARTIFACT_SPELLBOOK, -1);\n", "")
+    if not any("sole artifact local" in rule.description for rule in
+               contract_violations(hoisted_artifact, enter_town_key)):
+        failures.append("hoisted AI_enter_town artifact local passed")
+    reordered_enter_town = enter_town_probe.replace(
+        "upgrade_creatures(current_hero, current_town);\n"
+        "complete_only_building_work();\n"
+        "buy_special_building(current_hero, current_town);",
+        "buy_special_building(current_hero, current_town);\n"
+        "complete_only_building_work();\n"
+        "upgrade_creatures(current_hero, current_town);")
+    if not any("upgrade_creatures then" in rule.description for rule in
+               contract_violations(reordered_enter_town, enter_town_key)):
+        failures.append("reordered AI_enter_town upgrade helpers passed")
+    split_visiting_effect = enter_town_probe.replace(
+        "if (current_town->visitingHeroId != -1)\n"
+        "    current_town->ApplySpecialBuildingEffect(\n"
+        "        gpGame->GetHero(current_town->visitingHeroId));",
+        "if (current_town->visitingHeroId != -1) {\n"
+        "    hero* visiting = gpGame->GetHero(current_town->visitingHeroId);\n"
+        "    current_town->ApplySpecialBuildingEffect(visiting);\n}")
+    if not any("final nested GetHero" in rule.description for rule in
+               contract_violations(split_visiting_effect, enter_town_key)):
+        failures.append("split AI_enter_town final helper group passed")
     combat_results_key = ("combatresultswindow.obj", 0x68364)
     combat_results_probe = """\
 gpCombatResultsWindow = this;

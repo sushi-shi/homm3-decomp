@@ -354,6 +354,30 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   definition slots/order, and caps its legal creation-order edit byte-flat as
   C1 front-end state.
 
+- **2026-08-30 — `AI_enter_town` ratchets its shared Dreamcast orchestration
+  at the honest 99.5109% final-load plateau.** The mandatory dossier at
+  `philai.obj+0x10e3f8` has 37 breakpoint rows and 32 lexical scopes. Raw NB11
+  records only one non-optimized local, `artifact`, inside the spellbook-
+  purchase scope. The reconstruction preserves the nested Grail guard and
+  helper sequence, the artifact construction / `GiveArtifact` / gold-debit
+  scope, `upgrade_creatures` before `buy_special_building`, both difficulty-
+  scoped artifact swaps before the siege purchases, and
+  `DemobilizeCurrHero` before the garrison and visiting-hero effects. Four
+  fatal asymmetric source rules and four independent negative controls now
+  reject flattening, hoisting, reordering, or splitting those facts.
+
+  Complete independently adds the town-type building switch and Conflux
+  university visit, and moves Dreamcast's separate `buy_artifacts` step into
+  the retail-exact `buy_special_building` receiver; those remain bounded
+  retail-only additions. Candidate and retail are both 1,548 bytes, all 74
+  blocks align, and their 43 branch targets and two returns agree. Only the
+  final visiting-hero address schedule differs: retail loads `gpGame` before
+  the first two index operations, while this compile loads it afterward.
+  Named receiver/result locals, reuse of `garrison_hero`, and a procedure-
+  scope result are byte-flat; naming the id falls to **97.01087%**. The
+  synchronized allocator model's three proposals and the guided sweep's nine
+  mutations find no improvement, so no source distortion is retained.
+
 - **2026-08-30 — the boat-pool load/save pair restores its symmetric
   Dreamcast serialization locals; the exact save path remains exact.** Raw
   NB11 records `unsigned short ushort_buffer`, `int count`, `int x`,
