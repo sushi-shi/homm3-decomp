@@ -2119,7 +2119,7 @@ philai	?ValueOfPrison@@YIHPAVNewmapCell@@PAVplayerData@@@Z	100.0000	100.0000	100
 philai	?ValueOfRallyFlag@@YIHPBVhero@@PAJ@Z	100.0000	100.0000	100.0000	0x12a5f0
 philai	?ValueOfRefugeeCamp@@YIHPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x12a700
 philai	?ValueOfResource@@YIJPBVhero@@PAVNewmapCell@@PAVplayerData@@@Z	100.0000	100.0000	100.0000	0x12a7c0
-philai	?ValueOfScroll@@YIHPBVhero@@PAVNewmapCell@@@Z	87.2222	87.2222	87.2222	0x12a8c0
+philai	?ValueOfScroll@@YIHPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x12a8c0
 philai	?ValueOfSeaChest@@YIHPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x12a870
 philai	?ValueOfSirens@@YIHPBVhero@@@Z	100.0000	100.0000	100.0000	0x12a960
 philai	?ValueOfSpell@hero@@QBEHH@Z	100.0000	100.0000	100.0000	0x127aa0
@@ -2432,7 +2432,7 @@ sacrifice_window	?all_creatures@type_skeleton_window@@CIHAAVmessage@@@Z	100.0000
 sacrifice_window	?artifact_click@type_sacrifice_window@@QAEXJE@Z	100.0000	100.0000	100.0000	0x1632a0
 sacrifice_window	?backpack_click@type_sacrifice_window@@QAEXJE@Z	86.1308	86.1308	86.1308	0x1636c0
 sacrifice_window	?convert_with_commas@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@J@Z	100.0000	100.0000	100.0000	0x162660
-sacrifice_window	?create_artifact_widgets@type_sacrifice_window@@AAEXAAJH@Z	99.5918	100.0000	100.0000	0x160380
+sacrifice_window	?create_artifact_widgets@type_sacrifice_window@@AAEXAAJH@Z	99.9983	100.0000	100.0000	0x160380
 sacrifice_window	?create_creature_icons@type_sacrifice_window@@AAEJJJJJJAAJPAPAViconWidget@@1PAPAVtextWidget@@E@Z	100.0000	100.0000	100.0000	0x161f70
 sacrifice_window	?create_creature_icons@type_skeleton_window@@AAEXJJJJJJAAJPAPAViconWidget@@1PAPAVtextWidget@@@Z	100.0000	100.0000	100.0000	0x166760
 sacrifice_window	?create_creature_widgets@type_sacrifice_window@@AAEXAAJH@Z	100.0000	100.0000	100.0000	0x1610f0

@@ -1459,6 +1459,20 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"our_hero\s*->\s*set_value_of_knowledge\s*\(\s*value\s*\)"
             r"\s*;"),
     ),
+    ("philai.obj", 0x112510): (
+        SourceRule(
+            "ValueOfScroll keeps the customized/non-customized spell "
+            "assignment arms before the semantic SpellID constructor",
+            r"\bSpellID\s+spell\s*;.*?if\s*\(\s*cell\s*->\s*"
+            r"IsCustomized\s*\(\s*\)\s*\)\s*\{.*?spell\s*=\s*"
+            r"cell\s*->\s*extraInfo\s*&\s*0xff\s*;.*?\}\s*else\s*"
+            r"spell\s*=\s*cell\s*->\s*extraInfo\s*;\s*"
+            r"type_artifact\s+artifact\s*\(\s*spell\s*\)\s*;"),
+        SourceRule(
+            "ValueOfScroll may not flatten type_artifact(SpellID) into "
+            "manual artifact record writes",
+            r"\bartifact\s*\.\s*(?:artifactId|extra)\s*=", 0, 0),
+    ),
     ("adventureoptionswindow.obj", 0x5204): (
         SourceRule(
             "TAdventureOptionsWindow::WindowHandler keeps explicit close "
@@ -5744,6 +5758,39 @@ else
     if not any("sole caster local" in rule.description for rule in
                contract_violations(pointer_bonus, hero_bonuses_key)):
         failures.append("pointer-shaped AI_set_hero_bonuses call passed")
+    scroll_key = ("philai.obj", 0x112510)
+    scroll_probe = """\
+SpellID spell;
+if (cell->IsCustomized()) {
+    TreasureData* treasure = gpAdvManager->get_treasure_data(cell);
+    spell = cell->extraInfo & 0xff;
+    if (treasure->HasCustomGuardians)
+        value += AI_value_of_combat(current_hero, 0,
+            treasure->Guardians, 0, cell);
+} else
+    spell = cell->extraInfo;
+type_artifact artifact(spell);
+"""
+    if contract_violations(scroll_probe, scroll_key):
+        failures.append("aligned ValueOfScroll contract did not pass")
+    collapsed_scroll = scroll_probe.replace(
+        "} else\n    spell = cell->extraInfo;",
+        "}\nspell = cell->extraInfo;")
+    if not any("assignment arms" in rule.description for rule in
+               contract_violations(collapsed_scroll, scroll_key)):
+        failures.append("collapsed ValueOfScroll assignment arms passed")
+    flattened_scroll = scroll_probe.replace(
+        "type_artifact artifact(spell);",
+        "type_artifact artifact(ARTIFACT_SPELL_SCROLL);\n"
+        "artifact.extra = spell;")
+    flattened_scroll_rules = contract_violations(
+        flattened_scroll, scroll_key)
+    if not any("semantic SpellID constructor" in rule.description
+               for rule in flattened_scroll_rules):
+        failures.append("flattened ValueOfScroll constructor passed")
+    if not any("manual artifact record writes" in rule.description
+               for rule in flattened_scroll_rules):
+        failures.append("manual ValueOfScroll artifact write passed")
     adventure_options_key = ("adventureoptionswindow.obj", 0x5204)
     adventure_options_probe = """\
 unsigned char closeDialog = false;
