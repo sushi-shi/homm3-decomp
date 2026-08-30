@@ -1181,11 +1181,13 @@ public:
     NewSMapHeader& operator=(const NewSMapHeader& that);
 #ifdef HOMM3_SSWINDOW_HEADER_VECTORS
     // game.h:311 in the Dreamcast line table.  The selection-window TU is
-    // the retail caller too; /Ob2 expands this source boundary there into
-    // the CMapHeaderData assignment and the two string assignments.
+    // the retail caller too.  Complete retains the base-header assignment
+    // call while expanding the two following string assignments.
     void AssignData(CMapHeaderData* data, char* name, char* description)
     {
+#pragma inline_depth(0)
         static_cast<CMapHeaderData&>(*this) = *data;
+#pragma inline_depth()
         mapName.assign(name, strlen(name));
         mapDescription.assign(description, strlen(description));
     }

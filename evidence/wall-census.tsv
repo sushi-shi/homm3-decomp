@@ -27,13 +27,13 @@ inliner (predict-inline)	645	80.5858	3324	multiplayerwindow	??0TMultiPlayerWindo
 inliner (predict-inline)	643	70.6470	2190	game	?LoadMap@game@@QAE_NPAVTAbstractFile@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 under-inline, 8 over-inline (14 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	624	39.0772	1024	seerhut	?DoSeerEvent@TSeerHut@@QAEXPAVhero@@_N@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 5 under-inline, 2 over-inline (4 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	592	33.7160	893	singleselectionwindow	??1TSingleSelectionWindow@@UAE@XZ	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 16 over-inline (2 name-unresolvable pair(s) discounted)
-inliner (predict-inline)	586	24.8108	780	singleselectionwindow	?UpdateGameVars@TSingleSelectionWindow@@QAEXXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline (10 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	583	80.4012	2973	advmgr	?ProcessKeyPress@advManager@@QAEHPBVmessage@@PAEPAUtype_point@@PAPAVNewmapCell@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 7 over-inline (9 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	535	93.9598	8860	advmgr	?SetRolloverText@advManager@@QAEXPAVNewmapCell@@HH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline
 unclaimed (no source binding)	524	0.0000	524	singleselectionwindow	BackupGameHeaders	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 register-homing (why-reg)	516	81.4249	2776	cspriteframe	?DrawTile@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@EE@Z	why-branch	spill to dead-parameter slot (B4)
 inliner (predict-inline)	514	74.4096	2007	viewarmywindow	?WindowHandler@TViewArmyWindow@@UAEHPAVmessage@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 5 under-inline, 2 over-inline (16 name-unresolvable pair(s) discounted)
 control-flow (why-branch)	494	94.8708	9632	advmgr	?QuickInfo@advManager@@QAEXHHH@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
+inliner (predict-inline)	493	36.8378	780	singleselectionwindow	?UpdateGameVars@TSingleSelectionWindow@@QAEXXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 5 under-inline (10 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	421	62.5281	1123	ai_player	?hire_heroes@type_AI_player@@QAE_NXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline
 inliner (predict-inline)	395	83.3584	2375	game	?NextPlayer@game@@QAEXXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (4 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	384	83.5000	2328	advmgr	?ProcessHover@advManager@@QAEHHH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline

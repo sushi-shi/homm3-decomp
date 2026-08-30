@@ -1927,7 +1927,9 @@ void TSingleSelectionWindow::UpdateGameVars()
         return;
     }
 
-    if (static_cast<unsigned int>(currentMap) >= SelectionHeaders.size())
+    // Complete's x86 guard is the strict size < index spelling (cmp/jb),
+    // unlike the conventional >= form; DC independently proves the guard.
+    if (SelectionHeaders.size() < static_cast<unsigned int>(currentMap))
         return;
 
     GameSelectionHeadersStruct& selected = SelectionHeaders[currentMap];

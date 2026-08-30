@@ -2771,7 +2771,7 @@ singleselectionwindow	?TurnOffScenarioOptions@TSingleSelectionWindow@@QAEXXZ	100
 singleselectionwindow	?Update@TSingleSelectionWindow@@QAEHXZ	98.9811	98.9811	98.9811	0x184550
 singleselectionwindow	?UpdateAllyEnemyFlags@TSingleSelectionWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x185300
 singleselectionwindow	?UpdateFilterWidgets@TSingleSelectionWindow@@QAEXXZ	95.0755	95.0755	95.0755	0x17ef70
-singleselectionwindow	?UpdateGameVars@TSingleSelectionWindow@@QAEXXZ	24.8108	24.8108	24.8108	0x183580
+singleselectionwindow	?UpdateGameVars@TSingleSelectionWindow@@QAEXXZ	36.8378	36.8378	36.8378	0x183580
 singleselectionwindow	?UpdateNameLists@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x18c960
 singleselectionwindow	?UpdatePlayerPositions@TSingleSelectionWindow@@QAEXE@Z	70.4601	70.4601	70.4601	0x188330
 singleselectionwindow	?UpdateTown@TSingleSelectionWindow@@QAEXHHE@Z	100.0000	100.0000	100.0000	0x18cd50

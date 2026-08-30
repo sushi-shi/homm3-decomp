@@ -4737,10 +4737,13 @@ bool consider_hiring(long player_id, hero* candidate)
 // find_all_destinations prices what the new hero could reach - shared
 // against every own hero whose cell the search touched.
 // Raw NB11 places all thirteen named DC locals in the procedure scope.  It
-// also names the non-const town::get_army overload; removing the earlier
-// const-receiver cast is byte-flat and the source-shape gate now protects it.
+// also names the non-const town::get_army overload. The normalized retail
+// target labels the one surviving ICF-folded body with the const public, but
+// that synthesized name cannot prove which identical source overload called
+// it. A const-receiver cast is byte/score-flat and violates the positive DC
+// fact, so the source-shape gate correctly rejects it.
 // Residual (99.95219%): all 56 blocks and 481 instructions agree; only two
-// stack-color classes differ.  Retail uses {player_id,-0x14; i,-0x1c} where
+// stack-color classes differ. Retail uses {player_id,-0x14; i,-0x1c} where
 // our CL swaps them (their later best-value/touched partners follow), and
 // {-0x28 point temp; -0x20 monster_cell} where ours uses {-0x24;-0x28}.
 // The guided why-reg sweep tried all 17 applicable mutations without a gain.
