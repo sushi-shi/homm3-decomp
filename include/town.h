@@ -434,8 +434,8 @@ public:
     // (?IsCastle@town@@QBA_NXZ / ?IsCapitol@town@@QBA_NXZ, both kept
     // out of line by the DC linker in game.obj). See the
     // get_building_mask note above for why they landed together.
-    bool IsCastle() const;
-    bool IsCapitol() const;
+    unsigned char IsCastle() const;
+    unsigned char IsCapitol() const;
     void CalcNumLevelArchers(int* numArchers, int* archerLevel);
     long get_castle_growth_bonus(TCreatureType creature) const;
     short get_gold_income(unsigned char include_silo) const;
@@ -496,6 +496,11 @@ public:
     // joins for advManager::TownEvent, which runs it immediately after
     // ClaimTown on both of its capture paths.
     void destroy_extra_capitol();
+    // Dreamcast's LF_FIELDLIST puts these immediately before update_shipyard,
+    // in this order. BuildBuilding calls both, and retail inlines both into
+    // that owner.
+    void set_spells_available();
+    void update_full_building_mask();
     // 0x5bf210. Keeps the dock-with-boat pseudo-building synchronized
     // with the object occupying the town's dock square.
     void update_shipyard();

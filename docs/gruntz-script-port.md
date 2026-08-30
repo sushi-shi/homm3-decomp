@@ -260,6 +260,41 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-30 — `town::BuildBuilding` deliberately leaves a source-false
+  99.3036% local maximum and banks the recovered Dreamcast helper graph.**
+  The dossier at `town.obj+0x166fc8` records `type_building_id built` as its
+  surviving local and proves the opening `IsCastle` / `IsCapitol` snapshots,
+  `create_building`, `update_full_building_mask`, two
+  `set_spells_available` calls, and the later `IsCapitol` / `IsCastle`
+  change test. Raw type records further prove that the two accessors return
+  `unsigned char`, while the class field list puts the two restored mutators
+  immediately before `update_shipyard` in declaration order. The old source
+  flattened all four helper bodies and renamed the result local to preserve a
+  high candidate percentage; it was therefore not an admissible endpoint.
+
+  Restoring that coherent source shape currently scores **92.5627%** against
+  the banked **99.3036%** maximum. This is an expected reconstruction dip,
+  not a regression to unwind: all 72 retail CFG blocks still align, the first
+  inlined spell-count pass is exact, and changing the header state also makes
+  `advManager::monsters_sell_out` exact. `recruitUnit::Update` temporarily
+  moves from 90.8376% to 88.2360%; max/history retain both earlier peaks.
+  The residual is bounded to VC6 frame/local colouring, the
+  `update_full_building_mask` and second spell-helper register schedules, and
+  one commutative `teamInfo` SIB encoder choice. Experiments with forced
+  inlining, asymmetric inline depth, a dead `built` initializer, and alternate
+  declaration placement did not improve the coherent form.
+
+  The evidence classification is asymmetric: the named helper boundaries,
+  their order and multiplicity, the `built` local, accessor return types, and
+  helper-body statement sequences **agree**; Complete's ownership/team update
+  is **retail-only**; no incompatible **dc-only** fact is established; the
+  exact VC6 local-colouring cause remains **unknown**. Eight fatal source
+  contracts and negative controls now reject renaming the local, flattening
+  either accessor/mutator, hoisting the spell-count local, dropping the second
+  refresh, or reversing the final test. The historical percentage remains
+  useful codegen evidence, but cannot authorize any of those source-shape
+  regressions.
+
 - **2026-08-30 — `game::GetNewHeroId` now banks its compatible Dreamcast
   local inventory and selection structure without claiming the older ABI.**
   The mandatory dossier for retail `0x004bb5e0` / `game.obj:0xa6cd4`

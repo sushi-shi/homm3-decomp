@@ -646,16 +646,20 @@ void town::initialize_spells(const TownExtra* town_setup)
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\town.cpp:1206
-DC_ONLY(0x166b64, 0xA4)
 void town::set_spells_available()
 {
-    // @stub
+    memset(mageGuildSpellCounts, 0, sizeof(mageGuildSpellCounts));
+    for (int level = 1; level <= field_14; level++) {
+        int count = gMageGuildBaseSpellCounts[level - 1];
+        if (type == TOWN_TOWER && HasBuilding(EXTRA_1_ID, 1))
+            count++;
+        while (count > 0
+               && mageGuildSpells[level - 1][count - 1] == -1)
+            count--;
+        mageGuildSpellCounts[level - 1] = count;
+    }
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\town.cpp:1226
 // ORs the building's 64-bit bit into `built` and strips the buildings
@@ -802,6 +806,22 @@ void town::destroy_extra_capitol()
 // per-TU.
 void CheckEndGame(int bForceWin);
 
+// E:\gamedcs\Town.h:337 / :342. BuildBuilding's first and later
+// breakpoint groups prove these two source-visible accessor boundaries.
+// One level of caller inlining retains the accessors while keeping their
+// inner HasBuilding calls out of line where the retail schedule does.
+inline unsigned char town::IsCastle() const
+{
+    return HasBuilding(CASTLE_FORT_ID, 0)
+        || HasBuilding(CASTLE_CITADEL_ID, 0)
+        || HasBuilding(CASTLE_CASTLE_ID, 0);
+}
+
+inline unsigned char town::IsCapitol() const
+{
+    return HasBuilding(HALL_CAPITOL_ID, 0);
+}
+
 // E:\gamedcs\town.cpp:1340
 // The public build entry: snapshots the fort-line/Capitol state,
 // delegates to create_building, sets the ownership flag on real builds
@@ -811,44 +831,29 @@ void CheckEndGame(int bForceWin);
 // Capitol first appears, runs the upgrade victory check, applies the
 // Tower Lookout/Skyship visibility, and re-applies special building
 // effects to both resident heroes.
-// Residual (99.3036%): one `teamInfo[team]` SIB base/index swap
-// (base ecx+eax, retail eax+ecx) - the B18 encoder tie-break class -
-// plus reloc-name cosmetics on the bitNumber loads.
-//
-// THE SEVEN HasBuilding SITES ARE PINNED, AND THAT IS WHAT RESTORES THE
-// 99.3036 (from 78.5766, 2026-08-20). town.h's HasBuilding note already
-// states the rule - "town.obj must NOT see the BODY", because retail
-// declines to expand the inline here and emits `call town_HasBuilding`
-// (0x4305a0, 0x66 B) instead - but the view-gate audit retired the
-// HOMM3_TOWN_HASBUILDING_API macro that had been enforcing it (654997d,
-// group 7; the header's prose survived the merge, the `#if` did not), and this
-// compiland then expanded all seven and the row fell 20.7 points.
-// `predict-inline` names it exactly: base 11 out-of-line calls against
-// retail's 18, the whole gap being `town_HasBuilding retail x7` with no
-// base counterpart, and this body's seven source sites ARE those seven.
-// The replacement for the retired macro is the standing lever for the
-// OVER-inline class - statement-scoped `#pragma inline_depth(0)` at the
-// SITE - which needs no view gate, no header edit, and changes nothing
-// any other compiland sees. The same single site in get_growth_rate
-// below is worth 88.4737 -> 100.0000, i.e. exact.
-// The third pin restores depth BEFORE the `if` body so it does not also
-// reach `worldMap.cell()`, which retail expands.
+// The former 99.3036% high-water source flattened four Dreamcast-proven
+// boundaries: IsCastle, IsCapitol, update_full_building_mask and both calls
+// to set_spells_available. Restoring the original source shape deliberately
+// moves the current checkpoint to 92.5627%; max/history retain the old peak.
+// All 72 retail CFG blocks still align. The first spell-count expansion is
+// exact, while the residual is frame/local colouring plus the second helper's
+// register schedule and one teamInfo base/index encoder tie-break. Do not
+// recover the historical percentage by flattening these helpers again.
 VA(0x005bede0, 0x427)  // anchor-global, dc 0x166fc8
 type_building_id town::BuildBuilding(int buildingId,
                                      unsigned char SetBuiltFlag,
                                      unsigned char apply_special_effect)
 {
-#pragma inline_depth(0)
-    unsigned char had_fort = (built & bitNumber[CASTLE_FORT_ID])
-        || HasBuilding(CASTLE_CITADEL_ID, 0)
-        || HasBuilding(CASTLE_CASTLE_ID, 0);
+    type_building_id built;
+#pragma inline_depth(1)
+    unsigned char had_fort = IsCastle();
+    unsigned char had_capitol = IsCapitol();
 #pragma inline_depth()
-    unsigned char had_capitol = (built & bitNumber[HALL_CAPITOL_ID]) != 0;
     // The parameter is int - DC-attested (`...QAA?AW4type_building_id@@
     // HEE@Z`) and required by the townmgr call sites - while
     // create_building's domain is the enum; the conversion is the
     // boundary between retail's own two spellings of the id.
-    type_building_id result = create_building(type_building_id(buildingId));
+    built = create_building(type_building_id(buildingId));
 
     if (SetBuiltFlag && buildingId != DOCK_WITH_BOAT_ID) {
         if (gpGame->setup.difficulty < 2) {
@@ -864,47 +869,20 @@ type_building_id town::BuildBuilding(int buildingId,
         }
     }
 
-    active = built;
-    for (int i = 0; i < MAX_BUILDING_TYPE; i++) {
-        if (built & bitNumber[i])
-            active |= included_buildings[type][i];
-    }
+    update_full_building_mask();
 
     if (buildingId <= MAGE_GUILD5_ID) {
         field_14 = buildingId + 1;
-        memset(mageGuildSpellCounts, 0, sizeof(mageGuildSpellCounts));
-        for (int level = 1; level <= field_14; level++) {
-            int count = gMageGuildBaseSpellCounts[level - 1];
-            if (type == TOWN_TOWER && (active & bitNumber[EXTRA_1_ID]))
-                count++;
-            while (count > 0
-                   && mageGuildSpells[level - 1][count - 1] == -1)
-                count--;
-            mageGuildSpellCounts[level - 1] = count;
-        }
+        set_spells_available();
     }
     if (type == TOWN_TOWER && buildingId == EXTRA_1_ID) {
-        memset(mageGuildSpellCounts, 0, sizeof(mageGuildSpellCounts));
-        for (int level = 1; level <= field_14; level++) {
-            int count = gMageGuildBaseSpellCounts[level - 1];
-#pragma inline_depth(0)
-            if (type == TOWN_TOWER && HasBuilding(EXTRA_1_ID, 1))
-#pragma inline_depth()
-                count++;
-            while (count > 0
-                   && mageGuildSpells[level - 1][count - 1] == -1)
-                count--;
-            mageGuildSpellCounts[level - 1] = count;
-        }
+        set_spells_available();
     }
     GiveSpells(0);
 
-#pragma inline_depth(0)
-    if ((HasBuilding(HALL_CAPITOL_ID, 0) && !had_capitol)
-        || ((HasBuilding(CASTLE_FORT_ID, 0)
-             || HasBuilding(CASTLE_CITADEL_ID, 0)
-             || HasBuilding(CASTLE_CASTLE_ID, 0))
-            && !had_fort))
+#pragma inline_depth(1)
+    if ((IsCapitol() && !had_capitol)
+        || (IsCastle() && !had_fort))
 #pragma inline_depth()
     {
         gpGame->ConvertObject(gpGame->worldMap.cell(mapX, mapY, mapZ));
@@ -928,7 +906,7 @@ type_building_id town::BuildBuilding(int buildingId,
         ApplySpecialBuildingEffect(gpGame->GetHero(garrisonHeroId));
     if (visitingHeroId != -1 && apply_special_effect)
         ApplySpecialBuildingEffect(gpGame->GetHero(visitingHeroId));
-    return result;
+    return built;
 }
 
 // E:\gamedcs\town.cpp:1417
@@ -1818,25 +1796,26 @@ unsigned char check_shipyard_square(town* current_town, long x, long y)
     return 0;
 }
 
-#if 0  // @carcass
-
 // No retail row for either of these two - inlined into town::initialize
 // (initialize_army) and into its callers (update_full_building_mask).
 // E:\gamedcs\town.cpp:2017
+#if 0  // @carcass
 DC_ONLY(0x168330, 0xFC)
 void initialize_army(town* current_town, const TownExtra* town_setup)
 {
     // @stub
 }
+#endif  // @carcass
 
 // E:\gamedcs\town.cpp:2084
-DC_ONLY(0x168494, 0x6E)
 void town::update_full_building_mask()
 {
-    // @stub
+    active = built;
+    for (int i = 0; i < MAX_BUILDING_TYPE; i++) {
+        if (HasBuilding(i, 0))
+            active |= included_buildings[type][i];
+    }
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\town.cpp:2097
 // "Buildable right now": the town record's own veto byte, the legal
