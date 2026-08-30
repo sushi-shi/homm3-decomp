@@ -294,6 +294,24 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"\bhuman_strength\s*=\s*0\s*;.*?"
             r"\bsum_player_dwellings\s*\("),
     ),
+    ("game.obj", 0xAEB64): (
+        SourceRule(
+            "loadVictoryCondition keeps Dreamcast's procedure-scope "
+            "int_buffer, count and char_buffer locals in raw NB11 order",
+            r"\A\s*int\s+int_buffer\s*;\s*"
+            r"int\s+count\s*;\s*char\s+char_buffer\s*;"),
+        SourceRule(
+            "loadVictoryCondition keeps Dreamcast's two leading count/read "
+            "assignments and common-flag statement order",
+            r"\bcount\s*=\s*infile\s*->\s*Read\s*\(\s*"
+            r"&\s*char_buffer\s*,\s*sizeof\s*\(\s*char_buffer\s*\)\s*"
+            r"\)\s*;\s*victoryCondition\s*\.\s*AllowNormalVictory\s*"
+            r"=\s*char_buffer\s*!=\s*0\s*;\s*"
+            r"count\s*=\s*infile\s*->\s*Read\s*\(\s*"
+            r"&\s*char_buffer\s*,\s*sizeof\s*\(\s*char_buffer\s*\)\s*"
+            r"\)\s*;\s*victoryCondition\s*\.\s*AppliesToComputer\s*"
+            r"=\s*char_buffer\s*!=\s*0\s*;"),
+    ),
     ("events.obj", 0x94760): (
         SourceRule(
             "DoEventPrison keeps Dreamcast's THeroID source local under its "
@@ -2576,6 +2594,32 @@ return (float(gHeroGoldCost) + army_value) / float(increment * 40);
     if not contract_violations(
             "int count;\nunsigned int x;\n", mine_pool_key):
         failures.append("unsigned LoadMinePool x escaped source-shape gate")
+    load_victory_key = ("game.obj", 0xAEB64)
+    load_victory_probe = """\
+int int_buffer;
+int count;
+char char_buffer;
+count = infile->Read(&char_buffer, sizeof(char_buffer));
+victoryCondition.AllowNormalVictory = char_buffer != 0;
+count = infile->Read(&char_buffer, sizeof(char_buffer));
+victoryCondition.AppliesToComputer = char_buffer != 0;
+switch (type) {}
+"""
+    if contract_violations(load_victory_probe, load_victory_key):
+        failures.append("aligned loadVictoryCondition source shape did not pass")
+    reordered_load_victory = load_victory_probe.replace(
+        "int int_buffer;\nint count;\nchar char_buffer;",
+        "int count;\nchar char_buffer;\nint int_buffer;")
+    if not any("raw NB11 order" in rule.description for rule in
+               contract_violations(reordered_load_victory,
+                                   load_victory_key)):
+        failures.append("reordered loadVictoryCondition locals passed")
+    flattened_load_victory = load_victory_probe.replace(
+        "count = infile->Read", "infile->Read")
+    if not any("two leading count/read assignments" in rule.description
+               for rule in contract_violations(flattened_load_victory,
+                                                load_victory_key)):
+        failures.append("flattened loadVictoryCondition count reads passed")
     prison_key = ("events.obj", 0x94760)
     prison_probe = """\
 int heroID = cell->extraInfo;

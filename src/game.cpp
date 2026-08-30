@@ -7099,11 +7099,13 @@ int NewSMapHeader::saveVictoryCondition(char type, TAbstractFile* outfile)
 // live retail record. The two common flags are normalized to bool; only the
 // creature/resource amounts, resource id and final upgraded-town byte retain
 // short-read checks. Saves before the Complete roster remap two campaign ids.
-// Residual (99.84%, 2026-08-26): all 34 blocks, control flow and operations
-// agree. Five blocks differ only in VC6's stack-slot coloring for the common
-// flag byte and the resource/upgraded-town case buffers; the reconstructed
-// int_buffer/count/char_buffer roster and all case semantics are DC-backed.
-VA(0x004c3890, 0x3E4)  // sole NewSMapHeader::Load caller + DC helper identity
+// Residual (99.8359%, 2026-08-30): all 34 blocks, control flow and operations
+// agree. Raw NB11 proves the procedure-scope int_buffer/count/char_buffer
+// order, and both leading reads retain Dreamcast's count assignments even
+// though Complete removed their short-read guards. The five differing blocks
+// are only VC6 stack coloring. Shared DC buffers, shared post-flag case temps
+// and function-scope Complete temps all displaced otherwise-exact homes.
+VA(0x004c3890, 0x3E4)  // sole Load caller + retail body; dc 0xaeb64
 int NewSMapHeader::loadVictoryCondition(char type, TAbstractFile* infile,
                                         int saveVersion)
 {
@@ -7111,9 +7113,9 @@ int NewSMapHeader::loadVictoryCondition(char type, TAbstractFile* infile,
     int count;
     char char_buffer;
 
-    infile->Read(&char_buffer, sizeof(char_buffer));
+    count = infile->Read(&char_buffer, sizeof(char_buffer));
     victoryCondition.AllowNormalVictory = char_buffer != 0;
-    infile->Read(&char_buffer, sizeof(char_buffer));
+    count = infile->Read(&char_buffer, sizeof(char_buffer));
     victoryCondition.AppliesToComputer = char_buffer != 0;
 
     switch (type) {

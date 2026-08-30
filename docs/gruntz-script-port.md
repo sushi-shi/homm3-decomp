@@ -309,6 +309,31 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   and `why-reg` controls leave the same post-allocation address-fold tie. Fatal
   rules and negative controls now reject the old buffer reuse even though it
   had the same percentage.
+- **2026-08-30 — `NewSMapHeader::loadVictoryCondition` restores two
+  optimized-out Dreamcast assignments and banks the honest 99.8359% stack-
+  coloring plateau.** The mandatory dossier at game.obj+0xaeb64 contains 119
+  breakpoint rows, 65 lexical scopes, and 26 `gzread` calls. Because the
+  compact scope tree does not attach locals to a lexical owner, the raw NB11
+  records were inspected: `int_buffer`, `count`, and `char_buffer` are the
+  only `S_REGREL32` locals before the first `S_BLOCK32`, in that procedure-
+  scope order; no nested local record occurs before the next procedure. The
+  two leading reads now retain DC's `count =` assignments. They optimize out
+  byte-flat in Complete, whose retail CFG directly contradicts the older
+  build's two immediate short-read returns. A fatal asymmetric source rule
+  and negative controls reject either reordering the three locals or erasing
+  those assignments; the claim now carries the missing `dc 0xaeb64` bridge.
+
+  Retail and candidate remain the same 996-byte extent with an exact 34-block
+  CFG and identical operations. The only differences are stack homes in five
+  blocks: the common flag byte, the resource byte, the upgraded-town dword,
+  and the final castle byte. Reusing DC's common buffers measured 99.15641%;
+  sharing only its char buffer measured 99.23333%; shared Complete case
+  temporaries measured 99.78718%; and hoisting the Complete temporaries to
+  function scope measured 99.75641%. All changed otherwise-exact homes or the
+  frame, while the recovered dead assignments remain at the best
+  **99.8359%**. Complete's saved-version hero remap and selective read checks
+  remain retail-only revision facts rather than being forced to the older DC
+  counts.
 
 - **2026-08-30 — `combatManager::AreaEffect` restores its Dreamcast local
   roster and banks the honest 99.8565% register-allocation plateau.** The
