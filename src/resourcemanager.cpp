@@ -1144,31 +1144,42 @@ TPalette16* ResourceManager::GetPalette(const char* name)
     return loaded;
 }
 
-// Residual (99.9273%): the complete plain-char[24] header (DC type 0x289e) +
-// 256-TRGBA file shape,
-// ordinary/archive adapters, fallback search, reporter calls, allocation,
-// optional saturation and cleanup semantics agree. Both sides contain 220
-// body instructions. OpenResourcePath closes the string-temporary midpoint;
-// both sides now have 24 blocks and the same 14-branch sequence. Only local
-// coloring remains: candidate frame 0x444 versus retail 0x43c. A generated
+// Residual (99.9273%): Dreamcast's two named locals are restored literally as
+// char header[24] (type 0x289e) then TRGBA rgba[256] (type 0x289f), and its
+// header-read, rgba-read, direct TPalette24 construction and optional AdjustHSV
+// order is preserved in both retail-corroborated Complete paths. The ordinary/
+// archive adapters, fallback search, reporter calls, allocation and cleanup
+// semantics agree. Candidate and retail each contain 220 body instructions,
+// 24 blocks and the same 14-branch sequence; paired calls and data relocations
+// agree. OpenResourcePath closes the earlier string-temporary midpoint.
+//
+// The remainder is only stack coloring: candidate frame 0x444 versus retail
+// 0x43c, because retail overlaps eight bytes of the destroyed path-string slot
+// with the later stdio adapter while this C1 state does not. A generated
 // 120-form declaration/result/file-lifetime tree is flat at this peak except
-// explicit zero initialization, which regresses to 93.10; eight natural helper
-// bodies also leave the direct expression best.
+// explicit zero initialization (93.10), and eight natural helper bodies leave
+// the direct expression best. Renewed tests are also bounded: branch-local
+// result declarations, result/file reordering, a shared interface pointer, an
+// interface-before-adapter declaration and a named fopen result are byte-flat;
+// an explicit ordinary/archive else is 93.1045, direct adapter calls are
+// 96.8864, and a named path local is 99.8773 while losing exact LoadFont.
+// why-reg's nine legal probes are flat or worse. Treat this as TU/C1 state, not
+// permission to remove the Dreamcast-proven local names or statement shape.
 VA(0x0055b470, 0x2D1)  // dc/hd public identity + retail palette-file shape
 TPalette24* ResourceManager::GetPalette24(const char* name)
 {
     TPalette24* result;
     char header[24];
-    TRGBA paletteData[256];
+    TRGBA rgba[256];
     FILE* file = OpenResourcePath(name);
     if (file) {
         try {
             t_stdio_file_adapter stream(file);
             TAbstractFile* streamInterface = &stream;
             streamInterface->Read(header, sizeof(header));
-            streamInterface->Read(paletteData, sizeof(paletteData));
+            streamInterface->Read(rgba, sizeof(rgba));
 
-            result = new TPalette24(paletteData);
+            result = new TPalette24(rgba);
             if (gGraphicsSaturated)
                 result->AdjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
 
@@ -1230,9 +1241,9 @@ TPalette24* ResourceManager::GetPalette24(const char* name)
     t_lod_file_adapter stream(lodFile);
     TAbstractFile* streamInterface = &stream;
     streamInterface->Read(header, sizeof(header));
-    streamInterface->Read(paletteData, sizeof(paletteData));
+    streamInterface->Read(rgba, sizeof(rgba));
 
-    result = new TPalette24(paletteData);
+    result = new TPalette24(rgba);
     if (gGraphicsSaturated)
         result->AdjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
     return result;

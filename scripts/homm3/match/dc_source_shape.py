@@ -453,6 +453,27 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"\beffect\s*\[\s*1\s*\]\s*\.\s*dwelling\s*=\s*slot\s*;"
             r".*?\beffect\s*\[\s*1\s*\]\s*\.\s*bonus\s*="),
     ),
+    ("resourcemanager.obj", 0x121EC8): (
+        SourceRule(
+            "GetPalette24 keeps Dreamcast's char[24] header and TRGBA[256] "
+            "rgba locals in CodeView declaration order and under their "
+            "recovered names",
+            r"\bchar\s+header\s*\[\s*24\s*\]\s*;\s*"
+            r"TRGBA\s+rgba\s*\[\s*256\s*\]\s*;"),
+        SourceRule(
+            "GetPalette24 keeps the retail-corroborated ordinary/archive "
+            "copies of Dreamcast's header-then-rgba read sequence",
+            r"streamInterface\s*->\s*Read\s*\(\s*header\s*,\s*"
+            r"sizeof\s*\(\s*header\s*\)\s*\)\s*;\s*"
+            r"streamInterface\s*->\s*Read\s*\(\s*rgba\s*,\s*"
+            r"sizeof\s*\(\s*rgba\s*\)\s*\)\s*;", 2, 2),
+        SourceRule(
+            "GetPalette24 keeps both retail paths on Dreamcast's direct "
+            "TPalette24 construction followed by optional AdjustHSV shape",
+            r"result\s*=\s*new\s+TPalette24\s*\(\s*rgba\s*\)\s*;\s*"
+            r"if\s*\(\s*gGraphicsSaturated\s*\)\s*"
+            r"result\s*->\s*AdjustHSV\s*\(", 2, 2),
+    ),
     ("philai.obj", 0x10FEB8): (
         SourceRule(
             "value_of_experience keeps Dreamcast's no-argument const hero "
@@ -2498,6 +2519,40 @@ effect[1].bonus = *bonus;
                                initialize_hordes_key):
         failures.append(
             "reordered initialize_hordes dwelling/bonus stores passed")
+    palette24_key = ("resourcemanager.obj", 0x121EC8)
+    palette24_path = """\
+streamInterface->Read(header, sizeof(header));
+streamInterface->Read(rgba, sizeof(rgba));
+result = new TPalette24(rgba);
+if (gGraphicsSaturated)
+    result->AdjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
+"""
+    palette24_probe = """\
+TPalette24* result;
+char header[24];
+TRGBA rgba[256];
+""" + palette24_path * 2
+    if contract_violations(palette24_probe, palette24_key):
+        failures.append("aligned GetPalette24 source shape did not pass")
+    renamed_palette24 = palette24_probe.replace("rgba", "paletteData")
+    if not any("recovered names" in rule.description for rule in
+               contract_violations(renamed_palette24, palette24_key)):
+        failures.append("renamed GetPalette24 rgba local passed")
+    reversed_palette24 = palette24_probe.replace(
+        "streamInterface->Read(header, sizeof(header));\n"
+        "streamInterface->Read(rgba, sizeof(rgba));",
+        "streamInterface->Read(rgba, sizeof(rgba));\n"
+        "streamInterface->Read(header, sizeof(header));", 1)
+    if not any("header-then-rgba" in rule.description for rule in
+               contract_violations(reversed_palette24, palette24_key)):
+        failures.append("reversed GetPalette24 read sequence passed")
+    flattened_palette24 = palette24_probe.replace(
+        "result = new TPalette24(rgba);",
+        "result = NewPalette24(rgba);", 1)
+    if not any("direct TPalette24 construction" in rule.description
+               for rule in contract_violations(flattened_palette24,
+                                                palette24_key)):
+        failures.append("flattened GetPalette24 constructor passed")
     hero_bonuses_key = ("philai.obj", 0x10FEF4)
     hero_bonuses_probe = """\
 type_spellvalue caster(our_hero);
