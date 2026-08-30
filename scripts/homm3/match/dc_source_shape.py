@@ -2328,6 +2328,20 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"\s*\)\s*;\s*if\s*\(\s*w\s*\)\s*\{\s*"
             r"int\s+saveStatus\s*=\s*w\s*->\s*status\s*;"),
     ),
+    ("singleselectionwindow.obj", 0x14870C): (
+        SourceRule(
+            "CNewPlayerUpdateMan::NewPlayer keeps Dreamcast's sole index "
+            "local and GetFirstAvailable boundary before the guarded scope",
+            r"\A\s*int\s+index\s*=\s*GetFirstAvailable\s*\(\s*\)\s*;"
+            r"\s*if\s*\(\s*index\s*!=\s*-\s*1\s*\)\s*\{", 1, 1),
+        SourceRule(
+            "CNewPlayerUpdateMan::NewPlayer keeps Dreamcast's proc "
+            "construction then virtual Go statement order",
+            r"m_procs\s*\[\s*index\s*\]\s*=\s*new\s+"
+            r"CNewPlayerUpdateProc\s*\(\s*dpid\s*\)\s*;\s*"
+            r"m_procs\s*\[\s*index\s*\]\s*->\s*Go\s*\(\s*\)\s*;",
+            1, 1),
+    ),
     ("singleselectionwindow.obj", 0x140D74): (
         SourceRule(
             "SendPlayerPositions keeps Dreamcast's explicit two-array "
@@ -4340,6 +4354,37 @@ if (s != 0.0f) {
                    contract_violations(probe, hsv_to_rgb_key)):
             failures.append("broken HSVToRGB " + description
                             + " source shape passed")
+    new_player_key = ("singleselectionwindow.obj", 0x14870C)
+    new_player_probe = """\
+int index = GetFirstAvailable();
+if (index != -1) {
+    m_procs[index] = new CNewPlayerUpdateProc(dpid);
+    m_procs[index]->Go();
+}
+"""
+    if contract_violations(new_player_probe, new_player_key):
+        failures.append("aligned CNewPlayerUpdateMan::NewPlayer shape did not pass")
+    new_player_mutations = (
+        (new_player_probe.replace("int index", "int i").replace(
+            "index", "i"), "sole index local"),
+        (new_player_probe.replace(
+            "int index = GetFirstAvailable();", "int index = 0;"),
+         "GetFirstAvailable boundary"),
+        (new_player_probe.replace(
+            "m_procs[index] = new CNewPlayerUpdateProc(dpid);\n"
+            "    m_procs[index]->Go();",
+            "m_procs[index]->Go();\n"
+            "    m_procs[index] = new CNewPlayerUpdateProc(dpid);"),
+         "construction then virtual Go"),
+        (new_player_probe.replace("m_procs[index]->Go();",
+                                  "CNewPlayerUpdateProc::Go();"),
+         "virtual Go statement"),
+    )
+    for probe, description in new_player_mutations:
+        if not any(description in rule.description for rule in
+                   contract_violations(probe, new_player_key)):
+            failures.append("broken CNewPlayerUpdateMan::NewPlayer "
+                            + description + " shape passed")
     send_key = ("singleselectionwindow.obj", 0x140D74)
     send_probe = """\
 CUpdatePlayerPosMsg msg(m_players.humanPlayers,

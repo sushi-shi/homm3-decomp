@@ -260,6 +260,30 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-30 — `CNewPlayerUpdateMan::NewPlayer` exposes a conflated
+  two-vtable model; the tempting one-for-one exact trade is rejected.** The
+  mandatory Dreamcast pass at `singleselectionwindow.obj:0x14870c` proves the
+  `index` local, `GetFirstAvailable`, guarded `CNewPlayerUpdateProc`
+  construction and subsequent virtual `Go` boundary. Complete retail at
+  `0x0058a280` has the same nine-block flow and every ordinary instruction;
+  its sole extra instruction is a relocation-backed store of vtable
+  `0x00641d44`, raising the current body from **95.3860% to 100%** when
+  `__declspec(novtable)` is removed.
+
+  That apparent closure is not admissible in isolation. Retail constructor
+  `0x00589240` stores the distinct vtable `0x00641d38`; the two tables each
+  contain three different function addresses (`0x577d70/0x577de0/0x578930`
+  versus `0x5789f0/0x578a90/0x5795a0`). The current header incorrectly joins
+  both families as one `CNewPlayerUpdateProc`. Removing `novtable` also adds
+  a vptr reset to the exact non-virtual destructor at `0x00583ef0`, lowering
+  it to **93.6111%**. The build therefore stays at the honest 95.3860% /
+  exact-destructor state until those dynamic types are split. Secondary IDA
+  names the `0x641d38` family `t_map_list_update`; that name is a hypothesis,
+  while the two retail vtable identities and the need for a split are direct
+  byte/relocation facts. A source-shape ratchet preserves Dreamcast's local
+  and helper order so the later type campaign cannot "fix" this by flattening
+  the constructor or virtual call.
+
 - **2026-08-30 — the first out-of-sample empty-body reconstruction,
   `CheckDoMain`, closes at 100% from Dreamcast source shape.** The starting
   state was a genuinely unreconstructed `#if 0 // @carcass` body: retail
