@@ -1414,6 +1414,12 @@ public:
     // public roster so it cannot split an attested pair.
     int get_mirror_effect() const;
 
+    // Complete's NextArmy directly combines the private reset latch with the
+    // shared IsIncapacitated helper. The exact retail lowering proves that
+    // combatManager can read this tail without making the Dreamcast-private
+    // data public; friendship is the source-level access that preserves both.
+    friend class combatManager;
+
 private:
     void animate_missile(army* armyToAttack);
     void attack_wall(TWallTargetId wall, long levelsDestroyed);
