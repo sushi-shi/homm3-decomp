@@ -2400,10 +2400,7 @@ public:
     //     move-order comparator. Its reconstructed body is byte-exact.
     unsigned char Unnamed464d40(army* selected);
     unsigned char Unnamed464f50(const army* incumbent, const army* candidate);
-    // TWO MORE ADDRESS ORDINALS, both pinned by SetNextArmy's body and
-    // both left unnamed for the reason above - no DC roster row reaches
-    // either, and neither carries a name in evidence/ida or the HD
-    // crossbuild map.
+    // One remaining address ordinal plus the named command rearm helper.
     //   0x5a40d0 (155 B, spells.obj) answers a byte and gates every one
     //     of the five artifact auto-casts: SetNextArmy asks it
     //     (spell, 3, side, 1, 2) and only calls CastSpell when it is
@@ -2413,14 +2410,13 @@ public:
     //     trailing 1 and 2 are unattested. It is NOT SpellCastWorks
     //     (0x5a3c80) or SpellCastWorkChance (0x5a8090) - both are
     //     declared above with different arities.
-    //   0x4782d0 (1461 B, command.obj) is a combatManager method taking
-    //     nothing, and SetNextArmy's epilogue calls it immediately after
-    //     clearing lastMovedArmy - i.e. it is what re-arms the command
-    //     bar for the new acting stack. Its compiland says the same.
+    //   0x4782d0 (1461 B, command.obj) is Dreamcast's named GetControl
+    //     method. SetNextArmy calls it immediately after clearing
+    //     lastMovedArmy, re-arming the command bar for the new stack.
     // Declared, not claimed: both bodies are outside this lane.
     unsigned char Unnamed5a40d0(SpellID spell, long mastery, long side,
                                 long arg4, long arg5);
-    void Unnamed4782d0();
+    void GetControl();
 #endif
     // ResetCycleTimers (0x479f30, 139 B) takes one GameTime::Get(), stores
     // it to the two hero fidget clocks, then walks numArmies on both sides

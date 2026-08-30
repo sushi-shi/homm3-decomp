@@ -405,6 +405,35 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"cell\s*->\s*type_value\s*=\s*0\s*;\s*"
             r"prisoner\s*->\s*obscure_cell\s*\(\s*\)\s*;"),
     ),
+    ("cmbtmgr.obj", 0x5F934): (
+        SourceRule(
+            "SetNextArmy keeps both Dreamcast army::get_controlling_side "
+            "source calls instead of a file-local expansion",
+            r"stack\s*->\s*get_controlling_side\s*\(\s*\)", 2, 2),
+        SourceRule(
+            "SetNextArmy keeps both Dreamcast army::GetName source calls "
+            "instead of a direct creature-trait expansion",
+            r"stack\s*->\s*GetName\s*\(\s*\)", 2, 2),
+        SourceRule(
+            "SetNextArmy keeps raw NB11's sole result local in the wraith "
+            "sample scope and the recovered message/helper order",
+            r"case\s+army\s*::\s*ARMY_CREATURE_WRAITH\s*:.*?"
+            r"if\s*\(\s*!\s*IsQuickCombat\s*\(\s*\)\s*\)\s*\{\s*"
+            r"SAMPLE2\s+sample\s*=\s*LoadPlaySample\s*\(.*?\)\s*;\s*"
+            r"std\s*::\s*string\s+result\s*;.*?"
+            r"if\s*\(\s*stack\s*->\s*numTroops\s*==\s*1\s*\).*?"
+            r"result\s*=\s*format_string\s*\(.*?stack\s*->\s*GetName"
+            r"\s*\(\s*\).*?else\s*\{.*?std\s*::\s*string\s+many\s*="
+            r"\s*format_string\s*\(.*?stack\s*->\s*GetName\s*\(\s*\)"
+            r".*?result\s*\.\s*assign\s*\(.*?\)\s*;.*?"
+            r"combatWindow\s*->\s*combat_message\s*\(\s*result\s*\.\s*"
+            r"c_str\s*\(\s*\)\s*,\s*1\s*,\s*0\s*\)\s*;.*?"
+            r"SpellEffect\s*\(.*?\)\s*;\s*WaitEndSample\s*\("),
+        SourceRule(
+            "SetNextArmy keeps Dreamcast's lastMovedArmy clear immediately "
+            "before the named GetControl tail call",
+            r"lastMovedArmy\s*=\s*0\s*;\s*GetControl\s*\(\s*\)\s*;"),
+    ),
     ("combatresultswindow.obj", 0x68364): (
         SourceRule(
             "TCombatResultsWindow keeps Dreamcast's function-scope amount, "
@@ -2720,6 +2749,54 @@ if (current_town->visitingHeroId != -1)
     if not any("final nested GetHero" in rule.description for rule in
                contract_violations(split_visiting_effect, enter_town_key)):
         failures.append("split AI_enter_town final helper group passed")
+    set_next_key = ("cmbtmgr.obj", 0x5F934)
+    set_next_probe = """\
+currentSide = stack->get_controlling_side();
+switch (stack->creatureType) {
+case army::ARMY_CREATURE_WRAITH:
+    hero* drained = heroes[1 - stack->get_controlling_side()];
+    if (!IsQuickCombat()) {
+        SAMPLE2 sample = LoadPlaySample("ManaDrai.wav");
+        std::string result;
+        if (stack->numTroops == 1)
+            result = format_string(one, stack->GetName(), drained->name);
+        else {
+            std::string many = format_string(
+                plural, stack->GetName(), drained->name);
+            result.assign(many, 0, std::string::npos);
+        }
+        if (combatWindow)
+            combatWindow->combat_message(result.c_str(), 1, 0);
+        SpellEffect(77, stack, 100, 0);
+        WaitEndSample(sample, -1);
+    }
+    break;
+}
+lastMovedArmy = 0;
+GetControl();
+"""
+    if contract_violations(set_next_probe, set_next_key):
+        failures.append("aligned SetNextArmy source shape did not pass")
+    local_controlling_side = set_next_probe.replace(
+        "stack->get_controlling_side()", "ControllingSide(stack)")
+    if not any("get_controlling_side" in rule.description for rule in
+               contract_violations(local_controlling_side, set_next_key)):
+        failures.append("file-local SetNextArmy controlling-side copy passed")
+    direct_creature_name = set_next_probe.replace(
+        "stack->GetName()", "CreatureName(stack->creatureType, "
+        "stack->numTroops)")
+    if not any("GetName" in rule.description for rule in
+               contract_violations(direct_creature_name, set_next_key)):
+        failures.append("de-inlined SetNextArmy GetName calls passed")
+    renamed_result = set_next_probe.replace("result", "message")
+    if not any("sole result local" in rule.description for rule in
+               contract_violations(renamed_result, set_next_key)):
+        failures.append("renamed SetNextArmy result local passed")
+    unnamed_control = set_next_probe.replace(
+        "GetControl();", "Unnamed4782d0();")
+    if not any("named GetControl" in rule.description for rule in
+               contract_violations(unnamed_control, set_next_key)):
+        failures.append("ordinal SetNextArmy GetControl tail passed")
     combat_results_key = ("combatresultswindow.obj", 0x68364)
     combat_results_probe = """\
 gpCombatResultsWindow = this;

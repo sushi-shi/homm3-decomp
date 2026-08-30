@@ -324,6 +324,27 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   the concrete anti-local-minimum control: the 99.7059% peak is historical
   evidence, not permission to delete a positive Dreamcast source fact.
 
+- **2026-08-30 — `combatManager::SetNextArmy` removes three source-false
+  surrogates without sacrificing its 99.6498% Windows peak.** The Dreamcast
+  dossier (`dc:0x5f934`) and raw NB11 record `result` as the sole surviving
+  local in the mana-drain message scope. The CodeView xrefs prove two
+  `army::get_controlling_side` calls, two `army::GetName` calls, and the
+  final named `combatManager::GetControl` call after `lastMovedArmy = 0`.
+  Retail corroborates the two expanded Army.h bodies and the command target
+  at `0x004782d0`.
+
+  The former 99.6498% source instead used a file-local controlling-side
+  clone, direct `CreatureName` calls, the renamed local `message`, and the
+  ordinal `Unnamed4782d0`. Restoring the original header-inline view and all
+  named boundaries is byte-flat: the candidate remains 1,270 bytes with all
+  74 Windows blocks aligned. It retires the three frozen missing-call rows
+  for `get_controlling_side`, `GetName`, and `GetControl`. Four fatal
+  asymmetric rules plus four negative controls now reject either helper
+  flattening, renaming `result`, or restoring the ordinal tail. The remaining
+  mismatch is still only the already-bounded string-temporary slot/RVO and
+  late register-allocation class; no Dreamcast fact was traded for that
+  percentage.
+
 - **2026-08-30 — `game::PerWeek` restores the inlined `town::IsCastle`
   source boundary and makes the complete neutral-town tail exact.** The
   mandatory dossier for `PerWeek` (`dc:0xb41e0`) ends with the older
