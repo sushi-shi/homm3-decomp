@@ -967,6 +967,29 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"mageGuildSpellCounts\s*\[\s*level\s*-\s*1\s*\]\s*=\s*"
             r"count\s*;\s*\}\s*\Z"),
     ),
+    ("town.obj", 0x166ED8): (
+        SourceRule(
+            "destroy_extra_capitol keeps both Dreamcast IsCapitol helper "
+            "boundaries",
+            r"\bIsCapitol\s*\(\s*\)", 2, 2),
+        SourceRule(
+            "destroy_extra_capitol keeps Dreamcast's self-Capitol guard, "
+            "GetTown/other-Capitol test and three mask updates in order",
+            r"\A\s*if\s*\(\s*IsCapitol\s*\(\s*\)\s*&&\s*owner\s*>=\s*0"
+            r"\s*\).*?town\s*\*\s*other_town\s*=\s*gpGame\s*->\s*"
+            r"GetTown\s*\(\s*town_id\s*\)\s*;\s*if\s*\(\s*"
+            r"other_town\s*->\s*IsCapitol\s*\(\s*\)\s*\)\s*\{\s*"
+            r"built\s*&=\s*~\s*bitNumber\s*\[\s*HALL_CAPITOL_ID\s*\]"
+            r"\s*;\s*built\s*\|=\s*bitNumber\s*\[\s*HALL_CITY_ID\s*\]"
+            r"\s*;\s*active\s*&=\s*~\s*bitNumber\s*\[\s*"
+            r"HALL_CAPITOL_ID\s*\]\s*;"),
+        SourceRule(
+            "destroy_extra_capitol keeps Dreamcast's NewfullMap::cell "
+            "boundary immediately before ConvertObject",
+            r"NewmapCell\s*\*\s*cell\s*=\s*gpGame\s*->\s*worldMap\s*\.\s*"
+            r"cell\s*\(\s*mapX\s*,\s*mapY\s*,\s*mapZ\s*\)\s*;\s*"
+            r"gpGame\s*->\s*ConvertObject\s*\(\s*cell\s*\)\s*;"),
+    ),
     ("town.obj", 0x166FC8): (
         SourceRule(
             "BuildBuilding keeps raw NB11's built local and the recovered "
@@ -4108,6 +4131,44 @@ for (int level = 1; level <= field_14; level++) {
         "(active & bitNumber[EXTRA_1_ID])")
     if not contract_violations(flattened_library_test, set_spells_key):
         failures.append("flattened set_spells_available HasBuilding passed")
+    destroy_capitol_key = ("town.obj", 0x166ED8)
+    destroy_capitol_probe = """\
+if (IsCapitol() && owner >= 0) {
+    town* other_town = gpGame->GetTown(town_id);
+    if (other_town->IsCapitol()) {
+        built &= ~bitNumber[HALL_CAPITOL_ID];
+        built |= bitNumber[HALL_CITY_ID];
+        active &= ~bitNumber[HALL_CAPITOL_ID];
+        NewmapCell* cell = gpGame->worldMap.cell(mapX, mapY, mapZ);
+        gpGame->ConvertObject(cell);
+    }
+}
+"""
+    if contract_violations(destroy_capitol_probe, destroy_capitol_key):
+        failures.append("aligned destroy_extra_capitol shape did not pass")
+    flattened_self_capitol = destroy_capitol_probe.replace(
+        "IsCapitol() && owner >= 0",
+        "(built & bitNumber[HALL_CAPITOL_ID]) && owner >= 0")
+    if not any("both Dreamcast IsCapitol" in rule.description for rule in
+               contract_violations(flattened_self_capitol,
+                                   destroy_capitol_key)):
+        failures.append("flattened destroy_extra_capitol self helper passed")
+    reordered_capitol_masks = destroy_capitol_probe.replace(
+        "built &= ~bitNumber[HALL_CAPITOL_ID];\n"
+        "        built |= bitNumber[HALL_CITY_ID];",
+        "built |= bitNumber[HALL_CITY_ID];\n"
+        "        built &= ~bitNumber[HALL_CAPITOL_ID];")
+    if not any("three mask updates in order" in rule.description for rule in
+               contract_violations(reordered_capitol_masks,
+                                   destroy_capitol_key)):
+        failures.append("reordered destroy_extra_capitol masks passed")
+    flattened_capitol_cell = destroy_capitol_probe.replace(
+        "gpGame->worldMap.cell(mapX, mapY, mapZ)",
+        "&gpGame->worldMap.cellData[index]")
+    if not any("NewfullMap::cell boundary" in rule.description for rule in
+               contract_violations(flattened_capitol_cell,
+                                   destroy_capitol_key)):
+        failures.append("flattened destroy_extra_capitol cell helper passed")
     build_building_key = ("town.obj", 0x166FC8)
     build_building_probe = """\
 type_building_id built;

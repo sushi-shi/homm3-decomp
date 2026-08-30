@@ -742,6 +742,22 @@ type_building_id town::create_building(type_building_id building)
     return building;
 }
 
+// E:\gamedcs\Town.h:337 / :342. These header-inline accessors must precede
+// destroy_extra_capitol as well as BuildBuilding: both Dreamcast bodies prove
+// source-visible calls, while each retail caller independently decides how
+// deeply VC6 expands the nested HasBuilding body.
+inline unsigned char town::IsCastle() const
+{
+    return HasBuilding(CASTLE_FORT_ID, 0)
+        || HasBuilding(CASTLE_CITADEL_ID, 0)
+        || HasBuilding(CASTLE_CASTLE_ID, 0);
+}
+
+inline unsigned char town::IsCapitol() const
+{
+    return HasBuilding(HALL_CAPITOL_ID, 0);
+}
+
 // E:\gamedcs\town.cpp:1313
 // Masks the same +0x150/+0x154 built mask against the capitol pair at
 // 0x66ce00 and tears the extra one down. Retail scans the owner's town-id
@@ -749,21 +765,24 @@ type_building_id town::create_building(type_building_id building)
 // owned town has a Capitol. The surviving City Hall bit is restored in
 // `built`, the Capitol bit is removed from `active`, and ConvertObject is
 // called for this town's map cell so its adventure object follows suit.
-// WALL (96.4595%, audited 2026-08-22): both objects have 111 instructions,
-// 13 blocks, seven conditional branches and one return, and their symbolic
-// branch streams agree.  The only residual is the register/schedule chosen
-// for the final `built |= City Hall; active &= ~Capitol` mask pair; the
-// operations, data symbols, member offsets and resulting stores all agree.
-// `vc6 why-reg` measured all 14 applicable catalog mutations.  Declaration
-// swaps and un-naming the size, id, count and limit were byte-flat; naming
-// either mask and every other volatile probe regressed.  Making the dead
-// loop `slot` volatile reduced register distance 34 -> 26 but remained
-// non-exact and would falsely model externally mutable state, so it was
-// rejected.  This is C2 scratch scheduling, not a missing source action.
+// SOURCE-SHAPE RATCHET (96.4595%, audited 2026-08-30): Dreamcast lines
+// 1314/1323 prove both IsCapitol boundaries and line 1329 proves the
+// NewfullMap::cell boundary. Restoring all three is byte-flat: both objects
+// still have 111 instructions, 13 blocks, seven conditional branches and one
+// return, with matching symbolic branch streams. The old direct masks and
+// hand-expanded cell index were therefore a source-false local maximum.
+// The only residual is the register/schedule chosen for the final
+// `built |= City Hall; active &= ~Capitol` mask pair. `vc6 why-reg` measured
+// all 14 applicable catalog mutations: declaration swaps and un-naming the
+// size, id, count and limit were byte-flat; naming either mask and every other
+// volatile probe regressed. Making the dead loop `slot` volatile reduced
+// register distance 34 -> 26 but remained non-exact and would falsely model
+// externally mutable state, so it was rejected. This is C2 scratch
+// scheduling, not evidence against the recovered helper shape.
 VA(0x005bec60, 0x173)  // retail body + dc identity, dc 0x166ed8
 void town::destroy_extra_capitol()
 {
-    if ((built & bitNumber[HALL_CAPITOL_ID]) && owner >= 0) {
+    if (IsCapitol() && owner >= 0) {
         playerData* player = &gpGame->players[owner];
         int town_count = player->numTowns;
         if (town_count <= 0)
@@ -778,14 +797,13 @@ void town::destroy_extra_capitol()
             char town_id = *town_cursor;
             if (town_id != id) {
                 town* other_town = gpGame->GetTown(town_id);
-                if (other_town->built & bitNumber[HALL_CAPITOL_ID]) {
+                if (other_town->IsCapitol()) {
                     built &= ~bitNumber[HALL_CAPITOL_ID];
                     built |= bitNumber[HALL_CITY_ID];
                     active &= ~bitNumber[HALL_CAPITOL_ID];
 
-                    int size = gpGame->worldMap.Size;
-                    NewmapCell* cell = &gpGame->worldMap.cellData[
-                        (mapZ * size + mapY) * size + mapX];
+                    NewmapCell* cell =
+                        gpGame->worldMap.cell(mapX, mapY, mapZ);
                     gpGame->ConvertObject(cell);
                     break;
                 }
@@ -805,22 +823,6 @@ void town::destroy_extra_capitol()
 // repeated here the way the import-thunk precedent repeats declarations
 // per-TU.
 void CheckEndGame(int bForceWin);
-
-// E:\gamedcs\Town.h:337 / :342. BuildBuilding's first and later
-// breakpoint groups prove these two source-visible accessor boundaries.
-// One level of caller inlining retains the accessors while keeping their
-// inner HasBuilding calls out of line where the retail schedule does.
-inline unsigned char town::IsCastle() const
-{
-    return HasBuilding(CASTLE_FORT_ID, 0)
-        || HasBuilding(CASTLE_CITADEL_ID, 0)
-        || HasBuilding(CASTLE_CASTLE_ID, 0);
-}
-
-inline unsigned char town::IsCapitol() const
-{
-    return HasBuilding(HALL_CAPITOL_ID, 0);
-}
 
 // E:\gamedcs\town.cpp:1340
 // The public build entry: snapshots the fort-line/Capitol state,
