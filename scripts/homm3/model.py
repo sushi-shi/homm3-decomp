@@ -144,6 +144,28 @@ def _write_compgen(src_claims) -> None:
                              c.meta["owner"], f"0x{c.size:x}"])
 
 
+def _upgrade_dense_data_alias(row: dict, claim) -> dict:
+    """Let a reviewed owner replace only a source DATA dense placeholder.
+
+    ``DATA()`` proves the address but deliberately contributes no source-level
+    spelling.  A reloc-alias row proves that missing spelling.  Treating the
+    two as contradictory prevents exactly the aggregate+addend recovery the
+    alias channel exists for; accepting any other replacement would hide a
+    genuine name/address conflict.
+    """
+    if row["name"] == claim.name:
+        return row
+    dense = f"data_{claim.rva:x}"
+    if row["provenance"] != "src-DATA" or row["name"] != dense:
+        raise ValueError(
+            f"reloc alias owner {claim.name!r} conflicts with "
+            f"{row['name']!r} at 0x{claim.rva:x}")
+    upgraded = dict(row)
+    upgraded.update(name=claim.name, unit=claim.unit,
+                    kind="data", provenance=claim.channel)
+    return upgraded
+
+
 def main(argv=None) -> int:
     import argparse
     # Parse even though there are no options (the gruntz lesson: `--help`
@@ -222,9 +244,10 @@ def main(argv=None) -> int:
     # an otherwise anonymous stripped-image relocation to it.
     for c in providers.reloc_aliases():
         if c.rva in rows:
-            if rows[c.rva]["name"] != c.name:
-                common.die(f"reloc alias owner {c.name!r} conflicts with "
-                           f"{rows[c.rva]['name']!r} at 0x{c.rva:x}")
+            try:
+                rows[c.rva] = _upgrade_dense_data_alias(rows[c.rva], c)
+            except ValueError as exc:
+                common.die(str(exc))
             continue
         put(c.rva, c.name, "", "", "data", c.channel)
 

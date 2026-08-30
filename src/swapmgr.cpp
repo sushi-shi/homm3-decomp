@@ -602,6 +602,10 @@ void swapManager::Update()
 }
 
 // E:\gamedcs\swapmgr.cpp:2165
+// Evaluating GetOtherHero before each message constructor is source-visible
+// scheduling, not a flattened accessor: it gives retail's two distinct 0x14
+// message slots and exact 39-block CFG. This closes 88.4550 -> 99.9650; the
+// remaining 0.035% is non-structural and includes still-unclaimed callees.
 VA(0x005b10d0, 0x2A8)  // switch ids/callees + ret 8, dc 0x15ec58
 void swapManager::OnWidgetDeselect(message& msg, int& exitFlag)
 {
@@ -662,8 +666,9 @@ void swapManager::OnWidgetDeselect(message& msg, int& exitFlag)
             && gpCurrentPlayer->IsLocalHuman()
             && field_5c)
         {
+            hero* otherHero = GetOtherHero();
             CTradeRequestDoneMsg requestDone;
-            TransmitRemoteData(&requestDone, GetOtherHero()->owner, 0, 1);
+            TransmitRemoteData(&requestDone, otherHero->owner, 0, 1);
         }
         exitFlag = 1;
         break;
@@ -713,6 +718,7 @@ void swapManager::OnReceiveFromAlly()
     parent->UpdateArrows();
     DrawSwapWin();
 
+    hero* otherHero = GetOtherHero();
     CGiveMeStuffMsg giveMeStuff;
-    TransmitRemoteData(&giveMeStuff, GetOtherHero()->owner, 0, 1);
+    TransmitRemoteData(&giveMeStuff, otherHero->owner, 0, 1);
 }

@@ -31,6 +31,9 @@ normalize_objs
              relocation and equals the target's resolved VA
              + paired aggregate+addend/field-symbol normalization only from
                a reviewed owner base or one equal-addend retail-data anchor;
+               reviewed owners may resolve synthesized `data_<rva>` interior
+               symbols without separately admitting every interior address,
+               but only when both expressions resolve to the identical RVA;
                every transform reparses COFF and verifies unrelated sections,
                symbols and relocations
 

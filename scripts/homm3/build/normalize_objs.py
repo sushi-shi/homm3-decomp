@@ -403,6 +403,19 @@ def _canonicalize_equivalent_relocations(
             continue
         target_symbol = target.symbols[target_relocation.symbol_index]
         authority = symbol_rvas.get(target_symbol.name)
+        if authority is None:
+            # Vostok names stripped interior references by their resolved
+            # retail address.  The owner base is the reviewed fact; an
+            # interior placeholder need not (and normally does not) have a
+            # second hand-admitted DATA row.  It is safe to use the parsed
+            # address here because the equality below still requires the
+            # candidate owner+addend and target placeholder+addend to resolve
+            # to the identical RVA.  A wrong synthetic address therefore
+            # remains visible.
+            placeholder = re.fullmatch(
+                r"(?:data|bss)_([0-9a-fA-F]+)", target_symbol.name)
+            if placeholder is not None:
+                authority = int(placeholder.group(1), 16), "data"
         if authority is None or authority[1] != "data":
             continue
         base_owner = base_functions.get(key[0], ())
