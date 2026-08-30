@@ -84,8 +84,17 @@ public:
     CGiveMeStuffMsg();
 };
 
+class CHeroUpdateMsg : public CNetMsg {
+public:
+    hero leftHero;
+    hero rightHero;
+
+    CHeroUpdateMsg(hero* left, hero* right);
+};
+
 SIZE(CTradeRequestDoneMsg, 0x14);
 SIZE(CGiveMeStuffMsg, 0x14);
+SIZE(CHeroUpdateMsg, 0x938);
 
 class swapManager : public baseManager {
 public:

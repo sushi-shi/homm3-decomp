@@ -1493,8 +1493,11 @@ void combatManager::ResetBoltAngle(SBolt* psBolt)
 // 0x68835c, read straight from the hash-verified image. Each row is one
 // (R, G, B) byte triple - the channel order is byte-proven in
 // bitmap16.h's note on the 0x68c86x mask triple - and DrawBolt is the
-// only function in the image that references any of the three, which is
-// what makes them spells.obj's own file statics.
+// only function in the image that references any of the three, which
+// identifies spells.obj as their data owner. The exact HoMM2 source
+// declares the arrays in its combat header and defines them after
+// DrawBolt; the HoMM3 reconstruction keeps that declaration/definition
+// shape rather than inventing file-local statics.
 //
 // The two FIVE-row tables are indexed by the DISTANCE FROM THE NEARER
 // EDGE of the drawn span, so row 0 paints both rims and the last row
@@ -1502,27 +1505,6 @@ void combatManager::ResetBoltAngle(SBolt* psBolt)
 // itself, forwards for BOLT_COLOR_0 and backwards from row 14 for
 // BOLT_COLOR_3 - the same ramp read in both directions, which is what
 // the two colours are FOR.
-DATA(0x0068833c)
-static unsigned char gBoltGreenSpanColors[5][3] = {
-    { 0x98, 0xbc, 0x18 }, { 0x7c, 0xd8, 0x7c }, { 0x24, 0xb4, 0x24 },
-    { 0x0c, 0x84, 0x0c }, { 0x00, 0x60, 0x00 }
-};
-
-DATA(0x0068834c)
-static unsigned char gBoltWhiteSpanColors[5][3] = {
-    { 0xc0, 0xc0, 0xc0 }, { 0xd0, 0xd0, 0xd0 }, { 0xe0, 0xe0, 0xe0 },
-    { 0xf0, 0xf0, 0xf0 }, { 0xff, 0xff, 0xff }
-};
-
-DATA(0x0068835c)
-static unsigned char gBoltSpectrumColors[15][3] = {
-    { 0xb4, 0x24, 0x24 }, { 0xbc, 0x38, 0x38 }, { 0xe0, 0x84, 0x2c },
-    { 0xec, 0xb8, 0x60 }, { 0xf4, 0xd0, 0x7c }, { 0xf0, 0xdc, 0x6c },
-    { 0xe8, 0xcc, 0x34 }, { 0xe0, 0xc4, 0x00 }, { 0xa4, 0xd0, 0x00 },
-    { 0x68, 0xb0, 0x5c }, { 0x70, 0xb0, 0xbc }, { 0x40, 0x4c, 0xb4 },
-    { 0x20, 0x30, 0x98 }, { 0x70, 0x44, 0x94 }, { 0x5c, 0x30, 0x80 }
-};
-
 // The bolt RASTERISER: step the pen one pixel along the bolt's current
 // heading iDrawLength times and, at every position it actually moved
 // to, paint a thickness-wide span straight into the screen bitmap.
@@ -1583,6 +1565,9 @@ static unsigned char gBoltSpectrumColors[15][3] = {
 // source-false even though it sat at the historical 94.9073 peak. Restoring
 // the proven RGBto16 accumulator and sin/cos order leaves the current score
 // at 89.316536% while max/history correctly retain 94.9073.
+// Moving the three bolt arrays to their header declarations and late external
+// definitions is score-flat, but makes the candidate emit retail's real
+// gBoltSpectrumColors+0x2b pointer and reduces register distance 176 -> 164.
 //
 // Current residual: all 27 conditional branches and both returns agree. The
 // first EBX/EDI/ESI definitions agree, but the candidate has 62 CFG blocks
@@ -1705,10 +1690,11 @@ void combatManager::DrawBolt(SBolt* psBolt, int iDrawLength)
                             gBoltSpectrumColors[14 - (k - iSpanFirst)][2]));
                     break;
                 case BOLT_COLOR_CHAIN_LIGHTNING:
-                    // Six hand-written shades rather than a table, and
-                    // retail spells all six: each arm expands RGBto16
-                    // in full and only the last channel term is
-                    // tail-merged between them.
+                    // Six hand-written shades rather than a table. The SH4
+                    // compiler tail-merges their calls and attributes the
+                    // shared site to the last source row; retail's extra
+                    // branch proves the Windows source keeps one RGBto16
+                    // assignment in each arm.
                     if (iFromEdge == BOLT_SPAN_DEPTH_0)
                         color = RGBto16(255, 255, 255);
                     else if (iFromEdge == BOLT_SPAN_DEPTH_1)
@@ -1748,6 +1734,27 @@ void combatManager::DrawBolt(SBolt* psBolt, int iDrawLength)
         }
     } }
 }
+
+DATA(0x0068833c)
+unsigned char gBoltGreenSpanColors[5][3] = {
+    { 0x98, 0xbc, 0x18 }, { 0x7c, 0xd8, 0x7c }, { 0x24, 0xb4, 0x24 },
+    { 0x0c, 0x84, 0x0c }, { 0x00, 0x60, 0x00 }
+};
+
+DATA(0x0068834c)
+unsigned char gBoltWhiteSpanColors[5][3] = {
+    { 0xc0, 0xc0, 0xc0 }, { 0xd0, 0xd0, 0xd0 }, { 0xe0, 0xe0, 0xe0 },
+    { 0xf0, 0xf0, 0xf0 }, { 0xff, 0xff, 0xff }
+};
+
+DATA(0x0068835c)
+unsigned char gBoltSpectrumColors[15][3] = {
+    { 0xb4, 0x24, 0x24 }, { 0xbc, 0x38, 0x38 }, { 0xe0, 0x84, 0x2c },
+    { 0xec, 0xb8, 0x60 }, { 0xf4, 0xd0, 0x7c }, { 0xf0, 0xdc, 0x6c },
+    { 0xe8, 0xcc, 0x34 }, { 0xe0, 0xc4, 0x00 }, { 0xa4, 0xd0, 0x00 },
+    { 0x68, 0xb0, 0x5c }, { 0x70, 0xb0, 0xbc }, { 0x40, 0x4c, 0xb4 },
+    { 0x20, 0x30, 0x98 }, { 0x70, 0x44, 0x94 }, { 0x5c, 0x30, 0x80 }
+};
 
 // The bolt constructor: clamp both endpoints into the screen, stamp the
 // whole record from the thirteen parameters, decide whether the run is

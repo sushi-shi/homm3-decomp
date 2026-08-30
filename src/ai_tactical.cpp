@@ -330,14 +330,22 @@ void type_AI_combat_parameters::simulate_attack(const army* current_army, long* 
 // assignment order, folding the copies back into the address-taken
 // locals (91.5%), and swapping the our_hits/enemy_hits copy order
 // (99.03, measured 2026-08-08 - the naming lever that closed the
-// SpellCastWorkChance family does not reach this pair). Register-
-// homing family.
+// SpellCastWorkChance family does not reach this pair). Moving the DC-named
+// our_hits/enemy_hits declarations, together with the two optimized start
+// scalars, into the four-line leading source gap is byte-flat and retained.
+// Preinitializing the start pair and removing the false-arm assignments is
+// not equivalent codegen: it collapses the flow to 10 blocks and falls to
+// 79.2211%, so that spelling is rejected. Register-homing family.
 VA(0x00435b90, 0xD2)  // corroborates, dc 0x3c9ac
 long type_AI_combat_parameters::get_simple_attack_effect(const army* current_army, long our_total, const army* enemy, long enemy_total, unsigned char ranged, long distance)
 {
+    long our_hits;
+    long enemy_hits;
+    long start_our;
+    long start_enemy;
+
     if (ranged)
         ranged = current_army->can_shoot(0);
-    long start_our, start_enemy;
     if (simulated) {
         start_our = our_total - current_army->get_AI_expected_damage();
         if (start_our <= 0)
@@ -349,8 +357,8 @@ long type_AI_combat_parameters::get_simple_attack_effect(const army* current_arm
         start_enemy = enemy_total;
         start_our = our_total;
     }
-    long our_hits = start_our;
-    long enemy_hits = start_enemy;
+    our_hits = start_our;
+    enemy_hits = start_enemy;
     simulate_attack(current_army, &our_hits, enemy, &enemy_hits, ranged, distance);
     long value = enemy->get_loss_combat_value(lowest_attack, lowest_defense, ranged,
                                               start_enemy - enemy_hits, kills_only);

@@ -2413,7 +2413,7 @@ long sacrifice_value(TCreatureType creature)
 // at entry, adds cleanup paths and falls to 85.65495%. Declaration order, a
 // release-VERIFY probe, and splitting total_hits declaration/assignment are
 // byte-flat, so the remaining difference is an unresolved stack-coloring tie.
-VA(0x00562da0, 0x3a2)  // dc order/name/signature + retail field graph
+VA(0x00562da0, 0x3a2)  // dc order/name/signature + retail field graph, dc 0x125e08
 void type_sacrifice_window::update_creature_offering(
     type_creature_offering* creature)
 {
