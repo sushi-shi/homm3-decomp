@@ -260,6 +260,30 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-30 — the Dreamcast `armyGroup::HasSomeUndead` member boundary is
+  restored byte-flat at both Complete morale consumers.** Raw CodeView proves
+  a public `unsigned char HasSomeUndead() const` body at
+  `armygrp.obj:0x4eb88`: a seven-slot loop, `CREATURE_NONE` skip, undead-trait
+  test, and no surviving locals. It also proves calls from `GetMorale` at
+  `dc:0x4f078` and `get_morale_description` at `dc:0x4f708`. Retail contains
+  the identical loop at both sites and no out-of-line copy, corroborating the
+  normal `/Ob2` expansion plus `/OPT:REF` elimination rather than the former
+  hand-expanded and file-local source forms.
+
+  Restoring the class declaration, real member definition and both calls is
+  byte-flat: `GetMorale` remains **98.5654%** with all 57 CFG blocks aligned,
+  and `get_morale_description` remains **93.0566%**. This is deliberately a
+  header-state correction despite its wide compile surface; max/history makes
+  blast radius observational, and the measured checkpoint set does not move.
+  Source-labelled comparison attaches the complete exact retail loop to the
+  member call. The older Dreamcast `GetHomogeneityMoraleAdjust()` call is not
+  imposed on Complete: its body calls `GetAlignments(NULL)`, while retail's
+  later grouped-alignment feature consumes the array and performs only one
+  census, directly proving that factoring was superseded. Fatal function and
+  header/body contracts, with flattening, non-const and loop-polarity negative
+  controls, now preserve the two positive calls without requiring equal
+  cross-revision call counts.
+
 - **2026-08-30 — `game::record_claim_town` reaches 100% from a Dreamcast
   statement that emits no retail bytes.** The mandatory wrapper dossier at
   retail `0x0049c190` / `event_record.obj:0x8e058` records no locals or

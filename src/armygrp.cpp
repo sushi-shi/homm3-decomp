@@ -87,22 +87,6 @@ inline const char* armygrp_creature_plural_name(TCreatureType creature)
     return "";
 }
 
-// armyGroup::HasSomeUndead (E:\gamedcs\armygrp.cpp:668, dc 0x4eb88) has no
-// out-of-line retail body - /Ob2 inlined its single call site and /OPT:REF
-// dropped the copy, which is why the 0x4ab20..0x4ab80 gap holds Dismiss. The
-// mirror of HasAllUndead above, modelled file-locally so an inlined static
-// vanishes exactly as retail's did.
-inline unsigned char armygrp_has_some_undead(const armyGroup* group)
-{
-    for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
-        if (group->armies[i] == CREATURE_NONE)
-            continue;
-        if (akCreatureTypeTraits[group->armies[i]].attributes & CTA_UNDEAD)
-            return 1;
-    }
-    return 0;
-}
-
 DATA(0x00693878)
 static TSplitWindow* gpSplitWindow;
 
@@ -952,18 +936,20 @@ unsigned char armyGroup::HasAllUndead()
     return 1;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\armygrp.cpp:668
-// LINKER-ELIMINATED in retail (/OPT:REF - no caller; the 0x4ab20..
-// 0x4ab80 gap holds exactly one function and its bytes are Dismiss).
-DC_ONLY(0x4eb88, 0x36)
-unsigned char armyGroup::HasSomeUndead()
+// LINKER-ELIMINATED in retail: /Ob2 expands this member at its morale
+// consumers and /OPT:REF drops the remaining copy, so the 0x4ab20..0x4ab80
+// image gap contains Dismiss rather than this body.
+unsigned char armyGroup::HasSomeUndead() const
 {
-    // @stub
+    for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
+        if (armies[i] == CREATURE_NONE)
+            continue;
+        if (akCreatureTypeTraits[armies[i]].attributes & CTA_UNDEAD)
+            return 1;
+    }
+    return 0;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\armygrp.cpp:684
 // Claimed 2026-08-04 from byte identity: the gap function's body IS
@@ -1221,9 +1207,14 @@ const char* armyGroup::GetArmySizeName(int howMany, int iNameSet)
 // ArmyGrpFn_0044A460+0x60; the base COFF names the equivalent _$E20 COMDAT
 // at addend zero. No source statement differs there.
 // DC-census verdict (2026-08-14): the census's `armyGroup::HasSomeUndead` x1
-// (dc 0x4eb88 - the member retail emitted and /OPT:REF then removed) against
-// the undead scan spelled inline below is byte-EXACTLY flat at 98.5654 when
-// modelled as a file-local helper, so the inline scan stays. `limit` x1 is the
+// (dc 0x4eb88 - the member retail inlined and /OPT:REF then removed) is now
+// restored as the real const member declaration, definition and call. The
+// change is byte-EXACTLY flat at 98.5654, and source-labelled comparison
+// assigns the complete exact seven-slot expansion to `if (HasSomeUndead())`.
+// The older `GetHomogeneityMoraleAdjust()` factoring is not retained here:
+// its DC body calls GetAlignments(NULL), while Complete's byte-proven grouped-
+// alignment extension needs the returned array and performs only one census.
+// `limit` x1 is the
 // clamp at the tail, now spelled as retail's pair. `town::HasBuilding` x1
 // against `ownerTown->built & bitNumber[TAVERN_ID]` needs town.h's
 // HasBuilding declaration - and when town.h opened on 2026-08-14 that
@@ -1277,14 +1268,8 @@ int armyGroup::GetMorale(const hero* ownerHero, const town* ownerTown,
             numAlignments += 1 - grouped;
     }
     morale += 2 - numAlignments;
-    for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
-        if (armies[i] == CREATURE_NONE)
-            continue;
-        if (akCreatureTypeTraits[armies[i]].attributes & CTA_UNDEAD) {
-            morale--;
-            break;
-        }
-    }
+    if (HasSomeUndead())
+        morale--;
     if (IsMember(CREATURE_ANGEL) || IsMember(CREATURE_ARCHANGEL))
         morale++;
     if (otherGroup
@@ -1801,17 +1786,14 @@ source_stack_merges:
 // GetAlignments x1, GetMorale x1, GetBuildingName x2, IsWieldingArtifact x2,
 // hero::get_morale_description x1, town::HasBuilding x1 - and the x8
 // format_string count is this body's exactly, so the census IS this function.
-// The one construct in it we did not spell was `armyGroup::HasSomeUndead`
-// (dc 0x4eb88), which the seven-slot undead scan below was written out
-// longhand for. Retail has no out-of-line body for it - /Ob2 inlined its
-// single call site and /OPT:REF dropped the copy, which is why the
-// 0x4ab20..0x4ab80 gap holds Dismiss - so it is modelled as a file-local
-// inline at the top of this file, where an inlined static vanishes the same
-// way. The expansion is the same instructions; what moved is the /Ob2
-// candidate-site count, exactly as the HasBuilding pair above did, and it is
-// worth 4.7 points. Note this is the OPPOSITE verdict to the GetMorale row's
-// (98.5654, byte-flat on the same helper): a site is worth points only where
-// the budget divisor is actually biting.
+// The formerly missing construct, `armyGroup::HasSomeUndead` (dc 0x4eb88),
+// is now spelled as the real const member rather than the temporary file-local
+// copy. Retail has no out-of-line body for it: /Ob2 inlines both surviving
+// morale consumers and /OPT:REF drops the copy, which is why the image's
+// 0x4ab20..0x4ab80 gap holds Dismiss. Restoring the declaration, definition
+// and both call boundaries is byte-flat at GetMorale 98.5654 and this body's
+// 93.0566; the helper's earlier 4.7-point gain remains intact. The fatal gate
+// now rejects the old hand-expanded or file-local forms.
 // THE HERO ARM ASSIGNS (byte-flat, and it is retail's spelling): the census
 // carries `basic_string::operator=` x2 with `result` empty at that point, and
 // get_luck_description's own note proves the same shape from the eh
@@ -1977,7 +1959,7 @@ std::string armyGroup::get_morale_description(
         result.append(gSameAlignmentMoraleText);
     }
 
-    if (armygrp_has_some_undead(this))
+    if (HasSomeUndead())
         result.append(gUndeadMoraleText);
 
     TCreatureType angelType = CREATURE_NONE;

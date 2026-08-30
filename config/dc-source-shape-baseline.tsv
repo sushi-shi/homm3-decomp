@@ -645,11 +645,9 @@ call	armygrp.obj	0x4e644	IsMindSpell
 call	armygrp.obj	0x4eab8	armyGroup::Initialize
 call	armygrp.obj	0x4ead0	armyGroup::Initialize
 call	armygrp.obj	0x4f078	armyGroup::GetHomogeneityMoraleAdjust
-call	armygrp.obj	0x4f078	armyGroup::HasSomeUndead
 call	armygrp.obj	0x4f5ec	armyGroup::CanJoin
 call	armygrp.obj	0x4f5ec	armyGroup::Dismiss
 call	armygrp.obj	0x4f708	GetArmyName
-call	armygrp.obj	0x4f708	armyGroup::HasSomeUndead
 call	armygrp.obj	0x4fab4	GetArmyName
 call	armygrp.obj	0x4fc98	townManager::GetNativeTerrain
 call	artifact.obj	0x4fec0	InitializeArtifactTraits
