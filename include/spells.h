@@ -25,6 +25,10 @@ enum EBoltSpanDepth {
 };
 
 // --- globals ---
+extern unsigned char gBoltGreenSpanColors[5][3];
+extern unsigned char gBoltWhiteSpanColors[5][3];
+extern unsigned char gBoltSpectrumColors[15][3];
+
 // CODEVIEW(E:\gamedcs\spells.cpp:1862, dc 0x151e94) int handle_sacrifice_beneficiary(message* msg);
 // CODEVIEW(E:\gamedcs\spells.cpp:1961, dc 0x15205c) int HandleCastSacrifice(message* msg);
 // CODEVIEW(E:\gamedcs\spells.cpp:2061, dc 0x152240) void mark_area_highlights(SpellID spell, TSkillMastery mastery, long hex);

@@ -18,6 +18,16 @@ DATA(0x006a3d08) static int gUnnamed6a3d08;
 // swapmgr singleton (bss 0x6a3d30): the ctor stores `this`, Reset/Open/Close consult it.
 DATA(0x006a3d30) swapManager* gpSwapManager;
 
+// E:\gamedcs\swapmgr.cpp:120. Dreamcast proves the class identity and
+// constructor signature; retail independently proves the CNetMsg base plus
+// two complete hero snapshots and the 0x938-byte wire extent.
+CHeroUpdateMsg::CHeroUpdateMsg(hero* left, hero* right)
+    : CNetMsg(RS_HERO_UPDATE, sizeof(CHeroUpdateMsg))
+{
+    leftHero = *left;
+    rightHero = *right;
+}
+
 // E:\gamedcs\swapmgr.cpp:130
 CTradeRequestDoneMsg::CTradeRequestDoneMsg()
     : CNetMsg(RS_TRADE_REQUEST_DONE, sizeof(CTradeRequestDoneMsg))
@@ -315,6 +325,21 @@ void swapManager::UpdateBackpack(int iHero)
     parent->BroadcastMessage(&msg);
 }
 
+// E:\gamedcs\swapmgr.cpp:1208
+VA(0x005afbf0, 0x17A)  // full retail body + dc signature/order, dc 0x15d440
+void swapManager::SendHeroUpdate()
+{
+    if (gNetworkActive69954c && field_5c && field_5d) {
+        int otherPlayer = GetOtherHero()->owner;
+        if (!field_64->GetAbortPopupMsg()) {
+            hero* leftHero = heroes[0];
+            hero* rightHero = heroes[1];
+            CHeroUpdateMsg msg(leftHero, rightHero);
+            TransmitRemoteData(&msg, otherPlayer, true, true);
+        }
+    }
+}
+
 // E:\gamedcs\swapmgr.cpp:1031
 #if 0  // @carcass
 DC_ONLY(0x15cf54, 0x1FC)
@@ -333,13 +358,6 @@ void swapManager::handle_artifact_click(long side, long id, unsigned char right_
 // E:\gamedcs\swapmgr.cpp:1168
 DC_ONLY(0x15d2e0, 0x160)
 void swapManager::handle_backpack_click(long side, long id, unsigned char right_click)
-{
-    // @stub
-}
-
-// E:\gamedcs\swapmgr.cpp:1208
-DC_ONLY(0x15d440, 0x6A)
-void swapManager::SendHeroUpdate()
 {
     // @stub
 }
@@ -431,13 +449,6 @@ void swapManager::OnGiveMeStuffMsg()
 // E:\gamedcs\basemgr.h:41
 DC_ONLY(0x15efd0, 0x4)
 void baseManager::SetStatus(short newStatus)
-{
-    // @stub
-}
-
-// E:\gamedcs\swapmgr.cpp:120
-DC_ONLY(0x15efd4, 0x90)
-void CHeroUpdateMsg::CHeroUpdateMsg(hero* left, hero* right)
 {
     // @stub
 }
