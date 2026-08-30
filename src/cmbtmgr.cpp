@@ -44,6 +44,7 @@
 #define HOMM3_ARMY_RESET_LATCH_DECL
 #define HOMM3_ARMY_SPELLCAST_VIEW
 #define HOMM3_ARMY_TURN_ABILITY_VIEW
+#define HOMM3_CREATURE_NAME_VIEW
 #include <math.h>
 #include <stdlib.h>
 
@@ -1560,19 +1561,6 @@ unsigned char combatManager::NextArmy(unsigned char checking_for_bad_morale)
     return 0;
 }
 
-// army::get_controlling_side (0x440140) as retail's cmbtmgr.cpp saw
-// it, spelled file-locally for exactly the reason CreatureName above
-// is: the DC roster puts that body in Army.h, so the TU could expand
-// it, and SetNextArmy expands it TWICE with no call - while our
-// army.h keeps it out-of-line because army.cpp's own tuning is
-// measured against that shape. Same body, same `if`-and-return form.
-static int ControllingSide(const army* stack)
-{
-    if (stack->hypnotizeFlag)
-        return 1 - stack->combatSide;
-    return stack->combatSide;
-}
-
 // E:\gamedcs\cmbtmgr.cpp:2364
 // RECONSTRUCTED 2026-08-20 from the earlier lane's head survey, which
 // was right about the three stores and the +0x13d68 latch and stopped
@@ -1597,10 +1585,10 @@ static int ControllingSide(const army* stack)
 // army.h rather than here.
 //
 // Two shapes the bytes force:
-//   * the controlling side is computed TWICE, once into the member and
-//     once again inside the wraith arm, and neither is a call - hence
-//     the file-local ControllingSide above rather than
-//     army::get_controlling_side, which our army.h keeps out of line;
+//   * the controlling side is computed TWICE through Dreamcast's
+//     Army.h `army::get_controlling_side` boundary, once into the member
+//     and once again inside the wraith arm. VC6 expands both calls, as
+//     retail requires;
 //   * the wraith arm's exits are `break`s, not `return`s: all of them
 //     land on the shared two-statement tail (lastMovedArmy = 0 and the
 //     command-bar rearm), which is also where bCreaturePlacement and
@@ -1629,7 +1617,7 @@ static int ControllingSide(const army* stack)
 // edit is the pin's DEPTH: retail expands operator= one level and
 // CALLS the three-argument assign (`mov ecx,[npos] / push / push 0 /
 // push eax`), while the pin on `message = many` cut at operator=
-// itself; spelling operator='s own expansion - `message.assign(many,
+// itself; spelling operator='s own expansion - `result.assign(many,
 // 0, std::string::npos)` - under the same pin puts the cut at retail's
 // level (97.77 -> 99.65). npos spelled as the static member is what
 // buys retail's `mov ecx,[npos]` load. Tried and rejected: naming the
@@ -1637,6 +1625,17 @@ static int ControllingSide(const army* stack)
 // budget expansion already matches and the named local breaks its
 // push-eax argument form), and `const` on the named local (byte-flat
 // to the digit).
+//
+// DREAMCAST SHAPE RESTORED 2026-08-30, byte-flat at 99.64975%. Raw NB11
+// records `result` as the sole non-optimized local inside the mana-drain
+// sample scope. Its xrefs prove two Army.h get_controlling_side calls,
+// two Army.h GetName calls and the named GetControl tail. The old source
+// used a file-local controlling-side expansion, a direct creature-trait
+// helper, `message`, and an address-ordinal command helper solely to retain
+// the existing bytes. Enabling the original CreatureType.h inline view and
+// restoring all five named source boundaries produces the identical x86.
+// Three frozen missing-call rows retire; fatal rules now reject putting any
+// of those flattened spellings back.
 //
 // Residual (99.65%): the two string temporaries' frame slots are
 // TRANSPOSED (retail singular -0x34 / plural -0x44; ours -0x44/-0x34)
@@ -1653,7 +1652,7 @@ void combatManager::SetNextArmy(int group, int index)
     army* stack = &armies[group][index];
     actingSide = group;
     actingSlot = index;
-    currentSide = ControllingSide(stack);
+    currentSide = stack->get_controlling_side();
     if (!bCreaturePlacement) {
         if (field_54b0[currentSide]) {
             hero* casting_hero = heroes[currentSide];
@@ -1683,7 +1682,7 @@ void combatManager::SetNextArmy(int group, int index)
             if (field_13de4)
                 break;
             {
-                hero* drained = heroes[1 - ControllingSide(stack)];
+                hero* drained = heroes[1 - stack->get_controlling_side()];
                 if (!drained)
                     break;
                 if (drained->mana <= 0)
@@ -1694,13 +1693,12 @@ void combatManager::SetNextArmy(int group, int index)
                 if (!IsQuickCombat()) {
                     SAMPLE2 sample = LoadPlaySample(DATA_COMPGEN(
                         0x0066ff94, manaDrainSampleName, "ManaDrai.wav"));
-                    std::string message;
+                    std::string result;
                     if (stack->numTroops == 1)
-                        message = format_string(
+                        result = format_string(
                             gpGeneralText->GetText(
                                 GENERAL_TEXT_COMBAT_MANA_DRAIN_ONE),
-                            CreatureName(stack->creatureType,
-                                         stack->numTroops),
+                            stack->GetName(),
                             drained->name);
                     else {
                         // OVER-INLINE, pinned. Retail CALLS
@@ -1718,15 +1716,14 @@ void combatManager::SetNextArmy(int group, int index)
                         std::string many = format_string(
                             gpGeneralText->GetText(
                                 GENERAL_TEXT_COMBAT_MANA_DRAIN_MANY),
-                            CreatureName(stack->creatureType,
-                                         stack->numTroops),
+                            stack->GetName(),
                             drained->name);
 #pragma inline_depth(0)
-                        message.assign(many, 0, std::string::npos);
+                        result.assign(many, 0, std::string::npos);
 #pragma inline_depth()
                     }
                     if (combatWindow)
-                        combatWindow->combat_message(message.c_str(), 1, 0);
+                        combatWindow->combat_message(result.c_str(), 1, 0);
                     SpellEffect(77, stack, 100, 0);
                     WaitEndSample(sample, -1);
                 }
@@ -1742,7 +1739,7 @@ void combatManager::SetNextArmy(int group, int index)
         }
     }
     lastMovedArmy = 0;
-    Unnamed4782d0();
+    GetControl();
 }
 
 // Single-call-site file static: /Ob2 inlines it into CombatIsOver and

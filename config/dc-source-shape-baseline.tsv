@@ -729,9 +729,6 @@ call	cmbtmgr.obj	0x5f3c4	SRandom
 call	cmbtmgr.obj	0x5f3c4	army::GetName
 call	cmbtmgr.obj	0x5f518	army::GetSpeed
 call	cmbtmgr.obj	0x5f518	combatManager::CheckCastleAttack
-call	cmbtmgr.obj	0x5f934	army::GetName
-call	cmbtmgr.obj	0x5f934	army::get_controlling_side
-call	cmbtmgr.obj	0x5f934	combatManager::GetControl
 call	cmbtmgr.obj	0x5fb14	army::Is
 call	cmbtmgr.obj	0x5fc00	army::Is
 call	cmbtmgr.obj	0x5fd10	combatManager::get_wall_strength
