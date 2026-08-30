@@ -99,6 +99,7 @@ public:
     heroWindow* window;
 #if defined(HOMM3_HERO_MESSAGE_CTOR_VIEW) || \
     defined(HOMM3_ARMYGRP_MESSAGE_CTOR_VIEW) || \
+    defined(HOMM3_QUESTLOG_MESSAGE_CTOR_VIEW) || \
     defined(HOMM3_RECRUIT_MESSAGE_CTOR_VIEW) || \
     defined(HOMM3_SWAPMGR_MESSAGE_CTOR_VIEW) || \
     defined(HOMM3_TRADPOST_MESSAGE_CTOR_VIEW)

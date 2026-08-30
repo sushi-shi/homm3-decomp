@@ -3,14 +3,46 @@
 // 8 functions in link order; 20 compiler-generated $-thunks omitted.
 // The quest log is the one reader of the map's two quest pools
 // (NewfullMap's SeerHutList / QuestGuardList vectors).
+#define HOMM3_QUESTLOG_MESSAGE_CTOR_VIEW
 #include <va.h>
 #include <string.h>
 #include "questlogwindow.h"
 #include "game.h"
 #include "kb.h"
 #include "message.h"
+#include "mousemgr.h"
+#include "quest.h"
 #include "seerhut.h"
 #include "widget.h"
+
+DATA(0x0069cd20) static TQuestLogWindow* gpQuestLogWindow;
+
+// Dreamcast names QuestActiveforPlayer as a const byte-returning TSeerHut
+// helper.  Its old body tested playerGivenQuest and then !QuestCompleted.
+// Complete's virtual quest model replaces the latter byte with a live quest
+// and a non-empty quest-log line, but retail keeps the same final visited-bit
+// and fresh quest-pointer tests.  Keep both pool-specific spellings: retail
+// calls quest_text_row for SeerHutList and expands quest_text for guards.
+inline unsigned char TSeerHut::QuestActiveforPlayer(
+    const unsigned char playerNum) const
+{
+    type_quest* thisQuest = quest;
+    return thisQuest
+        && !thisQuest->quest_text_row()[
+               type_quest::QUEST_TEXT_COLUMNS * thisQuest->quest_type()
+               + type_quest::QUEST_TEXT_LOG].empty()
+        && (visitedPlayers & (1 << playerNum))
+        && quest;
+}
+
+inline unsigned char TQuestGuard::QuestActiveforPlayer(
+    const unsigned char playerNum) const
+{
+    return quest
+        && !quest->quest_text(type_quest::QUEST_TEXT_LOG).empty()
+        && (visitedPlayers & (1 << playerNum))
+        && quest;
+}
 
 #if 0  // @carcass
 
@@ -38,13 +70,6 @@ void TQuestLogWindow::~TQuestLogWindow()
 // E:\gamedcs\questlogwindow.cpp:89
 DC_ONLY(0x116bd8, 0xA0)
 void TQuestLogWindow::UpdateQuestLocator(int i)
-{
-    // @stub
-}
-
-// E:\gamedcs\questlogwindow.cpp:105
-DC_ONLY(0x116c78, 0x2A)
-void TQuestLogWindow::UpdateQuestLocators()
 {
     // @stub
 }
@@ -108,22 +133,15 @@ TQuestLogWindow::~TQuestLogWindow()
 // same std::string teardown; retail duplicates the pair rather than
 // sharing a tail, so they are two statements and not one.
 //
-// The message is built field by field ahead of the guard - all seven
-// non-id members zeroed, then MESSAGE_WIDGET - and only codeX/codeY/
-// extraText are filled in on the taken path. codeY is the row's WIDGET
-// ID, i + 1, which is why the caller's loop index is one-based against
-// the log's widgets.
+// Dreamcast proves the message constructor boundary.  Retail inlines its
+// eight zero stores ahead of the guard, then overwrites id with
+// MESSAGE_WIDGET; only codeX/codeY/extraText are filled on the taken path.
+// codeY is the row's WIDGET ID, i + 1, which is why the caller's loop index
+// is one-based against the log's widgets.
 VA(0x0052e270, 0x19F)  // caller 0x52e430 + seerHutLogList, dc 0x116bd8
 void TQuestLogWindow::UpdateQuestLocator(int i)
 {
     message msg;
-    msg.codeX = 0;
-    msg.codeY = 0;
-    msg.qualifier = 0;
-    msg.mouseX = 0;
-    msg.mouseY = 0;
-    msg.extra = 0;
-    msg.window = 0;
     msg.id = MESSAGE_WIDGET;
 
     if (firstVisibleQuest + i < seerHutLogList.size()) {
@@ -144,6 +162,15 @@ void TQuestLogWindow::UpdateQuestLocator(int i)
     }
 }
 
+// Dreamcast preserves this helper as a 12-row loop.  Complete expands the
+// same source boundary into DoQuestLog after increasing the visible list to
+// 16 rows; the singular retail callee and loop schedule prove the revision.
+inline void TQuestLogWindow::UpdateQuestLocators()
+{
+    for (int i = 0; i < 16; ++i)
+        UpdateQuestLocator(i);
+}
+
 // E:\gamedcs\questlogwindow.cpp:111
 VA(0x0052e410, 0x1d)  // source-order map + both retail call edges, dc 0x116ca4
 int TQuestLogWindow::WindowHandler(message* msg)
@@ -154,14 +181,52 @@ int TQuestLogWindow::WindowHandler(message* msg)
     return result;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\questlogwindow.cpp:142
-DC_ONLY(0x116ccc, 0x15C)
+// The Complete two-pool reconstruction moved 85.0157 -> 94.0047 when the
+// SeerHut helper's first quest read was named `thisQuest`: retail homes that
+// pointer across quest_type/quest_text_row, reducing reg_dist 150 -> 52 and
+// making all 38 CFG blocks exact.  Keep the final `&& quest` separate: the
+// virtual text calls may change the hut, and retail proves a fresh member
+// load after the visited-player test.  The remaining delta is register
+// scheduling inside otherwise exact 19-branch/1-ret flow, not permission to
+// flatten either QuestActiveforPlayer or UpdateQuestLocators.
+VA(0x0052e430, 0x27E)  // dc 0x116ccc; Complete adds QuestGuardList
 void DoQuestLog(int player)
 {
-    // @stub
+    message msg;
+
+    gpMouseManager->SetPointer(0, mouseManager::DEFAULT_SET);
+
+    gpQuestLogWindow = new TQuestLogWindow;
+    if (!gpQuestLogWindow)
+        MemError();
+
+    int numberSeerHuts = gpGame->worldMap.SeerHutList.size();
+    int i;
+    for (i = 0; i < numberSeerHuts; ++i) {
+        if (gpGame->worldMap.SeerHutList[i]
+                .QuestActiveforPlayer(player))
+            gpQuestLogWindow->seerHutLogList.push_back(i);
+    }
+
+    for (i = 0; i < gpGame->worldMap.QuestGuardList.size(); ++i) {
+        if (gpGame->worldMap.QuestGuardList[i]
+                .QuestActiveforPlayer(player))
+            gpQuestLogWindow->seerHutLogList.push_back(numberSeerHuts + i);
+    }
+
+    msg.id = MESSAGE_WIDGET;
+    msg.codeX = widget::WIDGET_SET_SLIDER_RESOLUTION;
+    msg.codeY = 17;
+    msg.extra = gpQuestLogWindow->seerHutLogList.size() - 15;
+    gpQuestLogWindow->BroadcastMessage(&msg);
+
+    gpQuestLogWindow->UpdateQuestLocators();
+    gpQuestLogWindow->DoModal(0);
+    delete gpQuestLogWindow;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\questlogwindow.cpp:78
 DC_ONLY(0x116e28, 0x34)

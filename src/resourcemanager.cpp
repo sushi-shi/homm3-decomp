@@ -1165,7 +1165,7 @@ TPalette16* ResourceManager::GetPalette(const char* name)
 // 96.8864, and a named path local is 99.8773 while losing exact LoadFont.
 // why-reg's nine legal probes are flat or worse. Treat this as TU/C1 state, not
 // permission to remove the Dreamcast-proven local names or statement shape.
-VA(0x0055b470, 0x2D1)  // dc/hd public identity + retail palette-file shape
+VA(0x0055b470, 0x2D1)  // dc/hd public identity + retail palette-file shape, dc 0x121ec8
 TPalette24* ResourceManager::GetPalette24(const char* name)
 {
     TPalette24* result;
@@ -1238,6 +1238,10 @@ TPalette24* ResourceManager::GetPalette24(const char* name)
         }
     }
 
+    // Complete routes Dreamcast's two direct LODFile::read calls through the
+    // exact t_lod_file_adapter::Read receiver. Retail proves the vtable owner
+    // at 0x641128 and its slot-1 target at 0x559110; keeping this adapter is a
+    // revision fact, not permission to flatten the older helper operation.
     t_lod_file_adapter stream(lodFile);
     TAbstractFile* streamInterface = &stream;
     streamInterface->Read(header, sizeof(header));
