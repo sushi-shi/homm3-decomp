@@ -382,6 +382,38 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"\bhuman_strength\s*=\s*0\s*;.*?"
             r"\bsum_player_dwellings\s*\("),
     ),
+    ("command.obj", 0x6F824): (
+        SourceRule(
+            "process_first_aid keeps both Dreamcast army::GetName calls",
+            r"\bGetName\s*\(\s*\)", 2, 2),
+        SourceRule(
+            "process_first_aid may not flatten army::GetName into a "
+            "creature-trait read",
+            r"\bakCreatureTypeTraits\b", 0, 0),
+        SourceRule(
+            "process_first_aid may not force either Dreamcast GetName "
+            "boundary out of line with an inline-depth fence",
+            r"#\s*pragma\s+inline_depth\s*\(\s*0\s*\)"
+            r"(?:(?!#\s*pragma\s+inline_depth\s*\(\s*\)).)*?"
+            r"\bGetName\s*\(\s*\)",
+            0, 0, include_directives=True),
+    ),
+    ("command.obj", 0x6F984): (
+        SourceRule(
+            "ProcessNextAction keeps all four Dreamcast army::GetName calls",
+            r"\bGetName\s*\(\s*\)", 4, 4),
+        SourceRule(
+            "ProcessNextAction may not flatten army::GetName into a "
+            "creature-trait read",
+            r"\bakCreatureTypeTraits\b", 0, 0),
+        SourceRule(
+            "ProcessNextAction may not force a Dreamcast GetName boundary "
+            "out of line with an inline-depth fence",
+            r"#\s*pragma\s+inline_depth\s*\(\s*0\s*\)"
+            r"(?:(?!#\s*pragma\s+inline_depth\s*\(\s*\)).)*?"
+            r"\bGetName\s*\(\s*\)",
+            0, 0, include_directives=True),
+    ),
     ("game.obj", 0xAEB64): (
         SourceRule(
             "loadVictoryCondition keeps Dreamcast's procedure-scope "
@@ -3655,6 +3687,40 @@ else
         failures.append("implicit constructor/destructor/operator was enforced")
     if missing_from_body("", ["std::vector<int>::_M_insert_overflow"]):
         failures.append("compiler/library implementation helper was enforced")
+    first_aid_key = ("command.obj", 0x6F824)
+    first_aid_probe = """\
+format_string(currentArmy->GetName(), targetArmy->GetName());
+"""
+    if contract_violations(first_aid_probe, first_aid_key):
+        failures.append("aligned process_first_aid GetName shape did not pass")
+    first_aid_mutations = (
+        first_aid_probe.replace("targetArmy->GetName()", "target_name"),
+        first_aid_probe + "akCreatureTypeTraits[type].m_name;\n",
+        "#pragma inline_depth(0)\n" + first_aid_probe
+        + "#pragma inline_depth()\n",
+    )
+    if any(not contract_violations(probe, first_aid_key)
+           for probe in first_aid_mutations):
+        failures.append("de-inlined process_first_aid GetName shape passed")
+    process_next_key = ("command.obj", 0x6F984)
+    process_next_probe = """\
+message = format_string(currentArmy->GetName());
+message = format_string(currentArmy->GetName());
+message = format_string(currentArmy->GetName());
+message = format_string(currentArmy->GetName());
+"""
+    if contract_violations(process_next_probe, process_next_key):
+        failures.append("aligned ProcessNextAction GetName shape did not pass")
+    process_next_mutations = (
+        process_next_probe.replace(
+            "message = format_string(currentArmy->GetName());", "", 1),
+        process_next_probe + "akCreatureTypeTraits[type].m_plural_name;\n",
+        "#pragma inline_depth(0)\n" + process_next_probe
+        + "#pragma inline_depth()\n",
+    )
+    if any(not contract_violations(probe, process_next_key)
+           for probe in process_next_mutations):
+        failures.append("de-inlined ProcessNextAction GetName shape passed")
     refs = [XrefCall(0x100, "RealPoolCall", 1, 0),
             XrefCall(0x200, "DataAddressCollision", 2, 0),
             XrefCall(0x300, "DirectBsrCall", 0, 1)]

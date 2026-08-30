@@ -13,8 +13,13 @@
 #define HOMM3_COMMAND_PLAYER_DROP_VIEW
 #define HOMM3_COMMAND_TOWER_STRING_VIEW
 #define HOMM3_DRAWING_UPDATE_MOUSE_GRID_DECLS
+// Both DC command routines below retain army::GetName as the source boundary,
+// while the original CreatureType.h body supplies its nested GetArmyName
+// expansion.  Omitting that header-inline body loses 16 retail CFG blocks.
+#define HOMM3_CREATURE_NAME_VIEW
 #include <va.h>
 #include "herospec.h"  // TSecondarySkill, for the skillLevel slot names
+#include "creaturetype.h"
 #include "cmbtmgr.h"
 #include "combatcontrolsubwindow.h"
 #include "command.h"
@@ -2384,8 +2389,9 @@ unsigned char combatManager::process_move_then_attack(message* msg)
 }
 
 // E:\gamedcs\command.cpp:3431. Retail expands ValidHex, both creature-name
-// accessors and the reference-returning _cpp_min; the remaining statement
-// order is independently preserved by the DC line table.
+// accessors, their GetArmyName bodies and the reference-returning _cpp_min;
+// the remaining statement order is independently preserved by the DC line
+// table. Restoring CreatureType.h's inline body recovered the exact 0x1e5 B.
 VA(0x00478b90, 0x1E5)  // exhaustive command order-map + body, dc 0x6f824
 void combatManager::process_first_aid(army* currentArmy)
 {
@@ -2418,6 +2424,12 @@ void combatManager::process_first_aid(army* currentArmy)
 // switch domain and source calls. Retail independently fixes all twelve
 // pending-action arms and shows that VC6 expanded ResetMouse,
 // ResetCycleTimers and CheckChangeSelector into this body.
+// RESIDUAL (98.5272%): the four GetName -> GetArmyName expansions now agree.
+// The remaining structural delta is one defend-arm std::string cleanup:
+// retail expands _Tidy while this header state retains the call (three branch
+// edges); inline_depth(255) is byte-flat. The independent early byte delta is
+// the iCombatControlNetPos base immediate (0 versus 4). Do not recover the old
+// exact score by flattening either Dreamcast-proven helper boundary.
 VA(0x00478d80, 0x1054)  // anchor-callee exhaustive + single-fn gap, dc 0x6f984
 int combatManager::ProcessNextAction(message& msg, unsigned char automaticTurn)
 {
