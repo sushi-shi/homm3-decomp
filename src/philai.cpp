@@ -2627,18 +2627,10 @@ int value_of_move_source(const hero* current_hero, long flag, short increase,
 // E:\gamedcs\philai.cpp:2752.  An obelisk's worth: nothing once this
 // player's visit bit is set, the grail is absent, or the puzzle guess
 // already sits on the ultimate artifact; otherwise one obelisk's share of
-// the grail artifact's value.  The puzzle-guess compare goes through a
-// type_point copy: playerData models the odd-offset +0x39 slot as raw
-// bytes (the alignment note there), so the bit-preserving memcpy bridge
-// is the house crossing.  Extern for emission while the OBELISK arm is a
-// stub.
-// Residual (86.14%): instruction multiset aligns after the word-bridge
-// respell (retail's direct odd-offset word reads reproduced); what stays
-// is the register-homing family - retail keeps gpGame in EAX and reloads
-// it after the artifact call while our CL homes it in ESI, and the
-// si/ax extract roles transpose behind that.  The playerData model's
-// char[4] puzzle_guess (alignment note there) rules out the packed
-// type_point member retail's source evidently had.
+// the grail artifact's value. Dreamcast types puzzle_guess as type_point;
+// retail fixes its odd +0x39 offset and one-byte alignment. Restoring that
+// source member in the philai view resolves the former register-homing
+// residual and makes all nine retail blocks exact.
 VA(0x0052a2b0, 0xc5)  // anchor: obeliskFlags + ultimateArtifact triple + OBELISK arm, dc 0x111d68
 int value_of_obelisk(NewmapCell* cell, long player_id)
 {
@@ -2648,18 +2640,9 @@ int value_of_obelisk(NewmapCell* cell, long player_id)
         return 0;
 
     playerData* player = &gpGame->players[player_id];
-    // The odd-offset packed guess: word-sized memcpy bridges, the
-    // playerData::Init precedent (game.cpp), then the type_point field
-    // extractions spelled at short width as retail reads them.
-    unsigned short guess_lo;
-    unsigned short guess_hi;
-    memcpy(&guess_lo, player->puzzle_guess, sizeof guess_lo);
-    memcpy(&guess_hi, player->puzzle_guess + 2, sizeof guess_hi);
-    short guess_x = static_cast<short>(guess_lo << 6);
-    short guess_y = static_cast<short>(guess_hi << 6);
-    if (static_cast<short>(guess_x >> 6) == gpGame->ultimateArtifactX
-        && static_cast<short>(guess_y >> 6) == gpGame->ultimateArtifactY
-        && static_cast<short>(static_cast<short>(guess_hi << 2) >> 12)
+    if (player->puzzle_guess.x == gpGame->ultimateArtifactX
+        && player->puzzle_guess.y == gpGame->ultimateArtifactY
+        && player->puzzle_guess.z
             == static_cast<short>(gpGame->ultimateArtifactZ))
         return 0;
 

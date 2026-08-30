@@ -17,6 +17,9 @@
 //   z: dword @ +2, shl 2, movsx ax, sar 12     -> signed  4 bits @ 10..13
 // and can_take_town (0x428410) builds one the other way round, masking
 // the three source bytes with 0x3ff, 0x3ff and 0xf before packing.
+#ifdef HOMM3_PHILAI_OBJ_DECLS
+#pragma pack(push, 1)
+#endif
 struct type_point {
     short x : 10;
     short y : 10;
@@ -39,6 +42,9 @@ struct type_point {
 #endif
     unsigned char is_valid();
 };
+#ifdef HOMM3_PHILAI_OBJ_DECLS
+#pragma pack(pop)
+#endif
 
 #ifdef HOMM3_SLIMITDATA_VIEW
 // The shared inclusive rectangle used by the adventure and combat drawing
