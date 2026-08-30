@@ -2594,18 +2594,19 @@ int game::GetStartingHeroId(int alignment, int playerPos, int mapPosition)
 
 // E:\gamedcs\game.cpp:2275
 VA(0x004bb5e0, 0x282)  // anchor-global, dc 0xa6cd4
-int game::GetNewHeroId(int playerPos, THeroClass excludedClass,
-                       unsigned char preferAlignment,
+int game::GetNewHeroId(int playerPos, THeroClass excluded,
+                       unsigned char prefer_alignment,
                        THeroClass preferredClass)
 {
-    int heroClass;
-    long totalCount;
+    int hero_class;
+    long total_count;
     long choice = 0;
     long counts[18];
-    int heroId;
+    int hero_id;
     long weights[18];
+    long aligned_count;
 
-    totalCount = 0;
+    total_count = 0;
 
     int alignment;
     if (playerPos >= 0)
@@ -2614,91 +2615,95 @@ int game::GetNewHeroId(int playerPos, THeroClass excludedClass,
         alignment = -1;
 
     memset(counts, 0, sizeof(counts));
-    for (heroClass = eClassKnight; heroClass < kNumHeroClasses;
-         heroClass++) {
-        weights[heroClass] =
-            akHeroClasses[heroClass].foundInTownType[alignment];
+    for (hero_class = eClassKnight; hero_class < kNumHeroClasses;
+         hero_class++) {
+        weights[hero_class] =
+            akHeroClasses[hero_class].foundInTownType[alignment];
     }
 
-    for (heroId = 0; heroId < HERO_COUNT; heroId++) {
-        if (heroAvailability[heroId] == -1
-            && (playerPos == -1 || heroPoolMap[heroId].test(playerPos))) {
-            totalCount++;
-            counts[heroes[heroId].heroClass]++;
+    for (hero_id = 0; hero_id < HERO_COUNT; hero_id++) {
+        if (heroAvailability[hero_id] == -1
+            && (playerPos == -1 || heroPoolMap[hero_id].test(playerPos))) {
+            total_count++;
+            counts[heroes[hero_id].heroClass]++;
         }
     }
 
-    if (totalCount == 0)
+    if (total_count == 0)
         return -1;
 
-    for (heroClass = eClassKnight; heroClass < kNumHeroClasses;
-         heroClass++) {
-        if (counts[heroClass] == 0)
-            weights[heroClass] = 0;
+    for (hero_class = eClassKnight; hero_class < kNumHeroClasses;
+         hero_class++) {
+        if (counts[hero_class] == 0)
+            weights[hero_class] = 0;
     }
 
-    // Residual (98.9815%): every branch agrees, but retail binds the gpGame
-    // pointer/value pair to EAX/ECX here and this SP3 compile chooses
-    // ECX/EAX, then hoists alignment across the compare. Measured and
+    // Residual (98.9815%): all 60 blocks and every branch agree, but retail
+    // binds the gpGame pointer/value pair to EAX/ECX here and this SP3 compile
+    // chooses ECX/EAX, then hoists alignment across the compare. Measured and
     // byte-flat on 2026-08-22: nesting this first guard, naming either the
     // gpGame pointer or f_1f698 value, and reversing it to `2 <= f_1f698`.
-    // This is register-homing/front-end handle state, not missing flow.
+    // The 2026-08-30 Dreamcast pass restored raw-NB11 local names, order and
+    // aligned_count's function lifetime without moving these bytes. Its
+    // THeroClass hero_class type is dc-only: VC6 SP3 rejects enum `++`, and no
+    // Windows operator++ is attested. This is register scheduling, not
+    // missing flow or permission to flatten the recovered source shape.
     if (gpGame->f_1f698 >= 2
         && *gpVideoGameState == VIDEO_GAME_STATE_FORCED_BINK_LOW
         && alignment != TOWN_CONFLUX
         && counts[eClassPlanesWalker] + counts[eClassElementalist]
-            < totalCount) {
+            < total_count) {
         if (preferredClass != eClassPlanesWalker)
             weights[eClassPlanesWalker] = 0;
         if (preferredClass != eClassElementalist)
             weights[eClassElementalist] = 0;
     }
 
-    if (excludedClass < kNumHeroClasses
-        && counts[excludedClass] < totalCount) {
-        weights[excludedClass] = 0;
+    if (excluded < kNumHeroClasses
+        && counts[excluded] < total_count) {
+        weights[excluded] = 0;
     }
 
-    if (preferAlignment) {
-        long alignedCount = 0;
-        for (heroClass = eClassKnight; heroClass < kNumHeroClasses;
-             heroClass++) {
-            if (akHeroClasses[heroClass].townType == alignment)
-                alignedCount += weights[heroClass];
+    if (prefer_alignment) {
+        aligned_count = 0;
+        for (hero_class = eClassKnight; hero_class < kNumHeroClasses;
+             hero_class++) {
+            if (akHeroClasses[hero_class].townType == alignment)
+                aligned_count += weights[hero_class];
         }
-        if (alignedCount > 0) {
-            for (heroClass = eClassKnight; heroClass < kNumHeroClasses;
-                 heroClass++) {
-                if (akHeroClasses[heroClass].townType != alignment)
-                    weights[heroClass] = 0;
+        if (aligned_count > 0) {
+            for (hero_class = eClassKnight; hero_class < kNumHeroClasses;
+                 hero_class++) {
+                if (akHeroClasses[hero_class].townType != alignment)
+                    weights[hero_class] = 0;
             }
         }
     }
 
     if (preferredClass != kNumHeroClasses && weights[preferredClass] != 0) {
-        heroClass = preferredClass;
+        hero_class = preferredClass;
     } else {
         long totalWeight = 0;
-        for (heroClass = eClassKnight; heroClass < kNumHeroClasses;
-             heroClass++) {
-            totalWeight += weights[heroClass];
+        for (hero_class = eClassKnight; hero_class < kNumHeroClasses;
+             hero_class++) {
+            totalWeight += weights[hero_class];
         }
         choice = Random(1, totalWeight);
-        for (heroClass = eClassKnight; heroClass < kNumHeroClasses;
-             heroClass++) {
-            choice -= weights[heroClass];
+        for (hero_class = eClassKnight; hero_class < kNumHeroClasses;
+             hero_class++) {
+            choice -= weights[hero_class];
             if (choice <= 0)
                 break;
         }
     }
 
-    choice = Random(1, counts[heroClass]);
-    for (heroId = 0; heroId < HERO_COUNT; heroId++) {
-        if (heroAvailability[heroId] == -1
-            && (playerPos == -1 || heroPoolMap[heroId].test(playerPos))
-            && heroes[heroId].heroClass == heroClass
+    choice = Random(1, counts[hero_class]);
+    for (hero_id = 0; hero_id < HERO_COUNT; hero_id++) {
+        if (heroAvailability[hero_id] == -1
+            && (playerPos == -1 || heroPoolMap[hero_id].test(playerPos))
+            && heroes[hero_id].heroClass == hero_class
             && --choice == 0) {
-            return heroId;
+            return hero_id;
         }
     }
     return -1;
