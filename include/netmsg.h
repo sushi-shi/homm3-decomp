@@ -521,30 +521,15 @@ class CMCHideHero : public CMapChange {
 public:
     int heroId;
 
-    // MEMBER FIRST, and the two call sites CONTRADICT each other on it -
-    // A/B'd both ways 2026-08-20 with both bodies compiled:
-    //   this spelling      -> SwapHeroes 100.00, add_garrison_hero 98.99
-    //   base-first, i.e.
-    //   `: CMapChange(RS_HIDE_HERO, sizeof(CMCHideHero)) { heroId = id; }`
-    //   (and the two equivalent init-list / body-last forms, all three
-    //   measured identical) -> add_garrison_hero 100.00, SwapHeroes 97.77
-    // In retail the two differ only in WHICH REGISTER holds the id:
-    // SwapHeroes has it in ECX, so the store is forced ahead of the
-    // `lea ecx,[ebp-0x20]` that sets up the call, while
-    // add_garrison_hero has it in EAX and sinks the store past all five
-    // base stores. One emission is scheduling luck either way; no source
-    // spelling reproduces both. Kept here because SwapHeroes is EXACT
-    // with it and the alternative only trades that exact row for this
-    // one (and regresses town.obj below its recorded max).
+    // Dreamcast netmsg.h:717-718 proves the CMapChange construction boundary
+    // is followed by a distinct heroId assignment statement. Retail lowers
+    // this coherently in add_garrison_hero but schedules the same store early
+    // in SwapHeroes because that caller already holds the id in ECX. The
+    // sibling percentage cannot justify reversing the attested source order.
     CMCHideHero(int id)
-        : CMapChange()
+        : CMapChange(RS_HIDE_HERO, sizeof(CMCHideHero))
     {
         heroId = id;
-        subType = RS_HIDE_HERO;
-        field_00 = -1;
-        size = sizeof(CMCHideHero);
-        field_04 = 0;
-        field_10 = 0;
     }
 };
 

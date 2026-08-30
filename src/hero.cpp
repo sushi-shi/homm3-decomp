@@ -1944,7 +1944,7 @@ void hero::Deallocate(unsigned char bGameLoaded, unsigned char remote_move)
         location.z = z;
         CMCDeadHero change(id, location);
         SendMapChange(&change);
-        gpGame->GameFn_0049C720(this, -1, freedTownVisitor);
+        gpGame->record_hide_hero(this, -1, freedTownVisitor);
     }
 
     int oldOwner = owner;

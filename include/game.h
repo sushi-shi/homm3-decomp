@@ -2404,8 +2404,6 @@ public:
     // population is codegen-sensitive.
     void record_hide_boat(boat* current_boat, unsigned char occupied,
                           int occupying_hero);                   // 0x49c560
-    void record_hide_hero(hero* who, char new_owner,
-                          unsigned char town_garrison);          // 0x49c720
     void record_move(hero* who, int direction,
                      type_point destination);                    // 0x49cd50
     void record_teleport(hero* who, type_point destination);     // 0x49cf50
@@ -2461,13 +2459,12 @@ public:
     // and the pair is gated to the one compiland that calls them.
     void ShowMoraleInfo(const hero* who, int dialogType);
     void ShowLuckInfo(hero* who, int dialogType);
-    // Retail-only 0x49c720. SwapHeroes, hero::Deallocate (0x4d9ec0) and
-    // playerData::add_garrison_hero (0x4b9fc0) all prove this
-    // three-argument member queues a hero-state record; no surviving name
-    // covers it, so the declaration stays ordinal and gated to the three
-    // compilands that reach it.
-    void GameFn_0049C720(hero* who, signed char owner,
-                         unsigned char state);
+    // Dreamcast names the shared source boundary record_hide_hero. Complete
+    // extends it from (hero*, char) to the retail-proven three-argument
+    // record at 0x49c720; SwapHeroes, hero::Deallocate and
+    // playerData::add_garrison_hero all retain that boundary.
+    void record_hide_hero(hero* who, char new_owner,
+                          unsigned char town_garrison);
     // 0x4c86a0. town::hire passes the player id and consumed two-slot
     // recruit index; hero::hire uses the same closeout call. The body
     // remains outside the admitted surface.

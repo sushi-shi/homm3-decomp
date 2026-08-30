@@ -1200,7 +1200,6 @@ call	game.obj	0xa3288	generator::set_owner
 call	game.obj	0xa3474	game::IsHuman
 call	game.obj	0xa3d50	game::saveString
 call	game.obj	0xa4d58	playerData::ClearNetInfo
-call	game.obj	0xa4ee8	game::record_hide_hero
 call	game.obj	0xa5108	playerData::SetName
 call	game.obj	0xa5e0c	game::GetCurrTownId
 call	game.obj	0xa5ff0	hero::get_artifact
@@ -1336,7 +1335,6 @@ call	hero.obj	0xcc300	max
 call	hero.obj	0xcc4e0	hero::UpdateArmies
 call	hero.obj	0xcc4e0	heroWindowManager::BroadcastMessage
 call	hero.obj	0xcc708	hero::GetPrimarySkill
-call	hero.obj	0xcc800	game::record_hide_hero
 call	hero.obj	0xcc800	type_obscuring_object::get_location
 call	hero.obj	0xccf78	hero::get_secondary_skill
 call	hero.obj	0xcd17c	SRandom
@@ -2084,7 +2082,6 @@ call	town.obj	0x165d5c	town::HasBuilding
 call	town.obj	0x165da4	generator::get_owner
 call	town.obj	0x16654c	town::get_army
 call	town.obj	0x166688	townManager::SetTown
-call	town.obj	0x166864	game::record_hide_hero
 call	town.obj	0x166950	town::HasBuilding
 call	town.obj	0x166950	town::set_spells_available
 call	town.obj	0x166c08	town::HasBuilding

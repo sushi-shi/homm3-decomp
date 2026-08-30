@@ -1464,16 +1464,11 @@ game	?_Xran@?$bitset@$0EG@@std@@ABEXXZ	100.0000	100.0000	100.0000	0xd1c80
 game	?_Xran@?$bitset@$0IA@@std@@ABEXXZ	100.0000	100.0000	100.0000	0xd5000
 game	?_Xran@?$bitset@$0JM@@std@@ABEXXZ	100.0000	100.0000	100.0000	0xd2090
 game	?_Xran@?$bitset@$0M@@std@@ABEXXZ	100.0000	100.0000	100.0000	0xd4eb0
-# DELIBERATE LOWER 2026-08-20. The 100.0000 above it was real but is not
-# reachable at the same time as town ?SwapHeroes@town@@QAEXXZ: both bodies
-# inline the one CMCHideHero constructor and they disagree on where its
-# member store lands. Base-first spellings make this row exact and take
-# SwapHeroes 100.00 -> 97.77; the member-first spelling in netmsg.h keeps
-# SwapHeroes exact and caps this row at 98.9923 (one instruction, the
-# member store, emitted before the five base stores instead of after).
-# Measured both ways; the larger exact body wins. See the A/B recorded on
-# CMCHideHero in include/netmsg.h and above the body in src/game.cpp.
-game	?add_garrison_hero@playerData@@QAEEPAVtown@@@Z	98.9923	98.9923	98.9923	0xb9fc0
+# EXACT 2026-08-30. The former 98.9923 deliberate lower was source-false:
+# Dreamcast proves CMCHideHero constructs its CMapChange base before the
+# separate heroId statement. Restoring that order closes this row; the sibling
+# SwapHeroes dip remains history rather than a waiver for reversing the fact.
+game	?add_garrison_hero@playerData@@QAEEPAVtown@@@Z	100.0000	100.0000	100.0000	0xb9fc0
 game	?any@?$bitset@$0BM@@std@@QBE_NXZ	100.0000	100.0000	100.0000	0xd1810
 game	?apply_map_header_availability@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc4e30
 game	?calculate_production@game@@QAEXXZ	94.4126	94.4126	94.4126	0xb8af0
@@ -2928,7 +2923,11 @@ town	?GiveSpells@town@@QAEXPAVhero@@@Z	99.9216	99.9216	99.9216	0x1be030
 town	?HasGarrison@town@@QAEHXZ	100.0000	100.0000	100.0000	0x1bdfe0
 town	?PlaceInMap@town@@QAEXHJE@Z	100.0000	100.0000	100.0000	0x1c13b0
 town	?SetSummoningGenerator@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1bd750
-town	?SwapHeroes@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1be450
+# DELIBERATE SOURCE-SHAPE LOWER 2026-08-30. This row's 100.0000 historical
+# peak used a member-first CMCHideHero spelling contradicted by the dependent
+# Dreamcast constructor. The coherent base-first source is 97.7744 here and
+# exact in add_garrison_hero; keep max/history and do not flatten the helper.
+town	?SwapHeroes@town@@QAEXXZ	97.7744	100.0000	100.0000	0x1be450
 town	?TownFn_005BF900@town@@QAEJJ@Z	99.8469	99.8469	99.8469	0x1bf900
 town	?UpgradedDwellingID@town@@SIHH@Z	100.0000	100.0000	100.0000	0x1c14a0
 town	?View@town@@QAEXH@Z	100.0000	100.0000	100.0000	0x1be210
