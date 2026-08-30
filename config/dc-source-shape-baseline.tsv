@@ -1527,11 +1527,6 @@ call	path.obj	0x10cbf8	combatManager::ValidHex
 call	path.obj	0x10cc80	army::Is
 call	path.obj	0x10cc80	army::OffsetToFront
 call	path.obj	0x10ccdc	combatManager::ValidHex
-call	philai.obj	0x10d47c	GameTime::ElapsedSince
-call	philai.obj	0x10d47c	GameTime::Get
-call	philai.obj	0x10d47c	GameTime::IsPast
-call	philai.obj	0x10d47c	PollSound
-call	philai.obj	0x10d47c	Process1WindowsMessage
 call	philai.obj	0x10e334	should_garrison_town
 call	philai.obj	0x10e9a8	AI_AttemptMove
 call	philai.obj	0x10e9a8	AI_choose_destination

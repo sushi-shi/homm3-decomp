@@ -15,6 +15,7 @@
 #include "advmgr.h"  // gpAdvManager + advManager::get_treasure_data, for the
                      // adventure-object appraisals (custom item / scroll / ...)
 #include "kb.h"
+#include "kbwin.h"
 #include "mousemgr.h"
 #include "soundmgr.h"
 #include "hillfortwindow.h"
@@ -62,6 +63,16 @@ int CalcTerrainCost(const NewmapCell* cell, int dir, int points_left,
     long iPathfinding, long end_road, long flying, long water_walking,
     long native_terrain, unsigned char param_9);
 
+// CheckDoMain's two TU-local frame-pacing cells. Dreamcast CodeView names the
+// second one iLastFrameRateTimer; no readable symbol names the first flag.
+DATA(0x0069cca4) static unsigned char gUnnamed69cca4;
+DATA(0x0069ccac) static unsigned long iLastFrameRateTimer;
+
+// Dreamcast names this shared cursor-suppression flag bSpecialHideCursor.
+// Its retail cell immediately follows the nine-row town hierarchy table; this
+// is its sole retail code reference, so this TU owns the public definition.
+DATA(0x006983f8) int bSpecialHideCursor;
+
 #if 0  // @carcass
 
 // E:\gamedcs\philai.cpp:58
@@ -71,12 +82,34 @@ int OnMySide(int iWhichPlayer)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\philai.cpp:67
-VA(0x005242d0, 0x82)  // anchor-callee, dc 0x10d47c
+// DC preserves the helper boundaries and statement order; retail /Ob2
+// expands ElapsedSince/IsPast to signed wrap-safe Get()-stamp tests.
+VA(0x005242d0, 0x82)  // anchor-callee {GameTime::Get, Process1WindowsMessage, PollSound}, dc 0x10d47c
 void CheckDoMain(int bForceMouseCheck, int bMouseOnly)
 {
-    // @stub
+    if (!(gUnnamed69cca4 & 1)) {
+        gUnnamed69cca4 |= 1;
+        iLastFrameRateTimer = GameTime::Get();
+    }
+
+    if (GameTime::ElapsedSince(iLastFrameRateTimer) > 15
+        || GameTime::IsPast(glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT])) {
+        Process1WindowsMessage();
+        PollSound();
+        if (GameTime::IsPast(glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT])) {
+            if (!bMouseOnly)
+                bSpecialHideCursor = 0;
+            glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] =
+                GameTime::Get() + 180;
+        }
+        iLastFrameRateTimer = GameTime::Get();
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\philai.cpp:102
 DC_ONLY(0x10d510, 0x4)

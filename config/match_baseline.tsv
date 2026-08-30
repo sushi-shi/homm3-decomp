@@ -2102,6 +2102,7 @@ philai	?AI_visit_black_market@@YIXPAVhero@@PAUTBlackMarket@@@Z	100.0000	100.0000
 philai	?AI_visit_hill_fort@@YIXPAVhero@@@Z	100.0000	100.0000	100.0000	0x127bb0
 philai	?AI_visit_university@@YIXPAVhero@@PAUtype_university@@@Z	100.0000	100.0000	100.0000	0x124ed0
 philai	?AI_visit_war_factory@@YIXPAVhero@@@Z	100.0000	100.0000	100.0000	0x124fc0
+philai	?CheckDoMain@@YIXHH@Z	100.0000	100.0000	100.0000	0x1242d0
 philai	?DetermineHeroToMove@@YIPAVhero@@HPAE@Z	100.0000	100.0000	100.0000	0x126a90
 philai	?DoAI@philAI@@QAEXH@Z	89.4816	89.4816	89.4816	0x125e80
 philai	?GetTurnAIVars@philAI@@QAEXH@Z	97.8723	97.8723	97.8723	0x127960
@@ -2157,7 +2158,6 @@ philai	?value_of_war_school@@YIHPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100
 philai	?value_of_witch_hut@@YIHPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x12b900
 philai	?wants_skill@@YIEPBVhero@@HH@Z	100.0000	100.0000	100.0000	0x124dd0
 philai	AI_value_of_event	0.0000	0.0000	0.0000	0x128040
-philai	CheckDoMain	0.0000	0.0000	0.0000	0x1242d0
 philai	MoveHero	0.0000	0.0000	0.0000	0x1261f0
 philai	get_skill_value	0.0000	0.0000	0.0000	0x124690
 philai	move_hero	0.0000	0.0000	0.0000	0x1267b0
