@@ -2092,10 +2092,6 @@ call	town.obj	0x166c08	town::HasBuilding
 call	town.obj	0x166ed8	NewfullMap::cell
 call	town.obj	0x166ed8	town::IsCapitol
 call	town.obj	0x166fc8	game::GetNumMapLevels
-call	town.obj	0x166fc8	town::IsCapitol
-call	town.obj	0x166fc8	town::IsCastle
-call	town.obj	0x166fc8	town::set_spells_available
-call	town.obj	0x166fc8	town::update_full_building_mask
 call	town.obj	0x1671cc	game::get_cell
 call	town.obj	0x1671cc	town::HasBuilding
 call	town.obj	0x1671cc	town::update_full_building_mask

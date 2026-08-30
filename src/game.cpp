@@ -9611,7 +9611,7 @@ void game::replace_recruit(int playerPos, long recruitSlot)
 // record proves three HasBuilding calls, while Complete's VC6 /Ob2 build
 // expands the helper into the neutral-town pass below. Defining it adjacent to
 // its recovered caller avoids perturbing earlier game.obj front-end state.
-inline bool town::IsCastle() const
+inline unsigned char town::IsCastle() const
 {
     return HasBuilding(CASTLE_FORT_ID, 0)
         || HasBuilding(CASTLE_CITADEL_ID, 0)

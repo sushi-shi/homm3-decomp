@@ -876,6 +876,13 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"\s*\|\|\s*HasBuilding\s*\(\s*CASTLE_CASTLE_ID\s*,\s*0\s*\)"
             r"\s*;"),
     ),
+    ("game.obj", 0xBCCB4): (
+        SourceRule(
+            "town::IsCapitol keeps Dreamcast line 343's HasBuilding helper "
+            "boundary and unsigned-byte result expression",
+            r"\A\s*return\s+HasBuilding\s*\(\s*HALL_CAPITOL_ID\s*,\s*0"
+            r"\s*\)\s*;\s*\Z"),
+    ),
     ("town.obj", 0x1664B0): (
         SourceRule(
             "initialize_hordes keeps Dreamcast lines 954/957/958/959/960's "
@@ -896,6 +903,56 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"ARTIFACT_SPELLBOOK\s*\)\s*\)\s*\{\s*"
             r"if\s*\(\s*HasBuilding\s*\(\s*MAGE_GUILD_ID\s*,\s*1\s*"
             r"\)\s*\)\s*\{"),
+    ),
+    ("town.obj", 0x166B64): (
+        SourceRule(
+            "set_spells_available keeps Dreamcast's count local inside the "
+            "level loop and its base-count, Tower Library, trim-loop and "
+            "result-store statement order",
+            r"\A\s*memset\s*\(\s*mageGuildSpellCounts\s*,\s*0\s*,\s*"
+            r"sizeof\s*\(\s*mageGuildSpellCounts\s*\)\s*\)\s*;\s*"
+            r"for\s*\(\s*int\s+level\s*=\s*1\s*;\s*level\s*<=\s*"
+            r"field_14\s*;\s*level\+\+\s*\)\s*\{\s*"
+            r"int\s+count\s*=\s*gMageGuildBaseSpellCounts\s*\[\s*"
+            r"level\s*-\s*1\s*\]\s*;.*?"
+            r"HasBuilding\s*\(\s*EXTRA_1_ID\s*,\s*1\s*\).*?"
+            r"while\s*\(\s*count\s*>\s*0.*?\)\s*count--\s*;.*?"
+            r"mageGuildSpellCounts\s*\[\s*level\s*-\s*1\s*\]\s*=\s*"
+            r"count\s*;\s*\}\s*\Z"),
+    ),
+    ("town.obj", 0x166FC8): (
+        SourceRule(
+            "BuildBuilding keeps raw NB11's built local and the recovered "
+            "IsCastle, IsCapitol and create_building opening order",
+            r"\A\s*type_building_id\s+built\s*;\s*"
+            r"unsigned\s+char\s+had_fort\s*=\s*IsCastle\s*\(\s*\)\s*;"
+            r"\s*unsigned\s+char\s+had_capitol\s*=\s*IsCapitol\s*\(\s*"
+            r"\)\s*;\s*built\s*=\s*create_building\s*\("),
+        SourceRule(
+            "BuildBuilding keeps Dreamcast's one update_full_building_mask "
+            "helper boundary",
+            r"\bupdate_full_building_mask\s*\(\s*\)\s*;", 1, 1),
+        SourceRule(
+            "BuildBuilding keeps both Dreamcast set_spells_available helper "
+            "boundaries",
+            r"\bset_spells_available\s*\(\s*\)\s*;", 2, 2),
+        SourceRule(
+            "BuildBuilding keeps Dreamcast's later IsCapitol then IsCastle "
+            "change test against the two opening snapshots",
+            r"\bGiveSpells\s*\(\s*0\s*\)\s*;.*?"
+            r"if\s*\(\s*\(\s*IsCapitol\s*\(\s*\)\s*&&\s*!\s*"
+            r"had_capitol\s*\)\s*\|\|\s*\(\s*IsCastle\s*\(\s*\)\s*"
+            r"&&\s*!\s*had_fort\s*\)\s*\)"),
+    ),
+    ("town.obj", 0x168494): (
+        SourceRule(
+            "update_full_building_mask keeps Dreamcast's active assignment "
+            "and HasBuilding-driven included-building sweep",
+            r"\A\s*active\s*=\s*built\s*;\s*for\s*\(\s*int\s+i\s*=\s*0"
+            r"\s*;\s*i\s*<\s*MAX_BUILDING_TYPE\s*;\s*i\+\+\s*\)\s*"
+            r"\{\s*if\s*\(\s*HasBuilding\s*\(\s*i\s*,\s*0\s*\)\s*"
+            r"\)\s*active\s*\|=\s*included_buildings\s*\[\s*type\s*\]"
+            r"\s*\[\s*i\s*\]\s*;\s*\}\s*\Z"),
     ),
     ("victorylossconditions.obj", 0x190124): (
         SourceRule(
@@ -3955,6 +4012,87 @@ if (currentHero
 """
     if not contract_violations(flattened_give_spells, give_spells_key):
         failures.append("flattened GiveSpells guard scopes passed")
+    is_capitol_key = ("game.obj", 0xBCCB4)
+    is_capitol_probe = "return HasBuilding(HALL_CAPITOL_ID, 0);"
+    if contract_violations(is_capitol_probe, is_capitol_key):
+        failures.append("aligned IsCapitol helper body did not pass")
+    flattened_is_capitol = "return (built & bitNumber[HALL_CAPITOL_ID]) != 0;"
+    if not contract_violations(flattened_is_capitol, is_capitol_key):
+        failures.append("flattened IsCapitol helper body passed")
+    set_spells_key = ("town.obj", 0x166B64)
+    set_spells_probe = """\
+memset(mageGuildSpellCounts, 0, sizeof(mageGuildSpellCounts));
+for (int level = 1; level <= field_14; level++) {
+    int count = gMageGuildBaseSpellCounts[level - 1];
+    if (type == TOWN_TOWER && HasBuilding(EXTRA_1_ID, 1))
+        count++;
+    while (count > 0 && mageGuildSpells[level - 1][count - 1] == -1)
+        count--;
+    mageGuildSpellCounts[level - 1] = count;
+}
+"""
+    if contract_violations(set_spells_probe, set_spells_key):
+        failures.append("aligned set_spells_available body did not pass")
+    hoisted_spell_count = set_spells_probe.replace(
+        "for (int level = 1; level <= field_14; level++) {\n"
+        "    int count = gMageGuildBaseSpellCounts[level - 1];",
+        "int count;\nfor (int level = 1; level <= field_14; level++) {\n"
+        "    count = gMageGuildBaseSpellCounts[level - 1];")
+    if not contract_violations(hoisted_spell_count, set_spells_key):
+        failures.append("hoisted set_spells_available count local passed")
+    flattened_library_test = set_spells_probe.replace(
+        "HasBuilding(EXTRA_1_ID, 1)",
+        "(active & bitNumber[EXTRA_1_ID])")
+    if not contract_violations(flattened_library_test, set_spells_key):
+        failures.append("flattened set_spells_available HasBuilding passed")
+    build_building_key = ("town.obj", 0x166FC8)
+    build_building_probe = """\
+type_building_id built;
+unsigned char had_fort = IsCastle();
+unsigned char had_capitol = IsCapitol();
+built = create_building(type_building_id(buildingId));
+update_full_building_mask();
+set_spells_available();
+set_spells_available();
+GiveSpells(0);
+if ((IsCapitol() && !had_capitol) || (IsCastle() && !had_fort)) {
+    refresh();
+}
+"""
+    if contract_violations(build_building_probe, build_building_key):
+        failures.append("aligned BuildBuilding source shape did not pass")
+    renamed_built = build_building_probe.replace(
+        "type_building_id built;", "type_building_id result;").replace(
+        "built = create_building", "result = create_building")
+    if not contract_violations(renamed_built, build_building_key):
+        failures.append("renamed BuildBuilding raw local passed")
+    flattened_full_mask = build_building_probe.replace(
+        "update_full_building_mask();", "active = built;")
+    if not contract_violations(flattened_full_mask, build_building_key):
+        failures.append("flattened BuildBuilding full-mask helper passed")
+    missing_spell_refresh = build_building_probe.replace(
+        "set_spells_available();\nset_spells_available();",
+        "set_spells_available();")
+    if not contract_violations(missing_spell_refresh, build_building_key):
+        failures.append("single BuildBuilding spell refresh passed")
+    flattened_change_test = build_building_probe.replace(
+        "IsCapitol() && !had_capitol", "HasBuilding(HALL_CAPITOL_ID, 0)")
+    if not contract_violations(flattened_change_test, build_building_key):
+        failures.append("flattened BuildBuilding later helper passed")
+    full_mask_key = ("town.obj", 0x168494)
+    full_mask_probe = """\
+active = built;
+for (int i = 0; i < MAX_BUILDING_TYPE; i++) {
+    if (HasBuilding(i, 0))
+        active |= included_buildings[type][i];
+}
+"""
+    if contract_violations(full_mask_probe, full_mask_key):
+        failures.append("aligned update_full_building_mask body did not pass")
+    flattened_full_mask_test = full_mask_probe.replace(
+        "HasBuilding(i, 0)", "built & bitNumber[i]")
+    if not contract_violations(flattened_full_mask_test, full_mask_key):
+        failures.append("flattened update_full_building_mask helper passed")
     grail_win_key = ("victorylossconditions.obj", 0x190124)
     grail_win_probe = """\
 type_point any_town_loc(-1, -1, -1);
