@@ -2124,7 +2124,7 @@ philai	?ValueOfSeaChest@@YIHPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.000
 philai	?ValueOfSirens@@YIHPBVhero@@@Z	100.0000	100.0000	100.0000	0x12a960
 philai	?ValueOfSpell@hero@@QBEHH@Z	100.0000	100.0000	100.0000	0x127aa0
 philai	?ValueOfStables@@YIHPBVhero@@PAJ@Z	100.0000	100.0000	100.0000	0x12aac0
-philai	?ValueOfTreasure@@YIHPBVhero@@@Z	87.5000	87.5000	87.5000	0x12b4e0
+philai	?ValueOfTreasure@@YIHPBVhero@@@Z	100.0000	100.0000	100.0000	0x12b4e0
 philai	?ValueOfTree@@YIHPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x12b5a0
 philai	?buy_artifacts@@YIXPAVhero@@PAW4TArtifact@@J@Z	93.7290	93.7290	93.7290	0x124400
 philai	?buy_siege_engine@@YIXPAVhero@@PAVtown@@W4type_building_id@@W4TArtifact@@@Z	100.0000	100.0000	100.0000	0x125ca0

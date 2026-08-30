@@ -1473,6 +1473,14 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             "manual artifact record writes",
             r"\bartifact\s*\.\s*(?:artifactId|extra)\s*=", 0, 0),
     ),
+    ("philai.obj", 0x112F6C): (
+        SourceRule(
+            "ValueOfTreasure keeps Dreamcast lines 3315-3318 as a full "
+            "first-pair assignment into an otherwise uninitialized value",
+            r"\bint\s+value\s*;\s*if\s*\(\s*experience_part\s*>\s*"
+            r"gold_part\s*\)\s*value\s*=\s*experience_part\s*;\s*"
+            r"else\s*value\s*=\s*gold_part\s*;"),
+    ),
     ("adventureoptionswindow.obj", 0x5204): (
         SourceRule(
             "TAdventureOptionsWindow::WindowHandler keeps explicit close "
@@ -5791,6 +5799,28 @@ type_artifact artifact(spell);
     if not any("manual artifact record writes" in rule.description
                for rule in flattened_scroll_rules):
         failures.append("manual ValueOfScroll artifact write passed")
+    treasure_key = ("philai.obj", 0x112F6C)
+    treasure_probe = """\
+int experience_part = 1;
+int gold_part = 2;
+int value;
+if (experience_part > gold_part)
+    value = experience_part;
+else
+    value = gold_part;
+"""
+    if contract_violations(treasure_probe, treasure_key):
+        failures.append("aligned ValueOfTreasure contract did not pass")
+    collapsed_treasure = treasure_probe.replace(
+        "int value;\nif (experience_part > gold_part)\n"
+        "    value = experience_part;\nelse\n"
+        "    value = gold_part;",
+        "int value = experience_part;\n"
+        "if (experience_part <= gold_part)\n"
+        "    value = gold_part;")
+    if not any("first-pair assignment" in rule.description for rule in
+               contract_violations(collapsed_treasure, treasure_key)):
+        failures.append("collapsed ValueOfTreasure first pair passed")
     adventure_options_key = ("adventureoptionswindow.obj", 0x5204)
     adventure_options_probe = """\
 unsigned char closeDialog = false;

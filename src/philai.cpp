@@ -3170,11 +3170,10 @@ long value_of_town_buildings(const hero* current_hero, town* current_town)
 // plus the slim artifact chance at a twentieth of the player's average
 // artifact valuation.  Extern for emission while the TREASURE_CHEST arm
 // is a stub.
-// Residual (87.50%): retail memory-homes `value` ([ebp-4] with add-mem
-// RMWs) and gives the player pointer EDI; our CL coalesces value into a
-// callee-saved register.  Tried and rejected byte-flat: block-scoped
-// pair locals, fresh pair locals, and the store-then-conditional-store
-// first pair (x = a; if (a <= b) x = b).
+// Dreamcast lines 3315-3318 assign the first pair through a full if/else.
+// Keeping `value` uninitialized until those two arms forces retail's stack
+// home; pre-initializing it and conditionally overwriting it is a false
+// register-coalesced plateau.
 VA(0x0052b4e0, 0xbf)  // anchor: three ratio/gold max pairs + turnValueOfAvgArtifact, TREASURE arm, dc 0x112f6c
 int ValueOfTreasure(const hero* current_hero)
 {
@@ -3183,8 +3182,10 @@ int ValueOfTreasure(const hero* current_hero)
         current_hero->turnExperienceToRVRatio * 160.0f);
     int gold_part =
         static_cast<int>(player->resourceValue[GOLD] * 320.0);
-    int value = experience_part;
-    if (experience_part <= gold_part)
+    int value;
+    if (experience_part > gold_part)
+        value = experience_part;
+    else
         value = gold_part;
     experience_part = static_cast<int>(
         current_hero->turnExperienceToRVRatio * 320.0f);
