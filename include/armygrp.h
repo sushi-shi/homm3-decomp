@@ -616,13 +616,9 @@ enum TTerrainType {
     // and needed by mapcell.obj's readMapLayer, which marks a cell
     // animated on terrain 7 or 8 and on any river or road.
     //
-    // GATED, for the reason the EArtifactId placement note above gives:
-    // armygrp.h sits inside initialize.cpp's include closure through
-    // town.h, and adding this enumerator unconditionally takes
-    // initialize_game_data 100.0 -> 96.09 through the include-set
-    // sensitivity class - measured 2026-08-19, no semantic change
-    // anywhere. The view macro keeps the extra symbol out of the TUs
-    // that do not need it.
+    // armygrp.h sits inside initialize.cpp's include closure through town.h;
+    // the resulting include-set sensitivity is banked in score history, not
+    // represented by a source-false TU-local enum view.
     eTerrainLava = 7,
     eTerrainWater = 8,
     eTerrainRock = 9
@@ -635,22 +631,17 @@ enum TTerrainType {
 // spellings. NewmapCell::get_magic_terrain_type (0x4fcf40) proves the
 // remaining return values against its five-way special-terrain switch.
 enum EMagicTerrain {
-#ifdef HOMM3_MAPCELL_MAGIC_TERRAIN_VIEW
     MAGIC_TERRAIN_INVALID = -1,
     MAGIC_TERRAIN_COAST = 0,
     MAGIC_TERRAIN_MAGIC_PLAINS = 0x1,
-#endif
     MAGIC_TERRAIN_CURSED_GROUND = 0x2,
     MAGIC_TERRAIN_HOLY_GROUND = 0x3,
     MAGIC_TERRAIN_EVIL_FOG = 0x4,
-    MAGIC_TERRAIN_CLOVER_FIELD = 0x5
-#ifdef HOMM3_MAPCELL_MAGIC_TERRAIN_VIEW
-    ,
+    MAGIC_TERRAIN_CLOVER_FIELD = 0x5,
     MAGIC_TERRAIN_LUCID_POOLS = 0x6,
     MAGIC_TERRAIN_FIERY_FIELDS = 0x7,
     MAGIC_TERRAIN_ROCKLANDS = 0x8,
     MAGIC_TERRAIN_MAGIC_CLOUDS = 0x9
-#endif
 };
 
 // PROVEN layout (2026-08-04): Dreamcast CodeView class size 56 with
