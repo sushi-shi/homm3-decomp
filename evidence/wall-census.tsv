@@ -459,7 +459,6 @@ register-homing (why-reg)	8	96.6709	254	recruit	??0recruitUnit@@QAE@PAVhero@@W4T
 unclassified	8	99.8607	5997	combatresultswindow	??0TCombatResultsWindow@@QAE@PBVhero@@0HHEH@Z	why-reg	run why-reg / why-branch for the full search
 register-homing (why-reg)	8	97.5961	343	tradpost	?ComputeTradeRatios@TSellCreatureWindow@@QAEXHHPAH00@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 control-flow (why-branch)	8	96.1585	208	mapcell	?is_diggable@NewmapCell@@QAEEXZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
-control-flow (why-branch)	8	96.2353	208	singleselectionwindow	?SetNextPlayer@CNetPlayerHandler@@QAEEH@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 unclaimed (no source binding)	8	96.5185	224	philai	?value_of_war_factory@@YIJPBVhero@@W4TArtifact@@J@Z	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 register-homing (why-reg)	8	96.6265	228	remote	?KillOldChat@CChatManager@@QAEXXZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 control-flow (why-branch)	8	98.8073	643	hero	?get_skill_award@@YI?AW4TSecondarySkill@@PBVhero@@W4TSkillMastery@@1W41@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)

@@ -508,8 +508,9 @@ void CNetPlayerHandler::CNetPlayerHandler()
 
 #endif  // @carcass
 
-// Residual (96.24%): the final scan rotates one guard (13 branches vs retail
-// 12); CodeView-guided for/while/do/continue/goto spellings all plateau.
+// Exact (208/208 bytes): Dreamcast's bounded scan calls the inline IsHuman
+// source helper and returns from the successful arm.  Flattening that helper
+// into a reversed dpid==0 loop produced the former 96.24% / 13-branch shape.
 VA(0x00577ae0, 0xd0)
 unsigned char CNetPlayerHandler::SetNextPlayer(int pos)
 {
@@ -541,15 +542,16 @@ unsigned char CNetPlayerHandler::SetNextPlayer(int pos)
     }
 
     int i = start;
-    while (humanPlayers[i].dpid == 0) {
-        ++i;
-        if (i >= MAX_PLAYERS)
+    while (i < MAX_PLAYERS) {
+        if (humanPlayers[i].IsHuman()) {
+            assignedPos = humanPlayers[i].playerPos;
+            humanPlayers[i].playerPos = pos;
+            humanPlayers[i].heroIndex = -1;
+            humanPlayers[i].townIndex = -1;
             return 1;
+        }
+        ++i;
     }
-    assignedPos = humanPlayers[i].playerPos;
-    humanPlayers[i].playerPos = pos;
-    humanPlayers[i].heroIndex = -1;
-    humanPlayers[i].townIndex = -1;
     return 1;
 }
 

@@ -260,6 +260,18 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-31 — `CNetPlayerHandler::SetNextPlayer` closes byte-exact by
+  restoring Dreamcast's `IsHuman()` scan instead of flattening it into a raw
+  `dpid` loop.** The dossier proves the `i`, `start`, and `pPlayer` locals,
+  the bounded player scan, the `IsHuman()` source-helper boundary, and the
+  assignment arm's early return. The previous `while (dpid == 0)` spelling
+  inverted and rotated that structure, leaving 26 candidate blocks and 13
+  branches at **96.2353%**. The recovered bounded loop produces all **208 / 208
+  bytes**, all **27 / 27 blocks**, and retail's exact **12-branch / two-return**
+  sequence. An asymmetric source-shape rule and negative controls now reject
+  re-flattening the helper, removing the bound/increment, or replacing the
+  success return with a fall-through.
+
 - **2026-08-31 — `BackupGameHeaders` closes byte-exact by preserving the
   shared Dreamcast aggregate/helper order while admitting one bounded
   Complete STL revision.** Dreamcast CodeView proves `dest`/`src`, the sole

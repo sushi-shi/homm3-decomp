@@ -420,6 +420,21 @@ RETAIL_BYTE_PROVEN_REVISION_REMOVALS: dict[
 # graph: inlined accessors/operators, a source order hidden by scheduling, and
 # nesting within a single attested statement group.
 SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
+    ("singleselectionwindow.obj", 0x1304A8): (
+        SourceRule(
+            "CNetPlayerHandler::SetNextPlayer keeps Dreamcast's bounded i "
+            "scan, inlined IsHuman helper boundary and early-success body",
+            r"int\s+i\s*=\s*start\s*;\s*"
+            r"while\s*\(\s*i\s*<\s*MAX_PLAYERS\s*\)\s*\{\s*"
+            r"if\s*\(\s*humanPlayers\s*\[\s*i\s*\]\.IsHuman\s*"
+            r"\(\s*\)\s*\)\s*\{\s*"
+            r"assignedPos\s*=\s*humanPlayers\s*\[\s*i\s*\]\.playerPos"
+            r"\s*;\s*humanPlayers\s*\[\s*i\s*\]\.playerPos\s*=\s*pos"
+            r"\s*;\s*humanPlayers\s*\[\s*i\s*\]\.heroIndex\s*=\s*-1"
+            r"\s*;\s*humanPlayers\s*\[\s*i\s*\]\.townIndex\s*=\s*-1"
+            r"\s*;\s*return\s+1\s*;\s*\}\s*\+\+\s*i\s*;\s*\}\s*"
+            r"return\s+1\s*;"),
+    ),
     ("singleselectionwindow.obj", 0x12F9C8): (
         SourceRule(
             "BackupGameHeaders keeps Dreamcast's sole int i local and the "
@@ -8928,6 +8943,36 @@ void AssignData(CMapHeaderData* pData, char* sName, char* sDesc)
     if any(not game_assign_data_header_violations(probe)
            for probe in broken_assign_data_probes):
         failures.append("broken Game.h AssignData source shape passed")
+    set_next_player_probe = """\
+int i = start;
+while (i < MAX_PLAYERS) {
+    if (humanPlayers[i].IsHuman()) {
+        assignedPos = humanPlayers[i].playerPos;
+        humanPlayers[i].playerPos = pos;
+        humanPlayers[i].heroIndex = -1;
+        humanPlayers[i].townIndex = -1;
+        return 1;
+    }
+    ++i;
+}
+return 1;
+"""
+    set_next_player_key = ("singleselectionwindow.obj", 0x1304A8)
+    if contract_violations(set_next_player_probe, set_next_player_key):
+        failures.append(
+            "aligned CNetPlayerHandler::SetNextPlayer source shape did not pass")
+    broken_set_next_player_probes = (
+        set_next_player_probe.replace(
+            "humanPlayers[i].IsHuman()", "humanPlayers[i].dpid != 0"),
+        set_next_player_probe.replace(
+            "while (i < MAX_PLAYERS) {", "while (humanPlayers[i].dpid == 0) {"),
+        set_next_player_probe.replace("        return 1;\n    }", "        break;\n    }"),
+        set_next_player_probe.replace("    ++i;\n", ""),
+    )
+    if any(not contract_violations(probe, set_next_player_key)
+           for probe in broken_set_next_player_probes):
+        failures.append(
+            "broken CNetPlayerHandler::SetNextPlayer source shape passed")
     backup_headers_probe = """\
 int i;
 dest->mapHeader = src->mapHeader;
