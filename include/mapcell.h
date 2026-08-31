@@ -306,6 +306,7 @@ struct CurrentVisitedInfo {
 };
 
 struct ShipyardInfo {
+    enum { NO_BOAT = 0xff };
     signed int owner : 8;
     unsigned int boatX : 8;
     unsigned int boatY : 8;
@@ -559,9 +560,9 @@ public:
         // listing order: the CodeView LF_BITFIELD records 0x3E16..0x3E22
         // each carry an explicit `starting position` (0, 1, ... 12), which
         // retires the "bit ORDER is inferred from listing order" caveat
-        // above for the ten bits named here. Bits 10 and 11 (unused_bit and
-        // can_build_ship in the DC list) stay pooled: no admitted retail
-        // body reaches them.
+        // above for the twelve bits named here. MoveHero's inlined
+        // mark_shipyards/clear_shipyards pair reaches bit 11 directly, so
+        // the DC `can_build_ship` name is now admitted as well.
         struct {
             unsigned short GroundFlippedHorizontal : 1;
             unsigned short GroundFlippedVertical : 1;
@@ -573,7 +574,9 @@ public:
             unsigned short Animated : 1;
             unsigned short IsBlocked : 1;
             unsigned short IsBeachBorder : 1;
-            unsigned short flags_10_15 : 6;
+            unsigned short unused_bit : 1;
+            unsigned short can_build_ship : 1;
+            unsigned short flags_12_15 : 4;
         };
         unsigned short cellFlags;
     };

@@ -101,6 +101,9 @@ public:
                            const RECT* dst_rect);
     void HidePointer();
     void ShowPointer(bool restore);
+    // Dreamcast mousemgr.h:221. MoveHero and RestoreMouse retain this
+    // source helper while Complete's /Ob2 lowers it to the field_68 test.
+    unsigned char IsVis() const { return field_68 == 0; }
     void CheckUpdate();
     void LoadFrame(int new_frame);
     void Reset();                 // 0x50cc80
