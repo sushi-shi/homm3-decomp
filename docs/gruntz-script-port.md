@@ -260,6 +260,40 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-31 — `NewfullMap::readHeroData` leaves its 92.7472% local maximum
+  banked and restores the Dreamcast-proven caller body.** The peak used three
+  invented caller-shrink statics for the secondary-skill, army and primary
+  loops. They were useful /Ob2 experiments, but they are not source facts:
+  Dreamcast assigns the secondary-skill, army, equipped-artifact and backpack
+  line/scope groups directly to `readHeroData`, records one `int x` reused
+  across them, and contains no rows for `readHeroSecondarySkills` or
+  `readHeroArmies`. The primary loop is Complete-only and is therefore kept in
+  the caller without claiming Dreamcast proof for its boundary.
+
+  Reintegrating the groups moves the current checkpoint from **92.7472% to
+  85.2833%**, while the generated ledger retains **92.7472% MAX/history**. The
+  coherent candidate and retail still have 53 branches and two returns each,
+  though enough targets differ that positional branch pairing is no longer
+  meaningful; the frame is 0xd8 against retail's 0xc4. The emitted call stream
+  is 14 against 13. After synth-name pairs are discounted, its one real census
+  divergence is `logic_error(const string&)` candidate x0 versus retail x2:
+  the larger source-real caller expands the nested constructors. That remains
+  an over-inline problem to solve through a real source/header boundary or
+  later coherent source mass, not by restoring fake helpers.
+
+  The tail now directly spells `hero_data->location =
+  heroObject->get_trigger()`, which was independently worth **91.6097% to
+  92.7472%** in the historical inline graph. Complete's decoded body also
+  proves one bounded revision removal: unlike Dreamcast, the absent custom
+  experience path leaves zero and passes it unchanged to
+  `GetStartingHeroId`; the retail function has no `Random` relocation. Fatal
+  asymmetric rules now enforce the direct trigger statement, the shared `x`
+  loops, the absence of invented shrink helpers, and that retail-proved
+  experience path. Their negative controls reject a flattened trigger,
+  restored Random fallback, split artifact counter, and fake helper call. The
+  live source-shape ratchet retires exactly the two former `get_trigger` and
+  `Random` backlog rows; **2,039** admitted backlog defects remain.
+
 - **2026-08-31 — `NewmapCell::get_trigger_cell` closes all 303 bytes and 14
   blocks by restoring the nested `CObject::get_trigger`/`game::get_cell`
   source hierarchy; `CObject::FindTrigger` remains exact under its published

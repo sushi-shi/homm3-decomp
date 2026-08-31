@@ -3391,74 +3391,6 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
     return 0;
 }
 
-// readHeroData's /Ob2 BUDGET dose - see the residual note on that body.  No
-// Dreamcast row; a codegen device.
-static void readPrimarySkills(TAbstractFile* infile, HeroExtra* hero_data)
-{
-    for (int stat = 0; stat < 4; ++stat) {
-        char value;
-        infile->Read(&value, sizeof(value));
-        hero_data->primarySkills[stat] = value;
-    }
-}
-
-static void readHeroArmies(TAbstractFile* infile, HeroExtra* hero_data,
-                           int mapVersion)
-{
-    hero_data->bCustomArmies = 1;
-    for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
-        int creature;
-        if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-            signed char narrow;
-            infile->Read(&narrow, sizeof(narrow));
-            creature = narrow;
-        } else {
-            short wide;
-            infile->Read(&wide, sizeof(wide));
-            creature = wide;
-        }
-        hero_data->armies[slot] = creature;
-
-        short troops;
-        infile->Read(&troops, sizeof(troops));
-        hero_data->numTroops[slot] = troops;
-    }
-}
-
-// TWO /Ob2 BUDGET DEVICES FOR readHeroData, not Dreamcast rows (2026-08-20).
-// The DC roster runs mapcell.cpp:2951 (readHeroData) to the next function with
-// nothing between, and it does list helpers a build inlined away, so these two
-// are codegen devices in the same class as the statement pin further down and
-// NOT a claim about retail's source.
-//
-// What they buy: retail CALLS `logic_error::logic_error(const string&)`
-// (0x4c3090) inside BOTH of its inlined bitset<70>::_Xran throw paths - at
-// fn+0x5c3 and fn+0x773 - and we expanded it, which is where the extra
-// `basic_string::assign` / `exception` / `_Grow` / `char_traits::assign`
-// calls in the unmatched column come from.  That is an over-inline, so the
-// budget - `clamp(2 * caller_cb, 1000, 35000)` - is too large, and shrinking
-// caller_cb is what reaches it.  Measured in doses:
-//   secondary skills out   83.7667 -> 86.2472
-//   armies out             86.2472 -> 86.7264
-//   artifacts out as well  86.7264 -> 86.4333, so THREE is past the peak and
-//                          the block stays in the body.
-static void readHeroSecondarySkills(TAbstractFile* infile,
-                                    HeroExtra* hero_data)
-{
-    int int_buffer;
-    hero_data->bCustomSecondarySkills = 1;
-    infile->Read(&int_buffer, sizeof(int_buffer));
-    hero_data->NumSecondarySkills = int_buffer;
-    for (int skill = 0; skill < hero_data->NumSecondarySkills; ++skill) {
-        char type;
-        infile->Read(&type, sizeof(type));
-        hero_data->secondarySkill[skill] = type;
-        char level;
-        infile->Read(&level, sizeof(level));
-        hero_data->secondarySkillLevel[skill] = level;
-    }
-}
-
 // E:\gamedcs\mapcell.cpp:2951
 // The map file's hero record, and the widest one this compiland reads: it
 // fills a whole HeroExtra out of gpGame's 156-record setup pool at +0xa4 and
@@ -3490,60 +3422,49 @@ static void readHeroSecondarySkills(TAbstractFile* infile,
 // conversion - pick_alignment does exactly the same thing to its loop index,
 // and the cast-into-an-enum floor is why.
 //
-// 71.9069 -> 83.7667 -> 86.7264 -> 89.3222 (2026-08-20): one call-site pin,
-// two /Ob2 caller-shrink doses, block-scoped scratch reads, and a const-ref
-// binding for ReadLengthPrefixedString's returned temporary.  The smallest
-// shrink dose, readPrimarySkills, is the peak; lifting either artifact loop,
-// the whole tail, or the Armageddon's-Blade arm overshoots and loses.
+// Historical local maximum (2026-08-20/21): a hero-name call-site pin,
+// block-scoped reads, the const-reference string return, and three
+// caller-shrink statics reached 91.6097%.  Restoring the source-level
+// `heroObject->get_trigger()` tail then reached 92.7472% and a 0xd4 frame.
+// That score is preserved as MAX/history, not as permission to keep the
+// statics: Dreamcast gives the secondary-skill, army, equipped-artifact and
+// backpack statements to THIS function, records one shared `int x`, and has
+// no function rows for readHeroSecondarySkills/readHeroArmies.  Removing all
+// three invented helpers restores that positive shape and intentionally puts
+// the current checkpoint at 85.2833%.
 //
-// 89.3222 -> 91.6097 (2026-08-21): putting the 70-bit mask loop back in this
-// caller lets VC6 allocate BOTH inlined bitset<70>::_Xran paths from one
-// front-end context, so their string/out_of_range objects finally share stack
-// homes.  Replacing the default-constructed named `noSpells` with the direct
-// `std::bitset<70>(0)` assignment supplies the other half of the gain.  The
-// branch transcript is now exact: 53 branches, two returns, with every
-// mnemonic and symbolic target agreeing.
+// Current structural frontier (2026-08-31): candidate and retail each have
+// 53 branches and two returns, but enough targets differ that positional
+// pairing is no longer meaningful.  The candidate frame is 0xd8 against
+// retail's 0xc4.  Its emitted call stream has 14 calls against retail's 13;
+// after unclaimed-name pairs are discounted, the one real census difference
+// is the two nested `logic_error(const string&)` constructors that retail
+// calls and this larger caller expands.  That is an over-inline consequence
+// to solve through a real source/header boundary or later coherent source
+// mass—not by recreating source-false caller-shrink helpers.
 //
-// Residual (91.6097%): pure C1 register/stack homing.  The frame is 0xe4
-// against retail's 0xc4.  Both of our throw expansions now reuse string
-// [ebp-0x4c] and out_of_range [ebp-0x7c]; retail reuses [ebp-0x40] and
-// [ebp-0x5c].  Our 12-byte zero bitset lives at -0x60/-0x5c/-0x58 versus
-// retail's shallow -0x24/-0x20/-0x1c.  `why-reg --model` sees the same three
-// callee-saved pseudos but a different processing order (ours EDI,EBX,ESI;
-// retail EDI,ESI,EBX), and the EH-state transcript is ours [0,-1,2,3] versus
-// retail [0,-1,1,2].  There is no remaining CFG hypothesis to chase.
+// Two facts remain deliberate.  Retail reaches __CxxThrowException@8 twice
+// and never calls bitset<70>::_Xran, so both bit stores use `operator[]` ->
+// `reference::operator=` -> `set`; spelling either as `set(pos,val)` keeps the
+// throw out of line.  Retail also CALLS three-argument basic_string::assign at
+// the hero-name store, so the statement-scoped inline_depth(0) below prevents
+// expansion without de-inlining ReadLengthPrefixedString.  Complete's decoded
+// body has no Random relocation: unlike Dreamcast, an absent custom experience
+// stays zero and is passed unchanged to GetStartingHeroId.
 //
-// Two inlining facts remain deliberate.  Retail reaches
-// __CxxThrowException@8 twice and never calls bitset<70>::_Xran, so both bit
-// stores use `operator[]` -> `reference::operator=` -> `set`; spelling either
-// one as `set(pos,val)` makes the throw stay out of line and loses.  Conversely,
-// retail CALLS the three-argument basic_string::assign at the hero-name store;
-// the statement-scoped inline_depth(0) below prevents VC6 from expanding that
-// call and dragging fifteen unrelated string helpers into this function.
-//
-// Measured and rejected, do not retry:
-//   * a second budget-starved single-call-site static over the whole
-//     `mapHeader.version != RESTORATION` tail, which contains BOTH throw
-//     sites - the block is too big to be inlined back, so it stays a real
-//     out-of-line function and the frame goes to 0xa8: 89.3222 -> 54.6514.
-//   * the same treatment on just the ARMAGEDDONS_BLADE spell arm
-//     (readCampaignSpell): 88.8320, and it is a loss for the same reason in
-//     miniature.
-//   * `hero_data->spells.reset()` in place of the zero-bitset assignment:
-//     84.4847, with no frame improvement.
-//   * keeping the mask loop longhand but default-constructing a named
-//     `noSpells`: 88.6583.  The frame and shared throw homes improve, but the
-//     instruction schedule regresses.
-//   * return-by-value `emptyHeroSpellSet()` and a named `noSpells(0)` are
-//     byte-identical to the retained direct temporary.  They cannot influence
-//     the remaining C1 placement decision.
-//   * the remaining Dreamcast local-roster order clues do not move the x86
-//     allocation: declaring `padding` before `tempText`, declaring
-//     `isRandomHero` before the hero-id read, and widening `hero_data` to
-//     function scope are all byte-flat at 91.6097%.  Passing the returned
-//     string temporary directly to `assign` is not flat: it loses three
-//     retail branches and falls to 90.5139%, so the const-reference lifetime
-//     below is retained.
+// Historical probes, measured before the recovered inline graph changed:
+//   * lifting the whole post-Restoration tail (54.6514%) or only the
+//     Armageddon's-Blade spell arm (88.8320%) overshot the caller-shrink peak;
+//   * `spells.reset()` reached 84.4847%; a default-constructed `noSpells`
+//     reached 88.6583%; return-by-value `emptyHeroSpellSet()` and named
+//     `noSpells(0)` were byte-flat;
+//   * after the direct trigger helper landed, narrowing the name pragma and
+//     naming `noSpells` were byte-flat; `padding` before `tempText` was also
+//     byte-flat and is retained because Dreamcast records that order;
+//   * widening hero_data's scope was byte-flat and was reverted, while moving
+//     isRandomHero before HeroID lost 92.7472 -> 92.3945 and was reverted.
+// Re-test a rejected codegen probe only after an upstream inline-graph change;
+// none of these measurements is evidence against the recovered source shape.
 VA(0x005021c0, 0x835)  // order-map: calls GetStartingHeroId 0x4bb400 (DC-unique callee) + FindTrigger 0x4fec30 (get_trigger inlined); called by readObject, dc 0xf0df4
 int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
                              int mapVersion)
@@ -3556,6 +3477,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
     // lifetime is confined to its own block.  A function-scoped
     // `int int_buffer;` gets a slot of its own below EBP and the parameter
     // home stays unused, which is what this body used to do.
+    char padding[16];
     char tempText[100] = { 0 };
 
     // The Shadow of Death quest identifier: absent on the oldest format, and
@@ -3662,18 +3584,49 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
         }
     }
 
+    int x;
     {
         char skillsFlag;
         infile->Read(&skillsFlag, sizeof(skillsFlag));
-        if (skillsFlag)
-            readHeroSecondarySkills(infile, hero_data);
+        if (skillsFlag) {
+            int int_buffer;
+            hero_data->bCustomSecondarySkills = 1;
+            infile->Read(&int_buffer, sizeof(int_buffer));
+            hero_data->NumSecondarySkills = int_buffer;
+            for (x = 0; x < hero_data->NumSecondarySkills; ++x) {
+                char type;
+                infile->Read(&type, sizeof(type));
+                hero_data->secondarySkill[x] = type;
+                char level;
+                infile->Read(&level, sizeof(level));
+                hero_data->secondarySkillLevel[x] = level;
+            }
+        }
     }
 
     {
         char armiesFlag;
         infile->Read(&armiesFlag, sizeof(armiesFlag));
-        if (armiesFlag)
-            readHeroArmies(infile, hero_data, mapVersion);
+        if (armiesFlag) {
+            hero_data->bCustomArmies = 1;
+            for (x = 0; x < armyGroup::ARMY_GROUP_SLOT_COUNT; ++x) {
+                int creature;
+                if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+                    signed char narrow;
+                    infile->Read(&narrow, sizeof(narrow));
+                    creature = narrow;
+                } else {
+                    short wide;
+                    infile->Read(&wide, sizeof(wide));
+                    creature = wide;
+                }
+                hero_data->armies[x] = creature;
+
+                short troops;
+                infile->Read(&troops, sizeof(troops));
+                hero_data->numTroops[x] = troops;
+            }
+        }
     }
 
     {
@@ -3688,39 +3641,38 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
         hero_data->bCustomArtifacts = 1;
 
         // Eighteen equipped positions before Shadow of Death, nineteen after.
-        int equippedCount = (gpGame->mapHeader.version
-                             == MAP_FORMAT_SHADOW_OF_DEATH) + 18;
-        for (int equipped = 0; equipped < equippedCount; ++equipped) {
-            int artifact;
+        int count = (gpGame->mapHeader.version
+                     == MAP_FORMAT_SHADOW_OF_DEATH) + 18;
+        int int_buffer;
+        for (x = 0; x < count; ++x) {
             if (gpGame->mapHeader.version
                 == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
                 signed char narrow;
                 infile->Read(&narrow, sizeof(narrow));
-                artifact = narrow;
+                int_buffer = narrow;
             } else {
                 short wide;
                 infile->Read(&wide, sizeof(wide));
-                artifact = wide;
+                int_buffer = wide;
             }
-            hero_data->artifacts[equipped].artifactId = artifact;
+            hero_data->artifacts[x].artifactId = int_buffer;
         }
 
         short short_buffer;
         infile->Read(&short_buffer, sizeof(short_buffer));
         hero_data->numInBackpack = static_cast<unsigned char>(short_buffer);
-        for (int carried = 0; carried < hero_data->numInBackpack; ++carried) {
-            int artifact;
+        for (x = 0; x < hero_data->numInBackpack; ++x) {
             if (gpGame->mapHeader.version
                 == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
                 signed char narrow;
                 infile->Read(&narrow, sizeof(narrow));
-                artifact = narrow;
+                int_buffer = narrow;
             } else {
                 short wide;
                 infile->Read(&wide, sizeof(wide));
-                artifact = wide;
+                int_buffer = wide;
             }
-            hero_data->backpack[carried].artifactId = artifact;
+            hero_data->backpack[x].artifactId = int_buffer;
         }
 
         // The fourth war-machine position is never serialized: every hero
@@ -3748,8 +3700,8 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
             // frame bytes (0xf4 -> 0xe4).  C++98 extends the temporary's
             // lifetime to the reference's scope, which is exactly the block
             // the assign sits in.
-#pragma inline_depth(0)
             const std::string& heroName = ReadLengthPrefixedString(infile);
+#pragma inline_depth(0)
             hero_data->name.assign(heroName, 0, std::string::npos);
 #pragma inline_depth()
         }
@@ -3787,12 +3739,15 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
             infile->Read(&primaryFlag, sizeof(primaryFlag));
             if (primaryFlag) {
                 hero_data->customPrimarySkills = 1;
-                readPrimarySkills(infile, hero_data);
+                for (x = 0; x < 4; ++x) {
+                    char value;
+                    infile->Read(&value, sizeof(value));
+                    hero_data->primarySkills[x] = value;
+                }
             }
         }
     }
 
-    char padding[16];
     if (infile->Read(padding, sizeof(padding)) < sizeof(padding))
         return -1;
 
@@ -3802,15 +3757,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
     else
         gpGame->heroAvailability[HeroID] = Owner;
 
-    int x;
-    int y;
-    heroObject->FindTrigger(x, y);
-
-    type_point point;
-    point.x = x;
-    point.y = y;
-    point.z = heroObject->z;
-    hero_data->location = point;
+    hero_data->location = heroObject->get_trigger();
     return 0;
 }
 

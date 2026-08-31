@@ -52,6 +52,20 @@ PROVENANCE_RE = re.compile(
     r"(?m)^[ \t]*//[ \t]*([^:\r\n]+:\\[^:\r\n]+):(\d+)[^\r\n]*$")
 
 
+# Complete removed the Dreamcast zero-experience Random(0, 50) + 40 fallback
+# from readHeroData.  Keep the admission tied to the decoded Complete flow:
+# an absent custom-experience byte leaves zero in ``experience`` and that zero
+# is passed unchanged to GetStartingHeroId.  The same bounded expression is a
+# source contract below; neither a score nor the absence of a token is proof.
+READ_HERO_COMPLETE_EXPERIENCE_RE = (
+    r"bCustomExperience\s*=\s*experienceFlag\s*!=\s*0\s*;\s*"
+    r"if\s*\(\s*bCustomExperience\s*\)\s*\{.*?"
+    r"else\s*\{\s*experience\s*=\s*0\s*;\s*\}\s*\}\s*"
+    r"if\s*\(\s*HeroID\s*==\s*-1\s*\)\s*\{.*?"
+    r"HeroID\s*=\s*gpGame\s*->\s*GetStartingHeroId\s*\(\s*"
+    r"alignment\s*,\s*char_buffer\s*,\s*experience\s*\)\s*;")
+
+
 @dataclass(frozen=True)
 class MissingCall:
     va: int | None
@@ -412,7 +426,15 @@ PROVEN_REVISION_REMOVALS: dict[
 # same expression and rejects the older helper, omission and flattening.  This
 # is deliberately not a general name substitution or score-based waiver.
 RETAIL_BYTE_PROVEN_REVISION_REMOVALS: dict[
-        tuple[str, int], tuple[ProvenRevisionRemoval, ...]] = {}
+        tuple[str, int], tuple[ProvenRevisionRemoval, ...]] = {
+    ("mapcell.obj", 0xF0DF4): (
+        ProvenRevisionRemoval(
+            "Complete readHeroData removes Dreamcast's zero-experience "
+            "Random(0, 50) + 40 fallback; decoded retail passes zero "
+            "unchanged to GetStartingHeroId and has no Random relocation",
+            0x005021C0, READ_HERO_COMPLETE_EXPERIENCE_RE, ("Random",)),
+    ),
+}
 
 
 # Named calls cover most recoverable shape automatically. These bounded
@@ -2431,6 +2453,49 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"FindTrigger\s*\(\s*result_x\s*,\s*result_y\s*\)\s*;\s*"
             r"return\s+type_point\s*\(\s*result_x\s*,\s*result_y\s*,"
             r"\s*z\s*\)\s*;\s*\Z"),
+    ),
+    ("mapcell.obj", 0xF0DF4): (
+        SourceRule(
+            "readHeroData keeps Complete's retail-proved zero-experience "
+            "path into GetStartingHeroId",
+            READ_HERO_COMPLETE_EXPERIENCE_RE),
+        SourceRule(
+            "readHeroData does not restore Dreamcast's retail-absent Random "
+            "fallback",
+            r"\bRandom\s*\(", minimum=0, maximum=0),
+        SourceRule(
+            "readHeroData keeps Dreamcast's direct get_trigger assignment "
+            "at the Complete tail",
+            r"hero_data\s*->\s*location\s*=\s*heroObject\s*->\s*"
+            r"get_trigger\s*\(\s*\)\s*;\s*return\s+0\s*;\s*\Z"),
+        SourceRule(
+            "readHeroData keeps Dreamcast's shared x local across the "
+            "secondary-skill loop",
+            r"\bint\s+x\s*;.*?for\s*\(\s*x\s*=\s*0\s*;\s*x\s*<\s*"
+            r"hero_data\s*->\s*NumSecondarySkills\s*;\s*\+\+\s*x\s*\)"
+            r"\s*\{.*?hero_data\s*->\s*secondarySkill\s*\[\s*x\s*\]"
+            r"\s*=.*?hero_data\s*->\s*secondarySkillLevel\s*"
+            r"\[\s*x\s*\]\s*="),
+        SourceRule(
+            "readHeroData keeps Dreamcast's shared x local across the army "
+            "loop",
+            r"for\s*\(\s*x\s*=\s*0\s*;\s*x\s*<\s*armyGroup\s*::\s*"
+            r"ARMY_GROUP_SLOT_COUNT\s*;\s*\+\+\s*x\s*\)\s*\{.*?"
+            r"hero_data\s*->\s*armies\s*\[\s*x\s*\]\s*=.*?"
+            r"hero_data\s*->\s*numTroops\s*\[\s*x\s*\]\s*="),
+        SourceRule(
+            "readHeroData reuses Dreamcast's x local for both artifact "
+            "loops",
+            r"for\s*\(\s*x\s*=\s*0\s*;\s*x\s*<\s*count\s*;\s*"
+            r"\+\+\s*x\s*\)\s*\{.*?hero_data\s*->\s*artifacts\s*"
+            r"\[\s*x\s*\].*?for\s*\(\s*x\s*=\s*0\s*;\s*x\s*<\s*"
+            r"hero_data\s*->\s*numInBackpack\s*;\s*\+\+\s*x\s*\)"
+            r"\s*\{.*?hero_data\s*->\s*backpack\s*\[\s*x\s*\]"),
+        SourceRule(
+            "readHeroData does not move its recovered statement groups into "
+            "invented caller-shrink helpers",
+            r"\b(?:readHeroArmies|readHeroSecondarySkills)\s*\(",
+            minimum=0, maximum=0),
     ),
     ("mapcell.obj", 0xEDAB8): (
         SourceRule(
@@ -6059,6 +6124,82 @@ ShowWidget(195);
             removal_key, removal_body.replace("ShowWidget(195);", ""),
             removal_va, {removal_va})[0]:
         failures.append("erased Complete replacement group classified")
+    retail_removal_key = ("mapcell.obj", 0xF0DF4)
+    retail_removal_va = \
+        RETAIL_BYTE_PROVEN_REVISION_REMOVALS[
+            retail_removal_key][0].caller_va
+    retail_removal_body = """\
+if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+    experience = int_buffer;
+} else {
+    bCustomExperience = experienceFlag != 0;
+    if (bCustomExperience) {
+        infile->Read(&experience, sizeof(experience));
+    } else {
+        experience = 0;
+    }
+}
+if (HeroID == -1) {
+    HeroID = gpGame->GetStartingHeroId(
+        alignment, char_buffer, experience);
+}
+int x;
+for (x = 0; x < hero_data->NumSecondarySkills; ++x) {
+    hero_data->secondarySkill[x] = type;
+    hero_data->secondarySkillLevel[x] = level;
+}
+for (x = 0; x < armyGroup::ARMY_GROUP_SLOT_COUNT; ++x) {
+    hero_data->armies[x] = creature;
+    hero_data->numTroops[x] = troops;
+}
+int count = 18;
+for (x = 0; x < count; ++x) {
+    hero_data->artifacts[x].artifactId = artifact;
+}
+for (x = 0; x < hero_data->numInBackpack; ++x) {
+    hero_data->backpack[x].artifactId = artifact;
+}
+for (x = 0; x < 4; ++x) {
+    hero_data->primarySkills[x] = value;
+}
+hero_data->location = heroObject->get_trigger();
+return 0;
+"""
+    retail_removed, retail_descriptions = \
+        retail_proven_dc_only_removed_helpers(
+            retail_removal_key, retail_removal_body, retail_removal_va)
+    if retail_removed != frozenset(("Random",)) \
+            or len(retail_descriptions) != 1:
+        failures.append(
+            "retail-byte-proved readHeroData revision removal did not "
+            "classify")
+    if contract_violations(retail_removal_body, retail_removal_key):
+        failures.append("Complete readHeroData source shape did not pass")
+    obsolete_random_body = retail_removal_body.replace(
+        "experience = 0;", "experience = Random(0, 50) + 40;")
+    if retail_proven_dc_only_removed_helpers(
+            retail_removal_key, obsolete_random_body,
+            retail_removal_va)[0]:
+        failures.append("obsolete Dreamcast Random fallback classified out")
+    if not contract_violations(obsolete_random_body, retail_removal_key):
+        failures.append("obsolete Dreamcast Random fallback passed")
+    flattened_trigger_body = retail_removal_body.replace(
+        "hero_data->location = heroObject->get_trigger();",
+        "heroObject->FindTrigger(x, y); hero_data->location.x = x;")
+    if not contract_violations(flattened_trigger_body, retail_removal_key):
+        failures.append("flattened readHeroData get_trigger tail passed")
+    fake_shrink_helper_body = retail_removal_body.replace(
+        "int x;", "int x; readHeroArmies(infile, hero_data, mapVersion);")
+    if not contract_violations(
+            fake_shrink_helper_body, retail_removal_key):
+        failures.append("invented readHeroData caller-shrink helper passed")
+    split_artifact_counter_body = retail_removal_body.replace(
+        "for (x = 0; x < hero_data->numInBackpack; ++x)",
+        "for (int carried = 0; carried < hero_data->numInBackpack; "
+        "++carried)")
+    if not contract_violations(
+            split_artifact_counter_body, retail_removal_key):
+        failures.append("split readHeroData artifact counters passed")
     move_hero_key = ("philai.obj", 0x10E9A8)
     move_hero_body = """\
 long max_distance = 1000;

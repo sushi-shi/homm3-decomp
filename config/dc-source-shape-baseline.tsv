@@ -1438,8 +1438,6 @@ call	mapcell.obj	0xee090	NewfullMap::loadTreasureData
 call	mapcell.obj	0xefbb8	ExtraInfoUnion::GetScholarAward
 call	mapcell.obj	0xf02a4	NewSMapHeader::readString
 call	mapcell.obj	0xf0390	NewSMapHeader::readString
-call	mapcell.obj	0xf0df4	CObject::get_trigger
-call	mapcell.obj	0xf0df4	Random
 call	mapcell.obj	0xf16c8	NewfullMap::readBoatData
 call	mapcell.obj	0xf16c8	NewfullMap::readHolyGrailData
 call	mapcell.obj	0xf16c8	NewfullMap::readSeerData
