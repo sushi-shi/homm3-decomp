@@ -288,6 +288,31 @@ ON_WIDGET_COMPLETE_FILTER_BEFORE_PLAYER_RE = (
     r"SetFilter\s*\(\s*0\s*\)\s*;.*?"
     r"case\s+SSW_PLAYER_POS_FIRST\s*:")
 
+# Complete's destination chooser no longer uses Dreamcast line 3746's
+# GetMapExtra test when classifying a candidate as nearby.  The retail x86
+# body has no GetMapExtra relocation in this function and instead checks the
+# path cell's last point against the hero start, then asks the world-map cell
+# whether that last point is a trigger.  Bind the revision admission to that
+# whole decoded replacement group; the mark_strategic_map helper still owns
+# its independent, mandatory GetMapExtra call.
+AI_CHOOSE_COMPLETE_NEARBY_RE = (
+    r"\A(?!.*\bGetMapExtra\s*\().*?"
+    r"pathCell\s*\*\s*path_cell\s*=\s*gpSearchArray\s*->\s*get_cell\s*"
+    r"\(\s*point\.point\s*,\s*false\s*\)\s*;\s*"
+    r"unsigned\s+char\s+is_nearby\s*=\s*0\s*;\s*"
+    r"if\s*\(\s*path_cell\s*->\s*last_point\s*==\s*start\s*&&\s*"
+    r"gpGame\s*->\s*worldMap\.cell\s*\(\s*"
+    r"path_cell\s*->\s*last_point\.x\s*,\s*"
+    r"path_cell\s*->\s*last_point\.y\s*,\s*"
+    r"path_cell\s*->\s*last_point\.z\s*\)\s*->\s*is_trigger\s*\)\s*"
+    r"\{\s*is_nearby\s*=\s*1\s*;\s*\}\s*"
+    r"if\s*\(\s*path_cell\s*->\s*cost\s*<=\s*nearby_cost\s*\|\|\s*"
+    r"point\.move_cost\s*<=\s*nearby_cost\s*\)\s*"
+    r"is_nearby\s*=\s*1\s*;\s*"
+    r"if\s*\(\s*path_cell\s*->\s*adjusted_cost\s*>\s*"
+    r"path_cell\s*->\s*cost\s*\|\|\s*!\s*no_towns\s*\)\s*"
+    r"is_nearby\s*=\s*0\s*;")
+
 
 @dataclass(frozen=True)
 class MissingCall:
@@ -745,6 +770,14 @@ PROVEN_REVISION_REMOVALS: dict[
 # is deliberately not a general name substitution or score-based waiver.
 RETAIL_BYTE_PROVEN_REVISION_REMOVALS: dict[
         tuple[str, int], tuple[ProvenRevisionRemoval, ...]] = {
+    ("ai_player.obj", 0x33CF8): (
+        ProvenRevisionRemoval(
+            "Complete AI_choose_destination replaces Dreamcast's candidate "
+            "GetMapExtra nearby test with the retail-decoded last-point "
+            "trigger and movement-cost group",
+            0x0042E0B0, AI_CHOOSE_COMPLETE_NEARBY_RE,
+            ("GetMapExtra",)),
+    ),
     ("command.obj", 0x6C070): (
         ProvenRevisionRemoval(
             "Complete ProcessCombatMsg replaces Dreamcast's WinCE modal "
@@ -971,6 +1004,16 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"\)\s*\)\s*;\s*memcpy\s*\(\s*current_town\s*->\s*"
             r"population\s*,\s*population\s*,\s*sizeof\s*\(\s*population"
             r"\s*\)\s*\)\s*;"),
+    ),
+    ("ai_player.obj", 0x33CF8): (
+        SourceRule(
+            "AI_choose_destination keeps Complete's retail-decoded "
+            "last-point trigger and movement-cost nearby group",
+            AI_CHOOSE_COMPLETE_NEARBY_RE),
+        SourceRule(
+            "AI_choose_destination may not restore Dreamcast's superseded "
+            "caller-local GetMapExtra nearby test",
+            r"\bGetMapExtra\s*\(", 0, 0),
     ),
     ("ai_player.obj", 0x2F694): (
         SourceRule(
@@ -7749,6 +7792,53 @@ ShowWidget(195);
             removal_key, removal_body.replace("ShowWidget(195);", ""),
             removal_va, {removal_va})[0]:
         failures.append("erased Complete replacement group classified")
+    ai_choose_removal_key = ("ai_player.obj", 0x33CF8)
+    ai_choose_removal_va = 0x0042E0B0
+    ai_choose_removal_body = """\
+pathCell* path_cell = gpSearchArray->get_cell(point.point, false);
+unsigned char is_nearby = 0;
+if (path_cell->last_point == start
+    && gpGame->worldMap.cell(path_cell->last_point.x,
+                             path_cell->last_point.y,
+                             path_cell->last_point.z)->is_trigger) {
+    is_nearby = 1;
+}
+if (path_cell->cost <= nearby_cost || point.move_cost <= nearby_cost)
+    is_nearby = 1;
+if (path_cell->adjusted_cost > path_cell->cost || !no_towns)
+    is_nearby = 0;
+"""
+    ai_choose_removed, ai_choose_descriptions = \
+        retail_proven_dc_only_removed_helpers(
+            ai_choose_removal_key, ai_choose_removal_body,
+            ai_choose_removal_va)
+    if ai_choose_removed != frozenset(("GetMapExtra",)) \
+            or len(ai_choose_descriptions) != 1:
+        failures.append(
+            "retail-byte-proved AI_choose nearby replacement did not "
+            "classify")
+    if contract_violations(ai_choose_removal_body, ai_choose_removal_key):
+        failures.append("Complete AI_choose nearby source shape did not pass")
+    ai_choose_flattened = ai_choose_removal_body.replace(
+        "&& gpGame->worldMap.cell(path_cell->last_point.x,\n"
+        "                             path_cell->last_point.y,\n"
+        "                             path_cell->last_point.z)->is_trigger",
+        "")
+    if retail_proven_dc_only_removed_helpers(
+            ai_choose_removal_key, ai_choose_flattened,
+            ai_choose_removal_va)[0]:
+        failures.append("flattened AI_choose nearby group classified")
+    if not contract_violations(
+            ai_choose_flattened, ai_choose_removal_key):
+        failures.append("flattened AI_choose nearby group passed")
+    ai_choose_obsolete = ai_choose_removal_body + \
+        "GetMapExtra(point.point.x, point.point.y, point.point.z);\n"
+    if retail_proven_dc_only_removed_helpers(
+            ai_choose_removal_key, ai_choose_obsolete,
+            ai_choose_removal_va)[0]:
+        failures.append("obsolete AI_choose GetMapExtra classified out")
+    if not contract_violations(ai_choose_obsolete, ai_choose_removal_key):
+        failures.append("obsolete AI_choose GetMapExtra passed")
     retail_removal_key = ("mapcell.obj", 0xF0DF4)
     retail_removal_va = \
         RETAIL_BYTE_PROVEN_REVISION_REMOVALS[

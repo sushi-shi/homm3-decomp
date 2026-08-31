@@ -211,6 +211,20 @@ struct HeroDestination {
 #endif
 };
 
+long find_all_destinations(hero* current_hero, searchArray* search_array,
+                           std::vector<HeroDestination>* destinations,
+                           long max_distance, unsigned char hiring_hero,
+                           unsigned char allow_spells,
+                           unsigned char explore_mode);
+int net_value_of_location(hero* current_hero, HeroDestination* destination,
+                          long* strategic_map, struct pathCell* path_cell,
+                          searchArray* search_array);
+int AI_choose_destination(hero* current_hero, long max_distance,
+                          HeroDestination& best_point,
+                          long& best_raw_value,
+                          unsigned char allow_spells,
+                          unsigned char explore_mode);
+
 // Full DC layout (classes.csv: 152 B, 6 members, 2 statics) and every
 // offset is corroborated by a retail reader: reset_magus_hut_value
 // (0x429ab0) reads the short at +0 and writes the long at +4, and

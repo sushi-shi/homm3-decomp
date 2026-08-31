@@ -3828,12 +3828,161 @@ void mark_danger_zones(const hero* our_hero, long* danger_zones)
     }
 }
 
-#if 0  // @carcass: claim-only home for move_hero's destination selector
+// The three helpers below are source-visible in the Dreamcast line table but
+// folded into AI_choose_destination by retail VC6.  Their boundaries are
+// reconstruction facts: keeping them here gives the source-shape gate the
+// same helper calls without manufacturing retail-only out-of-line slots.
+__forceinline void searchArray::set_rectangle(tagRECT& rect)
+{
+    valid_left = rect.left;
+    valid_top = rect.top;
+    valid_right = rect.right;
+    valid_bottom = rect.bottom;
+}
+
+static __forceinline void mark_strategic_map(
+    hero* current_hero, long* strategic_map,
+    std::vector<HeroDestination>* destinations)
+{
+    tagRECT rect;
+    searchArray search_array;
+    short top_x;
+    unsigned char was_trigger;
+    short top_y;
+    type_point pt;
+    long level_size = gMapWidth * gMapHeight;
+    HeroDestination point;
+
+    for (short i = 0; i < static_cast<short>(destinations->size()); ++i) {
+        point = (*destinations)[i];
+        NewmapCell* cell = gpAdvManager->GetCell(point.point);
+        if (!(GetMapExtra(point.point.x, point.point.y, point.point.z)
+              & gUnnamed69ccc4)) {
+            strategic_map[point.point.z * level_size
+                          + point.point.y * gMapWidth + point.point.x]
+                += point.value;
+            continue;
+        }
+
+        was_trigger = cell->is_trigger;
+        int type = cell->type;
+        if (gAdventureObjectTraits[type][0])
+            cell->is_trigger = 0;
+
+        rect.left = max(static_cast<long>(point.point.x) - 5, 0);
+        rect.top = max(static_cast<long>(point.point.y) - 5, 0);
+        rect.right = min(static_cast<long>(point.point.x) + 6, gMapWidth);
+        rect.bottom = min(static_cast<long>(point.point.y) + 6, gMapHeight);
+        search_array.set_rectangle(rect);
+        gpAdvManager->advWindow->animate_bottom_view(0);
+        search_array.SeedPosition(
+            current_hero, point.point, type_point(-1, -1, -1), 500,
+            cell->GroundSet == eTerrainWater, const_AI_treasure_search,
+            59999, 0);
+
+        long nearby_cost;
+        if (!gAdventureObjectTraits[type][0]) {
+            nearby_cost = 0;
+        } else {
+            cell->is_trigger = was_trigger;
+            pt.z = point.point.z;
+            top_x = max(static_cast<long>(point.point.x) - 1, 0);
+            top_y = max(static_cast<long>(point.point.y) - 1, 0);
+            short stop_x = min(static_cast<long>(point.point.x) + 2,
+                               gMapWidth);
+            short stop_y = min(static_cast<long>(point.point.y) + 2,
+                               gMapHeight);
+            nearby_cost = 0;
+            for (pt.x = top_x; pt.x < stop_x; ++pt.x) {
+                for (pt.y = top_y; pt.y < stop_y; ++pt.y) {
+                    pathCell* nearby = search_array.get_cell(pt, false);
+                    if (nearby_cost < nearby->cost)
+                        nearby_cost = nearby->cost;
+                }
+            }
+        }
+
+        for (long j = search_array.get_visited_count(); j-- != 0;) {
+            pathCell* visited = search_array.get_visited_cell(j);
+            long value;
+            if (visited->cost > nearby_cost) {
+                value = point.value * 300
+                    / (visited->cost - nearby_cost + 300);
+            } else {
+                value = point.value;
+            }
+            strategic_map[visited->point.z * level_size
+                          + visited->point.y * gMapWidth + visited->point.x]
+                += value;
+        }
+    }
+}
+
+static __forceinline void unblock_lith(hero* current_hero,
+                                       HeroDestination& destination,
+                                       long& best_distance)
+{
+    unsigned char was_on_map = current_hero->is_on_map();
+    current_hero->restore_cell();
+    type_point point = current_hero->get_location();
+    NewmapCell* cell = gpGame->get_cell(point);
+
+    if (!cell->is_trigger) {
+        if (was_on_map)
+            current_hero->obscure_cell();
+        return;
+    }
+    if (cell->type == TOWN
+        && gpGame->GetTown(cell->extraInfo)->owner == current_hero->owner) {
+        if (was_on_map)
+            current_hero->obscure_cell();
+        return;
+    }
+    if (cell->type == SANCTUARY) {
+        if (was_on_map)
+            current_hero->obscure_cell();
+        return;
+    }
+
+    long closest = 0;
+    point.z = current_hero->z;
+    for (const signed char* direction = gStepDeltaY;
+         direction < gStepDeltaY + 8 * 4; direction += 4) {
+        point.x = current_hero->x + direction[-1];
+        point.y = current_hero->y + direction[0];
+        if (!point.is_valid())
+            continue;
+        if (gpGame->worldMap.cell(point.x, point.y, point.z)->is_trigger)
+            continue;
+        if (GetMapExtra(point.x, point.y, point.z) & MAP_EXTRA_MONSTER)
+            continue;
+        pathCell* path_cell = gpSearchArray->get_cell(point, false);
+        if (!path_cell->visited)
+            continue;
+        if (destination.point.x >= 0 && closest <= path_cell->cost)
+            continue;
+        if (gpSearchArray->get_danger_value(point) < 0)
+            continue;
+        closest = path_cell->cost;
+        destination.point = point;
+        destination.is_critical = 0;
+        best_distance = 0;
+    }
+    if (was_on_map)
+        current_hero->obscure_cell();
+}
 
 // E:\gamedcs\ai_player.cpp:3645.  The DC decorated signature proves both
 // output operands are references; move_hero's retail /Gr call passes their
-// addresses in the same argument positions.  Link order brackets this large
-// body between mark_danger_zones and the following header-COMDAT band.
+// addresses in the same argument positions.  Retail corroborates the full
+// helper/statement skeleton and folds mark_strategic_map plus unblock_lith.
+// Opening residual (63.3090%, 137 candidate blocks vs 136 retail): the broad
+// CFG and every named helper boundary are present. The leading codegen split
+// is the vector default construction (candidate emits three zero stores while
+// retail calls operator new(0)), followed by one mark_strategic_map loop block
+// and the expected frame/register cascade. Bank this coherent source shape;
+// the hard-first queue now moves to the remaining 0%-MAX functions rather
+// than trading it for a local inliner permutation.
 VA(0x0042e0b0, 0xb6e)  // anchor-caller move_hero + order bracket, dc 0x33cf8
 int AI_choose_destination(hero* current_hero, long max_distance,
                           HeroDestination& best_point,
@@ -3841,10 +3990,127 @@ int AI_choose_destination(hero* current_hero, long max_distance,
                           unsigned char allow_spells,
                           unsigned char explore_mode)
 {
-    // @stub
-}
+    long raw_value;
+    long nearby_cost;
+    unsigned char no_towns;
+    short i;
+    std::vector<HeroDestination> destinations;
+    type_point start;
+    HeroDestination point;
+    long best_distance;
 
-#endif  // @carcass
+    long map_cells = (gpGame->GetNumMapLevels() + 1)
+        * gMapWidth * gMapHeight;
+    raw_value = find_all_destinations(current_hero, gpSearchArray,
+                                      &destinations, max_distance, 0,
+                                      allow_spells, explore_mode);
+    long* strategic_map = new long[map_cells];
+    memset(strategic_map, 0, map_cells * sizeof(long));
+    mark_strategic_map(current_hero, strategic_map, &destinations);
+
+    start = current_hero->get_location();
+    best_distance = 0x7fff;
+    nearby_cost = current_hero->maxMovePoints * 21 / 100;
+    no_towns = gpCurrentPlayer->numTowns == 0;
+    best_point.is_critical = 0;
+
+    if (best_point.point.x < 0) {
+        best_point.is_nearby = 0;
+        if (raw_value < 0) {
+            best_point.value = 0;
+        } else {
+            best_point.value = 1;
+            if (!gpSearchArray->limit_was_reached())
+                unblock_lith(current_hero, best_point, best_distance);
+        }
+    } else {
+        best_distance = best_point.move_cost;
+        raw_value = best_raw_value;
+        if (best_distance > 100)
+            raw_value = raw_value * 100 / best_distance;
+        pathCell* best_cell = gpSearchArray->get_cell(best_point.point,
+                                                      false);
+        best_point.is_nearby =
+            best_cell->last_point == start
+            || best_cell->cost <= nearby_cost
+            || best_point.move_cost <= nearby_cost;
+        if (best_cell->adjusted_cost > best_cell->cost)
+            best_point.is_nearby = 0;
+        if (raw_value < 0 || !no_towns)
+            best_point.is_nearby = 0;
+    }
+
+    for (i = 0; i < static_cast<short>(destinations.size()); ++i) {
+        point = destinations[i];
+        if (best_point.value > 0 && point.value == 0)
+            continue;
+
+        pathCell* path_cell = gpSearchArray->get_cell(point.point, false);
+        unsigned char is_nearby = 0;
+        if (path_cell->last_point == start
+            && gpGame->worldMap.cell(path_cell->last_point.x,
+                                     path_cell->last_point.y,
+                                     path_cell->last_point.z)->is_trigger) {
+            is_nearby = 1;
+        }
+        if (path_cell->cost <= nearby_cost
+            || point.move_cost <= nearby_cost)
+            is_nearby = 1;
+        if (path_cell->adjusted_cost > path_cell->cost || !no_towns)
+            is_nearby = 0;
+
+        long candidate_raw = net_value_of_location(
+            current_hero, &point, strategic_map, path_cell, gpSearchArray);
+        long value = candidate_raw;
+        if (candidate_raw > 0) {
+            if (point.move_cost > 100)
+                value = candidate_raw * 100 / point.move_cost;
+            if (value < 1)
+                value = 1;
+        } else if (candidate_raw < 0) {
+            is_nearby = 0;
+        }
+        gpAdvManager->advWindow->animate_bottom_view(0);
+
+        if (point.value == 0 && value <= raw_value)
+            continue;
+        if (!point.is_critical
+            && ((best_point.value == 0 && point.value == 0)
+                || (best_point.value > 0 && point.value > 0))) {
+            if (!best_point.is_nearby) {
+                if (!is_nearby && value <= raw_value)
+                    continue;
+            } else {
+                if (!is_nearby)
+                    continue;
+                if (best_distance < path_cell->cost)
+                    continue;
+                if (best_distance == path_cell->cost && value <= raw_value)
+                    continue;
+            }
+        }
+
+        best_point = point;
+        best_distance = path_cell->cost;
+        best_raw_value = candidate_raw;
+        best_point.is_nearby = is_nearby;
+        raw_value = value;
+        if (best_point.is_critical)
+            break;
+    }
+
+    if (best_distance > current_hero->movePoints)
+        best_distance -= current_hero->movePoints;
+    else
+        best_distance = 0;
+    current_hero->pathTargetX = best_point.point.x;
+    current_hero->pathTargetY = best_point.point.y;
+    current_hero->pathTargetZ = best_point.point.z;
+    current_hero->targetIsCritical = best_point.is_critical;
+    current_hero->field_041 = static_cast<short>(best_distance);
+    delete[] strategic_map;
+    return raw_value;
+}
 
 #if 0  // @carcass: claim-only homes for retained header COMDATs
 
