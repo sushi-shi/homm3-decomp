@@ -2656,7 +2656,7 @@ singleselectionpopups	?Main@CSpriteWidget@@UAEHPAVmessage@@@Z	100.0000	100.0000	
 singleselectionpopups	?handle_message@CSingleSelPopup@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x175430
 singleselectionwindow	??0CNetPlayerHandlerPlayer@@QAE@XZ	100.0000	100.0000	100.0000	0x17c790
 singleselectionwindow	??0CNetPlayerInfo@@QAE@XZ	100.0000	100.0000	100.0000	0x17f720
-singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	7.1505	7.1505	7.1505	0x179960
+singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	35.5433	35.5433	35.5433	0x179960
 singleselectionwindow	??0lobby_message@@QAE@XZ	100.0000	100.0000	100.0000	0x189190
 singleselectionwindow	??0t_map_list_update@@QAE@K@Z	100.0000	100.0000	100.0000	0x189240
 singleselectionwindow	??1CHostWaitDlg@@UAE@XZ	0.0000	0.0000	0.0000	0x189230

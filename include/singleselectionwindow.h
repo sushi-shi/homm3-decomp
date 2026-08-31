@@ -256,9 +256,9 @@ public:
     // 91/309/342 with its own Width/Height re-read off the same load -
     // map format (frames 0..2), victory condition (0..11) and loss
     // condition (0..3).
-    CSprite* versionIcons;             // 0x6c
-    CSprite* victoryConditionIcons;    // 0x70
-    CSprite* lossConditionIcons;       // 0x74
+    CSprite* VersionIcon;              // 0x6c, Complete-only format strip
+    CSprite* VictoryIcon;              // 0x70, DC name
+    CSprite* LossIcon;                 // 0x74, DC name
     // The advanced-options row art, all byte-proven by
     // DrawHeroAdvancedOption (0x58d510): the town strip (frames
     // 2*town+2 at column 0xb0), the bonus strip (frames 3/8/9/10/town
@@ -269,11 +269,15 @@ public:
     // plates - random town (drawn with the random-hero plate's
     // extent, exactly as retail does), random hero, and the locked
     // no-hero plate.
-    CSprite* townIcons;                // 0x78
-    CSprite* bonusIcons;               // 0x7c
-    char pad_80[0xa8 - 0x80];
-    Bitmap816* playerFlags[8];         // 0xa8
-    Bitmap816* heroFaces[165];         // 0xc8..0x35c
+    CSprite* TownPix;                  // 0x78, DC name
+    CSprite* Resource;                 // 0x7c, DC name
+    CSprite* heroSpecificAbility;      // 0x80, DC name
+    char pad_84[0x88 - 0x84];
+    Bitmap816* Flags[8];               // 0x88, DC name; adopflg%c.pcx
+    Bitmap816* Panels[8];              // 0xa8, DC name; adop_cpnl.pcx
+    Bitmap816* HeroPix[163];           // 0xc8..0x354, expanded retail roster
+    Bitmap816* GoldBox;                // 0x354, DC name
+    char pad_358[0x35c - 0x358];
     Bitmap816* randomTownBmp;          // 0x35c
     Bitmap816* randomHeroBmp;          // 0x360
     char pad_364[0x368 - 0x364];
