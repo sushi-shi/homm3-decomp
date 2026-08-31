@@ -2568,6 +2568,45 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"\bGetName\s*\(\s*\)",
             0, 0, include_directives=True),
     ),
+    ("army.obj", 0x496DC): (
+        SourceRule(
+            "adjust_hitpoints keeps Dreamcast's two direct hitPoints "
+            "assignment arms followed by the min statement",
+            r"if\s*\(\s*spellInfluence\s*\[\s*SPELL_AGE\s*\]\s*\)\s*"
+            r"hitPoints\s*=\s*static_cast\s*<\s*int\s*>\s*\(.*?\)\s*;"
+            r"\s*else\s*hitPoints\s*=\s*static_cast\s*<\s*int\s*>\s*"
+            r"\(.*?\)\s*;\s*topCreatureDamage\s*=\s*min\s*\(\s*"
+            r"topCreatureDamage\s*,\s*hitPoints\s*-\s*1\s*\)\s*;"),
+        SourceRule(
+            "adjust_hitpoints may not bypass the source min wrapper",
+            r"\b_cpp_min\s*\(", 0, 0),
+    ),
+    ("army.obj", 0x49748): (
+        SourceRule(
+            "CancelIndividualSpell keeps the BIND vector::clear boundary",
+            r"\bbinders\s*\.\s*clear\s*\(\s*\)", 1, 1),
+        SourceRule(
+            "CancelIndividualSpell may not flatten BIND clear to erase",
+            r"\bbinders\s*\.\s*erase\s*\(", 0, 0),
+        SourceRule(
+            "CancelIndividualSpell keeps HYPNOTIZE's remove_aura then "
+            "add_aura helper sequence",
+            r"case\s+SPELL_HYPNOTIZE\s*:\s*"
+            r"(?:this\s*->\s*)?remove_aura\s*\(\s*\)\s*;\s*"
+            r"(?:this\s*->\s*)?add_aura\s*\(\s*\)\s*;"),
+        SourceRule(
+            "CancelIndividualSpell may not flatten the aura helper into "
+            "container surgery",
+            r"\b(?:aura_sources|aura_clients)\b", 0, 0),
+        SourceRule(
+            "CancelIndividualSpell keeps AGE's adjust_hitpoints boundary",
+            r"case\s+SPELL_AGE\s*:\s*"
+            r"(?:this\s*->\s*)?adjust_hitpoints\s*\(\s*\)\s*;",
+            1, 1),
+        SourceRule(
+            "CancelIndividualSpell may not flatten adjust_hitpoints fields",
+            r"\b(?:origHitPoints|poisonPenalty|topCreatureDamage)\b", 0, 0),
+    ),
     ("army.obj", 0x4A348): (
         SourceRule(
             "get_berserk_targets keeps Dreamcast's sole can_shoot(0) "
@@ -4978,6 +5017,22 @@ def army_header_roster_violations(text: str) -> list[tuple[int, str]]:
         defects.append((text.count("\n", 0, position) + 1,
                         "GetArmyName must retain its Dreamcast-proven "
                         "inline contract"))
+
+    adjust_hitpoints_decl = re.compile(
+        r"(?m)^[ \t]*(?P<inline>inline[ \t]+)?void[ \t]+"
+        r"adjust_hitpoints\s*\(\s*\)\s*;")
+    adjust_hitpoints_matches = list(adjust_hitpoints_decl.finditer(masked))
+    broken_adjust_hitpoints = next(
+        (match for match in adjust_hitpoints_matches
+         if match.group("inline") is None), None)
+    if (len(adjust_hitpoints_matches) != 1
+            or broken_adjust_hitpoints is not None):
+        position = (broken_adjust_hitpoints.start()
+                    if broken_adjust_hitpoints else 0)
+        defects.append((text.count("\n", 0, position) + 1,
+                        "adjust_hitpoints must retain the inline contract "
+                        "that preserves its source boundary without a "
+                        "retail out-of-line body"))
     return defects
 
 
@@ -6450,6 +6505,67 @@ case CREATURE_THUNDERBIRD:
     if any(not contract_violations(probe, do_post_attack_key)
            for probe in flattened_do_post_attack_probes):
         failures.append("flattened do_post_attack source shape passed")
+    adjust_hitpoints_key = ("army.obj", 0x496DC)
+    adjust_hitpoints_probe = """\
+if (spellInfluence[SPELL_AGE])
+    hitPoints = static_cast<int>(
+        origHitPoints * poisonPenalty * 0.5f + 0.95f);
+else
+    hitPoints = static_cast<int>(origHitPoints * poisonPenalty + 0.95f);
+topCreatureDamage = min(topCreatureDamage, hitPoints - 1);
+"""
+    if contract_violations(adjust_hitpoints_probe, adjust_hitpoints_key):
+        failures.append("aligned adjust_hitpoints source shape did not pass")
+    flattened_adjust_hitpoints_probes = (
+        adjust_hitpoints_probe.replace("min(", "_cpp_min("),
+        adjust_hitpoints_probe.replace(
+            "hitPoints = static_cast<int>(\n"
+            "        origHitPoints * poisonPenalty * 0.5f + 0.95f);",
+            "long hp = static_cast<int>(\n"
+            "        origHitPoints * poisonPenalty * 0.5f + 0.95f);"),
+    )
+    if any(not contract_violations(probe, adjust_hitpoints_key)
+           for probe in flattened_adjust_hitpoints_probes):
+        failures.append("flattened adjust_hitpoints source shape passed")
+    cancel_individual_key = ("army.obj", 0x49748)
+    cancel_individual_probe = """\
+case SPELL_BIND: {
+    unsigned i = binders.size();
+    while (i-- != 0)
+        erase_item(binders[i]->bound_armies, this);
+    binders.clear();
+    break;
+}
+case SPELL_HYPNOTIZE:
+    remove_aura();
+    add_aura();
+    break;
+case SPELL_AGE:
+    adjust_hitpoints();
+    break;
+"""
+    if contract_violations(cancel_individual_probe,
+                           cancel_individual_key):
+        failures.append("aligned CancelIndividualSpell shape did not pass")
+    flattened_cancel_individual_probes = (
+        cancel_individual_probe.replace(
+            "binders.clear()",
+            "binders.erase(binders.begin(), binders.end())"),
+        cancel_individual_probe.replace(
+            "remove_aura();\n    add_aura();",
+            "aura_sources.clear();\n    aura_clients.clear();\n"
+            "    add_aura();"),
+        cancel_individual_probe.replace(
+            "adjust_hitpoints()",
+            "topCreatureDamage = min(topCreatureDamage, "
+            "origHitPoints * poisonPenalty - 1)"),
+        cancel_individual_probe.replace(
+            "remove_aura();\n    add_aura();",
+            "add_aura();\n    remove_aura();"),
+    )
+    if any(not contract_violations(probe, cancel_individual_key)
+           for probe in flattened_cancel_individual_probes):
+        failures.append("flattened CancelIndividualSpell shape passed")
     automate_first_aid_key = ("command.obj", 0x6B12C)
     automate_first_aid_probe = """\
 field_3c = 11;
@@ -11022,6 +11138,13 @@ int get_owning_side() const { return combatSide; }
                for _line, defect in army_header_roster_violations(
                    deinlined_get_army_name)):
         failures.append("de-inlined GetArmyName header contract passed")
+    deinlined_adjust_hitpoints = roster_text.replace(
+        "    inline void adjust_hitpoints();",
+        "    void adjust_hitpoints();", 1)
+    if not any("adjust_hitpoints" in defect and "inline" in defect
+               for _line, defect in army_header_roster_violations(
+                   deinlined_adjust_hitpoints)):
+        failures.append("de-inlined adjust_hitpoints contract passed")
 
     class_defects = {description for _line, description in
                      army_class_roster_violations(roster_text)}

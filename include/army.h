@@ -1232,7 +1232,7 @@ public:
     long adjust_damage(army* enemy, long base_damage, unsigned char bIsShot,
                        unsigned char simulated, long distance,
                        long* fire_damage) const;
-    void adjust_hitpoints();
+    inline void adjust_hitpoints();
     unsigned char attack_hex(int hex, unsigned char restore_facing);
     unsigned char do_attack(army* armyToAttack, int direction);
     void do_attack(int direction);
