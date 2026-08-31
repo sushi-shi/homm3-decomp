@@ -3921,29 +3921,11 @@ int game::Load(TAbstractFile* infile)
 #pragma inline_depth()
 }
 
-// Retail retains SCampaign's generated memberwise assignment immediately
-// after game::Load. The first two nested-vector assignments expand while the
-// map-score and int-vector assignments remain calls, fixing the TU-local
-// concrete pool view without changing other game.h consumers.
-VA(0x004bdc70, 0x309)  // game::Load caller + generated SCampaign field walk
-SCampaign& SCampaign::operator=(const SCampaign& that)
-{
-    isCheater = that.isCheater;
-    secretActive = that.secretActive;
-    currentMap = that.currentMap;
-    currentCampaign = that.currentCampaign;
-    numMapRegions = that.numMapRegions;
-    crossoverArrayIndex = that.crossoverArrayIndex;
-    briefingChoice = that.briefingChoice;
-    campaignFilename = that.campaignFilename;
-    for (unsigned int i = 0; i < sizeof(campaignCompleted); ++i)
-        campaignCompleted[i] = that.campaignCompleted[i];
-    carryOverHeroes = that.carryOverHeroes;
-    field_4c = that.field_4c;
-    mapScores = that.mapScores;
-    field_6c = that.field_6c;
-    return *this;
-}
+// Retail retains SCampaign's compiler-generated memberwise assignment
+// immediately after game::Load. Source has no hand-written body: the direct
+// symbol claim binds the emitted COMDAT while max/history banks the including-
+// TU transitions caused by restoring the coherent implicit header state.
+VA_COMPGEN(0x004bdc70, 0x309, IMPLICIT_COPY_ASSIGN, SCampaign)
 
 // E:\gamedcs\game.cpp:3257, dc 0xa8b48.
 // Retail deliberately serializes `color` twice: the second eight-byte

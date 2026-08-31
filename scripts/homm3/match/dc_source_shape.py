@@ -420,6 +420,45 @@ RETAIL_BYTE_PROVEN_REVISION_REMOVALS: dict[
 # graph: inlined accessors/operators, a source order hidden by scheduling, and
 # nesting within a single attested statement group.
 SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
+    ("singleselectionwindow.obj", 0x12F9C8): (
+        SourceRule(
+            "BackupGameHeaders keeps Dreamcast's sole int i local and the "
+            "shared header/setup/campaign/scalar assignment order",
+            r"\A\s*int\s+i\s*;\s*"
+            r"dest\s*->\s*mapHeader\s*=\s*src\s*->\s*mapHeader\s*;\s*"
+            r"dest\s*->\s*setup\s*=\s*src\s*->\s*setup\s*;\s*"
+            r"dest\s*->\s*campaign\s*=\s*src\s*->\s*campaign\s*;\s*"
+            r"dest\s*->\s*field_1f4d4\s*=\s*src\s*->\s*field_1f4d4\s*;\s*"
+            r"dest\s*->\s*difficultyRating\s*=\s*"
+            r"src\s*->\s*difficultyRating\s*;\s*"
+            r"dest\s*->\s*field_1f635\s*=\s*src\s*->\s*field_1f635\s*;"),
+        SourceRule(
+            "BackupGameHeaders keeps Dreamcast's two scoped current-player "
+            "arms in their attested direction",
+            r"if\s*\(\s*src\s*==\s*gpGame\s*\)\s*\{\s*"
+            r"saveCurPlayer\s*=\s*gNetLocalGamePos\s*;\s*\}\s*"
+            r"else\s*\{\s*gNetLocalGamePos\s*=\s*saveCurPlayer\s*;\s*\}"),
+        SourceRule(
+            "BackupGameHeaders keeps Complete's byte-exact Dinkumware "
+            "std::copy player transfer and the three ordered array copies; "
+            "the player std::copy is retail-only while preserving the "
+            "Dreamcast playerData assignment operation",
+            r"std\s*::\s*copy\s*\(\s*src\s*->\s*players\s*,\s*"
+            r"src\s*->\s*players\s*\+\s*8\s*,\s*dest\s*->\s*players\s*"
+            r"\)\s*;\s*"
+            r"std\s*::\s*copy\s*\(\s*src\s*->\s*heroAvailability\s*,\s*"
+            r"src\s*->\s*heroAvailability\s*\+\s*sizeof\s*\(\s*"
+            r"src\s*->\s*heroAvailability\s*\)\s*,\s*"
+            r"dest\s*->\s*heroAvailability\s*\)\s*;\s*"
+            r"std\s*::\s*copy\s*\(\s*src\s*->\s*saveFileName\s*,\s*"
+            r"src\s*->\s*saveFileName\s*\+\s*sizeof\s*\(\s*"
+            r"src\s*->\s*saveFileName\s*\)\s*,\s*"
+            r"dest\s*->\s*saveFileName\s*\)\s*;\s*"
+            r"std\s*::\s*copy\s*\(\s*src\s*->\s*playerDisabled\s*,\s*"
+            r"src\s*->\s*playerDisabled\s*\+\s*sizeof\s*\(\s*"
+            r"src\s*->\s*playerDisabled\s*\)\s*,\s*"
+            r"dest\s*->\s*playerDisabled\s*\)\s*;"),
+    ),
     ("advmgr.obj", 0x1A878): (
         SourceRule(
             "SetHeroContext keeps Dreamcast's player, curr and cell local "
@@ -8889,6 +8928,62 @@ void AssignData(CMapHeaderData* pData, char* sName, char* sDesc)
     if any(not game_assign_data_header_violations(probe)
            for probe in broken_assign_data_probes):
         failures.append("broken Game.h AssignData source shape passed")
+    backup_headers_probe = """\
+int i;
+dest->mapHeader = src->mapHeader;
+dest->setup = src->setup;
+dest->campaign = src->campaign;
+dest->field_1f4d4 = src->field_1f4d4;
+dest->difficultyRating = src->difficultyRating;
+dest->field_1f635 = src->field_1f635;
+if (src == gpGame) {
+    saveCurPlayer = gNetLocalGamePos;
+} else {
+    gNetLocalGamePos = saveCurPlayer;
+}
+std::copy(src->players, src->players + 8, dest->players);
+std::copy(src->heroAvailability,
+          src->heroAvailability + sizeof(src->heroAvailability),
+          dest->heroAvailability);
+std::copy(src->saveFileName,
+          src->saveFileName + sizeof(src->saveFileName),
+          dest->saveFileName);
+std::copy(src->playerDisabled,
+          src->playerDisabled + sizeof(src->playerDisabled),
+          dest->playerDisabled);
+"""
+    backup_headers_key = ("singleselectionwindow.obj", 0x12F9C8)
+    if contract_violations(backup_headers_probe, backup_headers_key):
+        failures.append("aligned BackupGameHeaders source shape did not pass")
+    broken_backup_headers_probes = (
+        backup_headers_probe.replace("int i;\n", ""),
+        backup_headers_probe.replace(
+            "dest->mapHeader = src->mapHeader;\n"
+            "dest->setup = src->setup;",
+            "dest->setup = src->setup;\n"
+            "dest->mapHeader = src->mapHeader;"),
+        backup_headers_probe.replace(
+            "std::copy(src->players, src->players + 8, dest->players);",
+            "for (i = 0; i < 8; i++) {\n"
+            "    dest->players[i] = src->players[i];\n}"),
+        backup_headers_probe.replace(
+            "if (src == gpGame) {\n"
+            "    saveCurPlayer = gNetLocalGamePos;\n"
+            "} else {\n"
+            "    gNetLocalGamePos = saveCurPlayer;\n}",
+            "if (src == gpGame)\n"
+            "    saveCurPlayer = gNetLocalGamePos;\n"
+            "else\n"
+            "    gNetLocalGamePos = saveCurPlayer;"),
+        backup_headers_probe.replace(
+            "std::copy(src->saveFileName,\n"
+            "          src->saveFileName + sizeof(src->saveFileName),\n"
+            "          dest->saveFileName);\n",
+            ""),
+    )
+    if any(not contract_violations(probe, backup_headers_key)
+           for probe in broken_backup_headers_probes):
+        failures.append("broken BackupGameHeaders source shape passed")
     computer_team_probe = """\
 inline unsigned char IsComputerTeam(int teamNum) const
 {

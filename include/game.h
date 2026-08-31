@@ -1178,7 +1178,8 @@ public:
         mapDescription = "";
     }
     ~NewSMapHeader();
-    NewSMapHeader& operator=(const NewSMapHeader& that);
+    // Copy assignment is compiler-generated. BackupGameHeaders proves its
+    // member walk directly: base assignment, both strings, then the bitset.
 #ifdef HOMM3_SSWINDOW_HEADER_VECTORS
     // game.h:311 in the Dreamcast line table.  The selection-window TU is
     // the retail caller too.  DC names two std::string::operator= calls.
@@ -1428,20 +1429,23 @@ public:
     // 61.0073, i.e. game.obj 83.6719 -> 80.5175, against campaignwindow
     // at 89.7220. Caller mass was NOT the whole story - both bodies still
     // expand the pair where retail calls the COMDATs.
-    // LANDED 2026-08-21 through the narrow declaration view below. A global
+    // LANDED 2026-08-21 through the narrow campaignwindow layout below. A global
     // implicit re-test at the current baselines still costs game::Load
     // 92.3721 -> 66.6252 and Save 93.5676 -> 78.2887, but campaignwindow.obj
     // alone needs the compiler-generated members and rises 82.5365 ->
     // 91.1679. The completed narrow view also models the nested vector split
     // and implicit padding above, taking that constructor to 98.4726 with an
     // exact 39/39 call ledger and flow-distance zero.
-    // HOMM3_CAMPAIGNWINDOW_IMPLICIT_SCAMPAIGN exposes it only to the proving
-    // TU; every other consumer retains the declared COMDAT calls retail uses.
+    // PROMOTED 2026-08-31: exact BackupGameHeaders independently proves the
+    // copy assignment is compiler-generated. Its global implicit state is now
+    // authoritative; the older including-TU dips above remain useful history
+    // banked by max/hist, not a reason to retain a source-false declaration.
+    // HOMM3_CAMPAIGNWINDOW_IMPLICIT_SCAMPAIGN still carries only that TU's
+    // separately proved concrete nested-vector/destructor layout.
     SCampaign();
     ~SCampaign();
-#ifndef HOMM3_CAMPAIGNWINDOW_IMPLICIT_SCAMPAIGN
-    SCampaign& operator=(const SCampaign& that);
-#endif
+    // Copy assignment is compiler-generated; its retained game.obj COMDAT is
+    // claimed with VA_COMPGEN beside the game::Load reconstruction.
     // Retail 0x489590, thiscall on gpGame->campaign with the selected
     // campaign's ordinal and its data-file name; CampaignWindowHandler's
     // deselect arm is the caller that proves the shape. Provisional name.
