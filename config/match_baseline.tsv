@@ -493,7 +493,7 @@ army	?get_resurrection_size@army@@QBEJPBV1@@Z	100.0000	100.0000	100.0000	0x47330
 army	?get_second_grid_index@army@@QBEHXZ	100.0000	100.0000	100.0000	0x466a0
 army	?get_total_combat_value@army@@QBEJJJ@Z	100.0000	100.0000	100.0000	0x42e60
 army	?get_total_hit_points@army@@QBEJE@Z	100.0000	100.0000	100.0000	0x43080
-army	?get_unit_combat_value@army@@QBENJJEPBV1@@Z	84.9968	92.1581	92.1581	0x42a50
+army	?get_unit_combat_value@army@@QBENJJEPBV1@@Z	96.5871	96.5871	96.5871	0x42a50
 army	?initialize@army@@QAEXHJPBVhero@@JJJ@Z	100.0000	100.0000	100.0000	0x3d730
 army	?is_adjacent@army@@QBEEH@Z	100.0000	100.0000	100.0000	0x466c0
 army	?is_enemy@army@@QBEEPBV1@@Z	100.0000	100.0000	100.0000	0x42880

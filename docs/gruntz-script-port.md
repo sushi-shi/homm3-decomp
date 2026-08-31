@@ -500,6 +500,32 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   controls now reject either artificial helper, collapsed mins, flattened HP
   logic, reordered aura/AGE helpers, or removal of the queue tail.
 
+- **2026-08-31 — `army::get_unit_combat_value` restores Dreamcast's helper
+  vocabulary and reaches a near-exact retail structure.** The former source
+  flattened `get_attack_modifier`, `get_defense_modifier`,
+  `get_defense_damage_modifier`, `can_shoot`, `get_average_damage`, and both
+  `get_total_hit_points` calls into field arithmetic. It also replaced the
+  three source-visible `get_controller` reads with direct hero-array access.
+  Those spellings preserved a banked 92.1581% peak but discarded positive
+  source facts from the 31-row dossier.
+
+  Restoring the helpers, including Dreamcast's literal `can_shoot(0)`, and
+  spelling the side-mass scan as the retail-corroborated pointer/count loop
+  raises the current byte score from **84.9968% to 96.5871%**. The structure
+  improves from **14/71 to 69/71 exact blocks**, with **all 38 branches and
+  both returns exact**; seven known Dreamcast backlog rows retire. The two
+  remaining size-only blocks are confined to EAX/ECX scheduling while the
+  modifier wrappers inline and retail storing the `0.1` result into a stack
+  slot where candidate VC6 loads the same constant from its literal pool.
+
+  The older Dreamcast build's damage modifier is the eight-byte constant
+  `1.0` body, while Complete retail directly proves the expanded shield,
+  petrification, and controller-defense factor now retained behind that same
+  helper boundary. Fatal source contracts and negative controls reject
+  flattening any restored helper, passing `excluded` to `can_shoot`, caching
+  the three controller reads, or replacing the recovered pointer loop with an
+  indexed scan.
+
 - **2026-08-31 — `combatManager::automate_catapult` reaches an exact
   59-block retail structure while restoring the complete Dreamcast source
   vocabulary.** The 49-row/53-scope dossier proves three calls each to

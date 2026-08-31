@@ -3088,17 +3088,30 @@ long army::get_defense_modifier() const
         - akCreatureTypeTraits[creatureType].defenseSkill;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\army.cpp:2680
-DC_ONLY(0x478fc, 0x8)
-double army::get_defense_damage_modifier(unsigned char ranged_attack) const
+// Dreamcast's eight-byte body returns 1.0, but the shared helper boundary is
+// still visible in get_unit_combat_value. Complete expands the later body
+// below at that call site; no retail out-of-line copy survives.
+inline double army::get_defense_damage_modifier(
+    unsigned char ranged_attack) const
 {
-    // @stub
+    double factor = 1.0;
+    if (ranged_attack) {
+        if (airShieldRounds)
+            factor = airShieldFactor;
+    } else {
+        if (shieldRounds)
+            factor = shieldFactor;
+    }
+    if (disabled_2b0)
+        factor = factor * 0.5;
+    hero* controller = get_controller();
+    if (controller)
+        factor = controller->GetDefenseFactor() * factor;
+    return factor;
 }
 
 // E:\gamedcs\army.cpp:2691
-#endif  // @carcass
 
 // The controller/owner pair, and the resolution of a naming inversion
 // that two lanes had recorded in opposite directions. The two bodies
@@ -3486,139 +3499,75 @@ DATA(0x0063b7f0)
 static const double kArtilleryFactors[4] = { 1.0, 1.5, 1.5, 2.0 };
 
 // E:\gamedcs\army.cpp:2820
-// What ONE creature of this stack is worth to the AI: the attack and
-// defense edges over the battlefield floor at 5% a point, the shield/
-// air-shield and petrification factors, the enemy hero's defense
-// factor, the ranged-viability re-check (the army::enemy_is_adjacent
-// WRAPPER's second real call site - the pragma on 0x4429f0 predicted
-// it), the ballista's artillery scaling, the bless/curse re-average,
-// the double-damage bit, then sqrt(attack * defense) times the
-// creature's baseFightValue - and for the two flag classes in
-// 0x400040, scaled by this stack's share of its own side's living
-// mass (0.1 outright for a dead stack).
+// Dreamcast recovers the source boundaries hidden by Complete's inliner:
+// attack/defense modifiers, defense-damage adjustment, can_shoot(0), three
+// independent controller reads, get_average_damage, and two
+// get_total_hit_points(0) calls. Retail corroborates those boundaries and
+// also proves Complete's expanded shield/controller damage factor. Keep the
+// side-mass scan in its recovered pointer/count form; the indexed spelling
+// preserves the semantics but loses retail's loop lowering.
 //
-// get_controlling_side is a CALL at the ranged re-check (pinned - our
-// CL expands it) and INLINE (three separate hypnotize-ternary
-// expansions) in the ballista arm's three heroes[] reads - transcribed
-// as three full accessor calls, do-not-cache.
-//
-// SPELLING LEDGER (0 -> 86.87 -> 89.95 -> 92.16): the pin bought 3.1,
-// and naming the two adjusted-stat call results (`adjusted_attack` /
-// `adjusted_defense`) another 2.2 - without the locals our C2 parks
-// each result in ECX and runs the traits subtraction in EAX, the
-// mirror of retail. The artillery read goes through hero::skillLevel's
-// ARRAY arm (eSecSkillBattlefieldBallistics): slicing a named +0xdd
-// field instead costs events' monsters_sell_out 100.0000 -> 99.9517
-// tree-wide (include-set class, measured and reverted).
-//
-// Residual (92.1581%): the register-mirror family end to end - the
-// remaining rows differ only in which of EAX/ECX (and EBX/EDI in the
-// own-side mass loop) each side homes, with every operation, constant
-// and call paired. Same B1 handle-state class as WalkTo's note.
+// SOURCE-SHAPE LEDGER (84.9968 -> 96.5871): restoring the Dreamcast helper
+// vocabulary and its pointer loop takes the CFG from 14/71 to 69/71 exact
+// blocks, with all 38 branches and both returns exact. The two residual
+// size-only blocks are codegen: EAX/ECX scheduling while the two modifier
+// helpers inline, and retail materializing the 0.1 result in an existing
+// stack slot while this compiler selects the equivalent literal pool.
 VA(0x00442a50, 0x410)  // anchor-global, dc 0x47cf4
 double army::get_unit_combat_value(long lowest_attack, long lowest_defense,
                                    unsigned char ranged,
                                    const army* excluded) const
 {
-    long adjusted_attack = get_adjusted_attack(0, ranged);
-    long attack_diff = adjusted_attack
-                       - akCreatureTypeTraits[creatureType].attackSkill
-                       - lowest_attack;
-    long adjusted_defense = get_adjusted_defense(0, 1);
-    long defense_diff = adjusted_defense
-                        - akCreatureTypeTraits[creatureType].defenseSkill
-                        - lowest_defense;
-    double factor = 1.0;
-    if (ranged) {
-        if (airShieldRounds)
-            factor = airShieldFactor;
-    } else {
-        if (shieldRounds)
-            factor = shieldFactor;
-    }
-    if (disabled_2b0)
-        factor = factor * 0.5;
-    hero* controller = get_controller();
-    if (controller)
-        factor = controller->GetDefenseFactor() * factor;
-    double defense_value = (defense_diff * 0.05 + 1.0) * factor;
-    if (ranged) {
-        if (creatureType != ARMY_CREATURE_BALLISTA
-            && creatureType != ARMY_CREATURE_ARROW_TOWER) {
-            if (!(Is(1u << 2)) || shotsLeft <= 0) {
-                ranged = 0;
-            } else {
-#pragma inline_depth(0)
-                long shooter_side = get_controlling_side();
-#pragma inline_depth()
-                hero* h = gpCombatManager->heroes[shooter_side];
-                if (!(h
-                      && h->IsWieldingArtifact(
-                             ARTIFACT_BOW_OF_THE_SHARPSHOOTER))
-                    && enemy_is_adjacent(0))
-                    ranged = 0;
-                else if (forgetfulnessRounds && forgetfulnessLevel >= 2)
-                    ranged = 0;
-            }
-        }
-    }
-    double attack_value = attack_diff * 0.05 + 1.0;
+    long attack_modifier = get_attack_modifier(0, ranged);
+    long attack_diff = attack_modifier - lowest_attack;
+    long defense_modifier = get_defense_modifier();
+    long defense_diff = defense_modifier - lowest_defense;
+    double defense =
+        (defense_diff * 0.05 + 1.0)
+        * get_defense_damage_modifier(ranged);
+    if (ranged && !can_shoot(0))
+        ranged = 0;
+    double attack = attack_diff * 0.05 + 1.0;
     if (!ranged && (Is(1u << 2)))
-        attack_value = attack_value * 0.5;
+        attack = attack * 0.5;
     if (creatureType == ARMY_CREATURE_BALLISTA) {
-        if (gpCombatManager->heroes[get_controlling_side()]) {
-            if (gpCombatManager->heroes[get_controlling_side()]
+        if (get_controller()) {
+            if (get_controller()
                     ->skillLevel[eSecSkillBattlefieldBallistics] > 1)
-                attack_value = attack_value + attack_value;
-            attack_value =
-                attack_value
-                * kArtilleryFactors[gpCombatManager
-                                        ->heroes[get_controlling_side()]
-                                        ->skillLevel
-                                            [eSecSkillBattlefieldBallistics]];
+                attack = attack + attack;
+            attack =
+                attack
+                * kArtilleryFactors[get_controller()->get_secondary_skill(
+                    eSecSkillBattlefieldBallistics)];
         }
     }
     if (blessRounds || curseRounds) {
         long damage_range = minDamage + maxDamage;
         double base_average = damage_range / 2.0;
-        double average = base_average;
-        if (blessRounds)
-            average = blessAmount + maxDamage;
-        else if (curseRounds)
-            average = _cpp_max(minDamage - curseAmount, 1);
-        else
-            average = base_average;
-        attack_value = average / base_average * attack_value;
+        double average_damage = get_average_damage();
+        attack = average_damage / base_average * attack;
     }
     if (ranged && (Is(1u << 15)))
-        attack_value = attack_value + attack_value;
-    double value = sqrt(attack_value * defense_value)
-                   * akCreatureTypeTraits[creatureType].baseFightValue;
+        attack = attack + attack;
+    double result = sqrt(attack * defense)
+                    * akCreatureTypeTraits[creatureType].baseFightValue;
     if (creatureId & 0x400040) {
-        long total;
-        if (Is(1u << 23))
-            total = 1;
-        else
-            total = hitPoints * numTroops - topCreatureDamage;
+        long total = get_total_hit_points(0);
         long sum = 0;
-        for (long i = 0; i < gpCombatManager->numArmies[combatSide]; i++) {
-            if (!(gpCombatManager->armies[combatSide][i].creatureId
-                  & 0x1d0)) {
-                if (gpCombatManager->armies[combatSide][i].Is(1u << 23))
-                    sum += 1;
-                else
-                    sum += gpCombatManager->armies[combatSide][i].hitPoints
-                               * gpCombatManager->armies[combatSide][i]
-                                     .numTroops
-                           - gpCombatManager->armies[combatSide][i]
-                                 .topCreatureDamage;
+        army* group = gpCombatManager->armies[combatSide];
+        for (long i = 0; i < gpCombatManager->numArmies[combatSide];
+             i++, group++) {
+            if (!(group->creatureId & 0x1d0)) {
+                sum += group->get_total_hit_points(0);
             }
         }
-        if (total == 0)
-            return 0.1;
-        value = sum * value / (total + sum);
+        if (total == 0) {
+            result = 0.1;
+            return result;
+        }
+        result = sum * result / (total + sum);
     }
-    return value;
+    return result;
 }
 
 // E:\gamedcs\army.cpp:2910
