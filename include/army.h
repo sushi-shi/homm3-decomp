@@ -2052,18 +2052,7 @@ public:
 #if defined(HOMM3_ARMY_ROUND_VIEW) || defined(HOMM3_ARMY_POW_VIEW)
     void ProcessDeath(int bFadeElementals);
 #endif
-    // BEHIND A VIEW, AND THAT IS A MEASUREMENT: this pair is the FOURTH
-    // bare member declaration in this header to move command.obj's
-    // GetCommand 92.5714 -> 92.5357, after numSpellCasts, GoBerserk and
-    // cmbtmgr.h's find_demonic_resurrection_target. ai.cpp is the only
-    // consumer of either.
     int get_second_grid_index() const;                          // 0x4466a0
-#ifdef HOMM3_ARMY_AI_VIEW
-    // DC Army.h twin of the grid-index pair above (army.cpp:4850, dc
-    // 0x4b398). Const because ai.cpp's choose_defense_hex (0x4205d0)
-    // asks it through the `const army* client` it takes.
-    unsigned char is_adjacent(int hex) const;
-#endif
     int get_mirror_effect() const;                              // 0x4487f0
     void consider_attack(const army* enemy, long value,
                          long attack_distance);                 // 0x448840
