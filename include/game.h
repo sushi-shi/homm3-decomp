@@ -1181,15 +1181,21 @@ public:
     NewSMapHeader& operator=(const NewSMapHeader& that);
 #ifdef HOMM3_SSWINDOW_HEADER_VECTORS
     // game.h:311 in the Dreamcast line table.  The selection-window TU is
-    // the retail caller too.  Complete retains the base-header assignment
-    // call while expanding the two following string assignments.
-    void AssignData(CMapHeaderData* data, char* name, char* description)
+    // the retail caller too.  DC names two std::string::operator= calls.
+    // Keep those source operations: depth 1 retains the DC-proven helper
+    // layer instead of flattening four STL bodies into UpdateGameVars.
+    // Retail expands three operators through assign() and expands the last
+    // one level further; that remaining VC6 state difference is not license
+    // to replace the two positive operator= facts with direct assign calls.
+    void AssignData(CMapHeaderData* pData, char* sName, char* sDesc)
     {
 #pragma inline_depth(0)
-        static_cast<CMapHeaderData&>(*this) = *data;
+        static_cast<CMapHeaderData&>(*this) = *pData;
 #pragma inline_depth()
-        mapName.assign(name, strlen(name));
-        mapDescription.assign(description, strlen(description));
+#pragma inline_depth(1)
+        mapName = sName;
+        mapDescription = sDesc;
+#pragma inline_depth()
     }
 #endif
     int Save(TAbstractFile* outfile);

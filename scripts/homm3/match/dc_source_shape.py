@@ -3332,6 +3332,35 @@ def game_get_hero_header_violations(text: str) -> list[tuple[int, str]]:
              "parameter, -1 null arm, and direct heroes-index return")]
 
 
+def game_assign_data_header_violations(text: str) -> list[tuple[int, str]]:
+    """Audit game.h:311's source-visible NewSMapHeader helper body.
+
+    Dreamcast CodeView supplies the four parameter identities and records the
+    two adjacent ``std::string::operator=(const char*)`` calls.  Retail x86
+    independently retains the outer AssignData expansion and the base-header
+    assignment, although VC6 lowers the nested string operations through a
+    mixture of retained and expanded STL calls.  The compiler-layer skew does
+    not permit replacing the positive source operations with direct assign()
+    calls merely because that can improve a local byte score.
+    """
+    masked = _source.mask(text)
+    pattern = (
+        r"\bvoid\s+AssignData\s*\(\s*CMapHeaderData\s*\*\s*pData\s*,\s*"
+        r"char\s*\*\s*sName\s*,\s*char\s*\*\s*sDesc\s*\)\s*\{\s*"
+        r"static_cast\s*<\s*CMapHeaderData\s*&\s*>\s*\(\s*\*\s*this"
+        r"\s*\)\s*=\s*\*\s*pData\s*;\s*"
+        r"mapName\s*=\s*sName\s*;\s*"
+        r"mapDescription\s*=\s*sDesc\s*;\s*\}")
+    if re.search(pattern, masked, re.DOTALL) is not None:
+        return []
+    token = re.search(r"\bAssignData\s*\(", masked)
+    line = text.count("\n", 0, token.start()) + 1 if token else 1
+    return [(line,
+             "Game.h:311 NewSMapHeader::AssignData must retain Dreamcast's "
+             "pData/sName/sDesc parameters, base-header assignment, and "
+             "ordered mapName/mapDescription operator= statements")]
+
+
 def game_is_computer_team_header_violations(
         text: str) -> list[tuple[int, str]]:
     """Audit the DC boundary and Complete-proven IsComputerTeam lowering."""
@@ -8837,6 +8866,29 @@ hero* GetHero(int which)
     if any(not game_get_hero_header_violations(probe)
            for probe in broken_get_hero_probes):
         failures.append("broken Game.h GetHero source shape passed")
+    assign_data_probe = """\
+void AssignData(CMapHeaderData* pData, char* sName, char* sDesc)
+{
+    static_cast<CMapHeaderData&>(*this) = *pData;
+    mapName = sName;
+    mapDescription = sDesc;
+}
+"""
+    if game_assign_data_header_violations(assign_data_probe):
+        failures.append("aligned Game.h AssignData source shape did not pass")
+    broken_assign_data_probes = (
+        assign_data_probe.replace("pData", "data"),
+        assign_data_probe.replace(
+            "mapName = sName;", "mapName.assign(sName, strlen(sName));"),
+        assign_data_probe.replace(
+            "mapName = sName;\n    mapDescription = sDesc;",
+            "mapDescription = sDesc;\n    mapName = sName;"),
+        assign_data_probe.replace(
+            "    static_cast<CMapHeaderData&>(*this) = *pData;\n", ""),
+    )
+    if any(not game_assign_data_header_violations(probe)
+           for probe in broken_assign_data_probes):
+        failures.append("broken Game.h AssignData source shape passed")
     computer_team_probe = """\
 inline unsigned char IsComputerTeam(int teamNum) const
 {
@@ -9956,13 +10008,15 @@ def scan() -> tuple[
     game_text = game_header.read_text(errors="replace")
     audited.add(_file_audit_scope("include/game.h"))
     get_hero_defects = game_get_hero_header_violations(game_text)
+    assign_data_defects = game_assign_data_header_violations(game_text)
     computer_team_defects = game_is_computer_team_header_violations(game_text)
     randomize_header_defects = game_randomize_header_violations(game_text)
-    checked += 3
+    checked += 4
     missing.extend(FileContractViolation("include/game.h", line,
                                          description)
                    for line, description in
-                   get_hero_defects + computer_team_defects
+                   get_hero_defects + assign_data_defects
+                   + computer_team_defects
                    + randomize_header_defects)
 
     split_header = common.HOMM3_DIR / "include/armygrp_split.h"
