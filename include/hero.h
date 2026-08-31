@@ -1073,6 +1073,14 @@ public:
     // dword domain value. philai.cpp crosses to its typed helpers without
     // changing this record's public header view.
     int SoD_get_seer_skill_value(int skill, int level);
+    // E:\gamedcs\Hero.h:981. Dreamcast records the typed
+    // get_secondary_skill(TSecondarySkill) boundary. The domain is spelled
+    // int in this split header for the same include-closure reason as the
+    // method above; its value and return width are unchanged.
+    int get_secondary_skill(int skill) const
+    {
+        return skillLevel[skill];
+    }
     float GetMagicResistanceFactor();
     // 0x4e4840, claimed in hero.cpp - cmbtmgr's
     // CalculateGainedExperience (0x46a350) scales the whole award by it

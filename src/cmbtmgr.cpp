@@ -1837,7 +1837,7 @@ VA(0x00465970, 0x20)  // anchor-global, dc 0x5fcec
 int GetTargetWallIndex(int grid_index)
 {
     for (int i = 0; i < 8; i++) {
-        if (gWallTargets[i].hex == grid_index)
+        if (combatManager::wallTargets[i].target_hex == grid_index)
             return i;
     }
     return -1;
@@ -1857,7 +1857,7 @@ void combatManager::DamageWall(TWallTargetId target_wall, int damage)
         return;
 
     int strength;
-    strength = wallStrength[gWallTargets[target_wall].wall_id] - damage;
+    strength = wallStrength[wallTargets[target_wall].wall] - damage;
     if (strength < 0)
         strength = 0;
 
@@ -1867,7 +1867,7 @@ void combatManager::DamageWall(TWallTargetId target_wall, int damage)
         case WALL_TARGET_2:
         case WALL_TARGET_4:
         case WALL_TARGET_5: {
-            int blocked_hex = gWallTargets[target_wall].get_blocked_hex();
+            int blocked_hex = wallTargets[target_wall].get_blocked_hex();
             cells[blocked_hex].field_10 &= ~2;
             break;
         }
@@ -1898,7 +1898,7 @@ void combatManager::DamageWall(TWallTargetId target_wall, int damage)
         }
     }
 
-    int wall_id = gWallTargets[target_wall].wall_id;
+    int wall_id = wallTargets[target_wall].wall;
     wallStrength[wall_id] = strength;
     if (strength == 0)
         wallStanding[wall_id] = 0;

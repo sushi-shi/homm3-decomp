@@ -806,7 +806,7 @@ command	?DoVictory@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x77470
 # automate_first_aid_tent re-exposes the same include-set/codegen class;
 # GetCommand's 62 branches and 20 returns still agree exactly. hist stays
 # at 92.5714.
-command	?GetCommand@combatManager@@QAEHH@Z	92.5357	92.5714	92.5714	0x76490
+command	?GetCommand@combatManager@@QAEHH@Z	92.5714	92.5714	92.5714	0x76490
 command	?GetControl@combatManager@@QAEXXZ	87.7747	87.7747	87.7747	0x782d0
 command	?HandleCombatPlayerDrop@combatManager@@QAEEKPAVmessage@@@Z	100.0000	100.0000	100.0000	0x7a500
 command	?Main@combatManager@@UAEHAAVmessage@@@Z	96.2267	96.2267	96.2267	0x740d0
@@ -823,8 +823,8 @@ command	?TurnOffHighlighter@combatManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x
 command	?TurnOffSelector@combatManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x77b60
 command	?ViewCastleBallista@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x7a380
 command	?auto_resolve_combat@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x76200
-command	?automate_catapult@combatManager@@QAEEXZ	96.9378	96.9378	96.9378	0x73c00
-command	?automate_first_aid_tent@combatManager@@QAEEXZ	98.1203	98.1203	98.1203	0x73ea0
+command	?automate_catapult@combatManager@@QAEEXZ	99.8804	99.8804	99.8804	0x73c00
+command	?automate_first_aid_tent@combatManager@@QAEEXZ	98.0451	98.1203	98.1203	0x73ea0
 command	?do_animations@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x74040
 command	?get_surrender_cost@combatManager@@QAEJXZ	100.0000	100.0000	100.0000	0x77a00
 command	?get_tower_string@combatManager@@ABE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TWallSection@1@JJ@Z	100.0000	100.0000	100.0000	0x7a2d0
@@ -1127,7 +1127,7 @@ events	?DoAIEvent@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@@Z	100.00
 # synth PDB - returned the row to master's own 98.5741 to the digit
 # with events.cpp untouched. Cross-generation noise, the
 # recruit::Update revert-control precedent; hist keeps 99.1139.
-events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	99.0481	99.0481	99.1139	0xad470
+events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	98.5741	99.0481	99.1139	0xad470
 events	?DoCustomArtifact@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	99.1492	99.1492	99.1492	0x9f070
 events	?DoCustomResource@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa4780
 events	?DoCustomSpellScroll@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	97.4451	97.4451	97.4451	0xa5a80
@@ -1818,7 +1818,7 @@ initialize	?create_requirement_masks@@YIXPBHPA_J1@Z	100.0000	100.0000	100.0000	0
 # this class: two enumerators moved the row by the same amount one
 # enumerator did on 2026-08-08, which is what a population threshold
 # looks like and not what a per-declarator penalty looks like.
-initialize	?initialize_game_data@@YIXXZ	90.1620	100.0000	100.0000	0xeb730
+initialize	?initialize_game_data@@YIXXZ	100.0000	100.0000	100.0000	0xeb730
 inputmgr	??0inputManager@@QAE@XZ	100.0000	100.0000	100.0000	0xec460
 inputmgr	?AsciiConvert@inputManager@@QAEXPAVmessage@@@Z	100.0000	100.0000	100.0000	0xec6f0
 inputmgr	?Close@inputManager@@UAEXXZ	100.0000	100.0000	100.0000	0xec540
@@ -2469,7 +2469,7 @@ sacrifice_window	?all_creatures@type_skeleton_window@@CIHAAVmessage@@@Z	100.0000
 sacrifice_window	?artifact_click@type_sacrifice_window@@QAEXJE@Z	100.0000	100.0000	100.0000	0x1632a0
 sacrifice_window	?backpack_click@type_sacrifice_window@@QAEXJE@Z	86.1308	86.1308	86.1308	0x1636c0
 sacrifice_window	?convert_with_commas@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@J@Z	100.0000	100.0000	100.0000	0x162660
-sacrifice_window	?create_artifact_widgets@type_sacrifice_window@@AAEXAAJH@Z	100.0000	100.0000	100.0000	0x160380
+sacrifice_window	?create_artifact_widgets@type_sacrifice_window@@AAEXAAJH@Z	99.9983	100.0000	100.0000	0x160380
 sacrifice_window	?create_creature_icons@type_sacrifice_window@@AAEJJJJJJAAJPAPAViconWidget@@1PAPAVtextWidget@@E@Z	100.0000	100.0000	100.0000	0x161f70
 sacrifice_window	?create_creature_icons@type_skeleton_window@@AAEXJJJJJJAAJPAPAViconWidget@@1PAPAVtextWidget@@@Z	100.0000	100.0000	100.0000	0x166760
 sacrifice_window	?create_creature_widgets@type_sacrifice_window@@AAEXAAJH@Z	100.0000	100.0000	100.0000	0x1610f0
@@ -3018,7 +3018,7 @@ town	?increase_population@town@@QAEXW4TCreatureType@@0J@Z	100.0000	100.0000	100.
 town	?initialize@town@@QAEXPBVTownExtra@@@Z	100.0000	100.0000	100.0000	0x1c0670
 town	?initialize_buildings@@YIXPAVtown@@PBVTownExtra@@@Z	100.0000	100.0000	100.0000	0x1c08c0
 town	?initialize_hordes@town@@SIXXZ	100.0000	100.0000	100.0000	0x1bdf60
-town	?initialize_spells@town@@QAEXPBVTownExtra@@@Z	97.7386	97.7386	97.7386	0x1be600
+town	?initialize_spells@town@@QAEXPBVTownExtra@@@Z	97.6742	97.7386	97.7386	0x1be600
 town	?is_legal_building@town@@QBEEW4type_building_id@@@Z	100.0000	100.0000	100.0000	0x1c12a0
 town	?remove_garrison_hero@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1be390
 # 2026-08-24: both carrier-free peaks are recovered by the real source call
@@ -3235,7 +3235,7 @@ viewarmywindow	?convertID2HelpID@TViewArmyWindow@@QBEHH@Z	100.0000	100.0000	100.
 viewarmywindow	?create_attack_widget@TViewArmyWindow@@QAEXHH@Z	100.0000	100.0000	100.0000	0x1f5340
 viewarmywindow	?create_damage_widget@TViewArmyWindow@@QAEXPBUTCreatureTypeTraits@@PBVhero@@@Z	100.0000	100.0000	100.0000	0x1f5860
 viewarmywindow	?create_defense_widget@TViewArmyWindow@@QAEXHH@Z	100.0000	100.0000	100.0000	0x1f55d0
-viewarmywindow	?create_dismiss_widget@TViewArmyWindow@@QAEXXZ	89.8771	89.8771	89.8771	0x1f6d50
+viewarmywindow	?create_dismiss_widget@TViewArmyWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1f6d50
 viewarmywindow	?create_hitpoints_left_widget@TViewArmyWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1f6070
 viewarmywindow	?create_hitpoints_widget@TViewArmyWindow@@QAEXHH@Z	100.0000	100.0000	100.0000	0x1f5dd0
 viewarmywindow	?create_ok_widget@TViewArmyWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1f6870
@@ -3243,7 +3243,7 @@ viewarmywindow	?create_portrait_widget@TViewArmyWindow@@QAEXPBDHH@Z	100.0000	100
 viewarmywindow	?create_shots_widget@TViewArmyWindow@@QAEXPBUTCreatureTypeTraits@@HH@Z	100.0000	100.0000	100.0000	0x1f5b30
 viewarmywindow	?create_speed_widget@TViewArmyWindow@@QAEXHH@Z	100.0000	100.0000	100.0000	0x1f62f0
 viewarmywindow	?create_spell_influence_widgets@TViewArmyWindow@@QAEXPBVarmy@@@Z	86.6570	86.6570	86.6570	0x1f65b0
-viewarmywindow	?create_upgrade_widget@TViewArmyWindow@@QAEXXZ	89.8771	89.8771	89.8771	0x1f6ae0
+viewarmywindow	?create_upgrade_widget@TViewArmyWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1f6ae0
 viewwrld	??1TViewWorldWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1fbd60
 viewwrld	??_GTViewWorldWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1fbd30
 widget	??0widget@@QAE@FFFFFF@Z	100.0000	100.0000	100.0000	0x1fe340

@@ -722,6 +722,39 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"\bhuman_strength\s*=\s*0\s*;.*?"
             r"\bsum_player_dwellings\s*\("),
     ),
+    ("command.obj", 0x6AF98): (
+        SourceRule(
+            "automate_catapult keeps all three Dreamcast "
+            "valid_wall_target boundaries",
+            r"\bvalid_wall_target\s*\(", 3, 3),
+        SourceRule(
+            "automate_catapult keeps the three Dreamcast "
+            "get_wall_strength boundaries",
+            r"\bget_wall_strength\s*\(", 3, 3),
+        SourceRule(
+            "automate_catapult keeps its sole Dreamcast SRandom boundary",
+            r"\bSRandom\s*\(", 1, 1),
+        SourceRule(
+            "automate_catapult keeps its sole Dreamcast "
+            "get_secondary_skill boundary",
+            r"\bget_secondary_skill\s*\(", 1, 1),
+        SourceRule(
+            "automate_catapult keeps Dreamcast's final command, direct "
+            "wall-target hex store, field_40 clear and return order",
+            r"\bfield_3c\s*=\s*9\s*;\s*"
+            r"field_44\s*=\s*wallTargets\s*\[\s*target\s*\]\s*\.\s*"
+            r"target_hex\s*;\s*field_40\s*=\s*-\s*1\s*;\s*return\s+1\s*;"),
+    ),
+    ("command.obj", 0x6B12C): (
+        SourceRule(
+            "automate_first_aid_tent keeps Dreamcast's final command, "
+            "direct target-grid store, field_40 clear and return statement "
+            "order without an artificial grid local",
+            r"\bfield_3c\s*=\s*11\s*;\s*"
+            r"field_44\s*=\s*armies\s*\[\s*side\s*\]\s*"
+            r"\[\s*best_index\s*\]\s*\.\s*gridIndex\s*;\s*"
+            r"field_40\s*=\s*-\s*1\s*;\s*return\s+1\s*;"),
+    ),
     ("command.obj", 0x6F824): (
         SourceRule(
             "process_first_aid keeps both Dreamcast army::GetName calls",
@@ -3415,12 +3448,39 @@ ARMY_BOOL_DECLARATIONS: tuple[SourceRule, ...] = (
 def combat_manager_header_violations(text: str) -> list[tuple[int, str]]:
     """Audit the attested cmbtmgr.h inline signature/body/order band."""
     masked = _source.mask(text)
+    wall_target_pattern = (
+        r"\bstruct\s+TWallTarget\s*\{\s*"
+        r"short\s+target_hex\s*;\s*"
+        r"short\s+blocked_row\s*;\s*"
+        r"short\s+hit_x\s*;\s*"
+        r"short\s+hit_y\s*;\s*"
+        r"TWallSection\s+wall\s*;\s*"
+        r"int\s+get_blocked_hex\s*\(\s*\)\s*const\s*\{\s*"
+        r"if\s*\(\s*blocked_row\s*!=\s*-\s*1\s*\)\s*"
+        r"return\s+gCastleWallColumns\s*\[\s*blocked_row\s*\]\s*;\s*"
+        r"return\s+-\s*1\s*;\s*\}\s*\}\s*;\s*"
+        r"static\s+const\s+TWallTarget\s+wallTargets\s*\[\s*8\s*\]\s*;"
+    )
+    defects: list[tuple[int, str]] = []
+    if re.search(wall_target_pattern, masked, re.DOTALL) is None:
+        token = re.search(r"\bTWallTarget\b", masked)
+        line = text.count("\n", 0, token.start()) + 1 if token else 1
+        defects.append((
+            line,
+            "cmbtmgr.h TWallTarget must retain Dreamcast's nested field "
+            "names/types, get_blocked_hex body, and static wallTargets[8]",
+        ))
     rules: tuple[tuple[str, str, str], ...] = (
         ("ValidHex", "cmbtmgr.h:1460 ValidHex must remain static bool with "
          "the attested two-bound predicate",
          r"\bstatic\s+bool\s+ValidHex\s*\(\s*int\s+(\w+)\s*\)\s*\{"
          r"\s*return\s+\1\s*>=\s*0\s*&&\s*\1\s*<\s*"
          r"COMBAT_GRID_CELLS\s*;\s*\}"),
+        ("get_wall_strength", "cmbtmgr.h:1473 get_wall_strength must retain "
+         "its typed wallTargets-to-wallStrength inline chain",
+         r"\blong\s+get_wall_strength\s*\(\s*TWallTargetId\s+(\w+)\s*\)"
+         r"\s*const\s*\{\s*return\s+wallStrength\s*\[\s*wallTargets\s*"
+         r"\[\s*\1\s*\]\s*\.\s*wall\s*\]\s*;\s*\}"),
         ("get_current_army", "cmbtmgr.h:1478 get_current_army must return "
          "the acting-side/slot army",
          r"\barmy\s*\*\s*get_current_army\s*\(\s*\)\s*\{\s*"
@@ -3460,7 +3520,6 @@ def combat_manager_header_violations(text: str) -> list[tuple[int, str]]:
          r"\bvoid\s+TestRaiseDoor\s*\(\s*\)\s*\{\s*RaiseDoor\s*\(\s*\)"
          r"\s*;\s*\}"),
     )
-    defects: list[tuple[int, str]] = []
     positions: list[tuple[int, str]] = []
     for name, description, pattern in rules:
         match = re.search(pattern, masked, re.DOTALL)
@@ -6011,6 +6070,65 @@ format_string(currentArmy->GetName(), targetArmy->GetName());
     if any(not contract_violations(probe, first_aid_key)
            for probe in first_aid_mutations):
         failures.append("de-inlined process_first_aid GetName shape passed")
+    automate_first_aid_key = ("command.obj", 0x6B12C)
+    automate_first_aid_probe = """\
+field_3c = 11;
+field_44 = armies[side][best_index].gridIndex;
+field_40 = -1;
+return 1;
+"""
+    if contract_violations(automate_first_aid_probe,
+                           automate_first_aid_key):
+        failures.append("aligned automate_first_aid_tent tail did not pass")
+    automate_first_aid_mutations = (
+        automate_first_aid_probe.replace(
+            "field_44 = armies[side][best_index].gridIndex;",
+            "int grid_index = armies[side][best_index].gridIndex;\n"
+            "field_44 = grid_index;"),
+        automate_first_aid_probe.replace(
+            "field_44 = armies[side][best_index].gridIndex;\n"
+            "field_40 = -1;",
+            "field_40 = -1;\n"
+            "field_44 = armies[side][best_index].gridIndex;"),
+    )
+    if any(not contract_violations(probe, automate_first_aid_key)
+           for probe in automate_first_aid_mutations):
+        failures.append("flattened automate_first_aid_tent tail passed")
+    automate_catapult_key = ("command.obj", 0x6AF98)
+    automate_catapult_probe = """\
+valid_wall_target(target);
+valid_wall_target(towers[index]);
+valid_wall_target(target);
+get_wall_strength(walls[i]);
+get_wall_strength(walls[i]);
+get_wall_strength(walls[index]);
+SRandom(1, count);
+get_secondary_skill(eSecSkillSiegeBallistics);
+field_3c = 9;
+field_44 = wallTargets[target].target_hex;
+field_40 = -1;
+return 1;
+"""
+    if contract_violations(automate_catapult_probe,
+                           automate_catapult_key):
+        failures.append("aligned automate_catapult shape did not pass")
+    automate_catapult_mutations = (
+        automate_catapult_probe.replace(
+            "valid_wall_target(target);\n", "", 1),
+        automate_catapult_probe.replace(
+            "get_wall_strength(walls[i]);\n", "", 1),
+        automate_catapult_probe.replace("SRandom(1, count);",
+                                         "Random(1, count);"),
+        automate_catapult_probe.replace(
+            "get_secondary_skill(eSecSkillSiegeBallistics);",
+            "skillLevel[eSecSkillSiegeBallistics];"),
+        automate_catapult_probe.replace(
+            "field_44 = wallTargets[target].target_hex;\nfield_40 = -1;",
+            "field_40 = -1;\nfield_44 = wallTargets[target].target_hex;"),
+    )
+    if any(not contract_violations(probe, automate_catapult_key)
+           for probe in automate_catapult_mutations):
+        failures.append("flattened automate_catapult shape passed")
     process_next_key = ("command.obj", 0x6F984)
     process_next_probe = """\
 message = format_string(currentArmy->GetName());
@@ -10385,8 +10503,23 @@ unsigned char armyGroup::HasSomeUndead() const
             adapter_query_header, const_query_source_probe):
         failures.append("armyGroup non-const query plus const adapter passed")
     cmbtmgr_inline_probe = """\
+struct TWallTarget {
+    short target_hex;
+    short blocked_row;
+    short hit_x;
+    short hit_y;
+    TWallSection wall;
+    int get_blocked_hex() const {
+        if (blocked_row != -1) return gCastleWallColumns[blocked_row];
+        return -1;
+    }
+};
+static const TWallTarget wallTargets[8];
 static bool ValidHex(int iHex) {
     return iHex >= 0 && iHex < COMBAT_GRID_CELLS;
+}
+long get_wall_strength(TWallTargetId target) const {
+    return wallStrength[wallTargets[target].wall];
 }
 army* get_current_army() { return &armies[actingSide][actingSlot]; }
 static int GetHexIndex(int x, int y) {
@@ -10413,6 +10546,15 @@ void TestRaiseDoor() { RaiseDoor(); }
             cmbtmgr_inline_probe.replace("static int GridX",
                                          "int GridX")):
         failures.append("non-static GridX passed")
+    if not combat_manager_header_violations(
+            cmbtmgr_inline_probe.replace(
+                "wallStrength[wallTargets[target].wall]",
+                "wallStrength[target]")):
+        failures.append("flattened get_wall_strength header body passed")
+    if not combat_manager_header_violations(
+            cmbtmgr_inline_probe.replace("TWallSection wall;",
+                                         "int wall_id;")):
+        failures.append("flattened TWallTarget member names/types passed")
     reordered_cmbtmgr = cmbtmgr_inline_probe.replace(
         "static int GetHexIndex(int x, int y) {\n"
         "    return y * COMBAT_GRID_ROW_STRIDE + x;\n"

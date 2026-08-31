@@ -222,8 +222,6 @@ call	ai.obj	0x240e4	army::Is
 call	ai.obj	0x240e4	army::IsIncapacitated
 call	ai.obj	0x240e4	type_AI_combat_parameters::get_enemy_group
 call	ai.obj	0x240e4	type_AI_combat_parameters::get_group
-call	ai.obj	0x2429c	SRandom
-call	ai.obj	0x2429c	combatManager::get_wall_strength
 call	ai.obj	0x24604	army::Is
 call	ai.obj	0x24604	army::get_spell_time
 call	ai.obj	0x24604	combatManager::is_in_second_phase
@@ -801,12 +799,6 @@ call	combatwindow.obj	0x69638	army::ProcessDeath
 call	combatwindow.obj	0x69638	combatManager::TurnOffHighlighter
 call	combatwindow.obj	0x6a488	TCombatWindow::OnChatActivate
 call	combatwindow.obj	0x6a540	TCombatWindow::OnChatActivate
-call	command.obj	0x6af98	SRandom
-call	command.obj	0x6af98	combatManager::get_wall_strength
-call	command.obj	0x6af98	hero::get_secondary_skill
-call	command.obj	0x6b12c	army::Is
-call	command.obj	0x6b12c	army::get_controlling_side
-call	command.obj	0x6b12c	hero::get_secondary_skill
 call	command.obj	0x6b268	GameTime::IsPast
 call	command.obj	0x6b318	army::get_spell_time
 call	command.obj	0x6b318	combatManager::CheckAutoScrolling

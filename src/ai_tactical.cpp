@@ -3987,16 +3987,17 @@ type_AI_spellcaster::TEnchantValue type_AI_spellcaster::get_enchantment_function
 // The value is then "what would our shooters be worth if the wall were
 // not in the way", and it is proportional: `damage / (3 * total)` of
 // each blocked shooter's combat value, where `total` is the whole
-// castle's remaining strength summed over gWallTargets and `damage` is
+// castle's remaining strength summed over wallTargets and `damage` is
 // what one cast takes off, capped at that total. A shooter with NO
 // target at all counts its FULL value instead, but only while some
 // segment is already at zero strength - which is what the running
 // minimum is for.
 //
-// The gWallTargets walk is an INT INDEX, not a pointer walk: retail
+// The wallTargets walk is an INT INDEX, not a pointer walk: retail
 // ends it on `cmp ecx,<end> / jl`, and a pointer relational compare is
 // unsigned and could only produce `jb`. VC6 strength-reduced the index
-// into a pointer biased by +8 so `wall_id` sits at displacement zero.
+// into a pointer biased by +8 so the enum-typed `wall` member sits at
+// displacement zero.
 VA(0x0043b8f0, 0x224)  // anchor-callee, dc 0x41c30
 void type_AI_spellcaster::consider_earthquake(type_spell_choice* choice)
 {
@@ -4009,7 +4010,8 @@ void type_AI_spellcaster::consider_earthquake(type_spell_choice* choice)
     long lowest = 0x7fff;
     long total = 0;
     for (long i = 0; i < WALL_TARGET_COUNT; i++) {
-        long strength = gpCombatManager->wallStrength[gWallTargets[i].wall_id];
+        long strength = gpCombatManager->wallStrength[
+            combatManager::wallTargets[i].wall];
         total += strength;
         lowest = _cpp_min(lowest, strength);
     }
