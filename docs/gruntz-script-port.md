@@ -469,6 +469,37 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   body, reversed aura-helper order, direct `_cpp_min`, or de-inlining of the
   no-retail-body helper declaration.
 
+- **2026-08-31 — `army::SetSpellInfluence` replaces a 99.5510% compiler-state
+  peak with the Dreamcast-attested statement structure.** The former source
+  lifted duration selection and the entire Poison/HP update into two
+  file-local helpers that have no Dreamcast definition or line-table row. It
+  also duplicated the AGE calculation and bypassed the source `min`
+  boundaries. Those choices shrank the caller enough to steer VC6's final
+  deque expansion toward retail, but they were codegen controls rather than
+  recovered source.
+
+  Lines 3822-3843 instead place the duration switch and
+  `get_current_army` call in `SetSpellInfluence`; lines 4054-4057 retain the
+  HYPNOTIZE `CancelIndividualSpell -> remove_aura -> add_aura` chain; lines
+  4067-4068 are two distinct Disease `min` statements; line 4075 is the
+  Poison `max -> adjust_hitpoints` group; and lines 4091-4092 are the AGE
+  `adjust_hitpoints -> min` group. Restoring them improves the retail
+  structure from **31/135 to 121/135 exact blocks**, removes all branch-count
+  skew with the exact **54-branch/two-return sequence**, and retires three
+  Dreamcast backlog rows. The current byte score is **96.98%** while the
+  source-false **99.5510%** high-water remains banked.
+
+  Complete retail proves a double conversion around Poison's 0.5 floor even
+  though Dreamcast's SH4/STLport lowering uses a float max. A direct double
+  `_cpp_max` expression preserves both facts and the best structure. A named
+  double exactly reproduces the local poison-copy block but changes the
+  whole-function inliner state, leaving only 110 exact blocks; a const
+  reference is worse, and `inline_depth(1)` around the queue statement is
+  byte-flat. The remaining missing block is confined to the nested
+  `deque::push_back` iterator update. Fatal source contracts and negative
+  controls now reject either artificial helper, collapsed mins, flattened HP
+  logic, reordered aura/AGE helpers, or removal of the queue tail.
+
 - **2026-08-31 — `combatManager::automate_catapult` reaches an exact
   59-block retail structure while restoring the complete Dreamcast source
   vocabulary.** The 49-row/53-scope dossier proves three calls each to

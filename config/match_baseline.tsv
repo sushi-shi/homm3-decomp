@@ -443,7 +443,7 @@ army	?ProcessDeath@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x44120
 army	?ResetRound@army@@QAEXXZ	100.0000	100.0000	100.0000	0x47120
 army	?SetLuck@army@@QAEXPBVhero@@PBVarmyGroup@@PBVtown@@01H@Z	100.0000	100.0000	100.0000	0x3df20
 army	?SetMorale@army@@QAEXPBVhero@@PBVarmyGroup@@PBVtown@@01HE@Z	100.0000	100.0000	100.0000	0x3e000
-army	?SetSpellInfluence@army@@QAEXHHHPBVhero@@@Z	96.0321	99.5510	99.5510	0x448f0
+army	?SetSpellInfluence@army@@QAEXHHHPBVhero@@@Z	96.9759	99.5510	99.5510	0x448f0
 army	?SetupAnimation@army@@QAEXXZ	100.0000	100.0000	100.0000	0x46830
 army	?Turn@army@@QAEXE@Z	91.7125	91.7125	91.7125	0x46720
 army	?Unnamed447fe0@army@@QAEEXZ	100.0000	100.0000	100.0000	0x47fe0
