@@ -261,7 +261,7 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 ## 5. Decision log
 
 - **2026-08-31 — `combatManager::ProcessCombatMsg` reaches 93.0970% by
-  restoring the Dreamcast statement hierarchy; the remaining frame/exit
+  restoring the Dreamcast statement hierarchy; the remaining frame/branch
   residual is banked without flattening the source.** The admitted retail
   body now keeps Dreamcast's function-scope `message msgTemp`, scoped
   `CEndPlacementPhaseMsg`, `GetPointer` and `DoSurrender` helper boundaries,
@@ -288,18 +288,124 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   reported `dc-only`.
 
   The remaining candidate is 4,436 bytes against retail's 4,429, with **127
-  versus 121 branches** and **21 versus 20 returns**. Its frame is `0x4c`
+  versus 120 branches**, **187 versus 180 CFG blocks**, and **20 returns on
+  both sides**. An earlier 121-branch/21-return report was a measurement bug:
+  `llvm-objdump` linearly decoded the trailing in-`.text` switch pointer pool
+  as x86 instructions. The shared sema/VC6 parser now treats a DIR32 relocation
+  at an alleged opcode byte as the pool boundary and stops after the final
+  preceding return; focused negative controls retain ordinary operand
+  relocations. Its frame is `0x4c`
   against retail's `0x60`: retail, like Dreamcast, keeps the 20-byte placement
   record separate from the two 32-byte `message` slots, while the current VC6
   state overlays it with `msgTemp`. Hoisting the placement object produced the
   right `0x60` frame and an earlier **77.0835%** experiment but moved its five
   constructor stores to function entry, directly contradicting both retail
   and Dreamcast, so that spelling was rejected. No invented stack pad is
-  retained. `ResetMouse` itself has an exact five-branch/two-return standalone
-  body; its different inlined register choices are downstream of this open
-  frame/lifetime state. A synchronized build -> delink -> build passes all
+  retained. Restoring Dreamcast's nested placement-message lexical scope is
+  byte-neutral but remains in source as positive shape. Declaring the
+  Dreamcast-proven seven-int-plus-`heroWindow*` `message` constructor, trying
+  explicit copy initialization, and moving the root `msgTemp` declaration
+  around other root locals were also byte-neutral. `ResetMouse` itself has an
+  exact five-branch/two-return standalone body; its different inlined register
+  choices are downstream of this open frame/lifetime state. The first real
+  CFG disagreement is its first inlined copy: candidate VC6 repeats the
+  five-branch prefix, while retail cross-jumps into the later copy and shares
+  the suffix. This accounts for the seven extra branches without deleting or
+  factoring any of Dreamcast's four proved call sites. Candidate C1 also
+  materializes constant one in EDI and zero in ESI much earlier than retail;
+  the captured rich-TU IL confirms the source-order local handles
+  `mouseX 0x978a`, `mouseY 0x978b`, `msgTemp 0x978c`, so a named-local reorder
+  is not the missing lever.
+
+  Bounded negative experiments classify the remaining wall. An unused local,
+  dead assignment, `memset`, address escape, empty inline reference helper,
+  typed `false`/`true`, all known hidden Dreamcast method declarations, and
+  `/Ow`/`/G6` are neutral or worse without changing the 127 branches.
+  A byte-faithful shadow-header control also tested both plausible unused
+  definitions of the eight-argument `message` constructor (member assignments
+  and a member-initializer list); each stayed exactly `0x4c / 187 / 127 / 20`
+  with retail distances 293/256, so the source retains only the declaration
+  actually proved by CodeView.
+  `/Oa`, disabling constructor inlining, or adding either empty destructor can
+  enlarge the frame but also retain source-false calls/EH or substantially
+  worsen codegen; none is retained. The IL name overlay itself had hidden the
+  function by consuming the leading `?P` of its decorated name as handle
+  `0x503f`; strongly framed function/local records now take precedence, with
+  negative controls preserving the genuine embedded-handle form.
+
+  A synchronized build -> delink -> build passes all
   gates at **2,635 / 3,154 linked exact**, **93.42% linked fuzzy**, and banks
   unrelated include-state dips by MAX/history.
+
+- **2026-08-31 — `combatManager::automate_catapult` reaches an exact
+  59-block retail structure while restoring the complete Dreamcast source
+  vocabulary.** The 49-row/53-scope dossier proves three calls each to
+  `valid_wall_target` and `get_wall_strength`, one `SRandom`, one
+  `hero::get_secondary_skill`, and the final order/target/clear statement
+  sequence. The main-building test is deliberately the one direct
+  `wallStrength[wallTargets[WALL_TARGET_3].wall]` read: Dreamcast line 102
+  has no fourth `get_wall_strength` call. Complete's pointer-taking
+  `is_computer_action(const army*)` remains the retail-proved revision
+  replacement for Dreamcast's nullary overload.
+
+  The raw type records strengthen that function evidence. They name the
+  public nested 12-byte record `combatManager::TWallTarget`, its fields
+  `target_hex`, `blocked_row`, `hit_x`, `hit_y`, and enum-typed `wall`, its
+  const `get_blocked_hex` method, and the public static
+  `combatManager::wallTargets[8]`. The former global `type_wall_target` /
+  `gWallTargets` reconstruction and integer `wall_id` field were therefore
+  source-false local-minimum artifacts. `TWallSection` is now unconditional,
+  the exact inline `get_wall_strength(TWallTargetId) const` indexes through
+  `.wall`, and all active consumers use the nested record. The source-shape
+  gate ratchets the record names/types/body, the static member, the inline
+  chain, all eight helper counts, and the final statement order; negative
+  controls flatten both the helper and record shapes.
+
+  After delinking the retail table/interior-array references as owner plus
+  addend, candidate and retail have **59/59 exact CFG blocks**, every block
+  size and flow agrees, and the symbolic branch sequence agrees at **42/42
+  branches with five returns**. Similarity is **99.88039%**. The complete
+  residual is one instruction-selection tie in the direct main-wall test:
+  candidate loads the table field through ECX then the strength through EAX,
+  while retail uses EAX then ECX. Candidate is consequently one byte longer
+  and retail carries one trailing alignment NOP. Reversing the comparison,
+  optimized ID/strength locals, narrower `int` locals, a nested equivalent,
+  and line-gap VERIFY/TRACE-shaped carriers are byte-identical to the retained
+  spelling. `>= 1` falls to **98.92345%**. A fourth inline helper is also
+  byte-identical but is rejected because Dreamcast directly contradicts that
+  source boundary. This residual is bounded register allocation, not license
+  to de-inline the three proved helper sites.
+
+- **2026-08-31 — `combatManager::automate_first_aid_tent` restores every
+  shared Dreamcast helper and statement boundary at an exact 23-block
+  structure match.** The dossier records only `current_army` as a surviving
+  local and proves calls to `get_current_army`, `army::get_controlling_side`,
+  `army::Is`, `army::get_controller`, and `hero::get_secondary_skill`.
+  The former 98.1203% source had hand-expanded the controlling-side ternary,
+  the attribute-mask test, and the secondary-skill array read. It also
+  introduced a `grid_index` local and reordered the last two stores to retain
+  a favorable VC6 scratch-register assignment. Those were codegen probes, not
+  source facts.
+
+  The coherent body now names all five helpers, passes the two-bit death/siege
+  mask to `army::Is`, nests the secondary-skill statement after the separate
+  computer-action test, and follows the final Dreamcast rows literally:
+  `field_3c = 11`, direct target-grid store to `field_44`, `field_40 = -1`,
+  then return. Candidate and retail still have **23/23 exact CFG blocks**, all
+  instruction-count and flow columns exact, and fourteen branches. Current
+  fuzzy similarity is **98.0451%** under the banked **98.1203%** maximum; the
+  residual is only the already-bounded argument/address scratch-register
+  allocation in two blocks. The one rejected DC call shape is evidence-based:
+  Dreamcast's nullary `is_computer_action()` is replaced by Complete's
+  pointer overload because the retail call relocation resolves that exact
+  decorated target.
+
+  The generic Dreamcast call/group ratchet now protects the restored helper
+  sequence, including the separate line-245/line-250 statement groups. The
+  existing mask contract rejects bit-index `army::Is` spellings, and a new
+  asymmetric tail rule rejects both an artificial grid local and reversed
+  final stores. Negative controls exercise both failures, so recovering the
+  old 98.1203% local maximum by de-inlining or regrouping this source is fatal.
 
 - **2026-08-31 — `readHeroData`'s bounded Dreamcast name copy is a proved
   older-revision divergence, not a missing Complete structure fact.** The raw
@@ -5206,10 +5312,13 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   proves that array at 0x63abd0 as wall rows `{1,2,4,5}`. The body counts
   surviving targets, calls the independently identified `find_AI_targets`,
   sums only armies without an existing AI target, applies retail's double
-  precision 1.2× value threshold, and uses `Random(1,count)` to choose among
-  the weakest positive-strength walls before emitting combat order 9. The
-  static datum is now source-owned with `DATA`, not represented through a
-  shadow view. Engine total: **981/1369 exact (71.7%)**, **53.14% fuzzy**.
+  precision 1.2× value threshold, and uses the Dreamcast-proved `SRandom`
+  boundary to choose among the weakest positive-strength walls. All three
+  source calls to `get_wall_strength` are retained; `/Ob2` expands them
+  through the nested `wallTargets[].wall` member without changing any of the
+  **441/441 exact bytes**. The static datum is source-owned with `DATA`, not
+  represented through a shadow view. Engine total at first closure:
+  **981/1369 exact (71.7%)**, **53.14% fuzzy**.
 
 - **2026-08-13 — `combatManager::choose_shooter_target` is byte-exact
   (544/544).** Retail xrefs and the DC local roster recover the complete

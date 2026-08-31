@@ -39,6 +39,14 @@ inline const _TYPE& min_ref(_TYPE _X, _TYPE _Y)
     return (_X < _Y ? _X : _Y);
 }
 
+// Dreamcast's source calls SRandom in the cyclops wall selector. Complete's
+// retail relocation names Random, so preserve the boundary through the same
+// fold-away adapter used by the other shared callers.
+inline int SRandom(int lower, int upper)
+{
+    return Random(lower, upper);
+}
+
 // The MAX twin of min_ref, same by-value/reference-returning shape.
 // choose_melee_target's tail (0x421ed8) homes both operands - one of them
 // in the dead `estimate` argument slot - selects between their ADDRESSES
@@ -310,8 +318,7 @@ unsigned char combatManager::choose_cyclops_action(long best_value, long side, t
 
     long count = 0;
     { for (long i = 0; i < 4; i++) {
-            long wall = gWallTargets[walls[i]].wall_id;
-            if (wallStrength[wall] > 0)
+            if (get_wall_strength(walls[i]) > 0)
                 count++;
         }
     }
@@ -335,7 +342,7 @@ unsigned char combatManager::choose_cyclops_action(long best_value, long side, t
     long weakest = 100;
     count = 0;
     { for (long i = 0; i < 4; i++) {
-            long strength = wallStrength[gWallTargets[walls[i]].wall_id];
+            long strength = get_wall_strength(walls[i]);
             if (strength <= 0 || strength > weakest)
                 continue;
             if (strength < weakest)
@@ -345,15 +352,15 @@ unsigned char combatManager::choose_cyclops_action(long best_value, long side, t
         }
     }
 
-    long choice = Random(1, count);
+    long choice = SRandom(1, count);
     long target = 0;
     for (; target < 4; target++) {
-        long strength = wallStrength[gWallTargets[walls[target]].wall_id];
+        long strength = get_wall_strength(walls[target]);
         if (strength == weakest && --choice == 0)
             break;
     }
     field_3c = 9;
-    field_44 = gWallTargets[walls[target]].hex;
+    field_44 = wallTargets[walls[target]].target_hex;
     field_40 = -1;
     return 1;
 }
@@ -1465,7 +1472,7 @@ unsigned char combatManager::choose_to_run(const army* our_army, const long* ene
 // The castle's own shooters are added afterwards and to the DEFENDER's
 // column only: a Citadel keep is worth the full Archer AI value per
 // level archer, a Castle's two towers half of one extra archer each.
-// gWallTargets' id column runs 5..14 and these three are its top - 14
+// wallTargets' `wall` column runs 5..14 and these three are its top - 14
 // the keep, 13 and 5 the two towers, exactly the trio
 // InitializeArchers fills at +0x13d78 for the same two fortification
 // tiers. CalcNumLevelArchers' second out-parameter (the archer LEVEL)
@@ -1504,15 +1511,15 @@ unsigned char combatManager::has_ranged_advantage(type_AI_combat_parameters* dat
         int numArchers;
         int archerLevel;
         defendingTown->CalcNumLevelArchers(&numArchers, &archerLevel);
-        if (get_wall_strength(14) > 0)
+        if (wallStrength[14] > 0)
             shooter_value[1] += akCreatureTypeTraits[CREATURE_ARCHER].AI_value
                                 * numArchers;
         if (field_132f4 == COMBAT_FORTIFICATION_CASTLE) {
-            if (get_wall_strength(13) > 0)
+            if (wallStrength[13] > 0)
                 shooter_value[1] +=
                     akCreatureTypeTraits[CREATURE_ARCHER].AI_value
                     * (numArchers + 1) / 2;
-            if (get_wall_strength(5) > 0)
+            if (wallStrength[5] > 0)
                 shooter_value[1] +=
                     akCreatureTypeTraits[CREATURE_ARCHER].AI_value
                     * (numArchers + 1) / 2;
@@ -1818,9 +1825,9 @@ unsigned char combatManager::choose_spell_action(const army* current_army, long*
 // castle already.
 //
 // THE OUT-OF-BOUNDS INDEX IS RETAIL'S. gCastleWallGateTargets holds
-// TWallTargetIds {6,8,9,10,12} - the id column of gWallTargets rows
+// TWallSection values {6,8,9,10,12} - the `wall` column of wallTargets rows
 // 1..5 - and the body uses each id BOTH as the wallStrength index
-// (correct: that array is id-indexed) AND as a gWallTargets subscript
+// (correct: that array is id-indexed) AND as a wallTargets subscript
 // (wrong: that table is POSITION-indexed and has eight rows, as
 // GetTargetWallIndex 0x465970 proves by stepping it 0x63be60..
 // 0x63bec0). Ids 8, 9, 10 and 12 therefore read past the end of an
@@ -1837,9 +1844,9 @@ unsigned char combatManager::should_stay_in_castle(type_AI_combat_parameters* es
         return 0;
     { for (const long* target = gCastleWallGateTargets;
            target < gCastleWallGateTargetsEnd; target++) {
-        if (get_wall_strength(*target))
+        if (wallStrength[*target])
             continue;
-        if (!HexIsBlocked(gWallTargets[*target].get_blocked_hex()))
+        if (!HexIsBlocked(wallTargets[*target].get_blocked_hex()))
             return 0;
     } }
     if (!has_ranged_advantage(estimate))

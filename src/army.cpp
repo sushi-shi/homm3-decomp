@@ -5770,7 +5770,7 @@ void army::attack_wall(TWallTargetId wall,
 
 // E:\gamedcs\army.cpp:4577
 // The landed shot: aim from the catapult's launch point at the
-// segment's own impact point (gWallTargets' +0x4/+0x6 pair, sliced by
+// segment's own impact point (wallTargets' +0x4/+0x6 pair, sliced by
 // this body), pick the ranged pose from the same +-25-degree atan the
 // cast path uses, play the attack cycle, fly the missile, and run the
 // explosion sprite over the wall - applying the damage on frame FIVE
@@ -5824,8 +5824,8 @@ void army::attack_wall(TWallTargetId wall, long levelsDestroyed)
         return;
     }
 
-    const int targetX = gWallTargets[wall].screenX;
-    const int targetY = gWallTargets[wall].screenY;
+    const int targetX = combatManager::wallTargets[wall].hit_x;
+    const int targetY = combatManager::wallTargets[wall].hit_y;
 
     long startX;
     if (facing == 1)

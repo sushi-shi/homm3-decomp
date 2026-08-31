@@ -54,6 +54,14 @@ static const int kCombatActionAttackWall = 9;
 static const int kCombatActionCastCreatureSpell = 10;
 static const int kCombatActionFirstAid = 11;
 
+// Dreamcast calls the later SRandom helper. Complete's retail relocation
+// instead targets the exact Random body, so keep the original source-visible
+// boundary as an adapter that /Ob2 folds before relocation emission.
+inline int SRandom(int lower, int upper)
+{
+    return Random(lower, upper);
+}
+
 // E:\gamedcs\command.cpp:63
 // Dreamcast CodeView names this private nullary member and its two static
 // TWallTargetId arrays. Retail fixes the Complete-build fourth tower target,
@@ -78,15 +86,10 @@ unsigned char combatManager::automate_catapult()
         return 1;
     }
 
-    long target;
-    for (target = WALL_TARGET_0; target < WALL_TARGET_COUNT; target++) {
-        if ((target == WALL_TARGET_0 || target == WALL_TARGET_6)
-                && field_132f4 < COMBAT_FORTIFICATION_CASTLE)
-            continue;
-        if (target == WALL_TARGET_7
-                && field_132f4 < COMBAT_FORTIFICATION_CITADEL)
-            continue;
-        if (wallStrength[gWallTargets[target].wall_id] > 0)
+    TWallTargetId target;
+    for (target = WALL_TARGET_0; target < WALL_TARGET_COUNT;
+            target = TWallTargetId(target + 1)) {
+        if (valid_wall_target(target))
             break;
     }
     if (target == WALL_TARGET_COUNT) {
@@ -95,12 +98,12 @@ unsigned char combatManager::automate_catapult()
     }
 
     long count;
-    hero* controller = current_army->get_controller();
-    long skill = controller->skillLevel[eSecSkillSiegeBallistics];
+    long skill = current_army->get_controller()->get_secondary_skill(
+        eSecSkillSiegeBallistics);
     if (static_cast<const combatManager*>(this)->IsQuickCombat()
             || is_computer_action(get_current_army())) {
         if (skill > 0
-                && wallStrength[gWallTargets[WALL_TARGET_3].wall_id] > 0) {
+                && wallStrength[wallTargets[WALL_TARGET_3].wall] > 0) {
             target = WALL_TARGET_3;
             goto target_chosen;
         }
@@ -110,8 +113,7 @@ unsigned char combatManager::automate_catapult()
 
     count = 0;
     { for (long i = 0; i < 4; i++) {
-            long wall = gWallTargets[walls[i]].wall_id;
-            if (wallStrength[wall] > 0)
+            if (get_wall_strength(walls[i]) > 0)
                 count++;
         }
     }
@@ -120,7 +122,7 @@ unsigned char combatManager::automate_catapult()
         long weakest = 100;
         count = 0;
         { for (long i = 0; i < 4; i++) {
-                long strength = wallStrength[gWallTargets[walls[i]].wall_id];
+                long strength = get_wall_strength(walls[i]);
                 if (strength <= 0 || strength > weakest)
                     continue;
                 if (strength < weakest)
@@ -130,10 +132,10 @@ unsigned char combatManager::automate_catapult()
             }
         }
 
-        long choice = Random(1, count);
+        long choice = SRandom(1, count);
         long index = 0;
         for (; index < 4; index++) {
-            long strength = wallStrength[gWallTargets[walls[index]].wall_id];
+            long strength = get_wall_strength(walls[index]);
             if (strength == weakest && --choice == 0)
                 break;
         }
@@ -151,14 +153,9 @@ unsigned char combatManager::automate_catapult()
         if (index < 4) {
             target = towers[index];
         } else {
-            for (target = WALL_TARGET_0; target < WALL_TARGET_COUNT; target++) {
-                if ((target == WALL_TARGET_0 || target == WALL_TARGET_6)
-                        && field_132f4 < COMBAT_FORTIFICATION_CASTLE)
-                    continue;
-                if (target == WALL_TARGET_7
-                        && field_132f4 < COMBAT_FORTIFICATION_CITADEL)
-                    continue;
-                if (wallStrength[gWallTargets[target].wall_id] > 0)
+            for (target = WALL_TARGET_0; target < WALL_TARGET_COUNT;
+                    target = TWallTargetId(target + 1)) {
+                if (valid_wall_target(target))
                     break;
             }
         }
@@ -166,22 +163,21 @@ unsigned char combatManager::automate_catapult()
 
 target_chosen:
     field_3c = 9;
-    field_44 = gWallTargets[target].hex;
+    field_44 = wallTargets[target].target_hex;
     field_40 = -1;
     return 1;
 }
 
 // E:\gamedcs\command.cpp:193. The DC signature and sole local identify
 // the current-stack scan; retail fixes the target filters and command tuple.
-// Residual at 98.1203%: all 23 blocks and 14 branches agree; only the
-// get-current-army argument and final target-index scratch registers differ.
+// The final two stores follow DC's separate statement groups: select and store
+// the target grid first, then clear field_40. Retail's Complete-only pointer
+// overload of is_computer_action is kept because its call relocation proves it.
 VA(0x00473ea0, 0x196)  // anchor-callee: Main's other automate callee (no-Random sibling) + order-map, dc 0x6b12c
 unsigned char combatManager::automate_first_aid_tent()
 {
     army* current_army = get_current_army();
-    int side = current_army->hypnotizeFlag
-        ? 1 - current_army->combatSide
-        : current_army->combatSide;
+    int side = current_army->get_controlling_side();
 
     if (current_army->creatureType != CREATURE_FIRST_AID_TENT)
         return 0;
@@ -190,7 +186,7 @@ unsigned char combatManager::automate_first_aid_tent()
     int best_damage = 0;
     for (int i = 0; i < numArmies[side]; ++i) {
         army* target = &armies[side][i];
-        if (target->creatureId & 0x200040)
+        if (target->Is((1u << 21) | (1u << 6)))
             continue;
         if (target->topCreatureDamage == 0)
             continue;
@@ -212,14 +208,15 @@ unsigned char combatManager::automate_first_aid_tent()
     }
 
     if (!static_cast<const combatManager*>(this)->IsQuickCombat()
-            && !is_computer_action(get_current_army())
-            && current_army->get_controller()->skillLevel[27] > 0)
-        return 0;
+            && !is_computer_action(get_current_army())) {
+        if (current_army->get_controller()->get_secondary_skill(
+                eSecSkillFirstAid) > 0)
+            return 0;
+    }
 
     field_3c = 11;
-    int grid_index = armies[side][best_index].gridIndex;
+    field_44 = armies[side][best_index].gridIndex;
     field_40 = -1;
-    field_44 = grid_index;
     return 1;
 }
 
@@ -902,10 +899,15 @@ int combatManager::ProcessCombatMsg(message& msg)
             case TCombatWindow::COMBAT_PLACEMENT_COMMAND_1_ID:
                 lastMovedArmy = 0;
                 if (gNetworkActive69954c) {
-                    CEndPlacementPhaseMsg placementMsg;
-                    TransmitRemoteData(&placementMsg,
-                                       iCombatControlNetPos[1 - currentSide],
-                                       false, true);
+                    // The Dreamcast NB11 stream gives placementMsg its own
+                    // nested lexical scope inside the network arm.
+                    {
+                        CEndPlacementPhaseMsg placementMsg;
+                        TransmitRemoteData(
+                            &placementMsg,
+                            iCombatControlNetPos[1 - currentSide],
+                            false, true);
+                    }
                 }
                 if (bCreaturePlacement) {
                     bCreaturePlacement = 0;
@@ -1397,7 +1399,7 @@ unsigned char combatManager::valid_wall_target(TWallTargetId wall)
     if (wall == WALL_TARGET_7
         && field_132f4 < COMBAT_FORTIFICATION_CITADEL)
         return 0;
-    return wallStrength[gWallTargets[wall].wall_id] > 0;
+    return wallStrength[wallTargets[wall].wall] > 0;
 }
 
 // E:\gamedcs\command.cpp:1964
@@ -1591,12 +1593,12 @@ int combatManager::GetCommand(int newIndex)
             && !bCreaturePlacement) {
         // The counter is TWallTargetId-typed rather than a long with a
         // cast at the call: the value IS a wall-target id everywhere it
-        // is used, both as gWallTargets' subscript and as
+        // is used, both as wallTargets' subscript and as
         // valid_wall_target's argument. Codegen is identical - retail's
         // own counter is a plain dword in ecx.
         for (TWallTargetId wall = WALL_TARGET_0; wall < WALL_TARGET_COUNT;
                 wall = TWallTargetId(wall + 1)) {
-            if (newIndex == gWallTargets[wall].hex) {
+            if (newIndex == wallTargets[wall].target_hex) {
                 if (valid_wall_target(wall)) {
                     currentArmy->side = -1;
                     currentArmy->slot = newIndex;
@@ -1621,7 +1623,7 @@ int combatManager::GetCommand(int newIndex)
                                             : COMBAT_COMMAND_WALK;
     }
 
-    if (newIndex == gWallTargets[WALL_TARGET_6].hex
+    if (newIndex == wallTargets[WALL_TARGET_6].target_hex
             && field_132f4 == COMBAT_FORTIFICATION_CASTLE)
         return COMBAT_COMMAND_VIEW_TOWERS;
     return COMBAT_COMMAND_NONE;
@@ -1636,8 +1638,8 @@ int combatManager::GetCommand(int newIndex)
 // the misc.obj preferences object, not a global of its own) to decide
 // whether the panel stays up after the quick-view pump returns.
 //
-// The wall arm is one `goto`: gWallTargets[7] short-circuits the whole
-// hex test, while gWallTargets[0] and [6] are only reachable once the
+// The wall arm is one `goto`: wallTargets[7] short-circuits the whole
+// hex test, while wallTargets[0] and [6] are only reachable once the
 // hex test has failed AND the town is a full castle. All three land on
 // ViewCastleBallista(1).
 VA(0x004769c0, 0x207)  // linkorder, dc 0x6d988
@@ -1669,7 +1671,7 @@ int combatManager::RightClick(int newIndex)
         return 0;
     }
 
-    if (newIndex != gWallTargets[7].hex) {
+    if (newIndex != wallTargets[7].target_hex) {
         if (newIndex >= 0 && newIndex < COMBAT_GRID_CELLS
                 && cells[newIndex].armySide >= 0) {
             gpMouseManager->SetPointer(6, mouseManager::COMBAT_SET);
@@ -1689,7 +1691,8 @@ int combatManager::RightClick(int newIndex)
         }
         if (field_132f4 != COMBAT_FORTIFICATION_CASTLE)
             return 0;
-        if (newIndex != gWallTargets[0].hex && newIndex != gWallTargets[6].hex)
+        if (newIndex != wallTargets[0].target_hex
+                && newIndex != wallTargets[6].target_hex)
             return 0;
     }
     ViewCastleBallista(1);

@@ -150,7 +150,7 @@ SIZE(SBolt, 0x78);
 // straight into the framebuffer as a raw 16-bit pixel. Only one member
 // can be named from a caller - ChainLightning (0x5a6360) pushes the
 // literal 0x131 into DoBolt - so the other five stay ORDINAL, exactly
-// as army.h's gWallTargets rows do where no roster names the individual
+// as army.h's wallTargets rows do where no roster names the individual
 // segments.
 //
 // CORRECTION 2026-08-20, on reconstructing DrawBolt: this note used to
@@ -222,8 +222,8 @@ enum ECombatGrid {
     COMBAT_HEX_ATTACKER_HERO = 0xfc,
     COMBAT_HEX_DEFENDER_HERO = 0xfd,
     // Two more pseudo-hexes in the same domain, both bombardable castle
-    // structures and both gWallTargets rows: 0xfe is row 7 and 0xff is
-    // row 0 (the table's own `hex` column carries exactly 254 and 255,
+    // structures and both wallTargets rows: 0xfe is row 7 and 0xff is
+    // row 0 (the table's own `target_hex` column carries exactly 254 and 255,
     // read straight from the image). valid_wall_target is what SPLITS
     // them - it refuses row 7 below a CITADEL and rows 0 and 6 below a
     // full CASTLE, which is the tier that builds the central keep and
@@ -433,6 +433,14 @@ enum EAIOrder {
     AI_ORDER_NONE = 12
 };
 
+// Per-castle hex-index table at 0x63bd00: InCastle divides the hex by
+// 0x11 (the row stride) and compares against the row's wall column.
+// The retail body takes its argument in ECX with no stack frame - a
+// FREE fastcall function, not a method (the DC name is scoped to
+// combatManager, so retail moved it out of the class). It is declared
+// here because the Dreamcast-proven TWallTarget inline below uses it.
+extern const unsigned char gCastleWallColumns[];
+
 // The combat-hero sprite state is stored as an int rather than as a
 // CodeView enum. One is the timed idle fidget; the two event-driven states
 // have no surviving public names, so their source-facing names keep the
@@ -455,8 +463,6 @@ public:
                            unsigned char doscroll_x,
                            unsigned char doscroll_y);
 #endif
-#if defined(HOMM3_COMMAND_TOWER_STRING_VIEW) \
-        || defined(HOMM3_DRAWING_ARCHER_DECLS)
     // DC CmbtMgr.h's complete nested enum. Command's get_tower_string takes
     // this type by value; retail indexes the same eighteen wall rows.
     enum TWallSection {
@@ -480,7 +486,6 @@ public:
         eWallSectionUpperTowerCover = 17,
         kNumWallSections = 18
     };
-#endif
     // Retail obstacle-catalogue prefix. PlaceAllObstacles reads the two
     // unsigned masks at +0/+2 from 20-byte rows; the remaining sixteen
     // bytes are not needed by that function and stay opaque here.
@@ -530,6 +535,27 @@ public:
         short pad_22;
     };
     static TWallTraits akWallTraits[9][18];
+
+    // Dreamcast CodeView records this exact nested type and the public static
+    // `combatManager::wallTargets` member. Retail independently proves the
+    // 0xc-byte row, all five fields, and the eight-row extent. Keeping the
+    // table on the class also lets get_wall_strength retain its original
+    // source-visible inline boundary instead of flattening it into callers.
+    struct TWallTarget {
+        short target_hex;             // +0x0
+        short blocked_row;            // +0x2
+        short hit_x;                  // +0x4
+        short hit_y;                  // +0x6
+        TWallSection wall;            // +0x8
+
+        int get_blocked_hex() const
+        {
+            if (blocked_row != -1)
+                return gCastleWallColumns[blocked_row];
+            return -1;
+        }
+    };
+    static const TWallTarget wallTargets[8];
     enum {
         // The moat row of a town's eighteen wall records: LoadIcons
         // (0x463370) suppresses exactly this row's five icons for
@@ -1118,7 +1144,7 @@ public:
     // 2026-08-08 by should_stay_in_castle (0x4213f0), which reads
     // `[this + 4*id + 0x13f60]` for each of the five wall ids and
     // treats a ZERO as "this segment is down". Fifteen entries because
-    // gWallTargets' own id column runs 5..14 and the largest id the
+    // wallTargets' own `wall` column runs 5..14 and the largest id the
     // located reader passes is 12; only 6, 8, 9, 10 and 12 are
     // retail-proven. The DC roster attests the accessor
     // (combatManager::get_wall_strength, cmbtmgr.h:1473, dc 0x27edc),
@@ -1195,10 +1221,6 @@ public:
     unsigned char field_14030[COMBAT_GRID_CELLS + 1]; // +0x14030..0x140eb
 
     combatManager();
-
-    // DC header inline (cmbtmgr.h:1473, dc 0x27edc, 32 B); no retail
-    // body - /Ob2 folds it into should_stay_in_castle.
-    long get_wall_strength(long target) const { return wallStrength[target]; }
 
     // THE S_PUB32 PASS OVER THIS CLASS, 2026-08-14, and it is the same
     // oracle the army lane used: the CODEVIEW roster text at the foot
@@ -1495,6 +1517,13 @@ public:
     static bool ValidHex(int iHex)
     {
         return iHex >= 0 && iHex < COMBAT_GRID_CELLS;
+    }
+    // DC header inline (cmbtmgr.h:1473, dc 0x27edc, 32 B); SH4 proves the
+    // typed target -> wallTargets[target].wall -> wallStrength chain.
+    // Retail has no body because /Ob2 folds the same chain into its callers.
+    long get_wall_strength(TWallTargetId target) const
+    {
+        return wallStrength[wallTargets[target].wall];
     }
     // DC header inline (cmbtmgr.h:1478, dc 0x27efc); the DC xref graph
     // lists it among DoCompAI's callees and retail carries no
@@ -2727,13 +2756,6 @@ DATA(0x00694f0c) extern int gCombatHexTop694f0c;
 DATA(0x00694f10) extern int gCombatHexRight694f10;
 DATA(0x00694f14) extern int gCombatHexBottom694f14;
 
-// Per-castle hex-index table at 0x63bd00: InCastle divides the hex by
-// 0x11 (the row stride) and compares against the row's wall column.
-// The retail body takes its argument in ECX with no stack frame - a
-// FREE fastcall function, not a method (the DC name is scoped to
-// combatManager, so retail moved it out of the class).
-extern const unsigned char gCastleWallColumns[];
-
 // The row-column table one hex LEFT of gCastleWallColumns, at 0x63bce8
 // (retail bytes 0b 1c 2c 3d 4d 5f 6f 81 92 a4 b5 - each entry exactly
 // one less than the wall column of the same row). LeftOfMoat divides
@@ -2752,60 +2774,9 @@ extern const unsigned char gOuterMoatColumns[];
 unsigned char InCastle(int index);
 unsigned char LeftOfMoat(int index);
 
-// The eight bombardable wall segments, at 0x63be60, stride 0xc - the
-// stride and the leading `short` are byte-proven by GetTargetWallIndex
-// (0x465970), which steps a pointer by 0xc from 0x63be60 to 0x63bec0
-// and movsx-loads the word at offset 0. The remaining ten bytes stay
-// padded: the retail rows read (hex, short, short, short, int) but no
-// decoded consumer proves the split yet. `TWallTargetId` is the DC
-// roster's name for the INDEX this table is searched for.
-struct type_wall_target {
-    short hex;                        // +0x0
-    // +0x2, an index into gCastleWallColumns or -1: the hex an
-    // attacker has to stand on once this segment is down. Sliced
-    // 2026-08-08 by combatManager::should_stay_in_castle (0x4213f0),
-    // which reads exactly this word (`mov ax, word [rec+2]`), answers
-    // -1 unchanged and otherwise uses it to index the 0x63bd00 byte
-    // table. The retail values are {-1, 1, 4, 5, 7, 10, -1, -1} - the
-    // three -1 rows are the two towers and the upper keep, the five
-    // real ones are the wall segments the AI cares about.
-    short blocked_column;             // +0x2
-    // The segment's sprite ANCHOR in screen coordinates, sliced
-    // 2026-08-20 by combatManager::Earthquake (0x5a7c80): it walks the
-    // table with a pointer 2 bytes into each row and `movsx`-loads
-    // BOTH words (`movsx edi, word [p-2]` / `movsx ebx, word [p]`),
-    // then centres the SGEXPL explosion sprite on the pair - x minus
-    // half the sprite width, y minus half its height - before clipping
-    // against the combat viewport. The retail values run
-    // (586,48) (564,128) (520,212) (498,296) (520,380) (586,506)
-    // (630,506) (762,212), which is the castle wall read top to bottom
-    // with the keep last, on an 800x600 field. Retyped IN PLACE out of
-    // the pad; both words are SIGNED (movsx, not movzx).
-    // CORROBORATED from a second caller: army::attack_wall (0x445fd0)
-    // movsx-loads the same pair as the catapult shot's destination and
-    // the explosion centre. Two lanes, two callers, same signed shorts.
-    short screenX;                    // +0x4
-    short screenY;                    // +0x6
-    // ID into combatManager::wallStrength / wallStanding. Retail rows are
-    // {5,6,8,9,10,12,13,14}.
-    int wall_id;                       // +0x8
-
-    // The DC roster's combatManager::TWallTarget::get_blocked_hex
-    // (cmbtmgr.h:1150, dc 0x27eac, 28 B). No retail body - /Ob2 folds
-    // it into should_stay_in_castle, which is the only located caller.
-    int get_blocked_hex() const
-    {
-        if (blocked_column != -1)
-            return gCastleWallColumns[blocked_column];
-        return -1;
-    }
-};
-
-extern const type_wall_target gWallTargets[8];
-
 // The five wall segments the castle AI checks, at 0x63abe0: the
-// TWallTargetIds {6, 8, 9, 10, 12}, i.e. gWallTargets rows 1..5 by
-// their id column - the five bombardable WALL sections, with the two
+// TWallSection values {6, 8, 9, 10, 12}, i.e. wallTargets rows 1..5 by
+// their `wall` column - the five bombardable WALL sections, with the two
 // towers and the keep left out. should_stay_in_castle walks it as a
 // POINTER, `for (p = begin; p < end; p++)`, and the end address is a
 // reloc of its own in the retail instruction stream. Hence the second

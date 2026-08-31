@@ -109,6 +109,12 @@ public:
     // units still use aggregate initializers; the attested consumer sites
     // need the real constructor shape and VC6 removes fields overwritten
     // before their first read.
+    // Dreamcast type 0x1016 lists this eight-argument overload before the
+    // default constructor. No emitted body survives in that build, so only
+    // the proved declaration belongs here.
+    message(int id, int codeX, int codeY, int qualifier,
+            int mouseX, int mouseY, int extra, heroWindow* window);
+
     message()
     {
         id = 0;

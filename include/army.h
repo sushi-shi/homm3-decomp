@@ -153,7 +153,7 @@ enum EAttackCriteria {
 // frenzyRounds' own +0x278 == +0x198 + 56*4. Byte-inert: same names,
 // same values, one declaration.
 
-// The eight rows of cmbtmgr's gWallTargets. Retail DamageWall dispatches
+// The eight rows of combatManager::wallTargets. Retail DamageWall dispatches
 // on all eight values; names remain ordinal because no local roster names
 // the individual segments.
 //

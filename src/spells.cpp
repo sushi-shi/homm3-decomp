@@ -2231,7 +2231,7 @@ static const int gEarthquakeShakeOffsets[15][2] = {
 const int kEarthquakeImpactFrame = 5;
 
 // combatManager::DamageWall's first slot is TWallTargetId while
-// Earthquake's own walk of gWallTargets is an int counter; this
+// Earthquake's own walk of wallTargets is an int counter; this
 // bit-preserving inline bridges the crossing rather than lying with an
 // enum cast, exactly as ai_combat.cpp's creature_type_from_int and
 // ai_player.cpp's twin do. VC6 reduces the four-byte copy to a move.
@@ -3229,7 +3229,7 @@ long combatManager::ModifySpellDamageForSpells(long damage, SpellID spell,
 // the table above, three times over.
 //
 // THEN the wall sections are drawn by lot. `counts[i]` accumulates how
-// many levels each of gWallTargets' eight segments takes; each round
+// many levels each of wallTargets' eight segments takes; each round
 // censuses the segments that still have more strength than they have
 // already been dealt, rolls Random(1, that), and walks the table again
 // to the roll-th STANDING segment. The two walks disagree - the census
@@ -3303,7 +3303,7 @@ void combatManager::Earthquake(int level)
     while (remaining-- > 0) {
         int candidates = 0;
         for (int i = 0; i < WALL_TARGET_COUNT; i++) {
-            if (wallStrength[gWallTargets[i].wall_id] > counts[i])
+            if (wallStrength[wallTargets[i].wall] > counts[i])
                 candidates++;
         }
         if (candidates == 0)
@@ -3311,7 +3311,7 @@ void combatManager::Earthquake(int level)
         int roll = Random(1, candidates);
         int chosen;
         for (chosen = 0; chosen < WALL_TARGET_COUNT; chosen++) {
-            if (wallStrength[gWallTargets[chosen].wall_id] != 0) {
+            if (wallStrength[wallTargets[chosen].wall] != 0) {
                 roll--;
                 if (roll == 0)
                     break;
@@ -3336,8 +3336,8 @@ void combatManager::Earthquake(int level)
                     continue;
                 int w = blast->Width;
                 int h = blast->Height;
-                int x = gWallTargets[i].screenX;
-                int y = gWallTargets[i].screenY;
+                int x = wallTargets[i].hit_x;
+                int y = wallTargets[i].hit_y;
                 int left = x - w / 2;
                 int right = x + (w - w / 2) - 1;
                 int top = y - h / 2;
