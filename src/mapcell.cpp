@@ -3433,6 +3433,15 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
 // three invented helpers restores that positive shape and intentionally puts
 // the current checkpoint at 85.2833%.
 //
+// The next structure pass reads the raw symbol nesting, not only the compact
+// roster: all thirteen DC locals appear under S_GPROC32 before the first
+// S_BLOCK32. Restoring one function-scope int_buffer, short_buffer and
+// char_buffer (and reusing them across the reads) moves the current checkpoint
+// to 82.9570%. MAX/history remains 92.7472%. HeroID stays the Complete x86
+// representation `int` until the 130-entry DC THeroID domain can be reconciled
+// with Complete's 156-entry roster; the local name, width and lifetime are
+// already preserved.
+//
 // Current structural frontier (2026-08-31): candidate and retail each have
 // 53 branches and two returns, but enough targets differ that positional
 // pairing is no longer meaningful.  The candidate frame is 0xd8 against
@@ -3469,16 +3478,24 @@ VA(0x005021c0, 0x835)  // order-map: calls GetStartingHeroId 0x4bb400 (DC-unique
 int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
                              int mapVersion)
 {
-    // THE SCRATCH READS ARE BLOCK-SCOPED, and that is a source fact the frame
-    // publishes.  Retail recycles the dead parameter homes as its temp pool -
-    // `infile` goes to EBX at entry and its home [ebp+8] then carries the
-    // dword `int_buffer` at three sites, with [ebp+0xb] carrying the
-    // name-flag byte - and VC6 will only put a local there if the local's
-    // lifetime is confined to its own block.  A function-scoped
-    // `int int_buffer;` gets a slot of its own below EBP and the parameter
-    // home stays unused, which is what this body used to do.
+    // Dreamcast's raw CodeView records all thirteen source locals directly
+    // under S_GPROC32, before the first S_BLOCK32: these buffers and counters
+    // are function-scoped and reused, not a family of block-local scratch
+    // declarations. Complete adds a few revision-only values below, but does
+    // not erase that positive shared-source fact.
     char padding[16];
+    unsigned char isRandomHero;
+    int HeroID;  // Dreamcast type: THeroID; Complete x86 stores a full int.
+    int int_buffer;
+    short short_buffer;
+    char Owner;
+    char customName;
+    int count;
+    int experience;
+    int x;
+    char char_buffer;
     char tempText[100] = { 0 };
+    HeroExtra* hero_data;
 
     // The Shadow of Death quest identifier: absent on the oldest format, and
     // it survives the whole body to reach HeroExtra::field_008.
@@ -3486,28 +3503,21 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
     if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
         identifier = 0;
     } else {
-        int int_buffer;
         infile->Read(&int_buffer, sizeof(int_buffer));
         identifier = int_buffer;
     }
 
-    char char_buffer;
     infile->Read(&char_buffer, sizeof(char_buffer));
-    char Owner = char_buffer;
+    Owner = char_buffer;
 
-    int HeroID = ReadHeroId(infile, mapVersion);
-    unsigned char isRandomHero = 0;
+    HeroID = ReadHeroId(infile, mapVersion);
+    isRandomHero = 0;
     if (HeroID == -1)
         isRandomHero = 1;
 
-    char customName;
-    {
-        char nameFlag;
-        infile->Read(&nameFlag, sizeof(nameFlag));
-        customName = nameFlag != 0;
-    }
+    infile->Read(&char_buffer, sizeof(char_buffer));
+    customName = char_buffer != 0;
     if (customName) {
-        int int_buffer;
         infile->Read(&int_buffer, sizeof(int_buffer));
         infile->Read(tempText, int_buffer);
         tempText[int_buffer] = 0;
@@ -3517,11 +3527,9 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
     // experience dword; Shadow of Death gates it behind a flag byte.  In a
     // campaign game a value below forty is treated as no custom experience at
     // all, which is what the gbUnk69774c consult is doing on both arms.
-    int experience;
     unsigned char bCustomExperience;
     if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA
         || mapVersion == MAP_FORMAT_ARMAGEDDONS_BLADE) {
-        int int_buffer;
         infile->Read(&int_buffer, sizeof(int_buffer));
         experience = int_buffer;
         if (experience != 0 && (!gbUnk69774c || experience >= 40))
@@ -3556,7 +3564,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
     if (gpGame->setup.startingHero[char_buffer] == -1)
         gpGame->setup.startingHero[char_buffer] = HeroID;
 
-    HeroExtra* hero_data = &gpGame->heroSetup[HeroID];
+    hero_data = &gpGame->heroSetup[HeroID];
     hero_data->Owner = Owner;
     hero_data->id = HeroID;
     hero_data->field_008 = identifier;
@@ -3574,103 +3582,78 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
 
     // A random hero keeps its rolled portrait unless the campaign engine is
     // running, which is the only reader of the flag byte pair.
-    char portrait;
-    infile->Read(&portrait, sizeof(portrait));
-    if (portrait) {
-        infile->Read(&portrait, sizeof(portrait));
+    infile->Read(&char_buffer, sizeof(char_buffer));
+    if (char_buffer) {
+        infile->Read(&char_buffer, sizeof(char_buffer));
         if (!isRandomHero || gbUnk69774c) {
             hero_data->bCustomPortraitNumber = 1;
-            hero_data->PortraitNumber = portrait;
+            hero_data->PortraitNumber = char_buffer;
         }
     }
 
-    int x;
-    {
-        char skillsFlag;
-        infile->Read(&skillsFlag, sizeof(skillsFlag));
-        if (skillsFlag) {
-            int int_buffer;
-            hero_data->bCustomSecondarySkills = 1;
-            infile->Read(&int_buffer, sizeof(int_buffer));
-            hero_data->NumSecondarySkills = int_buffer;
-            for (x = 0; x < hero_data->NumSecondarySkills; ++x) {
-                char type;
-                infile->Read(&type, sizeof(type));
-                hero_data->secondarySkill[x] = type;
-                char level;
-                infile->Read(&level, sizeof(level));
-                hero_data->secondarySkillLevel[x] = level;
+    infile->Read(&char_buffer, sizeof(char_buffer));
+    if (char_buffer) {
+        hero_data->bCustomSecondarySkills = 1;
+        infile->Read(&int_buffer, sizeof(int_buffer));
+        hero_data->NumSecondarySkills = int_buffer;
+        for (x = 0; x < hero_data->NumSecondarySkills; ++x) {
+            infile->Read(&char_buffer, sizeof(char_buffer));
+            hero_data->secondarySkill[x] = char_buffer;
+            infile->Read(&char_buffer, sizeof(char_buffer));
+            hero_data->secondarySkillLevel[x] = char_buffer;
+        }
+    }
+
+    infile->Read(&char_buffer, sizeof(char_buffer));
+    if (char_buffer) {
+        hero_data->bCustomArmies = 1;
+        for (x = 0; x < armyGroup::ARMY_GROUP_SLOT_COUNT; ++x) {
+            if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+                infile->Read(&char_buffer, sizeof(char_buffer));
+                int_buffer = char_buffer;
+            } else {
+                infile->Read(&short_buffer, sizeof(short_buffer));
+                int_buffer = short_buffer;
             }
+            hero_data->armies[x] = int_buffer;
+
+            infile->Read(&short_buffer, sizeof(short_buffer));
+            hero_data->numTroops[x] = short_buffer;
         }
     }
 
-    {
-        char armiesFlag;
-        infile->Read(&armiesFlag, sizeof(armiesFlag));
-        if (armiesFlag) {
-            hero_data->bCustomArmies = 1;
-            for (x = 0; x < armyGroup::ARMY_GROUP_SLOT_COUNT; ++x) {
-                int creature;
-                if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-                    signed char narrow;
-                    infile->Read(&narrow, sizeof(narrow));
-                    creature = narrow;
-                } else {
-                    short wide;
-                    infile->Read(&wide, sizeof(wide));
-                    creature = wide;
-                }
-                hero_data->armies[x] = creature;
+    infile->Read(&char_buffer, sizeof(char_buffer));
+    hero_data->GroupFormation = char_buffer != 0;
 
-                short troops;
-                infile->Read(&troops, sizeof(troops));
-                hero_data->numTroops[x] = troops;
-            }
-        }
-    }
-
-    {
-        char formation;
-        infile->Read(&formation, sizeof(formation));
-        hero_data->GroupFormation = formation != 0;
-    }
-
-    char artifactsFlag;
-    infile->Read(&artifactsFlag, sizeof(artifactsFlag));
-    if (artifactsFlag) {
+    infile->Read(&char_buffer, sizeof(char_buffer));
+    if (char_buffer) {
         hero_data->bCustomArtifacts = 1;
 
         // Eighteen equipped positions before Shadow of Death, nineteen after.
-        int count = (gpGame->mapHeader.version
-                     == MAP_FORMAT_SHADOW_OF_DEATH) + 18;
-        int int_buffer;
+        count = (gpGame->mapHeader.version
+                 == MAP_FORMAT_SHADOW_OF_DEATH) + 18;
         for (x = 0; x < count; ++x) {
             if (gpGame->mapHeader.version
                 == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-                signed char narrow;
-                infile->Read(&narrow, sizeof(narrow));
-                int_buffer = narrow;
+                infile->Read(&char_buffer, sizeof(char_buffer));
+                int_buffer = char_buffer;
             } else {
-                short wide;
-                infile->Read(&wide, sizeof(wide));
-                int_buffer = wide;
+                infile->Read(&short_buffer, sizeof(short_buffer));
+                int_buffer = short_buffer;
             }
             hero_data->artifacts[x].artifactId = int_buffer;
         }
 
-        short short_buffer;
         infile->Read(&short_buffer, sizeof(short_buffer));
         hero_data->numInBackpack = static_cast<unsigned char>(short_buffer);
         for (x = 0; x < hero_data->numInBackpack; ++x) {
             if (gpGame->mapHeader.version
                 == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-                signed char narrow;
-                infile->Read(&narrow, sizeof(narrow));
-                int_buffer = narrow;
+                infile->Read(&char_buffer, sizeof(char_buffer));
+                int_buffer = char_buffer;
             } else {
-                short wide;
-                infile->Read(&wide, sizeof(wide));
-                int_buffer = wide;
+                infile->Read(&short_buffer, sizeof(short_buffer));
+                int_buffer = short_buffer;
             }
             hero_data->backpack[x].artifactId = int_buffer;
         }
@@ -3682,16 +3665,12 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
         hero_data->artifacts[hero::EQUIPPED_SLOT_WAR_MACHINE_4].extra = -1;
     }
 
-    {
-        char patrolRadius;
-        infile->Read(&patrolRadius, sizeof(patrolRadius));
-        hero_data->PatrolRadius = patrolRadius;
-    }
+    infile->Read(&char_buffer, sizeof(char_buffer));
+    hero_data->PatrolRadius = char_buffer;
 
     if (gpGame->mapHeader.version != MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-        char customNameFlag;
-        infile->Read(&customNameFlag, sizeof(customNameFlag));
-        if (customNameFlag) {
+        infile->Read(&char_buffer, sizeof(char_buffer));
+        if (char_buffer) {
             hero_data->customName = 1;
             // BOUND BY const REFERENCE, not copied.  ReadLengthPrefixedString
             // returns by value and VC6 does not elide the copy into a named
@@ -3706,26 +3685,21 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
 #pragma inline_depth()
         }
 
-        char sexByte;
-        infile->Read(&sexByte, sizeof(sexByte));
-        int sex = sexByte;
-        if (sex != -1)
-            hero_data->sex = sex;
+        infile->Read(&char_buffer, sizeof(char_buffer));
+        if (char_buffer != -1)
+            hero_data->sex = char_buffer;
 
         if (gpGame->mapHeader.version == MAP_FORMAT_ARMAGEDDONS_BLADE) {
-            char spellByte;
-            infile->Read(&spellByte, sizeof(spellByte));
-            int spell = spellByte;
-            if (spell != -2) {
+            infile->Read(&char_buffer, sizeof(char_buffer));
+            if (char_buffer != -2) {
                 hero_data->customSpells = 1;
                 hero_data->spells = std::bitset<70>(0);
-                if (spell != -1)
-                    hero_data->spells[spell] = 1;
+                if (char_buffer != -1)
+                    hero_data->spells[char_buffer] = 1;
             }
         } else {
-            char spellsFlag;
-            infile->Read(&spellsFlag, sizeof(spellsFlag));
-            if (spellsFlag) {
+            infile->Read(&char_buffer, sizeof(char_buffer));
+            if (char_buffer) {
                 hero_data->customSpells = 1;
                 unsigned char spellMask[9];
                 infile->Read(spellMask, sizeof(spellMask));
@@ -3735,14 +3709,12 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
                 }
             }
 
-            char primaryFlag;
-            infile->Read(&primaryFlag, sizeof(primaryFlag));
-            if (primaryFlag) {
+            infile->Read(&char_buffer, sizeof(char_buffer));
+            if (char_buffer) {
                 hero_data->customPrimarySkills = 1;
                 for (x = 0; x < 4; ++x) {
-                    char value;
-                    infile->Read(&value, sizeof(value));
-                    hero_data->primarySkills[x] = value;
+                    infile->Read(&char_buffer, sizeof(char_buffer));
+                    hero_data->primarySkills[x] = char_buffer;
                 }
             }
         }

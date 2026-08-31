@@ -2456,6 +2456,28 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
     ),
     ("mapcell.obj", 0xF0DF4): (
         SourceRule(
+            "readHeroData keeps Dreamcast's function-scope local roster "
+            "and declaration order",
+            r"\A\s*char\s+padding\s*\[\s*16\s*\]\s*;\s*"
+            r"unsigned\s+char\s+isRandomHero\s*;\s*"
+            r"(?:THeroID|int)\s+HeroID\s*;\s*"
+            r"int\s+int_buffer\s*;\s*short\s+short_buffer\s*;\s*"
+            r"char\s+Owner\s*;\s*char\s+customName\s*;\s*"
+            r"int\s+count\s*;\s*int\s+experience\s*;\s*"
+            r"int\s+x\s*;\s*char\s+char_buffer\s*;\s*"
+            r"char\s+tempText\s*\[\s*100\s*\]\s*=\s*"
+            r"\{\s*0\s*\}\s*;\s*HeroExtra\s*\*\s*"
+            r"hero_data\s*;"),
+        SourceRule(
+            "readHeroData has one shared Dreamcast int_buffer local",
+            r"\bint\s+int_buffer\s*;", minimum=1, maximum=1),
+        SourceRule(
+            "readHeroData has one shared Dreamcast short_buffer local",
+            r"\bshort\s+short_buffer\s*;", minimum=1, maximum=1),
+        SourceRule(
+            "readHeroData has one shared Dreamcast char_buffer local",
+            r"\bchar\s+char_buffer\s*;", minimum=1, maximum=1),
+        SourceRule(
             "readHeroData keeps Complete's retail-proved zero-experience "
             "path into GetStartingHeroId",
             READ_HERO_COMPLETE_EXPERIENCE_RE),
@@ -6129,6 +6151,19 @@ ShowWidget(195);
         RETAIL_BYTE_PROVEN_REVISION_REMOVALS[
             retail_removal_key][0].caller_va
     retail_removal_body = """\
+char padding[16];
+unsigned char isRandomHero;
+int HeroID;
+int int_buffer;
+short short_buffer;
+char Owner;
+char customName;
+int count;
+int experience;
+int x;
+char char_buffer;
+char tempText[100] = { 0 };
+HeroExtra* hero_data;
 if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
     experience = int_buffer;
 } else {
@@ -6143,7 +6178,6 @@ if (HeroID == -1) {
     HeroID = gpGame->GetStartingHeroId(
         alignment, char_buffer, experience);
 }
-int x;
 for (x = 0; x < hero_data->NumSecondarySkills; ++x) {
     hero_data->secondarySkill[x] = type;
     hero_data->secondarySkillLevel[x] = level;
@@ -6152,7 +6186,7 @@ for (x = 0; x < armyGroup::ARMY_GROUP_SLOT_COUNT; ++x) {
     hero_data->armies[x] = creature;
     hero_data->numTroops[x] = troops;
 }
-int count = 18;
+count = 18;
 for (x = 0; x < count; ++x) {
     hero_data->artifacts[x].artifactId = artifact;
 }
@@ -6200,6 +6234,11 @@ return 0;
     if not contract_violations(
             split_artifact_counter_body, retail_removal_key):
         failures.append("split readHeroData artifact counters passed")
+    block_buffer_body = retail_removal_body.replace(
+        "int int_buffer;", "").replace(
+        "count = 18;", "int int_buffer;\ncount = 18;")
+    if not contract_violations(block_buffer_body, retail_removal_key):
+        failures.append("block-local readHeroData buffer passed")
     move_hero_key = ("philai.obj", 0x10E9A8)
     move_hero_body = """\
 long max_distance = 1000;
