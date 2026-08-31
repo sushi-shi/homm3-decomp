@@ -553,7 +553,7 @@ public:
     int id;                         // +0x04
     int field_008;                  // +0x08 - copied to hero::field_01e
     unsigned char bCustomName;      // +0x0c
-    char Name[13];                  // +0x0d - strncpy'd 13 bytes
+    char Name[13];                  // +0x0d - Complete strcpy destination
     unsigned char bCustomExperience;// +0x1a
     char pad_01b;
     int Experience;                 // +0x1c

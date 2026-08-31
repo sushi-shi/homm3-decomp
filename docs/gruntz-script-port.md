@@ -260,6 +260,24 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-31 — `readHeroData`'s bounded Dreamcast name copy is a proved
+  older-revision divergence, not a missing Complete structure fact.** The raw
+  SH4 statement group stores `customName` into `HeroExtra::bCustomName`, tests
+  that field and `!isRandomHero`, then imports
+  `strncpy(hero_data->Name, tempText, 12)`. Complete retail instead has one
+  `customName` guard, stores the literal 1, and performs a runtime NUL scan
+  followed by a `strlen + 1` copy. The current `strcpy` spelling emits that
+  same 15-instruction sequence instruction-for-instruction; a bounded
+  `strncpy` cannot have those semantics because it must pad through its fixed
+  bound.
+
+  The source keeps the Complete group. The asymmetric structure gate now
+  classifies only this bounded helper as `dc-only`, requires the exact
+  Complete replacement expression, rejects any remaining `strncpy` in the
+  body, and has a negative control that restores the Dreamcast guard/call.
+  This is a retail semantic/CFG contradiction—the permitted reason to reject
+  a positive Dreamcast statement—not a score-based waiver.
+
 - **2026-08-31 — `readHeroData` restores its function-scope Dreamcast local
   roster; the 82.9570% current score is a deliberate second structural dip
   under the 92.7472% MAX.** The compact dossier lists thirteen locals, but the
