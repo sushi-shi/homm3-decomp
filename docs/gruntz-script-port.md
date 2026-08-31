@@ -260,6 +260,33 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-31 — `BackupGameHeaders` closes byte-exact by preserving the
+  shared Dreamcast aggregate/helper order while admitting one bounded
+  Complete STL revision.** Dreamcast CodeView proves `dest`/`src`, the sole
+  `int i` local, `NewSMapHeader::operator=`, eight `playerData::operator=`
+  operations, three final copy statements, and their lexical scopes. Exposing
+  `NewSMapHeader` and `SCampaign` copy assignment as compiler-generated in
+  `singleselectionwindow.obj` restores Complete's two expanded member walks
+  and naturally leaves `playerData::operator=` out of line. The final three
+  byte-array statements are `std::copy`: Dreamcast STLport lowers them to
+  `_memcpy`, while retail Dinkumware emits the exact iterator loops.
+
+  The player transfer is the bounded revision fact. Dreamcast uses its
+  recorded `i` loop, but retail's ten-branch body is exactly Dinkumware's
+  `std::copy<playerData*>`; the explicit loop produces only nine branches and
+  **89.398735%**, while `std::copy` produces all **524 / 524 bytes**. The
+  source retains the proven `int i` local because an optimized-out local does
+  not contradict retail. A fatal source-shape rule and negative controls now
+  preserve the shared assignment order, both current-player scopes, the
+  retail-only player transfer, and all three final copies.
+
+  The proof is promoted globally, not hidden behind a score-protecting TU
+  view: both copy assignments are implicit in `game.h`, and the hand-written
+  exact `SCampaign::operator=` body is removed. Until reconstructed caller
+  mass again makes VC6 emit that out-of-line COMDAT, its former 100% row and
+  including-TU scores survive in max/history. Those current dips are the
+  expected cost of carrying the coherent header state forward.
+
 - **2026-08-30 — `DoQuestLog` reaches 96.5463% from source-backed quest
   access, while two score-flat local corrections remain banked as shape.**
   The exact `TAdventureMapWindow::UpdateQuestLogButton` sibling proves the

@@ -124,8 +124,43 @@ unsigned char SaveValid(const char* filename)
 // E:\gamedcs\singleselectionwindow.cpp:268
 // Dreamcast publishes this original helper boundary.  Complete retains it
 // at 0x577530 and passes its first two game pointers in ECX/EDX under /Gr.
+DATA(0x0069fb0c) int saveCurPlayer;
+
 VA(0x00577530, 0x20C)
-void BackupGameHeaders(game* dest, game* src);
+void BackupGameHeaders(game* dest, game* src)
+{
+    // Dreamcast's older lowering uses this local for the eight-player copy.
+    // Complete instead emits Dinkumware's std::copy iterator loop exactly;
+    // the dead local is still a positive source fact and costs no retail code.
+    int i;
+
+    dest->mapHeader = src->mapHeader;
+    dest->setup = src->setup;
+    dest->campaign = src->campaign;
+    dest->field_1f4d4 = src->field_1f4d4;
+    dest->difficultyRating = src->difficultyRating;
+    dest->field_1f635 = src->field_1f635;
+
+    if (src == gpGame) {
+        saveCurPlayer = gNetLocalGamePos;
+    } else {
+        gNetLocalGamePos = saveCurPlayer;
+    }
+
+    // RETAIL-ONLY source revision: this exact std::copy retains the same
+    // playerData::operator= boundary Dreamcast calls from its explicit loop.
+    std::copy(src->players, src->players + 8, dest->players);
+
+    std::copy(src->heroAvailability,
+              src->heroAvailability + sizeof(src->heroAvailability),
+              dest->heroAvailability);
+    std::copy(src->saveFileName,
+              src->saveFileName + sizeof(src->saveFileName),
+              dest->saveFileName);
+    std::copy(src->playerDisabled,
+              src->playerDisabled + sizeof(src->playerDisabled),
+              dest->playerDisabled);
+}
 
 // Dreamcast names both globals in this TU. Retail independently fixes their
 // addresses through every CreateEvent/_beginthreadex and stop-path reference.
