@@ -786,18 +786,15 @@ public:
     // image_height is DC army@344: MidY (0x446630) subtracts HALF of it
     // from the hexcell's own y, and LoadResources (0x43dd62) writes it
     // as `0x10b - <stdIcon frame metric>` - the stack's own vertical
-    // span on the combat field. InitClean zeroes it. Sliced behind a
-    // view because this header is included tree-wide and the slice adds
-    // declarators (see the include-set note at the top of army.cpp);
-    // army.cpp is the only consumer.
+    // span on the combat field. InitClean zeroes it. The resource-owning
+    // copy layout keeps its wrapper type; the ordinary layout uses the
+    // same named source members with the retail pointer representation.
 #ifdef HOMM3_ARMY_COPY_VIEW
     TArmyResourceRef<CSprite> missileIcon;  // +0x168
     int image_height;             // +0x16c
-#elif defined(HOMM3_ARMY_MIDPOINT_FIELD_VIEW)
+#else
     CSprite* missileIcon;         // +0x168
     int image_height;             // +0x16c
-#else
-    char pad_168[0x8];
 #endif
     // DC army::armySample is sample*[8] at +0x15c; retail's preceding STL
     // expansion shifts it to +0x170, independently confirmed by play_sample.
