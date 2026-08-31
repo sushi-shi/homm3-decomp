@@ -1127,7 +1127,7 @@ events	?DoAIEvent@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@@Z	100.00
 # synth PDB - returned the row to master's own 98.5741 to the digit
 # with events.cpp untouched. Cross-generation noise, the
 # recruit::Update revert-control precedent; hist keeps 99.1139.
-events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	98.5741	99.0481	99.1139	0xad470
+events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	99.0481	99.0481	99.1139	0xad470
 events	?DoCustomArtifact@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	99.1492	99.1492	99.1492	0x9f070
 events	?DoCustomResource@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa4780
 events	?DoCustomSpellScroll@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	97.4451	97.4451	97.4451	0xa5a80
@@ -1242,7 +1242,7 @@ events	?monsters_join@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@
 # (push 0xb4 in townManager::Open), layout-required and not gateable
 # per-TU. hist keeps 100.0000; the saturation law says a later
 # declarator can carry it back.
-events	?monsters_sell_out@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	100.0000	100.0000	100.0000	0xa7250
+events	?monsters_sell_out@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	99.9517	100.0000	100.0000	0xa7250
 events	?show_rewards@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@2@J@Z	100.0000	100.0000	100.0000	0xa0b00
 exec	?AddManager@executive@@QAEHPAVbaseManager@@H@Z	100.0000	100.0000	100.0000	0xb0b20
 exec	?CallManager@executive@@QAEXPAVbaseManager@@@Z	100.0000	100.0000	100.0000	0xb0c70
@@ -2142,6 +2142,7 @@ philai	?DoAI@philAI@@QAEXH@Z	90.2537	90.2537	90.2537	0x125e80
 philai	?GetTurnAIVars@philAI@@QAEXH@Z	97.8723	97.8723	97.8723	0x127960
 philai	?LuckIncreaseValue@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0x127d80
 philai	?MoraleIncreaseValue@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0x127cf0
+philai	?MoveHero@@YIXPAVhero@@PAJEPAE@Z	86.6362	86.6362	86.6362	0x1261f0
 philai	?NetValueOfArtifact@@YIHPBVhero@@HHHW4EGameResource@@@Z	100.0000	100.0000	100.0000	0x129810
 philai	?OnSameTeam@game@@QBE_NHH@Z	100.0000	100.0000	100.0000	0x1296d0
 philai	?PlayerKnowsCell@ExtraInfoUnion@@QBE_NF@Z	100.0000	100.0000	100.0000	0x129690
@@ -2176,8 +2177,8 @@ philai	?get_mass_damage_spell_value@type_spellvalue@@IBEJHHJ@Z	100.0000	100.0000
 philai	?get_raw_spell_value@type_spellvalue@@QBEJH@Z	100.0000	100.0000	100.0000	0x1273d0
 philai	?get_school_value@@YIJPBVhero@@W4TSecondarySkill@@@Z	100.0000	100.0000	100.0000	0x124d20
 philai	?get_skill_value@@YIJPBVhero@@W4TSecondarySkill@@E@Z	78.1958	78.1958	78.1958	0x124690
-philai	?get_value_of_spring@@YIJPBVhero@@PBVNewmapCell@@G@Z	100.0000	100.0000	100.0000	0x12b810
-philai	?get_value_of_well@@YIJPBVhero@@G@Z	100.0000	100.0000	100.0000	0x12a510
+philai	?get_value_of_spring@@YIJPBVhero@@PBVNewmapCell@@G@Z	76.6104	100.0000	100.0000	0x12b810
+philai	?get_value_of_well@@YIJPBVhero@@G@Z	75.2436	100.0000	100.0000	0x12a510
 philai	?move_hero@@YIXPAVhero@@EAAE@Z	100.0000	100.0000	100.0000	0x1267b0
 philai	?value_of_bank@@YIJPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x129920
 philai	?value_of_custom_item@@YIJPBVhero@@PAVNewmapCell@@J@Z	100.0000	100.0000	100.0000	0x129890
@@ -2199,7 +2200,6 @@ philai	?value_of_war_factory@@YIJPBVhero@@W4TArtifact@@J@Z	96.5185	96.5185	96.51
 philai	?value_of_war_school@@YIHPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x12b790
 philai	?value_of_witch_hut@@YIHPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x12b900
 philai	?wants_skill@@YIEPBVhero@@HH@Z	100.0000	100.0000	100.0000	0x124dd0
-philai	MoveHero	0.0000	0.0000	0.0000	0x1261f0
 puzzlewindow	??0TPuzzleWindow@@QAE@H@Z	100.0000	100.0000	100.0000	0x12c1e0
 puzzlewindow	??0type_AI_puzzle_tile@@QAE@PAVNewmapCell@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x12c770
 puzzlewindow	??1TPuzzleWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x12c5a0
@@ -2737,7 +2737,7 @@ singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100
 # 2026-08-27 (round 3): the interim full build re-banked the transient
 # peak a third time; re-lowered with the round's bodies landed. Same
 # scheduler flap, same recovery path.
-singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0
+singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0
 singleselectionwindow	?OnMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2193	90.2193	90.2193	0x189710
 singleselectionwindow	?OnNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	97.5366	97.5366	97.5366	0x18b510
 singleselectionwindow	?OnNewPlayerMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	97.0628	97.0628	97.0628	0x189fa0

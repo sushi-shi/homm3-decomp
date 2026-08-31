@@ -2449,7 +2449,8 @@ public:
     // DC game.h:865. Keep the body ahead of the two helpers that call it,
     // matching the original header's definition order. The events compiland
     // selects the exact retail COMDAT when one expansion remains uninlined.
-#ifdef HOMM3_EVENTS_GAME_INLINE_HELPERS
+#if defined(HOMM3_EVENTS_GAME_INLINE_HELPERS) \
+ || defined(HOMM3_PHILAI_OBJ_DECLS)
     // The exact selected COMDAT's source-authority VA claim is carried by
     // the owning events TU between its 0x4a5610 and 0x4a5980 claims. Header
     // VA sites do not enter per-TU claim fragments.

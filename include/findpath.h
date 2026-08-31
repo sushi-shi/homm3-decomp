@@ -284,6 +284,12 @@ public:
     // const tiny helper into move_hero and AI_choose_destination as the
     // byte read at +0x20.
     bool limit_was_reached() const { return limit_reached != 0; }
+    // Dreamcast FindPath.h:252. MoveHero brackets its move_hero call with
+    // this setter; Complete expands both calls to the +0x6c store.
+    void set_danger_zones(long* danger_zone_map)
+    {
+        danger_zones = danger_zone_map;
+    }
     // Dreamcast FindPath.h:231/236/257.  These source helpers are all
     // folded into ai_player.obj's destination chooser on retail x86.  Keep
     // the boundaries visible in C++ even where the selected lowering is a

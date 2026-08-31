@@ -201,6 +201,7 @@ class TTownEvent;
 
 class town {
 public:
+    enum { TOWN_DOCK_SITE_NONE = 0xff };
     // Index of this town in gpGame->towns (byte, sign-extended).
     char id;
     // Owning player, -1 when unowned (Deallocate stores -1 here).

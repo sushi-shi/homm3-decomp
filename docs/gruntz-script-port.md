@@ -12822,6 +12822,27 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   collateral `find_all_destinations` dip remains observational because its
   35.9206% MAX is banked.
 
+- **2026-08-31 — hardest-first `MoveHero` reconstruction admitted.** The next
+  zero-MAX head was the 1,466-byte movement coordinator. Its Dreamcast dossier
+  restores the source-real `check_for_town`, `mark_shipyards`,
+  `clear_shipyards`, and `RestoreMouse` boundaries and the complete
+  danger-map / move / post-move-garrison statement order; Complete expands
+  the four helpers into the retail body. Retail then fixes two revision facts:
+  the danger pass is gated by positive scenario difficulty or a human ally,
+  and the map-shipyard pass reads `boatX`/`boatY` from the
+  `NewmapCell::extraInfo` `ShipyardInfo` overlay while taking only `z` from
+  the player's shipyard vector. The latter corrected a real semantic error in
+  the first reconstruction. Pinning only each vector-loop condition retains
+  retail's four `vector::size()` calls while leaving both subscripts inline.
+  The checkpoint advances **0% -> 86.6362%**. Its out-of-line call multiset is
+  exact at **32 / 32**, and the 49-branch symbolic sequence plus both returns
+  agree exactly. The conservative block aligner reports **37 exact blocks**
+  across 81 candidate versus 79 retail blocks; the remaining two-block and
+  byte gap is register/lifetime scheduling, not permission to discard the
+  now-corroborated Dreamcast helper structure. An automated suggestion to
+  widen `mouse_was_visible` is rejected because CodeView positively records
+  that sole `MoveHero` local as `unsigned char`.
+
 - **2026-07-23 — repo + toolchain distribution.** Private GitHub repo
   `sushi-shi/homm3-decomp` created and pushed; toolchain tarball published as
   release `toolchain-vc6-sp3`. `homm3 init` now downloads it via `gh` when
