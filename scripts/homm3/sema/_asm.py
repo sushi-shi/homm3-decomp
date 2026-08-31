@@ -196,6 +196,52 @@ def parse_ins(ln: str):
     return (off, " ".join(body)) if body else None
 
 
+_DIR32_RELOC = re.compile(
+    r"^\s*([0-9a-fA-F]+):\s+IMAGE_REL_I386_DIR32\b")
+
+
+def code_insns(text: str) -> list[tuple[int, str]]:
+    """Return instruction rows, excluding a trailing in-``.text`` data pool.
+
+    VC6 appends switch pointer tables and byte lookup tables to a function's
+    COMDAT. ``llvm-objdump`` linearly decodes those bytes because COFF has no
+    code/data boundary inside the section. A DIR32 relocation whose site is
+    exactly an alleged instruction address cannot belong to an x86 operand
+    (the opcode occupies that byte); it is a relocated data word. The final
+    real return immediately before the first such word is therefore the
+    compiler-published code boundary. Keep the return, and discard alignment
+    bytes plus the pool.
+    """
+    insns = [parsed for line in text.splitlines()
+             if (parsed := parse_ins(line)) is not None]
+    if not insns:
+        return []
+
+    addresses = {offset for offset, _instruction in insns}
+    pool_sites = []
+    for line in text.splitlines():
+        match = _DIR32_RELOC.match(line)
+        if match:
+            site = int(match.group(1), 16)
+            if site in addresses:
+                pool_sites.append(site)
+    if not pool_sites:
+        return insns
+
+    first_pool_word = min(pool_sites)
+    last_return = None
+    for index, (offset, instruction) in enumerate(insns):
+        if offset >= first_pool_word:
+            break
+        mnemonic = instruction.lower().split(None, 1)[0]
+        if mnemonic.startswith("ret"):
+            last_return = index
+    if last_return is not None:
+        return insns[:last_return + 1]
+    return [(offset, instruction) for offset, instruction in insns
+            if offset < first_pool_word]
+
+
 def lite(text: str) -> str:
     """Only the asm: drop offsets, byte columns, reloc blocks; keep titles."""
     keep = []
@@ -271,8 +317,7 @@ def cfg_rows(text: str):
     normalized candidate and retail objects comparable. The block count
     is diagnostic, not authoritative: MSVC TU state can split or merge
     blocks without any source change."""
-    insns = [parsed for line in text.splitlines()
-             if (parsed := parse_ins(line)) is not None]
+    insns = code_insns(text)
     while insns and insns[-1][1].lower() == "nop":
         insns.pop()
     if not insns:

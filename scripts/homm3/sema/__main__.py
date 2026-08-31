@@ -8,8 +8,9 @@ build/gen/symbol_names.csv name)
         Caller ancestry tree (the default; depth 4, 0 = unlimited),
         flat direct callers, or forward callees - always ending with
         the exact reloc-backed data-side references.
-  diff TARGET [--verbose | --asm | --branches | --source]
+  diff TARGET [--verbose | --structure | --asm | --branches | --source]
         Base-vs-target comparison: block-SKELETON diff by default,
+        --structure = explicit spelling of that block-SKELETON view,
         --verbose = block bodies, --asm = flat masked asm diff,
         --branches = symbolic branch-sequence comparison,
         --source = statement-grouped diff using candidate /Z7 lines.
@@ -63,6 +64,9 @@ def _build_parser() -> argparse.ArgumentParser:
     sd.add_argument("--verbose", action="store_true",
                     help="block bodies instead of the skeleton table")
     mode = sd.add_mutually_exclusive_group()
+    mode.add_argument("--structure", action="store_true",
+                      help="block-structure skeleton (explicit alias for "
+                           "the default diff view)")
     mode.add_argument("--asm", action="store_true",
                       help="flat masked unified asm diff")
     mode.add_argument("--branches", action="store_true",
