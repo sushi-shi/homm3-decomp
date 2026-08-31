@@ -1690,7 +1690,6 @@ call	singleselectionpopups.obj	0x12f1fc	Bitmap816::GetWidth
 call	singleselectionwindow.obj	0x12f86c	SavedGameExists
 call	singleselectionwindow.obj	0x130670	CNetPlayerHandler::PlayerExists
 call	singleselectionwindow.obj	0x130904	CNetPlayerHandlerPlayer::IsHuman
-call	singleselectionwindow.obj	0x1309f0	Bitmap816::Draw
 call	singleselectionwindow.obj	0x1309f0	Bitmap816::GetHeight
 call	singleselectionwindow.obj	0x1309f0	Bitmap816::GetWidth
 call	singleselectionwindow.obj	0x1309f0	CChatManager::SetPosition
@@ -1698,7 +1697,6 @@ call	singleselectionwindow.obj	0x1309f0	CChatManager::UpdateWidget
 call	singleselectionwindow.obj	0x1309f0	CHeroWindowEx::SetHelpText
 call	singleselectionwindow.obj	0x1309f0	GameTime::Get
 call	singleselectionwindow.obj	0x1309f0	MemError
-call	singleselectionwindow.obj	0x1309f0	Random
 call	singleselectionwindow.obj	0x1309f0	ResourceManager::GetBitmap816
 call	singleselectionwindow.obj	0x1309f0	ResourceManager::GetSprite
 call	singleselectionwindow.obj	0x1309f0	StopMouseThread
@@ -1719,9 +1717,6 @@ call	singleselectionwindow.obj	0x1309f0	button::set_hotkey
 call	singleselectionwindow.obj	0x1309f0	font::DrawBoundedString
 call	singleselectionwindow.obj	0x1309f0	game::SaveGame
 call	singleselectionwindow.obj	0x1309f0	heroWindow::AddWidget
-call	singleselectionwindow.obj	0x1309f0	heroWindow::GetWidget
-call	singleselectionwindow.obj	0x1309f0	playerData::Init
-call	singleselectionwindow.obj	0x1309f0	widget::hide
 call	singleselectionwindow.obj	0x136e94	TSingleSelectionWindow::IsMultiPlayer
 call	singleselectionwindow.obj	0x1371fc	CBonusDlg::CreateWin
 call	singleselectionwindow.obj	0x1371fc	CHeroDlg::CreateWin

@@ -40,10 +40,13 @@
 // draws and the columns render through the shared font cells;
 // DrawHeroAdvancedOption blits the flag/portrait plates.
 #include "bitmap816.h"
+#include "border.h"
 #include "crt_process.h"
 #include "csprite.h"
 #include "font.h"
+#include "iconwdgt.h"
 #include "mousemgr.h"
+#include "singleselectionpopups.h"
 #include "singleselectionwindow.h"
 #include "singleselectionwindow_priv.h"
 #include "soundmgr.h"
@@ -1008,10 +1011,12 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     m_players.unused = -1;
     m_players.assignedPos = -1;
 
-    for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
-        m_players.computerPlayers[i].color = i;
-        strcpy(m_players.computerPlayers[i].sName,
-               gpGeneralText->GetText(469));
+    {
+        for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
+            m_players.computerPlayers[i].color = i;
+            strcpy(m_players.computerPlayers[i].sName,
+                   gpGeneralText->GetText(469));
+        }
     }
 
     StartMouseThread();
@@ -1076,6 +1081,149 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     inFilterOptions = 0;
     field_37F = 0;
     clickTime = timeGetTime();
+
+    if (!m_flag65) {
+        for (int i = 0; i < 8; ++i)
+            gpGame->players[i].Init();
+    }
+
+    Widgets.reserve(111);
+
+    sprintf(gText, "gamselb%d.pcx", Random(0, 50));
+    bitmapBorder16* tempBack = new bitmapBorder16(
+        0, 0, 800, 600, 100, gText, 0x800);
+    Widgets.push_back(tempBack);
+    tempBack->image->Draw(0, 0, tempBack->image->Width,
+        tempBack->image->Height, gpWindowManager->screenBitmap,
+        tempBack->x + x, tempBack->y + y, 0);
+
+    bitmapBorder* w = new bitmapBorder(
+        396, 6, 370, 585, 100, "GSelPop1.pcx", 0x800);
+    Widgets.push_back(w);
+    w->image->Draw(0, 0, w->image->Width, w->image->Height,
+        gpWindowManager->screenBitmap, w->x + x, w->y + y, 0);
+
+    w = new bitmapBorder(3, 6, 575, 585, 101,
+                         "SCSelBck.pcx", 0x800);
+    w->hide();
+    Widgets.push_back(w);
+
+    int heading = m_flag65 ? 2 : (m_flag64 ? 1 : 0);
+    textWidget* headingWidget = new textWidget(
+        25, 23, 367, 23, gUnnamed6a8098[heading], "medfont.fnt",
+        font::HEADING_HIGHLIGHT, 361, 5, 0, 8);
+    Widgets.push_back(headingWidget);
+
+    if (!m_flag64) {
+        if (!m_flag65) {
+            w = new bitmapBorder(3, 6, 557, 585, 102,
+                                 "AdvOptBk.pcx", 0x800);
+            w->hide();
+            Widgets.push_back(w);
+
+            w = new bitmapBorder(3, 6, 557, 585, 103,
+                                 "RanMapBk.pcx", 0x800);
+            w->hide();
+            Widgets.push_back(w);
+        }
+    } else if (bVideoPaused || gUnnamed6989f0 == WINDOW_MODE_6989F0_3) {
+        w = new bitmapBorder(3, 6, 557, 585, 102,
+                             "AdvOptBk.pcx", 0x800);
+        w->hide();
+        Widgets.push_back(w);
+
+        w = new bitmapBorder(3, 6, 557, 585, 103,
+                             "RanMapBk.pcx", 0x800);
+        w->hide();
+        Widgets.push_back(w);
+    }
+
+    sprintf(gText, "%s", gpGeneralText->GetText(493));
+    Widgets.push_back(new textWidget(
+        414, 435, 334, 19, gText, "smalfont.fnt", font::PRIMARY_HIGHLIGHT,
+        132, font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
+    sprintf(gText, "%s", gpGeneralText->GetText(219));
+    Widgets.push_back(new textWidget(
+        665, 435, 84, 19, gText, "smalfont.fnt", font::PRIMARY_HIGHLIGHT,
+        133, font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(
+        414, 435, 90, 19, gpGeneralText->GetText(495), "smalfont.fnt",
+        font::PRIMARY_HIGHLIGHT, 134,
+        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(
+        422, 27, 278, 18, gpGeneralText->GetText(496), "smalfont.fnt",
+        font::PRIMARY_HIGHLIGHT, 100, font::VERT_CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(
+        422, 137, 278, 18, gpGeneralText->GetText(497), "smalfont.fnt",
+        font::PRIMARY_HIGHLIGHT, 105, font::VERT_CENTER_JUSTIFIED, 0, 8));
+
+    field_196c = new CScrollTextWidget(
+        emptyRolloverText, 422, 155, 319, 115, "smalfont.fnt",
+        font::WHITE, 1);
+    Widgets.push_back(field_196c);
+
+    Widgets.push_back(new textWidget(
+        422, 288, 278, 18, gpGeneralText->GetText(498), "smalfont.fnt",
+        font::PRIMARY_HIGHLIGHT, 100, font::VERT_CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(
+        422, 344, 278, 18, gpGeneralText->GetText(499), "smalfont.fnt",
+        font::PRIMARY_HIGHLIGHT, 100, font::VERT_CENTER_JUSTIFIED, 0, 8));
+
+    if (bVideoPaused && !m_flag65) {
+        chatToggle = new textButton(
+            622, 81, 128, 20, 131, "gspbut2.def", emptyRolloverText,
+            "smalfont.fnt", 0, 1, 0, 15, 2, font::WHITE);
+        Widgets.push_back(chatToggle);
+    }
+
+    Widgets.push_back(new iconWidget(
+        714, 28, 29, 23, 189, "scnrmpsz.def", 0, 0, 0, 0,
+        iconWidget::ICON_STYLE_PLAIN));
+    sprintf(gText, "%s", gpGeneralText->GetText(391));
+    Widgets.push_back(new textWidget(
+        414, 403, 44, 23, gText, "smalfont.fnt", font::WHITE, 100,
+        font::VERT_CENTER_JUSTIFIED | font::RIGHT_JUSTIFIED, 0, 8));
+    sprintf(gText, "%s", gpGeneralText->GetText(392));
+    Widgets.push_back(new textWidget(
+        579, 403, 58, 23, gText, "smalfont.fnt", font::WHITE, 386,
+        font::VERT_CENTER_JUSTIFIED | font::RIGHT_JUSTIFIED, 0, 8));
+
+    if (m_flag65
+        || (m_flag64 && !bVideoPaused
+            && gUnnamed6989f0 != WINDOW_MODE_6989F0_3)) {
+        GetWidget(132)->hide();
+        GetWidget(133)->hide();
+    }
+
+    {
+        for (int i = 0; i < 8; ++i) {
+            iconWidget* flag = new iconWidget(
+                460 + i * 15, 405, 15, 20, 112 + i, "itgflags.def",
+                0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
+            flag->hide();
+            Widgets.push_back(flag);
+
+            flag = new iconWidget(
+                640 + i * 15, 405, 15, 20, 120 + i, "itgflags.def",
+                0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
+            flag->hide();
+            Widgets.push_back(flag);
+        }
+    }
+
+    if (!m_flag65
+        && (!m_flag64 || bVideoPaused
+            || gUnnamed6989f0 == WINDOW_MODE_6989F0_3))
+        Widgets.push_back(new CHotspotWidget(456, 402, 310, 25, 387));
+
+    for (int i = 0; i < gUnnamed69fdc8; ++i) {
+        textWidget* row = new textWidget(
+            57, 122 + i * 25, 314, 25, emptyRolloverText,
+            "smalfont.fnt", font::WHITE, 142 + i,
+            font::CENTER_JUSTIFIED, 0, 8);
+        row->hide();
+        Widgets.push_back(row);
+    }
 }
 
 #if 0  // @carcass: claim-only home for the game.h COMDAT below
@@ -2335,20 +2483,20 @@ void TSingleSelectionWindow::DrawBasicMapInfo()
     gUnnamed698a08->DrawBoundedString(lcText,
         gpWindowManager->screenBitmap, 456, 364, 288, 32, 4, 4, -1);
     if (vc->Type >= 0 && vc->Type <= 11)
-        victoryConditionIcons->Draw(0, vc->Type, 0, 0,
-            victoryConditionIcons->Width, victoryConditionIcons->Height,
+        VictoryIcon->Draw(0, vc->Type, 0, 0,
+            VictoryIcon->Width, VictoryIcon->Height,
             gpWindowManager->screenBitmap, 420, 308, 0, 1);
     else
-        victoryConditionIcons->Draw(0, 11, 0, 0,
-            victoryConditionIcons->Width, victoryConditionIcons->Height,
+        VictoryIcon->Draw(0, 11, 0, 0,
+            VictoryIcon->Width, VictoryIcon->Height,
             gpWindowManager->screenBitmap, 420, 308, 0, 1);
     if (lc->Type >= 0)
-        lossConditionIcons->Draw(0, lc->Type, 0, 0,
-            lossConditionIcons->Width, lossConditionIcons->Height,
+        LossIcon->Draw(0, lc->Type, 0, 0,
+            LossIcon->Width, LossIcon->Height,
             gpWindowManager->screenBitmap, 420, 365, 0, 1);
     else
-        lossConditionIcons->Draw(0, 3, 0, 0,
-            lossConditionIcons->Width, lossConditionIcons->Height,
+        LossIcon->Draw(0, 3, 0, 0,
+            LossIcon->Width, LossIcon->Height,
             gpWindowManager->screenBitmap, 420, 365, 0, 1);
 }
 
@@ -2508,8 +2656,8 @@ int TSingleSelectionWindow::Update()
                             text, gpWindowManager->screenBitmap,
                             59, y - 1, 30, 25, color, 5, -1);
                         if (frame >= 0)
-                            versionIcons->Draw(0, frame, 0, 0,
-                                versionIcons->Width, versionIcons->Height,
+                            VersionIcon->Draw(0, frame, 0, 0,
+                                VersionIcon->Width, VersionIcon->Height,
                                 gpWindowManager->screenBitmap, 91, y, 0, 1);
                         gUnnamed698a08->DrawBoundedString(
                             GetMapName(currentIndex + i),
@@ -2517,26 +2665,26 @@ int TSingleSelectionWindow::Update()
                             125, y - 1, 184, 25, color, 5, -1);
                         if (hdr->header.victoryCondition.Type >= 0
                                 && hdr->header.victoryCondition.Type <= 11)
-                            victoryConditionIcons->Draw(0,
+                            VictoryIcon->Draw(0,
                                 hdr->header.victoryCondition.Type, 0, 0,
-                                victoryConditionIcons->Width,
-                                victoryConditionIcons->Height,
+                                VictoryIcon->Width,
+                                VictoryIcon->Height,
                                 gpWindowManager->screenBitmap, 309, y, 0, 1);
                         else
-                            victoryConditionIcons->Draw(0, 11, 0, 0,
-                                victoryConditionIcons->Width,
-                                victoryConditionIcons->Height,
+                            VictoryIcon->Draw(0, 11, 0, 0,
+                                VictoryIcon->Width,
+                                VictoryIcon->Height,
                                 gpWindowManager->screenBitmap, 309, y, 0, 1);
                         if (hdr->header.lossCondition.Type >= 0)
-                            lossConditionIcons->Draw(0,
+                            LossIcon->Draw(0,
                                 hdr->header.lossCondition.Type, 0, 0,
-                                lossConditionIcons->Width,
-                                lossConditionIcons->Height,
+                                LossIcon->Width,
+                                LossIcon->Height,
                                 gpWindowManager->screenBitmap, 342, y, 0, 1);
                         else
-                            lossConditionIcons->Draw(0, 3, 0, 0,
-                                lossConditionIcons->Width,
-                                lossConditionIcons->Height,
+                            LossIcon->Draw(0, 3, 0, 0,
+                                LossIcon->Width,
+                                LossIcon->Height,
                                 gpWindowManager->screenBitmap, 342, y, 0, 1);
                     }
                     ++i;
@@ -5379,8 +5527,8 @@ void TSingleSelectionWindow::DrawHeroAdvancedOption(int playerPos,
     }
     GetWidget(playerPos + 263)->Draw();
     int rowY = position * 50;
-    playerFlags[playerPos]->Draw(0, 0, playerFlags[0]->Width,
-                                 playerFlags[0]->Height,
+    Panels[playerPos]->Draw(0, 0, Panels[0]->Width,
+                                 Panels[0]->Height,
                                  gpWindowManager->screenBitmap, 57,
                                  rowY + 128, 1);
     GetWidget(playerPos + 199)->Draw();
@@ -5395,8 +5543,8 @@ void TSingleSelectionWindow::DrawHeroAdvancedOption(int playerPos,
         // exists against that memory home).
         position = gpGame->setup.alignment[playerPos];
         int iconY = rowY + 130;
-        townIcons->Draw(0, position * 2 + 2, 0, 0, townIcons->Width,
-                        townIcons->Height, gpWindowManager->screenBitmap,
+        TownPix->Draw(0, position * 2 + 2, 0, 0, TownPix->Width,
+                        TownPix->Height, gpWindowManager->screenBitmap,
                         176, iconY, 0, 1);
         int textY = rowY + 162;
         // (textY/iconY keep retail's dead-slot homes)
@@ -5404,8 +5552,8 @@ void TSingleSelectionWindow::DrawHeroAdvancedOption(int playerPos,
             gpWindowManager->screenBitmap, 164, textY, 71, 16, 4, 5, -1);
         int face = GetDisplayFace(playerPos);
         if (face != -1) {
-            heroFaces[face]->Draw(0, 0, heroFaces[0]->Width,
-                heroFaces[0]->Height, gpWindowManager->screenBitmap,
+            HeroPix[face]->Draw(0, 0, HeroPix[0]->Width,
+                HeroPix[0]->Height, gpWindowManager->screenBitmap,
                 252, iconY, 0);
             const char* name = GetHeroName(playerPos);
             gpTinyFont->DrawBoundedString(name,
@@ -5433,8 +5581,8 @@ void TSingleSelectionWindow::DrawHeroAdvancedOption(int playerPos,
             position = 10;
             break;
         }
-        bonusIcons->Draw(0, position, 0, 0, bonusIcons->Width,
-                         bonusIcons->Height,
+        Resource->Draw(0, position, 0, 0, Resource->Width,
+                         Resource->Height,
                          gpWindowManager->screenBitmap, 328, iconY, 0, 1);
         if (bonus == NEW_MAP_BONUS_RANDOM)
             gpTinyFont->DrawBoundedString(gpGeneralText->GetText(523),
@@ -5485,8 +5633,8 @@ void TSingleSelectionWindow::DrawHeroAdvancedOption(int playerPos,
                 gpWindowManager->screenBitmap, 164, rowY + 162, 71, 16,
                 4, 5, -1);
         } else {
-            townIcons->Draw(0, town * 2 + 2, 0, 0, townIcons->Width,
-                townIcons->Height, gpWindowManager->screenBitmap, 176,
+            TownPix->Draw(0, town * 2 + 2, 0, 0, TownPix->Width,
+                TownPix->Height, gpWindowManager->screenBitmap, 176,
                 rowY + 130, 0, 1);
             gpTinyFont->DrawBoundedString(gUnnamed6a74f4[town],
                 gpWindowManager->screenBitmap, 164, rowY + 162, 71, 16,
@@ -5540,8 +5688,8 @@ void TSingleSelectionWindow::DrawHeroAdvancedOption(int playerPos,
             }
         } else {
             const char* name = GetHeroName(playerPos);
-            heroFaces[face]->Draw(0, 0, heroFaces[0]->Width,
-                heroFaces[0]->Height, gpWindowManager->screenBitmap,
+            HeroPix[face]->Draw(0, 0, HeroPix[0]->Width,
+                HeroPix[0]->Height, gpWindowManager->screenBitmap,
                 252, rowY + 130, 0);
             gpTinyFont->DrawBoundedString(name,
                 gpWindowManager->screenBitmap, 240, rowY + 162, 71, 16,
@@ -5580,8 +5728,8 @@ void TSingleSelectionWindow::DrawHeroAdvancedOption(int playerPos,
             gpTinyFont->DrawBoundedString(gUnnamed6a5e14[bonus],
                 gpWindowManager->screenBitmap, 316, rowY + 162, 71, 16,
                 4, 5, -1);
-        bonusIcons->Draw(0, frame, 0, 0, bonusIcons->Width,
-            bonusIcons->Height, gpWindowManager->screenBitmap, 328,
+        Resource->Draw(0, frame, 0, 0, Resource->Width,
+            Resource->Height, gpWindowManager->screenBitmap, 328,
             rowY + 130, 0, 1);
         unsigned char townChosen = 1;
         if (town == -1)

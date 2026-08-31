@@ -509,8 +509,17 @@ extern const char* gUnnamed6a7e18[];
 // and the class stays abstract - it exists to type the call.
 class CScrollTextWidget : public widget {
 public:
+    CScrollTextWidget(const char* text, int x, int y, int w, int h,
+                      const char* fontName, font::TColor color,
+                      unsigned char focusable);
+    virtual int Main(message* msg);
+    virtual void zBufferDraw();
+    virtual void Draw();
     void SetText(const char* text);
+
+    char pad_30[0x5c - 0x30];
 };
+SIZE(CScrollTextWidget, 0x5c);
 
 // Dreamcast names the selected row's difficulty mirror `lastDiff`;
 // Complete retains it at .data 0x683454 (initial 1).
@@ -763,6 +772,10 @@ enum EWindowMode6989f0 {
     WINDOW_MODE_6989F0_3 = 3
 };
 extern int gUnnamed6989f0;
+
+// Three constructor headings (new/load/save) at .bss 0x6a8098. The table's
+// values and indexing are retail-proven; no public spelling survives.
+extern const char* gUnnamed6a8098[];
 
 // Constructor-only domains. DC gives gameMode as int; retail proves the two
 // non-default commands by their load/save setup arms. The context values are
