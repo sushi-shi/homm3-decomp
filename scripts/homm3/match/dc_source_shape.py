@@ -2765,6 +2765,14 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             "boundary",
             r"\bOffsetToFront\s*\(\s*-\s*1\s*\)", 1, 1),
     ),
+    ("army.obj", 0x4B454): (
+        SourceRule(
+            "Turn keeps both Dreamcast army::Is(1) boundaries",
+            r"(?<![\w:>])(?:this\s*->\s*)?Is\s*\(\s*1u?\s*\)", 2, 2),
+        SourceRule(
+            "Turn may not flatten either Is boundary into a raw creature "
+            "bit test", r"\bcreatureId\s*&\s*1u?\b", 0, 0),
+    ),
     ("army.obj", 0x4BEEC): (
         SourceRule(
             "can_cast_spell keeps the Master Genie target test and "
@@ -6553,6 +6561,25 @@ return gridIndex + OffsetToFront(-1);
     if any(not contract_violations(probe, get_second_grid_index_key)
            for probe in flattened_get_second_grid_index_probes):
         failures.append("flattened get_second_grid_index helper shape passed")
+    turn_key = ("army.obj", 0x4B454)
+    turn_probe = """\
+if (facing == FACING_ATTACKER) {
+    if (Is(1u))
+        gridIndex--;
+} else {
+    if (Is(1u))
+        gridIndex++;
+}
+"""
+    if contract_violations(turn_probe, turn_key):
+        failures.append("aligned Turn Is boundaries did not pass")
+    flattened_turn_probes = (
+        turn_probe.replace("Is(1u)", "creatureId & 1", 1),
+        turn_probe.replace("Is(1u)", "creatureId & 1"),
+    )
+    if any(not contract_violations(probe, turn_key)
+           for probe in flattened_turn_probes):
+        failures.append("flattened Turn Is boundary passed")
     go_berserk_key = ("army.obj", 0x4A480)
     go_berserk_probe = """\
 if (can_shoot(0)) {

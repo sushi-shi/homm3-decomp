@@ -582,7 +582,6 @@ call	army.obj	0x4b070	army::adjust_hitpoints
 call	army.obj	0x4b1a8	army::Is
 call	army.obj	0x4b398	army::Is
 call	army.obj	0x4b398	army::get_second_grid_index
-call	army.obj	0x4b454	army::Is
 call	army.obj	0x4b624	SLimitData::Height
 call	army.obj	0x4b624	SLimitData::Include
 call	army.obj	0x4b624	SLimitData::Width
