@@ -543,13 +543,6 @@ call	army.obj	0x477e8	army::Is
 call	army.obj	0x477e8	army::OffsetToFront
 call	army.obj	0x47a14	max
 call	army.obj	0x47af8	army::get_total_hit_points
-call	army.obj	0x47cf4	army::can_shoot
-call	army.obj	0x47cf4	army::get_attack_modifier
-call	army.obj	0x47cf4	army::get_average_damage
-call	army.obj	0x47cf4	army::get_defense_damage_modifier
-call	army.obj	0x47cf4	army::get_defense_modifier
-call	army.obj	0x47cf4	army::get_total_hit_points
-call	army.obj	0x47cf4	hero::get_secondary_skill
 call	army.obj	0x48168	army::get_total_hit_points
 call	army.obj	0x48524	SRandom
 call	army.obj	0x48524	max

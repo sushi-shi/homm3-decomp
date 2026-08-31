@@ -1289,7 +1289,8 @@ public:
     int get_controlling_side() const;
     hero* get_owner() const;
     hero* get_controller() const;
-    double get_defense_damage_modifier(unsigned char ranged_attack) const;
+    inline double get_defense_damage_modifier(
+        unsigned char ranged_attack) const;
     long get_defense_modifier() const;
     long get_clockwise(long direction) const;
     long get_counter_clockwise(long direction) const;

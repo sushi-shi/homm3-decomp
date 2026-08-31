@@ -2553,6 +2553,59 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             "get_second_grid_index boundary",
             r"\bget_second_grid_index\s*\(\s*\)", 1, 1),
     ),
+    ("army.obj", 0x47CF4): (
+        SourceRule(
+            "get_unit_combat_value keeps Dreamcast's modifier, damage-factor "
+            "and can_shoot(0) helper order",
+            r"\bget_attack_modifier\s*\(\s*(?:0|NULL)\s*,\s*ranged\s*\)"
+            r".*?\bget_defense_modifier\s*\(\s*\)"
+            r".*?\bget_defense_damage_modifier\s*\(\s*ranged\s*\)"
+            r".*?\bcan_shoot\s*\(\s*(?:0|NULL)\s*\)"),
+        SourceRule(
+            "get_unit_combat_value keeps exactly one attack-modifier "
+            "boundary", r"\bget_attack_modifier\s*\(", 1, 1),
+        SourceRule(
+            "get_unit_combat_value keeps exactly one defense-modifier "
+            "boundary", r"\bget_defense_modifier\s*\(", 1, 1),
+        SourceRule(
+            "get_unit_combat_value keeps exactly one defense-damage "
+            "boundary", r"\bget_defense_damage_modifier\s*\(", 1, 1),
+        SourceRule(
+            "get_unit_combat_value keeps Dreamcast's sole can_shoot(0) "
+            "boundary", r"\bcan_shoot\s*\(\s*(?:0|NULL)\s*\)", 1, 1),
+        SourceRule(
+            "get_unit_combat_value keeps Dreamcast's three independent "
+            "get_controller boundaries", r"\bget_controller\s*\(", 3, 3),
+        SourceRule(
+            "the ballista arm keeps its three controller reads and nested "
+            "get_secondary_skill boundary in their recovered order",
+            r"if\s*\(\s*get_controller\s*\(\s*\)\s*\)\s*\{"
+            r".*?get_controller\s*\(\s*\)\s*->\s*skillLevel"
+            r".*?get_controller\s*\(\s*\)\s*->\s*"
+            r"get_secondary_skill\s*\("),
+        SourceRule(
+            "get_unit_combat_value keeps Dreamcast's sole "
+            "get_average_damage boundary",
+            r"\bget_average_damage\s*\(\s*\)", 1, 1),
+        SourceRule(
+            "get_unit_combat_value keeps both Dreamcast "
+            "get_total_hit_points(0) boundaries",
+            r"\bget_total_hit_points\s*\(\s*(?:0|NULL)\s*\)", 2, 2),
+        SourceRule(
+            "the side-mass scan keeps the retail-corroborated pointer/count "
+            "loop around Dreamcast's per-army hit-point helper",
+            r"army\s*\*\s*group\s*=\s*gpCombatManager\s*->\s*armies"
+            r"\s*\[\s*combatSide\s*\]\s*;\s*for\s*\(\s*long\s+i\s*="
+            r"\s*0\s*;\s*i\s*<\s*gpCombatManager\s*->\s*numArmies"
+            r"\s*\[\s*combatSide\s*\]\s*;\s*i\+\+\s*,\s*group\+\+"
+            r"\s*\).*?sum\s*\+=\s*group\s*->\s*"
+            r"get_total_hit_points\s*\(\s*(?:0|NULL)\s*\)"),
+        SourceRule(
+            "get_unit_combat_value may not flatten the recovered modifier "
+            "or can_shoot boundaries",
+            r"\b(?:get_adjusted_attack|get_adjusted_defense|"
+            r"enemy_is_adjacent)\s*\(", 0, 0),
+    ),
     ("army.obj", 0x4868C): (
         SourceRule(
             "ComputeAttackerDamageBonuses keeps Dreamcast's ballista-arm "
@@ -5090,6 +5143,23 @@ def army_header_roster_violations(text: str) -> list[tuple[int, str]]:
                         "adjust_hitpoints must retain the inline contract "
                         "that preserves its source boundary without a "
                         "retail out-of-line body"))
+
+    defense_damage_decl = re.compile(
+        r"(?m)^[ \t]*(?P<inline>inline[ \t]+)?double[ \t]+"
+        r"get_defense_damage_modifier\s*\(\s*"
+        r"unsigned\s+char\s+ranged_attack\s*\)\s*const\s*;")
+    defense_damage_matches = list(defense_damage_decl.finditer(masked))
+    broken_defense_damage = next(
+        (match for match in defense_damage_matches
+         if match.group("inline") is None), None)
+    if (len(defense_damage_matches) != 1
+            or broken_defense_damage is not None):
+        position = (broken_defense_damage.start()
+                    if broken_defense_damage else 0)
+        defects.append((text.count("\n", 0, position) + 1,
+                        "get_defense_damage_modifier must retain the inline "
+                        "contract that preserves its Dreamcast helper "
+                        "boundary without a retail out-of-line body"))
     return defects
 
 
@@ -6383,6 +6453,63 @@ return 0;
     if any(not contract_violations(probe, enemy_adjacent_key)
            for probe in flattened_enemy_adjacent_probes):
         failures.append("flattened enemy_is_adjacent helper chain passed")
+    unit_value_key = ("army.obj", 0x47CF4)
+    unit_value_probe = """\
+long attack_modifier = get_attack_modifier(0, ranged);
+long defense_modifier = get_defense_modifier();
+double defense = defense_modifier * get_defense_damage_modifier(ranged);
+if (ranged && !can_shoot(0))
+    ranged = 0;
+if (creatureType == ARMY_CREATURE_BALLISTA) {
+    if (get_controller()) {
+        if (get_controller()->skillLevel[eSecSkillBattlefieldBallistics] > 1)
+            attack += attack;
+        attack *= factors[get_controller()->get_secondary_skill(
+            eSecSkillBattlefieldBallistics)];
+    }
+}
+double average_damage = get_average_damage();
+long total = get_total_hit_points(0);
+long sum = 0;
+army* group = gpCombatManager->armies[combatSide];
+for (long i = 0; i < gpCombatManager->numArmies[combatSide];
+     i++, group++) {
+    if (!(group->creatureId & mask))
+        sum += group->get_total_hit_points(0);
+}
+"""
+    if contract_violations(unit_value_probe, unit_value_key):
+        failures.append("aligned get_unit_combat_value shape did not pass")
+    flattened_unit_value_probes = (
+        unit_value_probe.replace(
+            "get_attack_modifier(0, ranged)",
+            "get_adjusted_attack(0, ranged) - base_attack"),
+        unit_value_probe.replace("can_shoot(0)", "can_shoot(excluded)"),
+        unit_value_probe.replace(
+            "if (get_controller()) {\n"
+            "        if (get_controller()->skillLevel",
+            "hero* controller = get_controller();\n"
+            "    if (controller) {\n"
+            "        if (controller->skillLevel").replace(
+                "get_controller()->get_secondary_skill",
+                "controller->get_secondary_skill"),
+        unit_value_probe.replace(
+            "get_average_damage()", "(minDamage + maxDamage) / 2.0"),
+        unit_value_probe.replace(
+            "group->get_total_hit_points(0)",
+            "group->hitPoints * group->numTroops - "
+            "group->topCreatureDamage"),
+        unit_value_probe.replace(
+            "army* group = gpCombatManager->armies[combatSide];\n"
+            "for (long i = 0; i < gpCombatManager->numArmies[combatSide];\n"
+            "     i++, group++) {",
+            "for (long i = 0; i < gpCombatManager->numArmies[combatSide];\n"
+            "     i++) {\n"
+            "    army* group = &gpCombatManager->armies[combatSide][i];"),
+    )
+    if any(not contract_violations(probe, unit_value_key)
+           for probe in flattened_unit_value_probes):
+        failures.append("flattened get_unit_combat_value shape passed")
     get_berserk_targets_key = ("army.obj", 0x4A348)
     get_berserk_targets_probe = """\
 if (can_shoot(0))
@@ -11282,6 +11409,17 @@ int get_owning_side() const { return combatSide; }
                for _line, defect in army_header_roster_violations(
                    deinlined_adjust_hitpoints)):
         failures.append("de-inlined adjust_hitpoints contract passed")
+    deinlined_defense_damage = roster_text.replace(
+        "    inline double get_defense_damage_modifier(\n"
+        "        unsigned char ranged_attack) const;",
+        "    double get_defense_damage_modifier(\n"
+        "        unsigned char ranged_attack) const;", 1)
+    if not any("get_defense_damage_modifier" in defect
+               and "inline" in defect
+               for _line, defect in army_header_roster_violations(
+                   deinlined_defense_damage)):
+        failures.append(
+            "de-inlined get_defense_damage_modifier contract passed")
 
     class_defects = {description for _line, description in
                      army_class_roster_violations(roster_text)}
