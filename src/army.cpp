@@ -23,6 +23,7 @@
 #define HOMM3_ARMY_PROTECTION_VIEW
 #define HOMM3_ARMY_SPELLS_VIEW
 #define HOMM3_ARMY_TURN_ABILITY_VIEW
+#define HOMM3_CREATURE_NAME_VIEW
 #include <algorithm>
 #include <math.h>
 #include <stdlib.h>
@@ -38,6 +39,7 @@
 // function (measured 2026-08-14, bisected against the field slicing in
 // the same change, which is innocent).
 #define HOMM3_ARMY_ISINCAPACITATED_DEF  // header-inline body; ai.cpp owns the 0x41f380 out-of-line copy
+#include "creaturetype.h"
 #include "army.h"
 // ai.h: the narrow EAreaAttackCreature roster - LoadResources' missile
 // switch needs its ARCHER/MAGOG/POWER_LICH, which deliberately live
@@ -48,8 +50,6 @@
 // SSpellTraits' m_sample slice: army.cpp is its only consumer and this
 // header sits inside initialize.cpp's include closure (see the field).
 #include "armygrp.h"
-#define HOMM3_CREATURE_NAME_VIEW
-#include "creaturetype.h"
 #include "bitmap16.h"
 #include "cmbtmgr.h"
 #include "combatwindow.h"
@@ -2316,25 +2316,6 @@ void army::do_fire_shield(long damage)
         WaitEndSample(sample, -1);
 }
 
-// do_post_attack's /Ob2 BUDGET dose - see the residual note below.  No
-// Dreamcast row; a codegen device.
-static long drain_amount(int hitPoints, int origNumTroops, int numTroops,
-                         int topCreatureDamage, int iDamage, int total_life)
-{
-    return _cpp_min(hitPoints * (origNumTroops - numTroops) + topCreatureDamage,
-                    _cpp_min(iDamage, total_life));
-}
-
-static int roll_death_stares(const army* attacker)
-{
-    int stares = 0;
-    for (long i = 0; i < attacker->numTroops; i++) {
-        if (Random(1, 100) <= 10)
-            stares++;
-    }
-    return stares;
-}
-
 // E:\gamedcs\army.cpp:1896
 // The blow has landed; now the attacker's aftermath, one arm per
 // special: the Vampire Lord drains min(damage, victim life, missing
@@ -2350,55 +2331,18 @@ static int roll_death_stares(const army* attacker)
 // constructs a std::string it never uses (its dtor constant-folds
 // away over the known-null _Ptr; only the EH state betrays it).
 //
-// The case bodies are in SOURCE order per the EH-state finding
-// (vampire 0..3, gorgon 4..6, thunderbird 7..8, rust 9); the
-// dispatch tables were decoded from the image.
-// CURRENT (96.6787%): 92.6414 -> 95.6821 -> 96.0724 on the /Ob2 CALLER-
-// SHRINK lever, in two doses, and THE CALL MULTISET NOW AGREES - the
-// string-teardown budget the old note called a hard class was the caller
-// being too big, nothing more.  It read "_Tidy 5 vs 6, operator delete 4 vs
-// 3", i.e. we EXPANDED one destructor retail calls, which is the OVER-inline
-// direction, and the fix is to shrink `caller_cb` so the budget stops
-// reaching it.  Confirmed with the `if (0)` cb instrument before spending
-// anything: growing the caller is 92.6414 at N=12 (flat), 83.7421 at N=28
-// and 77.5011 at N=60, so the direction was never in doubt.
-//   dose 1, the Gorgon's stare roll -> roll_death_stares  +3.04
-//   dose 2, the Vampire's drain min -> drain_amount       +0.39
-// Titrated, and the neighbours are recorded so they are not re-spent:
-// folding the `dead` clamp into dose 1 as well is 94.16 (worse than the
-// loop alone); lifting the resurrection quotient is byte-flat both as a
-// second and as a third dose; lifting the Rust Dragon's acid roll is 94.88
-// alone and 95.39 as a third dose.  Both remaining helpers are codegen
-// devices with no Dreamcast row, in the same class as findpath's three.
+// The shared Vampire/Gorgon source is now the CodeView shape: seven
+// TTextResource::operator[] boundaries, four separate min statements, the
+// dead_vampires/damage_recovered locals, and the Gorgon Random loop in this
+// function. The former drain_amount and roll_death_stares helpers were
+// artificial /Ob2 budget controls with no Dreamcast rows.
 //
-// The Gorgon helper originally accepted a copied troop count, which made VC6
-// strength-reduce the source loop to `dec/jne`. Passing the army instead
-// preserves the caller-shrink dose but forces the retail alias-sensitive
-// reload after Random and `cmp i,numTroops / jl`: +0.6063, and both objects
-// now agree on all 71 branches and all six returns. A pointer-based Vampire
-// helper loses that sixth return and regresses to 96.1414; reordering the
-// proven six scalar arguments and hoisting the Gorgon accumulator are both
-// byte-flat.
-//
-// THE REMAINING FRAME DELTA IS READ OFF THE SLOT MAPS
-// (2026-08-20).  Our 0x78 against retail's 0x84 is not three scattered
-// locals: retail owns FOUR sixteen-byte string objects at [ebp-0x60],
-// [ebp-0x70], [ebp-0x80] and [ebp-0x90] where this compile owns THREE, at
-// [ebp-0x64], [ebp-0x74] and [ebp-0x84], plus one extra dword at [ebp-0x54]
-// that retail does not have.  -16 for the missing string +4 for the surplus
-// dword is exactly the 12.  The four `std::string text;` locals in the
-// vampire / gorgon / thunderbird / rust arms are mutually exclusive and VC6
-// overlapped one pair; retail did not.  So the lead is which of those four
-// declarations has the lifetime that stops the overlap - NOT the `_cpp_min`
-// operand, which was measured at -0.26 and does not move the frame at all.
-// THAT LEAD IS NOW CLOSED AS A DEAD END (2026-08-20).  Hoisting each of the
-// four `std::string text;` declarations one scope outwards, one at a time,
-// leaves `sub esp, 0x78` UNCHANGED in all four compiles and costs points
-// every time - vampire 88.75, gorgon 91.15, thunderbird 91.63, rust 88.88
-// against the 92.64 baseline.  Neither did the two caller-shrink doses that
-// closed the call multiset move it.  So the fourth slot is not a source
-// lifetime and the frame is not the lever here; do not re-spend the scope
-// sweep.
+// Restoring that source initially moves the byte score through the expected
+// banked dip, but improves retail structure from 122/136 to 131/136 blocks,
+// missing blocks from 14 to 5, and branches from 67/71 to 69/71. The residual
+// is now a four-byte frame difference plus nested GetName/GetArmyName inline
+// selection. Dreamcast's later Rust-message rows are not carried into
+// Complete: retail's relocation/call multiset directly rejects them.
 VA(0x00440bc0, 0xA41)  // anchor-global, dc 0x46658
 void army::do_post_attack(army* target, int iDamage, int iKilled,
                           int total_life)
@@ -2406,34 +2350,36 @@ void army::do_post_attack(army* target, int iDamage, int iKilled,
     switch (creatureType) {
     case CREATURE_VAMPIRE_LORD:
         if (target->Is(1u << 4)) {
-            long resurrected = 0;
-            long heal = drain_amount(hitPoints, origNumTroops, numTroops,
-                                     topCreatureDamage, iDamage, total_life);
-            topCreatureDamage -= heal;
+            long dead_vampires = 0;
+            long missing_life =
+                hitPoints * (origNumTroops - numTroops) + topCreatureDamage;
+            long damage_recovered = min(iDamage, total_life);
+            damage_recovered = min(damage_recovered, missing_life);
+            topCreatureDamage -= damage_recovered;
             if (topCreatureDamage < 0) {
-                resurrected =
+                dead_vampires =
                     (hitPoints - topCreatureDamage - 1) / hitPoints;
-                topCreatureDamage += hitPoints * resurrected;
-                numTroops += resurrected;
+                topCreatureDamage += hitPoints * dead_vampires;
+                numTroops += dead_vampires;
             }
-            if (heal > 0) {
+            if (damage_recovered > 0) {
                 std::string text;
                 const char* target_name =
                     target->GetName(target->numTroops + iKilled);
-                if (numTroops - resurrected == 1)
-                    text = format_string(gpGeneralText->GetText(362),
-                                         GetName(numTroops - resurrected),
-                                         heal, target_name);
+                if (numTroops - dead_vampires == 1)
+                    text = format_string((*gpGeneralText)[362],
+                                         GetName(numTroops - dead_vampires),
+                                         damage_recovered, target_name);
                 else
-                    text = format_string(gpGeneralText->GetText(363),
-                                         GetName(numTroops - resurrected),
-                                         heal, target_name);
-                if (resurrected > 0) {
-                    if (resurrected == 1)
-                        text += gpGeneralText->GetText(364);
+                    text = format_string((*gpGeneralText)[363],
+                                         GetName(numTroops - dead_vampires),
+                                         damage_recovered, target_name);
+                if (dead_vampires > 0) {
+                    if (dead_vampires == 1)
+                        text += (*gpGeneralText)[364];
                     else
-                        text += format_string(gpGeneralText->GetText(365),
-                                              resurrected);
+                        text += format_string((*gpGeneralText)[365],
+                                              dead_vampires);
                 }
                 if (!static_cast<const combatManager*>(gpCombatManager)
                          ->IsQuickCombat()) {
@@ -2449,21 +2395,25 @@ void army::do_post_attack(army* target, int iDamage, int iKilled,
         }
         break;
 
-    case CREATURE_MIGHTY_GORGON:
+    case CREATURE_MIGHTY_GORGON: {
+        int stares = 0;
         if (target->Is(1u << 4)) {
-            int stares = roll_death_stares(this);
-            long dead = _cpp_min((numTroops + 9) / 10,
-                                 _cpp_min(stares, target->numTroops));
+            for (long i = 0; i < numTroops; i++) {
+                if (Random(1, 100) <= 10)
+                    stares++;
+            }
+            long dead = min(stares, target->numTroops);
+            dead = min(dead, (numTroops + 9) / 10);
             if (dead > 0) {
                 long damage =
                     target->hitPoints * dead - target->topCreatureDamage;
                 std::string text;
                 if (dead == 1)
-                    text = format_string(gpGeneralText->GetText(119),
+                    text = format_string((*gpGeneralText)[119],
                                          target->GetName(dead),
                                          GetName());
                 else
-                    text = format_string(gpGeneralText->GetText(120),
+                    text = format_string((*gpGeneralText)[120],
                                          dead,
                                          target->GetName(dead),
                                          GetName());
@@ -2484,6 +2434,7 @@ void army::do_post_attack(army* target, int iDamage, int iKilled,
             }
         }
         break;
+    }
 
     case CREATURE_THUNDERBIRD:
         if (target->numTroops > 0 && Random(1, 100) <= 20) {
@@ -2500,7 +2451,7 @@ void army::do_post_attack(army* target, int iDamage, int iKilled,
                              gpCombatManager)
                              ->IsQuickCombat()) {
                         text = format_string(
-                            gpGeneralText->GetText(368),
+                            (*gpGeneralText)[368],
                             target->GetName());
                         gpCombatManager->combatWindow->combat_message(
                             text.c_str(), 1, 0);

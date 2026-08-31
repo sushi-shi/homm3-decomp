@@ -426,6 +426,28 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   controls reject both the explicit nested overload and a hand-written
   direction loop.
 
+- **2026-08-31 — `army::do_post_attack` leaves a helper-invented local
+  maximum and recovers most of retail's missing structure.** The Dreamcast
+  rows keep the Vampire's `dead_vampires`, `missing_life`, and
+  `damage_recovered` locals; its two ordered `min` statements; the Gorgon's
+  accumulator before `Is`, in-function `Random` loop, and two more ordered
+  `min` statements; and seven `TTextResource::operator[]` boundaries across
+  the shared message arms. The former `drain_amount` and
+  `roll_death_stares` functions had no Dreamcast rows: they were artificial
+  caller-shrink devices preserving an attractive isolated percentage.
+
+  Restoring the attested source improves the retail structure from **122/136
+  to 131/136 blocks**, reduces missing blocks from **14 to 5**, and improves
+  the symbolic branch sequence from **67/71 to 69/71**. Its byte score
+  temporarily moves from **90.57% to 88.09%**, safely below a banked
+  **96.68%** maximum; that expected dip is not grounds to flatten the source
+  again. The remaining difference is narrowed to a four-byte frame delta and
+  VC6's nested `GetName -> GetArmyName` expansion choice. Source contracts
+  and negative controls now make removal of any recovered statement boundary,
+  reintroduction of either artificial helper, or de-inlining of the header
+  wrappers fatal. Dreamcast's additional Rust-message rows remain `dc-only`:
+  Complete retail's call/relocation multiset directly rejects them.
+
 - **2026-08-31 — `combatManager::automate_catapult` reaches an exact
   59-block retail structure while restoring the complete Dreamcast source
   vocabulary.** The 49-row/53-scope dossier proves three calls each to
