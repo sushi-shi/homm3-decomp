@@ -2751,7 +2751,7 @@ singleselectionwindow	?SendPlayerFaces@TSingleSelectionWindow@@QAEXXZ	100.0000	1
 singleselectionwindow	?SetCurrentMap@TSingleSelectionWindow@@QAEXHE@Z	99.9874	99.9874	99.9874	0x185500
 singleselectionwindow	?SetFilter@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x185d90
 singleselectionwindow	?SetHumanSlot@TSingleSelectionWindow@@QAEXXZ	19.8438	19.8438	19.8438	0x184c40
-singleselectionwindow	?SetNextPlayer@CNetPlayerHandler@@QAEEH@Z	96.2353	96.2353	96.2353	0x177ae0
+singleselectionwindow	?SetNextPlayer@CNetPlayerHandler@@QAEEH@Z	100.0000	100.0000	100.0000	0x177ae0
 singleselectionwindow	?SetResolution@CChatSlider@@UAEXH@Z	100.0000	100.0000	100.0000	0x17c9d0
 singleselectionwindow	?SetState@CChatSlider@@UAEXH@Z	100.0000	100.0000	100.0000	0x17ca00
 singleselectionwindow	?SetupAdvancedOptions@TSingleSelectionWindow@@QAEXXZ	99.3846	99.3846	99.3846	0x181100
