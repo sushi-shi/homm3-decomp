@@ -1,7 +1,6 @@
 // adventureoptionswindow.cpp - E:\gamedcs\adventureoptionswindow.cpp
 // (compiland adventureoptionswindow.obj)
 // HAND-OWNED after admission; retail bytes are authoritative.
-#define HOMM3_CHERO_WINDOW_HANDLE_MESSAGE_VIEW
 #include <va.h>
 #include "adventureoptionswindow.h"
 #include "border.h"
