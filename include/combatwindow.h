@@ -86,13 +86,9 @@ public:
 #if !defined(HOMM3_COMMAND_GRID_VIEW)
     TCombatWindow(unsigned char do_placement);
 #endif
-#if defined(HOMM3_COMMAND_GRID_VIEW) \
-        || defined(HOMM3_COMBATWINDOW_END_PLACEMENT_VIEW)
-    // command.cpp and combatwindow.cpp use the placement teardown but do not
-    // construct this window. combatwindow.cpp now also reconstructs the
-    // constructor, so its private view needs both declarations.
+    // command.cpp and combatwindow.cpp both use the placement teardown;
+    // Dreamcast and retail independently prove this class member.
     void EndPlacementPhase();                              // 0x4731f0
-#endif
     // Retail 0x472e90, the message line ClearCombatMessages forwards to
     // and the one combatManager's morale/damage bodies print through.
     void combat_message(const char* new_text, unsigned char keep,
