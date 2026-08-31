@@ -1402,7 +1402,6 @@ public:
     void UpdateMouseGrid(int gridIndex, std::vector<long>& hexes,
                          unsigned char forceUpdate);
     void UpdateMouseGrid(int gridIndex, int allowDuringAction);
-#ifdef HOMM3_SLIMITDATA_VIEW
     // Fly's two Complete-era header folds. The retail viewport never scrolls,
     // so ScrollTo is supplied as a TU inline there; UpdateCombatArea expands
     // to UpdateScreen, matching drawing.cpp's retained inline copy.
@@ -1412,7 +1411,6 @@ public:
     // Complete has no out-of-line copy, and the exact retail expansion in
     // UpdateMouseGrid proves its const-reference form here.
     void UpdateCombatArea(const SLimitData& area);
-#endif
 #endif
 #ifdef HOMM3_DRAWING_ARCHER_DECLS
     // Dreamcast's LF_FIELDLIST fixes this complete renderer band (entries
