@@ -2168,6 +2168,10 @@ void AI_set_hero_bonuses(hero* our_hero)
 
 // E:\gamedcs\philai.cpp:1770. Retail retains the DC hero-bonus sweep and
 // extends its artifact appraisal across Complete's full 144-entry table.
+// The older build calls AI_get_value_of_artifact in the artifact loop;
+// Complete's relocation instead names the exact retail-only
+// AI_get_artifact_player_value helper. Keep this revision local: the
+// independently exact value_of_obelisk still calls the older overload.
 VA(0x00527960, 0x140)  // anchor-callee, dc 0x110018
 void philAI::GetTurnAIVars(int whichPlayer)
 {
@@ -2188,7 +2192,7 @@ void philAI::GetTurnAIVars(int whichPlayer)
             ++artifact_count;
             type_artifact artifact(artifact_from_int(artifact_id), -1);
             total_artifact_value +=
-                AI_get_value_of_artifact(artifact, whichPlayer);
+                AI_get_artifact_player_value(artifact, whichPlayer);
         }
     }
     gpCurrentPlayer->turnValueOfAvgArtifact =

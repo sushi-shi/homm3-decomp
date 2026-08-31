@@ -152,6 +152,25 @@ These labels describe the **candidate build only**. They are navigation evidence
 which candidate statement produced an instruction span, not evidence for retail source
 semantics, and they never outrank the retail bytes or objdiff score.
 
+## Inline-boundary matching
+
+Treat the source declaration and the retail lowering as separate facts. A Dreamcast-
+proved `inline` helper remains `inline` even when one Complete caller emits an out-of-
+line call. Confirm the mismatch with `homm3 vc6 predict-inline <selector>` and inspect
+the named call sequence, not only the aggregate call count.
+
+When retail proves a call at one site, constrain the smallest possible caller region
+with statement-scoped `#pragma inline_depth(0)` and restore it immediately with
+`#pragma inline_depth()`. Use `#pragma auto_inline(off)` only when every affected call
+site proves the helper body was unavailable or out of line. Do not move or remove an
+`inline` declaration, create a second source-false declaration, or add synthetic caller
+mass merely to steer VC6's budget.
+
+Every permanent inline-boundary pin must carry a source comment naming the caller,
+callee, and retail/Dreamcast evidence, plus a source-shape ratchet and a negative
+control that proves flattening or de-inlining fails. Bank percentage peaks in max/history;
+an unrelated current-score dip is not permission to undo a proven helper boundary.
+
 ## Tooling layout
 
 One importable package (`scripts/homm3/`), one CLI (`homm3`), grouped by role:
