@@ -3,7 +3,6 @@
 // 211 functions in link order; 20 compiler-generated $-thunks omitted.
 #define HOMM3_WIDGET_SET_VISIBLE_DECLS
 #define HOMM3_WIDGET_HIDE_SHOW_INLINE
-#define HOMM3_TYPE_ARTIFACT_EXTRA_FIRST_VIEW
 #include <va.h>
 #include "sacrifice_window.h"
 #include "border.h"
@@ -1593,8 +1592,9 @@ void type_artifact_offering::set(const type_artifact* artifact, long slot,
 }
 
 // The window member takes the ordinary empty-artifact construction. The
-// builder's local uses type_artifact's one-argument form, whose auxiliary-
-// then-id store order is independently exact in the artifact reward paths.
+// builder's local uses type_artifact's one-argument form, whose id-then-
+// auxiliary store order is proved by the Dreamcast header body and retail's
+// exact value_of_town expansion.
 inline type_artifact_offering::type_artifact_offering()
 {
 }
