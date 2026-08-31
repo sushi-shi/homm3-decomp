@@ -7,6 +7,8 @@
 
 #include <vector>
 
+class CObject;
+
 // The adventure-map object domain, the type of NewmapCell::type.
 // Transcribed COMPLETE from the Dreamcast CodeView enum (163
 // enumerators, every value written out explicitly so the four values
@@ -603,6 +605,8 @@ public:
         unsigned short objectIndex;
         unsigned char offsets;
         signed char layer;
+
+        CObject* get_object();
     };
     std::vector<TObjectCell> objects;
     // loadMapLayer stores the serialized object type as a FULL DWORD: the
