@@ -122,7 +122,7 @@ def _build_parser() -> argparse.ArgumentParser:
     pr.add_argument("--limit", type=int)
 
     pq = ss.add_parser("queue", help="tree-wide wall census: sweep diagnose "
-                       "over every unmatched fn, rank by recoverable bytes")
+                       "over unfinished fns, rank hardest-first by MAX")
     pq.add_argument("--unit", help="restrict to a comma-separated unit list")
     pq.add_argument("--quiet", action="store_true")
 

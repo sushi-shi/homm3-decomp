@@ -47,6 +47,7 @@ model cannot rot.
 | `scripts/homm3/vc6/census.py` | the gates (each with a negative control) |
 | `scripts/homm3/vc6/test_locator.py` | the `locator` gate's cases (`homm3 vc6 check --locator`) |
 | `scripts/homm3/vc6/test_report_resolution.py` | negative controls for shared public-symbol routing and unclaimed flat names |
+| `scripts/homm3/vc6/test_queue.py` | negative controls for MAX-first ordering and banked-exact dip exclusion |
 | `scripts/homm3/vc6/shim/` | the C2-slot pass-through/instrumentation DLL |
 | `scripts/homm3/vc6/ghidra_scripts/` | in-Ghidra headless scripts (no `__init__`) |
 | `scripts/homm3/vc6/probes/` | one probe TU per catalogued behaviour |
@@ -59,8 +60,13 @@ model cannot rot.
 
 ## Residual-routing contract
 
-`homm3 vc6 queue` ranks every non-exact row, including functions whose retail
-address is known but whose source body is still inactive or absent. Those
+`homm3 vc6 queue` ranks actionable rows hardest-first by ascending effective
+MAX (`max(current score, banked MAX)`). A banked-exact function is excluded
+even when its current score has dipped; those collateral dips are reported
+separately and may only be reopened by an evidence/source-gate failure. The
+census still records recoverable bytes as wall-mass accounting, not as its
+priority key. It includes functions whose retail address is known but whose
+source body is still inactive or absent. Those
 unclaimed rows are reconstruction work, not solver failures. Before invoking
 disassembly, the router now requires one unique public text symbol shared by
 the compiled base object and the delinked target object. A retail/synth flat

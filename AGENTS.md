@@ -87,6 +87,8 @@ blast radius is not a reason to avoid an evidence-backed class or
 interface correction: max/history exists to bank the including-TU dips while the coherent
 header state is carried forward. Measure and document that collateral, but do not restore
 a source-false declaration merely to recover a current exact count.
+`homm3 vc6 queue` enforces this operationally: it sorts unfinished work by ascending
+effective MAX and excludes every banked-exact current dip from actionable routing.
 
 This remains a cross-architecture, older-revision source oracle, **not a second byte
 target**. A missing Dreamcast statement or call never proves retail lacks it, and

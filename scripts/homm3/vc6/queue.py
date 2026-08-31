@@ -2,14 +2,15 @@
 """homm3.vc6.queue - the tree-wide wall census (`homm3 vc6 queue`).
 
 `diagnose` answers "what is blocking THIS function". This sweeps that same
-routing over every unmatched function in the tree and ranks the answers by
-RECOVERABLE BYTES, so a round of lanes can be aimed at a wall family rather
-than at whatever unit happens to be next alphabetically.
+routing over every unfinished function in the tree and ranks the answers by
+ascending EFFECTIVE MAX, so work starts at the hardest never-exact functions.
+The effective max is max(current build, banked MAX): a newly improved current
+score counts immediately, while a collateral current dip cannot reopen a
+function whose better result is already banked.
 
-Recoverable bytes = size * (1 - fuzzy/100): what closing the function would
-add to the fuzzy-weighted total. It is the only ranking that does not lie in
-both directions at once - a 90%-matched 9 KB function outranks a 64%-matched
-580-byte one, while a stub's whole mass counts.
+Recoverable bytes = size * (1 - effective_max/100): what closing the function
+would add beyond its banked frontier. It remains useful wall-mass accounting,
+but is deliberately not the work-order key.
 
 Writes evidence/wall-census.tsv (GENERATED - regenerate, never hand-edit) and
 prints the ranked summary. Reads built objects only; compiles nothing, and
@@ -22,8 +23,9 @@ import json
 
 from homm3.vc6 import _common, diagnose
 
-HEADER = ("class", "recoverable", "fuzzy", "size", "unit", "fn", "route",
-          "knob")
+HEADER = ("class", "recoverable", "max_fuzzy", "current_fuzzy", "size",
+          "unit", "fn", "route", "knob")
+EXACT = 99.999
 
 
 def _size(fn):
@@ -33,15 +35,50 @@ def _size(fn):
         return 0
 
 
-def _targets():
-    rep = _common.REPO / "build/objdiff/report.json"
-    if not rep.is_file():
-        _common.die("no build/objdiff/report.json - run `homm3 build` first")
-    data = json.loads(rep.read_text())
-    out, undiffable = [], []
+def _load_maxima(path=None):
+    """Return the ratchet's banked MAX score for each report identity."""
+    path = path or (_common.REPO / "config/match_baseline.tsv")
+    out = {}
+    if not path.is_file():
+        return out
+    for line in path.read_text().splitlines():
+        if line.startswith("#") or not line.strip():
+            continue
+        cols = line.split("\t")
+        if len(cols) < 4:
+            continue
+        try:
+            out[(cols[0], cols[1])] = float(cols[3])
+        except ValueError:
+            continue
+    return out
+
+
+def _partition_targets(data, maxima):
+    """Split report rows into actionable, banked dips, and undiffable rows.
+
+    Actionable tuples are (unit, name, effective_max, current, size). A row
+    whose effective max is exact is never actionable. This is intentionally a
+    pure helper so the MAX-routing defect has a hermetic negative control.
+    """
+    out, banked_dips, undiffable = [], [], []
     for u in data["units"]:
         unit = (u.get("name") or u.get("id") or "").split("/")[-1]
         for fn in u.get("functions", []):
+            name = fn["name"]
+            size = _size(fn)
+            maximum = maxima.get((unit, name), 0.0)
+            has_score = "fuzzy_match_percent" in fn
+            current = float(fn.get("fuzzy_match_percent") or 0.0)
+            effective = max(current, maximum)
+
+            if effective >= EXACT:
+                if not has_score or current < EXACT:
+                    banked_dips.append(
+                        (unit, name, maximum, current if has_score else None,
+                         size))
+                continue
+
             # A MISSING key has TWO causes and they are opposites, which the
             # NAME FORM tells apart:
             #   * a FLAT CARVE NAME (`army_do_post_attack`) means the body
@@ -56,20 +93,20 @@ def _targets():
             #     not recoverable mass.
             # Excluding both (2026-08-20) wrongly dropped 20 KB of real work
             # and kept the 723 B that actually is undiffable - backwards.
-            if "fuzzy_match_percent" not in fn:
-                if fn["name"].startswith("?"):
-                    undiffable.append((unit, fn["name"], _size(fn)))
-                    continue
-                out.append((unit, fn["name"], 0.0, _size(fn)))
+            if not has_score and name.startswith("?"):
+                undiffable.append((unit, name, size))
                 continue
-            p = fn.get("fuzzy_match_percent") or 0.0
-            if p >= 99.999:
-                continue
-            try:
-                size = int(fn.get("size", 0) or 0)
-            except (TypeError, ValueError):
-                size = 0
-            out.append((unit, fn["name"], p, size))
+            out.append((unit, name, effective, current, size))
+    out.sort(key=lambda row: (row[2], -row[4], row[0], row[1]))
+    return out, banked_dips, undiffable
+
+
+def _targets(maxima):
+    rep = _common.REPO / "build/objdiff/report.json"
+    if not rep.is_file():
+        _common.die("no build/objdiff/report.json - run `homm3 build` first")
+    data = json.loads(rep.read_text())
+    out, banked_dips, undiffable = _partition_targets(data, maxima)
     if undiffable:
         tot = sum(s for _u, _n, s in undiffable)
         print(f"[queue] {len(undiffable)} function(s), {tot/1024:.1f} KB, "
@@ -77,6 +114,18 @@ def _targets():
               "        diff them. Not recoverable mass; excluded from the ranking:")
         for u, n, s in sorted(undiffable, key=lambda r: -r[2])[:8]:
             print(f"          {s:6d} B  {u}:{n[:52]}")
+    if banked_dips:
+        print(f"[queue] {len(banked_dips)} current dip(s) are already banked "
+              "exact and are excluded from actionable ranking.")
+        print("        Inspect them as collateral, but do not rewrite source "
+              "unless an evidence/source gate fails:")
+        for u, n, mx, cur, s in sorted(
+                banked_dips,
+                key=lambda r: (r[3] is None, r[3] if r[3] is not None else 0,
+                               -r[4]))[:8]:
+            shown = "no current score" if cur is None else f"current {cur:.4f}%"
+            print(f"          {s:6d} B  {u}:{n[:44]}  {shown}; "
+                  f"MAX {mx:.4f}%")
     return out
 
 
@@ -175,7 +224,7 @@ def _lost_peaks():
     return out
 
 
-def _horizon(in_unit_bytes: float) -> None:
+def _horizon(in_unit_bytes: float, maxima) -> None:
     """Print what this census can and cannot see.
 
     Everything above ranks work INSIDE the units the build compiles. That is
@@ -197,19 +246,22 @@ def _horizon(in_unit_bytes: float) -> None:
         return
     unit_bytes = matched = 0.0
     for u in rep["units"]:
+        unit = (u.get("name") or u.get("id") or "").split("/")[-1]
         for f in u.get("functions", []):
             try:
                 s = int(f.get("size", 0) or 0)
             except (TypeError, ValueError):
                 s = 0
             unit_bytes += s
-            matched += s * (f.get("fuzzy_match_percent", 0) or 0) / 100
+            current = float(f.get("fuzzy_match_percent", 0) or 0)
+            banked = maxima.get((unit, f.get("name", "")), 0.0)
+            matched += s * max(current, banked) / 100
     outside = engine - unit_bytes
     remaining = engine - matched
     in_span, in_span_n = _in_span_unclaimed()
     print(f"\nhorizon (filtered engine, the README's denominator: "
           f"{engine / 1024:.0f} KB):")
-    print(f"  {matched / 1024:8.1f} KB  matched so far "
+    print(f"  {matched / 1024:8.1f} KB  banked matched so far "
           f"({100 * matched / engine:.2f}%)")
     print(f"  {in_unit_bytes / 1024:8.1f} KB  recoverable INSIDE compiled "
           f"units - everything this census ranks")
@@ -232,8 +284,9 @@ def _horizon(in_unit_bytes: float) -> None:
 def run(args) -> int:
     only = set(filter(None, (args.unit or "").split(",")))
     rows, failed = [], []
-    targets = _targets()
-    for i, (unit, fn, pct, size) in enumerate(targets, 1):
+    maxima = _load_maxima()
+    targets = _targets(maxima)
+    for i, (unit, fn, pct, current, size) in enumerate(targets, 1):
         if only and unit not in only:
             continue
         if not args.quiet and i % 25 == 0:
@@ -252,7 +305,8 @@ def run(args) -> int:
             rows.append({
                 "class": UNCLAIMED if unclaimed else "unclassified",
                 "recoverable": size * (1 - pct / 100),
-                "fuzzy": pct, "size": size, "unit": unit, "fn": fn,
+                "max_fuzzy": pct, "current_fuzzy": current, "size": size,
+                "unit": unit, "fn": fn,
                 "route": "reconstruct" if unclaimed else "diagnose",
                 "knob": ("no source claim owns this address - carve a VA() "
                          "claim and reconstruct the body" if unclaimed else
@@ -263,21 +317,26 @@ def run(args) -> int:
         primary = next((s for s, _ in routes if s), "(none)")
         rows.append({
             "class": d["class"], "recoverable": size * (1 - pct / 100),
-            "fuzzy": pct, "size": size, "unit": unit, "fn": fn,
+            "max_fuzzy": pct, "current_fuzzy": current, "size": size,
+            "unit": unit, "fn": fn,
             "route": primary, "knob": d.get("knob", ""),
         })
 
-    rows.sort(key=lambda r: -r["recoverable"])
+    # Hardest first: ascending effective MAX. Size only breaks score ties.
+    rows.sort(key=lambda r: (r["max_fuzzy"], -r["size"], r["unit"], r["fn"]))
     out = _common.REPO / "evidence/wall-census.tsv"
     out.parent.mkdir(parents=True, exist_ok=True)
     with out.open("w") as fh:
         fh.write("# GENERATED: homm3 vc6 queue - regenerate, never hand-edit.\n")
-        fh.write("# recoverable = size * (1 - fuzzy/100), the fuzzy-weighted\n")
-        fh.write("# bytes closing this function would add.\n")
+        fh.write("# Sorted hardest-first by effective MAX = "
+                 "max(current_fuzzy, banked MAX).\n")
+        fh.write("# Banked-exact current dips are observational and excluded.\n")
+        fh.write("# recoverable = size * (1 - max_fuzzy/100).\n")
         fh.write("\t".join(HEADER) + "\n")
         for r in rows:
             fh.write("\t".join((
-                r["class"], f"{r['recoverable']:.0f}", f"{r['fuzzy']:.4f}",
+                r["class"], f"{r['recoverable']:.0f}",
+                f"{r['max_fuzzy']:.4f}", f"{r['current_fuzzy']:.4f}",
                 str(r["size"]), r["unit"], r["fn"],
                 r["route"], r["knob"].replace("\t", " "))) + "\n")
 
@@ -288,9 +347,9 @@ def run(args) -> int:
         by_unit[r["unit"]] += r["recoverable"]
 
     in_unit = sum(r["recoverable"] for r in rows)
-    print(f"\n[queue] {len(rows)} unmatched function(s), "
+    print(f"\n[queue] {len(rows)} never-exact function(s), "
           f"{in_unit / 1024:.1f} KB recoverable")
-    _horizon(in_unit)
+    _horizon(in_unit, maxima)
     if failed:
         unclaimed_count = sum(unclaimed for *_rest, unclaimed in failed)
         diagnosis_count = len(failed) - unclaimed_count
