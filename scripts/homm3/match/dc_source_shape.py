@@ -2518,6 +2518,12 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             "GoBerserk keeps all three Dreamcast get_owning_side "
             "boundaries",
             r"\bget_owning_side\s*\(", 3, 3),
+        SourceRule(
+            "GoBerserk keeps Dreamcast's shoot-arm return before the "
+            "separate melee statement",
+            r"\bfield_53dc\s*\[\s*get_owning_side\s*\(\s*\)\s*\]"
+            r"\s*=\s*1\s*;\s*return\s*;\s*\}\s*"
+            r"gpCombatManager\s*->\s*berserk_attack\s*\("),
     ),
     ("army.obj", 0x4BEEC): (
         SourceRule(
@@ -6108,7 +6114,9 @@ if (enemy_is_adjacent(excluded))
 if (can_shoot(0)) {
     if (target->get_owning_side() == get_owning_side())
         field_53dc[get_owning_side()] = 1;
+    return;
 }
+gpCombatManager->berserk_attack(this, target);
 """
     if contract_violations(go_berserk_probe, go_berserk_key):
         failures.append("aligned GoBerserk helper shape did not pass")
@@ -6118,6 +6126,9 @@ if (can_shoot(0)) {
             "target->get_owning_side()", "target->combatSide"),
         go_berserk_probe.replace("field_53dc[get_owning_side()]",
                                  "field_53dc[combatSide]"),
+        go_berserk_probe.replace(
+            "    return;\n}\ngpCombatManager->berserk_attack(this, target);",
+            "} else {\n    gpCombatManager->berserk_attack(this, target);\n}"),
     )
     if any(not contract_violations(probe, go_berserk_key)
            for probe in flattened_go_berserk_probes):

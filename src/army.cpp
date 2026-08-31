@@ -3467,7 +3467,7 @@ unsigned char army::is_enemy(const army* arg) const
 // and original header state are coherent.
 // CLOSURE 2026-08-31: with that wrapper restored and its auto_inline fence
 // removed, can_shoot itself is 100% (18/18 blocks), enemy_is_adjacent stays
-// 100% (5/5), and GoBerserk rises past its prior maximum to 97.8846% with
+// 100% (5/5), and the line-4237 early return closes GoBerserk at 100% with
 // the retail 20-block/13-branch shape. The lower including-caller scores are
 // banked inliner-state collateral, not a reason to flatten this edge again.
 // MEASURED AND REJECTED 2026-08-21: respelling the bCanShoot flag as
@@ -5247,7 +5247,9 @@ void army::get_berserk_targets(std::vector<army*>& armies) const
 // came from trying several branch spellings of the duplicated predicate;
 // those experiments were internally consistent but started from a
 // source-false local minimum. Lines 4233/4235 likewise prove all three
-// get_owning_side calls in the shoot arm.
+// get_owning_side calls in the shoot arm. Line 4237 emits the vector
+// destructor before the separate melee block, identifying an early return
+// rather than an else arm.
 VA(0x004456d0, 0x164)  // anchor-global, dc 0x4a480
 void army::GoBerserk()
 {
@@ -5264,9 +5266,9 @@ void army::GoBerserk()
         gpCombatManager->field_44 = target->gridIndex;
         if (target->get_owning_side() == get_owning_side())
             gpCombatManager->field_53dc[get_owning_side()] = 1;
-    } else {
-        gpCombatManager->berserk_attack(this, target);
+        return;
     }
+    gpCombatManager->berserk_attack(this, target);
 }
 
 VA(0x00445840, 0x66)  // corroborates, dc 0x4a598
