@@ -91,11 +91,7 @@ def profile(text: str) -> dict:
     """One side's branch-shape profile from producer text."""
     clipped, trunc = _clip(text)
     insns = []
-    for ln in clipped.splitlines():
-        p = _asm.parse_ins(ln)
-        if p is None:
-            continue
-        off, body = p
+    for off, body in _asm.code_insns(clipped):
         fields = body.split(None, 1)
         insns.append((off, fields[0].lower(),
                       fields[1] if len(fields) > 1 else ""))

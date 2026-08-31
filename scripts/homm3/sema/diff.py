@@ -9,6 +9,7 @@ Renderings (the polarity is deliberate - the skeleton is the default,
 the flat asm diff is the opt-in):
   (default)   block-skeleton diff: one row per block, FLOW/SIZE marks,
               five-way census, first branch-kind divergence
+  --structure explicit spelling of the default block-skeleton diff
   --verbose   block-aligned body diff (per-block unified diffs)
   --asm       flat masked unified asm diff (the old sibling default)
   --branches  the ordered conditional-branch comparison the masked views
@@ -95,11 +96,7 @@ def _branch_insns(text: str) -> list:
     normalizing offsets while leaving targets absolute would compare two
     address spaces and turn every function into a topology hit."""
     insns = []
-    for ln in text.splitlines():
-        p = _asm.parse_ins(ln)
-        if p is None:
-            continue
-        off, body = p
+    for off, body in _asm.code_insns(text):
         fields = body.split(None, 1)
         insns.append((off, fields[0].lower(), fields[1] if len(fields) > 1 else ""))
     while insns and insns[-1][1] == "nop":
@@ -450,9 +447,10 @@ def run(args) -> None:
         die(f"{name} [{unit or 'no unit'}] has no comparison objects - only "
             "delinked manifest units (config/units.toml) can diff; "
             "`homm3 sema disasm` views any retail function")
-    if args.verbose and (args.asm or args.branches or args.source):
+    if args.verbose and (args.structure or args.asm or args.branches
+                         or args.source):
         die("--verbose modifies the default block diff; --asm and "
-            "--branches/--source each have one rendering")
+            "--structure/--branches/--source each have one rendering")
 
     if args.branches:
         sys.exit(_branch_view(ctx, rva, name, unit, ordinal))

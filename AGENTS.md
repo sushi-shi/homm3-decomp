@@ -53,6 +53,7 @@ The mandatory first-pass workflow is:
 ```sh
 homm3 dreamcast show 0x00524dd0
 homm3 dreamcast asm 0x00524dd0 --blocks
+homm3 sema diff 0x00524dd0 --structure
 homm3 sema diff 0x00524dd0 --source
 ```
 
@@ -62,6 +63,9 @@ basic blocks (`B0`, `B1`, ...). It is the detailed view for aligning original st
 groups to the retail and candidate control-flow graphs. Selectors may also be exact or
 unambiguous names, `module.obj:0xOFF`, or `dc:0xOFF`; use `homm3 dreamcast find NAME`
 to locate a function and `homm3 dreamcast stats` to audit corpus coverage.
+`homm3 sema diff <selector> --structure` is the explicit candidate-vs-retail CFG
+checkpoint: it reports block flow and size differences without pretending that
+cross-architecture Dreamcast instruction counts should match.
 
 The campaign loop is **Dreamcast dossier -> retail source-labelled diff -> C++
 hypothesis -> VC6 retail checkpoint**. Start with signatures, locals, scopes, helper calls,
