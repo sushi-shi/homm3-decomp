@@ -188,12 +188,9 @@ public:
     CHeroWindowEx(int winX, int winY, int winWidth, int winHeight, unsigned winType);
     void SetHelpText(THelpText* pHelpText, int start, int stop, unsigned char copyText);
 
-    // Header-inline retail override, exposed only to its emitting TU: this
-    // header reaches most game objects and an otherwise unused member
-    // declarator is observable VC6 optimizer state.
-#ifdef HOMM3_CHERO_WINDOW_HANDLE_MESSAGE_VIEW
+    // Window.h:210, dc 0x2dcc. Dreamcast's public signature and retail's
+    // shared slot-3 forwarder both prove this header-inline override.
     virtual int handle_message(message& msg);                         // slot 3, 0x405680
-#endif
     virtual int WindowHandler(message* msg);                            // slot 9
     virtual unsigned char ProcessHover(int mouseX, int mouseY);         // slot 10
     virtual unsigned char ProcessRightSelect(int id);                   // slot 11
