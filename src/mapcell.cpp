@@ -3570,6 +3570,12 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
     hero_data->field_008 = identifier;
     heroObject->extraInfo = HeroID;
 
+    // Dreamcast first stores `customName` into bCustomName, then copies only
+    // for a non-random hero with `strncpy(Name, tempText, 12)`. Complete
+    // changed this group: retail has one customName guard, stores 1, then
+    // performs the runtime-NUL scan and strlen+1 copy of an inlined strcpy.
+    // Our emitted 15-instruction copy sequence is instruction-identical to
+    // retail, so the older bounded copy and isRandomHero guard are DC-only.
     if (customName) {
         hero_data->bCustomName = 1;
         strcpy(hero_data->Name, tempText);

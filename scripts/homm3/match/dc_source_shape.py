@@ -65,6 +65,18 @@ READ_HERO_COMPLETE_EXPERIENCE_RE = (
     r"HeroID\s*=\s*gpGame\s*->\s*GetStartingHeroId\s*\(\s*"
     r"alignment\s*,\s*char_buffer\s*,\s*experience\s*\)\s*;")
 
+# Dreamcast stores the flag unconditionally and calls
+# ``strncpy(hero_data->Name, tempText, 12)`` only for a non-random hero.
+# Complete retail has one customName guard followed by a runtime NUL scan and
+# strlen+1 copy; the current ``strcpy`` lowering matches that sequence
+# instruction-for-instruction.  This expression is the bounded replacement
+# proof for classifying the older imported helper and second guard as DC-only.
+READ_HERO_COMPLETE_NAME_RE = (
+    r"if\s*\(\s*customName\s*\)\s*\{\s*"
+    r"hero_data\s*->\s*bCustomName\s*=\s*1\s*;\s*"
+    r"strcpy\s*\(\s*hero_data\s*->\s*Name\s*,\s*tempText\s*\)\s*;"
+    r"\s*\}")
+
 
 @dataclass(frozen=True)
 class MissingCall:
@@ -433,6 +445,11 @@ RETAIL_BYTE_PROVEN_REVISION_REMOVALS: dict[
             "Random(0, 50) + 40 fallback; decoded retail passes zero "
             "unchanged to GetStartingHeroId and has no Random relocation",
             0x005021C0, READ_HERO_COMPLETE_EXPERIENCE_RE, ("Random",)),
+        ProvenRevisionRemoval(
+            "Complete readHeroData replaces Dreamcast's random-hero-guarded "
+            "strncpy(Name, tempText, 12) with a single customName guard and "
+            "an instruction-identical inlined strcpy",
+            0x005021C0, READ_HERO_COMPLETE_NAME_RE, ("strncpy",)),
     ),
 }
 
@@ -2485,6 +2502,13 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             "readHeroData does not restore Dreamcast's retail-absent Random "
             "fallback",
             r"\bRandom\s*\(", minimum=0, maximum=0),
+        SourceRule(
+            "readHeroData keeps Complete's retail-proved custom-name group",
+            READ_HERO_COMPLETE_NAME_RE),
+        SourceRule(
+            "readHeroData does not restore Dreamcast's retail-absent "
+            "bounded name copy",
+            r"\bstrncpy\s*\(", minimum=0, maximum=0),
         SourceRule(
             "readHeroData keeps Dreamcast's direct get_trigger assignment "
             "at the Complete tail",
@@ -6164,6 +6188,10 @@ int x;
 char char_buffer;
 char tempText[100] = { 0 };
 HeroExtra* hero_data;
+if (customName) {
+    hero_data->bCustomName = 1;
+    strcpy(hero_data->Name, tempText);
+}
 if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
     experience = int_buffer;
 } else {
@@ -6202,8 +6230,8 @@ return 0;
     retail_removed, retail_descriptions = \
         retail_proven_dc_only_removed_helpers(
             retail_removal_key, retail_removal_body, retail_removal_va)
-    if retail_removed != frozenset(("Random",)) \
-            or len(retail_descriptions) != 1:
+    if retail_removed != frozenset(("Random", "strncpy")) \
+            or len(retail_descriptions) != 2:
         failures.append(
             "retail-byte-proved readHeroData revision removal did not "
             "classify")
@@ -6211,12 +6239,27 @@ return 0;
         failures.append("Complete readHeroData source shape did not pass")
     obsolete_random_body = retail_removal_body.replace(
         "experience = 0;", "experience = Random(0, 50) + 40;")
-    if retail_proven_dc_only_removed_helpers(
+    if "Random" in retail_proven_dc_only_removed_helpers(
             retail_removal_key, obsolete_random_body,
             retail_removal_va)[0]:
         failures.append("obsolete Dreamcast Random fallback classified out")
     if not contract_violations(obsolete_random_body, retail_removal_key):
         failures.append("obsolete Dreamcast Random fallback passed")
+    obsolete_name_body = retail_removal_body.replace(
+        "if (customName) {\n"
+        "    hero_data->bCustomName = 1;\n"
+        "    strcpy(hero_data->Name, tempText);\n"
+        "}",
+        "hero_data->bCustomName = customName;\n"
+        "if (hero_data->bCustomName && !isRandomHero) {\n"
+        "    strncpy(hero_data->Name, tempText, 12);\n"
+        "}")
+    obsolete_name_removed = retail_proven_dc_only_removed_helpers(
+        retail_removal_key, obsolete_name_body, retail_removal_va)[0]
+    if "strncpy" in obsolete_name_removed:
+        failures.append("obsolete Dreamcast name copy classified out")
+    if not contract_violations(obsolete_name_body, retail_removal_key):
+        failures.append("obsolete Dreamcast name copy passed")
     flattened_trigger_body = retail_removal_body.replace(
         "hero_data->location = heroObject->get_trigger();",
         "heroObject->FindTrigger(x, y); hero_data->location.x = x;")
