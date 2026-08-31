@@ -3316,7 +3316,7 @@ long army::get_average_damage(const army* enemy, unsigned char ranged_attack, lo
 // Located by the DC-order slot directly before can_shoot (claimed
 // 0x4428f0) and the body: null/self reject, berserk (+0x284) returns
 // true for everyone, hypnotize (+0x288) flips the effective side, then
-// an effective-side inequality on +0xf4. path.cpp's ValidAttack
+// a controlling-side/owning-side inequality. path.cpp's ValidAttack
 // criteria-1 arm calls it on the target cell's army.
 #endif  // @carcass
 
@@ -3328,7 +3328,7 @@ unsigned char army::is_enemy(const army* arg) const
     if (this == arg)
         return 0;
     if (!berserkFlag && !arg->berserkFlag)
-        return get_controlling_side() != arg->combatSide;
+        return get_controlling_side() != arg->get_owning_side();
     return 1;
 }
 
