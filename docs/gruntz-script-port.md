@@ -12774,6 +12774,17 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   while its 89.316536% score stayed flat, separating relocation diagnostics
   from the remaining body-codegen mismatch.
 
+- **2026-08-31 — the matcher queue is MAX-first and hard-first.** `homm3 vc6
+  queue` ranks by effective banked MAX (`max(current, max)`) ascending, then
+  by retail size descending inside a tier; banked-exact current dips remain
+  observational and are excluded. The first strict 0%-MAX head,
+  `AI_choose_destination` (2,926 B), was reconstructed from its Dreamcast
+  dossier with both source helpers retained and opened at 63.3090%. Retail
+  directly replaces the older caller-local `GetMapExtra` nearby test with a
+  last-point trigger/cost group; the source-shape gate admits only that
+  bounded replacement and carries negative controls for flattening and for
+  restoring the obsolete call.
+
 - **2026-07-23 — repo + toolchain distribution.** Private GitHub repo
   `sushi-shi/homm3-decomp` created and pushed; toolchain tarball published as
   release `toolchain-vc6-sp3`. `homm3 init` now downloads it via `gh` when

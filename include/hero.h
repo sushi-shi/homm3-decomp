@@ -191,6 +191,10 @@ struct type_obscuring_object {
     {
         return was_trigger;
     }
+    // E:\\gamedcs\\Hero.h:145.  The DC tiny helper is the validity byte;
+    // retail folds it into unblock_lith before temporarily restoring the
+    // hero's underlying map cell.
+    bool is_on_map() const { return valid != 0; }
     // Dreamcast proves this Hero.h helper boundary. Retail SetupHeroView
     // folds it to the same three field tests; keep the call in source so
     // an exact lowering cannot erase the attested source shape again.

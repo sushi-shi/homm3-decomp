@@ -12,6 +12,7 @@
 class army;
 class hero;
 class NewmapCell;
+struct tagRECT;
 
 // Dreamcast CodeView supplies the complete domain and names; SeedTo's retail
 // call proves const_normal_search == 0 on x86.
@@ -279,11 +280,17 @@ public:
                       type_search_type search_type,
                       int iCurTempMobility,
                       unsigned char bSeedContinuation);
-#ifdef HOMM3_PHILAI_OBJ_DECLS
     // E:\\gamedcs\\findpath.h:247 (dc 0x37e7c). Retail folds this
-    // const tiny helper into move_hero as the byte read at +0x20.
+    // const tiny helper into move_hero and AI_choose_destination as the
+    // byte read at +0x20.
     bool limit_was_reached() const { return limit_reached != 0; }
-#endif
+    // Dreamcast FindPath.h:231/236/257.  These source helpers are all
+    // folded into ai_player.obj's destination chooser on retail x86.  Keep
+    // the boundaries visible in C++ even where the selected lowering is a
+    // vector::size call or direct field/index arithmetic.
+    long get_visited_count() const { return visited_points.size(); }
+    pathCell* get_visited_cell(long index) { return visited_points[index]; }
+    void set_rectangle(tagRECT& rect);
 };
 
 // findpath.h:265 in the DC roster; no retail row of its own - /Ob2
