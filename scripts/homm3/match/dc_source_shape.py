@@ -379,6 +379,16 @@ PROVEN_CALL_SPELLINGS: dict[tuple[str, int], tuple[CallSpelling, ...]] = {
 # waiver.
 NONEXACT_RETAIL_PROVEN_CALL_SPELLINGS: dict[
         tuple[str, int], tuple[CallSpelling, ...]] = {
+    ("philai.obj", 0x110018): (
+        CallSpelling(
+            "Complete philAI::GetTurnAIVars replaces Dreamcast's "
+            "AI_get_value_of_artifact overload with the retail-relocation-"
+            "proved AI_get_artifact_player_value helper in the artifact "
+            "appraisal loop",
+            0x00527960, "AI_get_value_of_artifact",
+            r"\bAI_get_artifact_player_value(?=\s*\()",
+            "AI_get_value_of_artifact"),
+    ),
     ("swapmgr.obj", 0x15D150): (
         CallSpelling(
             "Complete swapManager::handle_artifact_click replaces the "
@@ -565,6 +575,22 @@ RETAIL_BYTE_PROVEN_REVISION_REMOVALS: dict[
 # graph: inlined accessors/operators, a source order hidden by scheduling, and
 # nesting within a single attested statement group.
 SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
+    ("philai.obj", 0x110018): (
+        SourceRule(
+            "GetTurnAIVars keeps Complete's retail-relocation-proved "
+            "AI_get_artifact_player_value call with Dreamcast's artifact "
+            "and player argument order",
+            r"total_artifact_value\s*\+=\s*"
+            r"AI_get_artifact_player_value\s*\(\s*artifact\s*,\s*"
+            r"whichPlayer\s*\)\s*;",
+            1, 1),
+        SourceRule(
+            "GetTurnAIVars may not retain Dreamcast's obsolete two-argument "
+            "AI_get_value_of_artifact spelling after Complete's retail-"
+            "relocation-proved helper replacement",
+            r"\bAI_get_value_of_artifact\s*\(\s*artifact\s*,\s*"
+            r"whichPlayer\s*\)", 0, 0),
+    ),
     ("singleselectionwindow.obj", 0x1304A8): (
         SourceRule(
             "CNetPlayerHandler::SetNextPlayer keeps Dreamcast's bounded i "
@@ -7197,6 +7223,41 @@ if (!our_hero->HeroFn_004E2840(slot,
             relocation_wrong_arguments, relocation_spelling_key):
         failures.append(
             "wrong-argument Complete artifact predicate passed")
+    artifact_value_key = ("philai.obj", 0x110018)
+    artifact_value_va = NONEXACT_RETAIL_PROVEN_CALL_SPELLINGS[
+        artifact_value_key][0].caller_va
+    artifact_value_body = """\
+total_artifact_value +=
+    AI_get_artifact_player_value(artifact, whichPlayer);
+"""
+    artifact_value_canonical = apply_proven_call_spellings(
+        artifact_value_key, artifact_value_body, artifact_value_va, set())
+    if missing_from_body(
+            artifact_value_canonical, ["AI_get_value_of_artifact"]) \
+            or contract_violations(artifact_value_body, artifact_value_key):
+        failures.append(
+            "relocation-proved Complete artifact-value call did not pass")
+    artifact_value_old = """\
+total_artifact_value +=
+    AI_get_value_of_artifact(artifact, whichPlayer);
+"""
+    if not contract_violations(artifact_value_old, artifact_value_key):
+        failures.append(
+            "obsolete Dreamcast artifact-value helper spelling passed")
+    artifact_value_flattened = """\
+total_artifact_value += akArtifactTraits[artifact_id].cost;
+"""
+    if not contract_violations(
+            artifact_value_flattened, artifact_value_key):
+        failures.append("flattened Complete artifact appraisal passed")
+    artifact_value_wrong_arguments = """\
+total_artifact_value +=
+    AI_get_artifact_player_value(whichPlayer, artifact);
+"""
+    if not contract_violations(
+            artifact_value_wrong_arguments, artifact_value_key):
+        failures.append(
+            "wrong-argument Complete artifact-value call passed")
     removal_key = ("singleselectionwindow.obj", 0x135F04)
     removal_va = PROVEN_REVISION_REMOVALS[removal_key][0].caller_va
     removal_body = """\
