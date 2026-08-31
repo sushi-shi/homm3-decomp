@@ -544,7 +544,6 @@ call	army.obj	0x477e8	army::Is
 call	army.obj	0x477e8	army::OffsetToFront
 call	army.obj	0x47a14	max
 call	army.obj	0x47af8	army::get_total_hit_points
-call	army.obj	0x47bcc	army::get_owning_side
 call	army.obj	0x47c74	army::Is
 call	army.obj	0x47c74	army::get_second_grid_index
 call	army.obj	0x47cf4	army::can_shoot
