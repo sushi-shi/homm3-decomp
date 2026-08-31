@@ -342,6 +342,16 @@ unsigned char initialize_ballistics_table()
 
 #endif  // @carcass
 
+// E:\gamedcs\hero.cpp:259
+// Complete keeps the Dreamcast-named getter out of line. The 40-byte
+// specialty-row stride and +0x1c short-text field are independently fixed by
+// the retail body and its UI callers.
+VA(0x004d7220, 0x11)  // anchor-callee TSingleSelectionWindow::ProcessRightSelect, dc 0xca7d4
+const char* hero::GetSpecificAbilityTextShort()
+{
+    return akHeroSpecificAbilities[id].shortText;
+}
+
 // E:\gamedcs\hero.cpp:375
 // The whole body is initialize() inlined - same seven stores, same
 // order, only the register roles swapped (`this` in eax here, in ecx

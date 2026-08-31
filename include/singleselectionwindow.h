@@ -438,6 +438,7 @@ public:
     virtual ~TSingleSelectionWindow();
     virtual int DoModal(unsigned char fadeIn);
     virtual int WindowHandler(message* msg);  // slot 9
+    virtual unsigned char ProcessRightSelect(int id);  // slot 11
     virtual int ExitDialog(message* msg);   // slot 14
     void UpdateAllyEnemyFlags(unsigned char update);
     void OnFileMenuSlider(int newIndex);
@@ -468,6 +469,7 @@ public:
     unsigned char CanChooseTown(int gamePos);
     unsigned char CanChooseHero(int gamePos);
     int GetDisplayFace(int gamePos);
+    int GetHeroInPos(int gamePos);
     // DC returns TTownType; spelled int for the same public-closure reason
     // as UpdateTown. Retail keeps this source helper fully inlined.
     int GetDisplayTown(int gamePos);

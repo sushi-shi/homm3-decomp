@@ -12785,6 +12785,22 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   bounded replacement and carries negative controls for flattening and for
   restoring the obsolete call.
 
+- **2026-08-31 — hardest zero-MAX selection dispatcher admitted.** The next
+  queue head, `TSingleSelectionWindow::ProcessRightSelect` (2,152 B retail),
+  was rebuilt from its 119-row Dreamcast dossier into the four hero, town,
+  bonus, and team-alignment arms. The first coherent claim opened at 88.21%;
+  restoring the DC `nbr` selector and retail-corroborated direct hero-array
+  lookup banked 88.97%. Its separately preserved
+  `hero::GetSpecificAbilityTextShort` boundary is byte-exact. The retained
+  source state is currently 88.65% because a helper-local `inline_depth(0)`
+  keeps the positive DC and retail `GetDisplayTown` -> `HasMultipleTowns`
+  edge: structure improved from 1 to 64 exact blocks and from 131/128 to
+  127/128 candidate/retail blocks even though the byte percentage dipped.
+  The remaining first flow-kind divergence is site-specific VC6 collector
+  state: retail keeps that nested call in the town arm but expands it in the
+  later bonus arm. MAX preserves the higher byte checkpoint while this
+  coherent de-inlined state and its unrelated TU dips are carried forward.
+
 - **2026-07-23 — repo + toolchain distribution.** Private GitHub repo
   `sushi-shi/homm3-decomp` created and pushed; toolchain tarball published as
   release `toolchain-vc6-sp3`. `homm3 init` now downloads it via `gh` when

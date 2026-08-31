@@ -335,7 +335,14 @@ enum ESingleSelectionWidgetId {
     SSW_FILTER_DURATION_ANY = 334,
     SSW_RANDOM_MAPS = 335,
     SSW_NAME_FIRST = 345,
-    SSW_NAME_LAST = 352
+    SSW_NAME_LAST = 352,
+    SSW_HERO_DETAIL_FIRST = 362,
+    SSW_HERO_DETAIL_LAST = 369,
+    SSW_TOWN_DETAIL_FIRST = 370,
+    SSW_TOWN_DETAIL_LAST = 377,
+    SSW_BONUS_DETAIL_FIRST = 378,
+    SSW_BONUS_DETAIL_LAST = 385,
+    SSW_TEAM_ALIGNMENT = 387
 };
 
 // The six std::sort predicates SortMaps instantiates - retail's band at

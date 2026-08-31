@@ -1024,6 +1024,9 @@ public:
     // 0x004d8f70 - returns the campaign override or this hero class's
     // display text. Retail callers span both adventure and hero UI paths.
     const char* HeroFn_004D8F70();
+    // DC names this source helper. Complete retains its tiny out-of-line
+    // getter at 0x4d7220 and ProcessRightSelect calls that boundary.
+    const char* GetSpecificAbilityTextShort();
     // 0x004e2dd0 - the by-id overload: finds the artifact in the
     // backpack first, then in the equipped slots, and unequips it.
     unsigned char remove_artifact(TArtifact artifact);

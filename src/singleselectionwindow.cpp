@@ -54,21 +54,48 @@
 #define HOMM3_U2DVERS_PRODUCT_VERSION_INLINE
 #include "u2dvers.h"
 
-#if 0  // @carcass: untouched bodies outside the admitted retail function
-
 // E:\gamedcs\singleselectionwindow.cpp:164
-DC_ONLY(0x12f6d4, 0xBC)
-const char* GetResourceBonusCaption(int townType)
+// Dreamcast preserves these two helpers as standalone functions. Complete
+// expands both calls in ProcessRightSelect, but keeps the same town-specific
+// text selection: Rampart/Tower/Inferno/Dungeon have dedicated resource
+// strings, Conflux shares Inferno's mercury strings, and every other town
+// uses the generic pair.
+inline const char* GetResourceBonusCaption(int townType)
 {
-    // @stub
+    switch (townType) {
+    case TOWN_RAMPART:
+        return gpGeneralText->GetText(693);
+    case TOWN_TOWER:
+        return gpGeneralText->GetText(694);
+    case TOWN_INFERNO:
+    case TOWN_CONFLUX:
+        return gpGeneralText->GetText(695);
+    case TOWN_DUNGEON:
+        return gpGeneralText->GetText(696);
+    default:
+        return gpGeneralText->GetText(90);
+    }
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:187
-DC_ONLY(0x12f790, 0xBC)
-const char* GetResourceBonusDescription(int townType)
+inline const char* GetResourceBonusDescription(int townType)
 {
-    // @stub
+    switch (townType) {
+    case TOWN_RAMPART:
+        return gpGeneralText->GetText(689);
+    case TOWN_TOWER:
+        return gpGeneralText->GetText(690);
+    case TOWN_INFERNO:
+    case TOWN_CONFLUX:
+        return gpGeneralText->GetText(691);
+    case TOWN_DUNGEON:
+        return gpGeneralText->GetText(692);
+    default:
+        return gpGeneralText->GetText(94);
+    }
 }
+
+#if 0  // @carcass: untouched bodies outside the admitted retail function
 
 // E:\gamedcs\singleselectionwindow.cpp:209
 DC_ONLY(0x12f84c, 0x20)
@@ -2423,14 +2450,207 @@ void TSingleSelectionWindow::TurnOffFilterOptions()
     inFilterOptions = 0;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\singleselectionwindow.cpp:3219
 VA(0x005822d0, 0x868)  // anchor-vtable TSingleSelectionWindow vtbl 0x241cac slot11 (ProcessRightSelect override; cf sibling THeroScreenWindow slot11 ProcessRightSelect@CHeroWindowEx), dc 0x1371fc
 unsigned char TSingleSelectionWindow::ProcessRightSelect(int id)
 {
-    // @stub
+    // File rows consume right clicks without opening a popup. Dreamcast's
+    // first two source rows prove this guard precedes the detail dispatch.
+    if (id >= SSW_FILE_ROW_FIRST && id <= SSW_FILE_ROW_LAST)
+        return 1;
+
+    int nbr = id - SSW_HERO_DETAIL_FIRST;
+    switch (id) {
+    case SSW_HERO_DETAIL_FIRST:
+    case SSW_HERO_DETAIL_FIRST + 1:
+    case SSW_HERO_DETAIL_FIRST + 2:
+    case SSW_HERO_DETAIL_FIRST + 3:
+    case SSW_HERO_DETAIL_FIRST + 4:
+    case SSW_HERO_DETAIL_FIRST + 5:
+    case SSW_HERO_DETAIL_FIRST + 6:
+    case SSW_HERO_DETAIL_LAST: {
+        int gamePos = nbr;
+        if (m_flag64) {
+            int heroId = gpGame->setup.startingHero[gamePos];
+            int displayFace = GetDisplayFace(gamePos);
+            const char* faceName = GetHeroName(gamePos);
+            if (displayFace != -1) {
+                hero* theHero = &gpGame->heroes[heroId];
+                CHeroDlg dlg(!m_flag65 && !m_flag64);
+                dlg.CreateWin(HeroPix[displayFace], faceName,
+                              heroSpecificAbility, heroId,
+                              theHero->GetSpecificAbilityTextShort(),
+                              theHero->HeroFn_004D8F70());
+                dlg.DoModal(0);
+            }
+        } else {
+            CNetPlayerHandlerPlayer* pPlayer =
+                m_players.GetPlayerInPos(gamePos);
+            if (!pPlayer)
+                pPlayer = m_players.GetCompPlayerInPos(gamePos);
+            if (!pPlayer)
+                break;
+
+            unsigned char noHero =
+                pPlayer->heroIndex == -1
+                && !HasRandomHero(gamePos)
+                && !HasNonRandomHero(gamePos);
+            if (noHero)
+                break;
+
+            int displayFace = GetDisplayFace(gamePos);
+            if (pPlayer->heroIndex == -1 && displayFace == -1) {
+                CBonusDlg dlg(!m_flag65 && !m_flag64);
+                dlg.CreateWin(gpGeneralText->GetText(102), randomHeroBmp,
+                              gpGeneralText->GetText(523),
+                              gpGeneralText->GetText(103));
+                dlg.DoModal(0);
+            } else {
+                int heroId = GetHeroInPos(gamePos);
+                if (heroId != -1) {
+                    hero* theHero = &gpGame->heroes[heroId];
+                    CHeroDlg dlg(!m_flag65 && !m_flag64);
+                    dlg.CreateWin(HeroPix[displayFace],
+                                  GetHeroName(gamePos),
+                                  heroSpecificAbility, heroId,
+                                  theHero->GetSpecificAbilityTextShort(),
+                                  theHero->HeroFn_004D8F70());
+                    dlg.DoModal(0);
+                }
+            }
+        }
+        DisplayChat();
+        DrawWindow(0, 0xffff0001, 0xffff);
+        Update();
+        break;
+    }
+
+    case SSW_TOWN_DETAIL_FIRST:
+    case SSW_TOWN_DETAIL_FIRST + 1:
+    case SSW_TOWN_DETAIL_FIRST + 2:
+    case SSW_TOWN_DETAIL_FIRST + 3:
+    case SSW_TOWN_DETAIL_FIRST + 4:
+    case SSW_TOWN_DETAIL_FIRST + 5:
+    case SSW_TOWN_DETAIL_FIRST + 6:
+    case SSW_TOWN_DETAIL_LAST: {
+        int gamePos =
+            nbr - (SSW_TOWN_DETAIL_FIRST - SSW_HERO_DETAIL_FIRST);
+        int townType;
+        if (m_flag64)
+            townType = gpGame->setup.alignment[gamePos];
+        else {
+            townType = GetDisplayTown(gamePos);
+        }
+
+        if (townType == -1) {
+            CBonusDlg dlg(!m_flag65 && !m_flag64);
+            dlg.CreateWin(gpGeneralText->GetText(104), randomTownBmp,
+                          gpGeneralText->GetText(523),
+                          gpGeneralText->GetText(105));
+            dlg.DoModal(0);
+        } else {
+            CTownDlg dlg(!m_flag65 && !m_flag64);
+            dlg.CreateWin(TownPix, townType * 2 + 2,
+                          static_cast<TTownType>(townType) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
+            dlg.DoModal(0);
+        }
+        DisplayChat();
+        DrawWindow(0, 0xffff0001, 0xffff);
+        Update();
+        break;
+    }
+
+    case SSW_BONUS_DETAIL_FIRST:
+    case SSW_BONUS_DETAIL_FIRST + 1:
+    case SSW_BONUS_DETAIL_FIRST + 2:
+    case SSW_BONUS_DETAIL_FIRST + 3:
+    case SSW_BONUS_DETAIL_FIRST + 4:
+    case SSW_BONUS_DETAIL_FIRST + 5:
+    case SSW_BONUS_DETAIL_FIRST + 6:
+    case SSW_BONUS_DETAIL_LAST: {
+        CBonusDlg dlg(!m_flag65 && !m_flag64);
+        int gamePos =
+            nbr - (SSW_BONUS_DETAIL_FIRST - SSW_HERO_DETAIL_FIRST);
+        int bonus;
+        int townType;
+        const char* header = "";
+        const char* desc = "";
+        int sprite = 9;
+        const char* bonusEx = "";
+
+        if (m_flag64) {
+            bonus = gpGame->setup.startingBonus[gamePos];
+            townType = gpGame->setup.alignment[gamePos];
+        } else {
+            CNetPlayerHandlerPlayer* pPlayer =
+                m_players.GetPlayerInPos(gamePos);
+            if (!pPlayer)
+                pPlayer = m_players.GetCompPlayerInPos(gamePos);
+            if (!pPlayer)
+                break;
+            bonus = pPlayer->startBonusIndex;
+            townType = GetDisplayTown(gamePos);
+        }
+
+        switch (bonus) {
+        case NEW_MAP_BONUS_ARTIFACT:
+            header = gpGeneralText->GetText(84);
+            desc = gpGeneralText->GetText(91);
+            break;
+        case NEW_MAP_BONUS_GOLD:
+            header = gpGeneralText->GetText(85);
+            sprite = 8;
+            bonusEx = gpGeneralText->GetText(88);
+            desc = gpGeneralText->GetText(93);
+            break;
+        case NEW_MAP_BONUS_RESOURCE:
+            header = gpGeneralText->GetText(86);
+            sprite = townType;
+            if (sprite == TOWN_CONFLUX)
+                sprite = TOWN_INFERNO;
+            bonusEx = GetResourceBonusCaption(townType);
+            desc = GetResourceBonusDescription(townType);
+            if (sprite == -1)
+                sprite = 0;
+            break;
+        case NEW_MAP_BONUS_RANDOM:
+            header = gpGeneralText->GetText(87);
+            sprite = 10;
+            desc = gpGeneralText->GetText(95);
+            break;
+        }
+
+        dlg.CreateWin(header, Resource, sprite, bonusEx, desc);
+        dlg.DoModal(0);
+        DisplayChat();
+        DrawWindow(0, 0xffff0001, 0xffff);
+        Update();
+        break;
+    }
+
+    case SSW_TEAM_ALIGNMENT: {
+        CTeamAlignmentDlg dlg(!m_flag65 && !m_flag64);
+        dlg.CreateWin();
+        dlg.DoModal(0);
+        DisplayChat();
+        DrawWindow(0, 0xffff0001, 0xffff);
+        Update();
+        break;
+    }
+
+    default:
+        if (!CHeroWindowEx::ProcessRightSelect(id))
+            break;
+        DisplayChat();
+        DrawWindow(0, 0xffff0001, 0xffff);
+        Update();
+        break;
+    }
+
+    return 1;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:3461
 DC_ONLY(0x137d28, 0x80)
@@ -6277,6 +6497,32 @@ int TSingleSelectionWindow::GetDisplayFace(int gamePos)
     return heroId;
 }
 
+// Dreamcast preserves this helper boundary and ProcessRightSelect calls it
+// in source. Complete expands the body at that site, so there is no separate
+// retail row: select the scenario-fixed hero when present, otherwise the
+// seat's chosen entry from its filtered hero list.
+// E:\gamedcs\singleselectionwindow.cpp:8143
+inline int TSingleSelectionWindow::GetHeroInPos(int gamePos)
+{
+    CNetPlayerHandlerPlayer* pPlayer = m_players.GetPlayerInPos(gamePos);
+    if (!pPlayer)
+        pPlayer = m_players.GetCompPlayerInPos(gamePos);
+    CMapHeaderData::TPlayerSlotAttributes* slotAtt =
+        &gpGame->mapHeader.playerSlotAttributes[gamePos];
+    int heroId;
+    if (!slotAtt->GenerateHero && !slotAtt->hasRandomHero) {
+        if (slotAtt->nonRandomHeroId != -1)
+            heroId = slotAtt->nonRandomHeroId;
+        else
+            heroId = pPlayer->availableHeroes[pPlayer->heroIndex];
+    } else if (pPlayer->heroIndex != -1) {
+        heroId = pPlayer->availableHeroes[pPlayer->heroIndex];
+    } else {
+        heroId = -1;
+    }
+    return heroId;
+}
+
 // The selected seat's town. Dreamcast falls back to pick_alignment when a
 // multi-town slot has no committed town; Complete's retail CanChooseHero
 // directly proves that its shared helper returns the -1 instead. The named
@@ -6289,8 +6535,10 @@ inline int TSingleSelectionWindow::GetDisplayTown(int gamePos)
         player = m_players.GetCompPlayerInPos(gamePos);
     CMapHeaderData::TPlayerSlotAttributes* slotAtt =
         &gpGame->mapHeader.playerSlotAttributes[gamePos];
+#pragma inline_depth(0)
     if (slotAtt->HasRandomAlignment || HasMultipleTowns(gamePos))
         return player->townIndex;
+#pragma inline_depth()
     return pick_alignment(
         static_cast<unsigned short>(slotAtt->legalAlignments), 1);
 }
