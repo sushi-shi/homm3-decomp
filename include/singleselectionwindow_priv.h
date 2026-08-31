@@ -133,19 +133,6 @@ public:
     unsigned long m_forWho;  // +0x7c
 };
 
-// The selection window's net-message handler. Its scalar deleting destructor
-// at 0x58e2e0 calls ~CAdvMgrNetMsgHandler, proving the base; CheckHandleNet
-// polls through GetRemoteData into the compression flag at +0xc. vtable
-// 0x241ce8 overrides slot 1 (CheckHandleNet) and slot 3 (HandleNetMsg).
-class CSingleSelectionNetMsgHandler : public CAdvMgrNetMsgHandler {
-public:
-    virtual CNetMsg* CheckHandleNet(unsigned char inPopup,
-                                    unsigned char* msgReceived);  // slot 1
-    virtual CNetMsg* HandleNetMsg(CNetMsg* pNetMsg);              // slot 3
-
-    unsigned char m_wasCompressed;  // +0x0c
-};
-
 // The chat text widget. It snapshots the screen region under itself into a
 // CChatSave (Bitmap16Bit + a saved flag at +0x38, the CTextEntrySave shape)
 // so Draw restores the background before repainting. m_save at +0x50; vtable
@@ -776,6 +763,21 @@ enum EWindowMode6989f0 {
     WINDOW_MODE_6989F0_3 = 3
 };
 extern int gUnnamed6989f0;
+
+// Constructor-only domains. DC gives gameMode as int; retail proves the two
+// non-default commands by their load/save setup arms. The context values are
+// intentionally ordinal until the gpVideoGameState owner supplies names.
+enum ESingleSelectionGameMode {
+    SINGLE_SELECTION_LOAD_GAME = 1,
+    SINGLE_SELECTION_SAVE_GAME = 2
+};
+enum ESingleSelectionGameContext {
+    SINGLE_SELECTION_CONTEXT_1 = 1,
+    SINGLE_SELECTION_CONTEXT_3 = 3
+};
+enum ESingleSelectionLaunchContext {
+    SINGLE_SELECTION_LAUNCHED_FROM_CAMPAIGN = 101
+};
 
 // 0x69954c, the paused-video gate DoModal/ExitDialog test. DECLARATION ONLY
 // (kbwin.cpp owns the DATA claim); declared here rather than by pulling

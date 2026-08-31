@@ -13,6 +13,7 @@
 // member block); the element type must be complete for it.
 #ifdef HOMM3_SSWINDOW_HEADER_VECTORS
 #include <vector>
+#include "remote.h"
 #endif
 
 // Forward-declared for TSingleSelectionWindow's slider members
@@ -207,6 +208,27 @@ public:
 };
 SIZE(CNetPlayerHandler, 0x7d0);
 
+#ifdef HOMM3_SSWINDOW_HEADER_VECTORS
+// Dreamcast names this as the window's final shared-build member, and the
+// retail constructor independently proves the same composition at +0x1888:
+// CNetMsgHandler's ctor is followed by the derived vtable store and a clear
+// of m_wasCompressed at +0x0c. Keep the complete type behind the owning-TU
+// view so public-header includers retain their established include closure.
+class CSingleSelectionNetMsgHandler : public CAdvMgrNetMsgHandler {
+public:
+    CSingleSelectionNetMsgHandler()
+    {
+        m_wasCompressed = 0;
+    }
+    virtual CNetMsg* CheckHandleNet(unsigned char inPopup,
+                                    unsigned char* msgReceived);  // slot 1
+    virtual CNetMsg* HandleNetMsg(CNetMsg* pNetMsg);              // slot 3
+
+    unsigned char m_wasCompressed;  // +0x0c
+};
+SIZE(CSingleSelectionNetMsgHandler, 0x10);
+#endif
+
 // The game-selection megawindow. DC reports size 2928 with SH4 STL; the
 // retail extent 0x1970 is frame-derived from advmgr's SaveGame (window local
 // ebp-0x19ec..ebp-0x7c around an __alloca_probe frame). The members below are
@@ -215,17 +237,20 @@ SIZE(CNetPlayerHandler, 0x7d0);
 // CNetPlayerHandler at +0x1064 (ExitDialog walks it at a 0x7c stride) and the
 // file-list slider* at +0x1840 (DoModal calls its SetState). The exact
 // UpdateAllyEnemyFlags body adds the DC-named saved-background pointer
-// flagBack at +0x1870. The ctor at 0x579960 and destructor at 0x583b40 remain
-// the reconstruction the pads still block.
+// flagBack at +0x1870. The constructor further proves the DC-named embedded
+// netMsgHandler at +0x1888; the tail after it remains under reconstruction.
 class TSingleSelectionWindow : public CAdvPopup {
 public:
-    char pad_60[0x64 - 0x60];
+    // DC names the constructor's timeGetTime snapshot clickTime; retail
+    // places it at the first derived dword.
+    unsigned long clickTime;            // 0x60
     unsigned char m_flag64;            // 0x64
     unsigned char m_flag65;            // 0x65
     // Third mode byte of the run: SortMaps (0x585050) sorts and refills
     // from TransferHeaders when it is set, HeadersA otherwise.
     unsigned char m_flag66;            // 0x66
-    char pad_67[0x6c - 0x67];
+    char pad_67;
+    int field_68;                      // 0x68, selected/start row sentinel
     // The scenario list's three icon strips, byte-proven by Update
     // (0x584550): each is the receiver of a CSprite::Draw at columns
     // 91/309/342 with its own Width/Height re-read off the same load -
@@ -380,7 +405,15 @@ public:
     // DC gameVersion (a 20-byte TFileVersionInfo product string there);
     // OnBadVersionMsg formats it against the offender's.
     char gameVersion[20];              // 0x1874
+    // DC's last window member. Retail constructs it in place with the
+    // CNetMsgHandler base ctor, the 0x641ce8 derived vtable and a zero byte at
+    // +0x0c before installing TSingleSelectionWindow's own vtable. The public
+    // include view keeps the same proven extent without importing remote.h.
+#ifdef HOMM3_SSWINDOW_HEADER_VECTORS
+    CSingleSelectionNetMsgHandler netMsgHandler;  // 0x1888
+#else
     char pad_1888[0x1898 - 0x1888];
+#endif
     int field_1898;                    // 0x1898, player count cached on drop
     // A widget id the advanced pane records: TurnOffAdvancedOptions
     // hides GetWidget(field_189c) between the 340 and 343 titles.

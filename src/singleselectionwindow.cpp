@@ -47,6 +47,9 @@
 #include "singleselectionwindow.h"
 #include "singleselectionwindow_priv.h"
 #include "soundmgr.h"
+#define HOMM3_U2DVERS_SYSTEM_VERSION_DECLS
+#define HOMM3_U2DVERS_PRODUCT_VERSION_INLINE
+#include "u2dvers.h"
 
 #if 0  // @carcass: untouched bodies outside the admitted retail function
 
@@ -72,6 +75,22 @@ unsigned char SavedGameExists(char* filename)
 }
 
 #endif  // @carcass
+
+// DC preserves this source helper. Complete expands it into the selection
+// window constructor: the retail body has the same executable-path buffer,
+// TFileVersionInfo lifetime, ProductVersion query and empty-string fallback.
+// E:\gamedcs\singleselectionwindow.cpp:368
+static inline void GetGameVersion(char* version)
+{
+    char filename[351];
+    GetModuleFileNameA(0, filename, sizeof(filename));
+    TFileVersionInfo fileInfo(filename);
+    std::string value;
+    if (fileInfo.GetProductVersion(&value))
+        strcpy(version, value.c_str());
+    else
+        version[0] = 0;
+}
 
 // Validate a save name from the entry line: refuse on a full disk,
 // strip the extension, confirm an overwrite through NormalDialog's
@@ -979,16 +998,85 @@ void CNewPlayerUpdateProc::Finish()
     gUnnamed69fbe8->SendPlayerFaces();
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\singleselectionwindow.cpp:1953
-VA(0x00579960, 0x2d63)  // anchor-callee CAdvPopup base ctor (??0CAdvPopup@@QAE@HHHHI@Z) + SavedGameHeader member ctor at this+0x38c+0x700, fs:[0] EH frame, ret4, dc 0x1309f0
-void TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
+VA(0x00579960, 0x2d63)  // active hardest-first reconstruction; anchor-callee CAdvPopup base ctor + embedded header/player/net-handler construction; dc 0x1309f0
+TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
+    : CAdvPopup(0, 0, 800, 600, 0)
 {
-    // @stub
-}
+    m_players.playerPos = -1;
+    m_players.playersCount = 0;
+    m_players.unused = -1;
+    m_players.assignedPos = -1;
 
-#endif  // @carcass
+    for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
+        m_players.computerPlayers[i].color = i;
+        strcpy(m_players.computerPlayers[i].sName,
+               gpGeneralText->GetText(469));
+    }
+
+    StartMouseThread();
+
+    campaignMode = (gpWindowManager->dialogReturn
+                        == SINGLE_SELECTION_LAUNCHED_FROM_CAMPAIGN
+                    || gUnnamed69774c != 0);
+    gUnnamed69fbe8 = this;
+    m_flag65 = 0;
+    m_flag64 = 0;
+    m_flag66 = 0;
+    gUnnamed69fdc8 = 18;
+
+    field_1898 = *gpVideoGameState;
+    field_189c = 341;
+    if (*gpVideoGameState == SINGLE_SELECTION_CONTEXT_1
+        || *gpVideoGameState == SINGLE_SELECTION_CONTEXT_3)
+        field_189c = 342;
+
+    if (gameMode == SINGLE_SELECTION_LOAD_GAME) {
+        m_flag64 = 1;
+    } else if (gameMode == SINGLE_SELECTION_SAVE_GAME) {
+        m_flag65 = 1;
+        field_68 = -1;
+        memset(gUnnamed69fc2c, 0, 351);
+        saveHeader = new game;
+        BackupGameHeaders(saveHeader, gpGame);
+        gUnnamed69fdc8 = 16;
+    }
+
+    if (!m_flag64 && !m_flag65 && bVideoPaused)
+        pDPlay->SetNetMsgHandler(&netMsgHandler);
+
+    logFile.Log(
+        DATA_COMPGEN(0x00683688, selectionWindowIsHostLog,
+                     "TSingleSelectionWindow::IsHost() = %d"),
+        IsHost());
+
+    gUnnamed69fda0 = 0;
+    receivedMaps = 0;
+    chatWidget = 0;
+    nameList1 = 0;
+    nameList2 = 0;
+    mapChanged = 1;
+    chatEdit = 0;
+    sortDirection = 0;
+    sortWhich = 0;
+    mapSizeFilter = 0;
+    pNewPlayerUpdateMan = 0;
+    chatShowing = 0;
+    receivingMaps = 0;
+    saveGameEdit = 0;
+    durationSlider = 0;
+    durationIndex = gpGame->setup.turnDuration;
+
+    flagBack = new CSaveScreen(310, 25);
+    GetGameVersion(gameVersion);
+
+    inAdvancedOptions = 0;
+    scenarioOptionsStarted = 0;
+    inScenarioOptions = 0;
+    inFilterOptions = 0;
+    field_37F = 0;
+    clickTime = timeGetTime();
+}
 
 #if 0  // @carcass: claim-only home for the game.h COMDAT below
 
