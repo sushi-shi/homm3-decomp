@@ -1799,11 +1799,10 @@ public:
         // corroborated from the other side by remove_binding's own
         // subject - Rampart owns both of HoMM3's stack-to-stack
         // relationships, the unicorn's resistance aura and the
-        // dendroid's bind. Behind the aura view; NH3API spellings.
-#ifdef HOMM3_ARMY_AURA_VIEW
+        // dendroid's bind. Dreamcast add_aura compares the same 24/25
+        // pair, and retail 0x43ea70 corroborates both values.
         ARMY_CREATURE_UNICORN = 0x18,
         ARMY_CREATURE_WAR_UNICORN = 0x19,
-#endif
         ARMY_CREATURE_BEHEMOTH = 0x60,
         ARMY_CREATURE_ANCIENT_BEHEMOTH = 0x61,
         // The three creatures with a START-OF-TURN ability, and
