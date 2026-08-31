@@ -260,6 +260,47 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-31 — `combatManager::ProcessCombatMsg` reaches 93.0970% by
+  restoring the Dreamcast statement hierarchy; the remaining frame/exit
+  residual is banked without flattening the source.** The admitted retail
+  body now keeps Dreamcast's function-scope `message msgTemp`, scoped
+  `CEndPlacementPhaseMsg`, `GetPointer` and `DoSurrender` helper boundaries,
+  the header-inline `InCombatArea` predicate, and the out-of-line exact
+  `TurnOffHighlighter`. The decisive correction was structural rather than a
+  byte permutation: both the Dreamcast breakpoint order and Complete's x86
+  CFG put the outside-combat cleanup in a negated early-return arm before the
+  hero/creature panel work. Replacing the source-equivalent
+  `if (InCombatArea) { ... } else { ... }` form with that recovered hierarchy
+  moved the coherent checkpoint from **55.8076% to 93.0970%** and the full
+  game-module score from **92.98% to 93.29%**, with no exact-function loss.
+
+  The cross-revision differences are now explicit asymmetric evidence rather
+  than missing-call waivers. Complete replaces Dreamcast's WinCE
+  `InitMouse`/`MoveCursorTo`/`MoveCursorMenu`/`ScrollCombatArea` controller
+  arm with the decoded `PeekEvent` mouse path and F5/F6/F7/F8/keypad/F/T key
+  roster; its desktop modal paths omit the older `FullUpdate` calls, including
+  the copy after `DoSurrender`; and it has one outside-combat
+  `ConvertToHover`/`SetPointer` group where Dreamcast also carried an earlier
+  screen-edge copy. Each classification requires a bounded Complete source
+  pattern, and negative controls restore the old helper or duplicate hover
+  group and must fail. The gate remains asymmetric: shared helper boundaries
+  are still mandatory, while only those individually decoded WinCE groups are
+  reported `dc-only`.
+
+  The remaining candidate is 4,436 bytes against retail's 4,429, with **127
+  versus 121 branches** and **21 versus 20 returns**. Its frame is `0x4c`
+  against retail's `0x60`: retail, like Dreamcast, keeps the 20-byte placement
+  record separate from the two 32-byte `message` slots, while the current VC6
+  state overlays it with `msgTemp`. Hoisting the placement object produced the
+  right `0x60` frame and an earlier **77.0835%** experiment but moved its five
+  constructor stores to function entry, directly contradicting both retail
+  and Dreamcast, so that spelling was rejected. No invented stack pad is
+  retained. `ResetMouse` itself has an exact five-branch/two-return standalone
+  body; its different inlined register choices are downstream of this open
+  frame/lifetime state. A synchronized build -> delink -> build passes all
+  gates at **2,635 / 3,154 linked exact**, **93.42% linked fuzzy**, and banks
+  unrelated include-state dips by MAX/history.
+
 - **2026-08-31 — `readHeroData`'s bounded Dreamcast name copy is a proved
   older-revision divergence, not a missing Complete structure fact.** The raw
   SH4 statement group stores `customName` into `HeroExtra::bCustomName`, tests

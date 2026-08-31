@@ -806,10 +806,11 @@ command	?DoVictory@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x77470
 # automate_first_aid_tent re-exposes the same include-set/codegen class;
 # GetCommand's 62 branches and 20 returns still agree exactly. hist stays
 # at 92.5714.
-command	?GetCommand@combatManager@@QAEHH@Z	92.5714	92.5714	92.5714	0x76490
+command	?GetCommand@combatManager@@QAEHH@Z	92.5357	92.5714	92.5714	0x76490
 command	?GetControl@combatManager@@QAEXXZ	87.7747	87.7747	87.7747	0x782d0
 command	?HandleCombatPlayerDrop@combatManager@@QAEEKPAVmessage@@@Z	100.0000	100.0000	100.0000	0x7a500
 command	?Main@combatManager@@UAEHAAVmessage@@@Z	96.2267	96.2267	96.2267	0x740d0
+command	?ProcessCombatMsg@combatManager@@QAEHAAVmessage@@@Z	93.0970	93.0970	93.0970	0x74d80
 command	?ProcessNextAction@combatManager@@QAEHAAVmessage@@E@Z	98.5272	100.0000	100.0000	0x78d80
 command	?ResetCycleTimers@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x79f30
 command	?ResetCyclingCreatures@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x79de0
@@ -835,7 +836,6 @@ command	?process_move_then_attack@combatManager@@QAEEPAVmessage@@@Z	100.0000	100
 command	?show_eagle_eye@combatManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0x76fe0
 command	?show_looted_artifacts@combatManager@@QAEXAAV?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@H@Z	100.0000	100.0000	100.0000	0x772b0
 command	?valid_wall_target@combatManager@@QAEEW4TWallTargetId@@@Z	100.0000	100.0000	100.0000	0x76440
-command	combatManager_ProcessCombatMsg	0.0000	0.0000	0.0000	0x74d80
 compress	@compress2@20	100.0000	100.0000	100.0000	0x206b40
 crc32	@crc32@12	100.0000	100.0000	100.0000	0x205af0
 creature_bank	??0type_creature_bank_traits@@QAE@XZ	100.0000	100.0000	100.0000	0x7aad0

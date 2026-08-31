@@ -32,6 +32,9 @@ enum EKeyCodes {
     KEYCODE_P = 0x19,
     KEYCODE_S = 0x1f,
     KEYCODE_D = 0x20,
+    // ProcessCombatMsg's Complete-only Faerie Dragon spell shortcut.
+    // The retail key jump table fixes the standard set-1 F scan code.
+    KEYCODE_F = 0x21,
     KEYCODE_L = 0x26,
     KEYCODE_V = 0x2f,
     KEYCODE_N = 0x31,
@@ -51,6 +54,8 @@ enum EKeyCodes {
     KEYCODE_KP_7 = 0x47,
     KEYCODE_KP_8 = 0x48,
     KEYCODE_KP_9 = 0x49,
+    // Combat-log scroll-up. The adjacent numpad table fixes the value.
+    KEYCODE_KP_MINUS = 0x4a,
     KEYCODE_KP_4 = 0x4b,
     KEYCODE_KP_5 = 0x4c,
     KEYCODE_KP_6 = 0x4d,

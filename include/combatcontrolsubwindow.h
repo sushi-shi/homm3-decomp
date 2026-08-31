@@ -14,6 +14,7 @@ class hero;
 class type_func_button;
 class iconWidget;
 class textWidget;
+class army;
 
 // The family base. Retail's 0x46b610 constructor takes (parent, sprite
 // name), chains ??0TSubWindow, stores the 0x63d410 vptr and one dword at
@@ -135,6 +136,13 @@ public:
     // TCombatHeroSubWindow's table) sits four bytes earlier, so neither
     // class adds a virtual beyond the destructor.
     virtual ~TCombatCreatureSubWindow();
+
+    // Dreamcast's public symbols preserve these two source boundaries and
+    // ProcessCombatMsg's retail call sites independently prove their
+    // pointer ABI.  They remain out of line just like the sibling hero
+    // panel methods.
+    void Update(const army* info, const hero* owner);
+    void Show();
 
     // 0x46df80. LOCATED 2026-08-13 from combatManager::DoCommand
     // (0x476bd0), which closes the two hero panels through the proven
