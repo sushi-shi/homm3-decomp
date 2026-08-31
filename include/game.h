@@ -491,11 +491,9 @@ public:
     // No surviving symbol names it, so the address-bearing spelling
     // follows NewfullMapFn_00505F20's precedent below.
     void NewfullMapFn_00505D60(type_point point, int player);
-#ifdef HOMM3_MAPCELL_OBJECT_TYPE_TABLE_VIEW
-    // Retail-only startup loader at 0x505da0. The narrow view keeps its
-    // declaration and TObjectType support out of unrelated game.h consumers.
+    // Retail-only startup loader at 0x505da0. Its declaration stays beside
+    // the canonical TObjectType support it consumes.
     void NewfullMapFn_00505DA0();
-#endif
     // Retail-only helper at 0x505f20. Its behavior selects or appends the
     // matching object-type/sprite pair and writes the resulting type index.
     // No surviving symbol names it, so the address-bearing spelling remains
