@@ -578,8 +578,6 @@ call	army.obj	0x499e8	combatManager::get_current_army
 call	army.obj	0x499e8	min
 call	army.obj	0x4a348	army::can_shoot
 call	army.obj	0x4a348	searchArray::get_hex
-call	army.obj	0x4a480	army::can_shoot
-call	army.obj	0x4a480	army::get_owning_side
 call	army.obj	0x4a598	army::Is
 call	army.obj	0x4a598	army::OffsetToFront
 call	army.obj	0x4a610	army::Is

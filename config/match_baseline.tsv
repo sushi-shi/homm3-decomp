@@ -431,7 +431,7 @@ army	?DrawToBuffer@army@@QAEXHHH@Z	96.1366	96.1366	96.1366	0x3e140
 army	?FaerieDragonSpell@army@@QAEXXZ	100.0000	100.0000	100.0000	0x47510
 army	?GetArmyName@@YIPBDHH@Z	100.0000	100.0000	100.0000	0x40100
 army	?GetSpeed@army@@QBEHXZ	100.0000	100.0000	100.0000	0x48cd0
-army	?GoBerserk@army@@QAEXXZ	86.0096	86.5769	86.5769	0x456d0
+army	?GoBerserk@army@@QAEXXZ	97.8846	97.8846	97.8846	0x456d0
 army	?Init@army@@QAEXHHPBVhero@@HHHH@Z	100.0000	100.0000	100.0000	0x3d8b0
 army	?InitClean@army@@QAEXXZ	92.6261	92.6261	92.6261	0x3d5c0
 army	?LoadResources@army@@QAEXXZ	98.6225	98.6225	98.6225	0x3d9f0
@@ -452,7 +452,7 @@ army	?WalkTo@army@@QAEEHE@Z	93.3162	93.3162	93.3162	0x41fa0
 army	?add_aura@army@@QAEXXZ	100.0000	100.0000	100.0000	0x3ea70
 army	?adjust_damage@army@@QBEJPAV1@JEEJPAJ@Z	100.0000	100.0000	100.0000	0x43f40
 army	?animate_missile@army@@AAEXPAV1@@Z	93.1695	93.1695	93.1695	0x3f2c0
-army	?attack_hex@army@@QAEEHE@Z	94.0790	94.0790	94.0790	0x45a60
+army	?attack_hex@army@@QAEEHE@Z	83.8632	94.0790	94.0790	0x45a60
 army	?attack_wall@army@@AAEXW4TWallTargetId@@ABUtype_ballistics_traits@@@Z	100.0000	100.0000	100.0000	0x45ec0
 army	?attack_wall@army@@AAEXW4TWallTargetId@@J@Z	91.4600	91.4600	91.4600	0x45fd0
 army	?can_cast_resurrect@army@@QBE_NJ@Z	100.0000	100.0000	100.0000	0x473d0
@@ -493,7 +493,7 @@ army	?get_resurrection_size@army@@QBEJPBV1@@Z	100.0000	100.0000	100.0000	0x47330
 army	?get_second_grid_index@army@@QBEHXZ	100.0000	100.0000	100.0000	0x466a0
 army	?get_total_combat_value@army@@QBEJJJ@Z	100.0000	100.0000	100.0000	0x42e60
 army	?get_total_hit_points@army@@QBEJE@Z	100.0000	100.0000	100.0000	0x43080
-army	?get_unit_combat_value@army@@QBENJJEPBV1@@Z	92.1581	92.1581	92.1581	0x42a50
+army	?get_unit_combat_value@army@@QBENJJEPBV1@@Z	84.9968	92.1581	92.1581	0x42a50
 army	?initialize@army@@QAEXHJPBVhero@@JJJ@Z	100.0000	100.0000	100.0000	0x3d730
 army	?is_adjacent@army@@QBEEH@Z	100.0000	100.0000	100.0000	0x466c0
 army	?is_enemy@army@@QBEEPBV1@@Z	100.0000	100.0000	100.0000	0x42880
@@ -508,7 +508,7 @@ army	?remove_binding@army@@QAEXXZ	100.0000	100.0000	100.0000	0x3ee10
 army	?set_AI_expected_damage@army@@QAEXJ@Z	100.0000	100.0000	100.0000	0x430d0
 army	?set_inside_area_effect@army@@QAEEE@Z	100.0000	100.0000	100.0000	0x3efe0
 army	?simple_move@army@@AAEEHE@Z	100.0000	100.0000	100.0000	0x45950
-army	?spell_is_valid_on_target@@YIEHPBVarmy@@@Z	92.6970	92.6970	92.6970	0x47a80
+army	?spell_is_valid_on_target@@YIEHPBVarmy@@@Z	86.3747	92.6970	92.6970	0x47a80
 army	?stop_sample@army@@QAEXW4TSampleID@1@@Z	100.0000	100.0000	100.0000	0x3d580
 armygrp	??0TSplitWindow@@QAE@HHW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x49790
 armygrp	??0armyGroup@@QAE@W4TCreatureType@@H@Z	100.0000	100.0000	100.0000	0x4aaa0
