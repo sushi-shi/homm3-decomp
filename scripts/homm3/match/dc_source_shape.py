@@ -2607,6 +2607,63 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             "CancelIndividualSpell may not flatten adjust_hitpoints fields",
             r"\b(?:origHitPoints|poisonPenalty|topCreatureDamage)\b", 0, 0),
     ),
+    ("army.obj", 0x499E8): (
+        SourceRule(
+            "SetSpellInfluence keeps the Dreamcast duration selection in "
+            "the caller, including get_current_army in the Frenzy arm",
+            r"\b(?:long|int)\s+rounds\s*;\s*"
+            r"switch\s*\(\s*spell\s*\)\s*\{"
+            r"\s*case\s+SPELL_DISRUPTING_RAY\s*:\s*"
+            r"case\s+SPELL_BERSERK\s*:\s*case\s+SPELL_BIND\s*:\s*"
+            r"rounds\s*=\s*255\s*;\s*break\s*;\s*"
+            r"case\s+SPELL_FRENZY\s*:\s*if\s*\(\s*this\s*==\s*"
+            r"gpCombatManager\s*->\s*get_current_army\s*\(\s*\)\s*\)"
+            r"\s*rounds\s*=\s*1\s*;\s*else\s*rounds\s*=\s*2\s*;"
+            r"\s*break\s*;\s*default\s*:\s*rounds\s*=\s*power\s*;"
+            r"\s*break\s*;\s*\}"),
+        SourceRule(
+            "SetSpellInfluence may not replace recovered statement groups "
+            "with artificial caller-shrink helpers",
+            r"\b(?:spell_influence_rounds|apply_poison_step)\s*\(", 0, 0),
+        SourceRule(
+            "SetSpellInfluence keeps HYPNOTIZE's CancelIndividualSpell, "
+            "remove_aura, add_aura order",
+            r"case\s+SPELL_HYPNOTIZE\s*:\s*"
+            r"CancelIndividualSpell\s*\(\s*SPELL_BERSERK\s*\)\s*;\s*"
+            r"(?:this\s*->\s*)?remove_aura\s*\(\s*\)\s*;\s*"
+            r"(?:this\s*->\s*)?add_aura\s*\(\s*\)\s*;"),
+        SourceRule(
+            "SetSpellInfluence keeps Disease's two and AGE's one separate "
+            "source min statements",
+            r"(?<![_\w])min\s*\(", 3, 3),
+        SourceRule(
+            "SetSpellInfluence may not bypass the source min wrapper",
+            r"\b_cpp_min\s*\(", 0, 0),
+        SourceRule(
+            "SetSpellInfluence keeps Poison's direct max statement "
+            "followed by the adjust_hitpoints boundary",
+            r"case\s+SPELL_POISON\s*:\s*(?:\{\s*)?"
+            r"poisonPenalty\s*=\s*[^;]*?"
+            r"(?:_cpp_max|(?:std\s*::\s*)?max)\s*\(\s*[^;]*?"
+            r"poisonPenalty\s*-\s*0\.1f?[^;]*?,\s*0\.5f?[^;]*?\)"
+            r"[^;]*?;\s*(?:this\s*->\s*)?"
+            r"adjust_hitpoints\s*\(\s*\)\s*;"),
+        SourceRule(
+            "SetSpellInfluence keeps AGE's adjust_hitpoints boundary before "
+            "its damage min statement",
+            r"case\s+SPELL_AGE\s*:\s*"
+            r"(?:this\s*->\s*)?adjust_hitpoints\s*\(\s*\)\s*;\s*"
+            r"topCreatureDamage\s*=\s*min\s*\(\s*topCreatureDamage\s*,"
+            r"\s*hitPoints\s*-\s*1\s*\)\s*;"),
+        SourceRule(
+            "SetSpellInfluence keeps exactly the Poison and AGE "
+            "adjust_hitpoints boundaries",
+            r"\badjust_hitpoints\s*\(\s*\)", 2, 2),
+        SourceRule(
+            "SetSpellInfluence keeps the Dreamcast deque push_back tail",
+            r"\bSpellInfluenceQueue\s*\.\s*push_back\s*\(\s*spell\s*\)",
+            1, 1),
+    ),
     ("army.obj", 0x4A348): (
         SourceRule(
             "get_berserk_targets keeps Dreamcast's sole can_shoot(0) "
@@ -6566,6 +6623,86 @@ case SPELL_AGE:
     if any(not contract_violations(probe, cancel_individual_key)
            for probe in flattened_cancel_individual_probes):
         failures.append("flattened CancelIndividualSpell shape passed")
+    set_spell_influence_key = ("army.obj", 0x499E8)
+    set_spell_influence_probe = """\
+long rounds;
+switch (spell) {
+case SPELL_DISRUPTING_RAY:
+case SPELL_BERSERK:
+case SPELL_BIND:
+    rounds = 255;
+    break;
+case SPELL_FRENZY:
+    if (this == gpCombatManager->get_current_army())
+        rounds = 1;
+    else
+        rounds = 2;
+    break;
+default:
+    rounds = power;
+    break;
+}
+switch (spell) {
+case SPELL_HYPNOTIZE:
+    CancelIndividualSpell(SPELL_BERSERK);
+    remove_aura();
+    add_aura();
+    break;
+case SPELL_DISEASE:
+    diseaseDefensePenalty = min(2, defenseSkill);
+    diseaseAttackPenalty = min(2, attackSkill);
+    break;
+case SPELL_POISON: {
+    poisonPenalty = static_cast<float>(
+        _cpp_max(static_cast<double>(poisonPenalty - 0.1f), 0.5));
+    adjust_hitpoints();
+    break;
+}
+case SPELL_AGE:
+    adjust_hitpoints();
+    topCreatureDamage = min(topCreatureDamage, hitPoints - 1);
+    break;
+}
+SpellInfluenceQueue.push_back(spell);
+"""
+    if contract_violations(set_spell_influence_probe,
+                           set_spell_influence_key):
+        failures.append("aligned SetSpellInfluence shape did not pass")
+    flattened_set_spell_influence_probes = (
+        set_spell_influence_probe.replace(
+            "switch (spell)", "switch (duration_spell)", 1),
+        set_spell_influence_probe.replace(
+            "long rounds;",
+            "long rounds = spell_influence_rounds(this, spell, power);",
+            1),
+        set_spell_influence_probe.replace(
+            "poisonPenalty = static_cast<float>(\n"
+            "        _cpp_max(static_cast<double>(poisonPenalty - 0.1f), "
+            "0.5));\n    adjust_hitpoints();",
+            "apply_poison_step(this);"),
+        set_spell_influence_probe.replace(
+            "case SPELL_AGE:\n    adjust_hitpoints();\n"
+            "    topCreatureDamage = min(topCreatureDamage, hitPoints - 1);",
+            "case SPELL_AGE:\n"
+            "    hitPoints = static_cast<int>(origHitPoints * "
+            "poisonPenalty + 0.95f);\n"
+            "    topCreatureDamage = min(topCreatureDamage, "
+            "hitPoints - 1);"),
+        set_spell_influence_probe.replace("min(", "_cpp_min("),
+        set_spell_influence_probe.replace(
+            "adjust_hitpoints();\n"
+            "    topCreatureDamage = min(topCreatureDamage, hitPoints - 1);",
+            "topCreatureDamage = min(topCreatureDamage, hitPoints - 1);\n"
+            "    adjust_hitpoints();", 1),
+        set_spell_influence_probe.replace(
+            "remove_aura();\n    add_aura();",
+            "add_aura();\n    remove_aura();"),
+        set_spell_influence_probe.replace(
+            "SpellInfluenceQueue.push_back(spell);", ""),
+    )
+    if any(not contract_violations(probe, set_spell_influence_key)
+           for probe in flattened_set_spell_influence_probes):
+        failures.append("flattened SetSpellInfluence shape passed")
     automate_first_aid_key = ("command.obj", 0x6B12C)
     automate_first_aid_probe = """\
 field_3c = 11;

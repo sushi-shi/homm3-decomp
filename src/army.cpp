@@ -4627,83 +4627,12 @@ void army::CancelAllSpells()
 // E:\gamedcs\army.cpp:3816
 #endif  // @carcass
 
-// THE THREE /Ob2 BUDGET DOSES SetSpellInfluence NEEDS (2026-08-20), and they
-// are a STEP, not a ramp: each one alone is byte-flat to the digit and the
-// three together are worth 94.6999 -> 99.0928.  Its standing note called the
-// residual "one statement, unreachable by statement-scoped pins" and stopped
-// there.  That was true of the PIN and wrong about the wall - the pin imposes
-// at the outermost callee, which here is the `push_back` retail expands, but
-// the CALLER-SHRINK lever reaches the nested expansions a pin cannot, and
-// this body at 2969 B had budget to spare.
-//
-// Retail keeps `std::copy` (0x5093c0 - the same fastcall COMDAT
-// findpath's FindCombatPath needs) and the deque map-iterator constructor
-// (0x5586d0) OUT of line inside its own push_back expansion; our CL wrote the
-// copy loop out longhand and inlined the ctor.  Lifting the Hypnotize
-// teardown alone crosses the threshold (+0.98 and the iterator ctor comes
-// back out of line), the duration switch then pays +1.49, and the Poison arm
-// +1.92, at which point the copy is a call too.  Order does not matter;
-// PRESENCE of all three does - with drop_aura_links removed the other two
-// measure exactly 94.6999, the untouched baseline.
-//
-// TWO NEGATIVE DOSES, so do not just add more: the Anti-Magic loop measures
-// 94.6999 -> 93.7251 on its own, and adding the Age arm on top of the three
-// below overshoots hard, 99.0928 -> 93.2875.  The dose is a PEAK.
-//
-// None of the three is a claim about retail's source.  The DC roster runs
-// army.cpp:3802 (CancelAllSpells) straight to 3816 (SetSpellInfluence) to
-// 4129 (DecrementSpellRounds) with nothing between, and it DOES list helpers
-// a build inlined away - so these are codegen devices in the same class as
-// the statement pins beside them, exactly like findpath's find_queue_slot.
-// They cost no symbol: army.obj defines none of them.
-//
-// 99.0928 -> 99.5510 (2026-08-21): naming a vector reference around each
-// two-iterator aura erase is the source handle for retail's receiver order.
-// It forms `lea ecx,[esi+0x2b0/2bc]` before pushing `first` and `last`, where
-// the direct member expression delayed the LEA until after both pushes.
-//
-// Residual (99.5510%): only the Age arm's first min remains. Retail copies
-// `hp`, stores hitPoints, loads topCreatureDamage, then decrements the copy;
-// this CL materialises `hp - 1` with LEA first. Three honest spellings are
-// byte-identical at 99.5510: an assignment expression in the min operand, a
-// named const-reference for the min result, and a named `damageCap` followed
-// by `--damageCap`. This is temp-creation scheduling inside one statement.
-
-// SetSpellInfluence's Poison arm, lifted out for the /Ob2 BUDGET probe
-// above.  +1.92 as the third dose.
-static void apply_poison_step(army* self)
-{
-    double clamped =
-        _cpp_max(static_cast<double>(self->poisonPenalty - 0.1f), 0.5);
-    float penalty = static_cast<float>(clamped);
-    self->poisonPenalty = penalty;
-    long hp;
-    if (self->spellInfluence[SPELL_AGE]) {
-        float base = self->origHitPoints;
-        hp = static_cast<long>(base * penalty * 0.5f + 0.95f);
-    } else {
-        float base = self->origHitPoints;
-        hp = static_cast<long>(base * penalty + 0.95f);
-    }
-    self->hitPoints = hp;
-    self->topCreatureDamage = _cpp_min(self->topCreatureDamage, hp - 1);
-}
-
-// SetSpellInfluence's duration pick, lifted out for the /Ob2 BUDGET probe
-// above.  +1.49 as the second dose.
-static long spell_influence_rounds(const army* self, int spell, int power)
-{
-    switch (spell) {
-    case SPELL_DISRUPTING_RAY:
-    case SPELL_BERSERK:
-    case SPELL_BIND:
-        return 255;
-    case SPELL_FRENZY:
-        return (self != gpCombatManager->get_current_army()) + 1;
-    default:
-        return power;
-    }
-}
+// Rejected 99.5510% local maximum (2026-08-31): file-local duration and
+// Poison helpers, plus duplicated HYPNOTIZE/AGE bodies, manipulated VC6's
+// /Ob2 budget but had no Dreamcast definition or line-table boundary. The
+// source contracts now forbid restoring that compiler-state scaffold. Its
+// useful codegen finding remains: retail's final deque expansion keeps a
+// nested copy/iterator update out of line while natural VC6 expands it.
 
 // Rejected local-maximum scaffold. Dreamcast army.cpp:4055 proves that
 // SetSpellInfluence calls the named remove_aura boundary here, followed by
@@ -4771,45 +4700,43 @@ static void drop_aura_links(army* self)
 // to the cast-order queue. The exact inverse of CancelIndividualSpell
 // above, arm for arm.
 //
-// SPELLING LEDGER (0 -> 87.51 -> 93.75 -> 94.70): the HYPNOTIZE arm's
-// two teardown loops must be erase_item's body written LONGHAND with
-// the size() and erase(iterator) sites pinned - retail expands
-// erase_item here but keeps ITS internals out of line (the 0x423110
-// size COMDAT and the 0x448d30 one-arg vector erase), the exact
-// opposite granularity of CancelIndividualSpell's arm, and no pin can
-// reach inside a real call's expansion; the two clears are pinned
-// erase(begin, end) exactly as there. Poison's clamp must round
-// through a NAMED DOUBLE local (`double clamped`) before the float
-// conversion or the reference-return dereference folds the copy retail
-// keeps (+0.95).
+// Dreamcast lines 3822-3843 recover the duration switch in this caller;
+// 4054-4057 recover CancelIndividualSpell -> remove_aura -> add_aura;
+// 4067-4068 are two separate Disease mins; 4075 is max followed by the
+// adjust_hitpoints boundary; and 4091-4092 are adjust_hitpoints followed by
+// one further min. Restoring those statement groups changes the retail CFG
+// from 31/135 to 121/135 exact blocks and restores its exact 54-branch
+// sequence. The byte score is 96.98% with the older 99.5510% peak banked.
 //
-// Residual (99.5510%): see the budget-dose and receiver-order notes above the
-// three file-local helpers this body calls. They replace the "unreachable by
-// statement-scoped pins" reading, which was right about the pin and wrong
-// about the wall. Down to ~6 instructions in the AGE arm (2026-08-21):
-// retail computes the clamp bound as `mov ecx,eax / dec ecx` AROUND the
-// hitPoints store where we emit store-then-`lea ecx,[eax-1]`. Tried and
-// rejected: `hp--` after the store (dec lands in place, 99.40), a named
-// `cap = hp` copied then decremented, and `cap = hp - 1` declared before
-// the store (both copy-propagated back to the in-place dec, 99.40/99.55).
-// C2's propagation erases every ordering the source can express here.
-//
-// The float constants are read from the image: the factor arms divide
-// the amount by 100.0, Haste re-times the walk cycle by 0.65 and Slow
-// by 1.5, Poison steps poisonPenalty down 0.1f with a 0.5 floor
-// (_cpp_max over doubles - the 0.5 literal builds its slot from
-// immediates while the compare uses the pooled copy), and both HP
-// recomputes carry the same +0.95f rounding CancelIndividualSpell's
-// AGE arm has. The AGE arm reads its OWN just-set round row (always
-// non-zero -> always the 0.5 halving path) - retail-faithful, do not
-// "fix" - and its topCreatureDamage clamp is written TWICE in a row,
-// the second min re-reading the first's store; transcribed as the two
-// statements they were.
+// Complete retail lowers Poison's 0.5 floor through double temporaries, so
+// the direct max statement retains that x86-proved type conversion even
+// though the SH4/STLport build uses a float max. Binding the result to a
+// named value reproduces the local copy but perturbs VC6's whole-function
+// inliner state and drops the structure to 110 exact blocks; the direct
+// expression is therefore the coherent form. The remaining missing block is
+// inside deque::push_back's nested iterator update. A statement-scoped
+// inline_depth(1) is byte-flat and is not retained.
 VA(0x004448f0, 0xB99)  // anchor-global, dc 0x499e8
 void army::SetSpellInfluence(int spell, int power, int mastery,
                              const hero* casting_hero)
 {
-    long rounds = spell_influence_rounds(this, spell, power);
+    long rounds;
+    switch (spell) {
+    case SPELL_DISRUPTING_RAY:
+    case SPELL_BERSERK:
+    case SPELL_BIND:
+        rounds = 255;
+        break;
+    case SPELL_FRENZY:
+        if (this == gpCombatManager->get_current_army())
+            rounds = 1;
+        else
+            rounds = 2;
+        break;
+    default:
+        rounds = power;
+        break;
+    }
     if (spellInfluence[spell] > 0) {
         if (rounds > spellInfluence[spell])
             spellInfluence[spell] = rounds;
@@ -4956,28 +4883,21 @@ void army::SetSpellInfluence(int spell, int power, int mastery,
         blindFactor = amount / 100.0;
         break;
     case SPELL_DISEASE:
-        diseaseDefensePenalty = _cpp_min(2, defenseSkill);
-        diseaseAttackPenalty = _cpp_min(2, attackSkill);
+        diseaseDefensePenalty = min(2, defenseSkill);
+        diseaseAttackPenalty = min(2, attackSkill);
         attackSkill = attackSkill - diseaseAttackPenalty;
         defenseSkill = defenseSkill - diseaseDefensePenalty;
         break;
-    case SPELL_POISON:
-        apply_poison_step(this);
-        break;
-    case SPELL_AGE: {
-        long hp;
-        if (spellInfluence[SPELL_AGE]) {
-            float base = origHitPoints;
-            hp = static_cast<long>(base * poisonPenalty * 0.5f + 0.95f);
-        } else {
-            float base = origHitPoints;
-            hp = static_cast<long>(base * poisonPenalty + 0.95f);
-        }
-        hitPoints = hp;
-        topCreatureDamage = _cpp_min(topCreatureDamage, hp - 1);
-        topCreatureDamage = _cpp_min(topCreatureDamage, hp - 1);
+    case SPELL_POISON: {
+        poisonPenalty = static_cast<float>(
+            _cpp_max(static_cast<double>(poisonPenalty - 0.1f), 0.5));
+        adjust_hitpoints();
         break;
     }
+    case SPELL_AGE:
+        adjust_hitpoints();
+        topCreatureDamage = min(topCreatureDamage, hitPoints - 1);
+        break;
     case SPELL_MAGIC_MIRROR:
         backlashChance = amount;
         break;
