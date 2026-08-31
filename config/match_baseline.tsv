@@ -2656,12 +2656,13 @@ singleselectionpopups	?Main@CSpriteWidget@@UAEHPAVmessage@@@Z	100.0000	100.0000	
 singleselectionpopups	?handle_message@CSingleSelPopup@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x175430
 singleselectionwindow	??0CNetPlayerHandlerPlayer@@QAE@XZ	100.0000	100.0000	100.0000	0x17c790
 singleselectionwindow	??0CNetPlayerInfo@@QAE@XZ	100.0000	100.0000	100.0000	0x17f720
+singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	7.1505	7.1505	7.1505	0x179960
 singleselectionwindow	??0lobby_message@@QAE@XZ	100.0000	100.0000	100.0000	0x189190
 singleselectionwindow	??0t_map_list_update@@QAE@K@Z	100.0000	100.0000	100.0000	0x189240
 singleselectionwindow	??1CHostWaitDlg@@UAE@XZ	0.0000	0.0000	0.0000	0x189230
 singleselectionwindow	??1CNewPlayerUpdateTask@@QAE@XZ	100.0000	100.0000	100.0000	0x183ef0
 singleselectionwindow	??1GameSelectionHeadersStruct@@QAE@XZ	35.0465	35.0465	35.0465	0x178290
-singleselectionwindow	??1TSingleSelectionWindow@@UAE@XZ	33.7160	33.7160	33.7160	0x183b40
+singleselectionwindow	??1TSingleSelectionWindow@@UAE@XZ	33.3385	33.7160	33.7160	0x183b40
 singleselectionwindow	??4GameSelectionHeadersStruct@@QAEAAU0@ABU0@@Z	75.2863	75.2863	75.2863	0x178440
 singleselectionwindow	??_GCHostWaitDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x189200
 singleselectionwindow	??_GTSingleSelectionWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x17d130
@@ -2735,7 +2736,7 @@ singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100
 # 2026-08-27 (round 3): the interim full build re-banked the transient
 # peak a third time; re-lowered with the round's bodies landed. Same
 # scheduler flap, same recovery path.
-singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0
+singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0
 singleselectionwindow	?OnMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2193	90.2193	90.2193	0x189710
 singleselectionwindow	?OnNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	97.5366	97.5366	97.5366	0x18b510
 singleselectionwindow	?OnNewPlayerMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	97.0628	97.0628	97.0628	0x189fa0
@@ -2785,7 +2786,6 @@ singleselectionwindow	TSingleSelectionWindow_GetHeader	0.0000	0.0000	0.0000	0x18
 singleselectionwindow	TSingleSelectionWindow_GetHeaders	0.0000	0.0000	0.0000	0x182b40
 singleselectionwindow	TSingleSelectionWindow_OnWidgetDeselect	0.0000	0.0000	0.0000	0x1865b0
 singleselectionwindow	TSingleSelectionWindow_ProcessRightSelect	0.0000	0.0000	0.0000	0x1822d0
-singleselectionwindow	TSingleSelectionWindow_TSingleSelectionWindow	0.0000	0.0000	0.0000	0x179960
 singleselectionwindow	TSingleSelectionWindow_WindowFn_00582e90	0.0000	0.0000	0.0000	0x182e90
 slider	??0slider@@QAE@HHHHHHP6IXHPAVheroWindow@@@ZW4EGraphics@0@HE@Z	100.0000	100.0000	100.0000	0x1960d0
 slider	??1slider@@UAE@XZ	100.0000	100.0000	100.0000	0x196180

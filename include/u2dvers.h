@@ -13,6 +13,7 @@
 // The narrow pointer types model the byte-proven call sites without casts:
 // the constructor reuses its filename slot as the ignored handle output,
 // and VerQueryValue returns the queried character buffer.
+#ifndef HOMM3_U2DVERS_SYSTEM_VERSION_DECLS
 extern "C" unsigned long __stdcall GetFileVersionInfoSizeA(
     const char* filename, unsigned long* ignoredHandle);
 extern "C" int __stdcall GetFileVersionInfoA(
@@ -21,6 +22,7 @@ extern "C" int __stdcall GetFileVersionInfoA(
 extern "C" int __stdcall VerQueryValueA(
     const void* data, const char* subBlock,
     char** value, unsigned int* length);
+#endif
 
 // PROVEN retail layout: both ctor and dtor access only the allocation
 // pointer at +0; callers allocate four bytes for the object.
@@ -31,6 +33,14 @@ public:
     TFileVersionInfo(const char* filename);
     ~TFileVersionInfo();
     unsigned char GetVersionInfo(const char* name, std::string* buffer);
+#ifdef HOMM3_U2DVERS_PRODUCT_VERSION_INLINE
+    // DC's source-visible wrapper. Complete expands it at the selection
+    // window call site into the ProductVersion GetVersionInfo call.
+    unsigned char GetProductVersion(std::string* productVersion)
+    {
+        return GetVersionInfo("ProductVersion", productVersion);
+    }
+#endif
 };
 SIZE(TFileVersionInfo, 4);
 
