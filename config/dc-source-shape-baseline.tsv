@@ -580,7 +580,6 @@ call	army.obj	0x4a610	army::Is
 call	army.obj	0x4a610	army::NeedToTurn
 call	army.obj	0x4a610	combatManager::ValidHex
 call	army.obj	0x4a7ac	army::GetAttackMask
-call	army.obj	0x4a7ac	army::get_attack_direction
 call	army.obj	0x4a8c8	SRandom
 call	army.obj	0x4a97c	hero::get_secondary_skill
 call	army.obj	0x4aa3c	SRandom

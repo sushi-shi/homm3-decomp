@@ -2551,6 +2551,12 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"\s*=\s*1\s*;\s*return\s*;\s*\}\s*"
             r"gpCombatManager\s*->\s*berserk_attack\s*\("),
     ),
+    ("army.obj", 0x4A7AC): (
+        SourceRule(
+            "attack_hex keeps Dreamcast's sole one-argument "
+            "get_attack_direction(target) boundary",
+            r"\bget_attack_direction\s*\(\s*target\s*\)", 1, 1),
+    ),
     ("army.obj", 0x4B354): (
         SourceRule(
             "get_second_grid_index keeps Dreamcast's army::Is(1) "
@@ -4872,6 +4878,25 @@ def army_header_roster_violations(text: str) -> list[tuple[int, str]]:
         if not any(start <= match.start() <= end for start, end in allowed):
             defects.append((text.count("\n", 0, match.start()) + 1,
                             "Army.h inline roster may not be hidden by a TU view"))
+
+    # Dreamcast line 4395 proves attack_hex uses the one-argument header
+    # wrapper. Complete retail then proves that wrapper's two-argument callee
+    # expands into attack_hex's exact 41-block body. Losing this qualifier
+    # preserves the source call but silently de-inlines its recovered shape,
+    # so the call-only xref ratchet is insufficient on its own.
+    direction_decl = re.compile(
+        r"(?m)^[ \t]*(?P<inline>inline[ \t]+)?long[ \t]+"
+        r"get_attack_direction\s*\(\s*long\s+our_hex\s*,\s*"
+        r"const\s+army\s*\*\s*enemy\s*\)\s*const\s*;")
+    direction_matches = list(direction_decl.finditer(masked))
+    broken_direction = next(
+        (match for match in direction_matches
+         if match.group("inline") is None), None)
+    if not direction_matches or broken_direction is not None:
+        position = broken_direction.start() if broken_direction else 0
+        defects.append((text.count("\n", 0, position) + 1,
+                        "two-argument get_attack_direction must retain its "
+                        "retail-proved inline contract"))
     return defects
 
 
@@ -6232,6 +6257,30 @@ gpCombatManager->berserk_attack(this, target);
     if any(not contract_violations(probe, go_berserk_key)
            for probe in flattened_go_berserk_probes):
         failures.append("flattened GoBerserk helper shape passed")
+    attack_hex_key = ("army.obj", 0x4A7AC)
+    attack_hex_probe = """\
+int direction = get_attack_direction(target);
+if (direction >= 0)
+    do_attack(direction);
+"""
+    if contract_violations(attack_hex_probe, attack_hex_key):
+        failures.append("aligned attack_hex helper shape did not pass")
+    flattened_attack_hex_probes = (
+        attack_hex_probe.replace(
+            "get_attack_direction(target)",
+            "get_attack_direction(gridIndex, target)"),
+        """\
+int direction = -1;
+for (int i = 0; i < 8; ++i) {
+    long adjacent = get_adjacent_hex(gridIndex, i);
+    if (target == gpCombatManager->cells[adjacent].get_army())
+        direction = i;
+}
+""",
+    )
+    if any(not contract_violations(probe, attack_hex_key)
+           for probe in flattened_attack_hex_probes):
+        failures.append("flattened attack_hex helper shape passed")
     automate_first_aid_key = ("command.obj", 0x6B12C)
     automate_first_aid_probe = """\
 field_3c = 11;
@@ -10780,6 +10829,16 @@ int get_owning_side() const { return combatSide; }
     if not any("TU view" in defect for _line, defect in
                army_header_roster_violations(guarded_roster)):
         failures.append("view-hidden Army.h roster member was not detected")
+    deinlined_attack_direction = roster_text.replace(
+        "inline long get_attack_direction(long our_hex, "
+        "const army* enemy) const;",
+        "long get_attack_direction(long our_hex, const army* enemy) const;",
+        1)
+    if not any("get_attack_direction" in defect and "inline" in defect
+               for _line, defect in army_header_roster_violations(
+                   deinlined_attack_direction)):
+        failures.append(
+            "de-inlined get_attack_direction header contract passed")
 
     class_defects = {description for _line, description in
                      army_class_roster_violations(roster_text)}
