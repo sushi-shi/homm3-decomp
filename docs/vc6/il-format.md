@@ -135,10 +135,14 @@ grammar is OPEN; the tool falls back to byte-level for such streams.
 * Trailer: `0a 00 00 00`.
 
 The name SCAN (`_il.scan_names`) walks printable 0-terminated runs preceded
-by a 00 byte and tries embedded-handle, then symbol-form (handle at -3),
-then file-form (handle at -2), gated by handle plausibility (<= high-water)
-and a name charset. It is an OVERLAY: it annotates the byte diff (names in
-order, handle-shift summaries, per-function ex spans), never replaces it.
+by a 00 byte and tries strongly framed function/data/local records before
+embedded-handle and generic symbol/file forms, gated by handle plausibility
+(<= high-water) and a name charset. Rich-TU `sy` locals use
+`01 <scope> <u16 handle> 02 00 00 <name>`. Strong framing must win: otherwise
+an ordinary mangled name beginning `?P` is a plausible embedded handle
+`0x503f` and loses its first two characters. It is an OVERLAY: it annotates
+the byte diff (names in order, handle-shift summaries, per-function ex spans),
+never replaces it.
 Known residual noise: junk runs from attribute bytes can scan as records;
 both sides of a diff see the same noise, so comparisons stay meaningful.
 

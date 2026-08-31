@@ -116,15 +116,17 @@ def scan_names(data: bytes, highwater: int | None = None,
     shapes, tried in this order for each printable 0-terminated run at
     offset o with data[o-1] == 0:
 
+      symbol    ``<u16 handle> 00 <name>`` (0e/01-opcode records) -
+                handle at o-3.
+      local     ``01 <scope> <u16 handle> 02 00 00 <name>`` - the rich-TU
+                ``sy`` form emitted by the pinned C1XX.
       embedded  ``<00> <u16 handle> <name>`` - no separator; when both
                 handle bytes are printable they head the run itself
                 (initialize.cpp: ``02 00  49 27  '$kTown0Buildings'`` =
-                handle 0x2749).  Tried first because the symbol-form
-                reading of these records false-fires on the preceding
-                opcode bytes; a mangled name's own first two chars are an
-                implausibly large u16, which keeps true symbol records out.
-      symbol    ``<u16 handle> 00 <name>`` (0e/01-opcode records) -
-                handle at o-3.
+                handle 0x2749).  This is tried only after the strongly
+                framed function/data/local forms.  Otherwise a decorated
+                name beginning ``?P`` can be misread as handle 0x503f and
+                silently lose its first two characters.
       file      ``<u16 handle> <name>`` where the handle's high 00 byte is
                 the byte before the name (21 12 records) - handle at o-2.
 
@@ -147,6 +149,26 @@ def scan_names(data: bytes, highwater: int | None = None,
             i = j + 1
             continue
         name = data[i:j].decode("latin1")
+        # Prefer the record forms whose opcode/separator framing is known.
+        # The embedded form deliberately places a printable u16 immediately
+        # before the name; trying it first corrupts ordinary mangled names
+        # whenever their first two characters also form a plausible handle.
+        strong = None
+        if i >= 4 and data[i - 4] == 0x0E:
+            strong = (i - 3, u16(data, i - 3))
+        elif (i >= 5 and data[i - 5:i - 3] in
+              (b"\x01\x00", b"\x01\x01")):
+            strong = (i - 3, u16(data, i - 3))
+        elif (i >= 7 and data[i - 7] == 0x01
+              and data[i - 3:i] == b"\x02\x00\x00"):
+            strong = (i - 5, u16(data, i - 5))
+        if (strong is not None and 0 < strong[1] <= hw
+                and len(name) >= min_len and _NAME_RE.match(name)):
+            out.append({"off": strong[0], "handle": strong[1],
+                        "name": name})
+            i = j + 1
+            continue
+
         h = u16(data, i)
         # The embedded reading skips the run's leading handle bytes, which
         # may be ANY printable pair - so it is gated only on the name TAIL,
