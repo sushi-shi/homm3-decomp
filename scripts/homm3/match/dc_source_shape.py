@@ -2495,6 +2495,16 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"(?<![\w:>])(?:this\s*->\s*)?enemy_is_adjacent\s*\(\s*"
             r"excluded\s*\)", 1, 1),
     ),
+    ("army.obj", 0x47C74): (
+        SourceRule(
+            "enemy_is_adjacent keeps Dreamcast's army::Is(1) boundary",
+            r"(?<![\w:>])(?:this\s*->\s*)?Is\s*\(\s*1u?\s*\)",
+            1, 1),
+        SourceRule(
+            "enemy_is_adjacent keeps Dreamcast's sole "
+            "get_second_grid_index boundary",
+            r"\bget_second_grid_index\s*\(\s*\)", 1, 1),
+    ),
     ("army.obj", 0x4868C): (
         SourceRule(
             "ComputeAttackerDamageBonuses keeps Dreamcast's ballista-arm "
@@ -2510,6 +2520,22 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"\bGetName\s*\(\s*\)",
             0, 0, include_directives=True),
     ),
+    ("army.obj", 0x4A348): (
+        SourceRule(
+            "get_berserk_targets keeps Dreamcast's sole can_shoot(0) "
+            "boundary",
+            r"\bcan_shoot\s*\(\s*(?:0|NULL)\s*\)", 1, 1),
+        SourceRule(
+            "get_berserk_targets keeps Dreamcast's searchArray::get_hex "
+            "boundary",
+            r"\bgpSearchArray\s*->\s*get_hex\s*\(\s*"
+            r"other\s*->\s*gridIndex\s*\)", 1, 1),
+        SourceRule(
+            "get_berserk_targets keeps Dreamcast's clear then push_back "
+            "statement order",
+            r"\barmies\s*\.\s*clear\s*\(\s*\)\s*;\s*\}?[\s\S]*?"
+            r"\barmies\s*\.\s*push_back\s*\(\s*other\s*\)", 1, 1),
+    ),
     ("army.obj", 0x4A480): (
         SourceRule(
             "GoBerserk keeps Dreamcast's sole can_shoot(0) boundary",
@@ -2524,6 +2550,17 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"\bfield_53dc\s*\[\s*get_owning_side\s*\(\s*\)\s*\]"
             r"\s*=\s*1\s*;\s*return\s*;\s*\}\s*"
             r"gpCombatManager\s*->\s*berserk_attack\s*\("),
+    ),
+    ("army.obj", 0x4B354): (
+        SourceRule(
+            "get_second_grid_index keeps Dreamcast's army::Is(1) "
+            "boundary",
+            r"(?<![\w:>])(?:this\s*->\s*)?Is\s*\(\s*1u?\s*\)",
+            1, 1),
+        SourceRule(
+            "get_second_grid_index keeps Dreamcast's OffsetToFront(-1) "
+            "boundary",
+            r"\bOffsetToFront\s*\(\s*-\s*1\s*\)", 1, 1),
     ),
     ("army.obj", 0x4BEEC): (
         SourceRule(
@@ -6109,6 +6146,68 @@ if (enemy_is_adjacent(excluded))
     if any(not contract_violations(probe, can_shoot_key)
            for probe in flattened_can_shoot_probes):
         failures.append("flattened can_shoot owner-sensitive helper passed")
+    enemy_adjacent_key = ("army.obj", 0x47C74)
+    enemy_adjacent_probe = """\
+if (gpCombatManager->enemy_is_adjacent(this, gridIndex, excluded))
+    return 1;
+if (Is(1u))
+    return gpCombatManager->enemy_is_adjacent(
+        this, get_second_grid_index(), excluded);
+return 0;
+"""
+    if contract_violations(enemy_adjacent_probe, enemy_adjacent_key):
+        failures.append("aligned enemy_is_adjacent helper chain did not pass")
+    flattened_enemy_adjacent_probes = (
+        enemy_adjacent_probe.replace("Is(1u)", "creatureId & 1"),
+        enemy_adjacent_probe.replace(
+            "get_second_grid_index()", "gridIndex + (facing ? 1 : -1)"),
+    )
+    if any(not contract_violations(probe, enemy_adjacent_key)
+           for probe in flattened_enemy_adjacent_probes):
+        failures.append("flattened enemy_is_adjacent helper chain passed")
+    get_berserk_targets_key = ("army.obj", 0x4A348)
+    get_berserk_targets_probe = """\
+if (can_shoot(0))
+    canShoot = 1;
+value = gpSearchArray->get_hex(other->gridIndex)->cost;
+if (value < best)
+    armies.clear();
+armies.push_back(other);
+"""
+    if contract_violations(get_berserk_targets_probe,
+                           get_berserk_targets_key):
+        failures.append("aligned get_berserk_targets helper shape did not pass")
+    flattened_get_berserk_targets_probes = (
+        get_berserk_targets_probe.replace(
+            "can_shoot(0)", "can_shoot_flagform(0)"),
+        get_berserk_targets_probe.replace(
+            "gpSearchArray->get_hex(other->gridIndex)->cost",
+            "gpSearchArray->cellData[other->gridIndex].cost"),
+        get_berserk_targets_probe.replace(
+            "armies.clear()", "armies.erase(armies.begin(), armies.end())"),
+        get_berserk_targets_probe.replace(
+            "armies.push_back(other)", "armies.insert(armies.end(), other)"),
+    )
+    if any(not contract_violations(probe, get_berserk_targets_key)
+           for probe in flattened_get_berserk_targets_probes):
+        failures.append("flattened get_berserk_targets helper shape passed")
+    get_second_grid_index_key = ("army.obj", 0x4B354)
+    get_second_grid_index_probe = """\
+if (!Is(1u))
+    return gridIndex;
+return gridIndex + OffsetToFront(-1);
+"""
+    if contract_violations(get_second_grid_index_probe,
+                           get_second_grid_index_key):
+        failures.append("aligned get_second_grid_index helper shape did not pass")
+    flattened_get_second_grid_index_probes = (
+        get_second_grid_index_probe.replace("Is(1u)", "creatureId & 1"),
+        get_second_grid_index_probe.replace(
+            "OffsetToFront(-1)", "(facing ? 1 : -1)"),
+    )
+    if any(not contract_violations(probe, get_second_grid_index_key)
+           for probe in flattened_get_second_grid_index_probes):
+        failures.append("flattened get_second_grid_index helper shape passed")
     go_berserk_key = ("army.obj", 0x4A480)
     go_berserk_probe = """\
 if (can_shoot(0)) {

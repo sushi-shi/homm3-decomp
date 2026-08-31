@@ -372,6 +372,31 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   spelling, so this local-minimum regression is now fatal even if its isolated
   byte percentage rises.
 
+- **2026-08-31 — the same helper chain removes the artificial
+  `can_shoot_flagform` twin from `get_berserk_targets`.** Its Dreamcast dossier
+  names `can_shoot(0)` at line 4163, `searchArray::get_hex` at line 4187,
+  `vector::clear` at line 4195, and `vector::push_back` at line 4197. The
+  former source instead declared a second member predicate, read `cellData`
+  directly, and used `erase`/`insert` to protect an isolated score. Restoring
+  all four positive boundaries first dipped the function to **14.4091%**, then
+  recovered as the nested `enemy_is_adjacent -> get_second_grid_index ->
+  Is(1)` chain was restored.
+
+  The coherent result returns `get_berserk_targets` to its banked
+  **92.5170%** and reproduces retail's complete **42-block count** and exact
+  **27-branch/one-return symbolic sequence**. `can_shoot`,
+  `enemy_is_adjacent`, `get_second_grid_index`, and `GoBerserk` are all
+  byte-exact in the same state; `attack_hex` also rises from **83.8632%** to
+  **92.1737%**. Removing the fake twin currently stops army.obj from emitting
+  the otherwise exact `OffsetToFront` COMDAT, so that row stays banked while
+  the real rejected caller/header state is recovered—it is not grounds to
+  restore a source-false member.
+
+  Explicit source contracts and negative controls now reject the flagform
+  twin, raw `cellData`, `erase`/`insert`, raw creature-bit tests, manual second
+  hex arithmetic, or removal of `OffsetToFront(-1)`. Together with the generic
+  Dreamcast call ratchet, five known-backlog rows were retired.
+
 - **2026-08-31 — `combatManager::automate_catapult` reaches an exact
   59-block retail structure while restoring the complete Dreamcast source
   vocabulary.** The 49-row/53-scope dossier proves three calls each to
