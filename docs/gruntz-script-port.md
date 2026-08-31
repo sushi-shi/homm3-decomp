@@ -260,6 +260,33 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-31 — `readHeroData` restores its function-scope Dreamcast local
+  roster; the 82.9570% current score is a deliberate second structural dip
+  under the 92.7472% MAX.** The compact dossier lists thirteen locals, but the
+  raw NB11 nesting supplies the stronger fact: every `S_REGREL32` record sits
+  directly under `S_GPROC32`, before the first `S_BLOCK32`. Therefore
+  `padding`, `isRandomHero`, `HeroID`, `int_buffer`, `short_buffer`, `Owner`,
+  `customName`, `count`, `experience`, `x`, `char_buffer`, `tempText`, and
+  `hero_data` are one ordered function-scope roster—not independently scoped
+  scratch variables that happen to reuse stack space.
+
+  The source now declares that roster in CodeView order and reuses the one
+  char/int/short buffer across the secondary-skill, army, formation, artifact,
+  backpack, patrol, name, sex, spell and primary-skill reads. Complete-only
+  state remains additive. `HeroID` retains its retail full-width `int`
+  spelling for now: Dreamcast proves the THeroID domain, but its enum stops at
+  the 130-entry DC roster while Complete's decoded setup has 156 entries, so a
+  shared Complete enum needs additional retail admission rather than an
+  incomplete header model.
+
+  The score moves **85.2833% to 82.9570%** while branch counts remain 53/53,
+  return counts 2/2, the frame remains 0xd8 versus 0xc4, and the sole resolved
+  call-census divergence remains the two nested `logic_error(const string&)`
+  constructors. MAX/history stays **92.7472%**. The fatal asymmetric gate now
+  requires the root-scope declaration sequence and exactly one copy of each
+  shared scratch buffer; its negative control moves `int_buffer` back into a
+  later block and must fail.
+
 - **2026-08-31 — `NewfullMap::readHeroData` leaves its 92.7472% local maximum
   banked and restores the Dreamcast-proven caller body.** The peak used three
   invented caller-shrink statics for the secondary-skill, army and primary
