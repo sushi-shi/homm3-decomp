@@ -4509,31 +4509,28 @@ void army::CancelSpellType(int iSpellType)
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\army.cpp:3660
-DC_ONLY(0x496dc, 0x6A)
-void army::adjust_hitpoints()
+inline void army::adjust_hitpoints()
 {
-    // @stub
+    if (spellInfluence[SPELL_AGE])
+        hitPoints = static_cast<int>(
+            origHitPoints * poisonPenalty * 0.5f + 0.95f);
+    else
+        hitPoints = static_cast<int>(
+            origHitPoints * poisonPenalty + 0.95f);
+    topCreatureDamage = min(topCreatureDamage, hitPoints - 1);
 }
-
-// E:\gamedcs\army.cpp:3675
-#endif  // @carcass
 
 // Take one standing spell off this stack: clear its round row, undo
 // whatever the spell had folded into the stack's own words, and pull
 // the spell's entry back out of the cast-order queue. Disrupting Ray
 // is the one spell that never comes off.
 //
-// THE SWITCH ARMS ARE IN SOURCE ORDER (jump-table switch): BIND's
-// binder teardown, HYPNOTIZE's aura rebuild, then the seven stat
-// restores. The two teardown arms are remove_binding's and
-// remove_aura's own loops written at their natural depth - the
-// erase_item and size()/clear() calls that stay out of line in the
-// HYPNOTIZE arm against the BIND arm's full expansions are the /Ob2
-// budget draining in site order, the same divisor remove_aura's note
-// records for its own two loops.
+// The switch arms are in Dreamcast source order (jump-table switch): BIND's
+// binder teardown, HYPNOTIZE's remove_aura/add_aura helper pair, then the
+// seven stat restores. BIND's vector::clear, the aura helper boundary, and
+// AGE's adjust_hitpoints boundary are all positive CodeView facts; none may
+// be replaced by their lower-level implementation to protect a local score.
 //
 // The AGE arm re-reads spellInfluence[SPELL_AGE] AFTER the entry code
 // zeroed it, so its 0.5f halving arm is dead at runtime - the
@@ -4548,29 +4545,14 @@ void army::adjust_hitpoints()
 // built on the stack - the second and last call site of the
 // deque::erase COMDAT at 0x448db0.
 //
-// THE PIN LEDGER (0 -> 21.50 -> 28.72 -> 79.43 -> 84.01 -> 86.31 ->
-// 96.27), because every stall was the same wall: our CL's inline
-// budget does not drain in retail's order, so each STL site needs its
-// retail decision reproduced by hand. Statement-scoped
-// `#pragma inline_depth(0)` is the only depth that works mid-function
-// - depth(1) and depth(2) pins measured INERT here, twice - so any
-// callee retail keeps inline must be hoisted OUT of the pinned
-// statement first (the subscripts feeding erase_item, the begin/end
-// temp builds, the `next = it` copy). Retail's 0x4491c0 advance is the
-// protected iterator::_Add(1); `next += 1` pinned emits operator+=
-// with the identical push-1/lea-ecx/call site (the `it + 1` spelling
-// costs a hidden-return push, 96.27 -> 84.01-class). BIND's clear must
-// be spelled `erase(begin(), end())` UNPINNED so its copy/_Destroy
-// stay expanded-with-calls as retail has them; HYPNOTIZE's two clears
-// and second size() must be pinned to calls.
-//
-// Residual (96.2713%): (1) retail's bind-arm clear keeps std::copy
-// (0x5093c0) as a call where our CL expands the two-instruction loop
-// (and emits a vacuous `mov eax,ecx / cmp eax,ecx` it cannot fold) -
-// no pin reaches d3 alone; (2) the find-loop's iterator pieces home
-// through the mirror scratch registers, the same family as InitClean's
-// residual; (3) reloc-name-only rows on the paired STL COMDATs
-// (?clear/?size/?erase vs the target's unclaimed synth labels).
+// Restoring those three boundaries raises 96.2713% to 97.3596% and changes
+// 52/50 blocks with two extra candidate branches into an exact 50/50 block
+// count and exact 24-branch sequence. Forty-nine blocks are byte-shaped
+// exactly. The sole size residual is BIND's source-true clear: candidate VC6
+// keeps vector::erase as one call (7 instructions), while retail expands it
+// one level and retains std::copy/_Destroy calls (14 instructions). Raising
+// inline_depth to 255 is byte-inert; explicit erase(begin,end) was the former
+// source-false plateau and may not return.
 VA(0x00444510, 0x3DB)  // anchor-global, dc 0x49748
 void army::CancelIndividualSpell(int spell)
 {
@@ -4586,36 +4568,13 @@ void army::CancelIndividualSpell(int spell)
         while (i-- != 0) {
             erase_item(binders[i]->bound_armies, this);
         }
-        binders.erase(binders.begin(), binders.end());
+        binders.clear();
         break;
     }
-    case SPELL_HYPNOTIZE: {
-        long i = aura_sources.size();
-        while (i-- > 0) {
-            army* source = aura_sources[i];
-#pragma inline_depth(0)
-            erase_item(source->aura_clients, this);
-#pragma inline_depth()
-        }
-#pragma inline_depth(0)
-        aura_sources.clear();
-#pragma inline_depth()
-
-#pragma inline_depth(0)
-        long j = aura_clients.size();
-#pragma inline_depth()
-        while (j-- > 0) {
-            army* client = aura_clients[j];
-#pragma inline_depth(0)
-            erase_item(client->aura_sources, this);
-#pragma inline_depth()
-        }
-#pragma inline_depth(0)
-        aura_clients.clear();
-#pragma inline_depth()
+    case SPELL_HYPNOTIZE:
+        remove_aura();
         add_aura();
         break;
-    }
     case SPELL_STONE_SKIN:
         defenseSkill -= toughskinBonus;
         break;
@@ -4637,19 +4596,9 @@ void army::CancelIndividualSpell(int spell)
     case SPELL_SLOW:
         frameInfoWalkCycleTime = origWalkCycleTime;
         break;
-    case SPELL_AGE: {
-        int hp;
-        if (spellInfluence[SPELL_AGE]) {
-            float base = origHitPoints;
-            hp = static_cast<int>(base * poisonPenalty * 0.5f + 0.95f);
-        } else {
-            float base = origHitPoints;
-            hp = static_cast<int>(base * poisonPenalty + 0.95f);
-        }
-        hitPoints = hp;
-        topCreatureDamage = _cpp_min(topCreatureDamage, hp - 1);
+    case SPELL_AGE:
+        adjust_hitpoints();
         break;
-    }
     case SPELL_DISEASE:
         attackSkill += diseaseAttackPenalty;
         defenseSkill += diseaseDefensePenalty;

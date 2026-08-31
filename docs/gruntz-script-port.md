@@ -448,6 +448,27 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   wrappers fatal. Dreamcast's additional Rust-message rows remain `dc-only`:
   Complete retail's call/relocation multiset directly rejects them.
 
+- **2026-08-31 — `army::CancelIndividualSpell` recovers the exact retail
+  CFG by restoring three Dreamcast helper boundaries.** The 35-row dossier
+  names `vector::clear` in the BIND arm, `remove_aura` followed by `add_aura`
+  in HYPNOTIZE, and `adjust_hitpoints` in AGE. The previous 96.27% plateau
+  spelled clear as `erase(begin,end)`, duplicated both aura loops inside the
+  caller, and duplicated the hit-point calculation. Those were compiler-state
+  controls, not source facts.
+
+  The reconstructed inline `adjust_hitpoints` body follows its own seven-row
+  dossier: two direct `hitPoints` assignments and the final source `min`.
+  Restoring all three boundaries raises the byte score to **97.3596%**, changes
+  **52 candidate / 50 retail blocks** into the exact **50/50 count**, and
+  produces the exact **24-branch/one-return symbolic sequence**. **49 of 50
+  blocks are exact**; only BIND's clear is size-only. Candidate VC6 keeps the
+  nested range-`erase` as one call (7 instructions), while retail expands it
+  and retains `std::copy`/destruction calls (14 instructions). Increasing
+  `inline_depth` is byte-inert, so no pragma is retained. Dedicated contracts
+  now reject the explicit erase, manual aura/container surgery, flattened AGE
+  body, reversed aura-helper order, direct `_cpp_min`, or de-inlining of the
+  no-retail-body helper declaration.
+
 - **2026-08-31 — `combatManager::automate_catapult` reaches an exact
   59-block retail structure while restoring the complete Dreamcast source
   vocabulary.** The 49-row/53-scope dossier proves three calls each to

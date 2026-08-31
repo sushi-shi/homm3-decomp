@@ -568,8 +568,6 @@ call	army.obj	0x48c60	min
 call	army.obj	0x48fc4	army::get_controller
 call	army.obj	0x492c8	army::CancelSpellType
 call	army.obj	0x493a0	army::CancelAllSpells
-call	army.obj	0x49748	army::adjust_hitpoints
-call	army.obj	0x49748	army::remove_aura
 call	army.obj	0x499e8	army::adjust_hitpoints
 call	army.obj	0x499e8	combatManager::get_current_army
 call	army.obj	0x499e8	min
