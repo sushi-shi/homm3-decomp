@@ -788,9 +788,12 @@ unsigned char combatManager::is_computer_action(const army* current_army)
 
 #if 0  // @carcass
 
-// E:\gamedcs\command.cpp:1001
-DC_ONLY(0x6c070, 0xB08)
-int combatManager::ProcessCombatMsg(message* msg)
+// E:\gamedcs\command.cpp:1001. The retail identity is closed by the
+// command.obj order slot immediately after is_computer_action, both direct
+// calls from Main, the reference-parameter decorated ABI, and the obstacle
+// diagnostic literal in Dreamcast's line-1348 statement group.
+VA(0x00474d80, 0x114D)  // exhaustive command order-map + callers + literal/call graph, dc 0x6c070
+int combatManager::ProcessCombatMsg(message& msg)
 {
     // @stub
 }
