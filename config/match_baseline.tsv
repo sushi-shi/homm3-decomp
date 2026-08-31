@@ -1624,6 +1624,7 @@ hero	?GetNecromancyCreature@hero@@QAE?AW4TCreatureType@@XZ	100.0000	100.0000	100
 hero	?GetNecromancyFactor@hero@@QAEME@Z	100.0000	100.0000	100.0000	0xe3cd0
 hero	?GetNthSS@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0xe23a0
 hero	?GetOffenseFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe42b0
+hero	?GetSpecificAbilityTextShort@hero@@QAEPBDXZ	100.0000	100.0000	100.0000	0xd7220
 hero	?GetSpellDurationBonus@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe4db0
 hero	?GetSpellSchoolLevel@hero@@QAEHW4TSpellSchool@@H@Z	100.0000	100.0000	100.0000	0xe5100
 hero	?GetStandSequence@boat@@QAE?AW4hero_seqid@@XZ	100.0000	100.0000	100.0000	0xd9160
@@ -2668,7 +2669,7 @@ singleselectionwindow	??_GCHostWaitDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1
 singleselectionwindow	??_GTSingleSelectionWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x17d130
 singleselectionwindow	?AddNewPlayer@CNetPlayerHandler@@QAEEPAVCNetPlayerInfo@@@Z	100.0000	100.0000	100.0000	0x177be0
 singleselectionwindow	?BackupGameHeaders@@YIXPAVgame@@0@Z	100.0000	100.0000	100.0000	0x177530
-singleselectionwindow	?CanChooseHero@TSingleSelectionWindow@@QAEEH@Z	100.0000	100.0000	100.0000	0x18cfb0
+singleselectionwindow	?CanChooseHero@TSingleSelectionWindow@@QAEEH@Z	93.6803	100.0000	100.0000	0x18cfb0
 singleselectionwindow	?CanChooseTown@TSingleSelectionWindow@@QAEEH@Z	100.0000	100.0000	100.0000	0x18ceb0
 singleselectionwindow	?CheckHandleNet@CSingleSelectionNetMsgHandler@@UAEPAVCNetMsg@@EPAE@Z	100.0000	100.0000	100.0000	0x18e310
 singleselectionwindow	?CheckMissingHeaders@TSingleSelectionWindow@@QAEEK@Z	100.0000	100.0000	100.0000	0x1895c0
@@ -2736,7 +2737,7 @@ singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100
 # 2026-08-27 (round 3): the interim full build re-banked the transient
 # peak a third time; re-lowered with the round's bodies landed. Same
 # scheduler flap, same recovery path.
-singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0
+singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0
 singleselectionwindow	?OnMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2193	90.2193	90.2193	0x189710
 singleselectionwindow	?OnNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	97.5366	97.5366	97.5366	0x18b510
 singleselectionwindow	?OnNewPlayerMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	97.0628	97.0628	97.0628	0x189fa0
@@ -2746,9 +2747,10 @@ singleselectionwindow	?OnPingResponseMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@
 singleselectionwindow	?OnRequestHeroFaceReplyMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@E@Z	100.0000	100.0000	100.0000	0x18b0b0
 singleselectionwindow	?OnSetAsHostMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18b120
 singleselectionwindow	?OnUpdatePlayerPosMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18ba40
-singleselectionwindow	?OnWidgetDeselect@TSingleSelectionWindow@@QAEHPAVmessage@@PAEE@Z	29.3653	29.3653	29.3653	0x1865b0
+singleselectionwindow	?OnWidgetDeselect@TSingleSelectionWindow@@QAEHPAVmessage@@PAEE@Z	28.0248	29.3653	29.3653	0x1865b0
 singleselectionwindow	?PlayerDropped@CNewPlayerUpdateMan@@QAEXK@Z	100.0000	100.0000	100.0000	0x189480
 singleselectionwindow	?ProcessMouse@@YGIPAX@Z	100.0000	100.0000	100.0000	0x177740
+singleselectionwindow	?ProcessRightSelect@TSingleSelectionWindow@@UAEEH@Z	88.6540	88.9695	88.9695	0x1822d0
 singleselectionwindow	?SaveValid@@YIEPBD@Z	100.0000	100.0000	100.0000	0x177360
 singleselectionwindow	?SendPlayerFaces@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x18bc70
 singleselectionwindow	?SetCurrentMap@TSingleSelectionWindow@@QAEXHE@Z	99.9874	99.9874	99.9874	0x185500
@@ -2788,7 +2790,6 @@ singleselectionwindow	CSingleSelectionNetMsgHandler_HandleNetMsg	0.0000	0.0000	0
 singleselectionwindow	SCampaign_GetCurrentScenario	0.0000	0.0000	0.0000	0x17c780
 singleselectionwindow	TSingleSelectionWindow_GetHeader	0.0000	0.0000	0.0000	0x183170
 singleselectionwindow	TSingleSelectionWindow_GetHeaders	0.0000	0.0000	0.0000	0x182b40
-singleselectionwindow	TSingleSelectionWindow_ProcessRightSelect	0.0000	0.0000	0.0000	0x1822d0
 singleselectionwindow	TSingleSelectionWindow_WindowFn_00582e90	0.0000	0.0000	0.0000	0x182e90
 slider	??0slider@@QAE@HHHHHHP6IXHPAVheroWindow@@@ZW4EGraphics@0@HE@Z	100.0000	100.0000	100.0000	0x1960d0
 slider	??1slider@@UAE@XZ	100.0000	100.0000	100.0000	0x196180
