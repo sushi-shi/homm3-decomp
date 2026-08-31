@@ -542,7 +542,6 @@ call	army.obj	0x472f4	searchArray::is_moat
 call	army.obj	0x47690	army::get_controller
 call	army.obj	0x477e8	army::Is
 call	army.obj	0x477e8	army::OffsetToFront
-call	army.obj	0x47924	army::get_owning_side
 call	army.obj	0x47a14	max
 call	army.obj	0x47af8	army::get_total_hit_points
 call	army.obj	0x47bcc	army::get_owning_side

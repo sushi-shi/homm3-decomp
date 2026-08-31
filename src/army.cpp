@@ -3220,6 +3220,10 @@ double army::get_defense_damage_modifier(unsigned char ranged_attack) const
 // (93.77 -> 100). Same class as the short-returning-accessor
 // truncation barrier: an inlined accessor's value is materialized,
 // not folded into the addressing mode.
+//
+// get_owner keeps the corresponding DC-proven get_owning_side call.
+// /Ob2 inlines that accessor to the same raw load retail emits; spelling
+// combatSide directly is byte-equivalent but source-shape false.
 VA(0x00442690, 0x39)  // anchor-callee (cross-build callsite), dc 0x47904
 hero* army::get_controller() const
 {
@@ -3230,7 +3234,7 @@ hero* army::get_controller() const
 VA(0x004426d0, 0x14)  // anchor-callee (cross-build callsite), dc 0x47924
 hero* army::get_owner() const
 {
-    return gpCombatManager->heroes[combatSide];
+    return gpCombatManager->heroes[get_owning_side()];
 }
 
 #if 0  // @carcass
