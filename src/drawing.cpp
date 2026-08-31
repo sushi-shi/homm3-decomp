@@ -14,7 +14,6 @@
 #define HOMM3_ARMY_SPELL_EFFECT_VIEW
 #define HOMM3_ARMY_MOVE_VIEW
 #define HOMM3_CMBTMGR_CYCLE_VIEW
-#define HOMM3_CMBTMGR_HEX_SPELL_EFFECT_VIEW
 #include "drawing.h"
 #include "bitmap16.h"
 #include "bitmap816.h"
