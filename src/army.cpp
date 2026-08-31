@@ -14,7 +14,6 @@
 // compute_attacker_bonus 0x443320, ComputeAttackerDamageBonuses
 // 0x443840, new_turn 0x446e30.
 #define HOMM3_ARMY_AI_VIEW
-#define HOMM3_ARMY_AURA_VIEW
 #define HOMM3_ARMY_BERSERK_VIEW
 #define HOMM3_ARMY_CALIPH_VIEW
 #define HOMM3_ARMY_MIDPOINT_DECL
