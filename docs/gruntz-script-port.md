@@ -351,11 +351,14 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   Restoring the complete chain and removing the pragma produces the expected
   selective lowering: `army::can_shoot` is now **100% with 18/18 exact CFG
   blocks**, `army::enemy_is_adjacent` remains **100% with 5/5**, and
-  `GoBerserk` rises from its banked **86.5769%** maximum to **97.8846%** while
-  recovering retail's **20-block count** and exact **13-branch/one-return
-  symbolic sequence**. Its remaining difference is tail block placement and
-  instruction selection, not a missing helper or CFG edge. The coherent
-  inliner-state change temporarily lowers `get_berserk_targets`,
+  `GoBerserk` first rises from its banked **86.5769%** maximum to **97.8846%**
+  while recovering retail's 20-block count. The final Dreamcast lifetime clue
+  closes it completely: line 4237 emits the vector destructor before the
+  separate melee block, proving an explicit return from the shoot arm rather
+  than an `else`. With that source shape, `GoBerserk` is **100% byte-exact,
+  20/20 blocks exact**, with the exact **13-branch/one-return symbolic
+  sequence**. The coherent inliner-state change temporarily lowers
+  `get_berserk_targets`,
   `get_unit_combat_value`, `attack_hex`, and `spell_is_valid_on_target`; their
   historical maxima remain banked and are not grounds to restore flattened
   source.
@@ -364,9 +367,10 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   scanner treated `gpCombatManager->enemy_is_adjacent` as satisfying the
   Dreamcast `army::enemy_is_adjacent` edge. Explicit owner-sensitive
   contracts now require that nested call, the sole `GoBerserk::can_shoot(0)`
-  boundary, and all three side accessors. Negative controls replace each with
-  the formerly flattened spelling, so this local-minimum regression is now
-  fatal even if its isolated byte percentage rises.
+  boundary, all three side accessors, and the shoot-arm return before the
+  melee statement. Negative controls replace each with the formerly flattened
+  spelling, so this local-minimum regression is now fatal even if its isolated
+  byte percentage rises.
 
 - **2026-08-31 — `combatManager::automate_catapult` reaches an exact
   59-block retail structure while restoring the complete Dreamcast source
