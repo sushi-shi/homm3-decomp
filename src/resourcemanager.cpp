@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <utility>
-#define HOMM3_TABSTRACTFILE_VIRTUAL_DTOR_VIEW
 #include "resource.h"
 #include "resourcemanager.h"
 #include "resourcemanager_cache_result.h"

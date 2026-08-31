@@ -43,9 +43,6 @@ public:
 
     TGzFile(const char* path, const char* mode);
     ~TGzFile();
-#ifndef HOMM3_TABSTRACTFILE_VIRTUAL_DTOR_VIEW
-    virtual void _vslot0();
-#endif
     virtual int Read(void* data, int size);
     virtual int Write(const void* data, int size);
 

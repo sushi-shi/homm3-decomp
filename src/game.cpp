@@ -34,7 +34,6 @@
 #if defined(_MSC_VER) && !defined(__clang__)
 #define _MT
 #endif
-#define HOMM3_TABSTRACTFILE_VIRTUAL_DTOR_VIEW
 #include "advmgr_objects.h"
 #include "advmgr.h"
 #include "bitset_iterator.h"
