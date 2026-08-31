@@ -1578,29 +1578,6 @@ private:
     // at depth 2 while army::Walk inlines it at depth 1.
 #endif
     unsigned char move_to(int hex, unsigned char restore_facing);
-    // The catapult pair, both claimed in army.cpp and both behind a view
-    // for the same measured reason every other member declaration in
-    // this header carries. army.cpp is the only consumer: AttackWall
-    // (0x445d30) drives the traits overload once per shot and that one
-    // tail-calls the other.
-#ifdef HOMM3_ARMY_WALL_VIEW
-    // 0x445d30. The whole bombardment: aim once, then fire the row's
-    // `shots` at that segment, re-aiming whenever it falls.
-    void AttackWall(int iTargetGridIndex);
-    // 0x445ec0. Rolls this shot's damage and its target: the row's own
-    // per-segment chance decides whether the aimed segment is hit at
-    // all, and a miss re-aims at the nearest OTHER valid segment.
-    void attack_wall(TWallTargetId wall,
-                     const type_ballistics_traits& ballistics);
-    // 0x445fd0 (0x526), LOCATED 2026-08-14 from the traits overload's
-    // own tail call (`push <levels> / push <wall> / mov ecx,<this> /
-    // call`) - a thiscall with TWO stack arguments, which is what the
-    // DC roster's two-parameter row says. Body still a carcass.
-    // PRIVATE on its DC public (?attack_wall@army@@AAAXW4TWallTargetId@@J@Z),
-    // recorded here and NOT acted on: the access move is the same
-    // whole-family pass simple_move's note above is waiting on.
-    void attack_wall(TWallTargetId wall, long levelsDestroyed);
-#endif
 #ifdef HOMM3_ARMY_COMMAND_ACTION_VIEW
     // ProcessNextAction's two dispatch-only army calls. The owning army.cpp
     // views carry the larger member families; command.cpp needs only these.
@@ -1784,12 +1761,11 @@ public:
         // The ids follow from the pair already byte-proven directly
         // below: Stronghold's fourteen slots end Behemoth 0x60 /
         // Ancient Behemoth 0x61, so the tier-five pair is 0x5e/0x5f,
-        // and Cyclopes are HoMM3's one wall-breaking creature.
-        // Behind the wall view for the header's usual measured reason.
-#ifdef HOMM3_ARMY_WALL_VIEW
+        // and Cyclopes are HoMM3's one wall-breaking creature. Dreamcast
+        // AttackWall compares the same 94/95 pair, and retail 0x445d30
+        // corroborates both ids.
         ARMY_CREATURE_CYCLOPS = 0x5e,
         ARMY_CREATURE_CYCLOPS_KING = 0x5f,
-#endif
         // The aura pair. add_aura (0x43ea70) is the only reader and it
         // tests BOTH stacks against the same two ids, once in each
         // direction, which is what says these are the creature that
