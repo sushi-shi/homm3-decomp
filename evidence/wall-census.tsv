@@ -28,7 +28,6 @@ register-homing (why-reg)	87	60.3026	60.3026	220	cmbtmgr	?GenerateMap@combatMana
 inliner (predict-inline)	417	62.9082	62.5281	1123	ai_player	?hire_heroes@type_AI_player@@QAE_NXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline
 register-homing (why-reg)	210	63.9403	63.9403	581	advmgr	?SetEnvironmentOrigin@advManager@@QAEXUtype_point@@H@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 control-flow (why-branch)	327	64.3119	64.3119	915	philai	??0type_spellvalue@@QAE@PBVhero@@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
-inliner (predict-inline)	4124	64.5101	64.5101	11619	singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 6 under-inline, 57 over-inline (219 name-unresolvable pair(s) discounted)
 control-flow (why-branch)	132	65.6968	65.6968	386	singleselectionwindow	?GetHeroFace@TSingleSelectionWindow@@QAEXHPAVCNetPlayerHandlerPlayer@@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	2193	66.8064	66.8064	6608	townmgr	?Main@townManager@@UAEHAAVmessage@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 5 under-inline, 5 over-inline (28 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	250	67.9099	67.9099	780	singleselectionwindow	?UpdateGameVars@TSingleSelectionWindow@@QAEXXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline (8 name-unresolvable pair(s) discounted)
@@ -38,6 +37,7 @@ inliner (predict-inline)	643	70.6470	70.6470	2190	game	?LoadMap@game@@QAE_NPAVTA
 inliner (predict-inline)	867	70.8576	70.8576	2976	spellbookwindow	?WindowHandler@TSpellbookWindow@@UAEHPAVmessage@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 13 over-inline (10 name-unresolvable pair(s) discounted)
 control-flow (why-branch)	155	71.8957	71.8957	552	singleselectionwindow	?Tick@t_map_list_update@@UAEXXZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
 control-flow (why-branch)	137	72.0056	72.0056	491	iconwdgt	?NextRandomFrame@iconWidget@@QAEXXZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
+inliner (predict-inline)	3171	72.7092	72.7092	11619	singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 33 under-inline, 43 over-inline (219 name-unresolvable pair(s) discounted)
 control-flow (why-branch)	60	72.9438	72.9438	220	dxplay	?FlushReceiveQueue@CDPlay@@UAEEXZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
 control-flow (why-branch)	161	73.5825	73.5825	611	multiplayerwindow	?OnTCP@TMultiPlayerWindow@@QAEEXZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	288	73.6571	72.2248	1095	ai_player	?buy_creatures@type_AI_player@@QAEXPAVhero@@PAVtown@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline (4 name-unresolvable pair(s) discounted)

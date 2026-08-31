@@ -7,11 +7,11 @@
 # date: 2026-08-04
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 # 11943 functions; size INCLUDES jump tables
-# BOUNDARY ADMISSION 2026-08-31: singleselectionwindow.obj's 28-byte
-# SliderFileMenu callback is an independent entry at 0x17c990.  The
-# constructor's slider-function relocation points to it, Dreamcast names the
-# same callback edge, and the retail wrapper ends in `ret` before 4-byte
-# padding and the independently carved 0x17c9b0 entry.
+# BOUNDARY ADMISSION 2026-08-31: singleselectionwindow.obj's 27-byte
+# SliderChatWindow and 28-byte SliderFileMenu callbacks are independent entries
+# at 0x17c7d0 and 0x17c990. Constructor slider-function relocations point to
+# both, Dreamcast names the same callback edges, and each retail wrapper ends
+# in `ret` before alignment padding and the next independently carved entry.
 # BOUNDARY CORRECTION 2026-08-22: 0x217b94 is the 166-byte `_sqrt`, not
 # a 9-byte helper followed by a 157-byte function at 0x217b9d. The pinned
 # VC6 SP3 lib-rtm/LIBCMT.LIB `sqrt.obj` publishes `_sqrt` at object +0x14;
@@ -4741,6 +4741,7 @@ rva	size
 0x17c6d0	172
 0x17c780	14
 0x17c790	64
+0x17c7d0	27
 0x17c7f0	404
 0x17c990	28
 0x17c9b0	18
