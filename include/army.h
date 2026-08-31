@@ -337,17 +337,14 @@ public:
     int iMirrorSourceIndex;        // +0x24
     int iMirrorDestIndex;          // +0x28
     int iRoundsLeftBeforeVanish;   // +0x2c
-#elif defined(HOMM3_ARMY_POW_VIEW) \
-   || defined(HOMM3_ARMY_SPELL_EFFECT_VIEW)
-    // PowEffect needs only the first of that pair - it scans every stack
-    // for a raised bShowPowEffect to decide whether to load the effect
-    // sprite at all, and clears it in the closing walk. Drawing's single-
-    // stack SpellEffect overload raises and clears the same byte. Those two
-    // narrow views take one declarator where the round view takes three.
+#else
+    // PowEffect scans every stack for a raised bShowPowEffect to decide
+    // whether to load the effect sprite at all, and clears it in the closing
+    // walk. Drawing's single-stack SpellEffect overload raises and clears
+    // the same byte. The ordinary layout names that DC-attested source member
+    // while leaving the rest of the low band opaque.
     unsigned char bShowPowEffect;  // +0x20
     char pad_21[0xf];
-#else
-    char pad_20[0x10];
 #endif
     // DC army.IsMoving (members.csv army@48, which is retail +0x30 -
     // the whole DC run 48..100 lands on retail 0x30..0x64 unshifted).
