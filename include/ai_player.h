@@ -17,6 +17,13 @@ class town;
 class generator;
 struct type_artifact;
 
+// ai_tactical.h exposes TSkillMastery as an int in this compilation family,
+// so keep the AI-visible mastery value in its own named domain rather than
+// re-declaring herospec.h's incompatible enum in each consumer.
+enum type_AI_mastery {
+    AI_MASTERY_EXPERT = 3
+};
+
 // Five-entry AI hero caps indexed by game difficulty. Dreamcast names both
 // compiland statics; retail hire_heroes proves these corresponding addresses.
 DATA(0x00660518) extern int hero_limits[5];
