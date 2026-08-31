@@ -229,7 +229,6 @@ public:
 };
 SIZE(CObject, 0xc);
 
-#ifdef HOMM3_MAPCELL_OBJECT_TYPE_TABLE_VIEW
 // Map-editor/RMG object template consumed by the retail-identical
 // CObjectType conversion constructor at 0x506080. The public names are from
 // the HD structural bridge; retail independently fixes the 0x4c stride and
@@ -266,14 +265,11 @@ public:
     void load(char* filename);
 };
 SIZE(TObjectTypeTable, 0x10);
-#endif
 
 class CObjectType {
 public:
-#ifdef HOMM3_MAPCELL_OBJECT_TYPE_TABLE_VIEW
     CObjectType() {}
     CObjectType(TObjectType* source);                         // 0x506080
-#endif
     // The DC field list names every member of this record - ImageName,
     // Width, Height, then the FOUR 48-cell masks PlacementMask,
     // PassableMask, ShadowMask, TriggerMask, then Type/Extra/IsUnderlay -
