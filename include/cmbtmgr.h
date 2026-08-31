@@ -503,7 +503,6 @@ public:
     };
     static const TLargeObstacleInfo LargeObstacleInfo[];
 
-#ifdef HOMM3_DRAWING_BACKGROUND_VIEW
     // Dreamcast CodeView's exact nested record and static-member names.
     // Retail confirms the 68-byte row, x/y at +0x4/+0x8 and FileName at
     // +0x40; the 52-byte middle array is opaque to DrawBackground.
@@ -517,7 +516,6 @@ private:
     };
     static const SElevationOverlay sElevationOverlay[34];
 public:
-#endif
 
     // Retail writes only name/hitpoints here; Dreamcast CodeView supplies
     // the intervening field identities and confirms the 36-byte extent.
@@ -1371,10 +1369,8 @@ public:
     // only retail caller; DC retains the nullary source signature.
     unsigned char is_computer_action();
 #endif
-#ifdef HOMM3_DRAWING_BACKGROUND_VIEW
     // drawing.cpp:919, DC 0x847dc; Complete's body is at 0x493cf0.
     void DrawBackground();
-#endif
     void ResetLimitCreature();
 #if !defined(HOMM3_COMMAND_PLAYER_DROP_VIEW) \
         && !defined(HOMM3_DRAWING_ARCHER_DECLS)
