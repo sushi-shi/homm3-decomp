@@ -2737,7 +2737,11 @@ unsigned char army::do_attack(army* armyToAttack, int direction)
 // for statement, including the DC's own SAVE/SET/RESTORE of the
 // manager's acting pair around each Turn.
 //
-// THREE EXPANSIONS THE DC LINE TABLE NAMES AND RETAIL INLINES:
+// FOUR EXPANSIONS THE DC LINE TABLE NAMES AND RETAIL INLINES:
+//   - get_attack_direction(const army*) at line 2239 forwards through
+//     Army.h to the two-argument overload. Naming that wrapper is what lets
+//     VC6 select retail's 29-block lowering; spelling the nested overload at
+//     the call site expands an extra fourteen blocks.
 //   - can_retaliate (Army.h:847) becomes the three tests after the
 //     defender's explicit numTroops check at 2291; `!killed` is the fifth
 //     condition. The Dreamcast helper bytes prove that split directly.
@@ -2762,8 +2766,7 @@ void army::do_attack(int direction)
     if (!armyToAttack)
         return;
     int savedArmyToAttackFacing = armyToAttack->facing;
-    long counter_direction =
-        armyToAttack->get_attack_direction(armyToAttack->gridIndex, this);
+    long counter_direction = armyToAttack->get_attack_direction(this);
     if (armyToAttack->NeedToTurn(counter_direction)) {
         int saved_side = gpCombatManager->actingSide;
         int saved_slot = gpCombatManager->actingSlot;

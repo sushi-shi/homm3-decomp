@@ -2482,6 +2482,13 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
                    r"\bMarkCreatureEffect\s*\(\s*"
                    r"(?:\w+\s*->\s*)?get_owning_side\s*\(", 3),
     ),
+    ("army.obj", 0x46FB0): (
+        SourceRule(
+            "do_attack(int) keeps Dreamcast's sole one-argument defender "
+            "get_attack_direction(this) boundary",
+            r"\barmyToAttack\s*->\s*get_attack_direction\s*\(\s*this\s*\)",
+            1, 1),
+    ),
     ("army.obj", 0x475EC): (
         SourceRule("CheckLuck calls SRandom", r"\bSRandom\s*\("),
         SourceRule("CheckLuck preserves the min wrapper", r"\bmin\s*\("),
@@ -6281,6 +6288,31 @@ for (int i = 0; i < 8; ++i) {
     if any(not contract_violations(probe, attack_hex_key)
            for probe in flattened_attack_hex_probes):
         failures.append("flattened attack_hex helper shape passed")
+    do_attack_direction_key = ("army.obj", 0x46FB0)
+    do_attack_direction_probe = """\
+long counter_direction = armyToAttack->get_attack_direction(this);
+if (armyToAttack->NeedToTurn(counter_direction)) {}
+"""
+    if contract_violations(do_attack_direction_probe,
+                           do_attack_direction_key):
+        failures.append("aligned do_attack direction helper did not pass")
+    flattened_do_attack_direction_probes = (
+        do_attack_direction_probe.replace(
+            "get_attack_direction(this)",
+            "get_attack_direction(armyToAttack->gridIndex, this)"),
+        """\
+long counter_direction = -1;
+for (long direction = 0; direction < 8; ++direction) {
+    long hex = armyToAttack->get_adjacent_hex(
+        armyToAttack->gridIndex, direction);
+    if (this == gpCombatManager->cells[hex].get_army())
+        counter_direction = direction;
+}
+""",
+    )
+    if any(not contract_violations(probe, do_attack_direction_key)
+           for probe in flattened_do_attack_direction_probes):
+        failures.append("flattened do_attack direction helper passed")
     automate_first_aid_key = ("command.obj", 0x6B12C)
     automate_first_aid_probe = """\
 field_3c = 11;

@@ -406,16 +406,25 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   inferred inline contract produces **100% byte identity, 41/41 exact CFG
   blocks**, and the exact **30-branch/two-return sequence**.
 
-  The coherent inliner state currently removes the standalone two-argument
-  helper copy and lowers `do_attack(int)` from its historical exact state;
-  MAX/history banks both while a real rejected caller/header state is
-  recovered. The one-argument helper call is now an explicit fatal source
-  contract with negative controls for both the wrong overload and the former
-  manual loop; a file-level negative control also makes removal of the nested
-  overload's `inline` qualifier fatal. Dreamcast's two `GetAttackMask` rows at
-  lines 4383/4385 have no runtime counterpart in exact Complete retail and
-  remain `dc-only`/unknown (possibly diagnostics), rather than being added as
-  live calls.
+  The coherent inliner state initially removed the standalone two-argument
+  helper copy and lowered `do_attack(int)` from its historical exact state;
+  MAX/history banked both while the real caller/header state was recovered.
+  The one-argument helper call is now an explicit fatal source contract with
+  negative controls for both the wrong overload and the former manual loop; a
+  file-level negative control also makes removal of the nested overload's
+  `inline` qualifier fatal. Dreamcast's two `GetAttackMask` rows at lines
+  4383/4385 have no runtime counterpart in exact Complete retail and remain
+  `dc-only`/unknown (possibly diagnostics), rather than being added as live
+  calls.
+
+  Dreamcast line 2239 resolves the apparent `do_attack(int)` collateral: it
+  too names the one-argument header wrapper, on the defender. Replacing the
+  source-false explicit `(armyToAttack->gridIndex, this)` overload with
+  `armyToAttack->get_attack_direction(this)` restores **100% byte identity,
+  29/29 exact CFG blocks**, and the exact **21-branch/one-return sequence**
+  while `attack_hex` stays exact. A dedicated source contract and negative
+  controls reject both the explicit nested overload and a hand-written
+  direction loop.
 
 - **2026-08-31 — `combatManager::automate_catapult` reaches an exact
   59-block retail structure while restoring the complete Dreamcast source
