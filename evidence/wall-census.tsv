@@ -41,6 +41,7 @@ control-flow (why-branch)	350	88.5460	3056	advmgr	?DoAdvCommand@advManager@@QAEP
 control-flow (why-branch)	331	70.4601	1122	singleselectionwindow	?UpdatePlayerPositions@TSingleSelectionWindow@@QAEXE@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 control-flow (why-branch)	327	64.3119	915	philai	??0type_spellvalue@@QAE@PBVhero@@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	323	70.5441	1096	resourcemanager	@game_sprite_1599e0@12	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline, 3 over-inline (30 name-unresolvable pair(s) discounted)
+inliner (predict-inline)	309	85.2833	2101	mapcell	?readHeroData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 3 under-inline, 2 over-inline (5 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	307	29.0580	433	game	??1SavedGameHeader@@QAE@XZ	predict-inline	callee expanded on one side only (A8/A9/A12): 11 over-inline (2 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	305	83.3598	1834	combatoptionswindow	?CombatOptionsWindowHandler@@YIHAAVmessage@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 over-inline (3 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	304	72.2248	1095	ai_player	?buy_creatures@type_AI_player@@QAEXPAVhero@@PAVtown@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline (4 name-unresolvable pair(s) discounted)
@@ -98,7 +99,6 @@ control-flow (why-branch)	179	87.7747	1461	command	?GetControl@combatManager@@QA
 inliner (predict-inline)	178	82.8591	1040	hero	?initialize@hero@@QAEXF@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline
 inliner (predict-inline)	177	78.8428	838	game	??1game@@QAE@XZ	predict-inline	callee expanded on one side only (A8/A9/A12): 2 over-inline (9 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	177	92.1471	2248	quickherowindow	??0TQuickHeroWindow@@QAE@PAVhero@@W4TViewLevel@0@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline, 1 over-inline (35 name-unresolvable pair(s) discounted)
-register-homing (why-reg)	176	91.6097	2101	mapcell	?readHeroData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 register-homing (why-reg)	172	89.3165	1612	spells	?DrawBolt@combatManager@@QAEXPAUSBolt@@H@Z	why-branch	cache-vs-reload a member/local (B13) / homing (B2/B3)
 inliner (predict-inline)	172	87.8496	1413	game	??0game@@QAE@XZ	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 2 over-inline (5 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	166	76.8787	717	spells	?ModifySpellDamage@combatManager@@QAEJJHPBVhero@@0PBVarmy@@E@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline (4 name-unresolvable pair(s) discounted)
