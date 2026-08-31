@@ -7,9 +7,6 @@
 #include <va.h>
 #include "tradpost.h"
 #include "border.h"
-// The marketplace ctors need button.h's push_back arm of set_hotkey (see
-// the gate comment there).
-#define HOMM3_TRADPOST_OBJ_VIEW
 #include "button.h"
 #include "game.h"
 #include "iconwdgt.h"

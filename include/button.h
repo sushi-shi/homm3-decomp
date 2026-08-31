@@ -95,27 +95,10 @@ public:
     // and create_upgrade_widget 88.11% -> 89.88% in one build.
     void set_hotkey(int code)
     {
-#if defined(HOMM3_HERO_OBJ_VIEW) || defined(HOMM3_ADVENTUREMAPWINDOW_OBJ_VIEW) \
-    || defined(HOMM3_TRADPOST_OBJ_VIEW) \
-    || defined(HOMM3_COMBATRESULTSWINDOW_OBJ_VIEW)
-        // hero.obj owns retail's retained out-of-line COMDAT copy. Its
-        // 431-byte body is Dinkumware vector<int>::push_back expanded
-        // directly; the insert spelling below is a caller-allocation lever
-        // needed only in the TUs where this wrapper itself is inlined.
-        // adventuremapwindow.obj's SetSleepImage independently proves the
-        // same push_back spelling after it clears the sleep button's keys.
-        // combatresultswindow.obj uses the same arm while retaining the two
-        // Dreamcast-proven set_hotkey calls at source lines 322 and 323.
-        // tradpost.obj joins this arm from the other direction: its five
-        // marketplace ctors inline set_hotkey AND its interior
-        // vector<int>::insert, and only push_back's extra begin()/end()
-        // candidate sites reproduce retail's four out-of-line size() calls
-        // inside that expansion (the insert spelling CSEs two of them).
+        // Dreamcast button.h:105 is a single vector<int>::push_back call.
+        // Retail corroborates that body in hero.obj's retained COMDAT and
+        // in the exact SetSleepImage and marketplace-caller expansions.
         hotKeyCodes.push_back(code);
-#else
-        std::vector<int>* codes = &hotKeyCodes;
-        codes->insert(codes->end(), 1, code);
-#endif
     }
 
     virtual int Main(message* msg);  // slot 2, retail 0x456190

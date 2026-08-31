@@ -2616,12 +2616,9 @@ public:
     // expands it to the acting player's widened currHero load; no standalone
     // retail row exists in the adventure-map header-method bracket.
     int GetCurrHeroId();
-#if defined(HOMM3_ADVENTUREMAPWINDOW_OBJ_VIEW) \
-    || defined(HOMM3_EVENTS_GAME_INLINE_HELPERS)
     // DC Game.h:1197. The Dreamcast keeps this header helper as a row;
     // retail expands the map's byte flag plus one at both cheat loops.
     int GetNumMapLevels() { return worldMap.GetNumLevels(); }
-#endif
     // DC `game::GetTown`, dc 0x2f24, declared in E:\gamedcs\Game.h line
     // 1016 - GetHero's twin. ai_player.obj retains its selected COMDAT at
     // 0x42ba30 while other readers inline it. Its

@@ -4,7 +4,6 @@
 #include <va.h>
 #include <stdio.h>
 #include <string.h>
-#define HOMM3_COMBATRESULTSWINDOW_OBJ_VIEW
 #include "combatresultswindow.h"
 #include "border.h"
 #include "button.h"
