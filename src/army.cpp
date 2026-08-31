@@ -5765,21 +5765,15 @@ int army::OtherArmyAdjacent(int OAgroup, int OAindex)
 // E:\gamedcs\army.cpp:4891
 #endif  // @carcass
 
-// Residual (91.7125%): control flow is EXACT (`homm3 vc6 why-reg`
-// reports flow-distance 0; all 16 unpaired slots are one register
-// binding). Our CL hoists the literal 1 into EBX - costing a `push ebx`
-// in the prologue and turning retail's `test al, 1` / `mov [cell], 1`
-// into `test bl, al` / `mov [cell], bl` - because the value is used
-// three times per arm. Retail materializes it at every site instead.
-// Rejected, all byte-identical to the spelling kept: `Is(1u << 0)` for
-// the two-hex test (retail's separate `mov al, byte ptr [esi+0x84]`
-// looked like that shape), literal 0/1 in place of FACING_ATTACKER /
-// FACING_DEFENDER, both of those together, and hexcell::field_1a
-// re-typed `unsigned char` (the signedness-CSE lever, which moves -1
-// but not +1). `homm3 vc6 why-reg`'s guided search finds ONE catalog
-// mutation for this class and it does not compile here; its verdict is
-// "a value promoted on one side only (register pressure shifted)",
-// i.e. the register-homing family, not a source-addressable knob.
+// Dreamcast lines 4902 and 4924 prove the two source-visible Is(1) helper
+// boundaries. They compile identically to the former raw creatureId tests;
+// that byte-flat result is not grounds to discard the recovered source fact.
+//
+// Residual (91.7125%): control flow is exact. Candidate CL hoists the literal
+// 1 into EBX, costing a push/pop and replacing retail's immediate tests,
+// stores, and final animation argument with BL. Literal facing values and
+// hexcell::field_1a signedness are byte-flat; the remaining difference is the
+// register-homing family, not a reason to flatten either Is boundary.
 VA(0x00446720, 0x107)  // anchor-global, dc 0x4b454
 void army::Turn(unsigned char play_animation)
 {
@@ -5787,7 +5781,7 @@ void army::Turn(unsigned char play_animation)
         if (play_animation)
             PlayAnimation(9, -1, 0);
         facing = FACING_DEFENDER;
-        if (creatureId & 1) {
+        if (Is(1u)) {
             gridIndex--;
             gpCombatManager->cells[gridIndex].field_1a = 0;
             gpCombatManager->cells[gridIndex + 1].field_1a = 1;
@@ -5800,7 +5794,7 @@ void army::Turn(unsigned char play_animation)
         if (play_animation)
             PlayAnimation(7, -1, 0);
         facing = FACING_ATTACKER;
-        if (creatureId & 1) {
+        if (Is(1u)) {
             gridIndex++;
             gpCombatManager->cells[gridIndex].field_1a = 1;
             gpCombatManager->cells[gridIndex - 1].field_1a = 0;

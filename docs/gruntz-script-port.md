@@ -526,6 +526,20 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   the three controller reads, or replacing the recovered pointer loop with an
   indexed scan.
 
+- **2026-08-31 — `army::Turn` restores two byte-flat Dreamcast helper
+  boundaries instead of treating a percentage tie as contrary evidence.**
+  Dreamcast lines 4902 and 4924 each call `army::Is(1)`. The former source
+  used two direct `creatureId & 1` tests even though its own experiment ledger
+  recorded that the helper spelling generated identical bytes. Both calls are
+  now restored and their known-backlog row is retired.
+
+  The byte score remains **91.7125%** and the retail structure remains **11/15
+  exact blocks**, with the exact **seven-branch/one-return sequence**. All four
+  residuals are size-only: candidate VC6 keeps the repeated value `1` in EBX,
+  while retail uses immediates for the two tests, cell occupancy stores, and
+  final animation argument. A fatal two-call contract and negative controls
+  now reject either direct bit test, independent of the unchanged score.
+
 - **2026-08-31 — `combatManager::automate_catapult` reaches an exact
   59-block retail structure while restoring the complete Dreamcast source
   vocabulary.** The 49-row/53-scope dossier proves three calls each to
