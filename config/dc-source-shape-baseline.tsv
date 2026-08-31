@@ -1425,10 +1425,6 @@ call	mapcell.obj	0xec114	game::GetBoat
 call	mapcell.obj	0xec114	type_obscuring_object::get_obscured_extra_info
 call	mapcell.obj	0xec1c8	game::GetBoat
 call	mapcell.obj	0xec1c8	type_obscuring_object::get_obscured_trigger
-call	mapcell.obj	0xec3b4	CObject::get_object_type_ptr
-call	mapcell.obj	0xec3b4	NewmapCell::TObjectCell::get_object
-call	mapcell.obj	0xec3b4	type_obscuring_object::get_obscured_object
-call	mapcell.obj	0xec3b4	type_obscuring_object::obscured_is_trigger
 call	mapcell.obj	0xec6a4	NewfullMap::Close
 call	mapcell.obj	0xec80c	NewfullMap::Close
 call	mapcell.obj	0xec8f4	NewfullMap::placeObjects

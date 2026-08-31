@@ -193,6 +193,12 @@ struct type_obscuring_object {
             return obscuredType;
         return NOTHING;
     }
+    // E:\gamedcs\hero.h:117. The Dreamcast tiny helper is the direct byte
+    // accessor; retail expands it to the same +0x10 load at its callers.
+    bool obscured_is_trigger() const
+    {
+        return was_trigger;
+    }
     // Dreamcast proves this Hero.h helper boundary. Retail SetupHeroView
     // folds it to the same three field tests; keep the call in source so
     // an exact lowering cannot erase the attested source shape again.

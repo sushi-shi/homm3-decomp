@@ -2470,6 +2470,43 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"\s*->\s*get_type\s*\(\s*\)\s*==\s*TERRAIN_HOLE\s*\)"
             r"\s*return\s+0\s*;\s*\}\s*\}\s*return\s+1\s*;\s*\Z"),
     ),
+    ("mapcell.obj", 0xEC3B4): (
+        SourceRule(
+            "NewmapCell::get_special_terrain keeps Dreamcast's our_hero "
+            "scope, both obscurer helpers, and the direct GARRISON arm "
+            "before the reverse scan",
+            r"\A\s*if\s*\(\s*type\s*==\s*HERO\s*&&\s*\(\s*cellFlags"
+            r"\s*&\s*0x1000\s*\)\s*\)\s*\{\s*hero\s*\*\s*our_hero\s*"
+            r"=\s*gpGame\s*->\s*GetHero\s*\(\s*extraInfo\s*\)\s*;\s*"
+            r"if\s*\(\s*our_hero\s*->\s*get_obscured_object\s*\(\s*\)"
+            r"\s*==\s*GARRISON\s*&&\s*our_hero\s*->\s*"
+            r"obscured_is_trigger\s*\(\s*\)\s*&&\s*objectIndex\s*==\s*1"
+            r"\s*\)\s*return\s+GARRISON\s*;\s*\}\s*"
+            r"if\s*\(\s*type\s*==\s*GARRISON\s*&&\s*\(\s*cellFlags"
+            r"\s*&\s*0x1000\s*\)\s*&&\s*objectIndex\s*==\s*1\s*\)"
+            r"\s*return\s+type\s*;\s*for\s*\("),
+        SourceRule(
+            "NewmapCell::get_special_terrain keeps Dreamcast's signed "
+            "post-decrement i loop and TObjectCell/CObject helper chain, "
+            "plus Complete's retail-proved ten terrain answers in order",
+            r"for\s*\(\s*int\s+i\s*=\s*objects\s*\.\s*size\s*\(\s*\)"
+            r"\s*;\s*i\s*--\s*>\s*0\s*;\s*\)\s*\{\s*"
+            r"CObject\s*\*\s*object\s*=\s*objects\s*\[\s*i\s*\]\s*\.\s*"
+            r"get_object\s*\(\s*\)\s*;\s*CObjectType\s*\*\s*"
+            r"object_type\s*=\s*object\s*->\s*get_object_type_ptr"
+            r"\s*\(\s*\)\s*;\s*if\s*\(\s*object_type\s*->\s*objectType"
+            r"\s*==\s*CURSED_GROUND\s*\|\|\s*object_type\s*->\s*objectType"
+            r"\s*==\s*MAGIC_PLAINS\s*\|\|\s*object_type\s*->\s*objectType"
+            r"\s*==\s*HOLY_GROUND\s*\|\|\s*object_type\s*->\s*objectType"
+            r"\s*==\s*EVIL_FOG\s*\|\|\s*object_type\s*->\s*objectType"
+            r"\s*==\s*CLOVER_FIELD_2\s*\|\|\s*object_type\s*->\s*objectType"
+            r"\s*==\s*FAVORABLE_WINDS\s*\|\|\s*object_type\s*->\s*"
+            r"objectType\s*==\s*LUCID_POOLS\s*\|\|\s*object_type\s*->\s*"
+            r"objectType\s*==\s*FIERY_FIELDS\s*\|\|\s*object_type\s*->\s*"
+            r"objectType\s*==\s*ROCKLANDS\s*\|\|\s*object_type\s*->\s*"
+            r"objectType\s*==\s*MAGIC_CLOUDS\s*\)\s*return\s+object_type"
+            r"\s*->\s*objectType\s*;\s*\}\s*return\s+NOTHING\s*;\s*\Z"),
+    ),
     ("mapcell.obj", 0xF4A9C): (
         SourceRule(
             "type_obscuring_object::get_obscured_object keeps Dreamcast's "
@@ -2477,6 +2514,12 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             "return; flattening it changes nested Windows inlining",
             r"\A\s*if\s*\(\s*valid\s*\)\s*return\s+obscuredType\s*;\s*"
             r"return\s+NOTHING\s*;\s*\Z"),
+    ),
+    ("findpath.obj", 0xA113C): (
+        SourceRule(
+            "type_obscuring_object::obscured_is_trigger keeps Dreamcast's "
+            "direct was_trigger byte accessor",
+            r"\A\s*return\s+was_trigger\s*;\s*\Z"),
     ),
     ("mapcell.obj", 0xF2C20): (
         SourceRule(
@@ -7141,6 +7184,73 @@ return 1;
     if any(not contract_violations(probe, is_diggable_key)
            for probe in broken_diggable_probes):
         failures.append("broken is_diggable Dreamcast source shape passed")
+    obscured_trigger_key = ("findpath.obj", 0xA113C)
+    obscured_trigger_probe = "return was_trigger;\n"
+    if contract_violations(obscured_trigger_probe, obscured_trigger_key):
+        failures.append("aligned obscured_is_trigger body did not pass")
+    if not contract_violations("return was_trigger != 0;\n",
+                               obscured_trigger_key):
+        failures.append("flattened obscured_is_trigger accessor passed")
+    special_terrain_key = ("mapcell.obj", 0xEC3B4)
+    special_terrain_probe = """\
+if (type == HERO && (cellFlags & 0x1000)) {
+    hero* our_hero = gpGame->GetHero(extraInfo);
+    if (our_hero->get_obscured_object() == GARRISON
+            && our_hero->obscured_is_trigger()
+            && objectIndex == 1)
+        return GARRISON;
+}
+if (type == GARRISON
+        && (cellFlags & 0x1000)
+        && objectIndex == 1)
+    return type;
+for (int i = objects.size(); i-- > 0;) {
+    CObject* object = objects[i].get_object();
+    CObjectType* object_type = object->get_object_type_ptr();
+    if (object_type->objectType == CURSED_GROUND
+            || object_type->objectType == MAGIC_PLAINS
+            || object_type->objectType == HOLY_GROUND
+            || object_type->objectType == EVIL_FOG
+            || object_type->objectType == CLOVER_FIELD_2
+            || object_type->objectType == FAVORABLE_WINDS
+            || object_type->objectType == LUCID_POOLS
+            || object_type->objectType == FIERY_FIELDS
+            || object_type->objectType == ROCKLANDS
+            || object_type->objectType == MAGIC_CLOUDS)
+        return object_type->objectType;
+}
+return NOTHING;
+"""
+    if contract_violations(special_terrain_probe, special_terrain_key):
+        failures.append("aligned get_special_terrain source shape did not pass")
+    flattened_special_obscurer = special_terrain_probe.replace(
+        "our_hero->get_obscured_object() == GARRISON",
+        "our_hero->valid && our_hero->obscuredType == GARRISON")
+    flattened_special_trigger = special_terrain_probe.replace(
+        "our_hero->obscured_is_trigger()", "our_hero->was_trigger")
+    cached_special_roots = special_terrain_probe.replace(
+        "if (type == HERO", "TAdventureObjectType cellType = type;\n"
+        "game* currentGame = gpGame;\nif (type == HERO")
+    unsigned_special_loop = special_terrain_probe.replace(
+        "i-- > 0", "i--")
+    flattened_special_object = special_terrain_probe.replace(
+        "CObject* object = objects[i].get_object();",
+        "CObject* object = &gpGame->worldMap.objects["
+        "objects[i].objectIndex];")
+    shortened_special_answers = special_terrain_probe.replace(
+        "            || object_type->objectType == HOLY_GROUND\n", "")
+    broken_special_terrain_probes = (
+        flattened_special_obscurer,
+        flattened_special_trigger,
+        cached_special_roots,
+        unsigned_special_loop,
+        flattened_special_object,
+        shortened_special_answers,
+    )
+    if any(not contract_violations(probe, special_terrain_key)
+           for probe in broken_special_terrain_probes):
+        failures.append(
+            "broken get_special_terrain Dreamcast source shape passed")
     read_map_objects_key = ("mapcell.obj", 0xF2C20)
     read_map_objects_probe = """\
 for (int i = 0; i < objectTypes.size(); ++i) {

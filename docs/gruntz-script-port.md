@@ -260,6 +260,32 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-31 — `NewmapCell::get_special_terrain` closes all 278 bytes and
+  32 blocks by restoring the Dreamcast helper/local shape and signed
+  post-decrement loop.** The former **79.8598%** body cached `type` and
+  `gpGame` in two source-false register locals and expanded the hero and object
+  lookups by hand. Dreamcast records exactly four locals—`our_hero`, `int i`,
+  `CObject* object`, and `CObjectType* object_type`—and calls
+  `get_obscured_object`, the header-tiny `obscured_is_trigger`,
+  `TObjectCell::get_object`, and `CObject::get_object_type_ptr`. Retail
+  independently expands those same loads. The const caller also exposes the
+  missing `get_object() const` qualifier from the Dreamcast `QBA` mangling.
+
+  Restoring those facts raises the body to **95.7477%** and makes the first 14
+  and final 13 blocks exact. The remaining loop lowering then reads directly
+  on both architectures: initialize `i` from `objects.size()`, compare the old
+  value as signed-positive while post-decrementing, and subscript with the new
+  value. `i-- > 0` produces retail's exact `jle`/`jg` pair; bare `i--` reaches
+  **98.8785%** but emits `je`/`jne`, while the previously banked
+  `size()-1; i>=0` form was only a local maximum under the flattened helper
+  state. Complete's eight additional magic-terrain answers stay in their
+  retail-proved order alongside Dreamcast's CURSED_GROUND/MAGIC_PLAINS pair.
+
+  Fatal asymmetric rules and negative controls now reject reintroducing the
+  two caches, flattening any helper, weakening the signed loop condition, or
+  shortening/reordering the Complete answer list. The live source-shape
+  ratchet retired the four former helper-omission rows.
+
 - **2026-08-31 — the Dreamcast helper chain closes
   `NewmapCell::get_map_object`, `NewmapCell::is_diggable`, and the existing
   `NewfullMap::CalculateCellExtra` caller byte-exact.**

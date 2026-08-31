@@ -355,7 +355,7 @@ int TTownEvent::Load(void* infile)
 // Dreamcast retains an out-of-line copy. Retail's corresponding source-order
 // slot is twelve bytes of NOP padding, while is_diggable contains this exact
 // vector lookup expanded in place, so the Windows helper is inline-only.
-inline CObject* NewmapCell::TObjectCell::get_object()
+inline CObject* NewmapCell::TObjectCell::get_object() const
 {
     return &gpGame->worldMap.objects[objectIndex];
 }
@@ -542,78 +542,43 @@ const unsigned char NewmapCell::HasTriggerableEvent()
 // E:\gamedcs\mapcell.cpp:490
 #endif  // @carcass
 
-// The reverse scan is `i = objects.size() - 1; i >= 0` and indexes
-// `objects[i]`, NOT `i = size(); i > 0` indexing `objects[i - 1]`
-// (79.0935 -> 79.8598).  The bytes tell the two apart at both ends of the
-// loop: retail keeps size in EDX and size-1 in ESI (`mov edx,esi / dec esi`)
-// so the entry guard can be `test edx,edx / jle` on the SIZE while the body
-// subscripts with ESI, and the back edge tests the PRE-decrement index
-// (`mov eax,esi / dec esi / test eax,eax / jg`).  Writing it the other way
-// lets VC6 fold `size() == 0` into the loop guard, which also collapses the
-// null-pointer arm of the inlined `vector::size()` - retail keeps that arm
-// as a real join (`xor esi,esi / jmp`), and that is the ten-instruction
-// difference the count showed.
-//
-// Residual (79.8598%): the two `cellFlags & 0x1000` tests.  Retail hoists
-// the mask into EBX before the first compare and tests the WORD twice
-// (`mov ebx,0x1000` + `test word ptr [ecx+0xc],bx`); this compile narrows
-// both to `test byte ptr [ecx+0xd],0x10`.  Same field, same bit - what is
-// missing is whatever stops VC6 narrowing.  `(cellFlags & 0x1000) != 0` is
-// byte-flat (measured), so it is not the comparison form; a mask that
-// arrives as an inlined parameter would do it, but no NewmapCell flag-test
-// helper appears anywhere in the DC roster to justify inventing one.
-// ALSO MEASURED (2026-08-21): naming the mask in a `register unsigned short`
-// local used at both sites is byte-flat too - VC6 constant-propagates it
-// straight back into the folded byte test, so no source spelling of the
-// CONSTANT reaches this; retail's `mov ebx,0x1000` is a constant-CSE the
-// allocator made under different pressure.
-// Two further readings of the tail, both rejected the same day. Retail keeps
-// `size` AND `size-1` live across the reverse scan (`mov edx,esi / dec esi`)
-// and guards on `test edx,edx / jle`, where we test `size-1` with
-// `lea edi,[eax-1] / test edi,edi / jl`: naming the size in an `int count`
-// ahead of the loop is byte-flat (VC6 folds it back), and wrapping the loop
-// in an explicit `if (count > 0)` costs 79.8598 -> 76.0093. Retail also keeps
-// the HERO and GARRISON returns as SEPARATE exits because one returns the
-// literal GARRISON and the other returns `cellType`; our compile proves them
-// equal on that path and merges both onto one `mov eax,0x21`. The source
-// already spells them differently, so that merge is constant propagation, not
-// a missing statement.
+// Exact Dreamcast/retail shape. The four recorded locals are our_hero, i,
+// object and object_type; the former cellType/currentGame caches were
+// source-false and hid the word mask/CSE lowering. Both obscurer helpers and
+// both object-pool helpers remain explicit in source and expand in retail.
+// The reverse loop is specifically `i-- > 0`: bare `i--` produces jne, while
+// the signed comparison produces retail's jle/jg pair on the old i value.
+// The eight post-Dreamcast Complete terrain ids remain retail-byte proof.
 VA(0x004fce20, 0x116)  // anchor-global, dc 0xec3b4
 TAdventureObjectType NewmapCell::get_special_terrain() const
 {
-    register TAdventureObjectType cellType = type;
-    register game* currentGame = gpGame;
-
-    if (cellType == HERO && (cellFlags & 0x1000)) {
-        hero* obscurer = currentGame->GetHero(extraInfo);
-        if (obscurer->valid
-                && obscurer->obscuredType == GARRISON
-                && obscurer->was_trigger
+    if (type == HERO && (cellFlags & 0x1000)) {
+        hero* our_hero = gpGame->GetHero(extraInfo);
+        if (our_hero->get_obscured_object() == GARRISON
+                && our_hero->obscured_is_trigger()
                 && objectIndex == 1)
             return GARRISON;
     }
 
-    if (cellType == GARRISON
+    if (type == GARRISON
             && (cellFlags & 0x1000)
             && objectIndex == 1)
-        return cellType;
+        return type;
 
-    for (int i = objects.size() - 1; i >= 0; --i) {
-        CObject* object =
-            &currentGame->worldMap.objects[objects[i].objectIndex];
-        CObjectType* objectType =
-            &currentGame->worldMap.objectTypes[object->typeIndex];
-        if (objectType->objectType == CURSED_GROUND
-                || objectType->objectType == MAGIC_PLAINS
-                || objectType->objectType == HOLY_GROUND
-                || objectType->objectType == EVIL_FOG
-                || objectType->objectType == CLOVER_FIELD_2
-                || objectType->objectType == FAVORABLE_WINDS
-                || objectType->objectType == LUCID_POOLS
-                || objectType->objectType == FIERY_FIELDS
-                || objectType->objectType == ROCKLANDS
-                || objectType->objectType == MAGIC_CLOUDS)
-            return objectType->objectType;
+    for (int i = objects.size(); i-- > 0;) {
+        CObject* object = objects[i].get_object();
+        CObjectType* object_type = object->get_object_type_ptr();
+        if (object_type->objectType == CURSED_GROUND
+                || object_type->objectType == MAGIC_PLAINS
+                || object_type->objectType == HOLY_GROUND
+                || object_type->objectType == EVIL_FOG
+                || object_type->objectType == CLOVER_FIELD_2
+                || object_type->objectType == FAVORABLE_WINDS
+                || object_type->objectType == LUCID_POOLS
+                || object_type->objectType == FIERY_FIELDS
+                || object_type->objectType == ROCKLANDS
+                || object_type->objectType == MAGIC_CLOUDS)
+            return object_type->objectType;
     }
     return NOTHING;
 }
