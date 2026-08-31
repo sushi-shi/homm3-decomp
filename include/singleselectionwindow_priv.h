@@ -754,6 +754,17 @@ public:
 // and slot 16 (IgnoreKey).
 class CSaveGameEdit : public textEntryWidget {
 public:
+    CSaveGameEdit(int x, int y, int w, int h, int textSize,
+                  const char* text, const char* fontName,
+                  font::TColor color, unsigned justification,
+                  const char* backgroundIcon, int backgroundFrame, int id,
+                  int style, int readType, int insetX, int insetY)
+        : textEntryWidget(x, y, w, h, textSize, text, fontName, color,
+                          justification, backgroundIcon, backgroundFrame, id,
+                          style, readType, insetX, insetY)
+    {
+    }
+
     virtual int OnKeyPress(message* msg);           // slot 15
     virtual unsigned char IgnoreKey(message* msg);  // slot 16
 };
