@@ -465,7 +465,7 @@ army	?check_special_attack@army@@QAEEPAV1@@Z	100.0000	100.0000	100.0000	0x40500
 army	?compute_attacker_bonus@army@@QBEHHEPAV1@EJ@Z	100.0000	100.0000	100.0000	0x43320
 army	?consider_attack@army@@QAEXPBV1@JJ@Z	100.0000	100.0000	100.0000	0x48840
 army	?do_attack@army@@QAEEPAV1@H@Z	98.8868	99.9962	99.9962	0x41610
-army	?do_attack@army@@QAEXH@Z	67.6684	100.0000	100.0000	0x41cb0
+army	?do_attack@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x41cb0
 army	?do_fire_shield@army@@AAEXJ@Z	100.0000	100.0000	100.0000	0x409c0
 army	?do_multi_head_attack@army@@QAEXIPAH0PAJ@Z	100.0000	100.0000	100.0000	0x40310
 army	?do_post_attack@army@@AAEXPAV1@HHH@Z	90.5724	96.6787	96.6787	0x40bc0
@@ -474,6 +474,7 @@ army	?erase_item@@YIXAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@PBVa
 army	?get_AI_target_time@army@@QBEJJ@Z	100.0000	100.0000	100.0000	0x48bd0
 army	?get_adjusted_attack@army@@QBEJPBV1@E@Z	100.0000	100.0000	100.0000	0x42410
 army	?get_adjusted_defense@army@@QBEJPBV1@E@Z	100.0000	100.0000	100.0000	0x42590
+army	?get_attack_direction@army@@QBEJJPBV1@@Z	100.0000	100.0000	100.0000	0x458b0
 army	?get_attack_direction@army@@QBEJJPBV1@J@Z	100.0000	100.0000	100.0000	0x45840
 army	?get_attack_modifier@army@@QBEJPBV1@E@Z	100.0000	100.0000	100.0000	0x42550
 army	?get_average_damage@army@@QBEJPBV1@EJEJ@Z	100.0000	100.0000	100.0000	0x42780
@@ -509,7 +510,6 @@ army	?set_inside_area_effect@army@@QAEEE@Z	100.0000	100.0000	100.0000	0x3efe0
 army	?simple_move@army@@AAEEHE@Z	100.0000	100.0000	100.0000	0x45950
 army	?spell_is_valid_on_target@@YIEHPBVarmy@@@Z	86.3747	92.6970	92.6970	0x47a80
 army	?stop_sample@army@@QAEXW4TSampleID@1@@Z	100.0000	100.0000	100.0000	0x3d580
-army	army_get_attack_direction_458b0	0.0000	100.0000	100.0000	0x458b0
 armygrp	??0TSplitWindow@@QAE@HHW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x49790
 armygrp	??0armyGroup@@QAE@W4TCreatureType@@H@Z	100.0000	100.0000	100.0000	0x4aaa0
 armygrp	??0armyGroup@@QAE@XZ	100.0000	100.0000	100.0000	0x4aa80
