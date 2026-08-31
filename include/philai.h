@@ -12,8 +12,11 @@ class hero;
 class town;
 class garrison;
 class generator;
+class NewmapCell;
+class playerData;
 struct TBlackMarket;
 struct type_university;
+struct type_point;
 
 // The Dreamcast class roster has no data members for this coordinator;
 // its three public methods are the complete method roster.  Retail DoAI
@@ -38,6 +41,73 @@ public:
 };
 
 long AI_get_spell_value(const hero* our_hero, SpellID spell);
+
+// Dreamcast line 3834 publishes the reference-qualified
+// move-cost parameter in the decorated name (`AAJ`) as well as the local and
+// statement records. Complete retains the same register/stack ABI at
+// 0x528040.
+long AI_value_of_event(const hero* current_hero, type_point point,
+                       long& move_cost);
+
+// Source-real appraisal boundaries used by AI_value_of_event. Several are
+// expanded or revision-adapted in Complete, but keeping these declarations
+// makes the recovered Dreamcast dispatch state explicit while their bodies
+// are promoted independently.
+long value_of_black_market(const hero* current_hero,
+                           const NewmapCell* cell);
+int ValueOfArena(const hero* current_hero, NewmapCell* cell);
+int ValueOfMapArtifact(const hero* current_hero, NewmapCell* cell);
+int ValueOfBlackBox(const hero* current_hero, NewmapCell* cell);
+int ValueOfCampfire(playerData* player, NewmapCell* cell);
+int ValueOfDefenseTower(const hero* current_hero, NewmapCell* cell);
+long value_of_bank(const hero* current_hero, NewmapCell* cell);
+int ValueOfGenerator(const hero* current_hero, int x, int y, int z,
+                     NewmapCell* cell, int move_cost);
+long value_of_garrison(const hero* current_hero, NewmapCell* cell);
+long value_of_idol(const hero* current_hero, long move_cost);
+int ValueOfFlotsam(playerData* player);
+int ValueOfGarden(const hero* current_hero, NewmapCell* cell);
+int ValueOfLeanTo(NewmapCell* cell, playerData* player);
+long value_of_hero_event(const hero* current_hero, NewmapCell* cell,
+                         short x, short y, short z, short move_cost);
+long value_of_hill_fort(const hero* current_hero, long move_cost);
+int ValueOfLibrary(const hero* current_hero, NewmapCell* cell);
+int ValueOfLighthouse(NewmapCell* cell);
+int ValueOfMagicSchool(const hero* current_hero, NewmapCell* cell);
+int ValueOfMercenaryCamp(const hero* current_hero, NewmapCell* cell);
+int MoraleIncreaseValue(const hero* current_hero, int value);
+int LuckIncreaseValue(const hero* current_hero, int value);
+long value_of_magus_hut(long player_id);
+int ValueOfMine(const hero* current_hero, NewmapCell* cell);
+long value_of_monsters(const hero* current_hero, NewmapCell* cell,
+                       type_point point);
+int value_of_move_source(const hero* current_hero, long flag, short increase,
+                         long* move_cost);
+int value_of_obelisk(NewmapCell* cell, long player_id);
+int ValueOfPowerSchool(const hero* current_hero, NewmapCell* cell);
+int ValueOfPrison(NewmapCell* cell, playerData* player);
+long value_of_pyramid(const hero* current_hero, NewmapCell* cell);
+long get_value_of_spring(const hero* current_hero, const NewmapCell* cell,
+                         unsigned short move_cost);
+long get_value_of_well(const hero* current_hero, unsigned short move_cost);
+int ValueOfRallyFlag(const hero* current_hero, long* move_cost);
+int ValueOfRefugeeCamp(const hero* current_hero, NewmapCell* cell);
+long ValueOfResource(const hero* current_hero, NewmapCell* cell,
+                     playerData* player);
+int ValueOfSeaChest(const hero* current_hero, NewmapCell* cell);
+int ValueOfSkeleton(const hero* current_hero, NewmapCell* cell);
+int ValueOfScroll(const hero* current_hero, NewmapCell* cell);
+int ValueOfShrine(const hero* current_hero, NewmapCell* cell);
+int ValueOfSirens(const hero* current_hero);
+int ValueOfStables(const hero* current_hero, long* move_cost);
+long value_of_town(const hero* current_hero, int x, int y, int z,
+                   short move_cost);
+int ValueOfTreasure(const hero* current_hero);
+int ValueOfTree(const hero* current_hero, NewmapCell* cell);
+int value_of_wagon(NewmapCell* cell, long player_id);
+long value_of_war_factory(const hero* current_hero, long move_cost);
+int value_of_war_school(const hero* current_hero, NewmapCell* cell);
+int value_of_witch_hut(const hero* current_hero, NewmapCell* cell);
 
 // 0x5253d0. DECLARED, not defined - advManager::TownEvent is the caller
 // that needs the declarator, and TownEvent is also what located the row:

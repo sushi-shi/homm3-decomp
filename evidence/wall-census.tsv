@@ -3,7 +3,6 @@
 # Banked-exact current dips are observational and excluded.
 # recoverable = size * (1 - max_fuzzy/100).
 class	recoverable	max_fuzzy	current_fuzzy	size	unit	fn	route	knob
-unclaimed (no source binding)	5704	0.0000	0.0000	5704	philai	AI_value_of_event	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 unclaimed (no source binding)	5100	0.0000	0.0000	5100	singleselectionwindow	TSingleSelectionWindow_OnWidgetDeselect	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 unclaimed (no source binding)	2926	0.0000	0.0000	2926	ai_player	AI_choose_destination	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 unclaimed (no source binding)	2152	0.0000	0.0000	2152	singleselectionwindow	TSingleSelectionWindow_ProcessRightSelect	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
@@ -16,6 +15,7 @@ unclaimed (no source binding)	731	0.0000	0.0000	731	singleselectionwindow	TSingl
 unclaimed (no source binding)	14	0.0000	0.0000	14	singleselectionwindow	SCampaign_GetCurrentScenario	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 control-flow (why-branch)	831	19.8438	19.8438	1037	singleselectionwindow	?SetHumanSlot@TSingleSelectionWindow@@QAEXXZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	307	29.0580	29.0580	433	game	??1SavedGameHeader@@QAE@XZ	predict-inline	callee expanded on one side only (A8/A9/A12): 11 over-inline (2 name-unresolvable pair(s) discounted)
+inliner (predict-inline)	3819	33.0444	33.0444	5704	philai	?AI_value_of_event@@YIJPBVhero@@Utype_point@@AAJ@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 32 under-inline, 87 over-inline (5 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	592	33.7160	33.3385	893	singleselectionwindow	??1TSingleSelectionWindow@@UAE@XZ	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 15 over-inline (2 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	277	35.0465	35.0465	427	singleselectionwindow	??1GameSelectionHeadersStruct@@QAE@XZ	predict-inline	callee expanded on one side only (A8/A9/A12): 11 over-inline (3 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	1248	35.9206	35.9206	1947	ai_player	?find_all_destinations@@YIJPAVhero@@PAVsearchArray@@PAV?$vector@UHeroDestination@@V?$allocator@UHeroDestination@@@std@@@std@@JEEE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 10 over-inline (4 name-unresolvable pair(s) discounted)
@@ -115,7 +115,7 @@ register-homing (why-reg)	93	84.7767	84.7767	608	event_record	?ResetVisibility@g
 control-flow (why-branch)	77	84.8547	84.8547	510	armygrp	?Merge@armyGroup@@QAEEPAV1@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	155	84.9579	84.9579	1032	spells	?Earthquake@combatManager@@QAEXH@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 register-homing (why-reg)	223	85.2335	85.2335	1508	advmgr	?DrawAdvObjShadow@advManager@@QAEXHHHHH@Z	why-reg	spill to dead-parameter slot (B4)
-register-homing (why-reg)	104	85.3476	85.3476	713	ai_player	?net_value_of_location@@YIHPAVhero@@PAUHeroDestination@@PAJPAUpathCell@@PAVsearchArray@@@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
+inliner (predict-inline)	104	85.3476	85.3476	713	ai_player	?net_value_of_location@@YIHPAVhero@@PAUHeroDestination@@PAJPAUpathCell@@PAVsearchArray@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline
 inliner (predict-inline)	111	85.6339	85.6339	775	advmgr	?ViewPuzzle@advManager@@QAEXXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (3 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	88	85.6452	85.6452	616	event_record	?SetVisibility@game@@QAEXHHHHHE@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 register-homing (why-reg)	63	85.8333	85.8333	447	ai_player	?check_trade_supply@type_AI_player@@QAE_NPBHJPAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
@@ -453,7 +453,7 @@ register-homing (why-reg)	17	98.9811	98.9811	1688	singleselectionwindow	?Update@
 register-homing (why-reg)	7	98.9815	98.9815	642	game	?GetNewHeroId@game@@QAEHHW4THeroClass@@E0@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 unclassified	6	98.9849	98.9849	548	ai_tactical	?get_frenzy_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	why-reg	run why-reg / why-branch for the full search
 register-homing (why-reg)	47	99.0102	99.0102	4757	recruit	??0TRecruitWindow@@QAE@HHHPAVrecruitUnit@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
-control-flow (why-branch)	52	99.0481	98.5741	5425	events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
+control-flow (why-branch)	52	99.0481	99.0481	5425	events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 unclassified	6	99.0596	99.0596	623	town	?show_creature_rewards@@YIXPBVtown@@PAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@std@@@Z	why-reg	run why-reg / why-branch for the full search
 control-flow (why-branch)	18	99.0902	99.0902	1946	events	?DoEventCreatureGenerator@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	4	99.0992	99.0992	389	ai	?choose_defense_hex@combatManager@@QAEEPBVarmy@@0PAJ1PAVsearchArray@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)

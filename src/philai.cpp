@@ -2571,20 +2571,151 @@ unsigned char AI_choose_resource_or_experience(const hero* current_hero,
     return resource_value > experience_value;
 }
 
-#if 0  // @carcass -- philai body-evidence claims, retail RVA order (divergent from DC link order)
-
 // E:\gamedcs\philai.cpp:3834.  The per-map-object event valuator: a giant
-// object-type dispatch that reaches nearly every value_of_* helper below
-// (calls value_of_town, ValueOfScroll, MoraleIncreaseValue, AI_value_of_luck
-// and the whole segment-9 sub cluster) - the retail carve named them all as
-// game_128040_subNN for exactly that reason.
-VA(0x00528040, 0x1648)  // anchor-callee, dc 0x113e24
-long AI_value_of_event(const hero* current_hero, type_point point, long* move_cost)
+// object-type dispatch. Dreamcast fixes the player/cell setup, one leading
+// absent source line, the arm order below and every named helper boundary.
+// Complete adds object variants and widens a few packed fields, but keeps the
+// same dispatch at this independently located retail address.
+VA(0x00528040, 0x1648)  // anchor-callee + 100-row DC statement shape, dc 0x113e24
+long AI_value_of_event(const hero* current_hero, type_point point,
+                       long& move_cost)
 {
-    // @stub
-}
+    playerData* player = const_cast<hero*>(current_hero)->get_player();
+    NewmapCell* cell = gpAdvManager->GetCell(point);
+    if (!cell->is_trigger)
+        return 0;
 
-#endif  // @carcass
+    switch (cell->type) {
+    case ARENA:
+        return ValueOfArena(current_hero, cell);
+    case ARTIFACT:
+        return ValueOfMapArtifact(current_hero, cell);
+    case BLACK_BOX:
+        return ValueOfBlackBox(current_hero, cell);
+    case BLACK_MARKET:
+        return value_of_black_market(current_hero, cell);
+
+    case BUOY:
+        return MoraleIncreaseValue(current_hero, 1);
+    case CAMPFIRE:
+        return ValueOfCampfire(player, cell);
+    case CLOVER_FIELD:
+        return LuckIncreaseValue(current_hero, 2);
+    case CREATURE_BANK:
+        return value_of_bank(current_hero, cell);
+    case CREATURE_GENERATOR_1:
+    case CREATURE_GENERATOR_4:
+        return ValueOfGenerator(current_hero, point.x, point.y, point.z,
+                                cell, move_cost);
+    case DEAD_GUY:
+        return ValueOfSkeleton(current_hero, cell);
+    case DEFENSE_TOWER:
+        return ValueOfDefenseTower(current_hero, cell);
+    case DERELICT_SHIP:
+    case DRAGON_CITY:
+        return value_of_bank(current_hero, cell);
+    case FAERIE_RING:
+        return LuckIncreaseValue(current_hero, 1);
+    case FLOTSAM:
+        return ValueOfFlotsam(player);
+
+    case GARDEN_OF_REVELATION:
+        return ValueOfGarden(current_hero, cell);
+    case GARRISON:
+        return value_of_garrison(current_hero, cell);
+    case IDOL_OF_FORTUNE:
+        return value_of_idol(current_hero, move_cost);
+    case HERO:
+        return value_of_hero_event(current_hero, cell, point.x, point.y,
+                                   point.z, static_cast<short>(move_cost));
+    case HILL_FORT:
+        return value_of_hill_fort(current_hero, move_cost);
+    case HUT_OF_MAGI:
+        return value_of_magus_hut(current_hero->owner);
+    case LEAN_TO:
+        return ValueOfLeanTo(cell, player);
+    case LIBRARY:
+        return ValueOfLibrary(current_hero, cell);
+    case LIGHTHOUSE:
+        return ValueOfLighthouse(cell);
+    case MAGIC_SCHOOL:
+        return ValueOfMagicSchool(current_hero, cell);
+    case MAGIC_SPRING:
+        return get_value_of_spring(current_hero, cell,
+                                   static_cast<unsigned short>(move_cost));
+    case MAGIC_WELL:
+        return get_value_of_well(current_hero,
+                                 static_cast<unsigned short>(move_cost));
+    case MERC_CAMP:
+        return ValueOfMercenaryCamp(current_hero, cell);
+    case MERMAID:
+        return LuckIncreaseValue(current_hero, 1);
+    case MINE:
+        return ValueOfMine(current_hero, cell);
+    case MONSTER:
+        return value_of_monsters(current_hero, cell, point);
+
+    case OASIS:
+        return value_of_move_source(current_hero, 0x400, 400, &move_cost);
+    case OBELISK:
+        return value_of_obelisk(cell, current_hero->owner);
+    case OBSERVATORY:
+        return AI_value_of_observatory(point, current_hero->owner, 10);
+    case POWER_SCHOOL:
+        return ValueOfPowerSchool(current_hero, cell);
+    case PRISON:
+        return ValueOfPrison(cell, player);
+    case PYRAMID:
+        return value_of_pyramid(current_hero, cell);
+    case RALLY_FLAG:
+        return ValueOfRallyFlag(current_hero, &move_cost);
+    case REFUGEE_CAMP:
+        return ValueOfRefugeeCamp(current_hero, cell);
+    case RESOURCE:
+        return ValueOfResource(current_hero, cell, player);
+    case SCHOLAR:
+        return hero::GetExperienceIncrement(current_hero->level);
+    case SEA_CHEST:
+        return ValueOfSeaChest(current_hero, cell);
+    case SHIPWRECK:
+        return value_of_bank(current_hero, cell);
+    case SHRINE1:
+    case SHRINE2:
+    case SHRINE3:
+        return ValueOfShrine(current_hero, cell);
+    case SIREN:
+        return ValueOfSirens(current_hero);
+    case SPELL_SCROLL:
+        return ValueOfScroll(current_hero, cell);
+    case STABLES:
+        return ValueOfStables(current_hero, &move_cost);
+    case TEMPLE:
+        return MoraleIncreaseValue(current_hero, 2);
+    case TOWN:
+        return value_of_town(current_hero, point.x, point.y, point.z,
+                             static_cast<short>(move_cost));
+    case TREASURE_CHEST:
+        return ValueOfTreasure(current_hero);
+    case TREE_OF_KNOWLEDGE:
+        return ValueOfTree(current_hero, cell);
+    case UNIVERSITY: {
+        ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
+            static_cast<void*>(cell));
+        return value_of_university(current_hero, info->get_university(), 1);
+    }
+    case WAGON:
+        return value_of_wagon(cell, current_hero->owner);
+    case WAR_MACHINE_FACTORY:
+        return value_of_war_factory(current_hero, move_cost);
+    case WAR_SCHOOL:
+        return value_of_war_school(current_hero, cell);
+    case WATERING_HOLE:
+        return value_of_move_source(current_hero, 0x800, 200, &move_cost);
+    case WITCH_HUT:
+        return value_of_witch_hut(current_hero, cell);
+    }
+    return 0;
+}
 
 #if 0  // @carcass: claim-only homes for retained header COMDATs
 

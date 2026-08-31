@@ -1127,7 +1127,7 @@ events	?DoAIEvent@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@@Z	100.00
 # synth PDB - returned the row to master's own 98.5741 to the digit
 # with events.cpp untouched. Cross-generation noise, the
 # recruit::Update revert-control precedent; hist keeps 99.1139.
-events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	98.5741	99.0481	99.1139	0xad470
+events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	99.0481	99.0481	99.1139	0xad470
 events	?DoCustomArtifact@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	99.1492	99.1492	99.1492	0x9f070
 events	?DoCustomResource@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa4780
 events	?DoCustomSpellScroll@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	97.4451	97.4451	97.4451	0xa5a80
@@ -2130,6 +2130,7 @@ philai	?AI_get_spell_value@@YIJPBVhero@@H@Z	100.0000	100.0000	100.0000	0x127640
 philai	?AI_resource_cost@@YIHJPBH@Z	100.0000	100.0000	100.0000	0x126cc0
 philai	?AI_resource_cost@@YIHPBVplayerData@@PBH@Z	100.0000	100.0000	100.0000	0x126c70
 philai	?AI_set_hero_bonuses@@YIXPAVhero@@@Z	100.0000	100.0000	100.0000	0x127760
+philai	?AI_value_of_event@@YIJPBVhero@@Utype_point@@AAJ@Z	33.0444	33.0444	33.0444	0x128040
 philai	?AI_visit_black_market@@YIXPAVhero@@PAUTBlackMarket@@@Z	100.0000	100.0000	100.0000	0x1243f0
 philai	?AI_visit_hill_fort@@YIXPAVhero@@@Z	100.0000	100.0000	100.0000	0x127bb0
 philai	?AI_visit_university@@YIXPAVhero@@PAUtype_university@@@Z	100.0000	100.0000	100.0000	0x124ed0
@@ -2197,7 +2198,6 @@ philai	?value_of_war_factory@@YIJPBVhero@@W4TArtifact@@J@Z	96.5185	96.5185	96.51
 philai	?value_of_war_school@@YIHPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x12b790
 philai	?value_of_witch_hut@@YIHPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x12b900
 philai	?wants_skill@@YIEPBVhero@@HH@Z	100.0000	100.0000	100.0000	0x124dd0
-philai	AI_value_of_event	0.0000	0.0000	0.0000	0x128040
 philai	MoveHero	0.0000	0.0000	0.0000	0x1261f0
 puzzlewindow	??0TPuzzleWindow@@QAE@H@Z	100.0000	100.0000	100.0000	0x12c1e0
 puzzlewindow	??0type_AI_puzzle_tile@@QAE@PAVNewmapCell@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x12c770
