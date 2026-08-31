@@ -51,7 +51,6 @@
 // third 5-param help builder, so its call surface keeps an ordinal placeholder
 // and its body remains unclaimed. See the help-text note further down.
 #define HOMM3_NEWFULLMAP_CELL_OUTOFLINE  // owns the 0x408770 COMDAT copy of cell(x,y,z)
-#define HOMM3_ADVMGR_GET_TARGET_VIEW
 #include <va.h>
 #include <stdio.h>
 #include <string.h>

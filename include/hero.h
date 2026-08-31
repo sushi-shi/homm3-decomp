@@ -996,16 +996,14 @@ public:
     void HeroScreenUpdate(int whichStat, int isQuickView);
     // 0x004d9110 - the idle frame for the hero's current facing.
     hero_seqid GetStandSequence();
-#if defined(HOMM3_ADVMGR_GET_TARGET_VIEW) \
-    || defined(HOMM3_PHILAI_OBJ_DECLS)
     // E:\gamedcs\Hero.h:986, dc 0x1fd30. SetHeroContext preserves this
-    // header helper in source; retail folds its packed-point construction
-    // into the caller.
+    // header-inline helper in source. Retail folds its packed-point
+    // construction into SetHeroContext and move_hero, so the canonical
+    // declaration belongs to hero rather than either TU's private view.
     __forceinline type_point get_target() const
     {
         return type_point(pathTargetX, pathTargetY, pathTargetZ);
     }
-#endif
     // 0x004e2f90 - inserts an artifact into the backpack, shifting the
     // tail up when the requested slot is occupied. `slot` < 0 means
     // "first free".
