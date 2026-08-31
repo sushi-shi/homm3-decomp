@@ -2041,13 +2041,6 @@ public:
     // combatManager::berserk_attack, whose first parameter is a plain
     // army*.
     //
-    // BEHIND A VIEW, AND THAT IS A MEASUREMENT: declaring it to every
-    // consumer costs command.obj's GetCommand 92.5714 -> 92.5357, this
-    // header's include-set class again and its third bare member
-    // DECLARATION to fire it. army.cpp is the only consumer.
-#ifdef HOMM3_ARMY_BERSERK_VIEW
-    void GoBerserk();
-#endif
     // 0x444120, LOCATED 2026-08-14 from ResetRound's own tail
     // (`push 1 / mov ecx,esi / call`) - a thiscall with ONE stack
     // argument, which is what the DC roster's two-parameter row and the
