@@ -2488,6 +2488,13 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
         SourceRule("CheckLuck uses TTextResource::operator[]",
                    r"\(\s*\*\s*gpGeneralText\s*\)\s*\["),
     ),
+    ("army.obj", 0x47C04): (
+        SourceRule(
+            "can_shoot keeps Dreamcast's owner-sensitive "
+            "army::enemy_is_adjacent(excluded) boundary",
+            r"(?<![\w:>])(?:this\s*->\s*)?enemy_is_adjacent\s*\(\s*"
+            r"excluded\s*\)", 1, 1),
+    ),
     ("army.obj", 0x4868C): (
         SourceRule(
             "ComputeAttackerDamageBonuses keeps Dreamcast's ballista-arm "
@@ -2502,6 +2509,15 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"(?:(?!#\s*pragma\s+inline_depth\s*\(\s*\)).)*?"
             r"\bGetName\s*\(\s*\)",
             0, 0, include_directives=True),
+    ),
+    ("army.obj", 0x4A480): (
+        SourceRule(
+            "GoBerserk keeps Dreamcast's sole can_shoot(0) boundary",
+            r"\bcan_shoot\s*\(\s*(?:0|NULL)\s*\)", 1, 1),
+        SourceRule(
+            "GoBerserk keeps all three Dreamcast get_owning_side "
+            "boundaries",
+            r"\bget_owning_side\s*\(", 3, 3),
     ),
     ("army.obj", 0x4BEEC): (
         SourceRule(
@@ -6070,6 +6086,42 @@ format_string(currentArmy->GetName(), targetArmy->GetName());
     if any(not contract_violations(probe, first_aid_key)
            for probe in first_aid_mutations):
         failures.append("de-inlined process_first_aid GetName shape passed")
+    can_shoot_key = ("army.obj", 0x47C04)
+    can_shoot_probe = """\
+if (enemy_is_adjacent(excluded))
+    bCanShoot = 0;
+"""
+    if contract_violations(can_shoot_probe, can_shoot_key):
+        failures.append("aligned can_shoot owner-sensitive helper did not pass")
+    flattened_can_shoot_probes = (
+        can_shoot_probe.replace(
+            "enemy_is_adjacent(excluded)",
+            "gpCombatManager->enemy_is_adjacent(this, gridIndex, excluded)"),
+        can_shoot_probe.replace(
+            "enemy_is_adjacent(excluded)", "enemy_is_adjacent(0)"),
+    )
+    if any(not contract_violations(probe, can_shoot_key)
+           for probe in flattened_can_shoot_probes):
+        failures.append("flattened can_shoot owner-sensitive helper passed")
+    go_berserk_key = ("army.obj", 0x4A480)
+    go_berserk_probe = """\
+if (can_shoot(0)) {
+    if (target->get_owning_side() == get_owning_side())
+        field_53dc[get_owning_side()] = 1;
+}
+"""
+    if contract_violations(go_berserk_probe, go_berserk_key):
+        failures.append("aligned GoBerserk helper shape did not pass")
+    flattened_go_berserk_probes = (
+        go_berserk_probe.replace("can_shoot(0)", "shotsLeft > 0"),
+        go_berserk_probe.replace(
+            "target->get_owning_side()", "target->combatSide"),
+        go_berserk_probe.replace("field_53dc[get_owning_side()]",
+                                 "field_53dc[combatSide]"),
+    )
+    if any(not contract_violations(probe, go_berserk_key)
+           for probe in flattened_go_berserk_probes):
+        failures.append("flattened GoBerserk helper shape passed")
     automate_first_aid_key = ("command.obj", 0x6B12C)
     automate_first_aid_probe = """\
 field_3c = 11;

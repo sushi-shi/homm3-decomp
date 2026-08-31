@@ -337,6 +337,37 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   gates at **2,635 / 3,154 linked exact**, **93.42% linked fuzzy**, and banks
   unrelated include-state dips by MAX/history.
 
+- **2026-08-31 — the Dreamcast helper chain breaks `GoBerserk` out of its
+  source-false 86% local maximum.** Dreamcast line 4223 positively proves
+  `GoBerserk` calls `can_shoot(0)`; lines 4233/4235 prove three
+  `get_owning_side` calls. The nested `can_shoot` dossier in turn proves an
+  owner-sensitive call to `army::enemy_is_adjacent(excluded)`. The previous
+  source duplicated `can_shoot`'s predicate in `GoBerserk`, duplicated the
+  wrapper's two `combatManager::enemy_is_adjacent` calls inside `can_shoot`,
+  and fenced the wrapper with `#pragma auto_inline(off)`. Those choices held
+  attractive isolated scores but erased two attested helper boundaries and
+  manufactured a partial-TU inliner state.
+
+  Restoring the complete chain and removing the pragma produces the expected
+  selective lowering: `army::can_shoot` is now **100% with 18/18 exact CFG
+  blocks**, `army::enemy_is_adjacent` remains **100% with 5/5**, and
+  `GoBerserk` rises from its banked **86.5769%** maximum to **97.8846%** while
+  recovering retail's **20-block count** and exact **13-branch/one-return
+  symbolic sequence**. Its remaining difference is tail block placement and
+  instruction selection, not a missing helper or CFG edge. The coherent
+  inliner-state change temporarily lowers `get_berserk_targets`,
+  `get_unit_combat_value`, `attack_hex`, and `spell_is_valid_on_target`; their
+  historical maxima remain banked and are not grounds to restore flattened
+  source.
+
+  This experiment also found a verifier false negative: the generic helper
+  scanner treated `gpCombatManager->enemy_is_adjacent` as satisfying the
+  Dreamcast `army::enemy_is_adjacent` edge. Explicit owner-sensitive
+  contracts now require that nested call, the sole `GoBerserk::can_shoot(0)`
+  boundary, and all three side accessors. Negative controls replace each with
+  the formerly flattened spelling, so this local-minimum regression is now
+  fatal even if its isolated byte percentage rises.
+
 - **2026-08-31 — `combatManager::automate_catapult` reaches an exact
   59-block retail structure while restoring the complete Dreamcast source
   vocabulary.** The 49-row/53-scope dossier proves three calls each to

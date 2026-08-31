@@ -3405,8 +3405,9 @@ unsigned char army::is_enemy(const army* arg) const
 // either, and BOTH rows are parked rather than landed low.
 #endif  // @carcass
 
-// CLAIMED 2026-08-15, and the "claimed OR expanded" trade the merge
-// recorded is RESOLVED: retail has both, and so do we. The mechanism
+// HISTORICAL 2026-08-15 partial-state measurement, superseded by the
+// source-shape closure below. The "claimed OR expanded" trade was resolved:
+// retail has both, and so do we. The mechanism
 // is one sentence - VC6 emits an `inline` function's out-of-line copy
 // exactly when the TU contains a USE IT DECLINES TO EXPAND - and the
 // whole A/B matrix, measured in this tree with the claim in place, is:
@@ -3457,13 +3458,18 @@ unsigned char army::is_enemy(const army* arg) const
 // retail's own out-of-line body at 0x4428f0 shows, so the two
 // spellings are byte-identical at every site this TU currently has -
 // the accessor is the one that also explains the third.
-// AND IT IS NOT army::enemy_is_adjacent's WRAPPER: the Dreamcast xref
-// graph pairs can_shoot -> army::enemy_is_adjacent, and spelling it
-// that way does reproduce get_AI_target_time at 100 with the
-// enemy_is_adjacent pragma lifted - but it costs get_berserk_targets
-// 92.52 -> 14.41, because the wrapper's own callees then sit at
-// depth 3 on a twice-divided budget. Retail's arithmetic only closes
-// with the two combatManager calls written here.
+// The Dreamcast xref graph positively pairs can_shoot with the
+// army::enemy_is_adjacent wrapper. An earlier score-local spelling
+// duplicated the wrapper's two combatManager calls here because it
+// protected get_berserk_targets in isolation; that omitted helper
+// boundary is not an admissible source verdict. Keep the wrapper and
+// carry the resulting inliner-state dip until its surrounding callers
+// and original header state are coherent.
+// CLOSURE 2026-08-31: with that wrapper restored and its auto_inline fence
+// removed, can_shoot itself is 100% (18/18 blocks), enemy_is_adjacent stays
+// 100% (5/5), and GoBerserk rises past its prior maximum to 97.8846% with
+// the retail 20-block/13-branch shape. The lower including-caller scores are
+// banked inliner-state collateral, not a reason to flatten this edge again.
 // MEASURED AND REJECTED 2026-08-21: respelling the bCanShoot flag as
 // direct `return 0;`s (to chase the literal stores retail's INLINED
 // copy shows in get_total_combat_value) moves FOUR consumers the wrong
@@ -3486,13 +3492,8 @@ inline unsigned char army::can_shoot(const army* excluded) const
     int bCanShoot = 1;
     if (!controller
         || !controller->IsWieldingArtifact(ARTIFACT_BOW_OF_THE_SHARPSHOOTER)) {
-        if (gpCombatManager->enemy_is_adjacent(this, gridIndex, excluded)) {
+        if (enemy_is_adjacent(excluded))
             bCanShoot = 0;
-        } else if (creatureId & 1) {
-            if (gpCombatManager->enemy_is_adjacent(
-                    this, get_second_grid_index(), excluded))
-                bCanShoot = 0;
-        }
     }
     return bCanShoot
            && (forgetfulnessRounds == 0 || forgetfulnessLevel < 2);
@@ -3503,30 +3504,11 @@ inline unsigned char army::can_shoot(const army* excluded) const
 // E:\gamedcs\army.cpp:2804
 #endif  // @carcass
 
-// auto_inline(off) IS LOAD-BEARING. GoBerserk (0x4456d0) is this
-// wrapper's ONLY call site in the TU as reconstructed so far, so our
-// CL expands the whole 92-byte body there - two
-// combatManager::enemy_is_adjacent calls where retail emits ONE call to
-// this function (predict-inline names the pair exactly). Retail's own
-// army.cpp plainly had more sites among the bodies still carcassed
-// here; the pragma reproduces that without inventing a call site. The
-// out-of-line body is unaffected and stays exact.
-//
-// KEPT 2026-08-14, and the expected expiry did NOT arrive.
-// get_berserk_targets (0x445490) was supposed to be the second call
-// site that retires this pragma; it is not one. Its retail bytes reach
-// the adjacency test through can_shoot, whose expansion emits the two
-// combatManager::enemy_is_adjacent calls DIRECTLY - there is no
-// army::enemy_is_adjacent call anywhere in that body - so the site
-// count is unchanged and lifting the pragma still costs GoBerserk
-// 86.01 -> 65.96 (re-measured today with get_berserk_targets landed).
-// The one shape that WOULD have supplied the site, can_shoot calling
-// this wrapper instead of the two combatManager forms, is refuted by
-// get_berserk_targets: it collapses that row to 14.41. So the scaffold
-// stays, and its retirement waits on a body that genuinely calls the
-// wrapper - CalculateNextArmy, the AI move chooser, or another of the
-// carcasses above.
-#pragma auto_inline(off)
+// Dreamcast proves this wrapper boundary from can_shoot. The former
+// auto_inline(off) scaffold reproduced a favorable partial-TU inliner
+// state, but it also forced the nested call out of the wrong source
+// context. The real remaining callers/header state, not a pragma
+// artifact, must eventually reproduce retail's selective expansion.
 VA(0x004429f0, 0x5C)  // anchor-global, dc 0x47c74
 unsigned char army::enemy_is_adjacent(const army* excluded) const
 {
@@ -3542,7 +3524,6 @@ unsigned char army::enemy_is_adjacent(const army* excluded) const
     }
     return 0;
 }
-#pragma auto_inline(on)
 
 #if 0  // @carcass
 
@@ -5259,38 +5240,14 @@ void army::get_berserk_targets(std::vector<army*>& armies) const
 // whatever it can to it - shoot if it may shoot, swing otherwise - and
 // if the list came back empty it simply defends.
 //
-// THE PREDICATE IS can_shoot's, SPELLED OUT rather than called. Retail
-// emits ONE call to army::enemy_is_adjacent(0) here where can_shoot's
-// own body expands the combat manager's three-argument form twice (once
-// per hex of a wide creature), so this is not that function inlined -
-// it is the same rule written again against the one-argument wrapper,
-// and it costs no call site can_shoot does not already own.
-//
-// AND IT HAS NO FLAG. can_shoot needs `int bCanShoot` because it has a
-// value to return; here the two answers are two STATEMENT arms, so the
-// condition stays one expression and the branches go straight to the
-// arms - which is why the controller lookup is an assignment inside the
-// chain rather than a statement above it. Hoisting it costs the
-// get_controlling_side expansion its position between the shotsLeft
-// test and the artifact test.
-//
-// Residual (86.01%): ONE branch polarity and its consequences. Every
-// instruction from the prologue through `cmp [forgetfulnessLevel], 2`
-// is byte-identical; retail then emits `jge <melee>` and lays the SHOOT
-// arm out at the fall-through, where our C2 emits `jl <shoot>` and
-// hoists the MELEE arm above it. The register permutation inside the
-// shoot arm (eax/edx against our ecx/eax) and the shared-versus-cloned
-// vector destructor push are both downstream of that one choice.
-// NOT SOURCE-ADDRESSABLE, and the probes say so: all FOUR spellings of
-// the same predicate - `if (mayShoot) {shoot} else {melee}`,
-// `if (!mayShoot) {melee} else {shoot}`, the same with an explicit
-// `return` closing the shoot arm, and the condition rewritten
-// positively as the MELEE rule - produce byte-identical code, and so
-// does an explicit `goto melee` with the melee block written LAST in
-// the source. C2 reorders the two arms itself on this CFG whatever the
-// source says. This is the merged-return / stale-CL-generation class.
-// The `push 0x8` against our `push 0x0` in the EH prologue is the
-// relocation addend and is not scored.
+// Dreamcast line 4223 proves this is a source call to can_shoot(0), not
+// a duplicated copy of its predicate. The inline definition above lets
+// VC6 expand that call here while the rejected spell_is_valid_on_target
+// sites keep can_shoot's retail out-of-line body. The old 86.01% plateau
+// came from trying several branch spellings of the duplicated predicate;
+// those experiments were internally consistent but started from a
+// source-false local minimum. Lines 4233/4235 likewise prove all three
+// get_owning_side calls in the shoot arm.
 VA(0x004456d0, 0x164)  // anchor-global, dc 0x4a480
 void army::GoBerserk()
 {
@@ -5302,19 +5259,11 @@ void army::GoBerserk()
         return;
     }
     army* target = berserkTargets[Random(0, count - 1)];
-    hero* controller;
-    if (creatureType == ARMY_CREATURE_BALLISTA
-        || creatureType == ARMY_CREATURE_ARROW_TOWER
-        || ((Is(1u << 2)) && shotsLeft > 0
-            && ((controller = get_controller()) != 0
-                    && controller->IsWieldingArtifact(
-                           ARTIFACT_BOW_OF_THE_SHARPSHOOTER)
-                || !enemy_is_adjacent(0))
-            && (forgetfulnessRounds == 0 || forgetfulnessLevel < 2))) {
+    if (can_shoot(0)) {
         gpCombatManager->field_3c = 7;
         gpCombatManager->field_44 = target->gridIndex;
-        if (target->combatSide == combatSide)
-            gpCombatManager->field_53dc[combatSide] = 1;
+        if (target->get_owning_side() == get_owning_side())
+            gpCombatManager->field_53dc[get_owning_side()] = 1;
     } else {
         gpCombatManager->berserk_attack(this, target);
     }
