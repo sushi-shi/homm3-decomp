@@ -387,6 +387,7 @@ void RemoteCleanup();
 // This TU's own file-scope save-name validator; its definition sits in
 // the carcass under the 0x577360 claim until reconstructed.
 unsigned char SaveValid(const char* filename);
+static void SliderFileMenu(int state, heroWindow* parent_window);
 
 // The live TSingleSelectionWindow (set for the dialog's lifetime; every
 // widget callback and net handler reaches the window through it). All 35
@@ -1224,6 +1225,52 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
         row->hide();
         Widgets.push_back(row);
     }
+
+    if (m_flag65) {
+        Widgets.push_back(new bitmapBorder(
+            3, 520 - y, 399, 65, 388, "gsstrip.pcx", 0x800));
+        strtok(DATA_COMPGEN(0x0068333c, defaultNewGameFileName,
+                            "NEWGAME.gm1"),
+               DATA_COMPGEN(0x006603ec, saveExtensionDot, "."));
+        saveGameEdit = new CSaveGameEdit(
+            35, 542, 342, 21, 61,
+            DATA_COMPGEN(0x0068333c, defaultNewGameFileName,
+                         "NEWGAME.gm1"),
+            "smalfont.fnt", font::WHITE, font::CENTER_JUSTIFIED,
+            0, 0, 160, 0x100, 0, 7, 5);
+        Widgets.push_back(saveGameEdit);
+    }
+
+    Widgets.push_back(new button(
+        161, 52, 44, 33, 137, "scsmbut.def", 0, 1, 0, 0, 2));
+    Widgets.push_back(new button(
+        208, 52, 44, 33, 138, "scmdbut.def", 0, 1, 0, 0, 2));
+    Widgets.push_back(new button(
+        255, 52, 44, 33, 139, "sclgbut.def", 0, 1, 0, 0, 2));
+    Widgets.push_back(new button(
+        302, 52, 44, 33, 140, "scxlbut.def", 0, 1, 0, 0, 2));
+    Widgets.push_back(new button(
+        349, 52, 44, 33, 141, "scalbut.def", 0, 1, 0, 0, 2));
+
+    Widgets.push_back(new button(
+        26, 92, 31, 28, 190, "scbutt1.def", 0, 1, 0, 0, 2));
+    Widgets.push_back(new button(
+        58, 92, 32, 28, 191, "scbutt2.def", 0, 1, 0, 0, 2));
+    Widgets.push_back(new button(
+        91, 92, 32, 28, 192, "ScButCp.def", 0, 1, 0, 0, 2));
+    Widgets.push_back(new button(
+        124, 92, 184, 33, 193, "scbutt3.def", 0, 1, 0, 0, 2));
+    Widgets.push_back(new button(
+        309, 92, 32, 28, 194, "scbutt4.def", 0, 1, 0, 0, 2));
+    Widgets.push_back(new button(
+        342, 92, 32, 28, 195, "scbutt5.def", 0, 1, 0, 0, 2));
+
+    int fileSliderHeight = m_flag65 ? 428 : 480;
+    fileSlider = new slider(
+        375, 92, 16, fileSliderHeight, 337, 10, SliderFileMenu,
+        slider::BLUE, gUnnamed69fdc8, 0);
+    fileSlider->hide();
+    Widgets.push_back(fileSlider);
 }
 
 #if 0  // @carcass: claim-only home for the game.h COMDAT below
@@ -1257,6 +1304,22 @@ CNetPlayerHandlerPlayer::CNetPlayerHandlerPlayer()
     color = -1;
     handicap = 0;
     memset(availableHeroes, 0, sizeof(availableHeroes));
+}
+
+// Dreamcast retains this member boundary. Complete expands it into the tiny
+// file-slider callback below, whose bytes prove the same store/call pair.
+inline void TSingleSelectionWindow::OnFileMenuSlider(int newIndex)
+{
+    currentIndex = newIndex;
+    SetCurrentMap(currentMap, 1);
+}
+
+// The file-list slider callback is a genuine Complete function boundary.
+// E:\gamedcs\singleselectionwindow.cpp:994
+VA(0x0057C990, 0x1C)  // anchor-reloc constructor slider callback + exact DC call edge, dc 0x1303dc
+static void SliderFileMenu(int state, heroWindow*)
+{
+    gUnnamed69fbe8->OnFileMenuSlider(state);
 }
 
 #if 0  // @carcass
