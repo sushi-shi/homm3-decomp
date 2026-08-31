@@ -2048,11 +2048,6 @@ public:
 #ifdef HOMM3_ARMY_BERSERK_VIEW
     void GoBerserk();
 #endif
-#ifdef HOMM3_ARMY_CALIPH_VIEW
-    // 0x447ee0, claimed in army.cpp: roll one of the caliph spells the
-    // stack at `hex` is a legal target for and cast it.
-    void cast_caliph_spell(long hex);
-#endif
     // 0x444120, LOCATED 2026-08-14 from ResetRound's own tail
     // (`push 1 / mov ecx,esi / call`) - a thiscall with ONE stack
     // argument, which is what the DC roster's two-parameter row and the
