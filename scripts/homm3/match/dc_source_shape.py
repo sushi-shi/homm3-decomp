@@ -39,7 +39,7 @@ import sys
 from collections import Counter
 from dataclasses import dataclass
 
-from homm3.analysis import dc_asm, dc_lines, dreamcast
+from homm3.analysis import dc_asm, dc_lines, dc_srclines, dreamcast
 from homm3.core import common
 from homm3.match import status
 from homm3.vc6 import _source
@@ -140,6 +140,153 @@ DO_SURRENDER_COMPLETE_RE = (
     r"->\s*name\s*,\s*gSurrenderCost695030\s*\)\s*;\s*"
     r"NormalDialog\s*\([^;]*\)\s*;\s*return\s+gpWindowManager\s*->\s*"
     r"dialogReturn\s*==\s*DIALOG_RETURN_ACCEPT\s*;\s*\Z")
+
+# Dreamcast's OnWidgetDeselect owns WinCE VM enumeration/save/controller
+# paths which have no counterpart in the decoded Complete Win32 switch.
+# Complete's scenario, begin/save-edit, and back arms are all present in the
+# retail body and form the bounded replacement proof; a missing old token by
+# itself is never enough.
+ON_WIDGET_COMPLETE_DESKTOP_STORAGE_RE = (
+    r"\A(?!.*\b(?:DSetCursorPos|EnumVMs|LoadCompleteVMFile|FindCurrentVM|"
+    r"GetDeviceDesc|VMDeleteFile|VMSaveFile|SaveGame|StopAllSamples)\s*\()"
+    r".*?case\s+SSW_SCENARIO_OPTIONS\s*:\s*"
+    r"SetupScenarioOptions\s*\(\s*0\s*\)\s*;.*?"
+    r"case\s+SSW_BEGIN\s*:\s*if\s*\(\s*!\s*m_flag65\s*\)\s*\{\s*"
+    r"\*\s*bExitFlag\s*=\s*OnBeginGame\s*\(\s*\)\s*;\s*\}\s*else\s*"
+    r"\{\s*\*\s*bExitFlag\s*=\s*SaveValid\s*\(\s*"
+    r"saveGameEdit\s*->\s*GetText\s*\(\s*\)\s*\)\s*;.*?"
+    r"gpMouseManager\s*->\s*SetPointer\s*\(.*?\)\s*;\s*\}\s*break\s*;"
+    r"\s*case\s+SSW_BACK\s*:.*?RemoteCleanup\s*\(\s*\)\s*;.*?"
+    r"memset\s*\(\s*gUnnamed69fc2c\s*,\s*0\s*,\s*351\s*\)\s*;.*?"
+    r"case\s+SSW_GENERATE_RANDOM_MAP\s*:\s*\{\s*"
+    r"std\s*::\s*string\s+name\s*=\s*GetRandomMapName\s*\(\s*\)\s*;"
+    r"\s*if\s*\(\s*GenerateRandomMap\s*\(\s*name\.c_str\s*\(\s*\)"
+    r"\s*\)\s*\)\s*NormalDialog\s*\(")
+
+# Complete moves the scenario/advanced/filter pane visibility work into
+# three setup helpers and adds its own filter pane. The four decoded selector
+# arms directly contradict Dreamcast's caller-local show/hide and MaxPlayers
+# groups while retaining the higher-level setup boundaries.
+ON_WIDGET_COMPLETE_OPTION_PANES_RE = (
+    r"\A(?!.*\b(?:MaxPlayers|show|hide)\s*\().*?"
+    r"case\s+SSW_SCENARIO_OPTIONS\s*:\s*"
+    r"SetupScenarioOptions\s*\(\s*0\s*\)\s*;.*?"
+    r"case\s+SSW_ADVANCED_OPTIONS\s*:\s*"
+    r"SetupAdvancedOptions\s*\(\s*\)\s*;.*?"
+    r"case\s+SSW_FILTER_OPTIONS\s*:\s*"
+    r"SetupFilterOptions\s*\(\s*\)\s*;.*?"
+    r"case\s+SSW_RANDOM_MAPS\s*:\s*"
+    r"SetupScenarioOptions\s*\(\s*1\s*\)\s*;")
+
+# Dreamcast separately asks HasMultipleTowns before its byte-mask prev/next
+# helpers. Complete's decoded caller instead retains GetDisplayTown and
+# widens both inline helper calls to a nine-bit legal-alignment mask, with the
+# Conflux bit removed when the active game version cannot use it. That exact
+# replacement proves only the *second, caller-local* HasMultipleTowns call
+# DC-only; GetDisplayTown's own named helper boundary remains mandatory.
+ON_WIDGET_COMPLETE_TOWN_CYCLE_RE = (
+    r"\A(?!.*\bHasMultipleTowns\s*\().*?"
+    r"case\s+SSW_TOWN_PREV_FIRST\s*:.*?"
+    r"int\s+town\s*=\s*GetDisplayTown\s*\(\s*pos\s*\)\s*;\s*"
+    r"unsigned\s+int\s+legal\s*=\s*gpGame\s*->\s*mapHeader\."
+    r"playerSlotAttributes\s*\[\s*pos\s*\]\.legalAlignments\s*;\s*"
+    r"if\s*\(\s*!\s*field_1898\s*\)\s*legal\s*&=\s*~\s*0x100\s*;"
+    r"\s*town\s*=\s*pick_prev_alignment\s*\(\s*legal\s*,.*?\)\s*;"
+    r".*?case\s+SSW_TOWN_NEXT_FIRST\s*:.*?"
+    r"int\s+pos\s*=\s*id\s*-\s*SSW_TOWN_NEXT_FIRST\s*;.*?"
+    r"int\s+town\s*=\s*GetDisplayTown\s*\(\s*pos\s*\)\s*;\s*"
+    r"unsigned\s+int\s+legal\s*=\s*gpGame\s*->\s*mapHeader\."
+    r"playerSlotAttributes\s*\[\s*pos\s*\]\.legalAlignments\s*;\s*"
+    r"if\s*\(\s*!\s*field_1898\s*\)\s*legal\s*&=\s*~\s*0x100\s*;"
+    r"\s*town\s*=\s*pick_next_alignment\s*\(\s*legal\s*,.*?\)\s*;")
+
+# The DC switch places its back/RemoteCleanup arm before the VM save-name
+# arm. Complete's decoded numeric selector order is begin/save-edit first and
+# back/RemoteCleanup second. This is an order-only revision: both shared
+# helper boundaries remain mandatory in the Complete source.
+ON_WIDGET_COMPLETE_BEGIN_BACK_ORDER_RE = (
+    r"case\s+SSW_BEGIN\s*:.*?SaveValid\s*\(.*?\)\s*;.*?"
+    r"case\s+SSW_BACK\s*:.*?IsMultiPlayer\s*\(\s*\).*?"
+    r"RemoteCleanup\s*\(\s*\)\s*;")
+
+ON_WIDGET_COMPLETE_OPTIONS_BEFORE_BEGIN_RE = (
+    r"case\s+SSW_SCENARIO_OPTIONS\s*:.*?"
+    r"SetupScenarioOptions\s*\(\s*0\s*\)\s*;.*?"
+    r"case\s+SSW_ADVANCED_OPTIONS\s*:.*?"
+    r"SetupAdvancedOptions\s*\(\s*\)\s*;.*?"
+    r"case\s+SSW_FILTER_OPTIONS\s*:.*?"
+    r"SetupFilterOptions\s*\(\s*\)\s*;.*?"
+    r"case\s+SSW_BEGIN\s*:")
+
+ON_WIDGET_COMPLETE_DIFFICULTY_FIRST_RE = (
+    r"case\s+SSW_DIFFICULTY_FIRST\s*:.*?"
+    r"SetDifficultyHiLite\s*\(\s*\)\s*;\s*"
+    r"SendSetupInfo\s*\(\s*0\s*\)\s*;\s*Update\s*\(\s*\)\s*;"
+    r"\s*break\s*;\s*case\s+SSW_SCENARIO_OPTIONS\s*:")
+
+ON_WIDGET_COMPLETE_CHAT_BEFORE_LIST_RE = (
+    r"case\s+SSW_CHAT_TOGGLE\s*:.*?if\s*\(\s*chatShowing\s*\)\s*"
+    r"TurnChatOff\s*\(\s*1\s*\)\s*;\s*else\s*"
+    r"TurnChatOn\s*\(\s*1\s*\)\s*;.*?"
+    r"case\s+SSW_SIZE_FILTER_SMALL\s*:")
+
+ON_WIDGET_COMPLETE_HANDICAP_BEFORE_TOWN_RE = (
+    r"case\s+SSW_HANDICAP_FIRST\s*:.*?"
+    r"widget\s*\*\s*w\s*=\s*GetWidget\s*\(\s*id\s*\)\s*;.*?"
+    r"w\s*->\s*send_message\s*\(.*?\)\s*;.*?"
+    r"DrawHeroAdvancedOption\s*\(\s*pos\s*,\s*1\s*,\s*-1\s*\)\s*;"
+    r".*?case\s+SSW_TOWN_PREV_FIRST\s*:")
+
+ON_WIDGET_COMPLETE_PLAYER_POS_BEFORE_NAME_RE = (
+    r"case\s+SSW_PLAYER_POS_FIRST\s*:.*?"
+    r"OnPlayerPosClick\s*\(\s*id\s*-\s*SSW_PLAYER_POS_FIRST\s*\)\s*;"
+    r".*?case\s+SSW_NAME_FIRST\s*:.*?"
+    r"OnNameClick\s*\(\s*id\s*-\s*SSW_NAME_FIRST\s*\)\s*;")
+
+ON_WIDGET_COMPLETE_SORT_BEFORE_PLAYER_RE = (
+    r"case\s+SSW_SORT_SIZE\s*:\s*"
+    r"OnSortMaps\s*\(\s*SORT_MAPS_BY_SIZE\s*\)\s*;.*?"
+    r"case\s+SSW_SORT_PLAYERS\s*:\s*"
+    r"OnSortMaps\s*\(\s*SORT_MAPS_BY_PLAYERS\s*\)\s*;.*?"
+    r"case\s+SSW_SORT_VERSION\s*:\s*"
+    r"OnSortMaps\s*\(\s*SORT_MAPS_BY_VERSION\s*\)\s*;.*?"
+    r"case\s+SSW_SORT_NAME\s*:\s*"
+    r"OnSortMaps\s*\(\s*SORT_MAPS_BY_NAME\s*\)\s*;.*?"
+    r"case\s+SSW_SORT_VICTORY\s*:\s*"
+    r"OnSortMaps\s*\(\s*SORT_MAPS_BY_VICTORY\s*\)\s*;.*?"
+    r"case\s+SSW_SORT_LOSS\s*:\s*"
+    r"OnSortMaps\s*\(\s*SORT_MAPS_BY_LOSS\s*\)\s*;.*?"
+    r"case\s+SSW_PLAYER_POS_FIRST\s*:")
+
+ON_WIDGET_COMPLETE_FILE_ROWS_BEFORE_PLAYER_RE = (
+    r"case\s+SSW_FILE_ROW_FIRST\s*:.*?"
+    r"if\s*\(\s*m_flag65\s*\)\s*\{.*?"
+    r"SetCurrentMap\s*\(\s*map\s*,\s*1\s*\)\s*;.*?"
+    r"else\s+if\s*\(.*?SelectionHeaders\.size\s*\(\s*\).*?\)\s*"
+    r"\{.*?SetCurrentMap\s*\(\s*map\s*,\s*1\s*\)\s*;.*?"
+    r"case\s+SSW_PLAYER_POS_FIRST\s*:")
+
+ON_WIDGET_COMPLETE_BONUS_BEFORE_PLAYER_RE = (
+    r"case\s+SSW_BONUS_PREV_FIRST\s*:.*?"
+    r"HasRandomHero\s*\(\s*pos\s*\).*?"
+    r"HasNonRandomHero\s*\(\s*pos\s*\).*?"
+    r"case\s+SSW_BONUS_NEXT_FIRST\s*:.*?"
+    r"HasRandomHero\s*\(\s*pos\s*\).*?"
+    r"HasNonRandomHero\s*\(\s*pos\s*\).*?"
+    r"case\s+SSW_PLAYER_POS_FIRST\s*:")
+
+ON_WIDGET_COMPLETE_FILTER_BEFORE_PLAYER_RE = (
+    r"case\s+SSW_SIZE_FILTER_SMALL\s*:\s*"
+    r"SetFilter\s*\(\s*MAP_DIMENSION_SMALL\s*\)\s*;.*?"
+    r"case\s+SSW_SIZE_FILTER_MEDIUM\s*:\s*"
+    r"SetFilter\s*\(\s*MAP_DIMENSION_MEDIUM\s*\)\s*;.*?"
+    r"case\s+SSW_SIZE_FILTER_LARGE\s*:\s*"
+    r"SetFilter\s*\(\s*MAP_DIMENSION_LARGE\s*\)\s*;.*?"
+    r"case\s+SSW_SIZE_FILTER_XLARGE\s*:\s*"
+    r"SetFilter\s*\(\s*MAP_DIMENSION_EXTRA_LARGE\s*\)\s*;.*?"
+    r"case\s+SSW_SIZE_FILTER_ALL\s*:\s*"
+    r"SetFilter\s*\(\s*0\s*\)\s*;.*?"
+    r"case\s+SSW_PLAYER_POS_FIRST\s*:")
 
 
 @dataclass(frozen=True)
@@ -500,6 +647,72 @@ RETAIL_BYTE_PROVEN_ORDER_SKEWS: dict[
             ("heroWindowManager::ConvertToHover",
              "mouseManager::SetPointer")),
     ),
+    ("singleselectionwindow.obj", 0x13C79C): (
+        ProvenOrderSkew(
+            "Complete OnWidgetDeselect orders its decoded begin/SaveValid "
+            "selector before back/IsMultiPlayer/RemoteCleanup; Dreamcast's "
+            "WinCE switch orders the back arm before its VM save arm",
+            0x005865B0, ON_WIDGET_COMPLETE_BEGIN_BACK_ORDER_RE,
+            ("TSingleSelectionWindow::OnBeginGame",
+             "TSingleSelectionWindow::IsMultiPlayer", "RemoteCleanup")),
+        ProvenOrderSkew(
+            "Complete OnWidgetDeselect orders its decoded scenario, "
+            "advanced and filter selectors before Begin; Dreamcast's "
+            "WinCE switch reaches its first advanced-options arm after the "
+            "VM save group",
+            0x005865B0, ON_WIDGET_COMPLETE_OPTIONS_BEFORE_BEGIN_RE,
+            ("TSingleSelectionWindow::SetupAdvancedOptions",)),
+        ProvenOrderSkew(
+            "Complete OnWidgetDeselect places its decoded difficulty "
+            "selector first; Dreamcast's WinCE switch reaches that shared "
+            "highlight/setup group after its platform lobby arms",
+            0x005865B0, ON_WIDGET_COMPLETE_DIFFICULTY_FIRST_RE,
+            ("TSingleSelectionWindow::SetDifficultyHiLite",
+             "TSingleSelectionWindow::SendSetupInfo")),
+        ProvenOrderSkew(
+            "Complete OnWidgetDeselect places its decoded chat toggle "
+            "before the map-list selectors; Dreamcast reaches the same "
+            "TurnChatOff/TurnChatOn pair after its option-pane groups",
+            0x005865B0, ON_WIDGET_COMPLETE_CHAT_BEFORE_LIST_RE,
+            ("TSingleSelectionWindow::TurnChatOff",
+             "TSingleSelectionWindow::TurnChatOn")),
+        ProvenOrderSkew(
+            "Complete OnWidgetDeselect places its decoded handicap selector "
+            "before the town and hero selectors; Dreamcast's WinCE switch "
+            "reaches the handicap GetWidget/send_message group later",
+            0x005865B0, ON_WIDGET_COMPLETE_HANDICAP_BEFORE_TOWN_RE,
+            ("heroWindow::GetWidget", "widget::send_message")),
+        ProvenOrderSkew(
+            "Complete OnWidgetDeselect orders its decoded player-position "
+            "selector before the name selector; Dreamcast orders OnNameClick "
+            "before OnPlayerPosClick",
+            0x005865B0, ON_WIDGET_COMPLETE_PLAYER_POS_BEFORE_NAME_RE,
+            ("TSingleSelectionWindow::OnNameClick",)),
+        ProvenOrderSkew(
+            "Complete OnWidgetDeselect places its decoded map-sort "
+            "selectors before the player-position selector; Dreamcast "
+            "reaches OnSortMaps after OnPlayerPosClick",
+            0x005865B0, ON_WIDGET_COMPLETE_SORT_BEFORE_PLAYER_RE,
+            ("TSingleSelectionWindow::OnSortMaps",)),
+        ProvenOrderSkew(
+            "Complete OnWidgetDeselect places its decoded file-row "
+            "selection before the player-position selector; Dreamcast "
+            "reaches SetCurrentMap after OnPlayerPosClick",
+            0x005865B0, ON_WIDGET_COMPLETE_FILE_ROWS_BEFORE_PLAYER_RE,
+            ("TSingleSelectionWindow::SetCurrentMap",)),
+        ProvenOrderSkew(
+            "Complete OnWidgetDeselect places both decoded start-bonus "
+            "selectors before the player-position selector; Dreamcast "
+            "reaches their HasRandomHero/HasNonRandomHero tests later",
+            0x005865B0, ON_WIDGET_COMPLETE_BONUS_BEFORE_PLAYER_RE,
+            ("HasRandomHero", "HasNonRandomHero")),
+        ProvenOrderSkew(
+            "Complete OnWidgetDeselect places its decoded map-size filter "
+            "selectors before the player-position selector; Dreamcast "
+            "reaches SetFilter after the start-bonus selectors",
+            0x005865B0, ON_WIDGET_COMPLETE_FILTER_BEFORE_PLAYER_RE,
+            ("TSingleSelectionWindow::SetFilter",)),
+    ),
 }
 
 
@@ -566,6 +779,33 @@ RETAIL_BYTE_PROVEN_REVISION_REMOVALS: dict[
             "strncpy(Name, tempText, 12) with a single customName guard and "
             "an instruction-identical inlined strcpy",
             0x005021C0, READ_HERO_COMPLETE_NAME_RE, ("strncpy",)),
+    ),
+    ("singleselectionwindow.obj", 0x13C79C): (
+        ProvenRevisionRemoval(
+            "Complete OnWidgetDeselect replaces Dreamcast's WinCE VM "
+            "enumeration/save/controller paths with the decoded Win32 "
+            "scenario, save-edit and back arms",
+            0x005865B0, ON_WIDGET_COMPLETE_DESKTOP_STORAGE_RE,
+            ("DSetCursorPos", "EnumVMs", "LoadCompleteVMFile",
+             "TSingleSelectionWindow::FindCurrentVM",
+             "TSingleSelectionWindow::GetDeviceDesc", "VMDeleteFile",
+             "VMSaveFile", "game::SaveGame",
+             "soundManager::StopAllSamples", "NormalDialog"),
+            unclaimed_inline=True),
+        ProvenRevisionRemoval(
+            "Complete OnWidgetDeselect moves Dreamcast's caller-local "
+            "option-pane visibility and player-count work into the decoded "
+            "scenario/advanced/filter setup helpers",
+            0x005865B0, ON_WIDGET_COMPLETE_OPTION_PANES_RE,
+            ("TSingleSelectionWindow::MaxPlayers", "widget::hide",
+             "widget::show"), unclaimed_inline=True),
+        ProvenRevisionRemoval(
+            "Complete OnWidgetDeselect replaces Dreamcast's second direct "
+            "HasMultipleTowns test with the decoded widened nine-town "
+            "prev/next helper loops",
+            0x005865B0, ON_WIDGET_COMPLETE_TOWN_CYCLE_RE,
+            ("TSingleSelectionWindow::HasMultipleTowns",),
+            unclaimed_inline=True),
     ),
 }
 
@@ -3474,6 +3714,18 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"gUnnamed69d810\s*=\s*gNetLocalGamePos\s*;\s*"
             r"UpdateTurnDuration\s*\(\s*\)\s*;"),
     ),
+    ("singleselectionwindow.obj", 0x13C79C): (
+        SourceRule(
+            "OnWidgetDeselect keeps Complete's retail-only random-map "
+            "name/generation/dialog statement order while Dreamcast's "
+            "earlier VM dialogs are classified separately",
+            r"case\s+SSW_GENERATE_RANDOM_MAP\s*:\s*\{\s*"
+            r"std\s*::\s*string\s+name\s*=\s*"
+            r"GetRandomMapName\s*\(\s*\)\s*;\s*"
+            r"if\s*\(\s*GenerateRandomMap\s*\(\s*"
+            r"name\.c_str\s*\(\s*\)\s*\)\s*\)\s*"
+            r"NormalDialog\s*\(", 1, 1),
+    ),
     ("swapmgr.obj", 0x15D150): (
         SourceRule(
             "handle_artifact_click keeps Complete's retail-relocation-proved "
@@ -5319,6 +5571,223 @@ def army_class_roster_violations(text: str) -> list[tuple[int, str]]:
 def selftest() -> list[str]:
     """Negative controls: the gate must detect the real defect class."""
     failures = []
+    multi_dc_claim = dc_srclines.CLAIM_RE.search(
+        "VA(0x005865b0, 0x13EA) // size 0.57x dc 0x22d4, "
+        "dc 0x13c79c")
+    if multi_dc_claim is None \
+            or multi_dc_claim.groups() != ("0x005865b0", "0x13c79c"):
+        failures.append(
+            "source-claim parser mistook Dreamcast size for final offset")
+
+    def check_on_widget_rule(pattern: str, aligned: str, broken: str,
+                             description: str) -> None:
+        if re.search(pattern, _source.mask(aligned), re.DOTALL) is None:
+            failures.append("aligned OnWidgetDeselect " + description
+                            + " did not classify")
+        if re.search(pattern, _source.mask(broken), re.DOTALL) is not None:
+            failures.append("broken OnWidgetDeselect " + description
+                            + " still classified")
+
+    desktop_storage_probe = """\
+case SSW_SCENARIO_OPTIONS:
+    SetupScenarioOptions(0);
+case SSW_BEGIN:
+    if (!m_flag65) {
+        *bExitFlag = OnBeginGame();
+    } else {
+        *bExitFlag = SaveValid(saveGameEdit->GetText());
+        gpMouseManager->SetPointer(1, mouseManager::ADVENTURE_SET);
+    }
+    break;
+case SSW_BACK:
+    RemoteCleanup();
+    memset(gUnnamed69fc2c, 0, 351);
+case SSW_GENERATE_RANDOM_MAP: {
+    std::string name = GetRandomMapName();
+    if (GenerateRandomMap(name.c_str()))
+        NormalDialog(text, 0, 1);
+}
+"""
+    check_on_widget_rule(
+        ON_WIDGET_COMPLETE_DESKTOP_STORAGE_RE, desktop_storage_probe,
+        desktop_storage_probe.replace("NormalDialog(text, 0, 1);", ""),
+        "desktop-storage replacement")
+    check_on_widget_rule(
+        ON_WIDGET_COMPLETE_DESKTOP_STORAGE_RE, desktop_storage_probe,
+        desktop_storage_probe.replace(
+            "SetupScenarioOptions(0);", "EnumVMs(); SetupScenarioOptions(0);"),
+        "desktop-storage obsolete-call rejection")
+
+    option_panes_probe = """\
+case SSW_SCENARIO_OPTIONS:
+    SetupScenarioOptions(0);
+case SSW_ADVANCED_OPTIONS:
+    SetupAdvancedOptions();
+case SSW_FILTER_OPTIONS:
+    SetupFilterOptions();
+case SSW_RANDOM_MAPS:
+    SetupScenarioOptions(1);
+"""
+    check_on_widget_rule(
+        ON_WIDGET_COMPLETE_OPTION_PANES_RE, option_panes_probe,
+        option_panes_probe.replace("SetupFilterOptions();", ""),
+        "option-pane replacement")
+
+    town_cycle_probe = """\
+case SSW_TOWN_PREV_FIRST:
+    int town = GetDisplayTown(pos);
+    unsigned int legal =
+        gpGame->mapHeader.playerSlotAttributes[pos].legalAlignments;
+    if (!field_1898)
+        legal &= ~0x100;
+    town = pick_prev_alignment(legal, town);
+case SSW_TOWN_NEXT_FIRST:
+    int pos = id - SSW_TOWN_NEXT_FIRST;
+    int town = GetDisplayTown(pos);
+    unsigned int legal =
+        gpGame->mapHeader.playerSlotAttributes[pos].legalAlignments;
+    if (!field_1898)
+        legal &= ~0x100;
+    town = pick_next_alignment(legal, town);
+"""
+    check_on_widget_rule(
+        ON_WIDGET_COMPLETE_TOWN_CYCLE_RE, town_cycle_probe,
+        town_cycle_probe.replace("town = pick_next_alignment(legal, town);",
+                                 "town = town + 1;"),
+        "nine-town cycle replacement")
+    check_on_widget_rule(
+        ON_WIDGET_COMPLETE_TOWN_CYCLE_RE, town_cycle_probe,
+        town_cycle_probe.replace(
+            "case SSW_TOWN_PREV_FIRST:",
+            "HasMultipleTowns(pos); case SSW_TOWN_PREV_FIRST:"),
+        "town-cycle obsolete-call rejection")
+
+    begin_back_probe = """\
+case SSW_BEGIN:
+    SaveValid(saveGameEdit->GetText());
+case SSW_BACK:
+    IsMultiPlayer();
+    RemoteCleanup();
+"""
+    options_begin_probe = """\
+case SSW_SCENARIO_OPTIONS:
+    SetupScenarioOptions(0);
+case SSW_ADVANCED_OPTIONS:
+    SetupAdvancedOptions();
+case SSW_FILTER_OPTIONS:
+    SetupFilterOptions();
+case SSW_BEGIN:
+"""
+    difficulty_probe = """\
+case SSW_DIFFICULTY_FIRST:
+    SetDifficultyHiLite();
+    SendSetupInfo(0);
+    Update();
+    break;
+case SSW_SCENARIO_OPTIONS:
+"""
+    chat_probe = """\
+case SSW_CHAT_TOGGLE:
+    if (chatShowing)
+        TurnChatOff(1);
+    else
+        TurnChatOn(1);
+case SSW_SIZE_FILTER_SMALL:
+"""
+    handicap_probe = """\
+case SSW_HANDICAP_FIRST:
+    widget* w = GetWidget(id);
+    w->send_message(widget::WIDGET_SET_TEXT, text);
+    DrawHeroAdvancedOption(pos, 1, -1);
+case SSW_TOWN_PREV_FIRST:
+"""
+    player_name_probe = """\
+case SSW_PLAYER_POS_FIRST:
+    OnPlayerPosClick(id - SSW_PLAYER_POS_FIRST);
+case SSW_NAME_FIRST:
+    OnNameClick(id - SSW_NAME_FIRST);
+"""
+    sort_probe = """\
+case SSW_SORT_SIZE:
+    OnSortMaps(SORT_MAPS_BY_SIZE);
+case SSW_SORT_PLAYERS:
+    OnSortMaps(SORT_MAPS_BY_PLAYERS);
+case SSW_SORT_VERSION:
+    OnSortMaps(SORT_MAPS_BY_VERSION);
+case SSW_SORT_NAME:
+    OnSortMaps(SORT_MAPS_BY_NAME);
+case SSW_SORT_VICTORY:
+    OnSortMaps(SORT_MAPS_BY_VICTORY);
+case SSW_SORT_LOSS:
+    OnSortMaps(SORT_MAPS_BY_LOSS);
+case SSW_PLAYER_POS_FIRST:
+"""
+    file_rows_probe = """\
+case SSW_FILE_ROW_FIRST:
+    if (m_flag65) {
+        SetCurrentMap(map, 1);
+    } else if (SelectionHeaders.size() && map < SelectionHeaders.size()) {
+        SetCurrentMap(map, 1);
+    }
+case SSW_PLAYER_POS_FIRST:
+"""
+    bonus_probe = """\
+case SSW_BONUS_PREV_FIRST:
+    HasRandomHero(pos);
+    HasNonRandomHero(pos);
+case SSW_BONUS_NEXT_FIRST:
+    HasRandomHero(pos);
+    HasNonRandomHero(pos);
+case SSW_PLAYER_POS_FIRST:
+"""
+    filter_probe = """\
+case SSW_SIZE_FILTER_SMALL:
+    SetFilter(MAP_DIMENSION_SMALL);
+case SSW_SIZE_FILTER_MEDIUM:
+    SetFilter(MAP_DIMENSION_MEDIUM);
+case SSW_SIZE_FILTER_LARGE:
+    SetFilter(MAP_DIMENSION_LARGE);
+case SSW_SIZE_FILTER_XLARGE:
+    SetFilter(MAP_DIMENSION_EXTRA_LARGE);
+case SSW_SIZE_FILTER_ALL:
+    SetFilter(0);
+case SSW_PLAYER_POS_FIRST:
+"""
+    on_widget_order_controls = (
+        (ON_WIDGET_COMPLETE_BEGIN_BACK_ORDER_RE, begin_back_probe,
+         "RemoteCleanup();", "begin/back order"),
+        (ON_WIDGET_COMPLETE_OPTIONS_BEFORE_BEGIN_RE, options_begin_probe,
+         "SetupFilterOptions();", "options/begin order"),
+        (ON_WIDGET_COMPLETE_DIFFICULTY_FIRST_RE, difficulty_probe,
+         "SendSetupInfo(0);", "difficulty-first order"),
+        (ON_WIDGET_COMPLETE_CHAT_BEFORE_LIST_RE, chat_probe,
+         "TurnChatOn(1);", "chat/list order"),
+        (ON_WIDGET_COMPLETE_HANDICAP_BEFORE_TOWN_RE, handicap_probe,
+         "w->send_message(widget::WIDGET_SET_TEXT, text);",
+         "handicap/town order"),
+        (ON_WIDGET_COMPLETE_PLAYER_POS_BEFORE_NAME_RE, player_name_probe,
+         "OnPlayerPosClick(id - SSW_PLAYER_POS_FIRST);",
+         "player/name order"),
+        (ON_WIDGET_COMPLETE_SORT_BEFORE_PLAYER_RE, sort_probe,
+         "OnSortMaps(SORT_MAPS_BY_LOSS);", "sort/player order"),
+        (ON_WIDGET_COMPLETE_FILE_ROWS_BEFORE_PLAYER_RE, file_rows_probe,
+         "SetCurrentMap(map, 1);", "file-row/player order"),
+        (ON_WIDGET_COMPLETE_BONUS_BEFORE_PLAYER_RE, bonus_probe,
+         "HasNonRandomHero(pos);", "bonus/player order"),
+        (ON_WIDGET_COMPLETE_FILTER_BEFORE_PLAYER_RE, filter_probe,
+         "SetFilter(MAP_DIMENSION_EXTRA_LARGE);", "filter/player order"),
+    )
+    registered_on_widget_order_patterns = {
+        rule.retail_pattern
+        for rule in RETAIL_BYTE_PROVEN_ORDER_SKEWS[
+            ("singleselectionwindow.obj", 0x13C79C)]
+    }
+    for pattern, aligned, marker, description in on_widget_order_controls:
+        if pattern not in registered_on_widget_order_patterns:
+            failures.append("unregistered OnWidgetDeselect " + description)
+        check_on_widget_rule(
+            pattern, aligned, aligned.replace(marker, "", 1), description)
+
     redeclaration_probe = """\
 void wanted() { KeepHelper(); }
 VA(0x00401230, 0x10)

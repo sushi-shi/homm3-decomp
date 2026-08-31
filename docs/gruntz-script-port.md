@@ -260,6 +260,39 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-31 — hardest-first reconstruction opens
+  `TSingleSelectionWindow::OnWidgetDeselect` from zero MAX to 29.3653% while
+  preserving its Dreamcast helper structure.** The 5,098-byte retail
+  function is now represented by a 5,100-byte candidate instead of an empty
+  body. Its Dreamcast counterpart contributes 8,916 SH4 bytes, 42 recovered
+  locals, 209 lexical scopes, 372 breakpoint rows, and 67 unique callees.
+  The first coherent pass restores the shared `IsSendingHeaders`,
+  `HasRandomHero`, `HasNonRandomHero`, `pick_prev_alignment`,
+  `pick_next_alignment`, `OnSortMaps`, `SetCurrentMap`, and option/setup
+  helper boundaries instead of flattening them for an isolated score.
+
+  Complete's x86 switch directly proves a bounded set of revision/platform
+  differences: Win32 scenario/save/back arms replace WinCE VM and controller
+  paths; setup helpers own the caller-local Dreamcast option-pane work; and
+  nine-town Conflux-aware prev/next loops replace the second direct
+  `HasMultipleTowns` test. Complete also orders its numeric selectors
+  differently from the older Dreamcast switch. Those differences are
+  admitted only through narrow positive source patterns; missing shared calls
+  still fail independently. Every new removal and order classification has a
+  negative control that deletes its required Complete replacement or restores
+  an obsolete Dreamcast call.
+
+  This pass also fixed the Dreamcast source-claim parser. A provenance comment
+  can contain both a comparison annotation such as `size 0.57x dc 0x22d4`
+  and the actual final identity `dc 0x13c79c`; the old non-greedy expression
+  selected the first token and silently attached the wrong dossier. Claims
+  now deliberately use the final explicit Dreamcast token, with a regression
+  control for the multi-token form. The candidate is an opening checkpoint,
+  not closure: its provisional Complete-only random-map declarations and the
+  remaining x86 codegen need later refinement. Hardest-first scheduling moves
+  on once this zero-MAX function is banked rather than polishing it ahead of
+  untouched larger functions.
+
 - **2026-08-31 — `combatManager::ProcessCombatMsg` reaches 93.0970% by
   restoring the Dreamcast statement hierarchy; the remaining frame/branch
   residual is banked without flattening the source.** The admitted retail
