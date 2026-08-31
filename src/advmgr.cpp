@@ -5367,7 +5367,7 @@ void advManager::DrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                         int triggerX;
                         int triggerY;
                         mapObjects->objects[objCell->objectIndex].FindTrigger(
-                            &triggerX, &triggerY);
+                            triggerX, triggerY);
                         NewmapCell* triggerCell =
                             GetCell(type_point(triggerX, triggerY, z));
                         int owner = GetFlaggedObjectOwner(triggerCell);
@@ -6072,7 +6072,7 @@ void advManager::DrawUnderlay(int srcX, int srcY, int z, int destX, int destY)
                 CObject* Obj;
                 int owner;
                 Obj = &fullMap->objects[objCell->objectIndex];
-                Obj->FindTrigger(&triggerX, &triggerY);
+                Obj->FindTrigger(triggerX, triggerY);
                 type_point triggerPoint;
                 triggerPoint = type_point(triggerX, triggerY, z);
                 // The `valid` and `map` locals are the file's own

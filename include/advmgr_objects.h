@@ -221,7 +221,11 @@ public:
 
     CObjectType* get_object_type_ptr() const;
     TAdventureObjectType get_type() const;
-    void FindTrigger(int* resultX, int* resultY);
+    // MapCell.cpp:1119/1131. Dreamcast publishes both members as const;
+    // FindTrigger's AAH parameters are references, and get_trigger is the
+    // source helper which retail expands into get_trigger_cell.
+    type_point get_trigger() const;
+    void FindTrigger(int& resultX, int& resultY) const;
 };
 SIZE(CObject, 0xc);
 

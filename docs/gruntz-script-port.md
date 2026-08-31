@@ -260,6 +260,34 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-31 — `NewmapCell::get_trigger_cell` closes all 303 bytes and 14
+  blocks by restoring the nested `CObject::get_trigger`/`game::get_cell`
+  source hierarchy; `CObject::FindTrigger` remains exact under its published
+  const-reference ABI.** The former **90.8763%** body had the right retail CFG
+  but four source-false locals: `index`, `triggerX`, `triggerY`, and `point`.
+  Dreamcast records exactly `type_point location` and `CObject* object` in the
+  caller, then calls `object->get_trigger()` and `gpGame->get_cell(location)`.
+  The inlined helper has exactly `int result_x` and `int result_y`, calls
+  `FindTrigger(result_x, result_y)`, and returns
+  `type_point(result_x, result_y, z)`. Its publics further settle both members
+  as const and `FindTrigger`'s two outputs as references (`AAH0`).
+
+  Restoring that hierarchy produces retail's 0xc-byte frame and combined
+  packed-y/z constructor merge exactly: **303/303 bytes, 14/14 blocks**. The
+  previously rejected direct-constructor experiment (**73.0309%**) was a
+  layer error, not contrary evidence—the constructor had been inserted into
+  the still-flattened caller, so VC6 saw a different inline graph. With the
+  original nested helper boundary present it is exact on the first compile.
+  The signature migration also leaves `FindTrigger` itself exact at **262/262
+  bytes, 17/17 blocks**, while making all ten reconstructed call sites use the
+  source-real reference form.
+
+  Fatal asymmetric rules and negative controls now reject an index cache,
+  flattened trigger construction, flattened game/map lookup, pointer-form
+  output arguments, a mutable interface, or loss of the two helper locals and
+  constructor. The live source-shape ratchet retired exactly the two former
+  caller/helper omission rows.
+
 - **2026-08-31 — `NewmapCell::get_special_terrain` closes all 278 bytes and
   32 blocks by restoring the Dreamcast helper/local shape and signed
   post-decrement loop.** The former **79.8598%** body cached `type` and
