@@ -218,11 +218,11 @@ enum TAdventureObjectType {
     MAX_EVENT_TYPE             = 165
 };
 
-#ifdef HOMM3_MAPCELL_UPGRADE_VIEW
 // The save-version <25 views used by mapcell.cpp's retail-only compatibility
 // pass. The legacy layouts are published by the Dreamcast CodeView record;
 // the current layouts are fixed by retail's seven conversion arms. They are
-// gated because only mapcell.obj converts serialized legacy dwords.
+// canonical declarations even though only mapcell.obj converts serialized
+// legacy dwords.
 struct LegacyArtifactInfo {
     signed long price : 4;
     signed long guard : 8;
@@ -304,7 +304,6 @@ struct CurrentVisitedInfo {
     unsigned long visited_bits : 8;
     unsigned long tail : 19;
 };
-#endif
 
 struct ShipyardInfo {
     signed int owner : 8;
