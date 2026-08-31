@@ -525,7 +525,6 @@ call	army.obj	0x453c8	combatManager::ScrollTo
 call	army.obj	0x453c8	combatManager::UpdateCombatArea
 call	army.obj	0x461a0	SRandom
 call	army.obj	0x46658	SRandom
-call	army.obj	0x46658	min
 call	army.obj	0x47270	army::Is
 call	army.obj	0x47270	army::get_second_grid_index
 call	army.obj	0x47270	combatManager::check_fire_wall

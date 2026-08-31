@@ -2470,6 +2470,47 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"Widgets\s*\.\s*push_back\s*\(\s*new\s+button\s*\([^;]*"
             r"0x7801[^;]*\)\s*\)\s*;"),
     ),
+    ("army.obj", 0x46658): (
+        SourceRule(
+            "do_post_attack keeps all seven Dreamcast-proven "
+            "TTextResource::operator[] statement boundaries",
+            r"\(\s*\*\s*gpGeneralText\s*\)\s*\[", 7, 7),
+        SourceRule(
+            "do_post_attack may not flatten operator[] into GetText",
+            r"\bgpGeneralText\s*->\s*GetText\s*\(", 0, 0),
+        SourceRule(
+            "do_post_attack keeps the four separate shared min statements",
+            r"(?<![_\w])min\s*\(", 4, 4),
+        SourceRule(
+            "do_post_attack may not bypass the source min wrapper",
+            r"\b_cpp_min\s*\(", 0, 0),
+        SourceRule(
+            "the Vampire arm keeps dead_vampires, missing_life, and the "
+            "two ordered damage_recovered min statements",
+            r"\blong\s+dead_vampires\s*=\s*0\s*;\s*"
+            r"long\s+missing_life\s*=.*?;\s*"
+            r"long\s+damage_recovered\s*=\s*min\s*\(\s*iDamage\s*,\s*"
+            r"total_life\s*\)\s*;\s*"
+            r"damage_recovered\s*=\s*min\s*\(\s*damage_recovered\s*,\s*"
+            r"missing_life\s*\)\s*;"),
+        SourceRule(
+            "the Gorgon arm keeps its accumulator before Is, its Random "
+            "loop in do_post_attack, and two ordered min statements",
+            r"case\s+CREATURE_MIGHTY_GORGON\s*:\s*\{\s*"
+            r"int\s+stares\s*=\s*0\s*;\s*"
+            r"if\s*\(\s*target\s*->\s*Is\s*\([^)]*\)\s*\)\s*\{\s*"
+            r"for\s*\(\s*long\s+i\s*=\s*0\s*;\s*i\s*<\s*numTroops\s*;"
+            r"\s*i\+\+\s*\)\s*\{.*?"
+            r"\bRandom\s*\(\s*1\s*,\s*100\s*\).*?\bstares\+\+\s*;"
+            r".*?\blong\s+dead\s*=\s*min\s*\(\s*stares\s*,\s*"
+            r"target\s*->\s*numTroops\s*\)\s*;\s*"
+            r"dead\s*=\s*min\s*\(\s*dead\s*,\s*"
+            r"\(\s*numTroops\s*\+\s*9\s*\)\s*/\s*10\s*\)\s*;"),
+        SourceRule(
+            "do_post_attack may not recreate the artificial Vampire or "
+            "Gorgon caller-shrink helpers",
+            r"\b(?:drain_amount|roll_death_stares)\s*\(", 0, 0),
+    ),
     ("army.obj", 0x46BEC): (
         SourceRule(
             "ResetHitByCreature precedes the behind zeroing "
@@ -4904,6 +4945,39 @@ def army_header_roster_violations(text: str) -> list[tuple[int, str]]:
         defects.append((text.count("\n", 0, position) + 1,
                         "two-argument get_attack_direction must retain its "
                         "retail-proved inline contract"))
+
+    # Dreamcast Army.h:810/815 supplies both class-body GetName wrappers and
+    # CreatureType.h:296 supplies the nested GetArmyName wrapper. Their helper
+    # boundaries are source facts even when VC6's shared /Ob2 budget chooses a
+    # different expansion in one caller.
+    get_name_decl = re.compile(
+        r"(?m)^[ \t]*(?P<inline>inline[ \t]+)?const[ \t]+char[ \t]*\*"
+        r"[ \t]*GetName\s*\(\s*(?:int\s+count\s*)?\)\s*const\s*;")
+    get_name_matches = list(get_name_decl.finditer(masked))
+    broken_get_name = next(
+        (match for match in get_name_matches
+         if match.group("inline") is None), None)
+    if len(get_name_matches) != 2 or broken_get_name is not None:
+        position = broken_get_name.start() if broken_get_name else 0
+        defects.append((text.count("\n", 0, position) + 1,
+                        "both GetName wrappers must retain their "
+                        "Dreamcast-proven inline contract"))
+
+    get_army_name_decl = re.compile(
+        r"(?m)^[ \t]*(?P<inline>inline[ \t]+)?const[ \t]+char[ \t]*\*"
+        r"[ \t]*GetArmyName\s*\(\s*int\s+type\s*,\s*int\s+count\s*\)"
+        r"\s*;")
+    get_army_name_matches = list(get_army_name_decl.finditer(masked))
+    broken_get_army_name = next(
+        (match for match in get_army_name_matches
+         if match.group("inline") is None), None)
+    if (len(get_army_name_matches) != 1
+            or broken_get_army_name is not None):
+        position = (broken_get_army_name.start()
+                    if broken_get_army_name else 0)
+        defects.append((text.count("\n", 0, position) + 1,
+                        "GetArmyName must retain its Dreamcast-proven "
+                        "inline contract"))
     return defects
 
 
@@ -6313,6 +6387,69 @@ for (long direction = 0; direction < 8; ++direction) {
     if any(not contract_violations(probe, do_attack_direction_key)
            for probe in flattened_do_attack_direction_probes):
         failures.append("flattened do_attack direction helper passed")
+    do_post_attack_key = ("army.obj", 0x46658)
+    do_post_attack_probe = """\
+switch (creatureType) {
+case CREATURE_VAMPIRE_LORD:
+    long dead_vampires = 0;
+    long missing_life = hitPoints * (origNumTroops - numTroops)
+                        + topCreatureDamage;
+    long damage_recovered = min(iDamage, total_life);
+    damage_recovered = min(damage_recovered, missing_life);
+    text = format_string((*gpGeneralText)[362]);
+    text = format_string((*gpGeneralText)[363]);
+    text += (*gpGeneralText)[364];
+    text += format_string((*gpGeneralText)[365]);
+    break;
+case CREATURE_MIGHTY_GORGON: {
+    int stares = 0;
+    if (target->Is(1u << 4)) {
+        for (long i = 0; i < numTroops; i++) {
+            if (Random(1, 100) <= 10)
+                stares++;
+        }
+        long dead = min(stares, target->numTroops);
+        dead = min(dead, (numTroops + 9) / 10);
+        text = format_string((*gpGeneralText)[119]);
+        text = format_string((*gpGeneralText)[120]);
+    }
+    break;
+}
+case CREATURE_THUNDERBIRD:
+    text = format_string((*gpGeneralText)[368]);
+    break;
+}
+"""
+    if contract_violations(do_post_attack_probe, do_post_attack_key):
+        failures.append("aligned do_post_attack source shape did not pass")
+    flattened_do_post_attack_probes = (
+        do_post_attack_probe.replace(
+            "(*gpGeneralText)[362]", "gpGeneralText->GetText(362)"),
+        do_post_attack_probe.replace(
+            "long damage_recovered = min(iDamage, total_life);\n"
+            "    damage_recovered = min(damage_recovered, missing_life);",
+            "long damage_recovered = "
+            "_cpp_min(_cpp_min(iDamage, total_life), missing_life);"),
+        do_post_attack_probe.replace(
+            "for (long i = 0; i < numTroops; i++) {\n"
+            "            if (Random(1, 100) <= 10)\n"
+            "                stares++;\n"
+            "        }",
+            "stares = roll_death_stares(this);"),
+        do_post_attack_probe.replace(
+            "    int stares = 0;\n"
+            "    if (target->Is(1u << 4)) {",
+            "    if (target->Is(1u << 4)) {\n"
+            "        int stares = 0;"),
+        do_post_attack_probe.replace(
+            "long dead = min(stares, target->numTroops);\n"
+            "        dead = min(dead, (numTroops + 9) / 10);",
+            "long dead = min(min(stares, target->numTroops), "
+            "(numTroops + 9) / 10);"),
+    )
+    if any(not contract_violations(probe, do_post_attack_key)
+           for probe in flattened_do_post_attack_probes):
+        failures.append("flattened do_post_attack source shape passed")
     automate_first_aid_key = ("command.obj", 0x6B12C)
     automate_first_aid_probe = """\
 field_3c = 11;
@@ -10871,6 +11008,20 @@ int get_owning_side() const { return combatSide; }
                    deinlined_attack_direction)):
         failures.append(
             "de-inlined get_attack_direction header contract passed")
+    deinlined_get_name = roster_text.replace(
+        "    inline const char* GetName() const;",
+        "    const char* GetName() const;", 1)
+    if not any("GetName" in defect and "inline" in defect
+               for _line, defect in army_header_roster_violations(
+                   deinlined_get_name)):
+        failures.append("de-inlined GetName header contract passed")
+    deinlined_get_army_name = roster_text.replace(
+        "inline const char* GetArmyName(int type, int count);",
+        "const char* GetArmyName(int type, int count);", 1)
+    if not any("GetArmyName" in defect and "inline" in defect
+               for _line, defect in army_header_roster_violations(
+                   deinlined_get_army_name)):
+        failures.append("de-inlined GetArmyName header contract passed")
 
     class_defects = {description for _line, description in
                      army_class_roster_violations(roster_text)}

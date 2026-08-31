@@ -22,7 +22,7 @@ class CSprite;
 // CreatureType.h:296 in the Dreamcast CodeView source. Retail 0x440100 has
 // the same two-register /Gr ABI and singular/plural trait lookup, with
 // Complete's extended creature-id bound.
-const char* GetArmyName(int type, int count);
+inline const char* GetArmyName(int type, int count);
 
 // E:\gamedcs\includes.h:124/134. Army.h's GetMorale/GetLuck class-body
 // accessors see the shared reference-returning template and its ordinary
@@ -1389,8 +1389,8 @@ public:
     void remove_aura();
     void remove_binding();
     bool cannot_attack() const;
-    const char* GetName() const;
-    const char* GetName(int count) const;
+    inline const char* GetName() const;
+    inline const char* GetName(int count) const;
     bool IsIncapacitated() const;
     void SetLuck(const hero* ownerHero, const armyGroup* ownerGroup,
                  const town* ownerTown, const hero* otherHero,

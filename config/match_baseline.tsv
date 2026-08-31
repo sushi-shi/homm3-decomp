@@ -468,7 +468,7 @@ army	?do_attack@army@@QAEEPAV1@H@Z	98.8868	99.9962	99.9962	0x41610
 army	?do_attack@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x41cb0
 army	?do_fire_shield@army@@AAEXJ@Z	100.0000	100.0000	100.0000	0x409c0
 army	?do_multi_head_attack@army@@QAEXIPAH0PAJ@Z	100.0000	100.0000	100.0000	0x40310
-army	?do_post_attack@army@@AAEXPAV1@HHH@Z	90.5724	96.6787	96.6787	0x40bc0
+army	?do_post_attack@army@@AAEXPAV1@HHH@Z	88.0894	96.6787	96.6787	0x40bc0
 army	?enemy_is_adjacent@army@@QBEEPBV1@@Z	100.0000	100.0000	100.0000	0x429f0
 army	?erase_item@@YIXAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@PBVarmy@@@Z	100.0000	100.0000	100.0000	0x3ea00
 army	?get_AI_target_time@army@@QBEJJ@Z	100.0000	100.0000	100.0000	0x48bd0
