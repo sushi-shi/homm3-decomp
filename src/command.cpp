@@ -22,8 +22,10 @@
 #include "cmbtmgr.h"
 #include "combatcontrolsubwindow.h"
 #include "command.h"
+#include "combatoptionswindow.h"
 #include "combatresultswindow.h"
 #include "combatwindow.h"
+#include "widget.h"
 #include "drawing.h"
 #include "findpath.h"
 #include "game.h"
@@ -592,14 +594,20 @@ int combatManager::ValidAttackHex(int hex)
     // @stub
 }
 
-// E:\gamedcs\command.cpp:907
-DC_ONLY(0x6bea4, 0x18)
-int combatManager::GetPointer(int inCombatCommand, int iHexIndex)
-{
-    // @stub
-}
-
 #endif  // @carcass
+
+// E:\gamedcs\command.cpp:907. The DC line table proves this helper boundary
+// and its two-comparison body. Complete expands the helper into
+// ProcessCombatMsg and carries no out-of-line copy, so keep the source fact
+// as an inline definition rather than replacing it with caller longhand.
+DC_ONLY(0x6bea4, 0x18)
+inline int combatManager::GetPointer(int inCombatCommand, int /* iHexIndex */)
+{
+    if (inCombatCommand == COMBAT_COMMAND_VIEW_OTHER_HERO
+            || inCombatCommand == COMBAT_COMMAND_VIEW_TOWERS)
+        return 5;
+    return inCombatCommand;
+}
 
 // E:\gamedcs\command.cpp header inline in the DC build. DC publishes three
 // int arguments; Complete adds an unsigned-byte "pointer changed" result.
@@ -786,8 +794,6 @@ unsigned char combatManager::is_computer_action(const army* current_army)
     return 1;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\command.cpp:1001. The retail identity is closed by the
 // command.obj order slot immediately after is_computer_action, both direct
 // calls from Main, the reference-parameter decorated ABI, and the obstacle
@@ -795,8 +801,334 @@ unsigned char combatManager::is_computer_action(const army* current_army)
 VA(0x00474d80, 0x114D)  // exhaustive command order-map + callers + literal/call graph, dc 0x6c070
 int combatManager::ProcessCombatMsg(message& msg)
 {
-    // @stub
+    int mouseX = msg.mouseX;
+    int mouseY = msg.mouseY;
+    // Dreamcast places this sole named local in the function frame before
+    // the dispatch switch. Retail's PeekEvent path retains the same
+    // whole-function lifetime even though the default construction folds out.
+    message msgTemp;
+
+    switch (msg.id) {
+    case MESSAGE_WIDGET:
+        if (msg.qualifier & MESSAGE_MODIFIER_RIGHT) {
+            if (msg.codeX == widget::WIDGET_SELECT
+                    || msg.codeX == widget::WIDGET_RIGHT_SELECT) {
+                if (msg.codeY == 0 || msg.codeY == 1)
+                    RightClick(field_132d4);
+                else
+                    combatWindow->ProcessRightSelect(&msg);
+            }
+            break;
+        }
+
+        switch (msg.codeX) {
+        case widget::WIDGET_SELECT:
+            if (field_132b4 && msg.codeY >= 0 && msg.codeY <= 1) {
+                combatWindow->heroSubWindows[0]->UnShow();
+                combatWindow->heroSubWindows[1]->UnShow();
+                combatWindow->creatureSubWindows[0]->UnShow();
+                combatWindow->creatureSubWindows[1]->UnShow();
+                combatWindow->creatureSubWindows[2]->UnShow();
+                combatWindow->creatureSubWindows[3]->UnShow();
+                DrawFrame(1, 0, 0, 0, 1, 0);
+                DoCommand(field_132e0);
+            }
+            break;
+
+        case widget::WIDGET_DESELECT:
+            if (!field_132b4)
+                break;
+
+            switch (msg.codeY) {
+            case TCombatWindow::COMBAT_LEFT_COMMAND_3_ID:
+                field_132c4 = !field_132c4;
+                if (field_132c4)
+                    GetControl();
+                if (field_132c4
+                        && (static_cast<const combatManager*>(this)->IsQuickCombat()
+                            || is_computer_action(get_current_army()))) {
+                    combatWindow->controlSubWindow->DisableAllButtons();
+                }
+                break;
+
+            case TCombatWindow::COMBAT_RIGHT_COMMAND_2_ID:
+                field_3c = 3;
+                break;
+
+            case TCombatWindow::COMBAT_LEFT_COMMAND_2_ID:
+                CombatSystemOptions();
+                break;
+
+            case TCombatWindow::COMBAT_RIGHT_COMMAND_0_ID:
+                if (!heroes[currentSide]) {
+                    NormalDialog(gpGeneralText->GetText(128),
+                                 1, -1, -1, -1, 0,
+                                 -1, 0, -1, 0, -1, 0);
+                } else {
+                    InitiateSpell(ViewSpells(), 0);
+                    ResetMouse();
+                }
+                break;
+
+            case TCombatWindow::COMBAT_LEFT_COMMAND_1_ID:
+                NormalDialog(gpGeneralText->GetText(29),
+                             2, -1, -1, -1, 0,
+                             -1, 0, -1, 0, -1, 0);
+                if (gpWindowManager->dialogReturn == DIALOG_RETURN_ACCEPT)
+                    field_3c = 4;
+                ResetMouse();
+                break;
+
+            case TCombatWindow::COMBAT_LEFT_COMMAND_0_ID:
+                if (DoSurrender()) {
+                    if (gpGame->players[playerIds[currentSide]].resources[6]
+                            < gSurrenderCost695030) {
+                        NormalDialog(gpGeneralText->GetText(30),
+                                     1, -1, -1, -1, 0,
+                                     -1, 0, -1, 0, -1, 0);
+                    } else {
+                        field_3c = 5;
+                        field_40 = gSurrenderCost695030;
+                    }
+                }
+                ResetMouse();
+                break;
+
+            case TCombatWindow::COMBAT_RIGHT_COMMAND_1_ID:
+            case TCombatWindow::COMBAT_PLACEMENT_COMMAND_0_ID:
+                field_3c = 8;
+                break;
+
+            case TCombatWindow::COMBAT_PLACEMENT_COMMAND_1_ID:
+                lastMovedArmy = 0;
+                if (gNetworkActive69954c) {
+                    CEndPlacementPhaseMsg placementMsg;
+                    TransmitRemoteData(&placementMsg,
+                                       iCombatControlNetPos[1 - currentSide],
+                                       false, true);
+                }
+                if (bCreaturePlacement) {
+                    bCreaturePlacement = 0;
+                    actingSide = 1;
+                    actingSlot = 0;
+                    field_13d6c = 0;
+                    if (!static_cast<const combatManager*>(this)->IsQuickCombat())
+                        combatWindow->EndPlacementPhase();
+                    ResetRound();
+                }
+                NextArmy(1);
+                field_53b8 = 0;
+                DrawFrame(1, 0, 0, 0, 1, 0);
+                break;
+            }
+            break;
+        }
+        break;
+
+    case MESSAGE_MOUSE_MOVE: {
+        unsigned char pointerChanged = 0;
+        if ((field_132c4 || gbUnk691209)
+                && (static_cast<const combatManager*>(this)->IsQuickCombat()
+                    || is_computer_action(get_current_army())))
+            break;
+
+        msgTemp = gpInputManager->PeekEvent();
+        if (msgTemp.id == MESSAGE_MOUSE_MOVE)
+            break;
+
+        int gridIndex = GetGridIndex(mouseX, mouseY);
+        UpdateMouseGrid(gridIndex, 0);
+
+        if (!InCombatArea(mouseX, mouseY)) {
+            TurnOffHighlighter(1);
+
+            combatWindow->heroSubWindows[0]->UnShow();
+            combatWindow->heroSubWindows[1]->UnShow();
+            combatWindow->creatureSubWindows[0]->UnShow();
+            combatWindow->creatureSubWindows[1]->UnShow();
+            combatWindow->creatureSubWindows[2]->UnShow();
+            combatWindow->creatureSubWindows[3]->UnShow();
+            gpWindowManager->ConvertToHover(msg);
+            gpMouseManager->SetPointer(6, mouseManager::COMBAT_SET);
+            field_132d4 = -1;
+            field_132dc = -99;
+            return MESSAGE_DISPATCH_CONSUME;
+        }
+
+            if (gridIndex == field_132d4) {
+            if (gridIndex != -1 && field_132e0 == COMBAT_COMMAND_ATTACK)
+                pointerChanged = CheckSetMouseDirection(mouseX, mouseY,
+                                                        gridIndex);
+            } else {
+            combatWindow->heroSubWindows[0]->UnShow();
+            combatWindow->heroSubWindows[1]->UnShow();
+            combatWindow->creatureSubWindows[0]->UnShow();
+            combatWindow->creatureSubWindows[1]->UnShow();
+            combatWindow->creatureSubWindows[2]->UnShow();
+            combatWindow->creatureSubWindows[3]->UnShow();
+
+            if (gridIndex == COMBAT_HEX_DEFENDER_HERO) {
+                if (heroes[1] && gUnnamed698758.combatArmyInfoLevel) {
+                    combatWindow->heroSubWindows[1]->Update(
+                        *heroes[1], heroes[0],
+                        field_53c0
+                            == COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS);
+                    combatWindow->heroSubWindows[1]->Show();
+                }
+            } else if (gridIndex == COMBAT_HEX_ATTACKER_HERO) {
+                if (heroes[0] && gUnnamed698758.combatArmyInfoLevel) {
+                    combatWindow->heroSubWindows[0]->Update(
+                        *heroes[0], heroes[1],
+                        field_53c0
+                            == COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS);
+                    combatWindow->heroSubWindows[0]->Show();
+                }
+            } else if (ValidHex(gridIndex)) {
+                if (cells[gridIndex].HasArmy()) {
+                    army* stack = cells[gridIndex].get_army();
+                    hero* owner = stack->get_owner();
+                    if (gUnnamed698758.combatArmyInfoLevel
+                            == TCombatOptionsWindow::
+                                CREATURE_INFO_LEVEL_VERBOSE) {
+                        if (stack->combatSide == 0) {
+                            combatWindow->creatureSubWindows[0]->Update(stack,
+                                                                        owner);
+                            combatWindow->creatureSubWindows[0]->Show();
+                        } else if (stack->combatSide == 1) {
+                            combatWindow->creatureSubWindows[1]->Update(stack,
+                                                                        owner);
+                            combatWindow->creatureSubWindows[1]->Show();
+                        }
+                    } else if (gUnnamed698758.combatArmyInfoLevel
+                               == TCombatOptionsWindow::
+                                   CREATURE_INFO_LEVEL_COMPACT) {
+                        if (stack->combatSide == 0) {
+                            combatWindow->creatureSubWindows[2]->Update(stack,
+                                                                        owner);
+                            combatWindow->creatureSubWindows[2]->Show();
+                        } else if (stack->combatSide == 1) {
+                            combatWindow->creatureSubWindows[3]->Update(stack,
+                                                                        owner);
+                            combatWindow->creatureSubWindows[3]->Show();
+                        }
+                    }
+                } else if (field_13d76
+                           && (cells[gridIndex].field_10 & 2)
+                           && cells[gridIndex].field_14 != -1) {
+                    TObstacle& obstacle =
+                        obstacles[cells[gridIndex].field_14];
+                    sprintf(gText,
+                            "Obstacle name: %s, owner: %d, visible:%s",
+                            obstacle.shape->spriteName, obstacle.owner,
+                            obstacle.is_visible ? "true" : "false");
+                    combatWindow->combat_message(gText, 0, 0);
+                    field_132d4 = gridIndex;
+                    return MESSAGE_DISPATCH_CONSUME;
+                }
+            }
+
+            if (gridIndex != field_132d4)
+                CheckChangeHighlighter(gridIndex);
+
+            field_132d4 = gridIndex;
+            field_132dc = -99;
+            field_132e0 = GetCommand(gridIndex);
+            field_1342c = 6;
+            if (field_132e0 == COMBAT_COMMAND_ATTACK) {
+                SetCombatDirections(gridIndex);
+                pointerChanged = CheckSetMouseDirection(mouseX, mouseY,
+                                                        gridIndex);
+            } else if (field_132e0 == COMBAT_COMMAND_CREATURE_SPELL) {
+                gpMouseManager->SetPointer(0, mouseManager::SPELL_SET);
+            } else {
+                gpMouseManager->SetPointer(
+                    GetPointer(field_132e0, gridIndex),
+                    mouseManager::COMBAT_SET);
+            }
+            }
+
+            if (field_132e0 != field_132dc
+                    || (field_132e0 == COMBAT_COMMAND_ATTACK && pointerChanged)) {
+                field_132dc = field_132e0;
+                CombatMessage(field_132e0);
+            }
+        break;
+    }
+
+    case MESSAGE_KEY_DOWN:
+        switch (msg.codeX) {
+        case KEYCODE_F5:
+            gUnnamed698758.combatArmyInfoLevel =
+                (gUnnamed698758.combatArmyInfoLevel + 1) % 3;
+            DrawFrame(1, 0, 0, 0, 1, 0);
+            WritePrefs();
+            break;
+
+        case KEYCODE_F6:
+            SetCombatGrid(!gUnnamed698758.showCombatGrid,
+                          gUnnamed698758.showCombatMouseHex,
+                          gUnnamed698758.combatShadeLevel, 1);
+            break;
+
+        case KEYCODE_F7:
+            SetCombatGrid(gUnnamed698758.showCombatGrid,
+                          !gUnnamed698758.showCombatMouseHex,
+                          gUnnamed698758.combatShadeLevel, 1);
+            break;
+
+        case KEYCODE_F8:
+            SetCombatGrid(gUnnamed698758.showCombatGrid,
+                          gUnnamed698758.showCombatMouseHex,
+                          !gUnnamed698758.combatShadeLevel, 1);
+            break;
+
+        case KEYCODE_KP_MINUS:
+            combatWindow->scroll_rollover(-1);
+            break;
+
+        case KEYCODE_KP_2:
+            combatWindow->scroll_rollover(1);
+            break;
+
+        case KEYCODE_F:
+            if (bCreaturePlacement)
+                break;
+            if ((field_132c4 || gbUnk691209)
+                    && (static_cast<const combatManager*>(this)->IsQuickCombat()
+                        || is_computer_action(get_current_army())))
+                break;
+            {
+                army* currentArmy = get_current_army();
+                if (currentArmy->creatureType == CREATURE_FAERIE_DRAGON
+                        && currentArmy->numSpellCasts) {
+                    InitiateSpell(currentArmy->field_4e0, 1);
+                    if (field_3c == 1)
+                        field_3c = 10;
+                }
+            }
+            break;
+
+        case KEYCODE_T:
+            if (bCreaturePlacement)
+                break;
+            combatWindow->heroSubWindows[0]->UnShow();
+            combatWindow->heroSubWindows[1]->UnShow();
+            combatWindow->creatureSubWindows[0]->UnShow();
+            combatWindow->creatureSubWindows[1]->UnShow();
+            combatWindow->creatureSubWindows[2]->UnShow();
+            combatWindow->creatureSubWindows[3]->UnShow();
+            gpMouseManager->SetPointer(6, mouseManager::COMBAT_SET);
+            ViewArmy(get_current_army(), 0);
+            ResetMouse();
+            break;
+        }
+        break;
+    }
+
+    return MESSAGE_DISPATCH_CONSUME;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\command.cpp:1522
 DC_ONLY(0x6cb78, 0x108)
@@ -1868,13 +2200,6 @@ long combatManager::get_surrender_cost()
 
 #if 0  // @carcass
 
-// E:\gamedcs\command.cpp:2800
-DC_ONLY(0x6e990, 0x80)
-int combatManager::DoSurrender()
-{
-    // @stub
-}
-
 // E:\gamedcs\command.cpp:2818
 DC_ONLY(0x6ea10, 0x108)
 void combatManager::CheckChangeSelector()
@@ -1978,6 +2303,20 @@ void combatManager::SetCombatGrid(int bCombatShowEntireGrid, int bCombatShowMous
 }
 
 #endif  // @carcass
+
+// E:\gamedcs\command.cpp:2800. Keep the Dreamcast-proven helper boundary:
+// Complete expands this sole caller into ProcessCombatMsg and therefore has
+// no standalone retail body. Complete also omits the older port's FullUpdate
+// after the modal dialog, as it does in the neighbouring retreat path.
+DC_ONLY(0x6e990, 0x80)
+inline int combatManager::DoSurrender()
+{
+    gSurrenderCost695030 = get_surrender_cost();
+    sprintf(gText, gpGeneralText->GetText(33),
+            heroes[1 - currentSide]->name, gSurrenderCost695030);
+    NormalDialog(gText, 2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    return gpWindowManager->dialogReturn == DIALOG_RETURN_ACCEPT;
+}
 
 // E:\gamedcs\command.cpp:2818. Complete stores the currently selected
 // stack directly at +0x132c8, where the older Dreamcast layout used its

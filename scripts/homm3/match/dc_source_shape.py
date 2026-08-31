@@ -77,6 +77,70 @@ READ_HERO_COMPLETE_NAME_RE = (
     r"strcpy\s*\(\s*hero_data\s*->\s*Name\s*,\s*tempText\s*\)\s*;"
     r"\s*\}")
 
+# Dreamcast's WinCE dispatcher has controller-cursor helpers that the Complete
+# Win32 retail dispatcher directly contradicts.  Keep the admission tied to
+# the two decoded Complete replacement groups rather than to a missing symbol
+# or a similarity score.  The modal group refreshes through ResetMouse after
+# each desktop dialog.  The input group consumes mouse movement through
+# PeekEvent/InCombatArea and exposes the Complete F5/F6/F7/F8, keypad, Faerie
+# Dragon and army-view key roster instead of the WinCE cursor-navigation arm.
+PROCESS_COMBAT_MSG_COMPLETE_MODAL_RE = (
+    r"\A(?!.*\bFullUpdate\s*\().*?"
+    r"case\s+TCombatWindow\s*::\s*COMBAT_RIGHT_COMMAND_0_ID\s*:\s*"
+    r"if\s*\(\s*!\s*heroes\s*\[\s*currentSide\s*\]\s*\)\s*\{\s*"
+    r"NormalDialog\s*\([^;]*\)\s*;\s*\}\s*else\s*\{\s*"
+    r"InitiateSpell\s*\(\s*ViewSpells\s*\(\s*\)\s*,\s*0\s*\)\s*;\s*"
+    r"ResetMouse\s*\(\s*\)\s*;\s*\}\s*break\s*;.*?"
+    r"case\s+TCombatWindow\s*::\s*COMBAT_LEFT_COMMAND_1_ID\s*:.*?"
+    r"NormalDialog\s*\([^;]*\)\s*;\s*"
+    r"if\s*\(\s*gpWindowManager\s*->\s*dialogReturn\s*==\s*"
+    r"DIALOG_RETURN_ACCEPT\s*\)\s*field_3c\s*=\s*4\s*;\s*"
+    r"ResetMouse\s*\(\s*\)\s*;\s*break\s*;.*?"
+    r"case\s+TCombatWindow\s*::\s*COMBAT_LEFT_COMMAND_0_ID\s*:.*?"
+    r"if\s*\(\s*DoSurrender\s*\(\s*\)\s*\)\s*\{.*?\}\s*"
+    r"ResetMouse\s*\(\s*\)\s*;\s*break\s*;")
+
+PROCESS_COMBAT_MSG_COMPLETE_INPUT_RE = (
+    r"\A(?!.*\b(?:InitMouse|MoveCursorMenu|MoveCursorTo|ScrollCombatArea)"
+    r"\s*\().*?case\s+MESSAGE_MOUSE_MOVE\s*:\s*\{.*?"
+    r"msgTemp\s*=\s*gpInputManager\s*->\s*PeekEvent\s*\(\s*\)\s*;.*?"
+    r"if\s*\(\s*!?\s*InCombatArea\s*\(\s*mouseX\s*,\s*mouseY\s*\)\s*\)"
+    r"\s*\{.*?case\s+MESSAGE_KEY_DOWN\s*:\s*"
+    r"switch\s*\(\s*msg\.codeX\s*\)\s*\{\s*"
+    r"case\s+KEYCODE_F5\s*:.*?WritePrefs\s*\(\s*\)\s*;\s*break\s*;"
+    r".*?case\s+KEYCODE_F6\s*:.*?SetCombatGrid\s*\([^;]*\)\s*;\s*"
+    r"break\s*;.*?case\s+KEYCODE_F7\s*:.*?SetCombatGrid\s*\([^;]*\)"
+    r"\s*;\s*break\s*;.*?case\s+KEYCODE_F8\s*:.*?SetCombatGrid\s*\("
+    r"[^;]*\)\s*;\s*break\s*;.*?case\s+KEYCODE_KP_MINUS\s*:\s*"
+    r"combatWindow\s*->\s*scroll_rollover\s*\(\s*-1\s*\)\s*;\s*"
+    r"break\s*;.*?case\s+KEYCODE_KP_2\s*:\s*combatWindow\s*->\s*"
+    r"scroll_rollover\s*\(\s*1\s*\)\s*;\s*break\s*;.*?"
+    r"case\s+KEYCODE_F\s*:.*?\bCREATURE_FAERIE_DRAGON\b.*?"
+    r"InitiateSpell\s*\([^;]*\)\s*;.*?break\s*;.*?"
+    r"case\s+KEYCODE_T\s*:.*?ViewArmy\s*\(\s*get_current_army\s*\("
+    r"\s*\)\s*,\s*0\s*\)\s*;\s*ResetMouse\s*\(\s*\)\s*;")
+
+PROCESS_COMBAT_MSG_COMPLETE_OUTSIDE_MOUSE_RE = (
+    r"\A(?!.*\bConvertToHover\s*\(.*\bConvertToHover\s*\().*?"
+    r"int\s+gridIndex\s*=\s*GetGridIndex\s*\(\s*mouseX\s*,\s*mouseY"
+    r"\s*\)\s*;\s*UpdateMouseGrid\s*\(\s*gridIndex\s*,\s*0\s*\)"
+    r"\s*;\s*if\s*\(\s*!\s*InCombatArea\s*\(\s*mouseX\s*,\s*mouseY"
+    r"\s*\)\s*\)\s*\{\s*TurnOffHighlighter\s*\(\s*1\s*\)\s*;.*?"
+    r"gpWindowManager\s*->\s*ConvertToHover\s*\("
+    r"\s*msg\s*\)\s*;\s*gpMouseManager\s*->\s*SetPointer\s*\(\s*6"
+    r"\s*,\s*mouseManager\s*::\s*COMBAT_SET\s*\)\s*;\s*"
+    r"field_132d4\s*=\s*-1\s*;\s*field_132dc\s*=\s*-99\s*;\s*"
+    r"return\s+MESSAGE_DISPATCH_CONSUME\s*;\s*\}")
+
+DO_SURRENDER_COMPLETE_RE = (
+    r"\A(?!.*\bFullUpdate\s*\()\s*"
+    r"gSurrenderCost695030\s*=\s*get_surrender_cost\s*\(\s*\)\s*;\s*"
+    r"sprintf\s*\(\s*gText\s*,\s*gpGeneralText\s*->\s*GetText\s*\("
+    r"\s*33\s*\)\s*,\s*heroes\s*\[\s*1\s*-\s*currentSide\s*\]\s*"
+    r"->\s*name\s*,\s*gSurrenderCost695030\s*\)\s*;\s*"
+    r"NormalDialog\s*\([^;]*\)\s*;\s*return\s+gpWindowManager\s*->\s*"
+    r"dialogReturn\s*==\s*DIALOG_RETURN_ACCEPT\s*;\s*\Z")
+
 
 @dataclass(frozen=True)
 class MissingCall:
@@ -165,6 +229,7 @@ class ProvenRevisionRemoval:
     caller_va: int
     retail_pattern: str
     dc_only_helpers: tuple[str, ...]
+    unclaimed_inline: bool = False
 
 
 @dataclass(frozen=True)
@@ -410,6 +475,24 @@ PROVEN_ORDER_SKEWS: dict[tuple[str, int], tuple[ProvenOrderSkew, ...]] = {
 }
 
 
+# The same proof shape is useful before a large caller is byte-exact when the
+# retail body itself directly fixes the replacement order.  Keep this table
+# separate so exactness is never silently weakened for the older admissions.
+RETAIL_BYTE_PROVEN_ORDER_SKEWS: dict[
+        tuple[str, int], tuple[ProvenOrderSkew, ...]] = {
+    ("command.obj", 0x6C070): (
+        ProvenOrderSkew(
+            "Complete ProcessCombatMsg has one outside-combat "
+            "ConvertToHover/SetPointer group after GetGridIndex, "
+            "UpdateMouseGrid and InCombatArea; Dreamcast also has an "
+            "earlier WinCE screen-edge copy",
+            0x00474D80, PROCESS_COMBAT_MSG_COMPLETE_OUTSIDE_MOUSE_RE,
+            ("heroWindowManager::ConvertToHover",
+             "mouseManager::SetPointer")),
+    ),
+}
+
+
 # Complete can replace an entire older-revision statement group rather than
 # merely reorder it. Classify such a call as DC-only only when the Complete
 # caller is byte-exact and its bounded replacement source remains present.
@@ -439,6 +522,29 @@ PROVEN_REVISION_REMOVALS: dict[
 # is deliberately not a general name substitution or score-based waiver.
 RETAIL_BYTE_PROVEN_REVISION_REMOVALS: dict[
         tuple[str, int], tuple[ProvenRevisionRemoval, ...]] = {
+    ("command.obj", 0x6C070): (
+        ProvenRevisionRemoval(
+            "Complete ProcessCombatMsg replaces Dreamcast's WinCE modal "
+            "FullUpdate calls with the decoded desktop dialog/ResetMouse "
+            "group",
+            0x00474D80, PROCESS_COMBAT_MSG_COMPLETE_MODAL_RE,
+            ("combatManager::FullUpdate",)),
+        ProvenRevisionRemoval(
+            "Complete ProcessCombatMsg replaces Dreamcast's WinCE "
+            "controller cursor helpers with the decoded mouse PeekEvent/"
+            "InCombatArea path and Complete keyboard roster",
+            0x00474D80, PROCESS_COMBAT_MSG_COMPLETE_INPUT_RE,
+            ("combatManager::InitMouse", "combatManager::MoveCursorMenu",
+             "combatManager::MoveCursorTo",
+             "combatManager::ScrollCombatArea")),
+    ),
+    ("command.obj", 0x6E990): (
+        ProvenRevisionRemoval(
+            "Complete's inlined DoSurrender expansion ends at the dialog "
+            "result and omits Dreamcast's following FullUpdate",
+            0x00474D80, DO_SURRENDER_COMPLETE_RE,
+            ("combatManager::FullUpdate",), unclaimed_inline=True),
+    ),
     ("mapcell.obj", 0xF0DF4): (
         ProvenRevisionRemoval(
             "Complete readHeroData removes Dreamcast's zero-experience "
@@ -647,6 +753,27 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"(?:(?!#\s*pragma\s+inline_depth\s*\(\s*\)).)*?"
             r"\bGetName\s*\(\s*\)",
             0, 0, include_directives=True),
+    ),
+    ("command.obj", 0x6C070): (
+        SourceRule(
+            "ProcessCombatMsg keeps Complete's retail-decoded desktop "
+            "modal/ResetMouse group and does not restore WinCE FullUpdate",
+            PROCESS_COMBAT_MSG_COMPLETE_MODAL_RE),
+        SourceRule(
+            "ProcessCombatMsg keeps Complete's retail-decoded mouse and "
+            "keyboard replacement for WinCE controller cursor navigation",
+            PROCESS_COMBAT_MSG_COMPLETE_INPUT_RE),
+        SourceRule(
+            "ProcessCombatMsg keeps Complete's sole outside-combat hover "
+            "group after GetGridIndex/UpdateMouseGrid/InCombatArea",
+            PROCESS_COMBAT_MSG_COMPLETE_OUTSIDE_MOUSE_RE),
+    ),
+    ("command.obj", 0x6E990): (
+        SourceRule(
+            "DoSurrender keeps the Dreamcast helper boundary around the "
+            "Complete retail expansion and its byte-proven no-FullUpdate "
+            "tail",
+            DO_SURRENDER_COMPLETE_RE),
     ),
     ("game.obj", 0xAEB64): (
         SourceRule(
@@ -4435,6 +4562,24 @@ def proven_dc_only_order_helpers(
     return frozenset(helpers), tuple(descriptions)
 
 
+def retail_proven_dc_only_order_helpers(
+        key: tuple[str, int], body: str, va: int | None) \
+        -> tuple[frozenset[str], tuple[str, ...]]:
+    """Return helper-order facts contradicted by a bounded retail body."""
+    if va is None:
+        return frozenset(), ()
+    active = _source.mask(body)
+    helpers: set[str] = set()
+    descriptions: list[str] = []
+    for skew in RETAIL_BYTE_PROVEN_ORDER_SKEWS.get(key, ()):
+        if va != skew.caller_va \
+                or re.search(skew.retail_pattern, active, re.DOTALL) is None:
+            continue
+        helpers.update(skew.dc_only_helpers)
+        descriptions.append(skew.description)
+    return frozenset(helpers), tuple(descriptions)
+
+
 def proven_dc_only_removed_helpers(
         key: tuple[str, int], body: str, va: int | None,
         exact_vas: set[int]) -> tuple[frozenset[str], tuple[str, ...]]:
@@ -4458,13 +4603,12 @@ def retail_proven_dc_only_removed_helpers(
         key: tuple[str, int], body: str, va: int | None) \
         -> tuple[frozenset[str], tuple[str, ...]]:
     """Return DC calls contradicted by one bounded decoded retail body."""
-    if va is None:
-        return frozenset(), ()
     active = _source.mask(body)
     helpers: set[str] = set()
     descriptions: list[str] = []
     for removal in RETAIL_BYTE_PROVEN_REVISION_REMOVALS.get(key, ()):
-        if va != removal.caller_va \
+        if (va is None and not removal.unclaimed_inline) \
+                or (va is not None and va != removal.caller_va) \
                 or re.search(
                     removal.retail_pattern, active, re.DOTALL) is None:
             continue
@@ -6255,11 +6399,161 @@ return 0;
         "    strncpy(hero_data->Name, tempText, 12);\n"
         "}")
     obsolete_name_removed = retail_proven_dc_only_removed_helpers(
-        retail_removal_key, obsolete_name_body, retail_removal_va)[0]
+            retail_removal_key, obsolete_name_body, retail_removal_va)[0]
     if "strncpy" in obsolete_name_removed:
         failures.append("obsolete Dreamcast name copy classified out")
     if not contract_violations(obsolete_name_body, retail_removal_key):
         failures.append("obsolete Dreamcast name copy passed")
+    process_removal_key = ("command.obj", 0x6C070)
+    process_removal_va = 0x00474D80
+    process_removal_body = """\
+switch (msg.id) {
+case MESSAGE_WIDGET:
+    switch (msg.codeX) {
+    case TCombatWindow::COMBAT_RIGHT_COMMAND_0_ID:
+        if (!heroes[currentSide]) {
+            NormalDialog(text, 1);
+        } else {
+            InitiateSpell(ViewSpells(), 0);
+            ResetMouse();
+        }
+        break;
+    case TCombatWindow::COMBAT_LEFT_COMMAND_1_ID:
+        NormalDialog(text, 2);
+        if (gpWindowManager->dialogReturn == DIALOG_RETURN_ACCEPT)
+            field_3c = 4;
+        ResetMouse();
+        break;
+    case TCombatWindow::COMBAT_LEFT_COMMAND_0_ID:
+        if (DoSurrender()) {
+            field_3c = 5;
+        }
+        ResetMouse();
+        break;
+    }
+    break;
+case MESSAGE_MOUSE_MOVE: {
+    msgTemp = gpInputManager->PeekEvent();
+    int gridIndex = GetGridIndex(mouseX, mouseY);
+    UpdateMouseGrid(gridIndex, 0);
+    if (!InCombatArea(mouseX, mouseY)) {
+        TurnOffHighlighter(1);
+        gpWindowManager->ConvertToHover(msg);
+        gpMouseManager->SetPointer(6, mouseManager::COMBAT_SET);
+        field_132d4 = -1;
+        field_132dc = -99;
+        return MESSAGE_DISPATCH_CONSUME;
+    }
+    CombatMessage(field_132e0);
+    break;
+}
+case MESSAGE_KEY_DOWN:
+    switch (msg.codeX) {
+    case KEYCODE_F5:
+        WritePrefs();
+        break;
+    case KEYCODE_F6:
+        SetCombatGrid(1, 0, 0, 1);
+        break;
+    case KEYCODE_F7:
+        SetCombatGrid(0, 1, 0, 1);
+        break;
+    case KEYCODE_F8:
+        SetCombatGrid(0, 0, 1, 1);
+        break;
+    case KEYCODE_KP_MINUS:
+        combatWindow->scroll_rollover(-1);
+        break;
+    case KEYCODE_KP_2:
+        combatWindow->scroll_rollover(1);
+        break;
+    case KEYCODE_F:
+        if (currentArmy->creatureType == CREATURE_FAERIE_DRAGON)
+            InitiateSpell(currentArmy->field_4e0, 1);
+        break;
+    case KEYCODE_T:
+        ViewArmy(get_current_army(), 0);
+        ResetMouse();
+        break;
+    }
+    break;
+}
+"""
+    process_removed, process_descriptions = \
+        retail_proven_dc_only_removed_helpers(
+            process_removal_key, process_removal_body, process_removal_va)
+    expected_process_removed = frozenset((
+        "combatManager::FullUpdate", "combatManager::InitMouse",
+        "combatManager::MoveCursorMenu", "combatManager::MoveCursorTo",
+        "combatManager::ScrollCombatArea"))
+    if process_removed != expected_process_removed \
+            or len(process_descriptions) != 2:
+        failures.append(
+            "retail-byte-proved ProcessCombatMsg removals did not classify")
+    if contract_violations(process_removal_body, process_removal_key):
+        failures.append("Complete ProcessCombatMsg replacement groups failed")
+    process_order_helpers, process_order_descriptions = \
+        retail_proven_dc_only_order_helpers(
+            process_removal_key, process_removal_body, process_removal_va)
+    if process_order_helpers != frozenset((
+            "heroWindowManager::ConvertToHover",
+            "mouseManager::SetPointer")) \
+            or len(process_order_descriptions) != 1:
+        failures.append(
+            "retail-byte-proved ProcessCombatMsg order did not classify")
+    duplicate_hover_body = process_removal_body.replace(
+        "TurnOffHighlighter(1);",
+        "gpWindowManager->ConvertToHover(msg); TurnOffHighlighter(1);")
+    if retail_proven_dc_only_order_helpers(
+            process_removal_key, duplicate_hover_body,
+            process_removal_va)[0]:
+        failures.append(
+            "duplicate ProcessCombatMsg hover group classified as skew")
+    if not contract_violations(duplicate_hover_body, process_removal_key):
+        failures.append("duplicate ProcessCombatMsg hover group passed")
+    obsolete_controller_body = process_removal_body.replace(
+        "WritePrefs();", "ScrollCombatArea(1); WritePrefs();")
+    obsolete_controller_removed = retail_proven_dc_only_removed_helpers(
+        process_removal_key, obsolete_controller_body,
+        process_removal_va)[0]
+    if obsolete_controller_removed & frozenset((
+            "combatManager::InitMouse", "combatManager::MoveCursorMenu",
+            "combatManager::MoveCursorTo",
+            "combatManager::ScrollCombatArea")):
+        failures.append(
+            "restored Dreamcast ProcessCombatMsg controller call classified")
+    if not contract_violations(
+            obsolete_controller_body, process_removal_key):
+        failures.append(
+            "restored Dreamcast ProcessCombatMsg controller call passed")
+    surrender_removal_key = ("command.obj", 0x6E990)
+    surrender_removal_body = """\
+gSurrenderCost695030 = get_surrender_cost();
+sprintf(gText, gpGeneralText->GetText(33),
+        heroes[1 - currentSide]->name, gSurrenderCost695030);
+NormalDialog(gText, 2, -1, 0);
+return gpWindowManager->dialogReturn == DIALOG_RETURN_ACCEPT;
+"""
+    surrender_removed, surrender_descriptions = \
+        retail_proven_dc_only_removed_helpers(
+            surrender_removal_key, surrender_removal_body, None)
+    if surrender_removed != frozenset(("combatManager::FullUpdate",)) \
+            or len(surrender_descriptions) != 1:
+        failures.append(
+            "inlined retail-byte-proved DoSurrender removal did not classify")
+    if retail_proven_dc_only_removed_helpers(
+            retail_removal_key, retail_removal_body, None)[0]:
+        failures.append(
+            "ordinary retail removal admitted a VA-less helper body")
+    obsolete_surrender_body = surrender_removal_body.replace(
+        "return gpWindowManager", "FullUpdate(); return gpWindowManager")
+    if retail_proven_dc_only_removed_helpers(
+            surrender_removal_key, obsolete_surrender_body, None)[0]:
+        failures.append(
+            "restored Dreamcast DoSurrender FullUpdate classified out")
+    if not contract_violations(
+            obsolete_surrender_body, surrender_removal_key):
+        failures.append("restored Dreamcast DoSurrender FullUpdate passed")
     flattened_trigger_body = retail_removal_body.replace(
         "hero_data->location = heroObject->get_trigger();",
         "heroObject->FindTrigger(x, y); hero_data->location.x = x;")
@@ -10524,6 +10818,10 @@ def scan() -> tuple[
             dc_only.update(removal_descriptions)
         helpers, descriptions = proven_dc_only_order_helpers(
             key, evidence_body, va, exact_vas)
+        retail_helpers, retail_descriptions = \
+            retail_proven_dc_only_order_helpers(key, evidence_body, va)
+        helpers = frozenset((*helpers, *retail_helpers))
+        descriptions = (*descriptions, *retail_descriptions)
         if helpers:
             groups = groups_without_helpers(groups, helpers)
             dc_only.update(descriptions)
@@ -10671,8 +10969,14 @@ def scan() -> tuple[
                 definition = definitions[0]
                 body = text[definition.body_open + 1:definition.body_close]
                 refs = calls.get(key, [])
+                removed, removal_descriptions = \
+                    retail_proven_dc_only_removed_helpers(key, body, None)
+                dc_only.update(removal_descriptions)
                 preliminary = missing_from_body(
                     body, [ref.name for ref in refs], key)
+                preliminary = [
+                    (callee, helper) for callee, helper in preliminary
+                    if callee not in removed]
                 names = attested(key, refs) if preliminary else set()
                 body_missing = False
                 for callee, helper in preliminary:

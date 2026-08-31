@@ -1532,6 +1532,14 @@ public:
         int column = GridX(index);
         return column == 0 || column == COMBAT_GRID_LAST_COLUMN;
     }
+    // E:\gamedcs\CmbtMgr.h:1488. Dreamcast proves the single-expression
+    // helper and its four ordered bounds. Complete widens the window to the
+    // retail 800x556 combat area; ProcessCombatMsg retains the source call
+    // and VC6 expands it into the four retail comparisons.
+    unsigned char InCombatArea(int x, int y)
+    {
+        return x >= 0 && x < 800 && y >= 0 && y < 556;
+    }
     // Returns a REFERENCE on its own public
     // (?GetCell@combatManager@@QAAAAVhexcell@@HH@Z); the roster text
     // renders every reference as a pointer, which is what this
@@ -2464,6 +2472,14 @@ public:
     int ProcessCombatMsg(message& msg);
     int ProcessNextAction(message& msg, unsigned char automaticTurn);
     unsigned char NextArmy(unsigned char checking_for_bad_morale);
+    // DC command.cpp:907. Complete has no standalone copy: ProcessCombatMsg
+    // carries this two-compare helper expanded at its sole retail site.
+    int GetPointer(int inCombatCommand, int iHexIndex);
+    // DC command.cpp:2800. Complete likewise expands its sole call, while
+    // retaining the helper's source-level surrender-dialog boundary.
+    int DoSurrender();
+    // drawing.cpp:326, retained out of line in both builds.
+    void CombatMessage(int command);
     // MATCHING_DEBT: command-only declaration view; broad exposure perturbs
     // VC6 member-handle allocation in unrelated combat translation units.
     void SetCombatDirections(int hex);
