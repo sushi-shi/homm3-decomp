@@ -794,8 +794,8 @@ extern const unsigned char (*gAdventureObjectLandBlocked)[16];
 
 // --- CObject ---
 // CODEVIEW(E:\gamedcs\mapcell.cpp:1110, dc 0xeda1c) CObjectType* CObject::get_object_type_ptr() const;
-// CODEVIEW(E:\gamedcs\mapcell.cpp:1119, dc 0xeda4c) type_point CObject::get_trigger(__$ReturnUdt);
-// CODEVIEW(E:\gamedcs\mapcell.cpp:1131, dc 0xedab8) void CObject::FindTrigger(int* result_x, int* result_y);
+// CODEVIEW(E:\gamedcs\mapcell.cpp:1119, dc 0xeda4c) type_point CObject::get_trigger() const;
+// CODEVIEW(E:\gamedcs\mapcell.cpp:1131, dc 0xedab8) void CObject::FindTrigger(int& result_x, int& result_y) const;
 // CODEVIEW(E:\gamedcs\MapCell.h:587, dc 0xf4944) void CObject::CObject();
 // CODEVIEW(E:\gamedcs\MapCell.h:1269, dc 0xf4a78) TAdventureObjectType CObject::get_type() const;
 

@@ -55,6 +55,31 @@ static int get_team(game* thisGame, int playerNum)
     return thisGame->mapHeader.teamInfo[playerNum];
 }
 
+// Struct.h/Game.h source helpers used by get_trigger_cell. Retail expands
+// them in mapcell.obj; their ordinary out-of-line copies remain owned by the
+// compilands whose admitted rows contain them.
+inline type_point::type_point(short new_x, short new_y, short new_z)
+{
+    x = new_x;
+    y = new_y;
+    z = new_z;
+}
+
+inline NewmapCell* game::get_cell(type_point point)
+{
+    return worldMap.cell(point);
+}
+
+// E:\gamedcs\mapcell.cpp:1119. Dreamcast retains this source helper as an
+// out-of-line SH4 body; Complete expands it into every admitted retail use.
+inline type_point CObject::get_trigger() const
+{
+    int result_x;
+    int result_y;
+    FindTrigger(result_x, result_y);
+    return type_point(result_x, result_y, z);
+}
+
 #if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\mapcell.cpp:46
@@ -377,41 +402,11 @@ VA_COMPGEN(0x004fca60, 0x3E, IMPLICIT_DTOR, TreasureData)
 // against objects.size() as an UNSIGNED value (`movsx eax,di` then `jae`),
 // which is what an int-versus-size_type comparison compiles to.
 //
-// The trigger point is assembled into a type_point rather than three ints, and
-// the packing is legible in the bytes: `xor word ptr` for x's ten bits, then
-// one 16-bit read-modify-write carrying BOTH y (ten bits) and z (four) because
-// MSVC starts a fresh short allocation unit when y will not fit beside x.
-// That is also why `point.x = triggerX` compiles to a self-xor - VC6 overlays
-// the point on triggerX's now-dead stack slot, so the merge reads back the
-// value it is about to write.
-//
-// The tail is the packed-point cell() overload verbatim: z*Size + y, times
-// Size, plus x, scaled by the 38-byte NewmapCell stride.  No header change was
-// needed - that overload is already unguarded, and it extracts the three
-// bitfields in exactly retail's order.
-//
-// Residual (90.8763%): the CFG is exact - `sema diff --branches` reports nine
-// branches and two rets on both sides with mnemonics and targets agreeing, so
-// nothing structural is left.  What differs is one bitfield merge FORM.  Both
-// fields of the second short allocation unit are written from one word store
-// on both sides, but retail clears y and z together with a single
-// `and eax,0xffffc000` and then ORs each value in, where this compile emits
-// the generic xor-merge for y and a separate `and ch` for z - VC6 combined
-// two adjacent bitfield writes on retail's input and did not on ours.  The
-// two gpGame reloc rows are cosmetic (the delinked side spells it
-// `bss_2994e8` because the global is unclaimed - the DoDialog precedent).
-// Tried and rejected: assigning z before y, which un-combines the pair
-// further and costs 5 points (90.8763 -> 86.1134); hoisting `object->z` into
-// a local ahead of the point, which is byte-flat at 90.8763.
-// ALSO TRIED AND REJECTED (2026-08-21): the three-argument type_point
-// CONSTRUCTOR. In advmgr.cpp that spelling IS what produces retail's
-// `and eax,0xffffc000` merge - it closed SetInitialMapOrigin outright and
-// paid +2.5 to +5.7 on four more rows - so the same `mask t=1 b=0` census
-// reading points here. It does not transfer: the ctor costs 17.8 points here
-// (90.8763 -> 73.0309), 5.4 on readHeroData (91.6097 -> 86.1750) and 5.0 on
-// readMonsterData (96.4729 -> 91.5043). mapcell.obj's point builds want the
-// field-assignment form; the merge census identifies the DIVERGENCE, not the
-// spelling that fixes it.
+// Dreamcast records exactly two locals here (`location` and `object`) and
+// retains both source helpers: CObject::get_trigger and game::get_cell.
+// Flattening the first into triggerX/triggerY/point produced the old 0x10
+// frame and 90.8763% local maximum; the helper's constructor is what lets
+// VC6 clear and merge the packed y/z allocation unit as retail does.
 VA(0x004fcaa0, 0x12F)  // anchor-global, dc 0xebf98
 NewmapCell* NewmapCell::get_trigger_cell()
 {
@@ -422,26 +417,16 @@ NewmapCell* NewmapCell::get_trigger_cell()
         || type == HOLY_GRAIL)
         return 0;
 
-    short index = object_type_index;
-    if (index < 0)
-        return 0;
-    if (index >= gpGame->worldMap.objects.size())
+    if (object_type_index < 0
+        || object_type_index >= gpGame->worldMap.objects.size())
         return 0;
 
-    CObject* object = &gpGame->worldMap.objects[index];
+    CObject* object = &gpGame->worldMap.objects[object_type_index];
+    type_point location = object->get_trigger();
 
-    int triggerX;
-    int triggerY;
-    object->FindTrigger(&triggerX, &triggerY);
-
-    type_point point;
-    point.x = triggerX;
-    point.y = triggerY;
-    point.z = object->z;
-
-    if (point.x < 0)
+    if (location.x < 0)
         return 0;
-    return gpGame->worldMap.cell(point);
+    return gpGame->get_cell(location);
 }
 
 #if 0  // @carcass -- located/reconstruction-pending bodies
@@ -1656,23 +1641,12 @@ CObjectType* CObject::get_object_type_ptr() const
     return &gpGame->worldMap.objectTypes[typeIndex];
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
-// E:\gamedcs\mapcell.cpp:1119
-DC_ONLY(0xeda4c, 0x6C)
-type_point CObject::get_trigger(__$ReturnUdt)
-{
-    // @stub
-}
-
-#endif  // @carcass -- located/reconstruction-pending bodies
-
 // E:\gamedcs\mapcell.cpp:1131
 VA(0x004fec30, 0x106)  // anchor-global, dc 0xedab8
-void CObject::FindTrigger(int* result_x, int* result_y)
+void CObject::FindTrigger(int& result_x, int& result_y) const
 {
-    *result_x = -1;
-    *result_y = -1;
+    result_x = -1;
+    result_y = -1;
 
     CObjectType* ObjType = &gpGame->worldMap.objectTypes[typeIndex];
     for (int Vert = 0; Vert < ObjType->height; ++Vert) {
@@ -1684,8 +1658,8 @@ void CObject::FindTrigger(int* result_x, int* result_y)
                 continue;
 
             if (ObjType->triggerCells[47 - Vert * 8 - Horiz]) {
-                *result_x = x - Horiz;
-                *result_y = y - Vert;
+                result_x = x - Horiz;
+                result_y = y - Vert;
                 return;
             }
         }
@@ -1712,7 +1686,7 @@ int NewfullMap::readGeneratorData(
 
     int x;
     int y;
-    generatorObject->FindTrigger(&x, &y);
+    generatorObject->FindTrigger(x, y);
     tempGenerator.mapX = static_cast<unsigned char>(x);
     tempGenerator.mapY = static_cast<unsigned char>(y);
     tempGenerator.mapZ = generatorObject->z;
@@ -2821,7 +2795,7 @@ int NewfullMap::readMineData(TAbstractFile* infile, CObject* mineObject)
 
     int x;
     int y;
-    mineObject->FindTrigger(&x, &y);
+    mineObject->FindTrigger(x, y);
     tempMine.mapX = static_cast<unsigned char>(x);
     tempMine.mapY = static_cast<unsigned char>(y);
     tempMine.mapZ = mineObject->z;
@@ -2869,7 +2843,7 @@ int NewfullMap::readAbandonedMineData(TAbstractFile* infile,
 
     int x;
     int y;
-    mineObject->FindTrigger(&x, &y);
+    mineObject->FindTrigger(x, y);
     tempMine.mapX = static_cast<unsigned char>(x);
     tempMine.mapY = static_cast<unsigned char>(y);
     tempMine.mapZ = mineObject->z;
@@ -3830,7 +3804,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
 
     int x;
     int y;
-    heroObject->FindTrigger(&x, &y);
+    heroObject->FindTrigger(x, y);
 
     type_point point;
     point.x = x;
@@ -3916,7 +3890,7 @@ int NewfullMap::readGarrisonData(TAbstractFile* infile, CObject* garrisonObject,
 
     int triggerX;
     int triggerY;
-    garrisonObject->FindTrigger(&triggerX, &triggerY);
+    garrisonObject->FindTrigger(triggerX, triggerY);
     newGarrison.mapX = static_cast<unsigned char>(triggerX);
     newGarrison.mapY = static_cast<unsigned char>(triggerY);
     newGarrison.mapZ = garrisonObject->z;
@@ -3998,7 +3972,7 @@ void NewfullMap::SoD_transformRandomDwellings()
         dwelling.object->x += x;
 
         int triggerY;
-        dwelling.object->FindTrigger(&x, &triggerY);
+        dwelling.object->FindTrigger(x, triggerY);
         newGenerator.genType = static_cast<char>(generatorType);
         newGenerator.mapX = static_cast<unsigned char>(x);
         newGenerator.mapY = static_cast<unsigned char>(triggerY);
@@ -4199,7 +4173,7 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
             objectTypes[tempObject->typeIndex].extra);
         int triggerX;
         int triggerY;
-        tempObject->FindTrigger(&triggerX, &triggerY);
+        tempObject->FindTrigger(triggerX, triggerY);
         tempObject->extraInfo = gpGame->CreateBoat(
             triggerX, triggerY, tempObject->z, -1, 1, boatType);
         break;

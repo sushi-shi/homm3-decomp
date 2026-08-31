@@ -205,7 +205,6 @@ control-flow (why-branch)	79	88.4550	680	swapmgr	?OnWidgetDeselect@swapManager@@
 control-flow (why-branch)	78	94.4126	1395	game	?calculate_production@game@@QAEXXZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	78	86.3580	571	army	?get_berserk_targets@army@@QBEXAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline, 1 over-inline (1 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	78	92.6970	1065	army	?spell_is_valid_on_target@@YIEHPBVarmy@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline
-control-flow (why-branch)	77	98.5741	5425	events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	77	94.6792	1453	advmgr	?ProcessSearch@advManager@@QAEHHHH@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 control-flow (why-branch)	77	84.8547	510	armygrp	?Merge@armyGroup@@QAEEPAV1@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	77	90.5846	815	spells	?Resurrect@combatManager@@QAEXPAVarmy@@JE@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
@@ -264,6 +263,7 @@ register-homing (why-reg)	54	95.0344	1091	cmbtmgr	?KeepAttack@combatManager@@QAE
 inliner (predict-inline)	54	84.0350	337	event_record	?load@type_record_shroud@@UAEEPAVTAbstractFile@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline (2 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	54	97.4369	2099	mapcell	?readObject@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (3 name-unresolvable pair(s) discounted)
 control-flow (why-branch)	53	92.9185	748	hero	?HeroFn_004E2550@hero@@QAEEJJ@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
+control-flow (why-branch)	52	99.0481	5425	events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 control-flow (why-branch)	51	88.6223	449	singleselectionwindow	?HeaderRequested@CNewPlayerUpdateMan@@QAEXKEH@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	51	88.7023	450	event_record	?record_erase_object@game@@QAEXPAVNewmapCell@@Utype_point@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline (9 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	51	95.6972	1176	game	?readMapPlayerSlot@TPlayerSlotAttributes@CMapHeaderData@@QAEXPAVTAbstractFile@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (6 name-unresolvable pair(s) discounted)
@@ -339,7 +339,6 @@ register-homing (why-reg)	30	95.6955	686	mapcell	?readScholarData@NewfullMap@@QA
 register-homing (why-reg)	29	98.1402	1543	cmbtmgr	?SetupAndLoadObstacles@combatManager@@QAEXXZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	28	95.4717	619	mapcell	?readMapLayer@NewfullMap@@QAEHPAVTAbstractFile@@HH@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	28	41.8750	48	remote	??1CNetMsgHandler@@UAE@XZ	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
-register-homing (why-reg)	28	90.8763	303	mapcell	?get_trigger_cell@NewmapCell@@QAEPAV1@XZ	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 register-homing (why-reg)	27	98.0945	1439	townmgr	?SetupTown@townManager@@QAEXE@Z	why-reg	register-homing knob (B-family)
 inliner (predict-inline)	27	97.5098	1084	game	?ConvertObject@game@@QAEXPAVNewmapCell@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline (2 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	27	97.4451	1054	events	?DoCustomSpellScroll@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)

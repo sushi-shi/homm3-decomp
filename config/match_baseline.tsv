@@ -1126,7 +1126,7 @@ events	?DoAIEvent@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@@Z	100.00
 # synth PDB - returned the row to master's own 98.5741 to the digit
 # with events.cpp untouched. Cross-generation noise, the
 # recruit::Update revert-control precedent; hist keeps 99.1139.
-events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	98.5741	99.0481	99.1139	0xad470
+events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	99.0481	99.0481	99.1139	0xad470
 events	?DoCustomArtifact@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	99.1492	99.1492	99.1492	0x9f070
 events	?DoCustomResource@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa4780
 events	?DoCustomSpellScroll@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	97.4451	97.4451	97.4451	0xa5a80
@@ -1887,7 +1887,7 @@ mapcell	??4TTownEvent@@QAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0x10a880
 mapcell	??_ENewmapCell@@QAEPAXI@Z	100.0000	100.0000	100.0000	0xfd460
 mapcell	??_F?$vector@VCObjectType@@V?$allocator@VCObjectType@@@std@@@std@@QAEXXZ	100.0000	100.0000	100.0000	0xfd1c0
 mapcell	?CalculateCellExtra@NewfullMap@@QAEXPAVNewmapCell@@E@Z	100.0000	100.0000	100.0000	0x105a10
-mapcell	?FindTrigger@CObject@@QAEXPAH0@Z	100.0000	100.0000	100.0000	0xfec30
+mapcell	?FindTrigger@CObject@@QBEXAAH0@Z	100.0000	100.0000	100.0000	0xfec30
 mapcell	?GenerateHeightMap@NewfullMap@@QAEXPBVCObject@@QAY05C@Z	96.7484	96.7484	96.7484	0x105060
 mapcell	?HasTriggerableEvent@NewmapCell@@QAE?BEXZ	100.0000	100.0000	100.0000	0xfcdc0
 mapcell	?Init@NewfullMap@@QAEXHE@Z	100.0000	100.0000	100.0000	0xfd4f0
@@ -1948,7 +1948,7 @@ mapcell	?get_map_extraInfo@NewmapCell@@QAEKXZ	100.0000	100.0000	100.0000	0xfcc30
 mapcell	?get_map_object@NewmapCell@@QAE?AW4TAdventureObjectType@@XZ	100.0000	100.0000	100.0000	0xfcbd0
 mapcell	?get_object_type_ptr@CObject@@QBEPAVCObjectType@@XZ	100.0000	100.0000	100.0000	0xfec10
 mapcell	?get_special_terrain@NewmapCell@@QBE?AW4TAdventureObjectType@@XZ	100.0000	100.0000	100.0000	0xfce20
-mapcell	?get_trigger_cell@NewmapCell@@QAEPAV1@XZ	90.8763	90.8763	90.8763	0xfcaa0
+mapcell	?get_trigger_cell@NewmapCell@@QAEPAV1@XZ	100.0000	100.0000	100.0000	0xfcaa0
 mapcell	?insert@?$vector@URandomDwellingData@@V?$allocator@URandomDwellingData@@@std@@@std@@QAEXPAURandomDwellingData@@IABU3@@Z	100.0000	100.0000	100.0000	0x1089e0
 mapcell	?insert@?$vector@VBlackBoxData@@V?$allocator@VBlackBoxData@@@std@@@std@@QAEXPAVBlackBoxData@@IABV3@@Z	100.0000	100.0000	100.0000	0x107150
 mapcell	?insert@?$vector@VMonsterData@@V?$allocator@VMonsterData@@@std@@@std@@QAEXPAVMonsterData@@IABV3@@Z	100.0000	100.0000	100.0000	0x106d70

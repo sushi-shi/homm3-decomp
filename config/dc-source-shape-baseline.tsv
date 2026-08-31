@@ -1419,8 +1419,6 @@ call	lodfile.obj	0xe9690	LODFile::getDataPtr
 call	mainmenu.obj	0xea2ec	widget::hide
 call	mapcell.obj	0xeb6a4	game::GetTeam
 call	mapcell.obj	0xeb7d0	NewSMapHeader::readString
-call	mapcell.obj	0xebf98	CObject::get_trigger
-call	mapcell.obj	0xebf98	game::get_cell
 call	mapcell.obj	0xec114	game::GetBoat
 call	mapcell.obj	0xec114	type_obscuring_object::get_obscured_extra_info
 call	mapcell.obj	0xec1c8	game::GetBoat

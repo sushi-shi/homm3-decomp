@@ -2423,12 +2423,55 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"if\s*\(\s*Is\s*\(\s*1u\s*<<\s*0\s*\)\s*&&\s*turn\s*\)"
             r"\s*destIndex\s*\+=\s*OffsetToFront\s*\(\s*-1\s*\)\s*;"),
     ),
+    ("mapcell.obj", 0xEDA4C): (
+        SourceRule(
+            "CObject::get_trigger keeps Dreamcast's result_x/result_y "
+            "locals, reference-form FindTrigger call and type_point ctor",
+            r"\A\s*int\s+result_x\s*;\s*int\s+result_y\s*;\s*"
+            r"FindTrigger\s*\(\s*result_x\s*,\s*result_y\s*\)\s*;\s*"
+            r"return\s+type_point\s*\(\s*result_x\s*,\s*result_y\s*,"
+            r"\s*z\s*\)\s*;\s*\Z"),
+    ),
+    ("mapcell.obj", 0xEDAB8): (
+        SourceRule(
+            "CObject::FindTrigger keeps Dreamcast's reference assignments, "
+            "ObjType/Vert/Horiz locals and nested trigger-mask scan",
+            r"\A\s*result_x\s*=\s*-1\s*;\s*result_y\s*=\s*-1\s*;\s*"
+            r"CObjectType\s*\*\s*ObjType\s*=\s*&\s*gpGame\s*->\s*"
+            r"worldMap\s*\.\s*objectTypes\s*\[\s*typeIndex\s*\]\s*;"
+            r"\s*for\s*\(\s*int\s+Vert\s*=\s*0\s*;\s*Vert\s*<\s*"
+            r"ObjType\s*->\s*height\s*;\s*\+\+\s*Vert\s*\)\s*\{.*?"
+            r"for\s*\(\s*int\s+Horiz\s*=\s*0\s*;\s*Horiz\s*<\s*"
+            r"ObjType\s*->\s*width\s*;\s*\+\+\s*Horiz\s*\)\s*\{.*?"
+            r"if\s*\(\s*ObjType\s*->\s*triggerCells\s*\[\s*47\s*-\s*"
+            r"Vert\s*\*\s*8\s*-\s*Horiz\s*\]\s*\)\s*\{\s*"
+            r"result_x\s*=\s*x\s*-\s*Horiz\s*;\s*result_y\s*=\s*y\s*"
+            r"-\s*Vert\s*;\s*return\s*;\s*\}\s*\}\s*\}\s*\Z"),
+    ),
     ("mapcell.obj", 0xEBF6C): (
         SourceRule(
             "TObjectCell::get_object keeps Dreamcast's vector subscript "
             "helper body instead of a flattened object-pool address",
             r"\A\s*return\s+&\s*gpGame\s*->\s*worldMap\s*\.\s*objects"
             r"\s*\[\s*objectIndex\s*\]\s*;\s*\Z"),
+    ),
+    ("mapcell.obj", 0xEBF98): (
+        SourceRule(
+            "NewmapCell::get_trigger_cell keeps Dreamcast's exact two-local "
+            "shape and the CObject::get_trigger/game::get_cell boundaries",
+            r"\A\s*if\s*\(\s*is_trigger\s*\)\s*return\s+this\s*;\s*"
+            r"if\s*\(\s*type\s*==\s*NOTHING\s*\|\|\s*type\s*==\s*"
+            r"ANCHOR_POINT\s*\|\|\s*type\s*==\s*EVENT\s*\|\|\s*type\s*"
+            r"==\s*HOLY_GRAIL\s*\)\s*return\s+0\s*;\s*if\s*\(\s*"
+            r"object_type_index\s*<\s*0\s*\|\|\s*object_type_index\s*"
+            r">=\s*gpGame\s*->\s*worldMap\s*\.\s*objects\s*\.\s*size"
+            r"\s*\(\s*\)\s*\)\s*return\s+0\s*;\s*CObject\s*\*\s*"
+            r"object\s*=\s*&\s*gpGame\s*->\s*worldMap\s*\.\s*objects"
+            r"\s*\[\s*object_type_index\s*\]\s*;\s*type_point\s+"
+            r"location\s*=\s*object\s*->\s*get_trigger\s*\(\s*\)\s*;"
+            r"\s*if\s*\(\s*location\s*\.\s*x\s*<\s*0\s*\)\s*"
+            r"return\s+0\s*;\s*return\s+gpGame\s*->\s*get_cell\s*\("
+            r"\s*location\s*\)\s*;\s*\Z"),
     ),
     ("mapcell.obj", 0xEC098): (
         SourceRule(
@@ -4209,6 +4252,23 @@ def contract_violations(body: str, key: tuple[str, int]) -> list[SourceRule]:
                 or rule.maximum is not None and count > rule.maximum:
             defects.append(rule)
     return defects
+
+
+def cobject_trigger_header_violations(text: str) \
+        -> list[tuple[int, str]]:
+    """Audit the published const/reference CObject trigger interfaces."""
+    active = _source.mask(text)
+    pattern = (
+        r"\btype_point\s+get_trigger\s*\(\s*\)\s*const\s*;\s*"
+        r"void\s+FindTrigger\s*\(\s*int\s*&\s*resultX\s*,\s*"
+        r"int\s*&\s*resultY\s*\)\s*const\s*;")
+    if re.search(pattern, active, re.DOTALL) is not None:
+        return []
+    token = re.search(r"\b(?:get_trigger|FindTrigger)\b", active)
+    line = text.count("\n", 0, token.start()) + 1 if token else 1
+    return [(line,
+             "CObject must retain Dreamcast's get_trigger() const followed "
+             "by const reference-form FindTrigger(int&, int&)")]
 
 
 def transfer_satisfied(transfer: CallTransfer, caller_body: str,
@@ -7113,6 +7173,99 @@ return NOTHING;
         "return gpGame->worldMap.objects.begin() + objectIndex;\n")
     if not contract_violations(flattened_object_cell, object_cell_key):
         failures.append("flattened TObjectCell::get_object body passed")
+    trigger_cell_key = ("mapcell.obj", 0xEBF98)
+    trigger_cell_probe = """\
+if (is_trigger)
+    return this;
+if (type == NOTHING || type == ANCHOR_POINT || type == EVENT
+    || type == HOLY_GRAIL)
+    return 0;
+if (object_type_index < 0
+    || object_type_index >= gpGame->worldMap.objects.size())
+    return 0;
+CObject* object = &gpGame->worldMap.objects[object_type_index];
+type_point location = object->get_trigger();
+if (location.x < 0)
+    return 0;
+return gpGame->get_cell(location);
+"""
+    if contract_violations(trigger_cell_probe, trigger_cell_key):
+        failures.append("aligned get_trigger_cell source shape did not pass")
+    indexed_trigger_cell = trigger_cell_probe.replace(
+        "if (object_type_index < 0",
+        "short index = object_type_index;\nif (index < 0").replace(
+            "object_type_index >=", "index >=").replace(
+                "objects[object_type_index]", "objects[index]")
+    flattened_trigger_cell = trigger_cell_probe.replace(
+        "type_point location = object->get_trigger();",
+        "int x; int y; object->FindTrigger(x, y);\n"
+        "type_point location(x, y, object->z);")
+    flattened_trigger_lookup = trigger_cell_probe.replace(
+        "return gpGame->get_cell(location);",
+        "return gpGame->worldMap.cell(location);")
+    if any(not contract_violations(probe, trigger_cell_key) for probe in (
+            indexed_trigger_cell,
+            flattened_trigger_cell,
+            flattened_trigger_lookup)):
+        failures.append("flattened get_trigger_cell source shape passed")
+    object_trigger_key = ("mapcell.obj", 0xEDA4C)
+    object_trigger_probe = """\
+int result_x;
+int result_y;
+FindTrigger(result_x, result_y);
+return type_point(result_x, result_y, z);
+"""
+    if contract_violations(object_trigger_probe, object_trigger_key):
+        failures.append("aligned CObject::get_trigger body did not pass")
+    pointer_trigger_call = object_trigger_probe.replace(
+        "FindTrigger(result_x, result_y);",
+        "FindTrigger(&result_x, &result_y);")
+    flattened_trigger_ctor = object_trigger_probe.replace(
+        "return type_point(result_x, result_y, z);",
+        "type_point result; result.x = result_x; result.y = result_y; "
+        "result.z = z; return result;")
+    if any(not contract_violations(probe, object_trigger_key) for probe in (
+            pointer_trigger_call, flattened_trigger_ctor)):
+        failures.append("flattened CObject::get_trigger body passed")
+    find_trigger_key = ("mapcell.obj", 0xEDAB8)
+    find_trigger_probe = """\
+result_x = -1;
+result_y = -1;
+CObjectType* ObjType = &gpGame->worldMap.objectTypes[typeIndex];
+for (int Vert = 0; Vert < ObjType->height; ++Vert) {
+    if (y - Vert < 0 || y - Vert >= gMapHeight)
+        continue;
+    for (int Horiz = 0; Horiz < ObjType->width; ++Horiz) {
+        if (x - Horiz < 0 || x - Horiz >= gMapWidth)
+            continue;
+        if (ObjType->triggerCells[47 - Vert * 8 - Horiz]) {
+            result_x = x - Horiz;
+            result_y = y - Vert;
+            return;
+        }
+    }
+}
+"""
+    if contract_violations(find_trigger_probe, find_trigger_key):
+        failures.append("aligned CObject::FindTrigger body did not pass")
+    pointer_find_trigger = find_trigger_probe.replace(
+        "result_x = -1;", "*result_x = -1;").replace(
+            "result_y = -1;", "*result_y = -1;")
+    if not contract_violations(pointer_find_trigger, find_trigger_key):
+        failures.append("pointer-form CObject::FindTrigger body passed")
+    object_trigger_header_probe = """\
+type_point get_trigger() const;
+void FindTrigger(int& resultX, int& resultY) const;
+"""
+    if cobject_trigger_header_violations(object_trigger_header_probe):
+        failures.append("aligned CObject trigger declarations did not pass")
+    pointer_trigger_header = object_trigger_header_probe.replace(
+        "int& resultX, int& resultY", "int* resultX, int* resultY")
+    mutable_trigger_header = object_trigger_header_probe.replace(
+        ") const;", ");")
+    if any(not cobject_trigger_header_violations(probe) for probe in (
+            pointer_trigger_header, mutable_trigger_header)):
+        failures.append("wrong CObject trigger declarations passed")
     get_map_object_key = ("mapcell.obj", 0xEC098)
     get_map_object_probe = """\
 if (type == HERO) {
@@ -10345,6 +10498,17 @@ def scan() -> tuple[
     missing.extend(FileContractViolation("include/cmbtmgr.h", line,
                                          description)
                    for line, description in cmbtmgr_defects)
+
+    object_header = common.HOMM3_DIR / "include/advmgr_objects.h"
+    object_header_text = object_header.read_text(errors="replace")
+    object_header_relpath = "include/advmgr_objects.h"
+    audited.add(_file_audit_scope(object_header_relpath))
+    object_trigger_defects = cobject_trigger_header_violations(
+        object_header_text)
+    checked += 1
+    missing.extend(FileContractViolation(object_header_relpath, line,
+                                         description)
+                   for line, description in object_trigger_defects)
 
     struct_header = common.HOMM3_DIR / "include/struct.h"
     struct_text = struct_header.read_text(errors="replace")
