@@ -269,6 +269,75 @@ enum EScenarioFilterCategory {
     SCENARIO_FILTER_CATEGORY_ANY = 3
 };
 
+// Widget ids consumed by TSingleSelectionWindow::OnWidgetDeselect. The
+// constructor, retail jump table, and Dreamcast's named handler calls agree
+// on these ranges.
+enum ESingleSelectionWidgetId {
+    SSW_DIFFICULTY_FIRST = 107,
+    SSW_DIFFICULTY_LAST = 111,
+    SSW_SCENARIO_OPTIONS = 128,
+    SSW_ADVANCED_OPTIONS = 129,
+    SSW_FILTER_OPTIONS = 130,
+    SSW_CHAT_TOGGLE = 131,
+    SSW_SIZE_FILTER_SMALL = 137,
+    SSW_SIZE_FILTER_MEDIUM = 138,
+    SSW_SIZE_FILTER_LARGE = 139,
+    SSW_SIZE_FILTER_XLARGE = 140,
+    SSW_SIZE_FILTER_ALL = 141,
+    SSW_FILE_ROW_FIRST = 142,
+    SSW_FILE_ROW_LAST = 159,
+    SSW_BEGIN = 186,
+    SSW_BACK = 188,
+    SSW_SORT_SIZE = 190,
+    SSW_SORT_PLAYERS = 191,
+    SSW_SORT_VERSION = 192,
+    SSW_SORT_NAME = 193,
+    SSW_SORT_VICTORY = 194,
+    SSW_SORT_LOSS = 195,
+    SSW_HANDICAP_FIRST = 207,
+    SSW_HANDICAP_LAST = 214,
+    SSW_TOWN_PREV_FIRST = 215,
+    SSW_TOWN_PREV_LAST = 222,
+    SSW_TOWN_NEXT_FIRST = 223,
+    SSW_TOWN_NEXT_LAST = 230,
+    SSW_HERO_PREV_FIRST = 231,
+    SSW_HERO_PREV_LAST = 238,
+    SSW_HERO_NEXT_FIRST = 239,
+    SSW_HERO_NEXT_LAST = 246,
+    SSW_BONUS_PREV_FIRST = 247,
+    SSW_BONUS_PREV_LAST = 254,
+    SSW_BONUS_NEXT_FIRST = 255,
+    SSW_BONUS_NEXT_LAST = 262,
+    SSW_PLAYER_POS_FIRST = 263,
+    SSW_PLAYER_POS_LAST = 270,
+    SSW_GENERATE_RANDOM_MAP = 279,
+    SSW_FILTER_MAP_SMALL = 281,
+    SSW_FILTER_MAP_MEDIUM = 282,
+    SSW_FILTER_MAP_LARGE = 283,
+    SSW_FILTER_MAP_XLARGE = 284,
+    SSW_FILTER_MAP_ALL = 285,
+    SSW_FILTER_PLAYERS_FIRST = 287,
+    SSW_FILTER_PLAYERS_LAST = 294,
+    SSW_FILTER_PLAYERS_ANY = 295,
+    SSW_FILTER_HUMANS_FIRST = 297,
+    SSW_FILTER_HUMANS_LAST = 304,
+    SSW_FILTER_HUMANS_ANY = 305,
+    SSW_FILTER_TEAMS_FIRST = 307,
+    SSW_FILTER_TEAMS_LAST = 314,
+    SSW_FILTER_TEAMS_ANY = 315,
+    SSW_FILTER_VERSION_FIRST = 317,
+    SSW_FILTER_VERSION_LAST = 323,
+    SSW_FILTER_VERSION_ANY = 324,
+    SSW_FILTER_CATEGORY_FIRST = 326,
+    SSW_FILTER_CATEGORY_LAST = 329,
+    SSW_FILTER_DURATION_FIRST = 331,
+    SSW_FILTER_DURATION_LAST = 333,
+    SSW_FILTER_DURATION_ANY = 334,
+    SSW_RANDOM_MAPS = 335,
+    SSW_NAME_FIRST = 345,
+    SSW_NAME_LAST = 352
+};
+
 // The six std::sort predicates SortMaps instantiates - retail's band at
 // 0x590070..0x591cf0 is six Dinkumware _Sort instantiations (the
 // one-line sort() wrapper inlines to the observed 4-arg
@@ -342,6 +411,12 @@ public:
 class CRequestHeroFaceMsg : public CNetMsg {
 public:
     int m_which;  // +0x14
+
+    CRequestHeroFaceMsg(int which)
+        : CNetMsg(RS_REQUEST_HERO_FACE, sizeof(CRequestHeroFaceMsg))
+    {
+        m_which = which;
+    }
 };
 
 class CRequestHeroFaceReplyMsg : public CNetMsg {
@@ -362,6 +437,13 @@ class CSetAGRMsg : public CNetMsg {
 public:
     int m_gamePos;  // +0x14
     int m_agr;      // +0x18
+
+    CSetAGRMsg(int gamePos, int agr)
+        : CNetMsg(RS_SETAGR, sizeof(CSetAGRMsg))
+    {
+        m_gamePos = gamePos;
+        m_agr = agr;
+    }
 };
 
 class CHeaderConfirmMsg : public CNetMsg {
@@ -387,6 +469,13 @@ class CTownUpdateMsg : public CNetMsg {
 public:
     int m_gamePos;  // +0x14
     int m_town;     // +0x18
+
+    CTownUpdateMsg(int gamePos, int town)
+        : CNetMsg(RS_TOWN_UPDATE, sizeof(CTownUpdateMsg))
+    {
+        m_gamePos = gamePos;
+        m_town = town;
+    }
 };
 
 class CNewSetupInfoMsg : public CNetMsg {
@@ -726,6 +815,15 @@ public:
 class CNewPlayerUpdateMan {
 public:
     CNewPlayerUpdateTask* m_procs[8];
+
+    // DC IsSendingHeaders; Complete expands it into each sort-button arm.
+    unsigned char IsSendingHeaders() const
+    {
+        for (int i = 0; i < 8; ++i)
+            if (m_procs[i])
+                return 1;
+        return 0;
+    }
 
     // DC GetFirstAvailable; HandleNetMsg's transfer-start arm expands it.
     int GetFirstAvailable()

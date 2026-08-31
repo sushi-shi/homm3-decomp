@@ -95,9 +95,11 @@ MODULE_RE = re.compile(r"\*\*\* Module .*[\\/]([^\\/]+\.obj) at ")
 FILE_RE = re.compile(r"^\s+(\S+), \d{4}:([0-9A-F]{8})-([0-9A-F]{8}), "
                      r"line/addr pairs = (\d+)")
 PAIR_RE = re.compile(r"(\d+)\s+([0-9A-F]{8})")
-# `VA(0x005dda10, 0x145F)  // <evidence>, dc 0x17f54c`
+# `VA(0x005dda10, 0x145F)  // <evidence>, dc 0x17f54c`. Evidence may also
+# mention a Dreamcast byte size earlier on the same line; greedily consume the
+# comment so the final explicit `dc 0x...` identity wins.
 CLAIM_RE = re.compile(r"\b(?:VA|VA_COMPGEN|DC_ONLY)\s*\(\s*(0x[0-9a-fA-F]+)"
-                      r"[^)]*\)[^\n]*?\bdc\s+(0x[0-9a-fA-F]+)")
+                      r"[^)]*\)[^\n]*\bdc\s+(0x[0-9a-fA-F]+)")
 
 _srclines: dict[str, list[tuple[str, int, int]]] = {}
 

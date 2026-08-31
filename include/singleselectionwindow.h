@@ -480,6 +480,15 @@ public:
     unsigned char HandleNetMsg(CNetMsg* pNetMsg, unsigned char* cancel);
     int OnWidgetDeselect(message* msg, unsigned char* bExitFlag,
                          unsigned char remoteClick);
+    void SetDifficultyHiLite();
+    void OnSortMaps(int how);
+    void OnNameClick(int pos);
+    void OnPlayerPosClick(int pos);
+    unsigned char OnBeginGame();
+    // Complete-only random-map helpers at 0x5879a0 and 0x5860e0. Their
+    // provisional role names describe the byte-decoded caller contract.
+    std::string GetRandomMapName();
+    unsigned char GenerateRandomMap(const char* name);
     void OnDeleteFile();
     void SetCurrentMap(int map, unsigned char bUpdate);
     void DrawHeroAdvancedOption(int playerPos, unsigned char update,
@@ -554,6 +563,9 @@ public:
     // OnSetAsHostMsg, where retail preserves the out-of-line boundary.
     void SetupScenarioOptions(unsigned char randomMaps);
     void SetupAdvancedOptions();
+    // Complete-only counterpart to the two shared setup panes. Retail calls
+    // 0x57feb0 before refreshing the filter widgets.
+    void SetupFilterOptions();
     unsigned char SendPlayerPositions(unsigned long dpidTo);
     unsigned char SendSetupInfo(unsigned long dpid);
     void SendPlayerFaces();
