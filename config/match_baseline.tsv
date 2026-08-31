@@ -2656,7 +2656,7 @@ singleselectionpopups	?Main@CSpriteWidget@@UAEHPAVmessage@@@Z	100.0000	100.0000	
 singleselectionpopups	?handle_message@CSingleSelPopup@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x175430
 singleselectionwindow	??0CNetPlayerHandlerPlayer@@QAE@XZ	100.0000	100.0000	100.0000	0x17c790
 singleselectionwindow	??0CNetPlayerInfo@@QAE@XZ	100.0000	100.0000	100.0000	0x17f720
-singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	51.2596	51.2596	51.2596	0x179960
+singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	64.5101	64.5101	64.5101	0x179960
 singleselectionwindow	??0lobby_message@@QAE@XZ	100.0000	100.0000	100.0000	0x189190
 singleselectionwindow	??0t_map_list_update@@QAE@K@Z	100.0000	100.0000	100.0000	0x189240
 singleselectionwindow	??1CHostWaitDlg@@UAE@XZ	0.0000	0.0000	0.0000	0x189230
@@ -2736,7 +2736,7 @@ singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100
 # 2026-08-27 (round 3): the interim full build re-banked the transient
 # peak a third time; re-lowered with the round's bodies landed. Same
 # scheduler flap, same recovery path.
-singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0
+singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0
 singleselectionwindow	?OnMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2193	90.2193	90.2193	0x189710
 singleselectionwindow	?OnNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	97.5366	97.5366	97.5366	0x18b510
 singleselectionwindow	?OnNewPlayerMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	97.0628	97.0628	97.0628	0x189fa0
@@ -2761,6 +2761,7 @@ singleselectionwindow	?SetupLoadGameMode@TSingleSelectionWindow@@QAEXXZ	100.0000
 singleselectionwindow	?SetupNewGameMode@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x17f740
 singleselectionwindow	?SetupScenarioOptions@TSingleSelectionWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x180a70
 singleselectionwindow	?ShowWidget@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x17fb20
+singleselectionwindow	?SliderDuration@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x17c7f0
 singleselectionwindow	?SliderFileMenu@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x17c990
 singleselectionwindow	?SortMaps@TSingleSelectionWindow@@QAEXHEE@Z	91.6682	91.6682	91.6682	0x185050
 singleselectionwindow	?StartMouseThread@@YIXXZ	100.0000	100.0000	100.0000	0x177790

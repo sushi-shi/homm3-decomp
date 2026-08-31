@@ -490,12 +490,12 @@ public:
                         CNetPlayerHandlerPlayer* pCompPlayers);
 };
 
-// The per-handicap label pointers the seat rows are retitled from
-// (cell 0x6a7800, owner unclaimed). Declared as int cells: the only
-// consumer (SetCurrentMap's seat loop) feeds them verbatim into
-// send_message's int payload, and the int view spells that without a
-// pointer cast.
-extern int gUnnamed6a7800[];
+// The three per-handicap label pointers the seat rows are retitled from
+// (0x6a7800..0x6a780c). The constructor also passes element zero as the
+// textButton caption, proving this is a pointer table rather than integer
+// payload storage; send_message's legacy int payload uses an explicit
+// pointer-width conversion at its two consumers.
+extern const char* gUnnamed6a7800[3];
 
 // The three advanced-options seat-kind labels (human-or-computer,
 // human-only, computer-only) at .bss 0x6a7e18. No published source name
@@ -745,6 +745,17 @@ public:
 // for it, so its definition must be `inline` (cpp-local, this TU only).
 class CEnterNameEdit : public textEntryWidget {
 public:
+    CEnterNameEdit(int x, int y, int w, int h, int textSize,
+                   const char* text, const char* fontName,
+                   font::TColor color, unsigned justification,
+                   const char* backgroundIcon, int backgroundFrame, int id,
+                   int style, int readType, int insetX, int insetY)
+        : textEntryWidget(x, y, w, h, textSize, text, fontName, color,
+                          justification, backgroundIcon, backgroundFrame, id,
+                          style, readType, insetX, insetY)
+    {
+    }
+
     virtual void OnKillFocus();            // slot 11
     virtual int OnKeyPress(message* msg);  // slot 15
     int OnEnter();

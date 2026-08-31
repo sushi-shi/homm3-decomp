@@ -441,6 +441,7 @@ public:
     virtual int ExitDialog(message* msg);   // slot 14
     void UpdateAllyEnemyFlags(unsigned char update);
     void OnFileMenuSlider(int newIndex);
+    void OnDurationSlider(int newIndex);
     void UpdatePlayerPositions(unsigned char updateCurPlayer);
     int Update();
     unsigned char OnGameTransmitInitMsg(CNetMsg* pNetMsg);
