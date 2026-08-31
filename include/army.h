@@ -1375,7 +1375,7 @@ public:
     long get_adjacent_hex(long direction) const;
     long get_attack_direction(long our_hex, const army* enemy,
                               long enemy_hex) const;
-    long get_attack_direction(long our_hex, const army* enemy) const;
+    inline long get_attack_direction(long our_hex, const army* enemy) const;
     long get_attack_direction(const army* enemy) const;
     long get_multi_head_directions(long our_hex, const army* enemy,
                                    long enemy_hex) const;
@@ -1489,7 +1489,7 @@ private:
     // it. ?get_attack_direction@army@@QBAJJPBV1@@Z is a const member,
     // and the retail body reads creatureId / facing and calls
     // get_adjacent_hex (const) and nothing else.
-    long get_attack_direction(long our_hex, const army* enemy) const;
+    inline long get_attack_direction(long our_hex, const army* enemy) const;
     // 0x448ab0 (claimed in army.cpp): the bitmask of the directions a
     // wide/multi-headed stack would also strike. Const for the same
     // reason - get_multi_head_bonus (0x436620) drives it off a

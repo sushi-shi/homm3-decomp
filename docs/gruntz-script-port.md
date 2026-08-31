@@ -387,15 +387,35 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   **27-branch/one-return symbolic sequence**. `can_shoot`,
   `enemy_is_adjacent`, `get_second_grid_index`, and `GoBerserk` are all
   byte-exact in the same state; `attack_hex` also rises from **83.8632%** to
-  **92.1737%**. Removing the fake twin currently stops army.obj from emitting
-  the otherwise exact `OffsetToFront` COMDAT, so that row stays banked while
-  the real rejected caller/header state is recovered—it is not grounds to
-  restore a source-false member.
+  **92.1737%**. Removing the fake twin initially stopped army.obj from
+  emitting the otherwise exact `OffsetToFront` COMDAT. The real
+  `get_attack_direction` inline state restored immediately below recovers that
+  exact row, confirming the source-false member was never required.
 
   Explicit source contracts and negative controls now reject the flagform
   twin, raw `cellData`, `erase`/`insert`, raw creature-bit tests, manual second
   hex arithmetic, or removal of `OffsetToFront(-1)`. Together with the generic
   Dreamcast call ratchet, five known-backlog rows were retired.
+
+- **2026-08-31 — `army::attack_hex` closes at 100% by restoring the
+  Dreamcast helper boundary previously misclassified as retail skew.** Line
+  4395 names the header wrapper `get_attack_direction(target)`. Retail's
+  41-block tail is the byte-exact two-argument overload expanded through that
+  wrapper; the former hand-written eight-direction loop only reached a banked
+  **94.0790%** and was one block too large. Giving the nested overload its
+  inferred inline contract produces **100% byte identity, 41/41 exact CFG
+  blocks**, and the exact **30-branch/two-return sequence**.
+
+  The coherent inliner state currently removes the standalone two-argument
+  helper copy and lowers `do_attack(int)` from its historical exact state;
+  MAX/history banks both while a real rejected caller/header state is
+  recovered. The one-argument helper call is now an explicit fatal source
+  contract with negative controls for both the wrong overload and the former
+  manual loop; a file-level negative control also makes removal of the nested
+  overload's `inline` qualifier fatal. Dreamcast's two `GetAttackMask` rows at
+  lines 4383/4385 have no runtime counterpart in exact Complete retail and
+  remain `dc-only`/unknown (possibly diagnostics), rather than being added as
+  live calls.
 
 - **2026-08-31 — `combatManager::automate_catapult` reaches an exact
   59-block retail structure while restoring the complete Dreamcast source

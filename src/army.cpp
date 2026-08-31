@@ -5111,9 +5111,9 @@ void army::DecrementSpellRounds()
 // Is(1) returns this function to 92.5170% with the full retail 42-block
 // count and exact 27-branch/one-return symbolic sequence. The residual is
 // instruction/register placement, not a missing helper or CFG edge.
-// Removing the artificial twin also currently leaves OffsetToFront's army
-// COMDAT un-emitted; its exact historical row is banked until a real rejected
-// caller/header state is restored. Do not reintroduce the twin to recover it.
+// Removing the artificial twin initially left OffsetToFront's army COMDAT
+// un-emitted. Restoring the real get_attack_direction inline state below
+// recovers that exact row, confirming the twin was never needed.
 VA(0x00445490, 0x23B)  // anchor-global, dc 0x4a348
 void army::get_berserk_targets(std::vector<army*>& armies) const
 {
@@ -5215,7 +5215,7 @@ long army::get_attack_direction(long our_hex, const army* enemy,
 #endif  // @carcass
 
 VA(0x004458b0, 0x9D)  // corroborates, dc 0x4a610
-long army::get_attack_direction(long our_hex, const army* enemy) const
+inline long army::get_attack_direction(long our_hex, const army* enemy) const
 {
     // The loop bound has to be tested at the BOTTOM of an unbounded
     // loop: a plain `for (d = 0; d < 8; d++)` costs 4.68 points, all of
@@ -5317,13 +5317,13 @@ unsigned char army::simple_move(int hex, unsigned char restore_facing)
 // do_attack and 4410 the br=2 death-bit gate with 4412/4413. Retail
 // follows it.
 //
-// WHERE THE DREAMCAST BUILD IS REFUSED: its line 4395 reaches the
-// melee direction through get_attack_direction (0x4458b0), and 4385
-// runs GetAttackMask first. Retail calls NEITHER - it walks the eight
-// directions itself, comparing each adjacent cell's occupant against
-// the resolved target, and keeps the FIRST direction that needs no
-// turn (breaking) or else the first that does. Retail's bytes win and
-// the DC shape is not adopted.
+// Dreamcast line 4395 positively names get_attack_direction(target).
+// Retail corroborates it: once the byte-exact two-argument overload carries
+// its inline contract, the header wrapper expands that helper into precisely
+// retail's direction loop. The former manual loop was a source-false local
+// maximum. Lines 4383/4385 contain two Dreamcast GetAttackMask calls for which
+// exact Complete retail has no runtime instructions; they remain dc-only/
+// unknown source (possibly diagnostic statements), not invented calls here.
 //
 // can_shoot IS THE GATE AND IT EXPANDS HERE, which is the second
 // independent witness for the spelling parked above it: retail's
@@ -5339,34 +5339,12 @@ unsigned char army::simple_move(int hex, unsigned char restore_facing)
 // initialization: retail puts `xor bl,bl` on the else path rather than
 // ahead of the test, which is what an explicit else buys.
 //
-// Residual (94.0790%): ONE register binding in the direction search,
-// and its two consequences. Retail hoists `gridIndex` into EBX for the
-// whole loop and HOMES `direction` in the dead `hex` parameter slot,
-// reaching the post-loop through EDI (`cmp [ebp+8],-1 / jne`, then
-// `mov edi,[ebp+8]` on the fall-out and nothing at all on the break,
-// where EDI already holds `i`). Our C2 promotes `direction` to EBX
-// instead, reloads `gridIndex` every iteration, and CLONES the
-// `direction = i` block into the loop exit - 42 blocks against
-// retail's 41, which is the whole flow-distance of 7. Everything
-// outside the search is paired. Tried and rejected, each measured
-// against the 94.0790 baseline: a named `int our_hex = gridIndex;`
-// ahead of the loop (90.6211), assigning the parameter
-// `hex = gridIndex;` instead (90.6211), spelling the latch test
-// `direction == -1` to match retail's own `cmp -1` (93.9421), and
-// declaring `direction` at function scope (94.0790, no movement).
-// why-reg's model agrees the bindings are identical at every first
-// definition, so this is the B1 handle-state class rather than
-// anything statement-local.
-// Residual (94.0790, probed 2026-08-21): one owner inversion. Retail
-// caches gridIndex in EBX across the direction loop and homes
-// `direction` at [ebp+8] ONLY (in-loop guard reads memory, spelled
-// `cmp [ebp+8],-1 / jne` - an == -1 compare); ours gives EBX to
-// `direction` and reloads gridIndex per iteration. Probed: the
-// `== -1` guard spelling alone (93.94 - the compare becomes cmp
-// ebx,-1, register still wrong) and naming gridIndex in a pre-loop
-// local (91.31 - the local takes a frame slot, direction keeps EBX,
-// frame grows). C2 prefers the loop-carried value for the register;
-// no spelling tried hands it the invariant instead.
+// CLOSURE 2026-08-31: this source is 100% byte-exact with all 41 retail
+// blocks exact and the complete 30-branch/two-return sequence. Marking the
+// nested overload inline currently makes its standalone copy disappear and
+// lowers do_attack(int); both historical rows stay banked until a real
+// rejected caller/header state restores selective emission. Neither dip is a
+// reason to duplicate the loop again.
 VA(0x00445a60, 0x26D)  // anchor-global, dc 0x4a7ac
 unsigned char army::attack_hex(int hex, unsigned char restore_facing)
 {
@@ -5386,22 +5364,7 @@ unsigned char army::attack_hex(int hex, unsigned char restore_facing)
     if (can_shoot(0)) {
         range_attack();
     } else {
-        int direction = -1;
-        for (int i = 0; i < 8; i++) {
-            if (i >= COMBAT_DIRECTION_COUNT && !(Is(1u << 0)))
-                continue;
-            long adjacent = get_adjacent_hex(gridIndex, i);
-            if (!gpCombatManager->ValidHex(adjacent))
-                continue;
-            if (target != gpCombatManager->cells[adjacent].get_army())
-                continue;
-            if (!NeedToTurn(i)) {
-                direction = i;
-                break;
-            }
-            if (direction < 0)
-                direction = i;
-        }
+        int direction = get_attack_direction(target);
         if (direction >= 0) {
             unsigned char turned;
             if (NeedToTurn(direction)) {
