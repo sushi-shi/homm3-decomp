@@ -3514,14 +3514,9 @@ unsigned char army::enemy_is_adjacent(const army* excluded) const
 {
     if (gpCombatManager->enemy_is_adjacent(this, gridIndex, excluded))
         return 1;
-    if (creatureId & 1) {
-        // The second hex has to be a STATEMENT: folded into the call's
-        // argument list it costs 10.6 points (89.40%), and naming only
-        // the +-1 delta 6.4 (93.57%) - retail loads both halves before
-        // it spills `excluded`, which is what the named local buys.
-        int hex = gridIndex + (facing ? 1 : -1);
-        return gpCombatManager->enemy_is_adjacent(this, hex, excluded);
-    }
+    if (Is(1u))
+        return gpCombatManager->enemy_is_adjacent(
+            this, get_second_grid_index(), excluded);
     return 0;
 }
 
@@ -5106,99 +5101,28 @@ void army::DecrementSpellRounds()
 // side except this one and the arrow towers, kept only while it ties or
 // beats the closest distance seen so far.
 //
-// THE PREDICATE IS A CALL TO can_shoot, not a fourth longhand copy of
-// it, and the ONE byte that proves it is the `call get_second_grid_index`
-// inside the expansion. Written longhand at this site (the first
-// reconstruction) that call sits at depth 1 where /Ob2 always expands
-// it - measured, 12.53% - and NO spelling at depth 1 can turn it back
-// into a call, because the reject needs `budget < cb` and the budget
-// opens at the 1000 floor. Behind a can_shoot call it lands at depth 2
-// on a DIVIDED budget, which is exactly where retail's own copy is:
-// can_shoot's out-of-line body (0x4428f0) expands the same accessor
-// inline, and so does the expansion inside get_AI_target_time. Same
-// callee, three sites, two different answers - only the budget
-// arithmetic explains that.
+// Dreamcast lines 4163, 4187, 4195, and 4197 positively recover the
+// can_shoot, searchArray::get_hex, vector::clear, and vector::push_back
+// boundaries. The former flagform twin plus raw cellData and erase/insert
+// spellings were score-local duplicates, not source facts.
 //
-// AND THE DIVISOR IS SPELLED, not assumed. cb(get_second_grid_index)
-// measures at exactly 41 (`homm3 vc6 predict-inline --measure-cb`, 24
-// of 64 harness sites expanded) - ONE over the 40-unit free threshold,
-// so it is budget-visible by a single unit - and cb(get_controller) at
-// 48-50 is charged against the same divided budget just before it.
-// With `armies.push_back(other)` the caller carries 7 candidate sites
-// and 1000/7 clears the pair; `armies.insert(armies.end(), other)` is
-// the SAME call (VC6's push_back is `insert(end(), _X)`) with 8, and
-// 1000/8 does not - 87.30% -> 92.52%, the accessor flipping to a call
-// on that one site. The mainmenu ledger's "+1 candidate site" lever,
-// arriving here as a divisor rather than a charge.
-//
-// The distance is EITHER the straight hex distance or the search
-// array's own cost, which is why the else-arm seeds the array first.
-// The cost read spells getCellData's two-return form by hand rather
-// than calling it: the accessor lives in findpath.obj and cannot be
-// inlined across the TU. The NULL ARM IS WRITTEN FIRST
-// (`cellData == 0 ? 0 : &cellData[hex]`): that orientation puts
-// `xor eax,eax` ahead of the lea chain as retail has it and is worth
-// 3.1 points over the positive spelling.
-//
-// `best` IS DECLARED AFTER THE PREDICATE, and that is a measurement,
-// not a style: declared before it, C2 finds a third use for the
-// constant zero, hoists it into a callee-saved register and rewrites
-// every `test eax,eax` in the can_shoot expansion as `cmp <mem>,esi`
-// (83.15% against 87.06%). Declaring `other` at the top is the other
-// half - it takes the -0x8 slot retail gives it and pushes the trip
-// counter into the incoming parameter slot, where retail keeps it.
-//
-// Residual (92.52%): ONE register binding, and its consequences.
-// Retail keeps `this` in ebx and HOMES `best` in [ebp-0xc] (reusing
-// that slot for the erase's dead end() temp); our C2 promotes `best`
-// to ebx and shares esi between `this` and `value`, reloading `this`
-// from its spill after each value dies. Everything else is paired -
-// same order, same operands, same branch polarity - and why-reg
-// agrees: 53 masked slots, ALL of them B1 binding (esi->ebx x17,
-// ebx->edx x2), zero schedule divergence. Its own guided search
-// reaches it only with `volatile long best`, which is not a spelling.
-// Register-homing family, not source-addressable. Tried and rejected:
-// swapped compare operands (92.25), `!empty()` for `size() > 0`
-// (92.18), `best = value` before the insert (87.19), `int` for `long`
-// best (byte-identical), naming the melee arm's hex (byte-identical),
-// declaring `value`/`best` at the top with the assignment left where
-// it is (byte-identical).
-// The flag-tail twin (declared beside can_shoot in army.h): ONLY
-// get_berserk_targets calls it. Its retail expansion here matches the
-// flag-tail body while can_shoot's own COMDAT and every other consumer
-// match the &&-return tail; one inline cannot carry both decisions
-// (measured: && tail alone = 92.52 -> 23.73 here; a fastcall static
-// twin does not reproduce the member expansion either).
-inline unsigned char army::can_shoot_flagform(const army* excluded) const
-{
-    if (creatureType == ARMY_CREATURE_BALLISTA
-        || creatureType == ARMY_CREATURE_ARROW_TOWER)
-        return 1;
-    if (!(Is(1u << 2)) || shotsLeft <= 0)
-        return 0;
-    hero* controller = get_controller();
-    int bCanShoot = 1;
-    if (!controller
-        || !controller->IsWieldingArtifact(ARTIFACT_BOW_OF_THE_SHARPSHOOTER)) {
-        if (gpCombatManager->enemy_is_adjacent(this, gridIndex, excluded)) {
-            bCanShoot = 0;
-        } else if (creatureId & 1) {
-            if (gpCombatManager->enemy_is_adjacent(
-                    this, get_second_grid_index(), excluded))
-                bCanShoot = 0;
-        }
-    }
-    if (bCanShoot && forgetfulnessRounds && forgetfulnessLevel >= 2)
-        bCanShoot = 0;
-    return static_cast<unsigned char>(bCanShoot);
-}
-
+// Restoring the complete chain initially exposed the expected inliner-state
+// dip. Carrying it through enemy_is_adjacent -> get_second_grid_index ->
+// Is(1) returns this function to 92.5170% with the full retail 42-block
+// count and exact 27-branch/one-return symbolic sequence. The residual is
+// instruction/register placement, not a missing helper or CFG edge.
+// Removing the artificial twin also currently leaves OffsetToFront's army
+// COMDAT un-emitted; its exact historical row is banked until a real rejected
+// caller/header state is restored. Do not reintroduce the twin to recover it.
 VA(0x00445490, 0x23B)  // anchor-global, dc 0x4a348
 void army::get_berserk_targets(std::vector<army*>& armies) const
 {
     unsigned char canShoot;
     army* other;
-    if (can_shoot_flagform(0)) {
+    // Dreamcast line 4163 positively identifies the shared can_shoot
+    // boundary. The former flagform twin duplicated this helper solely to
+    // protect an isolated score plateau and was not an original function.
+    if (can_shoot(0)) {
         canShoot = 1;
     } else {
         canShoot = 0;
@@ -5221,16 +5145,13 @@ void army::get_berserk_targets(std::vector<army*>& armies) const
             } else {
                 if (!gpCombatManager->cells[other->gridIndex].field_4a)
                     continue;
-                pathCell* cell = gpSearchArray->cellData == 0
-                                     ? 0
-                                     : &gpSearchArray->cellData[other->gridIndex];
-                value = cell->cost;
+                value = gpSearchArray->get_hex(other->gridIndex)->cost;
             }
             if (armies.size() > 0 && value > best)
                 continue;
             if (value < best)
-                armies.erase(armies.begin(), armies.end());
-            armies.insert(armies.end(), other);
+                armies.clear();
+            armies.push_back(other);
             best = value;
         }
     }
@@ -6053,7 +5974,7 @@ int army::FrontX() const
 VA(0x004466a0, 0x1E)  // anchor-callee, dc 0x4b354
 int army::get_second_grid_index() const
 {
-    if (!(creatureId & 1))
+    if (!Is(1u))
         return gridIndex;
     return gridIndex + OffsetToFront(-1);
 }

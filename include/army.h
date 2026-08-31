@@ -1252,7 +1252,6 @@ public:
     unsigned char can_cast_spell(long hex) const;
     bool can_retaliate(const army& attacker) const;
     unsigned char can_shoot(const army* excluded) const;
-    unsigned char can_shoot_flagform(const army* excluded) const;
     void cast_caliph_spell(long hex);
     void cast_resurrect(long hex);
     void cast_demonic_resurrect(long hex);
@@ -1896,11 +1895,6 @@ public:
     // ai_tactical can call them (the retail callsites are the
     // location evidence for get_average_damage's own claim).
     unsigned char can_shoot(const army* excluded) const;        // 0x4428f0
-    // Compile-shaping twin for get_berserk_targets ONLY (defined inline
-    // in army.cpp): identical semantics to can_shoot, spelled with the
-    // flag tail that site's retail expansion carries, while can_shoot
-    // itself carries the &&-return tail its out-of-line copy needs.
-    unsigned char can_shoot_flagform(const army* excluded) const;
     // 0x4473d0 / 0x4476c0, carcasses in army.cpp; declared here because
     // combatManager::GetCommand (command.obj) is a caller of both.
     // Both const (?can_cast_resurrect@army@@QBA_NJ@Z,

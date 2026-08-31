@@ -544,8 +544,6 @@ call	army.obj	0x477e8	army::Is
 call	army.obj	0x477e8	army::OffsetToFront
 call	army.obj	0x47a14	max
 call	army.obj	0x47af8	army::get_total_hit_points
-call	army.obj	0x47c74	army::Is
-call	army.obj	0x47c74	army::get_second_grid_index
 call	army.obj	0x47cf4	army::can_shoot
 call	army.obj	0x47cf4	army::get_attack_modifier
 call	army.obj	0x47cf4	army::get_average_damage
@@ -576,8 +574,6 @@ call	army.obj	0x49748	army::remove_aura
 call	army.obj	0x499e8	army::adjust_hitpoints
 call	army.obj	0x499e8	combatManager::get_current_army
 call	army.obj	0x499e8	min
-call	army.obj	0x4a348	army::can_shoot
-call	army.obj	0x4a348	searchArray::get_hex
 call	army.obj	0x4a598	army::Is
 call	army.obj	0x4a598	army::OffsetToFront
 call	army.obj	0x4a610	army::Is
@@ -598,7 +594,6 @@ call	army.obj	0x4aacc	combatManager::ScrollTo
 call	army.obj	0x4aacc	combatManager::UpdateCombatArea
 call	army.obj	0x4b070	army::adjust_hitpoints
 call	army.obj	0x4b1a8	army::Is
-call	army.obj	0x4b354	army::Is
 call	army.obj	0x4b398	army::Is
 call	army.obj	0x4b398	army::get_second_grid_index
 call	army.obj	0x4b454	army::Is

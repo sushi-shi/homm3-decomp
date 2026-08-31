@@ -437,7 +437,6 @@ army	?InitClean@army@@QAEXXZ	92.6261	92.6261	92.6261	0x3d5c0
 army	?LoadResources@army@@QAEXXZ	98.6225	98.6225	98.6225	0x3d9f0
 army	?MidX@army@@QBEHXZ	100.0000	100.0000	100.0000	0x46660
 army	?MidY@army@@QBEHXZ	100.0000	100.0000	100.0000	0x46630
-army	?OffsetToFront@army@@QBEHH@Z	100.0000	100.0000	100.0000	0x45cd0
 army	?PlayAnimation@army@@QAEXHHH@Z	100.0000	100.0000	100.0000	0x46940
 army	?ProcessDeath@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x44120
 army	?ResetRound@army@@QAEXXZ	100.0000	100.0000	100.0000	0x47120
@@ -452,7 +451,7 @@ army	?WalkTo@army@@QAEEHE@Z	93.3162	93.3162	93.3162	0x41fa0
 army	?add_aura@army@@QAEXXZ	100.0000	100.0000	100.0000	0x3ea70
 army	?adjust_damage@army@@QBEJPAV1@JEEJPAJ@Z	100.0000	100.0000	100.0000	0x43f40
 army	?animate_missile@army@@AAEXPAV1@@Z	93.1695	93.1695	93.1695	0x3f2c0
-army	?attack_hex@army@@QAEEHE@Z	83.8632	94.0790	94.0790	0x45a60
+army	?attack_hex@army@@QAEEHE@Z	92.1737	94.0790	94.0790	0x45a60
 army	?attack_wall@army@@AAEXW4TWallTargetId@@ABUtype_ballistics_traits@@@Z	100.0000	100.0000	100.0000	0x45ec0
 army	?attack_wall@army@@AAEXW4TWallTargetId@@J@Z	91.4600	91.4600	91.4600	0x45fd0
 army	?can_cast_resurrect@army@@QBE_NJ@Z	100.0000	100.0000	100.0000	0x473d0
@@ -479,7 +478,7 @@ army	?get_attack_direction@army@@QBEJJPBV1@J@Z	100.0000	100.0000	100.0000	0x4584
 army	?get_attack_modifier@army@@QBEJPBV1@E@Z	100.0000	100.0000	100.0000	0x42550
 army	?get_average_damage@army@@QBEJPBV1@EJEJ@Z	100.0000	100.0000	100.0000	0x42780
 army	?get_average_damage@army@@QBENXZ	100.0000	100.0000	100.0000	0x426f0
-army	?get_berserk_targets@army@@QBEXAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	86.3580	92.5170	92.5170	0x45490
+army	?get_berserk_targets@army@@QBEXAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	92.5170	92.5170	92.5170	0x45490
 army	?get_controller@army@@QBEPAVhero@@XZ	100.0000	100.0000	100.0000	0x42690
 army	?get_controlling_side@army@@QBEHXZ	100.0000	100.0000	100.0000	0x40140
 army	?get_defense_modifier@army@@QBEJXZ	100.0000	100.0000	100.0000	0x42660
@@ -510,6 +509,7 @@ army	?set_inside_area_effect@army@@QAEEE@Z	100.0000	100.0000	100.0000	0x3efe0
 army	?simple_move@army@@AAEEHE@Z	100.0000	100.0000	100.0000	0x45950
 army	?spell_is_valid_on_target@@YIEHPBVarmy@@@Z	86.3747	92.6970	92.6970	0x47a80
 army	?stop_sample@army@@QAEXW4TSampleID@1@@Z	100.0000	100.0000	100.0000	0x3d580
+army	army_OffsetToFront	0.0000	100.0000	100.0000	0x45cd0
 armygrp	??0TSplitWindow@@QAE@HHW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x49790
 armygrp	??0armyGroup@@QAE@W4TCreatureType@@H@Z	100.0000	100.0000	100.0000	0x4aaa0
 armygrp	??0armyGroup@@QAE@XZ	100.0000	100.0000	100.0000	0x4aa80
