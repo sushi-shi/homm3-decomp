@@ -1421,14 +1421,10 @@ call	mapcell.obj	0xeb6a4	game::GetTeam
 call	mapcell.obj	0xeb7d0	NewSMapHeader::readString
 call	mapcell.obj	0xebf98	CObject::get_trigger
 call	mapcell.obj	0xebf98	game::get_cell
-call	mapcell.obj	0xec098	type_obscuring_object::get_obscured_object
 call	mapcell.obj	0xec114	game::GetBoat
 call	mapcell.obj	0xec114	type_obscuring_object::get_obscured_extra_info
 call	mapcell.obj	0xec1c8	game::GetBoat
 call	mapcell.obj	0xec1c8	type_obscuring_object::get_obscured_trigger
-call	mapcell.obj	0xec254	CObject::get_type
-call	mapcell.obj	0xec254	NewmapCell::TObjectCell::get_object
-call	mapcell.obj	0xec254	NewmapCell::get_map_object
 call	mapcell.obj	0xec3b4	CObject::get_object_type_ptr
 call	mapcell.obj	0xec3b4	NewmapCell::TObjectCell::get_object
 call	mapcell.obj	0xec3b4	type_obscuring_object::get_obscured_object

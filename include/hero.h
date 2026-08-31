@@ -185,6 +185,14 @@ struct type_obscuring_object {
 
     type_obscuring_object();
     void initialize();
+    // E:\gamedcs\Hero.h:150. Dreamcast retains an out-of-line copy, while
+    // retail expands the validity test at every admitted Windows caller.
+    TAdventureObjectType get_obscured_object() const
+    {
+        if (valid)
+            return obscuredType;
+        return NOTHING;
+    }
     // Dreamcast proves this Hero.h helper boundary. Retail SetupHeroView
     // folds it to the same three field tests; keep the call in source so
     // an exact lowering cannot erase the attested source shape again.

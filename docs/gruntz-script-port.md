@@ -260,6 +260,41 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-31 — the Dreamcast helper chain closes
+  `NewmapCell::get_map_object`, `NewmapCell::is_diggable`, and the existing
+  `NewfullMap::CalculateCellExtra` caller byte-exact.**
+  `get_map_object` had plateaued at **93.4848%** with direct `valid` and
+  `obscuredType` field reads. Its dossier instead proves two scoped locals,
+  `current_hero` and `current_boat`, whose arms call the Hero.h inline
+  `type_obscuring_object::get_obscured_object`. That helper's own line table
+  proves a validity guard, a scoped `return obscuredType`, and a separate
+  `return NOTHING`; it is not a ternary. Restoring both boundaries produces
+  all **92 / 92 bytes** and **11 / 11 blocks** of `get_map_object` exactly.
+
+  `is_diggable` had independently plateaued at **96.1585%** because the two
+  invalid obscurer arms bypassed retail's shared `NOTHING` block. Dreamcast
+  proves separate terrain/passability guards, the `object_type` local calling
+  `get_map_object`, a `long i` loop, and the nested
+  `TObjectCell::get_object()->CObject::get_type()` chain. Retail corroborates
+  every expanded operation. With that complete shape and the guarded-return
+  helper above, the caller gains the missing join and reaches all **208 / 208
+  bytes** and **23 / 23 blocks** exactly. The Windows source-order slot for
+  `TObjectCell::get_object` is twelve NOP bytes, so its real same-TU body is
+  retained as inline-only rather than inventing a retail claim.
+
+  The corrected expansion also removes `CalculateCellExtra`'s former
+  **93.6598%** register/CFG residual without touching that body: all **264 / 264
+  bytes** and **23 / 23 blocks** now agree. This spillover is the third exact
+  checkpoint raised by the change and confirms that the helper boundary, not
+  caller-local scheduling, was the common cause.
+
+  The asymmetric gate now generically audits provenance-marked no-call header
+  helpers when they carry a source contract. New rules and negative controls
+  reject the ternary, direct field reads, combined guards, flattened object
+  pools, an unsigned loop counter, reordered hero/boat arms, or removal of any
+  helper boundary. The live ratchet retired four former backlog rows: the
+  nested obscurer edge and all three `is_diggable` helper edges.
+
 - **2026-08-31 — `CNetPlayerHandler::SetNextPlayer` closes byte-exact by
   restoring Dreamcast's `IsHuman()` scan instead of flattening it into a raw
   `dpid` loop.** The dossier proves the `i`, `start`, and `pPlayer` locals,

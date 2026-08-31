@@ -349,14 +349,16 @@ int TTownEvent::Load(void* infile)
     // @stub
 }
 
-// E:\gamedcs\mapcell.cpp:354
-DC_ONLY(0xebf6c, 0x2C)
-CObject* NewmapCell::TObjectCell::get_object()
-{
-    // @stub
-}
-
 #endif  // @carcass
+
+// E:\gamedcs\mapcell.cpp:354
+// Dreamcast retains an out-of-line copy. Retail's corresponding source-order
+// slot is twelve bytes of NOP padding, while is_diggable contains this exact
+// vector lookup expanded in place, so the Windows helper is inline-only.
+inline CObject* NewmapCell::TObjectCell::get_object()
+{
+    return &gpGame->worldMap.objects[objectIndex];
+}
 
 // The destructor remains implicit in C++. mapcell.obj already emits the real
 // ??1TreasureData COFF public, first among the byte-identical one-string
@@ -446,35 +448,22 @@ NewmapCell* NewmapCell::get_trigger_cell()
 #endif  // @carcass
 
 // E:\gamedcs\mapcell.cpp:387
-// Residual (93.4849%): the hero arm and ten of eleven CFG blocks are exact.
-// In the boat arm retail completes `extraInfo * 5` before loading gpGame;
-// this VC6 compile loads gpGame between the index load and LEA. A named index,
-// direct vector reference, and the equivalent `begin() + index` GetBoat body
-// are byte-identical (measured 2026-08-13): a caller-saved scheduling cap.
+// Exact only with the nested Dreamcast Hero.h helper boundary. Flattening
+// get_obscured_object into valid/obscuredType field reads schedules the boat
+// index after the gpGame load and leaves this body at 93.4848%.
 VA(0x004fcbd0, 0x5C)  // anchor-global, dc 0xec098
 TAdventureObjectType NewmapCell::get_map_object()
 {
     if (type == HERO) {
         hero* current_hero = gpGame->GetHero(extraInfo);
-        if (current_hero->valid)
-            return current_hero->obscuredType;
-        return NOTHING;
+        return current_hero->get_obscured_object();
     }
     if (type == BOAT) {
         boat* current_boat = gpGame->GetBoat(extraInfo);
-        if (current_boat->valid)
-            return current_boat->obscuredType;
-        return NOTHING;
+        return current_boat->get_obscured_object();
     }
     return type;
 }
-// Residual (93.48%): retail forms the boat index in EAX/EDX before loading
-// gpGame, while this VC6 SP3 compile keeps it in ECX until after that load.
-// Tried and rejected: a named signed/unsigned index local, separate
-// declaration/assignment, explicit int conversion, commuted pointer addition,
-// direct canonical `gpGame->boats[extraInfo]`, and spelling GetBoat through
-// vector::begin. The shared type_obscuring_object tail is expressed by the
-// canonical inheritance edge and preserves this residual.
 
 // E:\gamedcs\mapcell.cpp:404
 VA(0x004fcc30, 0x4D)  // anchor-global, dc 0xec114
@@ -503,42 +492,28 @@ unsigned char NewmapCell::cell_is_trigger()
 }
 
 // E:\gamedcs\mapcell.cpp:436
-// A diggable cell is passable non-Water/non-Rock ground whose visible object
-// resolves (through a hero or boat's obscuring record) to NOTHING or the
-// HOLY_GRAIL marker. ANCHOR_POINT cells additionally scan every layered map
-// object and reject TERRAIN_HOLE overlays. The source shape below gives
-// retail's exact 14-branch/two-return graph.
-// Residual (96.16%): the two obscurer false arms are optimizer-folded directly
-// to the final success tail; retail first materializes NOTHING in EAX and runs
-// it through the shared object-type tests. Explicit if/else assignments, the
-// equivalent get_map_object() call, and ternary assignments all emit the same
-// closest folding under VC6 SP3.
+// Dreamcast line/scope evidence keeps the terrain and passability guards as
+// separate statements, resolves the visible type through get_map_object, and
+// walks anchor overlays through TObjectCell::get_object and CObject::get_type.
+// Retail independently corroborates every expanded helper operation. The
+// guarded-return body of get_obscured_object is load-bearing here: a ternary
+// erases the shared NOTHING block and leaves this body at 96.1585%, while the
+// attested guard produces all 208 bytes and all 23 blocks exactly.
 VA(0x004fccf0, 0xD0)  // anchor-global, dc 0xec254
 unsigned char NewmapCell::is_diggable()
 {
-    if (GroundSet == eTerrainWater || GroundSet == eTerrainRock
-        || !(flags_00_11 & 0x40))
+    if (GroundSet == eTerrainWater || GroundSet == eTerrainRock)
+        return 0;
+    if (!(flags_00_11 & 0x40))
         return 0;
 
-    TAdventureObjectType objectType = type;
-    if (objectType == HERO) {
-        hero* obscurer = gpGame->GetHero(extraInfo);
-        objectType = obscurer->valid
-            ? obscurer->obscuredType : NOTHING;
-    } else if (objectType == BOAT) {
-        boat* obscurer = gpGame->GetBoat(extraInfo);
-        objectType = obscurer->valid ? obscurer->obscuredType : NOTHING;
-    }
-    if (objectType != ANCHOR_POINT) {
-        if (objectType != HOLY_GRAIL && objectType != NOTHING)
+    TAdventureObjectType object_type = get_map_object();
+    if (object_type != ANCHOR_POINT) {
+        if (object_type != HOLY_GRAIL && object_type != NOTHING)
             return 0;
     } else {
-        for (unsigned int i = 0; i < objects.size(); ++i) {
-            CObject& object =
-                gpGame->worldMap.objects[objects[i].objectIndex];
-            CObjectType& objectType =
-                gpGame->worldMap.objectTypes[object.typeIndex];
-            if (objectType.objectType == TERRAIN_HOLE)
+        for (long i = 0; i < objects.size(); ++i) {
+            if (objects[i].get_object()->get_type() == TERRAIN_HOLE)
                 return 0;
         }
     }
@@ -5670,11 +5645,8 @@ void NewfullMap::calc_cell_extra(NewmapCell* thisCell, unsigned char bSetExtraIn
 // E:\gamedcs\mapcell.cpp:4310
 // Retail temporarily restores a hero or boat, recalculates the underlying
 // cell, then re-obscures it; EVENT cells are deliberately left untouched.
-// Residual (93.6598%): the restore/recalculate/re-obscure tail and 14 of 23
-// blocks are exact. Inlining get_map_object duplicates its hero/boat validity
-// test, while spelling the common transient pointer directly reproduces the
-// target CFG but displaces the persistent hero/boat registers (84.28%). A
-// named helper result is byte-inert; the natural helper spelling is the cap.
+// The restored nested get_obscured_object boundary makes get_map_object's
+// expansion exact here too: all 264 bytes and all 23 blocks now agree.
 VA(0x00505a10, 0x108)  // order-map: calls obscure_cell 0x4d75d0 + restore_cell 0x4d76e0 + calc_cell_extra 0x505610 (DC-isomorphic); callers incl. PlaceObject/EraseObj/ConvertObject, dc 0xf42f0
 void NewfullMap::CalculateCellExtra(NewmapCell* thisCell, unsigned char bSetExtraInfo)
 {
@@ -6096,19 +6068,12 @@ void MonsterData::MonsterData()
     // @stub
 }
 
-// E:\gamedcs\MapCell.h:1269
-DC_ONLY(0xf4a78, 0x24)
-TAdventureObjectType CObject::get_type()
-{
-    // @stub
-}
+// CObject::get_type (dc 0xf4a78) moved to its original inline definition in
+// include/advmgr_objects.h; retail emits no out-of-line copy.
 
-// E:\gamedcs\Hero.h:150
-DC_ONLY(0xf4a9c, 0x1E)
-TAdventureObjectType type_obscuring_object::get_obscured_object()
-{
-    // @stub
-}
+// type_obscuring_object::get_obscured_object (dc 0xf4a9c) moved to its
+// original inline definition in include/hero.h; retail emits no out-of-line
+// copy.
 
 // E:\gamedcs\Hero.h:167
 DC_ONLY(0xf4abc, 0x32)

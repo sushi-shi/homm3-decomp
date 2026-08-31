@@ -2423,6 +2423,61 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"if\s*\(\s*Is\s*\(\s*1u\s*<<\s*0\s*\)\s*&&\s*turn\s*\)"
             r"\s*destIndex\s*\+=\s*OffsetToFront\s*\(\s*-1\s*\)\s*;"),
     ),
+    ("mapcell.obj", 0xEBF6C): (
+        SourceRule(
+            "TObjectCell::get_object keeps Dreamcast's vector subscript "
+            "helper body instead of a flattened object-pool address",
+            r"\A\s*return\s+&\s*gpGame\s*->\s*worldMap\s*\.\s*objects"
+            r"\s*\[\s*objectIndex\s*\]\s*;\s*\Z"),
+    ),
+    ("mapcell.obj", 0xEC098): (
+        SourceRule(
+            "NewmapCell::get_map_object keeps Dreamcast's scoped hero and "
+            "boat locals, GetHero/GetBoat calls and nested "
+            "get_obscured_object helper boundaries",
+            r"\A\s*if\s*\(\s*type\s*==\s*HERO\s*\)\s*\{\s*"
+            r"hero\s*\*\s*current_hero\s*=\s*gpGame\s*->\s*GetHero"
+            r"\s*\(\s*extraInfo\s*\)\s*;\s*return\s+current_hero\s*->\s*"
+            r"get_obscured_object\s*\(\s*\)\s*;\s*\}\s*"
+            r"if\s*\(\s*type\s*==\s*BOAT\s*\)\s*\{\s*"
+            r"boat\s*\*\s*current_boat\s*=\s*gpGame\s*->\s*GetBoat"
+            r"\s*\(\s*extraInfo\s*\)\s*;\s*return\s+current_boat\s*->\s*"
+            r"get_obscured_object\s*\(\s*\)\s*;\s*\}\s*"
+            r"return\s+type\s*;\s*\Z"),
+    ),
+    ("mapcell.obj", 0xEC254): (
+        SourceRule(
+            "NewmapCell::is_diggable keeps Dreamcast's terrain and "
+            "passability guards as separate statements",
+            r"\A\s*if\s*\(\s*GroundSet\s*==\s*eTerrainWater\s*\|\|\s*"
+            r"GroundSet\s*==\s*eTerrainRock\s*\)\s*return\s+0\s*;\s*"
+            r"if\s*\(\s*!\s*\(\s*flags_00_11\s*&\s*0x40\s*\)\s*\)"
+            r"\s*return\s+0\s*;"),
+        SourceRule(
+            "NewmapCell::is_diggable keeps the object_type local and "
+            "get_map_object boundary before the three shared type tests",
+            r"TAdventureObjectType\s+object_type\s*=\s*get_map_object"
+            r"\s*\(\s*\)\s*;\s*if\s*\(\s*object_type\s*!=\s*"
+            r"ANCHOR_POINT\s*\)\s*\{\s*if\s*\(\s*object_type\s*!=\s*"
+            r"HOLY_GRAIL\s*&&\s*object_type\s*!=\s*NOTHING\s*\)\s*"
+            r"return\s+0\s*;\s*\}\s*else\s*\{"),
+        SourceRule(
+            "NewmapCell::is_diggable keeps Dreamcast's long i anchor loop "
+            "and the TObjectCell::get_object/CObject::get_type chain",
+            r"for\s*\(\s*long\s+i\s*=\s*0\s*;\s*i\s*<\s*objects\s*\.\s*"
+            r"size\s*\(\s*\)\s*;\s*\+\+\s*i\s*\)\s*\{\s*if\s*\(\s*"
+            r"objects\s*\[\s*i\s*\]\s*\.\s*get_object\s*\(\s*\)"
+            r"\s*->\s*get_type\s*\(\s*\)\s*==\s*TERRAIN_HOLE\s*\)"
+            r"\s*return\s+0\s*;\s*\}\s*\}\s*return\s+1\s*;\s*\Z"),
+    ),
+    ("mapcell.obj", 0xF4A9C): (
+        SourceRule(
+            "type_obscuring_object::get_obscured_object keeps Dreamcast's "
+            "guarded obscuredType return followed by the separate NOTHING "
+            "return; flattening it changes nested Windows inlining",
+            r"\A\s*if\s*\(\s*valid\s*\)\s*return\s+obscuredType\s*;\s*"
+            r"return\s+NOTHING\s*;\s*\Z"),
+    ),
     ("mapcell.obj", 0xF2C20): (
         SourceRule(
             "readMapObjects keeps retail's Complete-only nullary object-"
@@ -6993,6 +7048,99 @@ for (spell = 10; spell < 70; spell++) {
         "count = get_valid_caliph_spells(target);")
     if not contract_violations(reordered_cast_caliph, cast_caliph_key):
         failures.append("reordered cast_caliph_spell helper call passed")
+    obscured_object_key = ("mapcell.obj", 0xF4A9C)
+    obscured_object_probe = """\
+if (valid)
+    return obscuredType;
+return NOTHING;
+"""
+    if contract_violations(obscured_object_probe, obscured_object_key):
+        failures.append(
+            "aligned get_obscured_object guarded-return shape did not pass")
+    flattened_obscured_object = "return valid ? obscuredType : NOTHING;\n"
+    if not contract_violations(flattened_obscured_object,
+                               obscured_object_key):
+        failures.append(
+            "flattened get_obscured_object guarded-return shape passed")
+    object_cell_key = ("mapcell.obj", 0xEBF6C)
+    object_cell_probe = "return &gpGame->worldMap.objects[objectIndex];\n"
+    if contract_violations(object_cell_probe, object_cell_key):
+        failures.append("aligned TObjectCell::get_object body did not pass")
+    flattened_object_cell = (
+        "return gpGame->worldMap.objects.begin() + objectIndex;\n")
+    if not contract_violations(flattened_object_cell, object_cell_key):
+        failures.append("flattened TObjectCell::get_object body passed")
+    get_map_object_key = ("mapcell.obj", 0xEC098)
+    get_map_object_probe = """\
+if (type == HERO) {
+    hero* current_hero = gpGame->GetHero(extraInfo);
+    return current_hero->get_obscured_object();
+}
+if (type == BOAT) {
+    boat* current_boat = gpGame->GetBoat(extraInfo);
+    return current_boat->get_obscured_object();
+}
+return type;
+"""
+    if contract_violations(get_map_object_probe, get_map_object_key):
+        failures.append("aligned get_map_object helper shape did not pass")
+    flattened_get_map_object = get_map_object_probe.replace(
+        "return current_hero->get_obscured_object();",
+        "return current_hero->valid ? current_hero->obscuredType : NOTHING;")
+    if not contract_violations(flattened_get_map_object,
+                               get_map_object_key):
+        failures.append("flattened get_map_object obscurer helper passed")
+    reordered_get_map_object = get_map_object_probe.replace(
+        "if (type == HERO)", "if (type == HERO_PLACEHOLDER)").replace(
+            "if (type == BOAT)", "if (type == HERO)").replace(
+            "if (type == HERO_PLACEHOLDER)", "if (type == BOAT)")
+    if not contract_violations(reordered_get_map_object,
+                               get_map_object_key):
+        failures.append("reordered get_map_object hero/boat arms passed")
+    is_diggable_key = ("mapcell.obj", 0xEC254)
+    is_diggable_probe = """\
+if (GroundSet == eTerrainWater || GroundSet == eTerrainRock)
+    return 0;
+if (!(flags_00_11 & 0x40))
+    return 0;
+
+TAdventureObjectType object_type = get_map_object();
+if (object_type != ANCHOR_POINT) {
+    if (object_type != HOLY_GRAIL && object_type != NOTHING)
+        return 0;
+} else {
+    for (long i = 0; i < objects.size(); ++i) {
+        if (objects[i].get_object()->get_type() == TERRAIN_HOLE)
+            return 0;
+    }
+}
+return 1;
+"""
+    if contract_violations(is_diggable_probe, is_diggable_key):
+        failures.append("aligned is_diggable source shape did not pass")
+    combined_diggable_guards = is_diggable_probe.replace(
+        "if (GroundSet == eTerrainWater || GroundSet == eTerrainRock)\n"
+        "    return 0;\nif (!(flags_00_11 & 0x40))",
+        "if (GroundSet == eTerrainWater || GroundSet == eTerrainRock\n"
+        "    || !(flags_00_11 & 0x40))")
+    flattened_diggable_type = is_diggable_probe.replace(
+        "TAdventureObjectType object_type = get_map_object();",
+        "TAdventureObjectType object_type = type;")
+    unsigned_diggable_loop = is_diggable_probe.replace(
+        "for (long i = 0;", "for (unsigned int i = 0;")
+    flattened_diggable_chain = is_diggable_probe.replace(
+        "objects[i].get_object()->get_type()",
+        "gpGame->worldMap.objectTypes[gpGame->worldMap.objects["
+        "objects[i].objectIndex].typeIndex].objectType")
+    broken_diggable_probes = (
+        combined_diggable_guards,
+        flattened_diggable_type,
+        unsigned_diggable_loop,
+        flattened_diggable_chain,
+    )
+    if any(not contract_violations(probe, is_diggable_key)
+           for probe in broken_diggable_probes):
+        failures.append("broken is_diggable Dreamcast source shape passed")
     read_map_objects_key = ("mapcell.obj", 0xF2C20)
     read_map_objects_probe = """\
 for (int i = 0; i < objectTypes.size(); ++i) {
@@ -9923,8 +10071,8 @@ def scan() -> tuple[
         rva = claim.va - common.IMAGE_BASE
         identity = current.get(rva)
         key = claim.module, claim.dc_offset
-        refs = calls.get(key)
-        if identity is None or not refs:
+        refs = calls.get(key, [])
+        if identity is None or not refs and key not in SOURCE_RULES:
             continue
         seen_keys.add(key)
         if claim.path not in cache:
@@ -10003,7 +10151,8 @@ def scan() -> tuple[
     provenance_rows: dict[tuple[str, str, int], list[dict[str, str]]] = {}
     for row in corpus.functions:
         key = corpus.key(row)
-        if key in seen_keys or key not in calls:
+        if key in seen_keys \
+                or key not in calls and key not in SOURCE_RULES:
             continue
         source = row.get("file", "").replace("/", "\\").lower()
         provenance_rows.setdefault(
@@ -10035,7 +10184,7 @@ def scan() -> tuple[
                 audited.add(_dc_audit_scope(key))
                 definition = definitions[0]
                 body = text[definition.body_open + 1:definition.body_close]
-                refs = calls[key]
+                refs = calls.get(key, [])
                 preliminary = missing_from_body(
                     body, [ref.name for ref in refs], key)
                 names = attested(key, refs) if preliminary else set()
@@ -10245,7 +10394,7 @@ def scan() -> tuple[
     header_rows: dict[tuple[str, int], list[dict[str, str]]] = {}
     for row in corpus.functions:
         key = corpus.key(row)
-        if key not in calls:
+        if key not in calls and key not in SOURCE_RULES:
             continue
         source = row.get("file", "").replace("/", "\\").lower()
         header_rows.setdefault((source, int(row["line"])), []).append(row)
@@ -10271,12 +10420,12 @@ def scan() -> tuple[
                 if key in seen_rows:
                     continue
                 seen_rows.add(key)
-                refs = calls[key]
+                refs = calls.get(key, [])
                 names = attested(key, refs)
                 enforced = [(callee, helper)
                             for callee in names
                             if (helper := _helper_token(callee)) is not None]
-                if not enforced:
+                if not enforced and key not in SOURCE_RULES:
                     continue
                 checked += 1
                 audited.add(_dc_audit_scope(key))

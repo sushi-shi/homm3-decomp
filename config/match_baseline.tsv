@@ -1126,7 +1126,7 @@ events	?DoAIEvent@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@@Z	100.00
 # synth PDB - returned the row to master's own 98.5741 to the digit
 # with events.cpp untouched. Cross-generation noise, the
 # recruit::Update revert-control precedent; hist keeps 99.1139.
-events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	99.0481	99.0481	99.1139	0xad470
+events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	98.5741	99.0481	99.1139	0xad470
 events	?DoCustomArtifact@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	99.1492	99.1492	99.1492	0x9f070
 events	?DoCustomResource@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa4780
 events	?DoCustomSpellScroll@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	97.4451	97.4451	97.4451	0xa5a80
@@ -1886,7 +1886,7 @@ mapcell	??4TTimedEvent@@QAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0x10a700
 mapcell	??4TTownEvent@@QAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0x10a880
 mapcell	??_ENewmapCell@@QAEPAXI@Z	100.0000	100.0000	100.0000	0xfd460
 mapcell	??_F?$vector@VCObjectType@@V?$allocator@VCObjectType@@@std@@@std@@QAEXXZ	100.0000	100.0000	100.0000	0xfd1c0
-mapcell	?CalculateCellExtra@NewfullMap@@QAEXPAVNewmapCell@@E@Z	93.6598	93.6598	93.6598	0x105a10
+mapcell	?CalculateCellExtra@NewfullMap@@QAEXPAVNewmapCell@@E@Z	100.0000	100.0000	100.0000	0x105a10
 mapcell	?FindTrigger@CObject@@QAEXPAH0@Z	100.0000	100.0000	100.0000	0xfec30
 mapcell	?GenerateHeightMap@NewfullMap@@QAEXPBVCObject@@QAY05C@Z	96.7484	96.7484	96.7484	0x105060
 mapcell	?HasTriggerableEvent@NewmapCell@@QAE?BEXZ	100.0000	100.0000	100.0000	0xfcdc0
@@ -1945,7 +1945,7 @@ mapcell	?erase@?$vector@VTreasureData@@V?$allocator@VTreasureData@@@std@@@std@@Q
 mapcell	?erase@?$vector@Vgenerator@@V?$allocator@Vgenerator@@@std@@@std@@QAEPAVgenerator@@PAV3@0@Z	100.0000	100.0000	100.0000	0x108860
 mapcell	?get_magic_terrain_type@NewmapCell@@QAEHXZ	100.0000	100.0000	100.0000	0xfcf40
 mapcell	?get_map_extraInfo@NewmapCell@@QAEKXZ	100.0000	100.0000	100.0000	0xfcc30
-mapcell	?get_map_object@NewmapCell@@QAE?AW4TAdventureObjectType@@XZ	93.4848	93.4848	93.4848	0xfcbd0
+mapcell	?get_map_object@NewmapCell@@QAE?AW4TAdventureObjectType@@XZ	100.0000	100.0000	100.0000	0xfcbd0
 mapcell	?get_object_type_ptr@CObject@@QBEPAVCObjectType@@XZ	100.0000	100.0000	100.0000	0xfec10
 mapcell	?get_special_terrain@NewmapCell@@QBE?AW4TAdventureObjectType@@XZ	79.8598	79.8598	79.8598	0xfce20
 mapcell	?get_trigger_cell@NewmapCell@@QAEPAV1@XZ	90.8763	90.8763	90.8763	0xfcaa0
@@ -1958,7 +1958,7 @@ mapcell	?insert@?$vector@VTTimedEvent@@V?$allocator@VTTimedEvent@@@std@@@std@@QA
 mapcell	?insert@?$vector@VTTownEvent@@V?$allocator@VTTownEvent@@@std@@@std@@QAEXPAVTTownEvent@@IABV3@@Z	100.0000	100.0000	100.0000	0x108250
 mapcell	?insert@?$vector@VTreasureData@@V?$allocator@VTreasureData@@@std@@@std@@QAEXPAVTreasureData@@IABV3@@Z	100.0000	100.0000	100.0000	0x106980
 mapcell	?insert@?$vector@Vgenerator@@V?$allocator@Vgenerator@@@std@@@std@@QAEXPAVgenerator@@IABV3@@Z	100.0000	100.0000	100.0000	0x1090b0
-mapcell	?is_diggable@NewmapCell@@QAEEXZ	96.1585	96.1585	96.1585	0xfccf0
+mapcell	?is_diggable@NewmapCell@@QAEEXZ	100.0000	100.0000	100.0000	0xfccf0
 mapcell	?loadBlackBox@NewfullMap@@QAEHPAVTAbstractFile@@PAVBlackBoxData@@H@Z	95.0000	95.0000	95.0000	0x100430
 mapcell	?loadBlackBoxList@NewfullMap@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x100200
 mapcell	?loadMapLayer@NewfullMap@@QAEHPAVTAbstractFile@@HHH@Z	100.0000	100.0000	100.0000	0xfe920
