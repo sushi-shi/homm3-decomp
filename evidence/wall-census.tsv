@@ -256,7 +256,6 @@ register-homing (why-reg)	57	94.6707	1076	hero	?HeroFn_004D8B30@hero@@QAEXPBVHer
 control-flow (why-branch)	57	95.0000	1144	mapcell	?loadBlackBox@NewfullMap@@QAEHPAVTAbstractFile@@PAVBlackBoxData@@H@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	57	75.2353	230	seerhut	?DoProgressDialog@type_artifact_quest@@UAEXXZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	57	91.6682	680	singleselectionwindow	?SortMaps@TSingleSelectionWindow@@QAEXHEE@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
-control-flow (why-branch)	56	79.8598	278	mapcell	?get_special_terrain@NewmapCell@@QBE?AW4TAdventureObjectType@@XZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
 control-flow (why-branch)	56	86.9847	427	remote	?SendIt@CDPlayHeroes@@QAE_NPAVCNetMsg@@K_N@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	55	94.4335	997	command	?CheckGetAIMove@combatManager@@QAEXXZ	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 inliner (predict-inline)	55	96.2267	1451	command	?Main@combatManager@@UAEHAAVmessage@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (4 name-unresolvable pair(s) discounted)

@@ -606,7 +606,7 @@ public:
         unsigned char offsets;
         signed char layer;
 
-        CObject* get_object();
+        CObject* get_object() const;
     };
     std::vector<TObjectCell> objects;
     // loadMapLayer stores the serialized object type as a FULL DWORD: the
@@ -627,8 +627,8 @@ public:
     ~NewmapCell();
     const unsigned char HasTriggerableEvent();
 
-    // 0x4fce20, claimed (still @stub) in src/mapcell.cpp. Declared here
-    // because findpath's CalcTerrainCost calls it with the cell in ECX.
+    // 0x4fce20, exact in src/mapcell.cpp. Declared here because findpath's
+    // CalcTerrainCost calls it with the const cell in ECX.
     TAdventureObjectType get_special_terrain() const;
 #ifdef HOMM3_HERO_OBJ_VIEW
     // Complete's hero terrain helper retained the Dreamcast accessor name
@@ -879,7 +879,7 @@ extern const unsigned char (*gAdventureObjectLandBlocked)[16];
 // CODEVIEW(E:\gamedcs\mapcell.cpp:4404, dc 0xf4740) int NewfullMap::placeObjects();
 
 // --- NewmapCell ---
-// CODEVIEW(E:\gamedcs\mapcell.cpp:354, dc 0xebf6c) CObject* NewmapCell::TObjectCell::get_object();
+// CODEVIEW(E:\gamedcs\mapcell.cpp:354, dc 0xebf6c) CObject* NewmapCell::TObjectCell::get_object() const;
 // CODEVIEW(E:\gamedcs\mapcell.cpp:361, dc 0xebf98) NewmapCell* NewmapCell::get_trigger_cell();
 // CODEVIEW(E:\gamedcs\mapcell.cpp:387, dc 0xec098) TAdventureObjectType NewmapCell::get_map_object();
 // CODEVIEW(E:\gamedcs\mapcell.cpp:404, dc 0xec114) unsigned long NewmapCell::get_map_extraInfo();

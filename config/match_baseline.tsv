@@ -1947,7 +1947,7 @@ mapcell	?get_magic_terrain_type@NewmapCell@@QAEHXZ	100.0000	100.0000	100.0000	0x
 mapcell	?get_map_extraInfo@NewmapCell@@QAEKXZ	100.0000	100.0000	100.0000	0xfcc30
 mapcell	?get_map_object@NewmapCell@@QAE?AW4TAdventureObjectType@@XZ	100.0000	100.0000	100.0000	0xfcbd0
 mapcell	?get_object_type_ptr@CObject@@QBEPAVCObjectType@@XZ	100.0000	100.0000	100.0000	0xfec10
-mapcell	?get_special_terrain@NewmapCell@@QBE?AW4TAdventureObjectType@@XZ	79.8598	79.8598	79.8598	0xfce20
+mapcell	?get_special_terrain@NewmapCell@@QBE?AW4TAdventureObjectType@@XZ	100.0000	100.0000	100.0000	0xfce20
 mapcell	?get_trigger_cell@NewmapCell@@QAEPAV1@XZ	90.8763	90.8763	90.8763	0xfcaa0
 mapcell	?insert@?$vector@URandomDwellingData@@V?$allocator@URandomDwellingData@@@std@@@std@@QAEXPAURandomDwellingData@@IABU3@@Z	100.0000	100.0000	100.0000	0x1089e0
 mapcell	?insert@?$vector@VBlackBoxData@@V?$allocator@VBlackBoxData@@@std@@@std@@QAEXPAVBlackBoxData@@IABV3@@Z	100.0000	100.0000	100.0000	0x107150
