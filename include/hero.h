@@ -1037,6 +1037,25 @@ public:
     // Declared for playerData::NextHero, which inlines nothing of it -
     // it is a real call from game.obj.
     unsigned char IsMobile();
+#ifdef HOMM3_AI_PLAYER_OBJ_DECLS
+    // Hero.h source helpers retained as calls by Dreamcast and expanded in
+    // Complete's AI_AttemptMove.  check_terrain is false at both recovered
+    // sites; the later build additionally treats Angel Wings and Boots of
+    // Levitation as persistent movement modes.
+    __forceinline unsigned char IsFlying(unsigned char check_terrain)
+    {
+        return !(flags & 0x40000)
+            && (flightLevel != -1 || IsWieldingArtifact(0x48));
+    }
+    __forceinline unsigned char CanWalkOnWater(unsigned char check_terrain)
+    {
+        return !(flags & 0x40000)
+            && (waterWalkLevel != -1 || IsWieldingArtifact(0x5a));
+    }
+#else
+    unsigned char IsFlying(unsigned char check_terrain);
+    unsigned char CanWalkOnWater(unsigned char check_terrain);
+#endif
     // 0x4e53c0 / 0x4e53e0 - the Arena visit pair. The DC mangling
     // (?VisitedArena@hero@@QBA_NPBVNewmapCell@@@Z) gives the const and
     // the bool.
@@ -1169,7 +1188,19 @@ public:
     TSpellSchool GetHighestSchool(TSpellSchool school_mask) const;
     int GetManaCost(int iWhichSpell, const class armyGroup* enemy,
                     int magic_terrain);
-#ifdef HOMM3_HERO_OBJ_VIEW
+#ifdef HOMM3_AI_PLAYER_OBJ_DECLS
+    // The one-argument Hero.h facades are positive Dreamcast source facts.
+    // Complete widens their terrain input, then expands each facade into the
+    // same get_special_terrain + out-of-line overload pair.
+    int get_spell_level(SpellID spell)
+    {
+        return get_spell_level(spell, get_special_terrain());
+    }
+    int GetManaCost(int iWhichSpell)
+    {
+        return GetManaCost(iWhichSpell, 0, get_special_terrain());
+    }
+#elif defined(HOMM3_HERO_OBJ_VIEW)
     // E:\gamedcs\Hero.h:702
     // The header helper used by GetManaCost's own-stack discount. Complete
     // folds it back to the same armyGroup::IsMember bytes.

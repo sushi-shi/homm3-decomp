@@ -302,6 +302,10 @@ enum ESpellId {
     // hero::Fly at 0x4e59a0 passes 6 to get_spell_level and indexes the
     // corresponding 0x88-byte traits row's per-mastery mana-cost band.
     SPELL_FLY = 0x6,
+    // AI_AttemptMove's two path-mode helpers pass these ids, and its
+    // town-portal arm independently charges spell 9's mana cost.
+    SPELL_WATER_WALK = 0x7,
+    SPELL_TOWN_PORTAL = 0x9,
     // DC eSpellEarthquake = 14. Read by check_wall_archery_penalty
     // (0x42482b) out of hero::available_spells - a hero who can bring
     // the town wall down is modeled as taking no wall archery penalty.

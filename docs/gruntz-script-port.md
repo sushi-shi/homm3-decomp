@@ -12801,6 +12801,27 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   later bonus arm. MAX preserves the higher byte checkpoint while this
   coherent de-inlined state and its unrelated TU dips are carried forward.
 
+- **2026-08-31 — hardest-first AI movement executor admitted.** After the
+  selection dispatcher left the zero-MAX tier, `AI_AttemptMove` (1,720 B
+  retail) became the largest function at the queue head. Its 52-statement
+  Dreamcast dossier restores the five named locals and the original helper
+  sequence: `build_path`, the two distinct `min`/`max` statements,
+  `check_gate_purchase`, `TeleportTo`, spell cost/use/mastery, retained
+  `attempt_teleport` and `check_move_spell` boundaries, `attempt_step`,
+  `AI_choose_destination`, and path rebuilding. Complete's retail bytes add
+  the later artifact-backed flight/water-walk checks without contradicting
+  that shared shape. The first build -> delink -> build claim banks
+  **81.0421%**; its structural checkpoint is **13 exact blocks** across 94
+  candidate versus 81 retail blocks. The first flow divergence is the early
+  vector-destructor return layout, while the remaining three unclaimed
+  file-local helpers account for an explicit closure dependency rather than a
+  reason to flatten their DC-proven calls. The source-shape ratchet also
+  caught a tempting false merge of Dreamcast's two consecutive
+  `max_distance` statements. The typed packed `playerData::puzzle_guess`
+  view is now shared by `philai.obj` and `ai_player.obj`; the resulting
+  collateral `find_all_destinations` dip remains observational because its
+  35.9206% MAX is banked.
+
 - **2026-07-23 — repo + toolchain distribution.** Private GitHub repo
   `sushi-shi/homm3-decomp` created and pushed; toolchain tarball published as
   release `toolchain-vc6-sp3`. `homm3 init` now downloads it via `gh` when

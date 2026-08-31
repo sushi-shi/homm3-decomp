@@ -4379,20 +4379,9 @@ long find_all_destinations(hero* current_hero, searchArray* search_array,
 
     if (!in_town) {
         playerData* player = &gpGame->players[current_hero->owner];
-        // The odd-offset packed guess: word-sized memcpy bridges, the
-        // value_of_obelisk (philai.cpp) precedent.
-        unsigned short guess_lo;
-        unsigned short guess_hi;
-        memcpy(&guess_lo, player->puzzle_guess, sizeof guess_lo);
-        memcpy(&guess_hi, player->puzzle_guess + 2, sizeof guess_hi);
-        if (static_cast<short>(guess_lo << 6) >= 0) {
+        if (player->puzzle_guess.x >= 0) {
             HeroDestination dest;
-            dest.point.x = static_cast<short>(
-                static_cast<short>(guess_lo << 6) >> 6);
-            dest.point.y = static_cast<short>(
-                static_cast<short>(guess_hi << 6) >> 6);
-            dest.point.z = static_cast<short>(
-                static_cast<short>(guess_hi << 2) >> 12);
+            dest.point = player->puzzle_guess;
             pathCell* guess_cell = search_array->get_cell(dest.point, 0);
             if (guess_cell->visited) {
                 NewmapCell* map_cell = gpGame->worldMap.cell(
@@ -4621,6 +4610,31 @@ void AI_set_hero_bonuses(hero* our_hero);
 // RVA order.
 void AI_build_ship(const hero* our_hero, long x, long y, long z);
 
+// These file-local helpers precede AI_AttemptMove in the Dreamcast source.
+// Complete VC6 emits their retained copies after the caller; declarations
+// here preserve the source calls while those bodies are reconstructed at
+// their retail slots.
+void build_path(hero* current_hero, searchArray* search_array,
+                std::vector<pathCell>& path,
+                HeroDestination& destination);
+unsigned char check_move_spell(hero* current_hero,
+                               std::vector<pathCell>& path,
+                               long step, SpellID spell,
+                               unsigned char already_active);
+unsigned char attempt_teleport(hero* current_hero,
+                               std::vector<pathCell>& path,
+                               long step);
+
+static __forceinline void check_gate_purchase(type_point point)
+{
+    int town_id = gpGame->GetTownId(point.x, point.y, point.z);
+    if (town_id >= 0) {
+        town* current_town = gpGame->GetTown(town_id);
+        if (!current_town->HasBuilding(EXTRA_1_ID, true))
+            current_town->buy_building(EXTRA_1_ID);
+    }
+}
+
 // Residual (52.95%): calls, guards and block roster all agree; why-branch
 // names D6 (retail keeps 6 exits to our 4 - its bNoMove/bFought return-0s
 // share ONE eax-wide epilogue while the boat/owner/currHero exits stay
@@ -4712,8 +4726,6 @@ unsigned char attempt_step(hero* current_hero, pathCell* path_cell,
     return 0;
 }
 
-#if 0  // @carcass: claim-only home for move_hero's move executor
-
 // E:\gamedcs\ai_player.cpp:4179.  The reference pair is fixed by the DC
 // decorated signature and the retail /Gr call at move_hero+0x219.  The body
 // lies after attempt_step and immediately before the Town.h COMDAT band.
@@ -4721,10 +4733,124 @@ VA(0x0042fee0, 0x6b8)  // anchor-caller move_hero + order bracket, dc 0x34b08
 void AI_AttemptMove(hero* current_hero, HeroDestination& best_point,
                     long& best_raw_value, unsigned char explore_mode)
 {
-    // @stub
-}
+    long total_cost;
+    std::vector<pathCell> path;
+    unsigned char first_step;
+    long max_distance;
+    type_point destination;
 
-#endif  // @carcass
+    if (current_hero->get_location() == gpCurrentPlayer->puzzle_guess) {
+        // VC6 cannot bind the temporary returned by get_target to this
+        // vintage STL/compiler view's const-reference operator.  Keeping it
+        // in its source temporary produces retail's target-then-location
+        // constructor pair after the first short-circuit succeeds.
+        type_point target = current_hero->get_target();
+        if (current_hero->get_location() == target) {
+            if (current_hero->movePoints == current_hero->maxMovePoints)
+                gpAdvManager->ProcessSearch(current_hero->x, current_hero->y,
+                                            current_hero->z);
+            else
+                current_hero->movePoints = 0;
+            return;
+        }
+    }
+
+    build_path(current_hero, gpSearchArray, path, best_point);
+    if (path.size() == 0) {
+        current_hero->movePoints = 0;
+        return;
+    }
+
+    if (path[0].can_stop) {
+        gpAdvManager->MobilizeCurrHero(0, 0, 1);
+        type_point point = current_hero->get_location();
+        NewmapCell* cell = gpGame->worldMap.cell(point.x, point.y, point.z);
+        gpAdvManager->DoAIEvent(cell, current_hero, point);
+        return;
+    }
+
+    max_distance = min(static_cast<long>(path.size()) - 1, 7);
+    max_distance = max(
+        min(static_cast<long>(path[max_distance].cost),
+            current_hero->movePoints),
+        350);
+    first_step = 1;
+    unsigned char stand_end = 0;
+    total_cost = 0;
+
+    for (long step = 0; step < static_cast<long>(path.size()); ++step) {
+        if (path[step].castle_gate) {
+            type_point gate_point = current_hero->get_location();
+            check_gate_purchase(gate_point);
+            check_gate_purchase(path[step].point);
+            current_hero->movePoints = max(current_hero->movePoints - 100, 0);
+            gpAdvManager->TeleportTo(current_hero, path[step].point, 0,
+                                     0, 1, 0);
+            return;
+        }
+
+        if (path[step].town_portal && step == 0) {
+            gpAdvManager->TeleportTo(current_hero, path[step].point, 0,
+                                     0, 1, 0);
+            current_hero->UseSpell(
+                current_hero->GetManaCost(SPELL_TOWN_PORTAL));
+            if (current_hero->get_spell_level(SPELL_TOWN_PORTAL)
+                == AI_MASTERY_EXPERT)
+                current_hero->movePoints -= 200;
+            else
+                current_hero->movePoints -= 300;
+            if (current_hero->movePoints < 0)
+                current_hero->movePoints = 0;
+            return;
+        }
+
+        if (attempt_teleport(current_hero, path, step))
+            return;
+
+        if (path[step].flying
+            && !check_move_spell(current_hero, path, step, SPELL_FLY,
+                                 current_hero->IsFlying(0)))
+            return;
+
+        if (path[step].water_walking
+            && !check_move_spell(
+                current_hero, path, step, SPELL_WATER_WALK,
+                current_hero->IsFlying(0)
+                    || current_hero->CanWalkOnWater(0)))
+            return;
+
+        if (step + 1 >= static_cast<long>(path.size())
+            || static_cast<long>(path[step + 1].cost) - total_cost
+                   > current_hero->movePoints)
+            stand_end = 1;
+
+        if (!attempt_step(current_hero, &path[step], stand_end, first_step))
+            return;
+        if (stand_end)
+            return;
+
+        first_step = 0;
+        best_point.move_cost -=
+            static_cast<long>(path[step].cost) - total_cost;
+        if (best_point.move_cost < 0)
+            best_point.move_cost = 0;
+        total_cost = path[step].cost;
+
+        if (path[step].last_can_stop
+            && current_hero->movePoints >= 100
+            && !best_point.is_critical) {
+            destination = best_point.point;
+            AI_choose_destination(current_hero, max_distance, best_point,
+                                  best_raw_value, 0, explore_mode);
+            if (destination != best_point.point) {
+                build_path(current_hero, gpSearchArray, path, best_point);
+                total_cost = 0;
+                first_step = 1;
+                step = -1;
+            }
+        }
+    }
+}
 
 #if 0  // @carcass: claim-only home for the Town.h COMDAT below
 

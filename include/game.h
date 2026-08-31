@@ -1771,7 +1771,7 @@ public:
     // (x 10 bits in the first unit, y 10 + z 4 in the second) at an
     // ODD base - which is the alignment finding above, from the other
     // side.
-#ifdef HOMM3_PHILAI_OBJ_DECLS
+#if defined(HOMM3_PHILAI_OBJ_DECLS) || defined(HOMM3_AI_PLAYER_OBJ_DECLS)
     type_point puzzle_guess;
 #else
     char puzzle_guess[4];
