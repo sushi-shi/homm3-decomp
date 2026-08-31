@@ -387,6 +387,7 @@ void RemoteCleanup();
 // This TU's own file-scope save-name validator; its definition sits in
 // the carcass under the 0x577360 claim until reconstructed.
 unsigned char SaveValid(const char* filename);
+static void SliderDuration(int state, heroWindow* parent_window);
 static void SliderFileMenu(int state, heroWindow* parent_window);
 
 // The live TSingleSelectionWindow (set for the dialog's lifetime; every
@@ -1271,6 +1272,109 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
         slider::BLUE, gUnnamed69fdc8, 0);
     fileSlider->hide();
     Widgets.push_back(fileSlider);
+
+    char flagColors[] = "RBYGOPTS";
+    if ((!m_flag64 && !m_flag65)
+        || (m_flag64
+            && (bVideoPaused
+                || gUnnamed6989f0 == WINDOW_MODE_6989F0_3))) {
+        durationSlider = new slider(
+            58, 557, 194, 16, 338, 11, SliderDuration,
+            slider::BLUE, 0, 0);
+        durationSlider->hide();
+        Widgets.push_back(durationSlider);
+
+        char flagName[256];
+        char temp_str[256];
+        for (int i = 0; i < 8; ++i) {
+            int rowY = 133 + i * 50;
+            sprintf(flagName, "AOFLGB%c.DEF", flagColors[i]);
+            Widgets.push_back(new button(
+                14 - x, rowY - y - 3, 42, 50, 263 + i,
+                flagName, 0, 1, 0, 0, 2));
+
+            Widgets.push_back(new textWidget(
+                62, rowY + 18, 46, 24, gpGeneralText->GetText(500),
+                "tiny.fnt", font::WHITE, 199 + i,
+                font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED,
+                0, 8));
+
+            sprintf(temp_str, "adopb2%c.def", flagColors[i]);
+            if (!bVideoPaused
+                && gUnnamed6989f0 != WINDOW_MODE_6989F0_3) {
+                Widgets.push_back(new button(
+                    110, rowY + 18, 50, 24, 207 + i,
+                    temp_str, 0, 1, 0, 0, 2));
+            } else {
+                Widgets.push_back(new textButton(
+                    110, rowY + 18, 50, 24, 207 + i,
+                    temp_str, gUnnamed6a7800[0], "tiny.fnt",
+                    0, 1, 0, 0, 2, font::WHITE));
+            }
+
+            Widgets.push_back(new button(
+                164, rowY, 11, 24, 215 + i,
+                "adoplfa.def", 0, 1, 0, 0, 2));
+            Widgets.push_back(new button(
+                225, rowY, 11, 24, 223 + i,
+                "adoprta.def", 1, 0, 0, 0, 2));
+            Widgets.push_back(new button(
+                240, rowY, 11, 24, 231 + i,
+                "adoplfa.def", 0, 1, 0, 0, 2));
+            Widgets.push_back(new button(
+                301, rowY, 11, 24, 239 + i,
+                "adoprta.def", 1, 0, 0, 0, 2));
+            Widgets.push_back(new button(
+                316, rowY, 11, 24, 247 + i,
+                "adoplfa.def", 0, 1, 0, 0, 2));
+            Widgets.push_back(new button(
+                377, rowY, 11, 24, 255 + i,
+                "adoprta.def", 1, 0, 0, 0, 2));
+
+            Widgets.push_back(new textWidget(
+                62, rowY - 3, 97, 17, gpGeneralText->GetText(469),
+                "smalfont.fnt", font::PRIMARY, 345 + i,
+                font::CENTER_JUSTIFIED, 0, 8));
+            Widgets.push_back(new CHotspotWidget(
+                252, rowY - 3, 48, 32, 362 + i));
+            Widgets.push_back(new CHotspotWidget(
+                176, rowY - 3, 48, 32, 370 + i));
+            Widgets.push_back(new CHotspotWidget(
+                328, rowY - 3, 48, 32, 378 + i));
+
+            if (!bVideoPaused
+                && gUnnamed6989f0 != WINDOW_MODE_6989F0_3) {
+                CEnterNameEdit* edit = new CEnterNameEdit(
+                    62, rowY - 3, 97, 17, 21, emptyRolloverText,
+                    "smalfont.fnt", font::PRIMARY, font::LEFT_JUSTIFIED,
+                    0, 0, 353 + i, 0x100, 0, 7, 5);
+                edit->hide();
+                edit->SetAutoDraw(1);
+                Widgets.push_back(edit);
+            }
+        }
+
+        Widgets.push_back(new textWidget(
+            58, 90, 104, 36, gpGeneralText->GetText(518),
+            "smalfont.fnt", font::PRIMARY_HIGHLIGHT, 339,
+            font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
+        Widgets.push_back(new textWidget(
+            163, 90, 75, 36, gpGeneralText->GetText(519),
+            "smalfont.fnt", font::PRIMARY_HIGHLIGHT, field_189c,
+            font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
+        Widgets.push_back(new textWidget(
+            239, 90, 75, 36, gpGeneralText->GetText(520),
+            "smalfont.fnt", font::PRIMARY_HIGHLIGHT, 343,
+            font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
+        Widgets.push_back(new textWidget(
+            315, 90, 75, 36, gpGeneralText->GetText(521),
+            "smalfont.fnt", font::PRIMARY_HIGHLIGHT, 344,
+            font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
+        Widgets.push_back(new textWidget(
+            58, 534, 334, 20, gpGeneralText->GetText(522),
+            "smalfont.fnt", font::PRIMARY_HIGHLIGHT, 340,
+            font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
+    }
 }
 
 #if 0  // @carcass: claim-only home for the game.h COMDAT below
@@ -1304,6 +1408,27 @@ CNetPlayerHandlerPlayer::CNetPlayerHandlerPlayer()
     color = -1;
     handicap = 0;
     memset(availableHeroes, 0, sizeof(availableHeroes));
+}
+
+// Complete expands this Dreamcast member boundary into SliderDuration.  Its
+// older `message` local disappeared in retail; the x86 body instead proves a
+// host setup broadcast followed by the full-window redraw and duration-clock
+// refresh.
+inline void TSingleSelectionWindow::OnDurationSlider(int newIndex)
+{
+    durationIndex = newIndex;
+    gpGame->setup.turnDuration = static_cast<signed char>(durationIndex);
+    if (bVideoPaused && IsHost())
+        SendSetupInfo(0);
+    DrawWindow(0, 0xffff0001, 0xffff);
+    Update();
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:989
+VA(0x0057C7F0, 0x194)  // anchor-reloc constructor duration-slider callback + retail setup-message copy, dc 0x13037c
+static void SliderDuration(int state, heroWindow*)
+{
+    gUnnamed69fbe8->OnDurationSlider(state);
 }
 
 // Dreamcast retains this member boundary. Complete expands it into the tiny
@@ -3312,7 +3437,7 @@ void TSingleSelectionWindow::SetCurrentMap(int map, unsigned char bUpdate)
                 int saveStatus = w->status;
                 w->status |= widget::WIDGET_ACTIVE;
                 w->send_message(widget::WIDGET_SET_TEXT,
-                                gUnnamed6a7800[player->handicap]);
+                                int(gUnnamed6a7800[player->handicap]));
                 w->status = saveStatus;
             }
         }
@@ -5147,7 +5272,7 @@ void TSingleSelectionWindow::OnUpdatePlayerPosMsg(CNetMsg* pNetMsg)
             p = &m_players.computerPlayers[i];
         if (p) {
             GetWidget(p->playerPos + 207)->send_message(
-                widget::WIDGET_SET_TEXT, gUnnamed6a7800[p->handicap]);
+                widget::WIDGET_SET_TEXT, int(gUnnamed6a7800[p->handicap]));
         }
     }
     if (!receivingMaps) {
