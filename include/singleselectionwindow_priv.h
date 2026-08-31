@@ -74,6 +74,12 @@ extern const char* gUnnamed6a5e14[];
 // knobRange +0x44). CChatSlider introduces no field either body reaches.
 class CChatSlider : public slider {
 public:
+    CChatSlider(int x, int y, int w, int h, int id, int num,
+                TSliderFunction func, EGraphics graphics, int page)
+        : slider(x, y, w, h, id, num, func, graphics, page, 0)
+    {
+    }
+
     virtual void SetResolution(int num);  // slot 13
     virtual void SetState(int state);     // slot 14
 };
@@ -142,12 +148,41 @@ public:
     class CChatSave : public Bitmap16Bit {
     public:
         unsigned char bSaved;  // +0x38
+        CChatSave(int w, int h) : Bitmap16Bit(w, h), bSaved(0) {}
         unsigned char IsSaved() const { return bSaved; }
     };
+
+    CChatWidget(int x, int y, int w, int h, const char* text,
+                const char* fontName, font::TColor color, int id,
+                unsigned justify, int backColor, int style)
+        : textWidget(x, y, w, h, text, fontName, color, id,
+                     justify, backColor, style)
+    {
+        m_save = new CChatSave(w, h);
+    }
 
     virtual void Draw();  // slot 4
 
     CChatSave* m_save;  // +0x50
+};
+
+// The lobby chat-entry subtype. Dreamcast proves the class and its IgnoreKey
+// override; retail's constructor call proves it has no additional fields.
+class CSingleSelectionChatEdit : public textEntryWidget {
+public:
+    CSingleSelectionChatEdit(
+        int x, int y, int w, int h, int textSize, const char* text,
+        const char* fontName, font::TColor color, unsigned justification,
+        const char* backgroundIcon, int backgroundFrame, int id, int style,
+        int readType, int insetX, int insetY)
+        : textEntryWidget(x, y, w, h, textSize, text, fontName, color,
+                          justification, backgroundIcon, backgroundFrame, id,
+                          style, readType, insetX, insetY)
+    {
+    }
+
+    void SendChat(const char* text, int toWho);
+    virtual unsigned char IgnoreKey(message* msg);
 };
 
 

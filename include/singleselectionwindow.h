@@ -442,6 +442,7 @@ public:
     void UpdateAllyEnemyFlags(unsigned char update);
     void OnFileMenuSlider(int newIndex);
     void OnDurationSlider(int newIndex);
+    void OnChatWindowSlider(int newIndex);
     void UpdatePlayerPositions(unsigned char updateCurPlayer);
     int Update();
     unsigned char OnGameTransmitInitMsg(CNetMsg* pNetMsg);

@@ -387,6 +387,7 @@ void RemoteCleanup();
 // This TU's own file-scope save-name validator; its definition sits in
 // the carcass under the 0x577360 claim until reconstructed.
 unsigned char SaveValid(const char* filename);
+static void SliderChatWindow(int state, heroWindow* parent_window);
 static void SliderDuration(int state, heroWindow* parent_window);
 static void SliderFileMenu(int state, heroWindow* parent_window);
 
@@ -1374,6 +1375,102 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
             58, 534, 334, 20, gpGeneralText->GetText(522),
             "smalfont.fnt", font::PRIMARY_HIGHLIGHT, 340,
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
+
+        if (bVideoPaused && !m_flag65) {
+            chatWidget = new CChatWidget(
+                416, 131, 315, 128, emptyRolloverText,
+                "smalfont.fnt", font::CHAT, 179,
+                font::BOTTOM_JUSTIFIED, 0, 8);
+            chatSlider = new CChatSlider(
+                733, 133, 16, 126, 336, 0, SliderChatWindow,
+                slider::BLUE, 0);
+            chatSlider->SetResolution(0);
+            chatSlider->SetState(0);
+            chatMan.UpdateWidget(chatWidget, 0, 5);
+            SetFocus(-1);
+
+            CSingleSelectionChatEdit* edit =
+                new CSingleSelectionChatEdit(
+                    415, 259, 334, 16, 127, emptyRolloverText,
+                    "smalfont.fnt", font::WHITE, font::LEFT_JUSTIFIED,
+                    "ircentry.pcx", 0, 180, 0x100, 0, 7, 5);
+            chatEdit = edit;
+            bitmapBorder* chatBack = new bitmapBorder(
+                412, 282, 340, 114, 181, "CHATPLUG.pcx", 0x800);
+            nameList1 = new textWidget(
+                419, 287, 156, 103, emptyRolloverText,
+                "smalfont.fnt", font::PRIMARY, 182,
+                font::LEFT_JUSTIFIED, 0, 8);
+            nameList2 = new textWidget(
+                584, 287, 156, 103, emptyRolloverText,
+                "smalfont.fnt", font::PRIMARY, 182,
+                font::LEFT_JUSTIFIED, 0, 8);
+
+            Widgets.push_back(chatBack);
+            Widgets.push_back(new bitmapBorder(
+                730, 133, 19, 126, 389, "selslide.pcx", 0x800));
+            Widgets.push_back(chatSlider);
+            Widgets.push_back(chatWidget);
+            Widgets.push_back(chatEdit);
+            Widgets.push_back(nameList1);
+            Widgets.push_back(nameList2);
+            chatEdit->SetFocus(1);
+        }
+    }
+
+    if ((!m_flag64 && !m_flag65)
+        || (m_flag64
+            && (bVideoPaused
+                || gUnnamed6989f0 == WINDOW_MODE_6989F0_3))) {
+        const char* modeText = gpGeneralText->GetText(
+            m_flag64 ? 656 : 501);
+        Widgets.push_back(new textButton(
+            414, 81, 200, 20, 128, "gspbutt.def", modeText,
+            "smalfont.fnt", 0, 1, 0, 31, 2, font::WHITE));
+        Widgets.push_back(new textButton(
+            414, 509, 200, 20, 129, "gspbutt.def",
+            gpGeneralText->GetText(502), "smalfont.fnt",
+            0, 1, 0, 30, 2, font::WHITE));
+        if (*gpVideoGameState == SINGLE_SELECTION_CONTEXT_1
+            || *gpVideoGameState == SINGLE_SELECTION_CONTEXT_3) {
+            Widgets.push_back(new textButton(
+                414, 105, 200, 20, 130, "gspbutt.def",
+                gpGeneralText->GetText(760), "smalfont.fnt",
+                0, 1, 0, 19, 2, font::WHITE));
+        }
+    }
+
+    Widgets.push_back(new button(
+        506, 456, 30, 46, 107, "gspbut3.def", 0, 1, 0, 0, 2));
+    Widgets.push_back(new button(
+        538, 456, 30, 46, 108, "gspbut4.def", 0, 1, 0, 0, 2));
+    Widgets.push_back(new button(
+        570, 456, 30, 46, 109, "gspbut5.def", 0, 1, 0, 0, 2));
+    Widgets.push_back(new button(
+        602, 456, 30, 46, 110, "gspbut6.def", 0, 1, 0, 0, 2));
+    Widgets.push_back(new button(
+        634, 456, 30, 46, 111, "gspbut7.def", 0, 1, 0, 0, 2));
+
+    const char* beginButtonName = "scnrbeg.def";
+    int beginHotkey = 48;
+    if (m_flag64) {
+        beginButtonName = "scnrlod.def";
+        beginHotkey = 38;
+    } else if (m_flag65) {
+        beginButtonName = "scnrsav.def";
+        beginHotkey = 31;
+    }
+    button* b = new button(
+        414, 535, 166, 40, 186, beginButtonName,
+        0, 1, 0, beginHotkey, 2);
+    if (m_flag64)
+        b->set_hotkey(28);
+    Widgets.push_back(b);
+
+    if (!gUnnamed69774c) {
+        Widgets.push_back(new button(
+            584, 535, 166, 40, 188, "scnrback.def",
+            0, 1, 0, 1, 2));
     }
 }
 
@@ -1408,6 +1505,21 @@ CNetPlayerHandlerPlayer::CNetPlayerHandlerPlayer()
     color = -1;
     handicap = 0;
     memset(availableHeroes, 0, sizeof(availableHeroes));
+}
+
+// Dreamcast retains this member boundary; Complete expands it into the chat
+// slider wrapper below.
+inline void TSingleSelectionWindow::OnChatWindowSlider(int newIndex)
+{
+    chatMan.SetPosition(newIndex);
+    DisplayChat();
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:985
+VA(0x0057C7D0, 0x1B)  // anchor-reloc constructor chat-slider callback + exact DC call edge, dc 0x13035c
+static void SliderChatWindow(int state, heroWindow*)
+{
+    gUnnamed69fbe8->OnChatWindowSlider(state);
 }
 
 // Complete expands this Dreamcast member boundary into SliderDuration.  Its
