@@ -2357,12 +2357,8 @@ void build_path(hero* current_hero, searchArray* search_array, std::vector<pathC
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:3951
-DC_ONLY(0x34508, 0x126)
-unsigned char check_move_spell(hero* current_hero, std::vector<pathCell,std::allocator<pathCell>* path, long step, SpellID spell, unsigned char already_active)
-{
-    // @stub
-}
+// check_move_spell (dc 0x34508) is promoted to its retained Complete body
+// at VA(0x004309a0) below.
 
 // E:\gamedcs\ai_player.cpp:4000
 DC_ONLY(0x34630, 0x44A)
@@ -4629,10 +4625,10 @@ void AI_build_ship(const hero* our_hero, long x, long y, long z);
 void build_path(hero* current_hero, searchArray* search_array,
                 std::vector<pathCell>& path,
                 HeroDestination& destination);
-unsigned char check_move_spell(hero* current_hero,
-                               std::vector<pathCell>& path,
-                               long step, SpellID spell,
-                               unsigned char already_active);
+static unsigned char check_move_spell(hero* current_hero,
+                                      std::vector<pathCell>& path,
+                                      long step, SpellID spell,
+                                      unsigned char already_active);
 unsigned char attempt_teleport(hero* current_hero,
                                std::vector<pathCell>& path,
                                long step);
@@ -4741,6 +4737,45 @@ unsigned char attempt_step(hero* current_hero, pathCell* path_cell,
         gAIPlayers[current_hero->owner].magus_hut_value = 0;
     AI_set_hero_bonuses(current_hero);
     return 0;
+}
+
+// E:\gamedcs\ai_player.cpp:3951. The source order, five-parameter /Gr ABI,
+// vector stride, last_can_stop scan and StopCursor/CastSpell tail identify the
+// retained Complete body. Complete no longer discounts available movement by
+// the spell's mastery cost; the retail comparison is against movePoints
+// directly.
+static unsigned char check_move_spell(hero* current_hero,
+                                      std::vector<pathCell>& path,
+                                      long step, SpellID spell,
+                                      unsigned char already_active)
+{
+    long i;
+    for (i = step; i < path.size(); ++i) {
+        if (path[i].last_can_stop)
+            break;
+    }
+
+    if (i == path.size()) {
+        if (step == 0)
+            current_hero->movePoints = 0;
+        return 0;
+    }
+
+    long move_cost = path[i].cost;
+    if (step > 0)
+        move_cost -= path[step - 1].cost;
+
+    if (current_hero->movePoints < move_cost) {
+        if (step == 0)
+            current_hero->movePoints = 0;
+        return 0;
+    }
+
+    if (!already_active) {
+        gpAdvManager->StopCursor(1);
+        gpAdvManager->CastSpell(spell);
+    }
+    return 1;
 }
 
 // E:\gamedcs\ai_player.cpp:4179.  The reference pair is fixed by the DC
@@ -4887,6 +4922,16 @@ bool town::HasBuilding(int buildingId, bool check_included) const
 // address-take is the established VC6 emission anchor (the do_swap pattern)
 // and does not force any call site out of line.
 bool (town::* g_emit_HasBuilding)(int, bool) const = &town::HasBuilding;
+
+// The real definition stays before AI_AttemptMove in Dreamcast-proven source
+// order. VC6 retained this helper after the caller and the Town.h COMDAT; the
+// annotated redeclaration records that later retail slot without moving the
+// canonical source body.
+VA(0x004309a0, 0x103)  // caller/callee/body exact bridge, dc 0x34508
+static unsigned char check_move_spell(hero* current_hero,
+                                      std::vector<pathCell>& path,
+                                      long step, SpellID spell,
+                                      unsigned char already_active);
 
 // E:\gamedcs\ai_player.cpp:4607
 // A computer hero may buy and launch from either an owned town dock or a

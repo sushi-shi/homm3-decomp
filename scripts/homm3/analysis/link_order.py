@@ -235,9 +235,10 @@ def main(argv=None) -> int:
             lo = bisect.bisect_left(starts, info["end"])
             hi = bisect.bisect_left(starts, nxt["first"])
             cands = [m for m in unspanned if unit < m < nxt_unit]
+            candidate_field = ",".join(cands) if cands else "-"
             fh.write(f"{unit}\t{nxt_unit}\t0x{info['end']:x}\t"
                      f"0x{nxt['first']:x}\t{nxt['first'] - info['end']}\t"
-                     f"{hi - lo}\t{','.join(cands)}\n")
+                     f"{hi - lo}\t{candidate_field}\n")
 
     # every game-band function: owned (inside a span) or bracketed
     from homm3.match import universe

@@ -21,40 +21,40 @@ between two button.cpp functions - but that placement is a property of
 that link, not of anyone's source order. Counting such a claim would
 stretch a span across its neighbour. Only claims whose source file is
 the unit's own `.cpp` anchor; header-origin claims are reported as span
-RESIDENTS (10 of them today).
+RESIDENTS (32 of them today).
 
 ## Findings
 
-- **63 units spanned** from 742
-  own-cpp anchors, covering **739,953 bytes** of retail `.text`.
+- **116 units spanned** from 2,101 own-cpp anchors, covering **1,300,130
+  bytes** of retail `.text`.
 - **The game-object link order is exactly ALPHABETICAL by object name**
-  - 63 units, zero inversions. (Vendor groups have their own
+  - 116 units, zero inversions. (Vendor groups have their own
   order: zlib's objects are in library order, not alphabetical.)
 - **No span overlaps**: every TU's extent is disjoint, which is a
   self-check on the claims - a misattributed claim would show up as one
   TU's span swallowing a neighbour's anchor.
-- **977 unclaimed carved functions are now attributed** to an
+- **793 unclaimed carved functions are now attributed** to an
   owning TU (`attribution.tsv`) - they sit inside a proven span.
-- **62 gaps** remain between spanned units. Because the order
-  is alphabetical, each gap's owner set is exactly the unspanned
-  compilands that sort between its neighbours (`gaps.tsv`) - e.g. the
-  42,900 B between `cmbtmgr` and `command` belongs to the
-  combat*window/subwindow family and nothing else.
+- **115 gaps** remain between spanned units. Because the order is
+  alphabetical, `gaps.tsv` records the unspanned compilands that can sort
+  between each neighbour pair; 109 have none, while the 15,110 B between
+  `resourcemanager` and `sacrifice_window`, for example, can additionally
+  belong to `ResSw`.
 
 ## Every game-band function is relatable
 
-`functions.tsv` covers the whole target band (0x1510..0x202cb3): all
-**4,663** target-class functions, each with either an owner or a
+`functions.tsv` covers the whole target band (0x2450..0x202cb3): all
+**4,664** target-class functions, each with either an owner or a
 bounded candidate set.
 
 | relation | functions | meaning |
 | :-- | --: | :-- |
-| `in-span` | 1,690 | inside a proven span - that TU's contribution holds it |
-| `bracketed` | 2,973 | between two spans - owner is the previous TU's tail, the next TU's head, or an unspanned compiland sorting between them |
+| `in-span` | 2,884 | inside a proven span - that TU's contribution holds it |
+| `bracketed` | 1,780 | between two spans - owner is the previous TU's tail, the next TU's head, or an unspanned compiland sorting between them |
 
-Bracketed candidate sets are small: 569 functions have just **2**
-candidates, 212 have 3, 452 have 4. Every new claim splits a bracket
-and shrinks the sets around it.
+Bracketed candidate sets are small: 1,588 functions have just **2**
+candidates, 64 have 3, and 128 have 4. Every new claim splits a bracket and
+shrinks the sets around it.
 
 **Ownership is placement, not definition.** "Function X is in TU Y"
 means the linker put it in Y's contribution. A header inline is emitted
