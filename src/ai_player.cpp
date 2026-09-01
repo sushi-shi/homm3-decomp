@@ -4654,6 +4654,10 @@ static __forceinline void check_gate_purchase(type_point point)
 // plus a mid-body ecx<->edx rename family. Tried and rejected: the
 // else-restructured tail (52.21), unsigned-char retypes of
 // direction/saved_x/saved_y (why-branch, no movement).
+// The Dreamcast line table separately attests a function-entry type_point
+// construction followed by assignment after ConsiderHidingMouse; restoring
+// that lifetime is byte-flat at this checkpoint and must not be collapsed
+// back into the later copy-initialization merely to simplify the source.
 // E:\gamedcs\ai_player.cpp:3832
 // One step of an AI hero's path: optionally hide the mouse, summon or
 // build a boat when stepping onto water without one, retarget the path
@@ -4663,6 +4667,7 @@ VA(0x0042fc50, 0x285)  // anchor-callee unique (NewmapCell::cell_is_trigger), dc
 unsigned char attempt_step(hero* current_hero, pathCell* path_cell,
                            unsigned char bStandEnd, unsigned char first_step)
 {
+    type_point point;
     int direction = path_cell->direction;
     if (gpMouseManager->field_68 == 0
         && gpAdvManager->ConsiderHidingMouse(current_hero, direction)) {
@@ -4672,7 +4677,7 @@ unsigned char attempt_step(hero* current_hero, pathCell* path_cell,
         gCompleteDrawEnabled = save_draw;
     }
 
-    type_point point = path_cell->point;
+    point = path_cell->point;
     NewmapCell* cell = gpGame->get_cell(point);
 
     if (path_cell->in_boat && !(current_hero->flags & 0x40000)) {
