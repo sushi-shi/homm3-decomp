@@ -4246,6 +4246,28 @@ SOURCE_RULES[_ai_player_get_cell_key] = SOURCE_RULES.get(
     )
 
 
+# SetNetMsgHandler's standalone x86 body cannot distinguish a compound &&
+# from the two source scopes retained in Dreamcast's S_BLOCK32 records.  The
+# latter are nevertheless a positive source fact: remote.cpp:788 opens the
+# old-handler scope and line 789 opens the installed-handler/Copy scope.
+# Such scope distinctions can feed VC6's caller-side inline state, so do not
+# erase this one merely because both the exact out-of-line body and the three
+# currently measured inline sites lower identically either way.
+_set_net_msg_handler_key = ("remote.obj", 0x11C268)
+SOURCE_RULES[_set_net_msg_handler_key] = SOURCE_RULES.get(
+    _set_net_msg_handler_key, ()) + (
+        SourceRule(
+            "SetNetMsgHandler keeps Dreamcast's two nested handler scopes; "
+            "restore `if (pOld) { if (pNetMsgHandler) { Copy } }` instead "
+            "of flattening them to a compound &&",
+            r"if\s*\(\s*pOld\s*\)\s*\{\s*"
+            r"if\s*\(\s*pNetMsgHandler\s*\)\s*\{\s*"
+            r"pNetMsgHandler\s*->\s*Copy\s*\(\s*pOld\s*\)\s*;\s*"
+            r"\}\s*\}",
+            1, 1),
+    )
+
+
 # CheckAdvCheatCode's optimized r8 local never receives an S_REGREL32 record,
 # but its value flow is unambiguous: zero at entry, one in every ordinary
 # cheat arm, and one test guarding the common notification tail.  The Phisher
@@ -6873,6 +6895,27 @@ case SSW_SIZE_FILTER_ALL:
         failures.append("aligned attempt_teleport release verify did not pass")
     if not contract_violations("", attempt_teleport_key):
         failures.append("removed attempt_teleport release verify passed")
+
+    set_net_handler_probe = """\
+CNetMsgHandler* pOld = m_pNetMsgHandler;
+m_pNetMsgHandler = pNetMsgHandler;
+if (pOld) {
+    if (pNetMsgHandler) {
+        pNetMsgHandler->Copy(pOld);
+    }
+}
+"""
+    if contract_violations(set_net_handler_probe,
+                           _set_net_msg_handler_key):
+        failures.append("aligned SetNetMsgHandler nested scopes did not pass")
+    flattened_set_net_handler = set_net_handler_probe.replace(
+        "if (pOld) {\n    if (pNetMsgHandler) {\n"
+        "        pNetMsgHandler->Copy(pOld);\n    }\n}",
+        "if (pOld && pNetMsgHandler) {\n"
+        "    pNetMsgHandler->Copy(pOld);\n}")
+    if not contract_violations(flattened_set_net_handler,
+                               _set_net_msg_handler_key):
+        failures.append("flattened SetNetMsgHandler scopes passed")
 
     attempt_step_probe = """\
 type_point trigger_point;
