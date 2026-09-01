@@ -314,8 +314,8 @@ void THeroSetupMapMinComdatAnchor::retain_min()
 {
     // Retail CMapHeaderData::Save retains the protected _Tree::_Min COMDAT
     // after the surrounding iterator work exhausts VC6's inline budget.
-    // Preserve the real helper and pin only this call: the source-shape gate's
-    // negative controls reject flattening, a member pointer, or volatile mass.
+    // Preserve the real helper and pin only this call: measured negative
+    // controls reject flattening, a member pointer, or volatile mass.
 #pragma inline_depth(0)
     INLINE_GATE(_Min(_Nil));
 #pragma inline_depth()
@@ -10904,7 +10904,7 @@ void game::CheckHeroConsistency()
 // frame/control-flow evidence; the cross-build address 0x4cac90 is before this
 // carved entry and therefore cannot name this retail function.
 //
-// DC source-shape ratchet (dc 0xb7560): preserve the function-scoped locals
+// Dreamcast dossier (dc 0xb7560): preserve the function-scoped locals
 // retryCount, dataTimeOutStart, pSmack, isDiff, pConfirmMsg, playerDone[8],
 // data, cFileName[351], attempts, current, bytesLeft, iFullGameCRC, diffSize,
 // totalBlocks, smack, done, iReturn, pGameTransmitMainMsg, queueSize,
@@ -10934,7 +10934,7 @@ int game::TransmitSaveGame(int iToWho, int thisPlayerDead, unsigned char inGame,
 // fall-through DestroyMsg block in this body's live receive loop and still
 // uses the parent's EBP frame, so promoting it likewise destroys the CFG.
 //
-// DC source-shape ratchet (dc 0xb85c4): preserve pSmack, pNetMsg, fromDPID,
+// Dreamcast dossier (dc 0xb85c4): preserve pSmack, pNetMsg, fromDPID,
 // cFileName[351], data, diffSize, blockReceived, totalBlocks, smack, done,
 // handle, waitingForRetransmit, bSChangeSounds, iLastDataReceiveTime,
 // netMsgHandlerPause and dlg as the function-local inventory.  Nested message
@@ -17701,7 +17701,7 @@ void CObjectType::~CObjectType()
 // Retail's real game callers also retain five private `_Tidy` COMDATs after
 // exhausting their inline budgets. These narrow reset specializations keep
 // the real Dinkumware helper calls and constrain only those statements. The
-// source-shape gate's negative controls reject direct expansion, member
+// measured negative controls reject direct expansion, member
 // pointers, volatile carriers, and a TU-wide auto_inline switch.
 template<> std::bitset<5>& std::bitset<5>::reset()
 {

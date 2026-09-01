@@ -31,6 +31,10 @@ The rows (all ratcheted; floors start at the tree's current counts):
                       INLINE_GATE convention instead. A Dreamcast line gap
                       plus a meaningful release-elided invariant may use
                       HOMM3_RELEASE_VERIFY; a gap by itself is not proof.
+  inline-gate shape   every `INLINE_GATE(...)` is enclosed by one immediate
+                      `inline_depth(0)` / `inline_depth()` pragma pair. This
+                      is syntax hygiene only; it does not infer a Dreamcast
+                      fact or compare debug structures.
   cpp extern decls    a declaration re-spelled in a consumer .cpp instead
                       of living in its OWNER's header. Fix: declare once
                       in the owner header and #include it.
@@ -144,6 +148,31 @@ _MAGIC_CASE = re.compile(
     r"^[ \t]*case[ \t]+(?:0[xX][0-9a-fA-F]+|-?[0-9]+)[ \t]*:", re.MULTILINE)
 _UNNAMED_COMPARE = re.compile(
     r"[=!]=[ \t]*(?:0[xX](?!0\b|1\b)[0-9a-fA-F]+|(?!0\b|1\b)[0-9]+)\b")
+_INLINE_GATE = re.compile(r"\bINLINE_GATE\s*\(")
+_INLINE_DEPTH = re.compile(
+    r"^[ \t]*#[ \t]*pragma[ \t]+inline_depth[ \t]*\(([^)\r\n]*)\)",
+    re.MULTILINE)
+_DEFINE = re.compile(r"^[ \t]*#[ \t]*define\b")
+
+
+def _inline_gate_sites(code: str, _ctx) -> list[int]:
+    """Return malformed marker sites, without judging why a pin exists."""
+    directives = [(match.start(), match.group(1).strip())
+                  for match in _INLINE_DEPTH.finditer(code)]
+    out = []
+    for marker in _INLINE_GATE.finditer(code):
+        line_start = code.rfind("\n", 0, marker.start()) + 1
+        line_end = code.find("\n", marker.end())
+        if line_end < 0:
+            line_end = len(code)
+        if _DEFINE.match(code[line_start:line_end]):
+            continue
+        before = [item for item in directives if item[0] < marker.start()]
+        after = [item for item in directives if marker.end() < item[0]]
+        if not before or not after or before[-1][1] != "0" \
+                or after[0][1] != "":
+            out.append(marker.start())
+    return out
 
 # One preprocessor directive may span several physical lines. Count every
 # view identifier in the complete logical directive, while `_strip` keeps
@@ -208,10 +237,14 @@ METRICS = (
      "`#pragma inline_depth()`; or (3) when a Dreamcast line gap and a real "
      "release-elided invariant agree, spell that invariant as "
      "`HOMM3_RELEASE_VERIFY(expression)`. Retained pins/verifies need an "
-     "evidence comment, source-shape ratchet, and flattening negative "
+     "evidence comment, retail checkpoint, and flattening negative "
      "control. Never replace volatile with self-assignment, dead code, or "
      "synthetic caller mass; accept a non-MAX current dip while recovering "
      "the true source"),
+    ("inline-gate convention", _inline_gate_sites, False,
+     "wrap each INLINE_GATE statement in an immediate "
+     "`#pragma inline_depth(0)` / `#pragma inline_depth()` pair; this marker "
+     "records a retail-proven site pin, not a cross-compiler comparison"),
     ("cpp extern decls", _regex_sites(_CPP_EXTERN), True,
      "declare it ONCE in the owner's header and #include that - a "
      "consumer .cpp never re-declares"),
@@ -354,6 +387,15 @@ _SAMPLES = {
          "int volatile_count = 0;",
          'trace("volatile int homed");',
          "// volatile was a rejected negative control")),
+    "inline-gate convention": (
+        ("INLINE_GATE(call());",
+         "#pragma inline_depth(1)\nINLINE_GATE(call());\n"
+         "#pragma inline_depth()",
+         "#pragma inline_depth(0)\nINLINE_GATE(call());",
+         "#pragma inline_depth()\nINLINE_GATE(call());"),
+        ("#pragma inline_depth(0)\nINLINE_GATE(call());\n"
+         "#pragma inline_depth()",
+         "#define INLINE_GATE(statement) statement")),
     "cpp extern decls": (
         ("extern int g_heroCount;",
          '  extern "C" void mm_init();'),

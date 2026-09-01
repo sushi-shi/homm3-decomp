@@ -53,18 +53,18 @@ build        the `homm3 build` command (homm3.build.build): configure ->
 
 `homm3 delink` runs the loop; `homm3 status` prints the per-unit table.
 
-The Dreamcast source-shape gate (`python3 -m
-homm3.match.dc_source_shape`) joins each reconstructed caller to
-`evidence/dc-xref-graph.tsv`. An ordinary named helper call must remain a
-named C++ call even when retail `/Ob2` inlines it into anonymous loads or
-tests; manually substituting the helper body is source flattening, not a
-match. `config/dc-source-shape-baseline.tsv` freezes the unfinished backlog by
-stable Dreamcast caller/callee or source-contract identity. Every new missing
-identity is fatal regardless of objdiff percentage or the aggregate defect
-count, while a pass removes restored identities from the baseline down-only.
-Use `--backlog` to inspect known/new/stale rows. `--write-baseline` is the
-explicit upward bless and is never part of normal matching; the bounded
-proof-carrying Complete transfer table is the sole ordinary-call exception.
+Dreamcast NB11 records are parsed into the compiler-neutral
+`homm3.debug-shape.v1` model in `homm3.analysis.debug_shape`. The model carries
+function extents, locals, scopes, source/breakpoint rows, emitted sizes, calls,
+and branch counts for reconstruction tools. It contains no candidate/retail
+comparison policy. In particular, Dreamcast SH4 structure is never compared
+to candidate VC6 `/Z7` structure: `/Z7` labels only the candidate side of a
+candidate-vs-retail x86 byte/relocation/CFG diff.
+
+`INLINE_GATE(...)` has only a small syntax-hygiene check on the cleanliness
+board: every marker must sit in an immediate `inline_depth(0)` / reset pair.
+Whether the pin is semantically justified remains a retail-evidence review,
+not a regex roster or a cross-compiler structure gate.
 
 The annotation macros live in `include/va.h` (absolute VAs in source, rvas
 in every artifact). The delinker never runs inside `homm3 build`; explicit

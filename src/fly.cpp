@@ -97,8 +97,8 @@ unsigned char army::find_flyer_attack_cell(int target)
 // Dreamcast source facts as one
 // coherent unit first reached 93.71, then 94.82, then exact. The final source
 // has one line-104 success return, and VC6 shares it across the selected-enemy
-// and literal-target arms exactly as retail does. The source-shape gate carries
-// a negative control for these facts so the isolated local maxima cannot be
+// and literal-target arms exactly as retail does. The measured negative
+// controls below document why the isolated local maxima must not be
 // reintroduced.
 // E:\gamedcs\fly.cpp:35
 inline bool army::find_flyer_attack_cell(int start, int target) const

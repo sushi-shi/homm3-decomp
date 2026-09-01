@@ -59,13 +59,21 @@ homm3 sema diff 0x00524dd0 --source
 
 `show` is the compact function dossier. `asm --blocks` labels SH4 assembly with
 CodeView `bp` line/breakpoint boundaries, lexical `scope` boundaries, and inferred
-basic blocks (`B0`, `B1`, ...). It is the detailed view for aligning original statement
-groups to the retail and candidate control-flow graphs. Selectors may also be exact or
+basic blocks (`B0`, `B1`, ...). It is the detailed view for understanding the older
+source statement groups before forming a retail hypothesis. Selectors may also be exact or
 unambiguous names, `module.obj:0xOFF`, or `dc:0xOFF`; use `homm3 dreamcast find NAME`
 to locate a function and `homm3 dreamcast stats` to audit corpus coverage.
 `homm3 sema diff <selector> --structure` is the explicit candidate-vs-retail CFG
 checkpoint: it reports block flow and size differences without pretending that
 cross-architecture Dreamcast instruction counts should match.
+
+Dreamcast NB11 extraction populates the compiler-neutral `homm3.debug-shape.v1` IR in
+`scripts/homm3/analysis/debug_shape.py`: function extents, parameters/locals, lexical
+scopes, source and zero-emission rows, emitted sizes, branch counts, and call sites. The
+IR is reusable by other debug-format parsers and skeleton/dossier generators. It has no
+comparison policy and contains no candidate or retail fields. Never compare this SH4
+shape to candidate VC6 `/Z7` shape. `/Z7` is used only to label which candidate C++
+statement emitted a region in the candidate-vs-retail x86 diff.
 
 The campaign loop is **Dreamcast dossier -> retail source-labelled diff -> C++
 hypothesis -> VC6 retail checkpoint**. Start with signatures, locals, scopes, helper calls,
@@ -77,8 +85,7 @@ helper, scope, or statement shape may temporarily lower several local scores bef
 surrounding source reaches retail's lowering. Do not remove a positive Dreamcast fact or
 invent "retail skew" merely because an isolated rewrite scores lower. Reject Dreamcast
 shape only when retail bytes directly contradict its semantics, ABI, layout, or CFG—not
-when the current candidate has a lower similarity percentage. The fatal source-shape
-gate must remain raised while a positive Dreamcast fact is omitted. Preserve prior score
+when the current candidate has a lower similarity percentage. Preserve prior score
 peaks as history, continue coherent reconstruction through expected dips, and record
 useful negative codegen classifications so the next matcher does not repeat an exhausted
 sweep. A current-score dip in an unrelated function is observational and must never fail
@@ -97,14 +104,11 @@ always the verdict. See `docs/dc-line-tables.md` for interpretation and
 `docs/dreamcast-proof-40.md` for the first bounded proof: four exact cohort closures,
 one exact spillover, and one signature-driven near-closure from 40 non-exact functions.
 
-Any future static verifier must therefore be **asymmetric**. It may flag our source for
-violating a positive DC fact—an incompatible shared parameter type, a missing recovered
-helper/RAII boundary, reversed shared-statement order, or an impossible scope/lifetime.
-It must not require equal instruction, basic-block, branch, call, statement, local, or
-scope counts; equal addresses; or the absence of retail-only code. Report findings as
-`agree`, `retail-only`, `dc-only`, or `unknown`, and make only explicitly admitted
-positive invariants fatal. Architecture/compiler codegen and revision skew are expected,
-not exceptions to be explained away.
+Do not build a regex roster or automated structure comparator between Dreamcast and our
+source. Positive Dreamcast facts are reconstruction evidence to record beside the source
+and test against retail semantics/bytes; they are not equality constraints on candidate
+instruction, block, branch, call, statement, local, or scope counts. Architecture,
+compiler, and revision differences make those counts incomparable.
 
 ## Toolchain
 
@@ -165,7 +169,7 @@ When retail proves a call at one site, constrain the smallest possible caller re
 with statement-scoped `#pragma inline_depth(0)` and restore it immediately with
 `#pragma inline_depth()`. VC6 SP3 predates `__pragma`, so this pair cannot be hidden in
 a safe macro. Wrap the controlled statement in `INLINE_GATE(...)` between those pragmas
-so the reason is explicit and the source-shape gate can ratchet the boundary. Existing
+so the reason is explicit and the generic cleanliness check can catch a malformed pair. Existing
 unmarked pins are historical debt; every new or touched pin must use the marker. Use
 `#pragma auto_inline(off)` only when every affected call site proves the helper body was
 unavailable or out of line. Do not move or remove an
@@ -180,8 +184,8 @@ budget-only carrier doses are forbidden. Record the line-table and codegen evide
 every retained carrier.
 
 Every permanent inline-boundary pin or release-VERIFY carrier must carry a source comment
-naming the caller, callee, and retail/Dreamcast evidence, plus a source-shape ratchet and
-a negative control that proves flattening or de-inlining fails. Bank percentage peaks in
+naming the caller, callee, and retail/Dreamcast evidence, plus a negative control that
+proves flattening or de-inlining fails. Bank percentage peaks in
 max/history; an unrelated current-score dip is not permission to undo a proven helper
 boundary.
 

@@ -543,7 +543,7 @@ void soundManager::SwitchAmbientMusic(int newMusicFileId)
 // 27 lexical scopes and 25 SH4 blocks. Line 817 emits both channel-wrap stores
 // as one statement (`slot = range->next = range->first`), and line 821 groups
 // Channel with the named StopSample helper. Both byte-flat restorations are
-// literal below and protected by the asymmetric source-shape gate, together
+// literal below as retained Dreamcast evidence, together
 // with the shared StopSample / ConvertVolume / volume / start / handle-return
 // order. The declaration now uses the recovered `sPtr` name too.
 //

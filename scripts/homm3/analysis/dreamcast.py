@@ -54,7 +54,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable, TextIO
 
-from homm3.analysis import dc_asm, dc_lines, dc_srclines
+from homm3.analysis import dc_asm, dc_lines, dc_srclines, debug_shape
 from homm3.core import common
 
 
@@ -86,6 +86,26 @@ class Claim:
     dc_offset: int
     path: str
     line: int
+
+
+@dataclass(frozen=True)
+class DreamcastDossier:
+    """Dreamcast-specific evidence wrapped around the neutral debug IR."""
+
+    shape: debug_shape.DebugFunctionShape
+    signatures: tuple[str, ...]
+    retail_bridges: tuple[dict[str, Any], ...]
+    retail_source_claims: tuple[dict[str, Any], ...]
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "authority": AUTHORITY,
+            "gap_caution": GAP_CAUTION,
+            "debug_shape": self.shape.to_dict(),
+            "signatures": list(self.signatures),
+            "retail_bridges": list(self.retail_bridges),
+            "retail_source_claims": list(self.retail_source_claims),
+        }
 
 
 def _csv_rows(path: Path) -> list[dict[str, str]]:
@@ -319,7 +339,7 @@ def _retail_bridges(corpus: Corpus, key: tuple[str, int]) -> list[dict[str, Any]
     return out
 
 
-def build_dossier(corpus: Corpus, row: dict[str, str]) -> dict[str, Any]:
+def build_dossier(corpus: Corpus, row: dict[str, str]) -> DreamcastDossier:
     if not dc_lines.DUMP.is_file():
         raise DreamcastError(f"Dreamcast CodeView dump not found: {dc_lines.DUMP}")
     off, cb = _integer(row["offset"]), _integer(row["cb"])
@@ -346,18 +366,19 @@ def build_dossier(corpus: Corpus, row: dict[str, str]) -> dict[str, Any]:
         raise DreamcastError(str(exc)) from exc
     control = dc_asm.control_events(asm_view, data)
 
-    call_rows: list[dict[str, Any]] = []
-    statement_rows: list[dict[str, Any]] = []
+    statement_rows: list[debug_shape.DebugStatement] = []
     for index, (addr, line, source) in enumerate(statements):
         end = bounds[index + 1]
-        statement_events = [event for site, event in control.items()
+        statement_events = [(site, event)
+                            for site, event in sorted(control.items())
                             if addr <= site < end]
-        calls = [event["call_target_va"] for event in statement_events
+        calls = [(site, event["call_target_va"])
+                 for site, event in statement_events
                  if "call_target_va" in event]
         branches = sum(event.get("conditional_branch", False)
-                       for event in statement_events)
-        rendered_calls = []
-        for target in calls:
+                       for _site, event in statement_events)
+        rendered_calls: list[debug_shape.DebugCall] = []
+        for site, target in calls:
             name = symbols.get(target) if target is not None else None
             dc_target = None
             target_row = None
@@ -371,70 +392,80 @@ def build_dossier(corpus: Corpus, row: dict[str, str]) -> dict[str, Any]:
                     # Prefer the typed roster identity for helper/RAII reads.
                     name = target_row["name"]
             target_size = _integer(target_row["cb"]) if target_row else None
-            call = {
-                "target_va": target,
-                "dc_offset": dc_target,
-                "name": name,
-                "dc_size": target_size,
-                "kind": _call_kind(name, target_size),
-            }
-            rendered_calls.append(call)
-            call_rows.append({"statement": index, "line": line, **call})
-        statement_rows.append({
-            "address": addr,
-            "size": end - addr,
-            "line": line,
-            "source": source,
-            "branches": branches,
-            "scope_opens": sum(1 for start, _size in blocks if start == addr),
-            "scope_closes": sum(1 for start, size in blocks
-                                if start + size == addr),
-            "calls": rendered_calls,
-        })
+            rendered_calls.append(debug_shape.DebugCall(
+                site_address=site,
+                target_address=target,
+                target_function_address=dc_target,
+                target_emitted_size=target_size,
+                name=name,
+                classification=_call_kind(name, target_size),
+            ))
+        statement_rows.append(debug_shape.DebugStatement(
+            address=addr,
+            emitted_size=end - addr,
+            source_file=source,
+            source_line=line,
+            branch_count=branches,
+            scope_opens=sum(1 for start, _size in blocks if start == addr),
+            scope_closes=sum(1 for start, size in blocks
+                             if start + size == addr),
+            calls=tuple(rendered_calls),
+        ))
 
     variables = corpus.variables_by_key.get((row["module"], row["name"]), ())
-    params = [dict(item) for item in variables if item["kind"] == "param"]
-    locals_ = [dict(item) for item in variables if item["kind"] != "param"]
-    bridges = _retail_bridges(corpus, key)
-    claims = [{"va": claim.va, "path": claim.path, "line": claim.line}
-              for claim in corpus.claims_by_key.get(key, ())]
+    def variable(item: dict[str, str]) -> debug_shape.DebugVariable:
+        return debug_shape.DebugVariable(
+            name=item["name"], type_name=item["type"],
+            storage=item.get("sp_offset") or None)
 
-    return {
-        "authority": AUTHORITY,
-        "function": {
-            "name": row["name"], "module": row["module"],
-            "kind": row["kind"], "dc_offset": off, "dc_size": cb,
-            "dc_end": off + cb, "source": row["file"],
-            "boundary_line": _integer(row["line"]),
-            "debug_start": _integer(row["debug_start"]),
-            "debug_end": _integer(row["debug_end"]),
-        },
-        "signatures": sorted({bridge["signature"] for bridge in bridges
-                              if bridge["signature"]}),
-        "retail_bridges": bridges,
-        "retail_source_claims": claims,
-        "parameters": params,
-        "locals": locals_,
-        "scopes": [{"start": start, "end": start + size, "size": size}
-                   for start, size in blocks],
-        "source_line_shape": line_shape,
-        "statements": statement_rows,
-        "summary": {
-            "statement_rows": len(statement_rows),
-            "distinct_source_lines": len({(s["source"], s["line"])
-                                           for s in statement_rows}),
-            "conditional_branches": sum(s["branches"] for s in statement_rows),
-            "calls": len(call_rows),
-            "unique_named_callees": len({c["name"] for c in call_rows
-                                          if c["name"]}),
-            "constructor_calls": sum(c["kind"] == "constructor"
-                                     for c in call_rows),
-            "destructor_calls": sum(c["kind"] == "destructor"
-                                    for c in call_rows),
-            "tiny_helper_calls": sum(c["kind"] == "tiny-helper"
-                                     for c in call_rows),
-        },
-    }
+    line_map = debug_shape.DebugLineMap(
+        procedure_line=line_shape["procedure_line"],
+        procedure_line_reliable=line_shape["procedure_line_reliable"],
+        bodyless=line_shape["bodyless"],
+        first_body_line=line_shape["first_body_line"],
+        first_body_address=line_shape["first_body_address"],
+        previous_body_last_line=line_shape["previous_body_last_line"],
+        borrowed_boundary_line=line_shape["borrowed_boundary_line"],
+        gaps=tuple(debug_shape.DebugSourceGap(
+            after_line=item["after_line"],
+            before_line=item["before_line"],
+            first_missing_line=item["first_missing_line"],
+            last_missing_line=item["last_missing_line"],
+            leading=item["leading"],
+        ) for item in line_shape["gaps"]),
+    )
+
+    shape = debug_shape.DebugFunctionShape(
+        producer="CodeView NB11",
+        target="Dreamcast WinCE SH4",
+        address_space="Dreamcast .text offset",
+        name=row["name"],
+        module=row["module"],
+        linkage=row["kind"],
+        address=off,
+        emitted_size=cb,
+        source_file=row["file"],
+        boundary_line=_integer(row["line"]),
+        debug_start=_integer(row["debug_start"]),
+        debug_end=_integer(row["debug_end"]),
+        line_map=line_map,
+        parameters=tuple(variable(item) for item in variables
+                         if item["kind"] == "param"),
+        locals=tuple(variable(item) for item in variables
+                     if item["kind"] != "param"),
+        scopes=debug_shape.scope_ranges(blocks),
+        statements=tuple(statement_rows),
+    )
+    bridges = tuple(_retail_bridges(corpus, key))
+    claims = tuple({"va": claim.va, "path": claim.path, "line": claim.line}
+                   for claim in corpus.claims_by_key.get(key, ()))
+    return DreamcastDossier(
+        shape=shape,
+        signatures=tuple(sorted({bridge["signature"] for bridge in bridges
+                                 if bridge["signature"]})),
+        retail_bridges=bridges,
+        retail_source_claims=claims,
+    )
 
 
 def _hex(value: int | None, width: int = 0) -> str:
@@ -443,86 +474,91 @@ def _hex(value: int | None, width: int = 0) -> str:
     return f"0x{value:0{width}x}" if width else f"{value:#x}"
 
 
-def render_dossier(dossier: dict[str, Any], out: TextIO = sys.stdout) -> None:
-    fn = dossier["function"]
+def render_dossier(dossier: DreamcastDossier,
+                   out: TextIO = sys.stdout) -> None:
+    shape = dossier.shape
     print("DREAMCAST REFERENCE — ANALYSIS OUTPUT, NOT RETAIL EVIDENCE", file=out)
     print(file=out)
-    print(fn["name"], file=out)
-    print(f"  module       {fn['module']} ({fn['kind']})", file=out)
-    print(f"  source       {fn['source']}:{fn['boundary_line']} (boundary row)",
+    print(shape.name, file=out)
+    print(f"  module       {shape.module} ({shape.linkage})", file=out)
+    print(f"  source       {shape.source_file}:{shape.boundary_line} (boundary row)",
           file=out)
-    print(f"  dc text      {_hex(fn['dc_offset'], 8)}..{_hex(fn['dc_end'], 8)} "
-          f"({fn['dc_size']} B SH4)", file=out)
-    print(f"  debug body   +{_hex(fn['debug_start'])}..+{_hex(fn['debug_end'])}",
+    print(f"  dc text      {_hex(shape.address, 8)}..{_hex(shape.end_address, 8)} "
+          f"({shape.emitted_size} B SH4)", file=out)
+    print(f"  debug body   +{_hex(shape.debug_start)}..+{_hex(shape.debug_end)}",
           file=out)
-    for signature in dossier["signatures"]:
+    for signature in dossier.signatures:
         print(f"  signature    {signature}", file=out)
 
     print("\nRetail bridge(s) — correlation only:", file=out)
-    if not dossier["retail_bridges"] and not dossier["retail_source_claims"]:
+    if not dossier.retail_bridges and not dossier.retail_source_claims:
         print("  none", file=out)
-    for bridge in dossier["retail_bridges"]:
+    for bridge in dossier.retail_bridges:
         print(f"  VA {_hex(bridge['va'], 8)}  RVA {_hex(bridge['rva'], 8)}  "
               f"{bridge['size']} B  role={bridge['role']}", file=out)
-    for claim in dossier["retail_source_claims"]:
+    for claim in dossier.retail_source_claims:
         print(f"  source claim {_hex(claim['va'], 8)}  "
               f"{claim['path']}:{claim['line']}", file=out)
 
-    for title, key in (("Parameters", "parameters"), ("Locals", "locals")):
-        rows = dossier[key]
+    for title, rows in (("Parameters", shape.parameters),
+                        ("Locals", shape.locals)):
         print(f"\n{title} ({len(rows)}; CodeView lower bound):", file=out)
         if not rows:
             print("  none recorded", file=out)
         for item in rows:
-            print(f"  {item['sp_offset']:>9}  {item['type']:<20}  {item['name']}",
+            storage = item.storage or "-"
+            print(f"  {storage:>9}  {item.type_name:<20}  {item.name}",
                   file=out)
 
-    print(f"\nLexical scopes ({len(dossier['scopes'])}):", file=out)
-    if not dossier["scopes"]:
+    print(f"\nLexical scopes ({len(shape.scopes)}):", file=out)
+    if not shape.scopes:
         print("  none recorded", file=out)
-    for scope in dossier["scopes"]:
-        print(f"  {_hex(scope['start'], 8)}..{_hex(scope['end'], 8)}  "
-              f"{scope['size']} B", file=out)
+    for scope in shape.scopes:
+        print(f"  {_hex(scope.start, 8)}..{_hex(scope.end, 8)}  "
+              f"{scope.emitted_size} B  depth={scope.depth}", file=out)
 
-    shape = dossier["source_line_shape"]
+    line_map = shape.line_map
+    assert line_map is not None
     print("\nSource-line gaps (zero-emission candidates):", file=out)
-    if shape["bodyless"]:
+    if line_map.bodyless:
         print("  minimal 4-byte SH4 body; no body-line inference", file=out)
-    elif not shape["procedure_line_reliable"]:
-        print(f"  unavailable: boundary line {shape['boundary_line']} is coherent "
+    elif not line_map.procedure_line_reliable:
+        print(f"  unavailable: boundary line {shape.boundary_line} is coherent "
               "with the preceding procedure's closing row", file=out)
-    elif shape["first_body_line"] is None:
+    elif line_map.first_body_line is None:
         print("  first body line unavailable", file=out)
     else:
-        missing = shape["leading_gap_lines"]
-        span = _line_span(shape["procedure_line"] + 1,
-                          shape["first_body_line"] - 1)
+        missing = line_map.leading_gap_lines
+        assert line_map.procedure_line is not None
+        span = _line_span(line_map.procedure_line + 1,
+                          line_map.first_body_line - 1)
         detail = f"; absent {span}" if missing else ""
-        print(f"  leading: frame line {shape['procedure_line']} -> first body line "
-              f"{shape['first_body_line']}: {missing} absent line(s){detail}",
+        print(f"  leading: frame line {line_map.procedure_line} -> first body line "
+              f"{line_map.first_body_line}: {missing} absent line(s){detail}",
               file=out)
     print(f"  {GAP_CAUTION}", file=out)
 
-    print(f"\nStatements ({len(dossier['statements'])} line/address rows):", file=out)
-    for statement in dossier["statements"]:
-        marks = " {" * statement["scope_opens"] + " }" * statement["scope_closes"]
-        branch = f" br={statement['branches']}" if statement["branches"] else ""
-        print(f"  {_basename(statement['source'])}:{statement['line']:<5} "
-              f"dc {_hex(statement['address'], 8)} {statement['size']:>4} B"
+    print(f"\nStatements ({len(shape.statements)} line/address rows):", file=out)
+    for statement in shape.statements:
+        marks = " {" * statement.scope_opens + " }" * statement.scope_closes
+        branch = f" br={statement.branch_count}" \
+            if statement.branch_count else ""
+        print(f"  {_basename(statement.source_file)}:{statement.source_line:<5} "
+              f"dc {_hex(statement.address, 8)} {statement.emitted_size:>4} B"
               f"{branch}{marks}", file=out)
-        for call in statement["calls"]:
-            name = call["name"] or _hex(call["target_va"])
+        for call in statement.calls:
+            name = call.name or _hex(call.target_address)
             details = []
-            if call["kind"] and call["kind"] != "call":
-                details.append(call["kind"])
-            if call["dc_offset"] is not None:
-                details.append(f"dc {_hex(call['dc_offset'])}")
-            if call["dc_size"] is not None:
-                details.append(f"{call['dc_size']} B")
+            if call.classification and call.classification != "call":
+                details.append(call.classification)
+            if call.target_function_address is not None:
+                details.append(f"dc {_hex(call.target_function_address)}")
+            if call.target_emitted_size is not None:
+                details.append(f"{call.target_emitted_size} B")
             suffix = f"  [{', '.join(details)}]" if details else ""
             print(f"      -> {name}{suffix}", file=out)
 
-    summary = dossier["summary"]
+    summary = shape.summary()
     print("\nSummary:", file=out)
     print(f"  source rows={summary['statement_rows']}  "
           f"branches={summary['conditional_branches']}  calls={summary['calls']}  "
@@ -849,7 +885,8 @@ def main(argv: list[str] | None = None) -> int:
             row = corpus.resolve(args.selector)
             dossier = build_dossier(corpus, row)
             if args.json:
-                json.dump(dossier, sys.stdout, indent=2, sort_keys=True)
+                json.dump(dossier.to_dict(), sys.stdout,
+                          indent=2, sort_keys=True)
                 print()
             else:
                 render_dossier(dossier)

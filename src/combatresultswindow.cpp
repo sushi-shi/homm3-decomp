@@ -140,7 +140,8 @@ inline int min(int a, int b)
 // enum type is therefore shared source, not a port difference. Dreamcast also
 // proves TTextResource::operator[] at all eighteen text sites, two source
 // calls to header-inline button::set_hotkey, and twenty-two Widgets.push_back
-// calls. The source-shape ratchet now protects all of these boundaries. This
+// calls. Keep those Dreamcast facts explicit while checking the resulting
+// candidate only against retail. This
 // TU's independently proved push_back arm lets both hotkey wrappers lower to
 // retail's vector paths without flattening the named calls.
 //
