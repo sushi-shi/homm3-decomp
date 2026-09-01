@@ -335,12 +335,18 @@ extern searchArray* gpSearchArray;
 
 // The eight-direction step table at 0x678150, four bytes a row:
 // (dx, dy, 0x10, 0) for N, NE, E, SE, S, SW, W, NW in that order.
-// SPELLED AS TWO SEPARATE STRIDE-FOUR ARRAYS, the town.h hit-rectangle
-// precedent: retail reads the dy column with a reloc against 0x678151
-// - the row's SECOND byte - and the delinker gives that address its own
-// symbol, so a `struct { signed char dx, dy; ... }` model would emit
-// `base+1` where the target carries addend zero. Neither is defined
-// here; findpath only reads them and an unclaimed extern still pairs.
+// Dreamcast publishes the source name/type as `tilePoint* normalDirTable`;
+// retail names the same base and reads its x/y fields at +0/+1. The two
+// stride-four aliases remain temporarily for already-exact legacy callers,
+// while reconstructed source uses the aggregate and lets reloc normalization
+// canonicalize owner+field-addend against retail's interior symbols.
+struct tilePoint {
+    signed char x;
+    signed char y;
+    short frameOffset;
+};
+SIZE(tilePoint, 4);
+extern tilePoint normalDirTable[8];       // 0x678150
 extern const signed char gStepDeltaX[];   // 0x678150, stride 4
 extern const signed char gStepDeltaY[];   // 0x678151, stride 4
 

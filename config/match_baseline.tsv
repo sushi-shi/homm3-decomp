@@ -10,7 +10,7 @@
 adler32	@adler32@12	100.0000	100.0000	100.0000	0x206ca0	-
 adventuremapwindow	??1TAdventureMapWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x2b10	edbb40617def
 adventuremapwindow	??_GTAdventureMapWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x2ae0	-
-adventuremapwindow	?CheckAdvCheatCode@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	89.5717	89.5717	89.5717	0x2450	ec4fd0a665ee
+adventuremapwindow	?CheckAdvCheatCode@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	89.5717	89.5717	90.3512	0x2450	ec4fd0a665ee
 adventuremapwindow	?ClearBottomView@TAdventureMapWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x3ee0	c44f40d9b96c
 adventuremapwindow	?DoHeroKnob@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x3220	5b941b78c07c
 adventuremapwindow	?DoTownKnob@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x3280	6132348c8553
@@ -242,7 +242,7 @@ ai_player	??_Gtype_combat_artifact@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x33080
 ai_player	?AI_AttemptMove@@YIXPAVhero@@AAUHeroDestination@@AAJE@Z	80.9860	82.0053	82.0053	0x2fee0	74322f630bf2
 ai_player	?AI_arrange_army@@YIXPAVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x2d8e0	6476d3737a0d
 ai_player	?AI_build_ship@@YIXPBVhero@@JJJ@Z	100.0000	100.0000	100.0000	0x30f80	357d4741dae5
-ai_player	?AI_choose_destination@@YIHPAVhero@@JAAUHeroDestination@@AAJEE@Z	72.5972	76.3657	76.3657	0x2e0b0	4c003845ef21
+ai_player	?AI_choose_destination@@YIHPAVhero@@JAAUHeroDestination@@AAJEE@Z	76.8679	76.8679	76.8679	0x2e0b0	4be1d56c29bb
 ai_player	?AI_consolidate_army@@YIXPAVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x2d870	5423f5fef321
 ai_player	?AI_equip_artifacts@@YIXPAVhero@@@Z	100.0000	100.0000	100.0000	0x33b40	dcb3719bb73f
 ai_player	?AI_get_artifact_player_value@@YIJABUtype_artifact@@J@Z	100.0000	100.0000	100.0000	0x33aa0	5752a68b522e
@@ -258,7 +258,7 @@ ai_player	?GetTown@game@@QAEPAVtown@@H@Z	100.0000	100.0000	100.0000	0x2ba30	1346
 ai_player	?HasBuilding@town@@QBE_NH_N@Z	100.0000	100.0000	100.0000	0x305a0	964b5b034749
 ai_player	?add_artifact@@YIEPAVhero@@Utype_artifact@@PAJ0J2J@Z	100.0000	100.0000	100.0000	0x33e20	491424c42444
 ai_player	?add_creatures@type_AI_creature_swapper@@IAEXW4TCreatureType@@FF@Z	100.0000	100.0000	100.0000	0x2c130	83f7182af229
-ai_player	?attempt_step@@YIEPAVhero@@PAUpathCell@@EE@Z	63.1306	63.1306	63.1306	0x2fc50	863efaafe67f
+ai_player	?attempt_step@@YIEPAVhero@@PAUpathCell@@EE@Z	63.1306	63.1306	89.9189	0x2fc50	863efaafe67f
 ai_player	?attempt_teleport@@YIEPAVhero@@AAV?$vector@UpathCell@@V?$allocator@UpathCell@@@std@@@std@@J@Z	99.9658	99.9658	99.9658	0x30ab0	39dc2d8a9c4f
 ai_player	?build_markets@type_AI_player@@QAE_NPAH@Z	100.0000	100.0000	100.0000	0x2ab40	f6eec2228a6e
 ai_player	?build_path@@YIXPAVhero@@PAVsearchArray@@AAV?$vector@UpathCell@@V?$allocator@UpathCell@@@std@@@std@@AAUHeroDestination@@@Z	100.0000	100.0000	100.0000	0x30610	ae89deb9dec0
