@@ -47,17 +47,6 @@ class hero;
 DATA(0x006a7d48) extern const char* gQuestGuardName;
 DATA(0x006a7b38) extern const char* gSeerName;
 
-// seerhut.obj's own seer-hut name list, and it is a POINTER to the vector,
-// not the vector: every one of the six references in the image loads the
-// pointer and then reads a `_First` at +4 off what it points at
-// (`mov eax,[0x69fab8] / mov ecx,[eax+4]`). The element stride is 16 and
-// the field at +4 is compared against 0 before falling back to
-// basic_string's `_Nullstr` static at 0x63a608, which is `c_str()` -
-// so the elements are std::string. All six references (0x56c3d2,
-// 0x573979, 0x5740ec, 0x574260, 0x574490, 0x574935) are inside the seerhut
-// bracket, so the datum is that compiland's own.
-DATA(0x0069fab8) extern std::vector<std::string>* gpSeerHutNames;
-
 // The family's TWO text tables, .data pointer cells at 0x68320c and
 // 0x683210. Every quest body that reads either one picks between them on
 // type_quest::field_04 and on nothing else, and reaches a string through
