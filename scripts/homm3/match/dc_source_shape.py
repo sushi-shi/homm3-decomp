@@ -1201,6 +1201,79 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"population\s*,\s*population\s*,\s*sizeof\s*\(\s*population"
             r"\s*\)\s*\)\s*;"),
     ),
+    ("ai_player.obj", 0x35400): (
+        SourceRule(
+            "total_artifact_value keeps Dreamcast's backpack then equipped "
+            "lexical loops and constructs the backpack record directly in "
+            "the proved TArtifact domain",
+            r"for\s*\(\s*slot\s*=\s*0\s*;\s*slot\s*<\s*"
+            r"HERO_BACKPACK_CAPACITY\s*;\s*\+\+slot\s*\)\s*\{\s*"
+            r"type_artifact\s+backpack_artifact\s*\(\s*candidate\s*->\s*"
+            r"get_backpack\s*\(\s*slot\s*\)\s*->\s*artifactId\s*\)\s*;\s*"
+            r"total\s*\+=\s*AI_get_artifact_player_value\s*\(\s*"
+            r"backpack_artifact\s*,\s*player_id\s*\)\s*;\s*\}\s*"
+            r"for\s*\(\s*slot\s*=\s*0\s*;\s*slot\s*<\s*19\s*;\s*"
+            r"\+\+slot\s*\)", 1, 1),
+        SourceRule(
+            "total_artifact_value constructs the equipped record directly "
+            "in the proved TArtifact domain before player-wide valuation",
+            r"type_artifact\s+equipped_artifact\s*\(\s*candidate\s*->\s*"
+            r"get_artifact\s*\(\s*slot\s*\)\s*->\s*artifactId\s*\)\s*;\s*"
+            r"total\s*\+=\s*AI_get_artifact_player_value\s*\(\s*"
+            r"equipped_artifact\s*,\s*player_id\s*\)", 1, 1),
+        SourceRule(
+            "total_artifact_value may not restore the artificial "
+            "artifact_from_int conversion that leaves Complete's caller "
+            "frame four bytes short",
+            r"\bartifact_from_int\s*\(", 0, 0),
+        SourceRule(
+            "total_artifact_value may not add a source-false candidate null "
+            "guard after both recruit ids were gated by the caller",
+            r"if\s*\(\s*!\s*candidate\s*\)", 0, 0),
+    ),
+    ("ai_player.obj", 0x35AC8): (
+        SourceRule(
+            "hire_heroes keeps the two named recruit-id guards and their "
+            "ordered Dreamcast total_artifact_value statements",
+            r"long\s+first_id\s*=\s*player\s*->\s*recruits\s*\[\s*0\s*"
+            r"\]\s*;\s*long\s+first_value\s*;\s*if\s*\(\s*first_id\s*"
+            r"!=\s*-\s*1\s*\)\s*\{\s*first\s*=\s*gpGame\s*->\s*"
+            r"GetHero\s*\(\s*first_id\s*\)\s*;\s*first_value\s*=\s*"
+            r"total_artifact_value\s*\(\s*first\s*,\s*team\s*\)\s*;\s*"
+            r"\}\s*long\s+second_id\s*=\s*player\s*->\s*recruits\s*\["
+            r"\s*1\s*\]\s*;\s*long\s+second_value\s*;\s*if\s*\(\s*"
+            r"second_id\s*!=\s*-\s*1\s*\)\s*\{\s*second\s*=\s*gpGame"
+            r"\s*->\s*GetHero\s*\(\s*second_id\s*\)\s*;\s*second_value"
+            r"\s*=\s*total_artifact_value\s*\(\s*second\s*,\s*team\s*"
+            r"\)\s*;\s*\}", 1, 1),
+        SourceRule(
+            "hire_heroes keeps Complete's retail-proved failure-first tail, "
+            "strict second-primary win, and first-recruit tie result",
+            r"if\s*\(\s*first\s*&&\s*second_value\s*<=\s*first_value\s*"
+            r"\)\s*\{\s*if\s*\(\s*!\s*second\s*\|\|\s*second_value\s*"
+            r"<\s*first_value\s*\)\s*return\s+consider_hiring\s*\(\s*"
+            r"team\s*,\s*first\s*\)\s*;\s*if\s*\(\s*second\s*->\s*"
+            r"get_primary_skill_total\s*\(\s*\)\s*>\s*first\s*->\s*"
+            r"get_primary_skill_total\s*\(\s*\)\s*\)\s*\{\s*return\s+"
+            r"consider_hiring\s*\(\s*team\s*,\s*second\s*\)\s*;\s*\}"
+            r"\s*return\s+consider_hiring\s*\(\s*team\s*,\s*first\s*"
+            r"\)\s*;\s*\}\s*if\s*\(\s*!\s*second\s*\)\s*return\s+"
+            r"false\s*;\s*return\s+consider_hiring\s*\(\s*team\s*,\s*"
+            r"second\s*\)\s*;", 1, 1),
+        SourceRule(
+            "hire_heroes keeps all four Dreamcast source-level "
+            "consider_hiring groups even though Complete cross-jumps them "
+            "into three emitted calls",
+            r"\bconsider_hiring\s*\(", 4, 4),
+        SourceRule(
+            "hire_heroes may not initialize first_value before its "
+            "recruit-id arm",
+            r"long\s+first_value\s*=", 0, 0),
+        SourceRule(
+            "hire_heroes may not initialize second_value before its "
+            "recruit-id arm",
+            r"long\s+second_value\s*=", 0, 0),
+    ),
     ("ai_player.obj", 0x34508): (
         SourceRule(
             "check_move_spell keeps Complete's retail-decoded direct "
@@ -4685,6 +4758,22 @@ def type_point_header_violations(text: str) -> list[tuple[int, str]]:
     return [(line,
              "struct.h type_point::operator== must remain a bool const "
              "member taking const type_point& and compare x, y, z in order")]
+
+
+def type_artifact_header_violations(text: str) -> list[tuple[int, str]]:
+    """Audit Dreamcast's TArtifact-typed first record member."""
+    masked = _source.mask(text)
+    pattern = (
+        r"\bstruct\s+type_artifact\s*\{\s*TArtifact\s+artifactId\s*;"
+        r"\s*int\s+extra\s*;")
+    if re.search(pattern, masked, re.DOTALL) is not None:
+        return []
+    token = re.search(r"\bartifactId\s*;", masked)
+    line = text.count("\n", 0, token.start()) + 1 if token else 1
+    return [(line,
+             "hero.h type_artifact must retain Dreamcast's TArtifact "
+             "artifactId member; spelling it int forces source-false enum "
+             "casts and changes hire_heroes' VC6 frame/inliner state")]
 
 
 def hero_get_location_header_violations(text: str) -> list[tuple[int, str]]:
@@ -8735,6 +8824,22 @@ case TAdventureOptionsWindow::VIEW_SCENARIO_ID:
         failures.append("proven cross-function call transfer did not pass")
     if transfer_satisfied(transfer, transfer_caller, transfer_receiver, set()):
         failures.append("non-exact transfer receiver passed")
+    banked_receiver = status.MatchRow(
+        cur=71.0, max=100.0, hist=100.0,
+        rva=transfer.receiver_va - common.IMAGE_BASE)
+    banked_exact = _effective_exact_vas(
+        set(), {("probe", "banked"): banked_receiver})
+    if not transfer_satisfied(
+            transfer, transfer_caller, transfer_receiver, banked_exact):
+        failures.append("banked-exact transfer receiver current dip failed")
+    nonbanked_receiver = status.MatchRow(
+        cur=99.0, max=99.0, hist=99.0,
+        rva=transfer.receiver_va - common.IMAGE_BASE)
+    nonbanked_exact = _effective_exact_vas(
+        set(), {("probe", "nonbanked"): nonbanked_receiver})
+    if transfer_satisfied(
+            transfer, transfer_caller, transfer_receiver, nonbanked_exact):
+        failures.append("non-banked transfer receiver passed effective MAX")
     if transfer_satisfied(
             transfer, transfer_caller,
             transfer_receiver.replace("gpGame->ShowScenInfo();", ""),
@@ -10342,6 +10447,106 @@ memcpy(current_town->population, population, sizeof(population));
     if any(not contract_violations(probe, hiring_value_key)
            for probe in hiring_value_mutations):
         failures.append("broken value_of_hiring source shape passed")
+    artifact_total_key = ("ai_player.obj", 0x35400)
+    artifact_total_probe = """\
+long total = 0;
+long slot;
+for (slot = 0; slot < HERO_BACKPACK_CAPACITY; ++slot) {
+    type_artifact backpack_artifact(
+        candidate->get_backpack(slot)->artifactId);
+    total += AI_get_artifact_player_value(backpack_artifact, player_id);
+}
+for (slot = 0; slot < 19; ++slot) {
+    type_artifact equipped_artifact(
+        candidate->get_artifact(slot)->artifactId);
+    total += AI_get_artifact_player_value(equipped_artifact, player_id);
+}
+return total;
+"""
+    if contract_violations(artifact_total_probe, artifact_total_key):
+        failures.append(
+            "aligned total_artifact_value source shape did not pass")
+    converted_artifact_total = artifact_total_probe.replace(
+        "candidate->get_backpack(slot)->artifactId",
+        "artifact_from_int(\n"
+        "        candidate->get_backpack(slot)->artifactId)")
+    if not any("artifact_from_int" in rule.description for rule in
+               contract_violations(converted_artifact_total,
+                                   artifact_total_key)):
+        failures.append(
+            "artifact_from_int total_artifact_value negative control passed")
+    guarded_artifact_total = artifact_total_probe.replace(
+        "long total = 0;", "if (!candidate)\n    return 0;\nlong total = 0;")
+    if not any("null guard" in rule.description for rule in
+               contract_violations(guarded_artifact_total,
+                                   artifact_total_key)):
+        failures.append("null-guarded total_artifact_value passed")
+    reordered_artifact_total = artifact_total_probe.replace(
+        "for (slot = 0; slot < HERO_BACKPACK_CAPACITY; ++slot)",
+        "for (slot = 0; slot < LOOP_BOUND_SWAP; ++slot)", 1).replace(
+            "for (slot = 0; slot < 19; ++slot)",
+            "for (slot = 0; slot < HERO_BACKPACK_CAPACITY; ++slot)",
+            1).replace("LOOP_BOUND_SWAP", "19", 1)
+    if not contract_violations(reordered_artifact_total, artifact_total_key):
+        failures.append("reordered total_artifact_value loops passed")
+    hire_heroes_key = ("ai_player.obj", 0x35AC8)
+    hire_heroes_probe = """\
+long first_id = player->recruits[0];
+long first_value;
+if (first_id != -1) {
+    first = gpGame->GetHero(first_id);
+    first_value = total_artifact_value(first, team);
+}
+long second_id = player->recruits[1];
+long second_value;
+if (second_id != -1) {
+    second = gpGame->GetHero(second_id);
+    second_value = total_artifact_value(second, team);
+}
+if (first && second_value <= first_value) {
+    if (!second || second_value < first_value)
+        return consider_hiring(team, first);
+    if (second->get_primary_skill_total()
+        > first->get_primary_skill_total()) {
+        return consider_hiring(team, second);
+    }
+    return consider_hiring(team, first);
+}
+if (!second)
+    return false;
+return consider_hiring(team, second);
+"""
+    if contract_violations(hire_heroes_probe, hire_heroes_key):
+        failures.append("aligned hire_heroes source shape did not pass")
+    reversed_hire_tie = hire_heroes_probe.replace(
+        "> first->get_primary_skill_total()",
+        "< first->get_primary_skill_total()")
+    if not contract_violations(reversed_hire_tie, hire_heroes_key):
+        failures.append("reversed hire_heroes primary tie-break passed")
+    initialized_second_hire = hire_heroes_probe.replace(
+        "long second_value;", "long second_value = 0;")
+    if not any("initialize second_value" in rule.description for rule in
+               contract_violations(initialized_second_hire,
+                                   hire_heroes_key)):
+        failures.append("initialized hire_heroes second_value passed")
+    reloaded_first_hire = hire_heroes_probe.replace(
+        "long first_id = player->recruits[0];\n", "").replace(
+            "first_id", "player->recruits[0]")
+    if not contract_violations(reloaded_first_hire, hire_heroes_key):
+        failures.append("reloaded hire_heroes first recruit id passed")
+    collapsed_hire_call = hire_heroes_probe.replace(
+        "    return consider_hiring(team, first);\n}\nif (!second)",
+        "}\nif (!second)")
+    if not any("four Dreamcast" in rule.description for rule in
+               contract_violations(collapsed_hire_call, hire_heroes_key)):
+        failures.append("collapsed hire_heroes source call group passed")
+    flipped_hire_tail = hire_heroes_probe.replace(
+        "if (!second)\n    return false;\n"
+        "return consider_hiring(team, second);",
+        "if (second)\n    return consider_hiring(team, second);\n"
+        "return false;")
+    if not contract_violations(flipped_hire_tail, hire_heroes_key):
+        failures.append("flipped hire_heroes failure tail passed")
     prohibited_key = ("ai_player.obj", 0x2F694)
     prohibited_probe = """\
 long human_strength;
@@ -12634,6 +12839,18 @@ bool operator==(const type_point& arg) const {
     if any(not type_point_header_violations(probe)
            for probe in bad_type_point_probes):
         failures.append("broken type_point equality source shape passed")
+    type_artifact_probe = """\
+struct type_artifact {
+    TArtifact artifactId;
+    int extra;
+};
+"""
+    if type_artifact_header_violations(type_artifact_probe):
+        failures.append("aligned type_artifact member type did not pass")
+    if not type_artifact_header_violations(
+            type_artifact_probe.replace(
+                "TArtifact artifactId", "int artifactId")):
+        failures.append("int-spelled type_artifact artifactId passed")
     get_location_probe = """\
     type_point get_location() const
     {
@@ -13795,14 +14012,34 @@ def _current_functions() -> dict[int, tuple[str, str]]:
     return {rvas[key]: key for key in status.fn_fuzzy(report) if key in rvas}
 
 
+def _effective_exact_vas(
+        current_exact: set[int],
+        baseline: dict[tuple[str, str], status.MatchRow]) -> set[int]:
+    """Current or banked-exact VAs for proof-carrying source admissions.
+
+    A header/TU optimizer dip cannot revoke a previously exact receiver and
+    turn its already-proved call transfer into a fresh Dreamcast omission.
+    MAX/history is monotone; rows without a retail RVA remain unknown.
+    """
+    exact = set(current_exact)
+    exact.update(
+        common.IMAGE_BASE + row.rva
+        for row in baseline.values()
+        if row.rva is not None and max(row.max, row.hist) >= 100.0)
+    return exact
+
+
 def _current_exact_vas() -> set[int]:
     if not status.REPORT.is_file():
-        return set()
+        return _effective_exact_vas(set(), status.load_baseline())
     report = json.loads(status.REPORT.read_text())
     scores = status.fn_fuzzy(report)
     rvas = status.function_rvas()
-    return {common.IMAGE_BASE + rvas[key] for key, score in scores.items()
-            if key in rvas and score >= 100.0}
+    current = {
+        common.IMAGE_BASE + rvas[key] for key, score in scores.items()
+        if key in rvas and score >= 100.0
+    }
+    return _effective_exact_vas(current, status.load_baseline())
 
 
 def _line_starts(text: str) -> list[int]:
@@ -14205,9 +14442,13 @@ def scan() -> tuple[
     hero_header = common.HOMM3_DIR / "include/hero.h"
     hero_text = hero_header.read_text(errors="replace")
     audited.add(_file_audit_scope("include/hero.h"))
+    artifact_type_defects = type_artifact_header_violations(hero_text)
     get_target_defects = hero_get_target_header_violations(hero_text)
     get_location_defects = hero_get_location_header_violations(hero_text)
-    checked += 2
+    checked += 3
+    missing.extend(FileContractViolation("include/hero.h", line,
+                                         description)
+                   for line, description in artifact_type_defects)
     missing.extend(FileContractViolation("include/hero.h", line,
                                          description)
                    for line, description in get_target_defects)

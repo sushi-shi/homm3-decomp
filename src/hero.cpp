@@ -699,7 +699,7 @@ int hero::load(TAbstractFile* infile, int saveVersion)
 
     if (saveVersion <= 30) {
         infile->Read(equipped, 18 * sizeof(type_artifact));
-        equipped[EQUIPPED_SLOT_SOD_MISC].artifactId = -1;
+        equipped[EQUIPPED_SLOT_SOD_MISC].artifactId = ARTIFACT_NONE;
         equipped[EQUIPPED_SLOT_SOD_MISC].extra = -1;
     } else {
         infile->Read(equipped, sizeof(equipped));
@@ -1014,7 +1014,7 @@ void hero::initialize(short index)
 #pragma inline_depth()
     }
     if (akHeroTraits[index].startsWithSpellbook)
-        equipped[17].artifactId = ARTIFACT_SPELLBOOK;
+        equipped[17].artifactId = artifact_from_int(ARTIFACT_SPELLBOOK);
     if (akHeroTraits[index].startingSpell != -1)
         AddSpell(akHeroTraits[index].startingSpell);
 
@@ -6040,7 +6040,7 @@ void hero::remove_backpack_artifact(short slot)
         backpack[slot] = backpack[slot + 1];
         slot++;
     }
-    backpack[slot].artifactId = -1;
+    backpack[slot].artifactId = ARTIFACT_NONE;
     backpackCount--;
 }
 

@@ -5191,36 +5191,44 @@ long AI_get_ship_cost(const hero* our_hero, type_point point)
     return -AI_resource_cost(player, cost);
 }
 
-// E:\\gamedcs\\ai_player.cpp:4457. The source helper is retained even
-// though Complete inlines both calls into hire_heroes. Complete also guards
-// the null returned by GetHero(-1); the older DC body assumes both tavern
-// recruits exist. Each artifact is intentionally reconstructed from only its
-// id, preserving the constructor's -1 payload before player-wide valuation.
-static __forceinline long total_artifact_value(hero* candidate,
-                                               long player_id)
+// E:\\gamedcs\\ai_player.cpp:4457. Dreamcast proves two lexical artifact
+// loops, with construction and valuation grouped in each statement, and the
+// source helper remains real even though Complete inlines both calls below.
+// The direct TArtifact construction preserves Dreamcast's proved field type.
+// Replacing it with the compatibility artifact_from_int helper is the negative
+// control: CFG stays 77/77 exact but the caller frame is four bytes short
+// (99.97449%). The caller gates both recruit ids, so this helper has no
+// source-false null guard.
+static long total_artifact_value(hero* candidate, long player_id)
 {
-    if (!candidate)
-        return 0;
-
     long total = 0;
     long slot;
     for (slot = 0; slot < HERO_BACKPACK_CAPACITY; ++slot) {
-        type_artifact artifact(artifact_from_int(
-            candidate->get_backpack(slot)->artifactId));
-        total += AI_get_artifact_player_value(artifact, player_id);
+        type_artifact backpack_artifact(
+            candidate->get_backpack(slot)->artifactId);
+        total += AI_get_artifact_player_value(backpack_artifact, player_id);
     }
     for (slot = 0; slot < 19; ++slot) {
-        type_artifact artifact(artifact_from_int(
-            candidate->get_artifact(slot)->artifactId));
-        total += AI_get_artifact_player_value(artifact, player_id);
+        type_artifact equipped_artifact(
+            candidate->get_artifact(slot)->artifactId);
+        total += AI_get_artifact_player_value(equipped_artifact, player_id);
     }
     return total;
 }
 
 // E:\\gamedcs\\ai_player.cpp:4670. Dreamcast supplies the cap checks,
-// computer-player census, two recruit valuations and primary-skill
-// tie-break. Retail corroborates those phases, adds the null-safe artifact
-// helper above, and chooses the second recruit when primary totals tie.
+// computer-player census, two recruit valuations and four source-level
+// consider_hiring groups. Complete is byte-exact with those groups retained.
+// Named recruit ids remove GetHero's otherwise duplicated -1 tests; the two
+// values deliberately remain uninitialized on the absent-recruit arms, as
+// retail and Dreamcast's two-recruit precondition prove. Complete cross-jumps
+// the four source calls into three emitted calls only with the failure-first
+// final arm. Both binaries evaluate the second primary total first and choose
+// the first recruit on a tie (`second > first` is the strict second-win arm).
+// Reinitializing second_value, collapsing the four calls through a selected
+// pointer, or reversing the final failure arm are source-shape controls and
+// break the exact 77-block lowering. No inline pin or synthetic carrier is
+// needed.
 VA(0x00431360, 0x463)  // DC statement/callee order + Complete retail body, dc 0x35ac8
 bool type_AI_player::hire_heroes()
 {
@@ -5246,31 +5254,31 @@ bool type_AI_player::hire_heroes()
         return false;
     }
 
-    if (player->recruits[0] != -1)
-        first = gpGame->GetHero(player->recruits[0]);
-    long first_value = total_artifact_value(first, team);
-    // Complete does not fetch the second recruit until the first recruit's
-    // expanded artifact valuation has finished.
-    if (player->recruits[1] != -1)
-        second = gpGame->GetHero(player->recruits[1]);
-    long second_value = total_artifact_value(second, team);
-
-    if (second && second_value > first_value)
-        return consider_hiring(team, second);
-    if (first && first_value > second_value)
-        return consider_hiring(team, first);
-    if (first && second) {
-        if (first->get_primary_skill_total()
-            > second->get_primary_skill_total()) {
-            return consider_hiring(team, first);
-        }
-        return consider_hiring(team, second);
+    long first_id = player->recruits[0];
+    long first_value;
+    if (first_id != -1) {
+        first = gpGame->GetHero(first_id);
+        first_value = total_artifact_value(first, team);
     }
-    if (first)
+    long second_id = player->recruits[1];
+    long second_value;
+    if (second_id != -1) {
+        second = gpGame->GetHero(second_id);
+        second_value = total_artifact_value(second, team);
+    }
+
+    if (first && second_value <= first_value) {
+        if (!second || second_value < first_value)
+            return consider_hiring(team, first);
+        if (second->get_primary_skill_total()
+            > first->get_primary_skill_total()) {
+            return consider_hiring(team, second);
+        }
         return consider_hiring(team, first);
-    if (second)
-        return consider_hiring(team, second);
-    return false;
+    }
+    if (!second)
+        return false;
+    return consider_hiring(team, second);
 }
 
 #if 0  // @carcass: claim-only home for the game.h COMDAT below
