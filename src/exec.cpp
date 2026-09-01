@@ -262,7 +262,7 @@ void executive::CallManager(baseManager* newManager)
 VA(0x004b0e40, 0xF5)  // anchor-callee, dc 0x9e9b0
 void executive::MainLoop()
 {
-    message msg = { 0, 0, 0, 0, 0, 0, 0, 0 };
+    message msg;
     int done = 0;
     int dispatch;
 

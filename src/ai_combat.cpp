@@ -1515,10 +1515,12 @@ void create_skeletons(const hero* current_hero, const armyGroup* dead_army, army
 // 97.3171. The surviving code delta is two instruction-scheduling choices:
 // retail moves the defender parameter ahead of the surrendered-byte init,
 // and delays the surrender store until between the call-argument pushes.
-// Making `surrendered` memory-resident remains load-bearing (75.4146 ->
-// 79.7256). Register hints, named defender aliases, declaration order and a
-// bottom-tested loop are byte-inert; a separate inline do_eagle_eye helper
-// regresses to 70.8963.
+// The old volatile spelling made `surrendered` memory-resident and was
+// load-bearing (75.4146 -> 79.7256), but Dreamcast proves an ordinary UCHAR
+// local and no external mutation. It is now a negative control, not source.
+// Register hints, named defender aliases, declaration order and a bottom-
+// tested loop are byte-inert; a separate inline do_eagle_eye helper regresses
+// to 70.8963.
 // 2026-08-14, the DC LOCAL census (dc 0x2be54) names retail's two
 // function-scope locals and their declaration ORDER: `defender_troop_count`
 // (T_SHORT, sp+0x16) FIRST, then `retreated` (T_UCHAR, sp+0x17) - which is
@@ -1534,7 +1536,7 @@ void create_skeletons(const hero* current_hero, const armyGroup* dead_army, army
 VA(0x00426ee0, 0x1D8)  // anchor-global, dc 0x2be54
 void type_AI_combat_data::do_aftermath(type_AI_combat_data* defender, const town* enemy_town)
 {
-    volatile unsigned char surrendered = 0;
+    unsigned char surrendered = 0;
     armyGroup* defeatedArmy = defender->get_army();
     hero* defeatedHero = defender->get_hero();
 

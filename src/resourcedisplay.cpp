@@ -74,11 +74,10 @@ TResourceDisplay::TResourceDisplay(heroWindow* parent, unsigned char is_small)
     int textX;
     int spacing;
     int borderWidth;
-    // Retail reloads the original flag from [ebp+0xc] here and after
-    // the loop. The volatile view prevents C1 from caching it in BL or
-    // reusing that parameter home for the widget-array cursor; it is
-    // byte-visible but does not change the ABI or the stored value.
-    if (static_cast<volatile unsigned char&>(is_small)) {
+    // Retail reloads the original flag from [ebp+0xc] here and after the
+    // loop. The former volatile view forced that allocation but did not model
+    // mutable state; the ordinary source parameter is authoritative.
+    if (is_small) {
         textX = 0x1d;
         spacing = 0x4c;
         borderWidth = 0x1a;
@@ -100,7 +99,7 @@ TResourceDisplay::TResourceDisplay(heroWindow* parent, unsigned char is_small)
         textX += spacing;
     }
 
-    if (static_cast<volatile unsigned char&>(is_small)) {
+    if (is_small) {
         statusWidget = new textWidget(
             0x22b, 3, 0xb2, 0x12, 0, "smalfont.fnt", font::WHITE,
             0x3f0, 1, 0, 8);
