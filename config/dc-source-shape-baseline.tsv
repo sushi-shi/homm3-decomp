@@ -1633,10 +1633,6 @@ call	singleselectionwindow.obj	0x1309f0	game::SaveGame
 call	singleselectionwindow.obj	0x1309f0	heroWindow::AddWidget
 call	singleselectionwindow.obj	0x136e94	TSingleSelectionWindow::IsMultiPlayer
 call	singleselectionwindow.obj	0x139498	TSingleSelectionWindow::GetDisplayTown
-call	singleselectionwindow.obj	0x1396d8	BackupGameHeaders
-call	singleselectionwindow.obj	0x1396d8	CDPlayHeroes::SetNetMsgHandler
-call	singleselectionwindow.obj	0x1396d8	ResourceManager::Dispose
-call	singleselectionwindow.obj	0x1396d8	ResourceManager::del_Spr_from_Cache
 call	singleselectionwindow.obj	0x139ccc	CSprite::GetHeight
 call	singleselectionwindow.obj	0x139ccc	CSprite::GetWidth
 call	singleselectionwindow.obj	0x139ccc	GetLCText
