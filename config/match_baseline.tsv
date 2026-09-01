@@ -73,8 +73,8 @@ advmgr	?DrawArrowShadow@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x11f
 advmgr	?DrawBoatPart@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	100.0000	100.0000	100.0000	0x10760	a1f17eb72995
 advmgr	?DrawBoatPartShadow@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	100.0000	100.0000	100.0000	0x109b0	a183c885ce4b
 advmgr	?DrawGround@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x12900	ac2aed792dc3
-advmgr	?DrawHeroPart@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	98.1667	98.1667	98.1667	0xfe30	5c08cdc18eb2
-advmgr	?DrawHeroPartShadow@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	98.1840	98.1840	98.1840	0x102c0	f64fdd2c59cf
+advmgr	?DrawHeroPart@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	98.1667	98.1667	98.1667	0xfe30	d074c3f12203
+advmgr	?DrawHeroPartShadow@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	98.1840	98.1840	98.1840	0x102c0	8a7d356b95f0
 advmgr	?DrawRiver@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x11b80	03d7efdb92c1
 advmgr	?DrawRoad@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x11d60	44da870e0885
 advmgr	?DrawRolloverText@advManager@@QAEXPAD@Z	100.0000	100.0000	100.0000	0xb0e0	62c3c3faf561
@@ -239,7 +239,7 @@ ai_player	??8type_point@@QBE_NABU0@@Z	100.0000	100.0000	100.0000	0x2ec20	994e61f
 ai_player	??_F?$vector@PAVtype_artifact_effect@@V?$allocator@PAVtype_artifact_effect@@@std@@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x324b0	-
 ai_player	??_Gtype_artifact_effect@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x324d0	-
 ai_player	??_Gtype_combat_artifact@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x33080	-
-ai_player	?AI_AttemptMove@@YIXPAVhero@@AAUHeroDestination@@AAJE@Z	80.9860	82.0053	82.0053	0x2fee0	74322f630bf2
+ai_player	?AI_AttemptMove@@YIXPAVhero@@AAUHeroDestination@@AAJE@Z	84.8316	84.8316	84.8316	0x2fee0	72363d035512
 ai_player	?AI_arrange_army@@YIXPAVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x2d8e0	6476d3737a0d
 ai_player	?AI_build_ship@@YIXPBVhero@@JJJ@Z	100.0000	100.0000	100.0000	0x30f80	357d4741dae5
 ai_player	?AI_choose_destination@@YIHPAVhero@@JAAUHeroDestination@@AAJEE@Z	76.8679	76.8679	76.8679	0x2e0b0	4be1d56c29bb
@@ -258,7 +258,7 @@ ai_player	?GetTown@game@@QAEPAVtown@@H@Z	100.0000	100.0000	100.0000	0x2ba30	1346
 ai_player	?HasBuilding@town@@QBE_NH_N@Z	100.0000	100.0000	100.0000	0x305a0	964b5b034749
 ai_player	?add_artifact@@YIEPAVhero@@Utype_artifact@@PAJ0J2J@Z	100.0000	100.0000	100.0000	0x33e20	491424c42444
 ai_player	?add_creatures@type_AI_creature_swapper@@IAEXW4TCreatureType@@FF@Z	100.0000	100.0000	100.0000	0x2c130	83f7182af229
-ai_player	?attempt_step@@YIEPAVhero@@PAUpathCell@@EE@Z	63.1306	63.1306	89.9189	0x2fc50	863efaafe67f
+ai_player	?attempt_step@@YIEPAVhero@@PAUpathCell@@EE@Z	100.0000	100.0000	100.0000	0x2fc50	bb64170c20f3
 ai_player	?attempt_teleport@@YIEPAVhero@@AAV?$vector@UpathCell@@V?$allocator@UpathCell@@@std@@@std@@J@Z	99.9658	99.9658	99.9658	0x30ab0	39dc2d8a9c4f
 ai_player	?build_markets@type_AI_player@@QAE_NPAH@Z	100.0000	100.0000	100.0000	0x2ab40	f6eec2228a6e
 ai_player	?build_path@@YIXPAVhero@@PAVsearchArray@@AAV?$vector@UpathCell@@V?$allocator@UpathCell@@@std@@@std@@AAUHeroDestination@@@Z	100.0000	100.0000	100.0000	0x30610	ae89deb9dec0
@@ -1486,6 +1486,7 @@ game	?SetupPuzzlePieces@game@@QAEHHH@Z	98.9637	98.9637	98.9637	0xbaf00	1d0bb1967
 game	?ShowComputerScreen@game@@QAEXXZ	100.0000	100.0000	100.0000	0xca5b0	0074fb32cfd0
 game	?ShowHeroesLogo@game@@QAEXXZ	100.0000	100.0000	100.0000	0xca780	4b6796bc7ccb
 game	?StartAITheme@@YIXXZ	100.0000	100.0000	100.0000	0xc6f40	45c7f5426a57
+game	?TransmitSaveGame@game@@QAEHHHEE@Z	72.9526	72.9526	72.9526	0xcafd0	687874605300
 game	?TurnOffAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6fd0	fe47952c0464
 game	?TurnOnAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6f80	0d6fe6e9e2a0
 game	?ValidateVictoryLossConditions@game@@QAEXE@Z	89.0407	89.0407	89.0407	0xbf780	263527e8a4bf
@@ -1613,7 +1614,6 @@ game	?test@?$bitset@$0JB@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xcfad0	-
 game	?update_bonus@generator@@QAEXXZ	100.0000	100.0000	100.0000	0xb87a0	a2ff06919677
 game	__h3cg$game$implicit_copy_assign$SCampaign	0.0000	100.0000	100.0000	0xbdc70	-
 game	game_ReceiveSaveGame	0.0000	0.0000	0.0000	0xcbd40	aad1e2b2b349
-game	game_TransmitSaveGame	0.0000	0.0000	0.0000	0xcafd0	6f5fb74884f0
 gametypewindow	??0TGameTypeWindow@@QAE@E@Z	100.0000	100.0000	100.0000	0xd54c0	f933a2a298bd
 gametypewindow	??1TGameTypeWindow@@UAE@XZ	100.0000	100.0000	100.0000	0xd5890	39e8a0790590
 gametypewindow	??_GTGameTypeWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xd5860	-
@@ -1816,9 +1816,9 @@ iconwdgt	??_GiconWidget@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xea6f0	-
 iconwdgt	?Draw@iconWidget@@UAEXXZ	100.0000	100.0000	100.0000	0xeab40	f62ed6ed6248
 iconwdgt	?GetRealHeight@iconWidget@@UAEHXZ	100.0000	100.0000	100.0000	0xeab30	cb3c13dfae54
 iconwdgt	?GetRealWidth@iconWidget@@UAEHXZ	100.0000	100.0000	100.0000	0xeab20	d1b9e008e482
-iconwdgt	?Main@iconWidget@@UAEHPAVmessage@@@Z	95.2708	95.2708	95.2708	0xea810	54af7e422bc9
-iconwdgt	?NextRandomFrame@iconWidget@@QAEXXZ	72.0056	72.0056	72.0056	0xeb060	cebc4510fa48
-iconwdgt	?NextRandomSiegeEngineFrame@iconWidget@@QAEXXZ	86.4111	86.4111	86.4111	0xeb250	4022055b3ace
+iconwdgt	?Main@iconWidget@@UAEHPAVmessage@@@Z	95.7040	95.7040	95.7040	0xea810	24fdc0c6cd40
+iconwdgt	?NextRandomFrame@iconWidget@@QAEXXZ	81.0449	81.0449	81.0449	0xeb060	093cb909a159
+iconwdgt	?NextRandomSiegeEngineFrame@iconWidget@@QAEXXZ	89.4667	89.4667	89.4667	0xeb250	0ccdbfa755c1
 iconwdgt	?SetIconFrame@iconWidget@@QAEXH@Z	100.0000	100.0000	100.0000	0xeaff0	ad2723f702d9
 iconwdgt	?SetSprite@iconWidget@@QAEXPBD@Z	100.0000	100.0000	100.0000	0xeb030	5864984a8156
 iconwdgt	?handle_click@iconWidget@@UAEEEE@Z	100.0000	100.0000	100.0000	0xeab10	f06db9071fe7
@@ -2178,7 +2178,7 @@ philai	?AI_bribe_monsters@@YIEPBVhero@@PAVNewmapCell@@W4TCreatureType@@FJ@Z	100.
 philai	?AI_choose_resource_or_experience@@YIEPBVhero@@W4EGameResource@@HH@Z	100.0000	100.0000	100.0000	0x127fe0	567f5fe7b35f
 philai	?AI_choose_secondary_skill@@YI?AW4TSecondarySkill@@PBVhero@@W41@1E@Z	100.0000	100.0000	100.0000	0x12bbd0	0f2e5122f3b7
 philai	?AI_enter_garrison@@YIXPAVhero@@PAVgarrison@@@Z	100.0000	100.0000	100.0000	0x124370	7cdfb5fc12c1
-philai	?AI_enter_town@@YIXPAVhero@@PAVtown@@@Z	99.4326	99.5109	99.5109	0x1253d0	3ca910ae5052
+philai	?AI_enter_town@@YIXPAVhero@@PAVtown@@@Z	99.1543	99.5109	99.5109	0x1253d0	e69b5532e2a3
 philai	?AI_examine_map@@YAXXZ	100.0000	100.0000	100.0000	0x12b9c0	80c8df47c261
 philai	?AI_friendly_hero_meeting@@YIXPAVhero@@0@Z	100.0000	100.0000	100.0000	0x125dc0	8c658f499984
 philai	?AI_get_spell_value@@YIJPBVhero@@H@Z	100.0000	100.0000	100.0000	0x127640	2d4e4d939119
@@ -2401,7 +2401,7 @@ remote	?IsExpired@CTurnDuration@@QAEEXZ	100.0000	100.0000	100.0000	0x157aa0	fe8e
 remote	?IsOn@CTurnDuration@@QAEEXZ	100.0000	100.0000	100.0000	0x157a80	d4cc9786488c
 remote	?IsOpen@CChatEdit@@UAE_NXZ	100.0000	100.0000	100.0000	0x1543e0	fe857de2fdca
 remote	?IsSaved@CSaveScreen@@QAEEXZ	100.0000	100.0000	100.0000	0x157400	85bb9eaf0933
-remote	?KillOldChat@CChatManager@@QAEXXZ	96.6265	96.6265	96.6265	0x153df0	13abd338340b
+remote	?KillOldChat@CChatManager@@QAEXXZ	96.6265	96.6265	96.6265	0x153df0	71de8ae89c52
 remote	?LobbyLaunchConnect@@YIEXZ	100.0000	100.0000	100.0000	0x155ef0	8f1a867fc59b
 remote	?OnEnter@CChatEdit@@UAEHVmessage@@@Z	100.0000	100.0000	100.0000	0x154380	5e1a9f645822
 remote	?OnEscape@CChatEdit@@UAEHVmessage@@@Z	100.0000	100.0000	100.0000	0x1543c0	cce22ad64aec
