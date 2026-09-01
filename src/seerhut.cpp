@@ -602,7 +602,9 @@ void type_skill_quest::DoProposalDialog(hero* current_hero)
 // slot before the vector loop and consequently chooses a different register
 // schedule. Tried and rejected: a named string alone, a bare c_str pointer
 // (destroys the temporary before the loop), a named string plus saved pointer,
-// and the lifetime-extending const reference below. The latter models the
+// and the lifetime-extending const reference below. VC6's accepted non-const
+// temporary-reference extension is byte-identical to the const form, so it
+// cannot recover the returned-EAX schedule either. The const form models the
 // shipped lifetime honestly and is retained instead of forcing allocator
 // scaffolding.
 // E:\gamedcs\seerhut.cpp
@@ -705,7 +707,9 @@ std::string type_skill_quest::skill_requirement_text(
 // the natural assignment (over-inlines assign, 49.37), inline_depth(1)
 // (byte-flat), inline_depth(0) over the whole expression (79.05), a const
 // reference (byte-identical to the named value), and a direct three-argument
-// assign (over-inlines further, 24.45).
+// assign (over-inlines further, 24.45). Combining that direct assign with
+// inline_depth(1) remains 24.45, while depth 0 moves to 82.78; neither keeps
+// retail's direct EAX argument and its separately inlined temporary cleanup.
 VA(0x0056e0d0, 0x169)  // anchor-vtable 0x6417c4 slot 14 + the shared text-table shape, retail-only
 void type_skill_quest::SetDefaultText()
 {
@@ -1062,9 +1066,14 @@ void type_monster_quest::Save(TAbstractFile* file)
 // three differing blocks are the EH-handler relocation addend, the initial
 // packed-point/cell-call register schedule, and one final inlined `_Eos`
 // where retail calls it. A named map pointer regresses the opening schedule;
-// direct one-argument string spellings either outline the wrapper or expand
-// `_Grow`. The traits-length/two-argument spelling below is the measured form
-// that reproduces retail's otherwise-unique middle-north assignment block.
+// bypassing the packed-point wrapper with the direct three-coordinate overload
+// likewise falls to 90.37%. Direct one-argument string spellings either
+// outline the wrapper or expand `_Grow`. Restricting the final completion
+// assignment to inline_depth(1) or 2 is byte-flat at 98.3426%; predict-inline
+// confirms the remaining call census is 28 here versus 29 retail, specifically
+// one missing `_Eos`. The traits-length/two-argument spelling below is the
+// measured form that reproduces retail's otherwise-unique middle-north
+// assignment block.
 // E:\gamedcs\seerhut.cpp
 VA(0x0056ef20, 0x57C)  // anchor-vtable 0x64183c slot 14 + quest-monster pool
 void type_monster_quest::SetDefaultText()
@@ -1532,7 +1541,9 @@ void type_creature_quest::DoProposalDialog(hero* current_hero)
 // retail inline boundary. inline_depth(0) leaves one instruction: this compile
 // calls basic_string::~basic_string, while retail inlines that wrapper and
 // calls `_Tidy(1)`. Default depth expands the complete refcount path and falls
-// to 90.8971%; depth 1 is likewise rejected at 86.0535%.
+// to 90.8971%; depth 1 is likewise rejected at 86.0535%. Moving either pin to
+// the inner vector-scope exit cannot isolate its element cleanup: depth 0 falls
+// to 83.51% and depth 1 reproduces the same 86.05% class.
 // E:\gamedcs\seerhut.cpp
 VA(0x00570b80, 0x2D5)  // anchor-vtable 0x6418b4 slot 5 + creature picture class, retail-only
 void type_creature_quest::DoProgressDialog()
@@ -2484,14 +2495,15 @@ int TSeerHut::getValue(hero* currentHero)
 // acceptance/payment/reward in this caller and reached the MAX, but
 // Dreamcast's DoCompletionDialog dossier positively places that accepted tail
 // inside the helper. The retained source restores that ownership and returns
-// through the helper on the human arm; retain that evidence-backed ownership. VC6
-// still leaves both EH-bearing helpers as calls in this otherwise frameless
-// caller. Moving their definitions before this body, `inline`, and
-// `__forceinline` before/after visibility were byte-flat. Re-measured
-// 2026-09-01: statement-scoped rand/format_string pins, a sole-caller
-// auto_inline fence on GetRewardExtra, the completion line-gap invariant,
-// and tightly scoped names for both real string temporaries are byte-flat as
-// well. An `if (0)` probe
+// through the helper on the human arm; retain that evidence-backed ownership.
+// dc_source_shape now ratchets it. VC6 still leaves both EH-bearing helpers as
+// calls in this otherwise frameless caller: 26 candidate blocks against
+// retail's 59, with 33 target-only helper blocks. Moving their definitions
+// before this body, `inline`, and `__forceinline` before/after visibility were
+// byte-flat. Re-measured 2026-09-01: statement-scoped rand/format_string pins,
+// a sole-caller auto_inline fence on GetRewardExtra, the completion line-gap
+// invariant, and tightly scoped names for both real string temporaries are
+// byte-flat as well. An `if (0)` probe
 // with two dead std::string declarations made both helpers expand and measured
 // 95.1173% (13 calls on each side), but it was only an inliner instrument and
 // was removed. At that peak the sole residual was the completion temporary's
