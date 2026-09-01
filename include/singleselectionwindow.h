@@ -77,12 +77,15 @@ struct GameSelectionHeadersStruct {
     _FILETIME fileTime;               // +0x6f8
     SavedGameHeader saved;            // +0x700
 
-    // Defined out of class in the TU (plain, not inline-marked): /Ob2
-    // expands it at the transfer-opener resize temps exactly as retail
-    // does (member ctors stay calls, the fills and difficulty store
-    // inline) while OnGameHeaderInfoMsg's wire-message construction
-    // keeps retail's call to the 0x578e00 COMDAT.
-    GameSelectionHeadersStruct();
+    // Dreamcast CodeView places this source-declared constructor in
+    // SingleSelectionWindow.h:73. Complete's wider record keeps the same
+    // boundary and adds the two PC text-band clears plus difficulty preset.
+    GameSelectionHeadersStruct()
+    {
+        memset(title, 0, sizeof(title));
+        memset(description, 0, sizeof(description));
+        setup.difficulty = 1;
+    }
     // The copy ctor stays DECLARED-ONLY so its call sites keep
     // retail's out-of-line call (the declare-but-do-not-define
     // lever). operator= is IMPLICIT: the synthesized memberwise body
@@ -91,7 +94,6 @@ struct GameSelectionHeadersStruct {
     // and the SelectionHeaders mirror, expanded for
     // OnGameHeaderInfoMsg's source-list row.
     GameSelectionHeadersStruct(const GameSelectionHeadersStruct& that);
-    ~GameSelectionHeadersStruct();
 };
 SIZE(GameSelectionHeadersStruct, 0xCA4);
 
@@ -562,7 +564,10 @@ public:
     // GetHeader fills one row's header temp from (dir, filename) -
     // retail widened DC's (cFilename, pHeader) with the dir argument
     // its chdir dance needs.
+    int GetFileSpecNbr();
     void GetHeaders(std::vector<GameSelectionHeadersStruct>* pHeaders);
+    void WindowFn_00582e90(
+        std::vector<GameSelectionHeadersStruct>* pHeaders);
     int GetHeader(char* dir, char* cFilename,
                   GameSelectionHeadersStruct* pHeader);
     // Retail 0x580a70 widened DC's no-arg SetupScenarioOptions with the
