@@ -3966,8 +3966,10 @@ void TSingleSelectionWindow::SetFilter(int size)
             std::vector<GameSelectionHeadersStruct>::iterator w =
                 dst.end();
             const GameSelectionHeadersStruct& v = (*src)[i];
+            // INLINE_GATE: DC lines 5006-5010 prove this filtered append's
+            // loop/scope; retail's exact 0x585d90 body retains insert here.
 #pragma inline_depth(0)
-            dst.insert(w, 1, v);
+            INLINE_GATE(dst.insert(w, 1, v));
 #pragma inline_depth()
         }
     }
@@ -4043,16 +4045,17 @@ unsigned char TSingleSelectionWindow::OnClickMsg(CNetMsg* pNetMsg)
 
 #endif  // @carcass
 
+// The retail jump-table arm layout and Dreamcast's line table independently
+// prove the shared arm order below.  It is source order, not numeric selector
+// order; keep msg->codeY direct because Dreamcast has no cached-id local.
 // E:\gamedcs\singleselectionwindow.cpp:5100
 VA(0x005865b0, 0x13EA)  // anchor-callee WindowHandler's id==0x200/codeX==13 arm calls it (msg, &redraw, 0) - the DC signature exactly; size 0.57x dc 0x22d4, dc 0x13c79c
 int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
                                               unsigned char* bExitFlag,
                                               unsigned char remoteClick)
 {
-    int id = msg->codeY;
-
     if (bVideoPaused && !m_flag65 && IsHost()) {
-        switch (id) {
+        switch (msg->codeY) {
         case SSW_DIFFICULTY_FIRST:
         case SSW_DIFFICULTY_FIRST + 1:
         case SSW_DIFFICULTY_FIRST + 2:
@@ -4113,115 +4116,14 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
         case SSW_FILTER_DURATION_LAST:
         case SSW_FILTER_DURATION_ANY:
         case SSW_RANDOM_MAPS: {
-            CClickMsg netMsg(id);
+            CClickMsg netMsg(msg->codeY);
             TransmitRemoteDataDPID(&netMsg, 0, false, true);
             break;
         }
         }
     }
 
-    switch (id) {
-    case SSW_DIFFICULTY_FIRST:
-    case SSW_DIFFICULTY_FIRST + 1:
-    case SSW_DIFFICULTY_FIRST + 2:
-    case SSW_DIFFICULTY_FIRST + 3:
-    case SSW_DIFFICULTY_LAST:
-        gpGame->setup.difficulty =
-            static_cast<signed char>(id - SSW_DIFFICULTY_FIRST);
-        lastDiff = gpGame->setup.difficulty;
-        SetDifficultyHiLite();
-        SendSetupInfo(0);
-        Update();
-        break;
-
-    case SSW_SCENARIO_OPTIONS:
-        SetupScenarioOptions(0);
-        DrawWindow(0, 0xffff0001, 0xffff);
-        Update();
-        break;
-    case SSW_ADVANCED_OPTIONS:
-        SetupAdvancedOptions();
-        DrawWindow(0, 0xffff0001, 0xffff);
-        Update();
-        break;
-    case SSW_FILTER_OPTIONS:
-        SetupFilterOptions();
-        UpdateFilterWidgets();
-        DrawWindow(0, 0xffff0001, 0xffff);
-        Update();
-        break;
-    case SSW_CHAT_TOGGLE:
-        if (bVideoPaused && !m_flag65) {
-            if (chatShowing)
-                TurnChatOff(1);
-            else
-                TurnChatOn(1);
-        }
-        break;
-
-    case SSW_SIZE_FILTER_SMALL:
-        SetFilter(MAP_DIMENSION_SMALL);
-        break;
-    case SSW_SIZE_FILTER_MEDIUM:
-        SetFilter(MAP_DIMENSION_MEDIUM);
-        break;
-    case SSW_SIZE_FILTER_LARGE:
-        SetFilter(MAP_DIMENSION_LARGE);
-        break;
-    case SSW_SIZE_FILTER_XLARGE:
-        SetFilter(MAP_DIMENSION_EXTRA_LARGE);
-        break;
-    case SSW_SIZE_FILTER_ALL:
-        SetFilter(0);
-        break;
-
-    case SSW_FILE_ROW_FIRST:
-    case SSW_FILE_ROW_FIRST + 1:
-    case SSW_FILE_ROW_FIRST + 2:
-    case SSW_FILE_ROW_FIRST + 3:
-    case SSW_FILE_ROW_FIRST + 4:
-    case SSW_FILE_ROW_FIRST + 5:
-    case SSW_FILE_ROW_FIRST + 6:
-    case SSW_FILE_ROW_FIRST + 7:
-    case SSW_FILE_ROW_FIRST + 8:
-    case SSW_FILE_ROW_FIRST + 9:
-    case SSW_FILE_ROW_FIRST + 10:
-    case SSW_FILE_ROW_FIRST + 11:
-    case SSW_FILE_ROW_FIRST + 12:
-    case SSW_FILE_ROW_FIRST + 13:
-    case SSW_FILE_ROW_FIRST + 14:
-    case SSW_FILE_ROW_FIRST + 15:
-    case SSW_FILE_ROW_FIRST + 16:
-    case SSW_FILE_ROW_LAST: {
-        unsigned int map = id - SSW_FILE_ROW_FIRST + currentIndex;
-        if (m_flag65) {
-            field_68 = id - SSW_FILE_ROW_FIRST;
-            SetCurrentMap(map, 1);
-        } else if (SelectionHeaders.size() != 0
-                && map < SelectionHeaders.size()) {
-            unsigned long now = timeGetTime();
-            if (static_cast<int>(now - clickTime) < 400) {
-                *bExitFlag = OnBeginGame();
-            } else {
-                clickTime = now;
-                if (SelectionHeaders.size() != 0
-                        && map < SelectionHeaders.size()
-                        && (!bVideoPaused || IsHost()))
-                    SetCurrentMap(map, 1);
-            }
-        }
-        break;
-    }
-
-    case SSW_BEGIN:
-        if (!m_flag65) {
-            *bExitFlag = OnBeginGame();
-        } else {
-            *bExitFlag = SaveValid(saveGameEdit->GetText());
-            if (*bExitFlag)
-                gpMouseManager->SetPointer(1, mouseManager::ADVENTURE_SET);
-        }
-        break;
+    switch (msg->codeY) {
     case SSW_BACK:
         msg->id = 0x7801;
         *bExitFlag = 1;
@@ -4235,54 +4137,15 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
         memset(gUnnamed69fc2c, 0, 351);
         break;
 
-    case SSW_SORT_SIZE:
-        OnSortMaps(SORT_MAPS_BY_SIZE);
-        break;
-    case SSW_SORT_PLAYERS:
-        OnSortMaps(SORT_MAPS_BY_PLAYERS);
-        break;
-    case SSW_SORT_VERSION:
-        OnSortMaps(SORT_MAPS_BY_VERSION);
-        break;
-    case SSW_SORT_NAME:
-        OnSortMaps(SORT_MAPS_BY_NAME);
-        break;
-    case SSW_SORT_VICTORY:
-        OnSortMaps(SORT_MAPS_BY_VICTORY);
-        break;
-    case SSW_SORT_LOSS:
-        OnSortMaps(SORT_MAPS_BY_LOSS);
-        break;
-
-    case SSW_HANDICAP_FIRST:
-    case SSW_HANDICAP_FIRST + 1:
-    case SSW_HANDICAP_FIRST + 2:
-    case SSW_HANDICAP_FIRST + 3:
-    case SSW_HANDICAP_FIRST + 4:
-    case SSW_HANDICAP_FIRST + 5:
-    case SSW_HANDICAP_FIRST + 6:
-    case SSW_HANDICAP_LAST: {
-        if (!bVideoPaused || IsHost() || remoteClick) {
-            int pos = id - SSW_HANDICAP_FIRST;
-            CNetPlayerHandlerPlayer* player = m_players.GetPlayerInPos(pos);
-            if (!player)
-                player = m_players.GetCompPlayerInPos(pos);
-            if (player) {
-                player->handicap =
-                    static_cast<signed char>((player->handicap + 1) % 3);
-                widget* w = GetWidget(id);
-                if (w) {
-                    int saveStatus = w->status;
-                    w->status |= widget::WIDGET_ACTIVE;
-                    w->send_message(widget::WIDGET_SET_TEXT,
-                                    int(gUnnamed6a7800[player->handicap]));
-                    w->status = saveStatus;
-                }
-                DrawHeroAdvancedOption(pos, 1, -1);
-            }
+    case SSW_BEGIN:
+        if (!m_flag65) {
+            *bExitFlag = OnBeginGame();
+        } else {
+            *bExitFlag = SaveValid(saveGameEdit->GetText());
+            if (*bExitFlag)
+                gpMouseManager->SetPointer(1, mouseManager::ADVENTURE_SET);
         }
         break;
-    }
 
     case SSW_TOWN_PREV_FIRST:
     case SSW_TOWN_PREV_FIRST + 1:
@@ -4292,7 +4155,7 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
     case SSW_TOWN_PREV_FIRST + 5:
     case SSW_TOWN_PREV_FIRST + 6:
     case SSW_TOWN_PREV_LAST: {
-        int pos = id - SSW_TOWN_PREV_FIRST;
+        int pos = msg->codeY - SSW_TOWN_PREV_FIRST;
         CNetPlayerHandlerPlayer* player = m_players.GetPlayerInPos(pos);
         if (!player)
             player = m_players.GetCompPlayerInPos(pos);
@@ -4320,7 +4183,7 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
     case SSW_TOWN_NEXT_FIRST + 5:
     case SSW_TOWN_NEXT_FIRST + 6:
     case SSW_TOWN_NEXT_LAST: {
-        int pos = id - SSW_TOWN_NEXT_FIRST;
+        int pos = msg->codeY - SSW_TOWN_NEXT_FIRST;
         CNetPlayerHandlerPlayer* player = m_players.GetPlayerInPos(pos);
         if (!player)
             player = m_players.GetCompPlayerInPos(pos);
@@ -4349,7 +4212,7 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
     case SSW_HERO_PREV_FIRST + 5:
     case SSW_HERO_PREV_FIRST + 6:
     case SSW_HERO_PREV_LAST: {
-        int pos = id - SSW_HERO_PREV_FIRST;
+        int pos = msg->codeY - SSW_HERO_PREV_FIRST;
         if (!IsHost()) {
             CRequestHeroFaceMsg netMsg(-1);
             TransmitRemoteDataDPID(&netMsg, 0, false, true);
@@ -4372,7 +4235,7 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
     case SSW_HERO_NEXT_FIRST + 5:
     case SSW_HERO_NEXT_FIRST + 6:
     case SSW_HERO_NEXT_LAST: {
-        int pos = id - SSW_HERO_NEXT_FIRST;
+        int pos = msg->codeY - SSW_HERO_NEXT_FIRST;
         if (!IsHost()) {
             CRequestHeroFaceMsg netMsg(1);
             TransmitRemoteDataDPID(&netMsg, 0, false, true);
@@ -4388,75 +4251,34 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
         break;
     }
 
-    case SSW_BONUS_PREV_FIRST:
-    case SSW_BONUS_PREV_FIRST + 1:
-    case SSW_BONUS_PREV_FIRST + 2:
-    case SSW_BONUS_PREV_FIRST + 3:
-    case SSW_BONUS_PREV_FIRST + 4:
-    case SSW_BONUS_PREV_FIRST + 5:
-    case SSW_BONUS_PREV_FIRST + 6:
-    case SSW_BONUS_PREV_LAST: {
-        int pos = id - SSW_BONUS_PREV_FIRST;
-        CNetPlayerHandlerPlayer* player = m_players.GetPlayerInPos(pos);
-        if (!player)
-            player = m_players.GetCompPlayerInPos(pos);
-        if (!player)
-            return 0;
-        unsigned char noHero = player->heroIndex == -1
-            && !HasRandomHero(pos) && !HasNonRandomHero(pos);
-        --player->startBonusIndex;
-        if (player->startBonusIndex < 0
-                || (player->startBonusIndex == 0 && noHero))
-            player->startBonusIndex = NEW_MAP_BONUS_RANDOM;
-        if (GetDisplayTown(pos) == -1
-                && player->startBonusIndex == NEW_MAP_BONUS_RESOURCE)
-            player->startBonusIndex = NEW_MAP_BONUS_GOLD;
-        if (bVideoPaused) {
-            CSetAGRMsg netMsg(pos, player->startBonusIndex);
-            TransmitRemoteDataDPID(&netMsg, 0, false, true);
-        }
-        DrawHeroAdvancedOption(pos, 1, -1);
+    case SSW_DIFFICULTY_FIRST:
+    case SSW_DIFFICULTY_FIRST + 1:
+    case SSW_DIFFICULTY_FIRST + 2:
+    case SSW_DIFFICULTY_FIRST + 3:
+    case SSW_DIFFICULTY_LAST:
+        gpGame->setup.difficulty =
+            static_cast<signed char>(msg->codeY - SSW_DIFFICULTY_FIRST);
+        lastDiff = gpGame->setup.difficulty;
+        SetDifficultyHiLite();
+        SendSetupInfo(0);
+        Update();
         break;
-    }
-    case SSW_BONUS_NEXT_FIRST:
-    case SSW_BONUS_NEXT_FIRST + 1:
-    case SSW_BONUS_NEXT_FIRST + 2:
-    case SSW_BONUS_NEXT_FIRST + 3:
-    case SSW_BONUS_NEXT_FIRST + 4:
-    case SSW_BONUS_NEXT_FIRST + 5:
-    case SSW_BONUS_NEXT_FIRST + 6:
-    case SSW_BONUS_NEXT_LAST: {
-        int pos = id - SSW_BONUS_NEXT_FIRST;
-        CNetPlayerHandlerPlayer* player = m_players.GetPlayerInPos(pos);
-        if (!player)
-            player = m_players.GetCompPlayerInPos(pos);
-        if (!player)
-            return 0;
-        unsigned char noHero = player->heroIndex == -1
-            && !HasRandomHero(pos) && !HasNonRandomHero(pos);
-        player->startBonusIndex = (player->startBonusIndex + 1) % 4;
-        if (player->startBonusIndex == 0 && noHero)
-            player->startBonusIndex = NEW_MAP_BONUS_GOLD;
-        if (GetDisplayTown(pos) == -1
-                && player->startBonusIndex == NEW_MAP_BONUS_RESOURCE)
-            player->startBonusIndex = NEW_MAP_BONUS_RANDOM;
-        if (bVideoPaused) {
-            CSetAGRMsg netMsg(pos, player->startBonusIndex);
-            TransmitRemoteDataDPID(&netMsg, 0, false, true);
-        }
-        DrawHeroAdvancedOption(pos, 1, -1);
-        break;
-    }
 
-    case SSW_PLAYER_POS_FIRST:
-    case SSW_PLAYER_POS_FIRST + 1:
-    case SSW_PLAYER_POS_FIRST + 2:
-    case SSW_PLAYER_POS_FIRST + 3:
-    case SSW_PLAYER_POS_FIRST + 4:
-    case SSW_PLAYER_POS_FIRST + 5:
-    case SSW_PLAYER_POS_FIRST + 6:
-    case SSW_PLAYER_POS_LAST:
-        OnPlayerPosClick(id - SSW_PLAYER_POS_FIRST);
+    case SSW_SCENARIO_OPTIONS:
+        SetupScenarioOptions(0);
+        DrawWindow(0, 0xffff0001, 0xffff);
+        Update();
+        break;
+    case SSW_ADVANCED_OPTIONS:
+        SetupAdvancedOptions();
+        DrawWindow(0, 0xffff0001, 0xffff);
+        Update();
+        break;
+    case SSW_FILTER_OPTIONS:
+        SetupFilterOptions();
+        UpdateFilterWidgets();
+        DrawWindow(0, 0xffff0001, 0xffff);
+        Update();
         break;
 
     case SSW_GENERATE_RANDOM_MAP: {
@@ -4505,7 +4327,7 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
     case SSW_FILTER_PLAYERS_FIRST + 5:
     case SSW_FILTER_PLAYERS_FIRST + 6:
     case SSW_FILTER_PLAYERS_LAST:
-        field_18A0[2] = id - SSW_FILTER_PLAYERS_FIRST + 1;
+        field_18A0[2] = msg->codeY - SSW_FILTER_PLAYERS_FIRST + 1;
         UpdateFilterWidgets();
         DrawWindow(0, 0xffff0001, 0xffff);
         Update();
@@ -4524,7 +4346,7 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
     case SSW_FILTER_HUMANS_FIRST + 5:
     case SSW_FILTER_HUMANS_FIRST + 6:
     case SSW_FILTER_HUMANS_LAST:
-        field_18A0[3] = id - SSW_FILTER_HUMANS_FIRST;
+        field_18A0[3] = msg->codeY - SSW_FILTER_HUMANS_FIRST;
         UpdateFilterWidgets();
         DrawWindow(0, 0xffff0001, 0xffff);
         Update();
@@ -4543,7 +4365,7 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
     case SSW_FILTER_TEAMS_FIRST + 5:
     case SSW_FILTER_TEAMS_FIRST + 6:
     case SSW_FILTER_TEAMS_LAST:
-        field_18A0[4] = id - SSW_FILTER_TEAMS_FIRST;
+        field_18A0[4] = msg->codeY - SSW_FILTER_TEAMS_FIRST;
         UpdateFilterWidgets();
         DrawWindow(0, 0xffff0001, 0xffff);
         Update();
@@ -4561,7 +4383,7 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
     case SSW_FILTER_VERSION_FIRST + 4:
     case SSW_FILTER_VERSION_FIRST + 5:
     case SSW_FILTER_VERSION_LAST:
-        field_18A0[5] = id - SSW_FILTER_VERSION_FIRST;
+        field_18A0[5] = msg->codeY - SSW_FILTER_VERSION_FIRST;
         UpdateFilterWidgets();
         DrawWindow(0, 0xffff0001, 0xffff);
         Update();
@@ -4576,7 +4398,7 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
     case SSW_FILTER_CATEGORY_FIRST + 1:
     case SSW_FILTER_CATEGORY_FIRST + 2:
     case SSW_FILTER_CATEGORY_LAST:
-        field_18A0[6] = id - SSW_FILTER_CATEGORY_FIRST;
+        field_18A0[6] = msg->codeY - SSW_FILTER_CATEGORY_FIRST;
         UpdateFilterWidgets();
         DrawWindow(0, 0xffff0001, 0xffff);
         Update();
@@ -4584,7 +4406,7 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
     case SSW_FILTER_DURATION_FIRST:
     case SSW_FILTER_DURATION_FIRST + 1:
     case SSW_FILTER_DURATION_LAST:
-        field_18A0[7] = id - SSW_FILTER_DURATION_FIRST;
+        field_18A0[7] = msg->codeY - SSW_FILTER_DURATION_FIRST;
         UpdateFilterWidgets();
         DrawWindow(0, 0xffff0001, 0xffff);
         Update();
@@ -4601,6 +4423,45 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
         Update();
         break;
 
+    case SSW_CHAT_TOGGLE:
+        if (bVideoPaused && !m_flag65) {
+            if (chatShowing)
+                TurnChatOff(1);
+            else
+                TurnChatOn(1);
+        }
+        break;
+
+    case SSW_HANDICAP_FIRST:
+    case SSW_HANDICAP_FIRST + 1:
+    case SSW_HANDICAP_FIRST + 2:
+    case SSW_HANDICAP_FIRST + 3:
+    case SSW_HANDICAP_FIRST + 4:
+    case SSW_HANDICAP_FIRST + 5:
+    case SSW_HANDICAP_FIRST + 6:
+    case SSW_HANDICAP_LAST: {
+        if (!bVideoPaused || IsHost() || remoteClick) {
+            int pos = msg->codeY - SSW_HANDICAP_FIRST;
+            CNetPlayerHandlerPlayer* player = m_players.GetPlayerInPos(pos);
+            if (!player)
+                player = m_players.GetCompPlayerInPos(pos);
+            if (player) {
+                player->handicap =
+                    static_cast<signed char>((player->handicap + 1) % 3);
+                widget* w = GetWidget(msg->codeY);
+                if (w) {
+                    int saveStatus = w->status;
+                    w->status |= widget::WIDGET_ACTIVE;
+                    w->send_message(widget::WIDGET_SET_TEXT,
+                                    int(gUnnamed6a7800[player->handicap]));
+                    w->status = saveStatus;
+                }
+                DrawHeroAdvancedOption(pos, 1, -1);
+            }
+        }
+        break;
+    }
+
     case SSW_NAME_FIRST:
     case SSW_NAME_FIRST + 1:
     case SSW_NAME_FIRST + 2:
@@ -4609,9 +4470,154 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
     case SSW_NAME_FIRST + 5:
     case SSW_NAME_FIRST + 6:
     case SSW_NAME_LAST:
-        OnNameClick(id - SSW_NAME_FIRST);
+        OnNameClick(msg->codeY - SSW_NAME_FIRST);
         Update();
         break;
+
+    case SSW_PLAYER_POS_FIRST:
+    case SSW_PLAYER_POS_FIRST + 1:
+    case SSW_PLAYER_POS_FIRST + 2:
+    case SSW_PLAYER_POS_FIRST + 3:
+    case SSW_PLAYER_POS_FIRST + 4:
+    case SSW_PLAYER_POS_FIRST + 5:
+    case SSW_PLAYER_POS_FIRST + 6:
+    case SSW_PLAYER_POS_LAST:
+        OnPlayerPosClick(msg->codeY - SSW_PLAYER_POS_FIRST);
+        break;
+
+    case SSW_SORT_NAME:
+        OnSortMaps(SORT_MAPS_BY_NAME);
+        break;
+    case SSW_SORT_SIZE:
+        OnSortMaps(SORT_MAPS_BY_SIZE);
+        break;
+    case SSW_SORT_VERSION:
+        OnSortMaps(SORT_MAPS_BY_VERSION);
+        break;
+    case SSW_SORT_PLAYERS:
+        OnSortMaps(SORT_MAPS_BY_PLAYERS);
+        break;
+    case SSW_SORT_VICTORY:
+        OnSortMaps(SORT_MAPS_BY_VICTORY);
+        break;
+    case SSW_SORT_LOSS:
+        OnSortMaps(SORT_MAPS_BY_LOSS);
+        break;
+
+    case SSW_FILE_ROW_FIRST:
+    case SSW_FILE_ROW_FIRST + 1:
+    case SSW_FILE_ROW_FIRST + 2:
+    case SSW_FILE_ROW_FIRST + 3:
+    case SSW_FILE_ROW_FIRST + 4:
+    case SSW_FILE_ROW_FIRST + 5:
+    case SSW_FILE_ROW_FIRST + 6:
+    case SSW_FILE_ROW_FIRST + 7:
+    case SSW_FILE_ROW_FIRST + 8:
+    case SSW_FILE_ROW_FIRST + 9:
+    case SSW_FILE_ROW_FIRST + 10:
+    case SSW_FILE_ROW_FIRST + 11:
+    case SSW_FILE_ROW_FIRST + 12:
+    case SSW_FILE_ROW_FIRST + 13:
+    case SSW_FILE_ROW_FIRST + 14:
+    case SSW_FILE_ROW_FIRST + 15:
+    case SSW_FILE_ROW_FIRST + 16:
+    case SSW_FILE_ROW_LAST: {
+        unsigned int map = msg->codeY - SSW_FILE_ROW_FIRST + currentIndex;
+        if (m_flag65) {
+            field_68 = msg->codeY - SSW_FILE_ROW_FIRST;
+            SetCurrentMap(map, 1);
+        } else if (SelectionHeaders.size() != 0
+                && map < SelectionHeaders.size()) {
+            unsigned long now = timeGetTime();
+            if (static_cast<int>(now - clickTime) < 400) {
+                *bExitFlag = OnBeginGame();
+            } else {
+                clickTime = now;
+                if (SelectionHeaders.size() != 0
+                        && map < SelectionHeaders.size()
+                        && (!bVideoPaused || IsHost()))
+                    SetCurrentMap(map, 1);
+            }
+        }
+        break;
+    }
+
+    case SSW_BONUS_PREV_FIRST:
+    case SSW_BONUS_PREV_FIRST + 1:
+    case SSW_BONUS_PREV_FIRST + 2:
+    case SSW_BONUS_PREV_FIRST + 3:
+    case SSW_BONUS_PREV_FIRST + 4:
+    case SSW_BONUS_PREV_FIRST + 5:
+    case SSW_BONUS_PREV_FIRST + 6:
+    case SSW_BONUS_PREV_LAST: {
+        int pos = msg->codeY - SSW_BONUS_PREV_FIRST;
+        CNetPlayerHandlerPlayer* player = m_players.GetPlayerInPos(pos);
+        if (!player)
+            player = m_players.GetCompPlayerInPos(pos);
+        if (!player)
+            return 0;
+        unsigned char noHero = player->heroIndex == -1
+            && !HasRandomHero(pos) && !HasNonRandomHero(pos);
+        --player->startBonusIndex;
+        if (player->startBonusIndex < 0
+                || (player->startBonusIndex == 0 && noHero))
+            player->startBonusIndex = NEW_MAP_BONUS_RANDOM;
+        if (GetDisplayTown(pos) == -1
+                && player->startBonusIndex == NEW_MAP_BONUS_RESOURCE)
+            player->startBonusIndex = NEW_MAP_BONUS_GOLD;
+        if (bVideoPaused) {
+            CSetAGRMsg msg(pos, player->startBonusIndex);
+            TransmitRemoteDataDPID(&msg, 0, false, true);
+        }
+        DrawHeroAdvancedOption(pos, 1, -1);
+        break;
+    }
+    case SSW_BONUS_NEXT_FIRST:
+    case SSW_BONUS_NEXT_FIRST + 1:
+    case SSW_BONUS_NEXT_FIRST + 2:
+    case SSW_BONUS_NEXT_FIRST + 3:
+    case SSW_BONUS_NEXT_FIRST + 4:
+    case SSW_BONUS_NEXT_FIRST + 5:
+    case SSW_BONUS_NEXT_FIRST + 6:
+    case SSW_BONUS_NEXT_LAST: {
+        int pos = msg->codeY - SSW_BONUS_NEXT_FIRST;
+        CNetPlayerHandlerPlayer* player = m_players.GetPlayerInPos(pos);
+        if (!player)
+            player = m_players.GetCompPlayerInPos(pos);
+        if (!player)
+            return 0;
+        unsigned char noHero = player->heroIndex == -1
+            && !HasRandomHero(pos) && !HasNonRandomHero(pos);
+        player->startBonusIndex = (player->startBonusIndex + 1) % 4;
+        if (player->startBonusIndex == 0 && noHero)
+            player->startBonusIndex = NEW_MAP_BONUS_GOLD;
+        if (GetDisplayTown(pos) == -1
+                && player->startBonusIndex == NEW_MAP_BONUS_RESOURCE)
+            player->startBonusIndex = NEW_MAP_BONUS_RANDOM;
+        if (bVideoPaused) {
+            CSetAGRMsg msg(pos, player->startBonusIndex);
+            TransmitRemoteDataDPID(&msg, 0, false, true);
+        }
+        DrawHeroAdvancedOption(pos, 1, -1);
+        break;
+    }
+
+    case SSW_SIZE_FILTER_SMALL:
+        SetFilter(MAP_DIMENSION_SMALL);
+        break;
+    case SSW_SIZE_FILTER_MEDIUM:
+        SetFilter(MAP_DIMENSION_MEDIUM);
+        break;
+    case SSW_SIZE_FILTER_LARGE:
+        SetFilter(MAP_DIMENSION_LARGE);
+        break;
+    case SSW_SIZE_FILTER_XLARGE:
+        SetFilter(MAP_DIMENSION_EXTRA_LARGE);
+        break;
+    case SSW_SIZE_FILTER_ALL:
+        SetFilter(0);
+        break;
+
     }
     return 0;
 }
