@@ -57,8 +57,6 @@ rva	size	unit	current_label	provenance
 0x2ed80	77	ai_player	?get_cell@game@@QAEPAVNewmapCell@@Utype_point@@@Z	src-VA+ir
 0x2fee0	1720	ai_player	?AI_AttemptMove@@YIXPAVhero@@AAUHeroDestination@@AAJE@Z	src-VA+ir
 0x305a0	102	ai_player	?HasBuilding@town@@QBE_NH_N@Z	src-VA+base
-0x30610	900	ai_player	game_2fee0_sub03_30610	working-label
-0x309a0	259	ai_player	?check_move_spell@@YIEPAVhero@@AAV?$vector@UpathCell@@V?$allocator@UpathCell@@@std@@@std@@JHE@Z	src-VA+base
 0x30ab0	1217	ai_player	game_2fee0_sub05_30ab0	working-label
 0x31160	499	ai_player	?AI_get_ship_cost@@YIJPBVhero@@Utype_point@@@Z	src-VA+ir
 0x31360	1123	ai_player	?hire_heroes@type_AI_player@@QAE_NXZ	src-VA+ir

@@ -349,7 +349,7 @@ rva	size	relation	owner_or_bracket	candidates	label
 0x2fc50	645	in-span	ai_player	ai_player	?attempt_step@@YIEPAVhero@@PAUpathCell@@EE@Z
 0x2fee0	1720	in-span	ai_player	ai_player	?AI_AttemptMove@@YIXPAVhero@@AAUHeroDestination@@AAJE@Z
 0x305a0	102	in-span	ai_player	ai_player	?HasBuilding@town@@QBE_NH_N@Z
-0x30610	900	in-span	ai_player	ai_player	game_2fee0_sub03_30610
+0x30610	900	in-span	ai_player	ai_player	?build_path@@YIXPAVhero@@PAVsearchArray@@AAV?$vector@UpathCell@@V?$allocator@UpathCell@@@std@@@std@@AAUHeroDestination@@@Z
 0x309a0	259	in-span	ai_player	ai_player	?check_move_spell@@YIEPAVhero@@AAV?$vector@UpathCell@@V?$allocator@UpathCell@@@std@@@std@@JHE@Z
 0x30ab0	1217	in-span	ai_player	ai_player	game_2fee0_sub05_30ab0
 0x30f80	466	in-span	ai_player	ai_player	?AI_build_ship@@YIXPBVhero@@JJJ@Z

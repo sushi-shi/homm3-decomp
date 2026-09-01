@@ -273,6 +273,18 @@ public:
         result.erase(result.begin(), result.end());
     }
 
+    // Dreamcast FindPath.h:216/226. Both const header helpers retain public
+    // SH4 copies, while Complete expands build_path's calls into the result
+    // vector's size and indexed pointer load.
+    long get_path_steps() const
+    {
+        return result.size();
+    }
+    const pathCell* get_step_cell(long i) const
+    {
+        return result[i];
+    }
+
     int BuildPath(const hero* current_hero, long limit);
     void SeedPosition(hero* current_hero, type_point start,
                       type_point target, int maxMobility,
