@@ -477,6 +477,7 @@ class CallSpelling:
     callee: str
     retail_pattern: str
     canonical_name: str
+    unclaimed_inline: bool = False
 
 
 @dataclass(frozen=True)
@@ -699,6 +700,16 @@ PROVEN_CALL_SPELLINGS: dict[tuple[str, int], tuple[CallSpelling, ...]] = {
 # waiver.
 NONEXACT_RETAIL_PROVEN_CALL_SPELLINGS: dict[
         tuple[str, int], tuple[CallSpelling, ...]] = {
+    ("ai_player.obj", 0x32E30): (
+        CallSpelling(
+            "Complete find_all_destinations replaces check_holy_grail's "
+            "Dreamcast AI_get_value_of_artifact helper with the retail-"
+            "relocation-proved AI_get_artifact_player_value helper while "
+            "expanding the static helper into the caller",
+            0x0042EDD0, "AI_get_value_of_artifact",
+            r"\bAI_get_artifact_player_value(?=\s*\()",
+            "AI_get_value_of_artifact", unclaimed_inline=True),
+    ),
     ("philai.obj", 0x110018): (
         CallSpelling(
             "Complete philAI::GetTurnAIVars replaces Dreamcast's "
@@ -963,6 +974,21 @@ RETAIL_BYTE_PROVEN_REVISION_REMOVALS: dict[
 # graph: inlined accessors/operators, a source order hidden by scheduling, and
 # nesting within a single attested statement group.
 SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
+    ("ai_player.obj", 0x32E30): (
+        SourceRule(
+            "check_holy_grail keeps Complete's retail-relocation-proved "
+            "AI_get_artifact_player_value call with Dreamcast's artifact "
+            "then player argument order",
+            r"destination\s*\.\s*value\s*=\s*"
+            r"AI_get_artifact_player_value\s*\(\s*grail\s*,\s*"
+            r"current_hero\s*->\s*owner\s*\)\s*;",
+            1, 1),
+        SourceRule(
+            "check_holy_grail may not retain Dreamcast's obsolete "
+            "AI_get_value_of_artifact spelling after Complete's retail-"
+            "relocation-proved helper replacement",
+            r"\bAI_get_value_of_artifact\s*\(", 0, 0),
+    ),
     ("philai.obj", 0x110018): (
         SourceRule(
             "GetTurnAIVars keeps Complete's retail-relocation-proved "
@@ -5421,11 +5447,9 @@ def apply_proven_call_spellings(
         key: tuple[str, int], body: str, va: int | None,
         exact_vas: set[int]) -> str:
     """Canonicalize bounded Complete call spellings for shape comparison."""
-    if va is None:
-        return body
     active = _source.mask(body)
     canonical = body
-    if va in exact_vas:
+    if va is not None and va in exact_vas:
         for spelling in PROVEN_CALL_SPELLINGS.get(key, ()):
             if va != spelling.caller_va \
                     or re.search(spelling.retail_pattern, active) is None:
@@ -5433,7 +5457,8 @@ def apply_proven_call_spellings(
             canonical = re.sub(
                 spelling.retail_pattern, spelling.canonical_name, canonical)
     for spelling in NONEXACT_RETAIL_PROVEN_CALL_SPELLINGS.get(key, ()):
-        if va != spelling.caller_va \
+        if ((va is None and not spelling.unclaimed_inline)
+                or (va is not None and va != spelling.caller_va)) \
                 or re.search(spelling.retail_pattern, active) is None:
             continue
         canonical = re.sub(
@@ -8291,6 +8316,43 @@ if (!our_hero->HeroFn_004E2840(slot,
             relocation_wrong_arguments, relocation_spelling_key):
         failures.append(
             "wrong-argument Complete artifact predicate passed")
+    grail_value_key = ("ai_player.obj", 0x32E30)
+    grail_value_body = """\
+destination.value = AI_get_artifact_player_value(
+    grail, current_hero->owner);
+destination.move_cost = max(destination.move_cost, mobility);
+"""
+    grail_value_canonical = apply_proven_call_spellings(
+        grail_value_key, grail_value_body, None, set())
+    if missing_from_body(
+            grail_value_canonical,
+            ["AI_get_value_of_artifact", "max"]) \
+            or contract_violations(grail_value_body, grail_value_key):
+        failures.append(
+            "inline retail-proved grail appraisal call did not pass")
+    grail_value_omitted = """\
+destination.value = akArtifactTraits[ARTIFACT_HOLY_GRAIL].cost;
+destination.move_cost = max(destination.move_cost, mobility);
+"""
+    if not missing_from_body(apply_proven_call_spellings(
+            grail_value_key, grail_value_omitted, None, set()),
+            ["AI_get_value_of_artifact"]):
+        failures.append("omitted inline grail appraisal helper passed")
+    grail_value_old = """\
+destination.value = AI_get_value_of_artifact(
+    grail, current_hero->owner);
+destination.move_cost = max(destination.move_cost, mobility);
+"""
+    if not contract_violations(grail_value_old, grail_value_key):
+        failures.append("obsolete Dreamcast grail helper spelling passed")
+    grail_value_wrong_arguments = """\
+destination.value = AI_get_artifact_player_value(
+    current_hero->owner, grail);
+destination.move_cost = max(destination.move_cost, mobility);
+"""
+    if not contract_violations(
+            grail_value_wrong_arguments, grail_value_key):
+        failures.append("wrong-argument Complete grail appraisal passed")
     artifact_value_key = ("philai.obj", 0x110018)
     artifact_value_va = NONEXACT_RETAIL_PROVEN_CALL_SPELLINGS[
         artifact_value_key][0].caller_va
@@ -13146,11 +13208,13 @@ def scan() -> tuple[
                 definition = definitions[0]
                 body = text[definition.body_open + 1:definition.body_close]
                 refs = calls.get(key, [])
+                shape_body = apply_proven_call_spellings(
+                    key, body, None, exact_vas)
                 removed, removal_descriptions = \
                     retail_proven_dc_only_removed_helpers(key, body, None)
                 dc_only.update(removal_descriptions)
                 preliminary = missing_from_body(
-                    body, [ref.name for ref in refs], key)
+                    shape_body, [ref.name for ref in refs], key)
                 preliminary = [
                     (callee, helper) for callee, helper in preliminary
                     if callee not in removed]
@@ -13165,7 +13229,7 @@ def scan() -> tuple[
                         text.count("\n", 0, definition.head) + 1,
                         row["name"], callee, helper))
                 if not body_missing and (group := group_defect(
-                        key, refs, body, None)):
+                        key, refs, shape_body, None)):
                     missing.append(MisgroupedCalls(
                         None, key[0], key[1], relpath,
                         text.count("\n", 0, definition.head) + 1,

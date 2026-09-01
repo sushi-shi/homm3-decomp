@@ -270,7 +270,7 @@ ai_player	?do_swap@type_AI_creature_swapper@@QAEXPAVhero@@PAVarmyGroup@@0E@Z	100
 ai_player	?dump_extra_creature@type_AI_creature_swapper@@IAEXXZ	100.0000	100.0000	100.0000	0x2c5b0	de3af218888a
 ai_player	?end_turn@type_AI_player@@QAEXXZ	89.5263	89.5263	89.5263	0x28dd0	ab298c573724
 ai_player	?fill_prohibited_array@@YIXPAVplayerData@@PAE@Z	99.9678	99.9678	99.9678	0x29d50	8a7176a95b20
-ai_player	?find_all_destinations@@YIJPAVhero@@PAVsearchArray@@PAV?$vector@UHeroDestination@@V?$allocator@UHeroDestination@@@std@@@std@@JEEE@Z	25.6968	35.9206	35.9206	0x2edd0	c3acd2ec37c3
+ai_player	?find_all_destinations@@YIJPAVhero@@PAVsearchArray@@PAV?$vector@UHeroDestination@@V?$allocator@UHeroDestination@@@std@@@std@@JEEE@Z	96.3651	96.3651	96.3651	0x2edd0	0d2e654de4c6
 ai_player	?find_magus_hut_value@@YIJJE@Z	100.0000	100.0000	100.0000	0x29910	4728f3ddc579
 ai_player	?get_alignments@type_AI_creature_swapper@@IAEXXZ	100.0000	100.0000	100.0000	0x2c060	8b7810c4ce17
 ai_player	?get_attack_bonus@type_AI_player@@SIMF@Z	100.0000	100.0000	100.0000	0x28710	5e81e3b6c7f4
@@ -314,7 +314,7 @@ ai_player	?mark_destinations@@YIJPAVhero@@JPAVsearchArray@@PAGW4type_search_type
 ai_player	?mark_town@type_garrison_purchaser@@UAEXPAVtown@@@Z	100.0000	100.0000	100.0000	0x28580	be0e69fceedb
 ai_player	?mark_town@type_town_threat_checker@@UAEXPAVtown@@@Z	100.0000	100.0000	100.0000	0x28570	eb3a011f3f6a
 ai_player	?mark_towns@type_town_threat_checker@@IAEXPAVhero@@PAVsearchArray@@@Z	100.0000	100.0000	100.0000	0x282b0	f5dc6aa6bf9c
-ai_player	?net_value_of_location@@YIHPAVhero@@PAUHeroDestination@@PAJPAUpathCell@@PAVsearchArray@@@Z	85.3476	85.3476	85.3476	0x2f980	7b9b3e538329
+ai_player	?net_value_of_location@@YIHPAVhero@@PAUHeroDestination@@PAJPAUpathCell@@PAVsearchArray@@@Z	85.3476	85.3476	85.3476	0x2f980	947d4d9a38bc
 ai_player	?purchase_building@type_AI_player@@QAEEPAE@Z	96.1947	96.1947	96.1947	0x2ae00	3576dcf729f7
 ai_player	?remove_negative_artifacts@@YIJPAVhero@@@Z	100.0000	100.0000	100.0000	0x33bb0	cd5326788ef9
 ai_player	?reset_magus_hut_value@type_AI_player@@QAEXXZ	100.0000	100.0000	100.0000	0x29ab0	5f044f8af5ba
