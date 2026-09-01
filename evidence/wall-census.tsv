@@ -3,8 +3,6 @@
 # Banked-exact current dips are observational and excluded.
 # recoverable = size * (1 - max_fuzzy/100).
 class	recoverable	max_fuzzy	current_fuzzy	size	unit	fn	route	knob
-unclaimed (no source binding)	14	0.0000	0.0000	14	singleselectionwindow	SCampaign_GetCurrentScenario	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
-control-flow (why-branch)	831	19.8438	19.8438	1037	singleselectionwindow	?SetHumanSlot@TSingleSelectionWindow@@QAEXXZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	307	29.0580	29.0580	433	game	??1SavedGameHeader@@QAE@XZ	predict-inline	callee expanded on one side only (A8/A9/A12): 11 over-inline (2 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	3602	29.3653	28.0248	5100	singleselectionwindow	?OnWidgetDeselect@TSingleSelectionWindow@@QAEHPAVmessage@@PAEE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 7 under-inline, 20 over-inline (11 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	3819	33.0444	33.0444	5704	philai	?AI_value_of_event@@YIJPBVhero@@Utype_point@@AAJ@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 32 under-inline, 87 over-inline (5 name-unresolvable pair(s) discounted)
@@ -30,7 +28,6 @@ inliner (predict-inline)	643	70.6470	70.6470	2190	game	?LoadMap@game@@QAE_NPAVTA
 inliner (predict-inline)	867	70.8576	70.8576	2976	spellbookwindow	?WindowHandler@TSpellbookWindow@@UAEHPAVmessage@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 13 over-inline (10 name-unresolvable pair(s) discounted)
 control-flow (why-branch)	155	71.8957	71.8957	552	singleselectionwindow	?Tick@t_map_list_update@@UAEXXZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
 control-flow (why-branch)	137	72.0056	72.0056	491	iconwdgt	?NextRandomFrame@iconWidget@@QAEXXZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
-inliner (predict-inline)	3171	72.7092	72.7092	11619	singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 33 under-inline, 43 over-inline (219 name-unresolvable pair(s) discounted)
 control-flow (why-branch)	60	72.9438	72.9438	220	dxplay	?FlushReceiveQueue@CDPlay@@UAEEXZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
 control-flow (why-branch)	161	73.5825	73.5825	611	multiplayerwindow	?OnTCP@TMultiPlayerWindow@@QAEEXZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	288	73.6571	72.2248	1095	ai_player	?buy_creatures@type_AI_player@@QAEXPAVhero@@PAVtown@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline (4 name-unresolvable pair(s) discounted)
@@ -41,12 +38,14 @@ register-homing (why-reg)	67	75.0110	75.0110	268	cmbtmgr	?CalculateGainedExperie
 inliner (predict-inline)	209	75.0535	75.0535	837	singleselectionwindow	?GetHeaders@TSingleSelectionWindow@@QAEXPAV?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline, 10 over-inline (6 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	205	75.1012	75.1012	825	hero	?GiveArtifact@hero@@QAEEPBUtype_artifact@@EE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 under-inline, 1 over-inline (4 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	57	75.2353	75.2353	230	seerhut	?DoProgressDialog@type_artifact_quest@@UAEXXZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
+inliner (predict-inline)	2873	75.2722	75.2722	11619	singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 19 under-inline, 42 over-inline (218 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	194	75.2863	75.2863	786	singleselectionwindow	??4GameSelectionHeadersStruct@@QAEAAU0@ABU0@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline, 1 over-inline (8 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	237	75.3838	75.3838	962	ai_player	?consider_hiring@@YI_NJPAVhero@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline
 inliner (predict-inline)	1275	75.4051	75.4051	5184	hero	?WindowHandler@THeroScreenWindow@@UAEHPAVmessage@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 13 over-inline (13 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	142	75.5550	75.5550	579	cmbtmgr	?place_obstacle@combatManager@@QAEEH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline (2 name-unresolvable pair(s) discounted)
 control-flow (why-branch)	59	75.8427	75.8427	245	seerhut	?DoProgressDialog@type_skill_quest@@UAEXXZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
 control-flow (why-branch)	234	75.8636	75.8636	968	victorylossconditions	?CheckForDefeatedHeroLoss@LossConditionStruct@@QAEEPBVhero@@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
+control-flow (why-branch)	247	76.1644	76.1644	1037	singleselectionwindow	?SetHumanSlot@TSingleSelectionWindow@@QAEXXZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
 control-flow (why-branch)	109	76.9111	76.9111	474	mapcell	?readResourceData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	61	77.0099	77.0099	266	singleselectionwindow	?GetDisplayFace@TSingleSelectionWindow@@QAEHH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 over-inline (1 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	275	77.3910	77.3910	1217	resourcemanager	@game_null_159510@12	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline, 3 over-inline (31 name-unresolvable pair(s) discounted)

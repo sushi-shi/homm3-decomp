@@ -2657,7 +2657,7 @@ singleselectionpopups	?Main@CSpriteWidget@@UAEHPAVmessage@@@Z	100.0000	100.0000	
 singleselectionpopups	?handle_message@CSingleSelPopup@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x175430
 singleselectionwindow	??0CNetPlayerHandlerPlayer@@QAE@XZ	100.0000	100.0000	100.0000	0x17c790
 singleselectionwindow	??0CNetPlayerInfo@@QAE@XZ	100.0000	100.0000	100.0000	0x17f720
-singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	72.7092	72.7092	72.7092	0x179960
+singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	75.2722	75.2722	75.2722	0x179960
 singleselectionwindow	??0lobby_message@@QAE@XZ	100.0000	100.0000	100.0000	0x189190
 singleselectionwindow	??0t_map_list_update@@QAE@K@Z	100.0000	100.0000	100.0000	0x189240
 singleselectionwindow	??1CHostWaitDlg@@UAE@XZ	0.0000	0.0000	0.0000	0x189230
@@ -2687,6 +2687,7 @@ singleselectionwindow	?DrawBasicMapInfo@TSingleSelectionWindow@@QAEXXZ	95.5200	9
 singleselectionwindow	?DrawHeroAdvancedOption@TSingleSelectionWindow@@QAEXHEH@Z	90.5627	90.5627	90.5627	0x18d510
 singleselectionwindow	?ExitDialog@TSingleSelectionWindow@@UAEHPAVmessage@@@Z	68.0485	100.0000	100.0000	0x187bc0
 singleselectionwindow	?Finish@CNewPlayerUpdateProc@@UAEXXZ	87.0155	89.5855	89.5855	0x1795a0
+singleselectionwindow	?GetCurrentScenario@SCampaign@@QAEPAUCampaignScenarioInfo@@XZ	100.0000	100.0000	100.0000	0x17c780
 singleselectionwindow	?GetDisplayFace@TSingleSelectionWindow@@QAEHH@Z	77.0099	77.0099	77.0099	0x18d0e0
 singleselectionwindow	?GetFileName@TSingleSelectionWindow@@QAEPBDH@Z	100.0000	100.0000	100.0000	0x183f20
 singleselectionwindow	?GetHeader@TSingleSelectionWindow@@QAEHPAD0PAUGameSelectionHeadersStruct@@@Z	100.0000	100.0000	100.0000	0x183170
@@ -2791,7 +2792,6 @@ singleselectionwindow	?UpdateTown@TSingleSelectionWindow@@QAEXHHE@Z	100.0000	100
 singleselectionwindow	?WindowFn_00582e90@TSingleSelectionWindow@@QAEXPAV?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x182e90
 singleselectionwindow	?WindowHandler@TSingleSelectionWindow@@UAEHPAVmessage@@@Z	97.6901	97.6901	97.6901	0x187d00
 singleselectionwindow	?handle_message@CHostWaitDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1891b0
-singleselectionwindow	SCampaign_GetCurrentScenario	0.0000	0.0000	0.0000	0x17c780
 slider	??0slider@@QAE@HHHHHHP6IXHPAVheroWindow@@@ZW4EGraphics@0@HE@Z	100.0000	100.0000	100.0000	0x1960d0
 slider	??1slider@@UAE@XZ	100.0000	100.0000	100.0000	0x196180
 slider	??_Gslider@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x196020
