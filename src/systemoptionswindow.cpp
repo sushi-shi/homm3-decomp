@@ -438,19 +438,24 @@ TSystemOptionsWindow::~TSystemOptionsWindow()
 // E:\gamedcs\systemoptionswindow.cpp:205
 // Retail inlines this switch into WindowHandler; no separate entry exists
 // between the destructor and DoModal.
-inline int TSystemOptionsWindow::convertID2HelpID(int id) const
+int TSystemOptionsWindow::convertID2HelpID(int id) const
 {
-    switch (id) {
-    case TMainMenu::MAIN_MENU_ID: return 0;
-    case TMainMenu::LOAD_GAME_ID: return 1;
-    case TMainMenu::SAVE_GAME_ID: return 2;
-    case TMainMenu::RESTART_ID: return 3;
-    case TMainMenu::QUIT_ID: return 4;
-    case DIALOG_RETURN_SPLIT_ACCEPT: return 5;
-    }
+    if (id < 0)
+        return -1;
     if (id >= MUSIC_VOLUME_0_ID && id <= ANIMATE_SPELLBOOK_ID)
         return id - 195;
-    return -1;
+
+    int helpID;
+    switch (id) {
+    case TMainMenu::MAIN_MENU_ID: helpID = 0; break;
+    case TMainMenu::LOAD_GAME_ID: helpID = 1; break;
+    case TMainMenu::SAVE_GAME_ID: helpID = 2; break;
+    case TMainMenu::RESTART_ID: helpID = 3; break;
+    case TMainMenu::QUIT_ID: helpID = 4; break;
+    case DIALOG_RETURN_SPLIT_ACCEPT: helpID = 5; break;
+    default: helpID = -1; break;
+    }
+    return helpID;
 }
 
 // E:\gamedcs\systemoptionswindow.cpp:230
@@ -487,6 +492,25 @@ __forceinline void TSystemOptionsWindow::UpdateSystemOptions(
 }
 
 // E:\gamedcs\systemoptionswindow.cpp:260
+// DC-SOURCE-SHAPE RESTORED 2026-09-01 (92.5000 -> 95.3661).
+// The dc 0x160698 helper owns, in order, the negative-id return, the
+// 201..242 range return, and the six-command switch assigning a local for one
+// final return. Retail independently agrees at fn+0x46..+0xae: negative
+// guard, range first, command switch second, then one joined helpID test. The
+// old 92.5000 spelling moved the negative guard into this caller and put the
+// switch first, contradicting both sources. Restoring the exact mixed-return
+// helper shape reached 93.3701. DC line 288 ends the right-click group with a
+// branch to the common return; retaining that join as `goto consume` restores
+// retail's EBX-held dispatch value and reaches 95.3661.
+//
+// Negative controls: all-immediate and fully-assigned range-first helper
+// families are byte-identical at 85.5532; plain, inline and __forceinline
+// declarations are byte-identical; moving the dispatch-value declaration or
+// reusing the base-handler result is byte-identical in that family and
+// score-flat at 95.3661. Moving the consume label physically ahead of the
+// main dispatch is likewise score-flat, so no synthetic layout spelling is
+// retained.
+//
 // 91.9193 -> 92.5000, 2026-08-21: two statement-order facts from the
 // unmasked retail stream. UpdateSystemOptions sets bPrefsChanged BEFORE it
 // initializes the otherwise-unused message (91.9193 -> 92.0354), and the
@@ -494,14 +518,11 @@ __forceinline void TSystemOptionsWindow::UpdateSystemOptions(
 // dialogReturn (-> 92.5000). The latter now agrees in instruction order; only
 // its EAX/ECX versus retail EDX/EAX allocation remains.
 //
-// Residual (92.5000%): all 32 out-of-line calls agree. The dominant CFG delta
-// is the inlined convertID2HelpID block. Retail tests the 201..242 range
-// first, jumps over a command switch, and joins once before the caller's
-// `helpID >= 0` test. This compiler puts the switch first at the current
-// 92.5000 maximum; range-first early-return, assigned-result if/else, De
-// Morgan, and explicit-goto spellings all canonicalize to the SAME 86.3110
-// layout with the switch outlined after the right-click return. This is the
-// merged-block/compiler-generation class, not another condition spelling.
+// Residual (95.3661%): all 32 out-of-line calls and all 76 CFG blocks agree in
+// count. The help helper's range/switch blocks now agree instruction for
+// instruction. The first remaining CFG difference is return-tail placement:
+// retail splits the post-NormalDialog consume epilogue before main dispatch,
+// while this compiler keeps it attached to the call despite the common join.
 // In the redraw tail retail also hoists the DrawWindow vtable load and three
 // argument pushes ahead of the message-constructor stores; this compiler
 // leaves them after. The old volatile surrogate was a 92.5000 local maximum;
@@ -522,14 +543,12 @@ int TSystemOptionsWindow::WindowHandler(message* msg)
         if (msg->codeX == widget::WIDGET_SELECT
                 || msg->codeX == widget::WIDGET_RIGHT_SELECT) {
             int id = msg->codeY;
-            if (id < 0)
-                goto consume;
             int helpID = convertID2HelpID(id);
             if (helpID >= 0)
                 NormalDialog(gSystemOptionsHelp[helpID].text,
                     4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
-        return one;
+        goto consume;
     }
 
     if (msg->id == one)

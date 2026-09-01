@@ -7,6 +7,16 @@
 
 #include "town.h"
 
+// ShowScenInfo consumes the campaign dialog's 111 reply and translates it
+// into the shared main-loop quit command stored at 0x6976d8. The storage is
+// claimed by advmgr.cpp; this is the owning new-game consumer declaration.
+extern int gUnnamed6976d8;
+
+enum ENewGameDialogCommand {
+    NEWGAME_CAMPAIGN_BRIEF_EXIT = 111,
+    NEWGAME_COMMAND_QUIT = 107
+};
+
 // Retail widened Dreamcast's eight-town byte mask to hold the ninth Conflux
 // bit. Both helper entries consume the full ECX value without a byte mask.
 long get_alignment_count(int legal_alignments);

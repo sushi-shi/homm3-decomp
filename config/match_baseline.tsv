@@ -37,7 +37,7 @@ adventuremapwindow	?set_bottom_view@TAdventureMapWindow@@QAEXPAVtype_bottom_view
 adventureoptionswindow	??0TAdventureOptionsWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x51d0	53c96c53058c
 adventureoptionswindow	??1TAdventureOptionsWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x56c0	1c0e7fa11c38
 adventureoptionswindow	??_GTAdventureOptionsWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x5690	-
-adventureoptionswindow	?WindowHandler@TAdventureOptionsWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x5730	0a86d77410c7
+adventureoptionswindow	?WindowHandler@TAdventureOptionsWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x5730	c8b1eee3d300
 adventureoptionswindow	?handle_message@CHeroWindowEx@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x5680	e9ee91f39ca4
 advmgr	??0CAdvPopup@@QAE@HHHHI@Z	100.0000	100.0000	100.0000	0x1b040	3b5291a00fae
 advmgr	??0advManager@@QAE@XZ	90.2973	90.2973	90.2973	0x6df0	333013a59cb7
@@ -479,7 +479,7 @@ army	?check_obstacle_attacks@army@@QAEEE@Z	100.0000	100.0000	100.0000	0x41f70	26
 army	?check_special_attack@army@@QAEEPAV1@@Z	100.0000	100.0000	100.0000	0x40500	49147539aa98
 army	?compute_attacker_bonus@army@@QBEHHEPAV1@EJ@Z	100.0000	100.0000	100.0000	0x43320	698523953542
 army	?consider_attack@army@@QAEXPBV1@JJ@Z	100.0000	100.0000	100.0000	0x48840	686954572466
-army	?do_attack@army@@QAEEPAV1@H@Z	98.8868	99.9962	99.9962	0x41610	1fa738e017fe
+army	?do_attack@army@@QAEEPAV1@H@Z	98.9251	99.9962	99.9962	0x41610	1fa738e017fe
 army	?do_attack@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x41cb0	0c17230627a2
 army	?do_fire_shield@army@@AAEXJ@Z	100.0000	100.0000	100.0000	0x409c0	3f772aa9df30
 army	?do_multi_head_attack@army@@QAEXIPAH0PAJ@Z	100.0000	100.0000	100.0000	0x40310	d1193b9e629e
@@ -576,8 +576,11 @@ bitmap24	??0Bitmap24Bit@@QAE@PBD0@Z	100.0000	100.0000	100.0000	0x4ee00	450f05898
 bitmap24	??0Bitmap24Bit@@QAE@PBDHHPBEH@Z	100.0000	100.0000	100.0000	0x4ed50	e44fdba7732a
 bitmap24	??1Bitmap24Bit@@UAE@XZ	100.0000	100.0000	100.0000	0x4eec0	6df94c23f56d
 bitmap24	??_GBitmap24Bit@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x4ed20	-
+bitmap24	?AdjustHSV@Bitmap24Bit@@QAEXHHHHMMMM@Z	100.0000	100.0000	100.0000	0x4f190	06b29885c795
+bitmap24	?Draw@Bitmap24Bit@@QBEXHHHHPAGHHHHH@Z	100.0000	100.0000	100.0000	0x4f010	26772053b386
 bitmap24	?Draw@Bitmap24Bit@@QBEXHHHHPAVBitmap16Bit@@HH@Z	100.0000	100.0000	100.0000	0x4efd0	6b9e0fa1e648
 bitmap24	?GetSize@Bitmap24Bit@@UBEIXZ	100.0000	100.0000	100.0000	0x4f180	94235cd59fb2
+bitmap24	?importPCXFile@Bitmap24Bit@@AAEHPBD@Z	100.0000	100.0000	100.0000	0x4eef0	83b17d27448a
 bitmap816	??1Bitmap816@@UAE@XZ	100.0000	100.0000	100.0000	0x4f9d0	c0c4496717f7
 bitmap816	??_GBitmap816@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x4f7d0	-
 bitmap816	?Draw@Bitmap816@@QBEXHHHHPAGHHHHH_N@Z	100.0000	100.0000	100.0000	0x4fc70	b883dff15a36
@@ -663,7 +666,7 @@ button	?_vslot12@button@@UAEXH@Z	100.0000	100.0000	100.0000	0x56a10	fa786de27cd0
 campaignbrief	??1TCampaignBrief@@UAE@XZ	100.0000	100.0000	100.0000	0x5afb0	d4c0d4a6ee48
 campaignbrief	??_GTCampaignBrief@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x5ae40	-
 campaignbrief	__h3cg$campaignbrief$implicit_dtor$NewSMapHeader	0.0000	100.0000	100.0000	0x5ad00	-
-campaignmap	?InitializeCampaignMapTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0x5dee0	521aa1f91cc9
+campaignmap	?InitializeCampaignMapTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0x5dee0	4134d1efefe4
 campaignmap	__h3cg$campaignmap$static_dtor$campaignNames	100.0000	100.0000	100.0000	0x5e1f0	-
 campaignwindow	??0TCampaignWindow@@QAE@EH@Z	98.4726	98.4726	98.4726	0x5ea40	8637a9869f6d
 campaignwindow	??1TCampaignWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x5f210	aee78d937417
@@ -677,7 +680,7 @@ cmbtmgr	??0TArcher@combatManager@@QAE@XZ	100.0000	100.0000	100.0000	0x62920	9fda
 cmbtmgr	??0TCombatEagleEyeSide@@QAE@XZ	0.0000	0.0000	0.0000	0x62890	-
 cmbtmgr	??0combatManager@@QAE@XZ	100.0000	100.0000	100.0000	0x62760	6f386fa11acc
 cmbtmgr	??1TArcher@combatManager@@QAE@XZ	100.0000	100.0000	100.0000	0x62930	-
-cmbtmgr	??1TCombatEagleEyeSide@@QAE@XZ	81.6667	100.0000	100.0000	0x628b0	-
+cmbtmgr	??1TCombatEagleEyeSide@@QAE@XZ	100.0000	100.0000	100.0000	0x628b0	-
 cmbtmgr	??1TPickANumber@@QAE@XZ	100.0000	100.0000	100.0000	0x66260	-
 cmbtmgr	?CalculateGainedExperience@combatManager@@QAEXHPAH@Z	75.0110	75.0110	75.0110	0x6a350	0928521604ba
 cmbtmgr	?CheckApplyBadMorale@combatManager@@QAEHHH@Z	97.7333	97.7333	97.7333	0x64b40	cdd3b6287212
@@ -1884,7 +1887,7 @@ levelupwindow	??_GTLevelUpWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xf9700	-
 levelupwindow	?WindowHandler@TLevelUpWindow@@UAEHPAVmessage@@@Z	77.7273	77.7273	77.7273	0xf9780	8ea6383d51a6
 lodfile	??0LODFile@@QAE@XZ	100.0000	100.0000	100.0000	0xfa780	cd1434f0f2f6
 lodfile	??1LODFile@@QAE@XZ	100.0000	100.0000	100.0000	0xfa800	828ac0585646
-lodfile	?Find@LODFile@@AAEXIIPBD@Z	74.0901	74.0901	74.0901	0xfa660	f4bef917fff2
+lodfile	?Find@LODFile@@AAEXIIPBD@Z	100.0000	100.0000	100.0000	0xfa660	89911f15fef5
 lodfile	?clear@LODFile@@QAEXXZ	100.0000	100.0000	100.0000	0xfa590	c4fb4bea980f
 lodfile	?getItemIndex@LODFile@@QAEPAULODEntry@@PBD@Z	100.0000	100.0000	100.0000	0xfa610	d25081955449
 lodfile	?pointAt@LODFile@@QAEEPBD@Z	100.0000	100.0000	100.0000	0xfaa70	8fb38e6433e5
@@ -2097,25 +2100,31 @@ multiplayerwindow	?OnDirectHost@TMultiPlayerWindow@@QAEEXZ	100.0000	100.0000	100
 multiplayerwindow	?OnDirectJoin@TMultiPlayerWindow@@QAEEXZ	100.0000	100.0000	100.0000	0x110cb0	90759a125762
 multiplayerwindow	?OnHost@TMultiPlayerWindow@@QAEEXZ	100.0000	100.0000	100.0000	0x10fda0	c64a2083689a
 multiplayerwindow	?OnHotSeat@TMultiPlayerWindow@@QAEEXZ	100.0000	100.0000	100.0000	0x111d40	e4b6bf119e26
-multiplayerwindow	?OnJoin@TMultiPlayerWindow@@QAEEXZ	100.0000	100.0000	100.0000	0x110f40	4a4995ffdac7
+multiplayerwindow	?OnJoin@TMultiPlayerWindow@@QAEEXZ	100.0000	100.0000	100.0000	0x110f40	17a15123af76
 multiplayerwindow	?OnKeyPress@CMPEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1107d0	08798805fe29
 multiplayerwindow	?OnKeyPress@CMultiPlayerWindowEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x10ed60	d631a790ede6
 multiplayerwindow	?OnModemJoin@TMultiPlayerWindow@@QAEEXZ	100.0000	100.0000	100.0000	0x110a10	aaea3cbefc02
 multiplayerwindow	?OnNextEdit@CMPEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x110850	b569183ed88b
 multiplayerwindow	?OnOK@CHotSeatDlg@@QAEEXZ	100.0000	100.0000	100.0000	0x112470	dae5065a6e04
 multiplayerwindow	?OnPrevEdit@CMPEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x110870	8904249ee9b6
-multiplayerwindow	?OnSearch@TMultiPlayerWindow@@QAEEXZ	91.3243	91.3243	91.3243	0x111660	b1b078be78cc
+multiplayerwindow	?OnSearch@TMultiPlayerWindow@@QAEEXZ	89.7658	91.3243	91.3243	0x111660	3ea6dedba20e
 multiplayerwindow	?OnTCP@TMultiPlayerWindow@@QAEEXZ	73.5825	73.5825	73.5825	0x1113f0	b2607a9021b0
 multiplayerwindow	?OnWidgetDeselect@CHotSeatDlg@@UAEHHPAE@Z	100.0000	100.0000	100.0000	0x112420	cd9d3ff169de
-multiplayerwindow	?OnWidgetDeselect@CMPInputDlg@@UAEHHPAE@Z	83.3750	83.3750	83.3750	0x1108f0	35e4e99cb07b
-multiplayerwindow	?OnWidgetDeselect@TMultiPlayerWindow@@UAEHHPAE@Z	98.1199	98.1199	98.1199	0x10f4e0	060637c7108f
+multiplayerwindow	?OnWidgetDeselect@CMPInputDlg@@UAEHHPAE@Z	100.0000	100.0000	100.0000	0x1108f0	980857d31a5d
+multiplayerwindow	?OnWidgetDeselect@TMultiPlayerWindow@@UAEHHPAE@Z	97.4932	98.1199	98.1199	0x10f4e0	fc151a47d3e1
 multiplayerwindow	?SetFocus@CMPEdit@@UAEXE@Z	100.0000	100.0000	100.0000	0x110890	33da61fc1578
-multiplayerwindow	?Update@TMultiPlayerWindow@@QAEXXZ	98.0484	99.2080	99.2080	0x10f0f0	516545f38ff1
+multiplayerwindow	?Update@TMultiPlayerWindow@@QAEXXZ	99.2080	99.2080	99.2080	0x10f0f0	516545f38ff1
 multiplayerwindow	?UpdateOK@CMPInputDlg@@QAEXXZ	100.0000	100.0000	100.0000	0x110980	9a40794dbe27
 multiplayerwindow	?WindowHandler@TMultiPlayerWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x10f940	8037720e1234
+newgame	?GetLossConditionText@game@@QAEXPAD@Z	100.0000	100.0000	100.0000	0x113800	ade52171f0bc
+newgame	?ShowScenInfo@game@@QAEXXZ	100.0000	100.0000	100.0000	0x113740	09dd2c5c2595
 newgame	?get_alignment_count@@YIJH@Z	100.0000	100.0000	100.0000	0x1132b0	f1e04004c643
 newgame	?pick_alignment@@YI?AW4TTownType@@HE@Z	100.0000	100.0000	100.0000	0x1132d0	7d86ef3bfcb8
+overview	??1TOverviewWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x120d90	048fab1d8faa
+overview	??_GTOverviewWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x120d60	-
 overview	?SetupNewOverviewType@game@@QAEXHE@Z	96.4609	100.0000	100.0000	0x11e330	f328fdfe08b1
+overview	?UpdateBackpack@@YIXH@Z	96.5741	96.5741	96.5741	0x122470	838327f3aed0
+overview	?get_last_backpack_index@@YIJJ@Z	100.0000	100.0000	100.0000	0x1225d0	ba725cb029d9
 palette	??0TPalette24@@QAE@PBE@Z	100.0000	100.0000	100.0000	0x122e80	468ea0d98910
 palette	??0TPalette24@@QAE@PBUTRGBA@@@Z	100.0000	100.0000	100.0000	0x122eb0	db67b2665478
 palette	??0TPalette24@@QAE@PBV0@@Z	100.0000	100.0000	100.0000	0x122f00	fdfdadf05dc7
@@ -2241,19 +2250,19 @@ questlogwindow	??_GTQuestLogWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x12e1b
 questlogwindow	?DoQuestLog@@YIXH@Z	96.5463	96.5463	96.5463	0x12e430	d4a683024e74
 questlogwindow	?UpdateQuestLocator@TQuestLogWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x12e270	27dea5832804
 questlogwindow	?WindowHandler@TQuestLogWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x12e410	0fd21b85c6e8
-quickherowindow	??0TQuickHeroWindow@@QAE@PAVhero@@W4TViewLevel@0@@Z	92.1471	92.1471	92.1471	0x12ead0	3fe8741edbac
+quickherowindow	??0TQuickHeroWindow@@QAE@PAVhero@@W4TViewLevel@0@@Z	92.5668	92.5668	92.5668	0x12ead0	cf7573892452
 quickherowindow	??1TQuickHeroWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x12f3d0	1548de5efd87
 quickherowindow	??_GTQuickHeroWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x12f3a0	-
 quickinfowindow	??0TQuickCreatureWindow@@QAE@W4TViewLevel@0@W4TCreatureType@@HW4TDisposition@0@H@Z	100.0000	100.0000	100.0000	0x12f8c0	d4641c42c5be
 quickinfowindow	??1TQuickCreatureWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x12fd20	bad1c1635a86
 quickinfowindow	??_GTQuickCreatureWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x12fcf0	-
-quicktownwindow	??0TQuickTownWindow@@QAE@PBVgarrison@@W4TViewLevel@0@@Z	100.0000	100.0000	100.0000	0x1307d0	82dae8cdc184
-quicktownwindow	??0TQuickTownWindow@@QAE@PBVtown@@W4TViewLevel@0@@Z	98.8368	98.8368	98.8368	0x130120	94eff302c6e3
+quicktownwindow	??0TQuickTownWindow@@QAE@PBVgarrison@@W4TViewLevel@0@@Z	100.0000	100.0000	100.0000	0x1307d0	519290c06b42
+quicktownwindow	??0TQuickTownWindow@@QAE@PBVtown@@W4TViewLevel@0@@Z	98.8368	98.8368	98.8368	0x130120	b4bd8dc85e6d
 quicktownwindow	??1TQuickTownWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x130920	6514080957d2
 quicktownwindow	??_GTQuickTownWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1307a0	-
 quicktownwindow	?QuickWindowWait@TQuickTownWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x130d30	abd432fc2088
 quicktownwindow	?center@TQuickTownWindow@@QAEXJJ@Z	100.0000	100.0000	100.0000	0x130ca0	ed250d13090f
-quicktownwindow	?initialize_army_display@TQuickTownWindow@@QAEXABVarmyGroup@@W4TViewLevel@1@@Z	100.0000	100.0000	100.0000	0x130990	872c438d818f
+quicktownwindow	?initialize_army_display@TQuickTownWindow@@QAEXABVarmyGroup@@W4TViewLevel@1@@Z	100.0000	100.0000	100.0000	0x130990	71520b8848e1
 recruit	??0TRecruitWindow@@QAE@HHHPAVrecruitUnit@@@Z	99.0102	99.0102	99.0102	0x14e850	dc12dc7a35c0
 recruit	??0recruitUnit@@QAE@PAVarmyGroup@@EW4TCreatureType@@PAF121212@Z	97.9750	97.9750	97.9750	0x151350	c2ef5ddb6430
 recruit	??0recruitUnit@@QAE@PAVhero@@W4TCreatureType@@PAF121212@Z	96.6709	96.6709	96.6709	0x151460	059b873c0419
@@ -2462,7 +2471,7 @@ resourcemanager	?GetSprite@ResourceManager@@YIPAVCSprite@@PBD@Z	88.8564	88.8564	
 resourcemanager	?GetText@ResourceManager@@YIPAVTTextResource@@PBD@Z	100.0000	100.0000	100.0000	0x15bdd0	2fa5184b579c
 resourcemanager	?LoadBitmap16@ResourceManager@@YIPAVBitmap16Bit@@PBD@Z	100.0000	100.0000	100.0000	0x15ac40	e5b6ef91c1f6
 resourcemanager	?LoadFont@ResourceManager@@YIPAVfont@@PBD@Z	100.0000	100.0000	100.0000	0x15b8d0	c9974084ed70
-resourcemanager	?LoadFontData@ResourceManager@@YIPAVfont@@PBDPAVTAbstractFile@@H@Z	97.6539	97.6539	97.6539	0x15b750	10b9ff9fc30b
+resourcemanager	?LoadFontData@ResourceManager@@YIPAVfont@@PBDPAVTAbstractFile@@H@Z	97.6539	97.6539	97.6539	0x15b750	4b7f5d90edaf
 resourcemanager	?LoadPalette@ResourceManager@@YIPAVTPalette16@@PBD@Z	95.6920	95.6920	95.6920	0x15b060	cc89dec47d9b
 resourcemanager	?LoadSample@ResourceManager@@YIPAVsample@@PBD@Z	100.0000	100.0000	100.0000	0x15c3c0	3bffb8f6f66d
 resourcemanager	?LoadSpreadsheet@ResourceManager@@YIPAVTSpreadsheetResource@@PBD@Z	100.0000	100.0000	100.0000	0x15be60	a35c45f7a74c
@@ -2793,7 +2802,7 @@ singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100
 # 2026-08-27 (round 3): the interim full build re-banked the transient
 # peak a third time; re-lowered with the round's bodies landed. Same
 # scheduler flap, same recovery path.
-singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0	66eb0a0e15c8
+singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0	66eb0a0e15c8
 singleselectionwindow	?OnMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2193	90.2193	90.2193	0x189710	3ad2be3935a3
 singleselectionwindow	?OnNameClick@TSingleSelectionWindow@@QAEXH@Z	96.3226	96.3226	96.3226	0x18b620	ef174e28edf8
 singleselectionwindow	?OnNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	97.5366	97.5366	97.5366	0x18b510	862e2a9c058b
@@ -3018,7 +3027,7 @@ systemoptionswindow	??0TSystemOptionsWindow@@QAE@XZ	96.3370	98.1326	98.1326	0x1b
 systemoptionswindow	??1TSystemOptionsWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1b3040	1dd54f6b85d2
 systemoptionswindow	??_GTSystemOptionsWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1b3010	-
 systemoptionswindow	?DoModal@TSystemOptionsWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1b30b0	3b9820683b03
-systemoptionswindow	?WindowHandler@TSystemOptionsWindow@@UAEHPAVmessage@@@Z	91.8661	92.5000	92.5000	0x1b3140	ba22eec2790c
+systemoptionswindow	?WindowHandler@TSystemOptionsWindow@@UAEHPAVmessage@@@Z	94.3957	94.3957	94.3957	0x1b3140	87bb0e263b3c
 text	?InitializeGeneralText@@YIEXZ	100.0000	100.0000	100.0000	0x1b90f0	23ec87607971
 textntry	??0textEntryWidget@@QAE@HHHHHPBD0W4TColor@font@@I0HHHHHH@Z	100.0000	100.0000	100.0000	0x1ba920	7bcd344cbd82
 textntry	??1textEntryWidget@@UAE@XZ	100.0000	100.0000	100.0000	0x1baae0	0ee13f09fa3c
@@ -3232,7 +3241,7 @@ tradpost	??_GTSellArtifactWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1e7be0	
 tradpost	??_GTSellCreatureWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1e9c80	-
 tradpost	??_GTTradeResourceWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1e1620	-
 tradpost	?ComputeTradeRatios@TSellArtifactWindow@@QAEXHHPAH00@Z	100.0000	100.0000	100.0000	0x1ecdc0	277bcc93a9f5
-tradpost	?ComputeTradeRatios@TSellCreatureWindow@@QAEXHHPAH00@Z	97.5961	97.5961	97.5961	0x1ece80	8e70ab1e4694
+tradpost	?ComputeTradeRatios@TSellCreatureWindow@@QAEXHHPAH00@Z	97.5961	97.5961	97.5961	0x1ece80	5788b3cd5ee5
 tradpost	?DoArtifactMerchants@@YIXXZ	100.0000	100.0000	100.0000	0x1e9d20	facfc446db58
 tradpost	?DoBlackMarket@@YIXPAVhero@@PAD@Z	100.0000	100.0000	100.0000	0x1ea100	2d70e904e44e
 tradpost	?DoFreelancersGuild@@YIXPAVhero@@@Z	100.0000	100.0000	100.0000	0x1e9e60	080d980828f3
@@ -3245,7 +3254,7 @@ tradpost	?SellCreatureSlider@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0
 tradpost	?SetRolloverText@TBuyArtifactWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1eddd0	bedd27956cb2
 tradpost	?SetRolloverText@TGiveResourceWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1ed850	b1b67cdba4d4
 tradpost	?SetRolloverText@TSellArtifactWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1ee6c0	090d66cf6c49
-tradpost	?SetRolloverText@TSellCreatureWindow@@QAEXH@Z	97.0522	97.0522	97.0522	0x1eebd0	17dc577a44eb
+tradpost	?SetRolloverText@TSellCreatureWindow@@QAEXH@Z	90.2612	97.0522	97.0522	0x1eebd0	f9ae89ae92e3
 tradpost	?SetRolloverText@TTradeResourceWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1ed3a0	c9bfe289eef3
 tradpost	?TradeResourceSlider@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1e1600	2d1c2bc840a4
 tradpost	?Update@TBuyArtifactWindow@@QAEXE@Z	88.6580	88.8247	88.8247	0x1eb6a0	67f7c5697c4a

@@ -107,9 +107,14 @@ inline void TCampaignWindow::HideText()
 // then newCampaign, to EBX; this compile makes the opposite assignment.
 // why-reg's forty store/chain/order probes are byte-flat (one volatile probe
 // and the global/store swap worsen), and both nested type declaration order
-// and a named `this` alias are byte-flat too. This is the bounded
-// register-homing class. Release-elided diagnostic tails at one, two and four
-// sites were already byte-flat, so caller mass is not a remaining lever.
+// and a named `this` alias are byte-flat too. The v2 model independently
+// localizes the class: both images bind ESI at instruction 10, then candidate
+// binds EBX/EDI at 15/30 where retail binds EDI/EBX; its best creation-order
+// and store-order mutations are flat or worse. Naming the SCampaign temporary
+// regresses to 96.5110%, and naming the destination pointer regresses to
+// 97.3850%. This is the bounded register-homing class. Release-elided
+// diagnostic tails at one, two and four sites were already byte-flat, so
+// caller mass is not a remaining lever.
 // The old two-axis grid below was measured on the explicit-member phase and
 // remains historical evidence.
 VA(0x0045ea40, 0x692)  // campbkx2.pcx + vtable/global stores; Complete adds newGame, dc 0x5b570
@@ -316,10 +321,16 @@ DATA(0x0066cad8) static int lastCampaignHoverID;
 // copy's dialogReturn and merges only the epilogue, 80.1), `goto` inside
 // the switch case (81.6), explicit `goto end_dialog` in both arms (81.6),
 // if/else-if chain (81.6). `if (id == CANCEL) goto end_dialog; goto
-// consume;` and plain `return MESSAGE_DISPATCH_CONSUME` both reach 84.5 but
-// only by DUPLICATING the consume epilogue, which retail does not have
-// (retail's body has exactly two `ret`s) - alignment luck, not a match, so
-// both are rejected. Everything else in the body is register-exact.
+// consume;` and plain `return MESSAGE_DISPATCH_CONSUME` both reach 84.4576%
+// but only by DUPLICATING the consume epilogue, which retail does not have
+// (3 candidate `ret`s against retail's 2) - alignment luck, not a match, so
+// both are rejected. Duplicating the shared end-dialog source at its first
+// predecessor preserves the exact 17-branch/2-ret symbolic sequence and
+// reaches 81.7119%, but VC6 tail-merges only its suffix: 32 candidate blocks
+// against retail's 30 and an extra jump through the split copy. Volatile `id`
+// and hover locals worsen why-reg distance by 13 and 25 respectively, while
+// why-branch finds no recognized control mutation. Everything else in the
+// body is register-exact.
 // 2026-08-14: `sema diff --branches` now reports the branch sequences AGREE
 // (17/17 mnemonics and symbolic targets, 2 rets each) - what is left is block
 // PLACEMENT plus one reloc split. Retail emits the shared end-dialog exit

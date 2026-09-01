@@ -2581,6 +2581,12 @@ public:
     // the Dreamcast xref graph records.
     void setup_shipyards();
     void ShowScenInfo();
+#ifdef HOMM3_NEWGAME_OBJ_DECLS
+    // newgame.cpp owns the retail text formatter at 0x513800. Keep this
+    // declaration in its compiler view only: game.h's member population is
+    // codegen-sensitive in its many unrelated consumers.
+    void GetLossConditionText(char* text);
+#endif
     // The kingdom-overview screen, overview.obj's own body at 0x51e8d0.
     // ORDER-MAPPED, not claimed here: overview.obj's DC roster runs
     // SetupNewOverviewType (dc 0x1069fc) -> UpdateFlaggableIcon ->

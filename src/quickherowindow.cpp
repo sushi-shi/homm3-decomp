@@ -16,12 +16,21 @@
 #include "misc.h"
 #include "textwdgt.h"
 #include "widget.h"
+
+// E:\gamedcs\includes.h:124/134. The DC constructor calls the by-value
+// wrapper at both morale/luck sites; the reference-returning template supplies
+// its nested selection shape.
 template <class T>
-static inline const T& quick_hero_limit(const T& minimum, const T& value,
-                                        const T& maximum)
+static inline const T& t_limit(const T& minimum, const T& value,
+                               const T& maximum)
 {
     return value < minimum ? minimum
                            : (maximum < value ? maximum : value);
+}
+
+static inline int limit(int minimum, int value, int maximum)
+{
+    return t_limit(minimum, value, maximum);
 }
 
 DATA(0x00640688) static const POINT gQuickHeroSkillPositions[4] = {
@@ -82,24 +91,35 @@ static int choose_quick_hero_disguise(hero* thisHero)
 }
 
 // E:\gamedcs\quickherowindow.cpp:37
-// CURRENT 92.1471% (from 90.7834, 2026-08-21).  Moving the two disguise
+// CURRENT 92.5668% (from 90.7834, 2026-09-01).  Moving the two disguise
 // scans behind the single-use helper above changes VC6's caller-budget
 // context without emitting a helper symbol: 90.7834 -> 91.4264 and three
 // excess branches disappear.  Spelling the troop-count select as a positive
 // `>= DisguiseAdvanced` if/else then chooses retail's arm placement and
-// reaches 92.1471.  The branch transcript is exact at 54 branches and one
-// return; flow-distance is zero.
+// reaches 92.1471.  Chaining each `std::ends` insertion to the preceding
+// stream expression preserves retail's returned-stream carry (92.3106), and
+// advancing the coordinate pointer only after an occupied stack matches the
+// exact quick-town sibling's packing and target scheduling (92.5668).  DC
+// lines 52/55/61 prove the separately initialized/incremented primary-skill
+// widget id; the DC xrefs also prove the shared `t_limit`/`limit` wrapper
+// pair.  Both restorations are byte-flat source-shape facts.
 //
-// Residual: register/inline state only.  `diagnose` reports a 259-row
+// Residual: all 111 CFG blocks have exact flow (100 exact-size, 11 size-only)
+// and the branch transcript is exact at 54 branches and one return.
+// `diagnose` reports a 253-row
 // register distance dominated by the EDX/ECX role swap.  The mana temporary's
 // _Tidy call now agrees, but our EH transcript has one later extra state:
 // after state 0xb our expanded ostrstream construction opens 0xc around the
 // separate basic_streambuf constructor before reaching 0xd; retail calls the
-// higher-level constructor and goes directly 0xb -> 0xd.  The primary-stat
-// loop as a second caller-shrink dose removes that EH difference, but worsens
-// register distance and scores 91.8229, so it is rejected.  A tiny helper
-// around the final AddWidget loop is byte-flat at 92.1471.  This bounds the
-// fresh caller-shrink search after four hypotheses.
+// higher-level strstreambuf constructor and goes directly 0xb -> 0xd.
+// `predict-inline` confirms this is the sole call-count divergence.  A scoped
+// depth-zero pin on the ostrstream declaration is too blunt and falls to
+// 90.50; reordering the three army-loop locals falls to 92.3965; making the
+// disguise local const is byte-flat.  The primary-stat loop as a second
+// caller-shrink dose removes the EH difference, but worsens register distance
+// and scores 91.8229, so it is rejected.  A tiny helper around the final
+// AddWidget loop is byte-flat at the earlier 92.1471 peak.  This bounds the
+// fresh caller-shrink search after the measured hypotheses.
 //
 // Earlier rejected forms remain rejected: an indexed/shared ostrstream
 // construction (75.28%), a pointer-form primary-stat loop (85.31%), a named
@@ -142,13 +162,15 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel view_level)
         NAME_ID, 0, 0, 8));
 
     if (view_level >= ViewAll) {
+        int widget_id = PRIMARY_SKILL_1_ID;
         for (int stat = 0; stat < 4; ++stat) {
             sprintf(gText, "%d", thisHero->GetPrimarySkill(stat));
             Widgets.push_back(new textWidget(
                 gQuickHeroSkillPositions[stat].x,
                 gQuickHeroSkillPositions[stat].y,
                 23, 16, gText, "smalfont.fnt", font::WHITE,
-                PRIMARY_SKILL_1_ID + stat, 1, 0, 8));
+                widget_id, 1, 0, 8));
+            ++widget_id;
         }
 
 #pragma inline_depth(1)
@@ -158,13 +180,13 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel view_level)
             font::WHITE, MANA_ID, 1, 0, 8));
 #pragma inline_depth(255)
 
-        int morale = quick_hero_limit(
+        int morale = limit(
             -3, thisHero->GetMorale(0, 0, 1), 3);
         Widgets.push_back(new iconWidget(
             14, 86, 22, 12, MORALE_ID, "imrl22.def", morale + 3,
             0, 0, 0, 0x10));
 
-        int luck = quick_hero_limit(
+        int luck = limit(
             -3, thisHero->GetLuck(0, 0, 1), 3);
         Widgets.push_back(new iconWidget(
             14, 103, 22, 12, LUCK_ID, "ilck22.def", luck + 3,
@@ -178,7 +200,7 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel view_level)
         int* coordinates = &gQuickHeroArmyPositions[0][0];
         const int* current_count = thisHero->army.numTroops;
         for (int remaining = armyGroup::ARMY_GROUP_SLOT_COUNT; remaining;
-             --remaining, ++current_count, coordinates += 2) {
+             --remaining, ++current_count) {
             int creature = current_count[-armyGroup::ARMY_GROUP_SLOT_COUNT];
             if (creature == CREATURE_NONE)
                 continue;
@@ -197,24 +219,24 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel view_level)
             std::ostrstream quantity_text;
             if (view_level >= ViewAll) {
                 if (count < 10000)
-                    quantity_text << count;
+                    quantity_text << count << std::ends;
                 else
-                    quantity_text << count / 1000 << "k";
+                    quantity_text << count / 1000 << "k" << std::ends;
 
-                quantity_text << std::ends;
                 Widgets.push_back(new textWidget(
                     coordinates[0], coordinates[1] + 34, 32, 11,
                     quantity_text.str(), "tiny.fnt", font::WHITE,
                     widget_id++, 1, 0, 8));
             } else {
-                quantity_text << armyGroup::GetArmySizeName(count, 0);
-                quantity_text << std::ends;
+                quantity_text << armyGroup::GetArmySizeName(count, 0)
+                              << std::ends;
                 Widgets.push_back(new textWidget(
                     coordinates[0], coordinates[1] + 34, 32, 11,
                     quantity_text.str(), "tiny.fnt", font::WHITE,
                     widget_id++, 1, 0, 8));
             }
             quantity_text.freeze(false);
+            coordinates += 2;
         }
     }
 

@@ -130,8 +130,8 @@ TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TView
 
         if (thisTown->HasBuilding(MARKETPLACE_SILO_ID, 1)) {
             int* silo_income = thisTown->get_silo_income();
-            // Retail stores the integer resource sprite frames directly;
-            // Dreamcast's EGameResource[3] is layout-equivalent here.
+            // Dreamcast names this exact local EGameResource[3] (CodeView
+            // type 0x3fa1); retail independently proves three dword slots.
             // Residual note (2026-08-14) for this scan, blocks B37-B39 of the
             // constructor's 6 differing blocks: retail runs THREE induction
             // values - the index in ECX (it addresses the source as
@@ -164,15 +164,22 @@ TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TView
             // hoisted into a local, the while form, store-then-increment,
             // `unsigned` count, `*(resource + resource_count++)`,
             // `*(silo_income + current)`, an EGameResource induction variable,
-            // an EGameResource array, and both together. Strictly worse:
+            // an EGameResource array, and both together. A function-scope
+            // `current` and an `int&` alias are also byte-flat at 98.8368%.
+            // Strictly worse:
             // `resource[++resource_count]` with a -1 seed 97.4860, re-reading
             // `thisTown->get_silo_income()` in the test 97.2123, `> 0` for the
             // implicit test 98.7316, and `int resource[4]`/`[7]` 98.4351.
-            int resource[3];
+            // Marking `current` volatile over-homes every use and falls to
+            // 97.4088%, bounding the other side of the memory-home wall.
+            EGameResource resource[3];
             int resource_count = 0;
             for (int current = WOOD; current <= GOLD; current++) {
-                if (silo_income[current])
-                    resource[resource_count++] = current;
+                if (silo_income[current]) {
+                    // Complete iterates integer ordinals; DC proves the
+                    // destination array's EGameResource ABI.
+                    resource[resource_count++] = static_cast<EGameResource>(current) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
+                }
             }
 
             // NAMED, not pushed straight from the `new` expression: 98.4193 ->
@@ -258,10 +265,10 @@ TQuickTownWindow::TQuickTownWindow(const garrison* this_garrison,
     : heroWindow(200, 200, 188, 182, 0x12)
 {
     Widgets.push_back(new bitmapBorder(
-        0, 0, 194, 186, 2000, "townqvbk.pcx", 0x800));
+        0, 0, 194, 186, BACKGROUND_ID, "townqvbk.pcx", 0x800));
     Widgets.push_back(new textWidget(
         77, 13, 110, 24, gQuickViewGarrisonText, "smalfont.fnt",
-        font::WHITE, 2002, 0, 0, 8));
+        font::WHITE, NAME_ID, 0, 0, 8));
 
     initialize_army_display(this_garrison->garrisonArmy, view_level);
     for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
@@ -300,7 +307,7 @@ void TQuickTownWindow::initialize_army_display(
     if (numArmies <= 0 || view_level < ViewArmyTypes)
         return;
 
-    int widget_id = 2009;
+    int widget_id = ARMY_1_SPRITE_ID;
     int* coordinates = &gQuickTownArmyPositions[0][0];
     const int* current_army = army_group.armies;
     for (int remaining = armyGroup::ARMY_GROUP_SLOT_COUNT; remaining;

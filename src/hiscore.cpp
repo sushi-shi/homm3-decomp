@@ -311,6 +311,17 @@ int highScoreManager::GetMonType(int score, int scoreType)
 // records are emitted first into the second pointer bank, then family zero;
 // constant-folding GetMonType in each loop accounts for the one inline divide
 // by five in the latter family only.
+// Residual (90.7049%, measured 2026-09-01): all 46 CFG flows and the complete
+// 35-call multiset agree; only four blocks differ in size.  Retail binds zero,
+// this, and the widget-vector walk to EBX/ESI/EDI, while this compile binds the
+// same call-crossing pseudos to EDI/EBX/ESI and strength-reduces each icon id
+// instead of retaining `i` in a stack home.  The VC6 allocator model reports
+// identical definition slots but different front-end processing state (C1
+// class); its `i`/`y` declaration swap is byte-flat.  Negative controls:
+// `volatile int i` falls to 77.7892%, and routing only the two icon ids through
+// an int-reference alias falls to 90.6581%.  The DC-proven base construction,
+// selector/frame/time setup, controls, icon families, widget registration,
+// captured backgrounds, and active-family reveal remain in source order.
 // E:\gamedcs\hiscore.cpp:858
 VA(0x004e9880, 0x506)  // vtable/global/widget/resource xrefs, dc 0xd7e3c
 THighScoreWindow::THighScoreWindow()
@@ -395,10 +406,15 @@ THighScoreWindow::THighScoreWindow()
     }
 }
 
+// DC 0xd92c8 proves destructor -> conditional operator-delete.  Retail's
+// 33-byte wrapper matches all 3 CFG blocks exactly; compiler-generated /Z7
+// output carries no classic source-line records.
 VA_COMPGEN(0x004e9d90, 0x21, SCALAR_DELETING_DTOR, THighScoreWindow)
 
 // Retail disposes the two captured backgrounds in reverse array order,
-// purges the owned widgets, then runs heroWindow's base destructor.
+// purges the owned widgets, then runs heroWindow's base destructor.  Exact
+// checkpoint (2026-09-01): all 5 CFG blocks and all 129 bytes match; the
+// source-labelled diff is identical throughout.
 // E:\gamedcs\hiscore.cpp:953
 VA(0x004e9dc0, 0x81)  // vtable-store, dc 0xd8424
 THighScoreWindow::~THighScoreWindow()

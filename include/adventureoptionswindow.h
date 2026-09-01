@@ -40,18 +40,7 @@ public:
 
     TAdventureOptionsWindow();
     virtual ~TAdventureOptionsWindow();
-    int convertID2HelpID(int id) const
-    {
-        switch (id) {
-        case VIEW_WORLD_ID: return 0;
-        case VIEW_PUZZLE_ID: return 1;
-        case VIEW_SCENARIO_ID: return 2;
-        case DIG_ID: return 3;
-        case REPLAY_ID: return 4;
-        case ADVENTURE_OPTION_ACCEPT_ID: return 6;
-        default: return -1;
-        }
-    }
+    int convertID2HelpID(int id) const;
     virtual int WindowHandler(message* msg);
 };
 SIZE(TAdventureOptionsWindow, 0x64);

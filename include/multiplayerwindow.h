@@ -329,9 +329,8 @@ public:
 
     bool GetSessionInfo(unsigned long index, char* sessName, char* userName,
                         int& numPlayers, eSessionStatus& status);
-    bool GetSessionInfoInline(unsigned long index, char* sessName,
-                              char* userName, int& numPlayers,
-                              eSessionStatus& status);
+    bool GetSessionInfo(int index, char* sessName, char* userName,
+                        int& numPlayers, eSessionStatus& status);
 };
 SIZE(CHeroSessions, 0x14);
 
@@ -431,8 +430,11 @@ public:
     unsigned char OnHost();
     unsigned char OnJoin();
     unsigned char OnTCP();
+    unsigned char OnIPX();
     unsigned char OnSearch();
     unsigned char OnHotSeat();
+    unsigned char OnModem();
+    unsigned char OnDirect();
     unsigned char HostSession(const char* sessName, const char* password);
     unsigned char InitRemote(eNetGameType netGameType, const char* sExtra,
                              _DPCOMPORTADDRESS* comportInfo);
