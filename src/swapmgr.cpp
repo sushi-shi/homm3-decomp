@@ -12,10 +12,12 @@
 #include "advmgr.h"
 #include "bitmap816.h"
 #include "kb.h"
+#include "kbwin.h"
 #include "questlogwindow.h"
 #include "winmgr.h"
 #include "netgame.h"
 #include "mousemgr.h"
+#include "resourcemanager.h"
 #include "textresource.h"
 
 DATA(0x006a3d08) static int gUnnamed6a3d08;
@@ -222,17 +224,114 @@ int swapManager::DrawSwapWin()
     return 0;
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
 // E:\gamedcs\swapmgr.cpp:665
-DC_ONLY(0x15c66c, 0x3D8)
+// Dreamcast proves the single message local, constructor/helper boundaries,
+// two-by-eight widget walk and final network-handler lifetime. Retail fixes
+// the Complete widget-id shifts and replaces the older swap_side() refresh
+// with Update(). The 930-byte retail body and 984-byte SH4 body otherwise
+// carry the same source statement roster.
+VA(0x005ae750, 0x3A2)  // full retail body + dc 0x15c66c dossier
 int swapManager::Open(int newPriority)
 {
-    // @stub
+    gHeroScreenDraggedArtifact.artifactId = ARTIFACT_NONE;
+    parent = new TSwapWindow(heroes);
+    if (!parent)
+        MemError();
+
+    Reset();
+
+    message msg;
+    msg.id = MESSAGE_WIDGET;
+    msg.codeX = 13;
+    msg.codeY = 0;
+    msg.extra = gpGame->GetLocalPlayerGamePos();
+    parent->BroadcastMessage(&msg);
+
+    msg.codeX = widget::WIDGET_SET_STATUS;
+    msg.extra = widget::WIDGET_DIMMED_NODRAW;
+    msg.codeY = kSwapRefreshLeft;
+    parent->BroadcastMessage(&msg);
+    msg.codeY = kSwapRefreshRight;
+    parent->BroadcastMessage(&msg);
+
+    for (int iHero = 0; iHero < 2; iHero++) {
+        // DC line 698 is one portrait-update statement; retail also stores
+        // the pointer payload in this sole recovered message local. The
+        // union/comma spelling preserves both facts without an untyped cast.
+        parent->BroadcastMessage(
+            MESSAGE_WIDGET, widget::WIDGET_SET_IMAGE, iHero + 1,
+            (msg.extraText =
+                 akHeroTraits[heroes[iHero]->portrait].largePortraitName,
+             msg.extra));
+
+        sprintf(gText, gpGeneralText->GetText(139),
+                heroes[iHero]->name, heroes[iHero]->level,
+                heroes[iHero]->HeroFn_004D8F70());
+        msg.codeX = widget::WIDGET_SET_TEXT;
+        msg.codeY = iHero + 87;
+        msg.extraText = gText;
+        parent->BroadcastMessage(&msg);
+
+        if (heroes[iHero]->experience < 10000)
+            sprintf(gText, "%d", heroes[iHero]->experience);
+        else
+            sprintf(gText, "%dk", heroes[iHero]->experience / 1000);
+        msg.codeY = iHero + 81;
+        parent->BroadcastMessage(&msg);
+
+        sprintf(gText, "%d", heroes[iHero]->mana);
+        msg.codeY = iHero + 83;
+        parent->BroadcastMessage(&msg);
+
+        msg.codeX = widget::WIDGET_SET_ICON_FRAME;
+        msg.codeY = iHero + 105;
+        msg.extra = heroes[iHero]->id;
+        parent->BroadcastMessage(&msg);
+
+        for (int iSkill = 0; iSkill < 8; ++iSkill) {
+            if (iSkill < heroes[iHero]->skillCount) {
+                int skill = heroes[iHero]->GetNthSS(iSkill);
+                msg.codeX = widget::WIDGET_SET_ICON_FRAME;
+                msg.codeY = iHero * 8 + iSkill + 200;
+                msg.extra = heroes[iHero]->skillLevel[skill]
+                            + 3 * skill + 2;
+            } else {
+                msg.codeX = widget::WIDGET_CLEAR_STATUS;
+                msg.codeY = iHero * 8 + iSkill + 200;
+                msg.extra = widget::WIDGET_DRAWN;
+            }
+            parent->BroadcastMessage(&msg);
+        }
+    }
+
+    UpdateBackpack(0);
+    UpdateBackpack(1);
+    gpAdvManager->DisableButtons();
+    Update();
+
+    gpWindowManager->AddWindow(parent, -1, 1);
+    KBChangeMenu(dfltMenu);
+    border = ResourceManager::GetBitmap816(
+        DATA_COMPGEN(0x00688524, swapTradeSelectorBitmapName,
+                     "TradeSel.pcx"));
+    gpWindowManager->UpdateScreen(0, 0, 800, 600);
+    gpMouseManager->SetPointer(0, mouseManager::DEFAULT_SET);
+
+    id = 0x100;
+    priority = newPriority;
+    status = STATUS_ACTIVE;
+    strcpy(cMgrName,
+           DATA_COMPGEN(0x00688518, swapManagerName, "swapManager"));
+
+    if (pDPlay) {
+        field_60 = pDPlay->GetNetMsgHandler();
+        field_64 = new CSwapMgrNetMsgHandler;
+        pDPlay->SetNetMsgHandler(field_64);
+    }
+    return 0;
 }
 
 // E:\gamedcs\swapmgr.cpp:789
-#endif  // @carcass
 
 VA(0x005aed20, 0x9B)  // exact retail teardown, dc 0x15ca44
 void swapManager::Close()
