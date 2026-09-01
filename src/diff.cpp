@@ -33,6 +33,12 @@ unsigned char* CDiffFile::GetData()
 // index=ESI(this) (SIB 0x30), our CL the reverse (SIB 0x06). Everything else is
 // byte-exact. Tried and rejected (all byte-identical): `diffOffset + GetData()`,
 // `&GetData()[diffOffset]`. Same class as hero.cpp:2162.
+// The Dreamcast dossier corroborates the seven-block loop, its two memcpy
+// arms, and the single newSaveGame pointer local.  A fresh why-reg catalog
+// sweep leaves six masked slots (the three reciprocal EAX/ESI SIB pairs):
+// zero-hoisting and oldOffset/diffOffset declaration swaps are flat, while
+// every other naming/order/volatile probe is worse.  This remains a measured
+// B1 encoding wall, not a missing source statement.
 // 2026-08-14 two-axis /Ob2 re-test (the campaign rule that a one-axis "flat"
 // verdict is not a verdict): HELD. Pad statements ahead of `resultOffset` x
 // xx_nop sites before the return are 99.6429 in all twelve cells of
@@ -103,7 +109,11 @@ int CDiffMaker::CountSameBytes(int oldOffset, int newOffset)
 // inlined success return, both inlined, and swapped label order) ALL compile to
 // the identical 84.1667 layout. Merged-return / block-layout generation family.
 // Earlier rejects: nested-scope counters, pointer-parameter spelling, memcmp's
-// symmetric operand order; why-branch distance 0, why-reg no addressable slice.
+// symmetric operand order; why-branch distance 0.  The Dreamcast dossier
+// corroborates the nested 64x64 search, 16-byte memcmp, loop-local `i` scopes,
+// and the two early-failure exits.  A fresh why-reg sweep leaves 14 schedule slots:
+// zero-hoisting, delta declaration swaps, and one chained assignment are flat;
+// the reverse chain/store order and volatile deltas are worse.
 // E:\gamedcs\diff.cpp:133
 VA(0x00491050, 0xed)  // linkorder + 64x64 search for a 16-byte synchronization run, dc 0x823d8
 bool CDiffMaker::FindNextSame(int oldOffset, int newOffset,
@@ -149,20 +159,26 @@ found:
     return 1;
 }
 
-// Residual (83.9477%): exact 447-byte extent and seven-branch/one-return CFG.
-// The delta is a cyclic ESI/EDI/EBX coloring: retail binds ESI=diffOffset,
-// EDI=this, EBX=newOffset; our CL binds ESI=this, EDI=newOffset, EBX=diffOffset.
-// Because `rep movs` claims ESI/EDI, retail's rotation leaves newOffset (EBX)
-// live across the payload copy while ours must spill it - hence retail's frame
-// is 0x3c and ours 0x40, the one extra dword being newOffset's home slot.
-// The declaration order below is the measured optimum: an exhaustive sweep of
-// all 120 orderings of the five prologue statements (diffSize=0 / oldOffset /
-// new / diffOffset / newOffset) tops out here, and no ordering reaches the
-// retail rotation - `this` is always the first call-crossing pseudo created, so
-// it always takes ESI. That makes the binding front-end handle-state, not a
-// source-local knob. Also tried and rejected: a ternary maximum, mutable-offset
-// CountSameBytes, placement-new headers, a shared terminal tail, hoisting
-// sameCount to function scope, register hints, and inert type-count probes.
+// Residual (current 83.9244%, banked MAX 83.9477%): exact 447-byte extent,
+// exact 14-block retail CFG, and the exact 0x3c retail frame.  Dreamcast proves
+// the max/CountSameBytes/FindNextSame helpers, three scoped CDiffHeader objects,
+// and both payload memcpy arms.  Its lower-bound local inventory and tail line
+// rows favor no separately named `count`; spelling m_newSize-newOffset directly
+// restores retail's frame and moves the diagnostic from 214 mixed flow/register
+// slots to 111 pure register-visible slots, so that coherent source shape is
+// retained despite the small aggregate-score dip.
+//
+// The remaining delta is a callee-saved role swap: retail binds ESI=diffOffset,
+// EDI=this, EBX=newOffset; our CL binds EDI=diffOffset, ESI=this, EBX=newOffset.
+// The allocator-model pass confirms equal pseudo definition slots/order but a
+// different front-end processing order: `this` is always the first-created
+// call-crossing pseudo in this compile.  Its three model-filtered edits
+// (diffOffset/newOffset declaration swap, oldCount/newCount swap, and terminal
+// store swap) are flat or worse.  Earlier exhaustive controls also reject all
+// 120 prologue orderings, ternary max, mutable-offset CountSameBytes,
+// placement-new headers, a shared terminal tail, function-scope sameCount,
+// register hints, and inert type-count probes.  This is a measured C1
+// front-end-handle wall, not license to invent an alias local absent from DC.
 // E:\gamedcs\diff.cpp:174
 VA(0x00491140, 0x1bf)  // linkorder + calls FindNextSame and emits 12-byte records, dc 0x82488
 CDiffFile* CDiffMaker::MakeDiff(unsigned long& diffSize)
@@ -192,14 +208,13 @@ CDiffFile* CDiffMaker::MakeDiff(unsigned long& diffSize)
                 oldOffset += oldCount;
                 newOffset += newCount;
             } else {
-                int count = m_newSize - newOffset;
-                CDiffHeader header(count, 1, 0);
+                CDiffHeader header(m_newSize - newOffset, 1, 0);
                 memcpy(diff->GetBase() + diffOffset, &header,
                        sizeof(CDiffHeader));
                 diffOffset += sizeof(CDiffHeader);
                 memcpy(diff->GetBase() + diffOffset,
-                       m_newData + newOffset, count);
-                diffOffset += count;
+                       m_newData + newOffset, m_newSize - newOffset);
+                diffOffset += m_newSize - newOffset;
                 diffSize = diffOffset;
                 diff->m_numBytes = m_newSize;
                 return diff;

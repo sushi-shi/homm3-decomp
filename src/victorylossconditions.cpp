@@ -77,18 +77,20 @@ static const int kAngelicAllianceSecondMap = 9;
 // then the combination fallback - per hero, bitset count()/test() over
 // the combo's components exactly as CheckForArtifactTransportWin, but
 // a missing piece merely advances to the next hero.
-// Residual (91.5981%): retail keeps the 2-arg vector::_Destroy CALL in
-// the inlined erase (copy loop inline, then call, then sub _Last,4)
-// where our compile proves the one-trip destroy loop empty and elides
-// it; the register echoes downstream are that call's shadow. Tried and
-// rejected: erase(it,it+1) with and without using the return (two-
-// pointer copy shape, destroy still elided, 90.37), inline_depth(1)
-// around the statement and around the loop (no byte change), plain
-// member reads instead of the campaign reference (87.40). No depth
-// value can inline copy while calling _Destroy - the split is the
-// sequential /Ob2 budget dying between the two, which no local edit
-// reaches. EraseObj (events, exact) proves the elision itself is
-// ordinary VC6, so the divergence is budget state, not the header.
+// 91.5981 -> 98.2057 (2026-09-01): restore Dreamcast's named
+// game::IsHumanTeam boundary in the shared artifact-victory arm. Retail
+// expands the helper to the same signed-team guard and eight-player scan,
+// while the coherent helper changes /Ob2 budget state enough to retain the
+// formerly missing 2-arg vector::_Destroy call. The result has the exact
+// 77-block retail CFG, with 73 blocks size-exact.
+// Residual: 15 register-visible slots across the Complete-only campaign
+// prologue, one commutative hero-array SIB, one winner-store load schedule,
+// and the final exception-cleanup state initialization. Keeping currMap as
+// a reference is the whole-body optimum: direct member reads now fall to
+// 92.69% and add a 78th block. The fresh eight-cell why-reg catalog is flat
+// or worse (unnamed comboIdx is flat; volatile team/comboIdx/remaining/j and
+// a named completion flag are worse). Earlier negative controls remain:
+// erase(it,it+1), inline_depth(1), and the pre-helper direct-member spelling.
 // E:\gamedcs\victorylossconditions.cpp:31
 VA(0x005f1610, 0x4FE)  // anchor-global, dc 0x18fdf8
 unsigned char VictoryConditionStruct::CheckForArtifactWin()
@@ -142,16 +144,7 @@ unsigned char VictoryConditionStruct::CheckForArtifactWin()
         return 0;
 
     int team = get_team(gpGame, gNetLocalGamePos);
-    if (team >= 0) {
-        int player = 0;
-        signed char* teams = gpGame->mapHeader.teamInfo;
-        for (; player < 8; ++player) {
-            if (teams[player] == team && gpGame->IsHuman(player))
-                goto eligible;
-        }
-    }
-    if (AppliesToComputer) {
-eligible:
+    if ((team >= 0 && gpGame->IsHumanTeam(team)) || AppliesToComputer) {
         int j;
         for (j = 0; j < gpCurrentPlayer->numHeroes; ++j) {
             if (gpGame->GetHero(gpCurrentPlayer->heroes[j])
@@ -336,8 +329,11 @@ unsigned char VictoryConditionStruct::CheckForUpgradedTown()
 // are byte-flat. Residual: one extra mov in the this_town_loc/grail_town_loc
 // y compare plus a grail_town_loc/any_town_loc stack-home exchange. All four
 // receiver/argument combinations and both operand orders inside the inline
-// equality measured identically; this is the same C1 register-rotation class
-// as IsGrailTarget's standing residual.
+// equality measured identically; this is a C1 packed-point register rotation.
+// A fresh why-reg pass leaves nine masked slots: zero-hoisting is flat, the
+// winner-store swap adds six, and volatile player adds 120. The allocator
+// model confirms identical first-definition bindings and places the
+// divergence after allocation, outside the B1 lever.
 // E:\gamedcs\victorylossconditions.cpp:184
 VA(0x005f1ef0, 0x203)  // anchor-global, dc 0x190124
 unsigned char VictoryConditionStruct::CheckForGrailBuildingWin()
@@ -392,19 +388,21 @@ bool VictoryConditionStruct::CheckForHeroDefeatWin(
 }
 
 // E:\gamedcs\victorylossconditions.cpp:264
-// Residual (92.5679%): the packed-point construction, both equality paths,
-// and CFG agree. VC6 rotates caller-saved EAX/ECX/EDX temporaries inside the
-// inlined comparisons; the v2 allocator model classifies the transposed pair
-// as C1 front-end handle state (parameter/`this` versus expression value),
-// not a source-nameable ordering lever.
+// Exact closure (92.5679 -> 100%, 2026-09-01): Dreamcast line rows prove the
+// declaration order any_town_loc, grail_town_loc, this_town_loc. Restoring
+// that order, the three recovered names, and the const-reference equality
+// spelling resolves both scratch-register rotations and makes all eight
+// retail blocks byte-exact.
 VA(0x005f2160, 0xFD)  // anchor-global, dc 0x1902c4
 unsigned char VictoryConditionStruct::IsGrailTarget(town* thisTown)
 {
-    type_point target(TownX, TownY, TownZ);
-    type_point wildcard(-1, -1, -1);
-    type_point townLocation(thisTown->mapX, thisTown->mapY, thisTown->mapZ);
+    type_point any_town_loc(-1, -1, -1);
+    type_point grail_town_loc(TownX, TownY, TownZ);
+    type_point this_town_loc(thisTown->mapX, thisTown->mapY,
+                             thisTown->mapZ);
 
-    if (townLocation.operator==(&target) || target.operator==(&wildcard))
+    if (this_town_loc == grail_town_loc
+        || grail_town_loc == any_town_loc)
         return 1;
     return 0;
 }
@@ -716,6 +714,10 @@ static const int kLossPortrait146 = 0x92;
 // `GetPrimarySkill(0) >= 0` invariant are all byte-flat at 75.8636%. They
 // enter C2 as real inline expressions and then disappear, but none changes
 // this function's cross-jump phase.
+// Fresh why-branch measurement: candidate 335 instructions / 65 branches /
+// 18 returns versus retail 334 / 64 / 19, both 89 blocks, for distance 162.
+// The solver classifies the remaining gap as D6 retail-side exit duplication;
+// adjacent case swaps are flat or +2/+4/+14, and full reversal is +16.
 // E:\gamedcs\victorylossconditions.cpp:463
 VA(0x005f2a40, 0x3C8)  // anchor-global, dc 0x1906d4
 unsigned char LossConditionStruct::CheckForDefeatedHeroLoss(const hero* loser)

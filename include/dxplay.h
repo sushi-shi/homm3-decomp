@@ -336,7 +336,7 @@ SIZE(CDPlayLobby, 0x60);
 // Destroy(), which frees pData and clears the pair.
 class CDPlayMsg {
 public:
-    CDPlayMsg() : pData(0), dataSize(0) {}
+    CDPlayMsg();
     unsigned char AllocSize(unsigned long dSize);
     unsigned char Destroy();
 
@@ -351,9 +351,21 @@ public:
 };
 SIZE(CDPlayMsg, 0x08);
 
+// CODEVIEW(E:\gamedcs\dxplay.h:137, dc 0x8bda8).  The constructor's
+// separate line rows prove body assignments rather than an initializer list;
+// Complete folds the helper into its callers while preserving both stores.
+inline CDPlayMsg::CDPlayMsg()
+{
+    pData = 0;
+    dataSize = 0;
+}
+
+// CODEVIEW(E:\gamedcs\dxplay.h:150, dc 0x8bdcc).  Dreamcast proves the
+// early size guard, conditional delete, allocation, and size store; retail's
+// inlined cmp/jb fixes this equivalent operand order.
 inline unsigned char CDPlayMsg::AllocSize(unsigned long dSize)
 {
-    if (dataSize > dSize)
+    if (dSize < dataSize)
         return 1;
     if (pData)
         delete pData;
