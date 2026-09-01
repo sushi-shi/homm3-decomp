@@ -150,6 +150,11 @@ def _in_span_unclaimed():
     fns = _common.REPO / "evidence/link-order/functions.tsv"
     if not base.is_file() or not fns.is_file():
         return 0, 0
+    # This side census must use the same authoritative universe as the main
+    # queue. Otherwise an admitted EH funclet/runtime thunk inside a unit's
+    # inferred span is falsely advertised as source-reconstructable work.
+    from homm3.match import universe
+    category, _sizes = universe.classify()
     claimed = set()
     for line in base.read_text().splitlines():
         if line.startswith("#") or not line.strip():
@@ -175,6 +180,8 @@ def _in_span_unclaimed():
         try:
             rva, size = int(r["rva"], 16), int(r["size"])
         except (ValueError, KeyError):
+            continue
+        if category.get(rva) not in ("target", "zlib"):
             continue
         if rva in claimed:
             continue

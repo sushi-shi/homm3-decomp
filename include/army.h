@@ -206,13 +206,13 @@ struct type_ballistics_traits {
     // Shots per bombardment: AttackWall reads it as the trip count of
     // the loop that calls attack_wall.
     signed char shots;                // +0x4
-    // The two cumulative rolls that decide how many levels one hit
+    // The cumulative rolls that decide how many levels one hit
     // takes off: attack_wall subtracts [0] and then [1] from a single
     // Random(1, 100) and stops at the first non-positive remainder, so
-    // the answer is 0, 1 or 2. AN ARRAY, not two fields - the retail
-    // load is `movsx edx, byte [row + i + 5]` off the loop counter.
-    signed char levelChance[2];       // +0x5
-    signed char pad_07;
+    // the answer is 0, 1 or 2. The ballist.txt parser independently
+    // proves THREE source entries at +5..+7; only the first two need be
+    // subtracted because falling through both already selects level 2.
+    signed char levelChance[3];       // +0x5
 };
 SIZE(type_ballistics_traits, 8);
 

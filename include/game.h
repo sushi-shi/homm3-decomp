@@ -1534,7 +1534,9 @@ public:
     NewSMapHeader mapHeader;
     SGameSetupOptions mapSetup;
     unsigned char campaignGame;
-    char pad_4e1[3];
+    // +0x4e1..+0x4e3 is natural alignment, not a source member. Naming it
+    // makes VC6's implicit operator= copy three bytes retail deliberately
+    // skips before the aligned SCampaign member.
     SCampaign campaign;
     std::string fileName;
     int difficultyRating;

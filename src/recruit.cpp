@@ -413,12 +413,15 @@ TRecruitWindow::~TRecruitWindow()
 // use background index -1 (the deliberately biased akCreatureBackgrounds
 // base). `name_y` is genuinely unused here; the constructor uses it for the
 // adjacent name widgets after calling this helper.
-// Residual (93.63%): blocks B0..B24, including all three allocations and
+// Residual (93.6325%): blocks B0..B24, including all three allocations and
 // constructor calls, are instruction-for-instruction exact. The only delta is
 // the slow-growth tail of the FINAL Widgets.push_back: retail leaves the last
 // vector<widget*>::size() at 0x423110 out of line and therefore merges its
 // empty/non-empty return, while this VC6 compile inlines that 19-byte helper
-// and emits one duplicate exit. Measured source-form probes: named border
+// and emits one duplicate exit. predict-inline measures 17 candidate calls
+// versus retail's 18. A statement-scoped inline_depth(1) is byte-flat, while
+// depth(0) de-inlines the whole push_back edge and falls to 51.8481%; it cannot
+// isolate the nested size() call. Other source-form controls: named border
 // temporary 93.59%; direct count-insert 79.10%; direct single-insert 87.60%.
 // All preserve the values but perturb more of Dinkumware's insertion lowering,
 // so the natural push_back form below is the banked maximum. Inline-budget /
@@ -669,17 +672,23 @@ TCreatureType siege_artifact_to_creature(TArtifact engine)
 // TTextResource::operator[], GetArmyName and sprintf; UpdateCost in turn
 // owns a sole `resCost` array and calls GetMonsterCost. Retail independently
 // corroborates all three helper boundaries by expanding their bodies. Keeping
-// those source facts raises the current candidate from 88.2360% to 94.1574%
+// those source facts raises the current candidate from 88.2360% to 96.5558%
 // and makes every instruction through the GetArmyName join exact.
 //
-// Residual (94.1574%): the first mismatch is VC6 parking the repeated
+// DC line 533 is one statement containing HasArtifact and the `1 - result`
+// store. Spelling that assignment directly (with no synthetic `owned` local)
+// is byte-flat at the current peak but restores the positive source shape.
+// Residual (96.5558%): the first mismatch is VC6 parking the repeated
 // WIDGET_SET_TEXT value in ESI, while retail stores immediate 3 and reserves
 // ESI for the creature-trait base used by the following siege test. That
 // register-colouring choice shifts the switch/table and later statement
-// alignment, but the symbolic branch sequence remains exact (24/24). The
-// earlier struct-view cost fetch, late message declaration and reversed
-// alt-resource polarity remain rejected lower plateaus; none may replace the
-// now-ratcheted constructor/helper/local facts.
+// alignment. why-reg v2 confirms all first callee-saved definitions agree and
+// classifies the divergence as later scheduling/CFG. A named trait-table
+// pointer falls to 96.0228%; making the artifact result volatile improves the
+// masked register distance but invents source-false storage and is rejected.
+// The earlier struct-view cost fetch, late message declaration and reversed
+// alt-resource polarity remain lower plateaus; none may replace the recovered
+// constructor/helper/local facts.
 VA(0x005503a0, 0x594)  // anchor-global, dc 0x119dcc
 void recruitUnit::Update(unsigned char new_monster, long slot)
 {
@@ -701,8 +710,8 @@ void recruitUnit::Update(unsigned char new_monster, long slot)
 
     numAvail = available[slot];
     if (akCreatureTypeTraits[monsterType].attributes & CTA_SIEGE_WEAPON) {
-        short owned = thisHero->HasArtifact(SiegeMonsterToSiegeArtifact(monsterType));
-        *numAvail = 1 - owned;
+        *numAvail = 1 - thisHero->HasArtifact(
+            SiegeMonsterToSiegeArtifact(monsterType));
         if (*numAvail < 0)
             *numAvail = 0;
     }
@@ -1164,7 +1173,7 @@ void recruitUnit::UpdateCost()
 // the byte at [ebp+0xc] -> +0x9c, then the four (type, count-pointer)
 // pairs into +0x5c/+0x6c .. +0x68/+0x78, with the first pair also
 // seeding monsterType/numAvail.
-// Residual (98.0%): three head instructions. Retail parks the shared
+// Residual (97.9750%): three head instructions. Retail parks the shared
 // zero in edx before the first store and cycles eax through the
 // argument loads; our CL parks it in eax and hoists the MonType2 load
 // (and its store) ahead of monsterType/MonType1. Statement order was
@@ -1174,7 +1183,10 @@ void recruitUnit::UpdateCost()
 // retail's store for it lands - after MonType1 (97.7/80.3) or after
 // MonType2 (95.4/79.4) - costs the hero constructor badly.
 // Register-homing family; the value written to every field is
-// identical in all spellings.
+// identical in all spellings. The CFG is 6/6 block-exact. why-reg v2's three
+// highest creation-order controls (the adjacent zero/member store swaps) were
+// flat, flat, and worse, leaving this as a front-end handle/register-homing
+// wall rather than a missing statement.
 VA(0x00551350, 0x101)  // anchor-callee(baseManager ctor) + anchor-vtable 0x640c70, dc 0x11ad04
 recruitUnit::recruitUnit(armyGroup* newGroup, unsigned char bGroupIsTownGarrison,
     TCreatureType _MonType1, short* _numMon1,
@@ -1206,12 +1218,14 @@ recruitUnit::recruitUnit(armyGroup* newGroup, unsigned char bGroupIsTownGarrison
 // E:\gamedcs\recruit.cpp:1158
 // `ret 0x24` = the nine hero-flavoured parameters; identical body with
 // thisHero taking the armyGroup pair's place.
-// Residual (96.7%): the same head-scheduling delta as the constructor
+// Residual (96.6709%): the same head-scheduling delta as the constructor
 // above, plus the thisHero store. Retail's store order (thisHero
 // first, then the four zeros) is reproduced exactly by writing
 // `thisHero = _thisHero;` first - but that spelling then hoists the
 // MonType2 load/store out of place and scores 95.8. Everything from
-// the MonType3 load onward is byte-identical in both.
+// the MonType3 load onward is byte-identical in both. The CFG is 6/6
+// block-exact, and why-reg v2's three adjacent-store creation-order controls
+// were all byte-flat, confirming the residual as front-end handle scheduling.
 VA(0x00551460, 0xFE)  // anchor-callee(baseManager ctor) + anchor-vtable 0x640c70, dc 0x11adb4
 recruitUnit::recruitUnit(hero* _thisHero,
     TCreatureType _MonType1, short* _numMon1,

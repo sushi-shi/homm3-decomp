@@ -21,9 +21,10 @@
 // the folded twins keep DC_ONLY rows below (one retail address = one claim).
 // Widget/CSingleSelPopup ctors and the trivial zBufferDraw/Draw stubs are
 // inlined or ICF-folded out of this TU (0x404140 / 0x404df0 shared empties).
-// All three widget non-deleting dtors fold to 0x575a60 (jmp ~widget) and all
-// four dialog non-deleting dtors fold to 0x576530 (jmp ~TDialogBox); they are
-// emitted here as empty out-of-line bodies with no claim of their own.
+// All three widget non-deleting dtors fold to 0x575a60 (jmp ~widget), whose
+// exact source-order bracket selects CBitmapWidget as the canonical claim.
+// All four dialog non-deleting dtors fold to 0x576530 (jmp ~TDialogBox),
+// similarly bracketed by CTeamAlignmentDlg's ctor and CreateWin.
 //
 // CreateWin family status: the two CBonusDlg::CreateWin overloads are
 // reconstructed (98.00 / 95.51) and cap on the register-homing family - the
@@ -156,10 +157,6 @@ CHeroDlg::~CHeroDlg()
 }
 
 CTownDlg::~CTownDlg()
-{
-}
-
-CTeamAlignmentDlg::~CTeamAlignmentDlg()
 {
 }
 
@@ -315,9 +312,11 @@ CBitmapWidget::CBitmapWidget(int xPos, int yPos, Bitmap816* pImage)
     height = pImage->Height;
 }
 
-CBitmapWidget::~CBitmapWidget()
-{
-}
+// The 5-byte body lies exactly between CBitmapWidget::Draw and CHeroDlg's
+// constructor in the retail order-map. The CSpriteWidget twin folds here.
+// E:\gamedcs\singleselectionpopups.cpp:106
+// It must remain implicit: an explicit empty body inserts a vptr store.
+VA_COMPGEN(0x00575a60, 0x5, IMPLICIT_DTOR, CBitmapWidget)  // dc 0x12f2a0
 
 // ============================================================================
 // CHeroDlg
@@ -448,6 +447,13 @@ CTeamAlignmentDlg::CTeamAlignmentDlg(unsigned char newGameMode)
 {
     GetTeams();
 }
+
+// The 5-byte body occupies the only aligned gap between this constructor and
+// CreateWin; its tail target is TDialogBox::~TDialogBox. The other three
+// dialog destructors fold to this canonical representative.
+// E:\gamedcs\singleselectionpopups.cpp:361
+// It must remain implicit: an explicit empty body inserts a vptr store.
+VA_COMPGEN(0x00576530, 0x5, IMPLICIT_DTOR, CTeamAlignmentDlg)  // dc 0x12b038
 
 // E:\gamedcs\singleselectionpopups.cpp:365
 // Residual (99.11%): all 41 CFG blocks and their edges agree; only B14/B17/B36

@@ -10,11 +10,9 @@
 //   0x4fca60 62 B   implicit TreasureData destructor - now claimed exact
 //   0x4fd460 88 B   `??_ENewmapCell` vector deleting destructor - now
 //                   claimed exact
-//   0x504260 46 B / 0x504290 42 B
-//                   the static ctor/dtor pair for a file-scope 16-byte
-//                   vector<int> gMissingMaskTypes at 0x699690, registered
-//                   through _atexit -
-//                   the cinit class the match doctrine excludes
+//   0x504260 46 B   excluded .CRT$XCU initializer for the file-scope
+//                   vector<int> InvalidPlacementList at 0x699690
+//   0x504290 42 B   its registered static destructor - now claimed exact
 //   0x5042c0 421 B  retail-only per-class object-type-index rebuild - now
 //                   claimed at its 99.8854 scheduling/pooled-symbol wall
 // The two larger rows (0x500de0, 0x502b60) are real game code with NO
@@ -4723,7 +4721,7 @@ int NewfullMap::loadObjectType(TAbstractFile* infile,
 // 87.2791 together (2026-08-20).  The note this replaces had both of them
 // pointed at the wrong construct, so read the bytes, not the prose.
 //
-//   * `i` IS AN `int`, NOT AN `unsigned` - because `gMissingMaskTypes` is a
+//   * `i` IS AN `int`, NOT AN `unsigned` - because `InvalidPlacementList` is a
 //     `vector<int>` and `push_back` takes `const int&`.  With an `unsigned`
 //     counter the conversion materialises a TEMPORARY and retail's
 //     `lea ecx,[ebp-0x10] / push ecx` becomes ours plus a
@@ -4803,8 +4801,15 @@ int NewfullMap::loadObjectType(TAbstractFile* infile,
 // its own at [ebp-0xd] - the same recycled-parameter-home mechanism
 // readHeroData's note describes, but on a COMPILER-GENERATED temp, so the
 // block-scope lever has nothing to bite on.
+// Retail's .CRT$XCU slot 549 initializes this vector at 0x504260 and
+// registers 0x504290 with atexit.  The registered body loads _First, calls
+// operator delete and zeros _First/_Last/_End: it is the compiler-emitted
+// static destructor, not the excluded initializer thunk itself.  Dreamcast's
+// mapcell $E483 is the same one-call vector<int> teardown for the source-named
+// InvalidPlacementList (dc 0xf2bb4).
+VA_COMPGEN(0x00504290, 0x2A, STATIC_DTOR, InvalidPlacementList)
 DATA(0x00699690)
-static std::vector<int> gMissingMaskTypes;
+std::vector<int> InvalidPlacementList;
 
 // Retail-only object-type lookup rebuild.  Each of the 232 adventure-object
 // classes owns a vector of type records.  Clear every record's resolved
@@ -4870,7 +4875,7 @@ void NewfullMap::NewfullMapFn_005042C0()
 VA(0x00504470, 0x5C9)  // order-map: calls readObject 0x502e00 + readObjectType 0x503780 + GetSprite 0x55c7b0 + Random x2 (CObject ctor inlined) + progress-bar helpers; $E482-$E485 pair sits just before at 0x104260/0x104290 matching DC link order; EH-bearing, dc 0xf2c20
 int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
 {
-    gMissingMaskTypes.clear();
+    InvalidPlacementList.clear();
 
     int count;
     if (infile->Read(&count, sizeof(count)) < sizeof(count))
@@ -4886,7 +4891,7 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
         if (i == objectTypes.size() / 2)
             IncProgressBar(1);
         if (status == READ_OBJECT_TYPE_DEFAULT_MASK)
-            gMissingMaskTypes.push_back(i);
+            InvalidPlacementList.push_back(i);
     }
 
     NewfullMapFn_005042C0();
@@ -4921,9 +4926,9 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
         if (readObject(infile, &objects[i], mapVersion) < 0)
             return -1;
 
-        for (unsigned int missing = 0; missing < gMissingMaskTypes.size();
+        for (unsigned int missing = 0; missing < InvalidPlacementList.size();
              ++missing) {
-            if (objects[i].typeIndex == gMissingMaskTypes[missing]) {
+            if (objects[i].typeIndex == InvalidPlacementList[missing]) {
                 sprintf(gText,
                         DATA_COMPGEN(0x0067fb48, readMapObjectsInvalidObject,
                                      "Invalid Object Referenced!\n\n"

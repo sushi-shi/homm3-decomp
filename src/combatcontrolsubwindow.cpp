@@ -8,7 +8,10 @@
 #include "combatwindow.h"
 #include "cmbtmgr.h"
 #include "game.h"
+#include "iconwdgt.h"
 #include "inputmgr.h"
+#include "kb.h"
+#include "textresource.h"
 #include "textwdgt.h"
 #include "widget.h"
 #include "window.h"
@@ -494,6 +497,94 @@ void TCombatPlacementSubWindow::DisableAllButtons()
     type_combat_sub_window::DisableAllButtons();
 }
 
+// E:\gamedcs\combatcontrolsubwindow.cpp:343
+// DC preserves the source-order pairs: construct a widget, append it, then
+// move to the next row. Retail corroborates every argument, the twelve-slot
+// reserve, the vtable, and the nine derived pointer offsets. The primary
+// labels are genrltxt rows 381..384; row 385 begins the morale/luck pair.
+VA(0x0046c370, 0x7FC)  // roster order + vtable 0x63d440 + CHrPop.pcx, dc 0x654a0
+TCombatHeroSubWindow::TCombatHeroSubWindow(
+    int x, int y, int w, int h, heroWindow* parent)
+    : TSubWindow(x, y, w, h, parent)
+{
+    Widgets.reserve(12);
+
+    backgroundWidget = new bitmapBorder(
+        0, 0, 78, 202, 0x834, "CHrPop.pcx", 0x800);
+    Widgets.push_back(backgroundWidget);
+    portrait = new bitmapBorder(10, 6, 58, 64, 0x835, 0, 0x800);
+    Widgets.push_back(portrait);
+
+    sprintf(gText, "%s:", gpGeneralText->GetText(381));
+    Widgets.push_back(new textWidget(
+        9, 75, 60, 12, gText, "tiny.fnt", font::WHITE,
+        0x836, 0, 0, 8));
+    attackText = new textWidget(
+        9, 75, 60, 12, 0, "tiny.fnt", font::WHITE,
+        0x837, 2, 0, 8);
+    Widgets.push_back(attackText);
+
+    sprintf(gText, "%s:", gpGeneralText->GetText(382));
+    Widgets.push_back(new textWidget(
+        9, 87, 60, 12, gText, "tiny.fnt", font::WHITE,
+        0x838, 0, 0, 8));
+    defenseText = new textWidget(
+        9, 87, 60, 12, 0, "tiny.fnt", font::WHITE,
+        0x839, 2, 0, 8);
+    Widgets.push_back(defenseText);
+
+    sprintf(gText, "%s:", gpGeneralText->GetText(383));
+    Widgets.push_back(new textWidget(
+        9, 99, 60, 12, gText, "tiny.fnt", font::WHITE,
+        0x83a, 0, 0, 8));
+    powerText = new textWidget(
+        9, 99, 60, 12, 0, "tiny.fnt", font::WHITE,
+        0x83b, 2, 0, 8);
+    Widgets.push_back(powerText);
+
+    sprintf(gText, "%s:", gpGeneralText->GetText(384));
+    Widgets.push_back(new textWidget(
+        9, 111, 60, 12, gText, "tiny.fnt", font::WHITE,
+        0x83c, 0, 0, 8));
+    knowledgeText = new textWidget(
+        9, 111, 60, 12, 0, "tiny.fnt", font::WHITE,
+        0x83d, 2, 0, 8);
+    Widgets.push_back(knowledgeText);
+
+    sprintf(gText, "%s:", gpGeneralText->GetText(385));
+    Widgets.push_back(new textWidget(
+        9, 131, 60, 12, gText, "tiny.fnt", font::PRIMARY,
+        0x83e, 0, 0, 8));
+    moraleIcon = new iconWidget(
+        47, 131, 22, 12, 0x83f, "imrls.def", 0, 0, 0, 0,
+        iconWidget::ICON_STYLE_PLAIN);
+    Widgets.push_back(moraleIcon);
+
+    sprintf(gText, "%s:", gpGeneralText->GetText(386));
+    Widgets.push_back(new textWidget(
+        9, 143, 60, 12, gText, "tiny.fnt", font::PRIMARY,
+        0x840, 0, 0, 8));
+    luckIcon = new iconWidget(
+        47, 143, 22, 12, 0x841, "ilcks.def", 0, 0, 0, 0,
+        iconWidget::ICON_STYLE_PLAIN);
+    Widgets.push_back(luckIcon);
+
+    manaText = new textWidget(
+        7, 165, 64, 30, 0, "tiny.fnt", font::WHITE,
+        0x842, 5, 0, 8);
+    Widgets.push_back(manaText);
+
+    for (std::vector<widget*>::iterator current = Widgets.begin();
+         current != Widgets.end(); ++current) {
+        widget* w = *current;
+        if (w)
+            w->status &= ~(widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        AddWidget(w, -1);
+    }
+
+    shown = false;
+}
+
 // TCombatHeroSubWindow's own destructor is 107 bytes, not 120, and the
 // 13-byte difference is one missing call: its loop deletes each widget
 // but does NOT hand it to parentWindow->RemoveWidget first. That also
@@ -515,6 +606,40 @@ TCombatHeroSubWindow::~TCombatHeroSubWindow()
         if (*it)
             delete *it;
     }
+}
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:428
+// Complete inlines the DC-proved GetPrimarySkill and GetMaxMana helpers.
+// The first argument remains a const source reference; the retail hero
+// methods lost their DC const qualifiers, hence the narrow const_cast at
+// those calls rather than a source-false Update signature.
+VA(0x0046cc10, 0x1D7)  // roster order + four clamped stats + mana format, dc 0x65b40
+void TCombatHeroSubWindow::Update(const hero& info, const hero* otherHero,
+                                  bool on_cursed_ground)
+{
+    char buffer[64];
+    hero& mutableInfo = const_cast<hero&>(info);
+
+    backgroundWidget->SetPlayerPaletteColors(info.owner);
+    portrait->SetImage(akHeroTraits[info.portrait].largePortraitName);
+
+    sprintf(buffer, "%d", info.GetPrimarySkill(0));
+    attackText->SetText(buffer);
+    sprintf(buffer, "%d", info.GetPrimarySkill(1));
+    defenseText->SetText(buffer);
+    sprintf(buffer, "%d", info.GetPrimarySkill(2));
+    powerText->SetText(buffer);
+    sprintf(buffer, "%d", info.GetPrimarySkill(3));
+    knowledgeText->SetText(buffer);
+
+    moraleIcon->SetIconFrame(
+        mutableInfo.GetMorale(otherHero, on_cursed_ground, 1) + 3);
+    luckIcon->SetIconFrame(
+        mutableInfo.GetLuck(otherHero, on_cursed_ground, 1) + 3);
+
+    sprintf(buffer, "%s\n%d/%d", gpGeneralText->GetText(388), info.mana,
+            mutableInfo.GetMaxMana());
+    manaText->SetText(buffer);
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:472
@@ -568,6 +693,132 @@ void TCombatHeroSubWindow::UnShow()
 // delete-only loop over Widgets - differing only in the table it stores:
 // 0x63d444, four bytes past 0x63d440, so both classes carry a one-slot
 // table holding nothing but the destructor.
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:562
+// The DC lexical map proves the two view-level arms and their common
+// spellText append. Retail fixes the Complete-only compact-stat labels,
+// every widget argument, the three-iteration standing-spell loops, and the
+// full derived layout at +0x34..+0x6c.
+// CODEGEN WALL (99.13%): the reserve, full-stat arm, and its spell loop are
+// structurally exact. The residual starts at the compact arm's converted
+// iconWidget*-to-widget* push_back, where retail selects one extra null-aware
+// vector-size block. Negative control: folding each DC-separated member
+// assignment into push_back drops this constructor to 97.27% and also loses
+// the exact reserve/full-arm lowering, so the source-proven split stays.
+VA(0x0046ceb0, 0xCD1)  // roster order + vtable 0x63d444 + CCrPop/SpellInf, dc 0x65dbc
+TCombatCreatureSubWindow::TCombatCreatureSubWindow(
+    int x, int y, int w, int h, heroWindow* parent, int view_level)
+    : TSubWindow(x, y, w, h, parent), viewLevel(view_level)
+{
+    Widgets.reserve(11);
+
+    if (view_level == 1) {
+        backgroundWidget = new bitmapBorder(
+            0, 0, 78, 288, 0x898, "CCrPop.pcx", 0x800);
+        Widgets.push_back(backgroundWidget);
+        creatureIcon = new iconWidget(
+            10, 6, 58, 64, 0x899, "TwCrPort.def", 0, 0, 0, 0,
+            iconWidget::ICON_STYLE_PLAIN);
+        Widgets.push_back(creatureIcon);
+
+        sprintf(gText, "%s:", gpGeneralText->GetText(381));
+        Widgets.push_back(new textWidget(
+            9, 75, 60, 12, gText, "tiny.fnt", font::WHITE,
+            0x89a, 0, 0, 8));
+        attackText = new textWidget(
+            9, 75, 60, 12, 0, "tiny.fnt", font::WHITE,
+            0x89b, 2, 0, 8);
+        Widgets.push_back(attackText);
+
+        sprintf(gText, "%s:", gpGeneralText->GetText(382));
+        Widgets.push_back(new textWidget(
+            9, 87, 60, 12, gText, "tiny.fnt", font::WHITE,
+            0x89c, 0, 0, 8));
+        defenseText = new textWidget(
+            9, 87, 60, 12, 0, "tiny.fnt", font::WHITE,
+            0x89d, 2, 0, 8);
+        Widgets.push_back(defenseText);
+
+        sprintf(gText, "%s:", gpGeneralText->GetText(387));
+        Widgets.push_back(new textWidget(
+            9, 99, 60, 12, gText, "tiny.fnt", font::WHITE,
+            0x89e, 0, 0, 8));
+        damageText = new textWidget(
+            9, 99, 60, 12, 0, "tiny.fnt", font::WHITE,
+            0x89f, 2, 0, 8);
+        Widgets.push_back(damageText);
+
+        sprintf(gText, "%s:", gpGeneralText->GetText(390));
+        Widgets.push_back(new textWidget(
+            9, 111, 60, 12, gText, "tiny.fnt", font::WHITE,
+            0x8a0, 0, 0, 8));
+        speedText = new textWidget(
+            9, 111, 60, 12, 0, "tiny.fnt", font::WHITE,
+            0x8a1, 2, 0, 8);
+        Widgets.push_back(speedText);
+
+        sprintf(gText, "%s:", gpGeneralText->GetText(385));
+        Widgets.push_back(new textWidget(
+            9, 131, 60, 12, gText, "tiny.fnt", font::WHITE,
+            0x8a2, 0, 0, 8));
+        moraleIcon = new iconWidget(
+            47, 131, 22, 12, 0x8a3, "imrls.def", 0, 0, 0, 0,
+            iconWidget::ICON_STYLE_PLAIN);
+        Widgets.push_back(moraleIcon);
+
+        sprintf(gText, "%s:", gpGeneralText->GetText(386));
+        Widgets.push_back(new textWidget(
+            9, 143, 60, 12, gText, "tiny.fnt", font::WHITE,
+            0x8a4, 0, 0, 8));
+        luckIcon = new iconWidget(
+            47, 143, 22, 12, 0x8a5, "ilcks.def", 0, 0, 0, 0,
+            iconWidget::ICON_STYLE_PLAIN);
+        Widgets.push_back(luckIcon);
+
+        countText = new textWidget(
+            10, 8, 58, 64, 0, "Verd10B.fnt", font::WHITE,
+            0x8a6, 10, 0, 8);
+        Widgets.push_back(countText);
+
+        int spellY = 169;
+        for (int i = 0; i < 3; ++i) {
+            spellIcons[i] = new iconWidget(
+                15, spellY, 48, 36, 0x8a7 + i, "spellint.def",
+                0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
+            Widgets.push_back(spellIcons[i]);
+            spellY += 38;
+        }
+        spellText = new textWidget(
+            15, 169, 48, 36, emptyRolloverText, "tiny.fnt", font::PRIMARY,
+            0x8aa, 1, 0, 8);
+    } else {
+        backgroundWidget = new bitmapBorder(
+            0, 0, 78, 126, 0x898, "SpellInf.pcx", 0x800);
+        Widgets.push_back(backgroundWidget);
+
+        int spellY = 7;
+        for (int i = 0; i < 3; ++i) {
+            spellIcons[i] = new iconWidget(
+                15, spellY, 48, 36, 0x8a7 + i, "spellint.def",
+                0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
+            Widgets.push_back(spellIcons[i]);
+            spellY += 38;
+        }
+        spellText = new textWidget(
+            15, 7, 48, 36, emptyRolloverText, "tiny.fnt", font::PRIMARY,
+            0x8aa, 1, 0, 8);
+    }
+
+    Widgets.push_back(spellText);
+    for (std::vector<widget*>::iterator current = Widgets.begin();
+         current != Widgets.end(); ++current) {
+        widget* w = *current;
+        if (w)
+            w->status &= ~(widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        AddWidget(w, -1);
+    }
+    shown = false;
+}
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:655
 VA_COMPGEN(0x0046db90, 0x21, SCALAR_DELETING_DTOR, TCombatCreatureSubWindow)

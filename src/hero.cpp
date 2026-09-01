@@ -88,6 +88,8 @@
 #include "remote.h"
 // launch_sample - the level-up jingle.
 #include "soundmgr.h"
+#include "resourcemanager.h"
+#include "textresource.h"
 
 // The base stores emit in CNetMsg(subType,size) order - retail's
 // PlaceInMap expansion stores 0x424 ahead of the -1 - so route through
@@ -135,6 +137,21 @@ DATA(0x006a6948) extern const char* gCampaignHeroName;
 DATA(0x006a8040) extern const char* gEmptyArtifactRolloverText;
 DATA(0x006a804c) extern const char* gSpellbookRolloverText;
 DATA(0x006a8050) extern const char* gArtifactRolloverFormat;
+
+// Runtime tables loaded by initialize_ballistics_table and its inlined
+// initialize_move_constants tail. The relocation at 0x679c84 makes the
+// public const view an array reference to the four writable 8-byte rows.
+DATA(0x00698a58) static type_ballistics_traits gBallisticsTraits[4];
+DATA(0x00679c84)
+const type_ballistics_traits (&const_ballistics_traits)[4] =
+    gBallisticsTraits;
+DATA(0x00698a98) extern int gLandMovement[21];
+DATA(0x00698aec) extern int gSeaMovement[kNumMasteries];
+DATA(0x00698afc) extern int gEquestriansGlovesMovementBonus;
+DATA(0x00698b00) extern int gBootsOfSpeedMovementBonus;
+DATA(0x00698b04) extern int gOceanGuidanceMovementBonus;
+DATA(0x00698b08) extern int gSeaCaptainsHatMovementBonus;
+DATA(0x00698b0c) extern int gLighthouseMovementBonus;
 
 // Retail's mana clamp materialises both operands in stack homes and selects
 // one by address. This by-value helper reproduces that Dinkumware-era shape;
@@ -350,6 +367,91 @@ VA(0x004d7220, 0x11)  // anchor-callee TSingleSelectionWindow::ProcessRightSelec
 const char* hero::GetSpecificAbilityTextShort()
 {
     return akHeroSpecificAbilities[id].shortText;
+}
+
+// E:\gamedcs\hero.cpp:267
+// Source-private in the Dreamcast roster and called only as the successful
+// tail of initialize_ballistics_table. Complete keeps that helper boundary
+// in source but /Ob2 expands it into the caller and emits no separate body.
+static unsigned char initialize_move_constants()
+{
+    TSpreadsheetResource* resource = ResourceManager::GetSpreadsheet(
+        DATA_COMPGEN(0x00679cdc, movementSpreadsheetName, "movement.txt"));
+    if (!resource)
+        return 0;
+
+    if (resource->GetNumberOfRows() < 23) {
+        resource->Dispose();
+        return 0;
+    }
+
+    int i;
+    for (i = 0; i <= 20; ++i)
+        gLandMovement[i] = atoi(resource->GetRow(i + 2)[1]);
+
+    int* sea_movement = gSeaMovement;
+    for (i = 2; i < 2 + kNumMasteries; ++i, ++sea_movement) {
+        const TSpreadsheetResource::TStringVector& values =
+            resource->GetRow(i);
+        *sea_movement = atoi(values[3]);
+    }
+
+    i = 2;
+    gEquestriansGlovesMovementBonus = atoi(resource->GetRow(i++)[5]);
+    gBootsOfSpeedMovementBonus = atoi(resource->GetRow(i++)[5]);
+    gOceanGuidanceMovementBonus = atoi(resource->GetRow(i++)[5]);
+    gSeaCaptainsHatMovementBonus = atoi(resource->GetRow(i++)[5]);
+    gStablesMovementBonus = atoi(resource->GetRow(i++)[5]);
+    gLighthouseMovementBonus = atoi(resource->GetRow(i)[5]);
+
+    resource->Dispose();
+    return 1;
+}
+
+// E:\gamedcs\hero.cpp:329
+// The retail entry loads ballist.txt first, fills four 8-byte rows, disposes
+// the sheet, and then contains initialize_move_constants in full. That is
+// exactly the DC-proven return-helper boundary after VC6 /Ob2 inlining.
+//
+// Residual (99.9485%): all 19 CFG blocks, nine branches, five returns and
+// every instruction agree. One SIB byte in the inlined sea-row GetRow names
+// the same effective address as `[edi+edx]` rather than retail's `[edx+edi]`.
+// `why-reg --model` reports identical EDI/ESI/EBX first definitions and only
+// four unpaired visible slots, placing this past the allocator's minimum
+// slice. Measured negative controls: coupling the destination to `i - 2`
+// scores 98.5309%; carrying an independent destination index scores 95.52%;
+// a scoped row reference and the direct expression both retain 99.9485%.
+VA(0x004d7240, 0x223)  // exhaustive link-order bracket + two table literals, dc 0xca984
+unsigned char initialize_ballistics_table()
+{
+    TSpreadsheetResource* resource = ResourceManager::GetSpreadsheet(
+        DATA_COMPGEN(0x00679cec, ballisticsSpreadsheetName, "ballist.txt"));
+    if (!resource)
+        return 0;
+
+    if (resource->GetNumberOfRows() < 6) {
+        resource->Dispose();
+        return 0;
+    }
+
+    int i;
+    for (i = 0; i < 4; ++i) {
+        const TSpreadsheetResource::TStringVector& values =
+            resource->GetRow(i + 2);
+        int column = 2;
+        gBallisticsTraits[i].field_00 = atoi(values[column++]);
+        gBallisticsTraits[i].field_01 = atoi(values[column++]);
+        gBallisticsTraits[i].field_02 = atoi(values[column++]);
+        gBallisticsTraits[i].field_03 = atoi(values[column++]);
+        gBallisticsTraits[i].shots = atoi(values[column++]);
+        int level;
+        for (level = 0; level < 3; ++level)
+            gBallisticsTraits[i].levelChance[level] =
+                atoi(values[column++]);
+    }
+
+    resource->Dispose();
+    return initialize_move_constants();
 }
 
 // E:\gamedcs\hero.cpp:375
@@ -6897,13 +6999,6 @@ static const float kLogisticsFactors[kNumMasteries] =
 // SAME cell the owned-Lighthouse count and the Castle Lighthouse
 // building multiply, which is what makes it the lighthouse bonus rather
 // than a fourth artifact's.
-DATA(0x00698a98) extern int gLandMovement[21];
-DATA(0x00698aec) extern int gSeaMovement[kNumMasteries];
-DATA(0x00698afc) extern int gEquestriansGlovesMovementBonus;
-DATA(0x00698b00) extern int gBootsOfSpeedMovementBonus;
-DATA(0x00698b04) extern int gOceanGuidanceMovementBonus;
-DATA(0x00698b0c) extern int gLighthouseMovementBonus;
-
 // The elemental gate the creature specialty applies before every upgrade
 // query - the twin of hillfortwindow.obj's own copy. No out-of-line row
 // exists; /Ob2 expands it at the single call site below.

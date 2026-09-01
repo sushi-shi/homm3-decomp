@@ -117,17 +117,27 @@ public:
 };
 SIZE(TCombatHeroSubWindow, 0x5c);
 
-// DrawCreatureAndHeroSubwindows proves the common TSubWindow base and the
-// shown byte at +0x68 for each of the four creature panels owned by
-// TCombatWindow. The intervening derived state remains opaque until one of
-// the panel's own retail bodies is reconstructed.
+// Retail's two constructor arms close the entire 0x34..0x6f tail. The
+// full-stat arm creates the compact creature portrait and six statistic
+// rows; both arms create the three standing-spell icons and their text
+// overlay. DrawCreatureAndHeroSubwindows independently proves the shown
+// byte at +0x68 for each of TCombatWindow's four panels.
 class TCombatCreatureSubWindow : public TSubWindow {
 public:
-    char pad_34[0x34];
+    bitmapBorder* backgroundWidget;  // +0x34
+    iconWidget* creatureIcon;         // +0x38, full-stat arm only
+    textWidget* attackText;           // +0x3c, full-stat arm only
+    textWidget* defenseText;          // +0x40, full-stat arm only
+    textWidget* damageText;           // +0x44, full-stat arm only
+    textWidget* speedText;            // +0x48, full-stat arm only
+    iconWidget* moraleIcon;            // +0x4c, full-stat arm only
+    iconWidget* luckIcon;              // +0x50, full-stat arm only
+    textWidget* countText;             // +0x54, full-stat arm only
+    iconWidget* spellIcons[3];         // +0x58
+    textWidget* spellText;             // +0x64
     bool shown;
-    // Retail's four construction sites allocate 0x70 bytes. The shown byte
-    // remains at +0x68; the last seven bytes are still opaque.
-    char pad_69[7];
+    char pad_69[3];
+    int viewLevel;                     // +0x6c
 
     TCombatCreatureSubWindow(int x, int y, int w, int h,
                              heroWindow* parent, int view_level);

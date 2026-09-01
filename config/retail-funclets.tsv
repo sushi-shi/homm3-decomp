@@ -8,6 +8,10 @@
 # rva = funclet entry; parent_rva = the function whose FuncInfo
 # owns it (matches with its parent); state = unwind state index.
 rva	parent_rva	state
+# HeroFn_004E2840 installs this handler address directly in its retail /GX
+# prologue; the delinked relocation names it hero_in_enum_range_e2840_unwind01.
+# It uses the parent's EBP frame, calls equip_artifact, then rethrows.
+0xe29dc	0xe2840	1
 0x227240	0x1400	1
 0x227260	0x1510	0
 0x227268	0x1510	1

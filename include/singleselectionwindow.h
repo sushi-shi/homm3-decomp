@@ -519,6 +519,7 @@ public:
     unsigned char OnBadVersionMsg(CNetMsg* pNetMsg);
     void OnPingMsg(CNetMsg* pNetMsg);
     void OnPingResponseMsg(CNetMsg* pNetMsg, unsigned char inPopup);
+    void SendChat(unsigned long dpid, const char* cChat);
     void ReceiveChat(unsigned long dpid, char* cChat,
                      unsigned char inPopup);
     void OnRequestHeroFaceMsg(CNetMsg* pNetMsg,
@@ -583,6 +584,10 @@ public:
     // Complete-only counterpart to the two shared setup panes. Retail calls
     // 0x57feb0 before refreshing the filter widgets.
     void SetupFilterOptions();
+    // Complete-only constructor helper at 0x57d170. It creates the filter
+    // panel controls and seeds the eight filter slots. The role spelling is
+    // provisional because this method is absent from the older DC build.
+    void CreateFilterWidgets();
     // Complete-only member at 0x580430. Its body rebuilds the map header and
     // player slots from field_18A0, redraws, and broadcasts the resulting
     // setup. The role name remains provisional until its body is claimed.
@@ -601,6 +606,7 @@ public:
 
 private:
     CNetPlayerHandlerPlayer* GetThisPlayer();
+    int CalcPosition(int playerPos);
 };
 SIZE(TSingleSelectionWindow, 0x1970);
 

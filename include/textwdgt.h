@@ -32,16 +32,15 @@ public:
     virtual void zBufferDraw();
     virtual void Draw();
     // Slot 13, the ONE virtual textWidget introduces (its vtable
-    // 0x642db0 is 14 wide against widget's 13). Retail body 0x57c6d0,
-    // a /Gy header COMDAT far outside textwdgt.obj's band: it takes one
-    // const char*, runs VC6's inline `repne scasb` strlen and assigns
-    // into the std::string at +0x30 - textWidget::Text. DC corroborates
-    // both ends: TextWdgt.h homes textWidget's small members inline,
-    // and textEntryWidget::SetText(const char*) (dc 0x1635dc) overrides
-    // exactly this slot at 0x5bb950. Declared only - no local
-    // definition, so callers dispatch through the slot (the
-    // widget::Close idiom).
-    virtual void SetText(const char* new_text);  // slot 13, retail 0x57c6d0
+    // 0x642db0 is 14 wide against widget's 13). Retail body 0x57c6d0 is a
+    // /Gy header COMDAT far outside textwdgt.obj's band: it takes one
+    // const char*, runs VC6's inline `repne scasb` strlen and assigns into
+    // the std::string at +0x30. Dreamcast CodeView independently places the
+    // one-statement body in TextWdgt.h:64 and records the same string
+    // operator= call; textEntryWidget::SetText(const char*) (dc 0x1635dc)
+    // overrides exactly this slot at 0x5bb950. The claim-only retail VA home
+    // lives in singleselectionwindow.cpp, whose object owns the DC COMDAT.
+    virtual void SetText(const char* new_text) { Text = new_text; }
 
     // E:\gamedcs\TextWdgt.h:67; DC emits this header helper out of line,
     // while Complete folds the c_str() access into its callers.

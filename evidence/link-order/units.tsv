@@ -5,7 +5,7 @@
 unit	first_rva	end_rva	span	anchors	residents	fns_in_span	claimed	unclaimed
 adventuremapwindow	0x2450	0x40a4	7252	20	1	26	20	6
 adventureoptionswindow	0x51d0	0x592c	1884	3	0	5	3	2
-advmgr	0x5de0	0x1b0da	86778	101	2	112	101	11
+advmgr	0x5de0	0x1b247	87143	103	2	117	103	14
 advspells	0x1c2f0	0x1c482	402	1	0	1	1	0
 ai	0x1eac0	0x224d9	14873	29	0	33	29	4
 ai_combat	0x23c80	0x276bf	14911	35	1	35	35	0
@@ -25,7 +25,7 @@ campaignbrief	0x5afb0	0x5b13f	399	1	0	1	1	0
 campaignmap	0x5dee0	0x5e1f0	784	1	0	1	1	0
 campaignwindow	0x5ea40	0x5f55c	2844	4	0	6	4	2
 castle	0x610e0	0x6118c	172	2	0	2	2	0
-cmbtmgr	0x62760	0x6a511	32177	61	0	74	61	13
+cmbtmgr	0x62760	0x6a511	32177	61	0	75	61	14
 combatcontrolsubwindow	0x6b610	0x6dc2b	9755	13	0	21	13	8
 combatoptionswindow	0x6e3b0	0x6feda	6954	4	0	5	4	1
 combatresultswindow	0x702d0	0x71c14	6468	6	0	7	6	1
@@ -51,7 +51,7 @@ fly	0xb46c0	0xb5012	2386	5	0	5	5	0
 font	0xb5070	0xb5b90	2848	12	0	14	12	2
 game	0xb8550	0xd2b20	107984	123	2	244	123	121
 gametypewindow	0xd54c0	0xd5b60	1696	4	0	5	4	1
-hero	0xd7220	0xe64be	62110	115	0	132	115	17
+hero	0xd7220	0xe64be	62110	116	0	132	116	16
 herodefs	0xe67a0	0xe6cd8	1336	3	0	3	3	0
 hexcell	0xe7150	0xe71fd	173	3	0	3	3	0
 hillfortwindow	0xe7e10	0xe8bb9	3497	6	0	6	6	0
@@ -83,14 +83,14 @@ recruit	0x14e750	0x151dc1	13937	17	0	19	17	2
 remote	0x153220	0x157f71	19793	75	4	113	75	38
 resource	0x158720	0x1587a7	135	2	0	3	2	1
 resourcedisplay	0x158ba0	0x1590c4	1316	4	0	5	4	1
-resourcemanager	0x1590f0	0x15c12a	12346	3	0	37	3	34
+resourcemanager	0x1590f0	0x15c12a	12346	3	0	36	3	33
 sacrifice_window	0x15fc30	0x166d7f	29007	47	0	55	47	8
 sample	0x166da0	0x166e89	233	2	0	3	2	1
 scenarioinfo	0x169800	0x1699b2	434	3	0	3	3	0
 search	0x16a0d0	0x16a352	642	1	0	1	1	0
 seerhut	0x16d3e0	0x17460c	29228	94	0	115	94	21
 singleselectionpopups	0x175220	0x176928	5896	10	0	21	10	11
-singleselectionwindow	0x177360	0x18e6b9	95065	91	1	151	91	60
+singleselectionwindow	0x177360	0x18e6b9	95065	92	1	151	92	59
 slider	0x196050	0x197185	4405	15	0	15	15	0
 smackmgr	0x1971b0	0x197cf4	2884	14	0	14	14	0
 soundmgr	0x1994b0	0x19b295	7653	24	0	29	24	5
@@ -99,7 +99,7 @@ spelldefs	0x19e060	0x19e4af	1103	3	0	3	3	0
 spells	0x1a3700	0x1a939c	23708	9	0	40	9	31
 strip	0x1a9d20	0x1aa31e	1534	5	0	5	5	0
 subwindow	0x1aa340	0x1aa68a	842	8	0	9	8	1
-swapmgr	0x1ae370	0x1b139c	12332	14	0	23	14	9
+swapmgr	0x1ae370	0x1b139c	12332	19	0	23	19	4
 systemoptionswindow	0x1b1790	0x1b375e	8142	4	0	5	4	1
 text	0x1b90f0	0x1b9109	25	1	0	1	1	0
 textntry	0x1ba920	0x1bbab4	4500	6	0	13	6	7

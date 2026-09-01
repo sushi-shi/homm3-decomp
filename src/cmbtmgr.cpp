@@ -24,16 +24,19 @@
 // DoorCanBeLowered (0x63268), and FreeArmies
 // (0x5e3d8, whose only caller is Close).
 //
-// Left UNCLAIMED on purpose, with the reason:
-//   0x62890 (21 B), 0x628b0 (110 B, takes std::_Lockit), 0x62930
-//     (84 B), 0x66260 (38 B, operator delete tail) - member-subobject
-//     STL ctors/dtors called out of combatManager::combatManager. The
-//     excluded COMDAT class; never claimed.
+// Promoted 2026-09-01 after rechecking the address-takes and named VC6
+// publics: 0x62890/0x628b0 are TCombatEagleEyeSide's owner ctor/dtor,
+// 0x62920/0x62930 are TArcher's ctor/dtor, and 0x66260 is
+// TPickANumber's owner dtor.
+// These are class special members, not anonymous STL tails.  The /MT calls
+// around the Dinkumware tree's shared sentinel independently prove the
+// cmbtmgr.obj profile; the TPickANumber row is the Complete lowering of the
+// destructor boundary Dreamcast records at includes.h:134 (dc 0x63a18).
 // Promoted 2026-08-24 from the retail-only class: 0x639e0, plus the four
 // ordinary helpers at 0x65f20, 0x693a0, 0x69440 and 0x69e50. None has a
 // DC cmbtmgr.obj counterpart, so the unattested functions retain bootstrap
 // or address-ordinal names; their retail bodies and callers now prove their
-// complete roles. The excluded ctor/dtor COMDATs above remain unclaimed.
+// complete roles.
 // Promoted 2026-08-24 after NextArmy closed: its two adjacent retail-only
 // helpers at 0x64d40 and 0x64f50 retain address-ordinal names, but their
 // selected-stack fear check and strict move-order predicate are now fully
@@ -93,6 +96,12 @@
 #include "widget.h"  // WIDGET_DIMMED / WIDGET_UPDATE, for Open
 #include "winmgr.h"
 
+inline combatManager::TArcherSprite::~TArcherSprite()
+{
+    if (value)
+        value->Dispose();
+}
+
 // E:\gamedcs\cmbtmgr.cpp:510
 // EXACT 2026-08-11. Retail proves the baseManager base, the 187-element
 // hexcell array, two Dinkumware set records, 42 army records, the empty
@@ -118,18 +127,41 @@ combatManager::combatManager()
     field_38 = 0;
 }
 
+// Both rows are address-taken by combatManager's two-element Eagle Eye
+// array constructor at 0x4627a0. Retail's /MT tree ctor keeps the 190-byte
+// std::set worker out of line, while the dtor carries the matching _Lockit
+// pair around the shared-sentinel reference count. The class is Complete-
+// only in the available DC roster, so the identities come from the retail
+// owner layout and the named VC6 publics rather than a cross-build address.
+// RESIDUAL 2026-09-01: VC6 expands the implicit set constructor to 187 B in
+// the current include environment, so objdiff declines to score this 21 B
+// target. An explicit empty owner and a caller-scoped inline-depth control
+// both emitted the same 29 B/52.2727% form because they unnecessarily
+// save/return this; the latter also broke the exact manager ctor and both
+// exact destructor callbacks. Declaration-scoped inline-depth/auto-inline
+// controls were inert. The source-true implicit owner is therefore retained
+// without a permanent codegen pin.
+VA_COMPGEN(0x00462890, 0x15, CLASS_CTOR, TCombatEagleEyeSide)
+VA_COMPGEN(0x004628b0, 0x6E, IMPLICIT_DTOR, TCombatEagleEyeSide)
+
+// The manager constructor takes this callback at 0x462802 for its three
+// contiguous 0x24-byte TArcher rows. Retail stores zero at +4 and +8 and
+// returns this, exactly the two Complete owner wrappers' default construction;
+// the 11-byte body ends before five bytes of alignment padding at 0x46292b.
+VA(0x00462920, 0x0B)  // anchor-callback, retail-only
 combatManager::TArcher::TArcher()
     : sprite(0), shadowSprite(0)
 {
 }
 
-combatManager::TArcher::~TArcher()
-{
-    if (shadowSprite)
-        shadowSprite->Dispose();
-    if (sprite)
-        sprite->Dispose();
-}
+// The retail manager ctor takes this body at 0x4627fd as the three-element
+// archer array's destructor. Its reverse +8/+4 Dispose sequence fixes the
+// owner and its thiscall arity; Complete's EH state preserves the second
+// cleanup if the first resource release throws. Small four-byte ownership
+// wrappers preserve DC's two CSprite* field ABI while letting VC6 express
+// the Complete unwind boundary; DC emits no standalone TArcher procedure.
+// EXACT 2026-09-01: all five CFG blocks and all 84 bytes match retail.
+VA_COMPGEN(0x00462930, 0x54, IMPLICIT_DTOR, TArcher)
 
 // E:\gamedcs\cmbtmgr.cpp:546
 // EXACT 2026-08-09. The walls.txt sheet contains nine town groups of
@@ -500,7 +532,9 @@ void combatManager::FreeIcons()
 // array receiver were a score-neutral flattening. Fatal rules now preserve
 // these five names, types, declaration scopes/order and receiver boundary.
 //
-// Residual (99.3528%): one comparison. Retail tests the combat hero with
+// Residual (99.3528%, rechecked 2026-09-01): all 36 CFG blocks are
+// structurally exact; the only source-labelled difference is one comparison.
+// Retail tests the combat hero with
 // `cmp eax, esi` against the register still holding the zero it has just
 // stored into numArmies[side], where our CL emits `test eax, eax`.
 // Tried and rejected: `numArmies[side] = placed;` after `int placed = 0;`
@@ -632,28 +666,22 @@ void combatManager::StopCombatSounds()
 // which is why an early transcription of it as 0x28fb9 read as a
 // compiler-generation wall (that constant is composite, and VC6 lowers it
 // with an imul, where 0x28f79 is prime and gets exactly retail's chain).
-// The three fortification tests are `built & bitNumber[7|8|9]` in exactly
-// that order - fort first, castle last - which is only coherent because
-// this game's `built` mask holds ONE of the three at a time (a Citadel
-// replaces the Fort bit rather than adding to it); the same three-way
-// walk in check_wall_archery_penalty (0x424790) reads the same way.
+// Dreamcast names the three fortification tests as town::HasBuilding calls
+// in exactly this order - fort first, castle last. Complete expands those
+// calls to `built & bitNumber[7|8|9]`, which is only coherent because this
+// game's `built` mask holds ONE of the three at a time (a Citadel replaces
+// the Fort bit rather than adding to it); the same three-way walk in
+// check_wall_archery_penalty (0x424790) reads the same way.
 // The moat expression's two exclusions are the game's own: Tower has no
 // moat, and Stronghold gained one only in Shadow of Death, which is what
 // the f_1f698 >= 2 gate says.
 //
-// Residual (96.4459%): ONE scheduling decision, seen twice, and nothing
-// else - every other row of the diff is a reloc NAME on a datum the
-// delinker carries no symbol for. Retail loads gpGame at the LAST moment,
-// after the argument is already pushed (`mov ecx,[ebx] / push ecx / mov
-// ecx,[gpGame]`) and after the players[] index is fully scaled; our CL
-// hoists that load ahead of both. The instruction COUNTS are equal on
-// both sides - only the load's position and its scratch register differ.
-// why-reg v2 (--model) settles this rather than guessing at it: the three
-// long-lived bindings agree exactly (esi<-this, ebx, edi created at the
-// same points), so the divergence is in caller-saved EAX/ECX/EDX creation
-// order, and the model reports the value that would have to move first is
-// copy-propagated - C1 handle state, which no local spelling reaches.
-// Register-homing family; not ground past that verdict.
+// EXACT 2026-09-01. Dreamcast's line rows put playerIds[1] before heroes[0]
+// and then the two army-group/hero pairs; restoring that one statement-order
+// fact closes the former parameter-store and gpGame scheduling cascade
+// (96.44586 -> 100%). The three positive HasBuilding boundaries are
+// byte-neutral individually and expand exactly. All 28 CFG blocks and all
+// 624 bytes now match retail.
 VA(0x004639f0, 0x270)  // anchor-callee, dc 0x5e464
 void combatManager::SetupCombat(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long right_player, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int x, int y, int iSeed, unsigned char is_surrounded)
 {
@@ -666,8 +694,8 @@ void combatManager::SetupCombat(type_point point, hero* leftHero, armyGroup* lef
         playerIds[0] = leftHero->owner;
     else
         playerIds[0] = -1;
-    heroes[0] = leftHero;
     playerIds[1] = right_player;
+    heroes[0] = leftHero;
     armyGroups[0] = leftArmyGroup;
     heroes[1] = rightHero;
     armyGroups[1] = rightArmyGroup;
@@ -687,17 +715,17 @@ void combatManager::SetupCombat(type_point point, hero* leftHero, armyGroup* lef
         field_132a0[side] = 30000;
     }
     if (rightTown) {
-        if (rightTown->built & bitNumber[CASTLE_FORT_ID]) {
+        if (rightTown->HasBuilding(CASTLE_FORT_ID, false)) {
             field_132f4 = COMBAT_FORTIFICATION_FORT;
             field_53a9 = 0;
             field_53a8 = 0;
-        } else if (rightTown->built & bitNumber[CASTLE_CITADEL_ID]) {
+        } else if (rightTown->HasBuilding(CASTLE_CITADEL_ID, false)) {
             field_132f4 = COMBAT_FORTIFICATION_CITADEL;
             field_53a8 = rightTown->type != TOWN_TOWER
                          && (rightTown->type != TOWN_STRONGHOLD
                              || gpGame->f_1f698 >= 2);
             field_53a9 = rightTown->type == TOWN_FORTRESS;
-        } else if (rightTown->built & bitNumber[CASTLE_CASTLE_ID]) {
+        } else if (rightTown->HasBuilding(CASTLE_CASTLE_ID, false)) {
             field_132f4 = COMBAT_FORTIFICATION_CASTLE;
             field_53a8 = rightTown->type != TOWN_TOWER
                          && (rightTown->type != TOWN_STRONGHOLD
@@ -719,22 +747,6 @@ void combatManager::SetupCombat(type_point point, hero* leftHero, armyGroup* lef
     DetermineCombatTerrain();
     isSurrounded = is_surrounded;
     backgroundName = GetBackgroundName();
-}
-
-// Retail's clamp shape at the four hero-statistic sites, and it is NOT
-// _cpp_clamp's. That helper tests the LOW bound first
-// (`_V < _Lo ? _Lo : (_Hi < _V ? _Hi : _V)`) and selects an ADDRESS;
-// these four test the HIGH bound first, use `>` throughout and
-// materialise the value straight into EAX. The floor differs per site -
-// 0 for attack and defense, 1 for spell power, which is never zero -
-// so it is a parameter rather than a literal.
-static int ClampStat(signed char value, int lowest)
-{
-    if (value > 99)
-        return 99;
-    if (value > 0)
-        return value;
-    return lowest;
 }
 
 // E:\gamedcs\cmbtmgr.cpp:1348
@@ -759,21 +771,23 @@ static int ClampStat(signed char value, int lowest)
 // FALLS THROUGH into the Fortress arm; that is a case without a break
 // in the source, not a shared tail.
 //
-// THE CLAMP HELPER'S PARAMETER IS A signed char, not an int, and that
-// alone is worth +3.69 (92.0332 -> 95.7196). With an int parameter VC6
-// widens the stat with `movsx` at the call and then compares a full
-// register, where retail compares the BYTE (`cmp al, 0x63`) and only
-// sign-extends on the surviving arm; worse, the widened form lets VC6
-// collapse the zero floor into a BRANCHLESS `setle / dec / and`, which
-// costs three conditional branches retail has. Byte in, branches back.
+// Dreamcast names the four clamp sites as hero::GetPrimarySkill and every
+// town statistic award as hero::AdjustPrimarySkill. Their Hero.h bodies
+// retain the byte load and high-bound-first clamp / byte add that retail
+// expands; a generic int clamp instead widens too early and loses three
+// conditional branches.
 //
-// Residual (95.7196%): flow-distance 2, ONE conditional branch short
-// (26 against 27) and one block, with predict-inline reporting the call
-// multisets equal at 6 and 6 - including the two set::erase calls,
-// which is what confirms the clear() reading from the other side. The
-// whole six-arm siege switch is now a reloc-NAME diff only: retail's
-// delinked side spells the masks as raw addresses where ours names
-// bitNumber, which objdiff masks.
+// Residual (current 95.6827%, banked MAX 95.7196%, rechecked 2026-09-01):
+// all 56 CFG blocks are exact; the old one-branch-short note was stale.
+// Restoring every DC-proven GetPrimarySkill/AdjustPrimarySkill boundary
+// leaves each of those source-labelled regions instruction-exact, but moves
+// the Fortress HasBuilding scratch-register schedule and accounts for the
+// small current-score dip. The other differences are scheduling only: the
+// mana load/store crosses the defendingTown null test, the two set::clear
+// calls reverse temporary address-push order, and LoadArmies' tail swaps
+// stack pseudos. The call multisets remain equal at 6 and 6, including both
+// set::erase calls, and the six-arm siege switch differs only in masked
+// relocation names.
 VA(0x00463c60, 0x43C)  // anchor-callee, dc 0x5e690
 void combatManager::InitNonVisualVars()
 {
@@ -786,9 +800,9 @@ void combatManager::InitNonVisualVars()
     field_132e4 = 0;
 
     if (heroes[1]) {
-        field_13de8 = ClampStat(heroes[1]->stats[0], 0);
-        field_13dec = ClampStat(heroes[1]->stats[1], 0);
-        field_13df0 = ClampStat(heroes[1]->stats[2], 1);
+        field_13de8 = heroes[1]->GetPrimarySkill(0);
+        field_13dec = heroes[1]->GetPrimarySkill(1);
+        field_13df0 = heroes[1]->GetPrimarySkill(2);
         field_13df4 = heroes[1]->mana;
 
         if (defendingTown) {
@@ -800,24 +814,24 @@ void combatManager::InitNonVisualVars()
                 break;
             case TOWN_INFERNO:
                 if (defendingTown->HasBuilding(EXTRA_0_ID, 1))
-                    heroes[1]->stats[2] += 2;
+                    heroes[1]->AdjustPrimarySkill(2, 2);
                 break;
             case TOWN_DUNGEON:
                 if (defendingTown->HasBuilding(HOLY_GRAIL_ID, 0))
-                    heroes[1]->stats[2] += 12;
+                    heroes[1]->AdjustPrimarySkill(2, 12);
                 break;
             case TOWN_STRONGHOLD:
                 if (defendingTown->HasBuilding(HOLY_GRAIL_ID, 0))
-                    heroes[1]->stats[0] += 20;
+                    heroes[1]->AdjustPrimarySkill(0, 20);
                 break;
             case TOWN_FORTRESS:
                 if (defendingTown->HasBuilding(EXTRA_0_ID, 1))
-                    heroes[1]->stats[0] += 2;
+                    heroes[1]->AdjustPrimarySkill(0, 2);
                 if (defendingTown->HasBuilding(EXTRA_1_ID, 1))
-                    heroes[1]->stats[1] += 2;
+                    heroes[1]->AdjustPrimarySkill(1, 2);
                 if (defendingTown->HasBuilding(HOLY_GRAIL_ID, 1)) {
-                    heroes[1]->stats[0] += 10;
-                    heroes[1]->stats[1] += 10;
+                    heroes[1]->AdjustPrimarySkill(0, 10);
+                    heroes[1]->AdjustPrimarySkill(1, 10);
                 }
                 break;
             }
@@ -829,10 +843,8 @@ void combatManager::InitNonVisualVars()
         field_13df4 = 0;
     }
 
-    spellPower[0] = heroes[0]
-        ? ClampStat(heroes[0]->stats[2], 1) : 0;
-    spellPower[1] = heroes[1]
-        ? ClampStat(heroes[1]->stats[2], 1) : 0;
+    spellPower[0] = heroes[0] ? heroes[0]->GetPrimarySkill(2) : 0;
+    spellPower[1] = heroes[1] ? heroes[1]->GetPrimarySkill(2) : 0;
 
     field_5414 = 0;
     field_5418 = 3;
@@ -1355,7 +1367,9 @@ void combatManager::CheckApplyGoodMorale(int group, int index)
 }
 
 // E:\gamedcs\cmbtmgr.cpp:2095
-// Residual (97.73%): the ONE remaining delta is the tail of the clamp's
+// Residual (97.7333%, rechecked 2026-09-01): 24 of 27 CFG blocks are
+// exact; two are size-only and one differs in flow kind. The ONE semantic
+// cluster is the tail of the clamp's
 // inner ternary. Retail duplicates the selector store - `jle -> &_V` with
 // a separate `lea edx,&_Hi / mov [ebp+8],edx / jmp` arm - where our CL
 // tail-merges the two arms onto a shared `mov [ebp+8],eax` and inverts
@@ -1644,7 +1658,9 @@ unsigned char combatManager::NextArmy(unsigned char checking_for_bad_morale)
 // Three frozen missing-call rows retire; fatal rules now reject putting any
 // of those flattened spellings back.
 //
-// Residual (99.65%): the two string temporaries' frame slots are
+// Residual (99.6498%, rechecked 2026-09-01): 73 of 74 CFG blocks are exact
+// and the remaining block differs by one instruction. The two string
+// temporaries' frame slots are
 // TRANSPOSED (retail singular -0x34 / plural -0x44; ours -0x44/-0x34)
 // because the named local allocates in the named-local region while
 // retail's two unnamed temps take creation order - ~10 masked lines of
@@ -2388,6 +2404,12 @@ void combatManager::TObstacleVector::_Ufill(TObstacle* first, unsigned count,
         new (static_cast<void*>(first)) TObstacle(value);
 }
 
+// Selected as cmbtmgr.obj's named ??1TPickANumber public. Retail folds the
+// +8 vector<unsigned char> member teardown into the owner (three pointer
+// clears after operator delete); Dreamcast instead calls its STLport
+// vector<bool> destructor at the same owner boundary. EXACT 2026-09-01.
+VA_COMPGEN(0x00466260, 0x26, IMPLICIT_DTOR, TPickANumber)  // dc 0x63a18
+
 // E:\gamedcs\cmbtmgr.cpp:2859
 // Everything the battlefield carries before the armies land: the wall
 // hitpoint tables, the castle wall's blocked column, a Tower's mined
@@ -2464,7 +2486,10 @@ void combatManager::TObstacleVector::_Ufill(TObstacle* first, unsigned count,
 //     (`dec edx` on the division result) - `size() - 1` in one
 //     initialiser makes a second pseudo and a `lea` (+0.49).
 //
-// Residual (98.1361%): scheduling only - the field stores of the
+// Residual (98.1402%, rechecked 2026-09-01): all 82 CFG blocks are
+// structurally exact. Dreamcast's `new_landmine` scope and its individual
+// field-assignment line rows also confirm the retained record construction
+// and order. The remaining differences are scheduling only - the field stores of the
 // landmine record interleave into insert's inlined division a slot
 // later than retail's, retail reuses the `end` load for insert's
 // `where` argument where this compile re-reads the member, and the
@@ -2818,30 +2843,32 @@ void combatManager::InitializeArchers()
 // is quick-combat gated - the occupancy clear runs either way, which is
 // what makes the two IsQuickCombat expansions straddle it.
 //
-// The tower branch is written out here rather than routed through
-// mark_tower_army (0x46a460), which is the same three-way switch: retail
-// EXPANDS it at this site and keeps the out-of-line body for cross-TU callers,
-// the /Ob2 asymmetry this TU shows twice more. Calling it from here
-// would emit a CALL retail does not have, because nothing in this tree
-// defines a body for VC6 to expand.
+// Dreamcast explicitly calls MarkCreatureEffect at cmbtmgr.cpp:3312
+// (dc 0x60d3a). The inline helper's Complete view contains the retail-only
+// arrow-tower switch and expands to the same x86 previously written out
+// here: restoring the helper boundary was byte-neutral at 97.37131% and
+// the whole marked-stack region remains instruction-exact.
 //
 // The 20-per-side byte arrays against armies[2][21] are retail's own
 // asymmetry, not a mis-slice: one loop steps the byte arrays by 20 and
 // the army index by 21, and ResetLimitCreature memsets exactly 2x20.
 //
 // Generated scheduling search (2026-08-27): moving the width capture before
-// `top` raises 96.8312 -> 97.3713 while preserving all 27 branches. The 21
+// `y` raises 96.8312 -> 97.3713 while preserving all 27 branches. The 21
 // depth-1 variants found that winner; all 218 depth-2 interactions around
-// the retained body were flat or worse. Retail still captures top and left
-// before computing either extent, reloads top for the height subtraction,
-// and consequently assigns the four SaveFizzle arguments to a different
-// caller-saved ordering. That remaining CSE/register schedule is the whole
-// executable residual; the other printed differences are relocation names.
+// the retained body were flat or worse. Post-helper structure is 38/39
+// blocks exact; the extent-capture block alone is 14 versus 16 instructions.
+// Retail still captures y and x before computing either extent, reloads y
+// for the height subtraction, and consequently assigns the four SaveFizzle
+// arguments to a different caller-saved ordering. Enabling drawing.h's
+// SLimitData view to spell Width/Height is not a local lever: it changes the
+// whole consumer view and makes existing `.values` consumers ill-formed.
+// A partial view conversion is therefore rejected rather than retained.
 VA(0x00466e00, 0x323)  // anchor-global, dc 0x60ce0
 void combatManager::MakeCreaturesVanish()
 {
-    int left;
-    int top;
+    int x;
+    int y;
     int width;
     int height;
     int side;
@@ -2852,28 +2879,13 @@ void combatManager::MakeCreaturesVanish()
             for (index = 0; index < numArmies[side]; index++) {
                 if (!field_13438[side][index])
                     continue;
-                if (armies[side][index].creatureType
-                        == army::ARMY_CREATURE_ARROW_TOWER) {
-                    switch (armies[side][index].gridIndex) {
-                    case COMBAT_HEX_LOWER_TOWER:
-                        field_1402c[1] = 1;
-                        break;
-                    case COMBAT_HEX_KEEP:
-                        field_1402c[0] = 1;
-                        break;
-                    case COMBAT_HEX_UPPER_TOWER:
-                        field_1402c[2] = 1;
-                        break;
-                    }
-                } else {
-                    field_14000[side][index] = 1;
-                }
+                MarkCreatureEffect(side, index);
             }
         }
         ComputeMaxExtent();
-        left = drawbridgeBounds.values[0];
+        x = drawbridgeBounds.values[0];
         width = drawbridgeBounds.values[2] - drawbridgeBounds.values[0] + 1;
-        top = drawbridgeBounds.values[1];
+        y = drawbridgeBounds.values[1];
         height = drawbridgeBounds.values[3] - drawbridgeBounds.values[1] + 1;
     }
 
@@ -2892,10 +2904,10 @@ void combatManager::MakeCreaturesVanish()
     }
 
     if (!IsQuickCombat()) {
-        gpWindowManager->SaveFizzleSourceX(left, top, width, height);
+        gpWindowManager->SaveFizzleSourceX(x, y, width, height);
         DrawFrame(0, 0, 1, 0, 1, 0);
         gpWindowManager->FizzleForwardX(
-            left, top, width, height,
+            x, y, width, height,
             static_cast<int>(
                 gCombatSpeedFactors[gUnnamed698758.combatSpeed] * 150.0f));
     }
@@ -3759,8 +3771,9 @@ static const long& MaxOf(const long& x, const long& y)
 //     `lea eax,[esi+edi-1]`;
 //   * `iNextFrameType = cs_wince + (Is(1u << 27))` is ARITHMETIC, not a
 //     ternary - retail emits `setne cl` straight into `add ecx,3`;
-//   * walk 4 is MakeCreaturesVanish's own first walk verbatim, down to
-//     the three-way arrow-tower switch on gridIndex;
+//   * walk 4 calls MarkCreatureEffect after its extra POW-specific guards;
+//     Dreamcast records that helper boundary at cmbtmgr.cpp:4293, and the
+//     Complete inline body adds the retail-only arrow-tower switch;
 //   * the wind-down is a `for(;;)` with a bFramesChanged latch, not a
 //     counted loop - retail has no bound to test.
 //
@@ -3778,9 +3791,14 @@ static const long& MaxOf(const long& x, const long& y)
 //     `if (attack_frames)` arms instead was measured and is much worse
 //     (94.90) - the flip is on the inner test alone.
 //
-// CURRENT (96.2232%): all 134 branches and the single return agree, and
-// predict-inline reports the call multisets AGREE exactly (14 and 14).
-// The remainder is instruction/slot selection. New negative controls on
+// CURRENT (96.2232%, rechecked 2026-09-01): predict-inline reports the call
+// multisets AGREE exactly (14 and 14). The DC dossier records 151 source
+// rows and the MarkCreatureEffect call at cmbtmgr.cpp:4293; restoring that
+// inline boundary is byte-neutral. The structure view is 224 versus 225
+// blocks, with the early one-block skew cascading through its alignment;
+// the source view localizes the first real divergence to the first animation
+// walk's stores and GetNumFrames lowering. The remainder is instruction/slot
+// selection rather than a missing DC helper. Negative controls on
 // 2026-08-21: DC's wince_frames-before-attack_frames declaration order
 // regresses to 96.21098; explicit clear/conditional-set of
 // bShowRangeFrames regresses to 95.7939 and flips one branch polarity; a
@@ -3872,21 +3890,7 @@ void combatManager::PowEffect(int spellEffect, int bResetLimitCreature)
                 if (!stack.bSomeUnitsDamaged && !stack.bShowAttackFrames
                         && !stack.bShowRangeFrames)
                     continue;
-                if (stack.creatureType == army::ARMY_CREATURE_ARROW_TOWER) {
-                    switch (stack.gridIndex) {
-                    case COMBAT_HEX_LOWER_TOWER:
-                        field_1402c[1] = 1;
-                        break;
-                    case COMBAT_HEX_KEEP:
-                        field_1402c[0] = 1;
-                        break;
-                    case COMBAT_HEX_UPPER_TOWER:
-                        field_1402c[2] = 1;
-                        break;
-                    }
-                } else {
-                    field_14000[side][slot] = 1;
-                }
+                MarkCreatureEffect(side, slot);
             }
         }
 
@@ -4291,31 +4295,13 @@ not_blocked:
 // copy from 0x469c34 straight into the singular arm because it already
 // knows the answer there.
 //
-// Residual (98.8371% as of 2026-08-21; the 89.64 this note was written
-// at has since closed to the second bullet alone - the unmasked diff
-// now shows ONLY the Text._First cluster below, plus the EH-prologue
-// push addend). Original analysis, still the correct account:
-// 263 instructions against retail's 264, flow-distance 0 - the CFG is
-// identical and predict-inline reports the call multisets AGREE, so
-// nothing structural is left. Register/PRE decisions remain,
-// NOT source-addressable:
-//   * the inlined IsQuickCombat forms both player-record addresses with
-//     `lea` and then loads .quickCombat from each, where we fold the
-//     +0xe4 into the load. DO NOT RETUNE THE SHARED INLINE FOR THIS -
-//     retail's own LowerDoor (0x4671c0, exact here) expands the very
-//     same source into the FOLDED form `mov edx,[ecx+8*eax+0x20bb4]`,
-//     so the two retail bodies disagree with each other and the shape
-//     is downstream register pressure, not spelling.
-//   * `gpGeneralText->Text._First`: retail hoists it above the
-//     `attacker_qty == 1` branch (we load it per arm) and then does the
-//     OPPOSITE at the `deaths == 1` branch, duplicating it into both
-//     arms where we hoist it. That one duplicated load is the whole
-//     instruction-count gap. Retail CSEs the pointer one level and we
-//     CSE two; both arms are already spelled exactly as retail's.
-//   * the first _Tidy picks AL where retail picks CL, and orders the
-//     allocator byte store after the `lea ecx` instead of before.
-// why-reg's guided search offers one candidate (B23, make `name`
-// volatile) and it moves the distance by +0. Register-homing family.
+// EXACT 2026-09-01. Dreamcast gives the no-defender singular/plural
+// assignments separate line rows and blocks. Preserving that explicit
+// if/else instead of a conditional expression prevents VC6 from hoisting
+// Text._First across the second deaths test; all 40 CFG blocks and all
+// 804 bytes then match retail. Two negative controls are banked: naming a
+// TTextResource reference scored 96.6402, and also naming the two vector
+// references scored 92.1629. Neither is part of the recovered source.
 VA(0x00469a90, 0x324)  // anchor-global, dc 0x6335c
 void combatManager::damage_message(const char* attacker, long attacker_qty, long damage, const army* defender, long deaths)
 {
@@ -4344,9 +4330,10 @@ void combatManager::damage_message(const char* attacker, long attacker_qty, long
                 goto have_death_text;
             }
         } else {
-            name = deaths == 1
-                ? gpGeneralText->GetText(GENERAL_TEXT_MIXED_ARMY_ONE)
-                : gpGeneralText->GetText(GENERAL_TEXT_MIXED_ARMY);
+            if (deaths == 1)
+                name = gpGeneralText->GetText(GENERAL_TEXT_MIXED_ARMY_ONE);
+            else
+                name = gpGeneralText->GetText(GENERAL_TEXT_MIXED_ARMY);
         }
         if (deaths == 1)
             deathText = format_string(

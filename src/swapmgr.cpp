@@ -18,9 +18,16 @@
 #include "netgame.h"
 #include "mousemgr.h"
 #include "resourcemanager.h"
+#include "sskilltraits.h"
+#include "herospec.h"
+#include "text.h"
 #include "textresource.h"
 
 DATA(0x006a3d08) static int gUnnamed6a3d08;
+// Dreamcast names the sparse widget-id lookup gStatNames. Retail folds its
+// biased view into the indexed address 0x6a51c4, so only the admitted case
+// values (115..118 and 145) are valid consumers of this base.
+DATA(0x006a51c4) extern const char* gStatNames[];
 // swapmgr singleton (bss 0x6a3d30): the ctor stores `this`, Reset/Open/Close consult it.
 DATA(0x006a3d30) swapManager* gpSwapManager;
 
@@ -52,6 +59,25 @@ inline TArtifact artifact_from_int(int value)
     } converted;
     converted.integer = value;
     return converted.artifact;
+}
+
+inline int text_pointer_payload(char* text)
+{
+    union {
+        char* pointer;
+        int payload;
+    } converted;
+    converted.pointer = text;
+    return converted.payload;
+}
+
+static inline const char* GetArmyName(int type, int count)
+{
+    if (type < 0 || type > kSwapRolloverCreatureLast)
+        return emptyRolloverText;
+    if (count == 1)
+        return akCreatureTypeTraits[type].m_name;
+    return akCreatureTypeTraits[type].m_plural_name;
 }
 
 // E:\gamedcs\swapmgr.cpp:120. Dreamcast proves the class identity and
@@ -229,7 +255,13 @@ int swapManager::DrawSwapWin()
 // two-by-eight widget walk and final network-handler lifetime. Retail fixes
 // the Complete widget-id shifts and replaces the older swap_side() refresh
 // with Update(). The 930-byte retail body and 984-byte SH4 body otherwise
-// carry the same source statement roster.
+// carry the same source statement roster. Passing the portrait pointer
+// directly through the retail message ABI removes the source-false union
+// store and raises the match from 91.66% to 96.32%; B0..B11 then agree byte
+// for byte. The residual has exact flow and is confined to VC6 moving the
+// common &msg push across the two skill arms (three size-only blocks) plus
+// downstream scratch-register choices. The bounded why-reg model found no
+// movable creation-order carrier.
 VA(0x005ae750, 0x3A2)  // full retail body + dc 0x15c66c dossier
 int swapManager::Open(int newPriority)
 {
@@ -255,14 +287,14 @@ int swapManager::Open(int newPriority)
     parent->BroadcastMessage(&msg);
 
     for (int iHero = 0; iHero < 2; iHero++) {
-        // DC line 698 is one portrait-update statement; retail also stores
-        // the pointer payload in this sole recovered message local. The
-        // union/comma spelling preserves both facts without an untyped cast.
+        // DC line 698 is one portrait-update statement. Retail passes the
+        // portrait pointer directly to the five-argument overload; the local
+        // message remains the sole object used by the surrounding updates.
+        msg.extraText =
+            akHeroTraits[heroes[iHero]->portrait].largePortraitName;
         parent->BroadcastMessage(
             MESSAGE_WIDGET, widget::WIDGET_SET_IMAGE, iHero + 1,
-            (msg.extraText =
-                 akHeroTraits[heroes[iHero]->portrait].largePortraitName,
-             msg.extra));
+            msg.extra);
 
         sprintf(gText, gpGeneralText->GetText(139),
                 heroes[iHero]->name, heroes[iHero]->level,
@@ -328,6 +360,61 @@ int swapManager::Open(int newPriority)
         field_64 = new CSwapMgrNetMsgHandler;
         pDPlay->SetNetMsgHandler(field_64);
     }
+    return 0;
+}
+
+// E:\gamedcs\swapmgr.cpp:518
+// The exact Open/Close bracket and five-case retail jump table identify this
+// handler. Dreamcast proves the case/helper order and common DestroyMsg tail;
+// Complete expands GetOtherHero, HandleHeroUpdateMsg and OnGiveMeStuffMsg.
+VA(0x005aeb00, 0x213)  // anchor-bracket + switch/callee roster, dc 0x15f228
+CNetMsg* CSwapMgrNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
+{
+    switch (pNetMsg->subType)
+    {
+    case RS_PLAYER_DROPPED: {
+        if (m_inPopup)
+        {
+            m_pAbortPopupMsg = pNetMsg;
+            return 0;
+        }
+        int otherPlayer = gpSwapManager->GetOtherHero()->owner;
+        if (gpGame->GetGamePosFromDPID(pNetMsg->field_04)
+            == otherPlayer)
+            field_0c = 1;
+        HandlePlayerDrop(pNetMsg->field_04);
+        break;
+    }
+
+    case RS_HERO_UPDATE:
+        gpSwapManager->HandleHeroUpdateMsg(pNetMsg);
+        break;
+
+    case RS_TRADE_REQUEST_DONE:
+        if (m_inPopup)
+        {
+            m_pAbortPopupMsg = pNetMsg;
+            return 0;
+        }
+        field_0c = 1;
+        break;
+
+    case RS_CHAT_MSG:
+        ReceiveChat(static_cast<CChatMsg*>(pNetMsg)->m_text,
+                    pNetMsg->field_00);
+        break;
+
+    case RS_GIVE_ME_STUFF:
+        gpSwapManager->OnGiveMeStuffMsg();
+        break;
+
+    default:
+        CNetMsgHandler::HandleNetMsg(pNetMsg);
+        break;
+    }
+
+    if (pNetMsg)
+        DestroyMsg(pNetMsg);
     return 0;
 }
 
@@ -413,24 +500,86 @@ void swapManager::DrawSelector()
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\swapmgr.cpp:914
 DC_ONLY(0x15cccc, 0x5E)
-void swapManager::update_artifact_widget(long id, TArtifact artifact)
+inline void swapManager::update_artifact_widget(long id, TArtifact artifact)
 {
-    // @stub
+    message msg;
+    msg.id = MESSAGE_WIDGET;
+    msg.codeY = id;
+    if (artifact == ARTIFACT_NONE)
+    {
+        msg.codeX = widget::WIDGET_CLEAR_STATUS;
+        msg.extra = widget::WIDGET_DRAWN;
+    }
+    else
+    {
+        msg.codeX = widget::WIDGET_SET_ICON_FRAME;
+        msg.extra = artifact;
+        parent->BroadcastMessage(&msg);
+        msg.codeX = widget::WIDGET_SET_STATUS;
+        msg.extra = widget::WIDGET_DRAWN;
+    }
+    parent->BroadcastMessage(&msg);
 }
 
 // E:\gamedcs\swapmgr.cpp:940
-DC_ONLY(0x15cd2c, 0x8E)
+// Dreamcast proves the artifact local, helper boundary and paired paint order.
+// Complete narrows the local from the older record copy to its used id and
+// adds the nineteen-position combination-artifact occupancy walk also present
+// in THeroScreenWindow::update_slot; retail independently proves the direct
+// dword load, slot-class tables, reverse scan and two widget-id bands.
+// Complete changes the first widget band but preserves Dreamcast's +0x1b
+// second band.  Retail proves that immediate independently in both arms.
+VA(0x005aef00, 0x24C)  // dc-order + typed retail body, dc 0x15cd2c
 void swapManager::UpdateSlot(int iHero, TArtifactSlot slot)
 {
-    // @stub
-}
+    int artifact = heroes[iHero]->get_artifact(slot)->artifactId;
+    if (artifact == ARTIFACT_NONE)
+    {
+        int type = akArtifactSlotTraits[slot].type;
+        unsigned int remaining = heroes[iHero]->artifactSlotCounts[type];
+        if (remaining > 0)
+        {
+            const std::bitset<19>& slots = aArtifactSlotMasks[type];
+            for (int i = kNumArtifactSlots + 1; ; )
+            {
+                --i;
+                if (!slots.test(i))
+                    continue;
+                if (i == slot)
+                {
+                    artifact = 0x91;
+                    break;
+                }
+                if (heroes[iHero]->equipped[i].artifactId == ARTIFACT_NONE
+                    && --remaining == 0)
+                    break;
+            }
+        }
+    }
 
-// E:\gamedcs\swapmgr.cpp:962
-#endif  // @carcass
+    if (gHeroScreenDraggedArtifact.artifactId != ARTIFACT_NONE
+        && heroes[iHero]->HeroFn_004E2840(
+               gHeroScreenDraggedArtifact.artifactId, slot))
+    {
+        update_artifact_widget(
+            iHero * (kNumArtifactSlots + 1) + slot + 0x96,
+            artifact_from_int(artifact));
+        update_artifact_widget(
+            iHero * (kNumArtifactSlots + 1) + slot + 0x1b,
+            artifact_from_int(0x90));
+    }
+    else
+    {
+        update_artifact_widget(
+            iHero * (kNumArtifactSlots + 1) + slot + 0x96,
+            ARTIFACT_NONE);
+        update_artifact_widget(
+            iHero * (kNumArtifactSlots + 1) + slot + 0x1b,
+            artifact_from_int(artifact));
+    }
+}
 
 // Dreamcast preserves this helper as the nested two-hero, nineteen-slot
 // UpdateSlot walk. Complete /Ob2 expands it into both known retail callers.
@@ -502,19 +651,86 @@ void swapManager::UpdateBackpack(int iHero)
 }
 
 // E:\gamedcs\swapmgr.cpp:1031
-#if 0  // @carcass
-DC_ONLY(0x15cf54, 0x1FC)
+// Dreamcast proves the five-parameter ABI, absence of source locals, selection
+// field assignment order, paired refresh broadcasts, ViewMon/CanModHero
+// helper boundaries, compound split condition and common final Reset. Retail
+// independently fixes the Complete widget ids and inlines ViewMon/CanModHero.
+// Residual (91.1894%): VC6 emits 39 blocks against retail's 35 because its
+// two nested bool returns cross-jump through shared materialization blocks.
+// Branch-local/result locals and explicit false-arm Reset returns were
+// measured byte-flat; one shared helper result reaches 35 blocks but scores
+// 91.0132%, so the DC-proven no-local statement shape remains authoritative.
+VA(0x005af2b0, 0x2DD)  // roster bracket + DC statement/CFG shape, dc 0x15cf54
 void swapManager::HandleMonster(int iHero, int iMonster, int bRightMouse, unsigned char bShift)
 {
-    // @stub
-}
+    if (bRightMouse)
+    {
+        if (heroes[iHero]->army.armies[iMonster] != CREATURE_NONE)
+            gpGame->ViewArmy(heroes[iHero]->army, iMonster, heroes[iHero],
+                             0, 0x77, 0x14, 0, 1);
+        return;
+    }
 
-#endif  // @carcass
+    if (field_58)
+    {
+        if (heroes[iHero]->army.armies[iMonster] != CREATURE_NONE
+            && CanModHero(iHero))
+        {
+            field_48 = iHero;
+            field_4c = -1;
+            field_58 = 0;
+            field_50 = iMonster;
+            field_54 = -1;
+
+            if (heroes[field_48]->owner == gNetLocalGamePos)
+            {
+                gpWindowManager->BroadcastMessage(
+                    MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
+                    kSwapRefreshLeft, 0x4008);
+                gpWindowManager->BroadcastMessage(
+                    MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
+                    kSwapRefreshRight, 0x4008);
+            }
+        }
+        else
+            Reset();
+        return;
+    }
+
+    field_4c = iHero;
+    field_54 = iMonster;
+    if (field_48 == iHero && field_50 == iMonster)
+        ViewMon();
+    else if (heroes[field_48]->owner == gNetLocalGamePos)
+    {
+        if ((gUnnamed6a3d08 || bShift)
+            && (heroes[field_4c]->army.armies[field_54] == CREATURE_NONE
+                || heroes[field_4c]->army.armies[field_54]
+                       == heroes[field_48]->army.armies[field_50]))
+        {
+            gUnnamed6a3d08 = 0;
+            if (CanModHero(field_4c))
+                heroes[field_48]->army.SplitArmy(
+                    field_50, &heroes[field_4c]->army, field_54, 1, 1);
+        }
+        else
+            SwapMons();
+    }
+
+    Reset();
+}
 
 // E:\gamedcs\swapmgr.cpp:1106
 // Dreamcast proves the two source locals and the get/view/remove/equip/
 // Update/SetPointer/Reset helper order. Complete retains that shared shape
 // and adds combination-artifact handling plus the campaign scenario guard.
+// The remaining 93.42% plateau is a layout wall in the Complete-only half:
+// candidate and retail both have 322 instructions, 56 blocks, 36 branches,
+// eight returns, and identical symbolic branch targets, but VC6 chooses the
+// opposite physical copy of the shared GetText(22)/NormalDialog return tail.
+// why-branch finds no applicable source mutation and why-reg's model finds no
+// binding divergence; restoring CanModHero's older direct returns is the
+// negative control and lowers this caller to 87.81%.
 VA(0x005af590, 0x3F7)  // Main roster/callees + full retail body, dc 0x15d150
 void swapManager::handle_artifact_click(long side, long id, unsigned char right_click)
 {
@@ -631,6 +847,11 @@ void swapManager::handle_artifact_click(long side, long id, unsigned char right_
 // The exact UpdateBackpack/SendHeroUpdate bracket fixes this third handler at
 // 0x5af990. Dreamcast supplies the two locals, helper boundaries and branch
 // order; retail independently proves the Complete dialog and pointer sets.
+// All 33 CFG blocks, 197 instructions, 20 branches and five returns agree.
+// The 99.90% residual is an eight-slot EAX/ECX/EDX scratch transpose at the
+// get_backpack_error argument chain; why-reg's model caps it as front-end
+// handle state.  Naming the string temporary is the negative control and
+// drops this function to 97.86% without repairing the transpose.
 VA(0x005af990, 0x251)  // roster bracket + body/callees, dc 0x15d2e0
 void swapManager::handle_backpack_click(long side, long id, unsigned char right_click)
 {
@@ -683,41 +904,784 @@ void swapManager::SendHeroUpdate()
     }
 }
 
-// E:\gamedcs\swapmgr.cpp:1222
-#if 0  // @carcass
-DC_ONLY(0x15d4ac, 0x986)
-int swapManager::Main(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\swapmgr.cpp:1660
+// E:\gamedcs\swapmgr.cpp:1660. Dreamcast keeps this one-statement helper;
+// Complete folds it into both exits of Main.
 DC_ONLY(0x15de34, 0xC)
-int swapManager::ExitSwapManager(message* msg)
+inline int swapManager::ExitSwapManager(message& msg)
 {
-    // @stub
+    msg.id = MESSAGE_EXECUTIVE;
+    msg.codeX = EXECUTIVE_COMMAND_RETURN_RESULT;
+    return MESSAGE_DISPATCH_FORWARD;
 }
 
-// E:\gamedcs\swapmgr.cpp:1667
-DC_ONLY(0x15de40, 0x4C8)
-void swapManager::swap_side()
+// E:\gamedcs\swapmgr.cpp:2140. The older build retains this refresh
+// boundary; Complete expands its Update body at Main's chat-refresh site.
+DC_ONLY(0x15eb90, 0x1A)
+inline void swapManager::OnChatUpdate()
 {
-    // @stub
+    DrawSwapWin();
+    Update();
+}
+
+// Dreamcast retains a substantial WinCE side-swap body. Complete's desktop
+// dispatcher has no corresponding instructions at Main's attested call site;
+// keep the source boundary while recording that proven revision removal.
+DC_ONLY(0x15de40, 0x4C8)
+inline void swapManager::swap_side()
+{
+}
+
+// Dreamcast proves all three as inline accessors. Earlier callers in this TU
+// still force VC6 to materialize IsLeftHero's retail COMDAT, while Main sees
+// the bodies here and can recover the retail expansions and shared tails.
+inline bool swapManager::IsLeftHero()
+{
+    if (heroes[0]->owner == gpGame->GetLocalPlayerGamePos())
+        return true;
+    return false;
+}
+
+inline unsigned char swapManager::IsRightHero()
+{
+    if (heroes[1]->owner == gpGame->GetLocalPlayerGamePos())
+        return true;
+    return false;
+}
+
+inline hero* swapManager::GetOtherHero()
+{
+    if (IsLeftHero())
+        return heroes[1];
+    return heroes[0];
+}
+
+#if 0  // @carcass: the active implicit special member emits this COMDAT
+// Complete's two hero snapshots are 0x492 bytes apart. Retail tears down the
+// two std::string members at CHeroUpdateMsg +0x884 and +0x3f2 in reverse
+// member order; the active VC6 object already emits this exact 123-byte body.
+VA(0x005afd70, 0x7B)  // anchor-body + exact implicit COMDAT; retail-only
+CHeroUpdateMsg::~CHeroUpdateMsg()
+{
+}
+#endif
+
+// E:\gamedcs\swapmgr.cpp:1222
+// Dreamcast supplies the one exitFlag local, helper boundaries and complete
+// statement order. Retail independently fixes the Complete widget ranges,
+// modifier bits, network-exit expansion and 215-byte selector table.
+// Negative control: spelling GetOtherHero before the first requestDone
+// construction raises the isolated score from 84.05% to 84.84%, but reverses
+// DC's positive ctor/helper order at line 1243. Keep the recovered order; the
+// residual retail store scheduling is optimizer state, not source evidence.
+VA(0x005afdf0, 0xABB)  // full retail dispatcher + dc 0x15d4ac dossier
+int swapManager::Main(message& msg)
+{
+    int exitFlag = 0;
+    unsigned char rightMouse =
+        (msg.qualifier & MESSAGE_MODIFIER_RIGHT) != 0;
+    unsigned char shift =
+        (msg.qualifier & MESSAGE_MODIFIER_SHIFT_KEYS) != 0;
+
+    if (gTurnDuration69d630.IsExpired())
+    {
+        if (gNetworkActive69954c)
+        {
+            CTradeRequestDoneMsg requestDone;
+            TransmitRemoteData(&requestDone, GetOtherHero()->owner, 0, 1);
+        }
+        return ExitSwapManager(msg);
+    }
+
+    if (gNetworkActive69954c)
+    {
+        field_64->CheckHandleNet(0, 0);
+        if (static_cast<CSwapMgrNetMsgHandler*>(field_64)->field_0c)
+        {
+            if (IsLeftHero())
+            {
+                CTradeRequestDoneMsg requestDone;
+                TransmitRemoteData(&requestDone, GetOtherHero()->owner, 0, 1);
+            }
+            exitFlag = 1;
+        }
+    }
+
+    if (!exitFlag)
+    {
+        switch (msg.id)
+        {
+        case MESSAGE_RIGHT_BUTTON_DOWN:
+            if (!rightMouse)
+            {
+                Reset();
+                Update();
+                DrawSwapWin();
+            }
+            break;
+
+        case MESSAGE_WIDGET:
+            switch (msg.codeX)
+            {
+            case widget::WIDGET_DESELECT:
+                if (!rightMouse)
+                    OnWidgetDeselect(msg, exitFlag);
+                break;
+
+            case widget::WIDGET_END_DIALOG:
+                if (gNetworkActive69954c && field_5c)
+                {
+                    CTradeRequestDoneMsg requestDone;
+                    TransmitRemoteData(&requestDone, GetOtherHero()->owner,
+                                       0, 1);
+                }
+                exitFlag = 1;
+                break;
+
+            case widget::WIDGET_SELECT:
+            case widget::WIDGET_RIGHT_SELECT:
+                switch (msg.codeY)
+                {
+                {
+                    int skillHero;
+                    int skillIndex;
+                case kSwapRolloverLeftSkill0:
+                case kSwapRolloverLeftSkill1:
+                case kSwapRolloverLeftSkill2:
+                case kSwapRolloverLeftSkill3:
+                case kSwapRolloverLeftSkill4:
+                case kSwapRolloverLeftSkill5:
+                case kSwapRolloverLeftSkill6:
+                case kSwapRolloverLeftSkill7:
+                    if (gHeroScreenDraggedArtifact.artifactId
+                        != ARTIFACT_NONE)
+                        break;
+                    skillHero = 0;
+                    skillIndex = msg.codeY - kSwapRolloverLeftSkill0;
+                    goto show_secondary_skill;
+
+                case kSwapRolloverRightSkill0:
+                case kSwapRolloverRightSkill1:
+                case kSwapRolloverRightSkill2:
+                case kSwapRolloverRightSkill3:
+                case kSwapRolloverRightSkill4:
+                case kSwapRolloverRightSkill5:
+                case kSwapRolloverRightSkill6:
+                case kSwapRolloverRightSkill7:
+                    if (gHeroScreenDraggedArtifact.artifactId
+                        != ARTIFACT_NONE)
+                        break;
+                    skillHero = 1;
+                    skillIndex = msg.codeY - kSwapRolloverRightSkill0;
+
+                // DC lines 1311-1338 expose two side/index assignments and
+                // one shared GetNthSS/string/dialog scope. Retail's B32/B34
+                // assignments converge on the same B35 tail. Negative
+                // controls: duplicating the two scopes falls to 82.58%, a
+                // volatile side local to 82.62%, and a byte local to 83.43%;
+                // the shared int form retains the coherent 84.05% shape.
+                show_secondary_skill:
+                    if (skillIndex < heroes[skillHero]->skillCount)
+                    {
+                        int skill = heroes[skillHero]->GetNthSS(skillIndex);
+                        strcpy(gText,
+                               akSSkillTraits[skill].levelNames[
+                                   heroes[skillHero]->skillLevel[skill] - 1]);
+                        NormalDialog(
+                            gText,
+                            rightMouse
+                                ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : hero::PRIMARY_STAT_DIALOG_TYPE,
+                            -1, -1, 20,
+                            heroes[skillHero]->skillLevel[skill]
+                                + 3 * skill + 2,
+                            -1, 0, -1, 0, -1, 0);
+                    }
+                    break;
+                }
+
+                case kSwapRolloverHeroLeft:
+                    if (gHeroScreenDraggedArtifact.artifactId == ARTIFACT_NONE
+                        && IsLeftHero() && field_5d)
+                    {
+                        HeroView(heroes[0]->id, 1, 0, 0);
+                        DrawSwapWin();
+                        Reset();
+                        SendHeroUpdate();
+                    }
+                    break;
+
+                case kSwapRolloverHeroRight:
+                    if (gHeroScreenDraggedArtifact.artifactId == ARTIFACT_NONE
+                        && IsRightHero() && field_5d)
+                    {
+                        HeroView(heroes[1]->id, 1, 0, 0);
+                        DrawSwapWin();
+                        Reset();
+                        SendHeroUpdate();
+                    }
+                    break;
+
+                case kSwapRolloverLeftArtifact0:
+                case kSwapRolloverLeftArtifact1:
+                case kSwapRolloverLeftArtifact2:
+                case kSwapRolloverLeftArtifact3:
+                case kSwapRolloverLeftArtifact4:
+                case kSwapRolloverLeftArtifact5:
+                case kSwapRolloverLeftArtifact6:
+                case kSwapRolloverLeftArtifact7:
+                case kSwapRolloverLeftArtifact8:
+                case kSwapRolloverLeftArtifact9:
+                case kSwapRolloverLeftArtifact10:
+                case kSwapRolloverLeftArtifact11:
+                case kSwapRolloverLeftArtifact12:
+                case kSwapRolloverLeftArtifact13:
+                case kSwapRolloverLeftArtifact14:
+                case kSwapRolloverLeftArtifact15:
+                case kSwapRolloverLeftArtifact16:
+                case kSwapRolloverLeftArtifact17:
+                case kSwapRolloverLeftArtifact18:
+                    handle_artifact_click(
+                        0, msg.codeY - kSwapRolloverLeftArtifact0,
+                        rightMouse);
+                    SendHeroUpdate();
+                    break;
+
+                case kSwapRolloverRightArtifact0:
+                case kSwapRolloverRightArtifact1:
+                case kSwapRolloverRightArtifact2:
+                case kSwapRolloverRightArtifact3:
+                case kSwapRolloverRightArtifact4:
+                case kSwapRolloverRightArtifact5:
+                case kSwapRolloverRightArtifact6:
+                case kSwapRolloverRightArtifact7:
+                case kSwapRolloverRightArtifact8:
+                case kSwapRolloverRightArtifact9:
+                case kSwapRolloverRightArtifact10:
+                case kSwapRolloverRightArtifact11:
+                case kSwapRolloverRightArtifact12:
+                case kSwapRolloverRightArtifact13:
+                case kSwapRolloverRightArtifact14:
+                case kSwapRolloverRightArtifact15:
+                case kSwapRolloverRightArtifact16:
+                case kSwapRolloverRightArtifact17:
+                case kSwapRolloverRightArtifact18:
+                    handle_artifact_click(
+                        1, msg.codeY - kSwapRolloverRightArtifact0,
+                        rightMouse);
+                    SendHeroUpdate();
+                    break;
+
+                case kSwapRolloverLeftBackpack0:
+                case kSwapRolloverLeftBackpack1:
+                case kSwapRolloverLeftBackpack2:
+                case kSwapRolloverLeftBackpack3:
+                case kSwapRolloverLeftBackpack4:
+                    handle_backpack_click(
+                        0, msg.codeY - kSwapRolloverLeftBackpack0,
+                        rightMouse);
+                    SendHeroUpdate();
+                    break;
+
+                case kSwapRolloverRightBackpack0:
+                case kSwapRolloverRightBackpack1:
+                case kSwapRolloverRightBackpack2:
+                case kSwapRolloverRightBackpack3:
+                case kSwapRolloverRightBackpack4:
+                    handle_backpack_click(
+                        1, msg.codeY - kSwapRolloverRightBackpack0,
+                        rightMouse);
+                    SendHeroUpdate();
+                    swap_side();
+                    break;
+
+                case kSwapRolloverLeftArmy0:
+                case kSwapRolloverLeftArmy1:
+                case kSwapRolloverLeftArmy2:
+                case kSwapRolloverLeftArmy3:
+                case kSwapRolloverLeftArmy4:
+                case kSwapRolloverLeftArmy5:
+                case kSwapRolloverLeftArmy6:
+                    if (gHeroScreenDraggedArtifact.artifactId
+                        == ARTIFACT_NONE)
+                    {
+                        HandleMonster(
+                            0, msg.codeY - kSwapRolloverLeftArmy0,
+                            rightMouse, shift);
+                        SendHeroUpdate();
+                    }
+                    break;
+
+                case kSwapRolloverRightArmy0:
+                case kSwapRolloverRightArmy1:
+                case kSwapRolloverRightArmy2:
+                case kSwapRolloverRightArmy3:
+                case kSwapRolloverRightArmy4:
+                case kSwapRolloverRightArmy5:
+                case kSwapRolloverRightArmy6:
+                    if (gHeroScreenDraggedArtifact.artifactId
+                        == ARTIFACT_NONE)
+                    {
+                        HandleMonster(
+                            1, msg.codeY - kSwapRolloverRightArmy0,
+                            rightMouse, shift);
+                        SendHeroUpdate();
+                    }
+                    break;
+
+                case kSwapRolloverLeftArmyCount0:
+                case kSwapRolloverLeftArmyCount1:
+                case kSwapRolloverLeftArmyCount2:
+                case kSwapRolloverLeftArmyCount3:
+                case kSwapRolloverLeftArmyCount4:
+                case kSwapRolloverLeftArmyCount5:
+                case kSwapRolloverLeftArmyCount6:
+                    if (gHeroScreenDraggedArtifact.artifactId
+                        == ARTIFACT_NONE)
+                    {
+                        HandleMonster(
+                            0, msg.codeY - kSwapRolloverLeftArmyCount0,
+                                      rightMouse, shift);
+                        SendHeroUpdate();
+                    }
+                    break;
+
+                case kSwapRolloverRightArmyCount0:
+                case kSwapRolloverRightArmyCount1:
+                case kSwapRolloverRightArmyCount2:
+                case kSwapRolloverRightArmyCount3:
+                case kSwapRolloverRightArmyCount4:
+                case kSwapRolloverRightArmyCount5:
+                case kSwapRolloverRightArmyCount6:
+                    if (gHeroScreenDraggedArtifact.artifactId
+                        == ARTIFACT_NONE)
+                    {
+                        HandleMonster(
+                            1, msg.codeY - kSwapRolloverRightArmyCount0,
+                                      rightMouse, shift);
+                        SendHeroUpdate();
+                    }
+                    break;
+
+                // Complete places the paired morale/luck cases before its
+                // three left text cases; retail B57-B70 fixes this revision
+                // order even though the older Dreamcast switch laid the
+                // left text statements first.
+                case kSwapRolloverMoraleLeft:
+                    if (gHeroScreenDraggedArtifact.artifactId
+                        == ARTIFACT_NONE)
+                        gpGame->ShowMoraleInfo(
+                            heroes[0],
+                            rightMouse
+                                ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : hero::PRIMARY_STAT_DIALOG_TYPE);
+                    break;
+
+                case kSwapRolloverLuckLeft:
+                    if (gHeroScreenDraggedArtifact.artifactId
+                        == ARTIFACT_NONE)
+                        gpGame->ShowLuckInfo(
+                            heroes[0],
+                            rightMouse
+                                ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : hero::PRIMARY_STAT_DIALOG_TYPE);
+                    break;
+
+                case kSwapRolloverText9Left:
+                    if (gHeroScreenDraggedArtifact.artifactId
+                        == ARTIFACT_NONE)
+                    {
+                        sprintf(gText, gpGeneralText->GetText(3),
+                                heroes[0]->level,
+                                hero::GetExperience(heroes[0]->level + 1),
+                                heroes[0]->experience);
+                        NormalDialog(
+                            gText,
+                            rightMouse
+                                ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : hero::PRIMARY_STAT_DIALOG_TYPE,
+                            -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                    }
+                    break;
+
+                case kSwapRolloverText22Left:
+                    if (gHeroScreenDraggedArtifact.artifactId
+                        == ARTIFACT_NONE)
+                    {
+                        sprintf(gText, gpGeneralText->GetText(206),
+                                heroes[0]->name, heroes[0]->mana,
+                                heroes[0]->GetMaxMana());
+                        NormalDialog(
+                            gText,
+                            rightMouse
+                                ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : hero::PRIMARY_STAT_DIALOG_TYPE,
+                            -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                    }
+                    break;
+
+                case kSwapRolloverText27Left:
+                    if (gHeroScreenDraggedArtifact.artifactId
+                        == ARTIFACT_NONE)
+                    {
+                        strcpy(gText,
+                               akHeroSpecificAbilities[heroes[0]->id].longText);
+                        NormalDialog(
+                            gText,
+                            rightMouse
+                                ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : hero::PRIMARY_STAT_DIALOG_TYPE,
+                            -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                    }
+                    break;
+
+                // Complete repeats the same paired ordering for the right
+                // hero; retail B71-B88 places these calls before its text
+                // cases while preserving the shared DC helper boundaries.
+                case kSwapRolloverMoraleRight:
+                    if (gHeroScreenDraggedArtifact.artifactId
+                        == ARTIFACT_NONE)
+                        gpGame->ShowMoraleInfo(
+                            heroes[1],
+                            rightMouse
+                                ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : hero::PRIMARY_STAT_DIALOG_TYPE);
+                    break;
+
+                case kSwapRolloverLuckRight:
+                    if (gHeroScreenDraggedArtifact.artifactId
+                        == ARTIFACT_NONE)
+                        gpGame->ShowLuckInfo(
+                            heroes[1],
+                            rightMouse
+                                ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : hero::PRIMARY_STAT_DIALOG_TYPE);
+                    break;
+
+                case kSwapRolloverText9Right:
+                    if (gHeroScreenDraggedArtifact.artifactId
+                        == ARTIFACT_NONE)
+                    {
+                        sprintf(gText, gpGeneralText->GetText(3),
+                                heroes[1]->level,
+                                hero::GetExperience(heroes[1]->level + 1),
+                                heroes[1]->experience);
+                        NormalDialog(
+                            gText,
+                            rightMouse
+                                ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : hero::PRIMARY_STAT_DIALOG_TYPE,
+                            -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                    }
+                    break;
+
+                case kSwapRolloverText22Right:
+                    if (gHeroScreenDraggedArtifact.artifactId
+                        == ARTIFACT_NONE)
+                    {
+                        sprintf(gText, gpGeneralText->GetText(206),
+                                heroes[1]->name, heroes[1]->mana,
+                                heroes[1]->GetMaxMana());
+                        NormalDialog(
+                            gText,
+                            rightMouse
+                                ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : hero::PRIMARY_STAT_DIALOG_TYPE,
+                            -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                    }
+                    break;
+
+                case kSwapRolloverText27Right:
+                    if (gHeroScreenDraggedArtifact.artifactId
+                        == ARTIFACT_NONE)
+                    {
+                        strcpy(gText,
+                               akHeroSpecificAbilities[heroes[1]->id].longText);
+                        NormalDialog(
+                            gText,
+                            rightMouse
+                                ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                : hero::PRIMARY_STAT_DIALOG_TYPE,
+                            -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                    }
+                    break;
+
+                case kSwapRolloverLeftPrimary0:
+                case kSwapRolloverLeftPrimary1:
+                case kSwapRolloverLeftPrimary2:
+                case kSwapRolloverLeftPrimary3:
+                    if (gHeroScreenDraggedArtifact.artifactId
+                        == ARTIFACT_NONE)
+                        heroes[0]->ViewStat(
+                            msg.codeY - kSwapRolloverLeftPrimary0,
+                            rightMouse);
+                    break;
+
+                case kSwapRolloverRightPrimary0:
+                case kSwapRolloverRightPrimary1:
+                case kSwapRolloverRightPrimary2:
+                case kSwapRolloverRightPrimary3:
+                    if (gHeroScreenDraggedArtifact.artifactId
+                        == ARTIFACT_NONE)
+                        heroes[1]->ViewStat(
+                            msg.codeY - kSwapRolloverRightPrimary0,
+                            rightMouse);
+                    break;
+
+                case kSwapRolloverStat115:
+                case kSwapRolloverStat116:
+                case kSwapRolloverStat117:
+                case kSwapRolloverStat118:
+                    if (gHeroScreenDraggedArtifact.artifactId
+                        == ARTIFACT_NONE)
+                        heroes[1]->ViewStat(
+                            msg.codeY - kSwapRolloverStat115,
+                            rightMouse);
+                    break;
+
+                case kSwapRolloverArmyMoveLeft:
+                case kSwapRolloverArmyMoveRight:
+                    if (rightMouse)
+                        NormalDialog(gHeroScreenMixedArmyHelp, 4,
+                                     -1, -1, -1, 0,
+                                     -1, 0, -1, 0, -1, 0);
+                    break;
+                }
+
+                if (!rightMouse && msg.codeY != kSwapNoRefreshWidget)
+                {
+                    Update();
+                    DrawSwapWin();
+                    DrawSelector();
+                }
+                break;
+            }
+            break;
+
+        case MESSAGE_MOUSE_MOVE:
+            gpWindowManager->ConvertToHover(msg);
+            if (msg.codeY == gpWindowManager->lastHover)
+                return MESSAGE_DISPATCH_CONSUME;
+            gpWindowManager->lastHover = msg.codeY;
+            SetRolloverText(msg.codeY);
+            break;
+        }
+    }
+
+    if (chatMan.ChatChanged() || chatMan.HasOldChat())
+    {
+        chatMan.UpdateWidget(parent->field_4c, 1, 20);
+        OnChatUpdate();
+    }
+
+    if (exitFlag == 1)
+        return ExitSwapManager(msg);
+    return MESSAGE_DISPATCH_CONSUME;
 }
 
 // E:\gamedcs\swapmgr.cpp:1793
-DC_ONLY(0x15e308, 0x552)
+// Dreamcast proves the source order below: three primary-stat bands, hero
+// heading, morale/luck, fixed status rows, two army bands, two skill bands,
+// and the four artifact/backpack bands. Complete shifts the backpack ids by
+// two and adds widget 145, while retail's 215-byte dispatch table fixes every
+// admitted case range independently. GetArmyName, get_artifact/get_backpack,
+// GetNthSS and get_rollover_text retain their recovered source boundaries;
+// Complete /Ob2 expands the first three where the x86 body proves it.
+// Residual (99.9787%): all 45 CFG blocks, sizes, branches and instruction
+// counts are exact. Two primary-stat loads differ only in relocation naming
+// (gPrimarySkillNames plus a negative addend versus retail's biased effective
+// base); the sole instruction-form residual commutes the base/index registers
+// in the right-skill mastery-byte load. The emitted addresses and semantics
+// agree, so neither flat label spelling is replaced with a source-false alias.
+VA(0x005b08b0, 0x4EF)  // retail byte table + DC statement roster, dc 0x15e308
 void swapManager::SetRolloverText(int codeY)
 {
-    // @stub
+    if (parent->field_50->bHasFocus)
+        return;
+
+    switch (codeY)
+    {
+    case kSwapRolloverStat115: case kSwapRolloverStat116:
+    case kSwapRolloverStat117: case kSwapRolloverStat118:
+    case kSwapRolloverStat145:
+        sprintf(gText, gHeroScreenNameFormat, gStatNames[codeY]);
+        break;
+
+    case kSwapRolloverLeftPrimary0: case kSwapRolloverLeftPrimary1:
+    case kSwapRolloverLeftPrimary2: case kSwapRolloverLeftPrimary3:
+        sprintf(gText, gHeroScreenNameFormat,
+                gPrimarySkillNames[codeY - kSwapRolloverLeftPrimary0]);
+        break;
+
+    case kSwapRolloverRightPrimary0: case kSwapRolloverRightPrimary1:
+    case kSwapRolloverRightPrimary2: case kSwapRolloverRightPrimary3:
+        sprintf(gText, gHeroScreenNameFormat,
+                gPrimarySkillNames[codeY - kSwapRolloverRightPrimary0]);
+        break;
+
+    case kSwapRolloverHeroLeft: case kSwapRolloverHeroRight:
+        sprintf(gText, gpGeneralText->GetText(16),
+                heroes[codeY - kSwapRolloverHeroLeft]->name,
+                heroes[codeY - kSwapRolloverHeroLeft]->HeroFn_004D8F70());
+        break;
+
+    case kSwapRolloverMoraleLeft: case kSwapRolloverMoraleRight:
+        if (heroes[codeY - kSwapRolloverMoraleLeft]->GetMorale(0, 0, 1) > 0)
+            strcpy(gText, gHeroScreenMoraleHighText);
+        else if (heroes[codeY - kSwapRolloverMoraleLeft]->GetMorale(0, 0, 1) == 0)
+            strcpy(gText, gHeroScreenMoraleNeutralText);
+        else
+            strcpy(gText, gHeroScreenMoraleLowText);
+        break;
+
+    case kSwapRolloverLuckLeft: case kSwapRolloverLuckRight:
+        if (heroes[codeY - kSwapRolloverLuckLeft]->GetLuck(0, 0, 1) > 0)
+            strcpy(gText, gHeroScreenLuckHighText);
+        else if (heroes[codeY - kSwapRolloverLuckLeft]->GetLuck(0, 0, 1) == 0)
+            strcpy(gText, gHeroScreenLuckNeutralText);
+        else
+            strcpy(gText, gHeroScreenLuckLowText);
+        break;
+
+    case kSwapRolloverText27Left: case kSwapRolloverText27Right:
+        strcpy(gText, gHeroScreenText27);
+        break;
+
+    case kSwapRolloverText9Left: case kSwapRolloverText9Right:
+        strcpy(gText, gHeroScreenText9);
+        break;
+
+    case kSwapRolloverText22Left: case kSwapRolloverText22Right:
+        strcpy(gText, gHeroScreenText22);
+        break;
+
+    case kSwapRolloverArmyMoveLeft: case kSwapRolloverArmyMoveRight:
+        sprintf(gText, gHeroScreenArmyMoveFormat,
+                gpGeneralText->GetText(44));
+        break;
+
+    case kSwapRolloverText0Left: case kSwapRolloverText0Right:
+        strcpy(gText, gHeroScreenText0);
+        break;
+
+    case kSwapRolloverLeftArmy0: case kSwapRolloverLeftArmy1:
+    case kSwapRolloverLeftArmy2: case kSwapRolloverLeftArmy3:
+    case kSwapRolloverLeftArmy4: case kSwapRolloverLeftArmy5:
+    case kSwapRolloverLeftArmy6:
+        if (heroes[0]->army.armies[codeY - kSwapRolloverLeftArmy0] == CREATURE_NONE)
+            strcpy(gText, emptyRolloverText);
+        else
+            sprintf(gText, gHeroScreenNameFormat,
+                    GetArmyName(heroes[0]->army.armies[
+                                    codeY - kSwapRolloverLeftArmy0], 2));
+        break;
+
+    case kSwapRolloverRightArmy0: case kSwapRolloverRightArmy1:
+    case kSwapRolloverRightArmy2: case kSwapRolloverRightArmy3:
+    case kSwapRolloverRightArmy4: case kSwapRolloverRightArmy5:
+    case kSwapRolloverRightArmy6:
+        if (heroes[1]->army.armies[codeY - kSwapRolloverRightArmy0] == CREATURE_NONE)
+            strcpy(gText, emptyRolloverText);
+        else
+            sprintf(gText, gHeroScreenNameFormat,
+                    GetArmyName(heroes[1]->army.armies[
+                                    codeY - kSwapRolloverRightArmy0], 2));
+        break;
+
+    case kSwapRolloverLeftSkill0: case kSwapRolloverLeftSkill1:
+    case kSwapRolloverLeftSkill2: case kSwapRolloverLeftSkill3:
+    case kSwapRolloverLeftSkill4: case kSwapRolloverLeftSkill5:
+    case kSwapRolloverLeftSkill6: case kSwapRolloverLeftSkill7:
+        if (codeY - kSwapRolloverLeftSkill0 < heroes[0]->skillCount) {
+            int skill = heroes[0]->GetNthSS(
+                codeY - kSwapRolloverLeftSkill0);
+            sprintf(gText, gHeroScreenSecondarySkillFormat,
+                    gSkillMasteryNamesBiased[heroes[0]->skillLevel[skill]],
+                    akSSkillTraits[skill].name);
+        }
+        break;
+
+    case kSwapRolloverRightSkill0: case kSwapRolloverRightSkill1:
+    case kSwapRolloverRightSkill2: case kSwapRolloverRightSkill3:
+    case kSwapRolloverRightSkill4: case kSwapRolloverRightSkill5:
+    case kSwapRolloverRightSkill6: case kSwapRolloverRightSkill7:
+        if (codeY - kSwapRolloverRightSkill0 < heroes[1]->skillCount) {
+            int skill = heroes[1]->GetNthSS(
+                codeY - kSwapRolloverRightSkill0);
+            sprintf(gText, gHeroScreenSecondarySkillFormat,
+                    gSkillMasteryNamesBiased[heroes[1]->skillLevel[skill]],
+                    akSSkillTraits[skill].name);
+        }
+        break;
+
+    case kSwapRolloverLeftArtifact0: case kSwapRolloverLeftArtifact1:
+    case kSwapRolloverLeftArtifact2: case kSwapRolloverLeftArtifact3:
+    case kSwapRolloverLeftArtifact4: case kSwapRolloverLeftArtifact5:
+    case kSwapRolloverLeftArtifact6: case kSwapRolloverLeftArtifact7:
+    case kSwapRolloverLeftArtifact8: case kSwapRolloverLeftArtifact9:
+    case kSwapRolloverLeftArtifact10: case kSwapRolloverLeftArtifact11:
+    case kSwapRolloverLeftArtifact12: case kSwapRolloverLeftArtifact13:
+    case kSwapRolloverLeftArtifact14: case kSwapRolloverLeftArtifact15:
+    case kSwapRolloverLeftArtifact16: case kSwapRolloverLeftArtifact17:
+    case kSwapRolloverLeftArtifact18:
+        heroes[0]
+            ->get_artifact(static_cast<TArtifactSlot>(codeY - kSwapRolloverLeftArtifact0) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */)
+            ->get_rollover_text(gText);
+        break;
+
+    case kSwapRolloverLeftBackpack0: case kSwapRolloverLeftBackpack1:
+    case kSwapRolloverLeftBackpack2: case kSwapRolloverLeftBackpack3:
+    case kSwapRolloverLeftBackpack4:
+        heroes[0]->get_backpack(codeY - kSwapRolloverLeftBackpack0)
+            ->get_rollover_text(gText);
+        break;
+
+    case kSwapRolloverRightArtifact0: case kSwapRolloverRightArtifact1:
+    case kSwapRolloverRightArtifact2: case kSwapRolloverRightArtifact3:
+    case kSwapRolloverRightArtifact4: case kSwapRolloverRightArtifact5:
+    case kSwapRolloverRightArtifact6: case kSwapRolloverRightArtifact7:
+    case kSwapRolloverRightArtifact8: case kSwapRolloverRightArtifact9:
+    case kSwapRolloverRightArtifact10: case kSwapRolloverRightArtifact11:
+    case kSwapRolloverRightArtifact12: case kSwapRolloverRightArtifact13:
+    case kSwapRolloverRightArtifact14: case kSwapRolloverRightArtifact15:
+    case kSwapRolloverRightArtifact16: case kSwapRolloverRightArtifact17:
+    case kSwapRolloverRightArtifact18:
+        heroes[1]
+            ->get_artifact(static_cast<TArtifactSlot>(codeY - kSwapRolloverRightArtifact0) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */)
+            ->get_rollover_text(gText);
+        break;
+
+    case kSwapRolloverRightBackpack0: case kSwapRolloverRightBackpack1:
+    case kSwapRolloverRightBackpack2: case kSwapRolloverRightBackpack3:
+    case kSwapRolloverRightBackpack4:
+        heroes[1]->get_backpack(codeY - kSwapRolloverRightBackpack0)
+            ->get_rollover_text(gText);
+        break;
+
+    default:
+        strcpy(gText, emptyRolloverText);
+        break;
+    }
+
+    parent->BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
+                             0x7b, text_pointer_payload(gText));
+    parent->DrawWindow(0, 0x7a, 0x7b);
+    gpWindowManager->UpdateScreen(4, 0x242, 0x2d4, 0x12);
 }
 
 // E:\gamedcs\swapmgr.cpp:2024
+
+// Dreamcast proves this as one source statement with no locals. Complete's
+// HandleMonster expands the helper while retaining the GetNumArmies and
+// ViewArmy call order; retail fixes the first-selected hero/second slot pair.
 DC_ONLY(0x15e85c, 0x5E)
 void swapManager::ViewMon()
 {
-    // @stub
+    gpGame->ViewArmy(heroes[field_48]->army, field_54, heroes[field_48],
+                     0, 0x77, 0x14,
+                     heroes[field_48]->army.GetNumArmies() > 1, 0);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\swapmgr.cpp:2030
 DC_ONLY(0x15e8bc, 0x142)
@@ -756,7 +1720,7 @@ hero* swapManager::GetOurHero()
 
 // E:\gamedcs\swapmgr.cpp:2267
 DC_ONLY(0x15ee98, 0x82)
-unsigned char swapManager::CanModHero(int hero)
+bool swapManager::CanModHero(int hero)
 {
     // @stub
 }
@@ -819,15 +1783,23 @@ CNetMsg* CSwapMgrNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
 
 #endif  // @carcass
 
+// Dreamcast lines 2033..2041 prove the initial seven-slot nonempty-troop
+// count. Complete never consumes the count; VC6 removes its body but retains
+// the induction walk visible at the retail entry.  The exact source keeps the
+// source-army pointer declaration after that loop, so its direct hero access
+// carries retail's numTroops pointer; predeclaring it swaps EBX/EDI and scores
+// 91.55%.  Flattening the source!=destination scope changes the same-army
+// semantics and scores 90.98%. Reversing the two recovered loop tests is
+// byte-flat, so the Dreamcast order remains the source ratchet.
 VA(0x005b0da0, 0x141)  // anchor-global, dc 0x15e8bc
 void swapManager::SwapMons()
 {
-    armyGroup* source = &heroes[field_48]->army;
-    // MATCHING_DEBT: retail retains this otherwise-dead seven-slot pointer
-    // walk at entry; keep it explicit until the source-level cause is known.
-    int* troops = source->numTroops;
+    int nonemptyTroops = 0;
     for (int slot = 0; slot < 7; ++slot)
-        ++troops;
+        if (heroes[field_48]->army.armies[slot] != CREATURE_NONE
+            && heroes[field_48]->army.numTroops[slot] > 0)
+            ++nonemptyTroops;
+    armyGroup* source = &heroes[field_48]->army;
     armyGroup* destination = &heroes[field_4c]->army;
 
     if (destination->armies[field_54] == source->armies[field_50]) {
@@ -839,20 +1811,25 @@ void swapManager::SwapMons()
         return;
     }
 
-    if (source != destination
-        && source->GetNumArmies() == 1
-        && destination->armies[field_54] == CREATURE_NONE)
-        return;
-
-    if (CanModHero(field_4c)
-        || destination->armies[field_54] == CREATURE_NONE)
-        source->Swap(field_50, destination, field_54);
+    if (source != destination) {
+        if (source->GetNumArmies() == 1
+            && destination->armies[field_54] == CREATURE_NONE)
+            return;
+        if (!CanModHero(field_4c)
+            && destination->armies[field_54] != CREATURE_NONE)
+            return;
+    }
+    source->Swap(field_50, destination, field_54);
 }
 
 // E:\gamedcs\swapmgr.cpp:2072
 // Dreamcast preserves the message local, primary-skill and army-widget loops,
 // then the update_all_slots helper call in this order. Complete /Ob2 expands
 // that final helper to the same nested UpdateSlot walk seen in both callers.
+// The retail and candidate CFGs are exact (25 blocks, 24 exact-sized): the
+// residual is VC6 scratch-register scheduling plus one end-of-side MOV.  A
+// named primary-skill temporary and hoisting `side` beside `i` both compile to
+// the same 89.35% bytes, so neither is a valid carrier for that allocator wall.
 VA(0x005b0ef0, 0x1D4)  // body/callee corroborates, dc 0x15ea00
 void swapManager::Update()
 {
@@ -867,10 +1844,9 @@ void swapManager::Update()
         for (i = 0; i < 4; ++i)
         {
             msg.codeY = 3 + side * 5 + i;
-            int val = heroes[side]->GetPrimarySkill(i);
             sprintf(gText,
                     DATA_COMPGEN(0x00660a1c, swapDecimalFormat, "%d"),
-                    val);
+                    heroes[side]->GetPrimarySkill(i));
             parent->BroadcastMessage(&msg);
         }
 
@@ -919,13 +1895,36 @@ void swapManager::Update()
     update_all_slots();
 }
 
+// E:\gamedcs\swapmgr.cpp:2147
+// Dreamcast proves two snapshot assignments followed by the popup guard and
+// UpdateBackpack(0/1), Update, DrawSwapWin helper order. Retail independently
+// proves Complete's 0x492-byte hero layout and expands this entire boundary.
+void swapManager::HandleHeroUpdateMsg(CNetMsg* pNetMsg)
+{
+    CHeroUpdateMsg* update = static_cast<CHeroUpdateMsg*>(pNetMsg);
+    gpGame->heroes[update->leftHero.id] = update->leftHero;
+    gpGame->heroes[update->rightHero.id] = update->rightHero;
+
+    if (!field_64->IsInPopup())
+    {
+        UpdateBackpack(0);
+        UpdateBackpack(1);
+        Update();
+        DrawSwapWin();
+    }
+}
+
 // E:\gamedcs\swapmgr.cpp:2165
 // Dreamcast places each real message construction before GetOtherHero on the
 // same source row.  Retail schedules the accessor first, but that optimized
 // order does not justify reversing the recovered source boundary.  Keeping
-// constructor-first source retains the exact 39-block CFG.  Complete's
-// optimized body gives the two inlined message cases distinct 0x14-byte
-// homes; that scheduling difference is not source-order evidence.
+// constructor-first source banked 99.97% before the later coherent helper
+// reconstruction changed this TU's optimizer state.  The current dip still
+// has all 35 CFG flows, 15 branches, five returns and call counts exact;
+// candidate reuses one 0x14-byte message home while Complete gives the two
+// inlined cases distinct homes in a 0x28 frame.  Accessor-first spelling is
+// the source-false negative control and the banked MAX prevents that local
+// scheduling artifact from overriding the positive Dreamcast fact.
 VA(0x005b10d0, 0x2A8)  // switch ids/callees + ret 8, dc 0x15ec58
 void swapManager::OnWidgetDeselect(message& msg, int& exitFlag)
 {
@@ -995,7 +1994,9 @@ void swapManager::OnWidgetDeselect(message& msg, int& exitFlag)
     }
 }
 
-// E:\gamedcs\swapmgr.cpp:2231
+#if 0  // @carcass: the active inline definition above emits this COMDAT
+// E:\gamedcs\swapmgr.cpp:2231. The retail-order claim remains here while the
+// canonical inline definition above Main controls caller lowering.
 VA(0x005b1380, 0x1C)
 bool swapManager::IsLeftHero()
 {
@@ -1003,31 +2004,26 @@ bool swapManager::IsLeftHero()
         return true;
     return false;
 }
+#endif
 
-// E:\gamedcs\swapmgr.cpp:2241
-unsigned char swapManager::IsRightHero()
+bool swapManager::CanModHero(int whichHero)
 {
-    if (heroes[1]->owner == gpGame->GetLocalPlayerGamePos())
-        return true;
-    return false;
-}
-
-// E:\gamedcs\swapmgr.cpp:2251
-hero* swapManager::GetOtherHero()
-{
-    if (IsLeftHero())
-        return heroes[1];
-    return heroes[0];
-}
-
-unsigned char swapManager::CanModHero(int whichHero)
-{
+    // Complete lowers this helper as false guards followed by one true tail in
+    // handle_backpack_click, HandleMonster and SwapMons.  Restoring the older
+    // Dreamcast direct-return expressions is the negative control: backpack,
+    // monster, swap and artifact callers fall 99.90->94.31, 100->91.19,
+    // 90.98->86.12 and 93.42->87.81.  The calls, predicates and statement
+    // order remain the DC-proved ones; only the Complete-era hot-seat return
+    // spelling differs.
     if (iMPNetProtocol == MP_HOTSEAT) {
-        return gpGame->OnSameTeam(
-            heroes[whichHero]->owner, gpGame->GetLocalPlayerGamePos());
+        if (!gpGame->OnSameTeam(
+                heroes[whichHero]->owner,
+                gpGame->GetLocalPlayerGamePos()))
+            return false;
+        return true;
     }
     if (field_5c && !field_5d)
-        return 0;
+        return false;
     return heroes[whichHero]->owner == gpGame->GetLocalPlayerGamePos();
 }
 
@@ -1041,4 +2037,14 @@ void swapManager::OnReceiveFromAlly()
     CGiveMeStuffMsg giveMeStuff;
     hero* otherHero = GetOtherHero();
     TransmitRemoteData(&giveMeStuff, otherHero->owner, 0, 1);
+}
+
+// E:\gamedcs\swapmgr.cpp:2298
+// Dreamcast proves the three-statement helper; Complete expands it in the
+// give-me-stuff dispatcher arm and expands DrawSwapWin one level further.
+void swapManager::OnGiveMeStuffMsg()
+{
+    field_5d = 1;
+    parent->UpdateArrows();
+    DrawSwapWin();
 }

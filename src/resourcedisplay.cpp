@@ -53,6 +53,18 @@ static const int resourceDisplayOrder[NUM_RESOURCES] = {
 // AddWidget are 99.3919 in all twenty cells of M in {0,2,4,8,16} x k in
 // {0,1,2,3} - the flattest grid measured in this sweep. Neither budget axis
 // touches this transposition.
+// 2026-09-01 FRESH WALL AUDIT: Dreamcast's 31 source rows preserve the same
+// initialize/background/palette/AddWidget/loop/status order, while retail's
+// 24/24 CFG blocks, 10-branch sequence, instruction schedule and frame all
+// agree. `why-reg --model --il-order` still measures exactly 52 unpaired
+// register-visible slots and its top three pseudo-order candidates are
+// byte-flat. A true declarator-population sweep (0..8 file-scope extern
+// declarators, distinct from the older unused-type sweep) is byte-flat at
+// 99.39189%; `textX` as int/long/unsigned is also byte-flat. Finally, the
+// admitted RTM C2 8168 A/B emits bytes identical to SP3 C2 8447 (distance
+// 52+0 on both), ruling out the compiler-generation family. The residual is
+// therefore a measured C1 front-end handle-order wall with no source-nameable
+// lever found; preserve this source shape.
 VA(0x00558ba0, 0x2A1)  // anchor-global, dc 0x120c54
 TResourceDisplay::TResourceDisplay(heroWindow* parent, unsigned char is_small)
     : isSmall(is_small)
@@ -117,6 +129,9 @@ TResourceDisplay::TResourceDisplay(heroWindow* parent, unsigned char is_small)
 VA_COMPGEN(0x00558e50, 0x21, SCALAR_DELETING_DTOR, TResourceDisplay)
 
 // E:\gamedcs\resourcedisplay.cpp:112
+// Fresh 2026-09-01 DC/retail audit: the background, paired seven-element
+// widget/border loop and status-widget teardown order agree with the DC
+// scopes; retail's 11 CFG blocks and source-labelled body remain exact.
 VA(0x00558e80, 0x95)  // anchor-bracket, dc 0x120ee8
 TResourceDisplay::~TResourceDisplay()
 {
@@ -142,7 +157,11 @@ TResourceDisplay::~TResourceDisplay()
 // TSubWindow::Draw(update, -0xffff, 0xffff) - there is no third slot.
 // Corroborated from the other side by recruitUnit::Close (0x550344),
 // which calls it with exactly two pushes (`push 0; push 1`). DC's
-// `inMap` has no retail home; the first two names are kept.
+// `inMap` has no retail home; the first two names are kept. The fresh
+// Dreamcast pass on 2026-09-01 confirms that its third parameter guards
+// `hide()` calls for each resource widget and the status widget. Retail's
+// exact five-block body contains neither guard nor call, proving this is a
+// Complete-revision deletion rather than a missing shared-source statement.
 VA(0x00558f20, 0xF3)  // anchor-global, dc 0x120fa0
 void TResourceDisplay::Update(unsigned char draw, unsigned char update)
 {
@@ -168,6 +187,9 @@ void TResourceDisplay::Update(unsigned char draw, unsigned char update)
 }
 
 // E:\gamedcs\resourcedisplay.cpp:183
+// Fresh 2026-09-01 DC/retail audit: palette refresh, seven empty-text writes,
+// status formatting and final Draw retain the DC statement order; retail's
+// three CFG blocks and source-labelled body remain exact.
 VA(0x00559020, 0xA4)  // anchor-global, dc 0x1210b4
 void TResourceDisplay::Clear()
 {
