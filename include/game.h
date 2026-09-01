@@ -1175,7 +1175,9 @@ public:
         mapName = "";
         mapDescription = "";
     }
-    ~NewSMapHeader();
+    // Compiler-generated. Dreamcast retains its standalone COMDAT at the
+    // campaignbrief.cpp use site rather than at a Game.h definition, while
+    // retail expands this exact member teardown into ~SavedGameHeader.
     // Copy assignment is compiler-generated. BackupGameHeaders proves its
     // member walk directly: base assignment, both strings, then the bitset.
 #ifdef HOMM3_SSWINDOW_HEADER_VECTORS
@@ -1441,7 +1443,8 @@ public:
     // HOMM3_CAMPAIGNWINDOW_IMPLICIT_SCAMPAIGN still carries only that TU's
     // separately proved concrete nested-vector/destructor layout.
     SCampaign();
-    ~SCampaign();
+    // The destructor is compiler-generated. Retail expands it member by
+    // member in ~SavedGameHeader and retains the same COMDAT for callers.
     // Copy assignment is compiler-generated; its retained game.obj COMDAT is
     // claimed with VA_COMPGEN beside the game::Load reconstruction.
     // Retail 0x489590, thiscall on gpGame->campaign with the selected

@@ -258,13 +258,10 @@ TCampaignWindow::TCampaignWindow(unsigned char newGame, int newCampaign)
 // constructor; Dreamcast appends it to the compiland.
 VA_COMPGEN(0x0045f0e0, 0x21, SCALAR_DELETING_DTOR, TCampaignWindow)
 
-// Empty source body: retail's entire function is the compiler-supplied member
-// teardown.  This explicit emission keeps the same generated work available
-// after the constructor switches to its declaration-only layout view above.
-VA(0x0045f110, 0x100)
-SCampaign::~SCampaign()
-{
-}
+// Dreamcast emits no standalone destructor definition. Retail proves this
+// compiler-generated member walk both as a retained COMDAT and expanded into
+// ~SavedGameHeader.
+VA_COMPGEN(0x0045f110, 0x100, IMPLICIT_DTOR, SCampaign)
 
 // E:\gamedcs\campaignwindow.cpp:261
 VA(0x0045f210, 0xAE)  // six preview-state closes + global/widget teardown, dc 0x5bd00

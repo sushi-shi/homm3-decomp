@@ -91,13 +91,11 @@ void TCampaignBrief::TCampaignBrief(unsigned char newCampaign, unsigned char bVi
 }
 #endif
 
-// Retail 0x45ad00. An empty user body is significant: VC6 emits the proven
-// reverse destruction of NewSMapHeader's strings, map, player-slot vectors,
-// and placeholder vector, and inlines the same sequence into ScenarioStruct.
-VA(0x0045ad00, 0x13E)
-NewSMapHeader::~NewSMapHeader()
-{
-}
+// Dreamcast attributes this retained destructor to campaignbrief.cpp:192,
+// its use site rather than a Game.h definition. Retail independently proves
+// the compiler-generated member walk both here and expanded into
+// ~SavedGameHeader.
+VA_COMPGEN(0x0045ad00, 0x13E, IMPLICIT_DTOR, NewSMapHeader)
 
 VA_COMPGEN(0x0045ae40, 0x21, SCALAR_DELETING_DTOR, TCampaignBrief)
 
