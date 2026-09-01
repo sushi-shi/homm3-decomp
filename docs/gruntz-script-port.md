@@ -12943,6 +12943,27 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   statement-scoped `INLINE_GATE(attempt_teleport(...))`; removal negative
   controls prove that either omission fails the contract.
 
+- **2026-09-01 — `swapManager::Open` admits a full Dreamcast-shaped body.**
+  The 930-byte Complete function advances **0% -> 91.6583%** with all **22 / 22
+  CFG blocks**, all control-flow edges, and the complete **278-instruction**
+  roster present. Dreamcast's 67 line rows and 17 lexical scopes recover the
+  sole `message` local, window construction/reset, three opening broadcasts,
+  the two-hero portrait/text/experience/mana walk, nested eight-skill walk,
+  backpack updates, UI handoff, and network-handler lifetime. Retail proves
+  the bounded Complete deltas: widget ids 103/104, a 0x64-byte `TSwapWindow`,
+  one selector bitmap, and `DisableButtons / Update / AddWindow` in place of
+  the older `swap_side` refresh. The asymmetric source-shape gate admits only
+  that whole replacement group and has negative controls for restoring the
+  obsolete helper or deleting `AddWindow`.
+  The handler constructor's DC line-514 body assignment also fixes a real
+  retail ordering mismatch: vtable install before the byte clear, raising the
+  checkpoint from 91.2266%. The residual is bounded register homing, not a
+  missing source construct: both sides contain 278 instructions and have zero
+  flow distance; `homm3 vc6 why-reg` measures 106 register-visible slots,
+  chiefly a whole-loop ESI/EDI role mirror. Its 12 catalogued mutations are
+  all byte-flat or worse. Preserve the recovered loops and common inner
+  broadcast rather than duplicating statements to steer that allocator wall.
+
 - **2026-07-23 — repo + toolchain distribution.** Private GitHub repo
   `sushi-shi/homm3-decomp` created and pushed; toolchain tarball published as
   release `toolchain-vc6-sp3`. `homm3 init` now downloads it via `gh` when

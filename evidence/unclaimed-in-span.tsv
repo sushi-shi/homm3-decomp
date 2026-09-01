@@ -3,15 +3,15 @@
 # span that no match_baseline row claims.
 unit	functions	bytes
 singleselectionwindow	38	22204
-swapmgr	7	6915
 game	2	6039
+swapmgr	6	5985
 combatcontrolsubwindow	3	5796
 advmgr	1	1439
-ai_player	2	1252
 hero	2	572
 cmbtmgr	4	253
 resourcemanager	2	127
 mapcell	1	42
 sacrifice_window	2	38
+ai_player	1	35
 singleselectionpopups	2	10
 textwdgt	2	4

@@ -401,6 +401,18 @@ CHECK_MOVE_SPELL_COMPLETE_MOVEMENT_RE = (
     r"gpAdvManager\s*->\s*StopCursor\s*\(\s*1\s*\)\s*;\s*"
     r"gpAdvManager\s*->\s*CastSpell\s*\(\s*spell\s*\)\s*;")
 
+# Dreamcast Open refreshes the just-created trade window through swap_side().
+# Complete's decoded x86 has no call to that helper at the corresponding
+# point: after DisableButtons it directly calls Update, then AddWindow.  Bind
+# the revision removal to the whole adjacent call group so it cannot become a
+# token-only waiver or admit both the old and new operations.
+SWAP_OPEN_COMPLETE_REFRESH_RE = (
+    r"\A(?!.*\bswap_side\s*\().*?"
+    r"gpAdvManager\s*->\s*DisableButtons\s*\(\s*\)\s*;\s*"
+    r"Update\s*\(\s*\)\s*;\s*"
+    r"gpWindowManager\s*->\s*AddWindow\s*\(\s*parent\s*,\s*-1\s*,\s*"
+    r"1\s*\)\s*;")
+
 # Dreamcast has the Shipwreck Survivor backpack statement before Shipyard.
 # Complete's object jump table instead sends object type 86 directly to the
 # suffix following WARRIOR_TOMB's PlayerKnowsCell guard; the Warrior arm falls
@@ -892,6 +904,14 @@ PROVEN_REVISION_REMOVALS: dict[
 # is deliberately not a general name substitution or score-based waiver.
 RETAIL_BYTE_PROVEN_REVISION_REMOVALS: dict[
         tuple[str, int], tuple[ProvenRevisionRemoval, ...]] = {
+    ("swapmgr.obj", 0x15C66C): (
+        ProvenRevisionRemoval(
+            "Complete swapManager::Open replaces Dreamcast's swap_side "
+            "refresh with the decoded DisableButtons / Update / AddWindow "
+            "group",
+            0x005AE750, SWAP_OPEN_COMPLETE_REFRESH_RE,
+            ("swapManager::swap_side",), unclaimed_inline=True),
+    ),
     ("ai_player.obj", 0x34508): (
         ProvenRevisionRemoval(
             "Complete check_move_spell removes Dreamcast's mastery-based "
@@ -999,6 +1019,16 @@ RETAIL_BYTE_PROVEN_REVISION_REMOVALS: dict[
 # graph: inlined accessors/operators, a source order hidden by scheduling, and
 # nesting within a single attested statement group.
 SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
+    ("swapmgr.obj", 0x15C66C): (
+        SourceRule(
+            "Open keeps Complete's retail-decoded DisableButtons / Update / "
+            "AddWindow replacement for Dreamcast's older swap_side group",
+            SWAP_OPEN_COMPLETE_REFRESH_RE, 1, 1),
+        SourceRule(
+            "Open does not retain Dreamcast's obsolete swap_side call after "
+            "the Complete replacement was decoded",
+            r"\bswap_side\s*\(", 0, 0),
+    ),
     ("ai_player.obj", 0x32E30): (
         SourceRule(
             "check_holy_grail keeps Complete's retail-relocation-proved "
@@ -8633,6 +8663,41 @@ setup = &pHeader->saved.mapSetup;
                 "setup = &pHeader->saved.mapSetup;", ""),
             get_header_removal_va, {get_header_removal_va})[0]:
         failures.append("erased GetHeader replacement group classified")
+    swap_open_key = ("swapmgr.obj", 0x15C66C)
+    swap_open_va = 0x005AE750
+    swap_open_body = """\
+gpAdvManager->DisableButtons();
+Update();
+gpWindowManager->AddWindow(parent, -1, 1);
+"""
+    swap_open_removed, swap_open_descriptions = \
+        retail_proven_dc_only_removed_helpers(
+            swap_open_key, swap_open_body, swap_open_va)
+    if swap_open_removed != frozenset(("swapManager::swap_side",)) \
+            or len(swap_open_descriptions) != 1:
+        failures.append(
+            "retail-byte-proved swap Open refresh did not classify")
+    if retail_proven_dc_only_removed_helpers(
+            swap_open_key, swap_open_body, None)[0] \
+            != frozenset(("swapManager::swap_side",)):
+        failures.append(
+            "pre-claim swap Open refresh did not classify")
+    if contract_violations(swap_open_body, swap_open_key):
+        failures.append("Complete swap Open refresh source shape did not pass")
+    swap_open_obsolete = swap_open_body.replace(
+        "Update();", "swap_side();")
+    if retail_proven_dc_only_removed_helpers(
+            swap_open_key, swap_open_obsolete, swap_open_va)[0]:
+        failures.append("obsolete swap Open swap_side classified out")
+    if not contract_violations(swap_open_obsolete, swap_open_key):
+        failures.append("obsolete swap Open swap_side passed")
+    swap_open_flattened = swap_open_body.replace(
+        "gpWindowManager->AddWindow(parent, -1, 1);\n", "")
+    if retail_proven_dc_only_removed_helpers(
+            swap_open_key, swap_open_flattened, swap_open_va)[0]:
+        failures.append("flattened swap Open refresh group classified")
+    if not contract_violations(swap_open_flattened, swap_open_key):
+        failures.append("flattened swap Open refresh group passed")
     ai_choose_removal_key = ("ai_player.obj", 0x33CF8)
     ai_choose_removal_va = 0x0042E0B0
     ai_choose_removal_body = """\
