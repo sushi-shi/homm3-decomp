@@ -4,7 +4,7 @@
 # recoverable = size * (1 - max_fuzzy/100).
 class	recoverable	max_fuzzy	current_fuzzy	size	unit	fn	route	knob
 register-homing (why-reg)	28	41.8750	41.8750	48	remote	??1CNetMsgHandler@@UAE@XZ	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
-inliner (predict-inline)	549	46.3642	46.3642	1024	seerhut	?DoSeerEvent@TSeerHut@@QAEXPAVhero@@_N@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 9 over-inline (2 name-unresolvable pair(s) discounted)
+inliner (predict-inline)	549	46.3642	44.4753	1024	seerhut	?DoSeerEvent@TSeerHut@@QAEXPAVhero@@_N@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 9 over-inline (2 name-unresolvable pair(s) discounted)
 control-flow (why-branch)	303	52.9459	52.9459	645	ai_player	?attempt_step@@YIEPAVhero@@PAUpathCell@@EE@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	693	53.5182	53.5182	1491	adventuremapwindow	?CheckAdvCheatCode@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 3 under-inline, 3 over-inline (1 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	414	53.6304	53.6304	893	singleselectionwindow	??1TSingleSelectionWindow@@UAE@XZ	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 5 over-inline (8 name-unresolvable pair(s) discounted)

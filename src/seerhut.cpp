@@ -2480,18 +2480,20 @@ int TSeerHut::getValue(hero* currentHero)
 // reward application. A hut with no quest records the visit and shows one of
 // three randomized empty-hut lines to a human player.
 //
-// Residual (46.3642%, MAX 39.0772% before this reconstruction): restoring
-// Dreamcast's DoEmptyDialog and DoCompletionDialog boundaries leaves both as
-// calls because VC6 will not expand an EH-bearing callee into this otherwise
-// frameless caller. Moving their definitions before this body and marking
-// both definitions inline were byte-flat. An `if (0)` probe with two dead
-// std::string declarations made both real helpers expand and measured
-// 95.1173% (13 calls on each side); it was an EH/inliner instrument and was
-// removed, not banked as source. At that peak the sole residual was the
-// completion temporary's cleanup: candidate `_Tidy` x4/delete x0 against
-// retail `_Tidy` x3/delete x1. Keep the positive helper facts and remeasure
-// after coherent surrounding class/header reconstruction changes compiler
-// state; do not add a synthetic carrier here.
+// Residual (44.4753%, banked MAX 46.3642%): the first helper restoration left
+// acceptance/payment/reward in this caller and reached the MAX, but
+// Dreamcast's DoCompletionDialog dossier positively places that accepted tail
+// inside the helper. The retained source restores that ownership and returns
+// through the helper on the human arm; dc_source_shape now ratchets it. VC6
+// still leaves both EH-bearing helpers as calls in this otherwise frameless
+// caller. Moving their definitions before this body, `inline`, and
+// `__forceinline` before/after visibility were byte-flat. An `if (0)` probe
+// with two dead std::string declarations made both helpers expand and measured
+// 95.1173% (13 calls on each side), but it was only an inliner instrument and
+// was removed. At that peak the sole residual was the completion temporary's
+// cleanup: candidate `_Tidy` x4/delete x0 against retail `_Tidy` x3/delete x1.
+// Keep the helper ownership and remeasure after coherent surrounding source
+// changes compiler state; do not add a synthetic carrier here.
 VA(0x00573670, 0x400)  // code plus two retail switch tables in the admitted row
 void TSeerHut::DoSeerEvent(hero* current_hero, bool human_player)
 {
@@ -2519,32 +2521,30 @@ void TSeerHut::DoSeerEvent(hero* current_hero, bool human_player)
 
         if (human_player) {
             DoCompletionDialog(current_hero, human_player);
-            if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT
-                && gpWindowManager->dialogReturn != DIALOG_RETURN_CHOICE_1)
-                return;
-        } else {
-            int value = reward.getValue(current_hero);
-            if (!(visitedPlayers & (1 << current_hero->owner))) {
-                value = _cpp_max(value, 20);
-            } else {
-                if (!quest)
-                    return;
-                expired = false;
-                if (quest->field_3c >= 0) {
-                    expired = quest->field_3c < static_cast<short>(
-                        (gpGame->field_1f642 * 4
-                         + gpGame->field_1f640 - 5) * 7
-                        + gpGame->field_1f63e);
-                }
-                if (expired)
-                    return;
-                if (!quest->is_satisfied(current_hero))
-                    return;
-                value -= quest->GetAIValue(current_hero->owner);
-            }
-            if (value <= 0)
-                return;
+            return;
         }
+
+        int value = reward.getValue(current_hero);
+        if (!(visitedPlayers & (1 << current_hero->owner))) {
+            value = _cpp_max(value, 20);
+        } else {
+            if (!quest)
+                return;
+            expired = false;
+            if (quest->field_3c >= 0) {
+                expired = quest->field_3c < static_cast<short>(
+                    (gpGame->field_1f642 * 4
+                     + gpGame->field_1f640 - 5) * 7
+                    + gpGame->field_1f63e);
+            }
+            if (expired)
+                return;
+            if (!quest->is_satisfied(current_hero))
+                return;
+            value -= quest->GetAIValue(current_hero->owner);
+        }
+        if (value <= 0)
+            return;
 
         quest->TakePayment(current_hero);
         reward.giveReward(current_hero, human_player);
@@ -2639,6 +2639,13 @@ inline void TSeerHut::DoCompletionDialog(
                  2, -1, -1, rewardPicture,
                  reward.GetRewardExtra(current_hero),
                  -1, 0, -1, 0, -1, 0);
+
+    if (gpWindowManager->dialogReturn == DIALOG_RETURN_ACCEPT
+        || gpWindowManager->dialogReturn == DIALOG_RETURN_CHOICE_1) {
+        quest->TakePayment(current_hero);
+        reward.giveReward(current_hero, human_player);
+        quest = 0;
+    }
 }
 
 // Retail-only TSeerReward dispatcher, named and typed by the HD/NH3API twin;

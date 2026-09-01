@@ -5909,6 +5909,90 @@ def army_class_roster_violations(text: str) -> list[tuple[int, str]]:
     return defects
 
 
+def seer_hut_dialog_contract_violations(
+        source_text: str, header_text: str) -> list[tuple[int, str]]:
+    """Audit the retained Seer helper boundaries and their ownership.
+
+    Dreamcast proves both private helpers and, more specifically, places the
+    accepted reward path inside DoCompletionDialog.  Complete retail replaces
+    the old artifact/reward model, but corroborates the same boundary after
+    inlining: dialog acceptance reaches TakePayment, giveReward, and quest
+    consumption as one tail.  This contract is intentionally asymmetric; it
+    does not compare branch/call counts across architectures.
+    """
+    source = _source.mask(source_text)
+    header = _source.mask(header_text)
+    defects: list[tuple[int, str]] = []
+
+    declaration = (
+        r"\bvoid\s+DoEmptyDialog\s*\(\s*\)\s*;.*?"
+        r"\binline\s+void\s+DoCompletionDialog\s*\(\s*"
+        r"hero\s*\*\s*current_hero\s*,\s*bool\s+human_player\s*\)\s*;")
+    if re.search(declaration, header, re.DOTALL) is None:
+        token = re.search(r"\bDo(?:Empty|Completion)Dialog\b", header)
+        line = header_text.count("\n", 0, token.start()) + 1 if token else 1
+        defects.append((
+            line,
+            "TSeerHut must retain Dreamcast's private DoEmptyDialog and "
+            "inline DoCompletionDialog(hero*, bool) declarations"))
+
+    def body_for(name: str) -> tuple[str | None, int]:
+        definitions = _source.find_definitions(source_text, name)
+        if len(definitions) != 1:
+            token = re.search(r"\b" + re.escape(name.split("::")[-1])
+                              + r"\b", source)
+            line = source_text.count("\n", 0, token.start()) + 1 \
+                if token else 1
+            return None, line
+        definition = definitions[0]
+        return (source[definition.body_open + 1:definition.body_close],
+                source_text.count("\n", 0, definition.head) + 1)
+
+    caller, caller_line = body_for("TSeerHut::DoSeerEvent")
+    completion, completion_line = body_for(
+        "TSeerHut::DoCompletionDialog")
+    empty, empty_line = body_for("TSeerHut::DoEmptyDialog")
+
+    caller_pattern = (
+        r"if\s*\(\s*human_player\s*\)\s*\{\s*"
+        r"DoCompletionDialog\s*\(\s*current_hero\s*,\s*human_player\s*"
+        r"\)\s*;\s*return\s*;\s*\}.*?"
+        r"visitedPlayers\s*\|=.*?if\s*\(\s*human_player\s*\)\s*"
+        r"DoEmptyDialog\s*\(\s*\)\s*;")
+    if caller is None or re.search(
+            caller_pattern, caller, re.DOTALL) is None:
+        defects.append((
+            caller_line,
+            "DoSeerEvent must retain the Dreamcast-proven completion and "
+            "empty-dialog helper calls, with the human completion arm "
+            "returning through its helper"))
+
+    completion_pattern = (
+        r"NormalDialog\s*\(.*?\)\s*;\s*"
+        r"if\s*\(\s*gpWindowManager\s*->\s*dialogReturn\s*==\s*"
+        r"DIALOG_RETURN_ACCEPT\s*\|\|\s*gpWindowManager\s*->\s*"
+        r"dialogReturn\s*==\s*DIALOG_RETURN_CHOICE_1\s*\)\s*\{\s*"
+        r"quest\s*->\s*TakePayment\s*\(\s*current_hero\s*\)\s*;\s*"
+        r"reward\s*\.\s*giveReward\s*\(\s*current_hero\s*,\s*"
+        r"human_player\s*\)\s*;\s*quest\s*=\s*0\s*;\s*\}")
+    if completion is None or re.search(
+            completion_pattern, completion, re.DOTALL) is None:
+        defects.append((
+            completion_line,
+            "DoCompletionDialog must own Dreamcast's accepted reward path, "
+            "using Complete's TakePayment/giveReward/quest-clear tail"))
+
+    empty_pattern = (
+        r"format_string\s*\(.*?GetName\s*\(\s*\)\s*\)\s*;.*?"
+        r"NormalDialog\s*\(")
+    if empty is None or re.search(empty_pattern, empty, re.DOTALL) is None:
+        defects.append((
+            empty_line,
+            "DoEmptyDialog must retain Dreamcast's GetName-before-dialog "
+            "helper body"))
+    return defects
+
+
 def selftest() -> list[str]:
     """Negative controls: the gate must detect the real defect class."""
     failures = []
@@ -5919,6 +6003,56 @@ def selftest() -> list[str]:
             or multi_dc_claim.groups() != ("0x005865b0", "0x13c79c"):
         failures.append(
             "source-claim parser mistook Dreamcast size for final offset")
+
+    seer_header_probe = """\
+class TSeerHut {
+    void DoEmptyDialog();
+    inline void DoCompletionDialog(hero* current_hero, bool human_player);
+};
+"""
+    seer_source_probe = """\
+void TSeerHut::DoSeerEvent(hero* current_hero, bool human_player)
+{
+    if (quest) {
+        if (human_player) {
+            DoCompletionDialog(current_hero, human_player);
+            return;
+        }
+    }
+    visitedPlayers |= 1 << gNetLocalGamePos;
+    if (human_player)
+        DoEmptyDialog();
+}
+void TSeerHut::DoEmptyDialog()
+{
+    text = format_string(gQuestTextA[0][0].c_str(), GetName());
+    NormalDialog(text.c_str(), 1);
+}
+inline void TSeerHut::DoCompletionDialog(
+    hero* current_hero, bool human_player)
+{
+    NormalDialog(quest->get_completion_text().c_str(), 2);
+    if (gpWindowManager->dialogReturn == DIALOG_RETURN_ACCEPT
+        || gpWindowManager->dialogReturn == DIALOG_RETURN_CHOICE_1) {
+        quest->TakePayment(current_hero);
+        reward.giveReward(current_hero, human_player);
+        quest = 0;
+    }
+}
+"""
+    if seer_hut_dialog_contract_violations(
+            seer_source_probe, seer_header_probe):
+        failures.append("aligned Seer helper ownership did not pass")
+    for broken, label in (
+            (seer_source_probe.replace(
+                "        quest->TakePayment(current_hero);\n", ""),
+             "completion reward ownership"),
+            (seer_source_probe.replace(
+                "            return;\n", "", 1),
+             "caller helper exit")):
+        if not seer_hut_dialog_contract_violations(
+                broken, seer_header_probe):
+            failures.append("broken Seer " + label + " passed")
 
     def check_on_widget_rule(pattern: str, aligned: str, broken: str,
                              description: str) -> None:
@@ -13266,6 +13400,23 @@ def scan() -> tuple[
     missing.extend(FileContractViolation("include/cmbtmgr.h", line,
                                          description)
                    for line, description in cmbtmgr_defects)
+
+    seer_source_relpath = "src/seerhut.cpp"
+    seer_header_relpath = "include/seerhut.h"
+    seer_source_text = (
+        common.HOMM3_DIR / seer_source_relpath).read_text(errors="replace")
+    seer_header_text = (
+        common.HOMM3_DIR / seer_header_relpath).read_text(errors="replace")
+    audited.add(_file_audit_scope(seer_source_relpath))
+    audited.add(_file_audit_scope(seer_header_relpath))
+    seer_dialog_defects = seer_hut_dialog_contract_violations(
+        seer_source_text, seer_header_text)
+    checked += 1
+    for line, description in seer_dialog_defects:
+        relpath = seer_header_relpath \
+            if description.startswith("TSeerHut must retain") \
+            else seer_source_relpath
+        missing.append(FileContractViolation(relpath, line, description))
 
     object_header = common.HOMM3_DIR / "include/advmgr_objects.h"
     object_header_text = object_header.read_text(errors="replace")
