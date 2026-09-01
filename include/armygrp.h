@@ -305,6 +305,10 @@ enum ESpellId {
     // AI_AttemptMove's two path-mode helpers pass these ids, and its
     // town-portal arm independently charges spell 9's mana cost.
     SPELL_WATER_WALK = 0x7,
+    // attempt_teleport passes 8 to all three spell helpers and indexes row
+    // 8's per-mastery cast-count limit before the retained TeleportTo call.
+    // Dreamcast independently names the same SpellID rung.
+    SPELL_DIMENSION_DOOR = 0x8,
     SPELL_TOWN_PORTAL = 0x9,
     // DC eSpellEarthquake = 14. Read by check_wall_archery_penalty
     // (0x42482b) out of hero::available_spells - a hero who can bring

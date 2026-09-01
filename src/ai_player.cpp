@@ -2356,12 +2356,8 @@ unsigned char attempt_step(hero* current_hero, pathCell* path_cell, unsigned cha
 // check_move_spell (dc 0x34508) is promoted to its retained Complete body
 // at VA(0x004309a0) below.
 
-// E:\gamedcs\ai_player.cpp:4000
-DC_ONLY(0x34630, 0x44A)
-unsigned char attempt_teleport(hero* current_hero, std::vector<pathCell,std::allocator<pathCell>* path, long step)
-{
-    // @stub
-}
+// attempt_teleport (dc 0x34630) is promoted to its retained Complete body
+// at VA(0x00430ab0) below.
 
 // E:\gamedcs\ai_player.cpp:4155
 DC_ONLY(0x34a7c, 0x8C)
@@ -4625,9 +4621,9 @@ static unsigned char check_move_spell(hero* current_hero,
                                       std::vector<pathCell>& path,
                                       long step, SpellID spell,
                                       unsigned char already_active);
-unsigned char attempt_teleport(hero* current_hero,
-                               std::vector<pathCell>& path,
-                               long step);
+static unsigned char attempt_teleport(hero* current_hero,
+                                      std::vector<pathCell>& path,
+                                      long step);
 
 static __forceinline void check_gate_purchase(type_point point)
 {
@@ -4809,6 +4805,153 @@ static unsigned char check_move_spell(hero* current_hero,
     return 1;
 }
 
+// E:\gamedcs\ai_player.cpp:4000. Dreamcast proves the helper boundary,
+// parameters, nine named locals and the nested destination search. Complete
+// retains that shape but adds the cursed-ground guard, uses its extra
+// pathCell flag as the entry gate, tests last_can_stop in the search, and
+// widens the platform-sized teleport window from 6x5 to 9x8 map squares.
+// The 99.9658% residual is bounded: VC6 moves destination_index's initial
+// store across best_savings's store, selects EDX rather than EAX for the final
+// UseSpell argument, and the delinked retail operand names data_2604fc+0 where
+// the candidate object names const_thresholds-4. Those relocation spellings
+// have the same effective indexed address; do not model that stripped-image
+// symbol-name limitation by changing the proven six-long table in source.
+DATA(0x00660500) static const long const_thresholds[6] = {
+    1000, 150, 100, 75, 50, 25
+};
+
+static unsigned char attempt_teleport(hero* current_hero,
+                                      std::vector<pathCell>& path,
+                                      long step)
+{
+    unsigned char at_mana_source;
+    unsigned char will_teleport;
+    type_point start_point;
+    long start_cost;
+    unsigned char in_boat;
+    long best_savings;
+    long mana_cost;
+    long savings;
+    long destination_index;
+    long threshold;
+
+    // Dreamcast's leading line 4001 emits no SH4 bytes immediately before
+    // the first path[step] access. A release-elided bounds assertion is a
+    // plausible source for that row and states the invariant this body needs.
+    HOMM3_RELEASE_VERIFY(step < path.size());
+
+    if (!path[step].field_04_bit11)
+        return 0;
+    if (!current_hero->SpellIsAvailable(SPELL_DIMENSION_DOOR))
+        return 0;
+    if (current_hero->HeroFn_004E4EC0() == CURSED_GROUND)
+        return 0;
+
+    mana_cost = current_hero->GetManaCost(SPELL_DIMENSION_DOOR);
+    if (mana_cost + 20 > current_hero->mana)
+        return 0;
+
+    long mastery = current_hero->get_spell_level(SPELL_DIMENSION_DOOR);
+    if (current_hero->dWalkSpellsCast
+        >= akSpellTraits[SPELL_DIMENSION_DOOR].mastery_bonus[mastery]) {
+        if (path[step].dimension_door) {
+            if (step == 0)
+                current_hero->movePoints = 0;
+            return 1;
+        }
+        return 0;
+    }
+
+    long casts_remaining = (current_hero->mana - 20) / mana_cost;
+    // Retail keeps this source object live in EBX across get_target/get_cell.
+    // Dreamcast's local inventory is a lower bound and cannot expose an
+    // optimizer-only pointer alias.
+    game* current_game = gpGame;
+    TAdventureObjectType target_type =
+        current_game->get_cell(current_hero->get_target())->type;
+    if (target_type == MAGIC_WELL || target_type == MAGIC_SPRING)
+        at_mana_source = 1;
+    else
+        at_mana_source = 0;
+    if (casts_remaining > 6)
+        casts_remaining = 6;
+    threshold = const_thresholds[casts_remaining - 1]
+                * current_hero->maxMovePoints / 100;
+    if (at_mana_source && casts_remaining > 1)
+        threshold = 200;
+
+    in_boat = (current_hero->flags & 0x40000) != 0;
+    // Dreamcast decrements this index in get_location's call delay slot. Its
+    // placement immediately before that call also reproduces retail VC6's
+    // interleaved lifetime; moving it after the call falls to 96.3350%.
+    long path_index = step - 1;
+    start_point = current_hero->get_location();
+    best_savings = 0;
+    destination_index = -1;
+
+    do {
+        will_teleport = 0;
+        if (path_index < 0)
+            start_cost = 200;
+        else
+            start_cost = path[path_index].cost + 200;
+
+        savings = 0;
+        long candidate_destination = -1;
+        long i;
+        for (i = path_index + 1; i < path.size(); ++i) {
+            if (path[i].dimension_door)
+                will_teleport = 1;
+            if (!path[i].last_can_stop)
+                continue;
+            if (abs(path[i].point.x - start_point.x) > 9
+                || abs(path[i].point.y - start_point.y) > 8
+                || path[i].point.z != start_point.z)
+                continue;
+            if (gpGame->get_cell(path[i].point)->is_trigger)
+                continue;
+            if (path[i].in_boat != in_boat)
+                continue;
+
+            savings = path[i].cost - start_cost;
+            if (at_mana_source && savings > 0 && i + 2 == path.size())
+                will_teleport = 1;
+            if (!will_teleport && savings < threshold)
+                continue;
+            candidate_destination = i;
+        }
+
+        if (path_index < step && candidate_destination < 0)
+            return 0;
+
+        if (destination_index < 0 || savings > best_savings) {
+            if (path_index >= step)
+                return 0;
+            best_savings = savings;
+            destination_index = candidate_destination;
+        }
+
+        for (++path_index; path_index < destination_index; ++path_index) {
+            if (!path[path_index].last_can_stop
+                || path[path_index].dimension_door) {
+                path_index = destination_index;
+                break;
+            }
+            if (path[path_index].point.z == start_point.z
+                && path[path_index].in_boat == in_boat) {
+                start_point = path[path_index].point;
+                break;
+            }
+        }
+    } while (path_index < destination_index);
+
+    gpAdvManager->TeleportTo(current_hero, path[destination_index].point, 0,
+                             0, 1, 0);
+    current_hero->UseSpell(mana_cost);
+    ++current_hero->dWalkSpellsCast;
+    return 1;
+}
+
 // E:\gamedcs\ai_player.cpp:4179.  The reference pair is fixed by the DC
 // decorated signature and the retail /Gr call at move_hero+0x219.  The body
 // lies after attempt_step and immediately before the Town.h COMDAT band.
@@ -4887,8 +5030,12 @@ void AI_AttemptMove(hero* current_hero, HeroDestination& best_point,
             return;
         }
 
-        if (attempt_teleport(current_hero, path, step))
+        // Dreamcast retains attempt_teleport as a source-real static helper,
+        // and Complete keeps the same out-of-line boundary at 0x00430ab0.
+#pragma inline_depth(0)
+        if (INLINE_GATE(attempt_teleport(current_hero, path, step)))
             return;
+#pragma inline_depth()
 
         if (path[step].flying
             && !check_move_spell(current_hero, path, step, SPELL_FLY,
@@ -4973,6 +5120,14 @@ static unsigned char check_move_spell(hero* current_hero,
                                       std::vector<pathCell>& path,
                                       long step, SpellID spell,
                                       unsigned char already_active);
+
+// E:\gamedcs\ai_player.cpp:4000. The definition remains in the proven
+// source order above AI_AttemptMove; this redeclaration records VC6's later
+// retained emission slot.
+VA(0x00430ab0, 0x4c1)  // caller/callee/body bridge, dc 0x34630
+static unsigned char attempt_teleport(hero* current_hero,
+                                      std::vector<pathCell>& path,
+                                      long step);
 
 // E:\gamedcs\ai_player.cpp:4607
 // A computer hero may buy and launch from either an owned town dock or a
