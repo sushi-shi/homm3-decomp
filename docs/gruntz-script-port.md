@@ -12843,6 +12843,22 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   widen `mouse_was_visible` is rejected because CodeView positively records
   that sole `MoveHero` local as `unsigned char`.
 
+- **2026-09-01 — hardest-first selection-header reader closed exactly.**
+  `TSingleSelectionWindow::GetHeader`, the next queue head by lowest effective
+  MAX and then largest retail size, advances **0% -> 100%** across all **1,038
+  retail bytes**. Its 69-row Dreamcast dossier restores the source status
+  local, the new-map versus saved-game header-transfer join, bounded title and
+  description copies, file-time query, version normalization, and repeated
+  text-resource lookups. Complete's retail bytes prove the bounded revision:
+  the older `GetSaveGameHeaders`/wide-character VMU path became
+  `SavedGameHeader::Load`, `CreateFileA`, and an added directory parameter.
+  Those changes preserve the shared statement order rather than flattening
+  the recovered function. The final closure depended on returning the
+  Dreamcast-recorded status local, using the actual 60/300-byte copy bounds,
+  and retaining all three source-level text lookups. The independent
+  structural checkpoint is also exact: **36 / 36 basic blocks**, **20 / 20
+  symbolic branches**, and **4 / 4 returns**.
+
 - **2026-07-23 — repo + toolchain distribution.** Private GitHub repo
   `sushi-shi/homm3-decomp` created and pushed; toolchain tarball published as
   release `toolchain-vc6-sp3`. `homm3 init` now downloads it via `gh` when

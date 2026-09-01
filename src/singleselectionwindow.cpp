@@ -2679,14 +2679,88 @@ void TSingleSelectionWindow::WindowFn_00582e90(
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\singleselectionwindow.cpp:3739
 VA(0x00583170, 0x40E)  // anchor-callee OnMapFileNameMsg 0x589710 calls it (dir, msg->fileName, &hdrTemp) behind its _access gate; body fills the temp (??0NewSMapHeader 0x457cb0, SavedGameHeader::Load at +0x700, GetFileTime -> +0x6f8) - DC's (cFilename, pHeader) widened with dir, size 0.41x dc 0x9D0, dc 0x1386c0
 int TSingleSelectionWindow::GetHeader(char* dir, char* cFilename, GameSelectionHeadersStruct* pHeader)
 {
-    // @stub
-}
+    // Dreamcast records this result local. Complete replaces the older
+    // GetSaveGameHeaders/VMU path with SavedGameHeader::Load, but retains
+    // the same failure convention and header-transfer join.
+    int gameFileProblem = 0;
 
-#endif  // @carcass
+    strcpy(gpGame->setup.path, dir);
+    strcpy(gpGame->setup.filename, cFilename);
+    gpGame->setup.fileInitialized = 0;
+
+    if (!m_flag65)
+        gpGame->SetupOrigData();
+
+    const SGameSetupOptions* setup;
+    if (!m_flag64 && !m_flag65) {
+        gpGame->InitNewGame(1, 0, 0, 0);
+        if (!gpGame->setup.fileInitialized)
+            return 1;
+        pHeader->header = gpGame->mapHeader;
+        setup = &gpGame->setup;
+    } else {
+        gameFileProblem = pHeader->saved.Load(0);
+        if (gameFileProblem)
+            return 1;
+        pHeader->header = pHeader->saved.mapHeader;
+        setup = &pHeader->saved.mapSetup;
+    }
+
+    pHeader->setup = *setup;
+    memcpy(pHeader->heroAvailability, gpGame->heroAvailability,
+           sizeof(pHeader->heroAvailability));
+    strncpy(pHeader->title, pHeader->header.mapName.c_str(),
+            sizeof(pHeader->title) - 1);
+    strncpy(pHeader->description, pHeader->header.mapDescription.c_str(),
+            sizeof(pHeader->description) - 1);
+
+    if (dir[0])
+        _chdir(dir);
+    HANDLE hFile = CreateFileA(
+        cFilename, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING,
+        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, 0);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        GetFileTime(hFile, 0, 0, &pHeader->fileTime);
+        CloseHandle(hFile);
+    }
+    if (dir[0])
+        _chdir("..");
+
+    if (!m_flag64 && !m_flag65) {
+        if (pHeader->header.version == MAP_FORMAT_SHADOW_OF_DEATH
+            || pHeader->header.version == MAP_FORMAT_RESTORATION_OF_ERATHIA
+            || pHeader->header.version == MAP_FORMAT_ARMAGEDDONS_BLADE) {
+            if (pHeader->header.isPlayable)
+                return gameFileProblem;
+            strcpy(pHeader->description, gpGeneralText->GetText(507));
+        } else {
+            pHeader->header.lossCondition.Type = -1;
+            pHeader->header.victoryCondition.Type = -1;
+            pHeader->header.difficulty = 0;
+            strcpy(pHeader->title, gpGeneralText->GetText(431));
+            strcpy(pHeader->description, gpGeneralText->GetText(506));
+        }
+        return gameFileProblem;
+    }
+
+    if (pHeader->saved.version < 25
+        && (pHeader->saved.version < 16
+            || pHeader->saved.version > 18)) {
+        strcpy(pHeader->title, gpGeneralText->GetText(431));
+        strcpy(pHeader->description, gpGeneralText->GetText(505));
+    }
+
+    if (_strnicmp(pHeader->setup.filename, gpGeneralText->GetText(77),
+                  strlen(gpGeneralText->GetText(77))) == 0)
+        strcpy(pHeader->title, gpGeneralText->GetText(77));
+    return gameFileProblem;
+}
 
 // E:\gamedcs\singleselectionwindow.cpp:3871
 VA(0x00583580, 0x30C)  // anchor-global copies the selected header's planes into gpGame (+0x1f6a0 header band, +0x4df18 setup band) off the SelectionHeaders row - the DC UpdateGameVars body shape; size 0.76x dc 0x408, dc 0x139090
