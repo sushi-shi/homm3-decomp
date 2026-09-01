@@ -63,7 +63,7 @@ control-flow (why-branch)	95	80.5426	80.5426	487	singleselectionwindow	?GetHeroN
 inliner (predict-inline)	645	80.5858	80.5858	3324	multiplayerwindow	??0TMultiPlayerWindow@@QAE@XZ	predict-inline	callee expanded on one side only (A8/A9/A12): 16 over-inline (62 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	101	80.9314	80.9314	530	hero	?update_spell_list@hero@@QAEXXZ	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 control-flow (why-branch)	91	81.0407	81.0407	479	path	?ValidAttack@army@@QBEHHHHHPAH@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
-inliner (predict-inline)	326	81.0421	81.0421	1720	ai_player	?AI_AttemptMove@@YIXPAVhero@@AAUHeroDestination@@AAJE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 over-inline (10 name-unresolvable pair(s) discounted)
+inliner (predict-inline)	326	81.0421	81.0421	1720	ai_player	?AI_AttemptMove@@YIXPAVhero@@AAUHeroDestination@@AAJE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 over-inline (8 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	155	81.3049	81.3049	830	singleselectionwindow	?OnGameHeaderInfoInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 5 under-inline, 2 over-inline (17 name-unresolvable pair(s) discounted)
 control-flow (why-branch)	274	81.3465	81.3465	1470	ai_player	?can_trade_resources@type_AI_player@@QAE_NPBHPAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	73	81.3696	81.3696	392	command	?is_computer_action@combatManager@@QAEEPBVarmy@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline

@@ -384,6 +384,23 @@ AI_CHOOSE_COMPLETE_NEARBY_RE = (
     r"path_cell\s*->\s*cost\s*\|\|\s*!\s*no_towns\s*\)\s*"
     r"is_nearby\s*=\s*0\s*;")
 
+# Dreamcast discounts the hero's available movement by the Fly/Water Walk
+# mastery cost before deciding whether the next stoppable path cell is
+# reachable. Complete's decoded x86 body has no get_spell_level call or spell-
+# trait relocation: it compares the same incremental path cost directly to
+# movePoints, then retains the shared StopCursor/CastSpell tail. Bind the
+# revision admission to that whole replacement group, not merely to the
+# absence of the older helper token.
+CHECK_MOVE_SPELL_COMPLETE_MOVEMENT_RE = (
+    r"\A(?!.*\bget_spell_level\s*\().*?"
+    r"long\s+move_cost\s*=\s*path\s*\[\s*i\s*\]\.cost\s*;\s*"
+    r"if\s*\(\s*step\s*>\s*0\s*\)\s*"
+    r"move_cost\s*-=\s*path\s*\[\s*step\s*-\s*1\s*\]\.cost\s*;\s*"
+    r"if\s*\(\s*current_hero\s*->\s*movePoints\s*<\s*move_cost\s*\)"
+    r"\s*\{.*?if\s*\(\s*!\s*already_active\s*\)\s*\{\s*"
+    r"gpAdvManager\s*->\s*StopCursor\s*\(\s*1\s*\)\s*;\s*"
+    r"gpAdvManager\s*->\s*CastSpell\s*\(\s*spell\s*\)\s*;")
+
 # Dreamcast has the Shipwreck Survivor backpack statement before Shipyard.
 # Complete's object jump table instead sends object type 86 directly to the
 # suffix following WARRIOR_TOMB's PlayerKnowsCell guard; the Warrior arm falls
@@ -875,6 +892,14 @@ PROVEN_REVISION_REMOVALS: dict[
 # is deliberately not a general name substitution or score-based waiver.
 RETAIL_BYTE_PROVEN_REVISION_REMOVALS: dict[
         tuple[str, int], tuple[ProvenRevisionRemoval, ...]] = {
+    ("ai_player.obj", 0x34508): (
+        ProvenRevisionRemoval(
+            "Complete check_move_spell removes Dreamcast's mastery-based "
+            "movement discount; decoded retail compares incremental path "
+            "cost directly to movePoints and retains the cast tail",
+            0x004309A0, CHECK_MOVE_SPELL_COMPLETE_MOVEMENT_RE,
+            ("hero::get_spell_level",), unclaimed_inline=True),
+    ),
     ("ai_player.obj", 0x33CF8): (
         ProvenRevisionRemoval(
             "Complete AI_choose_destination replaces Dreamcast's candidate "
@@ -1145,6 +1170,16 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"\)\s*\)\s*;\s*memcpy\s*\(\s*current_town\s*->\s*"
             r"population\s*,\s*population\s*,\s*sizeof\s*\(\s*population"
             r"\s*\)\s*\)\s*;"),
+    ),
+    ("ai_player.obj", 0x34508): (
+        SourceRule(
+            "check_move_spell keeps Complete's retail-decoded direct "
+            "incremental-cost versus movePoints group and shared cast tail",
+            CHECK_MOVE_SPELL_COMPLETE_MOVEMENT_RE),
+        SourceRule(
+            "check_move_spell may not restore Dreamcast's superseded "
+            "mastery-based movement discount",
+            r"\bget_spell_level\s*\(", 0, 0),
     ),
     ("ai_player.obj", 0x33CF8): (
         SourceRule(
@@ -8618,6 +8653,54 @@ if (path_cell->adjusted_cost > path_cell->cost || !no_towns)
         failures.append("obsolete AI_choose GetMapExtra classified out")
     if not contract_violations(ai_choose_obsolete, ai_choose_removal_key):
         failures.append("obsolete AI_choose GetMapExtra passed")
+    check_move_key = ("ai_player.obj", 0x34508)
+    check_move_va = 0x004309A0
+    check_move_body = """\
+long i;
+long move_cost = path[i].cost;
+if (step > 0)
+    move_cost -= path[step - 1].cost;
+if (current_hero->movePoints < move_cost) {
+    if (step == 0)
+        current_hero->movePoints = 0;
+    return 0;
+}
+if (!already_active) {
+    gpAdvManager->StopCursor(1);
+    gpAdvManager->CastSpell(spell);
+}
+return 1;
+"""
+    check_move_removed, check_move_descriptions = \
+        retail_proven_dc_only_removed_helpers(
+            check_move_key, check_move_body, check_move_va)
+    if check_move_removed != frozenset(("hero::get_spell_level",)) \
+            or len(check_move_descriptions) != 1:
+        failures.append(
+            "retail-byte-proved check_move_spell replacement did not "
+            "classify")
+    if retail_proven_dc_only_removed_helpers(
+            check_move_key, check_move_body, None)[0] \
+            != frozenset(("hero::get_spell_level",)):
+        failures.append(
+            "pre-claim check_move_spell replacement did not classify")
+    if contract_violations(check_move_body, check_move_key):
+        failures.append("Complete check_move_spell source shape did not pass")
+    check_move_flattened = check_move_body.replace(
+        "    move_cost -= path[step - 1].cost;",
+        "    move_cost = path[step].cost;")
+    if retail_proven_dc_only_removed_helpers(
+            check_move_key, check_move_flattened, check_move_va)[0]:
+        failures.append("flattened check_move_spell cost group classified")
+    if not contract_violations(check_move_flattened, check_move_key):
+        failures.append("flattened check_move_spell cost group passed")
+    check_move_obsolete = check_move_body + \
+        "current_hero->get_spell_level(spell);\n"
+    if retail_proven_dc_only_removed_helpers(
+            check_move_key, check_move_obsolete, check_move_va)[0]:
+        failures.append("obsolete check_move_spell mastery call classified")
+    if not contract_violations(check_move_obsolete, check_move_key):
+        failures.append("obsolete check_move_spell mastery call passed")
     retail_removal_key = ("mapcell.obj", 0xF0DF4)
     retail_removal_va = \
         RETAIL_BYTE_PROVEN_REVISION_REMOVALS[
