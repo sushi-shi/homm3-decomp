@@ -3,8 +3,8 @@
 
     homm3 labels [--unit U ...] [--all]
 
-The extraction universe is sorted(src/*.c*), NOT the manifest (see the
-package docstring).
+The extraction universe is the sorted regular C/C++ files directly under
+src/, NOT the manifest (see the package docstring).
 
 EVERY MACRO IS SCANNED BY BALANCED PARENS, never per line (the mechanism
 ported from gruntz). DATA_COMPGEN sits in EXPRESSION position, so
@@ -85,6 +85,7 @@ from homm3.core.tsv import write as write_tsv
 from homm3.retail_labels.fragments import FRAGMENTS, HEADER, fragment_path
 
 SRC_DIR = common.HOMM3_DIR / "src"
+SOURCE_SUFFIXES = frozenset({".c", ".cc", ".cpp", ".cxx"})
 
 #: Macro HEADS - the name and its opening paren, nothing more. The
 #: argument list is then taken by balanced-paren matching
@@ -1132,10 +1133,12 @@ def _fragment_rows(rows: list[dict]) -> list[list[str]]:
 
 
 def src_files() -> list:
-    """The extraction universe: sorted src/*.c*, one unit per stem. A stem
-    collision would silently merge two files' claims into one fragment -
-    fatal, has never existed."""
-    paths = sorted(SRC_DIR.glob("*.c*"))
+    """The extraction universe: regular C/C++ files, one unit per stem.
+    A stem collision would silently merge two files' claims into one
+    fragment - fatal, has never existed. Directories such as a transient
+    ``src/.codex`` workspace must never enter the source universe."""
+    paths = sorted(p for p in SRC_DIR.iterdir()
+                   if p.is_file() and p.suffix.lower() in SOURCE_SUFFIXES)
     stems = [p.stem for p in paths]
     for stem in stems:
         if stems.count(stem) > 1:
