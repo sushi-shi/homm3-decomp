@@ -510,6 +510,51 @@ PROVEN_CALL_TRANSFERS: dict[tuple[str, int, str], CallTransfer] = {
             r"current_town\s*\)\s*;",
             r"\bbuy_artifacts\s*\(\s*current_hero\s*,\s*gpGame\s*->\s*"
             r"field_1f664\s*,\s*market_count\s*\)\s*;"),
+    ("singleselectionwindow.obj", 0x137DA8,
+     "TSingleSelectionWindow::SortMaps"):
+        CallTransfer(
+            "Complete splits GetHeaders' post-scan SortMaps statement into "
+            "the exact WindowFn_00582e90 tail",
+            "src/singleselectionwindow.cpp",
+            "TSingleSelectionWindow::WindowFn_00582e90", 0x00582E90,
+            r"\bWindowFn_00582e90\s*\(\s*pHeaders\s*\)\s*;",
+            r"\bSortMaps\s*\(\s*2\s*,\s*false\s*,\s*false\s*\)\s*;"),
+    ("singleselectionwindow.obj", 0x137DA8,
+     "TSingleSelectionWindow::HighlightFile"):
+        CallTransfer(
+            "Complete splits GetHeaders' HighlightFile statement into the "
+            "exact WindowFn_00582e90 tail",
+            "src/singleselectionwindow.cpp",
+            "TSingleSelectionWindow::WindowFn_00582e90", 0x00582E90,
+            r"\bWindowFn_00582e90\s*\(\s*pHeaders\s*\)\s*;",
+            r"\bHighlightFile\s*\("),
+    ("singleselectionwindow.obj", 0x137DA8, "BackupGameHeaders"):
+        CallTransfer(
+            "Complete splits GetHeaders' BackupGameHeaders statement into "
+            "the exact WindowFn_00582e90 tail",
+            "src/singleselectionwindow.cpp",
+            "TSingleSelectionWindow::WindowFn_00582e90", 0x00582E90,
+            r"\bWindowFn_00582e90\s*\(\s*pHeaders\s*\)\s*;",
+            r"\bBackupGameHeaders\s*\(\s*gpGame\s*,\s*saveHeader\s*\)"
+            r"\s*;"),
+    ("singleselectionwindow.obj", 0x137DA8,
+     "TSingleSelectionWindow::SetCurrentMap"):
+        CallTransfer(
+            "Complete splits GetHeaders' SetCurrentMap statement into the "
+            "exact WindowFn_00582e90 tail",
+            "src/singleselectionwindow.cpp",
+            "TSingleSelectionWindow::WindowFn_00582e90", 0x00582E90,
+            r"\bWindowFn_00582e90\s*\(\s*pHeaders\s*\)\s*;",
+            r"\bSetCurrentMap\s*\(\s*currentMap\s*,\s*false\s*\)\s*;"),
+    ("singleselectionwindow.obj", 0x137DA8,
+     "TSingleSelectionWindow::UpdateGameVars"):
+        CallTransfer(
+            "Complete splits GetHeaders' UpdateGameVars statement into the "
+            "exact WindowFn_00582e90 tail",
+            "src/singleselectionwindow.cpp",
+            "TSingleSelectionWindow::WindowFn_00582e90", 0x00582E90,
+            r"\bWindowFn_00582e90\s*\(\s*pHeaders\s*\)\s*;",
+            r"\bUpdateGameVars\s*\(\s*\)\s*;"),
 }
 
 
@@ -7672,6 +7717,50 @@ return lod_file->read(data, size) ? 0 : size;
                 "streamInterface->Read(rgba, sizeof(rgba));", ""),
             palette_transfer_receiver, {palette_transfer.receiver_va}):
         failures.append("LOD adapter transfer with one caller read passed")
+    selection_transfer_keys = (
+        ("singleselectionwindow.obj", 0x137DA8,
+         "TSingleSelectionWindow::SortMaps"),
+        ("singleselectionwindow.obj", 0x137DA8,
+         "TSingleSelectionWindow::HighlightFile"),
+        ("singleselectionwindow.obj", 0x137DA8, "BackupGameHeaders"),
+        ("singleselectionwindow.obj", 0x137DA8,
+         "TSingleSelectionWindow::SetCurrentMap"),
+        ("singleselectionwindow.obj", 0x137DA8,
+         "TSingleSelectionWindow::UpdateGameVars"),
+    )
+    selection_transfers = tuple(
+        PROVEN_CALL_TRANSFERS[key] for key in selection_transfer_keys)
+    selection_transfer_caller = "WindowFn_00582e90(pHeaders);"
+    selection_transfer_receiver = """\
+SortMaps(2, false, false);
+HighlightFile(defaultMapFileName);
+BackupGameHeaders(gpGame, saveHeader);
+SetCurrentMap(currentMap, false);
+UpdateGameVars();
+"""
+    if any(not transfer_satisfied(
+            transfer, selection_transfer_caller,
+            selection_transfer_receiver, {0x00582E90})
+            for transfer in selection_transfers):
+        failures.append("exact GetHeaders split-tail transfer did not pass")
+    if any(transfer_satisfied(
+            transfer, selection_transfer_caller,
+            selection_transfer_receiver, set())
+            for transfer in selection_transfers):
+        failures.append("non-exact GetHeaders split-tail receiver passed")
+    if any(transfer_satisfied(
+            transfer, "", selection_transfer_receiver, {0x00582E90})
+            for transfer in selection_transfers):
+        failures.append("GetHeaders split tail without forwarding call passed")
+    for key, transfer in zip(selection_transfer_keys, selection_transfers):
+        helper = _helper_token(key[2])
+        flattened = selection_transfer_receiver.replace(
+            helper + "(", "FlattenedHelper(", 1)
+        if transfer_satisfied(
+                transfer, selection_transfer_caller, flattened,
+                {0x00582E90}):
+            failures.append(
+                f"GetHeaders split tail without {helper} passed")
     transfer_groups = (CallGroup(187, ("game::ShowScenInfo",)),
                        CallGroup(211, ("heroWindow::findWidget",)))
     filtered_groups = groups_without_transfers(

@@ -12877,6 +12877,27 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   bytes. The dispatcher structure is exact at **40 / 40 blocks**, **18 / 18
   symbolic branches**, and **11 / 11 returns**.
 
+- **2026-09-01 — hardest selection-header scan restored; Complete's split
+  tail closed exactly.** `TSingleSelectionWindow::GetHeaders`, the 837-byte
+  zero-MAX queue head, advances **0% -> 75.0535%** with Dreamcast's directory
+  scan, `GetFileSpecNbr`, header-read status local, multiplayer filter, and
+  temporary header lifetime restored. Its first 23 retail blocks align through
+  the scan loop; the remaining **46 candidate / 37 retail** structure is
+  localized to VC6's nested vector-destruction inliner state around `clear()`
+  and the temporary teardown, not permission to flatten the recovered locals
+  or statement groups. Retail then proves that Complete moved Dreamcast's
+  post-scan tail into the adjacent 0x582e90 procedure. Reconstructing that
+  731-byte helper as vector assignment, empty-save notification, `SortMaps`,
+  `HighlightFile`, `BackupGameHeaders`, `SetCurrentMap`, and `UpdateGameVars`
+  advances it **0% -> 100%**, with **36 / 36 blocks exact**. The last residual
+  was source order: retail evaluates `m_flag65` before `m_flag64` and retains
+  Dreamcast's `b` result local through two explicit `HighlightFile` arms.
+  The fatal source-shape gate now recognizes this only as five bounded call
+  transfers: `GetHeaders` must still forward to `WindowFn_00582e90`, the
+  receiver must remain byte-exact, and every transferred helper must remain in
+  that receiver. Its negative controls reject a missing forward, a non-exact
+  receiver, or deletion of any one helper.
+
 - **2026-07-23 — repo + toolchain distribution.** Private GitHub repo
   `sushi-shi/homm3-decomp` created and pushed; toolchain tarball published as
   release `toolchain-vc6-sp3`. `homm3 init` now downloads it via `gh` when

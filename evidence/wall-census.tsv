@@ -3,8 +3,6 @@
 # Banked-exact current dips are observational and excluded.
 # recoverable = size * (1 - max_fuzzy/100).
 class	recoverable	max_fuzzy	current_fuzzy	size	unit	fn	route	knob
-unclaimed (no source binding)	837	0.0000	0.0000	837	singleselectionwindow	TSingleSelectionWindow_GetHeaders	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
-unclaimed (no source binding)	731	0.0000	0.0000	731	singleselectionwindow	TSingleSelectionWindow_WindowFn_00582e90	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 unclaimed (no source binding)	14	0.0000	0.0000	14	singleselectionwindow	SCampaign_GetCurrentScenario	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 control-flow (why-branch)	831	19.8438	19.8438	1037	singleselectionwindow	?SetHumanSlot@TSingleSelectionWindow@@QAEXXZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	307	29.0580	29.0580	433	game	??1SavedGameHeader@@QAE@XZ	predict-inline	callee expanded on one side only (A8/A9/A12): 11 over-inline (2 name-unresolvable pair(s) discounted)
@@ -40,6 +38,7 @@ control-flow (why-branch)	71	74.0901	74.0901	275	lodfile	?Find@LODFile@@AAEXIIPB
 inliner (predict-inline)	514	74.4096	74.4096	2007	viewarmywindow	?WindowHandler@TViewArmyWindow@@UAEHPAVmessage@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 5 under-inline, 2 over-inline (16 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	191	74.6250	74.6250	753	resourcemanager	?Open@ResourceManager@@YI_N_N0PAH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline (8 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	67	75.0110	75.0110	268	cmbtmgr	?CalculateGainedExperience@combatManager@@QAEXHPAH@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
+inliner (predict-inline)	209	75.0535	75.0535	837	singleselectionwindow	?GetHeaders@TSingleSelectionWindow@@QAEXPAV?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline, 10 over-inline (6 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	205	75.1012	75.1012	825	hero	?GiveArtifact@hero@@QAEEPBUtype_artifact@@EE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 under-inline, 1 over-inline (4 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	57	75.2353	75.2353	230	seerhut	?DoProgressDialog@type_artifact_quest@@UAEXXZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 inliner (predict-inline)	194	75.2863	75.2863	786	singleselectionwindow	??4GameSelectionHeadersStruct@@QAEAAU0@ABU0@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline, 1 over-inline (8 name-unresolvable pair(s) discounted)
