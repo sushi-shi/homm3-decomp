@@ -5338,15 +5338,8 @@ void TSingleSelectionWindow::OnPingResponseMsg(CNetMsg* pNetMsg, unsigned char i
     CPingMsg* pMsg = static_cast<CPingMsg*>(pNetMsg);
     char text[0x100];
     sprintf(text, gpGeneralText->GetText(67),
-            GameTime::Get() - pMsg->m_pingTime);
-    CNetPlayerHandlerPlayer* p = m_players.GetPlayer(pMsg->field_04);
-    if (p) {
-        AddChat(&chatMan,
-                DATA_COMPGEN(0x00682ab4, chatPlayerLineFormat, "%s: %s"),
-                p->sName, text);
-        if (!inPopup)
-            DisplayChat();
-    }
+            GameTime::ElapsedSince(pMsg->m_pingTime));
+    ReceiveChat(pMsg->field_04, text, inPopup);
 }
 
 #if 0  // @carcass
@@ -6024,6 +6017,21 @@ unsigned char TSingleSelectionWindow::OnGameHeaderInfoMsg(CNetMsg* pNetMsg)
     return 1;
 }
 
+// E:\gamedcs\singleselectionwindow.cpp:7212
+VA(0x0058AE10, 0x63)  // DC helper boundary; retail caller also keeps it out of line, dc 0x14169c
+void TSingleSelectionWindow::ReceiveChat(
+    unsigned long dpid, char* cChat, unsigned char inPopup)
+{
+    CNetPlayerHandlerPlayer* p = m_players.GetPlayer(dpid);
+    if (p) {
+        AddChat(&chatMan,
+                DATA_COMPGEN(0x00682ab4, chatPlayerLineFormat, "%s: %s"),
+                p->sName, cChat);
+        if (!inPopup)
+            DisplayChat();
+    }
+}
+
 // Repaint the chat pane: refresh the widget from the chat manager,
 // re-seat the chat slider, then draw both when the pane is showing.
 // E:\gamedcs\singleselectionwindow.cpp:7226
@@ -6092,6 +6100,23 @@ void TSingleSelectionWindow::GetHeroFace(int which, CNetPlayerHandlerPlayer* pPl
     pPlayer->heroIndex = idx;
 }
 
+// E:\gamedcs\singleselectionwindow.cpp:7298
+inline void TSingleSelectionWindow::OnRequestHeroFaceMsg(
+        CNetMsg* pNetMsg, unsigned char inPopup)
+{
+    if (!bVideoPaused || pDPlay->IsHost()) {
+        CNetPlayerHandlerPlayer* p =
+            m_players.GetPlayer(pNetMsg->field_04);
+        if (p && p->playerPos != -1) {
+            GetHeroFace(
+                static_cast<CRequestHeroFaceMsg*>(pNetMsg)->m_which, p);
+            CRequestHeroFaceReplyMsg reply(p->playerPos, p->heroIndex);
+            TransmitRemoteDataDPID(&reply, 0, false, true);
+            OnRequestHeroFaceReplyMsg(&reply, inPopup);
+        }
+    }
+}
+
 #if 0  // @carcass
 
 #endif  // @carcass
@@ -6109,6 +6134,22 @@ void TSingleSelectionWindow::OnRequestHeroFaceReplyMsg(CNetMsg* pNetMsg, unsigne
             DrawWindow(0, 0xffff0001, 0xffff);
             Update();
         }
+    }
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7356
+inline void TSingleSelectionWindow::OnSetAGRMsg(
+        CNetMsg* pNetMsg, unsigned char inPopup)
+{
+    CSetAGRMsg* pMsg = static_cast<CSetAGRMsg*>(pNetMsg);
+    CNetPlayerHandlerPlayer* p =
+        m_players.GetPlayerInPos(pMsg->m_gamePos);
+    if (!p)
+        p = m_players.GetCompPlayerInPos(pMsg->m_gamePos);
+    if (p) {
+        p->startBonusIndex = pMsg->m_agr;
+        if (!inPopup)
+            DrawHeroAdvancedOption(pMsg->m_gamePos, 1, -1);
     }
 }
 
@@ -6431,6 +6472,14 @@ inline unsigned char TSingleSelectionWindow::IsMultiPlayer()
     if (gUnnamed6989f0 == WINDOW_MODE_6989F0_3)
         return 1;
     return 0;
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7990
+inline void TSingleSelectionWindow::OnTownUpdateMsg(
+        CNetMsg* pNetMsg, unsigned char inPopup)
+{
+    CTownUpdateMsg* pMsg = static_cast<CTownUpdateMsg*>(pNetMsg);
+    UpdateTown(pMsg->m_gamePos, pMsg->m_town, inPopup);
 }
 
 // Commit a seat's town pick, rebuild the hero filter, re-validate every
@@ -7050,12 +7099,58 @@ CNetMsg* CSingleSelectionNetMsgHandler::CheckHandleNet(unsigned char inPopup, un
 
 #if 0  // @carcass
 
+#endif  // @carcass
+
 // E:\gamedcs\singleselectionwindow.cpp:8775
 VA(0x0058e340, 0x379)  // anchor-vtable vtbl 0x241ce8 slot3 (HandleNetMsg; cf CNetMsgHandler layout) + fingerprint w0.75, dc 0x1451e8
 CNetMsg* CSingleSelectionNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
 {
-    // @stub
+    CNetMsg* pMsg;
+    switch (pNetMsg->subType) {
+    case RS_REQUEST_HERO_FACE:
+        gUnnamed69fbe8->OnRequestHeroFaceMsg(pNetMsg, 1);
+        pMsg = GetRemoteData(1, 0);
+        DestroyMsg(pMsg);
+        return 0;
+    case RS_TOWN_UPDATE:
+        gUnnamed69fbe8->OnTownUpdateMsg(pNetMsg, 1);
+        pMsg = GetRemoteData(1, 0);
+        DestroyMsg(pMsg);
+        return 0;
+    case RS_SETAGR:
+        gUnnamed69fbe8->OnSetAGRMsg(pNetMsg, 1);
+        pMsg = GetRemoteData(1, 0);
+        DestroyMsg(pMsg);
+        return 0;
+    case RS_REQUEST_HERO_FACE_REPLY:
+        gUnnamed69fbe8->OnRequestHeroFaceReplyMsg(pNetMsg, 1);
+        pMsg = GetRemoteData(1, 0);
+        DestroyMsg(pMsg);
+        return 0;
+    case RS_CHAT_MSG:
+        gUnnamed69fbe8->ReceiveChat(
+            pNetMsg->field_04, static_cast<CChatMsg*>(pNetMsg)->m_text, 1);
+        pMsg = GetRemoteData(1, 0);
+        DestroyMsg(pMsg);
+        return 0;
+    case RS_SETUP_PING:
+        gUnnamed69fbe8->OnPingMsg(pNetMsg);
+        pMsg = GetRemoteData(1, 0);
+        DestroyMsg(pMsg);
+        return 0;
+    case RS_SETUP_PING_RESPONSE:
+        gUnnamed69fbe8->OnPingResponseMsg(pNetMsg, 1);
+        pMsg = GetRemoteData(1, 0);
+        DestroyMsg(pMsg);
+        return 0;
+    default:
+        if (m_wasCompressed)
+            DestroyMsg(pNetMsg);
+        return 0;
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:8847
 DC_ONLY(0x1453ec, 0xB0)

@@ -1691,8 +1691,6 @@ call	singleselectionwindow.obj	0x13fd74	TSingleSelectionWindow::OnScrollMsg
 call	singleselectionwindow.obj	0x13fd74	TSingleSelectionWindow::OnSetAGRMsg
 call	singleselectionwindow.obj	0x13fd74	TSingleSelectionWindow::OnTownUpdateMsg
 call	singleselectionwindow.obj	0x13fd74	TSingleSelectionWindow::ReceiveChat
-call	singleselectionwindow.obj	0x140450	GameTime::ElapsedSince
-call	singleselectionwindow.obj	0x140450	TSingleSelectionWindow::ReceiveChat
 call	singleselectionwindow.obj	0x1409d4	stricmp
 call	singleselectionwindow.obj	0x140a74	CNetPlayerHandler::AddNewPlayer
 call	singleselectionwindow.obj	0x140f24	TSingleSelectionWindow::OnBadVersionMsg
@@ -1722,11 +1720,6 @@ call	singleselectionwindow.obj	0x143a7c	townManager::GetTownTypeName
 call	singleselectionwindow.obj	0x143a7c	widget::hide
 call	singleselectionwindow.obj	0x143a7c	widget::show
 call	singleselectionwindow.obj	0x145128	TSingleSelectionWindow::Update
-call	singleselectionwindow.obj	0x1451e8	GetRemoteData
-call	singleselectionwindow.obj	0x1451e8	TSingleSelectionWindow::OnRequestHeroFaceMsg
-call	singleselectionwindow.obj	0x1451e8	TSingleSelectionWindow::OnSetAGRMsg
-call	singleselectionwindow.obj	0x1451e8	TSingleSelectionWindow::OnTownUpdateMsg
-call	singleselectionwindow.obj	0x1451e8	TSingleSelectionWindow::ReceiveChat
 call	singleselectionwindow.obj	0x1483f8	CAutoArray<int>::Destroy
 call	singleselectionwindow.obj	0x1483f8	TransmitRemoteDataDPID
 call	singleselectionwindow.obj	0x148838	CNewPlayerUpdateProc::HeaderConfirmed

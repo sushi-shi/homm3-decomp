@@ -12859,6 +12859,24 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   structural checkpoint is also exact: **36 / 36 basic blocks**, **20 / 20
   symbolic branches**, and **4 / 4 returns**.
 
+- **2026-09-01 — the next zero-MAX selection dispatcher and its recovered
+  helper close exactly.** `CSingleSelectionNetMsgHandler::HandleNetMsg`, the
+  largest function remaining in the lowest effective-MAX tier, advances
+  **0% -> 100%** across all **889 retail bytes**. Dreamcast's 36 line rows
+  recover one `pMsg` local and the original seven-case helper sequence:
+  `OnRequestHeroFaceMsg`, `OnTownUpdateMsg`, `OnSetAGRMsg`,
+  `OnRequestHeroFaceReplyMsg`, `ReceiveChat`, `OnPingMsg`, and
+  `OnPingResponseMsg`, with a queue-pop and destruction statement group after
+  every case. Complete VC6 expands the small helpers selectively while
+  retaining `ReceiveChat` out of line in the ping-response path. Restoring
+  that source boundary also claims and closes `ReceiveChat` at **100% across
+  99 bytes**. The final two-instruction residual disappeared only after the
+  ping helper used Dreamcast's attested `GameTime::ElapsedSince` expression
+  instead of the algebraically equivalent `GameTime::Get() - pingTime`;
+  `OnPingResponseMsg` consequently advances **88.8387% -> 100%** across 163
+  bytes. The dispatcher structure is exact at **40 / 40 blocks**, **18 / 18
+  symbolic branches**, and **11 / 11 returns**.
+
 - **2026-07-23 — repo + toolchain distribution.** Private GitHub repo
   `sushi-shi/homm3-decomp` created and pushed; toolchain tarball published as
   release `toolchain-vc6-sp3`. `homm3 init` now downloads it via `gh` when
