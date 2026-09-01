@@ -541,6 +541,16 @@ PROVEN_CALL_SPELLINGS: dict[tuple[str, int], tuple[CallSpelling, ...]] = {
             0x0057F330, "CNetPlayerHandler::AddNewPlayer",
             r"\bSetNewPlayerSlot(?=\s*\()", "AddNewPlayer"),
     ),
+    ("singleselectionwindow.obj", 0x1386C0): (
+        CallSpelling(
+            "Complete GetHeader uses the Win32 CRT _chdir spelling for both "
+            "Dreamcast chdir statement groups",
+            0x00583170, "chdir", r"\b_chdir(?=\s*\()", "chdir"),
+        CallSpelling(
+            "Complete GetHeader uses the Win32 CRT _strnicmp spelling for "
+            "Dreamcast's case-insensitive autosave-name test",
+            0x00583170, "strnicmp", r"\b_strnicmp(?=\s*\()", "strnicmp"),
+    ),
 }
 
 
@@ -759,6 +769,18 @@ PROVEN_REVISION_REMOVALS: dict[
             r"\bShowWidget\s*\(\s*190\s*\)\s*;.*?"
             r"\bShowWidget\s*\(\s*195\s*\)\s*;",
             ("TSingleSelectionWindow::IsMultiPlayer", "widget::hide")),
+    ),
+    ("singleselectionwindow.obj", 0x1386C0): (
+        ProvenRevisionRemoval(
+            "Complete GetHeader replaces Dreamcast's VMU-oriented "
+            "game::GetSaveGameHeaders operation with the exact saved-header "
+            "Load/failure/header/setup transfer group",
+            0x00583170,
+            r"gameFileProblem\s*=\s*pHeader\s*->\s*saved\.Load\s*\(\s*0\s*\)"
+            r"\s*;\s*if\s*\(\s*gameFileProblem\s*\)\s*return\s+1\s*;\s*"
+            r"pHeader\s*->\s*header\s*=\s*pHeader\s*->\s*saved\.mapHeader"
+            r"\s*;\s*setup\s*=\s*&\s*pHeader\s*->\s*saved\.mapSetup\s*;",
+            ("game::GetSaveGameHeaders",)),
     ),
 }
 
@@ -7689,6 +7711,30 @@ return lod_file->read(data, size) ? 0 : size;
     if not missing_from_body(erased,
                              ["CNetPlayerHandler::AddNewPlayer"]):
         failures.append("erased Complete wrapper passed source-shape gate")
+    get_header_spelling_key = ("singleselectionwindow.obj", 0x1386C0)
+    get_header_spelling_va = \
+        PROVEN_CALL_SPELLINGS[get_header_spelling_key][0].caller_va
+    get_header_spelling_body = """\
+_chdir(dir);
+if (_strnicmp(filename, autosave, strlen(autosave)) == 0)
+    return 1;
+"""
+    canonical = apply_proven_call_spellings(
+        get_header_spelling_key, get_header_spelling_body,
+        get_header_spelling_va, {get_header_spelling_va})
+    if missing_from_body(canonical, ["chdir", "strnicmp"]):
+        failures.append("exact GetHeader CRT spellings did not canonicalize")
+    unproved = apply_proven_call_spellings(
+        get_header_spelling_key, get_header_spelling_body,
+        get_header_spelling_va, set())
+    if not missing_from_body(unproved, ["chdir", "strnicmp"]):
+        failures.append("non-exact GetHeader CRT spellings bypassed gate")
+    erased = apply_proven_call_spellings(
+        get_header_spelling_key,
+        get_header_spelling_body.replace("_strnicmp", "memcmp"),
+        get_header_spelling_va, {get_header_spelling_va})
+    if not missing_from_body(erased, ["strnicmp"]):
+        failures.append("erased GetHeader comparison helper passed gate")
     relocation_spelling_key = ("swapmgr.obj", 0x15D150)
     relocation_spelling_va = \
         NONEXACT_RETAIL_PROVEN_CALL_SPELLINGS[
@@ -7792,6 +7838,33 @@ ShowWidget(195);
             removal_key, removal_body.replace("ShowWidget(195);", ""),
             removal_va, {removal_va})[0]:
         failures.append("erased Complete replacement group classified")
+    get_header_removal_key = ("singleselectionwindow.obj", 0x1386C0)
+    get_header_removal_va = \
+        PROVEN_REVISION_REMOVALS[get_header_removal_key][0].caller_va
+    get_header_removal_body = """\
+gameFileProblem = pHeader->saved.Load(0);
+if (gameFileProblem)
+    return 1;
+pHeader->header = pHeader->saved.mapHeader;
+setup = &pHeader->saved.mapSetup;
+"""
+    removed_helpers, removal_descriptions = \
+        proven_dc_only_removed_helpers(
+            get_header_removal_key, get_header_removal_body,
+            get_header_removal_va, {get_header_removal_va})
+    if removed_helpers != frozenset(("game::GetSaveGameHeaders",)) \
+            or len(removal_descriptions) != 1:
+        failures.append("exact GetHeader revision removal did not classify")
+    if proven_dc_only_removed_helpers(
+            get_header_removal_key, get_header_removal_body,
+            get_header_removal_va, set())[0]:
+        failures.append("non-exact GetHeader revision removal classified")
+    if proven_dc_only_removed_helpers(
+            get_header_removal_key,
+            get_header_removal_body.replace(
+                "setup = &pHeader->saved.mapSetup;", ""),
+            get_header_removal_va, {get_header_removal_va})[0]:
+        failures.append("erased GetHeader replacement group classified")
     ai_choose_removal_key = ("ai_player.obj", 0x33CF8)
     ai_choose_removal_va = 0x0042E0B0
     ai_choose_removal_body = """\
