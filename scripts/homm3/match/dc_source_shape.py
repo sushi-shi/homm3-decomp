@@ -4102,6 +4102,45 @@ SOURCE_RULES[_attempt_teleport_key] = SOURCE_RULES.get(
     )
 
 
+# attempt_step's Dreamcast line table names trigger_point and places its
+# default construction before the later path-cell assignment.  Its final
+# statement computes the no-event/no-move/no-battle result as one expression;
+# Complete retail independently reproduces that shared EAX-wide 0/1 tail.
+# game::get_cell is likewise a source-visible Game.h wrapper around
+# NewfullMap::cell, even though Complete expands both layers in this object.
+_attempt_step_key = ("ai_player.obj", 0x341F4)
+SOURCE_RULES[_attempt_step_key] = SOURCE_RULES.get(
+    _attempt_step_key, ()) + (
+        SourceRule(
+            "attempt_step keeps Dreamcast's trigger_point local, later "
+            "path-cell assignment, and game::get_cell helper boundary",
+            r"\btype_point\s+trigger_point\s*;.*?"
+            r"trigger_point\s*=\s*path_cell\s*->\s*point\s*;.*?"
+            r"NewmapCell\s*\*\s*cell\s*=\s*gpGame\s*->\s*get_cell\s*"
+            r"\(\s*trigger_point\s*\)\s*;",
+            1, 1),
+        SourceRule(
+            "attempt_step keeps Dreamcast's final no-event/no-move/no-"
+            "battle conjunction; inspect the retail EAX-wide return tail "
+            "instead of flattening it into early returns",
+            r"return\s+event_cell\s*==\s*0\s*&&\s*bNoMove\s*==\s*0\s*"
+            r"&&\s*bFoughtBattle\s*==\s*0\s*;\s*\Z",
+            1, 1),
+    )
+
+_ai_player_get_cell_key = ("ai_player.obj", 0x38000)
+SOURCE_RULES[_ai_player_get_cell_key] = SOURCE_RULES.get(
+    _ai_player_get_cell_key, ()) + (
+        SourceRule(
+            "game::get_cell keeps Dreamcast's NewfullMap::cell helper "
+            "boundary; restore worldMap.cell(point.x, point.y, point.z) "
+            "instead of flattening the row-major address arithmetic",
+            r"\A\s*return\s+worldMap\s*\.\s*cell\s*\(\s*point\s*\.\s*x\s*,"
+            r"\s*point\s*\.\s*y\s*,\s*point\s*\.\s*z\s*\)\s*;\s*\Z",
+            1, 1),
+    )
+
+
 # Caller-local Complete codegen can retain a source-real call that another
 # emission of the same inline helper expands.  These are admitted asymmetric
 # boundaries: Dreamcast supplies the named source call and Complete retail
@@ -4111,6 +4150,9 @@ SOURCE_RULES[_attempt_teleport_key] = SOURCE_RULES.get(
 # named call itself, without inventing a global equal-call-count invariant.
 INLINE_GATE_REQUIREMENTS: dict[
         tuple[str, int], tuple[tuple[str, int], ...]] = {
+    ("ai_player.obj", 0x32E30): (
+        ("worldMap.cell", 1),
+    ),
     ("ai_player.obj", 0x34B08): (
         ("attempt_teleport", 1),
     ),
@@ -6571,6 +6613,39 @@ case SSW_SIZE_FILTER_ALL:
     if not contract_violations("", attempt_teleport_key):
         failures.append("removed attempt_teleport release verify passed")
 
+    attempt_step_probe = """\
+type_point trigger_point;
+trigger_point = path_cell->point;
+NewmapCell* cell = gpGame->get_cell(trigger_point);
+if (event_cell == 0) {
+    if (bNoMove != 0)
+        current_hero->movePoints = 0;
+} else {
+    gpAdvManager->DoAIEvent(event_cell, current_hero, trigger_point);
+}
+return event_cell == 0 && bNoMove == 0 && bFoughtBattle == 0;
+"""
+    if contract_violations(attempt_step_probe, _attempt_step_key):
+        failures.append("aligned attempt_step source shape did not pass")
+    for broken_attempt_step in (
+            attempt_step_probe.replace("trigger_point", "point"),
+            attempt_step_probe.replace(
+                "return event_cell == 0 && bNoMove == 0 && "
+                "bFoughtBattle == 0;",
+                "if (event_cell == 0) return 1;\nreturn 0;")):
+        if not contract_violations(broken_attempt_step, _attempt_step_key):
+            failures.append("flattened attempt_step source shape passed")
+
+    get_cell_probe = "return worldMap.cell(point.x, point.y, point.z);\n"
+    if contract_violations(get_cell_probe, _ai_player_get_cell_key):
+        failures.append("aligned game::get_cell boundary did not pass")
+    flattened_get_cell = (
+        "return &worldMap.cellData[(point.z * worldMap.Size + point.y) "
+        "* worldMap.Size + point.x];\n")
+    if not contract_violations(flattened_get_cell,
+                               _ai_player_get_cell_key):
+        failures.append("flattened game::get_cell boundary passed")
+
     inline_gate_key = ("singleselectionwindow.obj", 0x13C434)
     inline_gate_probe = """\
 #pragma inline_depth(0)
@@ -8649,6 +8724,10 @@ if (!our_hero->HeroFn_004E2840(slot,
             "wrong-argument Complete artifact predicate passed")
     grail_value_key = ("ai_player.obj", 0x32E30)
     grail_value_body = """\
+#pragma inline_depth(0)
+NewmapCell* map_cell = INLINE_GATE(gpGame->worldMap.cell(
+    destination.point.x, destination.point.y, destination.point.z));
+#pragma inline_depth()
 destination.value = AI_get_artifact_player_value(
     grail, current_hero->owner);
 destination.move_cost = max(destination.move_cost, mobility);
