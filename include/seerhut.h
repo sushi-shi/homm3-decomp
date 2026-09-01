@@ -169,6 +169,10 @@ class TSeerHut : private TQuestGuard {
     // application. Complete revises both models, while retaining the source
     // boundary inside DoSeerEvent's human arm.
     inline void DoCompletionDialog(hero* current_hero, bool human_player);
+    // Dreamcast proves this nested no-local switch helper as the first call
+    // made by DoCompletionDialog. Complete retains the boundary while
+    // shifting the primary-skill icon domain by one.
+    inline int GetRewardType();
 
 public:
     TSeerReward reward;

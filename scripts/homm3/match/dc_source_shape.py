@@ -6070,14 +6070,16 @@ def seer_hut_dialog_contract_violations(
     declaration = (
         r"\bvoid\s+DoEmptyDialog\s*\(\s*\)\s*;.*?"
         r"\binline\s+void\s+DoCompletionDialog\s*\(\s*"
-        r"hero\s*\*\s*current_hero\s*,\s*bool\s+human_player\s*\)\s*;")
+        r"hero\s*\*\s*current_hero\s*,\s*bool\s+human_player\s*\)\s*;"
+        r".*?\binline\s+int\s+GetRewardType\s*\(\s*\)\s*;")
     if re.search(declaration, header, re.DOTALL) is None:
         token = re.search(r"\bDo(?:Empty|Completion)Dialog\b", header)
         line = header_text.count("\n", 0, token.start()) + 1 if token else 1
         defects.append((
             line,
-            "TSeerHut must retain Dreamcast's private DoEmptyDialog and "
-            "inline DoCompletionDialog(hero*, bool) declarations"))
+            "TSeerHut must retain Dreamcast's private DoEmptyDialog, inline "
+            "DoCompletionDialog/GetRewardType boundaries; restore these "
+            "real helpers instead of adding caller mass or volatile state"))
 
     def body_for(name: str) -> tuple[str | None, int]:
         definitions = _source.find_definitions(source_text, name)
@@ -6095,6 +6097,7 @@ def seer_hut_dialog_contract_violations(
     completion, completion_line = body_for(
         "TSeerHut::DoCompletionDialog")
     empty, empty_line = body_for("TSeerHut::DoEmptyDialog")
+    reward_type, reward_type_line = body_for("TSeerHut::GetRewardType")
 
     caller_pattern = (
         r"if\s*\(\s*human_player\s*\)\s*\{\s*"
@@ -6111,7 +6114,9 @@ def seer_hut_dialog_contract_violations(
             "returning through its helper"))
 
     completion_pattern = (
-        r"NormalDialog\s*\(.*?\)\s*;\s*"
+        r"NormalDialog\s*\(.*?GetRewardType\s*\(\s*\).*?"
+        r"reward\s*\.\s*GetRewardExtra\s*\(\s*current_hero\s*\).*?"
+        r"\)\s*;\s*"
         r"if\s*\(\s*gpWindowManager\s*->\s*dialogReturn\s*==\s*"
         r"DIALOG_RETURN_ACCEPT\s*\|\|\s*gpWindowManager\s*->\s*"
         r"dialogReturn\s*==\s*DIALOG_RETURN_CHOICE_1\s*\)\s*\{\s*"
@@ -6123,7 +6128,24 @@ def seer_hut_dialog_contract_violations(
         defects.append((
             completion_line,
             "DoCompletionDialog must own Dreamcast's accepted reward path, "
-            "using Complete's TakePayment/giveReward/quest-clear tail"))
+            "call GetRewardType then GetRewardExtra for the dialog, and use "
+            "Complete's TakePayment/giveReward/quest-clear tail"))
+
+    reward_type_pattern = (
+        r"switch\s*\(\s*reward\s*\.\s*rewardType\s*\).*?"
+        r"case\s+eRewardExperience\s*:\s*return\s+0x11\s*;.*?"
+        r"case\s+eRewardResource\s*:\s*return\s+reward\s*\.\s*value\s*"
+        r"\.\s*resource\s*\.\s*resourceType\s*;.*?"
+        r"case\s+eRewardPrimarySkill\s*:\s*switch\s*\(\s*reward\s*\.\s*"
+        r"value\s*\.\s*primarySkill\s*\.\s*skillType\s*\).*?"
+        r"case\s+eRewardCreature\s*:\s*return\s+0x15\s*;")
+    if reward_type is None or re.search(
+            reward_type_pattern, reward_type, re.DOTALL) is None:
+        defects.append((
+            reward_type_line,
+            "TSeerHut::GetRewardType must remain Dreamcast's no-local nested "
+            "switch helper with Complete's retail-proven picture values; "
+            "do not flatten its switch into DoCompletionDialog"))
 
     empty_pattern = (
         r"format_string\s*\(.*?GetName\s*\(\s*\)\s*\)\s*;.*?"
@@ -6151,6 +6173,7 @@ def selftest() -> list[str]:
 class TSeerHut {
     void DoEmptyDialog();
     inline void DoCompletionDialog(hero* current_hero, bool human_player);
+    inline int GetRewardType();
 };
 """
     seer_source_probe = """\
@@ -6171,10 +6194,29 @@ void TSeerHut::DoEmptyDialog()
     text = format_string(gQuestTextA[0][0].c_str(), GetName());
     NormalDialog(text.c_str(), 1);
 }
+inline int TSeerHut::GetRewardType()
+{
+    switch (reward.rewardType) {
+    case eRewardExperience:
+        return 0x11;
+    case eRewardResource:
+        return reward.value.resource.resourceType;
+    case eRewardPrimarySkill:
+        switch (reward.value.primarySkill.skillType) {
+        default:
+            return -1;
+        }
+    case eRewardCreature:
+        return 0x15;
+    default:
+        return -1;
+    }
+}
 inline void TSeerHut::DoCompletionDialog(
     hero* current_hero, bool human_player)
 {
-    NormalDialog(quest->get_completion_text().c_str(), 2);
+    NormalDialog(quest->get_completion_text().c_str(), 2, GetRewardType(),
+                 reward.GetRewardExtra(current_hero));
     if (gpWindowManager->dialogReturn == DIALOG_RETURN_ACCEPT
         || gpWindowManager->dialogReturn == DIALOG_RETURN_CHOICE_1) {
         quest->TakePayment(current_hero);
@@ -6192,7 +6234,10 @@ inline void TSeerHut::DoCompletionDialog(
              "completion reward ownership"),
             (seer_source_probe.replace(
                 "            return;\n", "", 1),
-             "caller helper exit")):
+             "caller helper exit"),
+            (seer_source_probe.replace(
+                "2, GetRewardType(),", "2, 0x11,"),
+             "GetRewardType helper flattening")):
         if not seer_hut_dialog_contract_violations(
                 broken, seer_header_probe):
             failures.append("broken Seer " + label + " passed")
