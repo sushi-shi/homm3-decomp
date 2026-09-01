@@ -2630,7 +2630,7 @@ void advManager::ProcessRadarSelect(const message* msg)
     }
     Process1WindowsMessage();
 
-    message dragMsg = { 0, 0, 0, 0, 0, 0, 0, 0 };
+    message dragMsg;
     message event;
     do {
         Process1WindowsMessage();

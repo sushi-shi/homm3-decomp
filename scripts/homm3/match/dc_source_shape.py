@@ -4710,12 +4710,12 @@ def recruit_inline_contract_violations(
     message_header = _source.mask(message_header_text)
     defects: list[tuple[int, str]] = []
 
-    constructor_view = re.search(
-        r"#\s*define\s+HOMM3_RECRUIT_MESSAGE_CTOR_VIEW\s*\r?\n"
-        r"\s*#\s*include\s+\"message\.h\"", source_text) is not None
-    constructor_guard = re.search(
-        r"defined\s*\(\s*HOMM3_RECRUIT_MESSAGE_CTOR_VIEW\s*\)",
-        message_header_text) is not None
+    constructor_use = re.search(r"\bmessage\s+msg\s*;", source) is not None
+    legacy_constructor_view = (
+        re.search(r"\bHOMM3_RECRUIT_MESSAGE_CTOR_VIEW\b", source_text)
+        is not None
+        or re.search(r"\bHOMM3_RECRUIT_MESSAGE_CTOR_VIEW\b",
+                     message_header_text) is not None)
     constructor_body = re.search(
         r"\bmessage\s*\(\s*\)\s*\{\s*id\s*=\s*0\s*;\s*"
         r"codeX\s*=\s*0\s*;\s*codeY\s*=\s*0\s*;\s*"
@@ -4723,12 +4723,14 @@ def recruit_inline_contract_violations(
         r"mouseY\s*=\s*0\s*;\s*extra\s*=\s*0\s*;\s*"
         r"window\s*=\s*0\s*;\s*\}", message_header,
         re.DOTALL) is not None
-    if not (constructor_view and constructor_guard and constructor_body):
+    if not (constructor_use and constructor_body) or legacy_constructor_view:
         token = re.search(r"\bmessage\s+msg\s*;", source)
         line = source_text.count("\n", 0, token.start()) + 1 if token else 1
         defects.append((line,
-            "recruit.cpp must retain its TU-scoped message constructor view "
-            "and message.h's ordered eight-field constructor body"))
+            "recruit.cpp must construct canonical message msg and message.h "
+            "must retain the ordered eight-field default constructor; fix "
+            "the shared constructor/helper shape, never reintroduce a "
+            "TU-scoped message view or a volatile POD surrogate"))
 
     inline_declaration = re.search(
         r"\binline\s+void\s+UpdateCost\s*\(\s*\)\s*;",
@@ -4744,6 +4746,64 @@ def recruit_inline_contract_violations(
         defects.append((line,
             "recruitUnit::UpdateCost must retain its inline recruit.cpp "
             "definition after GetMonsterCost, with the resCost/helper head"))
+    return defects
+
+
+def game_comdat_inline_gate_violations(
+        source_text: str) -> list[tuple[int, str]]:
+    """Keep retail-proven STL COMDAT calls explicit without codegen tricks.
+
+    These late game.cpp anchors are emission scaffolds until their real callers
+    are reconstructed. Retail proves the named out-of-line Dinkumware bodies;
+    it does not justify volatile aliases, member pointers, synthetic mass, or a
+    TU-wide inliner switch. The narrow inline-depth gate is therefore part of
+    the admitted source contract and gives the cleanliness diagnostic a precise
+    repair path when one of those tricks is reintroduced.
+    """
+    masked = _source.mask(source_text)
+    lexical = _source._mask_lex(source_text)
+    defects: list[tuple[int, str]] = []
+
+    def require(signature: str, call: str, description: str) -> None:
+        match = re.search(signature, masked)
+        if match is None:
+            defects.append((1, description))
+            return
+        body = _source._definition_at(masked, match.start(), match.group(1))
+        if body is None:
+            defects.append((source_text.count("\n", 0, match.start()) + 1,
+                            description))
+            return
+        function_text = lexical[body.body_open + 1:body.body_close]
+        masked_function_text = masked[body.body_open + 1:body.body_close]
+        gate = (r"\A\s*#\s*pragma\s+inline_depth\s*\(\s*0\s*\)\s*"
+                r"INLINE_GATE\s*\(\s*" + call + r"\s*\)\s*;\s*"
+                r"#\s*pragma\s+inline_depth\s*\(\s*\)")
+        forbidden = re.search(
+            r"\bvolatile\b|\bauto_inline\b|\b(?:minFunction|TidyMember)\b",
+            masked_function_text) is not None
+        if re.search(gate, function_text, re.DOTALL) is None or forbidden:
+            defects.append((source_text.count("\n", 0, body.head) + 1,
+                            description))
+
+    require(
+        r"\b(THeroSetupMapMinComdatAnchor::retain_min)\s*\(\s*\)\s*\{",
+        r"_Min\s*\(\s*_Nil\s*\)",
+        "game.cpp retain_min must keep the real _Min(_Nil) helper under a "
+        "statement-scoped inline_depth/INLINE_GATE pair; inspect retail with "
+        "homm3 vc6 predict-inline and sema diff, restore the helper boundary, "
+        "and never substitute volatile, a member pointer, or synthetic mass")
+    for size in (5, 8, 28, 70, 128):
+        require(
+            (r"\b(std::bitset\s*<\s*" + str(size) +
+             r"\s*>\s*::\s*reset)\s*\(\s*\)\s*\{"),
+            r"_Tidy\s*\(\s*0\s*\)",
+            ("game.cpp bitset<" + str(size) +
+             ">::reset must keep the real _Tidy(0) helper under a "
+             "statement-scoped inline_depth/INLINE_GATE pair; inspect the "
+             "retail COMDAT/caller before changing the boundary, and never "
+             "substitute volatile, a member pointer, synthetic mass, or "
+             "TU-wide auto_inline"))
     return defects
 
 
@@ -11113,7 +11173,6 @@ for (i = 0; i < 6; i++) {
                for rule in flattened_rules):
         failures.append("flattened UpdateCost direct record access passed")
     recruit_contract_source = """\
-#define HOMM3_RECRUIT_MESSAGE_CTOR_VIEW
 #include "message.h"
 message msg;
 inline void recruitUnit::UpdateCost()
@@ -11124,12 +11183,10 @@ inline void recruitUnit::UpdateCost()
 """
     recruit_contract_header = "inline void UpdateCost();\n"
     recruit_message_header = """\
-#if defined(HOMM3_RECRUIT_MESSAGE_CTOR_VIEW)
 message() {
     id = 0; codeX = 0; codeY = 0; qualifier = 0;
     mouseX = 0; mouseY = 0; extra = 0; window = 0;
 }
-#endif
 """
     if recruit_inline_contract_violations(
             recruit_contract_source, recruit_contract_header,
@@ -11137,7 +11194,7 @@ message() {
         failures.append("aligned recruit inline contracts did not pass")
     broken_recruit_inline_probes = (
         recruit_contract_source.replace(
-            "#define HOMM3_RECRUIT_MESSAGE_CTOR_VIEW\n", ""),
+            "message msg;", "message* msg;"),
         recruit_contract_source.replace(
             "inline void recruitUnit::UpdateCost()",
             "void recruitUnit::UpdateCost()"),
@@ -11149,9 +11206,46 @@ message() {
     if not recruit_inline_contract_violations(
             recruit_contract_source, recruit_contract_header,
             recruit_message_header.replace(
-                "HOMM3_RECRUIT_MESSAGE_CTOR_VIEW",
-                "HOMM3_OTHER_MESSAGE_CTOR_VIEW")):
-        failures.append("missing recruit message constructor guard passed")
+                "codeX = 0;", "codeX = 1;")):
+        failures.append("flattened recruit message constructor body passed")
+    if not recruit_inline_contract_violations(
+            "#define HOMM3_RECRUIT_MESSAGE_CTOR_VIEW\n"
+            + recruit_contract_source,
+            recruit_contract_header, recruit_message_header):
+        failures.append("reintroduced recruit message constructor view passed")
+    game_comdat_gate_probe = """\
+void THeroSetupMapMinComdatAnchor::retain_min()
+{
+#pragma inline_depth(0)
+    INLINE_GATE(_Min(_Nil));
+#pragma inline_depth()
+}
+""" + "\n".join("""\
+template<> std::bitset<{size}>& std::bitset<{size}>::reset()
+{{
+#pragma inline_depth(0)
+    INLINE_GATE(_Tidy(0));
+#pragma inline_depth()
+    return *this;
+}}
+""".format(size=size) for size in (5, 8, 28, 70, 128))
+    if game_comdat_inline_gate_violations(game_comdat_gate_probe):
+        failures.append("aligned game COMDAT inline gates did not pass")
+    broken_game_comdat_probes = (
+        game_comdat_gate_probe.replace(
+            "INLINE_GATE(_Min(_Nil));", "_Min(_Nil);", 1),
+        game_comdat_gate_probe.replace(
+            "INLINE_GATE(_Tidy(0));", "_Tidy(0);", 1),
+        game_comdat_gate_probe.replace(
+            "INLINE_GATE(_Min(_Nil));", "minFunction = &_Min;", 1),
+        game_comdat_gate_probe.replace(
+            "INLINE_GATE(_Tidy(0));", "volatile int carrier = 0;", 1),
+        game_comdat_gate_probe.replace(
+            "#pragma inline_depth(0)", "#pragma auto_inline(off)", 1),
+    )
+    if any(not game_comdat_inline_gate_violations(probe)
+           for probe in broken_game_comdat_probes):
+        failures.append("broken game COMDAT inline gate passed")
     set_hero_context_key = ("advmgr.obj", 0x1A878)
     set_hero_context_probe = """\
 playerData* player = gpCurrentPlayer;
@@ -13649,6 +13743,17 @@ def scan() -> tuple[
     missing.extend(FileContractViolation("src/recruit.cpp", line,
                                          description)
                    for line, description in recruit_inline_defects)
+
+    game_source_relpath = "src/game.cpp"
+    game_source_text = (
+        common.HOMM3_DIR / game_source_relpath).read_text(errors="replace")
+    audited.add(_file_audit_scope(game_source_relpath))
+    game_comdat_gate_defects = game_comdat_inline_gate_violations(
+        game_source_text)
+    checked += 6
+    missing.extend(FileContractViolation(game_source_relpath, line,
+                                         description)
+                   for line, description in game_comdat_gate_defects)
 
     netmsg_header = common.HOMM3_DIR / "include/netmsg.h"
     netmsg_text = netmsg_header.read_text(errors="replace")

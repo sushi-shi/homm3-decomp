@@ -1014,8 +1014,10 @@ void type_AI_player::reset_magus_hut_value()
 // arithmetic, and all code after the dwelling scan agree. The remaining
 // span is one VC6 register-allocation cycle: retail keeps vector finish,
 // dwelling, and population in ESI/EBX/EDI; this compile chooses ECX/EDI/ESI.
-// Volatile pointer homes recover retail's two memory reads and town spill.
-// Plain indexed/pointer loops, int/short indices, declaration order,
+// Volatile pointer homes once recovered retail's two memory reads and town
+// spill, but those qualifiers were allocator steering rather than source
+// evidence and are now retained only as a negative-control result. Plain
+// indexed/pointer loops, int/short indices, declaration order,
 // register hints, combined for-initializers, and explicit vector insert
 // forms were tested; none exceeded this source-equivalent plateau.
 #endif  // @carcass
@@ -1027,8 +1029,8 @@ void type_AI_player::calculate_reserve()
     std::vector<type_creature_value> creatures;
     memset(reserved_funds, 0, sizeof(reserved_funds));
     short dwelling;
-    volatile short* population;
-    town* volatile current_town;
+    short* population;
+    town* current_town;
 
     for (short town_index = 0; town_index < player->numTowns; town_index++) {
         current_town = gpGame->GetTown(player->townIds[town_index]);
