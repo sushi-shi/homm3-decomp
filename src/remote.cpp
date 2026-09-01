@@ -620,8 +620,16 @@ void CDPlayHeroes::SetNetMsgHandler(CNetMsgHandler* pNetMsgHandler)
 {
     CNetMsgHandler* pOld = m_pNetMsgHandler;
     m_pNetMsgHandler = pNetMsgHandler;
-    if (pOld && pNetMsgHandler) {
-        pNetMsgHandler->Copy(pOld);
+    // Dreamcast remote.cpp:788-790 carries two nested lexical scopes: the
+    // old-handler test owns the outer scope and the installed-handler test
+    // owns the Copy scope.  The standalone x86 body lowers identically to a
+    // compound &&. Keep the source fact even though the measured Complete
+    // inline sites currently lower identically and the destructor's separate
+    // register-homing residual remains.
+    if (pOld) {
+        if (pNetMsgHandler) {
+            pNetMsgHandler->Copy(pOld);
+        }
     }
 }
 
@@ -3546,6 +3554,10 @@ CNetMsg* CNetMsgHandler::CheckHandleNet(unsigned char inPopup,
 // `pOld` constness, split declaration/assignment, and an alias to the member
 // slot. All produce byte-identical output in this body, ??_G, the derived
 // destructor, and the still-exact out-of-line setter.
+// Restoring SetNetMsgHandler's two Dreamcast S_BLOCK32 scopes (nested pOld
+// and pNetMsgHandler tests) is source-correct and remains ratcheted, but is a
+// measured negative control for this residual too: the three inlined rows do
+// not move. Nesting this destructor's own two tests is likewise identical.
 //
 // The rows are kept rather than withdrawn: without an out-of-line body here
 // ~CNetMsgHandlerPause cannot inline it at all - retail's 0x557ee0 shows

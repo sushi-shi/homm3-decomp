@@ -2378,7 +2378,7 @@ remote	?SendIt@CDPlayHeroes@@QAE_NPAVCNetMsg@@K_N@Z	86.9847	86.9847	86.9847	0x15
 remote	?SetAbortPopupMsg@CNetMsgHandler@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x157910	90675acd3cea
 remote	?SetDuration@CTurnDuration@@QAEXK@Z	100.0000	100.0000	100.0000	0x157d70	eb6c335ff683
 remote	?SetMaxLines@CChatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x1540d0	17f8cf0b6e3a
-remote	?SetNetMsgHandler@CDPlayHeroes@@QAEXPAVCNetMsgHandler@@@Z	100.0000	100.0000	100.0000	0x153770	91b884697eca
+remote	?SetNetMsgHandler@CDPlayHeroes@@QAEXPAVCNetMsgHandler@@@Z	100.0000	100.0000	100.0000	0x153770	23f908d87d84
 remote	?SetPercentage@CGameTransferSmack@@QAEXM@Z	100.0000	100.0000	100.0000	0x1574b0	2d9776ac4e02
 remote	?SetPosition@CChatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x154170	53df6fac9283
 remote	?Setup@CAnimatedDlg@@UAEEPBDPAVfont@@0H@Z	100.0000	100.0000	100.0000	0x154b10	dc4d6697ee40
