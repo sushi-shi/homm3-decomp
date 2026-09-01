@@ -530,6 +530,581 @@ int ValueOfMapArtifact(const hero* current_hero, NewmapCell* cell)
 
 #endif  // @carcass
 
+// Source-order declarations for helpers whose retained Complete bodies live
+// later in retail RVA order.
+inline TArtifact artifact_from_int(int value);
+inline SpellID spell_id_from_int(int value);
+int NetValueOfArtifact(const hero* current_hero, int artifact_value,
+    int gold_cost, int resource_cost, EGameResource resource_type);
+long value_of_custom_item(const hero* current_hero, NewmapCell* cell,
+    long item_value);
+long value_of_learning(const hero* current_hero, SpellID spell);
+long get_artifact_purchase_value(
+    TArtifact artifact_id, long market_count, long* funds);
+long value_of_enemy_town(const hero* current_hero, const town* enemy_town,
+                         short move_cost, NewmapCell* cell);
+
+// E:\\gamedcs\\philai.cpp:1319. Price a seven-column resource row in the
+// player's own per-resource valuations. Retail emits the out-of-line copy
+// for cross-TU callers while /Ob2 expands this real helper into a direct
+// value_of_bank body. When that bank body is itself expanded into
+// AI_value_of_event, VC6 retains this nested call.
+int AI_resource_cost(const playerData* player, const int* resources)
+{
+    int value = 0;
+    for (int resource = 0; resource < NUM_RESOURCES; resource++)
+        value += resources[resource] * player->resourceValue[resource];
+    return value;
+}
+
+// E:\\gamedcs\\philai.cpp:1330. The player-id overload prices the row for
+// gpGame->players[player_id]; retail keeps the players-array walk inline
+// rather than routing through the playerData overload.
+int AI_resource_cost(long player_id, const int* resources)
+{
+    int value = 0;
+    for (int resource = 0; resource < NUM_RESOURCES; resource++)
+        value += resources[resource]
+            * gpGame->players[player_id].resourceValue[resource];
+    return value;
+}
+
+// E:\\gamedcs\\philai.cpp:1854. Dreamcast preserves this source-real helper
+// boundary and its two calls; Complete keeps the same four-block body but
+// expands it into AI_value_of_event's ARENA arm. The retail arm calls
+// VisitedArena, returns zero on the visited edge, then doubles the level
+// increment before applying turnExperienceToRVRatio.
+inline int ValueOfArena(const hero* current_hero, NewmapCell* cell)
+{
+    if (current_hero->VisitedArena(cell))
+        return 0;
+    int experience_value =
+        2 * hero::GetExperienceIncrement(current_hero->level);
+    return static_cast<int>(
+        experience_value * current_hero->turnExperienceToRVRatio);
+}
+
+// E:\\gamedcs\\philai.cpp:1883. Dreamcast preserves the complete helper:
+// backpack capacity, artifact appraisal and minimum-value clamp, customized
+// and defended early returns, then the six MapArtifactInfo price cases.
+// Complete expands this helper into AI_value_of_event's ARTIFACT arm and
+// retains the same statement/branch shape, using its later artifact-player
+// valuation entry point.
+inline int ValueOfMapArtifact(const hero* current_hero, NewmapCell* cell)
+{
+    if (const_cast<hero*>(current_hero)->get_number_in_backpack(1)
+            >= HERO_BACKPACK_CAPACITY)
+        return 0;
+
+    type_artifact artifact(artifact_from_int(cell->GetArtifactIndex()));
+    int value = AI_get_artifact_player_value(artifact, current_hero->owner);
+    if (value < 10)
+        value = 10;
+
+    const ExtraInfoUnion* info = static_cast<const ExtraInfoUnion*>(
+        static_cast<const void*>(cell));
+    if (info->IsCustomized()) {
+        // Both Dreamcast ValueOfMapArtifact and Complete's expanded
+        // ARTIFACT arm retain this source helper as a real call boundary.
+#pragma inline_depth(0)
+        return INLINE_GATE(value_of_custom_item(current_hero, cell, value));
+#pragma inline_depth()
+    }
+
+    if (info->IsDefendedArtifact()) {
+        armyGroup monsters(info->GetArtifactDefender(),
+                           info->artifact_info.guard_qty);
+        return AI_value_of_combat(current_hero, 0, monsters, 0, cell) + value;
+    }
+
+    switch (info->GetArtifactPrice()) {
+    case const_free_artifact:
+        return value;
+    case const_artifact_requires_wisdom:
+        if (current_hero->skillLevel[eSecSkillWisdom] > 0)
+            return value;
+        return 0;
+    case const_artifact_requires_leadership:
+        if (current_hero->skillLevel[eSecSkillLeadership] > 0)
+            return value;
+        return 0;
+    case const_artifact_costs_2000:
+        return NetValueOfArtifact(current_hero, value, 2000, 0, WOOD);
+    case const_artifact_costs_2500:
+        return NetValueOfArtifact(current_hero, value, 2500, 3,
+                                  info->GetArtifactResourceCost());
+    case const_artifact_costs_3000:
+        return NetValueOfArtifact(current_hero, value, 3000, 5,
+                                  info->GetArtifactResourceCost());
+    }
+    return 0;
+}
+
+// E:\\gamedcs\\philai.cpp:1972. The Dreamcast line table recovers this
+// entire appraisal in source order, and Complete's BLACK_BOX arm preserves
+// the same field walks and control flow after inlining: guardians,
+// experience/resources, primary and secondary skills, artifacts, spells,
+// then joinable creatures.
+inline int ValueOfBlackBox(const hero* current_hero, NewmapCell* cell)
+{
+    BlackBoxData* black_box = cell->get_black_box();
+    int value = 0;
+
+    if (black_box->HasCustomGuardians)
+        value = AI_value_of_combat(
+            current_hero, 0, black_box->Guardians, 0, cell);
+
+    if (black_box->ExperienceBonus > 0) {
+        value = static_cast<int>(
+            static_cast<float>(value)
+            + static_cast<float>(black_box->ExperienceBonus)
+                * current_hero->turnExperienceToRVRatio);
+    }
+
+    value += AI_resource_cost(
+        &gpGame->players[current_hero->owner], black_box->ResQty);
+
+    int primary_skill_value = static_cast<int>(
+        static_cast<float>(hero::GetExperienceIncrement(current_hero->level))
+        * current_hero->turnExperienceToRVRatio);
+    for (int skill = 0; skill < 4; ++skill) {
+        if (black_box->PrimarySkillBonus[skill] > 0)
+            value += black_box->PrimarySkillBonus[skill]
+                * primary_skill_value;
+    }
+
+    for (unsigned int secondary_index = 0;
+         secondary_index < black_box->SecondarySkills.size();
+         ++secondary_index) {
+        signed char current_level = current_hero->skillLevel[
+            black_box->SecondarySkills[secondary_index].type];
+        int level = black_box->SecondarySkills[secondary_index].level;
+        if (current_level == 0 && current_hero->skillCount < 8)
+            value += level * primary_skill_value;
+        else if (current_level > 0 && current_level < level)
+            value += (level - current_level) * primary_skill_value;
+    }
+
+    value = static_cast<int>(
+        static_cast<float>(value)
+        + static_cast<float>(black_box->Artifacts.size())
+            * gpCurrentPlayer->turnValueOfAvgArtifact);
+
+    if (const_cast<hero*>(current_hero)->IsWieldingArtifact(
+            ARTIFACT_SPELLBOOK)) {
+        for (unsigned int spell = 0;
+             spell < black_box->Spells.size(); ++spell) {
+            value += value_of_learning(
+                current_hero, spell_id_from_int(black_box->Spells[spell]));
+        }
+    }
+
+    for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
+        int creature = black_box->Creatures.armies[slot];
+        if (creature != CREATURE_NONE
+            && current_hero->army.CanJoin(creature)) {
+            value += black_box->Creatures.numTroops[slot]
+                * akCreatureTypeTraits[creature].AI_value;
+        }
+    }
+    return value;
+}
+
+// E:\\gamedcs\\philai.cpp:2054. Retail first resolves the cell's creature-bank
+// record, rejects an already emptied bank, then values its guards. Keep the
+// real definition before AI_value_of_event, as it is in the recovered source:
+// VC6 naturally expands the early bank arms but retains the later call. The
+// record layout and the subsequent resource, creature, and artifact rewards
+// are independently fixed by the shared creature-bank model.
+inline long value_of_bank(const hero* current_hero, NewmapCell* cell)
+{
+    long value;
+
+    ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
+        static_cast<void*>(cell));
+    type_creature_bank& bank = info->get_creature_bank();
+    if (cell->extraInfo & 0x2000000)
+        return 0;
+
+    value = AI_value_of_combat(current_hero, 0, bank.guards, 0, cell);
+    if (value <= -500000000)
+        return value;
+
+    value += AI_resource_cost(
+        &gpGame->players[current_hero->owner], bank.resources);
+
+    if (bank.reward_creatures > 0)
+        value += bank.reward_creatures
+            * akCreatureTypeTraits[bank.reward_creature].AI_value;
+
+    // Dreamcast names vector<TArtifact>::size here, and Complete retains the
+    // same call even when value_of_bank itself expands into AI_value_of_event.
+    // Pin that source-real nested boundary, not the surrounding appraisal.
+#pragma inline_depth(0)
+    value = INLINE_GATE(bank.artifacts.size())
+        * gpCurrentPlayer->turnValueOfAvgArtifact + value;
+#pragma inline_depth()
+    return value;
+}
+
+// E:\\gamedcs\\philai.cpp:370. Dreamcast gives this six-statement helper
+// and Complete expands it into AI_value_of_event's BLACK_MARKET arm: reject
+// a full backpack, select the cell's seven-artifact market record, and sum
+// the five-marketplace purchase value of every slot.
+inline long value_of_black_market(const hero* current_hero,
+                                  const NewmapCell* cell)
+{
+    if (const_cast<hero*>(current_hero)->get_number_in_backpack(1)
+            == HERO_BACKPACK_CAPACITY)
+        return 0;
+
+    const TBlackMarket& market = gpGame->field_1f680[cell->extraInfo];
+    long value = 0;
+    for (int artifact = 0; artifact < 7; ++artifact) {
+        value += get_artifact_purchase_value(
+            market.artifacts[artifact], 5, gpCurrentPlayer->resources);
+    }
+    return value;
+}
+
+// E:\\gamedcs\\philai.cpp:2115. Dreamcast gives one size statement and
+// one value statement, with the size reused in the gold and special-resource
+// terms. Complete expands the two cell accessors and this helper into
+// AI_value_of_event's CAMPFIRE arm; retail proves the 100-gold unit and the
+// same left-to-right double expression.
+inline int ValueOfCampfire(playerData* player, NewmapCell* cell)
+{
+    int size = cell->GetCampfireSize();
+    return static_cast<int>(
+        size * 100 * player->resourceValue[GOLD]
+        + size * player->resourceValue[cell->GetCampfireResource()]);
+}
+
+// E:\\gamedcs\\philai.cpp:2194. The recovered helper rejects a Defense
+// Tower already visited by this hero, then prices one experience increment
+// through the hero's turn ratio. Complete expands the helper and the no-arg
+// experience accessor into the DEFENSE_TOWER arm.
+inline int ValueOfDefenseTower(const hero* current_hero, NewmapCell* cell)
+{
+    if (current_hero->DefenseTowerFlags & (1UL << cell->extraInfo))
+        return 0;
+    return static_cast<int>(
+        current_hero->GetExperienceIncrement()
+        * current_hero->turnExperienceToRVRatio);
+}
+
+// E:\\gamedcs\\philai.cpp:2220. Dreamcast recovers the GetGarrison helper,
+// the local creature swapper, the same-owner and same-team arms, and the
+// combat fallback. Complete adds the removable-troops and early-campaign
+// gates plus the Angelic Alliance input used by its widened swapper method.
+inline long value_of_garrison(const hero* current_hero, NewmapCell* cell)
+{
+    garrison* current_garrison = gpGame->GetGarrison(cell->extraInfo);
+    if (current_garrison->playerOwner == current_hero->owner
+        && current_garrison->removableTroops) {
+        if (gbUnk69774c && gpGame->campaign.currentCampaign < 7)
+            return 0;
+
+        unsigned char has_angelic_alliance =
+            gpGame->players[current_hero->owner].hasGivenArtifact(
+                ARTIFACT_ANGELIC_ALLIANCE);
+        type_AI_creature_swapper swapper;
+        return swapper.get_swap_value(
+            current_hero, &current_garrison->garrisonArmy, 0,
+            has_angelic_alliance);
+    }
+
+    if (gpGame->OnSameTeam(current_garrison->playerOwner,
+                           current_hero->owner))
+        return 0;
+    return AI_value_of_combat(
+        current_hero, 0, current_garrison->garrisonArmy, 0, cell);
+}
+
+// E:\\gamedcs\\philai.cpp:2250. The shared Idol helper rejects the two
+// visited flags and an unaffordable trip, values both morale and luck on
+// Sunday, and otherwise selects one from the low flag bit. Complete expands
+// that shared shape into AI_value_of_event. Dreamcast's final fallback after
+// the same movement rejection is dc-only; retail has no corresponding edge.
+inline long value_of_idol(const hero* current_hero, long move_cost)
+{
+    if (current_hero->flags & 0x10)
+        return 0;
+    if (current_hero->flags & 0x2000000)
+        return 0;
+    if (move_cost > current_hero->movePoints)
+        return 0;
+
+    if (gpGame->field_1f63e == DAY_OF_WEEK_SUNDAY) {
+        return static_cast<long>(
+            AI_value_of_morale(
+                const_cast<hero*>(current_hero)->GetMorale(0, 0, 1), 1)
+            + AI_value_of_luck(
+                const_cast<hero*>(current_hero)->GetLuck(0, 0, 1), 1));
+    }
+    if (current_hero->flags & 1) {
+        return static_cast<long>(AI_value_of_luck(
+            const_cast<hero*>(current_hero)->GetLuck(0, 0, 1), 1));
+    }
+    return static_cast<long>(AI_value_of_morale(
+        const_cast<hero*>(current_hero)->GetMorale(0, 0, 1), 1));
+}
+
+// E:\\gamedcs\\philai.cpp:2392. Dreamcast recovers the complete meeting
+// helper, including its two locals and the split between enemy and friendly
+// heroes. Complete expands it into AI_value_of_event and adds the Angelic
+// Alliance input to both creature-swap appraisals. Retail also confirms the
+// enemy hero's bounty term, the stranded-player combat floor, and the same
+// movement-cost guard around the friendly-army increase check.
+__forceinline long value_of_hero_event(const hero* current_hero,
+                                       NewmapCell* cell, short x, short y,
+                                       short z, short move_cost)
+{
+    hero* second_hero = gpGame->GetHero(cell->extraInfo);
+    if (second_hero->owner != current_hero->owner) {
+        if (gpGame->OnSameTeam(second_hero->owner, current_hero->owner))
+            return 0;
+
+        short town_id = static_cast<short>(gpGame->GetTownId(x, y, z));
+        long value = AI_value_of_combat(
+            current_hero, second_hero, second_hero->army, 0, cell);
+        if (move_cost <= current_hero->movePoints) {
+            value = static_cast<long>(
+                static_cast<float>(value)
+                + static_cast<float>(second_hero->bounty + 10000)
+                    * type_AI_player::get_attack_bonus(second_hero->owner));
+        }
+
+        if (town_id < 0)
+            return value;
+        town* current_town = gpGame->GetTown(town_id);
+        if (value <= -500000000) {
+            if (const_cast<hero*>(current_hero)->get_player()->numTowns > 0)
+                return value;
+            value = -1250000;
+        }
+        return value_of_enemy_town(
+            current_hero, current_town, move_cost, cell) + value;
+    }
+
+    if (!gpGame->setup.difficulty)
+        return 0;
+
+    type_AI_creature_swapper swapper;
+    short current_skill =
+        const_cast<hero*>(current_hero)->get_primary_skill_total();
+    short second_skill = second_hero->get_primary_skill_total();
+    if (second_skill < current_skill) {
+        unsigned char has_angelic_alliance =
+            gpGame->players[current_hero->owner].hasGivenArtifact(
+                ARTIFACT_ANGELIC_ALLIANCE);
+        long value = swapper.get_swap_value(
+            current_hero, &second_hero->army, second_hero,
+            has_angelic_alliance) / 2;
+        if (move_cost >= current_hero->maxMovePoints
+            && swapper.get_army_value_increase()
+                   < current_hero->army.get_AI_value())
+            return 0;
+        return value;
+    }
+    if (second_skill > current_skill) {
+        unsigned char has_angelic_alliance =
+            gpGame->players[second_hero->owner].hasGivenArtifact(
+                ARTIFACT_ANGELIC_ALLIANCE);
+        return swapper.get_swap_value(
+            second_hero, &current_hero->army, current_hero,
+            has_angelic_alliance);
+    }
+    return 0;
+}
+
+// E:\\gamedcs\\philai.cpp:2465. Dreamcast proves the two seven-resource
+// locals, the seven army-slot walk, upgrade lookup/cost calls, affordability
+// test, provisional-funds debit, and final movement/army-strength gate.
+// Complete expands the helper into AI_value_of_event and routes the upgrade
+// lookup through game::UpgradedCreatureType, whose real inline body carries
+// Complete's elemental-upgrade restriction.
+__forceinline long value_of_hill_fort(const hero* current_hero,
+                                      long move_cost)
+{
+    int funds[NUM_RESOURCES];
+    memcpy(funds, gpCurrentPlayer->resources, sizeof(funds));
+    int cost[NUM_RESOURCES];
+    long value = 0;
+
+    for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
+        TCreatureType creature = current_hero->army.armyTypes[slot];
+        if (creature == CREATURE_NONE)
+            continue;
+
+        TCreatureType upgrade = gpGame->UpgradedCreatureType(creature);
+        if (upgrade == CREATURE_NONE)
+            continue;
+
+        get_upgrade_cost(creature, upgrade,
+                         current_hero->army.numTroops[slot], cost);
+        cost[GOLD] = static_cast<int>(
+            static_cast<float>(cost[GOLD])
+            * afUpgradeCostFactor[akCreatureTypeTraits[creature].level]);
+
+        int resource;
+        for (resource = 0; resource <= GOLD; ++resource) {
+            if (cost[resource] > funds[resource])
+                break;
+        }
+        if (resource <= GOLD)
+            continue;
+
+        value += current_hero->army.numTroops[slot]
+            * (akCreatureTypeTraits[upgrade].AI_value
+               - akCreatureTypeTraits[creature].AI_value);
+        for (resource = 0; resource <= GOLD; ++resource)
+            funds[resource] -= cost[resource];
+    }
+
+    if (move_cost > 500
+        && 3 * value < current_hero->army.get_AI_value())
+        return 0;
+    return value;
+}
+
+// E:\\gamedcs\\philai.cpp:2294. The recovered helper tests the item's
+// visit bit in the player's Lean-To flags and prices an unvisited cache as
+// three average resource units. Complete expands the helper and GetItemId
+// into the event arm without changing that shape.
+__forceinline int ValueOfLeanTo(NewmapCell* cell, playerData* player)
+{
+    const ExtraInfoUnion* info = static_cast<const ExtraInfoUnion*>(
+        static_cast<const void*>(cell));
+    if (player->LeanToFlags & (1UL << info->GetItemId()))
+        return 0;
+    return 3 * player->averageResourceValue;
+}
+
+// E:\\gamedcs\\philai.cpp:2775. Dreamcast preserves this one-statement
+// helper and the tiny type_AI_player accessor beneath it. Complete expands
+// both boundaries into AI_value_of_event's HUT_OF_MAGI arm.
+__forceinline long value_of_magus_hut(long player_id)
+{
+    return gAIPlayers[player_id].get_magus_hut_value();
+}
+
+// E:\\gamedcs\\philai.cpp:2550. Dreamcast recovers both early returns and
+// the exact value ingredients. Complete expands the helper and its two hero
+// value accessors into the event arm: a qualifying unvisited hero receives
+// two power values, two knowledge values, and one tenth of the army value.
+__forceinline int ValueOfLibrary(const hero* current_hero, NewmapCell* cell)
+{
+    if (current_hero->LibraryFlags & (1UL << cell->extraInfo))
+        return 0;
+    if (current_hero->level
+            + 2 * current_hero->skillLevel[eSecSkillDiplomacy]
+        < 10)
+        return 0;
+    return 2 * current_hero->get_value_of_power()
+        + 2 * current_hero->get_value_of_knowledge()
+        + current_hero->army.get_AI_value() * 4 / 40;
+}
+
+// E:\\gamedcs\\philai.cpp:2567. The source helper indexes the lighthouse's
+// mine record, tests its owner through OnSameTeam, and returns 1,000 only
+// for an enemy lighthouse. Complete expands the vector access but retains
+// the same OnSameTeam boundary.
+__forceinline int ValueOfLighthouse(NewmapCell* cell)
+{
+    if (gpGame->OnSameTeam(
+            gpGame->mines[cell->extraInfo].playerOwner,
+            gNetLocalGamePos))
+        return 0;
+    return 1000;
+}
+
+// E:\\gamedcs\\philai.cpp:2615. An already visited Mercenary Camp is
+// worthless; otherwise it grants one level increment, converted through the
+// hero's current experience-to-resource ratio. Complete expands the helper
+// and retains the static experience accessor call.
+__forceinline int ValueOfMercenaryCamp(const hero* current_hero,
+                                       NewmapCell* cell)
+{
+    if (current_hero->MercCampFlags & (1UL << cell->extraInfo))
+        return 0;
+    return static_cast<int>(
+        hero::GetExperienceIncrement(current_hero->level)
+        * current_hero->turnExperienceToRVRatio);
+}
+
+// E:\\gamedcs\\philai.cpp:2997. The helper reads the shrine spell through
+// its named packed-cell accessor and prices learning it. Complete expands
+// the helper/accessor but retains value_of_learning as a real call.
+__forceinline int ValueOfShrine(const hero* current_hero, NewmapCell* cell)
+{
+    const ExtraInfoUnion* info = static_cast<const ExtraInfoUnion*>(
+        static_cast<const void*>(cell));
+    SpellID spell = info->GetShrineSpell();
+#pragma inline_depth(0)
+    return INLINE_GATE(value_of_learning(current_hero, spell));
+#pragma inline_depth()
+}
+
+// E:\\gamedcs\\philai.cpp:2274. Dreamcast recovers this as one expression
+// with two resource-value products and one sum. Complete expands it into the
+// FLOTSAM arm; retail's literal pool fixes the expected haul at 175 gold and
+// five wood.
+inline int ValueOfFlotsam(playerData* player)
+{
+    return static_cast<int>(
+        player->resourceValue[GOLD] * 175.0
+        + player->resourceValue[WOOD] * 5.0);
+}
+
+// E:\\gamedcs\\philai.cpp:2283. A visited Garden of Revelation is worth
+// nothing; otherwise its one knowledge point is worth the hero's cached
+// knowledge value. Complete expands both the helper and accessor.
+inline int ValueOfGarden(const hero* current_hero, NewmapCell* cell)
+{
+    if (current_hero->GardenOfRevelationFlags & (1UL << cell->extraInfo))
+        return 0;
+    return current_hero->get_value_of_knowledge();
+}
+
+// E:\\gamedcs\\philai.cpp:2711. A one-per-hero movement bonus source:
+// credit the bonus against this trip's cost, then add the morale worth that
+// Complete folded into the helper. Keep the real definition before the
+// dispatcher: VC6 expands the early Fountain of Youth use, retains its nested
+// morale call, and leaves the later Oasis/Watering Hole uses out of line.
+inline int value_of_move_source(const hero* current_hero, long flag,
+                                short increase, long* move_cost)
+{
+    if (current_hero->flags & flag)
+        return 0;
+    if (*move_cost >= increase) {
+        *move_cost -= increase;
+        return const_cast<hero*>(current_hero)->MoraleIncreaseValue(1);
+    }
+    *move_cost = 0;
+    return 10000;
+}
+
+// E:\\gamedcs\\philai.cpp:2948. Dreamcast recovers the item-id visit bit,
+// owner-player lookup, backpack-capacity branch, and the two value sources.
+// Complete expands the helper into AI_value_of_event's DEAD_GUY arm; retail
+// fixes the later constants as one fifth of an average artifact, or 200 gold
+// when the backpack is full.
+inline int ValueOfSkeleton(const hero* current_hero, NewmapCell* cell)
+{
+    const ExtraInfoUnion* info = static_cast<const ExtraInfoUnion*>(
+        static_cast<const void*>(cell));
+    unsigned long visited = 1UL << info->GetItemId();
+    if (gpCurrentPlayer->DeadGuyFlags & visited)
+        return 0;
+
+    playerData* player = const_cast<hero*>(current_hero)->get_player();
+    if (const_cast<hero*>(current_hero)->get_number_in_backpack(1)
+            < HERO_BACKPACK_CAPACITY)
+        return static_cast<int>(player->turnValueOfAvgArtifact / 5.0f);
+    return static_cast<int>(player->resourceValue[GOLD] * 200.0);
+}
+
 // armyGroup deliberately models its mutable roster as int while
 // get_spell_work_chance's domain is TCreatureType, and the resource
 // sweep below counts with an int while its consumers take
@@ -555,6 +1130,13 @@ inline TArtifact artifact_from_int(int value)
     TArtifact artifact;
     memcpy(&artifact, &value, sizeof artifact);
     return artifact;
+}
+
+inline SpellID spell_id_from_int(int value)
+{
+    SpellID spell;
+    memcpy(&spell, &value, sizeof spell);
+    return spell;
 }
 
 inline type_building_id building_id_from_int(int value)
@@ -1872,33 +2454,15 @@ hero* DetermineHeroToMove(int player_id, unsigned char* is_last_hero)
     return selected_hero;
 }
 
-// E:\gamedcs\philai.cpp:1319.  Price a seven-column resource row in the
-// player's own per-resource valuations.  Retail emits the out-of-line copy
-// at 0x526c70 for its cross-TU callers (purchase_building, consider_hiring,
-// AI_enter_town, AI_value_of_event) while still expanding it into the
-// value_of_town appraisals below - extern linkage plus /Ob2 gives exactly
-// that arrangement.
+// These helpers remain defined above where Dreamcast proves their source
+// order and where VC6 can inline them. Their retained out-of-line copies are
+// emitted here in retail order, so the authoritative annotations belong on
+// these redeclarations rather than on the earlier definitions.
 VA(0x00526c70, 0x48)  // anchor: resourceValue walk at playerData+0x128, dc 0x10f22c
-int AI_resource_cost(const playerData* player, const int* resources)
-{
-    int value = 0;
-    for (int resource = 0; resource < NUM_RESOURCES; resource++)
-        value += resources[resource] * player->resourceValue[resource];
-    return value;
-}
+int AI_resource_cost(const playerData* player, const int* resources);
 
-// E:\gamedcs\philai.cpp:1330.  The player-id overload prices the row for
-// gpGame->players[player_id]; retail keeps the players-array walk inline
-// rather than routing through the playerData overload.
 VA(0x00526cc0, 0x55)  // anchor: players-array resourceValue walk at game+0x20bf8, dc 0x10f2f8
-int AI_resource_cost(long player_id, const int* resources)
-{
-    int value = 0;
-    for (int resource = 0; resource < NUM_RESOURCES; resource++)
-        value += resources[resource]
-            * gpGame->players[player_id].resourceValue[resource];
-    return value;
-}
+int AI_resource_cost(long player_id, const int* resources);
 
 // Retail-only 0x526d20 (no DC row): the computer-owner purchase shim
 // town::buy_building runs over a cost row before charging it - route the
@@ -2753,12 +3317,28 @@ long AI_value_of_event(const hero* current_hero, type_point point,
     case BLACK_MARKET:
         return value_of_black_market(current_hero, cell);
 
+    case BORDER_TENT:
+        if (gpGame->borderTentVisitFlags[cell->objectIndex]
+            & gUnnamed69ccc4)
+            return 0;
+        return 5000;
     case BUOY:
-        return MoraleIncreaseValue(current_hero, 1);
+        if (current_hero->flags & 4)
+            return 0;
+        if (move_cost > current_hero->movePoints)
+            return 0;
+        return const_cast<hero*>(current_hero)->MoraleIncreaseValue(1);
     case CAMPFIRE:
         return ValueOfCampfire(player, cell);
     case CLOVER_FIELD:
-        return LuckIncreaseValue(current_hero, 2);
+        if (current_hero->flags & 8)
+            return 0;
+        if (move_cost > current_hero->movePoints)
+            return 0;
+        if (move_cost + 200 < current_hero->movePoints)
+            return 0;
+        move_cost = max(move_cost, current_hero->movePoints);
+        return const_cast<hero*>(current_hero)->LuckIncreaseValue(2);
     case CREATURE_BANK:
         return value_of_bank(current_hero, cell);
     case CREATURE_GENERATOR_1:
@@ -2773,9 +3353,38 @@ long AI_value_of_event(const hero* current_hero, type_point point,
     case DRAGON_CITY:
         return value_of_bank(current_hero, cell);
     case FAERIE_RING:
-        return LuckIncreaseValue(current_hero, 1);
+        if (current_hero->flags & 0x2000)
+            return 0;
+        if (move_cost > current_hero->movePoints)
+            return 0;
+        return const_cast<hero*>(current_hero)->LuckIncreaseValue(1);
     case FLOTSAM:
         return ValueOfFlotsam(player);
+
+    case FOUNTAIN_OF_FORTUNE:
+        if (current_hero->flags & 0x20)
+            return 0;
+        if (current_hero->flags & 0x8000000)
+            return 0;
+        if (current_hero->flags & 0x10000000)
+            return 0;
+        if (current_hero->flags & 0x20000000)
+            return 0;
+        if (move_cost > current_hero->movePoints)
+            return 0;
+        if (cell->PlayerKnowsCell(current_hero->owner)) {
+            const ExtraInfoUnion* info =
+                static_cast<const ExtraInfoUnion*>(
+                    static_cast<const void*>(cell));
+            return static_cast<int>(AI_value_of_luck(
+                const_cast<hero*>(current_hero)->GetLuck(0, 0, 1),
+                info->fountain_info.luck));
+        }
+        return static_cast<int>(AI_value_of_luck(
+            const_cast<hero*>(current_hero)->GetLuck(0, 0, 1), 1));
+    case FOUNTAIN_OF_YOUTH:
+        return value_of_move_source(
+            current_hero, 0x4000, 200, &move_cost);
 
     case GARDEN_OF_REVELATION:
         return ValueOfGarden(current_hero, cell);
@@ -2797,80 +3406,248 @@ long AI_value_of_event(const hero* current_hero, type_point point,
     case LIGHTHOUSE:
         return ValueOfLighthouse(cell);
     case MAGIC_SCHOOL:
-        return ValueOfMagicSchool(current_hero, cell);
+        // Both Dreamcast and Complete retain this named helper call. Keep
+        // the source-real boundary even when VC6's current budget wants to
+        // expand it.
+#pragma inline_depth(0)
+        return INLINE_GATE(ValueOfMagicSchool(current_hero, cell));
+#pragma inline_depth()
     case MAGIC_SPRING:
-        return get_value_of_spring(current_hero, cell,
-                                   static_cast<unsigned short>(move_cost));
+        // Both targets retain this source-real helper boundary.
+#pragma inline_depth(0)
+        return INLINE_GATE(get_value_of_spring(
+            current_hero, cell,
+            static_cast<unsigned short>(move_cost)));
+#pragma inline_depth()
     case MAGIC_WELL:
-        return get_value_of_well(current_hero,
-                                 static_cast<unsigned short>(move_cost));
+        // Complete retains this helper call as well; keep the decision
+        // independent of the surrounding event arm's changing inline budget.
+#pragma inline_depth(0)
+        return INLINE_GATE(get_value_of_well(
+            current_hero, static_cast<unsigned short>(move_cost)));
+#pragma inline_depth()
     case MERC_CAMP:
         return ValueOfMercenaryCamp(current_hero, cell);
     case MERMAID:
-        return LuckIncreaseValue(current_hero, 1);
+        if (current_hero->flags & 0x8000)
+            return 0;
+        if (move_cost > current_hero->movePoints)
+            return 0;
+#pragma inline_depth(0)
+        return INLINE_GATE(
+            const_cast<hero*>(current_hero)->LuckIncreaseValue(1));
+#pragma inline_depth()
     case MINE:
-        return ValueOfMine(current_hero, cell);
+#pragma inline_depth(0)
+        return INLINE_GATE(ValueOfMine(current_hero, cell));
+#pragma inline_depth()
     case MONSTER:
-        return value_of_monsters(current_hero, cell, point);
+#pragma inline_depth(0)
+        return INLINE_GATE(value_of_monsters(current_hero, cell, point));
+#pragma inline_depth()
+
+    case MYSTICAL_GARDEN: {
+        const ExtraInfoUnion* info =
+            static_cast<const ExtraInfoUnion*>(
+                static_cast<const void*>(cell));
+        if (!info->GardenIsFull())
+            return 0;
+        return static_cast<long>(
+            (player->resourceValue[GOLD] * 500.0
+             + player->resourceValue[GEMS] * 5.0)
+            / 2.0);
+    }
 
     case OASIS:
-        return value_of_move_source(current_hero, 0x400, 400, &move_cost);
+#pragma inline_depth(0)
+        return INLINE_GATE(value_of_move_source(
+            current_hero, 0x80, 400, &move_cost));
+#pragma inline_depth()
     case OBELISK:
-        return value_of_obelisk(cell, current_hero->owner);
+#pragma inline_depth(0)
+        return INLINE_GATE(value_of_obelisk(cell, current_hero->owner));
+#pragma inline_depth()
     case OBSERVATORY:
-        return AI_value_of_observatory(point, current_hero->owner, 10);
+#pragma inline_depth(0)
+        return INLINE_GATE(
+            AI_value_of_observatory(point, current_hero->owner, 20));
+#pragma inline_depth()
     case POWER_SCHOOL:
-        return ValueOfPowerSchool(current_hero, cell);
+#pragma inline_depth(0)
+        return INLINE_GATE(ValueOfPowerSchool(current_hero, cell));
+#pragma inline_depth()
     case PRISON:
-        return ValueOfPrison(cell, player);
+#pragma inline_depth(0)
+        return INLINE_GATE(ValueOfPrison(cell, player));
+#pragma inline_depth()
     case PYRAMID:
-        return value_of_pyramid(current_hero, cell);
+#pragma inline_depth(0)
+        return INLINE_GATE(value_of_pyramid(current_hero, cell));
+#pragma inline_depth()
     case RALLY_FLAG:
-        return ValueOfRallyFlag(current_hero, &move_cost);
+        if (move_cost > current_hero->movePoints)
+            return 0;
+#pragma inline_depth(0)
+        return INLINE_GATE(ValueOfRallyFlag(current_hero, &move_cost));
+#pragma inline_depth()
     case REFUGEE_CAMP:
-        return ValueOfRefugeeCamp(current_hero, cell);
+#pragma inline_depth(0)
+        return INLINE_GATE(ValueOfRefugeeCamp(current_hero, cell));
+#pragma inline_depth()
     case RESOURCE:
-        return ValueOfResource(current_hero, cell, player);
+#pragma inline_depth(0)
+        return INLINE_GATE(ValueOfResource(current_hero, cell, player));
+#pragma inline_depth()
     case SCHOLAR:
-        return hero::GetExperienceIncrement(current_hero->level);
+        return static_cast<int>(
+            hero::GetExperienceIncrement(current_hero->level)
+            * current_hero->turnExperienceToRVRatio);
     case SEA_CHEST:
-        return ValueOfSeaChest(current_hero, cell);
+#pragma inline_depth(0)
+        return INLINE_GATE(ValueOfSeaChest(current_hero, cell));
+#pragma inline_depth()
+    case SEER:
+        return gpGame->worldMap.SeerHutList[cell->extraInfo].getValue(
+            const_cast<hero*>(current_hero));
+    case SEPULCHER:
     case SHIPWRECK:
-        return value_of_bank(current_hero, cell);
+#pragma inline_depth(0)
+        return INLINE_GATE(value_of_bank(current_hero, cell));
+#pragma inline_depth()
+    case SHIPYARD: {
+        const ShipyardInfo* info = static_cast<const ShipyardInfo*>(
+            static_cast<const void*>(&cell->extraInfo));
+        // The Dreamcast statement is a named OnSameTeam call and Complete
+        // retains that boundary.  Pin only the call; the surrounding event
+        // arm remains ordinary source.
+#pragma inline_depth(0)
+        if (INLINE_GATE(gpGame->OnSameTeam(
+                info->owner, gNetLocalGamePos)))
+            return 0;
+#pragma inline_depth()
+        return 1000;
+    }
     case SHRINE1:
     case SHRINE2:
     case SHRINE3:
         return ValueOfShrine(current_hero, cell);
     case SIREN:
-        return ValueOfSirens(current_hero);
+#pragma inline_depth(0)
+        return INLINE_GATE(ValueOfSirens(current_hero));
+#pragma inline_depth()
     case SPELL_SCROLL:
-        return ValueOfScroll(current_hero, cell);
+#pragma inline_depth(0)
+        return INLINE_GATE(ValueOfScroll(current_hero, cell));
+#pragma inline_depth()
     case STABLES:
-        return ValueOfStables(current_hero, &move_cost);
+#pragma inline_depth(0)
+        return INLINE_GATE(ValueOfStables(current_hero, &move_cost));
+#pragma inline_depth()
     case TEMPLE:
-        return MoraleIncreaseValue(current_hero, 2);
+        if (current_hero->flags & 0x100)
+            return 0;
+        if (current_hero->flags & 0x4000000)
+            return 0;
+        if (move_cost > current_hero->movePoints)
+            return 0;
+#pragma inline_depth(0)
+        return INLINE_GATE(
+            const_cast<hero*>(current_hero)->MoraleIncreaseValue(2));
+#pragma inline_depth()
     case TOWN:
-        return value_of_town(current_hero, point.x, point.y, point.z,
-                             static_cast<short>(move_cost));
+#pragma inline_depth(0)
+        return INLINE_GATE(value_of_town(
+            current_hero, point.x, point.y, point.z,
+            static_cast<short>(move_cost)));
+#pragma inline_depth()
+    case TRAINING_GROUNDS: {
+        const ExtraInfoUnion* info = static_cast<const ExtraInfoUnion*>(
+            static_cast<const void*>(cell));
+        if (current_hero->TrainingGroundsFlags
+            & (1UL << info->GetItemId()))
+            return 0;
+        return static_cast<int>(
+            current_hero->turnExperienceToRVRatio * 1000.0f);
+    }
     case TREASURE_CHEST:
-        return ValueOfTreasure(current_hero);
+#pragma inline_depth(0)
+        return INLINE_GATE(ValueOfTreasure(current_hero));
+#pragma inline_depth()
     case TREE_OF_KNOWLEDGE:
-        return ValueOfTree(current_hero, cell);
+#pragma inline_depth(0)
+        return INLINE_GATE(ValueOfTree(current_hero, cell));
+#pragma inline_depth()
     case UNIVERSITY: {
         ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
             static_cast<void*>(cell));
-        return value_of_university(current_hero, info->get_university(), 1);
+#pragma inline_depth(0)
+        return INLINE_GATE(value_of_university(
+            current_hero, info->get_university(), 1));
+#pragma inline_depth()
     }
     case WAGON:
-        return value_of_wagon(cell, current_hero->owner);
+#pragma inline_depth(0)
+        return INLINE_GATE(value_of_wagon(cell, current_hero->owner));
+#pragma inline_depth()
     case WAR_MACHINE_FACTORY:
-        return value_of_war_factory(current_hero, move_cost);
+#pragma inline_depth(0)
+        return INLINE_GATE(value_of_war_factory(current_hero, move_cost));
+#pragma inline_depth()
     case WAR_SCHOOL:
-        return value_of_war_school(current_hero, cell);
+#pragma inline_depth(0)
+        return INLINE_GATE(value_of_war_school(current_hero, cell));
+#pragma inline_depth()
+    case WARRIOR_TOMB: {
+        const ExtraInfoUnion* info =
+            static_cast<const ExtraInfoUnion*>(
+                static_cast<const void*>(cell));
+#pragma inline_depth(0)
+        if (INLINE_GATE(info->PlayerKnowsCell(gNetLocalGamePos)))
+            return 0;
+#pragma inline_depth()
+    }
+    case SHIPWRECK_SURVIVOR:
+        // Complete's retail jump table maps object type 86 directly to the
+        // backpack-test / average-artifact tail which WARRIOR_TOMB reaches
+        // by fallthrough. Dreamcast independently proves this named helper.
+        if (const_cast<hero*>(current_hero)
+                ->get_number_in_backpack(1) >= HERO_BACKPACK_CAPACITY)
+            return 0;
+        return static_cast<int>(gpCurrentPlayer->turnValueOfAvgArtifact);
+    case WATER_WHEEL: {
+        const ExtraInfoUnion* info =
+            static_cast<const ExtraInfoUnion*>(
+                static_cast<const void*>(cell));
+#pragma inline_depth(0)
+        if (INLINE_GATE(info->PlayerKnowsCell(gNetLocalGamePos))) {
+#pragma inline_depth()
+            return static_cast<long>(
+                info->get_wheel_gold() * player->resourceValue[GOLD]);
+        }
+        return static_cast<long>(
+            player->resourceValue[GOLD] * 1000.0);
+    }
     case WATERING_HOLE:
-        return value_of_move_source(current_hero, 0x800, 200, &move_cost);
+#pragma inline_depth(0)
+        return INLINE_GATE(value_of_move_source(
+            current_hero, 0x40, 200, &move_cost));
+#pragma inline_depth()
+    case WINDMILL: {
+        const ExtraInfoUnion* info =
+            static_cast<const ExtraInfoUnion*>(
+                static_cast<const void*>(cell));
+#pragma inline_depth(0)
+        if (INLINE_GATE(info->PlayerKnowsCell(gNetLocalGamePos))) {
+#pragma inline_depth()
+            if (info->get_windmill_amount() == 0)
+                return 0;
+        }
+        return gpCurrentPlayer->averageResourceValue * 9 / 2;
+    }
     case WITCH_HUT:
-        return value_of_witch_hut(current_hero, cell);
+#pragma inline_depth(0)
+        return INLINE_GATE(value_of_witch_hut(current_hero, cell));
+#pragma inline_depth()
     }
     return 0;
 }
@@ -2983,7 +3760,7 @@ long value_of_learning(const hero* current_hero, SpellID spell)
 #if 0  // @carcass -- philai body-evidence claims, retail RVA order (divergent from DC link order)
 
 // E:\gamedcs\philai.cpp:2054
-// Retail claim promoted to the reconstructed body below.
+// Retail claim promoted to the source-order definition above.
 long value_of_bank(const hero* current_hero, NewmapCell* cell)
 {
     // @stub
@@ -2992,44 +3769,11 @@ long value_of_bank(const hero* current_hero, NewmapCell* cell)
 // E:\gamedcs\philai.cpp:2128
 #endif  // @carcass
 
-// E:\gamedcs\philai.cpp:2054. Retail first resolves the cell's creature-bank
-// record, rejects an already emptied bank, then values its guards. The record
-// layout and the subsequent +0x38 resource row, creature reward, and artifact
-// vector are independently fixed by the shared creature-bank model.
+// The definition stays at Dreamcast source line 2054 above the dispatcher so
+// VC6 sees the real inline body. This redeclaration records the retained
+// out-of-line copy at its retail link-order position.
 VA(0x00529920, 0x10d)  // anchor-callee + record layout, dc 0x110808
-long value_of_bank(const hero* current_hero, NewmapCell* cell)
-{
-    long value;
-    long resource_value;
-    int resource;
-
-    ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
-        static_cast<void*>(cell));
-    type_creature_bank& bank = info->get_creature_bank();
-    if (cell->extraInfo & 0x2000000)
-        return 0;
-
-    value = AI_value_of_combat(current_hero, 0, bank.guards, 0, cell);
-    if (value <= -500000000)
-        return value;
-
-    resource_value = 0;
-    for (resource = 0; resource < NUM_RESOURCES; resource++)
-        resource_value = static_cast<long>(
-            static_cast<double>(bank.resources[resource])
-                * gpGame->players[current_hero->owner]
-                      .resourceValue[resource]
-            + static_cast<double>(resource_value));
-    value += resource_value;
-
-    if (bank.reward_creatures > 0)
-        value += bank.reward_creatures
-            * akCreatureTypeTraits[bank.reward_creature].AI_value;
-
-    value = bank.artifacts.size() * gpCurrentPlayer->turnValueOfAvgArtifact
-        + value;
-    return value;
-}
+long value_of_bank(const hero* current_hero, NewmapCell* cell);
 
 VA(0x00529a30, 0x27f)  // anchor-callee, dc 0x1109b8
 int ValueOfGenerator(const hero* current_hero, int x, int y, int z, NewmapCell* cell, int move_cost)
@@ -3262,26 +4006,11 @@ long value_of_monsters(const hero* current_hero, NewmapCell* cell, type_point po
     return value;
 }
 
-// E:\gamedcs\philai.cpp:2711.  A one-per-hero movement bonus source (the
-// Oasis and Watering Hole arms call it with their hero-flag masks and
-// bonuses): credit the bonus against this trip's cost - an object whose
-// bonus outruns the trip is nearly free and highly prized - then add the
-// morale worth Complete folded into this helper (the DC 52-byte body
-// carried only the movement credit; the signature is the DC one).
-// Extern for emission while both arms are stubs.
+// The real source-order definition precedes AI_value_of_event so the early
+// arm can expand it. This annotation names the later retained retail body.
 VA(0x0052a1e0, 0xc3)  // anchor: hero flags mask + move_cost credit + OASIS/WATERING_HOLE arms, dc 0x111c44
-int value_of_move_source(const hero* current_hero, long flag, short increase,
-                         long* move_cost)
-{
-    if (current_hero->flags & flag)
-        return 0;
-    if (*move_cost >= increase) {
-        *move_cost -= increase;
-        return const_cast<hero*>(current_hero)->MoraleIncreaseValue(1);
-    }
-    *move_cost = 0;
-    return 10000;
-}
+int value_of_move_source(const hero* current_hero, long flag,
+                         short increase, long* move_cost);
 
 // E:\gamedcs\philai.cpp:2752.  An obelisk's worth: nothing once this
 // player's visit bit is set, the grail is absent, or the puzzle guess
@@ -3517,7 +4246,8 @@ VA(0x0052a870, 0x4F)  // anchor-callee, dc 0x1123ac
 int ValueOfSeaChest(const hero* current_hero, NewmapCell* cell)
 {
     playerData* player = const_cast<hero*>(current_hero)->get_player();
-    if (const_cast<hero*>(current_hero)->get_number_in_backpack(1) < 64)
+    if (const_cast<hero*>(current_hero)->get_number_in_backpack(1)
+            < HERO_BACKPACK_CAPACITY)
         return static_cast<int>(player->turnValueOfAvgArtifact / 10.0f
             + player->resourceValue[GOLD] * 1200.0);
     return static_cast<int>(player->resourceValue[GOLD] * 1200.0);
@@ -3532,7 +4262,8 @@ VA(0x0052a8c0, 0x9a)  // anchor-callee, dc 0x112510
 int ValueOfScroll(const hero* current_hero, NewmapCell* cell)
 {
     SpellID spell;
-    if (const_cast<hero*>(current_hero)->get_number_in_backpack(1) >= 64)
+    if (const_cast<hero*>(current_hero)->get_number_in_backpack(1)
+            >= HERO_BACKPACK_CAPACITY)
         return 0;
 
     int value = 10;

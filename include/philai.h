@@ -67,17 +67,21 @@ long value_of_garrison(const hero* current_hero, NewmapCell* cell);
 long value_of_idol(const hero* current_hero, long move_cost);
 int ValueOfFlotsam(playerData* player);
 int ValueOfGarden(const hero* current_hero, NewmapCell* cell);
-int ValueOfLeanTo(NewmapCell* cell, playerData* player);
-long value_of_hero_event(const hero* current_hero, NewmapCell* cell,
-                         short x, short y, short z, short move_cost);
-long value_of_hill_fort(const hero* current_hero, long move_cost);
-int ValueOfLibrary(const hero* current_hero, NewmapCell* cell);
-int ValueOfLighthouse(NewmapCell* cell);
+__forceinline int ValueOfLeanTo(NewmapCell* cell, playerData* player);
+__forceinline long value_of_hero_event(
+    const hero* current_hero, NewmapCell* cell, short x, short y, short z,
+    short move_cost);
+__forceinline long value_of_hill_fort(const hero* current_hero,
+                                      long move_cost);
+__forceinline int ValueOfLibrary(const hero* current_hero,
+                                 NewmapCell* cell);
+__forceinline int ValueOfLighthouse(NewmapCell* cell);
 int ValueOfMagicSchool(const hero* current_hero, NewmapCell* cell);
-int ValueOfMercenaryCamp(const hero* current_hero, NewmapCell* cell);
+__forceinline int ValueOfMercenaryCamp(const hero* current_hero,
+                                       NewmapCell* cell);
 int MoraleIncreaseValue(const hero* current_hero, int value);
 int LuckIncreaseValue(const hero* current_hero, int value);
-long value_of_magus_hut(long player_id);
+__forceinline long value_of_magus_hut(long player_id);
 int ValueOfMine(const hero* current_hero, NewmapCell* cell);
 long value_of_monsters(const hero* current_hero, NewmapCell* cell,
                        type_point point);
@@ -97,7 +101,7 @@ long ValueOfResource(const hero* current_hero, NewmapCell* cell,
 int ValueOfSeaChest(const hero* current_hero, NewmapCell* cell);
 int ValueOfSkeleton(const hero* current_hero, NewmapCell* cell);
 int ValueOfScroll(const hero* current_hero, NewmapCell* cell);
-int ValueOfShrine(const hero* current_hero, NewmapCell* cell);
+__forceinline int ValueOfShrine(const hero* current_hero, NewmapCell* cell);
 int ValueOfSirens(const hero* current_hero);
 int ValueOfStables(const hero* current_hero, long* move_cost);
 long value_of_town(const hero* current_hero, int x, int y, int z,

@@ -49,7 +49,8 @@ WAIVERS = common.HOMM3_DIR / "config/match-banked-waivers.tsv"
 def parse_history(patch_text: str) -> dict[int, tuple[float, str, str]]:
     """rva -> (best banked score ever, unit, label) from `git log -p` output.
 
-    Only added lines in the six-column cur/max/hist/rva format count. Rows
+    Added rows may use the legacy six-column cur/max/hist/rva format or append
+    the function source-definition hash. Rows
     without an RVA (the legacy flat-name format) have no stable identity and
     are skipped - the ratchet's own retirement rule already covers them.
     `git log -p` prints newest first, so the first label seen for an RVA is
@@ -60,7 +61,7 @@ def parse_history(patch_text: str) -> dict[int, tuple[float, str, str]]:
         if not line.startswith("+") or line.startswith("+++"):
             continue
         cols = line[1:].split("\t")
-        if len(cols) != 6 or cols[5] == "-":
+        if len(cols) not in (6, 7) or cols[5] == "-":
             continue
         try:
             # max OR hist: a row accepted down to zero still had an

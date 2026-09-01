@@ -85,13 +85,18 @@ def main(argv=None) -> int:
               "run `homm3 build` before committing")
         return 0
 
-    status.cmd_update(report)
     # A byte score is a checkpoint, not an admissibility invariant. Coherent
     # restoration of a Dreamcast-proven source shape may lower several local
     # scores before the surrounding class/TU reaches the retail lowering.
-    # Report those dips and preserve the peaks, but never make them fatal or
-    # recommend lowering the checkpoint to get a green build.
+    # Preserve the peaks, but never make a score regression fatal or recommend
+    # lowering the checkpoint to get a green build. Only a function whose own
+    # source hash changed and whose score fell from its preceding current score
+    # is worth reporting.
+    # Check BEFORE updating the ledger so a changed function is compared with
+    # its preceding current score/source hash. The update records this build,
+    # ensuring an unchanged below-MAX function is not reported again.
     status.cmd_check(report)
+    status.cmd_update(report)
 
     # EVERY evidence/source gate runs, even after one fails. Collect, report
     # everything, fail once; these gates, not a local objdiff maximum, decide

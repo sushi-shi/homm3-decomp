@@ -384,6 +384,27 @@ AI_CHOOSE_COMPLETE_NEARBY_RE = (
     r"path_cell\s*->\s*cost\s*\|\|\s*!\s*no_towns\s*\)\s*"
     r"is_nearby\s*=\s*0\s*;")
 
+# Dreamcast has the Shipwreck Survivor backpack statement before Shipyard.
+# Complete's object jump table instead sends object type 86 directly to the
+# suffix following WARRIOR_TOMB's PlayerKnowsCell guard; the Warrior arm falls
+# through to the same suffix.  Admit only that older statement occurrence as
+# reordered, while retaining the named backpack helper and the later shared
+# Dreamcast statement as positive facts.
+AI_EVENT_COMPLETE_SURVIVOR_FALLTHROUGH_RE = (
+    r"case\s+WARRIOR_TOMB\s*:\s*\{\s*"
+    r"const\s+ExtraInfoUnion\s*\*\s*info\s*=\s*"
+    r"static_cast\s*<\s*const\s+ExtraInfoUnion\s*\*\s*>\s*\(\s*"
+    r"static_cast\s*<\s*const\s+void\s*\*\s*>\s*\(\s*cell\s*\)\s*"
+    r"\)\s*;\s*if\s*\(\s*INLINE_GATE\s*\(\s*info\s*->\s*"
+    r"PlayerKnowsCell\s*\(\s*gNetLocalGamePos\s*\)\s*\)\s*\)\s*"
+    r"return\s+0\s*;\s*\}\s*case\s+SHIPWRECK_SURVIVOR\s*:\s*"
+    r"if\s*\(\s*const_cast\s*<\s*hero\s*\*\s*>\s*\(\s*"
+    r"current_hero\s*\)\s*->\s*get_number_in_backpack\s*\(\s*1\s*"
+    r"\)\s*>=\s*HERO_BACKPACK_CAPACITY\s*\)\s*return\s+0\s*;\s*"
+    r"return\s+"
+    r"static_cast\s*<\s*int\s*>\s*\(\s*gpCurrentPlayer\s*->\s*"
+    r"turnValueOfAvgArtifact\s*\)\s*;")
+
 
 @dataclass(frozen=True)
 class MissingCall:
@@ -886,6 +907,14 @@ RETAIL_BYTE_PROVEN_REVISION_REMOVALS: dict[
             "an instruction-identical inlined strcpy",
             0x005021C0, READ_HERO_COMPLETE_NAME_RE, ("strncpy",)),
     ),
+    ("philai.obj", 0x113E24): (
+        ProvenRevisionRemoval(
+            "Complete AI_value_of_event reorders Dreamcast's early "
+            "Shipwreck Survivor backpack statement into the retail-jump-"
+            "table-proved Warrior Tomb fallthrough suffix",
+            0x00528040, AI_EVENT_COMPLETE_SURVIVOR_FALLTHROUGH_RE, (),
+            dc_only_group_lines=(4034,)),
+    ),
     ("singleselectionwindow.obj", 0x13C79C): (
         ProvenRevisionRemoval(
             "Complete OnWidgetDeselect replaces Dreamcast's WinCE VM "
@@ -1100,6 +1129,13 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             "AI_choose_destination may not restore Dreamcast's superseded "
             "caller-local GetMapExtra nearby test",
             r"\bGetMapExtra\s*\(", 0, 0),
+    ),
+    ("philai.obj", 0x113E24): (
+        SourceRule(
+            "AI_value_of_event keeps Complete's retail-jump-table-proved "
+            "Warrior Tomb fallthrough into the shared Shipwreck Survivor "
+            "backpack-test and average-artifact suffix",
+            AI_EVENT_COMPLETE_SURVIVOR_FALLTHROUGH_RE, 1, 1),
     ),
     ("ai_player.obj", 0x2F694): (
         SourceRule(
@@ -3960,6 +3996,85 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
 }
 
 
+# Caller-local Complete codegen can retain a source-real call that another
+# emission of the same inline helper expands.  These are admitted asymmetric
+# boundaries: Dreamcast supplies the named source call and Complete retail
+# proves the particular retained x86 call.  The marker is deliberately an
+# identity macro; the two statement-scoped pragmas do the compiler work.
+# Keeping the roster here makes removing a gate as visible as removing the
+# named call itself, without inventing a global equal-call-count invariant.
+INLINE_GATE_REQUIREMENTS: dict[
+        tuple[str, int], tuple[tuple[str, int], ...]] = {
+    ("philai.obj", 0x110408): (
+        ("value_of_custom_item", 1),
+    ),
+    ("philai.obj", 0x110808): (
+        ("artifacts.size", 1),
+    ),
+    ("philai.obj", 0x1125EC): (
+        ("value_of_learning", 1),
+    ),
+    ("philai.obj", 0x113E24): (
+        ("ValueOfMagicSchool", 1),
+        ("get_value_of_spring", 1),
+        ("get_value_of_well", 1),
+        ("LuckIncreaseValue", 1),
+        ("ValueOfMine", 1),
+        ("value_of_monsters", 1),
+        ("value_of_move_source", 2),
+        ("value_of_obelisk", 1),
+        ("AI_value_of_observatory", 1),
+        ("ValueOfPowerSchool", 1),
+        ("ValueOfPrison", 1),
+        ("value_of_pyramid", 1),
+        ("ValueOfRallyFlag", 1),
+        ("ValueOfRefugeeCamp", 1),
+        ("ValueOfResource", 1),
+        ("ValueOfSeaChest", 1),
+        ("value_of_bank", 1),
+        ("OnSameTeam", 1),
+        ("ValueOfSirens", 1),
+        ("ValueOfScroll", 1),
+        ("ValueOfStables", 1),
+        ("MoraleIncreaseValue", 1),
+        ("value_of_town", 1),
+        ("ValueOfTreasure", 1),
+        ("ValueOfTree", 1),
+        ("value_of_university", 1),
+        ("value_of_wagon", 1),
+        ("value_of_war_factory", 1),
+        ("value_of_war_school", 1),
+        ("PlayerKnowsCell", 3),
+        ("value_of_witch_hut", 1),
+    ),
+}
+
+
+def _inline_gate_rule(callee: str, count: int) -> SourceRule:
+    between_directives = r"(?:(?!#pragma\s+inline_depth).)*?"
+    before_callee = r"(?:(?!#pragma\s+inline_depth|INLINE_GATE|[,;]).)*?"
+    pattern = (
+        r"#pragma\s+inline_depth\(0\)\s*"
+        + between_directives
+        + r"INLINE_GATE\s*\(\s*"
+        + before_callee
+        + re.escape(callee)
+        + r"\s*\("
+        + between_directives
+        + r"#pragma\s+inline_depth\(\)"
+    )
+    return SourceRule(
+        f"retail/Dreamcast-proven {callee} boundary remains a direct "
+        "INLINE_GATE call between statement-scoped inline-depth pragmas",
+        pattern, count, count, include_directives=True)
+
+
+for _inline_key, _inline_requirements in INLINE_GATE_REQUIREMENTS.items():
+    SOURCE_RULES[_inline_key] = SOURCE_RULES.get(_inline_key, ()) + tuple(
+        _inline_gate_rule(callee, count)
+        for callee, count in _inline_requirements)
+
+
 # One continuous out-of-class header-inline roster in Dreamcast Army.h.  The
 # class LF_FIELDLIST (type 0x205b) contains their declarations interspersed
 # among the other members, while CodeView lines 718..881 identify this later
@@ -6115,6 +6230,30 @@ INLINE_GATE(dst.insert(w, 1, v));
         if not contract_violations(broken_gate, inline_gate_key):
             failures.append("broken INLINE_GATE pragma pair passed")
 
+    def philai_gate_snippet(callee: str) -> str:
+        return ("#pragma inline_depth(0)\n"
+                f"INLINE_GATE({callee}());\n"
+                "#pragma inline_depth()\n")
+
+    for key, requirements in INLINE_GATE_REQUIREMENTS.items():
+        probe = "".join(
+            philai_gate_snippet(callee)
+            for callee, count in requirements
+            for _ in range(count))
+        inline_defects = [
+            rule for rule in contract_violations(probe, key)
+            if rule.description.startswith("retail/Dreamcast-proven")]
+        if inline_defects:
+            failures.append(
+                f"aligned philai INLINE_GATE roster did not pass {key}")
+        for callee, _count in requirements:
+            broken = probe.replace(
+                philai_gate_snippet(callee), f"{callee}();\n", 1)
+            defects = contract_violations(broken, key)
+            if not any(callee in rule.description for rule in defects):
+                failures.append(
+                    f"removed philai INLINE_GATE passed {key} {callee}")
+
     repeated_helper_groups = (
         CallGroup(5298, ("TSingleSelectionWindow::SetupAdvancedOptions",)),
         CallGroup(5564, ("TSingleSelectionWindow::SetupAdvancedOptions",)),
@@ -6122,6 +6261,63 @@ INLINE_GATE(dst.insert(w, 1, v));
     if groups_without_lines(repeated_helper_groups, frozenset((5298,))) != (
             repeated_helper_groups[1],):
         failures.append("DC-only statement removal erased retained helper")
+
+    ai_event_key = ("philai.obj", 0x113E24)
+    ai_event_va = 0x00528040
+    ai_event_fallthrough = """\
+case WARRIOR_TOMB: {
+    const ExtraInfoUnion* info = static_cast<const ExtraInfoUnion*>(
+        static_cast<const void*>(cell));
+    if (INLINE_GATE(info->PlayerKnowsCell(gNetLocalGamePos)))
+        return 0;
+}
+case SHIPWRECK_SURVIVOR:
+    if (const_cast<hero*>(current_hero)->get_number_in_backpack(1)
+            >= HERO_BACKPACK_CAPACITY)
+        return 0;
+    return static_cast<int>(gpCurrentPlayer->turnValueOfAvgArtifact);
+"""
+    event_lines = retail_proven_dc_only_group_lines(
+        ai_event_key, ai_event_fallthrough, ai_event_va)
+    if event_lines != frozenset((4034,)):
+        failures.append(
+            "retail-proved AI event Survivor reorder did not classify")
+    repeated_backpack_groups = (
+        CallGroup(4034, ("hero::get_number_in_backpack",)),
+        CallGroup(4094, ("hero::get_number_in_backpack",)),
+    )
+    if groups_without_lines(repeated_backpack_groups, event_lines) != (
+            repeated_backpack_groups[1],):
+        failures.append(
+            "AI event occurrence removal erased retained backpack helper")
+
+    def ai_event_fallthrough_defects(body: str) -> list[SourceRule]:
+        return [
+            rule for rule in contract_violations(body, ai_event_key)
+            if "Warrior Tomb fallthrough" in rule.description]
+
+    if ai_event_fallthrough_defects(ai_event_fallthrough):
+        failures.append("aligned AI event Survivor fallthrough did not pass")
+    for broken_event in (
+            ai_event_fallthrough.replace(
+                "case WARRIOR_TOMB:", "case WATER_WHEEL:", 1),
+            ai_event_fallthrough.replace(
+                "case SHIPWRECK_SURVIVOR:", "case SHIPYARD:", 1),
+            ai_event_fallthrough.replace(
+                "PlayerKnowsCell", "GetItemId", 1),
+            ai_event_fallthrough.replace(
+                "get_number_in_backpack", "get_backpack", 1),
+            ai_event_fallthrough.replace(
+                "return static_cast<int>("
+                "gpCurrentPlayer->turnValueOfAvgArtifact);",
+                "return 1;", 1)):
+        if retail_proven_dc_only_group_lines(
+                ai_event_key, broken_event, ai_event_va):
+            failures.append(
+                "broken AI event Survivor fallthrough classified reorder")
+        if not ai_event_fallthrough_defects(broken_event):
+            failures.append(
+                "broken AI event Survivor fallthrough passed source rule")
 
     redeclaration_probe = """\
 void wanted() { KeepHelper(); }

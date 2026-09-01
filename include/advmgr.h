@@ -25,6 +25,20 @@ struct type_creature_bank;
 struct type_university;
 class armyGroup;
 
+// MapCell.h's artifact-price domain, published in full by Dreamcast.  It
+// lives beside MapArtifactInfo rather than in events.h: the enum is part of
+// the packed map-cell representation and is also the return type of
+// ExtraInfoUnion::GetArtifactPrice.
+enum ArtifactPrices {
+    const_free_artifact = 0,
+    const_artifact_costs_2000 = 1,
+    const_artifact_requires_wisdom = 2,
+    const_artifact_requires_leadership = 3,
+    const_artifact_costs_2500 = 4,
+    const_artifact_costs_3000 = 5,
+    const_artifact_defended = 6
+};
+
 // events.obj needs the plain packed dword arm plus the object views its
 // reconstructed handlers actually read. Keeping this narrow avoids
 // importing the remaining eighteen bitfield views into its TU.
@@ -188,6 +202,20 @@ struct type_skeleton_info {
 };
 SIZE(type_skeleton_info, 4);
 
+// Dreamcast CodeView publishes all five MapArtifactInfo fields and their
+// order. Complete retains that record but expands the guard lane from eight
+// to nine bits for its larger creature domain; AI_value_of_event proves the
+// resulting retail positions directly: signed price 0..3, signed guard
+// 4..12, signed resource 13..16, a 14-bit guard count, and custom at bit 31.
+struct MapArtifactInfo {
+    ArtifactPrices price : 4;
+    TCreatureType guard : 9;
+    EGameResource resource_price : 4;
+    unsigned long guard_qty : 14;
+    unsigned long custom : 1;
+};
+SIZE(MapArtifactInfo, 4);
+
 // DoEventTreeOfKnowledge (0x4a6710) shares the corpse's five-bit id lane -
 // it reads it through the same GetItemId, as the Dreamcast line table
 // says at events.cpp:3454 - and adds a SIGNED three-bit price selector at
@@ -218,6 +246,7 @@ SIZE(type_university_info, 4);
 
 union ExtraInfoUnion {
     unsigned long value;
+    MapArtifactInfo artifact_info;
     type_water_wheel_info water_wheel_info;
     type_windmill_info windmill_info;
     type_lean_to_info lean_to_info;
@@ -231,6 +260,7 @@ union ExtraInfoUnion {
     type_wagon_info wagon_info;
     type_skeleton_info skeleton_info;
     type_tree_info tree_info;
+    ShrineInfo shrine_info;
     type_creature_bank_info creature_bank_info;
     type_university_info university_info;
 
@@ -240,7 +270,20 @@ union ExtraInfoUnion {
     void SetWagon(enum EGameResource resource, short amount);
     void SetWagon(int artifact);
     void set_witch_skill(int skill);
-    enum EGameResource GetArtifactResourceCost() const;
+    // MapCell.h:923-945. These are source-real accessors, not convenience
+    // wrappers: Dreamcast publishes their decorated signatures and bodies,
+    // while Complete inlines them into the artifact event/appraisal paths.
+    bool IsCustomized() const { return artifact_info.custom != 0; }
+    TCreatureType GetArtifactDefender() const { return artifact_info.guard; }
+    ArtifactPrices GetArtifactPrice() const { return artifact_info.price; }
+    enum EGameResource GetArtifactResourceCost() const
+    {
+        return artifact_info.resource_price;
+    }
+    bool IsDefendedArtifact() const
+    {
+        return artifact_info.price == const_artifact_defended;
+    }
 
     // The lean-to trio, all three DC-published (MapCell.h:985/992/997).
     // GetLeanToAmount is decorated `short` and that WIDTH is what makes
@@ -364,6 +407,10 @@ union ExtraInfoUnion {
     // the Dreamcast line table over DoEventTreeOfKnowledge (dc 0x964c4)
     // and spelled `int` for get_tomb_artifact's reason.
     int GetTreePrice() const { return tree_info.price; }
+    SpellID GetShrineSpell() const
+    {
+        return shrine_info.spell;
+    }
     void SetSkeleton(int id, bool has_treasure, short artifact)
     {
         skeleton_info.id = id;

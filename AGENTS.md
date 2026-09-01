@@ -185,6 +185,14 @@ a negative control that proves flattening or de-inlining fails. Bank percentage 
 max/history; an unrelated current-score dip is not permission to undo a proven helper
 boundary.
 
+`homm3 status check` fingerprints each VA-owned function's own source definition. It reports
+a score regression only when that source hash changed and its score fell from the preceding
+current checkpoint. An unchanged function is never reported as a drop, even when header/TU
+optimizer state or a delink-generation change moves its current score below MAX. A changed
+function that improves while still below MAX is also not a drop. Unattributable functions
+are unknown, not edited. The banked MAX remains monotone and is the work-order frontier used
+by `homm3 vc6 queue`.
+
 ## Tooling layout
 
 One importable package (`scripts/homm3/`), one CLI (`homm3`), grouped by role:

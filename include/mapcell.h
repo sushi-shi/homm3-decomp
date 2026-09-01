@@ -678,6 +678,14 @@ public:
     // register assignment off retail's.
     bool IsCustomized() const { return monster_info.custom != 0; }
 
+    // MapCell.h:1260. Dreamcast returns TArtifact; this foundational header
+    // cannot name artifact.h's enum without creating a circular include, so
+    // the ABI-equivalent int spelling is used at the declaration and callers
+    // cross into the enum domain explicitly. Dreamcast masks the older
+    // seven-bit object index; Complete's inlined artifact readers load the
+    // full signed word, proving that the later accessor no longer masks it.
+    int GetArtifactIndex() const { return objectIndex; }
+
     // The campfire's pair, `?GetCampfireSize@ExtraInfoUnion@@QBAFXZ` and
     // `?GetCampfireResource@ExtraInfoUnion@@QBA?AW4EGameResource@@XZ` in
     // the Dreamcast line table over DoEventCampfire (dc 0x922e8), scoped

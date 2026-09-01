@@ -3,7 +3,6 @@
 # Banked-exact current dips are observational and excluded.
 # recoverable = size * (1 - max_fuzzy/100).
 class	recoverable	max_fuzzy	current_fuzzy	size	unit	fn	route	knob
-inliner (predict-inline)	3602	29.3653	28.0248	5100	singleselectionwindow	?OnWidgetDeselect@TSingleSelectionWindow@@QAEHPAVmessage@@PAEE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 7 under-inline, 20 over-inline (11 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	3819	33.0444	33.0444	5704	philai	?AI_value_of_event@@YIJPBVhero@@Utype_point@@AAJ@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 32 under-inline, 87 over-inline (5 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	1248	35.9206	25.6968	1947	ai_player	?find_all_destinations@@YIJPAVhero@@PAVsearchArray@@PAV?$vector@UHeroDestination@@V?$allocator@UHeroDestination@@@std@@@std@@JEEE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 9 over-inline (5 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	624	39.0772	39.0772	1024	seerhut	?DoSeerEvent@TSeerHut@@QAEXPAVhero@@_N@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 5 under-inline, 2 over-inline (4 name-unresolvable pair(s) discounted)
@@ -219,6 +218,7 @@ register-homing (why-reg)	47	91.0961	91.0961	525	cmbtmgr	?Unnamed464d40@combatMa
 inliner (predict-inline)	137	91.1006	91.1006	1542	advmgr	?ProcessMapSelect@advManager@@QAEXPBVmessage@@PAUtype_point@@PAPAVNewmapCell@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline
 register-homing (why-reg)	32	91.1017	91.1017	355	spells	?GetNextChainLightningTarget@combatManager@@QAEJPBVarmy@@J@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	13	91.1111	91.1111	145	remote	??1CNetMsgHandlerPause@@UAE@XZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
+inliner (predict-inline)	451	91.1529	91.1529	5100	singleselectionwindow	?OnWidgetDeselect@TSingleSelectionWindow@@QAEHPAVmessage@@PAEE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline, 8 over-inline (11 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	80	91.2973	91.2973	915	bottomviewsubwindow	??0TBottomViewResourceMessage@@QAE@PAVheroWindow@@HHPBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 inliner (predict-inline)	142	91.3243	91.3243	1638	multiplayerwindow	?OnSearch@TMultiPlayerWindow@@QAEEXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 3 over-inline (27 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	113	91.4600	91.4600	1318	army	?attack_wall@army@@AAEXW4TWallTargetId@@J@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (1 name-unresolvable pair(s) discounted)

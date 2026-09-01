@@ -2594,11 +2594,15 @@ public:
     // TurnOffAIMusic (dc 0xb1fc0). ProcessDeSelect's END_TURN arm calls it
     // once the "heroes can still move" confirm is past.
     void NextPlayer();
-#ifdef HOMM3_EVENTS_GAME_INLINE_HELPERS
-    // Game.h:1056/1380. These source accessors are expanded into
-    // DispatchEvent in retail; their nested vector/map helpers remain
-    // visible so the source hierarchy is not flattened again.
+#if defined(HOMM3_EVENTS_GAME_INLINE_HELPERS) \
+ || defined(HOMM3_PHILAI_OBJ_DECLS)
+    // Game.h:1056. GetGarrison is expanded into both DispatchEvent and
+    // philai's value_of_garrison; its nested vector access remains visible
+    // so the recovered source hierarchy is not flattened again.
     garrison* GetGarrison(int which) { return &garrisons[which]; }
+#endif
+#ifdef HOMM3_EVENTS_GAME_INLINE_HELPERS
+    // Game.h:1380. DispatchEvent expands this cell accessor.
     NewmapCell* get_cell(type_point point);
 #else
     NewmapCell* get_cell(type_point point);      // 0x42ed80 (ai_player.obj)
