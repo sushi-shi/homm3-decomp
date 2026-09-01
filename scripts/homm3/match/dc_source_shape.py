@@ -4182,6 +4182,72 @@ SOURCE_RULES[_check_adv_cheat_code_key] = SOURCE_RULES.get(
     )
 
 
+# The selection-window destructor is the worked proof that a positive source
+# fact which emits no Complete instructions can still be required for exact C1
+# state.  Dreamcast line 4069 guards del_Spr_from_Cache with !m_flag65; the
+# Complete helper folds to nothing, but removing the guard changes the final
+# implicit vector-member teardown from outer-inline/inner-call to an outer
+# call (96.98%, 33/34 exact blocks).  Restoring the real guard yields 100% and
+# 34/34.  Ratchet the complete ownership sequence so a later local score chase
+# cannot flatten it or resurrect the false 163+GoldBox model.
+_single_selection_dtor_key = ("singleselectionwindow.obj", 0x1396D8)
+SOURCE_RULES[_single_selection_dtor_key] = SOURCE_RULES.get(
+    _single_selection_dtor_key, ()) + (
+        SourceRule(
+            "~TSingleSelectionWindow keeps Dreamcast's sole i local, "
+            "load/save/remote handler guard, and flagBack ownership head",
+            r"\A\s*int\s+i\s*;\s*"
+            r"if\s*\(\s*!\s*m_flag64\s*&&\s*!\s*m_flag65\s*&&\s*"
+            r"bVideoPaused\s*&&\s*pDPlay\s*\)\s*"
+            r"pDPlay\s*->\s*SetNetMsgHandler\s*\(\s*0\s*\)\s*;\s*"
+            r"delete\s+flagBack\s*;", 1, 1),
+        SourceRule(
+            "~TSingleSelectionWindow keeps the panel/flag loop, shared "
+            "Resource disposal, Complete's retail-proved 164-entry HeroPix "
+            "walk, and ordered trailing image ownership",
+            r"for\s*\(\s*i\s*=\s*0\s*;\s*i\s*<\s*8\s*;\s*\+\+\s*i\s*\)"
+            r"\s*\{\s*ResourceManager\s*::\s*Dispose\s*\(\s*Panels\s*"
+            r"\[\s*i\s*\]\s*\)\s*;\s*ResourceManager\s*::\s*Dispose"
+            r"\s*\(\s*Flags\s*\[\s*i\s*\]\s*\)\s*;\s*\}\s*"
+            r"ResourceManager\s*::\s*Dispose\s*\(\s*Resource\s*\)\s*;\s*"
+            r"for\s*\(\s*i\s*=\s*0\s*;\s*i\s*<\s*164\s*;\s*\+\+\s*i"
+            r"\s*\)\s*\{\s*if\s*\(\s*HeroPix\s*\[\s*i\s*\]\s*\)"
+            r"\s*ResourceManager\s*::\s*Dispose\s*\(\s*HeroPix\s*\[\s*i"
+            r"\s*\]\s*\)\s*;\s*\}\s*"
+            r"ResourceManager\s*::\s*Dispose\s*\(\s*TownPix\s*\)\s*;\s*"
+            r"ResourceManager\s*::\s*Dispose\s*\(\s*LossIcon\s*\)\s*;\s*"
+            r"ResourceManager\s*::\s*Dispose\s*\(\s*VictoryIcon\s*\)\s*;"
+            r"\s*ResourceManager\s*::\s*Dispose\s*\(\s*VersionIcon\s*\)"
+            r"\s*;\s*ResourceManager\s*::\s*Dispose\s*\(\s*randomTownBmp"
+            r"\s*\)\s*;\s*ResourceManager\s*::\s*Dispose\s*\(\s*"
+            r"randomHeroBmp\s*\)\s*;\s*ResourceManager\s*::\s*Dispose\s*"
+            r"\(\s*noHeroBmp\s*\)\s*;\s*ResourceManager\s*::\s*Dispose"
+            r"\s*\(\s*heroSpecificAbility\s*\)\s*;", 1, 1),
+        SourceRule(
+            "~TSingleSelectionWindow keeps Dreamcast's manager delete/null, "
+            "global clear and widget iterator scopes, then Complete's save "
+            "teardown followed by the Dreamcast !m_flag65 cache-cleanup "
+            "guard; the zero-byte guard is an inline-state source fact",
+            r"if\s*\(\s*pNewPlayerUpdateMan\s*\)\s*\{\s*delete\s+"
+            r"pNewPlayerUpdateMan\s*;\s*pNewPlayerUpdateMan\s*=\s*0\s*;\s*"
+            r"\}\s*gUnnamed69fbe8\s*=\s*0\s*;\s*for\s*\(\s*std\s*::\s*"
+            r"vector\s*<\s*widget\s*\*\s*>\s*::\s*iterator\s+it\s*=\s*"
+            r"Widgets\s*\.\s*begin\s*\(\s*\)\s*;\s*it\s*!=\s*Widgets"
+            r"\s*\.\s*end\s*\(\s*\)\s*;\s*\+\+\s*it\s*\)\s*\{\s*"
+            r"if\s*\(\s*\*\s*it\s*\)\s*delete\s+\*\s*it\s*;\s*\}\s*"
+            r"if\s*\(\s*m_flag65\s*\)\s*\{\s*BackupGameHeaders\s*\(\s*"
+            r"gpGame\s*,\s*saveHeader\s*\)\s*;\s*delete\s+saveHeader\s*;"
+            r"\s*saveHeader\s*=\s*0\s*;\s*\}\s*if\s*\(\s*!\s*m_flag65"
+            r"\s*\)\s*ResourceManager\s*::\s*del_Spr_from_Cache\s*\(\s*"
+            r"\)\s*;\s*\Z", 1, 1),
+        SourceRule(
+            "~TSingleSelectionWindow has exactly one source-visible "
+            "del_Spr_from_Cache boundary; duplicating a zero-byte candidate "
+            "to spend inline budget is forbidden",
+            r"\bResourceManager\s*::\s*del_Spr_from_Cache\s*\(", 1, 1),
+    )
+
+
 # Caller-local Complete codegen can retain a source-real call that another
 # emission of the same inline helper expands.  These are admitted asymmetric
 # boundaries: Dreamcast supplies the named source call and Complete retail
@@ -5179,6 +5245,33 @@ def single_selection_window_contract_violations(
              "and ordered memcpy statements")]
 
 
+def single_selection_destructor_layout_violations(
+        public_header_text: str) -> list[tuple[int, str]]:
+    """Audit the retail-proved widening of Dreamcast's HeroPix array.
+
+    Dreamcast type records make HeroPix one pointer array and place GoldBox
+    before Flags.  Complete's destructor independently walks 164 pointers from
+    +0xc8, proving that +0x354 is the last three HeroPix entries rather than a
+    new GoldBox member.  This is a layout/source fact, not padding arithmetic.
+    """
+    header = _source.mask(public_header_text)
+    run = (
+        r"Bitmap816\s*\*\s*Flags\s*\[\s*8\s*\]\s*;\s*"
+        r"Bitmap816\s*\*\s*Panels\s*\[\s*8\s*\]\s*;\s*"
+        r"Bitmap816\s*\*\s*HeroPix\s*\[\s*164\s*\]\s*;")
+    has_false_split = re.search(
+        r"Bitmap816\s*\*\s*GoldBox\s*;", header) is not None
+    if re.search(run, header, re.DOTALL) is not None and not has_false_split:
+        return []
+    token = re.search(r"\b(?:HeroPix|GoldBox)\b", header)
+    line = (public_header_text.count("\n", 0, token.start()) + 1
+            if token else 1)
+    return [(line,
+             "TSingleSelectionWindow must retain Flags[8], Panels[8], then "
+             "the single retail-proved HeroPix[164] array; Dreamcast places "
+             "GoldBox elsewhere, so do not split +0x354 back out")]
+
+
 def new_player_update_contract_violations(
         header_text: str, source_text: str) -> list[tuple[int, str]]:
     """Audit the DC-derived, retail-corroborated two-vtable type chain.
@@ -5223,7 +5316,8 @@ def new_player_update_contract_violations(
         r"virtual\s+void\s+Finish\s*\(\s*\)\s*;")
     manager = (
         r"class\s+CNewPlayerUpdateMan\s*\{.*?"
-        r"CNewPlayerUpdateTask\s*\*\s*m_procs\s*\[\s*8\s*\]\s*;")
+        r"CNewPlayerUpdateProc\s*\*\s*m_procs\s*\[\s*8\s*\]\s*;.*?"
+        r"~\s*CNewPlayerUpdateMan\s*\(\s*\)\s*;")
     definitions = (
         r"VA\s*\(\s*0x00589240\s*,\s*0x2F\s*\).*?"
         r"t_map_list_update\s*::\s*t_map_list_update\s*"
@@ -5241,6 +5335,10 @@ def new_player_update_contract_violations(
         r"VA\s*\(\s*0x00578010\s*,\s*0x272\s*\).*?"
         r"inline\s+void\s+CNewPlayerUpdateProc\s*::\s*HandleRequests\s*"
         r"\(\s*\)",
+        r"CNewPlayerUpdateMan\s*::\s*~\s*CNewPlayerUpdateMan\s*"
+        r"\(\s*\)\s*\{\s*for\s*\(\s*int\s+i\s*=\s*0\s*;\s*i\s*<\s*8"
+        r"\s*;\s*\+\+\s*i\s*\)\s*\{\s*if\s*\(\s*m_procs\s*\[\s*i"
+        r"\s*\]\s*\)\s*delete\s+m_procs\s*\[\s*i\s*\]\s*;\s*\}\s*\}",
     )
     derived_body = re.search(
         r"class\s+t_map_list_update\s*:\s*public\s+"
@@ -5258,8 +5356,9 @@ def new_player_update_contract_violations(
     return [(line,
              "the NewPlayer update model must retain the novtable shared "
              "task, CNewPlayerUpdateProc field-initializing level, derived "
-             "t_map_list_update override, interface-pointer manager, exact "
-             "0x00589240 derived constructor boundary, shared teardown, and "
+             "t_map_list_update override, concrete-proc pointer manager and "
+             "its eight-slot owning destructor, exact 0x00589240 derived "
+             "constructor boundary, shared task teardown, and "
              "Dreamcast-owned base RequestConfirmation/HandleRequests "
              "boundaries (without an invented log vararg)")]
 
@@ -12807,6 +12906,91 @@ inline CUpdatePlayerPosMsg::CUpdatePlayerPosMsg(
     if any(not single_selection_window_contract_violations(header, source)
            for header, source in broken_update_probes):
         failures.append("broken CUpdatePlayerPosMsg constructor shape passed")
+    selection_layout_probe = """\
+class TSingleSelectionWindow {
+public:
+    Bitmap816* Flags[8];
+    Bitmap816* Panels[8];
+    Bitmap816* HeroPix[164];
+};
+"""
+    if single_selection_destructor_layout_violations(
+            selection_layout_probe):
+        failures.append("aligned selection destructor layout did not pass")
+    broken_selection_layouts = (
+        selection_layout_probe.replace("HeroPix[164]", "HeroPix[163]"),
+        selection_layout_probe.replace(
+            "Bitmap816* HeroPix[164];",
+            "Bitmap816* HeroPix[163];\n    Bitmap816* GoldBox;"),
+        selection_layout_probe.replace(
+            "Bitmap816* Flags[8];\n    Bitmap816* Panels[8];",
+            "Bitmap816* Panels[8];\n    Bitmap816* Flags[8];"),
+    )
+    if any(not single_selection_destructor_layout_violations(probe)
+           for probe in broken_selection_layouts):
+        failures.append("broken selection destructor layout passed")
+
+    selection_dtor_probe = """\
+int i;
+if (!m_flag64 && !m_flag65 && bVideoPaused && pDPlay)
+    pDPlay->SetNetMsgHandler(0);
+delete flagBack;
+for (i = 0; i < 8; ++i) {
+    ResourceManager::Dispose(Panels[i]);
+    ResourceManager::Dispose(Flags[i]);
+}
+ResourceManager::Dispose(Resource);
+for (i = 0; i < 164; ++i) {
+    if (HeroPix[i])
+        ResourceManager::Dispose(HeroPix[i]);
+}
+ResourceManager::Dispose(TownPix);
+ResourceManager::Dispose(LossIcon);
+ResourceManager::Dispose(VictoryIcon);
+ResourceManager::Dispose(VersionIcon);
+ResourceManager::Dispose(randomTownBmp);
+ResourceManager::Dispose(randomHeroBmp);
+ResourceManager::Dispose(noHeroBmp);
+ResourceManager::Dispose(heroSpecificAbility);
+if (pNewPlayerUpdateMan) {
+    delete pNewPlayerUpdateMan;
+    pNewPlayerUpdateMan = 0;
+}
+gUnnamed69fbe8 = 0;
+for (std::vector<widget*>::iterator it = Widgets.begin();
+     it != Widgets.end(); ++it) {
+    if (*it)
+        delete *it;
+}
+if (m_flag65) {
+    BackupGameHeaders(gpGame, saveHeader);
+    delete saveHeader;
+    saveHeader = 0;
+}
+if (!m_flag65)
+    ResourceManager::del_Spr_from_Cache();
+"""
+    if contract_violations(selection_dtor_probe,
+                           _single_selection_dtor_key):
+        failures.append("aligned selection destructor shape did not pass")
+    broken_selection_dtors = (
+        selection_dtor_probe.replace("i < 164", "i < 163"),
+        selection_dtor_probe.replace(
+            "ResourceManager::Dispose(Panels[i]);\n"
+            "    ResourceManager::Dispose(Flags[i]);",
+            "ResourceManager::Dispose(Flags[i]);\n"
+            "    ResourceManager::Dispose(Panels[i]);"),
+        selection_dtor_probe.replace("    delete pNewPlayerUpdateMan;\n", ""),
+        selection_dtor_probe.replace(
+            "if (!m_flag65)\n    "
+            "ResourceManager::del_Spr_from_Cache();",
+            "ResourceManager::del_Spr_from_Cache();"),
+        selection_dtor_probe + "ResourceManager::del_Spr_from_Cache();\n",
+    )
+    if any(not contract_violations(probe, _single_selection_dtor_key)
+           for probe in broken_selection_dtors):
+        failures.append("broken selection destructor shape passed")
+
     update_task_header_probe = """\
 class __declspec(novtable) CNewPlayerUpdateTask {
 public:
@@ -12843,7 +13027,8 @@ public:
 };
 class CNewPlayerUpdateMan {
 public:
-    CNewPlayerUpdateTask* m_procs[8];
+    CNewPlayerUpdateProc* m_procs[8];
+    ~CNewPlayerUpdateMan();
 };
 """
     update_task_source_probe = """\
@@ -12866,6 +13051,13 @@ VA(0x00578010, 0x272)
 inline void CNewPlayerUpdateProc::HandleRequests()
 {
 }
+CNewPlayerUpdateMan::~CNewPlayerUpdateMan()
+{
+    for (int i = 0; i < 8; ++i) {
+        if (m_procs[i])
+            delete m_procs[i];
+    }
+}
 """
     if new_player_update_contract_violations(
             update_task_header_probe, update_task_source_probe):
@@ -12878,9 +13070,17 @@ inline void CNewPlayerUpdateProc::HandleRequests()
             "class t_map_list_update : public CNewPlayerUpdateTask"),
          update_task_source_probe),
         (update_task_header_probe.replace(
-            "CNewPlayerUpdateTask* m_procs[8]",
-            "CNewPlayerUpdateProc* m_procs[8]"),
+            "CNewPlayerUpdateProc* m_procs[8]",
+            "CNewPlayerUpdateTask* m_procs[8]"),
          update_task_source_probe),
+        (update_task_header_probe.replace(
+            "    ~CNewPlayerUpdateMan();\n", ""),
+         update_task_source_probe),
+        (update_task_header_probe, update_task_source_probe.replace(
+            "i < 8", "i < 7", 1)),
+        (update_task_header_probe, update_task_source_probe.replace(
+            "            delete m_procs[i];",
+            "            m_procs[i] = 0;")),
         (update_task_header_probe, update_task_source_probe.replace(
             ": CNewPlayerUpdateProc(dpid)",
             ": CNewPlayerUpdateTask()")),
@@ -14054,7 +14254,10 @@ def scan() -> tuple[
     audited.add(_file_audit_scope(selection_public_relpath))
     selection_signature_defects = update_player_pos_signature_violations(
         selection_public_text, selection_source_text)
-    checked += 1
+    selection_signature_defects.extend(
+        single_selection_destructor_layout_violations(
+            selection_public_text))
+    checked += 2
     missing.extend(FileContractViolation(selection_public_relpath, line,
                                          description)
                    for line, description in selection_signature_defects)

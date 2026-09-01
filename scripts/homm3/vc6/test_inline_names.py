@@ -114,6 +114,45 @@ class Divergence(unittest.TestCase):
         note = im.divergence_note(base, ref)
         self.assertIn("name-unresolvable pair", note)
 
+    def test_exact_bytes_override_relocation_name_residue(self):
+        # The normalized byte verdict is stronger than incomplete/synthetic
+        # REL32 naming in a delinked target object.
+        base = Counter({"?a@@YAXXZ": 2})
+        ref = Counter()
+        self.assertEqual(
+            im.effective_divergence(base, ref, byte_exact=True),
+            (0, 0, 0))
+
+    def test_nonexact_bytes_do_not_hide_real_residue(self):
+        # NEGATIVE CONTROL: without a current 100% verdict the same surplus
+        # remains visible and routes to diagnosis.
+        base = Counter({"?a@@YAXXZ": 2})
+        ref = Counter()
+        self.assertEqual(
+            im.effective_divergence(base, ref, byte_exact=False),
+            (2, 0, 0))
+
+
+class NestedFrontier(unittest.TestCase):
+
+    def test_outer_under_inner_over_is_identified(self):
+        outer = "??1GameSelectionHeadersStruct@@QAE@XZ"
+        inner = "??1SavedGameHeader@@QAE@XZ"
+        under = [(outer, 3, 2)]
+        over = [(inner, 0, 1)]
+        calls = {outer: Counter({inner: 1})}
+        self.assertEqual(
+            im.nested_frontiers(under, over, calls),
+            ((outer, inner, 1),))
+
+    def test_unrelated_reciprocal_counts_are_not_called_nested(self):
+        # NEGATIVE CONTROL: matching count directions alone do not prove a
+        # nesting relationship; the outer callee must really call the inner.
+        under = [("?outer@@YAXXZ", 2, 1)]
+        over = [("?inner@@YAXXZ", 0, 1)]
+        calls = {"?outer@@YAXXZ": Counter({"?other@@YAXXZ": 1})}
+        self.assertEqual(im.nested_frontiers(under, over, calls), ())
+
 
 if __name__ == "__main__":
     unittest.main()

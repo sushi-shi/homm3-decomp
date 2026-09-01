@@ -31,6 +31,7 @@ import re
 from collections import Counter
 from pathlib import Path
 
+from homm3.sema import _asm
 from homm3.vc6 import _common, _unit, reg_model
 
 # a REL32 reloc names a call / tail-jump target; DIR32 is data - exclude it.
@@ -117,6 +118,82 @@ def divergence_note(base_calls: Counter, ref_calls: Counter):
                    if paired else "")
 
 
+def effective_divergence(base_calls: Counter, ref_calls: Counter,
+                         *, byte_exact: bool = False):
+    """Divergence after the strongest available verdict.
+
+    A current normalized 100% byte match outranks the two COFF relocation-name
+    inventories.  The delinked target can legitimately have fewer named REL32
+    records than the compiled object even though the normalized instructions
+    and relocation semantics are exact.  In that case the residue is tooling
+    bookkeeping, not an inline decision and certainly not a source fix.
+    """
+    under, over, paired = divergence(base_calls, ref_calls)
+    return (0, 0, paired) if byte_exact else (under, over, paired)
+
+
+def nested_frontiers(under_rows, over_rows, callee_calls):
+    """Find reciprocal outer-call/nested-call inline boundaries.
+
+    ``under_rows`` are callees our caller keeps more often than retail;
+    ``over_rows`` are callees retail keeps more often than ours.  If the
+    candidate's standalone outer body calls the latter, retail's source shape
+    is the useful midpoint: expand the outer operation but stop at the nested
+    helper.  Return ``(outer, inner, differing_sites)`` rows.
+    """
+    out = []
+    for outer, base_n, retail_n in under_rows:
+        outer_calls = callee_calls.get(outer, Counter())
+        outer_delta = max(0, base_n - retail_n)
+        for inner, inner_base_n, inner_retail_n in over_rows:
+            inner_delta = max(0, inner_retail_n - inner_base_n)
+            if outer_calls[inner]:
+                out.append((outer, inner,
+                            min(outer_delta, inner_delta,
+                                outer_calls[inner])))
+    return tuple(row for row in out if row[2])
+
+
+def _callee_call_map(obj: Path, rows) -> dict[str, Counter]:
+    """Out-of-line call maps for candidate callees present in this object."""
+    public = _asm._public_text_symbols(obj)
+    out = {}
+    for symbol, _base_n, _retail_n in rows:
+        if symbol in public:
+            out[symbol] = _called(_asm.objdump(obj, symbol, 0))
+    return out
+
+
+def _current_report_score(unit: str | None, symbol: str,
+                          base_obj: Path) -> float | None:
+    """Fresh objdiff score for the exact build object being diagnosed."""
+    if not unit:
+        return None
+    report = _common.REPO / "build/objdiff/report.json"
+    try:
+        report_mtime = report.stat().st_mtime_ns
+        target_obj = _asm.TARGET / f"{unit}.c.obj"
+        newest_input = max(
+            base_obj.stat().st_mtime_ns,
+            target_obj.stat().st_mtime_ns if target_obj.is_file() else 0)
+        if report_mtime < newest_input:
+            return None
+        data = json.loads(report.read_text())
+    except (OSError, ValueError, TypeError):
+        return None
+    for unit_row in data.get("units", []):
+        name = (unit_row.get("name") or unit_row.get("id") or "").split("/")[-1]
+        if name != unit:
+            continue
+        for function in unit_row.get("functions", []) or []:
+            if function.get("name") == symbol:
+                try:
+                    return float(function.get("fuzzy_match_percent"))
+                except (TypeError, ValueError):
+                    return None
+    return None
+
+
 def run_predict(args) -> int:
     src = Path(args.src).resolve()
     if not src.is_file():
@@ -156,9 +233,18 @@ def run_predict(args) -> int:
         else:                             # only retail, under a real name
             over.append((short, b, r))
 
-    real_under, real_over, paired = divergence(base_calls, ref_calls)
+    report_score = _current_report_score(unit, base_sym, base_obj)
+    byte_exact = report_score is not None and report_score >= 99.9999
+    raw_under, raw_over, paired = divergence(base_calls, ref_calls)
+    real_under, real_over, _ = effective_divergence(
+        base_calls, ref_calls, byte_exact=byte_exact)
     diverged = bool(real_under or real_over)
     rc = 1 if diverged else 0
+
+    nested = ()
+    if diverged and under and over:
+        nested = nested_frontiers(
+            under, over, _callee_call_map(base_obj, under))
 
     if getattr(args, "json", False):
         print(json.dumps({
@@ -167,10 +253,17 @@ def run_predict(args) -> int:
                             for s, b, r in over],
             "under_inline": [{"callee": s, "base_calls": b, "retail_calls": r}
                              for s, b, r in under],
-            "name_unresolved": [{"callee": s, "retail_calls": r}
+            "name_unresolved": [{"callee": s, "base_calls": b,
+                                 "retail_calls": r}
                                 for s, b, r in unresolved],
             "name_paired": paired,
+            "raw_under": raw_under, "raw_over": raw_over,
             "under": real_under, "over": real_over,
+            "byte_exact": byte_exact,
+            "report_score": report_score,
+            "nested_frontiers": [
+                {"outer": outer, "inner": inner, "sites": sites}
+                for outer, inner, sites in nested],
             "rc": rc}, indent=2))
         return rc
 
@@ -185,6 +278,12 @@ def run_predict(args) -> int:
         for s, b, r in sorted(unresolved, key=lambda x: -(x[1] + x[2])):
             side = f"base x{b}" if b else f"retail x{r}"
             print(f"    {s[:70]}  {side}")
+    if byte_exact:
+        print(f"[inline] current normalized byte score is {report_score:.4f}% "
+              "- inline structure is exact. Any remaining REL32 name/count "
+              "residue is delinker/name-map bookkeeping; do not change "
+              "source for it.")
+        return 0
     if not diverged:
         print("[inline] call multisets AGREE - inline structure matches; any "
               "residual is register/scheduling (-> why-reg).")
@@ -199,6 +298,29 @@ def run_predict(args) -> int:
               "(A12 single-call-site / callee cheaper than retail's):")
         for s, b, r in sorted(over, key=lambda x: -(x[2] - x[1])):
             print(f"    {s[:70]}  base x{b} vs retail x{r}")
+    if not under and not over:
+        print("[unknown] unmatched synthesized callee names leave a call-count "
+              "residue, but no named inline decision can be correlated. This "
+              "is not actionable evidence for changing C++.")
+        print("[fix] run `homm3 sema diff <selector> --structure`; if flow and "
+              "sizes agree, repair/admit the relocation or callee-name mapping "
+              "instead of steering C1.")
+        return rc
+    if nested:
+        print("[shape] reciprocal nested inline frontier: retail expands the "
+              "outer operation at the differing site but retains its nested "
+              "helper:")
+        for outer, inner, sites in nested:
+            print(f"    {outer[:56]} -> {inner[:56]}  site(s) x{sites}")
+        print("[fix] inspect the Dreamcast line/scope rows immediately before "
+              "that source or compiler-generated cleanup. Restore a missing "
+              "real guard, helper, RAII boundary, or release-elided operation "
+              "first; such a zero-byte source fact can move C1 to the exact "
+              "outer-inline/inner-call midpoint.")
+        print("[probe] `inline_depth(1)` over the cleanup region may confirm "
+              "the nesting diagnosis, but an overshoot is a negative control, "
+              "not permission for a global pragma, an exposed library "
+              "internal, or synthetic caller mass.")
     print("[fix] first run `homm3 dreamcast show/asm --blocks` and `homm3 "
           "sema diff --structure/--source`; restore the evidenced helper, "
           "type, lifetime, and statement order before steering C1.")

@@ -3000,16 +3000,11 @@ void TSingleSelectionWindow::MakeHeroFilter()
     }
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\singleselectionwindow.cpp:4012
-VA(0x00583b40, 0x37D)  // anchor-callee the claimed ??_G (0x57d130) calls exactly this row (its only callee besides operator delete), size 1.06x dc 0x348, dc 0x1396d8
-void TSingleSelectionWindow::~TSingleSelectionWindow()
-{
-    // @stub
-}
-
-#endif  // @carcass
+// RVA-ordered redeclaration; the one active body remains in Dreamcast source
+// order below. status.py resolves this claim to that unique definition so its
+// hash follows real destructor edits without moving C1 source state.
+VA(0x00583b40, 0x37D)  // anchor-callee the claimed ??_G (0x57d130) calls exactly this row (its only callee besides operator delete), exact shared ownership lowering, dc 0x1396d8
+TSingleSelectionWindow::~TSingleSelectionWindow();
 
 // The shared header-transfer task teardown: frees the staging buffer and
 // zeroes the buffer triple. Non-virtual - WindowHandler's inlined Tick
@@ -3179,6 +3174,17 @@ int TSingleSelectionWindow::MaxPlayers()
 // Ticks every live transfer job and reaps the finished ones. Retail
 // keeps this out-of-line copy (not yet located among the 0x5892xx rows)
 // and expands it into WindowHandler's pump.
+// E:\gamedcs\singleselectionwindow.cpp:1443. The manager owns eight
+// CNewPlayerUpdateProc pointers; its body expands into
+// ~TSingleSelectionWindow in Complete retail.
+CNewPlayerUpdateMan::~CNewPlayerUpdateMan()
+{
+    for (int i = 0; i < 8; ++i) {
+        if (m_procs[i])
+            delete m_procs[i];
+    }
+}
+
 // E:\gamedcs\singleselectionwindow.cpp:1466
 void CNewPlayerUpdateMan::Tick()
 {
@@ -7913,16 +7919,65 @@ void CSaveGameEdit::~CSaveGameEdit()
 
 #endif  // @carcass
 
-// The compiler-generated scalar deleting destructor (vtable 0x241cac slot 0);
-// its ??_G body is the ~dtor call + conditional operator delete VC6 emits once
-// the class destructor is defined here. The out-of-line ~TSingleSelectionWindow
-// the ??_G calls lives at retail 0x583b40 (893 B, unclaimed); its full body is
-// the large-method reconstruction the pad-modeled class still blocks, so the
-// definition below is the accurate empty destructor for the current model - it
-// only emits the vtable store + ~CAdvPopup base call the ??_G reaches by name.
+// Dreamcast lines 4013..4071 recover the ownership phases and named helper
+// boundaries. Complete retail independently fixes the wider 164-entry hero
+// bank, its three retained random plates, the added VersionIcon, and the
+// saveHeader/game teardown below.
 // E:\gamedcs\singleselectionwindow.cpp:4012
 TSingleSelectionWindow::~TSingleSelectionWindow()
 {
+    int i;
+
+    if (!m_flag64 && !m_flag65 && bVideoPaused && pDPlay)
+        pDPlay->SetNetMsgHandler(0);
+
+    delete flagBack;
+
+    for (i = 0; i < 8; ++i) {
+        ResourceManager::Dispose(Panels[i]);
+        ResourceManager::Dispose(Flags[i]);
+    }
+
+    ResourceManager::Dispose(Resource);
+    for (i = 0; i < 164; ++i) {
+        if (HeroPix[i])
+            ResourceManager::Dispose(HeroPix[i]);
+    }
+
+    ResourceManager::Dispose(TownPix);
+    ResourceManager::Dispose(LossIcon);
+    ResourceManager::Dispose(VictoryIcon);
+    ResourceManager::Dispose(VersionIcon);
+    ResourceManager::Dispose(randomTownBmp);
+    ResourceManager::Dispose(randomHeroBmp);
+    ResourceManager::Dispose(noHeroBmp);
+    ResourceManager::Dispose(heroSpecificAbility);
+
+    if (pNewPlayerUpdateMan) {
+        delete pNewPlayerUpdateMan;
+        pNewPlayerUpdateMan = 0;
+    }
+
+    gUnnamed69fbe8 = 0;
+    for (std::vector<widget*>::iterator it = Widgets.begin();
+         it != Widgets.end(); ++it) {
+        if (*it)
+            delete *it;
+    }
+
+    if (m_flag65) {
+        BackupGameHeaders(gpGame, saveHeader);
+        delete saveHeader;
+        saveHeader = 0;
+    }
+
+    // DC line 4069 owns this guard. Complete folds the helper to zero bytes,
+    // but C1 still counts the real conditional source operation: flattening
+    // it made HeadersA call the outer row destructor (96.98%, 33/34 blocks),
+    // while this spelling expands that outer boundary, retains the nested
+    // SavedGameHeader destructor, and matches retail at 100%, 34/34.
+    if (!m_flag65)
+        ResourceManager::del_Spr_from_Cache();
 }
 
 // TSingleSelectionWindow vtable 0x241cac slot 0. E:\gamedcs\singleselectionwindow.cpp:2632
