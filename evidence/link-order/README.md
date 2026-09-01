@@ -25,7 +25,7 @@ RESIDENTS (32 of them today).
 
 ## Findings
 
-- **116 units spanned** from 2,101 own-cpp anchors, covering **1,300,130
+- **116 units spanned** from 2,103 own-cpp anchors, covering **1,300,130
   bytes** of retail `.text`.
 - **The game-object link order is exactly ALPHABETICAL by object name**
   - 116 units, zero inversions. (Vendor groups have their own
@@ -33,7 +33,7 @@ RESIDENTS (32 of them today).
 - **No span overlaps**: every TU's extent is disjoint, which is a
   self-check on the claims - a misattributed claim would show up as one
   TU's span swallowing a neighbour's anchor.
-- **793 unclaimed carved functions are now attributed** to an
+- **791 unclaimed carved functions are now attributed** to an
   owning TU (`attribution.tsv`) - they sit inside a proven span.
 - **115 gaps** remain between spanned units. Because the order is
   alphabetical, `gaps.tsv` records the unspanned compilands that can sort

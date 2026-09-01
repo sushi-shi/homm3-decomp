@@ -2350,12 +2350,8 @@ unsigned char attempt_step(hero* current_hero, pathCell* path_cell, unsigned cha
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:3910
-DC_ONLY(0x343c4, 0x142)
-void build_path(hero* current_hero, searchArray* search_array, std::vector<pathCell,std::allocator<pathCell>* path, HeroDestination* destination)
-{
-    // @stub
-}
+// build_path (dc 0x343c4) is promoted to its retained Complete body at
+// VA(0x00430610) below.
 
 // check_move_spell (dc 0x34508) is promoted to its retained Complete body
 // at VA(0x004309a0) below.
@@ -4622,9 +4618,9 @@ void AI_build_ship(const hero* our_hero, long x, long y, long z);
 // Complete VC6 emits their retained copies after the caller; declarations
 // here preserve the source calls while those bodies are reconstructed at
 // their retail slots.
-void build_path(hero* current_hero, searchArray* search_array,
-                std::vector<pathCell>& path,
-                HeroDestination& destination);
+static void build_path(hero* current_hero, searchArray* search_array,
+                       std::vector<pathCell>& path,
+                       HeroDestination& destination);
 static unsigned char check_move_spell(hero* current_hero,
                                       std::vector<pathCell>& path,
                                       long step, SpellID spell,
@@ -4737,6 +4733,41 @@ unsigned char attempt_step(hero* current_hero, pathCell* path_cell,
         gAIPlayers[current_hero->owner].magus_hut_value = 0;
     AI_set_hero_bonuses(current_hero);
     return 0;
+}
+
+// E:\gamedcs\ai_player.cpp:3910. Dreamcast's statement rows and Complete's
+// x86 agree on the clear/BuildPath/step-count prefix, backward result walk,
+// non-adjacent flying-hop retarget and pathCell append. The search_array
+// parameter is source-real but unused in both builds; the implementation uses
+// the global search result selected by AI_AttemptMove.
+static void build_path(hero* current_hero, searchArray* search_array,
+                       std::vector<pathCell>& path,
+                       HeroDestination& destination)
+{
+    path.clear();
+    gpSearchArray->BuildPath(current_hero, 99999);
+    long i = gpSearchArray->get_path_steps();
+    if (i == 0) {
+        current_hero->movePoints = 0;
+        return;
+    }
+
+    while (i-- > 0) {
+        const pathCell* path_cell = gpSearchArray->get_step_cell(i);
+        if (path_cell->flying
+            && (abs(path_cell->point.x - path_cell->last_point.x) > 1
+                || abs(path_cell->point.y - path_cell->last_point.y) > 1
+                || path_cell->point.z != path_cell->last_point.z)) {
+            destination.point.x = path_cell->last_point.x;
+            destination.point.y = path_cell->last_point.y;
+            destination.point.z = path_cell->last_point.z;
+            current_hero->pathTargetX = path_cell->last_point.x;
+            current_hero->pathTargetY = path_cell->last_point.y;
+            current_hero->pathTargetZ = path_cell->last_point.z;
+            return;
+        }
+        path.push_back(*path_cell);
+    }
 }
 
 // E:\gamedcs\ai_player.cpp:3951. The source order, five-parameter /Gr ABI,
@@ -4923,10 +4954,20 @@ bool town::HasBuilding(int buildingId, bool check_included) const
 // and does not force any call site out of line.
 bool (town::* g_emit_HasBuilding)(int, bool) const = &town::HasBuilding;
 
+// The canonical definition stays before AI_AttemptMove. VC6 retained it
+// after the caller and the Town.h COMDAT, so this redeclaration records the
+// later retail slot without falsifying Dreamcast's source order.
+// E:\gamedcs\ai_player.cpp:3910
+VA(0x00430610, 0x384)  // caller/callee/body bridge, dc 0x343c4
+static void build_path(hero* current_hero, searchArray* search_array,
+                       std::vector<pathCell>& path,
+                       HeroDestination& destination);
+
 // The real definition stays before AI_AttemptMove in Dreamcast-proven source
 // order. VC6 retained this helper after the caller and the Town.h COMDAT; the
 // annotated redeclaration records that later retail slot without moving the
 // canonical source body.
+// E:\gamedcs\ai_player.cpp:3951
 VA(0x004309a0, 0x103)  // caller/callee/body exact bridge, dc 0x34508
 static unsigned char check_move_spell(hero* current_hero,
                                       std::vector<pathCell>& path,
