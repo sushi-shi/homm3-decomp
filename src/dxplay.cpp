@@ -1104,9 +1104,13 @@ DPLCONNECTION* CDPlayLobby::GetConnectionSettings(unsigned long dwAppId, unsigne
     }
     return buf;
 }
-// Residual (88.4%): the two-call probe is byte-right; retail's final `m_hRes >= 0`
-// return is a jge branch to separate return-1/return-0 epilogues, where our CL
-// collapses it to `setge al` - measured both polarities, VC6 folds either.
+// Residual (88.4210%): the two-call probe is byte-right; retail's final
+// `m_hRes >= 0` is a jge to separate return-1/return-0 epilogues, while our
+// CL folds either polarity to `setge al`. `why-branch` measures 57/3/4
+// instructions/branches/returns in retail versus 51/2/3 here, classifies the
+// residual as D6 plus D8/D13 branchless folding, and finds no catalog lever.
+// A named result initialized to zero and assigned in the success arm is a
+// negative control: it falls to 85.33% without recovering the extra exit.
 // E:\gamedcs\dxplay.cpp:1351
 VA(0x00498b70, 0x6E)  // anchor-callee IDirectPlayLobby::GetConnectionSettings probe + GlobalAlloc/GlobalLock; ret 0, src-order, dc 0x8b69c
 unsigned char CDPlayLobby::TestLobbied()

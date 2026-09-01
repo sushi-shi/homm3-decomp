@@ -299,11 +299,13 @@ void __cdecl SystemMsg(CChatManager* manager, const char* format, ...);
 void __cdecl PlayerDropMsg(CChatManager* manager, const char* format, ...);
 void __cdecl PlayerEnterMsg(CChatManager* manager, const char* format, ...);
 
-#ifdef HOMM3_CHAT_EDIT_DECLS
+#if defined(HOMM3_CHAT_EDIT_DECLS) || defined(HOMM3_GAME_TRANSMIT_DECLS)
 enum ENetMessageRecipient {
     NET_MESSAGE_RECIPIENT_ALL = 0x7f
 };
+#endif
 
+#ifdef HOMM3_CHAT_EDIT_DECLS
 // Retail vtable 0x640e30. Slots 0..18 are textEntryWidget's exact prefix;
 // Dreamcast supplies the seven introduced method names at slots 19..24 and
 // proves that this class adds no data (its 0x70-byte extent equals retail's
@@ -419,6 +421,10 @@ int TransmitRemoteData(CNetMsg* pMsg, int toWho,
                        bool compressMsg, bool guaranteed);
 int TransmitRemoteDataDPID(CNetMsg* pMsg, unsigned long dpidTo,
                            bool compressMsg, bool guaranteed);
+#ifdef HOMM3_GAME_TRANSMIT_DECLS
+CNetMsg* GetRemoteData(unsigned char removeFromQueue);
+int calc_crc_long(unsigned char* buffer, int len);
+#endif
 void PollRemote();
 void SendChat(const char* cChat, int toWho);
 unsigned char LobbyLaunchConnect();

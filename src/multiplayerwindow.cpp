@@ -3,6 +3,7 @@
 // 87 functions in link order; 20 compiler-generated $-thunks omitted.
 #include <va.h>
 #include "multiplayerwindow.h"
+#include "multiplayerwindow_globals.h"
 #include "winmgr.h"
 #include "csprite.h"
 #include "border.h"

@@ -164,7 +164,12 @@ int mouseManager::Main(message& msg)
 // polarity: retail forces frame 0 for the ANIMATED set (field_4c ==
 // SPELL_SET) and passes new_frame for every other set, not the
 // reverse (`field_4c == SPELL_SET ? new_frame : 0` compiles to the
-// setne/dec mask instead and scored 77.1).
+// setne/dec mask instead and scored 77.1). A named `zero` used by the guard,
+// frame condition, ternary, and final byte clear is a negative control: it
+// falls to 78.87% and does not reproduce retail's back-end zero CSE.
+// `why-reg --model --il-order` measures 25 register-visible slots, finds the
+// same ESI/EDI first definitions, and classifies EBX's later zero pseudo as
+// outside the model's source-addressable B1 slice.
 VA(0x0050cca0, 0xE0)  // anchor-global, dc 0xfeb1c
 void mouseManager::SetPointer(int new_frame, mouseManager::EPointerSet new_set)
 {

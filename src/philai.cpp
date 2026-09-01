@@ -1767,14 +1767,23 @@ static void upgrade_creatures(hero* current_hero, const town* current_town)
 // are compatible retail-only additions, not reasons to flatten the shared
 // source shape.
 //
-// Residual (99.51087%): candidate and retail are both 1,548 bytes with all 73
-// blocks and the 43-branch / two-return structure aligned. Every instruction
-// agrees through the final visiting-hero lookup; retail loads gpGame before
-// forming the hero index, while this VC6 state schedules the same load after
-// the first two index operations. A named receiver, a named result, reusing
-// garrison_hero and a procedure-scope result are byte-flat; naming the id
-// falls to 97.01087%. why-reg's three model proposals and nine guided
-// mutations found no improvement, so no register-forcing distortion is kept.
+// The line-769 DC call is specifically the one-argument TArtifact constructor.
+// This tree still has split artifact-id enums, so the compatibility bridge at
+// the call site is required to avoid selecting type_artifact(SpellID). It makes
+// the retail constructor block byte-exact (artifact 0, extra -1). The bare
+// one-argument spelling instead emits the scroll payload (artifact 1, extra 0),
+// while the two-int constructor reaches the historical 99.51087% peak but
+// erases the DC-proven helper boundary; both are measured negative controls.
+//
+// Residual (99.1804%, MAX 99.51087%): candidate and retail are both 1,548
+// bytes with all 73 blocks and the 43-branch / two-return structure aligned.
+// The source-true inline bridge changes VC6's later register schedule in two
+// upgrade_creatures blocks; the final mismatch remains the visiting-hero
+// lookup, where retail loads gpGame before forming the hero index. A named
+// receiver, a named result, reusing garrison_hero and a procedure-scope result
+// are byte-flat; naming the id falls to 97.01087%. why-reg's three model
+// proposals and nine guided mutations found no improvement, so no
+// register-forcing distortion is kept.
 VA(0x005253d0, 0x60c)  // anchor-callee, dc 0x10e3f8
 void AI_enter_town(hero* current_hero, town* current_town)
 {
@@ -1806,7 +1815,8 @@ void AI_enter_town(hero* current_hero, town* current_town)
         if (player->resources[GOLD] >= 500
             && current_town->HasBuilding(MAGE_GUILD_ID, 1)
             && !current_hero->IsWieldingArtifact(ARTIFACT_SPELLBOOK)) {
-            type_artifact artifact(ARTIFACT_SPELLBOOK, -1);
+            type_artifact artifact(
+                artifact_from_int(ARTIFACT_SPELLBOOK));
             current_hero->GiveArtifact(&artifact, 1, 1);
             player->resources[GOLD] -= 500;
         }

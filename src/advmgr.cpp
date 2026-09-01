@@ -4974,24 +4974,30 @@ static inline NewmapCell* DrawGroundCell(advManager* manager, type_point point)
 // invariant, a discarded GetNumFrames value, a `GetNumFrames(...) > 0`
 // invariant, and naming the divisor; naming the remainder regresses to
 // 98.1571%.
+//
+// The 2026-09-01 Dreamcast source-shape pass restored all three positive
+// header boundaries visible in this body: game::GetHero, the inherited
+// get_location, and hero::GetHflip. They are byte-flat at 98.1667%, as an
+// exact inline lowering should be. DC also names advManager::GetCell at the
+// location lookup, but Complete directly contradicts that older semantic:
+// retail calls NewfullMap::cell(0, 0, 0) for an invalid point, whereas the
+// admitted GetCell returns cellData. Retaining the DC call measured 93.18%;
+// DrawHeroCell preserves Complete's proven invalid arm. why-reg --model still
+// reports 15 slots and no binding divergence after the source-shape repair,
+// confirming the same third-call scheduling wall.
 VA(0x0040fe30, 0x484)  // linkorder, dc 0x11424
 void advManager::DrawHeroPart(int part, TDrawParts& heroParts, int baseX,
                               int baseY, int tilex, int tiley, int tilew,
                               int tileh)
 {
-    hero* currHero;
-    if (heroParts.id == -1)
-        currHero = 0;
-    else
-        currHero = &gpGame->heroes[heroParts.id];
+    hero* currHero = gpGame->GetHero(heroParts.id);
 
     int HeroCellY = part % 3;
     int HeroCellX = part / 3;
 
     if (currHero->flags & 0x40000) {
         boat* currBoat = gpGame->GetHeroBoat(currHero->id, true);
-        NewmapCell* heroCell = DrawHeroCell(
-            this, type_point(currHero->x, currHero->y, currHero->z));
+        NewmapCell* heroCell = DrawHeroCell(this, currHero->get_location());
 
         if (!(heroCell->flags_00_11 & 0x200)) {
             boatFrothIcons[currBoat->type]->DrawHero(
@@ -5001,7 +5007,7 @@ void advManager::DrawHeroPart(int part, TDrawParts& heroParts, int baseX,
                 tilex + (2 - HeroCellY) * 32,
                 tiley - HeroCellX * 32 + 32, tilew, tileh,
                 gpWindowManager->screenBitmap, baseX, baseY + 8,
-                currHero->facing > hero::kFacingS);
+                currHero->GetHflip());
         }
 
         boatFlagIcons[currBoat->type][currBoat->playerOwner]->DrawHero(
@@ -5011,7 +5017,7 @@ void advManager::DrawHeroPart(int part, TDrawParts& heroParts, int baseX,
             tilex + (2 - HeroCellY) * 32,
             tiley - HeroCellX * 32 + 32, tilew, tileh,
             gpWindowManager->screenBitmap, baseX, baseY + 8,
-            currHero->facing > hero::kFacingS);
+            currHero->GetHflip());
 
         boatIcons[currBoat->type]->DrawHero(
             currHero->GetStandSequence(),
@@ -5020,7 +5026,7 @@ void advManager::DrawHeroPart(int part, TDrawParts& heroParts, int baseX,
             tilex + (2 - HeroCellY) * 32,
             tiley - HeroCellX * 32 + 32, tilew, tileh,
             gpWindowManager->screenBitmap, baseX, baseY + 8,
-            currHero->facing > hero::kFacingS);
+            currHero->GetHflip());
     } else if (currHero->owner >= 0 && currHero->owner < 8) {
         flagIcons[currHero->owner]->DrawHero(
             currHero->GetStandSequence(),
@@ -5028,7 +5034,7 @@ void advManager::DrawHeroPart(int part, TDrawParts& heroParts, int baseX,
             tilex + (2 - HeroCellY) * 32,
             tiley - HeroCellX * 32 + 32, tilew, tileh,
             gpWindowManager->screenBitmap, baseX, baseY + 8,
-            currHero->facing > hero::kFacingS);
+            currHero->GetHflip());
 
         cursorIcons[currHero->heroClass]->DrawHero(
             currHero->GetStandSequence(),
@@ -5037,7 +5043,7 @@ void advManager::DrawHeroPart(int part, TDrawParts& heroParts, int baseX,
             tilex + (2 - HeroCellY) * 32,
             tiley - HeroCellX * 32 + 32, tilew, tileh,
             gpWindowManager->screenBitmap, baseX, baseY + 8,
-            currHero->facing > hero::kFacingS);
+            currHero->GetHflip());
     }
 }
 
@@ -5048,19 +5054,17 @@ void advManager::DrawHeroPart(int part, TDrawParts& heroParts, int baseX,
 // four-local roster and the VERIFY/accessor/named-local probes are identical,
 // so this is the shared scheduling residual (flow-distance 0, why-reg --model
 // reports no binding divergence) rather than an independently source-nameable
-// shadow-path difference. The twins are a free in-compile A/B: any candidate
-// spelling should be tried in ONE of them first, since a real fix must move
-// both.
+// shadow-path difference. The same 2026-09-01 helper restoration is byte-flat
+// here at 98.1840%; the rejected DC GetCell revision measures 93.24%, and the
+// post-repair allocator model again reports 15 slots with no binding
+// divergence. The twins are a free in-compile A/B: any candidate spelling
+// should be tried in ONE of them first, since a real fix must move both.
 VA(0x004102c0, 0x494)  // anchor-callee, dc 0x11958
 void advManager::DrawHeroPartShadow(int part, TDrawParts& heroParts,
                                     int baseX, int baseY, int tilex,
                                     int tiley, int tilew, int tileh)
 {
-    hero* currHero;
-    if (heroParts.id == -1)
-        currHero = 0;
-    else
-        currHero = &gpGame->heroes[heroParts.id];
+    hero* currHero = gpGame->GetHero(heroParts.id);
 
     int HeroCellY = part % 3;
     int HeroCellX = part / 3;
@@ -5070,8 +5074,7 @@ void advManager::DrawHeroPartShadow(int part, TDrawParts& heroParts,
             return;
 
         boat* currBoat = gpGame->GetHeroBoat(currHero->id, true);
-        NewmapCell* heroCell = DrawHeroCell(
-            this, type_point(currHero->x, currHero->y, currHero->z));
+        NewmapCell* heroCell = DrawHeroCell(this, currHero->get_location());
 
         if (!(heroCell->flags_00_11 & 0x200)) {
             boatFrothIcons[currBoat->type]->DrawHeroShadow(
@@ -5081,7 +5084,7 @@ void advManager::DrawHeroPartShadow(int part, TDrawParts& heroParts,
                 tilex + (2 - HeroCellY) * 32,
                 tiley - HeroCellX * 32 + 32, tilew, tileh,
                 gpWindowManager->screenBitmap, baseX, baseY + 8,
-                currHero->facing > hero::kFacingS);
+                currHero->GetHflip());
         }
 
         boatFlagIcons[currBoat->type][currBoat->playerOwner]->DrawHeroShadow(
@@ -5091,7 +5094,7 @@ void advManager::DrawHeroPartShadow(int part, TDrawParts& heroParts,
             tilex + (2 - HeroCellY) * 32,
             tiley - HeroCellX * 32 + 32, tilew, tileh,
             gpWindowManager->screenBitmap, baseX, baseY + 8,
-            currHero->facing > hero::kFacingS);
+            currHero->GetHflip());
 
         boatIcons[currBoat->type]->DrawHeroShadow(
             currHero->GetStandSequence(),
@@ -5100,7 +5103,7 @@ void advManager::DrawHeroPartShadow(int part, TDrawParts& heroParts,
             tilex + (2 - HeroCellY) * 32,
             tiley - HeroCellX * 32 + 32, tilew, tileh,
             gpWindowManager->screenBitmap, baseX, baseY + 8,
-            currHero->facing > hero::kFacingS);
+            currHero->GetHflip());
     } else if (currHero->owner >= 0 && currHero->owner < 8) {
         flagIcons[currHero->owner]->DrawHeroShadow(
             currHero->GetStandSequence(),
@@ -5108,7 +5111,7 @@ void advManager::DrawHeroPartShadow(int part, TDrawParts& heroParts,
             tilex + (2 - HeroCellY) * 32,
             tiley - HeroCellX * 32 + 32, tilew, tileh,
             gpWindowManager->screenBitmap, baseX, baseY + 8,
-            currHero->facing > hero::kFacingS);
+            currHero->GetHflip());
 
         cursorIcons[currHero->heroClass]->DrawHeroShadow(
             currHero->GetStandSequence(),
@@ -5117,7 +5120,7 @@ void advManager::DrawHeroPartShadow(int part, TDrawParts& heroParts,
             tilex + (2 - HeroCellY) * 32,
             tiley - HeroCellX * 32 + 32, tilew, tileh,
             gpWindowManager->screenBitmap, baseX, baseY + 8,
-            currHero->facing > hero::kFacingS);
+            currHero->GetHflip());
     }
 }
 
