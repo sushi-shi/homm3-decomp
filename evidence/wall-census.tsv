@@ -3,7 +3,6 @@
 # Banked-exact current dips are observational and excluded.
 # recoverable = size * (1 - max_fuzzy/100).
 class	recoverable	max_fuzzy	current_fuzzy	size	unit	fn	route	knob
-unclaimed (no source binding)	889	0.0000	0.0000	889	singleselectionwindow	CSingleSelectionNetMsgHandler_HandleNetMsg	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 unclaimed (no source binding)	837	0.0000	0.0000	837	singleselectionwindow	TSingleSelectionWindow_GetHeaders	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 unclaimed (no source binding)	731	0.0000	0.0000	731	singleselectionwindow	TSingleSelectionWindow_WindowFn_00582e90	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 unclaimed (no source binding)	14	0.0000	0.0000	14	singleselectionwindow	SCampaign_GetCurrentScenario	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
@@ -169,7 +168,6 @@ control-flow (why-branch)	34	88.6140	88.6140	298	events	?monsters_give_reward@ad
 control-flow (why-branch)	51	88.6223	88.6223	449	singleselectionwindow	?HeaderRequested@CNewPlayerUpdateMan@@QAEXKEH@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	51	88.7023	88.7023	450	event_record	?record_erase_object@game@@QAEXPAVNewmapCell@@Utype_point@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline (9 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	225	88.8247	88.6580	2009	tradpost	?Update@TBuyArtifactWindow@@QAEXE@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
-register-homing (why-reg)	18	88.8387	88.8387	163	singleselectionwindow	?OnPingResponseMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@E@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 register-homing (why-reg)	207	88.8564	88.8564	1859	resourcemanager	?GetSprite@ResourceManager@@YIPAVCSprite@@PBD@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 inliner (predict-inline)	187	88.8745	88.8745	1681	spellbookwindow	?GotoPage@TSpellbookWindow@@QAEXH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 2 over-inline (8 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	49	88.9253	88.9253	440	event_record	?record_hide_boat@game@@QAEXPAVboat@@EH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline (9 name-unresolvable pair(s) discounted)
