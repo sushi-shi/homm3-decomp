@@ -12202,10 +12202,11 @@ type_point game::GameFn_004CEF10(int identifier)
 // SavedGameHeader's scope-exit destructor is retained by the Load/Save
 // callers above. The 0x5a4-byte receiver and member order identify this
 // compiler-generated body between the explicit header methods and game::Load.
-// PARTIAL (29.0580%): retail expands SCampaign and NewSMapHeader teardown
-// here; this TU calls their exact out-of-line destructors. Exposing the
-// implicit member views globally is the already-measured ratchet loss
-// documented on SCampaign in game.h, so retain the honest call boundary.
+// EXACT 2026-09-01: retail expands the compiler-generated SCampaign and
+// NewSMapHeader member walks. Removing their source-false destructor
+// declarations closes all 433 bytes and all 11 CFG blocks. The resulting
+// Load/Save inlining dips are banked collateral, not grounds for restoring
+// declarations contradicted by this body and Dreamcast symbol provenance.
 VA_COMPGEN(0x004bdf80, 0x1B1, IMPLICIT_DTOR, SavedGameHeader)
 
 // Sign's one-string destructor is emitted out of line and is the callee used
