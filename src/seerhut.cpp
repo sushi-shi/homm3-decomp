@@ -2493,7 +2493,12 @@ int TSeerHut::getValue(hero* currentHero)
 // was removed. At that peak the sole residual was the completion temporary's
 // cleanup: candidate `_Tidy` x4/delete x0 against retail `_Tidy` x3/delete x1.
 // Keep the helper ownership and remeasure after coherent surrounding source
-// changes compiler state; do not add a synthetic carrier here.
+// changes compiler state; do not add a synthetic carrier here. A 2026-09-01
+// probe replaced the AI arm with a call to the exact TSeerHut::getValue body
+// and marked that helper inline. It restored 26 caller blocks but suppressed
+// the retail-proven standalone function (100% -> absent) and lowered this row
+// to 42.5710%. Dreamcast DoSeerEvent calls neither getValue nor an equivalent
+// helper, so that inference was reverted rather than made fatal.
 VA(0x00573670, 0x400)  // code plus two retail switch tables in the admitted row
 void TSeerHut::DoSeerEvent(hero* current_hero, bool human_player)
 {
@@ -2574,6 +2579,48 @@ void TSeerHut::DoEmptyDialog()
                  -1, 0, -1, 0, -1, 0);
 }
 
+// Dreamcast seerhut.cpp:414 (dc 0x12d758) records this as a separate,
+// no-local switch helper called first by DoCompletionDialog. Retail's inlined
+// copy preserves the ten reward arms and Complete's shifted skill pictures.
+inline int TSeerHut::GetRewardType()
+{
+    switch (reward.rewardType) {
+    case eRewardExperience:
+        return 0x11;
+    case eRewardMana:
+        return 0x23;
+    case eRewardMorale:
+        return 0x0e;
+    case eRewardLuck:
+        return 0x0b;
+    case eRewardResource:
+        return reward.value.resource.resourceType;
+    case eRewardPrimarySkill:
+        switch (reward.value.primarySkill.skillType) {
+        case TSeerReward::ePriSkillAttack:
+            return 0x1f;
+        case TSeerReward::ePriSkillDefense:
+            return 0x20;
+        case TSeerReward::ePriSkillPower:
+            return 0x21;
+        case TSeerReward::ePriSkillKnowledge:
+            return 0x22;
+        default:
+            return -1;
+        }
+    case eRewardSecondarySkill:
+        return 0x14;
+    case eRewardArtifact:
+        return 8;
+    case eRewardSpell:
+        return 9;
+    case eRewardCreature:
+        return 0x15;
+    default:
+        return -1;
+    }
+}
+
 // Dreamcast places this private boundary immediately after DoEmptyDialog and
 // gives it the same (hero*, bool) inputs. Complete's virtual quest owns the
 // completion text and its reward object owns application, but retail folds
@@ -2582,61 +2629,8 @@ void TSeerHut::DoEmptyDialog()
 inline void TSeerHut::DoCompletionDialog(
     hero* current_hero, bool human_player)
 {
-    int rewardPicture;
-    switch (reward.rewardType) {
-    case eRewardExperience:
-        rewardPicture = 0x11;
-        break;
-    case eRewardMana:
-        rewardPicture = 0x23;
-        break;
-    case eRewardMorale:
-        rewardPicture = 0x0e;
-        break;
-    case eRewardLuck:
-        rewardPicture = 0x0b;
-        break;
-    case eRewardResource:
-        rewardPicture = reward.value.resource.resourceType;
-        break;
-    case eRewardPrimarySkill:
-        switch (reward.value.primarySkill.skillType) {
-        case TSeerReward::ePriSkillAttack:
-            rewardPicture = 0x1f;
-            break;
-        case TSeerReward::ePriSkillDefense:
-            rewardPicture = 0x20;
-            break;
-        case TSeerReward::ePriSkillPower:
-            rewardPicture = 0x21;
-            break;
-        case TSeerReward::ePriSkillKnowledge:
-            rewardPicture = 0x22;
-            break;
-        default:
-            rewardPicture = -1;
-            break;
-        }
-        break;
-    case eRewardSecondarySkill:
-        rewardPicture = 0x14;
-        break;
-    case eRewardArtifact:
-        rewardPicture = 8;
-        break;
-    case eRewardSpell:
-        rewardPicture = 9;
-        break;
-    case eRewardCreature:
-        rewardPicture = 0x15;
-        break;
-    default:
-        rewardPicture = -1;
-        break;
-    }
-
     NormalDialog(quest->get_completion_text().c_str(),
-                 2, -1, -1, rewardPicture,
+                 2, -1, -1, GetRewardType(),
                  reward.GetRewardExtra(current_hero),
                  -1, 0, -1, 0, -1, 0);
 

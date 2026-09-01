@@ -620,8 +620,9 @@ void CDPlayHeroes::SetNetMsgHandler(CNetMsgHandler* pNetMsgHandler)
 {
     CNetMsgHandler* pOld = m_pNetMsgHandler;
     m_pNetMsgHandler = pNetMsgHandler;
-    if (pOld && pNetMsgHandler)
+    if (pOld && pNetMsgHandler) {
         pNetMsgHandler->Copy(pOld);
+    }
 }
 
 // E:\gamedcs\remote.cpp:793 - seven bytes, frameless, and the reason
