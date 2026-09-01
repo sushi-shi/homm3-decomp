@@ -19,9 +19,9 @@
 // end_turn's marketplace gate is a town::HasBuilding call in the
 // Dreamcast body (dc 0x2e7d8 line 452, `mov #14,r5 / mov #1,r6`); see
 // town.h for why the inline's visibility is scoped.
-// find_all_destinations' grail-spot tail calls ?cell@NewfullMap out of
-// line - the advmgr.cpp gate, joined 2026-08-27.
-#define HOMM3_NEWFULLMAP_CELL_OUTOFLINE
+// find_all_destinations' grail-spot tail calls NewfullMap::cell out of line;
+// that single statement is pinned below instead of hiding the real header
+// inline from this entire compiland.
 // Joins VICTORY_CONDITION_BUILD_GRAIL (game.h gates the enumerator);
 // find_all_destinations prices the grail spot 1968 under that victory.
 #define HOMM3_AI_PLAYER_OBJ_DECLS
@@ -4212,8 +4212,7 @@ int game::GetTeam(int playerNum)
 VA(0x0042ed80, 0x4D)  // anchor-global, dc 0x38000
 NewmapCell* game::get_cell(type_point point)
 {
-    return &worldMap.cellData[(point.z * worldMap.Size + point.y) * worldMap.Size
-                              + point.x];
+    return worldMap.cell(point.x, point.y, point.z);
 }
 
 // The nine functions below are located by the callee-fingerprint join against
@@ -4282,9 +4281,15 @@ static void check_holy_grail(
             // Dreamcast calls game::get_cell here, but Complete retail calls
             // NewfullMap::cell directly; expanding this TU's retained
             // game::get_cell body would instead calculate cellData in place.
-            NewmapCell* map_cell = gpGame->worldMap.cell(
+            // Site-pinned check_holy_grail -> NewfullMap::cell boundary:
+            // Complete retail keeps this call while the surrounding helper
+            // expands. Removing only this gate measures find_all_destinations
+            // 96.3651% -> 92.3064%; the former TU-wide view is unnecessary.
+#pragma inline_depth(0)
+            NewmapCell* map_cell = INLINE_GATE(gpGame->worldMap.cell(
                 destination.point.x, destination.point.y,
-                destination.point.z);
+                destination.point.z));
+#pragma inline_depth()
             if (!(map_cell->type == HERO && map_cell->is_trigger)
                 || map_cell->extraInfo
                     == static_cast<unsigned long>(current_hero->id)) {
@@ -4637,17 +4642,20 @@ static __forceinline void check_gate_purchase(type_point point)
     }
 }
 
-// Residual (52.95%): calls, guards and block roster all agree; why-branch
-// names D6 (retail keeps 6 exits to our 4 - its bNoMove/bFought return-0s
-// share ONE eax-wide epilogue while the boat/owner/currHero exits stay
-// al-wide and distinct, a width split no uchar-return spelling reaches)
-// plus a mid-body ecx<->edx rename family. Tried and rejected: the
-// else-restructured tail (52.21), unsigned-char retypes of
-// direction/saved_x/saved_y (why-branch, no movement).
-// The Dreamcast line table separately attests a function-entry type_point
-// construction followed by assignment after ConsiderHidingMouse; restoring
-// that lifetime is byte-flat at this checkpoint and must not be collapsed
-// back into the later copy-initialization merely to simplify the source.
+// Progress (banked MAX 89.9189%): Dreamcast's final line returns the single
+// `event_cell == 0 && !bNoMove && !bFoughtBattle` result. Restoring that
+// expression moved 52.9459% -> 63.1306% and made the CFG 35/35 blocks with
+// 26 exact. A zero-initialized retarget flag then measured 89.9189%, but our
+// VC6 keeps that zero live in EBX from the declaration, spills `cell`, grows
+// the frame 0x18 -> 0x1c and collapses the false arm (34/35 blocks). Retail
+// instead emits distinct one/zero assignments around a shared MoveHero join,
+// so the explicit else below is retained through the expected current-score
+// dip while the peak remains banked. Positive evidence also retained here:
+// CodeView names trigger_point and separates its construction from the later
+// path-cell assignment; game::get_cell calls NewfullMap::cell in source.
+// Negative controls: negating the condition and spelling the same flow with
+// gotos are byte-identical at 63.1306%; two meaningful entry VERIFY probes
+// are byte-flat; direction/saved_x/saved_y byte retypes are byte-flat.
 // E:\gamedcs\ai_player.cpp:3832
 // One step of an AI hero's path: optionally hide the mouse, summon or
 // build a boat when stepping onto water without one, retarget the path
@@ -4657,7 +4665,7 @@ VA(0x0042fc50, 0x285)  // anchor-callee unique (NewmapCell::cell_is_trigger), dc
 unsigned char attempt_step(hero* current_hero, pathCell* path_cell,
                            unsigned char bStandEnd, unsigned char first_step)
 {
-    type_point point;
+    type_point trigger_point;
     int direction = path_cell->direction;
     if (gpMouseManager->field_68 == 0
         && gpAdvManager->ConsiderHidingMouse(current_hero, direction)) {
@@ -4667,8 +4675,8 @@ unsigned char attempt_step(hero* current_hero, pathCell* path_cell,
         gCompleteDrawEnabled = save_draw;
     }
 
-    point = path_cell->point;
-    NewmapCell* cell = gpGame->get_cell(point);
+    trigger_point = path_cell->point;
+    NewmapCell* cell = gpGame->get_cell(trigger_point);
 
     if (path_cell->in_boat && !(current_hero->flags & 0x40000)) {
         if (!(cell->type == BOAT && cell->is_trigger)) {
@@ -4681,7 +4689,8 @@ unsigned char attempt_step(hero* current_hero, pathCell* path_cell,
             // can_build_ship is bit 11 of the proven cellFlags word (the
             // header pools bits 10-11; this is the first admitted reader).
             if (cell->cellFlags & 0x800)
-                AI_build_ship(current_hero, point.x, point.y, point.z);
+                AI_build_ship(current_hero, trigger_point.x,
+                              trigger_point.y, trigger_point.z);
         }
     }
 
@@ -4691,9 +4700,9 @@ unsigned char attempt_step(hero* current_hero, pathCell* path_cell,
 
     unsigned char retargeted;
     if (path_cell->flying && path_cell->last_can_stop && cell->is_trigger) {
-        current_hero->pathTargetX = point.x;
-        current_hero->pathTargetY = point.y;
-        current_hero->pathTargetZ = point.z;
+        current_hero->pathTargetX = trigger_point.x;
+        current_hero->pathTargetY = trigger_point.y;
+        current_hero->pathTargetZ = trigger_point.z;
         retargeted = 1;
     } else {
         retargeted = 0;
@@ -4702,7 +4711,7 @@ unsigned char attempt_step(hero* current_hero, pathCell* path_cell,
     int bNoMove;
     int bFoughtBattle;
     NewmapCell* event_cell = gpAdvManager->MoveHero(
-        path_cell->direction, bStandEnd, &point, &bNoMove, 1,
+        path_cell->direction, bStandEnd, &trigger_point, &bNoMove, 1,
         &bFoughtBattle, 0);
     if (retargeted) {
         current_hero->pathTargetX = saved_x;
@@ -4714,23 +4723,19 @@ unsigned char attempt_step(hero* current_hero, pathCell* path_cell,
         return 0;
 
     if (event_cell == 0) {
-        if (bNoMove != 0) {
+        if (bNoMove != 0)
             current_hero->movePoints = 0;
+    } else {
+        gpAdvManager->DoAIEvent(event_cell, current_hero, trigger_point);
+        if (gpCurrentPlayer->currHeroId == -1)
             return 0;
-        }
-        if (bFoughtBattle != 0)
-            return 0;
-        return 1;
+        if (event_cell->get_map_object() == HUT_OF_MAGI
+            && event_cell->cell_is_trigger())
+            gAIPlayers[current_hero->owner].magus_hut_value = 0;
+        AI_set_hero_bonuses(current_hero);
     }
 
-    gpAdvManager->DoAIEvent(event_cell, current_hero, point);
-    if (gpCurrentPlayer->currHeroId == -1)
-        return 0;
-    if (event_cell->get_map_object() == HUT_OF_MAGI
-        && event_cell->cell_is_trigger())
-        gAIPlayers[current_hero->owner].magus_hut_value = 0;
-    AI_set_hero_bonuses(current_hero);
-    return 0;
+    return event_cell == 0 && bNoMove == 0 && bFoughtBattle == 0;
 }
 
 // E:\gamedcs\ai_player.cpp:3910. Dreamcast's statement rows and Complete's

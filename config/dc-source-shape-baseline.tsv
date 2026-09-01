@@ -373,7 +373,6 @@ call	ai_player.obj	0x37acc	hero::get_artifact
 call	ai_player.obj	0x37acc	hero::get_backpack
 call	ai_player.obj	0x37fd8	game::GetTeam
 call	ai_player.obj	0x37fd8	game::IsHumanTeam
-call	ai_player.obj	0x38000	NewfullMap::cell
 call	ai_tactical.obj	0x3c608	combatManager::ValidHex
 call	ai_tactical.obj	0x3c608	min
 call	ai_tactical.obj	0x3c708	combatManager::ValidHex
