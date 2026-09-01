@@ -53,6 +53,7 @@ The mandatory first-pass workflow is:
 ```sh
 homm3 dreamcast show 0x00524dd0
 homm3 dreamcast asm 0x00524dd0 --blocks
+homm3 dreamcast inline-clues 0x00524dd0
 homm3 sema diff 0x00524dd0 --structure
 homm3 sema diff 0x00524dd0 --source
 ```
@@ -63,6 +64,12 @@ basic blocks (`B0`, `B1`, ...). It is the detailed view for understanding the ol
 source statement groups before forming a retail hypothesis. Selectors may also be exact or
 unambiguous names, `module.obj:0xOFF`, or `dc:0xOFF`; use `homm3 dreamcast find NAME`
 to locate a function and `homm3 dreamcast stats` to audit corpus coverage.
+`inline-clues` reports only positive Dreamcast compiler residue: another source file's
+line rows inside the procedure, or a same-file jump into a named earlier helper. Treat
+the recovered helper boundary, nested scopes, and surviving inlinee locals as source
+facts when retail agrees. NB11 has no explicit inline-site record, so an empty report
+never proves that the helper remained out of line; a separately emitted helper body also
+does not disprove an inline copy.
 `homm3 sema diff <selector> --structure` is the explicit candidate-vs-retail CFG
 checkpoint: it reports block flow and size differences without pretending that
 cross-architecture Dreamcast instruction counts should match.

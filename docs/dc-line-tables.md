@@ -79,6 +79,62 @@ helper calls, scopes, lifetimes, and statement boundaries than retail VC6
 `/O2 /Ob2` did. Tool output exposes those surviving facts without assuming
 that every non-inlined helper was caused by optimization being completely off.
 
+### Inline expansion leaves source-file fingerprints
+
+NB11 has no `S_INLINESITE` record, but the older SH compiler does not make
+inlining invisible. A controlled compile with the recovered QFE 8511
+candidate, using the canonical `/O1 /Qsh4r7 /Z7 /TP` profile, establishes what
+its ordinary inline residue looks like:
+
+| source case | `/O1` result | debug residue in the caller |
+|---|---|---|
+| explicit header leaf | expanded (8-byte caller) | the header's two body lines; three coincident `S_BLOCK32` scopes; no out-of-line copy when no site needs one |
+| explicit header branch | expanded (14-byte caller) | the header branch/return lines and five scopes |
+| nested explicit helpers | both expanded (22-byte caller) | both nested header line sequences and eleven scopes |
+| explicit helper containing an external call and an address-exposed local | expanded (26-byte caller) | the header lines plus the inlinee's local `y` as an `S_REGREL32` local of the caller |
+| member defined inside its class | expanded | the member's header line and coincident inline scopes |
+| plain small `static` helper, not declared inline | retained call (16-byte caller) | only the caller line; no inline scopes |
+| explicit inline containing a loop | retained call in this probe (18-byte caller) | only the caller line; a separate 22-byte helper body |
+| address-taken explicit helper | direct use still expanded | inline rows in the caller **and** a separate addressable body coexist |
+
+The `/Ob0` negative control turns the explicit cases back into calls and emits
+their separate bodies. A `/Yc` + `/Yu` PCH control still preserves the header
+file switches, so PCH use by itself is not an explanation for a missing row.
+These are compiler-behaviour controls, not universal cost thresholds: a larger
+body, loop, EH region, recursion, or surrounding budget may change a decision.
+
+The linked H3 NB11 stream contains the same positive signature. The current
+bounded scan finds **29 procedures** with inline residue: 27 have rows from a
+different source file inside their exact `S_GPROC32` extent, six jump from a
+later caller into an earlier named function in the same `.cpp`, and four have
+both. All 29 currently occur in `cursor.obj`. That is a lower bound on
+observable expansion, not a claim that other modules never inline.
+
+`advManager::OnMoveHero` is the compact control. Its procedure owns a 56-byte
+`game.h:972..979` expansion mapped to `game::GetHero`, followed by
+`type_obscuring_object::get_location` from `hero.h`, whose body in turn contains
+a 74-byte `type_point` constructor expansion from `struct.h`. The closing
+`hero.h:158` row still calls `type_point::operator!=`. Thus one dossier shows
+three expanded helper boundaries and one deliberately retained call, with the
+nested scope opens/closes attached to the exact spans.
+
+Read the clues in this order:
+
+1. A foreign source row inside the procedure extent is positive expansion
+   evidence. A disjoint header range elsewhere in the module is merely an
+   out-of-line COMDAT.
+2. A same-file row below the procedure's boundary line is positive when the
+   roster maps it to a different earlier function; this catches helpers such
+   as `advManager::StopCursor` expanded into later `cursor.cpp` functions.
+3. Coincident/nested `S_BLOCK32` ranges and inlinee locals corroborate the
+   boundary. Optimized-out locals remain absent, so the inventory is still a
+   lower bound.
+4. The missing direct call edge corroborates expansion, but a separately
+   emitted/address-taken helper body does **not** contradict it.
+5. A large call-site line without a foreign/back-jump line is only a candidate.
+   Absence of a clue never proves a retained call, because there is no explicit
+   inline-site record and line rows may be coalesced or optimized away.
+
 ## The tool
 
 The public entry point is `homm3 dreamcast`. It joins the roster, retail
@@ -92,6 +148,8 @@ homm3 dreamcast find ClearBottomView
 homm3 dreamcast gaps game::GetHero
 homm3 dreamcast gaps --minimum 2 --limit 50
 homm3 dreamcast gaps --exact 1 --retail-only --limit 0
+homm3 dreamcast inline-clues advManager::OnMoveHero
+homm3 dreamcast inline-clues --module cursor --limit 0
 homm3 dreamcast stats
 ```
 

@@ -136,6 +136,44 @@ class SourceLineGapTest(unittest.TestCase):
         self.assertIsNone(shape["leading_gap_lines"])
 
 
+class InlineClueTest(unittest.TestCase):
+    def test_foreign_and_earlier_named_source_rows_are_grouped(self):
+        caller = _fn("0x100", "Caller", cb="32")
+        caller["line"] = "100"
+        earlier = _fn("0x200", "EarlierHelper")
+        earlier["line"] = "40"
+        header = _fn("0x300", "HeaderHelper", "header.obj")
+        header["file"] = r"E:\gamedcs\helper.h"
+        header["line"] = "20"
+        corpus = dreamcast.Corpus(
+            functions=[caller, earlier, header], variables=[], bridges=[], claims=[])
+        rows = [
+            (r"E:\gamedcs\unit.cpp", 100, 0x100),
+            (r"E:\gamedcs\helper.h", 20, 0x104),
+            (r"E:\gamedcs\helper.h", 21, 0x108),
+            (r"E:\gamedcs\unit.cpp", 40, 0x10c),
+            (r"E:\gamedcs\unit.cpp", 101, 0x110),
+        ]
+        clues = dreamcast._inline_clue_rows(corpus, caller, rows)
+        self.assertEqual([item["kind"] for item in clues], [
+            "foreign-source", "foreign-source", "earlier-source-function"])
+        self.assertEqual(clues[0]["definitions"], ["HeaderHelper"])
+        self.assertEqual(clues[2]["definitions"], ["EarlierHelper"])
+        self.assertTrue(all(item["confidence"] == "positive" for item in clues))
+        groups = dreamcast._inline_clue_groups(clues)
+        self.assertEqual([item["statement_rows"] for item in groups], [2, 1])
+        self.assertEqual([item["emitted_size"] for item in groups], [8, 4])
+
+    def test_ordinary_owning_source_rows_do_not_invent_inline_clues(self):
+        caller = _fn("0x100", "Caller", cb="16")
+        corpus = dreamcast.Corpus(
+            functions=[caller], variables=[], bridges=[], claims=[])
+        rows = [
+            (r"E:\gamedcs\unit.cpp", 10, 0x100),
+            (r"E:\gamedcs\unit.cpp", 11, 0x108),
+        ]
+        self.assertEqual(dreamcast._inline_clue_rows(corpus, caller, rows), [])
+
 class CfgTest(unittest.TestCase):
     @staticmethod
     def _decoder(rows):
