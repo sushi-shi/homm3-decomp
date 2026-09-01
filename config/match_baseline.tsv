@@ -2751,7 +2751,7 @@ singleselectionwindow	?OnPingResponseMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@
 singleselectionwindow	?OnRequestHeroFaceReplyMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@E@Z	100.0000	100.0000	100.0000	0x18b0b0
 singleselectionwindow	?OnSetAsHostMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18b120
 singleselectionwindow	?OnUpdatePlayerPosMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18ba40
-singleselectionwindow	?OnWidgetDeselect@TSingleSelectionWindow@@QAEHPAVmessage@@PAEE@Z	87.4238	87.4238	87.4238	0x1865b0
+singleselectionwindow	?OnWidgetDeselect@TSingleSelectionWindow@@QAEHPAVmessage@@PAEE@Z	91.1529	91.1529	91.1529	0x1865b0
 singleselectionwindow	?PlayerDropped@CNewPlayerUpdateMan@@QAEXK@Z	100.0000	100.0000	100.0000	0x189480
 singleselectionwindow	?ProcessMouse@@YGIPAX@Z	100.0000	100.0000	100.0000	0x177740
 singleselectionwindow	?ProcessRightSelect@TSingleSelectionWindow@@UAEEH@Z	88.6540	88.9695	88.9695	0x1822d0
@@ -2788,7 +2788,7 @@ singleselectionwindow	?UpdateFilterWidgets@TSingleSelectionWindow@@QAEXXZ	95.075
 singleselectionwindow	?UpdateGameVars@TSingleSelectionWindow@@QAEXXZ	67.9099	67.9099	67.9099	0x183580
 singleselectionwindow	?UpdateNameLists@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x18c960
 singleselectionwindow	?UpdatePlayerPositions@TSingleSelectionWindow@@QAEXE@Z	70.4601	70.4601	70.4601	0x188330
-singleselectionwindow	?UpdateTown@TSingleSelectionWindow@@QAEXHHE@Z	100.0000	100.0000	100.0000	0x18cd50
+singleselectionwindow	?UpdateTown@TSingleSelectionWindow@@QAEXHW4TTownType@@E@Z	100.0000	100.0000	100.0000	0x18cd50
 singleselectionwindow	?WindowFn_00582e90@TSingleSelectionWindow@@QAEXPAV?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x182e90
 singleselectionwindow	?WindowHandler@TSingleSelectionWindow@@UAEHPAVmessage@@@Z	97.6901	97.6901	97.6901	0x187d00
 singleselectionwindow	?handle_message@CHostWaitDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1891b0

@@ -475,9 +475,9 @@ public:
 class CTownUpdateMsg : public CNetMsg {
 public:
     int m_gamePos;  // +0x14
-    int m_town;     // +0x18
+    TTownType m_town;  // +0x18
 
-    CTownUpdateMsg(int gamePos, int town)
+    CTownUpdateMsg(int gamePos, TTownType town)
         : CNetMsg(RS_TOWN_UPDATE, sizeof(CTownUpdateMsg))
     {
         m_gamePos = gamePos;

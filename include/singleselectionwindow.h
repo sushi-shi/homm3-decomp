@@ -7,6 +7,7 @@
 
 #include "netplayer.h"
 #include "advmgr_popup.h"
+#include "town.h"
 #include "va.h"
 
 // The TU-only full-vector view of the three header lists (see the
@@ -29,6 +30,11 @@ class CChatWidget;
 class textWidget;
 class textButton;
 struct GameSelectionHeadersStruct;
+
+// Complete-only random-map filename chooser. Retail 0x5879a0 receives the
+// hidden std::string result in ECX under /Gr; it is a free function, not a
+// TSingleSelectionWindow member.
+std::string GetRandomMapName();
 
 #ifdef HOMM3_SSWINDOW_HEADER_VECTORS
 // One cached map/save header row of the file list. Only the stride is
@@ -472,9 +478,9 @@ public:
     unsigned char CanChooseHero(int gamePos);
     int GetDisplayFace(int gamePos);
     int GetHeroInPos(int gamePos);
-    // DC returns TTownType; spelled int for the same public-closure reason
-    // as UpdateTown. Retail keeps this source helper fully inlined.
-    int GetDisplayTown(int gamePos);
+    // Dreamcast names the enum return, and Complete's inlined nine-town
+    // callers retain that enum-typed local and mask lowering.
+    TTownType GetDisplayTown(int gamePos);
     const char* GetHeroName(int gamePos);
     int GetThisPlayerGamePos();
     unsigned char HighlightFile(char* filename);
@@ -491,7 +497,6 @@ public:
     unsigned char OnBeginGame();
     // Complete-only random-map helpers at 0x5879a0 and 0x5860e0. Their
     // provisional role names describe the byte-decoded caller contract.
-    std::string GetRandomMapName();
     unsigned char GenerateRandomMap(const char* name);
     void OnDeleteFile();
     void SetCurrentMap(int map, unsigned char bUpdate);
@@ -542,9 +547,8 @@ public:
     // &pMsg->m_playerInfo and OnUpdatePlayerPosMsg a full seat record
     // (derived-to-base). DC's takes the dpid alone.
     unsigned char SetNewPlayerSlot(CNetPlayerInfo* pPlayer);
-    // DC takes TTownType; spelled int here so the public closure needs no
-    // town.h - retype when the body lands.
-    void UpdateTown(int pos, int town, unsigned char inPopup);
+    // Dreamcast and Complete both retain the source-level town enum here.
+    void UpdateTown(int pos, TTownType town, unsigned char inPopup);
     void UpdateNameLists();
     void SetupLoadGameMode();
     void SetupNewGameMode();
@@ -579,6 +583,10 @@ public:
     // Complete-only counterpart to the two shared setup panes. Retail calls
     // 0x57feb0 before refreshing the filter widgets.
     void SetupFilterOptions();
+    // Complete-only member at 0x580430. Its body rebuilds the map header and
+    // player slots from field_18A0, redraws, and broadcasts the resulting
+    // setup. The role name remains provisional until its body is claimed.
+    void RebuildFilteredPlayerSetup();
     unsigned char SendPlayerPositions(unsigned long dpidTo);
     unsigned char SendSetupInfo(unsigned long dpid);
     void SendPlayerFaces();
