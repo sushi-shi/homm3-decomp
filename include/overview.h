@@ -5,6 +5,37 @@
 #ifndef HOMM3_OVERVIEW_H
 #define HOMM3_OVERVIEW_H
 
+#include <vector>
+#include "advmgr_popup.h"
+
+// Complete allocates TOverviewWindow as exactly 0x80 bytes. Its destructor
+// proves that the CAdvPopup base is followed by two VC6 vectors: it tears down
+// their allocation pointers at +0x74 and +0x64, in reverse construction
+// order. The earlier vector's element stride is independently eight bytes in
+// the retail helper at 0x51e670. Dreamcast only exposes a forward reference
+// for this class, so the record and member names remain intentionally ordinal.
+struct overview_item_record {
+    int field_00;
+    int field_04;
+};
+SIZE(overview_item_record, 8);
+
+class TOverviewWindow : public CAdvPopup {
+public:
+    TOverviewWindow();
+    virtual ~TOverviewWindow();
+    virtual int WindowHandler(message* msg);
+
+    void ClearButtons(int slot);
+    void UpdateRollover(char* cText);
+    void DoRollover(int codeY);
+
+private:
+    std::vector<overview_item_record> field_60;
+    std::vector<widget*> field_70;
+};
+SIZE(TOverviewWindow, 0x80);
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\overview.cpp:1254, dc 0x106d18) void UpdateFlaggableIcon(int i);
 // CODEVIEW(E:\gamedcs\overview.cpp:1279, dc 0x106d98) void UpdateFlaggableIcons();

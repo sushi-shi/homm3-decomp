@@ -71,58 +71,61 @@ LODEntry* LODFile::getItemIndex(const char* item_name)
 // carries TWO copies of that scan, one per comparison arm, so the span
 // test sits inside each arm rather than above the split.
 //
-// Residual (93.98%): instruction-for-instruction identical, four exit
-// blocks against our three.  Retail's four tails are pairwise identical
-// APART FROM one scratch register (the `matchindex = i` stores use ecx
-// in the upper arm and edx in the lower, the two `matchindex = -1`
-// blocks use eax and edx), so its tail-merger folded only the upper
-// linear hit onto the midpoint hit; ours makes all four congruent and
-// merges them into two.  `homm3 vc6 diagnose` calls it control-flow
-// (21 vs 22 blocks, three retargeted branches, register-distance 150),
-// but the block set is downstream of that register choice, so no local
-// spelling reaches it.  Per-function fuzzy 74.09% - the objdiff move
-// penalty over a long run of near-identical instructions, not a
-// semantic gap.  Tried and rejected: an explicit `half` local, `mid`
-// hoisted above the loop, `mid` recomputed per use, and both
-// asymmetric exit forms that would give each linear scan its own
-// `matchindex = -1` block (68.87% and 69.18%).  Same family as the
-// documented merged-return residual.
+// Exact since 2026-09-01: all 22 CFG blocks and all 275 bytes match.  The
+// Dreamcast dossier's sole stack local is `half`; its line/scope table proves
+// the outer infinite search, per-arm short-span scans, and separate failure
+// returns.  Retail further fixes `half` as the half-span (each midpoint use
+// adds `begin`) and keeps distinct register-resident i/j scan indices.  Those
+// facts moved the old merged-return spelling through 74.09 -> 79.18 -> 84.01
+// before reproducing retail's four selectively merged exit tails exactly.
+// Negative controls: a midpoint-valued `half` stops at 79.18, while mutating
+// `begin` directly in both short scans stops at 84.01 and swaps index/offset
+// register roles.
 VA(0x004fa660, 0x113)  // anchor-global, dc 0xe91c0
 void LODFile::Find(unsigned begin, unsigned end, const char* item_name)
 {
-    while (begin != end) {
-        unsigned span = end - begin;
-        unsigned mid = begin + span / 2;
-        int order = _strcmpi(item_name, subindex[mid].name);
+    for (;;) {
+        if (begin == end) {
+            matchindex = -1;
+            return;
+        }
+
+        unsigned half = (end - begin) / 2;
+        int order = _strcmpi(item_name, subindex[begin + half].name);
         if (order == 0) {
-            matchindex = mid;
+            matchindex = begin + half;
             return;
         }
         if (order < 0) {
-            if (span <= 4) {
+            if (end - begin > 4) {
+                end = begin + half;
+                continue;
+            } else {
                 for (unsigned i = begin; i < end; i++) {
                     if (_strcmpi(item_name, subindex[i].name) == 0) {
                         matchindex = i;
                         return;
                     }
                 }
-                break;
+                matchindex = -1;
+                return;
             }
-            end = mid;
         } else {
-            if (span <= 4) {
+            if (end - begin > 4) {
+                begin += half;
+                continue;
+            } else {
                 for (unsigned j = begin; j < end; j++) {
                     if (_strcmpi(item_name, subindex[j].name) == 0) {
                         matchindex = j;
                         return;
                     }
                 }
-                break;
+                matchindex = -1;
+                return;
             }
-            begin = mid;
         }
     }
-    matchindex = -1;
 }
 
 #if 0  // @carcass

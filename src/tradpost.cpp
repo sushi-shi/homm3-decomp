@@ -30,6 +30,17 @@ void TradeResourceSlider(int state, heroWindow* parent_window);
 void GiveResourceSlider(int state, heroWindow* parent_window);
 void SellCreatureSlider(int state, heroWindow* parent_window);
 
+// E:\\gamedcs\\CreatureType.h:296 (dc 0x1ef94). The helper is a positive
+// source fact even when Complete folds its constant-count call into trait
+// loads; keep the header-inline boundary visible in this recovered TU.
+static inline const char* GetArmyName(int type, int count)
+{
+    return type >= 0 && type <= 0x96
+               ? (count == 1 ? akCreatureTypeTraits[type].m_name
+                             : akCreatureTypeTraits[type].m_plural_name)
+               : emptyRolloverText;
+}
+
 // Market state the slider callbacks reach (declared ahead of their
 // definitions inside the dialog band below; the rest of the file-static
 // market state block follows the dialogs, where its consumers start).
@@ -1530,6 +1541,16 @@ void DoBlackMarket(hero* inHero, char* blackArtifacts)
 // the dialog gMarketWindow selects, seeds the shared trade selection, runs the
 // dialog modally, then follows gpWindowManager->dialogReturn from one pane to
 // the next until a window requests the exit command.
+// Residual (94.61%): Dreamcast rows 738/768/793/818/843 prove the five modal
+// calls and rows 739/769/794/819/844 their five direct deletes. Retail's
+// 50-block CFG differs from this build's 48 only because VC6 folds the Give
+// and SellArtifact delete sequences into one tail after choosing the same
+// eax/edx scratch pairing at both sites; the candidate's opposite pairing
+// prevents that optimizer merge. why-reg measured 58 register-visible slots:
+// its model's two best named-condition probes were byte-flat, and the guided
+// declaration/store-order sweep found no improvement (the moved-store
+// controls added 2--80 slots). Keep the separately attested delete statements
+// instead of spelling a synthetic shared-cleanup goto.
 VA(0x005ea130, 0x49c)  // anchor-callee (from 6 entry points) + linkorder, dc 0x188708
 void DoMarket()
 {
@@ -2669,13 +2690,14 @@ void TSellArtifactWindow::Update(unsigned char bUpdate)
 // panels and slider, and, in a two-pane loop, each army slot (creature icon +
 // count) and each buy-resource button (icon, exchange ratio, highlight). The
 // final repaint is gated by bUpdate.
-// Residual (94.73%): all 22 conditional branches and their symbolic targets
-// agree. The remaining tail differences are VC6 register-family choices while
-// carrying message code 4 through the selected-trade and nested pane loops;
-// retail has 52 CFG blocks versus 51 here because one sprintf path falls
-// through where this include set emits a jump. The Dreamcast-attested inline
-// SetWidgetOn/Off/Disabled helpers recover the source topology without a
-// synthetic register carrier.
+// Residual (MAX 98.7947%, current 98.7522%): all 52 CFG blocks and every edge
+// agree (48 blocks exact, four size-only). Dreamcast records precisely the six
+// locals below and the SetWidgetOn/Off/Disabled boundaries; retain both facts.
+// why-reg measured 37 residual slots in the B1/B2 register-pressure class.
+// Unnaming widgetOff, naming either side-test, all three adjacent declaration
+// swaps and the plausible message-store swaps were byte-flat; the remaining
+// store reorders added 2--6 slots and volatile-local controls added 83--298.
+// There is no evidence-backed carrier for the last callee-save tie.
 VA(0x005ec550, 0x7ba)  // ordermap clean run + arity ret 4, dc 0x18a550
 void TSellCreatureWindow::Update(bool bUpdate)
 {
@@ -3053,11 +3075,13 @@ void TSellCreatureWindow::ComputeTradeRatios(int inLeftResource, int inRightReso
                     gpMarketHero->army.numTroops[inLeftResource];
         }
     }
-    // Residual (97.60%): the inverted (ratio < 1) arm allocates its throwaway
-    // pointer/scratch registers as edx/eax/ecx where retail rotates ecx/edx/eax
-    // (retail compares the GetNumArmies result in place before reusing eax for
-    // the hero reload; the denominated arm's idiv pins iInTradeRatio in esi and
-    // matches exactly). A register wall - the float math and control flow agree.
+    // Residual (97.60%): all nine CFG blocks and the float/control semantics
+    // agree. The inverted arm allocates its throwaway pointer/scratch registers
+    // as edx/eax/ecx where retail rotates ecx/edx/eax; the denominated arm's
+    // idiv pins iInTradeRatio in esi and matches exactly. why-reg measured 20
+    // slots. Its v2 creation-order probes were either ill-typed or byte-flat;
+    // the guided 1.0f/name probes were flat and volatile ratio added 12 slots.
+    // This is a front-end handle-order register wall, not a missing branch.
 }
 
 // The four private helpers below survive only as inlined bodies in the retail
@@ -4063,17 +4087,15 @@ void TSellCreatureWindow::SetRolloverText(int codeY)
     case MARKET_BUY_ORE_ID: case MARKET_BUY_SULFUR_ID:
     case MARKET_BUY_CRYSTAL_ID: case MARKET_BUY_GEMS_ID:
     case MARKET_BUY_GOLD_ID:
-        strcpy(gText, gResourceNames[codeY - MARKET_BUY_WOOD_ID]);
-        goto rollover_text_ready;
+        rolloverText = gResourceNames[codeY - MARKET_BUY_WOOD_ID];
+        break;
     case MARKET_CREATURE_SLOT_0_ID: case MARKET_CREATURE_SLOT_1_ID:
     case MARKET_CREATURE_SLOT_2_ID: case MARKET_CREATURE_SLOT_3_ID:
     case MARKET_CREATURE_SLOT_4_ID: case MARKET_CREATURE_SLOT_5_ID:
     case MARKET_CREATURE_SLOT_6_ID: {
-        int creatureType = gpMarketHero->army.armies[codeY - MARKET_CREATURE_SLOT_0_ID];
-        if (creatureType >= 0 && creatureType <= 0x96)
-            sprintf(gText, akCreatureTypeTraits[creatureType].m_plural_name);
-        else
-            sprintf(gText, emptyRolloverText);
+        int creatureType =
+            gpMarketHero->army.armies[codeY - MARKET_CREATURE_SLOT_0_ID];
+        sprintf(gText, GetArmyName(creatureType, 2));
         goto rollover_text_ready;
     }
     default:
@@ -4087,7 +4109,13 @@ rollover_text_ready:
     BroadcastMessage(0x200, 3, 0x93, update.extra);
     DrawWindow(0, 0x92, 0x93);
     gpWindowManager->UpdateScreen(x + 8, y + 0x238, 0x249, 0x12);
-    // Residual (97.05%): block placement and branch structure agree. VC6 still
-    // chooses the opposite eax/edx tie for the inlined strcpy length spill and
-    // the creature sprintf operand; the resource lookup is a reloc alias.
+    // Residual (90.26%, banked MAX 97.05%): all 24 blocks and edges agree;
+    // twenty blocks are exact and three more differ by one instruction.
+    // Dreamcast positively attests GetArmyName(creature, 2), which Complete
+    // folds to the range test and plural trait load. Keeping that helper while
+    // joining the resource arm to the shared strcpy raises 78.69 -> 90.26.
+    // Negative controls: sharing every DC strcpy arm falls to 68.96, forcing
+    // the left-panel copy direct falls to 77.87, and `register` is byte-flat.
+    // Omitting GetArmyName reaches the older 97.05 peak but violates the
+    // positive helper gate; a volatile creature local is likewise source-false.
 }

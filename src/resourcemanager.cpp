@@ -842,7 +842,11 @@ static inline FILE* OpenResourcePath(const char* name)
 // positional string boundary without a site pragma; both sides now have 34
 // blocks and the same 20-branch sequence. The remaining early-cache insertion
 // and archive-local coloring differ. Replacing the explicit public-map wrapper
-// with AddToCache or the natural insert expression regresses to 90.14/89.45.
+// with AddToCache or the natural insert expression regresses to 90.14/89.45;
+// a fully nested pair/value/wrapper expression is a separate 92.61 negative
+// control. why-reg's best volatile-remaining probe reduces its masked distance
+// from 145 to 133 slots, but invents a source-false qualifier and does not
+// close the function, so the Dreamcast-proven ordinary integer remains.
 VA(0x0055a800, 0x41F)  // bitmapBorder::SetImage loader; dc 0x121ac8
 Bitmap816* ResourceManager::GetBitmap816(const char* name)
 {
@@ -1371,8 +1375,13 @@ TPalette24* ResourceManager::GetPalette24(const char* name)
 // common test, while retail branches to that common test and stores the home
 // between its test and branch. The structural diff has 18/18 blocks, 16 exact,
 // one size-only and one shifted target; the catch block itself is exact.
-// Natural nesting, scoped cached locals, explicit load/common labels, and
-// resource*/TPalette16* intermediate spellings are otherwise byte-flat.
+// Retail's relocation names the public TCacheMap::find facade, now preserved
+// instead of its byte-identical find_tree twin. Natural nesting, scoped cached
+// locals, explicit load/common labels, and resource*/TPalette16* intermediate
+// spellings are otherwise byte-flat. Repeating the node-value expression does
+// recover retail's late EAX-to-ESI handoff, but duplicates its load and drops
+// the refcount store below the null test (94.35%), so it is a measured negative
+// control rather than permission to discard the coherent cached local.
 VA(0x0055b750, 0x17A)  // retail stream ABI + merged HandlerType catch
 font* ResourceManager::LoadFontData(const char* name, TAbstractFile* stream,
                                     int fileSize)
@@ -1392,7 +1401,7 @@ font* ResourceManager::LoadFontData(const char* name, TAbstractFile* stream,
 #pragma inline_depth(0)
     TCacheMapKey key(paletteName);
 #pragma inline_depth()
-    TCacheIterator found = gResourceCache.find_tree(key);
+    TCacheIterator found = gResourceCache.find(key);
     TPalette16* palette;
     if (found.node != gResourceCache.head) {
         resource* cached = found.node->value.second;
@@ -2807,12 +2816,15 @@ LODFile* ResourceManager::PointToBitmapResource(const char* name)
     return file;
 }
 
-// Exact three-block CFG and 30/31-instruction sequence.  Retail retains a
-// dead `lea` of the selected 24-byte context after loading the bitmap list;
-// pointer/reference/accessor spellings remove it, while a by-value spelling
-// performs a real 24-byte copy.  why-reg's model finds no binding divergence
-// and its guided volatile probe is worse (5 rather than 3 masked slots), so
-// the residual is a bounded C1 dead-address-materialization wall.
+// Dreamcast's direct method (dc 0x1224e4) is one source statement with no
+// recorded locals; retail expands it into this three-block Complete archive
+// walk. Candidate and retail have the same 30/31-instruction sequence. Retail
+// retains a dead `lea` of the selected 24-byte context after loading the
+// bitmap list; pointer/reference/accessor spellings remove it, a named context
+// reference is byte-flat, and a by-value spelling performs a real 24-byte
+// copy. why-reg's model finds no binding divergence and its guided volatile
+// probe is worse (5 rather than 3 masked slots), so the residual is a bounded
+// C1 dead-address-materialization wall.
 VA(0x0055d070, 0x5C)  // retail archive-list walk + dc/hd name corroboration
 int ResourceManager::GetBitmapResourceSize(const char* name)
 {

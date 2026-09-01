@@ -112,12 +112,7 @@ unsigned char TMultiPlayerWindow::OnModemHost()
 
 // OnTCP promoted to a VA claim (retail-located block).
 
-// E:\gamedcs\multiplayerwindow.cpp:1924
-DC_ONLY(0x1018ec, 0x7E)
-unsigned char TMultiPlayerWindow::OnIPX()
-{
-    // @stub
-}
+// OnIPX is modelled inline beside its retail caller below.
 
 // E:\gamedcs\multiplayerwindow.cpp:1944
 DC_ONLY(0x10196c, 0x294)
@@ -128,19 +123,9 @@ unsigned char TMultiPlayerWindow::OnSearch()
 
 // OnHotSeat promoted to a VA claim (retail-located block).
 
-// E:\gamedcs\multiplayerwindow.cpp:2025
-DC_ONLY(0x101c4c, 0x56)
-unsigned char TMultiPlayerWindow::OnModem()
-{
-    // @stub
-}
+// OnModem is modelled inline beside its retail caller below.
 
-// E:\gamedcs\multiplayerwindow.cpp:2043
-DC_ONLY(0x101ca4, 0x56)
-unsigned char TMultiPlayerWindow::OnDirect()
-{
-    // @stub
-}
+// OnDirect is modelled inline beside its retail caller below.
 
 // E:\gamedcs\multiplayerwindow.cpp:2061
 DC_ONLY(0x101cfc, 0x5C)
@@ -285,12 +270,7 @@ void CMPInputEdit::~CMPInputEdit()
     // @stub
 }
 
-// E:\gamedcs\multiplayerwindow.cpp:493
-DC_ONLY(0x1027b4, 0x38)
-unsigned char CMPInputDlg::OnOK()
-{
-    // @stub
-}
+// CMPInputDlg::OnOK is modelled inline beside its retail caller below.
 
 // UpdateOK promoted to a VA claim (retail-located block).
 
@@ -339,10 +319,11 @@ inline bool CHeroSessions::GetSessionInfo(unsigned long index, char* sessName,
 }
 
 // Update and OnJoin inline the same source helper but make opposite nested
-// IsJoinDisabled decisions in retail. Keep a caller-specific copy so VC6 can
-// expand the status test in Update without changing OnJoin's out-of-line call.
-inline bool CHeroSessions::GetSessionInfoInline(
-    unsigned long index, char* sessName, char* userName, int& numPlayers,
+// IsJoinDisabled decisions in retail. Keep a caller-specific int overload so
+// Update's int row expression selects the expanded status test while the
+// Dreamcast-proven unsigned-long overload remains OnJoin's exact lowering.
+inline bool CHeroSessions::GetSessionInfo(
+    int index, char* sessName, char* userName, int& numPlayers,
     eSessionStatus& status)
 {
     CDPlaySession* session = Get(index);
@@ -654,10 +635,15 @@ void TMultiPlayerWindow::GoMainMenu()
 // the local player has typed a name. Splash-visible and empty-list states take
 // the two short branches; the full list re-uses the same UpdateScreen tail.
 // CHeroSessions::GetSessionInfo and CDPlaySession::IsJoinDisabled inline here,
-// reproducing retail's session parsing and status CFG. Residual (99.21%) is a
-// row-Y load/add/store schedule plus stack-slot assignments; the CFG and
-// instruction count agree. The differently named pooled-data relocs are
-// cosmetic.
+// reproducing retail's session parsing and status CFG. Selecting the caller-
+// specific inline copy restores the banked 99.208% peak (from 98.048%). The
+// sole residual is a row-Y load/add/store schedule plus stack-slot assignments;
+// 51 of 52 blocks are exact and the last is size-only. why-reg measured a
+// 40-instruction distance and none of its 25 catalog mutations improved it.
+// Hoisting/splitting nRow, swapping status/numPlayers, and moving split's
+// declaration were byte-flat negative controls; caller inline-depth 2 and 255
+// were also flat at 98.048%. Alternative wx/wy schedules regressed. Differently
+// named pooled-data relocs are cosmetic.
 VA(0x0050f0f0, 0x3E6)  // anchor-callee: sole big drawing method (font::DrawBoundedString x3, CSprite::Draw, session-name strncpy/sprintf), size 0.99x DC, dc 0x1005fc
 void TMultiPlayerWindow::Update()
 {
@@ -757,12 +743,82 @@ void TMultiPlayerWindow::Update()
     gpWindowManager->UpdateScreen(x, y, width, height);
 }
 
-// Residual (98.1%): the executable CFG, instruction counts and offsets match
-// through the shared return; five late blocks differ only in VC6 register
-// scheduling (three exit-flag stores, DrawWindow's vtable load and the session
-// index/GetCount pair). Unpromoted helper/data relocation names are cosmetic.
-// Tried and rejected: return-the-assignment, a local bool-reference view of the
-// ABI pointer, commuted session-index operands and inverted success guards.
+// DC retains these three member helpers and OnWidgetDeselect calls them.
+// Complete emits no standalone bodies; the corresponding retail case arms
+// contain the complete inlined bodies, including Complete's expanded IPX
+// session setup and the later widget-status API.
+inline unsigned char TMultiPlayerWindow::OnIPX()
+{
+    iMPNetProtocol = MP_IPX;
+    if (::InitRemote(MP_IPX, playerName->Text.c_str()) &&
+        InitConnection(0, 0)) {
+        DPCAPS caps;
+        pDPlay->GetCaps(&caps, 1);
+        sessionRefreshTimeout = caps.dwTimeout + 100;
+        if (iMPNetProtocol == MP_TCP)
+            sessionRefreshTimeout = 1000;
+
+        if (host)
+            host->send_message(
+                widget::WIDGET_SET_STATUS,
+                widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        join->send_message(widget::WIDGET_SET_STATUS,
+                           widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        join->enable(0);
+        pSessions->Destroy();
+        pDPlay->EnumSessions(pSessions, sessionRefreshTimeout, 0x52);
+        sessTimer = GameTime::Get();
+        static_cast<slider*>(gameSlider)->UpdateResolution(
+            pSessions->GetCount() - 12);
+        Update();
+        return 1;
+    }
+
+    NormalDialog(gpGeneralText->GetText(461), 1, -1, -1,
+                 -1, 0, -1, 0, -1, 0, -1, 0);
+    return 0;
+}
+
+inline unsigned char TMultiPlayerWindow::OnModem()
+{
+    iMPNetProtocol = MP_MODEM;
+    hostJoinScreen = 1;
+    splash->send_message(widget::WIDGET_SET_STATUS,
+                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    if (host)
+        host->send_message(widget::WIDGET_SET_STATUS,
+                           widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    join->send_message(widget::WIDGET_SET_STATUS,
+                       widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    join->enable(1);
+    Update();
+    return 1;
+}
+
+inline unsigned char TMultiPlayerWindow::OnDirect()
+{
+    iMPNetProtocol = MP_SERIAL;
+    hostJoinScreen = 1;
+    splash->send_message(widget::WIDGET_SET_STATUS,
+                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    if (host)
+        host->send_message(widget::WIDGET_SET_STATUS,
+                           widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    join->send_message(widget::WIDGET_SET_STATUS,
+                       widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    join->enable(1);
+    Update();
+    return 1;
+}
+
+// DC proves the three member-helper boundaries retained above; Complete inlines
+// all of them into this caller. With those boundaries present the CFG remains
+// 42/42 blocks exact and the current score is 97.493% (banked flattened MAX
+// 98.120%); the residual is VC6 register scheduling in the late case arms.
+// Flattening recovers MAX but violates the positive DC source fact. A plain
+// out-of-line spelling fell to 61.757%; __forceinline and success-guard polarity
+// were byte-flat at 97.493%, while making the session pointer volatile fell to
+// 92.580%. Unpromoted helper/data relocation names are cosmetic.
 VA(0x0050f4e0, 0x458)  // anchor-vtable 0x6400a0 slot 12 (OnWidgetDeselect), dc 0x1009a4
 int TMultiPlayerWindow::OnWidgetDeselect(int id, unsigned char* bExitFlag)
 {
@@ -774,33 +830,9 @@ int TMultiPlayerWindow::OnWidgetDeselect(int id, unsigned char* bExitFlag)
 
     case IPX_ID: {
         GoSessionList();
-        iMPNetProtocol = MP_IPX;
-        if (::InitRemote(MP_IPX, playerName->Text.c_str()) &&
-            InitConnection(0, 0)) {
-            DPCAPS caps;
-            pDPlay->GetCaps(&caps, 1);
-            sessionRefreshTimeout = caps.dwTimeout + 100;
-            if (iMPNetProtocol == MP_TCP)
-                sessionRefreshTimeout = 1000;
-
-            if (host)
-                host->send_message(
-                    widget::WIDGET_SET_STATUS,
-                    widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-            join->send_message(widget::WIDGET_SET_STATUS,
-                               widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-            join->enable(0);
-            pSessions->Destroy();
-            pDPlay->EnumSessions(pSessions, sessionRefreshTimeout, 0x52);
-            sessTimer = GameTime::Get();
-            static_cast<slider*>(gameSlider)->UpdateResolution(
-                pSessions->GetCount() - 12);
-            Update();
-            return 1;
-        }
-
-        NormalDialog(gpGeneralText->GetText(461), 1, -1, -1,
-                     -1, 0, -1, 0, -1, 0, -1, 0);
+        if (!OnIPX())
+            goto connection_failed;
+        return 1;
     }
 
 connection_failed:
@@ -821,32 +853,14 @@ connection_failed:
 
     case MODEM_ID:
         GoSessionList();
-        iMPNetProtocol = MP_MODEM;
-        hostJoinScreen = 1;
-        splash->send_message(widget::WIDGET_SET_STATUS,
-                             widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        if (host)
-            host->send_message(widget::WIDGET_SET_STATUS,
-                               widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        join->send_message(widget::WIDGET_SET_STATUS,
-                           widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        join->enable(1);
-        Update();
+        if (!OnModem())
+            goto connection_failed;
         return 1;
 
     case DIRECT_ID:
         GoSessionList();
-        iMPNetProtocol = MP_SERIAL;
-        hostJoinScreen = 1;
-        splash->send_message(widget::WIDGET_SET_STATUS,
-                             widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        if (host)
-            host->send_message(widget::WIDGET_SET_STATUS,
-                               widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        join->send_message(widget::WIDGET_SET_STATUS,
-                           widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        join->enable(1);
-        Update();
+        if (!OnDirect())
+            goto connection_failed;
         return 1;
 
     case ONLINE_ID:
@@ -1252,28 +1266,30 @@ CMPInputDlg::~CMPInputDlg()
     delete_widgets();
 }
 
+// DC keeps this source helper out of line and OnWidgetDeselect calls it.
+// Complete emits no standalone body, but the retail caller contains exactly
+// its active-field/empty-text guard, proving that VC6 inlined the boundary.
+inline unsigned char CMPInputDlg::OnOK()
+{
+    if (field1->status & widget::WIDGET_ACTIVE) {
+        if (!strlen(field1->Text.c_str()))
+            return 0;
+    }
+    return 1;
+}
+
 // E:\gamedcs\multiplayerwindow.cpp:470
 VA(0x005108f0, 0x72)  // anchor-vtable 0x6400f4 slot 12 (OnWidgetDeselect), dc 0x10275c
 int CMPInputDlg::OnWidgetDeselect(int id, unsigned char* bExitFlag)
 {
-    // Residual (83.4%): merged-return CL-generation class. Retail sinks the
-    // shared `return 0` join (reached by the default dispatch and the empty-
-    // field reject) to the very end, past the OKAY accept block; our SP3 CL
-    // places it between the OKAY test and the accept block. Dispatch, guards
-    // and both accept blocks are byte-exact. Tried and rejected: `&&`+return
-    // (dispatch regresses to je-BACK, 77%), `||`+break, nested-if+return 0
-    // (same 77%). The _Nullstr vs adventureTownRolloverEmptyText reloc is the
-    // c_str() null fallback and is cosmetic (OnOK matches with the same base
-    // reloc). break form is closest.
     switch (id) {
     case OKAY_ID:
-        if (field1->status & widget::WIDGET_ACTIVE) {
-            if (!strlen(field1->Text.c_str()))
-                break;
+        if (OnOK()) {
+            *bExitFlag = 1;
+            gpWindowManager->dialogReturn = DIALOG_RETURN_OK;
+            return 1;
         }
-        *bExitFlag = 1;
-        gpWindowManager->dialogReturn = DIALOG_RETURN_OK;
-        return 1;
+        break;
 
     case BACK_ID:
         *bExitFlag = 1;
@@ -1433,7 +1449,8 @@ unsigned char TMultiPlayerWindow::OnJoin()
     char sessName[256];
     int numPlayers;
     CHeroSessions::eSessionStatus status;
-    if (!pSessions->GetSessionInfo(currentGame, sessName, userName,
+    if (!pSessions->GetSessionInfo(static_cast<unsigned long>(currentGame),
+                                   sessName, userName,
                                    numPlayers, status))
         return 0;
 
@@ -1524,11 +1541,14 @@ unsigned char GetIPAddress(char* sIPAddress)
 
 // E:\gamedcs\multiplayerwindow.cpp:1884
 // Source-complete residual. All 20 semantic blocks, calls, stack offsets and
-// per-block instructions agree with retail. VC6 schedules the connection-
-// failure dialog at the function tail here; retail places that cold return
-// between the textWidget constructor and its null-allocation continuation.
-// TCP setup activates the host/join/search controls, publishes the local
-// address once, refreshes the DirectPlay session array and redraws the browser.
+// per-block instructions agree with retail. why-branch measured only six
+// differing instructions: three topology deltas have identical branch
+// mnemonics but different landing blocks, with no catalog mutation available.
+// VC6 schedules the connection-failure dialog at the function tail here;
+// retail places that cold return between the textWidget constructor and its
+// null-allocation continuation. TCP setup activates the host/join/search
+// controls, publishes the local address once, refreshes the DirectPlay session
+// array and redraws the browser.
 VA(0x005113f0, 0x263)  // TCP InitRemote/GetIPAddress/session-enum flow, dc 0x101784
 unsigned char TMultiPlayerWindow::OnTCP()
 {
@@ -1588,17 +1608,19 @@ unsigned char TMultiPlayerWindow::OnTCP()
 VA(0x00511660, 0x666)  // caller slot + complete TCP search flow, dc 0x10196c
 unsigned char TMultiPlayerWindow::OnSearch()
 {
-    // Residual (91.324%): all 13 retail branch tests are present, but C1 feeds
+    // Current 89.766%, banked MAX 91.324%: all 13 retail branch tests are
+    // present, but C1 feeds
     // the allocator the first two call-crossing pseudos in the opposite order:
     // candidate ESI=this/EDI=-1 versus retail EDI=this/ESI=-1. Reusing ESI for
     // the saved DirectPlay error therefore spills this, grows the frame by four
     // bytes, and lets VC6 merge the two late false cleanup tails (3 emitted
     // returns versus retail's 4). DC proves the saved error precedes dialog 456
-    // and scopes sErr inside the join-failure block; applying both raised the
-    // prior 90.94% plateau. Its negative join spelling gets the branch sequence
-    // exact but regresses to 89.81% under this C1 state. Naming/parameterizing
-    // the -1 sentinel is copy-propagated byte-flat, as the register model
-    // predicts; the remaining role swap is not a statement-level lever.
+    // and scopes sErr inside the join-failure block. DC and the retail branch
+    // direction both prove the retained negative JoinSession guard with the
+    // failure body preceding the final success return; the higher positive-
+    // guard spelling omitted that source fact. Naming/parameterizing the -1
+    // sentinel is copy-propagated byte-flat, as the register model predicts;
+    // the remaining role swap is not a statement-level lever.
     CMPInputDlg searchDlg(20, 20);
     searchDlg.header1->SetText((*gpGeneralText)[179]);
     searchDlg.header2->SetText((*gpGeneralText)[462]);
@@ -1639,11 +1661,8 @@ unsigned char TMultiPlayerWindow::OnSearch()
     }
 
 #pragma inline_depth(0)
-    if (JoinSession(pSessions->Get(0), 0)) {
-        return 1;
-    }
+    if (!JoinSession(pSessions->Get(0), 0)) {
 #pragma inline_depth()
-    else {
         char sErr[256];
         long lastError = pDPlay->GetLastError();
         NormalDialog((*gpGeneralText)[456], 1, -1, -1,
@@ -1659,6 +1678,7 @@ unsigned char TMultiPlayerWindow::OnSearch()
         return 0;
 #pragma inline_depth()
     }
+    return 1;
 }
 
 // Retail selects the header-inline CMPInputEdit constructor's /Gy COMDAT

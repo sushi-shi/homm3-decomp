@@ -161,16 +161,31 @@ TAdventureOptionsWindow::~TAdventureOptionsWindow()
 
 // E:\gamedcs\adventureoptionswindow.cpp:112
 // Dreamcast emits this const helper out of line. Retail's handler contains
-// its ID-to-help-index switch inline and the 0x405680 slot is independently
-// proved to be CHeroWindowEx's handle_message forwarder, so no retail body is
-// forced into the remaining roster slot.
-#if 0  // @carcass
+// both calls inline and the 0x405680 slot is independently proved to be
+// CHeroWindowEx's handle_message forwarder, so the helper has no retail claim.
+// DC 0x51b0 proves the early negative return followed by a switch assigning
+// one result for the final return. Complete adds the upper-bound fast reject;
+// with both bounds owned here, retail corroborates both inlined lowerings.
 DC_ONLY(0x51b0, 0x54)
 int TAdventureOptionsWindow::convertID2HelpID(int id) const
 {
-    // @stub
+    if (id < 0)
+        return -1;
+    if (id > ADVENTURE_OPTION_ACCEPT_ID)
+        return -1;
+
+    int helpID;
+    switch (id) {
+    case VIEW_WORLD_ID: helpID = 0; break;
+    case VIEW_PUZZLE_ID: helpID = 1; break;
+    case VIEW_SCENARIO_ID: helpID = 2; break;
+    case DIG_ID: helpID = 3; break;
+    case REPLAY_ID: helpID = 4; break;
+    case ADVENTURE_OPTION_ACCEPT_ID: helpID = 6; break;
+    default: helpID = -1; break;
+    }
+    return helpID;
 }
-#endif
 
 // E:\gamedcs\adventureoptionswindow.cpp:143
 // EXACT 2026-08-28 (99.9367 -> 99.8734 -> 100.0). The old near-match erased
@@ -178,6 +193,13 @@ int TAdventureOptionsWindow::convertID2HelpID(int id) const
 // restoring closeDialog also selects retail's EAX/ECX argument staging for
 // the direct line-211 findWidget call. The attested const findWidget pair and
 // distinct gAdventureOptionsHelp identity are restored as well.
+//
+// SOURCE-SHAPE AUDIT 2026-09-01: convertID2HelpID now lives at its attested
+// out-of-class boundary, owns the two bounds, and retains DC's result-local
+// switch. Both call sites remain exact. Keeping the caller bounds as well as
+// the helper's DC negative guard duplicates two blocks (100.0 -> 97.4684);
+// the old header-resident immediate-return body was byte-exact but erased the
+// positive helper boundary and statement shape.
 //
 // Complete moves the campaign-side ShowScenInfo work from this handler into
 // advManager::DoAdventureOptions: retail forwards the selected code through
@@ -200,13 +222,11 @@ int TAdventureOptionsWindow::WindowHandler(message* msg)
     if (msg->qualifier & MESSAGE_MODIFIER_RIGHT) {
         if (msg->codeX == widget::WIDGET_SELECT
             || msg->codeX == widget::WIDGET_RIGHT_SELECT) {
-            if (msg->codeY >= 0 && msg->codeY <= ADVENTURE_OPTION_ACCEPT_ID) {
-                int helpID = convertID2HelpID(msg->codeY);
-                if (helpID == -1)
-                    goto consume;
-                NormalDialog(gAdventureOptionsHelp[helpID].text,
-                    4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-            }
+            int helpID = convertID2HelpID(msg->codeY);
+            if (helpID == -1)
+                goto consume;
+            NormalDialog(gAdventureOptionsHelp[helpID].text,
+                4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
         goto consume;
     }
@@ -226,11 +246,9 @@ int TAdventureOptionsWindow::WindowHandler(message* msg)
             const char* rollover = "";
             if (hoverID != -1) {
                 gpMouseManager->SetPointer(1, mouseManager::DEFAULT_SET);
-                if (hoverID >= 0 && hoverID <= ADVENTURE_OPTION_ACCEPT_ID) {
-                    int helpID = convertID2HelpID(hoverID);
-                    if (helpID != -1)
-                        rollover = gAdventureOptionsHelp[helpID].text;
-                }
+                int helpID = convertID2HelpID(hoverID);
+                if (helpID != -1)
+                    rollover = gAdventureOptionsHelp[helpID].text;
             } else {
                 gpMouseManager->SetPointer(0, mouseManager::DEFAULT_SET);
             }

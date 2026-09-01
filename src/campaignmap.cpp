@@ -1,7 +1,8 @@
 // campaignmap.cpp - E:\gamedcs\campaignmap.cpp (compiland campaignmap.obj)
-// HAND-OWNED after admission. Nine Dreamcast AutoArrayPtr / ResourcePtr
-// roster entries are header emissions and have no distinct retail bodies in
-// this compiland.
+// HAND-OWNED after admission. Functions-only TU closure is complete: retail
+// retains the table initializer and its static-dtor wrapper, both exact. Nine
+// Dreamcast AutoArrayPtr / ResourcePtr roster entries are header emissions and
+// have no distinct retail bodies in this compiland.
 #include <va.h>
 #include <string.h>
 #include "campaignmap.h"
@@ -23,10 +24,18 @@ DATA(0x0063bc50)
 TCampaignMapTraits::TRegionTraits* const aCampaignRegionTraits[21] = { 0 };
 
 // E:\gamedcs\campaignmap.cpp:161
+// Exact source-shape checkpoint (2026-09-01): Dreamcast records
+// pTextResource, strSize and pSrc plus the two nested campaign/region scan
+// scopes. Retail corroborates every helper boundary and loop group; the
+// source-labelled comparison is 42/42 blocks and 784/784 bytes identical.
 VA(0x0045dee0, 0x310)  // anchor-string/caller, dc 0x5af64
 unsigned char InitializeCampaignMapTraitsTable()
 {
     DATA_COMPGEN_GUARD(0x00694df8, campaignNamesGuard, campaignNames)
+    // The initializer's atexit address-take pairs this wrapper with DC $E436
+    // at 0x5b190, whose sole source action is ~TAutoArrayPtr<char>. Retail's
+    // compiler-generated wrapper is exact (3/3 blocks, 22/22 bytes); /Z7
+    // emits no classic source-line record for compiler-generated wrappers.
     VA_COMPGEN(0x0045e1f0, 0x16, STATIC_DTOR, campaignNames)
     DATA(0x00694e00)
     static TAutoArrayPtr<char> campaignNames;

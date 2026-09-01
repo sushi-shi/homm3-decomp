@@ -5,6 +5,7 @@
 #ifndef HOMM3_PALETTE_H
 #define HOMM3_PALETTE_H
 
+#include "hsv.h"
 #include "resource.h"
 
 // Dreamcast CodeView type 0x184c; retail's TPalette24 constructor consumes
@@ -16,16 +17,6 @@ struct TRGBA {
     unsigned char Alpha;
 };
 SIZE(TRGBA, 4);
-
-// The six integer sectors selected by HSVToRGB after scaling hue by 6.
-enum THueSector {
-    HSV_RED_SECTOR,
-    HSV_YELLOW_SECTOR,
-    HSV_GREEN_SECTOR,
-    HSV_CYAN_SECTOR,
-    HSV_BLUE_SECTOR,
-    HSV_MAGENTA_SECTOR
-};
 
 // Dreamcast CodeView prototypes; the retail palette transforms at
 // 0x522a10/0x522b50 call the same two global conversion boundaries.

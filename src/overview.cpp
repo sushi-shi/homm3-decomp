@@ -7,14 +7,24 @@
 #include "game.h"
 #include "kb.h"
 #include "message.h"
+#include "resourcemanager.h"
 #include "slider.h"
 #include "textwdgt.h"
 #include "window.h"
+#include "winmgr.h"
 
 // The names are Dreamcast-attested; every retail address and extent below is
 // independently fixed by SetupNewOverviewType's indexed accesses.
 DATA(0x0069cbbc) static int giOverviewItems[2];
+// Retail UpdateBackpack indexes one byte per local-player hero slot. The
+// eight-byte extent is fixed by playerData::HERO_SLOT_COUNT and by the next
+// overview datum in this packed run.
+DATA(0x0069cbc4) static unsigned char gOverviewBackpackStart[8];
 DATA(0x0069cbd4) static slider* overviewSlider;
+// The hero-id half of the overview roster: UpdateBackpack indexes it with
+// giOverviewTop[giOverviewType] + iSlot, and the retail GetHero expansion
+// proves dword elements. The following four-dword gap is the town roster.
+DATA(0x0069cbec) static int gOverviewHeroIds[8];
 DATA(0x0069cc1c) static textWidget* textWidgetTitle[3];
 DATA(0x0069cc34) static int iOverviewItems;
 // The retail window is TOverviewWindow, whose derived layout is not needed by
@@ -120,6 +130,29 @@ void game::SetupNewOverviewType(int iWhichType, unsigned char bUpdate)
         overWin->DrawWindow(bUpdate, 100, 999);
 }
 
+// Retail vtable 0x640320 slot 0. Dreamcast's canonical scalar-deleting
+// wrapper agrees with the x86 destructor-then-conditional-delete sequence.
+// E:\gamedcs\overview.cpp:2083
+VA_COMPGEN(0x00520d60, 0x21, SCALAR_DELETING_DTOR, TOverviewWindow)
+
+// Dreamcast proves the source-level Widgets deletion loop and CAdvPopup base
+// destruction. Complete drops Dreamcast's resource-cache call (there is no
+// corresponding x86 call) and independently proves the two derived vector
+// teardowns at +0x74 and +0x64 between that loop and the base destructor.
+// E:\gamedcs\overview.cpp:2086
+VA(0x00520d90, 0x9C)  // vtable 0x640320 + two vector teardowns, dc 0x108f74
+TOverviewWindow::~TOverviewWindow()
+{
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            delete *it;
+    }
+
+    // DC keeps this cache sweep out of line. Complete has no call at this
+    // point; the PC declaration is therefore its retail-neutral inline form.
+    ResourceManager::del_Spr_from_Cache();
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\overview.cpp:1254
@@ -150,12 +183,58 @@ void game::Overview()
     // @stub
 }
 
+#endif  // @carcass
+
+// E:\gamedcs\overview.cpp:1528. Dreamcast proves the four locals, their
+// scopes, and the statement order: hero lookup, last-backpack bound, artifact
+// and message construction, eight visible slots, status update, two window
+// redraws, then the screen rectangle. Retail independently fixes the hero-id
+// and backpack-start arrays, Complete's 200-id / 116-pixel slot strides, and
+// the eight-slot widening.
+//
+// Residual (96.574%): ten of eleven retail CFG blocks align semantically. VC6
+// keeps the slot-id base in ebx but reloads it at the loop test in this TU,
+// while retail reloads it at the loop bottom; that adds one exit-only block.
+// The remaining byte delta is the equivalent commutative LEA operand order.
+// Negative controls: declaring `i` at the DC local-list position and assigning
+// it in the for initializer drops to 91.930%; reversing `i + iSlotOff` is
+// codegen-neutral and cannot change the LEA encoding. The current source keeps
+// every DC-proven local, statement group and scope while banking the best VC6
+// lowering found.
 // E:\gamedcs\overview.cpp:1528
-DC_ONLY(0x107668, 0x180)
+VA(0x00522470, 0x15E)  // body/arity identified, dc 0x107668
 void UpdateBackpack(int iSlot)
 {
-    // @stub
+    int heroNumber = giOverviewTop[giOverviewType] + iSlot;
+    int iSlotOff = iSlot * 200 + 200;
+    int i = 0;
+    hero* currHero = gpGame->GetHero(gOverviewHeroIds[heroNumber]);
+    int lastBackpackIndex = currHero->get_last_backpack_index() + 1;
+    type_artifact artifact;
+    message msg(0, 0, 0, 0, 0, 0, 0, 0);
+
+    msg.id = MESSAGE_WIDGET;
+    msg.codeX = widget::WIDGET_SET_ICON_FRAME;
+
+    for (; i < 8 && i < lastBackpackIndex; ++i) {
+        msg.codeY = i + iSlotOff + 130;
+        artifact = *currHero->get_backpack(
+            (gOverviewBackpackStart[heroNumber] + i) % lastBackpackIndex);
+        msg.extra = artifact.artifactId;
+        overWin->BroadcastMessage(&msg);
+
+        if (artifact.artifactId == -1)
+            overWin->WidgetClearStatus(i + iSlotOff + 130, 4);
+        else
+            overWin->WidgetSetStatus(i + iSlotOff + 130, 4);
+    }
+
+    overWin->DrawWindow(1, 0xffff0001, 0xffff);
+    overWin->DrawWindow(0, iSlotOff + 130, iSlotOff + 137);
+    gpWindowManager->UpdateScreen(293, iSlot * 116 + 91, 428, 46);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\overview.cpp:1562
 DC_ONLY(0x1077e8, 0x100)
@@ -164,12 +243,23 @@ void UpdateArtifacts(int iSlot)
     // @stub
 }
 
+#endif  // @carcass
+
+// E:\gamedcs\overview.cpp:1597. The DC five-line dossier predicts both
+// GetLocalPlayer calls, the hero-slot bound, GetHero and the final backpack
+// query. Retail has that exact call/access sequence and fastcall arity.
 // E:\gamedcs\overview.cpp:1597
-DC_ONLY(0x1078e8, 0x8C)
+VA(0x005225d0, 0x55)  // body/arity identified, dc 0x1078e8
 long get_last_backpack_index(long hero_number)
 {
-    // @stub
+    if (hero_number >= gpGame->GetLocalPlayer()->numHeroes)
+        return 0;
+    hero* currHero = gpGame->GetHero(
+        gpGame->GetLocalPlayer()->heroes[hero_number]);
+    return currHero->get_last_backpack_index();
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\overview.cpp:1612
 DC_ONLY(0x107974, 0x42)

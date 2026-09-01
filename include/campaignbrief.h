@@ -9,9 +9,11 @@
 #include "window.h"
 
 // Retail Complete diverges from the Dreamcast class after heroWindow.
-// The destructor proves the four fields below directly: +0x4c is freed as
-// the z buffer, +0x50 restores the music volume, +0x54 is a Dinkumware
+// The destructor proves the four named fields below directly: +0x4c is freed
+// as the z buffer, +0x50 restores the music volume, +0x54 is a Dinkumware
 // vector with a 0x4d4 element stride, and +0x64 owns the campaign header.
+// newgame's exact ShowScenInfo stack owner proves the opaque retail tail and
+// the complete 0xb4 extent.
 class TCampaignBrief : public heroWindow {
 public:
     struct CampaignHeaderStruct {
@@ -32,12 +34,24 @@ public:
     int oldVolume;
     std::vector<ScenarioStruct> scenarios;
     CampaignHeaderStruct* campaign;
+    // ShowScenInfo (0x513740) places the following 0xb4-byte
+    // CScenarioInfoDlg immediately after this stack object and addresses the
+    // campaign brief at ebp-0xc0. Its frame and both object offsets prove a
+    // further 0x4c-byte retail tail beyond the destructor-visible fields.
+    char pad_68[0x4c];
 
+#ifdef HOMM3_NEWGAME_OBJ_DECLS
+    // newgame.cpp:610-619. The retail ShowScenInfo caller pushes the same
+    // (newCampaign, viewFromGame) byte pair and retains the out-of-line
+    // modal wrapper named by the Dreamcast roster.
+    TCampaignBrief(unsigned char newCampaign, unsigned char viewFromGame);
+    void DoModal();
+#endif
     virtual ~TCampaignBrief();
 };
 SIZE(TCampaignBrief::CampaignHeaderStruct, 0x5c);
 SIZE(TCampaignBrief::ScenarioStruct, 0x4d4);
-SIZE(TCampaignBrief, 0x68);
+SIZE(TCampaignBrief, 0xb4);
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\campaignbrief.cpp:202, dc 0x58244) void CampaignWait(int which);

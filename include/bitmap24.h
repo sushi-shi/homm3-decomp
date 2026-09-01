@@ -32,6 +32,9 @@ public:
 
     int GetWidth() const { return Width; }
     int GetHeight() const { return Height; }
+    // Dreamcast bitmap24.h:72 (dc 0x533b0); both row advances in the raw
+    // Draw body inline this exact 24-bit pitch calculation in retail.
+    int GetPitch() const { return Width * 3; }
     void Draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst,
               int dx, int dy) const;
     void Draw(int sx, int sy, int sw, int sh, unsigned short* dst,
