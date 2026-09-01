@@ -372,6 +372,28 @@ always counts `call` + tail `jmp`.
     dominant residual class behind the EH-transcript rows
     (`docs/vc6/eh-cleanup.md`).
 
+13. **A zero-byte real statement can select the exact nested frontier
+    (2026-09-01).** `TSingleSelectionWindow::~TSingleSelectionWindow` first
+    reached 96.98% with 33/34 exact CFG blocks. Its only residual was the
+    final `HeadersA` member teardown: our caller retained
+    `~GameSelectionHeadersStruct`, while retail expands that outer destructor
+    and retains its nested `~SavedGameHeader` call. A cleanup-region
+    `inline_depth(1)` probe overshot in the opposite direction (two outer
+    expansions), proving the nested frontier but not supplying a fix.
+
+    Dreamcast's final line rows supplied the missing source fact instead:
+    `del_Spr_from_Cache()` is guarded by `!m_flag65`. The Complete helper
+    itself folds to no instructions, but restoring the real conditional moved
+    C1 to retail's exact midpoint: 100% bytes and 34/34 exact blocks. This is
+    the operational order for a reciprocal outer-under/inner-over report:
+    inspect the Dreamcast line/scope rows for a missing real guard, helper,
+    RAII boundary, or release-elided operation immediately before cleanup;
+    use depth probes only to classify the frontier. Never retain synthetic
+    free calls, expose a nested library internal, or apply TU-wide
+    `auto_inline(off)` to manufacture the midpoint. `predict-inline` now emits
+    this repair path when it can prove that the under-inline outer callee calls
+    the over-inline inner callee.
+
 ## 6. What the model does not cover
 
 * **The veto (`0x94964`)**: post-substitution re-walk, limit

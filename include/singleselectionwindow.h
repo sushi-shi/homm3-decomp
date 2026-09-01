@@ -283,8 +283,11 @@ public:
     char pad_84[0x88 - 0x84];
     Bitmap816* Flags[8];               // 0x88, DC name; adopflg%c.pcx
     Bitmap816* Panels[8];              // 0xa8, DC name; adop_cpnl.pcx
-    Bitmap816* HeroPix[163];           // 0xc8..0x354, expanded retail roster
-    Bitmap816* GoldBox;                // 0x354, DC name
+    // Dreamcast's 130-entry HeroPix field is a single array. Complete widens
+    // the same destructor walk to 164 pointers at +0xc8..+0x357; the former
+    // +0x354 `GoldBox` split was a model artifact (DC's real GoldBox precedes
+    // Flags and has no Complete counterpart at this offset).
+    Bitmap816* HeroPix[164];           // 0xc8..0x357, expanded retail roster
     char pad_358[0x35c - 0x358];
     Bitmap816* randomTownBmp;          // 0x35c
     Bitmap816* randomHeroBmp;          // 0x360

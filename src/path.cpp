@@ -73,11 +73,10 @@ off_grid:
 // E:\gamedcs\path.cpp:51
 // The leading GetSpeed() call is real - retail issues it and discards
 // the result before the conditional re-query.
-// The tail's otherwise-dead parameter store is source-reachable by
-// preserving the target separately, widening FindCombatPath's byte return
-// to int, and writing it back through a volatile view of the parameter.
-// VC6 then emits retail's exact `and eax,0xff; mov [ebp+8],eax; jne`
-// while retaining the original target in EDI for the success store.
+// The target must survive the path query for the success store.  An earlier
+// exact spelling forced the query result through a volatile view of the
+// parameter; that was optimizer steering, not a source fact.  Keep the real
+// assignment and let the banked exact checkpoint record the old codegen.
 VA(0x00523a70, 0xA8)  // anchor-bracket, dc 0x10c9a4
 unsigned char army::ValidPath(int destIndex, unsigned char bLiteralTest)
 {
@@ -100,11 +99,9 @@ off_grid:
     else
         group = combatSide;
     int target = destIndex;
-    int found = gpSearchArray->FindCombatPath(this, group, destIndex,
+    destIndex = gpSearchArray->FindCombatPath(this, group, destIndex,
         gpCombatManager->bCreaturePlacement, moves, -1);
-    volatile int* resultSlot = &destIndex;
-    *resultSlot = found;
-    if (!found)
+    if (!destIndex)
         return 0;
     pathTarget = target;
     return 1;

@@ -23,6 +23,14 @@ The rows (all ratcheted; floors start at the tree's current counts):
   reinterpret_casts   named-cast DEBT, ratcheted down: each one is often
                       the only lexical evidence of an integer carrier or
                       a mis-modeled member view. static_cast is free.
+  volatile qualifiers BANNED at floor 0. `volatile` is not an admissible
+                      way to home a temporary, perturb VC6's register
+                      allocator, retain a dead store, or spend an inline
+                      budget. Recover the real helper/type/lifetime first;
+                      when retail proves a call, use the narrowly scoped
+                      INLINE_GATE convention instead. A Dreamcast line gap
+                      plus a meaningful release-elided invariant may use
+                      HOMM3_RELEASE_VERIFY; a gap by itself is not proof.
   cpp extern decls    a declaration re-spelled in a consumer .cpp instead
                       of living in its OWNER's header. Fix: declare once
                       in the owner header and #include it.
@@ -124,6 +132,7 @@ def _regex_sites(pattern):
 
 # --- the other ratcheted shapes (gruntz spellings) --------------------------------
 _REINTERPRET = re.compile(r"\breinterpret_cast\s*<")
+_VOLATILE = re.compile(r"\bvolatile\b")
 _CPP_EXTERN = re.compile(r"^[ \t]*extern\b", re.MULTILINE)
 # struct/class DEFINITION (name then body brace, optional base clause) -
 # not forward decls, not elaborated uses (`class TBar* p;`).
@@ -189,6 +198,20 @@ METRICS = (
      "spell it as a named C++ cast (static_cast / reinterpret_cast)"),
     ("reinterpret_casts", _regex_sites(_REINTERPRET), False,
      "model the real type instead; reinterpret_cast debt only drains"),
+    ("volatile qualifiers", _regex_sites(_VOLATILE), False,
+     "`volatile` is not a codegen lever. Diagnose with `homm3 dreamcast "
+     "show <selector>`, `homm3 vc6 predict-inline <selector>`, and `homm3 "
+     "sema diff <selector> --structure` plus `--source`. Then: (1) restore "
+     "the Dreamcast-proven helper, type, local lifetime, or statement order; "
+     "(2) if retail proves an out-of-line call, wrap only that statement in "
+     "`#pragma inline_depth(0)` / `INLINE_GATE(...)` / "
+     "`#pragma inline_depth()`; or (3) when a Dreamcast line gap and a real "
+     "release-elided invariant agree, spell that invariant as "
+     "`HOMM3_RELEASE_VERIFY(expression)`. Retained pins/verifies need an "
+     "evidence comment, source-shape ratchet, and flattening negative "
+     "control. Never replace volatile with self-assignment, dead code, or "
+     "synthetic caller mass; accept a non-MAX current dip while recovering "
+     "the true source"),
     ("cpp extern decls", _regex_sites(_CPP_EXTERN), True,
      "declare it ONCE in the owner's header and #include that - a "
      "consumer .cpp never re-declares"),
@@ -323,6 +346,14 @@ _SAMPLES = {
         ("q = static_cast<int>(x);",
          "// reinterpret_cast<int> named in prose",
          "my_reinterpret_caster(x);")),
+    "volatile qualifiers": (
+        ("volatile int homed = value;",
+         "int* volatile forced_register = pointer;",
+         "const volatile unsigned char* device = address;"),
+        ("int stable = value;",
+         "int volatile_count = 0;",
+         'trace("volatile int homed");',
+         "// volatile was a rejected negative control")),
     "cpp extern decls": (
         ("extern int g_heroCount;",
          '  extern "C" void mm_init();'),
@@ -432,6 +463,12 @@ def selftest() -> list[str]:
                 failures.append(f"{label}: FALSE POSITIVE {sample!r}")
     missing = set(counters) - set(_SAMPLES)
     failures.extend(f"{label}: NO SELFTEST SAMPLES" for label in sorted(missing))
+    volatile_fix = _FIX["volatile qualifiers"]
+    for required in ("dreamcast show", "predict-inline", "INLINE_GATE",
+                     "HOMM3_RELEASE_VERIFY", "synthetic caller mass"):
+        if required not in volatile_fix:
+            failures.append(
+                f"volatile qualifiers: repair diagnostic lost {required!r}")
     return failures
 
 
@@ -490,6 +527,7 @@ def main(argv=None) -> int:
         print(f"{label}\t{n}{delta}")
         if label in RATCHET and floor is not None and n > floor:
             rc = 1
+            print(f"  fix: {_FIX[label]}")
     for label, where in offenders:
         print(f"  [{label}] {where}")
     return rc

@@ -19,9 +19,9 @@
 // end_turn's marketplace gate is a town::HasBuilding call in the
 // Dreamcast body (dc 0x2e7d8 line 452, `mov #14,r5 / mov #1,r6`); see
 // town.h for why the inline's visibility is scoped.
-// find_all_destinations' grail-spot tail calls ?cell@NewfullMap out of
-// line - the advmgr.cpp gate, joined 2026-08-27.
-#define HOMM3_NEWFULLMAP_CELL_OUTOFLINE
+// find_all_destinations' grail-spot tail calls NewfullMap::cell out of line;
+// that single statement is pinned below instead of hiding the real header
+// inline from this entire compiland.
 // Joins VICTORY_CONDITION_BUILD_GRAIL (game.h gates the enumerator);
 // find_all_destinations prices the grail spot 1968 under that victory.
 #define HOMM3_AI_PLAYER_OBJ_DECLS
@@ -1021,8 +1021,10 @@ void type_AI_player::reset_magus_hut_value()
 // arithmetic, and all code after the dwelling scan agree. The remaining
 // span is one VC6 register-allocation cycle: retail keeps vector finish,
 // dwelling, and population in ESI/EBX/EDI; this compile chooses ECX/EDI/ESI.
-// Volatile pointer homes recover retail's two memory reads and town spill.
-// Plain indexed/pointer loops, int/short indices, declaration order,
+// Volatile pointer homes once recovered retail's two memory reads and town
+// spill, but those qualifiers were allocator steering rather than source
+// evidence and are now retained only as a negative-control result. Plain
+// indexed/pointer loops, int/short indices, declaration order,
 // register hints, combined for-initializers, and explicit vector insert
 // forms were tested; none exceeded this source-equivalent plateau.
 #endif  // @carcass
@@ -1034,8 +1036,8 @@ void type_AI_player::calculate_reserve()
     std::vector<type_creature_value> creatures;
     memset(reserved_funds, 0, sizeof(reserved_funds));
     short dwelling;
-    volatile short* population;
-    town* volatile current_town;
+    short* population;
+    town* current_town;
 
     for (short town_index = 0; town_index < player->numTowns; town_index++) {
         current_town = gpGame->GetTown(player->townIds[town_index]);
@@ -4248,8 +4250,7 @@ int game::GetTeam(int playerNum)
 VA(0x0042ed80, 0x4D)  // anchor-global, dc 0x38000
 NewmapCell* game::get_cell(type_point point)
 {
-    return &worldMap.cellData[(point.z * worldMap.Size + point.y) * worldMap.Size
-                              + point.x];
+    return worldMap.cell(point.x, point.y, point.z);
 }
 
 // The nine functions below are located by the callee-fingerprint join against
@@ -4318,9 +4319,15 @@ static void check_holy_grail(
             // Dreamcast calls game::get_cell here, but Complete retail calls
             // NewfullMap::cell directly; expanding this TU's retained
             // game::get_cell body would instead calculate cellData in place.
-            NewmapCell* map_cell = gpGame->worldMap.cell(
+            // Site-pinned check_holy_grail -> NewfullMap::cell boundary:
+            // Complete retail keeps this call while the surrounding helper
+            // expands. Removing only this gate measures find_all_destinations
+            // 96.3651% -> 92.3064%; the former TU-wide view is unnecessary.
+#pragma inline_depth(0)
+            NewmapCell* map_cell = INLINE_GATE(gpGame->worldMap.cell(
                 destination.point.x, destination.point.y,
-                destination.point.z);
+                destination.point.z));
+#pragma inline_depth()
             if (!(map_cell->type == HERO && map_cell->is_trigger)
                 || map_cell->extraInfo
                     == static_cast<unsigned long>(current_hero->id)) {
@@ -4675,18 +4682,20 @@ static __forceinline void check_gate_purchase(type_point point)
     }
 }
 
-// Residual (52.95%): calls, guards and block roster all agree; why-branch
-// names D6 (retail keeps 6 exits to our 4 - its bNoMove/bFought return-0s
-// share ONE eax-wide epilogue while the boat/owner/currHero exits stay
-// al-wide and distinct, a width split no uchar-return spelling reaches)
-// plus a mid-body ecx<->edx rename family. Tried and rejected: the
-// else-restructured tail (52.21), an explicit duplicate return in the
-// first-step summon-boat arm (byte-flat at 52.95), and unsigned-char retypes
-// of direction/saved_x/saved_y (why-branch, no movement).
-// The Dreamcast line table separately attests a function-entry type_point
-// construction followed by assignment after ConsiderHidingMouse; restoring
-// that lifetime is byte-flat at this checkpoint and must not be collapsed
-// back into the later copy-initialization merely to simplify the source.
+// Progress (banked MAX 89.9189%): Dreamcast's final line returns the single
+// `event_cell == 0 && !bNoMove && !bFoughtBattle` result. Restoring that
+// expression moved 52.9459% -> 63.1306% and made the CFG 35/35 blocks with
+// 26 exact. A zero-initialized retarget flag then measured 89.9189%, but our
+// VC6 keeps that zero live in EBX from the declaration, spills `cell`, grows
+// the frame 0x18 -> 0x1c and collapses the false arm (34/35 blocks). Retail
+// instead emits distinct one/zero assignments around a shared MoveHero join,
+// so the explicit else below is retained through the expected current-score
+// dip while the peak remains banked. Positive evidence also retained here:
+// CodeView names trigger_point and separates its construction from the later
+// path-cell assignment; game::get_cell calls NewfullMap::cell in source.
+// Negative controls: negating the condition and spelling the same flow with
+// gotos are byte-identical at 63.1306%; two meaningful entry VERIFY probes
+// are byte-flat; direction/saved_x/saved_y byte retypes are byte-flat.
 // E:\gamedcs\ai_player.cpp:3832
 // One step of an AI hero's path: optionally hide the mouse, summon or
 // build a boat when stepping onto water without one, retarget the path
@@ -4696,7 +4705,7 @@ VA(0x0042fc50, 0x285)  // anchor-callee unique (NewmapCell::cell_is_trigger), dc
 unsigned char attempt_step(hero* current_hero, pathCell* path_cell,
                            unsigned char bStandEnd, unsigned char first_step)
 {
-    type_point point;
+    type_point trigger_point;
     int direction = path_cell->direction;
     if (gpMouseManager->field_68 == 0
         && gpAdvManager->ConsiderHidingMouse(current_hero, direction)) {
@@ -4706,8 +4715,8 @@ unsigned char attempt_step(hero* current_hero, pathCell* path_cell,
         gCompleteDrawEnabled = save_draw;
     }
 
-    point = path_cell->point;
-    NewmapCell* cell = gpGame->get_cell(point);
+    trigger_point = path_cell->point;
+    NewmapCell* cell = gpGame->get_cell(trigger_point);
 
     if (path_cell->in_boat && !(current_hero->flags & 0x40000)) {
         if (!(cell->type == BOAT && cell->is_trigger)) {
@@ -4720,7 +4729,8 @@ unsigned char attempt_step(hero* current_hero, pathCell* path_cell,
             // can_build_ship is bit 11 of the proven cellFlags word (the
             // header pools bits 10-11; this is the first admitted reader).
             if (cell->cellFlags & 0x800)
-                AI_build_ship(current_hero, point.x, point.y, point.z);
+                AI_build_ship(current_hero, trigger_point.x,
+                              trigger_point.y, trigger_point.z);
         }
     }
 
@@ -4730,9 +4740,9 @@ unsigned char attempt_step(hero* current_hero, pathCell* path_cell,
 
     unsigned char retargeted;
     if (path_cell->flying && path_cell->last_can_stop && cell->is_trigger) {
-        current_hero->pathTargetX = point.x;
-        current_hero->pathTargetY = point.y;
-        current_hero->pathTargetZ = point.z;
+        current_hero->pathTargetX = trigger_point.x;
+        current_hero->pathTargetY = trigger_point.y;
+        current_hero->pathTargetZ = trigger_point.z;
         retargeted = 1;
     } else {
         retargeted = 0;
@@ -4741,7 +4751,7 @@ unsigned char attempt_step(hero* current_hero, pathCell* path_cell,
     int bNoMove;
     int bFoughtBattle;
     NewmapCell* event_cell = gpAdvManager->MoveHero(
-        path_cell->direction, bStandEnd, &point, &bNoMove, 1,
+        path_cell->direction, bStandEnd, &trigger_point, &bNoMove, 1,
         &bFoughtBattle, 0);
     if (retargeted) {
         current_hero->pathTargetX = saved_x;
@@ -4753,23 +4763,19 @@ unsigned char attempt_step(hero* current_hero, pathCell* path_cell,
         return 0;
 
     if (event_cell == 0) {
-        if (bNoMove != 0) {
+        if (bNoMove != 0)
             current_hero->movePoints = 0;
+    } else {
+        gpAdvManager->DoAIEvent(event_cell, current_hero, trigger_point);
+        if (gpCurrentPlayer->currHeroId == -1)
             return 0;
-        }
-        if (bFoughtBattle != 0)
-            return 0;
-        return 1;
+        if (event_cell->get_map_object() == HUT_OF_MAGI
+            && event_cell->cell_is_trigger())
+            gAIPlayers[current_hero->owner].magus_hut_value = 0;
+        AI_set_hero_bonuses(current_hero);
     }
 
-    gpAdvManager->DoAIEvent(event_cell, current_hero, point);
-    if (gpCurrentPlayer->currHeroId == -1)
-        return 0;
-    if (event_cell->get_map_object() == HUT_OF_MAGI
-        && event_cell->cell_is_trigger())
-        gAIPlayers[current_hero->owner].magus_hut_value = 0;
-    AI_set_hero_bonuses(current_hero);
-    return 0;
+    return event_cell == 0 && bNoMove == 0 && bFoughtBattle == 0;
 }
 
 // E:\gamedcs\ai_player.cpp:3910. Dreamcast's statement rows and Complete's
@@ -5225,39 +5231,44 @@ long AI_get_ship_cost(const hero* our_hero, type_point point)
     return -AI_resource_cost(player, cost);
 }
 
-// E:\\gamedcs\\ai_player.cpp:4457. The source helper is retained even
-// though Complete inlines both calls into hire_heroes. Complete also guards
-// the null returned by GetHero(-1); the older DC body assumes both tavern
-// recruits exist. Each artifact is intentionally reconstructed from only its
-// id, preserving the constructor's -1 payload before player-wide valuation.
-static __forceinline long total_artifact_value(hero* candidate,
-                                               long player_id)
+// E:\\gamedcs\\ai_player.cpp:4457. Dreamcast proves two lexical artifact
+// loops, with construction and valuation grouped in each statement, and the
+// source helper remains real even though Complete inlines both calls below.
+// The direct TArtifact construction preserves Dreamcast's proved field type.
+// Replacing it with the compatibility artifact_from_int helper is the negative
+// control: CFG stays 77/77 exact but the caller frame is four bytes short
+// (99.97449%). The caller gates both recruit ids, so this helper has no
+// source-false null guard.
+static long total_artifact_value(hero* candidate, long player_id)
 {
-    if (!candidate)
-        return 0;
-
     long total = 0;
     long slot;
     for (slot = 0; slot < HERO_BACKPACK_CAPACITY; ++slot) {
-        type_artifact artifact(artifact_from_int(
-            candidate->get_backpack(slot)->artifactId));
-        total += AI_get_artifact_player_value(artifact, player_id);
+        type_artifact backpack_artifact(
+            candidate->get_backpack(slot)->artifactId);
+        total += AI_get_artifact_player_value(backpack_artifact, player_id);
     }
     for (slot = 0; slot < 19; ++slot) {
-        type_artifact artifact(artifact_from_int(
-            candidate->get_artifact(slot)->artifactId));
-        total += AI_get_artifact_player_value(artifact, player_id);
+        type_artifact equipped_artifact(
+            candidate->get_artifact(slot)->artifactId);
+        total += AI_get_artifact_player_value(equipped_artifact, player_id);
     }
     return total;
 }
 
 // E:\\gamedcs\\ai_player.cpp:4670. Dreamcast supplies the cap checks,
-// computer-player census, two recruit valuations and primary-skill
-// tie-break. Retail corroborates those phases, adds the null-safe artifact
-// helper above, and chooses the second recruit when primary totals tie.
-// Residual (71.55%, opened at 62.53%): the retail decision tree and exact
-// 12/12 call multiset are restored; the remaining 81/77-block difference is
-// early-return epilogue cross-jumping and frame/register topology.
+// computer-player census, two recruit valuations and four source-level
+// consider_hiring groups. Complete is byte-exact with those groups retained.
+// Named recruit ids remove GetHero's otherwise duplicated -1 tests; the two
+// values deliberately remain uninitialized on the absent-recruit arms, as
+// retail and Dreamcast's two-recruit precondition prove. Complete cross-jumps
+// the four source calls into three emitted calls only with the failure-first
+// final arm. Both binaries evaluate the second primary total first and choose
+// the first recruit on a tie (`second > first` is the strict second-win arm).
+// Reinitializing second_value, collapsing the four calls through a selected
+// pointer, or reversing the final failure arm are source-shape controls and
+// break the exact 77-block lowering. No inline pin or synthetic carrier is
+// needed.
 VA(0x00431360, 0x463)  // DC statement/callee order + Complete retail body, dc 0x35ac8
 bool type_AI_player::hire_heroes()
 {
@@ -5283,33 +5294,30 @@ bool type_AI_player::hire_heroes()
         return false;
     }
 
-    if (player->recruits[0] != -1) {
-        // hire_heroes -> game::GetHero: retail calls both recruit lookups.
-        // The first site needs this pin; the second remains naturally
-        // out-of-line under the restored decision tree. DC preserves both.
-#pragma inline_depth(0)
-        first = INLINE_GATE(gpGame->GetHero(player->recruits[0]));
-#pragma inline_depth()
+    long first_id = player->recruits[0];
+    long first_value;
+    if (first_id != -1) {
+        first = gpGame->GetHero(first_id);
+        first_value = total_artifact_value(first, team);
     }
-    long first_value = total_artifact_value(first, team);
-    // Complete does not fetch the second recruit until the first recruit's
-    // expanded artifact valuation has finished.
-    if (player->recruits[1] != -1)
-        second = gpGame->GetHero(player->recruits[1]);
-    long second_value = total_artifact_value(second, team);
+    long second_id = player->recruits[1];
+    long second_value;
+    if (second_id != -1) {
+        second = gpGame->GetHero(second_id);
+        second_value = total_artifact_value(second, team);
+    }
 
-    if (!first || second_value > first_value) {
-        if (second)
-            goto hire_second;
+    if (first && second_value <= first_value) {
+        if (!second || second_value < first_value)
+            return consider_hiring(team, first);
+        if (second->get_primary_skill_total()
+            > first->get_primary_skill_total()) {
+            return consider_hiring(team, second);
+        }
+        return consider_hiring(team, first);
+    }
+    if (!second)
         return false;
-    }
-    if (!second || second_value < first_value)
-        return consider_hiring(team, first);
-    if (first->get_primary_skill_total()
-        > second->get_primary_skill_total()) {
-        return consider_hiring(team, first);
-    }
-hire_second:
     return consider_hiring(team, second);
 }
 

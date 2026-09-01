@@ -3757,13 +3757,12 @@ void combatManager::SpellTargetMessage(SpellID spellId, int targetIndex,
 // written as army::GetName and one as this file's CreatureName - the
 // third instance of the lever in this TU.
 //
-// EXACT (100%, 0x999 bytes, 2026-08-21): the last seven instructions
+// BANKED EXACT (100%, 0x999 bytes, 2026-08-21): the last seven instructions
 // were all in the artifact arm. Retail RELOADS `[ebp+0xc]` at that arm's
 // default label where plain source lets CL keep the switch selector live
 // from the dispatch, promoting it from EDX to ESI and rescheduling the
-// akArtifactTraits subscript. A volatile reference bound to the parameter
-// is a zero-storage source alias but makes that one default-arm read
-// observable, forcing the retail stack reload and closing the function.
+// akArtifactTraits subscript. A volatile reference once forced that reload,
+// but it was not source evidence; MAX/history retains the negative control.
 // Earlier spellings measured before that fix were all neutral or worse:
 //   `int artifact = spellId;` with no default arm            88.90
 //   the three format_string calls written out per arm        70.97
@@ -3790,7 +3789,6 @@ void combatManager::ShowSpellMessage(int bIsMonsterSpell, SpellID spellId,
     else
         targetName = 0;
     const char* spellName = akSpellTraits[spellId].name;
-    volatile SpellID& reloadSpellId = spellId;
     std::string message;
     switch (bIsMonsterSpell) {
     case SPELL_CASTER_CREATURE:
@@ -3884,7 +3882,7 @@ void combatManager::ShowSpellMessage(int bIsMonsterSpell, SpellID spellId,
             artifact = ARTIFACT_ARMOR_OF_THE_DAMNED;
             break;
         default:
-            artifact = reloadSpellId;
+            artifact = spellId;
             break;
         }
         message = format_string(gpGeneralText->GetText(197),

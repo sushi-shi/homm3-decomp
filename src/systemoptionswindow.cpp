@@ -473,21 +473,15 @@ void TSystemOptionsWindow::DoModal()
 }
 
 // Dreamcast homes this helper after WindowHandler, but retail inlines it at
-// every call site. The otherwise-unused message local and full initialization
-// are visible in the retail handler's 0x20-byte frame.
+// every call site. Its CodeView rows prove the message::message() constructor
+// boundary and retail retains that initialization in the handler's 0x20-byte
+// frame. Use the real constructor rather than a volatile POD surrogate.
 __forceinline void TSystemOptionsWindow::UpdateSystemOptions(
     unsigned char bFirstUpdate)
 {
     if (!bFirstUpdate)
         bPrefsChanged = 1;
-    volatile message updateMessage;
-    updateMessage.codeX = 0;
-    updateMessage.codeY = 0;
-    updateMessage.qualifier = 0;
-    updateMessage.mouseX = 0;
-    updateMessage.mouseY = 0;
-    updateMessage.extra = 0;
-    updateMessage.window = 0;
+    message updateMessage;
     updateMessage.id = MESSAGE_WIDGET;
     DrawWindow(1, 0xffff0001, 0xffff);
 }
@@ -509,11 +503,11 @@ __forceinline void TSystemOptionsWindow::UpdateSystemOptions(
 // layout with the switch outlined after the right-click return. This is the
 // merged-block/compiler-generation class, not another condition spelling.
 // In the redraw tail retail also hoists the DrawWindow vtable load and three
-// argument pushes ahead of the volatile message stores; this compiler leaves
-// them after. Removing volatile or using an aggregate initializer eliminates
-// all eight real stores (91.4016), so the retained spelling is closest. The
-// final findWidget and click-sample deltas are register rotations over the
-// same loads/stores and calls.
+// argument pushes ahead of the message-constructor stores; this compiler
+// leaves them after. The old volatile surrogate was a 92.5000 local maximum;
+// the recovered constructor is the positive source fact. The final findWidget
+// and click-sample deltas are register rotations over the same loads/stores
+// and calls.
 VA(0x005b3140, 0x61E)  // vtable slot 9 + inlined help switch, dc 0x160770
 int TSystemOptionsWindow::WindowHandler(message* msg)
 {

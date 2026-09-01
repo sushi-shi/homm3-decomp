@@ -99,6 +99,25 @@ inline void TSpellbookWindow::SetContext(TSpellContext context)
     LastContext = context;
 }
 
+// The Dreamcast header line table proves these three source helpers, and its
+// WindowHandler xrefs prove four GetContextMask sites plus the widget-page
+// PreviousPage/NextPage sites. Complete has no corresponding retail function
+// entries: VC6 expands the same bodies into the handler.
+inline unsigned TSpellbookWindow::GetContextMask()
+{
+    return ContextMask;
+}
+
+inline void TSpellbookWindow::PreviousPage()
+{
+    GotoPage(Page - 1);
+}
+
+inline void TSpellbookWindow::NextPage()
+{
+    GotoPage(Page + 1);
+}
+
 #if 0  // @carcass: untouched Dreamcast-only bodies
 // E:\gamedcs\spellbookwindow.cpp:69
 DC_ONLY(0x14bc58, 0x28)
@@ -116,8 +135,10 @@ std::string TSpellbookWindow::get_spell_description(
     // 96.8000%: all 36 blocks, 21 branches and the return agree.  The only
     // residual is VC6 inlining the returned string's initial _Tidy while
     // retail calls it out of line; twelve generated ordinary-source trees
-    // were flat or worse.  A second substr raises the numeric score but is
-    // absent from the DC xref graph, so the source-authentic return stays.
+    // were flat or worse.  Pinning the return's copy boundary is a negative
+    // control: it suppresses the wrong level and falls to 82.0500%. A second
+    // substr raises the numeric score but is absent from the DC xref graph,
+    // so the source-authentic return stays.
     const SSpellTraits* traits = &akSpellTraits[spell];
     std::string result;
     int mastery = 0;
@@ -389,6 +410,11 @@ void TSpellbookWindow::GotoPage(int page)
     // _Unguarded_insert out of line.  The pointer-only spelling expands that
     // helper and gives the exact 68-block CFG, but drops to 86.2235%; named,
     // iterator and reference spellings all converge on this higher maximum.
+    // Interpreting DC's `entry` record as a by-value Complete local falls to
+    // 81.6941%, and auto_inline(off) on operator< is byte-flat. predict-inline
+    // confirms the wall: retail keeps two comparator calls while this sort
+    // lowering keeps none. The guided induction-type controls are also closed
+    // (long is byte-flat; short worsens the branch distance 52 -> 54).
     if (page < 0)
         return;
 
@@ -578,19 +604,18 @@ DATA(0x00641da4) static const int school_to_tab[] = {0, 2, 3, 1, 4};
 DATA(0x00641db8) static const int tab_to_school[] = {0, 3, 1, 2, 4};
 
 // E:\gamedcs\spellbookwindow.cpp:755
-// Reconstructed 2026-08-27 (stub -> 70.8576%). The right-click dispatch and
-// key-handler prefix agree instruction-for-instruction through retail block
-// B31; Complete's added mouse-rollover arm and all widget actions are present.
-// The standing residual is VC6 shaping: retail expands the rollover string's
-// copy assignment while this compile keeps the three-argument assign call,
-// and it chooses a different common DrawWindow tail after the first page-key
-// arm. Restoring the DC-attested simple SetContext, SetSchool and GetSchool
-// header helpers, with the animation/page/redraw behavior explicit at their
-// call sites, raised the local maximum from 67.0455. PreviousPage/NextPage
-// and GetContextMask helper spellings both fall to 67.0683 in this compiler
-// state; caller-mass probes 1..9 reach 66.7992 and 10 drops to 53.7636, while
-// a named rollover temporary (66.5846) and explicit three-argument assign
-// (64.7181) also regress.
+// Reconstructed 2026-08-27 (stub -> banked 70.8576%, current 67.0683%). The
+// right-click dispatch agrees through retail B31. Dreamcast positively proves
+// GetContextMask at four shared handler sites and PreviousPage/NextPage at the
+// two widget-page sites. Keeping those source facts makes VC6 expand two of
+// retail's three rollover-string growth paths, leaving one _Grow call;
+// predict-inline now measures _Tidy 7/9, _Copy 2/3 and _Xlen 2/3 against
+// retail. The higher banked score used direct field/page spellings, so it is
+// history rather than a reason to discard the recovered helpers. Negative
+// controls are closed: deleting the retail rollover arm falls to 51.6874%;
+// explicitly merging its cache-hit exit falls to 63.9970%; caller-mass probes
+// 1..9 reach 66.7992 and 10 falls to 53.7636; a named rollover temporary
+// reaches 66.5846 and explicit three-argument assign reaches 64.7181.
 VA(0x0059d040, 0xBA0)  // anchor-callee: calls GotoPage/get_spell_description/GetManaCost/SetIconFrame, msg jump-table, ret 4; absorbs inlined DisplayNewSchool+convertID2HelpID; dc 0x14cecc
 int TSpellbookWindow::WindowHandler(message* msg)
 {
@@ -688,9 +713,9 @@ int TSpellbookWindow::WindowHandler(message* msg)
             if (msg->codeY >= SPELL_0_ID && msg->codeY <= SPELL_11_ID) {
                 SpellID spell = SpellMap[msg->codeY - SPELL_0_ID];
                 if ((AllowedContext == eContextCombat
-                     && ContextMask == eCombatContextMask)
+                     && GetContextMask() == eCombatContextMask)
                     || (AllowedContext == eContextAdventure
-                        && ContextMask == eAdventureContextMask)) {
+                        && GetContextMask() == eAdventureContextMask)) {
                     int mana_cost = const_cast<hero*>(Hero)->GetManaCost(
                         spell, EnemyGroup, OnMagicPlains);
                     if (mana_cost <= Hero->mana) {
@@ -712,7 +737,7 @@ int TSpellbookWindow::WindowHandler(message* msg)
                        && msg->codeY <= ALL_SCHOOL_ID) {
                 DisplayNewSchool(msg->codeY - AIR_SCHOOL_ID);
             } else if (msg->codeY == COMBAT_SPELLS_ID) {
-                if (ContextMask != eCombatContextMask) {
+                if (GetContextMask() != eCombatContextMask) {
                     if (gUnnamed698758.animateSpellBook)
                         VideoPlay(0x24, x + 13, y + 14, -1, -1);
                     SetContext(eContextCombat);
@@ -720,7 +745,7 @@ int TSpellbookWindow::WindowHandler(message* msg)
                     DrawWindow(1, -65535, 65535);
                 }
             } else if (msg->codeY == ADVENTURE_SPELLS_ID) {
-                if (ContextMask != eAdventureContextMask) {
+                if (GetContextMask() != eAdventureContextMask) {
                     if (gUnnamed698758.animateSpellBook)
                         VideoPlay(0x25, x + 13, y + 14, -1, -1);
                     SetContext(eContextAdventure);
@@ -730,12 +755,12 @@ int TSpellbookWindow::WindowHandler(message* msg)
             } else if (msg->codeY == PREVIOUS_PAGE_ID) {
                 if (gUnnamed698758.animateSpellBook)
                     VideoPlay(0x24, x + 13, y + 14, -1, -1);
-                GotoPage(Page - 1);
+                PreviousPage();
                 DrawWindow(1, -65535, 65535);
             } else if (msg->codeY == NEXT_PAGE_ID) {
                 if (gUnnamed698758.animateSpellBook)
                     VideoPlay(0x25, x + 13, y + 14, -1, -1);
-                GotoPage(Page + 1);
+                NextPage();
                 DrawWindow(1, -65535, 65535);
             } else if (msg->codeY == DIALOG_RETURN_CANCEL) {
                 goto exit_dialog;

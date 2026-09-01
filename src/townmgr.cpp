@@ -15,7 +15,6 @@
 // first inclusion count.
 // Opens town.h's SetSummoningGenerator declarator for TCastleWindow's
 // constructor, and only for it: town.cpp never defines this.
-#define HOMM3_TOWNMGR_MESSAGE_CTOR_CARRIER
 // widget.h's set_visible header inline (DC Widget.h:263), for
 // set_bonus_display's six show/hide sites - retail folds each into
 // `send_message(WIDGET_{SET,CLEAR}_STATUS, WIDGET_DRAWN)` in place, the
@@ -2234,7 +2233,7 @@ void townManager::SetCommandAndText(message* msg)
         break;
     }
 
-    message textMessage = { 0, 0, 0, 0, 0, 0, 0, 0 };
+    message textMessage;
     textMessage.id = MESSAGE_WIDGET;
     textMessage.codeX = widget::WIDGET_SET_TEXT;
     textMessage.codeY = 0x97;
@@ -5809,7 +5808,7 @@ building_popup:
                         StartMouseThread();
                         SetupExtraStuff();
                         SetupTown(1);
-                        message textMessage = { 0, 0, 0, 0, 0, 0, 0, 0 };
+                        message textMessage;
                         textMessage.id = MESSAGE_WIDGET;
                         textMessage.codeY = -1;
                         SetCommandAndText(&textMessage);
@@ -6035,7 +6034,7 @@ building_popup:
                 StartMouseThread();
                 SetupExtraStuff();
                 SetupTown(1);
-                message textMessage = { 0, 0, 0, 0, 0, 0, 0, 0 };
+                message textMessage;
                 textMessage.id = MESSAGE_WIDGET;
                 textMessage.codeY = -1;
                 SetCommandAndText(&textMessage);
@@ -6056,7 +6055,7 @@ building_popup:
                 StartMouseThread();
                 SetupExtraStuff();
                 SetupTown(1);
-                message textMessage = { 0, 0, 0, 0, 0, 0, 0, 0 };
+                message textMessage;
                 textMessage.id = MESSAGE_WIDGET;
                 textMessage.codeY = -1;
                 SetCommandAndText(&textMessage);
@@ -7084,7 +7083,7 @@ void townManager::BuildObj(int buildingId)
 VA(0x005d6ef0, 0x1BD)  // linkorder(dc row after BuildObj) + arity(ret 4) + is_legal_building edge, dc 0x179e74
 void townManager::SetupMage(heroWindow* mageWin)
 {
-    mage_message msg;
+    message msg;
 
     msg.id = MESSAGE_WIDGET;
     msg.codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
@@ -9276,7 +9275,7 @@ void TCastleWindow::SetRolloverText(message* msg)
         sprintf(gText, gUnnamed6a5c40, gBuildingNamesCommon[castleType]);
     }
 
-    message textMessage = { 0, 0, 0, 0, 0, 0, 0, 0 };
+    message textMessage;
     textMessage.id = MESSAGE_WIDGET;
     textMessage.codeX = widget::WIDGET_SET_TEXT;
     textMessage.codeY = 0x8a;
@@ -9577,7 +9576,7 @@ int TCastleWindow::WindowHandler(message* msg)
 VA(0x005dd390, 0x67E)  // anchor-bracket + arity + townManager thiscall, dc 0x17fd08
 void townManager::SetupWell(TCastleWindow* wellWin)
 {
-    message msg = { 0, 0, 0, 0, 0, 0, 0, 0 };
+    message msg;
     message textMessage;
 
     gUnnamed6aa9d8 = 1;

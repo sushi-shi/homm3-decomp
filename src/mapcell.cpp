@@ -3642,7 +3642,8 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
                 infile->Read(&short_buffer, sizeof(short_buffer));
                 int_buffer = short_buffer;
             }
-            hero_data->artifacts[x].artifactId = int_buffer;
+            memcpy(&hero_data->artifacts[x].artifactId, &int_buffer,
+                   sizeof hero_data->artifacts[x].artifactId);
         }
 
         infile->Read(&short_buffer, sizeof(short_buffer));
@@ -3656,7 +3657,8 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
                 infile->Read(&short_buffer, sizeof(short_buffer));
                 int_buffer = short_buffer;
             }
-            hero_data->backpack[x].artifactId = int_buffer;
+            memcpy(&hero_data->backpack[x].artifactId, &int_buffer,
+                   sizeof hero_data->backpack[x].artifactId);
         }
 
         // The fourth war-machine position is never serialized: every hero
