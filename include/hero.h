@@ -1020,6 +1020,13 @@ public:
     void HeroScreenUpdate(int whichStat, int isQuickView);
     // 0x004d9110 - the idle frame for the hero's current facing.
     hero_seqid GetStandSequence();
+    // E:\gamedcs\Hero.h:334, dc 0x1fbc8. DrawHeroPart and its shadow
+    // twin call this header helper at each sprite draw; retail folds the
+    // branchless facing > 4 body into the caller.
+    unsigned char GetHflip()
+    {
+        return facing > kFacingS;
+    }
     // E:\gamedcs\Hero.h:986, dc 0x1fd30. SetHeroContext preserves this
     // header-inline helper in source. Retail folds its packed-point
     // construction into SetHeroContext and move_hero, so the canonical

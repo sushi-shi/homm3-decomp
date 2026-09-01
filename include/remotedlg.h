@@ -372,9 +372,11 @@ public:
     virtual void CalcDimensions(const char* cText, font* pFont,
                                 int& winX, int& winY,
                                 int& winWidth, int& winHeight);  // slot 12
+    // Public in DC field list 0x4e47; TransmitSaveGame selects this member
+    // when the progress window, rather than the adventure view, owns it.
+    CGameTransferSmack smack;    // +0x58
 
 protected:
-    CGameTransferSmack smack;    // +0x58
     unsigned char m_sending;     // +0x6c
 };
 SIZE(CGameTransferDlg, 0x70);

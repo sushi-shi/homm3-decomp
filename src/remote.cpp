@@ -973,10 +973,12 @@ unsigned char CChatManager::HasOldChat()
 // lane to EBX, while this compile assigns those two nonvolatile registers in
 // the opposite order. The DC-named ElapsedSince/GetNextMsgNbr helpers are now
 // restored; retail's unsigned first timeout test requires the explicit cast
-// around ElapsedSince. Declaration-scope and discarded-result probes do not
-// move VC6's allocation. why-reg v2 measures distance 28, identifies identical
-// definition slots but different C1 handle state, and its only legal control
-// (swapping changed/chatKilled stores) worsens the distance to 32.
+// around ElapsedSince. DC's 1096..1099 line gap places `i` after the five state
+// updates; restoring that scope is byte-flat but preserves the positive fact.
+// Splitting killTime's declaration is also flat. why-reg v2 measures distance
+// 28, identifies identical definition slots but different C1 handle state,
+// and its only legal control (swapping changed/chatKilled stores) worsens the
+// distance to 32.
 // E:\gamedcs\remote.cpp:1080
 VA(0x00553df0, 0xE4)  // anchor-global, dc 0x11c7b0
 void CChatManager::KillOldChat()
@@ -989,13 +991,13 @@ void CChatManager::KillOldChat()
         // though DC names the signed ElapsedSince helper at this source row.
         if (static_cast<unsigned long>(GameTime::ElapsedSince(killTime))
                 > 20000) {
-            int i = 0;
-            msgArray[currMsg].killTime = i;
+            msgArray[currMsg].killTime = 0;
             currMsg = GetNextMsgNbr(currMsg);
             --msgCount;
             changed = 1;
             chatKilled = 1;
 
+            int i = 0;
             int msgNbr = currMsg;
             while (i < msgCount - 1) {
                 unsigned long nextKillTime = msgArray[msgNbr].killTime;

@@ -42,7 +42,8 @@ DATA(0x00698a14) extern font* gpCalligraphicFont;
 // the troop-count box's number with it, which is the reader the note
 // above was waiting on.
 DATA(0x00698a04) extern font* gpTinyFont;
-#ifdef HOMM3_REMOTE_WAIT_READY_DECLS
+#if defined(HOMM3_REMOTE_WAIT_READY_DECLS) \
+        || defined(HOMM3_GAME_TRANSMIT_DECLS)
 // The third cell of the same canonical font run.  CWaitForReadyPlayersDlg
 // passes it to CAnimatedDlg::Setup; scoped because adding declarations to
 // a shared header is a measured VC6 include-set trigger in this tree.
@@ -60,6 +61,11 @@ unsigned short* GetMapExtraPtr(int x, int y, int z);
 // Live prototypes (claimed kb.cpp bodies; called from kbwin's
 // AppCommand and exec's DoDialog).
 void ShutDown(const char* cInExitMessage);               // 0x4f3690
+#ifdef HOMM3_GAME_TRANSMIT_DECLS
+// DC kb.cpp:3954 names the owner; retail TransmitSaveGame calls it after a
+// failed _open and independently proves the const-character-buffer ABI.
+void FileError(const char* cBuf);                        // 0x4f35f0
+#endif
 int HandleAppSpecificMenuCommands(int idItem);           // 0x4f4350
 void CleanUpMenus();                                     // 0x4f4b50
 int GetNextHumanPlayer(int start);                       // 0x4f4ba0

@@ -4693,26 +4693,28 @@ static __forceinline void check_gate_purchase(type_point point)
 {
     int town_id = gpGame->GetTownId(point.x, point.y, point.z);
     if (town_id >= 0) {
-        town* current_town = gpGame->GetTown(town_id);
+        // check_gate_purchase -> game::GetTown: Dreamcast line 4161 and both
+        // Complete expansions retain this call. Flattening it removes the two
+        // retail calls and expands the lookup into AI_AttemptMove.
+#pragma inline_depth(0)
+        town* current_town = INLINE_GATE(gpGame->GetTown(town_id));
+#pragma inline_depth()
         if (!current_town->HasBuilding(EXTRA_1_ID, true))
             current_town->buy_building(EXTRA_1_ID);
     }
 }
 
-// Progress (banked MAX 89.9189%): Dreamcast's final line returns the single
-// `event_cell == 0 && !bNoMove && !bFoughtBattle` result. Restoring that
-// expression moved 52.9459% -> 63.1306% and made the CFG 35/35 blocks with
-// 26 exact. A zero-initialized retarget flag then measured 89.9189%, but our
-// VC6 keeps that zero live in EBX from the declaration, spills `cell`, grows
-// the frame 0x18 -> 0x1c and collapses the false arm (34/35 blocks). Retail
-// instead emits distinct one/zero assignments around a shared MoveHero join,
-// so the explicit else below is retained through the expected current-score
-// dip while the peak remains banked. Positive evidence also retained here:
-// CodeView names trigger_point and separates its construction from the later
-// path-cell assignment; game::get_cell calls NewfullMap::cell in source.
-// Negative controls: negating the condition and spelling the same flow with
-// gotos are byte-identical at 63.1306%; two meaningful entry VERIFY probes
-// are byte-flat; direction/saved_x/saved_y byte retypes are byte-flat.
+// Exact. Dreamcast's final line and retail's six-exit tail prove the single
+// `event_cell == 0 && !bNoMove && !bFoughtBattle` result. The retarget flag is
+// the compound predicate's value: this keeps `cell` in EBX through its last
+// use, then lets VC6 materialize BL=1 in the true arm and the cold BL=0 arm
+// after the owner-return epilogue, exactly matching retail's 35-block layout.
+// A declaration-time zero followed by an assignment in the true arm measured
+// 89.9189%: it makes the flag overlap `cell`, spills the pointer, grows the
+// frame from 0x18 to 0x1c, and loses one block. Explicit if/else and equivalent
+// goto spellings measured 63.1306%, with the false assignment before MoveHero.
+// CodeView also names trigger_point and separates its construction from the
+// later path-cell assignment; game::get_cell remains the source-real helper.
 // E:\gamedcs\ai_player.cpp:3832
 // One step of an AI hero's path: optionally hide the mouse, summon or
 // build a boat when stepping onto water without one, retarget the path
@@ -4755,14 +4757,12 @@ unsigned char attempt_step(hero* current_hero, pathCell* path_cell,
     int saved_y = current_hero->pathTargetY;
     int saved_z = current_hero->pathTargetZ;
 
-    unsigned char retargeted;
-    if (path_cell->flying && path_cell->last_can_stop && cell->is_trigger) {
+    unsigned char retargeted =
+        path_cell->flying && path_cell->last_can_stop && cell->is_trigger;
+    if (retargeted) {
         current_hero->pathTargetX = trigger_point.x;
         current_hero->pathTargetY = trigger_point.y;
         current_hero->pathTargetZ = trigger_point.z;
-        retargeted = 1;
-    } else {
-        retargeted = 0;
     }
 
     int bNoMove;
@@ -5019,6 +5019,16 @@ static unsigned char attempt_teleport(hero* current_hero,
 // E:\gamedcs\ai_player.cpp:4179.  The reference pair is fixed by the DC
 // decorated signature and the retail /Gr call at move_hero+0x219.  The body
 // lies after attempt_step and immediately before the Town.h COMDAT band.
+// Residual (84.83%, 2026-09-01): the Dreamcast statement groups now recover
+// the compound puzzle-guess test, both check_gate_purchase -> game::GetTown
+// boundaries, the Complete-only can-stop map lookup and its fresh location
+// temporary, and the unsigned vector-size loop exits. predict-inline is down
+// to one backend divergence: candidate shares one operator-delete tail where
+// retail emits two calls. The signed size casts are a measured negative
+// control (84.18% and signed jge instead of retail/DC's unsigned jae/cmp-hi);
+// flattening GetTown or NewfullMap::cell removes retained retail calls and the
+// sixth point constructor. Preserve these positive source facts across the
+// remaining VC6 tail-merging/register-allocation wall.
 VA(0x0042fee0, 0x6b8)  // anchor-caller move_hero + order bracket, dc 0x34b08
 void AI_AttemptMove(hero* current_hero, HeroDestination& best_point,
                     long& best_raw_value, unsigned char explore_mode)
@@ -5029,20 +5039,17 @@ void AI_AttemptMove(hero* current_hero, HeroDestination& best_point,
     long max_distance;
     type_point destination;
 
-    if (current_hero->get_location() == gpCurrentPlayer->puzzle_guess) {
-        // VC6 cannot bind the temporary returned by get_target to this
-        // vintage STL/compiler view's const-reference operator.  Keeping it
-        // in its source temporary produces retail's target-then-location
-        // constructor pair after the first short-circuit succeeds.
-        type_point target = current_hero->get_target();
-        if (current_hero->get_location() == target) {
-            if (current_hero->movePoints == current_hero->maxMovePoints)
-                gpAdvManager->ProcessSearch(current_hero->x, current_hero->y,
-                                            current_hero->z);
-            else
-                current_hero->movePoints = 0;
-            return;
-        }
+    // Dreamcast line 4188 groups both comparisons and all four accessors in
+    // one short-circuit statement; retail likewise constructs get_target's
+    // temporary before the second get_location temporary.
+    if (gpCurrentPlayer->puzzle_guess == current_hero->get_location()
+        && current_hero->get_location() == current_hero->get_target()) {
+        if (current_hero->movePoints == current_hero->maxMovePoints)
+            gpAdvManager->ProcessSearch(current_hero->x, current_hero->y,
+                                        current_hero->z);
+        else
+            current_hero->movePoints = 0;
+        return;
     }
 
     build_path(current_hero, gpSearchArray, path, best_point);
@@ -5054,8 +5061,15 @@ void AI_AttemptMove(hero* current_hero, HeroDestination& best_point,
     if (path[0].can_stop) {
         gpAdvManager->MobilizeCurrHero(0, 0, 1);
         type_point point = current_hero->get_location();
-        NewmapCell* cell = gpGame->worldMap.cell(point.x, point.y, point.z);
-        gpAdvManager->DoAIEvent(cell, current_hero, point);
+        // Complete's can-stop arm retains NewfullMap::cell and constructs a
+        // fresh get_location temporary for DoAIEvent. Without this site gate
+        // VC6 expands cell and emits only five of retail's six point ctors.
+#pragma inline_depth(0)
+        NewmapCell* cell = INLINE_GATE(
+            gpGame->worldMap.cell(point.x, point.y, point.z));
+#pragma inline_depth()
+        gpAdvManager->DoAIEvent(cell, current_hero,
+                                current_hero->get_location());
         return;
     }
 
@@ -5068,7 +5082,7 @@ void AI_AttemptMove(hero* current_hero, HeroDestination& best_point,
     unsigned char stand_end = 0;
     total_cost = 0;
 
-    for (long step = 0; step < static_cast<long>(path.size()); ++step) {
+    for (long step = 0; step < path.size(); ++step) {
         if (path[step].castle_gate) {
             type_point gate_point = current_hero->get_location();
             check_gate_purchase(gate_point);
@@ -5113,7 +5127,7 @@ void AI_AttemptMove(hero* current_hero, HeroDestination& best_point,
                     || current_hero->CanWalkOnWater(0)))
             return;
 
-        if (step + 1 >= static_cast<long>(path.size())
+        if (step + 1 >= path.size()
             || static_cast<long>(path[step + 1].cost) - total_cost
                    > current_hero->movePoints)
             stand_end = 1;

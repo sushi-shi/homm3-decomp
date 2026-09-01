@@ -61,6 +61,14 @@ enum eRS_Messages {
     // at the top of this enum). Gated to advmgr's view - an ungated
     // enumerator here is a measured include-set trigger (RS_ERASE_OBJECT).
     RS_GAME_TRANSMIT_INIT = 1000,
+#ifdef HOMM3_GAME_TRANSMIT_DECLS
+    RS_GAME_TRANSMIT_MAIN = 1001,
+    RS_GAME_TRANSMIT_REQ = 1002,
+    RS_GAME_TRANSMIT_END = 1003,
+    RS_DESTROY_PLAYER = 1079,
+    RS_GAME_TRANSMIT_ACK = 1080,
+    RS_GAME_XFER_CONFIRM_END = 1081,
+#endif
     RS_CHAT_MSG = 1004,
     RS_COMBAT_INIT = 1005,
     RS_PLAYER_DROPPED = 1014,
@@ -132,6 +140,17 @@ enum eRS_Messages {
     RS_NORMAL_WIN = 1078
 };
 
+#ifdef HOMM3_GAME_TRANSMIT_DECLS
+// Network transfer wire limits shared by the sender and receiver.  Retail's
+// sender allocates 0x400 bytes per main message; the fixed 0x1c-byte header
+// leaves 996 payload bytes, and its idle watchdog compares against 30000 ms.
+enum EGameTransmitLimits {
+    GAME_TRANSMIT_MESSAGE_SIZE = 1024,
+    GAME_TRANSMIT_PAYLOAD_SIZE = 996,
+    GAME_TRANSMIT_TIMEOUT = 30000
+};
+#endif
+
 class CNetMsg {
 public:
     int field_00;
@@ -168,7 +187,8 @@ SIZE(CEndPlacementPhaseMsg, 0x14);
 #endif
 
 #if defined(HOMM3_REMOTE_WAIT_READY_DECLS) \
-        || defined(HOMM3_COMMAND_GRID_VIEW)
+        || defined(HOMM3_COMMAND_GRID_VIEW) \
+        || defined(HOMM3_GAME_TRANSMIT_DECLS)
 // The header-inline owner delegates to the process-wide recycler. remote.cpp
 // can see and inline that wrapper down to delete; command.cpp retains the
 // retail out-of-line DestroyMsg call.
@@ -283,7 +303,119 @@ public:
     unsigned long m_thisPlayerDead;
     unsigned char m_isDiff;
     unsigned char m_makeOrig;
+
+#ifdef HOMM3_GAME_TRANSMIT_DECLS
+    CGameTransmitInitMsg(unsigned long fileSize,
+                         unsigned long fullGameCRC,
+                         unsigned long thisPlayerDead,
+                         unsigned char isDiff,
+                         unsigned char makeOrig)
+        : CNetMsg(RS_GAME_TRANSMIT_INIT, sizeof(CGameTransmitInitMsg)),
+          m_fileSize(fileSize),
+          m_fullGameCRC(fullGameCRC),
+          m_thisPlayerDead(thisPlayerDead),
+          m_isDiff(isDiff),
+          m_makeOrig(makeOrig)
+    {
+    }
+#endif
 };
+SIZE(CGameTransmitInitMsg, 0x24);
+
+#ifdef HOMM3_GAME_TRANSMIT_DECLS
+// DC netmsg.h:312..395 supplies every boundary, member and access class.
+// Retail TransmitSaveGame independently proves the x86 extents, subtype
+// immediates and inline store order at 0x4cafd0.
+class CGameTransmitReqMsg : public CNetMsg {
+public:
+    int m_blockNbr;
+
+    CGameTransmitReqMsg(int blockNbr)
+        : CNetMsg(RS_GAME_TRANSMIT_REQ, sizeof(CGameTransmitReqMsg)),
+          m_blockNbr(blockNbr)
+    {
+    }
+};
+SIZE(CGameTransmitReqMsg, 0x18);
+
+class CGameTransmitMainMsg : public CNetMsg {
+public:
+    unsigned long m_blockNbr;
+    unsigned long m_blockSize;
+
+    static CGameTransmitMainMsg* CreateMsg(unsigned long maxSize)
+    {
+        unsigned long size = sizeof(CGameTransmitMainMsg) + maxSize;
+        CGameTransmitMainMsg* msg = static_cast<CGameTransmitMainMsg*>(
+            ::operator new(size));
+        memset(msg, 0, size);
+        msg->subType = RS_GAME_TRANSMIT_MAIN;
+        return msg;
+    }
+
+    void Update(unsigned char* data, unsigned long blockSize)
+    {
+        m_blockSize = blockSize;
+        memcpy(GetData(), data, blockSize);
+        size = GetSize();
+    }
+
+    unsigned long GetSize() { return m_blockSize + sizeof(*this); }
+    unsigned char* GetData()
+    {
+        return static_cast<unsigned char*>(static_cast<void*>(this))
+            + sizeof(*this);
+    }
+
+protected:
+    CGameTransmitMainMsg();
+};
+SIZE(CGameTransmitMainMsg, 0x1c);
+
+class CGameTransmitConfirmEndMsg : public CNetMsg {
+public:
+    CGameTransmitConfirmEndMsg()
+        : CNetMsg(RS_GAME_XFER_CONFIRM_END,
+                  sizeof(CGameTransmitConfirmEndMsg))
+    {
+    }
+};
+SIZE(CGameTransmitConfirmEndMsg, 0x14);
+
+class CGameTransmitEndMsg : public CNetMsg {
+public:
+    int m_iMonthType;
+    int m_iMonthTypeExtra;
+    int m_iWeekType;
+    int m_iWeekTypeExtra;
+    unsigned long m_diffSize;
+
+    CGameTransmitEndMsg(int iMonthType, int iMonthTypeExtra,
+                        int iWeekType, int iWeekTypeExtra,
+                        unsigned long diffSize)
+        : CNetMsg(RS_GAME_TRANSMIT_END, sizeof(CGameTransmitEndMsg)),
+          m_iMonthType(iMonthType),
+          m_iMonthTypeExtra(iMonthTypeExtra),
+          m_iWeekType(iWeekType),
+          m_iWeekTypeExtra(iWeekTypeExtra),
+          m_diffSize(diffSize)
+    {
+    }
+};
+SIZE(CGameTransmitEndMsg, 0x28);
+
+class CDestroyPlayerMsg : public CNetMsg {
+public:
+    unsigned long m_dpid;
+
+    CDestroyPlayerMsg(unsigned long dpid)
+        : CNetMsg(RS_DESTROY_PLAYER, sizeof(CDestroyPlayerMsg)),
+          m_dpid(dpid)
+    {
+    }
+};
+SIZE(CDestroyPlayerMsg, 0x18);
+#endif
 
 class CChatMsg : public CNetMsg {
 public:

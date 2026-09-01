@@ -89,9 +89,12 @@ iconWidget::~iconWidget()
 // E:\gamedcs\iconwdgt.cpp:119
 // Retail independently fixes the complete message protocol and six live
 // widget-command arms. The reconstructed body has all 28 branches and is
-// measured at 95.27076%; this C2 invocation duplicates one shared zero
-// epilogue and schedules the inlined sequence parameter differently after
-// source-order, helper-boundary, register-hint, and label-placement probes.
+// measured at 95.70397%; this C2 invocation duplicates one shared zero
+// epilogue after source-order, helper-boundary, register-hint, and
+// label-placement probes. Restoring Dreamcast's MESSAGE_WIDGET/default-first
+// source order is byte-flat, but restoring its SetIconSequence call and that
+// helper's proven seqId-then-Frame statement order makes the sequence and
+// following color arms byte-exact (B36/B37).
 // Located precisely 2026-08-13 with `sema diff --branches` (base 28/17 rets
 // against retail 28/16, one POLARITY flip at +0x294): retail merges EVERY
 // return-0 exit into the block that sits at the LEFT_BUTTON_UP disabled gate
@@ -130,6 +133,41 @@ returnZero:
         isDisabled = 1;
 
     switch (msg->id) {
+    case MESSAGE_WIDGET:
+        if (msg->codeY != id)
+            break;
+        switch (msg->codeX) {
+        case WIDGET_SET_ICON_NAME:
+            SetSprite(msg->extraText);
+            return 1;
+        case WIDGET_SET_ICON_FRAME:
+            SetIconFrame(msg->extra & 0xFFFF);
+            return 1;
+        case WIDGET_SET_ICON_SEQUENCE:
+            SetIconSequence(msg->extra & 0xFFFF);
+            return 1;
+        case WIDGET_SET_ICON_COLOR:
+            BackColor = static_cast<unsigned short>(msg->extra);
+            return 1;
+        case WIDGET_SET_PALETTE: {
+            TPalette16* newPalette = ResourceManager::GetPalette(msg->extraText);
+            if (newPalette) {
+                Sprite->SetPalette(newPalette->data);
+                newPalette->Dispose();
+            }
+            return 1;
+        }
+        case WIDGET_SET_PLAYER_PALETTE_COLORS:
+            SetPlayerPaletteColors(msg->extra);
+            return 1;
+        }
+        break;
+
+    default:
+        if (isDisabled)
+            return 0;
+        break;
+
     case MESSAGE_LEFT_BUTTON_DOWN:
         if (isDisabled)
             goto returnZero;
@@ -172,42 +210,6 @@ returnZero:
         if (msg->id == MESSAGE_RIGHT_BUTTON_UP)
             msg->qualifier = MESSAGE_MODIFIER_RIGHT;
         return 2;
-
-    case MESSAGE_WIDGET:
-        if (msg->codeY != id)
-            break;
-        switch (msg->codeX) {
-        case WIDGET_SET_ICON_NAME:
-            SetSprite(msg->extraText);
-            return 1;
-        case WIDGET_SET_ICON_FRAME:
-            SetIconFrame(msg->extra & 0xFFFF);
-            return 1;
-        case WIDGET_SET_ICON_SEQUENCE:
-            Frame = 0;
-            seqId = msg->extra & 0xFFFF;
-            return 1;
-        case WIDGET_SET_ICON_COLOR:
-            BackColor = static_cast<unsigned short>(msg->extra);
-            return 1;
-        case WIDGET_SET_PALETTE: {
-            TPalette16* newPalette = ResourceManager::GetPalette(msg->extraText);
-            if (newPalette) {
-                Sprite->SetPalette(newPalette->data);
-                newPalette->Dispose();
-            }
-            return 1;
-        }
-        case WIDGET_SET_PLAYER_PALETTE_COLORS:
-            SetPlayerPaletteColors(msg->extra);
-            return 1;
-        }
-        break;
-
-    default:
-        if (isDisabled)
-            return 0;
-        break;
     }
 
     return widget::Main(msg);
@@ -510,11 +512,14 @@ void iconWidget::SetIconFrame(int newFrame)
 }
 
 // E:\gamedcs\iconwdgt.cpp:444
+// Dreamcast line 447 stores new_sequence to seqId and line 448 clears Frame;
+// Main's retail-inlined WIDGET_SET_ICON_SEQUENCE arm corroborates the order:
+// its six-instruction block is exact only with this source shape.
 DC_ONLY(0xd9ca4, 0x8)
 void iconWidget::SetIconSequence(int new_sequence)
 {
-    Frame = 0;
     seqId = new_sequence;
+    Frame = 0;
 }
 
 // E:\gamedcs\iconwdgt.cpp:452
@@ -551,13 +556,15 @@ void iconWidget::SetSprite(const char* new_sprite)
 // per re-roll, matching the retail loop-back into its stores);
 // cs_prewalk/cs_postwalk (0x14/0x15) are the leave/enter transitions
 // with the fidget target parked in PostPostWalkSequence.
-// Residual (72.0%): the SAME `this`-homing difference as the siege
-// twin below - retail spills `this` to [ebp-4] (frame 0x5c vs our
-// 0x58) and pins it in ESI where this compile keeps it in EDI and
-// never homes it; downstream, our allocator also CSEs the literal 0
-// into EBX (`cmp [eax+4*ecx], ebx`) where retail compares against the
-// immediate. Control flow AGREES (`--branches`, 21/21, one merged
-// exit). Fixed here 2026-08-08: the frame-count guard is
+// Residual (81.0449%): Dreamcast proves the fast path calls SetIconFrame,
+// the transition and reroll arms assign one shared `chosen`, and the single
+// tail calls SetIconSequence. Restoring that source shape raises the old
+// 72.0056% plateau and makes the CFG exact (32/32 blocks, 22 exact and ten
+// size-only). The remaining dominant delta is the same invariant-table
+// motion as the siege twin below: B13 carries 24 initializer instructions
+// that retail places at the B14 reroll head. Retail also homes `this` at
+// [ebp-4] (frame 0x5c vs our 0x58), accounting for B0 and the one-instruction
+// reload deltas after the reroll. Fixed here 2026-08-08: the frame-count guard is
 // CSprite::GetNumFrames (a csprite.h inline, DC CSprite.h:293), NOT a
 // cached local - re-expanding it per use took this 69.02 -> 72.01 and
 // SetIconFrame 90.18 -> exact. Dreamcast CodeView further proves that
@@ -568,66 +575,55 @@ void iconWidget::SetSprite(const char* new_sprite)
 VA(0x004eb060, 0x1EB)  // anchor-global, dc 0xd9d90
 void iconWidget::NextRandomFrame()
 {
-    int frames = Sprite->GetNumFrames(seqId);
-    int next = Frame + 1;
-    if (next < frames) {
-        Frame = next % Sprite->GetNumFrames(seqId);
-        return;
-    }
-    if (seqId == cs_prewalk) {
-        seqId = 0;
-        Frame = 0;
-        return;
-    }
-    if (seqId == cs_postwalk) {
-        Frame = 0;
-        seqId = PostPostWalkSequence;
+    if (Frame + 1 < Sprite->GetNumFrames(seqId)) {
+        SetIconFrame(Frame + 1);
         return;
     }
     int chosen;
-    for (;;) {
-        const struct {
-            creature_seqid sequence_id;
-            int chance;
-        } sequenceList[11] = {
-            {cs_walk, 65},
-            {cs_wait, 15},
-            {cs_defend, 5},
-            {cs_fidget, 5},
-            {cs_wince, 4},
-            {cs_attack_ur, 1},
-            {cs_attack_r, 1},
-            {cs_attack_dr, 1},
-            {cs_range_ur, 1},
-            {cs_range_r, 1},
-            {cs_range_dr, 1},
-        };
-        int roll = Random(1, 100);
-        int cumulative = 0;
-        unsigned int pick = 0;
-        for (; pick < 11; ++pick) {
-            cumulative += sequenceList[pick].chance;
-            if (roll <= cumulative)
+    if (seqId == cs_prewalk) {
+        chosen = cs_walk;
+    } else if (seqId == cs_postwalk) {
+        chosen = PostPostWalkSequence;
+    } else {
+        for (;;) {
+            const struct {
+                creature_seqid sequence_id;
+                int chance;
+            } sequenceList[11] = {
+                {cs_walk, 65},
+                {cs_wait, 15},
+                {cs_defend, 5},
+                {cs_fidget, 5},
+                {cs_wince, 4},
+                {cs_attack_ur, 1},
+                {cs_attack_r, 1},
+                {cs_attack_dr, 1},
+                {cs_range_ur, 1},
+                {cs_range_r, 1},
+                {cs_range_dr, 1},
+            };
+            int roll = Random(1, 100);
+            int cumulative = 0;
+            unsigned int pick = 0;
+            for (; pick < 11; ++pick) {
+                cumulative += sequenceList[pick].chance;
+                if (roll <= cumulative)
+                    break;
+            }
+            chosen = sequenceList[pick].sequence_id;
+            if (Sprite->GetNumFrames(chosen) > 0)
                 break;
         }
-        chosen = sequenceList[pick].sequence_id;
-        if (Sprite->GetNumFrames(chosen) > 0)
-            break;
-    }
-    if (chosen == 0) {
-        if (seqId != 0 && Sprite->GetNumFrames(cs_prewalk) > 0) {
-            seqId = cs_prewalk;
-            Frame = 0;
-            return;
+        if (chosen == cs_walk) {
+            if (seqId != cs_walk && Sprite->GetNumFrames(cs_prewalk) > 0)
+                chosen = cs_prewalk;
+        } else if (seqId == cs_walk
+                   && Sprite->GetNumFrames(cs_postwalk) > 0) {
+            PostPostWalkSequence = chosen;
+            chosen = cs_postwalk;
         }
-    } else if (seqId == 0 && Sprite->GetNumFrames(cs_postwalk) > 0) {
-        PostPostWalkSequence = chosen;
-        seqId = cs_postwalk;
-        Frame = 0;
-        return;
     }
-    seqId = chosen;
-    Frame = 0;
+    SetIconSequence(chosen);
 }
 
 #if 0  // @carcass
@@ -637,16 +633,20 @@ void iconWidget::NextRandomFrame()
 // E:\gamedcs\iconwdgt.cpp:572
 // The siege-engine variant of NextRandomFrame: four-pair odds table
 // (2:94%, fidgets 14-16 2% each), no transition sequences.
-// Residual (86.4%): retail HOMES `this` at [ebp-4] - its frame is
+// Residual (89.4667%): retail HOMES `this` at [ebp-4] - its frame is
 // 0x24 where ours is 0x20 - because it burns EDI on the CSE'd literal
 // 2 inside the table stores and has to reload `this` from the home
 // after each Random(). This compile keeps `this` in EDI for the whole
 // body and materialises the 2 in EAX, so the table sits one dword
 // higher ([ebp-0x20] vs [ebp-0x24]) and every table store's
-// displacement differs. Control flow AGREES (`--branches`, 10/10).
+// displacement differs. Dreamcast's SetIconFrame fast path and single
+// SetIconSequence tail, plus the helper's seqId-then-Frame statement order,
+// make B1-B8 exact; control flow agrees across all 17 blocks, with only the
+// five size-only B0/B9/B10/B13/B16 rows remaining.
 // Tried and rejected: caching `Sprite` in a local (74.02 - it also
 // stops the per-iteration [this+0x30] reload retail does), folding
-// the frame count into the `if` condition instead of a local (83.74).
+// the frame count into the `if` condition while retaining a direct Frame
+// store (83.74); the same guard with the DC helper call is the retained win.
 // ROOT CAUSE identified 2026-08-08 (closeout lane) from the branch
 // targets: the re-roll loop's back edge lands on `mov edx,0x64` in
 // BOTH builds, but retail's odds-table stores sit AFTER that label
@@ -667,7 +667,7 @@ void iconWidget::NextRandomFrame()
 // VC6 folds the name away before allocation and still hoists the table.
 //
 // THE ACCOUNTING, closed 2026-08-14 - the whole residual is those eight
-// stores and nothing else. The skeleton diff is 17 vs 17 blocks, ZERO
+// stores and three `this` home/reloads. The skeleton diff is 17 vs 17 blocks, ZERO
 // flow divergence, five size-only rows, and they sum to zero:
 //   B9  preheader  base 9i (mov eax,2 + the 8 table stores) vs target 1i
 //                  (mov edi,2 alone)
@@ -719,10 +719,8 @@ void iconWidget::NextRandomSiegeEngineFrame()
     // `Sprite` is read through the member every time, NOT cached in a
     // local: retail homes `this` at [ebp-4] and reloads [this+0x30]
     // after each Random() call inside the re-roll loop.
-    int frames = Sprite->GetNumFrames(seqId);
-    int next = Frame + 1;
-    if (next < frames) {
-        Frame = next % Sprite->GetNumFrames(seqId);
+    if (Frame + 1 < Sprite->GetNumFrames(seqId)) {
+        SetIconFrame(Frame + 1);
         return;
     }
     int chosen;
@@ -748,8 +746,7 @@ void iconWidget::NextRandomSiegeEngineFrame()
         if (Sprite->GetNumFrames(chosen) > 0)
             break;
     }
-    seqId = chosen;
-    Frame = 0;
+    SetIconSequence(chosen);
 }
 
 #if 0  // @carcass
