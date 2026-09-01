@@ -1025,8 +1025,8 @@ static const int gTownArmyCoords[7][2] = {
 // expansion and direct mask are identical at this site, while Dreamcast
 // positively proves the helper. Preserve 98.7476 as score history and keep
 // the seventh call while the surrounding post-Dreamcast quantity-text shape
-// is reconstructed. The fatal DC source-shape gate now prevents this local
-// maximum from flattening the helper again.
+// is reconstructed. Keep the Dreamcast-attested helper despite this local
+// maximum; retail remains the final semantic/codegen check.
 //
 // Raw NB11 also records the pointer-sized local as `resource` inside the
 // silo block (S_REGREL32 sp+0x64, type 0x3fa1), after procedure-scope

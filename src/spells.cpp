@@ -1069,8 +1069,8 @@ void combatManager::mark_area_effect(SpellID spell, long hex, long mastery,
 // the multiple-target tail and PowEffect in that order. Complete adds the
 // retail-proven Random/SpellCastWorkChance roll around the shared failed-
 // target clear; this is retail-only revision shape, not a reason to erase the
-// compatible Dreamcast facts. The asymmetric source-shape gate ratchets the
-// recovered locals, call order and shared branch state.
+// compatible Dreamcast facts. Retain the recovered locals, call order and
+// shared branch state while judging the candidate against retail x86.
 //
 // ComputeSpellDamage (0x5a7890) is EXPANDED at both sites: the mastery
 // row and the power product appear inline and only ModifySpellDamage

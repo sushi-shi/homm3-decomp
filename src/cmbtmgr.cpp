@@ -1021,7 +1021,7 @@ void combatManager::UpdateArmyGroup(int whichSide)
 // three clears. Restoring that shape makes VC6 hoist the two row expressions,
 // reserve EBX for -1, spill y and the cell cursor, and reproduce all 220
 // retail bytes and all five CFG blocks. The cached upper/lower-offset form is
-// the measured 60.3026% negative control; the fatal source-shape gate also
+// the measured 60.3026% negative control; the retained evidence also
 // rejects cached offsets, reordered coordinate/state statements, and a
 // loop-scoped y. The member read-backs remain retail-proven: field_08 derives
 // from field_04, while field_0a/field_0c derive from field_06.

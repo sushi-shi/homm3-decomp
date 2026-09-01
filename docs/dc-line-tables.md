@@ -5,8 +5,8 @@
 
 The Dreamcast dump is usually consulted for **names, types and layouts**
 (`docs/…`, `CLAUDE.md`'s evidence ranking). It carries two more records that
-nothing in this tree was using, and they are the only artefact anywhere that
-speaks about retail's **source text**:
+nothing in this tree was using, and they are the only artefact here that
+speaks about the Dreamcast pressing's **source text**:
 
 * a **line/addr table** per compiland — `(source line, section-1 offset)`
   pairs, sorted by address; and
@@ -103,6 +103,14 @@ following Vostok's debugger-breakpoint terminology. `scope` labels are
 CodeView `S_BLOCK32` lexical scopes; `B0`, `B1`, ... are separately inferred
 SH4 basic blocks.
 
+`show --json` emits the debug records through the compiler-neutral
+`homm3.debug-shape.v1` IR in `scripts/homm3/analysis/debug_shape.py`. The IR
+can also represent debug structure parsed from another format or target; it
+contains no matching policy, candidate fields, or retail fields. Dreamcast
+SH4 structure is never compared with candidate VC6 `/Z7` structure. Candidate
+`/Z7` lines serve only as labels on the candidate side of the independent x86
+candidate-vs-retail diff.
+
 ### Vostok-style empty source-line gaps
 
 NB11 preserves the same clue Vostok's PDB carcass uses. The first line-program
@@ -183,7 +191,8 @@ python3 -m homm3.analysis.dc_lines --find GetCurrTown
 Each statement prints as `line N  dc 0xX  <bytes>  br=<conditional
 branches>  { }` followed by the calls it makes, with `{`/`}` marking the
 S_BLOCK32 scope opens and closes. That triple — statement size, branch
-count, call list — is what a reconstruction is compared against.
+count, call list — describes the older source/build and guides reconstruction;
+it is not an equality target for a VC6/x86 candidate.
 
 Three practicalities the tool already handles, listed because they bite when
 reading the raw dump:

@@ -719,7 +719,7 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   loops, the absence of invented shrink helpers, and that retail-proved
   experience path. Their negative controls reject a flattened trigger,
   restored Random fallback, split artifact counter, and fake helper call. The
-  live source-shape ratchet retires exactly the two former `get_trigger` and
+  since-retired source-shape ratchet then retired exactly the two former `get_trigger` and
   `Random` backlog rows; **2,039** admitted backlog defects remain.
 
 - **2026-08-31 — `NewmapCell::get_trigger_cell` closes all 303 bytes and 14
@@ -747,7 +747,7 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   Fatal asymmetric rules and negative controls now reject an index cache,
   flattened trigger construction, flattened game/map lookup, pointer-form
   output arguments, a mutable interface, or loss of the two helper locals and
-  constructor. The live source-shape ratchet retired exactly the two former
+  constructor. The since-retired source-shape ratchet retired exactly the two former
   caller/helper omission rows.
 
 - **2026-08-31 — `NewmapCell::get_special_terrain` closes all 278 bytes and
@@ -819,7 +819,7 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   inverted and rotated that structure, leaving 26 candidate blocks and 13
   branches at **96.2353%**. The recovered bounded loop produces all **208 / 208
   bytes**, all **27 / 27 blocks**, and retail's exact **12-branch / two-return**
-  sequence. An asymmetric source-shape rule and negative controls now reject
+  sequence. The former asymmetric source-shape rule and negative controls rejected
   re-flattening the helper, removing the bound/increment, or replacing the
   success return with a fall-through.
 
@@ -974,8 +974,8 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   Complete adds a version dword to Dreamcast's `{dpid, name}` player record
   and routes each direct `AddNewPlayer` through `SetNewPlayerSlot`. Retail
   independently proves that the wrapper begins by calling
-  `CNetPlayerHandler::AddNewPlayer`, so the asymmetric source-shape gate
-  canonicalizes that exact caller spelling without discarding the recovered
+  `CNetPlayerHandler::AddNewPlayer`, so the former source-shape gate
+  canonicalized that exact caller spelling without discarding the recovered
   helper boundary. Dreamcast also contains an earlier duplicate
   `GetHeaders` / `HighlightFile` / `SetCurrentMap` host UI pass; the exact
   Complete body retains those helpers only in its final host block. A bounded
@@ -1227,7 +1227,7 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   for reverting a positive source fact. The project remains green at
   **2,561 / 3,100** linked functions exact and **93.10%** fuzzy.
 
-  The asymmetric source-shape gate now audits the whole `QB` declaration and
+  The former source-shape gate audited the whole `QB` declaration and
   definition roster, including both overloads and the retained DC-only
   carcass. Embedded negative controls remove const from a declaration, remove
   it from a definition, and restore the rejected non-const-plus-adapter
@@ -9126,7 +9126,7 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   different store order, reserves EBX for -1, and spills both `y` and the cell
   cursor exactly as retail does. The previously retained cached upper/lower
   offsets were therefore a local source-false maximum, not a compiler wall.
-  The Dreamcast source-shape gate now ratchets the recovered form and carries
+  The former Dreamcast source-shape gate ratcheted the recovered form and carried
   negative controls for cached offsets, reordered coordinate/state statements
   and loop-scoped `y`. No external implementation or `decomp-attempt-1`
   material was used.
@@ -12783,8 +12783,8 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   `AI_choose_destination` (2,926 B), was reconstructed from its Dreamcast
   dossier with both source helpers retained and opened at 63.3090%. Retail
   directly replaces the older caller-local `GetMapExtra` nearby test with a
-  last-point trigger/cost group; the source-shape gate admits only that
-  bounded replacement and carries negative controls for flattening and for
+  last-point trigger/cost group; the former source-shape gate admitted only that
+  bounded replacement and carried negative controls for flattening and for
   restoring the obsolete call.
 
 - **2026-08-31 — hardest zero-MAX selection dispatcher admitted.** The next
@@ -12817,7 +12817,7 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   candidate versus 81 retail blocks. The first flow divergence is the early
   vector-destructor return layout, while the remaining three unclaimed
   file-local helpers account for an explicit closure dependency rather than a
-  reason to flatten their DC-proven calls. The source-shape ratchet also
+  reason to flatten their DC-proven calls. The former source-shape ratchet also
   caught a tempting false merge of Dreamcast's two consecutive
   `max_distance` statements. The typed packed `playerData::puzzle_guess`
   view is now shared by `philai.obj` and `ai_player.obj`; the resulting
@@ -12894,7 +12894,7 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   advances it **0% -> 100%**, with **36 / 36 blocks exact**. The last residual
   was source order: retail evaluates `m_flag65` before `m_flag64` and retains
   Dreamcast's `b` result local through two explicit `HighlightFile` arms.
-  The fatal source-shape gate now recognizes this only as five bounded call
+  The former source-shape gate recognized this only as five bounded call
   transfers: `GetHeaders` must still forward to `WindowFn_00582e90`, the
   receiver must remain byte-exact, and every transferred helper must remain in
   that receiver. Its negative controls reject a missing forward, a non-exact
@@ -12909,7 +12909,7 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   revision changes inside the expansion: Complete calls `NewfullMap::cell`
   directly and replaces Dreamcast's `AI_get_value_of_artifact` with
   `AI_get_artifact_player_value`; both builds retain the source `max` mobility
-  operation. The asymmetric source-shape gate now canonicalizes that one
+  operation. The former source-shape gate canonicalized that one
   retail-proved call spelling even though the inline helper has no x86 claim,
   with negative controls for omission, the obsolete spelling, and reversed
   arguments. The checkpoint has **80 / 81 blocks** and **54 / 54 symbolic
@@ -12940,7 +12940,7 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   image cannot recover the original six-long static symbol from that address
   alone. Preserve the Dreamcast-typed table and fix that naming limitation in
   relocation recovery rather than falsifying the source.
-  The asymmetric source-shape gate ratchets both the line-4001
+  The former source-shape gate ratcheted both the line-4001
   `HOMM3_RELEASE_VERIFY(step < path.size())` carrier and AI_AttemptMove's
   statement-scoped `INLINE_GATE(attempt_teleport(...))`; removal negative
   controls prove that either omission fails the contract.
@@ -12954,7 +12954,7 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   backpack updates, UI handoff, and network-handler lifetime. Retail proves
   the bounded Complete deltas: widget ids 103/104, a 0x64-byte `TSwapWindow`,
   one selector bitmap, and `DisableButtons / Update / AddWindow` in place of
-  the older `swap_side` refresh. The asymmetric source-shape gate admits only
+  the older `swap_side` refresh. The former source-shape gate admitted only
   that whole replacement group and has negative controls for restoring the
   obsolete helper or deleting `AddWindow`.
   The handler constructor's DC line-514 body assignment also fixes a real
@@ -12965,6 +12965,18 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   chiefly a whole-loop ESI/EDI role mirror. Its 12 catalogued mutations are
   all byte-flat or worse. Preserve the recovered loops and common inner
   broadcast rather than duplicating statements to steer that allocator wall.
+
+- **2026-09-01 — retired the cross-compiler source-shape gate.** The former
+  `homm3.match.dc_source_shape` grew to 15,343 lines of per-function regular
+  expressions plus a 2,089-line admitted-debt ledger. It incorrectly made an
+  automated policy comparison between Dreamcast SH4/NB11 evidence and our
+  VC6 candidate source. Both files and the build hook are deleted. Dreamcast
+  records now populate the small compiler-neutral `homm3.debug-shape.v1` IR
+  for dossiers and future skeleton generators; the IR has no candidate or
+  retail fields. Candidate `/Z7` lines remain navigation labels only for the
+  candidate-vs-retail x86 diff. A separate generic cleanliness rule checks
+  only that each `INLINE_GATE` marker is enclosed by its immediate
+  `inline_depth(0)` / reset pair, with positive and negative controls.
 
 - **2026-07-23 — repo + toolchain distribution.** Private GitHub repo
   `sushi-shi/homm3-decomp` created and pushed; toolchain tarball published as

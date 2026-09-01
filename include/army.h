@@ -2118,8 +2118,7 @@ private:
     // LF_FIELDLIST 0x205b entries 237..249: the private data tail follows
     // every public and private method declaration.  The names at +0x4e8,
     // +0x4ec, +0x4f0 and +0x540 retain their established retail aliases;
-    // the order and access are the Dreamcast source facts enforced by the
-    // source-shape gate.
+    // the order and access are retained Dreamcast source facts.
     int morale;                           // +0x4e8, DC iMorale
     int luck;                             // +0x4ec, DC iLuck
     unsigned char field_4f0;              // +0x4f0, DC reset_this_round
