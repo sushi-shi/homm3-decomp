@@ -512,8 +512,14 @@ public:
     unsigned char OnBadVersionMsg(CNetMsg* pNetMsg);
     void OnPingMsg(CNetMsg* pNetMsg);
     void OnPingResponseMsg(CNetMsg* pNetMsg, unsigned char inPopup);
+    void ReceiveChat(unsigned long dpid, char* cChat,
+                     unsigned char inPopup);
+    void OnRequestHeroFaceMsg(CNetMsg* pNetMsg,
+                              unsigned char inPopup);
     void OnRequestHeroFaceReplyMsg(CNetMsg* pNetMsg,
                                    unsigned char inPopup);
+    void OnSetAGRMsg(CNetMsg* pNetMsg, unsigned char inPopup);
+    void OnTownUpdateMsg(CNetMsg* pNetMsg, unsigned char inPopup);
     unsigned char CheckMissingHeaders(unsigned long dpidHost);
     void SortMaps(int how, unsigned char sendSortMsg,
                   unsigned char bUpdate);
