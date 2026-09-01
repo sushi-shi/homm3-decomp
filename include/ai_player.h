@@ -211,11 +211,9 @@ struct HeroDestination {
     long move_cost;
     unsigned char is_nearby;
     unsigned char is_critical;
-#ifdef HOMM3_PHILAI_OBJ_DECLS
     // E:\\gamedcs\\ai_player.h:233 (dc 0x380f0). The source constructor is
-    // empty; Complete's /Ob2 therefore erases move_hero's call entirely.
+    // empty; Complete's /Ob2 therefore erases every call entirely.
     HeroDestination() {}
-#endif
 };
 
 long find_all_destinations(hero* current_hero, searchArray* search_array,

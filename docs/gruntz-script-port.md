@@ -12898,6 +12898,25 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   that receiver. Its negative controls reject a missing forward, a non-exact
   receiver, or deletion of any one helper.
 
+- **2026-09-01 — `find_all_destinations` restores its Dreamcast helper and
+  reaches 96.3651%.** The 1,947-byte body advances from its 35.9206% MAX after
+  restoring Dreamcast's four named locals, explicit search-type arms,
+  `searchArray` accessors, `hero::get_location`, statement grouping, and the
+  source-real `check_holy_grail` boundary. Complete VC6 expands that static
+  helper into its sole caller. Retail relocations then prove two bounded
+  revision changes inside the expansion: Complete calls `NewfullMap::cell`
+  directly and replaces Dreamcast's `AI_get_value_of_artifact` with
+  `AI_get_artifact_player_value`; both builds retain the source `max` mobility
+  operation. The asymmetric source-shape gate now canonicalizes that one
+  retail-proved call spelling even though the inline helper has no x86 claim,
+  with negative controls for omission, the obsolete spelling, and reversed
+  arguments. The checkpoint has **80 / 81 blocks** and **54 / 54 symbolic
+  branches**; its sole remaining structural delta is that retail retains the
+  first of three nested `vector<HeroDestination>::size()` calls in the loop's
+  Dreamcast-proven `push_back` expansion while the candidate retains the latter
+  two. Preserve the recovered source shape and solve that site-specific
+  inlining decision rather than replacing `push_back` or adding caller mass.
+
 - **2026-07-23 — repo + toolchain distribution.** Private GitHub repo
   `sushi-shi/homm3-decomp` created and pushed; toolchain tarball published as
   release `toolchain-vc6-sp3`. `homm3 init` now downloads it via `gh` when

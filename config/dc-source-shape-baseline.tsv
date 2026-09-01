@@ -348,11 +348,7 @@ call	ai_player.obj	0x32a84	searchArray::get_danger_value
 call	ai_player.obj	0x32a84	searchArray::get_visited_cell
 call	ai_player.obj	0x32a84	searchArray::get_visited_count
 call	ai_player.obj	0x32a84	type_obscuring_object::get_location
-call	ai_player.obj	0x33038	check_holy_grail
 call	ai_player.obj	0x33038	game::GetNumMapLevels
-call	ai_player.obj	0x33038	searchArray::get_visited_cell
-call	ai_player.obj	0x33038	searchArray::get_visited_count
-call	ai_player.obj	0x33038	type_obscuring_object::get_location
 call	ai_player.obj	0x341f4	type_AI_player::clear_magus_hut_value
 call	ai_player.obj	0x354bc	total_artifact_value
 call	ai_player.obj	0x36390	hero::get_value_of_power
