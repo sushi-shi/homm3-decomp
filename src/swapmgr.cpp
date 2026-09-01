@@ -338,7 +338,7 @@ void swapManager::Close()
     if (gHeroScreenDraggedArtifact.artifactId != -1)
     {
         heroes[0]->GiveArtifact(&gHeroScreenDraggedArtifact, 0, 0);
-        gHeroScreenDraggedArtifact.artifactId = -1;
+        gHeroScreenDraggedArtifact.artifactId = ARTIFACT_NONE;
     }
     border->Dispose();
     gpWindowManager->RemoveWindow(parent);
