@@ -401,6 +401,24 @@ public:
         : CNetMsg(id, size) {}
 };
 
+// Dreamcast CodeView names CMCMoveHero and its m_heroId/m_dir/m_standEnd/
+// m_point sequence. Complete keeps the same source object but packs the
+// point at +0x17 rather than Dreamcast's +0x18: OnMoveHero (0x481ed0) reads
+// the three byte fields at +0x14..+0x16 and compares the packed coordinate
+// through word loads at +0x17/+0x19. The unsigned/signed split is likewise
+// retail-proven by zero-extending heroId, sign-extending dir, and testing
+// standEnd as a byte before the MoveHero call.
+#pragma pack(push, 1)
+class CMCMoveHero : public CMapChange {
+public:
+    unsigned char m_heroId;
+    signed char m_dir;
+    unsigned char m_standEnd;
+    type_point m_point;
+};
+#pragma pack(pop)
+SIZE(CMCMoveHero, 0x1b);
+
 #ifdef HOMM3_EVENT_RECORD_NETMSG_DECLS
 // Dreamcast CodeView names both classes and both constructors
 // (netmsg.h:577 / netmsg.h:591, dc 0x8f2c8 / 0x8f2fc), and the constructors

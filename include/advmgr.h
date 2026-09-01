@@ -1998,6 +1998,10 @@ public:
                          type_point* trigger_point, int* bNoMove,
                          unsigned char bComputerMove, int* bFoughtBattle,
                          unsigned char bIsRemoteMove);
+    // cursor.obj's 0x481ed0 (cursor.cpp:1124, dc 0x7c1d8). Retail expands
+    // GetHero, get_location and type_point construction in the same nested
+    // order preserved by the Dreamcast line/scope stream.
+    void OnMoveHero(class CMapChange* change);
     // cursor.obj's 0x481be0 (cursor.cpp:1027, dc 0x7bee4), reached the
     // same way and located by an EXHAUSTIVE order-map over the whole
     // cursor.obj tail: DC GetMoveShowIt/end_move_hero/
