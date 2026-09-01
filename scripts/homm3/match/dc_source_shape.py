@@ -149,19 +149,23 @@ DO_SURRENDER_COMPLETE_RE = (
 ON_WIDGET_COMPLETE_DESKTOP_STORAGE_RE = (
     r"\A(?!.*\b(?:DSetCursorPos|EnumVMs|LoadCompleteVMFile|FindCurrentVM|"
     r"GetDeviceDesc|VMDeleteFile|VMSaveFile|SaveGame|StopAllSamples)\s*\()"
-    r".*?case\s+SSW_BACK\s*:.*?RemoteCleanup\s*\(\s*\)\s*;.*?"
+    r".*?case\s+SSW_BACK\s*:\s*msg\s*->\s*codeY\s*=\s*0x7801\s*;"
+    r"\s*\*\s*bExitFlag\s*=\s*1\s*;\s*if\s*\(\s*"
+    r"IsMultiPlayer\s*\(\s*\)\s*&&\s*!\s*m_flag65\s*\)\s*"
+    r"RemoteCleanup\s*\(\s*\)\s*;\s*if\s*\(\s*m_flag65\s*\)\s*"
     r"memset\s*\(\s*gUnnamed69fc2c\s*,\s*0\s*,\s*351\s*\)\s*;.*?"
-    r"case\s+SSW_BEGIN\s*:\s*if\s*\(\s*!\s*m_flag65\s*\)\s*\{\s*"
-    r"\*\s*bExitFlag\s*=\s*OnBeginGame\s*\(\s*\)\s*;\s*\}\s*else\s*"
-    r"\{\s*\*\s*bExitFlag\s*=\s*SaveValid\s*\(\s*"
+    r"case\s+SSW_BEGIN\s*:\s*if\s*\(\s*m_flag65\s*\)\s*\{\s*"
+    r"\*\s*bExitFlag\s*=\s*SaveValid\s*\(\s*"
     r"saveGameEdit\s*->\s*GetText\s*\(\s*\)\s*\)\s*;.*?"
-    r"gpMouseManager\s*->\s*SetPointer\s*\(.*?\)\s*;\s*\}\s*break\s*;"
+    r"gpMouseManager\s*->\s*SetPointer\s*\(.*?\)\s*;\s*\}\s*else\s*"
+    r"\{\s*\*\s*bExitFlag\s*=\s*OnBeginGame\s*\(\s*\)\s*;\s*\}"
+    r"\s*break\s*;"
     r".*?case\s+SSW_SCENARIO_OPTIONS\s*:\s*"
     r"SetupScenarioOptions\s*\(\s*0\s*\)\s*;.*?"
     r"case\s+SSW_GENERATE_RANDOM_MAP\s*:\s*\{\s*"
-    r"std\s*::\s*string\s+name\s*=\s*GetRandomMapName\s*\(\s*\)\s*;"
-    r"\s*if\s*\(\s*GenerateRandomMap\s*\(\s*name\.c_str\s*\(\s*\)"
-    r"\s*\)\s*\)\s*NormalDialog\s*\(")
+    r"if\s*\(\s*GenerateRandomMap\s*\(\s*GetRandomMapName\s*\(\s*\)"
+    r"\.c_str\s*\(\s*\)\s*\)\s*\)\s*NormalDialog\s*\(\s*"
+    r"gpGeneralText\s*->\s*GetText\s*\(\s*749\s*\)\s*,")
 
 # Complete moves the scenario/advanced/filter pane visibility work into
 # three setup helpers and adds its own filter pane. The four decoded selector
@@ -187,21 +191,124 @@ ON_WIDGET_COMPLETE_OPTION_PANES_RE = (
 ON_WIDGET_COMPLETE_TOWN_CYCLE_RE = (
     r"\A(?!.*\bHasMultipleTowns\s*\().*?"
     r"case\s+SSW_TOWN_PREV_FIRST\s*:.*?"
-    r"int\s+pos\s*=\s*msg\s*->\s*codeY\s*-\s*"
-    r"SSW_TOWN_PREV_FIRST\s*;.*?"
-    r"int\s+town\s*=\s*GetDisplayTown\s*\(\s*pos\s*\)\s*;\s*"
-    r"unsigned\s+int\s+legal\s*=\s*gpGame\s*->\s*mapHeader\."
-    r"playerSlotAttributes\s*\[\s*pos\s*\]\.legalAlignments\s*;\s*"
+    r"int\s+i\s*=\s*msg\s*->\s*codeY\s*-\s*SSW_TOWN_PREV_FIRST\s*;"
+    r"\s*CNetPlayerHandlerPlayer\s*\*\s*pThisPlayer\s*=\s*"
+    r"m_players\.GetPlayerInPos\s*\(\s*i\s*\)\s*;\s*"
+    r"if\s*\(\s*!\s*pThisPlayer\s*\)\s*pThisPlayer\s*=\s*"
+    r"m_players\.GetCompPlayerInPos\s*\(\s*i\s*\)\s*;\s*"
+    r"if\s*\(\s*pThisPlayer\s*\)\s*\{\s*"
+    r"pThisPlayer\s*->\s*heroIndex\s*=\s*-1\s*;\s*"
+    r"TTownType\s+townType\s*=\s*GetDisplayTown\s*\(\s*i\s*\)\s*;"
+    r"\s*int\s+legal\s*=\s*static_cast\s*<\s*unsigned\s+short\s*>\s*"
+    r"\(\s*gpGame\s*->\s*mapHeader\.playerSlotAttributes\s*"
+    r"\[\s*i\s*\]\.legalAlignments\s*\)\s*;\s*"
     r"if\s*\(\s*!\s*field_1898\s*\)\s*legal\s*&=\s*~\s*0x100\s*;"
-    r"\s*town\s*=\s*pick_prev_alignment\s*\(\s*legal\s*,.*?\)\s*;"
+    r"\s*townType\s*=\s*pick_prev_alignment\s*\(\s*legal\s*,\s*"
+    r"townType\s*\)\s*;\s*pThisPlayer\s*->\s*townIndex\s*=\s*"
+    r"townType\s*;\s*CTownUpdateMsg\s+netMsg\s*\(\s*i\s*,\s*"
+    r"townType\s*\)\s*;\s*TransmitRemoteDataDPID\s*\(\s*&\s*netMsg"
+    r"\s*,\s*0\s*,\s*false\s*,\s*true\s*\)\s*;\s*"
+    r"UpdateTown\s*\(\s*i\s*,\s*townType\s*,\s*0\s*\)\s*;\s*\}"
     r".*?case\s+SSW_TOWN_NEXT_FIRST\s*:.*?"
-    r"int\s+pos\s*=\s*msg\s*->\s*codeY\s*-\s*"
-    r"SSW_TOWN_NEXT_FIRST\s*;.*?"
-    r"int\s+town\s*=\s*GetDisplayTown\s*\(\s*pos\s*\)\s*;\s*"
-    r"unsigned\s+int\s+legal\s*=\s*gpGame\s*->\s*mapHeader\."
-    r"playerSlotAttributes\s*\[\s*pos\s*\]\.legalAlignments\s*;\s*"
+    r"int\s+i\s*=\s*msg\s*->\s*codeY\s*-\s*SSW_TOWN_NEXT_FIRST\s*;"
+    r"\s*CNetPlayerHandlerPlayer\s*\*\s*pThisPlayer\s*=\s*"
+    r"m_players\.GetPlayerInPos\s*\(\s*i\s*\)\s*;\s*"
+    r"if\s*\(\s*!\s*pThisPlayer\s*\)\s*pThisPlayer\s*=\s*"
+    r"m_players\.GetCompPlayerInPos\s*\(\s*i\s*\)\s*;\s*"
+    r"if\s*\(\s*pThisPlayer\s*\)\s*\{\s*"
+    r"pThisPlayer\s*->\s*heroIndex\s*=\s*-1\s*;\s*"
+    r"TTownType\s+townType\s*=\s*GetDisplayTown\s*\(\s*i\s*\)\s*;"
+    r"\s*int\s+legal\s*=\s*static_cast\s*<\s*unsigned\s+short\s*>\s*"
+    r"\(\s*gpGame\s*->\s*mapHeader\.playerSlotAttributes\s*"
+    r"\[\s*i\s*\]\.legalAlignments\s*\)\s*;\s*"
     r"if\s*\(\s*!\s*field_1898\s*\)\s*legal\s*&=\s*~\s*0x100\s*;"
-    r"\s*town\s*=\s*pick_next_alignment\s*\(\s*legal\s*,.*?\)\s*;")
+    r"\s*townType\s*=\s*pick_next_alignment\s*\(\s*legal\s*,\s*"
+    r"townType\s*\)\s*;\s*pThisPlayer\s*->\s*townIndex\s*=\s*"
+    r"townType\s*;\s*CTownUpdateMsg\s+netMsg\s*\(\s*i\s*,\s*"
+    r"townType\s*\)\s*;\s*TransmitRemoteDataDPID\s*\(\s*&\s*netMsg"
+    r"\s*,\s*0\s*,\s*false\s*,\s*true\s*\)\s*;\s*"
+    r"UpdateTown\s*\(\s*i\s*,\s*townType\s*,\s*0\s*\)\s*;\s*\}")
+
+# Complete's retail arm tests the transfer-state byte at +0x186c, not the
+# unrelated early-layout flag at +0x65. Dreamcast independently retains the
+# paused/chatShowing source condition and the paired TurnChat calls.
+ON_WIDGET_COMPLETE_CHAT_RE = (
+    r"case\s+SSW_CHAT_TOGGLE\s*:\s*if\s*\(\s*bVideoPaused\s*&&\s*"
+    r"!\s*receivingMaps\s*\)\s*\{\s*if\s*\(\s*chatShowing\s*\)\s*"
+    r"TurnChatOff\s*\(\s*1\s*\)\s*;\s*else\s*TurnChatOn\s*\(\s*1\s*\)")
+
+# Dreamcast lines 5699-5712 and Complete's two adjacent retail arms agree:
+# name selection returns after OnNameClick, while player-position selection
+# redraws through Update after OnPlayerPosClick.
+ON_WIDGET_SHARED_NAME_POSITION_RE = (
+    r"case\s+SSW_NAME_FIRST\s*:.*?OnNameClick\s*\(.*?\)\s*;\s*"
+    r"break\s*;\s*case\s+SSW_PLAYER_POS_FIRST\s*:.*?"
+    r"OnPlayerPosClick\s*\(.*?\)\s*;\s*Update\s*\(\s*\)\s*;\s*"
+    r"break\s*;")
+
+# Complete 0x580430 is a real no-argument member boundary: each caller loads
+# this into ECX, and the body rebuilds player-slot/header state from the
+# filter block. Retail calls it after the concrete player, human and team
+# selectors, but not after their following "Any" arms.
+ON_WIDGET_COMPLETE_PLAYER_FILTER_REBUILD_RE = (
+    r"case\s+SSW_FILTER_PLAYERS_FIRST\s*:.*?field_18A0\s*\[\s*2\s*\]"
+    r"\s*=\s*msg\s*->\s*codeY\s*-\s*SSW_FILTER_PLAYERS_FIRST\s*"
+    r"\+\s*1\s*;\s*UpdateFilterWidgets\s*\(\s*\)\s*;.*?"
+    r"Update\s*\(\s*\)\s*;\s*RebuildFilteredPlayerSetup\s*\(\s*\)"
+    r"\s*;\s*break\s*;\s*case\s+SSW_FILTER_PLAYERS_ANY\s*:.*?"
+    r"case\s+SSW_FILTER_HUMANS_FIRST\s*:.*?field_18A0\s*\[\s*3\s*\]"
+    r"\s*=\s*msg\s*->\s*codeY\s*-\s*SSW_FILTER_HUMANS_FIRST\s*;\s*"
+    r"UpdateFilterWidgets\s*\(\s*\)\s*;.*?Update\s*\(\s*\)\s*;\s*"
+    r"RebuildFilteredPlayerSetup\s*\(\s*\)\s*;\s*break\s*;\s*"
+    r"case\s+SSW_FILTER_HUMANS_ANY\s*:.*?"
+    r"case\s+SSW_FILTER_TEAMS_FIRST\s*:.*?field_18A0\s*\[\s*4\s*\]"
+    r"\s*=\s*msg\s*->\s*codeY\s*-\s*SSW_FILTER_TEAMS_FIRST\s*;\s*"
+    r"UpdateFilterWidgets\s*\(\s*\)\s*;.*?Update\s*\(\s*\)\s*;\s*"
+    r"RebuildFilteredPlayerSetup\s*\(\s*\)\s*;\s*break\s*;\s*"
+    r"case\s+SSW_FILTER_TEAMS_ANY\s*:")
+
+# Complete's file-row double-click path has two distinct GameTime::Get call
+# relocations: the elapsed test and the later clickTime assignment. A cached
+# timeGetTime local collapses a real source statement and is not equivalent.
+ON_WIDGET_COMPLETE_FILE_ROW_TIMING_RE = (
+    r"\A(?!.*\btimeGetTime\s*\().*?case\s+SSW_FILE_ROW_FIRST\s*:.*?"
+    r"if\s*\(\s*static_cast\s*<\s*int\s*>\s*\(\s*GameTime\s*::\s*"
+    r"Get\s*\(\s*\)\s*-\s*clickTime\s*\)\s*<\s*400\s*\)\s*\{\s*"
+    r"\*\s*bExitFlag\s*=\s*OnBeginGame\s*\(\s*\)\s*;\s*\}\s*"
+    r"else\s*\{\s*clickTime\s*=\s*GameTime\s*::\s*Get\s*\(\s*\)\s*;"
+    r".*?SetCurrentMap\s*\(")
+
+# Dreamcast CodeView exposes separate i/pThisPlayer/noHero locals for both
+# bonus-cycle arms and nests the CSetAGRMsg lifetime under the surviving
+# player guard. Complete's retail branches are compatible with that scope.
+ON_WIDGET_SHARED_BONUS_SCOPES_RE = (
+    r"case\s+SSW_BONUS_PREV_FIRST\s*:.*?int\s+i\s*=\s*msg\s*->\s*"
+    r"codeY\s*-\s*SSW_BONUS_PREV_FIRST\s*;\s*"
+    r"CNetPlayerHandlerPlayer\s*\*\s*pThisPlayer\s*=\s*m_players\."
+    r"GetPlayerInPos\s*\(\s*i\s*\)\s*;\s*if\s*\(\s*!\s*pThisPlayer"
+    r"\s*\)\s*pThisPlayer\s*=\s*m_players\.GetCompPlayerInPos\s*"
+    r"\(\s*i\s*\)\s*;\s*if\s*\(\s*pThisPlayer\s*\)\s*\{\s*"
+    r"unsigned\s+char\s+noHero\s*=\s*pThisPlayer\s*->\s*heroIndex"
+    r"\s*==\s*-1\s*&&\s*!\s*HasRandomHero\s*\(\s*i\s*\)\s*&&\s*"
+    r"!\s*HasNonRandomHero\s*\(\s*i\s*\)\s*;.*?"
+    r"if\s*\(\s*bVideoPaused\s*\)\s*\{\s*CSetAGRMsg\s+msg\s*\("
+    r"\s*i\s*,\s*pThisPlayer\s*->\s*startBonusIndex\s*\)\s*;\s*"
+    r"TransmitRemoteDataDPID\s*\(\s*&\s*msg\s*,.*?\)\s*;\s*\}\s*"
+    r"DrawHeroAdvancedOption\s*\(\s*i\s*,\s*1\s*,\s*-1\s*\)\s*;"
+    r"\s*\}\s*break\s*;.*?case\s+SSW_BONUS_NEXT_FIRST\s*:.*?"
+    r"int\s+i\s*=\s*msg\s*->\s*codeY\s*-\s*SSW_BONUS_NEXT_FIRST"
+    r"\s*;\s*CNetPlayerHandlerPlayer\s*\*\s*pThisPlayer\s*=\s*"
+    r"m_players\.GetPlayerInPos\s*\(\s*i\s*\)\s*;\s*if\s*\(\s*!\s*"
+    r"pThisPlayer\s*\)\s*pThisPlayer\s*=\s*m_players\."
+    r"GetCompPlayerInPos\s*\(\s*i\s*\)\s*;\s*if\s*\(\s*pThisPlayer"
+    r"\s*\)\s*\{\s*unsigned\s+char\s+noHero\s*=\s*pThisPlayer\s*"
+    r"->\s*heroIndex\s*==\s*-1\s*&&\s*!\s*HasRandomHero\s*\(\s*i"
+    r"\s*\)\s*&&\s*!\s*HasNonRandomHero\s*\(\s*i\s*\)\s*;.*?"
+    r"if\s*\(\s*bVideoPaused\s*\)\s*\{\s*CSetAGRMsg\s+msg\s*\("
+    r"\s*i\s*,\s*pThisPlayer\s*->\s*startBonusIndex\s*\)\s*;\s*"
+    r"TransmitRemoteDataDPID\s*\(\s*&\s*msg\s*,.*?\)\s*;\s*\}\s*"
+    r"DrawHeroAdvancedOption\s*\(\s*i\s*,\s*1\s*,\s*-1\s*\)\s*;"
+    r"\s*\}\s*break\s*;")
 
 # Dreamcast's line table and the retail x86 jump-table arm layout agree on
 # this shared source order.  The candidate switch preserves source-arm order,
@@ -209,8 +316,8 @@ ON_WIDGET_COMPLETE_TOWN_CYCLE_RE = (
 ON_WIDGET_SHARED_SWITCH_ORDER_RE = (
     r"case\s+SSW_BACK\s*:.*?IsMultiPlayer\s*\(\s*\).*?"
     r"RemoteCleanup\s*\(\s*\)\s*;.*?"
-    r"case\s+SSW_BEGIN\s*:.*?OnBeginGame\s*\(\s*\)\s*;.*?"
-    r"SaveValid\s*\(.*?\)\s*;.*?"
+    r"case\s+SSW_BEGIN\s*:.*?SaveValid\s*\(.*?\)\s*;.*?"
+    r"OnBeginGame\s*\(\s*\)\s*;.*?"
     r"case\s+SSW_TOWN_PREV_FIRST\s*:.*?"
     r"pick_prev_alignment\s*\(.*?"
     r"case\s+SSW_TOWN_NEXT_FIRST\s*:.*?"
@@ -220,6 +327,7 @@ ON_WIDGET_SHARED_SWITCH_ORDER_RE = (
     r"case\s+SSW_DIFFICULTY_FIRST\s*:.*?"
     r"SetDifficultyHiLite\s*\(\s*\)\s*;\s*"
     r"SendSetupInfo\s*\(\s*0\s*\)\s*;\s*"
+    r"DrawWindow\s*\(\s*0\s*,\s*0xffff0001\s*,\s*0xffff\s*\)\s*;\s*"
     r"Update\s*\(\s*\)\s*;\s*break\s*;\s*"
     r"case\s+SSW_SCENARIO_OPTIONS\s*:.*?"
     r"SetupScenarioOptions\s*\(\s*0\s*\)\s*;.*?"
@@ -3755,11 +3863,43 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             "name/generation/dialog statement order while Dreamcast's "
             "earlier VM dialogs are classified separately",
             r"case\s+SSW_GENERATE_RANDOM_MAP\s*:\s*\{\s*"
-            r"std\s*::\s*string\s+name\s*=\s*"
-            r"GetRandomMapName\s*\(\s*\)\s*;\s*"
             r"if\s*\(\s*GenerateRandomMap\s*\(\s*"
-            r"name\.c_str\s*\(\s*\)\s*\)\s*\)\s*"
-            r"NormalDialog\s*\(", 1, 1),
+            r"GetRandomMapName\s*\(\s*\)\.c_str\s*\(\s*\)\s*\)\s*\)\s*"
+            r"NormalDialog\s*\(\s*gpGeneralText\s*->\s*GetText\s*"
+            r"\(\s*749\s*\)\s*,", 1, 1),
+        SourceRule(
+            "OnWidgetDeselect keeps the retail-proven receivingMaps guard "
+            "and Dreamcast-proven chatShowing TurnChat pair",
+            ON_WIDGET_COMPLETE_CHAT_RE, 1, 1),
+        SourceRule(
+            "OnWidgetDeselect keeps Dreamcast and Complete's shared "
+            "OnNameClick / OnPlayerPosClick / Update statement grouping",
+            ON_WIDGET_SHARED_NAME_POSITION_RE, 1, 1),
+        SourceRule(
+            "OnWidgetDeselect keeps Complete's three retail-proven "
+            "player-filter rebuild boundaries outside the following Any "
+            "arms",
+            ON_WIDGET_COMPLETE_PLAYER_FILTER_REBUILD_RE, 1, 1),
+        SourceRule(
+            "OnWidgetDeselect has exactly the three retail-proven calls to "
+            "the provisional RebuildFilteredPlayerSetup boundary",
+            r"\bRebuildFilteredPlayerSetup\s*\(\s*\)", 3, 3),
+        SourceRule(
+            "OnWidgetDeselect keeps Complete's two-statement GameTime file-"
+            "row timing shape and rejects the cached timeGetTime rewrite",
+            ON_WIDGET_COMPLETE_FILE_ROW_TIMING_RE, 1, 1),
+        SourceRule(
+            "OnWidgetDeselect has exactly the two retail-proven GameTime::Get "
+            "calls in the file-row double-click arm",
+            r"\bGameTime\s*::\s*Get\s*\(\s*\)", 2, 2),
+        SourceRule(
+            "OnWidgetDeselect does not use timeGetTime after Complete's "
+            "GameTime::Get relocations were decoded",
+            r"\btimeGetTime\s*\(", 0, 0),
+        SourceRule(
+            "OnWidgetDeselect keeps Dreamcast's paired bonus-arm locals, "
+            "player guards and block-scoped CSetAGRMsg lifetimes",
+            ON_WIDGET_SHARED_BONUS_SCOPES_RE, 1, 1),
     ),
     ("swapmgr.obj", 0x15D150): (
         SourceRule(
@@ -5651,27 +5791,31 @@ def selftest() -> list[str]:
 
     desktop_storage_probe = """\
 case SSW_BACK:
-    RemoteCleanup();
-    memset(gUnnamed69fc2c, 0, 351);
+    msg->codeY = 0x7801;
+    *bExitFlag = 1;
+    if (IsMultiPlayer() && !m_flag65)
+        RemoteCleanup();
+    if (m_flag65)
+        memset(gUnnamed69fc2c, 0, 351);
 case SSW_BEGIN:
-    if (!m_flag65) {
-        *bExitFlag = OnBeginGame();
-    } else {
+    if (m_flag65) {
         *bExitFlag = SaveValid(saveGameEdit->GetText());
         gpMouseManager->SetPointer(1, mouseManager::ADVENTURE_SET);
+    } else {
+        *bExitFlag = OnBeginGame();
     }
     break;
 case SSW_SCENARIO_OPTIONS:
     SetupScenarioOptions(0);
 case SSW_GENERATE_RANDOM_MAP: {
-    std::string name = GetRandomMapName();
-    if (GenerateRandomMap(name.c_str()))
-        NormalDialog(text, 0, 1);
+    if (GenerateRandomMap(GetRandomMapName().c_str()))
+        NormalDialog(gpGeneralText->GetText(749), 0, 1);
 }
 """
     check_on_widget_rule(
         ON_WIDGET_COMPLETE_DESKTOP_STORAGE_RE, desktop_storage_probe,
-        desktop_storage_probe.replace("NormalDialog(text, 0, 1);", ""),
+        desktop_storage_probe.replace(
+            "NormalDialog(gpGeneralText->GetText(749), 0, 1);", ""),
         "desktop-storage replacement")
     check_on_widget_rule(
         ON_WIDGET_COMPLETE_DESKTOP_STORAGE_RE, desktop_storage_probe,
@@ -5696,41 +5840,190 @@ case SSW_RANDOM_MAPS:
 
     town_cycle_probe = """\
 case SSW_TOWN_PREV_FIRST:
-    int pos = msg->codeY - SSW_TOWN_PREV_FIRST;
-    int town = GetDisplayTown(pos);
-    unsigned int legal =
-        gpGame->mapHeader.playerSlotAttributes[pos].legalAlignments;
-    if (!field_1898)
-        legal &= ~0x100;
-    town = pick_prev_alignment(legal, town);
+    int i = msg->codeY - SSW_TOWN_PREV_FIRST;
+    CNetPlayerHandlerPlayer* pThisPlayer = m_players.GetPlayerInPos(i);
+    if (!pThisPlayer)
+        pThisPlayer = m_players.GetCompPlayerInPos(i);
+    if (pThisPlayer) {
+        pThisPlayer->heroIndex = -1;
+        TTownType townType = GetDisplayTown(i);
+        int legal = static_cast<unsigned short>(
+            gpGame->mapHeader.playerSlotAttributes[i].legalAlignments);
+        if (!field_1898)
+            legal &= ~0x100;
+        townType = pick_prev_alignment(legal, townType);
+        pThisPlayer->townIndex = townType;
+        CTownUpdateMsg netMsg(i, townType);
+        TransmitRemoteDataDPID(&netMsg, 0, false, true);
+        UpdateTown(i, townType, 0);
+    }
 case SSW_TOWN_NEXT_FIRST:
-    int pos = msg->codeY - SSW_TOWN_NEXT_FIRST;
-    int town = GetDisplayTown(pos);
-    unsigned int legal =
-        gpGame->mapHeader.playerSlotAttributes[pos].legalAlignments;
-    if (!field_1898)
-        legal &= ~0x100;
-    town = pick_next_alignment(legal, town);
+    int i = msg->codeY - SSW_TOWN_NEXT_FIRST;
+    CNetPlayerHandlerPlayer* pThisPlayer = m_players.GetPlayerInPos(i);
+    if (!pThisPlayer)
+        pThisPlayer = m_players.GetCompPlayerInPos(i);
+    if (pThisPlayer) {
+        pThisPlayer->heroIndex = -1;
+        TTownType townType = GetDisplayTown(i);
+        int legal = static_cast<unsigned short>(
+            gpGame->mapHeader.playerSlotAttributes[i].legalAlignments);
+        if (!field_1898)
+            legal &= ~0x100;
+        townType = pick_next_alignment(legal, townType);
+        pThisPlayer->townIndex = townType;
+        CTownUpdateMsg netMsg(i, townType);
+        TransmitRemoteDataDPID(&netMsg, 0, false, true);
+        UpdateTown(i, townType, 0);
+    }
 """
     check_on_widget_rule(
         ON_WIDGET_COMPLETE_TOWN_CYCLE_RE, town_cycle_probe,
-        town_cycle_probe.replace("town = pick_next_alignment(legal, town);",
-                                 "town = town + 1;"),
+        town_cycle_probe.replace(
+            "townType = pick_next_alignment(legal, townType);",
+            "townType = static_cast<TTownType>(townType + 1);"),
         "nine-town cycle replacement")
     check_on_widget_rule(
         ON_WIDGET_COMPLETE_TOWN_CYCLE_RE, town_cycle_probe,
         town_cycle_probe.replace(
             "case SSW_TOWN_PREV_FIRST:",
-            "HasMultipleTowns(pos); case SSW_TOWN_PREV_FIRST:"),
+            "HasMultipleTowns(i); case SSW_TOWN_PREV_FIRST:"),
         "town-cycle obsolete-call rejection")
+
+    chat_probe = """\
+case SSW_CHAT_TOGGLE:
+    if (bVideoPaused && !receivingMaps) {
+        if (chatShowing)
+            TurnChatOff(1);
+        else
+            TurnChatOn(1);
+    }
+"""
+    check_on_widget_rule(
+        ON_WIDGET_COMPLETE_CHAT_RE, chat_probe,
+        chat_probe.replace("!receivingMaps", "!m_flag65"),
+        "retail receivingMaps chat guard")
+
+    name_position_probe = """\
+case SSW_NAME_FIRST:
+    OnNameClick(msg->codeY - SSW_NAME_FIRST);
+    break;
+case SSW_PLAYER_POS_FIRST:
+    OnPlayerPosClick(msg->codeY - SSW_PLAYER_POS_FIRST);
+    Update();
+    break;
+"""
+    check_on_widget_rule(
+        ON_WIDGET_SHARED_NAME_POSITION_RE, name_position_probe,
+        name_position_probe.replace(
+            "OnNameClick(msg->codeY - SSW_NAME_FIRST);\n    break;",
+            "OnNameClick(msg->codeY - SSW_NAME_FIRST);\n    Update();\n"
+            "    break;").replace(
+                "OnPlayerPosClick(msg->codeY - SSW_PLAYER_POS_FIRST);\n"
+                "    Update();",
+                "OnPlayerPosClick(msg->codeY - SSW_PLAYER_POS_FIRST);"),
+        "shared name/player-position statement grouping")
+
+    file_row_timing_probe = """\
+case SSW_FILE_ROW_FIRST:
+    if (static_cast<int>(GameTime::Get() - clickTime) < 400) {
+        *bExitFlag = OnBeginGame();
+    } else {
+        clickTime = GameTime::Get();
+        if (valid)
+            SetCurrentMap(map, 1);
+    }
+"""
+    check_on_widget_rule(
+        ON_WIDGET_COMPLETE_FILE_ROW_TIMING_RE, file_row_timing_probe,
+        file_row_timing_probe.replace(
+            "clickTime = GameTime::Get();", "clickTime = now;"),
+        "retail two-call GameTime file-row timing")
+
+    bonus_scopes_probe = """\
+case SSW_BONUS_PREV_FIRST:
+    int i = msg->codeY - SSW_BONUS_PREV_FIRST;
+    CNetPlayerHandlerPlayer* pThisPlayer = m_players.GetPlayerInPos(i);
+    if (!pThisPlayer)
+        pThisPlayer = m_players.GetCompPlayerInPos(i);
+    if (pThisPlayer) {
+        unsigned char noHero = pThisPlayer->heroIndex == -1
+            && !HasRandomHero(i) && !HasNonRandomHero(i);
+        UpdatePreviousBonus(noHero);
+        if (bVideoPaused) {
+            CSetAGRMsg msg(i, pThisPlayer->startBonusIndex);
+            TransmitRemoteDataDPID(&msg, 0, false, true);
+        }
+        DrawHeroAdvancedOption(i, 1, -1);
+    }
+    break;
+case SSW_BONUS_NEXT_FIRST:
+    int i = msg->codeY - SSW_BONUS_NEXT_FIRST;
+    CNetPlayerHandlerPlayer* pThisPlayer = m_players.GetPlayerInPos(i);
+    if (!pThisPlayer)
+        pThisPlayer = m_players.GetCompPlayerInPos(i);
+    if (pThisPlayer) {
+        unsigned char noHero = pThisPlayer->heroIndex == -1
+            && !HasRandomHero(i) && !HasNonRandomHero(i);
+        UpdateNextBonus(noHero);
+        if (bVideoPaused) {
+            CSetAGRMsg msg(i, pThisPlayer->startBonusIndex);
+            TransmitRemoteDataDPID(&msg, 0, false, true);
+        }
+        DrawHeroAdvancedOption(i, 1, -1);
+    }
+    break;
+"""
+    check_on_widget_rule(
+        ON_WIDGET_SHARED_BONUS_SCOPES_RE, bonus_scopes_probe,
+        bonus_scopes_probe.replace(
+            "if (pThisPlayer) {\n        unsigned char noHero",
+            "if (!pThisPlayer) return 0;\n    unsigned char noHero", 1),
+        "shared paired bonus scopes")
+
+    player_filter_rebuild_probe = """\
+case SSW_FILTER_PLAYERS_FIRST:
+    field_18A0[2] = msg->codeY - SSW_FILTER_PLAYERS_FIRST + 1;
+    UpdateFilterWidgets(); DrawWindow(); Update();
+    RebuildFilteredPlayerSetup();
+    break;
+case SSW_FILTER_PLAYERS_ANY:
+    field_18A0[2] = -1;
+case SSW_FILTER_HUMANS_FIRST:
+    field_18A0[3] = msg->codeY - SSW_FILTER_HUMANS_FIRST;
+    UpdateFilterWidgets(); DrawWindow(); Update();
+    RebuildFilteredPlayerSetup();
+    break;
+case SSW_FILTER_HUMANS_ANY:
+    field_18A0[3] = -1;
+case SSW_FILTER_TEAMS_FIRST:
+    field_18A0[4] = msg->codeY - SSW_FILTER_TEAMS_FIRST;
+    UpdateFilterWidgets(); DrawWindow(); Update();
+    RebuildFilteredPlayerSetup();
+    break;
+case SSW_FILTER_TEAMS_ANY:
+    field_18A0[4] = -1;
+"""
+    check_on_widget_rule(
+        ON_WIDGET_COMPLETE_PLAYER_FILTER_REBUILD_RE,
+        player_filter_rebuild_probe,
+        player_filter_rebuild_probe.replace(
+            "UpdateFilterWidgets(); DrawWindow(); Update();\n"
+            "    RebuildFilteredPlayerSetup();",
+            "UpdateFilterWidgets(); DrawWindow(); Update();", 1),
+        "retail player-filter rebuild placement")
+    on_widget_key = ("singleselectionwindow.obj", 0x13C79C)
+    if not any(rule.minimum == 3 and rule.maximum == 3
+               and "RebuildFilteredPlayerSetup" in rule.pattern
+               for rule in SOURCE_RULES[on_widget_key]):
+        failures.append("unregistered player-filter rebuild call count")
 
     shared_switch_probe = """\
 case SSW_BACK:
     IsMultiPlayer();
     RemoteCleanup();
 case SSW_BEGIN:
-    OnBeginGame();
     SaveValid(saveGameEdit->GetText());
+    OnBeginGame();
 case SSW_TOWN_PREV_FIRST:
     pick_prev_alignment(legal, town);
 case SSW_TOWN_NEXT_FIRST:
@@ -5742,6 +6035,7 @@ case SSW_HERO_NEXT_FIRST:
 case SSW_DIFFICULTY_FIRST:
     SetDifficultyHiLite();
     SendSetupInfo(0);
+    DrawWindow(0, 0xffff0001, 0xffff);
     Update();
     break;
 case SSW_SCENARIO_OPTIONS:

@@ -4125,25 +4125,21 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
 
     switch (msg->codeY) {
     case SSW_BACK:
-        msg->id = 0x7801;
+        msg->codeY = 0x7801;
         *bExitFlag = 1;
-        if (!IsMultiPlayer()) {
-            if (!m_flag65)
-                return 0;
-        } else if (!m_flag65) {
+        if (IsMultiPlayer() && !m_flag65)
             RemoteCleanup();
-            return 0;
-        }
-        memset(gUnnamed69fc2c, 0, 351);
+        if (m_flag65)
+            memset(gUnnamed69fc2c, 0, 351);
         break;
 
     case SSW_BEGIN:
-        if (!m_flag65) {
-            *bExitFlag = OnBeginGame();
-        } else {
+        if (m_flag65) {
             *bExitFlag = SaveValid(saveGameEdit->GetText());
             if (*bExitFlag)
                 gpMouseManager->SetPointer(1, mouseManager::ADVENTURE_SET);
+        } else {
+            *bExitFlag = OnBeginGame();
         }
         break;
 
@@ -4155,24 +4151,23 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
     case SSW_TOWN_PREV_FIRST + 5:
     case SSW_TOWN_PREV_FIRST + 6:
     case SSW_TOWN_PREV_LAST: {
-        int pos = msg->codeY - SSW_TOWN_PREV_FIRST;
-        CNetPlayerHandlerPlayer* player = m_players.GetPlayerInPos(pos);
-        if (!player)
-            player = m_players.GetCompPlayerInPos(pos);
-        if (!player)
-            return 0;
-        player->heroIndex = -1;
-        int town = GetDisplayTown(pos);
-        unsigned int legal =
-            gpGame->mapHeader.playerSlotAttributes[pos].legalAlignments;
-        if (!field_1898)
-            legal &= ~0x100;
-        town = pick_prev_alignment(
-            legal,
-            static_cast<TTownType>(town) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
-        CTownUpdateMsg netMsg(pos, town);
-        TransmitRemoteDataDPID(&netMsg, 0, false, true);
-        UpdateTown(pos, town, 0);
+        int i = msg->codeY - SSW_TOWN_PREV_FIRST;
+        CNetPlayerHandlerPlayer* pThisPlayer = m_players.GetPlayerInPos(i);
+        if (!pThisPlayer)
+            pThisPlayer = m_players.GetCompPlayerInPos(i);
+        if (pThisPlayer) {
+            pThisPlayer->heroIndex = -1;
+            TTownType townType = GetDisplayTown(i);
+            int legal = static_cast<unsigned short>(
+                gpGame->mapHeader.playerSlotAttributes[i].legalAlignments);
+            if (!field_1898)
+                legal &= ~0x100;
+            townType = pick_prev_alignment(legal, townType);
+            pThisPlayer->townIndex = townType;
+            CTownUpdateMsg netMsg(i, townType);
+            TransmitRemoteDataDPID(&netMsg, 0, false, true);
+            UpdateTown(i, townType, 0);
+        }
         break;
     }
     case SSW_TOWN_NEXT_FIRST:
@@ -4183,24 +4178,23 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
     case SSW_TOWN_NEXT_FIRST + 5:
     case SSW_TOWN_NEXT_FIRST + 6:
     case SSW_TOWN_NEXT_LAST: {
-        int pos = msg->codeY - SSW_TOWN_NEXT_FIRST;
-        CNetPlayerHandlerPlayer* player = m_players.GetPlayerInPos(pos);
-        if (!player)
-            player = m_players.GetCompPlayerInPos(pos);
-        if (!player)
-            return 0;
-        player->heroIndex = -1;
-        int town = GetDisplayTown(pos);
-        unsigned int legal =
-            gpGame->mapHeader.playerSlotAttributes[pos].legalAlignments;
-        if (!field_1898)
-            legal &= ~0x100;
-        town = pick_next_alignment(
-            legal,
-            static_cast<TTownType>(town) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
-        CTownUpdateMsg netMsg(pos, town);
-        TransmitRemoteDataDPID(&netMsg, 0, false, true);
-        UpdateTown(pos, town, 0);
+        int i = msg->codeY - SSW_TOWN_NEXT_FIRST;
+        CNetPlayerHandlerPlayer* pThisPlayer = m_players.GetPlayerInPos(i);
+        if (!pThisPlayer)
+            pThisPlayer = m_players.GetCompPlayerInPos(i);
+        if (pThisPlayer) {
+            pThisPlayer->heroIndex = -1;
+            TTownType townType = GetDisplayTown(i);
+            int legal = static_cast<unsigned short>(
+                gpGame->mapHeader.playerSlotAttributes[i].legalAlignments);
+            if (!field_1898)
+                legal &= ~0x100;
+            townType = pick_next_alignment(legal, townType);
+            pThisPlayer->townIndex = townType;
+            CTownUpdateMsg netMsg(i, townType);
+            TransmitRemoteDataDPID(&netMsg, 0, false, true);
+            UpdateTown(i, townType, 0);
+        }
         break;
     }
 
@@ -4212,17 +4206,19 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
     case SSW_HERO_PREV_FIRST + 5:
     case SSW_HERO_PREV_FIRST + 6:
     case SSW_HERO_PREV_LAST: {
-        int pos = msg->codeY - SSW_HERO_PREV_FIRST;
         if (!IsHost()) {
             CRequestHeroFaceMsg netMsg(-1);
             TransmitRemoteDataDPID(&netMsg, 0, false, true);
         } else {
-            CNetPlayerHandlerPlayer* player = m_players.GetPlayerInPos(pos);
-            if (player) {
-                GetHeroFace(-1, player);
-                CRequestHeroFaceReplyMsg netMsg(pos, player->heroIndex);
+            int clickPos = msg->codeY - SSW_HERO_PREV_FIRST;
+            CNetPlayerHandlerPlayer* pThisPlayer =
+                m_players.GetPlayerInPos(clickPos);
+            if (pThisPlayer) {
+                GetHeroFace(-1, pThisPlayer);
+                CRequestHeroFaceReplyMsg netMsg(
+                    pThisPlayer->playerPos, pThisPlayer->heroIndex);
                 TransmitRemoteDataDPID(&netMsg, 0, false, true);
-                DrawHeroAdvancedOption(pos, 1, -1);
+                DrawHeroAdvancedOption(clickPos, 1, -1);
             }
         }
         break;
@@ -4235,17 +4231,19 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
     case SSW_HERO_NEXT_FIRST + 5:
     case SSW_HERO_NEXT_FIRST + 6:
     case SSW_HERO_NEXT_LAST: {
-        int pos = msg->codeY - SSW_HERO_NEXT_FIRST;
         if (!IsHost()) {
             CRequestHeroFaceMsg netMsg(1);
             TransmitRemoteDataDPID(&netMsg, 0, false, true);
         } else {
-            CNetPlayerHandlerPlayer* player = m_players.GetPlayerInPos(pos);
-            if (player) {
-                GetHeroFace(1, player);
-                CRequestHeroFaceReplyMsg netMsg(pos, player->heroIndex);
+            int clickPos = msg->codeY - SSW_HERO_NEXT_FIRST;
+            CNetPlayerHandlerPlayer* pThisPlayer =
+                m_players.GetPlayerInPos(clickPos);
+            if (pThisPlayer) {
+                GetHeroFace(1, pThisPlayer);
+                CRequestHeroFaceReplyMsg netMsg(
+                    pThisPlayer->playerPos, pThisPlayer->heroIndex);
                 TransmitRemoteDataDPID(&netMsg, 0, false, true);
-                DrawHeroAdvancedOption(pos, 1, -1);
+                DrawHeroAdvancedOption(clickPos, 1, -1);
             }
         }
         break;
@@ -4261,6 +4259,7 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
         lastDiff = gpGame->setup.difficulty;
         SetDifficultyHiLite();
         SendSetupInfo(0);
+        DrawWindow(0, 0xffff0001, 0xffff);
         Update();
         break;
 
@@ -4282,9 +4281,12 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
         break;
 
     case SSW_GENERATE_RANDOM_MAP: {
-        std::string name = GetRandomMapName();
-        if (GenerateRandomMap(name.c_str()))
-            NormalDialog(0, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        // Measured negative (2026-09-01): statement-scoped inline_depth(1)
+        // is byte-flat and does not preserve retail's nested _Tidy call.
+        // Do not retain an inert INLINE_GATE here.
+        if (GenerateRandomMap(GetRandomMapName().c_str()))
+            NormalDialog(gpGeneralText->GetText(749),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         break;
     }
 
@@ -4331,6 +4333,7 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
         UpdateFilterWidgets();
         DrawWindow(0, 0xffff0001, 0xffff);
         Update();
+        RebuildFilteredPlayerSetup();
         break;
     case SSW_FILTER_PLAYERS_ANY:
         field_18A0[2] = -1;
@@ -4350,6 +4353,7 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
         UpdateFilterWidgets();
         DrawWindow(0, 0xffff0001, 0xffff);
         Update();
+        RebuildFilteredPlayerSetup();
         break;
     case SSW_FILTER_HUMANS_ANY:
         field_18A0[3] = -1;
@@ -4369,6 +4373,7 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
         UpdateFilterWidgets();
         DrawWindow(0, 0xffff0001, 0xffff);
         Update();
+        RebuildFilteredPlayerSetup();
         break;
     case SSW_FILTER_TEAMS_ANY:
         field_18A0[4] = -1;
@@ -4424,7 +4429,7 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
         break;
 
     case SSW_CHAT_TOGGLE:
-        if (bVideoPaused && !m_flag65) {
+        if (bVideoPaused && !receivingMaps) {
             if (chatShowing)
                 TurnChatOff(1);
             else
@@ -4471,7 +4476,6 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
     case SSW_NAME_FIRST + 6:
     case SSW_NAME_LAST:
         OnNameClick(msg->codeY - SSW_NAME_FIRST);
-        Update();
         break;
 
     case SSW_PLAYER_POS_FIRST:
@@ -4483,6 +4487,7 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
     case SSW_PLAYER_POS_FIRST + 6:
     case SSW_PLAYER_POS_LAST:
         OnPlayerPosClick(msg->codeY - SSW_PLAYER_POS_FIRST);
+        Update();
         break;
 
     case SSW_SORT_NAME:
@@ -4522,17 +4527,19 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
     case SSW_FILE_ROW_FIRST + 15:
     case SSW_FILE_ROW_FIRST + 16:
     case SSW_FILE_ROW_LAST: {
+        // Measured negative (2026-09-01): repeating this expression because
+        // DC does not expose the local drops 91.15 -> 89.04; CodeView locals
+        // are a lower bound and retail carries one computed map index.
         unsigned int map = msg->codeY - SSW_FILE_ROW_FIRST + currentIndex;
         if (m_flag65) {
             field_68 = msg->codeY - SSW_FILE_ROW_FIRST;
             SetCurrentMap(map, 1);
         } else if (SelectionHeaders.size() != 0
                 && map < SelectionHeaders.size()) {
-            unsigned long now = timeGetTime();
-            if (static_cast<int>(now - clickTime) < 400) {
+            if (static_cast<int>(GameTime::Get() - clickTime) < 400) {
                 *bExitFlag = OnBeginGame();
             } else {
-                clickTime = now;
+                clickTime = GameTime::Get();
                 if (SelectionHeaders.size() != 0
                         && map < SelectionHeaders.size()
                         && (!bVideoPaused || IsHost()))
@@ -4550,26 +4557,26 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
     case SSW_BONUS_PREV_FIRST + 5:
     case SSW_BONUS_PREV_FIRST + 6:
     case SSW_BONUS_PREV_LAST: {
-        int pos = msg->codeY - SSW_BONUS_PREV_FIRST;
-        CNetPlayerHandlerPlayer* player = m_players.GetPlayerInPos(pos);
-        if (!player)
-            player = m_players.GetCompPlayerInPos(pos);
-        if (!player)
-            return 0;
-        unsigned char noHero = player->heroIndex == -1
-            && !HasRandomHero(pos) && !HasNonRandomHero(pos);
-        --player->startBonusIndex;
-        if (player->startBonusIndex < 0
-                || (player->startBonusIndex == 0 && noHero))
-            player->startBonusIndex = NEW_MAP_BONUS_RANDOM;
-        if (GetDisplayTown(pos) == -1
-                && player->startBonusIndex == NEW_MAP_BONUS_RESOURCE)
-            player->startBonusIndex = NEW_MAP_BONUS_GOLD;
-        if (bVideoPaused) {
-            CSetAGRMsg msg(pos, player->startBonusIndex);
-            TransmitRemoteDataDPID(&msg, 0, false, true);
+        int i = msg->codeY - SSW_BONUS_PREV_FIRST;
+        CNetPlayerHandlerPlayer* pThisPlayer = m_players.GetPlayerInPos(i);
+        if (!pThisPlayer)
+            pThisPlayer = m_players.GetCompPlayerInPos(i);
+        if (pThisPlayer) {
+            unsigned char noHero = pThisPlayer->heroIndex == -1
+                && !HasRandomHero(i) && !HasNonRandomHero(i);
+            --pThisPlayer->startBonusIndex;
+            if (pThisPlayer->startBonusIndex < 0
+                    || (pThisPlayer->startBonusIndex == 0 && noHero))
+                pThisPlayer->startBonusIndex = NEW_MAP_BONUS_RANDOM;
+            if (GetDisplayTown(i) == -1
+                    && pThisPlayer->startBonusIndex == NEW_MAP_BONUS_RESOURCE)
+                pThisPlayer->startBonusIndex = NEW_MAP_BONUS_GOLD;
+            if (bVideoPaused) {
+                CSetAGRMsg msg(i, pThisPlayer->startBonusIndex);
+                TransmitRemoteDataDPID(&msg, 0, false, true);
+            }
+            DrawHeroAdvancedOption(i, 1, -1);
         }
-        DrawHeroAdvancedOption(pos, 1, -1);
         break;
     }
     case SSW_BONUS_NEXT_FIRST:
@@ -4580,25 +4587,26 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
     case SSW_BONUS_NEXT_FIRST + 5:
     case SSW_BONUS_NEXT_FIRST + 6:
     case SSW_BONUS_NEXT_LAST: {
-        int pos = msg->codeY - SSW_BONUS_NEXT_FIRST;
-        CNetPlayerHandlerPlayer* player = m_players.GetPlayerInPos(pos);
-        if (!player)
-            player = m_players.GetCompPlayerInPos(pos);
-        if (!player)
-            return 0;
-        unsigned char noHero = player->heroIndex == -1
-            && !HasRandomHero(pos) && !HasNonRandomHero(pos);
-        player->startBonusIndex = (player->startBonusIndex + 1) % 4;
-        if (player->startBonusIndex == 0 && noHero)
-            player->startBonusIndex = NEW_MAP_BONUS_GOLD;
-        if (GetDisplayTown(pos) == -1
-                && player->startBonusIndex == NEW_MAP_BONUS_RESOURCE)
-            player->startBonusIndex = NEW_MAP_BONUS_RANDOM;
-        if (bVideoPaused) {
-            CSetAGRMsg msg(pos, player->startBonusIndex);
-            TransmitRemoteDataDPID(&msg, 0, false, true);
+        int i = msg->codeY - SSW_BONUS_NEXT_FIRST;
+        CNetPlayerHandlerPlayer* pThisPlayer = m_players.GetPlayerInPos(i);
+        if (!pThisPlayer)
+            pThisPlayer = m_players.GetCompPlayerInPos(i);
+        if (pThisPlayer) {
+            unsigned char noHero = pThisPlayer->heroIndex == -1
+                && !HasRandomHero(i) && !HasNonRandomHero(i);
+            pThisPlayer->startBonusIndex =
+                (pThisPlayer->startBonusIndex + 1) % 4;
+            if (pThisPlayer->startBonusIndex == 0 && noHero)
+                pThisPlayer->startBonusIndex = NEW_MAP_BONUS_GOLD;
+            if (GetDisplayTown(i) == -1
+                    && pThisPlayer->startBonusIndex == NEW_MAP_BONUS_RESOURCE)
+                pThisPlayer->startBonusIndex = NEW_MAP_BONUS_RANDOM;
+            if (bVideoPaused) {
+                CSetAGRMsg msg(i, pThisPlayer->startBonusIndex);
+                TransmitRemoteDataDPID(&msg, 0, false, true);
+            }
+            DrawHeroAdvancedOption(i, 1, -1);
         }
-        DrawHeroAdvancedOption(pos, 1, -1);
         break;
     }
 
@@ -6564,7 +6572,8 @@ inline void TSingleSelectionWindow::OnTownUpdateMsg(
 // face, and redraw the row.
 // E:\gamedcs\singleselectionwindow.cpp:7997
 VA(0x0058CD50, 0x119)  // anchor-callee RS_TOWN_UPDATE arm calls it (pos, town, 0) - the DC 3-arg signature; also calls DrawHeroAdvancedOption per xref, size 2.1x dc 0x84, dc 0x143138
-void TSingleSelectionWindow::UpdateTown(int pos, int town, unsigned char inPopup)
+void TSingleSelectionWindow::UpdateTown(
+        int pos, TTownType town, unsigned char inPopup)
 {
     CNetPlayerHandlerPlayer* p = m_players.GetPlayerInPos(pos);
     if (!p)
@@ -6729,7 +6738,7 @@ inline int TSingleSelectionWindow::GetHeroInPos(int gamePos)
 // directly proves that its shared helper returns the -1 instead. The named
 // boundary and its HasMultipleTowns call remain common source facts.
 // E:\gamedcs\singleselectionwindow.cpp:8166
-inline int TSingleSelectionWindow::GetDisplayTown(int gamePos)
+inline TTownType TSingleSelectionWindow::GetDisplayTown(int gamePos)
 {
     CNetPlayerHandlerPlayer* player = m_players.GetPlayerInPos(gamePos);
     if (!player)
@@ -6738,7 +6747,7 @@ inline int TSingleSelectionWindow::GetDisplayTown(int gamePos)
         &gpGame->mapHeader.playerSlotAttributes[gamePos];
 #pragma inline_depth(0)
     if (slotAtt->HasRandomAlignment || HasMultipleTowns(gamePos))
-        return player->townIndex;
+        return static_cast<TTownType>(player->townIndex) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
 #pragma inline_depth()
     return pick_alignment(
         static_cast<unsigned short>(slotAtt->legalAlignments), 1);
