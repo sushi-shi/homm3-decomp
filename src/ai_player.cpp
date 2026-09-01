@@ -3824,8 +3824,8 @@ void mark_danger_zones(const hero* our_hero, long* danger_zones)
 
 // The three helpers below are source-visible in the Dreamcast line table but
 // folded into AI_choose_destination by retail VC6.  Their boundaries are
-// reconstruction facts: keeping them here gives the source-shape gate the
-// same helper calls without manufacturing retail-only out-of-line slots.
+// reconstruction facts: keeping them here preserves the same helper calls
+// without manufacturing retail-only out-of-line slots.
 __forceinline void searchArray::set_rectangle(tagRECT& rect)
 {
     valid_left = rect.left;
@@ -3834,21 +3834,22 @@ __forceinline void searchArray::set_rectangle(tagRECT& rect)
     valid_bottom = rect.bottom;
 }
 
+// E:\gamedcs\ai_player.cpp:3390
 static __forceinline void mark_strategic_map(
     hero* current_hero, long* strategic_map,
-    std::vector<HeroDestination>* destinations)
+    std::vector<HeroDestination>& destinations)
 {
     tagRECT rect;
     searchArray search_array;
+    HeroDestination point;
     short top_x;
     unsigned char was_trigger;
     short top_y;
     type_point pt;
     long level_size = gMapWidth * gMapHeight;
-    HeroDestination point;
 
-    for (short i = 0; i < destinations->size(); ++i) {
-        point = (*destinations)[i];
+    for (short i = 0; i < destinations.size(); ++i) {
+        point = destinations[i];
         NewmapCell* cell = gpAdvManager->GetCell(point.point);
         if (!(GetMapExtra(point.point.x, point.point.y, point.point.z)
               & gUnnamed69ccc4)) {
@@ -3865,12 +3866,13 @@ static __forceinline void mark_strategic_map(
 
         rect.left = max(0L, static_cast<long>(point.point.x) - 5);
         rect.top = max(0L, static_cast<long>(point.point.y) - 5);
-        rect.right = min(gMapWidth, static_cast<long>(point.point.x) + 6);
-        rect.bottom = min(gMapHeight, static_cast<long>(point.point.y) + 6);
+        rect.right = min(static_cast<long>(point.point.x) + 6, gMapWidth);
+        rect.bottom = min(static_cast<long>(point.point.y) + 6, gMapHeight);
         search_array.set_rectangle(rect);
         gpAdvManager->advWindow->animate_bottom_view(0);
-        // AI_choose_destination::mark_strategic_map -> type_point(-1,-1,-1):
-        // retail calls the temporary constructor at this DC-proven site.
+        // mark_strategic_map -> type_point::type_point(-1,-1,-1): both the
+        // Dreamcast xref and Complete's retained constructor call prove this
+        // nested boundary; flattening it loses the retail call/EH shape.
 #pragma inline_depth(0)
         INLINE_GATE(search_array.SeedPosition(
             current_hero, point.point, type_point(-1, -1, -1), 500,
@@ -3878,23 +3880,23 @@ static __forceinline void mark_strategic_map(
             59999, 0));
 #pragma inline_depth()
 
-        long nearby_cost;
+        short nearby_cost;
         if (!gAdventureObjectTraits[type][0]) {
             nearby_cost = 0;
         } else {
             cell->is_trigger = was_trigger;
-            pt.z = point.point.z;
-            top_x = max(static_cast<long>(point.point.x) - 1, 0);
-            top_y = max(static_cast<long>(point.point.y) - 1, 0);
+            top_x = max(0L, static_cast<long>(point.point.x) - 1);
+            top_y = max(0L, static_cast<long>(point.point.y) - 1);
             short stop_x = min(static_cast<long>(point.point.x) + 2,
                                gMapWidth);
             short stop_y = min(static_cast<long>(point.point.y) + 2,
                                gMapHeight);
+            pt.z = point.point.z;
             nearby_cost = 0;
             for (pt.x = top_x; pt.x < stop_x; ++pt.x) {
                 for (pt.y = top_y; pt.y < stop_y; ++pt.y) {
                     pathCell* nearby = search_array.get_cell(pt, false);
-                    if (nearby_cost < nearby->cost)
+                    if (nearby->cost > nearby_cost)
                         nearby_cost = nearby->cost;
                 }
             }
@@ -3903,11 +3905,11 @@ static __forceinline void mark_strategic_map(
         for (long j = search_array.get_visited_count(); j-- != 0;) {
             pathCell* visited = search_array.get_visited_cell(j);
             long value;
-            if (visited->cost > nearby_cost) {
+            if (visited->cost <= nearby_cost) {
+                value = point.value;
+            } else {
                 value = point.value * 300
                     / (visited->cost - nearby_cost + 300);
-            } else {
-                value = point.value;
             }
             strategic_map[visited->point.z * level_size
                           + visited->point.y * gMapWidth + visited->point.x]
@@ -3916,19 +3918,18 @@ static __forceinline void mark_strategic_map(
     }
 }
 
+// E:\gamedcs\ai_player.cpp:3573
 static __forceinline void unblock_lith(hero* current_hero,
                                        HeroDestination& destination,
                                        long& best_distance)
 {
     unsigned char was_on_map = current_hero->is_on_map();
     current_hero->restore_cell();
-    // unblock_lith -> get_location/get_cell: retail retains both DC-proven
-    // helper calls, while unrestricted /Ob2 expands them into the caller.
+    // unblock_lith -> get_location -> game::get_cell: DC line 3578 and
+    // Complete both retain this nested pair on the unnamed temporary.
 #pragma inline_depth(0)
-    type_point point = INLINE_GATE(current_hero->get_location());
-#pragma inline_depth()
-#pragma inline_depth(0)
-    NewmapCell* cell = INLINE_GATE(gpGame->get_cell(point));
+    NewmapCell* cell = INLINE_GATE(
+        gpGame->get_cell(current_hero->get_location()));
 #pragma inline_depth()
 
     if (!cell->is_trigger) {
@@ -3936,16 +3937,18 @@ static __forceinline void unblock_lith(hero* current_hero,
             current_hero->obscure_cell();
         return;
     }
-    // unblock_lith -> game::GetTown: Complete retains this older-DC inline
-    // lookup as a call. The condition-only pin leaves the arm unpinned.
+    if (cell->type == TOWN) {
+        // unblock_lith -> game::GetTown: Complete adds this owner refinement
+        // to the Dreamcast TOWN scope and retains the helper call; flattening
+        // the initializer expands GetTown and loses the retail branch group.
 #pragma inline_depth(0)
-    if (INLINE_GATE(cell->type == TOWN
-        && gpGame->GetTown(cell->extraInfo)->owner == current_hero->owner))
+        town* current_town = INLINE_GATE(gpGame->GetTown(cell->extraInfo));
 #pragma inline_depth()
-    {
-        if (was_on_map)
-            current_hero->obscure_cell();
-        return;
+        if (current_town->owner == current_hero->owner) {
+            if (was_on_map)
+                current_hero->obscure_cell();
+            return;
+        }
     }
     if (cell->type == SANCTUARY) {
         if (was_on_map)
@@ -3953,20 +3956,27 @@ static __forceinline void unblock_lith(hero* current_hero,
         return;
     }
 
+    type_point point;
     long closest = 0;
     point.z = current_hero->z;
-    for (const signed char* direction = gStepDeltaY;
-         direction < gStepDeltaY + 8 * 4; direction += 4) {
-        point.x = current_hero->x + direction[-1];
-        point.y = current_hero->y + direction[0];
+    for (long direction = 0; direction < 8; ++direction) {
+        point.x = current_hero->x + normalDirTable[direction].x;
+        point.y = current_hero->y + normalDirTable[direction].y;
         if (!point.is_valid())
             continue;
-        if (gpGame->worldMap.cell(point.x, point.y, point.z)->is_trigger)
+        // unblock_lith -> NewfullMap::cell: DC line 3606 and Complete's loop
+        // both retain this map lookup before the trigger test; flattening the
+        // direct call erases one of retail's two NewfullMap calls.
+#pragma inline_depth(0)
+        if (INLINE_GATE(gpGame->worldMap.cell(
+                point.x, point.y, point.z))->is_trigger)
+#pragma inline_depth()
             continue;
         if (GetMapExtra(point.x, point.y, point.z) & MAP_EXTRA_MONSTER)
             continue;
-        // unblock_lith -> searchArray::get_cell: DC calls it in this loop and
-        // retail retains the second AI_choose_destination call at 0x426582.
+        // unblock_lith -> searchArray::get_cell: DC line 3613 names this
+        // loop statement and Complete retains the call; flattening the
+        // initializer erases one of retail's two searchArray calls.
 #pragma inline_depth(0)
         pathCell* path_cell = INLINE_GATE(
             gpSearchArray->get_cell(point, false));
@@ -3975,10 +3985,11 @@ static __forceinline void unblock_lith(hero* current_hero,
             continue;
         if (destination.point.x >= 0 && closest <= path_cell->cost)
             continue;
-        // unblock_lith -> searchArray::get_danger_value: retail and DC both
-        // show an out-of-line call at this condition.
+        // unblock_lith -> searchArray::get_danger_value: DC line 3620 and
+        // Complete both retain this predicate helper; flattening it erases
+        // retail's only call and folds the following continue test.
 #pragma inline_depth(0)
-        if (INLINE_GATE(gpSearchArray->get_danger_value(point) < 0))
+        if (INLINE_GATE(gpSearchArray->get_danger_value(point)) < 0)
 #pragma inline_depth()
             continue;
         closest = path_cell->cost;
@@ -4024,12 +4035,14 @@ int AI_choose_destination(hero* current_hero, long max_distance,
                                       allow_spells, explore_mode);
     long* strategic_map = new long[map_cells];
     memset(strategic_map, 0, map_cells * sizeof(long));
-    mark_strategic_map(current_hero, strategic_map, &destinations);
+    mark_strategic_map(current_hero, strategic_map, destinations);
 
     start = current_hero->get_location();
-    best_distance = 0x7fff;
     nearby_cost = current_hero->maxMovePoints * 21 / 100;
-    no_towns = gpCurrentPlayer->numTowns == 0;
+    best_distance = 0x7fff;
+    no_towns = 0;
+    if (!gpCurrentPlayer->numTowns)
+        no_towns = 1;
     best_point.is_critical = 0;
 
     if (best_point.point.x < 0) {
@@ -4065,16 +4078,15 @@ int AI_choose_destination(hero* current_hero, long max_distance,
 
         pathCell* path_cell = gpSearchArray->get_cell(point.point, false);
         unsigned char is_nearby = 0;
-        // AI_choose_destination -> type_point::operator==: retail retains the
-        // DC-proven comparison at 0x4267d1. Keep the compound condition's
-        // accessor boundary with that call.
+        // AI_choose_destination -> type_point::operator== / NewfullMap::cell:
+        // Complete retains both calls in its retail-decoded last-point
+        // trigger statement; flattening this condition erases both boundaries.
 #pragma inline_depth(0)
         if (INLINE_GATE(path_cell->last_point == start
             && gpGame->worldMap.cell(path_cell->last_point.x,
                                      path_cell->last_point.y,
-                                     path_cell->last_point.z)->is_trigger))
+                                     path_cell->last_point.z)->is_trigger)) {
 #pragma inline_depth()
-        {
             is_nearby = 1;
         }
         if (path_cell->cost <= nearby_cost
@@ -4133,7 +4145,12 @@ int AI_choose_destination(hero* current_hero, long max_distance,
     current_hero->targetIsCritical = best_point.is_critical;
     current_hero->field_041 = static_cast<short>(best_distance);
     delete[] strategic_map;
-    return raw_value;
+    // AI_choose_destination -> vector<HeroDestination>::~vector: Complete's
+    // unwind transcript resets state to -1 and retains this implicit cleanup;
+    // flattening the return expands it into a second operator delete call.
+#pragma inline_depth(0)
+    return INLINE_GATE(raw_value);
+#pragma inline_depth()
 }
 
 #if 0  // @carcass: claim-only homes for retained header COMDATs
@@ -5450,7 +5467,7 @@ bool consider_hiring(long player_id, hero* candidate)
 // target labels the one surviving ICF-folded body with the const public, but
 // that synthesized name cannot prove which identical source overload called
 // it. A const-receiver cast is byte/score-flat and violates the positive DC
-// fact, so the source-shape gate correctly rejects it.
+// fact, so it is not an admissible reconstruction.
 // Residual (99.95219%): all 56 blocks and 481 instructions agree; only two
 // stack-color classes differ. Retail uses {player_id,-0x14; i,-0x1c} where
 // our CL swaps them (their later best-value/touched partners follow), and

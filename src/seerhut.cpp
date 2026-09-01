@@ -2484,10 +2484,14 @@ int TSeerHut::getValue(hero* currentHero)
 // acceptance/payment/reward in this caller and reached the MAX, but
 // Dreamcast's DoCompletionDialog dossier positively places that accepted tail
 // inside the helper. The retained source restores that ownership and returns
-// through the helper on the human arm; dc_source_shape now ratchets it. VC6
+// through the helper on the human arm; retain that evidence-backed ownership. VC6
 // still leaves both EH-bearing helpers as calls in this otherwise frameless
 // caller. Moving their definitions before this body, `inline`, and
-// `__forceinline` before/after visibility were byte-flat. An `if (0)` probe
+// `__forceinline` before/after visibility were byte-flat. Re-measured
+// 2026-09-01: statement-scoped rand/format_string pins, a sole-caller
+// auto_inline fence on GetRewardExtra, the completion line-gap invariant,
+// and tightly scoped names for both real string temporaries are byte-flat as
+// well. An `if (0)` probe
 // with two dead std::string declarations made both helpers expand and measured
 // 95.1173% (13 calls on each side), but it was only an inliner instrument and
 // was removed. At that peak the sole residual was the completion temporary's
