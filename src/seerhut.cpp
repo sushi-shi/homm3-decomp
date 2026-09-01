@@ -507,30 +507,31 @@ unsigned char type_skill_quest::is_satisfied(hero* current_hero)
 // formats the missing-skill list into the table's progress column and appends
 // the common deadline suffix before showing the same pictures.
 //
-// Residual (57.7297%): the semantic body is complete, and computing the
-// five-column quest group once recovers the retail text-copy schedule. The STL
-// view gives VC6 44 CFG blocks and three cleanup exits against retail's 30
-// blocks and one exit. The original natural vector spelling inlined its
-// constructor/destructor and scored 46.5225%; source-local inline_depth(0)
-// restores retail's out-of-line vector calls and reaches the retained score.
-// Named strings versus lifetime-extended const references are byte-flat at
-// that score. Closing this requires the retail vector declaration view, not
-// fabricated cleanup gotos or raw storage.
+// Residual (75.4324%; experimental peak 90.8649%): the retained source restores the
+// Dreamcast-attested hero::GetPrimarySkill accessor, and retail corroborates
+// its fully expanded clamp body. Writing that body out by hand reaches the
+// peak but removes the positive helper boundary, so the ratchet banks the
+// retained accessor state while the experiment remains documented. Both states have retail's exact 30 blocks,
+// 13 branches and one return. Statement-scoped INLINE_GATEs now reproduce the
+// two out-of-line vector constructors/destructors, direct two-argument insert
+// calls (with end() evaluated outside the pin), and the deadline temporary's
+// single cleanup path. A widened required-skill local plus loop-persistent
+// dialog record fixes the frame/slot family. The remaining call-level delta
+// is at the string scope exits: this state calls destructor wrappers, while
+// retail inlines those wrappers and calls nested `_Tidy`. Natural cleanup
+// duplicates six branches and two exits; inline_depth(1) is identical to
+// natural cleanup; a shared invented dialog helper measured 57.9685% and was
+// removed. Do not replace the accessor with its manual expansion or add raw
+// storage.
 // E:\gamedcs\seerhut.cpp
 VA(0x0056dad0, 0x28C)  // anchor-vtable 0x6417c4 slot 4 + exact HD structural twin
 void type_skill_quest::DoProposalDialog(hero* current_hero)
 {
     signed char missing[4];
     for (int i = 0; i < 4; ++i) {
-        int have;
-        if (current_hero->stats[i] > 99)
-            have = 99;
-        else if (current_hero->stats[i] > 0)
-            have = current_hero->stats[i];
-        else
-            have = i >= 2;
-
-        missing[i] = required_skills[i] > have ? required_skills[i] : 0;
+        int have = current_hero->GetPrimarySkill(i);
+        int required = required_skills[i];
+        missing[i] = required > have ? required : 0;
     }
 
     if (progressText.length() > 0) {
@@ -538,44 +539,58 @@ void type_skill_quest::DoProposalDialog(hero* current_hero)
         const char* textPointer = text.c_str();
 #pragma inline_depth(0)
         {
-        std::vector<type_dialog_resource> dialogResources;
+        INLINE_GATE(std::vector<type_dialog_resource> dialogResources);
+#pragma inline_depth()
+        type_dialog_resource resource;
         for (int i = 0; i < 4; ++i) {
             if (missing[i] > 0) {
-                type_dialog_resource resource;
                 resource.resource = 0x1f + i;
                 resource.qualifier = 0x10000
                     | static_cast<unsigned short>(missing[i]);
-                dialogResources.push_back(resource);
+                type_dialog_resource* position = dialogResources.end();
+#pragma inline_depth(0)
+                INLINE_GATE(dialogResources.insert(position, resource));
+#pragma inline_depth()
             }
         }
-        extended_dialog(textPointer, dialogResources, -1, -1, 0);
+#pragma inline_depth(0)
+        INLINE_GATE(extended_dialog(
+            textPointer, dialogResources, -1, -1, 0));
         }
+    }
 #pragma inline_depth()
-    } else {
+    else {
         std::string requirement = skill_requirement_text(missing);
         const char* requirementPointer = requirement.c_str();
         const std::string* texts = quest_texts();
         std::string text = format_string(
             texts[QUEST_TEXT_PROGRESS].c_str(), requirementPointer);
-        text += get_time_limit_text();
+#pragma inline_depth(0)
+        text += INLINE_GATE(get_time_limit_text());
+#pragma inline_depth()
         const char* textPointer = text.c_str();
-
 #pragma inline_depth(0)
         {
-        std::vector<type_dialog_resource> dialogResources;
+        INLINE_GATE(std::vector<type_dialog_resource> dialogResources);
+#pragma inline_depth()
+        type_dialog_resource resource;
         for (int i = 0; i < 4; ++i) {
             if (missing[i] > 0) {
-                type_dialog_resource resource;
                 resource.resource = 0x1f + i;
                 resource.qualifier = 0x10000
                     | static_cast<unsigned short>(missing[i]);
-                dialogResources.push_back(resource);
+                type_dialog_resource* position = dialogResources.end();
+#pragma inline_depth(0)
+                INLINE_GATE(dialogResources.insert(position, resource));
+#pragma inline_depth()
             }
         }
-        extended_dialog(textPointer, dialogResources, -1, -1, 0);
+#pragma inline_depth(0)
+        INLINE_GATE(extended_dialog(
+            textPointer, dialogResources, -1, -1, 0));
         }
-#pragma inline_depth()
     }
+#pragma inline_depth()
 }
 
 // Slot 5 presents one primary-skill picture for every positive requirement.
@@ -2465,15 +2480,18 @@ int TSeerHut::getValue(hero* currentHero)
 // reward application. A hut with no quest records the visit and shows one of
 // three randomized empty-hut lines to a human player.
 //
-// Residual (39.0772% over the admitted code-plus-switch-table row; 30.8511%
-// in the code-only iteration): all reward cases, both dialog paths, both
-// deadline checks and every virtual/helper edge are decoded, but this view
-// reserves a 0x34-byte string frame and emits 87 CFG blocks / three exits
-// against retail's 0x24 bytes and 59 blocks / two exits. Direct versus
-// explicit-bool deadline tests moved 30.5793 -> 30.8511; a
-// register-qualified hero alias was byte-flat. The mismatch is the same
-// local-coloring/EH-view class as the complex slot-4 dialog above, so retain
-// the natural ownership model.
+// Residual (46.3642%, MAX 39.0772% before this reconstruction): restoring
+// Dreamcast's DoEmptyDialog and DoCompletionDialog boundaries leaves both as
+// calls because VC6 will not expand an EH-bearing callee into this otherwise
+// frameless caller. Moving their definitions before this body and marking
+// both definitions inline were byte-flat. An `if (0)` probe with two dead
+// std::string declarations made both real helpers expand and measured
+// 95.1173% (13 calls on each side); it was an EH/inliner instrument and was
+// removed, not banked as source. At that peak the sole residual was the
+// completion temporary's cleanup: candidate `_Tidy` x4/delete x0 against
+// retail `_Tidy` x3/delete x1. Keep the positive helper facts and remeasure
+// after coherent surrounding class/header reconstruction changes compiler
+// state; do not add a synthetic carrier here.
 VA(0x00573670, 0x400)  // code plus two retail switch tables in the admitted row
 void TSeerHut::DoSeerEvent(hero* current_hero, bool human_player)
 {
@@ -2487,116 +2505,140 @@ void TSeerHut::DoSeerEvent(hero* current_hero, bool human_player)
         if (expired)
             return;
 
-        hero* currentHero = current_hero;
         if (human_player) {
             if (!(visitedPlayers
                   & (1 << static_cast<unsigned char>(gNetLocalGamePos))))
                 quest->DoProgressDialog();
-            else if (!quest->is_satisfied(currentHero))
-                quest->DoProposalDialog(currentHero);
+            else if (!quest->is_satisfied(current_hero))
+                quest->DoProposalDialog(current_hero);
         }
 
         visitedPlayers |= 1 << gNetLocalGamePos;
-        if (!quest->is_satisfied(currentHero))
+        if (!quest->is_satisfied(current_hero))
             return;
 
         if (human_player) {
-            int rewardPicture;
-            switch (reward.rewardType) {
-            case eRewardExperience:
-                rewardPicture = 0x11;
-                break;
-            case eRewardMana:
-                rewardPicture = 0x23;
-                break;
-            case eRewardMorale:
-                rewardPicture = 0x0e;
-                break;
-            case eRewardLuck:
-                rewardPicture = 0x0b;
-                break;
-            case eRewardResource:
-                rewardPicture = reward.value.resource.resourceType;
-                break;
-            case eRewardPrimarySkill:
-                switch (reward.value.primarySkill.skillType) {
-                case TSeerReward::ePriSkillAttack:
-                    rewardPicture = 0x1f;
-                    break;
-                case TSeerReward::ePriSkillDefense:
-                    rewardPicture = 0x20;
-                    break;
-                case TSeerReward::ePriSkillPower:
-                    rewardPicture = 0x21;
-                    break;
-                case TSeerReward::ePriSkillKnowledge:
-                    rewardPicture = 0x22;
-                    break;
-                default:
-                    rewardPicture = -1;
-                    break;
-                }
-                break;
-            case eRewardSecondarySkill:
-                rewardPicture = 0x14;
-                break;
-            case eRewardArtifact:
-                rewardPicture = 8;
-                break;
-            case eRewardSpell:
-                rewardPicture = 9;
-                break;
-            case eRewardCreature:
-                rewardPicture = 0x15;
-                break;
-            default:
-                rewardPicture = -1;
-                break;
-            }
-
-            NormalDialog(quest->get_completion_text().c_str(),
-                         2, -1, -1, rewardPicture,
-                         reward.GetRewardExtra(currentHero),
-                         -1, 0, -1, 0, -1, 0);
+            DoCompletionDialog(current_hero, human_player);
             if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT
                 && gpWindowManager->dialogReturn != DIALOG_RETURN_CHOICE_1)
                 return;
         } else {
-            int value = reward.getValue(currentHero);
-            if (!(visitedPlayers & (1 << currentHero->owner))) {
+            int value = reward.getValue(current_hero);
+            if (!(visitedPlayers & (1 << current_hero->owner))) {
                 value = _cpp_max(value, 20);
             } else {
                 if (!quest)
                     return;
-                if (quest->field_3c >= 0
-                    && quest->field_3c < static_cast<short>(
+                expired = false;
+                if (quest->field_3c >= 0) {
+                    expired = quest->field_3c < static_cast<short>(
                         (gpGame->field_1f642 * 4
                          + gpGame->field_1f640 - 5) * 7
-                        + gpGame->field_1f63e))
+                        + gpGame->field_1f63e);
+                }
+                if (expired)
                     return;
-                if (!quest->is_satisfied(currentHero))
+                if (!quest->is_satisfied(current_hero))
                     return;
-                value -= quest->GetAIValue(currentHero->owner);
+                value -= quest->GetAIValue(current_hero->owner);
             }
             if (value <= 0)
                 return;
         }
 
-        quest->TakePayment(currentHero);
-        reward.giveReward(currentHero, human_player);
+        quest->TakePayment(current_hero);
+        reward.giveReward(current_hero, human_player);
         quest = 0;
         return;
     }
 
     visitedPlayers |= 1 << gNetLocalGamePos;
-    if (human_player) {
-        std::string text;
-        text = format_string(
-            gQuestTextA[rand() % 3][type_quest::QUEST_TEXT_EXPIRED].c_str(),
-            (*gpSeerHutNames)[NameIndex].c_str());
-        NormalDialog(text.c_str(), 1, -1, -1, -1, 0,
-                     -1, 0, -1, 0, -1, 0);
+    if (human_player)
+        DoEmptyDialog();
+}
+
+// Dreamcast preserves this private helper at dc 0x12d158 and places it after
+// DoSeerEvent in the TU. Complete replaces its fixed-buffer sprintf with a
+// string-returning formatter, but retail's no-quest arm corroborates the
+// helper's name lookup followed by NormalDialog. Complete retail expands this
+// source boundary into its sole caller while retaining selected nested
+// Dinkumware calls.
+void TSeerHut::DoEmptyDialog()
+{
+    std::string text;
+    int text_index = rand() % 3;
+    text = format_string(
+        gQuestTextA[text_index][type_quest::QUEST_TEXT_EXPIRED].c_str(),
+        GetName());
+    NormalDialog(text.c_str(), 1, -1, -1, -1, 0,
+                 -1, 0, -1, 0, -1, 0);
+}
+
+// Dreamcast places this private boundary immediately after DoEmptyDialog and
+// gives it the same (hero*, bool) inputs. Complete's virtual quest owns the
+// completion text and its reward object owns application, but retail folds
+// this revised helper into DoSeerEvent and cross-jumps its accepted arm with
+// the AI reward tail.
+inline void TSeerHut::DoCompletionDialog(
+    hero* current_hero, bool human_player)
+{
+    int rewardPicture;
+    switch (reward.rewardType) {
+    case eRewardExperience:
+        rewardPicture = 0x11;
+        break;
+    case eRewardMana:
+        rewardPicture = 0x23;
+        break;
+    case eRewardMorale:
+        rewardPicture = 0x0e;
+        break;
+    case eRewardLuck:
+        rewardPicture = 0x0b;
+        break;
+    case eRewardResource:
+        rewardPicture = reward.value.resource.resourceType;
+        break;
+    case eRewardPrimarySkill:
+        switch (reward.value.primarySkill.skillType) {
+        case TSeerReward::ePriSkillAttack:
+            rewardPicture = 0x1f;
+            break;
+        case TSeerReward::ePriSkillDefense:
+            rewardPicture = 0x20;
+            break;
+        case TSeerReward::ePriSkillPower:
+            rewardPicture = 0x21;
+            break;
+        case TSeerReward::ePriSkillKnowledge:
+            rewardPicture = 0x22;
+            break;
+        default:
+            rewardPicture = -1;
+            break;
+        }
+        break;
+    case eRewardSecondarySkill:
+        rewardPicture = 0x14;
+        break;
+    case eRewardArtifact:
+        rewardPicture = 8;
+        break;
+    case eRewardSpell:
+        rewardPicture = 9;
+        break;
+    case eRewardCreature:
+        rewardPicture = 0x15;
+        break;
+    default:
+        rewardPicture = -1;
+        break;
     }
+
+    NormalDialog(quest->get_completion_text().c_str(),
+                 2, -1, -1, rewardPicture,
+                 reward.GetRewardExtra(current_hero),
+                 -1, 0, -1, 0, -1, 0);
 }
 
 // Retail-only TSeerReward dispatcher, named and typed by the HD/NH3API twin;

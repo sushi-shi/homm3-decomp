@@ -3,6 +3,7 @@
 #define HOMM3_SEERHUT_H
 
 #include <string>
+#include <vector>
 #include <va.h>
 
 class type_quest;
@@ -10,6 +11,11 @@ class TAdventureMapWindow;
 class hero;
 class NewmapCell;
 struct type_point;
+
+// Complete's seer-hut name table replaced Dreamcast's const-char pointer
+// array with Dinkumware strings; TSeerHut::GetName keeps the shared header
+// accessor boundary over the revised storage.
+DATA(0x0069fab8) extern std::vector<std::string>* gpSeerHutNames;
 
 #pragma pack(push, 1)
 
@@ -155,12 +161,27 @@ class TSeerHut : private TQuestGuard {
     friend class NewfullMap;
     friend class TAdventureMapWindow;
 
+    // Dreamcast preserves this private source boundary. Complete replaces
+    // the VMU-era text lookup inside it, but retail expands the revised body
+    // into DoSeerEvent's no-quest arm.
+    void DoEmptyDialog();
+    // Dreamcast's next private helper owns the completion dialog and reward
+    // application. Complete revises both models, while retaining the source
+    // boundary inside DoSeerEvent's human arm.
+    inline void DoCompletionDialog(hero* current_hero, bool human_player);
+
 public:
     TSeerReward reward;
     signed char NameIndex;
     unsigned char field_12;
 
     TSeerHut();
+    // E:\gamedcs\seerhut.h:121, dc 0x20244. Retail corroborates the signed
+    // NameIndex load, 16-byte vector stride and inlined c_str() fallback.
+    const char* GetName() const
+    {
+        return (*gpSeerHutNames)[NameIndex].c_str();
+    }
     // Dreamcast supplies the surviving public name/signature; retail's
     // Complete-era body replaces the monolith with the virtual quest family.
     void DoSeerEvent(hero* current_hero, bool human_player);
