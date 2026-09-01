@@ -27,6 +27,8 @@ struct LODEntry {
     int size;
     int attrib;
     int csize;
+
+    LODEntry();
 };
 SIZE(LODEntry, 0x20);
 

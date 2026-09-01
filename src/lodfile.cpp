@@ -15,7 +15,8 @@
 //     logic of set_filemap survives only inlined in clear/open/~LODFile);
 //   compare - address only taken by sort, stripped with it (retail open has
 //     no qsort call);
-//   LODEntry::LODEntry - trivial, absorbed into the 0xfac40 COMDAT;
+//   LODEntry::LODEntry - inlined into open's resize temporary (retail keeps
+//     its five zero stores), with no standalone linked row;
 //   LODHeader::LODHeader - visibly inlined in LODFile::LODFile at 0xfa780
 //     ("LOD" strcpy into this+0x11c, +0x120=500, 20 dwords zeroed).
 #include <va.h>
@@ -147,20 +148,12 @@ char* LODFile::getErrorString(int LODErr)
 }
 
 // E:\gamedcs\lodfile.cpp:226
-DC_ONLY(0xe92f8, 0x38)
-void LODEntry::LODEntry()
-{
-    // @stub
-}
+// Promoted to a live definition below; retail inlines it into open's resize.
 
 // E:\gamedcs\lodfile.cpp:240 / 252 / 266 - promoted to live claims below.
 
 // E:\gamedcs\lodfile.cpp:277
-// RETAIL_LOCATED(0x004fa8a0, 0x1c4): not reconstructed; anchor-bracket, dc 0xe941c
-int LODFile::open(const char* filename, int flags)
-{
-    // @stub
-}
+// Promoted to a live claim below.
 
 // E:\gamedcs\lodfile.cpp:341
 DC_ONLY(0xe955c, 0xF6)
@@ -497,6 +490,17 @@ void std::__destroy_aux()
 
 #endif  // @carcass
 
+// E:\gamedcs\lodfile.cpp:226.  DC's seven source rows prove these five
+// stores; retail repeats them exactly in open's vector-resize temporary.
+LODEntry::LODEntry()
+{
+    name[0] = 0;
+    offset = 0;
+    size = 0;
+    attrib = 0;
+    csize = 0;
+}
+
 // E:\gamedcs\lodfile.cpp:266.  No retail row of its own: /Ob2 folds it
 // into the one call site below, where the "LOD" strcpy expands to VC6's
 // repne scasb + rep movs pair.
@@ -526,6 +530,38 @@ VA(0x004fa800, 0x97)  // anchor-global, dc 0xe9374
 LODFile::~LODFile()
 {
     clear();
+}
+
+// Complete replaced Dreamcast's WinCE file mapping with a FILE stream, but
+// preserves its clear -> name/header -> directory-vector population order.
+// The retail flag test selects read-only "rb" for bit 0 and "rb+" otherwise;
+// after reading the directory it rewinds the stream for pointAt/read.
+// Exact checkpoint (2026-09-01): all 23 CFG blocks and all 452 bytes match;
+// the source-labelled diff is identical throughout.
+// E:\gamedcs\lodfile.cpp:277
+VA(0x004fa8a0, 0x1C4)  // anchor-bracket + body/import evidence, dc 0xe941c
+int LODFile::open(const char* filename, int flags)
+{
+    if (opened)
+        clear();
+
+    if (flags & 1)
+        fileptr = fopen(filename,
+            DATA_COMPGEN(0x00677d6c, lodReadMode, "rb"));
+    else
+        fileptr = fopen(filename,
+            DATA_COMPGEN(0x0067fa5c, lodUpdateMode, "rb+"));
+    if (!fileptr)
+        return 1;
+
+    strcpy(LODFileName, filename);
+    fread(&header, sizeof(header), 1, fileptr);
+    numEntries = header.numEntries;
+    subindex.resize(numEntries);
+    fread(&subindex[0], sizeof(LODEntry), numEntries, fileptr);
+    fseek(fileptr, 0, SEEK_SET);
+    opened = 1;
+    return 0;
 }
 
 // E:\gamedcs\lodfile.cpp:430.  The shared failure block sits in the

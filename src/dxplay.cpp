@@ -402,24 +402,42 @@ unsigned char CDPlay::Receive(unsigned long* pFromID, unsigned long* pToID, CDPl
     return ReceiveMsg(*pFromID, *pToID, pMsg);
 }
 
-// Residual (72.9%): the loop, resize and cleanup branches are mapped, but
-// retail keeps one unpeeled Receive block and homes this/msg data in edi/esi;
-// our CL specializes the first iteration and assigns those pseudos to esi/edi.
+// Coherent Dreamcast reconstruction (current 70.0899%, banked MAX 72.9438):
+// the dossier proves the CDPlayMsg constructor boundary, a separate zeroing
+// of buffSize, the direct interface Receive, the AllocSize helper call, and
+// the two-part bottom loop condition. Restoring the helper itself removes the
+// prior source-false outer size check; spelling its proven comparison as
+// `dSize < dataSize` reproduces retail's exact cmp/jb and raises the coherent
+// form from 66.0449 to 70.0899. The older MAX duplicated that condition in
+// the caller and is retained only as history.
+//
+// Residual wall: both sides have 19 blocks, but C2 specializes our first
+// Receive from the constructor-known null buffer (107 instructions and 11
+// branches) while retail keeps one unpeeled loop body (89 and 10). Retail
+// then homes this/msg data in EDI/ESI; ours uses ESI/EDI. `why-reg --model
+// --il-order` finds 96 register-visible slots and identical definition order,
+// classifies the EBX/ESI permutation as C1 front-end handle state, and its
+// from/to/buffSize declaration moves are all flat. Constructor initializer
+// versus the DC-proven assignment body, in-class versus out-of-class inline
+// placement, combined versus split buffSize initialization, and one
+// line-gap constructor-invariant carrier are byte-flat. `why-branch` confirms
+// the single extra conditional branch and finds no applicable D-class lever.
 // E:\gamedcs\dxplay.cpp:574
 VA(0x004976b0, 0xDC)  // anchor-vtable CDPlay slot37 (FlushReceiveQueue), dc 0x8a744
 unsigned char CDPlay::FlushReceiveQueue()
 {
-    unsigned long idFrom, idTo, dwSize = 0;
     CDPlayMsg msg;
+    unsigned long from;
+    unsigned long to;
+    unsigned long buffSize;
+    buffSize = 0;
     do {
-        m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->Receive(&idFrom, &idTo, 1, msg.pData, &dwSize);
+        m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->Receive(
+            &from, &to, 1, msg.pData, &buffSize);
         if (m_hRes == DPERR_NOMESSAGES)
             return 1;
-        if (m_hRes == DPERR_BUFFERTOOSMALL) {
-            unsigned long dSize = dwSize;
-            if (dSize >= msg.dataSize)
-                msg.AllocSize(dSize);
-        }
+        if (m_hRes == DPERR_BUFFERTOOSMALL)
+            msg.AllocSize(buffSize);
     } while (m_hRes == DPERR_BUFFERTOOSMALL || m_hRes == 0);
     if (m_hRes < 0)
         return 0;
