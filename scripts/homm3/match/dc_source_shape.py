@@ -1515,6 +1515,38 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"thisArmy\s*\.\s*Init\s*\(.*?\)\s*;\s*"
             r"thisArmy\s*\.\s*LoadResources\s*\(\s*\)\s*;"),
     ),
+    ("cmbtmgr.obj", 0x5ECA8): (
+        SourceRule(
+            "GenerateMap keeps raw NB11's sole named y local outside the "
+            "outer loop and its loop-scoped x",
+            r"\A\s*int\s+y\s*;\s*for\s*\(\s*y\s*=\s*0\s*;\s*y\s*<\s*"
+            r"11\s*;\s*y\s*\+\+\s*\)\s*\{\s*for\s*\(\s*int\s+x\s*=\s*"
+            r"0\s*;\s*x\s*<\s*17\s*;\s*x\s*\+\+\s*\)\s*\{"),
+        SourceRule(
+            "GenerateMap keeps Dreamcast's direct RowIsOdd coordinate "
+            "statements in field_00, field_02, field_04, field_06, "
+            "field_08, field_0a, field_0c order instead of cached offsets",
+            r"field_00\s*=\s*static_cast\s*<\s*short\s*>\s*\(\s*x\s*\*\s*"
+            r"44\s*\+\s*\(\s*RowIsOdd\s*\(\s*y\s*\)\s*\?\s*22\s*:\s*"
+            r"44\s*\)\s*\+\s*14\s*\)\s*;.*?"
+            r"field_02\s*=.*?;.*?"
+            r"field_04\s*=\s*static_cast\s*<\s*short\s*>\s*\(\s*x\s*\*\s*"
+            r"44\s*\+\s*\(\s*RowIsOdd\s*\(\s*y\s*\)\s*\?\s*0\s*:\s*"
+            r"22\s*\)\s*\+\s*14\s*\)\s*;.*?"
+            r"field_06\s*=.*?;.*?field_08\s*=.*?;.*?"
+            r"field_0a\s*=.*?;.*?field_0c\s*=.*?;", 1, 1),
+        SourceRule(
+            "GenerateMap keeps Dreamcast's five sentinel and three clear "
+            "statements after the coordinate group in recovered line order",
+            r"field_0c\s*=.*?;\s*cell\s*->\s*armySide\s*=\s*-\s*1\s*;\s*"
+            r"cell\s*->\s*armySlot\s*=\s*-\s*1\s*;\s*"
+            r"cell\s*->\s*field_1a\s*=\s*-\s*1\s*;\s*"
+            r"cell\s*->\s*field_14\s*=\s*-\s*1\s*;\s*"
+            r"cell\s*->\s*field_10\s*=\s*0\s*;\s*"
+            r"cell\s*->\s*iBodiesInHex\s*=\s*0\s*;\s*"
+            r"cell\s*->\s*background_offset\s*=\s*-\s*1\s*;\s*"
+            r"cell\s*->\s*field_4c\s*=\s*0\s*;", 1, 1),
+    ),
     ("cmbtmgr.obj", 0x5F518): (
         SourceRule(
             "NextArmy keeps Complete's field_4f0 guard around the "
@@ -9770,6 +9802,69 @@ for (side = 0; side < 2; side++) {
     if not any("army-reference thisArmy" in rule.description for rule in
                contract_violations(direct_army_access, load_armies_key)):
         failures.append("flattened LoadArmies thisArmy reference passed")
+    generate_map_key = ("cmbtmgr.obj", 0x5ECA8)
+    generate_map_probe = """\
+int y;
+for (y = 0; y < 11; y++) {
+    for (int x = 0; x < 17; x++) {
+        hexcell* cell = &GetCell(x, y);
+        cell->field_00 = static_cast<short>(
+            x * 44 + (RowIsOdd(y) ? 22 : 44) + 14);
+        cell->field_02 = static_cast<short>(y * 42 + 128);
+        cell->field_04 = static_cast<short>(
+            x * 44 + (RowIsOdd(y) ? 0 : 22) + 14);
+        cell->field_06 = static_cast<short>(y * 42 + 86);
+        cell->field_08 = static_cast<short>(cell->field_04 + 44);
+        cell->field_0a = static_cast<short>(cell->field_06 + 42);
+        cell->field_0c = static_cast<short>(cell->field_06 + 52);
+        cell->armySide = -1;
+        cell->armySlot = -1;
+        cell->field_1a = -1;
+        cell->field_14 = -1;
+        cell->field_10 = 0;
+        cell->iBodiesInHex = 0;
+        cell->background_offset = -1;
+        cell->field_4c = 0;
+    }
+}
+"""
+    if contract_violations(generate_map_probe, generate_map_key):
+        failures.append("aligned GenerateMap source shape did not pass")
+    cached_offsets = generate_map_probe.replace(
+        "for (int x = 0; x < 17; x++) {",
+        "int upper_offset = RowIsOdd(y) ? 22 : 44;\n"
+        "    int lower_offset = RowIsOdd(y) ? 0 : 22;\n"
+        "    for (int x = 0; x < 17; x++) {").replace(
+            "(RowIsOdd(y) ? 22 : 44)", "upper_offset").replace(
+                "(RowIsOdd(y) ? 0 : 22)", "lower_offset")
+    if not any("direct RowIsOdd" in rule.description for rule in
+               contract_violations(cached_offsets, generate_map_key)):
+        failures.append("cached GenerateMap row offsets passed")
+    reordered_coordinates = generate_map_probe.replace(
+        "        cell->field_06 = static_cast<short>(y * 42 + 86);\n",
+        "", 1).replace(
+            "        cell->field_00 =", "        cell->field_06 = "
+            "static_cast<short>(y * 42 + 86);\n"
+            "        cell->field_00 =", 1)
+    if not any("coordinate" in rule.description for rule in
+               contract_violations(reordered_coordinates,
+                                   generate_map_key)):
+        failures.append("reordered GenerateMap coordinates passed")
+    reordered_state = generate_map_probe.replace(
+        "        cell->field_10 = 0;\n"
+        "        cell->iBodiesInHex = 0;\n"
+        "        cell->background_offset = -1;",
+        "        cell->background_offset = -1;\n"
+        "        cell->field_10 = 0;\n"
+        "        cell->iBodiesInHex = 0;")
+    if not any("sentinel and three clear" in rule.description for rule in
+               contract_violations(reordered_state, generate_map_key)):
+        failures.append("reordered GenerateMap state clears passed")
+    loop_scoped_y = generate_map_probe.replace(
+        "int y;\nfor (y = 0;", "for (int y = 0;")
+    if not any("sole named y" in rule.description for rule in
+               contract_violations(loop_scoped_y, generate_map_key)):
+        failures.append("loop-scoped GenerateMap y passed")
     next_army_key = ("cmbtmgr.obj", 0x5F518)
     next_army_probe = """\
 if (stack->field_4f0 && stack->IsIncapacitated())

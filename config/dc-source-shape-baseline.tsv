@@ -2087,7 +2087,6 @@ group	adventuremapwindow.obj	0x3b0	115:hero::GiveExperience
 group	ai_player.obj	0x2f998	1048:AI_resource_cost
 group	border.obj	0x54a20	373:bitmapBorder::SetPalette
 group	bottomviewsubwindow.obj	0x56bbc	655:hero::GetMobility
-group	cmbtmgr.obj	0x5eca8	1658:combatManager::GetCell|combatManager::RowIsOdd
 group	combatoptionswindow.obj	0x67b7c	344:SetDefaultCombatOptions
 group	drawing.obj	0x85478	1522:combatManager::GridY|combatManager::RowIsOdd|combatManager::GridY
 group	events.obj	0x960ac	3317:game::SetInfoFlag

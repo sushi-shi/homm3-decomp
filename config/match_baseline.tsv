@@ -675,7 +675,7 @@ cmbtmgr	?CombatSystemOptions@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x
 cmbtmgr	?DamageWall@combatManager@@QAEXW4TWallTargetId@@H@Z	100.0000	100.0000	100.0000	0x65990	a0bfccca1eba
 cmbtmgr	?DetermineCombatTerrain@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x643b0	918a4b962162
 cmbtmgr	?FreeIcons@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x63500	65d15fcb8448
-cmbtmgr	?GenerateMap@combatManager@@QAEXXZ	60.3026	60.3026	60.3026	0x642d0	edffe57d7ba1
+cmbtmgr	?GenerateMap@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x642d0	f02aed104d40
 cmbtmgr	?GetBackgroundName@combatManager@@QAEPBDXZ	100.0000	100.0000	100.0000	0x646d0	1c957faf1aa8
 cmbtmgr	?GetGridIndex@combatManager@@QBEHHH@Z	100.0000	100.0000	100.0000	0x647a0	6cd6dd530624
 cmbtmgr	?GetMissileStartingPosition@@YIXHHHHHHPBVCSprite@@PAH111@Z	100.0000	100.0000	100.0000	0x69880	bf527463cadd

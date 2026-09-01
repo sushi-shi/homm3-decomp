@@ -9115,19 +9115,21 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   `origPos` field name and inline call; no external implementation or
   `decomp-attempt-1` material was used.
 
-- **2026-08-09 — `combatManager::GenerateMap` reconstructed from unscored to
-  58.8421% (220 bytes).** Retail initializes the complete 11-by-17 combat
-  grid: eight signed-short screen-coordinate fields, five empty-stack
-  sentinels and three cleared state fields per 112-byte cell. The natural
-  nested loop has the same five-block CFG, bounds and store semantics. The
-  residual is whole-loop allocation and strength reduction: retail spills
-  the row plus three derived coordinates and retains -1 in EBX, while this
-  compile retains/strength-reduces the row and emits immediate sentinels.
-  Cached versus repeated `GetCell`, function/block row lifetimes, a shared
-  sentinel and the nested `GetHexIndex` header boundary were measured; the
-  best canonical form is retained under the HoMM2/Gruntz bounded-hypothesis
-  rule. Dreamcast contributes only the method/helper identities and local
-  name; no external implementation or `decomp-attempt-1` material was used.
+- **2026-09-01 — `combatManager::GenerateMap` closed byte-exact (220 bytes,
+  5/5 CFG blocks), from the prior 60.3026% wall.** Retail initializes the
+  complete 11-by-17 combat grid: seven derived screen-coordinate statements,
+  five empty-stack sentinels and three cleared state fields per 112-byte cell.
+  Dreamcast NB11 supplies the missing source facts: `y` is the sole named
+  local, the two `RowIsOdd(y)` tests remain directly in the field assignments,
+  and the coordinate, sentinel and clear statements retain their recovered
+  line order. VC6 hoists and schedules that source into retail's apparently
+  different store order, reserves EBX for -1, and spills both `y` and the cell
+  cursor exactly as retail does. The previously retained cached upper/lower
+  offsets were therefore a local source-false maximum, not a compiler wall.
+  The Dreamcast source-shape gate now ratchets the recovered form and carries
+  negative controls for cached offsets, reordered coordinate/state statements
+  and loop-scoped `y`. No external implementation or `decomp-attempt-1`
+  material was used.
 
 - **2026-08-09 — `combatManager::PlaceLargeObstacle` reconstructed to
   99.9888% (264 bytes).** Retail's second stack parameter is a special-
