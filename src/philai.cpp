@@ -1173,8 +1173,15 @@ long get_artifact_purchase_value(
     return value;
 }
 
-// Residual (93.73%): all 15 CFG blocks align; EBX/EDI allocation remains
-// swapped after the inlined appraisal despite five source-order probes.
+// CHECKPOINT (93.7290 -> 98.1308): Dreamcast line 355 prices the tray entry,
+// then line 358 constructs the artifact from the tray again.  Removing the
+// source-false artifact-id cache restores retail's reload and, with it, every
+// register allocation and all 15 CFG blocks.  The sole residual is the
+// scheduler's placement of the constructor's independent `extra = -1` store:
+// retail hoists it across the resource debit while this build emits it after
+// the artifact-id store. why-reg classifies the two-slot distance as a pure
+// B16/C3/C4 schedule transpose; all nine catalog probes are flat or worse,
+// and copy-initializing an equivalent constructor temporary falls to 92.48%.
 VA(0x00524400, 0x149)  // anchor-global, dc 0x10da30
 void buy_artifacts(hero* current_hero, TArtifact* artifact_list,
                    long market_count)
@@ -1202,12 +1209,11 @@ void buy_artifacts(hero* current_hero, TArtifact* artifact_list,
         }
 
         EGameResource resource;
-        TArtifact artifact_id = artifact_list[best_artifact];
         long price = get_artifact_purchase_price(
-            artifact_id, market_count, &resource);
+            artifact_list[best_artifact], market_count, &resource);
         gpCurrentPlayer->resources[resource] -= price;
 
-        type_artifact artifact(artifact_id);
+        type_artifact artifact(artifact_list[best_artifact]);
         current_hero->GiveArtifact(&artifact, 1, 1);
         artifact_list[best_artifact] = ARTIFACT_NONE;
     }
@@ -1761,7 +1767,7 @@ static void upgrade_creatures(hero* current_hero, const town* current_town)
 // are compatible retail-only additions, not reasons to flatten the shared
 // source shape.
 //
-// Residual (99.51087%): candidate and retail are both 1,548 bytes with all 74
+// Residual (99.51087%): candidate and retail are both 1,548 bytes with all 73
 // blocks and the 43-branch / two-return structure aligned. Every instruction
 // agrees through the final visiting-hero lookup; retail loads gpGame before
 // forming the hero index, while this VC6 state schedules the same load after
@@ -2894,6 +2900,14 @@ void AI_set_hero_bonuses(hero* our_hero)
 // Complete's relocation instead names the exact retail-only
 // AI_get_artifact_player_value helper. Keep this revision local: the
 // independently exact value_of_obelisk still calls the older overload.
+//
+// Residual (97.8723%): all 13 CFG blocks and the 94-instruction multiset
+// agree.  Retail reloads the staged double numerator before converting the
+// divisor; VC6 schedules that reload immediately afterward. why-reg reports
+// only a two-slot B16/C3/C4 transpose: its 16 guided mutations are flat or
+// worse. Naming the numerator is byte-flat, while carrying it through a
+// second average local falls to 95.57%, so the direct DC-shaped expression
+// remains the strongest defensible spelling.
 VA(0x00527960, 0x140)  // anchor-callee, dc 0x110018
 void philAI::GetTurnAIVars(int whichPlayer)
 {

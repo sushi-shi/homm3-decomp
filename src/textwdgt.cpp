@@ -77,6 +77,11 @@ int textWidget::Main(message* msg)
 // image point at it (whole-image scan of the absolute operand), so the
 // row has no single owning TU. Same standing as widget::Close and the
 // slot-3 `ret 8` fold at 0x5bc7e0 that border.h/button.h already record.
+// Re-audited 2026-09-01: retail is exactly one `ret`; DC zBufferDraw and
+// Dim are independent four-byte `rts; nop` publics, and bitmapBacked's
+// zBufferDraw is a third independent empty public. Defining any one at this
+// VA is the negative control: it falsely assigns the other 47 retail vtable
+// references to one source identity and emits an unpairable TU-local COMDAT.
 DC_ONLY(0x164f7c, 0x4)
 void textWidget::zBufferDraw()
 {
@@ -87,6 +92,10 @@ void textWidget::zBufferDraw()
 // EXCLUDED CLASS, same cause as zBufferDraw above: the empty override
 // folded onto the shared 1-byte `ret`. textWidget's vtable slot 8 and
 // the empty zBufferDraw both point at 0x5bc690 for that reason.
+// The adjacent 0x5bc7e0 row is independently a three-byte `ret 8` with 56
+// retail vtable references; its different callee-pop ABI rules it out for
+// both nil-ary DC publics. It too remains an image-wide ICF representative,
+// not textwdgt-owned unclaimed work.
 DC_ONLY(0x165034, 0x4)
 void textWidget::Dim()
 {

@@ -2981,6 +2981,12 @@ int TThievesGuildWindow::WindowHandler(message* msg)
 // so every one of the nine reads as a mismatch. Nine entries at four bytes
 // plus the `jmp [4*eax + <table>]` operand's own addend is 40 B against this
 // row's 39 B of recoverable mass - the whole of it.
+// Re-audited 2026-09-01: all 369 CFG blocks are exact. The source view also
+// finds six repeated loop latches where retail schedules the induction-pointer
+// add before the index increment and this compile reverses them; both `++i`
+// and a body-scoped increment are byte-flat negative controls. Those harmless
+// rotations cannot explain or repair the score: the 40-byte self-relocation
+// ceiling above still accounts for the complete 39-byte fuzzy loss.
 //
 // THE SAME CEILING BOUNDS EVERY JUMP-TABLE ROW IN THESE UNITS (measured
 // 2026-08-21, self-relocation census): get_spell_work_chance 120 B of table

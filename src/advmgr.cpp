@@ -495,6 +495,14 @@ void CAdvMgrNetMsgHandler::HandleGiftRequestMsg(CNetMsg* pNetMsg)
 // recorded here rather than done here.
 #endif  // @carcass
 
+// Retail's destination-in-ECX/source-at-[ebp+8] memberwise copy reaches
+// through +0x48e, returns the destination, and is the ??4hero public emitted
+// by HandleNetMsg's two hero assignments.  The 0x492-byte hero extent, the
+// embedded string assignment at +0x3da, both call sites, and the RET 4 arity
+// rule out the adjacent Dreamcast gift-request handler.  Keep this implicit:
+// an explicit operator= declaration perturbs the include-set inline budget.
+VA_COMPGEN(0x00406480, 0x59F, IMPLICIT_COPY_ASSIGN, hero)
+
 // Reconstructed under the CURRENT claim name per the attribution note
 // above: this body is the REQUEST handler - it reads CGiftRequestMsg's
 // m_greedyGuy/m_resource pair, formats general-text row 360 with the
@@ -10116,21 +10124,71 @@ CAdvPopup::CAdvPopup(int winX, int winY, int winWidth, int winHeight,
     }
 }
 
-#if 0  // @carcass
+// Dreamcast names the compiler wrapper in advmgr.obj and proves its
+// destructor/delete pair. Retail's CAdvPopup vtable at 0x63a6a8 points to
+// this exact 33-byte body, whose first call lands on the destructor below.
+VA_COMPGEN(0x0041b0e0, 0x21, SCALAR_DELETING_DTOR, CAdvPopup)
+
+// The implicitly generated CHeroWindowEx destructor COMDAT is one tail jump
+// to heroWindow::~heroWindow in both images: DC 0x34e0 records that sole base
+// destructor call, and retail 0x41b110 is the exact five-byte x86 jump. The
+// active implicit destructor remains source-truthful in window.h.
+VA_COMPGEN(0x0041b110, 0x5, IMPLICIT_DTOR, CHeroWindowEx)
+
+// Dreamcast's shared destructor is otherwise empty before the CHeroWindowEx
+// base teardown. Complete adds the inverse of the constructor's popup-state
+// latch: retail tests the same 0x69954c flag, fetches the handler, and restores
+// byte +4 from this object's saved byte at +0x5c before calling the base dtor.
+VA(0x0041b120, 0x67)  // anchor-vtable + Complete network-state restore, dc 0x34c8
+CAdvPopup::~CAdvPopup()
+{
+    if (bVideoPaused) {
+        CNetMsgHandler* pNetMsgHandler = pDPlay->GetNetMsgHandler();
+        if (pNetMsgHandler)
+            pNetMsgHandler->SetInPopup(savedPlayerState);
+    }
+}
 
 // E:\gamedcs\advmgr.cpp:11528
-DC_ONLY(0x1ec80, 0x32)
+// Retail keeps the same seven-statement, branchless shape: publish the saved
+// result, rewrite the message from this object's three command fields, and
+// forward it to the executive.
+VA(0x0041b190, 0x2D)  // CAdvPopup vtable 0x63a6a8 slot 14, dc 0x1ec80
 int CAdvPopup::ExitDialog(message* msg)
 {
-    // @stub
+    gpWindowManager->dialogReturn = exitCodeX;
+    msg->id = field_50;
+    msg->codeX = exitId;
+    msg->codeY = 10;
+    return MESSAGE_DISPATCH_FORWARD;
 }
 
 // E:\gamedcs\advmgr.cpp:11539
-DC_ONLY(0x1ecb4, 0xF4)
+// Dreamcast proves the local inventory and statement order. Retail preserves
+// that control flow but gates the network pump on Complete's bVideoPaused:
+// base handler, expired-turn exit, CheckHandleNet, abort-message exit.
+VA(0x0041b1c0, 0x87)  // CAdvPopup vtable 0x63a6a8 slot 9, dc 0x1ecb4
 int CAdvPopup::WindowHandler(message* msg)
 {
-    // @stub
+    int ret = CHeroWindowEx::WindowHandler(msg);
+    if (ret)
+        return ret;
+
+    if (gTurnDuration69d630.IsExpired())
+        return ExitDialog(msg);
+
+    if (bVideoPaused) {
+        unsigned char msgReceived = 0;
+        CNetMsgHandler* pNetMsgHandler = pDPlay->GetNetMsgHandler();
+        if (pNetMsgHandler)
+            pNetMsgHandler->CheckHandleNet(1, &msgReceived);
+        if (msgReceived && pNetMsgHandler->GetAbortPopupMsg())
+            return ExitDialog(msg);
+    }
+    return 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\struct.h:100
 DC_ONLY(0x1eda8, 0x8)

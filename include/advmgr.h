@@ -1582,6 +1582,8 @@ public:
     void FightForArtifact(class hero* current_hero, NewmapCell* cell,
                           type_point point, bool human_player);
 private:
+    void DoEventFreeArtifact(class hero* current_hero, NewmapCell* cell,
+                             type_point point, bool human_player);
     void PayForArtifact(class hero* current_hero, NewmapCell* cell,
                         type_point point, const char* dialog_text,
                         short gold_cost, short resource_cost,

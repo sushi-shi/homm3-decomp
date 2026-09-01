@@ -260,6 +260,13 @@ public:
     void ClearChat();
     void SetMaxLines(int maxChatLines);
     void SetPosition(int newPos);
+private:
+    // remote.cpp:1060/1065, DC 0x11c71c/0x11c738. Complete's free AddChat
+    // retains the first helper's equivalent expression; KillOldChat expands
+    // the second at both call sites. No standalone retail copy survives.
+    int GetNextFreeMsgNbr();
+    int GetNextMsgNbr(int msgNbr);
+public:
     // remote.h:326, DC 0x87620. Complete expands this accessor in DrawFrame;
     // no retail out-of-line copy survives. The DC public decoration proves
     // that the original member is non-const.

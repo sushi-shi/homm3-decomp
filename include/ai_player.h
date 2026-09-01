@@ -251,6 +251,9 @@ public:
     long resource_demand[7];
     double resource_value[7];
 
+    // DC ai_player.h:263 (dc 0x37dec). Complete inlines the helper into
+    // AI_initialize; retail leaves exactly the team-word store.
+    void init(short new_team) { team = new_team; }
     static float get_attack_bonus(short player);  // 0x428710
     // DC ai_player.h:278 (dc 0x37df8, ?...@@QBANW4EGameResource@@@Z);
     // inlined into type_income_artifact::get_value, whose by-value double
@@ -803,8 +806,41 @@ public:
 // 144 vector objects directly with a 16-byte stride.
 extern std::vector<type_artifact_effect*> const_artifact_effects[144];
 
+// Complete's 0x63ac7c sentinel stream selects the concrete effect class
+// created for each artifact. The numeric order is retail's jump table at
+// 0x434530; the Dreamcast initializer corroborates the shared class family.
+enum EArtifactEffectKind {
+    ARTIFACT_EFFECT_MIGHT,
+    ARTIFACT_EFFECT_POWER,
+    ARTIFACT_EFFECT_KNOWLEDGE,
+    ARTIFACT_EFFECT_MORALE,
+    ARTIFACT_EFFECT_LUCK,
+    ARTIFACT_EFFECT_SCOUTING,
+    ARTIFACT_EFFECT_NECROMANCY,
+    ARTIFACT_EFFECT_COMBAT,
+    ARTIFACT_EFFECT_MOVEMENT,
+    ARTIFACT_EFFECT_SPELLCASTER,
+    ARTIFACT_EFFECT_DURATION,
+    ARTIFACT_EFFECT_SCHOOL,
+    ARTIFACT_EFFECT_ANTIMAGIC,
+    ARTIFACT_EFFECT_ANTIMORALE,
+    ARTIFACT_EFFECT_ANTILUCK,
+    ARTIFACT_EFFECT_TOME,
+    ARTIFACT_EFFECT_INCOME,
+    ARTIFACT_EFFECT_CREATURE_GROWTH,
+    ARTIFACT_EFFECT_SPELL,
+    ARTIFACT_EFFECT_SHOOTER_BONUS,
+    ARTIFACT_EFFECT_ANGELIC_ALLIANCE,
+    ARTIFACT_EFFECT_UNDEAD_KING_CLOAK,
+    ARTIFACT_EFFECT_ELIXIR_OF_LIFE,
+    ARTIFACT_EFFECT_STATUE_OF_LEGION
+};
+
+extern const int gAIArtifactEffectDefinitions[];
+
 class type_scouting_artifact : public type_artifact_effect {
 public:
+    type_scouting_artifact(long new_bonus);
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 
@@ -822,66 +858,77 @@ public:
 
 class type_might_artifact : public type_combat_artifact {
 public:
+    type_might_artifact(long new_bonus);
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 };
 
 class type_power_artifact : public type_combat_artifact {
 public:
+    type_power_artifact(long new_bonus);
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 };
 
 class type_knowledge_artifact : public type_combat_artifact {
 public:
+    type_knowledge_artifact(long new_bonus);
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 };
 
 class type_necromancy_artifact : public type_combat_artifact {
 public:
+    type_necromancy_artifact(long new_bonus);
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 };
 
 class type_movement_artifact : public type_combat_artifact {
 public:
+    type_movement_artifact(long new_bonus);
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 };
 
 class type_spellcaster_artifact : public type_combat_artifact {
 public:
+    type_spellcaster_artifact(long new_bonus);
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 };
 
 class type_morale_artifact : public type_combat_artifact {
 public:
+    type_morale_artifact(long new_bonus);
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 };
 
 class type_luck_artifact : public type_combat_artifact {
 public:
+    type_luck_artifact(long new_bonus);
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 };
 
 class type_antimorale_artifact : public type_artifact_effect {
 public:
+    type_antimorale_artifact();
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 };
 
 class type_antiluck_artifact : public type_artifact_effect {
 public:
+    type_antiluck_artifact();
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 };
 
 class type_creature_growth_artifact : public type_artifact_effect {
 public:
+    type_creature_growth_artifact(long new_level, long new_bonus);
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 
@@ -893,18 +940,21 @@ public:
 
 class type_undead_king_cloak_artifact : public type_necromancy_artifact {
 public:
+    type_undead_king_cloak_artifact();
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 };
 
 class type_duration_artifact : public type_power_artifact {
 public:
+    type_duration_artifact(long new_bonus);
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 };
 
 class type_school_artifact : public type_power_artifact {
 public:
+    type_school_artifact(TSpellSchool new_school, long new_bonus);
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 
@@ -913,6 +963,7 @@ public:
 
 class type_antimagic_artifact : public type_artifact_effect {
 public:
+    type_antimagic_artifact(long max_level);
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 
@@ -925,6 +976,7 @@ public:
 // concrete branch, as in the Dreamcast/NH3API hierarchy.
 class type_spell_artifact : public type_artifact_effect {
 public:
+    type_spell_artifact(SpellID new_spell);
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 
@@ -933,30 +985,35 @@ public:
 
 class type_shooter_bonus_artifact : public type_combat_artifact {
 public:
+    type_shooter_bonus_artifact(long new_bonus);
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 };
 
 class type_angelic_alliance_artifact : public type_might_artifact {
 public:
+    type_angelic_alliance_artifact();
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 };
 
 class type_elixir_of_life_artifact : public type_artifact_effect {
 public:
+    type_elixir_of_life_artifact();
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 };
 
 class type_statue_of_legion_artifact : public type_artifact_effect {
 public:
+    type_statue_of_legion_artifact();
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 };
 
 class type_tome_artifact : public type_combat_artifact {
 public:
+    type_tome_artifact(TSpellSchool new_school);
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 

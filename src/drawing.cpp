@@ -738,6 +738,18 @@ void combatManager::UpdateMouseGrid(int iNewMouseGridIndex,
 // combat area or the accumulated creature-effect extent. Dreamcast's line
 // table preserves the three small helper boundaries which retail /Ob2 folds
 // into these walks.
+// Residual (96.1465%, from the audited 91.8567% helper-preserving shape): all
+// 117 CFG blocks and targets agree and the emitted call multiset is exact at
+// 30/30. The remaining 155 masked slots are register binding plus one stack
+// slot: candidate homes the inlined obstacle divisor and uses a 0x24 frame;
+// retail keeps it in EBX and uses 0x20. DC line 1165 groups the three chat
+// reset stores; chaining field_13d30 and bLimitDraw is the strongest coherent
+// spelling. Separate stores, a retail-order-preserving partial chain, and a
+// comma expression all return to 91.8567%; a volatile first-loop column meant
+// to force retail's argument-slot home falls to 85.6731%. Named obstacle-index
+// and extended column-lifetime controls are byte-flat. The banked 98.9130%
+// flattening is not retained because it removes DC-proven DrawObstacle,
+// DrawObstacleAt, and DrawDeadOccupants source boundaries.
 // E:\gamedcs\drawing.cpp:1141
 VA(0x00494440, 0x7d5)  // anchor-global + retail arity, dc 0x84e2c
 void combatManager::DrawFrame(unsigned char update,
@@ -751,14 +763,15 @@ void combatManager::DrawFrame(unsigned char update,
             || !field_13300)
         return;
 
+    SLimitData temp_limits;
+
     if (bLimitCreatureEffect) {
         ComputeMaxExtent();
         field_13d30 = 1;
     }
 
     if (chatMan.ChatChanged()) {
-        field_13d30 = 0;
-        bLimitDraw = 0;
+        field_13d30 = bLimitDraw = 0;
         bLimitCreatureEffect = 0;
         if (field_53b8) {
             field_53b0->Draw(
@@ -847,8 +860,8 @@ void combatManager::DrawFrame(unsigned char update,
         }
 
         int firstColumn;
-        int lastColumn;
         int step;
+        int lastColumn;
         if (field_132f4 > COMBAT_FORTIFICATION_NONE && row >= 6) {
             firstColumn = COMBAT_GRID_LAST_COLUMN;
             lastColumn = -1;
@@ -863,8 +876,7 @@ void combatManager::DrawFrame(unsigned char update,
                 priority++) {
             for (int column = firstColumn; column != lastColumn;
                     column += step) {
-                int index = GetHexIndex(column, row);
-                hexcell& cell = cells[index];
+                const int index = GetHexIndex(column, row);
 
                 if (field_132f4 > COMBAT_FORTIFICATION_NONE
                         && priority == COMBAT_DRAW_PRIORITY_WALL) {

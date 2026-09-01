@@ -53,7 +53,6 @@ public:
     Bitmap816* image;
 
     CBitmapWidget(int xPos, int yPos, Bitmap816* pImage);
-    virtual ~CBitmapWidget();
     virtual int Main(message* msg);  // slot 2, folds onto 0x575a10
     virtual void zBufferDraw();      // slot 3, folded onto 0x404140
     virtual void Draw();             // slot 4, retail 0x575a20
@@ -119,7 +118,6 @@ public:
     int numTeams;
 
     CTeamAlignmentDlg(unsigned char newGameMode);  // retail 0x5764d0
-    virtual ~CTeamAlignmentDlg();
     unsigned char CreateWin();
     int CountNumPlayers(int teamNbr);
     void GetTeams();

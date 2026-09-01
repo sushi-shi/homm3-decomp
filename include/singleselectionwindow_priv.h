@@ -161,6 +161,7 @@ public:
         m_save = new CChatSave(w, h);
     }
 
+    virtual ~CChatWidget();
     virtual void Draw();  // slot 4
 
     CChatSave* m_save;  // +0x50
@@ -168,20 +169,22 @@ public:
 
 // The lobby chat-entry subtype. Dreamcast proves the class and its IgnoreKey
 // override; retail's constructor call proves it has no additional fields.
-class CSingleSelectionChatEdit : public textEntryWidget {
+class CSingleSelectionChatEdit : public CChatEdit {
 public:
     CSingleSelectionChatEdit(
         int x, int y, int w, int h, int textSize, const char* text,
-        const char* fontName, font::TColor color, unsigned justification,
+        const char* fontName, font::TColor color,
+        font::EJustify justification,
         const char* backgroundIcon, int backgroundFrame, int id, int style,
         int readType, int insetX, int insetY)
-        : textEntryWidget(x, y, w, h, textSize, text, fontName, color,
-                          justification, backgroundIcon, backgroundFrame, id,
-                          style, readType, insetX, insetY)
+        : CChatEdit(x, y, w, h, textSize, const_cast<char*>(text),
+                    const_cast<char*>(fontName), color, justification,
+                    const_cast<char*>(backgroundIcon), backgroundFrame, id,
+                    style, readType, insetX, insetY)
     {
     }
 
-    void SendChat(const char* text, int toWho);
+    virtual void SendChat(const char* text, int toWho);
     virtual unsigned char IgnoreKey(message* msg);
 };
 
@@ -556,31 +559,28 @@ public:
     CNewPlayerMsg(CNetPlayerInfo* pPlayerInfo, char* version);
 };
 
-// The per-row header-transfer payload: a t_complex_net_message wrapping
-// one full GameSelectionHeadersStruct plus the transfer flag and row
-// number. vtable 0x641b20; OnGameHeaderInfoMsg's inline construction
-// calls the base default ctor 0x512c20 and the record ctor COMDAT
-// 0x578e00, and 0x578760 is the compiler-generated teardown.
+// Dreamcast's new-map announcement carries one NewSMapHeader. Complete wraps
+// the same payload in t_complex_net_message so the header is serialized via
+// its unique 0x641d30 read/write vtable. The +0x18 member placement is fixed
+// independently by both retail virtual bodies and their construction sites.
 class CNewMapHeaderInfoMsg : public t_complex_net_message {
 public:
-    unsigned char m_flag;                 // +0x18, 1 = a TransferHeaders row
-    char pad_19[3];
-    int m_number;                         // +0x1c
-    GameSelectionHeadersStruct m_header;  // +0x20
+    NewSMapHeader m_header;  // +0x18
 
     CNewMapHeaderInfoMsg() {}
-    ~CNewMapHeaderInfoMsg() {}
+    CNewMapHeaderInfoMsg(NewSMapHeader* pMapHeader);
+    ~CNewMapHeaderInfoMsg();
     virtual unsigned char read(TAbstractFile* infile);
     virtual unsigned char write(TAbstractFile* outfile) const;
 };
 
 // The re-requested-row reply (subtype RS_GAME_HEADER_INFO through the
-// t_complex_net_message subtype ctor 0x512c50): the same
-// flag/number/header payload as the transfer stream. Retail widened
-// DC's (headerNbr, pHeader) ctor with the list-select flag and
-// expands it in HandleRequests - base ctor and the header's member
-// assign (the 0x578440 COMDAT) stay calls, the member default
-// construction and the flag/number stores inline.
+// t_complex_net_message subtype ctor 0x512c50): one full list row plus the
+// transfer flag and row number. Retail widens DC's (headerNbr, pHeader) ctor
+// with the list-select flag and adds the unique 0x641b20 read/write vtable.
+// HandleRequests expands the construction - base ctor and the header's member
+// assign (the 0x578440 COMDAT) stay calls, while default construction and the
+// flag/number stores inline.
 class CGameHeaderInfoMsg : public t_complex_net_message {
 public:
     unsigned char m_flag;                 // +0x18
@@ -588,14 +588,11 @@ public:
     int m_number;                         // +0x1c
     GameSelectionHeadersStruct m_header;  // +0x20
 
+    CGameHeaderInfoMsg() {}
     CGameHeaderInfoMsg(unsigned char flag, int number,
-                       GameSelectionHeadersStruct* pHeader)
-        : t_complex_net_message(RS_GAME_HEADER_INFO)
-    {
-        m_flag = flag;
-        m_number = number;
-        m_header = *pHeader;
-    }
+                       GameSelectionHeadersStruct* pHeader);
+    virtual unsigned char read(TAbstractFile* infile);
+    virtual unsigned char write(TAbstractFile* outfile) const;
 };
 
 // The full-roster broadcast (DC ctor takes both player arrays); the
@@ -822,6 +819,8 @@ public:
 class CNewPlayerUpdateMan {
 public:
     CNewPlayerUpdateTask* m_procs[8];
+
+    CNewPlayerUpdateMan();
 
     // DC IsSendingHeaders; Complete expands it into each sort-button arm.
     unsigned char IsSendingHeaders() const

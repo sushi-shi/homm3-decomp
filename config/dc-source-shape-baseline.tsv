@@ -674,10 +674,7 @@ call	cmbtmgr.obj	0x5d60c	font::DrawBoundedString
 call	cmbtmgr.obj	0x5dc70	Bitmap16Bit::FillRect
 call	cmbtmgr.obj	0x5dc70	DDCreateSurface
 call	cmbtmgr.obj	0x5dc70	combatManager::FreeArmies
-call	cmbtmgr.obj	0x5e464	town::HasBuilding
 call	cmbtmgr.obj	0x5e690	combatManager::CheckNativeTerrain
-call	cmbtmgr.obj	0x5e690	hero::AdjustPrimarySkill
-call	cmbtmgr.obj	0x5e690	hero::GetPrimarySkill
 call	cmbtmgr.obj	0x5e9ac	combatManager::GridX
 call	cmbtmgr.obj	0x5e9ac	combatManager::GridY
 call	cmbtmgr.obj	0x5e9ac	combatManager::InInvisibleColumn
@@ -712,7 +709,6 @@ call	cmbtmgr.obj	0x60b20	combatManager::RowIsOdd
 call	cmbtmgr.obj	0x60ce0	SLimitData::Height
 call	cmbtmgr.obj	0x60ce0	SLimitData::Width
 call	cmbtmgr.obj	0x60ce0	army::OffsetToFront
-call	cmbtmgr.obj	0x60ce0	combatManager::MarkCreatureEffect
 call	cmbtmgr.obj	0x60ce0	heroWindowManager::FizzleForward
 call	cmbtmgr.obj	0x60ce0	heroWindowManager::SaveFizzleSource
 call	cmbtmgr.obj	0x60ee0	army::Is
@@ -747,7 +743,6 @@ call	cmbtmgr.obj	0x623cc	army::Is
 call	cmbtmgr.obj	0x623cc	army::OffsetToFront
 call	cmbtmgr.obj	0x62478	combatManager::DrawFrame
 call	cmbtmgr.obj	0x62478	combatManager::UpdateCombatArea
-call	cmbtmgr.obj	0x62560	combatManager::MarkCreatureEffect
 call	cmbtmgr.obj	0x62560	combatManager::UpdateCombatArea
 call	cmbtmgr.obj	0x62560	max
 call	cmbtmgr.obj	0x62e4c	combatManager::GridX
@@ -1065,7 +1060,6 @@ call	events.obj	0x90c58	advManager::DoEventFreeArtifact
 call	events.obj	0x90d34	NewmapCell::GetArtifactIndex
 call	events.obj	0x91104	ExtraInfoUnion::GetArtifactPrice
 call	events.obj	0x91104	ExtraInfoUnion::IsDefendedArtifact
-call	events.obj	0x91104	advManager::DoEventFreeArtifact
 call	events.obj	0x91308	show_rewards
 call	events.obj	0x9138c	hero::AdjustPrimarySkill
 call	events.obj	0x9138c	hero::is_in_spellbook
@@ -1373,7 +1367,6 @@ call	kbwin.obj	0xe7e38	DestroyDirectInput
 call	kbwin.obj	0xe806c	GameTime::IsPast
 call	levelupwindow.obj	0xe8344	button::set_hotkey
 call	levelupwindow.obj	0xe8344	widget::set_visible
-call	levelupwindow.obj	0xe8c64	GameTime::IsPast
 call	levelupwindow.obj	0xe8c64	widget::set_visible
 call	lodfile.obj	0xe908c	DCfclose
 call	lodfile.obj	0xe91c0	stricmp
@@ -1527,8 +1520,6 @@ call	remote.obj	0x11c3a8	CChatManager::GetNextFreeMsgNbr
 call	remote.obj	0x11c4ac	CTurnDuration::IsClose
 call	remote.obj	0x11c6bc	CChatManager::UpdateNewChat
 call	remote.obj	0x11c754	GameTime::ElapsedSince
-call	remote.obj	0x11c7b0	CChatManager::GetNextMsgNbr
-call	remote.obj	0x11c7b0	GameTime::ElapsedSince
 call	remote.obj	0x11c8d0	CChatManager::GetNextMsgNbr
 call	remote.obj	0x11ca14	GameTime::ElapsedSince
 call	remote.obj	0x11cd14	textWidget::GetText

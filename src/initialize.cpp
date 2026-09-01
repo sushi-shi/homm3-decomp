@@ -326,6 +326,11 @@ static void add_to_included_mask(const int* include_list, __int64* included_buil
 // side (owner=?bitNumber@@3PA_JA, addend=0x4); that is a reviewed-table change
 // and is deliberately left for the pipeline owner. The only real divergence
 // left is the position of the single `lea edi,[edx+8]` (3 bytes).
+// Rechecked 2026-09-01 against the exact add_to_included_mask and
+// create_requirement_masks siblings: all three have exact retail CFGs and
+// the same cosmetic high-dword relocation split. Moving the duplicate zero
+// store into memcpy's destination comma-expression and naming BOTH the source
+// and destination pointers are byte-flat at 93.8667; neither delays the LEA.
 VA(0x004ebb70, 0xD8)  // linkorder+body (common-list + arg-list walks), dc 0xdc3cc
 static void create_included_mask(const int* include_list, __int64* included_buildings)
 {

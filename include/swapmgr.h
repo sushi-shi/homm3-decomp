@@ -40,8 +40,8 @@ public:
 // virtuals. Retail's destructor walks the inherited Widgets vector verbatim.
 class TSwapWindow : public heroWindow {
 public:
-    int field_4c;       // +0x4c
-    int field_50;       // +0x50
+    textWidget* field_4c;  // +0x4c  chat transcript consumed by CChatManager
+    CSwapManagerChatEdit* field_50;  // +0x50, rollover suppressed while focused
     widget* field_54;   // +0x54  left-army count arrow
     widget* field_58;   // +0x58  right-army count arrow
     widget* field_5c;   // +0x5c  transfer control
@@ -75,6 +75,138 @@ enum ESwapWidgetId {
     kSwapRefreshRight = 0x68,
     kSwapReceiveFromAlly = 0x12e,
     kSwapTradeRequestDone = 0x7800,
+};
+
+// SetRolloverText's complete dispatch domain. The 215-byte retail selector
+// table proves each band; ordinal names are retained where the corresponding
+// TSwapWindow constructor body has not yet supplied a stronger widget role.
+enum ESwapRolloverWidgetId {
+    kSwapRolloverHeroLeft = 1,
+    kSwapRolloverHeroRight,
+    kSwapRolloverLeftPrimary0,
+    kSwapRolloverLeftPrimary1,
+    kSwapRolloverLeftPrimary2,
+    kSwapRolloverLeftPrimary3,
+    kSwapRolloverRightPrimary0 = 8,
+    kSwapRolloverRightPrimary1,
+    kSwapRolloverRightPrimary2,
+    kSwapRolloverRightPrimary3,
+    kSwapRolloverLeftArmy0 = 13,
+    kSwapRolloverLeftArmy1,
+    kSwapRolloverLeftArmy2,
+    kSwapRolloverLeftArmy3,
+    kSwapRolloverLeftArmy4,
+    kSwapRolloverLeftArmy5,
+    kSwapRolloverLeftArmy6,
+    kSwapRolloverRightArmy0,
+    kSwapRolloverRightArmy1,
+    kSwapRolloverRightArmy2,
+    kSwapRolloverRightArmy3,
+    kSwapRolloverRightArmy4,
+    kSwapRolloverRightArmy5,
+    kSwapRolloverRightArmy6,
+    kSwapRolloverLeftArtifact0,
+    kSwapRolloverLeftArtifact1,
+    kSwapRolloverLeftArtifact2,
+    kSwapRolloverLeftArtifact3,
+    kSwapRolloverLeftArtifact4,
+    kSwapRolloverLeftArtifact5,
+    kSwapRolloverLeftArtifact6,
+    kSwapRolloverLeftArtifact7,
+    kSwapRolloverLeftArtifact8,
+    kSwapRolloverLeftArtifact9,
+    kSwapRolloverLeftArtifact10,
+    kSwapRolloverLeftArtifact11,
+    kSwapRolloverLeftArtifact12,
+    kSwapRolloverLeftArtifact13,
+    kSwapRolloverLeftArtifact14,
+    kSwapRolloverLeftArtifact15,
+    kSwapRolloverLeftArtifact16,
+    kSwapRolloverLeftArtifact17,
+    kSwapRolloverLeftArtifact18,
+    kSwapRolloverRightArtifact0,
+    kSwapRolloverRightArtifact1,
+    kSwapRolloverRightArtifact2,
+    kSwapRolloverRightArtifact3,
+    kSwapRolloverRightArtifact4,
+    kSwapRolloverRightArtifact5,
+    kSwapRolloverRightArtifact6,
+    kSwapRolloverRightArtifact7,
+    kSwapRolloverRightArtifact8,
+    kSwapRolloverRightArtifact9,
+    kSwapRolloverRightArtifact10,
+    kSwapRolloverRightArtifact11,
+    kSwapRolloverRightArtifact12,
+    kSwapRolloverRightArtifact13,
+    kSwapRolloverRightArtifact14,
+    kSwapRolloverRightArtifact15,
+    kSwapRolloverRightArtifact16,
+    kSwapRolloverRightArtifact17,
+    kSwapRolloverRightArtifact18,
+    kSwapRolloverLeftArmyCount0 = 65,
+    kSwapRolloverLeftArmyCount1,
+    kSwapRolloverLeftArmyCount2,
+    kSwapRolloverLeftArmyCount3,
+    kSwapRolloverLeftArmyCount4,
+    kSwapRolloverLeftArmyCount5,
+    kSwapRolloverLeftArmyCount6,
+    kSwapRolloverRightArmyCount0,
+    kSwapRolloverRightArmyCount1,
+    kSwapRolloverRightArmyCount2,
+    kSwapRolloverRightArmyCount3,
+    kSwapRolloverRightArmyCount4,
+    kSwapRolloverRightArmyCount5,
+    kSwapRolloverRightArmyCount6,
+    kSwapRolloverText0Left = 85,
+    kSwapRolloverText0Right,
+    kSwapRolloverLeftBackpack0 = 89,
+    kSwapRolloverLeftBackpack1,
+    kSwapRolloverLeftBackpack2,
+    kSwapRolloverLeftBackpack3,
+    kSwapRolloverLeftBackpack4,
+    kSwapRolloverRightBackpack0,
+    kSwapRolloverRightBackpack1,
+    kSwapRolloverRightBackpack2,
+    kSwapRolloverRightBackpack3,
+    kSwapRolloverRightBackpack4,
+    kSwapRolloverArmyMoveLeft = 103,
+    kSwapRolloverArmyMoveRight,
+    kSwapRolloverText27Left,
+    kSwapRolloverText27Right,
+    kSwapRolloverMoraleLeft,
+    kSwapRolloverMoraleRight,
+    kSwapRolloverLuckLeft,
+    kSwapRolloverLuckRight,
+    kSwapRolloverText9Left,
+    kSwapRolloverText9Right,
+    kSwapRolloverText22Left,
+    kSwapRolloverText22Right,
+    kSwapRolloverStat115,
+    kSwapRolloverStat116,
+    kSwapRolloverStat117,
+    kSwapRolloverStat118,
+    kSwapRolloverStat145 = 145,
+    kSwapRolloverLeftSkill0 = 200,
+    kSwapRolloverLeftSkill1,
+    kSwapRolloverLeftSkill2,
+    kSwapRolloverLeftSkill3,
+    kSwapRolloverLeftSkill4,
+    kSwapRolloverLeftSkill5,
+    kSwapRolloverLeftSkill6,
+    kSwapRolloverLeftSkill7,
+    kSwapRolloverRightSkill0,
+    kSwapRolloverRightSkill1,
+    kSwapRolloverRightSkill2,
+    kSwapRolloverRightSkill3,
+    kSwapRolloverRightSkill4,
+    kSwapRolloverRightSkill5,
+    kSwapRolloverRightSkill6,
+    kSwapRolloverRightSkill7,
+    kSwapNoRefreshWidget = 300,
+};
+
+enum ESwapRolloverCreatureDomain {
+    kSwapRolloverCreatureLast = 0x96,
 };
 
 // Complete's campaign-only guard in handle_artifact_click. Retail fixes the
@@ -146,24 +278,34 @@ public:
     virtual void Close();               // slot 1
     virtual int Main(message& msg);     // slot 2
     int DrawSwapWin();
-    bool IsLeftHero();
-    unsigned char IsRightHero();
-    hero* GetOtherHero();
+    inline bool IsLeftHero();
+    inline unsigned char IsRightHero();
+    inline hero* GetOtherHero();
     void DrawSelector();
     void SendHeroUpdate();
+    int ExitSwapManager(message& msg);
+    void swap_side();
+    void OnChatUpdate();
+    void update_artifact_widget(long id, TArtifact artifact);
     void UpdateSlot(int iHero, TArtifactSlot slot);
     void update_all_slots();
     void UpdateBackpackItem(int iHero, int i);
     void UpdateBackpack(int iHero);
+    void HandleMonster(int iHero, int iMonster, int bRightMouse,
+                       unsigned char bShift);
     void handle_artifact_click(long side, long id,
                                unsigned char right_click);
     void handle_backpack_click(long side, long id,
                                unsigned char right_click);
     void SwapMons();
+    void ViewMon();
+    void SetRolloverText(int codeY);
     void Update();
+    void HandleHeroUpdateMsg(CNetMsg* pNetMsg);
     void OnWidgetDeselect(message& msg, int& exitFlag);
     void OnReceiveFromAlly();
-    unsigned char CanModHero(int hero);
+    void OnGiveMeStuffMsg();
+    bool CanModHero(int hero);
 };
 
 // --- CGiveMeStuffMsg ---
@@ -224,7 +366,7 @@ public:
 // CODEVIEW(E:\gamedcs\swapmgr.cpp:2241, dc 0x15ee24) unsigned char swapManager::IsRightHero();
 // CODEVIEW(E:\gamedcs\swapmgr.cpp:2251, dc 0x15ee50) hero* swapManager::GetOtherHero();
 // CODEVIEW(E:\gamedcs\swapmgr.cpp:2259, dc 0x15ee74) hero* swapManager::GetOurHero();
-// CODEVIEW(E:\gamedcs\swapmgr.cpp:2267, dc 0x15ee98) unsigned char swapManager::CanModHero(int hero);
+// CODEVIEW(E:\gamedcs\swapmgr.cpp:2267, dc 0x15ee98) bool swapManager::CanModHero(int hero);
 // CODEVIEW(E:\gamedcs\swapmgr.cpp:2287, dc 0x15ef1c) void swapManager::OnReceiveFromAlly();
 // CODEVIEW(E:\gamedcs\swapmgr.cpp:2298, dc 0x15ef60) void swapManager::OnGiveMeStuffMsg();
 

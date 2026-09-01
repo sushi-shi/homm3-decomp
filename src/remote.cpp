@@ -676,7 +676,10 @@ void CChatManager::ShutDown()
 // which then swaps equivalent base/index encodings on the two following
 // stores. Tried a named base pointer, a named destination pointer, keeping
 // the base live across all three accesses, and repeating the full ring index;
-// 96.63% is the plateau (the latter two fall to 89.74% and 70.99%).
+// 96.63% is the plateau (the latter two fall to 89.74% and 70.99%). The
+// model-backed register pass agrees that ESI/EDI first definitions already
+// match retail and classifies the residual after them as an address-folding
+// schedule, not a source-nameable allocation lever.
 VA(0x00553840, 0x11B)  // anchor-callees + arity/order-map, dc 0x11c3a8
 void __cdecl AddChat(CChatManager* manager, const char* format, ...)
 {
@@ -695,6 +698,9 @@ void __cdecl AddChat(CChatManager* manager, const char* format, ...)
         --manager->msgCount;
     }
 
+    // Complete changed DC's member formatter into this free function, so its
+    // private GetNextFreeMsgNbr call necessarily became the proven equivalent
+    // expression when `manager` became explicit.
     int msgNbr = (manager->currMsg + manager->msgCount) % manager->maxLines;
     strncpy(manager->msgArray[msgNbr].sText, chatText, 127);
     manager->msgArray[msgNbr].killTime = 0;
@@ -929,6 +935,19 @@ int CChatManager::GetNextMsgNbr(int msgNbr)
 // E:\gamedcs\remote.cpp:1070
 #endif  // @carcass
 
+// E:\gamedcs\remote.cpp:1060/1065. DC records these named source helpers.
+// Complete's free AddChat retains the first one's equivalent expression;
+// retail /Ob2 expands the second at both surviving KillOldChat call sites.
+inline int CChatManager::GetNextFreeMsgNbr()
+{
+    return (currMsg + msgCount) % maxLines;
+}
+
+inline int CChatManager::GetNextMsgNbr(int msgNbr)
+{
+    return (msgNbr + 1) % maxLines;
+}
+
 // E:\gamedcs\remote.cpp:1070
 VA(0x00553db0, 0x33)  // anchor-global, dc 0x11c754
 unsigned char CChatManager::HasOldChat()
@@ -943,8 +962,12 @@ unsigned char CChatManager::HasOldChat()
 // Residual (96.63%): the CFG, instruction sequence, and operand roles agree;
 // retail assigns the zero/loop-counter lane to EDI and the timestamp/count
 // lane to EBX, while this compile assigns those two nonvolatile registers in
-// the opposite order. Declaration-scope and discarded-result probes do not
-// move VC6's allocation.
+// the opposite order. The DC-named ElapsedSince/GetNextMsgNbr helpers are now
+// restored; retail's unsigned first timeout test requires the explicit cast
+// around ElapsedSince. Declaration-scope and discarded-result probes do not
+// move VC6's allocation. why-reg v2 measures distance 28, identifies identical
+// definition slots but different C1 handle state, and its only legal control
+// (swapping changed/chatKilled stores) worsens the distance to 32.
 // E:\gamedcs\remote.cpp:1080
 VA(0x00553df0, 0xE4)  // anchor-global, dc 0x11c7b0
 void CChatManager::KillOldChat()
@@ -953,10 +976,13 @@ void CChatManager::KillOldChat()
     if (msgCount != 0) {
         GameTime::Get();
         unsigned long killTime = msgArray[currMsg].killTime;
-        if (GameTime::Get() - killTime > 20000) {
+        // Retail's jbe proves the Complete comparison remained unsigned even
+        // though DC names the signed ElapsedSince helper at this source row.
+        if (static_cast<unsigned long>(GameTime::ElapsedSince(killTime))
+                > 20000) {
             int i = 0;
             msgArray[currMsg].killTime = i;
-            currMsg = (currMsg + 1) % maxLines;
+            currMsg = GetNextMsgNbr(currMsg);
             --msgCount;
             changed = 1;
             chatKilled = 1;
@@ -964,12 +990,12 @@ void CChatManager::KillOldChat()
             int msgNbr = currMsg;
             while (i < msgCount - 1) {
                 unsigned long nextKillTime = msgArray[msgNbr].killTime;
-                long elapsed = GameTime::Get() - nextKillTime;
+                long elapsed = GameTime::ElapsedSince(nextKillTime);
                 if (elapsed <= 20000)
                     break;
                 if (!msgArray[msgNbr].isSystem)
                     msgArray[msgNbr].killTime += 10000;
-                msgNbr = (msgNbr + 1) % maxLines;
+                msgNbr = GetNextMsgNbr(msgNbr);
                 i++;
             }
         }
@@ -2326,7 +2352,9 @@ void HandleNewHost()
 // the pointer alive through NextPlayer and scores 98.11926%. Retail also folds
 // the empty CTextDialog destructor to its TDialogBox base; exposing that body
 // in the header regresses both this function and an exact caller, so it is
-// rejected.
+// rejected. The refreshed structure pass has all 8 edges aligned (only B4 is
+// one instruction smaller); predict-inline independently isolates that same
+// TDialogBox cleanup as the sole real over-inline call boundary.
 VA(0x005565e0, 0x19E)  // anchor-string + callgraph + dc-order-map, dc 0x11e1cc
 void OnPlayerDropUpdateMsg(unsigned long dpid)
 {
@@ -3546,6 +3574,16 @@ CNetMsg* CNetMsgHandler::CheckHandleNet(unsigned char inPopup,
 // slot. All produce byte-identical output in this body, ??_G, the derived
 // destructor, and the still-exact out-of-line setter.
 //
+// Re-audited 2026-09-01 after this family reached the top of `vc6 queue`.
+// The retail/source structure pass is 4/4 flow-identical blocks and
+// predict-inline reports identical empty call multisets. why-reg finds no
+// applicable legal mutation: retail alone homes the inlined setter's dead
+// `pOld` in [ebp-4] and therefore retains EBP. A volatile `pOld` is the
+// negative control: it does create the frame/store, but also reloads the
+// slot, grows this destructor past retail, expands the derived destructor's
+// EH frame, and destroys the exact 48-byte out-of-line setter. The remaining
+// delta is not permission to invent a carrier or flatten the real helper.
+//
 // The rows are kept rather than withdrawn: without an out-of-line body here
 // ~CNetMsgHandlerPause cannot inline it at all - retail's 0x557ee0 shows
 // the 0x640f14 vptr store and the unhook block sitting inside it - and the
@@ -3826,6 +3864,12 @@ VA_COMPGEN(0x00557eb0, 0x21, SCALAR_DELETING_DTOR, CNetMsgHandlerPause)
 // E:\gamedcs\remote.cpp:3105 - put the parked handler back, then run the
 // base destructor. Both vptr stores are visible: 0x640f04 on entry, then
 // 0x640f14 before ~CNetMsgHandler's own body, which /Ob2 inlines here.
+// WALL 2026-09-01 (91.1111%): all 8 retail blocks and edges agree. Dreamcast
+// independently fixes the guarded SetNetMsgHandler(saved) statement and its
+// order; the residual is the same dead `pOld` home as the base destructor
+// plus one EAX/EDX choice inside the inlined Copy. why-reg finds no legal
+// mutation, while the volatile negative control above perturbs both the
+// positive DC shape and the already-exact setter.
 // E:\gamedcs\remote.cpp:3105
 VA(0x00557ee0, 0x91)  // anchor-vtable 0x640f04, dc 0x11f498
 CNetMsgHandlerPause::~CNetMsgHandlerPause()

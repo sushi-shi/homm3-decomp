@@ -278,6 +278,34 @@ ON_WIDGET_COMPLETE_FILE_ROW_TIMING_RE = (
     r"else\s*\{\s*clickTime\s*=\s*GameTime\s*::\s*Get\s*\(\s*\)\s*;"
     r".*?SetCurrentMap\s*\(")
 
+# Dreamcast's name-entry arm owns the WinCE VRKeyboard popup, including its
+# DisplayChat / OnNameChange / hide tail. Complete retail 0x58b620 has no
+# corresponding calls: it edits the two desktop text widgets in place after
+# the same IsMultiPlayer, GetThisPlayer and CalcPosition setup. Keep the
+# revision classification tied to that full decoded replacement rather than
+# accepting the absence of an older helper name by itself.
+ON_NAME_CLICK_COMPLETE_DESKTOP_RE = (
+    r"\A(?!.*\b(?:DisplayChat|OnNameChange|hide)\s*\().*?"
+    r"if\s*\(\s*IsMultiPlayer\s*\(\s*\)\s*\)\s*return\s*;\s*"
+    r"SetFocus\s*\(\s*-\s*1\s*\)\s*;\s*"
+    r"CNetPlayerHandlerPlayer\s*\*\s*player\s*=\s*"
+    r"GetThisPlayer\s*\(\s*\)\s*;\s*"
+    r"if\s*\(\s*player\s*->\s*playerPos\s*!=\s*pos\s*\)\s*"
+    r"return\s*;.*?GetWidget\s*\(\s*pos\s*\+\s*353\s*\)\s*"
+    r"\)\s*;\s*int\s+colorPos\s*=\s*CalcPosition\s*\(\s*pos\s*\)"
+    r"\s*;\s*if\s*\(\s*w\s*\)\s*\{.*?"
+    r"Panels\s*\[\s*pos\s*\]\s*->\s*Draw\s*\(.*?"
+    r"w\s*->\s*SetText\s*\(\s*player\s*->\s*sName\s*\)\s*;.*?"
+    r"w\s*->\s*send_message\s*\(\s*widget\s*::\s*"
+    r"WIDGET_SET_STATUS\s*,\s*widget\s*::\s*WIDGET_ACTIVE\s*\|\s*"
+    r"widget\s*::\s*WIDGET_DRAWN\s*\)\s*;.*?"
+    r"GetWidget\s*\(\s*pos\s*\+\s*345\s*\)\s*\)\s*;.*?"
+    r"w\s*->\s*send_message\s*\(\s*widget\s*::\s*"
+    r"WIDGET_CLEAR_STATUS\s*,\s*widget\s*::\s*WIDGET_ACTIVE\s*\|\s*"
+    r"widget\s*::\s*WIDGET_DRAWN\s*\)\s*;.*?"
+    r"w\s*->\s*SetText\s*\(\s*player\s*->\s*sName\s*\)\s*;\s*"
+    r"SetFocus\s*\(\s*pos\s*\+\s*353\s*\)\s*;\s*\}\s*\Z")
+
 # Dreamcast CodeView exposes separate i/pThisPlayer/noHero locals for both
 # bonus-cycle arms and nests the CSetAGRMsg lifetime under the surviving
 # player guard. Complete's retail branches are compatible with that scope.
@@ -371,11 +399,13 @@ AI_CHOOSE_COMPLETE_NEARBY_RE = (
     r"pathCell\s*\*\s*path_cell\s*=\s*gpSearchArray\s*->\s*get_cell\s*"
     r"\(\s*point\.point\s*,\s*false\s*\)\s*;\s*"
     r"unsigned\s+char\s+is_nearby\s*=\s*0\s*;\s*"
-    r"if\s*\(\s*path_cell\s*->\s*last_point\s*==\s*start\s*&&\s*"
+    r"if\s*\(\s*(?:INLINE_GATE\s*\(\s*)?"
+    r"path_cell\s*->\s*last_point\s*==\s*start\s*&&\s*"
     r"gpGame\s*->\s*worldMap\.cell\s*\(\s*"
     r"path_cell\s*->\s*last_point\.x\s*,\s*"
     r"path_cell\s*->\s*last_point\.y\s*,\s*"
-    r"path_cell\s*->\s*last_point\.z\s*\)\s*->\s*is_trigger\s*\)\s*"
+    r"path_cell\s*->\s*last_point\.z\s*\)\s*->\s*is_trigger\s*"
+    r"(?:\)\s*)?\)\s*"
     r"\{\s*is_nearby\s*=\s*1\s*;\s*\}\s*"
     r"if\s*\(\s*path_cell\s*->\s*cost\s*<=\s*nearby_cost\s*\|\|\s*"
     r"point\.move_cost\s*<=\s*nearby_cost\s*\)\s*"
@@ -749,6 +779,14 @@ NONEXACT_RETAIL_PROVEN_CALL_SPELLINGS: dict[
             r"\bAI_get_artifact_player_value(?=\s*\()",
             "AI_get_value_of_artifact"),
     ),
+    ("swapmgr.obj", 0x15CD2C): (
+        CallSpelling(
+            "Complete swapManager::UpdateSlot replaces the Dreamcast free "
+            "artifactAllowedInSlot helper with the retail relocation-proved "
+            "hero::HeroFn_004E2840 member call",
+            0x005AEF00, "artifactAllowedInSlot",
+            r"\bHeroFn_004E2840(?=\s*\()", "artifactAllowedInSlot"),
+    ),
     ("swapmgr.obj", 0x15D150): (
         CallSpelling(
             "Complete swapManager::handle_artifact_click replaces the "
@@ -1010,6 +1048,15 @@ RETAIL_BYTE_PROVEN_REVISION_REMOVALS: dict[
             0x005865B0, ON_WIDGET_COMPLETE_TOWN_CYCLE_RE,
             ("TSingleSelectionWindow::HasMultipleTowns",),
             unclaimed_inline=True),
+    ),
+    ("singleselectionwindow.obj", 0x141E9C): (
+        ProvenRevisionRemoval(
+            "Complete OnNameClick replaces Dreamcast's WinCE VRKeyboard "
+            "DisplayChat / OnNameChange / hide tail with the decoded "
+            "desktop paired-text-widget edit and focus sequence",
+            0x0058B620, ON_NAME_CLICK_COMPLETE_DESKTOP_RE,
+            ("TSingleSelectionWindow::DisplayChat",
+             "TSingleSelectionWindow::OnNameChange", "widget::hide")),
     ),
 }
 
@@ -3980,6 +4027,17 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"\s*\)\s*\)\s*;\s*#pragma\s+inline_depth\(\)",
             1, 1, include_directives=True),
     ),
+    ("singleselectionwindow.obj", 0x141E9C): (
+        SourceRule(
+            "OnNameClick keeps Complete's retail-decoded desktop paired-"
+            "text-widget replacement for Dreamcast's WinCE VRKeyboard tail",
+            ON_NAME_CLICK_COMPLETE_DESKTOP_RE, 1, 1),
+        SourceRule(
+            "OnNameClick does not retain Dreamcast's obsolete VRKeyboard "
+            "DisplayChat / OnNameChange / hide calls after the Complete "
+            "desktop replacement was decoded",
+            r"\b(?:DisplayChat|OnNameChange|hide)\s*\(", 0, 0),
+    ),
     ("singleselectionwindow.obj", 0x13C79C): (
         SourceRule(
             "OnWidgetDeselect keeps the shared arm order proved by both "
@@ -6295,6 +6353,59 @@ case SSW_FILE_ROW_FIRST:
         file_row_timing_probe.replace(
             "clickTime = GameTime::Get();", "clickTime = now;"),
         "retail two-call GameTime file-row timing")
+
+    on_name_click_probe = """\
+if (IsMultiPlayer())
+    return;
+SetFocus(-1);
+CNetPlayerHandlerPlayer* player = GetThisPlayer();
+if (player->playerPos != pos)
+    return;
+textWidget* w = static_cast<textWidget*>(GetWidget(pos + 353));
+int colorPos = CalcPosition(pos);
+if (w) {
+    Panels[pos]->Draw(w->x - 57, w->y - 128 - colorPos * 50,
+                      w->width, w->height, screen, 57,
+                      128 + colorPos * 50, true);
+    w->SetText(player->sName);
+    w->send_message(widget::WIDGET_SET_STATUS,
+                    widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    w = static_cast<textWidget*>(GetWidget(pos + 345));
+    if (w)
+        w->send_message(widget::WIDGET_CLEAR_STATUS,
+                        widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    w->SetText(player->sName);
+    SetFocus(pos + 353);
+}
+"""
+    check_on_widget_rule(
+        ON_NAME_CLICK_COMPLETE_DESKTOP_RE, on_name_click_probe,
+        on_name_click_probe.replace("    w->SetText(player->sName);\n", "", 1),
+        "OnNameClick desktop-widget replacement")
+    check_on_widget_rule(
+        ON_NAME_CLICK_COMPLETE_DESKTOP_RE, on_name_click_probe,
+        on_name_click_probe.replace(
+            "    SetFocus(pos + 353);",
+            "    DisplayChat();\n    SetFocus(pos + 353);"),
+        "OnNameClick obsolete VRKeyboard-call rejection")
+    on_name_key = ("singleselectionwindow.obj", 0x141E9C)
+    on_name_removed, _ = retail_proven_dc_only_removed_helpers(
+        on_name_key, on_name_click_probe, 0x0058B620)
+    if on_name_removed != frozenset((
+            "TSingleSelectionWindow::DisplayChat",
+            "TSingleSelectionWindow::OnNameChange", "widget::hide")):
+        failures.append("retail-proved OnNameClick VRKeyboard tail did not "
+                        "classify")
+    if contract_violations(on_name_click_probe, on_name_key):
+        failures.append("aligned OnNameClick desktop replacement did not pass")
+    for broken_name in (
+            on_name_click_probe.replace(
+                "    w->SetText(player->sName);\n", "", 1),
+            on_name_click_probe.replace(
+                "    SetFocus(pos + 353);",
+                "    OnNameChange();\n    SetFocus(pos + 353);")):
+        if not contract_violations(broken_name, on_name_key):
+            failures.append("broken OnNameClick desktop replacement passed")
 
     bonus_scopes_probe = """\
 case SSW_BONUS_PREV_FIRST:

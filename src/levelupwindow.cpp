@@ -75,6 +75,12 @@ static const char* LevelUpSkillName(int encodedSkill)
 // is the reserve site's coupled `_Destroy`/`size()` inline split plus the
 // already documented EH-temp slot rotation; why-reg reduces it to 61 unpaired
 // masked slots and a small B10/B14 scratch-register preference.
+// Re-audited 2026-09-01 Dreamcast-first: the retail and candidate CFGs both
+// have 132 blocks, 131 of them exact; only reserve block B4 differs in size.
+// Statement-scoped inline_depth(1), (2), and (3) around the DC-proven reserve
+// call are byte-flat at 99.12995%. This is a measured negative control: a
+// depth pin cannot select the empty `_Destroy` call without also crossing the
+// in-class reserve expansion, so no inert INLINE_GATE is retained.
 //
 // The earlier 98.8241 gain came from the two-axis /Ob2 sweep described in
 // mainmenu.cpp, with the mass half supplied HONESTLY rather than padded.
@@ -372,6 +378,10 @@ TLevelUpWindow::~TLevelUpWindow()
 // is therefore a source-input difference we have not found, not a stale-CL
 // artifact. Tried and rejected: repeated longhand tails, switch-vs-if dispatch,
 // reordered selection arms, an inline helper.
+// Re-audited 2026-09-01: retail has 43 blocks / 315 instructions / 9 returns,
+// candidate 49 / 289 / 11; the first eight blocks are exact and why-branch
+// reports distance 36. Its guided unsigned-hover-id, reverse-case, and
+// swap-case controls are all byte-flat at 77.72727%, so none is retained.
 // Macro/source-carrier audit (2026-08-21): conventional release VERIFY of
 // each accept lookup (`(void)((accept = GetWidget(id)) != 0)`) is byte-flat,
 // as are release-elided call-shaped diagnostic doses of 1/3/5/9 sites at
@@ -384,9 +394,8 @@ TLevelUpWindow::~TLevelUpWindow()
 // `heroWindow::GetWidget` x12 matches our twelve sites exactly and its
 // `widget::set_visible` x4 matches our four send_message pairs. The one
 // under-count row, `GameTime::IsPast` x1 (dc 0x1ef04 = `ElapsedSince(t) >= 0`,
-// itself `(long)(Get() - t)`) against our
-// `(long)(GameTime::Get() - deadline) >= 0`, is byte-EXACTLY flat at 77.7273
-// when modelled file-locally, even though it nests three inline levels deep.
+// itself `(long)(Get() - t)`), is now preserved below and remains byte-
+// EXACTLY flat at 77.7273 even though it nests three inline levels deep.
 // What DID move it 73.18 -> 77.73: retail materialises each GetWidget() object
 // BEFORE pushing the member function's arguments (`push id; call GetWidget;
 // push 4; push 6; mov ecx,eax; call send_message`), where the fused
@@ -407,7 +416,7 @@ int TLevelUpWindow::WindowHandler(message* msg)
     PollSound();
 
     unsigned long deadline = gDialogDeadline697784;
-    if (deadline && static_cast<long>(GameTime::Get() - deadline) >= 0) {
+    if (deadline && GameTime::IsPast(deadline)) {
         msg->id = MESSAGE_WIDGET;
         gpWindowManager->dialogReturn = 9999;
         msg->codeY = widget::WIDGET_END_DIALOG;

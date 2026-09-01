@@ -136,6 +136,13 @@ inline SpellID spell_id_from_int(int value)
     return spell;
 }
 
+inline TSpellSchool spell_school_from_int(int value)
+{
+    TSpellSchool school;
+    memcpy(&school, &value, sizeof school);
+    return school;
+}
+
 inline type_building_id building_id_from_int(int value)
 {
     type_building_id building;
@@ -1326,10 +1333,11 @@ void type_AI_player::trade_resources(const int* cost, long number)
 // per-unit price; market_value totals what selling the surplus earns. The
 // largest affordable candidate is refined by whole units of unit_cost and
 // the supply shortfalls are relaxed to what that quantity leaves out.
-// Residual (81.35%): the call multiset is 2 apart - retail folds the
-// (_M < size()) compare/max of base_cost's fresh-vector insert (its size()
-// inlines and folds against the ctor constants; ours stays the out-of-line
-// COMDAT call, +2 size calls) - and the register story downstream of the
+// Residual (81.03%, MAX 81.35%): the current 34/34 out-of-line call multiset
+// agrees. Retail's direct unsigned size comparison (`jae`) is retained below;
+// removing the source-false signed cast moved 81.35 -> 81.03 by perturbing
+// downstream register allocation, but closes that retail/DC-positive branch.
+// The remaining 88/89-block split and register story start downstream of the
 // players[team] address: retail computes it ONCE into the [ebp-0x18] temp,
 // reloads it per use, and rebases the same temp by +0x9c as the resources
 // walker, with markets in EDI / flag in BL; every spelling tried gives the
@@ -1401,7 +1409,7 @@ bool type_AI_player::can_trade_resources(const int* cost, int* supply,
         return true;
 
     long qty = trade_qty[j];
-    if (j + 1 < static_cast<int>(trade_qty.size())
+    if (j + 1 < trade_qty.size()
         && trade_qty[j] + 1 < trade_qty[j + 1]) {
         qty += (market_value - base_cost[j]) / unit_cost[j];
         if (qty >= trade_qty[j + 1])
@@ -3837,7 +3845,7 @@ static __forceinline void mark_strategic_map(
     long level_size = gMapWidth * gMapHeight;
     HeroDestination point;
 
-    for (short i = 0; i < static_cast<short>(destinations->size()); ++i) {
+    for (short i = 0; i < destinations->size(); ++i) {
         point = (*destinations)[i];
         NewmapCell* cell = gpAdvManager->GetCell(point.point);
         if (!(GetMapExtra(point.point.x, point.point.y, point.point.z)
@@ -3853,16 +3861,20 @@ static __forceinline void mark_strategic_map(
         if (gAdventureObjectTraits[type][0])
             cell->is_trigger = 0;
 
-        rect.left = max(static_cast<long>(point.point.x) - 5, 0);
-        rect.top = max(static_cast<long>(point.point.y) - 5, 0);
-        rect.right = min(static_cast<long>(point.point.x) + 6, gMapWidth);
-        rect.bottom = min(static_cast<long>(point.point.y) + 6, gMapHeight);
+        rect.left = max(0L, static_cast<long>(point.point.x) - 5);
+        rect.top = max(0L, static_cast<long>(point.point.y) - 5);
+        rect.right = min(gMapWidth, static_cast<long>(point.point.x) + 6);
+        rect.bottom = min(gMapHeight, static_cast<long>(point.point.y) + 6);
         search_array.set_rectangle(rect);
         gpAdvManager->advWindow->animate_bottom_view(0);
-        search_array.SeedPosition(
+        // AI_choose_destination::mark_strategic_map -> type_point(-1,-1,-1):
+        // retail calls the temporary constructor at this DC-proven site.
+#pragma inline_depth(0)
+        INLINE_GATE(search_array.SeedPosition(
             current_hero, point.point, type_point(-1, -1, -1), 500,
             cell->GroundSet == eTerrainWater, const_AI_treasure_search,
-            59999, 0);
+            59999, 0));
+#pragma inline_depth()
 
         long nearby_cost;
         if (!gAdventureObjectTraits[type][0]) {
@@ -3908,16 +3920,27 @@ static __forceinline void unblock_lith(hero* current_hero,
 {
     unsigned char was_on_map = current_hero->is_on_map();
     current_hero->restore_cell();
-    type_point point = current_hero->get_location();
-    NewmapCell* cell = gpGame->get_cell(point);
+    // unblock_lith -> get_location/get_cell: retail retains both DC-proven
+    // helper calls, while unrestricted /Ob2 expands them into the caller.
+#pragma inline_depth(0)
+    type_point point = INLINE_GATE(current_hero->get_location());
+#pragma inline_depth()
+#pragma inline_depth(0)
+    NewmapCell* cell = INLINE_GATE(gpGame->get_cell(point));
+#pragma inline_depth()
 
     if (!cell->is_trigger) {
         if (was_on_map)
             current_hero->obscure_cell();
         return;
     }
-    if (cell->type == TOWN
-        && gpGame->GetTown(cell->extraInfo)->owner == current_hero->owner) {
+    // unblock_lith -> game::GetTown: Complete retains this older-DC inline
+    // lookup as a call. The condition-only pin leaves the arm unpinned.
+#pragma inline_depth(0)
+    if (INLINE_GATE(cell->type == TOWN
+        && gpGame->GetTown(cell->extraInfo)->owner == current_hero->owner))
+#pragma inline_depth()
+    {
         if (was_on_map)
             current_hero->obscure_cell();
         return;
@@ -3940,12 +3963,21 @@ static __forceinline void unblock_lith(hero* current_hero,
             continue;
         if (GetMapExtra(point.x, point.y, point.z) & MAP_EXTRA_MONSTER)
             continue;
-        pathCell* path_cell = gpSearchArray->get_cell(point, false);
+        // unblock_lith -> searchArray::get_cell: DC calls it in this loop and
+        // retail retains the second AI_choose_destination call at 0x426582.
+#pragma inline_depth(0)
+        pathCell* path_cell = INLINE_GATE(
+            gpSearchArray->get_cell(point, false));
+#pragma inline_depth()
         if (!path_cell->visited)
             continue;
         if (destination.point.x >= 0 && closest <= path_cell->cost)
             continue;
-        if (gpSearchArray->get_danger_value(point) < 0)
+        // unblock_lith -> searchArray::get_danger_value: retail and DC both
+        // show an out-of-line call at this condition.
+#pragma inline_depth(0)
+        if (INLINE_GATE(gpSearchArray->get_danger_value(point) < 0))
+#pragma inline_depth()
             continue;
         closest = path_cell->cost;
         destination.point = point;
@@ -3960,13 +3992,14 @@ static __forceinline void unblock_lith(hero* current_hero,
 // output operands are references; move_hero's retail /Gr call passes their
 // addresses in the same argument positions.  Retail corroborates the full
 // helper/statement skeleton and folds mark_strategic_map plus unblock_lith.
-// Opening residual (63.3090%, 137 candidate blocks vs 136 retail): the broad
-// CFG and every named helper boundary are present. The leading codegen split
-// is the vector default construction (candidate emits three zero stores while
-// retail calls operator new(0)), followed by one mark_strategic_map loop block
-// and the expected frame/register cascade. Bank this coherent source shape;
-// the hard-first queue now moves to the remaining 0%-MAX functions rather
-// than trading it for a local inliner permutation.
+// Residual (76.37%, opened at 63.3090%): the vector(0) constructor, signed-
+// short/unsigned-size comparisons, map-level count, min/max operand order and
+// six retail-retained helper boundaries now produce the exact 31/31 call
+// census. The candidate has 133 blocks to retail's 136 and a 0xe4 vs 0xec
+// frame. Its remaining call-shape wall is the vector cleanup: our copy expands
+// the destructor to a second operator delete, while retail retains one
+// unclaimed destructor call beside the strategic-map delete. Preserve the
+// coherent DC helper/statement shape across that backend budget split.
 VA(0x0042e0b0, 0xb6e)  // anchor-caller move_hero + order bracket, dc 0x33cf8
 int AI_choose_destination(hero* current_hero, long max_distance,
                           HeroDestination& best_point,
@@ -3978,13 +4011,12 @@ int AI_choose_destination(hero* current_hero, long max_distance,
     long nearby_cost;
     unsigned char no_towns;
     short i;
-    std::vector<HeroDestination> destinations;
+    std::vector<HeroDestination> destinations(0);
     type_point start;
     HeroDestination point;
     long best_distance;
 
-    long map_cells = (gpGame->GetNumMapLevels() + 1)
-        * gMapWidth * gMapHeight;
+    long map_cells = gpGame->GetNumMapLevels() * gMapWidth * gMapHeight;
     raw_value = find_all_destinations(current_hero, gpSearchArray,
                                       &destinations, max_distance, 0,
                                       allow_spells, explore_mode);
@@ -4024,17 +4056,23 @@ int AI_choose_destination(hero* current_hero, long max_distance,
             best_point.is_nearby = 0;
     }
 
-    for (i = 0; i < static_cast<short>(destinations.size()); ++i) {
+    for (i = 0; i < destinations.size(); ++i) {
         point = destinations[i];
         if (best_point.value > 0 && point.value == 0)
             continue;
 
         pathCell* path_cell = gpSearchArray->get_cell(point.point, false);
         unsigned char is_nearby = 0;
-        if (path_cell->last_point == start
+        // AI_choose_destination -> type_point::operator==: retail retains the
+        // DC-proven comparison at 0x4267d1. Keep the compound condition's
+        // accessor boundary with that call.
+#pragma inline_depth(0)
+        if (INLINE_GATE(path_cell->last_point == start
             && gpGame->worldMap.cell(path_cell->last_point.x,
                                      path_cell->last_point.y,
-                                     path_cell->last_point.z)->is_trigger) {
+                                     path_cell->last_point.z)->is_trigger))
+#pragma inline_depth()
+        {
             is_nearby = 1;
         }
         if (path_cell->cost <= nearby_cost
@@ -4433,10 +4471,12 @@ long find_all_destinations(hero* current_hero, searchArray* search_array,
 
 #endif  // @carcass
 
-// Residual (77.61%): flow-distance 0 after the ==0-arm swap and the
-// j-- reverse walk; the remainder is the ecx<->eax / edx<->ecx rename
-// family (why-reg: schedule aligned) around the two point builds and the
-// SeedPosition argument formation - handle-state, measured 2026-08-27.
+// Residual (77.61%): all 30 blocks and every edge agree (25 exact blocks,
+// five size-only) after the ==0-arm swap and j-- reverse walk. The 0x98 vs
+// 0x9c frame and remaining ecx<->eax / edx<->ecx family are confined to the
+// two point builds and SeedPosition argument formation; why-reg reports the
+// schedule aligned, so local-renaming proposals are a measured handle-state
+// wall rather than permission to flatten a DC-proven helper.
 // E:\gamedcs\ai_player.cpp:3044
 // Seeds the hero's own search, then for every OTHER hero of the current
 // player seeds a friendly allied search from that hero's path target (or
@@ -4640,8 +4680,9 @@ static __forceinline void check_gate_purchase(type_point point)
 // share ONE eax-wide epilogue while the boat/owner/currHero exits stay
 // al-wide and distinct, a width split no uchar-return spelling reaches)
 // plus a mid-body ecx<->edx rename family. Tried and rejected: the
-// else-restructured tail (52.21), unsigned-char retypes of
-// direction/saved_x/saved_y (why-branch, no movement).
+// else-restructured tail (52.21), an explicit duplicate return in the
+// first-step summon-boat arm (byte-flat at 52.95), and unsigned-char retypes
+// of direction/saved_x/saved_y (why-branch, no movement).
 // The Dreamcast line table separately attests a function-entry type_point
 // construction followed by assignment after ConsiderHidingMouse; restoring
 // that lifetime is byte-flat at this checkpoint and must not be collapsed
@@ -5214,6 +5255,9 @@ static __forceinline long total_artifact_value(hero* candidate,
 // computer-player census, two recruit valuations and primary-skill
 // tie-break. Retail corroborates those phases, adds the null-safe artifact
 // helper above, and chooses the second recruit when primary totals tie.
+// Residual (71.55%, opened at 62.53%): the retail decision tree and exact
+// 12/12 call multiset are restored; the remaining 81/77-block difference is
+// early-return epilogue cross-jumping and frame/register topology.
 VA(0x00431360, 0x463)  // DC statement/callee order + Complete retail body, dc 0x35ac8
 bool type_AI_player::hire_heroes()
 {
@@ -5239,8 +5283,14 @@ bool type_AI_player::hire_heroes()
         return false;
     }
 
-    if (player->recruits[0] != -1)
-        first = gpGame->GetHero(player->recruits[0]);
+    if (player->recruits[0] != -1) {
+        // hire_heroes -> game::GetHero: retail calls both recruit lookups.
+        // The first site needs this pin; the second remains naturally
+        // out-of-line under the restored decision tree. DC preserves both.
+#pragma inline_depth(0)
+        first = INLINE_GATE(gpGame->GetHero(player->recruits[0]));
+#pragma inline_depth()
+    }
     long first_value = total_artifact_value(first, team);
     // Complete does not fetch the second recruit until the first recruit's
     // expanded artifact valuation has finished.
@@ -5248,22 +5298,19 @@ bool type_AI_player::hire_heroes()
         second = gpGame->GetHero(player->recruits[1]);
     long second_value = total_artifact_value(second, team);
 
-    if (second && second_value > first_value)
-        return consider_hiring(team, second);
-    if (first && first_value > second_value)
-        return consider_hiring(team, first);
-    if (first && second) {
-        if (first->get_primary_skill_total()
-            > second->get_primary_skill_total()) {
-            return consider_hiring(team, first);
-        }
-        return consider_hiring(team, second);
+    if (!first || second_value > first_value) {
+        if (second)
+            goto hire_second;
+        return false;
     }
-    if (first)
+    if (!second || second_value < first_value)
         return consider_hiring(team, first);
-    if (second)
-        return consider_hiring(team, second);
-    return false;
+    if (first->get_primary_skill_total()
+        > second->get_primary_skill_total()) {
+        return consider_hiring(team, first);
+    }
+hire_second:
+    return consider_hiring(team, second);
 }
 
 #if 0  // @carcass: claim-only home for the game.h COMDAT below
@@ -5293,8 +5340,12 @@ long AI_get_artifact_player_value(const type_artifact& artifact,
 // nested inline decision - retail's phase-1 copy of
 // AI_get_artifact_player_value CALLS game::GetHero out of line while both
 // our copy and the (exact) standalone helper expand the game.h inline; a
-// statement pin cannot split a nested callee per context. The rest is the
-// ebx-total register homing family.
+// statement pin cannot split a nested callee per context. Measured negative
+// controls: inline_depth(1) around the backpack call and inline_depth(0)
+// around GetHero inside the exact standalone helper were both byte-flat at
+// 75.38 and left the 15/16 call census unchanged. The remaining 44/41-block
+// and ebx-total register-homing family is therefore a genuine caller-context
+// inliner wall, not a missing phase.
 // E:\gamedcs\ai_player.cpp:4476
 // Prices the candidate: every artifact valued on the player's best hero
 // (backpack expands the helper, worn slots call it with extra reset to -1
@@ -5536,24 +5587,23 @@ long AI_value_of_observatory(type_point origin, long player_id, long range)
 // makes VC6 emit this std::vector<type_artifact_effect*> element constructor.
 VA_COMPGEN(0x004324b0, 0x18, DEFAULT_CTOR_CLOSURE, type_artifact_effect)
 
-// E:\gamedcs\ai_player.cpp:5044. Slot zero of the base vtable points at a
-// second base deleting-destructor body here. The current VC6 source emits one
-// public ??_Gtype_artifact_effect body, selected at 0x433080 below; claiming
-// this inlined duplicate as the same public symbol would create two source
-// owners, so 0x4324d0 remains deliberately unclaimed.
+// E:\gamedcs\ai_player.cpp:5044. Slot zero of the base vtable at 0x63b6b0
+// points here.  Retail inlines the seven-byte base destructor into this
+// compiler-generated deleting destructor, leaving the base-vtable store and
+// conditional delete visible in the 35-byte body.  Dreamcast's corresponding
+// ??_G calls the base destructor instead (dc 0x38184); the shared source facts
+// are the unsigned flags parameter, conditional operator delete and this
+// return, while retail bytes prove Complete's inline boundary.
+VA_COMPGEN(0x004324d0, 0x23, SCALAR_DELETING_DTOR, type_artifact_effect)
 
 // E:\gamedcs\ai_player.cpp:5050
 // Reattributed from the DC ctor (0x361c8): a VC6 ctor returns this in eax
 // and this 7-byte body never writes eax; its sole caller is the shared
 // scalar deleting dtor 0x433080. The ctor is retail-inlined (/Ob2).
-// auto_inline(off): retail's ??_G (0x433080) CALLS this dtor; without the
-// pin our synthesized ??_G inlines the 7-byte body (vtable store) instead.
-#pragma auto_inline(off)
 VA(0x00432500, 0x7)  // anchor-callee (0x433080 ??_G) + no this-return, dc 0x361f4
 type_artifact_effect::~type_artifact_effect()
 {
 }
-#pragma auto_inline(on)
 
 // E:\gamedcs\ai_player.cpp:5065
 VA(0x00432510, 0x24)  // artifact get_value cluster order-map + get_AI_value, dc 0x36258
@@ -5922,11 +5972,11 @@ long type_spell_artifact::get_value(const hero* owner, unsigned char equipped,
 }
 
 // Every derived artifact-effect vtable's slot 0 points here (/OPT:ICF folded
-// bodies that reduce to the base destructor call and conditional delete). The
-// one public deleting-destructor body currently emitted by the VC6 source is
-// the exact byte match for this retail copy; the base-vtable copy at 0x4324d0
-// remains unclaimed above.
-VA_COMPGEN(0x00433080, 0x21, SCALAR_DELETING_DTOR, type_artifact_effect)
+// bodies that reduce to the base destructor call and conditional delete).
+// type_combat_artifact is the representative derived deleting-destructor
+// symbol emitted by this reconstruction; its Dreamcast body has the same
+// dtor/delete/return shape (dc 0x38204).
+VA_COMPGEN(0x00433080, 0x21, SCALAR_DELETING_DTOR, type_combat_artifact)
 
 VA(0x004330b0, 0x73)  // vtable-slot 0x63b758 (provisional type), retail-only
 long type_shooter_bonus_artifact::get_value(const hero* owner, unsigned char, unsigned char) const
@@ -6499,6 +6549,262 @@ void AI_swap_artifacts(hero* source, hero* dest)
             && add_artifact(dest, artifact, &dest_value, 0, 19, 0, 0)) {
             source->remove_backpack_artifact(backpack_slot);
         }
+    }
+}
+
+// Complete keeps the DC artifact-effect class boundaries but expands these
+// tiny construction helpers into AI_initialize.  The retained
+// type_combat_artifact constructor is still called at the three nested-base
+// sites selected by VC6's /Ob2 budget.
+inline type_scouting_artifact::type_scouting_artifact(long new_bonus)
+    : bonus(new_bonus)
+{
+}
+
+inline type_might_artifact::type_might_artifact(long new_bonus)
+    : type_combat_artifact(new_bonus)
+{
+}
+
+inline type_power_artifact::type_power_artifact(long new_bonus)
+    : type_combat_artifact(new_bonus)
+{
+}
+
+inline type_knowledge_artifact::type_knowledge_artifact(long new_bonus)
+    : type_combat_artifact(new_bonus)
+{
+}
+
+inline type_necromancy_artifact::type_necromancy_artifact(long new_bonus)
+    : type_combat_artifact(new_bonus)
+{
+}
+
+inline type_movement_artifact::type_movement_artifact(long new_bonus)
+    : type_combat_artifact(new_bonus)
+{
+}
+
+inline type_spellcaster_artifact::type_spellcaster_artifact(long new_bonus)
+    : type_combat_artifact(new_bonus)
+{
+}
+
+inline type_morale_artifact::type_morale_artifact(long new_bonus)
+    : type_combat_artifact(new_bonus)
+{
+}
+
+inline type_luck_artifact::type_luck_artifact(long new_bonus)
+    : type_combat_artifact(new_bonus)
+{
+}
+
+inline type_antimorale_artifact::type_antimorale_artifact()
+{
+}
+
+inline type_antiluck_artifact::type_antiluck_artifact()
+{
+}
+
+inline type_creature_growth_artifact::type_creature_growth_artifact(
+    long new_level, long new_bonus)
+    : bonus(new_level), growthBonus(new_bonus)
+{
+}
+
+inline type_undead_king_cloak_artifact::type_undead_king_cloak_artifact()
+    : type_necromancy_artifact(30)
+{
+}
+
+inline type_duration_artifact::type_duration_artifact(long new_bonus)
+    : type_power_artifact(new_bonus)
+{
+}
+
+inline type_school_artifact::type_school_artifact(TSpellSchool new_school,
+                                                   long new_bonus)
+    : type_power_artifact(new_bonus), school(new_school)
+{
+}
+
+inline type_antimagic_artifact::type_antimagic_artifact(long max_level)
+    : bonus(max_level)
+{
+}
+
+inline type_spell_artifact::type_spell_artifact(SpellID new_spell)
+    : spell(new_spell)
+{
+}
+
+inline type_shooter_bonus_artifact::type_shooter_bonus_artifact(long new_bonus)
+    : type_combat_artifact(new_bonus)
+{
+}
+
+inline type_angelic_alliance_artifact::type_angelic_alliance_artifact()
+    : type_might_artifact(8)
+{
+}
+
+inline type_elixir_of_life_artifact::type_elixir_of_life_artifact()
+{
+}
+
+inline type_statue_of_legion_artifact::type_statue_of_legion_artifact()
+{
+}
+
+inline type_tome_artifact::type_tome_artifact(TSpellSchool new_school)
+    : type_combat_artifact(0), school(new_school)
+{
+}
+
+inline type_income_artifact::type_income_artifact(
+    long new_amount, EGameResource new_resource)
+    : amount(new_amount), resource(new_resource)
+{
+}
+
+inline EArtifactEffectKind artifact_effect_kind_from_int(int value)
+{
+    EArtifactEffectKind kind;
+    memcpy(&kind, &value, sizeof kind);
+    return kind;
+}
+
+// Retail .rdata 0x63ac7c is a sentinel-delimited stream: artifact id,
+// effect-kind/arguments..., -1, repeated, and a final -1.  The switch and
+// every argument-consumption site are directly visible in 0x4340e0.
+// DC keeps this as initialize_artifact_effects (dc 0x35f08); Complete's
+// single caller expands it into AI_initialize.
+static void initialize_artifact_effects()
+{
+    const int* definition = gAIArtifactEffectDefinitions;
+    while (*definition >= 0) {
+        std::vector<type_artifact_effect*>& effects =
+            const_artifact_effects[*definition++];
+        while (*definition >= 0) {
+            EArtifactEffectKind kind =
+                artifact_effect_kind_from_int(*definition++);
+            type_artifact_effect* effect;
+            switch (kind) {
+                case ARTIFACT_EFFECT_MIGHT:
+                    effect = new type_might_artifact(*definition++);
+                    break;
+                case ARTIFACT_EFFECT_POWER:
+                    effect = new type_power_artifact(*definition++);
+                    break;
+                case ARTIFACT_EFFECT_KNOWLEDGE:
+                    effect = new type_knowledge_artifact(*definition++);
+                    break;
+                case ARTIFACT_EFFECT_MORALE:
+                    effect = new type_morale_artifact(*definition++);
+                    break;
+                case ARTIFACT_EFFECT_LUCK:
+                    effect = new type_luck_artifact(*definition++);
+                    break;
+                case ARTIFACT_EFFECT_SCOUTING:
+                    effect = new type_scouting_artifact(*definition++);
+                    break;
+                case ARTIFACT_EFFECT_NECROMANCY:
+                    effect = new type_necromancy_artifact(*definition++);
+                    break;
+                case ARTIFACT_EFFECT_COMBAT:
+                    effect = new type_combat_artifact(*definition++);
+                    break;
+                case ARTIFACT_EFFECT_MOVEMENT:
+                    effect = new type_movement_artifact(*definition++);
+                    break;
+                case ARTIFACT_EFFECT_SPELLCASTER:
+                    effect = new type_spellcaster_artifact(*definition++);
+                    break;
+                case ARTIFACT_EFFECT_DURATION:
+                    effect = new type_duration_artifact(*definition++);
+                    break;
+                case ARTIFACT_EFFECT_SCHOOL:
+                    effect = new type_school_artifact(
+                        spell_school_from_int(*definition++), *definition++);
+                    break;
+                case ARTIFACT_EFFECT_ANTIMAGIC:
+                    effect = new type_antimagic_artifact(*definition++);
+                    break;
+                case ARTIFACT_EFFECT_ANTIMORALE:
+                    effect = new type_antimorale_artifact;
+                    break;
+                case ARTIFACT_EFFECT_ANTILUCK:
+                    effect = new type_antiluck_artifact;
+                    break;
+                case ARTIFACT_EFFECT_TOME:
+                    effect = new type_tome_artifact(
+                        spell_school_from_int(*definition++));
+                    break;
+                case ARTIFACT_EFFECT_INCOME:
+                    effect = new type_income_artifact(
+                        *definition++, game_resource_from_int(*definition++));
+                    break;
+                case ARTIFACT_EFFECT_CREATURE_GROWTH:
+                    effect = new type_creature_growth_artifact(
+                        *definition++, *definition++);
+                    break;
+                case ARTIFACT_EFFECT_SPELL:
+                    effect = new type_spell_artifact(
+                        spell_id_from_int(*definition++));
+                    break;
+                case ARTIFACT_EFFECT_SHOOTER_BONUS:
+                    effect = new type_shooter_bonus_artifact(*definition++);
+                    break;
+                case ARTIFACT_EFFECT_ANGELIC_ALLIANCE:
+                    effect = new type_angelic_alliance_artifact;
+                    break;
+                case ARTIFACT_EFFECT_UNDEAD_KING_CLOAK:
+                    effect = new type_undead_king_cloak_artifact;
+                    break;
+                case ARTIFACT_EFFECT_ELIXIR_OF_LIFE:
+                    effect = new type_elixir_of_life_artifact;
+                    break;
+                case ARTIFACT_EFFECT_STATUE_OF_LEGION:
+                    effect = new type_statue_of_legion_artifact;
+                    break;
+            }
+            effects.push_back(effect);
+        }
+        ++definition;
+    }
+}
+
+// DC's AI_initialize loop calls type_AI_player::init for nine records and
+// then initialize_artifact_effects. Complete's cmp/jl proves eight records,
+// extends the effect table to 144 vector rows, and tail-jumps to the retained
+// helper at 0x434100.
+// Residual (2.28%): the retail carve coalesces this 32-byte entry with that
+// internal tail target, while candidate COMDATs retain the DC-proven helper as
+// a separate symbol. Negative controls: inline, __forceinline and
+// inline_depth(255) all stayed out of line; merging the helper reached 84.09%
+// but contradicted both the DC boundary and retail's helper prologue.
+// E:\gamedcs\ai_player.cpp:6096
+VA(0x004340e0, 0x4B0)  // unique artifact vtable/config stream + DC helpers, dc 0x37c38
+void AI_initialize()
+{
+    for (short i = 0; i < 8; ++i)
+        gAIPlayers[i].init(i);
+    initialize_artifact_effects();
+}
+
+// DC proves the nested vector walk, virtual delete and clear sequence;
+// Complete's retail limit/address pair proves all 144 rows.
+// E:\gamedcs\ai_player.cpp:6105
+VA(0x00434590, 0x62)  // sole shutdown callers + effect table extent, dc 0x37c70
+void AI_shut_down()
+{
+    for (int i = 0; i < 144; ++i) {
+        for (unsigned int j = 0; j < const_artifact_effects[i].size(); ++j)
+            delete const_artifact_effects[i][j];
+        const_artifact_effects[i].clear();
     }
 }
 

@@ -7,6 +7,12 @@
 # date: 2026-08-04
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 # 11943 functions; size INCLUDES jump tables
+# BOUNDARY CORRECTION 2026-09-01: ResourceManager::LoadFontData is one
+# 378-byte EH-bearing function at 0x15b750. The 17-byte split at 0x15b8b9
+# is its typed catch handler: the .rdata HandlerType relocation names that
+# address, the block inherits the parent's EBP frame, disposes the palette,
+# and rethrows before padding and LoadFont's independent 0x15b8d0 entry.
+# 11942 rows since.
 # BOUNDARY ADMISSION 2026-08-31: singleselectionwindow.obj's 27-byte
 # SliderChatWindow and 28-byte SliderFileMenu callbacks are independent entries
 # at 0x17c7d0 and 0x17c990. Constructor slider-function relocations point to
@@ -1226,6 +1232,7 @@ rva	size
 0x62760	295
 0x62890	21
 0x628b0	110
+0x62920	11
 0x62930	84
 0x62990	143
 0x62a20	2111
@@ -4303,8 +4310,7 @@ rva	size
 0x15b060	887
 0x15b3e0	138
 0x15b470	721
-0x15b750	361
-0x15b8b9	17
+0x15b750	378
 0x15b8d0	553
 0x15bb00	138
 0x15bb90	576

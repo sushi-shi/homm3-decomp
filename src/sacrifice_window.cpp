@@ -1680,6 +1680,14 @@ unsigned char type_artifact_offering_widget::handle_click(
     return 0;
 }
 
+// Vtable 0x64165c slot 0 is the last of four slot-widget address-takers for
+// this ICF representative. Its call target is the 0x5654b0 representative
+// immediately before type_transformer_slot::handle_click, fixing the
+// canonical source identity despite the three earlier folded aliases.
+// E:\gamedcs\sacrifice_window.cpp:1894
+VA_COMPGEN(0x0055fd70, 0x21, SCALAR_DELETING_DTOR,
+           type_transformer_slot)
+
 // E:\gamedcs\sacrifice_window.cpp:272
 // The army-slot member of the same family, 0x2a rather than 0x26 because it
 // forwards a THIRD value: the byte at +0x4c alongside the dword at +0x48.
@@ -1793,6 +1801,19 @@ type_sacrifice_window::type_sacrifice_window(hero* new_hero, int cur_player)
 // Complete independently exposes all nineteen equipment coordinates, the
 // five-slot backpack strip, the 5/5/5/5/2 offering grid, every callback and
 // help row, and the insertion order into Widgets and artifact_widgets.
+// Residual (99.9983%, MAX 100% banked before the armyGroup const-interface
+// correction): all 102 CFG blocks, all 50 symbolic branch targets, both
+// returns, and the 92-call count agree. The only byte delta is the order of
+// two adjacent `-1` stores for the inlined type_artifact base of
+// `artifact_offering`: retail writes extra then artifactId, while this C1
+// state writes the DC-proven constructor order artifactId then extra. The
+// mismatch is four masked slots and every later instruction is identical.
+// why-reg's model finds no register-binding divergence; its 24 guided
+// declaration/store/lifetime controls are either byte-flat or worse (making
+// item_count volatile adds 75 slots). Swapping the semantic constructor
+// stores is forbidden: DC Hero.h:211-212 and retail value_of_town prove the
+// shared id-then-extra source order. Preserve the coherent header state and
+// the banked exact peak; this is a measured C1 handle-order collateral wall.
 VA(0x00560380, 0xD67)  // ctor caller + dc name/order/locals, dc 0x1246b8
 void type_sacrifice_window::create_artifact_widgets(
     long& widget_id, int cur_player)
@@ -2404,7 +2425,8 @@ long sacrifice_value(TCreatureType creature)
 // Retail proves the record layout through its six widget loads and terminal
 // group/amount pair. The two general-text indices are the folded +0x1ec and
 // +0x788 rows of gpGeneralText's pointer table.
-// Residual: all 42 blocks, branch targets and instruction counts agree. VC6
+// Residual (99.9744%): all 42 blocks, 20 symbolic branch targets, three
+// returns and instruction counts agree. VC6
 // colors four early string-return temporaries at ebp-0x30 instead of
 // retail's ebp-0x40; the later help_text/result slots themselves agree.
 // Dreamcast's nested line-955/958 arm scopes are restored and ratcheted even
@@ -2412,7 +2434,10 @@ long sacrifice_value(TCreatureType creature)
 // suggested by its raw S_REGREL32 placement is retail-refuted: it constructs
 // at entry, adds cleanup paths and falls to 85.65495%. Declaration order, a
 // release-VERIFY probe, and splitting total_hits declaration/assignment are
-// byte-flat, so the remaining difference is an unresolved stack-coloring tie.
+// byte-flat. A fresh why-reg pass measures 18 masked slots, finds no allocator
+// model divergence, and rejects all four guided source controls (named group
+// is flat; volatile available and both adjacent store swaps are worse), so
+// the remaining difference is a measured C1 stack-coloring tie.
 VA(0x00562da0, 0x3a2)  // dc order/name/signature + retail field graph, dc 0x125e08
 void type_sacrifice_window::update_creature_offering(
     type_creature_offering* creature)
@@ -3349,11 +3374,16 @@ artifact_returned:
 // (side, slot, right_click) - and the Dreamcast constructor takes that pair
 // as (new_group, new_slot).
 //
-// NO CLAIM on the deleting destructor at 0x55fd70 or the destructor at
-// 0x5654b0 it calls. Every slot widget in this TU is a trivial iconWidget
-// subclass, so all five destructors compile to the same `jmp ??1iconWidget`
-// and all five ??_G wrappers to the same 33 bytes; /OPT:ICF left one of
-// each, with no owning class. Excluded class, the widget::Close standing.
+// Every participating slot widget is a trivial iconWidget subclass, so the
+// four deleting wrappers and ordinary destructors /OPT:ICF-fold. Retail
+// nevertheless fixes the canonical pair: vtable 0x64165c slot 0 points to
+// 0x55fd70, which calls 0x5654b0, and that 5-byte body is immediately before
+// this class's sole retained method in both retail order and the DC roster.
+// E:\gamedcs\sacrifice_window.cpp:1894
+// It must remain implicit: spelling an empty body makes VC6 insert a derived-
+// vtable store before the iconWidget destructor tail-jump.
+VA_COMPGEN(0x005654b0, 0x5, IMPLICIT_DTOR, type_transformer_slot)  // dc 0x128764
+
 VA(0x005654c0, 0x2a)  // linkorder + the +0x48/+0x4c pair, dc 0x127598
 unsigned char type_transformer_slot::handle_click(
     unsigned char down_click, unsigned char right_click)

@@ -666,10 +666,25 @@ public:
     // clears three contiguous 0x24-byte rows at +0x13d78 and fills these
     // members in this order; DamageWall later uses armySlot from each row
     // when the corresponding tower is destroyed.
+    struct TArcherSprite {
+        CSprite* value;
+
+        TArcherSprite(CSprite* sprite = 0) : value(sprite) {}
+        ~TArcherSprite();
+        operator CSprite*() const { return value; }
+        CSprite* operator->() const { return value; }
+        TArcherSprite& operator=(CSprite* sprite)
+        {
+            value = sprite;
+            return *this;
+        }
+    };
+    SIZE(TArcherSprite, 0x4);
+
     struct TArcher {
         int creatureType;             // +0x0
-        CSprite* sprite;              // +0x4
-        CSprite* shadowSprite;        // +0x8
+        TArcherSprite sprite;          // +0x4
+        TArcherSprite shadowSprite;    // +0x8
         int x;                        // +0xc
         int y;                        // +0x10
         int field_14;                 // +0x14
@@ -678,7 +693,6 @@ public:
         int armySlot;                 // +0x20
 
         TArcher();
-        ~TArcher();
     };
 
     // InitializeArchers' two simultaneously live resource locals. Keeping

@@ -2372,6 +2372,9 @@ void ComputeUALoc(int whichPlayer)
 // gpGame and the float pools are unnamed on the target side, while the
 // candidate's puzzlePiecesRemoved+4 and target's synthetic bss_2976ec+0
 // denote the same second dword. Do not model that delinker split in C++.
+// The 2026-09-01 structure pass reconfirmed 43/43 exact blocks; why-reg v2
+// diagnoses no register-binding divergence, independently closing the
+// B-family search without disturbing the recovered local roster.
 VA(0x004baf00, 0x25A)  // linkorder, dc 0xa6350
 int game::SetupPuzzlePieces(int whichPlayer, int countOnly)
 {
@@ -2651,6 +2654,10 @@ int game::GetNewHeroId(int playerPos, THeroClass excluded,
     // THeroClass hero_class type is dc-only: VC6 SP3 rejects enum `++`, and no
     // Windows operator++ is attested. This is register scheduling, not
     // missing flow or permission to flatten the recovered source shape.
+    // why-reg v2's bounded negative control named each of three nearby flags
+    // (`counts[hero_class] == 0`, `total_count == 0`, and the preferred-class
+    // test); all three were byte-flat at distance six, classifying the residual
+    // as C1 front-end handle order rather than a missing source value.
     if (gpGame->f_1f698 >= 2
         && *gpVideoGameState == VIDEO_GAME_STATE_FORCED_BINK_LOW
         && alignment != TOWN_CONFLUX
@@ -2946,11 +2953,13 @@ int game::LoadRumours(TAbstractFile* infile)
     return 1;
 }
 
-// PARTIAL (96.4326%): the nested map header and setup constructors, exact
-// 0x5a4 layout, H3SVG identifier, and version 42 default are reconstructed.
-// The residual is one Dinkumware map-constructor inline decision: retail calls
-// its two-argument wrapper while this compile inlines the wrapper and calls
-// the three-argument tree constructor directly.
+// WALL (98.8764%): the nested map header and setup constructors, exact 0x5a4
+// layout, H3SVG identifier, and version 42 default are reconstructed. All four
+// blocks, 178 instructions, and 11 out-of-line calls agree. The only remaining
+// code-order delta is a `lea ecx,[esi+0x2f0]` scheduled on the opposite side of
+// the following `push 0` before the same member-constructor call. predict-inline
+// confirms an equal 11/11 call surface; both why-reg paths find no binding
+// divergence or applicable source mutation.
 // Re-tested 2026-08-14 against the /Ob2 budget DIVISOR lever that closed
 // TMainMenu (see src/mainmenu.cpp for the mechanism): the verdict HOLDS.
 // Titrating this constructor's inline-candidate site count with byte-inert
@@ -5577,6 +5586,9 @@ void game::InitRandomArtifacts()
 // with or without named deltas (98.35/97.86).  The former `_sqrt` relocation
 // delta was a false runtime boundary, now byte-proven and corrected in the
 // hand-owned inventories from the pinned VC6 SP3 LIBCMT sqrt.obj.
+// A 2026-09-01 why-reg v2 negative control also tested the two adjacent local
+// orders and the current_gate/closest store order: two were byte-flat at
+// distance 18 and the third worsened to 20, leaving the DC-proven order intact.
 VA(0x004c0b60, 0x160)  // dc-order + NewMap caller, dc 0xac63c
 void game::match_underground_gates()
 {
@@ -10071,15 +10083,19 @@ TCreatureType game::GetRandomMonster(int minLevel, int maxLevel)
 // class has no allocatable member at all, it retries against the four normal
 // artifact classes. Residual (94.7260%): all 15 branches and operations
 // agree; VC6 rotates the traits pointer and the two non-overlapping counter
-// lifetimes through ESI/EDI/EDX differently from retail.
+// lifetimes through ESI/EDI/EDX differently from retail. The Dreamcast local
+// roster order (UnallocatedInClass, TotalInClass, curCount, x, i) is restored
+// below and is byte-flat. why-reg v2 classifies the permutation as C1
+// front-end handle state: aliasing ArtifactClass and swapping i/x or
+// x/curCount fail to move its distance-27 binding divergence.
 VA(0x004c94d0, 0xCD)  // anchor-global, dc 0xb4c84
 TArtifact game::GetRandomArtifactId(int ArtifactClass)
 {
-    int i;
-    int x;
-    int curCount;
-    int TotalInClass;
     int UnallocatedInClass;
+    int TotalInClass;
+    int curCount;
+    int x;
+    int i;
 
     for (;;) {
         TotalInClass = 0;
@@ -10524,6 +10540,9 @@ void game::ProcessRandomObjects()
 // named startingHeroIds element is not a legal writable local transform, and
 // binding CastleLoc to a const reference regresses to 98.15% by perturbing the
 // following y compare.  The direct argument spelling is the measured wall.
+// The 2026-09-01 model pass likewise rejects both proposed names
+// (startingHeroIds[i] and setup.alignment[i]) at compile time, while the retail
+// structure remains 29/29 exact blocks; no legal B14 mutation remains.
 VA(0x004ca040, 0x1F1)  // linkorder, dc 0xb5cdc
 void game::CreateTownHeroes(int* startingHeroIds)
 {
@@ -10886,6 +10905,32 @@ void game::CheckHeroConsistency()
 }
 
 // E:\gamedcs\game.cpp:10142
+// Retail admission 2026-09-01: ProcessOnMapHeroes and DoNewTurn bracket these
+// two transfer bodies in the same order as dc game.obj.  This first body is a
+// thiscall with four stack arguments and `ret 0x10`; its SaveGame -> optional
+// CDiffMaker/gzip -> CGameTransmitInitMsg/CGameTransmitMainMsg -> transfer
+// dialog -> resend/confirm/drop sequence independently identifies
+// TransmitSaveGame.  The full 0xd14-byte span is intentional: 0x4cb1ec is the
+// typed catch named by retail's HandlerType at 0x64db70, and the normal path at
+// 0x4cb1ea jumps to the parent's 0x4cb206 continuation, which reuses the saved
+// EBP frame and reaches the shared epilogues and trailing switch tables.
+// Negative controls: treating 0x4cb1ec or 0x4cb206 as entries breaks that EH/
+// frame/control-flow evidence; the cross-build address 0x4cac90 is before this
+// carved entry and therefore cannot name this retail function.
+//
+// DC source-shape ratchet (dc 0xb7560): preserve the function-scoped locals
+// retryCount, dataTimeOutStart, pSmack, isDiff, pConfirmMsg, playerDone[8],
+// data, cFileName[351], attempts, current, bytesLeft, iFullGameCRC, diffSize,
+// totalBlocks, smack, done, iReturn, pGameTransmitMainMsg, queueSize,
+// iFileSize, handle, numMsgs, msg, useGuaranteed, curBlock, bSChangeSounds,
+// netMsgHandlerPause and dlg.  Its nested diff scope owns File, oldSize,
+// pDiff, pOld, newSize, diffFilename, CDiffMaker, pNew and pFile; message
+// scopes own pNetMsg/CMessageKill, killDPID, CGameTransmitEndMsg,
+// CGameTransmitReqMsg and CChatMsg.  The 203-row / 45-branch / 129-call
+// dossier proves those RAII scopes and the phase order above.  A source body
+// remains fenced until those positive facts can be expressed coherently; a
+// return-only or decompiler-shaped placeholder is the explicit negative
+// control and is not an admissible reconstruction.
 DC_ONLY(0xb7560, 0x1064)
 int game::TransmitSaveGame(int iToWho, int thisPlayerDead, unsigned char inGame, unsigned char makeOrig)
 {
@@ -10893,6 +10938,27 @@ int game::TransmitSaveGame(int iToWho, int thisPlayerDead, unsigned char inGame,
 }
 
 // E:\gamedcs\game.cpp:10587
+// Retail admission 2026-09-01: this second bracketed body is a thiscall with
+// five stack arguments and `ret 0x14`.  Its GameTime stamp, incoming buffer
+// and block-received allocation, request/ack/retransmit loop, optional
+// CDiffFile/gzip application, save write, UI restoration and NextPlayer path
+// identify ReceiveSaveGame independently of the DC order transfer.
+// Negative controls: the inherited HD/NH3API-style address 0x4cba00 lies in
+// TransmitSaveGame's retail body, not at an entry; 0x4cbfef is merely the
+// fall-through DestroyMsg block in this body's live receive loop and still
+// uses the parent's EBP frame, so promoting it likewise destroys the CFG.
+//
+// DC source-shape ratchet (dc 0xb85c4): preserve pSmack, pNetMsg, fromDPID,
+// cFileName[351], data, diffSize, blockReceived, totalBlocks, smack, done,
+// handle, waitingForRetransmit, bSChangeSounds, iLastDataReceiveTime,
+// netMsgHandlerPause and dlg as the function-local inventory.  Nested message
+// scopes own CGameTransmitReqMsg, CGameTransmitMainMsg, killDPID,
+// CGameTransmitEndMsg, CGameTransmitConfirmEndMsg and CChatMsg; the diff scope
+// owns size, origFilename, bytesRead, diffFilename, CDiffFile, gzfile, pOrig,
+// newSave and File.  The 197-row / 45-branch / 128-call dossier proves those
+// lifetimes and receive -> validate -> apply/write -> restore ordering.  As
+// above, a flat return-only or pseudocode transcription is the explicit
+// negative control, not source recovery.
 DC_ONLY(0xb85c4, 0xE44)
 int game::ReceiveSaveGame(int iFileSize, int iFullGameCRC, int iFromWho, unsigned char inGame, unsigned char isDiff)
 {
@@ -11058,6 +11124,28 @@ void game::ProcessOnMapHeroes()
         }
     }
 }
+
+#if 0  // @carcass - admitted transfer bodies; DC source-shape dossier above
+
+// Retail's EH metadata, live cross-chunk control flow, four-argument ABI and
+// SaveGame/diff/transmit/resend callee fingerprint prove this complete span.
+VA(0x004cafd0, 0xD14)  // retail body + typed catch + continuation/tables
+int game::TransmitSaveGame(int iToWho, int thisPlayerDead,
+                           unsigned char inGame, unsigned char makeOrig)
+{
+    // @stub - a source-false partial body is intentionally not emitted
+}
+
+// The five-argument ABI and receive/retransmit/diff/write/UI fingerprint prove
+// the only remaining body between the transfer destructor and DoNewTurn.
+VA(0x004cbd40, 0xA83)  // retail body including internal control/table material
+int game::ReceiveSaveGame(int iFileSize, int iFullGameCRC, int iFromWho,
+                          unsigned char inGame, unsigned char isDiff)
+{
+    // @stub - a source-false partial body is intentionally not emitted
+}
+
+#endif  // @carcass
 
 // E:\\gamedcs\\game.cpp:11028
 // Retail's two callers, the complete Dreamcast callee fingerprint and the

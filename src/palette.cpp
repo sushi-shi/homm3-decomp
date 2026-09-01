@@ -126,6 +126,12 @@ TPalette16* TPalette16::operator=(const TPalette16* from)
 // E:\gamedcs\palette.cpp:204
 #endif  // @carcass
 
+// Dreamcast names the compiler wrapper and its destructor/delete pair at
+// palette.cpp:57. Retail independently fixes the identity: this 33-byte body
+// calls the already exact TPalette16 destructor at 0x522940 before testing the
+// low deleting flag. The base object already emits the decorated wrapper.
+VA_COMPGEN(0x00522670, 0x21, SCALAR_DELETING_DTOR, TPalette16)
+
 VA(0x00522940, 0xB)  // anchor-global, dc 0x10a8e0
 TPalette16::~TPalette16()
 {

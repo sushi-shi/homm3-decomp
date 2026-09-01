@@ -2503,6 +2503,22 @@ void advManager::GiveArtifact(hero* current_hero, type_point point,
     current_hero->CheckLevel();
 }
 
+// E:\gamedcs\events.cpp:498. Dreamcast proves this private helper, its
+// short `artifact` local and its statement order. Retail has no separate
+// body, but DoEventArtifact's free arm contains this entire sequence, so
+// the definition remains inline and the retail caller is the x86 verdict.
+inline void advManager::DoEventFreeArtifact(hero* current_hero,
+                                            NewmapCell* cell,
+                                            type_point point,
+                                            bool human_player)
+{
+    short artifact = cell->GetArtifactIndex();
+    if (human_player)
+        NormalDialog(gArtifactEventText[artifact],
+                     1, -1, -1, 8, artifact, -1, 0, -1, 0, -1, 0);
+    GiveArtifact(current_hero, point, human_player);
+}
+
 // E:\gamedcs\events.cpp:516.  Dreamcast supplies the three locals and the
 // complete helper roster.  Retail widens the packed defender from the DC's
 // eight-bit lane to a signed nine-bit lane (bits 4..12), leaving fourteen
@@ -2617,18 +2633,20 @@ TreasureData* advManager::get_treasure_data(NewmapCell* cell) const
 // inline advManager::GiveArtifact whole and cross-jump onto one final
 // CheckLevel; the guarded copy keeps FizzleCenter as a call and the
 // plain one folds it, exactly as DoCustomSpellScroll's pair does.
-// [2026-08-27] Residual (99.1492%): five head instructions - retail
-// schedules the fullMap/_First chain ahead of the extraInfo read and
-// sinks the objectIndex word-read below both (we emit source order).
-// The same bounded head-interleave class as DoCustomSpellScroll's; the
-// artifactId-before-treasure declaration order above is measured
-// (+0.91 over the reverse) and load-bearing.
+// [2026-09-01] Dreamcast's breakpoint rows make the declaration order
+// positive source evidence: treasure is line 657 and artifactId line 659.
+// Keep that order even though this SP3 compile currently scores below the
+// old source-false local peak (current 98.24%, banked MAX 99.15%): retail
+// interleaves the fullMap/_First chain with the cell loads, while SP3
+// serializes the inlined accessor. Negative control: putting artifactId
+// first raises the byte score but contradicts those two named statement
+// rows, so it is not an admissible reconstruction.
 VA(0x0049f070, 0x765)  // dc-bracket forced, ret 0x10=p5, dc 0x90d34
 void advManager::DoCustomArtifact(hero* current_hero, NewmapCell* cell,
                                   type_point point, bool human_player)
 {
-    short artifactId = cell->objectIndex;
     TreasureData* treasure = get_treasure_data(cell);
+    short artifactId = cell->objectIndex;
 
     if (treasure->HasCustomGuardians && treasure->Guardians.GetNumArmies()) {
         if (human_player) {
@@ -2763,6 +2781,13 @@ inline void advManager::DoArtifactSkillRequirement(
 // homing, reference memory-homes [ebp-0x75]). The next lane should
 // re-try the pair AFTER any inline-structure change here - the merged
 // content is byte-proven, only the merge itself is missing.
+// [2026-09-01] SOURCE-SHAPE CHECKPOINT (77.72%, banked MAX 78.12%):
+// restore Dreamcast's DoEventFreeArtifact boundary and its short artifact
+// local. Retail contains the whole helper in this free arm, but SP3 now
+// keeps its nested GiveArtifact call out of line. Flattening the helper is
+// the negative control that recovers the old score and fails the DC helper
+// gate; spelling the helper __forceinline is byte-flat, so plain inline is
+// retained while this nested-inline budget wall remains open.
 VA(0x0049f7e0, 0x2A4)  // anchor-callee DoCustomArtifact+FightForArtifact, ret 0x10=p5, dc 0x91104
 void advManager::DoEventArtifact(hero* current_hero, NewmapCell* cell,
                                  type_point point, bool human_player)
@@ -2786,11 +2811,7 @@ void advManager::DoEventArtifact(hero* current_hero, NewmapCell* cell,
 
     switch (get_artifact_price(cell)) {
     case const_free_artifact:
-        if (human_player)
-            NormalDialog(gArtifactEventText[get_artifact_index(cell)],
-                         1, -1, -1, 8, get_artifact_index(cell),
-                         -1, 0, -1, 0, -1, 0);
-        GiveArtifact(current_hero, point, human_player);
+        DoEventFreeArtifact(current_hero, cell, point, human_player);
         break;
     case const_artifact_requires_wisdom:
         DoArtifactSkillRequirement(
@@ -3502,6 +3523,11 @@ void advManager::DoEventCreatureBank(hero* current_hero, NewmapCell* cell,
 // divergence past them (allocator CSE state, 11 slots). The
 // generatorType/index locals, the inverted CREATURE_GENERATOR_1 arm and
 // the shared GeneratorEvent tail above are measured (74.81 -> 99.09).
+// Fresh 2026-09-01 source/structure comparison localizes the first mismatch
+// to that same pair: retail passes `&guards` in ECX then recomputes its LEA
+// after prompt construction, while this compile keeps it in EDI. The other
+// 114/115 blocks are an alignment cascade from this one allocator choice,
+// not evidence for a source control-flow rewrite.
 VA(0x004a18b0, 0x79A)  // dc-bracket forced, ret 0x10=p5, dc 0x92814
 void advManager::DoEventCreatureGenerator(hero* current_hero, NewmapCell* cell,
                                           type_point point, bool human_player)
@@ -4477,8 +4503,10 @@ void advManager::DoEventPrison(hero* current_hero, NewmapCell* cell,
     // reloads [ebp-0xc] then [ebp-0x8], while SP3 reloads the same homes in
     // use order.  `why-reg` tested 41 guided mutations without improvement;
     // at(), .set(), pointer/reference/proxy locals, a signed owner local, and
-    // both owner/pool declaration orders are flat or worse.  Keep the direct
-    // Complete-only pool update while the surrounding C1 schedule is open.
+    // both owner/pool declaration orders are flat or worse. A fresh `.set()`
+    // control on 2026-09-01 is again flat at 99.9540%; the branch sequences
+    // remain exactly equal. Keep the direct Complete-only pool update while
+    // the surrounding C1 schedule is open.
     gpGame->heroPoolMap[heroID][current_hero->owner] = 1;
     gpCurrentPlayer->heroes[gpCurrentPlayer->numHeroes] = heroID;
     ++gpCurrentPlayer->numHeroes;
@@ -5447,6 +5475,10 @@ unsigned char AI_choose_resource_or_experience(hero* current_hero,
 // No structured respelling changes which copy survives; the register
 // story (this in ebx vs our edi, amount edi vs esi) is downstream of
 // that extra exit's pressure. 2026-08-27.
+// [2026-09-01] Fresh why-branch classifies the same residual as D6
+// retail-side exit duplication plus one D8 polarity. An explicit
+// accept-path goto to the shared resource label is byte-flat at 83.0357%,
+// and the guided catalog finds no legal mutation, so the natural form stays.
 VA(0x004a6440, 0xD8)  // dc-bracket forced, ret 0xc=p4, dc 0x962dc
 void advManager::DoTreasureDialog(hero* current_hero, int amount,
                                   bool human_player)

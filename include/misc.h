@@ -49,9 +49,9 @@ public:
     std::vector<unsigned char> marks;
 
     TPickANumber(int lowBound, int high);
-    // Retail inlines this cleanup into PlaceAllObstacles; no standalone
-    // x86 row survives. The Dreamcast roster independently attests the dtor.
-    ~TPickANumber() {}
+    // The destructor remains implicit. Dreamcast records the owner boundary
+    // at includes.h:134, while Complete emits the named VC6 public selected
+    // by cmbtmgr.obj and folds the vector<unsigned char> teardown into it.
     int Pick();
 };
 

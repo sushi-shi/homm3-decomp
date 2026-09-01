@@ -251,6 +251,23 @@ extern const char* gSkillMasteryNames[3];
 // immediately before gSkillMasteryNames, giving that biased view its own
 // relocation at 0x6a756c.
 DATA(0x006a756c) extern const char* gSkillMasteryNamesBiased[4];
+// HeroScrn.txt row declarations shared with swapmgr's hero-exchange screen.
+// src/hero.cpp owns the DATA claims; these declarations only expose the
+// already-proven contiguous runtime text table to its source twin.
+extern const char* gHeroScreenText0;
+extern const char* gHeroScreenNameFormat;
+extern const char* gHeroScreenMoraleHighText;
+extern const char* gHeroScreenMoraleNeutralText;
+extern const char* gHeroScreenMoraleLowText;
+extern const char* gHeroScreenLuckHighText;
+extern const char* gHeroScreenLuckNeutralText;
+extern const char* gHeroScreenLuckLowText;
+extern const char* gHeroScreenText9;
+extern const char* gHeroScreenArmyMoveFormat;
+extern const char* gHeroScreenSecondarySkillFormat;
+extern const char* gHeroScreenText22;
+extern const char* gHeroScreenText27;
+extern const char* gHeroScreenMixedArmyHelp;
 extern int bVideoPaused;
 // 0x6aa9d8. DECLARATION ONLY - src/townmgr.cpp:163 owns the DATA claim,
 // and a second claim on one RVA is a fatal duplicate at delink. hero.obj
@@ -797,7 +814,15 @@ public:
     {
         return &equipped[slot];
     }
+    type_artifact* get_artifact(long slot)
+    {
+        return &equipped[slot];
+    }
     const type_artifact* get_backpack(long slot) const
+    {
+        return &backpack[slot];
+    }
+    type_artifact* get_backpack(long slot)
     {
         return &backpack[slot];
     }
@@ -1141,17 +1166,21 @@ public:
     float GetOffenseFactor();
     float GetDefenseFactor();
     float GetIntelligenceFactor();
-#if defined(HOMM3_HERO_OBJ_VIEW) || defined(HOMM3_TOWN_OBJ_DECLS) \
- || defined(HOMM3_GAME_NEW_MAP_DECLS) || defined(HOMM3_PHILAI_OBJ_DECLS)
     // Header inline at E:\gamedcs\Hero.h:634 (dc 0x669fc). Dreamcast's
-    // xrefs put direct calls in both hero-screen functions; the retail
-    // hero.obj sites expand it byte-for-byte under /Ob2.
+    // xrefs put direct calls in both hero-screen functions and the combat
+    // sub-window update; the retail sites expand it byte-for-byte under
+    // /Ob2. Keep the recovered header helper canonical for every consumer.
     int GetMaxMana()
     {
         return static_cast<int>(
             GetPrimarySkill(3) * 10 * GetIntelligenceFactor());
     }
-#endif
+    // Dreamcast's swap screen calls this source helper. Complete's retail
+    // body is the two-argument HeroScreenUpdate entry at 0x4d9990.
+    void ViewStat(int whichStat, int isQuickView)
+    {
+        HeroScreenUpdate(whichStat, isQuickView);
+    }
     float GetFirstAidFactor();
     int CreatureTypeCount(int creatureType);
     int GetNthSS(int iWhich);
@@ -1360,6 +1389,20 @@ struct THeroClassTraits {
 };
 SIZE(THeroClassTraits, 0x40);
 
+// Dreamcast names this public aggregate and its retail producer preserves the
+// exact layout: 21 land-speed entries, four Navigation masteries, then five
+// movement bonuses. Complete keeps the Stables bonus in the preceding cell.
+struct type_movement_constants {
+    int land[21];
+    int sea[4];
+    int equestriansGlovesBonus;
+    int bootsOfSpeedBonus;
+    int oceanGuidanceBonus;
+    int seaCaptainsHatBonus;
+    int lighthouseBonus;
+};
+SIZE(type_movement_constants, 0x78);
+extern type_movement_constants move_constants;
 extern int gLandMovement[21];
 DATA(0x0067d868) extern THeroClassTraits aHeroClassTraits[18];
 extern const THeroClassTraits (&akHeroClasses)[18];

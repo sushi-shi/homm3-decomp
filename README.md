@@ -12,21 +12,21 @@ legally obtained `HEROES3.EXE` locally to initialize the matching workspace.
 
 <!-- match-score:start -->
 
-**Executable matched: 64.26%** — fuzzy-weighted bytes over all 1,997,146 unfiltered bytes.
+**Executable matched: 65.31%** — fuzzy-weighted bytes over all 1,997,132 unfiltered bytes.
 
-**Match score** — 2,645 / 4,768 functions exact (55.5%) across the full engine (3163 in linked units).
+**Match score** — 2,697 / 4,767 functions exact (56.6%) across the full engine (3234 in linked units).
 
 | Module        | Units |     Functions exact |   Fuzzy | Fuzzy Max |
 | :------------ | ----: | ------------------: | ------: | --------: |
-| `game`        |   117 | 2576 / 3094 (83.3%) |  95.54% |    96.06% |
+| `game`        |   117 | 2628 / 3165 (83.0%) |  93.99% |    94.49% |
 | `zlib-1.1.3`  |    14 |    69 / 69 (100.0%) | 100.00% |   100.00% |
-| `(unmatched)` |     — |    0 / 1,605 (0.0%) |    0.0% |      0.0% |
+| `(unmatched)` |     — |    0 / 1,533 (0.0%) |    0.0% |      0.0% |
 
 _Excluded from the % above — generated/library code, not independent reconstruction targets:_
 
 | Category              | Functions | Code (B) | Why excluded                                                       |
 | :-------------------- | --------: | -------: | :----------------------------------------------------------------- |
-| `EH unwind funclets`  |     5,125 |   53,151 | compiler EH unwind funclets; match with their parent function      |
+| `EH unwind funclets`  |     5,126 |   53,176 | compiler EH unwind funclets; match with their parent function      |
 | `CRT/C++ runtime`     |       915 |  110,788 | CRT/C++ runtime, named not matched (config/retail-runtime-map.tsv) |
 | `init/cleanup thunks` |     1,119 |   94,433 | .CRT$XCU dynamic-initializer bodies (compiler-generated)           |
 | `import thunks`       |        27 |      162 | FF 25 jumps through the IAT                                        |
