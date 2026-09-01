@@ -1485,7 +1485,17 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
         b->set_hotkey(28);
     Widgets.push_back(b);
 
-    if (!gUnnamed69774c) {
+    // Complete campaign saves may only return from an unfinished scenario.
+    // Retail proves both the GetCurrentScenario boundary and this duplicated
+    // button-construction source family. Keep the header accessor inline:
+    // this large caller naturally retains the call and emits its exact COMDAT.
+    if (gUnnamed69774c) {
+        if (!gpGame->campaign.GetCurrentScenario()->completed) {
+            Widgets.push_back(new button(
+                584, 535, 166, 40, 188, "scnrback.def",
+                0, 1, 0, 1, 2));
+        }
+    } else {
         Widgets.push_back(new button(
             584, 535, 166, 40, 188, "scnrback.def",
             0, 1, 0, 1, 2));
