@@ -33,13 +33,15 @@ land within +-10% of 1.0. That makes it a **+-25% instrument** - about
     effect; anything inside +-25% is noise. An earlier 249-body
     calibration that reported median 1.000 was a small-sample
     artefact - do not resurrect it.
-  * The "which header lines were inlined into this body" reading DOES
-    NOT WORK. NB11 has no inlinee-line records: inlined code is
-    attributed to the CALL SITE's own .cpp line. Header files that do
-    appear in a module's SRCLINES are separate out-of-line COMDATs at
-    disjoint addresses, which is why they never intersect a proc's
-    extent. Absence of a callee's lines is therefore NOT evidence that
-    the DC build called it out of line.
+  * Inlinee line records are a POSITIVE instrument.  The recovered QFE 8511
+    compiler candidate retains source-file switches and inlinee body lines
+    for explicit and implicit inline expansions, and H3.EXE preserves such
+    rows inside 29 procedure extents.  A header range outside a procedure can
+    still be a separate out-of-line COMDAT; intersection with the S_GPROC32
+    extent is the discriminator.  NB11 has no explicit inline-site record,
+    so absence of an inlinee row is never evidence that the build called it
+    out of line.  Use `homm3 dreamcast inline-clues` for the bounded positive
+    scan.
 
 Further caveats, all of them real:
   * DC line counts are the DC PRESSING's source. Retail is a later build
@@ -191,10 +193,11 @@ def _report(row: dict, args) -> None:
     print(f"  LINES: {own_lines} in the owning .cpp, {total} total "
           f"across {len(by_file)} file(s)")
     for f, v in by_file.items():
-        # A second file inside a proc's extent is a separate out-of-line
-        # COMDAT the linker packed adjacently, NOT an inline expansion -
-        # NB11 attributes inlined code to the call site's own line.
-        tag = "  <-- body" if _basename(f).lower() == own else "  (adjacent)"
+        # The S_GPROC32 extent is the boundary.  A different source file that
+        # intersects it is inline-expansion residue; disjoint header ranges
+        # elsewhere in the module remain ordinary out-of-line COMDATs.
+        tag = ("  <-- body" if _basename(f).lower() == own
+               else "  <-- inline source inside body")
         print(f"      {_basename(f):<30} {len(v):>4} lines "
               f"[{v[0][0]}..{v[-1][0]}]{tag}")
         if args.lines:

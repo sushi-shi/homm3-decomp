@@ -56,7 +56,7 @@ Subcommands
         disassembly of ANY retail function, address dossiers, literal
         evidence. Every invocation logs one line to build/homm3_sema.log.
 
-  dreamcast <show|asm|find|stats> ...
+  dreamcast <show|asm|find|gaps|inline-clues|stats> ...
         Read-only source-shape navigation over the older WinCE/SH4 pressing:
         joined CodeView names/signatures/locals/scopes, breakpoint-labelled SH4
         assembly and CFG blocks, and explicitly qualified retail correlations.

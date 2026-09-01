@@ -34,6 +34,12 @@ Subcommands
         between them are zero-emission source candidates.  With no selector,
         rank the whole corpus by leading-gap size.
 
+  inline-clues [SELECTOR] [--module MODULE] [--limit N] [--json]
+        Report source-file switches and jumps into earlier named source
+        functions that occur inside a Dreamcast procedure's extent.  These
+        are positive inline-expansion residues left by the SH compiler.  An
+        absent clue never proves that a call was retained.
+
   stats [--json]
         Corpus coverage and bridge counts.
 
@@ -44,6 +50,7 @@ requires corroboration from the pinned Complete executable.
 from __future__ import annotations
 
 import argparse
+from bisect import bisect_right
 import csv
 import json
 import re
@@ -72,6 +79,12 @@ GAP_CAUTION = (
     "A missing line-program row can be a blank, comment, declaration, brace, "
     "preprocessor-only line, or compiled-out statement (including an assert); "
     "it is a candidate, never assert proof."
+)
+INLINE_CAUTION = (
+    "A reported row is positive compiler attribution inside the caller; an "
+    "unreported helper may still have been inlined because NB11 has no "
+    "explicit inline-site records and optimized code need not retain a "
+    "distinct source row."
 )
 
 
@@ -158,6 +171,24 @@ class Corpus:
             self.by_key[key] = row
             self.by_offset[key[1]].append(row)
             self.by_name[row["name"]].append(row)
+
+        # A foreign-file line row inside a procedure can be joined back to
+        # the helper definition that supplied it.  Template instantiations
+        # legitimately share one source boundary, hence the set of names.
+        source_definitions: dict[str, dict[int, set[str]]] = defaultdict(
+            lambda: defaultdict(set))
+        for row in self.functions:
+            source = row["file"].replace("/", "\\").lower()
+            source_definitions[source][_integer(row["line"])].add(row["name"])
+        self.source_definitions = {
+            source: {line: tuple(sorted(names))
+                     for line, names in by_line.items()}
+            for source, by_line in source_definitions.items()
+        }
+        self.source_definition_lines = {
+            source: tuple(sorted(by_line))
+            for source, by_line in self.source_definitions.items()
+        }
 
         self.variables_by_key: dict[tuple[str, str], list[dict[str, str]]] = \
             defaultdict(list)
@@ -268,6 +299,22 @@ class Corpus:
                 and (module is None or row["module"] == module)]
         return sorted(rows, key=lambda r: (r["module"], _integer(r["offset"]),
                                            r["name"]))
+
+    def source_definition(self, source: str, line: int) \
+            -> tuple[int, tuple[str, ...]] | None:
+        """Return the nearest function boundary at or before ``source:line``.
+
+        The roster gives definition starts, not closing lines, so this names
+        the likely owner of an already-positive inline residue; it never
+        creates the residue by itself.
+        """
+        key = source.replace("/", "\\").lower()
+        lines = self.source_definition_lines.get(key, ())
+        position = bisect_right(lines, line) - 1
+        if position < 0:
+            return None
+        boundary = lines[position]
+        return boundary, self.source_definitions[key][boundary]
 
 
 def _gate_dc_exe(path: Path) -> bytes:
@@ -581,6 +628,231 @@ def _source_key(path: str) -> str:
     return path.replace("/", "\\").lower()
 
 
+def _inline_clue_rows(
+        corpus: Corpus,
+        row: dict[str, str],
+        module_rows: Iterable[tuple[str, int, int]] | None = None,
+) -> list[dict[str, Any]]:
+    """Recover positive/probable inline residue from rows inside one proc.
+
+    The linked NB11 line table is flat per compiland, but S_GPROC32 supplies
+    an exact procedure extent.  A row from another source file inside that
+    extent is therefore code attributed to an expanded foreign definition,
+    not the out-of-line callee (whose rows live in its own extent).  A row in
+    the owning file that predates the procedure boundary is the same signal
+    for a helper defined earlier in the translation unit.
+    """
+    off, end = _integer(row["offset"]), _integer(row["offset"]) + _integer(
+        row["cb"])
+    if module_rows is None:
+        module_rows = dc_srclines._load_srclines().get(row["module"], ())
+    records = sorted({(address, line, source)
+                      for source, line, address in module_rows
+                      if off <= address < end})
+    if not records:
+        return []
+    owner = _source_key(row["file"])
+    boundary = _integer(row["line"])
+    clues: list[dict[str, Any]] = []
+    for index, (address, line, source) in enumerate(records):
+        foreign = _source_key(source) != owner
+        earlier = not foreign and line < boundary
+        if not foreign and not earlier:
+            continue
+        definition = corpus.source_definition(source, line)
+        definition_line = definition[0] if definition else None
+        definitions = definition[1] if definition else ()
+        # Foreign-file attribution is intrinsically positive.  A same-source
+        # back-jump is equally positive when the roster names a different
+        # earlier procedure; otherwise retain it as a probable clue.
+        positive = foreign or bool(
+            definition and row["name"] not in definitions
+            and definition_line is not None and definition_line < boundary)
+        next_address = records[index + 1][0] if index + 1 < len(records) else end
+        clues.append({
+            "line_program_index": index,
+            "kind": "foreign-source" if foreign else "earlier-source-function",
+            "confidence": "positive" if positive else "probable",
+            "address": address,
+            "emitted_size": max(0, next_address - address),
+            "source": source,
+            "line": line,
+            "definition_line": definition_line,
+            "definitions": list(definitions),
+        })
+    return clues
+
+
+def _enrich_inline_clues(clues: list[dict[str, Any]],
+                         dossier: DreamcastDossier) -> list[dict[str, Any]]:
+    by_location: dict[tuple[int, str, int], list[debug_shape.DebugStatement]] = \
+        defaultdict(list)
+    for statement in dossier.shape.statements:
+        by_location[(statement.address, _source_key(statement.source_file),
+                     statement.source_line)].append(statement)
+    out = []
+    for clue in clues:
+        enriched = dict(clue)
+        key = (clue["address"], _source_key(clue["source"]), clue["line"])
+        matches = by_location.get(key, ())
+        statement = matches[0] if matches else None
+        if statement is not None:
+            enriched.update({
+                "branch_count": statement.branch_count,
+                "scope_opens": statement.scope_opens,
+                "scope_closes": statement.scope_closes,
+                "calls": [call.name or _hex(call.target_address)
+                          for call in statement.calls],
+            })
+        out.append(enriched)
+    return out
+
+
+def _inline_clue_groups(clues: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    groups: list[dict[str, Any]] = []
+    previous_index = None
+    previous_key = None
+    for clue in clues:
+        key = (clue["kind"], clue["confidence"], _source_key(clue["source"]),
+               clue["definition_line"], tuple(clue["definitions"]))
+        adjacent = previous_index is not None \
+            and clue["line_program_index"] == previous_index + 1
+        if not groups or not adjacent or key != previous_key:
+            groups.append({
+                "kind": clue["kind"], "confidence": clue["confidence"],
+                "source": clue["source"],
+                "definition_line": clue["definition_line"],
+                "definitions": clue["definitions"], "statements": [],
+            })
+        groups[-1]["statements"].append(clue)
+        previous_index, previous_key = clue["line_program_index"], key
+    for group in groups:
+        statements = group["statements"]
+        group.update({
+            "address": statements[0]["address"],
+            "end_address": max(item["address"] + item["emitted_size"]
+                               for item in statements),
+            "emitted_size": sum(item["emitted_size"] for item in statements),
+            "statement_rows": len(statements),
+            "source_lines": [item["line"] for item in statements],
+            "branch_count": sum(item.get("branch_count", 0)
+                                for item in statements),
+            "scope_opens": sum(item.get("scope_opens", 0)
+                               for item in statements),
+            "scope_closes": sum(item.get("scope_closes", 0)
+                                for item in statements),
+            "calls": [call for item in statements
+                      for call in item.get("calls", [])],
+        })
+    return groups
+
+
+def _inline_clue_payload(corpus: Corpus, row: dict[str, str], *,
+                         detailed: bool = False) -> dict[str, Any]:
+    clues = _inline_clue_rows(corpus, row)
+    if detailed and clues:
+        clues = _enrich_inline_clues(clues, build_dossier(corpus, row))
+    groups = _inline_clue_groups(clues)
+    return {
+        "name": row["name"], "module": row["module"],
+        "dc_offset": _integer(row["offset"]), "dc_size": _integer(row["cb"]),
+        "source": row["file"], "boundary_line": _integer(row["line"]),
+        "retail_vas": _mapped_vas(corpus, row),
+        "foreign_source_rows": sum(item["kind"] == "foreign-source"
+                                   for item in clues),
+        "earlier_source_rows": sum(item["kind"] == "earlier-source-function"
+                                   for item in clues),
+        "groups": groups,
+    }
+
+
+def _short_definitions(group: dict[str, Any], limit: int = 3) -> str:
+    names = group["definitions"]
+    if not names:
+        return "unresolved source definition"
+    shown = ", ".join(names[:limit])
+    if len(names) > limit:
+        shown += f" (+{len(names) - limit} overload/instantiation(s))"
+    return shown
+
+
+def _render_inline_clues(payload: dict[str, Any], *, selected: bool,
+                         out: TextIO = sys.stdout) -> None:
+    print("DREAMCAST INLINE CLUES — ANALYSIS OUTPUT, NOT RETAIL EVIDENCE",
+          file=out)
+    print(INLINE_CAUTION, file=out)
+    print("QFE 8511 /O1 controls: explicit/implicit inline leaves, branches, "
+          "nested helpers and a helper with a surviving local retain inlinee "
+          "line/scope records; the probed plain static helper and inline loop "
+          "remained calls.", file=out)
+    summary = payload["summary"]
+    shown = f", showing {summary['shown']}" \
+        if summary["shown"] != summary["functions"] else ""
+    print(f"\n{summary['functions']} function(s){shown}: "
+          f"foreign-file={summary['foreign_source_functions']}, "
+          f"earlier-same-file={summary['earlier_source_functions']}", file=out)
+    if not payload["functions"]:
+        print("no inline line-table residue found", file=out)
+        return
+    for function in payload["functions"]:
+        retail = ",".join(_hex(va, 8) for va in function["retail_vas"]) or "-"
+        print(f"\n{function['module']}:{_hex(function['dc_offset'])}  "
+              f"{function['dc_size']} B  retail={retail}", file=out)
+        print(f"  {function['name']}  "
+              f"({_basename(function['source'])}:{function['boundary_line']})",
+              file=out)
+        if not selected:
+            helpers = []
+            for group in function["groups"]:
+                label = (group["definitions"][0] if group["definitions"]
+                         else _basename(group["source"]))
+                if label not in helpers:
+                    helpers.append(label)
+            shown_helpers = ", ".join(helpers[:8])
+            if len(helpers) > 8:
+                shown_helpers += f" (+{len(helpers) - 8} more)"
+            print(f"  inline rows: foreign={function['foreign_source_rows']} "
+                  f"earlier-same-file={function['earlier_source_rows']}; "
+                  f"helpers={shown_helpers}", file=out)
+            continue
+        for group in function["groups"]:
+            definition_line = group["definition_line"]
+            location = _basename(group["source"])
+            if definition_line is not None:
+                location += f":{definition_line}"
+            lines = ",".join(str(line) for line in group["source_lines"][:12])
+            if len(group["source_lines"]) > 12:
+                lines += f",...(+{len(group['source_lines']) - 12})"
+            print(f"  [{group['confidence']} {group['kind']}] "
+                  f"{_short_definitions(group)}", file=out)
+            print(f"    {location}; rows={group['statement_rows']} "
+                  f"lines={lines}; dc {_hex(group['address'])}.."
+                  f"{_hex(group['end_address'])}; {group['emitted_size']} B",
+                  file=out)
+            if selected:
+                details = []
+                if group["branch_count"]:
+                    details.append(f"branches={group['branch_count']}")
+                if group["scope_opens"] or group["scope_closes"]:
+                    details.append(
+                        f"scopes=+{group['scope_opens']}/-{group['scope_closes']}")
+                if group["calls"]:
+                    details.append("calls=" + ", ".join(group["calls"]))
+                if details:
+                    print("    " + "  ".join(details), file=out)
+                for statement in group["statements"]:
+                    marks = " {" * statement.get("scope_opens", 0) \
+                        + " }" * statement.get("scope_closes", 0)
+                    branch = f" br={statement.get('branch_count', 0)}" \
+                        if statement.get("branch_count", 0) else ""
+                    print(f"      {statement['line']:>5}  "
+                          f"dc {_hex(statement['address'], 8)}  "
+                          f"{statement['emitted_size']:>4} B{branch}{marks}",
+                          file=out)
+                    for call in statement.get("calls", []):
+                        print(f"             -> {call}", file=out)
+
+
 def _line_span(first: int, last: int) -> str:
     if first == last:
         return str(first)
@@ -857,6 +1129,17 @@ def _build_parser() -> argparse.ArgumentParser:
                       help="maximum corpus rows (default 50; 0 = all)")
     gaps.add_argument("--json", action="store_true", help="machine-readable output")
 
+    inline_clues = sub.add_parser(
+        "inline-clues", help="positive source-line residue of SH inline expansion")
+    inline_clues.add_argument(
+        "selector", nargs="?",
+        help="optional retail VA/RVA, dc:OFF, module:OFF, or name")
+    inline_clues.add_argument("--module", help="restrict corpus mode to module[.obj]")
+    inline_clues.add_argument("--limit", type=int, default=50,
+                              help="maximum corpus rows (default 50; 0 = all)")
+    inline_clues.add_argument("--json", action="store_true",
+                              help="machine-readable output")
+
     stats = sub.add_parser("stats", help="corpus and retail-bridge coverage")
     stats.add_argument("--json", action="store_true", help="machine-readable output")
     return ap
@@ -955,6 +1238,52 @@ def main(argv: list[str] | None = None) -> int:
                 print()
             else:
                 _render_gaps(rows, selected=bool(args.selector))
+        elif args.command == "inline-clues":
+            if args.limit < 0:
+                raise DreamcastError("--limit must be >= 0")
+            if args.selector:
+                functions = [_inline_clue_payload(
+                    corpus, corpus.resolve(args.selector), detailed=True)]
+                functions = [row for row in functions if row["groups"]]
+            else:
+                module = args.module
+                if module and not module.endswith(".obj"):
+                    module += ".obj"
+                candidates = [row for row in corpus.functions
+                              if module is None or row["module"] == module]
+                functions = [_inline_clue_payload(corpus, row)
+                             for row in candidates]
+                functions = [row for row in functions if row["groups"]]
+                functions.sort(key=lambda row: (
+                    -(row["foreign_source_rows"] + row["earlier_source_rows"]),
+                    row["module"], row["dc_offset"]))
+            total = len(functions)
+            summary = {
+                "functions": total,
+                "foreign_source_functions": sum(
+                    row["foreign_source_rows"] > 0 for row in functions),
+                "earlier_source_functions": sum(
+                    row["earlier_source_rows"] > 0 for row in functions),
+                "foreign_source_rows": sum(
+                    row["foreign_source_rows"] for row in functions),
+                "earlier_source_rows": sum(
+                    row["earlier_source_rows"] for row in functions),
+            }
+            if not args.selector and args.limit:
+                functions = functions[:args.limit]
+            summary["shown"] = len(functions)
+            payload = {
+                "authority": AUTHORITY,
+                "caution": INLINE_CAUTION,
+                "selected": bool(args.selector),
+                "summary": summary,
+                "functions": functions,
+            }
+            if args.json:
+                json.dump(payload, sys.stdout, indent=2, sort_keys=True)
+                print()
+            else:
+                _render_inline_clues(payload, selected=bool(args.selector))
         else:
             payload = _stats(corpus)
             if args.json:
