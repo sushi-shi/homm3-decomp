@@ -14,6 +14,36 @@
 #include "textwdgt.h"
 #include "smackmgr.h"
 #include "soundmgr.h"
+#include "resourcemanager.h"
+#include "textresource.h"
+
+// Complete's 37-row window-text routing table.  Its initialized bytes occupy
+// 0x68c710..0x68c837; the immediately following jktext.txt literal at
+// 0x68c838 bounds the array independently.  SetWinText's +0/+2/+4 loads and
+// 8-byte stride prove the layout, and the values below are the pinned retail
+// initializer rather than an inferred enumeration.
+DATA(0x0068c710)
+static SWinSetup gWinSetup[37] = {
+    { 0x06, 0x0067, 0 }, { 0x06, 0x0068, 0 },
+    { 0x06, 0x0069, 0 }, { 0x06, 0x006a, 0 },
+    { 0x06, 0x006b, 0 }, { 0x06, 0x006c, 0 },
+    { 0x06, 0x006d, 0 }, { 0x06, 0x006e, 0 },
+    { 0x06, 0x006f, 0 }, { 0x09, 0x0029, 0 },
+    { 0x0c, 0x0001, 0 }, { 0x0c, 0x0002, 0 },
+    { 0x0e, 0x0320, 0 }, { 0x0e, 0x0321, 0 },
+    { 0x0e, 0x0322, 0 }, { 0x0e, 0x0323, 0 },
+    { 0x0e, 0x0324, 0 }, { 0x0e, 0x0325, 0 },
+    { 0x0e, 0x0326, 0 }, { 0x0e, 0x0327, 0 },
+    { 0x0e, 0x025c, 0 }, { 0x0e, 0x025d, 0 },
+    { 0x0e, 0x025e, 0 }, { 0x0e, 0x025f, 0 },
+    { 0x0e, 0x0260, 0 }, { 0x0e, 0x0261, 0 },
+    { 0x0e, 0x0262, 0 }, { 0x0e, 0x0263, 0 },
+    { 0x0e, 0x0264, 0 }, { 0x0e, 0x026c, 0 },
+    { 0x0e, 0x026d, 0 }, { 0x0e, 0x026e, 0 },
+    { 0x16, 0x0001, 0 }, { 0x16, 0x0003, 0 },
+    { 0x18, 0x0001, 0 }, { 0x18, 0x0002, 0 },
+    { 0x19, 0x0002, 0 }
+};
 
 // E:\gamedcs\window.cpp:48
 VA(0x005fe9f0, 0x5E)  // anchor-global, dc 0x197138
@@ -815,21 +845,98 @@ void CHeroWindowEx::SetHelpText(THelpText* pHelpText, int start, int stop,
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\window.cpp:1201
-DC_ONLY(0x197fd8, 0x158)
+// Retail identity proof (2026-09-01): this is the first of the two rows
+// between SetHelpText and winfile.obj.  It calls ResourceManager::GetText
+// with the adjacent 0x68c838 "jktext.txt" literal, returns uchar, and writes
+// exactly the +4 pointer column of gWinSetup.  The seven loop groups and the
+// skipped text rows reproduce the DC line/scope order; Complete reduced each
+// group's row count by one (37 destinations versus DC's 44).
+VA(0x005ff960, 0xC3)  // link-order + jktext/table body, dc 0x197fd8
 unsigned char InitializeWinSetupText()
 {
-    // @stub
+    TTextResource* textResource = ResourceManager::GetText(
+        DATA_COMPGEN(0x0068c838, winSetupTextName, "jktext.txt"));
+    if (!textResource)
+        return 0;
+
+    int textLine = 0;
+    int setup = 0;
+    int i;
+
+    ++textLine;
+    for (i = 0; i < 9; ++i, ++textLine, ++setup) {
+        gWinSetup[setup].text = textResource->GetText(textLine);
+    }
+
+    ++textLine;
+    for (i = 0; i < 1; ++i, ++textLine, ++setup) {
+        gWinSetup[setup].text = textResource->GetText(textLine);
+    }
+
+    ++textLine;
+    for (i = 0; i < 2; ++i, ++textLine, ++setup) {
+        gWinSetup[setup].text = textResource->GetText(textLine);
+    }
+
+    ++textLine;
+    for (i = 0; i < 20; ++i, ++textLine, ++setup) {
+        gWinSetup[setup].text = textResource->GetText(textLine);
+    }
+
+    ++textLine;
+    for (i = 0; i < 2; ++i, ++textLine, ++setup) {
+        gWinSetup[setup].text = textResource->GetText(textLine);
+    }
+
+    ++textLine;
+    for (i = 0; i < 2; ++i, ++textLine, ++setup) {
+        gWinSetup[setup].text = textResource->GetText(textLine);
+    }
+
+    ++textLine;
+    for (i = 0; i < 1; ++i, ++textLine, ++setup) {
+        gWinSetup[setup].text = textResource->GetText(textLine);
+    }
+
+    return 1;
 }
 
 // E:\gamedcs\window.cpp:1283
-DC_ONLY(0x198130, 0x7C)
+// Retail identity proof (2026-09-01): the second pre-winfile row is a /Gr
+// two-argument function (win in ecx, winId in edx).  It walks the same 37
+// eight-byte rows, compares +0, loads +2/+4 into a message, and inlines
+// heroWindow::BroadcastMessage.  That body and DC's ctor/loop/call dossier
+// jointly exclude the neighbouring winfile methods and compiler funclets.
+VA(0x005ffa30, 0xC1)  // link-order + text-table/BroadcastMessage body, dc 0x198130
 void SetWinText(heroWindow* win, int winId)
 {
-    // @stub
+    // DC names the default-constructor boundary here.  The project still
+    // keeps message POD in the canonical header, so spell that constructor's
+    // byte-proven all-zero state field-for-field instead of adding another
+    // cleanliness-forbidden per-TU header view.  Retail likewise emits eight
+    // consecutive stores rather than aggregate-init's `rep stosd`.
+    message msg;
+    msg.id = 0;
+    msg.codeX = 0;
+    msg.codeY = 0;
+    msg.qualifier = 0;
+    msg.mouseX = 0;
+    msg.mouseY = 0;
+    msg.extra = 0;
+    msg.window = 0;
+    for (unsigned i = 0; i < 37; ++i) {
+        if (gWinSetup[i].windowId == winId) {
+            msg.id = MESSAGE_WIDGET;
+            msg.codeX = widget::WIDGET_SET_TEXT;
+            msg.codeY = gWinSetup[i].widgetId;
+            msg.extraText = gWinSetup[i].text;
+            win->BroadcastMessage(&msg);
+        }
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\window.cpp:68
 DC_ONLY(0x1981ac, 0x34)

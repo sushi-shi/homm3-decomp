@@ -426,7 +426,7 @@ void font::DrawString(const char* text, Bitmap16Bit* bitmap, int x, int y, font:
 // the branch sequences now AGREE). `while (str[pos] != ' ' &&
 // pos >= lineStart)` scores the same; `pos <= lineStart` as the break
 // condition is worse (96.59).
-// A volatile bottom-justification `total` aligns the scratch-register
+// The former volatile bottom-justification `total` aligned the scratch-register
 // family through the rest of the function (96.81 -> 98.79). The branch
 // sequence is exact; the residual is only the three forced stack-memory
 // instructions around that value. A second guided solver pass found no
@@ -498,7 +498,7 @@ void font::DrawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
             currY = (boxHeight - iHeight) / 2;
     }
     if (justification & BOTTOM_JUSTIFIED) {
-        volatile int total;
+        int total;
 
         justification &= ~BOTTOM_JUSTIFIED;
         total = LineLength(str, boxWidth) * fs.height;
@@ -622,7 +622,7 @@ long font::get_string_width(const char* arg)
 //   * newline is NOT an unconditional line end: all three exits fall
 //     into one `if (width > boxWidth) { backtrack }` after the loop.
 //   * `int width = 0;` is declared BEFORE `int lineStart = pos;`.
-// Making `lineStart` volatile homes the backtrack boundary and raises the
+// The former volatile `lineStart` homed the backtrack boundary and raised the
 // function 91.74 -> 92.68 while preserving the exact branch sequence.
 // Earlier rejected forms: `count` declared first (86.4), declared last
 // (identical), split declaration + assignment (identical), `pos` declared
@@ -693,7 +693,7 @@ int font::LineLength(const char* str, int boxWidth)
     int pos = 0;
     while (pos < len && str[pos] != 0) {
         int width = 0;
-        volatile int lineStart = pos;
+        int lineStart = pos;
         while (str[pos] != 0) {
             if (str[pos] == '\n')
                 break;

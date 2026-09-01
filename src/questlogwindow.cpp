@@ -3,7 +3,6 @@
 // 8 functions in link order; 20 compiler-generated $-thunks omitted.
 // The quest log is the one reader of the map's two quest pools
 // (NewfullMap's SeerHutList / QuestGuardList vectors).
-#define HOMM3_QUESTLOG_MESSAGE_CTOR_VIEW
 #include <va.h>
 #include <string.h>
 #include "questlogwindow.h"

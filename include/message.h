@@ -82,8 +82,8 @@ enum EMessageModifiers {
 // extra, window, oldX@32, oldY@36 (40 B). The retail frames in
 // widget::send_message/enable are 0x20 B - retail dropped oldX/oldY.
 // The Dreamcast xref graph also proves the default constructor at dc 0x2d58.
-// Keep its concrete inline view consumer-scoped because many reconstructed
-// retail sites still model already-optimized member stores directly.
+// This is one class shape, not a per-TU optimizer view: the constructor is
+// canonical and VC6 may remove fields overwritten before their first read.
 class message {
 public:
     int id;
@@ -97,23 +97,23 @@ public:
         const char* extraText;
     };
     heroWindow* window;
-#if defined(HOMM3_HERO_MESSAGE_CTOR_VIEW) || \
-    defined(HOMM3_ARMYGRP_MESSAGE_CTOR_VIEW) || \
-    defined(HOMM3_COMMAND_GRID_VIEW) || \
-    defined(HOMM3_QUESTLOG_MESSAGE_CTOR_VIEW) || \
-    defined(HOMM3_RECRUIT_MESSAGE_CTOR_VIEW) || \
-    defined(HOMM3_SWAPMGR_MESSAGE_CTOR_VIEW) || \
-    defined(HOMM3_TRADPOST_MESSAGE_CTOR_VIEW)
     // The Dreamcast CodeView body at struct.h:42 zeroes the fields in
-    // declaration order.  Keep this TU-scoped because other reconstructed
-    // units still use aggregate initializers; the attested consumer sites
-    // need the real constructor shape and VC6 removes fields overwritten
-    // before their first read.
+    // declaration order. The attested consumer sites need the real
+    // constructor shape and VC6 removes fields overwritten before first read.
     // Dreamcast type 0x1016 lists this eight-argument overload before the
-    // default constructor. No emitted body survives in that build, so only
-    // the proved declaration belongs here.
-    message(int id, int codeX, int codeY, int qualifier,
-            int mouseX, int mouseY, int extra, heroWindow* window);
+    // default constructor; both are header-inline source boundaries.
+    message(int id_, int codeX_, int codeY_, int qualifier_,
+            int mouseX_, int mouseY_, int extra_, heroWindow* window_)
+    {
+        id = id_;
+        codeX = codeX_;
+        codeY = codeY_;
+        qualifier = qualifier_;
+        mouseX = mouseX_;
+        mouseY = mouseY_;
+        extra = extra_;
+        window = window_;
+    }
 
     message()
     {
@@ -126,30 +126,7 @@ public:
         extra = 0;
         window = 0;
     }
-#endif
 };
 SIZE(message, 32);
-
-#ifdef HOMM3_TOWNMGR_MESSAGE_CTOR_CARRIER
-// Compiler-history carrier for townManager::SetupMage. Dreamcast proves the
-// original source called message::message(), whose body zeroes this complete
-// base plus its two DC-only tail fields. Giving message itself a default ctor
-// would change every reconstructed POD-style site in the include closure, so
-// this layout-identical subtype isolates the one retail-proven call site.
-class mage_message : public message {
-public:
-    mage_message()
-    {
-        id = 0;
-        codeX = 0;
-        codeY = 0;
-        qualifier = 0;
-        mouseX = 0;
-        mouseY = 0;
-        extra = 0;
-        window = 0;
-    }
-};
-#endif
 
 #endif  /* HOMM3_MESSAGE_H */

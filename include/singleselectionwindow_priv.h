@@ -27,6 +27,12 @@
 // singleselectionwindow.cpp's include closure.
 namespace ResourceManager {
     TTextResource* GetText(const char* name);
+    // Dreamcast keeps these source helpers out of line. Complete expands the
+    // one-operation bodies into the selection-window destructor; explicit
+    // nullability remains at the HeroPix call site where retail tests it.
+    inline void Dispose(resource* value) { value->Dispose(); }
+    inline void Dispose(CSprite* value) { value->Dispose(); }
+    inline void del_Spr_from_Cache() {}
 }
 
 // misc.cpp's free-space probe (retail 0x50c7a0), declared file-locally
@@ -818,7 +824,12 @@ public:
 // (retail keeps an out-of-line copy and expands it into WindowHandler).
 class CNewPlayerUpdateMan {
 public:
-    CNewPlayerUpdateTask* m_procs[8];
+    // Dreamcast's destructor calls CNewPlayerUpdateProc's scalar deleting
+    // destructor, fixing the source element type. Complete's retail-only
+    // t_map_list_update still converts to this immediate base.
+    CNewPlayerUpdateProc* m_procs[8];
+
+    ~CNewPlayerUpdateMan();
 
     CNewPlayerUpdateMan();
 
@@ -841,7 +852,7 @@ public:
     }
 
     // DC GetProc (protected there); the HeaderConfirmed body expands it.
-    CNewPlayerUpdateTask* GetProc(unsigned long dpid)
+    CNewPlayerUpdateProc* GetProc(unsigned long dpid)
     {
         for (int i = 0; i < 8; ++i)
             if (m_procs[i] && m_procs[i]->m_dpid == dpid)

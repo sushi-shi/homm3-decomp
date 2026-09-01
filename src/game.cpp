@@ -312,9 +312,13 @@ std::map<int, type_map_hero_info>::_Imp::insert(const value_type& value)
 
 void THeroSetupMapMinComdatAnchor::retain_min()
 {
-    typedef _Nodeptr (__fastcall *MinFunction)(_Nodeptr);
-    MinFunction volatile minFunction = &_Min;
-    minFunction(_Nil);
+    // Retail CMapHeaderData::Save retains the protected _Tree::_Min COMDAT
+    // after the surrounding iterator work exhausts VC6's inline budget.
+    // Preserve the real helper and pin only this call: the source-shape gate's
+    // negative controls reject flattening, a member pointer, or volatile mass.
+#pragma inline_depth(0)
+    INLINE_GATE(_Min(_Nil));
+#pragma inline_depth()
 }
 
 void THeroSetupMapMinComdatAnchor::retain_insert(const Value& value)
@@ -1289,11 +1293,9 @@ int game::LoadMinePool(TAbstractFile* infile, int saveVersion)
         } else {
             armyGroup* guards = &mines[x].guards;
             guards->Initialize();
-            volatile legacyMineGuard legacy;
-            infile->Read(const_cast<signed char*>(&legacy.type),
-                         sizeof(legacy.type));
-            infile->Read(const_cast<signed char*>(&legacy.amount),
-                         sizeof(legacy.amount));
+            legacyMineGuard legacy;
+            infile->Read(&legacy.type, sizeof(legacy.type));
+            infile->Read(&legacy.amount, sizeof(legacy.amount));
             int typeValue = legacy.type;
             int amountValue = legacy.amount;
             if (typeValue != -1 && amountValue > 0)
@@ -3976,18 +3978,6 @@ int SGameSetupOptions::save(TAbstractFile* outfile)
                : 0;
 }
 
-union TSetupLoadCounterAlias {
-    TAbstractFile** fileSlot;
-    int* counterSlot;
-};
-
-static __forceinline int& setup_load_counter_slot(TAbstractFile*& fileSlot)
-{
-    TSetupLoadCounterAlias alias;
-    alias.fileSlot = &fileSlot;
-    return *alias.counterSlot;
-}
-
 // E:\gamedcs\game.cpp:3266, dc 0xa8b74.  The retail PC build adds the
 // save-version argument used for the old path default and hero-id remap.
 VA(0x004be260, 0x188)
@@ -4020,20 +4010,16 @@ int SGameSetupOptions::load(TAbstractFile* infile, int saveVersion)
         turnDuration = char_buffer;
     }
 
-    // C1 reuses the now-dead input-parameter home for retail's countdown.
-    // Naming that alias keeps the one-slot frame and the independently saved
-    // `input` pointer preserves the file object used by the loop body.
-    volatile int& heroesRemaining = setup_load_counter_slot(infile);
+    // Retail reuses the now-dead input-parameter home for this countdown, but
+    // that stack-slot choice is optimizer state rather than a source alias.
+    // Keep the ordinary lifetime and bank the former exact alias spelling.
     int* heroPos = startingHero;
-    int remaining;
-    heroesRemaining = 8;
+    int heroesRemaining = 8;
     do {
         *heroPos = load_saved_hero_id(input, saveVersion);
-        remaining = heroesRemaining;
         ++heroPos;
-        --remaining;
-        heroesRemaining = remaining;
-    } while (remaining);
+        --heroesRemaining;
+    } while (heroesRemaining);
 
     return input->Read(startingBonus, sizeof(startingBonus)) <
                    sizeof(startingBonus)
@@ -8961,7 +8947,7 @@ void game::NextPlayer()
 {
     int iToWho;
     int weekSave;
-    volatile int iHumans;
+    int iHumans;
     int i;
     unsigned char last_was_human;
     int giCurPlayerSave;
@@ -9772,11 +9758,11 @@ void game::PerWeek()
                         iCount += iIncrease;
                         if (iCount > 64000)
                             iCount = 64000;
-                        volatile unsigned long* packed_info =
-                            &map_cell->extraInfo;
                         // The retail setter reloads the packed dword before
-                        // replacing its split count lanes.
-                        unsigned long original_info = *packed_info;
+                        // replacing its split count lanes. The direct member
+                        // read is the source fact; a volatile pointer was only
+                        // a scheduling lever.
+                        unsigned long original_info = map_cell->extraInfo;
                         map_cell->extraInfo =
                             ((iCount >> 4) & 0xfff)
                             | ((iCount & 0xf) << 27)
@@ -17712,53 +17698,50 @@ void CObjectType::~CObjectType()
 // only their named out-of-line members without changing any runtime caller.
 // As with hero.cpp's established anchor, objdiff enumerates target functions;
 // this scaffold and any unclaimed helper it emits add no comparison rows.
-// Retail's real game callers also retain four private `_Tidy` COMDATs after
-// exhausting their inline budgets.  These narrow reset specializations take
-// the private member's address from inside its own class and make the anchor's
-// calls harmless ODR uses.  That retains the original Dinkumware bodies and
-// names without a collision-prone whole-template instantiation.
-#pragma auto_inline(off)
+// Retail's real game callers also retain five private `_Tidy` COMDATs after
+// exhausting their inline budgets. These narrow reset specializations keep
+// the real Dinkumware helper calls and constrain only those statements. The
+// source-shape gate's negative controls reject direct expansion, member
+// pointers, volatile carriers, and a TU-wide auto_inline switch.
 template<> std::bitset<5>& std::bitset<5>::reset()
 {
-    typedef void (std::bitset<5>::*TidyMember)(unsigned long);
-    TidyMember volatile tidy = &std::bitset<5>::_Tidy;
-    (this->*tidy)(0);
+#pragma inline_depth(0)
+    INLINE_GATE(_Tidy(0));
+#pragma inline_depth()
     return *this;
 }
 
 template<> std::bitset<8>& std::bitset<8>::reset()
 {
-    typedef void (std::bitset<8>::*TidyMember)(unsigned long);
-    TidyMember volatile tidy = &std::bitset<8>::_Tidy;
-    (this->*tidy)(0);
+#pragma inline_depth(0)
+    INLINE_GATE(_Tidy(0));
+#pragma inline_depth()
     return *this;
 }
 
 template<> std::bitset<28>& std::bitset<28>::reset()
 {
-    typedef void (std::bitset<28>::*TidyMember)(unsigned long);
-    TidyMember volatile tidy = &std::bitset<28>::_Tidy;
-    (this->*tidy)(0);
+#pragma inline_depth(0)
+    INLINE_GATE(_Tidy(0));
+#pragma inline_depth()
     return *this;
 }
 
 template<> std::bitset<70>& std::bitset<70>::reset()
 {
-    typedef void (std::bitset<70>::*TidyMember)(unsigned long);
-    TidyMember volatile tidy = &std::bitset<70>::_Tidy;
-    (this->*tidy)(0);
+#pragma inline_depth(0)
+    INLINE_GATE(_Tidy(0));
+#pragma inline_depth()
     return *this;
 }
 
 template<> std::bitset<128>& std::bitset<128>::reset()
 {
-    typedef void (std::bitset<128>::*TidyMember)(unsigned long);
-    TidyMember volatile tidy = &std::bitset<128>::_Tidy;
-    (this->*tidy)(0);
+#pragma inline_depth(0)
+    INLINE_GATE(_Tidy(0));
+#pragma inline_depth()
     return *this;
 }
-
-#pragma auto_inline(on)
 
 #pragma inline_depth(0)
 void h3_game_class_comdat_anchor(unsigned char sending)

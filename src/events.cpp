@@ -2494,7 +2494,9 @@ void advManager::GiveArtifact(hero* current_hero, type_point point,
     type_artifact artifact;
     artifact.artifactId = ARTIFACT_NONE;
     artifact.extra = -1;
-    artifact.artifactId = cell->objectIndex;
+    int artifact_id = cell->objectIndex;
+    memcpy(&artifact.artifactId, &artifact_id,
+           sizeof artifact.artifactId);
     current_hero->GiveArtifact(&artifact, 1, 1);
     if (!human_player)
         AI_equip_artifacts(current_hero);
@@ -3060,7 +3062,8 @@ bool advManager::GiveBlackBoxReward(const char* text, hero* current_hero, Newmap
                            BlackBox->Artifacts[m]);
                 show_rewards(message, rewards, 8);
             }
-            artifact.artifactId = BlackBox->Artifacts[m];
+            memcpy(&artifact.artifactId, &BlackBox->Artifacts[m],
+                   sizeof artifact.artifactId);
             current_hero->GiveArtifact(&artifact, 1, 1);
             if (!human_player)
                 AI_equip_artifacts(current_hero);
@@ -4946,7 +4949,9 @@ void advManager::DoEventSeaChest(hero* current_hero, NewmapCell* cell,
         current_hero->GiveResource(GOLD, 1500);
         break;
     case const_sea_chest_artifact:
-        artifact.artifactId = cell->GetSeaChestArtifact();
+        int artifact_id = cell->GetSeaChestArtifact();
+        memcpy(&artifact.artifactId, &artifact_id,
+               sizeof artifact.artifactId);
         if (human_player) {
             sprintf(gText,
                     gpAdventureEventText->GetText(
@@ -4992,7 +4997,8 @@ void advManager::DoEventSurvivor(hero* current_hero, NewmapCell* cell,
                          -1, 0, -1, 0, -1, 0);
         }
         type_artifact artifact;
-        artifact.artifactId = cell->extraInfo;
+        memcpy(&artifact.artifactId, &cell->extraInfo,
+               sizeof artifact.artifactId);
         artifact.extra = -1;
         current_hero->GiveArtifact(&artifact, 1, 1);
         if (!human_player)
@@ -5029,7 +5035,9 @@ void advManager::DoEventSkeleton(hero* current_hero, ExtraInfoUnion* cell,
     if (cell->SkeletonHasTreasure()) {
         if (current_hero->get_number_in_backpack(1) < 64) {
             type_artifact artifact;
-            artifact.artifactId = cell->GetSkeletonArtifact();
+            int artifact_id = cell->GetSkeletonArtifact();
+            memcpy(&artifact.artifactId, &artifact_id,
+                   sizeof artifact.artifactId);
             artifact.extra = -1;
             if (human_player) {
                 sprintf(gText,
@@ -5530,7 +5538,9 @@ void advManager::DoEventTreasure(hero* current_hero, NewmapCell* cell,
     if (cell->TreasureIsArtifact()) {
         if (current_hero->get_number_in_backpack(1) < 64) {
             type_artifact artifact;
-            artifact.artifactId = cell->GetTreasureArtifact();
+            int artifact_id = cell->GetTreasureArtifact();
+            memcpy(&artifact.artifactId, &artifact_id,
+                   sizeof artifact.artifactId);
             artifact.extra = -1;
             if (human_player) {
                 sprintf(gText,
@@ -5693,7 +5703,9 @@ void advManager::DoEventWagon(hero* current_hero, ExtraInfoUnion* cell,
     if (cell->WagonHasArtifact()
         && current_hero->get_number_in_backpack(1) < 64) {
         type_artifact artifact;
-        artifact.artifactId = cell->GetWagonArtifact();
+        int artifact_id = cell->GetWagonArtifact();
+        memcpy(&artifact.artifactId, &artifact_id,
+               sizeof artifact.artifactId);
         artifact.extra = -1;
         if (human_player) {
             sprintf(gText,
@@ -6424,7 +6436,9 @@ void advManager::do_event_warrior_tomb(hero* current_hero, ExtraInfoUnion* cell,
 
     if (cell->tomb_is_full() && current_hero->get_number_in_backpack(1) < 64) {
         type_artifact artifact;
-        artifact.artifactId = cell->get_tomb_artifact();
+        int artifact_id = cell->get_tomb_artifact();
+        memcpy(&artifact.artifactId, &artifact_id,
+               sizeof artifact.artifactId);
         artifact.extra = -1;
         if (human_player) {
             sprintf(gText,

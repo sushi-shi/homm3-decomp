@@ -13,7 +13,6 @@
 #include "hero.h"
 #include "kb.h"
 #include "kbwin.h"
-#define HOMM3_RECRUIT_MESSAGE_CTOR_VIEW
 #include "message.h"
 #include "widget.h"
 // Appended AFTER the original set on purpose: recruit.obj is knife-edge

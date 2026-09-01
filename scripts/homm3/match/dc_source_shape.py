@@ -1248,6 +1248,79 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"population\s*,\s*population\s*,\s*sizeof\s*\(\s*population"
             r"\s*\)\s*\)\s*;"),
     ),
+    ("ai_player.obj", 0x35400): (
+        SourceRule(
+            "total_artifact_value keeps Dreamcast's backpack then equipped "
+            "lexical loops and constructs the backpack record directly in "
+            "the proved TArtifact domain",
+            r"for\s*\(\s*slot\s*=\s*0\s*;\s*slot\s*<\s*"
+            r"HERO_BACKPACK_CAPACITY\s*;\s*\+\+slot\s*\)\s*\{\s*"
+            r"type_artifact\s+backpack_artifact\s*\(\s*candidate\s*->\s*"
+            r"get_backpack\s*\(\s*slot\s*\)\s*->\s*artifactId\s*\)\s*;\s*"
+            r"total\s*\+=\s*AI_get_artifact_player_value\s*\(\s*"
+            r"backpack_artifact\s*,\s*player_id\s*\)\s*;\s*\}\s*"
+            r"for\s*\(\s*slot\s*=\s*0\s*;\s*slot\s*<\s*19\s*;\s*"
+            r"\+\+slot\s*\)", 1, 1),
+        SourceRule(
+            "total_artifact_value constructs the equipped record directly "
+            "in the proved TArtifact domain before player-wide valuation",
+            r"type_artifact\s+equipped_artifact\s*\(\s*candidate\s*->\s*"
+            r"get_artifact\s*\(\s*slot\s*\)\s*->\s*artifactId\s*\)\s*;\s*"
+            r"total\s*\+=\s*AI_get_artifact_player_value\s*\(\s*"
+            r"equipped_artifact\s*,\s*player_id\s*\)", 1, 1),
+        SourceRule(
+            "total_artifact_value may not restore the artificial "
+            "artifact_from_int conversion that leaves Complete's caller "
+            "frame four bytes short",
+            r"\bartifact_from_int\s*\(", 0, 0),
+        SourceRule(
+            "total_artifact_value may not add a source-false candidate null "
+            "guard after both recruit ids were gated by the caller",
+            r"if\s*\(\s*!\s*candidate\s*\)", 0, 0),
+    ),
+    ("ai_player.obj", 0x35AC8): (
+        SourceRule(
+            "hire_heroes keeps the two named recruit-id guards and their "
+            "ordered Dreamcast total_artifact_value statements",
+            r"long\s+first_id\s*=\s*player\s*->\s*recruits\s*\[\s*0\s*"
+            r"\]\s*;\s*long\s+first_value\s*;\s*if\s*\(\s*first_id\s*"
+            r"!=\s*-\s*1\s*\)\s*\{\s*first\s*=\s*gpGame\s*->\s*"
+            r"GetHero\s*\(\s*first_id\s*\)\s*;\s*first_value\s*=\s*"
+            r"total_artifact_value\s*\(\s*first\s*,\s*team\s*\)\s*;\s*"
+            r"\}\s*long\s+second_id\s*=\s*player\s*->\s*recruits\s*\["
+            r"\s*1\s*\]\s*;\s*long\s+second_value\s*;\s*if\s*\(\s*"
+            r"second_id\s*!=\s*-\s*1\s*\)\s*\{\s*second\s*=\s*gpGame"
+            r"\s*->\s*GetHero\s*\(\s*second_id\s*\)\s*;\s*second_value"
+            r"\s*=\s*total_artifact_value\s*\(\s*second\s*,\s*team\s*"
+            r"\)\s*;\s*\}", 1, 1),
+        SourceRule(
+            "hire_heroes keeps Complete's retail-proved failure-first tail, "
+            "strict second-primary win, and first-recruit tie result",
+            r"if\s*\(\s*first\s*&&\s*second_value\s*<=\s*first_value\s*"
+            r"\)\s*\{\s*if\s*\(\s*!\s*second\s*\|\|\s*second_value\s*"
+            r"<\s*first_value\s*\)\s*return\s+consider_hiring\s*\(\s*"
+            r"team\s*,\s*first\s*\)\s*;\s*if\s*\(\s*second\s*->\s*"
+            r"get_primary_skill_total\s*\(\s*\)\s*>\s*first\s*->\s*"
+            r"get_primary_skill_total\s*\(\s*\)\s*\)\s*\{\s*return\s+"
+            r"consider_hiring\s*\(\s*team\s*,\s*second\s*\)\s*;\s*\}"
+            r"\s*return\s+consider_hiring\s*\(\s*team\s*,\s*first\s*"
+            r"\)\s*;\s*\}\s*if\s*\(\s*!\s*second\s*\)\s*return\s+"
+            r"false\s*;\s*return\s+consider_hiring\s*\(\s*team\s*,\s*"
+            r"second\s*\)\s*;", 1, 1),
+        SourceRule(
+            "hire_heroes keeps all four Dreamcast source-level "
+            "consider_hiring groups even though Complete cross-jumps them "
+            "into three emitted calls",
+            r"\bconsider_hiring\s*\(", 4, 4),
+        SourceRule(
+            "hire_heroes may not initialize first_value before its "
+            "recruit-id arm",
+            r"long\s+first_value\s*=", 0, 0),
+        SourceRule(
+            "hire_heroes may not initialize second_value before its "
+            "recruit-id arm",
+            r"long\s+second_value\s*=", 0, 0),
+    ),
     ("ai_player.obj", 0x34508): (
         SourceRule(
             "check_move_spell keeps Complete's retail-decoded direct "
@@ -1561,6 +1634,38 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
             r"\s*side\s*\]\s*\[\s*placed\s*\]\s*;.*?"
             r"thisArmy\s*\.\s*Init\s*\(.*?\)\s*;\s*"
             r"thisArmy\s*\.\s*LoadResources\s*\(\s*\)\s*;"),
+    ),
+    ("cmbtmgr.obj", 0x5ECA8): (
+        SourceRule(
+            "GenerateMap keeps raw NB11's sole named y local outside the "
+            "outer loop and its loop-scoped x",
+            r"\A\s*int\s+y\s*;\s*for\s*\(\s*y\s*=\s*0\s*;\s*y\s*<\s*"
+            r"11\s*;\s*y\s*\+\+\s*\)\s*\{\s*for\s*\(\s*int\s+x\s*=\s*"
+            r"0\s*;\s*x\s*<\s*17\s*;\s*x\s*\+\+\s*\)\s*\{"),
+        SourceRule(
+            "GenerateMap keeps Dreamcast's direct RowIsOdd coordinate "
+            "statements in field_00, field_02, field_04, field_06, "
+            "field_08, field_0a, field_0c order instead of cached offsets",
+            r"field_00\s*=\s*static_cast\s*<\s*short\s*>\s*\(\s*x\s*\*\s*"
+            r"44\s*\+\s*\(\s*RowIsOdd\s*\(\s*y\s*\)\s*\?\s*22\s*:\s*"
+            r"44\s*\)\s*\+\s*14\s*\)\s*;.*?"
+            r"field_02\s*=.*?;.*?"
+            r"field_04\s*=\s*static_cast\s*<\s*short\s*>\s*\(\s*x\s*\*\s*"
+            r"44\s*\+\s*\(\s*RowIsOdd\s*\(\s*y\s*\)\s*\?\s*0\s*:\s*"
+            r"22\s*\)\s*\+\s*14\s*\)\s*;.*?"
+            r"field_06\s*=.*?;.*?field_08\s*=.*?;.*?"
+            r"field_0a\s*=.*?;.*?field_0c\s*=.*?;", 1, 1),
+        SourceRule(
+            "GenerateMap keeps Dreamcast's five sentinel and three clear "
+            "statements after the coordinate group in recovered line order",
+            r"field_0c\s*=.*?;\s*cell\s*->\s*armySide\s*=\s*-\s*1\s*;\s*"
+            r"cell\s*->\s*armySlot\s*=\s*-\s*1\s*;\s*"
+            r"cell\s*->\s*field_1a\s*=\s*-\s*1\s*;\s*"
+            r"cell\s*->\s*field_14\s*=\s*-\s*1\s*;\s*"
+            r"cell\s*->\s*field_10\s*=\s*0\s*;\s*"
+            r"cell\s*->\s*iBodiesInHex\s*=\s*0\s*;\s*"
+            r"cell\s*->\s*background_offset\s*=\s*-\s*1\s*;\s*"
+            r"cell\s*->\s*field_4c\s*=\s*0\s*;", 1, 1),
     ),
     ("cmbtmgr.obj", 0x5F518): (
         SourceRule(
@@ -4160,6 +4265,174 @@ SOURCE_RULES[_attempt_teleport_key] = SOURCE_RULES.get(
     )
 
 
+# attempt_step's Dreamcast line table names trigger_point and places its
+# default construction before the later path-cell assignment.  Its final
+# statement computes the no-event/no-move/no-battle result as one expression;
+# Complete retail independently reproduces that shared EAX-wide 0/1 tail.
+# game::get_cell is likewise a source-visible Game.h wrapper around
+# NewfullMap::cell, even though Complete expands both layers in this object.
+_attempt_step_key = ("ai_player.obj", 0x341F4)
+SOURCE_RULES[_attempt_step_key] = SOURCE_RULES.get(
+    _attempt_step_key, ()) + (
+        SourceRule(
+            "attempt_step keeps Dreamcast's trigger_point local, later "
+            "path-cell assignment, and game::get_cell helper boundary",
+            r"\btype_point\s+trigger_point\s*;.*?"
+            r"trigger_point\s*=\s*path_cell\s*->\s*point\s*;.*?"
+            r"NewmapCell\s*\*\s*cell\s*=\s*gpGame\s*->\s*get_cell\s*"
+            r"\(\s*trigger_point\s*\)\s*;",
+            1, 1),
+        SourceRule(
+            "attempt_step keeps Dreamcast's final no-event/no-move/no-"
+            "battle conjunction; inspect the retail EAX-wide return tail "
+            "instead of flattening it into early returns",
+            r"return\s+event_cell\s*==\s*0\s*&&\s*bNoMove\s*==\s*0\s*"
+            r"&&\s*bFoughtBattle\s*==\s*0\s*;\s*\Z",
+            1, 1),
+    )
+
+_ai_player_get_cell_key = ("ai_player.obj", 0x38000)
+SOURCE_RULES[_ai_player_get_cell_key] = SOURCE_RULES.get(
+    _ai_player_get_cell_key, ()) + (
+        SourceRule(
+            "game::get_cell keeps Dreamcast's NewfullMap::cell helper "
+            "boundary; restore worldMap.cell(point.x, point.y, point.z) "
+            "instead of flattening the row-major address arithmetic",
+            r"\A\s*return\s+worldMap\s*\.\s*cell\s*\(\s*point\s*\.\s*x\s*,"
+            r"\s*point\s*\.\s*y\s*,\s*point\s*\.\s*z\s*\)\s*;\s*\Z",
+            1, 1),
+    )
+
+
+# SetNetMsgHandler's standalone x86 body cannot distinguish a compound &&
+# from the two source scopes retained in Dreamcast's S_BLOCK32 records.  The
+# latter are nevertheless a positive source fact: remote.cpp:788 opens the
+# old-handler scope and line 789 opens the installed-handler/Copy scope.
+# Such scope distinctions can feed VC6's caller-side inline state, so do not
+# erase this one merely because both the exact out-of-line body and the three
+# currently measured inline sites lower identically either way.
+_set_net_msg_handler_key = ("remote.obj", 0x11C268)
+SOURCE_RULES[_set_net_msg_handler_key] = SOURCE_RULES.get(
+    _set_net_msg_handler_key, ()) + (
+        SourceRule(
+            "SetNetMsgHandler keeps Dreamcast's two nested handler scopes; "
+            "restore `if (pOld) { if (pNetMsgHandler) { Copy } }` instead "
+            "of flattening them to a compound &&",
+            r"if\s*\(\s*pOld\s*\)\s*\{\s*"
+            r"if\s*\(\s*pNetMsgHandler\s*\)\s*\{\s*"
+            r"pNetMsgHandler\s*->\s*Copy\s*\(\s*pOld\s*\)\s*;\s*"
+            r"\}\s*\}",
+            1, 1),
+    )
+
+
+# CheckAdvCheatCode's optimized r8 local never receives an S_REGREL32 record,
+# but its value flow is unambiguous: zero at entry, one in every ordinary
+# cheat arm, and one test guarding the common notification tail.  The Phisher
+# Price arm deliberately leaves it clear and shares its Redraw after the
+# Remap/Saturate choice.  Complete's extra Ignorance Is Bliss arm raises the
+# admitted true-assignment count from the fourteen visible on Dreamcast to
+# fifteen; retail independently proves that arm and the same common tail.
+_check_adv_cheat_code_key = ("adventuremapwindow.obj", 0x3B0)
+SOURCE_RULES[_check_adv_cheat_code_key] = SOURCE_RULES.get(
+    _check_adv_cheat_code_key, ()) + (
+        SourceRule(
+            "CheckAdvCheatCode keeps Dreamcast's recognized-cheat flag "
+            "initialized false instead of flattening the tail into returns",
+            r"\bbool\s+cheatUsed\s*=\s*false\s*;", 1, 1),
+        SourceRule(
+            "all fifteen Complete ordinary-cheat arms set the shared "
+            "Dreamcast recognized-cheat flag",
+            r"\bcheatUsed\s*=\s*true\s*;", 15, 15),
+        SourceRule(
+            "Phisher Price keeps Dreamcast's one post-choice Redraw and "
+            "does not set the ordinary-cheat flag",
+            r"advCheatPhisherPrice.*?\)\s*\{\s*"
+            r"gGraphicsSaturated\s*=\s*!\s*gGraphicsSaturated\s*;\s*"
+            r"if\s*\(\s*!\s*gGraphicsSaturated\s*\)\s*"
+            r"ResourceManager\s*::\s*RemapGraphics\s*\(\s*\)\s*;\s*"
+            r"else\s*ResourceManager\s*::\s*SaturateGraphics\s*"
+            r"\(\s*\)\s*;\s*gpAdvManager\s*->\s*RedrawAdvScreen\s*"
+            r"\(\s*1\s*,\s*0\s*\)\s*;\s*\}\s*"
+            r"if\s*\(\s*cheatUsed\s*\)", 1, 1),
+        SourceRule(
+            "CheckAdvCheatCode keeps Dreamcast's recognized-cheat guard "
+            "around the common chat and game/campaign latch tail",
+            r"if\s*\(\s*cheatUsed\s*\)\s*\{\s*"
+            r"chatString\s*=\s*\(\s*\*\s*gpGeneralText\s*\)\s*"
+            r"\[\s*261\s*\]\s*;\s*gpGame\s*->\s*field_1f69c\s*"
+            r"=\s*1\s*;\s*if\s*\(\s*gbUnk69774c\s*\)\s*"
+            r"gpGame\s*->\s*campaign\s*\.\s*isCheater\s*=\s*1\s*;\s*"
+            r"\}\s*\Z", 1, 1),
+    )
+
+
+# The selection-window destructor is the worked proof that a positive source
+# fact which emits no Complete instructions can still be required for exact C1
+# state.  Dreamcast line 4069 guards del_Spr_from_Cache with !m_flag65; the
+# Complete helper folds to nothing, but removing the guard changes the final
+# implicit vector-member teardown from outer-inline/inner-call to an outer
+# call (96.98%, 33/34 exact blocks).  Restoring the real guard yields 100% and
+# 34/34.  Ratchet the complete ownership sequence so a later local score chase
+# cannot flatten it or resurrect the false 163+GoldBox model.
+_single_selection_dtor_key = ("singleselectionwindow.obj", 0x1396D8)
+SOURCE_RULES[_single_selection_dtor_key] = SOURCE_RULES.get(
+    _single_selection_dtor_key, ()) + (
+        SourceRule(
+            "~TSingleSelectionWindow keeps Dreamcast's sole i local, "
+            "load/save/remote handler guard, and flagBack ownership head",
+            r"\A\s*int\s+i\s*;\s*"
+            r"if\s*\(\s*!\s*m_flag64\s*&&\s*!\s*m_flag65\s*&&\s*"
+            r"bVideoPaused\s*&&\s*pDPlay\s*\)\s*"
+            r"pDPlay\s*->\s*SetNetMsgHandler\s*\(\s*0\s*\)\s*;\s*"
+            r"delete\s+flagBack\s*;", 1, 1),
+        SourceRule(
+            "~TSingleSelectionWindow keeps the panel/flag loop, shared "
+            "Resource disposal, Complete's retail-proved 164-entry HeroPix "
+            "walk, and ordered trailing image ownership",
+            r"for\s*\(\s*i\s*=\s*0\s*;\s*i\s*<\s*8\s*;\s*\+\+\s*i\s*\)"
+            r"\s*\{\s*ResourceManager\s*::\s*Dispose\s*\(\s*Panels\s*"
+            r"\[\s*i\s*\]\s*\)\s*;\s*ResourceManager\s*::\s*Dispose"
+            r"\s*\(\s*Flags\s*\[\s*i\s*\]\s*\)\s*;\s*\}\s*"
+            r"ResourceManager\s*::\s*Dispose\s*\(\s*Resource\s*\)\s*;\s*"
+            r"for\s*\(\s*i\s*=\s*0\s*;\s*i\s*<\s*164\s*;\s*\+\+\s*i"
+            r"\s*\)\s*\{\s*if\s*\(\s*HeroPix\s*\[\s*i\s*\]\s*\)"
+            r"\s*ResourceManager\s*::\s*Dispose\s*\(\s*HeroPix\s*\[\s*i"
+            r"\s*\]\s*\)\s*;\s*\}\s*"
+            r"ResourceManager\s*::\s*Dispose\s*\(\s*TownPix\s*\)\s*;\s*"
+            r"ResourceManager\s*::\s*Dispose\s*\(\s*LossIcon\s*\)\s*;\s*"
+            r"ResourceManager\s*::\s*Dispose\s*\(\s*VictoryIcon\s*\)\s*;"
+            r"\s*ResourceManager\s*::\s*Dispose\s*\(\s*VersionIcon\s*\)"
+            r"\s*;\s*ResourceManager\s*::\s*Dispose\s*\(\s*randomTownBmp"
+            r"\s*\)\s*;\s*ResourceManager\s*::\s*Dispose\s*\(\s*"
+            r"randomHeroBmp\s*\)\s*;\s*ResourceManager\s*::\s*Dispose\s*"
+            r"\(\s*noHeroBmp\s*\)\s*;\s*ResourceManager\s*::\s*Dispose"
+            r"\s*\(\s*heroSpecificAbility\s*\)\s*;", 1, 1),
+        SourceRule(
+            "~TSingleSelectionWindow keeps Dreamcast's manager delete/null, "
+            "global clear and widget iterator scopes, then Complete's save "
+            "teardown followed by the Dreamcast !m_flag65 cache-cleanup "
+            "guard; the zero-byte guard is an inline-state source fact",
+            r"if\s*\(\s*pNewPlayerUpdateMan\s*\)\s*\{\s*delete\s+"
+            r"pNewPlayerUpdateMan\s*;\s*pNewPlayerUpdateMan\s*=\s*0\s*;\s*"
+            r"\}\s*gUnnamed69fbe8\s*=\s*0\s*;\s*for\s*\(\s*std\s*::\s*"
+            r"vector\s*<\s*widget\s*\*\s*>\s*::\s*iterator\s+it\s*=\s*"
+            r"Widgets\s*\.\s*begin\s*\(\s*\)\s*;\s*it\s*!=\s*Widgets"
+            r"\s*\.\s*end\s*\(\s*\)\s*;\s*\+\+\s*it\s*\)\s*\{\s*"
+            r"if\s*\(\s*\*\s*it\s*\)\s*delete\s+\*\s*it\s*;\s*\}\s*"
+            r"if\s*\(\s*m_flag65\s*\)\s*\{\s*BackupGameHeaders\s*\(\s*"
+            r"gpGame\s*,\s*saveHeader\s*\)\s*;\s*delete\s+saveHeader\s*;"
+            r"\s*saveHeader\s*=\s*0\s*;\s*\}\s*if\s*\(\s*!\s*m_flag65"
+            r"\s*\)\s*ResourceManager\s*::\s*del_Spr_from_Cache\s*\(\s*"
+            r"\)\s*;\s*\Z", 1, 1),
+        SourceRule(
+            "~TSingleSelectionWindow has exactly one source-visible "
+            "del_Spr_from_Cache boundary; duplicating a zero-byte candidate "
+            "to spend inline budget is forbidden",
+            r"\bResourceManager\s*::\s*del_Spr_from_Cache\s*\(", 1, 1),
+    )
+
+
 # Caller-local Complete codegen can retain a source-real call that another
 # emission of the same inline helper expands.  These are admitted asymmetric
 # boundaries: Dreamcast supplies the named source call and Complete retail
@@ -4169,6 +4442,9 @@ SOURCE_RULES[_attempt_teleport_key] = SOURCE_RULES.get(
 # named call itself, without inventing a global equal-call-count invariant.
 INLINE_GATE_REQUIREMENTS: dict[
         tuple[str, int], tuple[tuple[str, int], ...]] = {
+    ("ai_player.obj", 0x32E30): (
+        ("worldMap.cell", 1),
+    ),
     ("ai_player.obj", 0x34B08): (
         ("attempt_teleport", 1),
     ),
@@ -4564,6 +4840,22 @@ def type_point_header_violations(text: str) -> list[tuple[int, str]]:
              "member taking const type_point& and compare x, y, z in order")]
 
 
+def type_artifact_header_violations(text: str) -> list[tuple[int, str]]:
+    """Audit Dreamcast's TArtifact-typed first record member."""
+    masked = _source.mask(text)
+    pattern = (
+        r"\bstruct\s+type_artifact\s*\{\s*TArtifact\s+artifactId\s*;"
+        r"\s*int\s+extra\s*;")
+    if re.search(pattern, masked, re.DOTALL) is not None:
+        return []
+    token = re.search(r"\bartifactId\s*;", masked)
+    line = text.count("\n", 0, token.start()) + 1 if token else 1
+    return [(line,
+             "hero.h type_artifact must retain Dreamcast's TArtifact "
+             "artifactId member; spelling it int forces source-false enum "
+             "casts and changes hire_heroes' VC6 frame/inliner state")]
+
+
 def hero_get_location_header_violations(text: str) -> list[tuple[int, str]]:
     """Audit Hero.h:157's ordinary in-class packed-point accessor."""
     masked = _source.mask(text)
@@ -4768,12 +5060,12 @@ def recruit_inline_contract_violations(
     message_header = _source.mask(message_header_text)
     defects: list[tuple[int, str]] = []
 
-    constructor_view = re.search(
-        r"#\s*define\s+HOMM3_RECRUIT_MESSAGE_CTOR_VIEW\s*\r?\n"
-        r"\s*#\s*include\s+\"message\.h\"", source_text) is not None
-    constructor_guard = re.search(
-        r"defined\s*\(\s*HOMM3_RECRUIT_MESSAGE_CTOR_VIEW\s*\)",
-        message_header_text) is not None
+    constructor_use = re.search(r"\bmessage\s+msg\s*;", source) is not None
+    legacy_constructor_view = (
+        re.search(r"\bHOMM3_RECRUIT_MESSAGE_CTOR_VIEW\b", source_text)
+        is not None
+        or re.search(r"\bHOMM3_RECRUIT_MESSAGE_CTOR_VIEW\b",
+                     message_header_text) is not None)
     constructor_body = re.search(
         r"\bmessage\s*\(\s*\)\s*\{\s*id\s*=\s*0\s*;\s*"
         r"codeX\s*=\s*0\s*;\s*codeY\s*=\s*0\s*;\s*"
@@ -4781,12 +5073,14 @@ def recruit_inline_contract_violations(
         r"mouseY\s*=\s*0\s*;\s*extra\s*=\s*0\s*;\s*"
         r"window\s*=\s*0\s*;\s*\}", message_header,
         re.DOTALL) is not None
-    if not (constructor_view and constructor_guard and constructor_body):
+    if not (constructor_use and constructor_body) or legacy_constructor_view:
         token = re.search(r"\bmessage\s+msg\s*;", source)
         line = source_text.count("\n", 0, token.start()) + 1 if token else 1
         defects.append((line,
-            "recruit.cpp must retain its TU-scoped message constructor view "
-            "and message.h's ordered eight-field constructor body"))
+            "recruit.cpp must construct canonical message msg and message.h "
+            "must retain the ordered eight-field default constructor; fix "
+            "the shared constructor/helper shape, never reintroduce a "
+            "TU-scoped message view or a volatile POD surrogate"))
 
     inline_declaration = re.search(
         r"\binline\s+void\s+UpdateCost\s*\(\s*\)\s*;",
@@ -4802,6 +5096,64 @@ def recruit_inline_contract_violations(
         defects.append((line,
             "recruitUnit::UpdateCost must retain its inline recruit.cpp "
             "definition after GetMonsterCost, with the resCost/helper head"))
+    return defects
+
+
+def game_comdat_inline_gate_violations(
+        source_text: str) -> list[tuple[int, str]]:
+    """Keep retail-proven STL COMDAT calls explicit without codegen tricks.
+
+    These late game.cpp anchors are emission scaffolds until their real callers
+    are reconstructed. Retail proves the named out-of-line Dinkumware bodies;
+    it does not justify volatile aliases, member pointers, synthetic mass, or a
+    TU-wide inliner switch. The narrow inline-depth gate is therefore part of
+    the admitted source contract and gives the cleanliness diagnostic a precise
+    repair path when one of those tricks is reintroduced.
+    """
+    masked = _source.mask(source_text)
+    lexical = _source._mask_lex(source_text)
+    defects: list[tuple[int, str]] = []
+
+    def require(signature: str, call: str, description: str) -> None:
+        match = re.search(signature, masked)
+        if match is None:
+            defects.append((1, description))
+            return
+        body = _source._definition_at(masked, match.start(), match.group(1))
+        if body is None:
+            defects.append((source_text.count("\n", 0, match.start()) + 1,
+                            description))
+            return
+        function_text = lexical[body.body_open + 1:body.body_close]
+        masked_function_text = masked[body.body_open + 1:body.body_close]
+        gate = (r"\A\s*#\s*pragma\s+inline_depth\s*\(\s*0\s*\)\s*"
+                r"INLINE_GATE\s*\(\s*" + call + r"\s*\)\s*;\s*"
+                r"#\s*pragma\s+inline_depth\s*\(\s*\)")
+        forbidden = re.search(
+            r"\bvolatile\b|\bauto_inline\b|\b(?:minFunction|TidyMember)\b",
+            masked_function_text) is not None
+        if re.search(gate, function_text, re.DOTALL) is None or forbidden:
+            defects.append((source_text.count("\n", 0, body.head) + 1,
+                            description))
+
+    require(
+        r"\b(THeroSetupMapMinComdatAnchor::retain_min)\s*\(\s*\)\s*\{",
+        r"_Min\s*\(\s*_Nil\s*\)",
+        "game.cpp retain_min must keep the real _Min(_Nil) helper under a "
+        "statement-scoped inline_depth/INLINE_GATE pair; inspect retail with "
+        "homm3 vc6 predict-inline and sema diff, restore the helper boundary, "
+        "and never substitute volatile, a member pointer, or synthetic mass")
+    for size in (5, 8, 28, 70, 128):
+        require(
+            (r"\b(std::bitset\s*<\s*" + str(size) +
+             r"\s*>\s*::\s*reset)\s*\(\s*\)\s*\{"),
+            r"_Tidy\s*\(\s*0\s*\)",
+            ("game.cpp bitset<" + str(size) +
+             ">::reset must keep the real _Tidy(0) helper under a "
+             "statement-scoped inline_depth/INLINE_GATE pair; inspect the "
+             "retail COMDAT/caller before changing the boundary, and never "
+             "substitute volatile, a member pointer, synthetic mass, or "
+             "TU-wide auto_inline"))
     return defects
 
 
@@ -5094,6 +5446,33 @@ def single_selection_window_contract_violations(
              "and ordered memcpy statements")]
 
 
+def single_selection_destructor_layout_violations(
+        public_header_text: str) -> list[tuple[int, str]]:
+    """Audit the retail-proved widening of Dreamcast's HeroPix array.
+
+    Dreamcast type records make HeroPix one pointer array and place GoldBox
+    before Flags.  Complete's destructor independently walks 164 pointers from
+    +0xc8, proving that +0x354 is the last three HeroPix entries rather than a
+    new GoldBox member.  This is a layout/source fact, not padding arithmetic.
+    """
+    header = _source.mask(public_header_text)
+    run = (
+        r"Bitmap816\s*\*\s*Flags\s*\[\s*8\s*\]\s*;\s*"
+        r"Bitmap816\s*\*\s*Panels\s*\[\s*8\s*\]\s*;\s*"
+        r"Bitmap816\s*\*\s*HeroPix\s*\[\s*164\s*\]\s*;")
+    has_false_split = re.search(
+        r"Bitmap816\s*\*\s*GoldBox\s*;", header) is not None
+    if re.search(run, header, re.DOTALL) is not None and not has_false_split:
+        return []
+    token = re.search(r"\b(?:HeroPix|GoldBox)\b", header)
+    line = (public_header_text.count("\n", 0, token.start()) + 1
+            if token else 1)
+    return [(line,
+             "TSingleSelectionWindow must retain Flags[8], Panels[8], then "
+             "the single retail-proved HeroPix[164] array; Dreamcast places "
+             "GoldBox elsewhere, so do not split +0x354 back out")]
+
+
 def new_player_update_contract_violations(
         header_text: str, source_text: str) -> list[tuple[int, str]]:
     """Audit the DC-derived, retail-corroborated two-vtable type chain.
@@ -5138,7 +5517,8 @@ def new_player_update_contract_violations(
         r"virtual\s+void\s+Finish\s*\(\s*\)\s*;")
     manager = (
         r"class\s+CNewPlayerUpdateMan\s*\{.*?"
-        r"CNewPlayerUpdateTask\s*\*\s*m_procs\s*\[\s*8\s*\]\s*;")
+        r"CNewPlayerUpdateProc\s*\*\s*m_procs\s*\[\s*8\s*\]\s*;.*?"
+        r"~\s*CNewPlayerUpdateMan\s*\(\s*\)\s*;")
     definitions = (
         r"VA\s*\(\s*0x00589240\s*,\s*0x2F\s*\).*?"
         r"t_map_list_update\s*::\s*t_map_list_update\s*"
@@ -5156,6 +5536,10 @@ def new_player_update_contract_violations(
         r"VA\s*\(\s*0x00578010\s*,\s*0x272\s*\).*?"
         r"inline\s+void\s+CNewPlayerUpdateProc\s*::\s*HandleRequests\s*"
         r"\(\s*\)",
+        r"CNewPlayerUpdateMan\s*::\s*~\s*CNewPlayerUpdateMan\s*"
+        r"\(\s*\)\s*\{\s*for\s*\(\s*int\s+i\s*=\s*0\s*;\s*i\s*<\s*8"
+        r"\s*;\s*\+\+\s*i\s*\)\s*\{\s*if\s*\(\s*m_procs\s*\[\s*i"
+        r"\s*\]\s*\)\s*delete\s+m_procs\s*\[\s*i\s*\]\s*;\s*\}\s*\}",
     )
     derived_body = re.search(
         r"class\s+t_map_list_update\s*:\s*public\s+"
@@ -5173,8 +5557,9 @@ def new_player_update_contract_violations(
     return [(line,
              "the NewPlayer update model must retain the novtable shared "
              "task, CNewPlayerUpdateProc field-initializing level, derived "
-             "t_map_list_update override, interface-pointer manager, exact "
-             "0x00589240 derived constructor boundary, shared teardown, and "
+             "t_map_list_update override, concrete-proc pointer manager and "
+             "its eight-slot owning destructor, exact 0x00589240 derived "
+             "constructor boundary, shared task teardown, and "
              "Dreamcast-owned base RequestConfirmation/HandleRequests "
              "boundaries (without an invented log vararg)")]
 
@@ -6068,14 +6453,16 @@ def seer_hut_dialog_contract_violations(
     declaration = (
         r"\bvoid\s+DoEmptyDialog\s*\(\s*\)\s*;.*?"
         r"\binline\s+void\s+DoCompletionDialog\s*\(\s*"
-        r"hero\s*\*\s*current_hero\s*,\s*bool\s+human_player\s*\)\s*;")
+        r"hero\s*\*\s*current_hero\s*,\s*bool\s+human_player\s*\)\s*;"
+        r".*?\binline\s+int\s+GetRewardType\s*\(\s*\)\s*;")
     if re.search(declaration, header, re.DOTALL) is None:
         token = re.search(r"\bDo(?:Empty|Completion)Dialog\b", header)
         line = header_text.count("\n", 0, token.start()) + 1 if token else 1
         defects.append((
             line,
-            "TSeerHut must retain Dreamcast's private DoEmptyDialog and "
-            "inline DoCompletionDialog(hero*, bool) declarations"))
+            "TSeerHut must retain Dreamcast's private DoEmptyDialog, inline "
+            "DoCompletionDialog/GetRewardType boundaries; restore these "
+            "real helpers instead of adding caller mass or volatile state"))
 
     def body_for(name: str) -> tuple[str | None, int]:
         definitions = _source.find_definitions(source_text, name)
@@ -6093,6 +6480,7 @@ def seer_hut_dialog_contract_violations(
     completion, completion_line = body_for(
         "TSeerHut::DoCompletionDialog")
     empty, empty_line = body_for("TSeerHut::DoEmptyDialog")
+    reward_type, reward_type_line = body_for("TSeerHut::GetRewardType")
 
     caller_pattern = (
         r"if\s*\(\s*human_player\s*\)\s*\{\s*"
@@ -6109,7 +6497,9 @@ def seer_hut_dialog_contract_violations(
             "returning through its helper"))
 
     completion_pattern = (
-        r"NormalDialog\s*\(.*?\)\s*;\s*"
+        r"NormalDialog\s*\(.*?GetRewardType\s*\(\s*\).*?"
+        r"reward\s*\.\s*GetRewardExtra\s*\(\s*current_hero\s*\).*?"
+        r"\)\s*;\s*"
         r"if\s*\(\s*gpWindowManager\s*->\s*dialogReturn\s*==\s*"
         r"DIALOG_RETURN_ACCEPT\s*\|\|\s*gpWindowManager\s*->\s*"
         r"dialogReturn\s*==\s*DIALOG_RETURN_CHOICE_1\s*\)\s*\{\s*"
@@ -6121,7 +6511,24 @@ def seer_hut_dialog_contract_violations(
         defects.append((
             completion_line,
             "DoCompletionDialog must own Dreamcast's accepted reward path, "
-            "using Complete's TakePayment/giveReward/quest-clear tail"))
+            "call GetRewardType then GetRewardExtra for the dialog, and use "
+            "Complete's TakePayment/giveReward/quest-clear tail"))
+
+    reward_type_pattern = (
+        r"switch\s*\(\s*reward\s*\.\s*rewardType\s*\).*?"
+        r"case\s+eRewardExperience\s*:\s*return\s+0x11\s*;.*?"
+        r"case\s+eRewardResource\s*:\s*return\s+reward\s*\.\s*value\s*"
+        r"\.\s*resource\s*\.\s*resourceType\s*;.*?"
+        r"case\s+eRewardPrimarySkill\s*:\s*switch\s*\(\s*reward\s*\.\s*"
+        r"value\s*\.\s*primarySkill\s*\.\s*skillType\s*\).*?"
+        r"case\s+eRewardCreature\s*:\s*return\s+0x15\s*;")
+    if reward_type is None or re.search(
+            reward_type_pattern, reward_type, re.DOTALL) is None:
+        defects.append((
+            reward_type_line,
+            "TSeerHut::GetRewardType must remain Dreamcast's no-local nested "
+            "switch helper with Complete's retail-proven picture values; "
+            "do not flatten its switch into DoCompletionDialog"))
 
     empty_pattern = (
         r"format_string\s*\(.*?GetName\s*\(\s*\)\s*\)\s*;.*?"
@@ -6149,6 +6556,7 @@ def selftest() -> list[str]:
 class TSeerHut {
     void DoEmptyDialog();
     inline void DoCompletionDialog(hero* current_hero, bool human_player);
+    inline int GetRewardType();
 };
 """
     seer_source_probe = """\
@@ -6169,10 +6577,29 @@ void TSeerHut::DoEmptyDialog()
     text = format_string(gQuestTextA[0][0].c_str(), GetName());
     NormalDialog(text.c_str(), 1);
 }
+inline int TSeerHut::GetRewardType()
+{
+    switch (reward.rewardType) {
+    case eRewardExperience:
+        return 0x11;
+    case eRewardResource:
+        return reward.value.resource.resourceType;
+    case eRewardPrimarySkill:
+        switch (reward.value.primarySkill.skillType) {
+        default:
+            return -1;
+        }
+    case eRewardCreature:
+        return 0x15;
+    default:
+        return -1;
+    }
+}
 inline void TSeerHut::DoCompletionDialog(
     hero* current_hero, bool human_player)
 {
-    NormalDialog(quest->get_completion_text().c_str(), 2);
+    NormalDialog(quest->get_completion_text().c_str(), 2, GetRewardType(),
+                 reward.GetRewardExtra(current_hero));
     if (gpWindowManager->dialogReturn == DIALOG_RETURN_ACCEPT
         || gpWindowManager->dialogReturn == DIALOG_RETURN_CHOICE_1) {
         quest->TakePayment(current_hero);
@@ -6190,7 +6617,10 @@ inline void TSeerHut::DoCompletionDialog(
              "completion reward ownership"),
             (seer_source_probe.replace(
                 "            return;\n", "", 1),
-             "caller helper exit")):
+             "caller helper exit"),
+            (seer_source_probe.replace(
+                "2, GetRewardType(),", "2, 0x11,"),
+             "GetRewardType helper flattening")):
         if not seer_hut_dialog_contract_violations(
                 broken, seer_header_probe):
             failures.append("broken Seer " + label + " passed")
@@ -6576,6 +7006,95 @@ case SSW_SIZE_FILTER_ALL:
         failures.append("aligned attempt_teleport release verify did not pass")
     if not contract_violations("", attempt_teleport_key):
         failures.append("removed attempt_teleport release verify passed")
+
+    set_net_handler_probe = """\
+CNetMsgHandler* pOld = m_pNetMsgHandler;
+m_pNetMsgHandler = pNetMsgHandler;
+if (pOld) {
+    if (pNetMsgHandler) {
+        pNetMsgHandler->Copy(pOld);
+    }
+}
+"""
+    if contract_violations(set_net_handler_probe,
+                           _set_net_msg_handler_key):
+        failures.append("aligned SetNetMsgHandler nested scopes did not pass")
+    flattened_set_net_handler = set_net_handler_probe.replace(
+        "if (pOld) {\n    if (pNetMsgHandler) {\n"
+        "        pNetMsgHandler->Copy(pOld);\n    }\n}",
+        "if (pOld && pNetMsgHandler) {\n"
+        "    pNetMsgHandler->Copy(pOld);\n}")
+    if not contract_violations(flattened_set_net_handler,
+                               _set_net_msg_handler_key):
+        failures.append("flattened SetNetMsgHandler scopes passed")
+
+    attempt_step_probe = """\
+type_point trigger_point;
+trigger_point = path_cell->point;
+NewmapCell* cell = gpGame->get_cell(trigger_point);
+if (event_cell == 0) {
+    if (bNoMove != 0)
+        current_hero->movePoints = 0;
+} else {
+    gpAdvManager->DoAIEvent(event_cell, current_hero, trigger_point);
+}
+return event_cell == 0 && bNoMove == 0 && bFoughtBattle == 0;
+"""
+    if contract_violations(attempt_step_probe, _attempt_step_key):
+        failures.append("aligned attempt_step source shape did not pass")
+    for broken_attempt_step in (
+            attempt_step_probe.replace("trigger_point", "point"),
+            attempt_step_probe.replace(
+                "return event_cell == 0 && bNoMove == 0 && "
+                "bFoughtBattle == 0;",
+                "if (event_cell == 0) return 1;\nreturn 0;")):
+        if not contract_violations(broken_attempt_step, _attempt_step_key):
+            failures.append("flattened attempt_step source shape passed")
+
+    get_cell_probe = "return worldMap.cell(point.x, point.y, point.z);\n"
+    if contract_violations(get_cell_probe, _ai_player_get_cell_key):
+        failures.append("aligned game::get_cell boundary did not pass")
+    flattened_get_cell = (
+        "return &worldMap.cellData[(point.z * worldMap.Size + point.y) "
+        "* worldMap.Size + point.x];\n")
+    if not contract_violations(flattened_get_cell,
+                               _ai_player_get_cell_key):
+        failures.append("flattened game::get_cell boundary passed")
+
+    check_adv_probe = (
+        "bool cheatUsed = false;\n"
+        + "cheatUsed = true;\n" * 15
+        + """\
+if (code.compare(advCheatPhisherPrice)) {
+    gGraphicsSaturated = !gGraphicsSaturated;
+    if (!gGraphicsSaturated)
+        ResourceManager::RemapGraphics();
+    else
+        ResourceManager::SaturateGraphics();
+    gpAdvManager->RedrawAdvScreen(1, 0);
+}
+if (cheatUsed) {
+    chatString = (*gpGeneralText)[261];
+    gpGame->field_1f69c = 1;
+    if (gbUnk69774c)
+        gpGame->campaign.isCheater = 1;
+}
+""")
+    if contract_violations(check_adv_probe,
+                           _check_adv_cheat_code_key):
+        failures.append("aligned CheckAdvCheatCode flag shape did not pass")
+    for broken_check_adv in (
+            check_adv_probe.replace("bool cheatUsed = false;\n", ""),
+            check_adv_probe.replace("cheatUsed = true;\n", "", 1),
+            check_adv_probe.replace(
+                "if (code.compare(advCheatPhisherPrice)) {\n",
+                "if (code.compare(advCheatPhisherPrice)) {\n"
+                "    cheatUsed = true;\n"),
+            check_adv_probe.replace("if (cheatUsed) {\n",
+                                    "if (true) {\n")):
+        if not contract_violations(broken_check_adv,
+                                   _check_adv_cheat_code_key):
+            failures.append("flattened CheckAdvCheatCode flag shape passed")
 
     inline_gate_key = ("singleselectionwindow.obj", 0x13C434)
     inline_gate_probe = """\
@@ -8459,6 +8978,22 @@ case TAdventureOptionsWindow::VIEW_SCENARIO_ID:
         failures.append("proven cross-function call transfer did not pass")
     if transfer_satisfied(transfer, transfer_caller, transfer_receiver, set()):
         failures.append("non-exact transfer receiver passed")
+    banked_receiver = status.MatchRow(
+        cur=71.0, max=100.0, hist=100.0,
+        rva=transfer.receiver_va - common.IMAGE_BASE)
+    banked_exact = _effective_exact_vas(
+        set(), {("probe", "banked"): banked_receiver})
+    if not transfer_satisfied(
+            transfer, transfer_caller, transfer_receiver, banked_exact):
+        failures.append("banked-exact transfer receiver current dip failed")
+    nonbanked_receiver = status.MatchRow(
+        cur=99.0, max=99.0, hist=99.0,
+        rva=transfer.receiver_va - common.IMAGE_BASE)
+    nonbanked_exact = _effective_exact_vas(
+        set(), {("probe", "nonbanked"): nonbanked_receiver})
+    if transfer_satisfied(
+            transfer, transfer_caller, transfer_receiver, nonbanked_exact):
+        failures.append("non-banked transfer receiver passed effective MAX")
     if transfer_satisfied(
             transfer, transfer_caller,
             transfer_receiver.replace("gpGame->ShowScenInfo();", ""),
@@ -8655,6 +9190,10 @@ if (!our_hero->HeroFn_004E2840(slot,
             "wrong-argument Complete artifact predicate passed")
     grail_value_key = ("ai_player.obj", 0x32E30)
     grail_value_body = """\
+#pragma inline_depth(0)
+NewmapCell* map_cell = INLINE_GATE(gpGame->worldMap.cell(
+    destination.point.x, destination.point.y, destination.point.z));
+#pragma inline_depth()
 destination.value = AI_get_artifact_player_value(
     grail, current_hero->owner);
 destination.move_cost = max(destination.move_cost, mobility);
@@ -9522,6 +10061,69 @@ for (side = 0; side < 2; side++) {
     if not any("army-reference thisArmy" in rule.description for rule in
                contract_violations(direct_army_access, load_armies_key)):
         failures.append("flattened LoadArmies thisArmy reference passed")
+    generate_map_key = ("cmbtmgr.obj", 0x5ECA8)
+    generate_map_probe = """\
+int y;
+for (y = 0; y < 11; y++) {
+    for (int x = 0; x < 17; x++) {
+        hexcell* cell = &GetCell(x, y);
+        cell->field_00 = static_cast<short>(
+            x * 44 + (RowIsOdd(y) ? 22 : 44) + 14);
+        cell->field_02 = static_cast<short>(y * 42 + 128);
+        cell->field_04 = static_cast<short>(
+            x * 44 + (RowIsOdd(y) ? 0 : 22) + 14);
+        cell->field_06 = static_cast<short>(y * 42 + 86);
+        cell->field_08 = static_cast<short>(cell->field_04 + 44);
+        cell->field_0a = static_cast<short>(cell->field_06 + 42);
+        cell->field_0c = static_cast<short>(cell->field_06 + 52);
+        cell->armySide = -1;
+        cell->armySlot = -1;
+        cell->field_1a = -1;
+        cell->field_14 = -1;
+        cell->field_10 = 0;
+        cell->iBodiesInHex = 0;
+        cell->background_offset = -1;
+        cell->field_4c = 0;
+    }
+}
+"""
+    if contract_violations(generate_map_probe, generate_map_key):
+        failures.append("aligned GenerateMap source shape did not pass")
+    cached_offsets = generate_map_probe.replace(
+        "for (int x = 0; x < 17; x++) {",
+        "int upper_offset = RowIsOdd(y) ? 22 : 44;\n"
+        "    int lower_offset = RowIsOdd(y) ? 0 : 22;\n"
+        "    for (int x = 0; x < 17; x++) {").replace(
+            "(RowIsOdd(y) ? 22 : 44)", "upper_offset").replace(
+                "(RowIsOdd(y) ? 0 : 22)", "lower_offset")
+    if not any("direct RowIsOdd" in rule.description for rule in
+               contract_violations(cached_offsets, generate_map_key)):
+        failures.append("cached GenerateMap row offsets passed")
+    reordered_coordinates = generate_map_probe.replace(
+        "        cell->field_06 = static_cast<short>(y * 42 + 86);\n",
+        "", 1).replace(
+            "        cell->field_00 =", "        cell->field_06 = "
+            "static_cast<short>(y * 42 + 86);\n"
+            "        cell->field_00 =", 1)
+    if not any("coordinate" in rule.description for rule in
+               contract_violations(reordered_coordinates,
+                                   generate_map_key)):
+        failures.append("reordered GenerateMap coordinates passed")
+    reordered_state = generate_map_probe.replace(
+        "        cell->field_10 = 0;\n"
+        "        cell->iBodiesInHex = 0;\n"
+        "        cell->background_offset = -1;",
+        "        cell->background_offset = -1;\n"
+        "        cell->field_10 = 0;\n"
+        "        cell->iBodiesInHex = 0;")
+    if not any("sentinel and three clear" in rule.description for rule in
+               contract_violations(reordered_state, generate_map_key)):
+        failures.append("reordered GenerateMap state clears passed")
+    loop_scoped_y = generate_map_probe.replace(
+        "int y;\nfor (y = 0;", "for (int y = 0;")
+    if not any("sole named y" in rule.description for rule in
+               contract_violations(loop_scoped_y, generate_map_key)):
+        failures.append("loop-scoped GenerateMap y passed")
     next_army_key = ("cmbtmgr.obj", 0x5F518)
     next_army_probe = """\
 if (stack->field_4f0 && stack->IsIncapacitated())
@@ -9999,6 +10601,106 @@ memcpy(current_town->population, population, sizeof(population));
     if any(not contract_violations(probe, hiring_value_key)
            for probe in hiring_value_mutations):
         failures.append("broken value_of_hiring source shape passed")
+    artifact_total_key = ("ai_player.obj", 0x35400)
+    artifact_total_probe = """\
+long total = 0;
+long slot;
+for (slot = 0; slot < HERO_BACKPACK_CAPACITY; ++slot) {
+    type_artifact backpack_artifact(
+        candidate->get_backpack(slot)->artifactId);
+    total += AI_get_artifact_player_value(backpack_artifact, player_id);
+}
+for (slot = 0; slot < 19; ++slot) {
+    type_artifact equipped_artifact(
+        candidate->get_artifact(slot)->artifactId);
+    total += AI_get_artifact_player_value(equipped_artifact, player_id);
+}
+return total;
+"""
+    if contract_violations(artifact_total_probe, artifact_total_key):
+        failures.append(
+            "aligned total_artifact_value source shape did not pass")
+    converted_artifact_total = artifact_total_probe.replace(
+        "candidate->get_backpack(slot)->artifactId",
+        "artifact_from_int(\n"
+        "        candidate->get_backpack(slot)->artifactId)")
+    if not any("artifact_from_int" in rule.description for rule in
+               contract_violations(converted_artifact_total,
+                                   artifact_total_key)):
+        failures.append(
+            "artifact_from_int total_artifact_value negative control passed")
+    guarded_artifact_total = artifact_total_probe.replace(
+        "long total = 0;", "if (!candidate)\n    return 0;\nlong total = 0;")
+    if not any("null guard" in rule.description for rule in
+               contract_violations(guarded_artifact_total,
+                                   artifact_total_key)):
+        failures.append("null-guarded total_artifact_value passed")
+    reordered_artifact_total = artifact_total_probe.replace(
+        "for (slot = 0; slot < HERO_BACKPACK_CAPACITY; ++slot)",
+        "for (slot = 0; slot < LOOP_BOUND_SWAP; ++slot)", 1).replace(
+            "for (slot = 0; slot < 19; ++slot)",
+            "for (slot = 0; slot < HERO_BACKPACK_CAPACITY; ++slot)",
+            1).replace("LOOP_BOUND_SWAP", "19", 1)
+    if not contract_violations(reordered_artifact_total, artifact_total_key):
+        failures.append("reordered total_artifact_value loops passed")
+    hire_heroes_key = ("ai_player.obj", 0x35AC8)
+    hire_heroes_probe = """\
+long first_id = player->recruits[0];
+long first_value;
+if (first_id != -1) {
+    first = gpGame->GetHero(first_id);
+    first_value = total_artifact_value(first, team);
+}
+long second_id = player->recruits[1];
+long second_value;
+if (second_id != -1) {
+    second = gpGame->GetHero(second_id);
+    second_value = total_artifact_value(second, team);
+}
+if (first && second_value <= first_value) {
+    if (!second || second_value < first_value)
+        return consider_hiring(team, first);
+    if (second->get_primary_skill_total()
+        > first->get_primary_skill_total()) {
+        return consider_hiring(team, second);
+    }
+    return consider_hiring(team, first);
+}
+if (!second)
+    return false;
+return consider_hiring(team, second);
+"""
+    if contract_violations(hire_heroes_probe, hire_heroes_key):
+        failures.append("aligned hire_heroes source shape did not pass")
+    reversed_hire_tie = hire_heroes_probe.replace(
+        "> first->get_primary_skill_total()",
+        "< first->get_primary_skill_total()")
+    if not contract_violations(reversed_hire_tie, hire_heroes_key):
+        failures.append("reversed hire_heroes primary tie-break passed")
+    initialized_second_hire = hire_heroes_probe.replace(
+        "long second_value;", "long second_value = 0;")
+    if not any("initialize second_value" in rule.description for rule in
+               contract_violations(initialized_second_hire,
+                                   hire_heroes_key)):
+        failures.append("initialized hire_heroes second_value passed")
+    reloaded_first_hire = hire_heroes_probe.replace(
+        "long first_id = player->recruits[0];\n", "").replace(
+            "first_id", "player->recruits[0]")
+    if not contract_violations(reloaded_first_hire, hire_heroes_key):
+        failures.append("reloaded hire_heroes first recruit id passed")
+    collapsed_hire_call = hire_heroes_probe.replace(
+        "    return consider_hiring(team, first);\n}\nif (!second)",
+        "}\nif (!second)")
+    if not any("four Dreamcast" in rule.description for rule in
+               contract_violations(collapsed_hire_call, hire_heroes_key)):
+        failures.append("collapsed hire_heroes source call group passed")
+    flipped_hire_tail = hire_heroes_probe.replace(
+        "if (!second)\n    return false;\n"
+        "return consider_hiring(team, second);",
+        "if (second)\n    return consider_hiring(team, second);\n"
+        "return false;")
+    if not contract_violations(flipped_hire_tail, hire_heroes_key):
+        failures.append("flipped hire_heroes failure tail passed")
     prohibited_key = ("ai_player.obj", 0x2F694)
     prohibited_probe = """\
 long human_strength;
@@ -11224,7 +11926,6 @@ for (i = 0; i < 6; i++) {
                for rule in flattened_rules):
         failures.append("flattened UpdateCost direct record access passed")
     recruit_contract_source = """\
-#define HOMM3_RECRUIT_MESSAGE_CTOR_VIEW
 #include "message.h"
 message msg;
 inline void recruitUnit::UpdateCost()
@@ -11235,12 +11936,10 @@ inline void recruitUnit::UpdateCost()
 """
     recruit_contract_header = "inline void UpdateCost();\n"
     recruit_message_header = """\
-#if defined(HOMM3_RECRUIT_MESSAGE_CTOR_VIEW)
 message() {
     id = 0; codeX = 0; codeY = 0; qualifier = 0;
     mouseX = 0; mouseY = 0; extra = 0; window = 0;
 }
-#endif
 """
     if recruit_inline_contract_violations(
             recruit_contract_source, recruit_contract_header,
@@ -11248,7 +11947,7 @@ message() {
         failures.append("aligned recruit inline contracts did not pass")
     broken_recruit_inline_probes = (
         recruit_contract_source.replace(
-            "#define HOMM3_RECRUIT_MESSAGE_CTOR_VIEW\n", ""),
+            "message msg;", "message* msg;"),
         recruit_contract_source.replace(
             "inline void recruitUnit::UpdateCost()",
             "void recruitUnit::UpdateCost()"),
@@ -11260,9 +11959,46 @@ message() {
     if not recruit_inline_contract_violations(
             recruit_contract_source, recruit_contract_header,
             recruit_message_header.replace(
-                "HOMM3_RECRUIT_MESSAGE_CTOR_VIEW",
-                "HOMM3_OTHER_MESSAGE_CTOR_VIEW")):
-        failures.append("missing recruit message constructor guard passed")
+                "codeX = 0;", "codeX = 1;")):
+        failures.append("flattened recruit message constructor body passed")
+    if not recruit_inline_contract_violations(
+            "#define HOMM3_RECRUIT_MESSAGE_CTOR_VIEW\n"
+            + recruit_contract_source,
+            recruit_contract_header, recruit_message_header):
+        failures.append("reintroduced recruit message constructor view passed")
+    game_comdat_gate_probe = """\
+void THeroSetupMapMinComdatAnchor::retain_min()
+{
+#pragma inline_depth(0)
+    INLINE_GATE(_Min(_Nil));
+#pragma inline_depth()
+}
+""" + "\n".join("""\
+template<> std::bitset<{size}>& std::bitset<{size}>::reset()
+{{
+#pragma inline_depth(0)
+    INLINE_GATE(_Tidy(0));
+#pragma inline_depth()
+    return *this;
+}}
+""".format(size=size) for size in (5, 8, 28, 70, 128))
+    if game_comdat_inline_gate_violations(game_comdat_gate_probe):
+        failures.append("aligned game COMDAT inline gates did not pass")
+    broken_game_comdat_probes = (
+        game_comdat_gate_probe.replace(
+            "INLINE_GATE(_Min(_Nil));", "_Min(_Nil);", 1),
+        game_comdat_gate_probe.replace(
+            "INLINE_GATE(_Tidy(0));", "_Tidy(0);", 1),
+        game_comdat_gate_probe.replace(
+            "INLINE_GATE(_Min(_Nil));", "minFunction = &_Min;", 1),
+        game_comdat_gate_probe.replace(
+            "INLINE_GATE(_Tidy(0));", "volatile int carrier = 0;", 1),
+        game_comdat_gate_probe.replace(
+            "#pragma inline_depth(0)", "#pragma auto_inline(off)", 1),
+    )
+    if any(not game_comdat_inline_gate_violations(probe)
+           for probe in broken_game_comdat_probes):
+        failures.append("broken game COMDAT inline gate passed")
     set_hero_context_key = ("advmgr.obj", 0x1A878)
     set_hero_context_probe = """\
 playerData* player = gpCurrentPlayer;
@@ -12257,6 +12993,18 @@ bool operator==(const type_point& arg) const {
     if any(not type_point_header_violations(probe)
            for probe in bad_type_point_probes):
         failures.append("broken type_point equality source shape passed")
+    type_artifact_probe = """\
+struct type_artifact {
+    TArtifact artifactId;
+    int extra;
+};
+"""
+    if type_artifact_header_violations(type_artifact_probe):
+        failures.append("aligned type_artifact member type did not pass")
+    if not type_artifact_header_violations(
+            type_artifact_probe.replace(
+                "TArtifact artifactId", "int artifactId")):
+        failures.append("int-spelled type_artifact artifactId passed")
     get_location_probe = """\
     type_point get_location() const
     {
@@ -12624,6 +13372,91 @@ inline CUpdatePlayerPosMsg::CUpdatePlayerPosMsg(
     if any(not single_selection_window_contract_violations(header, source)
            for header, source in broken_update_probes):
         failures.append("broken CUpdatePlayerPosMsg constructor shape passed")
+    selection_layout_probe = """\
+class TSingleSelectionWindow {
+public:
+    Bitmap816* Flags[8];
+    Bitmap816* Panels[8];
+    Bitmap816* HeroPix[164];
+};
+"""
+    if single_selection_destructor_layout_violations(
+            selection_layout_probe):
+        failures.append("aligned selection destructor layout did not pass")
+    broken_selection_layouts = (
+        selection_layout_probe.replace("HeroPix[164]", "HeroPix[163]"),
+        selection_layout_probe.replace(
+            "Bitmap816* HeroPix[164];",
+            "Bitmap816* HeroPix[163];\n    Bitmap816* GoldBox;"),
+        selection_layout_probe.replace(
+            "Bitmap816* Flags[8];\n    Bitmap816* Panels[8];",
+            "Bitmap816* Panels[8];\n    Bitmap816* Flags[8];"),
+    )
+    if any(not single_selection_destructor_layout_violations(probe)
+           for probe in broken_selection_layouts):
+        failures.append("broken selection destructor layout passed")
+
+    selection_dtor_probe = """\
+int i;
+if (!m_flag64 && !m_flag65 && bVideoPaused && pDPlay)
+    pDPlay->SetNetMsgHandler(0);
+delete flagBack;
+for (i = 0; i < 8; ++i) {
+    ResourceManager::Dispose(Panels[i]);
+    ResourceManager::Dispose(Flags[i]);
+}
+ResourceManager::Dispose(Resource);
+for (i = 0; i < 164; ++i) {
+    if (HeroPix[i])
+        ResourceManager::Dispose(HeroPix[i]);
+}
+ResourceManager::Dispose(TownPix);
+ResourceManager::Dispose(LossIcon);
+ResourceManager::Dispose(VictoryIcon);
+ResourceManager::Dispose(VersionIcon);
+ResourceManager::Dispose(randomTownBmp);
+ResourceManager::Dispose(randomHeroBmp);
+ResourceManager::Dispose(noHeroBmp);
+ResourceManager::Dispose(heroSpecificAbility);
+if (pNewPlayerUpdateMan) {
+    delete pNewPlayerUpdateMan;
+    pNewPlayerUpdateMan = 0;
+}
+gUnnamed69fbe8 = 0;
+for (std::vector<widget*>::iterator it = Widgets.begin();
+     it != Widgets.end(); ++it) {
+    if (*it)
+        delete *it;
+}
+if (m_flag65) {
+    BackupGameHeaders(gpGame, saveHeader);
+    delete saveHeader;
+    saveHeader = 0;
+}
+if (!m_flag65)
+    ResourceManager::del_Spr_from_Cache();
+"""
+    if contract_violations(selection_dtor_probe,
+                           _single_selection_dtor_key):
+        failures.append("aligned selection destructor shape did not pass")
+    broken_selection_dtors = (
+        selection_dtor_probe.replace("i < 164", "i < 163"),
+        selection_dtor_probe.replace(
+            "ResourceManager::Dispose(Panels[i]);\n"
+            "    ResourceManager::Dispose(Flags[i]);",
+            "ResourceManager::Dispose(Flags[i]);\n"
+            "    ResourceManager::Dispose(Panels[i]);"),
+        selection_dtor_probe.replace("    delete pNewPlayerUpdateMan;\n", ""),
+        selection_dtor_probe.replace(
+            "if (!m_flag65)\n    "
+            "ResourceManager::del_Spr_from_Cache();",
+            "ResourceManager::del_Spr_from_Cache();"),
+        selection_dtor_probe + "ResourceManager::del_Spr_from_Cache();\n",
+    )
+    if any(not contract_violations(probe, _single_selection_dtor_key)
+           for probe in broken_selection_dtors):
+        failures.append("broken selection destructor shape passed")
+
     update_task_header_probe = """\
 class __declspec(novtable) CNewPlayerUpdateTask {
 public:
@@ -12660,7 +13493,8 @@ public:
 };
 class CNewPlayerUpdateMan {
 public:
-    CNewPlayerUpdateTask* m_procs[8];
+    CNewPlayerUpdateProc* m_procs[8];
+    ~CNewPlayerUpdateMan();
 };
 """
     update_task_source_probe = """\
@@ -12683,6 +13517,13 @@ VA(0x00578010, 0x272)
 inline void CNewPlayerUpdateProc::HandleRequests()
 {
 }
+CNewPlayerUpdateMan::~CNewPlayerUpdateMan()
+{
+    for (int i = 0; i < 8; ++i) {
+        if (m_procs[i])
+            delete m_procs[i];
+    }
+}
 """
     if new_player_update_contract_violations(
             update_task_header_probe, update_task_source_probe):
@@ -12695,9 +13536,17 @@ inline void CNewPlayerUpdateProc::HandleRequests()
             "class t_map_list_update : public CNewPlayerUpdateTask"),
          update_task_source_probe),
         (update_task_header_probe.replace(
-            "CNewPlayerUpdateTask* m_procs[8]",
-            "CNewPlayerUpdateProc* m_procs[8]"),
+            "CNewPlayerUpdateProc* m_procs[8]",
+            "CNewPlayerUpdateTask* m_procs[8]"),
          update_task_source_probe),
+        (update_task_header_probe.replace(
+            "    ~CNewPlayerUpdateMan();\n", ""),
+         update_task_source_probe),
+        (update_task_header_probe, update_task_source_probe.replace(
+            "i < 8", "i < 7", 1)),
+        (update_task_header_probe, update_task_source_probe.replace(
+            "            delete m_procs[i];",
+            "            m_procs[i] = 0;")),
         (update_task_header_probe, update_task_source_probe.replace(
             ": CNewPlayerUpdateProc(dpid)",
             ": CNewPlayerUpdateTask()")),
@@ -13317,14 +14166,34 @@ def _current_functions() -> dict[int, tuple[str, str]]:
     return {rvas[key]: key for key in status.fn_fuzzy(report) if key in rvas}
 
 
+def _effective_exact_vas(
+        current_exact: set[int],
+        baseline: dict[tuple[str, str], status.MatchRow]) -> set[int]:
+    """Current or banked-exact VAs for proof-carrying source admissions.
+
+    A header/TU optimizer dip cannot revoke a previously exact receiver and
+    turn its already-proved call transfer into a fresh Dreamcast omission.
+    MAX/history is monotone; rows without a retail RVA remain unknown.
+    """
+    exact = set(current_exact)
+    exact.update(
+        common.IMAGE_BASE + row.rva
+        for row in baseline.values()
+        if row.rva is not None and max(row.max, row.hist) >= 100.0)
+    return exact
+
+
 def _current_exact_vas() -> set[int]:
     if not status.REPORT.is_file():
-        return set()
+        return _effective_exact_vas(set(), status.load_baseline())
     report = json.loads(status.REPORT.read_text())
     scores = status.fn_fuzzy(report)
     rvas = status.function_rvas()
-    return {common.IMAGE_BASE + rvas[key] for key, score in scores.items()
-            if key in rvas and score >= 100.0}
+    current = {
+        common.IMAGE_BASE + rvas[key] for key, score in scores.items()
+        if key in rvas and score >= 100.0
+    }
+    return _effective_exact_vas(current, status.load_baseline())
 
 
 def _line_starts(text: str) -> list[int]:
@@ -13727,9 +14596,13 @@ def scan() -> tuple[
     hero_header = common.HOMM3_DIR / "include/hero.h"
     hero_text = hero_header.read_text(errors="replace")
     audited.add(_file_audit_scope("include/hero.h"))
+    artifact_type_defects = type_artifact_header_violations(hero_text)
     get_target_defects = hero_get_target_header_violations(hero_text)
     get_location_defects = hero_get_location_header_violations(hero_text)
-    checked += 2
+    checked += 3
+    missing.extend(FileContractViolation("include/hero.h", line,
+                                         description)
+                   for line, description in artifact_type_defects)
     missing.extend(FileContractViolation("include/hero.h", line,
                                          description)
                    for line, description in get_target_defects)
@@ -13760,6 +14633,17 @@ def scan() -> tuple[
     missing.extend(FileContractViolation("src/recruit.cpp", line,
                                          description)
                    for line, description in recruit_inline_defects)
+
+    game_source_relpath = "src/game.cpp"
+    game_source_text = (
+        common.HOMM3_DIR / game_source_relpath).read_text(errors="replace")
+    audited.add(_file_audit_scope(game_source_relpath))
+    game_comdat_gate_defects = game_comdat_inline_gate_violations(
+        game_source_text)
+    checked += 6
+    missing.extend(FileContractViolation(game_source_relpath, line,
+                                         description)
+                   for line, description in game_comdat_gate_defects)
 
     netmsg_header = common.HOMM3_DIR / "include/netmsg.h"
     netmsg_text = netmsg_header.read_text(errors="replace")
@@ -13860,7 +14744,10 @@ def scan() -> tuple[
     audited.add(_file_audit_scope(selection_public_relpath))
     selection_signature_defects = update_player_pos_signature_violations(
         selection_public_text, selection_source_text)
-    checked += 1
+    selection_signature_defects.extend(
+        single_selection_destructor_layout_violations(
+            selection_public_text))
+    checked += 2
     missing.extend(FileContractViolation(selection_public_relpath, line,
                                          description)
                    for line, description in selection_signature_defects)

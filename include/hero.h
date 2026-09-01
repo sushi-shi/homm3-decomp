@@ -126,10 +126,10 @@ enum TArtifactSlot {
 // struct was the odd one out. The member spellings stay provisional
 // (no retail body names them).
 struct type_artifact {
-    int artifactId;
+    TArtifact artifactId;
     int extra;
 
-    type_artifact() : artifactId(-1), extra(-1) {}
+    type_artifact() : artifactId(ARTIFACT_NONE), extra(-1) {}
     // DC Hero.h:211 stores the artifact argument at +0, then line 212 stores
     // the -1 sentinel at +4. Retail value_of_town preserves that order in
     // its register allocation even though the eventual by-value pushes are
@@ -148,7 +148,10 @@ struct type_artifact {
         extra = spell;
     }
     type_artifact(int id, int extraValue)
-        : artifactId(id), extra(extraValue) {}
+        : extra(extraValue)
+    {
+        memcpy(&artifactId, &id, sizeof artifactId);
+    }
 
 // townmgr.cpp's blacksmith right-click text (0x5d1aa0) calls this on a
 // copy of the war machine's artifact record; hero.obj owns the

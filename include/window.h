@@ -13,6 +13,19 @@ class textWidget;
 class message;
 class Bitmap16Bit;
 
+// The retail table at 0x68c710 has 37 eight-byte rows.  SetWinText proves
+// the byte/word/pointer field offsets (+0/+2/+4), while
+// InitializeWinSetupText writes the final pointer column in seven source
+// groups.  The names of the table and row type are Dreamcast publics/source
+// evidence; the field spellings remain role names because no fieldlist was
+// retained in the dump.
+struct SWinSetup {
+    unsigned char windowId;
+    unsigned short widgetId;
+    const char* text;
+};
+SIZE(SWinSetup, 8);
+
 // One pooled empty rollover string shared by window::UpdateRollover and
 // hero::initialize's custom-name string reset.
 DATA(0x00691210) extern const char emptyRolloverText[];
@@ -197,6 +210,9 @@ public:
     virtual int OnWidgetDeselect(int id, unsigned char* bExitFlag) { return 0; }  // slot 12
     virtual textWidget* GetRolloverWidget();                            // slot 13
 };
+
+unsigned char InitializeWinSetupText();
+void SetWinText(heroWindow* win, int winId);
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\window.cpp:1201, dc 0x197fd8) unsigned char InitializeWinSetupText();

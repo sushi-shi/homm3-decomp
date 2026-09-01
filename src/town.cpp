@@ -794,13 +794,11 @@ void town::destroy_extra_capitol()
         if (town_count <= 0)
             return;
 
-        char* town_cursor = player->townIds;
-        // Retail carries the 32-bit cursor as an address plus a negative
-        // base bias. The null-relative differences state that representation
-        // without introducing pointer reinterpret-cast debt.
-        volatile long town_bias = static_cast<char*>(0) - player->townIds;
-        for (;;) {
-            char town_id = *town_cursor;
+        // Dreamcast proves the owner-town scan and both IsCapitol helper
+        // boundaries.  The former null-relative cursor bias merely forced
+        // retail's induction representation; it was not source evidence.
+        for (int slot = 0; slot < town_count; ++slot) {
+            char town_id = player->townIds[slot];
             if (town_id != id) {
                 town* other_town = gpGame->GetTown(town_id);
                 if (other_town->IsCapitol()) {
@@ -814,12 +812,6 @@ void town::destroy_extra_capitol()
                     break;
                 }
             }
-            long slot = town_bias;
-            int town_limit = town_count;
-            town_cursor++;
-            slot += town_cursor - static_cast<char*>(0);
-            if (slot >= town_limit)
-                break;
         }
     }
 }
@@ -1836,10 +1828,11 @@ void town::update_full_building_mask()
 // and an explicit `if (...) return 0; return 1;` tail scores 62.6).
 // What is left is homing: retail forms the bit-number index in EDX where
 // this compile uses ESI and re-reads the short parameter through AX where
-// this compile retains it in DX. Making the town-type byte volatile is
-// load-bearing: it gives the byte the retail stack home and raises the old
-// 81.2% body to 89.6%. An explicit promoted integer loses that home and
-// returns to 81.2%; a volatile building parameter falls to 67.6%. Also
+// this compile retains it in DX. The former volatile town-type byte gave the
+// byte retail's stack home and raised the old 81.2% body to 89.6%, but it did
+// not model mutable state and is now only a negative control. An explicit
+// promoted integer loses that home and returns to 81.2%; a volatile building
+// parameter fell to 67.6%. Also
 // tried and rejected: an int temp for the bitNumber index (no change - VC6
 // CSEs it back), and calling is_legal_building (short -> type_building_id
 // needs an explicit cast).
@@ -1857,7 +1850,7 @@ unsigned char town::can_build(short building_id) const
                 return dockSite != TOWN_DOCK_SITE_NONE;
             if (building_id == HALL_CAPITOL_ID)
                 return !gpGame->players[owner].HasCapitol();
-            volatile char townType = type;
+            char townType = type;
             __int64 requirements = gHierarchyMask[townType][building_id];
             if (gpGame->field_1f69d && building_id == DWELLING_2_ID
                 && townType == TOWN_CASTLE)

@@ -3362,7 +3362,7 @@ int type_sacrifice_window::ExitDialog(message* msg)
         current_hero->equip_artifact(artifact, -1);
 
 artifact_returned:
-        artifact->artifactId = -1;
+        artifact->artifactId = ARTIFACT_NONE;
     }
     return MESSAGE_DISPATCH_FORWARD;
 }
