@@ -164,8 +164,11 @@ the named call sequence, not only the aggregate call count.
 When retail proves a call at one site, constrain the smallest possible caller region
 with statement-scoped `#pragma inline_depth(0)` and restore it immediately with
 `#pragma inline_depth()`. VC6 SP3 predates `__pragma`, so this pair cannot be hidden in
-a safe macro. Use `#pragma auto_inline(off)` only when every affected call
-site proves the helper body was unavailable or out of line. Do not move or remove an
+a safe macro. Wrap the controlled statement in `INLINE_GATE(...)` between those pragmas
+so the reason is explicit and the source-shape gate can ratchet the boundary. Existing
+unmarked pins are historical debt; every new or touched pin must use the marker. Use
+`#pragma auto_inline(off)` only when every affected call site proves the helper body was
+unavailable or out of line. Do not move or remove an
 `inline` declaration, create a second source-false declaration, or add synthetic caller
 mass merely to steer VC6's budget.
 
