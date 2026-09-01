@@ -12917,6 +12917,32 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   two. Preserve the recovered source shape and solve that site-specific
   inlining decision rather than replacing `push_back` or adding caller mass.
 
+- **2026-09-01 — the Dreamcast path helpers admit two exact bodies and one
+  structure-exact near-closure.** `check_move_spell` advances **0% -> 100%**
+  across 259 bytes and `build_path` advances **0% -> 100%** across 900 bytes.
+  Their recovered static boundaries, signatures, vector accessors, spell
+  activation path, and path-copy loop are exact against Complete retail.
+  `attempt_teleport` then advances **0% -> 99.9658%** across 1,217 bytes.
+  Dreamcast supplies its three parameters, nine lower-bound locals, nested
+  destination search, helper calls, and source order; retail proves bounded
+  Complete changes for cursed ground, the additional path flag, the 9x8
+  teleport window, last-stop semantics, and the mana-source override. The
+  index declaration belongs immediately before `get_location`: Dreamcast
+  emits its decrement in that call's delay slot, and this lifetime placement
+  raises the x86 result from 96.3350% to 99.9658%. The independent structure
+  checkpoint is exact at **63 / 63 blocks**. Remaining code differences are
+  one reordered initialization store and an EAX/EDX choice for `UseSpell`.
+  The third reported residual is intentionally inspectable relocation
+  evidence: candidate `_const_thresholds-4` and delinked-retail
+  `data_2604fc+0` denote the same effective indexed address, but the stripped
+  image cannot recover the original six-long static symbol from that address
+  alone. Preserve the Dreamcast-typed table and fix that naming limitation in
+  relocation recovery rather than falsifying the source.
+  The asymmetric source-shape gate ratchets both the line-4001
+  `HOMM3_RELEASE_VERIFY(step < path.size())` carrier and AI_AttemptMove's
+  statement-scoped `INLINE_GATE(attempt_teleport(...))`; removal negative
+  controls prove that either omission fails the contract.
+
 - **2026-07-23 — repo + toolchain distribution.** Private GitHub repo
   `sushi-shi/homm3-decomp` created and pushed; toolchain tarball published as
   release `toolchain-vc6-sp3`. `homm3 init` now downloads it via `gh` when

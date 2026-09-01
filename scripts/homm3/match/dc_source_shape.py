@@ -4057,6 +4057,21 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
 }
 
 
+# attempt_teleport's leading CodeView gap is not assert proof by itself, but
+# the bounds invariant is meaningful and its release-elided spelling is now an
+# admitted positive source fact.  Keep the carrier asymmetric: retail may add
+# statements, while this one evidenced invariant may not disappear.
+_attempt_teleport_key = ("ai_player.obj", 0x34630)
+SOURCE_RULES[_attempt_teleport_key] = SOURCE_RULES.get(
+    _attempt_teleport_key, ()) + (
+        SourceRule(
+            "attempt_teleport keeps the line-4001 release-elided path bound",
+            r"HOMM3_RELEASE_VERIFY\s*\(\s*step\s*<\s*path\.size\s*"
+            r"\(\s*\)\s*\)\s*;",
+            1, 1),
+    )
+
+
 # Caller-local Complete codegen can retain a source-real call that another
 # emission of the same inline helper expands.  These are admitted asymmetric
 # boundaries: Dreamcast supplies the named source call and Complete retail
@@ -4066,6 +4081,9 @@ SOURCE_RULES: dict[tuple[str, int], tuple[SourceRule, ...]] = {
 # named call itself, without inventing a global equal-call-count invariant.
 INLINE_GATE_REQUIREMENTS: dict[
         tuple[str, int], tuple[tuple[str, int], ...]] = {
+    ("ai_player.obj", 0x34B08): (
+        ("attempt_teleport", 1),
+    ),
     ("philai.obj", 0x110408): (
         ("value_of_custom_item", 1),
     ),
@@ -6408,6 +6426,15 @@ case SSW_SIZE_FILTER_ALL:
                for rule in SOURCE_RULES[
                    ("singleselectionwindow.obj", 0x13C79C)]):
         failures.append("unregistered OnWidgetDeselect shared arm order")
+
+    attempt_teleport_key = ("ai_player.obj", 0x34630)
+    attempt_teleport_verify = (
+        "HOMM3_RELEASE_VERIFY(step < path.size());\n")
+    if contract_violations(attempt_teleport_verify,
+                           attempt_teleport_key):
+        failures.append("aligned attempt_teleport release verify did not pass")
+    if not contract_violations("", attempt_teleport_key):
+        failures.append("removed attempt_teleport release verify passed")
 
     inline_gate_key = ("singleselectionwindow.obj", 0x13C434)
     inline_gate_probe = """\
