@@ -912,13 +912,10 @@ int hero::save(TAbstractFile* outfile)
 // (type_obscuring_object, armyGroup, bitset<48>, the type_artifact
 // default-ctor pair) where retail keeps all of those expanded, and only
 // customName's _Tidy out of line.
-#define HOMM3_HERO_CTOR_RELEASE_VERIFY(expression) \
-    static_cast<void>(expression)
-
 VA(0x004d85f0, 0x12E)  // anchor-bracket, dc 0xcbdb8
 hero::hero()
 {
-    HOMM3_HERO_CTOR_RELEASE_VERIFY(TownSpecialGrantedMask.size());
+    HOMM3_RELEASE_VERIFY(TownSpecialGrantedMask.size());
 
     x = 0;
     y = 0;

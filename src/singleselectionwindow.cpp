@@ -3449,128 +3449,125 @@ inline void TSingleSelectionWindow::OnSortMaps(int how)
 // seeding townIndex from the row's alignment), else first human
 // slot, else the first enabled slot with its CanBeComputer dropped.
 // E:\gamedcs\singleselectionwindow.cpp:4470
+// MATCHING (2026-09-01): 76.1644%, with 104/104 CFG blocks, 57 exact,
+// six size-only and no missing blocks; the first 35 blocks are exact. The
+// remaining tail/return lowering is retained behind all positive DC facts.
+// A source-false early-return spelling of GetThisPlayer reached 91.0411% but
+// removed its proved pPlayer local and if/else/shared-return shape (and emitted
+// 107 blocks), so it is rejected rather than treated as a better source state.
+// ASSERT/TRACE audit: DC has no leading zero-emission line here, and the tested
+// carrier doses were byte-flat. No release-VERIFY carrier is evidenced.
 VA(0x00584C40, 0x40D)  // anchor-callee OnNewPlayerMsg 0x589fa0 + SetCurrentMap call it no-arg; head calls UpdateGameVars 0x583580; body is DC SetHumanSlot's seat walk verbatim, size 0.84x dc 0x4D8, dc 0x13b22c
 void TSingleSelectionWindow::SetHumanSlot()
 {
+    CNetPlayerHandlerPlayer* player;
+    int i;
+    NewSMapHeader* mp;
+
     if (m_flag65)
         return;
     UpdateGameVars();
-    CMapHeaderData& hdr = gpGame->mapHeader;
-    CMapHeaderData::TPlayerSlotAttributes* attrs =
-        hdr.playerSlotAttributes;
-    int i;
+    mp = &gpGame->mapHeader;
     for (i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
         m_players.humanPlayers[i].playerPos = -1;
         if (m_flag64 && gpGame->playerDisabled[i])
-            attrs[i].CanBeHuman = 0;
+            mp->playerSlotAttributes[i].CanBeHuman = 0;
     }
-    // Residual (19.8): the whole multiplayer arm SINKS - our CL lays
-    // the single-player arm at fallthrough and moves this block past
-    // it, where retail keeps it in source order (fallthrough from the
-    // mode test). if/else, inverted-condition, and two-goto dispatch
-    // spellings all emit the identical inverted layout (measured
-    // 13.82/19.84 across the hdr-split variants); the content and the
-    // branch senses match retail arm-for-arm. The positional masking
-    // then discounts every block. Documented merged-return/layout
-    // class; revisit with a layout-family lever.
-    if (bVideoPaused || gUnnamed6989f0 == WINDOW_MODE_6989F0_3) {
+    if (IsMultiPlayer()) {
         if (m_flag64) {
+            int i;
             for (i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
-                if (g_wasHuman[i] && attrs[i].CanBeHuman) {
-                    int n = m_players.GetUnassignedPlayerPos();
-                    if (n == -1)
+                if (g_wasHuman[i]
+                        && mp->playerSlotAttributes[i].CanBeHuman) {
+                    int iFreePlayer = m_players.GetUnassignedPlayerPos();
+                    if (iFreePlayer == -1)
                         break;
-                    m_players.humanPlayers[n].playerPos = i;
+                    m_players.humanPlayers[iFreePlayer].playerPos = i;
                 }
             }
             for (i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
-                if (attrs[i].CanBeHuman
+                if (mp->playerSlotAttributes[i].CanBeHuman
                         && !m_players.GetPlayerInPos(i)) {
-                    int n = m_players.GetUnassignedPlayerPos();
-                    if (n == -1)
+                    int iFreePlayer = m_players.GetUnassignedPlayerPos();
+                    if (iFreePlayer == -1)
                         return;
-                    m_players.humanPlayers[n].playerPos = i;
+                    m_players.humanPlayers[iFreePlayer].playerPos = i;
+                }
+            }
+        } else {
+            int i;
+            for (i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
+                if (mp->playerSlotAttributes[i].CanBeHuman) {
+                    int iFreePlayer = m_players.GetUnassignedPlayerPos();
+                    if (iFreePlayer == -1)
+                        return;
+                    m_players.humanPlayers[iFreePlayer].playerPos = i;
+                }
+            }
+        }
+        return;
+    } else {
+        int x;
+        for (x = 0; x < CNetPlayerHandler::MAX_PLAYERS; ++x) {
+            if (mp->playerSlotAttributes[x].CanBeHuman
+                    && !mp->playerSlotAttributes[x].CanBeComputer)
+                break;
+        }
+        if (x < CNetPlayerHandler::MAX_PLAYERS) {
+            if (!IsMultiPlayer()) {
+                for (int q = x; q < CNetPlayerHandler::MAX_PLAYERS; ++q) {
+                    mp->playerSlotAttributes[q].CanBeHuman = 0;
+                    mp->playerSlotAttributes[q].CanBeComputer = 1;
+                }
+            }
+            if (IsHost() && SelectionHeaders.size() > 0) {
+                CNetPlayerHandlerPlayer* player;
+                player = GetThisPlayer();
+                if (player) {
+                    if (field_37F) {
+                        player->playerPos = x;
+                        player->townIndex = m_localHeader.setup.alignment[x];
+                    } else {
+                        player->playerPos = x;
+                        player->townIndex =
+                            SelectionHeaders[currentMap].setup.alignment[x];
+                    }
                 }
             }
             return;
         }
-        for (i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
-            if (attrs[i].CanBeHuman) {
-                int n = m_players.GetUnassignedPlayerPos();
-                if (n == -1)
-                    return;
-                m_players.humanPlayers[n].playerPos = i;
+        for (x = 0; x < CNetPlayerHandler::MAX_PLAYERS; ++x) {
+            if (mp->playerSlotAttributes[x].CanBeHuman)
+                break;
+        }
+        if (x < CNetPlayerHandler::MAX_PLAYERS) {
+            if (IsHost()) {
+                CNetPlayerHandlerPlayer* player;
+                player = GetThisPlayer();
+                if (player)
+                    player->playerPos = x;
             }
+            return;
         }
-        return;
-    }
-    for (i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
-        if (hdr.playerSlotAttributes[i].CanBeHuman
-                && !hdr.playerSlotAttributes[i].CanBeComputer)
-            break;
-    }
-    if (i < CNetPlayerHandler::MAX_PLAYERS) {
-        for (int j = i; j < CNetPlayerHandler::MAX_PLAYERS; ++j) {
-            hdr.playerSlotAttributes[j].CanBeHuman = 0;
-            hdr.playerSlotAttributes[j].CanBeComputer = 1;
+        for (x = 0; x < CNetPlayerHandler::MAX_PLAYERS; ++x) {
+            if (mp->playerSlotAttributes[x].CanBeHuman
+                    || mp->playerSlotAttributes[x].CanBeComputer)
+                break;
         }
-        if (bVideoPaused && !pDPlay->IsHost())
+        if (x < CNetPlayerHandler::MAX_PLAYERS) {
+            mp->playerSlotAttributes[x].CanBeComputer = 0;
+            if (IsHost()) {
+                CNetPlayerHandlerPlayer* player;
+                player = GetThisPlayer();
+                if (player)
+                    player->playerPos = x;
+            }
             return;
-        if (SelectionHeaders.size() == 0)
-            return;
-        CNetPlayerHandlerPlayer* p;
-        if (gUnnamed6989f0 == WINDOW_MODE_6989F0_3)
-            p = &m_players.humanPlayers[0];
-        else
-            p = m_players.GetPlayer(gsThisNetPlayerInfo.dpid);
-        if (!p)
-            return;
-        if (field_37F) {
-            p->playerPos = i;
-            p->townIndex = m_localHeader.setup.alignment[i];
-        } else {
-            p->playerPos = i;
-            p->townIndex =
-                SelectionHeaders[currentMap].setup.alignment[i];
         }
-        return;
     }
-    for (i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
-        if (attrs[i].CanBeHuman)
-            break;
-    }
-    if (i < CNetPlayerHandler::MAX_PLAYERS) {
-        CNetPlayerHandlerPlayer* p =
-            m_players.GetPlayer(gsThisNetPlayerInfo.dpid);
-        if (!p)
-            return;
-        p->playerPos = i;
-        return;
-    }
-    for (i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
-        if (hdr.playerSlotAttributes[i].CanBeHuman
-                || hdr.playerSlotAttributes[i].CanBeComputer)
-            break;
-    }
-    if (i < CNetPlayerHandler::MAX_PLAYERS) {
-        hdr.playerSlotAttributes[i].CanBeComputer = 0;
-        if (bVideoPaused && !pDPlay->IsHost())
-            return;
-        CNetPlayerHandlerPlayer* p;
-        if (gUnnamed6989f0 == WINDOW_MODE_6989F0_3)
-            p = &m_players.humanPlayers[0];
-        else
-            p = m_players.GetPlayer(gsThisNetPlayerInfo.dpid);
-        if (!p)
-            return;
-        p->playerPos = i;
-    } else {
-        CNetPlayerHandlerPlayer* p =
-            m_players.GetPlayer(gsThisNetPlayerInfo.dpid);
-        if (!p)
-            return;
-        p->playerPos = -1;
-    }
+    player = GetThisPlayer();
+    if (player)
+        player->playerPos = -1;
 }
 
 // Sort the source list (TransferHeaders in transfer mode, HeadersA
@@ -3649,11 +3646,16 @@ void TSingleSelectionWindow::SortMaps(int how, unsigned char sendSortMsg,
     }
 }
 
-inline CNetPlayerHandlerPlayer* TSingleSelectionWindow::GetThisPlayer()
+// DC line 7324..7333 proves the pPlayer local, if/else assignments and shared
+// return. Complete expands this body at the SetHumanSlot call sites.
+CNetPlayerHandlerPlayer* TSingleSelectionWindow::GetThisPlayer()
 {
+    CNetPlayerHandlerPlayer* pPlayer;
     if (gUnnamed6989f0 == WINDOW_MODE_6989F0_3)
-        return &m_players.humanPlayers[0];
-    return m_players.GetPlayer(gsThisNetPlayerInfo.dpid);
+        pPlayer = &m_players.humanPlayers[0];
+    else
+        pPlayer = m_players.GetPlayer(gsThisNetPlayerInfo.dpid);
+    return pPlayer;
 }
 
 // Like GetThisPlayer above: retail keeps no out-of-line copy (the

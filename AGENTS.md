@@ -163,15 +163,24 @@ the named call sequence, not only the aggregate call count.
 
 When retail proves a call at one site, constrain the smallest possible caller region
 with statement-scoped `#pragma inline_depth(0)` and restore it immediately with
-`#pragma inline_depth()`. Use `#pragma auto_inline(off)` only when every affected call
+`#pragma inline_depth()`. VC6 SP3 predates `__pragma`, so this pair cannot be hidden in
+a safe macro. Use `#pragma auto_inline(off)` only when every affected call
 site proves the helper body was unavailable or out of line. Do not move or remove an
 `inline` declaration, create a second source-false declaration, or add synthetic caller
 mass merely to steer VC6's budget.
 
-Every permanent inline-boundary pin must carry a source comment naming the caller,
-callee, and retail/Dreamcast evidence, plus a source-shape ratchet and a negative
-control that proves flattening or de-inlining fails. Bank percentage peaks in max/history;
-an unrelated current-score dip is not permission to undo a proven helper boundary.
+A Dreamcast line gap may be evidence of a release-elided `VERIFY`, `ASSERT`, or `TRACE`,
+but does not prove one by itself. When a meaningful recovered invariant is also plausible,
+spell its release form as `HOMM3_RELEASE_VERIFY(expression)`. The expression must encode
+that invariant; self-assignments, unreachable branches, dummy helper calls, and repeated
+budget-only carrier doses are forbidden. Record the line-table and codegen evidence beside
+every retained carrier.
+
+Every permanent inline-boundary pin or release-VERIFY carrier must carry a source comment
+naming the caller, callee, and retail/Dreamcast evidence, plus a source-shape ratchet and
+a negative control that proves flattening or de-inlining fails. Bank percentage peaks in
+max/history; an unrelated current-score dip is not permission to undo a proven helper
+boundary.
 
 ## Tooling layout
 

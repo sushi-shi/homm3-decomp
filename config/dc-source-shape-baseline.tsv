@@ -1664,8 +1664,6 @@ call	singleselectionwindow.obj	0x13a380	TSingleSelectionWindow::MaxPlayers
 call	singleselectionwindow.obj	0x13a380	TSingleSelectionWindow::UpdateNames
 call	singleselectionwindow.obj	0x13a380	widget::hide
 call	singleselectionwindow.obj	0x13b104	TSingleSelectionWindow::IsMultiPlayer
-call	singleselectionwindow.obj	0x13b22c	TSingleSelectionWindow::GetThisPlayer
-call	singleselectionwindow.obj	0x13b22c	TSingleSelectionWindow::IsMultiPlayer
 call	singleselectionwindow.obj	0x13b9fc	TSingleSelectionWindow::IsMultiPlayer
 call	singleselectionwindow.obj	0x13b9fc	widget::hide
 call	singleselectionwindow.obj	0x13b9fc	widget::show
