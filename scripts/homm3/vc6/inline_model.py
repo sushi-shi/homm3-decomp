@@ -199,10 +199,23 @@ def run_predict(args) -> int:
               "(A12 single-call-site / callee cheaper than retail's):")
         for s, b, r in sorted(over, key=lambda x: -(x[2] - x[1])):
             print(f"    {s[:70]}  base x{b} vs retail x{r}")
-    print("[knob] over-inline -> `#pragma auto_inline(off)` around the callee "
-          "(or make its body carry retail's cost); under-inline -> spell the "
-          "callee smaller / a ternary so /Ob2 expands it (A15). why-reg cannot "
-          "reach these - they are inliner decisions.")
+    print("[fix] first run `homm3 dreamcast show/asm --blocks` and `homm3 "
+          "sema diff --structure/--source`; restore the evidenced helper, "
+          "type, lifetime, and statement order before steering C1.")
+    print("[fix] over-inline at a DIRECT source call -> put only that statement "
+          "between `#pragma inline_depth(0)` / `#pragma inline_depth()` and "
+          "mark it `INLINE_GATE(...)`; retain it only with a flattening "
+          "negative control. Use `auto_inline(off)` only when every affected "
+          "call site proves the body unavailable.")
+    print("[fix] over-inline at a NESTED callee absent from source (for example "
+          "basic_string::_Tidy) -> do not expose library internals or add "
+          "synthetic mass. Probe depth 1; if it is flat and depth 0 suppresses "
+          "the required outer inline, keep the natural source and classify "
+          "the compiler-state wall.")
+    print("[fix] under-inline -> restore the smallest Dreamcast-proven callee "
+          "body/declaration and remeasure its callers; do not erase the "
+          "helper boundary merely to improve one percentage. why-reg cannot "
+          "reach these inliner decisions.")
     return rc
 
 

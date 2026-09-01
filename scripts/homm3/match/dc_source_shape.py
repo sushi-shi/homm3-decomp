@@ -4141,6 +4141,47 @@ SOURCE_RULES[_ai_player_get_cell_key] = SOURCE_RULES.get(
     )
 
 
+# CheckAdvCheatCode's optimized r8 local never receives an S_REGREL32 record,
+# but its value flow is unambiguous: zero at entry, one in every ordinary
+# cheat arm, and one test guarding the common notification tail.  The Phisher
+# Price arm deliberately leaves it clear and shares its Redraw after the
+# Remap/Saturate choice.  Complete's extra Ignorance Is Bliss arm raises the
+# admitted true-assignment count from the fourteen visible on Dreamcast to
+# fifteen; retail independently proves that arm and the same common tail.
+_check_adv_cheat_code_key = ("adventuremapwindow.obj", 0x3B0)
+SOURCE_RULES[_check_adv_cheat_code_key] = SOURCE_RULES.get(
+    _check_adv_cheat_code_key, ()) + (
+        SourceRule(
+            "CheckAdvCheatCode keeps Dreamcast's recognized-cheat flag "
+            "initialized false instead of flattening the tail into returns",
+            r"\bbool\s+cheatUsed\s*=\s*false\s*;", 1, 1),
+        SourceRule(
+            "all fifteen Complete ordinary-cheat arms set the shared "
+            "Dreamcast recognized-cheat flag",
+            r"\bcheatUsed\s*=\s*true\s*;", 15, 15),
+        SourceRule(
+            "Phisher Price keeps Dreamcast's one post-choice Redraw and "
+            "does not set the ordinary-cheat flag",
+            r"advCheatPhisherPrice.*?\)\s*\{\s*"
+            r"gGraphicsSaturated\s*=\s*!\s*gGraphicsSaturated\s*;\s*"
+            r"if\s*\(\s*!\s*gGraphicsSaturated\s*\)\s*"
+            r"ResourceManager\s*::\s*RemapGraphics\s*\(\s*\)\s*;\s*"
+            r"else\s*ResourceManager\s*::\s*SaturateGraphics\s*"
+            r"\(\s*\)\s*;\s*gpAdvManager\s*->\s*RedrawAdvScreen\s*"
+            r"\(\s*1\s*,\s*0\s*\)\s*;\s*\}\s*"
+            r"if\s*\(\s*cheatUsed\s*\)", 1, 1),
+        SourceRule(
+            "CheckAdvCheatCode keeps Dreamcast's recognized-cheat guard "
+            "around the common chat and game/campaign latch tail",
+            r"if\s*\(\s*cheatUsed\s*\)\s*\{\s*"
+            r"chatString\s*=\s*\(\s*\*\s*gpGeneralText\s*\)\s*"
+            r"\[\s*261\s*\]\s*;\s*gpGame\s*->\s*field_1f69c\s*"
+            r"=\s*1\s*;\s*if\s*\(\s*gbUnk69774c\s*\)\s*"
+            r"gpGame\s*->\s*campaign\s*\.\s*isCheater\s*=\s*1\s*;\s*"
+            r"\}\s*\Z", 1, 1),
+    )
+
+
 # Caller-local Complete codegen can retain a source-real call that another
 # emission of the same inline helper expands.  These are admitted asymmetric
 # boundaries: Dreamcast supplies the named source call and Complete retail
@@ -6645,6 +6686,41 @@ return event_cell == 0 && bNoMove == 0 && bFoughtBattle == 0;
     if not contract_violations(flattened_get_cell,
                                _ai_player_get_cell_key):
         failures.append("flattened game::get_cell boundary passed")
+
+    check_adv_probe = (
+        "bool cheatUsed = false;\n"
+        + "cheatUsed = true;\n" * 15
+        + """\
+if (code.compare(advCheatPhisherPrice)) {
+    gGraphicsSaturated = !gGraphicsSaturated;
+    if (!gGraphicsSaturated)
+        ResourceManager::RemapGraphics();
+    else
+        ResourceManager::SaturateGraphics();
+    gpAdvManager->RedrawAdvScreen(1, 0);
+}
+if (cheatUsed) {
+    chatString = (*gpGeneralText)[261];
+    gpGame->field_1f69c = 1;
+    if (gbUnk69774c)
+        gpGame->campaign.isCheater = 1;
+}
+""")
+    if contract_violations(check_adv_probe,
+                           _check_adv_cheat_code_key):
+        failures.append("aligned CheckAdvCheatCode flag shape did not pass")
+    for broken_check_adv in (
+            check_adv_probe.replace("bool cheatUsed = false;\n", ""),
+            check_adv_probe.replace("cheatUsed = true;\n", "", 1),
+            check_adv_probe.replace(
+                "if (code.compare(advCheatPhisherPrice)) {\n",
+                "if (code.compare(advCheatPhisherPrice)) {\n"
+                "    cheatUsed = true;\n"),
+            check_adv_probe.replace("if (cheatUsed) {\n",
+                                    "if (true) {\n")):
+        if not contract_violations(broken_check_adv,
+                                   _check_adv_cheat_code_key):
+            failures.append("flattened CheckAdvCheatCode flag shape passed")
 
     inline_gate_key = ("singleselectionwindow.obj", 0x13C434)
     inline_gate_probe = """\

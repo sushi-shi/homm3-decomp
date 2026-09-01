@@ -187,25 +187,29 @@ void TAdventureMapWindow::SetSleepImage(int image)
 
 #endif  // @carcass
 
-// E:\gamedcs\adventuremapwindow.cpp:63. The Dreamcast procedure record
-// types the sole parameter as an lvalue reference and names the one local
-// TCheatCode. Retail independently fixes the sixteen comparisons, their
-// order, and every effect below. The 53.5182% plateau is compiler layout,
-// not a semantic gap: predict-inline finds equal total call counts and only
-// two real frontiers - our CL expands two nested basic_string::_Tidy calls
-// retail keeps, and merges the phisher-price branch's identical Redraw call
-// (two sites here versus retail's three). Direct/counted assign spellings and
-// inline_depth(1/2/4) were byte-flat, so the natural source stays.
+// E:\gamedcs\adventuremapwindow.cpp:63. The procedure record types the sole
+// parameter as an lvalue reference and names the one surviving local
+// TCheatCode. More importantly, SH4 keeps an optimized register flag: r8 is
+// initialized to zero, every ordinary cheat arm sets it, line 209 tests it
+// before the common chat/latch tail, and Phisher Price deliberately leaves it
+// clear while sharing one Redraw after Remap/Saturate. Restoring that source
+// shape makes the Complete CFG exact through the graphics branch and moves
+// 53.5182% -> 90.35%. The negative control (early returns and unconditional
+// tail) restores 53.5182%; a depth-1 pin at the assignment is byte-flat and
+// depth zero suppresses the required outer operator= inline (80.38%). The
+// remaining residual is the two nested basic_string::_Tidy calls retail keeps
+// out of line; do not flatten the proven flag to chase that compiler midpoint.
 VA(0x00402450, 0x5D3)  // anchor-global, dc 0x3b0
 void CheckAdvCheatCode(std::string& chatString)
 {
     hero* currentHero = gpGame->GetCurrHero();
-    std::string* chat = &chatString;
-    TCheatCode code(chat->c_str());
+    TCheatCode code(chatString.c_str());
+    bool cheatUsed = false;
 
     if (code.compare(DATA_COMPGEN(
             0x0063a480, advCheatTrinity, "ajpgevavgl"))
         && currentHero) {
+        cheatUsed = true;
         for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++) {
             if (currentHero->army.armies[slot] == -1)
                 currentHero->army.Add(CREATURE_ARCHANGEL, 5, slot);
@@ -214,6 +218,7 @@ void CheckAdvCheatCode(std::string& chatString)
     } else if (code.compare(DATA_COMPGEN(
                    0x0063a48c, advCheatAgents, "ajpntragf"))
                && currentHero) {
+        cheatUsed = true;
         for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++) {
             if (currentHero->army.armies[slot] == -1)
                 currentHero->army.Add(CREATURE_BLACK_KNIGHT, 10, slot);
@@ -222,6 +227,7 @@ void CheckAdvCheatCode(std::string& chatString)
     } else if (code.compare(DATA_COMPGEN(
                    0x0063a498, advCheatLotsOfGuns, "ajpybgfbsthaf"))
                && currentHero) {
+        cheatUsed = true;
         if (!currentHero->HasArtifact(ARTIFACT_AMMO_CART)) {
             type_artifact artifact(ARTIFACT_AMMO_CART, -1);
             currentHero->GiveArtifact(&artifact, 0, 0);
@@ -237,18 +243,21 @@ void CheckAdvCheatCode(std::string& chatString)
     } else if (code.compare(DATA_COMPGEN(
                    0x0063a4a8, advCheatNeo, "ajparb"))
                && currentHero) {
+        cheatUsed = true;
         currentHero->GiveExperience(
             hero::GetExperienceIncrement(currentHero->level), 1, 1);
     } else if (code.compare(DATA_COMPGEN(
                    0x0063a4b0, advCheatFollowTheWhiteRabbit,
                    "ajpsbyybjgurjuvgrenoovg"))
                && currentHero) {
+        cheatUsed = true;
         currentHero->flags |= 0x00400000;
         gpAdvManager->UpdBottomView(1, 1, 1);
     } else if (code.compare(DATA_COMPGEN(
                    0x0063a4c8, advCheatNebuchadnezzar,
                    "ajparohpunqarmmne"))
                && currentHero) {
+        cheatUsed = true;
         currentHero->flags |= 0x01000000;
         int mobility = currentHero->GetMobility();
         currentHero->movePoints = mobility;
@@ -256,15 +265,18 @@ void CheckAdvCheatCode(std::string& chatString)
     } else if (code.compare(DATA_COMPGEN(
                    0x0063a4dc, advCheatMorpheus, "ajpzbecurhf"))
                && currentHero) {
+        cheatUsed = true;
         currentHero->flags |= 0x00800000;
         gpAdvManager->UpdBottomView(1, 1, 1);
     } else if (code.compare(DATA_COMPGEN(
                    0x0063a4e8, advCheatOracle, "ajpbenpyr"))) {
+        cheatUsed = true;
         gpCurrentPlayer->extraPuzzlePieces = 0x30;
         gpAdvManager->ViewPuzzle();
     } else if (code.compare(DATA_COMPGEN(
                    0x0063a4f4, advCheatWhatIsTheMatrix,
                    "ajpjungvfgurzngevk"))) {
+        cheatUsed = true;
         for (int level = 0; level < gpGame->GetNumMapLevels(); level++)
             gpGame->SetVisibility(0, 0, level, gNetLocalGamePos, 200, 0);
         if (currentHero)
@@ -273,6 +285,7 @@ void CheckAdvCheatCode(std::string& chatString)
     } else if (code.compare(DATA_COMPGEN(
                    0x0063a508, advCheatIgnoranceIsBliss,
                    "ajpvtabenaprvfoyvff"))) {
+        cheatUsed = true;
         for (int level = 0; level < gpGame->GetNumMapLevels(); level++)
             gpGame->ResetVisibility(0, 0, level, -1, 200);
         gpGame->ResetAllPlayerVisibility();
@@ -282,20 +295,24 @@ void CheckAdvCheatCode(std::string& chatString)
     } else if (code.compare(DATA_COMPGEN(
                    0x0063a51c, advCheatTheConstruct,
                    "ajpgurpbafgehpg"))) {
+        cheatUsed = true;
         for (int resource = 0; resource < 7; resource++)
             gpCurrentPlayer->resources[resource] +=
                 resource == GOLD ? 100000 : 100;
         gpAdvManager->advWindow->UpdateResourceDisplay(1, 1);
     } else if (code.compare(DATA_COMPGEN(
                    0x0063a52c, advCheatBluePill, "ajpoyhrcvyy"))) {
+        cheatUsed = true;
         CheckEndGame(2);
     } else if (code.compare(DATA_COMPGEN(
                    0x0063a538, advCheatRedPill, "ajperqcvyy"))) {
+        cheatUsed = true;
         CheckEndGame(1);
     } else if (code.compare(DATA_COMPGEN(
                    0x0063a544, advCheatThereIsNoSpoon,
                    "ajpgurervfabfcbba"))
                && currentHero) {
+        cheatUsed = true;
         currentHero->mana = 999;
         if (!currentHero->IsWieldingArtifact(ARTIFACT_SPELLBOOK)) {
             type_artifact spellbook(ARTIFACT_SPELLBOOK, -1);
@@ -306,27 +323,25 @@ void CheckAdvCheatCode(std::string& chatString)
         gpAdvManager->UpdBottomView(1, 1, 1);
     } else if (code.compare(DATA_COMPGEN(
                    0x0063a558, advCheatZion, "ajpmvba"))) {
+        cheatUsed = true;
         gBuildAllBuildings = !gBuildAllBuildings;
     } else if (code.compare(DATA_COMPGEN(
                    0x0063a560, advCheatPhisherPrice,
                    "ajpcuvfurecevpr"))) {
         gGraphicsSaturated = !gGraphicsSaturated;
-        if (gGraphicsSaturated) {
-            ResourceManager::SaturateGraphics();
-            gpAdvManager->RedrawAdvScreen(1, 0);
-        } else {
+        if (!gGraphicsSaturated)
             ResourceManager::RemapGraphics();
-            gpAdvManager->RedrawAdvScreen(1, 0);
-        }
-        return;
-    } else {
-        return;
+        else
+            ResourceManager::SaturateGraphics();
+        gpAdvManager->RedrawAdvScreen(1, 0);
     }
 
-    *chat = (*gpGeneralText)[261];
-    gpGame->field_1f69c = 1;
-    if (gbUnk69774c)
-        gpGame->campaign.isCheater = 1;
+    if (cheatUsed) {
+        chatString = (*gpGeneralText)[261];
+        gpGame->field_1f69c = 1;
+        if (gbUnk69774c)
+            gpGame->campaign.isCheater = 1;
+    }
 }
 
 // Game.h:1439, dc 0x2fa0. Constructor calls from both cheat handlers expand
