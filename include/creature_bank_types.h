@@ -12,12 +12,13 @@
 // +0x38..+0x53; RandomizeEvents' implicit local constructor writes the byte at
 // +0x5c and zeroes the three vector pointers at +0x60/+0x64/+0x68.  The PC
 // vector is four bytes wider than Dreamcast STLport's, which accounts exactly
-// for retail's 108-byte stride against the DC record's 104 bytes. The three
-// alignment bytes before artifacts stay implicit so generated copies skip
-// them.
+// for retail's 108-byte stride against the DC record's 104 bytes. Dreamcast's
+// field record identifies resources as T_INT4[7], which also makes the row's
+// proven AI_resource_cost(const int*) call type-correct. The three alignment
+// bytes before artifacts stay implicit so generated copies skip them.
 struct type_creature_bank {
     armyGroup guards;
-    long resources[7];
+    int resources[7];
     TCreatureType reward_creature;
     signed char reward_creatures;
     std::vector<TArtifact> artifacts;

@@ -1481,7 +1481,6 @@ call	philai.obj	0x10fa84	type_spellvalue::get_summoning_value
 call	philai.obj	0x10fcf0	hero::SpellIsAvailable
 call	philai.obj	0x110574	hero::is_in_spellbook
 call	philai.obj	0x1105ac	ValueOfSpell
-call	philai.obj	0x110808	AI_resource_cost
 call	philai.obj	0x1109b8	generator::get_owner
 call	philai.obj	0x1109b8	type_AI_creature_swapper::get_army_increase
 call	philai.obj	0x111808	hero::get_value_of_knowledge
@@ -1508,16 +1507,6 @@ call	philai.obj	0x11348c	hero::get_value_of_spring
 call	philai.obj	0x113c1c	ExtraInfoUnion::get_university
 call	philai.obj	0x113cbc	ExtraInfoUnion::get_university
 call	philai.obj	0x113da0	ExtraInfoUnion::get_witch_skill
-call	philai.obj	0x113e24	AI_value_of_luck
-call	philai.obj	0x113e24	ExtraInfoUnion::GardenIsFull
-call	philai.obj	0x113e24	ExtraInfoUnion::GetItemId
-call	philai.obj	0x113e24	ExtraInfoUnion::PlayerKnowsCell
-call	philai.obj	0x113e24	ExtraInfoUnion::get_wheel_gold
-call	philai.obj	0x113e24	ExtraInfoUnion::get_windmill_amount
-call	philai.obj	0x113e24	game::OnSameTeam
-call	philai.obj	0x113e24	hero::GetLuck
-call	philai.obj	0x113e24	hero::get_number_in_backpack
-call	philai.obj	0x113e24	max
 call	philai.obj	0x1147ac	game::GetNumMapLevels
 call	philai.obj	0x1147ac	game::get_cell
 call	puzzlewindow.obj	0x1153a8	Bitmap816::GetHeight

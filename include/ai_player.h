@@ -267,6 +267,7 @@ public:
         attack_computer_bonus = computer_bonus;
         attack_human_bonus = human_bonus;
     }
+    long get_magus_hut_value() const { return magus_hut_value; }
     void calculate_demand();                      // 0x428740
     void end_turn();                              // 0x428dd0
     void make_gift(long player_id);               // 0x429110

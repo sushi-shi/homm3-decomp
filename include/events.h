@@ -73,20 +73,6 @@ unsigned char AI_quick_combat(hero* attacking_hero, hero* defending_hero,
 void split_armies(hero* current_hero, const hero* enemy_hero,
                   const armyGroup* enemy);
 
-// The six ordinary artifact pickup conditions plus the defended sentinel.
-// Dreamcast publishes this enum as ArtifactPrices; retail's
-// advManager::DoEventArtifact sign-extends the low four bits and dispatches
-// values 0..5 after testing 6 separately.
-enum ArtifactPrices {
-    const_free_artifact = 0,
-    const_artifact_costs_2000 = 1,
-    const_artifact_requires_wisdom = 2,
-    const_artifact_requires_leadership = 3,
-    const_artifact_costs_2500 = 4,
-    const_artifact_costs_3000 = 5,
-    const_artifact_defended = 6
-};
-
 // Named indices into advevent.txt, the adventure-object text resource
 // events.obj loads through InitializeAdventureEventText (0x49e0e0).
 // Every value is retail-byte-proven by the [Text._First + 4*N] load in
