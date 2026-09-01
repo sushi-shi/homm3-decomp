@@ -1002,58 +1002,40 @@ void combatManager::UpdateArmyGroup(int whichSide)
 // `odd ? 22 : 44`. This body had both as `odd ? 22 : <else>`, so every odd
 // row's field_04/field_08 sat 22 too far right.
 //
-// The three derived coordinates are READ BACK OUT OF THE JUST-STORED
-// MEMBER, not recomputed and not cached in a named local. Retail spells
-// field_0a/field_0c as `lea ecx,[edi+2Ah]` / `[edi+34h]` off the field_06
-// value and field_08 as `add esi,2Ch` off the field_04 value. Written as
-// `y*42+128` / `y*42+138` / `x*44+lower+14+44` they constant-fold into
-// three independent expressions VC6 never re-associates back together;
-// landing them in named locals is WORSE still, because `int top = y*42+86`
-// is an affine function of the outer counter and VC6 strength-reduces it
-// onto its own induction variable (`mov edi,56h` ... `add edi,2Ah` /
-// `cmp edi,224h`) where retail recomputes `y*42` from y every outer
-// iteration. Measured: 58.8421 (folded) -> 54.4868 (named locals) ->
-// 60.3026 (member read-back).
-//
-// Residual (60.3026%): ONE allocation decision. Retail hoists `or ebx,-1`
-// into the outer preheader and feeds all five sentinels from it (`mov
-// [eax+14h],bl` x3, `mov [eax+10h],ebx`), which costs it EBX and pushes y
-// AND the cell pointer into frame slots ([ebp-4], [ebp-8], frame 14h);
-// this compile keeps y in EBX and the pointer in EAX (frame 0Ch) and pays
-// with five -1 immediates. The choice is C2's and the source cannot reach
-// it - tried and rejected, all BYTE-IDENTICAL to the plain form at
-// 60.3026: `cell->field_1a = cell->armySlot = cell->armySide = -1;`
-// (chained, which also yields retail's left-to-right store order), a
-// hoisted `int empty = -1;` fed through `static_cast<signed char>`, and
-// both together; the constant folds back every time. Downstream of the
-// same decision: our base pointer lands at cells+18h against retail's
-// cells+4, which is what pushes four stores onto disp32 encodings.
+// EXACT 2026-09-01. The apparent 60.3026% C2 allocation wall was a missing
+// source fact, not compiler noise. Dreamcast NB11 proves only the named `y`
+// local, keeps RowIsOdd directly inside the field_00/field_04 statements,
+// and orders the seven coordinate statements before the five sentinels and
+// three clears. Restoring that shape makes VC6 hoist the two row expressions,
+// reserve EBX for -1, spill y and the cell cursor, and reproduce all 220
+// retail bytes and all five CFG blocks. The cached upper/lower-offset form is
+// the measured 60.3026% negative control; the fatal source-shape gate also
+// rejects cached offsets, reordered coordinate/state statements, and a
+// loop-scoped y. The member read-backs remain retail-proven: field_08 derives
+// from field_04, while field_0a/field_0c derive from field_06.
 VA(0x004642d0, 0xDC)  // linkorder, dc 0x5eca8
 void combatManager::GenerateMap()
 {
     int y;
     for (y = 0; y < 11; y++) {
-        int upper_offset = RowIsOdd(y) ? 22 : 44;
-        int lower_offset = RowIsOdd(y) ? 0 : 22;
-
         for (int x = 0; x < 17; x++) {
             hexcell* cell = &GetCell(x, y);
+            cell->field_00 = static_cast<short>(
+                x * 44 + (RowIsOdd(y) ? 22 : 44) + 14);
+            cell->field_02 = static_cast<short>(y * 42 + 128);
+            cell->field_04 = static_cast<short>(
+                x * 44 + (RowIsOdd(y) ? 0 : 22) + 14);
             cell->field_06 = static_cast<short>(y * 42 + 86);
+            cell->field_08 = static_cast<short>(cell->field_04 + 44);
+            cell->field_0a = static_cast<short>(cell->field_06 + 42);
+            cell->field_0c = static_cast<short>(cell->field_06 + 52);
             cell->armySide = -1;
             cell->armySlot = -1;
             cell->field_1a = -1;
             cell->field_14 = -1;
-            cell->background_offset = -1;
-            cell->field_00 = static_cast<short>(
-                x * 44 + upper_offset + 14);
-            cell->field_02 = static_cast<short>(y * 42 + 128);
-            cell->field_0a = static_cast<short>(cell->field_06 + 42);
-            cell->field_04 = static_cast<short>(
-                x * 44 + lower_offset + 14);
-            cell->field_0c = static_cast<short>(cell->field_06 + 52);
-            cell->field_08 = static_cast<short>(cell->field_04 + 44);
             cell->field_10 = 0;
             cell->iBodiesInHex = 0;
+            cell->background_offset = -1;
             cell->field_4c = 0;
         }
     }

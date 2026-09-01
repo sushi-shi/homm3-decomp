@@ -5,7 +5,6 @@
 class	recoverable	max_fuzzy	current_fuzzy	size	unit	fn	route	knob
 register-homing (why-reg)	28	41.8750	41.8750	48	remote	??1CNetMsgHandler@@UAE@XZ	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 inliner (predict-inline)	549	46.3642	44.4753	1024	seerhut	?DoSeerEvent@TSeerHut@@QAEXPAVhero@@_N@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 9 over-inline (2 name-unresolvable pair(s) discounted)
-register-homing (why-reg)	87	60.3026	60.3026	220	cmbtmgr	?GenerateMap@combatManager@@QAEXXZ	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 inliner (predict-inline)	417	62.9082	62.5281	1123	ai_player	?hire_heroes@type_AI_player@@QAE_NXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline
 inliner (predict-inline)	1073	63.3242	63.3242	2926	ai_player	?AI_choose_destination@@YIHPAVhero@@JAAUHeroDestination@@AAJEE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 8 over-inline (3 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	210	63.9403	63.9403	581	advmgr	?SetEnvironmentOrigin@advManager@@QAEXUtype_point@@H@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
