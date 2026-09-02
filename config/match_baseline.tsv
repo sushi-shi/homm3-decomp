@@ -30,6 +30,7 @@ adventuremapwindow	?UpdateSpellButton@TAdventureMapWindow@@QAEXPBVhero@@@Z	100.0
 adventuremapwindow	?UpdateTownLocator@TAdventureMapWindow@@QAEXHEE@Z	100.0000	100.0000	100.0000	0x37a0	a6d1d482d25f
 adventuremapwindow	?UpdateTownLocators@TAdventureMapWindow@@QAEXHEE@Z	100.0000	100.0000	100.0000	0x3420	55ffb1262179
 adventuremapwindow	?animate_bottom_view@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x2b90	cfa48a5aa0dc
+adventuremapwindow	?assign@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@PBDI@Z	100.0000	100.0000	100.0000	0x4150	-
 adventuremapwindow	?convertID2HelpID@TAdventureMapWindow@@QBEHH@Z	100.0000	100.0000	100.0000	0x2c50	0bc1aa59310c
 adventuremapwindow	?draw_bottom_view@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x2bc0	34b9d222de8f
 adventuremapwindow	?encode@TCheatCode@@AAEXPBD@Z	100.0000	100.0000	100.0000	0x2a30	f5a608c64fac
@@ -570,8 +571,11 @@ artifact	__h3cg$artifact$static_dtor$artifactSlotStrings	100.0000	100.0000	100.0
 artifact	__h3cg$artifact$static_dtor$artifactStrings	100.0000	100.0000	100.0000	0x4d360	-
 basemgr	??0baseManager@@QAE@XZ	100.0000	100.0000	100.0000	0x4d530	687e8eebaf66
 binkmanager	?RestartBink@BinkManager@@SIXXZ	100.0000	100.0000	100.0000	0x4da50	20d03e6309f1
+bitmap16	??0Bitmap16Bit@@QAE@HH@Z	100.0000	100.0000	100.0000	0x4df70	a4eca84aac08
 bitmap16	??1Bitmap16Bit@@UAE@XZ	100.0000	100.0000	100.0000	0x4e100	7b1ed76e43e8
 bitmap16	??_GBitmap16Bit@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x4e020	-
+bitmap16	?Darken@Bitmap16Bit@@QAEXHHHH@Z	100.0000	100.0000	100.0000	0x4e5f0	e4fb764cccb1
+bitmap16	?FrameRect@Bitmap16Bit@@QAEXHHHHG@Z	100.0000	100.0000	100.0000	0x4e540	dd67b0dc9a43
 bitmap16	?GetSize@Bitmap16Bit@@UBEIXZ	100.0000	100.0000	100.0000	0x4e240	d3be9f706bf7
 bitmap24	??0Bitmap24Bit@@QAE@PBD0@Z	100.0000	100.0000	100.0000	0x4ee00	450f058980a2
 bitmap24	??0Bitmap24Bit@@QAE@PBDHHPBEH@Z	100.0000	100.0000	100.0000	0x4ed50	e44fdba7732a
@@ -634,6 +638,7 @@ bottomviewsubwindow	??1TBottomViewNewTurn@@UAE@XZ	100.0000	100.0000	100.0000	0x5
 bottomviewsubwindow	??1TBottomViewResourceMessage@@UAE@XZ	100.0000	100.0000	100.0000	0x517a0	e06a223069f8
 bottomviewsubwindow	??1TBottomViewTown@@UAE@XZ	100.0000	100.0000	100.0000	0x52b00	bd09da0ac1f4
 bottomviewsubwindow	??1type_bottom_view_window@@UAE@XZ	100.0000	100.0000	100.0000	0x50d50	7bf99d8681a0
+bottomviewsubwindow	??6std@@YAAAV?$basic_ostream@DU?$char_traits@D@std@@@0@AAV10@PBD@Z	100.0000	100.0000	100.0000	0x54450	-
 bottomviewsubwindow	??_Dostrstream@std@@QAEXXZ	100.0000	100.0000	100.0000	0x51750	-
 bottomviewsubwindow	??_GTBottomViewEnemyTurn@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x53640	-
 bottomviewsubwindow	??_GTBottomViewHero@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x52140	-
@@ -649,6 +654,7 @@ bottomviewsubwindow	??_Gtype_bottom_view_window@@UAEPAXI@Z	100.0000	100.0000	100
 bottomviewsubwindow	?animate@TBottomViewEnemyTurn@@UAEXXZ	100.0000	100.0000	100.0000	0x536f0	0e79eeb98cd5
 bottomviewsubwindow	?animate@TBottomViewNewTurn@@UAEXXZ	100.0000	100.0000	100.0000	0x511a0	a5b26fc67c45
 bottomviewsubwindow	?put@?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEAAV12@D@Z	100.0000	100.0000	100.0000	0x53dd0	-
+bottomviewsubwindow	?xsputn@?$basic_streambuf@DU?$char_traits@D@std@@@std@@MAEHPBDH@Z	100.0000	100.0000	100.0000	0x54150	-
 button	??0button@@QAE@HHHHHPBDHHEHH@Z	100.0000	100.0000	100.0000	0x55ef0	a60516324f5e
 button	??0textButton@@QAE@HHHHHPBD00HHEHHH@Z	88.4400	88.4400	88.4400	0x56a50	2e99aa88dd86
 button	??0type_func_button@@QAE@JJJJJPBDP6IHAAVmessage@@@ZHH@Z	100.0000	100.0000	100.0000	0x56d30	08a3745f01c2
@@ -667,6 +673,7 @@ button	?SetPlayerPaletteColors@button@@QAEXH@Z	100.0000	100.0000	100.0000	0x569e
 button	?_vslot12@button@@UAEXH@Z	100.0000	100.0000	100.0000	0x56a10	fa786de27cd0
 campaignbrief	??1TCampaignBrief@@UAE@XZ	100.0000	100.0000	100.0000	0x5afb0	d4c0d4a6ee48
 campaignbrief	??_GTCampaignBrief@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x5ae40	-
+campaignbrief	?_Inc@const_iterator@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x5d370	-
 campaignbrief	__h3cg$campaignbrief$implicit_dtor$NewSMapHeader	0.0000	100.0000	100.0000	0x5ad00	-
 campaignmap	?InitializeCampaignMapTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0x5dee0	4134d1efefe4
 campaignmap	__h3cg$campaignmap$static_dtor$campaignNames	100.0000	100.0000	100.0000	0x5e1f0	-
@@ -925,6 +932,8 @@ cursor	advManager_ValidMoveWithEvent	0.0000	0.0000	0.0000	0x81ad0	dee616486353
 cursor	advManager_animate_move	0.0000	0.0000	0.0000	0x80380	95e2e7d2eff8
 cursor	advManager_end_move_hero	0.0000	0.0000	0.0000	0x80090	ec60b3be722c
 cursor	advManager_handle_stop_on_trigger	0.0000	0.0000	0.0000	0x80240	500fe2e77a59
+customcampaign	?_Insertion_sort_1@std@@YIXPAPAX0VCampaignHeaderPointerLess@@0@Z	100.0000	100.0000	100.0000	0x83aa0	-
+customcampaign	?erase@?$vector@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@V?$allocator@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@@2@@std@@QAEPAV?$vector@Vhero@@V?$allocator@Vhero@@@std@@@2@PAV32@0@Z	100.0000	100.0000	100.0000	0x8c500	-
 customcampaign	?get_score@SCampaign@@QBEHXZ	100.0000	100.0000	100.0000	0x8b200	7000f32081c7
 customcampaign	?get_total_time@SCampaign@@QBEHXZ	100.0000	100.0000	100.0000	0x8b280	e320ba64afbf
 deflate	@deflate@8	100.0000	100.0000	100.0000	0x204ac0	-
@@ -1505,6 +1514,7 @@ game	?_Destroy@?$vector@UTRumour@game@@V?$allocator@UTRumour@game@@@std@@@std@@I
 game	?_Destroy@?$vector@Utype_creature_bank@@V?$allocator@Utype_creature_bank@@@std@@@std@@IAEXPAUtype_creature_bank@@0@Z	100.0000	100.0000	100.0000	0xd13b0	-
 game	?_Destroy@?$vector@Utype_map_hero_identity@@V?$allocator@Utype_map_hero_identity@@@std@@@std@@IAEXPAUtype_map_hero_identity@@0@Z	100.0000	100.0000	100.0000	0xcfec0	-
 game	?_Destroy@?$vector@Vtown@@V?$allocator@Vtown@@@std@@@std@@IAEXPAVtown@@0@Z	100.0000	100.0000	100.0000	0xd07c0	-
+game	?_Inc@const_iterator@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@U_Kfn@?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@3@U?$less@PAVCImmEnclosure@@@3@V?$allocator@UtagRECT@@@3@@std@@QAEXXZ	100.0000	100.0000	100.0000	0xb7330	-
 game	?_Insert@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@IAE?AViterator@12@PAU_Node@12@0ABU?$pair@$$CBHUtype_map_hero_info@@@2@@Z	100.0000	100.0000	100.0000	0xd1d50	-
 game	?_Min@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@KIPAU_Node@12@PAU312@@Z	100.0000	100.0000	100.0000	0xd2050	-
 game	?_Tidy@?$bitset@$04@std@@AAEXK@Z	100.0000	100.0000	100.0000	0xd1790	-
@@ -2910,6 +2920,8 @@ slider	?SetState@slider@@UAEXH@Z	100.0000	100.0000	100.0000	0x1961e0	865d5534b3b
 slider	?UpdateResolution@slider@@UAEXH@Z	100.0000	100.0000	100.0000	0x1970b0	de523f66917e
 slider	?enable@slider@@UAEXE@Z	100.0000	100.0000	100.0000	0x197140	09ea1f3d7a32
 slider	?initialize@slider@@IAEXPBD@Z	100.0000	100.0000	100.0000	0x196050	aa3ab5eb7c34
+smackmgr	?DeleteSoundHeaders@@YIXXZ	100.0000	100.0000	100.0000	0x1986e0	0a3016c080b2
+smackmgr	?SetPixelFormat@SmackManager@@YIXKKK@Z	100.0000	100.0000	100.0000	0x198a40	69d2b1564ad6
 smackmgr	?VideoClose@@YIXXZ	95.9231	95.9231	95.9231	0x1975f0	ca01a06f3f34
 smackmgr	?VideoDrawCurrentFrame@@YIXXZ	100.0000	100.0000	100.0000	0x197740	64f4bb33e498
 smackmgr	?VideoDrawRects@@YIXXZ	89.6347	89.6347	89.6347	0x1979d0	7798c771e248

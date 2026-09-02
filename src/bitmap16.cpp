@@ -108,6 +108,38 @@ void Bitmap16Bit::FrameRect(int x, int y, int w, int h,
     }
 }
 
+// E:\gamedcs\bitmap16.cpp:742. Dreamcast (dc 0x51614) proves the clipped
+// rectangle, one GetMap expression, RGB shift-mask construction, and nested
+// row/pixel loops. Complete inlines GetMap and independently fixes Pitch as
+// a byte stride; the resulting 0xA4-byte body is exact.
+VA(0x0044E5F0, 0xA4)
+void Bitmap16Bit::Darken(int x, int y, int w, int h)
+{
+    if (w > Width - x)
+        w = Width - x;
+    if (h > Height - y)
+        h = Height - y;
+
+    if (w && h) {
+        unsigned long shift_mask =
+            ((gColorMaskRed >> 1) & gColorMaskRed)
+            | ((gColorMaskGreen >> 1) & gColorMaskGreen)
+            | ((gColorMaskBlue >> 1) & gColorMaskBlue);
+        Bitmap16MapPointer row;
+        row.pixels = GetMap(x, y);
+
+        for (int iy = 0; iy < h; ++iy) {
+            Bitmap16MapPointer pixel = row;
+            for (int ix = 0; ix < w; ++ix) {
+                *pixel.pixels = static_cast<unsigned short>(
+                    (*pixel.pixels >> 1) & shift_mask);
+                ++pixel.pixels;
+            }
+            row.bytes += Pitch;
+        }
+    }
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\bitmap16.cpp:224
@@ -193,13 +225,6 @@ void Bitmap16Bit::Grab(const unsigned short* src, int sx, int sy, int sw, int sh
 // RETAIL_LOCATED(0x0044e4c0, 0x7D): anchor-global, not reconstructed.
 DC_ONLY(0x5150c, 0x7D)
 void Bitmap16Bit::FillRect(int x, int y, int w, int h, unsigned short color)
-{
-    // @stub
-}
-
-// E:\gamedcs\bitmap16.cpp:742
-DC_ONLY(0x51614, 0x94)
-void Bitmap16Bit::Darken(int x, int y, int w, int h)
 {
     // @stub
 }
