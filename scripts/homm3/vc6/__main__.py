@@ -121,9 +121,12 @@ def _build_parser() -> argparse.ArgumentParser:
     pr.add_argument("--unit")
     pr.add_argument("--limit", type=int)
 
-    pq = ss.add_parser("queue", help="tree-wide wall census: sweep diagnose "
-                       "over unfinished fns, rank hardest-first by MAX")
+    pq = ss.add_parser("queue", help="admission-first function queue; use "
+                       "--polish for the deferred MAX-ranked wall census")
     pq.add_argument("--unit", help="restrict to a comma-separated unit list")
+    pq.add_argument("--polish", action="store_true",
+                    help="deferred campaign: diagnose admitted non-exact "
+                         "functions and rank by effective MAX")
     pq.add_argument("--quiet", action="store_true")
 
     pc = ss.add_parser("check", help="the model gates (with negative controls)")
