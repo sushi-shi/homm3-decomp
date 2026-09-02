@@ -609,6 +609,9 @@ enum EAdvCommand {
 //   0x6968e0  the live walk-sample handle soundManager::MemorySample
 //             returns for the step the route walker is about to take.
 DATA(0x006968e0) extern ds_memsample* gUnnamed6968e0;
+//   0x6968e4  the resource-side walk sample paired with that live handle;
+//             StopCursor clears both after stopping the handle.
+DATA(0x006968e4) extern sample* gUnnamed6968e4;
 //   0x69777c  breaks the route step loop when nonzero.
 DATA(0x0069777c) extern int gUnnamed69777c;
 //   0x698774  suppresses the route teardown and forces ShowRoute
