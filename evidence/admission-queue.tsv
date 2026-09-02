@@ -2,7 +2,6 @@
 # Admission campaign only; sorted by retail size descending.
 # Use `homm3 vc6 queue --polish` only after admission.
 state	size	rva	relation	owner	candidates	label	action
-carcass	7671	0x17d170	in-span	singleselectionwindow	singleselectionwindow	TSingleSelectionWindow_CreateFilterWidgets	enable the existing VA claim and reconstruct its body
 bracketed	7172	0xee3e0	bracketed	inputmgr..kb	inputmgr,kb	calls_MessageBoxA_ee3e0	resolve the owner, then add its VA claim and body
 bracketed	5926	0x1fa600	bracketed	viewarmywindow..viewwrld	viewarmywindow,viewwrld	game_vworld_pcx_1fa600	resolve the owner, then add its VA claim and body
 bracketed	4936	0xf15e0	bracketed	inputmgr..kb	inputmgr,kb	game_you_have_defeated_all_of_f15e0	resolve the owner, then add its VA claim and body
@@ -139,7 +138,6 @@ bracketed	943	0x117dd0	bracketed	newgame..overview	newgame,overview	game_missing
 bracketed	941	0x5c960	bracketed	campaignbrief..campaignmap	campaignbrief,campaignmap	game_590c0_sub13_5c960	resolve the owner, then add its VA claim and body
 bracketed	933	0xb5b90	bracketed	font..game	font,game	font_FillLinesVector	resolve the owner, then add its VA claim and body
 bracketed	929	0x54f20	bracketed	bottomviewsubwindow..button	bottomviewsubwindow,button	game_missing_locale_facet_54f20	resolve the owner, then add its VA claim and body
-bracketed	916	0x1693a0	bracketed	sample..scenarioinfo	sample,scenarioinfo	sample_vslot04	resolve the owner, then add its VA claim and body
 bracketed	915	0x119d70	bracketed	newgame..overview	newgame,overview	game_n0123456789abcdefabcdef_119d70	resolve the owner, then add its VA claim and body
 bracketed	908	0x1921e0	bracketed	singleselectionwindow..slider	singleselectionwindow,slider	game_autosave_1921e0	resolve the owner, then add its VA claim and body
 bracketed	907	0x1f95b0	bracketed	viewarmywindow..viewwrld	viewarmywindow,viewwrld	game_1fc4c0_sub04_1f95b0	resolve the owner, then add its VA claim and body
@@ -940,7 +938,6 @@ bracketed	87	0x1b7fc0	bracketed	systemoptionswindow..text	systemoptionswindow,te
 bracketed	86	0x84cf0	bracketed	cursor..customcampaign	cursor,customcampaign	game_85190_sub05_84cf0	resolve the owner, then add its VA claim and body
 bracketed	86	0xb7080	bracketed	font..game	font,game	game_b6260_sub04_b7080	resolve the owner, then add its VA claim and body
 bracketed	86	0x16bed0	bracketed	search..seerhut	search,seerhut	game_16bde0_sub00_16bed0	resolve the owner, then add its VA claim and body
-bracketed	85	0x169770	bracketed	sample..scenarioinfo	sample,scenarioinfo	game_169740_sub00_169770	resolve the owner, then add its VA claim and body
 bracketed	85	0x198440	bracketed	smackmgr..soundmgr	smackmgr,soundmgr	game_f3690_sub08_198440	resolve the owner, then add its VA claim and body
 bracketed	85	0x1b93f0	bracketed	text..textntry	text,textntry	game_skilllev_txt_1b93f0	resolve the owner, then add its VA claim and body
 bracketed	84	0x11b8b0	bracketed	newgame..overview	newgame,overview	game_11af50_sub03_11b8b0	resolve the owner, then add its VA claim and body
@@ -1292,7 +1289,6 @@ bracketed	33	0x15db10	bracketed	resourcemanager..sacrifice_window	resourcemanage
 bracketed	33	0x15e540	bracketed	resourcemanager..sacrifice_window	resourcemanager,ressw,sacrifice_window	game_15e440_sub00_15e540	resolve the owner, then add its VA claim and body
 bracketed	33	0x15eed0	bracketed	resourcemanager..sacrifice_window	resourcemanager,ressw,sacrifice_window	game_15eed0	resolve the owner, then add its VA claim and body
 bracketed	33	0x15f430	bracketed	resourcemanager..sacrifice_window	resourcemanager,ressw,sacrifice_window	game_15f430	resolve the owner, then add its VA claim and body
-bracketed	33	0x169740	bracketed	sample..scenarioinfo	sample,scenarioinfo	sample_vslot00	resolve the owner, then add its VA claim and body
 bracketed	33	0x177090	bracketed	singleselectionpopups..singleselectionwindow	singleselectionpopups,singleselectionwindow	game_177090	resolve the owner, then add its VA claim and body
 carcass	33	0x183ec0	in-span	singleselectionwindow	singleselectionwindow	__h3cg$singleselectionwindow$scalar_deleting_dtor$CNewPlayerUpdateTask	enable the existing VA claim and reconstruct its body
 bracketed	33	0x18eab0	bracketed	singleselectionwindow..slider	singleselectionwindow,slider	game_179960_sub22_18eab0	resolve the owner, then add its VA claim and body
