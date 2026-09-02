@@ -61,5 +61,47 @@ class BankedMaxRouting(unittest.TestCase):
         self.assertEqual(undiffable, [("unit", "?claimed@@YAXXZ", 12)])
 
 
+class AdmissionRouting(unittest.TestCase):
+
+    def test_default_queue_excludes_every_admitted_source_body(self):
+        # NEGATIVE CONTROL: the admission campaign must not spend time on a
+        # scored residual or on a mangled body objdiff merely cannot score.
+        data = _report(
+            {"name": "flat_carve", "size": 100},
+            {"name": "?undiffable@@YAXXZ", "size": 90},
+            {"name": "?residual@@YAXXZ", "size": 80,
+             "fuzzy_match_percent": 12.0},
+        )
+        baseline = "\n".join((
+            "unit\tflat_carve\t0\t0\t0\t0x100\t-",
+            "unit\t?undiffable@@YAXXZ\t0\t0\t0\t0x200\t-",
+            "unit\t?residual@@YAXXZ\t12\t12\t12\t0x300\t-",
+        ))
+        links = "\n".join((
+            "rva\tsize\trelation\towner_or_bracket\tcandidates\tlabel",
+            "0x100\t100\tin-span\tunit\tunit\tflat_carve",
+            "0x400\t1000\tbracketed\ta..b\ta,b\tnew_largest",
+            "0x500\t2000\tin-span\truntime\truntime\tnot_a_target",
+        ))
+        category = {0x100: "target", 0x200: "target", 0x300: "target",
+                    0x400: "target", 0x500: "runtime"}
+        sizes = {0x100: 100, 0x200: 90, 0x300: 80,
+                 0x400: 1000, 0x500: 2000}
+        rows = queue._admission_rows_from_text(
+            data, baseline, links, category, sizes)
+        self.assertEqual([r["rva"] for r in rows], [0x400, 0x100])
+        self.assertEqual(rows[0]["state"], "bracketed")
+        self.assertEqual(rows[1]["state"], "carcass")
+
+    def test_admission_queue_is_largest_first(self):
+        rows = queue._admission_rows_from_text(
+            _report(), "",
+            "rva\tsize\trelation\towner_or_bracket\tcandidates\tlabel\n"
+            "0x10\t10\tunmapped\t\t\tshort\n"
+            "0x20\t20\tunmapped\t\t\tlong",
+            {0x10: "target", 0x20: "target"}, {0x10: 10, 0x20: 20})
+        self.assertEqual([r["rva"] for r in rows], [0x20, 0x10])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -101,8 +101,10 @@ blast radius is not a reason to avoid an evidence-backed class or
 interface correction: max/history exists to bank the including-TU dips while the coherent
 header state is carried forward. Measure and document that collateral, but do not restore
 a source-false declaration merely to recover a current exact count.
-`homm3 vc6 queue` enforces this operationally: it sorts unfinished work by ascending
-effective MAX and excludes every banked-exact current dip from actionable routing.
+`homm3 vc6 queue` is admission-first: it ranks functions that have no diffable compiled
+body by retail size, largest first. Do not polish already admitted functions until this
+queue is empty. The deferred `homm3 vc6 queue --polish` campaign sorts admitted unfinished
+work by ascending effective MAX and excludes every banked-exact current dip.
 
 This remains a cross-architecture, older-revision source oracle, **not a second byte
 target**. A missing Dreamcast statement or call never proves retail lacks it, and
@@ -201,8 +203,8 @@ a score regression only when that source hash changed and its score fell from th
 current checkpoint. An unchanged function is never reported as a drop, even when header/TU
 optimizer state or a delink-generation change moves its current score below MAX. A changed
 function that improves while still below MAX is also not a drop. Unattributable functions
-are unknown, not edited. The banked MAX remains monotone and is the work-order frontier used
-by `homm3 vc6 queue`.
+are unknown, not edited. The banked MAX remains monotone and is the later polish frontier
+used by `homm3 vc6 queue --polish`; it does not displace the current admission-first queue.
 
 ## Tooling layout
 
