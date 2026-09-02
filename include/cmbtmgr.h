@@ -1438,7 +1438,6 @@ public:
     int DrawWall(const Bitmap816* image, int x, int y, int width, int height,
                  int destX, int destY);
     int DrawObject(const Bitmap816* image, int x, int y);
-    int DrawObstacle(const hexcell& cell);
     int DrawMoatOverlay(int index);
     void DrawOccupant(int index, int iDrawPriority, int bNumBoxOnly);
     void DrawDeadOccupants(int index);
@@ -1474,6 +1473,10 @@ public:
     // common three-argument clip/draw body at 0x4958e0 settles the identity.
     int DrawObject(const Bitmap816* image, int x, int y);
 #endif
+    // Dreamcast drawing.cpp:1568 and spells.cpp:1643 both retain this
+    // boundary. Complete likewise calls the same out-of-line body from
+    // CastSpell's Remove Obstacle arm, so it is not drawing-TU-only.
+    int DrawObstacle(const hexcell& cell);
     // The three missile animators. Every pointer parameter's constness
     // is read off the DC S_PUB32 mangling rather than guessed:
     // ?ShootMissile@combatManager@@QAAXHHHHPBMPBVCSprite@@@Z gives
@@ -2011,6 +2014,11 @@ public:
     // good-enough callee - the reloc pairs).
     void Resurrect(army* target_army, long hit_points_resurrected,
                    unsigned char temporary);
+    // Dreamcast spells.cpp:4984. Complete has no separate retail body:
+    // VC6 expands this source helper into CastSpell's shared
+    // Resurrection/Animate Dead arm.
+    inline void Resurrect(SpellID spell, int target_hex, int power,
+                          int mastery, const hero* casting_hero);
     // The three cells a WALL spell occupies, in the order
     // ValidSpellTarget (0x5a39c0) walks them: the aimed hex, then the
     // one a row above it (with a parity nudge that keeps the wall
@@ -2311,6 +2319,10 @@ public:
         SPELL_CASTER_CREATURE = 1,
         SPELL_CASTER_ARTIFACT = 2
     };
+    // Dreamcast spells.cpp:5041 emits this inline helper separately;
+    // Complete VC6 expands its only surviving call into CastSpell's
+    // failure path at +0x2159.
+    inline void ShowSpellCastFailure(army* targetArmy, int spellId);
     void ShowSpellMessage(int bIsMonsterSpell, SpellID spellId,
                           army* targetArmy);                   // 0x5a8950
     // 0x468990, cmbtmgr.obj's own. DC cmbtmgr.cpp:4158 spells it
@@ -2328,6 +2340,18 @@ public:
     // PowEffect's own body.
     enum TSpellEffectID {
         eSpellEffectFireShield = 11,
+        // Dreamcast's TSpellEffectID table and CastSpell's Berserk arm
+        // both fix the mass-animation row to 35.
+        eSpellEffectBerserk = 35,
+        // Dreamcast enum table and CastSpell's retail Sacrifice arm agree:
+        // effect 51 is the slaying flash over the sacrificed stack.
+        eSpellEffectSacrifice_Slay = 51,
+        // Dreamcast spells.cpp:1788..1792 names these three effect rows;
+        // Complete's CastSpell tail independently pushes 76, 75, and 78
+        // for the channel-spew, channel-suck, and resisted-spell flashes.
+        eSpellEffectMagicChannel_Suck = 75,
+        eSpellEffectMagicChannel_Spew = 76,
+        eSpellEffectMagicResistance = 78,
         // Dreamcast TSpellEffectID.eSpellEffectFortune = 18; retail
         // proves the number at army::do_attack (0x441610), which hands
         // it to SpellEffect as the good-luck sparkle over the striking

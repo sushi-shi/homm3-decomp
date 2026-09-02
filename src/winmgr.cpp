@@ -634,8 +634,7 @@ void heroWindowManager::SaveFizzleSource(int startX, int startY, int width, int 
 }
 
 // E:\gamedcs\winmgr.cpp:1125
-// RETAIL_LOCATED 0x00602cc0, 0xF2 - see winmgr.h.
-DC_ONLY(0x19b5c0, 0xAA)
+VA(0x00602cc0, 0xF2)  // anchor-callee + exhaustive tail order, dc 0x19b5c0
 void heroWindowManager::SaveFizzleSourceX(int startX, int startY, int width, int height)
 {
     // @stub
@@ -649,8 +648,7 @@ void heroWindowManager::FizzleForward(int startX, int startY, int width, int hei
 }
 
 // E:\gamedcs\winmgr.cpp:1314
-// RETAIL_LOCATED 0x00602dc0, 0x2F7 - see winmgr.h.
-DC_ONLY(0x19b8fc, 0x2AA)
+VA(0x00602dc0, 0x2F7)  // anchor-import + exhaustive tail order, dc 0x19b8fc
 void heroWindowManager::FizzleForwardX(int startX, int startY, int width, int height, int iFadeTime)
 {
     // @stub

@@ -265,35 +265,33 @@ public:
     // bShowRangeFrames from the current sequence, picks iNextFrameType
     // (-1 = nothing to play), loads iRemainingFramesToPlay out of
     // CSprite::GetNumFrames and raises iDrawPriority to at least 5; its
-    // animation loop then drives all five. They arrive as their own view
-    // rather than by widening the move view because that one carries
-    // twenty declarators cmbtmgr.obj has no use for.
+    // animation loop then drives all five. bShowAttackFrames and
+    // iDrawPriority are now canonical: CastSpell's shared post-cast walk
+    // independently writes both, so hiding either behind a TU view would
+    // discard proven class structure merely to preserve optimizer state.
+    unsigned char bShowAttackFrames;     // +0x00
 #ifdef HOMM3_ARMY_COPY_VIEW
     // The retained copy proves these five animation-state bytes and the
     // byte at +0x0c are independent members: retail copies each one and
     // leaves their alignment bytes untouched.
-    unsigned char bShowAttackFrames;     // +0x00
     unsigned char bShowRangeFrames;      // +0x01
     signed char iShowAttackFrameType;    // +0x02
     signed char iNextFrameType;          // +0x03
     signed char iRemainingFramesToPlay;  // +0x04
-    int iDrawPriority;                   // +0x08
-    unsigned char field_0c;              // +0x0c
 #elif defined(HOMM3_ARMY_POW_VIEW)
-    unsigned char bShowAttackFrames;     // +0x00
     unsigned char bShowRangeFrames;      // +0x01
     signed char iShowAttackFrameType;    // +0x02
     signed char iNextFrameType;          // +0x03
     signed char iRemainingFramesToPlay;  // +0x04
     char pad_05[0x3];
-    int iDrawPriority;            // +0x08
-    char pad_0c[0x4];
-#elif defined(HOMM3_ARMY_MOVE_VIEW)
-    char pad_00[0x8];
-    int iDrawPriority;            // +0x08
-    char pad_0c[0x4];
 #else
-    char pad_00[0x10];
+    char pad_01[0x7];
+#endif
+    int iDrawPriority;                   // +0x08
+#ifdef HOMM3_ARMY_COPY_VIEW
+    unsigned char field_0c;              // +0x0c
+#else
+    char pad_0c[0x4];
 #endif
     // Grid identity, byte-proven by ValidAttack (0x523bb0): the target
     // hexcell's armySide/armySlot pair compares against these.

@@ -92,11 +92,10 @@ const unsigned int AI_SPELL_ENCHANTMENT = 0x40000;
 const unsigned int AI_SPELL_RESURRECTION = 0x80000;
 const unsigned int AI_SPELL_CLASS_MASK = 0x1f8000;
 
-// Retail uniquely proves both roles in cast_spell: artifact 0x53 suppresses
-// level-3+ magic on either side (Recanter's Cloak), and living creature 0x2b
-// channels one fifth of the spent mana to its hero (Familiar).
+// Retail uniquely proves artifact 0x53 suppresses level-3+ magic on either
+// side (Recanter's Cloak). Familiar's 0x2b identity is now shared through
+// TCreatureType: CastSpell and this AI projection independently prove it.
 const int ARTIFACT_RECANTERS_CLOAK = 0x53;
-const int CREATURE_FAMILIAR = 0x2b;
 const int SECONDARY_SKILL_WISDOM = 7;
 const int SECONDARY_SKILL_SIEGE_BALLISTICS = 10;
 const int SECONDARY_SKILL_EAGLE_EYE = 11;

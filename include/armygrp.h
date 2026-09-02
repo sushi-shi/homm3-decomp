@@ -59,6 +59,11 @@ enum TCreatureType {
     // enemy-luck special).
     CREATURE_DEVIL = 0x36,
     CREATURE_ARCH_DEVIL = 0x37,
+    // Complete CastSpell's post-cast mana-channel walk compares every
+    // opposing stack against 0x2b before returning one fifth of the mana
+    // cost to the opposing hero. Dreamcast spells.cpp:1764 independently
+    // names the same source comparison as Familiar.
+    CREATURE_FAMILIAR = 0x2b,
     // Proven by GetMorale's two inlined IsMember scans: 0xc/0xd in the
     // OWN group add +1 morale (0x44af9c) and 0x44/0x45 in the ENEMY
     // group subtract 1 (0x44afd1) - exactly the Angel/Archangel and

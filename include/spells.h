@@ -87,6 +87,8 @@ extern unsigned char gBoltSpectrumColors[15][3];
 // CODEVIEW(E:\gamedcs\spells.cpp:4888, dc 0x156840) void combatManager::Resurrect(army* target_army, long hit_points_resurrected, unsigned char temporary);
 // CODEVIEW(E:\gamedcs\spells.cpp:4984, dc 0x156a68) void combatManager::Resurrect(SpellID spell, int target_hex, int power, TSkillMastery mastery, const hero* casting_hero);
 // CODEVIEW(E:\gamedcs\spells.cpp:5041, dc 0x156aec) void combatManager::ShowSpellCastFailure(army* targetArmy, int spellId);
+// Complete expands this helper into CastSpell's failure path while Dreamcast
+// also emits the standalone inline body.
 // CODEVIEW(E:\gamedcs\spells.cpp:5065, dc 0x156b94) int combatManager::ComputeSpellDamage(SpellID id, int power, int spell_level, const hero* casting_hero, const hero* affected_hero, const army* target_army, unsigned char print_result);
 // CODEVIEW(E:\gamedcs\spells.cpp:5086, dc 0x156c30) int combatManager::ModifySpellDamage(int base_damage, int iSpellType, const hero* castingHero, const hero* affectedHero, const army* targetArmy, unsigned char print_result);
 // CODEVIEW(E:\gamedcs\spells.cpp:5134, dc 0x156dc4) int combatManager::ModifySpellDamageForSpells(int damage, int iSpellType, const army* targetArmy);
