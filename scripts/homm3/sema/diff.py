@@ -10,13 +10,18 @@ the flat asm diff is the opt-in):
   (default)   block-skeleton diff: one row per block, FLOW/SIZE marks,
               five-way census, first branch-kind divergence
   --structure explicit spelling of the default block-skeleton diff
-  --verbose   block-aligned body diff (per-block unified diffs)
   --asm       flat masked unified asm diff (the old sibling default)
   --branches  the ordered conditional-branch comparison the masked views
               structurally cannot show (SIGNEDNESS/POLARITY/OTHER/
               TOPOLOGY)
   --source    block/instruction alignment grouped beneath verified candidate
-              /Z7 source statements; metadata is attached after comparison
+              /Z7 source statements; metadata is attached after comparison.
+              A compiler-generated body (no /Z7 statements) falls back to
+              the block-skeleton diff with a note instead of failing.
+  --verbose   more of the chosen view: block bodies for the default and
+              --structure, the whole listing as context for --asm, both
+              branch sequences for --branches, unchanged statement groups
+              expanded for --source
 
 rc: 0 = the requested VIEW found no difference, 1 = it did, 2 = error.
 The default skeleton compares flow shape + block sizes ONLY - a
@@ -215,8 +220,9 @@ def _branches_compare(bi, ti, max_flips: int = 4) -> dict:
     return res
 
 
-def _branch_view(ctx, rva, name, unit, ordinal) -> int:
-    """Render the branch-sequence comparison of the two sides."""
+def _branch_view(ctx, rva, name, unit, ordinal, verbose: bool = False) -> int:
+    """Render the branch-sequence comparison of the two sides; --verbose
+    appends both full branch sequences after the verdict."""
     def trunc_note(side, insns):
         at = _first_bad(insns)
         if at is not None:
@@ -233,6 +239,13 @@ def _branch_view(ctx, rva, name, unit, ordinal) -> int:
           "shift compares EQUAL and a genuine retarget does not]")
     bstop, tstop = trunc_note("base", bi), trunc_note("target", ti)
     res = _branches_compare(bi, ti)
+    if verbose:
+        for side, seq in (("base", _branch_seq(bi, bstop)),
+                          ("target", _branch_seq(ti, tstop))):
+            print(f"  {side} branch sequence ({len(seq)}):")
+            for i, (off, mn, target) in enumerate(seq):
+                where = f"-> +{target:03x}" if target is not None else "-> <ext>"
+                print(f"    #{i:<3} +{off:03x} {mn:<5} {where}")
     br, tr = res["rets"]
     dup = ("  DUP-EXIT (we duplicate an exit retail merges - respell the "
            "gate)" if br > tr else
@@ -341,7 +354,8 @@ def _statement_groups(rows, source_map, origin: int):
 
 
 def _render_source_block(out, block_number, base_block, target_block,
-                         source_map, origin, first_changed):
+                         source_map, origin, first_changed,
+                         verbose: bool = False):
     base_addr, base_body, base_term = base_block
     target_addr, target_body, target_term = target_block
     rows = _aligned_instruction_rows(base_body, target_body)
@@ -364,7 +378,7 @@ def _render_source_block(out, block_number, base_block, target_block,
             out.append("    ; !! [no candidate source statement]"
                        if group_changed else
                        "    ; [no candidate source statement]")
-        if not group_changed:
+        if not group_changed and not verbose:
             out.append(f"      == {len(grouped_rows)} instruction(s)")
             continue
         for kind, _anchor, base_text, target_text in grouped_rows:
@@ -382,8 +396,10 @@ def _render_source_block(out, block_number, base_block, target_block,
                            f"target [{target_text}]")
 
 
-def _source_diff(base_text: str, target_text: str, source_map) -> tuple[str, bool]:
-    """Statement-grouped block diff; comments are attached after alignment."""
+def _source_diff(base_text: str, target_text: str, source_map,
+                 verbose: bool = False) -> tuple[str, bool]:
+    """Statement-grouped block diff; comments are attached after alignment.
+    --verbose expands the unchanged statement groups too."""
     import difflib
 
     base_cfg = _asm.cfg_rows(base_text)
@@ -405,7 +421,8 @@ def _source_diff(base_text: str, target_text: str, source_map) -> tuple[str, boo
             for offset in range(i2 - i1):
                 _render_source_block(
                     out, display_block, base_cfg[i1 + offset],
-                    target_cfg[j1 + offset], source_map, origin, first_changed)
+                    target_cfg[j1 + offset], source_map, origin, first_changed,
+                    verbose)
                 display_block += 1
             continue
         for offset in range(max(i2 - i1, j2 - j1)):
@@ -414,13 +431,13 @@ def _source_diff(base_text: str, target_text: str, source_map) -> tuple[str, boo
             if bi is not None and ti is not None:
                 _render_source_block(
                     out, display_block, base_cfg[bi], target_cfg[ti],
-                    source_map, origin, first_changed)
+                    source_map, origin, first_changed, verbose)
             elif bi is not None:
                 address, body, term = base_cfg[bi]
                 empty = (address, [], None)
                 _render_source_block(
                     out, display_block, (address, body, term), empty,
-                    source_map, origin, first_changed)
+                    source_map, origin, first_changed, verbose)
             else:
                 address, body, term = target_cfg[ti]
                 out.append(f"  B{display_block} @{address:x} TARGET-ONLY:")
@@ -447,13 +464,8 @@ def run(args) -> None:
         die(f"{name} [{unit or 'no unit'}] has no comparison objects - only "
             "delinked manifest units (config/units.toml) can diff; "
             "`homm3 sema disasm` views any retail function")
-    if args.verbose and (args.structure or args.asm or args.branches
-                         or args.source):
-        die("--verbose modifies the default block diff; --asm and "
-            "--structure/--branches/--source each have one rendering")
-
     if args.branches:
-        sys.exit(_branch_view(ctx, rva, name, unit, ordinal))
+        sys.exit(_branch_view(ctx, rva, name, unit, ordinal, args.verbose))
 
     base_text = _asm.objdump(normal_base, name, ordinal)
     target_text = _asm.objdump(normal_target, name, ordinal)
@@ -462,11 +474,17 @@ def run(args) -> None:
         try:
             source_map = source_view.load(
                 unit, name, ordinal, _asm.BASE / f"{unit}.obj")
+        except source_view.NoLineRecords as exc:
+            print(f"[{exc}]")
+            print("[no statements to label - showing the block-structure "
+                  "diff instead; --branches carries the in-block signal]")
         except source_view.SourceError as exc:
             die(str(exc))
-        output, exact = _source_diff(base_text, target_text, source_map)
-        print(output, end="")
-        sys.exit(0 if exact else 1)
+        else:
+            output, exact = _source_diff(base_text, target_text, source_map,
+                                         args.verbose)
+            print(output, end="")
+            sys.exit(0 if exact else 1)
 
     if args.asm:
         import difflib
@@ -478,9 +496,11 @@ def run(args) -> None:
             _hint_branches(ctx, rva, name, unit)
             sys.exit(0)
         print(f"[asm diff: BASE (compiled) vs TARGET (retail) @ 0x{rva:08x} "
-              f"{name}; addresses masked as <addr>]")
+              f"{name}; addresses masked as <addr>"
+              f"{'; full listing as context' if args.verbose else ''}]")
+        context = max(len(base), len(target)) if args.verbose else 3
         for ln in difflib.unified_diff(base, target, "base", "target",
-                                       lineterm=""):
+                                       n=context, lineterm=""):
             print(ln)
         sys.exit(1)
 

@@ -53,6 +53,21 @@ class SourceMapTest(unittest.TestCase):
         self.assertIn("; src/unit.cpp:11 | return a;", rendered)
         self.assertEqual(rendered.count("src/unit.cpp:10"), 1)
         self.assertNotIn("90", rendered)
+        self.assertIn("  0: mov eax, ebx", rendered)
+
+    def test_lite_disassembly_folds_call_symbols_like_plain_disasm(self):
+        mapping = source.SourceMap("src/unit.cpp", (
+            source.Statement(0, 10, "callee();"),))
+        listing = ("00000000 <func>:\n"
+                   "       0: e8 00 00 00 00\tcall\t0x5 <func+0x5>\n"
+                   "\t\t\t00000001:  IMAGE_REL_I386_REL32\t?callee@@YAXXZ\n"
+                   "       5: c3\tret\n")
+        rendered = source.render_disassembly(listing, mapping, verbose=False)
+        self.assertIn("; src/unit.cpp:10 | callee();\n  0: call ?callee@@YAXXZ",
+                      rendered)
+        self.assertNotIn("IMAGE_REL", rendered)
+        verbose = source.render_disassembly(listing, mapping, verbose=True)
+        self.assertIn("IMAGE_REL_I386_REL32", verbose)
 
 
 class StatementDiffTest(unittest.TestCase):

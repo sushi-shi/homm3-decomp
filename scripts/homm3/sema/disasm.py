@@ -1,4 +1,4 @@
-"""homm3.sema.disasm - one function's body, either side, lite by default.
+"""homm3.sema.disasm - one function's body, either side.
 
 Sides:
   (default)  TARGET: the delinked unit object when one covers the
@@ -7,11 +7,16 @@ Sides:
              delinked unit yet)
   --base     your compiled object (delinked manifest units only)
   --source   your compiled object with verified VC6 /Z7 statement labels;
-             implies --base
+             implies --base (a compiler-generated body with no /Z7
+             statements falls back to the unlabelled base listing)
 
-Views (lite is the default; the full columns are the opt-in):
-  (default)  asm only - mnemonic+operands with <symbol> annotations
-  --verbose  addresses + byte columns + reloc lines
+Views (the default carries what matching reads; the columns are opt-in):
+  (default)  address column + mnemonic/operands with every call and data
+             symbol folded in from its reloc (`call ?f@@YAXXZ`, `[gVar]`,
+             `push offset gVar`, `[4*ecx + $L1]`), cross-symbol <notes>,
+             and the trailing switch/lookup pool as `dd`/`db` rows
+  --verbose  the raw llvm-objdump rows: byte columns, IMAGE_REL reloc
+             lines, <ownfn+0xNNN> notes - for encoding questions only
   --blocks   basic-block CFG view: skeleton lines by default,
              masked instruction bodies with --verbose
 
@@ -39,17 +44,22 @@ def run(args) -> None:
             die(f"{name} [{unit or 'no unit'}] has no compiled base object - "
                 "only manifest units (config/units.toml) compile")
         text = _asm.objdump(obj, name, ordinal)
+        title = (f"[disasm BASE (compiled): {name}  "
+                 f"build/objdiff/base/{unit}.obj]")
         if args.source:
             try:
                 source_map = source_view.load(unit, name, ordinal, obj)
+            except source_view.NoLineRecords as exc:
+                print(f"[{exc}]")
+                print("[no statements to label - showing the unlabelled "
+                      "base listing]")
+                args.source = False
             except source_view.SourceError as exc:
                 die(str(exc))
-            title = (f"[disasm BASE+SOURCE (compiled): {name}  "
-                     f"build/objdiff/base/{unit}.obj + "
-                     f"build/debug/{unit}.obj]")
-        else:
-            title = (f"[disasm BASE (compiled): {name}  "
-                     f"build/objdiff/base/{unit}.obj]")
+            else:
+                title = (f"[disasm BASE+SOURCE (compiled): {name}  "
+                         f"build/objdiff/base/{unit}.obj + "
+                         f"build/debug/{unit}.obj]")
     else:
         obj = _asm.TARGET / f"{unit}.c.obj"
         if obj.is_file():

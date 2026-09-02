@@ -242,16 +242,198 @@ def code_insns(text: str) -> list[tuple[int, str]]:
             if offset < first_pool_word]
 
 
-def lite(text: str) -> str:
-    """Only the asm: drop offsets, byte columns, reloc blocks; keep titles."""
-    keep = []
+_ROW_HEAD = re.compile(
+    r"^\s*([0-9a-fA-F]+):\s*((?:[0-9a-fA-F]{2}\s?)*)\s*$")
+_RELOC_ROW = re.compile(
+    r"^\s*([0-9a-fA-F]+):\s+IMAGE_REL_I386_([A-Z0-9_]+)\s+(\S.*?)\s*$")
+_NOTE = re.compile(r"\s*<([^>]*)>")
+_FLOW = re.compile(r"^(?:call|jmp|j[a-z]{1,4}|loop\w*)$")
+
+
+def _parse_row(ln: str):
+    """(offset, raw bytes, 'mnemonic operands') for an instruction row."""
+    if "\t" not in ln:
+        return None
+    head, *rest = ln.split("\t")
+    match = _ROW_HEAD.match(head)
+    if not match:
+        return None
+    raw = bytes.fromhex(re.sub(r"\s", "", match.group(2)))
+    body = [part.strip() for part in rest if part.strip()]
+    if body and re.fullmatch(r"(?:[0-9a-fA-F]{2}\s*)+", body[0]):
+        body.pop(0)
+    if not body:
+        return None
+    return int(match.group(1), 16), raw, " ".join(body)
+
+
+def _fold_reloc(mnemonic: str, operands: str, kind: str, symbol: str,
+                raw: bytes, field: int):
+    """Fold one relocation into *operands*; (operands, note) where the
+    note carries the symbol whenever the relocated field cannot be
+    located in the operand text (a data word decoded as code, an
+    ambiguous literal, an unexpected shape)."""
+    if kind == "REL32":
+        if _FLOW.match(mnemonic) and re.fullmatch(r"0x[0-9a-fA-F]+", operands):
+            return symbol, None
+        return operands, symbol
+    if kind != "DIR32" or field <= 0 or field + 4 > len(raw):
+        # field 0 = the opcode byte: a relocated pool word, not an operand
+        return operands, symbol
+    value = int.from_bytes(raw[field:field + 4], "little")
+    signed = value - (1 << 32) if value & 0x80000000 else value
+    if value == 0:
+        target, pattern = symbol, r"0x0\b"
+    elif signed < 0:
+        target, pattern = f"{symbol}-0x{-signed:x}", rf"-\s?0x{-signed:x}\b"
+    else:
+        target, pattern = f"{symbol}+0x{value:x}", rf"0x{value:x}\b"
+    hits = list(re.finditer(pattern, operands))
+    if signed < 0 and not hits:
+        hits = list(re.finditer(rf"0x{value:x}\b", operands))
+    if len(hits) == 1:
+        hit = hits[0]
+        before = operands[:hit.start()]
+        inside = before.count("[") > before.count("]")
+        if inside:
+            spelled = f"+ {target}" if hit.group(0).startswith("-") else target
+        else:
+            spelled = f"offset {target}"
+        return before + spelled + operands[hit.end():], None
+    if not hits and value == 0:
+        close = operands.rfind("]")
+        if close > 0:  # SIB form with the zero displacement elided
+            return operands[:close] + f" + {symbol}" + operands[close:], None
+    return operands, symbol
+
+
+def lite_rows(text: str) -> list[tuple[int | None, str]]:
+    """The default listing as ``(offset, line)`` rows; titles and notices
+    carry ``None``. What a matcher reads survives: the address column
+    (branch targets stay locatable), every call/data symbol folded from
+    its reloc row into the operand (``call ?f@@YAXXZ``, ``[gVar]``,
+    ``push offset gVar``), cross-symbol ``<notes>``. What only encoding
+    questions need is left to ``--verbose``: byte columns, raw reloc
+    rows, and the ``<ownfn+0xNNN>`` notes the address column makes
+    redundant."""
+    titles = []
+    rows: list = []
     for ln in text.splitlines():
-        p = parse_ins(ln)
-        if p:
-            keep.append("    " + p[1])
-        elif ln.rstrip().endswith(">:") or ln.startswith("[decode stopped"):
-            keep.append(ln)
-    return "\n".join(keep) + "\n"
+        title = _SYMBOL_TITLE.match(ln)
+        if title:
+            titles.append(title.group(1))
+            rows.append(("title", ln.strip(), int(ln.split(None, 1)[0], 16)))
+            continue
+        if ln.startswith("[decode stopped"):
+            rows.append(("title", ln, None))
+            continue
+        parsed = _parse_row(ln)
+        if parsed:
+            rows.append(("ins", parsed, []))
+            continue
+        reloc = _RELOC_ROW.match(ln)
+        if reloc and rows and rows[-1][0] == "ins":
+            rows[-1][2].append((int(reloc.group(1), 16), reloc.group(2),
+                                reloc.group(3)))
+    own = titles[0] if titles else None
+    labels = set(titles)
+
+    def keep_note(note: str) -> bool:
+        root, _plus, rest = note.partition("+")
+        if root == own:
+            return not rest  # a bare self-reference is recursion; +off is body
+        return root not in labels
+
+    # A DIR32 site AT an instruction address is a relocated data word: the
+    # trailing switch/lookup pool objdump decodes as code (see code_insns).
+    # Render the pool as data rows instead of the garbage instructions.
+    pool_start = min((site for row in rows if row[0] == "ins"
+                      for site, kind, _sym in row[2]
+                      if kind == "DIR32" and site == row[1][0]), default=None)
+
+    offsets = [row[1][0] for row in rows if row[0] == "ins"]
+    width = max((len(f"{off:x}") for off in offsets), default=1)
+    out: list[tuple[int | None, str]] = []
+    pool: list = []  # (offset, raw, relocs) rows from pool_start on
+    pool_titles: list = []  # label titles inside the pool, by address
+    for row in rows:
+        if row[0] == "title":
+            if (pool_start is not None and row[2] is not None
+                    and row[2] >= pool_start):
+                pool_titles.append((row[2], row[1]))
+            else:
+                out.append((None, row[1]))
+            continue
+        (off, raw, body), relocs = row[1], row[2]
+        if pool_start is not None and off >= pool_start:
+            pool.append((off, raw, relocs))
+            continue
+        notes = [n for n in _NOTE.findall(body) if keep_note(n)]
+        stripped = _NOTE.sub("", body).strip() or body.strip()
+        mnemonic, _sp, operands = stripped.partition(" ")
+        for site, kind, symbol in relocs:
+            operands, note = _fold_reloc(mnemonic, operands, kind, symbol,
+                                         raw, site - off)
+            if note and note not in notes:
+                notes.append(note)
+        text_row = f"{mnemonic} {operands}".strip()
+        text_row += "".join(f" <{n}>" for n in notes)
+        out.append((off, f"  {off:>{width}x}: {text_row}"))
+    merged = ([(addr, 0, None, line) for addr, line in pool_titles]
+              + [(off, 1, off, line) for off, line in _pool_rows(pool, width)])
+    out.extend((off, line) for _addr, _rank, off, line in sorted(
+        merged, key=lambda item: (item[0], item[1])))
+    return out
+
+
+def _pool_rows(pool, width: int) -> list[tuple[int, str]]:
+    """``dd symbol[+addend]`` per relocated word, ``db ..`` for the bytes
+    between them (byte lookup tables, alignment)."""
+    if not pool:
+        return []
+    base = pool[0][0]
+    data = bytearray()
+    sites = {}
+    for off, raw, relocs in pool:
+        if off - base > len(data):  # objdump skipped bytes; keep alignment
+            data.extend(b"\0" * (off - base - len(data)))
+        data[off - base:off - base + len(raw)] = raw
+        for site, kind, symbol in relocs:
+            if kind == "DIR32":
+                sites[site] = symbol
+    out = []
+    at = 0
+    plain: list[int] = []
+
+    def flush(start: int):
+        if plain:
+            chunk = " ".join(f"{b:02x}" for b in plain)
+            out.append((start, f"  {start:>{width}x}: db {chunk}"))
+            plain.clear()
+
+    plain_start = base
+    while at < len(data):
+        site = base + at
+        if site in sites and at + 4 <= len(data):
+            flush(plain_start)
+            value = int.from_bytes(data[at:at + 4], "little")
+            addend = f"+0x{value:x}" if value else ""
+            out.append((site, f"  {site:>{width}x}: dd {sites[site]}{addend}"))
+            at += 4
+            plain_start = base + at
+            continue
+        plain.append(data[at])
+        at += 1
+        if len(plain) == 16:
+            flush(plain_start)
+            plain_start = base + at
+    flush(plain_start)
+    return out
+
+
+def lite(text: str) -> str:
+    """The default `disasm` listing - see lite_rows()."""
+    return "\n".join(line for _off, line in lite_rows(text)) + "\n"
 
 
 def norm(text: str) -> list:

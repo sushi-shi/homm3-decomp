@@ -12978,6 +12978,39 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   only that each `INLINE_GATE` marker is enclosed by its immediate
   `inline_depth(0)` / reset pair, with positive and negative controls.
 
+- **2026-09-02 — navigation tools stop failing on answerable selectors.**
+  A usage-log audit (5,040 `sema` and 2,846 `dreamcast` calls) found nine
+  error classes that were tool defects, not user errors; all are fixed.
+  `homm3 dreamcast`: `dc:` offsets are always hex with or without `0x`
+  (the listing prints bare hex; `int(x, 0)` had read digit-only offsets as
+  decimal); a body offset snaps to its procedure with a stderr note; a
+  retail address with no claim or bridge is matched by its demangled name
+  in the corpus (noted as a correlation); a short number that is no bridged
+  RVA is read as a Dreamcast offset (noted); retail mangled names and
+  pasted declarations are selectors; one identity naming several procedures
+  (a bridge to two, an overload) renders every match under a banner; "no
+  match" is rc 1, errors stay rc 2. `homm3 sema`: `Class::method`, bare
+  `method`, and pasted declarations resolve through `llvm-undname`
+  (`homm3.core.undname`) when they name one retail symbol, else the
+  candidates are listed; `diff --verbose` now adds detail to every view
+  instead of being rejected with a mode flag; `diff --source` and
+  `disasm --source` on a compiler-generated body (no /Z7 statements) fall
+  back to the unlabelled view with a note instead of failing.
+
+- **2026-09-02 — `homm3 sema disasm` default carries the matching payload.**
+  The usage log (5,040 sema calls) showed the lite view chosen 9 times
+  against 1,511 `--verbose`: lite dropped the reloc rows, so every call and
+  global read as an unrelocated placeholder, and it had no address column to
+  locate branch targets. The default now prints the address column, folds
+  each reloc symbol into its operand (`call ?f@@YAXXZ`, `[gVar]`,
+  `push offset gVar`, `[4*ecx + $L1]`), drops the `<ownfn+0xNNN>` notes the
+  addresses make redundant, and renders the trailing switch/lookup pool as
+  `dd`/`db` rows instead of garbage decodes. `--verbose` keeps the raw
+  objdump rows (byte columns, reloc lines) for encoding questions;
+  `disasm --source` shares the default rows. Measured on
+  `ProcessCombatMsg`: 36% of the verbose size with nothing a matcher reads
+  lost.
+
 - **2026-07-23 — repo + toolchain distribution.** Private GitHub repo
   `sushi-shi/homm3-decomp` created and pushed; toolchain tarball published as
   release `toolchain-vc6-sp3`. `homm3 init` now downloads it via `gh` when
