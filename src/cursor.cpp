@@ -677,7 +677,7 @@ void advManager::OnMoveHero(CMapChange* pMapChange)
 #if 0  // @carcass
 
 // E:\gamedcs\cursor.cpp:1158
-VA(0x00481fd0, 0x32)  // exhaustive cursor-tail order + ret 4, dc 0x7c2e0
+DC_ONLY(0x7c2e0, 0x48)
 void advManager::OnTeleportHero(CMapChange* pMapChange)
 {
     // @stub
@@ -754,13 +754,20 @@ void advManager::OnClaimShipYard(CMapChange* pMapChange)
 }
 
 // E:\gamedcs\cursor.cpp:1274
-DC_ONLY(0x7c688, 0x32)
+#endif  // @carcass
+
+VA(0x00481fd0, 0x32)  // call-site + exact GetHero/restore shape, dc 0x7c688
 void advManager::OnHideHero(CMapChange* pMapChange)
 {
-    // @stub
+    CMCHideHero* change = static_cast<CMCHideHero*>(pMapChange);
+    hero* current_hero = gpGame->GetHero(change->heroId);
+    if (current_hero)
+        current_hero->restore_cell();
 }
 
 // E:\gamedcs\cursor.cpp:1286
+#if 0  // @carcass
+
 VA(0x00482010, 0x328)  // HandleNetMsg caller + exhaustive order, dc 0x7c6bc
 void advManager::ProcessMapChangeNew(CMapChange* pMapChange)
 {
