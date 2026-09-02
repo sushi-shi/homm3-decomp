@@ -2486,14 +2486,6 @@ int game::get_new_boat_id()
 // E:\gamedcs\game.cpp:2112
 #endif  // @carcass
 
-// Dreamcast CodeView attests this inline wrapper. Keeping the wrapper is
-// material on x86 too: it makes VC6 zero-extend the byte boat id for the
-// long parameter, as retail does.
-inline void boat::obscure_cell()
-{
-    type_obscuring_object::obscure_cell(BOAT, id);
-}
-
 VA(0x004bb250, 0x1AA)  // anchor-global, dc 0xa6690
 int game::CreateBoat(int x, int y, int z, int owner, unsigned char bIsRemoteMove, signed char type)
 {

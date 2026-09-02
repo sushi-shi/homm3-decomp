@@ -1342,7 +1342,13 @@ public:
 
     boat() : allocated(0) {}
     hero_seqid GetStandSequence();
-    void obscure_cell();
+    // Hero.h:196 in Dreamcast. Complete expands this ordinary header helper
+    // in MoveHero, CreateBoat and the event-record undo path; retaining the
+    // named boundary also preserves the byte-id zero extension at each site.
+    void obscure_cell()
+    {
+        type_obscuring_object::obscure_cell(BOAT, id);
+    }
 };
 SIZE(boat, 0x28);
 
