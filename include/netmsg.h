@@ -28,36 +28,22 @@ enum eRS_Messages {
     // pairing the two names describe. Gated for the same reason its
     // neighbours are.
     RS_RESET_VISIBILITY = 0x3fe,
-#ifdef HOMM3_EVENT_RECORD_NETMSG_DECLS
-    // 1052 and 1053, the two rungs directly below RS_CLAIM_GENERATOR on the
-    // gapless DC ladder, and the Dreamcast enumerates both by name. Retail
-    // agrees: game::record_claim_mine (0x49bf90) and record_claim_town
-    // (0x49c190) stamp 0x41c and 0x41d into 0x1c-byte stack records whose
-    // layout is CMCClaimMine's / CMCClaimTown's member for member. GATED
-    // for exactly the reason RS_ERASE_OBJECT below is.
+    // The complete map-change ladder is corroborated at once by
+    // ProcessMapChangeNew's 13-entry jump table. The Dreamcast enum supplies
+    // the names; the Windows dispatch and record constructors independently
+    // prove every value and the Complete-width payloads.
+    RS_MOVE_HERO = 0x41a,
+    RS_TELEPORT_HERO = 0x41b,
     RS_CLAIM_MINE = 0x41c,
     RS_CLAIM_TOWN = 0x41d,
-#endif
     RS_CLAIM_GENERATOR = 0x41e,
     RS_CLAIM_GARRISON = 0x41f,
     RS_CLAIM_SHIPYARD = 0x420,
     RS_BUILD_BOAT = 0x421,
-    // GATED, and it has to be. An ENUMERATOR on an existing enum is
-    // usually free - two of them went onto winmgr.h's EDialogReturnType
-    // across 41 consumers without moving a byte - but this one is not:
-    // ungated it takes recruit.obj's recruitUnit::Update 90.84 -> 88.24,
-    // the include-set sensitivity class reaching a TU that never mentions
-    // the value. Measured both ways 2026-08-14.
     RS_ERASE_OBJECT = 0x422,
-    // GATED for exactly the reason RS_ERASE_OBJECT is, and measured the
-    // same way. The VALUE is fixed by hero::Deallocate (0x4d9ec0), whose
-    // inlined CMCDeadHero constructor stores 0x423 as the record subtype -
-    // the rung directly below RS_TELEPORT_HERO.
     RS_DEAD_HERO = 0x423,
-    RS_TELEPORT_HERO = 0x424,
-    // Dreamcast's gapless ladder names 1050. Complete's MoveHero stamps
-    // the same 0x41a subtype into CMCMoveHero before SendMapChange.
-    RS_MOVE_HERO = 0x41a,
+    RS_RECRUIT_HERO = 0x424,
+    RS_DEAD_PLAYER = 0x425,
     RS_HIDE_HERO = 0x426,
     // The adventure dispatcher's case roster, named from the gapless DC
     // eRS_Messages ladder (values 1000..1078 transfer whole; see the note
@@ -563,7 +549,6 @@ public:
 #pragma pack(pop)
 SIZE(CMCMoveHero, 0x1b);
 
-#ifdef HOMM3_EVENT_RECORD_NETMSG_DECLS
 // Dreamcast CodeView names both classes and both constructors
 // (netmsg.h:577 / netmsg.h:591, dc 0x8f2c8 / 0x8f2fc), and the constructors
 // are the only bodies retail keeps - expanded into the two recorders. The
@@ -596,7 +581,6 @@ public:
     }
 };
 SIZE(CMCClaimTown, 0x1c);
-#endif
 
 class CMCClaimGarrison : public CMapChange {
 public:
@@ -699,15 +683,31 @@ public:
 };
 SIZE(CResetVisibilityMsg, 0x20);
 
+// Dreamcast's teleport payload is char+padding+point; Windows widens the id
+// to the dword ProcessMapChangeNew reads at +0x14, leaving the packed point at
+// +0x18 and the same 0x1c wire extent.
 class CMCTeleportHero : public CMapChange {
+public:
+    int heroId;
+    type_point point;
+
+    CMCTeleportHero(int id, type_point location);
+};
+SIZE(CMCTeleportHero, 0x1c);
+
+// The old model called this 0x20-byte 0x424 record CMCTeleportHero. The
+// Windows dispatcher proves it is the next ladder entry, CMCRecruitHero:
+// hero id at +0x14, point at +0x18 and player position at +0x1c. Dreamcast
+// independently publishes the same three-member class and constructor.
+class CMCRecruitHero : public CMapChange {
 public:
     int heroId;
     type_point point;
     int playerPos;
 
-    CMCTeleportHero(int id, type_point location);
+    CMCRecruitHero(int id, type_point location, int player);
 };
-SIZE(CMCTeleportHero, 0x20);
+SIZE(CMCRecruitHero, 0x20);
 
 // DC netmsg.h:675 (dc 0xd5964, a hero.obj COMDAT); retail /Ob2-expands it
 // inside hero::Deallocate, whose 0x1c-byte frame record and 0x423 subtype
@@ -721,6 +721,14 @@ public:
     CMCDeadHero(int id, type_point location);
 };
 SIZE(CMCDeadHero, 0x1c);
+
+class CMCDeadPlayer : public CMapChange {
+public:
+    int playerPos;
+
+    CMCDeadPlayer(int player);
+};
+SIZE(CMCDeadPlayer, 0x18);
 
 // game.obj opens this on its own narrow gate: playerData::add_garrison_hero
 // (0x4b9fc0) broadcasts the same record town::SwapHeroes does.

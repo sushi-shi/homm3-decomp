@@ -1942,10 +1942,10 @@ public:
     void ScreenScroll(int iDir, int bChangeMouse);
     void CheckScreenScroll();
     void LoadRemote(unsigned char makeOrig);
-    // Retail-only member ordinal HandleNetMsg drives on gpAdvManager:
-    // 0x482010 is the map-change record applier (the 1049..1063 batch).
-    // Its row remains unclaimed and lives outside advmgr.obj's band.
-    void AdvmgrFn_00482010(class CNetMsg* pNetMsg);
+    // cursor.obj's map-change record applier. Dreamcast proves the named
+    // helper boundaries; Complete decides independently which calls remain
+    // out of line in this caller.
+    void ProcessMapChangeNew(class CMapChange* change);
     void TrimLoopingSounds(int maxSoundsAllowed);
     void DisableButtons();
     void EnableButtons();
@@ -2029,6 +2029,17 @@ public:
     // GetHero, get_location and type_point construction in the same nested
     // order preserved by the Dreamcast line/scope stream.
     void OnMoveHero(class CMapChange* change);
+    void OnTeleportHero(class CMapChange* change);
+    void OnClaimMine(class CMapChange* change);
+    void OnClaimTown(class CMapChange* change);
+    void OnBuildBoat(class CMapChange* change);
+    void OnEraseObject(class CMapChange* change);
+    void OnDeadHero(class CMapChange* change);
+    void OnRecruitHero(class CMapChange* change);
+    void OnDeadPlayer(class CMapChange* change);
+    void OnClaimGenerator(class CMapChange* change);
+    void OnClaimGarrison(class CMapChange* change);
+    void OnClaimShipYard(class CMapChange* change);
     void OnHideHero(class CMapChange* change);
     // cursor.obj's 0x481be0 (cursor.cpp:1027, dc 0x7bee4), reached the
     // same way and located by an EXHAUSTIVE order-map over the whole

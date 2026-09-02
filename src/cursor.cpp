@@ -13,6 +13,7 @@
 #include "remote.h"
 #include "sample.h"
 #include "soundmgr.h"
+#include "textresource.h"
 #include "winmgr.h"
 
 // Retail cursor.obj constants, read from the hash-verified image. Dreamcast
@@ -674,88 +675,132 @@ void advManager::OnMoveHero(CMapChange* pMapChange)
         DoAIEvent(event_cell, current_hero, trigger_point);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\cursor.cpp:1158
 DC_ONLY(0x7c2e0, 0x48)
 void advManager::OnTeleportHero(CMapChange* pMapChange)
 {
-    // @stub
+    CMCTeleportHero* change = static_cast<CMCTeleportHero*>(pMapChange);
+    hero* current_hero = gpGame->GetHero(change->heroId);
+    TeleportTo(current_hero, change->point, 0, 1, 1, 0);
 }
 
 // E:\gamedcs\cursor.cpp:1167
 DC_ONLY(0x7c328, 0x68)
 void advManager::OnClaimMine(CMapChange* pMapChange)
 {
-    // @stub
+    CMCClaimMine* change = static_cast<CMCClaimMine*>(pMapChange);
+    gpGame->ClaimMine(change->mineId, change->playerPos,
+                      const_remote_action);
+    CompleteDraw(0);
+    UpdateScreen(0, 0);
 }
 
 // E:\gamedcs\cursor.cpp:1177
 DC_ONLY(0x7c390, 0x36)
 void advManager::OnClaimTown(CMapChange* pMapChange)
 {
-    // @stub
+    CMCClaimTown* change = static_cast<CMCClaimTown*>(pMapChange);
+    gpGame->ClaimTown(change->townId, change->playerPos, 1, 1);
+    CompleteDraw(0);
+    UpdateScreen(0, 0);
 }
 
 // E:\gamedcs\cursor.cpp:1186
 DC_ONLY(0x7c3c8, 0x58)
 void advManager::OnBuildBoat(CMapChange* pMapChange)
 {
-    // @stub
+    CMCBuildBoat* change = static_cast<CMCBuildBoat*>(pMapChange);
+    gpGame->CreateBoat(change->point.x, change->point.y, change->point.z,
+                       change->playerPos, 1, 1);
+    CompleteDraw(0);
+    UpdateScreen(0, 0);
 }
 
 // E:\gamedcs\cursor.cpp:1196
 DC_ONLY(0x7c420, 0x4E)
 void advManager::OnEraseObject(CMapChange* pMapChange)
 {
-    // @stub
+    CMCEraseObject* change = static_cast<CMCEraseObject*>(pMapChange);
+    NewmapCell* cell = GetCell(change->m_point);
+    EraseObj(cell, change->m_point, 0);
+    CompleteDraw(0);
+    UpdateScreen(0, 0);
 }
 
 // E:\gamedcs\cursor.cpp:1208
 DC_ONLY(0x7c470, 0xAC)
 void advManager::OnDeadHero(CMapChange* pMapChange)
 {
-    // @stub
+    CMCDeadHero* change = static_cast<CMCDeadHero*>(pMapChange);
+    hero* current_hero = gpGame->GetHero(change->heroId);
+    if (current_hero->get_location() != change->point)
+        return;
+    current_hero->Deallocate(1, 1);
+    CompleteDraw(0);
+    UpdateScreen(0, 0);
 }
 
 // E:\gamedcs\cursor.cpp:1224
 DC_ONLY(0x7c51c, 0x66)
 void advManager::OnRecruitHero(CMapChange* pMapChange)
 {
-    // @stub
+    CMCRecruitHero* change = static_cast<CMCRecruitHero*>(pMapChange);
+    gpGame->get_cell(change->point);
+    // OnRecruitHero -> game::GetHero: Dreamcast game.h:972-979 residue
+    // proves the source-inline accessor. Complete retains this nested call
+    // after expanding OnRecruitHero. Negative control without this site pin:
+    // ProcessMapChangeNew 100.0000% -> 92.6034%, calls 30 -> 29.
+#pragma inline_depth(0)
+    hero* current_hero = INLINE_GATE(gpGame->GetHero(change->heroId));
+#pragma inline_depth()
+    current_hero->x = change->point.x;
+    current_hero->y = change->point.y;
+    current_hero->z = change->point.z;
+    current_hero->flags = 0;
+    current_hero->facing = hero::kFacingE;
+    current_hero->owner = static_cast<signed char>(change->playerPos);
+    current_hero->obscure_cell();
 }
 
 // E:\gamedcs\cursor.cpp:1245
 DC_ONLY(0x7c584, 0x5C)
 void advManager::OnDeadPlayer(CMapChange* pMapChange)
 {
-    // @stub
+    CMCDeadPlayer* change = static_cast<CMCDeadPlayer*>(pMapChange);
+    sprintf(gText, gpGeneralText->GetText(6),
+            gpGame->GetPlayerName(change->playerPos));
+    NormalDialog(gText, 1, -1, -1, 10, change->playerPos,
+                 -1, -1, -1, 5000, -1, 0);
 }
 
 // E:\gamedcs\cursor.cpp:1253
 DC_ONLY(0x7c5e0, 0x68)
 void advManager::OnClaimGenerator(CMapChange* pMapChange)
 {
-    // @stub
+    CMCClaimGenerator* change =
+        static_cast<CMCClaimGenerator*>(pMapChange);
+    gpGame->ClaimGenerator(change->generatorId, change->playerPos);
 }
 
 // E:\gamedcs\cursor.cpp:1260
 DC_ONLY(0x7c648, 0x1A)
 void advManager::OnClaimGarrison(CMapChange* pMapChange)
 {
-    // @stub
+    CMCClaimGarrison* change =
+        static_cast<CMCClaimGarrison*>(pMapChange);
+    gpGame->ClaimGarrison(change->garrisonId, change->playerPos);
 }
 
 // E:\gamedcs\cursor.cpp:1267
 DC_ONLY(0x7c664, 0x24)
 void advManager::OnClaimShipYard(CMapChange* pMapChange)
 {
-    // @stub
+    CMCClaimShipYard* change =
+        static_cast<CMCClaimShipYard*>(pMapChange);
+    gpGame->ClaimShipyard(change->point, change->playerPos);
 }
 
 // E:\gamedcs\cursor.cpp:1274
-#endif  // @carcass
-
 VA(0x00481fd0, 0x32)  // call-site + exact GetHero/restore shape, dc 0x7c688
 void advManager::OnHideHero(CMapChange* pMapChange)
 {
@@ -765,17 +810,65 @@ void advManager::OnHideHero(CMapChange* pMapChange)
         current_hero->restore_cell();
 }
 
-// E:\gamedcs\cursor.cpp:1286
-#if 0  // @carcass
-
+// E:\gamedcs\cursor.cpp:1286. Dreamcast line ownership proves every named
+// helper boundary below. Complete retains OnMoveHero and OnHideHero as calls,
+// expands the other handlers, and retains the nested type_point::operator!=.
 VA(0x00482010, 0x328)  // HandleNetMsg caller + exhaustive order, dc 0x7c6bc
 void advManager::ProcessMapChangeNew(CMapChange* pMapChange)
 {
-    // @stub
+    switch (pMapChange->subType) {
+    case RS_MOVE_HERO:
+        OnMoveHero(pMapChange);
+        break;
+    case RS_TELEPORT_HERO:
+        OnTeleportHero(pMapChange);
+        break;
+    case RS_CLAIM_MINE:
+        OnClaimMine(pMapChange);
+        break;
+    case RS_CLAIM_TOWN:
+        OnClaimTown(pMapChange);
+        break;
+    case RS_BUILD_BOAT:
+        OnBuildBoat(pMapChange);
+        break;
+    case RS_ERASE_OBJECT:
+        OnEraseObject(pMapChange);
+        break;
+    case RS_DEAD_HERO:
+        OnDeadHero(pMapChange);
+        break;
+    case RS_RECRUIT_HERO:
+        OnRecruitHero(pMapChange);
+        break;
+    case RS_DEAD_PLAYER:
+        OnDeadPlayer(pMapChange);
+        break;
+    case RS_CLAIM_GENERATOR:
+        OnClaimGenerator(pMapChange);
+        break;
+    case RS_CLAIM_GARRISON:
+        OnClaimGarrison(pMapChange);
+        break;
+    case RS_CLAIM_SHIPYARD:
+        OnClaimShipYard(pMapChange);
+        break;
+    case RS_HIDE_HERO:
+        OnHideHero(pMapChange);
+        break;
+    }
 }
 
-// E:\gamedcs\cursor.cpp:1343
-#endif  // @carcass
+// Complete selects the same header-inline comparison as a cursor.obj COMDAT.
+// The active definition remains in struct.h; this anchor records the retained
+// body selected by OnDeadHero without replacing its source-inline boundary.
+#if 0  // @carcass: active header-inline body emits this COMDAT
+VA(0x00482340, 0x45)  // call edge + byte-identical point comparison, dc 0x37d2c
+bool type_point::operator!=(const type_point& arg) const
+{
+    // @stub - active definition is the struct.h class-body inline
+}
+#endif
 
 VA(0x00482390, 0x21)  // exact gate-and-transmit body, dc 0x7c9f8
 void SendMapChange(CMapChange* pMapChange)
