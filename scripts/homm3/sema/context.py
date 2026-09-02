@@ -154,7 +154,8 @@ class SymbolDb:
             owner = self.owner(rva)
             if owner is None:
                 die(f"0x{rva:x} is not a function start and not inside any "
-                    "function body")
+                    f"function body - `homm3 sema rva 0x{rva:x}` shows what "
+                    "is at an address")
             print(f"[0x{rva:x} is +0x{rva - owner:x} into "
                   f"{self.funcs[owner][0]} - using the owner]")
             rva = owner

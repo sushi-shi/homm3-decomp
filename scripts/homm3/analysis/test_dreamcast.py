@@ -308,5 +308,23 @@ class CfgTest(unittest.TestCase):
         self.assertEqual(events, {2: {"call_target_va": target}})
 
 
+
+class WrongNamespaceTest(unittest.TestCase):
+    def test_guessed_subcommands_name_their_home(self):
+        import os
+        from pathlib import Path
+        saved = dreamcast.LOG
+        dreamcast.LOG = Path(os.devnull)
+        try:
+            for argv, hint in ((["init", "--help"], "homm3 init"),
+                               (["verify", "--changed"], "homm3 build"),
+                               (["raw", "-h"], "--no-breakpoints")):
+                with contextlib.redirect_stderr(io.StringIO()) as err:
+                    self.assertEqual(dreamcast.main(argv), 2)
+                self.assertIn(hint, err.getvalue())
+        finally:
+            dreamcast.LOG = saved
+
+
 if __name__ == "__main__":
     unittest.main()

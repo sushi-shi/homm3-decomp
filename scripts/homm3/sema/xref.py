@@ -14,9 +14,14 @@ Modes:
   --raw       with --flat: every site, no dedup
   --callees   forward: the function's own direct call targets, plus a
               count of the FF /2 & /4 indirect sites rel32 cannot see
+  --to        every site referencing TARGET - rel32 call/jmp sites for a
+              function, dir32 data sites for anything - each with its
+              owner, offset, and the referencing INSTRUCTION (decoded
+              from the image). The default view for a data address,
+              which has no callers to tree.
 
-Every mode ends with the data-side references, resolved EXACTLY from
-the admitted dir32 reloc sites (config/retail-relocs.tsv) - fn-ptr
+The function views end with the data-side references, resolved EXACTLY
+from the admitted dir32 reloc sites (config/retail-relocs.tsv) - fn-ptr
 tables, command tables, vtable slots (named slot-precisely via
 config/retail-vtables.tsv), and address-takings inside .text. No blind
 byte scan, no false positives.
@@ -25,8 +30,10 @@ rc: 0 = answered (even "no callers"), 2 = error.
 """
 from __future__ import annotations
 
+import bisect
 import struct
 
+from homm3.sema import _asm
 from homm3.sema._common import die
 from homm3.sema.context import get_context
 
@@ -36,10 +43,7 @@ _EXPAND = {"target", "zlib"}
 
 
 def _label(ctx, rva: int) -> str:
-    row = ctx.symbols.funcs.get(rva)
-    if row:
-        return f"0x{rva:08x} {row[0]} [{row[1]}]"
-    return f"0x{rva:08x} ?"
+    return ctx.symbols.label(rva)
 
 
 def _frontier_tag(ctx, rva: int):
@@ -49,6 +53,14 @@ def _frontier_tag(ctx, rva: int):
 
 def _data_refs(ctx, target: int):
     """[(site_rva, description)] for every dir32 site holding target's VA."""
+    return [(site, description) for site, _owner, description
+            in _data_sites(ctx, target)]
+
+
+def _data_sites(ctx, target: int):
+    """[(site_rva, owner_rva|None, description)] for every dir32 site
+    holding target's VA; the owner is the containing function when the
+    site is inside one."""
     want = ctx.image.image_base + target
     out = []
     for site, value in ctx.relocs:
@@ -57,25 +69,90 @@ def _data_refs(ctx, target: int):
         owner = ctx.symbols.owner(site)
         if owner is not None:
             name, unit, _sz, _p = ctx.symbols.funcs[owner]
-            out.append((site, f"address-taken in {name} [{unit}] "
-                              f"(+0x{site - owner:x})"))
+            out.append((site, owner, f"address-taken in {name} [{unit}] "
+                                     f"(+0x{site - owner:x})"))
             continue
         slot = ctx.vtable_of(site)
         if slot:
             vt, k = slot
             vrow = ctx.symbols.datas.get(vt)
             vname = f" {vrow[0]}" if vrow else ""
-            out.append((site, f"vtable 0x{vt:x}{vname} slot {k}"))
+            out.append((site, None, f"vtable 0x{vt:x}{vname} slot {k}"))
             continue
         near = ctx.symbols.nearest_data(site)
         section = ctx.image.section_of(site)
         where = section.name if section else "?"
         if near:
             _start, name, delta = near
-            out.append((site, f"[{where}] ~{name}+0x{delta:x}"))
+            out.append((site, None, f"[{where}] ~{name}+0x{delta:x}"))
         else:
-            out.append((site, f"[{where}]"))
+            out.append((site, None, f"[{where}]"))
     return out
+
+
+# --- --to: every referencing site, with the instruction that references ---------
+
+def _row_covering(rows, va: int):
+    """The `reloc_rows` row whose byte span covers *va*, or None (past the
+    decode end: jump-table data in the span)."""
+    offsets = [row[0] for row in rows]
+    k = bisect.bisect_right(offsets, va) - 1
+    if k < 0:
+        return None
+    row = rows[k]
+    return row if row[0] <= va < row[0] + len(row[1]) else None
+
+
+def _site_instruction(ctx, cache: dict, owner: int, site: int) -> str:
+    """The instruction text at *site* inside *owner*, decoding each owner
+    once per invocation (several sites in one function cost one decode)."""
+    rows = cache.get(owner)
+    if rows is None:
+        name, _unit, size, _p = ctx.symbols.funcs[owner]
+        rows = _asm.reloc_rows(_asm.image_text(ctx, owner, size or 0x400, name))
+        cache[owner] = rows
+    row = _row_covering(rows, ctx.image.image_base + site)
+    if row is None:
+        return "(undecoded - jump-table data in the span?)"
+    return row[2]
+
+
+def _refs_to(ctx, targets) -> None:
+    cache: dict = {}
+    for t in targets:
+        print(f"\n==== references to {_label(ctx, t)} ====")
+        if t not in ctx.symbols.funcs and t not in ctx.symbols.datas:
+            near = ctx.symbols.nearest_data(t)
+            if near:
+                _start, name, delta = near
+                print(f"  [0x{t:x} is {name}+0x{delta:x}]")
+        shown = 0
+        code_sites = ctx.call_index.get(t, []) if t in ctx.symbols.funcs else []
+        if code_sites:
+            print(f"  -- code sites (rel32 call/jmp), {len(code_sites)}:")
+            for site, op in code_sites:
+                kind = "call" if op == 0xE8 else "jmp "
+                owner = ctx.symbols.owner(site)
+                if owner is None:
+                    print(f"  {kind} @0x{site:08x}  (unowned site - padding/data in .text)")
+                    continue
+                name, unit, _sz, _p = ctx.symbols.funcs[owner]
+                print(f"  {kind} @0x{site:08x}  in 0x{owner:08x} {name} [{unit}] "
+                      f"+0x{site - owner:x}   {_site_instruction(ctx, cache, owner, site)}")
+            shown += len(code_sites)
+        data_sites = _data_sites(ctx, t)
+        if data_sites:
+            print(f"  -- data sites (dir32 reloc), {len(data_sites)}:")
+            for site, owner, description in data_sites:
+                if owner is None:
+                    print(f"  @0x{site:08x}  {description}")
+                    continue
+                name, unit, _sz, _p = ctx.symbols.funcs[owner]
+                print(f"  @0x{site:08x}  in 0x{owner:08x} {name} [{unit}] "
+                      f"+0x{site - owner:x}   {_site_instruction(ctx, cache, owner, site)}")
+            shown += len(data_sites)
+        if not shown:
+            print("  (no references)")
 
 
 def _print_data_refs(ctx, target: int, indent: str = "  ") -> None:
@@ -204,8 +281,11 @@ def run(args) -> None:
     if args.raw and not args.flat:
         die("--raw only modifies --flat (the tree and --callees have no "
             "per-site rendering)")
+    if args.to and args.callees:
+        die("--to lists the sites referencing TARGET; --callees is the "
+            "opposite direction")
     ctx = get_context()
-    targets = []
+    functions, data = [], []
     for arg in args.target:
         rva = ctx.symbols.resolve(arg)
         if rva not in ctx.symbols.funcs:
@@ -214,10 +294,20 @@ def run(args) -> None:
                 print(f"[0x{rva:x} is +0x{rva - owner:x} into "
                       f"{ctx.symbols.funcs[owner][0]} - using the owner]")
                 rva = owner
-        targets.append(rva)
+            else:
+                data.append(rva)  # a data address has only referencing sites
+                continue
+        functions.append(rva)
+    if args.to:
+        _refs_to(ctx, functions + data)
+        return
+    if data:
+        _refs_to(ctx, data)
+    if not functions:
+        return
     if args.callees:
-        _callees(ctx, targets)
+        _callees(ctx, functions)
     elif args.flat:
-        _callers_flat(ctx, targets, raw=args.raw)
+        _callers_flat(ctx, functions, raw=args.raw)
     else:
-        _caller_tree(ctx, targets, depth_cap=args.depth)
+        _caller_tree(ctx, functions, depth_cap=args.depth)

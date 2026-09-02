@@ -37,6 +37,9 @@ def run(args) -> None:
     if args.source and args.blocks:
         die("--source labels the linear candidate listing and does not combine "
             "with --blocks")
+    if getattr(args, "target_side", False) and (args.base or args.source):
+        die("--target is the retail side; it does not combine with --base/"
+            "--candidate/--source")
 
     if args.base or args.source:
         obj = _asm.BASE / f"{unit}.obj"

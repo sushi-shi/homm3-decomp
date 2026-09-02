@@ -54,6 +54,7 @@ The mandatory first-pass workflow is:
 homm3 dreamcast show 0x00524dd0
 homm3 dreamcast asm 0x00524dd0 --blocks
 homm3 dreamcast inline-clues 0x00524dd0
+homm3 sema diff 0x00524dd0 --summary
 homm3 sema diff 0x00524dd0 --structure
 homm3 sema diff 0x00524dd0 --source
 ```

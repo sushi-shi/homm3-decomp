@@ -5,11 +5,13 @@ Subcommands (TARGET/ADDR = 0x<rva>, 0x<va>, an exact
 build/gen/symbol_names.csv name, or a demangled Class::method / method
 spelling that names exactly one retail symbol)
 -----------------------------------------------------------------
-  xref TARGET... [--flat [--raw]] [--callees] [--depth N]
+  xref TARGET... [--flat [--raw]] [--callees] [--to] [--depth N]
         Caller ancestry tree (the default; depth 4, 0 = unlimited),
-        flat direct callers, or forward callees - always ending with
-        the exact reloc-backed data-side references.
-  diff TARGET [--verbose | --structure | --asm | --branches | --source]
+        flat direct callers, forward callees, or --to = every
+        referencing site with its instruction (the default for a data
+        address). Function views end with the reloc-backed data refs.
+  diff TARGET [--verbose | --structure | --asm | --branches | --source
+              | --calls | --relocs | --summary | --why-bytes]
         Base-vs-target comparison: block-SKELETON diff by default,
         --structure = explicit spelling of that block-SKELETON view,
         --verbose = block bodies, --asm = flat masked asm diff,
@@ -17,10 +19,14 @@ spelling that names exactly one retail symbol)
         --source = statement-grouped diff using candidate /Z7 lines.
         rc=1 when the REQUESTED VIEW differs (the skeleton compares
         flow shape + block sizes only; in-block changes need
-        --verbose/--branches). --verbose adds detail to ANY view.
+        --verbose/--branches). --calls/--relocs = the ordered reference
+        sequences judged like `objdiff-cli diff`; --summary = every
+        verdict on one screen + the next view; --why-bytes = --summary
+        + the first byte-level divergence. --verbose adds detail to ANY
+        view.
         Names: an exact mangled name, or a demangled Class::method /
         bare method when it names one retail symbol.
-  disasm TARGET [--base] [--source] [--blocks] [--verbose]
+  disasm TARGET [--base|--candidate] [--target] [--source] [--blocks] [--verbose]
         One function's body: addresses + asm with call/data symbols
         folded into the operands; ANY retail function renders
         (delinked-unit object when one exists, image bytes via capstone
@@ -57,8 +63,13 @@ def _build_parser() -> argparse.ArgumentParser:
                     help="only direct rel32 callers (opt out of the tree)")
     sx.add_argument("--raw", action="store_true",
                     help="with --flat: every site, no per-owner dedup")
-    sx.add_argument("--callees", action="store_true",
+    sx.add_argument("--callees", "--calls", action="store_true",
                     help="forward: the function's own call targets")
+    sx.add_argument("--to", action="store_true",
+                    help="every site referencing TARGET: rel32 call/jmp sites "
+                         "(functions) and dir32 data sites, each with the "
+                         "referencing instruction; the default view for a "
+                         "data address")
     sx.add_argument("--depth", type=int, default=4, metavar="N",
                     help="tree expansion cap (default 4; 0 = unlimited)")
 
@@ -70,9 +81,10 @@ def _build_parser() -> argparse.ArgumentParser:
                          "--structure), full-context --asm, both sequences "
                          "for --branches, unchanged groups for --source")
     mode = sd.add_mutually_exclusive_group()
-    mode.add_argument("--structure", action="store_true",
+    mode.add_argument("--structure", "--blocks", "--skeleton",
+                      action="store_true",
                       help="block-structure skeleton (explicit alias for "
-                           "the default diff view)")
+                           "the default diff view; also --blocks, --skeleton)")
     mode.add_argument("--asm", action="store_true",
                       help="flat masked unified asm diff")
     mode.add_argument("--branches", action="store_true",
@@ -81,12 +93,30 @@ def _build_parser() -> argparse.ArgumentParser:
     mode.add_argument("--source", action="store_true",
                       help="statement-grouped diff labelled with candidate "
                            "source from a verified /Z7 object")
+    mode.add_argument("--calls", action="store_true",
+                      help="ordered callee-sequence comparison judged like "
+                           "`objdiff-cli diff` (function_reloc_diffs="
+                           "name_address); unclaimed retail labels are marked")
+    mode.add_argument("--relocs", action="store_true",
+                      help="ordered comparison of every reloc reference, "
+                           "calls AND data (--calls is this view restricted "
+                           "to calls)")
+    mode.add_argument("--summary", action="store_true",
+                      help="one screen: which views agree, the first "
+                           "divergence, and the next view to run")
+    mode.add_argument("--why-bytes", dest="why_bytes", action="store_true",
+                      help="--summary plus the first byte-level divergence "
+                           "unmasked (both sides' bytes and relocs) with its "
+                           "kind")
 
     sa = ss.add_parser(
         "disasm", help="one function, symbol-folded asm; any retail fn renders")
     sa.add_argument("target", help="0x<addr> or symbol name")
-    sa.add_argument("--base", action="store_true",
-                    help="your compiled obj instead of retail")
+    sa.add_argument("--base", "--candidate", action="store_true",
+                    help="your compiled obj (the candidate) instead of retail")
+    sa.add_argument("--target", dest="target_side", action="store_true",
+                    help="the retail side (the default; the explicit opposite "
+                         "of --base)")
     sa.add_argument("--source", action="store_true",
                     help="label candidate asm with verified /Z7 source lines "
                          "(implies --base; incompatible with --blocks)")
@@ -108,6 +138,40 @@ def _build_parser() -> argparse.ArgumentParser:
     return ap
 
 
+COMMANDS = ("xref", "diff", "disasm", "rva", "strings")
+
+# What agents typed under `homm3 sema` that lives elsewhere (usage-log
+# audit): the vc6 solvers, dreamcast lookups, and flag spellings guessed
+# as subcommands. A wrong guess names its home instead of "invalid choice".
+ELSEWHERE = {
+    "why-reg": "homm3 vc6 why-reg", "why-branch": "homm3 vc6 why-branch",
+    "predict-inline": "homm3 vc6 predict-inline",
+    "diagnose": "homm3 vc6 diagnose", "report": "homm3 vc6 report",
+    "queue": "homm3 vc6 queue", "il-diff": "homm3 vc6 il-diff",
+    "xrefs": "homm3 sema xref", "callers": "homm3 sema xref",
+    "callees": "homm3 sema xref TARGET --callees",
+    "blocks": "homm3 sema disasm TARGET --blocks",
+    "branches": "homm3 sema diff TARGET --branches",
+    "calls": "homm3 sema diff TARGET --calls",
+    "summary": "homm3 sema diff TARGET --summary",
+    "asm": "homm3 sema disasm", "show": "homm3 dreamcast show",
+    "find": "homm3 dreamcast find",
+    "locate": "homm3 dreamcast find NAME (the Dreamcast roster) or "
+              "homm3 sema rva 0xADDR (the address dossier)",
+    "status": "homm3 status", "build": "homm3 build",
+}
+
+
+def _redirect(argv: list[str]) -> None:
+    """Die with the command's real home for a wrong-namespace guess."""
+    if not argv or argv[0].startswith("-") or argv[0] in COMMANDS:
+        return
+    hint = ELSEWHERE.get(argv[0])
+    _common.die(f"'{argv[0]}' is not a homm3 sema command "
+                f"({', '.join(COMMANDS)})"
+                + (f" - you want `{hint}`" if hint else ""))
+
+
 def main(argv=None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     # Log what THIS call parsed, not sys.argv: a programmatic main(argv)
@@ -116,6 +180,7 @@ def main(argv=None) -> int:
     cmd = shlex.join(["homm3", "sema", *argv])
     rc = 0
     try:
+        _redirect(argv)
         args = _build_parser().parse_args(argv)
         from homm3.sema import diff, disasm, rva, strings, xref
         tool = {"xref": xref, "diff": diff, "disasm": disasm,

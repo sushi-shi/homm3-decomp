@@ -1316,11 +1316,36 @@ def _match_banner(index: int, rows: list[dict[str, str]]) -> None:
               f"{row['offset']} {row['name']} ====")
 
 
+COMMANDS = ("show", "asm", "find", "gaps", "inline-clues", "stats")
+
+# Wrong-namespace guesses the usage log recorded under `homm3 dreamcast`,
+# each with its real home.
+ELSEWHERE = {
+    "init": "homm3 init", "build": "homm3 build", "status": "homm3 status",
+    "clean": "homm3 clean", "verify": "homm3 build (the gates run there)",
+    "type": "homm3 dreamcast show SELECTOR (parameters and locals carry "
+            "their types)",
+    "raw": "homm3 dreamcast asm SELECTOR --no-breakpoints",
+    "disasm": "homm3 dreamcast asm", "diff": "homm3 sema diff",
+    "xref": "homm3 sema xref", "rva": "homm3 sema rva",
+}
+
+
+def _redirect(argv: list[str]) -> None:
+    if not argv or argv[0].startswith("-") or argv[0] in COMMANDS:
+        return
+    hint = ELSEWHERE.get(argv[0])
+    raise DreamcastError(
+        f"'{argv[0]}' is not a homm3 dreamcast command ({', '.join(COMMANDS)})"
+        + (f" - you want `{hint}`" if hint else ""))
+
+
 def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     parser = _build_parser()
     rc = 0
     try:
+        _redirect(argv)
         args = parser.parse_args(argv)
         corpus = Corpus()
         if args.command == "show":

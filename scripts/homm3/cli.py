@@ -51,10 +51,12 @@ Subcommands
 
   sema <xref|diff|disasm|rva|strings> ...
         Read-only navigation over the retail image (homm3.sema): caller
-        trees + exact data refs, base-vs-target block diffs (skeleton by
-        default; rc=1 when the requested view differs), per-function
-        disassembly of ANY retail function, address dossiers, literal
-        evidence. Every invocation logs one line to build/homm3_sema.log.
+        trees + exact data refs (xref --to = every referencing site),
+        base-vs-target diffs (skeleton by default; --summary = every
+        verdict on one screen; --calls/--relocs judged like objdiff; rc=1
+        when the requested view differs), per-function disassembly of ANY
+        retail function, address dossiers, literal evidence. Every
+        invocation logs one line to build/homm3_sema.log.
 
   dreamcast <show|asm|find|gaps|inline-clues|stats> ...
         Read-only source-shape navigation over the older WinCE/SH4 pressing:
