@@ -934,6 +934,9 @@ DATA(0x00699538) extern int gCompleteDrawAllCells;
 // Retail-only CompleteDraw gates. Their roles and widths are proved by the
 // entry predicate at 0x40f3f0; spellings remain provisional.
 DATA(0x006989c0) extern int gCompleteDrawEnabled;
+// Dreamcast names this shared cursor-suppression gate. DrawCursorAlpha's
+// second entry predicate and philai's sole writer prove the retail cell.
+DATA(0x006983f8) extern int bSpecialHideCursor;
 
 // A .data byte advManager::EraseAndFizzle (0x49e170) saves, CLEARS for the
 // duration of the erase, and restores on every one of its three exits -
@@ -1901,6 +1904,7 @@ public:
     void DrawUnderlay(int srcX, int srcY, int z, int destX, int destY);
     void DrawCursor(int cellX, int cellY);
     void DrawCursorShadow(int cellX, int cellY);
+    void DrawCursorAlpha();
     void DrawRolloverText(char* text);
     void SetRolloverText(NewmapCell* testCell, int rx, int ry);
     unsigned char FindAdjacentMonster(type_point point, type_point* result,

@@ -4,6 +4,7 @@
 #include <va.h>
 #include "game.h"
 #include "advmgr.h"
+#include "csprite.h"
 #include "cursor.h"
 #include "findpath.h"
 #include "kb.h"
@@ -97,15 +98,80 @@ void advManager::DrawCursorShadow(int CellX, int CellY)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\cursor.cpp:247
 VA(0x0047fc80, 0x35A)  // alpha draw/cursor animation call set, dc 0x7a024
 void advManager::DrawCursorAlpha()
 {
-    // @stub
+    if (gCompleteDrawEnabled) {
+        if (!bSpecialHideCursor) {
+            int refX = 256;
+            int refY = 232;
+            int clipx = 0;
+            int clipy = 0;
+            int rightClip = 0;
+            int bottomClip = 0;
+
+            if (radarOrigin.x + 8 < 0) {
+                clipx = abs((radarOrigin.x + 8) * 32) + scrollX;
+                refX += clipx;
+            }
+            if (radarOrigin.x + 11 >= gMapWidth)
+                rightClip = abs((gMapWidth - radarOrigin.x - 11) * 32);
+
+            if (radarOrigin.y + 7 < 0) {
+                clipy = abs((radarOrigin.y + 7) * 32) + scrollY;
+                refY += clipy;
+            }
+            if (radarOrigin.y + 9 >= gMapHeight)
+                bottomClip = abs((gMapHeight - radarOrigin.y - 9) * 32);
+
+            hero* curr = gpGame->GetHero(gpCurrentPlayer->currHeroId);
+
+            if (curr->flags & 0x40000) {
+                boat* currBoat = gpGame->GetHeroBoat(curr->id, 1);
+                boatFlagIcons[currBoat->type][curr->owner]->DrawHeroAlpha(
+                    cursorSequence, (animFrame + cursorFrameCount) % 8,
+                    clipx, clipy, 96 - rightClip - clipx,
+                    64 - bottomClip - clipy,
+                    gpWindowManager->screenBitmap, refX, refY,
+                    curr->GetHflip());
+                boatIcons[currBoat->type]->DrawHeroAlpha(
+                    cursorSequence, cursorFrameCount, clipx, clipy,
+                    96 - rightClip - clipx, 64 - bottomClip - clipy,
+                    gpWindowManager->screenBitmap, refX, refY,
+                    curr->GetHflip());
+            } else {
+                flagIcons[curr->owner]->DrawHeroAlpha(
+                    cursorSequence, (animFrame + cursorFrameCount) % 8,
+                    clipx, clipy, 96 - rightClip - clipx,
+                    64 - bottomClip - clipy,
+                    gpWindowManager->screenBitmap, refX, refY,
+                    curr->GetHflip());
+                cursorIcons[curr->heroClass]->DrawHeroAlpha(
+                    cursorSequence, cursorFrameCount, clipx, clipy,
+                    96 - rightClip - clipx, 64 - bottomClip - clipy,
+                    gpWindowManager->screenBitmap, refX, refY,
+                    curr->GetHflip());
+            }
+
+            if (bHeroMoving) {
+                cursorFrameCount = (cursorFrameCount + 1) % 8;
+                if (!cursorFrameCount && gUnnamed6968e4) {
+                    gpSoundManager->StopSample(gUnnamed6968e0);
+                    gUnnamed6968e0 =
+                        gpSoundManager->MemorySample(gUnnamed6968e4);
+                    gUnnamed6968e4 = 0;
+                }
+            } else {
+                cursorFrameCount = 0;
+            }
+        }
+    }
 }
 
 // E:\gamedcs\cursor.cpp:386
-#endif  // @carcass
 
 VA(0x0047ffe0, 0x1A)  // DC roster order + exact cursor member stores, dc 0x7a428
 void advManager::TurnTo(int newDirection)
