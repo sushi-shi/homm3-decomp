@@ -470,6 +470,17 @@ public:
     }
 };
 
+// DC names this source-level launch message and its constructor. Complete
+// expands the base-only constructor at BeginSavedGame: subtype 0x415, size
+// 0x14, and no payload beyond CNetMsg.
+class CLaunchingGameMsg : public CNetMsg {
+public:
+    CLaunchingGameMsg()
+        : CNetMsg(RS_LAUNCHING_GAME, sizeof(CLaunchingGameMsg))
+    {
+    }
+};
+
 class CGameHeaderInfoEndMsg : public CNetMsg {
 public:
     CGameHeaderInfoEndMsg();
