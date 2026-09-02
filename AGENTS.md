@@ -181,8 +181,18 @@ semantics, and they never outrank the retail bytes or objdiff score.
 
 Treat the source declaration and the retail lowering as separate facts. A Dreamcast-
 proved `inline` helper remains `inline` even when one Complete caller emits an out-of-
-line call. Confirm the mismatch with `homm3 vc6 predict-inline <selector>` and inspect
-the named call sequence, not only the aggregate call count.
+line call. Confirm the mismatch with
+`homm3 vc6 predict-inline src/<unit>.cpp --fn <selector>` and inspect the named call
+sequence, not only the aggregate call count. For a manifest-owned source, the command
+infers the retail unit; use `--against` only to override that reference.
+
+Dreamcast may expose both a standalone procedure and expansions of that same helper in
+callers. Preserve that as one canonical source helper: match its retained retail body
+when retail has one, and match every retail caller's call/expansion decision separately.
+An exact standalone body does not excuse a wrong caller boundary, and an exact caller
+does not permit deleting or hand-flattening the helper. Dreamcast proves the source
+relationship; Complete's x86 bytes remain authoritative for whether each site calls or
+expands it.
 
 The converse is required too. When Dreamcast retains a call to an ordinary non-`inline`
 helper but Complete VC6 `/Ob2` expands it, preserve the source call and the ordinary
