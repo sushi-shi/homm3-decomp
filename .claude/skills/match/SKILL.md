@@ -139,8 +139,9 @@ Reconcile per function, preferring the header - it is modelled from bytes.
    exact bytes from the hash-verified image, never guess. Unclaimed data externs
    still pair (reloc NAMES don't gate the verdict — DoDialog precedent); claims
    are hygiene + future data-phase truth.
-3. **Reconstruct.** Decode with `homm3 sema disasm 0x<va>` (`--verbose` bytes+
-   relocs, `--blocks` CFG, `--base` your side). Conventions: /Gr = free
+3. **Reconstruct.** Decode with `homm3 sema disasm 0x<va>` (addresses, call/data
+   symbols and the jump-table pool are in the default listing; `--blocks` CFG,
+   `--base` your side). Conventions: /Gr = free
    functions fastcall (ecx, edx, stack); members thiscall; WINAPI stdcall.
    Model real types in the owner header (`include/<tu>.h`), pads sliced only
    where bytes prove a field; SIZE() asserts are clang-arm only — VC6 does NOT

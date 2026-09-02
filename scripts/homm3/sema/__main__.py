@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """homm3 sema - read-only semantic navigation over the retail image.
 
-Subcommands (TARGET/ADDR = 0x<rva>, 0x<va>, or an exact
-build/gen/symbol_names.csv name)
+Subcommands (TARGET/ADDR = 0x<rva>, 0x<va>, an exact
+build/gen/symbol_names.csv name, or a demangled Class::method / method
+spelling that names exactly one retail symbol)
 -----------------------------------------------------------------
   xref TARGET... [--flat [--raw]] [--callees] [--depth N]
         Caller ancestry tree (the default; depth 4, 0 = unlimited),
@@ -16,12 +17,15 @@ build/gen/symbol_names.csv name)
         --source = statement-grouped diff using candidate /Z7 lines.
         rc=1 when the REQUESTED VIEW differs (the skeleton compares
         flow shape + block sizes only; in-block changes need
-        --verbose/--branches).
+        --verbose/--branches). --verbose adds detail to ANY view.
+        Names: an exact mangled name, or a demangled Class::method /
+        bare method when it names one retail symbol.
   disasm TARGET [--base] [--source] [--blocks] [--verbose]
-        One function's body, lite asm by default; ANY retail function
-        renders (delinked-unit object when one exists, image bytes via
-        capstone otherwise). --source labels candidate statements and
-        implies --base.
+        One function's body: addresses + asm with call/data symbols
+        folded into the operands; ANY retail function renders
+        (delinked-unit object when one exists, image bytes via capstone
+        otherwise). --source labels candidate statements and implies
+        --base; --verbose is the raw objdump view (bytes, reloc lines).
   rva ADDR
         The address dossier: symbol, universe class, src claim,
         vtable membership, match %.
@@ -62,7 +66,9 @@ def _build_parser() -> argparse.ArgumentParser:
         "diff", help="base-vs-target block diff (skeleton default; rc=1 differs)")
     sd.add_argument("target", help="0x<addr> or symbol name")
     sd.add_argument("--verbose", action="store_true",
-                    help="block bodies instead of the skeleton table")
+                    help="more of the chosen view: block bodies (default/"
+                         "--structure), full-context --asm, both sequences "
+                         "for --branches, unchanged groups for --source")
     mode = sd.add_mutually_exclusive_group()
     mode.add_argument("--structure", action="store_true",
                       help="block-structure skeleton (explicit alias for "
@@ -77,7 +83,7 @@ def _build_parser() -> argparse.ArgumentParser:
                            "source from a verified /Z7 object")
 
     sa = ss.add_parser(
-        "disasm", help="one function, lite asm default; any retail fn renders")
+        "disasm", help="one function, symbol-folded asm; any retail fn renders")
     sa.add_argument("target", help="0x<addr> or symbol name")
     sa.add_argument("--base", action="store_true",
                     help="your compiled obj instead of retail")
@@ -87,7 +93,8 @@ def _build_parser() -> argparse.ArgumentParser:
     sa.add_argument("--blocks", action="store_true",
                     help="basic-block CFG view (skeleton; --verbose = bodies)")
     sa.add_argument("--verbose", action="store_true",
-                    help="addresses + byte columns + reloc lines")
+                    help="raw objdump rows: byte columns + reloc lines (the "
+                         "default already folds every symbol into its operand)")
 
     sr = ss.add_parser("rva", help="address dossier (the first command on "
                                    "any address)")

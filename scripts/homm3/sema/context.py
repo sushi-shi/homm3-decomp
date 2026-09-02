@@ -36,6 +36,7 @@ class SymbolDb:
         self.funcs = {}   # rva -> (name, unit, size, provenance)
         self.datas = {}   # rva -> (name, unit, size, provenance)
         self.byname = {}
+        self._qualified = None  # lazy: demangled 'Class::method' -> [mangled]
         with SYMCSV.open() as fh:
             rows = (line for line in fh if not line.startswith("#"))
             for r in csv.DictReader(rows):
@@ -82,9 +83,51 @@ class SymbolDb:
             return None
         return start, self.datas[start][0], rva - start
 
+    def _qualified_index(self):
+        """('Class::method' -> [mangled], 'method' -> [mangled]) over every
+        mangled name in the inventory, built once per process on first
+        use (llvm-undname over ~12k names is well under a second)."""
+        if self._qualified is None:
+            from collections import defaultdict
+            from homm3.core import undname
+            names = {row[0] for row in self.funcs.values()}
+            names.update(row[0] for row in self.datas.values())
+            full, bare = defaultdict(list), defaultdict(list)
+            for mangled, name in undname.qualified_names(names).items():
+                full[name].append(mangled)
+                bare[undname.bare(name)].append(mangled)
+            self._qualified = (full, bare)
+        return self._qualified
+
+    def resolve_demangled(self, arg: str) -> int | None:
+        """RVA for a 'Class::method', 'method', or pasted declaration
+        spelling; None when nothing demangles to it. Several retail
+        symbols demangling to one spelling is an error that lists them -
+        a guess would silently open the wrong function."""
+        from homm3.core import undname
+        wanted = undname.strip_signature(arg)
+        full, bare = self._qualified_index()
+        found = list(full.get(wanted, ()))
+        if not found:
+            found = [m for name, ms in full.items()
+                     if name.lower() == wanted.lower() for m in ms]
+        if not found and "::" not in wanted:
+            found = list(bare.get(wanted, ()))
+        found = sorted(set(found), key=lambda m: self.byname[m])
+        if not found:
+            return None
+        if len(found) > 1:
+            listing = "\n  ".join(f"0x{self.byname[m] + common.IMAGE_BASE:08x} {m}"
+                                  for m in found[:12])
+            die(f"'{arg}' is ambiguous - {len(found)} retail symbols demangle "
+                f"to it; give one of:\n  {listing}")
+        print(f"['{arg}' -> {found[0]}]")
+        return self.byname[found[0]]
+
     def resolve(self, arg: str) -> int:
-        """RVA for '0x<rva>' / '0x<va>' (VA reduces) or an exact name.
-        Numbers require the 0x prefix - bare hex is ambiguous with names."""
+        """RVA for '0x<rva>' / '0x<va>' (VA reduces), an exact mangled
+        name, or a demangled 'Class::method' / 'method' spelling. Numbers
+        require the 0x prefix - bare hex is ambiguous with names."""
         if arg.lower().startswith("0x"):
             try:
                 n = int(arg, 16)
@@ -96,8 +139,11 @@ class SymbolDb:
             return rva
         if arg in self.byname:
             return self.byname[arg]
-        die(f"'{arg}' is not an 0x-address and not a name in "
-            "build/gen/symbol_names.csv")
+        rva = self.resolve_demangled(arg)
+        if rva is not None:
+            return rva
+        die(f"'{arg}' is not an 0x-address, not a name in "
+            "build/gen/symbol_names.csv, and no retail symbol demangles to it")
 
     def resolve_fn(self, arg: str):
         """(name, unit, rva, size, ordinal) for a FUNCTION target; an

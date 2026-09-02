@@ -27,6 +27,12 @@ class SourceError(RuntimeError):
     pass
 
 
+class NoLineRecords(SourceError):
+    """/Z7 emitted no statement rows for the function: a compiler-generated
+    body (destructor, scalar deleting destructor, operator=, thunk) has no
+    source statements to label. Callers fall back to the unlabelled view."""
+
+
 @dataclass(frozen=True)
 class Statement:
     offset: int
@@ -193,9 +199,10 @@ def load(unit: str, name: str, ordinal: int, base_obj: Path) -> SourceMap:
     try:
         info = codeview.parse_lines(debug_obj).get((name, ordinal))
         if info is None:
-            raise SourceError(
+            raise NoLineRecords(
                 f"/Z7 emitted no classic line records for {name} "
-                f"occurrence {ordinal} in {unit}")
+                f"occurrence {ordinal} in {unit} - a compiler-generated "
+                "body has no source statements to label")
         base_code = codeview.function_bytes(base_obj, name, ordinal)
     except codeview.CodeViewError as exc:
         raise SourceError(str(exc)) from exc
@@ -229,20 +236,25 @@ def load(unit: str, name: str, ordinal: int, base_obj: Path) -> SourceMap:
 
 def render_disassembly(text: str, source_map: SourceMap,
                        verbose: bool) -> str:
-    """Interleave statement headings with an already-selected base listing."""
+    """Interleave statement headings with an already-selected base listing.
+
+    The default rows are the same folded listing plain `disasm` prints
+    (addresses, call/data symbols in the operands); --verbose keeps the
+    raw objdump rows with byte columns and reloc lines."""
     from homm3.sema import _asm
 
-    parsed = [(line, _asm.parse_ins(line)) for line in text.splitlines()]
-    first = next((row[1][0] for row in parsed if row[1] is not None), 0)
+    if verbose:
+        rows = [(parsed[0] if parsed else None, line)
+                for line in text.splitlines()
+                if (parsed := _asm.parse_ins(line)) is not None
+                or line.strip()]
+    else:
+        rows = _asm.lite_rows(text)
+    first = next((offset for offset, _line in rows if offset is not None), 0)
     out = []
-    for line, instruction in parsed:
-        if instruction is not None:
-            offset, body = instruction
+    for offset, line in rows:
+        if offset is not None:
             for statement in source_map.heads_at(offset - first):
                 out.append(format_heading(statement, source_map.source))
-            out.append(line if verbose else "    " + body)
-        elif verbose:
-            out.append(line)
-        elif line.rstrip().endswith(">:") or line.startswith("[decode stopped"):
-            out.append(line)
+        out.append(line)
     return "\n".join(out) + "\n"

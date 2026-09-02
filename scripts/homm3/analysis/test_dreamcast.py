@@ -1,10 +1,13 @@
 """Hermetic tests for `homm3 dreamcast` selector and corpus logic."""
 from __future__ import annotations
 
+import contextlib
+import io
 import struct
 import unittest
 
 from homm3.analysis import dc_asm, dreamcast
+from homm3.core import undname
 
 
 def _fn(offset: str, name: str, module: str = "unit.obj", cb: str = "12"):
@@ -51,9 +54,80 @@ class CorpusResolutionTest(unittest.TestCase):
         with self.assertRaisesRegex(dreamcast.DreamcastError, "ambiguous"):
             self.corpus.resolve("Open")
 
-    def test_bare_numeric_is_never_silently_treated_as_dc_offset(self):
-        with self.assertRaisesRegex(dreamcast.DreamcastError, "use dc:0xOFF"):
-            self.corpus.resolve("0x100")
+    def test_short_number_without_retail_bridge_reads_as_dc_offset_with_note(self):
+        with contextlib.redirect_stderr(io.StringIO()) as err:
+            row = self.corpus.resolve("0x100")
+        self.assertEqual(row["name"], "Widget::Open")
+        self.assertIn("resolved as the Dreamcast offset dc:0x100", err.getvalue())
+        # a bridged retail RVA still wins over the same number as a DC offset
+        self.assertEqual(self.corpus.resolve("0x2000")["name"], "Widget::Open")
+
+    def test_dc_offsets_are_hex_with_or_without_prefix(self):
+        self.assertEqual(self.corpus.resolve("dc:100")["name"], "Widget::Open")
+        self.assertEqual(self.corpus.resolve("dc:120")["name"], "Widget::Close")
+        self.assertEqual(self.corpus.resolve("DC:0X140")["name"], "Other::Open")
+        self.assertEqual(self.corpus.resolve("other.obj:140")["name"], "Other::Open")
+        with self.assertRaisesRegex(dreamcast.DreamcastError, "invalid DC offset"):
+            self.corpus.resolve("dc:0x12zz")
+
+    def test_body_offset_snaps_to_its_procedure_with_note(self):
+        with contextlib.redirect_stderr(io.StringIO()) as err:
+            self.assertEqual(self.corpus.resolve("dc:0x104")["name"], "Widget::Open")
+            self.assertEqual(self.corpus.resolve("unit.obj:0x126")["name"],
+                             "Widget::Close")
+        self.assertIn("dc:0x104 is +0x4 into unit.obj:0x100 Widget::Open", err.getvalue())
+        with self.assertRaises(dreamcast.NoMatch):
+            self.corpus.resolve("dc:0x10c")  # cb=12: first byte past the body
+
+    def test_nothing_matching_is_an_answer_not_an_error(self):
+        self.assertTrue(issubclass(dreamcast.NoMatch, dreamcast.DreamcastError))
+        with self.assertRaises(dreamcast.NoMatch):
+            self.corpus.resolve("dc:0xdead")
+        with self.assertRaises(dreamcast.NoMatch):
+            self.corpus.resolve("NoSuchName")
+        with self.assertRaises(dreamcast.NoMatch):
+            self.corpus.resolve("nothing.obj:0x100")
+
+    def test_exact_name_with_several_procedures_resolves_all(self):
+        functions = self.functions + [_fn("0x160", "Widget::Open", "other.obj")]
+        corpus = dreamcast.Corpus(functions=functions, variables=[], bridges=[],
+                                  claims=[])
+        self.assertEqual([r["module"] for r in corpus.resolve_all("Widget::Open")],
+                         ["unit.obj", "other.obj"])
+        with self.assertRaisesRegex(dreamcast.DreamcastError, "ambiguous"):
+            corpus.resolve("Widget::Open")
+        with self.assertRaisesRegex(dreamcast.DreamcastError, "ambiguous"):
+            corpus.resolve_all("Open")  # a substring still has to be unique
+
+    def test_retail_bridge_to_two_procedures_resolves_all(self):
+        corpus = dreamcast.Corpus(
+            functions=self.functions, variables=[],
+            bridges=[_bridge("0x2000", "0x100", "Widget::Open"),
+                     _bridge("0x2000", "0x120", "Widget::Close")], claims=[])
+        self.assertEqual([r["name"] for r in corpus.resolve_all("0x402000")],
+                         ["Widget::Open", "Widget::Close"])
+
+    def test_pasted_declaration_loses_its_signature(self):
+        self.assertEqual(self.corpus.resolve("Widget::Close() const")["name"],
+                         "Widget::Close")
+
+    @unittest.skipUnless(undname.available(), "llvm-undname not on PATH")
+    def test_retail_address_without_bridge_matches_by_demangled_name(self):
+        corpus = dreamcast.Corpus(
+            functions=self.functions, variables=[], bridges=[], claims=[],
+            retail_names={0x1500: "?Close@Widget@@QAEXXZ",
+                          0x1600: "?Nowhere@Widget@@QAEXXZ"})
+        with contextlib.redirect_stderr(io.StringIO()) as err:
+            self.assertEqual(corpus.resolve("0x401500")["name"], "Widget::Close")
+        self.assertIn("BY NAME", err.getvalue())
+        with self.assertRaisesRegex(dreamcast.NoMatch, "Widget::Nowhere"):
+            corpus.resolve("0x401600")
+
+    @unittest.skipUnless(undname.available(), "llvm-undname not on PATH")
+    def test_retail_mangled_name_is_a_selector(self):
+        with contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(self.corpus.resolve("?Open@Widget@@QAEXXZ")["name"],
+                             "Widget::Open")
 
     def test_find_normalizes_module_suffix(self):
         rows = self.corpus.find("open", "unit")

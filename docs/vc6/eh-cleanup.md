@@ -159,9 +159,10 @@ the finding worth keeping:
   multiset. `diagnose` reports COUNT/ORDER; the positional read is yours.
 
 Method that worked three times: **compare the two state sequences with their
-neighbouring calls attached** (`grep -E '\tcall\t|REL32|\[ebp - 0x4\]'` over
-`homm3 sema disasm --verbose` on both sides, then `diff`). The call names
-localize the store; the store localizes the statement.
+neighbouring calls attached** (`grep -E ': call |\[ebp - 0x4\]'` over
+`homm3 sema disasm` on both sides, then `diff`; the default listing carries
+the callee name on the call row). The call names localize the store; the
+store localizes the statement.
 
 The Dreamcast xref graph is the natural corroborator for a lifetime claim,
 because it names the CALLS a compiland makes at source level:

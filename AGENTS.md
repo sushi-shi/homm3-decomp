@@ -151,7 +151,7 @@ Use the candidate's VC6 debug lines to localize a mismatch to the C++ statement 
 lowered into it:
 
 ```sh
-homm3 sema disasm 0x00554400 --base --source --verbose
+homm3 sema disasm 0x00554400 --base --source
 homm3 sema diff 0x00554400 --source
 ```
 

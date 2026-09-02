@@ -14,9 +14,18 @@ Subcommands
 
         SELECTOR is one of:
           0x00403ee0                 retail VA (or 0x3ee0 retail RVA)
-          dc:0x1190                  Dreamcast .text offset
+          dc:0x1190 / dc:1190        Dreamcast .text offset (always hex)
           adventuremapwindow.obj:0x1190
           TAdventureMapWindow::ClearBottomView
+          ?ClearBottomView@TAdventureMapWindow@@QAEXXZ   (retail name)
+
+        A retail address without a claim or bridge is matched BY NAME when
+        its retail symbol demangles to a Dreamcast procedure (a correlation,
+        noted on stderr); a short number that is no bridged retail RVA is
+        read as a Dreamcast offset (noted). An offset inside a procedure
+        body snaps to its owner (noted). One identity naming several
+        procedures (a bridge to two, an overloaded name) renders every
+        match under a banner; a substring naming several is listed.
 
   asm SELECTOR [--blocks] [--no-breakpoints] [--json]
         SH4 assembly labelled with CodeView breakpoint/source rows. --blocks
@@ -46,6 +55,10 @@ Subcommands
 All results are ANALYSIS OUTPUT about another pressing.  A Dreamcast address,
 line or call is never retail address/byte evidence; retail promotion still
 requires corroboration from the pinned Complete executable.
+
+rc: 0 = rendered, 1 = answered-NO (nothing in the corpus matches the
+selector, an empty `find`), 2 = error (bad selector syntax, missing corpus).
+Every invocation appends one line to build/homm3_dreamcast.log.
 """
 from __future__ import annotations
 
@@ -62,14 +75,16 @@ from pathlib import Path
 from typing import Any, Iterable, TextIO
 
 from homm3.analysis import dc_asm, dc_lines, dc_srclines, debug_shape
-from homm3.core import common
+from homm3.core import common, undname
 
 
 FUNCTIONS = common.EVIDENCE_DIR / "dreamcast/functions.csv"
 VARIABLES = common.EVIDENCE_DIR / "dreamcast/variables.csv"
 BRIDGES = common.EVIDENCE_DIR / "retail-dc-name-map.csv"
 SRC_DIR = common.HOMM3_DIR / "src"
+RETAIL_NAMES = common.HOMM3_DIR / "build/gen/symbol_names.csv"
 LOG = common.HOMM3_DIR / "build/homm3_dreamcast.log"
+MAX_RENDERED_MATCHES = 8
 
 DC_EXE_SHA256 = \
     "cdbc7e75bd7d057171fa12b728aaaee01c1db133fff350b034950dd21dd07736"
@@ -90,6 +105,29 @@ INLINE_CAUTION = (
 
 class DreamcastError(ValueError):
     pass
+
+
+class NoMatch(DreamcastError):
+    """The selector names nothing in the corpus: an ANSWER (rc 1), not a
+    broken invocation (rc 2) - scripts and the usage log can tell them
+    apart, as with `homm3 sema`."""
+
+
+def _note(message: str) -> None:
+    """A resolution note on stderr - stdout stays the rendered answer
+    (and valid JSON under --json)."""
+    print(f"[homm3 dreamcast] {message}", file=sys.stderr)
+
+
+def _dc_offset(selector: str) -> int:
+    """`dc:0x1190` and `dc:1190` are the same Dreamcast .text offset -
+    always hex, because the asm listing prints addresses without 0x."""
+    text = selector.split(":", 1)[1].strip()
+    if text[:2].lower() == "0x":
+        text = text[2:]
+    if not re.fullmatch(r"[0-9a-fA-F]+", text):
+        raise DreamcastError(f"{selector}: invalid DC offset (hex expected)")
+    return int(text, 16)
 
 
 @dataclass(frozen=True)
@@ -157,11 +195,13 @@ class Corpus:
     def __init__(self, *, functions: list[dict[str, str]] | None = None,
                  variables: list[dict[str, str]] | None = None,
                  bridges: list[dict[str, str]] | None = None,
-                 claims: list[Claim] | None = None):
+                 claims: list[Claim] | None = None,
+                 retail_names: dict[int, str] | None = None):
         self.functions = _csv_rows(FUNCTIONS) if functions is None else functions
         self.variables = _csv_rows(VARIABLES) if variables is None else variables
         self.bridges = _csv_rows(BRIDGES) if bridges is None else bridges
         self.claims = _source_claims() if claims is None else claims
+        self._retail_names = retail_names  # rva -> mangled name; lazy
 
         self.by_key: dict[tuple[str, int], dict[str, str]] = {}
         self.by_offset: dict[int, list[dict[str, str]]] = defaultdict(list)
@@ -171,6 +211,7 @@ class Corpus:
             self.by_key[key] = row
             self.by_offset[key[1]].append(row)
             self.by_name[row["name"]].append(row)
+        self._starts = sorted(self.by_offset)
 
         # A foreign-file line row inside a procedure can be joined back to
         # the helper definition that supplied it.  Template instantiations
@@ -241,53 +282,155 @@ class Corpus:
             raise DreamcastError(f"{selector}: ambiguous: {detail}{more}")
         return next(iter(unique.values()))
 
-    def resolve(self, selector: str) -> dict[str, str]:
-        """Resolve retail address, explicit DC address, module:offset or name."""
-        if selector.lower().startswith("dc:"):
-            try:
-                off = _integer(selector.split(":", 1)[1])
-            except ValueError as exc:
-                raise DreamcastError(f"{selector}: invalid DC offset") from exc
-            return self._one(selector, self.by_offset.get(off, ()))
+    # --- selector resolution ---------------------------------------------------
 
-        module_match = re.fullmatch(r"([^:]+\.obj):(0x[0-9a-fA-F]+)", selector)
-        if module_match:
-            key = (module_match.group(1), int(module_match.group(2), 16))
-            row = self.by_key.get(key)
-            if row is None:
-                raise DreamcastError(f"{selector}: no Dreamcast roster row")
-            return row
+    def owner_rows(self, off: int) -> list[dict[str, str]]:
+        """Roster rows whose [offset, offset+cb) covers *off* (a body
+        offset pasted from a listing snaps to its procedure)."""
+        k = bisect_right(self._starts, off) - 1
+        if k < 0:
+            return []
+        start = self._starts[k]
+        return [row for row in self.by_offset[start]
+                if start <= off < start + _integer(row["cb"])]
 
-        if re.fullmatch(r"0x[0-9a-fA-F]+", selector):
-            value = int(selector, 16)
-            va = value if value >= common.IMAGE_BASE else value + common.IMAGE_BASE
-            rva = va - common.IMAGE_BASE
-            rows: list[dict[str, str]] = []
-            for claim in self.claims_by_va.get(va, ()):
-                row = self.by_key.get((claim.module, claim.dc_offset))
-                if row is not None:
-                    rows.append(row)
-            for bridge in self.bridges_by_rva.get(rva, ()):
-                row = self.by_key.get((bridge["dc_module"],
-                                       _integer(bridge["dc_offset"])))
-                if row is not None:
-                    rows.append(row)
-            if not rows:
-                raise DreamcastError(
-                    f"{selector}: no source claim or retail/DC bridge; use "
-                    "dc:0xOFF for a Dreamcast offset")
-            return self._one(selector, rows)
+    def _retail_name(self, rva: int) -> str | None:
+        """The retail inventory name at *rva* (build/gen/symbol_names.csv),
+        loaded once on first use; None without an inventory."""
+        if self._retail_names is None:
+            names: dict[int, str] = {}
+            if RETAIL_NAMES.is_file():
+                with RETAIL_NAMES.open(newline="") as fh:
+                    rows = (ln for ln in fh if not ln.startswith("#"))
+                    for row in csv.DictReader(rows):
+                        if row.get("kind") == "func":
+                            try:
+                                names[int(row["rva"], 16)] = row["name"]
+                            except ValueError:
+                                continue
+            self._retail_names = names
+        return self._retail_names.get(rva)
 
-        exact = self.by_name.get(selector, ())
+    def _named(self, name: str) -> list[dict[str, str]]:
+        exact = self.by_name.get(name)
         if exact:
-            return self._one(selector, exact)
-        folded = [row for name, rows in self.by_name.items()
-                  if name.lower() == selector.lower() for row in rows]
-        if folded:
-            return self._one(selector, folded)
-        needle = selector.lower()
-        return self._one(selector, (row for row in self.functions
-                                    if needle in row["name"].lower()))
+            return list(exact)
+        return [row for candidate, rows in self.by_name.items()
+                if candidate.lower() == name.lower() for row in rows]
+
+    def _snapped(self, selector: str, off: int,
+                 owners: list[dict[str, str]]) -> list[dict[str, str]]:
+        owner = owners[0]
+        _note(f"{selector} is +0x{off - _integer(owner['offset']):x} into "
+              f"{owner['module']}:{owner['offset']} {owner['name']} - "
+              "using the owner")
+        return owners
+
+    def _dc_rows(self, selector: str, off: int) -> list[dict[str, str]]:
+        rows = self.by_offset.get(off)
+        if rows:
+            return list(rows)
+        owners = self.owner_rows(off)
+        if owners:
+            return self._snapped(selector, off, owners)
+        raise NoMatch(f"{selector}: no Dreamcast procedure matches")
+
+    def _retail_rows(self, selector: str, value: int) -> list[dict[str, str]]:
+        """Retail VA/RVA: source claim or bridge first; then (short
+        numbers only) an exact Dreamcast procedure start; then the retail
+        symbol's demangled name in the corpus; then a Dreamcast body
+        offset. Every fallback says so on stderr."""
+        short = value < common.IMAGE_BASE
+        va = value + common.IMAGE_BASE if short else value
+        rva = va - common.IMAGE_BASE
+        rows: list[dict[str, str]] = []
+        for claim in self.claims_by_va.get(va, ()):
+            row = self.by_key.get((claim.module, claim.dc_offset))
+            if row is not None:
+                rows.append(row)
+        for bridge in self.bridges_by_rva.get(rva, ()):
+            row = self.by_key.get((bridge["dc_module"],
+                                   _integer(bridge["dc_offset"])))
+            if row is not None:
+                rows.append(row)
+        if rows:
+            return rows
+        if short and self.by_offset.get(value):
+            _note(f"{selector}: no retail claim or bridge for rva 0x{rva:x}; "
+                  f"resolved as the Dreamcast offset dc:0x{value:x}")
+            return list(self.by_offset[value])
+        name = self._retail_name(rva)
+        qualified = undname.qualified_names([name]).get(name) if name else None
+        if qualified:
+            rows = self._named(qualified)
+            if rows:
+                _note(f"{selector} {name}: no retail/DC bridge; matched the "
+                      f"Dreamcast procedure {qualified} BY NAME - a "
+                      "correlation, not a bridge")
+                return rows
+        if short:
+            owners = self.owner_rows(value)
+            if owners:
+                _note(f"{selector}: no retail claim or bridge for rva "
+                      f"0x{rva:x}; read as a Dreamcast offset")
+                return self._snapped(f"dc:0x{value:x}", value, owners)
+        about = ""
+        if name:
+            about = f" ({name}" + (f" = {qualified}" if qualified else "") + ")"
+        raise NoMatch(
+            f"{selector}{about}: no source claim, retail/DC bridge, or "
+            "same-named Dreamcast procedure; use dc:0xOFF for a Dreamcast "
+            "offset")
+
+    def _name_rows(self, selector: str) -> list[dict[str, str]]:
+        name = selector
+        if name.startswith("?"):
+            qualified = undname.qualified_names([name]).get(name)
+            if not qualified:
+                raise DreamcastError(
+                    f"{selector}: not a decodable MSVC name"
+                    + ("" if undname.available() else
+                       " (llvm-undname is not on PATH)"))
+            _note(f"{selector} -> {qualified}")
+            name = qualified
+        name = undname.strip_signature(name)
+        rows = self._named(name)
+        if rows:
+            return rows
+        needle = name.lower()
+        rows = [row for row in self.functions if needle in row["name"].lower()]
+        if not rows:
+            raise NoMatch(f"{selector}: no Dreamcast procedure matches")
+        return [self._one(selector, rows)]  # a substring must be unique
+
+    def resolve_all(self, selector: str) -> list[dict[str, str]]:
+        """Every roster row a selector names: retail address, explicit DC
+        offset (`dc:0x1190` or `dc:1190`, always hex), module:offset, a
+        Dreamcast name, or a retail mangled name. Several rows mean one
+        identity with several procedures (a retail address bridged to two
+        Dreamcast procedures, an exact name with overloads); a substring
+        matching several names is still an error that lists them."""
+        selector = selector.strip()
+        if selector.lower().startswith("dc:"):
+            return self._dc_rows(selector, _dc_offset(selector))
+        module_match = re.fullmatch(r"([^:]+\.obj):(?:0[xX])?([0-9a-fA-F]+)",
+                                    selector)
+        if module_match:
+            module, off = module_match.group(1), int(module_match.group(2), 16)
+            row = self.by_key.get((module, off))
+            if row is not None:
+                return [row]
+            owners = [r for r in self.owner_rows(off) if r["module"] == module]
+            if owners:
+                return self._snapped(selector, off, owners)
+            raise NoMatch(f"{selector}: no Dreamcast roster row")
+        if re.fullmatch(r"0[xX][0-9a-fA-F]+", selector):
+            return self._retail_rows(selector, int(selector, 16))
+        return self._name_rows(selector)
+
+    def resolve(self, selector: str) -> dict[str, str]:
+        """Exactly one roster row; several are an explicit ambiguity."""
+        return self._one(selector, self.resolve_all(selector))
 
     def find(self, pattern: str, module: str | None = None) \
             -> list[dict[str, str]]:
@@ -1157,6 +1300,22 @@ def _log(rc: int, argv: list[str]) -> None:
         pass
 
 
+def _matches(corpus: Corpus, selector: str) -> list[dict[str, str]]:
+    """The rows `show`/`asm` render: one, or every procedure one identity
+    names, capped so an accidental wide selector still gets a listing."""
+    rows = corpus.resolve_all(selector)
+    if len(rows) > MAX_RENDERED_MATCHES:
+        return [corpus._one(selector, rows)]  # raises the listing
+    return rows
+
+
+def _match_banner(index: int, rows: list[dict[str, str]]) -> None:
+    if len(rows) > 1:
+        row = rows[index]
+        print(f"==== match {index + 1} of {len(rows)}: {row['module']}:"
+              f"{row['offset']} {row['name']} ====")
+
+
 def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     parser = _build_parser()
@@ -1165,37 +1324,50 @@ def main(argv: list[str] | None = None) -> int:
         args = parser.parse_args(argv)
         corpus = Corpus()
         if args.command == "show":
-            row = corpus.resolve(args.selector)
-            dossier = build_dossier(corpus, row)
+            rows = _matches(corpus, args.selector)
+            dossiers = [build_dossier(corpus, row) for row in rows]
             if args.json:
-                json.dump(dossier.to_dict(), sys.stdout,
-                          indent=2, sort_keys=True)
+                payload = (dossiers[0].to_dict() if len(dossiers) == 1 else
+                           {"authority": AUTHORITY, "selector": args.selector,
+                            "matches": [d.to_dict() for d in dossiers]})
+                json.dump(payload, sys.stdout, indent=2, sort_keys=True)
                 print()
             else:
-                render_dossier(dossier)
+                for index, (row, dossier) in enumerate(zip(rows, dossiers)):
+                    _match_banner(index, rows)
+                    render_dossier(dossier)
         elif args.command == "asm":
-            row = corpus.resolve(args.selector)
+            rows = _matches(corpus, args.selector)
             if not dc_lines.DUMP.is_file():
                 raise DreamcastError(
                     f"Dreamcast CodeView dump not found: {dc_lines.DUMP}")
             dump = dc_lines._dump_lines()
             data = _gate_dc_exe(dc_lines.EXE)
-            try:
-                view = dc_asm.build_view(row, dump, data)
-            except dc_asm.AsmError as exc:
-                raise DreamcastError(str(exc)) from exc
+            views = []
+            for row in rows:
+                try:
+                    views.append(dc_asm.build_view(row, dump, data))
+                except dc_asm.AsmError as exc:
+                    raise DreamcastError(str(exc)) from exc
             if args.json:
-                json.dump(view, sys.stdout, indent=2, sort_keys=True)
+                payload = (views[0] if len(views) == 1 else
+                           {"authority": AUTHORITY, "selector": args.selector,
+                            "matches": views})
+                json.dump(payload, sys.stdout, indent=2, sort_keys=True)
                 print()
             else:
-                dc_asm.render(view, data, dc_lines.symbol_map(dump),
-                              blocks=args.blocks,
-                              breakpoints=not args.no_breakpoints,
-                              out=sys.stdout)
+                for index, view in enumerate(views):
+                    _match_banner(index, rows)
+                    dc_asm.render(view, data, dc_lines.symbol_map(dump),
+                                  blocks=args.blocks,
+                                  breakpoints=not args.no_breakpoints,
+                                  out=sys.stdout)
         elif args.command == "find":
             rows = corpus.find(args.text, args.module)
             if args.limit < 0:
                 raise DreamcastError("--limit must be >= 0")
+            if not rows:
+                rc = 1  # answered: nothing is named like that
             if args.limit:
                 rows = rows[:args.limit]
             payload = _find_payload(corpus, rows)
@@ -1291,6 +1463,9 @@ def main(argv: list[str] | None = None) -> int:
                 print()
             else:
                 _render_stats(payload)
+    except NoMatch as exc:
+        print(f"[homm3 dreamcast] no match: {exc}", file=sys.stderr)
+        rc = 1
     except DreamcastError as exc:
         print(f"[homm3 dreamcast] ERROR: {exc}", file=sys.stderr)
         rc = 2
