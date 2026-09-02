@@ -203,10 +203,20 @@ public:
         DrawHeroShadow(seqnum, framenum, sx, sy, sw, sh, dst->map, dx, dy,
                        dst->Width, dst->Height, dst->Pitch, hflip);
     }
-#ifdef HOMM3_CSPRITE_DRAW_METHODS
     void DrawHeroAlpha(int seqnum, int framenum, int sx, int sy, int sw,
                        int sh, unsigned short* dst, int dx, int dy, int dw,
                        int dh, int dpitch, unsigned char hflip);
+    // E:\\gamedcs\\CSprite.h:438. DrawCursorAlpha reaches the bitmap
+    // overload four times; Dreamcast's line table shows this header boundary
+    // and Complete expands it into the raw map/width/height/pitch call.
+    void DrawHeroAlpha(int seqnum, int framenum, int sx, int sy, int sw,
+                       int sh, Bitmap16Bit* dst, int dx, int dy,
+                       unsigned char hflip)
+    {
+        DrawHeroAlpha(seqnum, framenum, sx, sy, sw, sh, dst->map, dx, dy,
+                      dst->Width, dst->Height, dst->Pitch, hflip);
+    }
+#ifdef HOMM3_CSPRITE_DRAW_METHODS
     void DrawSpellEffect(int seqnum, int framenum, int sx, int sy, int sw,
                          int sh, unsigned short* dst, int dx, int dy, int dw,
                          int dh, int dpitch, unsigned char hflip,
