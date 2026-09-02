@@ -5,6 +5,8 @@
 #include "game.h"
 #include "advmgr.h"
 #include "cursor.h"
+#include "findpath.h"
+#include "prefs.h"
 
 // struct.h:102 is header-inline in Dreamcast and both Dreamcast and retail
 // expand it inside OnMoveHero. Kept TU-visible pending consolidation of the
@@ -66,11 +68,28 @@ void advManager::TurnTo(int newDirection)
 #if 0  // @carcass
 
 // E:\gamedcs\cursor.cpp:393
+#endif  // @carcass
+
 VA(0x00480000, 0x84)  // exhaustive cursor-tail order + ret 8, dc 0x7a45c
 int advManager::GetMoveShowIt(hero* currHero, int direction)
 {
-    // @stub
+    int xInc = normalDirTable[direction].x;
+    int yInc = normalDirTable[direction].y;
+
+    if ((gpCurrentPlayer->IsLocalHuman()
+         || !gUnnamed698758.blackoutComputer)
+        && (MapExtraPosAndAdjacentsSet(currHero->x, currHero->y,
+                                      currHero->z, gMapVisibilityBit)
+            || MapExtraPosAndAdjacentsSet(currHero->x + xInc,
+                                         currHero->y + yInc,
+                                         currHero->z,
+                                         gMapVisibilityBit)))
+        return 1;
+    else
+        return 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\cursor.cpp:420
 VA(0x00480090, 0x1A4)  // exhaustive cursor-tail order + ret 0x1c, dc 0x7a4d0
