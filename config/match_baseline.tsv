@@ -2153,6 +2153,7 @@ newgame	?pick_alignment@@YI?AW4TTownType@@HE@Z	100.0000	100.0000	100.0000	0x1132
 objecttype	?_Inc@const_iterator@?$_Tree@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V12@U_Kfn@?$set@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@2@U?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x117780	-
 overview	??1TOverviewWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x120d90	048fab1d8faa
 overview	??_GTOverviewWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x120d60	-
+overview	?SetupDynamicStuff@game@@QAEXHH@Z	90.5699	90.5699	90.5699	0x11bd50	f385ac22aff9
 overview	?SetupNewOverviewType@game@@QAEXHE@Z	96.4609	100.0000	100.0000	0x11e330	f328fdfe08b1
 overview	?UpdateBackpack@@YIXH@Z	96.5741	96.5741	96.5741	0x122470	838327f3aed0
 overview	?get_last_backpack_index@@YIJJ@Z	100.0000	100.0000	100.0000	0x1225d0	ba725cb029d9

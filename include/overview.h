@@ -8,6 +8,16 @@
 #include <vector>
 #include "advmgr_popup.h"
 
+// Per-hero artifact subpage selected in the kingdom overview. Retail's
+// SetupDynamicStuff and click handler prove that the two equipped pages are
+// nine slots each and the third page is the backpack. Names are provisional;
+// the domain and values are byte-proven.
+enum EOverviewHeroArtifactPage {
+    OVERVIEW_HERO_EQUIPPED_PAGE_1 = 0,
+    OVERVIEW_HERO_EQUIPPED_PAGE_2 = 1,
+    OVERVIEW_HERO_BACKPACK_PAGE = 2
+};
+
 // Complete allocates TOverviewWindow as exactly 0x80 bytes. Its destructor
 // proves that the CAdvPopup base is followed by two VC6 vectors: it tears down
 // their allocation pointers at +0x74 and +0x64, in reverse construction

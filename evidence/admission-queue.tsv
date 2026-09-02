@@ -182,7 +182,6 @@ bracketed	815	0x86110	bracketed	cursor..customcampaign	cursor,customcampaign	gam
 bracketed	815	0x16a400	bracketed	search..seerhut	search,seerhut	game_16ab40_sub00_16a400	resolve the owner, then add its VA claim and body
 bracketed	814	0x347a0	bracketed	ai_player..ai_tactical	ai_player,ai_tactical	game_29ad0_sub00_347a0	resolve the owner, then add its VA claim and body
 bracketed	810	0x1402a0	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_1402a0	resolve the owner, then add its VA claim and body
-carcass	808	0x82010	in-span	cursor	cursor	advManager_ProcessMapChangeNew	enable the existing VA claim and reconstruct its body
 bracketed	804	0x145250	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_144a50_sub00_145250	resolve the owner, then add its VA claim and body
 bracketed	804	0x190ad0	bracketed	singleselectionwindow..slider	singleselectionwindow,slider	game_185050_sub01_190ad0	resolve the owner, then add its VA claim and body
 bracketed	802	0x7b480	bracketed	creaturetype..csequence	creaturetype,csequence	CSprite_AddFrame	resolve the owner, then add its VA claim and body
@@ -999,7 +998,6 @@ bracketed	71	0x12f440	bracketed	quickherowindow..quickinfowindow	quickherowindow
 bracketed	70	0x84230	bracketed	cursor..customcampaign	cursor,customcampaign	game_84230	resolve the owner, then add its VA claim and body
 bracketed	70	0x84280	bracketed	cursor..customcampaign	cursor,customcampaign	game_84280	resolve the owner, then add its VA claim and body
 bracketed	70	0x853c0	bracketed	cursor..customcampaign	cursor,customcampaign	game_853c0	resolve the owner, then add its VA claim and body
-unclaimed-in-span	69	0x82340	in-span	cursor	cursor	SendMapChange	add a VA claim and body to cursor
 bracketed	69	0x11a940	bracketed	newgame..overview	newgame,overview	game_11a1f0_sub00_11a940	resolve the owner, then add its VA claim and body
 bracketed	69	0x14d0a0	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_143e20_sub05_14d0a0	resolve the owner, then add its VA claim and body
 bracketed	68	0x235c0	bracketed	ai..ai_combat	ai,ai_combat	game_23340_sub00_235c0	resolve the owner, then add its VA claim and body
