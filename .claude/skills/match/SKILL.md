@@ -157,8 +157,12 @@ and diagnosed twelve phantom regressions before noticing.
    claim or DATA lands, run `homm3 delink` ONCE (the target side must relearn
    names), then `--fast` again. Scores: filter `build/objdiff/report.json` by
    unit (report addresses are obj-local — count identity, not RVAs).
-5. **Iterate.** `homm3 sema diff 0x<va> --asm` (masked; reloc-name-only rows on
-   data are cosmetic), `--branches` for the structural signal the masking hides.
+5. **Iterate.** `homm3 sema diff 0x<va> --summary` first: every view's verdict on
+   one screen plus the next view to run (`--why-bytes` adds the first byte-level
+   divergence unmasked). Then `--calls` (the callee sequences, judged like
+   `objdiff-cli diff`; a one-sided call is an inlining decision), `--branches`
+   for the structural signal the masking hides, `--asm` (masked; reloc-name-only
+   rows on data are cosmetic).
    For real deltas compare UNMASKED (`disasm --base` vs `disasm`) — masking
    hides immediates (the IDC_ARROW and 0x54cc bugs were invisible masked).
    Structural versions first (homm2 doctrine): pick the retail-compatible CFG

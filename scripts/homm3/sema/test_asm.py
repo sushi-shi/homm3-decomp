@@ -116,3 +116,37 @@ class LiteRenderTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class RelocRowsAndCensusTests(unittest.TestCase):
+    def test_reloc_rows_pairs_each_instruction_with_its_relocs(self):
+        rows = _asm.reloc_rows(LiteRenderTests.LISTING)
+        self.assertEqual(len(rows), 14)
+        offset, raw, body, relocs = rows[0]
+        self.assertEqual((offset, raw, body), (0, b"\xe8\0\0\0\0", "call 0x5 <fn+0x5>"))
+        self.assertEqual(relocs, [(1, "REL32", "?callee@@YAXXZ")])
+        pool = {row[0]: row for row in rows}
+        self.assertEqual(pool[0x24][3], [(0x24, "DIR32", "$L2")])
+        self.assertEqual(pool[0x1e][3], [])
+
+    def test_skeleton_census_counts_and_first_marks(self):
+        base = [(0, ["push ebp", "cmp eax, 0x1"], "jcc B2 | fall B1"),
+                (0x8, ["xor eax, eax"], "fall B2"),
+                (0xa, ["pop ebp"], "ret")]
+        target = [(0, ["push ebp", "cmp eax, 0x1"], "jcc B2 | fall B1"),
+                  (0x8, ["xor eax, eax", "nop"], "fall B2"),
+                  (0xb, ["pop ebp"], "ret"),
+                  (0xc, ["int3"], "end")]
+        census = _asm.skeleton_census(base, target)
+        self.assertEqual(census["blocks"], (3, 4))
+        self.assertEqual((census["exact"], census["size"], census["shift"],
+                          census["flow"], census["missing"]), (2, 1, 0, 0, 1))
+        self.assertEqual(census["first_differs"], (1, "size"))
+        self.assertIsNone(census["first_flow"])
+        self.assertFalse(census["same"])
+        text, same = _asm.skeleton_diff(base, target)
+        self.assertFalse(same)
+        self.assertIn("[skeleton diff: base 3 vs target 4 blocks; 2 exact, 1 size-only, "
+                      "0 target-shift, 0 flow-kind, 1 missing]", text)
+        self.assertIn("[legend:", text)
+        self.assertTrue(_asm.skeleton_census(base, base)["same"])
