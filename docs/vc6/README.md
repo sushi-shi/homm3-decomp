@@ -84,6 +84,6 @@ a compiler wall.
 
 ## Status
 
-Phase 0 (driver ground truth + probe rig) in progress. See the approved plan
-at `~/.claude/plans/good-now-onto-the-lexical-allen.md` for the full phase
-sequence and `docs/gruntz-script-port.md` §5 for the decision log.
+Phase 0 (driver ground truth + probe rig) is in progress. Reusable compiler
+findings live in this directory; function-specific failed probes are recorded
+beside the affected source function.

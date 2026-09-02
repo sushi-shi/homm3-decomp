@@ -96,8 +96,9 @@ to its role package, not to a new top-level file.
 
 ## References
 
-- `docs/gruntz-script-port.md` — the port plan, module inventory, decision log, and
-  open decision points. Read it before proposing any new area.
+- Function-specific failed probes belong beside the affected source function;
+  reusable compiler-wide findings belong under `docs/vc6/`. Do not create a
+  second chronological decision log.
 - `~/Projects/gruntz` — the architecture template (pipeline, gates, conventions).
 - `~/Projects/homm2/homm2-decomp` (branch `decomp-pol-2.0`) — the mature sibling
   project; its README/CLAUDE/AGENTS are the style reference for this repo.
