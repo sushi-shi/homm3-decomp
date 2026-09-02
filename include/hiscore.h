@@ -67,6 +67,11 @@ public:
 };
 SIZE(highScoreManager, 0x8d4);
 
+// Retail oldmain opens this manager and invokes ViewHiScore through the
+// pointer at 0x6993cc; hiscore.cpp owns the DATA definition.
+DATA(0x006993cc) extern highScoreManager* gpHighScoreManager;
+DATA(0x0069955c) extern int gbShowHighScore;
+
 // DC names the three CHeroWindowEx-tail pointers at +0x4c/+0x50/+0x54.
 // Retail's proven CHeroWindowEx is four bytes wider, putting them at
 // +0x50/+0x54/+0x58; GetRolloverWidget 0x4e97f0 directly confirms the

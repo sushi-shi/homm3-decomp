@@ -81,13 +81,13 @@ SIZE(SUnnamed698758, 212);
 extern SUnnamed698758 gUnnamed698758;
 
 // Four dwords at 0x699524..0x699530, OUTSIDE the prefs block (it ends
-// at 0x69882b), so they are separate globals and not members. Written
-// under the four diagnostic value names shown; roles otherwise
-// unattested, so the names stay house ordinal placeholders.
+// at 0x69882b), so they are separate globals and not members. Their names are
+// published by Dreamcast CodeView and their roles/addresses are independently
+// confirmed by the retail preference I/O and oldmain benchmark block.
 // Definitions + DATA claims in src/misc.cpp.
-extern int gUnnamed699524;   // "First Time"
-extern int gUnnamed699528;   // "Test Decomp"
-extern int gUnnamed69952c;   // "Test Read"
-extern int gUnnamed699530;   // "Test Blit"
+extern int gbFirstTimeThrough;  // 0x699524, "First Time"
+extern int giTestDecomp;        // 0x699528, "Test Decomp"
+extern int giTestRead;          // 0x69952c, "Test Read"
+extern int giTestBlit;          // 0x699530, "Test Blit"
 
 #endif  /* HOMM3_PREFS_H */

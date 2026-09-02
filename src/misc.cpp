@@ -111,7 +111,7 @@ void CheckConfigFile()
     gUnnamed698758.combatFirstAidTent &= 1;
     gUnnamed698758.autosave &= 1;
     gUnnamed698758.blackoutComputer &= 1;
-    gUnnamed699524 &= 1;
+    gbFirstTimeThrough &= 1;
     gUnnamed698758.unnamed8f &= 1;
     gUnnamed698758.mainGameShowMenu &= 1;
     gUnnamed698758.mainGameFullScreen &= 1;
@@ -205,13 +205,13 @@ DATA(0x006993c0)
 int giShowIntro;
 
 DATA(0x00699524)
-int gUnnamed699524;   // "First Time"
+int gbFirstTimeThrough;
 DATA(0x00699528)
-int gUnnamed699528;   // "Test Decomp"
+int giTestDecomp;
 DATA(0x0069952c)
-int gUnnamed69952c;   // "Test Read"
+int giTestRead;
 DATA(0x00699530)
-int gUnnamed699530;   // "Test Blit"
+int giTestBlit;
 
 // The registry key and value-name table. Retail LOADS each of these
 // (`mov ecx, dword ptr [0x63ff80]`) rather than pushing a literal
@@ -360,7 +360,7 @@ void SetGameDefaults()
     gUnnamed698758.blackoutComputer = 0;
     gUnnamed698758.mainGameShowMenu = 1;
     gUnnamed698758.mainGameFullScreen = 1;
-    gUnnamed699524 = 1;
+    gbFirstTimeThrough = 1;
     strcpy(gUnnamed698758.networkDefaultName, "Player");
     GenerateUniqueSystemID();
     gUnnamed698758.unnamed8f = 0;
@@ -517,10 +517,10 @@ void ReadPrefsFromRegistry()
             &gUnnamed698758.windowScrollSpeed);
         READ_REG_PREF(szPrefBlackoutComputer,
             &gUnnamed698758.blackoutComputer);
-        READ_REG_PREF(szPrefFirstTime, &gUnnamed699524);
-        READ_REG_PREF(szPrefTestDecomp, &gUnnamed699528);
-        READ_REG_PREF(szPrefTestRead, &gUnnamed69952c);
-        READ_REG_PREF(szPrefTestBlit, &gUnnamed699530);
+        READ_REG_PREF(szPrefFirstTime, &gbFirstTimeThrough);
+        READ_REG_PREF(szPrefTestDecomp, &giTestDecomp);
+        READ_REG_PREF(szPrefTestRead, &giTestRead);
+        READ_REG_PREF(szPrefTestBlit, &giTestBlit);
         READ_REG_PREF(szPrefBinkVideo,
             &gUnnamed698758.binkVideo);
 
@@ -658,16 +658,16 @@ void WritePrefsToRegistry()
                 &gUnnamed698758.blackoutComputer)), 4);
         RegSetValueExA(hKey, szPrefFirstTime, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &gUnnamed699524)), 4);
+                &gbFirstTimeThrough)), 4);
         RegSetValueExA(hKey, szPrefTestDecomp, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &gUnnamed699528)), 4);
+                &giTestDecomp)), 4);
         RegSetValueExA(hKey, szPrefTestRead, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &gUnnamed69952c)), 4);
+                &giTestRead)), 4);
         RegSetValueExA(hKey, szPrefTestBlit, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &gUnnamed699530)), 4);
+                &giTestBlit)), 4);
         RegSetValueExA(hKey, szPrefUniqueSystemID, 0, REG_SZ,
             static_cast<const BYTE*>(static_cast<const void*>(
                 gUnnamed698758.name)), 4);

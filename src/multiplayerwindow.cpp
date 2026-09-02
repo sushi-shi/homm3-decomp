@@ -441,7 +441,7 @@ TMultiPlayerWindow::TMultiPlayerWindow()
     Widgets.push_back(new bitmapBorder(0, 0, 454, 490, 100, "mupopup.pcx", 0x800));
 
     hotSeat = 0;
-    if (!gbRestrictedGameTypeMenu)
+    if (!gbNoCDRom)
         hotSeat = new button(373, 78, 64, 48, 102, "muBhot.def", 0, 1, 0, 0, 2);
 
     ipx = new button(373, 135, 64, 48, 103, "muBipx.def", 0, 1, 0, 0, 2);
@@ -451,7 +451,7 @@ TMultiPlayerWindow::TMultiPlayerWindow()
     online = new button(373, 363, 64, 48, 101, "mubonl.def", 0, 1, 0, 0, 2);
 
     host = 0;
-    if (!gbRestrictedGameTypeMenu)
+    if (!gbNoCDRom)
         host = new button(373, 78, 64, 48, 107, "muBhost.def", 0, 1, 0, 0, 2);
 
     join = new button(373, 135, 64, 48, 108, "muBjoin.def", 0, 1, 0, 0, 2);

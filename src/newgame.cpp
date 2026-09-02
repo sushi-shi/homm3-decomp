@@ -72,7 +72,7 @@ void game::ShowScenInfo()
         TCampaignBrief campaignBrief(0, 1);
         campaignBrief.DoModal();
         if (gpWindowManager->dialogReturn == NEWGAME_CAMPAIGN_BRIEF_EXIT)
-            gUnnamed6976d8 = NEWGAME_COMMAND_QUIT;
+            gGameCommand = NEWGAME_COMMAND_QUIT;
     } else {
         CScenarioInfoDlg scenarioInfo;
         scenarioInfo.DoModal(0);

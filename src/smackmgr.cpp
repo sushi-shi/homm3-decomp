@@ -23,6 +23,7 @@
 #include "kbwin.h"
 #include "bitmap16.h"
 #include "message.h"
+#include "prefs.h"
 
 struct SoundHeaderStruct;
 
@@ -184,7 +185,7 @@ int VideoPlay(int id, int x, int y, int w, int h)
     unsigned char aborted;
 
     if (id >= VIDEO_ID_FIRST_TABLED
-        && (!gVideoDescriptors[id].useBink || !gbBinkEnabled
+        && (!gVideoDescriptors[id].useBink || !gUnnamed698758.binkVideo
             || (id == VIDEO_ID_STATE_GATED
                 && *gpVideoGameState != VIDEO_GAME_STATE_FORCED_BINK_LOW
                 && *gpVideoGameState != VIDEO_GAME_STATE_FORCED_BINK_HIGH))) {
@@ -265,7 +266,7 @@ VA(0x00597570, 0x75)  // anchor-global, dc 0x14ac3c
 void VideoOpen(int id, int x, int y, int w, int h, int a6, int a7, int a8)
 {
     if (id >= VIDEO_ID_FIRST_TABLED
-        && (!gVideoDescriptors[id].useBink || !gbBinkEnabled
+        && (!gVideoDescriptors[id].useBink || !gUnnamed698758.binkVideo
             || (id == VIDEO_ID_STATE_GATED
                 && *gpVideoGameState != VIDEO_GAME_STATE_FORCED_BINK_LOW
                 && *gpVideoGameState != VIDEO_GAME_STATE_FORCED_BINK_HIGH)))

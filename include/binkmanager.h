@@ -5,6 +5,8 @@
 #ifndef HOMM3_BINKMANAGER_H
 #define HOMM3_BINKMANAGER_H
 
+#include <va.h>
+
 // ddraw's interface is only ever passed through here; the forward
 // declaration keeps <ddraw.h> out of every includer that does not
 // itself touch DirectDraw (smackmgr.cpp includes the real header
@@ -27,6 +29,45 @@ struct BINK {
     long NumRects;            // +0xb0
 };
 typedef BINK Bink;
+
+// The game shipped against an older Bink SDK than vendor/bink-0.5a.  The
+// Dreamcast CodeView type is 112 bytes and, unlike the later header, has no
+// SkippedBlits member and reports one combined TotalDecompTime.  Retail
+// oldmain independently proves the fields it reads at +8/+20/+32/+48/+52/+56.
+// Keep this ABI here instead of including the incompatible later SDK type.
+struct BINKSUMMARY {
+    unsigned long Width;
+    unsigned long Height;
+    unsigned long TotalTime;
+    unsigned long FileFrameRate;
+    unsigned long FileFrameRateDiv;
+    unsigned long FrameRate;
+    unsigned long FrameRateDiv;
+    unsigned long TotalOpenTime;
+    unsigned long TotalFrames;
+    unsigned long TotalPlayedFrames;
+    unsigned long SkippedFrames;
+    unsigned long SoundSkips;
+    unsigned long TotalBlitTime;
+    unsigned long TotalReadTime;
+    unsigned long TotalDecompTime;
+    unsigned long TotalBackReadTime;
+    unsigned long TotalReadSpeed;
+    unsigned long SlowestFrameTime;
+    unsigned long Slowest2FrameTime;
+    unsigned long SlowestFrameNum;
+    unsigned long Slowest2FrameNum;
+    unsigned long AverageDataRate;
+    unsigned long AverageFrameSize;
+    unsigned long HighestMemAmount;
+    unsigned long TotalIOMemory;
+    unsigned long HighestIOUsed;
+    unsigned long Highest1SecRate;
+    unsigned long Highest1SecFrame;
+};
+SIZE(BINKSUMMARY, 112);
+
+extern BINKSUMMARY BinkSummary;
 
 // The binkw32 import surface (leading underscore, the RAD convention -
 // see smackmgr.h; smackmgr.cpp aliases the names back).

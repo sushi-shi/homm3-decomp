@@ -5578,7 +5578,7 @@ unsigned char TSingleSelectionWindow::HandleNetMsg(CNetMsg* pNetMsg, unsigned ch
         break;
     }
     case RS_SET_AS_HOST:
-        if (gbRestrictedGameTypeMenu) {
+        if (gbNoCDRom) {
             RemoteCleanup();
             NormalDialog(gpGeneralText->GetText(655), 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
@@ -6760,7 +6760,7 @@ inline void TSingleSelectionWindow::OnSetAGRMsg(
 // feature bit) and the chat toggle. The DrawWindow(1,...)+Update tail
 // is DC's UpdateMainWindow spelled inline (no retail row fits it).
 // E:\gamedcs\singleselectionwindow.cpp:7377
-VA(0x0058B120, 0x3E8)  // anchor-callee RS_SET_AS_HOST arm calls it behind the gbRestrictedGameTypeMenu gate, size 2.2x dc 0x1c4, dc 0x141b98
+VA(0x0058B120, 0x3E8)  // anchor-callee RS_SET_AS_HOST arm calls it behind the gbNoCDRom gate, size 2.2x dc 0x1c4, dc 0x141b98
 unsigned char TSingleSelectionWindow::OnSetAsHostMsg(CNetMsg* pNetMsg)
 {
     SystemMsg(&chatMan, gpGeneralText->GetText(471));

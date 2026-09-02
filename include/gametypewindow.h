@@ -55,7 +55,7 @@ int GameTypeWindowHandler(message& msg);
 
 // Cross-TU menu-mode latch; oldmain owns the setup and both front-end menus
 // consume it.
-extern int gbRestrictedGameTypeMenu;
+extern int gbNoCDRom;
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\gametypewindow.cpp:138, dc 0xc9524) int GameTypeWindowHandler(message* msg);

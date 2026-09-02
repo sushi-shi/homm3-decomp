@@ -70,6 +70,9 @@ void SetPixelFormat(unsigned long redMask, unsigned long greenMask,
                     unsigned long blueMask);             // 0x55a6b0
 CSprite* GetSprite(const char* name);
 font* GetFont(const char* name);
+// Dreamcast and retail oldmain load the same Players.pal through the 24-bit
+// sibling immediately after the two TPalette16 loads (retail 0x55b470).
+TPalette24* GetPalette24(const char* name);
 sample* GetSample(const char* name);
 // Retail body 0x55a800 (bitmapBorder::SetImage's loader).
 Bitmap816* GetBitmap816(const char* name);

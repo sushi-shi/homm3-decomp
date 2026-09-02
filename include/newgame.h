@@ -10,7 +10,7 @@
 // ShowScenInfo consumes the campaign dialog's 111 reply and translates it
 // into the shared main-loop quit command stored at 0x6976d8. The storage is
 // claimed by advmgr.cpp; this is the owning new-game consumer declaration.
-extern int gUnnamed6976d8;
+extern int gGameCommand;
 
 enum ENewGameDialogCommand {
     NEWGAME_CAMPAIGN_BRIEF_EXIT = 111,

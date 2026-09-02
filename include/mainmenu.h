@@ -57,6 +57,10 @@ SIZE(TMainMenu, 0x54);
 
 int MainMenuHandler(message& msg);
 
+// SetupCDDrive's result. Dreamcast kb.cpp's static SetupCDRom and retail
+// oldmain both dispatch on this value before the front-end is opened.
+extern int gCDDriveNumber;
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\mainmenu.cpp:135, dc 0xea618) int MainMenuHandler(message* msg);
 

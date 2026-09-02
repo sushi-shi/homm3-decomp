@@ -1731,7 +1731,9 @@ unsigned char SaveGame(unsigned char bCampaignWinMode);
 // consumer declares - and that is now ProcessKeyPress below, whose N, L,
 // ESC and I arms each latch a different command into it, with
 // ProcessDeSelect's adventure-options arm latching SYSOPT_QUIT further on.
-DATA(0x006976d8) extern int gUnnamed6976d8;
+// Dreamcast publishes gGameCommand; the Complete front-end and adventure
+// option handlers independently read/write this same command latch.
+DATA(0x006976d8) extern int gGameCommand;
 
 // E:\gamedcs\advmgr.cpp:1688
 // The adventure map's keyboard dispatcher, and the largest switch in this
@@ -2054,7 +2056,7 @@ int advManager::ProcessKeyPress(const message* msg, unsigned char* exitFlag, typ
         if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT)
             break;
         *exitFlag = 1;
-        gUnnamed6976d8 = SYSOPT_COMMAND_101;
+        gGameCommand = SYSOPT_COMMAND_101;
         return 1;
 
     case KEYCODE_L:
@@ -2065,7 +2067,7 @@ int advManager::ProcessKeyPress(const message* msg, unsigned char* exitFlag, typ
         if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT)
             break;
         *exitFlag = 1;
-        gUnnamed6976d8 = SYSOPT_COMMAND_102;
+        gGameCommand = SYSOPT_COMMAND_102;
         return 1;
 
     case KEYCODE_ESCAPE:
@@ -2076,7 +2078,7 @@ int advManager::ProcessKeyPress(const message* msg, unsigned char* exitFlag, typ
         if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT)
             break;
         *exitFlag = 1;
-        gUnnamed6976d8 = SYSOPT_COMMAND_108;
+        gGameCommand = SYSOPT_COMMAND_108;
         return 1;
 
     case KEYCODE_S:
@@ -2092,7 +2094,7 @@ int advManager::ProcessKeyPress(const message* msg, unsigned char* exitFlag, typ
                      -1, 0, -1, 0);
         if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT)
             break;
-        gUnnamed6976d8 = SYSOPT_QUIT;
+        gGameCommand = SYSOPT_QUIT;
         *exitFlag = 1;
         return 1;
 
@@ -2434,7 +2436,7 @@ int advManager::ProcessDeSelect(const message* msg, unsigned char* exitFlag, typ
             NormalDialog(gpGeneralText->GetText(68), 2, -1, -1, -1, 0, -1, 0,
                          -1, 0, -1, 0);
             if (gpWindowManager->dialogReturn == DIALOG_RETURN_ACCEPT) {
-                gUnnamed6976d8 = SYSOPT_QUIT;
+                gGameCommand = SYSOPT_QUIT;
                 *exitFlag = 1;
             }
         }
@@ -10031,7 +10033,7 @@ unsigned char advManager::DoSystemOptions()
         MobilizeCurrHero(0, 0, 1);
 
     if (result != -1) {
-        gUnnamed6976d8 = result;
+        gGameCommand = result;
         return 1;
     }
     return 0;

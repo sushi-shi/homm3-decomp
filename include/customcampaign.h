@@ -5,6 +5,26 @@
 #ifndef HOMM3_CUSTOMCAMPAIGN_H
 #define HOMM3_CUSTOMCAMPAIGN_H
 
+#ifdef HOMM3_KB_OLDMAIN_DECLS
+#include <vector>
+#include "window.h"
+
+// Complete-only custom-campaign browser used by kb.cpp. Retail 0x4827b0
+// derives CHeroWindowEx, leaves the 0x50..0xf7 UI tail opaque, and
+// default-constructs a Dinkumware pointer vector at +0xf8; its 0x482f10
+// destructor walks and deletes the pointed-to campaign headers before the
+// vector storage. The caller's next local begins exactly at +0x108.
+class TCustomCampaignWindow : public CHeroWindowEx {
+public:
+    char pad_50[0xa8];
+    std::vector<void*> campaignHeaders;
+
+    TCustomCampaignWindow();
+    virtual ~TCustomCampaignWindow();
+};
+SIZE(TCustomCampaignWindow, 0x108);
+#endif
+
 // Complete's custom-campaign list orders four-byte header pointers through
 // this predicate. The predicate body is a separate retail helper; this owner
 // header carries its one authoritative type shape for the retained STL sort

@@ -9,6 +9,30 @@
 
 class message;
 
+#ifdef HOMM3_KB_OLDMAIN_DECLS
+// Complete-only campaign-set chooser used by kb.cpp's DoCampaignWindow.
+// Retail constructor 0x456ec0 derives heroWindow directly and the caller's
+// adjacent stack objects bound the complete object to the 0x4c-byte base;
+// 0x457230/0x4574a0 are its destructor and modal wrapper.  No Dreamcast class
+// name survives, so the role name remains deliberately conservative.
+class TCampaignSetWindow : public heroWindow {
+public:
+    // Its modal result selects the TCampaignWindow page passed by each
+    // retail arm; the fourth result opens the Complete-only custom chooser.
+    enum ECampaignSetResults {
+        CAMPAIGN_SET_SOD_ID = 0,
+        CAMPAIGN_SET_AB_ID = 1,
+        CAMPAIGN_SET_ROE_ID = 2,
+        CUSTOM_CAMPAIGN_ID = 3
+    };
+
+    TCampaignSetWindow();
+    virtual ~TCampaignSetWindow();
+    void DoModal();
+};
+SIZE(TCampaignSetWindow, 0x4c);
+#endif
+
 // Retail's constructor initializes heroWindow directly, installs vtable
 // 0x63bca4, and accesses derived storage through +0x78.  That tail differs
 // substantially from Dreamcast's smaller campaign roster, so it remains

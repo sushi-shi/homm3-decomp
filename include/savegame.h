@@ -5,10 +5,9 @@
 // in the gametypewindow..hero link-order bracket with four candidate
 // units and no Dreamcast row, and the save-slot number below has
 // eighteen readers spread across the image with none of them modelled.
-// Parking them in a header only src/game.cpp includes keeps the
-// declarator count of the other 44 game.h consumers unchanged - the
-// include-set wall is live on this tree. Move them to a real owner
-// header the moment a second compiland needs either.
+// This narrow domain header now serves the two reconstructed consumers,
+// game.cpp and kb.cpp, without widening game.h's include-set wall. Move a
+// declaration to its real owner header once that owner is proven.
 #ifndef HOMM3_SAVEGAME_H
 #define HOMM3_SAVEGAME_H
 
