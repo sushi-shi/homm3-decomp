@@ -5,7 +5,8 @@ Sides:
              function; otherwise the retail image bytes via capstone
              (any of the 11,943 functions - most of the game has no
              delinked unit yet)
-  --base     your compiled object (delinked manifest units only)
+  --base     your compiled object (delinked manifest units only), refreshed
+             in place first (ninja target + normalize); --no-build skips that
   --source   your compiled object with verified VC6 /Z7 statement labels;
              implies --base (a compiler-generated body with no /Z7
              statements falls back to the unlabelled base listing)
@@ -45,6 +46,10 @@ def run(args) -> None:
 
     if args.base or args.source:
         obj = _asm.BASE / f"{unit}.obj"
+        if unit and not getattr(args, "no_build", False):
+            note = _asm.refresh_unit(unit)
+            if note:
+                print(note)
         if not obj.is_file():
             die(f"{name} [{unit or 'no unit'}] has no compiled base object - "
                 "only manifest units (config/units.toml) compile")

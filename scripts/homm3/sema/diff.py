@@ -34,6 +34,11 @@ the flat asm diff is the opt-in):
               branch sequences for --branches, unchanged statement groups
               expanded for --source
 
+Before comparing, the unit is refreshed in place (its ninja target, its
+normalized copies, the objdiff report) so an edit needs no separate build:
+free when nothing changed, one VC6 compile otherwise. --no-build compares
+the last built object instead.
+
 rc: 0 = the requested VIEW found no difference, 1 = it did, 2 = error.
 The default skeleton compares flow shape + block sizes ONLY - a
 function can differ inside a block (e.g. jb vs jl) and still exit 0
@@ -1059,6 +1064,10 @@ def _summary_verbose(lines, census, branches, calls, relocs, cap: int = 8):
 def run(args) -> None:
     ctx = get_context()
     name, unit, rva, _size, ordinal = ctx.symbols.resolve_fn(args.target)
+    if not getattr(args, "no_build", False) and (_asm.TARGET / f"{unit}.c.obj").is_file():
+        note = _asm.refresh_unit(unit)
+        if note:
+            print(note)
     normal_base = _asm.NORMAL_BASE / f"{unit}.obj"
     normal_target = _asm.NORMAL_TARGET / f"{unit}.c.obj"
     if not (normal_base.is_file() and normal_target.is_file()):

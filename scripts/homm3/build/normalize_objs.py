@@ -961,96 +961,125 @@ def _retain_matching_target_padding(base_payload: bytes,
     return bytes(data), retained
 
 
+def _canonicalize_side(side: str, obj: Path) -> bool:
+    """Write the normalized copy + sidecar + stamp of one raw object unless
+    the existing copy is fresh; True when written."""
+    root = OBJDIFF / side
+    rel = obj.relative_to(root)
+    unit = rel.name[:-6] if rel.name.endswith(".c.obj") else rel.stem
+    claims = ()
+    if COMPGEN_MANIFEST.is_file():
+        claims = canon.load_compgen_claims(COMPGEN_MANIFEST, unit)
+    out = OBJDIFF / "normalized" / side / rel
+    sidecar = out.with_suffix(".symbols.tsv")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    if out.exists() and sidecar.is_file() and not freshness_problems(out):
+        return False
+    result = canon.canonicalize_coff(obj.read_bytes(), claims)
+    out.write_bytes(_drop_data_sections(result.data))
+    sidecar.write_bytes(canon.sidecar_bytes(result.rows))
+    stamp_inputs = {"raw": obj}
+    if COMPGEN_MANIFEST.is_file():
+        stamp_inputs["compgen_manifest"] = COMPGEN_MANIFEST
+    write_stamp(out, stamp_inputs)
+    return True
+
+
+def _pair_unit(rel: Path, symbol_rvas) -> Counter:
+    """The paired base/target passes for one unit (padding retention,
+    __except_list literals, equivalent relocations, EH handler owners);
+    a no-op unless both normalized copies exist."""
+    counts: Counter = Counter()
+    base_obj = OBJDIFF / "base" / rel
+    target_rel = rel.with_name(rel.stem + ".c.obj")
+    target_obj = OBJDIFF / "target" / target_rel
+    normalized_base = OBJDIFF / "normalized/base" / rel
+    normalized_target = OBJDIFF / "normalized/target" / target_rel
+    if not (target_obj.is_file() and normalized_base.is_file()
+            and normalized_target.is_file()):
+        return counts
+    padded, count = _retain_matching_target_padding(
+        normalized_base.read_bytes(), normalized_target.read_bytes())
+    counts["retained"] += count
+    paired_base, base_literal_count = \
+        _canonicalize_except_list_literals(
+            padded, normalized_target.read_bytes())
+    counts["literal"] += base_literal_count
+    paired_target, literal_count, aggregate_count = \
+        _canonicalize_equivalent_relocations(
+            paired_base, normalized_target.read_bytes(), symbol_rvas)
+    counts["literal"] += literal_count
+    counts["aggregate"] += aggregate_count
+    normalized, rewrites = _canonicalize_matching_eh_handler_owners(
+        paired_base, paired_target)
+    counts["eh"] += len(rewrites)
+    if count or base_literal_count or rewrites:
+        normalized_base.write_bytes(normalized)
+    if literal_count or aggregate_count:
+        normalized_target.write_bytes(paired_target)
+    # Padding is a paired normalization decision, so the base copy is
+    # stale whenever either raw input changes, even when this run found no
+    # suffix to retain.
+    stamp_inputs = {
+        "raw": base_obj,
+        "target": target_obj,
+        "symbol_names": SYMBOL_NAMES,
+    }
+    if COMPGEN_MANIFEST.is_file():
+        stamp_inputs["compgen_manifest"] = COMPGEN_MANIFEST
+    write_stamp(normalized_base, stamp_inputs)
+    target_stamp_inputs = {
+        "raw": target_obj,
+        "base": base_obj,
+        "symbol_names": SYMBOL_NAMES,
+    }
+    if COMPGEN_MANIFEST.is_file():
+        target_stamp_inputs["compgen_manifest"] = COMPGEN_MANIFEST
+    write_stamp(normalized_target, target_stamp_inputs)
+    return counts
+
+
+def normalize_unit(unit: str, symbol_rvas=None) -> Counter:
+    """Refresh ONE unit's comparison copies: both raw sides canonicalized
+    when stale, then the paired passes. The same steps `main` runs for
+    every unit, so `homm3 sema diff` can refresh the unit it is about to
+    compare instead of demanding a tree-wide build. Counters: wrote,
+    retained, literal, aggregate, eh."""
+    counts: Counter = Counter()
+    base_obj = OBJDIFF / "base" / f"{unit}.obj"
+    target_obj = OBJDIFF / "target" / f"{unit}.c.obj"
+    for side, obj in (("base", base_obj), ("target", target_obj)):
+        if obj.is_file() and _canonicalize_side(side, obj):
+            counts["wrote"] += 1
+    if base_obj.is_file():
+        if symbol_rvas is None:
+            symbol_rvas = _retail_symbol_rvas()
+        counts.update(_pair_unit(Path(f"{unit}.obj"), symbol_rvas))
+    return counts
+
+
 def main(argv=None) -> int:
     argv = list(argv or [])
     wrote = skipped = 0
     for side in ("base", "target"):
         root = OBJDIFF / side
-        out_root = OBJDIFF / "normalized" / side
         if not root.is_dir():
             continue
         for obj in sorted(root.rglob("*.obj")):
-            rel = obj.relative_to(root)
-            unit = rel.name[:-6] if rel.name.endswith(".c.obj") else rel.stem
-            claims = ()
-            if COMPGEN_MANIFEST.is_file():
-                claims = canon.load_compgen_claims(COMPGEN_MANIFEST, unit)
-            out = out_root / rel
-            sidecar = out.with_suffix(".symbols.tsv")
-            out.parent.mkdir(parents=True, exist_ok=True)
-            if out.exists() and sidecar.is_file() \
-                    and not freshness_problems(out):
+            if _canonicalize_side(side, obj):
+                wrote += 1
+            else:
                 skipped += 1
-                continue
-            result = canon.canonicalize_coff(obj.read_bytes(), claims)
-            out.write_bytes(_drop_data_sections(result.data))
-            sidecar.write_bytes(canon.sidecar_bytes(result.rows))
-            stamp_inputs = {"raw": obj}
-            if COMPGEN_MANIFEST.is_file():
-                stamp_inputs["compgen_manifest"] = COMPGEN_MANIFEST
-            write_stamp(out, stamp_inputs)
-            wrote += 1
-    retained = 0
-    eh_rewritten = 0
-    literal_rewritten = 0
-    aggregate_rewritten = 0
+    counts: Counter = Counter()
     symbol_rvas = _retail_symbol_rvas()
     base_root = OBJDIFF / "base"
     for base_obj in sorted(base_root.rglob("*.obj")):
-        rel = base_obj.relative_to(base_root)
-        target_rel = rel.with_name(rel.stem + ".c.obj")
-        target_obj = OBJDIFF / "target" / target_rel
-        normalized_base = OBJDIFF / "normalized/base" / rel
-        normalized_target = OBJDIFF / "normalized/target" / target_rel
-        if not (target_obj.is_file() and normalized_base.is_file()
-                and normalized_target.is_file()):
-            continue
-        padded, count = _retain_matching_target_padding(
-            normalized_base.read_bytes(), normalized_target.read_bytes())
-        if count:
-            retained += count
-        paired_base, base_literal_count = \
-            _canonicalize_except_list_literals(
-                padded, normalized_target.read_bytes())
-        literal_rewritten += base_literal_count
-        paired_target, literal_count, aggregate_count = \
-            _canonicalize_equivalent_relocations(
-                paired_base, normalized_target.read_bytes(), symbol_rvas)
-        literal_rewritten += literal_count
-        aggregate_rewritten += aggregate_count
-        normalized, rewrites = _canonicalize_matching_eh_handler_owners(
-            paired_base, paired_target)
-        if rewrites:
-            eh_rewritten += len(rewrites)
-        if count or base_literal_count or rewrites:
-            normalized_base.write_bytes(normalized)
-        if literal_count or aggregate_count:
-            normalized_target.write_bytes(paired_target)
-        # Padding is a paired normalization decision, so the base copy is
-        # stale whenever either raw input changes, even when this run found no
-        # suffix to retain.
-        stamp_inputs = {
-            "raw": base_obj,
-            "target": target_obj,
-            "symbol_names": SYMBOL_NAMES,
-        }
-        if COMPGEN_MANIFEST.is_file():
-            stamp_inputs["compgen_manifest"] = COMPGEN_MANIFEST
-        write_stamp(normalized_base, stamp_inputs)
-        target_stamp_inputs = {
-            "raw": target_obj,
-            "base": base_obj,
-            "symbol_names": SYMBOL_NAMES,
-        }
-        if COMPGEN_MANIFEST.is_file():
-            target_stamp_inputs["compgen_manifest"] = COMPGEN_MANIFEST
-        write_stamp(normalized_target, target_stamp_inputs)
-
+        counts.update(_pair_unit(base_obj.relative_to(base_root), symbol_rvas))
     print(f"[build normalize_objs] {wrote} normalized, {skipped} fresh, "
-          f"{retained} target-padding span(s) retained "
-          f"{eh_rewritten} EH handler-owner relocation(s) canonicalized "
-          f"{literal_rewritten} false-literal relocation(s) removed "
-          f"{aggregate_rewritten} aggregate/field relocation(s) canonicalized "
+          f"{counts['retained']} target-padding span(s) retained "
+          f"{counts['eh']} EH handler-owner relocation(s) canonicalized "
+          f"{counts['literal']} false-literal relocation(s) removed "
+          f"{counts['aggregate']} aggregate/field relocation(s) canonicalized "
           f"-> {OBJDIFF / 'normalized'}")
     return 0
 

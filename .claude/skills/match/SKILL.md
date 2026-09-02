@@ -153,9 +153,12 @@ runs, the second build never runs, and the numbers you read are a lie about
 a stale tree. Use `;` between them. A lane lost its whole baseline to this
 and diagnosed twelve phantom regressions before noticing.
 
-4. **Build + score.** `homm3 build --fast` for the inner loop. After ANY new
-   claim or DATA lands, run `homm3 delink` ONCE (the target side must relearn
-   names), then `--fast` again. Scores: filter `build/objdiff/report.json` by
+4. **Build + score.** `homm3 sema diff` refreshes the unit it compares by
+   itself (its ninja target, normalized copies, objdiff report: free when
+   nothing changed, one VC6 compile otherwise), so an edit-diff cycle needs no
+   separate build; `homm3 build --fast` is for the tree-wide score. After ANY
+   new claim or DATA lands, run `homm3 delink` ONCE (the target side must
+   relearn names), then `--fast` again. Scores: filter `build/objdiff/report.json` by
    unit (report addresses are obj-local — count identity, not RVAs).
 5. **Iterate.** `homm3 sema diff 0x<va> --summary` first: every view's verdict on
    one screen plus the next view to run (`--why-bytes` adds the first byte-level

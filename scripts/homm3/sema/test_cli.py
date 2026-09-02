@@ -47,6 +47,12 @@ class InventedFlagsTest(unittest.TestCase):
         self.assertTrue(parse(["xref", "f", "--calls"]).callees)
         self.assertTrue(parse(["xref", "f", "--to"]).to)
 
+    def test_no_build_opts_out_of_the_unit_refresh(self):
+        parse = _build_parser().parse_args
+        self.assertTrue(parse(["diff", "f", "--no-build", "--calls"]).no_build)
+        self.assertFalse(parse(["diff", "f"]).no_build)
+        self.assertTrue(parse(["disasm", "f", "--base", "--no-build"]).no_build)
+
     def test_new_diff_views_parse_alone_and_with_verbose(self):
         parse = _build_parser().parse_args
         for flag, attr in (("--calls", "calls"), ("--relocs", "relocs"),
