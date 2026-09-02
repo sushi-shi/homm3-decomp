@@ -249,7 +249,7 @@ ai_player	?AI_get_artifact_player_value@@YIJABUtype_artifact@@J@Z	100.0000	100.0
 ai_player	?AI_get_equip_value@@YIJUtype_artifact@@PBVhero@@E@Z	100.0000	100.0000	100.0000	0x339e0	1bf829811a6c
 ai_player	?AI_get_ship_cost@@YIJPBVhero@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x31160	8aea73009bda
 ai_player	?AI_get_value_of_artifact@@YIJUtype_artifact@@PBVhero@@EE@Z	92.7585	92.7585	92.7585	0x336c0	f90474d1c94e
-ai_player	?AI_initialize@@YIXXZ	2.2792	2.2792	2.2792	0x340e0	17ecdf9074c6
+ai_player	?AI_initialize@@YIXXZ	100.0000	100.0000	100.0000	0x340e0	17ecdf9074c6
 ai_player	?AI_shut_down@@YIXXZ	100.0000	100.0000	100.0000	0x34590	07cb87603aa2
 ai_player	?AI_swap_artifacts@@YIXPAVhero@@0@Z	100.0000	100.0000	100.0000	0x33fe0	da056a53a7b3
 ai_player	?AI_value_of_observatory@@YIJUtype_point@@JJ@Z	100.0000	100.0000	100.0000	0x32220	503ff53046fe
@@ -319,6 +319,7 @@ ai_player	?get_value@type_statue_of_legion_artifact@@UBEJPBVhero@@EE@Z	100.0000	
 ai_player	?get_value@type_tome_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x32c20	7e1b792d8414
 ai_player	?get_value@type_undead_king_cloak_artifact@@UBEJPBVhero@@EE@Z	96.7778	96.7778	96.7778	0x333a0	d0b0fdd6cf87
 ai_player	?hire_heroes@type_AI_player@@QAE_NXZ	100.0000	100.0000	100.0000	0x31360	090ada3d6566
+ai_player	?initialize_artifact_effects@@YIXXZ	91.9528	91.9528	91.9528	0x34100	a14bb0e20585
 ai_player	?is_human_ally@game@@QBE_NH@Z	100.0000	100.0000	100.0000	0x2b9e0	df633736fa56
 ai_player	?make_gift@type_AI_player@@QAEXJ@Z	84.5868	84.5868	84.5868	0x29110	9e66faf2a9da
 ai_player	?mark_danger_zones@@YIXPBVhero@@PAJ@Z	100.0000	100.0000	100.0000	0x2de50	6e7aeeb6b9c3

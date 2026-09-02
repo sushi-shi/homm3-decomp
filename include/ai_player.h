@@ -797,6 +797,7 @@ long AI_value_of_observatory(struct type_point origin, long player_id, long rang
 // roster and the retail get_value bodies.
 class type_artifact_effect {
 public:
+    type_artifact_effect();
     virtual ~type_artifact_effect();
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;

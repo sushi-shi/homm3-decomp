@@ -1,6 +1,6 @@
 # generator: homm3.analysis.link_order
 # exe: HEROES3.EXE sha256=057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274 size=2732032
-# date: 2026-09-01
+# date: 2026-09-02
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 position	unit	first_rva	end_rva	gap_to_next
 0	adventuremapwindow	0x2450	0x40a4	4396
@@ -9,7 +9,7 @@ position	unit	first_rva	end_rva	gap_to_next
 3	advspells	0x1c2f0	0x1c482	9790
 4	ai	0x1eac0	0x224d9	6055
 5	ai_combat	0x23c80	0x276bf	2593
-6	ai_player	0x280e0	0x340d5	5979
+6	ai_player	0x280e0	0x345f2	4670
 7	ai_tactical	0x35830	0x3cb08	2616
 8	army	0x3d540	0x48d1b	2437
 9	armygrp	0x496a0	0x4c606	1866
@@ -35,8 +35,8 @@ position	unit	first_rva	end_rva	gap_to_next
 29	creaturetype	0x7b120	0x7b211	1583
 30	csequence	0x7b840	0x7b8c6	90
 31	csprite	0x7b920	0x7c23c	116
-32	cspriteframe	0x7c2b0	0x7d09c	12100
-33	cursor	0x7ffe0	0x7fffa	45574
+32	cspriteframe	0x7c2b0	0x7d09c	10036
+33	cursor	0x7f7d0	0x82385	36475
 34	customcampaign	0x8b200	0x8b2d7	19177
 35	dialogbox	0x8fdc0	0x90b67	1017
 36	diff	0x90f60	0x912ff	1009
@@ -62,15 +62,15 @@ position	unit	first_rva	end_rva	gap_to_next
 56	kb	0xf3540	0xf368b	17317
 57	kbwin	0xf7a30	0xf8490	1008
 58	levelupwindow	0xf8880	0xf9bc0	2640
-59	lodfile	0xfa610	0xfa655	3147
+59	lodfile	0xfa610	0xfaa64	2108
 60	mainmenu	0xfb2a0	0xfbb94	1020
 61	mapcell	0xfbf90	0x105d12	21694
 62	misc	0x10b1d0	0x10c7e2	46
 63	monframeinfo	0x10c810	0x10cb26	42
 64	mousemgr	0x10cb50	0x10da57	1529
 65	multiplayerwindow	0x10e050	0x1125c3	3309
-66	newgame	0x1132b0	0x113320	45072
-67	overview	0x11e330	0x11e66a	17110
+66	newgame	0x1132b0	0x1139d5	43355
+67	overview	0x11e330	0x122625	795
 68	palette	0x122940	0x12294b	4229
 69	path	0x1239d0	0x123edf	1009
 70	philai	0x1242d0	0x12bbcc	1556
@@ -99,7 +99,7 @@ position	unit	first_rva	end_rva	gap_to_next
 93	spells	0x1a3700	0x1a939c	2436
 94	strip	0x1a9d20	0x1aa31e	34
 95	subwindow	0x1aa340	0x1aa68a	15590
-96	swapmgr	0x1ae370	0x1b139c	1012
+96	swapmgr	0x1ae370	0x1b1378	1048
 97	systemoptionswindow	0x1b1790	0x1b375e	22930
 98	text	0x1b90f0	0x1b9109	6167
 99	textntry	0x1ba920	0x1bbab4	236
@@ -115,7 +115,7 @@ position	unit	first_rva	end_rva	gap_to_next
 109	viewarmywindow	0x1f3360	0x1f6fb5	19883
 110	viewwrld	0x1fbd60	0x1fbde6	9562
 111	widget	0x1fe340	0x1fe9c3	45
-112	window	0x1fe9f0	0x1ff955	459
+112	window	0x1fe9f0	0x1ffaf1	47
 113	winfile	0x1ffb20	0x1ffdc2	5790
 114	wingraph	0x201460	0x2019fa	2422
 115	winmgr	0x202370	0x202cb3	0

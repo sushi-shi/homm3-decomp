@@ -1,6 +1,6 @@
 # generator: homm3.analysis.link_order
 # exe: HEROES3.EXE sha256=057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274 size=2732032
-# date: 2026-09-01
+# date: 2026-09-02
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 after_unit	before_unit	gap_start	gap_end	bytes	fns	candidate_owners
 adventuremapwindow	adventureoptionswindow	0x40a4	0x51d0	4396	33	-
@@ -9,7 +9,7 @@ advmgr	advspells	0x1b247	0x1c2f0	4265	25	-
 advspells	ai	0x1c482	0x1eac0	9790	20	-
 ai	ai_combat	0x224d9	0x23c80	6055	25	-
 ai_combat	ai_player	0x276bf	0x280e0	2593	17	-
-ai_player	ai_tactical	0x340d5	0x35830	5979	34	-
+ai_player	ai_tactical	0x345f2	0x35830	4670	32	-
 ai_tactical	army	0x3cb08	0x3d540	2616	16	-
 army	armygrp	0x48d1b	0x496a0	2437	19	-
 armygrp	artifact	0x4c606	0x4cd50	1866	10	-
@@ -35,8 +35,8 @@ creature_bank	creaturetype	0x7ab2e	0x7b120	1522	3	-
 creaturetype	csequence	0x7b211	0x7b840	1583	4	-
 csequence	csprite	0x7b8c6	0x7b920	90	2	-
 csprite	cspriteframe	0x7c23c	0x7c2b0	116	4	-
-cspriteframe	cursor	0x7d09c	0x7ffe0	12100	21	-
-cursor	customcampaign	0x7fffa	0x8b200	45574	166	-
+cspriteframe	cursor	0x7d09c	0x7f7d0	10036	17	-
+cursor	customcampaign	0x82385	0x8b200	36475	154	-
 customcampaign	dialogbox	0x8b2d7	0x8fdc0	19177	88	dc_input,dc_precompiledheaders
 dialogbox	diff	0x90b67	0x90f60	1017	11	-
 diff	dimensiondoorwindow	0x912ff	0x916f0	1009	11	-
@@ -62,15 +62,15 @@ inputmgr	kb	0xeccca	0xf3540	26742	47	-
 kb	kbwin	0xf368b	0xf7a30	17317	29	-
 kbwin	levelupwindow	0xf8490	0xf8880	1008	11	-
 levelupwindow	lodfile	0xf9bc0	0xfa610	2640	14	-
-lodfile	mainmenu	0xfa655	0xfb2a0	3147	18	-
+lodfile	mainmenu	0xfaa64	0xfb2a0	2108	14	-
 mainmenu	mapcell	0xfbb94	0xfbf90	1020	11	-
 mapcell	misc	0x105d12	0x10b1d0	21694	80	-
 misc	monframeinfo	0x10c7e2	0x10c810	46	1	-
 monframeinfo	mousemgr	0x10cb26	0x10cb50	42	1	-
 mousemgr	multiplayerwindow	0x10da57	0x10e050	1529	14	-
 multiplayerwindow	newgame	0x1125c3	0x1132b0	3309	34	-
-newgame	overview	0x113320	0x11e330	45072	154	-
-overview	palette	0x11e66a	0x122940	17110	21	-
+newgame	overview	0x1139d5	0x11e330	43355	151	-
+overview	palette	0x122625	0x122940	795	9	-
 palette	path	0x12294b	0x1239d0	4229	27	-
 path	philai	0x123edf	0x1242d0	1009	11	-
 philai	puzzlewindow	0x12bbcc	0x12c1e0	1556	17	playvideo
@@ -99,7 +99,7 @@ spelldefs	spells	0x19e4af	0x1a3700	21073	29	-
 spells	strip	0x1a939c	0x1a9d20	2436	15	-
 strip	subwindow	0x1aa31e	0x1aa340	34	1	-
 subwindow	swapmgr	0x1aa68a	0x1ae370	15590	12	-
-swapmgr	systemoptionswindow	0x1b139c	0x1b1790	1012	11	-
+swapmgr	systemoptionswindow	0x1b1378	0x1b1790	1048	12	-
 systemoptionswindow	text	0x1b375e	0x1b90f0	22930	94	-
 text	textntry	0x1b9109	0x1ba920	6167	38	-
 textntry	textresource	0x1bbab4	0x1bbba0	236	3	-
@@ -115,6 +115,6 @@ victorylossconditions	viewarmywindow	0x1f2f70	0x1f3360	1008	11	-
 viewarmywindow	viewwrld	0x1f6fb5	0x1fbd60	19883	27	-
 viewwrld	widget	0x1fbde6	0x1fe340	9562	38	-
 widget	window	0x1fe9c3	0x1fe9f0	45	1	-
-window	winfile	0x1ff955	0x1ffb20	459	3	-
+window	winfile	0x1ffaf1	0x1ffb20	47	1	-
 winfile	wingraph	0x1ffdc2	0x201460	5790	10	-
 wingraph	winmgr	0x2019fa	0x202370	2422	19	-
