@@ -2,7 +2,6 @@
 # Admission campaign only; sorted by retail size descending.
 # Use `homm3 vc6 queue --polish` only after admission.
 state	size	rva	relation	owner	candidates	label	action
-bracketed	9692	0x11bd50	bracketed	newgame..overview	newgame,overview	game_ovslot_def_11bd50	resolve the owner, then add its VA claim and body
 bracketed	8769	0x138b10	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_137b10_sub02_138b10	resolve the owner, then add its VA claim and body
 bracketed	8457	0x167290	bracketed	sample..scenarioinfo	sample,scenarioinfo	game_gselpop1_pcx_167290	resolve the owner, then add its VA claim and body
 carcass	7671	0x17d170	in-span	singleselectionwindow	singleselectionwindow	TSingleSelectionWindow_CreateFilterWidgets	enable the existing VA claim and reconstruct its body
@@ -25,7 +24,6 @@ bracketed	2846	0x8a310	bracketed	cursor..customcampaign	cursor,customcampaign	ga
 unclaimed-in-span	2819	0x121960	in-span	overview	overview	game_121960	add a VA claim and body to overview
 bracketed	2728	0x19ec50	bracketed	spelldefs..spells	spelldefs,spells	game_68860_sub00_19ec50	resolve the owner, then add its VA claim and body
 bracketed	2692	0x86590	bracketed	cursor..customcampaign	cursor,customcampaign	game_87290_sub00_86590	resolve the owner, then add its VA claim and body
-carcass	2691	0xcbd40	in-span	game	game	game_ReceiveSaveGame	enable the existing VA claim and reconstruct its body
 bracketed	2463	0x148df0	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_149870_sub02_148df0	resolve the owner, then add its VA claim and body
 bracketed	2332	0x61190	bracketed	castle..cmbtmgr	castle,cmbtmgr	game_1d27b0_sub00_61190	resolve the owner, then add its VA claim and body
 bracketed	2289	0x1f82e0	bracketed	viewarmywindow..viewwrld	viewarmywindow,viewwrld	game_1fc4c0_sub01_1f82e0	resolve the owner, then add its VA claim and body

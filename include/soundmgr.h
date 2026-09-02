@@ -179,7 +179,7 @@ public:
     int field_40;
     ds_memsample* sampleHandles[14];
     int field_7c;
-    unsigned char field_80;
+    signed char field_80;
     unsigned char field_81[3];
     int field_84;
     int bChangeSounds;

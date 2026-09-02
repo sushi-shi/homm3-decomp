@@ -422,8 +422,15 @@ int TransmitRemoteData(CNetMsg* pMsg, int toWho,
 int TransmitRemoteDataDPID(CNetMsg* pMsg, unsigned long dpidTo,
                            bool compressMsg, bool guaranteed);
 #ifdef HOMM3_GAME_TRANSMIT_DECLS
-CNetMsg* GetRemoteData(unsigned char removeFromQueue);
+// DC remote.cpp:1384 proves the two-argument public boundary. Complete's
+// wrapper ignores wasCompressed internally, but its game.obj callers still
+// materialize the null second fastcall argument in EDX.
+CNetMsg* GetRemoteData(unsigned char removeFromQueue,
+                       unsigned char* wasCompressed);
 int calc_crc_long(unsigned char* buffer, int len);
+// DC remote.cpp:1411, dc 0x11ce68; retail ReceiveSaveGame keeps this
+// cleanup boundary out of line on both fatal in-game receive paths.
+void RemoteCleanup();
 #endif
 void PollRemote();
 void SendChat(const char* cChat, int toWho);

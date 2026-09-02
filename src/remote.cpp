@@ -1274,14 +1274,15 @@ unsigned char CChatEdit::IgnoreKey(message* msg)
 }
 
 // E:\gamedcs\remote.cpp:1384 - the free-function face of the singleton's
-// queue read, fifteen bytes of it. Retail's takes ONE argument where DC's
-// prototype takes two: the wasCompressed out-parameter is the literal 0
-// pushed here and never leaves the wrapper, and /Gr's ecx - the only
-// register argument this body touches - is pushed straight through as the
-// removeFromQueue flag.
+// queue read, fifteen bytes of it. DC proves the two-argument public
+// boundary. Complete ignores wasCompressed in the wrapper and always passes
+// a literal 0 to the member; callers nevertheless materialize their null
+// second fastcall argument in EDX. /Gr's ECX is pushed straight through as
+// the removeFromQueue flag.
 // E:\gamedcs\remote.cpp:1384
 VA(0x00554400, 0xF)  // anchor-callee (CDPlayHeroes::GetRemoteData 0x553040), dc 0x11cdfc
-CNetMsg* GetRemoteData(unsigned char removeFromQueue)
+CNetMsg* GetRemoteData(unsigned char removeFromQueue,
+                       unsigned char* wasCompressed)
 {
     return pDPlay->GetRemoteData(removeFromQueue, 0);
 }
@@ -1816,7 +1817,7 @@ int CWaitForReadyPlayersDlg::handle_message(message& msg)
     }
 
     if (GameTime::ElapsedSince(startTime) >= 3000) {
-        CNetMsg* pNetMsg = GetRemoteData(1);
+        CNetMsg* pNetMsg = GetRemoteData(1, 0);
         if (pNetMsg) {
             CMessageKill killMsg(pNetMsg);
             switch (pNetMsg->subType) {
@@ -2583,7 +2584,7 @@ int CLevelPickWaitDlg::handle_message(message& msg)
     CAnimatedDlg::handle_message(msg);
     PollSound();
 
-    CNetMsg* pNetMsg = GetRemoteData(1);
+    CNetMsg* pNetMsg = GetRemoteData(1, 0);
     if (pNetMsg) {
         CMessageKill msgKill(pNetMsg);
         switch (pNetMsg->subType) {
@@ -2688,7 +2689,7 @@ int CWaitForRemoteBattleDlg::handle_message(message& msg)
     CAnimatedDlg::handle_message(msg);
     PollSound();
 
-    CNetMsg* pNetMsg = GetRemoteData(1);
+    CNetMsg* pNetMsg = GetRemoteData(1, 0);
     if (pNetMsg) {
         CMessageKill killMsg(0);
         if (pNetMsg->subType != RS_COMBAT_INIT)
