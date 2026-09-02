@@ -19,6 +19,8 @@ Views (the default carries what matching reads; the columns are opt-in):
              lines, <ownfn+0xNNN> notes - for encoding questions only
   --blocks   basic-block CFG view: skeleton lines by default,
              masked instruction bodies with --verbose
+  --range    restrict any view to an end-exclusive function-local span;
+             branches leaving the span render as external edges
 
 rc: 0 = rendered, 2 = error.
 """
@@ -76,6 +78,14 @@ def run(args) -> None:
             text = _asm.image_text(ctx, rva, size, name)
             title = (f"[disasm TARGET (image): {name} @ rva 0x{rva:x} "
                      f"(va 0x{ctx.image.image_base + rva:x}), {size} B]")
+
+    if args.range:
+        try:
+            span = _asm.parse_local_range(args.range)
+            text = _asm.slice_local_range(text, span)
+        except ValueError as exc:
+            die(f"invalid --range {args.range!r}: {exc}")
+        title += f"  [local range {args.range}, end exclusive]"
 
     print(title)
     if args.source:

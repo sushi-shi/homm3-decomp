@@ -22,6 +22,16 @@ class SemaCliTests(unittest.TestCase):
                 _build_parser().parse_args(
                     ["diff", "ProcessCombatMsg", "--structure", "--source"])
 
+    def test_local_ranges_parse_for_diff_and_disasm(self):
+        args = _build_parser().parse_args(
+            ["diff", "CastSpell", "--base-range", "+0xb90:+0xc60",
+             "--target-range", "+0xc00:+0xcdc"])
+        self.assertEqual(args.base_range, "+0xb90:+0xc60")
+        self.assertEqual(args.target_range, "+0xc00:+0xcdc")
+        args = _build_parser().parse_args(
+            ["disasm", "CastSpell", "--range", "+0xc00:+0xcdc"])
+        self.assertEqual(args.range, "+0xc00:+0xcdc")
+
 
 
 class InventedFlagsTest(unittest.TestCase):

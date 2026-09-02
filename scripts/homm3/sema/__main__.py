@@ -12,6 +12,7 @@ spelling that names exactly one retail symbol)
         address). Function views end with the reloc-backed data refs.
   diff TARGET [--verbose | --structure | --asm | --branches | --source
               | --calls | --relocs | --summary | --why-bytes]
+              [--range START:END | --base-range ... --target-range ...]
         Base-vs-target comparison: block-SKELETON diff by default,
         --structure = explicit spelling of that block-SKELETON view,
         --verbose = block bodies, --asm = flat masked asm diff,
@@ -26,7 +27,8 @@ spelling that names exactly one retail symbol)
         view.
         Names: an exact mangled name, or a demangled Class::method /
         bare method when it names one retail symbol.
-  disasm TARGET [--base|--candidate] [--target] [--source] [--blocks] [--verbose]
+  disasm TARGET [--base|--candidate] [--target] [--source] [--blocks]
+                [--range START:END] [--verbose]
         One function's body: addresses + asm with call/data symbols
         folded into the operands; ANY retail function renders
         (delinked-unit object when one exists, image bytes via capstone
@@ -108,6 +110,15 @@ def _build_parser() -> argparse.ArgumentParser:
                       help="--summary plus the first byte-level divergence "
                            "unmasked (both sides' bytes and relocs) with its "
                            "kind")
+    sd.add_argument("--range", metavar="START:END",
+                    help="end-exclusive function-local offset range on both "
+                         "sides (for example +0xc00:+0xcdc)")
+    sd.add_argument("--base-range", metavar="START:END",
+                    help="candidate-local range; pair with --target-range "
+                         "when the two arms begin at different offsets")
+    sd.add_argument("--target-range", metavar="START:END",
+                    help="retail-local range; pair with --base-range when "
+                         "the two arms begin at different offsets")
 
     sa = ss.add_parser(
         "disasm", help="one function, symbol-folded asm; any retail fn renders")
@@ -122,6 +133,9 @@ def _build_parser() -> argparse.ArgumentParser:
                          "(implies --base; incompatible with --blocks)")
     sa.add_argument("--blocks", action="store_true",
                     help="basic-block CFG view (skeleton; --verbose = bodies)")
+    sa.add_argument("--range", metavar="START:END",
+                    help="end-exclusive function-local offset range, e.g. "
+                         "+0xc00:+0xcdc")
     sa.add_argument("--verbose", action="store_true",
                     help="raw objdump rows: byte columns + reloc lines (the "
                          "default already folds every symbol into its operand)")

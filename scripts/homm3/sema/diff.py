@@ -25,6 +25,10 @@ the flat asm diff is the opt-in):
   --summary   one screen: every view's verdict, the first divergence, the
               next view to run
   --why-bytes --summary plus the first byte-level divergence unmasked
+  --range     restrict both sides to one end-exclusive function-local span
+  --base-range/--target-range
+              independently select corresponding spans when prior codegen
+              gives the candidate and retail arm different local offsets
   --verbose   more of the chosen view: block bodies for the default and
               --structure, the whole listing as context for --asm, both
               branch sequences for --branches, unchanged statement groups
@@ -1063,6 +1067,29 @@ def run(args) -> None:
             "`homm3 sema disasm` views any retail function")
     base_text = _asm.objdump(normal_base, name, ordinal)
     target_text = _asm.objdump(normal_target, name, ordinal)
+
+    if args.range and (args.base_range or args.target_range):
+        die("--range applies to both sides; do not combine it with "
+            "--base-range/--target-range")
+    base_spec = args.base_range or args.range
+    target_spec = args.target_range or args.range
+    if bool(args.base_range) != bool(args.target_range):
+        die("side-specific slicing requires both --base-range and "
+            "--target-range")
+    for side, spec in (("base", base_spec), ("target", target_spec)):
+        if not spec:
+            continue
+        try:
+            span = _asm.parse_local_range(spec)
+            if side == "base":
+                base_text = _asm.slice_local_range(base_text, span)
+            else:
+                target_text = _asm.slice_local_range(target_text, span)
+        except ValueError as exc:
+            die(f"invalid --{side}-range {spec!r}: {exc}")
+    if base_spec:
+        print(f"[scoped diff: base {base_spec}; target {target_spec}; "
+              "ranges are function-local and end exclusive]")
 
     if args.branches:
         sys.exit(_branch_view(base_text, target_text, rva, name, args.verbose))

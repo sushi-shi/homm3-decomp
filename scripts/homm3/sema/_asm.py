@@ -345,6 +345,85 @@ def reloc_rows(text: str) -> list[tuple[int, bytes, str, list]]:
              if row[0] == "ins")]
 
 
+def parse_local_range(spec: str) -> tuple[int | None, int | None]:
+    """Parse an end-exclusive function-local ``START:END`` range.
+
+    Either endpoint may be omitted.  Offsets accept the same decimal/0x
+    spelling as the CLI's addresses; a leading ``+`` is deliberately
+    accepted because disassembly offsets are normally written ``+0xc00``.
+    """
+    if spec.count(":") != 1:
+        raise ValueError("expected START:END (end exclusive)")
+    words = spec.split(":")
+
+    def endpoint(word: str) -> int | None:
+        word = word.strip()
+        if not word:
+            return None
+        try:
+            value = int(word, 0)
+        except ValueError as exc:
+            raise ValueError(f"invalid offset {word!r}") from exc
+        if value < 0:
+            raise ValueError("offsets cannot be negative")
+        return value
+
+    start, end = map(endpoint, words)
+    if start is None and end is None:
+        raise ValueError("range must have at least one endpoint")
+    if start is not None and end is not None and start >= end:
+        raise ValueError("range START must be less than END")
+    return start, end
+
+
+def slice_local_range(text: str, span: tuple[int | None, int | None]) -> str:
+    """Keep instructions in one function-local range and their reloc rows.
+
+    Obj sections do not promise that a selected function begins at address
+    zero, so endpoints are added to the first real instruction.  Branches
+    that leave the slice intentionally become ``<ext>`` in ``cfg``: for a
+    switch arm that is the useful boundary, not missing context.
+    """
+    instructions = code_insns(text)
+    if not instructions:
+        raise ValueError("listing has no code instructions")
+    origin = instructions[0][0]
+    start = origin + (span[0] or 0)
+    end = origin + span[1] if span[1] is not None else None
+    out = [f"{start:08x} <selected-range>:"]
+    keep_previous = False
+    kept = 0
+    for line in text.splitlines():
+        parsed = _parse_row(line)
+        if parsed is not None:
+            offset = parsed[0]
+            keep_previous = offset >= start and (end is None or offset < end)
+            if keep_previous:
+                out.append(line)
+                kept += 1
+            continue
+        if _RELOC_ROW.match(line):
+            if keep_previous:
+                out.append(line)
+            continue
+        # Private labels make raw listings easier to read.  Keep only labels
+        # whose address belongs to the selected interval; the synthetic title
+        # above remains the sole public/function title.
+        title = _SYMBOL_TITLE.match(line)
+        if title:
+            try:
+                address = int(line.split(None, 1)[0], 16)
+            except (ValueError, IndexError):
+                continue
+            if address != start and address >= start and (end is None or address < end):
+                out.append(line)
+    if not kept:
+        lo = f"+0x{span[0]:x}" if span[0] is not None else "start"
+        hi = f"+0x{span[1]:x}" if span[1] is not None else "end"
+        raise ValueError(f"no instructions in local range {lo}:{hi}")
+    return "\n".join(out) + "\n"
+
+
 def lite_rows(text: str) -> list[tuple[int | None, str]]:
     """The default listing as ``(offset, line)`` rows; titles and notices
     carry ``None``. What a matcher reads survives: the address column
@@ -571,6 +650,9 @@ def cfg_rows(text: str):
             block[2] = "ret"
         elif op == "jmp":
             block[2] = "jmp <ext>"
+        elif op in _JCC or op.startswith("loop"):
+            block[2] = (f"jcc <ext> | fall B{block_of(following)}"
+                        if following is not None else "jcc <ext>")
         elif following is not None:
             block[2] = f"fall B{block_of(following)}"
         else:
