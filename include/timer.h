@@ -17,6 +17,13 @@ public:
     {
     }
 
+    // Dreamcast timer.h:33; oldmain's debug-only startup arm is the retail
+    // consumer that proves this trivial header boundary at GlobalTimer+13.
+    void enable()
+    {
+        enabled = 1;
+    }
+
     void start()
     {
         if (enabled) {
@@ -45,5 +52,7 @@ private:
     unsigned char enabled;
 };
 SIZE(CTimer, 16);
+
+extern CTimer GlobalTimer;
 
 #endif  // HOMM3_TIMER_H

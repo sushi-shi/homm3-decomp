@@ -4,6 +4,11 @@
 #include <va.h>
 #include "binkmanager.h"
 
+// Dreamcast publishes this exact name and the old 112-byte SDK type. Retail
+// oldmain addresses the same object at 0x694ce8.
+DATA(0x00694ce8)
+BINKSUMMARY BinkSummary;
+
 #if 0  // @carcass
 
 // E:\gamedcs\binkmanager.cpp:79

@@ -15,6 +15,14 @@
 
 struct _DPCOMPORTADDRESS;
 
+#ifdef HOMM3_KB_OLDMAIN_DECLS
+// multiplayerwindow.cpp owns this 21-byte preference-backed player name.
+// DoNewGame copies it into players[0].cName in retail's tutorial arm.
+extern char gLocalPlayerName[21];
+extern int gUnnamed69927c;
+extern int gUnnamed699288;
+#endif
+
 // Cast-free storage for the Winsock bind call in GetIPAddress. Both views are
 // the same 16-byte IPv4 socket-address record; keeping the union in the domain
 // header avoids a TU-local layout view.

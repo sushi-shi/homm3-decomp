@@ -24,9 +24,15 @@ void WritePrefs();                  // 0x50c1b0
 std::string format_string(const char* format, ...);  // 0x50c600
 unsigned long get_available_disk_space();            // 0x50c7a0
 
-// SetupCDDrive result values singled out by the retail startup/menu paths.
-// The remaining values retain their ordinary drive-number meaning.
+// SetupCDDrive result domain. Retail proves all six non-default arms in
+// oldmain's inlined SetupCDRom and separately singles out 5/6 in the main
+// menu. The original enumerator spellings did not survive, so keep the names
+// deliberately numeric rather than inventing error semantics for them.
 enum ECDDriveNumber {
+    CD_DRIVE_NUMBER_1 = 1,
+    CD_DRIVE_NUMBER_2 = 2,
+    CD_DRIVE_NUMBER_3 = 3,
+    CD_DRIVE_NUMBER_4 = 4,
     CD_DRIVE_NUMBER_5 = 5,
     CD_DRIVE_NUMBER_6 = 6
 };

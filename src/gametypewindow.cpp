@@ -22,10 +22,9 @@ DATA(0x006972d8) static TGameTypeWindow* gpGameTypeWindow;
 // the THelpText stride and the [0] field used by NormalDialog.
 DATA(0x006a6bfc) extern THelpText gNewGameHelp[5];
 
-// Cross-TU mode latch: oldmain writes it and both TMainMenu and this window
-// consume it. Its exact source name is not attested on retail; this role name
-// stays provisional until the owning TU is reconstructed.
-DATA(0x00698a2c) extern int gbRestrictedGameTypeMenu;
+// Dreamcast publishes gbNoCDRom, and retail oldmain writes the same address
+// from SetupCDRom before both front-end menus consume it.
+DATA(0x00698a2c) extern int gbNoCDRom;
 
 // Source-private, DC-attested local name; retail data contains the -1
 // initializer and this handler is its only image-wide consumer.
@@ -93,7 +92,7 @@ TGameTypeWindow::TGameTypeWindow(unsigned char loadGameMode)
     const TGameTypeButtonRect& tutorial = gameTypeButtonRects[3];
     const TGameTypeButtonRect& back = gameTypeButtonRects[4];
 
-    if (!gbRestrictedGameTypeMenu) {
+    if (!gbNoCDRom) {
         Widgets.push_back(new button(
             single.x, single.y, single.width, single.height, SINGLE_ID,
             "gtsingl.def", 0, 1, 0, 31, 2));
@@ -199,7 +198,7 @@ int GameTypeWindowHandler(message& msg)
             bRedraw = 1;
             lastIMHoverID = hoverID;
 
-            if (!gbRestrictedGameTypeMenu) {
+            if (!gbNoCDRom) {
                 for (int id = TGameTypeWindow::SINGLE_ID;
                      id <= TGameTypeWindow::QUIT_ID; ++id) {
                     gpGameTypeWindow->GetWidget(id)->send_message(

@@ -52,7 +52,6 @@ struct SVideoDescriptor {
 extern SVideoDescriptor gVideoDescriptors[];   // .data 0x6839c8
 
 // Foreign globals without an owning header yet (all provisional):
-extern int gbBinkEnabled;        // .bss 0x6987a8 - gates the bink arm
 extern int* gpVideoGameState;    // .bss 0x69923c - the forced-bink state pair
 extern int gbVideoNoSkip;        // .bss 0x699524 - nonzero blocks the user abort
 

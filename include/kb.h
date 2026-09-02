@@ -43,7 +43,8 @@ DATA(0x00698a14) extern font* gpCalligraphicFont;
 // above was waiting on.
 DATA(0x00698a04) extern font* gpTinyFont;
 #if defined(HOMM3_REMOTE_WAIT_READY_DECLS) \
-        || defined(HOMM3_GAME_TRANSMIT_DECLS)
+        || defined(HOMM3_GAME_TRANSMIT_DECLS) \
+        || defined(HOMM3_KB_OLDMAIN_DECLS)
 // The third cell of the same canonical font run.  CWaitForReadyPlayersDlg
 // passes it to CAnimatedDlg::Setup; scoped because adding declarations to
 // a shared header is a measured VC6 include-set trigger in this tree.
@@ -89,6 +90,17 @@ void __fastcall get_quickview_size(const char* text, int* width,
 // yet reconstructed; the declarators match the kbwin call sites).
 int InitMainClasses();                                   // 0x4ed650
 int oldmain();                                           // 0x4ee3e0
+#ifdef HOMM3_KB_OLDMAIN_DECLS
+// Positive Dreamcast kb.cpp boundaries used by oldmain. Their retail
+// implementations are being admitted separately; keeping the declarations
+// here lets the caller preserve the recovered source shape in the meantime.
+void CreditsWait();
+void ShowCredits();
+void LostGame();
+// Retail-only dword paired with the Dreamcast-named giHighMemBuffer in
+// oldmain's low-debug-memory defaults. No surviving source symbol names it.
+DATA(0x006994ec) extern int gUnnamed6994ec;
+#endif
 // The image-wide allocation-failure handler: every `new` site that
 // null-checks its result calls it (67 B at 0x4f42c0, no args, sprintf
 // into gText then ShutDown). DC kb.obj MemError, dc 0xe44f0/64 B,

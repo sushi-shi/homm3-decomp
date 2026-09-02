@@ -19,6 +19,10 @@ public:
     baseManager* currentManager;
     long dialogReturn;
 
+    // Dreamcast exec.cpp:43 names the source boundary and oldmain is its
+    // sole recovered startup caller.  Retail 0x4b0910 consumes this in ECX
+    // and returns the nonzero initialization failure tested at 0x4ee414.
+    int InitSystem();
     int AddManager(baseManager* newManager, int newPriority);
     void RemoveManager(baseManager* killManager);
     int DoDialog(baseManager* newDialog);

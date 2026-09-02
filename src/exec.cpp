@@ -39,13 +39,6 @@ void executive::executive()
     // @stub
 }
 
-// E:\gamedcs\exec.cpp:43
-DC_ONLY(0x9e520, 0x74)
-int executive::InitSystem()
-{
-    // @stub
-}
-
 // E:\gamedcs\exec.cpp:63
 DC_ONLY(0x9e594, 0xD8)
 void executive::ShutDownSystem()
@@ -56,6 +49,21 @@ void executive::ShutDownSystem()
 #endif  // @carcass
 
 // gpGeneralText is the canonical TTextResource loaded from genrltxt.txt.
+
+// E:\gamedcs\exec.cpp:43. Exhaustive exec.obj order and the body establish
+// the Complete address: it opens the input manager and adds the mouse/window
+// managers in the exact three statement groups preserved by CodeView.
+VA(0x004b0910, 0x79)  // anchor-callee + dc-order-map, dc 0x9e520
+int executive::InitSystem()
+{
+    if (gpInputManager->Open(-1))
+        ShutDown((*gpGeneralText)[131]);
+    if (AddManager(gpMouseManager, -1))
+        ShutDown((*gpGeneralText)[133]);
+    if (AddManager(gpWindowManager, -1))
+        ShutDown((*gpGeneralText)[134]);
+    return 0;
+}
 
 // E:\gamedcs\exec.cpp:103
 VA(0x004b0a10, 0x10B)  // anchor-global, dc 0x9e66c

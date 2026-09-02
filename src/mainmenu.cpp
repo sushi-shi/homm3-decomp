@@ -511,7 +511,7 @@ TMainMenu::TMainMenu()
     : heroWindow(0, 0, 800, 600, 0)
 {
     gpMainMenu = this;
-    bShowCDMessage = gbRestrictedGameTypeMenu && !cdMessageShown;
+    bShowCDMessage = gbNoCDRom && !cdMessageShown;
 
     std::vector<widget*>* widgets = &Widgets;
     widgets->reserve(NWIDGETS);

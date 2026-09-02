@@ -130,6 +130,10 @@ public:
 // highlight color out of it). The DATA claim stays on townmgr.h's
 // declaration - this one is declaration only.
 extern TPalette16* gSystemPalette;
+// Dreamcast publishes these as gPlayerPalette/gPlayerPalette24. Retail
+// oldmain stores the consecutive Players.pal results at 0x6aaca8/0x6aacac.
+extern TPalette16* gPlayerPalette;
+extern TPalette24* gPlayerPalette24;
 
 // Dreamcast ?GetPalette@ResourceManager@@YAPAVTPalette16@@PBD_N@Z
 // (retail body 0x55b3e0 takes just the name; called by button::Main).
