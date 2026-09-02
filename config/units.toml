@@ -727,3 +727,8 @@ flags = "game_o2_ml_gr_windows"
 unit = "sacrifice_window"
 source = "src/sacrifice_window.cpp"
 flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "rmg"
+source = "src/rmg.cpp"
+flags = "game_o2_ml_gr_windows"

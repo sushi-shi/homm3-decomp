@@ -1170,7 +1170,7 @@ events	?DoAIEvent@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@@Z	100.00
 # synth PDB - returned the row to master's own 98.5741 to the digit
 # with events.cpp untouched. Cross-generation noise, the
 # recruit::Update revert-control precedent; hist keeps 99.1139.
-events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	99.0481	99.0481	99.1139	0xad470	907f85ec7c05
+events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	98.5741	99.0481	99.1139	0xad470	907f85ec7c05
 events	?DoCustomArtifact@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	98.2381	99.1492	99.1492	0x9f070	4d12ed56362a
 events	?DoCustomResource@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa4780	51e134850e4b
 events	?DoCustomSpellScroll@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	97.4451	97.4451	97.4451	0xa5a80	2c8331b27654
@@ -2505,12 +2505,14 @@ resourcemanager	?SaturateGraphics@ResourceManager@@YIXXZ	100.0000	100.0000	100.0
 resourcemanager	?SetPath@ResourceManager@@YIXPBD@Z	100.0000	100.0000	100.0000	0x15a5c0	d085d67fac64
 resourcemanager	?SetPixelFormat@ResourceManager@@YIXKKK@Z	100.0000	100.0000	100.0000	0x15a6b0	4de25b191581
 resourcemanager	?Write@t_stdio_file_adapter@ResourceManager@@UAEHPBXH@Z	100.0000	100.0000	100.0000	0x159140	647bbbd056c9
+resourcemanager	?_Inc@const_iterator@?$_Tree@UTCacheMapKey@ResourceManager@@U?$pair@$$CBUTCacheMapKey@ResourceManager@@PAVresource@@@std@@U_Kfn@?$map@UTCacheMapKey@ResourceManager@@PAVresource@@U?$less@UTCacheMapKey@ResourceManager@@@std@@V?$allocator@U?$pair@$$CBUTCacheMapKey@ResourceManager@@PAVresource@@@std@@@5@@4@U?$less@UTCacheMapKey@ResourceManager@@@4@V?$allocator@U?$pair@$$CBUTCacheMapKey@ResourceManager@@PAVresource@@@std@@@4@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x15e390	-
 resourcemanager	?find@TCacheMap@ResourceManager@@QAE?AUTCacheIterator@2@ABUTCacheMapKey@2@@Z	100.0000	100.0000	100.0000	0x15d3b0	7efc1cfaa62e
 resourcemanager	?find_tree@TCacheMap@ResourceManager@@QAE?AUTCacheIterator@2@ABUTCacheMapKey@2@@Z	100.0000	100.0000	100.0000	0x15e330	4c731a71170e
 resourcemanager	?insert_wrapper@TCacheMap@ResourceManager@@QAE?AUTCacheInsertResult@2@ABUTCacheValue@2@@Z	100.0000	100.0000	100.0000	0x15d380	b3f79dd3b1bd
 resourcemanager	?lower_bound_iterator@TCacheMap@ResourceManager@@QAEPAUTCacheIterator@2@PAU32@ABUTCacheMapKey@2@@Z	100.0000	100.0000	100.0000	0x15e740	63b1bbc81736
 resourcemanager	@game_null_159510@12	89.3910	89.3910	89.3910	0x159510	e8246890ab05
 resourcemanager	@game_sprite_1599e0@12	86.1324	86.1324	86.1324	0x1599e0	0216f7dc6550
+rmg	?_Inc@const_iterator@?$_Tree@UTPoint@@U1@U_Kfn@?$set@UTPoint@@U?$less@UTPoint@@@std@@V?$allocator@UTPoint@@@3@@std@@U?$less@UTPoint@@@4@V?$allocator@UTPoint@@@4@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x1b8bc0	-
 sacrifice_window	??0type_sacrifice_window@@QAE@PAVhero@@H@Z	100.0000	100.0000	100.0000	0x15fdd0	e3c4b7caa364
 sacrifice_window	??0type_skeleton_window@@QAE@PAVarmyGroup@@@Z	98.3508	98.3508	98.3508	0x1654f0	7b3203c0fe49
 sacrifice_window	??1type_sacrifice_window@@UAE@XZ	100.0000	100.0000	100.0000	0x1623a0	2862ff7bfb2e
@@ -3018,6 +3020,7 @@ subwindow	?Draw@TSubWindow@@QAEXEHH@Z	100.0000	100.0000	100.0000	0x1aa4f0	306694
 subwindow	?RestoreBackground@TSubWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1aa610	c14e4687436e
 subwindow	?SaveBackground@TSubWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1aa560	750d85324ee8
 subwindow	?initialize@TSubWindow@@QAEXHHHHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1aa470	f991ff62f5ec
+swapmgr	??0TSwapWindow@@QAE@PAPAVhero@@@Z	100.0000	100.0000	100.0000	0x1aaa80	b511aeff37f8
 swapmgr	??0swapManager@@QAE@PAVhero@@0@Z	100.0000	100.0000	100.0000	0x1ae500	f20180835aae
 swapmgr	??1CHeroUpdateMsg@@QAE@XZ	100.0000	100.0000	100.0000	0x1afd70	e567126492ee
 swapmgr	??1TSwapWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1ae3c0	dbb4a269ed17
