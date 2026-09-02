@@ -566,6 +566,10 @@ public:
     // header transfer completes.
     void UpdateGameVars();
 #ifdef HOMM3_SSWINDOW_HEADER_VECTORS
+    // Dreamcast source method; Complete retail 0x58c290. Only the owning TU
+    // calls it (from OnBeginGame), so keep this declaration with that TU's
+    // existing private lobby-message/vector view.
+    unsigned char BeginSavedGame();
     // The disk header reader family around it, visible only to the
     // owning TU (the vectors gate): GetHeaders scans the picked
     // directory ("random_maps"/"games"/"maps" by mode) into the lists;

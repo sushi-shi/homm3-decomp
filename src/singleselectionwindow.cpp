@@ -6883,11 +6883,71 @@ unsigned char TSingleSelectionWindow::OnBeginGame()
     // @stub
 }
 
-VA(0x0058C290, 0x2D2)  // OnBeginGame saved arm, dc 0x142870
+#endif  // @carcass
+
+// Load the selected save while retaining the lobby's calendar state. DC
+// proves the four progress ticks, scoped launch message, four calendar
+// snapshots, two separately-scoped player lookups, and the final guarded
+// position/save broadcast. Complete widens the player record to 0x7c and
+// expands IsMultiPlayer, UpdateTurnDuration, and SendPlayerPositions.
+// E:\gamedcs\singleselectionwindow.cpp:7756
+VA(0x0058C290, 0x2D2)  // OnBeginGame saved arm + complete DC call/CFG order, dc 0x142870
 unsigned char TSingleSelectionWindow::BeginSavedGame()
 {
-    // @stub
+    IncProgressBar(1);
+    UpdateTurnDuration();
+
+    if (!IsMultiPlayer()) {
+        SetHumanSlot();
+    }
+
+    IncProgressBar(1);
+
+    if (bVideoPaused) {
+        CLaunchingGameMsg msg;
+        TransmitRemoteDataDPID(&msg, 0, false, true);
+    }
+
+    int iMonthType = giMonthType;
+    int iMonthTypeExtra = giMonthTypeExtra;
+    int iWeekType = giWeekType;
+    int iWeekTypeExtra = giWeekTypeExtra;
+
+    gpGame->LoadGame(gpGame->setup.filename, 0, 0);
+
+    giMonthType = iMonthType;
+    giMonthTypeExtra = iMonthTypeExtra;
+    giWeekType = iWeekType;
+    giWeekTypeExtra = iWeekTypeExtra;
+    gUnnamed69d810 = gNetLocalGamePos;
+
+    IncProgressBar(1);
+
+    if (!IsMultiPlayer()) {
+        CNetPlayerHandlerPlayer* player = m_players.GetPlayer(1);
+        player->playerPos = gNetLocalGamePos;
+    }
+
+    if (!IsMultiPlayer()) {
+        CNetPlayerHandlerPlayer* player = m_players.GetPlayer(1);
+        player->playerPos = gNetLocalGamePos;
+    }
+
+    UpdatePlayerPositions(0);
+
+    if (bVideoPaused) {
+        SendPlayerPositions(0);
+        gUnnamed69d810 = gNetLocalGamePos;
+        if (!gpGame->TransmitSaveGame(0x7f, 0, 0, 1)) {
+            return 0;
+        }
+    }
+
+    IncProgressBar(1);
+    return 1;
 }
+
+#if 0  // @carcass - DC-shaped launch bodies remain queued
 
 VA(0x0058C570, 0x3E7)  // OnBeginGame new arm, dc 0x1429e8
 unsigned char TSingleSelectionWindow::BeginNewGame()
