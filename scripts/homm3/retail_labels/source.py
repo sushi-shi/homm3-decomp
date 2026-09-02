@@ -167,6 +167,10 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "BITSET_TEST", "BITSET_XRAN", "TREE_MIN",
                  "TREE_INSERT", "TREE_NODE_INSERT",
                  "TREE_CONST_ITERATOR_DEC", "TREE_CONST_ITERATOR_INC",
+                 "BASIC_STRING_ASSIGN_PTR_SIZE",
+                 "OSTREAM_PUT", "OSTREAM_INSERT_CSTR",
+                 "INSERTION_SORT_1",
+                 "STREAMBUF_XSPUTN",
                  "PAIR_CONST_INT_DTOR",
                  "STD_CONSTRUCT", "STD_COPY",
                  "CLASS_CTOR",
@@ -621,10 +625,13 @@ def _demangle_key(mangled: str):
     # cache (`_Tree@UTCacheMapKey@ResourceManager@@...`).
     tree_named_owner = re.search(
         r"\?\$_Tree@(?:V|U)([A-Za-z_]\w*)@", mangled)
+    tree_pointer_owner = re.search(
+        r"\?\$_Tree@P(?:A|B)?(?:V|U)([A-Za-z_]\w*)@", mangled)
     tree_string_owner = re.search(
         r"\?\$_Tree@V\?\$basic_string@D", mangled)
     tree_owner = (tree_value.group(1) if tree_value else
                   tree_named_owner.group(1) if tree_named_owner else
+                  tree_pointer_owner.group(1) if tree_pointer_owner else
                   "string" if tree_string_owner else None)
     if mangled.startswith("?_Min@?$_Tree@") and tree_value:
         return f"{tree_value.group(1).lower()}@tree_min"
@@ -639,6 +646,8 @@ def _demangle_key(mangled: str):
     vector_element = re.search(
         r"\?\$vector@(?:(?:P[AB][VU])|(?:V|U|W4))?"
         r"([A-Za-z_]\w*)@", mangled)
+    nested_vector_element = re.search(
+        r"\?\$vector@V\?\$vector@(?:V|U)([A-Za-z_]\w*)@", mangled)
     if mangled.startswith("??1?$vector@") and vector_element:
         return f"{vector_element.group(1).lower()}@vector_dtor"
     if mangled.startswith("?size@?$vector@") and vector_element:
@@ -649,6 +658,9 @@ def _demangle_key(mangled: str):
         return f"{vector_element.group(1).lower()}@vector_resize"
     if mangled.startswith("?insert@?$vector@") and vector_element:
         return f"{vector_element.group(1).lower()}@vector_insert"
+    if mangled.startswith("?erase@?$vector@") and nested_vector_element:
+        return (f"{nested_vector_element.group(1).lower()}_vector"
+                "@vector_erase")
     if mangled.startswith("?erase@?$vector@") and vector_element:
         return f"{vector_element.group(1).lower()}@vector_erase"
     if mangled.startswith("?_Destroy@?$vector@") and vector_element:
@@ -688,6 +700,22 @@ def _demangle_key(mangled: str):
         return "int@std_copy"
     if mangled.startswith("?copy@std@@YIPAHPBH"):
         return "const_int@std_copy"
+    if mangled.startswith(
+            "?put@?$basic_ostream@DU?$char_traits@D@std@@@std@@"):
+        return "char@ostream_put"
+    if mangled.startswith(
+            "??6std@@YAAAV?$basic_ostream@DU?$char_traits@D@std@@") \
+            and mangled.endswith("@PBD@Z"):
+        return "char@ostream_insert_cstr"
+    if (mangled.startswith("?_Insertion_sort_1@std@@")
+            and "CampaignHeaderPointerLess" in mangled):
+        return "campaignheaderpointerless@insertion_sort_1"
+    if mangled.startswith(
+            "?xsputn@?$basic_streambuf@DU?$char_traits@D@std@@@std@@"):
+        return "char@streambuf_xsputn"
+    if (mangled.startswith("?assign@?$basic_string@D")
+            and mangled.endswith("@PBDI@Z")):
+        return "char@basic_string_assign_ptr_size"
     if mangled.startswith("??_G"):
         # scalar deleting destructor - joined by the VA_COMPGEN
         # SCALAR_DELETING_DTOR claims (owner = the class)
@@ -960,6 +988,11 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                                or "$tree_node_insert$" in r["name"]
                                or "$tree_const_iterator_dec$" in r["name"]
                                or "$tree_const_iterator_inc$" in r["name"]
+                               or "$basic_string_assign_ptr_size$" in r["name"]
+                               or "$ostream_put$" in r["name"]
+                               or "$ostream_insert_cstr$" in r["name"]
+                               or "$insertion_sort_1$" in r["name"]
+                               or "$streambuf_xsputn$" in r["name"]
                                or "$pair_const_int_dtor$" in r["name"]
                                or "$std_construct$" in r["name"]
                                or "$std_copy$" in r["name"]
@@ -1071,6 +1104,30 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             owner = row["name"].rsplit("$", 1)[1].lower()
             claim_keys.setdefault(
                 f"{owner}@tree_const_iterator_inc", []).append(row)
+            continue
+        if "$basic_string_assign_ptr_size$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(
+                f"{owner}@basic_string_assign_ptr_size", []).append(row)
+            continue
+        if "$ostream_put$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}@ostream_put", []).append(row)
+            continue
+        if "$ostream_insert_cstr$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(
+                f"{owner}@ostream_insert_cstr", []).append(row)
+            continue
+        if "$insertion_sort_1$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(
+                f"{owner}@insertion_sort_1", []).append(row)
+            continue
+        if "$streambuf_xsputn$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(
+                f"{owner}@streambuf_xsputn", []).append(row)
             continue
         if "$pair_const_int_dtor$" in row["name"]:
             owner = row["name"].rsplit("$", 1)[1].lower()
@@ -1554,6 +1611,11 @@ def selftest() -> list[str]:
             "tquestguard@vector_erase":
         failures.append("MSVC vector erase key regressed")
     if _demangle_key(
+            "?erase@?$vector@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@"
+            "@std@@V?$allocator@V?$vector@Vhero@@V?$allocator@Vhero@@"
+            "@std@@@std@@@2@@std@@") != "hero_vector@vector_erase":
+        failures.append("MSVC nested-vector erase key regressed")
+    if _demangle_key(
             "?capacity@?$vector@USecondarySkillData@@V?$allocator@USecondarySkillData@@"
             "@std@@@std@@QBEIXZ") != "secondaryskilldata@vector_capacity":
         failures.append("MSVC vector capacity key regressed")
@@ -1594,6 +1656,8 @@ def selftest() -> list[str]:
             "type_map_hero_info@tree_node_insert",
         "?_Dec@const_iterator@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@":
             "type_map_hero_info@tree_const_iterator_dec",
+        "?_Inc@const_iterator@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@":
+            "type_map_hero_info@tree_const_iterator_inc",
         "?_Inc@const_iterator@?$_Tree@UTCacheMapKey@ResourceManager@@"
         "U?$pair@$$CBUTCacheMapKey@ResourceManager@@PAVresource@@@std@@":
             "tcachemapkey@tree_const_iterator_inc",
@@ -1602,10 +1666,35 @@ def selftest() -> list[str]:
         "?_Inc@const_iterator@?$_Tree@V?$basic_string@D"
         "U?$char_traits@D@std@@V?$allocator@D@2@@std@@V12@":
             "string@tree_const_iterator_inc",
+        "?_Inc@const_iterator@?$_Tree@PAVCImmEnclosure@@"
+        "U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@":
+            "cimmenclosure@tree_const_iterator_inc",
     }
     for mangled, expected in tree_member_cases.items():
         if _demangle_key(mangled) != expected:
             failures.append(f"MSVC {expected} key regressed")
+    if _demangle_key(
+            "?put@?$basic_ostream@DU?$char_traits@D@std@@@std@@"
+            "QAEAAV12@D@Z") != "char@ostream_put":
+        failures.append("MSVC basic_ostream<char>::put key regressed")
+    if _demangle_key(
+            "??6std@@YAAAV?$basic_ostream@DU?$char_traits@D@std@@@0@"
+            "AAV10@PBD@Z") != "char@ostream_insert_cstr":
+        failures.append("MSVC ostream<char> c-string insertion key regressed")
+    if _demangle_key(
+            "?_Insertion_sort_1@std@@YIXPAPAX0V"
+            "CampaignHeaderPointerLess@@0@Z") != \
+            "campaignheaderpointerless@insertion_sort_1":
+        failures.append("MSVC campaign pointer insertion-sort key regressed")
+    if _demangle_key(
+            "?xsputn@?$basic_streambuf@DU?$char_traits@D@std@@@std@@"
+            "MAEHPBDH@Z") != "char@streambuf_xsputn":
+        failures.append("MSVC basic_streambuf<char>::xsputn key regressed")
+    if _demangle_key(
+            "?assign@?$basic_string@DU?$char_traits@D@std@@"
+            "V?$allocator@D@2@@std@@QAEAAV12@PBDI@Z") != \
+            "char@basic_string_assign_ptr_size":
+        failures.append("MSVC basic_string<char>::assign(ptr,size) key regressed")
     unrelated_tree_key = _demangle_key(
         "?_Erase@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@")
     if unrelated_tree_key in tree_member_cases.values():

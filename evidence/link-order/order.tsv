@@ -95,11 +95,11 @@ position	unit	first_rva	end_rva	gap_to_next
 89	smackmgr	0x1971b0	0x197cf4	6076
 90	soundmgr	0x1994b0	0x19b295	2059
 91	spellbookwindow	0x19baa0	0x19dc64	1020
-92	spelldefs	0x19e060	0x19e4af	21073
-93	spells	0x1a3700	0x1a939c	2436
+92	spelldefs	0x19e060	0x19e4af	6529
+93	spells	0x19fe30	0x1a939c	2436
 94	strip	0x1a9d20	0x1aa31e	34
-95	subwindow	0x1aa340	0x1aa68a	15590
-96	swapmgr	0x1ae370	0x1b1378	1048
+95	subwindow	0x1aa340	0x1aa68a	1014
+96	swapmgr	0x1aaa80	0x1b1378	1048
 97	systemoptionswindow	0x1b1790	0x1b375e	22930
 98	text	0x1b90f0	0x1b9109	6167
 99	textntry	0x1ba920	0x1bbab4	236

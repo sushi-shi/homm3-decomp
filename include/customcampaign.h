@@ -5,6 +5,15 @@
 #ifndef HOMM3_CUSTOMCAMPAIGN_H
 #define HOMM3_CUSTOMCAMPAIGN_H
 
+// Complete's custom-campaign list orders four-byte header pointers through
+// this predicate. The predicate body is a separate retail helper; this owner
+// header carries its one authoritative type shape for the retained STL sort
+// specialization in customcampaign.obj.
+class CampaignHeaderPointerLess {
+public:
+    bool operator()(void* left, void* right) const;
+};
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\customcampaign.cpp:70, dc 0x7cd4c) void InitCampaignMapTraits([]* map_traits);
 

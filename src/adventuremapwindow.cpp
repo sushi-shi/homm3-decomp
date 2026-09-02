@@ -35,6 +35,20 @@ const char* TCheatCode::a = "abcdefghijklmnopqrstuvwxyz";
 DATA(0x0065f224)
 const char* TCheatCode::b = "nopqrstuvwxyzabcdefghijklm";
 
+// Retail's gosolo handler at 0x4022e0 calls this Dinkumware specialization
+// at 0x404150 to build its local string. The VC6 public emitted elsewhere is
+// byte-identical across all 0xA1 bytes. This unclaimed wrapper keeps the ODR
+// body in adventuremapwindow.obj; without the statement-scoped depth pin the
+// call flattens and the public disappears (negative control).
+VA_COMPGEN(0x00404150, 0xA1, BASIC_STRING_ASSIGN_PTR_SIZE, char)
+void EmitBasicStringAssignPtrSize(std::string* value, const char* source,
+                                  unsigned size)
+{
+#pragma inline_depth(0)
+    INLINE_GATE(value->assign(source, size));
+#pragma inline_depth()
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\adventuremapwindow.cpp:52. Retail has no own body: the DC

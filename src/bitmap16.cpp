@@ -17,13 +17,6 @@ long ftol(double d)
     // @stub
 }
 
-// E:\gamedcs\bitmap16.cpp:71
-DC_ONLY(0x50b00, 0x104)
-void Bitmap16Bit::Bitmap16Bit(int w, int h)
-{
-    // @stub
-}
-
 // E:\gamedcs\bitmap16.cpp:117
 DC_ONLY(0x50c04, 0x104)
 void Bitmap16Bit::Bitmap16Bit(const char* name, int w, int h)
@@ -52,6 +45,26 @@ void Bitmap16Bit::Bitmap16Bit(const char* name, const char* path)
 // constructor; Dreamcast appends it to the compiland.
 VA_COMPGEN(0x0044e020, 0x21, SCALAR_DELETING_DTOR, Bitmap16Bit)
 
+// E:\gamedcs\bitmap16.cpp:71. Dreamcast (dc 0x50b00) proves the null/none
+// resource base, dimensions, two-byte pitch, DataSize-sized pixel allocation,
+// zero-size null arm, and the branch-local referenced clear. Complete drops
+// the DirectDraw surface tail but preserves that shared source shape; retail
+// fixes the resulting PC layout and this 0xA3-byte constructor exactly.
+VA(0x0044df70, 0xA3)
+Bitmap16Bit::Bitmap16Bit(int w, int h)
+    : resource(0, RESOURCE_TYPE_NONE),
+      ImageSize(w * h * 2), Width(w), Height(h), Pitch(w * 2)
+{
+    DataSize = ImageSize;
+
+    if (w && h) {
+        map = new unsigned short[DataSize / 2];
+        referenced = 0;
+    } else {
+        map = 0;
+    }
+}
+
 // E:\gamedcs\bitmap16.cpp:208
 VA(0x0044e100, 0x29)  // unique dtor body + vtable, dc 0x50ebc
 Bitmap16Bit::~Bitmap16Bit()
@@ -64,6 +77,35 @@ VA(0x0044e240, 0x07)  // vtable slot 2: fixed object extent + pixel bytes
 unsigned int Bitmap16Bit::GetSize() const
 {
     return sizeof(*this) + DataSize;
+}
+
+// E:\gamedcs\bitmap16.cpp:705. The Dreamcast dossier (dc 0x5157c)
+// proves the clipped width/height, one GetMap call, row loop, full top/bottom
+// rows, and two endpoint stores on interior rows. Retail independently fixes
+// Pitch as a byte stride and preserves this 18-block source shape.
+VA(0x0044e540, 0xA3)
+void Bitmap16Bit::FrameRect(int x, int y, int w, int h,
+                            unsigned short color)
+{
+    if (w > Width - x)
+        w = Width - x;
+    if (h > Height - y)
+        h = Height - y;
+
+    if (w && h) {
+        Bitmap16MapPointer dst;
+        dst.pixels = GetMap(x, y);
+        for (int row = 0; row < h; ++row) {
+            if (row == 0 || row == h - 1) {
+                for (int col = 0; col < w; ++col)
+                    dst.pixels[col] = color;
+            } else {
+                dst.pixels[0] = color;
+                dst.pixels[w - 1] = color;
+            }
+            dst.bytes += Pitch;
+        }
+    }
 }
 
 #if 0  // @carcass
@@ -151,14 +193,6 @@ void Bitmap16Bit::Grab(const unsigned short* src, int sx, int sy, int sw, int sh
 // RETAIL_LOCATED(0x0044e4c0, 0x7D): anchor-global, not reconstructed.
 DC_ONLY(0x5150c, 0x7D)
 void Bitmap16Bit::FillRect(int x, int y, int w, int h, unsigned short color)
-{
-    // @stub
-}
-
-// E:\gamedcs\bitmap16.cpp:705
-// RETAIL_LOCATED(0x0044e540, 0xA3): anchor-global, not reconstructed.
-DC_ONLY(0x5157c, 0xA3)
-void Bitmap16Bit::FrameRect(int x, int y, int w, int h, unsigned short color)
 {
     // @stub
 }

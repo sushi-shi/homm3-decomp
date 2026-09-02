@@ -76,8 +76,8 @@ enum EVideoGameState {
     VIDEO_GAME_STATE_FORCED_BINK_HIGH = 0x3
 };
 
-// gVideoPixelFormat's one attested value: the RGB565 screen mode that
-// selects SMACKBUFFER565 (name provisional).
+// GreenBits' one attested value: the RGB565 screen mode that selects
+// SMACKBUFFER565. The global's name and bit-count meaning are DC-proven.
 enum EVideoPixelFormat {
     VIDEO_PIXEL_FORMAT_RGB565 = 0x6
 };
@@ -99,6 +99,7 @@ unsigned char VideoNeedsUpdate();  // 0x597930
 unsigned char VideoPlaying();      // 0x597990
 void VideoDrawRects();         // 0x5979d0
 void VideoShutDown();          // 0x597c70
+void DeleteSoundHeaders();     // 0x5986e0
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\smackmgr.cpp:75, dc 0x14ac30) void VideoSoundOnOff();

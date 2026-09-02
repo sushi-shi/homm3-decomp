@@ -689,6 +689,13 @@ void ImmMouseWindowMoved()
     }
 }
 
+// The loop above retains VC6's real map<CImmEnclosure*, RECT> tree-successor
+// COMDAT. Retail 0x4b7330 has the same nine blocks and 0xa3 bytes; its node
+// consumer independently fixes the pair at +0x0c/+0x10 and `_Nil` at
+// 0x696d8c. Dreamcast's generic STLport _M_increment at dc 0x64214
+// corroborates the helper boundary; the Immersion integration is retail-only.
+VA_COMPGEN(0x004B7330, 0xA3, TREE_CONST_ITERATOR_INC, CImmEnclosure)
+
 // Retail-only HeroExtra reset used by game::SetupOrigData.  No Dreamcast
 // procedure row names it; the receiver layout and sole caller prove the role,
 // so the address remains in the source spelling.

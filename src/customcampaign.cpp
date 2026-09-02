@@ -6,7 +6,10 @@
 // customcampaign/dialogbox gaps remain ambiguous, so the older-revision
 // carcass is not force-claimed merely from roster order.
 #include <va.h>
+#include <algorithm>
+#define HOMM3_GAME_SCAMPAIGN_ASSIGN_VIEW
 #include "game.h"
+#include "customcampaign.h"
 
 #if 0  // Dreamcast-only carcass; retained as evidence, not emitted for retail.
 // E:\gamedcs\customcampaign.cpp:29
@@ -90,6 +93,44 @@ int SCampaign::get_total_time() const
     }
 
     return totalTime;
+}
+
+// SCampaign::Load retains the range-erase COMDAT for its concrete carry-over
+// hero pools. Retail 0x48c500 proves the nested element shapes independently:
+// the outer stride is 0x10 and each leaf is destroyed on hero's 0x492 stride.
+// The Complete-only loader has no Dreamcast bridge; its SCampaign owner and
+// two calls from 0x48a310 place this helper in customcampaign.obj.
+VA_COMPGEN(0x0048C500, 0xA3, VECTOR_ERASE, hero_vector)
+
+// Minimum ODR use needed to retain the real VC6/Dinkumware COMDAT. The
+// statement-scoped inline pin applies only to this unclaimed anchor; without
+// it VC6 flattens erase into the wrapper and emits no public specialization,
+// while retail's 0x48a310 caller proves an out-of-line call to this helper.
+// The wrapper is not a retail claim and adds no target/report row.
+void __fastcall EmitCampaignHeroPoolErase(
+    SCampaignHeroPoolsView* pools,
+    SCampaignHeroPoolsView::iterator first,
+    SCampaignHeroPoolsView::iterator last)
+{
+#pragma inline_depth(0)
+    INLINE_GATE(pools->erase(first, last));
+#pragma inline_depth()
+}
+
+// Exact Dinkumware _Insertion_sort_1 body retained by the Complete-only
+// custom-campaign list sort. Retail proves four-byte pointer elements, the
+// by-value empty predicate, the extra _Ty** discriminator, and all three
+// out-of-line predicate calls. The stock VC6 template is byte-identical.
+VA_COMPGEN(0x00483AA0, 0xA0, INSERTION_SORT_1,
+           CampaignHeaderPointerLess)
+
+void __fastcall EmitCampaignHeaderInsertionSort(void** first, void** last)
+{
+#pragma inline_depth(0)
+    INLINE_GATE(std::_Insertion_sort_1(
+        first, last, CampaignHeaderPointerLess(),
+        static_cast<void**>(0)));
+#pragma inline_depth()
 }
 
 #if 0  // Dreamcast-only carcass; retained as evidence, not emitted for retail.

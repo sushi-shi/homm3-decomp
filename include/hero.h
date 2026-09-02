@@ -690,6 +690,13 @@ public:
     enum { NUM_SPELLS = 70 };       // DC SpellID::kNumSpells
     unsigned char in_spellbook[NUM_SPELLS];     // +0x3ea
     unsigned char available_spells[NUM_SPELLS]; // +0x430
+    // DC hero.h:1016, dc 0x37ddc. The const-bool mangling
+    // (?is_in_spellbook@hero@@QBA_NW4SpellID@@@Z) and CastSpell's direct
+    // retail byte load prove this is a source-visible header inline.
+    bool is_in_spellbook(SpellID spell) const
+    {
+        return in_spellbook[spell] != 0;
+    }
     // DC-attested inline helper; SetShrineHelpText proves the direct
     // byte-indexed availability read in retail.
     unsigned char SpellIsAvailable(SpellID spell) const
