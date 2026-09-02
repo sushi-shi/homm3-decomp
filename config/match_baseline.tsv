@@ -2526,6 +2526,7 @@ resourcemanager	?insert_wrapper@TCacheMap@ResourceManager@@QAE?AUTCacheInsertRes
 resourcemanager	?lower_bound_iterator@TCacheMap@ResourceManager@@QAEPAUTCacheIterator@2@PAU32@ABUTCacheMapKey@2@@Z	100.0000	100.0000	100.0000	0x15e740	63b1bbc81736
 resourcemanager	@game_null_159510@12	89.3910	89.3910	89.3910	0x159510	e8246890ab05
 resourcemanager	@game_sprite_1599e0@12	86.1324	86.1324	86.1324	0x1599e0	0216f7dc6550
+rmg	??0RMGObjectGenerator@@QAE@HHHH@Z	100.0000	100.0000	100.0000	0x134160	c06f648fbe52
 rmg	?_Inc@const_iterator@?$_Tree@UTPoint@@U1@U_Kfn@?$set@UTPoint@@U?$less@UTPoint@@@std@@V?$allocator@UTPoint@@@3@@std@@U?$less@UTPoint@@@4@V?$allocator@UTPoint@@@4@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x1b8bc0	-
 sacrifice_window	??0type_sacrifice_window@@QAE@PAVhero@@H@Z	100.0000	100.0000	100.0000	0x15fdd0	e3c4b7caa364
 sacrifice_window	??0type_skeleton_window@@QAE@PAVarmyGroup@@@Z	98.3508	98.3508	98.3508	0x1654f0	7b3203c0fe49
