@@ -184,6 +184,15 @@ proved `inline` helper remains `inline` even when one Complete caller emits an o
 line call. Confirm the mismatch with `homm3 vc6 predict-inline <selector>` and inspect
 the named call sequence, not only the aggregate call count.
 
+The converse is required too. When Dreamcast retains a call to an ordinary non-`inline`
+helper but Complete VC6 `/Ob2` expands it, preserve the source call and the ordinary
+helper declaration/definition, then reproduce the retail auto-inline decision by making
+the real body available in the original TU and source order. Do not paste the helper's
+body into the caller or add a false `inline` keyword. `advManager::MoveHero` is the
+canonical control: Dreamcast calls `GetMoveShowIt` at `cursor.cpp:601`, while Complete
+expands that same source helper. Dreamcast call/expansion residue ratchets the source
+boundary; retail x86 independently ratchets the per-site lowering.
+
 When retail proves a call at one site, constrain the smallest possible caller region
 with statement-scoped `#pragma inline_depth(0)` and restore it immediately with
 `#pragma inline_depth()`. VC6 SP3 predates `__pragma`, so this pair cannot be hidden in

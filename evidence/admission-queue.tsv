@@ -218,7 +218,7 @@ bracketed	761	0xb7a50	bracketed	font..game	font,game	game_b70e0_sub00_b7a50	reso
 bracketed	761	0x107ad0	bracketed	mapcell..misc	mapcell,misc	game_fd950_sub00_107ad0	resolve the owner, then add its VA claim and body
 bracketed	761	0x18e700	bracketed	singleselectionwindow..slider	singleselectionwindow,slider	game_17f330_sub03_18e700	resolve the owner, then add its VA claim and body
 bracketed	761	0x1a9570	bracketed	spells..strip	spells,strip	game_1a9450_sub00_1a9570	resolve the owner, then add its VA claim and body
-unmapped	759	0x202dc0	unmapped				locate the owning TU, then add its VA claim and body
+carcass	759	0x202dc0	unmapped	winmgr	winmgr	heroWindowManager_FizzleForwardX	enable the existing VA claim and reconstruct its body
 bracketed	757	0x1443a0	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_1446a0_sub00_1443a0	resolve the owner, then add its VA claim and body
 bracketed	755	0xb3f70	bracketed	findpath..fly	findpath,fly	game_b1a70_sub00_b3f70	resolve the owner, then add its VA claim and body
 bracketed	754	0x1f0ac0	bracketed	u2dvers..university_window	u2dvers,university_window	game_1ef490_sub00_1f0ac0	resolve the owner, then add its VA claim and body
@@ -627,7 +627,7 @@ bracketed	246	0xee1b0	bracketed	inputmgr..kb	inputmgr,kb	game_ee3e0_sub15_ee1b0	
 bracketed	244	0x8f940	bracketed	customcampaign..dialogbox	customcampaign,dc_input,dc_precompiledheaders,dialogbox	TDialogBox_TDialogBox	resolve the owner, then add its VA claim and body
 bracketed	244	0x16bf30	bracketed	search..seerhut	search,seerhut	game_16bde0_sub01_16bf30	resolve the owner, then add its VA claim and body
 bracketed	243	0xed350	bracketed	inputmgr..kb	inputmgr,kb	game_loadbar_pcx_ed350	resolve the owner, then add its VA claim and body
-unmapped	242	0x202cc0	unmapped				locate the owning TU, then add its VA claim and body
+carcass	242	0x202cc0	unmapped	winmgr	winmgr	heroWindowManager_SaveFizzleSourceX	enable the existing VA claim and reconstruct its body
 bracketed	238	0x10df60	bracketed	mousemgr..multiplayerwindow	mousemgr,multiplayerwindow	calls_GetKeyState_10df60	resolve the owner, then add its VA claim and body
 bracketed	234	0x83240	bracketed	cursor..customcampaign	cursor,customcampaign	game_82fd0_sub00_83240	resolve the owner, then add its VA claim and body
 bracketed	234	0x135df0	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_135110_sub03_135df0	resolve the owner, then add its VA claim and body
@@ -757,7 +757,6 @@ bracketed	167	0xed2a0	bracketed	inputmgr..kb	inputmgr,kb	game_6fd0_sub08_ed2a0	r
 bracketed	167	0xf3eb0	bracketed	kb..kbwin	kb,kbwin	game_89820_sub05_f3eb0	resolve the owner, then add its VA claim and body
 bracketed	165	0x4e050	bracketed	binkmanager..bitmap16	binkmanager,bitmap16	Bitmap16Bit_Bitmap16Bit_4e050	resolve the owner, then add its VA claim and body
 bracketed	164	0x835c0	bracketed	cursor..customcampaign	cursor,customcampaign	calls_timeGetTime_835c0	resolve the owner, then add its VA claim and body
-bracketed	164	0x1a93a0	bracketed	spells..strip	spells,strip	game_3bb20_sub09_1a93a0	resolve the owner, then add its VA claim and body
 bracketed	160	0x130fb0	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_136070_sub00_130fb0	resolve the owner, then add its VA claim and body
 bracketed	160	0x133460	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_133460	resolve the owner, then add its VA claim and body
 bracketed	160	0x157fe0	bracketed	remote..resource	remote,resource	game_227f74_sub00_157fe0	resolve the owner, then add its VA claim and body

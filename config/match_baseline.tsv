@@ -915,6 +915,7 @@ cspriteframe	?DrawCreatureImpl@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@EGE@
 cspriteframe	?DrawTile@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@EE@Z	81.4249	83.2115	83.2115	0x7dd40	31ff46cec542
 cspriteframe	?GetSize@CSpriteFrame@@UBEIXZ	100.0000	100.0000	100.0000	0x7c560	b733f08b7525
 cspriteframe	?SetPixelFormat@CSpriteFrame@@SIXIII@Z	100.0000	100.0000	100.0000	0x7c460	14fdf9e7d6f8
+cursor	?GetMoveShowIt@advManager@@QAEHPAVhero@@H@Z	100.0000	100.0000	100.0000	0x80000	bc03c3596322
 cursor	?OnMoveHero@advManager@@QAEXPAVCMapChange@@@Z	100.0000	100.0000	100.0000	0x81ed0	831cc6211424
 cursor	?TurnTo@advManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x7ffe0	403a24945d74
 cursor	SendMapChange	0.0000	0.0000	0.0000	0x82340	85e66aeb17b4
@@ -922,7 +923,6 @@ cursor	advManager_CheckAdjacentMon	0.0000	0.0000	0.0000	0x81900	0eb57ca2e0bc
 cursor	advManager_DrawCursor	0.0000	0.0000	0.0000	0x7f860	ad7d179cd2c4
 cursor	advManager_DrawCursorAlpha	0.0000	0.0000	0.0000	0x7fc80	0535dc58f8b1
 cursor	advManager_DrawCursorShadow	0.0000	0.0000	0.0000	0x7fb40	7637b83ff3cf
-cursor	advManager_GetMoveShowIt	0.0000	0.0000	0.0000	0x80000	0a39e0ced39a
 cursor	advManager_MoveHero	0.0000	0.0000	0.0000	0x805e0	d08edf7be495
 cursor	advManager_OnTeleportHero	0.0000	0.0000	0.0000	0x81fd0	114eeb3a1eb5
 cursor	advManager_ProcessMapChangeNew	0.0000	0.0000	0.0000	0x82010	7486d5d6f161
@@ -1180,7 +1180,7 @@ events	?DoAIEvent@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@@Z	100.00
 # synth PDB - returned the row to master's own 98.5741 to the digit
 # with events.cpp untouched. Cross-generation noise, the
 # recruit::Update revert-control precedent; hist keeps 99.1139.
-events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	98.5741	99.0481	99.1139	0xad470	907f85ec7c05
+events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	99.0481	99.0481	99.1139	0xad470	907f85ec7c05
 events	?DoCustomArtifact@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	98.2381	99.1492	99.1492	0x9f070	4d12ed56362a
 events	?DoCustomResource@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa4780	51e134850e4b
 events	?DoCustomSpellScroll@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	97.4451	97.4451	97.4451	0xa5a80	2c8331b27654
@@ -2734,7 +2734,7 @@ singleselectionwindow	??0CNetPlayerHandlerPlayer@@QAE@XZ	100.0000	100.0000	100.0
 singleselectionwindow	??0CNetPlayerInfo@@QAE@XZ	100.0000	100.0000	100.0000	0x17f720	-
 singleselectionwindow	??0CNewPlayerUpdateMan@@QAE@XZ	100.0000	100.0000	100.0000	0x17c9b0	0ed8ff53773d
 singleselectionwindow	??0CUpdatePlayerPosMsg@@QAE@PAVCNetPlayerHandlerPlayer@@0@Z	100.0000	100.0000	100.0000	0x179870	4cb719207948
-singleselectionwindow	??0GameSelectionHeadersStruct@@QAE@XZ	79.2582	79.3242	79.3242	0x178e00	-
+singleselectionwindow	??0GameSelectionHeadersStruct@@QAE@XZ	79.3242	79.3242	79.3242	0x178e00	-
 singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	74.9955	75.2722	75.2722	0x179960	3885b26cf40c
 singleselectionwindow	??0lobby_message@@QAE@XZ	100.0000	100.0000	100.0000	0x189190	2b1be8208221
 singleselectionwindow	??0t_map_list_update@@QAE@K@Z	100.0000	100.0000	100.0000	0x189240	173781ee6a81
