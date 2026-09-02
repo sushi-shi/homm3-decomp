@@ -185,9 +185,9 @@ rva	function_count	class
 0x240b34	4	
 0x240b44	4	
 0x240b54	4	
-0x240b64	3	RMGObjectGenerator
+0x240b64	3	type_treasure_def
 0x240b70	3	
-0x240b7c	3	
+0x240b7c	3	type_black_box_creature_def
 0x240b88	3	
 0x240b94	3	
 0x240ba0	3	
@@ -196,12 +196,12 @@ rva	function_count	class
 0x240bc4	3	
 0x240bd0	3	
 0x240bdc	3	
-0x240be8	3	
-0x240bf4	3	
+0x240be8	3	type_shrine_def
+0x240bf4	3	type_witch_hut_def
 0x240c00	3	
 0x240c0c	3	
 0x240c18	3	
-0x240c24	3	
+0x240c24	3	type_spell_scroll_def
 0x240c30	3	
 0x240c3c	2	
 0x240c44	2	
