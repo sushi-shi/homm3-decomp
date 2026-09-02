@@ -767,7 +767,6 @@ bracketed	163	0x4e540	bracketed	bitmap16..bitmap816	bitmap16,bitmap24,bitmap8,bi
 bracketed	163	0x5d370	bracketed	campaignbrief..campaignmap	campaignbrief,campaignmap	game_5c070_sub02_5d370	resolve the owner, then add its VA claim and body
 bracketed	163	0x8c500	bracketed	customcampaign..dialogbox	customcampaign,dc_input,dc_precompiledheaders,dialogbox	game_8a310_sub04_8c500	resolve the owner, then add its VA claim and body
 bracketed	163	0xb7330	bracketed	font..game	font,game	game_b6950_sub00_b7330	resolve the owner, then add its VA claim and body
-bracketed	163	0x117780	bracketed	newgame..overview	newgame,overview	game_116ae0_sub02_117780	resolve the owner, then add its VA claim and body
 bracketed	162	0x53dd0	bracketed	bottomviewsubwindow..button	bottomviewsubwindow,button	game_51220_sub04_53dd0	resolve the owner, then add its VA claim and body
 bracketed	162	0x1986e0	bracketed	smackmgr..soundmgr	smackmgr,soundmgr	calls_CloseHandle_1986e0	resolve the owner, then add its VA claim and body
 bracketed	162	0x198a40	bracketed	smackmgr..soundmgr	smackmgr,soundmgr	game_2014f0_sub01_198a40	resolve the owner, then add its VA claim and body

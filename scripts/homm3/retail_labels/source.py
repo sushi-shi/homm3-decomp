@@ -619,8 +619,13 @@ def _demangle_key(mangled: str):
     # Keep the mapped-value key above for the established map<int, T> claims,
     # and use the named key as the stable owner for maps such as the resource
     # cache (`_Tree@UTCacheMapKey@ResourceManager@@...`).
-    tree_owner = tree_value or re.search(
+    tree_named_owner = re.search(
         r"\?\$_Tree@(?:V|U)([A-Za-z_]\w*)@", mangled)
+    tree_string_owner = re.search(
+        r"\?\$_Tree@V\?\$basic_string@D", mangled)
+    tree_owner = (tree_value.group(1) if tree_value else
+                  tree_named_owner.group(1) if tree_named_owner else
+                  "string" if tree_string_owner else None)
     if mangled.startswith("?_Min@?$_Tree@") and tree_value:
         return f"{tree_value.group(1).lower()}@tree_min"
     if mangled.startswith("?insert@?$_Tree@") and tree_value:
@@ -628,9 +633,9 @@ def _demangle_key(mangled: str):
     if mangled.startswith("?_Insert@?$_Tree@") and tree_value:
         return f"{tree_value.group(1).lower()}@tree_node_insert"
     if mangled.startswith("?_Dec@const_iterator@?$_Tree@") and tree_owner:
-        return f"{tree_owner.group(1).lower()}@tree_const_iterator_dec"
+        return f"{tree_owner.lower()}@tree_const_iterator_dec"
     if mangled.startswith("?_Inc@const_iterator@?$_Tree@") and tree_owner:
-        return f"{tree_owner.group(1).lower()}@tree_const_iterator_inc"
+        return f"{tree_owner.lower()}@tree_const_iterator_inc"
     vector_element = re.search(
         r"\?\$vector@(?:(?:P[AB][VU])|(?:V|U|W4))?"
         r"([A-Za-z_]\w*)@", mangled)
@@ -1594,6 +1599,9 @@ def selftest() -> list[str]:
             "tcachemapkey@tree_const_iterator_inc",
         "?_Inc@const_iterator@?$_Tree@UTPoint@@UTPoint@@":
             "tpoint@tree_const_iterator_inc",
+        "?_Inc@const_iterator@?$_Tree@V?$basic_string@D"
+        "U?$char_traits@D@std@@V?$allocator@D@2@@std@@V12@":
+            "string@tree_const_iterator_inc",
     }
     for mangled, expected in tree_member_cases.items():
         if _demangle_key(mangled) != expected:
