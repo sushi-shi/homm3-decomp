@@ -39,6 +39,9 @@ extern int gDifficultyRatingPercent[5];
 extern const char* gUnnamed6a77ec[];
 extern const char* gUnnamed6a7800[3];
 extern const char* gUnnamed6a7e18[];
+// Starting-bonus labels shared by the selection window and the Complete-only
+// scenario-info row renderer. No source symbol survives for the retail table.
+extern const char* gUnnamed6a5e14[];
 
 enum ESingleSelectionGameContext {
     SINGLE_SELECTION_CONTEXT_1 = 1,

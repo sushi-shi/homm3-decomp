@@ -62,13 +62,6 @@ int __cdecl _close(int handle);
 int __cdecl _access(const char* path, int mode);
 }
 
-// The starting-bonus name table at .bss 0x6a5e14 (rows 0..2 =
-// Artifact/Gold/Resource; the random rung draws general-text 523
-// instead), read by DrawHeroAdvancedOption's bonus column in both
-// mode arms. No attested name survives - house unnamed-cell spelling.
-// Owner TU unlocated - extern only, no DATA claim.
-extern const char* gUnnamed6a5e14[];
-
 // The chat/duration/file-menu slider. DC gives it a `slider` base and a
 // SetResolution/SetState override pair (slots 13/14 of the 0x241b8c vtable).
 // Both bodies read the slider base fields retail's slider.obj proves
