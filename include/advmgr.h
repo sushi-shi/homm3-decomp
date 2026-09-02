@@ -2029,6 +2029,7 @@ public:
     // GetHero, get_location and type_point construction in the same nested
     // order preserved by the Dreamcast line/scope stream.
     void OnMoveHero(class CMapChange* change);
+    void OnHideHero(class CMapChange* change);
     // cursor.obj's 0x481be0 (cursor.cpp:1027, dc 0x7bee4), reached the
     // same way and located by an EXHAUSTIVE order-map over the whole
     // cursor.obj tail: DC GetMoveShowIt/end_move_hero/

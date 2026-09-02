@@ -918,6 +918,7 @@ cspriteframe	?SetPixelFormat@CSpriteFrame@@SIXIII@Z	100.0000	100.0000	100.0000	0
 cursor	?DrawCursorAlpha@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x7fc80	f88e01d23684
 cursor	?GetMoveShowIt@advManager@@QAEHPAVhero@@H@Z	100.0000	100.0000	100.0000	0x80000	bc03c3596322
 cursor	?MoveHero@advManager@@QAEPAVNewmapCell@@HEPAUtype_point@@PAHE1E@Z	89.5139	89.5139	89.5139	0x805e0	d5e4c46dc99f
+cursor	?OnHideHero@advManager@@QAEXPAVCMapChange@@@Z	100.0000	100.0000	100.0000	0x81fd0	04ab79a0f668
 cursor	?OnMoveHero@advManager@@QAEXPAVCMapChange@@@Z	100.0000	100.0000	100.0000	0x81ed0	831cc6211424
 cursor	?SendMapChange@@YIXPAVCMapChange@@@Z	100.0000	100.0000	100.0000	0x82390	22f828296a19
 cursor	?StopCursor@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x7f7d0	4c61d41b55e7
@@ -928,7 +929,6 @@ cursor	?handle_stop_on_trigger@advManager@@AAEPAVNewmapCell@@PAVhero@@PAV2@EEPAH
 cursor	advManager_CheckAdjacentMon	0.0000	0.0000	0.0000	0x81900	0eb57ca2e0bc
 cursor	advManager_DrawCursor	0.0000	0.0000	0.0000	0x7f860	ad7d179cd2c4
 cursor	advManager_DrawCursorShadow	0.0000	0.0000	0.0000	0x7fb40	7637b83ff3cf
-cursor	advManager_OnTeleportHero	0.0000	0.0000	0.0000	0x81fd0	114eeb3a1eb5
 cursor	advManager_ProcessMapChangeNew	0.0000	0.0000	0.0000	0x82010	7486d5d6f161
 cursor	advManager_ValidMove	0.0000	0.0000	0.0000	0x81be0	33eeaa6d2a1f
 cursor	advManager_ValidMoveWithEvent	0.0000	0.0000	0.0000	0x81ad0	dee616486353
