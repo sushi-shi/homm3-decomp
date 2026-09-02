@@ -6,9 +6,7 @@
 #include "event_record.h"
 #define HOMM3_EVENT_RECORD_CLEAR_DECL
 #define HOMM3_EVENT_RECORD_DECLS
-#define HOMM3_EVENT_RECORD_NETMSG_DECLS
 #include "game.h"
-#undef HOMM3_EVENT_RECORD_NETMSG_DECLS
 #undef HOMM3_EVENT_RECORD_DECLS
 #undef HOMM3_EVENT_RECORD_CLEAR_DECL
 #include "abstractfile.h"

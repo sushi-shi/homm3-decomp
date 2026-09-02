@@ -233,7 +233,8 @@ CNetMsg* CAdvMgrNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
 {
     if (pNetMsg->subType >= RS_MAP_CHANGE_START
         && pNetMsg->subType <= RS_MAP_CHANGE_END) {
-        gpAdvManager->AdvmgrFn_00482010(pNetMsg);
+        gpAdvManager->ProcessMapChangeNew(
+            static_cast<CMapChange*>(pNetMsg));
         DestroyMsg(pNetMsg);
         return 0;
     }

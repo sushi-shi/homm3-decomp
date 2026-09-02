@@ -80,11 +80,12 @@ inline CCombatInitMsg::CCombatInitMsg()
     m_rightGold = 0;
 }
 
-// Retail uses the same 0x20-byte 0x424 map-change shape when a prison hero
-// enters the map. Keep the constructor inline at its only events.obj site.
-inline CMCTeleportHero::CMCTeleportHero(int id, type_point location)
-    : CMapChange(RS_TELEPORT_HERO, sizeof(CMCTeleportHero)),
-      heroId(id), point(location), playerPos(gNetLocalGamePos)
+// A prison hero entering the map emits the 0x20-byte recruit record. Keep
+// Dreamcast's three-argument constructor boundary while preserving Windows'
+// explicit gNetLocalGamePos argument at this events.obj site.
+inline CMCRecruitHero::CMCRecruitHero(int id, type_point location, int player)
+    : CMapChange(RS_RECRUIT_HERO, sizeof(CMCRecruitHero)),
+      heroId(id), point(location), playerPos(player)
 {
 }
 
@@ -4528,7 +4529,7 @@ void advManager::DoEventPrison(hero* current_hero, NewmapCell* cell,
     animCtrPaused = OldAnimCtrPaused;
     gUnnamed67f574 = OldColorCycling;
 
-    CMCTeleportHero change(heroID, point);
+    CMCRecruitHero change(heroID, point, gNetLocalGamePos);
     SendMapChange(&change);
     advWindow->UpdateHeroLocators(-1, 1, 1);
 }

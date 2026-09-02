@@ -91,7 +91,7 @@ advmgr	?GetFlaggedObjectOwner@@YIHPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0
 advmgr	?GetRouteArrayPtr@advManager@@QAEPAGHHH@Z	100.0000	100.0000	100.0000	0x1b010	90d03721f759
 advmgr	?GetSoundId@advManager@@QAE?AW4e_looping_sound_id@@HHH@Z	94.5074	94.5074	94.5074	0x18620	14094771376d
 advmgr	?HandleGiftMsg@CAdvMgrNetMsgHandler@@IAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x6a20	d4337d53c59b
-advmgr	?HandleNetMsg@CAdvMgrNetMsgHandler@@MAEPAVCNetMsg@@PAV2@@Z	100.0000	100.0000	100.0000	0x5e30	2e9e87e5429f
+advmgr	?HandleNetMsg@CAdvMgrNetMsgHandler@@MAEPAVCNetMsg@@PAV2@@Z	100.0000	100.0000	100.0000	0x5e30	50b67ad27e81
 advmgr	?HandleTradeRequestMsg@CAdvMgrNetMsgHandler@@MAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x6bf0	a7883b2b24fb
 advmgr	?HeroQuickView@advManager@@QAEXHHHE@Z	100.0000	100.0000	100.0000	0x16590	1296f3f0df48
 advmgr	?HideRoute@advManager@@QAEXHHH@Z	100.0000	100.0000	100.0000	0x19300	a01c254e1d1b
@@ -915,11 +915,13 @@ cspriteframe	?DrawCreatureImpl@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@EGE@
 cspriteframe	?DrawTile@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@EE@Z	81.4249	83.2115	83.2115	0x7dd40	31ff46cec542
 cspriteframe	?GetSize@CSpriteFrame@@UBEIXZ	100.0000	100.0000	100.0000	0x7c560	b733f08b7525
 cspriteframe	?SetPixelFormat@CSpriteFrame@@SIXIII@Z	100.0000	100.0000	100.0000	0x7c460	14fdf9e7d6f8
+cursor	??9type_point@@QBE_NABU0@@Z	100.0000	100.0000	100.0000	0x82340	8a56cf619630
 cursor	?DrawCursorAlpha@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x7fc80	f88e01d23684
 cursor	?GetMoveShowIt@advManager@@QAEHPAVhero@@H@Z	100.0000	100.0000	100.0000	0x80000	bc03c3596322
 cursor	?MoveHero@advManager@@QAEPAVNewmapCell@@HEPAUtype_point@@PAHE1E@Z	89.5139	89.5139	89.5139	0x805e0	d5e4c46dc99f
 cursor	?OnHideHero@advManager@@QAEXPAVCMapChange@@@Z	100.0000	100.0000	100.0000	0x81fd0	04ab79a0f668
 cursor	?OnMoveHero@advManager@@QAEXPAVCMapChange@@@Z	100.0000	100.0000	100.0000	0x81ed0	831cc6211424
+cursor	?ProcessMapChangeNew@advManager@@QAEXPAVCMapChange@@@Z	100.0000	100.0000	100.0000	0x82010	1916421b762d
 cursor	?SendMapChange@@YIXPAVCMapChange@@@Z	100.0000	100.0000	100.0000	0x82390	22f828296a19
 cursor	?StopCursor@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x7f7d0	4c61d41b55e7
 cursor	?TurnTo@advManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x7ffe0	403a24945d74
@@ -929,7 +931,6 @@ cursor	?handle_stop_on_trigger@advManager@@AAEPAVNewmapCell@@PAVhero@@PAV2@EEPAH
 cursor	advManager_CheckAdjacentMon	0.0000	0.0000	0.0000	0x81900	0eb57ca2e0bc
 cursor	advManager_DrawCursor	0.0000	0.0000	0.0000	0x7f860	ad7d179cd2c4
 cursor	advManager_DrawCursorShadow	0.0000	0.0000	0.0000	0x7fb40	7637b83ff3cf
-cursor	advManager_ProcessMapChangeNew	0.0000	0.0000	0.0000	0x82010	7486d5d6f161
 cursor	advManager_ValidMove	0.0000	0.0000	0.0000	0x81be0	33eeaa6d2a1f
 cursor	advManager_ValidMoveWithEvent	0.0000	0.0000	0.0000	0x81ad0	dee616486353
 customcampaign	?_Insertion_sort_1@std@@YIXPAPAX0VCampaignHeaderPointerLess@@0@Z	100.0000	100.0000	100.0000	0x83aa0	-
@@ -1210,7 +1211,7 @@ events	?DoEventMine@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	10
 events	?DoEventMysticalGarden@advManager@@QAEXPAVhero@@PATExtraInfoUnion@@_N@Z	100.0000	100.0000	100.0000	0xa3bc0	594c8c77a4c9
 events	?DoEventOasis@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0xa3ca0	acf073e4e01f
 events	?DoEventPowerSchool@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0xa3dc0	7e3499c54678
-events	?DoEventPrison@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	99.9540	99.9540	99.9540	0xa3eb0	b03d255666a6
+events	?DoEventPrison@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa3eb0	9e3cb3d8a63d
 events	?DoEventRallyFlag@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0xa44c0	fa4d7e1889e8
 events	?DoEventRefugeeCamp@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0xa4600	1a62b2d6a181
 events	?DoEventResource@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa4be0	f70bf1e414f6
@@ -1726,7 +1727,7 @@ hero	?HeroView@@YIHHHHE@Z	100.0000	100.0000	100.0000	0xe1800	f02e79d1de49
 hero	?IsInIdentifyRange@hero@@QAEEPBUtype_point@@@Z	98.6813	98.6813	98.6813	0xe5e10	8540e5ea6284
 hero	?IsMobile@hero@@QAEEXZ	100.0000	100.0000	100.0000	0xe5f30	c6edcb416792
 hero	?IsWieldingArtifact@hero@@QAEEH@Z	100.0000	100.0000	100.0000	0xd91f0	2534e38ca00c
-hero	?PlaceInMap@hero@@QAEXHUtype_point@@E@Z	100.0000	100.0000	100.0000	0xd7900	b72d63a0be83
+hero	?PlaceInMap@hero@@QAEXHUtype_point@@E@Z	100.0000	100.0000	100.0000	0xd7900	0d72e5b04f96
 hero	?SetSS@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xe2210	71ac7604c4e5
 hero	?SetVisitedArena@hero@@QAEXPBVNewmapCell@@@Z	100.0000	100.0000	100.0000	0xe53e0	b692ce74dd13
 hero	?SetupHeroView@THeroScreenWindow@@QAEXXZ	100.0000	100.0000	100.0000	0xe1a50	ac2d3199670f
@@ -2734,7 +2735,7 @@ singleselectionwindow	??0CNetPlayerHandlerPlayer@@QAE@XZ	100.0000	100.0000	100.0
 singleselectionwindow	??0CNetPlayerInfo@@QAE@XZ	100.0000	100.0000	100.0000	0x17f720	-
 singleselectionwindow	??0CNewPlayerUpdateMan@@QAE@XZ	100.0000	100.0000	100.0000	0x17c9b0	0ed8ff53773d
 singleselectionwindow	??0CUpdatePlayerPosMsg@@QAE@PAVCNetPlayerHandlerPlayer@@0@Z	100.0000	100.0000	100.0000	0x179870	4cb719207948
-singleselectionwindow	??0GameSelectionHeadersStruct@@QAE@XZ	73.1483	79.3242	79.3242	0x178e00	-
+singleselectionwindow	??0GameSelectionHeadersStruct@@QAE@XZ	79.2582	79.3242	79.3242	0x178e00	-
 singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	74.9955	75.2722	75.2722	0x179960	3885b26cf40c
 singleselectionwindow	??0lobby_message@@QAE@XZ	100.0000	100.0000	100.0000	0x189190	2b1be8208221
 singleselectionwindow	??0t_map_list_update@@QAE@K@Z	100.0000	100.0000	100.0000	0x189240	173781ee6a81
@@ -2820,7 +2821,7 @@ singleselectionwindow	?OnGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNet
 # SetCurrentMap/OnSetAsHostMsg bodies landing in the TU dropped the
 # pair again with both sources byte-identical. Recovery rides with
 # DrawHeroAdvancedOption reaching 100.
-singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0	0e5de8f038ec
+singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	99.8868	100.0000	100.0000	0x17cdc0	0e5de8f038ec
 singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	9177fbb0fa83
 # 2026-08-27 hand-lowered 100.0000 -> 99.8710 (hist keeps 100.0000): the
 # documented TU-state flap (master accepted this pair down at 99.89/99.87

@@ -90,14 +90,14 @@
 #include "resourcemanager.h"
 #include "textresource.h"
 
-// The base stores emit in CNetMsg(subType,size) order - retail's
-// PlaceInMap expansion stores 0x424 ahead of the -1 - so route through
-// the real CMapChange initializer as CMCDeadHero below already does.
-inline CMCTeleportHero::CMCTeleportHero(int id, type_point location)
-    : CMapChange(RS_TELEPORT_HERO, sizeof(CMCTeleportHero)),
+// The base stores emit in CNetMsg(subType,size) order. PlaceInMap's 0x424,
+// 0x20-byte payload is the recruit record, with gNetLocalGamePos supplied as
+// Dreamcast's third constructor argument.
+inline CMCRecruitHero::CMCRecruitHero(int id, type_point location, int player)
+    : CMapChange(RS_RECRUIT_HERO, sizeof(CMCRecruitHero)),
       heroId(id),
       point(location),
-      playerPos(gNetLocalGamePos)
+      playerPos(player)
 {
 }
 
@@ -649,7 +649,7 @@ void hero::PlaceInMap(int iPlayer, type_point point, unsigned char reset_flags)
 
     type_obscuring_object::obscure_cell(HERO, id);
 
-    CMCTeleportHero change(id, point);
+    CMCRecruitHero change(id, point, gNetLocalGamePos);
     SendMapChange(&change);
 }
 

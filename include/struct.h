@@ -40,7 +40,7 @@ struct type_point {
     // AI_AttemptMove; Complete VC6 expands the same three comparisons.
     bool operator!=(const type_point& arg) const
     {
-        return !(*this == arg);
+        return x != arg.x || y != arg.y || z != arg.z;
     }
     unsigned char is_valid();
 };
