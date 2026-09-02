@@ -25,8 +25,28 @@ from __future__ import annotations
 
 import unittest
 from collections import Counter
+from pathlib import Path
+from unittest.mock import patch
 
 from homm3.vc6 import inline_model as im
+
+
+class DefaultReference(unittest.TestCase):
+    """The normal matching command infers retail from the manifest source."""
+
+    def test_manifest_source_infers_unit_and_exact_function(self):
+        fn = "?MoveHero@advManager@@QAEPAVNewmapCell@@HEPAUtype_point@@PAHE1E@Z"
+        with patch.object(im._unit, "unit_for_source", return_value="cursor"):
+            self.assertEqual(im._default_against(Path("src/cursor.cpp"), fn),
+                             ("cursor", f"cursor:{fn}"))
+
+    def test_unowned_source_does_not_guess_a_reference(self):
+        # NEGATIVE CONTROL: a scratch/probe TU may share a function name with
+        # a retail row but has no authoritative unit identity.  Never route
+        # it to retail merely from its basename or function substring.
+        with patch.object(im._unit, "unit_for_source", return_value=None):
+            self.assertIsNone(
+                im._default_against(Path("/tmp/probe.cpp"), "MoveHero"))
 
 
 class UnresolvableName(unittest.TestCase):

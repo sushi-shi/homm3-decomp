@@ -194,12 +194,35 @@ def _current_report_score(unit: str | None, symbol: str,
     return None
 
 
+def _default_against(src: Path, fn: str) -> tuple[str, str] | None:
+    """Infer ``(unit, UNIT:FN)`` for a manifest-owned source file.
+
+    ``predict-inline`` is part of the ordinary matching loop, so requiring a
+    caller to repeat the unit already named by ``config/units.toml`` is both
+    noisy and error-prone.  An explicit ``--against`` still wins; sources
+    outside the manifest remain ambiguous and must name their reference.
+    """
+    unit = _unit.unit_for_source(src)
+    if not unit:
+        return None
+    return unit, f"{unit}:{fn}"
+
+
 def run_predict(args) -> int:
     src = Path(args.src).resolve()
     if not src.is_file():
         _common.die(f"source missing: {src}")
-    unit = reg_model._resolve_unit(args) if getattr(args, "against", None) \
-        else None
+    if not getattr(args, "against", None) \
+            and not getattr(args, "against_src", None):
+        inferred = _default_against(src, args.fn)
+        if inferred is None:
+            _common.die(
+                "no implicit retail reference: source is not a units.toml "
+                "unit; pass --against UNIT:FN or --against-src FILE")
+        unit, args.against = inferred
+    else:
+        unit = reg_model._resolve_unit(args) \
+            if getattr(args, "against", None) else None
     # base: the in-unit obj the ratchet scored (or a faithful compile)
     if unit and _unit.base_obj(unit):
         base_obj = _unit.base_obj(unit)
