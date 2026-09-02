@@ -3,12 +3,17 @@
 // 22 functions in link order; 20 compiler-generated $-thunks omitted.
 #include <va.h>
 #include <string.h>
+#include "army.h"
+#include "border.h"
+#include "button.h"
+#include "iconwdgt.h"
 #include "overview.h"
 #include "game.h"
 #include "kb.h"
 #include "message.h"
 #include "resourcemanager.h"
 #include "slider.h"
+#include "textresource.h"
 #include "textwdgt.h"
 #include "window.h"
 #include "winmgr.h"
@@ -20,7 +25,11 @@ DATA(0x0069cbbc) static int giOverviewItems[2];
 // eight-byte extent is fixed by playerData::HERO_SLOT_COUNT and by the next
 // overview datum in this packed run.
 DATA(0x0069cbc4) static unsigned char gOverviewBackpackStart[8];
+DATA(0x0069cbd0) static int iLastDynamicTop;
 DATA(0x0069cbd4) static slider* overviewSlider;
+// One artifact-page byte per local-player hero slot. The original source name
+// is not present in either symbol stream, so this spelling remains provisional.
+DATA(0x0069cc10) static unsigned char gOverviewHeroArtifactPage[8];
 // The hero-id half of the overview roster: UpdateBackpack indexes it with
 // giOverviewTop[giOverviewType] + iSlot, and the retail GetHero expansion
 // proves dword elements. The following four-dword gap is the town roster.
@@ -30,21 +39,679 @@ DATA(0x0069cc34) static int iOverviewItems;
 // The retail window is TOverviewWindow, whose derived layout is not needed by
 // this base-interface consumer and is deliberately not fabricated here.
 DATA(0x0069cc3c) static heroWindow* overWin;
+DATA(0x0069cc40) static textWidget** textWidgetDynamic;
+DATA(0x0069cc44) static iconWidget** iconWidgetDynamic;
+DATA(0x0069cc48) static bitmapBorder** bitmapBorderDynamic;
+DATA(0x0069cc4c) static button** buttonDynamic;
+DATA(0x0069cc50) static textButton** textButtonDynamic;
 DATA(0x0069cc54) static int giOverviewType;
 DATA(0x0069cc58) static int giOverviewTop[2];
+DATA(0x0069cbe8) static int iLastDynamicType;
 DATA(0x006a7ec0) static const char* cOverviewText[6];
 DATA(0x006a7ecc) static const char* cTownOverviewText[3];
 
-#if 0  // @carcass
-
+// Dreamcast proves the source signature, five leading array initializers,
+// cleanup-loop nesting, named town/hero locals, and every subsequent helper
+// boundary. Complete independently fixes the two-argument ABI, 0x25dc extent,
+// five dynamic-widget arrays, four rows, seventy general slots per row, and
+// the Complete-specific geometry. The admitted body reproduces all 328 retail
+// CFG blocks and the 197-call out-of-line multiset; the remaining delta is
+// register allocation and instruction scheduling, not missing source regions.
 // E:\gamedcs\overview.cpp:220
-DC_ONLY(0x104458, 0x25A4)
+VA(0x0051bd50, 0x25DC)  // exhaustive body/caller identity, dc 0x104458
 void game::SetupDynamicStuff(int bUpdate, int bForceUpdate)
 {
-    // @stub
+    int iCurBitmap;
+    int iCurText;
+    int row;
+    int item;
+    int monsterX[7] = { 0, 36, 72, 108, 18, 54, 90 };
+    int monsterY[7] = { 0, 0, 0, 0, 37, 37, 37 };
+    unsigned short titleXOffs[2][3] = {
+        { 28, 435, 459 }, { 28, 385, 385 }
+    };
+    unsigned short titleWidths[2][3] = {
+        { 100, 100, 100 }, { 230, 213, 213 }
+    };
+    unsigned short titleYOffs[2][3] = {
+        { 37, 37, 37 }, { 37, 124, 222 }
+    };
+
+    if (!bForceUpdate && giOverviewType == iLastDynamicType
+            && giOverviewTop[iLastDynamicType] == iLastDynamicTop)
+        return;
+
+    for (row = 0; row < 4; row++) {
+        for (item = 0; item < 70; item++) {
+            int slot = row * 70 + item;
+            if (textWidgetDynamic[slot]) {
+                overWin->RemoveWidget(textWidgetDynamic[slot]);
+                delete textWidgetDynamic[slot];
+                textWidgetDynamic[slot] = 0;
+            }
+            if (iconWidgetDynamic[slot]) {
+                overWin->RemoveWidget(iconWidgetDynamic[slot]);
+                delete iconWidgetDynamic[slot];
+                iconWidgetDynamic[slot] = 0;
+            }
+            if (bitmapBorderDynamic[slot]) {
+                overWin->RemoveWidget(bitmapBorderDynamic[slot]);
+                delete bitmapBorderDynamic[slot];
+                bitmapBorderDynamic[slot] = 0;
+            }
+        }
+
+        for (item = 0; item < 2; item++) {
+            int slot = row * 2 + item;
+            if (buttonDynamic[slot]) {
+                overWin->RemoveWidget(buttonDynamic[slot]);
+                delete buttonDynamic[slot];
+                buttonDynamic[slot] = 0;
+            }
+        }
+
+        for (item = 0; item < 3; item++) {
+            int slot = row * 3 + item;
+            if (textButtonDynamic[slot]) {
+                overWin->RemoveWidget(textButtonDynamic[slot]);
+                delete textButtonDynamic[slot];
+                textButtonDynamic[slot] = 0;
+            }
+        }
+    }
+
+    for (row = 0; row < 4; row++) {
+        iCurBitmap = 0;
+        iCurText = 0;
+        int slot = row * 70;
+        int rowWidgetId = row * 200 + 200;
+
+        if (giOverviewTop[giOverviewType] + row
+                >= giOverviewItems[giOverviewType])
+            break;
+
+        if (giOverviewType == 1) {
+            int iLookup;
+            int iOffsetToMon;
+            TCreatureType creature;
+            hero* occupyingHero;
+            town* currTown = GetTown(GetLocalPlayer()->townIds[
+                giOverviewTop[giOverviewType] + row]);
+
+            iconWidgetDynamic[slot + iCurBitmap] = new iconWidget(
+                22, row * 116 + 24, 701, 113, rowWidgetId + 2,
+                "OVSlot.def", 6, 0, 0, 0,
+                iconWidget::ICON_STYLE_PLAIN);
+            if (!iconWidgetDynamic[slot + iCurBitmap])
+                MemError();
+            overWin->AddWidget(iconWidgetDynamic[slot + iCurBitmap], -1);
+            iCurBitmap++;
+
+            strcpy(gText, currTown->cName.c_str());
+            textWidgetDynamic[slot + iCurText] = new textWidget(
+                96, row * 116 + 32, 132, 19, gText, "smalfont.fnt",
+                font::PRIMARY, rowWidgetId + 3,
+                font::CENTER_JUSTIFIED, 0, 8);
+            overWin->AddWidget(textWidgetDynamic[slot + iCurText], -1);
+            iCurText++;
+
+            iconWidgetDynamic[slot + iCurBitmap] = new iconWidget(
+                27, row * 116 + 30, 58, 64, rowWidgetId + 4,
+                "itpt.def", currTown->GetPortraitFrame(false),
+                0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
+            if (!iconWidgetDynamic[slot + iCurBitmap])
+                MemError();
+            overWin->AddWidget(iconWidgetDynamic[slot + iCurBitmap], -1);
+            iCurBitmap++;
+
+            iLookup = 0;
+            if (currTown->HasBuilding(HALL_CAPITOL_ID, false))
+                iLookup = 1;
+            else if (currTown->HasBuilding(HALL_CITY_ID, false))
+                iLookup = 2;
+            else if (currTown->HasBuilding(HALL_TOWN_ID, false))
+                iLookup = 3;
+
+            iconWidgetDynamic[slot + iCurBitmap] = new iconWidget(
+                91, row * 116 + 55, 38, 38, rowWidgetId + 51,
+                "itmtl.def", iLookup, 0, 0, 0,
+                iconWidget::ICON_STYLE_PLAIN);
+            if (!iconWidgetDynamic[slot + iCurBitmap])
+                MemError();
+            overWin->AddWidget(iconWidgetDynamic[slot + iCurBitmap], -1);
+            iCurBitmap++;
+
+            iLookup = 3;
+            if (currTown->HasBuilding(CASTLE_FORT_ID, false))
+                iLookup = 0;
+            else if (currTown->HasBuilding(CASTLE_CITADEL_ID, false))
+                iLookup = 1;
+            else if (currTown->HasBuilding(CASTLE_CASTLE_ID, false))
+                iLookup = 2;
+
+            iconWidgetDynamic[slot + iCurBitmap] = new iconWidget(
+                133, row * 116 + 55, 38, 38, rowWidgetId + 52,
+                "itmcl.def", iLookup, 0, 0, 0,
+                iconWidget::ICON_STYLE_PLAIN);
+            if (!iconWidgetDynamic[slot + iCurBitmap])
+                MemError();
+            overWin->AddWidget(iconWidgetDynamic[slot + iCurBitmap], -1);
+            iCurBitmap++;
+
+            sprintf(gText, "%d", currTown->get_gold_income(1));
+            textWidgetDynamic[slot + iCurText] = new textWidget(
+                180, row * 116 + 77, 62, 20, gText, "smalfont.fnt",
+                font::PRIMARY, rowWidgetId + 68,
+                font::CENTER_JUSTIFIED, 0, 8);
+            overWin->AddWidget(textWidgetDynamic[slot + iCurText], -1);
+            iCurText++;
+
+            occupyingHero = 0;
+            if (currTown->garrisonHeroId != -1)
+                occupyingHero = GetHero(currTown->garrisonHeroId);
+            if (occupyingHero) {
+                bitmapBorderDynamic[slot] = new bitmapBorder(
+                    265, row * 116 + 30, 58, 64, rowWidgetId + 53,
+                    akHeroTraits[occupyingHero->portrait].largePortraitName,
+                    0x800);
+                if (!bitmapBorderDynamic[slot])
+                    MemError();
+                overWin->AddWidget(bitmapBorderDynamic[slot], -1);
+            }
+
+            for (item = 0; item < 7; item++) {
+                if (static_cast<const town*>(currTown)->get_army()
+                            .armies[item] != CREATURE_NONE
+                        && static_cast<const town*>(currTown)->get_army()
+                               .numTroops[item] > 0) {
+                    iconWidgetDynamic[slot + iCurBitmap] = new iconWidget(
+                        monsterX[item] + 336,
+                        monsterY[item] + row * 116 + 27,
+                        32, 32, rowWidgetId + item + 5,
+                        "cprsmall.def",
+                        static_cast<const town*>(currTown)->get_army()
+                                .armies[item] + 2,
+                        0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
+                    if (!iconWidgetDynamic[slot + iCurBitmap])
+                        MemError();
+                    overWin->AddWidget(
+                        iconWidgetDynamic[slot + iCurBitmap], -1);
+                    iCurBitmap++;
+
+                    sprintf(gText, "%d",
+                            static_cast<const town*>(currTown)->get_army()
+                                .numTroops[item]);
+                    textWidgetDynamic[slot + iCurText] = new textWidget(
+                        monsterX[item] + 347,
+                        monsterY[item] + row * 116 + 48,
+                        20, 11, gText, "tiny.fnt", font::PRIMARY,
+                        rowWidgetId + item + 12,
+                        font::RIGHT_JUSTIFIED, 0, 8);
+                    overWin->AddWidget(
+                        textWidgetDynamic[slot + iCurText], -1);
+                    iCurText++;
+                }
+            }
+
+            occupyingHero = 0;
+            if (currTown->visitingHeroId != -1)
+                occupyingHero = GetHero(currTown->visitingHeroId);
+            if (occupyingHero) {
+                bitmapBorderDynamic[slot + 1] = new bitmapBorder(
+                    497, row * 116 + 30, 58, 64, rowWidgetId + 48,
+                    akHeroTraits[occupyingHero->portrait].largePortraitName,
+                    0x800);
+                if (!bitmapBorderDynamic[slot + 1])
+                    MemError();
+                overWin->AddWidget(bitmapBorderDynamic[slot + 1], -1);
+
+                for (item = 0; item < 7; item++) {
+                    if (occupyingHero->army.armies[item] != CREATURE_NONE
+                            && occupyingHero->army.numTroops[item] > 0) {
+                        iconWidgetDynamic[slot + iCurBitmap] = new iconWidget(
+                            monsterX[item] + 568,
+                            monsterY[item] + row * 116 + 27,
+                            32, 32, rowWidgetId + item + 54,
+                            "cprsmall.def",
+                            occupyingHero->army.armies[item] + 2,
+                            0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
+                        if (!iconWidgetDynamic[slot + iCurBitmap])
+                            MemError();
+                        overWin->AddWidget(
+                            iconWidgetDynamic[slot + iCurBitmap], -1);
+                        iCurBitmap++;
+
+                        sprintf(gText, "%d",
+                                occupyingHero->army.numTroops[item]);
+                        textWidgetDynamic[slot + iCurText] = new textWidget(
+                            monsterX[item] + 571,
+                            monsterY[item] + row * 116 + 48,
+                            28, 11, gText, "tiny.fnt", font::PRIMARY,
+                            rowWidgetId + item + 61,
+                            font::RIGHT_JUSTIFIED, 0, 8);
+                        overWin->AddWidget(
+                            textWidgetDynamic[slot + iCurText], -1);
+                        iCurText++;
+                    }
+                }
+            }
+
+            textWidgetDynamic[slot + iCurText] = new textWidget(
+                26, row * 116 + 102, 54, 32, (*gpGeneralText)[266],
+                "smalfont.fnt", static_cast<font::TColor>(7),
+                rowWidgetId + 97, font::LEFT_JUSTIFIED, 0, 8);
+            overWin->AddWidget(textWidgetDynamic[slot + iCurText], -1);
+            iCurText++;
+
+            textWidgetDynamic[slot + iCurText] = new textWidget(
+                373, row * 116 + 102, 56, 32, (*gpGeneralText)[267],
+                "smalfont.fnt", static_cast<font::TColor>(7),
+                rowWidgetId + 47, font::LEFT_JUSTIFIED, 0, 8);
+            overWin->AddWidget(textWidgetDynamic[slot + iCurText], -1);
+            iCurText++;
+
+            iOffsetToMon = 0;
+            for (item = 0; item < TOWN_DWELLING_COUNT; item++) {
+                if (currTown->HasBuilding(DWELLING_0_ID + item, true)) {
+                    iLookup = item;
+                    if (currTown->HasBuilding(
+                            DWELLING_0_UPG_ID + item, true))
+                        iLookup = item + TOWN_DWELLING_COUNT;
+
+                    creature = gTownDwellingCreatures[
+                        currTown->type * TOWN_DWELLING_SLOTS + iLookup];
+                    iconWidgetDynamic[slot + iCurBitmap] = new iconWidget(
+                        iOffsetToMon * 37 + 78, row * 116 + 102,
+                        32, 32, rowWidgetId + iLookup + 69,
+                        "cprsmall.def", creature + 2, 0, 0, 0,
+                        iconWidget::ICON_STYLE_PLAIN);
+                    if (!iconWidgetDynamic[slot + iCurBitmap])
+                        MemError();
+                    overWin->AddWidget(
+                        iconWidgetDynamic[slot + iCurBitmap], -1);
+                    iCurBitmap++;
+
+                    sprintf(gText, "+%d",
+                            currTown->get_growth_rate(iLookup));
+                    textWidgetDynamic[slot + iCurText] = new textWidget(
+                        iOffsetToMon * 37 + 81, row * 116 + 123,
+                        28, 11, gText, "tiny.fnt", font::PRIMARY,
+                        rowWidgetId + iLookup + 83,
+                        font::RIGHT_JUSTIFIED, 0, 8);
+                    overWin->AddWidget(
+                        textWidgetDynamic[slot + iCurText], -1);
+                    iCurText++;
+
+                    iconWidgetDynamic[slot + iCurBitmap] = new iconWidget(
+                        iOffsetToMon * 37 + 431, row * 116 + 102,
+                        32, 32, rowWidgetId + iLookup + 19,
+                        "cprsmall.def", creature + 2, 0, 0, 0,
+                        iconWidget::ICON_STYLE_PLAIN);
+                    if (!iconWidgetDynamic[slot + iCurBitmap])
+                        MemError();
+                    overWin->AddWidget(
+                        iconWidgetDynamic[slot + iCurBitmap], -1);
+                    iCurBitmap++;
+
+                    sprintf(gText, "%d", currTown->population[iLookup]);
+                    textWidgetDynamic[slot + iCurText] = new textWidget(
+                        iOffsetToMon * 37 + 434, row * 116 + 123,
+                        28, 11, gText, "tiny.fnt", font::PRIMARY,
+                        rowWidgetId + iLookup + 33,
+                        font::RIGHT_JUSTIFIED, 0, 8);
+                    overWin->AddWidget(
+                        textWidgetDynamic[slot + iCurText], -1);
+                    iCurText++;
+                    iOffsetToMon++;
+                }
+            }
+
+            if (currTown->type == TOWN_DUNGEON
+                    && currTown->HasBuilding(EXTRA_1_ID, true)) {
+                if (currTown->summoningType == CREATURE_NONE)
+                    currTown->SetSummoningGenerator();
+                if (currTown->summoningType != CREATURE_NONE) {
+                    iconWidgetDynamic[slot + iCurBitmap] = new iconWidget(
+                        iOffsetToMon * 37 + 78, row * 116 + 102,
+                        32, 32, rowWidgetId + 99,
+                        "cprsmall.def", currTown->summoningType + 2,
+                        0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
+                    if (!iconWidgetDynamic[slot + iCurBitmap])
+                        MemError();
+                    overWin->AddWidget(
+                        iconWidgetDynamic[slot + iCurBitmap], -1);
+                    iCurBitmap++;
+
+                    textWidgetDynamic[slot + iCurText] = new textWidget(
+                        iOffsetToMon * 37 + 81, row * 116 + 123,
+                        28, 11, "+0", "tiny.fnt", font::PRIMARY,
+                        rowWidgetId + 100, font::RIGHT_JUSTIFIED, 0, 8);
+                    overWin->AddWidget(
+                        textWidgetDynamic[slot + iCurText], -1);
+                    iCurText++;
+
+                    iconWidgetDynamic[slot + iCurBitmap] = new iconWidget(
+                        iOffsetToMon * 37 + 431, row * 116 + 102,
+                        32, 32, rowWidgetId + 101,
+                        "cprsmall.def", currTown->summoningType + 2,
+                        0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
+                    if (!iconWidgetDynamic[slot + iCurBitmap])
+                        MemError();
+                    overWin->AddWidget(
+                        iconWidgetDynamic[slot + iCurBitmap], -1);
+
+                    sprintf(gText, "%d", currTown->summoningPopulation);
+                    textWidgetDynamic[slot + iCurText] = new textWidget(
+                        iOffsetToMon * 37 + 434, row * 116 + 123,
+                        28, 11, gText, "tiny.fnt", font::PRIMARY,
+                        rowWidgetId + 102, font::RIGHT_JUSTIFIED, 0, 8);
+                    overWin->AddWidget(
+                        textWidgetDynamic[slot + iCurText], -1);
+                }
+            }
+        } else {
+            int iOffsetToMon;
+            hero* currHero = GetHero(gOverviewHeroIds[
+                giOverviewTop[giOverviewType] + row]);
+
+            iconWidgetDynamic[slot + iCurBitmap] = new iconWidget(
+                22, row * 116 + 24, 701, 113, rowWidgetId + 2,
+                "OVSlot.def",
+                4 + (gOverviewHeroArtifactPage[
+                    giOverviewTop[giOverviewType] + row]
+                        == OVERVIEW_HERO_BACKPACK_PAGE),
+                0, 0, 0,
+                iconWidget::ICON_STYLE_PLAIN);
+            if (!iconWidgetDynamic[slot + iCurBitmap])
+                MemError();
+            overWin->AddWidget(iconWidgetDynamic[slot + iCurBitmap], -1);
+            iCurBitmap++;
+
+            strcpy(gText, currHero->name);
+            textWidgetDynamic[slot + iCurText] = new textWidget(
+                97, row * 116 + 31, 185, 20, gText, "smalfont.fnt",
+                font::PRIMARY, rowWidgetId + 185,
+                font::LEFT_JUSTIFIED, 0, 8);
+            overWin->AddWidget(textWidgetDynamic[slot + iCurText], -1);
+            iCurText++;
+
+            bitmapBorderDynamic[slot + iCurBitmap] = new bitmapBorder(
+                27, row * 116 + 30, 58, 64, rowWidgetId + 103,
+                akHeroTraits[currHero->portrait].largePortraitName,
+                0x800);
+            if (!bitmapBorderDynamic[slot + iCurBitmap])
+                MemError();
+            overWin->AddWidget(bitmapBorderDynamic[slot + iCurBitmap], -1);
+            iCurBitmap++;
+
+            for (item = 0; item < 4; item++) {
+                sprintf(gText, "%d", currHero->GetPrimarySkill(item));
+                textWidgetDynamic[slot + iCurText] = new textWidget(
+                    item * 36 + 102, row * 116 + 82,
+                    30, 20, gText, "smalfont.fnt", font::PRIMARY,
+                    rowWidgetId + item + 154,
+                    font::CENTER_JUSTIFIED, 0, 8);
+                overWin->AddWidget(
+                    textWidgetDynamic[slot + iCurText], -1);
+                iCurText++;
+
+                iconWidgetDynamic[slot + iCurBitmap] = new iconWidget(
+                    item * 36 + 100, row * 116 + 50,
+                    32, 32, rowWidgetId + item + 182,
+                    "pskil32.def", item, 0, 0, 0,
+                    iconWidget::ICON_STYLE_PLAIN);
+                if (!iconWidgetDynamic[slot + iCurBitmap])
+                    MemError();
+                overWin->AddWidget(
+                    iconWidgetDynamic[slot + iCurBitmap], -1);
+                iCurBitmap++;
+            }
+
+            int luck = limit(-3, currHero->GetLuck(0, 0, 1), 3);
+            iconWidgetDynamic[slot + iCurBitmap] = new iconWidget(
+                246, row * 116 + 52, 30, 20, rowWidgetId + 187,
+                "ILCK30.def", luck + 3, 0, 0, 0,
+                iconWidget::ICON_STYLE_PLAIN);
+            if (!iconWidgetDynamic[slot + iCurBitmap])
+                MemError();
+            overWin->AddWidget(iconWidgetDynamic[slot + iCurBitmap], -1);
+            iCurBitmap++;
+
+            int morale = limit(-3, currHero->GetMorale(0, 0, 1), 3);
+            iconWidgetDynamic[slot + iCurBitmap] = new iconWidget(
+                246, row * 116 + 77, 30, 20, rowWidgetId + 188,
+                "IMRL30.def", morale + 3, 0, 0, 0,
+                iconWidget::ICON_STYLE_PLAIN);
+            if (!iconWidgetDynamic[slot + iCurBitmap])
+                MemError();
+            overWin->AddWidget(iconWidgetDynamic[slot + iCurBitmap], -1);
+            iCurBitmap++;
+
+            iOffsetToMon = 39;
+            for (item = 0; item < 7; item++) {
+                if (currHero->army.armies[item] != CREATURE_NONE
+                        && currHero->army.numTroops[item] > 0) {
+                    iconWidgetDynamic[slot + iCurBitmap] = new iconWidget(
+                        iOffsetToMon - 11, row * 116 + 101,
+                        32, 32, rowWidgetId + item + 105,
+                        "cprsmall.def", currHero->army.armies[item] + 2,
+                        0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
+                    if (!iconWidgetDynamic[slot + iCurBitmap])
+                        MemError();
+                    overWin->AddWidget(
+                        iconWidgetDynamic[slot + iCurBitmap], -1);
+                    iCurBitmap++;
+
+                    sprintf(gText, "%d", currHero->army.numTroops[item]);
+                    textWidgetDynamic[slot + iCurText] = new textWidget(
+                        iOffsetToMon, row * 116 + 122,
+                        20, 11, gText, "tiny.fnt", font::PRIMARY,
+                        rowWidgetId + item + 112,
+                        font::RIGHT_JUSTIFIED, 0, 8);
+                    overWin->AddWidget(
+                        textWidgetDynamic[slot + iCurText], -1);
+                    iCurText++;
+                    iOffsetToMon += 36;
+                }
+            }
+
+            iconWidgetDynamic[slot + iCurBitmap] = new iconWidget(
+                398, row * 116 + 30, 32, 32, rowWidgetId + 193,
+                "un32.def", currHero->id, 0, 0, 0,
+                iconWidget::ICON_STYLE_PLAIN);
+            if (!iconWidgetDynamic[slot + iCurBitmap])
+                MemError();
+            overWin->AddWidget(iconWidgetDynamic[slot + iCurBitmap], -1);
+            iCurBitmap++;
+
+            iconWidgetDynamic[slot + iCurBitmap] = new iconWidget(
+                352, row * 116 + 29, 32, 32, rowWidgetId + 189,
+                "pskil32.def", 4, 0, 0, 0,
+                iconWidget::ICON_STYLE_PLAIN);
+            if (!iconWidgetDynamic[slot + iCurBitmap])
+                MemError();
+            overWin->AddWidget(iconWidgetDynamic[slot + iCurBitmap], -1);
+            iCurBitmap++;
+
+            if (currHero->experience < 10000)
+                sprintf(gText, "%d", currHero->experience);
+            else
+                sprintf(gText, "%dk", currHero->experience / 1000);
+            textWidgetDynamic[slot + iCurText] = new textWidget(
+                346, row * 116 + 49, 48, 20, gText, "tiny.fnt",
+                font::PRIMARY, rowWidgetId + 190,
+                font::CENTER_JUSTIFIED, 0, 8);
+            overWin->AddWidget(textWidgetDynamic[slot + iCurText], -1);
+            iCurText++;
+
+            iconWidgetDynamic[slot + iCurBitmap] = new iconWidget(
+                302, row * 116 + 29, 32, 32, rowWidgetId + 191,
+                "pskil32.def", 5, 0, 0, 0,
+                iconWidget::ICON_STYLE_PLAIN);
+            if (!iconWidgetDynamic[slot + iCurBitmap])
+                MemError();
+            overWin->AddWidget(iconWidgetDynamic[slot + iCurBitmap], -1);
+            iCurBitmap++;
+
+            sprintf(gText, "%d/%d", currHero->mana,
+                    currHero->GetMaxMana());
+            textWidgetDynamic[slot + iCurText] = new textWidget(
+                294, row * 116 + 49, 48, 20, gText, "tiny.fnt",
+                font::PRIMARY, rowWidgetId + 192,
+                font::CENTER_JUSTIFIED, 0, 8);
+            overWin->AddWidget(textWidgetDynamic[slot + iCurText], -1);
+            iCurText++;
+
+            for (item = 0; item < 8; item++) {
+                int iLookup = currHero->GetNthSS(item);
+                if (iLookup != -1) {
+                    iconWidgetDynamic[slot + iCurBitmap] = new iconWidget(
+                        item * 36 + 433, row * 116 + 29,
+                        32, 32, rowWidgetId + item + 158,
+                        "secsk32.def",
+                        iLookup * 3 + currHero->skillLevel[iLookup] + 2,
+                        0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
+                    if (!iconWidgetDynamic[slot + iCurBitmap])
+                        MemError();
+                    overWin->AddWidget(
+                        iconWidgetDynamic[slot + iCurBitmap], -1);
+                    iCurBitmap++;
+                }
+            }
+
+            textWidgetDynamic[slot + iCurText] = new textWidget(
+                294, row * 116 + 71, 93, 20, (*gpGeneralText)[259],
+                "smalfont.fnt", font::PRIMARY, rowWidgetId + 139,
+                font::CENTER_JUSTIFIED, 0, 8);
+            overWin->AddWidget(textWidgetDynamic[slot + iCurText], -1);
+            iCurText++;
+
+            type_artifact artifact;
+            int heroNumber = giOverviewTop[giOverviewType] + row;
+            if (gOverviewHeroArtifactPage[heroNumber]
+                    == OVERVIEW_HERO_BACKPACK_PAGE) {
+                int lastBackpackIndex =
+                    currHero->get_last_backpack_index() + 1;
+                iOffsetToMon = 316;
+                for (item = 0; item < lastBackpackIndex && item < 8;
+                     item++) {
+                    artifact = *currHero->get_backpack(
+                        (gOverviewBackpackStart[heroNumber] + item)
+                            % lastBackpackIndex);
+                    iconWidgetDynamic[slot + iCurBitmap] = new iconWidget(
+                        iOffsetToMon, row * 116 + 90,
+                        44, 44, rowWidgetId + item + 130,
+                        "artifact.def", artifact.artifactId,
+                        0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
+                    if (!iconWidgetDynamic[slot + iCurBitmap])
+                        MemError();
+                    overWin->AddWidget(
+                        iconWidgetDynamic[slot + iCurBitmap], -1);
+                    iCurBitmap++;
+
+                    if (artifact.artifactId == ARTIFACT_NONE)
+                        overWin->WidgetClearStatus(
+                            rowWidgetId + item + 130,
+                            widget::WIDGET_DRAWN);
+                    iOffsetToMon += 48;
+                }
+
+                buttonDynamic[row * 3] = new button(
+                    291, row * 116 + 90, 22, 46,
+                    rowWidgetId + 194, "hsbtns5.def",
+                    0, 1, 0, 0, 2);
+                if (!buttonDynamic[row * 3])
+                    MemError();
+                overWin->AddWidget(buttonDynamic[row * 3], -1);
+
+                buttonDynamic[row * 3 + 1] = new button(
+                    697, row * 116 + 90, 22, 46,
+                    rowWidgetId + 195, "hsbtns3.def",
+                    0, 1, 0, 0, 2);
+                if (!buttonDynamic[row * 3 + 1])
+                    MemError();
+                overWin->AddWidget(buttonDynamic[row * 3 + 1], -1);
+            } else {
+                iOffsetToMon = 292;
+                for (item = 0; item < kNumArtifactSlots / 2; item++) {
+                    artifact = *currHero->get_artifact(
+                        (item + (kNumArtifactSlots / 2)
+                            * gOverviewHeroArtifactPage[heroNumber])
+                            % kNumArtifactSlots);
+                    iconWidgetDynamic[slot + iCurBitmap] = new iconWidget(
+                        iOffsetToMon, row * 116 + 90,
+                        44, 44, rowWidgetId + item + 119,
+                        "artifact.def", artifact.artifactId,
+                        0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
+                    if (!iconWidgetDynamic[slot + iCurBitmap])
+                        MemError();
+                    overWin->AddWidget(
+                        iconWidgetDynamic[slot + iCurBitmap], -1);
+                    iCurBitmap++;
+
+                    if (artifact.artifactId == ARTIFACT_NONE) {
+                        message msg;
+                        msg.id = MESSAGE_WIDGET;
+                        msg.codeX = widget::WIDGET_CLEAR_STATUS;
+                        msg.codeY = rowWidgetId + item + 119;
+                        msg.extra = widget::WIDGET_DRAWN;
+                        overWin->BroadcastMessage(&msg);
+                    }
+                    iOffsetToMon += 48;
+                }
+            }
+
+            textButtonDynamic[row * 3] = new textButton(
+                386, row * 116 + 70, 108, 16,
+                rowWidgetId + 128, "OvButn3.def", (*gpGeneralText)[260],
+                "smalfont.fnt", 0, 1, 0, 0, 2, 7);
+            if (!textButtonDynamic[row * 3])
+                MemError();
+            overWin->AddWidget(textButtonDynamic[row * 3], -1);
+
+            textButtonDynamic[row * 3 + 1] = new textButton(
+                498, row * 116 + 70, 108, 16,
+                rowWidgetId + 129, "OvButn3.def", (*gpGeneralText)[262],
+                "smalfont.fnt", 0, 1, 0, 0, 2, 7);
+            if (!textButtonDynamic[row * 3 + 1])
+                MemError();
+            overWin->AddWidget(textButtonDynamic[row * 3 + 1], -1);
+
+            textButtonDynamic[row * 3 + 2] = new textButton(
+                610, row * 116 + 70, 108, 16,
+                rowWidgetId + 138, "OvButn3.def", (*gpGeneralText)[263],
+                "smalfont.fnt", 0, 1, 0, 0, 2, 7);
+            if (!textButtonDynamic[row * 3 + 2])
+                MemError();
+            overWin->AddWidget(textButtonDynamic[row * 3 + 2], -1);
+
+            switch (gOverviewHeroArtifactPage[heroNumber]) {
+            case OVERVIEW_HERO_EQUIPPED_PAGE_1:
+                overWin->BroadcastMessage(
+                    MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
+                    rowWidgetId + 128, widget::WIDGET_HIGHLIGHTED);
+                break;
+            case OVERVIEW_HERO_EQUIPPED_PAGE_2:
+                overWin->BroadcastMessage(
+                    MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
+                    rowWidgetId + 129, widget::WIDGET_HIGHLIGHTED);
+                break;
+            case OVERVIEW_HERO_BACKPACK_PAGE:
+                overWin->BroadcastMessage(
+                    MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
+                    rowWidgetId + 138, widget::WIDGET_HIGHLIGHTED);
+                break;
+            }
+        }
+    }
+
+    if (bUpdate) {
+        overWin->DrawWindow(0, 110, 999);
+        gpWindowManager->UpdateScreen(0, 0, 800, 600);
+    }
+
 }
 
-#endif  // @carcass
 
 // E:\gamedcs\overview.cpp:1170. The DC name/locals and HoMM2 lineage give
 // the source vocabulary; the Complete body proves the changed player fields,
