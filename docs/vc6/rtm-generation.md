@@ -199,7 +199,7 @@ Consequences:
   `genab run --fn <fn>` and expect `RTM-closes` - the harness is standing
   and the verdict enum already covers it.
 
-## 5. Draft decision-log entry for `docs/gruntz-script-port.md` §5
+## 5. Pinned-input experiment record
 
 > **[DATE] RTM C2 12.00.8168 admitted as a hash-pinned A/B-only input
 > (Track R).** Sourced from archive.org
