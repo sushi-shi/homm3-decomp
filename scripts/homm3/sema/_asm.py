@@ -95,7 +95,8 @@ def objdump(obj, name: str, ordinal: int) -> str:
         from homm3.build.normalized_freshness import freshness_problems
         problems = freshness_problems(obj)
         if problems:
-            die("stale normalized comparison object:\n  "
+            die("stale normalized comparison object (re-run without "
+                "--no-build to refresh this unit, or `homm3 build`):\n  "
                 + "\n  ".join(problems[:5]))
     res = subprocess.run(
         ["llvm-objdump", "-dr", "--x86-asm-syntax=intel", str(obj)],
@@ -107,6 +108,55 @@ def objdump(obj, name: str, ordinal: int) -> str:
     if body is None:
         die(f"symbol {name} not found in {obj.relative_to(common.HOMM3_DIR)}")
     return body
+
+
+# --- the unit refresh: compile + normalize what a diff is about to read -------------
+
+REFRESH_LOCK = common.HOMM3_DIR / "build/.sema-refresh.lock"
+NINJA_FILE = common.HOMM3_DIR / "build.ninja"
+
+
+def refresh_unit(unit: str, *, run=subprocess.run) -> str | None:
+    """Bring ONE unit's comparison copies up to date before a diff: the
+    unit's ninja target (0.01 s when nothing changed, one VC6 compile
+    otherwise), then its normalized copies, then the objdiff report when
+    anything was rewritten. Returns a note describing what was rebuilt,
+    or None when everything was already fresh. Serialized through a
+    file lock: agents fire many sema calls per second and two ninja runs
+    in one build directory would collide. A compile error dies with the
+    compiler's output - a diff against a broken object answers nothing."""
+    import fcntl
+    import time
+    if not NINJA_FILE.is_file() or not unit:
+        return None
+    target = f"build/objdiff/base/{unit}.obj"
+    started = time.time()
+    REFRESH_LOCK.parent.mkdir(parents=True, exist_ok=True)
+    with REFRESH_LOCK.open("w") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        res = run(["ninja", "-f", str(NINJA_FILE), target],
+                  cwd=common.HOMM3_DIR, capture_output=True, text=True)
+        if res.returncode != 0:
+            tail = "\n".join((res.stdout + res.stderr).strip().splitlines()[-25:])
+            die(f"{unit} does not compile - fix the source (or --no-build to "
+                f"diff the last built object):\n{tail}")
+        compiled = "no work to do" not in res.stdout
+        from homm3.build import normalize_objs
+        counts = normalize_objs.normalize_unit(unit)
+        if not compiled and not counts["wrote"]:
+            return None
+        report = run(["objdiff-cli", "report", "generate", "-o", "report.json"],
+                     cwd=common.HOMM3_DIR / "build/objdiff",
+                     capture_output=True, text=True)
+    did = []
+    if compiled:
+        did.append("compiled")
+    if counts["wrote"]:
+        did.append("normalized")
+    if report.returncode == 0:
+        did.append("report")
+    return (f"[refreshed {unit}: {' + '.join(did)} in {time.time() - started:.1f}s; "
+            "--no-build compares the last built object]")
 
 
 # --- producer 2: capstone over the retail image ------------------------------------

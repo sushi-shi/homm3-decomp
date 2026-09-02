@@ -186,3 +186,67 @@ class LocalRangeTests(unittest.TestCase):
                 "       4: c3\tret\n")
         self.assertEqual(_asm.cfg(text)[0][2],
                          "jcc <ext> | fall B1")
+
+
+class RefreshUnitTests(unittest.TestCase):
+    """The in-place unit refresh: ninja target, normalize, report."""
+
+    class _Run:
+        def __init__(self, ninja_rc=0, ninja_out="ninja: no work to do.\n"):
+            self.calls = []
+            self.ninja_rc, self.ninja_out = ninja_rc, ninja_out
+
+        def __call__(self, argv, **kw):
+            import subprocess
+            self.calls.append(argv)
+            if argv[0] == "ninja":
+                return subprocess.CompletedProcess(argv, self.ninja_rc, self.ninja_out, "")
+            return subprocess.CompletedProcess(argv, 0, "", "")
+
+    def setUp(self):
+        import tempfile
+        from pathlib import Path
+        from homm3.build import normalize_objs
+        self.dir = tempfile.TemporaryDirectory()
+        ninja = Path(self.dir.name) / "build.ninja"
+        ninja.write_text("# fixture\n")
+        self._saved = (_asm.NINJA_FILE, _asm.REFRESH_LOCK, normalize_objs.normalize_unit)
+        _asm.NINJA_FILE = ninja
+        _asm.REFRESH_LOCK = Path(self.dir.name) / "lock"
+        self.wrote = 0
+        normalize_objs.normalize_unit = lambda unit, symbol_rvas=None: {"wrote": self.wrote}
+
+    def tearDown(self):
+        from homm3.build import normalize_objs
+        _asm.NINJA_FILE, _asm.REFRESH_LOCK, normalize_objs.normalize_unit = self._saved
+        self.dir.cleanup()
+
+    def test_fresh_unit_costs_one_ninja_call_and_no_report(self):
+        run = self._Run()
+        self.assertIsNone(_asm.refresh_unit("philai", run=run))
+        self.assertEqual([c[0] for c in run.calls], ["ninja"])
+        self.assertEqual(run.calls[0][-1], "build/objdiff/base/philai.obj")
+
+    def test_recompiled_unit_is_normalized_and_reported(self):
+        run = self._Run(ninja_out="[1/1] VC6 philai\n")
+        self.wrote = 1
+        note = _asm.refresh_unit("philai", run=run)
+        self.assertIn("[refreshed philai: compiled + normalized + report", note)
+        self.assertEqual([c[0] for c in run.calls], ["ninja", "objdiff-cli"])
+
+    def test_compile_error_dies_with_the_compiler_output(self):
+        import contextlib
+        import io
+        run = self._Run(ninja_rc=1, ninja_out="src/philai.cpp(12) : error C2065: 'x'\n")
+        with contextlib.redirect_stderr(io.StringIO()) as err:
+            with self.assertRaises(SystemExit) as stop:
+                _asm.refresh_unit("philai", run=run)
+        self.assertEqual(stop.exception.code, 2)
+        self.assertIn("error C2065", err.getvalue())
+        self.assertIn("--no-build", err.getvalue())
+
+    def test_no_ninja_graph_means_no_refresh(self):
+        _asm.NINJA_FILE = _asm.NINJA_FILE.with_name("absent.ninja")
+        run = self._Run()
+        self.assertIsNone(_asm.refresh_unit("philai", run=run))
+        self.assertEqual(run.calls, [])

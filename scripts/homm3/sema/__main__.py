@@ -10,8 +10,8 @@ spelling that names exactly one retail symbol)
         flat direct callers, forward callees, or --to = every
         referencing site with its instruction (the default for a data
         address). Function views end with the reloc-backed data refs.
-  diff TARGET [--verbose | --structure | --asm | --branches | --source
-              | --calls | --relocs | --summary | --why-bytes]
+  diff TARGET [--no-build] [--verbose | --structure | --asm | --branches
+              | --source | --calls | --relocs | --summary | --why-bytes]
               [--range START:END | --base-range ... --target-range ...]
         Base-vs-target comparison: block-SKELETON diff by default,
         --structure = explicit spelling of that block-SKELETON view,
@@ -24,7 +24,9 @@ spelling that names exactly one retail symbol)
         sequences judged like `objdiff-cli diff`; --summary = every
         verdict on one screen + the next view; --why-bytes = --summary
         + the first byte-level divergence. --verbose adds detail to ANY
-        view.
+        view. The unit is refreshed in place first (its ninja target,
+        normalized copies, objdiff report; free when nothing changed) -
+        --no-build compares the last built object.
         Names: an exact mangled name, or a demangled Class::method /
         bare method when it names one retail symbol.
   disasm TARGET [--base|--candidate] [--target] [--source] [--blocks]
@@ -78,6 +80,9 @@ def _build_parser() -> argparse.ArgumentParser:
     sd = ss.add_parser(
         "diff", help="base-vs-target block diff (skeleton default; rc=1 differs)")
     sd.add_argument("target", help="0x<addr> or symbol name")
+    sd.add_argument("--no-build", dest="no_build", action="store_true",
+                    help="compare the last built object; skip the in-place "
+                         "unit refresh (ninja target + normalize + report)")
     sd.add_argument("--verbose", action="store_true",
                     help="more of the chosen view: block bodies (default/"
                          "--structure), full-context --asm, both sequences "
@@ -125,6 +130,8 @@ def _build_parser() -> argparse.ArgumentParser:
     sa.add_argument("target", help="0x<addr> or symbol name")
     sa.add_argument("--base", "--candidate", action="store_true",
                     help="your compiled obj (the candidate) instead of retail")
+    sa.add_argument("--no-build", dest="no_build", action="store_true",
+                    help="with --base/--source: skip the in-place unit refresh")
     sa.add_argument("--target", dest="target_side", action="store_true",
                     help="the retail side (the default; the explicit opposite "
                          "of --base)")
