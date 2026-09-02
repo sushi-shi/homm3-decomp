@@ -2984,7 +2984,7 @@ spells	?AbleToSummonElemental@combatManager@@QAEEHJ@Z	100.0000	100.0000	100.0000
 spells	?AddBolt@combatManager@@QAEXPAUSBolt@@HHHHHHHHHHHH@Z	100.0000	100.0000	100.0000	0x1a5a90	298ffa58efa4
 spells	?AreaEffect@combatManager@@QAEXJHJJ@Z	99.8565	99.8565	99.8565	0x1a4970	89c796832376
 spells	?Armageddon@combatManager@@QAEXHH@Z	93.9013	93.9013	93.9013	0x1a4bc0	4c4fd8883f34
-spells	?CastSpell@combatManager@@QAEXHHEHHJ@Z	83.5569	83.5569	83.5569	0x19fe30	d2a8571e8a4c
+spells	?CastSpell@combatManager@@QAEXHHHHHJ@Z	90.2658	90.2658	90.2658	0x19fe30	7c86708a4be8
 spells	?ChainLightning@combatManager@@QAEXHHH@Z	96.1913	96.1913	96.1913	0x1a6360	ebf901f1d173
 spells	?ClearEffects@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1a66b0	59ebec44e08d
 spells	?ComputeSpellDamage@combatManager@@QAEJHJJPAVhero@@0PBVarmy@@E@Z	100.0000	100.0000	100.0000	0x1a7890	210d41023a64

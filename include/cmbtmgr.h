@@ -2287,18 +2287,23 @@ public:
     // with the parameter names spellId / targetIndex / bIsMonsterSpell
     // / secondaryIndex / monster_skill / monster_power, and retail's
     // six pushes at army::cast_caliph_spell (0x447ee0) match that arity
-    // exactly. TSkillMastery is spelled int here because its typedef
-    // lives in a header this one does not include. Not claimed.
+    // exactly. Dreamcast's older build typed bIsMonsterSpell as `_N` (and
+    // CodeView records its one-byte storage), but Complete widened the role
+    // to the three-way ESpellCaster value: retail compares the full dword
+    // against 1 and 2 and forwards it without a zero-extension mask. The
+    // third parameter is therefore int in the Complete ABI. TSkillMastery is
+    // spelled int here because its typedef lives in a header this one does
+    // not include. Not claimed.
 #ifdef HOMM3_ARMY_COMMAND_ACTION_VIEW
     // command.cpp stores the heterogeneous pending-action payload in an int
     // slot. Keeping that source type here avoids an artificial enum cast;
     // the ABI is unchanged because SpellID is int-sized.
     void CastSpell(int spellId, int targetIndex,
-                   unsigned char bIsMonsterSpell, int secondaryIndex,
+                   int bIsMonsterSpell, int secondaryIndex,
                    int monster_skill, long monster_power);   // 0x59fe30
 #else
     void CastSpell(SpellID spellId, int targetIndex,
-                   unsigned char bIsMonsterSpell, int secondaryIndex,
+                   int bIsMonsterSpell, int secondaryIndex,
                    int monster_skill, long monster_power);   // 0x59fe30
 #endif
     // WHO cast the spell ShowSpellMessage is about to announce. The DC
