@@ -18,6 +18,8 @@
 #undef HOMM3_CHAT_EDIT_DECLS
 
 class Bitmap816;
+class bitmapBorder;
+class button;
 class message;
 
 // Dreamcast proves the inheritance and method identities. Retail independently
@@ -25,14 +27,27 @@ class message;
 // swap editor dispatches it through the immediately following slot (+0x64).
 class CGameChatEdit : public CChatEdit {
 public:
+    CGameChatEdit(int x, int y, int w, int h, int textSize, char* text,
+                  char* fontName, font::TColor color,
+                  font::EJustify justification, char* backgroundIcon,
+                  int backgroundFrame, int id, int style, int readType,
+                  int insetX, int insetY);
     virtual int OnKeyPress(message* msg) OVERRIDE;
     virtual int OnEscape(message msg) OVERRIDE;
     virtual void SendChatCleanup();
     virtual void Activate();
+
+    unsigned char field_70;
+    char pad_71[3];
 };
 
 class CSwapManagerChatEdit : public CGameChatEdit {
 public:
+    CSwapManagerChatEdit(int x, int y, int w, int h, int textSize,
+                         char* text, char* fontName, font::TColor color,
+                         font::EJustify justification, char* backgroundIcon,
+                         int backgroundFrame, int id, int style,
+                         int readType, int insetX, int insetY);
     virtual void SendChat(const char* text, int toWho) OVERRIDE;
 };
 
@@ -42,9 +57,9 @@ class TSwapWindow : public heroWindow {
 public:
     textWidget* field_4c;  // +0x4c  chat transcript consumed by CChatManager
     CSwapManagerChatEdit* field_50;  // +0x50, rollover suppressed while focused
-    widget* field_54;   // +0x54  left-army count arrow
-    widget* field_58;   // +0x58  right-army count arrow
-    widget* field_5c;   // +0x5c  transfer control
+    bitmapBorder* field_54;  // +0x54  left-army count arrow
+    bitmapBorder* field_58;  // +0x58  right-army count arrow
+    button* field_5c;        // +0x5c  transfer control
     int field_60;       // +0x60  Complete-only tail (allocation extent proof)
 
     TSwapWindow(hero** heroes);

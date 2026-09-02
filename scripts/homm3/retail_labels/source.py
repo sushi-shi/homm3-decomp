@@ -166,7 +166,7 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "BITSET_COUNT", "BITSET_ANY", "BITSET_SET",
                  "BITSET_TEST", "BITSET_XRAN", "TREE_MIN",
                  "TREE_INSERT", "TREE_NODE_INSERT",
-                 "TREE_CONST_ITERATOR_DEC",
+                 "TREE_CONST_ITERATOR_DEC", "TREE_CONST_ITERATOR_INC",
                  "PAIR_CONST_INT_DTOR",
                  "STD_CONSTRUCT", "STD_COPY",
                  "CLASS_CTOR",
@@ -615,14 +615,22 @@ def _demangle_key(mangled: str):
     tree_value = re.search(
         r"\?\$_Tree@H(?:V|U)\?\$pair@\$\$CBH(?:V|U)([A-Za-z_]\w*)@",
         mangled)
+    # Maps whose key is a class encode that key immediately after `_Tree@`.
+    # Keep the mapped-value key above for the established map<int, T> claims,
+    # and use the named key as the stable owner for maps such as the resource
+    # cache (`_Tree@UTCacheMapKey@ResourceManager@@...`).
+    tree_owner = tree_value or re.search(
+        r"\?\$_Tree@(?:V|U)([A-Za-z_]\w*)@", mangled)
     if mangled.startswith("?_Min@?$_Tree@") and tree_value:
         return f"{tree_value.group(1).lower()}@tree_min"
     if mangled.startswith("?insert@?$_Tree@") and tree_value:
         return f"{tree_value.group(1).lower()}@tree_insert"
     if mangled.startswith("?_Insert@?$_Tree@") and tree_value:
         return f"{tree_value.group(1).lower()}@tree_node_insert"
-    if mangled.startswith("?_Dec@const_iterator@?$_Tree@") and tree_value:
-        return f"{tree_value.group(1).lower()}@tree_const_iterator_dec"
+    if mangled.startswith("?_Dec@const_iterator@?$_Tree@") and tree_owner:
+        return f"{tree_owner.group(1).lower()}@tree_const_iterator_dec"
+    if mangled.startswith("?_Inc@const_iterator@?$_Tree@") and tree_owner:
+        return f"{tree_owner.group(1).lower()}@tree_const_iterator_inc"
     vector_element = re.search(
         r"\?\$vector@(?:(?:P[AB][VU])|(?:V|U|W4))?"
         r"([A-Za-z_]\w*)@", mangled)
@@ -946,6 +954,7 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                                or "$tree_insert$" in r["name"]
                                or "$tree_node_insert$" in r["name"]
                                or "$tree_const_iterator_dec$" in r["name"]
+                               or "$tree_const_iterator_inc$" in r["name"]
                                or "$pair_const_int_dtor$" in r["name"]
                                or "$std_construct$" in r["name"]
                                or "$std_copy$" in r["name"]
@@ -1052,6 +1061,11 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             owner = row["name"].rsplit("$", 1)[1].lower()
             claim_keys.setdefault(
                 f"{owner}@tree_const_iterator_dec", []).append(row)
+            continue
+        if "$tree_const_iterator_inc$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(
+                f"{owner}@tree_const_iterator_inc", []).append(row)
             continue
         if "$pair_const_int_dtor$" in row["name"]:
             owner = row["name"].rsplit("$", 1)[1].lower()
@@ -1575,6 +1589,11 @@ def selftest() -> list[str]:
             "type_map_hero_info@tree_node_insert",
         "?_Dec@const_iterator@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@":
             "type_map_hero_info@tree_const_iterator_dec",
+        "?_Inc@const_iterator@?$_Tree@UTCacheMapKey@ResourceManager@@"
+        "U?$pair@$$CBUTCacheMapKey@ResourceManager@@PAVresource@@@std@@":
+            "tcachemapkey@tree_const_iterator_inc",
+        "?_Inc@const_iterator@?$_Tree@UTPoint@@UTPoint@@":
+            "tpoint@tree_const_iterator_inc",
     }
     for mangled, expected in tree_member_cases.items():
         if _demangle_key(mangled) != expected:

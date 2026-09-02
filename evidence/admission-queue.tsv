@@ -2,7 +2,6 @@
 # Admission campaign only; sorted by retail size descending.
 # Use `homm3 vc6 queue --polish` only after admission.
 state	size	rva	relation	owner	candidates	label	action
-bracketed	14569	0x1aaa80	bracketed	subwindow..swapmgr	subwindow,swapmgr	game_trade2_pcx_1aaa80	resolve the owner, then add its VA claim and body
 bracketed	10831	0x19fe30	bracketed	spelldefs..spells	spelldefs,spells	game_quiksand_wav_19fe30	resolve the owner, then add its VA claim and body
 bracketed	9692	0x11bd50	bracketed	newgame..overview	newgame,overview	game_ovslot_def_11bd50	resolve the owner, then add its VA claim and body
 bracketed	8769	0x138b10	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_137b10_sub02_138b10	resolve the owner, then add its VA claim and body
@@ -769,8 +768,6 @@ bracketed	163	0x5d370	bracketed	campaignbrief..campaignmap	campaignbrief,campaig
 bracketed	163	0x8c500	bracketed	customcampaign..dialogbox	customcampaign,dc_input,dc_precompiledheaders,dialogbox	game_8a310_sub04_8c500	resolve the owner, then add its VA claim and body
 bracketed	163	0xb7330	bracketed	font..game	font,game	game_b6950_sub00_b7330	resolve the owner, then add its VA claim and body
 bracketed	163	0x117780	bracketed	newgame..overview	newgame,overview	game_116ae0_sub02_117780	resolve the owner, then add its VA claim and body
-bracketed	163	0x15e390	bracketed	resourcemanager..sacrifice_window	resourcemanager,ressw,sacrifice_window	game_159e30_sub05_15e390	resolve the owner, then add its VA claim and body
-bracketed	163	0x1b8bc0	bracketed	systemoptionswindow..text	systemoptionswindow,text	game_1b7e30_sub02_1b8bc0	resolve the owner, then add its VA claim and body
 bracketed	162	0x53dd0	bracketed	bottomviewsubwindow..button	bottomviewsubwindow,button	game_51220_sub04_53dd0	resolve the owner, then add its VA claim and body
 bracketed	162	0x1986e0	bracketed	smackmgr..soundmgr	smackmgr,soundmgr	calls_CloseHandle_1986e0	resolve the owner, then add its VA claim and body
 bracketed	162	0x198a40	bracketed	smackmgr..soundmgr	smackmgr,soundmgr	game_2014f0_sub01_198a40	resolve the owner, then add its VA claim and body

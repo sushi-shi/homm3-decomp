@@ -10,6 +10,9 @@
 #include "hero.h"
 #include "advmgr.h"
 #include "bitmap816.h"
+#include "border.h"
+#include "button.h"
+#include "iconwdgt.h"
 #include "kb.h"
 #include "kbwin.h"
 #include "questlogwindow.h"
@@ -21,6 +24,7 @@
 #include "herospec.h"
 #include "text.h"
 #include "textresource.h"
+#include "textwdgt.h"
 
 DATA(0x006a3d08) static int gUnnamed6a3d08;
 // Dreamcast names the sparse widget-id lookup gStatNames. Retail folds its
@@ -101,9 +105,634 @@ CGiveMeStuffMsg::CGiveMeStuffMsg()
 {
 }
 
+// Both forwarding constructors are header-source boundaries in the DC
+// roster. Complete expands them into TSwapWindow's sole allocation: the
+// retained CChatEdit call, CGameChatEdit's +0x70 clear, then the two derived
+// vtable stores are all visible in retail in that order.
+inline CGameChatEdit::CGameChatEdit(
+    int x, int y, int w, int h, int textSize, char* text, char* fontName,
+    font::TColor color, font::EJustify justification, char* backgroundIcon,
+    int backgroundFrame, int id, int style, int readType, int insetX,
+    int insetY)
+    : CChatEdit(x, y, w, h, textSize, text, fontName, color, justification,
+                backgroundIcon, backgroundFrame, id, style, readType,
+                insetX, insetY)
+{
+    field_70 = 0;
+}
+
+inline CSwapManagerChatEdit::CSwapManagerChatEdit(
+    int x, int y, int w, int h, int textSize, char* text, char* fontName,
+    font::TColor color, font::EJustify justification, char* backgroundIcon,
+    int backgroundFrame, int id, int style, int readType, int insetX,
+    int insetY)
+    : CGameChatEdit(x, y, w, h, textSize, text, fontName, color,
+                    justification, backgroundIcon, backgroundFrame, id,
+                    style, readType, insetX, insetY)
+{
+}
+
 #if 0  // @carcass -- located/reconstruction-pending bodies
 
 #endif  // @carcass
+// E:\gamedcs\swapmgr.cpp:210. Dreamcast proves the source-level sequence:
+// reserve the widget roster, construct one widget per line, append the two
+// late-owned controls, then register every non-null widget in vector order.
+// Complete adds the SoD background and artifact slots plus the network arrow
+// split; retail fixes all constructor arguments below.
+VA(0x005aaa80, 0x38E9)
+TSwapWindow::TSwapWindow(hero** heroes)
+    : heroWindow(0, 0, 800, 600, 1)
+{
+    Widgets.reserve(125);
+
+    const char* background =
+        gpGame->f_1f698 == GAME_VERSION_SOD ? "trade2.pcx" : "trade.pcx";
+    Widgets.push_back(new bitmapBorder(
+        0, 0, width, height, 0, background, 0x800));
+
+    field_4c = new textWidget(
+        0x145, 0xfa, 0x94, 0x132, 0, "smalfont.fnt",
+        font::CHAT, 0x12d, font::BOTTOM_JUSTIFIED, 0, 8);
+    field_50 = new CSwapManagerChatEdit(
+        4, 0x242, 0x2d4, 0x12, 0x7f, "", "smalfont.fnt",
+        font::WHITE, font::LEFT_JUSTIFIED, "TStatBar.pcx",
+        0, 0x12c, 0x100, 0, 7, 5);
+
+    if (gNetworkActive69954c && gpSwapManager->field_5c) {
+        field_54 = new bitmapBorder(
+            0x16e, 0xfa, 0x43, 0x10f, 0, "trarrowl.pcx", 0x800);
+        field_58 = new bitmapBorder(
+            0x16e, 0xfa, 0x43, 0x10f, 0, "trarrowr.pcx", 0x800);
+        Widgets.push_back(field_54);
+        Widgets.push_back(field_58);
+        field_5c = new button(
+            0x15f, 0xbd, 0x62, 0x30, kSwapReceiveFromAlly,
+            "trrecb.def", 0, 1, 0, 0, 2);
+        UpdateArrows();
+    } else {
+        if (heroes[1]->owner != gpGame->GetLocalPlayerGamePos()) {
+            Widgets.push_back(new bitmapBorder(
+                0x16e, 0xfa, 0x43, 0x10f, 0,
+                "trarrowr.pcx", 0x800));
+        }
+        field_54 = 0;
+        field_58 = 0;
+        field_5c = 0;
+    }
+
+    Widgets.push_back(field_4c);
+
+    Widgets.push_back(new iconWidget(
+        0x180, 0x11, 0x20, 0x20, 0x73, "pskil32.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x180, 0x35, 0x20, 0x20, 0x74, "pskil32.def",
+        1, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x180, 0x59, 0x20, 0x20, 0x75, "pskil32.def",
+        2, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x180, 0x7d, 0x20, 0x20, 0x76, "pskil32.def",
+        3, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+
+    Widgets.push_back(new iconWidget(
+        0x43, 0x2d, 0x20, 0x20, 0x69, "un32.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x67, 0x2d, 0x20, 0x20, 0x6f, "pskil32.def",
+        4, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x8b, 0x2d, 0x20, 0x20, 0x71, "pskil32.def",
+        5, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0xb0, 0x2d, 0x1e, 0x14, 0x6b, "imrl30.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0xd4, 0x2d, 0x1e, 0x14, 0x6d, "ilck30.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+
+    Widgets.push_back(new textWidget(
+        0x14a, 0x1b, 0x2e, 0x14, 0, "smalfont.fnt",
+        font::PRIMARY, 3, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(
+        0x14a, 0x3f, 0x2e, 0x14, 0, "smalfont.fnt",
+        font::PRIMARY, 4, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(
+        0x14a, 0x63, 0x2e, 0x14, 0, "smalfont.fnt",
+        font::PRIMARY, 5, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(
+        0x14a, 0x87, 0x2e, 0x14, 0, "smalfont.fnt",
+        font::PRIMARY, 6, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(
+        0x2c, 0x11, 0xc8, 0x14, 0, "smalfont.fnt",
+        font::PRIMARY, 0x57, font::RIGHT_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(
+        0x67, 0x3f, 0x20, 0x14, 0, "smalfont.fnt",
+        font::PRIMARY, 0x51, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(
+        0x8b, 0x3f, 0x20, 0x14, 0, "smalfont.fnt",
+        font::PRIMARY, 0x53, font::CENTER_JUSTIFIED, 0, 8));
+
+    Widgets.push_back(new button(
+        0x0a, 0x2c, 0x34, 0x24, kSwapLeftQuestLog,
+        "hsbtns4.def", 0, 1, 0, 0, 2));
+    Widgets.push_back(new button(
+        0x0a, 0x84, 0x30, 0x1e, kSwapRefreshLeft,
+        "tsbtns.def", 0, 1, 0, 0, 2));
+    Widgets.push_back(new button(
+        0x2e, 0x203, 0x16, 0x2e, kSwapLeftBackpackLeft,
+        "hsbtns3.def", 0, 1, 0, 0, 2));
+    Widgets.push_back(new button(
+        0x12b, 0x203, 0x16, 0x2e, kSwapLeftBackpackRight,
+        "hsbtns5.def", 0, 1, 0, 0, 2));
+
+    Widgets.push_back(new iconWidget(
+        0x22e, 0x2d, 0x20, 0x20, 0x6a, "un32.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x251, 0x2d, 0x20, 0x20, 0x70, "pskil32.def",
+        4, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x275, 0x2d, 0x20, 0x20, 0x72, "pskil32.def",
+        5, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x29a, 0x2d, 0x1e, 0x14, 0x6c, "imrl30.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x2be, 0x2d, 0x1e, 0x14, 0x6e, "ilck30.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+
+    Widgets.push_back(new textWidget(
+        0x1a8, 0x1a, 0x2e, 0x14, 0, "smalfont.fnt",
+        font::PRIMARY, 8, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(
+        0x1a8, 0x3e, 0x2e, 0x14, 0, "smalfont.fnt",
+        font::PRIMARY, 9, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(
+        0x1a8, 0x62, 0x2e, 0x14, 0, "smalfont.fnt",
+        font::PRIMARY, 10, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(
+        0x1a8, 0x86, 0x2e, 0x14, 0, "smalfont.fnt",
+        font::PRIMARY, 11, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(
+        0x22b, 0x11, 0xc8, 0x14, 0, "smalfont.fnt",
+        font::PRIMARY, 0x58, font::LEFT_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(
+        0x251, 0x3f, 0x20, 0x14, 0, "smalfont.fnt",
+        font::PRIMARY, 0x52, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(
+        0x275, 0x3f, 0x20, 0x14, 0, "smalfont.fnt",
+        font::PRIMARY, 0x54, font::CENTER_JUSTIFIED, 0, 8));
+
+    Widgets.push_back(new button(
+        0x2e4, 0x2c, 0x34, 0x24, kSwapRightQuestLog,
+        "hsbtns4.def", 0, 1, 0, 0, 2));
+    Widgets.push_back(new button(
+        0x2e4, 0x84, 0x30, 0x1e, kSwapRefreshRight,
+        "tsbtns.def", 0, 1, 0, 0, 2));
+    Widgets.push_back(new button(
+        0x1dd, 0x203, 0x16, 0x2e, kSwapRightBackpackLeft,
+        "hsbtns3.def", 0, 1, 0, 0, 2));
+    Widgets.push_back(new button(
+        0x2da, 0x203, 0x16, 0x2e, kSwapRightBackpackRight,
+        "hsbtns5.def", 0, 1, 0, 0, 2));
+
+    Widgets.push_back(new bitmapBorder(
+        0x101, 0x0d, 0x3a, 0x40, 1, 0, 0x800));
+    Widgets.push_back(new bitmapBorder(
+        0x1e5, 0x0d, 0x3a, 0x40, 2, 0, 0x800));
+
+    Widgets.push_back(new iconWidget(
+        0x45, 0x83, 0x20, 0x20, 0x0d, "cprsmall.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x69, 0x83, 0x20, 0x20, 0x0e, "cprsmall.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x8d, 0x83, 0x20, 0x20, 0x0f, "cprsmall.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0xb1, 0x83, 0x20, 0x20, 0x10, "cprsmall.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0xd5, 0x83, 0x20, 0x20, 0x11, "cprsmall.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0xf9, 0x83, 0x20, 0x20, 0x12, "cprsmall.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x11d, 0x83, 0x20, 0x20, 0x13, "cprsmall.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+
+    Widgets.push_back(new textWidget(
+        0x46, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
+        font::PRIMARY, 0x41, font::RIGHT_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(
+        0x6a, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
+        font::PRIMARY, 0x42, font::RIGHT_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(
+        0x8e, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
+        font::PRIMARY, 0x43, font::RIGHT_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(
+        0xb2, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
+        font::PRIMARY, 0x44, font::RIGHT_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(
+        0xd6, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
+        font::PRIMARY, 0x45, font::RIGHT_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(
+        0xfa, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
+        font::PRIMARY, 0x46, font::RIGHT_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(
+        0x11e, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
+        font::PRIMARY, 0x47, font::RIGHT_JUSTIFIED, 0, 8));
+
+    Widgets.push_back(new iconWidget(
+        0x1e7, 0x83, 0x20, 0x20, 0x14, "cprsmall.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x20b, 0x83, 0x20, 0x20, 0x15, "cprsmall.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x22f, 0x83, 0x20, 0x20, 0x16, "cprsmall.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x253, 0x83, 0x20, 0x20, 0x17, "cprsmall.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x277, 0x83, 0x20, 0x20, 0x18, "cprsmall.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x29b, 0x83, 0x20, 0x20, 0x19, "cprsmall.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x2bf, 0x83, 0x20, 0x20, 0x1a, "cprsmall.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+
+    Widgets.push_back(new textWidget(
+        0x1e8, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
+        font::PRIMARY, 0x48, font::RIGHT_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(
+        0x20c, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
+        font::PRIMARY, 0x49, font::RIGHT_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(
+        0x230, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
+        font::PRIMARY, 0x4a, font::RIGHT_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(
+        0x254, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
+        font::PRIMARY, 0x4b, font::RIGHT_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(
+        0x278, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
+        font::PRIMARY, 0x4c, font::RIGHT_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(
+        0x29c, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
+        font::PRIMARY, 0x4d, font::RIGHT_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(
+        0x2c0, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
+        font::PRIMARY, 0x4e, font::RIGHT_JUSTIFIED, 0, 8));
+
+    Widgets.push_back(new iconWidget(
+        0xae, 0xb4, 0x2c, 0x2c, 0x96, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0xe9, 0x188, 0x2c, 0x2c, 0x97, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0xae, 0xe6, 0x2c, 0x2c, 0x98, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x30, 0xdb, 0x2c, 0x2c, 0x99, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0xe3, 0x14e, 0x2c, 0x2c, 0x9a, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0xae, 0x119, 0x2c, 0x2c, 0x9b, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x60, 0xdb, 0x2c, 0x2c, 0x9c, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x113, 0x14e, 0x2c, 0x2c, 0x9d, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0xb4, 0x1bd, 0x2c, 0x2c, 0x9e, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x30, 0x125, 0x2c, 0x2c, 0x9f, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x40, 0x157, 0x2c, 0x2c, 0xa0, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x50, 0x18a, 0x2c, 0x2c, 0xa1, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x60, 0x1bd, 0x2c, 0x2c, 0xa2, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0xe5, 0xb4, 0x2c, 0x2c, 0xa3, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x113, 0xb4, 0x2c, 0x2c, 0xa4, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x113, 0xe2, 0x2c, 0x2c, 0xa5, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x113, 0x110, 0x2c, 0x2c, 0xa6, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x113, 0x1cd, 0x2c, 0x2c, 0xa7, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    if (gpGame->f_1f698 == GAME_VERSION_SOD) {
+        Widgets.push_back(new iconWidget(
+            0x2e, 0x1bd, 0x2c, 0x2c, 0xa8, "artifact.def",
+            0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    }
+
+    Widgets.push_back(new iconWidget(
+        0x25e, 0xb4, 0x2c, 0x2c, 0xa9, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x299, 0x188, 0x2c, 0x2c, 0xaa, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x25e, 0xe6, 0x2c, 0x2c, 0xab, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x1e0, 0xdb, 0x2c, 0x2c, 0xac, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x293, 0x14e, 0x2c, 0x2c, 0xad, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x25e, 0x119, 0x2c, 0x2c, 0xae, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x210, 0xdb, 0x2c, 0x2c, 0xaf, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x2c3, 0x14e, 0x2c, 0x2c, 0xb0, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x264, 0x1bd, 0x2c, 0x2c, 0xb1, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x1e0, 0x125, 0x2c, 0x2c, 0xb2, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x1f0, 0x157, 0x2c, 0x2c, 0xb3, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x200, 0x18a, 0x2c, 0x2c, 0xb4, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x210, 0x1bd, 0x2c, 0x2c, 0xb5, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x295, 0xb4, 0x2c, 0x2c, 0xb6, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x2c3, 0xb4, 0x2c, 0x2c, 0xb7, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x2c3, 0xe2, 0x2c, 0x2c, 0xb8, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x2c3, 0x110, 0x2c, 0x2c, 0xb9, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x2c3, 0x1cd, 0x2c, 0x2c, 0xba, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    if (gpGame->f_1f698 == GAME_VERSION_SOD) {
+        Widgets.push_back(new iconWidget(
+            0x1de, 0x1bd, 0x2c, 0x2c, 0xbb, "artifact.def",
+            0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    }
+
+    Widgets.push_back(new iconWidget(
+        0xae, 0xb4, 0x2c, 0x2c, 0x1b, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0xe9, 0x188, 0x2c, 0x2c, 0x1c, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0xae, 0xe6, 0x2c, 0x2c, 0x1d, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x30, 0xdb, 0x2c, 0x2c, 0x1e, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0xe3, 0x14e, 0x2c, 0x2c, 0x1f, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0xae, 0x119, 0x2c, 0x2c, 0x20, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x60, 0xdb, 0x2c, 0x2c, 0x21, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x113, 0x14e, 0x2c, 0x2c, 0x22, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0xb4, 0x1bd, 0x2c, 0x2c, 0x23, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x30, 0x125, 0x2c, 0x2c, 0x24, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x40, 0x157, 0x2c, 0x2c, 0x25, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x50, 0x18a, 0x2c, 0x2c, 0x26, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x60, 0x1bd, 0x2c, 0x2c, 0x27, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0xe5, 0xb4, 0x2c, 0x2c, 0x28, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x113, 0xb4, 0x2c, 0x2c, 0x29, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x113, 0xe2, 0x2c, 0x2c, 0x2a, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x113, 0x110, 0x2c, 0x2c, 0x2b, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x113, 0x1cd, 0x2c, 0x2c, 0x2c, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    if (gpGame->f_1f698 == GAME_VERSION_SOD) {
+        Widgets.push_back(new iconWidget(
+            0x2e, 0x1bd, 0x2c, 0x2c, 0x2d, "artifact.def",
+            0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    }
+
+    Widgets.push_back(new iconWidget(
+        0x25e, 0xb4, 0x2c, 0x2c, 0x2e, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x299, 0x188, 0x2c, 0x2c, 0x2f, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x25e, 0xe6, 0x2c, 0x2c, 0x30, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x1e0, 0xdb, 0x2c, 0x2c, 0x31, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x293, 0x14e, 0x2c, 0x2c, 0x32, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x25e, 0x119, 0x2c, 0x2c, 0x33, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x210, 0xdb, 0x2c, 0x2c, 0x34, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x2c3, 0x14e, 0x2c, 0x2c, 0x35, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x264, 0x1bd, 0x2c, 0x2c, 0x36, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x1e0, 0x125, 0x2c, 0x2c, 0x37, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x1f0, 0x157, 0x2c, 0x2c, 0x38, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x200, 0x18a, 0x2c, 0x2c, 0x39, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x210, 0x1bd, 0x2c, 0x2c, 0x3a, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x295, 0xb4, 0x2c, 0x2c, 0x3b, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x2c3, 0xb4, 0x2c, 0x2c, 0x3c, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x2c3, 0xe2, 0x2c, 0x2c, 0x3d, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x2c3, 0x110, 0x2c, 0x2c, 0x3e, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x2c3, 0x1cd, 0x2c, 0x2c, 0x3f, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    if (gpGame->f_1f698 == GAME_VERSION_SOD) {
+        Widgets.push_back(new iconWidget(
+            0x1de, 0x1bd, 0x2c, 0x2c, 0x40, "artifact.def",
+            0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    }
+
+    Widgets.push_back(new iconWidget(
+        0x44, 0x203, 0x2c, 0x2c, 0x59, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x72, 0x203, 0x2c, 0x2c, 0x5a, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0xa0, 0x203, 0x2c, 0x2c, 0x5b, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0xce, 0x203, 0x2c, 0x2c, 0x5c, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0xfc, 0x203, 0x2c, 0x2c, 0x5d, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x1f4, 0x203, 0x2c, 0x2c, 0x5e, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x222, 0x203, 0x2c, 0x2c, 0x5f, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x250, 0x203, 0x2c, 0x2c, 0x60, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x27e, 0x203, 0x2c, 0x2c, 0x61, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x2ac, 0x203, 0x2c, 0x2c, 0x62, "artifact.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+
+    Widgets.push_back(new iconWidget(
+        0x1e, 0x57, 0x20, 0x20, 0xc8, "secsk32.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x42, 0x57, 0x20, 0x20, 0xc9, "secsk32.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x66, 0x57, 0x20, 0x20, 0xca, "secsk32.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x8a, 0x57, 0x20, 0x20, 0xcb, "secsk32.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0xae, 0x57, 0x20, 0x20, 0xcc, "secsk32.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0xd2, 0x57, 0x20, 0x20, 0xcd, "secsk32.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0xf6, 0x57, 0x20, 0x20, 0xce, "secsk32.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x11a, 0x57, 0x20, 0x20, 0xcf, "secsk32.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x1e4, 0x57, 0x20, 0x20, 0xd0, "secsk32.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x208, 0x57, 0x20, 0x20, 0xd1, "secsk32.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x22c, 0x57, 0x20, 0x20, 0xd2, "secsk32.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x250, 0x57, 0x20, 0x20, 0xd3, "secsk32.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x274, 0x57, 0x20, 0x20, 0xd4, "secsk32.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x298, 0x57, 0x20, 0x20, 0xd5, "secsk32.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x2bc, 0x57, 0x20, 0x20, 0xd6, "secsk32.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        0x2e0, 0x57, 0x20, 0x20, 0xd7, "secsk32.def",
+        0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+
+    Widgets.push_back(new bitmapBorder(
+        4, 0x242, 0x2d4, 0x12, 0x7a, "TStatBar.pcx", 0x800));
+    Widgets.push_back(new textWidget(
+        4, 0x242, 0x2d4, 0x12, 0, "smalfont.fnt",
+        font::PRIMARY, 0x7b, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new button(
+        0x2dc, 0x237, 0x40, 0x1e, 0x7800,
+        "iOkay.def", 0, 1, 1, 0x1c, 2));
+
+    Widgets.push_back(field_50);
+    if (field_5c)
+        Widgets.push_back(field_5c);
+
+    for (std::vector<widget*>::iterator it = Widgets.begin();
+         it != Widgets.end(); ++it) {
+        if (*it)
+            AddWidget(*it, -1);
+        else
+            MemError();
+    }
+}
+
 // E:\gamedcs\swapmgr.cpp:196
 VA(0x005ae370, 0x1D)  // anchor-callee + vtable-forward, dc 0x15f13c
 void CSwapManagerChatEdit::SendChat(const char* sChat, int toWho)
@@ -124,15 +753,6 @@ TSwapWindow::~TSwapWindow()
             delete *it;
     }
 }
-
-// E:\gamedcs\swapmgr.cpp:210
-#if 0  // @carcass
-DC_ONLY(0x159328, 0x2FF8)
-void TSwapWindow::TSwapWindow(hero** heroes)
-{
-    // @stub
-}
-#endif  // @carcass
 
 // E:\gamedcs\swapmgr.cpp:465
 VA(0x005ae430, 0xCB)  // dc-bracket forced + body corroborates, dc 0x15c384

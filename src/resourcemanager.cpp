@@ -3009,6 +3009,13 @@ ResourceManager::TCacheMap::find_tree(const TCacheMapKey& key)
 }
 #pragma auto_inline(on)
 
+// Complete uses VC6/Dinkumware rather than Dreamcast's STLport, but preserves
+// the iterator-increment boundary: RemapGraphics, SaturateGraphics, Close and
+// tree teardown all call this emitted `_Inc` COMDAT. The stock XTREE body in
+// this TU is already byte-identical across all nine retail blocks; this claim
+// binds that compiler-emitted specialization without duplicating its source.
+VA_COMPGEN(0x0055E390, 0xA3, TREE_CONST_ITERATOR_INC, TCacheMapKey)
+
 // ABI facade over the raw-node lower_bound body. A one-dword iterator return
 // is an explicit result pointer plus the key at the machine boundary; spelling
 // that boundary directly preserves CSprite's two simultaneously live iterator
