@@ -8,6 +8,11 @@
 #include "advmgr_popup.h"
 
 class CSprite;
+class Bitmap816;
+
+// Dreamcast publishes the original name; retail scenarioinfo.obj passes this
+// exact 0x6a6ca0 table to CHeroWindowEx::SetHelpText.
+DATA(0x006a6ca0) extern THelpText gSingleSelectionHelp[];
 
 // Retail's stack owner at 0x513740 reserves 0xb4 bytes for this object.
 // The vtable at 0x641710 has the inherited 15-slot CAdvPopup shape, with
@@ -26,8 +31,8 @@ public:
     CSprite* LossIcon;                 // +0x64
     CSprite* TownPix;                  // +0x68
     CSprite* bonusSprite;              // +0x6c
-    CSprite* Panels[8];                // +0x70
-    CSprite* Flags[8];                 // +0x90
+    Bitmap816* Panels[8];              // +0x70
+    Bitmap816* Flags[8];               // +0x90
     CSprite* heroSpecificAbility;      // +0xb0
 
     CScenarioInfoDlg();

@@ -31,6 +31,20 @@ class textWidget;
 class textButton;
 struct GameSelectionHeadersStruct;
 
+// Shared selection/scenario presentation tables. Retail scenarioinfo.obj
+// references the same addresses initialized and owned by
+// singleselectionwindow.obj, which proves external rather than file linkage.
+extern char* gTurnDurationText[11];
+extern int gDifficultyRatingPercent[5];
+extern const char* gUnnamed6a77ec[];
+extern const char* gUnnamed6a7800[3];
+extern const char* gUnnamed6a7e18[];
+
+enum ESingleSelectionGameContext {
+    SINGLE_SELECTION_CONTEXT_1 = 1,
+    SINGLE_SELECTION_CONTEXT_3 = 3
+};
+
 // Complete-only random-map filename chooser. Retail 0x5879a0 receives the
 // hidden std::string result in ECX under /Gr; it is a free function, not a
 // TSingleSelectionWindow member.

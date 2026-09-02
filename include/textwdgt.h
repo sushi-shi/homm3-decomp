@@ -49,6 +49,23 @@ public:
 
 class Bitmap816;
 
+// The scenario-description scroller shared by the selection window and the
+// stand-alone scenario-info popup. Retail fixes the constructor ABI and the
+// 0x5c extent; SetText refills its wrapped line list.
+class CScrollTextWidget : public widget {
+public:
+    CScrollTextWidget(const char* text, int x, int y, int w, int h,
+                      const char* fontName, font::TColor color,
+                      unsigned char focusable);
+    virtual int Main(message* msg);
+    virtual void zBufferDraw();
+    virtual void Draw();
+    void SetText(const char* text);
+
+    char pad_30[0x5c - 0x30];
+};
+SIZE(CScrollTextWidget, 0x5c);
+
 // Retail dtor 0x5bc6d0 is the empty derived dtor: the inlined
 // ~textWidget body under this class's vtable store, then ~widget.
 // It does NOT free the backing bitmap - that resource is borrowed.
