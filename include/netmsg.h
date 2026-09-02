@@ -55,6 +55,9 @@ enum eRS_Messages {
     // the rung directly below RS_TELEPORT_HERO.
     RS_DEAD_HERO = 0x423,
     RS_TELEPORT_HERO = 0x424,
+    // Dreamcast's gapless ladder names 1050. Complete's MoveHero stamps
+    // the same 0x41a subtype into CMCMoveHero before SendMapChange.
+    RS_MOVE_HERO = 0x41a,
     RS_HIDE_HERO = 0x426,
     // The adventure dispatcher's case roster, named from the gapless DC
     // eRS_Messages ladder (values 1000..1078 transfer whole; see the note
@@ -547,6 +550,15 @@ public:
     signed char m_dir;
     unsigned char m_standEnd;
     type_point m_point;
+
+    // netmsg.h:547-551 in Dreamcast. The wire-size field is rounded to the
+    // retail record's dword boundary although Complete packs the point at
+    // +0x17 and therefore gives the C++ object a 0x1b extent.
+    CMCMoveHero(unsigned char heroId, signed char direction,
+                unsigned char standEnd, type_point point)
+        : CMapChange(RS_MOVE_HERO, 0x1c),
+          m_heroId(heroId), m_dir(direction), m_standEnd(standEnd),
+          m_point(point) {}
 };
 #pragma pack(pop)
 SIZE(CMCMoveHero, 0x1b);

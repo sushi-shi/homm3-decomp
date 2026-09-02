@@ -33,11 +33,6 @@
 // step over it, and the cleanliness floor wants the domain named.
 const int SAVE_VERSION_BOAT_FIELDS_ABSENT = 0x1c;
 
-inline void boat::obscure_cell()
-{
-    type_obscuring_object::obscure_cell(BOAT, id);
-}
-
 // E:\gamedcs\includes.h - the reference-returning clamp templates the
 // visibility sweeps use. Both take BY VALUE and return `const T&`, which is
 // what puts their two temporaries in stack slots and makes retail select
@@ -55,22 +50,6 @@ inline const _TYPE& max_ref(_TYPE _X, _TYPE _Y)
 }
 
 // dc 0x8f270 (game.h:877). No retail row: both sweeps expand it.
-inline unsigned char game::GetTeamMask(int playerNum) const
-{
-    unsigned char mask = 0;
-    if (playerNum >= 0 && playerNum < 8) {
-        // Named as an int: retail sign-extends BOTH sides of the compare
-        // (`movsx eax,byte / cmp eax,esi`), which a byte-to-byte compare on
-        // the two signed-char members cannot produce.
-        int myTeam = mapHeader.teamInfo[playerNum];
-        for (int i = 0; i < 8; ++i) {
-            if (mapHeader.teamInfo[i] == myTeam)
-                mask |= 1 << i;
-        }
-    }
-    return mask;
-}
-
 inline type_point::type_point(short new_x, short new_y, short new_z)
 {
     x = new_x;

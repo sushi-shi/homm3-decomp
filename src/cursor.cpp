@@ -9,6 +9,8 @@
 #include "kb.h"
 #include "kbwin.h"
 #include "prefs.h"
+#include "remote.h"
+#include "sample.h"
 #include "soundmgr.h"
 #include "winmgr.h"
 
@@ -248,14 +250,315 @@ void advManager::animate_move(hero* curr, int direction, int xInc, int yInc)
     gUnnamed6968e8 = 0;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\cursor.cpp:570
 VA(0x004805e0, 0x131C)  // ret 0x1c + caller arg order/call set, dc 0x7aa54
 NewmapCell* advManager::MoveHero(int direction, unsigned char standEnd, type_point* trigger_point, int* bNoMove, unsigned char bComputerMove, int* bFoughtBattle, unsigned char bIsRemoteMove)
 {
-    // @stub
+    unsigned char became_boat = 0;
+    hero* curr;
+    unsigned char enteredBoat;
+    NewmapCell* returnCell;
+    int nextMoveMinCost;
+    int xInc;
+    int iOrigX;
+    int curMoveCost;
+    int yInc;
+    int iOrigY;
+
+    if (gpCurrentPlayer->IsLocalHuman())
+        SetNoDialogMenus(0);
+
+    gUnnamed69777c = 0;
+    *bFoughtBattle = 0;
+    *bNoMove = 0;
+    returnCell = 0;
+
+    curr = gpGame->GetHero(gpCurrentPlayer->currHeroId);
+    iOrigY = curr->y;
+    iOrigX = curr->x;
+    xInc = normalDirTable[direction].x;
+    yInc = normalDirTable[direction].y;
+
+    trigger_point->x = curr->x + xInc;
+    trigger_point->y = curr->y + yInc;
+    trigger_point->z = curr->z;
+
+    gCompleteDrawEnabled = GetMoveShowIt(curr, direction);
+    if (pNetMsgHandler && pNetMsgHandler->IsInPopup())
+        gCompleteDrawEnabled = 0;
+
+    // Dreamcast's two line groups preserve this source lookup separately
+    // from the destination lookup even though its result is unused.
+    GetCell(curr->get_location());
+    NewmapCell* destCell = GetCell(*trigger_point);
+
+    curMoveCost = GetTerrainCost(curr, curr->get_location(), direction,
+                                 curr->movePoints);
+    if (curr->flags & 0x40000) {
+        nextMoveMinCost = MinimumTerrainCost(
+            destCell, curr->movePoints - curMoveCost, curr->skillLevel[0],
+            -1, -1,
+            curr->army.get_creature_total(CREATURE_NOMAD) > 0);
+    } else {
+        nextMoveMinCost = MinimumTerrainCost(
+            destCell, curr->movePoints - curMoveCost, curr->skillLevel[0],
+            curr->flightLevel, curr->waterWalkLevel,
+            curr->army.get_creature_total(CREATURE_NOMAD) > 0);
+    }
+
+    if (!bIsRemoteMove && curr->movePoints < curMoveCost) {
+        *bNoMove = 1;
+        curr->movePoints = 0;
+        StopCursor(1);
+        return end_move_hero(curr, 0, 0, iOrigX, iOrigY, standEnd,
+                             bFoughtBattle);
+    }
+
+    MobilizeCurrHero(0, 0, 1);
+    if (gCompleteDrawEnabled)
+        drawCursor = 1;
+    if (cursorDirection != direction)
+        TurnTo(direction);
+    curr->facing = direction;
+
+    if ((curr->flags & 0x40000) && destCell->type == ANCHOR_POINT) {
+        boat* oldBoat = gpGame->GetHeroBoat(curr->id, 1);
+        GetCell(curr->get_location());
+
+        if (gNetworkActive69954c && bIsRemoteMove) {
+            curr->restore_cell();
+            curr->flags &= ~0x40000;
+        }
+
+        gpGame->record_hide_hero(curr, curr->owner, 0);
+        gpGame->record_show_boat(oldBoat, curr->get_location());
+        gpGame->record_show_hero(curr, curr->owner, *trigger_point, 0);
+
+        oldBoat->x = curr->x;
+        oldBoat->y = curr->y;
+        oldBoat->z = curr->z;
+        oldBoat->obscure_cell();
+        oldBoat->occupied = 0;
+        oldBoat->facing = curr->facing;
+        drawCursor = 0;
+        became_boat = 1;
+        StopCursor(1);
+        CompleteDraw(0);
+        UpdateScreen(0, 0);
+    }
+
+    if (bShowRoute)
+        *GetRouteArrayPtr(curr->x + xInc, curr->y + yInc, curr->z) = 0;
+
+    enteredBoat = 0;
+    if ((!curr->IsFlying(0) || curr->get_target() == *trigger_point)
+        && destCell->is_trigger
+        && ValidMoveWithEvent(curr, direction)) {
+        switch (destCell->type) {
+        case BOAT:
+            if (curr->flags & 0x40000)
+                return end_move_hero(curr, 0, bIsRemoteMove,
+                                     iOrigX, iOrigY, standEnd,
+                                     bFoughtBattle);
+            else {
+                boat* newBoat = &gpGame->boats[destCell->extraInfo];
+                gpGame->record_hide_hero(curr, curr->owner, 0);
+                gpGame->record_hide_boat(newBoat, 1, curr->id);
+                gpGame->record_show_hero(curr, curr->owner,
+                                         *trigger_point, 1);
+                became_boat = 1;
+                if (gNetworkActive69954c && bIsRemoteMove) {
+                    curr->restore_cell();
+                    enteredBoat = 1;
+                } else {
+                    StopCursor(1);
+                    drawCursor = 0;
+                    FizzleCenter(0);
+                }
+            }
+            break;
+
+        case HERO:
+            if (curr->flags & 0x40000) {
+                hero* other = gpGame->GetHero(destCell->extraInfo);
+                if (!(other->flags & 0x40000))
+                    return end_move_hero(curr, 0, bIsRemoteMove,
+                                         iOrigX, iOrigY, standEnd,
+                                         bFoughtBattle);
+            }
+            if (!curr->IsFlying(0) || curr->can_land())
+                return handle_stop_on_trigger(
+                    curr, destCell, bIsRemoteMove, standEnd,
+                    bFoughtBattle, curMoveCost, nextMoveMinCost);
+            break;
+
+        case TOWN: {
+            town* thisTown = gpGame->GetTown(destCell->extraInfo);
+            if (!gpGame->OnSameTeam(thisTown->owner, gNetLocalGamePos)
+                && thisTown->HasGarrison())
+                return handle_stop_on_trigger(
+                    curr, destCell, bIsRemoteMove, standEnd,
+                    bFoughtBattle, curMoveCost, nextMoveMinCost);
+            break;
+        }
+
+        case BORDER_GATE:
+            if (!(gpGame->borderTentVisitFlags[destCell->objectIndex]
+                  & gUnnamed69ccc4))
+                return handle_stop_on_trigger(
+                    curr, destCell, bIsRemoteMove, standEnd,
+                    bFoughtBattle, curMoveCost, nextMoveMinCost);
+            break;
+
+        default:
+            if (gAdventureObjectTraits[destCell->type][0]
+                && (!curr->IsFlying(0) || curr->can_land()))
+                return handle_stop_on_trigger(
+                    curr, destCell, bIsRemoteMove, standEnd,
+                    bFoughtBattle, curMoveCost, nextMoveMinCost);
+            break;
+        }
+    }
+
+    if (!bIsRemoteMove && !ValidMove(curr, direction, 0, 0)) {
+        if (bComputerMove)
+            curr->movePoints = 0;
+        return end_move_hero(curr, 0, 0, iOrigX, iOrigY, standEnd,
+                             bFoughtBattle);
+    }
+
+    CMCMoveHero msg(curr->id, direction, standEnd, curr->get_location());
+    SendMapChange(&msg);
+
+    if (bIsRemoteMove && !gbFollowPlayerMode)
+        curr->restore_cell();
+
+    if (!became_boat)
+        gpGame->record_move(curr, direction, *trigger_point);
+
+    gpGame->SetVisibility(curr->x + xInc, curr->y + yInc, curr->z,
+                          curr->owner, curr->GetVisibility(),
+                          bIsRemoteMove);
+
+    if (gNetworkActive69954c && bIsRemoteMove
+        && (gpGame->GetTeamMask(curr->owner)
+            & (1 << gpGame->GetLocalPlayerGamePos())))
+        UpdateRadar(1, 1, 0, 0, 0);
+
+    gbForceCompleteDraw = 1;
+    if (gNetworkActive69954c && !gbFollowPlayerMode
+        && !gpCurrentPlayer->IsLocalHuman() && bIsRemoteMove) {
+        curr->x += xInc;
+        curr->y += yInc;
+        if (enteredBoat)
+            DoEventBoat(curr, destCell);
+        DemobilizeCurrHero(0, 1);
+        return 0;
+    }
+
+    animate_move(curr, direction, xInc, yInc);
+
+    curr->movePoints -= curMoveCost;
+    if (curr->movePoints < nextMoveMinCost) {
+        curr->movePoints = 0;
+        standEnd = 1;
+    }
+
+    unsigned char hasEvent = !bIsRemoteMove && destCell->HasTriggerableEvent();
+    if (!bComputerMove && hasEvent)
+        standEnd = 1;
+    if (standEnd)
+        StopCursor(1);
+    if (bComputerMove && standEnd && gCompleteDrawEnabled) {
+        CompleteDraw(0);
+        UpdateScreen(0, 0);
+    }
+
+    type_point point(radarOrigin.x + 9, radarOrigin.y + 8, radarOrigin.z);
+    int ground = GetCell(point)->GroundSet;
+    if (ground != field_58) {
+        field_58 = ground;
+        gpSoundManager->SwitchAmbientMusic(gTerrainMusicIds[field_58]);
+    }
+
+    sample* walkSample = heroSamples[
+        GetCell(curr->get_location())->GroundSet];
+    if (curr->IsFlying(0))
+        walkSample = heroSamples[10];
+    walkSample->field_30 = 0;
+    if (cursorFrameCount) {
+        gUnnamed6968e4 = walkSample;
+    } else {
+        gUnnamed6968e4 = 0;
+        gpSoundManager->StopSample(gUnnamed6968e0);
+        gUnnamed6968e0 = gpSoundManager->MemorySample(walkSample);
+    }
+
+    point = type_point(radarOrigin.x + 9, radarOrigin.y + 8,
+                       radarOrigin.z);
+    SetEnvironmentOrigin(point, 0);
+    scrollX = scrollY = 0;
+
+    NewmapCell* eventCell = GetCell(*trigger_point);
+    if (eventCell->is_trigger
+        || ((curr->flags & 0x40000)
+            && eventCell->type == ANCHOR_POINT)) {
+        if ((!curr->IsFlying(0)
+             || curr->get_target() == *trigger_point)
+            && (!gAdventureObjectTraits[eventCell->type][0]
+                || !curr->IsFlying(0) || curr->can_land()
+                || eventCell->type == BOAT))
+            returnCell = eventCell;
+
+        switch (eventCell->type) {
+        case GARRISON:
+            if (curr->get_target() != *trigger_point
+                && gpCurrentPlayer->IsHuman()
+                && gpGame->OnSameTeam(
+                    gpGame->garrisons[eventCell->extraInfo].playerOwner,
+                    gNetLocalGamePos))
+                returnCell = 0;
+            break;
+
+        case BORDER_GATE:
+            if (curr->get_target() != *trigger_point
+                && gpCurrentPlayer->IsHuman())
+                returnCell = 0;
+            break;
+
+        case TERRAIN_CACTUS:
+        case TERRAIN_CRATER:
+        case TERRAIN_DEAD_VEGETATION:
+        case TERRAIN_FLOWER:
+        case TERRAIN_HOLE:
+        case TERRAIN_LAKE:
+        case TERRAIN_LAVA_LAKE:
+        case TERRAIN_MANDRAKE:
+        case TERRAIN_MOUND:
+        case TERRAIN_MOUNTAIN:
+        case TERRAIN_OUTCROPPING:
+        case TERRAIN_ROCK:
+        case TERRAIN_SAND_DUNE:
+        case TERRAIN_SHRUB:
+        case TERRAIN_STUMP:
+        case TERRAIN_TREE:
+        case TERRAIN_VOLCANO:
+            returnCell = 0;
+            break;
+        }
+    }
+
+    returnCell = end_move_hero(curr, returnCell, bIsRemoteMove,
+                               iOrigX, iOrigY, standEnd, bFoughtBattle);
+    if (hasEvent) {
+        gUnnamed69777c = 1;
+        StopCursor(1);
+        HandleMapEvent(curr, destCell, *trigger_point, !bComputerMove);
+    }
+    return returnCell;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\cursor.cpp:961
 VA(0x00481900, 0x1C1)  // exhaustive cursor-tail order/call set, dc 0x7bbbc
@@ -399,10 +702,11 @@ void advManager::ProcessMapChangeNew(CMapChange* pMapChange)
 }
 
 // E:\gamedcs\cursor.cpp:1343
-VA(0x00482340, 0x45)  // exhaustive tail + TransmitRemoteData call, dc 0x7c9f8
+#endif  // @carcass
+
+VA(0x00482390, 0x21)  // exact gate-and-transmit body, dc 0x7c9f8
 void SendMapChange(CMapChange* pMapChange)
 {
-    // @stub
+    if (gbThisNetGotAdventureControl && gNetworkActive69954c)
+        TransmitRemoteData(pMapChange, 0x7f, false, true);
 }
-
-#endif  // @carcass
