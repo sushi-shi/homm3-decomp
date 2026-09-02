@@ -10,6 +10,7 @@
 #include "csprite.h"
 #define HOMM3_SCENARIOINFO_OBJ_DECLS
 #include "game.h"
+#include "font.h"
 #include "hero.h"
 #include "iconwdgt.h"
 #include "kb.h"
@@ -23,6 +24,8 @@
 #include "textresource.h"
 #include "textwdgt.h"
 #include "widget.h"
+#include "window.h"
+#include "winmgr.h"
 
 // E:\gamedcs\scenarioinfo.cpp:258
 VA(0x00567290, 0x2109)  // anchor CAdvPopup ctor + GSelPop1.pcx + DC source shape, dc 0x129db4
@@ -260,6 +263,117 @@ CScenarioInfoDlg::CScenarioInfoDlg()
     SetHelpText(gSingleSelectionHelp, 104, 345, 0);
     lastDifficultyButton->enable(0);
     heroSpecificAbility = ResourceManager::GetSprite("un44.def");
+}
+
+// Complete-only row renderer. Its vtable at 0x6416dc and every field access
+// in retail 0x5693a0 fix the otherwise unpublished class layout.
+VA(0x005693a0, 0x394)
+void CScenarioPlayerInfoWidget::Draw()
+{
+    int windowX = parentWindow->x;
+    int windowY = parentWindow->y;
+
+    panel->Draw(0, 0, panel->Width, panel->Height,
+                gpWindowManager->screenBitmap,
+                windowX + 54, windowY + playerPosition * 50 + 122, 1);
+    flag->Draw(0, 0, flag->Width, flag->Height,
+               gpWindowManager->screenBitmap,
+               windowX + 11, windowY + playerPosition * 50 + 124, 1);
+
+    gUnnamed698a08->DrawBoundedString(
+        playerName, gpWindowManager->screenBitmap,
+        windowX + 59, windowY + playerPosition * 50 + 124,
+        97, 17, font::PRIMARY, font::CENTER_JUSTIFIED, -1);
+    gUnnamed698a08->DrawBoundedString(
+        playerTypeText, gpWindowManager->screenBitmap,
+        windowX + 59, windowY + playerPosition * 50 + 145,
+        46, 24, font::WHITE,
+        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
+    if (gpGame->IsMultiplayer()) {
+        gUnnamed698a08->DrawBoundedString(
+            handicapText, gpWindowManager->screenBitmap,
+            windowX + 107, windowY + playerPosition * 50 + 145,
+            50, 24, font::WHITE,
+            font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
+    }
+
+    townSprite->Draw(0, townType * 2 + 2, 0, 0,
+                     townSprite->Width, townSprite->Height,
+                     gpWindowManager->screenBitmap,
+                     windowX + 173, windowY + playerPosition * 50 + 124,
+                     0, 1);
+    gUnnamed698a08->DrawBoundedString(
+        gUnnamed6a74f4[townType], gpWindowManager->screenBitmap,
+        windowX + 161, windowY + playerPosition * 50 + 156,
+        71, 16, font::WHITE,
+        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
+
+    if (heroPortrait) {
+        heroPortrait->Draw(0, 0, heroPortrait->Width, heroPortrait->Height,
+                           gpWindowManager->screenBitmap,
+                           windowX + 249,
+                           windowY + playerPosition * 50 + 124, 0);
+    }
+    if (startingHero) {
+        gUnnamed698a08->DrawBoundedString(
+            startingHero->name, gpWindowManager->screenBitmap,
+            windowX + 237, windowY + playerPosition * 50 + 156,
+            71, 16, font::WHITE,
+            font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
+    } else {
+        gUnnamed698a08->DrawBoundedString(
+            gpGeneralText->GetText(524), gpWindowManager->screenBitmap,
+            windowX + 237, windowY + playerPosition * 50 + 156,
+            71, 16, font::WHITE,
+            font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
+    }
+
+    int bonusFrame = 10;
+    switch (startingBonus) {
+    case NEW_MAP_BONUS_ARTIFACT:
+        bonusFrame = 9;
+        break;
+    case NEW_MAP_BONUS_GOLD:
+        bonusFrame = 8;
+        break;
+    case NEW_MAP_BONUS_RESOURCE:
+        bonusFrame = townType == TOWN_CONFLUX ? 3 : townType;
+        break;
+    case NEW_MAP_BONUS_RANDOM:
+    case NEW_MAP_BONUS_NONE:
+        bonusFrame = 10;
+        break;
+    }
+    bonusSprite->Draw(0, bonusFrame, 0, 0,
+                      bonusSprite->Width, bonusSprite->Height,
+                      gpWindowManager->screenBitmap,
+                      windowX + 325, windowY + playerPosition * 50 + 124,
+                      0, 1);
+
+    if (startingBonus == NEW_MAP_BONUS_RANDOM) {
+        gUnnamed698a08->DrawBoundedString(
+            gpGeneralText->GetText(523), gpWindowManager->screenBitmap,
+            windowX + 313, windowY + playerPosition * 50 + 156,
+            71, 16, font::WHITE,
+            font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
+    } else {
+        gUnnamed698a08->DrawBoundedString(
+            gUnnamed6a5e14[startingBonus], gpWindowManager->screenBitmap,
+            windowX + 313, windowY + playerPosition * 50 + 156,
+            71, 16, font::WHITE,
+            font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
+    }
+}
+
+// Slot 0 of the Complete-only vtable 0x6416dc.
+VA_COMPGEN(0x00569740, 0x21, SCALAR_DELETING_DTOR,
+           CScenarioPlayerInfoWidget)
+
+VA(0x00569770, 0x55)
+CScenarioPlayerInfoWidget::~CScenarioPlayerInfoWidget()
+{
+    if (heroPortrait)
+        heroPortrait->Dispose();
 }
 
 

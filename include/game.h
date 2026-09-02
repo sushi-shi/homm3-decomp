@@ -742,12 +742,17 @@ enum EGameScenarioOrdinal {
 };
 #endif
 
-#ifdef HOMM3_GAME_NEW_MAP_DECLS
+#if defined(HOMM3_GAME_NEW_MAP_DECLS) \
+ || defined(HOMM3_SCENARIOINFO_OBJ_DECLS)
 enum ENewMapStartingBonus {
     NEW_MAP_BONUS_ARTIFACT = 0,
     NEW_MAP_BONUS_GOLD = 1,
     NEW_MAP_BONUS_RESOURCE = 2,
-    NEW_MAP_BONUS_RANDOM = 3
+    NEW_MAP_BONUS_RANDOM = 3,
+    // Complete's scenario-info row constructor seeds this sentinel and its
+    // Draw switch has an explicit fifth jump-table arm which shares the
+    // random icon frame. The older Dreamcast enum does not contain it.
+    NEW_MAP_BONUS_NONE = 4
 };
 
 enum ENewMapHandicap {

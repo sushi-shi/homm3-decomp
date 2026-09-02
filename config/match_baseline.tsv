@@ -2594,7 +2594,10 @@ sample	??_Gsample@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x166e30	-
 sample	?GetSize@sample@@UBEIXZ	100.0000	100.0000	100.0000	0x166e90	b35cdff407a5
 scenarioinfo	??0CScenarioInfoDlg@@QAE@XZ	95.7756	95.7756	95.7756	0x167290	aa9993a9b415
 scenarioinfo	??1CScenarioInfoDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x169800	201d072d5b3d
+scenarioinfo	??1CScenarioPlayerInfoWidget@@UAE@XZ	100.0000	100.0000	100.0000	0x169770	cddf9610d751
 scenarioinfo	??_GCScenarioInfoDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1697d0	-
+scenarioinfo	??_GCScenarioPlayerInfoWidget@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x169740	-
+scenarioinfo	?Draw@CScenarioPlayerInfoWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x1693a0	b8fafb7fa234
 scenarioinfo	?OnWidgetDeselect@CScenarioInfoDlg@@UAEHHPAE@Z	100.0000	100.0000	100.0000	0x1698a0	82205d95efe8
 scenarioinfo	?UpdateAllyEnemyFlags@CScenarioInfoDlg@@QAEXXZ	100.0000	100.0000	100.0000	0x1698c0	afedf847dd90
 search	?BuildPath@searchArray@@QAEHPBVhero@@J@Z	82.5524	86.3333	86.3333	0x16a0d0	e0678cd48165
