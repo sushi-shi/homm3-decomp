@@ -118,6 +118,7 @@ type_point AI_attempt_puzzle_guess(long player);
 #include "timer.h"
 #include <fcntl.h>
 #include <io.h>
+#include <sys/stat.h>
 #if defined(_MSC_VER) && !defined(__clang__)
 #undef _MT
 #endif
@@ -11281,7 +11282,7 @@ int game::TransmitSaveGame(int iToWho, int thisPlayerDead,
     do {
         PollSound();
         CheckDoMain(0, 1);
-        pConfirmMsg = GetRemoteData(1);
+        pConfirmMsg = GetRemoteData(1, 0);
         CMessageKill kill(pConfirmMsg);
 
         if (!pConfirmMsg) {
@@ -11426,14 +11427,357 @@ int game::TransmitSaveGame(int iToWho, int thisPlayerDead,
 
 // The five-argument ABI and receive/retransmit/diff/write/UI fingerprint prove
 // the only remaining body between the transfer destructor and DoNewTurn.
-#if 0 // @carcass: ReceiveSaveGame awaits its own coherent DC/retail body
-VA(0x004cbd40, 0xA83)  // retail body including internal control/table material
+// DC 0xb85c4 supplies the helper boundaries, five parameters, local inventory,
+// nested scopes and statement order. Complete's x86 body independently fixes
+// the 996-byte blocks, 30-block acknowledgement cadence, message switch,
+// retransmit/error paths, diff application and final UI/sound restoration.
+// Three asymmetric revision facts are deliberate: Complete never reads
+// iFullGameCRC, widens DC's char bSChangeSounds local to an x86 dword home,
+// and unlike DC's line-10883 arm emits no RestoreScreen call.
+// Residual (99.2213%): all 85 CFG blocks and their sizes, all 42 branches,
+// and all 112 ordered call positions agree. The only code delta is B22's
+// caller-saved register colouring across the inlined memcpy and its following
+// percentage calculation. Tried and rejected: pointer/subscript destination,
+// multiplication order, C-style packet cast, split pMsg declaration, and both
+// line-gap-plausible block-number/block-size release VERIFYs are byte-flat;
+// a named payload local reaches only 99.2345, does not move the hunk, and is
+// absent from DC's 36-local inventory. The bounded why-reg sweep found 51
+// declaration/local variants flat or worse. Do not add an unproved carrier.
+VA(0x004cbd40, 0xA83)  // retail body + dc 0xb85c4 source shape
 int game::ReceiveSaveGame(int iFileSize, int iFullGameCRC, int iFromWho,
                           unsigned char inGame, unsigned char isDiff)
 {
-    // @stub - a source-false partial body is intentionally not emitted
+    CNetMsgHandlerPause netMsgHandlerPause;
+    gpAdvManager->TrimLoopingSounds(4);
+
+    if (gpAdvManager->status == baseManager::STATUS_ACTIVE)
+        gpAdvManager->BVMessage((*gpGeneralText)[100]);
+
+    int iLastDataReceiveTime = GameTime::Get();
+    int bSChangeSounds = gpSoundManager->field_80;
+    char soundWasEnabled = gpSoundManager->field_84;
+    gpSoundManager->field_84 = 1;
+    gpSoundManager->SwitchAmbientMusic(-1);
+    gpSoundManager->field_84 = soundWasEnabled;
+
+    unsigned char* data = new unsigned char[iFileSize];
+    CNetMsg* pNetMsg = 0;
+    unsigned char done = 0;
+    int totalBlocks = iFileSize / GAME_TRANSMIT_PAYLOAD_SIZE;
+    if (iFileSize % GAME_TRANSMIT_PAYLOAD_SIZE)
+        ++totalBlocks;
+
+    logFile.Log(DATA_COMPGEN(
+                    0x006780ac, xferReceivingSaveLog,
+                    "Receiving save game from [%d]"),
+                iFromWho);
+
+    unsigned char waitingForRetransmit = 0;
+    unsigned char* blockReceived = new unsigned char[totalBlocks];
+    memset(blockReceived, 0, totalBlocks);
+
+    CGameTransferSmack smack;
+    CGameTransferDlg dlg(0);
+    unsigned long diffSize = 0;
+    CGameTransferSmack* pSmack;
+
+    if (iFromWho >= 8 || iFromWho < 0)
+        iFromWho = 0;
+
+    unsigned long fromDPID = gpGame->players[iFromWho].dpid;
+
+    if (inGame) {
+        smack.Setup(622, 403, 0, 1);
+        smack.SaveScreen();
+        pSmack = &smack;
+    } else {
+        dlg.Setup(DATA_COMPGEN(0x00691210,
+                              adventureRolloverEmptyText, ""),
+                  gpMediumFont);
+        dlg.Open(0, 1);
+        pSmack = &dlg.smack;
+    }
+    pSmack->Start();
+
+    while (!done) {
+        PollSound();
+        CheckDoMain(0, 1);
+
+        if (GameTime::ElapsedSince(iLastDataReceiveTime)
+                > GAME_TRANSMIT_TIMEOUT) {
+            NormalDialog((*gpGeneralText)[15], 2, -1, -1,
+                         -1, 0, -1, 0, -1, 0, -1, 0);
+            if (gpWindowManager->dialogReturn == DIALOG_RETURN_ACCEPT) {
+                iLastDataReceiveTime = GameTime::Get();
+                for (int i = 0; i < totalBlocks; ++i) {
+                    if (!blockReceived[i]) {
+                        logFile.Log(DATA_COMPGEN(
+                                        0x0067808c,
+                                        xferRequestResendBlockLog,
+                                        "Requesting resend block [%d]"),
+                                    i);
+                        CGameTransmitReqMsg msg(i);
+                        TransmitRemoteDataDPID(&msg, fromDPID, false, true);
+                        waitingForRetransmit = 1;
+                    }
+                }
+            } else {
+                if (inGame) {
+                    RemoteCleanup();
+                    NormalDialog((*gpGeneralText)[329], 1, -1, -1,
+                                 -1, 0, -1, 0, -1, 0, -1, 0);
+                    ShutDown(0);
+                } else {
+                    unsigned long killDPID = players[iFromWho].dpid;
+                    pDPlay->DestroyPlayer(players[iFromWho].dpid);
+                    pDPlay->HandlePlayerDrop(players[iFromWho].dpid);
+                    CDestroyPlayerMsg msg(killDPID);
+                    TransmitRemoteDataDPID(&msg, 0, false, true);
+                }
+                delete[] data;
+                delete[] blockReceived;
+                return 0;
+            }
+        }
+
+        if (pNetMsg) {
+            DestroyMsg(pNetMsg);
+            pNetMsg = 0;
+        }
+        pNetMsg = GetRemoteData(1, 0);
+
+        if (pNetMsg) {
+            iLastDataReceiveTime = GameTime::Get();
+            switch (pNetMsg->subType) {
+            case RS_GAME_TRANSMIT_MAIN: {
+                CGameTransmitMainMsg* pMsg =
+                    static_cast<CGameTransmitMainMsg*>(pNetMsg);
+                memcpy(data + pMsg->m_blockNbr
+                                * GAME_TRANSMIT_PAYLOAD_SIZE,
+                       pMsg->GetData(), pMsg->m_blockSize);
+
+                if (!waitingForRetransmit) {
+                    pSmack->SetPercentage(
+                        static_cast<float>(pMsg->m_blockNbr)
+                        / static_cast<float>(totalBlocks));
+                    if (!(pMsg->m_blockNbr % 30)) {
+                        CGameXferAckMsg msg;
+                        TransmitRemoteDataDPID(
+                            &msg, pNetMsg->field_04, false, false);
+                    }
+                }
+
+                blockReceived[pMsg->m_blockNbr] = 1;
+                if (waitingForRetransmit) {
+                    logFile.Log(DATA_COMPGEN(
+                                    0x00678070,
+                                    xferReceivedResendBlockLog,
+                                    "Received resend block [%d]"),
+                                pMsg->m_blockNbr);
+                    done = 1;
+                    for (int i = 0; i < totalBlocks; ++i) {
+                        if (!blockReceived[i]) {
+                            logFile.Log(DATA_COMPGEN(
+                                            0x0067801c,
+                                            xferStillWaitingBlockLog,
+                                            "Still waiting for block #%d"),
+                                        i);
+                            done = 0;
+                            break;
+                        }
+                    }
+
+                    if (done) {
+                        logFile.Log(DATA_COMPGEN(
+                                        0x00678038,
+                                        xferAllResendsDoneLog,
+                                        "All resends are done.  Sending "
+                                        "GameTransmitEndMsg to %d"),
+                                    pNetMsg->field_00);
+                        waitingForRetransmit = 0;
+                        CGameTransmitConfirmEndMsg msg;
+                        TransmitRemoteDataDPID(
+                            &msg, pNetMsg->field_04, false, true);
+                    } else {
+                        logFile.Log(DATA_COMPGEN(
+                            0x00678000, xferStillWaitingResendsLog,
+                            "Still waiting for resend(s)"));
+                    }
+                }
+                break;
+            }
+
+            case RS_GAME_TRANSMIT_END: {
+                CGameTransmitEndMsg* pMsg =
+                    static_cast<CGameTransmitEndMsg*>(pNetMsg);
+                logFile.Log(DATA_COMPGEN(
+                    0x00677fe4, xferReceivedEndLog,
+                    "Received game transmit end."));
+                pSmack->SetPercentage(1.0f);
+
+                for (int i = 0; i < totalBlocks; ++i) {
+                    if (!blockReceived[i]) {
+                        logFile.Log(DATA_COMPGEN(
+                                        0x0067808c,
+                                        xferRequestResendBlockLog,
+                                        "Requesting resend block [%d]"),
+                                    i);
+                        CGameTransmitReqMsg msg(i);
+                        TransmitRemoteDataDPID(
+                            &msg, pNetMsg->field_04, false, true);
+                        waitingForRetransmit = 1;
+                    }
+                }
+
+                giMonthType = pMsg->m_iMonthType;
+                giMonthTypeExtra = pMsg->m_iMonthTypeExtra;
+                giWeekType = pMsg->m_iWeekType;
+                giWeekTypeExtra = pMsg->m_iWeekTypeExtra;
+                diffSize = pMsg->m_diffSize;
+
+                if (!waitingForRetransmit) {
+                    logFile.Log(DATA_COMPGEN(
+                        0x00677fc0, xferSendingDoneLog,
+                        "Sending confirmation we are done!"));
+                    done = 1;
+                    CGameTransmitConfirmEndMsg msg;
+                    TransmitRemoteDataDPID(
+                        &msg, pNetMsg->field_04, false, true);
+                }
+                break;
+            }
+
+            case RS_PLAYER_DROPPED:
+                if (GetGamePosFromDPID(pNetMsg->field_04) == iFromWho) {
+                    RemoteCleanup();
+                    NormalDialog((*gpGeneralText)[432], 1, -1, -1,
+                                 -1, 0, -1, 0, -1, 0, -1, 0);
+                    return 0;
+                }
+                HandlePlayerDrop(pNetMsg->field_04);
+                break;
+
+            case RS_SET_AS_HOST:
+                SystemMsg(&chatMan, (*gpGeneralText)[471]);
+                break;
+
+            case RS_CHAT_MSG: {
+                CChatMsg* pMsg = static_cast<CChatMsg*>(pNetMsg);
+                ReceiveChat(pMsg->m_text, pMsg->field_00);
+                if (inGame) {
+                    gpAdvManager->CompleteDraw(0);
+                    gpAdvManager->UpdateScreen(0, 0);
+                }
+                break;
+            }
+            }
+
+            DestroyMsg(pNetMsg);
+            pNetMsg = 0;
+        }
+    }
+
+    pSmack->Stop();
+    if (!inGame)
+        dlg.Close(1);
+
+    if (isDiff) {
+        File file;
+        const char* diffFilename = DATA_COMPGEN(
+            0x00677fa0, xferDiffFilename, "data\\diff.dat");
+        File::Delete(diffFilename);
+        if (!file.Open(diffFilename, modeWrite)) {
+            FileError(diffFilename);
+            ShutDown(0);
+        }
+        if (!file.Write(data, iFileSize)) {
+            file.Close();
+            FileError(diffFilename);
+            ShutDown(0);
+        }
+        file.Close();
+        delete[] data;
+
+        unsigned char* newSave = new unsigned char[diffSize];
+        unsigned long bytesRead;
+        try {
+            TGzFile gzfile(
+                diffFilename,
+                DATA_COMPGEN(0x00677d6c, gzReadMode, "rb"));
+            bytesRead = gzfile.Read(newSave, diffSize);
+        } catch (TGzFile::TOpenFailure) {
+            FileError(diffFilename);
+            ShutDown(0);
+        }
+
+        if (bytesRead != diffSize) {
+            FileError(diffFilename);
+            ShutDown(0);
+        }
+
+        const char* origFilename = DATA_COMPGEN(
+            0x00677fb0, xferOriginalFilename, "data\\orig.dat");
+        if (!file.Open(origFilename, modeRead)) {
+            FileError(origFilename);
+            ShutDown(0);
+        }
+        unsigned long size = file.GetLength();
+        if (!size) {
+            FileError(origFilename);
+            ShutDown(0);
+        }
+        unsigned char* pOrig = new unsigned char[size];
+        if (!file.Read(pOrig, size)) {
+            file.Close();
+            FileError(origFilename);
+            ShutDown(0);
+        }
+        file.Close();
+
+        CDiffFile* diffFile =
+            static_cast<CDiffFile*>(static_cast<void*>(newSave));
+        unsigned char* temp =
+            static_cast<unsigned char*>(diffFile->Apply(pOrig, size));
+        iFileSize = diffFile->m_numBytes;
+        delete[] pOrig;
+        delete diffFile;
+        data = temp;
+    }
+
+    char cFileName[351];
+    sprintf(cFileName,
+            DATA_COMPGEN(0x00660358, processSearchFoundFormat, "%s%s"),
+            DATA_COMPGEN(0x00677d88, dataDirectoryPrefix, ".\\DATA\\"),
+            gLoadedGameName);
+    int handle = _open(cFileName,
+                       _O_BINARY | _O_CREAT | _O_TRUNC | _O_WRONLY,
+                       _S_IWRITE);
+    if (handle == -1)
+        FileError(cFileName);
+    _write(handle, data, iFileSize);
+    _close(handle);
+
+    delete[] blockReceived;
+    delete[] data;
+
+    if (gpAdvManager->status == baseManager::STATUS_ACTIVE) {
+        gpAdvManager->OverrideBottomView(
+            advManager::BOTTOM_VIEW_DEFAULT, -1);
+        gpAdvManager->UpdBottomView(1, 1, 1);
+    }
+
+    if (bSChangeSounds != -1) {
+        char restoreSoundWasEnabled = gpSoundManager->field_84;
+        gpSoundManager->field_84 = 1;
+        gpSoundManager->SwitchAmbientMusic(bSChangeSounds);
+        gpSoundManager->field_84 = restoreSoundWasEnabled;
+    }
+
+    if (inGame && playerDisabled[gNetLocalGamePos])
+        NextPlayer();
+
+    return 1;
 }
-#endif
 
 // E:\\gamedcs\\game.cpp:11028
 // Retail's two callers, the complete Dreamcast callee fingerprint and the

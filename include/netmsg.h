@@ -109,6 +109,13 @@ enum eRS_Messages {
     // include-set/codegen trigger for unrelated consumers.
     RS_PING = 1072,
 #endif
+#if defined(HOMM3_GAME_TRANSMIT_DECLS) \
+        || defined(HOMM3_REMOTE_WAIT_READY_DECLS)
+    // Both transfer receiver and ready-player dispatcher consume this rung.
+    // Dreamcast names it in the shared message ladder; retail ReceiveSaveGame
+    // dispatches value 1015 to the host-status chat notification.
+    RS_SET_AS_HOST = 1015,
+#endif
 #ifdef HOMM3_REMOTE_WAIT_READY_DECLS
     // The two consecutive ready-handshake records constructed by
     // CWaitForReadyPlayersDlg.  DC's gapless roster names the rungs;
@@ -116,7 +123,6 @@ enum eRS_Messages {
     RS_HERO_LEVEL_UPDATE = 1011,
     RS_READY_TO_PLAY = 1012,
     RS_ALL_READY_TO_PLAY = 1013,
-    RS_SET_AS_HOST = 1015,
     // The lobby keepalive pair (DC rungs verbatim); singleselectionwindow's
     // OnPingMsg builds the response as a CPingMsg, whose ctor takes this
     // enum - same scoped view, same reason.
@@ -334,18 +340,27 @@ public:
 
     static CGameTransmitMainMsg* CreateMsg(unsigned long maxSize)
     {
-        unsigned long size = sizeof(CGameTransmitMainMsg) + maxSize;
-        CGameTransmitMainMsg* msg = static_cast<CGameTransmitMainMsg*>(
-            ::operator new(size));
-        memset(msg, 0, size);
-        msg->subType = RS_GAME_TRANSMIT_MAIN;
-        return msg;
+        // DC netmsg.h:325..333 records pTemp first, then pMsg; neither the
+        // removed `size` local nor a direct typed allocation exists there.
+        unsigned char* pTemp = static_cast<unsigned char*>(
+            ::operator new(sizeof(CGameTransmitMainMsg) + maxSize));
+        memset(pTemp, 0, sizeof(CGameTransmitMainMsg) + maxSize);
+        CGameTransmitMainMsg* pMsg =
+            static_cast<CGameTransmitMainMsg*>(static_cast<void*>(pTemp));
+        pMsg->subType = RS_GAME_TRANSMIT_MAIN;
+        return pMsg;
     }
 
-    void Update(unsigned char* data, unsigned long blockSize)
+    void Update(unsigned char* pData, unsigned long blockSize)
     {
         m_blockSize = blockSize;
-        memcpy(GetData(), data, blockSize);
+        // DC netmsg.h:342 exposes this source local and its lifetime. The
+        // later ReceiveSaveGame call still uses the separately proven
+        // GetData helper boundary.
+        unsigned char* pTemp =
+            static_cast<unsigned char*>(static_cast<void*>(this))
+            + sizeof(CGameTransmitMainMsg);
+        memcpy(pTemp, pData, blockSize);
         size = GetSize();
     }
 
@@ -370,6 +385,18 @@ public:
     }
 };
 SIZE(CGameTransmitConfirmEndMsg, 0x14);
+
+// DC netmsg.h:882 proves this header-defined boundary. Complete retains no
+// standalone copy: ReceiveSaveGame expands the five CNetMsg stores at the
+// every-thirtieth-block acknowledgement site (subtype 1080, size 0x14).
+class CGameXferAckMsg : public CNetMsg {
+public:
+    CGameXferAckMsg()
+        : CNetMsg(RS_GAME_TRANSMIT_ACK, sizeof(CGameXferAckMsg))
+    {
+    }
+};
+SIZE(CGameXferAckMsg, 0x14);
 
 class CGameTransmitEndMsg : public CNetMsg {
 public:

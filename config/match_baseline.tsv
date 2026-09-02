@@ -1464,6 +1464,7 @@ game	?RandomizeEvents@game@@QAEXXZ	86.9275	86.9275	86.9275	0xc0cc0	5cc2e739f394
 game	?RandomizeHolyGrail@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc0870	aa8c18ac68ba
 game	?Read@NewSMapHeader@@QAEHPAVTAbstractFile@@H@Z	91.5614	91.5614	91.5614	0xc4390	832db94cb2ff
 game	?ReadHeroId@@YIHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xba1c0	391772931dc6
+game	?ReceiveSaveGame@game@@QAEHHHHEE@Z	99.2213	99.2213	99.2213	0xcbd40	d489ef477c0d
 game	?Reset@SavedGameHeader@@QAEXXZ	100.0000	100.0000	100.0000	0xbc350	7ce21cff5c10
 game	?ResetAllPlayerVisibility@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc7c50	08c42be70880
 game	?ResetGame@game@@QAEXHHPAVNewSMapHeader@@@Z	100.0000	100.0000	100.0000	0xcecb0	bed4cee33487
@@ -1498,7 +1499,7 @@ game	?SetupPuzzlePieces@game@@QAEHHH@Z	98.9637	98.9637	98.9637	0xbaf00	1d0bb1967
 game	?ShowComputerScreen@game@@QAEXXZ	100.0000	100.0000	100.0000	0xca5b0	0074fb32cfd0
 game	?ShowHeroesLogo@game@@QAEXXZ	100.0000	100.0000	100.0000	0xca780	890d5263bad4
 game	?StartAITheme@@YIXXZ	100.0000	100.0000	100.0000	0xc6f40	45c7f5426a57
-game	?TransmitSaveGame@game@@QAEHHHEE@Z	72.9526	72.9526	72.9526	0xcafd0	687874605300
+game	?TransmitSaveGame@game@@QAEHHHEE@Z	72.8548	72.9526	72.9526	0xcafd0	d2656373a04e
 game	?TurnOffAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6fd0	fe47952c0464
 game	?TurnOnAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6f80	0d6fe6e9e2a0
 game	?ValidateVictoryLossConditions@game@@QAEXE@Z	89.0407	89.0407	89.0407	0xbf780	263527e8a4bf
@@ -1626,7 +1627,6 @@ game	?test@?$bitset@$0IA@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xd4e50	-
 game	?test@?$bitset@$0JB@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xcfad0	-
 game	?update_bonus@generator@@QAEXXZ	100.0000	100.0000	100.0000	0xb87a0	a2ff06919677
 game	__h3cg$game$implicit_copy_assign$SCampaign	0.0000	100.0000	100.0000	0xbdc70	-
-game	game_ReceiveSaveGame	0.0000	0.0000	0.0000	0xcbd40	aad1e2b2b349
 gametypewindow	??0TGameTypeWindow@@QAE@E@Z	100.0000	100.0000	100.0000	0xd54c0	f933a2a298bd
 gametypewindow	??1TGameTypeWindow@@UAE@XZ	100.0000	100.0000	100.0000	0xd5890	39e8a0790590
 gametypewindow	??_GTGameTypeWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xd5860	-
@@ -2396,7 +2396,7 @@ remote	?DrawSprite@CAnimatedDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x154cf0	7d8e
 remote	?DrawWindow@CAnimatedDlg@@UAEXEHH@Z	100.0000	100.0000	100.0000	0x154e90	0a5dc09bec69
 remote	?GetAbortPopupMsg@CNetMsgHandler@@UAEPAVCNetMsg@@XZ	100.0000	100.0000	100.0000	0x157900	f1884c1fd4e7
 remote	?GetNetMsgHandler@CDPlayHeroes@@QAEPAVCNetMsgHandler@@XZ	100.0000	100.0000	100.0000	0x1537a0	0e9b8f9bb05a
-remote	?GetRemoteData@@YIPAVCNetMsg@@E@Z	100.0000	100.0000	100.0000	0x154400	3b1e7f66079b
+remote	?GetRemoteData@@YIPAVCNetMsg@@EPAE@Z	100.0000	100.0000	100.0000	0x154400	05d8f053fd87
 remote	?HandleMPlayerLaunch@@YIEXZ	98.3167	98.3167	98.3167	0x155aa0	fbbe11f41dd4
 remote	?HandleNetMsg@CNetMsgHandler@@UAEPAVCNetMsg@@PAV2@@Z	100.0000	100.0000	100.0000	0x157920	9b3bbef3a17e
 remote	?HandleNetMsg@CNetMsgHandlerPause@@UAEPAVCNetMsg@@PAV2@@Z	100.0000	100.0000	100.0000	0x155180	4688fd9ad604
@@ -2467,9 +2467,9 @@ remote	?Wait@CWaitForRemoteBattleDlg@@QAEXH@Z	100.0000	100.0000	100.0000	0x15709
 remote	?WaitForLevels@CLevelPickWaitDlg@@QAEXH@Z	100.0000	100.0000	100.0000	0x156ba0	0241a383016a
 remote	?WaitForReadyToPlayMsg@@YIXXZ	84.4720	84.4720	84.4720	0x154f10	35800d8982ed
 remote	?handle_message@CAnimatedDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x154d90	2b6f4adffdbc
-remote	?handle_message@CLevelPickWaitDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x156c20	02d33cc900f9
-remote	?handle_message@CWaitForReadyPlayersDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x155190	cd911f0f3992
-remote	?handle_message@CWaitForRemoteBattleDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1570f0	c23cae0cc291
+remote	?handle_message@CLevelPickWaitDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x156c20	b05d22fa68f5
+remote	?handle_message@CWaitForReadyPlayersDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x155190	b27aba841293
+remote	?handle_message@CWaitForRemoteBattleDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1570f0	e41b300b05fe
 remote	__h3cg$remote$static_ctor$logFile	100.0000	100.0000	100.0000	0x152260	-
 resource	??0resource@@QAE@PBDW4EResourceType@@@Z	100.0000	100.0000	100.0000	0x158720	35e3f60becda
 resource	??1resource@@UAE@XZ	100.0000	100.0000	100.0000	0x1587a0	19d0e418e510
