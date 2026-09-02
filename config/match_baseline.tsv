@@ -2526,7 +2526,11 @@ resourcemanager	?insert_wrapper@TCacheMap@ResourceManager@@QAE?AUTCacheInsertRes
 resourcemanager	?lower_bound_iterator@TCacheMap@ResourceManager@@QAEPAUTCacheIterator@2@PAU32@ABUTCacheMapKey@2@@Z	100.0000	100.0000	100.0000	0x15e740	63b1bbc81736
 resourcemanager	@game_null_159510@12	89.3910	89.3910	89.3910	0x159510	e8246890ab05
 resourcemanager	@game_sprite_1599e0@12	86.1324	86.1324	86.1324	0x1599e0	0216f7dc6550
-rmg	??0RMGObjectGenerator@@QAE@HHHH@Z	100.0000	100.0000	100.0000	0x134160	c06f648fbe52
+rmg	??0type_black_box_creature_def@@QAE@H@Z	100.0000	100.0000	100.0000	0x134250	e2adc0087d3a
+rmg	??0type_shrine_def@@QAE@HH@Z	100.0000	100.0000	100.0000	0x1349d0	1621d989a619
+rmg	??0type_spell_scroll_def@@QAE@HH@Z	100.0000	100.0000	100.0000	0x134ea0	bd98d234413a
+rmg	??0type_treasure_def@@QAE@HHHH@Z	100.0000	100.0000	100.0000	0x134160	fdf13f3fe2e6
+rmg	??0type_witch_hut_def@@QAE@XZ	100.0000	100.0000	100.0000	0x134a60	248d29ba8ae4
 rmg	?_Inc@const_iterator@?$_Tree@UTPoint@@U1@U_Kfn@?$set@UTPoint@@U?$less@UTPoint@@@std@@V?$allocator@UTPoint@@@3@@std@@U?$less@UTPoint@@@4@V?$allocator@UTPoint@@@4@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x1b8bc0	-
 sacrifice_window	??0type_sacrifice_window@@QAE@PAVhero@@H@Z	100.0000	100.0000	100.0000	0x15fdd0	e3c4b7caa364
 sacrifice_window	??0type_skeleton_window@@QAE@PAVarmyGroup@@@Z	98.3508	98.3508	98.3508	0x1654f0	7b3203c0fe49
