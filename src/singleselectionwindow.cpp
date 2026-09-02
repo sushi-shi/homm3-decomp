@@ -2027,18 +2027,180 @@ int CSaveGameEdit::OnKeyPress(message* msg)
 // body. One owner claim is sufficient for the shared 33-byte RVA.
 VA_COMPGEN(0x0057d100, 0x21, SCALAR_DELETING_DTOR, CEnterNameEdit)
 
-#if 0  // @carcass - Complete-only filter-control constructor helper
-
 // Complete's desktop lobby adds this constructor-sized control builder; the
 // retained callers and the contiguous filter-widget id families establish
 // its no-argument member boundary. It has no older Dreamcast counterpart.
 VA(0x0057D170, 0x1DF7)
 void TSingleSelectionWindow::CreateFilterWidgets()
 {
-    // @stub
-}
+    field_18A0[0] = MAP_DIMENSION_MEDIUM;
+    field_18A0[1] = 2;
+    field_18A0[2] = -1;
+    field_18A0[3] = -1;
+    field_18A0[4] = 0;
+    field_18A0[5] = -1;
+    field_18A0[6] = SCENARIO_FILTER_CATEGORY_ANY;
+    field_18A0[7] = -1;
 
-#endif  // @carcass
+    Widgets.push_back(new textWidget(
+        58, 82, 99, 31, gpGeneralText->GetText(753), "smalfont.fnt",
+        font::PRIMARY, 0x118,
+        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new button(
+        161, 81, 44, 33, 0x119, "RanSizS.def", 0, 1, 0, 0, 2));
+    Widgets.push_back(new button(
+        208, 81, 44, 33, 0x11a, "RanSizM.def", 0, 1, 0, 0, 2));
+    Widgets.push_back(new button(
+        255, 81, 44, 33, 0x11b, "RanSizL.def", 0, 1, 0, 0, 2));
+    Widgets.push_back(new button(
+        302, 81, 44, 33, 0x11c, "RanSizX.def", 0, 1, 0, 0, 2));
+    Widgets.push_back(new button(
+        349, 81, 44, 33, 0x11d, "RanUndr.def", 0, 1, 0, 0, 2));
+
+    Widgets.push_back(new textWidget(
+        71, 133, 250, 16, gpGeneralText->GetText(754), "smalfont.fnt",
+        font::PRIMARY, 0x11e, font::LEFT_JUSTIFIED, 0, 8));
+    filterCountAButtons[0] = new button(
+        70, 153, 30, 32, 0x11f, "RanNum1.def", 0, 1, 0, 0, 2);
+    filterCountAButtons[1] = new button(
+        102, 153, 30, 32, 0x120, "RanNum2.def", 0, 1, 0, 0, 2);
+    filterCountAButtons[2] = new button(
+        134, 153, 30, 32, 0x121, "RanNum3.def", 0, 1, 0, 0, 2);
+    filterCountAButtons[3] = new button(
+        166, 153, 30, 32, 0x122, "RanNum4.def", 0, 1, 0, 0, 2);
+    filterCountAButtons[4] = new button(
+        198, 153, 30, 32, 0x123, "RanNum5.def", 0, 1, 0, 0, 2);
+    filterCountAButtons[5] = new button(
+        230, 153, 30, 32, 0x124, "RanNum6.def", 0, 1, 0, 0, 2);
+    filterCountAButtons[6] = new button(
+        262, 153, 30, 32, 0x125, "RanNum7.def", 0, 1, 0, 0, 2);
+    filterCountAButtons[7] = new button(
+        294, 153, 30, 32, 0x126, "RanNum8.def", 0, 1, 0, 0, 2);
+    filterCountAButtons[8] = new button(
+        326, 153, 55, 32, 0x127, "RanRand.def", 0, 1, 0, 0, 2);
+    int i;
+    for (i = 0; i < 9; ++i) {
+        filterCountAButtons[i]->field_40 = 2;
+        filterCountAButtons[i]->disabled_frame = 1;
+        Widgets.push_back(filterCountAButtons[i]);
+    }
+
+    Widgets.push_back(new textWidget(
+        71, 199, 250, 16, gpGeneralText->GetText(755), "smalfont.fnt",
+        font::PRIMARY, 0x128, font::LEFT_JUSTIFIED, 0, 8));
+    filterCountBButtons[0] = new button(
+        70, 219, 30, 32, 0x129, "RanNum0.def", 0, 1, 0, 0, 2);
+    filterCountBButtons[1] = new button(
+        102, 219, 30, 24, 0x12a, "RanNum1.def", 0, 1, 0, 0, 2);
+    filterCountBButtons[2] = new button(
+        134, 219, 30, 24, 0x12b, "RanNum2.def", 0, 1, 0, 0, 2);
+    filterCountBButtons[3] = new button(
+        166, 219, 30, 32, 0x12c, "RanNum3.def", 0, 1, 0, 0, 2);
+    filterCountBButtons[4] = new button(
+        198, 219, 30, 32, 0x12d, "RanNum4.def", 0, 1, 0, 0, 2);
+    filterCountBButtons[5] = new button(
+        230, 219, 30, 32, 0x12e, "RanNum5.def", 0, 1, 0, 0, 2);
+    filterCountBButtons[6] = new button(
+        262, 219, 30, 32, 0x12f, "RanNum6.def", 0, 1, 0, 0, 2);
+    filterCountBButtons[7] = new button(
+        294, 219, 30, 32, 0x130, "RanNum7.def", 0, 1, 0, 0, 2);
+    filterCountBButtons[8] = new button(
+        326, 219, 55, 32, 0x131, "RanRand.def", 0, 1, 0, 0, 2);
+    for (i = 0; i < 9; ++i) {
+        filterCountBButtons[i]->field_40 = 2;
+        filterCountBButtons[i]->disabled_frame = 1;
+        Widgets.push_back(filterCountBButtons[i]);
+    }
+
+    Widgets.push_back(new textWidget(
+        71, 265, 250, 16, gpGeneralText->GetText(756), "smalfont.fnt",
+        font::PRIMARY, 0x132, font::LEFT_JUSTIFIED, 0, 8));
+    filterCountCButtons[0] = new button(
+        70, 285, 30, 32, 0x133, "RanNum0.def", 0, 1, 0, 0, 2);
+    filterCountCButtons[1] = new button(
+        102, 285, 30, 32, 0x134, "RanNum1.def", 0, 1, 0, 0, 2);
+    filterCountCButtons[2] = new button(
+        134, 285, 30, 32, 0x135, "RanNum2.def", 0, 1, 0, 0, 2);
+    filterCountCButtons[3] = new button(
+        166, 285, 30, 32, 0x136, "RanNum3.def", 0, 1, 0, 0, 2);
+    filterCountCButtons[4] = new button(
+        198, 285, 30, 32, 0x137, "RanNum4.def", 0, 1, 0, 0, 2);
+    filterCountCButtons[5] = new button(
+        230, 285, 30, 32, 0x138, "RanNum5.def", 0, 1, 0, 0, 2);
+    filterCountCButtons[6] = new button(
+        262, 285, 30, 32, 0x139, "RanNum6.def", 0, 1, 0, 0, 2);
+    filterCountCButtons[7] = new button(
+        294, 285, 30, 32, 0x13a, "RanNum7.def", 0, 1, 0, 0, 2);
+    filterCountCButtons[8] = new button(
+        326, 285, 55, 32, 0x13b, "RanRand.def", 0, 1, 0, 0, 2);
+    for (i = 0; i < 9; ++i) {
+        filterCountCButtons[i]->field_40 = 2;
+        filterCountCButtons[i]->disabled_frame = 1;
+        Widgets.push_back(filterCountCButtons[i]);
+    }
+
+    Widgets.push_back(new textWidget(
+        71, 331, 250, 16, gpGeneralText->GetText(757), "smalfont.fnt",
+        font::PRIMARY, 0x13c, font::LEFT_JUSTIFIED, 0, 8));
+    filterCountDButtons[0] = new button(
+        70, 351, 30, 32, 0x13d, "RanNum0.def", 0, 1, 0, 0, 2);
+    filterCountDButtons[1] = new button(
+        102, 351, 30, 32, 0x13e, "RanNum1.def", 0, 1, 0, 0, 2);
+    filterCountDButtons[2] = new button(
+        134, 351, 30, 32, 0x13f, "RanNum2.def", 0, 1, 0, 0, 2);
+    filterCountDButtons[3] = new button(
+        166, 351, 30, 32, 0x140, "RanNum3.def", 0, 1, 0, 0, 2);
+    filterCountDButtons[4] = new button(
+        198, 351, 30, 32, 0x141, "RanNum4.def", 0, 1, 0, 0, 2);
+    filterCountDButtons[5] = new button(
+        230, 351, 30, 32, 0x142, "RanNum5.def", 0, 1, 0, 0, 2);
+    filterCountDButtons[6] = new button(
+        262, 351, 30, 32, 0x143, "RanNum6.def", 0, 1, 0, 0, 2);
+    filterCountDButtons[7] = new button(
+        326, 351, 55, 32, 0x144, "RanRand.def", 0, 1, 0, 0, 2);
+    for (i = 0; i < 8; ++i) {
+        filterCountDButtons[i]->field_40 = 2;
+        filterCountDButtons[i]->disabled_frame = 1;
+        Widgets.push_back(filterCountDButtons[i]);
+    }
+
+    Widgets.push_back(new textWidget(
+        71, 398, 105, 16, gpGeneralText->GetText(758), "smalfont.fnt",
+        font::PRIMARY, 0x145, font::LEFT_JUSTIFIED, 0, 8));
+    filterWaterButtons[0] = new button(
+        70, 419, 83, 32, 0x146, "RanNone.def", 0, 1, 0, 0, 2);
+    filterWaterButtons[1] = new button(
+        155, 419, 83, 32, 0x147, "RanNorm.def", 0, 1, 0, 0, 2);
+    filterWaterButtons[2] = new button(
+        240, 419, 83, 32, 0x148, "RanIsld.def", 0, 1, 0, 0, 2);
+    filterWaterButtons[3] = new button(
+        326, 419, 55, 32, 0x149, "RanRand.def", 0, 1, 0, 0, 2);
+    for (i = 0; i < 4; ++i) {
+        filterWaterButtons[i]->field_40 = 2;
+        filterWaterButtons[i]->disabled_frame = 1;
+        Widgets.push_back(filterWaterButtons[i]);
+    }
+
+    Widgets.push_back(new textWidget(
+        71, 465, 105, 16, gpGeneralText->GetText(759), "smalfont.fnt",
+        font::PRIMARY, 0x14a, font::LEFT_JUSTIFIED, 0, 8));
+    filterStrengthButtons[0] = new button(
+        70, 485, 83, 32, 0x14b, "RanWeak.def", 0, 1, 0, 0, 2);
+    filterStrengthButtons[1] = new button(
+        155, 485, 83, 32, 0x14c, "RanNorm.def", 0, 1, 0, 0, 2);
+    filterStrengthButtons[2] = new button(
+        240, 485, 83, 32, 0x14d, "RanStrg.def", 0, 1, 0, 0, 2);
+    filterStrengthButtons[3] = new button(
+        326, 485, 55, 32, 0x14e, "RanRand.def", 0, 1, 0, 0, 2);
+    for (i = 0; i < 4; ++i) {
+        filterStrengthButtons[i]->field_40 = 2;
+        filterStrengthButtons[i]->disabled_frame = 1;
+        Widgets.push_back(filterStrengthButtons[i]);
+    }
+
+    Widgets.push_back(new button(
+        57, 535, 337, 40, 0x14f, "RanShow.def", 0, 1, 0, 0, 2));
+}
 
 // Retail-only (no DC roster row - the DC lobby has no filter panel).
 // Walks the filter panel's widget ranges (0x119..0x11c size buttons,

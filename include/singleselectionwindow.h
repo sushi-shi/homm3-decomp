@@ -29,6 +29,7 @@ class CNewPlayerUpdateMan;
 class CChatWidget;
 class textWidget;
 class textButton;
+class button;
 struct GameSelectionHeadersStruct;
 
 // Shared selection/scenario presentation tables. Retail scenarioinfo.obj
@@ -455,7 +456,17 @@ public:
     // SGameSetupOptions copy; the duration slider reads them back out.
     // Role unattested - ordinal placeholder.
     int field_18A0[8];                 // 0x18a0
-    char pad_18c0[0x196c - 0x18c0];
+    // Complete-only random-map filter controls. CreateFilterWidgets constructs
+    // each family explicitly, then walks these contiguous pointer arrays to
+    // select the disabled/highlight frames and register them with the window.
+    // The six loop bases and counts in retail prove every boundary below; the
+    // ordinal names avoid claiming meanings not present in the older DC UI.
+    button* filterCountAButtons[9];     // 0x18c0, ids 0x11f..0x127
+    button* filterCountBButtons[9];     // 0x18e4, ids 0x129..0x131
+    button* filterCountCButtons[9];     // 0x1908, ids 0x133..0x13b
+    button* filterCountDButtons[8];     // 0x192c, ids 0x13d..0x144
+    button* filterWaterButtons[4];      // 0x194c, ids 0x146..0x149
+    button* filterStrengthButtons[4];   // 0x195c, ids 0x14b..0x14e
     // Retail-only tail member (no DC counterpart - DC's roster ends at
     // netMsgHandler): the widget the TurnChat pair shows with widget 105
     // when chat is OFF and hides when it is ON, always addressed
