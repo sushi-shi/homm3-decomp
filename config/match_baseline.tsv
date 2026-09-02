@@ -2138,6 +2138,7 @@ newgame	?GetLossConditionText@game@@QAEXPAD@Z	100.0000	100.0000	100.0000	0x11380
 newgame	?ShowScenInfo@game@@QAEXXZ	100.0000	100.0000	100.0000	0x113740	09dd2c5c2595
 newgame	?get_alignment_count@@YIJH@Z	100.0000	100.0000	100.0000	0x1132b0	f1e04004c643
 newgame	?pick_alignment@@YI?AW4TTownType@@HE@Z	100.0000	100.0000	100.0000	0x1132d0	7d86ef3bfcb8
+objecttype	?_Inc@const_iterator@?$_Tree@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V12@U_Kfn@?$set@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@2@U?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x117780	-
 overview	??1TOverviewWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x120d90	048fab1d8faa
 overview	??_GTOverviewWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x120d60	-
 overview	?SetupNewOverviewType@game@@QAEXHE@Z	96.4609	100.0000	100.0000	0x11e330	f328fdfe08b1
