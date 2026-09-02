@@ -2186,7 +2186,7 @@ void combatManager::ResetHitByCreature()
 VA(0x00466010, 0x243)  // dc-callgraph unique, dc 0x60354
 unsigned char combatManager::place_obstacle(int obstacle_id)
 {
-    const type_obstacle_shape* shape = &gObstacleShapes[obstacle_id];
+    const TObstacleInfo* shape = &ObstacleInfo[obstacle_id];
     TPickANumber picker(0x12, 0xa8);
     int hex;
 next_hex:
@@ -2542,8 +2542,8 @@ void combatManager::SetupAndLoadObstacles()
 
                 TObstacle new_landmine;
                 new_landmine.sprite =
-                    ResourceManager::GetSprite(gLandMineShape.spriteName);
-                new_landmine.shape = &gLandMineShape;
+                    ResourceManager::GetSprite(LandMineInfo[0].spriteName);
+                new_landmine.shape = &LandMineInfo[0];
                 new_landmine.hex = static_cast<unsigned char>(hex);
                 new_landmine.owner = 1;
                 new_landmine.is_visible = 0;
@@ -2609,7 +2609,7 @@ void combatManager::SetupAndLoadObstacles()
         if (obstacle_id < 0)
             break;
         if (place_obstacle(obstacle_id))
-            placed += gObstacleShapes[obstacle_id].extra_hex_count;
+            placed += ObstacleInfo[obstacle_id].extra_hex_count;
     }
 }
 
@@ -2656,7 +2656,7 @@ found:
 VA(0x004669b0, 0xBF)  // anchor-global, dc 0x609d0
 void combatManager::PlaceObstacle(const combatManager::TObstacle* obstacle, int id, int hex, unsigned attributes)
 {
-    const type_obstacle_shape* shape = obstacle->shape;
+    const TObstacleInfo* shape = obstacle->shape;
     unsigned char row_is_odd = static_cast<unsigned char>((hex / 0x11) & 1);
     for (int i = 0; i < shape->extra_hex_count; i++) {
         int cell_index = shape->extra_hex_offsets[i] + hex;
@@ -2735,7 +2735,7 @@ void combatManager::RemoveObstacle(int index)
                >= static_cast<unsigned>(obstacles.size()))
         return;
     TObstacle* obstacle = &GetObstacle(index);
-    const type_obstacle_shape* shape = obstacle->shape;
+    const TObstacleInfo* shape = obstacle->shape;
     unsigned char row_is_odd =
         static_cast<unsigned char>((obstacle->hex / 0x11) & 1);
     for (int i = 0; i < shape->extra_hex_count; i++) {

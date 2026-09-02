@@ -10,7 +10,7 @@
 adler32	@adler32@12	100.0000	100.0000	100.0000	0x206ca0	-
 adventuremapwindow	??1TAdventureMapWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x2b10	edbb40617def
 adventuremapwindow	??_GTAdventureMapWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x2ae0	-
-adventuremapwindow	?CheckAdvCheatCode@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	89.5717	89.5717	90.3512	0x2450	ec4fd0a665ee
+adventuremapwindow	?CheckAdvCheatCode@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	90.5910	90.5910	90.5910	0x2450	ec4fd0a665ee
 adventuremapwindow	?ClearBottomView@TAdventureMapWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x3ee0	c44f40d9b96c
 adventuremapwindow	?DoHeroKnob@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x3220	5b941b78c07c
 adventuremapwindow	?DoTownKnob@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x3280	6132348c8553
@@ -648,6 +648,7 @@ bottomviewsubwindow	??_Gstrstreambuf@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0
 bottomviewsubwindow	??_Gtype_bottom_view_window@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x50d20	-
 bottomviewsubwindow	?animate@TBottomViewEnemyTurn@@UAEXXZ	100.0000	100.0000	100.0000	0x536f0	0e79eeb98cd5
 bottomviewsubwindow	?animate@TBottomViewNewTurn@@UAEXXZ	100.0000	100.0000	100.0000	0x511a0	a5b26fc67c45
+bottomviewsubwindow	?put@?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEAAV12@D@Z	100.0000	100.0000	100.0000	0x53dd0	-
 button	??0button@@QAE@HHHHHPBDHHEHH@Z	100.0000	100.0000	100.0000	0x55ef0	a60516324f5e
 button	??0textButton@@QAE@HHHHHPBD00HHEHHH@Z	88.4400	88.4400	88.4400	0x56a50	2e99aa88dd86
 button	??0type_func_button@@QAE@JJJJJPBDP6IHAAVmessage@@@ZHH@Z	100.0000	100.0000	100.0000	0x56d30	08a3745f01c2
@@ -720,16 +721,16 @@ cmbtmgr	?Open@combatManager@@UAEHH@Z	100.0000	100.0000	100.0000	0x62a20	b3b259b2
 cmbtmgr	?PlaceAllObstacles@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x66a70	06a8f484fa96
 cmbtmgr	?PlaceArmyInGrid@combatManager@@QAEXABVarmy@@H@Z	100.0000	100.0000	100.0000	0x687c0	2ec8f9a8fe7f
 cmbtmgr	?PlaceLargeObstacle@combatManager@@QAEHII@Z	100.0000	100.0000	100.0000	0x668a0	0dcdebb3c2f1
-cmbtmgr	?PlaceObstacle@combatManager@@QAEXPBUTObstacle@1@HHI@Z	100.0000	100.0000	100.0000	0x669b0	ab261471a51c
+cmbtmgr	?PlaceObstacle@combatManager@@QAEXPBUTObstacle@1@HHI@Z	100.0000	100.0000	100.0000	0x669b0	d41bb5cd8cc4
 cmbtmgr	?PowEffect@combatManager@@QAEXHH@Z	96.2232	96.2232	96.2232	0x68990	36d21ee01728
 cmbtmgr	?RaiseDoor@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x672e0	69c647dd5678
 cmbtmgr	?RaiseSkeletons@combatManager@@QAEXH@Z	93.2203	93.2203	93.2203	0x69f20	3a65a60c06a8
 cmbtmgr	?RemoveArmyFromGrid@combatManager@@QAEXABVarmy@@@Z	100.0000	100.0000	100.0000	0x68730	673e4d7ee99c
-cmbtmgr	?RemoveObstacle@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x66b30	edac3400d824
+cmbtmgr	?RemoveObstacle@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x66b30	101875d9e158
 cmbtmgr	?ResetHitByCreature@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x65fe0	037b24bc169a
 cmbtmgr	?SetNextArmy@combatManager@@QAEXHH@Z	99.6497	99.6497	99.6497	0x65330	eb3505fa04bd
 cmbtmgr	?SetupAdjacencyArray@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x640a0	1ec64dc6109f
-cmbtmgr	?SetupAndLoadObstacles@combatManager@@QAEXXZ	98.1402	98.1402	98.1402	0x66290	18a6300ac472
+cmbtmgr	?SetupAndLoadObstacles@combatManager@@QAEXXZ	98.1402	98.1402	98.1402	0x66290	e1280d4cefce
 cmbtmgr	?SetupCombat@combatManager@@QAEXUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HHHE@Z	100.0000	100.0000	100.0000	0x639f0	9a212de8b1a4
 cmbtmgr	?ShootAnimatedMissile@combatManager@@QAEXHHHHHPBMPBQBD@Z	93.5088	93.5088	93.5088	0x67db0	14024eb3857d
 cmbtmgr	?ShootBallisticMissile@combatManager@@QAEXHHHHPBVCSprite@@@Z	89.3406	89.3406	89.3406	0x67a00	e2acc9e1d582
@@ -752,7 +753,7 @@ cmbtmgr	?enemy_is_adjacent@combatManager@@QBEEPBVarmy@@H0@Z	100.0000	100.0000	10
 cmbtmgr	?get_distance@@YIJJJ@Z	100.0000	100.0000	100.0000	0x69670	1588cfc46734
 cmbtmgr	?is_adjacent@combatManager@@QBEEHH@Z	100.0000	100.0000	100.0000	0x674c0	8030571d2f9b
 cmbtmgr	?mark_tower_army@combatManager@@QAEXPBVarmy@@@Z	100.0000	100.0000	100.0000	0x6a460	4243f6c14cc9
-cmbtmgr	?place_obstacle@combatManager@@QAEEH@Z	75.5550	75.5550	75.5550	0x66010	49f0071eeb6c
+cmbtmgr	?place_obstacle@combatManager@@QAEEH@Z	75.5550	75.5550	75.5550	0x66010	07a981f3e10a
 cmbtmgr	?should_lower_door@combatManager@@QBEEPAVarmy@@J@Z	100.0000	100.0000	100.0000	0x67130	90bb8d4f3eac
 combatcontrolsubwindow	??0TCombatControlSubWindow@@QAE@PAVheroWindow@@@Z	96.3990	96.3990	96.3990	0x6bc30	f312aa2a2178
 combatcontrolsubwindow	??0TCombatCreatureSubWindow@@QAE@HHHHPAVheroWindow@@H@Z	99.1290	99.1290	99.1290	0x6ceb0	fbd81e8e493c
@@ -2501,8 +2502,8 @@ resourcemanager	?PointToSpriteResource@ResourceManager@@YIPAVLODFile@@PBD@Z	100.
 resourcemanager	?Read@t_lod_file_adapter@ResourceManager@@UAEHPAXH@Z	100.0000	100.0000	100.0000	0x159110	02b466f4f06a
 resourcemanager	?Read@t_stdio_file_adapter@ResourceManager@@UAEHPAXH@Z	100.0000	100.0000	100.0000	0x1590f0	5a6272278190
 resourcemanager	?ReadFromBitmapResource@ResourceManager@@YIHPAVLODFile@@PAXH@Z	100.0000	100.0000	100.0000	0x15d0d0	1d5cfc7f83de
-resourcemanager	?RemapGraphics@ResourceManager@@YIXXZ	100.0000	100.0000	100.0000	0x159e30	0693c37d69fa
-resourcemanager	?SaturateGraphics@ResourceManager@@YIXXZ	100.0000	100.0000	100.0000	0x15a020	98a7e397ca63
+resourcemanager	?RemapGraphics@ResourceManager@@YIXXZ	97.7535	100.0000	100.0000	0x159e30	0693c37d69fa
+resourcemanager	?SaturateGraphics@ResourceManager@@YIXXZ	97.8722	100.0000	100.0000	0x15a020	98a7e397ca63
 resourcemanager	?SetPath@ResourceManager@@YIXPBD@Z	100.0000	100.0000	100.0000	0x15a5c0	d085d67fac64
 resourcemanager	?SetPixelFormat@ResourceManager@@YIXKKK@Z	100.0000	100.0000	100.0000	0x15a6b0	4de25b191581
 resourcemanager	?Write@t_stdio_file_adapter@ResourceManager@@UAEHPBXH@Z	100.0000	100.0000	100.0000	0x159140	647bbbd056c9
@@ -2723,8 +2724,8 @@ singleselectionwindow	??0CNetPlayerHandlerPlayer@@QAE@XZ	100.0000	100.0000	100.0
 singleselectionwindow	??0CNetPlayerInfo@@QAE@XZ	100.0000	100.0000	100.0000	0x17f720	-
 singleselectionwindow	??0CNewPlayerUpdateMan@@QAE@XZ	100.0000	100.0000	100.0000	0x17c9b0	0ed8ff53773d
 singleselectionwindow	??0CUpdatePlayerPosMsg@@QAE@PAVCNetPlayerHandlerPlayer@@0@Z	100.0000	100.0000	100.0000	0x179870	4cb719207948
-singleselectionwindow	??0GameSelectionHeadersStruct@@QAE@XZ	73.1483	79.3242	79.3242	0x178e00	-
-singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	75.2722	75.2722	75.2722	0x179960	3885b26cf40c
+singleselectionwindow	??0GameSelectionHeadersStruct@@QAE@XZ	79.2582	79.3242	79.3242	0x178e00	-
+singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	74.9955	75.2722	75.2722	0x179960	3885b26cf40c
 singleselectionwindow	??0lobby_message@@QAE@XZ	100.0000	100.0000	100.0000	0x189190	2b1be8208221
 singleselectionwindow	??0t_map_list_update@@QAE@K@Z	100.0000	100.0000	100.0000	0x189240	173781ee6a81
 singleselectionwindow	??1CChatSlider@@UAE@XZ	100.0000	100.0000	100.0000	0x17ca80	-
@@ -2824,7 +2825,7 @@ singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100
 # 2026-08-27 (round 3): the interim full build re-banked the transient
 # peak a third time; re-lowered with the round's bodies landed. Same
 # scheduler flap, same recovery path.
-singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0	66eb0a0e15c8
+singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0	66eb0a0e15c8
 singleselectionwindow	?OnMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2193	90.2193	90.2193	0x189710	3ad2be3935a3
 singleselectionwindow	?OnNameClick@TSingleSelectionWindow@@QAEXH@Z	96.3226	96.3226	96.3226	0x18b620	ef174e28edf8
 singleselectionwindow	?OnNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	97.5366	97.5366	97.5366	0x18b510	862e2a9c058b
@@ -2918,7 +2919,7 @@ smackmgr	?VideoOpen@@YIXHHHHHHHH@Z	100.0000	100.0000	100.0000	0x197570	d77b32d95
 smackmgr	?VideoPause@@YIXXZ	100.0000	100.0000	100.0000	0x1977a0	2ea498501049
 smackmgr	?VideoPlay@@YIHHHHHH@Z	87.1912	87.1912	87.1912	0x1972d0	72d32131c4ee
 smackmgr	?VideoPlaying@@YIEXZ	100.0000	100.0000	100.0000	0x197990	49cb7ed9fb9f
-smackmgr	?VideoRealignBuffers@@YIXXZ	88.9254	88.9254	88.9254	0x1971f0	5c14e9f84392
+smackmgr	?VideoRealignBuffers@@YIXXZ	88.9254	88.9254	88.9254	0x1971f0	14cd11411f7f
 smackmgr	?VideoRestart@@YIXXZ	100.0000	100.0000	100.0000	0x197900	b9317f2d483b
 smackmgr	?VideoResume@@YIXXZ	100.0000	100.0000	100.0000	0x197850	219da5b0d0a1
 smackmgr	?VideoShutDown@@YIXXZ	100.0000	100.0000	100.0000	0x197c70	5b5b45640a91
@@ -2970,6 +2971,7 @@ spelldefs	__h3cg$spelldefs$static_dtor$spellNames	100.0000	100.0000	100.0000	0x1
 spells	?AddBolt@combatManager@@QAEXPAUSBolt@@HHHHHHHHHHHH@Z	100.0000	100.0000	100.0000	0x1a5a90	298ffa58efa4
 spells	?AreaEffect@combatManager@@QAEXJHJJ@Z	99.8565	99.8565	99.8565	0x1a4970	89c796832376
 spells	?Armageddon@combatManager@@QAEXHH@Z	93.9013	93.9013	93.9013	0x1a4bc0	4c4fd8883f34
+spells	?CastSpell@combatManager@@QAEXHHEHHJ@Z	30.3098	30.3098	30.3098	0x19fe30	152ffe2f024a
 spells	?ChainLightning@combatManager@@QAEXHHH@Z	96.1913	96.1913	96.1913	0x1a6360	ebf901f1d173
 spells	?ClearEffects@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1a66b0	59ebec44e08d
 spells	?ComputeSpellDamage@combatManager@@QAEJHJJPAVhero@@0PBVarmy@@E@Z	100.0000	100.0000	100.0000	0x1a7890	210d41023a64
@@ -2992,7 +2994,7 @@ spells	?SpellCastWorkChance@combatManager@@QAEMHJPBVarmy@@EEJ@Z	100.0000	100.000
 spells	?SpellCastWorks@combatManager@@QAEEHJPBVarmy@@EJ@Z	100.0000	100.0000	100.0000	0x1a8640	d59134a22e8d
 spells	?SpellTargetMessage@combatManager@@QAEXHHE@Z	100.0000	100.0000	100.0000	0x1a8690	9cf732f301c4
 spells	?SummonElemental@combatManager@@QAEXHW4TCreatureType@@HH@Z	71.8173	93.4375	93.4375	0x1a7080	74fef5ef261c
-spells	?ValidSpellTarget@combatManager@@QAEEHJJJEJ@Z	88.4937	88.4937	88.4937	0x1a39c0	f9ae0717fafe
+spells	?ValidSpellTarget@combatManager@@QAEEHJJJEJ@Z	88.4937	88.4937	88.4937	0x1a39c0	61a003dfba43
 spells	?ValidSpellTargetArmy@combatManager@@QAEEHHPBVarmy@@EJ@Z	100.0000	100.0000	100.0000	0x1a3c80	110edc19289c
 spells	?demonic_resurrection@combatManager@@QAEXPBVarmy@@PAV2@@Z	100.0000	100.0000	100.0000	0x1a7390	edaedb0045b6
 spells	?find_animate_dead_target@combatManager@@QAEPAVarmy@@HH@Z	100.0000	100.0000	100.0000	0x1a3f50	e138f71286c7

@@ -7,6 +7,19 @@
 
 #include "resource.h"
 
+// Bitmap16Bit::map is DC-proven as unsigned short*, while Pitch is
+// independently proven as a byte stride. This union names those two views
+// without introducing reinterpret-cast debt or changing the stored pointer.
+union Bitmap16MapPointer {
+    unsigned short* pixels;
+    unsigned char* bytes;
+};
+
+union Bitmap16ConstMapPointer {
+    const unsigned short* pixels;
+    const unsigned char* bytes;
+};
+
 // Bootstrap VIEW of Bitmap16Bit (resource lineage). Layout PROVEN at
 // retail size 0x38: heroWindow::SaveBackground news it with
 // `push 0x38`, and the DC roster (DataSize@0x1c, ImageSize@0x20,
@@ -42,11 +55,17 @@ public:
     int GetPitch() const { return Pitch; }
     unsigned short* GetMap(int x, int y)
     {
-        return map + y * Pitch + x;
+        Bitmap16MapPointer result;
+        result.pixels = map;
+        result.bytes += y * Pitch + x * sizeof(unsigned short);
+        return result.pixels;
     }
     const unsigned short* GetMap(int x, int y) const
     {
-        return map + y * Pitch + x;
+        Bitmap16ConstMapPointer result;
+        result.pixels = map;
+        result.bytes += y * Pitch + x * sizeof(unsigned short);
+        return result.pixels;
     }
     void reference(int w, int h, int pitch, unsigned short* data);
     void Darken(int x, int y, int w, int h);

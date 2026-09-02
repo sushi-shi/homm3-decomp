@@ -281,6 +281,9 @@ enum ESpellId {
     // spell power to derive the scouting radius; retail displacement 0x144
     // proves spell id 2 independently of the Dreamcast spelling.
     SPELL_VISIONS = 0x2,
+    // Dreamcast's first combat spell and CastSpell's first jump-table arm;
+    // retail indexes the mastery row at 0x642214 and places QuicksandInfo.
+    SPELL_QUICKSAND = 0xa,
     // 11. combatManager::SetupAndLoadObstacles (0x466290) prices the
     // Tower's moat with ComputeSpellDamage(11, ...) and builds each
     // moat hex out of the obstacle shape whose sprite is C09spF1.def -

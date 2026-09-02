@@ -13,6 +13,21 @@
 # address, the block inherits the parent's EBP frame, disposes the palette,
 # and rethrows before padding and LoadFont's independent 0x15b8d0 entry.
 # 11942 rows since.
+# BOUNDARY CORRECTION 2026-09-02: the Dinkumware
+# basic_ostream<char>::put body at 0x53dd0 is one 0x16b-byte EH-bearing
+# function through 0x53f3b. The carve split its 0x53e72 typed catch handler
+# and its 0x53e9e shared continuation into independent entries, omitting the
+# 0x53e98 restore of the parent's saved ESI/EDI between them. Both pieces use
+# the parent's EBP frame and return through its ret 4 epilogue; the stock VC6
+# header specialization reproduces the merged body byte-for-byte. 11940 rows.
+# BOUNDARY CORRECTION 2026-09-02: the Dinkumware
+# operator<<(basic_ostream<char>&, const char*) body at 0x54450 is one
+# 0x284-byte EH-bearing function through 0x546d4. The carve split its
+# 0x5460a exception handler and its 0x54633 shared continuation into
+# independent entries even though both inherit the parent's EBP frame and
+# retail branches directly from the first span into 0x54633. The stock VC6
+# specialization emits one 0x290-byte COMDAT (0x284 code plus alignment)
+# with the same public identity. 11938 rows.
 # BOUNDARY ADMISSION 2026-08-31: singleselectionwindow.obj's 27-byte
 # SliderChatWindow and 28-byte SliderFileMenu callbacks are independent entries
 # at 0x17c7d0 and 0x17c990. Constructor slider-function relocations point to
@@ -1015,9 +1030,7 @@ rva	size
 0x53d30	59
 0x53d70	24
 0x53d90	59
-0x53dd0	162
-0x53e72	38
-0x53e9e	157
+0x53dd0	363
 0x53f40	11
 0x53f50	169
 0x54000	80
@@ -1037,9 +1050,7 @@ rva	size
 0x54320	99
 0x54390	60
 0x543d0	116
-0x54450	442
-0x5460a	38
-0x54633	161
+0x54450	644
 0x546e0	92
 0x54740	35
 0x54770	658

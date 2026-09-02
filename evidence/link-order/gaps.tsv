@@ -19,7 +19,7 @@ binkmanager	bitmap16	0x4da9d	0x4e100	1635	7	-
 bitmap16	bitmap816	0x4e129	0x4f9d0	6311	26	bitmap24,bitmap8
 bitmap816	border	0x4fec0	0x4ff10	80	2	-
 border	bottomviewsubwindow	0x50854	0x50d50	1276	13	-
-bottomviewsubwindow	button	0x53961	0x55ef0	9615	67	-
+bottomviewsubwindow	button	0x53961	0x55ef0	9615	65	-
 button	campaignbrief	0x56e94	0x5afb0	16668	37	-
 campaignbrief	campaignmap	0x5b13f	0x5dee0	11681	33	-
 campaignmap	campaignwindow	0x5e1f0	0x5ea40	2128	16	-
@@ -95,10 +95,10 @@ slider	smackmgr	0x197185	0x1971b0	43	1	-
 smackmgr	soundmgr	0x197cf4	0x1994b0	6076	23	-
 soundmgr	spellbookwindow	0x19b295	0x19baa0	2059	23	-
 spellbookwindow	spelldefs	0x19dc64	0x19e060	1020	3	-
-spelldefs	spells	0x19e4af	0x1a3700	21073	29	-
+spelldefs	spells	0x19e4af	0x19fe30	6529	21	-
 spells	strip	0x1a939c	0x1a9d20	2436	15	-
 strip	subwindow	0x1aa31e	0x1aa340	34	1	-
-subwindow	swapmgr	0x1aa68a	0x1ae370	15590	12	-
+subwindow	swapmgr	0x1aa68a	0x1aaa80	1014	11	-
 swapmgr	systemoptionswindow	0x1b1378	0x1b1790	1048	12	-
 systemoptionswindow	text	0x1b375e	0x1b90f0	22930	94	-
 text	textntry	0x1b9109	0x1ba920	6167	38	-

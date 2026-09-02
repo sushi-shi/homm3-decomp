@@ -614,6 +614,25 @@ TBottomViewResourceMessage::TBottomViewResourceMessage(
     }
 }
 
+// The `std::ends` call above retains VC6's real Dinkumware
+// basic_ostream<char>::put specialization. Retail 0x453dd0 is the identical
+// body: its normal span jumps across the typed catch at 0x453e72 into the
+// shared 0x453e9e continuation, which keeps using the parent's EBP frame.
+// The former three-row carve is therefore admitted as this one public symbol.
+VA_COMPGEN(0x00453DD0, 0x16B, OSTREAM_PUT, char)
+
+// The same stream expression retains VC6's ordinary c-string insertion
+// specialization. Retail 0x454450 branches across its 0x45460a exception
+// handler into the shared 0x454633 continuation, so the former three-row
+// carve is one public 0x284-byte function (plus COMDAT alignment).
+VA_COMPGEN(0x00454450, 0x284, OSTREAM_INSERT_CSTR, char)
+
+// TGzInflateBuf inherits Dinkumware's ordinary xsputn implementation in
+// vtable slot 7. Retail 0x454150 and the bottomviewsubwindow.obj public are
+// byte-identical across all 0xA4 code bytes; the remaining COMDAT bytes are
+// alignment padding.
+VA_COMPGEN(0x00454150, 0xA4, STREAMBUF_XSPUTN, char)
+
 // The default ostrstream used above causes VC6 to retain this consecutive
 // Dinkumware support band in bottomviewsubwindow.obj. The identities come
 // from the base object's own public symbols; the retail bodies and vtable

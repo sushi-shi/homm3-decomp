@@ -105,6 +105,13 @@ VA_COMPGEN(0x0045ad00, 0x13E, IMPLICIT_DTOR, NewSMapHeader)
 // emits no classic /Z7 line records for this compiler-generated body.
 VA_COMPGEN(0x0045ae40, 0x21, SCALAR_DELETING_DTOR, TCampaignBrief)
 
+// The generic Dreamcast tree-increment dossier (dc 0x64214) proves the
+// successor walk. Retail's sole direct caller at 0x45c070 and the already
+// emitted campaignbrief.obj public identify the concrete instantiation as
+// map<int, type_map_hero_info>::const_iterator::_Inc. The candidate public is
+// byte-identical across the 0xA3-byte EH-bearing retail body before relocation.
+VA_COMPGEN(0x0045D370, 0xA3, TREE_CONST_ITERATOR_INC, type_map_hero_info)
+
 // E:\gamedcs\campaignbrief.cpp:1011
 // Exact checkpoint (2026-09-01): all 15 retail CFG blocks and all 399 bytes
 // match.  The DC-positive sequence is preserved: restore volume/music, copy

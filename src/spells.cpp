@@ -64,6 +64,7 @@
 #include "mousemgr.h"  // gpMouseManager, DoBolt's pointer hide/show
 #include "prefs.h"     // gUnnamed698758.combatSpeed, DoBolt's speed index
 #include "soundmgr.h"      // SAMPLE2 / LoadPlaySample / WaitEndSample
+#include "sample.h"        // Quicksand/Land Mine retained sample resources
 // ModifySpellDamage's four "the spell did more/less than the table row"
 // messages; textresource.h keeps those enumerators behind this view.
 #include "textresource.h"  // gpGeneralText
@@ -179,6 +180,24 @@ static long gTeleportHoverHex = -1;
 DATA(0x006a3cac)
 static unsigned char gTeleportSourcePicked;
 
+// CastSpell's projectile tables. Retail fixes the five-entry extents through
+// ShootAnimatedMissile's `nsprites` argument and Dreamcast lines 1028/1056
+// prove their source roles. The first row of each pair is visibly five image
+// pointers in retail; the second is five IEEE-754 angles.
+DATA(0x006421ec) extern const char* const gMagicArrowSprites[5];
+DATA(0x00642200) extern const float gMagicArrowAngles[5];
+
+// The two mastery-indexed placement counts immediately following the Magic
+// Arrow tables. CastSpell's retail switch reads the first for Quicksand and
+// the second for Land Mine; both rows are exactly {4, 4, 6, 8}.
+DATA(0x00642214)
+static const int gQuicksandCountByMastery[4] = { 4, 4, 6, 8 };
+DATA(0x00642224)
+static const int gLandMineCountByMastery[4] = { 4, 4, 6, 8 };
+
+DATA(0x00642234) extern const char* const gIceBoltSprites[5];
+DATA(0x00642248) extern const float gIceBoltAngles[5];
+
 #if 0 // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
 // E:\gamedcs\spells.cpp:97
@@ -210,11 +229,466 @@ unsigned char combatManager::check_fire_wall(long hex, army* current_army, unsig
 }
 
 // E:\gamedcs\spells.cpp:616
-DC_ONLY(0x14f7dc, 0x2366)
-void combatManager::CastSpell(SpellID spellId, int targetIndex, unsigned char bIsMonsterSpell, int secondaryIndex, TSkillMastery monster_skill, long monster_power)
+#endif  // @carcass
+
+VA(0x0059fe30, 0x2A4F)  // retail largest-unadmitted row, dc 0x14f7dc
+void combatManager::CastSpell(SpellID spellId, int targetIndex,
+                              unsigned char bIsMonsterSpell,
+                              int secondaryIndex, int monster_skill,
+                              long monster_power)
 {
-    // @stub
+    const int other_side = 1 - currentSide;
+    hero* casting_hero = bIsMonsterSpell == SPELL_CASTER_CREATURE
+        ? 0 : heroes[currentSide];
+    hero* const other_hero = heroes[other_side];
+    const SSpellTraits* traits = &akSpellTraits[spellId];
+
+    int mastery;
+    if (!bIsMonsterSpell) {
+        mastery = casting_hero->get_spell_level(spellId, field_53c0);
+    } else {
+        mastery = monster_skill;
+        if (field_53c0 == MAGIC_TERRAIN_MAGIC_PLAINS)
+            mastery = eMasteryExpert;
+    }
+
+    int mana_cost = 0;
+    if (!bIsMonsterSpell) {
+        if (!can_cast_spells(currentSide, 1)) {
+            sprintf(gText, gpGeneralText->GetText(542), casting_hero->name);
+            NormalDialog(gText, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            return;
+        }
+
+        if (other_hero
+            && other_hero->skillLevel[eSecSkillEagleEye] > eMasteryNone
+            && !other_hero->is_in_spellbook(spellId)
+            && other_hero->skillLevel[eSecSkillEagleEye] + 1
+                >= traits->level) {
+            if (Random(1, 100)
+                <= static_cast<int>(other_hero->GetEagleEyeChance()
+                                    * 100.0f))
+                eagleEyeData[other_side].spells.insert(spellId);
+        }
+
+        mana_cost = casting_hero->GetManaCost(spellId,
+                                              armyGroups[other_side],
+                                              field_53c0);
+        casting_hero->UseSpell(mana_cost);
+        field_54b4[currentSide] = 1;
+        if (gpGame->IsHuman(playerIds[currentSide]) && !field_13d74
+            && !static_cast<const combatManager*>(this)->IsQuickCombat())
+            combatWindow->WidgetSetStatus(0x7d8, 0x4008);
+    }
+
+    TurnOffSelector(1);
+    TurnOffHighlighter(1);
+
+    army* target;
+    if (ValidHex(targetIndex) && SpellTargetsASingleArmy(spellId, mastery))
+        target = find_spell_target(spellId, currentSide, targetIndex, 1,
+                                   bIsMonsterSpell);
+    else
+        target = 0;
+
+    int castX;
+    int castY;
+    if (!bIsMonsterSpell) {
+        monster_power = spellPower[currentSide];
+        if (traits->field_c & 4)
+            monster_power += casting_hero->GetSpellDurationBonus();
+    }
+
+    if (bIsMonsterSpell != SPELL_CASTER_CREATURE) {
+        int hero_row = akHeroClasses[casting_hero->heroClass].townType * 2
+            + akHeroTraits[casting_hero->id].sex;
+        if (currentSide == 0)
+            castX = kCombatHeroSprites[hero_row].castX - 43;
+        else
+            castX = creatureSprites[1]->GetWidth()
+                - kCombatHeroSprites[hero_row].castX + 693;
+        castY = kCombatHeroSprites[hero_row].castY - 19;
+
+        field_53e4[currentSide] = 4;
+        for (int frame = 0;
+             frame < kCombatHeroSprites[hero_row].castFrame; frame++) {
+            field_53ec[currentSide] = frame;
+            DrawFrame(1, 1, 0, 100, 1, 1);
+        }
+    } else {
+        army* caster = get_current_army();
+        if (!static_cast<const combatManager*>(this)->IsQuickCombat()) {
+            castX = caster->MidX();
+            castY = caster->MidY();
+        }
+    }
+
+    unsigned char redirected;
+    if (secondaryIndex != -1 && spellId != SPELL_TELEPORT
+        && spellId != SPELL_SACRIFICE) {
+        SpellEffect(akSpellTraits[SPELL_MAGIC_MIRROR].m_effect, target, 100,
+                    0);
+        target = find_spell_target(spellId, other_side, secondaryIndex, 0,
+                                   bIsMonsterSpell);
+        redirected = 1;
+    } else {
+        redirected = 0;
+    }
+
+    if (bIsMonsterSpell != SPELL_CASTER_CREATURE && target
+        && !SpellCastWorks(spellId, currentSide, target, redirected,
+                           bIsMonsterSpell))
+        return;
+
+    if (!static_cast<const combatManager*>(this)->IsQuickCombat())
+        launch_sample(traits->m_sample, -1, 3);
+
+    switch (spellId) {
+    case SPELL_QUICKSAND: {
+        const int nhexes = gQuicksandCountByMastery[mastery];
+        sample* sample2b;
+        if (!static_cast<const combatManager*>(this)->IsQuickCombat())
+            sample2b = ResourceManager::GetSample(
+                DATA_COMPGEN(0x006884a0, quicksandSampleName,
+                             "Quiksand.wav"));
+
+        TPickANumber picker(0, COMBAT_GRID_CELLS - 1);
+        for (int i = 0; i < nhexes; ++i) {
+            int hex;
+            for (;;) {
+                hex = picker.Pick();
+                if (hex < 0)
+                    goto quicksand_done;
+                if (!InInvisibleColumn(hex)
+                    && !(cells[hex].field_10 & 0x3f)
+                    && !cells[hex].HasArmy()
+                    && cells[hex].iBodiesInHex <= 0)
+                    break;
+            }
+
+            ds_memsample* place_sample;
+            if (!static_cast<const combatManager*>(this)->IsQuickCombat())
+                place_sample = gpSoundManager->MemorySample(sample2b);
+
+            SpellEffect(traits->m_effect, hex, 100, 1);
+
+            TObstacle new_quicksand;
+            new_quicksand.sprite =
+                ResourceManager::GetSprite(QuicksandInfo[0].spriteName);
+            new_quicksand.shape = &QuicksandInfo[0];
+            new_quicksand.hex = static_cast<unsigned char>(hex);
+            new_quicksand.owner = static_cast<signed char>(currentSide);
+            new_quicksand.is_visible = field_1329c[other_side];
+            new_quicksand.spell_damage = 0;
+            new_quicksand.field_10 = 0;
+            new_quicksand.field_14 = 0x3a;
+            obstacles.insert(obstacles.end, 1, new_quicksand);
+            int obstacle_slot = obstacles.size() - 1;
+            PlaceObstacle(&new_quicksand, obstacle_slot, hex, 4);
+            DrawFrame(1, 0, 0, 0, 1, 0);
+
+            if (!static_cast<const combatManager*>(this)->IsQuickCombat())
+                gpSoundManager->WaitSample(place_sample, -1);
+        }
+quicksand_done:
+        ShowSpellMessage(bIsMonsterSpell, spellId, 0);
+        if (!static_cast<const combatManager*>(this)->IsQuickCombat() && sample2b)
+            sample2b->Dispose();
+        break;
+    }
+
+    case SPELL_LAND_MINE: {
+        const int nhexes = gLandMineCountByMastery[mastery];
+        const int damage = ComputeSpellDamage(SPELL_LAND_MINE, monster_power,
+                                              mastery, 0, 0, 0, 0);
+        sample* sample2b;
+        if (!static_cast<const combatManager*>(this)->IsQuickCombat())
+            sample2b = ResourceManager::GetSample(
+                DATA_COMPGEN(0x00688490, landMineSampleName,
+                             "landmine.wav"));
+
+        TPickANumber picker(0, COMBAT_GRID_CELLS - 1);
+        for (int i = 0; i < nhexes; ++i) {
+            int hex;
+            for (;;) {
+                hex = picker.Pick();
+                if (hex < 0)
+                    goto landmine_done;
+                if (!InInvisibleColumn(hex)
+                    && !(cells[hex].field_10 & 0x3f)
+                    && !cells[hex].HasArmy()
+                    && cells[hex].iBodiesInHex <= 0)
+                    break;
+            }
+
+            ds_memsample* place_sample;
+            if (!static_cast<const combatManager*>(this)->IsQuickCombat())
+                place_sample = gpSoundManager->MemorySample(sample2b);
+
+            SpellEffect(traits->m_effect, hex, 100, 1);
+
+            TObstacle new_landmine;
+            new_landmine.sprite =
+                ResourceManager::GetSprite(LandMineInfo[0].spriteName);
+            new_landmine.shape = &LandMineInfo[0];
+            new_landmine.hex = static_cast<unsigned char>(hex);
+            new_landmine.owner = static_cast<signed char>(currentSide);
+            new_landmine.is_visible = field_1329c[other_side];
+            new_landmine.spell_damage = damage;
+            new_landmine.field_10 = 0;
+            new_landmine.field_14 = 0x3b;
+            obstacles.insert(obstacles.end, 1, new_landmine);
+            int obstacle_slot = obstacles.size() - 1;
+            PlaceObstacle(&new_landmine, obstacle_slot, hex, 8);
+            DrawFrame(1, 0, 0, 0, 1, 0);
+
+            if (!static_cast<const combatManager*>(this)->IsQuickCombat())
+                gpSoundManager->WaitSample(place_sample, -1);
+        }
+landmine_done:
+        ShowSpellMessage(bIsMonsterSpell, spellId, 0);
+        if (!static_cast<const combatManager*>(this)->IsQuickCombat() && sample2b)
+            sample2b->Dispose();
+        break;
+    }
+
+    case SPELL_FORCE_FIELD: {
+        SpellEffect((mastery >= eMasteryAdvanced) + 0x20, targetIndex,
+                    100, 1);
+        const TObstacleInfo* shape = &WallObstacleInfo[0];
+        if (mastery >= eMasteryAdvanced)
+            shape = &WallObstacleInfo[1];
+
+        TObstacle new_wall;
+        new_wall.sprite = ResourceManager::GetSprite(shape->spriteName);
+        new_wall.shape = shape;
+        new_wall.hex = static_cast<unsigned char>(targetIndex);
+        new_wall.owner = static_cast<signed char>(currentSide);
+        new_wall.is_visible = 1;
+        new_wall.spell_damage = 0;
+        new_wall.field_10 = 2;
+        new_wall.field_14 = (mastery >= eMasteryAdvanced) + 0x3c;
+        obstacles.insert(obstacles.end, 1, new_wall);
+        int obstacle_slot = obstacles.size() - 1;
+        PlaceObstacle(&new_wall, obstacle_slot, targetIndex, 0x22);
+        ShowSpellMessage(bIsMonsterSpell, spellId, 0);
+        break;
+    }
+
+    case SPELL_FIRE_WALL: {
+        const int damage = ComputeSpellDamage(SPELL_FIRE_WALL, monster_power,
+                                              mastery, 0, 0, 0, 0);
+        const int n_hexes = (mastery >= eMasteryAdvanced) + 2;
+        for (int i = 0; i < n_hexes; ++i) {
+            SpellEffect(traits->m_effect, targetIndex, 100, 1);
+
+            TObstacle new_wall;
+            new_wall.sprite =
+                ResourceManager::GetSprite(WallObstacleInfo[4].spriteName);
+            new_wall.shape = &WallObstacleInfo[4];
+            int hex = GetSpellWallHex(targetIndex, i, currentSide);
+            new_wall.hex = static_cast<unsigned char>(hex);
+            new_wall.owner = static_cast<signed char>(currentSide);
+            new_wall.is_visible = 1;
+            new_wall.spell_damage = damage;
+            new_wall.field_10 = 2;
+            new_wall.field_14 = 0x42;
+            obstacles.insert(obstacles.end, 1, new_wall);
+            int obstacle_slot = obstacles.size() - 1;
+            PlaceObstacle(&new_wall, obstacle_slot, hex, 0x10);
+            DrawFrame(1, 0, 0, 0, 1, 0);
+        }
+        ShowSpellMessage(bIsMonsterSpell, spellId, 0);
+        break;
+    }
+
+    case SPELL_EARTHQUAKE:
+        Earthquake(mastery);
+        break;
+
+    case SPELL_MAGIC_ARROW: {
+        if (!static_cast<const combatManager*>(this)->IsQuickCombat()) {
+            ShootAnimatedMissile(castX, castY, target->MidX(), target->MidY(),
+                                 5, gMagicArrowAngles,
+                                 gMagicArrowSprites);
+        }
+        int damage = ComputeSpellDamage(SPELL_MAGIC_ARROW, monster_power,
+                                        mastery, casting_hero, other_hero,
+                                        target, 1);
+        int deaths = target->Damage(damage);
+        target->bShowPowEffect = 1;
+        PowEffect(traits->m_effect, 1);
+        damage_message(traits->name, 1, damage, target, deaths);
+        CheckRebirth();
+        break;
+    }
+
+    case SPELL_ICE_BOLT: {
+        if (!static_cast<const combatManager*>(this)->IsQuickCombat()) {
+            ShootAnimatedMissile(castX, castY, target->MidX(), target->MidY(),
+                                 5, gIceBoltAngles, gIceBoltSprites);
+        }
+        int damage = ComputeSpellDamage(SPELL_ICE_BOLT, monster_power,
+                                        mastery, casting_hero, other_hero,
+                                        target, 1);
+        int deaths = target->Damage(damage);
+        SAMPLE2 iceray_sample;
+        if (!static_cast<const combatManager*>(this)->IsQuickCombat()) {
+            iceray_sample = LoadPlaySample(
+                DATA_COMPGEN(0x00688480, iceRaySampleName,
+                             "IceRayEx.wav"));
+            target->bShowPowEffect = 1;
+        }
+        PowEffect(traits->m_effect, 1);
+        if (!static_cast<const combatManager*>(this)->IsQuickCombat()) {
+            damage_message(traits->name, 1, damage, target, deaths);
+            WaitEndSample(iceray_sample, -1);
+        }
+        CheckRebirth();
+        break;
+    }
+
+    case SPELL_LIGHTNING_BOLT: {
+        SpellEffect(1, target, 10, 0);
+        int damage = ComputeSpellDamage(SPELL_LIGHTNING_BOLT, monster_power,
+                                        mastery, casting_hero, other_hero,
+                                        target, 1);
+        int deaths = target->Damage(damage);
+        target->bShowPowEffect = 1;
+        PowEffect(traits->m_effect, 1);
+        damage_message(traits->name, 1, damage, target, deaths);
+        CheckRebirth();
+        break;
+    }
+
+    case SPELL_IMPLOSION: {
+        int damage = ComputeSpellDamage(SPELL_IMPLOSION, monster_power,
+                                        mastery, casting_hero, other_hero,
+                                        target, 1);
+        int deaths = target->Damage(damage);
+        target->bShowPowEffect = 1;
+        PowEffect(traits->m_effect, 1);
+        damage_message(traits->name, 1, damage, target, deaths);
+        CheckRebirth();
+        break;
+    }
+
+    case SPELL_CHAIN_LIGHTNING:
+        ChainLightning(target->gridIndex, mastery, monster_power);
+        CheckRebirth();
+        break;
+
+    case SPELL_FROST_RING:
+        AreaEffect(targetIndex, SPELL_FROST_RING, mastery, monster_power);
+        break;
+
+    case SPELL_FIREBALL:
+        AreaEffect(targetIndex, SPELL_FIREBALL, mastery, monster_power);
+        break;
+
+    case SPELL_INFERNO:
+        AreaEffect(targetIndex, SPELL_INFERNO, mastery, monster_power);
+        break;
+
+    case SPELL_METEOR_SHOWER:
+        AreaEffect(targetIndex, SPELL_METEOR_SHOWER, mastery, monster_power);
+        break;
+
+    case SPELL_DEATH_RIPPLE: {
+        ShowSpellMessage(0, SPELL_DEATH_RIPPLE, 0);
+        ClearEffects();
+        unsigned char bAnyEffects = 0;
+        unsigned char multiple_victims = 0;
+        int damage;
+        for (int iGroup = 0; iGroup < 2; ++iGroup) {
+            for (int iIndex = 0; iIndex < numArmies[iGroup]; ++iIndex) {
+                army* targetArmy = &armies[iGroup][iIndex];
+                if (Random(1, 100)
+                    <= static_cast<long>(SpellCastWorkChance(
+                        SPELL_DEATH_RIPPLE, currentSide, targetArmy, 0, 1,
+                        bIsMonsterSpell) * 100.0f)) {
+                    effected[iGroup][iIndex] = 1;
+                    damage = ComputeSpellDamage(
+                        SPELL_DEATH_RIPPLE, monster_power, mastery,
+                        casting_hero, targetArmy->get_controller(),
+                        targetArmy, 0);
+                    targetArmy->Damage(damage);
+                    if (bAnyEffects)
+                        multiple_victims = 1;
+                    bAnyEffects = 1;
+                }
+            }
+        }
+        if (!static_cast<const combatManager*>(this)->IsQuickCombat()) {
+            if (!multiple_victims && bAnyEffects) {
+                sprintf(gText, gpGeneralText->GetText(188), damage);
+            } else {
+                damage = ComputeSpellDamage(
+                    SPELL_DEATH_RIPPLE, monster_power, mastery,
+                    casting_hero, 0, 0, 0);
+                sprintf(gText, gpGeneralText->GetText(188), damage);
+            }
+            combatWindow->combat_message(gText, 1, 0);
+        }
+        if (bAnyEffects)
+            ShowMassSpell(effected, traits->m_effect, 1);
+        DrawFrame(1, 0, 0, 0, 1, 0);
+        CheckRebirth();
+        break;
+    }
+
+    case SPELL_DESTROY_UNDEAD: {
+        ShowSpellMessage(0, SPELL_DESTROY_UNDEAD, 0);
+        ClearEffects();
+        unsigned char bAnyEffects = 0;
+        unsigned char multiple_victims = 0;
+        int damage;
+        for (int iGroup = 0; iGroup < 2; ++iGroup) {
+            for (int iIndex = 0; iIndex < numArmies[iGroup]; ++iIndex) {
+                army* targetArmy = &armies[iGroup][iIndex];
+                if (Random(1, 100)
+                    <= static_cast<long>(SpellCastWorkChance(
+                        SPELL_DESTROY_UNDEAD, currentSide, targetArmy, 0, 1,
+                        bIsMonsterSpell) * 100.0f)) {
+                    effected[iGroup][iIndex] = 1;
+                    damage = ComputeSpellDamage(
+                        SPELL_DESTROY_UNDEAD, monster_power, mastery,
+                        casting_hero, targetArmy->get_controller(),
+                        targetArmy, 0);
+                    targetArmy->Damage(damage);
+                    if (bAnyEffects)
+                        multiple_victims = 1;
+                    bAnyEffects = 1;
+                }
+            }
+        }
+        if (bAnyEffects)
+            ShowMassSpell(effected, traits->m_effect, 1);
+        if (!static_cast<const combatManager*>(this)->IsQuickCombat()) {
+            if (!multiple_victims && bAnyEffects) {
+                sprintf(gText, gpGeneralText->GetText(187), traits->name,
+                        damage);
+            } else {
+                damage = ComputeSpellDamage(
+                    SPELL_DESTROY_UNDEAD, monster_power, mastery,
+                    casting_hero, 0, 0, 0);
+                sprintf(gText, gpGeneralText->GetText(187), traits->name,
+                        damage);
+            }
+            combatWindow->combat_message(gText, 1, 0);
+            DrawFrame(1, 0, 0, 0, 1, 0);
+        }
+        CheckRebirth();
+        break;
+    }
+
+    case SPELL_ARMAGEDDON:
+        Armageddon(mastery, monster_power);
+        break;
+    }
 }
+
+#if 0 // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
 // E:\gamedcs\spells.cpp:1807
 DC_ONLY(0x151b44, 0x310)
@@ -568,9 +1042,9 @@ unsigned char combatManager::ValidSpellTarget(SpellID spellId, long mastery,
                 return 0;
         }
     } else if (spellId == SPELL_FORCE_FIELD) {
-        const type_obstacle_shape* shape = &kSpellObstacleShapes[0];
+        const TObstacleInfo* shape = &WallObstacleInfo[0];
         if (mastery >= eMasteryAdvanced)
-            shape = &kSpellObstacleShapes[1];
+            shape = &WallObstacleInfo[1];
         long odd_row = (targetIndex / COMBAT_GRID_ROW_STRIDE) & 1;
         long wall_cells = shape->extra_hex_count;
         for (long i = 0; i < wall_cells; i++) {

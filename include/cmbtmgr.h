@@ -335,71 +335,19 @@ enum ECombatMineType {
     COMBAT_MINE_TYPE_6 = 6
 };
 
-// The shape record an obstacle's TObstacle points at (TObstacle+0x4).
-// Byte-proven by PlaceObstacle (0x4669b0) and RemoveObstacle
-// (0x466b30), which both read the unsigned count at +0x6 and then walk
-// that many SIGNED byte hex offsets from +0x8. Everything below +0x6
-// stays padded, and the trailing array is the usual count-follows
-// idiom - nothing decoded so far bounds it. Name is a BOOTSTRAP
-// INVENTION; the DC roster only attests the owning combatManager::
-// TObstacle.
-// One row of the obstacle table at .rdata 0x63c7c8. place_obstacle
-// (0x466010) proves the 20-byte stride outright - it forms the row base
-// as `4 * (5 * id) + table` - and reads the two placement bounds at +4/+5
-// and the sprite name at +0x10 out of the same row it stores into
-// TObstacle::shape.
 // The eighteen combat hero animations, keyed `2 * townType + sex`.
 // Retail .rdata 0x63bd40; LoadIcons' `shl eax, 4` proves the 16-byte
-// stride and only the .def name is read, so the trailing three dwords
-// keep ordinal names (their retail values are a plausible draw offset
-// pair plus a small count). DC types the row combatManager::SCmbtHero
+// stride. CastSpell reads all three trailing dwords as the cast origin
+// and animation length. DC independently types the row combatManager::SCmbtHero
 // {SpriteName, castX, castY, castFrame}; the retail table is 18 rows
 // where the Dreamcast's is 16.
 struct TCombatHeroSprite {
     const char* defName;
-    int field_04;
-    int field_08;
-    int field_0c;
+    int castX;
+    int castY;
+    int castFrame;
 };
 DATA(0x0063bd40) extern const TCombatHeroSprite kCombatHeroSprites[18];
-
-struct type_obstacle_shape {
-    char pad_00[0x4];
-    // The lowest grid ROW this obstacle may be anchored in, and the
-    // number of columns it needs to the right of its anchor: retail
-    // rejects a candidate hex when `minRow > hex / 17` or when
-    // `width + hex % 17 > 15`. Names describe those two tests.
-    unsigned char minRow;             // +0x4
-    unsigned char width;              // +0x5
-    unsigned char extra_hex_count;    // +0x6
-    // DC TObstacleInfo::underlay. DrawFrame independently proves the byte:
-    // non-zero shapes are drawn in the pre-unit pass, zero shapes in draw
-    // priority 2.
-    unsigned char underlay;
-    signed char extra_hex_offsets[8]; // +0x8, extra_hex_count entries
-    const char* spriteName;           // +0x10
-};
-
-// THE FIVE SPELL-PLACED OBSTACLE SHAPES, .rdata 0x63cf18, and they are
-// type_obstacle_shape rows exactly - same 20-byte stride, same unsigned
-// count at +6 followed by that many signed byte offsets at +8, same
-// sprite name at +0x10. combatManager::ValidSpellTarget (0x5a39c0)
-// reaches rows 0 and 1 by ADDRESS (two absolute immediates 20 bytes
-// apart), which is what fixes the base; the five rows read
-//     0  minRow 3, 2 hexes { 0, -16 }       C15spE1.def
-//     1  minRow 4, 3 hexes { 0, -16, -34 }  C15spE10.def
-//     2  minRow 3, 2 hexes { 0, -16 }       C07spF1.def
-//     3  minRow 4, 3 hexes { 0, -16, -34 }  C07spF10.def
-//     4  minRow 3, 1 hex   { 0 }            C07spF61.def
-// - a basic/expert pair per wall spell plus a single-hex mine, and the
-// dwords after row 4 are a float 1.0f, so the table ends there. This is
-// NOT the big obstacle catalogue at 0x63c7c8: that one's rows sit on a
-// different 20-byte phase, so the two tables are distinct. The name is a
-// bootstrap invention, like type_obstacle_shape's own. Behind the spells
-// view because src/spells.cpp is its only consumer.
-    // UNGATED 2026-08-20 by the view audit: these are the spells.obj declarations,
-    // byte-proven from reconstructed bodies, so they are declared for everyone.
-DATA(0x0063cf18) extern const type_obstacle_shape kSpellObstacleShapes[5];
 
 // Head model from the byte-proven leaves. The battlefield holds two
 // sides of 21 army slots (20 used - ResetHitByCreature clears exactly
@@ -486,15 +434,31 @@ public:
         eWallSectionUpperTowerCover = 17,
         kNumWallSections = 18
     };
-    // Retail obstacle-catalogue prefix. PlaceAllObstacles reads the two
-    // unsigned masks at +0/+2 from 20-byte rows; the remaining sixteen
-    // bytes are not needed by that function and stay opaque here.
+    // The exact Dreamcast nested record. Retail independently proves the
+    // whole 20-byte layout across PlaceAllObstacles, place_obstacle,
+    // PlaceObstacle, RemoveObstacle and DrawFrame: the catalogue masks are
+    // at +0/+2, placement bounds at +4/+5, signed occupied-hex offsets at
+    // +8, and the sprite name at +0x10.
     struct TObstacleInfo {
         unsigned short terrain_mask;
         unsigned short special_terrain_mask;
-        unsigned char opaque_04[0x10];
+        unsigned char minRow;
+        unsigned char width;
+        unsigned char extra_hex_count;
+        unsigned char underlay;
+        signed char extra_hex_offsets[8];
+        const char* spriteName;
     };
+private:
     static const TObstacleInfo ObstacleInfo[];
+    // Dreamcast records all four as private static arrays. Their raw MSVC
+    // names (`@@0QBU...`) independently distinguish this declaration from
+    // both a singleton object and a public static member. Retail fixes the
+    // first elements at 0x63cee8, 0x63cf00 and 0x63cf18 respectively.
+    static const TObstacleInfo QuicksandInfo[];
+    static const TObstacleInfo LandMineInfo[];
+    static const TObstacleInfo WallObstacleInfo[];
+public:
 
     // Separate 68-byte catalogue used for large battlefield features.
     // PlaceLargeObstacle reads the two masks and up to 25 signed-short
@@ -576,7 +540,7 @@ public:
         // RemoveObstacle calls vtable slot 1 on it with no arguments
         // and then clears the slot - CSprite's slot 1 is Dispose().
         CSprite* sprite;                    // +0x0
-        const type_obstacle_shape* shape;   // +0x4
+        const TObstacleInfo* shape;         // +0x4
         unsigned char hex;                  // +0x8
         // DC CodeView names these owner/is_visible. Retail independently
         // fixes both offsets: searchArray::set_moat (0x4b3290) marks an
@@ -1559,6 +1523,28 @@ public:
     {
         return index % COMBAT_GRID_ROW_STRIDE;
     }
+    // Dreamcast's spells.cpp helper. CastSpell calls this boundary while
+    // placing Fire Wall segments; retail VC6 expands it into the row-parity
+    // ladder, so no standalone Complete body is required by that caller.
+    enum ESpellWallRowOffset {
+        SPELL_WALL_SECOND_ROW = 2
+    };
+    int GetSpellWallHex(int base_index, int row_offset, int side)
+    {
+        if (row_offset == 1) {
+            int hex = base_index - COMBAT_GRID_ROW_STRIDE;
+            if ((base_index / COMBAT_GRID_ROW_STRIDE) & 1) {
+                if (side == 1)
+                    --hex;
+            } else if (side == 0) {
+                ++hex;
+            }
+            return hex;
+        }
+        if (row_offset == SPELL_WALL_SECOND_ROW)
+            return base_index - 2 * COMBAT_GRID_ROW_STRIDE;
+        return base_index;
+    }
     // DC header inline (cmbtmgr.h:1525, dc 0x27f64). mark_teleport's
     // retail expansion retains the ValidHex bounds checks and the two
     // invisible edge columns, 0 and 16 of each 17-cell row.
@@ -1601,6 +1587,10 @@ public:
     // header inlines army::Is / get_current_army / the adventure-menu
     // caller). Its own claim waits for the TU that owns 0x477e10.
     void TurnOffHighlighter(unsigned char restore);           // 0x477e10
+    // Public command helpers also used by spells.cpp's CastSpell. Their
+    // retail cross-TU calls refute the former command-only declaration view.
+    void CheckChangeSelector();                               // 0x477ac0
+    void TurnOffSelector(unsigned char drawIt);               // 0x477b60
     // 0x46a520 (68 B), army::simple_move's second call: it zeroes a
     // 187-byte per-hex row at this + 0x14031 with a `rep stosd` of 46
     // dwords plus a word plus a byte - the cell count exactly - and
@@ -2523,8 +2513,6 @@ public:
     void ResetRound();
     void auto_resolve_combat();
     int CheckWin(message* msg);
-    void CheckChangeSelector();
-    void TurnOffSelector(unsigned char drawIt);
     void CheckChangeHighlighter(int currentIndex);
     unsigned char process_move_then_attack(message* msg);
     void process_first_aid(army* currentArmy);
@@ -2650,11 +2638,6 @@ extern const char* const gTerrainCombatBackgrounds[9][3];    // 0x63d2f0
 // referenced address independently; indexing by ten shorts preserves
 // the common 20-byte stride.
 DATA(0x0063c7c8) extern const unsigned short gObstacleTerrainMasks[];
-// The same 0x63c7c8 table, typed as its 20-byte rows. The DATA claim for
-// the rva is the shorts view above, so this alias carries none - the only
-// delta it can produce is a reloc NAME.
-extern const type_obstacle_shape gObstacleShapes[];
-
 // One spell-effect row, at .rdata 0x641e08 with a TWELVE-byte stride.
 // Two retail bodies fix the layout between them and neither needs the
 // other: LoadSpellEffect (0x5a92f0) forms `[12*effect + 0x641e08]` and
@@ -2704,14 +2687,6 @@ DATA(0x0063bd18) extern const int gMoatDamage[];
 // text loader and indexed by defendingTown->type in the retail-only moat
 // worker at 0x469e50. Name is a BOOTSTRAP INVENTION.
 DATA(0x006a5d60) extern const char* gMoatDamageMessages[9];
-
-// The standalone 20-byte obstacle shape the Tower's moat mines are
-// built from, at .rdata 0x63cf00 - not a row of gObstacleShapes but a
-// singleton, and its spriteName points at "C09spF1.def". Retail takes
-// its address whole (`push 0x63cf00`) into TObstacle::shape and loads
-// [0x63cf10] for the sprite name, which is +0x10, the struct's own
-// spriteName slot. Name is a BOOTSTRAP INVENTION.
-DATA(0x0063cf00) extern const type_obstacle_shape gLandMineShape;
 
 // The thirty-two hexes two facing boats occupy, at .rdata 0x63d368.
 // SetupAndLoadObstacles walks it as a POINTER and ends the walk on the

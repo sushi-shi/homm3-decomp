@@ -692,7 +692,6 @@ rva	size	unit	current_label	provenance
 0x18a780	698	singleselectionwindow	?OnGameHeaderInfoInitMsgEx@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	src-VA+base
 0x18ba40	373	singleselectionwindow	?OnUpdatePlayerPosMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	src-VA+base
 0x18bce0	1455	singleselectionwindow	TSingleSelectionWindow_OnBeginGame	src-VA
-0x18c290	722	singleselectionwindow	TSingleSelectionWindow_BeginSavedGame	src-VA
 0x18c570	999	singleselectionwindow	TSingleSelectionWindow_BeginNewGame	src-VA
 0x18cbf0	338	singleselectionwindow	?TurnChatOff@TSingleSelectionWindow@@QAEXE@Z	src-VA+base
 0x18dfb0	800	singleselectionwindow	?OnDeleteFile@TSingleSelectionWindow@@QAEXXZ	src-VA+base
@@ -703,6 +702,13 @@ rva	size	unit	current_label	provenance
 0x19a6b0	275	soundmgr	?WaitEndSampleThread@@YAXPAX@Z	src-VA+ir
 0x19a7d0	81	soundmgr	?service_sounds@soundManager@@QAEXXZ	src-VA+ir
 0x19c8c0	33	spellbookwindow	??_GTSpellbookWindow@@UAEPAXI@Z	src-VA+base
+0x1a2880	981	spells	game_1a2c60_sub00_1a2880	working-label
+0x1a2c60	155	spells	game_19f700_sub01_1a2c60	working-label
+0x1a2d00	388	spells	game_19ec50_sub02_1a2d00	working-label
+0x1a2e90	468	spells	game_19ec50_sub03_1a2e90	working-label
+0x1a3070	472	spells	game_19ec50_sub04_1a3070	working-label
+0x1a3250	796	spells	game_19ec50_sub05_1a3250	working-label
+0x1a3570	388	spells	game_19ec50_sub06_1a3570	working-label
 0x1a3950	104	spells	?find_spell_target@combatManager@@QAEPAVarmy@@HJJEJ@Z	src-VA+ir
 0x1a3c80	58	spells	?ValidSpellTargetArmy@combatManager@@QAEEHHPBVarmy@@EJ@Z	src-VA+ir
 0x1a3cc0	373	spells	?find_resurrection_target@combatManager@@QAEPAVarmy@@HHJ@Z	src-VA+ir

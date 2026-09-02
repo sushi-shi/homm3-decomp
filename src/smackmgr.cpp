@@ -24,6 +24,8 @@
 #include "bitmap16.h"
 #include "message.h"
 
+struct SoundHeaderStruct;
+
 // The Smack/Bink handle views and the smackw32/binkw32 dllimport
 // surface live in smackmgr.h / binkmanager.h; the underscored import
 // names alias back to the radlib spellings here.
@@ -56,13 +58,31 @@ DATA(0x0069fe00) int gSmackX;                      // blit origin on the screen 
 DATA(0x0069fe04) int gSmackY;
 DATA(0x0069fe18) int gSmackPaused;
 DATA(0x0069fe20) unsigned long gSmackBufferFlags;  // SMACKBUFFER555/565
-DATA(0x0069fe30) int gVideoPixelFormat;            // VIDEO_PIXEL_FORMAT_RGB565 screen
+DATA(0x0069fddc) int RedShift;
+DATA(0x0069fdd8) int RedBits;
+DATA(0x0069fe40) int GreenShift;
+DATA(0x0069fe30) int GreenBits;
+DATA(0x0069fde8) int BlueShift;
+DATA(0x0069fe38) int BlueBits;
 DATA(0x0069fe44) int gVideoPauseCount;
 DATA(0x0069fe48) HANDLE gVideoFile1;               // VideoShutDown's CloseHandle trio
 DATA(0x0069fe4c) HANDLE gVideoFile2;
 DATA(0x0069fe50) HANDLE gVideoFile3;
 DATA(0x0069fe54) int gInVideoNextFrame;            // reentry latch
 DATA(0x0069fe5c) unsigned char gSmackFrameReady;   // SmackDoFrame is allowed
+
+// Dreamcast proves the first two file/header pairs and their types in
+// DeleteSoundHeaders (dc 0x14acc8). Complete's retail loader at 0x5984a0
+// adds a third archive built from the active campaign name. The retail
+// teardown below independently proves all six addresses and the sentinel
+// states: file handles live in .data as INVALID_HANDLE_VALUE; header arrays
+// live in .bss as null pointers.
+DATA(0x00682e80) HANDLE SoundFile = INVALID_HANDLE_VALUE;
+DATA(0x0069d848) SoundHeaderStruct* SoundHeader;
+DATA(0x00682e7c) HANDLE SoundFileCD = INVALID_HANDLE_VALUE;
+DATA(0x0069d850) SoundHeaderStruct* SoundHeaderCD;
+DATA(0x00682e84) HANDLE SoundFileCampaign = INVALID_HANDLE_VALUE;
+DATA(0x0069d84c) SoundHeaderStruct* SoundHeaderCampaign;
 
 // E:\gamedcs\smackmgr.cpp:75
 VA(0x005971b0, 0x3B)  // anchor-global, dc 0x14ac30
@@ -108,7 +128,7 @@ void VideoSoundOnOff()
 VA(0x005971f0, 0xD9)  // anchor-global, dc 0x14ac34
 void VideoRealignBuffers()
 {
-    gSmackBufferFlags = (gVideoPixelFormat == VIDEO_PIXEL_FORMAT_RGB565)
+    gSmackBufferFlags = (GreenBits == VIDEO_PIXEL_FORMAT_RGB565)
                             ? SMACKBUFFER565 : SMACKBUFFER555;
     if (gSmackVideo)
         SmackToBuffer(gSmackVideo, gSmackX, gSmackY,
@@ -567,6 +587,82 @@ void VideoShutDown()
     gVideoFile3 = 0;
 }
 
+// E:\gamedcs\smackmgr.cpp:631. Dreamcast proves the alternating
+// handle-close / header-delete statement groups for the base and CD pairs
+// (dc 0x14acc8, 9 blocks). Retail Complete repeats that source shape for the
+// campaign archive and fixes the order and addresses of all three pairs.
+VA(0x005986e0, 0xA2)
+void DeleteSoundHeaders()
+{
+    if (SoundFile != INVALID_HANDLE_VALUE) {
+        CloseHandle(SoundFile);
+        SoundFile = INVALID_HANDLE_VALUE;
+    }
+    if (SoundHeader) {
+        delete[] SoundHeader;
+        SoundHeader = 0;
+    }
+    if (SoundFileCD != INVALID_HANDLE_VALUE) {
+        CloseHandle(SoundFileCD);
+        SoundFileCD = INVALID_HANDLE_VALUE;
+    }
+    if (SoundHeaderCD) {
+        delete[] SoundHeaderCD;
+        SoundHeaderCD = 0;
+    }
+    if (SoundFileCampaign != INVALID_HANDLE_VALUE) {
+        CloseHandle(SoundFileCampaign);
+        SoundFileCampaign = INVALID_HANDLE_VALUE;
+    }
+    if (SoundHeaderCampaign) {
+        delete[] SoundHeaderCampaign;
+        SoundHeaderCampaign = 0;
+    }
+}
+
+// E:\gamedcs\smackmgr.cpp:811. The Dreamcast dossier (dc 0x14ad24)
+// proves the three unsigned masks, the shift-count pass followed by the
+// bit-count pass, and all six named globals. Retail independently preserves
+// that statement order and lowers it to this 0xA2-byte fastcall body.
+VA(0x00598a40, 0xA2)
+void SmackManager::SetPixelFormat(unsigned long red_mask,
+                                  unsigned long green_mask,
+                                  unsigned long blue_mask)
+{
+    RedShift = 0;
+    while (!(red_mask & 1) && red_mask) {
+        ++RedShift;
+        red_mask >>= 1;
+    }
+    RedBits = 0;
+    while (red_mask) {
+        ++RedBits;
+        red_mask >>= 1;
+    }
+
+    GreenShift = 0;
+    while (!(green_mask & 1) && green_mask) {
+        ++GreenShift;
+        green_mask >>= 1;
+    }
+    GreenBits = 0;
+    while (green_mask) {
+        ++GreenBits;
+        green_mask >>= 1;
+    }
+
+    BlueShift = 0;
+    while (!(blue_mask & 1) && blue_mask) {
+        ++BlueShift;
+        blue_mask >>= 1;
+    }
+    BlueBits = 0;
+    while (blue_mask) {
+        ++BlueBits;
+        blue_mask >>= 1;
+    }
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\smackmgr.cpp:535
@@ -586,20 +682,6 @@ void DeleteAnimHeaders()
 // E:\gamedcs\smackmgr.cpp:585
 DC_ONLY(0x14aca0, 0x26)
 unsigned char LoadSoundHeaders()
-{
-    // @stub
-}
-
-// E:\gamedcs\smackmgr.cpp:631
-DC_ONLY(0x14acc8, 0x5A)
-void DeleteSoundHeaders()
-{
-    // @stub
-}
-
-// E:\gamedcs\smackmgr.cpp:811
-DC_ONLY(0x14ad24, 0xD8)
-void SmackManager::SetPixelFormat(unsigned long red_mask, unsigned long green_mask, unsigned long blue_mask)
 {
     // @stub
 }

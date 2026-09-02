@@ -72,7 +72,6 @@ public:
     int Width;
     int Height;
 
-#if defined(HOMM3_DRAWING_ARCHER_DECLS) || defined(HOMM3_ARMY_RANGE_VIEW)
     // CSprite.h:145. DrawWallAt expands this DC header accessor at its
     // archer site; the retail load is the Width dword above.
     int GetWidth() const { return Width; }
@@ -80,7 +79,6 @@ public:
     // targeted spell animation; Dreamcast retains out-of-line copies of
     // both accessors while retail VC6 folds them to the two dword loads.
     int GetHeight() const { return Height; }
-#endif
 
     CSprite(const char* name, int sprtype, int w, int h);
     void AllocateSeq(int seqnum, int numFrames);
