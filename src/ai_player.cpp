@@ -6592,9 +6592,14 @@ void AI_swap_artifacts(hero* source, hero* dest)
 }
 
 // Complete keeps the DC artifact-effect class boundaries but expands these
-// tiny construction helpers into AI_initialize.  The retained
-// type_combat_artifact constructor is still called at the three nested-base
-// sites selected by VC6's /Ob2 budget.
+// tiny construction helpers into initialize_artifact_effects. DC also proves
+// the explicit type_artifact_effect default constructor (line 5043); spelling
+// it here is byte-flat but preserves that real source/inliner boundary.
+// Retail retains type_combat_artifact at four later nested-base sites.
+inline type_artifact_effect::type_artifact_effect()
+{
+}
+
 inline type_scouting_artifact::type_scouting_artifact(long new_bonus)
     : bonus(new_bonus)
 {
@@ -6709,27 +6714,44 @@ inline type_income_artifact::type_income_artifact(
 {
 }
 
-inline EArtifactEffectKind artifact_effect_kind_from_int(int value)
+static void initialize_artifact_effects();
+
+// DC's AI_initialize loop calls type_AI_player::init for nine records and
+// then initialize_artifact_effects. Complete's cmp/jl proves eight records.
+// Retail independently proves the helper boundary: the 0x20-byte entry ends
+// in a tail jump, followed by four alignment NOPs, and 0x434100 starts a fresh
+// EBP frame. The candidate emits the same loop and relocation sequence.
+// E:\gamedcs\ai_player.cpp:6096
+VA(0x004340e0, 0x20)  // exact loop/tail boundary + DC helper, dc 0x37c38
+void AI_initialize()
 {
-    EArtifactEffectKind kind;
-    memcpy(&kind, &value, sizeof kind);
-    return kind;
+    for (short i = 0; i < 8; ++i)
+        gAIPlayers[i].init(i);
+    initialize_artifact_effects();
 }
 
 // Retail .rdata 0x63ac7c is a sentinel-delimited stream: artifact id,
 // effect-kind/arguments..., -1, repeated, and a final -1.  The switch and
-// every argument-consumption site are directly visible in 0x4340e0.
-// DC keeps this as initialize_artifact_effects (dc 0x35f08); Complete's
-// single caller expands it into AI_initialize.
+// every argument-consumption site are directly visible in the separately
+// framed 0x434100 body. DC names the same helper at 0x35f08 and places a
+// vector::clear before the inner loop; restoring that statement raises this
+// body from 86.90% to 91.95%. Flattening the helper into AI_initialize
+// measured 84.09% only because the old retail inventory incorrectly
+// coalesced both functions, and is the boundary negative control. The one
+// remaining extra CFG block is a retained type_combat_artifact call in our
+// necromancy arm; inline_depth(255) and force-inlining the outer constructor
+// were byte-flat, while inline-qualifying the shared base over-expanded later
+// retail call sites and fell to 76.42%, so no synthetic control is retained.
+VA(0x00434100, 0x490)  // tail target/fresh frame + DC helper, dc 0x35f08
 static void initialize_artifact_effects()
 {
     const int* definition = gAIArtifactEffectDefinitions;
     while (*definition >= 0) {
         std::vector<type_artifact_effect*>& effects =
             const_artifact_effects[*definition++];
+        effects.clear();
         while (*definition >= 0) {
-            EArtifactEffectKind kind =
-                artifact_effect_kind_from_int(*definition++);
+            EArtifactEffectKind kind = (EArtifactEffectKind)*definition++;
             type_artifact_effect* effect;
             switch (kind) {
                 case ARTIFACT_EFFECT_MIGHT:
@@ -6767,7 +6789,7 @@ static void initialize_artifact_effects()
                     break;
                 case ARTIFACT_EFFECT_SCHOOL:
                     effect = new type_school_artifact(
-                        spell_school_from_int(*definition++), *definition++);
+                        (TSpellSchool)*definition++, *definition++);
                     break;
                 case ARTIFACT_EFFECT_ANTIMAGIC:
                     effect = new type_antimagic_artifact(*definition++);
@@ -6780,11 +6802,11 @@ static void initialize_artifact_effects()
                     break;
                 case ARTIFACT_EFFECT_TOME:
                     effect = new type_tome_artifact(
-                        spell_school_from_int(*definition++));
+                        (TSpellSchool)*definition++);
                     break;
                 case ARTIFACT_EFFECT_INCOME:
                     effect = new type_income_artifact(
-                        *definition++, game_resource_from_int(*definition++));
+                        *definition++, (EGameResource)*definition++);
                     break;
                 case ARTIFACT_EFFECT_CREATURE_GROWTH:
                     effect = new type_creature_growth_artifact(
@@ -6792,7 +6814,7 @@ static void initialize_artifact_effects()
                     break;
                 case ARTIFACT_EFFECT_SPELL:
                     effect = new type_spell_artifact(
-                        spell_id_from_int(*definition++));
+                        (SpellID)*definition++);
                     break;
                 case ARTIFACT_EFFECT_SHOOTER_BONUS:
                     effect = new type_shooter_bonus_artifact(*definition++);
@@ -6814,24 +6836,6 @@ static void initialize_artifact_effects()
         }
         ++definition;
     }
-}
-
-// DC's AI_initialize loop calls type_AI_player::init for nine records and
-// then initialize_artifact_effects. Complete's cmp/jl proves eight records,
-// extends the effect table to 144 vector rows, and tail-jumps to the retained
-// helper at 0x434100.
-// Residual (2.28%): the retail carve coalesces this 32-byte entry with that
-// internal tail target, while candidate COMDATs retain the DC-proven helper as
-// a separate symbol. Negative controls: inline, __forceinline and
-// inline_depth(255) all stayed out of line; merging the helper reached 84.09%
-// but contradicted both the DC boundary and retail's helper prologue.
-// E:\gamedcs\ai_player.cpp:6096
-VA(0x004340e0, 0x4B0)  // unique artifact vtable/config stream + DC helpers, dc 0x37c38
-void AI_initialize()
-{
-    for (short i = 0; i < 8; ++i)
-        gAIPlayers[i].init(i);
-    initialize_artifact_effects();
 }
 
 // DC proves the nested vector walk, virtual delete and clear sequence;

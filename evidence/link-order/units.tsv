@@ -1,6 +1,6 @@
 # generator: homm3.analysis.link_order
 # exe: HEROES3.EXE sha256=057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274 size=2732032
-# date: 2026-09-01
+# date: 2026-09-02
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 unit	first_rva	end_rva	span	anchors	residents	fns_in_span	claimed	unclaimed
 adventuremapwindow	0x2450	0x40a4	7252	20	1	26	20	6
@@ -9,7 +9,7 @@ advmgr	0x5de0	0x1b247	87143	103	2	117	103	14
 advspells	0x1c2f0	0x1c482	402	1	0	1	1	0
 ai	0x1eac0	0x224d9	14873	29	0	33	29	4
 ai_combat	0x23c80	0x276bf	14911	35	1	35	35	0
-ai_player	0x280e0	0x340d5	49141	67	4	115	67	48
+ai_player	0x280e0	0x345f2	50450	70	4	118	70	48
 ai_tactical	0x35830	0x3cb08	29400	86	0	89	86	3
 army	0x3d540	0x48d1b	47067	61	1	93	61	32
 armygrp	0x496a0	0x4c606	12134	33	0	36	33	3
@@ -26,7 +26,7 @@ campaignmap	0x5dee0	0x5e1f0	784	1	0	1	1	0
 campaignwindow	0x5ea40	0x5f55c	2844	4	0	6	4	2
 castle	0x610e0	0x6118c	172	2	0	2	2	0
 cmbtmgr	0x62760	0x6a511	32177	61	0	75	61	14
-combatcontrolsubwindow	0x6b610	0x6dc2b	9755	13	0	21	13	8
+combatcontrolsubwindow	0x6b610	0x6dc2b	9755	16	0	21	16	5
 combatoptionswindow	0x6e3b0	0x6feda	6954	4	0	5	4	1
 combatresultswindow	0x702d0	0x71c14	6468	6	0	7	6	1
 combatwindow	0x72010	0x732e2	4818	10	0	20	10	10
@@ -36,7 +36,7 @@ creaturetype	0x7b120	0x7b211	241	3	0	3	3	0
 csequence	0x7b840	0x7b8c6	134	3	0	3	3	0
 csprite	0x7b920	0x7c23c	2332	23	0	24	23	1
 cspriteframe	0x7c2b0	0x7d09c	3564	5	0	7	5	2
-cursor	0x7ffe0	0x7fffa	26	1	0	1	1	0
+cursor	0x7f7d0	0x82385	11189	16	0	17	16	1
 customcampaign	0x8b200	0x8b2d7	215	2	0	2	2	0
 dialogbox	0x8fdc0	0x90b67	3495	10	0	12	10	2
 diff	0x90f60	0x912ff	927	4	0	4	4	0
@@ -62,15 +62,15 @@ inputmgr	0xec0e0	0xeccca	3050	10	0	12	10	2
 kb	0xf3540	0xf368b	331	1	0	1	1	0
 kbwin	0xf7a30	0xf8490	2656	12	0	12	12	0
 levelupwindow	0xf8880	0xf9bc0	4928	3	0	4	3	1
-lodfile	0xfa610	0xfa655	69	1	0	1	1	0
+lodfile	0xfa610	0xfaa64	1108	2	0	5	2	3
 mainmenu	0xfb2a0	0xfbb94	2292	3	0	5	3	2
 mapcell	0xfbf90	0x105d12	40322	65	0	78	65	13
 misc	0x10b1d0	0x10c7e2	5650	16	0	16	16	0
 monframeinfo	0x10c810	0x10cb26	790	2	0	2	2	0
 mousemgr	0x10cb50	0x10da57	3847	14	0	15	14	1
 multiplayerwindow	0x10e050	0x1125c3	17779	29	2	43	29	14
-newgame	0x1132b0	0x113320	112	2	0	2	2	0
-overview	0x11e330	0x11e66a	826	1	0	1	1	0
+newgame	0x1132b0	0x1139d5	1829	4	0	5	4	1
+overview	0x11e330	0x122625	17141	4	0	13	4	9
 palette	0x122940	0x12294b	11	1	0	1	1	0
 path	0x1239d0	0x123edf	1295	8	0	8	8	0
 philai	0x1242d0	0x12bbcc	30972	13	0	85	13	72
@@ -90,7 +90,7 @@ scenarioinfo	0x169800	0x1699b2	434	3	0	3	3	0
 search	0x16a0d0	0x16a352	642	1	0	1	1	0
 seerhut	0x16d3e0	0x17460c	29228	94	0	115	94	21
 singleselectionpopups	0x175220	0x176928	5896	10	0	21	10	11
-singleselectionwindow	0x177360	0x18e6b9	95065	92	1	151	92	59
+singleselectionwindow	0x177360	0x18e6b9	95065	103	1	151	103	48
 slider	0x196050	0x197185	4405	15	0	15	15	0
 smackmgr	0x1971b0	0x197cf4	2884	14	0	14	14	0
 soundmgr	0x1994b0	0x19b295	7653	24	0	29	24	5
@@ -99,7 +99,7 @@ spelldefs	0x19e060	0x19e4af	1103	3	0	3	3	0
 spells	0x1a3700	0x1a939c	23708	9	0	40	9	31
 strip	0x1a9d20	0x1aa31e	1534	5	0	5	5	0
 subwindow	0x1aa340	0x1aa68a	842	8	0	9	8	1
-swapmgr	0x1ae370	0x1b139c	12332	19	0	23	19	4
+swapmgr	0x1ae370	0x1b1378	12296	19	0	22	19	3
 systemoptionswindow	0x1b1790	0x1b375e	8142	4	0	5	4	1
 text	0x1b90f0	0x1b9109	25	1	0	1	1	0
 textntry	0x1ba920	0x1bbab4	4500	6	0	13	6	7
@@ -115,7 +115,7 @@ victorylossconditions	0x1f15a0	0x1f2f70	6608	17	0	19	17	2
 viewarmywindow	0x1f3360	0x1f6fb5	15445	19	0	20	19	1
 viewwrld	0x1fbd60	0x1fbde6	134	1	0	1	1	0
 widget	0x1fe340	0x1fe9c3	1667	11	0	12	11	1
-window	0x1fe9f0	0x1ff955	3941	23	0	31	23	8
+window	0x1fe9f0	0x1ffaf1	4353	25	0	33	25	8
 winfile	0x1ffb20	0x1ffdc2	674	14	0	14	14	0
 wingraph	0x201460	0x2019fa	1434	8	0	9	8	1
 winmgr	0x202370	0x202cb3	2371	6	0	8	6	2
