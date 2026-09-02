@@ -2576,11 +2576,16 @@ public:
     // the Dreamcast xref graph records.
     void setup_shipyards();
     void ShowScenInfo();
-#ifdef HOMM3_NEWGAME_OBJ_DECLS
+#if defined(HOMM3_NEWGAME_OBJ_DECLS) \
+ || defined(HOMM3_SCENARIOINFO_OBJ_DECLS)
     // newgame.cpp owns the retail text formatter at 0x513800. Keep this
-    // declaration in its compiler view only: game.h's member population is
-    // codegen-sensitive in its many unrelated consumers.
+    // declaration in the two compiler views which call it: game.h's member
+    // population is codegen-sensitive in its many unrelated consumers.
     void GetLossConditionText(char* text);
+    // The Complete formatter at 0x5139e0 is the victory-condition twin.
+    // Dreamcast proves the member name/signature and scenarioinfo.obj is its
+    // caller, while retail fixes the one-char* thiscall ABI.
+    void GetVictoryConditionText(char* text);
 #endif
     // The kingdom-overview screen, overview.obj's own body at 0x51e8d0.
     // ORDER-MAPPED, not claimed here: overview.obj's DC roster runs

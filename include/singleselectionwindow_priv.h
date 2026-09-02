@@ -21,6 +21,7 @@
 // inherited header-inline SetText (retail expands the std::string
 // assign in place, calling only _Grow/_Eos - the button.h shape).
 #include "button.h"
+#include "textwdgt.h"
 
 // The namespace-level text-resource loader (retail body 0x55bdd0), fastcall
 // under /Gr. Declared file-locally rather than pulling resourcemanager.h into
@@ -60,11 +61,6 @@ int __cdecl _open(const char* filename, int oflag, ...);
 int __cdecl _close(int handle);
 int __cdecl _access(const char* path, int mode);
 }
-
-// The five difficulty names at .bss 0x6a77ec, indexed by the header's
-// difficulty byte in DrawBasicMapInfo's bottom row. Owner TU unlocated -
-// extern only, no DATA claim; house unnamed-cell spelling.
-extern const char* gUnnamed6a77ec[];
 
 // The starting-bonus name table at .bss 0x6a5e14 (rows 0..2 =
 // Artifact/Gold/Resource; the random rung draws general-text 523
@@ -635,37 +631,6 @@ public:
                         CNetPlayerHandlerPlayer* pCompPlayers);
 };
 
-// The three per-handicap label pointers the seat rows are retitled from
-// (0x6a7800..0x6a780c). The constructor also passes element zero as the
-// textButton caption, proving this is a pointer table rather than integer
-// payload storage; send_message's legacy int payload uses an explicit
-// pointer-width conversion at its two consumers.
-extern const char* gUnnamed6a7800[3];
-
-// The three advanced-options seat-kind labels (human-or-computer,
-// human-only, computer-only) at .bss 0x6a7e18. No published source name
-// survives, so the address-based spelling remains provisional.
-extern const char* gUnnamed6a7e18[];
-
-// The scenario-description scroller class of the +0x196c widget
-// (retail band 0x5ba600..0x5ba920, between text.obj and textntry.obj;
-// no DC roster counterpart). SetText (retail 0x5ba6e0, thiscall ret 4)
-// refills the lines vector from the font; only that entry is modeled,
-// and the class stays abstract - it exists to type the call.
-class CScrollTextWidget : public widget {
-public:
-    CScrollTextWidget(const char* text, int x, int y, int w, int h,
-                      const char* fontName, font::TColor color,
-                      unsigned char focusable);
-    virtual int Main(message* msg);
-    virtual void zBufferDraw();
-    virtual void Draw();
-    void SetText(const char* text);
-
-    char pad_30[0x5c - 0x30];
-};
-SIZE(CScrollTextWidget, 0x5c);
-
 // Dreamcast names the selected row's difficulty mirror `lastDiff`;
 // Complete retains it at .data 0x683454 (initial 1).
 extern int lastDiff;
@@ -966,10 +931,6 @@ extern const char* gUnnamed6a8098[];
 enum ESingleSelectionGameMode {
     SINGLE_SELECTION_LOAD_GAME = 1,
     SINGLE_SELECTION_SAVE_GAME = 2
-};
-enum ESingleSelectionGameContext {
-    SINGLE_SELECTION_CONTEXT_1 = 1,
-    SINGLE_SELECTION_CONTEXT_3 = 3
 };
 enum ESingleSelectionLaunchContext {
     SINGLE_SELECTION_LAUNCHED_FROM_CAMPAIGN = 101

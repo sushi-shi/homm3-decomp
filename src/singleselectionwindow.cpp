@@ -462,7 +462,9 @@ DATA(0x0069fb70) static char* gVictoryConditionDesc[14];
 DATA(0x0069fbf4) static TTextResource* gpLossConditionText;
 DATA(0x0069fc18) static char* gLossConditionDesc[4];
 DATA(0x0069fb14) static TTextResource* gpTurnDurationText;
-DATA(0x0069fb44) static char* gTurnDurationText[11];
+// External linkage is retail-proven: scenarioinfo.obj reads the same table
+// while constructing CScenarioInfoDlg.
+DATA(0x0069fb44) char* gTurnDurationText[11];
 DATA(0x00641ae8) static const int gTurnDurationMinutes[10] = {
     1, 2, 4, 6, 8, 10, 15, 20, 25, 30
 };
@@ -512,7 +514,8 @@ DATA(0x00683470) static int lastIMHoverID = -1;
 
 // The five per-difficulty score ratings DrawBasicMapInfo formats as
 // "%d%%" - .data (non-const in retail), values read from the image.
-DATA(0x00683440) static int gDifficultyRatingPercent[5] = {
+// External linkage is retail-proven by scenarioinfo.obj's rating label.
+DATA(0x00683440) int gDifficultyRatingPercent[5] = {
     80, 100, 130, 160, 200
 };
 
