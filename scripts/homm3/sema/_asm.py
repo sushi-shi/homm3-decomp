@@ -307,21 +307,15 @@ def _fold_reloc(mnemonic: str, operands: str, kind: str, symbol: str,
     return operands, symbol
 
 
-def lite_rows(text: str) -> list[tuple[int | None, str]]:
-    """The default listing as ``(offset, line)`` rows; titles and notices
-    carry ``None``. What a matcher reads survives: the address column
-    (branch targets stay locatable), every call/data symbol folded from
-    its reloc row into the operand (``call ?f@@YAXXZ``, ``[gVar]``,
-    ``push offset gVar``), cross-symbol ``<notes>``. What only encoding
-    questions need is left to ``--verbose``: byte columns, raw reloc
-    rows, and the ``<ownfn+0xNNN>`` notes the address column makes
-    redundant."""
-    titles = []
+def _scan_rows(text: str) -> list:
+    """Listing rows in order: ``("title", line, addr|None)`` for symbol
+    titles and notices, ``("ins", (offset, raw, body), [(site, kind,
+    symbol), ...])`` for instructions - a reloc row attaches to the
+    instruction row that precedes it."""
     rows: list = []
     for ln in text.splitlines():
         title = _SYMBOL_TITLE.match(ln)
         if title:
-            titles.append(title.group(1))
             rows.append(("title", ln.strip(), int(ln.split(None, 1)[0], 16)))
             continue
         if ln.startswith("[decode stopped"):
@@ -335,6 +329,34 @@ def lite_rows(text: str) -> list[tuple[int | None, str]]:
         if reloc and rows and rows[-1][0] == "ins":
             rows[-1][2].append((int(reloc.group(1), 16), reloc.group(2),
                                 reloc.group(3)))
+    return rows
+
+
+def reloc_rows(text: str) -> list[tuple[int, bytes, str, list]]:
+    """``(offset, raw bytes, 'mnemonic operands', [(site, kind, symbol)])``
+    per instruction row of an objdump/image listing, in order; the one
+    parser every reloc-aware view shares (the default disasm listing, the
+    call/reloc sequence diffs, the first-divergence walk). Titles are
+    dropped; the trailing pool is NOT cut here - callers keep only the
+    `code_insns` offsets when they want code."""
+    return [(off, raw, body, relocs)
+            for kind, (off, raw, body), relocs in
+            ((row[0], row[1], row[2]) for row in _scan_rows(text)
+             if row[0] == "ins")]
+
+
+def lite_rows(text: str) -> list[tuple[int | None, str]]:
+    """The default listing as ``(offset, line)`` rows; titles and notices
+    carry ``None``. What a matcher reads survives: the address column
+    (branch targets stay locatable), every call/data symbol folded from
+    its reloc row into the operand (``call ?f@@YAXXZ``, ``[gVar]``,
+    ``push offset gVar``), cross-symbol ``<notes>``. What only encoding
+    questions need is left to ``--verbose``: byte columns, raw reloc
+    rows, and the ``<ownfn+0xNNN>`` notes the address column makes
+    redundant."""
+    rows = _scan_rows(text)
+    titles = [row[1].split("<", 1)[1].rstrip(">:") for row in rows
+              if row[0] == "title" and row[2] is not None]
     own = titles[0] if titles else None
     labels = set(titles)
 
@@ -606,12 +628,17 @@ def branch_kind(term: str | None, at: int) -> str:
     return " ".join(parts)
 
 
-def skeleton_diff(base_cfg, target_cfg) -> tuple:
-    """Side-by-side block sizes/terminators with separate flow/size marks."""
-    out = [f"       {'BASE':48} FLOW SIZE TARGET"]
+def skeleton_census(base_cfg, target_cfg) -> dict:
+    """The block-skeleton comparison as data: ``blocks`` (nb, nt), the
+    ``exact``/``size``/``shift``/``flow``/``missing`` counts, ``rows`` =
+    [(i, base_summary, flow_mark, size_mark, target_summary)],
+    ``first_flow`` = (i, base_kind, target_kind) | None, ``first_differs``
+    = (i, kind) | None for the first non-exact block, and ``same``."""
     same = len(base_cfg) == len(target_cfg)
     counts = {"exact": 0, "size": 0, "shift": 0, "flow": 0, "missing": 0}
     first_flow = None
+    first_differs = None
+    rows = []
 
     def mnemonic(line):
         """A blank line inside a block (jump-table padding renders as
@@ -633,6 +660,8 @@ def skeleton_diff(base_cfg, target_cfg) -> tuple:
             flow_mark, size_mark = "--", "--"
             counts["missing"] += 1
             same = False
+            if first_differs is None:
+                first_differs = (i, "missing")
         else:
             base_term, target_term = base_cfg[i][2], target_cfg[i][2]
             base_kind = branch_kind(base_term, i)
@@ -653,19 +682,36 @@ def skeleton_diff(base_cfg, target_cfg) -> tuple:
             elif flow_mark == "==" and size_mark == "##":
                 counts["size"] += 1
             same &= flow_mark == "==" and size_mark == "=="
-        out.append(f"  B{i:<3} {base:48}  {flow_mark:^4} {size_mark:^4} {target}")
+            if first_differs is None and not (flow_mark == "==" and size_mark == "=="):
+                first_differs = (i, "flow" if flow_mark == "!!" else
+                                 "shift" if flow_mark == "~=" else "size")
+        rows.append((i, base, flow_mark, size_mark, target))
+    return {"blocks": (len(base_cfg), len(target_cfg)), **counts,
+            "rows": rows, "first_flow": first_flow,
+            "first_differs": first_differs, "same": bool(same)}
 
-    out.insert(0, f"[skeleton diff: base {len(base_cfg)} vs target "
-                  f"{len(target_cfg)} blocks; {counts['exact']} exact, "
-                  f"{counts['size']} size-only, {counts['shift']} target-shift, "
-                  f"{counts['flow']} flow-kind, {counts['missing']} missing]")
+
+def skeleton_diff(base_cfg, target_cfg) -> tuple:
+    """Side-by-side block sizes/terminators with separate flow/size marks."""
+    census = skeleton_census(base_cfg, target_cfg)
+    out = [census_line(census), f"       {'BASE':48} FLOW SIZE TARGET"]
+    for i, base, flow_mark, size_mark, target in census["rows"]:
+        out.append(f"  B{i:<3} {base:48}  {flow_mark:^4} {size_mark:^4} {target}")
     out.append("[legend: FLOW == exact, ~= same branch kind/direction with "
                "shifted block target, !! branch-kind mismatch; SIZE ## differs]")
-    if first_flow is not None:
-        i, base_kind, target_kind = first_flow
+    if census["first_flow"] is not None:
+        i, base_kind, target_kind = census["first_flow"]
         out.append(f"[first branch-kind divergence B{i}: base [{base_kind}] vs "
                    f"target [{target_kind}]]")
-    return "\n".join(out) + "\n", bool(same)
+    return "\n".join(out) + "\n", census["same"]
+
+
+def census_line(census: dict) -> str:
+    nb, nt = census["blocks"]
+    return (f"[skeleton diff: base {nb} vs target {nt} blocks; "
+            f"{census['exact']} exact, {census['size']} size-only, "
+            f"{census['shift']} target-shift, {census['flow']} flow-kind, "
+            f"{census['missing']} missing]")
 
 
 def blocks_diff(base_text: str, target_text: str) -> tuple:
