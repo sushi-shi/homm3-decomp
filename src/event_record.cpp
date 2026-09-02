@@ -286,7 +286,7 @@ void type_record_move_hero::replay(unsigned char draw)
     gUnnamed69ccc4 = 1 << player;
 
     if (gpCurrentPlayer->currHeroId != current_hero->id
-        || !gpAdvManager->inDialog) {
+        || !gpAdvManager->bCurHeroMobile) {
         gpAdvManager->SetHeroContext(current_hero->id, 1, 0, draw);
     }
 
@@ -984,7 +984,7 @@ void type_record_hide_hero::replay(unsigned char draw)
     if (!town_garrison) {
         if (player == prev_owner) {
             if (gpCurrentPlayer->currHeroId != current_hero->id
-                || !gpAdvManager->inDialog) {
+                || !gpAdvManager->bCurHeroMobile) {
                 gpAdvManager->SetHeroContext(current_hero->id, 1, 0, draw);
             }
         }
@@ -995,7 +995,7 @@ void type_record_hide_hero::replay(unsigned char draw)
     current_hero->owner = new_owner;
     if (gNetLocalGamePos == prev_owner && !town_garrison) {
         gpAdvManager->drawCursor = 0;
-        gpAdvManager->inDialog = 0;
+        gpAdvManager->bCurHeroMobile = 0;
     }
     if (draw) {
         gpAdvManager->CompleteDraw(0);
@@ -1105,7 +1105,7 @@ void type_record_show_hero::replay(unsigned char draw)
     if (draw && (GetMapExtra(location.x, location.y, location.z)
                  & gMapVisibilityBit)) {
         if (gpCurrentPlayer->currHeroId != current_hero->id
-            || !gpAdvManager->inDialog) {
+            || !gpAdvManager->bCurHeroMobile) {
             gpAdvManager->SetHeroContext(current_hero->id, 1, 0, draw);
         }
         gpAdvManager->CompleteDraw(0);
@@ -1124,7 +1124,7 @@ void type_record_show_hero::undo()
     current_hero->restore_cell();
     if (gNetLocalGamePos == new_owner) {
         gpAdvManager->drawCursor = 0;
-        gpAdvManager->inDialog = 0;
+        gpAdvManager->bCurHeroMobile = 0;
     }
     current_hero->owner = prev_owner;
     current_hero->x = previous_location.x;

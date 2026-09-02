@@ -2272,7 +2272,7 @@ public:
 // SPLIT around it rather than moved, so the preprocessed text every
 // events-view consumer sees is unchanged, line for line.
     // game.cpp:9720 in the Dreamcast roster (dc 0xb6538). Retail preserves
-    // the network-popup guard, aishield.pcx radar blit and field_38c latch
+    // the network-popup guard, aishield.pcx radar blit and bHeroLogoShowing latch
     // at 0x4ca780; advManager::UpdateRadar is the other caller.
     void ShowHeroesLogo();
     // event_record.cpp:1189 in the DC roster (dc 0x8e54c), the negative

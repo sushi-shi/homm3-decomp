@@ -2087,7 +2087,7 @@ void hero::Deallocate(unsigned char bGameLoaded, unsigned char remote_move)
         if (gNetLocalGamePos == owner)
             gpAdvManager->drawCursor = 0;
         if (oldOwner == gNetLocalGamePos)
-            gpAdvManager->inDialog = 0;
+            gpAdvManager->bCurHeroMobile = 0;
     }
     gpAdvManager->advWindow->UpdateHeroLocators(0, 1, 1);
     gpGame->heroAvailability[id] = -1;

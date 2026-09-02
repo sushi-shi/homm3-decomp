@@ -1735,7 +1735,7 @@ unsigned char playerData::add_garrison_hero(town* our_town)
         currHeroId = -1;
         if (gNetLocalGamePos == our_hero->owner) {
             gpAdvManager->drawCursor = 0;
-            gpAdvManager->inDialog = 0;
+            gpAdvManager->bCurHeroMobile = 0;
         }
     }
     --numHeroes;
@@ -3925,7 +3925,7 @@ int game::Load(TAbstractFile* infile)
     if (!load_recorded_events(infile, saved.version))
         return -1;
 
-    gpAdvManager->inDialog = 0;
+    gpAdvManager->bCurHeroMobile = 0;
     gpCurrentPlayer = &gpGame->players[gNetLocalGamePos];
     gUnnamed69ccc4 = 1 << gNetLocalGamePos;
     if (!gNetworkActive69954c)
@@ -4696,7 +4696,7 @@ void game::SetupOrigData()
 
     field_4e3e8 = 0;
     advManager* manager = gpAdvManager;
-    manager->inDialog = 0;
+    manager->bCurHeroMobile = 0;
     for (i = 0; i < sizeof(heroAvailability); ++i)
         heroAvailability[i] = -1;
 
@@ -10785,7 +10785,7 @@ void game::ShowComputerScreen()
 // E:\gamedcs\game.cpp:9720
 // The Dreamcast local roster and call graph name this AI-turn shield;
 // Complete keeps the same popup guard, aishield.pcx resource, radar-widget
-// rectangle, screen blit and field_38c latch.
+// rectangle, screen blit and bHeroLogoShowing latch.
 VA(0x004ca780, 0xB4)  // DC name/order + complete retail call/data shape
 void game::ShowHeroesLogo()
 {
@@ -10802,10 +10802,10 @@ void game::ShowHeroesLogo()
             return;
     }
 
-    if (gpAdvManager->field_38c)
+    if (gpAdvManager->bHeroLogoShowing)
         return;
 
-    gpAdvManager->field_38c = 1;
+    gpAdvManager->bHeroLogoShowing = 1;
     heroLogo = ResourceManager::GetBitmap816(
         DATA_COMPGEN(0x00677eb8, heroesLogoBitmapName, "aishield.pcx"));
     x = gpAdvManager->advWindow->RadarWidget->x;

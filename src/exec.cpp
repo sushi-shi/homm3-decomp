@@ -205,7 +205,7 @@ void executive::CallManager(baseManager* newManager)
         if (saved == gpAdvManager) {
             gpAdvManager->status = 2;
             gpAdvManager->advWindow->SleepAllWidgets(1);
-            gpAdvManager->field_38c = 0;
+            gpAdvManager->bHeroLogoShowing = 0;
         } else {
             RemoveManager(currentManager);
         }

@@ -346,6 +346,19 @@ struct tilePoint {
     short frameOffset;
 };
 SIZE(tilePoint, 4);
+
+enum EMapDirection {
+    MAP_DIRECTION_NORTH = 0,
+    MAP_DIRECTION_NORTHEAST = 1,
+    MAP_DIRECTION_EAST = 2,
+    MAP_DIRECTION_SOUTHEAST = 3,
+    MAP_DIRECTION_SOUTH = 4,
+    MAP_DIRECTION_SOUTHWEST = 5,
+    MAP_DIRECTION_WEST = 6,
+    MAP_DIRECTION_NORTHWEST = 7,
+    MAP_DIRECTION_COUNT = 8
+};
+
 extern tilePoint normalDirTable[8];       // 0x678150
 extern const signed char gStepDeltaX[];   // 0x678150, stride 4
 extern const signed char gStepDeltaY[];   // 0x678151, stride 4

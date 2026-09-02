@@ -41,7 +41,7 @@ adventureoptionswindow	??_GTAdventureOptionsWindow@@UAEPAXI@Z	100.0000	100.0000	
 adventureoptionswindow	?WindowHandler@TAdventureOptionsWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x5730	c8b1eee3d300
 adventureoptionswindow	?handle_message@CHeroWindowEx@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x5680	e9ee91f39ca4
 advmgr	??0CAdvPopup@@QAE@HHHHI@Z	100.0000	100.0000	100.0000	0x1b040	3b5291a00fae
-advmgr	??0advManager@@QAE@XZ	90.2973	90.2973	90.2973	0x6df0	333013a59cb7
+advmgr	??0advManager@@QAE@XZ	90.2973	90.2973	90.2973	0x6df0	02fbfcfe4389
 advmgr	??0type_point@@QAE@FFF@Z	100.0000	100.0000	100.0000	0x192b0	65bee7a55cd4
 advmgr	??1CAdvMgrNetMsgHandler@@UAE@XZ	100.0000	100.0000	100.0000	0x17d160	-
 advmgr	??1CAdvPopup@@UAE@XZ	100.0000	100.0000	100.0000	0x1b120	37b468aec563
@@ -61,26 +61,26 @@ advmgr	?CompleteDraw@advManager@@QAEXHHHEE@Z	100.0000	100.0000	100.0000	0xf3f0	d
 advmgr	?ComputeAdvNetControl@@YIXXZ	100.0000	100.0000	100.0000	0x1a660	86c2040053ef
 advmgr	?DeactivateCurrHero@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x175a0	48342cb41839
 advmgr	?DeactivateCurrTown@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x17570	65cf91ab93a3
-advmgr	?DemobilizeCurrHero@advManager@@QAEXEE@Z	100.0000	100.0000	100.0000	0x17680	cce93b349407
+advmgr	?DemobilizeCurrHero@advManager@@QAEXEE@Z	100.0000	100.0000	100.0000	0x17680	0e81b70808b2
 advmgr	?DisableButtons@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1a2e0	d6a15e176a45
 advmgr	?DoAdvCommand@advManager@@QAEPAVNewmapCell@@PAUtype_point@@@Z	88.5460	88.5460	88.5460	0x7b80	3a2da16dca60
-advmgr	?DoAdventureOptions@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1ab00	bd8eeddfe8b4
-advmgr	?DoSystemOptions@advManager@@QAEEXZ	100.0000	100.0000	100.0000	0x1ac00	300c30d5a9ae
-advmgr	?DrawAdvObj@advManager@@QAEXHHHHH@Z	87.5901	87.5901	87.5901	0x10c00	76a65ead2b7c
-advmgr	?DrawAdvObjShadow@advManager@@QAEXHHHHH@Z	85.2335	85.2335	85.2335	0x11590	a4d087e8519a
+advmgr	?DoAdventureOptions@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1ab00	7e482f83bb0c
+advmgr	?DoSystemOptions@advManager@@QAEEXZ	100.0000	100.0000	100.0000	0x1ac00	5217b1b4dc00
+advmgr	?DrawAdvObj@advManager@@QAEXHHHHH@Z	87.5901	87.5901	87.5901	0x10c00	1156912974aa
+advmgr	?DrawAdvObjShadow@advManager@@QAEXHHHHH@Z	85.2335	85.2335	85.2335	0x11590	f3218ffb9641
 advmgr	?DrawAdventureMapGems@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0xf2f0	9d3fdf2e2504
-advmgr	?DrawArrow@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x120b0	383e34202732
-advmgr	?DrawArrowShadow@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x11f50	2c18c6bd904b
+advmgr	?DrawArrow@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x120b0	04bd51ceeb37
+advmgr	?DrawArrowShadow@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x11f50	844e9d753542
 advmgr	?DrawBoatPart@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	100.0000	100.0000	100.0000	0x10760	a1f17eb72995
 advmgr	?DrawBoatPartShadow@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	100.0000	100.0000	100.0000	0x109b0	a183c885ce4b
-advmgr	?DrawGround@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x12900	ac2aed792dc3
+advmgr	?DrawGround@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x12900	9580f16cdf1f
 advmgr	?DrawHeroPart@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	98.1667	98.1667	98.1667	0xfe30	d074c3f12203
 advmgr	?DrawHeroPartShadow@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	98.1840	98.1840	98.1840	0x102c0	8a7d356b95f0
-advmgr	?DrawRiver@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x11b80	03d7efdb92c1
-advmgr	?DrawRoad@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x11d60	44da870e0885
+advmgr	?DrawRiver@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x11b80	de957d1fd78d
+advmgr	?DrawRoad@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x11d60	3daba874b02e
 advmgr	?DrawRolloverText@advManager@@QAEXPAD@Z	100.0000	100.0000	100.0000	0xb0e0	62c3c3faf561
-advmgr	?DrawShroud@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x12220	4f2bc30be3cd
-advmgr	?DrawUnderlay@advManager@@QAEXHHHHH@Z	92.7034	92.7034	92.7034	0x12470	9993d5fdff73
+advmgr	?DrawShroud@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x12220	1eed5a038a0c
+advmgr	?DrawUnderlay@advManager@@QAEXHHHHH@Z	92.7034	92.7034	92.7034	0x12470	407a74a0ac3f
 advmgr	?EnableButtons@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1a3a0	ea23d8af44aa
 advmgr	?ExitDialog@CAdvPopup@@MAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1b190	c278a260c070
 advmgr	?FindAdjacentMonster@advManager@@QAEEUtype_point@@PAU2@0@Z	100.0000	100.0000	100.0000	0x1a460	16a46bb372e1
@@ -100,29 +100,29 @@ advmgr	?InsertSound@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x18c10	0
 advmgr	?LoadRemote@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x1a100	4879fea7104a
 advmgr	?Main@advManager@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x87b0	c51bc4b80cb3
 advmgr	?MapExtraPosAndAdjacentsSet@@YIHHHHE@Z	100.0000	100.0000	100.0000	0x1a750	69b4ef7b35ae
-advmgr	?MobilizeCurrHero@advManager@@QAEXHEE@Z	100.0000	100.0000	100.0000	0x175e0	7388b1e6e46a
+advmgr	?MobilizeCurrHero@advManager@@QAEXHEE@Z	100.0000	100.0000	100.0000	0x175e0	c62e97fe2615
 advmgr	?MonsterQuickView@advManager@@QAEXPBVNewmapCell@@HH@Z	100.0000	100.0000	100.0000	0x17150	524a4a09d472
 advmgr	?MoreTreesNear@advManager@@QAEHUtype_point@@@Z	100.0000	100.0000	100.0000	0x1adb0	fb4980addf5f
-advmgr	?Open@advManager@@UAEHH@Z	97.7989	97.7989	97.7989	0x6fd0	ac9d840d3f26
+advmgr	?Open@advManager@@UAEHH@Z	97.7989	97.7989	97.7989	0x6fd0	e0f403631eca
 advmgr	?OverrideBottomView@advManager@@QAEXW4EBottomViewType@1@H@Z	100.0000	100.0000	100.0000	0x15d60	98751fa2643c
 advmgr	?PopupPlayerTurnInfo@@YIXXZ	100.0000	100.0000	100.0000	0x19c80	98baf175609e
 advmgr	?ProcessDeSelect@advManager@@QAEHPBVmessage@@PAEPAUtype_point@@PAPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x9a70	e3fac156247c
 advmgr	?ProcessHover@advManager@@QAEHHH@Z	83.5000	83.5000	83.5000	0xe360	cd31f1d94036
-advmgr	?ProcessKeyPress@advManager@@QAEHPBVmessage@@PAEPAUtype_point@@PAPAVNewmapCell@@@Z	80.4012	80.4012	80.4012	0x8c40	55e24e0bb9b6
-advmgr	?ProcessMapSelect@advManager@@QAEXPBVmessage@@PAUtype_point@@PAPAVNewmapCell@@@Z	91.1006	91.1006	91.1006	0xa5d0	8f228b5b60e3
+advmgr	?ProcessKeyPress@advManager@@QAEHPBVmessage@@PAEPAUtype_point@@PAPAVNewmapCell@@@Z	80.4012	80.4012	80.4012	0x8c40	ab54324add8b
+advmgr	?ProcessMapSelect@advManager@@QAEXPBVmessage@@PAUtype_point@@PAPAVNewmapCell@@@Z	91.1006	91.1006	91.1006	0xa5d0	e94ec6649fc3
 advmgr	?ProcessRadarSelect@advManager@@QAEXPBVmessage@@@Z	100.0000	100.0000	100.0000	0xa0c0	a99eac5faaf4
 advmgr	?ProcessSearch@advManager@@QAEHHHH@Z	94.6792	94.6792	94.6792	0xec90	6e52ade78630
 advmgr	?ProcessSelect@advManager@@QAEHPBVmessage@@PAUtype_point@@PAPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x97e0	61b96265198a
 advmgr	?ProcessWaitingHover@advManager@@QAEHHH@Z	96.1467	96.1467	96.1467	0xdeb0	20e951caf93a
 advmgr	?QuickInfo@advManager@@QAEXHHH@Z	94.8708	94.8708	94.8708	0x137c0	c166fbeda341
-advmgr	?RedrawAdvScreen@advManager@@QAEXEE@Z	100.0000	100.0000	100.0000	0x17420	e484c9b8efe8
+advmgr	?RedrawAdvScreen@advManager@@QAEXEE@Z	100.0000	100.0000	100.0000	0x17420	0617381048e0
 advmgr	?Reseed@advManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0xec80	d2e859e634b8
 advmgr	?SaveGame@@YIEE@Z	100.0000	100.0000	100.0000	0x18160	82f9544efca0
 advmgr	?ScanForHeroOrBoat@advManager@@QAE_NHHHGAAY05UTDrawParts@@@Z	100.0000	100.0000	100.0000	0xfb30	bf12f53ebccb
 advmgr	?ScreenScroll@advManager@@QAEXHH@Z	97.8177	97.8177	97.8177	0x195c0	101924e85d7a
 advmgr	?SeedTo@advManager@@QAEXUtype_point@@@Z	100.0000	100.0000	100.0000	0x194a0	4e87ce523fb9
 advmgr	?SetEnvironmentOrigin@advManager@@QAEXUtype_point@@H@Z	63.9403	63.9403	63.9403	0x183d0	46a7f4d86752
-advmgr	?SetHeroContext@advManager@@QAEXHHEE@Z	99.2746	99.2746	99.2746	0x17b20	0984a934989c
+advmgr	?SetHeroContext@advManager@@QAEXHHEE@Z	99.2746	99.2746	99.2746	0x17b20	67bd9ddfde14
 advmgr	?SetInitialMapOrigin@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19990	d4815376fb68
 advmgr	?SetRolloverText@advManager@@QAEXPAVNewmapCell@@HH@Z	93.9598	93.9598	93.9598	0xb150	eb4d9abd46d1
 advmgr	?SetShrineHelpText@@YIXPADPAVhero@@PAVNewmapCell@@W4GlobalInfoFlags@@PBD4@Z	100.0000	100.0000	100.0000	0xd8d0	186a1bc7eb31
@@ -141,7 +141,7 @@ advmgr	?UpdBottomViewNewTurn@advManager@@QAEEE@Z	100.0000	100.0000	100.0000	0x15
 advmgr	?UpdBottomViewResMsg@advManager@@QAEEE@Z	100.0000	100.0000	100.0000	0x16160	5455d6acb170
 advmgr	?UpdBottomViewTown@advManager@@QAEEE@Z	100.0000	100.0000	100.0000	0x164f0	de6fb0226771
 advmgr	?UpdateRadar@advManager@@QAEXEEEEE@Z	100.0000	100.0000	100.0000	0x13790	e31ae2610a4b
-advmgr	?UpdateRadar@advManager@@QAEXUtype_point@@EEEEE@Z	90.6495	90.6495	90.6495	0x12c40	1edb3f0c17df
+advmgr	?UpdateRadar@advManager@@QAEXUtype_point@@EEEEE@Z	90.6495	90.6495	90.6495	0x12c40	f9baff040e28
 advmgr	?UpdateScreen@advManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0xf270	d8787382a606
 advmgr	?ViewPuzzle@advManager@@QAEXXZ	85.6339	85.6339	85.6339	0x1a7f0	4ede4d97bbc5
 advmgr	?WindowHandler@CAdvPopup@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1b1c0	9bc2420b5496
@@ -919,6 +919,9 @@ cursor	?GetMoveShowIt@advManager@@QAEHPAVhero@@H@Z	100.0000	100.0000	100.0000	0x
 cursor	?OnMoveHero@advManager@@QAEXPAVCMapChange@@@Z	100.0000	100.0000	100.0000	0x81ed0	831cc6211424
 cursor	?StopCursor@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x7f7d0	4c61d41b55e7
 cursor	?TurnTo@advManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x7ffe0	403a24945d74
+cursor	?animate_move@advManager@@QAEXPAVhero@@HHH@Z	97.7237	97.7237	97.7237	0x80380	4538013021e0
+cursor	?end_move_hero@advManager@@AAEPAVNewmapCell@@PAVhero@@PAV2@EJJEPAH@Z	100.0000	100.0000	100.0000	0x80090	885e2974ab10
+cursor	?handle_stop_on_trigger@advManager@@AAEPAVNewmapCell@@PAVhero@@PAV2@EEPAHJJ@Z	100.0000	100.0000	100.0000	0x80240	36b8c8c29a01
 cursor	SendMapChange	0.0000	0.0000	0.0000	0x82340	85e66aeb17b4
 cursor	advManager_CheckAdjacentMon	0.0000	0.0000	0.0000	0x81900	0eb57ca2e0bc
 cursor	advManager_DrawCursor	0.0000	0.0000	0.0000	0x7f860	ad7d179cd2c4
@@ -929,9 +932,6 @@ cursor	advManager_OnTeleportHero	0.0000	0.0000	0.0000	0x81fd0	114eeb3a1eb5
 cursor	advManager_ProcessMapChangeNew	0.0000	0.0000	0.0000	0x82010	7486d5d6f161
 cursor	advManager_ValidMove	0.0000	0.0000	0.0000	0x81be0	33eeaa6d2a1f
 cursor	advManager_ValidMoveWithEvent	0.0000	0.0000	0.0000	0x81ad0	dee616486353
-cursor	advManager_animate_move	0.0000	0.0000	0.0000	0x80380	95e2e7d2eff8
-cursor	advManager_end_move_hero	0.0000	0.0000	0.0000	0x80090	ec60b3be722c
-cursor	advManager_handle_stop_on_trigger	0.0000	0.0000	0.0000	0x80240	500fe2e77a59
 customcampaign	?_Insertion_sort_1@std@@YIXPAPAX0VCampaignHeaderPointerLess@@0@Z	100.0000	100.0000	100.0000	0x83aa0	-
 customcampaign	?erase@?$vector@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@V?$allocator@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@@2@@std@@QAEPAV?$vector@Vhero@@V?$allocator@Vhero@@@std@@@2@PAV32@0@Z	100.0000	100.0000	100.0000	0x8c500	-
 customcampaign	?get_score@SCampaign@@QBEHXZ	100.0000	100.0000	100.0000	0x8b200	7000f32081c7
@@ -1140,11 +1140,11 @@ event_record	?replay@type_record_claim_mine@@UAEXE@Z	100.0000	100.0000	100.0000	
 event_record	?replay@type_record_claim_town@@UAEXE@Z	100.0000	100.0000	100.0000	0x9ac20	5f4a8d64d90f
 event_record	?replay@type_record_erase@@UAEXE@Z	100.0000	100.0000	100.0000	0x9b280	242810e98774
 event_record	?replay@type_record_hide_boat@@UAEXE@Z	100.0000	100.0000	100.0000	0x9ae80	e524eaf9f8b6
-event_record	?replay@type_record_hide_hero@@UAEXE@Z	100.0000	100.0000	100.0000	0x9b570	06b8832f5adf
-event_record	?replay@type_record_move_hero@@UAEXE@Z	94.5833	94.5833	94.5833	0x9a7c0	3c02965f8d41
+event_record	?replay@type_record_hide_hero@@UAEXE@Z	100.0000	100.0000	100.0000	0x9b570	61951132b80f
+event_record	?replay@type_record_move_hero@@UAEXE@Z	94.5833	94.5833	94.5833	0x9a7c0	e212ea5fa700
 event_record	?replay@type_record_player_death@@UAEXE@Z	100.0000	100.0000	100.0000	0x9bab0	88c54691f6b0
 event_record	?replay@type_record_show_boat@@UAEXE@Z	100.0000	100.0000	100.0000	0x9b040	02a3a2d96b6b
-event_record	?replay@type_record_show_hero@@UAEXE@Z	100.0000	100.0000	100.0000	0x9b800	da82ab766fcf
+event_record	?replay@type_record_show_hero@@UAEXE@Z	100.0000	100.0000	100.0000	0x9b800	55bdac6e823c
 event_record	?replay@type_record_shroud@@UAEXE@Z	100.0000	100.0000	100.0000	0x9be60	a9f665fc7673
 event_record	?replay@type_record_teleport@@UAEXE@Z	100.0000	100.0000	100.0000	0x9a9c0	4dc74aa253f7
 event_record	?replay_available@game@@QBEEXZ	100.0000	100.0000	100.0000	0x9da70	9985111b99b3
@@ -1166,7 +1166,7 @@ event_record	?undo@type_record_hide_boat@@UAEXXZ	100.0000	100.0000	100.0000	0x9a
 event_record	?undo@type_record_hide_hero@@UAEXXZ	100.0000	100.0000	100.0000	0x9b680	097b8ecd97b8
 event_record	?undo@type_record_move_hero@@UAEXXZ	100.0000	100.0000	100.0000	0x9a910	02a4cbd423ec
 event_record	?undo@type_record_show_boat@@UAEXXZ	100.0000	100.0000	100.0000	0x9b100	2790cfe498ef
-event_record	?undo@type_record_show_hero@@UAEXXZ	100.0000	100.0000	100.0000	0x9b960	11a32050e88d
+event_record	?undo@type_record_show_hero@@UAEXXZ	100.0000	100.0000	100.0000	0x9b960	bdc4c2af12e5
 event_record	?undo@type_record_shroud@@UAEXXZ	100.0000	100.0000	100.0000	0x9bf20	b49d62e47a06
 events	??1type_university_window@@UAE@XZ	100.0000	100.0000	100.0000	0xaaa40	-
 events	?CombatMonsterEvent@advManager@@QAEHPAVhero@@HPAHPAVNewmapCell@@Utype_point@@W4TCreatureType@@HH4HH@Z	99.2966	99.2966	99.2966	0xac580	df673b90a2ee
@@ -1298,7 +1298,7 @@ events	?monsters_join@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@
 events	?monsters_sell_out@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	100.0000	100.0000	100.0000	0xa7250	f7b1ec4933f6
 events	?show_rewards@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@2@J@Z	100.0000	100.0000	100.0000	0xa0b00	9287544ef4a4
 exec	?AddManager@executive@@QAEHPAVbaseManager@@H@Z	100.0000	100.0000	100.0000	0xb0b20	11f81dc72e6a
-exec	?CallManager@executive@@QAEXPAVbaseManager@@@Z	100.0000	100.0000	100.0000	0xb0c70	cafa52c605a7
+exec	?CallManager@executive@@QAEXPAVbaseManager@@@Z	100.0000	100.0000	100.0000	0xb0c70	a9eb44cb2746
 exec	?DoDialog@executive@@QAEHPAVbaseManager@@@Z	100.0000	100.0000	100.0000	0xb0a10	16ffd133dd52
 exec	?MainLoop@executive@@QAEXXZ	100.0000	100.0000	100.0000	0xb0e40	d98a0a0cc5bc
 exec	?RemoveManager@executive@@QAEXPAVbaseManager@@@Z	100.0000	100.0000	100.0000	0xb0bf0	d777fd91ddc9
@@ -1436,7 +1436,7 @@ game	?IsLocalHuman@playerData@@QBE_NXZ	100.0000	100.0000	100.0000	0xbad80	4683ca
 game	?IsMultiplayer@game@@QBE_NXZ	100.0000	100.0000	100.0000	0xcec90	bf9d3de21a93
 game	?Load@NewSMapHeader@@QAEHPAVTAbstractFile@@H@Z	92.5118	92.5118	92.5118	0xc5630	3910a566acf1
 game	?Load@SavedGameHeader@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbc750	99bb7010e0dc
-game	?Load@game@@QAEHPAVTAbstractFile@@@Z	60.5547	92.4127	92.4127	0xbcda0	f44313914488
+game	?Load@game@@QAEHPAVTAbstractFile@@@Z	60.5547	92.4127	92.4127	0xbcda0	86e50077a6a7
 game	?LoadBoatPool@game@@QAEHPAVTAbstractFile@@@Z	99.6447	99.6447	99.6447	0xb9a00	6dff534ebbf5
 game	?LoadGame@game@@QAEHPBDHH@Z	100.0000	100.0000	100.0000	0xbf330	fc53c93a80bc
 game	?LoadGarrisonPool@game@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xb96f0	e574c834f8c2
@@ -1492,10 +1492,10 @@ game	?SetWagon@ExtraInfoUnion@@QAEXH@Z	100.0000	100.0000	100.0000	0xc2390	bf93b6
 game	?SetWagon@ExtraInfoUnion@@QAEXW4EGameResource@@F@Z	100.0000	100.0000	100.0000	0xc2360	ed98030ba85c
 game	?SetupAdjacentMons@game@@QAEXXZ	100.0000	100.0000	100.0000	0xca410	68b80a9e7606
 game	?SetupFirstPlayer@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc0630	bb1844be6738
-game	?SetupOrigData@game@@QAEXXZ	100.0000	100.0000	100.0000	0xbf1a0	730e086f9212
+game	?SetupOrigData@game@@QAEXXZ	100.0000	100.0000	100.0000	0xbf1a0	b66f2b61a9e5
 game	?SetupPuzzlePieces@game@@QAEHHH@Z	98.9637	98.9637	98.9637	0xbaf00	1d0bb1967257
 game	?ShowComputerScreen@game@@QAEXXZ	100.0000	100.0000	100.0000	0xca5b0	0074fb32cfd0
-game	?ShowHeroesLogo@game@@QAEXXZ	100.0000	100.0000	100.0000	0xca780	4b6796bc7ccb
+game	?ShowHeroesLogo@game@@QAEXXZ	100.0000	100.0000	100.0000	0xca780	890d5263bad4
 game	?StartAITheme@@YIXXZ	100.0000	100.0000	100.0000	0xc6f40	45c7f5426a57
 game	?TransmitSaveGame@game@@QAEHHHEE@Z	72.9526	72.9526	72.9526	0xcafd0	687874605300
 game	?TurnOffAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6fd0	fe47952c0464
@@ -1541,7 +1541,7 @@ game	?_Xran@?$bitset@$0M@@std@@ABEXXZ	100.0000	100.0000	100.0000	0xd4eb0	-
 # Dreamcast proves CMCHideHero constructs its CMapChange base before the
 # separate heroId statement. Restoring that order closes this row; the sibling
 # SwapHeroes dip remains history rather than a waiver for reversing the fact.
-game	?add_garrison_hero@playerData@@QAEEPAVtown@@@Z	100.0000	100.0000	100.0000	0xb9fc0	ae9d18ab61a7
+game	?add_garrison_hero@playerData@@QAEEPAVtown@@@Z	100.0000	100.0000	100.0000	0xb9fc0	2e056133f228
 game	?any@?$bitset@$0BM@@std@@QBE_NXZ	100.0000	100.0000	100.0000	0xd1810	-
 game	?apply_map_header_availability@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc4e30	e86fa3f1591d
 game	?calculate_production@game@@QAEXXZ	94.4126	94.4126	94.4126	0xb8af0	5a49f0a38ec3
@@ -1652,7 +1652,7 @@ hero	?ApplyBattleLossTemps@hero@@QAEXXZ	100.0000	100.0000	100.0000	0xda710	3fa11
 hero	?ApplyBattleWinTemps@hero@@QAEXXZ	100.0000	100.0000	100.0000	0xda510	4eb30d4b1b66
 hero	?CheckLevel@hero@@QAEXXZ	83.4342	83.4342	83.4342	0xda720	62221da77008
 hero	?CreatureTypeCount@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0xe2340	20e9a887c55f
-hero	?Deallocate@hero@@QAEXEE@Z	100.0000	100.0000	100.0000	0xd9ec0	db25a871e253
+hero	?Deallocate@hero@@QAEXEE@Z	100.0000	100.0000	100.0000	0xd9ec0	6f033442214a
 hero	?DestroySiegeWeaponArtifact@hero@@QAEXH@Z	96.5278	96.5278	96.5278	0xd9260	d330930a3f3f
 hero	?ExitDialog@THeroScreenWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0xdd2a0	290f74224019
 hero	?Fly@hero@@QAEXH@Z	100.0000	100.0000	100.0000	0xe59a0	5ab8d23a34ea
@@ -2734,7 +2734,7 @@ singleselectionwindow	??0CNetPlayerHandlerPlayer@@QAE@XZ	100.0000	100.0000	100.0
 singleselectionwindow	??0CNetPlayerInfo@@QAE@XZ	100.0000	100.0000	100.0000	0x17f720	-
 singleselectionwindow	??0CNewPlayerUpdateMan@@QAE@XZ	100.0000	100.0000	100.0000	0x17c9b0	0ed8ff53773d
 singleselectionwindow	??0CUpdatePlayerPosMsg@@QAE@PAVCNetPlayerHandlerPlayer@@0@Z	100.0000	100.0000	100.0000	0x179870	4cb719207948
-singleselectionwindow	??0GameSelectionHeadersStruct@@QAE@XZ	79.3242	79.3242	79.3242	0x178e00	-
+singleselectionwindow	??0GameSelectionHeadersStruct@@QAE@XZ	73.1483	79.3242	79.3242	0x178e00	-
 singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	74.9955	75.2722	75.2722	0x179960	3885b26cf40c
 singleselectionwindow	??0lobby_message@@QAE@XZ	100.0000	100.0000	100.0000	0x189190	2b1be8208221
 singleselectionwindow	??0t_map_list_update@@QAE@K@Z	100.0000	100.0000	100.0000	0x189240	173781ee6a81
@@ -2835,7 +2835,7 @@ singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100
 # 2026-08-27 (round 3): the interim full build re-banked the transient
 # peak a third time; re-lowered with the round's bodies landed. Same
 # scheduler flap, same recovery path.
-singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0	66eb0a0e15c8
+singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0	66eb0a0e15c8
 singleselectionwindow	?OnMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2193	90.2193	90.2193	0x189710	3ad2be3935a3
 singleselectionwindow	?OnNameClick@TSingleSelectionWindow@@QAEXH@Z	96.3226	96.3226	96.3226	0x18b620	ef174e28edf8
 singleselectionwindow	?OnNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	97.5366	97.5366	97.5366	0x18b510	862e2a9c058b
@@ -3117,7 +3117,7 @@ town	?SetSummoningGenerator@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1bd750	22e
 # Dreamcast constructor. The coherent base-first source is 97.7744 here and
 # exact in add_garrison_hero; raw NB11 also fixes CNetMsg/CMapChange/CMCHideHero
 # parameter types and names. Keep max/history and do not flatten the helper.
-town	?SwapHeroes@town@@QAEXXZ	97.7744	100.0000	100.0000	0x1be450	f2f4db6fadb6
+town	?SwapHeroes@town@@QAEXXZ	97.7744	100.0000	100.0000	0x1be450	8f680b9e440b
 town	?TownFn_005BF900@town@@QAEJJ@Z	99.8469	99.8469	99.8469	0x1bf900	30fef3caec1f
 town	?UpgradedDwellingID@town@@SIHH@Z	100.0000	100.0000	100.0000	0x1c14a0	dbf03795acbd
 town	?View@town@@QAEXH@Z	100.0000	100.0000	100.0000	0x1be210	0e664c984f2b

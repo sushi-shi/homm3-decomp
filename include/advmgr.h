@@ -612,6 +612,9 @@ DATA(0x006968e0) extern ds_memsample* gUnnamed6968e0;
 //   0x6968e4  the resource-side walk sample paired with that live handle;
 //             StopCursor clears both after stopping the handle.
 DATA(0x006968e4) extern sample* gUnnamed6968e4;
+//   0x6968e8  a cursor-owned byte latch cleared when animate_move finishes.
+//             No surviving symbol names its role, so the name stays ordinal.
+extern unsigned char gUnnamed6968e8;
 //   0x69777c  breaks the route step loop when nonzero.
 DATA(0x0069777c) extern int gUnnamed69777c;
 //   0x698774  suppresses the route teardown and forces ShowRoute
@@ -1335,8 +1338,8 @@ public:
     type_point lastMapHover;       // +0xe8
     int lastHoverX;                // +0xec
     int lastHoverY;                // +0xf0
-    int mapOriginX;               // +0xf4, adventure viewport origin
-    int mapOriginY;               // +0xf8
+    int scrollX;                  // +0xf4, DC advManager::scrollX
+    int scrollY;                  // +0xf8, DC advManager::scrollY
     // +0xfc, a dword the constructor zeroes alongside the map origin pair.
     // Role unattested; the width is what the ctor's dword store proves.
     int field_fc;
@@ -1367,12 +1370,10 @@ public:
     int cursorFrameCount;         // +0x200
     int cursorTurning;            // +0x204
     int cursorDrawn;       // +0x208, cleared at the start of CompleteDraw
-    unsigned char inDialog;   // +0x20c (Mobilize bails when set)
+    unsigned char bCurHeroMobile;  // +0x20c, DC name; Mobilize bails when set
     char pad_20d[3];
-    // +0x210, a dword the constructor zeroes between inDialog and the
-    // moving-object pair. Role unattested; width per the ctor's store.
-    int field_210;
-    char pad_214[4];
+    int iShowMode;                 // +0x210, DC name
+    int gbForceCompleteDraw;       // +0x214, DC name
     int movingObjectIndex;        // +0x218, transient object-pool index
     int movingObjectSequence;     // +0x21c
     int movingObjectFrame;        // +0x220
@@ -1380,12 +1381,10 @@ public:
     soundNode soundArray[4];       // +0x228, DC name and extent
     sample* loopedSample[LOOPING_SOUND_COUNT];  // +0x248, DC name
     sample* heroSamples[11];       // +0x360, DC name and extent
-    int field_38c;            // +0x38c, zeroed by CallManager's suspend arm
-    // +0x390, sliced out of the old four-byte pad by SetHeroContext: its
-    // tail gates the closing ForceMouseMove/lastHoverX reset on this byte
-    // being clear (`mov al,[esi+0x390] / test al,al / jne <return>`).
-    // Role and width are what those bytes prove; the name is ordinal.
-    unsigned char field_390;
+    int bHeroLogoShowing;          // +0x38c, DC name
+    // +0x390. SetHeroContext's tail gates the closing
+    // ForceMouseMove/lastHoverX reset on Dreamcast's bHeroMoving byte.
+    unsigned char bHeroMoving;
     char pad_391[3];
     // +0x394: UpdBottomViewEnemyTurn compares this against 5 before
     // rebuilding the view, then stores 5 before installing the new window.
@@ -1982,11 +1981,32 @@ public:
                                  enum TCreatureType creature);
     // cursor.obj's 0x47f7d0 (cursor.cpp:85, dc 0x79a84).
     void StopCursor(unsigned char standEnd);
+    // cursor.cpp:52 (dc 0x79a48). Complete has no retained body, but
+    // animate_move contains this ordinary helper's complete expansion.
+    // Keep the source call and let VC6 make that per-build inline decision.
+    void StartCursor(int direction);
     // cursor.obj's 0x480000; ai_player's attempt_step (0x42fc50) calls it
     // to gate the HidePointer that precedes an AI move. The DC census
     // names it ConsiderHidingMouse; the int return is the bare
     // `test eax,eax` at that call site.
     int ConsiderHidingMouse(class hero* current_hero, int direction);
+private:
+    // cursor.cpp:420/458. Dreamcast marks both helpers private and Complete
+    // retains their out-of-line bodies. MoveHero calls these source
+    // boundaries; their bodies must not be pasted into the caller merely
+    // because another compiler may choose a different expansion.
+    NewmapCell* end_move_hero(class hero* curr, NewmapCell* returnCell,
+                              unsigned char bIsRemoteMove, long iOrigX,
+                              long iOrigY, unsigned char standEnd,
+                              int* bFoughtBattle);
+    NewmapCell* handle_stop_on_trigger(class hero* curr,
+                                       NewmapCell* destCell,
+                                       unsigned char bIsRemoteMove,
+                                       unsigned char standEnd,
+                                       int* bFoughtBattle,
+                                       long curMoveCost,
+                                       long nextMoveMinCost);
+public:
     // The two out-of-compiland members DoAdvCommand reaches, DECLARED
     // and not defined here - each is defined in its own TU and a call
     // relocation's symbol name is not scored.
@@ -2019,6 +2039,7 @@ public:
     // the two flags that decide whether a flier may leave the water.
     int ValidMove(class hero* who, int direction, int bComputerMove,
                   unsigned char bLandOnly);
+    int ValidMoveWithEvent(class hero* who, int direction);
     // The first and fourth entries of that same cursor.obj order-map are
     // reached from event_record.obj's type_record_move_hero::replay
     // (0x49a7c0), which calls 0x480000 with (hero, direction) and tail-calls
