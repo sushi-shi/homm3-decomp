@@ -6,8 +6,21 @@
 #include "advmgr.h"
 #include "cursor.h"
 #include "findpath.h"
+#include "kb.h"
+#include "kbwin.h"
 #include "prefs.h"
 #include "soundmgr.h"
+#include "winmgr.h"
+
+// Retail cursor.obj constants, read from the hash-verified image. Dreamcast
+// names startVals and its animate_move line table proves the two speed-table
+// lookups surrounding it.
+DATA(0x0063d6c8) static const int kWalkSpeedPixels[5] = { 2, 8, 10, 16, 32 };
+DATA(0x0063d6dc) static const int kScrollDelayValues[5] = { 100, 50, 50, 50, 100 };
+
+// cursor.obj-owned byte latch; the surviving source name is not present in
+// either CodeView corpus, so keep it ordinal until stronger evidence lands.
+DATA(0x006968e8) unsigned char gUnnamed6968e8;
 
 // struct.h:102 is header-inline in Dreamcast and both Dreamcast and retail
 // expand it inside OnMoveHero. Kept TU-visible pending consolidation of the
@@ -19,18 +32,34 @@ inline type_point::type_point(short new_x, short new_y, short new_z)
     z = new_z;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\cursor.cpp:52
 DC_ONLY(0x79a48, 0x3C)
 void advManager::StartCursor(int direction)
 {
-    // @stub
+    cursorDirection = direction;
+    switch (direction) {
+    case MAP_DIRECTION_NORTH:
+        cursorSequence = hs_walk_n;
+        break;
+    case MAP_DIRECTION_NORTHEAST:
+    case MAP_DIRECTION_NORTHWEST:
+        cursorSequence = hs_walk_ne;
+        break;
+    case MAP_DIRECTION_EAST:
+    case MAP_DIRECTION_WEST:
+        cursorSequence = hs_walk_e;
+        break;
+    case MAP_DIRECTION_SOUTHEAST:
+    case MAP_DIRECTION_SOUTHWEST:
+        cursorSequence = hs_walk_se;
+        break;
+    case MAP_DIRECTION_SOUTH:
+        cursorSequence = hs_walk_s;
+        break;
+    }
 }
 
 // E:\gamedcs\cursor.cpp:85
-#endif  // @carcass
-
 VA(0x0047f7d0, 0x82)  // exhaustive cursor order + ret 4/call set, dc 0x79a84
 void advManager::StopCursor(unsigned char standEnd)
 {
@@ -107,28 +136,119 @@ int advManager::GetMoveShowIt(hero* currHero, int direction)
         return 0;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\cursor.cpp:420
 VA(0x00480090, 0x1A4)  // exhaustive cursor-tail order + ret 0x1c, dc 0x7a4d0
 NewmapCell* advManager::end_move_hero(hero* curr, NewmapCell* returnCell, unsigned char bIsRemoteMove, long iOrigX, long iOrigY, unsigned char standEnd, int* bFoughtBattle)
 {
-    // @stub
+    UpdateRadar(1, 1, 0, 0, 0);
+
+    if (!bIsRemoteMove
+        && (iOrigX != curr->x || iOrigY != curr->y)) {
+        if (!((curr->flags & 0x40000)
+              && returnCell && returnCell->type == ANCHOR_POINT)
+            && (GetMapExtra(curr->x, curr->y, curr->z) & 0x100)
+            && (!returnCell || returnCell->type != BOAT)) {
+            if (!curr->IsFlying(0) || standEnd
+                || curr->get_target() == curr->get_location())
+                CheckAdjacentMon(bFoughtBattle);
+
+            if (curr->owner != gNetLocalGamePos)
+                returnCell = 0;
+        }
+    }
+
+    if (gpCurrentPlayer->IsLocalHuman())
+        SetNoDialogMenus(1);
+    return returnCell;
 }
 
 // E:\gamedcs\cursor.cpp:458
 VA(0x00480240, 0x131)  // exhaustive cursor-tail order + 305/304 B, dc 0x7a6c4
 NewmapCell* advManager::handle_stop_on_trigger(hero* curr, NewmapCell* destCell, unsigned char bIsRemoteMove, unsigned char standEnd, int* bFoughtBattle, long curMoveCost, long nextMoveMinCost)
 {
-    // @stub
+    StopCursor(1);
+
+    if (gCompleteDrawEnabled) {
+        radarOrigin.x = curr->x - 9;
+        radarOrigin.y = curr->y - 8;
+        radarOrigin.z = curr->z;
+    }
+
+    curr->pathTargetX = curr->pathTargetY = -1;
+    CompleteDraw(0);
+    UpdateScreen(0, 0);
+
+    curr->movePoints -= curMoveCost;
+    if (curr->movePoints < nextMoveMinCost) {
+        curr->movePoints = 0;
+        standEnd = 1;
+    }
+
+    return end_move_hero(curr, destCell, bIsRemoteMove,
+                         curr->x, curr->y, standEnd, bFoughtBattle);
 }
 
 // E:\gamedcs\cursor.cpp:490
 VA(0x00480380, 0x25C)  // exhaustive order + timeGetTime call, dc 0x7a7f4
 void advManager::animate_move(hero* curr, int direction, int xInc, int yInc)
 {
-    // @stub
+    scrollX = scrollY = 0;
+    StartCursor(direction);
+    bHeroMoving = 1;
+
+    curr->x += xInc;
+    curr->y += yInc;
+
+    if (gCompleteDrawEnabled) {
+        int walk_speed;
+        walk_speed = (&gUnnamed698758.computerWalkSpeed)
+            [gpCurrentPlayer->IsLocalHuman()];
+
+        radarOrigin.x = curr->x - 9;
+        radarOrigin.y = curr->y - 8;
+        radarOrigin.z = curr->z;
+        gbForceCompleteDraw = 1;
+
+        if (walk_speed == CURSOR_INSTANT_WALK_SPEED) {
+            CompleteDraw(0);
+            gpWindowManager->UpdateScreen(0, 8, 608, 544);
+        } else {
+            int iterations;
+            DATA(0x0063d6f0)
+            static const int startVals[3] = { -32, 0, 32 };
+            int iScrollDelayValue;
+
+            iScrollDelayValue = kScrollDelayValues[walk_speed];
+            walk_speed = kWalkSpeedPixels[walk_speed];
+            iterations = CURSOR_TILE_PIXELS / walk_speed;
+
+            scrollX = startVals[xInc + 1];
+            scrollY = startVals[yInc + 1];
+
+            for (int i = 0; i < iterations; ++i) {
+                unsigned long next_frame_time;
+                next_frame_time = GameTime::Get() + iScrollDelayValue;
+
+                if (walk_speed == CURSOR_IRREGULAR_STEP_PIXELS && i == 1) {
+                    scrollX -= xInc * CURSOR_IRREGULAR_MIDDLE_STEP_PIXELS;
+                    scrollY -= yInc * CURSOR_IRREGULAR_MIDDLE_STEP_PIXELS;
+                } else {
+                    scrollX -= xInc * walk_speed;
+                    scrollY -= yInc * walk_speed;
+                }
+
+                CompleteDraw(0);
+                gpWindowManager->UpdateScreen(0, 8, 608, 544);
+                GameTime::DelayTil(next_frame_time);
+            }
+        }
+    }
+
+    bHeroMoving = 0;
+    gUnnamed6968e8 = 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\cursor.cpp:570
 VA(0x004805e0, 0x131C)  // ret 0x1c + caller arg order/call set, dc 0x7aa54

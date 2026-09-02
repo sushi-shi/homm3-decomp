@@ -534,7 +534,7 @@ void town::SwapHeroes()
         gpCurrentPlayer->currHeroId = -1;
         if (gNetLocalGamePos == visitingHero->owner) {
             gpAdvManager->drawCursor = 0;
-            gpAdvManager->inDialog = 0;
+            gpAdvManager->bCurHeroMobile = 0;
         }
     }
 

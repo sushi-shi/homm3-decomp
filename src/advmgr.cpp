@@ -602,8 +602,8 @@ advManager::advManager()
 {
     radarOrigin = type_point(0, 0, 0);
     radarIcons = 0;
-    mapOriginX = 0;
-    mapOriginY = 0;
+    scrollX = 0;
+    scrollY = 0;
     field_fc = 0;
     animFrame = 0;
     field_108 = 0;
@@ -611,7 +611,7 @@ advManager::advManager()
     drawCursor = 0;
     DebugShowFPS = 0;
     DebugViewAll = 0;
-    field_390 = 0;
+    bHeroMoving = 0;
 
     for (int i = 0; i < 10; i++) {
         groundTileset[i] = 0;
@@ -638,8 +638,8 @@ advManager::advManager()
     radarIcons = 0;
     advWindow = 0;
     routeArray = 0;
-    inDialog = 0;
-    field_210 = 0;
+    bCurHeroMobile = 0;
+    iShowMode = 0;
     gCompleteDrawEnabled = 1;
     movingObjectIndex = -1;
     movingObjectSequence = -1;
@@ -719,7 +719,7 @@ VA(0x00406fd0, 0x7D6)  // anchor-vtable, dc 0x6b24
 int advManager::Open(int newPriority)
 {
     bottomViewType = BOTTOM_VIEW_DEFAULT;
-    field_38c = 0;
+    bHeroLogoShowing = 0;
     gCompleteDrawEnabled = 0;
 
     if (routeArray == 0) {
@@ -1853,7 +1853,7 @@ int advManager::ProcessKeyPress(const message* msg, unsigned char* exitFlag, typ
         if (waitingPlayer)
             break;
 
-        if (!inDialog) {
+        if (!bCurHeroMobile) {
             if (gpCurrentPlayer->IsLocalHuman()
                 || (gUnnamed6989c8 && gUnnamed69ccd4)) {
                 gpWindowManager->BroadcastMessage(
@@ -2126,7 +2126,7 @@ int advManager::ProcessKeyPress(const message* msg, unsigned char* exitFlag, typ
         }
         if (localPlayer->currHeroId == -1)
             break;
-        if (inDialog) {
+        if (bCurHeroMobile) {
             advCommand = ADV_COMMAND_VIEW_HERO;
             DoAdvCommand(trigger_point);
             return 1;
@@ -2802,7 +2802,7 @@ void advManager::ProcessMapSelect(const message* msg, type_point* trigger_point,
         int objIndex;
         if (gpCurrentPlayer == localPlayer && lastHoverX == HERO_VIEW_TILE_X
             && lastHoverY == HERO_VIEW_TILE_Y
-            && gpCurrentPlayer->currHeroId != -1 && inDialog) {
+            && gpCurrentPlayer->currHeroId != -1 && bCurHeroMobile) {
             objIndex = gpCurrentPlayer->currHeroId;
             objType = HERO;
         } else {
@@ -5215,8 +5215,8 @@ void advManager::DrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
     else
         thisCell = fullMap->cellData;
 
-    int baseX = mapOriginX + destX * 32;
-    int baseY = mapOriginY + destY * 32;
+    int baseX = scrollX + destX * 32;
+    int baseY = scrollY + destY * 32;
     int tilex = 0;
     int tiley = 0;
     int tilew = 32;
@@ -5532,8 +5532,8 @@ void advManager::DrawAdvObjShadow(int srcX, int srcY, int z, int destX, int dest
     else
         thisCell = map->cell(point.x, point.y, point.z);
 
-    int baseX = mapOriginX + destX * 32;
-    int baseY = mapOriginY + destY * 32;
+    int baseX = scrollX + destX * 32;
+    int baseY = scrollY + destY * 32;
     int tilex = 0;
     int tiley = 0;
     int tilew = 32;
@@ -5751,8 +5751,8 @@ void advManager::DrawRiver(int srcX, int srcY, int z, int destX, int destY)
     if (!thisCell->RiverSet)
         return;
 
-    int baseX = mapOriginX + destX * 32;
-    int baseY = mapOriginY + destY * 32;
+    int baseX = scrollX + destX * 32;
+    int baseY = scrollY + destY * 32;
     int tilex = 0;
     int tiley = 0;
     int tilew = 32;
@@ -5801,8 +5801,8 @@ void advManager::DrawRoad(int srcX, int srcY, int z, int destX, int destY)
     if (!thisCell->RoadSet)
         return;
 
-    int baseX = mapOriginX + destX * 32;
-    int baseY = mapOriginY + destY * 32 + 16;
+    int baseX = scrollX + destX * 32;
+    int baseY = scrollY + destY * 32 + 16;
     int tilex = 0;
     int tiley = 0;
     int tilew = 32;
@@ -5846,8 +5846,8 @@ void advManager::DrawArrowShadow(int srcX, int srcY, int z, int destX,
     if (!arrow)
         return;
 
-    int baseX = mapOriginX + destX * 32;
-    int baseY = mapOriginY + destY * 32;
+    int baseX = scrollX + destX * 32;
+    int baseY = scrollY + destY * 32;
 
     type_point point;
     point = type_point(srcX, srcY, z);
@@ -5895,8 +5895,8 @@ void advManager::DrawArrow(int srcX, int srcY, int z, int destX, int destY)
     point = type_point(srcX, srcY, z);
     GetCell(point);
 
-    int baseX = mapOriginX + destX * 32;
-    int baseY = mapOriginY + destY * 32;
+    int baseX = scrollX + destX * 32;
+    int baseY = scrollY + destY * 32;
     int tilex = 0;
     int tiley = 0;
     int tilew = 32;
@@ -5942,8 +5942,8 @@ void advManager::DrawShroud(int srcX, int srcY, int z, int destX, int destY)
         point.is_valid();
     }
 
-    int baseX = mapOriginX + destX * 32;
-    int baseY = mapOriginY + destY * 32;
+    int baseX = scrollX + destX * 32;
+    int baseY = scrollY + destY * 32;
     unsigned char hflip = false;
     int tilex = 0;
     int tiley = 0;
@@ -6029,8 +6029,8 @@ void advManager::DrawUnderlay(int srcX, int srcY, int z, int destX, int destY)
     point = type_point(srcX, srcY, z);
     thisCell = DrawHeroCell(this, point);
 
-    baseX = mapOriginX + destX * 32;
-    baseY = mapOriginY + destY * 32;
+    baseX = scrollX + destX * 32;
+    baseY = scrollY + destY * 32;
     tilex = 0;
     tiley = 0;
     tilew = 32;
@@ -6146,8 +6146,8 @@ void advManager::DrawGround(int srcX, int srcY, int z, int destX, int destY)
     NewmapCell* thisCell = DrawGroundCell(
         this, type_point(srcX, srcY, z));
 
-    int baseX = mapOriginX + destX * 32;
-    int baseY = mapOriginY + destY * 32;
+    int baseX = scrollX + destX * 32;
+    int baseY = scrollY + destY * 32;
     int tilex = 0;
     int tiley = 0;
     int tilew = 32;
@@ -6327,16 +6327,16 @@ void advManager::UpdateRadar(type_point origin, unsigned char updateFlag, unsign
     int lastRow = gMapHeight - 1;
     playerData* localPlayer = gpGame->GetLocalPlayer();
 
-    if (!gpCurrentPlayer->IsHuman() && field_38c == 0
+    if (!gpCurrentPlayer->IsHuman() && bHeroLogoShowing == 0
         && (!gNetworkActive69954c || gbUnk691209))
         gpGame->ShowHeroesLogo();
 
     if (!gNetworkActive69954c && !gpCurrentPlayer->IsHuman()
         && !gbUnk691209)
         return;
-    if (field_38c && !gpCurrentPlayer->IsHuman())
+    if (bHeroLogoShowing && !gpCurrentPlayer->IsHuman())
         return;
-    field_38c = 0;
+    bHeroLogoShowing = 0;
 
     // The acting player's live hero, and its map square, so the cell loop
     // below can paint that one square in the owner's colour.
@@ -7987,7 +7987,7 @@ void advManager::RedrawAdvScreen(unsigned char bUpdate, unsigned char bForceSave
         bmp->Draw(0, 0, bmp->Width, bmp->Height,
                   gpWindowManager->screenBitmap, 0, 0, 0);
         bmp->Dispose();
-        field_38c = 0;
+        bHeroLogoShowing = 0;
     }
 
     advWindow->UpdateButtons(0, 0);
@@ -8038,7 +8038,7 @@ void advManager::MobilizeCurrHero(int bInMove, unsigned char waitingPlayer, unsi
 
     if (waitingPlayer)
         player = gpGame->GetLocalPlayer();
-    else if (inDialog)
+    else if (bCurHeroMobile)
         return;
 
     if (player->currHeroId == -1) {
@@ -8065,8 +8065,8 @@ void advManager::DemobilizeCurrHero(unsigned char waitingPlayer,
                                     unsigned char draw_changes)
 {
     if (!waitingPlayer && gpCurrentPlayer
-        && gpCurrentPlayer->currHeroId != -1 && inDialog) {
-        inDialog = 0;
+        && gpCurrentPlayer->currHeroId != -1 && bCurHeroMobile) {
+        bCurHeroMobile = 0;
         hero* currHero;
         if (gpCurrentPlayer->currHeroId != -1)
             currHero = &gpGame->heroes[gpCurrentPlayer->currHeroId];
@@ -8255,7 +8255,7 @@ void advManager::SetHeroContext(int heroId, int bInMove, unsigned char waitingPl
     if (waitingPlayer)
         player = gpGame->GetLocalPlayer();
     else
-        inDialog = 1;
+        bCurHeroMobile = 1;
 
     player->currHeroId = heroId;
 
@@ -8365,7 +8365,7 @@ void advManager::SetHeroContext(int heroId, int bInMove, unsigned char waitingPl
         gpSoundManager->SwitchAmbientMusic(gTerrainMusicIds[field_58]);
     }
 
-    if (!field_390 && draw_changes) {
+    if (!bHeroMoving && draw_changes) {
         gpInputManager->ForceMouseMove();
         lastHoverX = 0;
     }
@@ -9933,7 +9933,7 @@ void advManager::DoAdventureOptions()
     TrimLoopingSounds(4);
     gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
 
-    unsigned char bSaveMobile = inDialog;
+    unsigned char bSaveMobile = bCurHeroMobile;
     DemobilizeCurrHero(0, 1);
 
     {
@@ -9986,7 +9986,7 @@ unsigned char advManager::DoSystemOptions()
     TrimLoopingSounds(4);
     gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
 
-    unsigned char bSaveMobile = inDialog;
+    unsigned char bSaveMobile = bCurHeroMobile;
     int walkSpeed = gUnnamed698758.walkSpeed;
     DemobilizeCurrHero(0, 1);
 

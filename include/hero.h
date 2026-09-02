@@ -1079,11 +1079,12 @@ public:
     // Declared for playerData::NextHero, which inlines nothing of it -
     // it is a real call from game.obj.
     unsigned char IsMobile();
-#ifdef HOMM3_AI_PLAYER_OBJ_DECLS
     // Hero.h source helpers retained as calls by Dreamcast and expanded in
-    // Complete's AI_AttemptMove.  check_terrain is false at both recovered
-    // sites; the later build additionally treats Angel Wings and Boots of
-    // Levitation as persistent movement modes.
+    // Complete's AI_AttemptMove and cursor movement family. check_terrain is
+    // false at the recovered sites; the later build additionally treats
+    // Angel Wings and Boots of Levitation as persistent movement modes.
+    // These are real shared header bodies, not an ai_player.obj declaration
+    // view: cursor.obj proves the same nested IsWieldingArtifact boundary.
     __forceinline unsigned char IsFlying(unsigned char check_terrain)
     {
         return !(flags & 0x40000)
@@ -1094,10 +1095,6 @@ public:
         return !(flags & 0x40000)
             && (waterWalkLevel != -1 || IsWieldingArtifact(0x5a));
     }
-#else
-    unsigned char IsFlying(unsigned char check_terrain);
-    unsigned char CanWalkOnWater(unsigned char check_terrain);
-#endif
     // 0x4e53c0 / 0x4e53e0 - the Arena visit pair. The DC mangling
     // (?VisitedArena@hero@@QBA_NPBVNewmapCell@@@Z) gives the const and
     // the bool.
