@@ -7,6 +7,7 @@
 #include "cursor.h"
 #include "findpath.h"
 #include "prefs.h"
+#include "soundmgr.h"
 
 // struct.h:102 is header-inline in Dreamcast and both Dreamcast and retail
 // expand it inside OnMoveHero. Kept TU-visible pending consolidation of the
@@ -28,11 +29,28 @@ void advManager::StartCursor(int direction)
 }
 
 // E:\gamedcs\cursor.cpp:85
+#endif  // @carcass
+
 VA(0x0047f7d0, 0x82)  // exhaustive cursor order + ret 4/call set, dc 0x79a84
 void advManager::StopCursor(unsigned char standEnd)
 {
-    // @stub
+    if (standEnd) {
+        hero* curr = gpGame->GetHero(gpCurrentPlayer->currHeroId);
+        if (curr)
+            cursorSequence = curr->GetStandSequence();
+        else
+            cursorSequence = 2;
+
+        cursorFrameCount = 0;
+        if (gUnnamed6968e0)
+            gpSoundManager->StopSample(gUnnamed6968e0);
+        gUnnamed6968e0 = 0;
+        gUnnamed6968e4 = 0;
+    }
+    cursorTurning = 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\cursor.cpp:110
 VA(0x0047f860, 0x2D9)  // draw call set + ret 8, dc 0x79b0c
