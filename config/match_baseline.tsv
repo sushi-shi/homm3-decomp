@@ -2191,7 +2191,7 @@ philai	?AI_bribe_monsters@@YIEPBVhero@@PAVNewmapCell@@W4TCreatureType@@FJ@Z	100.
 philai	?AI_choose_resource_or_experience@@YIEPBVhero@@W4EGameResource@@HH@Z	100.0000	100.0000	100.0000	0x127fe0	567f5fe7b35f
 philai	?AI_choose_secondary_skill@@YI?AW4TSecondarySkill@@PBVhero@@W41@1E@Z	100.0000	100.0000	100.0000	0x12bbd0	0f2e5122f3b7
 philai	?AI_enter_garrison@@YIXPAVhero@@PAVgarrison@@@Z	100.0000	100.0000	100.0000	0x124370	7cdfb5fc12c1
-philai	?AI_enter_town@@YIXPAVhero@@PAVtown@@@Z	99.1543	99.5109	99.5109	0x1253d0	e69b5532e2a3
+philai	?AI_enter_town@@YIXPAVhero@@PAVtown@@@Z	99.1804	99.5109	99.5109	0x1253d0	e69b5532e2a3
 philai	?AI_examine_map@@YAXXZ	100.0000	100.0000	100.0000	0x12b9c0	80c8df47c261
 philai	?AI_friendly_hero_meeting@@YIXPAVhero@@0@Z	100.0000	100.0000	100.0000	0x125dc0	8c658f499984
 philai	?AI_get_spell_value@@YIJPBVhero@@H@Z	100.0000	100.0000	100.0000	0x127640	2d4e4d939119
@@ -2980,10 +2980,11 @@ spelldefs	?SpellTargetsASingleArmy@@YIEHH@Z	100.0000	100.0000	100.0000	0x19e060	
 spelldefs	__h3cg$spelldefs$static_dtor$abbreviatedSpellNames	100.0000	100.0000	100.0000	0x19e4d0	-
 spelldefs	__h3cg$spelldefs$static_dtor$spellDescriptions	100.0000	100.0000	100.0000	0x19e4b0	-
 spelldefs	__h3cg$spelldefs$static_dtor$spellNames	100.0000	100.0000	100.0000	0x19e4f0	-
+spells	?AbleToSummonElemental@combatManager@@QAEEHJ@Z	100.0000	100.0000	100.0000	0x1a93a0	4a39e65405b1
 spells	?AddBolt@combatManager@@QAEXPAUSBolt@@HHHHHHHHHHHH@Z	100.0000	100.0000	100.0000	0x1a5a90	298ffa58efa4
 spells	?AreaEffect@combatManager@@QAEXJHJJ@Z	99.8565	99.8565	99.8565	0x1a4970	89c796832376
 spells	?Armageddon@combatManager@@QAEXHH@Z	93.9013	93.9013	93.9013	0x1a4bc0	4c4fd8883f34
-spells	?CastSpell@combatManager@@QAEXHHEHHJ@Z	30.3098	30.3098	30.3098	0x19fe30	152ffe2f024a
+spells	?CastSpell@combatManager@@QAEXHHEHHJ@Z	83.5569	83.5569	83.5569	0x19fe30	d2a8571e8a4c
 spells	?ChainLightning@combatManager@@QAEXHHH@Z	96.1913	96.1913	96.1913	0x1a6360	ebf901f1d173
 spells	?ClearEffects@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1a66b0	59ebec44e08d
 spells	?ComputeSpellDamage@combatManager@@QAEJHJJPAVhero@@0PBVarmy@@E@Z	100.0000	100.0000	100.0000	0x1a7890	210d41023a64
@@ -3456,6 +3457,8 @@ winmgr	?Main@heroWindowManager@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x
 winmgr	?ReleaseFizzleSource@heroWindowManager@@QAEXXZ	100.0000	100.0000	100.0000	0x2030c0	ef7d54f3f76c
 winmgr	?RemoveWindow@heroWindowManager@@QAEXPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x2024a0	69ac376c00bf
 winmgr	?UpdateScreen@heroWindowManager@@QAEXHHHH@Z	100.0000	100.0000	100.0000	0x202bd0	c785d0cd6be6
+winmgr	heroWindowManager_FizzleForwardX	0.0000	0.0000	0.0000	0x202dc0	a52c262f8ead
+winmgr	heroWindowManager_SaveFizzleSourceX	0.0000	0.0000	0.0000	0x202cc0	5d5570466a5f
 zutil	@zcalloc@12	100.0000	100.0000	100.0000	0x206c70	-
 zutil	@zcfree@8	100.0000	100.0000	100.0000	0x206c90	-
 # DELIBERATE LOWER 2026-08-20, integrating lane/town-vlc across the view

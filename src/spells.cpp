@@ -198,6 +198,11 @@ static const int gLandMineCountByMastery[4] = { 4, 4, 6, 8 };
 DATA(0x00642234) extern const char* const gIceBoltSprites[5];
 DATA(0x00642248) extern const float gIceBoltAngles[5];
 
+// Disrupting Ray has the same source-level projectile pair as the two
+// five-frame missiles above, but retail's call fixes both extents to one.
+DATA(0x0064225c) extern const char* const gDisruptingRaySprites[1];
+DATA(0x00642260) extern const float gDisruptingRayAngles[1];
+
 #if 0 // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
 // E:\gamedcs\spells.cpp:97
@@ -285,11 +290,18 @@ void combatManager::CastSpell(SpellID spellId, int targetIndex,
     TurnOffHighlighter(1);
 
     army* target;
-    if (ValidHex(targetIndex) && SpellTargetsASingleArmy(spellId, mastery))
-        target = find_spell_target(spellId, currentSide, targetIndex, 1,
-                                   bIsMonsterSpell);
-    else
+    if (ValidHex(targetIndex) && SpellTargetsASingleArmy(spellId, mastery)) {
+        // INLINE_GATE CastSpell -> find_spell_target: Dreamcast line 696
+        // records the helper call and retail +0x276 retains its REL32.
+        // Negative control: with normal depth VC6 expands the helper into
+        // its three leaf callees (0 find_spell_target calls; 82.4456%).
+#pragma inline_depth(0)
+        target = INLINE_GATE(find_spell_target(
+            spellId, currentSide, targetIndex, 1, bIsMonsterSpell));
+#pragma inline_depth()
+    } else {
         target = 0;
+    }
 
     int castX;
     int castY;
@@ -328,22 +340,25 @@ void combatManager::CastSpell(SpellID spellId, int targetIndex,
         && spellId != SPELL_SACRIFICE) {
         SpellEffect(akSpellTraits[SPELL_MAGIC_MIRROR].m_effect, target, 100,
                     0);
-        target = find_spell_target(spellId, other_side, secondaryIndex, 0,
-                                   bIsMonsterSpell);
+        // INLINE_GATE CastSpell -> find_spell_target: Dreamcast line 759
+        // records this redirected-target call and retail +0x478 retains it.
+        // The same flattening negative control above removes both calls.
+#pragma inline_depth(0)
+        target = INLINE_GATE(find_spell_target(
+            spellId, other_side, secondaryIndex, 0, bIsMonsterSpell));
+#pragma inline_depth()
         redirected = 1;
     } else {
         redirected = 0;
     }
 
-    if (bIsMonsterSpell != SPELL_CASTER_CREATURE && target
-        && !SpellCastWorks(spellId, currentSide, target, redirected,
-                           bIsMonsterSpell))
-        return;
+    if (bIsMonsterSpell == SPELL_CASTER_CREATURE || !target
+        || SpellCastWorks(spellId, currentSide, target, redirected,
+                          bIsMonsterSpell)) {
+        if (!static_cast<const combatManager*>(this)->IsQuickCombat())
+            launch_sample(traits->m_sample, -1, 3);
 
-    if (!static_cast<const combatManager*>(this)->IsQuickCombat())
-        launch_sample(traits->m_sample, -1, 3);
-
-    switch (spellId) {
+        switch (spellId) {
     case SPELL_QUICKSAND: {
         const int nhexes = gQuicksandCountByMastery[mastery];
         sample* sample2b;
@@ -685,6 +700,532 @@ landmine_done:
     case SPELL_ARMAGEDDON:
         Armageddon(mastery, monster_power);
         break;
+
+    // Dreamcast spells.cpp:1275..1289 preserves this as one shared
+    // single-target/mass-enchantment arm. Retail's local index table maps
+    // every label below to the same +0x124f body.
+    case SPELL_SHIELD:
+    case SPELL_AIR_SHIELD:
+    case SPELL_FIRE_SHIELD:
+    case SPELL_PROTECTION_FROM_AIR:
+    case SPELL_PROTECTION_FROM_FIRE:
+    case SPELL_PROTECTION_FROM_WATER:
+    case SPELL_PROTECTION_FROM_EARTH:
+    case SPELL_ANTI_MAGIC:
+    case SPELL_MAGIC_MIRROR:
+    case SPELL_BLESS:
+    case SPELL_CURSE:
+    case SPELL_PRECISION:
+    case SPELL_WEAKNESS:
+    case SPELL_STONE_SKIN:
+    case SPELL_PRAYER:
+    case SPELL_MIRTH:
+    case SPELL_SORROW:
+    case SPELL_FORTUNE:
+    case SPELL_MISFORTUNE:
+    case SPELL_HASTE:
+    case SPELL_SLOW:
+    case SPELL_SLAYER:
+    case SPELL_FRENZY:
+    case SPELL_COUNTERSTRIKE:
+    case SPELL_HYPNOTIZE:
+    case SPELL_FORGETFULNESS:
+    case SPELL_BLIND:
+    case SPELL_DISEASE:
+    case SPELL_PARALYZE:
+        if (target) {
+            target->SetSpellInfluence(spellId, monster_power, mastery,
+                                      casting_hero);
+            ShowSpellMessage(bIsMonsterSpell, spellId, target);
+            SpellEffect(traits->m_effect, target, 100, 0);
+        } else {
+            SetMassSpellInfluence(casting_hero, spellId, mastery,
+                                  monster_power, currentSide,
+                                  bIsMonsterSpell);
+            ShowSpellMessage(bIsMonsterSpell, spellId, 0);
+            ShowMassSpell(effected, traits->m_effect, 0);
+        }
+        break;
+
+    case SPELL_STONE:
+        target->SetSpellInfluence(spellId, monster_power, mastery,
+                                  casting_hero);
+        ShowSpellMessage(bIsMonsterSpell, spellId, target);
+        if (!static_cast<const combatManager*>(this)->IsQuickCombat()) {
+            target->creatureId |= 0x40000000;
+            ResetLimitCreature();
+            MarkCreatureEffect(target->combatSide, target->bitIndex);
+            ComputeMaxExtent();
+            for (int frame = 10; frame > 0; --frame) {
+                target->PaletteEffect = frame * 0.1;
+                DrawFrame(1, 1, 0, 100, 1, 1);
+            }
+            target->creatureId &= ~0x40000000;
+            DrawFrame(1, 1, 0, 0, 1, 0);
+        }
+        break;
+
+    case SPELL_BLOODLUST:
+        if (target) {
+            target->SetSpellInfluence(spellId, monster_power, mastery,
+                                      casting_hero);
+            ShowSpellMessage(bIsMonsterSpell, spellId, target);
+            if (!static_cast<const combatManager*>(this)->IsQuickCombat()) {
+                target->creatureId |= 0x20000000;
+                ResetLimitCreature();
+                MarkCreatureEffect(target->combatSide, target->bitIndex);
+                ComputeMaxExtent();
+                {
+                    for (int frame = 0; frame < 10; ++frame) {
+                        target->PaletteEffect = frame * 0.1;
+                        DrawFrame(1, 1, 0, 100, 1, 1);
+                    }
+                }
+                {
+                    for (int frame = 10; frame > 0; --frame) {
+                        target->PaletteEffect = frame * 0.1;
+                        DrawFrame(1, 1, 0, 100, 1, 1);
+                    }
+                }
+                target->creatureId &= ~0x20000000;
+                DrawFrame(1, 1, 0, 0, 1, 0);
+            }
+        } else {
+            SetMassSpellInfluence(casting_hero, spellId, mastery,
+                                  monster_power, currentSide,
+                                  bIsMonsterSpell);
+            ShowSpellMessage(bIsMonsterSpell, spellId, 0);
+            if (!static_cast<const combatManager*>(this)->IsQuickCombat()) {
+                ResetLimitCreature();
+                {
+                    for (int side = 0; side < 2; ++side) {
+                        for (int index = 0; index < numArmies[side]; ++index) {
+                            if (effected[side][index]) {
+                                army* effected_army = &armies[side][index];
+                                effected_army->creatureId |= 0x20000000;
+                                MarkCreatureEffect(side, index);
+                            }
+                        }
+                    }
+                }
+                ComputeMaxExtent();
+
+                {
+                    for (int frame = 0; frame < 10; ++frame) {
+                        for (int side = 0; side < 2; ++side) {
+                            for (int index = 0; index < numArmies[side]; ++index) {
+                                if (effected[side][index])
+                                    armies[side][index].PaletteEffect = frame * 0.1;
+                            }
+                        }
+                        DrawFrame(1, 1, 0, 100, 1, 1);
+                    }
+                }
+                {
+                    for (int frame = 10; frame > 0; --frame) {
+                        for (int side = 0; side < 2; ++side) {
+                            for (int index = 0; index < numArmies[side]; ++index) {
+                                if (effected[side][index])
+                                    armies[side][index].PaletteEffect = frame * 0.1;
+                            }
+                        }
+                        DrawFrame(1, 1, 0, 100, 1, 1);
+                    }
+                }
+                {
+                    for (int side = 0; side < 2; ++side) {
+                        for (int index = 0; index < numArmies[side]; ++index) {
+                            if (effected[side][index])
+                                armies[side][index].creatureId &= ~0x20000000;
+                        }
+                    }
+                }
+                DrawFrame(1, 1, 0, 0, 1, 0);
+            }
+        }
+        break;
+
+    case SPELL_POISON:
+        target->SetSpellInfluence(spellId, monster_power, mastery, 0);
+        ShowSpellMessage(bIsMonsterSpell, spellId, target);
+        SpellEffect(traits->m_effect, target, 100, 1);
+        break;
+
+    case SPELL_BIND:
+    case SPELL_AGE:
+        target->SetSpellInfluence(spellId, monster_power, mastery, 0);
+        ShowSpellMessage(bIsMonsterSpell, spellId, target);
+        SpellEffect(traits->m_effect, target, 100, 0);
+        break;
+
+    // Dreamcast spells.cpp:1432..1484 preserves both helper boundaries:
+    // ClearEffects starts the mass arm and ValidSpellTargetArmy is the
+    // per-stack predicate. Complete expands both here; the retail body
+    // consequently contains the same inline memset and direct
+    // SpellCastWorkChance comparison.
+    case SPELL_DISPEL:
+        if (target) {
+            SpellEffect(traits->m_effect, target, 100, 0);
+            for (int dispelled_spell = 0; dispelled_spell < 81;
+                 ++dispelled_spell) {
+                if (dispelled_spell != SPELL_POISON)
+                    target->CancelIndividualSpell(dispelled_spell);
+            }
+            ShowSpellMessage(bIsMonsterSpell, spellId, target);
+        } else {
+            ClearEffects();
+            for (int side = 0; side < 2; ++side) {
+                for (int index = 0; index < numArmies[side]; ++index) {
+                    army* dispel_target = &armies[side][index];
+                    if (ValidSpellTargetArmy(spellId, currentSide,
+                                             dispel_target, 1,
+                                             bIsMonsterSpell)) {
+                        for (int dispelled_spell = 0;
+                             dispelled_spell < 81; ++dispelled_spell) {
+                            if (dispelled_spell != SPELL_POISON)
+                                dispel_target->CancelIndividualSpell(
+                                    dispelled_spell);
+                        }
+                        effected[side][index] = 1;
+                    }
+                }
+            }
+            ShowSpellMessage(bIsMonsterSpell, spellId, 0);
+            ShowMassSpell(effected, traits->m_effect, 0);
+
+            for (TObstacle* obstacle = obstacles.begin;
+                 obstacle != obstacles.end; ++obstacle) {
+                if (obstacle->sprite
+                    && (cells[obstacle->hex].field_10 & 0x3c)) {
+                    RemoveObstacle(obstacle - obstacles.begin);
+                    if (obstacle->field_14 != -1)
+                        SpellEffect(obstacle->field_14, obstacle->hex,
+                                    100, 0);
+                }
+            }
+        }
+        break;
+
+    // Dreamcast spells.cpp:1490..1500 retains this creature ability as
+    // a separate arm: only positive (helpful) influences are removed.
+    // Complete independently narrows the loop to shared spell rows 10..69;
+    // the later creature-effect rows are not part of this helpful-spell scan.
+    case SPELL_DISPEL_HELPFUL: {
+        for (int dispelled_spell = 10; dispelled_spell < 70;
+             ++dispelled_spell) {
+            if (target->spellInfluence[dispelled_spell]
+                && akSpellTraits[dispelled_spell].field_0 > 0) {
+                target->CancelIndividualSpell(dispelled_spell);
+            }
+        }
+        ShowSpellMessage(bIsMonsterSpell, spellId, target);
+        SpellEffect(traits->m_effect, target, 100, 0);
+        break;
+    }
+
+    // Dreamcast spells.cpp:1505..1530 supplies the single/mass split,
+    // ClearEffects boundary, hypnotized-stack guard and
+    // ValidSpellTargetArmy predicate. Retail expands the two tiny helpers
+    // but keeps the same statement order and current-side-only walk.
+    case SPELL_CURE:
+        if (target) {
+            target->Cure(mastery, monster_power, casting_hero);
+            SpellEffect(traits->m_effect, target, 100, 0);
+            ShowSpellMessage(bIsMonsterSpell, SPELL_CURE, target);
+        } else {
+            ClearEffects();
+            for (int index = 0; index < numArmies[currentSide]; ++index) {
+                army* cure_target = &armies[currentSide][index];
+                if (!cure_target->hypnotizeFlag
+                    && ValidSpellTargetArmy(SPELL_CURE, currentSide,
+                                             cure_target, 1,
+                                             bIsMonsterSpell)) {
+                    cure_target->Cure(mastery, monster_power,
+                                      casting_hero);
+                    effected[currentSide][index] = 1;
+                }
+            }
+            ShowSpellMessage(bIsMonsterSpell, SPELL_CURE, 0);
+            ShowMassSpell(effected, traits->m_effect, 0);
+        }
+        break;
+
+    // Dreamcast spells.cpp:1534 proves this shared source-level helper
+    // call. Complete expands the helper, including its smaller
+    // find_resurrection_target selector, into the retail switch arm.
+    case SPELL_RESURRECTION:
+    case SPELL_ANIMATE_DEAD:
+        Resurrect(spellId, target->gridIndex, monster_power, mastery,
+                  casting_hero);
+        break;
+
+    // Dreamcast spells.cpp:1540..1558 fixes this as a guarded secondary
+    // stack lookup followed by the sacrifice, message/effect, and
+    // resurrection in that order. Retail proves the hit-point formula and
+    // the two stack-state writes independently.
+    case SPELL_SACRIFICE:
+        if (ValidHex(secondaryIndex)) {
+            army* sacrifice_army = cells[secondaryIndex].get_army();
+            long hit_points_resurrected =
+                (akCreatureTypeTraits[sacrifice_army->creatureType].hitPoints
+                 + traits->mastery_bonus[mastery] + monster_power)
+                * sacrifice_army->numTroops;
+            sacrifice_army->Damage(sacrifice_army->hitPoints
+                                   * sacrifice_army->numTroops);
+            sacrifice_army->bShowPowEffect = 1;
+            sacrifice_army->creatureId |= 0x10000000;
+            ShowSpellMessage(bIsMonsterSpell, spellId, sacrifice_army);
+            PowEffect(eSpellEffectSacrifice_Slay, 1);
+            Resurrect(target, hit_points_resurrected, 0);
+        }
+        break;
+
+    // Dreamcast spells.cpp:1571..1597 proves the projectile, named
+    // previous_skill local, hero-bonus call, influence update and quick-
+    // combat message guard. Retail fixes the defense arithmetic and the
+    // one-entry projectile tables.
+    case SPELL_DISRUPTING_RAY: {
+        if (!static_cast<const combatManager*>(this)->IsQuickCombat()) {
+            ShootAnimatedMissile(castX, castY, target->MidX(),
+                                 target->MidY(), 1,
+                                 gDisruptingRayAngles,
+                                 gDisruptingRaySprites);
+        }
+        int previous_skill = target->defenseSkill;
+        target->defenseSkill -= traits->mastery_bonus[mastery];
+        if (casting_hero) {
+            target->defenseSkill -= casting_hero->GetHeroSpellBonus(
+                SPELL_DISRUPTING_RAY, target->monInfoLevel,
+                traits->mastery_bonus[mastery]);
+        }
+        if (target->defenseSkill < 0)
+            target->defenseSkill = 0;
+        SpellEffect(traits->m_effect, target, 100, 0);
+        target->SetSpellInfluence(spellId, monster_power, mastery,
+                                  casting_hero);
+        if (!static_cast<const combatManager*>(this)->IsQuickCombat()) {
+            sprintf(gText, gpGeneralText->GetText(92),
+                    previous_skill - target->defenseSkill);
+            combatWindow->combat_message(gText, 1, 0);
+        }
+        break;
+    }
+
+    // Dreamcast spells.cpp:1602..1627 retains the two window-manager
+    // helper boundaries and the whole move sequence. Complete inlines only
+    // army::Is; the remaining ten calls and their order are independently
+    // visible in retail.
+    case SPELL_TELEPORT:
+        targetIndex = secondaryIndex;
+        DrawFrame(1, 0, 0, 0, 1, 0);
+        gpWindowManager->SaveFizzleSourceX(0, 0, 0x320, 0x22c);
+        target->remove_aura();
+        target->remove_binding();
+        target->CancelIndividualSpell(SPELL_BIND);
+        RemoveArmyFromGrid(*target);
+        if (target->Is(1u << 0))
+            target->CanFit(targetIndex, 1, &targetIndex);
+        PlaceArmyInGrid(*target, targetIndex);
+        target->gridIndex = targetIndex;
+        target->add_aura();
+        DrawFrame(0, 0, 0, 0, 1, 0);
+        gpWindowManager->FizzleForwardX(0, 0, 0x320, 0x22c, -1);
+        break;
+
+    // Dreamcast spells.cpp:1632..1660 preserves the obstacle lookup,
+    // secondary-effect split, drawing-limit capture and the two fizzle
+    // helper boundaries. Retail fixes field_14 as both the cell's obstacle
+    // index and the obstacle's optional replacement effect.
+    case SPELL_REMOVE_OBSTACLE: {
+        int obstacle_index = cells[targetIndex].field_14;
+        int replacement_effect = obstacles[obstacle_index].field_14;
+        SpellEffect(traits->m_effect, targetIndex, 100, 0);
+        if (replacement_effect == -1) {
+            field_13d2c = 1;
+            field_13d34 = 1;
+            DrawObstacle(cells[targetIndex]);
+            field_13d34 = 0;
+            field_13d2c = 0;
+            gpWindowManager->SaveFizzleSourceX(
+                drawbridgeBounds.values[0], drawbridgeBounds.values[1],
+                drawbridgeBounds.values[2] - drawbridgeBounds.values[0] + 1,
+                drawbridgeBounds.values[3] - drawbridgeBounds.values[1] + 1);
+            RemoveObstacle(obstacle_index);
+            DrawFrame(0, 0, 0, 0, 1, 0);
+            gpWindowManager->FizzleForwardX(
+                drawbridgeBounds.values[0], drawbridgeBounds.values[1],
+                drawbridgeBounds.values[2] - drawbridgeBounds.values[0] + 1,
+                drawbridgeBounds.values[3] - drawbridgeBounds.values[1] + 1,
+                replacement_effect);
+        } else {
+            RemoveObstacle(obstacle_index);
+            SpellEffect(replacement_effect, targetIndex, 100, 0);
+        }
+        break;
+    }
+
+    // Dreamcast spells.cpp:1664 keeps the clone operation as this named
+    // helper boundary; Complete likewise emits one out-of-line call.
+    case SPELL_CLONE:
+        MirrorImage(target->gridIndex, mastery);
+        break;
+
+    // Dreamcast spells.cpp:1668..1681 has one source arm per elemental,
+    // all joining at the same four-argument helper call. Retail preserves
+    // the four calls and fixes the Complete creature IDs independently.
+    case SPELL_SUMMON_FIRE_ELEMENTAL:
+        SummonElemental(SPELL_SUMMON_FIRE_ELEMENTAL,
+                        CREATURE_FIRE_ELEMENTAL, monster_power, mastery);
+        break;
+    case SPELL_SUMMON_EARTH_ELEMENTAL:
+        SummonElemental(SPELL_SUMMON_EARTH_ELEMENTAL,
+                        CREATURE_EARTH_ELEMENTAL, monster_power, mastery);
+        break;
+    case SPELL_SUMMON_WATER_ELEMENTAL:
+        SummonElemental(SPELL_SUMMON_WATER_ELEMENTAL,
+                        CREATURE_WATER_ELEMENTAL, monster_power, mastery);
+        break;
+    case SPELL_SUMMON_AIR_ELEMENTAL:
+        SummonElemental(SPELL_SUMMON_AIR_ELEMENTAL,
+                        CREATURE_AIR_ELEMENTAL, monster_power, mastery);
+        break;
+
+    // Dreamcast spells.cpp:1685..1703 proves the vector lifetime, named
+    // collector, SpellCastWorks boundary, per-stack influence update and
+    // final mass animation. Complete expands SpellCastWorks here while
+    // retaining its separate retail body at 0x5a8640.
+    case SPELL_BERSERK: {
+        std::vector<army*> targets;
+        mark_berserk_area_effect(targetIndex, mastery, targets);
+        for (std::vector<army*>::iterator it = targets.begin();
+             it != targets.end(); ++it) {
+            army* this_army = *it;
+            if (!SpellCastWorks(spellId, currentSide, this_army, 0,
+                                bIsMonsterSpell)) {
+                effected[this_army->combatSide][this_army->bitIndex] = 0;
+            } else {
+                this_army->SetSpellInfluence(spellId, monster_power,
+                                             mastery, casting_hero);
+            }
+        }
+        ShowMassSpell(effected, eSpellEffectBerserk, 0);
+        break;
+    }
+
+    // Complete-only Rust Dragon pseudo-spell. The Dreamcast spell table
+    // stops one row earlier, so retail is the sole source oracle here:
+    // CastSpell+0x2040 fixes the three-point reduction, zero clamp, dead
+    // legacy sprintf and the temporary format_string message in this order.
+    case SPELL_ACID_BREATH_DEFENSE: {
+        int previous_skill = target->defenseSkill;
+        target->defenseSkill -= 3;
+        if (target->defenseSkill < 0)
+            target->defenseSkill = 0;
+        SpellEffect(traits->m_effect, target, 100, 0);
+        if (!static_cast<const combatManager*>(this)->IsQuickCombat()) {
+            int reduction = previous_skill - target->defenseSkill;
+            sprintf(gText, gpGeneralText->GetText(92), reduction);
+            combatWindow->combat_message(
+                format_string(DATA_COMPGEN(
+                                  0x00688450, acidBreathDefenseFormat,
+                                  "Acid breath reduces the defense of the %s by %i"),
+                              CreatureName(target->creatureType,
+                                           target->numTroops),
+                              reduction)
+                    .c_str(),
+                1, 0);
+        }
+        break;
+    }
+        }
+    } else {
+        // Dreamcast spells.cpp:1713 and the separately emitted helper at
+        // dc 0x156aec prove this trailing source boundary. Complete VC6
+        // expands the helper here; retail reaches it from the failed
+        // SpellCastWorks test at CastSpell+0x4e2.
+        ShowSpellCastFailure(target, spellId);
+    }
+
+    // Dreamcast spells.cpp:1718..1728 preserves this as the shared join
+    // after both successful casts and ShowSpellCastFailure. Complete's
+    // +0x2228 walk proves the four surviving reset stores and omits two
+    // older Dreamcast-only animation flags.
+    for (int side = 0; side < 2; ++side) {
+        for (int index = 0; index < numArmies[side]; ++index) {
+            army* current_army = &armies[side][index];
+            current_army->bSomeUnitsDamaged = 0;
+            current_army->iDrawPriority = 4;
+            current_army->bShowAttackFrames = 0;
+            current_army->numTroopsToShowOverride = -1;
+        }
+    }
+
+    // The Dreamcast statement groups retain GetNumFrames and the hero-row
+    // lookup as source boundaries. Retail folds GetNumFrames but preserves
+    // the same completion loop, state reset, final DrawFrame, and selector
+    // update in this order.
+    if (bIsMonsterSpell != SPELL_CASTER_CREATURE) {
+        int nframes = creatureSprites[currentSide]->GetNumFrames(4);
+        int hero_row = akHeroClasses[casting_hero->heroClass].townType * 2
+            + akHeroTraits[casting_hero->id].sex;
+        for (int frame = kCombatHeroSprites[hero_row].castFrame;
+             frame < nframes; ++frame) {
+            field_53ec[currentSide] = frame;
+            DrawFrame(1, 0, 0, 100, 1, 1);
+        }
+        field_53e4[currentSide] = 0;
+        field_53ec[currentSide] = 0;
+        DrawFrame(1, 0, 0, 0, 1, 0);
+    }
+    CheckChangeSelector();
+
+    // Dreamcast spells.cpp:1753..1796 exposes the otherwise anonymous
+    // Familiar scan, message-string lifetime, two channel effects, and
+    // sample ordering. Complete corroborates every predicate and operand;
+    // only the x86 compiler's lowering of the inline name/side helpers is
+    // architecture-specific.
+    if (other_hero && bIsMonsterSpell == SPELL_CASTER_HERO
+        && mana_cost >= 5) {
+        int mana_recovered = mana_cost / 5;
+        int num_familiars = 0;
+        for (int side = 0; side < 2; ++side) {
+            for (int index = 0; index < numArmies[side]; ++index) {
+                army* current_army = &armies[side][index];
+                if (current_army->creatureType == CREATURE_FAMILIAR
+                    && ControllingSide(current_army) != currentSide) {
+                    num_familiars += current_army->numTroops;
+                }
+            }
+        }
+
+        if (num_familiars > 0) {
+            other_hero->mana += mana_recovered;
+            if (!static_cast<const combatManager*>(this)->IsQuickCombat()) {
+                std::string msg;
+                if (num_familiars == 1) {
+                    msg = format_string(gpGeneralText->GetText(112),
+                                        CreatureName(CREATURE_FAMILIAR, 1),
+                                        mana_recovered);
+                } else {
+                    msg = format_string(gpGeneralText->GetText(113),
+                                        CreatureName(CREATURE_FAMILIAR, 2),
+                                        mana_recovered);
+                }
+                combatWindow->combat_message(msg.c_str(), 1, 0);
+                SAMPLE2 drain_sample = LoadPlaySample(DATA_COMPGEN(
+                    0x00688430, magicChannelDrainSampleName,
+                    "MagChDrn.wav"));
+                SpellEffect(eSpellEffectMagicChannel_Spew,
+                            currentSide ? 16 : 0, 100, 0);
+                SAMPLE2 fill_sample = LoadPlaySample(DATA_COMPGEN(
+                    0x00688420, magicChannelFillSampleName,
+                    "MagChFil.wav"));
+                SpellEffect(eSpellEffectMagicChannel_Suck,
+                            currentSide ? 0 : 16, 100, 0);
+                WaitEndSample(drain_sample, -1);
+                WaitEndSample(fill_sample, -1);
+            }
+        }
     }
 }
 
@@ -3512,23 +4053,51 @@ void combatManager::Resurrect(army* target_army, long hit_points_resurrected,
     DrawFrame(1, 0, 0, 0, 1, 0);
 }
 
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
-
 // E:\gamedcs\spells.cpp:4984
+// Dreamcast's helper boundary and nine-statement body are preserved here.
+// Complete VC6 expands this whole helper into CastSpell; the retail arm
+// independently corroborates the selector, formula, hero bonus and
+// temporary-resurrection predicate.
 DC_ONLY(0x156a68, 0x84)
-void combatManager::Resurrect(SpellID spell, int target_hex, int power, TSkillMastery mastery, const hero* casting_hero)
+inline void combatManager::Resurrect(SpellID spell, int target_hex,
+                                     int power, int mastery,
+                                     const hero* casting_hero)
 {
-    // @stub
+    army* target_army =
+        find_resurrection_target(spell, currentSide, target_hex, 0);
+    if (target_army) {
+        long hit_points_resurrected =
+            akSpellTraits[spell].mastery_bonus[mastery]
+            + akSpellTraits[spell].power_factor * power;
+        hit_points_resurrected += casting_hero->GetHeroSpellBonus(
+            spell, target_army->monInfoLevel, hit_points_resurrected);
+        unsigned char temporary =
+            spell == SPELL_RESURRECTION && mastery < eMasteryAdvanced;
+        Resurrect(target_army, hit_points_resurrected, temporary);
+    }
 }
 
 // E:\gamedcs\spells.cpp:5041
-DC_ONLY(0x156aec, 0xA8)
-void combatManager::ShowSpellCastFailure(army* targetArmy, int spellId)
+// Dreamcast emits this inline helper separately at dc 0x156aec and CastSpell
+// calls the source boundary at line 1713. Complete has no standalone body:
+// VC6 expands it into CastSpell+0x2159. The unused spellId parameter is kept
+// because CodeView and the decorated Dreamcast signature both prove it.
+inline void combatManager::ShowSpellCastFailure(army* targetArmy, int spellId)
 {
-    // @stub
+    if (!static_cast<const combatManager*>(this)->IsQuickCombat()) {
+        SAMPLE2 sample = LoadPlaySample(DATA_COMPGEN(
+            0x00688440, magicResistanceSampleName, "MagicRes.wav"));
+        sprintf(gText, gpGeneralText->GetText(190),
+                CreatureName(targetArmy->creatureType,
+                             targetArmy->numTroops),
+                gpGeneralText->GetText(targetArmy->numTroops == 1
+                                           ? 145
+                                           : 144));
+        combatWindow->combat_message(gText, 1, 0);
+        SpellEffect(eSpellEffectMagicResistance, targetArmy, 100, 0);
+        WaitEndSample(sample, -1);
+    }
 }
-
-#endif  // @carcass
 
 // The order-map's first RET-MISMATCH, RESOLVED HERE. The aligner paired
 // 0x5a7890 with the six-parameter Resurrect (spells.cpp:4984) and the
@@ -4433,14 +5002,21 @@ TCreatureType get_elemental_type(SpellID spell)
     }
 }
 
-#if 0 // @carcass - remaining Dreamcast roster rows
-
-// E:\gamedcs\spells.cpp:5912
-DC_ONLY(0x1580c4, 0x42)
+// E:\gamedcs\spells.cpp:5912. Dreamcast (dc 0x1580c4) proves the
+// full-side guard, the unused-side -1 sentinel, and the final comparison
+// against get_elemental_type. Complete retains the same four spell/type
+// arms and inlines that immediately preceding helper into the comparison.
+VA(0x005A93A0, 0xA4)
 unsigned char combatManager::AbleToSummonElemental(SpellID spell, long side)
 {
-    // @stub
+    if (numArmies[side] >= 20)
+        return 0;
+    if (field_132a8[side] == -1)
+        return 1;
+    return get_elemental_type(spell) == field_132a8[side];
 }
+
+#if 0 // @carcass - remaining Dreamcast roster rows
 
 // E:\gamedcs\spells.cpp:5928
 DC_ONLY(0x158108, 0x78)
