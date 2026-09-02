@@ -238,7 +238,7 @@ unsigned char combatManager::check_fire_wall(long hex, army* current_army, unsig
 
 VA(0x0059fe30, 0x2A4F)  // retail largest-unadmitted row, dc 0x14f7dc
 void combatManager::CastSpell(SpellID spellId, int targetIndex,
-                              unsigned char bIsMonsterSpell,
+                              int bIsMonsterSpell,
                               int secondaryIndex, int monster_skill,
                               long monster_power)
 {
@@ -311,7 +311,10 @@ void combatManager::CastSpell(SpellID spellId, int targetIndex,
             monster_power += casting_hero->GetSpellDurationBonus();
     }
 
-    if (bIsMonsterSpell != SPELL_CASTER_CREATURE) {
+    // Dreamcast line 721 has the original `!bIsMonsterSpell` hero arm.
+    // Complete extends that exact arm for artifact casts; retail +0x2db
+    // tests the already-nonzero value against SPELL_CASTER_ARTIFACT.
+    if (!bIsMonsterSpell || bIsMonsterSpell == SPELL_CASTER_ARTIFACT) {
         int hero_row = akHeroClasses[casting_hero->heroClass].townType * 2
             + akHeroTraits[casting_hero->id].sex;
         if (currentSide == 0)
@@ -352,9 +355,18 @@ void combatManager::CastSpell(SpellID spellId, int targetIndex,
         redirected = 0;
     }
 
-    if (bIsMonsterSpell == SPELL_CASTER_CREATURE || !target
-        || SpellCastWorks(spellId, currentSide, target, redirected,
-                          bIsMonsterSpell)) {
+    // Dreamcast lines 771..779 assign the cast decision before testing it;
+    // retail +0x4e2 corroborates the byte lifetime with `setle al; test al`.
+    // Keeping the expression fused into this `if` makes VC6 branch directly
+    // and pulls the expanded failure helper in front of the spell switch.
+    unsigned char spell_works;
+    if (bIsMonsterSpell == SPELL_CASTER_CREATURE || !target)
+        spell_works = 1;
+    else
+        spell_works = SpellCastWorks(spellId, currentSide, target, redirected,
+                                     bIsMonsterSpell);
+
+    if (spell_works) {
         if (!static_cast<const combatManager*>(this)->IsQuickCombat())
             launch_sample(traits->m_sample, -1, 3);
 
