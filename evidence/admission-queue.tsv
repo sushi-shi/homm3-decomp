@@ -238,7 +238,6 @@ bracketed	735	0x195b30	bracketed	singleselectionwindow..slider	singleselectionwi
 bracketed	732	0x195640	bracketed	singleselectionwindow..slider	singleselectionwindow,slider	game_191970_sub03_195640	resolve the owner, then add its VA claim and body
 carcass	729	0x7f860	in-span	cursor	cursor	advManager_DrawCursor	enable the existing VA claim and reconstruct its body
 bracketed	726	0x1926c0	bracketed	singleselectionwindow..slider	singleselectionwindow,slider	game_190ad0_sub02_1926c0	resolve the owner, then add its VA claim and body
-unclaimed-in-span	722	0x18c290	in-span	singleselectionwindow	singleselectionwindow	TSingleSelectionWindow_BeginSavedGame	add a VA claim and body to singleselectionwindow
 unmapped	722	0x203b20	unmapped				locate the owning TU, then add its VA claim and body
 bracketed	719	0x3cb20	bracketed	ai_tactical..army	ai_tactical,army	game_37a00_sub00_3cb20	resolve the owner, then add its VA claim and body
 bracketed	719	0x158080	bracketed	remote..resource	remote,resource	game_1533d0_sub00_158080	resolve the owner, then add its VA claim and body
