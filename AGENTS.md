@@ -59,6 +59,15 @@ homm3 sema diff 0x00524dd0 --structure
 homm3 sema diff 0x00524dd0 --source
 ```
 
+For a very large dispatcher, scope the view to the current arm instead of
+reading hundreds of unrelated blocks. Ranges are function-local and end
+exclusive; give each side its own range when earlier codegen shifted the arm:
+
+```sh
+homm3 sema diff 0x0059fe30 --base-range +0xb90:+0xc60 \
+  --target-range +0xc00:+0xcdc --structure
+```
+
 `show` is the compact function dossier. `asm --blocks` labels SH4 assembly with
 CodeView `bp` line/breakpoint boundaries, lexical `scope` boundaries, and inferred
 basic blocks (`B0`, `B1`, ...). It is the detailed view for understanding the older

@@ -150,3 +150,39 @@ class RelocRowsAndCensusTests(unittest.TestCase):
                       "0 target-shift, 0 flow-kind, 1 missing]", text)
         self.assertIn("[legend:", text)
         self.assertTrue(_asm.skeleton_census(base, base)["same"])
+
+
+class LocalRangeTests(unittest.TestCase):
+    def test_parse_accepts_disassembly_spelling_and_open_endpoints(self):
+        self.assertEqual(_asm.parse_local_range("+0xc00:+0xcdc"),
+                         (0xc00, 0xcdc))
+        self.assertEqual(_asm.parse_local_range(":0x20"), (None, 0x20))
+        self.assertEqual(_asm.parse_local_range("16:"), (16, None))
+        for bad in ("", ":", "10", "20:10", "-1:2", "wat:2"):
+            with self.subTest(bad=bad), self.assertRaises(ValueError):
+                _asm.parse_local_range(bad)
+
+    def test_slice_is_local_to_function_origin_and_keeps_reloc(self):
+        text = ("00001000 <fn>:\n"
+                "    1000: 90\tnop\n"
+                "    1001: e8 00 00 00 00\tcall\t0x1006\n"
+                "\t\t\t00001002:  IMAGE_REL_I386_REL32\t?callee@@YAXXZ\n"
+                "    1006: 75 02\tjne\t0x100a\n"
+                "    1008: 33 c0\txor\teax, eax\n"
+                "    100a: c3\tret\n")
+        sliced = _asm.slice_local_range(text, (1, 8))
+        self.assertNotIn("1000: 90", sliced)
+        self.assertIn("1001: e8", sliced)
+        self.assertIn("IMAGE_REL_I386_REL32\t?callee", sliced)
+        self.assertIn("1006: 75", sliced)
+        self.assertNotIn("1008: 33", sliced)  # end is origin + 8
+        cfg = _asm.cfg(sliced)
+        self.assertEqual(cfg[-1][2], "jcc <ext>")
+
+    def test_external_conditional_keeps_its_fallthrough_edge(self):
+        text = ("00000000 <selected-range>:\n"
+                "       0: 75 08\tjne\t0xa\n"
+                "       2: 33 c0\txor\teax, eax\n"
+                "       4: c3\tret\n")
+        self.assertEqual(_asm.cfg(text)[0][2],
+                         "jcc <ext> | fall B1")
