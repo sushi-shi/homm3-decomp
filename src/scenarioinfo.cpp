@@ -92,7 +92,7 @@ CScenarioInfoDlg::CScenarioInfoDlg()
         "bigfont.fnt", font::HEADING_HIGHLIGHT, 100, 0, 0, 8));
     Widgets.push_back(new CScrollTextWidget(
         gpGame->mapHeader.mapDescription.c_str(), 419, 149, 319, 115,
-        "smalfont.fnt", font::WHITE, 1));
+        "smalfont.fnt", font::WHITE, slider::BLUE));
 
     Widgets.push_back(new textWidget(
         411, 448, 89, 48,

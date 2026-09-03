@@ -45,7 +45,7 @@ public:
 
     virtual ~CScenarioPlayerInfoWidget();
     virtual int Main(message* msg) { return widget::Main(msg); }
-    virtual void zBufferDraw() {}
+    virtual void zBufferDraw(unsigned short*, int) {}
     virtual void Draw();
 };
 SIZE(CScenarioPlayerInfoWidget, 0x60);

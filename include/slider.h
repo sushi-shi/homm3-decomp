@@ -45,7 +45,7 @@ public:
     virtual ~slider();
 
     virtual int Main(message* msg);                 // slot 2
-    virtual void zBufferDraw();                     // slot 3
+    virtual void zBufferDraw(unsigned short* zBuffer, int id); // slot 3
     virtual void Draw();                            // slot 4
     virtual int GetRealHeight();                    // slot 5
     virtual int GetRealWidth();                     // slot 6

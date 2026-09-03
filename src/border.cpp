@@ -344,13 +344,11 @@ void bitmapBorder::SetPalette(const char* palette_name)
 #endif  // @carcass
 
 // E:\gamedcs\border.cpp:301
-// Promoted from DC_ONLY 2026-08-08. NOT the widget slot-3 override in
-// spite of the delinker's working label - it takes two arguments
-// (`ret 8`), exactly the DC roster's (unsigned short*, int), where
-// widget::zBufferDraw is nil-ary; bitmapBorder simply HIDES the pure
-// virtual, whose retail body ICF-folded away. The 11-argument push run
-// is the DC Bitmap816::zBufferDraw signature verbatim, and the three
-// literals are the 800x600 screen and its 1600-byte pitch.
+// Promoted from DC_ONLY 2026-08-08. Complete widened widget slot 3 to this
+// two-argument form: TCampaignBrief calls it through the vtable and the
+// image-wide empty representative at 0x5bc7e0 returns with `ret 8`.
+// The 11-argument push run is the DC Bitmap816::zBufferDraw signature
+// verbatim, and the three literals are the 800x600 screen and its pitch.
 VA(0x004503f0, 0x55)  // dc-bracket + body (11-arg zBufferDraw call), dc 0x5489c
 void bitmapBorder::zBufferDraw(unsigned short* zBuffer, int id)
 {
