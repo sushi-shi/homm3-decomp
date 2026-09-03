@@ -654,29 +654,30 @@ def _demangle_key(mangled: str):
         r"([A-Za-z_]\w*)@", mangled)
     nested_vector_element = re.search(
         r"\?\$vector@V\?\$vector@(?:V|U)([A-Za-z_]\w*)@", mangled)
-    if mangled.startswith("??1?$vector@") and vector_element:
-        return f"{vector_element.group(1).lower()}@vector_dtor"
-    if mangled.startswith("?size@?$vector@") and vector_element:
-        return f"{vector_element.group(1).lower()}@vector_size"
-    if mangled.startswith("?capacity@?$vector@") and vector_element:
-        return f"{vector_element.group(1).lower()}@vector_capacity"
-    if mangled.startswith("?resize@?$vector@") and vector_element:
-        return f"{vector_element.group(1).lower()}@vector_resize"
-    if mangled.startswith("?insert@?$vector@") and vector_element:
-        return f"{vector_element.group(1).lower()}@vector_insert"
-    if mangled.startswith("?erase@?$vector@") and nested_vector_element:
-        return (f"{nested_vector_element.group(1).lower()}_vector"
-                "@vector_erase")
-    if mangled.startswith("?erase@?$vector@") and vector_element:
-        return f"{vector_element.group(1).lower()}@vector_erase"
-    if mangled.startswith("?_Destroy@?$vector@") and vector_element:
-        return f"{vector_element.group(1).lower()}@vector_destroy"
-    if mangled.startswith("?_Ucopy@?$vector@") and vector_element:
-        return f"{vector_element.group(1).lower()}@vector_ucopy"
-    if mangled.startswith("?_Ufill@?$vector@") and vector_element:
-        return f"{vector_element.group(1).lower()}@vector_ufill"
-    if mangled.startswith("??4?$vector@") and vector_element:
-        return f"{vector_element.group(1).lower()}@vector_copy_assign"
+    vector_owner = (
+        f"{nested_vector_element.group(1).lower()}_vector"
+        if nested_vector_element else
+        vector_element.group(1).lower() if vector_element else None)
+    if mangled.startswith("??1?$vector@") and vector_owner:
+        return f"{vector_owner}@vector_dtor"
+    if mangled.startswith("?size@?$vector@") and vector_owner:
+        return f"{vector_owner}@vector_size"
+    if mangled.startswith("?capacity@?$vector@") and vector_owner:
+        return f"{vector_owner}@vector_capacity"
+    if mangled.startswith("?resize@?$vector@") and vector_owner:
+        return f"{vector_owner}@vector_resize"
+    if mangled.startswith("?insert@?$vector@") and vector_owner:
+        return f"{vector_owner}@vector_insert"
+    if mangled.startswith("?erase@?$vector@") and vector_owner:
+        return f"{vector_owner}@vector_erase"
+    if mangled.startswith("?_Destroy@?$vector@") and vector_owner:
+        return f"{vector_owner}@vector_destroy"
+    if mangled.startswith("?_Ucopy@?$vector@") and vector_owner:
+        return f"{vector_owner}@vector_ucopy"
+    if mangled.startswith("?_Ufill@?$vector@") and vector_owner:
+        return f"{vector_owner}@vector_ufill"
+    if mangled.startswith("??4?$vector@") and vector_owner:
+        return f"{vector_owner}@vector_copy_assign"
     bitset_width = _bitset_width(mangled)
     if bitset_width is not None:
         if mangled.startswith("??0?$bitset@"):
@@ -1624,6 +1625,21 @@ def selftest() -> list[str]:
             "@std@@V?$allocator@V?$vector@Vhero@@V?$allocator@Vhero@@"
             "@std@@@std@@@2@@std@@") != "hero_vector@vector_erase":
         failures.append("MSVC nested-vector erase key regressed")
+    if _demangle_key(
+            "?size@?$vector@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@"
+            "@std@@V?$allocator@V?$vector@Vhero@@V?$allocator@Vhero@@"
+            "@std@@@std@@@2@@std@@QBEIXZ") != \
+            "hero_vector@vector_size":
+        failures.append("MSVC nested-vector size key regressed")
+    if _demangle_key(
+            "?insert@?$vector@V?$vector@Utype_artifact@@"
+            "V?$allocator@Utype_artifact@@@std@@@std@@"
+            "V?$allocator@V?$vector@Utype_artifact@@"
+            "V?$allocator@Utype_artifact@@@std@@@std@@@2@@std@@"
+            "QAEXPAV?$vector@Utype_artifact@@"
+            "V?$allocator@Utype_artifact@@@std@@@2@IABV32@@Z") != \
+            "type_artifact_vector@vector_insert":
+        failures.append("MSVC nested-vector insert key regressed")
     if _demangle_key(
             "?capacity@?$vector@USecondarySkillData@@V?$allocator@USecondarySkillData@@"
             "@std@@@std@@QBEIXZ") != "secondaryskilldata@vector_capacity":
