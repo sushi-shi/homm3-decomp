@@ -1215,6 +1215,53 @@ static int PickLoadGame()
     return gpWindowManager->dialogReturn != DIALOG_RETURN_CANCEL;
 }
 
+// E:\gamedcs\kb.cpp:2811. The retail body independently fixes the source
+// shape: GetTeamMask expands at the head, both loops scan the eight player
+// slots in ascending order, disabled players are omitted, and the separator
+// choice is made only after appending a name. The three literal addresses are
+// retail's own pool entries; Dreamcast supplies the helper and local names.
+VA(0x004f1460, 0x172)  // linkorder + anchor-callee, dc 0xe2808
+unsigned char GetTeamNames(int player, char* sNames)
+{
+    unsigned short teamMask = gpGame->GetTeamMask(player);
+    int numPlayers = 0;
+    int i;
+
+    for (i = 0; i < 8; ++i) {
+        if ((teamMask & (1 << i)) && !gpGame->playerDisabled[i])
+            ++numPlayers;
+    }
+
+    if (numPlayers == 1) {
+        strcpy(sNames, gpGame->GetPlayerName(player));
+        return 0;
+    }
+
+    sNames[0] = 0;
+    int numPlayersAdded = 0;
+    for (i = 0; i < 8; ++i) {
+        if ((teamMask & (1 << i)) && !gpGame->playerDisabled[i]) {
+            strcat(sNames, gpGame->GetPlayerName(i));
+            ++numPlayersAdded;
+            if (numPlayersAdded < numPlayers) {
+                if (numPlayers == TEAM_NAMES_PAIR) {
+                    strcat(sNames,
+                           DATA_COMPGEN(0x0067f794, twoNameSeparator,
+                                        " & "));
+                } else if (numPlayersAdded
+                           < numPlayers - TEAM_NAMES_PAIR) {
+                    strcat(sNames, ", ");
+                } else {
+                    strcat(sNames,
+                           DATA_COMPGEN(0x0067f78c, finalNameSeparator,
+                                        ", & "));
+                }
+            }
+        }
+    }
+    return 1;
+}
+
 VA(0x004f3540, 0x14B)
 void game::ShowLuckInfo(hero* thisHero, int iMBType)
 {

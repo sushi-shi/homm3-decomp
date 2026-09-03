@@ -19,6 +19,12 @@ enum EKbTimerSlots {
     GLOBAL_BUTTON_REPEAT_TIMER_SLOT = 2
 };
 
+// GetTeamNames selects the natural-language conjunction only for a team of
+// exactly two active players; larger teams use comma-separated forms.
+enum EKbTeamNameCount {
+    TEAM_NAMES_PAIR = 2
+};
+
 extern unsigned long glTimers[10];
 
 // Retail .bss pointer cell used by both map-extra accessors. The complete
