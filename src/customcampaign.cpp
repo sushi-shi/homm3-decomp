@@ -108,6 +108,20 @@ void TCampaignBrief::CampaignHeaderStruct::GetAvailableScenarios(
 }
 #endif
 
+static unsigned char ReadCampaignByte(TAbstractFile* infile)
+{
+    unsigned char value;
+    infile->Read(&value, sizeof(value));
+    return value;
+}
+
+static short ReadCampaignWord(TAbstractFile* infile)
+{
+    short value;
+    infile->Read(&value, sizeof(value));
+    return value;
+}
+
 // Complete-only campaign deserializer. The >=28 arm is the field-for-field
 // inverse of retail SCampaign::Save at 0x48ae90. The older arm is fixed by
 // the 0x66a9-byte Read, the compiler-generated 2x8 LegacyCampaignHero
@@ -210,46 +224,20 @@ void SCampaign::Load(TAbstractFile* infile, int saveVersion)
         return;
     }
 
-    {
-        unsigned char value;
-        infile->Read(&value, sizeof(value));
-        isCheater = value != 0;
-    }
+    isCheater = ReadCampaignByte(infile) != 0;
     if (saveVersion >= 26) {
-        unsigned char value;
-        infile->Read(&value, sizeof(value));
-        secretActive = value != 0;
+        secretActive = ReadCampaignByte(infile) != 0;
     } else {
         secretActive = false;
     }
-    {
-        unsigned char value;
-        infile->Read(&value, sizeof(value));
-        currentMap = value;
-    }
-    {
-        unsigned char value;
-        infile->Read(&value, sizeof(value));
-        currentCampaign = value;
-    }
+    currentMap = ReadCampaignByte(infile);
+    currentCampaign = ReadCampaignByte(infile);
     if (saveVersion < 36
             && currentCampaign == PRE36_CAMPAIGN_REMAP_SOURCE)
         currentCampaign = PRE36_CAMPAIGN_REMAP_TARGET;
-    {
-        signed char value;
-        infile->Read(&value, sizeof(value));
-        numMapRegions = value;
-    }
-    {
-        unsigned char value;
-        infile->Read(&value, sizeof(value));
-        crossoverArrayIndex = value;
-    }
-    {
-        signed char value;
-        infile->Read(&value, sizeof(value));
-        briefingChoice = value;
-    }
+    numMapRegions = static_cast<signed char>(ReadCampaignByte(infile));
+    crossoverArrayIndex = ReadCampaignByte(infile);
+    briefingChoice = static_cast<signed char>(ReadCampaignByte(infile));
 
     campaignFilename = ReadLengthPrefixedString(infile);
     if (saveVersion >= 36) {
@@ -260,55 +248,48 @@ void SCampaign::Load(TAbstractFile* infile, int saveVersion)
                sizeof(campaignCompleted) - 14);
     }
 
-    unsigned char count;
-    infile->Read(&count, sizeof(count));
+    unsigned char count = ReadCampaignByte(infile);
     mapScores.resize(count);
     for (int i = 0; i < count; ++i) {
-        unsigned char completed;
-        infile->Read(&completed, sizeof(completed));
-        mapScores[i].completed = completed != 0;
+        mapScores[i].completed = ReadCampaignByte(infile) != 0;
         infile->Read(&mapScores[i].days, sizeof(mapScores[i].days));
         infile->Read(&mapScores[i].score, sizeof(mapScores[i].score));
 
-        signed char value;
-        infile->Read(&value, sizeof(value));
-        mapScores[i].complete_order = value;
-        infile->Read(&value, sizeof(value));
-        mapScores[i].index = value;
+        mapScores[i].complete_order =
+            static_cast<signed char>(ReadCampaignByte(infile));
+        mapScores[i].index =
+            static_cast<signed char>(ReadCampaignByte(infile));
     }
 
-    infile->Read(&count, sizeof(count));
+    count = ReadCampaignByte(infile);
     carryOverHeroes.resize(count);
-    infile->Read(&count, sizeof(count));
+    count = ReadCampaignByte(infile);
     field_4c.resize(count);
 
     for (int pool = 0; pool < count; ++pool) {
-        unsigned char heroCount;
-        infile->Read(&heroCount, sizeof(heroCount));
+        unsigned char heroCount = ReadCampaignByte(infile);
         carryOverHeroes[pool].resize(heroCount);
         for (int whichHero = 0; whichHero < heroCount; ++whichHero)
             carryOverHeroes[pool][whichHero].load(infile, saveVersion);
 
-        unsigned short artifactCount;
-        infile->Read(&artifactCount, sizeof(artifactCount));
+        unsigned short artifactCount =
+            static_cast<unsigned short>(ReadCampaignWord(infile));
         field_4c[pool].resize(artifactCount);
         for (int whichArtifact = 0; whichArtifact < artifactCount;
              ++whichArtifact) {
-            short value;
-            infile->Read(&value, sizeof(value));
+            short value = ReadCampaignWord(infile);
             int artifactId = value;
             memcpy(&field_4c[pool][whichArtifact].artifactId, &artifactId,
                    sizeof(artifactId));
-            infile->Read(&value, sizeof(value));
+            value = ReadCampaignWord(infile);
             field_4c[pool][whichArtifact].extra = value;
         }
     }
 
-    infile->Read(&count, sizeof(count));
+    count = ReadCampaignByte(infile);
     field_6c.resize(count);
     for (int assignedIndex = 0; assignedIndex < count; ++assignedIndex) {
-        short value;
-        infile->Read(&value, sizeof(value));
+        short value = ReadCampaignWord(infile);
         field_6c[assignedIndex] = value;
     }
 }
