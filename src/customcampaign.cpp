@@ -117,30 +117,8 @@ void TCampaignBrief::CampaignHeaderStruct::GetAvailableScenarios(
 VA(0x0048a310, 0xB1E)  // SavedGameHeader::Load caller + member/helper graph
 void SCampaign::Load(TAbstractFile* infile, int saveVersion)
 {
-    std::vector<CampaignScenarioInfo>::iterator scoreBegin =
-        mapScores.begin();
-    std::vector<CampaignScenarioInfo>::iterator scoreEnd = mapScores.end();
-    // TEMPORARY INLINE CONTROL: SCampaign::Load ->
-    // vector<CampaignScenarioInfo>::erase.
-    // retail +0x37 expands begin/end to the two pointer loads but calls the
-    // retained 0x48cdd0 range-erase body.  Pinning the whole original
-    // erase(begin(), end()) expression is the negative control: it also
-    // retains begin/end and grows the body to 170 blocks.
-#pragma inline_depth(0)
-    mapScores.erase(scoreBegin, scoreEnd);
-#pragma inline_depth()
-
-    SCampaignHeroPoolsView::iterator heroPoolBegin =
-        carryOverHeroes.begin();
-    SCampaignHeroPoolsView::iterator heroPoolEnd = carryOverHeroes.end();
-    // TEMPORARY INLINE CONTROL: SCampaign::Load ->
-    // vector<vector<hero> >::erase. Retail
-    // +0x47 expands begin/end to pointer loads but calls the retained
-    // 0x48c500 body.  Without the narrowed pin VC6 expands the element-
-    // assignment/_Destroy loops into this caller.
-#pragma inline_depth(0)
-    carryOverHeroes.erase(heroPoolBegin, heroPoolEnd);
-#pragma inline_depth()
+    mapScores.erase(mapScores.begin(), mapScores.end());
+    carryOverHeroes.erase(carryOverHeroes.begin(), carryOverHeroes.end());
 
     if (saveVersion < 28) {
         // The out-of-line LegacyCampaignHero constructor below makes VC6
@@ -158,15 +136,8 @@ void SCampaign::Load(TAbstractFile* infile, int saveVersion)
         currentCampaign = saved.currentCampaign;
         crossoverArrayIndex = 0;
         secretActive = false;
-        // TEMPORARY INLINE CONTROL: SCampaign::Load ->
-        // basic_string::assign(ptr, size).
-        // retail +0xc9 inlines the C-string length scan and retains this
-        // two-argument assign.  The operator= spelling is the negative
-        // control: VC6 expands assign here and calls _Grow/_Eos instead.
-#pragma inline_depth(0)
         campaignFilename.assign(
             saved.campaignFilename, strlen(saved.campaignFilename));
-#pragma inline_depth()
 
         memset(campaignCompleted, 0, sizeof(campaignCompleted));
         memcpy(campaignCompleted, saved.campaignCompleted,
@@ -334,14 +305,7 @@ void SCampaign::Load(TAbstractFile* infile, int saveVersion)
     }
 
     infile->Read(&count, sizeof(count));
-    // TEMPORARY INLINE CONTROL: SCampaign::Load -> vector<int>::resize.
-    // Retail +0xade
-    // retains this complete four-byte-element resize, ICF-folded with the
-    // already exact vector<type_point>::resize at 0x4d4aa0.  The unpinned
-    // negative control expands its allocation/insert/erase CFG into Load.
-#pragma inline_depth(0)
     field_6c.resize(count);
-#pragma inline_depth()
     for (int assignedIndex = 0; assignedIndex < count; ++assignedIndex) {
         short value;
         infile->Read(&value, sizeof(value));
@@ -423,36 +387,12 @@ int SCampaign::get_total_time() const
 // two calls from 0x48a310 place this helper in customcampaign.obj.
 VA_COMPGEN(0x0048C500, 0xA3, VECTOR_ERASE, hero_vector)
 
-// Minimum ODR use needed to retain the real VC6/Dinkumware COMDAT. The
-// statement-scoped inline pin applies only to this unclaimed anchor; without
-// it VC6 flattens erase into the wrapper and emits no public specialization,
-// while retail's 0x48a310 caller proves an out-of-line call to this helper.
-// The wrapper is not a retail claim and adds no target/report row.
-void __fastcall EmitCampaignHeroPoolErase(
-    SCampaignHeroPoolsView* pools,
-    SCampaignHeroPoolsView::iterator first,
-    SCampaignHeroPoolsView::iterator last)
-{
-#pragma inline_depth(0)
-    pools->erase(first, last);
-#pragma inline_depth()
-}
-
 // Exact Dinkumware _Insertion_sort_1 body retained by the Complete-only
 // custom-campaign list sort. Retail proves four-byte pointer elements, the
 // by-value empty predicate, the extra _Ty** discriminator, and all three
 // out-of-line predicate calls. The stock VC6 template is byte-identical.
 VA_COMPGEN(0x00483AA0, 0xA0, INSERTION_SORT_1,
            CampaignHeaderPointerLess)
-
-void __fastcall EmitCampaignHeaderInsertionSort(void** first, void** last)
-{
-#pragma inline_depth(0)
-    std::_Insertion_sort_1(
-        first, last, CampaignHeaderPointerLess(),
-        static_cast<void**>(0));
-#pragma inline_depth()
-}
 
 #if 0  // Dreamcast-only carcass; retained as evidence, not emitted for retail.
 // E:\gamedcs\customcampaign.cpp:222
