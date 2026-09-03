@@ -1277,6 +1277,13 @@ public:
             const_cast<hero*>(this)->get_special_terrain());
     }
 #endif
+    // E:\gamedcs\Hero.h:724. Dreamcast retains this header helper as a
+    // standalone inline body. Complete stores the resolved sex on the live
+    // hero and expands this test at its spells.cpp caller.
+    unsigned char IsMale() const
+    {
+        return sex == 0;
+    }
     float get_combat_value_modifier();
     // ai_combat's create_skeletons (0x426df0) calls both back to back:
     // the factor with a pushed 1, then the creature type with no

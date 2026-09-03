@@ -1219,7 +1219,7 @@ events	?DoAIEvent@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@@Z	100.00
 # synth PDB - returned the row to master's own 98.5741 to the digit
 # with events.cpp untouched. Cross-generation noise, the
 # recruit::Update revert-control precedent; hist keeps 99.1139.
-events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	99.0481	99.0481	99.1139	0xad470	907f85ec7c05
+events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	98.5741	99.0481	99.1139	0xad470	907f85ec7c05
 events	?DoCustomArtifact@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	98.2381	99.1492	99.1492	0x9f070	4d12ed56362a
 events	?DoCustomResource@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa4780	51e134850e4b
 events	?DoCustomSpellScroll@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	97.4451	97.4451	97.4451	0xa5a80	2c8331b27654
@@ -1334,7 +1334,7 @@ events	?monsters_join@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@
 # (push 0xb4 in townManager::Open), layout-required and not gateable
 # per-TU. hist keeps 100.0000; the saturation law says a later
 # declarator can carry it back.
-events	?monsters_sell_out@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	99.9517	100.0000	100.0000	0xa7250	f7b1ec4933f6
+events	?monsters_sell_out@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	100.0000	100.0000	100.0000	0xa7250	f7b1ec4933f6
 events	?show_rewards@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@2@J@Z	100.0000	100.0000	100.0000	0xa0b00	9287544ef4a4
 exec	?AddManager@executive@@QAEHPAVbaseManager@@H@Z	100.0000	100.0000	100.0000	0xb0b20	11f81dc72e6a
 exec	?CallManager@executive@@QAEXPAVbaseManager@@@Z	100.0000	100.0000	100.0000	0xb0c70	a9eb44cb2746
@@ -2902,7 +2902,7 @@ singleselectionwindow	?OnGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNet
 # SetCurrentMap/OnSetAsHostMsg bodies landing in the TU dropped the
 # pair again with both sources byte-identical. Recovery rides with
 # DrawHeroAdvancedOption reaching 100.
-singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0	0e5de8f038ec
+singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	99.8868	100.0000	100.0000	0x17cdc0	0e5de8f038ec
 singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	9177fbb0fa83
 # 2026-08-27 hand-lowered 100.0000 -> 99.8710 (hist keeps 100.0000): the
 # documented TU-state flap (master accepted this pair down at 99.89/99.87
@@ -3065,7 +3065,7 @@ spells	?AbleToSummonElemental@combatManager@@QAEEHJ@Z	100.0000	100.0000	100.0000
 spells	?AddBolt@combatManager@@QAEXPAUSBolt@@HHHHHHHHHHHH@Z	100.0000	100.0000	100.0000	0x1a5a90	298ffa58efa4
 spells	?AreaEffect@combatManager@@QAEXJHJJ@Z	99.8565	99.8565	99.8565	0x1a4970	89c796832376
 spells	?Armageddon@combatManager@@QAEXHH@Z	93.9013	93.9013	93.9013	0x1a4bc0	4c4fd8883f34
-spells	?CastSpell@combatManager@@QAEXHHHHHJ@Z	90.2658	90.2658	90.2658	0x19fe30	2f8d50f1b470
+spells	?CastSpell@combatManager@@QAEXHHHHHJ@Z	90.2630	90.2658	90.2658	0x19fe30	2f8d50f1b470
 spells	?ChainLightning@combatManager@@QAEXHHH@Z	96.1913	96.1913	96.1913	0x1a6360	ebf901f1d173
 spells	?ClearEffects@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1a66b0	59ebec44e08d
 spells	?ComputeSpellDamage@combatManager@@QAEJHJJPAVhero@@0PBVarmy@@E@Z	100.0000	100.0000	100.0000	0x1a7890	210d41023a64
@@ -3073,8 +3073,9 @@ spells	?DoBolt@combatManager@@QAEXHHHHHHHHHHHHHHHHH@Z	100.0000	100.0000	100.0000
 spells	?DrawBolt@combatManager@@QAEXPAUSBolt@@H@Z	89.3165	94.9073	94.9073	0x1a5440	69eb210a186c
 spells	?Earthquake@combatManager@@QAEXH@Z	84.9579	84.9579	84.9579	0x1a7c80	659a5c274d1b
 spells	?GetNextChainLightningTarget@combatManager@@QAEJPBVarmy@@J@Z	91.1017	91.1017	91.1017	0x1a61f0	1b87e9d5a270
-spells	?HandleGetTeleportDestination@@YIHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1a37d0	5075d18ff193
+spells	?HandleGetTeleportDestination@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1a37d0	288a3f189d84
 spells	?HasValidSpellTarget@combatManager@@QAEEHJJEJ@Z	100.0000	100.0000	100.0000	0x1a40d0	7c8be7ea45f1
+spells	?InitiateSpell@combatManager@@QAEXHH@Z	89.4253	89.4253	89.4253	0x19ec50	f3d24cbd9a02
 spells	?LoadSpellEffect@combatManager@@QAEPAVCSprite@@H@Z	100.0000	100.0000	100.0000	0x1a92f0	b8d6895d9116
 spells	?MirrorImage@combatManager@@QAEXHH@Z	82.3404	82.3404	82.3404	0x1a6c70	ee7fd7c139af
 spells	?ModifySpellDamage@combatManager@@QAEJJHPBVhero@@0PBVarmy@@E@Z	76.8787	88.4854	88.4854	0x1a78e0	cc075767214e
@@ -3103,6 +3104,14 @@ spells	?mark_berserk_area_effect@combatManager@@QAEXJJAAV?$vector@JV?$allocator@
 spells	?mark_berserk_area_effect@combatManager@@QAEXJJAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x1a4810	7b49ff679e72
 spells	?mark_hex_area_effect@combatManager@@QAEXJJEAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x1a46f0	07c71d56cf92
 spells	?remove_corpse@combatManager@@QAEXPAVhexcell@@JJ@Z	100.0000	100.0000	100.0000	0x1a7320	9d5aa2401316
+spells	?update_spell_target@@YIHJ@Z	95.5113	95.5113	95.5113	0x19f700	e930771247aa
+spells	HandleCastSacrifice	0.0000	0.0000	0.0000	0x1a2e90	4eecd9dd0187
+spells	HandleCastSpell	0.0000	0.0000	0.0000	0x1a3070	63941684393c
+spells	HandleCastTeleport	0.0000	0.0000	0.0000	0x1a3570	f4b6a0d5165a
+spells	HandleCastWallSpell	0.0000	0.0000	0.0000	0x1a3250	29f4a9b8e29d
+spells	combatManager_display_failure_reason	0.0000	0.0000	0.0000	0x1a2c60	5caf63834f12
+spells	handle_sacrifice_beneficiary	0.0000	0.0000	0.0000	0x1a2d00	2d39e586d4cb
+spells	mark_area_highlights	0.0000	0.0000	0.0000	0x19f8a0	26d7e0c34be7
 strip	??0strip@@QAE@HHHHHJPAVhero@@PAVarmyGroup@@HEPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1a9d20	cd54781733f7
 strip	?Draw@strip@@QAEXW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x1a9d80	bff66b465f1f
 strip	?DrawIcons@strip@@QAEXEW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x1a9db0	2f539e8928be

@@ -9,6 +9,7 @@
 // hex-taking SpellEffect; armygrp.h keeps that slice behind this view.
 #include "armygrp.h"
 #include "spells.h"
+#include "spelldefs.h"  // ESpellTargetFlags
 // DrawBolt writes 16-bit pixels straight into the screen bitmap, so it needs
 // the Bitmap16Bit layout and WinGraph.h's recovered RGBto16 boundary.
 #include "bitmap16.h"
@@ -156,6 +157,25 @@ static int ControllingSide(const army* stack)
 // enumerator in artifact.h and reaches here through hero.h.
 const int ARTIFACT_RECANTERS_CLOAK = 0x53;
 
+// Mirror Image's random target search excludes the one battlefield cell
+// retail singles out in addition to war-machine stacks. The semantic reason
+// for that particular cell is not yet proven, so keep the name conservative.
+const int MIRROR_IMAGE_EXCLUDED_HEX = 149;
+
+// Dialog handlers and rollover helpers. Dreamcast records every handler as
+// an S_LPROC32 taking message&, and Complete's DoDialog call sites retain the
+// same fastcall ABI. The unimplemented handlers remain external declarations
+// until their bodies move out of the carcass; their eventual definitions are
+// file-local in the recovered source.
+int handle_sacrifice_beneficiary(message& msg);
+int HandleCastSacrifice(message& msg);
+int HandleCastSpell(message& msg);
+int HandleCastWallSpell(message& msg);
+int HandleCastTeleport(message& msg);
+static int HandleGetTeleportDestination(message& msg);
+void mark_area_highlights(SpellID spell, TSkillMastery mastery, long hex);
+static int update_spell_target(long hex);
+
 // Retail .data 0x688334/0x688338, both initialised to -1 and each with
 // exactly FOUR references in the whole image, all eight of them inside
 // HandleGetTeleportDestination - so both are file-scope statics of this
@@ -212,13 +232,6 @@ SpellID combatManager::ViewSpells()
     // @stub
 }
 
-// E:\gamedcs\spells.cpp:176
-DC_ONLY(0x14ecbc, 0x85E)
-void combatManager::InitiateSpell(SpellID spellToCast)
-{
-    // @stub
-}
-
 // E:\gamedcs\spells.cpp:517
 DC_ONLY(0x14f51c, 0x18E)
 unsigned char combatManager::check_landmine(long hex, army* current_army, unsigned char is_walking)
@@ -235,6 +248,317 @@ unsigned char combatManager::check_fire_wall(long hex, army* current_army, unsig
 
 // E:\gamedcs\spells.cpp:616
 #endif  // @carcass
+
+// Dreamcast spells.cpp:176 supplies the source switch, the TPickANumber
+// lifetime, and the retained helper boundaries. Complete adds the initial
+// already-cast guard and the creatureSpell selector; its retail jump table and
+// call graph independently prove those changes.
+VA(0x0059ec50, 0xAA8)  // retail+dc-shape, dc 0x14ecbc
+void combatManager::InitiateSpell(SpellID spellToCast, int creatureSpell)
+{
+    if (field_54b4[currentSide] && !field_13d74)
+        return;
+    if (spellToCast == -1)
+        return;
+
+    field_3c = 0;
+    field_40 = -1;
+    field_44 = -1;
+    field_48 = -1;
+
+    int mastery = heroes[currentSide]->get_spell_level(spellToCast,
+                                                        field_53c0);
+    switch (spellToCast) {
+    case SPELL_QUICKSAND:
+        field_3c = 1;
+        field_40 = spellToCast;
+        break;
+
+    case SPELL_LAND_MINE:
+        if (field_1329c[1 - currentSide]) {
+            NormalDialog(gpGeneralText->GetText(186), 1, -1, -1, -1, 0,
+                         -1, 0, -1, 0, -1, 0);
+            break;
+        }
+        field_3c = 1;
+        field_40 = spellToCast;
+        break;
+
+    case SPELL_EARTHQUAKE:
+        if (field_132f4 <= 0) {
+            NormalDialog(gpGeneralText->GetText(183), 1, -1, -1, -1, 0,
+                         -1, 0, -1, 0, -1, 0);
+            break;
+        }
+        field_3c = 1;
+        field_40 = spellToCast;
+        break;
+
+    case SPELL_MAGIC_ARROW:
+    case SPELL_ICE_BOLT:
+    case SPELL_LIGHTNING_BOLT:
+    case SPELL_IMPLOSION:
+    case SPELL_CHAIN_LIGHTNING:
+    case SPELL_DEATH_RIPPLE:
+    case SPELL_DESTROY_UNDEAD:
+    case SPELL_ARMAGEDDON:
+    case SPELL_SHIELD:
+    case SPELL_AIR_SHIELD:
+    case SPELL_FIRE_SHIELD:
+    case SPELL_PROTECTION_FROM_AIR:
+    case SPELL_PROTECTION_FROM_FIRE:
+    case SPELL_PROTECTION_FROM_WATER:
+    case SPELL_PROTECTION_FROM_EARTH:
+    case SPELL_ANTI_MAGIC:
+    case SPELL_DISPEL:
+    case SPELL_MAGIC_MIRROR:
+    case SPELL_CURE:
+    case SPELL_RESURRECTION:
+    case SPELL_ANIMATE_DEAD:
+    case SPELL_BLESS:
+    case SPELL_CURSE:
+    case SPELL_BLOODLUST:
+    case SPELL_PRECISION:
+    case SPELL_WEAKNESS:
+    case SPELL_STONE_SKIN:
+    case SPELL_DISRUPTING_RAY:
+    case SPELL_PRAYER:
+    case SPELL_MIRTH:
+    case SPELL_SORROW:
+    case SPELL_FORTUNE:
+    case SPELL_MISFORTUNE:
+    case SPELL_HASTE:
+    case SPELL_SLOW:
+    case SPELL_SLAYER:
+    case SPELL_FRENZY:
+    case SPELL_TITANS_LIGHTNING_BOLT:
+    case SPELL_COUNTERSTRIKE:
+    case SPELL_HYPNOTIZE:
+    case SPELL_FORGETFULNESS:
+    case SPELL_BLIND: {
+        if (!HasValidSpellTarget(spellToCast, mastery, currentSide, 1, 0)) {
+            NormalDialog(gpGeneralText->GetText(186), 1, -1, -1, -1, 0,
+                         -1, 0, -1, 0, -1, 0);
+            break;
+        }
+
+        field_3c = creatureSpell == 1 ? AI_ORDER_CREATURE_SPELL
+                                      : AI_ORDER_CAST_SPELL;
+        field_40 = spellToCast;
+        if (SpellTargetsASingleArmy(spellToCast, mastery)) {
+            int x;
+            int y;
+            gpMouseManager->MouseCoords(&x, &y);
+            update_spell_target(GetGridIndex(x, y));
+            gpWindowManager->DoDialog(0, HandleCastSpell, 0);
+            if (!field_3c)
+                break;
+
+            army* target = find_spell_target(spellToCast, currentSide,
+                                             field_44, 1, 0);
+            if (target && spellToCast != SPELL_DISPEL
+                    && target->combatSide != currentSide
+                    && !(target->creatureId & (1 << 21))
+                    && target->get_mirror_effect() >= Random(1, 100)) {
+                TPickANumber picker(0, numArmies[currentSide] - 1);
+                int picked;
+                do {
+                    picked = picker.Pick();
+                } while (picked >= 0
+                         && ((armies[currentSide][picked].creatureId
+                              & (1 << 21))
+                             || armies[currentSide][picked].gridIndex
+                                    == MIRROR_IMAGE_EXCLUDED_HEX));
+                field_48 = armies[currentSide][picked].gridIndex;
+            }
+        }
+        break;
+    }
+
+    case SPELL_FROST_RING:
+    case SPELL_FIREBALL:
+    case SPELL_INFERNO:
+    case SPELL_METEOR_SHOWER:
+    case SPELL_BERSERK: {
+        int shadeLevel = gUnnamed698758.combatShadeLevel;
+        field_3c = creatureSpell == 1 ? AI_ORDER_CREATURE_SPELL
+                                      : AI_ORDER_CAST_SPELL;
+        field_40 = spellToCast;
+        if (shadeLevel && gUnnamed698758.showCombatMouseHex)
+            SetCombatGrid(gUnnamed698758.showCombatGrid, 1, 0, 1);
+        int x;
+        int y;
+        gpMouseManager->MouseCoords(&x, &y);
+        update_spell_target(GetGridIndex(x, y));
+        gpWindowManager->DoDialog(0, HandleCastSpell, 0);
+        if (shadeLevel && gUnnamed698758.showCombatMouseHex)
+            SetCombatGrid(gUnnamed698758.showCombatGrid, 1, 1,
+                          field_3c == 0);
+        break;
+    }
+
+    case SPELL_FORCE_FIELD:
+    case SPELL_FIRE_WALL: {
+        int shadeLevel = gUnnamed698758.combatShadeLevel;
+        field_3c = 1;
+        field_40 = spellToCast;
+        if (shadeLevel && gUnnamed698758.showCombatMouseHex)
+            SetCombatGrid(gUnnamed698758.showCombatGrid, 1, 0, 1);
+        gpWindowManager->DoDialog(0, HandleCastWallSpell, 0);
+        if (shadeLevel && gUnnamed698758.showCombatMouseHex)
+            SetCombatGrid(gUnnamed698758.showCombatGrid, 1, 1,
+                          field_3c == 0);
+        break;
+    }
+
+    case SPELL_TELEPORT:
+        gTeleportSourcePicked = 0;
+        if (!HasValidSpellTarget(spellToCast, mastery, currentSide, 1, 0)) {
+            NormalDialog(gpGeneralText->GetText(186), 1, -1, -1, -1, 0,
+                         -1, 0, -1, 0, -1, 0);
+            return;
+        }
+        field_3c = 1;
+        field_40 = spellToCast;
+        gpWindowManager->DoDialog(0, HandleCastTeleport, 0);
+        if (!field_3c)
+            break;
+        gTeleportSourcePicked = 1;
+        gpWindowManager->DoDialog(0, HandleGetTeleportDestination, 0);
+        break;
+
+    case SPELL_SACRIFICE:
+        if (!HasValidSpellTarget(spellToCast, mastery, currentSide, 1, 0)) {
+            NormalDialog(gpGeneralText->GetText(186), 1, -1, -1, -1, 0,
+                         -1, 0, -1, 0, -1, 0);
+            return;
+        }
+        if (!HasValidSpellTarget(spellToCast, mastery, currentSide, 0, 0)) {
+            NormalDialog(gpGeneralText->GetText(186), 1, -1, -1, -1, 0,
+                         -1, 0, -1, 0, -1, 0);
+            return;
+        }
+        field_3c = 1;
+        field_40 = spellToCast;
+        gpWindowManager->DoDialog(0, handle_sacrifice_beneficiary, 0);
+        if (!field_3c)
+            break;
+        gpWindowManager->DoDialog(0, HandleCastSacrifice, 0);
+        break;
+
+    case SPELL_REMOVE_OBSTACLE:
+        if (!HasValidSpellTarget(spellToCast, mastery, currentSide, 1, 0)) {
+            NormalDialog(gpGeneralText->GetText(713), 1, -1, -1, -1, 0,
+                         -1, 0, -1, 0, -1, 0);
+            return;
+        }
+        field_3c = 1;
+        field_40 = spellToCast;
+        gpWindowManager->DoDialog(0, HandleCastSpell, 0);
+        break;
+
+    case SPELL_CLONE:
+        if (numArmies[currentSide] >= 20) {
+            sprintf(gText, gpGeneralText->GetText(184),
+                    numArmies[currentSide]);
+            NormalDialog(gText, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            return;
+        }
+        if (!HasValidSpellTarget(spellToCast, mastery, currentSide, 1, 0)) {
+            NormalDialog(gpGeneralText->GetText(186), 1, -1, -1, -1, 0,
+                         -1, 0, -1, 0, -1, 0);
+            return;
+        }
+        field_3c = 1;
+        field_40 = spellToCast;
+        gpWindowManager->DoDialog(0, HandleCastSpell, 0);
+        break;
+
+    case SPELL_SUMMON_FIRE_ELEMENTAL:
+    case SPELL_SUMMON_EARTH_ELEMENTAL:
+    case SPELL_SUMMON_WATER_ELEMENTAL:
+    case SPELL_SUMMON_AIR_ELEMENTAL: {
+        int side = currentSide;
+        if (AbleToSummonElemental(spellToCast, side)) {
+            field_3c = 1;
+            field_40 = spellToCast;
+            break;
+        }
+        hero* castingHero = heroes[side];
+        const char* gender;
+        if (castingHero->IsMale())
+            gender = gpGeneralText->GetText(540);
+        else
+            gender = gpGeneralText->GetText(541);
+        const char* creatureName = CreatureName(field_132a8[side], 2);
+        sprintf(gText, gpGeneralText->GetText(539), castingHero->name,
+                creatureName, gender);
+        NormalDialog(gText, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        break;
+    }
+    }
+
+    gpMouseManager->SetPointer(6, mouseManager::COMBAT_SET);
+}
+
+// Complete factors the live rollover update out of InitiateSpell and the
+// dialog handler. There is no Dreamcast counterpart, so the name is
+// behaviour-derived; the retained body and its three callers prove the
+// boundary and fastcall argument placement.
+VA(0x0059f700, 0x192)  // retail-only factored helper
+static int update_spell_target(long hex)
+{
+    combatManager* manager = gpCombatManager;
+    unsigned char markArea = 0;
+    int creatureSpell = manager->field_3c == AI_ORDER_CREATURE_SPELL;
+    SpellID spell = manager->field_40;
+    hero* castingHero = manager->heroes[manager->currentSide];
+    unsigned int spellFlags = akSpellTraits[spell].field_c;
+    int mastery;
+    if (!castingHero)
+        mastery = 0;
+    else
+        mastery = castingHero->get_spell_level(spell, manager->field_53c0);
+
+    if ((spellFlags & SPELL_TARGET_MARK_AREA) == SPELL_TARGET_MARK_AREA
+            || spell == SPELL_BERSERK)
+        markArea = 1;
+
+    int result;
+    if (combatManager::ValidHex(hex)
+            && !combatManager::InInvisibleColumn(hex)
+            && gpCombatManager->ValidSpellTarget(
+                spell, mastery, hex, gpCombatManager->currentSide, 1,
+                creatureSpell)
+            && (spell != SPELL_CHAIN_LIGHTNING
+                || !gpCombatManager->cells[hex].HasArmy()
+                || gpCombatManager->cells[hex].get_army()->combatSide
+                    != gpCombatManager->currentSide)) {
+        result = hex;
+        gpMouseManager->SetPointer(spell + 1, mouseManager::SPELL_SET);
+        gpCombatManager->SpellTargetMessage(spell, hex, 1);
+        if (!markArea)
+            gpCombatManager->CheckChangeHighlighter(hex);
+    } else {
+        result = -1;
+        gpMouseManager->SetPointer(0, mouseManager::COMBAT_SET);
+        gpCombatManager->display_failure_reason(
+            spell, gpGeneralText->GetText(24), hex);
+        gpCombatManager->TurnOffHighlighter(1);
+    }
+    if (markArea)
+        mark_area_highlights(
+            spell,
+            static_cast<TSkillMastery>(mastery) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */,
+            hex);
+    return result;
+}
+
+// The Complete compiler emits this later source helper before CastSpell.
+// Keep the function at its Dreamcast-proven source location below while the
+// annotation records retail's actual emitted placement.
+VA(0x0059f8a0, 0x293)  // retail caller+CFG role, dc 0x152240
+void mark_area_highlights(SpellID spell, TSkillMastery mastery, long hex);
 
 VA(0x0059fe30, 0x2A4F)  // retail largest-unadmitted row, dc 0x14f7dc
 void combatManager::CastSpell(SpellID spellId, int targetIndex,
@@ -1251,22 +1575,22 @@ std::basic_string<char,std::char_traits<char>,std::allocator<char> combatManager
 }
 
 // E:\gamedcs\spells.cpp:1852
-DC_ONLY(0x151e54, 0x40)
+VA(0x005a2c60, 0x9B)  // retail order+caller, dc 0x151e54
 void combatManager::display_failure_reason(SpellID spell, const char* msg, long hex)
 {
     // @stub
 }
 
 // E:\gamedcs\spells.cpp:1862
-DC_ONLY(0x151e94, 0x1C6)
-int handle_sacrifice_beneficiary(message* msg)
+VA(0x005a2d00, 0x184)  // retail order+handler call, dc 0x151e94
+int handle_sacrifice_beneficiary(message& msg)
 {
     // @stub
 }
 
 // E:\gamedcs\spells.cpp:1961
-DC_ONLY(0x15205c, 0x1E2)
-int HandleCastSacrifice(message* msg)
+VA(0x005a2e90, 0x1D4)  // retail order+handler call, dc 0x15205c
+int HandleCastSacrifice(message& msg)
 {
     // @stub
 }
@@ -1286,22 +1610,22 @@ void clear_area_highlights()
 }
 
 // E:\gamedcs\spells.cpp:2159
-DC_ONLY(0x152558, 0x262)
-int HandleCastSpell(message* msg)
+VA(0x005a3070, 0x1D8)  // retail order+handler call, dc 0x152558
+int HandleCastSpell(message& msg)
 {
     // @stub
 }
 
 // E:\gamedcs\spells.cpp:2266
-DC_ONLY(0x1527bc, 0x258)
-int HandleCastWallSpell(message* msg)
+VA(0x005a3250, 0x31C)  // retail order+handler call, dc 0x1527bc
+int HandleCastWallSpell(message& msg)
 {
     // @stub
 }
 
 // E:\gamedcs\spells.cpp:2367
-DC_ONLY(0x152a14, 0x166)
-int HandleCastTeleport(message* msg)
+VA(0x005a3570, 0x184)  // retail order+handler call, dc 0x152a14
+int HandleCastTeleport(message& msg)
 {
     // @stub
 }
@@ -1353,11 +1677,11 @@ unsigned char combatManager::is_valid_teleport(const army* this_army, long new_h
 // ValidHex's `test/jl` and its `cmp 0xbb/jge`, which only happens when
 // the cell pointer is named ahead of the guard.
 VA(0x005a37d0, 0x17C)  // order-map+arity, dc 0x152c80
-int HandleGetTeleportDestination(message* msg)
+static int HandleGetTeleportDestination(message& msg)
 {
-    switch (msg->id) {
+    switch (msg.id) {
     case MESSAGE_MOUSE_MOVE: {
-        long hex = gpCombatManager->GetGridIndex(msg->codeX, msg->codeY);
+        long hex = gpCombatManager->GetGridIndex(msg.codeX, msg.codeY);
         if (hex == gTeleportHoverHex)
             break;
         long source_hex = gpCombatManager->field_44;
@@ -1384,21 +1708,21 @@ int HandleGetTeleportDestination(message* msg)
         gpCombatManager->field_48 = gTeleportDestinationHex;
         gTeleportHoverHex = -1;
         gTeleportDestinationHex = -1;
-        msg->id = MESSAGE_WIDGET;
-        msg->codeX = 10;
+        msg.id = MESSAGE_WIDGET;
+        msg.codeX = 10;
         return MESSAGE_DISPATCH_FORWARD;
     case MESSAGE_KEY_DOWN:
         // The ESC scancode in the codeX domain, the same value
         // dimensiondoorwindow.h names DIALOG_CLOSE_KEY; the arm then
         // falls into the right-click cancel below.
-        if (msg->codeX != 1)
+        if (msg.codeX != 1)
             break;
     case MESSAGE_RIGHT_BUTTON_DOWN:
         gpCombatManager->field_3c = 0;
         gTeleportHoverHex = -1;
         gTeleportDestinationHex = -1;
-        msg->id = MESSAGE_WIDGET;
-        msg->codeX = 10;
+        msg.id = MESSAGE_WIDGET;
+        msg.codeX = 10;
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;
