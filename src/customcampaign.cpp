@@ -358,6 +358,7 @@ LegacyCampaignHero::LegacyCampaignHero()
 // SCampaign::Load's retained Dinkumware helper cluster.  The element and
 // nested-element types are independently fixed by the +0x5c/+0x3c/+0x4c
 // member layouts and by the caller's 0x14/0x492/0x10/8-byte strides.
+VA_COMPGEN(0x004013D0, 0x28, VECTOR_CONSTRUCTOR_ITERATOR, LegacyCampaignHero)
 VA_COMPGEN(0x0048B440, 0x21, VECTOR_SIZE, CampaignScenarioInfo)
 VA_COMPGEN(0x0048B470, 0x23, VECTOR_SIZE, hero)
 VA_COMPGEN(0x0048C270, 0x285, VECTOR_INSERT, hero_vector)

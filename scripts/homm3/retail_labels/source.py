@@ -158,6 +158,7 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "VECTOR_DELETING_DTOR", "DEFAULT_CTOR_CLOSURE",
                  "VECTOR_DTOR", "VECTOR_SIZE",
                  "VECTOR_CAPACITY",
+                 "VECTOR_CONSTRUCTOR_ITERATOR",
                  "VECTOR_RESIZE", "VECTOR_INSERT", "VECTOR_ERASE",
                  "VECTOR_DESTROY", "VECTOR_UCOPY", "VECTOR_UFILL",
                  "VECTOR_COPY_ASSIGN",
@@ -660,6 +661,13 @@ def _demangle_key(mangled: str):
         vector_element.group(1).lower() if vector_element else None)
     if mangled.startswith("??1?$vector@") and vector_owner:
         return f"{vector_owner}@vector_dtor"
+    if mangled.startswith("??_H@"):
+        # MSVC's array/vector constructor iterator is type-erased in its
+        # public name: the element constructor arrives as a function-pointer
+        # argument.  There can be only one ??_H COMDAT spelling in a TU, so
+        # its claim key is intentionally independent of the descriptive
+        # source owner.
+        return "vector_constructor_iterator"
     if mangled.startswith("?size@?$vector@") and vector_owner:
         return f"{vector_owner}@vector_size"
     if mangled.startswith("?capacity@?$vector@") and vector_owner:
@@ -975,6 +983,7 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                                or "$vector_dtor$" in r["name"]
                                or "$vector_size$" in r["name"]
                                or "$vector_capacity$" in r["name"]
+                               or "$vector_constructor_iterator$" in r["name"]
                                or "$vector_resize$" in r["name"]
                                or "$vector_insert$" in r["name"]
                                or "$vector_erase$" in r["name"]
@@ -1046,6 +1055,9 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
         if "$vector_capacity$" in row["name"]:
             owner = row["name"].rsplit("$", 1)[1].lower()
             claim_keys.setdefault(f"{owner}@vector_capacity", []).append(row)
+            continue
+        if "$vector_constructor_iterator$" in row["name"]:
+            claim_keys.setdefault("vector_constructor_iterator", []).append(row)
             continue
         if "$vector_resize$" in row["name"]:
             owner = row["name"].rsplit("$", 1)[1].lower()
@@ -1644,6 +1656,9 @@ def selftest() -> list[str]:
             "?capacity@?$vector@USecondarySkillData@@V?$allocator@USecondarySkillData@@"
             "@std@@@std@@QBEIXZ") != "secondaryskilldata@vector_capacity":
         failures.append("MSVC vector capacity key regressed")
+    if _demangle_key("??_H@YGXPAXIHP6EX0@Z@Z") != \
+            "vector_constructor_iterator":
+        failures.append("MSVC vector constructor iterator key regressed")
     if _demangle_key("?_Tidy@?$bitset@$09@std@@AAEXK@Z") != \
             "bitset10@bitset_tidy":
         failures.append("MSVC bitset<10> _Tidy key regressed")
