@@ -1704,7 +1704,7 @@ hero	?GetVisibility@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe4070	95a689b2be07
 # unit's reference differently and the comparison moves with our
 # object unchanged. The header audit above found nothing because
 # there was nothing in the headers to find.
-hero	?GiveArtifact@hero@@QAEEPBUtype_artifact@@EE@Z	65.7490	75.1012	75.1012	0xe3070	67ddcbc18a6b
+hero	?GiveArtifact@hero@@QAEEPBUtype_artifact@@EE@Z	68.9069	75.1012	75.1012	0xe3070	67ddcbc18a6b
 hero	?GiveExperience@hero@@QAEHHHE@Z	100.0000	100.0000	100.0000	0xe33b0	f855005f641d
 hero	?GiveResource@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xe3600	934aedcd34c8
 hero	?GiveSS@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0xe22d0	8cb3163ef67c
@@ -1891,7 +1891,9 @@ inputmgr	?MakeScanCodeTable@inputManager@@QAEXXZ	100.0000	100.0000	100.0000	0xec
 inputmgr	?MouseMessageHandler@@YIHPAXIIJ@Z	100.0000	100.0000	100.0000	0xec290	7c0edaaa5a93
 inputmgr	?Open@inputManager@@UAEHH@Z	100.0000	100.0000	100.0000	0xec4d0	8332e8526402
 inputmgr	?PeekEvent@inputManager@@QAE?AVmessage@@XZ	100.0000	100.0000	100.0000	0xec640	3e82547dc77d
+kb	??0CNetMsg@@QAE@W4eRS_Messages@@K@Z	100.0000	100.0000	100.0000	0xf2930	c08c11f46c9e
 kb	?CleanUpMenus@@YIXXZ	100.0000	100.0000	100.0000	0xf4b50	5ad85acac0be
+kb	?DisplayVCWinLoss@@YI_NAAVVictoryConditionStruct@@AAH1_N@Z	94.9521	94.9521	94.9521	0xf15e0	0fa75f4e1fc3
 kb	?DoCampaignWindow@@YIEXZ	98.3910	98.3910	98.3910	0xf00a0	68ef1062200d
 kb	?DoMultiPlayerWindow@@YIHXZ	100.0000	100.0000	100.0000	0xf0590	732e54afec3c
 kb	?DoSinglePlayerWindow@@YIHXZ	99.1549	99.1549	99.1549	0xf0490	e1a6fe4ef5bb
@@ -2417,7 +2419,7 @@ remote	?HandlePlayerDead@@YIXHE@Z	100.0000	100.0000	100.0000	0x156780	a09fd5c039
 remote	?HandlePlayerDrop@@YIXK@Z	100.0000	100.0000	100.0000	0x156430	05f09e5d3f52
 remote	?HandlePlayerDrop@CDPlayHeroes@@QAEXK@Z	100.0000	100.0000	100.0000	0x153580	d5f0daf09975
 remote	?HandlePlayerLost@@YIXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x1569a0	1c5460787a87
-remote	?HandlePlayerWon@@YIXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x156940	77d401a12ef6
+remote	?HandlePlayerWon@@YIXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x156940	3d6505239734
 remote	?HasOldChat@CChatManager@@QAEEXZ	100.0000	100.0000	100.0000	0x153db0	9760075ee3ce
 remote	?IgnoreKey@CChatEdit@@UAEEPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1543f0	77129503ae51
 remote	?Init@CChatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1537b0	cd5ad8d4d49c
@@ -2562,7 +2564,7 @@ sacrifice_window	?all_creatures@type_skeleton_window@@CIHAAVmessage@@@Z	100.0000
 sacrifice_window	?artifact_click@type_sacrifice_window@@QAEXJE@Z	100.0000	100.0000	100.0000	0x1632a0	0feb58f6bb2a
 sacrifice_window	?backpack_click@type_sacrifice_window@@QAEXJE@Z	86.1308	86.1308	86.1308	0x1636c0	0d5252860cd9
 sacrifice_window	?convert_with_commas@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@J@Z	100.0000	100.0000	100.0000	0x162660	928f4f20aa90
-sacrifice_window	?create_artifact_widgets@type_sacrifice_window@@AAEXAAJH@Z	99.9983	100.0000	100.0000	0x160380	834f71b0c8a5
+sacrifice_window	?create_artifact_widgets@type_sacrifice_window@@AAEXAAJH@Z	99.5918	100.0000	100.0000	0x160380	834f71b0c8a5
 sacrifice_window	?create_creature_icons@type_sacrifice_window@@AAEJJJJJJAAJPAPAViconWidget@@1PAPAVtextWidget@@E@Z	100.0000	100.0000	100.0000	0x161f70	afad52fed516
 sacrifice_window	?create_creature_icons@type_skeleton_window@@AAEXJJJJJJAAJPAPAViconWidget@@1PAPAVtextWidget@@@Z	100.0000	100.0000	100.0000	0x166760	93a2b5c2f89b
 sacrifice_window	?create_creature_widgets@type_sacrifice_window@@AAEXAAJH@Z	100.0000	100.0000	100.0000	0x1610f0	eb6a2ccb96d4
@@ -2758,7 +2760,7 @@ singleselectionwindow	??0CNetPlayerHandlerPlayer@@QAE@XZ	100.0000	100.0000	100.0
 singleselectionwindow	??0CNetPlayerInfo@@QAE@XZ	100.0000	100.0000	100.0000	0x17f720	-
 singleselectionwindow	??0CNewPlayerUpdateMan@@QAE@XZ	100.0000	100.0000	100.0000	0x17c9b0	0ed8ff53773d
 singleselectionwindow	??0CUpdatePlayerPosMsg@@QAE@PAVCNetPlayerHandlerPlayer@@0@Z	100.0000	100.0000	100.0000	0x179870	4cb719207948
-singleselectionwindow	??0GameSelectionHeadersStruct@@QAE@XZ	79.2582	79.3242	79.3242	0x178e00	-
+singleselectionwindow	??0GameSelectionHeadersStruct@@QAE@XZ	79.3242	79.3242	79.3242	0x178e00	-
 singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	74.9955	75.2722	75.2722	0x179960	3885b26cf40c
 singleselectionwindow	??0lobby_message@@QAE@XZ	100.0000	100.0000	100.0000	0x189190	2b1be8208221
 singleselectionwindow	??0t_map_list_update@@QAE@K@Z	100.0000	100.0000	100.0000	0x189240	173781ee6a81

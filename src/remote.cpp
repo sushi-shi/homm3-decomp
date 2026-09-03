@@ -2470,8 +2470,8 @@ void HandlePlayerWon(CNetMsg* pNetMsg)
     bGameWon = 0;
     bGameLost = 0;
     gbGameOver = 1;
-    DisplayVCWinLoss(&message->victoryCondition,
-                     &bGameWon, &bGameLost, 1);
+    DisplayVCWinLoss(message->victoryCondition,
+                     bGameWon, bGameLost, true);
     if (bGameLost)
         bDefeatedAllPlayers = 0;
     if (bGameWon)

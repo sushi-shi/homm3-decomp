@@ -10,6 +10,7 @@
 #define HOMM3_GAME_TRANSMIT_DECLS
 #define HOMM3_GAME_NEW_MAP_DECLS
 #define HOMM3_NEWGAME_OBJ_DECLS
+#define HOMM3_REMOTE_WINLOSS_DECLS
 #include "kb.h"
 #define HOMM3_TOWN_OBJ_DECLS
 #include "game.h"
@@ -20,6 +21,7 @@
 #include "campaignbrief.h"
 #include "campaignwindow.h"
 #include "cmbtmgr.h"
+#include "creaturetype.h"
 #include "customcampaign.h"
 #include "kbwin.h"
 #include "exec.h"
@@ -48,6 +50,17 @@
 // GameUnsaved polls the town manager's baseManager status, so kb.obj is
 // one of the consumers that needs townmgr.h's guarded class prefix.
 #include "townmgr.h"
+
+// E:\gamedcs\CreatureType.h:296. Keep the recovered header-inline helper as
+// a real source boundary in this TU without adding another conditional VIEW.
+inline const char* GetArmyName(int type, int count)
+{
+    if (type < 0 || type > CREATURE_TYPE_LAST)
+        return DATA_COMPGEN(0x00691210, emptyCreatureName, "");
+    if (count == 1)
+        return akCreatureTypeTraits[type].m_name;
+    return akCreatureTypeTraits[type].m_plural_name;
+}
 
 #if 0  // @carcass
 
@@ -1261,6 +1274,470 @@ unsigned char GetTeamNames(int player, char* sNames)
     }
     return 1;
 }
+
+// E:\gamedcs\kb.cpp:2867. Dreamcast preserves this source helper and its
+// two calls. Complete expands it at every DisplayVCWinLoss site, including
+// the nested CPlayerWonMsg constructor; retaining the helper is therefore
+// part of the source shape rather than duplicated network scaffolding.
+inline void SendPlayerWon()
+{
+    if (gNetworkActive69954c) {
+        CPlayerWonMsg msg(
+            gpGame->mapHeader.victoryCondition.playerWinner,
+            gpGame->mapHeader.victoryCondition);
+        TransmitRemoteData(&msg, 127, false, true);
+        gbGameOver = 1;
+    }
+}
+
+// E:\gamedcs\kb.cpp:2888. The DC line program supplies the reference ABI,
+// 256-byte sNames local, switch/source order, helper boundaries and all ten
+// RoE-era message families. Retail corroborates those facts and adds the two
+// Complete-only victory kinds plus three campaign-specific artifact texts.
+VA(0x004f15e0, 0x1348)  // linkorder + anchor-string/callee, dc 0xe29a8
+bool DisplayVCWinLoss(VictoryConditionStruct& VictoryCondition,
+                      int& bGameWon, int& bGameLost, bool remoteCheck)
+{
+    char sNames[256];
+
+    switch (VictoryCondition.Type) {
+    case VICTORY_CONDITION_ARTIFACT:
+        if (VictoryCondition.GameWon) {
+            const char* campaignText;
+
+            if (gpGame->OnSameTeam(gpGame->GetLocalPlayerGamePos(),
+                                   VictoryCondition.playerWinner)) {
+                bGameWon = 1;
+            } else {
+                bGameLost = 1;
+            }
+
+            if (!gbUnk69774c)
+                goto normal_artifact_message;
+            if (gpGame->campaign.currentCampaign != GAME_CAMPAIGN_7
+                || gpGame->campaign.currentMap != GAME_SCENARIO_1)
+                goto other_campaign_artifacts;
+
+            campaignText = (*gpGeneralText)[714];
+
+campaign_artifact_message:
+            strcpy(gText, campaignText);
+
+artifact_message_ready:
+            if (!remoteCheck)
+                SendPlayerWon();
+            NormalDialog(gText, 1, -1, -1, -1, 0,
+                         -1, 0, -1, 0, -1, 0);
+            break;
+
+other_campaign_artifacts:
+            if (gpGame->campaign.currentCampaign == GAME_CAMPAIGN_18
+                && gpGame->campaign.currentMap == GAME_SCENARIO_8) {
+                campaignText = (*gpGeneralText)[764];
+                goto campaign_artifact_message;
+            }
+            if (gpGame->campaign.currentCampaign == GAME_CAMPAIGN_18
+                && gpGame->campaign.currentMap == GAME_SCENARIO_9) {
+                campaignText = (*gpGeneralText)[738];
+                goto campaign_artifact_message;
+            }
+
+normal_artifact_message:
+            if (bGameWon) {
+                if (remoteCheck) {
+                    sprintf(gText, (*gpGeneralText)[638],
+                            gpGame->GetPlayerName(
+                                VictoryCondition.playerWinner),
+                            akArtifactTraits[
+                                VictoryCondition.ArtifactNum].name);
+                } else {
+                    sprintf(gText, (*gpGeneralText)[281],
+                            akArtifactTraits[
+                                VictoryCondition.ArtifactNum].name);
+                }
+            } else {
+                if (remoteCheck) {
+                    if (GetTeamNames(VictoryCondition.playerWinner,
+                                     sNames)) {
+                        sprintf(gText, (*gpGeneralText)[633], sNames,
+                                akArtifactTraits[
+                                    VictoryCondition.ArtifactNum].name);
+                    } else {
+                        sprintf(gText, (*gpGeneralText)[632], sNames,
+                                akArtifactTraits[
+                                    VictoryCondition.ArtifactNum].name);
+                    }
+                } else {
+                    sprintf(gText, (*gpGeneralText)[282],
+                            akArtifactTraits[
+                                VictoryCondition.ArtifactNum].name);
+                }
+            }
+            goto artifact_message_ready;
+        }
+        break;
+
+    case VICTORY_CONDITION_TOTAL_CREATURES:
+        if (VictoryCondition.GameWon) {
+            if (gpGame->OnSameTeam(gpGame->GetLocalPlayerGamePos(),
+                                   VictoryCondition.playerWinner)) {
+                bGameWon = 1;
+            } else {
+                bGameLost = 1;
+            }
+
+            if (bGameWon) {
+                sprintf(gText, (*gpGeneralText)[277],
+                        VictoryCondition.NumCreatures,
+                        GetArmyName(VictoryCondition.CreatureType,
+                                    VictoryCondition.NumCreatures));
+            } else {
+                if (remoteCheck) {
+                    if (GetTeamNames(VictoryCondition.playerWinner,
+                                     sNames)) {
+                        sprintf(gText, (*gpGeneralText)[635], sNames,
+                                VictoryCondition.NumCreatures,
+                                GetArmyName(VictoryCondition.CreatureType,
+                                            VictoryCondition.NumCreatures));
+                    } else {
+                        sprintf(gText, (*gpGeneralText)[634], sNames,
+                                VictoryCondition.NumCreatures,
+                                GetArmyName(VictoryCondition.CreatureType,
+                                            VictoryCondition.NumCreatures));
+                    }
+                } else {
+                    sprintf(gText, (*gpGeneralText)[278],
+                            VictoryCondition.NumCreatures,
+                            GetArmyName(VictoryCondition.CreatureType,
+                                        VictoryCondition.NumCreatures));
+                }
+            }
+            if (!remoteCheck)
+                SendPlayerWon();
+            NormalDialog(gText, 1, -1, -1, -1, 0,
+                         -1, 0, -1, 0, -1, 0);
+        }
+        break;
+
+    case VICTORY_CONDITION_TOTAL_RESOURCES:
+        if (VictoryCondition.GameWon) {
+            if (gpGame->OnSameTeam(gpGame->GetLocalPlayerGamePos(),
+                                   VictoryCondition.playerWinner)) {
+                bGameWon = 1;
+            } else {
+                bGameLost = 1;
+            }
+
+            if (bGameWon) {
+                sprintf(gText, (*gpGeneralText)[279],
+                        VictoryCondition.ResourceAmount,
+                        gResourceNames[VictoryCondition.ResourceType]);
+            } else {
+                if (remoteCheck) {
+                    if (GetTeamNames(VictoryCondition.playerWinner,
+                                     sNames)) {
+                        sprintf(gText, (*gpGeneralText)[637], sNames,
+                                VictoryCondition.ResourceAmount,
+                                gResourceNames[
+                                    VictoryCondition.ResourceType]);
+                    } else {
+                        sprintf(gText, (*gpGeneralText)[636], sNames,
+                                VictoryCondition.ResourceAmount,
+                                gResourceNames[
+                                    VictoryCondition.ResourceType]);
+                    }
+                } else {
+                    sprintf(gText, (*gpGeneralText)[280],
+                            VictoryCondition.ResourceAmount,
+                            gResourceNames[VictoryCondition.ResourceType]);
+                }
+            }
+            if (!remoteCheck)
+                SendPlayerWon();
+            NormalDialog(gText, 1, -1, -1, -1, 0,
+                         -1, 0, -1, 0, -1, 0);
+        }
+        break;
+
+    case VICTORY_CONDITION_UPGRADE_TOWN:
+        if (VictoryCondition.GameWon) {
+            if (gpGame->OnSameTeam(gpGame->GetLocalPlayerGamePos(),
+                                   VictoryCondition.playerWinner)) {
+                bGameWon = 1;
+            } else {
+                bGameLost = 1;
+            }
+
+            if (bGameWon) {
+                if (remoteCheck) {
+                    sprintf(gText, (*gpGeneralText)[639],
+                            gpGame->GetPlayerName(
+                                VictoryCondition.playerWinner));
+                } else {
+                    strcpy(gText, (*gpGeneralText)[283]);
+                }
+            } else {
+                if (remoteCheck) {
+                    if (GetTeamNames(VictoryCondition.playerWinner,
+                                     sNames)) {
+                        sprintf(gText, (*gpGeneralText)[641], sNames);
+                    } else {
+                        sprintf(gText, (*gpGeneralText)[640], sNames);
+                    }
+                } else {
+                    strcpy(gText, (*gpGeneralText)[284]);
+                }
+            }
+            if (!remoteCheck)
+                SendPlayerWon();
+            NormalDialog(gText, 1, -1, -1, -1, 0,
+                         -1, 0, -1, 0, -1, 0);
+        }
+        break;
+
+    case VICTORY_CONDITION_BUILD_GRAIL:
+        if (VictoryCondition.GameWon) {
+            if (gpGame->OnSameTeam(gpGame->GetLocalPlayerGamePos(),
+                                   VictoryCondition.playerWinner)) {
+                bGameWon = 1;
+            } else {
+                bGameLost = 1;
+            }
+
+            if (bGameWon) {
+                if (remoteCheck) {
+                    sprintf(gText, (*gpGeneralText)[642],
+                            gpGame->GetPlayerName(
+                                VictoryCondition.playerWinner));
+                } else {
+                    strcpy(gText, (*gpGeneralText)[285]);
+                }
+            } else {
+                if (remoteCheck) {
+                    if (GetTeamNames(VictoryCondition.playerWinner,
+                                     sNames)) {
+                        sprintf(gText, (*gpGeneralText)[644], sNames);
+                    } else {
+                        sprintf(gText, (*gpGeneralText)[643], sNames);
+                    }
+                } else {
+                    strcpy(gText, (*gpGeneralText)[286]);
+                }
+            }
+            if (!remoteCheck)
+                SendPlayerWon();
+            NormalDialog(gText, 1, -1, -1, -1, 0,
+                         -1, 0, -1, 0, -1, 0);
+        }
+        break;
+
+    case VICTORY_CONDITION_DEFEAT_HERO:
+        if (VictoryCondition.GameWon
+            && gpGame->OnSameTeam(gpGame->GetLocalPlayerGamePos(),
+                                  VictoryCondition.playerWinner)) {
+            bGameWon = 1;
+            sprintf(gText, (*gpGeneralText)[253],
+                    gpGame->GetHero(VictoryCondition.HeroID)->name);
+            if (!remoteCheck)
+                SendPlayerWon();
+            NormalDialog(gText, 1, -1, -1, -1, 0,
+                         -1, 0, -1, 0, -1, 0);
+        }
+        break;
+
+    case VICTORY_CONDITION_CAPTURE_TOWN:
+        if (VictoryCondition.GameWon) {
+            if (gpGame->OnSameTeam(gpGame->GetLocalPlayerGamePos(),
+                                   VictoryCondition.playerWinner)) {
+                bGameWon = 1;
+            } else {
+                bGameLost = 1;
+            }
+
+            town* thisTown = gpGame->GetTown(gpGame->GetTownId(
+                VictoryCondition.TownX, VictoryCondition.TownY,
+                VictoryCondition.TownZ));
+            if (bGameWon) {
+                sprintf(gText, (*gpGeneralText)[250],
+                        thisTown->cName.c_str());
+            } else {
+                sprintf(gText, (*gpGeneralText)[251],
+                        thisTown->cName.c_str());
+            }
+            if (!remoteCheck)
+                SendPlayerWon();
+            NormalDialog(gText, 1, -1, -1, -1, 0,
+                         -1, 0, -1, 0, -1, 0);
+        }
+        break;
+
+    case VICTORY_CONDITION_DEFEAT_MONSTER:
+        if (VictoryCondition.GameWon) {
+            if (gpGame->OnSameTeam(gpGame->GetLocalPlayerGamePos(),
+                                   VictoryCondition.playerWinner)) {
+                bGameWon = 1;
+            } else {
+                bGameLost = 1;
+            }
+
+            if (bGameWon) {
+                if (remoteCheck) {
+                    sprintf(gText, (*gpGeneralText)[645],
+                            gpGame->GetPlayerName(
+                                VictoryCondition.playerWinner));
+                } else {
+                    strcpy(gText, (*gpGeneralText)[287]);
+                }
+            } else {
+                if (remoteCheck) {
+                    if (GetTeamNames(VictoryCondition.playerWinner,
+                                     sNames)) {
+                        sprintf(gText, (*gpGeneralText)[647], sNames);
+                    } else {
+                        sprintf(gText, (*gpGeneralText)[646], sNames);
+                    }
+                } else {
+                    strcpy(gText, (*gpGeneralText)[288]);
+                }
+            }
+            if (!remoteCheck)
+                SendPlayerWon();
+            NormalDialog(gText, 1, -1, -1, -1, 0,
+                         -1, 0, -1, 0, -1, 0);
+        }
+        break;
+
+    case VICTORY_CONDITION_DEFEAT_ALL_MONSTERS:
+        if (VictoryCondition.GameWon) {
+            bGameWon = 1;
+            NormalDialog(
+                DATA_COMPGEN(
+                    0x0067f7b8, allMonstersDefeatedText,
+                    "You have defeated all of the monsters plaguing this land!"),
+                1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        }
+        break;
+
+    case VICTORY_CONDITION_SURVIVE_TIME:
+        if (VictoryCondition.GameWon) {
+            bGameWon = 1;
+            NormalDialog(
+                DATA_COMPGEN(0x0067f798, survivedVictoryText,
+                             "You have managed to survive!"),
+                1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        }
+        break;
+
+    case VICTORY_CONDITION_FLAG_ALL_GENERATORS:
+        if (VictoryCondition.GameWon) {
+            if (gpGame->OnSameTeam(gpGame->GetLocalPlayerGamePos(),
+                                   VictoryCondition.playerWinner)) {
+                bGameWon = 1;
+            } else {
+                bGameLost = 1;
+            }
+
+            if (bGameWon) {
+                strcpy(gText, (*gpGeneralText)[289]);
+            } else {
+                if (remoteCheck) {
+                    if (GetTeamNames(VictoryCondition.playerWinner,
+                                     sNames)) {
+                        sprintf(gText, (*gpGeneralText)[649], sNames);
+                    } else {
+                        sprintf(gText, (*gpGeneralText)[648], sNames);
+                    }
+                } else {
+                    strcpy(gText, (*gpGeneralText)[290]);
+                }
+            }
+            if (!remoteCheck)
+                SendPlayerWon();
+            NormalDialog(gText, 1, -1, -1, -1, 0,
+                         -1, 0, -1, 0, -1, 0);
+        }
+        break;
+
+    case VICTORY_CONDITION_FLAG_ALL_MINES:
+        if (VictoryCondition.GameWon) {
+            if (gpGame->OnSameTeam(gpGame->GetLocalPlayerGamePos(),
+                                   VictoryCondition.playerWinner)) {
+                bGameWon = 1;
+            } else {
+                bGameLost = 1;
+            }
+
+            if (bGameWon) {
+                strcpy(gText, (*gpGeneralText)[291]);
+            } else {
+                if (remoteCheck) {
+                    if (GetTeamNames(VictoryCondition.playerWinner,
+                                     sNames)) {
+                        sprintf(gText, (*gpGeneralText)[651], sNames);
+                    } else {
+                        sprintf(gText, (*gpGeneralText)[650], sNames);
+                    }
+                } else {
+                    strcpy(gText, (*gpGeneralText)[292]);
+                }
+            }
+            if (!remoteCheck)
+                SendPlayerWon();
+            NormalDialog(gText, 1, -1, -1, -1, 0,
+                         -1, 0, -1, 0, -1, 0);
+        }
+        break;
+
+    case VICTORY_CONDITION_TRANSPORT_ARTIFACT:
+        if (VictoryCondition.GameWon) {
+            if (gpGame->OnSameTeam(gpGame->GetLocalPlayerGamePos(),
+                                   VictoryCondition.playerWinner)) {
+                bGameWon = 1;
+            } else {
+                bGameLost = 1;
+            }
+
+            if (bGameWon) {
+                if (remoteCheck) {
+                    sprintf(gText, (*gpGeneralText)[652],
+                            gpGame->GetPlayerName(
+                                VictoryCondition.playerWinner));
+                } else {
+                    strcpy(gText, (*gpGeneralText)[293]);
+                }
+            } else {
+                if (remoteCheck) {
+                    if (GetTeamNames(VictoryCondition.playerWinner,
+                                     sNames)) {
+                        sprintf(gText, (*gpGeneralText)[654], sNames);
+                    } else {
+                        sprintf(gText, (*gpGeneralText)[653], sNames);
+                    }
+                } else {
+                    strcpy(gText, (*gpGeneralText)[294]);
+                }
+            }
+            if (!remoteCheck)
+                SendPlayerWon();
+            NormalDialog(gText, 1, -1, -1, -1, 0,
+                         -1, 0, -1, 0, -1, 0);
+        }
+        break;
+    }
+
+    return bGameWon || bGameLost;
+}
+
+// The 35-byte row immediately following DisplayVCWinLoss is the selected
+// out-of-line copy of the header constructor: five stores in exactly the
+// CNetMsg(eRS_Messages, unsigned long) source order and `ret 8`.
+#if 0  // claim-only home for the netmsg.h COMDAT selected by kb.obj
+VA(0x004f2930, 0x23)  // anchor-callee + exact body, retail-only slot
+CNetMsg::CNetMsg(eRS_Messages subType, unsigned long size)
+{
+    // @stub: the authoritative active body is in netmsg.h
+}
+#endif
 
 VA(0x004f3540, 0x14B)
 void game::ShowLuckInfo(hero* thisHero, int iMBType)

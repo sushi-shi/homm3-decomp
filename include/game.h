@@ -665,29 +665,18 @@ enum EVictoryConditionType {
     // 0x5f1610 CheckForArtifactWin's main arm gates on `cmp Type,0`,
     // the map-format acquire-artifact ordinal.
     VICTORY_CONDITION_ARTIFACT = 0,
-#ifdef HOMM3_VLC_CHECKS_VIEW
     // 0x5f1b10 CheckForTotalCreatures gates on `cmp Type,1` and
     // 0x5f1d40 CheckForUpgradedTown on `cmp Type,3`; the values agree
     // with the map-format victory-condition ordinal (0 artifact,
-    // 1 creatures, 2 resources, 3 upgrade town, ...). Gated:
-    // enumerators count against the include-set declarator wall for
-    // every consumer of this header.
+    // 1 creatures, 2 resources, 3 upgrade town, ...).
     VICTORY_CONDITION_TOTAL_CREATURES = 1,
-#endif
-#if defined(HOMM3_VLC_CHECKS_VIEW) || defined(HOMM3_AI_PLAYER_OBJ_DECLS)
     // ai_player.obj joins for purchase_building's two inlined helpers:
     // value_of_castle_upgrade and value_of_hall both price the 5,000,000
     // upgrade-town victory bonus behind `cmp Type,3`.
     VICTORY_CONDITION_UPGRADE_TOWN = 3,
-#endif
-#if defined(HOMM3_VLC_CHECKS_VIEW) || defined(HOMM3_TOWN_OBJ_DECLS) \
-    || defined(HOMM3_AI_PLAYER_OBJ_DECLS) \
-    || defined(HOMM3_PHILAI_OBJ_DECLS)
     // town.obj joins for initialize_buildings' Grail-slot gate;
     // ai_player.obj for find_all_destinations' fixed grail-spot value.
     VICTORY_CONDITION_BUILD_GRAIL = 4,
-#endif
-#if defined(HOMM3_VLC_CHECKS_VIEW) || defined(HOMM3_PHILAI_OBJ_DECLS)
     // 0x5f2390 CheckForDefeatedMonsterWin dispatches on both: 7 is the
     // map-format defeat-monster ordinal, 11 the engine's
     // every-monster-dead sweep of the same routine.
@@ -696,7 +685,6 @@ enum EVictoryConditionType {
     // Complete adds the survive-until victory immediately after the
     // original map-format range. 0x5f2810 gates on `cmp Type,0xc`.
     VICTORY_CONDITION_SURVIVE_TIME = 12,
-#endif
     // 0x5f2860 CheckForArtifactTransportWin and AI_get_value_of_artifact
     // gate on `cmp Type,0xa`, the map-format transport-artifact ordinal.
     VICTORY_CONDITION_TRANSPORT_ARTIFACT = 10,
@@ -879,7 +867,6 @@ public:
 #else
     int ArtifactNum;
 #endif
-#if defined(HOMM3_VLC_CHECKS_VIEW) || defined(HOMM3_PHILAI_OBJ_DECLS)
     // The Dreamcast field list (dump 0x3e34) orders ArtifactNum,
     // CreatureType, NumCreatures between AppliesToComputer and
     // ResourceType; retail widens the trailing pair to ints.
@@ -887,13 +874,17 @@ public:
     // straight into armyGroup::get_creature_total(TCreatureType) and
     // compares the summed total against the dword at +0xc, fixing both
     // offsets. ArtifactNum is exposed above from its independent +4 retail
-    // reads. Gated: member declarators count against the include-set wall
-    // for every consumer.
+    // reads.
+    // Complete stores the widened creature ordinal as a dword. The condition
+    // checker needs the enum type for its armyGroup call; display-only
+    // consumers use the same proven representation without pulling the enum
+    // through fragile include cycles.
+#if defined(HOMM3_VLC_CHECKS_VIEW) || defined(HOMM3_PHILAI_OBJ_DECLS)
     TCreatureType CreatureType;
-    int NumCreatures;
 #else
-    char pad_08[8];
+    int CreatureType;
 #endif
+    int NumCreatures;
     int ResourceType;
     int ResourceAmount;
     int TownX;
@@ -1033,6 +1024,17 @@ class CPlayerWonMsg : public CNetMsg {
 public:
     int gamePos;
     VictoryConditionStruct victoryCondition;
+
+    // Dreamcast netmsg.h:505 fixes the reference parameter and statement
+    // order. Complete expands this constructor into DisplayVCWinLoss while
+    // retaining or expanding the CNetMsg base constructor per call site.
+    CPlayerWonMsg(int gamePos,
+                  VictoryConditionStruct& victoryConditionStruct)
+      : CNetMsg(RS_PLAYER_WON, sizeof(CPlayerWonMsg))
+    {
+        this->gamePos = gamePos;
+        victoryCondition = victoryConditionStruct;
+    }
 };
 SIZE(CPlayerWonMsg, 0x64);
 
