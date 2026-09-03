@@ -9,6 +9,8 @@
 #include "town.h"
 
 class message;
+class VictoryConditionStruct;
+class LossConditionStruct;
 
 // homm2's KB timer array survives (DC glTimers: unsigned long[10];
 // retail base 0x698998 - button::Select stores slot 2 at 0x6989a0).
@@ -119,9 +121,8 @@ void KbFn_004F4C00(int field00, unsigned char b);
 int GameUnsaved();                                       // 0x4f4310
 void CheckEndGame(int bForceWin);                        // 0x4f2ce0
 #ifdef HOMM3_REMOTE_WINLOSS_DECLS
-unsigned char DisplayVCWinLoss(VictoryConditionStruct* victoryCondition,
-                               int* bGameWon, int* bGameLost,
-                               unsigned char remoteCheck);
+bool DisplayVCWinLoss(VictoryConditionStruct& victoryCondition,
+                      int& bGameWon, int& bGameLost, bool remoteCheck);
 unsigned char DisplayLCWinLoss(LossConditionStruct* lossCondition,
                                int* bGameWon, int* bGameLost,
                                unsigned char remoteCheck);
