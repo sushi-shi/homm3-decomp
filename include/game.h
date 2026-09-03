@@ -21,6 +21,7 @@ enum EDayOfWeek {
 #include <vector>
 #include "mapcell.h"
 #include "netmsg.h"
+#include "secondaryskill.h"
 #include "struct.h"
 // `class game` embeds the hero array by value, so the COMPLETE hero
 // type has to be visible here. hero.h pulls armygrp.h; armygrp.h no
@@ -29,8 +30,8 @@ enum EDayOfWeek {
 #include "hero.h"
 #include "creature_bank_types.h"
 #include "town.h"
-// herospec.h is deliberately NOT included here: game.h names none of its
-// types, and herospec.h's enum TSkillMastery is a hard C2371 against
+// herospec.h is deliberately NOT included here: game.h needs only the
+// secondaryskill.h domain above, while herospec.h's enum TSkillMastery is a hard C2371 against
 // ai_tactical.h's `typedef int TSkillMastery` in every AI TU that game.h
 // reaches. That name is defined BOTH ways in this tree (DC LF_ENUM vs
 // the AI headers' int) - a standing contradiction the view audit
@@ -605,7 +606,7 @@ SIZE(HeroExtra, 0x334);
 // out of ExtraInfoUnion::get_university instead. Sixteen bytes either way,
 // unchanged.
 struct type_university {
-    int skills[4];
+    TSecondarySkill skills[4];
 
     // DEFINED in townmgr.cpp, not here, and the retail image is what says
     // so: the out-of-line copy at 0x5d2d80 sits inside townmgr.obj's link

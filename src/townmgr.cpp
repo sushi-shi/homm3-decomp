@@ -5027,10 +5027,10 @@ char* GetBuildingInfo(const town* this_town, int buildingId, unsigned char bIncl
 VA(0x005d2d80, 0x1E)  // anchor-bracket(between GetBuildingInfo 0x5d2a40 and DoUniversity 0x5d2da0) + body(the four elemental magic schools) + arity(bare ret, thiscall), retail-only
 type_university::type_university()
 {
-    skills[0] = 14;
-    skills[1] = 15;
-    skills[2] = 16;
-    skills[3] = 17;
+    skills[0] = eSecSkillSchoolOfFireMagic;
+    skills[1] = eSecSkillSchoolOfAirMagic;
+    skills[2] = eSecSkillSchoolOfWaterMagic;
+    skills[3] = eSecSkillSchoolOfEarthMagic;
 }
 
 VA(0x005d2da0, 0x1E8)  // anchor-callee(GetBuildingInfo 0x5d2a40 + university window 0x5ef500) + anchor-caller(Main 0x5d3af1) + arity(bare ret), retail-only
