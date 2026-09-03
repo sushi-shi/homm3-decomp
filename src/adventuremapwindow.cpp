@@ -8,9 +8,11 @@
 #include "border.h"
 #include "bottomviewsubwindow.h"
 #include "button.h"
+#include "chatedit.h"
 #include "cheatcode.h"
 #include "game.h"
 #include "hero.h"
+#include "iconwdgt.h"
 #include "kb.h"
 #include "town.h"
 #include "townmgr_globals.h"
@@ -93,22 +95,6 @@ void TAdventureMapWindow::SleepAllWidgets(unsigned char put_to_sleep)
 //   Location, class and signature are proven; the METHOD NAME is not (no DC or
 //   sibling attestation), so it stays unnamed.
 //   RETAIL_LOCATED(0x004040b0, 0x38)  // anchor-vtable slot 8, retail-only
-
-// E:\gamedcs\adventuremapwindow.cpp:318
-// RETAIL_LOCATED(0x00401510, 0xCB5)  // anchor-global, dc 0x89c
-// Dependency frontier audited 2026-08-12: retail first calls the exact
-// five-argument heroWindow constructor for an 800x600 window, reserves 39
-// entries in the inherited widget vector, and then creates the complete
-// adventure UI. The body has 19 EH cleanup states and calls still-unmodeled
-// constructors for the bitmap-backed radar/map widgets, chat widgets,
-// locators, buttons, borders, and their resource payloads. The abandoned
-// attempt contains only the same address/name mapping, no source body.
-// Revisit after those constructor surfaces are admitted; a partial sequence
-// here would merely fabricate ownership and cannot approach a byte verdict.
-void TAdventureMapWindow::TAdventureMapWindow()
-{
-    // @stub
-}
 
 // E:\gamedcs\adventuremapwindow.cpp:505
 // RETAIL_LOCATED(0x00402b90, 0x24)  // anchor-global, dc 0xbf0
@@ -200,6 +186,243 @@ void TAdventureMapWindow::SetSleepImage(int image)
 }
 
 #endif  // @carcass
+
+inline CAdventurMapChatEdit::CAdventurMapChatEdit(
+    int x, int y, int w, int h, int textSize, char* text, char* fontName,
+    font::TColor color, font::EJustify justification, char* backgroundIcon,
+    int backgroundFrame, int id, int style, int readType, int insetX,
+    int insetY)
+    : CGameChatEdit(x, y, w, h, textSize, text, fontName, color,
+                    justification, backgroundIcon, backgroundFrame, id,
+                    style, readType, insetX, insetY)
+{
+}
+
+// E:\gamedcs\adventuremapwindow.cpp:318. Dreamcast proves the base, the
+// three initial border statements, member assignments, widget-registration
+// loop, and resource-display tail. Complete retains that skeleton and adds
+// the full Windows adventure controls between the third border and rollover
+// widgets; every constructor, argument, array extent and hotkey below is
+// transcribed from the retail call stream.
+VA(0x00401510, 0xCB5)  // anchor-global + vtable, dc 0x89c
+TAdventureMapWindow::TAdventureMapWindow()
+    : heroWindow(0, 0, 800, 600, 1),
+      topHero(0),
+      topTown(0),
+      immersion(0)
+{
+    animateInBackground = 0;
+    ChatTextWidget = 0;
+
+    Widgets.reserve(39);
+
+    Widgets.push_back(new border(8, 8, 592, 544, MAP_ID, 1));
+    MapWidget = Widgets.back();
+    Widgets.push_back(new border(630, 26, 144, 144, RADAR_ID, 1));
+    RadarWidget = Widgets.back();
+    Widgets.push_back(new border(605, 389, 188, 182,
+                                 SELECTION_WINDOW_ID, 1));
+
+    button* newButton = new button(
+        679, 196, 32, 32, KINGDOM_OVERVIEW_ID,
+        DATA_COMPGEN(0x0065F3C0, adventureIam002, "iam002.def"),
+        0, 1, 0, 0, 2);
+    newButton->set_hotkey(0x25);
+    Widgets.push_back(newButton);
+
+    newButton = new button(
+        711, 196, 32, 32, ELEVATION_TOGGLE_ID,
+        DATA_COMPGEN(0x0065F268, adventureIam010, "iam010.def"),
+        0, 1, 0, 0, 2);
+    newButton->set_hotkey(0x16);
+    Widgets.push_back(newButton);
+
+    newButton = new button(
+        679, 228, 32, 32, QUEST_LOG_ID,
+        DATA_COMPGEN(0x0065F3B4, adventureIam004, "iam004.def"),
+        0, 1, 0, 0, 2);
+    newButton->set_hotkey(0x10);
+    Widgets.push_back(newButton);
+
+    newButton = new button(
+        711, 228, 32, 32, SLEEP_ID,
+        DATA_COMPGEN(0x0065F250, adventureIam005, "iam005.def"),
+        0, 1, 0, 0, 2);
+    newButton->set_hotkey(0x2c);
+    Widgets.push_back(newButton);
+
+    newButton = new button(
+        679, 260, 32, 32, MOVE_ID,
+        DATA_COMPGEN(0x0065F3A8, adventureIam006, "iam006.def"),
+        0, 1, 0, 0, 2);
+    newButton->set_hotkey(0x32);
+    Widgets.push_back(newButton);
+
+    newButton = new button(
+        711, 260, 32, 32, CAST_SPELL_ID,
+        DATA_COMPGEN(0x0065F39C, adventureIam007, "iam007.def"),
+        0, 1, 0, 0, 2);
+    newButton->set_hotkey(0x2e);
+    Widgets.push_back(newButton);
+
+    newButton = new button(
+        679, 292, 32, 32, ADVENTURE_OPTIONS_ID,
+        DATA_COMPGEN(0x0065F390, adventureIam008, "iam008.def"),
+        0, 1, 0, 0, 2);
+    newButton->set_hotkey(0x1e);
+    Widgets.push_back(newButton);
+
+    newButton = new button(
+        711, 292, 32, 32, SYSTEM_OPTIONS_ID,
+        DATA_COMPGEN(0x0065F384, adventureIam009, "iam009.def"),
+        0, 1, 0, 0, 2);
+    newButton->set_hotkey(0x18);
+    Widgets.push_back(newButton);
+
+    newButton = new button(
+        679, 324, 64, 32, NEXT_HERO_ID,
+        DATA_COMPGEN(0x0065F378, adventureIam000, "iam000.def"),
+        0, 1, 0, 0, 2);
+    newButton->set_hotkey(0x23);
+    Widgets.push_back(newButton);
+
+    newButton = new button(
+        679, 356, 64, 32, END_TURN_ID,
+        DATA_COMPGEN(0x0065F36C, adventureIam001, "iam001.def"),
+        0, 1, 0, 0, 2);
+    newButton->set_hotkey(0x12);
+    Widgets.push_back(newButton);
+
+    Widgets.push_back(new button(
+        609, 196, 64, 16, HERO_UP_ID,
+        DATA_COMPGEN(0x0065F360, adventureIam012, "iam012.def"),
+        0, 1, 0, 0, 2));
+    Widgets.push_back(new button(
+        609, 372, 64, 16, HERO_DOWN_ID,
+        DATA_COMPGEN(0x0065F354, adventureIam013, "iam013.def"),
+        0, 1, 0, 0, 2));
+
+    // Retail default-constructs an otherwise-unused string here: its
+    // allocator byte is copied into [ebp-0x30] and its three pointer lanes
+    // are cleared at [ebp-0x2c..-0x24]. Unwind state 16 destroys that slot
+    // through the retail one-string destructor at 0x004fca60. The source
+    // name is unavailable.
+    std::string unusedText;
+
+    int i;
+    int y = 212;
+    for (i = 0; i < NUM_HERO_BUTTONS; ++i) {
+        HeroPortraits[i] = new bitmapBorder(
+            617, y, 48, 32, HERO_0_ID + i, 0, 0x800);
+        Widgets.push_back(HeroPortraits[i]);
+        y += 32;
+    }
+    y = 212;
+    for (i = 0; i < NUM_HERO_BUTTONS; ++i) {
+        HeroLocators[i] = new bitmapBorder(
+            617, y, 48, 32, HERO_LOCATOR_0_ID + i, 0, 0x800);
+        Widgets.push_back(HeroLocators[i]);
+        y += 32;
+    }
+    // All three icon runs carry separate y/id induction values and a
+    // five-to-zero counter in retail; their back edges are dec/jne.
+    {
+        int y = 213;
+        int widgetId = HERO_MOVEMENT_0_ID;
+        int remaining = NUM_HERO_BUTTONS;
+        do {
+            Widgets.push_back(new iconWidget(
+                610, y, 8, 32, widgetId,
+                DATA_COMPGEN(0x0065F348, adventureImobil, "imobil.def"),
+                0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+            ++widgetId;
+            y += 32;
+        } while (--remaining);
+    }
+    {
+        int y = 213;
+        int widgetId = HERO_MANA_0_ID;
+        int remaining = NUM_HERO_BUTTONS;
+        do {
+            Widgets.push_back(new iconWidget(
+                666, y, 8, 32, widgetId,
+                DATA_COMPGEN(0x0065F33C, adventureImana, "imana.def"),
+                0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+            ++widgetId;
+            y += 32;
+        } while (--remaining);
+    }
+
+    Widgets.push_back(new button(
+        747, 196, 48, 16, TOWN_UP_ID,
+        DATA_COMPGEN(0x0065F330, adventureIam014, "iam014.def"),
+        0, 1, 0, 0, 2));
+    Widgets.push_back(new button(
+        747, 372, 48, 16, TOWN_DOWN_ID,
+        DATA_COMPGEN(0x0065F324, adventureIam015, "iam015.def"),
+        0, 1, 0, 0, 2));
+
+    {
+        int y = 212;
+        int widgetId = TOWN_0_ID;
+        int remaining = NUM_TOWN_BUTTONS;
+        do {
+            Widgets.push_back(new iconWidget(
+                747, y, 48, 32, widgetId,
+                DATA_COMPGEN(0x0065F318, adventureItpa, "itpa.def"),
+                0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+            ++widgetId;
+            y += 32;
+        } while (--remaining);
+    }
+
+    RolloverTextWidget = new bitmapBackedTextWidget(
+        8, 556, 592, 18, 0,
+        DATA_COMPGEN(0x0065F2F8, adventureSmallFont, "smalfont.fnt"),
+        DATA_COMPGEN(0x0065F308, adventureRolloverBack, "AdRollvr.pcx"),
+        font::PRIMARY, ROLLOVER_TEXT_ID, font::CENTER_JUSTIFIED, 8);
+    Widgets.push_back(RolloverTextWidget);
+
+    ChatTextWidget = new textWidget(
+        54, 100, 520, 440, 0,
+        DATA_COMPGEN(0x0065F2EC, adventureMediumFont, "medfont.fnt"),
+        font::CHAT, CHAT_TEXT_ID, font::BOTTOM_JUSTIFIED, 0, 8);
+    {
+        widget* chatText = ChatTextWidget;
+        std::vector<widget*>& widgets = Widgets;
+        // TAdventureMapWindow::TAdventureMapWindow ->
+        // vector<widget*>::insert: retail expands push_back's end() wrapper
+        // but calls the nested three-argument insert at 0x0054d120, while
+        // retaining the later chatEdit insertion inline. The unpinned
+        // negative control expands both insertions (118 calls/131 blocks
+        // versus retail's 106/116) and shifts the entire chat-editor tail.
+        // Hoist the end() load that retail keeps inline, and gate only insert.
+        std::vector<widget*>::iterator chatTextEnd = widgets.end();
+#pragma inline_depth(0)
+        INLINE_GATE(widgets.insert(chatTextEnd, 1, chatText));
+#pragma inline_depth()
+    }
+
+    chatEdit = new CAdventurMapChatEdit(
+        8, 556, 592, 18, 127,
+        DATA_COMPGEN(0x00691210, adventureRolloverEmptyText, ""),
+        DATA_COMPGEN(0x0065F2F8, adventureChatSmallFont, "smalfont.fnt"),
+        font::WHITE, font::LEFT_JUSTIFIED,
+        DATA_COMPGEN(0x0065F308, adventureChatBackground, "AdRollvr.pcx"),
+        0, CHAT_EDIT_ID, 0x100, 0, 7, 5);
+    Widgets.push_back(chatEdit);
+
+    for (std::vector<widget*>::iterator it = Widgets.begin();
+         it != Widgets.end(); ++it) {
+        if (*it)
+            AddWidget(*it, -1);
+        else
+            MemError();
+    }
+
+    bottomView = 0;
+    ResourceDisplay = new TResourceDisplay(this, 0);
+}
 
 // E:\gamedcs\adventuremapwindow.cpp:63. The procedure record types the sole
 // parameter as an lvalue reference and names the one surviving local
