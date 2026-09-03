@@ -376,8 +376,10 @@ DATA(0x0063bd40) extern const TCombatHeroSprite kCombatHeroSprites[18];
 // string reaches this domain, exactly as the three field names it
 // describes are address ordinals.
 enum EAIOrder {
+    AI_ORDER_CAST_SPELL = 1,
     AI_ORDER_MOVE_AND_ATTACK = 6,
     AI_ORDER_SHOOT = 7,
+    AI_ORDER_CREATURE_SPELL = 10,
     AI_ORDER_NONE = 12
 };
 
@@ -1231,9 +1233,9 @@ public:
     void RemoveArmyFromGrid(const army& a);
     void PlaceArmyInGrid(const army& a, int hex);
     void ViewArmy(army* thisArmy, int isQuickView);
-    // Retail 0x59ec50, a two-argument post-dialog command leaf whose
-    // full spells.obj identity is still provisional.
-    void InitiateSpell(int spellOrCommand, int fromArmyView);
+    // Retail 0x59ec50 extends Dreamcast's one-argument spells.cpp:176
+    // routine with the creature-cast selector passed by command.cpp.
+    void InitiateSpell(SpellID spellToCast, int creatureSpell);
     unsigned char place_obstacle(int obstacle_id);
     // 0x46a570 (224 B, `ret 8`): the landmine / fire-wall worker that
     // army::check_obstacle_attacks (0x441f70) delegates to once it has
@@ -1591,6 +1593,9 @@ public:
     // retail cross-TU calls refute the former command-only declaration view.
     void CheckChangeSelector();                               // 0x477ac0
     void TurnOffSelector(unsigned char drawIt);               // 0x477b60
+    void CheckChangeHighlighter(int currentIndex);            // 0x478040
+    void SetCombatGrid(int showEntireGrid, int showMouseHex, int gridLevel,
+                       unsigned char drawNow);                 // 0x479fc0
     // 0x46a520 (68 B), army::simple_move's second call: it zeroes a
     // 187-byte per-hex row at this + 0x14031 with a `rep stosd` of 46
     // dwords plus a word plus a byte - the cell count exactly - and
@@ -2128,6 +2133,8 @@ public:
     // because the body's whole shape is a jump table over the enum.
     void SpellTargetMessage(SpellID spellId, int targetIndex,
                             unsigned char first_target);       // 0x5a8690
+    void display_failure_reason(SpellID spell, const char* msg,
+                                long hex);                     // 0x5a2c60
     // The two spells.obj area collectors that fill a vector of HEXES -
     // the inner halves of the two vector<army*> collectors declared far
     // below, which call these and then map each hex to its stack. The
@@ -2551,12 +2558,9 @@ public:
     void ResetRound();
     void auto_resolve_combat();
     int CheckWin(message* msg);
-    void CheckChangeHighlighter(int currentIndex);
     unsigned char process_move_then_attack(message* msg);
     void process_first_aid(army* currentArmy);
     void ResetCyclingCreatures();
-    void SetCombatGrid(int showEntireGrid, int showMouseHex, int gridLevel,
-                       unsigned char drawNow);
 #ifdef HOMM3_COMMAND_ANIMATION_VIEW
     void do_animations();
     void CycleCombatScreen();

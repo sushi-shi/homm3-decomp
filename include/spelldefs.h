@@ -14,7 +14,11 @@
 enum ESpellTargetFlags {
     SPELL_TARGET_ALWAYS_SINGLE = 0x10,
     SPELL_TARGET_MASS_AT_ADVANCED = 0x20,
-    SPELL_TARGET_MASS_AT_EXPERT = 0x40
+    SPELL_TARGET_MASS_AT_EXPERT = 0x40,
+    // mark_area_highlights owns the rollover preview for the two area
+    // traits carried together by this mask. Retail tests the pair as one
+    // value before also admitting Berserk explicitly.
+    SPELL_TARGET_MARK_AREA = 0x280
 };
 
 unsigned char SpellTargetsASingleArmy(int spell, int sslevel);
