@@ -2883,7 +2883,7 @@ singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100
 # 2026-08-27 (round 3): the interim full build re-banked the transient
 # peak a third time; re-lowered with the round's bodies landed. Same
 # scheduler flap, same recovery path.
-singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0	66eb0a0e15c8
+singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0	66eb0a0e15c8
 singleselectionwindow	?OnMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2193	90.2193	90.2193	0x189710	3ad2be3935a3
 singleselectionwindow	?OnNameClick@TSingleSelectionWindow@@QAEXH@Z	96.3226	96.3226	96.3226	0x18b620	ef174e28edf8
 singleselectionwindow	?OnNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	97.5366	97.5366	97.5366	0x18b510	862e2a9c058b
@@ -3219,7 +3219,7 @@ townmgr	??0TTownScreenWindow@@QAE@XZ	98.9497	98.9497	98.9497	0x1c34d0	32be2baca2
 townmgr	??0townManager@@QAE@XZ	100.0000	100.0000	100.0000	0x1c3310	dc274f7e9931
 townmgr	??0type_garrison_base_window@@QAE@PAVhero@@HPAVarmyGroup@@@Z	93.8825	98.2932	98.2932	0x1ce830	6bdd282efa14
 townmgr	??0type_monster_join_window@@QAE@PAVhero@@PAVarmyGroup@@E@Z	93.8770	93.8770	93.8770	0x1d0b40	b0aee7ca0785
-townmgr	??0type_university@@QAE@XZ	100.0000	100.0000	100.0000	0x1d2d80	64392dcedc25
+townmgr	??0type_university@@QAE@XZ	100.0000	100.0000	100.0000	0x1d2d80	576222ab9cc6
 townmgr	??1TBlacksmithWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1d1a30	ec6d338751ee
 townmgr	??1TBuyBuildWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1d5b70	497e5c44743a
 townmgr	??1TCastleWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1dcb80	2344c3c86422
@@ -3378,9 +3378,14 @@ u2dvers	??0TFileVersionInfo@@QAE@PBD@Z	100.0000	100.0000	100.0000	0x1eeda0	9ca6c
 u2dvers	??1TFileVersionInfo@@QAE@XZ	100.0000	100.0000	100.0000	0x1eedf0	0305b6198ddb
 u2dvers	?GetVersionInfo@TFileVersionInfo@@QAEEPBDPAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0x1eee00	984ca2abfa72
 uncompr	@uncompress@16	100.0000	100.0000	100.0000	0x206be0	-
+university_window	??0type_university_window@@QAE@PAVhero@@PBUtype_university@@E@Z	87.8950	87.8950	87.8950	0x1ef500	baa66d520537
+university_window	?DoModal@type_university_window@@UAEHE@Z	100.0000	100.0000	100.0000	0x1f0a20	5c5d65c58c4e
 university_window	?ExitDialog@type_university_window@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1f1180	fd96ecac9df9
-university_window	?handle_widget_hover@type_university_window@@UAEXPAVwidget@@@Z	100.0000	100.0000	100.0000	0x1f0dc0	d8ce2bab5b41
-university_window	?purchase_click@type_university_window@@SIHPAVmessage@@@Z	80.2926	80.2926	80.2926	0x1f0f60	d96571dfb0e3
+university_window	?cancel_click@type_university_window@@KIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1f0e00	fd43efd4fe86
+university_window	?exit_click@type_university_window@@KIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1f0ef0	611f3b01fd93
+university_window	?handle_click@type_university_skill_button@@UAEEEE@Z	100.0000	100.0000	100.0000	0x1ef490	c3989b472843
+university_window	?handle_widget_hover@type_university_window@@UAEXPAVwidget@@@Z	100.0000	100.0000	100.0000	0x1f0dc0	a3d184c5ea5a
+university_window	?purchase_click@type_university_window@@KIHAAVmessage@@@Z	94.7553	94.7553	94.7553	0x1f0f60	e6775d76fa39
 victorylossconditions	?CheckForArtifactTransportWin@VictoryConditionStruct@@QAEEPBVhero@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x1f2860	10dec993b8aa
 victorylossconditions	?CheckForArtifactWin@VictoryConditionStruct@@QAEEXZ	98.2057	98.2057	98.2057	0x1f1610	9d6a0fa53dbd
 victorylossconditions	?CheckForDefeatedHeroLoss@LossConditionStruct@@QAEEPBVhero@@@Z	75.8636	75.8636	75.8636	0x1f2a40	77cbe67963b6

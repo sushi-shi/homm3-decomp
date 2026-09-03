@@ -12,56 +12,17 @@
 #define HOMM3_HEROSPEC_H
 
 #include <va.h>
+#include "secondaryskill.h"
 
-// DC LF_ENUM `TSecondarySkill`, transcribed from
-// evidence/dreamcast/enums.csv (31 enumerators; the DC spellings, minus
-// the two aliases const_first_secondary_skill = 0 and
-// kNumSecSkillsPerHero = 8 that name no distinct skill).
-// FIVE of the values are retail-proven on this image, and each one
-// lands where the DC roster puts it - which is what promotes the whole
-// ladder from a transcription to a model. hero.obj's five specialty
-// factor getters each read hero::skillLevel at a fixed offset and then
-// require the hero's specialty record to name the SAME skill id:
+// Five TSecondarySkill values are independently retail-proven here:
+// hero.obj's specialty factor getters each read hero::skillLevel at a fixed
+// offset and require the specialty record to name the same skill id:
 //   Learning      21  0x4e4840 reads +0xde (0xc9 + 21), tests id 0x15
 //   Offense       22  0x4e42b0 reads +0xdf (0xc9 + 22), tests id 0x16
 //   Defense       23  0x4e4310 reads +0xe0 (0xc9 + 23), tests id 0x17
 //   Intelligence  24  0x4e48b0 reads +0xe1 (0xc9 + 24), tests id 0x18
 //   First Aid     27  0x4e4920 reads +0xe4 (0xc9 + 27), tests id 0x1b
-// and the three slots hero.h already byte-proves independently -
-// Wisdom 7, Ballistics 10, Eagle Eye 11 - agree with the same ladder.
-enum TSecondarySkill {
-    eSecSkillNone = -1,
-    kNumSecSkillsPerHero = 8,
-    eSecSkillPathfinding = 0,
-    eSecSkillArchery = 1,
-    eSecSkillLogistics = 2,
-    eSecSkillScouting = 3,
-    eSecSkillDiplomacy = 4,
-    eSecSkillNavigation = 5,
-    eSecSkillLeadership = 6,
-    eSecSkillWisdom = 7,
-    eSecSkillMysticism = 8,
-    eSecSkillLuck = 9,
-    eSecSkillSiegeBallistics = 10,
-    eSecSkillEagleEye = 11,
-    eSecSkillNecromancy = 12,
-    eSecSkillEstates = 13,
-    eSecSkillSchoolOfFireMagic = 14,
-    eSecSkillSchoolOfAirMagic = 15,
-    eSecSkillSchoolOfWaterMagic = 16,
-    eSecSkillSchoolOfEarthMagic = 17,
-    eSecSkillMagicScholar = 18,
-    eSecSkillBattleTactics = 19,
-    eSecSkillBattlefieldBallistics = 20,
-    eSecSkillLearning = 21,
-    eSecSkillOffense = 22,
-    eSecSkillDefense = 23,
-    eSecSkillIntelligence = 24,
-    eSecSkillSorcery = 25,
-    eSecSkillMagicResistance = 26,
-    eSecSkillFirstAid = 27,
-    kNumSecSkills = 28
-};
+// Wisdom 7, Ballistics 10 and Eagle Eye 11 agree with that shared ladder.
 
 // DC LF_ENUM `TSkillMastery`. Retail corroborates the extent from the
 // data side: every per-skill factor table in hero.obj's .rdata run

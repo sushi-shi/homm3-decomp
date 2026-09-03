@@ -6,53 +6,71 @@
 #define HOMM3_UNIVERSITY_WINDOW_H
 
 #include "advmgr_popup.h"
+#include "herospec.h"
+#include "iconwdgt.h"
 #include "textwdgt.h"
 
 #include <vector>
 class hero;
 struct type_university;
+class type_university_window;
 
 // Shared three-entry Basic/Advanced/Expert display-name row. Its retail
 // storage is claimed by levelupwindow.cpp; the university purchase callback
 // reads the Basic entry when composing its skill dialog.
 extern const char* gSkillMasteryNames[3];
 
-// The retail purchase handler walks four records from +0x74 with a 0x14
-// stride and passes each record to update_skill_button. The record's interior
-// belongs to that still-unclaimed method; its extent is nevertheless fixed by
-// both the walk and the +0xc4 end of the array.
+// Retail's two inlined constructor sites prove the iconWidget base followed
+// by the byte click latch and dword skill at +0x48/+0x4c. Dreamcast preserves
+// both the class identity and the source-level constructor/handle_click
+// boundaries even though Complete inlines the constructor into this TU.
+class type_university_skill_button : public iconWidget {
+public:
+    unsigned char click;       // +0x48
+    TSecondarySkill skill;     // +0x4c
+
+    type_university_skill_button(long x, long y, long width, long height,
+                                 long new_id, const char* image,
+                                 TSecondarySkill new_skill);
+    virtual unsigned char handle_click(unsigned char down_click,
+                                       unsigned char right_click);
+    void set_skill(TSecondarySkill new_skill, unsigned char new_click);
+};
+SIZE(type_university_skill_button, 0x50);
+
+// The retail constructor and update path prove this complete 0x14-byte
+// record: the button, two coloured bars and label occupy the first four
+// dwords, followed by the TSecondarySkill. Dreamcast proves the record's
+// identity and the containing window's four-plus-one arrangement.
 struct type_university_skill {
-    char pad_00[0x14];
+    type_university_skill_button* button;
+    iconWidget* top_bar;
+    iconWidget* bottom_bar;
+    textWidget* text_widget;
+    TSecondarySkill skill;
 };
 SIZE(type_university_skill, 0x14);
 
 // Retail's +0x70 rollover pointer and +0x74 skill-array accesses translate
 // DC's +0x68/+0x6c fields by exactly the eight-byte CAdvPopup widening already
-// proven in advmgr_popup.h.  The tail layout remains undeclared until its
-// type_university_skill record is reconstructed; no opaque layout view is
-// needed by the first admitted method.
+// proven in advmgr_popup.h. The constructor and callbacks below complete the
+// translated tail through the two VC6 vectors at +0xd8 and +0xe8.
 class type_university_window : public CAdvPopup {
 public:
-    // purchase_click independently proves the hero at +0x60, then walks four
-    // 0x14-byte skill records from +0x74 and keeps its selected skill at
-    // +0xd4. handle_widget_hover proves the rollover pointer between them.
-    hero* currentHero;             // +0x60
-    char pad_64[0x0c];
-    textWidget* rolloverText;  // +0x70
-    // The tail, proven by the constructor 0x5ef500 and by the stack copy
-    // townManager::DoUniversity builds: the base runs to +0x74, then
-    // 0x64 bytes this compiland never touches, then TWO VC6 vectors -
-    // the constructor writes their allocator byte at +0xd8 and +0xe8 and
-    // zeroes each following storage triplet, and the modal run reads
-    // +0xdc/+0xe0 and +0xec/+0xf0 as begin/end. The object therefore
-    // ends at +0xf8, which is exactly the 0x11c-byte frame
-    // DoUniversity reserves less its own string, skill record and
-    // allocator temp.
-    type_university_skill skills[4];  // +0x74 .. +0xc3
-    char pad_c4[0x10];
-    int selectedSkill;                // +0xd4
-    std::vector<widget*> field_d8;
-    std::vector<widget*> field_e8;
+    enum { TUITION = 2000 };
+
+    // Dreamcast names this member sequence at +0x58..+0xdc. Retail shifts it
+    // by the byte-proven eight-byte CAdvPopup widening; the constructor and
+    // modal/callback bodies independently corroborate every used offset.
+    hero* current_hero;                       // +0x60
+    class type_func_button* purchase_button; // +0x64
+    textWidget* purchase_title_widget;        // +0x68 (unused by Complete)
+    textWidget* purchase_text_widget;         // +0x6c
+    textWidget* rollover_widget;              // +0x70
+    type_university_skill skills[4];           // +0x74 .. +0xc3
+    type_university_skill selected_skill;      // +0xc4 .. +0xd7
+    std::vector<widget*> selection_widgets;    // +0xd8
+    std::vector<widget*> purchase_widgets;     // +0xe8
 
     // Retail 0x5ef500. `bTownUniversity` is the retail-added third
     // parameter the Dreamcast pair does not have, and both image-wide
@@ -71,8 +89,16 @@ public:
     virtual void handle_widget_hover(widget* current_widget);  // slot 4
     virtual int ExitDialog(message* msg);  // slot 14
 
-    void update_skill_button(type_university_skill* skill);
-    static int purchase_click(message* msg);
+    // Public in the Dreamcast field list. The derived skill button calls it
+    // through widget::parentWindow; Complete keeps that exact relationship.
+    void skill_click(TSecondarySkill skill);
+
+protected:
+    void set_selection_mode();
+    void update_skill_button(type_university_skill& skill);
+    static int cancel_click(message& msg);
+    static int exit_click(message& msg);
+    static int purchase_click(message& msg);
 };
 SIZE(type_university_window, 0xf8);
 
