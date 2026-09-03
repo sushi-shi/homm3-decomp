@@ -5,6 +5,7 @@
 #include <ddraw.h>
 #include <string.h>
 #include "wingraph.h"
+#include "kb.h"
 #include "kbwin.h"
 #include "misc.h"
 #include "mousemgr.h"
@@ -32,6 +33,7 @@ DATA(0x006aacbc) IDirectDrawSurface* gpDDSPrimary;
 DATA(0x006aacc0) IDirectDrawSurface* gpDDSBack;
 DATA(0x006aacd0) static IDirectDrawClipper* gpDDClipper;
 DATA(0x006aacb4) static int gWinGraphBusy;
+DATA(0x006aacd4) static unsigned char gInDirectDrawError;
 
 // The first 16 bytes of the old DirectDraw pixel-format record. Its three
 // live channel masks are separately owned at 0x68c860..68 by mousemgr.cpp,
@@ -147,13 +149,6 @@ void DDReleaseMouseSurfaces()
     // @stub
 }
 
-// E:\gamedcs\wingraph.cpp:1313
-DC_ONLY(0x199724, 0x978)
-void DDSD(int iDDErr, char* cFile, int iLine)
-{
-    // @stub
-}
-
 // E:\gamedcs\wingraph.cpp:1476
 DC_ONLY(0x19a09c, 0x76)
 void DDCleanUpWinGraphics()
@@ -184,6 +179,558 @@ unsigned char DDSetFullScreenStatus(int iNewStatus)
 
 // E:\gamedcs\wingraph.cpp:1857
 #endif  // @carcass
+
+// The Dreamcast line table groups the re-entry test, RestoreDisplayMode,
+// error-name switch, formatter and shutdown into the same source statements
+// retained here.  Complete's x86 body independently proves the 200-byte
+// cTemp extent, every HRESULT case, one MessageBeep, the low-word error code
+// passed to wsprintfA, and the final guard reset.  The shared HoMM2 DDSD body
+// supplies the source lineage; its smaller error roster is not copied blindly.
+VA(0x006006E0, 0xCBF)  // DC DDSD identity + retail literals/CFG + HoMM2 lineage
+void DDSD(int iDDErr, char* cFile, int iLine)
+{
+    char cTemp[200];
+
+    if (gInDirectDrawError)
+        return;
+
+    gInDirectDrawError = 1;
+    if (gpDirectDraw)
+        gpDirectDraw->RestoreDisplayMode();
+
+    switch (iDDErr) {
+    case DD_OK:
+        return;
+    case DDERR_OUTOFMEMORY:
+        strcpy(cTemp, DATA_COMPGEN(0x0068D248, ddsd_DDERR_OUTOFMEMORY,
+                                   "DDERR_OUTOFMEMORY"));
+        break;
+    case DDERR_GENERIC:
+        strcpy(cTemp, DATA_COMPGEN(0x0068D238, ddsd_DDERR_GENERIC,
+                                   "DDERR_GENERIC"));
+        break;
+    case DDERR_UNSUPPORTED:
+        strcpy(cTemp, DATA_COMPGEN(0x0068D224, ddsd_DDERR_UNSUPPORTED,
+                                   "DDERR_UNSUPPORTED"));
+        break;
+    case DDERR_INVALIDPARAMS:
+        strcpy(cTemp, DATA_COMPGEN(0x0068D210, ddsd_DDERR_INVALIDPARAMS,
+                                   "DDERR_INVALIDPARAMS"));
+        break;
+    case DDERR_CANNOTATTACHSURFACE:
+        strcpy(cTemp, DATA_COMPGEN(0x0068D1F4,
+                                   ddsd_DDERR_CANNOTATTACHSURFACE,
+                                   "DDERR_CANNOTATTACHSURFACE"));
+        break;
+    case DDERR_ALREADYINITIALIZED:
+        strcpy(cTemp, DATA_COMPGEN(0x0068D1D8,
+                                   ddsd_DDERR_ALREADYINITIALIZED,
+                                   "DDERR_ALREADYINITIALIZED"));
+        break;
+    case DDERR_CANNOTDETACHSURFACE:
+        strcpy(cTemp, DATA_COMPGEN(0x0068D1BC,
+                                   ddsd_DDERR_CANNOTDETACHSURFACE,
+                                   "DDERR_CANNOTDETACHSURFACE"));
+        break;
+    case DDERR_CURRENTLYNOTAVAIL:
+        strcpy(cTemp, DATA_COMPGEN(0x0068D1A4,
+                                   ddsd_DDERR_CURRENTLYNOTAVAIL,
+                                   "DDERR_CURRENTLYNOTAVAIL"));
+        break;
+    case DDERR_EXCEPTION:
+        strcpy(cTemp, DATA_COMPGEN(0x0068D194, ddsd_DDERR_EXCEPTION,
+                                   "DDERR_EXCEPTION"));
+        break;
+    case DDERR_HEIGHTALIGN:
+        strcpy(cTemp, DATA_COMPGEN(0x0068D180, ddsd_DDERR_HEIGHTALIGN,
+                                   "DDERR_HEIGHTALIGN"));
+        break;
+    case DDERR_INCOMPATIBLEPRIMARY:
+        strcpy(cTemp, DATA_COMPGEN(0x0068D164,
+                                   ddsd_DDERR_INCOMPATIBLEPRIMARY,
+                                   "DDERR_INCOMPATIBLEPRIMARY"));
+        break;
+    case DDERR_INVALIDCAPS:
+        strcpy(cTemp, DATA_COMPGEN(0x0068D150, ddsd_DDERR_INVALIDCAPS,
+                                   "DDERR_INVALIDCAPS"));
+        break;
+    case DDERR_INVALIDCLIPLIST:
+        strcpy(cTemp, DATA_COMPGEN(0x0068D138,
+                                   ddsd_DDERR_INVALIDCLIPLIST,
+                                   "DDERR_INVALIDCLIPLIST"));
+        break;
+    case DDERR_INVALIDMODE:
+        strcpy(cTemp, DATA_COMPGEN(0x0068D124, ddsd_DDERR_INVALIDMODE,
+                                   "DDERR_INVALIDMODE"));
+        break;
+    case DDERR_INVALIDOBJECT:
+        strcpy(cTemp, DATA_COMPGEN(0x0068D110,
+                                   ddsd_DDERR_INVALIDOBJECT,
+                                   "DDERR_INVALIDOBJECT"));
+        break;
+    case DDERR_INVALIDPIXELFORMAT:
+        strcpy(cTemp, DATA_COMPGEN(0x0068D0F4,
+                                   ddsd_DDERR_INVALIDPIXELFORMAT,
+                                   "DDERR_INVALIDPIXELFORMAT"));
+        break;
+    case DDERR_INVALIDRECT:
+        strcpy(cTemp, DATA_COMPGEN(0x0068D0E0, ddsd_DDERR_INVALIDRECT,
+                                   "DDERR_INVALIDRECT"));
+        break;
+    case DDERR_LOCKEDSURFACES:
+        strcpy(cTemp, DATA_COMPGEN(0x0068D0C8,
+                                   ddsd_DDERR_LOCKEDSURFACES,
+                                   "DDERR_LOCKEDSURFACES"));
+        break;
+    case DDERR_NO3D:
+        strcpy(cTemp, DATA_COMPGEN(0x0068D0BC, ddsd_DDERR_NO3D,
+                                   "DDERR_NO3D"));
+        break;
+    case DDERR_NOALPHAHW:
+        strcpy(cTemp, DATA_COMPGEN(0x0068D0AC, ddsd_DDERR_NOALPHAHW,
+                                   "DDERR_NOALPHAHW"));
+        break;
+    case DDERR_NOCLIPLIST:
+        strcpy(cTemp, DATA_COMPGEN(0x0068D098, ddsd_DDERR_NOCLIPLIST,
+                                   "DDERR_NOCLIPLIST"));
+        break;
+    case DDERR_NOCOLORCONVHW:
+        strcpy(cTemp, DATA_COMPGEN(0x0068D084,
+                                   ddsd_DDERR_NOCOLORCONVHW,
+                                   "DDERR_NOCOLORCONVHW"));
+        break;
+    case DDERR_NOCOOPERATIVELEVELSET:
+        strcpy(cTemp, DATA_COMPGEN(0x0068D068,
+                                   ddsd_DDERR_NOCOOPERATIVELEVELSET,
+                                   "DDERR_NOCOOPERATIVELEVELSET"));
+        break;
+    case DDERR_NOCOLORKEY:
+        strcpy(cTemp, DATA_COMPGEN(0x0068D054, ddsd_DDERR_NOCOLORKEY,
+                                   "DDERR_NOCOLORKEY"));
+        break;
+    case DDERR_NOCOLORKEYHW:
+        strcpy(cTemp, DATA_COMPGEN(0x0068D040,
+                                   ddsd_DDERR_NOCOLORKEYHW,
+                                   "DDERR_NOCOLORKEYHW"));
+        break;
+    case DDERR_NODIRECTDRAWSUPPORT:
+        strcpy(cTemp, DATA_COMPGEN(0x0068D024,
+                                   ddsd_DDERR_NODIRECTDRAWSUPPORT,
+                                   "DDERR_NODIRECTDRAWSUPPORT"));
+        break;
+    case DDERR_NOEXCLUSIVEMODE:
+        strcpy(cTemp, DATA_COMPGEN(0x0068D00C,
+                                   ddsd_DDERR_NOEXCLUSIVEMODE,
+                                   "DDERR_NOEXCLUSIVEMODE"));
+        break;
+    case DDERR_NOFLIPHW:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CFFC, ddsd_DDERR_NOFLIPHW,
+                                   "DDERR_NOFLIPHW"));
+        break;
+    case DDERR_NOGDI:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CFF0, ddsd_DDERR_NOGDI,
+                                   "DDERR_NOGDI"));
+        break;
+    case DDERR_NOMIRRORHW:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CFDC, ddsd_DDERR_NOMIRRORHW,
+                                   "DDERR_NOMIRRORHW"));
+        break;
+    case DDERR_NOTFOUND:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CFCC, ddsd_DDERR_NOTFOUND,
+                                   "DDERR_NOTFOUND"));
+        break;
+    case DDERR_NOOVERLAYHW:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CFB8, ddsd_DDERR_NOOVERLAYHW,
+                                   "DDERR_NOOVERLAYHW"));
+        break;
+    case DDERR_OVERLAPPINGRECTS:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CFA0,
+                                   ddsd_DDERR_OVERLAPPINGRECTS,
+                                   "DDERR_OVERLAPPINGRECTS"));
+        break;
+    case DDERR_NORASTEROPHW:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CF8C,
+                                   ddsd_DDERR_NORASTEROPHW,
+                                   "DDERR_NORASTEROPHW"));
+        break;
+    case DDERR_NOROTATIONHW:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CF78,
+                                   ddsd_DDERR_NOROTATIONHW,
+                                   "DDERR_NOROTATIONHW"));
+        break;
+    case DDERR_NOSTRETCHHW:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CF64,
+                                   ddsd_DDERR_NOSTRETCHHW,
+                                   "DDERR_NOSTRETCHHW"));
+        break;
+    case DDERR_NOT4BITCOLOR:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CF50,
+                                   ddsd_DDERR_NOT4BITCOLOR,
+                                   "DDERR_NOT4BITCOLOR"));
+        break;
+    case DDERR_NOT4BITCOLORINDEX:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CF38,
+                                   ddsd_DDERR_NOT4BITCOLORINDEX,
+                                   "DDERR_NOT4BITCOLORINDEX"));
+        break;
+    case DDERR_NOT8BITCOLOR:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CF24,
+                                   ddsd_DDERR_NOT8BITCOLOR,
+                                   "DDERR_NOT8BITCOLOR"));
+        break;
+    case DDERR_NOTEXTUREHW:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CF10,
+                                   ddsd_DDERR_NOTEXTUREHW,
+                                   "DDERR_NOTEXTUREHW"));
+        break;
+    case DDERR_NOVSYNCHW:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CF00, ddsd_DDERR_NOVSYNCHW,
+                                   "DDERR_NOVSYNCHW"));
+        break;
+    case DDERR_NOZBUFFERHW:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CEEC,
+                                   ddsd_DDERR_NOZBUFFERHW,
+                                   "DDERR_NOZBUFFERHW"));
+        break;
+    case DDERR_NOZOVERLAYHW:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CED8,
+                                   ddsd_DDERR_NOZOVERLAYHW,
+                                   "DDERR_NOZOVERLAYHW"));
+        break;
+    case DDERR_OUTOFCAPS:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CEC8, ddsd_DDERR_OUTOFCAPS,
+                                   "DDERR_OUTOFCAPS"));
+        break;
+    case DDERR_OUTOFVIDEOMEMORY:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CEB0,
+                                   ddsd_DDERR_OUTOFVIDEOMEMORY,
+                                   "DDERR_OUTOFVIDEOMEMORY"));
+        break;
+    case DDERR_OVERLAYCANTCLIP:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CE98,
+                                   ddsd_DDERR_OVERLAYCANTCLIP,
+                                   "DDERR_OVERLAYCANTCLIP"));
+        break;
+    case DDERR_OVERLAYCOLORKEYONLYONEACTIVE:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CE74,
+                                   ddsd_DDERR_OVERLAYCOLORKEYONLYONEACTIVE,
+                                   "DDERR_OVERLAYCOLORKEYONLYONEACTIVE"));
+        break;
+    case DDERR_PALETTEBUSY:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CE60, ddsd_DDERR_PALETTEBUSY,
+                                   "DDERR_PALETTEBUSY"));
+        break;
+    case DDERR_COLORKEYNOTSET:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CE48,
+                                   ddsd_DDERR_COLORKEYNOTSET,
+                                   "DDERR_COLORKEYNOTSET"));
+        break;
+    case DDERR_SURFACEALREADYATTACHED:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CE28,
+                                   ddsd_DDERR_SURFACEALREADYATTACHED,
+                                   "DDERR_SURFACEALREADYATTACHED"));
+        break;
+    case DDERR_SURFACEALREADYDEPENDENT:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CE08,
+                                   ddsd_DDERR_SURFACEALREADYDEPENDENT,
+                                   "DDERR_SURFACEALREADYDEPENDENT"));
+        break;
+    case DDERR_SURFACEBUSY:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CDF4, ddsd_DDERR_SURFACEBUSY,
+                                   "DDERR_SURFACEBUSY"));
+        break;
+    case DDERR_CANTLOCKSURFACE:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CDDC,
+                                   ddsd_DDERR_CANTLOCKSURFACE,
+                                   "DDERR_CANTLOCKSURFACE"));
+        break;
+    case DDERR_SURFACEISOBSCURED:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CDC4,
+                                   ddsd_DDERR_SURFACEISOBSCURED,
+                                   "DDERR_SURFACEISOBSCURED"));
+        break;
+    case DDERR_SURFACELOST:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CDB0, ddsd_DDERR_SURFACELOST,
+                                   "DDERR_SURFACELOST"));
+        break;
+    case DDERR_SURFACENOTATTACHED:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CD94,
+                                   ddsd_DDERR_SURFACENOTATTACHED,
+                                   "DDERR_SURFACENOTATTACHED"));
+        break;
+    case DDERR_TOOBIGHEIGHT:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CD80,
+                                   ddsd_DDERR_TOOBIGHEIGHT,
+                                   "DDERR_TOOBIGHEIGHT"));
+        break;
+    case DDERR_TOOBIGSIZE:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CD6C, ddsd_DDERR_TOOBIGSIZE,
+                                   "DDERR_TOOBIGSIZE"));
+        break;
+    case DDERR_TOOBIGWIDTH:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CD58,
+                                   ddsd_DDERR_TOOBIGWIDTH,
+                                   "DDERR_TOOBIGWIDTH"));
+        break;
+    case DDERR_UNSUPPORTEDFORMAT:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CD40,
+                                   ddsd_DDERR_UNSUPPORTEDFORMAT,
+                                   "DDERR_UNSUPPORTEDFORMAT"));
+        break;
+    case DDERR_UNSUPPORTEDMASK:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CD28,
+                                   ddsd_DDERR_UNSUPPORTEDMASK,
+                                   "DDERR_UNSUPPORTEDMASK"));
+        break;
+    case DDERR_INVALIDSTREAM:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CD14,
+                                   ddsd_DDERR_INVALIDSTREAM,
+                                   "DDERR_INVALIDSTREAM"));
+        break;
+    case DDERR_VERTICALBLANKINPROGRESS:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CCF4,
+                                   ddsd_DDERR_VERTICALBLANKINPROGRESS,
+                                   "DDERR_VERTICALBLANKINPROGRESS"));
+        break;
+    case DDERR_WASSTILLDRAWING:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CCDC,
+                                   ddsd_DDERR_WASSTILLDRAWING,
+                                   "DDERR_WASSTILLDRAWING"));
+        break;
+    case DDERR_XALIGN:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CCCC, ddsd_DDERR_XALIGN,
+                                   "DDERR_XALIGN"));
+        break;
+    case DDERR_INVALIDDIRECTDRAWGUID:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CCB0,
+                                   ddsd_DDERR_INVALIDDIRECTDRAWGUID,
+                                   "DDERR_INVALIDDIRECTDRAWGUID"));
+        break;
+    case DDERR_DIRECTDRAWALREADYCREATED:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CC90,
+                                   ddsd_DDERR_DIRECTDRAWALREADYCREATED,
+                                   "DDERR_DIRECTDRAWALREADYCREATED"));
+        break;
+    case DDERR_NODIRECTDRAWHW:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CC78,
+                                   ddsd_DDERR_NODIRECTDRAWHW,
+                                   "DDERR_NODIRECTDRAWHW"));
+        break;
+    case DDERR_PRIMARYSURFACEALREADYEXISTS:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CC54,
+                                   ddsd_DDERR_PRIMARYSURFACEALREADYEXISTS,
+                                   "DDERR_PRIMARYSURFACEALREADYEXISTS"));
+        break;
+    case DDERR_NOEMULATION:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CC40, ddsd_DDERR_NOEMULATION,
+                                   "DDERR_NOEMULATION"));
+        break;
+    case DDERR_REGIONTOOSMALL:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CC28,
+                                   ddsd_DDERR_REGIONTOOSMALL,
+                                   "DDERR_REGIONTOOSMALL"));
+        break;
+    case DDERR_CLIPPERISUSINGHWND:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CC0C,
+                                   ddsd_DDERR_CLIPPERISUSINGHWND,
+                                   "DDERR_CLIPPERISUSINGHWND"));
+        break;
+    case DDERR_NOCLIPPERATTACHED:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CBF4,
+                                   ddsd_DDERR_NOCLIPPERATTACHED,
+                                   "DDERR_NOCLIPPERATTACHED"));
+        break;
+    case DDERR_NOHWND:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CBE4, ddsd_DDERR_NOHWND,
+                                   "DDERR_NOHWND"));
+        break;
+    case DDERR_HWNDSUBCLASSED:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CBCC,
+                                   ddsd_DDERR_HWNDSUBCLASSED,
+                                   "DDERR_HWNDSUBCLASSED"));
+        break;
+    case DDERR_HWNDALREADYSET:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CBB4,
+                                   ddsd_DDERR_HWNDALREADYSET,
+                                   "DDERR_HWNDALREADYSET"));
+        break;
+    case DDERR_NOPALETTEATTACHED:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CB9C,
+                                   ddsd_DDERR_NOPALETTEATTACHED,
+                                   "DDERR_NOPALETTEATTACHED"));
+        break;
+    case DDERR_NOPALETTEHW:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CB88,
+                                   ddsd_DDERR_NOPALETTEHW,
+                                   "DDERR_NOPALETTEHW"));
+        break;
+    case DDERR_BLTFASTCANTCLIP:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CB70,
+                                   ddsd_DDERR_BLTFASTCANTCLIP,
+                                   "DDERR_BLTFASTCANTCLIP"));
+        break;
+    case DDERR_NOBLTHW:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CB60, ddsd_DDERR_NOBLTHW,
+                                   "DDERR_NOBLTHW"));
+        break;
+    case DDERR_NODDROPSHW:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CB4C,
+                                   ddsd_DDERR_NODDROPSHW,
+                                   "DDERR_NODDROPSHW"));
+        break;
+    case DDERR_OVERLAYNOTVISIBLE:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CB34,
+                                   ddsd_DDERR_OVERLAYNOTVISIBLE,
+                                   "DDERR_OVERLAYNOTVISIBLE"));
+        break;
+    case DDERR_NOOVERLAYDEST:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CB20,
+                                   ddsd_DDERR_NOOVERLAYDEST,
+                                   "DDERR_NOOVERLAYDEST"));
+        break;
+    case DDERR_INVALIDPOSITION:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CB08,
+                                   ddsd_DDERR_INVALIDPOSITION,
+                                   "DDERR_INVALIDPOSITION"));
+        break;
+    case DDERR_NOTAOVERLAYSURFACE:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CAEC,
+                                   ddsd_DDERR_NOTAOVERLAYSURFACE,
+                                   "DDERR_NOTAOVERLAYSURFACE"));
+        break;
+    case DDERR_EXCLUSIVEMODEALREADYSET:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CACC,
+                                   ddsd_DDERR_EXCLUSIVEMODEALREADYSET,
+                                   "DDERR_EXCLUSIVEMODEALREADYSET"));
+        break;
+    case DDERR_NOTFLIPPABLE:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CAB8,
+                                   ddsd_DDERR_NOTFLIPPABLE,
+                                   "DDERR_NOTFLIPPABLE"));
+        break;
+    case DDERR_CANTDUPLICATE:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CAA4,
+                                   ddsd_DDERR_CANTDUPLICATE,
+                                   "DDERR_CANTDUPLICATE"));
+        break;
+    case DDERR_NOTLOCKED:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CA94, ddsd_DDERR_NOTLOCKED,
+                                   "DDERR_NOTLOCKED"));
+        break;
+    case DDERR_CANTCREATEDC:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CA80,
+                                   ddsd_DDERR_CANTCREATEDC,
+                                   "DDERR_CANTCREATEDC"));
+        break;
+    case DDERR_NODC:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CA74, ddsd_DDERR_NODC,
+                                   "DDERR_NODC"));
+        break;
+    case DDERR_WRONGMODE:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CA64, ddsd_DDERR_WRONGMODE,
+                                   "DDERR_WRONGMODE"));
+        break;
+    case DDERR_IMPLICITLYCREATED:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CA4C,
+                                   ddsd_DDERR_IMPLICITLYCREATED,
+                                   "DDERR_IMPLICITLYCREATED"));
+        break;
+    case DDERR_NOTPALETTIZED:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CA38,
+                                   ddsd_DDERR_NOTPALETTIZED,
+                                   "DDERR_NOTPALETTIZED"));
+        break;
+    case DDERR_UNSUPPORTEDMODE:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CA20,
+                                   ddsd_DDERR_UNSUPPORTEDMODE,
+                                   "DDERR_UNSUPPORTEDMODE"));
+        break;
+    case DDERR_NOMIPMAPHW:
+        strcpy(cTemp, DATA_COMPGEN(0x0068CA0C,
+                                   ddsd_DDERR_NOMIPMAPHW,
+                                   "DDERR_NOMIPMAPHW"));
+        break;
+    case DDERR_INVALIDSURFACETYPE:
+        strcpy(cTemp, DATA_COMPGEN(0x0068C9F0,
+                                   ddsd_DDERR_INVALIDSURFACETYPE,
+                                   "DDERR_INVALIDSURFACETYPE"));
+        break;
+    case DDERR_NOOPTIMIZEHW:
+        strcpy(cTemp, DATA_COMPGEN(0x0068C9DC,
+                                   ddsd_DDERR_NOOPTIMIZEHW,
+                                   "DDERR_NOOPTIMIZEHW"));
+        break;
+    case DDERR_NOTLOADED:
+        strcpy(cTemp, DATA_COMPGEN(0x0068C9CC, ddsd_DDERR_NOTLOADED,
+                                   "DDERR_NOTLOADED"));
+        break;
+    case DDERR_NOFOCUSWINDOW:
+        strcpy(cTemp, DATA_COMPGEN(0x0068C9B8,
+                                   ddsd_DDERR_NOFOCUSWINDOW,
+                                   "DDERR_NOFOCUSWINDOW"));
+        break;
+    case DDERR_DCALREADYCREATED:
+        strcpy(cTemp, DATA_COMPGEN(0x0068C9A0,
+                                   ddsd_DDERR_DCALREADYCREATED,
+                                   "DDERR_DCALREADYCREATED"));
+        break;
+    case DDERR_NONONLOCALVIDMEM:
+        strcpy(cTemp, DATA_COMPGEN(0x0068C988,
+                                   ddsd_DDERR_NONONLOCALVIDMEM,
+                                   "DDERR_NONONLOCALVIDMEM"));
+        break;
+    case DDERR_CANTPAGELOCK:
+        strcpy(cTemp, DATA_COMPGEN(0x0068C974,
+                                   ddsd_DDERR_CANTPAGELOCK,
+                                   "DDERR_CANTPAGELOCK"));
+        break;
+    case DDERR_CANTPAGEUNLOCK:
+        strcpy(cTemp, DATA_COMPGEN(0x0068C95C,
+                                   ddsd_DDERR_CANTPAGEUNLOCK,
+                                   "DDERR_CANTPAGEUNLOCK"));
+        break;
+    case DDERR_NOTPAGELOCKED:
+        strcpy(cTemp, DATA_COMPGEN(0x0068C948,
+                                   ddsd_DDERR_NOTPAGELOCKED,
+                                   "DDERR_NOTPAGELOCKED"));
+        break;
+    case DDERR_MOREDATA:
+        strcpy(cTemp, DATA_COMPGEN(0x0068C938, ddsd_DDERR_MOREDATA,
+                                   "DDERR_MOREDATA"));
+        break;
+    case DDERR_EXPIRED:
+        strcpy(cTemp, DATA_COMPGEN(0x0068C928, ddsd_DDERR_EXPIRED,
+                                   "DDERR_EXPIRED"));
+        break;
+    case DDERR_DEVICEDOESNTOWNSURFACE:
+        strcpy(cTemp, DATA_COMPGEN(0x0068C8F4,
+                                   ddsd_DDERR_DEVICEDOESNTOWNSURFACE,
+                                   "DDERR_DEVICEDOESNTOWNSURFACE"));
+        break;
+    case DDERR_VIDEONOTACTIVE:
+        strcpy(cTemp, DATA_COMPGEN(0x0068C8DC,
+                                   ddsd_DDERR_VIDEONOTACTIVE,
+                                   "DDERR_VIDEONOTACTIVE"));
+        break;
+    default:
+        strcpy(cTemp, DATA_COMPGEN(0x0068C914, ddsdUnknownError,
+                                   "Error type unknown"));
+        break;
+    }
+
+    MessageBeep(0);
+    wsprintfA(gText,
+              DATA_COMPGEN(
+                  0x0068C8A4,
+                  ddsdErrorFormat,
+                  "DirectDraw Error (%d):\n\n  '%s'\n\n  File: '%s'\n  Line: %d"),
+              iDDErr & 0xffff,
+              cTemp,
+              cFile,
+              iLine);
+    ShutDown(gText);
+    gInDirectDrawError = 0;
+}
 
 // E:\gamedcs\wingraph.cpp:1833
 // Retail's row is the real query the Dreamcast port stubbed out to four
