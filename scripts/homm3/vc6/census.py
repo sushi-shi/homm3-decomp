@@ -53,16 +53,17 @@ def _locator() -> tuple[bool, str]:
     import io
     import unittest
     from homm3.vc6 import test_inline_names, test_locator, test_queue, \
-        test_report_resolution
+        test_reg_mutations, test_report_resolution
     suite = unittest.TestSuite(
         unittest.defaultTestLoader.loadTestsFromModule(m)
-        for m in (test_locator, test_inline_names, test_report_resolution,
-                  test_queue))
+        for m in (test_locator, test_inline_names, test_reg_mutations,
+                  test_report_resolution, test_queue))
     buf = io.StringIO()
     res = unittest.TextTestRunner(stream=buf, verbosity=0).run(suite)
     bad = res.failures + res.errors
     if not bad:
-        return True, (f"{res.testsRun} definition shape / inline-name case(s) "
+        return True, (f"{res.testsRun} definition shape / solver-policy / "
+                      "inline-name case(s) "
                       "held (carcass + declaration + call-site + "
                       "name-artifact + banked-MAX queue controls)")
     names = ", ".join(t.id().split(".")[-1] for t, _ in bad[:4])

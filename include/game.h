@@ -2177,6 +2177,7 @@ public:
     void SetupDynamicStuff(int bUpdate, int bForceUpdate); // 0x51bd50
     void SetupNewOverviewType(int iWhichType,
                               unsigned char bUpdate);      // 0x51e330
+    int ProcessIconSelect(int codeY, unsigned char bRightMouse); // 0x51ee50
     // DC-attested inline helper. Retail's shrine consumer proves the signed
     // [0,8) player guard and the byte bitset at +0x4e344.
     unsigned char GetInfoFlag(enum GlobalInfoFlags flag, const int playerNum)

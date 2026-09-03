@@ -2483,11 +2483,11 @@ int advManager::ProcessDeSelect(const message* msg, unsigned char* exitFlag, typ
         gpGame->Overview();
 
         int bFadeOut = 1;
-        if (gUnnamed6985c0 == OVERVIEW_EXIT_TOWN) {
+        if (giOverviewReturnAction == OVERVIEW_EXIT_TOWN) {
             DemobilizeCurrHero(0, 1);
             gpMouseManager->ShowPointer(1);
             gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
-            gpGame->GetTown(gUnnamed69873c)->View(1);
+            gpGame->GetTown(giOverviewReturnActionExtra)->View(1);
             bFadeOut = 0;
         } else if (gUnnamed699560) {
             type_point viewCentre;

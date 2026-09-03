@@ -10,11 +10,6 @@ struct type_point;
 unsigned char DoTavern();
 void DoMapTavern(type_point point);
 
-// hero.obj's four primary-stat column headers (0x6a7540, claimed in hero.cpp),
-// reused by TThievesGuildWindow::WindowHandler as the NormalDialog title on a
-// rank-cell right-click. Declared here because hero.h does not carry it.
-extern const char* gPrimaryStatNames[4];
-
 // The nine columns of the thieves' guild table, in the order
 // SetupThievesGuild builds them and GetCategoryStats dispatches them.
 // The Dreamcast dump declares no enum for this domain - both bodies pass

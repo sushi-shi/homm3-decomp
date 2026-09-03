@@ -38,11 +38,6 @@ struct THelpText {
     const char* rclick;
 };
 
-// Eight-byte help rows at retail 0x6a56e0. townmgr.cpp owns the address
-// annotation; adventuremapwindow reads the same storage as text/rclick
-// pairs. The provisional name is retained until the text initializer lands.
-extern const char* gUnnamed6a56e0[];
-
 // Dreamcast names its right-click text pointer array gQuickViewText. Retail
 // interleaves that column with rollover pointers, so consecutive entries are
 // eight bytes apart beginning at the second pointer of the first help row.

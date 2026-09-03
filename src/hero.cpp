@@ -123,7 +123,7 @@ inline CMCDeadHero::CMCDeadHero(int id, type_point location)
 
 DATA(0x0069774c) extern unsigned char gCampaignMode;
 DATA(0x0067dcec) extern const THeroClassTraits (&akHeroClasses)[18];
-DATA(0x006a7540) extern const char* gPrimaryStatNames[4];
+DATA(0x006a7540) extern const char* gStatDesc[4];
 // Runtime hero-view state used by the retail-only name getter below. The
 // storage addresses and access widths are byte-proven; no public symbol
 // roster survives for the two name-table pointer spellings, so they are
@@ -1911,7 +1911,7 @@ VA(0x004d9990, 0x65)  // dc-bracket forced, dc 0xcc4e0
 void hero::HeroScreenUpdate(int whichStat, int isQuickView)
 {
     unsigned short statValue = GetPrimarySkill(whichStat);
-    NormalDialog(gPrimaryStatNames[whichStat],
+    NormalDialog(gStatDesc[whichStat],
                  isQuickView ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
                              : hero::PRIMARY_STAT_DIALOG_TYPE,
                  -1, PRIMARY_STAT_DIALOG_Y,

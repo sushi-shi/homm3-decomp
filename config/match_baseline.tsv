@@ -17,7 +17,7 @@ adventuremapwindow	?DoHeroKnob@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	10
 adventuremapwindow	?DoTownKnob@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x3280	6132348c8553
 adventuremapwindow	?DrawChatText@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x3f20	ac1b75da0e1d
 adventuremapwindow	?HighlightLocators@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x38c0	e5ef448a01de
-adventuremapwindow	?ProcessHover@TAdventureMapWindow@@QAEEHH@Z	100.0000	100.0000	100.0000	0x3010	f10675231260
+adventuremapwindow	?ProcessHover@TAdventureMapWindow@@QAEEHH@Z	100.0000	100.0000	100.0000	0x3010	bfd10bf53b10
 adventuremapwindow	?ProcessRightSelect@TAdventureMapWindow@@QAEEPBVmessage@@@Z	100.0000	100.0000	100.0000	0x2e70	80df558fe952
 adventuremapwindow	?SetElevationToggleImage@TAdventureMapWindow@@QAEEH@Z	96.9512	100.0000	100.0000	0x3c40	0df4e9cb919d
 adventuremapwindow	?SetSleepImage@TAdventureMapWindow@@QAEXH@Z	86.6667	100.0000	100.0000	0x3cc0	eb469edf3fb7
@@ -107,7 +107,7 @@ advmgr	?MoreTreesNear@advManager@@QAEHUtype_point@@@Z	100.0000	100.0000	100.0000
 advmgr	?Open@advManager@@UAEHH@Z	97.7989	97.7989	97.7989	0x6fd0	e0f403631eca
 advmgr	?OverrideBottomView@advManager@@QAEXW4EBottomViewType@1@H@Z	100.0000	100.0000	100.0000	0x15d60	98751fa2643c
 advmgr	?PopupPlayerTurnInfo@@YIXXZ	100.0000	100.0000	100.0000	0x19c80	98baf175609e
-advmgr	?ProcessDeSelect@advManager@@QAEHPBVmessage@@PAEPAUtype_point@@PAPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x9a70	aac045e0a4e9
+advmgr	?ProcessDeSelect@advManager@@QAEHPBVmessage@@PAEPAUtype_point@@PAPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x9a70	ea04b60e2e3c
 advmgr	?ProcessHover@advManager@@QAEHHH@Z	83.5000	83.5000	83.5000	0xe360	cd31f1d94036
 advmgr	?ProcessKeyPress@advManager@@QAEHPBVmessage@@PAEPAUtype_point@@PAPAVNewmapCell@@@Z	80.4012	80.4012	80.4012	0x8c40	722b42ee0c97
 advmgr	?ProcessMapSelect@advManager@@QAEXPBVmessage@@PAUtype_point@@PAPAVNewmapCell@@@Z	91.1006	91.1006	91.1006	0xa5d0	e94ec6649fc3
@@ -1742,7 +1742,7 @@ hero	?HeroFn_004E2840@hero@@QAEEJJ@Z	78.8633	78.8633	78.8633	0xe2840	3a443a1401c
 hero	?HeroFn_004E4EC0@hero@@QAE?AW4TAdventureObjectType@@XZ	100.0000	100.0000	100.0000	0xe4ec0	5705c9ac3fa4
 hero	?HeroFn_004E5DE0@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe5de0	ec2f952e9a8e
 hero	?HeroFn_004E6120@hero@@QBEXHPAUTCreatureTypeTraits@@@Z	100.0000	100.0000	100.0000	0xe6120	0ad9c16ec449
-hero	?HeroScreenUpdate@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xd9990	7ae4d25201ca
+hero	?HeroScreenUpdate@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xd9990	aebceb76e89c
 hero	?HeroView@@YIHHHHE@Z	100.0000	100.0000	100.0000	0xe1800	f02e79d1de49
 hero	?IsInIdentifyRange@hero@@QAEEPBUtype_point@@@Z	98.6813	98.6813	98.6813	0xe5e10	8540e5ea6284
 hero	?IsMobile@hero@@QAEEXZ	100.0000	100.0000	100.0000	0xe5f30	c6edcb416792
@@ -2194,8 +2194,9 @@ overview	??0TOverviewWindow@@QAE@XZ	78.4627	80.0954	80.0954	0x11fa40	77a0b34ded9
 overview	??1TOverviewWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x120d90	048fab1d8faa
 overview	??_GTOverviewWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x120d60	-
 overview	?OverviewSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x11fa20	d405249777ca
+overview	?ProcessIconSelect@game@@QAEHHE@Z	94.7322	94.7322	94.7322	0x11ee50	042a4f8cf2fd
 overview	?SetupDynamicStuff@game@@QAEXHH@Z	90.5699	90.5699	90.5699	0x11bd50	f385ac22aff9
-overview	?SetupNewOverviewType@game@@QAEXHE@Z	96.4609	100.0000	100.0000	0x11e330	f328fdfe08b1
+overview	?SetupNewOverviewType@game@@QAEXHE@Z	96.4609	100.0000	100.0000	0x11e330	aa25ff2c3eaa
 overview	?UpdateBackpack@@YIXH@Z	96.5741	96.5741	96.5741	0x122470	838327f3aed0
 overview	?get_last_backpack_index@@YIJJ@Z	100.0000	100.0000	100.0000	0x1225d0	ba725cb029d9
 palette	??0TPalette24@@QAE@PBE@Z	100.0000	100.0000	100.0000	0x122e80	468ea0d98910
@@ -3274,7 +3275,7 @@ townmgr	?GetBuildingInfo@@YIPADPBVtown@@HEE@Z	100.0000	100.0000	100.0000	0x1d2a4
 townmgr	?GetCategoryStats@@YIXHPAJPAC@Z	100.0000	100.0000	100.0000	0x1dee70	7abd5d7a8cb1
 townmgr	?GetText@TTextResource@@QBEPBDH@Z	100.0000	100.0000	100.0000	0x1cc8d0	20ece2b574c7
 townmgr	?HandleGiftMsg@CTownNetMsgHandler@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x1c66b0	a350f10638ae
-townmgr	?Main@townManager@@UAEHAAVmessage@@@Z	66.8064	66.8064	66.8064	0x1d3240	3972f32e6b75
+townmgr	?Main@townManager@@UAEHAAVmessage@@@Z	66.8064	66.8064	66.8064	0x1d3240	74bb904b6276
 townmgr	?MoveHeroFromGarrison@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d5220	86f5af5a1637
 townmgr	?NewStrips@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c6e10	ba44f2443cec
 townmgr	?Open@TTavernWindow@@UAEHHE@Z	100.0000	100.0000	100.0000	0x1d7e20	9573d2ea1a7c
@@ -3283,12 +3284,12 @@ townmgr	?Recruit@TCastleWindow@@QAEXH@Z	96.4286	96.4286	96.4286	0x1dce50	96d007a
 townmgr	?RedrawTownScreen@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d5410	ffb153bb4f70
 townmgr	?ResetStrips@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d5530	94af52951674
 townmgr	?SetArmyCommand@townManager@@QAEXHE@Z	100.0000	100.0000	100.0000	0x1c7400	62f46c4eff6b
-townmgr	?SetCommandAndText@townManager@@QAEXPAVmessage@@@Z	92.0510	92.0510	92.0510	0x1c77a0	10d3a7469c5a
+townmgr	?SetCommandAndText@townManager@@QAEXPAVmessage@@@Z	92.0510	92.0510	92.0510	0x1c77a0	ab7c0d7d7187
 townmgr	?SetCommandAndText@type_garrison_base_window@@QAEXPAVmessage@@@Z	95.6856	95.6856	95.6856	0x1d05f0	272de7460518
 townmgr	?SetHeroCommand@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c7250	4d3e671b5a70
 townmgr	?SetRightClickText@TBlacksmithWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1d1aa0	cbee64ae2544
 townmgr	?SetRolloverText@TBlacksmithWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1d1b60	4999aa3da3f1
-townmgr	?SetRolloverText@TCastleWindow@@QAEXPAVmessage@@@Z	97.7688	97.7688	97.7688	0x1dcbf0	a4d6c7f05998
+townmgr	?SetRolloverText@TCastleWindow@@QAEXPAVmessage@@@Z	97.7688	97.7688	97.7688	0x1dcbf0	eac6b2e4719d
 townmgr	?SetRolloverText@TMageGuildWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1ce1c0	23df681c378d
 townmgr	?SetRolloverText@TTavernWindow@@QAEXH@Z	81.4136	81.4136	81.4136	0x1d7920	31cc55e9cbc8
 townmgr	?SetRolloverText@TThievesGuildWindow@@QAEXH@Z	94.1758	94.1758	94.1758	0x1c9710	0a961efcf30d
@@ -3305,11 +3306,11 @@ townmgr	?UpdateTownLocator@TTownScreenWindow@@QAEXH@Z	100.0000	100.0000	100.0000
 townmgr	?UpdateTownLocators@TTownScreenWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1c5aa0	456c214f5d85
 townmgr	?WindowHandler@TBlacksmithWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1d1c60	d791fa949057
 townmgr	?WindowHandler@TBuyBuildWindow@@UAEHPAVmessage@@@Z	98.0247	98.0247	98.0247	0x1d6810	19345d2aedc2
-townmgr	?WindowHandler@TCastleWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1dcf80	d713c866b70e
+townmgr	?WindowHandler@TCastleWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1dcf80	82de3db64734
 townmgr	?WindowHandler@TMageGuildWindow@@UAEHPAVmessage@@@Z	97.3926	97.3926	97.3926	0x1ce370	1ae7d5b1d61a
 townmgr	?WindowHandler@TShipWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1d25a0	40f8d683c326
 townmgr	?WindowHandler@TTavernWindow@@UAEHPAVmessage@@@Z	89.7235	89.7235	89.7235	0x1d7b30	1267941adfdd
-townmgr	?WindowHandler@TThievesGuildWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1c9930	84a081c35a56
+townmgr	?WindowHandler@TThievesGuildWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1c9930	39ae92e41f00
 townmgr	?WindowHandler@type_garrison_base_window@@UAEHPAVmessage@@@Z	95.6600	95.6600	95.6600	0x1d0910	823e10055f20
 townmgr	?do_monster_join_dialog@@YIXPAVhero@@PAVarmyGroup@@H@Z	100.0000	100.0000	100.0000	0x1d12b0	b54f6385538a
 townmgr	?do_monster_join_dialog@@YIXPAVhero@@W4TCreatureType@@H@Z	100.0000	100.0000	100.0000	0x1d11d0	d3d149b9cb41

@@ -549,15 +549,14 @@ the pointer member → base not kept).
   named int global* also invalidates the char-field CSE — VC6's invalidation
   is address-blind conservative, no type-based refinement)
 
-### B23. `volatile` as a modelling instrument — contested across the two trees
-homm3, byte-justified: `do_aftermath` `volatile unsigned char surrendered`
-load-bearing 75.41 → 79.73; `ai_player` volatile pointer homes recover two
-memory reads + town spill; `mousemgr:256` volatile parameters bounded at
-≤94.1675. homm2, rejected doctrine: volatile `pendingSkip` added a block,
-changed flow, expanded beyond retail — a structural contradiction
-(`docs/msvc42-optimized-nonlocal-islands.md:71-80`).
-- status: FLAG for the model — the trees disagree on when a homing artifact licenses `volatile`
-- probe: none (doctrinal conflict, not a single reproducible codegen fact)
+### B23. `volatile` is not an admissible register-allocation lever
+Earlier sweeps observed percentage gains from volatile locals and pointers,
+but none established a real source qualifier. The source cleanliness gate now
+bans the qualifier at floor zero, and `why-reg` deliberately excludes volatile
+mutations even when they would lower its abstract instruction distance. Recover
+the real helper, type, lifetime, aliasing obligation, or statement order.
+- status: REJECTED as source-false; detection remains fatal in cleanliness
+- negative control: `test_reg_mutations.py` proves `why-reg` cannot offer it
 
 ---
 
