@@ -15,7 +15,6 @@ TCreatureType UpgradedCreatureType(TCreatureType type);
 // GetArmyName's retail range guard proves the inclusive upper bound.
 const int CREATURE_TYPE_LAST = 0x96;
 
-#ifdef HOMM3_CREATURE_NAME_VIEW
 // E:\gamedcs\CreatureType.h:296
 inline const char* GetArmyName(int type, int count)
 {
@@ -29,9 +28,6 @@ inline const char* GetArmyName(int type, int count)
         }
     }
 }
-#else
-const char* GetArmyName(int type, int count);
-#endif
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\creaturetype.cpp:202, dc 0x718dc) TCreatureType GetBaseCreature(TTownType townType, int baseCreatureNbr);

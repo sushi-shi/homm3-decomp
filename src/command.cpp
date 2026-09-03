@@ -15,7 +15,6 @@
 // Both DC command routines below retain army::GetName as the source boundary,
 // while the original CreatureType.h body supplies its nested GetArmyName
 // expansion.  Omitting that header-inline body loses 16 retail CFG blocks.
-#define HOMM3_CREATURE_NAME_VIEW
 #include <va.h>
 #include "herospec.h"  // TSecondarySkill, for the skillLevel slot names
 #include "creaturetype.h"

@@ -86,17 +86,6 @@ inline int max(int left, int right)
 // use the same text-column clamp.
 #define DIALOG_ICON_MAX_TEXT_WIDTH 110
 
-// E:\gamedcs\CreatureType.h:296. Keep the recovered header-inline helper as
-// a real source boundary in this TU without adding another conditional VIEW.
-inline const char* GetArmyName(int type, int count)
-{
-    if (type < 0 || type > CREATURE_TYPE_LAST)
-        return DATA_COMPGEN(0x00691210, emptyCreatureName, "");
-    if (count == 1)
-        return akCreatureTypeTraits[type].m_name;
-    return akCreatureTypeTraits[type].m_plural_name;
-}
-
 #if 0  // @carcass
 
 // E:\gamedcs\kb.cpp:240

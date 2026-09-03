@@ -53,7 +53,6 @@
 #include "winmgr.h"
 #include "mousemgr.h"
 #include "advmgr.h"
-#define HOMM3_CREATURE_NAME_VIEW
 #include "creaturetype.h"
 #include "misc.h"
 #include "viewarmywindow.h"

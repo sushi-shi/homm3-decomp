@@ -16,9 +16,13 @@
 #include "bitmap816.h"
 #include "combatcontrolsubwindow.h"
 #include "combatwindow.h"
+#include "command.h"
+#include "creaturetype.h"
 #include "csprite.h"
 #include "findpath.h"
 #include "game.h"
+#include "ai_tactical.h"
+#include "kb.h"
 #include "kbwin.h"
 #include "misc.h"
 #include "palette.h"
@@ -27,6 +31,7 @@
 #include "resourcemanager.h"
 #include "soundmgr.h"
 #include "textwdgt.h"
+#include "textresource.h"
 #include "town.h"
 #include "widget.h"
 #include "winmgr.h"
@@ -81,44 +86,284 @@ DATA(0x006989ec) int gbProcessingCombatAction;
 // order (>= , <= , > , <) against SLimitData's four dwords at +0/+4/+8/+0xc.
 // cmbtmgr.h wants that band modelled before this TU is opened.
 
-#if 0  // @carcass
+static std::string format_rounded(long amount, long high);
+static std::string get_estimated_damage(const army* currentArmy,
+                                        army* targetArmy,
+                                        unsigned char ranged,
+                                        long distance);
 
-// E:\gamedcs\drawing.cpp:47
-DC_ONLY(0x831b4, 0x124)
-void get_creature_spell_message(char* buffer, const army* current_army, long current_hex)
+// E:\gamedcs\drawing.cpp:47. Dreamcast retains this file-static helper;
+// Complete's larger creature roster is expanded into CombatMessage, but the
+// ValidHex guard, controlling-side accessor and four shared cases prove that
+// the helper boundary survived at source level.
+static void get_creature_spell_message(char* buffer,
+                                       const army* currentArmy,
+                                       long currentHex)
 {
-    // @stub
+    if (!combatManager::ValidHex(currentHex)) {
+        buffer[0] = 0;
+        return;
+    }
+
+    int currentSide = currentArmy->get_controlling_side();
+    army* targetArmy;
+    switch (currentArmy->creatureType) {
+    case CREATURE_ARCHANGEL:
+        targetArmy = gpCombatManager->find_resurrection_target(
+            currentSide, currentHex, 1);
+        sprintf(buffer, (*gpGeneralText)[300], targetArmy->GetName());
+        break;
+    case CREATURE_MASTER_GENIE:
+        targetArmy = gpCombatManager->cells[currentHex].get_army();
+        sprintf(buffer, (*gpGeneralText)[302], targetArmy->GetName());
+        break;
+    case army::ARMY_CREATURE_PIT_LORD:
+        targetArmy = gpCombatManager->find_demonic_resurrection_target(
+            currentSide, currentHex);
+        sprintf(buffer, (*gpGeneralText)[301], targetArmy->GetName());
+        break;
+    case CREATURE_FAERIE_DRAGON:
+        targetArmy = gpCombatManager->cells[currentHex].get_army();
+        if (targetArmy) {
+            sprintf(buffer, (*gpGeneralText)[28],
+                    akSpellTraits[currentArmy->field_4e0].name,
+                    targetArmy->GetName());
+        } else {
+            sprintf(buffer, (*gpGeneralText)[27],
+                    akSpellTraits[currentArmy->field_4e0].name);
+        }
+        break;
+    case CREATURE_STORM_ELEMENTAL:
+        targetArmy = gpCombatManager->cells[currentHex].get_army();
+        sprintf(buffer, (*gpGeneralText)[28],
+                akSpellTraits[SPELL_PROTECTION_FROM_AIR].name,
+                targetArmy->GetName());
+        break;
+    case CREATURE_ICE_ELEMENTAL:
+        targetArmy = gpCombatManager->cells[currentHex].get_army();
+        sprintf(buffer, (*gpGeneralText)[28],
+                akSpellTraits[SPELL_PROTECTION_FROM_WATER].name,
+                targetArmy->GetName());
+        break;
+    case CREATURE_ENERGY_ELEMENTAL:
+        targetArmy = gpCombatManager->cells[currentHex].get_army();
+        sprintf(buffer, (*gpGeneralText)[28],
+                akSpellTraits[SPELL_PROTECTION_FROM_FIRE].name,
+                targetArmy->GetName());
+        break;
+    case CREATURE_MAGMA_ELEMENTAL:
+        targetArmy = gpCombatManager->cells[currentHex].get_army();
+        sprintf(buffer, (*gpGeneralText)[28],
+                akSpellTraits[SPELL_PROTECTION_FROM_EARTH].name,
+                targetArmy->GetName());
+        break;
+    case CREATURE_OGRE_MAGE:
+        targetArmy = gpCombatManager->cells[currentHex].get_army();
+        sprintf(buffer, (*gpGeneralText)[28],
+                akSpellTraits[SPELL_BLOODLUST].name,
+                targetArmy->GetName());
+        break;
+    }
 }
 
-// E:\gamedcs\drawing.cpp:122
-DC_ONLY(0x832d8, 0xDA)
-std::basic_string<char,std::char_traits<char>,std::allocator<char> format_rounded(__$ReturnUdt, long amount, long high)
-{
-    // @stub
-}
-
-// E:\gamedcs\drawing.cpp:145
-DC_ONLY(0x833b4, 0x196)
-std::basic_string<char,std::char_traits<char>,std::allocator<char> get_estimated_damage(__$ReturnUdt, const army* currArmy, army* target, unsigned char ranged, long distance)
-{
-    // @stub
-}
-
-// E:\gamedcs\drawing.cpp:178
-DC_ONLY(0x8354c, 0x3A2)
-unsigned char combatManager::show_creature_spell_error(char* buffer, const army* current_army)
-{
-    // @stub
-}
-
-// E:\gamedcs\drawing.cpp:326
-DC_ONLY(0x838f0, 0x4C0)
+// E:\gamedcs\drawing.cpp:326. The Complete body preserves every shared DC
+// statement group and expands get_creature_spell_message for its five added
+// caster types. One caller leaves GetArmyName out of line while the next
+// expands it; retaining GetName in source lets VC6 make that site decision.
+VA(0x00492840, 0xB8E)  // retail CFG/calls + DC source shape, dc 0x838f0
 void combatManager::CombatMessage(int command)
 {
-    // @stub
+    if (!field_13300
+            || static_cast<const combatManager*>(this)->IsQuickCombat())
+        return;
+
+    army* currentArmy = get_current_army();
+    army* targetArmy = 0;
+    unsigned char priority = 0;
+    if (currentArmy->side >= 0 && currentArmy->slot >= 0)
+        targetArmy = &armies[currentArmy->side][currentArmy->slot];
+
+    long distance;
+    switch (command) {
+    case COMBAT_COMMAND_NONE:
+        if (currentArmy->Is(1u << 2) && currentArmy->shotsLeft == 0
+                && targetArmy)
+            strcpy(gText, (*gpGeneralText)[299]);
+        else
+            strcpy(gText, "");
+        break;
+
+    case COMBAT_COMMAND_WALK:
+        sprintf(gText, (*gpGeneralText)[295], currentArmy->GetName());
+        break;
+
+    case COMBAT_COMMAND_FLY:
+        sprintf(gText, (*gpGeneralText)[296], currentArmy->GetName());
+        break;
+
+    case COMBAT_COMMAND_ATTACK:
+        distance = get_distance(currentArmy->gridIndex, field_132d8);
+        if (gUnnamed698758.combatArmyInfoLevel) {
+            sprintf(gText, (*gpGeneralText)[37], targetArmy->GetName(),
+                    get_estimated_damage(currentArmy, targetArmy, 0,
+                                         distance).c_str());
+        } else {
+            sprintf(gText, (*gpGeneralText)[221], targetArmy->GetName());
+        }
+        priority = 1;
+        break;
+
+    case COMBAT_COMMAND_SHOOT:
+    case COMBAT_COMMAND_SHOOT_PENALTY: {
+        distance = get_distance(currentArmy->gridIndex,
+                                targetArmy->gridIndex);
+        long targetHits = targetArmy->get_total_hit_points(0);
+        long currentHits = currentArmy->get_total_hit_points(0);
+        long expectedDamage = AI_get_attack_damage(
+            currentArmy, currentHits, targetArmy, 1, distance);
+        if (!gUnnamed698758.combatArmyInfoLevel) {
+            sprintf(gText, (*gpGeneralText)[221], targetArmy->GetName());
+        } else if (currentArmy->shotsLeft == 1) {
+            sprintf(gText, (*gpGeneralText)[38], targetArmy->GetName(),
+                    get_estimated_damage(currentArmy, targetArmy, 1,
+                                         distance).c_str());
+        } else {
+            sprintf(gText, (*gpGeneralText)[41], targetArmy->GetName(),
+                    currentArmy->shotsLeft,
+                    get_estimated_damage(currentArmy, targetArmy, 1,
+                                         distance).c_str());
+        }
+        priority = 1;
+        break;
+    }
+
+    case COMBAT_COMMAND_SPELL_BOOK:
+        strcpy(gText, (*gpGeneralText)[418]);
+        break;
+
+    case COMBAT_COMMAND_VIEW_OTHER_HERO:
+        strcpy(gText, (*gpGeneralText)[419]);
+        break;
+
+    case COMBAT_COMMAND_VIEW_TOWERS:
+        strcpy(gText, (*gpGeneralText)[157]);
+        break;
+
+    case COMBAT_COMMAND_VIEW_ARMY:
+        if (ValidHex(field_132d4)) {
+            army* viewedArmy = cells[field_132d4].get_army();
+            if (viewedArmy)
+                sprintf(gText, (*gpGeneralText)[298],
+                        viewedArmy->GetName(1));
+            else
+                gText[0] = 0;
+        }
+        break;
+
+    case COMBAT_COMMAND_BOMBARD_WALL: {
+        int wall;
+        for (wall = 0; wall < WALL_TARGET_COUNT; wall++) {
+            if (wallTargets[wall].target_hex == currentArmy->slot)
+                break;
+        }
+        if (wall < WALL_TARGET_COUNT) {
+            sprintf(gText, (*gpGeneralText)[221],
+                    akWallTraits[defendingTown->type]
+                                [wallTargets[wall].wall].name);
+        }
+        break;
+    }
+
+    case COMBAT_COMMAND_CREATURE_SPELL:
+        get_creature_spell_message(gText, currentArmy, field_132d4);
+        break;
+
+    case COMBAT_COMMAND_FIRST_AID:
+        sprintf(gText, (*gpGeneralText)[420],
+                armies[currentArmy->side]
+                      [cells[field_132d4].armySlot].GetName());
+        break;
+
+    default:
+        gText[0] = 0;
+        break;
+    }
+
+    if (command == COMBAT_COMMAND_NONE
+            || command == COMBAT_COMMAND_WALK
+            || command == COMBAT_COMMAND_FLY
+            || command == COMBAT_COMMAND_VIEW_ARMY) {
+        if (show_creature_spell_error(gText, currentArmy))
+            priority = 1;
+    }
+    combatWindow->combat_message(gText, 0, priority);
 }
 
-#endif  // @carcass
+// Complete emits the two file-static formatting helpers after their caller,
+// in the opposite order from the older Dreamcast object. The retail calls,
+// arithmetic and Dinkumware string lifetimes close their source structure.
+VA(0x004933d0, 0x27A)  // retail body + DC source shape, dc 0x833b4
+static std::string get_estimated_damage(const army* currentArmy,
+                                        army* targetArmy,
+                                        unsigned char ranged,
+                                        long distance)
+{
+    long low = currentArmy->minDamage * currentArmy->numTroops;
+    long high = currentArmy->maxDamage * currentArmy->numTroops;
+    std::string result;
+
+    if (currentArmy->blessRounds || currentArmy->curseRounds) {
+        low = high = currentArmy->ComputeBaseDamage(1);
+    } else if (currentArmy->creatureType == CREATURE_BALLISTA) {
+        hero* controller = currentArmy->get_controller();
+        low *= controller->GetPrimarySkill(0) + 1;
+        high *= controller->GetPrimarySkill(0) + 1;
+    }
+
+    low = currentArmy->adjust_damage(targetArmy, low, ranged, 1,
+                                     distance, 0);
+    high = currentArmy->adjust_damage(targetArmy, high, ranged, 1,
+                                      distance, 0);
+    if (low == high) {
+        result = format_rounded(high, high);
+    } else {
+        result = format_string(
+            DATA_COMPGEN(0x006772dc, estimatedDamageRangeFormat,
+                         "%s - %s"),
+            format_rounded(low, high).c_str(),
+            format_rounded(high, high).c_str());
+    }
+    return result;
+}
+
+VA(0x00493650, 0xBD)  // retail body + DC source shape, dc 0x832d8
+static std::string format_rounded(long amount, long high)
+{
+    if (high < 1000)
+        return format_string(
+            DATA_COMPGEN(0x00660a1c, roundedDamageIntegerFormat, "%d"),
+            amount);
+
+    if (high < 10000) {
+        long rounded = (amount + 50) / 100;
+        long whole = rounded / 10;
+        long fraction = rounded % 10;
+        if (fraction == 0) {
+            return format_string(
+                DATA_COMPGEN(0x00660cb0, roundedDamageThousandsFormat,
+                             "%dk"),
+                whole);
+        }
+        return format_string(
+            DATA_COMPGEN(0x006772e4, roundedDamageDecimalThousandsFormat,
+                         "%d.%dk"),
+            whole, fraction);
+    }
+
+    return format_string(
+        DATA_COMPGEN(0x00660cb0, roundedDamageLargeThousandsFormat, "%dk"),
+        (amount + 500) / 1000);
+}
 
 // E:\gamedcs\drawing.cpp:467
 VA(0x00493710, 0x63)  // anchor-global, dc 0x83db0

@@ -46,7 +46,6 @@
 #define HOMM3_ARMY_POW_VIEW
 #define HOMM3_ARMY_RESET_LATCH_DECL
 #define HOMM3_ARMY_TURN_ABILITY_VIEW
-#define HOMM3_CREATURE_NAME_VIEW
 #include <math.h>
 #include <stdlib.h>
 
