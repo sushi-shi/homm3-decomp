@@ -996,6 +996,7 @@ dimensiondoorwindow	?ExitDialog@TDimensionDoorWindow@@UAEHPAVmessage@@@Z	100.000
 dimensiondoorwindow	?ExitDialog@TSkuttleBoatWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x91eb0	52e28cdf4a3b
 dimensiondoorwindow	?WindowHandler@TDimensionDoorWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x91900	1a07604a0f4d
 dimensiondoorwindow	?WindowHandler@TSkuttleBoatWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x91d00	bef9af53322f
+drawing	?CombatMessage@combatManager@@QAEXH@Z	87.0800	87.0800	87.0800	0x92840	b2baa85b381e
 drawing	?ComputeExtent@combatManager@@QAEXPBVCSprite@@HHHHPAUSLimitData@@HE@Z	100.0000	100.0000	100.0000	0x95f50	03a82e8ae4ab
 drawing	?ComputeMaxExtent@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x95bf0	3d6b348c0f2c
 drawing	?CycleCombatScreen@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x960d0	8e7fd8c5bb94
@@ -1021,6 +1022,8 @@ drawing	?UpdateCombatArea@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x937
 drawing	?UpdateGrid@combatManager@@QAEHHH@Z	100.0000	100.0000	100.0000	0x93930	3236f86d39f4
 drawing	?UpdateMouseGrid@combatManager@@QAEXHAAV?$vector@JV?$allocator@J@std@@@std@@E@Z	100.0000	100.0000	100.0000	0x93ea0	3b78bad0181f
 drawing	?UpdateMouseGrid@combatManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0x94390	d349de9de0ae
+drawing	?format_rounded@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@JJ@Z	100.0000	100.0000	100.0000	0x93650	480bccc45aab
+drawing	?get_estimated_damage@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBVarmy@@PAV3@EJ@Z	100.0000	100.0000	100.0000	0x933d0	fedbd52ea3aa
 drawing	__h3cg$drawing$static_dtor$old_hexes	100.0000	100.0000	100.0000	0x94370	-
 dxplay	??0CDPlayLobby@@QAE@XZ	100.0000	100.0000	100.0000	0x98870	d771bae990ba
 dxplay	??1?$CAutoArray@VCDPlayAddressElement@@@@UAE@XZ	100.0000	100.0000	100.0000	0x99f00	794d91e8a4c9
@@ -1200,7 +1203,7 @@ events	?DoAIEvent@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@@Z	100.00
 # synth PDB - returned the row to master's own 98.5741 to the digit
 # with events.cpp untouched. Cross-generation noise, the
 # recruit::Update revert-control precedent; hist keeps 99.1139.
-events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	99.0481	99.0481	99.1139	0xad470	907f85ec7c05
+events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	98.5741	99.0481	99.1139	0xad470	907f85ec7c05
 events	?DoCustomArtifact@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	98.2381	99.1492	99.1492	0x9f070	4d12ed56362a
 events	?DoCustomResource@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa4780	51e134850e4b
 events	?DoCustomSpellScroll@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	97.4451	97.4451	97.4451	0xa5a80	2c8331b27654

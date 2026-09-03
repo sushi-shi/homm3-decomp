@@ -2983,25 +2983,6 @@ DATA(0x006a8094) extern const char* gHeroScreenMixedArmyHelp;         // row 32
 // nothing in the bytes decides that. ORDINAL PLACEHOLDER spelling.
 DATA(0x006a5704) extern const char* gUnnamed6a5704;
 
-// E:\gamedcs\CreatureType.h:296 (dc 0x1ef94): the header's free name
-// selector - army::GetName (0x440100) is its out-of-line twin, and this
-// compiland gets the same file-local copy advmgr.cpp already carries.
-// Retail inlines it at every army-slot arm below with the count folded
-// away, so the `2` is only proven to be != 1.
-static inline const char* GetArmyName(int type, int count)
-{
-    if (type >= 0 && type <= army::ARMY_CREATURE_LAST) {
-        if (count == 1)
-            return akCreatureTypeTraits[type].m_name;
-        return akCreatureTypeTraits[type].m_plural_name;
-    }
-    // BARE literal, no DATA_COMPGEN: src/army.cpp:717 owns the claim on
-    // 0x691210 and a second claim on one RVA is a fatal duplicate at
-    // delink. hero.obj emits its own pooled "" and the reloc names differ
-    // from retail's, which is cosmetic.
-    return "";
-}
-
 // E:\gamedcs\hero.cpp:2477
 // The hero screen's rollover text. Gated on the dragged-artifact record
 // being empty, it switches on the hovered widget's codeY, fills gText,

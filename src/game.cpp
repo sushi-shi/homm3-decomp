@@ -154,19 +154,6 @@ inline TCreatureType creature_type_from_int(int value)
     return storage.creature;
 }
 
-// E:\\gamedcs\\CreatureType.h:296 (dc 0x1ef94). DoNewTurn's six uses
-// all inline in retail: the two signed range checks and the singular/plural
-// choice are visible at each call site.
-static inline const char* GetArmyName(int type, int count)
-{
-    if (type >= 0 && type <= 150) {
-        if (count == 1)
-            return akCreatureTypeTraits[type].m_name;
-        return akCreatureTypeTraits[type].m_plural_name;
-    }
-    return "";
-}
-
 inline TArtifact artifact_from_int(int value)
 {
     union {

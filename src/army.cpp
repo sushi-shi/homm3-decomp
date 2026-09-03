@@ -23,7 +23,6 @@
 #define HOMM3_ARMY_PROTECTION_VIEW
 #define HOMM3_ARMY_SPELLS_VIEW
 #define HOMM3_ARMY_TURN_ABILITY_VIEW
-#define HOMM3_CREATURE_NAME_VIEW
 #include <algorithm>
 #include <math.h>
 #include <stdlib.h>

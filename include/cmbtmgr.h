@@ -2522,6 +2522,10 @@ public:
     //     public and the retail body now prove the source name.
     void ResetCycleTimers();
     void ResetMouse();
+    // drawing.cpp:326. Dreamcast retains the source member and Complete
+    // retains its out-of-line body; this is class structure, not a
+    // command-TU declaration view.
+    void CombatMessage(int command);
 #ifdef HOMM3_COMMAND_GRID_VIEW
     unsigned char automate_first_aid_tent();
     virtual int Main(message& msg);
@@ -2534,8 +2538,6 @@ public:
     // DC command.cpp:2800. Complete likewise expands its sole call, while
     // retaining the helper's source-level surrender-dialog boundary.
     int DoSurrender();
-    // drawing.cpp:326, retained out of line in both builds.
-    void CombatMessage(int command);
     // MATCHING_DEBT: command-only declaration view; broad exposure perturbs
     // VC6 member-handle allocation in unrelated combat translation units.
     void SetCombatDirections(int hex);
@@ -2559,6 +2561,11 @@ private:
                                  long skill) const;
 public:
 #endif
+private:
+    // drawing.cpp:178. Private in every Dreamcast LF_FIELDLIST copy; the
+    // retail call from CombatMessage proves that Complete retained it too.
+    unsigned char show_creature_spell_error(char* buffer,
+                                             const army* currentArmy);
 };
 SIZE(combatManager::TWallTraits, 0x24);
 
