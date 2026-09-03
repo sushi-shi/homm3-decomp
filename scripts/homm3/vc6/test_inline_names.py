@@ -152,6 +152,86 @@ class Divergence(unittest.TestCase):
             im.effective_divergence(base, ref, byte_exact=False),
             (2, 0, 0))
 
+    def test_base_only_mangled_call_is_reported_as_under_inline(self):
+        # The active drawing.cpp defect: there is no retail-only synth label
+        # that could rename these candidate GetArmyName calls, so calling the
+        # symbol "name unresolved" hides a proven under-inline frontier.
+        get_name = "?GetArmyName@@YAPBDHH@Z"
+        over, under, paired_rows, unknown_over, paired = \
+            im.divergence_rows(Counter({get_name: 2}), Counter())
+        self.assertEqual(over, [])
+        self.assertEqual(under, [(get_name, 2, 0)])
+        self.assertEqual(paired_rows, [])
+        self.assertEqual(unknown_over, [])
+        self.assertEqual(paired, 0)
+
+    def test_synth_pair_is_not_misreported_as_under_inline(self):
+        # NEGATIVE CONTROL: a base-only real symbol and a retail-only working
+        # label may still be the same call under two names.
+        base = Counter({"?AI_bribe_monsters@@YIHPBVhero@@@Z": 1})
+        ref = Counter({"game_a7250_sub00_127f60": 1})
+        over, under, paired_rows, unknown_over, paired = \
+            im.divergence_rows(base, ref)
+        self.assertEqual(over, [])
+        self.assertEqual(under, [])
+        self.assertEqual(len(paired_rows), 2)
+        self.assertEqual(unknown_over, [])
+        self.assertEqual(paired, 1)
+
+    def test_only_unconsumed_counts_become_actionable(self):
+        # One synthesized retail call pairs by name; the second candidate call
+        # remains a real under-inline and must not disappear with it.
+        base = Counter({"?GetArmyName@@YAPBDHH@Z": 2})
+        ref = Counter({"sub_4922f0": 1})
+        over, under, paired_rows, unknown_over, paired = \
+            im.divergence_rows(base, ref)
+        self.assertEqual(over, [])
+        self.assertEqual(under, [("?GetArmyName@@YAPBDHH@Z", 1, 0)])
+        self.assertEqual(len(paired_rows), 2)
+        self.assertEqual(unknown_over, [])
+        self.assertEqual(paired, 1)
+
+    def test_unpaired_synth_surplus_remains_visible(self):
+        # NEGATIVE CONTROL: only one of three retail synth calls can pair;
+        # the other two remain a real, inspectable over-inline residue.
+        base = Counter({"?f@@YAXXZ": 1})
+        ref = Counter({"sub_1000": 3})
+        over, under, paired_rows, unknown_over, paired = \
+            im.divergence_rows(base, ref)
+        self.assertEqual(over, [])
+        self.assertEqual(under, [])
+        self.assertEqual(len(paired_rows), 2)
+        self.assertEqual(unknown_over, [("sub_1000", 0, 2)])
+        self.assertEqual(paired, 1)
+
+    def test_external_shared_call_delta_is_not_called_inlining(self):
+        # drawing.cpp's `_sprintf` is undefined in the TU. Both binaries call
+        # it, so 8-vs-9 is cross-jumping/tail duplication, never expansion.
+        rows = [("_sprintf", 8, 9)]
+        inline_rows, count_rows = \
+            im.partition_external_count_rows(rows, {"?local@@YAXXZ"})
+        self.assertEqual(inline_rows, [])
+        self.assertEqual(count_rows, rows)
+
+    def test_defined_comdat_delta_remains_inline_signal(self):
+        # NEGATIVE CONTROL: a visible inline COMDAT really can be expanded at
+        # only some sites, so a shared-name count delta remains actionable.
+        name = "?GetArmyName@@YIPBDHH@Z"
+        rows = [(name, 2, 1)]
+        inline_rows, count_rows = \
+            im.partition_external_count_rows(rows, {name})
+        self.assertEqual(inline_rows, rows)
+        self.assertEqual(count_rows, [])
+
+    def test_one_sided_row_stays_conservative_without_a_body(self):
+        # NEGATIVE CONTROL: an absent inline definition/include can itself be
+        # the defect, so one-sided rows must still reach inline diagnosis.
+        rows = [("?maybe_inline@@YAXXZ", 1, 0)]
+        inline_rows, count_rows = \
+            im.partition_external_count_rows(rows, set())
+        self.assertEqual(inline_rows, rows)
+        self.assertEqual(count_rows, [])
+
 
 class NestedFrontier(unittest.TestCase):
 
