@@ -1295,9 +1295,6 @@ public:
     // invention; only the behaviour is proven. Its VA claim belongs to
     // src/cmbtmgr.cpp when that lane reaches the row.
     void StopCombatSounds();
-    void show_eagle_eye(int winning_group, int dialog_timeout);
-    void show_looted_artifacts(std::vector<type_artifact>& looted_artifacts,
-                               int dialog_timeout);
     void DoVictory(int winningGroup);
     // Two DC-roster corrections, both byte-proven at 0x467510: the
     // first parameter is an `army*`, NOT the roster's `int group` (the
@@ -1876,6 +1873,16 @@ public:
 #endif
     unsigned char should_stay_in_castle(
         type_AI_combat_parameters* estimate);                 // 0x4213f0
+private:
+    // drawing.cpp:178. Private in every Dreamcast LF_FIELDLIST copy and
+    // immediately follows should_stay_in_castle there; the retail call from
+    // CombatMessage proves that Complete retained the source member too.
+    bool show_creature_spell_error(char* buffer,
+                                   const army* currentArmy);
+    void show_eagle_eye(int winning_group, int dialog_timeout);
+    void show_looted_artifacts(std::vector<type_artifact>& looted_artifacts,
+                               int dialog_timeout);
+public:
     void place_shooter(const army* current_army);             // 0x422060
     void choose_shooter_action(const army* current_army,
                                unsigned char simulated, long side);
@@ -2561,11 +2568,6 @@ private:
                                  long skill) const;
 public:
 #endif
-private:
-    // drawing.cpp:178. Private in every Dreamcast LF_FIELDLIST copy; the
-    // retail call from CombatMessage proves that Complete retained it too.
-    unsigned char show_creature_spell_error(char* buffer,
-                                             const army* currentArmy);
 };
 SIZE(combatManager::TWallTraits, 0x24);
 

@@ -86,12 +86,6 @@ DATA(0x006989ec) int gbProcessingCombatAction;
 // order (>= , <= , > , <) against SLimitData's four dwords at +0/+4/+8/+0xc.
 // cmbtmgr.h wants that band modelled before this TU is opened.
 
-static std::string format_rounded(long amount, long high);
-static std::string get_estimated_damage(const army* currentArmy,
-                                        army* targetArmy,
-                                        unsigned char ranged,
-                                        long distance);
-
 // E:\gamedcs\drawing.cpp:47. Dreamcast retains this file-static helper;
 // Complete's larger creature roster is expanded into CombatMessage, but the
 // ValidHex guard, controlling-side accessor and four shared cases prove that
@@ -164,6 +158,207 @@ static void get_creature_spell_message(char* buffer,
                 targetArmy->GetName());
         break;
     }
+}
+
+// E:\gamedcs\drawing.cpp:122. VC6 emits this file-static helper after its
+// externally visible callers; its source definition still precedes them.
+static std::string format_rounded(long amount, long high)
+{
+    if (high < 1000)
+        return format_string(
+            DATA_COMPGEN(0x00660a1c, roundedDamageIntegerFormat, "%d"),
+            amount);
+
+    if (high < 10000) {
+        long rounded = (amount + 50) / 100;
+        long whole = rounded / 10;
+        long fraction = rounded % 10;
+        if (fraction == 0) {
+            return format_string(
+                DATA_COMPGEN(0x00660cb0, roundedDamageThousandsFormat,
+                             "%dk"),
+                whole);
+        }
+        return format_string(
+            DATA_COMPGEN(0x006772e4, roundedDamageDecimalThousandsFormat,
+                         "%d.%dk"),
+            whole, fraction);
+    }
+
+    return format_string(
+        DATA_COMPGEN(0x00660cb0, roundedDamageLargeThousandsFormat, "%dk"),
+        (amount + 500) / 1000);
+}
+
+// E:\gamedcs\drawing.cpp:145. The retail arithmetic and Dinkumware string
+// lifetimes close the older build's statement/scoping evidence exactly.
+static std::string get_estimated_damage(const army* currentArmy,
+                                        army* targetArmy,
+                                        unsigned char ranged,
+                                        long distance)
+{
+    long low = currentArmy->minDamage * currentArmy->numTroops;
+    long high = currentArmy->maxDamage * currentArmy->numTroops;
+    std::string result;
+
+    if (currentArmy->blessRounds || currentArmy->curseRounds) {
+        low = high = currentArmy->ComputeBaseDamage(1);
+    } else if (currentArmy->creatureType == CREATURE_BALLISTA) {
+        hero* controller = currentArmy->get_controller();
+        low *= controller->GetPrimarySkill(0) + 1;
+        high *= controller->GetPrimarySkill(0) + 1;
+    }
+
+    low = currentArmy->adjust_damage(targetArmy, low, ranged, 1,
+                                     distance, 0);
+    high = currentArmy->adjust_damage(targetArmy, high, ranged, 1,
+                                      distance, 0);
+    if (low == high) {
+        result = format_rounded(high, high);
+    } else {
+        result = format_string(
+            DATA_COMPGEN(0x006772dc, estimatedDamageRangeFormat,
+                         "%s - %s"),
+            format_rounded(low, high).c_str(),
+            format_rounded(high, high).c_str());
+    }
+    return result;
+}
+
+// E:\gamedcs\drawing.cpp:178. Dreamcast preserves the complete source
+// decision tree; retail confirms the Complete creature ids, corpse-row
+// lookup, spell restrictions, Orb of Inhibition test and every message row.
+VA(0x004922f0, 0x54C)  // retail body + DC source shape, dc 0x8354c
+bool combatManager::show_creature_spell_error(
+    char* buffer, const army* currentArmy)
+{
+    if (!ValidHex(field_132d4)) {
+        goto no_error;
+    }
+
+    if (currentArmy->creatureType != CREATURE_ARCHANGEL
+            && currentArmy->creatureType != army::ARMY_CREATURE_PIT_LORD
+            && currentArmy->creatureType != CREATURE_OGRE_MAGE) {
+        goto no_error;
+    }
+
+    hexcell* cell;
+    army* targetArmy;
+    int i;
+
+    cell = &cells[field_132d4];
+    targetArmy = cell->get_army();
+    if (!targetArmy) {
+        if (cell->field_10 & 2) {
+            goto no_error;
+        }
+        for (i = cell->iBodiesInHex - 1; i >= 0; i--) {
+            int deadSide = cell->deadArmySide[i];
+            int deadSlot = cell->deadArmySlot[i];
+            if (deadSide == currentSide) {
+                targetArmy = &armies[deadSide][deadSlot];
+                break;
+            }
+        }
+    }
+    if (!targetArmy) {
+        goto no_error;
+    }
+    if (targetArmy->get_owning_side() != currentSide) {
+        goto no_error;
+    }
+    if ((targetArmy->Is(1u << 21))
+            && currentArmy->creatureType == CREATURE_OGRE_MAGE) {
+        goto no_error;
+    }
+    if (!(targetArmy->Is(1u << 21))
+            && currentArmy->creatureType == army::ARMY_CREATURE_PIT_LORD) {
+        goto no_error;
+    }
+
+    if (!currentArmy->numSpellCasts) {
+        if (currentArmy->numTroops == 1) {
+            sprintf(buffer, (*gpGeneralText)[697],
+                    currentArmy->GetName());
+        } else {
+            sprintf(buffer, (*gpGeneralText)[698],
+                    currentArmy->GetName());
+        }
+        return true;
+    }
+
+    if (field_53c0 == COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS) {
+        strcpy(buffer, (*gpGeneralText)[699]);
+        return true;
+    }
+    if (field_53c4) {
+        strcpy(buffer, (*gpGeneralText)[700]);
+        return true;
+    }
+    for (i = 0; i < 2; i++) {
+        if (heroes[i]
+                && heroes[i]->IsWieldingArtifact(
+                    ARTIFACT_ORB_OF_INHIBITION)) {
+            sprintf(buffer, (*gpGeneralText)[701],
+                    akArtifactTraits[ARTIFACT_ORB_OF_INHIBITION].name);
+            return true;
+        }
+    }
+
+    switch (currentArmy->creatureType) {
+    case CREATURE_OGRE_MAGE: {
+        if (get_spell_work_chance(SPELL_BLOODLUST,
+                                  targetArmy->creatureType, 0, 0) > 0.0f) {
+            goto no_error;
+        }
+        sprintf(buffer, (*gpGeneralText)[181], targetArmy->GetName(2),
+                akSpellTraits[SPELL_BLOODLUST].name);
+        return true;
+    }
+
+    case army::ARMY_CREATURE_PIT_LORD: {
+        if (!(targetArmy->Is(1u << 4))) {
+            sprintf(buffer, (*gpGeneralText)[702],
+                    GetArmyName(army::ARMY_CREATURE_DEMON, 2));
+            return true;
+        }
+        if (currentArmy->get_resurrection_size(targetArmy) > 0) {
+            goto no_error;
+        }
+        if (targetArmy->numTroops == 1) {
+            sprintf(buffer, (*gpGeneralText)[703], targetArmy->GetName(),
+                    GetArmyName(army::ARMY_CREATURE_DEMON, 2));
+        } else {
+            sprintf(buffer, (*gpGeneralText)[704], targetArmy->GetName(),
+                    GetArmyName(army::ARMY_CREATURE_DEMON, 2));
+        }
+        return true;
+    }
+
+    case CREATURE_ARCHANGEL: {
+        if (targetArmy->origNumTroops <= targetArmy->numTroops) {
+            goto no_error;
+        }
+        if (!(targetArmy->Is(1u << 4))) {
+            strcpy(buffer, (*gpGeneralText)[705]);
+            return true;
+        }
+        if (currentArmy->get_resurrection_size(targetArmy) > 0) {
+            goto no_error;
+        }
+        if (currentArmy->numTroops == 1) {
+            sprintf(buffer, (*gpGeneralText)[706], currentArmy->GetName(),
+                    targetArmy->GetName());
+        } else {
+            sprintf(buffer, (*gpGeneralText)[707], currentArmy->GetName(),
+                    targetArmy->GetName());
+        }
+        return true;
+    }
+    }
+
+no_error:
+    return false;
 }
 
 // E:\gamedcs\drawing.cpp:326. The Complete body preserves every shared DC
@@ -299,71 +494,17 @@ void combatManager::CombatMessage(int command)
     combatWindow->combat_message(gText, 0, priority);
 }
 
-// Complete emits the two file-static formatting helpers after their caller,
-// in the opposite order from the older Dreamcast object. The retail calls,
-// arithmetic and Dinkumware string lifetimes close their source structure.
+// VC6 deferred these two file-static bodies behind their external callers.
+// The real definitions stay in Dreamcast-proven source order above; only the
+// annotated redeclarations sit here in retail emission order.
 VA(0x004933d0, 0x27A)  // retail body + DC source shape, dc 0x833b4
 static std::string get_estimated_damage(const army* currentArmy,
                                         army* targetArmy,
                                         unsigned char ranged,
-                                        long distance)
-{
-    long low = currentArmy->minDamage * currentArmy->numTroops;
-    long high = currentArmy->maxDamage * currentArmy->numTroops;
-    std::string result;
-
-    if (currentArmy->blessRounds || currentArmy->curseRounds) {
-        low = high = currentArmy->ComputeBaseDamage(1);
-    } else if (currentArmy->creatureType == CREATURE_BALLISTA) {
-        hero* controller = currentArmy->get_controller();
-        low *= controller->GetPrimarySkill(0) + 1;
-        high *= controller->GetPrimarySkill(0) + 1;
-    }
-
-    low = currentArmy->adjust_damage(targetArmy, low, ranged, 1,
-                                     distance, 0);
-    high = currentArmy->adjust_damage(targetArmy, high, ranged, 1,
-                                      distance, 0);
-    if (low == high) {
-        result = format_rounded(high, high);
-    } else {
-        result = format_string(
-            DATA_COMPGEN(0x006772dc, estimatedDamageRangeFormat,
-                         "%s - %s"),
-            format_rounded(low, high).c_str(),
-            format_rounded(high, high).c_str());
-    }
-    return result;
-}
+                                        long distance);
 
 VA(0x00493650, 0xBD)  // retail body + DC source shape, dc 0x832d8
-static std::string format_rounded(long amount, long high)
-{
-    if (high < 1000)
-        return format_string(
-            DATA_COMPGEN(0x00660a1c, roundedDamageIntegerFormat, "%d"),
-            amount);
-
-    if (high < 10000) {
-        long rounded = (amount + 50) / 100;
-        long whole = rounded / 10;
-        long fraction = rounded % 10;
-        if (fraction == 0) {
-            return format_string(
-                DATA_COMPGEN(0x00660cb0, roundedDamageThousandsFormat,
-                             "%dk"),
-                whole);
-        }
-        return format_string(
-            DATA_COMPGEN(0x006772e4, roundedDamageDecimalThousandsFormat,
-                         "%d.%dk"),
-            whole, fraction);
-    }
-
-    return format_string(
-        DATA_COMPGEN(0x00660cb0, roundedDamageLargeThousandsFormat, "%dk"),
-        (amount + 500) / 1000);
-}
+static std::string format_rounded(long amount, long high);
 
 // E:\gamedcs\drawing.cpp:467
 VA(0x00493710, 0x63)  // anchor-global, dc 0x83db0

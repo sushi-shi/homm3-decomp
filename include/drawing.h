@@ -100,7 +100,7 @@ extern const float gCombatSpeedFactors[3];
 // CODEVIEW(E:\gamedcs\Army.h:881, dc 0x872f4) bool army::is_in_area_highlight();
 
 // --- combatManager ---
-// CODEVIEW(E:\gamedcs\drawing.cpp:178, dc 0x8354c) unsigned char combatManager::show_creature_spell_error(char* buffer, const army* current_army);
+// CODEVIEW(E:\gamedcs\drawing.cpp:178, dc 0x8354c) bool combatManager::show_creature_spell_error(char* buffer, const army* current_army);
 // CODEVIEW(E:\gamedcs\drawing.cpp:326, dc 0x838f0) void combatManager::CombatMessage(int command);
 // RETAIL(0x00493710, 0x63), CODEVIEW(E:\gamedcs\drawing.cpp:467, dc 0x83db0) void combatManager::ResetLimitCreature();
 // CODEVIEW(E:\gamedcs\drawing.cpp:492, dc 0x83e58) void combatManager::UpdateCombatArea();
