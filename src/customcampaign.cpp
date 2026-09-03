@@ -359,8 +359,10 @@ LegacyCampaignHero::LegacyCampaignHero()
 // nested-element types are independently fixed by the +0x5c/+0x3c/+0x4c
 // member layouts and by the caller's 0x14/0x492/0x10/8-byte strides.
 VA_COMPGEN(0x004013D0, 0x28, VECTOR_CONSTRUCTOR_ITERATOR, LegacyCampaignHero)
+VA_COMPGEN(0x00404140, 0x03, VECTOR_DESTROY, type_artifact)
 VA_COMPGEN(0x0048B440, 0x21, VECTOR_SIZE, CampaignScenarioInfo)
 VA_COMPGEN(0x0048B470, 0x23, VECTOR_SIZE, hero)
+VA_COMPGEN(0x004AF4E0, 0x13, VECTOR_SIZE, hero_vector)
 VA_COMPGEN(0x0048C270, 0x285, VECTOR_INSERT, hero_vector)
 VA_COMPGEN(0x0048C7A0, 0x285, VECTOR_INSERT, type_artifact_vector)
 VA_COMPGEN(0x0048CA30, 0x6A, VECTOR_ERASE, type_artifact_vector)
@@ -368,6 +370,7 @@ VA_COMPGEN(0x0048CAE0, 0x2E4, VECTOR_INSERT, CampaignScenarioInfo)
 VA_COMPGEN(0x0048CDD0, 0x44, VECTOR_ERASE, CampaignScenarioInfo)
 VA_COMPGEN(0x0048D060, 0x331, VECTOR_INSERT, hero)
 VA_COMPGEN(0x0048D3A0, 0x6D, VECTOR_ERASE, hero)
+VA_COMPGEN(0x0054D330, 0x246, VECTOR_INSERT, type_artifact)
 
 // E:\gamedcs\customcampaign.cpp:198
 // Exact Complete checkpoint (2026-09-01): Dreamcast proves the indexed score
