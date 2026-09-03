@@ -48,7 +48,9 @@ struct LegacyCampaignSave {
     char field_0003[2];
     int numScenarios;                         // +0x0005
     char campaignFilename[101];               // +0x0009
-    unsigned char scenarioCompleted[8][32];   // +0x006e
+    // Retail SCampaign::Load copies this byte directly into the current
+    // record's bool. An unsigned-char source makes VC6 insert test/setne.
+    bool scenarioCompleted[8][32];            // +0x006e
     short scenarioDays[8][32];                // +0x016e
     short scenarioScores[8][32];              // +0x036e
     unsigned char campaignCompleted[7];       // +0x056e

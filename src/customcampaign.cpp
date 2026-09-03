@@ -175,11 +175,15 @@ void SCampaign::Load(TAbstractFile* infile, int saveVersion)
         mapScores.resize(saved.numScenarios);
         for (int i = 0; i < saved.numScenarios; ++i) {
             CampaignScenarioInfo& scenario = mapScores[i];
+            // Retail +0x191 preserves this source order. Together with the
+            // bool legacy field, the loop now has the exact instruction and
+            // memory-access structure; only earlier live-register choices
+            // rename its ecx/edx and esi/edi pairs.
+            scenario.days = saved.scenarioDays[currentCampaign][i];
+            scenario.index = legacyCampaignScenarioIndices[currentCampaign][i];
+            scenario.score = saved.scenarioScores[currentCampaign][i];
             scenario.completed =
                 saved.scenarioCompleted[currentCampaign][i];
-            scenario.days = saved.scenarioDays[currentCampaign][i];
-            scenario.score = saved.scenarioScores[currentCampaign][i];
-            scenario.index = legacyCampaignScenarioIndices[currentCampaign][i];
         }
 
         carryOverHeroes.resize(2);
@@ -345,9 +349,9 @@ void SCampaign::Load(TAbstractFile* infile, int saveVersion)
     }
 }
 
-// The fixed pre-v28 record uses the old 0x462 hero layout.  Retail emits this
+// The fixed pre-v28 record uses the old 0x462 hero layout. Retail emits this
 // constructor immediately before SCampaign::Save and passes its address to
-// the vector-constructor iterator in SCampaign::Load.  Base/member
+// the vector-constructor iterator in SCampaign::Load. Base/member
 // construction alone produces the exact 93-byte body; no recovered field
 // initialization is invented here.
 VA(0x0048ae30, 0x5D)  // anchor-caller SCampaign::Load +0x56
