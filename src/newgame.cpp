@@ -64,6 +64,18 @@ inline unsigned char town::IsCastle() const
 #pragma inline_depth()
 }
 
+#if 0  // @carcass
+// Complete widens the Dreamcast map-header-only entry point with the selected
+// difficulty, scenario ordinal, and optional stream. TCampaignBrief pushes
+// all four and retail returns with `ret 0x10`, fixing this PC ABI.
+VA(0x00513320, 0x41A)  // anchor-caller(TCampaignBrief ctor), dc 0x1034fc
+void game::InitNewGame(int difficulty, int version,
+                       NewSMapHeader* mapHeader, TAbstractFile* infile)
+{
+    // @stub
+}
+#endif
+
 // E:\gamedcs\newgame.cpp:610
 VA(0x00513740, 0xBC)  // exact campaign/scenario stack lifetimes, dc 0x103824
 void game::ShowScenInfo()
@@ -122,13 +134,6 @@ void game::GetLossConditionText(char* text)
 }
 
 #if 0  // @carcass
-
-// E:\gamedcs\newgame.cpp:224
-DC_ONLY(0x1034fc, 0x2F8)
-void game::InitNewGame(NewSMapHeader* psMapHeaderDefault)
-{
-    // @stub
-}
 
 // E:\gamedcs\newgame.cpp:337
 DC_ONLY(0x1037f4, 0x4)

@@ -6,8 +6,10 @@
 #define HOMM3_TEXTWDGT_H
 
 #include <string>
+#include <vector>
 #include "widget.h"
 #include "font.h"
+#include "slider.h"
 
 // Dreamcast roster with the STLport->VC6 string shift: Text@0x30
 // (16 B), Font@0x40, Color@0x44, BackColor@0x48, Justify@0x4c - total
@@ -29,7 +31,7 @@ public:
                unsigned justify, int backColor, unsigned char focusable);
     virtual ~textWidget();  // retail 0x5bc3b0
     virtual int Main(message* msg);
-    virtual void zBufferDraw();
+    virtual void zBufferDraw(unsigned short* zBuffer, int id);
     virtual void Draw();
     // Slot 13, the ONE virtual textWidget introduces (its vtable
     // 0x642db0 is 14 wide against widget's 13). Retail body 0x57c6d0 is a
@@ -48,23 +50,37 @@ public:
 };
 
 class Bitmap816;
+class Bitmap16Bit;
+class type_text_slider;
 
 // The scenario-description scroller shared by the selection window and the
-// stand-alone scenario-info popup. Retail fixes the constructor ABI and the
-// 0x5c extent; SetText refills its wrapped line list.
-class CScrollTextWidget : public widget {
+// stand-alone scenario-info popup. Retail fixes its original type identity,
+// constructor ABI, member offsets, and complete 0x5c extent.
+class type_text_scroller : public widget {
 public:
-    CScrollTextWidget(const char* text, int x, int y, int w, int h,
-                      const char* fontName, font::TColor color,
-                      unsigned char focusable);
+    type_text_scroller(const char* text, int x, int y, int w, int h,
+                       const char* fontName, font::TColor color,
+                       slider::EGraphics graphics);
+    virtual ~type_text_scroller();
+    virtual int Open(int priority, heroWindow* parent);
     virtual int Main(message* msg);
-    virtual void zBufferDraw();
+    virtual void zBufferDraw(unsigned short* zBuffer, int id);
     virtual void Draw();
     void SetText(const char* text);
+    void Refresh(int knobRange);
 
-    char pad_30[0x5c - 0x30];
+    const char* font_filename;
+    std::vector<std::string> text_lines;
+    std::vector<textWidget*> line_images;
+    type_text_slider* text_slider;
+    Bitmap16Bit* background;
 };
-SIZE(CScrollTextWidget, 0x5c);
+SIZE(type_text_scroller, 0x5c);
+
+// Compatibility spelling for already reconstructed callers. Being a typedef,
+// it emits the retail `type_text_scroller` decorated names rather than a
+// second source-false class identity.
+typedef type_text_scroller CScrollTextWidget;
 
 // Retail dtor 0x5bc6d0 is the empty derived dtor: the inlined
 // ~textWidget body under this class's vtable store, then ~widget.

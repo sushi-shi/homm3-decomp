@@ -103,7 +103,7 @@ public:
 
     virtual int Main(message* msg);  // slot 2, retail 0x456190
 
-    virtual void zBufferDraw();  // slot 3, folded onto 0x5bc7e0
+    virtual void zBufferDraw(unsigned short* zBuffer, int id); // slot 3
     virtual void Draw();  // slot 4, retail 0x456940
 
     virtual ~button();  // retail 0x4560f0

@@ -1381,6 +1381,9 @@ public:
     // basic_string::_Tidy(true) against it. Same 0x10 width, so nothing
     // after it moves.
     std::string campaignFilename;
+    // Retail campaignbrief.obj retains this by-value accessor at 0x45a3e0;
+    // its body copies the string at +0x14 into the hidden return object.
+    std::string GetCampaignFileName() const;
     unsigned char campaignCompleted[21];
 #if defined(HOMM3_CAMPAIGNWINDOW_IMPLICIT_SCAMPAIGN) \
  || defined(HOMM3_GAME_SCAMPAIGN_ASSIGN_VIEW)

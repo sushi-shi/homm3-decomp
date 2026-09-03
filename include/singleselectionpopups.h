@@ -24,7 +24,7 @@ public:
     CHotspotWidget(int xPos, int yPos, int w, int h, int widgetId);
     virtual ~CHotspotWidget();
     virtual int Main(message* msg);  // slot 2, retail 0x575290
-    virtual void zBufferDraw();      // slot 3, folded onto 0x404140
+    virtual void zBufferDraw(unsigned short* zBuffer, int id); // slot 3
     virtual void Draw();             // slot 4, folded onto 0x404df0
 };
 
@@ -39,7 +39,7 @@ public:
     CSpriteWidget(int xPos, int yPos, CSprite* pSprite, int spriteFrame);
     virtual ~CSpriteWidget();
     virtual int Main(message* msg);  // slot 2, retail 0x575a10
-    virtual void zBufferDraw();      // slot 3, folded onto 0x404140
+    virtual void zBufferDraw(unsigned short* zBuffer, int id); // slot 3
     virtual void Draw();             // slot 4, retail 0x575750
 };
 SIZE(CSpriteWidget, 0x38);
@@ -54,7 +54,7 @@ public:
 
     CBitmapWidget(int xPos, int yPos, Bitmap816* pImage);
     virtual int Main(message* msg);  // slot 2, folds onto 0x575a10
-    virtual void zBufferDraw();      // slot 3, folded onto 0x404140
+    virtual void zBufferDraw(unsigned short* zBuffer, int id); // slot 3
     virtual void Draw();             // slot 4, retail 0x575a20
 };
 

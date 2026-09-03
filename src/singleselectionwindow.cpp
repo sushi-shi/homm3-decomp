@@ -1323,7 +1323,7 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
 
     field_196c = new CScrollTextWidget(
         emptyRolloverText, 422, 155, 319, 115, "smalfont.fnt",
-        font::WHITE, 1);
+        font::WHITE, slider::BLUE);
     Widgets.push_back(field_196c);
 
     Widgets.push_back(new textWidget(

@@ -9,6 +9,7 @@
 #include <algorithm>
 #define HOMM3_GAME_SCAMPAIGN_ASSIGN_VIEW
 #include "game.h"
+#include "campaignbrief.h"
 #include "customcampaign.h"
 
 #if 0  // Dreamcast-only carcass; retained as evidence, not emitted for retail.
@@ -50,6 +51,51 @@ void SCampaign::clear_carryover_pool(TCarryOverPoolNumber pool_num)
 // E:\gamedcs\customcampaign.cpp:147
 DC_ONLY(0x7d22c, 0x148)
 void SCampaign::DoPreLoadCustomization()
+{
+    // @stub
+}
+#endif
+
+#if 0  // @carcass - Complete campaign-file loader, named by its ctor caller.
+// TCampaignBrief::TCampaignBrief supplies exact receiver offsets, return
+// tests, and argument ABIs for this PC-only loader family.  Keeping the
+// located bodies as carcass claims gives constructor relocations their real
+// identities without pretending the loaders have been reconstructed.
+VA(0x004885d0, 0xCB)  // anchor-caller(TCampaignBrief ctor), retail-only
+TCampaignBrief::CampaignHeaderStruct::CampaignHeaderStruct(
+    const char* filename)
+{
+    // @stub
+}
+
+VA(0x004886a0, 0x132)  // anchor-caller(TCampaignBrief ctor), retail-only
+TCampaignBrief::CampaignHeaderStruct::~CampaignHeaderStruct()
+{
+    // @stub
+}
+
+VA(0x00488810, 0x32)  // anchor-caller(TCampaignBrief ctor), retail-only
+bool TCampaignBrief::CampaignHeaderStruct::LoadScenario(
+    int which, NewSMapHeader* mapHeader)
+{
+    // @stub
+}
+
+VA(0x00488880, 0x5D6)  // anchor-caller(TCampaignBrief ctor), retail-only
+bool TCampaignBrief::CampaignHeaderStruct::Load()
+{
+    // @stub
+}
+
+VA(0x00488ee0, 0x1D)  // anchor-caller(TCampaignBrief ctor), retail-only
+void TCampaignBrief::CampaignHeaderStruct::StartMusic()
+{
+    // @stub
+}
+
+VA(0x00488f00, 0xAC)  // anchor-caller(TCampaignBrief ctor), retail-only
+void TCampaignBrief::CampaignHeaderStruct::GetAvailableScenarios(
+    unsigned char* available) const
 {
     // @stub
 }

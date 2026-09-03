@@ -5,52 +5,277 @@
 #ifndef HOMM3_CAMPAIGNBRIEF_H
 #define HOMM3_CAMPAIGNBRIEF_H
 
+#include <bitset>
+#include <string>
+#include <vector>
 #include "game.h"
 #include "window.h"
 
-// Retail Complete diverges from the Dreamcast class after heroWindow.
-// The destructor proves the four named fields below directly: +0x4c is freed
-// as the z buffer, +0x50 restores the music volume, +0x54 is a Dinkumware
-// vector with a 0x4d4 element stride, and +0x64 owns the campaign header.
-// newgame's exact ShowScenInfo stack owner proves the opaque retail tail and
-// the complete 0xb4 extent.
+class bitmapBorder;
+class button;
+class coloredBorderFrame;
+class iconWidget;
+class type_func_button;
+class type_text_scroller;
+
+// Retail's vector insert and constructor cleanup both prove this exact
+// source-level aggregate: a NewSMapHeader, the trivially copied setup record,
+// and one availability byte at +0x4d0.
+struct CampaignScenarioPreview : public NewSMapHeader {
+    SGameSetupOptions game_setup;
+    bool available;
+};
+SIZE(CampaignScenarioPreview, 0x4d4);
+
+// Retail Complete diverges from the Dreamcast class after heroWindow, but
+// fixes every field used by the campaign constructor and destructor.
 class TCampaignBrief : public heroWindow {
 public:
-    struct CampaignHeaderStruct {
-        // The independently located retail destructor at 0x4886a0 reaches
-        // the final member at +0x58, fixing the complete 0x5c extent.
-        char fields[0x5c];
-        ~CampaignHeaderStruct();
+    struct MapTextStruct {
+        int video;
+        int audio;
+        std::string subtitles;
     };
 
     struct ScenarioStruct {
-        // The vector cleanup in TCampaignBrief::~TCampaignBrief destroys a
-        // NewSMapHeader at element +0 and advances by exactly 0x4d4.
-        NewSMapHeader mapHeader;
-        char pad_304[0x1d0];
+        std::string name;
+        int offset;
+        // Retail tests this field with a signed `jle` before loading a
+        // scenario.  The width agrees with the cross-build record, but the
+        // Complete codegen proves the signed PC spelling.
+        int inflated_size;
+        std::vector<bool> prerequisites;
+        std::string region_desc;
+        unsigned char region_color;
+        signed char difficulty;
+        char pad_3a[2];
+        MapTextStruct* prologue;
+        MapTextStruct* epilogue;
+        bool retain_xp;
+        bool retain_pskills;
+        bool retain_sskills;
+        bool retain_spellbook;
+        bool retain_artifacts;
+        char pad_49[3];
+        int heroes_status[8];
+        std::vector<int> hero_placeholders;
+        std::bitset<145> crossover_creatures;
+        std::bitset<144> crossover_artifacts;
+        void* options;
     };
+
+    struct CampaignHeaderStruct {
+        // Complete's Load body sets OPEN_FAILED when its reader factory
+        // returns null and VERSION_UNSUPPORTED when campaign_version < 4.
+        enum EFileError {
+            CAMPAIGN_FILE_OK = 0,
+            CAMPAIGN_FILE_OPEN_FAILED = 1,
+            CAMPAIGN_FILE_VERSION_UNSUPPORTED = 2
+        };
+
+        EFileError file_error;
+        std::string file_name;
+        int campaign_version;
+        int region_map;
+        std::string campaign_name;
+        std::string campaign_desc;
+        std::vector<ScenarioStruct*> scenarios;
+        unsigned char* data;
+        void* stream;
+        bool variable_difficulty;
+        char pad_55[3];
+        int campaign_music;
+
+        CampaignHeaderStruct(const char* filename);
+        ~CampaignHeaderStruct();
+        bool Load();
+        bool LoadScenario(int which, NewSMapHeader* mapHeader);
+        std::string GetCampaignName() const;
+        std::string GetCampaignDescription() const;
+        void StartMusic();
+        void GetAvailableScenarios(unsigned char* available) const;
+    };
+
+    // Dreamcast's LF_FIELDLIST preserves this complete nested enum.  The
+    // Complete constructor independently uses the same 100..235 ranges for
+    // the background, campaign text, flags and three region-image states.
+    // Keeping the names in the class also restores the real C1 declaration
+    // environment instead of steering /Ob2 from a stripped-down surrogate.
+    enum EOtherWidgetIDs {
+        BACKGROUND_ID = 100,
+        CAMPAIGN_NAME_ID,
+        CAMPAIGN_DESCRIPTION_ID,
+        MAP_NAME_ID,
+        MAP_DESCRIPTION_ID,
+        HERO_FACE_ID,
+        HERO_LEFT_ID,
+        HERO_RITE_ID,
+        ARTIFACT_ID,
+        GOLD_ID,
+        RESOURCE_ID,
+        RESTART_ID,
+        VIDEO_ID,
+        ALLY_FLAG1_ID,
+        ALLY_FLAG2_ID,
+        ALLY_FLAG3_ID,
+        ALLY_FLAG4_ID,
+        ALLY_FLAG5_ID,
+        ALLY_FLAG6_ID,
+        ALLY_FLAG7_ID,
+        ALLY_FLAG8_ID,
+        ENEMY_FLAG1_ID,
+        ENEMY_FLAG2_ID,
+        ENEMY_FLAG3_ID,
+        ENEMY_FLAG4_ID,
+        ENEMY_FLAG5_ID,
+        ENEMY_FLAG6_ID,
+        ENEMY_FLAG7_ID,
+        ENEMY_FLAG8_ID,
+        WHICHMAP_ID,
+        MAP_CONQUERED_1_ID,
+        MAP_CONQUERED_2_ID,
+        MAP_CONQUERED_3_ID,
+        MAP_CONQUERED_4_ID,
+        MAP_CONQUERED_5_ID,
+        MAP_CONQUERED_6_ID,
+        MAP_CONQUERED_7_ID,
+        MAP_CONQUERED_8_ID,
+        MAP_CONQUERED_9_ID,
+        MAP_CONQUERED_10_ID,
+        MAP_CONQUERED_11_ID,
+        MAP_CONQUERED_12_ID,
+        MAP_CONQUERED_13_ID,
+        MAP_CONQUERED_14_ID,
+        MAP_CONQUERED_15_ID,
+        MAP_CONQUERED_16_ID,
+        MAP_CONQUERED_17_ID,
+        MAP_CONQUERED_18_ID,
+        MAP_CONQUERED_19_ID,
+        MAP_CONQUERED_20_ID,
+        MAP_CONQUERED_21_ID,
+        MAP_CONQUERED_22_ID,
+        MAP_CONQUERED_23_ID,
+        MAP_CONQUERED_24_ID,
+        MAP_CONQUERED_25_ID,
+        MAP_CONQUERED_26_ID,
+        MAP_CONQUERED_27_ID,
+        MAP_CONQUERED_28_ID,
+        MAP_CONQUERED_29_ID,
+        MAP_CONQUERED_30_ID,
+        MAP_CONQUERED_31_ID,
+        MAP_CONQUERED_32_ID,
+        MAP_ENABLED_1_ID,
+        MAP_ENABLED_2_ID,
+        MAP_ENABLED_3_ID,
+        MAP_ENABLED_4_ID,
+        MAP_ENABLED_5_ID,
+        MAP_ENABLED_6_ID,
+        MAP_ENABLED_7_ID,
+        MAP_ENABLED_8_ID,
+        MAP_ENABLED_9_ID,
+        MAP_ENABLED_10_ID,
+        MAP_ENABLED_11_ID,
+        MAP_ENABLED_12_ID,
+        MAP_ENABLED_13_ID,
+        MAP_ENABLED_14_ID,
+        MAP_ENABLED_15_ID,
+        MAP_ENABLED_16_ID,
+        MAP_ENABLED_17_ID,
+        MAP_ENABLED_18_ID,
+        MAP_ENABLED_19_ID,
+        MAP_ENABLED_20_ID,
+        MAP_ENABLED_21_ID,
+        MAP_ENABLED_22_ID,
+        MAP_ENABLED_23_ID,
+        MAP_ENABLED_24_ID,
+        MAP_ENABLED_25_ID,
+        MAP_ENABLED_26_ID,
+        MAP_ENABLED_27_ID,
+        MAP_ENABLED_28_ID,
+        MAP_ENABLED_29_ID,
+        MAP_ENABLED_30_ID,
+        MAP_ENABLED_31_ID,
+        MAP_ENABLED_32_ID,
+        MAP_SELECTED_1_ID,
+        MAP_SELECTED_2_ID,
+        MAP_SELECTED_3_ID,
+        MAP_SELECTED_4_ID,
+        MAP_SELECTED_5_ID,
+        MAP_SELECTED_6_ID,
+        MAP_SELECTED_7_ID,
+        MAP_SELECTED_8_ID,
+        MAP_SELECTED_9_ID,
+        MAP_SELECTED_10_ID,
+        MAP_SELECTED_11_ID,
+        MAP_SELECTED_12_ID,
+        MAP_SELECTED_13_ID,
+        MAP_SELECTED_14_ID,
+        MAP_SELECTED_15_ID,
+        MAP_SELECTED_16_ID,
+        MAP_SELECTED_17_ID,
+        MAP_SELECTED_18_ID,
+        MAP_SELECTED_19_ID,
+        MAP_SELECTED_20_ID,
+        MAP_SELECTED_21_ID,
+        MAP_SELECTED_22_ID,
+        MAP_SELECTED_23_ID,
+        MAP_SELECTED_24_ID,
+        MAP_SELECTED_25_ID,
+        MAP_SELECTED_26_ID,
+        MAP_SELECTED_27_ID,
+        MAP_SELECTED_28_ID,
+        MAP_SELECTED_29_ID,
+        MAP_SELECTED_30_ID,
+        MAP_SELECTED_31_ID,
+        MAP_SELECTED_32_ID,
+        CHOICE_1_ID,
+        CHOICE_2_ID,
+        CHOICE_3_ID,
+        CHOICE_1_HIGHLIGHT_ID,
+        CHOICE_2_HIGHLIGHT_ID,
+        CHOICE_3_HIGHLIGHT_ID,
+        BONUS_TEXT_ID,
+        ROLLOVER_ID,
+        CAMPAIGN_DESCRIPTION_BUTTON_ID,
+        SCENARIO_DESCRIPTION_ID
+    };
+    enum { NWIDGETS = 80 };
 
     unsigned short* zBuffer;
     int oldVolume;
-    std::vector<ScenarioStruct> scenarios;
+    std::vector<CampaignScenarioPreview> scenarios;
     CampaignHeaderStruct* campaign;
-    // ShowScenInfo (0x513740) places the following 0xb4-byte
-    // CScenarioInfoDlg immediately after this stack object and addresses the
-    // campaign brief at ebp-0xc0. Its frame and both object offsets prove a
-    // further 0x4c-byte retail tail beyond the destructor-visible fields.
-    char pad_68[0x4c];
+    int field_68;
+    int selected_scenario;
+    coloredBorderFrame* start_bonus_borders[3];
+    bitmapBorder* bitmap_bonus_images[3];
+    iconWidget* sprite_bonus_images[3];
+    button* difficulty_buttons[5];
+    type_func_button* difficulty_decr_button;
+    type_func_button* difficulty_incr_button;
+    type_text_scroller* scroller;
 
-#ifdef HOMM3_NEWGAME_OBJ_DECLS
-    // newgame.cpp:610-619. The retail ShowScenInfo caller pushes the same
-    // (newCampaign, viewFromGame) byte pair and retains the out-of-line
-    // modal wrapper named by the Dreamcast roster.
     TCampaignBrief(unsigned char newCampaign, unsigned char viewFromGame);
-    void DoModal();
-#endif
     virtual ~TCampaignBrief();
+    void AddBonusIcons();
+    void UpdateBonusIcons();
+    void DoModal();
+    void Select(int which);
+    void ClearSelected();
+    void ResetMapAndDescription(int which);
+    void SetHumanSlot();
+    void SetupCurrentTerritory();
+    void UpdateAllyEnemyFlags();
+
+private:
+    // The DC class type contains this private member in addition to the
+    // same-named file-scope helper emitted by campaignbrief.obj.
+    void ShowTerritorySmacker(unsigned char evilPost);
+    int convertID2HelpID(int id) const;
 };
+SIZE(TCampaignBrief::MapTextStruct, 0x18);
+SIZE(TCampaignBrief::ScenarioStruct, 0xa8);
 SIZE(TCampaignBrief::CampaignHeaderStruct, 0x5c);
-SIZE(TCampaignBrief::ScenarioStruct, 0x4d4);
 SIZE(TCampaignBrief, 0xb4);
 
 // --- globals ---

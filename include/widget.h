@@ -234,7 +234,10 @@ public:
     virtual ~widget();                                      // slot 0
     virtual int Open(int newPriority, heroWindow* parent);  // slot 1
     virtual int Main(message* msg) = 0;                     // slot 2
-    virtual void zBufferDraw() = 0;                         // slot 3
+    // Complete widened the Dreamcast nil-argument draw hook. The shared
+    // vtable representative at 0x5bc7e0 is `ret 8`, and
+    // TCampaignBrief dispatches this slot with the z-buffer and widget id.
+    virtual void zBufferDraw(unsigned short* zBuffer, int id) = 0; // slot 3
     virtual void Draw() = 0;                                // slot 4
     virtual int GetRealHeight() { return height; }          // slot 5
     virtual int GetRealWidth() { return width; }            // slot 6

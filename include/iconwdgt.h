@@ -97,7 +97,7 @@ public:
                unsigned backColor, int style);
     virtual ~iconWidget();  // retail 0x4ea7b0
     virtual int Main(message* msg);
-    virtual void zBufferDraw();
+    virtual void zBufferDraw(unsigned short* zBuffer, int id);
     virtual void Draw();
     // Overrides of widget's two size slots; retail 0x4eab30 / 0x4eab20
     // (vtable 0x63ec48 slots 5 and 6). Both answer with the sprite's

@@ -28,7 +28,7 @@ public:
     // border.cpp without /Ob2.
     border() {}
     virtual int Main(message* msg);  // slot 2, retail 0x44ff60
-    virtual void zBufferDraw();      // slot 3, folded onto 0x5bc7e0
+    virtual void zBufferDraw(unsigned short* zBuffer, int id);
     virtual void Draw();             // slot 4
     // Slot 13, appended past widget's twelve-plus-_vslot12 exactly as
     // iconWidget appends its own twin (see iconwdgt.h). Main dispatches
@@ -86,9 +86,7 @@ public:
     virtual void Draw();          // slot 4, retail 0x450450
     virtual int GetRealHeight();  // slot 5, retail 0x4504b0
     virtual int GetRealWidth();   // slot 6, retail 0x4504a0
-    // NOT an override: two arguments where widget's slot 3 has none
-    // (see the body in border.cpp), so this HIDES the pure virtual.
-    void zBufferDraw(unsigned short* zBuffer, int id);
+    virtual void zBufferDraw(unsigned short* zBuffer, int id);
     void SetImage(const char* bitmap_name);
     void SetPlayerPaletteColors(int whichPlayer);
     virtual int Main(message* msg);  // slot 2, retail 0x450550
@@ -105,6 +103,7 @@ public:
     bitmapBorder16(int x, int y, int w, int h, int id,
                    const char* image_, int style);
     virtual ~bitmapBorder16();
+    virtual void zBufferDraw(unsigned short* zBuffer, int id);
     virtual void Draw();  // slot 4, retail 0x4507b0
     void Draw2();
 };
