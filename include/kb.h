@@ -7,6 +7,7 @@
 
 #include <string>
 #include <vector>
+#include "border.h"
 #include "town.h"
 
 class message;
@@ -33,12 +34,67 @@ struct type_dialog_icon {
     long textHeight;
     long textWidth;
 
-    type_dialog_icon();
-    ~type_dialog_icon();
-    type_dialog_icon(const type_dialog_icon& that);
     void set(EGameResource resource, long qualifier);
 };
 SIZE(type_dialog_icon, 0x4c);
+
+// Dreamcast CodeView publishes the five named members of EMBType. Complete's
+// DoNormalDialog jump table independently proves that the domain remains dense
+// through ten and uses the five intervening values too. Their source names did
+// not survive, so keep ordinal placeholders for those Complete-only facts.
+enum EMBType {
+    NORMAL_DIALOG_DEFAULT = 1,
+    NORMAL_DIALOG_YESNO = 2,
+    NORMAL_DIALOG_ORDINAL_3 = 3,
+    NORMAL_DIALOG_POPUP = 4,
+    NORMAL_DIALOG_ORDINAL_5 = 5,
+    NORMAL_DIALOG_ORDINAL_6 = 6,
+    NORMAL_DIALOG_CHOOSE = 7,
+    NORMAL_DIALOG_ORDINAL_8 = 8,
+    NORMAL_DIALOG_ORDINAL_9 = 9,
+    NORMAL_DIALOG_CHOOSE_OPTIONAL = 10
+};
+
+// Dreamcast supplies the record identity, all shared members and the array
+// count. Complete adds text_expansion between the text rectangle and icons;
+// retail's by-value DoNormalDialog ABI fixes every translated VC6 offset and
+// the final 0x2a0 extent. The special members are intentionally implicit:
+// CodeView marks them compiler-generated, and retail expands this aggregate's
+// teardown while retaining type_dialog_icon's element destructor boundary.
+struct TNormalDialogInfo {
+    std::string dialog_text;
+    int x;
+    int y;
+    int width;
+    int height;
+    int text_widget_x;
+    int text_widget_y;
+    int text_widget_width;
+    int text_widget_height;
+    bool text_expansion;
+    char pad_31[3];
+    type_dialog_icon icons[8];
+    EMBType iMBType;
+    int iSpecial;
+    int timeout;
+};
+SIZE(TNormalDialogInfo, 0x2a0);
+
+// The normal-dialog rollover frame has one canonical project-wide model.
+// Retail's inlined constructor proves the base extent, derived vtable store
+// and the two four-byte tail members.
+class type_normal_dialog_frame : public coloredBorderFrame {
+public:
+    EGameResource resource;
+    long qualifier;
+
+    type_normal_dialog_frame(long x, long y, long w, long h, long id,
+                             EGameResource resource, long qualifier);
+    virtual ~type_normal_dialog_frame();
+    virtual unsigned char handle_click(unsigned char down_click,
+                                       unsigned char right_click);
+};
+SIZE(type_normal_dialog_frame, 0x40);
 
 // homm2's KB timer array survives (DC glTimers: unsigned long[10];
 // retail base 0x698998 - button::Select stores slot 2 at 0x6989a0).
@@ -112,6 +168,7 @@ void NormalDialog(const char* cText, int iMBType, int x, int y,
 void NormalDialogTimeOut(const char* cText, int iMBType, int timeOut,
     int x, int y, int iResType1, int iResExtra1, int iResType2,
     int iResExtra2, int iSpecial, int iResType3, int iResExtra3); // 0x4f6530
+void DoNormalDialog(TNormalDialogInfo dialog_info);              // 0x4f6990
 void extended_dialog(const char* text,
     std::vector<type_dialog_resource>& resources,
     long x, long y, long timeout);                              // 0x4f6cf0

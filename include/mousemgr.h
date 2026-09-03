@@ -60,7 +60,7 @@ public:
 
     int field_38;
     RECT savedRect;
-    int field_4c;
+    EPointerSet field_4c;
     int field_50;
     CSprite* field_54;
     int field_58;
@@ -101,6 +101,17 @@ public:
                            const RECT* dst_rect);
     void HidePointer();
     void ShowPointer(bool restore);
+    // E:\gamedcs\MouseMgr.h:215/216. Dreamcast emits these header helpers
+    // in kb.obj/adventuremapwindow.obj; Complete folds both into the direct
+    // +0x4c/+0x50 loads at their call sites.
+    EPointerSet GetSet() const
+    {
+        return field_4c;
+    }
+    int GetFrame() const
+    {
+        return field_50;
+    }
     // Dreamcast mousemgr.h:221. MoveHero and RestoreMouse retain this
     // source helper while Complete's /Ob2 lowers it to the field_68 test.
     unsigned char IsVis() const { return field_68 == 0; }

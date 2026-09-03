@@ -1915,6 +1915,7 @@ kb	?CleanUpMenus@@YIXXZ	100.0000	100.0000	100.0000	0xf4b50	5ad85acac0be
 kb	?DisplayVCWinLoss@@YI_NAAVVictoryConditionStruct@@AAH1_N@Z	94.9521	94.9521	94.9521	0xf15e0	0fa75f4e1fc3
 kb	?DoCampaignWindow@@YIEXZ	98.3910	98.3910	98.3910	0xf00a0	68ef1062200d
 kb	?DoMultiPlayerWindow@@YIHXZ	100.0000	100.0000	100.0000	0xf0590	732e54afec3c
+kb	?DoNormalDialog@@YIXUTNormalDialogInfo@@@Z	99.8554	99.8554	99.8554	0xf6990	b381947e06f8
 kb	?DoSinglePlayerWindow@@YIHXZ	99.1549	99.1549	99.1549	0xf0490	e1a6fe4ef5bb
 kb	?GameUnsaved@@YIHXZ	100.0000	100.0000	100.0000	0xf4310	8134b9e04baa
 kb	?GetMapExtra@@YIGHHH@Z	100.0000	100.0000	100.0000	0xf79b0	d57379b3a90a
@@ -1926,11 +1927,14 @@ kb	?MemError@@YIXXZ	100.0000	100.0000	100.0000	0xf42c0	a3a21a3be5c1
 kb	?NormalDialogTimeOut@@YIXPBDHHHHHHHHHHH@Z	100.0000	100.0000	100.0000	0xf6530	8724fb21051e
 kb	?PickLoadGame@@YIHXZ	100.0000	100.0000	100.0000	0xf0610	4b51a872ab91
 kb	?ShowLuckInfo@game@@QAEXPAVhero@@H@Z	100.0000	100.0000	100.0000	0xf3540	19d81223c1ea
+kb	?WaitHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0xf7620	5f15859cbc9f
 kb	?oldmain@@YIHXZ	31.4343	31.9630	31.9630	0xee3e0	f961ea8a8a17
 kb	?set@type_dialog_icon@@QAEXW4EGameResource@@J@Z	99.1667	99.1667	99.1667	0xf4eb0	06cb359cd3d3
 kb	CreditsWait	0.0000	0.0000	0.0000	0xedda0	ab29717ff7fc
 kb	LostGame	0.0000	0.0000	0.0000	0xee2b0	ae165c870346
 kb	NormalDialog	0.0000	0.0000	0.0000	0xf6570	c63ad579abc9
+kb	NormalDialogHandler	0.0000	0.0000	0.0000	0xf08d0	9a6eb9694e3f
+kb	PollSound	0.0000	0.0000	0.0000	0xed490	66548806e97f
 kb	ShutDown	0.0000	0.0000	0.0000	0xf3690	2c65224c7488
 kbwin	?AppAbout@@YGHPAUHWND__@@IIJ@Z	100.0000	100.0000	100.0000	0xf8140	b6d6a9ba7939
 kbwin	?AppCommand@@YIJPAUHWND__@@IIJ@Z	100.0000	100.0000	100.0000	0xf8060	ab51fe2b9295
@@ -2119,7 +2123,7 @@ misc	?get_available_disk_space@@YIKXZ	100.0000	100.0000	100.0000	0x10c7a0	92fb8c
 monframeinfo	?InitializeCreatureAnimationTraits@@YIXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	100.0000	100.0000	100.0000	0x10ca00	8c3230214ffb
 monframeinfo	?InitializeCreatureAnimationTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0x10c810	8a6e9f2508fc
 mousemgr	??0TCSLock@@QAE@PAU_RTL_CRITICAL_SECTION@@@Z	100.0000	100.0000	100.0000	0x10d890	e94aac89e0d6
-mousemgr	??0mouseManager@@QAE@XZ	100.0000	100.0000	100.0000	0x10cb50	d3db6aa43f2e
+mousemgr	??0mouseManager@@QAE@XZ	100.0000	100.0000	100.0000	0x10cb50	40fcf9bcd38f
 mousemgr	??1TCSLock@@QAE@XZ	100.0000	100.0000	100.0000	0x10cd80	36a369c6acbb
 mousemgr	??_GmouseManager@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x10cbc0	-
 mousemgr	?CheckUpdate@mouseManager@@QAEXXZ	100.0000	100.0000	100.0000	0x10d680	97578198a4a8

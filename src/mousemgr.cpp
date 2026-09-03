@@ -58,7 +58,7 @@ VA(0x0050cb50, 0x6F)  // anchor-global, dc 0xfe9d4
 mouseManager::mouseManager()
 {
     field_74 = 0;
-    field_4c = -1;
+    field_4c = INVALID_SET;
     // baseManager::status, at +0x34 - NOT id at +0xc. The single
     // instruction this ctor was off by was `mov [ebx+0xc],edx` against
     // retail's `mov [ebx+0x34],edx`; 0x34 is where basemgr.h's proven
