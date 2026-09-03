@@ -881,8 +881,8 @@ command	?is_computer_action@combatManager@@QAEEXZ	100.0000	100.0000	100.0000	0x7
 command	?is_outside_placement_boundry@combatManager@@QAEEHH@Z	100.0000	100.0000	100.0000	0x763f0	121e7d3afbb8
 command	?process_first_aid@combatManager@@QAEXPAVarmy@@@Z	100.0000	100.0000	100.0000	0x78b90	91444258c0b3
 command	?process_move_then_attack@combatManager@@QAEEPAVmessage@@@Z	100.0000	100.0000	100.0000	0x78900	41bc79735fad
-command	?show_eagle_eye@combatManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0x76fe0	b76de5895e14
-command	?show_looted_artifacts@combatManager@@QAEXAAV?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@H@Z	100.0000	100.0000	100.0000	0x772b0	91a7b522c841
+command	?show_eagle_eye@combatManager@@AAEXHH@Z	100.0000	100.0000	100.0000	0x76fe0	b76de5895e14
+command	?show_looted_artifacts@combatManager@@AAEXAAV?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@H@Z	100.0000	100.0000	100.0000	0x772b0	91a7b522c841
 command	?valid_wall_target@combatManager@@QAEEW4TWallTargetId@@@Z	100.0000	100.0000	100.0000	0x76440	5e49eacfad95
 compress	@compress2@20	100.0000	100.0000	100.0000	0x206b40	-
 crc32	@crc32@12	100.0000	100.0000	100.0000	0x205af0	-
@@ -996,7 +996,7 @@ dimensiondoorwindow	?ExitDialog@TDimensionDoorWindow@@UAEHPAVmessage@@@Z	100.000
 dimensiondoorwindow	?ExitDialog@TSkuttleBoatWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x91eb0	52e28cdf4a3b
 dimensiondoorwindow	?WindowHandler@TDimensionDoorWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x91900	1a07604a0f4d
 dimensiondoorwindow	?WindowHandler@TSkuttleBoatWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x91d00	bef9af53322f
-drawing	?CombatMessage@combatManager@@QAEXH@Z	87.0800	87.0800	87.0800	0x92840	b2baa85b381e
+drawing	?CombatMessage@combatManager@@QAEXH@Z	90.2999	90.2999	90.2999	0x92840	b2baa85b381e
 drawing	?ComputeExtent@combatManager@@QAEXPBVCSprite@@HHHHPAUSLimitData@@HE@Z	100.0000	100.0000	100.0000	0x95f50	03a82e8ae4ab
 drawing	?ComputeMaxExtent@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x95bf0	3d6b348c0f2c
 drawing	?CycleCombatScreen@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x960d0	8e7fd8c5bb94
@@ -1024,6 +1024,7 @@ drawing	?UpdateMouseGrid@combatManager@@QAEXHAAV?$vector@JV?$allocator@J@std@@@s
 drawing	?UpdateMouseGrid@combatManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0x94390	d349de9de0ae
 drawing	?format_rounded@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@JJ@Z	100.0000	100.0000	100.0000	0x93650	480bccc45aab
 drawing	?get_estimated_damage@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBVarmy@@PAV3@EJ@Z	100.0000	100.0000	100.0000	0x933d0	fedbd52ea3aa
+drawing	?show_creature_spell_error@combatManager@@AAE_NPADPBVarmy@@@Z	82.4044	82.4044	82.4044	0x922f0	1a0ec0f0a4e7
 drawing	__h3cg$drawing$static_dtor$old_hexes	100.0000	100.0000	100.0000	0x94370	-
 dxplay	??0CDPlayLobby@@QAE@XZ	100.0000	100.0000	100.0000	0x98870	d771bae990ba
 dxplay	??1?$CAutoArray@VCDPlayAddressElement@@@@UAE@XZ	100.0000	100.0000	100.0000	0x99f00	794d91e8a4c9
