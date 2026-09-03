@@ -1896,7 +1896,7 @@ initialize	?create_requirement_masks@@YIXPBHPA_J1@Z	100.0000	100.0000	100.0000	0
 # this class: two enumerators moved the row by the same amount one
 # enumerator did on 2026-08-08, which is what a population threshold
 # looks like and not what a per-declarator penalty looks like.
-initialize	?initialize_game_data@@YIXXZ	90.1620	100.0000	100.0000	0xeb730	9bb04f467e4b
+initialize	?initialize_game_data@@YIXXZ	94.0741	100.0000	100.0000	0xeb730	9bb04f467e4b
 inputmgr	??0inputManager@@QAE@XZ	73.3333	100.0000	100.0000	0xec460	ce1b8a0744aa
 inputmgr	?AsciiConvert@inputManager@@QAEXPAVmessage@@@Z	100.0000	100.0000	100.0000	0xec6f0	b21c053d2257
 inputmgr	?Close@inputManager@@UAEXXZ	100.0000	100.0000	100.0000	0xec540	3eaa4090c58c
@@ -1926,6 +1926,7 @@ kb	?NormalDialogTimeOut@@YIXPBDHHHHHHHHHHH@Z	100.0000	100.0000	100.0000	0xf6530	
 kb	?PickLoadGame@@YIHXZ	100.0000	100.0000	100.0000	0xf0610	4b51a872ab91
 kb	?ShowLuckInfo@game@@QAEXPAVhero@@H@Z	100.0000	100.0000	100.0000	0xf3540	19d81223c1ea
 kb	?oldmain@@YIHXZ	31.4343	31.9630	31.9630	0xee3e0	f961ea8a8a17
+kb	?set@type_dialog_icon@@QAEXW4EGameResource@@J@Z	99.1667	99.1667	99.1667	0xf4eb0	06cb359cd3d3
 kb	CreditsWait	0.0000	0.0000	0.0000	0xedda0	ab29717ff7fc
 kb	LostGame	0.0000	0.0000	0.0000	0xee2b0	ae165c870346
 kb	NormalDialog	0.0000	0.0000	0.0000	0xf6570	c63ad579abc9
@@ -2868,7 +2869,7 @@ singleselectionwindow	?OnGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNet
 # SetCurrentMap/OnSetAsHostMsg bodies landing in the TU dropped the
 # pair again with both sources byte-identical. Recovery rides with
 # DrawHeroAdvancedOption reaching 100.
-singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0	0e5de8f038ec
+singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	99.8868	100.0000	100.0000	0x17cdc0	0e5de8f038ec
 singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	9177fbb0fa83
 # 2026-08-27 hand-lowered 100.0000 -> 99.8710 (hist keeps 100.0000): the
 # documented TU-state flap (master accepted this pair down at 99.89/99.87
@@ -3207,8 +3208,8 @@ town	?update_shipyard@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1bf210	343d37d72
 towngatewindow	??1TTownGateWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1c2370	2cdf88c2600e
 towngatewindow	??_GTTownGateWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1c2340	-
 townmgr	??0TBlacksmithWindow@@QAE@HH@Z	100.0000	100.0000	100.0000	0x1d1360	777db8ccc983
-townmgr	??0TBuyBuildWindow@@QAE@HHH@Z	100.0000	100.0000	100.0000	0x1d55c0	8ae5a0fe1666
-townmgr	??0TCastleWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x1d86f0	3f7a2dcda492
+townmgr	??0TBuyBuildWindow@@QAE@HHH@Z	100.0000	100.0000	100.0000	0x1d55c0	97dccb7f8a0f
+townmgr	??0TCastleWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x1d86f0	8d91980e7e44
 townmgr	??0TGarrisonWindow@@QAE@PAVhero@@HPAVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x1d0e00	67abb9d3d02f
 townmgr	??0THallWindow@@QAE@H@Z	99.6605	99.6605	99.6605	0x1c9be0	e9dcfb489aea
 townmgr	??0TMageGuildWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x1cc980	a44930e9e40f

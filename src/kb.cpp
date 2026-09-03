@@ -16,12 +16,15 @@
 #include "game.h"
 #include "textresource.h"
 #include "advmgr.h"
+#include "artifact.h"
 #include "binkmanager.h"
 #include "bitmap16.h"
 #include "campaignbrief.h"
 #include "campaignwindow.h"
+#include "castle.h"
 #include "cmbtmgr.h"
 #include "creaturetype.h"
+#include "csprite.h"
 #include "customcampaign.h"
 #include "kbwin.h"
 #include "exec.h"
@@ -45,11 +48,36 @@
 #include "singleselectionwindow.h"
 #include "smackmgr.h"
 #include "soundmgr.h"
+#include "sskilltraits.h"
 #include "timer.h"
 #include "winmgr.h"
 // GameUnsaved polls the town manager's baseManager status, so kb.obj is
 // one of the consumers that needs townmgr.h's guarded class prefix.
 #include "townmgr.h"
+
+// E:\gamedcs\includes.h:97,114. Dreamcast retains calls to these two
+// by-value wrappers from type_dialog_icon::set. Retail expands them and
+// selects an operand address before loading the result, proving the nested
+// reference-returning VC6 helper rather than a plain ternary or Win32 macro.
+#ifdef min
+#undef min
+#endif
+#ifdef max
+#undef max
+#endif
+inline int min(int left, int right)
+{
+    return std::_cpp_min(left, right);
+}
+
+inline int max(int left, int right)
+{
+    return std::_cpp_max(left, right);
+}
+
+// type_dialog_icon::set's two Dreamcast min calls and retail's equality exit
+// use the same text-column clamp.
+#define DIALOG_ICON_MAX_TEXT_WIDTH 110
 
 // E:\gamedcs\CreatureType.h:296. Keep the recovered header-inline helper as
 // a real source boundary in this TU without adding another conditional VIEW.
@@ -1884,11 +1912,7 @@ int CheckMem()
 }
 
 // E:\gamedcs\kb.cpp:4897
-DC_ONLY(0xe52b8, 0x6A8)
-void type_dialog_icon::set(EGameResource _resource, long _qualifier)
-{
-    // @stub
-}
+// Promoted to the live retail claim below.
 
 // E:\gamedcs\kb.cpp:5206
 DC_ONLY(0xe5960, 0x574)
@@ -2413,6 +2437,260 @@ int GetNextHumanPlayer(int start)
             break;
     }
     return -1;
+}
+
+// E:\gamedcs\kb.cpp:4897. Dreamcast supplies the switch order, helper
+// boundaries, statement groups and text-wrapping scopes. Retail corroborates
+// the Complete-only Conflux enum insertion, every field offset, packed
+// qualifier interpretation, table stride, literal, and the final CFG.
+VA(0x004f4eb0, 0xEC9)  // linkorder + anchor-callee, dc 0xe52b8
+void type_dialog_icon::set(EGameResource _resource, long _qualifier)
+{
+    // Residual (99.1667%): all 133 CFG blocks and all 64 branches agree.
+    // Retail retains two nested basic_string::_Eos calls in the two
+    // RES_EXPERIENCE char-pointer assignments (85 calls versus our 83).
+    // Statement-scoped inline_depth(0) is not the missing boundary: it also
+    // de-inlines operator=, grows the CFG to 135 blocks, and scores 94.9238%.
+    // Rejected source families: signed/unsigned relational count tests,
+    // zero-first monster arms, repeated direct LOWORD/HIWORD expressions,
+    // and division-based high-word extraction. The quantity-first unsigned
+    // local plus a nonzero test is the sole exact monster-arm lowering.
+    resource = _resource;
+    qualifier = _qualifier;
+    textWidth = 0;
+    textHeight = 0;
+    spriteWidth = 0;
+    spriteHeight = 0;
+    spriteFrameIndex = 0;
+
+    if (resource == const_no_resource)
+        return;
+
+    switch (resource) {
+    case RES_BUILDING_TT_0:
+    case RES_BUILDING_TT_1:
+    case RES_BUILDING_TT_2:
+    case RES_BUILDING_TT_3:
+    case RES_BUILDING_TT_4:
+    case RES_BUILDING_TT_5:
+    case RES_BUILDING_TT_6:
+    case RES_BUILDING_TT_7:
+    case RES_BUILDING_TT_8:
+        spriteName = townBuildingSpriteNames[resource - RES_BUILDING_TT_0];
+        text = GetBuildingName(resource - RES_BUILDING_TT_0, qualifier);
+        spriteFrameIndex = qualifier;
+        break;
+
+    case WOOD:
+    case MERCURY:
+    case ORE:
+    case SULFUR:
+    case CRYSTAL:
+    case GEMS:
+    case GOLD:
+        if (qualifier > 0) {
+            text = format_string(
+                DATA_COMPGEN(0x00660a1c, dialogDecimalFormat, "%d"),
+                qualifier);
+        } else if (qualifier == 0) {
+            text = DATA_COMPGEN(0x00691210, dialogEmptyText, "");
+        } else if (qualifier < -100000) {
+            text = format_string(
+                DATA_COMPGEN(0x00660a1c, dialogDecimalFormat, "%d"),
+                qualifier + 100000);
+        } else {
+            text = format_string((*gpGeneralText)[4], -qualifier);
+        }
+        spriteName = DATA_COMPGEN(
+            0x00660114, dialogResourceSprite, "resour82.def");
+        spriteFrameIndex = resource;
+        break;
+
+    case RES_SMALL_GOLD:
+        if (qualifier > 0) {
+            text = format_string(
+                DATA_COMPGEN(0x00660a1c, dialogDecimalFormat, "%d"),
+                qualifier);
+        } else if (qualifier == 0) {
+            text = DATA_COMPGEN(0x00691210, dialogEmptyText, "");
+        } else if (qualifier < -100000) {
+            text = format_string(
+                DATA_COMPGEN(0x00660a1c, dialogDecimalFormat, "%d"),
+                qualifier + 100000);
+        } else {
+            text = format_string((*gpGeneralText)[4], -qualifier);
+        }
+        spriteName = DATA_COMPGEN(
+            0x00660224, dialogSmallGoldSprite, "resource.def");
+        spriteFrameIndex = GOLD;
+        break;
+
+    case RES_ARTIFACT:
+        text = akArtifactTraits[static_cast<unsigned short>(qualifier)].name;
+        spriteName = DATA_COMPGEN(
+            0x00660214, dialogArtifactSprite, "artifact.def");
+        spriteFrameIndex = static_cast<unsigned short>(qualifier);
+        break;
+
+    case RES_SPELL:
+        text = akSpellTraits[qualifier].name;
+        spriteName = DATA_COMPGEN(
+            0x00660104, dialogSpellSprite, "spellScr.def");
+        spriteFrameIndex = qualifier;
+        break;
+
+    case RES_COLOR:
+        text = gPlayerColorNames[qualifier];
+        spriteName = DATA_COMPGEN(
+            0x006601fc, dialogPlayerCrestSprite, "crest58.def");
+        spriteFrameIndex = qualifier;
+        break;
+
+    case RES_PRIMARY_SKILL_ATTACK:
+    case RES_PRIMARY_SKILL_DEFENSE:
+    case RES_PRIMARY_SKILL_POWER:
+    case RES_PRIMARY_SKILL_KNOWLEDGE:
+        spriteName = DATA_COMPGEN(
+            0x006601f0, dialogPrimarySkillSprite, "pskill.def");
+        spriteFrameIndex = resource - RES_PRIMARY_SKILL_ATTACK;
+        if (qualifier == 0) {
+            text = DATA_COMPGEN(0x00691210, dialogEmptyText, "");
+        } else if (HIWORD(qualifier) == 1) {
+            text = format_string(
+                DATA_COMPGEN(0x006778a4, dialogQuantityFormat, "%d %s"),
+                static_cast<unsigned short>(qualifier),
+                gPrimarySkillNames[spriteFrameIndex]);
+        } else {
+            text = format_string(
+                DATA_COMPGEN(0x00677278, dialogBonusFormat, "+%d %s"),
+                qualifier, gPrimarySkillNames[spriteFrameIndex]);
+        }
+        break;
+
+    case RES_MONSTER: {
+        unsigned long count = HIWORD(qualifier);
+        int creature = LOWORD(qualifier);
+        spriteFrameIndex = creature + 2;
+        if (count != 0) {
+            text = format_string(
+                DATA_COMPGEN(0x006778a4, dialogQuantityFormat, "%d %s"),
+                count, GetArmyName(creature, count));
+        } else {
+            text = GetArmyName(creature, 2);
+        }
+        spriteName = DATA_COMPGEN(
+            0x006601e0, dialogCreatureSprite, "twcrport.def");
+        break;
+    }
+
+    case RES_SECONDARY_SKILL:
+        text = gSkillMasteryNames[qualifier % 3];
+        text += DATA_COMPGEN(0x00660330, dialogSkillSeparator, " ");
+        text += akSSkillTraits[qualifier / 3 - 1].name;
+        spriteName = DATA_COMPGEN(
+            0x006600f8, dialogSecondarySkillSprite, "secsk82.def");
+        spriteFrameIndex = qualifier;
+        break;
+
+    case RES_EXPERIENCE:
+        spriteName = DATA_COMPGEN(
+            0x006601f0, dialogPrimarySkillSprite, "pskill.def");
+        spriteFrameIndex = 4;
+        if (qualifier == -1) {
+            text = (*gpGeneralText)[443];
+        } else if (qualifier == 0) {
+            text = DATA_COMPGEN(0x00691210, dialogEmptyText, "");
+        } else {
+            text = format_string(
+                DATA_COMPGEN(0x00660a1c, dialogDecimalFormat, "%d"),
+                qualifier);
+        }
+        break;
+
+    case RES_MANA:
+        spriteName = DATA_COMPGEN(
+            0x006601f0, dialogPrimarySkillSprite, "pskill.def");
+        spriteFrameIndex = 5;
+        text = format_string(
+            DATA_COMPGEN(0x006778a4, dialogQuantityFormat, "%d %s"),
+            qualifier, (*gpGeneralText)[388]);
+        break;
+
+    case RES_GOOD_MORALE:
+        spriteName = DATA_COMPGEN(
+            0x006600ec, dialogMoraleSprite, "imrl82.def");
+        spriteFrameIndex = 4;
+        break;
+    case RES_NEUTRAL_MORALE:
+        spriteName = DATA_COMPGEN(
+            0x006600ec, dialogMoraleSprite, "imrl82.def");
+        spriteFrameIndex = 3;
+        break;
+    case RES_BAD_MORALE:
+        spriteName = DATA_COMPGEN(
+            0x006600ec, dialogMoraleSprite, "imrl82.def");
+        spriteFrameIndex = 2;
+        break;
+    case RES_GOOD_LUCK:
+        spriteName = DATA_COMPGEN(
+            0x006600e0, dialogLuckSprite, "ilck82.def");
+        spriteFrameIndex = 4;
+        break;
+    case RES_NEUTRAL_LUCK:
+        spriteName = DATA_COMPGEN(
+            0x006600e0, dialogLuckSprite, "ilck82.def");
+        spriteFrameIndex = 3;
+        break;
+    case RES_BAD_LUCK:
+        spriteName = DATA_COMPGEN(
+            0x006600e0, dialogLuckSprite, "ilck82.def");
+        spriteFrameIndex = 2;
+        break;
+
+    default:
+        spriteName = DATA_COMPGEN(
+            0x00660114, dialogResourceSprite, "resour82.def");
+        spriteFrameIndex = resource;
+        break;
+    }
+
+    CSprite* image = ResourceManager::GetSprite(spriteName.c_str());
+    spriteWidth = image->GetWidth() + 2;
+    spriteHeight = image->GetHeight() + 2;
+    image->Dispose();
+
+    if (text.length()) {
+        textWidth = max(spriteWidth, 50);
+
+        const char* current = text.c_str();
+        while (*current) {
+            while (*current == ' ')
+                ++current;
+
+            int wordWidth = 2;
+            while (*current && *current != ' ') {
+                wordWidth += gUnnamed698a08->GetCharacterWidth(*current);
+                ++current;
+            }
+            if (wordWidth > textWidth)
+                textWidth = wordWidth;
+        }
+
+        textWidth = min(textWidth, DIALOG_ICON_MAX_TEXT_WIDTH);
+        int lines = gUnnamed698a08->LineLength(text.c_str(), textWidth);
+        textHeight = gUnnamed698a08->fs.height * lines;
+
+        while (lines > 1 && textHeight > textWidth * 2 / 3) {
+            // Both retail and the Dreamcast delay slot store the grown width
+            // before entering min; the clamp is a second assignment.
+            textWidth = textWidth * 3 / 2;
+            textWidth = min(textWidth, DIALOG_ICON_MAX_TEXT_WIDTH);
+            lines = gUnnamed698a08->LineLength(text.c_str(), textWidth);
+            textHeight = gUnnamed698a08->fs.height * lines;
+            if (textWidth == DIALOG_ICON_MAX_TEXT_WIDTH)
+                break;
+        }
+    }
 }
 
 // E:\gamedcs\kb.cpp:5488.  The retail predecessor of NormalDialog is the
