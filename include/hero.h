@@ -21,6 +21,10 @@
 #include "spellschool.h"
 #include "advmgr_popup.h"
 
+// hero.obj's four primary-stat descriptions.  Dreamcast supplies the name
+// and type; Complete fixes the 0x6a7540 address and all four indexed readers.
+extern const char* gStatDesc[4];
+
 // Hero-class ids. Dreamcast CodeView supplies the original 0..15 ladder;
 // retail GetNewHeroId extends it with the two Conflux classes, indexes all
 // eighteen class-traits rows, and uses 18 as the no-class sentinel.
@@ -835,6 +839,13 @@ public:
     type_artifact* get_backpack(long slot)
     {
         return &backpack[slot];
+    }
+    // E:\gamedcs\Hero.h:664. Dreamcast emits this header helper from
+    // overview.obj. Complete emits no standalone wrapper; ProcessIconSelect
+    // expands it and retains the underlying get_obscured_town call.
+    inline town* GetOccupiedTown()
+    {
+        return get_obscured_town();
     }
     // `?AdjustPrimarySkill@hero@@QAAXHH@Z`, a Hero.h inline the Dreamcast
     // build calls OUT OF LINE and retail's /Ob2 expands. The DC line table

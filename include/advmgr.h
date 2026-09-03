@@ -25,6 +25,11 @@ struct type_creature_bank;
 struct type_university;
 class armyGroup;
 
+// adventuremapwindow.obj's shared rollover/right-click text table. Dreamcast
+// supplies the name and THelpText row type; Complete fixes its 0x6a56e0 base
+// through overview and town-screen readers of both columns.
+extern THelpText gAdventureWindowHelp[];
+
 // MapCell.h's artifact-price domain, published in full by Dreamcast.  It
 // lives beside MapArtifactInfo rather than in events.h: the enum is part of
 // the packed map-cell representation and is also the return type of
@@ -630,12 +635,12 @@ DATA(0x00699560) extern int gUnnamed699560;
 // to back, and both are written inside that body (relocs at 0x11e8ff and
 // 0x11e904) - and the third gates the end-turn warning dialog.
 //   0x6985c0  the overview screen's exit action; see EOverviewExit.
-DATA(0x006985c0) extern int gUnnamed6985c0;
+DATA(0x006985c0) extern int giOverviewReturnAction;
 //   0x69873c  the town the overview screen exited on, in game::GetTown's
 //             domain: ProcessDeSelect feeds it straight to the accessor
 //             and the -1 arm is emitted, so it carries the same "no town"
 //             sentinel townIds does.
-DATA(0x0069873c) extern int gUnnamed69873c;
+DATA(0x0069873c) extern int giOverviewReturnActionExtra;
 //   0x698778  third of the three gates on the "you still have heroes who
 //             can move" end-turn confirm, after game::field_1f69d and
 //             playerData::HasMobileHero.
@@ -718,8 +723,8 @@ void VideoResume();
 // executive's terminate-loop message.
 extern int gbGameOver;
 
-// gUnnamed6985c0's domain. ONE value is byte-proven - the kingdom-overview
-// arm answers 2 by viewing gUnnamed69873c's town and suppressing the
+// giOverviewReturnAction's domain. ONE value is byte-proven - the kingdom-
+// overview arm answers 2 by viewing giOverviewReturnActionExtra's town and suppressing the
 // screen fade - so the label is an ORDINAL PLACEHOLDER carrying only that
 // role. This enum exists so the compare is named rather than magic.
 enum EOverviewExit {

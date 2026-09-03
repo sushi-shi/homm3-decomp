@@ -2,7 +2,6 @@
 # Admission campaign only; sorted by retail size descending.
 # Use `homm3 vc6 queue --polish` only after admission.
 state	size	rva	relation	owner	candidates	label	action
-bracketed	3212	0xf6990	bracketed	kb..kbwin	kb,kbwin	calls_timeGetTime_f6990	resolve the owner, then add its VA claim and body
 unclaimed-in-span	3024	0x11ee50	in-span	overview	overview	game_121960_sub02_11ee50	add a VA claim and body to overview
 bracketed	2958	0x92840	bracketed	dimensiondoorwindow..drawing	dimensiondoorwindow,drawing	game_74d80_sub19_92840	resolve the owner, then add its VA claim and body
 unclaimed-in-span	2860	0x120e30	in-span	overview	overview	game_elementals_120e30	add a VA claim and body to overview
@@ -336,7 +335,7 @@ bracketed	528	0x4860	bracketed	adventuremapwindow..adventureoptionswindow	advent
 bracketed	528	0x8ce50	bracketed	customcampaign..dialogbox	customcampaign,dc_input,dc_precompiledheaders,dialogbox	game_89820_sub03_8ce50	resolve the owner, then add its VA claim and body
 bracketed	526	0x152530	bracketed	recruit..remote	recruit,remote	game_152530	resolve the owner, then add its VA claim and body
 bracketed	526	0x194a10	bracketed	singleselectionwindow..slider	singleselectionwindow,slider	game_190ad0_sub04_194a10	resolve the owner, then add its VA claim and body
-bracketed	524	0xf08d0	bracketed	inputmgr..kb	inputmgr,kb	calls_timeGetTime_f08d0	resolve the owner, then add its VA claim and body
+carcass	524	0xf08d0	bracketed	kb	kb	NormalDialogHandler	enable the existing VA claim and reconstruct its body
 bracketed	522	0x116c10	bracketed	newgame..overview	newgame,overview	game_114610_sub04_116c10	resolve the owner, then add its VA claim and body
 bracketed	521	0x4200	bracketed	adventuremapwindow..adventureoptionswindow	adventuremapwindow,adventureoptionswindow	button_set_hotkey	resolve the owner, then add its VA claim and body
 bracketed	521	0x23130	bracketed	ai..ai_combat	ai,ai_combat	game_1f140_sub02_23130	resolve the owner, then add its VA claim and body
@@ -397,7 +396,7 @@ bracketed	442	0x132c80	bracketed	quicktownwindow..recruit	quicktownwindow,recrui
 bracketed	441	0x13d1c0	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_13e6a0_sub03_13d1c0	resolve the owner, then add its VA claim and body
 bracketed	438	0x146520	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_1466e0_sub02_146520	resolve the owner, then add its VA claim and body
 bracketed	437	0x22880	bracketed	ai..ai_combat	ai,ai_combat	game_22a40_sub00_22880	resolve the owner, then add its VA claim and body
-bracketed	437	0xed490	bracketed	inputmgr..kb	inputmgr,kb	PollSound	resolve the owner, then add its VA claim and body
+carcass	437	0xed490	bracketed	kb	kb	PollSound	enable the existing VA claim and reconstruct its body
 bracketed	437	0x1c25b0	bracketed	towngatewindow..townmgr	towngatewindow,townmgr	game_1c2770_sub00_1c25b0	resolve the owner, then add its VA claim and body
 bracketed	435	0xd2c90	bracketed	game..gametypewindow	game,gametypewindow	game_bdc70_sub01_d2c90	resolve the owner, then add its VA claim and body
 bracketed	435	0x1b6e00	bracketed	systemoptionswindow..text	systemoptionswindow,text	game_1b5a70_sub03_1b6e00	resolve the owner, then add its VA claim and body
@@ -861,7 +860,6 @@ bracketed	104	0x16aad0	bracketed	search..seerhut	search,seerhut	game_b2300_sub03
 bracketed	103	0x353f0	bracketed	ai_player..ai_tactical	ai_player,ai_tactical	game_2a2b0_sub02_353f0	resolve the owner, then add its VA claim and body
 bracketed	103	0x4c610	bracketed	armygrp..artifact	armygrp,artifact	game_4ae60_sub00_4c610	resolve the owner, then add its VA claim and body
 bracketed	103	0x8eb60	bracketed	customcampaign..dialogbox	customcampaign,dc_input,dc_precompiledheaders,dialogbox	game_8d5a0_sub04_8eb60	resolve the owner, then add its VA claim and body
-bracketed	102	0xf7620	bracketed	kb..kbwin	kb,kbwin	game_f6990_sub02_f7620	resolve the owner, then add its VA claim and body
 bracketed	102	0x18fe80	bracketed	singleselectionwindow..slider	singleselectionwindow,slider	game_18f480_sub02_18fe80	resolve the owner, then add its VA claim and body
 bracketed	100	0x27c30	bracketed	ai_combat..ai_player	ai_combat,ai_player	game_24120_sub02_27c30	resolve the owner, then add its VA claim and body
 bracketed	100	0x134310	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_134310	resolve the owner, then add its VA claim and body

@@ -27,6 +27,7 @@
 #include "widget.h"
 #include "winmgr.h"
 
+DATA(0x006a56e0) extern THelpText gAdventureWindowHelp[];
 DATA(0x006a56e4) extern TQuickViewTextRow gQuickViewText[];
 
 // Dreamcast Game.h names both substitution alphabets. Retail's encoder reads
@@ -918,7 +919,7 @@ town_rollover: {
 generic_help:
             int helpID = convertID2HelpID(hoverID);
             if (helpID >= 0)
-                rolloverText = gUnnamed6a56e0[2 * helpID];
+                rolloverText = gAdventureWindowHelp[helpID].text;
         }
 
         message update;

@@ -18,6 +18,46 @@ enum EOverviewHeroArtifactPage {
     OVERVIEW_HERO_BACKPACK_PAGE = 2
 };
 
+// Widget/message ids consumed by game::ProcessIconSelect. Dreamcast proves
+// the source-domain groupings and Complete extends the roster with the level,
+// mana, specialty, summoning-portal, and second help bands. The band bases
+// and unique controls below are byte-proven by the retail switch tables;
+// individual consecutive slots are written as base-plus-offset at use sites.
+enum EOverviewIconId {
+    OVERVIEW_TOWN_EXIT_ID = 4,
+    OVERVIEW_TOWN_GARRISON_ARMY_FIRST_ID = 5,
+    OVERVIEW_TOWN_GARRISON_ARMY_SECOND_ROW_FIRST_ID = 12,
+    OVERVIEW_TOWN_RECRUIT_FIRST_ID = 19,
+    OVERVIEW_TOWN_RECRUIT_SECOND_ROW_FIRST_ID = 33,
+    OVERVIEW_TOWN_VISITING_HERO_LEFT_ID = 48,
+    OVERVIEW_TOWN_VISITING_HERO_RIGHT_ID = 50,
+    OVERVIEW_TOWN_GARRISON_HERO_ID = 53,
+    OVERVIEW_TOWN_VISITING_ARMY_FIRST_ID = 54,
+    OVERVIEW_TOWN_VISITING_ARMY_SECOND_ROW_FIRST_ID = 61,
+    OVERVIEW_TOWN_SUMMONING_PORTAL_ICON_ID = 101,
+    OVERVIEW_TOWN_SUMMONING_PORTAL_TEXT_ID = 102,
+    OVERVIEW_HERO_VIEW_ICON_ID = 103,
+    OVERVIEW_HERO_VIEW_NAME_ID = 104,
+    OVERVIEW_HERO_ARMY_FIRST_ID = 105,
+    OVERVIEW_HERO_ARMY_SECOND_ROW_FIRST_ID = 112,
+    OVERVIEW_HERO_ARTIFACT_FIRST_ID = 119,
+    OVERVIEW_HERO_ARTIFACT_PAGE_1_ID = 128,
+    OVERVIEW_HERO_ARTIFACT_PAGE_2_ID = 129,
+    OVERVIEW_HERO_BACKPACK_FIRST_ID = 130,
+    OVERVIEW_HERO_ARTIFACT_PAGE_3_ID = 138,
+    OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID = 158,
+    OVERVIEW_HERO_PRIMARY_STAT_FIRST_ID = 182,
+    OVERVIEW_HERO_LUCK_ID = 187,
+    OVERVIEW_HERO_MORALE_ID = 188,
+    OVERVIEW_HERO_LEVEL_ID = 189,
+    OVERVIEW_HERO_MANA_ID = 191,
+    OVERVIEW_HERO_SPECIALTY_ID = 193,
+    OVERVIEW_SELECT_HEROES_ID = 195,
+    OVERVIEW_SELECT_TOWNS_ID = 196,
+    OVERVIEW_HELP_FIRST_ID = 1001,
+    OVERVIEW_HELP_SECOND_BAND_FIRST_ID = 1009
+};
+
 // Complete allocates TOverviewWindow as exactly 0x80 bytes. Its destructor
 // proves that the CAdvPopup base is followed by two VC6 vectors: it tears down
 // their allocation pointers at +0x74 and +0x64, in reverse construction

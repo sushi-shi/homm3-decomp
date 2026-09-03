@@ -500,12 +500,9 @@ DATA(0x0068a378) extern const unsigned char gHorde2DwellingSlot[TOWN_TYPE_COUNT]
 // personality display names playerData::personality indexes.
 DATA(0x0068a2d4) extern const char* const gPlayerFlagSprites[8];
 DATA(0x006a7794) extern const char* gPersonalityNames[];
-// The fort page's shared pair (see the survey block ahead of
-// TCastleWindow::SetRolloverText below for the evidence): 0x6a56e0 is
-// a per-building eight-byte record whose first dword is the building's
-// name, 0x642e70 the eight-int hotspot->building map read at two
-// addends. SetCommandAndText's resource band is the second reader.
-DATA(0x006a56e0) extern const char* gUnnamed6a56e0[];
+// adventuremapwindow.obj owns this eight-byte rollover/right-click record;
+// Dreamcast supplies the public name and THelpText type. The fort page and
+// SetCommandAndText select its two columns through the shared building map.
 DATA(0x00642e70) extern const int gUnnamed642e70[8];
 DATA(0x006a5e04) extern const char* gUnnamed6a5e04;
 DATA(0x006a5e08) extern const char* gUnnamed6a5e08;
@@ -2210,8 +2207,8 @@ void townManager::SetCommandAndText(message* msg)
     case TResourceDisplay::RESOURCE_TEXT_6_ID:
     case TResourceDisplay::RESOURCE_TEXT_7_ID:
         strcpy(statusText,
-               gUnnamed6a56e0[2 * gUnnamed642e70[
-                   code - TResourceDisplay::RESOURCE_TEXT_0_ID]]);
+               gAdventureWindowHelp[gUnnamed642e70[
+                   code - TResourceDisplay::RESOURCE_TEXT_0_ID]].text);
         break;
     case TResourceDisplay::RESOURCE_BORDER_0_ID:
     case TResourceDisplay::RESOURCE_BORDER_1_ID:
@@ -2221,8 +2218,8 @@ void townManager::SetCommandAndText(message* msg)
     case TResourceDisplay::RESOURCE_BORDER_5_ID:
     case TResourceDisplay::RESOURCE_BORDER_6_ID:
         strcpy(statusText,
-               gUnnamed6a56e0[2 * gUnnamed642e70[
-                   code - TResourceDisplay::RESOURCE_BORDER_0_ID]]);
+               gAdventureWindowHelp[gUnnamed642e70[
+                   code - TResourceDisplay::RESOURCE_BORDER_0_ID]].text);
         break;
     case TTownScreenWindow::TOWN_HOTSPOT_NONE:
     default:
@@ -2547,7 +2544,7 @@ void TThievesGuildWindow::SetRolloverText(int codeY)
 
 // The thieves' guild's message handler, reconstructed 2026-08-25 from the
 // prior lane's decode. Right-clicks (WIDGET_RIGHT_SELECT) on a rank cell open a
-// NormalDialog headed by the matching gPrimaryStatNames column; right-clicks on
+// NormalDialog headed by the matching gStatDesc column; right-clicks on
 // a hero or creature portrait open that unit's detail view, but only for the
 // local player's own column (owners[player] == GetLocalPlayerGamePos()). Mouse
 // moves refresh the rollover line through the window manager's hover latch.
@@ -2570,22 +2567,22 @@ int TThievesGuildWindow::WindowHandler(message* msg)
                     switch (msg->codeY) {
                     case RANK_A0: case RANK_A1: case RANK_A2: case RANK_A3:
                     case RANK_A4: case RANK_A5: case RANK_A6: case RANK_A7:
-                        NormalDialog(gPrimaryStatNames[0], 4, -1, -1, -1, 0,
+                        NormalDialog(gStatDesc[0], 4, -1, -1, -1, 0,
                                      -1, 0, -1, 0, -1, 0);
                         return MESSAGE_DISPATCH_CONSUME;
                     case RANK_B0: case RANK_B1: case RANK_B2: case RANK_B3:
                     case RANK_B4: case RANK_B5: case RANK_B6: case RANK_B7:
-                        NormalDialog(gPrimaryStatNames[1], 4, -1, -1, -1, 0,
+                        NormalDialog(gStatDesc[1], 4, -1, -1, -1, 0,
                                      -1, 0, -1, 0, -1, 0);
                         return MESSAGE_DISPATCH_CONSUME;
                     case RANK_C0: case RANK_C1: case RANK_C2: case RANK_C3:
                     case RANK_C4: case RANK_C5: case RANK_C6: case RANK_C7:
-                        NormalDialog(gPrimaryStatNames[2], 4, -1, -1, -1, 0,
+                        NormalDialog(gStatDesc[2], 4, -1, -1, -1, 0,
                                      -1, 0, -1, 0, -1, 0);
                         return MESSAGE_DISPATCH_CONSUME;
                     }
                 } else {
-                    NormalDialog(gPrimaryStatNames[3], 4, -1, -1, -1, 0,
+                    NormalDialog(gStatDesc[3], 4, -1, -1, -1, 0,
                                  -1, 0, -1, 0, -1, 0);
                     return MESSAGE_DISPATCH_CONSUME;
                 }
@@ -5698,7 +5695,7 @@ building_popup:
             case TTownScreenWindow::TOWN_UP_ARROW_ID:
             case TTownScreenWindow::TOWN_DOWN_ARROW_ID:
                 strcpy(text,
-                       gUnnamed6a56e0[2 * (code - 0x89) + 1]);
+                       gAdventureWindowHelp[code - 0x89].rclick);
                 if (rclick)
                     NormalDialog(text, 4, -1, -1, -1, 0, -1, 0, -1, 0,
                                  -1, 0);
@@ -5917,11 +5914,10 @@ building_popup:
             case TResourceDisplay::RESOURCE_TEXT_6_ID:
             case TResourceDisplay::RESOURCE_TEXT_7_ID:
                 strcpy(text,
-                       gUnnamed6a56e0[
-                           2 * gUnnamed642e70[
-                                   code
-                                   - TResourceDisplay::RESOURCE_TEXT_0_ID]
-                           + 1]);
+                       gAdventureWindowHelp[
+                           gUnnamed642e70[
+                               code
+                               - TResourceDisplay::RESOURCE_TEXT_0_ID]].rclick);
                 if (rclick)
                     NormalDialog(text, 4, -1, -1, -1, 0, -1, 0, -1, 0,
                                  -1, 0);
@@ -5937,12 +5933,11 @@ building_popup:
             case TResourceDisplay::RESOURCE_BORDER_5_ID:
             case TResourceDisplay::RESOURCE_BORDER_6_ID:
                 strcpy(text,
-                       gUnnamed6a56e0[
-                           2 * gUnnamed642e70[
-                                   code
-                                   - TResourceDisplay::
-                                         RESOURCE_BORDER_0_ID]
-                           + 1]);
+                       gAdventureWindowHelp[
+                           gUnnamed642e70[
+                               code
+                               - TResourceDisplay::
+                                     RESOURCE_BORDER_0_ID]].rclick);
                 if (rclick)
                     NormalDialog(text, 4, -1, -1, -1, 0, -1, 0, -1, 0,
                                  -1, 0);
@@ -9192,7 +9187,7 @@ TCastleWindow::~TCastleWindow()
 //             the second column stays unmodelled.
 DATA(0x006a5c28) extern const char* gUnnamed6a5c28[6];
 DATA(0x006a5c40) extern const char* gUnnamed6a5c40;
-// gUnnamed6a56e0 / gUnnamed642e70 are declared with the status-line
+// gAdventureWindowHelp / gUnnamed642e70 are declared with the status-line
 // pool near the top of the file: townManager::SetCommandAndText reads
 // both long before this page does.
 
@@ -9263,11 +9258,15 @@ void TCastleWindow::SetRolloverText(message* msg)
     } else if (code <= 0x3f7) {
         if (code < 0x3f1) {
             if (code >= 0x3e9 && code <= 0x3f0)
-                strcpy(gText, gUnnamed6a56e0[2 * gUnnamed642e70[code - 0x3e9]]);
+                strcpy(gText,
+                       gAdventureWindowHelp[
+                           gUnnamed642e70[code - 0x3e9]].text);
             else
                 strcpy(gText, "");
         } else {
-            strcpy(gText, gUnnamed6a56e0[2 * gUnnamed642e70[code - 0x3f1]]);
+            strcpy(gText,
+                   gAdventureWindowHelp[
+                       gUnnamed642e70[code - 0x3f1]].text);
         }
     } else if (code != EXIT_BUTTON_ID) {
         strcpy(gText, "");
@@ -9498,9 +9497,9 @@ int TCastleWindow::WindowHandler(message* msg)
             case RESOURCE_TEXT_ID + 5:
             case RESOURCE_TEXT_ID + 6:
             case RESOURCE_TEXT_ID + 7:
-                strcpy(gText, gUnnamed6a56e0[
-                           2 * gUnnamed642e70[msg->codeY - RESOURCE_TEXT_ID]
-                           + 1]);
+                strcpy(gText, gAdventureWindowHelp[
+                           gUnnamed642e70[
+                               msg->codeY - RESOURCE_TEXT_ID]].rclick);
                 if (msg->codeX == widget::WIDGET_RIGHT_SELECT)
                     NormalDialog(gText, 4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 else
@@ -9514,9 +9513,9 @@ int TCastleWindow::WindowHandler(message* msg)
             case RESOURCE_BORDER_ID + 4:
             case RESOURCE_BORDER_ID + 5:
             case RESOURCE_BORDER_ID + 6:
-                strcpy(gText, gUnnamed6a56e0[
-                           2 * gUnnamed642e70[msg->codeY - RESOURCE_BORDER_ID]
-                           + 1]);
+                strcpy(gText, gAdventureWindowHelp[
+                           gUnnamed642e70[
+                               msg->codeY - RESOURCE_BORDER_ID]].rclick);
                 if (msg->codeX == widget::WIDGET_RIGHT_SELECT)
                     NormalDialog(gText, 4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 else

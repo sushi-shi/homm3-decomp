@@ -440,21 +440,6 @@ def _mut_reorder_store_runs(body: str):
         i = max(j, i + 1)
 
 
-def _mut_volatile(body: str):
-    """Make a homed local `volatile` (B23): forces the memory residency the
-    reference keeps where our CL promotes to a register. Value-inert - only
-    the schedule/homing changes - so it is a safe nudge; the compile decides.
-    (Byte-proven lever: ai_combat::do_aftermath 75.4 -> 79.7.)"""
-    for m in _iter_decl(body):
-        ty = m.group("type")
-        if "volatile" in ty:
-            continue
-        decl = body[m.start():m.end()]
-        new_decl = re.sub(r"^([ \t]*)", r"\1volatile ", decl, count=1)
-        yield (f"make local '{m.group('name')}' volatile", "B23",
-               body[:m.start()] + new_decl + body[m.end():])
-
-
 def _mut_reorder_wide(body: str):
     """Slot-coloring (B5/B6): move a declaration to the front/back of its
     contiguous declaration block - non-adjacent permutations the adjacent-swap
@@ -541,7 +526,7 @@ def _mutations(src_text: str, fn: str) -> list:
     out, seen = [], {body}
     for gen in (_mut_unname, _mut_name_expr, _mut_reorder,
                 _mut_reorder_store_runs, _mut_reorder_wide,
-                _mut_hoist_zero, _mut_chain, _mut_volatile):
+                _mut_hoist_zero, _mut_chain):
         for label, catalog, new_body in gen(body):
             if new_body in seen:
                 continue
