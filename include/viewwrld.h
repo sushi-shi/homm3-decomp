@@ -10,17 +10,29 @@
 
 class type_func_button;
 
-// Dreamcast supplies the complete four-member tail after CAdvPopup. Retail's
-// independently proven 0x60-byte popup base shifts that tail by eight bytes,
-// giving a 0x70-byte object. The constructor and destructor corroborate the
-// vtable and the inherited Widgets ownership policy.
+// Dreamcast supplies the shared four-member tail after CAdvPopup. Complete
+// keeps that tail, adds two level-selector buttons between RolloverWidget and
+// origin, and grows the object to 0x78. The retail ViewWorld caller constructs
+// this object at [ebp-0x8c] and puts the following type_point at [ebp-0x14],
+// independently fixing the extent. The constructor/callback family proves
+// SurfaceButton@+0x64, UndergroundButton@+0x68, origin@+0x6c and the two
+// dimensions at +0x70/+0x74; the inherited 0x60-byte base fixes the remaining
+// Dreamcast RolloverWidget at +0x60.
 class TViewWorldWindow : public CAdvPopup {
 public:
     enum EOtherWidgetIDs { MAP_ID = 0 };
-    enum { NWIDGETS = 2 };
+    // Dreamcast's older revision reserves two slots. Complete's constructor
+    // compares the Dinkumware vector capacity against 0x28 and allocates 160
+    // bytes, directly proving the revised constant.
+    enum { NWIDGETS = 40 };
 
 private:
-    type_func_button* RolloverWidget;
+    // CodeView type 0x1A89 is pointer-to-const-widget, not a button pointer.
+    // Like the dimension-door twin, this inherited source member is not
+    // initialized by the constructor.
+    const widget* RolloverWidget;
+    type_func_button* SurfaceButton;
+    type_func_button* UndergroundButton;
     type_point origin;
     int viewable_width;
     int viewable_height;
@@ -37,7 +49,13 @@ private:
     void update_radar(int mrx, int mry, float fRadarDivisor);
     void update_view_world(message* msg);
 };
-SIZE(TViewWorldWindow, 0x70);
+SIZE(TViewWorldWindow, 0x78);
+
+// Complete-only, address-taken handlers passed to the two level buttons.
+// Their names are role-based because the older Dreamcast source has neither
+// button; their exact retail entries are claimed in viewwrld.cpp.
+int ViewWorldSurfaceHandler(message& msg);
+int ViewWorldUndergroundHandler(message& msg);
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\viewwrld.cpp:100, dc 0x192ee8) long ftol(double d);

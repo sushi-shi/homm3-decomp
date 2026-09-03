@@ -3396,8 +3396,11 @@ viewarmywindow	?create_shots_widget@TViewArmyWindow@@QAEXPBUTCreatureTypeTraits@
 viewarmywindow	?create_speed_widget@TViewArmyWindow@@QAEXHH@Z	100.0000	100.0000	100.0000	0x1f62f0	16f6e6987461
 viewarmywindow	?create_spell_influence_widgets@TViewArmyWindow@@QAEXPBVarmy@@@Z	86.6570	86.6570	86.6570	0x1f65b0	ead1359e6949
 viewarmywindow	?create_upgrade_widget@TViewArmyWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1f6ae0	7268df34c10c
+viewwrld	??0TViewWorldWindow@@QAE@XZ	96.4425	96.4425	96.4425	0x1fa600	3be9bd43aa52
 viewwrld	??1TViewWorldWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1fbd60	82df7ee1ec9b
 viewwrld	??_GTViewWorldWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1fbd30	-
+viewwrld	ViewWorldSurfaceHandler	0.0000	0.0000	0.0000	0x1fbdf0	bc84cf43f4e2
+viewwrld	ViewWorldUndergroundHandler	0.0000	0.0000	0.0000	0x1fbec0	560f7174e1e3
 widget	??0widget@@QAE@FFFFFF@Z	100.0000	100.0000	100.0000	0x1fe340	0553215b2eec
 widget	??0widget@@QAE@XZ	100.0000	100.0000	100.0000	0x1fe410	6042558f56f5
 widget	??1widget@@UAE@XZ	100.0000	100.0000	100.0000	0x1fe430	4a29d8bc037a
