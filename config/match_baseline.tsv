@@ -2184,8 +2184,10 @@ newgame	?get_alignment_count@@YIJH@Z	100.0000	100.0000	100.0000	0x1132b0	f1e0400
 newgame	?pick_alignment@@YI?AW4TTownType@@HE@Z	100.0000	100.0000	100.0000	0x1132d0	7d86ef3bfcb8
 newgame	game_InitNewGame	0.0000	0.0000	0.0000	0x113320	a978141c8f54
 objecttype	?_Inc@const_iterator@?$_Tree@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V12@U_Kfn@?$set@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@2@U?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x117780	-
+overview	??0TOverviewWindow@@QAE@XZ	78.4627	80.0954	80.0954	0x11fa40	77a0b34ded9c
 overview	??1TOverviewWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x120d90	048fab1d8faa
 overview	??_GTOverviewWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x120d60	-
+overview	?OverviewSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x11fa20	d405249777ca
 overview	?SetupDynamicStuff@game@@QAEXHH@Z	90.5699	90.5699	90.5699	0x11bd50	f385ac22aff9
 overview	?SetupNewOverviewType@game@@QAEXHE@Z	96.4609	100.0000	100.0000	0x11e330	f328fdfe08b1
 overview	?UpdateBackpack@@YIXH@Z	96.5741	96.5741	96.5741	0x122470	838327f3aed0

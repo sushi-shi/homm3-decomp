@@ -1611,6 +1611,13 @@ int __fastcall SaveAbstractString(
 // bytes stay opaque.
 class mine {
 public:
+    // Lighthouse objects share the mine ownership pool so sea-mobility and
+    // the overview can count them with the ordinary mine walk. Retail proves
+    // the discriminator value in both independent consumers.
+    enum EMineType {
+        MINE_TYPE_LIGHTHOUSE = 100
+    };
+
     // +0x00/+0x01, both retail-proven: MineTypesOwned sign-extends
     // each and compares it against an int parameter.
     char playerOwner;

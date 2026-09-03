@@ -797,6 +797,262 @@ void game::SetupNewOverviewType(int iWhichType, unsigned char bUpdate)
         overWin->DrawWindow(bUpdate, 100, 999);
 }
 
+// Dreamcast proves the two-statement callback and its call into
+// SetupDynamicStuff. Complete's address-taken body is the 28-byte island at
+// 0x51fa20: store the new top for the active overview type, then rebuild the
+// dynamic widgets without forcing an update.
+// E:\gamedcs\overview.cpp:2010
+VA(0x0051fa20, 0x1C)  // address-taken by TOverviewWindow ctor, dc 0x1084a0
+void OverviewSliderCallback(int state, heroWindow* parent_window)
+{
+    giOverviewTop[giOverviewType] = state;
+    gpGame->SetupDynamicStuff(1, 0);
+}
+
+// Dreamcast supplies the original 43-statement constructor shape: reserve the
+// widget vector, construct each fixed widget in source order, add the complete
+// vector to the window, and set the ready byte. Complete corroborates that
+// entire prefix and adds the four ownership/counting passes at the tail. The
+// retail operator-new state sequence, constructor arguments, string relocs,
+// vtable store, exact following destructor and address-taken slider callback
+// jointly fix this identity and extent.
+// E:\gamedcs\overview.cpp:2017
+VA(0x0051fa40, 0x1311)  // exhaustive ctor/callback/dtor identity, dc 0x1084f0
+TOverviewWindow::TOverviewWindow()
+    : CAdvPopup(0, 0, 800, 600, 0)
+{
+    Widgets.reserve(100);
+
+    Widgets.push_back(new bitmapBorder(
+        0, 0, width, height, 0, "OvCast.pcx", 0x800));
+    Widgets.push_back(new bitmapBorder(
+        22, 4, 702, 20, 197, "OvTitle.pcx", 0x800));
+    Widgets.push_back(new iconWidget(
+        23, 25, 701, 113, 201, "OVSlot.def", 0, 0, 0, 0,
+        iconWidget::ICON_STYLE_PLAIN));
+    // Complete widens the single Dreamcast overview slot into four stacked
+    // rows; the repeated 116-pixel y stride and 200-id stride are explicit in
+    // the retail constructor's next three operator-new/ctor/insert groups.
+    Widgets.push_back(new iconWidget(
+        23, 141, 701, 113, 401, "OVSlot.def", 1, 0, 0, 0,
+        iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        23, 257, 701, 113, 601, "OVSlot.def", 2, 0, 0, 0,
+        iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        23, 373, 701, 113, 801, "OVSlot.def", 3, 0, 0, 0,
+        iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new bitmapBorder(
+        731, 45, 66, 398, 39, "FlagBack.pcx", 0x800));
+
+    int i;
+    for (i = 0; i < 7; ++i) {
+        Widgets.push_back(new iconWidget(
+            739, i * 57 + 47, 50, 50, i + 40, "FlagPort.def",
+            0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+        field_70.push_back(new textWidget(
+            739, i * 57 + 81, 50, 16, emptyRolloverText,
+            "smalfont.fnt", font::PRIMARY, -1,
+            font::RIGHT_JUSTIFIED, 0, 8));
+        Widgets.push_back(field_70.back());
+    }
+
+    Widgets.push_back(new iconWidget(
+        20, 494, 68, 54, 29, "OvMines.def", 0, 0, 0, 0,
+        iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        100, 494, 68, 54, 30, "OvMines.def", 1, 0, 0, 0,
+        iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        180, 494, 68, 54, 31, "OvMines.def", 2, 0, 0, 0,
+        iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        260, 494, 68, 54, 32, "OvMines.def", 3, 0, 0, 0,
+        iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        340, 494, 68, 54, 33, "OvMines.def", 4, 0, 0, 0,
+        iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        420, 494, 68, 54, 34, "OvMines.def", 5, 0, 0, 0,
+        iconWidget::ICON_STYLE_PLAIN));
+
+    Widgets.push_back(new textWidget(
+        20, 539, 68, 20, 0, "smalfont.fnt", font::PRIMARY, 20,
+        font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(
+        100, 539, 68, 20, 0, "smalfont.fnt", font::PRIMARY, 21,
+        font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(
+        180, 539, 68, 20, 0, "smalfont.fnt", font::PRIMARY, 22,
+        font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(
+        260, 539, 68, 20, 0, "smalfont.fnt", font::PRIMARY, 23,
+        font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(
+        340, 539, 68, 20, 0, "smalfont.fnt", font::PRIMARY, 24,
+        font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(
+        420, 539, 68, 20, 0, "smalfont.fnt", font::PRIMARY, 25,
+        font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(
+        500, 539, 68, 20, 0, "smalfont.fnt", font::PRIMARY, 26,
+        font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(
+        590, 539, 126, 20, 0, "smalfont.fnt", font::PRIMARY, 27,
+        font::CENTER_JUSTIFIED, 0, 8));
+
+    Widgets.push_back(new border(590, 505, 126, 57, 28, 1));
+    Widgets.push_back(new bitmapBorder(
+        9, 555, 730, 19, 36, "TStatBar.pcx", 0x800));
+    Widgets.push_back(new textWidget(
+        9, 556, 730, 18, 0, "smalfont.fnt", font::PRIMARY, 37,
+        font::CENTER_JUSTIFIED, 0, 8));
+
+    Widgets.push_back(new button(
+        733, 4, 61, 18, 12, "OvButn4.def", 0, 1, 0, 0, 2));
+    Widgets.push_back(new button(
+        733, 466, 61, 18, 13, "OvButn4.def", 2, 3, 0, 0, 2));
+    Widgets.push_back(new button(
+        733, 24, 61, 18, 15, "OvButn4.def", 4, 5, 0, 0, 2));
+    Widgets.push_back(new button(
+        733, 446, 61, 18, 16, "OvButn4.def", 6, 7, 0, 0, 2));
+
+    overviewSlider = new slider(
+        4, 4, 16, 482, 10, 2, OverviewSliderCallback,
+        slider::BROWN, 4, 0);
+    Widgets.push_back(overviewSlider);
+
+    Widgets.push_back(new button(
+        748, 493, 48, 32, 195, "OvButn1.def", 0, 1, 0, 35, 2));
+    Widgets.push_back(new button(
+        748, 528, 48, 32, 196, "OvButn6.def", 0, 1, 0, 20, 2));
+    Widgets.push_back(new button(
+        748, 563, 48, 32, 0x7800, "OvButn1.def", 3, 4, 1, 28, 2));
+
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            AddWidget(*it, -1);
+        else
+            MemError();
+    }
+
+    int localPlayer = gpGame->GetLocalPlayerGamePos();
+
+    for (i = 0; i < gpGame->mines.size(); ++i) {
+        mine& current = gpGame->mines[i];
+        if (current.playerOwner != localPlayer)
+            continue;
+
+        if (current.field_02) {
+            int item = field_60.size();
+            while (item--) {
+                if (field_60[item].field_00 == 'U')
+                    break;
+            }
+            if (item < 0) {
+                item = field_60.size();
+                overview_item_record record = { 'U', 0 };
+                overview_item_record* position = field_60.end();
+                // TOverviewWindow::TOverviewWindow -> vector::insert:
+                // retail calls the two-argument body here. Without this
+                // statement pin VC6 flattens it into the three-argument
+                // overload, adding a count argument and changing the CFG.
+#pragma inline_depth(0)
+                INLINE_GATE(field_60.insert(position, record));
+#pragma inline_depth()
+            }
+            ++field_60[item].field_04;
+        } else if (current.type == mine::MINE_TYPE_LIGHTHOUSE) {
+            int item = field_60.size();
+            while (item--) {
+                if (field_60[item].field_00 == 'R')
+                    break;
+            }
+            if (item < 0) {
+                item = field_60.size();
+                overview_item_record record = { 'R', 0 };
+                overview_item_record* position = field_60.end();
+                // TOverviewWindow::TOverviewWindow -> vector::insert:
+                // the second retail mine branch has the same direct-call
+                // boundary; flattening is the matching negative control.
+#pragma inline_depth(0)
+                INLINE_GATE(field_60.insert(position, record));
+#pragma inline_depth()
+            }
+            ++field_60[item].field_04;
+        }
+    }
+
+    for (i = 0; i < gpGame->generators.size(); ++i) {
+        generator& current = gpGame->generators[i];
+        if (current.playerOwner != localPlayer)
+            continue;
+
+        current.genClass = 17;
+        int itemType = current.genType;
+        int item = field_60.size();
+        while (item--) {
+            if (field_60[item].field_00 == itemType)
+                break;
+        }
+        if (item < 0) {
+            item = field_60.size();
+            overview_item_record record = { itemType, 0 };
+            field_60.push_back(record);
+        }
+        ++field_60[item].field_04;
+    }
+
+    for (i = 0; i < gpGame->garrisons.size(); ++i) {
+        garrison& current = gpGame->garrisons[i];
+        if (current.playerOwner != localPlayer)
+            continue;
+
+        NewmapCell* cell = gpGame->worldMap.cell(
+            current.mapX, current.mapY, current.mapZ);
+        int item;
+        if (cell->objectIndex == 0) {
+            item = field_60.size();
+            while (item--) {
+                if (field_60[item].field_00 == 'S')
+                    break;
+            }
+            if (item < 0) {
+                item = field_60.size();
+                overview_item_record record = { 'S', 0 };
+                field_60.push_back(record);
+            }
+        } else {
+            item = field_60.size();
+            while (item--) {
+                if (field_60[item].field_00 == 'T')
+                    break;
+            }
+            if (item < 0) {
+                item = field_60.size();
+                overview_item_record record = { 'T', 0 };
+                field_60.push_back(record);
+            }
+        }
+        ++field_60[item].field_04;
+    }
+
+    playerData& player = gpGame->players[localPlayer];
+    for (i = 0; i < player.shipyards.size(); ++i) {
+        int item = field_60.size();
+        while (item--) {
+            if (field_60[item].field_00 == 'W')
+                break;
+        }
+        if (item < 0) {
+            item = field_60.size();
+            overview_item_record record = { 'W', 0 };
+            field_60.push_back(record);
+        }
+        ++field_60[item].field_04;
+    }
+}
+
 // Retail vtable 0x640320 slot 0. Dreamcast's canonical scalar-deleting
 // wrapper agrees with the x86 destructor-then-conditional-delete sequence.
 // E:\gamedcs\overview.cpp:2083
@@ -952,20 +1208,6 @@ void show_artifact(hero* currHero, const type_artifact* artifact, unsigned char 
 // E:\gamedcs\overview.cpp:1663
 DC_ONLY(0x107a90, 0xA10)
 int game::ProcessIconSelect(int codeY, unsigned char bRightMouse)
-{
-    // @stub
-}
-
-// E:\gamedcs\overview.cpp:2010
-DC_ONLY(0x1084a0, 0x50)
-void OverviewSliderCallback(int state, heroWindow* parent_window)
-{
-    // @stub
-}
-
-// E:\gamedcs\overview.cpp:2017
-DC_ONLY(0x1084f0, 0xA84)
-void TOverviewWindow::TOverviewWindow()
 {
     // @stub
 }
