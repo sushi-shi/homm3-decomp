@@ -45,11 +45,6 @@
  *   HOMM3_RELEASE_VERIFY(expr)      release-form invariant carrier; the
  *                                  expression is evaluated, like VERIFY, and
  *                                  must be supported by source-shape evidence
- *   INLINE_GATE(statement)          mark one source-proven call boundary;
- *                                  VC6 SP3 lacks __pragma, so matching source
- *                                  pairs this marker with adjacent
- *                                  inline_depth pragmas. Never a substitute
- *                                  for fabricated source mass or behavior
  *   OVERRIDE                       `override` under clang, nothing under VC6
  *   SIZE(type, bytes)              struct-size assertion (clang arm only)
  */
@@ -65,7 +60,6 @@
 #define DATA_COMPGEN_GUARD(addr, name, owner)
 #define DC_ONLY(off, cb)
 #define HOMM3_RELEASE_VERIFY(expression) static_cast<void>(expression)
-#define INLINE_GATE(statement) statement
 #define OVERRIDE override
 #define SIZE(type, bytes) \
     static_assert(sizeof(type) == (bytes), "sizeof(" #type ") != " #bytes)
@@ -79,7 +73,6 @@
 #define DATA_COMPGEN_GUARD(addr, name, owner)
 #define DC_ONLY(off, cb)
 #define HOMM3_RELEASE_VERIFY(expression) static_cast<void>(expression)
-#define INLINE_GATE(statement) statement
 #define OVERRIDE
 
 #define SIZE(type, bytes)

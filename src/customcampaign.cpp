@@ -430,7 +430,7 @@ void __fastcall EmitCampaignHeroPoolErase(
     SCampaignHeroPoolsView::iterator last)
 {
 #pragma inline_depth(0)
-    INLINE_GATE(pools->erase(first, last));
+    pools->erase(first, last);
 #pragma inline_depth()
 }
 
@@ -444,9 +444,9 @@ VA_COMPGEN(0x00483AA0, 0xA0, INSERTION_SORT_1,
 void __fastcall EmitCampaignHeaderInsertionSort(void** first, void** last)
 {
 #pragma inline_depth(0)
-    INLINE_GATE(std::_Insertion_sort_1(
+    std::_Insertion_sort_1(
         first, last, CampaignHeaderPointerLess(),
-        static_cast<void**>(0)));
+        static_cast<void**>(0));
 #pragma inline_depth()
 }
 

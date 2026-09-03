@@ -751,7 +751,7 @@ void advManager::OnRecruitHero(CMapChange* pMapChange)
     // after expanding OnRecruitHero. Negative control without this site pin:
     // ProcessMapChangeNew 100.0000% -> 92.6034%, calls 30 -> 29.
 #pragma inline_depth(0)
-    hero* current_hero = INLINE_GATE(gpGame->GetHero(change->heroId));
+    hero* current_hero = gpGame->GetHero(change->heroId);
 #pragma inline_depth()
     current_hero->x = change->point.x;
     current_hero->y = change->point.y;

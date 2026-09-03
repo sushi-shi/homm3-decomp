@@ -299,7 +299,7 @@ void __fastcall game_null_159510(const char* caller,
 // hoisting strlen makes this pin govern assign alone. Flattening all four
 // restores the 77.3910 baseline; the N=3 control is 83.5393 vs N=4 89.3910.
 #pragma inline_depth(0)
-        INLINE_GATE(typeName.assign(value, length));
+        typeName.assign(value, length);
 #pragma inline_depth()
         break;
     }
@@ -309,7 +309,7 @@ void __fastcall game_null_159510(const char* caller,
         std::string::size_type length = strlen(value);
         // Same caller/callee boundary and N=3/N=4 ratchet as above.
 #pragma inline_depth(0)
-        INLINE_GATE(typeName.assign(value, length));
+        typeName.assign(value, length);
 #pragma inline_depth()
         break;
     }
@@ -319,7 +319,7 @@ void __fastcall game_null_159510(const char* caller,
         std::string::size_type length = strlen(value);
         // Same caller/callee boundary and N=3/N=4 ratchet as above.
 #pragma inline_depth(0)
-        INLINE_GATE(typeName.assign(value, length));
+        typeName.assign(value, length);
 #pragma inline_depth()
         break;
     }
@@ -329,7 +329,7 @@ void __fastcall game_null_159510(const char* caller,
         std::string::size_type length = strlen(value);
         // Same caller/callee boundary and N=3/N=4 ratchet as above.
 #pragma inline_depth(0)
-        INLINE_GATE(typeName.assign(value, length));
+        typeName.assign(value, length);
 #pragma inline_depth()
         break;
     }
@@ -424,7 +424,7 @@ void __fastcall game_sprite_1599e0(const char* caller,
 // strlen makes this pin govern assign alone. Flattening all five restores the
 // 70.5441 baseline; the N=4 control is 78.4735 vs N=5 86.1324.
 #pragma inline_depth(0)
-        INLINE_GATE(typeName.assign(value, length));
+        typeName.assign(value, length);
 #pragma inline_depth()
         break;
     }
@@ -434,7 +434,7 @@ void __fastcall game_sprite_1599e0(const char* caller,
         std::string::size_type length = strlen(value);
         // Same caller/callee boundary and N=4/N=5 ratchet as above.
 #pragma inline_depth(0)
-        INLINE_GATE(typeName.assign(value, length));
+        typeName.assign(value, length);
 #pragma inline_depth()
         break;
     }
@@ -444,7 +444,7 @@ void __fastcall game_sprite_1599e0(const char* caller,
         std::string::size_type length = strlen(value);
         // Same caller/callee boundary and N=4/N=5 ratchet as above.
 #pragma inline_depth(0)
-        INLINE_GATE(typeName.assign(value, length));
+        typeName.assign(value, length);
 #pragma inline_depth()
         break;
     }
@@ -454,7 +454,7 @@ void __fastcall game_sprite_1599e0(const char* caller,
         std::string::size_type length = strlen(value);
         // Same caller/callee boundary and N=4/N=5 ratchet as above.
 #pragma inline_depth(0)
-        INLINE_GATE(typeName.assign(value, length));
+        typeName.assign(value, length);
 #pragma inline_depth()
         break;
     }
@@ -464,7 +464,7 @@ void __fastcall game_sprite_1599e0(const char* caller,
         std::string::size_type length = strlen(value);
         // Same caller/callee boundary and N=4/N=5 ratchet as above.
 #pragma inline_depth(0)
-        INLINE_GATE(typeName.assign(value, length));
+        typeName.assign(value, length);
 #pragma inline_depth()
         break;
     }

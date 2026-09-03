@@ -61,10 +61,10 @@ comparison policy. In particular, Dreamcast SH4 structure is never compared
 to candidate VC6 `/Z7` structure: `/Z7` labels only the candidate side of a
 candidate-vs-retail x86 byte/relocation/CFG diff.
 
-`INLINE_GATE(...)` has only a small syntax-hygiene check on the cleanliness
-board: every marker must sit in an immediate `inline_depth(0)` / reset pair.
-Whether the pin is semantically justified remains a retail-evidence review,
-not a regex roster or a cross-compiler structure gate.
+`INLINE_GATE(...)` is banned as source-false scaffolding. Statement-scoped
+`inline_depth(0)` remains useful as a local compiler experiment, but committed
+pins are historical debt: the cleanliness board prevents their count from
+increasing and ratchets it down as natural source/compiler state replaces them.
 
 The annotation macros live in `include/va.h` (absolute VAs in source, rvas
 in every artifact). The delinker never runs inside `homm3 build`; explicit

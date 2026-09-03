@@ -203,16 +203,17 @@ canonical control: Dreamcast calls `GetMoveShowIt` at `cursor.cpp:601`, while Co
 expands that same source helper. Dreamcast call/expansion residue ratchets the source
 boundary; retail x86 independently ratchets the per-site lowering.
 
-When retail proves a call at one site, constrain the smallest possible caller region
-with statement-scoped `#pragma inline_depth(0)` and restore it immediately with
-`#pragma inline_depth()`. VC6 SP3 predates `__pragma`, so this pair cannot be hidden in
-a safe macro. Wrap the controlled statement in `INLINE_GATE(...)` between those pragmas
-so the reason is explicit and the generic cleanliness check can catch a malformed pair. Existing
-unmarked pins are historical debt; every new or touched pin must use the marker. Use
-`#pragma auto_inline(off)` only when every affected call site proves the helper body was
-unavailable or out of line. Do not move or remove an
-`inline` declaration, create a second source-false declaration, or add synthetic caller
-mass merely to steer VC6's budget.
+`#pragma inline_depth(0)` may be used locally as a diagnostic: if suppressing one
+expansion improves the retail structure, that identifies missing natural compiler state.
+It is not reconstructed source. `INLINE_GATE` is likewise a no-op artifact that the
+original developers did not write. Do not add or commit either construct. Existing
+inline-depth pins are historical debt and the cleanliness ratchet permits only their
+removal. Replace them by recovering the real declaration, body visibility, source order,
+local lifetime, release-elided operation, or original TU/PCH state that made VC6 choose
+the retail boundary naturally. Do not move or remove an `inline` declaration, create a
+second source-false declaration, or add synthetic caller mass merely to steer VC6's
+budget. Use `#pragma auto_inline(off)` only as an uncommitted diagnostic when every
+affected call site can be inspected.
 
 A Dreamcast line gap may be evidence of a release-elided `VERIFY`, `ASSERT`, or `TRACE`,
 but does not prove one by itself. When a meaningful recovered invariant is also plausible,
@@ -221,9 +222,11 @@ that invariant; self-assignments, unreachable branches, dummy helper calls, and 
 budget-only carrier doses are forbidden. Record the line-table and codegen evidence beside
 every retained carrier.
 
-Every permanent inline-boundary pin or release-VERIFY carrier must carry a source comment
-naming the caller, callee, and retail/Dreamcast evidence, plus a negative control that
-proves flattening or de-inlining fails. Bank percentage peaks in
+Every temporary inline-depth experiment or retained release-VERIFY carrier must carry a
+source comment naming the caller, callee, and retail/Dreamcast evidence, plus a negative
+control that proves flattening or de-inlining fails. An inline-depth experiment must be
+removed before commit; record any reusable compiler finding under `docs/vc6/`. Bank
+percentage peaks in
 max/history; an unrelated current-score dip is not permission to undo a proven helper
 boundary.
 

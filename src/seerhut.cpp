@@ -512,7 +512,7 @@ unsigned char type_skill_quest::is_satisfied(hero* current_hero)
 // its fully expanded clamp body. Writing that body out by hand reaches the
 // peak but removes the positive helper boundary, so the ratchet banks the
 // retained accessor state while the experiment remains documented. Both states have retail's exact 30 blocks,
-// 13 branches and one return. Statement-scoped INLINE_GATEs now reproduce the
+// 13 branches and one return. Temporary statement-scoped pins reproduce the
 // two out-of-line vector constructors/destructors, direct two-argument insert
 // calls (with end() evaluated outside the pin), and the deadline temporary's
 // single cleanup path. A widened required-skill local plus loop-persistent
@@ -539,7 +539,7 @@ void type_skill_quest::DoProposalDialog(hero* current_hero)
         const char* textPointer = text.c_str();
 #pragma inline_depth(0)
         {
-        INLINE_GATE(std::vector<type_dialog_resource> dialogResources);
+        std::vector<type_dialog_resource> dialogResources;
 #pragma inline_depth()
         type_dialog_resource resource;
         for (int i = 0; i < 4; ++i) {
@@ -549,13 +549,13 @@ void type_skill_quest::DoProposalDialog(hero* current_hero)
                     | static_cast<unsigned short>(missing[i]);
                 type_dialog_resource* position = dialogResources.end();
 #pragma inline_depth(0)
-                INLINE_GATE(dialogResources.insert(position, resource));
+                dialogResources.insert(position, resource);
 #pragma inline_depth()
             }
         }
 #pragma inline_depth(0)
-        INLINE_GATE(extended_dialog(
-            textPointer, dialogResources, -1, -1, 0));
+        extended_dialog(
+            textPointer, dialogResources, -1, -1, 0);
         }
     }
 #pragma inline_depth()
@@ -566,12 +566,12 @@ void type_skill_quest::DoProposalDialog(hero* current_hero)
         std::string text = format_string(
             texts[QUEST_TEXT_PROGRESS].c_str(), requirementPointer);
 #pragma inline_depth(0)
-        text += INLINE_GATE(get_time_limit_text());
+        text += get_time_limit_text();
 #pragma inline_depth()
         const char* textPointer = text.c_str();
 #pragma inline_depth(0)
         {
-        INLINE_GATE(std::vector<type_dialog_resource> dialogResources);
+        std::vector<type_dialog_resource> dialogResources;
 #pragma inline_depth()
         type_dialog_resource resource;
         for (int i = 0; i < 4; ++i) {
@@ -581,13 +581,13 @@ void type_skill_quest::DoProposalDialog(hero* current_hero)
                     | static_cast<unsigned short>(missing[i]);
                 type_dialog_resource* position = dialogResources.end();
 #pragma inline_depth(0)
-                INLINE_GATE(dialogResources.insert(position, resource));
+                dialogResources.insert(position, resource);
 #pragma inline_depth()
             }
         }
 #pragma inline_depth(0)
-        INLINE_GATE(extended_dialog(
-            textPointer, dialogResources, -1, -1, 0));
+        extended_dialog(
+            textPointer, dialogResources, -1, -1, 0);
         }
     }
 #pragma inline_depth()

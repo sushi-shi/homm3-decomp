@@ -471,7 +471,7 @@ TCampaignBrief::TCampaignBrief(unsigned char newCampaign,
         // ordinary depth and depth 1 both produce 73.58% / 216 blocks; pinning
         // only this site leaves 202 blocks / 80.97%, versus 185 in retail.
 #pragma inline_depth(0)
-        INLINE_GATE(Widgets.push_back(w));
+        Widgets.push_back(w);
 #pragma inline_depth()
 
         w = new iconWidget(
@@ -487,7 +487,7 @@ TCampaignBrief::TCampaignBrief(unsigned char newCampaign,
         // 81.38%; both controls together give the current 187-block / 85.72%
         // checkpoint while the natural source-state threshold is recovered.
 #pragma inline_depth(0)
-        INLINE_GATE(Widgets.push_back(w));
+        Widgets.push_back(w);
 #pragma inline_depth()
     }
 
