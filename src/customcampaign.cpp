@@ -9,8 +9,15 @@
 #include <algorithm>
 #define HOMM3_GAME_SCAMPAIGN_ASSIGN_VIEW
 #include "game.h"
+#include "abstractfile.h"
 #include "campaignbrief.h"
 #include "customcampaign.h"
+#include "customcampaign_legacy.h"
+#include "hero.h"
+
+// Scenario ordinals used when the fixed legacy matrices are promoted to the
+// current variable-length CampaignScenarioInfo vector.
+DATA(0x0063d8c8) static int legacyCampaignScenarioIndices[7][4];
 
 #if 0  // Dreamcast-only carcass; retained as evidence, not emitted for retail.
 // E:\gamedcs\customcampaign.cpp:29
@@ -100,6 +107,266 @@ void TCampaignBrief::CampaignHeaderStruct::GetAvailableScenarios(
     // @stub
 }
 #endif
+
+// Complete-only campaign deserializer. The >=28 arm is the field-for-field
+// inverse of retail SCampaign::Save at 0x48ae90. The older arm is fixed by
+// the 0x66a9-byte Read, the compiler-generated 2x8 LegacyCampaignHero
+// construction, and every source/destination displacement in the promotion
+// loops. There is no Dreamcast procedure: that port does not use this PC save
+// format, so retail x86 is the sole code and ABI verdict here.
+VA(0x0048a310, 0xB1E)  // SavedGameHeader::Load caller + member/helper graph
+void SCampaign::Load(TAbstractFile* infile, int saveVersion)
+{
+    std::vector<CampaignScenarioInfo>::iterator scoreBegin =
+        mapScores.begin();
+    std::vector<CampaignScenarioInfo>::iterator scoreEnd = mapScores.end();
+    // TEMPORARY INLINE CONTROL: SCampaign::Load ->
+    // vector<CampaignScenarioInfo>::erase.
+    // retail +0x37 expands begin/end to the two pointer loads but calls the
+    // retained 0x48cdd0 range-erase body.  Pinning the whole original
+    // erase(begin(), end()) expression is the negative control: it also
+    // retains begin/end and grows the body to 170 blocks.
+#pragma inline_depth(0)
+    mapScores.erase(scoreBegin, scoreEnd);
+#pragma inline_depth()
+
+    SCampaignHeroPoolsView::iterator heroPoolBegin =
+        carryOverHeroes.begin();
+    SCampaignHeroPoolsView::iterator heroPoolEnd = carryOverHeroes.end();
+    // TEMPORARY INLINE CONTROL: SCampaign::Load ->
+    // vector<vector<hero> >::erase. Retail
+    // +0x47 expands begin/end to pointer loads but calls the retained
+    // 0x48c500 body.  Without the narrowed pin VC6 expands the element-
+    // assignment/_Destroy loops into this caller.
+#pragma inline_depth(0)
+    carryOverHeroes.erase(heroPoolBegin, heroPoolEnd);
+#pragma inline_depth()
+
+    if (saveVersion < 28) {
+        // The out-of-line LegacyCampaignHero constructor below makes VC6
+        // construct this 16-element array through the retail 0x4013d0
+        // vector-constructor iterator.  Leaving the constructor implicit in
+        // the header is the negative control: its call-per-element loop is
+        // expanded directly into SCampaign::Load.
+        LegacyCampaignSave saved;
+        infile->Read(&saved, sizeof(saved));
+
+        currentMap = saved.currentMap;
+        isCheater = saved.isCheater;
+        briefingChoice = saved.briefingChoice;
+        numMapRegions = -1;
+        currentCampaign = saved.currentCampaign;
+        crossoverArrayIndex = 0;
+        secretActive = false;
+        // TEMPORARY INLINE CONTROL: SCampaign::Load ->
+        // basic_string::assign(ptr, size).
+        // retail +0xc9 inlines the C-string length scan and retains this
+        // two-argument assign.  The operator= spelling is the negative
+        // control: VC6 expands assign here and calls _Grow/_Eos instead.
+#pragma inline_depth(0)
+        campaignFilename.assign(
+            saved.campaignFilename, strlen(saved.campaignFilename));
+#pragma inline_depth()
+
+        memset(campaignCompleted, 0, sizeof(campaignCompleted));
+        memcpy(campaignCompleted, saved.campaignCompleted,
+               sizeof(saved.campaignCompleted));
+
+        mapScores.resize(saved.numScenarios);
+        for (int i = 0; i < saved.numScenarios; ++i) {
+            CampaignScenarioInfo& scenario = mapScores[i];
+            scenario.completed =
+                saved.scenarioCompleted[currentCampaign][i];
+            scenario.days = saved.scenarioDays[currentCampaign][i];
+            scenario.score = saved.scenarioScores[currentCampaign][i];
+            scenario.index = legacyCampaignScenarioIndices[currentCampaign][i];
+        }
+
+        carryOverHeroes.resize(2);
+        field_4c.resize(2);
+
+        for (int pool = 0; pool < 2; ++pool) {
+            int heroCount = saved.carryOverHeroCounts[pool];
+            carryOverHeroes[pool].resize(heroCount);
+
+            for (int whichHero = 0; whichHero < heroCount; ++whichHero) {
+                const LegacyCampaignHero& oldHero =
+                    saved.carryOverHeroes[pool][whichHero];
+                hero& newHero = carryOverHeroes[pool][whichHero];
+
+                newHero.id = oldHero.id;
+                newHero.owner = oldHero.owner;
+                strcpy(newHero.name, oldHero.name);
+                newHero.heroClass = oldHero.heroClass;
+                newHero.portrait = oldHero.portrait;
+                newHero.last_magic_school_level =
+                    oldHero.lastMagicSchoolLevel;
+                newHero.experience = oldHero.experience;
+                newHero.level = oldHero.level;
+                newHero.iLevelSeed = oldHero.levelSeed;
+                newHero.lastWisdom = oldHero.lastWisdom;
+                newHero.army = oldHero.army;
+                memcpy(newHero.skillLevel, oldHero.skillLevel,
+                       sizeof(newHero.skillLevel));
+                memcpy(newHero.skillOrder, oldHero.skillOrder,
+                       sizeof(newHero.skillOrder));
+                newHero.skillCount = oldHero.skillCount;
+
+                for (int equippedSlot = 0; equippedSlot < 19;
+                     ++equippedSlot) {
+                    type_artifact artifact = oldHero.equipped[equippedSlot];
+                    if (artifact.artifactId != ARTIFACT_NONE)
+                        newHero.equip_artifact(&artifact, equippedSlot);
+                }
+                for (int backpackSlot = 0; backpackSlot < 64;
+                     ++backpackSlot) {
+                    type_artifact artifact = oldHero.backpack[backpackSlot];
+                    if (artifact.artifactId != ARTIFACT_NONE)
+                        newHero.add_to_backpack(&artifact, backpackSlot);
+                }
+                for (int spell = 0; spell < 70; ++spell) {
+                    if (oldHero.inSpellbook[spell])
+                        newHero.AddSpell(spell);
+                }
+                for (int stat = 0; stat < 4; ++stat)
+                    newHero.stats[stat] = oldHero.stats[stat];
+            }
+        }
+        return;
+    }
+
+    {
+        unsigned char value;
+        infile->Read(&value, sizeof(value));
+        isCheater = value != 0;
+    }
+    if (saveVersion >= 26) {
+        unsigned char value;
+        infile->Read(&value, sizeof(value));
+        secretActive = value != 0;
+    } else {
+        secretActive = false;
+    }
+    {
+        unsigned char value;
+        infile->Read(&value, sizeof(value));
+        currentMap = value;
+    }
+    {
+        unsigned char value;
+        infile->Read(&value, sizeof(value));
+        currentCampaign = value;
+    }
+    if (saveVersion < 36
+            && currentCampaign == PRE36_CAMPAIGN_REMAP_SOURCE)
+        currentCampaign = PRE36_CAMPAIGN_REMAP_TARGET;
+    {
+        signed char value;
+        infile->Read(&value, sizeof(value));
+        numMapRegions = value;
+    }
+    {
+        unsigned char value;
+        infile->Read(&value, sizeof(value));
+        crossoverArrayIndex = value;
+    }
+    {
+        signed char value;
+        infile->Read(&value, sizeof(value));
+        briefingChoice = value;
+    }
+
+    campaignFilename = ReadLengthPrefixedString(infile);
+    if (saveVersion >= 36) {
+        infile->Read(campaignCompleted, sizeof(campaignCompleted));
+    } else {
+        infile->Read(campaignCompleted, 14);
+        memset(campaignCompleted + 14, 0,
+               sizeof(campaignCompleted) - 14);
+    }
+
+    unsigned char count;
+    infile->Read(&count, sizeof(count));
+    mapScores.resize(count);
+    for (int i = 0; i < count; ++i) {
+        unsigned char completed;
+        infile->Read(&completed, sizeof(completed));
+        mapScores[i].completed = completed != 0;
+        infile->Read(&mapScores[i].days, sizeof(mapScores[i].days));
+        infile->Read(&mapScores[i].score, sizeof(mapScores[i].score));
+
+        signed char value;
+        infile->Read(&value, sizeof(value));
+        mapScores[i].complete_order = value;
+        infile->Read(&value, sizeof(value));
+        mapScores[i].index = value;
+    }
+
+    infile->Read(&count, sizeof(count));
+    carryOverHeroes.resize(count);
+    infile->Read(&count, sizeof(count));
+    field_4c.resize(count);
+
+    for (int pool = 0; pool < count; ++pool) {
+        unsigned char heroCount;
+        infile->Read(&heroCount, sizeof(heroCount));
+        carryOverHeroes[pool].resize(heroCount);
+        for (int whichHero = 0; whichHero < heroCount; ++whichHero)
+            carryOverHeroes[pool][whichHero].load(infile, saveVersion);
+
+        unsigned short artifactCount;
+        infile->Read(&artifactCount, sizeof(artifactCount));
+        field_4c[pool].resize(artifactCount);
+        for (int whichArtifact = 0; whichArtifact < artifactCount;
+             ++whichArtifact) {
+            short value;
+            infile->Read(&value, sizeof(value));
+            int artifactId = value;
+            memcpy(&field_4c[pool][whichArtifact].artifactId, &artifactId,
+                   sizeof(artifactId));
+            infile->Read(&value, sizeof(value));
+            field_4c[pool][whichArtifact].extra = value;
+        }
+    }
+
+    infile->Read(&count, sizeof(count));
+    // TEMPORARY INLINE CONTROL: SCampaign::Load -> vector<int>::resize.
+    // Retail +0xade
+    // retains this complete four-byte-element resize, ICF-folded with the
+    // already exact vector<type_point>::resize at 0x4d4aa0.  The unpinned
+    // negative control expands its allocation/insert/erase CFG into Load.
+#pragma inline_depth(0)
+    field_6c.resize(count);
+#pragma inline_depth()
+    for (int assignedIndex = 0; assignedIndex < count; ++assignedIndex) {
+        short value;
+        infile->Read(&value, sizeof(value));
+        field_6c[assignedIndex] = value;
+    }
+}
+
+// The fixed pre-v28 record uses the old 0x462 hero layout.  Retail emits this
+// constructor immediately before SCampaign::Save and passes its address to
+// the vector-constructor iterator in SCampaign::Load.  Base/member
+// construction alone produces the exact 93-byte body; no recovered field
+// initialization is invented here.
+VA(0x0048ae30, 0x5D)  // anchor-caller SCampaign::Load +0x56
+LegacyCampaignHero::LegacyCampaignHero()
+{
+}
+
+// SCampaign::Load's retained Dinkumware helper cluster.  The element and
+// nested-element types are independently fixed by the +0x5c/+0x3c/+0x4c
+// member layouts and by the caller's 0x14/0x492/0x10/8-byte strides.
+VA_COMPGEN(0x0048B440, 0x21, VECTOR_SIZE, CampaignScenarioInfo)
+VA_COMPGEN(0x0048B470, 0x23, VECTOR_SIZE, hero)
+VA_COMPGEN(0x0048C270, 0x285, VECTOR_INSERT, hero_vector)
+VA_COMPGEN(0x0048C7A0, 0x285, VECTOR_INSERT, type_artifact_vector)
+VA_COMPGEN(0x0048CA30, 0x6A, VECTOR_ERASE, type_artifact_vector)
+VA_COMPGEN(0x0048CAE0, 0x2E4, VECTOR_INSERT, CampaignScenarioInfo)
+VA_COMPGEN(0x0048CDD0, 0x44, VECTOR_ERASE, CampaignScenarioInfo)
+VA_COMPGEN(0x0048D060, 0x331, VECTOR_INSERT, hero)
+VA_COMPGEN(0x0048D3A0, 0x6D, VECTOR_ERASE, hero)
 
 // E:\gamedcs\customcampaign.cpp:198
 // Exact Complete checkpoint (2026-09-01): Dreamcast proves the indexed score

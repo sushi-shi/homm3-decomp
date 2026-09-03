@@ -1341,11 +1341,21 @@ struct CampaignScenarioInfo {
     int score;
     int index;
     int complete_order;
+
+    CampaignScenarioInfo()
+        : completed(false), days(0), score(0), index(-1), complete_order(0)
+    {
+    }
 };
 SIZE(CampaignScenarioInfo, 0x14);
 
 class SCampaign {
 public:
+    enum {
+        PRE36_CAMPAIGN_REMAP_SOURCE = 13,
+        PRE36_CAMPAIGN_REMAP_TARGET = 20
+    };
+
     // Compatibility spelling for the already reconstructed vector helpers;
     // as a typedef it still gives VC6 the authoritative global element type.
     typedef CampaignScenarioInfo MapScore;
@@ -1469,10 +1479,10 @@ public:
     // CustomCampaign.cpp row and is called on gpGame->campaign here.
     void DoPreLoadCustomization();
 #endif
-    int Save(TAbstractFile* outfile);
+    void Save(TAbstractFile* outfile);
     // Retail-only load surface at 0x48a310; SavedGameHeader::Load passes the
     // stream and save version and the callee reads both.
-    int Load(TAbstractFile* infile, int saveVersion);
+    void Load(TAbstractFile* infile, int saveVersion);
     // Complete-only header accessor selected into singleselectionwindow.obj
     // at 0x57c780. Retail sign-extends currentMap, indexes the +0x5c vector's
     // first pointer with the 0x14 CampaignScenarioInfo stride, and returns it.
