@@ -35,20 +35,26 @@ NORMAL_TARGET = common.HOMM3_DIR / "build/objdiff/normalized/target"
 
 # --- producer 1: llvm-objdump over pipeline COFF objects ---------------------------
 
-def _public_text_symbols(obj) -> set:
-    """External text symbols of *obj*. COMDAT sections start at address
-    zero per function, so numeric ranges cannot select one function -
-    public-name boundaries can."""
+def _text_symbols(obj, *, public_only: bool = False) -> set:
+    """Defined text symbols of *obj*, optionally limited to externals."""
     res = subprocess.run(["llvm-nm", "-P", str(obj)],
                          capture_output=True, text=True)
     if res.returncode != 0:
         die(f"llvm-nm failed on {obj.name}:\n{res.stderr.strip()}")
     names = set()
+    kinds = {"T"} if public_only else {"T", "t"}
     for line in res.stdout.splitlines():
         fields = line.split()
-        if len(fields) >= 3 and fields[1] == "T":
+        if len(fields) >= 3 and fields[1] in kinds:
             names.add(fields[0])
     return names
+
+
+def _public_text_symbols(obj) -> set:
+    """External text symbols of *obj*. COMDAT sections start at address
+    zero per function, so numeric ranges cannot select one function -
+    public-name boundaries can."""
+    return _text_symbols(obj, public_only=True)
 
 
 _SYMBOL_TITLE = re.compile(r"^\s*[0-9a-fA-F]+ <(.+)>:$")

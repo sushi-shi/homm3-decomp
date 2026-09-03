@@ -132,6 +132,83 @@ def effective_divergence(base_calls: Counter, ref_calls: Counter,
     return (0, 0, paired) if byte_exact else (under, over, paired)
 
 
+def divergence_rows(base_calls: Counter, ref_calls: Counter):
+    """Named rows behind :func:`divergence`, with synth pairing allocated.
+
+    A base-only mangled symbol is a real under-inline unless one of retail's
+    base-impossible synthesized labels can consume that call as a name-only
+    pair.  The old CLI put *every* base-only symbol in ``name_unresolved``;
+    that hid unambiguous cases such as two candidate ``GetArmyName`` calls
+    against no retail-only synthesized labels at all.
+
+    Return ``(over, under, paired_rows, unknown_over, paired_count)``.  Rows
+    use the existing ``(symbol, base_count, retail_count)`` shape.  Pair
+    allocation is deliberately deterministic but carries no semantic claim:
+    paired symbols remain unknown, while any unconsumed count is actionable.
+    """
+    keys = set(base_calls) | set(ref_calls)
+    over, under = [], []
+    base_only, ref_only_labels = [], []
+
+    for sym in sorted(keys):
+        b, r = base_calls[sym], ref_calls[sym]
+        if b == r:
+            continue
+        if b and r:
+            (under if b > r else over).append((sym, b, r))
+        elif b:
+            base_only.append((sym, b))
+        elif _unresolvable(sym):
+            ref_only_labels.append((sym, r))
+        else:
+            over.append((sym, b, r))
+
+    pair_budget = min(sum(n for _s, n in base_only),
+                      sum(n for _s, n in ref_only_labels))
+    paired_count = pair_budget
+    paired_rows = []
+
+    remaining_pairs = pair_budget
+    for sym, count in base_only:
+        paired = min(count, remaining_pairs)
+        if paired:
+            paired_rows.append((sym, paired, 0))
+            remaining_pairs -= paired
+        if count > paired:
+            under.append((sym, count - paired, 0))
+
+    unknown_over = []
+    remaining_pairs = pair_budget
+    for sym, count in ref_only_labels:
+        paired = min(count, remaining_pairs)
+        if paired:
+            paired_rows.append((sym, 0, paired))
+            remaining_pairs -= paired
+        if count > paired:
+            unknown_over.append((sym, 0, count - paired))
+
+    return over, under, paired_rows, unknown_over, paired_count
+
+
+def partition_external_count_rows(rows, defined_text):
+    """Separate count deltas that cannot be inline decisions.
+
+    If both sides call the same symbol, but that symbol has no code body in
+    the candidate TU, C1 cannot expand it.  A differing count then comes from
+    duplicated/merged call sites or revision semantics, not the inliner.
+    Candidate-only and retail-only rows remain conservative because a missing
+    visible body may itself be the declaration/include defect under study.
+    """
+    inline_rows, count_rows = [], []
+    for row in rows:
+        sym, base_n, retail_n = row
+        if base_n and retail_n and sym not in defined_text:
+            count_rows.append(row)
+        else:
+            inline_rows.append(row)
+    return inline_rows, count_rows
+
+
 def nested_frontiers(under_rows, over_rows, callee_calls):
     """Find reciprocal outer-call/nested-call inline boundaries.
 
@@ -241,20 +318,13 @@ def run_predict(args) -> int:
     ref_text, ref_label = reg_model._reference_side(args)
 
     base_calls, ref_calls = _called(base_text), _called(ref_text)
-    over, under, unresolved = [], [], []
-    for sym in set(base_calls) | set(ref_calls):
-        b, r = base_calls[sym], ref_calls[sym]
-        if b == r:
-            continue
-        short = reg_model._resolve_symbol.__doc__ and sym  # keep full name
-        if b and r:                       # both sides name it - real signal
-            (under if b > r else over).append((short, b, r))
-        elif b:                           # only we name it - pairing candidate
-            unresolved.append((short, b, r))
-        elif _unresolvable(sym):          # only retail, under a synth label
-            unresolved.append((short, b, r))
-        else:                             # only retail, under a real name
-            over.append((short, b, r))
+    over, under, unresolved, unknown_over, _row_paired = divergence_rows(
+        base_calls, ref_calls)
+    defined_text = _asm._text_symbols(base_obj)
+    over, over_call_counts = partition_external_count_rows(over, defined_text)
+    under, under_call_counts = partition_external_count_rows(under,
+                                                               defined_text)
+    call_counts = over_call_counts + under_call_counts
 
     report_score = _current_report_score(unit, base_sym, base_obj)
     byte_exact = report_score is not None and report_score >= 99.9999
@@ -279,6 +349,12 @@ def run_predict(args) -> int:
             "name_unresolved": [{"callee": s, "base_calls": b,
                                  "retail_calls": r}
                                 for s, b, r in unresolved],
+            "over_inline_unresolved": [
+                {"callee": s, "base_calls": b, "retail_calls": r}
+                for s, b, r in unknown_over],
+            "noninline_call_count": [
+                {"callee": s, "base_calls": b, "retail_calls": r}
+                for s, b, r in call_counts],
             "name_paired": paired,
             "raw_under": raw_under, "raw_over": raw_over,
             "under": real_under, "over": real_over,
@@ -321,7 +397,24 @@ def run_predict(args) -> int:
               "(A12 single-call-site / callee cheaper than retail's):")
         for s, b, r in sorted(over, key=lambda x: -(x[2] - x[1])):
             print(f"    {s[:70]}  base x{b} vs retail x{r}")
-    if not under and not over:
+    if unknown_over:
+        print("[OVER-inline, name unresolved] retail retains additional "
+              "call(s) under synthesized labels; inspect them positionally "
+              "before choosing a source site:")
+        for s, b, r in sorted(unknown_over,
+                              key=lambda x: -(x[2] - x[1])):
+            print(f"    {s[:70]}  retail x{r}")
+    if call_counts:
+        print("[CALL-count, not inlining] both sides call these external "
+              "symbols, and this TU defines no body C1 could expand. The "
+              "difference is duplicated/merged sites or revision semantics:")
+        for s, b, r in sorted(call_counts,
+                              key=lambda x: -abs(x[2] - x[1])):
+            print(f"    {s[:70]}  base x{b} vs retail x{r}")
+        print("[fix] inspect the ordered call stream and source-labelled CFG "
+              "for branch-arm duplication, a cross-jumped common tail, or a "
+              "missing guarded call; do not apply an inline pragma.")
+    if not under and not over and not unknown_over and not call_counts:
         print("[unknown] unmatched synthesized callee names leave a call-count "
               "residue, but no named inline decision can be correlated. This "
               "is not actionable evidence for changing C++.")
@@ -347,20 +440,23 @@ def run_predict(args) -> int:
     print("[fix] first run `homm3 dreamcast show/asm --blocks` and `homm3 "
           "sema diff --structure/--source`; restore the evidenced helper, "
           "type, lifetime, and statement order before steering C1.")
-    print("[fix] over-inline at a DIRECT source call -> put only that statement "
-          "between `#pragma inline_depth(0)` / `#pragma inline_depth()` and "
-          "mark it `INLINE_GATE(...)`; retain it only with a flattening "
-          "negative control. Use `auto_inline(off)` only when every affected "
-          "call site proves the body unavailable.")
-    print("[fix] over-inline at a NESTED callee absent from source (for example "
-          "basic_string::_Tidy) -> do not expose library internals or add "
-          "synthetic mass. Probe depth 1; if it is flat and depth 0 suppresses "
-          "the required outer inline, keep the natural source and classify "
-          "the compiler-state wall.")
-    print("[fix] under-inline -> restore the smallest Dreamcast-proven callee "
-          "body/declaration and remeasure its callers; do not erase the "
-          "helper boundary merely to improve one percentage. why-reg cannot "
-          "reach these inliner decisions.")
+    if over or unknown_over:
+        print("[fix] over-inline at a DIRECT source call -> put only that "
+              "statement between `#pragma inline_depth(0)` / "
+              "`#pragma inline_depth()` and mark it `INLINE_GATE(...)`; "
+              "retain it only with a flattening negative control. Use "
+              "`auto_inline(off)` only when every affected call site proves "
+              "the body unavailable.")
+        print("[fix] over-inline at a NESTED callee absent from source (for "
+              "example basic_string::_Tidy) -> do not expose library "
+              "internals or add synthetic mass. Probe depth 1; if it is flat "
+              "and depth 0 suppresses the required outer inline, keep the "
+              "natural source and classify the compiler-state wall.")
+    if under:
+        print("[fix] under-inline -> restore the smallest Dreamcast-proven "
+              "callee body/declaration and remeasure its callers; do not "
+              "erase the helper boundary merely to improve one percentage. "
+              "why-reg cannot reach these inliner decisions.")
     return rc
 
 
