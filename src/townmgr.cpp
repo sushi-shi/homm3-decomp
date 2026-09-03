@@ -189,11 +189,11 @@ DATA(0x006436e0) static const int gResourceIconPos[8][2] = {
     { 22, 507 }, { 77, 507 }, { 132, 507 }, { 187, 507 }
 };
 
-// The nine town-hall icon definitions, indexed by town::type. Both
-// image-wide references to the table (0x5d5721 in TBuyBuildWindow's
-// constructor and 0x5d966d) land inside townmgr's bracket, so this
-// compiland owns it.
-DATA(0x0067f578) static const char* const gTownHallDefNames[9] = {
+// The nine town-hall icon definitions, indexed by town::type. Dreamcast
+// publishes the shared name townBuildingSpriteNames; retail's two local
+// readers plus type_dialog_icon::set in kb.obj prove townmgr.obj ownership
+// and cross-TU linkage.
+DATA(0x0067f578) const char* townBuildingSpriteNames[9] = {
     "HALLCSTL.def", "HALLRAMP.def", "HALLtowr.def", "HALLINFR.def",
     "HALLNECR.def", "HALLDUNG.def", "HALLSTRN.def", "HALLFORT.def",
     "HALLelem.def"
@@ -6395,7 +6395,7 @@ TBuyBuildWindow::TBuyBuildWindow(int x2, int y2, int Id)
                                        "TPuBuild.pcx", 0x800));
     Widgets.push_back(new iconWidget(
         124, 49, 150, 70, 2,
-        gTownHallDefNames[gpTownManager->townToView->type], buildingId,
+        townBuildingSpriteNames[gpTownManager->townToView->type], buildingId,
         0, 0, 0, 0x10));
 
     sprintf(gText, gpGeneralText->GetText(596),
@@ -8720,7 +8720,7 @@ TCastleWindow::TCastleWindow()
                                      font::PRIMARY, 0x27, 1, 0, 8));
     }
 
-    strcpy(gText, gTownHallDefNames[whichTown]);
+    strcpy(gText, townBuildingSpriteNames[whichTown]);
 
     Widgets.push_back(new iconWidget(14, 43, 150, 70, 1, gText, 0, 0, 0, 0,
                                      0x10));

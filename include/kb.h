@@ -5,12 +5,40 @@
 #ifndef HOMM3_KB_H
 #define HOMM3_KB_H
 
+#include <string>
 #include <vector>
 #include "town.h"
 
 class message;
 class VictoryConditionStruct;
 class LossConditionStruct;
+
+// Dreamcast supplies the identity, member function roster, and the source
+// order consumed by set(). Retail independently fixes the Complete layout:
+// two four-byte selectors, two VC6 strings, then seven dwords. The paired
+// position fields remain split until a shared point type with an eight-byte
+// retail layout is admitted.
+struct type_dialog_icon {
+    EGameResource resource;
+    long qualifier;
+    std::string spriteName;
+    std::string text;
+    long spriteFrameIndex;
+    long spriteX;
+    long spriteY;
+    long spriteHeight;
+    long spriteWidth;
+    long textX;
+    long textY;
+    long textHeight;
+    long textWidth;
+
+    type_dialog_icon();
+    ~type_dialog_icon();
+    type_dialog_icon(const type_dialog_icon& that);
+    void set(EGameResource resource, long qualifier);
+};
+SIZE(type_dialog_icon, 0x4c);
 
 // homm2's KB timer array survives (DC glTimers: unsigned long[10];
 // retail base 0x698998 - button::Select stores slot 2 at 0x6989a0).
