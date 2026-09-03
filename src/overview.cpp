@@ -17,6 +17,7 @@
 #include "game.h"
 #include "kb.h"
 #include "message.h"
+#include "misc.h"
 #include "recruit.h"
 #include "quicktownwindow.h"
 #include "resourcedisplay.h"
@@ -89,6 +90,7 @@ static const int overviewHelpIds[8] = {
 // Defined at its retail address later in this TU; ProcessIconSelect precedes
 // that body in Complete even though Dreamcast emitted the helper first.
 long get_last_backpack_index(long hero_number);
+void UpdateBackpack(int iSlot);
 
 // Dreamcast proves the source signature, five leading array initializers,
 // cleanup-loop nesting, named town/hero locals, and every subsequent helper
@@ -835,6 +837,81 @@ void game::SetupNewOverviewType(int iWhichType, unsigned char bUpdate)
     SetupDynamicStuff(0, 0);
     if (bUpdate)
         overWin->DrawWindow(bUpdate, 100, 999);
+}
+
+// Complete moved Dreamcast's global flaggable-item helpers onto the window:
+// the retail bodies read field_60 at +0x60 and field_70 at +0x70 through
+// `this`.  The message sequence and the temporary format_string result are
+// byte-visible at 0x51e670.
+VA(0x0051e670, 0x14D)  // member layout + sole callers below, dc 0x106d18
+void TOverviewWindow::UpdateFlaggableIcon(int i)
+{
+    message msg;
+    msg.id = MESSAGE_WIDGET;
+    msg.codeY = i + OVERVIEW_FLAGGABLE_FIRST_ID;
+
+    if (iOverviewFlaggableTop + i >= field_60.size()) {
+        msg.codeX = widget::WIDGET_CLEAR_STATUS;
+        msg.extra = widget::WIDGET_DRAWN;
+        BroadcastMessage(&msg);
+        field_70[i]->send_message(
+            widget::WIDGET_CLEAR_STATUS,
+            widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    } else {
+        msg.codeX = widget::WIDGET_SET_STATUS;
+        msg.extra = widget::WIDGET_DRAWN;
+        BroadcastMessage(&msg);
+
+        msg.codeX = widget::WIDGET_SET_ICON_FRAME;
+        msg.extra = field_60[iOverviewFlaggableTop + i].field_00;
+        BroadcastMessage(&msg);
+
+        field_70[i]->SetText(
+            format_string(
+                DATA_COMPGEN(0x006755b4, overviewFlaggableCountFormat, "%d"),
+                field_60[iOverviewFlaggableTop + i].field_04).c_str());
+        field_70[i]->send_message(
+            widget::WIDGET_SET_STATUS,
+            widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    }
+}
+
+// Dreamcast proves the seven-item loop and the helper boundary. Complete's
+// 42-byte body calls UpdateFlaggableIcon seven times and redraws the strip.
+VA(0x0051e7c0, 0x2A)  // called by WindowHandler and DoFlaggableButtons
+void TOverviewWindow::UpdateFlaggableIcons()
+{
+    for (int i = 0; i < 7; ++i)
+        UpdateFlaggableIcon(i);
+    DrawWindow(0, 0xffff0001, 0xffff);
+}
+
+// The four constant actions are recovered directly from the retail switch.
+// VC6 retains this general body for the END/NEXT call sites while expanding
+// the HOME/PREVIOUS sites in WindowHandler; keep one real source helper.
+VA(0x0051e7f0, 0xE0)  // switch/body/callers, dc 0x106dcc
+void TOverviewWindow::DoFlaggableButtons(int which)
+{
+    switch (which) {
+    case OVERVIEW_FLAGGABLE_HOME:
+        iOverviewFlaggableTop = 0;
+        break;
+    case OVERVIEW_FLAGGABLE_PREVIOUS:
+        if (iOverviewFlaggableTop > 0)
+            --iOverviewFlaggableTop;
+        break;
+    case OVERVIEW_FLAGGABLE_NEXT:
+        if (iOverviewFlaggableTop < field_60.size() - 7)
+            ++iOverviewFlaggableTop;
+        break;
+    case OVERVIEW_FLAGGABLE_END:
+        if (iOverviewFlaggableTop < field_60.size() - 7)
+            iOverviewFlaggableTop = field_60.size() - 7;
+        break;
+    }
+
+    UpdateFlaggableIcons();
+    gpWindowManager->UpdateScreen(731, 45, 66, 398);
 }
 
 // E:\gamedcs\overview.cpp:1647. Dreamcast proves this helper boundary, its
@@ -2114,6 +2191,297 @@ void game::Overview()
 }
 
 #endif  // @carcass
+
+// Dreamcast proves these as two ordinary static source helpers, each with the
+// selected hero index, one backpack-bound query and one conditional refresh.
+// Complete emits no standalone copies: VC6 expands every call below, while
+// independently choosing whether to expand get_last_backpack_index within
+// each expansion.
+static void increment_backpack_start(long slot)
+{
+    long heroNumber = giOverviewTop[giOverviewType] + slot;
+    long lastBackpackIndex = get_last_backpack_index(heroNumber) + 1;
+    if (lastBackpackIndex > 8) {
+        gOverviewBackpackStart[heroNumber] =
+            (gOverviewBackpackStart[heroNumber] + 1) % lastBackpackIndex;
+        UpdateBackpack(slot);
+    }
+}
+
+static void decrement_backpack_start(long slot)
+{
+    long heroNumber = giOverviewTop[giOverviewType] + slot;
+    long lastBackpackIndex = get_last_backpack_index(heroNumber);
+    if (lastBackpackIndex > 8) {
+        gOverviewBackpackStart[heroNumber] =
+            (gOverviewBackpackStart[heroNumber] + lastBackpackIndex - 1)
+            % lastBackpackIndex;
+        UpdateBackpack(slot);
+    }
+}
+
+// Dreamcast fixes the base-handler protocol, ProcessIconSelect boundary,
+// rollover path, static-helper calls and high-level switch nesting. Complete
+// independently fixes the four 200-id hero rows, three artifact-page buttons
+// and two backpack arrows per row, plus the keyboard paging extension.
+// E:\gamedcs\overview.cpp:2546
+VA(0x00521960, 0xB03)  // vtable slot 9 + exhaustive call/CFG identity, dc 0x10997c
+int TOverviewWindow::WindowHandler(message* msg)
+{
+    int result = CAdvPopup::WindowHandler(msg);
+    if (result)
+        return result;
+
+    int res = 0;
+    unsigned char rightMouse = 0;
+
+    if (msg->id == MESSAGE_WIDGET) {
+        switch (msg->codeX) {
+        case widget::WIDGET_RIGHT_SELECT:
+            rightMouse = 1;
+            // The source intentionally shares the ordinary-select tail.
+        case widget::WIDGET_SELECT:
+            if (msg->qualifier & MESSAGE_MODIFIER_RIGHT)
+                rightMouse = 1;
+            res = gpGame->ProcessIconSelect(msg->codeY, rightMouse);
+            break;
+
+        case widget::WIDGET_DESELECT:
+            switch (msg->codeY) {
+            case OVERVIEW_FLAGGABLE_HOME_ID:
+                DoFlaggableButtons(OVERVIEW_FLAGGABLE_HOME);
+                break;
+            case OVERVIEW_FLAGGABLE_END_ID:
+                DoFlaggableButtons(OVERVIEW_FLAGGABLE_END);
+                break;
+            case OVERVIEW_CONTROL_14_ID:
+                res = 1;
+                gpWindowManager->dialogReturn = msg->codeY;
+                break;
+            case OVERVIEW_FLAGGABLE_PREVIOUS_ID:
+                DoFlaggableButtons(OVERVIEW_FLAGGABLE_PREVIOUS);
+                break;
+            case OVERVIEW_FLAGGABLE_NEXT_ID:
+                DoFlaggableButtons(OVERVIEW_FLAGGABLE_NEXT);
+                break;
+
+            case OVERVIEW_SELECT_HEROES_ID:
+                if (giOverviewType != 0)
+                    gpGame->SetupNewOverviewType(0, 1);
+                gpWindowManager->UpdateScreen(0, 0, 800, 600);
+                break;
+            case OVERVIEW_SELECT_TOWNS_ID:
+                if (giOverviewType != 1)
+                    gpGame->SetupNewOverviewType(1, 1);
+                gpWindowManager->UpdateScreen(0, 0, 800, 600);
+                break;
+
+            case OVERVIEW_ROW_FIRST_ID + OVERVIEW_HERO_ARTIFACT_PAGE_1_ID:
+                if (giOverviewType == 0) {
+                    gOverviewHeroArtifactPage[giOverviewTop[giOverviewType]] =
+                        OVERVIEW_HERO_EQUIPPED_PAGE_1;
+                    gpGame->SetupNewOverviewType(0, 1);
+                }
+                break;
+            case OVERVIEW_ROW_FIRST_ID + OVERVIEW_HERO_ARTIFACT_PAGE_2_ID:
+                if (giOverviewType == 0) {
+                    gOverviewHeroArtifactPage[giOverviewTop[giOverviewType]] =
+                        OVERVIEW_HERO_EQUIPPED_PAGE_2;
+                    gpGame->SetupNewOverviewType(0, 1);
+                }
+                break;
+            case OVERVIEW_ROW_FIRST_ID + OVERVIEW_HERO_ARTIFACT_PAGE_3_ID:
+                if (giOverviewType == 0
+                        && gOverviewHeroArtifactPage[
+                               giOverviewTop[giOverviewType]]
+                           != OVERVIEW_HERO_BACKPACK_PAGE) {
+                    gOverviewHeroArtifactPage[giOverviewTop[giOverviewType]] =
+                        OVERVIEW_HERO_BACKPACK_PAGE;
+                    gpGame->SetupNewOverviewType(0, 1);
+                }
+                break;
+            case OVERVIEW_ROW_FIRST_ID
+                    + OVERVIEW_HERO_BACKPACK_SCROLL_LEFT_ID:
+                if (giOverviewType == 0)
+                    decrement_backpack_start(0);
+                break;
+            case OVERVIEW_ROW_FIRST_ID
+                    + OVERVIEW_HERO_BACKPACK_SCROLL_RIGHT_ID:
+                if (giOverviewType == 0)
+                    increment_backpack_start(0);
+                break;
+
+            case OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE
+                    + OVERVIEW_HERO_ARTIFACT_PAGE_1_ID:
+                if (giOverviewType == 0) {
+                    gOverviewHeroArtifactPage[
+                        giOverviewTop[giOverviewType] + 1] =
+                        OVERVIEW_HERO_EQUIPPED_PAGE_1;
+                    gpGame->SetupNewOverviewType(0, 1);
+                }
+                break;
+            case OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE
+                    + OVERVIEW_HERO_ARTIFACT_PAGE_2_ID:
+                if (giOverviewType == 0) {
+                    gOverviewHeroArtifactPage[
+                        giOverviewTop[giOverviewType] + 1] =
+                        OVERVIEW_HERO_EQUIPPED_PAGE_2;
+                    gpGame->SetupNewOverviewType(0, 1);
+                }
+                break;
+            case OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE
+                    + OVERVIEW_HERO_ARTIFACT_PAGE_3_ID:
+                if (giOverviewType == 0
+                        && gOverviewHeroArtifactPage[
+                               giOverviewTop[giOverviewType] + 1]
+                           != OVERVIEW_HERO_BACKPACK_PAGE) {
+                    gOverviewHeroArtifactPage[
+                        giOverviewTop[giOverviewType] + 1] =
+                        OVERVIEW_HERO_BACKPACK_PAGE;
+                    gpGame->SetupNewOverviewType(0, 1);
+                }
+                break;
+            case OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE
+                    + OVERVIEW_HERO_BACKPACK_SCROLL_LEFT_ID:
+                if (giOverviewType == 0)
+                    decrement_backpack_start(1);
+                break;
+            case OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE
+                    + OVERVIEW_HERO_BACKPACK_SCROLL_RIGHT_ID:
+                if (giOverviewType == 0)
+                    increment_backpack_start(1);
+                break;
+
+            case OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE
+                    + OVERVIEW_HERO_ARTIFACT_PAGE_1_ID:
+                if (giOverviewType == 0) {
+                    gOverviewHeroArtifactPage[
+                        giOverviewTop[giOverviewType] + 2] =
+                        OVERVIEW_HERO_EQUIPPED_PAGE_1;
+                    gpGame->SetupNewOverviewType(0, 1);
+                }
+                break;
+            case OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE
+                    + OVERVIEW_HERO_ARTIFACT_PAGE_2_ID:
+                if (giOverviewType == 0) {
+                    gOverviewHeroArtifactPage[
+                        giOverviewTop[giOverviewType] + 2] =
+                        OVERVIEW_HERO_EQUIPPED_PAGE_2;
+                    gpGame->SetupNewOverviewType(0, 1);
+                }
+                break;
+            case OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE
+                    + OVERVIEW_HERO_ARTIFACT_PAGE_3_ID:
+                if (giOverviewType == 0
+                        && gOverviewHeroArtifactPage[
+                               giOverviewTop[giOverviewType] + 2]
+                           != OVERVIEW_HERO_BACKPACK_PAGE) {
+                    gOverviewHeroArtifactPage[
+                        giOverviewTop[giOverviewType] + 2] =
+                        OVERVIEW_HERO_BACKPACK_PAGE;
+                    gpGame->SetupNewOverviewType(0, 1);
+                }
+                break;
+            case OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE
+                    + OVERVIEW_HERO_BACKPACK_SCROLL_LEFT_ID:
+                if (giOverviewType == 0)
+                    decrement_backpack_start(2);
+                break;
+            case OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE
+                    + OVERVIEW_HERO_BACKPACK_SCROLL_RIGHT_ID:
+                if (giOverviewType == 0)
+                    increment_backpack_start(2);
+                break;
+
+            case OVERVIEW_ROW_FIRST_ID + 3 * OVERVIEW_ROW_STRIDE
+                    + OVERVIEW_HERO_ARTIFACT_PAGE_1_ID:
+                if (giOverviewType == 0) {
+                    gOverviewHeroArtifactPage[
+                        giOverviewTop[giOverviewType] + 3] =
+                        OVERVIEW_HERO_EQUIPPED_PAGE_1;
+                    gpGame->SetupNewOverviewType(0, 1);
+                }
+                break;
+            case OVERVIEW_ROW_FIRST_ID + 3 * OVERVIEW_ROW_STRIDE
+                    + OVERVIEW_HERO_ARTIFACT_PAGE_2_ID:
+                if (giOverviewType == 0) {
+                    gOverviewHeroArtifactPage[
+                        giOverviewTop[giOverviewType] + 3] =
+                        OVERVIEW_HERO_EQUIPPED_PAGE_2;
+                    gpGame->SetupNewOverviewType(0, 1);
+                }
+                break;
+            case OVERVIEW_ROW_FIRST_ID + 3 * OVERVIEW_ROW_STRIDE
+                    + OVERVIEW_HERO_ARTIFACT_PAGE_3_ID:
+                if (giOverviewType == 0
+                        && gOverviewHeroArtifactPage[
+                               giOverviewTop[giOverviewType] + 3]
+                           != OVERVIEW_HERO_BACKPACK_PAGE) {
+                    gOverviewHeroArtifactPage[
+                        giOverviewTop[giOverviewType] + 3] =
+                        OVERVIEW_HERO_BACKPACK_PAGE;
+                    gpGame->SetupNewOverviewType(0, 1);
+                }
+                break;
+            case OVERVIEW_ROW_FIRST_ID + 3 * OVERVIEW_ROW_STRIDE
+                    + OVERVIEW_HERO_BACKPACK_SCROLL_LEFT_ID:
+                if (giOverviewType == 0)
+                    decrement_backpack_start(3);
+                break;
+            case OVERVIEW_ROW_FIRST_ID + 3 * OVERVIEW_ROW_STRIDE
+                    + OVERVIEW_HERO_BACKPACK_SCROLL_RIGHT_ID:
+                if (giOverviewType == 0)
+                    increment_backpack_start(3);
+                break;
+            }
+            break;
+        }
+    }
+
+    if (msg->id == MESSAGE_MOUSE_MOVE) {
+        gpWindowManager->ConvertToHover(*msg);
+        if (gpWindowManager->lastHover != msg->codeY) {
+            gpWindowManager->lastHover = msg->codeY;
+            DoRollover(msg->codeY);
+        }
+        return MESSAGE_DISPATCH_CONSUME;
+    }
+
+    if (msg->id == MESSAGE_KEY_DOWN) {
+        switch (msg->codeX) {
+        case VK_HOME:
+            giOverviewTop[giOverviewType] = 0;
+            gpGame->SetupDynamicStuff(1, 0);
+            break;
+        case VK_PRIOR:
+            giOverviewTop[giOverviewType] -= 4;
+            if (giOverviewTop[giOverviewType] < 0)
+                giOverviewTop[giOverviewType] = 0;
+            gpGame->SetupDynamicStuff(1, 0);
+            break;
+        case VK_END:
+            giOverviewTop[giOverviewType] =
+                giOverviewItems[giOverviewType] - 4;
+            gpGame->SetupDynamicStuff(1, 0);
+            break;
+        case VK_NEXT:
+            giOverviewTop[giOverviewType] += 4;
+            if (giOverviewTop[giOverviewType]
+                    > giOverviewItems[giOverviewType] - 4)
+                giOverviewTop[giOverviewType] =
+                    giOverviewItems[giOverviewType] - 4;
+            gpGame->SetupDynamicStuff(1, 0);
+            break;
+        }
+    }
+
+    if (res == 1) {
+        msg->codeY = widget::WIDGET_END_DIALOG;
+        msg->codeX = widget::WIDGET_END_DIALOG;
+        return MESSAGE_DISPATCH_FORWARD;
+    }
+    return MESSAGE_DISPATCH_CONSUME;
+}
 
 // E:\gamedcs\overview.cpp:1528. Dreamcast proves the four locals, their
 // scopes, and the statement order: hero lookup, last-backpack bound, artifact

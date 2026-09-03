@@ -8,6 +8,8 @@
 #include <vector>
 #include "advmgr_popup.h"
 
+class textWidget;
+
 // Per-hero artifact subpage selected in the kingdom overview. Retail's
 // SetupDynamicStuff and click handler prove that the two equipped pages are
 // nine slots each and the third page is the backpack. Names are provisional;
@@ -18,12 +20,30 @@ enum EOverviewHeroArtifactPage {
     OVERVIEW_HERO_BACKPACK_PAGE = 2
 };
 
+// Actions consumed by TOverviewWindow::DoFlaggableButtons. The values are
+// fixed by its four-entry retail jump table; names describe the proven
+// effects because neither debug stream preserves the original enum.
+enum EOverviewFlaggableAction {
+    OVERVIEW_FLAGGABLE_HOME = 0,
+    OVERVIEW_FLAGGABLE_PREVIOUS = 1,
+    OVERVIEW_FLAGGABLE_NEXT = 2,
+    OVERVIEW_FLAGGABLE_END = 3
+};
+
 // Widget/message ids consumed by game::ProcessIconSelect. Dreamcast proves
 // the source-domain groupings and Complete extends the roster with the level,
 // mana, specialty, summoning-portal, and second help bands. The band bases
 // and unique controls below are byte-proven by the retail switch tables;
 // individual consecutive slots are written as base-plus-offset at use sites.
 enum EOverviewIconId {
+    // The four fixed strip-navigation buttons and the unlabelled control
+    // dispatched between them. Their actions are fixed by the retail
+    // WindowHandler switch; the original names do not survive.
+    OVERVIEW_FLAGGABLE_HOME_ID = 12,
+    OVERVIEW_FLAGGABLE_END_ID = 13,
+    OVERVIEW_CONTROL_14_ID = 14,
+    OVERVIEW_FLAGGABLE_PREVIOUS_ID = 15,
+    OVERVIEW_FLAGGABLE_NEXT_ID = 16,
     OVERVIEW_TOWN_EXIT_ID = 4,
     OVERVIEW_TOWN_GARRISON_ARMY_FIRST_ID = 5,
     OVERVIEW_TOWN_GARRISON_ARMY_SECOND_ROW_FIRST_ID = 12,
@@ -59,8 +79,12 @@ enum EOverviewIconId {
     OVERVIEW_HERO_LEVEL_ID = 189,
     OVERVIEW_HERO_MANA_ID = 191,
     OVERVIEW_HERO_SPECIALTY_ID = 193,
+    OVERVIEW_HERO_BACKPACK_SCROLL_LEFT_ID = 194,
+    OVERVIEW_HERO_BACKPACK_SCROLL_RIGHT_ID = 195,
     OVERVIEW_SELECT_HEROES_ID = 195,
     OVERVIEW_SELECT_TOWNS_ID = 196,
+    OVERVIEW_ROW_FIRST_ID = 200,
+    OVERVIEW_ROW_STRIDE = 200,
     OVERVIEW_HELP_FIRST_ID = 1001,
     OVERVIEW_HELP_SECOND_BAND_FIRST_ID = 1009
 };
@@ -84,12 +108,18 @@ public:
     virtual int WindowHandler(message* msg);
 
 private:
+    void UpdateFlaggableIcon(int i);
+    void UpdateFlaggableIcons();
+    void DoFlaggableButtons(int which);
     void ClearButtons(int slot);
     void UpdateRollover(char* cText);
     void DoRollover(int codeY);
 
     std::vector<overview_item_record> field_60;
-    std::vector<widget*> field_70;
+    // UpdateFlaggableIcon invokes textWidget's SetText virtual on every
+    // element; retail therefore proves the derived pointer type, not the
+    // earlier widget* placeholder.
+    std::vector<textWidget*> field_70;
 };
 SIZE(TOverviewWindow, 0x80);
 
