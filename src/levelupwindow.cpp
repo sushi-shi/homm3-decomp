@@ -80,7 +80,7 @@ static const char* LevelUpSkillName(int encodedSkill)
 // Statement-scoped inline_depth(1), (2), and (3) around the DC-proven reserve
 // call are byte-flat at 99.12995%. This is a measured negative control: a
 // depth pin cannot select the empty `_Destroy` call without also crossing the
-// in-class reserve expansion, so no inert INLINE_GATE is retained.
+// in-class reserve expansion, so no inert inline-control artifact is retained.
 //
 // The earlier 98.8241 gain came from the two-axis /Ob2 sweep described in
 // mainmenu.cpp, with the mass half supplied HONESTLY rather than padded.

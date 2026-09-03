@@ -3874,10 +3874,10 @@ static __forceinline void mark_strategic_map(
         // Dreamcast xref and Complete's retained constructor call prove this
         // nested boundary; flattening it loses the retail call/EH shape.
 #pragma inline_depth(0)
-        INLINE_GATE(search_array.SeedPosition(
+        search_array.SeedPosition(
             current_hero, point.point, type_point(-1, -1, -1), 500,
             cell->GroundSet == eTerrainWater, const_AI_treasure_search,
-            59999, 0));
+            59999, 0);
 #pragma inline_depth()
 
         short nearby_cost;
@@ -3928,8 +3928,8 @@ static __forceinline void unblock_lith(hero* current_hero,
     // unblock_lith -> get_location -> game::get_cell: DC line 3578 and
     // Complete both retain this nested pair on the unnamed temporary.
 #pragma inline_depth(0)
-    NewmapCell* cell = INLINE_GATE(
-        gpGame->get_cell(current_hero->get_location()));
+    NewmapCell* cell =
+        gpGame->get_cell(current_hero->get_location());
 #pragma inline_depth()
 
     if (!cell->is_trigger) {
@@ -3942,7 +3942,7 @@ static __forceinline void unblock_lith(hero* current_hero,
         // to the Dreamcast TOWN scope and retains the helper call; flattening
         // the initializer expands GetTown and loses the retail branch group.
 #pragma inline_depth(0)
-        town* current_town = INLINE_GATE(gpGame->GetTown(cell->extraInfo));
+        town* current_town = gpGame->GetTown(cell->extraInfo);
 #pragma inline_depth()
         if (current_town->owner == current_hero->owner) {
             if (was_on_map)
@@ -3968,8 +3968,8 @@ static __forceinline void unblock_lith(hero* current_hero,
         // both retain this map lookup before the trigger test; flattening the
         // direct call erases one of retail's two NewfullMap calls.
 #pragma inline_depth(0)
-        if (INLINE_GATE(gpGame->worldMap.cell(
-                point.x, point.y, point.z))->is_trigger)
+        if (gpGame->worldMap.cell(
+                point.x, point.y, point.z)->is_trigger)
 #pragma inline_depth()
             continue;
         if (GetMapExtra(point.x, point.y, point.z) & MAP_EXTRA_MONSTER)
@@ -3978,8 +3978,8 @@ static __forceinline void unblock_lith(hero* current_hero,
         // loop statement and Complete retains the call; flattening the
         // initializer erases one of retail's two searchArray calls.
 #pragma inline_depth(0)
-        pathCell* path_cell = INLINE_GATE(
-            gpSearchArray->get_cell(point, false));
+        pathCell* path_cell =
+            gpSearchArray->get_cell(point, false);
 #pragma inline_depth()
         if (!path_cell->visited)
             continue;
@@ -3989,7 +3989,7 @@ static __forceinline void unblock_lith(hero* current_hero,
         // Complete both retain this predicate helper; flattening it erases
         // retail's only call and folds the following continue test.
 #pragma inline_depth(0)
-        if (INLINE_GATE(gpSearchArray->get_danger_value(point)) < 0)
+        if (gpSearchArray->get_danger_value(point) < 0)
 #pragma inline_depth()
             continue;
         closest = path_cell->cost;
@@ -4082,10 +4082,10 @@ int AI_choose_destination(hero* current_hero, long max_distance,
         // Complete retains both calls in its retail-decoded last-point
         // trigger statement; flattening this condition erases both boundaries.
 #pragma inline_depth(0)
-        if (INLINE_GATE(path_cell->last_point == start
+        if (path_cell->last_point == start
             && gpGame->worldMap.cell(path_cell->last_point.x,
                                      path_cell->last_point.y,
-                                     path_cell->last_point.z)->is_trigger)) {
+                                     path_cell->last_point.z)->is_trigger) {
 #pragma inline_depth()
             is_nearby = 1;
         }
@@ -4149,7 +4149,7 @@ int AI_choose_destination(hero* current_hero, long max_distance,
     // unwind transcript resets state to -1 and retains this implicit cleanup;
     // flattening the return expands it into a second operator delete call.
 #pragma inline_depth(0)
-    return INLINE_GATE(raw_value);
+    return raw_value;
 #pragma inline_depth()
 }
 
@@ -4341,9 +4341,9 @@ static void check_holy_grail(
             // expands. Removing only this gate measures find_all_destinations
             // 96.3651% -> 92.3064%; the former TU-wide view is unnecessary.
 #pragma inline_depth(0)
-            NewmapCell* map_cell = INLINE_GATE(gpGame->worldMap.cell(
+            NewmapCell* map_cell = gpGame->worldMap.cell(
                 destination.point.x, destination.point.y,
-                destination.point.z));
+                destination.point.z);
 #pragma inline_depth()
             if (!(map_cell->type == HERO && map_cell->is_trigger)
                 || map_cell->extraInfo
@@ -4697,7 +4697,7 @@ static __forceinline void check_gate_purchase(type_point point)
         // Complete expansions retain this call. Flattening it removes the two
         // retail calls and expands the lookup into AI_AttemptMove.
 #pragma inline_depth(0)
-        town* current_town = INLINE_GATE(gpGame->GetTown(town_id));
+        town* current_town = gpGame->GetTown(town_id);
 #pragma inline_depth()
         if (!current_town->HasBuilding(EXTRA_1_ID, true))
             current_town->buy_building(EXTRA_1_ID);
@@ -5065,8 +5065,8 @@ void AI_AttemptMove(hero* current_hero, HeroDestination& best_point,
         // fresh get_location temporary for DoAIEvent. Without this site gate
         // VC6 expands cell and emits only five of retail's six point ctors.
 #pragma inline_depth(0)
-        NewmapCell* cell = INLINE_GATE(
-            gpGame->worldMap.cell(point.x, point.y, point.z));
+        NewmapCell* cell =
+            gpGame->worldMap.cell(point.x, point.y, point.z);
 #pragma inline_depth()
         gpAdvManager->DoAIEvent(cell, current_hero,
                                 current_hero->get_location());
@@ -5111,7 +5111,7 @@ void AI_AttemptMove(hero* current_hero, HeroDestination& best_point,
         // Dreamcast retains attempt_teleport as a source-real static helper,
         // and Complete keeps the same out-of-line boundary at 0x00430ab0.
 #pragma inline_depth(0)
-        if (INLINE_GATE(attempt_teleport(current_hero, path, step)))
+        if (attempt_teleport(current_hero, path, step))
             return;
 #pragma inline_depth()
 

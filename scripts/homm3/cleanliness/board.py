@@ -27,14 +27,15 @@ The rows (all ratcheted; floors start at the tree's current counts):
                       way to home a temporary, perturb VC6's register
                       allocator, retain a dead store, or spend an inline
                       budget. Recover the real helper/type/lifetime first;
-                      when retail proves a call, use the narrowly scoped
-                      INLINE_GATE convention instead. A Dreamcast line gap
-                      plus a meaningful release-elided invariant may use
+                      an inline-depth probe may diagnose an over-expansion,
+                      but it must not be retained. A Dreamcast line gap plus
+                      a meaningful release-elided invariant may use
                       HOMM3_RELEASE_VERIFY; a gap by itself is not proof.
-  inline-gate shape   every `INLINE_GATE(...)` is enclosed by one immediate
-                      `inline_depth(0)` / `inline_depth()` pragma pair. This
-                      is syntax hygiene only; it does not infer a Dreamcast
-                      fact or compare debug structures.
+  inline-gate         BANNED at floor 0. `INLINE_GATE(...)` is a no-op marker
+  artifacts           invented by the decompilation, not original source.
+  inline-depth pins   source-false compiler-steering debt. Local experiments
+                      are useful, but committed pins only ratchet down while
+                      the natural declaration/TU/compiler state is recovered.
   cpp extern decls    a declaration re-spelled in a consumer .cpp instead
                       of living in its OWNER's header. Fix: declare once
                       in the owner header and #include it.
@@ -149,30 +150,9 @@ _MAGIC_CASE = re.compile(
 _UNNAMED_COMPARE = re.compile(
     r"[=!]=[ \t]*(?:0[xX](?!0\b|1\b)[0-9a-fA-F]+|(?!0\b|1\b)[0-9]+)\b")
 _INLINE_GATE = re.compile(r"\bINLINE_GATE\s*\(")
-_INLINE_DEPTH = re.compile(
-    r"^[ \t]*#[ \t]*pragma[ \t]+inline_depth[ \t]*\(([^)\r\n]*)\)",
+_INLINE_DEPTH_ZERO = re.compile(
+    r"^[ \t]*#[ \t]*pragma[ \t]+inline_depth[ \t]*\([ \t]*0[ \t]*\)",
     re.MULTILINE)
-_DEFINE = re.compile(r"^[ \t]*#[ \t]*define\b")
-
-
-def _inline_gate_sites(code: str, _ctx) -> list[int]:
-    """Return malformed marker sites, without judging why a pin exists."""
-    directives = [(match.start(), match.group(1).strip())
-                  for match in _INLINE_DEPTH.finditer(code)]
-    out = []
-    for marker in _INLINE_GATE.finditer(code):
-        line_start = code.rfind("\n", 0, marker.start()) + 1
-        line_end = code.find("\n", marker.end())
-        if line_end < 0:
-            line_end = len(code)
-        if _DEFINE.match(code[line_start:line_end]):
-            continue
-        before = [item for item in directives if item[0] < marker.start()]
-        after = [item for item in directives if marker.end() < item[0]]
-        if not before or not after or before[-1][1] != "0" \
-                or after[0][1] != "":
-            out.append(marker.start())
-    return out
 
 # One preprocessor directive may span several physical lines. Count every
 # view identifier in the complete logical directive, while `_strip` keeps
@@ -232,19 +212,20 @@ METRICS = (
      "show <selector>`, `homm3 vc6 predict-inline <selector>`, and `homm3 "
      "sema diff <selector> --structure` plus `--source`. Then: (1) restore "
      "the Dreamcast-proven helper, type, local lifetime, or statement order; "
-     "(2) if retail proves an out-of-line call, wrap only that statement in "
-     "`#pragma inline_depth(0)` / `INLINE_GATE(...)` / "
-     "`#pragma inline_depth()`; or (3) when a Dreamcast line gap and a real "
+     "(2) use statement-scoped `#pragma inline_depth(0)` only as an "
+     "uncommitted diagnostic, then recover the natural compiler state; or "
+     "(3) when a Dreamcast line gap and a real "
      "release-elided invariant agree, spell that invariant as "
-     "`HOMM3_RELEASE_VERIFY(expression)`. Retained pins/verifies need an "
-     "evidence comment, retail checkpoint, and flattening negative "
+     "`HOMM3_RELEASE_VERIFY(expression)`. Retained verifies need an evidence "
+     "comment, retail checkpoint, and flattening negative "
      "control. Never replace volatile with self-assignment, dead code, or "
      "synthetic caller mass; accept a non-MAX current dip while recovering "
      "the true source"),
-    ("inline-gate convention", _inline_gate_sites, False,
-     "wrap each INLINE_GATE statement in an immediate "
-     "`#pragma inline_depth(0)` / `#pragma inline_depth()` pair; this marker "
-     "records a retail-proven site pin, not a cross-compiler comparison"),
+    ("inline-gate artifacts", _regex_sites(_INLINE_GATE), False,
+     "remove INLINE_GATE: it is a source-false no-op wrapper"),
+    ("inline-depth pins", _regex_sites(_INLINE_DEPTH_ZERO), False,
+     "do not add committed compiler-steering pins; use them only as local "
+     "diagnostics, then recover the natural declaration/body/TU state"),
     ("cpp extern decls", _regex_sites(_CPP_EXTERN), True,
      "declare it ONCE in the owner's header and #include that - a "
      "consumer .cpp never re-declares"),
@@ -387,15 +368,19 @@ _SAMPLES = {
          "int volatile_count = 0;",
          'trace("volatile int homed");',
          "// volatile was a rejected negative control")),
-    "inline-gate convention": (
+    "inline-gate artifacts": (
         ("INLINE_GATE(call());",
-         "#pragma inline_depth(1)\nINLINE_GATE(call());\n"
-         "#pragma inline_depth()",
-         "#pragma inline_depth(0)\nINLINE_GATE(call());",
-         "#pragma inline_depth()\nINLINE_GATE(call());"),
-        ("#pragma inline_depth(0)\nINLINE_GATE(call());\n"
-         "#pragma inline_depth()",
-         "#define INLINE_GATE(statement) statement")),
+         "#define INLINE_GATE(statement) statement"),
+        ("call();",
+         "my_INLINE_GATE_counter();",
+         'trace("INLINE_GATE(call())");',
+         "// INLINE_GATE(call()) was removed")),
+    "inline-depth pins": (
+        ("#pragma inline_depth(0)\ncall();\n#pragma inline_depth()",
+         "# pragma inline_depth ( 0 )"),
+        ("#pragma inline_depth()",
+         "#pragma inline_depth(1)",
+         "// #pragma inline_depth(0) was a probe")),
     "cpp extern decls": (
         ("extern int g_heroCount;",
          '  extern "C" void mm_init();'),
@@ -506,7 +491,7 @@ def selftest() -> list[str]:
     missing = set(counters) - set(_SAMPLES)
     failures.extend(f"{label}: NO SELFTEST SAMPLES" for label in sorted(missing))
     volatile_fix = _FIX["volatile qualifiers"]
-    for required in ("dreamcast show", "predict-inline", "INLINE_GATE",
+    for required in ("dreamcast show", "predict-inline", "uncommitted",
                      "HOMM3_RELEASE_VERIFY", "synthetic caller mass"):
         if required not in volatile_fix:
             failures.append(

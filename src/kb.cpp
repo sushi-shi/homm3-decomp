@@ -628,10 +628,10 @@ int oldmain()
                 // removed, VC6 flattened all ten of the helper's calls into
                 // oldmain and emitted no 0x4ee1b0 candidate function.
 #pragma inline_depth(0)
-                INLINE_GATE(KbFn_004EE1B0(
+                KbFn_004EE1B0(
                     30,
                     DATA_COMPGEN(0x0067f718, oldMainIntroFrame,
-                                 "introrim.pcx")));
+                                 "introrim.pcx"));
 #pragma inline_depth()
             }
         }
@@ -876,7 +876,7 @@ static int DoNewGame()
             // retains the REL32. Negative control: ordinary depth expands
             // the selection-window ctor/modal/dtor into oldmain.
 #pragma inline_depth(0)
-            if (INLINE_GATE(DoSinglePlayerWindow()))
+            if (DoSinglePlayerWindow())
                 exitNewGame = 1;
 #pragma inline_depth()
             break;
@@ -894,8 +894,8 @@ static int DoNewGame()
             // oldmain+0x933/+0x940 retain both calls. Negative control:
             // ordinary depth expands both modal objects into oldmain.
 #pragma inline_depth(0)
-            if (INLINE_GATE(DoMultiPlayerWindow()
-                            && DoSinglePlayerWindow()))
+            if (DoMultiPlayerWindow()
+                            && DoSinglePlayerWindow())
                 exitNewGame = 1;
 #pragma inline_depth()
             break;
@@ -1182,7 +1182,7 @@ static int DoLoadGame()
             // kb.cpp:2096 and retail oldmain+0xc68 retain the call;
             // ordinary depth expands the modal object into oldmain.
 #pragma inline_depth(0)
-            if (INLINE_GATE(PickLoadGame()))
+            if (PickLoadGame())
                 exitLoadGame = 1;
 #pragma inline_depth()
             break;
@@ -1190,7 +1190,7 @@ static int DoLoadGame()
         case TGameTypeWindow::CAMPAIGN_ID:
             // Same proven PickLoadGame boundary, retail oldmain+0xc54.
 #pragma inline_depth(0)
-            if (INLINE_GATE(PickLoadGame())) {
+            if (PickLoadGame()) {
                 gbUnk69774c = 1;
                 exitLoadGame = 1;
             }
@@ -1203,7 +1203,7 @@ static int DoLoadGame()
             // oldmain+0xc5f/+0xc68 retain both calls. Ordinary depth expands
             // both modal objects and destroys the retail call sequence.
 #pragma inline_depth(0)
-            if (INLINE_GATE(DoMultiPlayerWindow() && PickLoadGame()))
+            if (DoMultiPlayerWindow() && PickLoadGame())
                 exitLoadGame = 1;
 #pragma inline_depth()
             break;
@@ -1215,7 +1215,7 @@ static int DoLoadGame()
             // arm retains it. Negative control: ordinary depth expands the
             // selection-window ctor/modal/dtor into oldmain.
 #pragma inline_depth(0)
-            if (INLINE_GATE(PickLoadGame()))
+            if (PickLoadGame())
                 exitLoadGame = 1;
 #pragma inline_depth()
             break;

@@ -61,7 +61,7 @@ static const char* gRmgTownNames[9] = {
 namespace std {
 
 // WriteMapHeader's ordered retail call stream is the boundary oracle for the
-// TU-local Dinkumware definitions below.  INLINE_GATE plus the function MAX
+// TU-local Dinkumware definitions below. Temporary inline pins plus the MAX
 // ratchets those calls.  Negative control: removing both string constructor
 // definitions regresses WriteMapHeader from 95.70% to 94.10%, grows its frame
 // from 0x32c to 0x334, and adds three target-only calls.
@@ -72,7 +72,7 @@ inline basic_string<char, char_traits<char>, allocator<char> >::basic_string(
 {
     // WriteMapHeader -> basic_string::_Tidy: retail retains this call.
 #pragma inline_depth(0)
-    INLINE_GATE(_Tidy());
+    _Tidy();
 #pragma inline_depth()
 }
 
@@ -84,11 +84,11 @@ inline basic_string<char, char_traits<char>, allocator<char> >::basic_string(
 {
     // WriteMapHeader -> basic_string::_Tidy: retail retains this call.
 #pragma inline_depth(0)
-    INLINE_GATE(_Tidy());
+    _Tidy();
 #pragma inline_depth()
     // WriteMapHeader -> basic_string::assign: retail retains this call.
 #pragma inline_depth(0)
-    INLINE_GATE(assign(source, strlen(source)));
+    assign(source, strlen(source));
 #pragma inline_depth()
 }
 
@@ -100,7 +100,7 @@ inline bool std::bitset<156>::test(size_t position) const
     if (156 <= position) {
         // WriteMapHeader -> bitset<156>::_Xran: retail retains this call.
 #pragma inline_depth(0)
-        INLINE_GATE(_Xran());
+        _Xran();
 #pragma inline_depth()
     }
     return ((_A[position / _Nb] & ((_Ty)1 << position % _Nb)) != 0);
@@ -112,7 +112,7 @@ inline bool std::bitset<128>::test(size_t position) const
     if (128 <= position) {
         // WriteMapHeader -> bitset<128>::_Xran: retail retains this call.
 #pragma inline_depth(0)
-        INLINE_GATE(_Xran());
+        _Xran();
 #pragma inline_depth()
     }
     return ((_A[position / _Nb] & ((_Ty)1 << position % _Nb)) != 0);
@@ -124,7 +124,7 @@ inline bool std::bitset<144>::test(size_t position) const
     if (144 <= position) {
         // WriteMapHeader -> bitset<144>::_Xran: retail retains this call.
 #pragma inline_depth(0)
-        INLINE_GATE(_Xran());
+        _Xran();
 #pragma inline_depth()
     }
     return ((_A[position / _Nb] & ((_Ty)1 << position % _Nb)) != 0);
@@ -135,11 +135,11 @@ inline void std::bitset<144>::_Xran() const
 {
     // WriteMapHeader -> string::_Tidy: retail keeps the nested ctor boundary.
 #pragma inline_depth(0)
-    INLINE_GATE(string message("invalid bitset<N> position"));
+    string message("invalid bitset<N> position");
 #pragma inline_depth()
     // WriteMapHeader -> out_of_range construction: retail retains this call.
 #pragma inline_depth(0)
-    INLINE_GATE(_THROW(out_of_range, message));
+    _THROW(out_of_range, message);
 #pragma inline_depth()
 }
 
@@ -149,7 +149,7 @@ inline void std::bitset<129>::_Xran() const
     string message("invalid bitset<N> position");
     // WriteMapHeader -> out_of_range construction: retail retains this call.
 #pragma inline_depth(0)
-    INLINE_GATE(_THROW(out_of_range, message));
+    _THROW(out_of_range, message);
 #pragma inline_depth()
 }
 
@@ -160,11 +160,11 @@ inline void std::bitset<70>::_Xran() const
     string message;
     // WriteMapHeader -> string::assign: retail retains this nested call.
 #pragma inline_depth(0)
-    INLINE_GATE(message.assign(text, strlen(text)));
+    message.assign(text, strlen(text));
 #pragma inline_depth()
     // WriteMapHeader -> out_of_range construction: retail retains this call.
 #pragma inline_depth(0)
-    INLINE_GATE(_THROW(out_of_range, message));
+    _THROW(out_of_range, message);
 #pragma inline_depth()
 }
 
@@ -175,11 +175,11 @@ inline void std::bitset<28>::_Xran() const
     string message;
     // WriteMapHeader -> string::assign: retail retains this nested call.
 #pragma inline_depth(0)
-    INLINE_GATE(message.assign(text, strlen(text)));
+    message.assign(text, strlen(text));
 #pragma inline_depth()
     // WriteMapHeader -> out_of_range construction: retail retains this call.
 #pragma inline_depth(0)
-    INLINE_GATE(_THROW(out_of_range, message));
+    _THROW(out_of_range, message);
 #pragma inline_depth()
 }
 
@@ -188,7 +188,7 @@ inline std::bitset<144>::reference::operator bool() const
 {
     // WriteMapHeader -> bitset<144>::test: retail retains this nested call.
 #pragma inline_depth(0)
-    return INLINE_GATE(_Pbs->test(_Off));
+    return _Pbs->test(_Off);
 #pragma inline_depth()
 }
 
@@ -198,7 +198,7 @@ std::bitset<129>::reference::operator=(bool value)
 {
     // WriteMapHeader -> bitset<129>::set: retail retains this nested call.
 #pragma inline_depth(0)
-    INLINE_GATE(_Pbs->set(_Off, value));
+    _Pbs->set(_Off, value);
 #pragma inline_depth()
     return *this;
 }
@@ -221,7 +221,7 @@ static void set_available_rmg_heroes(
         bool available = !*heroFlag;
         // WriteMapHeader -> bitset<N>::set: retail retains both call sites.
 #pragma inline_depth(0)
-        INLINE_GATE(availableHeroes->set(heroIndex, available));
+        availableHeroes->set(heroIndex, available);
 #pragma inline_depth()
         ++heroFlag;
         ++heroIndex;

@@ -48,7 +48,7 @@ void EmitBasicStringAssignPtrSize(std::string* value, const char* source,
                                   unsigned size)
 {
 #pragma inline_depth(0)
-    INLINE_GATE(value->assign(source, size));
+    value->assign(source, size);
 #pragma inline_depth()
 }
 
@@ -400,7 +400,7 @@ TAdventureMapWindow::TAdventureMapWindow()
         // Hoist the end() load that retail keeps inline, and gate only insert.
         std::vector<widget*>::iterator chatTextEnd = widgets.end();
 #pragma inline_depth(0)
-        INLINE_GATE(widgets.insert(chatTextEnd, 1, chatText));
+        widgets.insert(chatTextEnd, 1, chatText);
 #pragma inline_depth()
     }
 

@@ -1434,7 +1434,7 @@ TOverviewWindow::TOverviewWindow()
                 // statement pin VC6 flattens it into the three-argument
                 // overload, adding a count argument and changing the CFG.
 #pragma inline_depth(0)
-                INLINE_GATE(field_60.insert(position, record));
+                field_60.insert(position, record);
 #pragma inline_depth()
             }
             ++field_60[item].field_04;
@@ -1452,7 +1452,7 @@ TOverviewWindow::TOverviewWindow()
                 // the second retail mine branch has the same direct-call
                 // boundary; flattening is the matching negative control.
 #pragma inline_depth(0)
-                INLINE_GATE(field_60.insert(position, record));
+                field_60.insert(position, record);
 #pragma inline_depth()
             }
             ++field_60[item].field_04;

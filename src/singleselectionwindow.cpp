@@ -4433,10 +4433,10 @@ void TSingleSelectionWindow::SetFilter(int size)
             std::vector<GameSelectionHeadersStruct>::iterator w =
                 dst.end();
             const GameSelectionHeadersStruct& v = (*src)[i];
-            // INLINE_GATE: DC lines 5006-5010 prove this filtered append's
+            // DC lines 5006-5010 prove this filtered append's
             // loop/scope; retail's exact 0x585d90 body retains insert here.
 #pragma inline_depth(0)
-            INLINE_GATE(dst.insert(w, 1, v));
+            dst.insert(w, 1, v);
 #pragma inline_depth()
         }
     }
@@ -4765,7 +4765,7 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
     case SSW_GENERATE_RANDOM_MAP: {
         // Measured negative (2026-09-01): statement-scoped inline_depth(1)
         // is byte-flat and does not preserve retail's nested _Tidy call.
-        // Do not retain an inert INLINE_GATE here.
+        // Do not retain an inert inline-control artifact here.
         if (GenerateRandomMap(GetRandomMapName().c_str()))
             NormalDialog(gpGeneralText->GetText(749),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);

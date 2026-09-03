@@ -607,7 +607,7 @@ inline int ValueOfMapArtifact(const hero* current_hero, NewmapCell* cell)
         // Both Dreamcast ValueOfMapArtifact and Complete's expanded
         // ARTIFACT arm retain this source helper as a real call boundary.
 #pragma inline_depth(0)
-        return INLINE_GATE(value_of_custom_item(current_hero, cell, value));
+        return value_of_custom_item(current_hero, cell, value);
 #pragma inline_depth()
     }
 
@@ -741,7 +741,7 @@ inline long value_of_bank(const hero* current_hero, NewmapCell* cell)
     // same call even when value_of_bank itself expands into AI_value_of_event.
     // Pin that source-real nested boundary, not the surrounding appraisal.
 #pragma inline_depth(0)
-    value = INLINE_GATE(bank.artifacts.size())
+    value = bank.artifacts.size()
         * gpCurrentPlayer->turnValueOfAvgArtifact + value;
 #pragma inline_depth()
     return value;
@@ -1042,7 +1042,7 @@ __forceinline int ValueOfShrine(const hero* current_hero, NewmapCell* cell)
         static_cast<const void*>(cell));
     SpellID spell = info->GetShrineSpell();
 #pragma inline_depth(0)
-    return INLINE_GATE(value_of_learning(current_hero, spell));
+    return value_of_learning(current_hero, spell);
 #pragma inline_depth()
 }
 
@@ -3434,21 +3434,21 @@ long AI_value_of_event(const hero* current_hero, type_point point,
         // the source-real boundary even when VC6's current budget wants to
         // expand it.
 #pragma inline_depth(0)
-        return INLINE_GATE(ValueOfMagicSchool(current_hero, cell));
+        return ValueOfMagicSchool(current_hero, cell);
 #pragma inline_depth()
     case MAGIC_SPRING:
         // Both targets retain this source-real helper boundary.
 #pragma inline_depth(0)
-        return INLINE_GATE(get_value_of_spring(
+        return get_value_of_spring(
             current_hero, cell,
-            static_cast<unsigned short>(move_cost)));
+            static_cast<unsigned short>(move_cost));
 #pragma inline_depth()
     case MAGIC_WELL:
         // Complete retains this helper call as well; keep the decision
         // independent of the surrounding event arm's changing inline budget.
 #pragma inline_depth(0)
-        return INLINE_GATE(get_value_of_well(
-            current_hero, static_cast<unsigned short>(move_cost)));
+        return get_value_of_well(
+            current_hero, static_cast<unsigned short>(move_cost));
 #pragma inline_depth()
     case MERC_CAMP:
         return ValueOfMercenaryCamp(current_hero, cell);
@@ -3458,16 +3458,16 @@ long AI_value_of_event(const hero* current_hero, type_point point,
         if (move_cost > current_hero->movePoints)
             return 0;
 #pragma inline_depth(0)
-        return INLINE_GATE(
-            const_cast<hero*>(current_hero)->LuckIncreaseValue(1));
+        return
+            const_cast<hero*>(current_hero)->LuckIncreaseValue(1);
 #pragma inline_depth()
     case MINE:
 #pragma inline_depth(0)
-        return INLINE_GATE(ValueOfMine(current_hero, cell));
+        return ValueOfMine(current_hero, cell);
 #pragma inline_depth()
     case MONSTER:
 #pragma inline_depth(0)
-        return INLINE_GATE(value_of_monsters(current_hero, cell, point));
+        return value_of_monsters(current_hero, cell, point);
 #pragma inline_depth()
 
     case MYSTICAL_GARDEN: {
@@ -3484,43 +3484,43 @@ long AI_value_of_event(const hero* current_hero, type_point point,
 
     case OASIS:
 #pragma inline_depth(0)
-        return INLINE_GATE(value_of_move_source(
-            current_hero, 0x80, 400, &move_cost));
+        return value_of_move_source(
+            current_hero, 0x80, 400, &move_cost);
 #pragma inline_depth()
     case OBELISK:
 #pragma inline_depth(0)
-        return INLINE_GATE(value_of_obelisk(cell, current_hero->owner));
+        return value_of_obelisk(cell, current_hero->owner);
 #pragma inline_depth()
     case OBSERVATORY:
 #pragma inline_depth(0)
-        return INLINE_GATE(
-            AI_value_of_observatory(point, current_hero->owner, 20));
+        return
+            AI_value_of_observatory(point, current_hero->owner, 20);
 #pragma inline_depth()
     case POWER_SCHOOL:
 #pragma inline_depth(0)
-        return INLINE_GATE(ValueOfPowerSchool(current_hero, cell));
+        return ValueOfPowerSchool(current_hero, cell);
 #pragma inline_depth()
     case PRISON:
 #pragma inline_depth(0)
-        return INLINE_GATE(ValueOfPrison(cell, player));
+        return ValueOfPrison(cell, player);
 #pragma inline_depth()
     case PYRAMID:
 #pragma inline_depth(0)
-        return INLINE_GATE(value_of_pyramid(current_hero, cell));
+        return value_of_pyramid(current_hero, cell);
 #pragma inline_depth()
     case RALLY_FLAG:
         if (move_cost > current_hero->movePoints)
             return 0;
 #pragma inline_depth(0)
-        return INLINE_GATE(ValueOfRallyFlag(current_hero, &move_cost));
+        return ValueOfRallyFlag(current_hero, &move_cost);
 #pragma inline_depth()
     case REFUGEE_CAMP:
 #pragma inline_depth(0)
-        return INLINE_GATE(ValueOfRefugeeCamp(current_hero, cell));
+        return ValueOfRefugeeCamp(current_hero, cell);
 #pragma inline_depth()
     case RESOURCE:
 #pragma inline_depth(0)
-        return INLINE_GATE(ValueOfResource(current_hero, cell, player));
+        return ValueOfResource(current_hero, cell, player);
 #pragma inline_depth()
     case SCHOLAR:
         return static_cast<int>(
@@ -3528,7 +3528,7 @@ long AI_value_of_event(const hero* current_hero, type_point point,
             * current_hero->turnExperienceToRVRatio);
     case SEA_CHEST:
 #pragma inline_depth(0)
-        return INLINE_GATE(ValueOfSeaChest(current_hero, cell));
+        return ValueOfSeaChest(current_hero, cell);
 #pragma inline_depth()
     case SEER:
         return gpGame->worldMap.SeerHutList[cell->extraInfo].getValue(
@@ -3536,7 +3536,7 @@ long AI_value_of_event(const hero* current_hero, type_point point,
     case SEPULCHER:
     case SHIPWRECK:
 #pragma inline_depth(0)
-        return INLINE_GATE(value_of_bank(current_hero, cell));
+        return value_of_bank(current_hero, cell);
 #pragma inline_depth()
     case SHIPYARD: {
         const ShipyardInfo* info = static_cast<const ShipyardInfo*>(
@@ -3545,8 +3545,8 @@ long AI_value_of_event(const hero* current_hero, type_point point,
         // retains that boundary.  Pin only the call; the surrounding event
         // arm remains ordinary source.
 #pragma inline_depth(0)
-        if (INLINE_GATE(gpGame->OnSameTeam(
-                info->owner, gNetLocalGamePos)))
+        if (gpGame->OnSameTeam(
+                info->owner, gNetLocalGamePos))
             return 0;
 #pragma inline_depth()
         return 1000;
@@ -3557,15 +3557,15 @@ long AI_value_of_event(const hero* current_hero, type_point point,
         return ValueOfShrine(current_hero, cell);
     case SIREN:
 #pragma inline_depth(0)
-        return INLINE_GATE(ValueOfSirens(current_hero));
+        return ValueOfSirens(current_hero);
 #pragma inline_depth()
     case SPELL_SCROLL:
 #pragma inline_depth(0)
-        return INLINE_GATE(ValueOfScroll(current_hero, cell));
+        return ValueOfScroll(current_hero, cell);
 #pragma inline_depth()
     case STABLES:
 #pragma inline_depth(0)
-        return INLINE_GATE(ValueOfStables(current_hero, &move_cost));
+        return ValueOfStables(current_hero, &move_cost);
 #pragma inline_depth()
     case TEMPLE:
         if (current_hero->flags & 0x100)
@@ -3575,14 +3575,14 @@ long AI_value_of_event(const hero* current_hero, type_point point,
         if (move_cost > current_hero->movePoints)
             return 0;
 #pragma inline_depth(0)
-        return INLINE_GATE(
-            const_cast<hero*>(current_hero)->MoraleIncreaseValue(2));
+        return
+            const_cast<hero*>(current_hero)->MoraleIncreaseValue(2);
 #pragma inline_depth()
     case TOWN:
 #pragma inline_depth(0)
-        return INLINE_GATE(value_of_town(
+        return value_of_town(
             current_hero, point.x, point.y, point.z,
-            static_cast<short>(move_cost)));
+            static_cast<short>(move_cost));
 #pragma inline_depth()
     case TRAINING_GROUNDS: {
         const ExtraInfoUnion* info = static_cast<const ExtraInfoUnion*>(
@@ -3595,38 +3595,38 @@ long AI_value_of_event(const hero* current_hero, type_point point,
     }
     case TREASURE_CHEST:
 #pragma inline_depth(0)
-        return INLINE_GATE(ValueOfTreasure(current_hero));
+        return ValueOfTreasure(current_hero);
 #pragma inline_depth()
     case TREE_OF_KNOWLEDGE:
 #pragma inline_depth(0)
-        return INLINE_GATE(ValueOfTree(current_hero, cell));
+        return ValueOfTree(current_hero, cell);
 #pragma inline_depth()
     case UNIVERSITY: {
         ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
             static_cast<void*>(cell));
 #pragma inline_depth(0)
-        return INLINE_GATE(value_of_university(
-            current_hero, info->get_university(), 1));
+        return value_of_university(
+            current_hero, info->get_university(), 1);
 #pragma inline_depth()
     }
     case WAGON:
 #pragma inline_depth(0)
-        return INLINE_GATE(value_of_wagon(cell, current_hero->owner));
+        return value_of_wagon(cell, current_hero->owner);
 #pragma inline_depth()
     case WAR_MACHINE_FACTORY:
 #pragma inline_depth(0)
-        return INLINE_GATE(value_of_war_factory(current_hero, move_cost));
+        return value_of_war_factory(current_hero, move_cost);
 #pragma inline_depth()
     case WAR_SCHOOL:
 #pragma inline_depth(0)
-        return INLINE_GATE(value_of_war_school(current_hero, cell));
+        return value_of_war_school(current_hero, cell);
 #pragma inline_depth()
     case WARRIOR_TOMB: {
         const ExtraInfoUnion* info =
             static_cast<const ExtraInfoUnion*>(
                 static_cast<const void*>(cell));
 #pragma inline_depth(0)
-        if (INLINE_GATE(info->PlayerKnowsCell(gNetLocalGamePos)))
+        if (info->PlayerKnowsCell(gNetLocalGamePos))
             return 0;
 #pragma inline_depth()
     }
@@ -3643,7 +3643,7 @@ long AI_value_of_event(const hero* current_hero, type_point point,
             static_cast<const ExtraInfoUnion*>(
                 static_cast<const void*>(cell));
 #pragma inline_depth(0)
-        if (INLINE_GATE(info->PlayerKnowsCell(gNetLocalGamePos))) {
+        if (info->PlayerKnowsCell(gNetLocalGamePos)) {
 #pragma inline_depth()
             return static_cast<long>(
                 info->get_wheel_gold() * player->resourceValue[GOLD]);
@@ -3653,15 +3653,15 @@ long AI_value_of_event(const hero* current_hero, type_point point,
     }
     case WATERING_HOLE:
 #pragma inline_depth(0)
-        return INLINE_GATE(value_of_move_source(
-            current_hero, 0x40, 200, &move_cost));
+        return value_of_move_source(
+            current_hero, 0x40, 200, &move_cost);
 #pragma inline_depth()
     case WINDMILL: {
         const ExtraInfoUnion* info =
             static_cast<const ExtraInfoUnion*>(
                 static_cast<const void*>(cell));
 #pragma inline_depth(0)
-        if (INLINE_GATE(info->PlayerKnowsCell(gNetLocalGamePos))) {
+        if (info->PlayerKnowsCell(gNetLocalGamePos)) {
 #pragma inline_depth()
             if (info->get_windmill_amount() == 0)
                 return 0;
@@ -3670,7 +3670,7 @@ long AI_value_of_event(const hero* current_hero, type_point point,
     }
     case WITCH_HUT:
 #pragma inline_depth(0)
-        return INLINE_GATE(value_of_witch_hut(current_hero, cell));
+        return value_of_witch_hut(current_hero, cell);
 #pragma inline_depth()
     }
     return 0;

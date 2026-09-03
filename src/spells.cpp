@@ -291,13 +291,13 @@ void combatManager::CastSpell(SpellID spellId, int targetIndex,
 
     army* target;
     if (ValidHex(targetIndex) && SpellTargetsASingleArmy(spellId, mastery)) {
-        // INLINE_GATE CastSpell -> find_spell_target: Dreamcast line 696
+        // CastSpell -> find_spell_target: Dreamcast line 696
         // records the helper call and retail +0x276 retains its REL32.
         // Negative control: with normal depth VC6 expands the helper into
         // its three leaf callees (0 find_spell_target calls; 82.4456%).
 #pragma inline_depth(0)
-        target = INLINE_GATE(find_spell_target(
-            spellId, currentSide, targetIndex, 1, bIsMonsterSpell));
+        target = find_spell_target(
+            spellId, currentSide, targetIndex, 1, bIsMonsterSpell);
 #pragma inline_depth()
     } else {
         target = 0;
@@ -343,12 +343,12 @@ void combatManager::CastSpell(SpellID spellId, int targetIndex,
         && spellId != SPELL_SACRIFICE) {
         SpellEffect(akSpellTraits[SPELL_MAGIC_MIRROR].m_effect, target, 100,
                     0);
-        // INLINE_GATE CastSpell -> find_spell_target: Dreamcast line 759
+        // CastSpell -> find_spell_target: Dreamcast line 759
         // records this redirected-target call and retail +0x478 retains it.
         // The same flattening negative control above removes both calls.
 #pragma inline_depth(0)
-        target = INLINE_GATE(find_spell_target(
-            spellId, other_side, secondaryIndex, 0, bIsMonsterSpell));
+        target = find_spell_target(
+            spellId, other_side, secondaryIndex, 0, bIsMonsterSpell);
 #pragma inline_depth()
         redirected = 1;
     } else {

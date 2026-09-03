@@ -59,8 +59,8 @@ inline unsigned char town::IsCastle() const
     // test but calls HasBuilding for citadel/castle. Depth 2 over-inlines to
     // one call (80.7987%); depth 1 leaves all three calls (87.4340%).
 #pragma inline_depth(0)
-    return INLINE_GATE(HasBuilding(CASTLE_CITADEL_ID, 0)
-        || HasBuilding(CASTLE_CASTLE_ID, 0));
+    return HasBuilding(CASTLE_CITADEL_ID, 0)
+        || HasBuilding(CASTLE_CASTLE_ID, 0);
 #pragma inline_depth()
 }
 

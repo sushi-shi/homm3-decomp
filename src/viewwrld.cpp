@@ -248,8 +248,8 @@ TViewWorldWindow::TViewWorldWindow()
     // insert and its nested STL helpers, producing the 88.42% / 247-block
     // constructor instead of retail's 215-block shape.
 #pragma inline_depth(0)
-    INLINE_GATE(Widgets.push_back(new button(
-        612, 538, 66, 32, 19, "VWPuz.def", 0, 1, 0, 25, 2)));
+    Widgets.push_back(new button(
+        612, 538, 66, 32, 19, "VWPuz.def", 0, 1, 0, 25, 2));
 #pragma inline_depth()
 
     UndergroundButton = new type_func_button(
@@ -265,7 +265,7 @@ TViewWorldWindow::TViewWorldWindow()
     // append immediately after it. Negative control: ordinary depth expands
     // both sites and contributes the second surplus STL reallocation body.
 #pragma inline_depth(0)
-    INLINE_GATE(Widgets.push_back(UndergroundButton));
+    Widgets.push_back(UndergroundButton);
 #pragma inline_depth()
     Widgets.push_back(SurfaceButton);
 

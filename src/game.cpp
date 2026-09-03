@@ -312,7 +312,7 @@ void THeroSetupMapMinComdatAnchor::retain_min()
     // Preserve the real helper and pin only this call: measured negative
     // controls reject flattening, a member pointer, or volatile mass.
 #pragma inline_depth(0)
-    INLINE_GATE(_Min(_Nil));
+    _Min(_Nil);
 #pragma inline_depth()
 }
 
@@ -18339,7 +18339,7 @@ void CObjectType::~CObjectType()
 template<> std::bitset<5>& std::bitset<5>::reset()
 {
 #pragma inline_depth(0)
-    INLINE_GATE(_Tidy(0));
+    _Tidy(0);
 #pragma inline_depth()
     return *this;
 }
@@ -18347,7 +18347,7 @@ template<> std::bitset<5>& std::bitset<5>::reset()
 template<> std::bitset<8>& std::bitset<8>::reset()
 {
 #pragma inline_depth(0)
-    INLINE_GATE(_Tidy(0));
+    _Tidy(0);
 #pragma inline_depth()
     return *this;
 }
@@ -18355,7 +18355,7 @@ template<> std::bitset<8>& std::bitset<8>::reset()
 template<> std::bitset<28>& std::bitset<28>::reset()
 {
 #pragma inline_depth(0)
-    INLINE_GATE(_Tidy(0));
+    _Tidy(0);
 #pragma inline_depth()
     return *this;
 }
@@ -18363,7 +18363,7 @@ template<> std::bitset<28>& std::bitset<28>::reset()
 template<> std::bitset<70>& std::bitset<70>::reset()
 {
 #pragma inline_depth(0)
-    INLINE_GATE(_Tidy(0));
+    _Tidy(0);
 #pragma inline_depth()
     return *this;
 }
@@ -18371,7 +18371,7 @@ template<> std::bitset<70>& std::bitset<70>::reset()
 template<> std::bitset<128>& std::bitset<128>::reset()
 {
 #pragma inline_depth(0)
-    INLINE_GATE(_Tidy(0));
+    _Tidy(0);
 #pragma inline_depth()
     return *this;
 }

@@ -441,12 +441,14 @@ def run_predict(args) -> int:
           "sema diff --structure/--source`; restore the evidenced helper, "
           "type, lifetime, and statement order before steering C1.")
     if over or unknown_over:
-        print("[fix] over-inline at a DIRECT source call -> put only that "
-              "statement between `#pragma inline_depth(0)` / "
-              "`#pragma inline_depth()` and mark it `INLINE_GATE(...)`; "
-              "retain it only with a flattening negative control. Use "
-              "`auto_inline(off)` only when every affected call site proves "
-              "the body unavailable.")
+        print("[probe] over-inline at a DIRECT source call -> temporarily put "
+              "only that statement between `#pragma inline_depth(0)` / "
+              "`#pragma inline_depth()` to confirm the boundary diagnosis. "
+              "Do not retain or commit the pragma; recover the declaration, "
+              "body visibility, source order, lifetime, release-elided "
+              "operation, or TU/PCH state that produces it naturally. Use "
+              "`auto_inline(off)` only as a local diagnostic when every "
+              "affected call site can be inspected.")
         print("[fix] over-inline at a NESTED callee absent from source (for "
               "example basic_string::_Tidy) -> do not expose library "
               "internals or add synthetic mass. Probe depth 1; if it is flat "

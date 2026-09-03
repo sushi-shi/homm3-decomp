@@ -3,7 +3,8 @@
 C-style casts	0
 reinterpret_casts	0
 volatile qualifiers	0
-inline-gate convention	0
+inline-gate artifacts	0
+inline-depth pins	369
 cpp extern decls	0
 .cpp-local views	0
 .cpp-local enums	0
