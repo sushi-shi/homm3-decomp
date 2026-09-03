@@ -1089,7 +1089,7 @@ public:
     textEntryWidget* chatEdit;
     // UpdateResourceDisplay (0x403f00) calls through this +0x5c field.
     class TResourceDisplay* ResourceDisplay;
-    widget* RolloverTextWidget;  // +0x60, DrawRolloverText redraw bounds
+    class bitmapBackedTextWidget* RolloverTextWidget;  // +0x60
     // DC names these topHero/topTown (member offsets 88/92). Retail moved
     // RolloverWidget ahead of the pair, so the DC->retail shift here is
     // +12 rather than the +8 that holds above; DoHeroKnob (0x403220) and
@@ -1114,10 +1114,16 @@ public:
     class bitmapBorder* HeroLocators[5];
     // ClearBottomView (0x403ee0) owns and clears the pointer at +0x98.
     class type_bottom_view_window* bottomView;
-    char pad_09c[4];
+    // Complete-only owned popup state: Open constructs it and Close deletes
+    // it; the ctor initializes the pointer before installing this vtable.
+    // The public name is not attested, so retain the cross-build role name.
+    void* immersion;
 
     TAdventureMapWindow();
     ~TAdventureMapWindow();
+    virtual int Open(int zOrder, unsigned char update);
+    virtual void Close(unsigned char update);
+    virtual void _vslot8(unsigned char on);
     void UpdateTownLocators(int top, unsigned char drawWin,
                             unsigned char update);
     void UpdateHeroLocators(int top, unsigned char drawWin,

@@ -6,40 +6,16 @@
 #define HOMM3_SWAPMGR_H
 
 #include "basemgr.h"
+#include "chatedit.h"
 #include "hero.h"
 #include "netmsg.h"
-#include "window.h"
-
-// MATCHING_DEBT: swapmgr.obj needs the existing chat-edit declaration view
-// for its private CGameChatEdit-derived editor. Remove this gate use when the
-// canonical chat-edit hierarchy is split from remote.h into its own header.
-#define HOMM3_CHAT_EDIT_DECLS
 #include "remote.h"
-#undef HOMM3_CHAT_EDIT_DECLS
+#include "window.h"
 
 class Bitmap816;
 class bitmapBorder;
 class button;
 class message;
-
-// Dreamcast proves the inheritance and method identities. Retail independently
-// proves that SendChatCleanup follows CChatEdit::SendChat in the vtable: the
-// swap editor dispatches it through the immediately following slot (+0x64).
-class CGameChatEdit : public CChatEdit {
-public:
-    CGameChatEdit(int x, int y, int w, int h, int textSize, char* text,
-                  char* fontName, font::TColor color,
-                  font::EJustify justification, char* backgroundIcon,
-                  int backgroundFrame, int id, int style, int readType,
-                  int insetX, int insetY);
-    virtual int OnKeyPress(message* msg) OVERRIDE;
-    virtual int OnEscape(message msg) OVERRIDE;
-    virtual void SendChatCleanup();
-    virtual void Activate();
-
-    unsigned char field_70;
-    char pad_71[3];
-};
 
 class CSwapManagerChatEdit : public CGameChatEdit {
 public:

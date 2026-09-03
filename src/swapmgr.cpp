@@ -105,22 +105,6 @@ CGiveMeStuffMsg::CGiveMeStuffMsg()
 {
 }
 
-// Both forwarding constructors are header-source boundaries in the DC
-// roster. Complete expands them into TSwapWindow's sole allocation: the
-// retained CChatEdit call, CGameChatEdit's +0x70 clear, then the two derived
-// vtable stores are all visible in retail in that order.
-inline CGameChatEdit::CGameChatEdit(
-    int x, int y, int w, int h, int textSize, char* text, char* fontName,
-    font::TColor color, font::EJustify justification, char* backgroundIcon,
-    int backgroundFrame, int id, int style, int readType, int insetX,
-    int insetY)
-    : CChatEdit(x, y, w, h, textSize, text, fontName, color, justification,
-                backgroundIcon, backgroundFrame, id, style, readType,
-                insetX, insetY)
-{
-    field_70 = 0;
-}
-
 inline CSwapManagerChatEdit::CSwapManagerChatEdit(
     int x, int y, int w, int h, int textSize, char* text, char* fontName,
     font::TColor color, font::EJustify justification, char* backgroundIcon,

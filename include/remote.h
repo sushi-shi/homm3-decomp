@@ -10,7 +10,7 @@
 #include <deque>
 #endif
 #ifdef HOMM3_CHAT_EDIT_DECLS
-#include "textntry.h"
+#include "chatedit.h"
 #endif
 
 class CNetMsg;
@@ -302,32 +302,6 @@ void __cdecl PlayerEnterMsg(CChatManager* manager, const char* format, ...);
 #if defined(HOMM3_CHAT_EDIT_DECLS) || defined(HOMM3_GAME_TRANSMIT_DECLS)
 enum ENetMessageRecipient {
     NET_MESSAGE_RECIPIENT_ALL = 0x7f
-};
-#endif
-
-#ifdef HOMM3_CHAT_EDIT_DECLS
-// Retail vtable 0x640e30. Slots 0..18 are textEntryWidget's exact prefix;
-// Dreamcast supplies the seven introduced method names at slots 19..24 and
-// proves that this class adds no data (its 0x70-byte extent equals retail's
-// textEntryWidget extent). The retail bodies independently confirm the base
-// tail offsets: IsOpen reads cursorIndex at +0x58 and the edit actions use
-// Text at +0x30.
-class CChatEdit : public textEntryWidget {
-public:
-    CChatEdit(int x, int y, int w, int h, int textSize, char* text,
-              char* fontName, font::TColor color,
-              font::EJustify justification,
-              char* backgroundIcon, int backgroundFrame, int id, int style,
-              int readType, int insetX, int insetY);
-    virtual ~CChatEdit();
-    virtual int OnKeyPress(message* msg);                       // slot 15
-    virtual unsigned char IgnoreKey(message* msg);              // slot 16
-    virtual void UpdateScreen();                                // slot 19
-    virtual int OnEnter(message msg);                            // slot 20
-    virtual int OnEscape(message msg);                           // slot 21
-    virtual int OnFunctionKey(message msg, int toWho);           // slot 22
-    virtual bool IsOpen();                                       // slot 23
-    virtual void SendChat(const char* text, int toWho) = 0;      // slot 24
 };
 #endif
 
