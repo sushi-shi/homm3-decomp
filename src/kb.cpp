@@ -11,7 +11,9 @@
 #define HOMM3_GAME_NEW_MAP_DECLS
 #define HOMM3_NEWGAME_OBJ_DECLS
 #define HOMM3_REMOTE_WINLOSS_DECLS
+#define HOMM3_WIDGET_SET_VISIBLE_INLINE
 #include "kb.h"
+#undef HOMM3_WIDGET_SET_VISIBLE_INLINE
 #define HOMM3_TOWN_OBJ_DECLS
 #include "game.h"
 #include "textresource.h"
@@ -19,6 +21,8 @@
 #include "artifact.h"
 #include "binkmanager.h"
 #include "bitmap16.h"
+#include "border.h"
+#include "button.h"
 #include "campaignbrief.h"
 #include "campaignwindow.h"
 #include "castle.h"
@@ -26,11 +30,13 @@
 #include "creaturetype.h"
 #include "csprite.h"
 #include "customcampaign.h"
+#include "dialogbox.h"
 #include "kbwin.h"
 #include "exec.h"
 #include "font.h"
 #include "gametypewindow.h"
 #include "hiscore.h"
+#include "iconwdgt.h"
 #include "inputmgr.h"
 #include "mainmenu.h"
 #include "message.h"
@@ -50,6 +56,7 @@
 #include "soundmgr.h"
 #include "sskilltraits.h"
 #include "timer.h"
+#include "textwdgt.h"
 #include "winmgr.h"
 // GameUnsaved polls the town manager's baseManager status, so kb.obj is
 // one of the consumers that needs townmgr.h's guarded class prefix.
@@ -121,7 +128,7 @@ void UnloadProgressBar()
 }
 
 // E:\gamedcs\kb.cpp:318
-// RETAIL_LOCATED(0x004ed490, 0x1B5)  // anchor-global, dc 0xdf330
+VA(0x004ed490, 0x1B5)  // anchor-global + handler-callee, dc 0xdf330
 void PollSound()
 {
     // @stub
@@ -260,6 +267,8 @@ int ExitNormalDialog(message* msg)
 }
 
 // E:\gamedcs\kb.cpp:2367
+// RETAIL_LOCATED(0x004f08d0, 0x20C): anchor-callee + dialog-global shape.
+// Its order-checked retail claim lives below; this row preserves DC source order.
 DC_ONLY(0xe1ccc, 0x118)
 int NormalDialogHandler(message* msg)
 {
@@ -1255,6 +1264,14 @@ static int PickLoadGame()
     }
     return gpWindowManager->dialogReturn != DIALOG_RETURN_CANCEL;
 }
+
+#if 0  // @carcass: claim-only home; DC source-order body remains above
+VA(0x004f08d0, 0x20C)  // anchor-callee + dialog-global shape, dc 0xe1ccc
+int NormalDialogHandler(message& msg)
+{
+    // @stub
+}
+#endif
 
 // E:\gamedcs\kb.cpp:2811. The retail body independently fixes the source
 // shape: GetTeamMask expands at the head, both loops scan the eight player
@@ -2352,6 +2369,15 @@ void std::__destroy_aux()
 
 #endif  // @carcass
 
+type_normal_dialog_frame::type_normal_dialog_frame(
+    long x, long y, long w, long h, long id,
+    EGameResource new_resource, long new_qualifier)
+    : coloredBorderFrame(x, y, w, h, id, gSystemPalette->data[45], 0x400)
+{
+    resource = new_resource;
+    qualifier = new_qualifier;
+}
+
 // kb.obj-owned recursion guard: both writers (the credits loop 0x4edda0
 // and MemError below) live in this TU, and the .bss slot sits in kb's
 // band.  Name provisional, role byte-proven.
@@ -2724,6 +2750,348 @@ void NormalDialog(const char* cText, int iMBType, int x, int y,
 }
 
 #endif  // @carcass
+
+// The normal-dialog state is private to kb.obj. Dreamcast publishes the
+// giNormalDialogMBType/giNormalDialogStart spellings; retail fixes their PC
+// cells and independently proves the saved selection/window companions.
+DATA(0x006993d4)
+static int giNormalDialogSelection;
+DATA(0x00699520)
+int giNormalDialogMBType;
+DATA(0x00699588)
+int giNormalDialogStart;
+DATA(0x00699590)
+static TDialogBox* gpNormalDialogWindow;
+DATA(0x00699254)
+static int gUnnamed699254;
+
+void PollSound();
+int NormalDialogHandler(message& msg);
+static int WaitHandler(message& msg);
+
+// E:\gamedcs\kb.cpp:5531. Dreamcast supplies the source-level class,
+// helper, local and statement boundaries. Retail independently proves the
+// Complete-only text scroller flag, dense ten-way button switch, widget
+// geometry, dialog handlers and every PC field offset below.
+VA(0x004f6990, 0xC8C)  // anchor-callee + strings + dc shape, dc 0xe60dc
+void DoNormalDialog(TNormalDialogInfo dialog_info)
+{
+    // Residual (99.8554%): all 156 CFG blocks, 70 branches, two returns and
+    // 95 call positions agree. The remaining emitted-code rows are register
+    // choices, first inside an inlined copy of the independently exact
+    // MemError. Retained source corrections: canonical dialog types, implicit
+    // icon special members, the recovered localPlayer, explicit clamps and
+    // the sentinel loop. Byte-flat controls: a named new-result, explicit
+    // null tests, split pointer/counter declarations and for/while spelling.
+    // Revisit after more of the earlier kb.cpp carcass is made live, because
+    // its absent definitions may change this late function's C1XX state.
+    if (!bVideoPaused
+            && !gTurnDuration69d630.IsOn()
+            && !gUnnamed691209)
+        dialog_info.timeout = 0;
+
+    if (dialog_info.timeout > 1 && dialog_info.timeout < 20000)
+        gDialogDeadline697784 = GameTime::Get() + dialog_info.timeout;
+    else
+        gDialogDeadline697784 = dialog_info.timeout;
+
+    if (!gDialogDeadline697784) {
+        if (gTurnDuration69d630.IsClose(15000))
+            gDialogDeadline697784 = GameTime::Get() + 15000;
+
+        if (!gDialogDeadline697784 && pDPlay) {
+            CNetMsgHandler* pNetMsgHandler = pDPlay->GetNetMsgHandler();
+            if (pNetMsgHandler && pNetMsgHandler->GetAbortPopupMsg())
+                gDialogDeadline697784 = GameTime::Get() + 15000;
+        }
+    }
+
+    if (gbGameOver)
+        gDialogDeadline697784 = 0;
+
+    int SaveNormalDialogType;
+    int SaveNormalDialogSelection;
+    TDialogBox* pSaveNormalDialogWindow;
+    giNormalDialogStart = GameTime::Get();
+    pSaveNormalDialogWindow = gpNormalDialogWindow;
+    SaveNormalDialogType = giNormalDialogMBType;
+    SaveNormalDialogSelection = giNormalDialogSelection;
+    giNormalDialogMBType = dialog_info.iMBType;
+    giNormalDialogSelection = -1;
+
+    gpNormalDialogWindow = new TDialogBox(
+        dialog_info.x, dialog_info.y,
+        dialog_info.width, dialog_info.height, 0x12);
+    if (!gpNormalDialogWindow) {
+        MemError();
+    }
+
+    playerData* localPlayer = gpGame->GetLocalPlayer();
+    if (localPlayer) {
+        for (int id = gpNormalDialogWindow->beginID;
+             id <= gpNormalDialogWindow->endID; ++id) {
+            gpNormalDialogWindow->BroadcastMessage(
+                MESSAGE_WIDGET, 13, id, gpGame->GetLocalPlayerGamePos());
+        }
+    }
+
+    std::vector<widget*> widgets;
+
+    if (dialog_info.text_expansion) {
+        widgets.push_back(new type_text_scroller(
+            dialog_info.dialog_text.c_str(),
+            dialog_info.text_widget_x, dialog_info.text_widget_y,
+            dialog_info.text_widget_width, dialog_info.text_widget_height,
+            DATA_COMPGEN(0x0065f2ec, normalDialogMediumFont,
+                         "medfont.fnt"),
+            font::PRIMARY, slider::BROWN));
+    } else {
+        widgets.push_back(new textWidget(
+            dialog_info.text_widget_x, dialog_info.text_widget_y,
+            dialog_info.text_widget_width, dialog_info.text_widget_height,
+            dialog_info.dialog_text.c_str(),
+            DATA_COMPGEN(0x0065f2ec, normalDialogMediumFont,
+                         "medfont.fnt"),
+            font::PRIMARY, 1, font::CENTER_JUSTIFIED, 0, 8));
+    }
+
+    int LeftButtonLoc = dialog_info.width / 2 - 74;
+    if (LeftButtonLoc < 1)
+        LeftButtonLoc = 1;
+
+    int RightButtonLoc = dialog_info.width / 2 + 8;
+    if (RightButtonLoc > dialog_info.width - 66)
+        RightButtonLoc = dialog_info.width - 66;
+    int CenterButtonLoc = (dialog_info.width - 66) / 2;
+    int ButtonY = dialog_info.height - 62;
+
+    switch (dialog_info.iMBType) {
+    case NORMAL_DIALOG_YESNO: {
+        bitmapBorder* acceptBorder = new bitmapBorder(
+            LeftButtonLoc, ButtonY, 66, 32, 0x7869,
+            DATA_COMPGEN(0x0067016c, normalDialogButtonBorder,
+                         "Box64x30.pcx"), 0x800);
+        button* acceptButton = new button(
+            LeftButtonLoc + 1, ButtonY + 1, 64, 30,
+            DIALOG_RETURN_ACCEPT,
+            DATA_COMPGEN(0x00670160, normalDialogOkayButton, "iOkay.def"),
+            0, 1, 0, 0x1c, 2);
+        widgets.push_back(acceptBorder);
+        widgets.push_back(acceptButton);
+
+        bitmapBorder* declineBorder = new bitmapBorder(
+            RightButtonLoc, ButtonY, 66, 32, 0x786a,
+            DATA_COMPGEN(0x0067016c, normalDialogButtonBorder,
+                         "Box64x30.pcx"), 0x800);
+        button* declineButton = new button(
+            RightButtonLoc + 1, ButtonY + 1, 64, 30,
+            DIALOG_RETURN_DECLINE,
+            DATA_COMPGEN(0x00660b04, normalDialogCancelButton,
+                         "iCancel.def"),
+            0, 1, 0, 1, 2);
+        widgets.push_back(declineBorder);
+        widgets.push_back(declineButton);
+        break;
+    }
+
+    case NORMAL_DIALOG_ORDINAL_3:
+    case NORMAL_DIALOG_CHOOSE_OPTIONAL: {
+        bitmapBorder* cancelBorder = new bitmapBorder(
+            RightButtonLoc, ButtonY, 66, 32, 0x7865,
+            DATA_COMPGEN(0x0067016c, normalDialogButtonBorder,
+                         "Box64x30.pcx"), 0x800);
+        button* cancelButton = new button(
+            RightButtonLoc + 1, ButtonY + 1, 64, 30,
+            DIALOG_RETURN_CANCEL,
+            DATA_COMPGEN(0x00660b04, normalDialogCancelButton,
+                         "iCancel.def"),
+            0, 1, 0, 1, 2);
+        widgets.push_back(cancelBorder);
+        widgets.push_back(cancelButton);
+
+        bitmapBorder* okayBorder = new bitmapBorder(
+            LeftButtonLoc, ButtonY, 66, 32, 0x7866,
+            DATA_COMPGEN(0x0067016c, normalDialogButtonBorder,
+                         "Box64x30.pcx"), 0x800);
+        button* okayButton = new button(
+            LeftButtonLoc + 1, ButtonY + 1, 64, 30,
+            DIALOG_RETURN_OK,
+            DATA_COMPGEN(0x00670160, normalDialogOkayButton, "iOkay.def"),
+            0, 1, 0, 0x1c, 2);
+        if (dialog_info.iMBType == NORMAL_DIALOG_CHOOSE_OPTIONAL)
+            okayButton->enable(0);
+        widgets.push_back(okayBorder);
+        widgets.push_back(okayButton);
+        break;
+    }
+
+    case NORMAL_DIALOG_DEFAULT:
+    case NORMAL_DIALOG_ORDINAL_5: {
+        bitmapBorder* okayBorder = new bitmapBorder(
+            CenterButtonLoc, ButtonY, 66, 32, 0x7866,
+            DATA_COMPGEN(0x0067016c, normalDialogButtonBorder,
+                         "Box64x30.pcx"), 0x800);
+        button* okayButton = new button(
+            CenterButtonLoc + 1, ButtonY + 1, 64, 30,
+            DIALOG_RETURN_OK,
+            DATA_COMPGEN(0x00670160, normalDialogOkayButton, "iOkay.def"),
+            0, 1, 0, 0x1c, 2);
+        widgets.push_back(okayBorder);
+        widgets.push_back(okayButton);
+        break;
+    }
+
+    case NORMAL_DIALOG_CHOOSE: {
+        bitmapBorder* okayBorder = new bitmapBorder(
+            CenterButtonLoc, ButtonY, 66, 32, 0x7866,
+            DATA_COMPGEN(0x0067016c, normalDialogButtonBorder,
+                         "Box64x30.pcx"), 0x800);
+        button* okayButton = new button(
+            CenterButtonLoc + 1, ButtonY + 1, 64, 30,
+            DIALOG_RETURN_OK,
+            DATA_COMPGEN(0x00670160, normalDialogOkayButton, "iOkay.def"),
+            0, 1, 0, 0x1c, 2);
+        okayButton->enable(0);
+        widgets.push_back(okayBorder);
+        widgets.push_back(okayButton);
+        break;
+    }
+
+    case NORMAL_DIALOG_ORDINAL_6: {
+        bitmapBorder* cancelBorder = new bitmapBorder(
+            CenterButtonLoc, ButtonY, 66, 32, 0x7865,
+            DATA_COMPGEN(0x0067016c, normalDialogButtonBorder,
+                         "Box64x30.pcx"), 0x800);
+        button* cancelButton = new button(
+            CenterButtonLoc + 1, ButtonY + 1, 64, 30,
+            DIALOG_RETURN_CANCEL,
+            DATA_COMPGEN(0x00660b04, normalDialogCancelButton,
+                         "iCancel.def"),
+            0, 1, 0, 1, 2);
+        widgets.push_back(cancelBorder);
+        widgets.push_back(cancelButton);
+        break;
+    }
+    }
+
+    for (int iconIndex = 0;
+         iconIndex < 8
+             && dialog_info.icons[iconIndex].resource != const_no_resource;
+         ++iconIndex) {
+        iconWidget* image = new iconWidget(
+            dialog_info.icons[iconIndex].spriteX,
+            dialog_info.icons[iconIndex].spriteY,
+            dialog_info.icons[iconIndex].spriteWidth,
+            dialog_info.icons[iconIndex].spriteHeight,
+            -1, dialog_info.icons[iconIndex].spriteName.c_str(),
+            dialog_info.icons[iconIndex].spriteFrameIndex,
+            0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
+        if (!image) {
+            MemError();
+        }
+        widgets.push_back(image);
+
+        if (dialog_info.icons[iconIndex].text.length() > 0) {
+            textWidget* text = new textWidget(
+                dialog_info.icons[iconIndex].textX,
+                dialog_info.icons[iconIndex].textY,
+                dialog_info.icons[iconIndex].textWidth,
+                dialog_info.icons[iconIndex].textHeight,
+                dialog_info.icons[iconIndex].text.c_str(),
+                DATA_COMPGEN(0x0065f2f8, normalDialogSmallFont,
+                             "smalfont.fnt"),
+                font::PRIMARY, -1, font::CENTER_JUSTIFIED, 0, 8);
+            if (!text) {
+                MemError();
+            }
+            widgets.push_back(text);
+        }
+
+        type_normal_dialog_frame* frame = new type_normal_dialog_frame(
+            dialog_info.icons[iconIndex].spriteX - 1,
+            dialog_info.icons[iconIndex].spriteY - 1,
+            dialog_info.icons[iconIndex].spriteWidth + 2,
+            dialog_info.icons[iconIndex].spriteHeight + 2,
+            0x7809 + iconIndex,
+            dialog_info.icons[iconIndex].resource,
+            dialog_info.icons[iconIndex].qualifier);
+        frame->set_visible(0);
+        widgets.push_back(frame);
+    }
+
+    if (dialog_info.iSpecial == 1) {
+        long text_width = gpMediumFont->LineWidth(
+            gpGeneralText->GetText(GENERAL_TEXT_LEVEL_UP_OR));
+        long text_height = gpMediumFont->fs.height;
+        long text_x = (dialog_info.width - text_width) / 2;
+        long text_y = dialog_info.icons[0].textY - text_height;
+        textWidget* special = new textWidget(
+            text_x, text_y, text_width, text_height,
+            gpGeneralText->GetText(GENERAL_TEXT_LEVEL_UP_OR),
+            DATA_COMPGEN(0x0065f2ec, normalDialogMediumFont,
+                         "medfont.fnt"),
+            font::PRIMARY, -1, font::CENTER_JUSTIFIED, 0, 8);
+        if (!special) {
+            MemError();
+        }
+        widgets.push_back(special);
+    }
+
+    for (int widgetIndex = 0; widgetIndex < widgets.size(); ++widgetIndex)
+        gpNormalDialogWindow->AddWidget(widgets[widgetIndex], -1);
+
+    mouseManager::EPointerSet oldSet = gpMouseManager->GetSet();
+    int oldFrame = gpMouseManager->GetFrame();
+    gpMouseManager->ShowPointer(1);
+    gpMouseManager->SetPointer(0, mouseManager::DEFAULT_SET);
+
+    VideoPause();
+    if (gUnnamed691209)
+        gDialogDeadline697784 = GameTime::Get() + 2000;
+
+    if (dialog_info.iMBType == NORMAL_DIALOG_ORDINAL_6
+            || dialog_info.iMBType == NORMAL_DIALOG_ORDINAL_5) {
+        gpWindowManager->DoDialog(gpNormalDialogWindow, WaitHandler, 0);
+    } else if (dialog_info.iMBType == NORMAL_DIALOG_POPUP) {
+        gpWindowManager->DoQuickView(gpNormalDialogWindow);
+    } else {
+        gpWindowManager->DoDialog(
+            gpNormalDialogWindow, NormalDialogHandler, 0);
+    }
+    VideoResume();
+
+    delete gpNormalDialogWindow;
+    gpMouseManager->SetPointer(oldFrame, oldSet);
+    gpNormalDialogWindow = pSaveNormalDialogWindow;
+
+    for (int deleteIndex = 0; deleteIndex < widgets.size(); ++deleteIndex)
+        delete widgets[deleteIndex];
+
+    giNormalDialogSelection = SaveNormalDialogSelection;
+    giNormalDialogMBType = SaveNormalDialogType;
+}
+
+// E:\gamedcs\kb.cpp:2279. The source-static handler is emitted after its
+// sole Complete caller. Its one PollSound call and message rewrite identify
+// retail 0x4f7620 independently of its near-identical 98-byte DC extent.
+VA(0x004f7620, 0x66)  // anchor-callee + body shape, dc 0xe1b94
+static int WaitHandler(message& msg)
+{
+    gUnnamed699254 = 1;
+    PollSound();
+    if (msg.id == MESSAGE_WIDGET
+            && msg.codeX == widget::WIDGET_DESELECT
+            && msg.codeY >= 0x7800
+            && msg.codeY <= DIALOG_RETURN_OK) {
+        gUnnamed699254 = 0;
+        gpWindowManager->dialogReturn = DIALOG_RETURN_CANCEL;
+        msg.id = MESSAGE_WIDGET;
+        msg.codeY = widget::WIDGET_END_DIALOG;
+        msg.codeX = widget::WIDGET_END_DIALOG;
+        return MESSAGE_DISPATCH_FORWARD;
+    }
+    return MESSAGE_DISPATCH_CONSUME;
+}
 
 VA(0x004f79b0, 0x25)  // decorated identity + map-extents arithmetic
 unsigned short GetMapExtra(int x, int y, int z)
