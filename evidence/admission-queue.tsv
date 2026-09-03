@@ -2,9 +2,7 @@
 # Admission campaign only; sorted by retail size descending.
 # Use `homm3 vc6 queue --polish` only after admission.
 state	size	rva	relation	owner	candidates	label	action
-unmapped	3253	0x1510	unmapped				locate the owning TU, then add its VA claim and body
 bracketed	3212	0xf6990	bracketed	kb..kbwin	kb,kbwin	calls_timeGetTime_f6990	resolve the owner, then add its VA claim and body
-carcass	3100	0x58120	bracketed	campaignbrief	campaignbrief	TCampaignBrief_AddBonusIcons	enable the existing VA claim and reconstruct its body
 unclaimed-in-span	3024	0x11ee50	in-span	overview	overview	game_121960_sub02_11ee50	add a VA claim and body to overview
 bracketed	2958	0x92840	bracketed	dimensiondoorwindow..drawing	dimensiondoorwindow,drawing	game_74d80_sub19_92840	resolve the owner, then add its VA claim and body
 unclaimed-in-span	2860	0x120e30	in-span	overview	overview	game_elementals_120e30	add a VA claim and body to overview
