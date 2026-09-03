@@ -307,6 +307,23 @@ class CfgTest(unittest.TestCase):
         events = dc_asm.control_events(view, bytes(data))
         self.assertEqual(events, {2: {"call_target_va": target}})
 
+    def test_control_events_do_not_leak_call_target_between_cfg_roots(self):
+        target = dc_asm.dc_lines.POOL_BASE + 0x100
+        data = bytearray(dc_asm.dc_lines.TEXT_RAW + 8)
+        data[dc_asm.dc_lines.TEXT_RAW:dc_asm.dc_lines.TEXT_RAW + 4] = \
+            bytes.fromhex("00d00b40")  # mov.l @(0,pc),r0; jsr @r0
+        data[dc_asm.dc_lines.TEXT_RAW + 4:] = struct.pack("<I", target)
+        view = {"blocks": [
+            {"instructions": [
+                {"address": 0, "bytes": "00d0", "mnemonic": "mov.l"},
+            ]},
+            {"instructions": [
+                {"address": 2, "bytes": "0b40", "mnemonic": "jsr"},
+            ]},
+        ]}
+        events = dc_asm.control_events(view, bytes(data))
+        self.assertEqual(events, {2: {"call_target_va": None}})
+
 
 
 class WrongNamespaceTest(unittest.TestCase):
