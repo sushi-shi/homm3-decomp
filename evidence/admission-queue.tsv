@@ -2,7 +2,6 @@
 # Admission campaign only; sorted by retail size descending.
 # Use `homm3 vc6 queue --polish` only after admission.
 state	size	rva	relation	owner	candidates	label	action
-bracketed	3263	0x2006e0	bracketed	winfile..wingraph	winfile,wingraph	game_dderr_outofmemory_2006e0	resolve the owner, then add its VA claim and body
 unmapped	3253	0x1510	unmapped				locate the owning TU, then add its VA claim and body
 bracketed	3212	0xf6990	bracketed	kb..kbwin	kb,kbwin	calls_timeGetTime_f6990	resolve the owner, then add its VA claim and body
 carcass	3100	0x58120	bracketed	campaignbrief	campaignbrief	TCampaignBrief_AddBonusIcons	enable the existing VA claim and reconstruct its body
