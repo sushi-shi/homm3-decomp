@@ -62,6 +62,14 @@ public:
         std::bitset<145> crossover_creatures;
         std::bitset<144> crossover_artifacts;
         void* options;
+
+        // Complete's campaign-map loader calls this on the selected
+        // scenario record for each matching map hero placeholder.  The
+        // receiver offsets prove this is ScenarioStruct itself; both
+        // arguments are fixed by the 0x10-byte placeholder stride and the
+        // 0x492-byte carry-over hero vector stride.
+        void InitializeCrossoverHero(HeroPlaceholderData* placeholder,
+                                     hero* sourceHero);
     };
 
     struct CampaignHeaderStruct {
