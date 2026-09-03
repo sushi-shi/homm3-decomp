@@ -282,35 +282,40 @@ def control_events(view: dict[str, Any], data: bytes) -> dict[int, dict[str, Any
     constants as source-level control flow.
     """
     sh4 = dc_lines.Sh4(data)
-    instructions = {
-        ins["address"]: ins
-        for block in view["blocks"] for ins in block["instructions"]
-    }
-    register_targets: dict[int, int] = {}
     events: dict[int, dict[str, Any]] = {}
-    for address, ins in sorted(instructions.items()):
-        raw = bytes.fromhex(ins["bytes"])
-        word = int.from_bytes(raw, "little")
-        if (word >> 12) == 0xD:
-            target = sh4.pool(address)
-            if target is not None:
-                register_targets[(word >> 8) & 0xF] = target
+    for block in view["blocks"]:
+        # A switch arm recovered from a CodeView breakpoint can have no CFG
+        # predecessor: its computed-jump landing pad (and therefore its
+        # literal load) is not necessarily represented by a line row.  Never
+        # let a register constant from an unrelated, earlier-address block
+        # leak into such an arm and turn an unresolved jsr into a false named
+        # source call.
+        register_targets: dict[int, int] = {}
+        for ins in block["instructions"]:
+            address = ins["address"]
+            raw = bytes.fromhex(ins["bytes"])
+            word = int.from_bytes(raw, "little")
+            if (word >> 12) == 0xD:
+                target = sh4.pool(address)
+                if target is not None:
+                    register_targets[(word >> 8) & 0xF] = target
 
-        event: dict[str, Any] = {}
-        if ins["mnemonic"] in {"bt", "bf", "bt/s", "bf/s"}:
-            event["conditional_branch"] = True
-        if (word & 0xF0FF) == 0x400B:  # jsr @Rn
-            event["call_target_va"] = register_targets.get((word >> 8) & 0xF)
-        elif (word & 0xF000) == 0xB000:  # bsr disp12
-            disp = word & 0xFFF
-            if disp & 0x800:
-                disp -= 0x1000
-            event["call_target_va"] = \
-                dc_lines.POOL_BASE + address + 4 + disp * 2
-        elif (word & 0xF0FF) == 0x0003:  # bsrf Rn
-            event["call_target_va"] = None
-        if event:
-            events[address] = event
+            event: dict[str, Any] = {}
+            if ins["mnemonic"] in {"bt", "bf", "bt/s", "bf/s"}:
+                event["conditional_branch"] = True
+            if (word & 0xF0FF) == 0x400B:  # jsr @Rn
+                event["call_target_va"] = register_targets.get(
+                    (word >> 8) & 0xF)
+            elif (word & 0xF000) == 0xB000:  # bsr disp12
+                disp = word & 0xFFF
+                if disp & 0x800:
+                    disp -= 0x1000
+                event["call_target_va"] = \
+                    dc_lines.POOL_BASE + address + 4 + disp * 2
+            elif (word & 0xF0FF) == 0x0003:  # bsrf Rn
+                event["call_target_va"] = None
+            if event:
+                events[address] = event
     return events
 
 
