@@ -949,6 +949,7 @@ cursor	advManager_ValidMoveWithEvent	0.0000	0.0000	0.0000	0x81ad0	dee616486353
 customcampaign	??0LegacyCampaignHero@@QAE@XZ	100.0000	100.0000	100.0000	0x8ae30	d00745bb485b
 customcampaign	??_H@YGXPAXIHP6EX0@Z@Z	100.0000	100.0000	100.0000	0x13d0	-
 customcampaign	?Load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	50.1494	50.1494	50.1494	0x8a310	09f5eda41d25
+customcampaign	?_Destroy@?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@IAEXPAUtype_artifact@@0@Z	100.0000	100.0000	100.0000	0x4140	-
 customcampaign	?_Insertion_sort_1@std@@YIXPAPAX0VCampaignHeaderPointerLess@@0@Z	100.0000	100.0000	100.0000	0x83aa0	-
 customcampaign	?erase@?$vector@UCampaignScenarioInfo@@V?$allocator@UCampaignScenarioInfo@@@std@@@std@@QAEPAUCampaignScenarioInfo@@PAU3@0@Z	100.0000	100.0000	100.0000	0x8cdd0	-
 customcampaign	?erase@?$vector@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@V?$allocator@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@@2@@std@@QAEPAV?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@2@PAV32@0@Z	100.0000	100.0000	100.0000	0x8ca30	-
@@ -957,10 +958,12 @@ customcampaign	?erase@?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@QAEPAVhero
 customcampaign	?get_score@SCampaign@@QBEHXZ	100.0000	100.0000	100.0000	0x8b200	7000f32081c7
 customcampaign	?get_total_time@SCampaign@@QBEHXZ	100.0000	100.0000	100.0000	0x8b280	e320ba64afbf
 customcampaign	?insert@?$vector@UCampaignScenarioInfo@@V?$allocator@UCampaignScenarioInfo@@@std@@@std@@QAEXPAUCampaignScenarioInfo@@IABU3@@Z	100.0000	100.0000	100.0000	0x8cae0	-
+customcampaign	?insert@?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@QAEXPAUtype_artifact@@IABU3@@Z	100.0000	100.0000	100.0000	0x14d330	-
 customcampaign	?insert@?$vector@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@V?$allocator@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@@2@@std@@QAEXPAV?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@2@IABV32@@Z	100.0000	100.0000	100.0000	0x8c7a0	-
 customcampaign	?insert@?$vector@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@V?$allocator@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@@2@@std@@QAEXPAV?$vector@Vhero@@V?$allocator@Vhero@@@std@@@2@IABV32@@Z	100.0000	100.0000	100.0000	0x8c270	-
 customcampaign	?insert@?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@QAEXPAVhero@@IABV3@@Z	100.0000	100.0000	100.0000	0x8d060	-
 customcampaign	?size@?$vector@UCampaignScenarioInfo@@V?$allocator@UCampaignScenarioInfo@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x8b440	-
+customcampaign	?size@?$vector@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@V?$allocator@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@@2@@std@@QBEIXZ	100.0000	100.0000	100.0000	0xaf4e0	-
 customcampaign	?size@?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x8b470	-
 customcampaign	TCampaignBrief_CampaignHeaderStruct_CampaignHeaderStruct	0.0000	0.0000	0.0000	0x885d0	320616a4325e
 customcampaign	TCampaignBrief_CampaignHeaderStruct_CampaignHeaderStruct_886a0	0.0000	0.0000	0.0000	0x886a0	ebc9c83362ec
