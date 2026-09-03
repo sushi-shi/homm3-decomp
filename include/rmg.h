@@ -5,6 +5,8 @@
 #include <vector>
 #include <va.h>
 
+class TAbstractFile;
+
 // Complete's random-map object factories share this five-dword prefix.  The
 // constructor at 0x534160 writes the four fields, while vtable 0x640b64 proves
 // three virtual operations: an object factory taking three arguments, a
@@ -251,22 +253,94 @@ SIZE(type_quest_creature_def, 0x1c);
 SIZE(type_quest_experience_def, 0x18);
 SIZE(type_quest_gold_def, 0x18);
 
-// Only fields read by InitializeObjectGenerators are named.  The vector
-// offsets are proven by their VC6 member accesses in retail; the opaque spans
-// preserve the surrounding Complete-only RMG layout without inventing it.
+// A generated town retains its source slot, selected alignment, and map
+// position.  The map-header writer proves every named offset through the
+// player-alignment and main-town serialization loops.
+struct TRmgTownSlot {
+    char opaque0000[0x4];
+    int kind;                       // +0x04: human (0) or computer (1)
+    char opaque0008[0x14];
+    int playerIndex;                // +0x1c
+};
+
+struct TRmgMapPosition {
+    int x;
+    int y;
+    int z;
+};
+
+struct TRmgGeneratedTown {
+    TRmgTownSlot* slot;              // +0x00
+    int alignment;                   // +0x04
+    char opaque0008[0x28];
+    TRmgMapPosition position;         // +0x30
+    unsigned char active;            // +0x3c
+    char pad003d[0x3];
+};
+
+SIZE(TRmgTownSlot, 0x20);
+SIZE(TRmgMapPosition, 0xc);
+SIZE(TRmgGeneratedTown, 0x40);
+
+enum ERmgMapVersion {
+    RMG_MAP_RESTORATION_OF_ERATHIA = 0,
+    RMG_MAP_ARMAGEDDONS_BLADE = 1,
+    RMG_MAP_SHADOW_OF_DEATH = 2
+};
+
+// The Complete-only map-header writer extends the object-factory evidence
+// into the late generator state.  Each named field below is read or written
+// at its annotated offset by retail 0x549cb0; opaque spans preserve all
+// unobserved state without guessing at its source identity.
 class type_random_map_generator {
 public:
-    char opaque0000[0x8];
-    int mapVersion;
-    char opaque000c[0xc8];
+    char opaque0000[0x4];
+    int randomSeed;                                  // +0x004
+    int mapVersion;                                  // +0x008
+    char opaque000c[0xc];
+    int mapSize;                                     // +0x018
+    char opaque001c[0x4];
+    int levels;                                      // +0x020
+    char opaque0024[0xb0];
     std::vector<int> playerSlots;                    // +0x0d4
     char opaque00e4[0x480];
     std::vector<int> questSlots;                     // +0x564
-    char opaque0574[0xb7c];
+    char opaque0574[0x964];
+    unsigned char fixedHumanPlayers[8];              // +0x0ed8
+    char opaque0ee0[0x4];
+    int playerIndexMap[16];                          // +0x0ee4
+    int townChoices[8];                              // +0x0f24
+    char opaque0f44[0x4];
+    int humanPlayerCount;                            // +0x0f48
+    int humanTeamCount;                              // +0x0f4c
+    int computerPlayerCount;                         // +0x0f50
+    int computerTeamCount;                           // +0x0f54
+    char opaque0f58[0x30];
+    unsigned char disabledHeroes[156];               // +0x0f88
+    char opaque1024[0x94];
+    int waterContent;                                // +0x10b8
+    int monsterStrength;                             // +0x10bc
+    char opaque10c0[0x4];
+    const char* templateName;                        // +0x10c4
+    char opaque10c8[0x18];
+    std::vector<TRmgGeneratedTown*> generatedTowns;  // +0x10e0
     std::vector<type_treasure_def*> objectGenerators; // +0x10f0
     std::vector<unsigned char> disabledKeyTents;     // +0x1100
 
+    inline int GetSerializedMapVersion() const
+    {
+        switch (mapVersion) {
+        case RMG_MAP_RESTORATION_OF_ERATHIA:
+            return 14;
+        case RMG_MAP_ARMAGEDDONS_BLADE:
+            return 21;
+        case RMG_MAP_SHADOW_OF_DEATH:
+            return 28;
+        }
+    }
+
     void InitializeObjectGenerators();
+    void WriteMapHeader(TAbstractFile* outfile);
 };
 
 SIZE(type_random_map_generator, 0x1110);

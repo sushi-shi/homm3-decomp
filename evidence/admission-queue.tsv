@@ -2,8 +2,6 @@
 # Admission campaign only; sorted by retail size descending.
 # Use `homm3 vc6 queue --polish` only after admission.
 state	size	rva	relation	owner	candidates	label	action
-bracketed	3785	0xf4eb0	bracketed	kb..kbwin	kb,kbwin	game_hisccam_def_f4eb0	resolve the owner, then add its VA claim and body
-bracketed	3728	0x149cb0	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_random_map_149cb0	resolve the owner, then add its VA claim and body
 bracketed	3263	0x2006e0	bracketed	winfile..wingraph	winfile,wingraph	game_dderr_outofmemory_2006e0	resolve the owner, then add its VA claim and body
 unmapped	3253	0x1510	unmapped				locate the owning TU, then add its VA claim and body
 bracketed	3212	0xf6990	bracketed	kb..kbwin	kb,kbwin	calls_timeGetTime_f6990	resolve the owner, then add its VA claim and body
@@ -712,7 +710,6 @@ bracketed	174	0xb654b	bracketed	font..game	font,game	game_h3shad_ifr_b654b	resol
 bracketed	173	0x5c8b0	bracketed	campaignbrief..campaignmap	campaignbrief,campaignmap	game_5c070_sub01_5c8b0	resolve the owner, then add its VA claim and body
 bracketed	173	0x114960	bracketed	newgame..overview	newgame,overview	game_106080_sub03_114960	resolve the owner, then add its VA claim and body
 bracketed	173	0x1175d0	bracketed	newgame..overview	newgame,overview	game_116ae0_sub01_1175d0	resolve the owner, then add its VA claim and body
-bracketed	173	0x14ab40	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_149cb0_sub00_14ab40	resolve the owner, then add its VA claim and body
 carcass	172	0x88f00	bracketed	customcampaign	customcampaign	TCampaignBrief_CampaignHeaderStruct_GetAvailableScenarios	enable the existing VA claim and reconstruct its body
 bracketed	171	0xb0350	bracketed	events..exec	events,exec	game_afcb0_sub02_b0350	resolve the owner, then add its VA claim and body
 bracketed	171	0x12bc60	bracketed	philai..puzzlewindow	philai,playvideo,puzzlewindow	game_9fa90_sub02_12bc60	resolve the owner, then add its VA claim and body
@@ -874,7 +871,6 @@ bracketed	100	0x134310	bracketed	quicktownwindow..recruit	quicktownwindow,recrui
 bracketed	100	0x134fd0	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_134fd0	resolve the owner, then add its VA claim and body
 bracketed	99	0x54320	bracketed	bottomviewsubwindow..button	bottomviewsubwindow,button	game_228ba0_sub00_54320	resolve the owner, then add its VA claim and body
 bracketed	99	0x1327c0	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_1327c0	resolve the owner, then add its VA claim and body
-bracketed	99	0x14ded0	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_149cb0_sub01_14ded0	resolve the owner, then add its VA claim and body
 unmapped	99	0x204570	unmapped				locate the owning TU, then add its VA claim and body
 bracketed	98	0x132410	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_132410	resolve the owner, then add its VA claim and body
 bracketed	97	0x1154a0	bracketed	newgame..overview	newgame,overview	game_114d80_sub02_1154a0	resolve the owner, then add its VA claim and body
