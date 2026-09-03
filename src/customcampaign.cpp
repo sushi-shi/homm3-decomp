@@ -15,9 +15,237 @@
 #include "customcampaign_legacy.h"
 #include "hero.h"
 
+inline type_point::type_point(short new_x, short new_y, short new_z)
+    : x(new_x), y(new_y), z(new_z)
+{
+}
+
 // Scenario ordinals used when the fixed legacy matrices are promoted to the
 // current variable-length CampaignScenarioInfo vector.
 DATA(0x0063d8c8) static int legacyCampaignScenarioIndices[7][4];
+
+static const int CROSSOVER_PRIMARY_ARTIFACT_SLOTS = 16;
+static const int CROSSOVER_EQUIPPED_ARTIFACT_SLOTS = 19;
+static const int CROSSOVER_PRIMARY_SKILLS = 4;
+static const int CROSSOVER_SPLIT_CAMPAIGN = 9;
+static const int CROSSOVER_SPLIT_FIRST_SCENARIO = 0;
+static const int CROSSOVER_SPLIT_LAST_SCENARIO = 1;
+static const int CROSSOVER_BONUS_CAMPAIGN = 8;
+static const int CROSSOVER_BONUS_SCENARIO = 3;
+static const int CROSSOVER_BONUS_HERO = 151;
+static const int CROSSOVER_BONUS_PORTRAIT = 153;
+static const int CROSSOVER_BONUS_AMOUNT = 4;
+static const int CROSSOVER_PATROL_CAMPAIGN = 7;
+static const int CROSSOVER_PATROL_FIRST_SCENARIO = 6;
+static const int CROSSOVER_PATROL_LAST_SCENARIO = 7;
+static const int CROSSOVER_PATROL_HERO = 155;
+static const int CROSSOVER_PATROL_RADIUS = 10;
+
+// Complete-only campaign carry-over expansion. Dreamcast's campaign path has
+// no counterpart, but its debug types still corroborate hero, army and
+// artifact source boundaries. Retail independently proves the ScenarioStruct
+// receiver (+0x44..+0xa4), HeroPlaceholderData argument, and source hero.
+VA(0x00486590, 0xA84)  // two calls from ScenarioStruct's 0x487290 map setup
+void TCampaignBrief::ScenarioStruct::InitializeCrossoverHero(
+    HeroPlaceholderData* placeholder, hero* sourceHero)
+{
+    CObject* object = placeholder->object;
+    hero* currentHero = gpGame->GetHero(sourceHero->id);
+    currentHero->field_01e = 0;
+    currentHero->id = sourceHero->id;
+    SCampaign* currentCampaign = &gpGame->campaign;
+    int slot;
+
+    if (currentCampaign->currentCampaign == CROSSOVER_SPLIT_CAMPAIGN
+        && (currentCampaign->currentMap == CROSSOVER_SPLIT_FIRST_SCENARIO
+            || currentCampaign->currentMap
+                == CROSSOVER_SPLIT_LAST_SCENARIO)
+        && (currentCampaign->mapScores[0].completed
+            || currentCampaign->mapScores[1].completed)) {
+        crossover_creatures.reset();
+    }
+
+    if (retain_xp) {
+        currentHero->experience = sourceHero->experience;
+        currentHero->level = sourceHero->level;
+    }
+
+    if (retain_pskills) {
+        type_artifact savedArtifacts[CROSSOVER_PRIMARY_ARTIFACT_SLOTS];
+        for (slot = 0; slot < CROSSOVER_PRIMARY_ARTIFACT_SLOTS; ++slot)
+            savedArtifacts[slot] = type_artifact();
+
+        for (slot = 0; slot < CROSSOVER_PRIMARY_ARTIFACT_SLOTS; ++slot) {
+            type_artifact artifact = currentHero->equipped[slot];
+            if (artifact.artifactId != ARTIFACT_NONE) {
+                savedArtifacts[slot] = artifact;
+                currentHero->remove_artifact(slot);
+            }
+        }
+
+        for (slot = 0; slot < CROSSOVER_PRIMARY_ARTIFACT_SLOTS; ++slot) {
+            type_artifact artifact = sourceHero->equipped[slot];
+            if (artifact.artifactId != ARTIFACT_NONE)
+                currentHero->equip_artifact(&artifact, slot);
+        }
+
+        for (int skill = 0; skill < CROSSOVER_PRIMARY_SKILLS; ++skill) {
+            currentHero->SetPrimarySkill(
+                skill, sourceHero->GetPrimarySkill(skill));
+        }
+
+        for (slot = 0; slot < CROSSOVER_PRIMARY_ARTIFACT_SLOTS; ++slot) {
+            type_artifact artifact = currentHero->equipped[slot];
+            if (artifact.artifactId != ARTIFACT_NONE)
+                currentHero->remove_artifact(slot);
+        }
+
+        for (slot = 0; slot < CROSSOVER_PRIMARY_ARTIFACT_SLOTS; ++slot) {
+            if (savedArtifacts[slot].artifactId != ARTIFACT_NONE)
+                currentHero->equip_artifact(&savedArtifacts[slot], slot);
+        }
+    }
+
+    if (retain_sskills) {
+        currentHero->skillCount = sourceHero->skillCount;
+        memcpy(currentHero->skillLevel, sourceHero->skillLevel,
+               sizeof(currentHero->skillLevel));
+        memcpy(currentHero->skillOrder, sourceHero->skillOrder,
+               sizeof(currentHero->skillOrder));
+    }
+
+    int triggerX;
+    int triggerY;
+    object->FindTrigger(triggerX, triggerY);
+    currentHero->x = static_cast<short>(triggerX);
+    currentHero->y = static_cast<short>(triggerY);
+    currentHero->z = object->z;
+    currentHero->owner = static_cast<signed char>(placeholder->owner);
+    currentHero->heroClass = sourceHero->heroClass;
+    currentHero->patrolRadius = -1;
+    currentHero->patrolX = hero::kPatrolNone;
+    strcpy(currentHero->name, sourceHero->name);
+    currentHero->portrait = sourceHero->portrait;
+
+    if (gbUnk69774c) {
+        if (currentCampaign->currentCampaign == CROSSOVER_BONUS_CAMPAIGN
+            && currentCampaign->currentMap == CROSSOVER_BONUS_SCENARIO
+            && sourceHero->id == CROSSOVER_BONUS_HERO) {
+            currentHero->portrait = CROSSOVER_BONUS_PORTRAIT;
+            currentHero->SetPrimarySkill(
+                0, currentHero->GetPrimarySkill(0)
+                    + CROSSOVER_BONUS_AMOUNT);
+            currentHero->SetPrimarySkill(
+                1, currentHero->GetPrimarySkill(1)
+                    + CROSSOVER_BONUS_AMOUNT);
+        }
+        if (currentCampaign->currentCampaign == CROSSOVER_PATROL_CAMPAIGN
+            && (currentCampaign->currentMap
+                    == CROSSOVER_PATROL_FIRST_SCENARIO
+                || currentCampaign->currentMap
+                    == CROSSOVER_PATROL_LAST_SCENARIO)
+            && sourceHero->id == CROSSOVER_PATROL_HERO) {
+            currentHero->patrolRadius = CROSSOVER_PATROL_RADIUS;
+            currentHero->patrolX = static_cast<unsigned char>(triggerX);
+            currentHero->patrolY = static_cast<unsigned char>(triggerY);
+        }
+    }
+
+    currentHero->army.Initialize();
+    for (slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
+        if (sourceHero->army.armies[slot] != -1
+            && crossover_creatures.test(sourceHero->army.armies[slot])) {
+            currentHero->army.Add(sourceHero->army.armies[slot],
+                                  sourceHero->army.numTroops[slot], -1);
+        }
+    }
+    if (currentHero->army.get_creature_total() == 0)
+        gpGame->SetRandomHeroArmies(currentHero->id, 0, 0);
+
+    if (retain_spellbook) {
+        memset(currentHero->in_spellbook, 0,
+               sizeof(currentHero->in_spellbook));
+        memset(currentHero->available_spells, 0,
+               sizeof(currentHero->available_spells));
+        for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+            if (sourceHero->in_spellbook[spell])
+                currentHero->AddSpell(spell);
+        }
+        if (!retain_artifacts
+            && sourceHero->equipped[hero::EQUIPPED_SLOT_SPELLBOOK].artifactId
+                == ARTIFACT_SPELLBOOK
+            && currentHero->equipped[hero::EQUIPPED_SLOT_SPELLBOOK].artifactId
+                == ARTIFACT_NONE) {
+            type_artifact spellbook(ARTIFACT_SPELLBOOK, -1);
+            currentHero->equip_artifact(&spellbook, -1);
+        }
+    }
+
+    if (retain_artifacts) {
+        for (slot = 0; slot < CROSSOVER_EQUIPPED_ARTIFACT_SLOTS; ++slot) {
+            type_artifact artifact = currentHero->equipped[slot];
+            if (artifact.artifactId != ARTIFACT_NONE)
+                currentHero->remove_artifact(slot);
+        }
+        for (slot = 0; slot < CROSSOVER_EQUIPPED_ARTIFACT_SLOTS; ++slot) {
+            type_artifact artifact = sourceHero->equipped[slot];
+            if (artifact.artifactId != ARTIFACT_NONE)
+                currentHero->equip_artifact(&artifact, slot);
+        }
+        while (currentHero->get_number_in_backpack(1) > 0) {
+            currentHero->remove_backpack_artifact(
+                static_cast<short>(currentHero->get_last_backpack_index()));
+        }
+        for (slot = 0; slot < HERO_BACKPACK_CAPACITY; ++slot) {
+            if (sourceHero->backpack[slot].artifactId != ARTIFACT_NONE)
+                currentHero->add_to_backpack(&sourceHero->backpack[slot], -1);
+        }
+    } else {
+        for (slot = 0; slot < CROSSOVER_EQUIPPED_ARTIFACT_SLOTS; ++slot) {
+            type_artifact artifact = sourceHero->equipped[slot];
+            if (artifact.artifactId != ARTIFACT_NONE
+                && crossover_artifacts.test(artifact.artifactId)) {
+                type_artifact displaced = currentHero->equipped[slot];
+                if (displaced.artifactId != ARTIFACT_NONE)
+                    currentHero->remove_artifact(slot);
+                currentHero->equip_artifact(&artifact, slot);
+            }
+        }
+        for (slot = 0; slot < HERO_BACKPACK_CAPACITY; ++slot) {
+            type_artifact artifact = sourceHero->backpack[slot];
+            if (artifact.artifactId != ARTIFACT_NONE
+                && crossover_artifacts.test(artifact.artifactId)) {
+                currentHero->add_to_backpack(&artifact, -1);
+            }
+        }
+    }
+
+    currentHero->sex = sourceHero->sex;
+    if (sourceHero->hasCustomName) {
+        currentHero->customName = sourceHero->HeroFn_004D8FB0();
+        currentHero->hasCustomName = 1;
+    }
+
+    currentHero->mana = static_cast<short>(currentHero->GetMaxMana());
+    currentHero->maxMovePoints = currentHero->movePoints
+        = currentHero->GetMobility();
+
+    type_point heroLocation(currentHero->x, currentHero->y, currentHero->z);
+    --heroLocation.x;
+    NewmapCell* cell = gpGame->worldMap.cell(heroLocation);
+    if (cell->type == PRISON && cell->is_trigger)
+        --currentHero->x;
+
+    gpGame->players[currentHero->owner].heroes[
+        gpGame->players[currentHero->owner].numHeroes] = currentHero->id;
+    ++gpGame->players[currentHero->owner].numHeroes;
+    currentHero->obscure_cell();
+    gpGame->heroAvailability[currentHero->id] = currentHero->owner;
+    gpGame->heroPoolMap[currentHero->id].set(currentHero->owner);
+    gpGame->SetVisibility(currentHero->x, currentHero->y, currentHero->z,
+                          currentHero->owner, currentHero->GetVisibility(), 1);
+    gpGame->campaign.field_6c.push_back(currentHero->id);
+}
 
 #if 0  // Dreamcast-only carcass; retained as evidence, not emitted for retail.
 // E:\gamedcs\customcampaign.cpp:29
