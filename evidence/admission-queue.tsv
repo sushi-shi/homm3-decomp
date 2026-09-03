@@ -2,8 +2,6 @@
 # Admission campaign only; sorted by retail size descending.
 # Use `homm3 vc6 queue --polish` only after admission.
 state	size	rva	relation	owner	candidates	label	action
-bracketed	2958	0x92840	bracketed	dimensiondoorwindow..drawing	dimensiondoorwindow,drawing	game_74d80_sub19_92840	resolve the owner, then add its VA claim and body
-unclaimed-in-span	2860	0x120e30	in-span	overview	overview	game_elementals_120e30	add a VA claim and body to overview
 bracketed	2846	0x8a310	bracketed	cursor..customcampaign	cursor,customcampaign	game_bc750_sub00_8a310	resolve the owner, then add its VA claim and body
 unclaimed-in-span	2819	0x121960	in-span	overview	overview	game_121960	add a VA claim and body to overview
 bracketed	2728	0x19ec50	bracketed	spelldefs..spells	spelldefs,spells	game_68860_sub00_19ec50	resolve the owner, then add its VA claim and body
@@ -58,7 +56,6 @@ bracketed	1364	0x142ce0	bracketed	quicktownwindow..recruit	quicktownwindow,recru
 bracketed	1361	0x13d380	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_13e050_sub01_13d380	resolve the owner, then add its VA claim and body
 bracketed	1361	0x1939f0	bracketed	singleselectionwindow..slider	singleselectionwindow,slider	game_autosave_1939f0	resolve the owner, then add its VA claim and body
 bracketed	1357	0x1c8a0	bracketed	advspells..ai	advspells,ai	game_1c490_sub00_1c8a0	resolve the owner, then add its VA claim and body
-bracketed	1356	0x922f0	bracketed	dimensiondoorwindow..drawing	dimensiondoorwindow,drawing	game_92840_sub00_922f0	resolve the owner, then add its VA claim and body
 bracketed	1350	0x1e570	bracketed	advspells..ai	advspells,ai	game_22da0_sub00_1e570	resolve the owner, then add its VA claim and body
 bracketed	1342	0x5c200	bracketed	campaignbrief..campaignmap	campaignbrief,campaignmap	game_5c070_sub00_5c200	resolve the owner, then add its VA claim and body
 bracketed	1342	0x117090	bracketed	newgame..overview	newgame,overview	game_116ae0_sub00_117090	resolve the owner, then add its VA claim and body
@@ -269,7 +266,6 @@ bracketed	639	0x23340	bracketed	ai..ai_combat	ai,ai_combat	game_1f140_sub03_2334
 bracketed	638	0x1446a0	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_149930_sub06_1446a0	resolve the owner, then add its VA claim and body
 bracketed	638	0x16a850	bracketed	search..seerhut	search,seerhut	game_16ab40_sub02_16a850	resolve the owner, then add its VA claim and body
 bracketed	634	0x5e7c0	bracketed	campaignmap..campaignwindow	campaignmap,campaignwindow	calls_BinkPause_8_5e7c0	resolve the owner, then add its VA claim and body
-bracketed	634	0x933d0	bracketed	dimensiondoorwindow..drawing	dimensiondoorwindow,drawing	game_s_s_933d0	resolve the owner, then add its VA claim and body
 bracketed	634	0x115ca0	bracketed	newgame..overview	newgame,overview	game_missing_locale_facet_115ca0	resolve the owner, then add its VA claim and body
 bracketed	632	0x22b20	bracketed	ai..ai_combat	ai,ai_combat	game_1e190_sub00_22b20	resolve the owner, then add its VA claim and body
 bracketed	629	0x84910	bracketed	cursor..customcampaign	cursor,customcampaign	game_d_s_84910	resolve the owner, then add its VA claim and body
@@ -676,7 +672,6 @@ bracketed	190	0x6a680	bracketed	cmbtmgr..combatcontrolsubwindow	cmbtmgr,combatco
 bracketed	190	0xb6f60	bracketed	font..game	font,game	game_b61b0_sub00_b6f60	resolve the owner, then add its VA claim and body
 bracketed	190	0x15d2c0	bracketed	resourcemanager..sacrifice_window	resourcemanager,ressw,sacrifice_window	game_159400_sub00_15d2c0	resolve the owner, then add its VA claim and body
 bracketed	190	0x1770c0	bracketed	singleselectionpopups..singleselectionwindow	singleselectionpopups,singleselectionwindow	game_177090_sub00_1770c0	resolve the owner, then add its VA claim and body
-bracketed	189	0x93650	bracketed	dimensiondoorwindow..drawing	dimensiondoorwindow,drawing	game_d_dk_93650	resolve the owner, then add its VA claim and body
 bracketed	188	0x11a780	bracketed	newgame..overview	newgame,overview	game_117dd0_sub03_11a780	resolve the owner, then add its VA claim and body
 bracketed	188	0x11b510	bracketed	newgame..overview	newgame,overview	game_117ba0_sub00_11b510	resolve the owner, then add its VA claim and body
 bracketed	186	0x85a90	bracketed	cursor..customcampaign	cursor,customcampaign	game_85a90	resolve the owner, then add its VA claim and body

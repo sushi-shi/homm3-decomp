@@ -9,6 +9,7 @@
 #include "advmgr.h"
 #include "border.h"
 #include "button.h"
+#include "creaturetype.h"
 #include "exec.h"
 #include "herospec.h"
 #include "iconwdgt.h"
@@ -17,11 +18,13 @@
 #include "kb.h"
 #include "message.h"
 #include "recruit.h"
+#include "quicktownwindow.h"
 #include "resourcedisplay.h"
 #include "resourcemanager.h"
 #include "slider.h"
 #include "spellbookwindow.h"
 #include "sskilltraits.h"
+#include "text.h"
 #include "textresource.h"
 #include "textwdgt.h"
 #include "window.h"
@@ -60,9 +63,16 @@ DATA(0x0069cc54) static int giOverviewType;
 DATA(0x0069cc58) static int giOverviewTop[2];
 DATA(0x0069cbe8) static int iLastDynamicType;
 // One Dreamcast-attested array: indices 0..1 and 3..5 are the two title
-// groups, 6..7 describe the overview selector buttons, and 8..10 describe
-// the three hero-artifact pages. Complete accesses all eleven cells.
-DATA(0x006a7ec0) static const char* cOverviewText[11];
+// groups, 6..7 describe the overview selector buttons, 8..10 their
+// right-click help, 11..12 their rollover text, and 13..15 describe the
+// three hero-artifact pages on rollover. Complete accesses all sixteen
+// cells.
+DATA(0x006a7ec0) static const char* cOverviewText[16];
+
+// Complete keeps the first visible entry in the constructor-built
+// flaggable-item vector here. Dreamcast has the same top/count/array
+// rollover shape in globals; retail moves the records into TOverviewWindow.
+DATA(0x0069cbe4) static int iOverviewFlaggableTop;
 
 // Dreamcast public symbols give these exact names; Complete's town-selection
 // arm proves the two retail cells and the OVERVIEW_EXIT_TOWN value.
@@ -1540,6 +1550,537 @@ TOverviewWindow::~TOverviewWindow()
     // DC keeps this cache sweep out of line. Complete has no call at this
     // point; the PC declaration is therefore its retail-neutral inline form.
     ResourceManager::del_Spr_from_Cache();
+}
+
+// Dreamcast proves three independent source statements and the exact
+// private helper boundary. Its literal pool fixes the three highlighted
+// controls at slot+128, slot+129 and slot+138. Complete has no surviving
+// standalone copy; WindowHandler is expected to expand this helper.
+// E:\gamedcs\overview.cpp:2096
+void TOverviewWindow::ClearButtons(int slot)
+{
+    BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
+                     slot + OVERVIEW_HERO_ARTIFACT_PAGE_1_ID,
+                     widget::WIDGET_HIGHLIGHTED);
+    BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
+                     slot + OVERVIEW_HERO_ARTIFACT_PAGE_2_ID,
+                     widget::WIDGET_HIGHLIGHTED);
+    BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
+                     slot + OVERVIEW_HERO_ARTIFACT_PAGE_3_ID,
+                     widget::WIDGET_HIGHLIGHTED);
+}
+
+// Dreamcast proves this private helper, the message local, its constructor,
+// the four assignments and the final BroadcastMessage/DrawWindow pair.
+// Complete retains precisely that sequence at the tail of DoRollover, but
+// VC6 /Ob2 folds the helper body into its only caller.
+// E:\gamedcs\overview.cpp:2103
+void TOverviewWindow::UpdateRollover(char* cText)
+{
+    message msg;
+    msg.id = MESSAGE_WIDGET;
+    msg.codeX = widget::WIDGET_SET_TEXT;
+    msg.codeY = 37;
+    msg.extraText = cText;
+    overWin->BroadcastMessage(&msg);
+
+    overWin->DrawWindow(1, 36, 37);
+}
+
+// Dreamcast supplies the original helper boundary, signature, sole named
+// iSlot local, nested switch order, accessor calls and scope tree. Complete
+// independently fixes the four 200-id overview rows, the widened hero and
+// town control bands, the constructor-built flaggable vector, and the two
+// Complete help bands. Retail expands GetHero/GetTown/GetArmyName and the
+// final UpdateRollover helper; those source boundaries remain explicit here.
+// Negative control: naming top+iSlot as a hero-index local raises the byte
+// checkpoint (97.85 -> 98.25; function-wide lifetime 98.51) but creates a
+// 134th x86 block and destroys the otherwise exact 133-block flow pairing.
+// Dreamcast retains only iSlot, so the repeated source expression is kept.
+// E:\gamedcs\overview.cpp:2115
+VA(0x00520e30, 0xB2C)  // vtable/caller/order-map + exhaustive body, dc 0x10906c
+void TOverviewWindow::DoRollover(int codeY)
+{
+    int iSlot;
+
+    if (codeY >= 200 && codeY <= 999) {
+        iSlot = (codeY - 200) / 200;
+        if (giOverviewTop[giOverviewType] + iSlot
+                > giOverviewItems[giOverviewType])
+            return;
+        codeY = (codeY - 200) % 200;
+
+        if (giOverviewType == 0) {
+            hero* currHero = gpGame->GetHero(
+                gOverviewHeroIds[giOverviewTop[giOverviewType] + iSlot]);
+
+            switch (codeY) {
+            case OVERVIEW_HERO_ARTIFACT_PAGE_1_ID:
+                strcpy(gText, cOverviewText[13]);
+                break;
+            case OVERVIEW_HERO_ARTIFACT_PAGE_2_ID:
+                strcpy(gText, cOverviewText[14]);
+                break;
+            case OVERVIEW_HERO_ARTIFACT_PAGE_3_ID:
+                strcpy(gText, cOverviewText[15]);
+                break;
+
+            case OVERVIEW_HERO_VIEW_ICON_ID:
+            case OVERVIEW_HERO_VIEW_NAME_ID:
+                sprintf(gText,
+                        (*gpGeneralText)[GENERAL_TEXT_HERO_ROLLOVER_FORMAT],
+                        currHero->name, currHero->HeroFn_004D8F70());
+                break;
+
+            case OVERVIEW_HERO_ARMY_SECOND_ROW_FIRST_ID:
+            case OVERVIEW_HERO_ARMY_SECOND_ROW_FIRST_ID + 1:
+            case OVERVIEW_HERO_ARMY_SECOND_ROW_FIRST_ID + 2:
+            case OVERVIEW_HERO_ARMY_SECOND_ROW_FIRST_ID + 3:
+            case OVERVIEW_HERO_ARMY_SECOND_ROW_FIRST_ID + 4:
+            case OVERVIEW_HERO_ARMY_SECOND_ROW_FIRST_ID + 5:
+            case OVERVIEW_HERO_ARMY_SECOND_ROW_FIRST_ID + 6:
+                sprintf(gText, gHeroScreenNameFormat,
+                        GetArmyName(currHero->army.armies[
+                            codeY - OVERVIEW_HERO_ARMY_SECOND_ROW_FIRST_ID],
+                                    2));
+                break;
+
+            case OVERVIEW_HERO_ARMY_FIRST_ID:
+            case OVERVIEW_HERO_ARMY_FIRST_ID + 1:
+            case OVERVIEW_HERO_ARMY_FIRST_ID + 2:
+            case OVERVIEW_HERO_ARMY_FIRST_ID + 3:
+            case OVERVIEW_HERO_ARMY_FIRST_ID + 4:
+            case OVERVIEW_HERO_ARMY_FIRST_ID + 5:
+            case OVERVIEW_HERO_ARMY_FIRST_ID + 6:
+                sprintf(gText, gHeroScreenNameFormat,
+                        GetArmyName(currHero->army.armies[
+                                        codeY - OVERVIEW_HERO_ARMY_FIRST_ID],
+                                    2));
+                break;
+
+            case OVERVIEW_HERO_PRIMARY_STAT_FIRST_ID:
+            case OVERVIEW_HERO_PRIMARY_STAT_FIRST_ID + 1:
+            case OVERVIEW_HERO_PRIMARY_STAT_FIRST_ID + 2:
+            case OVERVIEW_HERO_PRIMARY_STAT_FIRST_ID + 3:
+                sprintf(gText, gHeroScreenNameFormat,
+                        gPrimarySkillNames[
+                            codeY - OVERVIEW_HERO_PRIMARY_STAT_FIRST_ID]);
+                break;
+
+            case OVERVIEW_HERO_MORALE_ID:
+                if (currHero->GetMorale(0, 0, 1) > 0)
+                    sprintf(gText, gHeroScreenMoraleHighText);
+                else if (currHero->GetMorale(0, 0, 1) == 0)
+                    sprintf(gText, gHeroScreenMoraleNeutralText);
+                else
+                    sprintf(gText, gHeroScreenMoraleLowText);
+                break;
+
+            case OVERVIEW_HERO_LUCK_ID:
+                if (currHero->GetLuck(0, 0, 1) > 0)
+                    sprintf(gText, gHeroScreenLuckHighText);
+                else if (currHero->GetLuck(0, 0, 1) == 0)
+                    sprintf(gText, gHeroScreenLuckNeutralText);
+                else
+                    sprintf(gText, gHeroScreenLuckLowText);
+                break;
+
+            case OVERVIEW_HERO_SPECIALTY_ID:
+                sprintf(gText, gHeroScreenText27);
+                break;
+            case OVERVIEW_HERO_LEVEL_ID:
+                sprintf(gText, gHeroScreenText9);
+                break;
+            case OVERVIEW_HERO_MANA_ID:
+                sprintf(gText, gHeroScreenText22);
+                break;
+
+            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID:
+            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 1:
+            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 2:
+            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 3:
+            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 4:
+            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 5:
+            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 6:
+            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 7:
+            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 8:
+            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 9:
+            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 10:
+            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 11:
+            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 12:
+            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 13:
+            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 14:
+            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 15:
+            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 16:
+            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 17:
+            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 18:
+            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 19:
+            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 20:
+            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 21:
+            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 22:
+            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 23: {
+                int nth = codeY - OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID;
+                if (nth < currHero->skillCount) {
+                    int skill = currHero->GetNthSS(nth);
+                    sprintf(gText, gHeroScreenSecondarySkillFormat,
+                            gSkillMasteryNames[
+                                currHero->skillLevel[skill] - 1],
+                            akSSkillTraits[skill].name);
+                }
+                break;
+            }
+
+            case OVERVIEW_HERO_ARTIFACT_FIRST_ID:
+            case OVERVIEW_HERO_ARTIFACT_FIRST_ID + 1:
+            case OVERVIEW_HERO_ARTIFACT_FIRST_ID + 2:
+            case OVERVIEW_HERO_ARTIFACT_FIRST_ID + 3:
+            case OVERVIEW_HERO_ARTIFACT_FIRST_ID + 4:
+            case OVERVIEW_HERO_ARTIFACT_FIRST_ID + 5:
+            case OVERVIEW_HERO_ARTIFACT_FIRST_ID + 6:
+            case OVERVIEW_HERO_ARTIFACT_FIRST_ID + 7:
+            case OVERVIEW_HERO_ARTIFACT_FIRST_ID + 8:
+                currHero->get_artifact(
+                    (codeY - OVERVIEW_HERO_ARTIFACT_FIRST_ID
+                     + 9 * gOverviewHeroArtifactPage[
+                         giOverviewTop[giOverviewType] + iSlot]) % 18)
+                    ->get_rollover_text(gText);
+                break;
+
+            case OVERVIEW_HERO_BACKPACK_FIRST_ID:
+            case OVERVIEW_HERO_BACKPACK_FIRST_ID + 1:
+            case OVERVIEW_HERO_BACKPACK_FIRST_ID + 2:
+            case OVERVIEW_HERO_BACKPACK_FIRST_ID + 3:
+            case OVERVIEW_HERO_BACKPACK_FIRST_ID + 4:
+            case OVERVIEW_HERO_BACKPACK_FIRST_ID + 5:
+            case OVERVIEW_HERO_BACKPACK_FIRST_ID + 6:
+            case OVERVIEW_HERO_BACKPACK_FIRST_ID + 7: {
+                int lastBackpackIndex =
+                    get_last_backpack_index(
+                        giOverviewTop[giOverviewType] + iSlot) + 1;
+                if (!lastBackpackIndex) {
+                    strcpy(gText, emptyRolloverText);
+                    break;
+                }
+                currHero->get_backpack(
+                    (gOverviewBackpackStart[
+                         giOverviewTop[giOverviewType] + iSlot] + codeY
+                     - OVERVIEW_HERO_BACKPACK_FIRST_ID)
+                    % lastBackpackIndex)->get_rollover_text(gText);
+                break;
+            }
+
+            default:
+                strcpy(gText, emptyRolloverText);
+                break;
+            }
+        } else {
+            town* currTown = gpGame->GetTown(
+                gpGame->GetLocalPlayer()->townIds[
+                    giOverviewTop[giOverviewType] + iSlot]);
+            strcpy(gText, emptyRolloverText);
+
+            switch (codeY) {
+            case OVERVIEW_TOWN_VISITING_HERO_LEFT_ID:
+            case OVERVIEW_TOWN_VISITING_HERO_RIGHT_ID:
+                if (currTown->visitingHeroId < 0)
+                    break;
+                {
+                    hero* currHero =
+                        gpGame->GetHero(currTown->visitingHeroId);
+                    sprintf(gText,
+                            (*gpGeneralText)[
+                                GENERAL_TEXT_HERO_ROLLOVER_FORMAT],
+                            currHero->name,
+                            currHero->HeroFn_004D8F70());
+                }
+                break;
+
+            case OVERVIEW_TOWN_GARRISON_HERO_ID:
+                if (currTown->garrisonHeroId < 0)
+                    break;
+                {
+                    hero* currHero =
+                        gpGame->GetHero(currTown->garrisonHeroId);
+                    sprintf(gText,
+                            (*gpGeneralText)[
+                                GENERAL_TEXT_HERO_ROLLOVER_FORMAT],
+                            currHero->name,
+                            currHero->HeroFn_004D8F70());
+                }
+                break;
+
+            case OVERVIEW_TOWN_GARRISON_ARMY_SECOND_ROW_FIRST_ID:
+            case OVERVIEW_TOWN_GARRISON_ARMY_SECOND_ROW_FIRST_ID + 1:
+            case OVERVIEW_TOWN_GARRISON_ARMY_SECOND_ROW_FIRST_ID + 2:
+            case OVERVIEW_TOWN_GARRISON_ARMY_SECOND_ROW_FIRST_ID + 3:
+            case OVERVIEW_TOWN_GARRISON_ARMY_SECOND_ROW_FIRST_ID + 4:
+            case OVERVIEW_TOWN_GARRISON_ARMY_SECOND_ROW_FIRST_ID + 5:
+            case OVERVIEW_TOWN_GARRISON_ARMY_SECOND_ROW_FIRST_ID + 6:
+                sprintf(gText, gHeroScreenNameFormat,
+                        GetArmyName(static_cast<const town*>(currTown)
+                                        ->get_army().armies[
+                            codeY
+                            - OVERVIEW_TOWN_GARRISON_ARMY_SECOND_ROW_FIRST_ID],
+                                    2));
+                break;
+
+            case OVERVIEW_TOWN_GARRISON_ARMY_FIRST_ID:
+            case OVERVIEW_TOWN_GARRISON_ARMY_FIRST_ID + 1:
+            case OVERVIEW_TOWN_GARRISON_ARMY_FIRST_ID + 2:
+            case OVERVIEW_TOWN_GARRISON_ARMY_FIRST_ID + 3:
+            case OVERVIEW_TOWN_GARRISON_ARMY_FIRST_ID + 4:
+            case OVERVIEW_TOWN_GARRISON_ARMY_FIRST_ID + 5:
+            case OVERVIEW_TOWN_GARRISON_ARMY_FIRST_ID + 6:
+                sprintf(gText, gHeroScreenNameFormat,
+                        GetArmyName(static_cast<const town*>(currTown)
+                                        ->get_army().armies[
+                            codeY - OVERVIEW_TOWN_GARRISON_ARMY_FIRST_ID],
+                                    2));
+                break;
+
+            case OVERVIEW_TOWN_VISITING_ARMY_SECOND_ROW_FIRST_ID:
+            case OVERVIEW_TOWN_VISITING_ARMY_SECOND_ROW_FIRST_ID + 1:
+            case OVERVIEW_TOWN_VISITING_ARMY_SECOND_ROW_FIRST_ID + 2:
+            case OVERVIEW_TOWN_VISITING_ARMY_SECOND_ROW_FIRST_ID + 3:
+            case OVERVIEW_TOWN_VISITING_ARMY_SECOND_ROW_FIRST_ID + 4:
+            case OVERVIEW_TOWN_VISITING_ARMY_SECOND_ROW_FIRST_ID + 5:
+            case OVERVIEW_TOWN_VISITING_ARMY_SECOND_ROW_FIRST_ID + 6:
+                if (currTown->visitingHeroId < 0)
+                    break;
+                sprintf(gText, gHeroScreenNameFormat,
+                        GetArmyName(
+                            gpGame->GetHero(currTown->visitingHeroId)
+                                ->army.armies[
+                                    codeY
+                                    - OVERVIEW_TOWN_VISITING_ARMY_SECOND_ROW_FIRST_ID],
+                            2));
+                break;
+
+            case OVERVIEW_TOWN_VISITING_ARMY_FIRST_ID:
+            case OVERVIEW_TOWN_VISITING_ARMY_FIRST_ID + 1:
+            case OVERVIEW_TOWN_VISITING_ARMY_FIRST_ID + 2:
+            case OVERVIEW_TOWN_VISITING_ARMY_FIRST_ID + 3:
+            case OVERVIEW_TOWN_VISITING_ARMY_FIRST_ID + 4:
+            case OVERVIEW_TOWN_VISITING_ARMY_FIRST_ID + 5:
+            case OVERVIEW_TOWN_VISITING_ARMY_FIRST_ID + 6:
+                if (currTown->visitingHeroId < 0)
+                    break;
+                sprintf(gText, gHeroScreenNameFormat,
+                        GetArmyName(
+                            gpGame->GetHero(currTown->visitingHeroId)
+                                ->army.armies[
+                                    codeY
+                                    - OVERVIEW_TOWN_VISITING_ARMY_FIRST_ID],
+                            2));
+                break;
+
+            case OVERVIEW_TOWN_RECRUIT_SECOND_ROW_FIRST_ID:
+            case OVERVIEW_TOWN_RECRUIT_SECOND_ROW_FIRST_ID + 1:
+            case OVERVIEW_TOWN_RECRUIT_SECOND_ROW_FIRST_ID + 2:
+            case OVERVIEW_TOWN_RECRUIT_SECOND_ROW_FIRST_ID + 3:
+            case OVERVIEW_TOWN_RECRUIT_SECOND_ROW_FIRST_ID + 4:
+            case OVERVIEW_TOWN_RECRUIT_SECOND_ROW_FIRST_ID + 5:
+            case OVERVIEW_TOWN_RECRUIT_SECOND_ROW_FIRST_ID + 6:
+            case OVERVIEW_TOWN_RECRUIT_SECOND_ROW_FIRST_ID + 7:
+            case OVERVIEW_TOWN_RECRUIT_SECOND_ROW_FIRST_ID + 8:
+            case OVERVIEW_TOWN_RECRUIT_SECOND_ROW_FIRST_ID + 9:
+            case OVERVIEW_TOWN_RECRUIT_SECOND_ROW_FIRST_ID + 10:
+            case OVERVIEW_TOWN_RECRUIT_SECOND_ROW_FIRST_ID + 11:
+            case OVERVIEW_TOWN_RECRUIT_SECOND_ROW_FIRST_ID + 12:
+            case OVERVIEW_TOWN_RECRUIT_SECOND_ROW_FIRST_ID + 13:
+                sprintf(gText, gHeroScreenNameFormat,
+                        GetArmyName(gTownDwellingCreatures[
+                            currTown->type * TOWN_DWELLING_SLOTS + codeY
+                            - OVERVIEW_TOWN_RECRUIT_SECOND_ROW_FIRST_ID], 1));
+                break;
+
+            case OVERVIEW_TOWN_RECRUIT_FIRST_ID:
+            case OVERVIEW_TOWN_RECRUIT_FIRST_ID + 1:
+            case OVERVIEW_TOWN_RECRUIT_FIRST_ID + 2:
+            case OVERVIEW_TOWN_RECRUIT_FIRST_ID + 3:
+            case OVERVIEW_TOWN_RECRUIT_FIRST_ID + 4:
+            case OVERVIEW_TOWN_RECRUIT_FIRST_ID + 5:
+            case OVERVIEW_TOWN_RECRUIT_FIRST_ID + 6:
+            case OVERVIEW_TOWN_RECRUIT_FIRST_ID + 7:
+            case OVERVIEW_TOWN_RECRUIT_FIRST_ID + 8:
+            case OVERVIEW_TOWN_RECRUIT_FIRST_ID + 9:
+            case OVERVIEW_TOWN_RECRUIT_FIRST_ID + 10:
+            case OVERVIEW_TOWN_RECRUIT_FIRST_ID + 11:
+            case OVERVIEW_TOWN_RECRUIT_FIRST_ID + 12:
+            case OVERVIEW_TOWN_RECRUIT_FIRST_ID + 13:
+                sprintf(gText, gHeroScreenNameFormat,
+                        GetArmyName(gTownDwellingCreatures[
+                            currTown->type * TOWN_DWELLING_SLOTS + codeY
+                            - OVERVIEW_TOWN_RECRUIT_FIRST_ID], 1));
+                break;
+
+            case OVERVIEW_TOWN_GROWTH_TEXT_FIRST_ID:
+            case OVERVIEW_TOWN_GROWTH_TEXT_FIRST_ID + 1:
+            case OVERVIEW_TOWN_GROWTH_TEXT_FIRST_ID + 2:
+            case OVERVIEW_TOWN_GROWTH_TEXT_FIRST_ID + 3:
+            case OVERVIEW_TOWN_GROWTH_TEXT_FIRST_ID + 4:
+            case OVERVIEW_TOWN_GROWTH_TEXT_FIRST_ID + 5:
+            case OVERVIEW_TOWN_GROWTH_TEXT_FIRST_ID + 6:
+            case OVERVIEW_TOWN_GROWTH_TEXT_FIRST_ID + 7:
+            case OVERVIEW_TOWN_GROWTH_TEXT_FIRST_ID + 8:
+            case OVERVIEW_TOWN_GROWTH_TEXT_FIRST_ID + 9:
+            case OVERVIEW_TOWN_GROWTH_TEXT_FIRST_ID + 10:
+            case OVERVIEW_TOWN_GROWTH_TEXT_FIRST_ID + 11:
+            case OVERVIEW_TOWN_GROWTH_TEXT_FIRST_ID + 12:
+            case OVERVIEW_TOWN_GROWTH_TEXT_FIRST_ID + 13:
+                sprintf(gText, (*gpGeneralText)[589],
+                        GetArmyName(gTownDwellingCreatures[
+                            currTown->type * TOWN_DWELLING_SLOTS
+                            + codeY
+                            - OVERVIEW_TOWN_GROWTH_TEXT_FIRST_ID], 1));
+                break;
+
+            case OVERVIEW_TOWN_GROWTH_ICON_FIRST_ID:
+            case OVERVIEW_TOWN_GROWTH_ICON_FIRST_ID + 1:
+            case OVERVIEW_TOWN_GROWTH_ICON_FIRST_ID + 2:
+            case OVERVIEW_TOWN_GROWTH_ICON_FIRST_ID + 3:
+            case OVERVIEW_TOWN_GROWTH_ICON_FIRST_ID + 4:
+            case OVERVIEW_TOWN_GROWTH_ICON_FIRST_ID + 5:
+            case OVERVIEW_TOWN_GROWTH_ICON_FIRST_ID + 6:
+            case OVERVIEW_TOWN_GROWTH_ICON_FIRST_ID + 7:
+            case OVERVIEW_TOWN_GROWTH_ICON_FIRST_ID + 8:
+            case OVERVIEW_TOWN_GROWTH_ICON_FIRST_ID + 9:
+            case OVERVIEW_TOWN_GROWTH_ICON_FIRST_ID + 10:
+            case OVERVIEW_TOWN_GROWTH_ICON_FIRST_ID + 11:
+            case OVERVIEW_TOWN_GROWTH_ICON_FIRST_ID + 12:
+            case OVERVIEW_TOWN_GROWTH_ICON_FIRST_ID + 13:
+                sprintf(gText, (*gpGeneralText)[589],
+                        GetArmyName(gTownDwellingCreatures[
+                            currTown->type * TOWN_DWELLING_SLOTS
+                            + codeY
+                            - OVERVIEW_TOWN_GROWTH_ICON_FIRST_ID], 1));
+                break;
+
+            case OVERVIEW_TOWN_SUMMONING_GROWTH_ICON_ID:
+            case OVERVIEW_TOWN_SUMMONING_GROWTH_TEXT_ID:
+                sprintf(gText, (*gpGeneralText)[589],
+                        GetArmyName(currTown->summoningType, 1));
+                break;
+
+            case OVERVIEW_TOWN_SUMMONING_PORTAL_ICON_ID:
+            case OVERVIEW_TOWN_SUMMONING_PORTAL_TEXT_ID:
+                sprintf(gText, gHeroScreenNameFormat,
+                        GetArmyName(currTown->summoningType, 1));
+                break;
+
+            default:
+                strcpy(gText, emptyRolloverText);
+                break;
+            }
+        }
+    } else {
+        switch (codeY) {
+        case OVERVIEW_SELECT_HEROES_ID:
+            strcpy(gText, cOverviewText[11]);
+            break;
+        case OVERVIEW_SELECT_TOWNS_ID:
+            strcpy(gText, cOverviewText[12]);
+            break;
+
+        case OVERVIEW_MINE_FIRST_ID:
+        case OVERVIEW_MINE_FIRST_ID + 1:
+        case OVERVIEW_MINE_FIRST_ID + 2:
+        case OVERVIEW_MINE_FIRST_ID + 3:
+        case OVERVIEW_MINE_FIRST_ID + 4:
+        case OVERVIEW_MINE_FIRST_ID + 5:
+        case OVERVIEW_MINE_FIRST_ID + 6:
+            strcpy(gText,
+                   gMineDescriptions[codeY - OVERVIEW_MINE_FIRST_ID]);
+            break;
+
+        case OVERVIEW_FLAGGABLE_FIRST_ID:
+        case OVERVIEW_FLAGGABLE_FIRST_ID + 1:
+        case OVERVIEW_FLAGGABLE_FIRST_ID + 2:
+        case OVERVIEW_FLAGGABLE_FIRST_ID + 3:
+        case OVERVIEW_FLAGGABLE_FIRST_ID + 4:
+        case OVERVIEW_FLAGGABLE_FIRST_ID + 5:
+        case OVERVIEW_FLAGGABLE_FIRST_ID + 6: {
+            unsigned item = iOverviewFlaggableTop + codeY
+                            - OVERVIEW_FLAGGABLE_FIRST_ID;
+            if (item < field_60.size()) {
+                int itemType = field_60[item].field_00;
+                if (itemType < 80) {
+                    strcpy(gText,
+                           akCreatureTypeTraits[
+                               gCreatureGenerator1Types[itemType]]
+                               .m_plural_name);
+                } else {
+                    switch (itemType) {
+                    case 'P':
+                        strcpy(gText, DATA_COMPGEN(
+                            0x00681850, overviewElementalsText,
+                            "Elementals"));
+                        break;
+                    case 'Q':
+                        strcpy(gText, DATA_COMPGEN(
+                            0x00681848, overviewGolemsText, "Golems"));
+                        break;
+                    case 'R':
+                        strcpy(gText, gSpecialBuildingNames[0][0]);
+                        break;
+                    case 'S':
+                    case 'T':
+                        strcpy(gText, gQuickViewGarrisonText);
+                        break;
+                    case 'U':
+                        strcpy(gText, gMineDescriptions[7]);
+                        break;
+                    case 'W':
+                        strcpy(gText, gSpecialBuildingNames[0][3]);
+                        break;
+                    default:
+                        gText[0] = 0;
+                        break;
+                    }
+                }
+            } else {
+                strcpy(gText, emptyRolloverText);
+            }
+            break;
+        }
+
+        case OVERVIEW_RESOURCE_TOTAL_ID:
+            strcpy(gText, (*gpGeneralText)[256]);
+            break;
+
+        case OVERVIEW_HELP_FIRST_ID:
+        case OVERVIEW_HELP_FIRST_ID + 1:
+        case OVERVIEW_HELP_FIRST_ID + 2:
+        case OVERVIEW_HELP_FIRST_ID + 3:
+        case OVERVIEW_HELP_FIRST_ID + 4:
+        case OVERVIEW_HELP_FIRST_ID + 5:
+        case OVERVIEW_HELP_FIRST_ID + 6:
+        case OVERVIEW_HELP_FIRST_ID + 7:
+            strcpy(gText,
+                   gAdventureWindowHelp[
+                       overviewHelpIds[codeY - OVERVIEW_HELP_FIRST_ID]].text);
+            break;
+
+        case OVERVIEW_HELP_SECOND_BAND_FIRST_ID:
+        case OVERVIEW_HELP_SECOND_BAND_FIRST_ID + 1:
+        case OVERVIEW_HELP_SECOND_BAND_FIRST_ID + 2:
+        case OVERVIEW_HELP_SECOND_BAND_FIRST_ID + 3:
+        case OVERVIEW_HELP_SECOND_BAND_FIRST_ID + 4:
+        case OVERVIEW_HELP_SECOND_BAND_FIRST_ID + 5:
+        case OVERVIEW_HELP_SECOND_BAND_FIRST_ID + 6:
+            strcpy(gText,
+                   gAdventureWindowHelp[
+                       overviewHelpIds[
+                           codeY - OVERVIEW_HELP_SECOND_BAND_FIRST_ID]].text);
+            break;
+
+        default:
+            strcpy(gText, emptyRolloverText);
+            break;
+        }
+    }
+
+    UpdateRollover(gText);
 }
 
 #if 0  // @carcass
