@@ -806,16 +806,12 @@ public:
     // names stay address ordinals.
     int field_53e4[2];                // +0x53e4
     int field_53ec[2];                // +0x53ec
-#ifdef HOMM3_CMBTMGR_CYCLE_VIEW
     // Retail ResetCycleTimers stamps both entries from one GameTime::Get.
     // Dreamcast names the same semantic row cmbtHeroLastFidgetTime; its
     // offset is 0x10 later in that older layout, so the retail placement
     // here comes only from the x86 stores at 0x479f43/0x479f49.
     char pad_53f4[0x8];
     unsigned long cmbtHeroLastFidgetTime[2]; // +0x53fc
-#else
-    char pad_53f4[0x10];
-#endif
     CSprite* creatureSprites[2];       // +0x5404
     CSprite* heroFlagSprites[2];       // +0x540c
     // Dreamcast names this pair cmbtHeroFlagFrame[2]. Retail's
