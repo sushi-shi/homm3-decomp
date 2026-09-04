@@ -385,19 +385,82 @@ void advManager::VWDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int de
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\viewwrld.cpp:946
+// The scaled river layer. Dreamcast supplies the statement order, the two
+// guards and the single tile blit; Complete's retail body corroborates every
+// element independently - the same four bounds, the GetMapExtra/iVWTerrains
+// disjunction, the RiverSet test through the bitfield unit, the scaled origin
+// pair, the inlined clear of the scratch buffer and the DrawTile through
+// riverTileset. advmgr.cpp's full-size DrawRiver is the unscaled twin.
 VA(0x005f9220, 0x38A)  // exhaustive dc-order-map + VWCompleteDraw call order (2nd layer), dc 0x194850
 void advManager::VWDrawRiver(int srcX, int srcY, int z, int destX, int destY)
 {
-    // @stub
+    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth || srcY >= gMapHeight)
+        return;
+
+    NewmapCell* thisCell = GetCell(type_point(srcX, srcY, z));
+
+    int playerBit = 1 << gpGame->GetLocalPlayerGamePos();
+
+    if (!(playerBit & GetMapExtra(srcX, srcY, z)) && !iVWTerrains)
+        return;
+
+    if (!thisCell->RiverSet)
+        return;
+
+    int baseX = destX * giViewWorldScale + iVWCenterOffsetW;
+    int baseY = destY * giViewWorldScale + iVWCenterOffsetH;
+
+    memset(memoryBuffer->GetMap(0, 0), 0,
+           memoryBuffer->GetHeight() * memoryBuffer->GetPitch());
+
+    riverTileset[thisCell->RiverSet]->DrawTile(
+        thisCell->RiverIndex, 0, 0, 32, 32, memoryBuffer, 0, 0,
+        (thisCell->flags_00_11 >> 2) & 1,
+        (thisCell->flags_00_11 >> 3) & 1);
+
+    VWScaleToScreenBuffer(baseX, baseY + 8);
 }
 
 // E:\gamedcs\viewwrld.cpp:985
+// The scaled road layer - the river layer's twin, differing only in the
+// tested bitfield (RoadSet, byte-aligned at the head of its own allocation
+// unit), the tileset array and the two flip bits (4 and 5 instead of 2 and
+// 3). Retail's identical instruction stream either side of those four
+// differences is what pairs the two.
 VA(0x005f95b0, 0x38B)  // exhaustive dc-order-map + VWCompleteDraw call order (3rd layer), dc 0x1949cc
 void advManager::VWDrawRoad(int srcX, int srcY, int z, int destX, int destY)
 {
-    // @stub
+    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth || srcY >= gMapHeight)
+        return;
+
+    NewmapCell* thisCell = GetCell(type_point(srcX, srcY, z));
+
+    int playerBit = 1 << gpGame->GetLocalPlayerGamePos();
+
+    if (!(playerBit & GetMapExtra(srcX, srcY, z)) && !iVWTerrains)
+        return;
+
+    if (!thisCell->RoadSet)
+        return;
+
+    int baseX = destX * giViewWorldScale + iVWCenterOffsetW;
+    int baseY = destY * giViewWorldScale + iVWCenterOffsetH;
+
+    memset(memoryBuffer->GetMap(0, 0), 0,
+           memoryBuffer->GetHeight() * memoryBuffer->GetPitch());
+
+    roadTileset[thisCell->RoadSet]->DrawTile(
+        thisCell->RoadIndex, 0, 0, 32, 32, memoryBuffer, 0, 0,
+        (thisCell->flags_00_11 >> 4) & 1,
+        (thisCell->flags_00_11 >> 5) & 1);
+
+    VWScaleToScreenBuffer(baseX, baseY + 8);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\viewwrld.cpp:1026
 VA(0x005f9940, 0x44A)  // exhaustive dc-order-map + VWCompleteDraw call order (the iVWTerrains-gated layer), dc 0x194b48

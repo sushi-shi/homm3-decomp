@@ -3558,12 +3558,12 @@ viewwrld	??1TViewWorldWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1fbd60	dbcb66a
 viewwrld	??_GTViewWorldWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1fbd30	-
 viewwrld	?VWCompleteDraw@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x1fc4c0	f85745d6e952
 viewwrld	?VWDrawAdvObj@advManager@@QAEXHHHHH@Z	94.8383	94.8383	94.8383	0x1f82e0	b73c0fc37794
+viewwrld	?VWDrawRiver@advManager@@QAEXHHHHH@Z	95.4910	95.4910	95.4910	0x1f9220	3ec5e78699ac
+viewwrld	?VWDrawRoad@advManager@@QAEXHHHHH@Z	94.5979	94.5979	94.5979	0x1f95b0	1c5a9fa7654e
 viewwrld	?ViewWorldSurfaceHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1fbdf0	6564c6c11a60
 viewwrld	?ViewWorldUndergroundHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1fbec0	9ef6e09cbd1a
 viewwrld	advManager_VWDrawAdvObjShadow	0.0000	0.0000	0.0000	0x1f8be0	cf0397b22bee
 viewwrld	advManager_VWDrawGround	0.0000	0.0000	0.0000	0x1fa1e0	fda6de961d0a
-viewwrld	advManager_VWDrawRiver	0.0000	0.0000	0.0000	0x1f9220	a93f908bb2c2
-viewwrld	advManager_VWDrawRoad	0.0000	0.0000	0.0000	0x1f95b0	2b59c713ab8d
 viewwrld	advManager_VWDrawShroud	0.0000	0.0000	0.0000	0x1f9940	4cf8c24d23f7
 viewwrld	advManager_VWDrawSymbols	0.0000	0.0000	0.0000	0x1f80e0	117ba2abf89c
 viewwrld	advManager_VWDrawUnderlay	0.0000	0.0000	0.0000	0x1f9ed0	c77a8ff095bf
