@@ -6,7 +6,6 @@
 #include <string.h>
 #include <va.h>
 #define HOMM3_EVENTS_PRISON_DECL
-#define HOMM3_EVENTS_TURN_PAUSE_DECL
 #define HOMM3_EVENTS_GAME_INLINE_HELPERS
 // DoCombat's remote arms: the wait dialog whose payload feeds
 // ReceiveHeroTownData, and the level-update message the winner's side
