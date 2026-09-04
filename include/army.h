@@ -1561,12 +1561,9 @@ public:
     // GetMissileStartingPosition as the destination. Retail's bodies
     // read gpCombatManager->cells[gridIndex] at +0x1c4 and +0x1c6 with
     // the 112-byte hexcell stride. DECLARED, NOT DEFINED - army.cpp
-    // still carries both as DC_ONLY carcasses. Behind a view for this
-    // header's usual measured reason.
-#ifdef HOMM3_ARMY_MIDPOINT_DECL
+    // still carries both as DC_ONLY carcasses.
     int MidX() const;                        // 0x446660
     int MidY() const;                        // 0x446630
-#endif
     unsigned char is_enemy(const army* arg) const; // 0x442880
     // 0x4429f0: asks the combat manager whether any enemy stack (other
     // than `excluded`) neighbours this stack's own hex, and for a
@@ -1759,14 +1756,9 @@ public:
     // dc 0x4ba88), attributed to army.obj by link order. Void and
     // argument-less: combatManager::NextArmy (0x465080) calls it with
     // the selected stack in ecx and nothing on the stack, once per stack
-    // as that stack comes up. Behind its own gate, and at the END of the
-    // class, because a bare declarator on a header this widely included
-    // is the include-set wall's trigger shape and C1XX numbers member
-    // handles in declaration order; cmbtmgr.cpp is the only consumer so
-    // far. Declared, not claimed - army.cpp owns the body.
-#ifdef HOMM3_ARMY_NEW_TURN_DECL
+    // as that stack comes up. Declared, not claimed - army.cpp owns the
+    // body.
     void new_turn();
-#endif
     // 0x43d5c0 (358 B) <- army::InitClean (dc 0x438e8, 200 B, 1 param =
     // `this` only; SH4->x86 ratio 1.79, in band). LoadArmies (0x463600)
     // calls it on each of the twenty slots it has just blanked, and the
