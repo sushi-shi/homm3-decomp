@@ -10,12 +10,10 @@
 #include "town.h"
 #include "va.h"
 
-// The TU-only full-vector view of the three header lists (see the
-// member block); the element type must be complete for it.
-#ifdef HOMM3_SSWINDOW_HEADER_VECTORS
+// The three header lists are std::vectors of GameSelectionHeadersStruct
+// (see the member block), whose element type must be complete here.
 #include <vector>
 #include "remote.h"
-#endif
 
 // Forward-declared for TSingleSelectionWindow's slider members
 // (+0x1838..+0x1844); the full layouts stay in the private header so this
@@ -54,7 +52,6 @@ enum ESingleSelectionGameContext {
 // TSingleSelectionWindow member.
 std::string GetRandomMapName();
 
-#ifdef HOMM3_SSWINDOW_HEADER_VECTORS
 // One cached map/save header row of the file list. Only the stride is
 // modeled: 0xCA4 is fixed by the size() magic-multiply in every
 // vector<GameSelectionHeadersStruct>::size() expansion (WindowHandler's
@@ -121,7 +118,6 @@ struct GameSelectionHeadersStruct {
 };
 SIZE(GameSelectionHeadersStruct, 0xCA4);
 
-#endif
 
 // DC supplies the source identities and member names.  Retail independently
 // proves the Windows layout used here: DeletePlayer walks eight records with
@@ -130,11 +126,9 @@ SIZE(GameSelectionHeadersStruct, 0xCA4);
 // extent.  The containing handler's two eight-record arrays and four tail
 // dwords are the complete 0x7d0-byte Windows layout.  Defined ahead of
 // TSingleSelectionWindow because that window embeds one at +0x1064.
-#ifdef HOMM3_SSWINDOW_HEADER_VECTORS
 // The ctor below seeds version from the game-context cell
 // (resourcemanager.cpp owns the claim).
 extern int* gpVideoGameState;
-#endif
 
 class CNetPlayerHandlerPlayer : public CNetPlayerInfo {
 public:
@@ -166,7 +160,6 @@ public:
         return 0;
     }
 
-#ifdef HOMM3_SSWINDOW_HEADER_VECTORS
     // DC's seat-record ctor. Declared here, DEFINED OUT OF CLASS in the
     // TU (retail 0x57c790): /Ob2 then reproduces retail's per-site
     // split - SetCurrentMap's CUpdatePlayerPosMsg local expands both
@@ -186,7 +179,6 @@ public:
         playerPos = -1;
         heroIndex = -1;
     }
-#endif
 };
 SIZE(CNetPlayerHandlerPlayer, 0x7c);
 
@@ -240,7 +232,6 @@ public:
 };
 SIZE(CNetPlayerHandler, 0x7d0);
 
-#ifdef HOMM3_SSWINDOW_HEADER_VECTORS
 // Dreamcast names this as the window's final shared-build member, and the
 // retail constructor independently proves the same composition at +0x1888:
 // CNetMsgHandler's ctor is followed by the derived vtable store and a clear
@@ -259,7 +250,6 @@ public:
     unsigned char m_wasCompressed;  // +0x0c
 };
 SIZE(CSingleSelectionNetMsgHandler, 0x10);
-#endif
 
 // The game-selection megawindow. DC reports size 2928 with SH4 STL; the
 // retail extent 0x1970 is frame-derived from advmgr's SaveGame (window local
@@ -347,17 +337,12 @@ public:
     textEntryWidget* saveGameEdit;     // 0x380
     char pad_384[0x388 - 0x384];
     CNewPlayerUpdateMan* pNewPlayerUpdateMan;  // 0x388
-#ifdef HOMM3_SSWINDOW_HEADER_VECTORS
     // The window's own scratch header row - 0x38c..0x1030 is exactly one
     // 0xCA4 element. The 11.6KB ctor constructs it in place (the
     // SavedGameHeader member ctor at this+0x38c+0x700 on its claim), and
     // SetCurrentMap points pCurrentHeader at it when field_37F selects
-    // the setup-local row. Gated with the vectors: the element type must
-    // be complete.
+    // the setup-local row.
     GameSelectionHeadersStruct m_localHeader;  // 0x38c
-#else
-    char pad_38c[0x1030 - 0x38c];
-#endif
     // The three header lists are real Dinkumware vectors, 0x1030/0x1040/
     // 0x1050 (allocator, _First, _Last, _End - the size() null-_First
     // ternary and the 0xCA4 magic-multiply in every consumer, plus
@@ -372,22 +357,9 @@ public:
     // the transfer path walks it. SortMaps sorts one of the two by
     // m_flag66 and refills SelectionHeaders from it through the
     // mapSizeFilter.
-#ifdef HOMM3_SSWINDOW_HEADER_VECTORS
     std::vector<GameSelectionHeadersStruct> HeadersA;         // 0x1030
     std::vector<GameSelectionHeadersStruct> TransferHeaders;  // 0x1040
     std::vector<GameSelectionHeadersStruct> SelectionHeaders; // 0x1050
-#else
-    char pad_1030[0x1034 - 0x1030];
-    GameSelectionHeadersStruct* HeadersAFirst;          // 0x1034
-    GameSelectionHeadersStruct* HeadersALast;           // 0x1038
-    char pad_103c[0x1044 - 0x103c];
-    GameSelectionHeadersStruct* TransferHeadersFirst;   // 0x1044
-    GameSelectionHeadersStruct* TransferHeadersLast;    // 0x1048
-    char pad_104c[0x1054 - 0x104c];
-    GameSelectionHeadersStruct* SelectionHeadersFirst;  // 0x1054
-    GameSelectionHeadersStruct* SelectionHeadersLast;   // 0x1058
-    char pad_105c[0x1060 - 0x105c];
-#endif
     // The header row of the currently selected map/save;
     // UpdatePlayerPositions reads the per-slot alignments through it.
     GameSelectionHeadersStruct* pCurrentHeader;         // 0x1060
@@ -448,11 +420,7 @@ public:
     // CNetMsgHandler base ctor, the 0x641ce8 derived vtable and a zero byte at
     // +0x0c before installing TSingleSelectionWindow's own vtable. The public
     // include view keeps the same proven extent without importing remote.h.
-#ifdef HOMM3_SSWINDOW_HEADER_VECTORS
     CSingleSelectionNetMsgHandler netMsgHandler;  // 0x1888
-#else
-    char pad_1888[0x1898 - 0x1888];
-#endif
     int field_1898;                    // 0x1898, player count cached on drop
     // A widget id the advanced pane records: TurnOffAdvancedOptions
     // hides GetWidget(field_189c) between the 340 and 343 titles.
@@ -602,7 +570,6 @@ public:
     // DC singleselectionwindow.cpp:2821 (dc 0x135e80); retail 0x57fb90 is
     // the constructor's out-of-line callee at +0x2c72.
     void UpdateMainWindow();
-#ifdef HOMM3_SSWINDOW_HEADER_VECTORS
     // Dreamcast source method; Complete retail 0x58c290. Only the owning TU
     // calls it (from OnBeginGame), so keep this declaration with that TU's
     // existing private lobby-message/vector view.
@@ -646,7 +613,6 @@ public:
     // provisional; its caller and body prove the out-of-line member
     // boundary, the filter-widget range, and the cleared mode byte.
     void TurnOffFilterOptions();
-#endif
 
 private:
     CNetPlayerHandlerPlayer* GetThisPlayer();

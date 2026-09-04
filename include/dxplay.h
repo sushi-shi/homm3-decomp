@@ -5,6 +5,7 @@
 #ifndef HOMM3_DXPLAY_H
 #define HOMM3_DXPLAY_H
 
+#include <string.h>  // strcpy, for CDPlayPlayer's in-class constructor
 #include <windows.h>
 #include <va.h>
 
@@ -12,23 +13,26 @@ class CDPlayConnection;
 class CDPlayAddressElement;
 class CDPlayGroup;
 class CDPlayMsg;
-#ifdef HOMM3_REMOTE_PLAYER_LIST_DECLS
-// DC's complete 0x104-byte class has a 255-byte name followed by the
-// naturally aligned DPID at +0x100. Retail independently proves that tail:
-// UpdateCurrentPlayers compares the result of CAutoArray::Get at +0x100.
+// DC's complete 0x104-byte class: a 0x100-byte name (members.csv puts
+// m_dpid at 256) followed by the DPID. Retail independently proves that
+// tail: UpdateCurrentPlayers compares the result of CAutoArray::Get at
+// +0x100. The constructor (DC dxplay.h:203) is in-class: AddPlayerEnum
+// news one per enumerated player and expands it there.
 class CDPlayPlayer {
 public:
-    char* GetName() { return m_sName; }
-    unsigned long GetId() { return m_dpid; }
+    CDPlayPlayer(char* sName, unsigned long dpid)
+    {
+        strcpy(m_sName, sName);
+        m_dpid = dpid;
+    }
+    char* GetName() { return m_sName; }         // DC dxplay.h:210
+    unsigned long GetId() { return m_dpid; }    // DC dxplay.h:211
 
 protected:
-    char m_sName[255];
-    unsigned long m_dpid;
+    char m_sName[0x100];      // +0x00
+    unsigned long m_dpid;     // +0x100
 };
 SIZE(CDPlayPlayer, 0x104);
-#else
-class CDPlayPlayer;
-#endif
 class CDPlaySession;
 template<class T> class CAutoArray;
 struct DPCAPS;
@@ -47,7 +51,6 @@ struct DPMSG_SETPLAYERORGROUPNAME;
 struct DPMSG_SETSESSIONDESC;
 struct DPMSG_STARTSESSION;
 
-#ifdef HOMM3_REMOTE_LOBBY_DECLS
 // DirectPlay 6 structures used by remote's retail lobby-connect path. The
 // layouts are published in the Dreamcast CodeView stream and independently
 // fixed on PC by the field loads in LobbyLaunchConnect.
@@ -108,7 +111,6 @@ enum EDPlaySessionFlags {
     DPLAY_SESSION_MIGRATE_HOST = 0x4,
     DPLAY_SESSION_KEEP_ALIVE = 0x40
 };
-#endif
 
 // The SDK macro values are also the exact HRESULT immediates used by the
 // DirectPlay send path. The domain lives here instead of importing DPLAY.H's
@@ -288,13 +290,11 @@ public:
     CDPlayConnection* CreateSerialConnection(
         char* name, struct _DPCOMPORTADDRESS* comportInfo);
     unsigned char TestLobbied();
-#ifdef HOMM3_REMOTE_LOBBY_DECLS
     DPLCONNECTION* GetConnectionSettings(
         unsigned long appId, unsigned long* size);
     unsigned char SetConnectionSettings(
         unsigned long appId, DPLCONNECTION* connection);
     unsigned char Connect();
-#endif
     virtual unsigned char EnumLobbyConnections(
         CAutoArray<CDPlayConnection>* connections);
     virtual unsigned char SetGroupConnectionSettings(

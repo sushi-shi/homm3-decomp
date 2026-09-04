@@ -7,7 +7,6 @@
 
 #include "cmbtmgr.h"
 
-#ifdef HOMM3_DRAWING_ARCHER_DECLS
 // DrawOccupant's priority sentinels: 8 bypasses the army-priority filter,
 // while 7 performs the first draw but suppresses the moat/redraw pass.
 enum ECombatDrawPriority {
@@ -26,7 +25,6 @@ enum ECombatWallDrawingConstants {
     COMBAT_ARCHER_ACTIVE_SEQUENCE = 2,
     COMBAT_ARCHER_DOUBLE_WIDE_ATTRIBUTE = 1
 };
-#endif
 
 // The effect-latch tail lies beyond the currently materialized
 // combatManager prefix. These offsets are retail-byte-proven by
@@ -53,12 +51,10 @@ enum ECombatGridDimensions {
 // declared here because fly.obj resets the extent through it once per
 // flight frame.
 extern TDrawbridgeBounds gCombatAreaLimits;
-#ifdef HOMM3_DRAWING_UPDATE_GRID_DECLS
 // DC names the 58,86..740,557 clip rectangle GridAreaLimits. Retail's
 // initializer at 0x462640 and UpdateGrid's four clamps prove the aggregate;
 // its storage belongs to cmbtmgr.obj and this TU only references it.
 DATA(0x00694ec8) extern SLimitData gCombatGridAreaLimits;
-#endif
 
 // The three combat animation speed multipliers at .rdata 0x63cf7c -
 // 1.0f, 0.63f and 0.4f exactly - indexed by gUnnamed698758.combatSpeed.

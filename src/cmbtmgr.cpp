@@ -41,9 +41,6 @@
 // helpers at 0x64d40 and 0x64f50 retain address-ordinal names, but their
 // selected-stack fear check and strict move-order predicate are now fully
 // pinned by their bodies and sole caller.
-#define HOMM3_ARMY_MIDPOINT_DECL
-#define HOMM3_ARMY_NEW_TURN_DECL
-#define HOMM3_ARMY_RESET_LATCH_DECL
 #include <math.h>
 #include <stdlib.h>
 
@@ -63,7 +60,6 @@
 #include "csprite.h"  // CSprite::Dispose, for RemoveObstacle
 #include "drawing.h"  // gCombatAreaLimits / gCombatSpeedFactors, for the
                       // missile animators
-#define HOMM3_GAME_IMM_EFFECT_DECL
 #include "game.h"     // gpGame ruleset gate, for RaiseSkeletons
 #include "hero.h"   // hero::IsWieldingArtifact, for ShotIsThroughWall
 #include "findpath.h" // searchArray::lower_door, for LowerDoor
@@ -2854,10 +2850,10 @@ void combatManager::MakeCreaturesVanish()
             }
         }
         ComputeMaxExtent();
-        x = drawbridgeBounds.values[0];
-        width = drawbridgeBounds.values[2] - drawbridgeBounds.values[0] + 1;
-        y = drawbridgeBounds.values[1];
-        height = drawbridgeBounds.values[3] - drawbridgeBounds.values[1] + 1;
+        x = drawbridgeBounds.iMinX;
+        width = drawbridgeBounds.iMaxX - drawbridgeBounds.iMinX + 1;
+        y = drawbridgeBounds.iMinY;
+        height = drawbridgeBounds.iMaxY - drawbridgeBounds.iMinY + 1;
     }
 
     for (side = 0; side < 2; side++) {
@@ -3238,10 +3234,10 @@ void combatManager::ShootBallisticMissile(int startX, int startY, int destX,
     for (int step = 0; step < nframes; step++) {
         unsigned long next_frame_time = GameTime::Get() + MISSILE_PERIOD;
         if (step != 0) {
-            update_area.values[0] = x;
-            update_area.values[1] = y;
-            update_area.values[2] = x + width - 1;
-            update_area.values[3] = y + height - 1;
+            update_area.iMinX = x;
+            update_area.iMinY = y;
+            update_area.iMaxX = x + width - 1;
+            update_area.iMaxY = y + height - 1;
             x = startX + travelX / nframes;
             y = static_cast<int>(
                 (deltaY - remaining * flatness) * step
@@ -3259,26 +3255,26 @@ void combatManager::ShootBallisticMissile(int startX, int startY, int destX,
             gpWindowManager->screenBitmap->Pitch, 0, 1);
         int right = x + width - 1;
         int bottom = y + height - 1;
-        if (update_area.values[0] > x)
-            update_area.values[0] = x;
-        if (update_area.values[1] > y)
-            update_area.values[1] = y;
-        if (update_area.values[2] < right)
-            update_area.values[2] = right;
-        if (update_area.values[3] < bottom)
-            update_area.values[3] = bottom;
-        if (update_area.values[0] < gCombatDrawLimits694f18.values[0])
-            update_area.values[0] = gCombatDrawLimits694f18.values[0];
-        if (update_area.values[1] < gCombatDrawLimits694f18.values[1])
-            update_area.values[1] = gCombatDrawLimits694f18.values[1];
-        if (update_area.values[2] > gCombatDrawLimits694f18.values[2])
-            update_area.values[2] = gCombatDrawLimits694f18.values[2];
-        if (update_area.values[3] > gCombatDrawLimits694f18.values[3])
-            update_area.values[3] = gCombatDrawLimits694f18.values[3];
+        if (update_area.iMinX > x)
+            update_area.iMinX = x;
+        if (update_area.iMinY > y)
+            update_area.iMinY = y;
+        if (update_area.iMaxX < right)
+            update_area.iMaxX = right;
+        if (update_area.iMaxY < bottom)
+            update_area.iMaxY = bottom;
+        if (update_area.iMinX < gCombatDrawLimits694f18.iMinX)
+            update_area.iMinX = gCombatDrawLimits694f18.iMinX;
+        if (update_area.iMinY < gCombatDrawLimits694f18.iMinY)
+            update_area.iMinY = gCombatDrawLimits694f18.iMinY;
+        if (update_area.iMaxX > gCombatDrawLimits694f18.iMaxX)
+            update_area.iMaxX = gCombatDrawLimits694f18.iMaxX;
+        if (update_area.iMaxY > gCombatDrawLimits694f18.iMaxY)
+            update_area.iMaxY = gCombatDrawLimits694f18.iMaxY;
         gpWindowManager->UpdateScreen(
-            update_area.values[0], update_area.values[1],
-            update_area.values[2] - update_area.values[0] + 1,
-            update_area.values[3] - update_area.values[1] + 1);
+            update_area.iMinX, update_area.iMinY,
+            update_area.iMaxX - update_area.iMinX + 1,
+            update_area.iMaxY - update_area.iMinY + 1);
         saved.Draw(0, 0, width, height,
                    gpWindowManager->screenBitmap->map, x, y,
                    gpWindowManager->screenBitmap->Width,
@@ -3400,10 +3396,10 @@ void combatManager::ShootAnimatedMissile(int startX, int startY, int destX,
                        gpWindowManager->screenBitmap->Width,
                        gpWindowManager->screenBitmap->Height,
                        gpWindowManager->screenBitmap->Pitch, false);
-            update_area.values[0] = x;
-            update_area.values[1] = y;
-            update_area.values[2] = right;
-            update_area.values[3] = bottom;
+            update_area.iMinX = x;
+            update_area.iMinY = y;
+            update_area.iMaxX = right;
+            update_area.iMaxY = bottom;
             x += addX;
             right += addX;
             y += addY;
@@ -3418,26 +3414,26 @@ void combatManager::ShootAnimatedMissile(int startX, int startY, int destX,
                       gpWindowManager->screenBitmap->Width,
                       gpWindowManager->screenBitmap->Height,
                       gpWindowManager->screenBitmap->Pitch, flipped, 1);
-        if (update_area.values[0] > x)
-            update_area.values[0] = x;
-        if (update_area.values[1] > y)
-            update_area.values[1] = y;
-        if (update_area.values[2] < right)
-            update_area.values[2] = right;
-        if (update_area.values[3] < bottom)
-            update_area.values[3] = bottom;
-        if (update_area.values[0] < gCombatDrawLimits694f18.values[0])
-            update_area.values[0] = gCombatDrawLimits694f18.values[0];
-        if (update_area.values[1] < gCombatDrawLimits694f18.values[1])
-            update_area.values[1] = gCombatDrawLimits694f18.values[1];
-        if (update_area.values[2] > gCombatDrawLimits694f18.values[2])
-            update_area.values[2] = gCombatDrawLimits694f18.values[2];
-        if (update_area.values[3] > gCombatDrawLimits694f18.values[3])
-            update_area.values[3] = gCombatDrawLimits694f18.values[3];
+        if (update_area.iMinX > x)
+            update_area.iMinX = x;
+        if (update_area.iMinY > y)
+            update_area.iMinY = y;
+        if (update_area.iMaxX < right)
+            update_area.iMaxX = right;
+        if (update_area.iMaxY < bottom)
+            update_area.iMaxY = bottom;
+        if (update_area.iMinX < gCombatDrawLimits694f18.iMinX)
+            update_area.iMinX = gCombatDrawLimits694f18.iMinX;
+        if (update_area.iMinY < gCombatDrawLimits694f18.iMinY)
+            update_area.iMinY = gCombatDrawLimits694f18.iMinY;
+        if (update_area.iMaxX > gCombatDrawLimits694f18.iMaxX)
+            update_area.iMaxX = gCombatDrawLimits694f18.iMaxX;
+        if (update_area.iMaxY > gCombatDrawLimits694f18.iMaxY)
+            update_area.iMaxY = gCombatDrawLimits694f18.iMaxY;
         gpWindowManager->UpdateScreen(
-            update_area.values[0], update_area.values[1],
-            update_area.values[2] - update_area.values[0] + 1,
-            update_area.values[3] - update_area.values[1] + 1);
+            update_area.iMinX, update_area.iMinY,
+            update_area.iMaxX - update_area.iMinX + 1,
+            update_area.iMaxY - update_area.iMinY + 1);
         ++frame;
         if (frame >= missile->GetNumFrames(0))
             frame = 0;
@@ -3562,10 +3558,10 @@ void combatManager::ShootMissile(int startX, int startY, int destX, int destY,
                        gpWindowManager->screenBitmap->Width,
                        gpWindowManager->screenBitmap->Height,
                        gpWindowManager->screenBitmap->Pitch, false);
-            update_area.values[0] = x;
-            update_area.values[1] = y;
-            update_area.values[2] = right;
-            update_area.values[3] = bottom;
+            update_area.iMinX = x;
+            update_area.iMinY = y;
+            update_area.iMaxX = right;
+            update_area.iMaxY = bottom;
             x += addX;
             right += addX;
             y += addY;
@@ -3584,25 +3580,25 @@ void combatManager::ShootMissile(int startX, int startY, int destX, int destY,
             gpWindowManager->screenBitmap->Width,
             gpWindowManager->screenBitmap->Height,
             gpWindowManager->screenBitmap->Pitch, flipped, 1);
-        if (update_area.values[0] > x)
-            update_area.values[0] = x;
-        if (update_area.values[1] > y)
-            update_area.values[1] = y;
-        if (update_area.values[2] < right)
-            update_area.values[2] = right;
-        if (update_area.values[3] < bottom)
-            update_area.values[3] = bottom;
-        if (update_area.values[0] < gCombatDrawLimits694f18.values[0])
-            update_area.values[0] = gCombatDrawLimits694f18.values[0];
-        if (update_area.values[1] < gCombatDrawLimits694f18.values[1])
-            update_area.values[1] = gCombatDrawLimits694f18.values[1];
-        if (update_area.values[2] > gCombatDrawLimits694f18.values[2])
-            update_area.values[2] = gCombatDrawLimits694f18.values[2];
-        if (update_area.values[3] > gCombatDrawLimits694f18.values[3])
-            update_area.values[3] = gCombatDrawLimits694f18.values[3];
-        gpWindowManager->UpdateScreen(update_area.values[0], update_area.values[1],
-                                      update_area.values[2] - update_area.values[0] + 1,
-                                      update_area.values[3] - update_area.values[1] + 1);
+        if (update_area.iMinX > x)
+            update_area.iMinX = x;
+        if (update_area.iMinY > y)
+            update_area.iMinY = y;
+        if (update_area.iMaxX < right)
+            update_area.iMaxX = right;
+        if (update_area.iMaxY < bottom)
+            update_area.iMaxY = bottom;
+        if (update_area.iMinX < gCombatDrawLimits694f18.iMinX)
+            update_area.iMinX = gCombatDrawLimits694f18.iMinX;
+        if (update_area.iMinY < gCombatDrawLimits694f18.iMinY)
+            update_area.iMinY = gCombatDrawLimits694f18.iMinY;
+        if (update_area.iMaxX > gCombatDrawLimits694f18.iMaxX)
+            update_area.iMaxX = gCombatDrawLimits694f18.iMaxX;
+        if (update_area.iMaxY > gCombatDrawLimits694f18.iMaxY)
+            update_area.iMaxY = gCombatDrawLimits694f18.iMaxY;
+        gpWindowManager->UpdateScreen(update_area.iMinX, update_area.iMinY,
+                                      update_area.iMaxX - update_area.iMinX + 1,
+                                      update_area.iMaxY - update_area.iMinY + 1);
         GameTime::DelayTil(next_frame_time);
     }
 
@@ -3939,9 +3935,9 @@ play_frame:
 
             DrawFrame(0, 1, 0, 100, 1, 1);
             gpWindowManager->UpdateScreen(
-                drawbridgeBounds.values[0], drawbridgeBounds.values[1],
-                drawbridgeBounds.values[2] - drawbridgeBounds.values[0] + 1,
-                drawbridgeBounds.values[3] - drawbridgeBounds.values[1] + 1);
+                drawbridgeBounds.iMinX, drawbridgeBounds.iMinY,
+                drawbridgeBounds.iMaxX - drawbridgeBounds.iMinX + 1,
+                drawbridgeBounds.iMaxY - drawbridgeBounds.iMinY + 1);
         }
     }
 

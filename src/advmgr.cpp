@@ -65,7 +65,6 @@
 #include "bottomviewsubwindow.h"
 #include "button.h"
 #include "csprite.h"
-#define HOMM3_ADVMGR_OBJ_DECLS
 #include "game.h"
 #include "creature_bank.h"
 #include "exec.h"
@@ -4461,8 +4460,7 @@ int advManager::ProcessSearch(int x, int y, int z)
     if (currHero->movePoints != currHero->maxMovePoints) {
         if (!gpCurrentPlayer->IsHuman()) {
             type_point invalidPoint(-1, -1, -1);
-            memcpy(gpCurrentPlayer->puzzle_guess, &invalidPoint,
-                   sizeof(invalidPoint));
+            gpCurrentPlayer->puzzle_guess = invalidPoint;
             return 1;
         }
         NormalDialog(gpGeneralText->GetText(
@@ -4475,8 +4473,7 @@ int advManager::ProcessSearch(int x, int y, int z)
             == HERO_BACKPACK_CAPACITY) {
         if (!gpCurrentPlayer->IsHuman()) {
             type_point invalidPoint(-1, -1, -1);
-            memcpy(gpCurrentPlayer->puzzle_guess, &invalidPoint,
-                   sizeof(invalidPoint));
+            gpCurrentPlayer->puzzle_guess = invalidPoint;
             return 1;
         }
         NormalDialog(gpGeneralText->GetText(
@@ -4503,8 +4500,7 @@ int advManager::ProcessSearch(int x, int y, int z)
 
     if (!gpCurrentPlayer->IsHuman() && !currCell->is_diggable()) {
         type_point invalidPoint(-1, -1, -1);
-        memcpy(gpCurrentPlayer->puzzle_guess, &invalidPoint,
-               sizeof(invalidPoint));
+        gpCurrentPlayer->puzzle_guess = invalidPoint;
         return 1;
     }
 
