@@ -44,6 +44,14 @@ static const int gLandRiverDeltaIndex[4] = {2, 0, 3, 1};
 DATA(0x006409B0)
 static const int gSnowRiverDeltaIndex[4] = {7, 5, 4, 6};
 
+// Four six-entry tables drive Complete's guarded-zone connection strength.
+// Their contents are retail data owned elsewhere; these address claims give
+// the candidate relocations semantic identities without copying game data.
+DATA(0x006823F0) extern int gRmgGuardThresholdLow[];
+DATA(0x00682408) extern int gRmgGuardThresholdHigh[];
+DATA(0x00682420) extern int gRmgGuardScaleLow[];
+DATA(0x00682438) extern int gRmgGuardScaleHigh[];
+
 DATA(0x00682700)
 static const char* gRmgWaterNames[3] = {
     DATA_COMPGEN(0x006827EC, rmgWaterNone, "None"),
@@ -301,6 +309,19 @@ type_spell_scroll_def::type_spell_scroll_def(int newSpellLevel, int newValue)
     spellLevel = newSpellLevel;
 }
 
+// Complete emits this ordinary by-value accessor once, then lets VC6 choose
+// its boundary independently at each RMG call site.  The standalone body's
+// `ret 0xc` proves that TRmgMapPosition is passed by value rather than by
+// reference; CreateSubterraneanGate retains its final two calls while
+// expanding the earlier ones.
+VA(0x005378E0, 0x27)
+TRmgMapItem* type_random_map::GetMapItem(TRmgMapPosition point)
+{
+    return mapItems
+        + (point.z * mapHeight + point.y) * mapWidth
+        + point.x;
+}
+
 // Complete-only object-generator roster.  Retail proves the source-level
 // `push_back(new ...)` chain through all three stages of VC6's real inline
 // ladder: early sites retain vector::insert(pos, value), middle sites retain
@@ -485,6 +506,204 @@ void type_random_map_generator::InitializeObjectGenerators()
     objectGenerators.push_back(new type_treasure_def(110, 0, 500, 50));
     objectGenerators.push_back(new type_treasure_def(112, 0, 2500, 150));
     objectGenerators.push_back(new type_witch_hut_def());
+}
+
+// Complete-only subterranean connection pass.  The caller walks paired
+// 0x1c-byte zone-connection records and invokes this method only when the two
+// zones are on different levels.  Retail proves the source algorithm through
+// the intersection bounds, the vector of equal-best legal positions, two
+// type_object constructions from objectPrototypes[103], and the mirrored
+// entrance/guard updates.  Dreamcast has no RMG compiland, so the method name
+// is role-based while every field and branch below is Windows-retail evidence.
+VA(0x00542080, 0x8AA)
+unsigned char type_random_map_generator::CreateSubterraneanGate(
+    TRmgZone* source, TRmgZoneConnection* connection)
+{
+    TRmgZone* destination = zones[connection->destination->zoneIndex];
+    int sourceZone = source->slot->zoneIndex;
+    int destinationZone = destination->slot->zoneIndex;
+    TRmgMapPosition sourceLevelPosition = source->levelPosition;
+    TRmgMapPosition destinationLevelPosition = destination->levelPosition;
+
+    if (sourceLevelPosition.z == destinationLevelPosition.z)
+        return 0;
+    if (source->terrain == eTerrainWater)
+        return 0;
+
+    TRmgZoneBounds sourceBounds = source->bounds;
+    TRmgZoneBounds destinationBounds = destination->bounds;
+    int minimumX = std::_cpp_max(
+        sourceBounds.minimumX, destinationBounds.minimumX);
+    int minimumY = std::_cpp_max(
+        sourceBounds.minimumY, destinationBounds.minimumY);
+    int maximumX = std::_cpp_min(
+        sourceBounds.maximumX, destinationBounds.maximumX);
+    int maximumY = std::_cpp_min(
+        sourceBounds.maximumY, destinationBounds.maximumY);
+    if (minimumX >= maximumX || minimumY >= maximumY)
+        return 0;
+
+    int gateIndex = rand() % objectPrototypes[103].size();
+    TRmgObjectPropertiesRef* gateProperties = objectPrototypes[103][gateIndex];
+    TRmgObjectProperties* gatePrototype = gateProperties->prototype;
+
+    std::vector<TRmgMapPosition> candidates;
+    int bestScore = 0;
+    TRmgMapPosition position = sourceLevelPosition;
+
+    for (position.y = minimumY; position.y < maximumY; ++position.y) {
+        for (position.x = minimumX; position.x < maximumX; ++position.x) {
+            TRmgMapItem* sourceItem = map.GetMapItem(position);
+            int score = sourceItem->zoneState.score;
+            if (sourceItem->zoneState.zone != sourceZone)
+                continue;
+
+            TRmgMapPosition otherPosition = destination->levelPosition;
+            otherPosition.x = position.x;
+            otherPosition.y = position.y;
+            TRmgMapItem* destinationItem = map.GetMapItem(otherPosition);
+            if (destinationItem->zoneState.zone != destinationZone)
+                continue;
+
+            score += destinationItem->zoneState.score;
+            if (score < bestScore)
+                continue;
+            if (!map.CanPlaceObject(gateProperties, position, source))
+                continue;
+            if (!map.CanPlaceObject(
+                    gateProperties, otherPosition, destination))
+                continue;
+
+            if (score > bestScore) {
+                candidates.clear();
+                bestScore = score;
+            }
+            candidates.push_back(position);
+        }
+    }
+
+    if (candidates.empty())
+        return 0;
+
+    position = candidates[rand() % candidates.size()];
+    AddObject(new type_object(gateProperties), position);
+
+    TRmgMapPosition otherPosition = destination->levelPosition;
+    otherPosition.x = position.x;
+    otherPosition.y = position.y;
+    AddObject(new type_object(gateProperties), otherPosition);
+
+    TPoint entrance(
+        position.x - gatePrototype->enterX,
+        position.y - gatePrototype->enterY);
+    source->entrances.push_back(entrance);
+    destination->entrances.push_back(entrance);
+
+    int guardValue;
+    if (connection->unguarded) {
+        guardValue = 0;
+    } else {
+        int strength = 0;
+        int level = monsterStrength;
+        if (connection->value > gRmgGuardThresholdLow[level]) {
+            strength =
+                (connection->value - gRmgGuardThresholdLow[level])
+                * gRmgGuardScaleLow[level] / 4;
+        }
+        if (connection->value > gRmgGuardThresholdHigh[level]) {
+            strength +=
+                (connection->value - gRmgGuardThresholdHigh[level])
+                * gRmgGuardScaleHigh[level] / 4;
+        }
+        guardValue = strength < 2000 ? 0 : strength;
+    }
+
+    ++position.y;
+    ++otherPosition.y;
+    TRmgMapItem* sourceEntrance = map.GetMapItem(position);
+    if (!sourceEntrance->connection.present) {
+        sourceEntrance->tileData.borderObject = 0;
+        sourceEntrance->tileData.subterraneanGate = 1;
+    }
+    TRmgMapItem* destinationEntrance = map.GetMapItem(otherPosition);
+    if (!destinationEntrance->connection.present) {
+        destinationEntrance->tileData.borderObject = 0;
+        destinationEntrance->tileData.subterraneanGate = 1;
+    }
+
+    if (connection->placeBorderObjects) {
+        int direction = PlaceBorderObject(position, 1, destination);
+        if (direction >= 0) {
+            --position.x;
+            guardValue = 0;
+            TRmgMapItem* item = map.GetMapItem(position);
+            if (item->objects.size() == 0) {
+                if (!item->connection.present) {
+                    item->tileData.subterraneanGate = 0;
+                    item->tileData.borderObject = 1;
+                }
+                item->connection.direction = direction;
+                item->connection.present = 1;
+            }
+
+            position.x += 2;
+            item = map.GetMapItem(position);
+            if (item->objects.size() == 0) {
+                if (!item->connection.present) {
+                    item->tileData.subterraneanGate = 0;
+                    item->tileData.borderObject = 1;
+                }
+                item->connection.direction = direction;
+                item->connection.present = 1;
+            }
+        }
+
+        direction = PlaceBorderObject(otherPosition, 1, source);
+        if (direction >= 0) {
+            --otherPosition.x;
+            TRmgMapItem* item = map.GetMapItem(otherPosition);
+            if (item->objects.size() == 0) {
+                if (!item->connection.present) {
+                    item->tileData.subterraneanGate = 0;
+                    item->tileData.borderObject = 1;
+                }
+                item->connection.direction = direction;
+                item->connection.present = 1;
+            }
+
+            otherPosition.x += 2;
+            item = map.GetMapItem(otherPosition);
+            if (item->objects.size() == 0) {
+                if (!item->connection.present) {
+                    item->tileData.subterraneanGate = 0;
+                    item->tileData.borderObject = 1;
+                }
+                item->connection.direction = direction;
+                item->connection.present = 1;
+            }
+            return 1;
+        }
+    }
+
+    if (guardValue > 0) {
+        TRmgMapItem* item = map.GetMapItem(position);
+        TRmgZone* zone = zones[item->zoneState.zone];
+        if (static_cast<int>(item->objects.size()) <= 0) {
+            type_object* guard = CreateGuard(guardValue, zone);
+            if (guard)
+                AddObject(guard, position);
+        }
+
+        item = map.GetMapItem(otherPosition);
+        zone = zones[item->zoneState.zone];
+        if (static_cast<int>(item->objects.size()) <= 0) {
+            type_object* guard = CreateGuard(guardValue, zone);
+            if (guard)
+                AddObject(guard, otherPosition);
+        }
+    }
+
+    return 1;
 }
 
 // The Complete RMG has no Dreamcast counterpart.  Retail nevertheless fixes
@@ -821,8 +1040,8 @@ void type_random_map_generator::WriteMapHeader(TAbstractFile* outfile)
         int generatedHumanTowns = 0;
         {
             unsigned int townIndex = 0;
-            for (; townIndex < generatedTowns.size(); ++townIndex) {
-                TRmgGeneratedTown* town = generatedTowns[townIndex];
+            for (; townIndex < zones.size(); ++townIndex) {
+                TRmgZone* town = zones[townIndex];
                 TRmgTownSlot* slot = town->slot;
                 int player = slot->playerIndex;
                 if (player < 0)

@@ -2610,8 +2610,10 @@ rmg	??0type_spell_scroll_def@@QAE@HH@Z	100.0000	100.0000	100.0000	0x134ea0	bd98d
 rmg	??0type_treasure_def@@QAE@HHHH@Z	100.0000	100.0000	100.0000	0x134160	fdf13f3fe2e6
 rmg	??0type_witch_hut_def@@QAE@XZ	100.0000	100.0000	100.0000	0x134a60	248d29ba8ae4
 rmg	?CreateRiver@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	35.8880	35.8880	35.8880	0x148df0	36298a084078
+rmg	?CreateSubterraneanGate@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	75.3486	75.3486	75.3486	0x142080	489a7073eff3
+rmg	?GetMapItem@type_random_map@@QAEPAUTRmgMapItem@@UTRmgMapPosition@@@Z	100.0000	100.0000	100.0000	0x1378e0	5df55a259e35
 rmg	?InitializeObjectGenerators@type_random_map_generator@@QAEXXZ	97.4646	97.4676	97.4676	0x138b10	55bc899a64f7
-rmg	?WriteMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	95.6987	95.7066	95.7066	0x149cb0	c3736f08f0c3
+rmg	?WriteMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	95.7066	95.7066	95.7066	0x149cb0	12d6f5f28f76
 rmg	?_Inc@const_iterator@?$_Tree@UTPoint@@U1@U_Kfn@?$set@UTPoint@@U?$less@UTPoint@@@std@@V?$allocator@UTPoint@@@3@@std@@U?$less@UTPoint@@@4@V?$allocator@UTPoint@@@4@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x1b8bc0	-
 rmg	?assign_rmg_teams@@YIXHHHPBEPAD@Z	100.0000	100.0000	100.0000	0x14ab40	a44a9dbf9227
 rmg	?set@?$bitset@$0IB@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0x14ded0	-

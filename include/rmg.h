@@ -9,6 +9,7 @@
 #include "terrain_type.h"
 
 class TAbstractFile;
+struct TRmgZone;
 
 // Complete's random-map object factories share this five-dword prefix.  The
 // constructor at 0x534160 writes the four fields, while vtable 0x640b64 proves
@@ -260,7 +261,7 @@ SIZE(type_quest_gold_def, 0x18);
 // position.  The map-header writer proves every named offset through the
 // player-alignment and main-town serialization loops.
 struct TRmgTownSlot {
-    char opaque0000[0x4];
+    int zoneIndex;                    // +0x00
     int kind;                       // +0x04: human (0) or computer (1)
     char opaque0008[0x14];
     int playerIndex;                // +0x1c
@@ -273,6 +274,25 @@ struct TRmgMapPosition {
 
     TRmgMapPosition() {}
     TRmgMapPosition(int newX, int newY, int newZ);
+};
+
+// Complete's zone-connection records are walked at a 0x1c-byte stride by
+// the connection pass.  The first pointer identifies the opposite template
+// zone; the three adjacent bytes select guard policy and record completion.
+struct TRmgZoneConnection {
+    TRmgTownSlot* destination;             // +0x00
+    int value;                             // +0x04
+    unsigned char unguarded;               // +0x08
+    unsigned char placeBorderObjects;      // +0x09
+    unsigned char connected;               // +0x0a
+    char opaque000b[0x11];
+};
+
+struct TRmgZoneBounds {
+    int minimumX;
+    int minimumY;
+    int maximumX;
+    int maximumY;
 };
 
 // Retail's common direction table contains eight consecutive two-dword
@@ -310,6 +330,16 @@ struct TRmgMovementCost {
     unsigned unknown : 16;
 };
 
+// The connection pass extracts the signed zone id from bits 16..23 with
+// `shl 8; sar 24` while ranking candidate squares by the low word.  Keeping
+// both fields in one dword reproduces the retail bitfield loads rather than
+// masking raw storage in the algorithm.
+struct TRmgZoneCellState {
+    unsigned score : 16;
+    signed zone : 8;
+    unsigned unknown24 : 8;
+};
+
 // The six-bit signed land field is fixed by retail's `shl 26; sar 26`
 // extraction in the river-delta path.  The four-bit field at bit 26 is
 // tested as a unit when river routing prices an already decorated tile.
@@ -324,10 +354,19 @@ struct TRmgGroundTileData {
     unsigned roadSprite : 7;
     unsigned unknown07 : 1;
     unsigned blockedDirections : 4;
-    unsigned unknown12 : 17;
+    unsigned unknown12 : 14;
+    unsigned borderObject : 1;
+    unsigned subterraneanGate : 1;
+    unsigned unknown28 : 1;
     unsigned roadTarget : 1;
     unsigned riverTarget : 1;
     unsigned impassable : 1;
+};
+
+struct TRmgConnectionDecoration {
+    unsigned present : 1;
+    unsigned direction : 4;
+    unsigned unknown05 : 27;
 };
 
 struct TRmgObjectProperties {
@@ -393,10 +432,10 @@ struct TRmgMapItem {
     std::vector<type_object*> objects;    // +0x00
     TRmgMapPosition previousTile;         // +0x10
     TRmgMovementCost movement;            // +0x1c
-    unsigned zone;                        // +0x20
+    TRmgZoneCellState zoneState;           // +0x20
     TRmgGroundTile tile;                  // +0x24
     TRmgGroundTileData tileData;          // +0x28
-    unsigned unknown2c;                   // +0x2c
+    TRmgConnectionDecoration connection;  // +0x2c
 };
 
 class TRmgMapInterface {
@@ -431,12 +470,16 @@ public:
     }
 
     TRmgMapItem* GetMapItem(int x, int y);
-    inline TRmgMapItem* GetMapItem(const TRmgMapPosition& point)
+    inline TRmgMapItem* GetMapItem(int x, int y, int z)
     {
-        return mapItems
-            + (point.z * mapHeight + point.y) * mapWidth
-            + point.x;
+        return mapItems + (z * mapHeight + y) * mapWidth + x;
     }
+    TRmgMapItem* GetMapItem(TRmgMapPosition point);
+
+    unsigned char CanPlaceObject(
+        TRmgObjectPropertiesRef* properties,
+        TRmgMapPosition position,
+        TRmgZone* zone);
 };
 
 // Retail retains these support bodies outside CreateRiver while the adapter
@@ -509,18 +552,31 @@ public:
     virtual ~TRmgRiverPainter();
 };
 
-struct TRmgGeneratedTown {
+// A generated zone owns both its template metadata and the Complete-only
+// connection state.  WriteMapHeader proves the player/town fields through
+// +0x3c; the connection pass independently proves the bounding rectangle,
+// 0x1c-stride connection vector, and entrance vector at +0x404.
+struct TRmgZone {
     TRmgTownSlot* slot;              // +0x00
     int alignment;                   // +0x04
-    char opaque0008[0x28];
-    TRmgMapPosition position;         // +0x30
+    char opaque0008[0x4];
+    int terrain;                     // +0x0c
+    TRmgMapPosition levelPosition;   // +0x10
+    int opaque001c;
+    TRmgZoneBounds bounds;           // +0x20
+    TRmgMapPosition position;        // +0x30: main town
     unsigned char active;            // +0x3c
-    char pad003d[0x3];
+    char opaque003d[0x8b];
+    std::vector<TRmgZoneConnection> connections; // +0xc8
+    char opaque00d8[0x32c];
+    std::vector<TPoint> entrances;   // +0x404
 };
 
 SIZE(TRmgTownSlot, 0x20);
 SIZE(TRmgMapPosition, 0xc);
-SIZE(TRmgGeneratedTown, 0x40);
+SIZE(TRmgZoneConnection, 0x1c);
+SIZE(TRmgZoneBounds, 0x10);
+SIZE(TRmgZone, 0x414);
 
 enum ERmgMapVersion {
     RMG_MAP_RESTORATION_OF_ERATHIA = 0,
@@ -559,7 +615,7 @@ public:
     char opaque10c0[0x4];
     const char* templateName;                        // +0x10c4
     char opaque10c8[0x18];
-    std::vector<TRmgGeneratedTown*> generatedTowns;  // +0x10e0
+    std::vector<TRmgZone*> zones;                    // +0x10e0
     std::vector<type_treasure_def*> objectGenerators; // +0x10f0
     std::vector<unsigned char> disabledKeyTents;     // +0x1100
     int objectCountByType[232];                      // +0x1110
@@ -583,6 +639,11 @@ public:
     }
 
     void InitializeObjectGenerators();
+    unsigned char CreateSubterraneanGate(
+        TRmgZone* source, TRmgZoneConnection* connection);
+    int PlaceBorderObject(
+        TRmgMapPosition position, int count, TRmgZone* zone);
+    type_object* CreateGuard(int value, TRmgZone* zone);
     // Provisional spelling: retail's water-wheel caller and the river-delta
     // object selection prove the role; the Dreamcast build has no RMG TU.
     void CreateRiver(TRmgMapPosition source);
@@ -593,8 +654,10 @@ SIZE(TRmgMapPosition, 0x0c);
 SIZE(TPoint, 0x08);
 SIZE(TRmgRiverDeltaOffset, 0x08);
 SIZE(TRmgMovementCost, 0x04);
+SIZE(TRmgZoneCellState, 0x04);
 SIZE(TRmgGroundTile, 0x04);
 SIZE(TRmgGroundTileData, 0x04);
+SIZE(TRmgConnectionDecoration, 0x04);
 SIZE(TRmgObjectProperties, 0x4c);
 SIZE(TRmgObjectPropertiesRef, 0xe8);
 SIZE(type_object, 0x1c);
