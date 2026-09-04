@@ -63,6 +63,10 @@ public:
         int video;
         int audio;
         std::string subtitles;
+
+        // Retail 0x488fb0, the thiscall SCampaign::PlayScenarioPrologue
+        // makes on a scenario's prologue record (name provisional).
+        void Play();
     };
 
     struct ScenarioStruct {
@@ -72,7 +76,11 @@ public:
         // scenario.  The width agrees with the cross-build record, but the
         // Complete codegen proves the signed PC spelling.
         int inflated_size;
-        std::vector<bool> prerequisites;
+        // Byte elements: GetAvailableScenarios (0x488f00) walks _First at
+        // +0x1c with `cmp byte ptr [ebx+edx],0` on a unit stride, and the
+        // prologue pointer follows at +0x3c (a Dinkumware vector<bool>
+        // would push it to +0x40).
+        std::vector<unsigned char> prerequisites;
         std::string region_desc;
         unsigned char region_color;
         signed char difficulty;
@@ -102,6 +110,12 @@ public:
         // wrapper below is its sole direct caller.
         void StartScenario(TAbstractFile* stream, int option);
         std::string GetRegionDescription() const;
+        ~ScenarioStruct();
+        // Retail 0x487d30: LoadScenario's callee, which inflates the map
+        // header of scenario `which` out of the campaign stream (name
+        // provisional).
+        void LoadMapHeader(TAbstractFile* stream, NewSMapHeader* mapHeader,
+                           int which);
     };
 
     struct CampaignHeaderStruct {
@@ -121,7 +135,9 @@ public:
         std::string campaign_desc;
         std::vector<ScenarioStruct*> scenarios;
         unsigned char* data;
-        void* stream;
+        // FreeData (0x4887e0) destroys it through vtable slot 0 with the
+        // deleting flag, and the two loaders hand it to ScenarioStruct.
+        TAbstractFile* stream;
         bool variable_difficulty;
         char pad_55[3];
         int campaign_music;
@@ -135,6 +151,11 @@ public:
         void StartMusic();
         void GetAvailableScenarios(unsigned char* available) const;
         void StartScenario(int which, int option);
+        // Retail 0x4887e0 / 0x488850, both Complete-only and named from
+        // their bodies (provisional): release the stream and the inflated
+        // data; count the scenarios that carry map data.
+        void FreeData();
+        int GetNumMaps() const;
     };
 
     // Dreamcast's LF_FIELDLIST preserves this complete nested enum.  The
