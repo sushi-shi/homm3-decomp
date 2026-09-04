@@ -237,11 +237,24 @@ void combatManager::do_animations()
 // E:\gamedcs\command.cpp:291
 // Dreamcast names the dispatcher, its message-owner local, and every called
 // helper; retail fixes the Complete-only DirectPlay cases and payload offsets.
-// Residual: 96.2267%, with all 78 basic blocks and their flow kinds agreeing.
-// The remaining bytes are VC6 code-shape debt: scratch-register choices in
-// the queued-input, tower and ProcessNextAction arms; the human/AI blocks are
-// laid out in the opposite order despite the same successors; and the EH
-// descriptor/jump-table placement follows those code offsets.
+// The former note read the AI/human dispatch as "laid out in the opposite
+// order despite the same successors" and banked it as code-shape debt.  It
+// was a source fact, and `--calls` named it exactly: this compile called
+// ProcessCombatMsg where retail calls CheckGetAIMove and CheckGetAIMove
+// where retail calls ProcessCombatMsg - a swapped pair, not a permutation.
+// Retail's `jne` on IsQuickCombat lands INSIDE the CheckGetAIMove block
+// (0x8c1) and its `je` on is_computer_action sinks the ProcessCombatMsg arm
+// to the function tail, so CheckGetAIMove is the FALL-THROUGH arm reached by
+// two predecessors, one of them a jump.  A merged `||` cannot spell that:
+// VC6 canonicalises `if (A || B) X; else Y;` into two `jne`s at X and sinks
+// X, and swapping the arms under `||` is byte-flat to the digit (96.2267
+// either way).  Splitting the guard and jumping into the surviving arm is
+// what merges it in place - the shape the sibling windows use.
+// Residual (97.6611%): all 77 blocks now agree EXACTLY, branches are clean
+// at 46/46 with five returns, and the call streams agree with no real
+// mismatch.  What is left is 24 instruction rows of scratch-register naming
+// (eax/ecx and ecx/edx transposed around get_current_army's index chain and
+// the ProcessNextAction argument push).
 VA(0x004740d0, 0x5AB)  // anchor-vtable combatManager slot02 + dispatcher: calls automate_catapult/first_aid + ProcessCombatMsg/CheckWin/ResetRound, dc 0x6b318
 int combatManager::Main(message& msg)
 {
@@ -388,11 +401,13 @@ int combatManager::Main(message& msg)
 
 process_action:
     if (field_3c == 0) {
-        if (!static_cast<const combatManager*>(this)->IsQuickCombat()
-                && !is_computer_action(get_current_army())) {
-            result = ProcessCombatMsg(msg);
-        } else {
+        if (static_cast<const combatManager*>(this)->IsQuickCombat())
+            goto ai_move;
+        if (is_computer_action(get_current_army())) {
+ai_move:
             CheckGetAIMove();
+        } else {
+            result = ProcessCombatMsg(msg);
         }
     }
 
