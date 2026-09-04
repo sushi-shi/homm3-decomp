@@ -10,7 +10,6 @@
 // them - the seven candidate sites are ALSO what starves the /Ob2
 // collector so basic_string::_Grow/_Eos stay retail's out-of-line
 // calls in both functions).
-#define HOMM3_WIDGET_HIDE_SHOW_INLINE
 // UpdatePlayerPositions reaches SetupFirstPlayer and the new-map bonus
 // array, both scoped behind game.h's new-map view gate.
 #define HOMM3_GAME_NEW_MAP_DECLS
