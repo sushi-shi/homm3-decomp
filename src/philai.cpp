@@ -2114,6 +2114,19 @@ void MoveHero(hero* current_hero, long* danger_zones,
               unsigned char is_last_hero, unsigned char* explore_mode);
 hero* DetermineHeroToMove(int player_id, unsigned char* is_last_hero);
 
+// Residual (90.2542%): ONE inline decision, and the obvious repair is
+// MEASURED AND REJECTED.  Retail CALLS game::GetTown (+2a0) and game::GetHero
+// (+2c1) inside the expanded second selector; this compile expands both
+// game.h accessors in place, which is also where our two surplus branches
+// come from (44 against retail's 42 - the `cmp id,-1` arm of each accessor).
+// They sit at inline depth 2 in retail, inside an expanded
+// DetermineHeroToMove, and at depth 1 here because the helper's body is
+// written out below.  Restoring `DetermineHeroToMove(whichPlayer,
+// &is_last_hero)` as the call does NOT reproduce that: VC6 declines to expand
+// it at all once the hand-written mass leaves caller_cb, emitting a plain call
+// and taking the row to 25.9647% (20 branches against 42).  The expansion is
+// the mass that justifies its own inlining, so the two accessors cannot be
+// pushed to depth 2 by any statement in this body.
 VA(0x00525e80, 0x362)  // anchor-callee, dc 0x10f16c
 void philAI::DoAI(int whichPlayer)
 {
@@ -2232,6 +2245,13 @@ void philAI::DoAI(int whichPlayer)
 }
 
 // E:\gamedcs\philai.cpp:1056
+// Residual (86.6432%): CENSUS-IDENTICAL - `--branches` agrees at 49/49 with
+// two returns, `--calls` at 28 same with nothing one-sided, and the reloc
+// multisets match: the only reference row that differs is ONE gpGame load
+// retail forms at +3cb and this compile at +3e9, the same symbol at a shifted
+// offset.  What is left is 27 flow-kind block placements and the scratch
+// renames behind them, with no missing or extra statement to find.  Do not
+// spend a lane re-deriving that - re-check the census first and move on.
 VA(0x005261f0, 0x5ba)  // anchor-callee, dc 0x10ec58
 void MoveHero(hero* current_hero, long* danger_zones, unsigned char is_last_hero, unsigned char* explore_mode)
 {
