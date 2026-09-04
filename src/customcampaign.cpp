@@ -14,8 +14,12 @@
 #include "customcampaign.h"
 #include "customcampaign_legacy.h"
 #include "hero.h"
+#include "misc.h"
+#include "slider.h"
 #include "soundmgr.h"
 #include "town.h"
+#include <direct.h>
+#include <io.h>
 #include <string.h>
 
 // Scenario ordinals used when the fixed legacy matrices are promoted to the
@@ -43,6 +47,84 @@ static const int CROSSOVER_PATROL_FIRST_SCENARIO = 6;
 static const int CROSSOVER_PATROL_LAST_SCENARIO = 7;
 static const int CROSSOVER_PATROL_HERO = 155;
 static const int CROSSOVER_PATROL_RADIUS = 10;
+
+#if 0  // @carcass - Complete-only "Select a Campaign" window constructor (1831 B of widget setup).
+VA(0x004827b0, 0x727)  // DoCampaignWindow's CUSTOM_CAMPAIGN_ID arm + CamCust.pcx, retail-only
+TCustomCampaignWindow::TCustomCampaignWindow()
+{
+    // @stub
+}
+#endif  // @carcass
+
+// Complete-only. Scans Maps\\*.h3c through the CRT _find family (each step
+// bracketed by a _getcwd retail kept), keeps every header that loads with
+// at least one map, sorts by campaign name and sizes the slider for the
+// eighteen-row list. FreeData's second retail call site: with it in the
+// TU, /Ob2 stops expanding FreeData into ~CampaignHeaderStruct.
+VA(0x00482fd0, 0x264)  // TCustomCampaignWindow ctor callee + _findfirst("*.h3c"), retail-only
+void TCustomCampaignWindow::LoadCampaignList()
+{
+    char currentDirectory[100];
+    _finddata_t fileInfo;
+
+    _getcwd(currentDirectory, sizeof(currentDirectory));
+    _chdir(DATA_COMPGEN(0x006755ac, mapsDirectory, "Maps"));
+    _getcwd(currentDirectory, sizeof(currentDirectory));
+    long findHandle = _findfirst(
+        DATA_COMPGEN(0x006755a4, campaignFilePattern, "*.h3c"), &fileInfo);
+    _chdir(DATA_COMPGEN(0x006755a0, parentDirectory, ".."));
+    _getcwd(currentDirectory, sizeof(currentDirectory));
+    if (findHandle == -1)
+        return;
+
+    do {
+        TCampaignBrief::CampaignHeaderStruct* header =
+            new TCampaignBrief::CampaignHeaderStruct(fileInfo.name);
+        _getcwd(currentDirectory, sizeof(currentDirectory));
+        if (!header->Load()) {
+            delete header;
+        } else if (header->GetNumMaps() == 0) {
+            header->FreeData();
+            delete header;
+        } else {
+            header->FreeData();
+            campaignHeaders.push_back(header);
+        }
+        _getcwd(currentDirectory, sizeof(currentDirectory));
+    } while (_findnext(findHandle, &fileInfo) == 0);
+    _findclose(findHandle);
+    _getcwd(currentDirectory, sizeof(currentDirectory));
+
+    std::sort(campaignHeaders.begin(), campaignHeaders.end(),
+              CampaignHeaderPointerLess());
+    if (campaignHeaders.size() > CAMPAIGN_LIST_ROWS) {
+        campaignSlider->send_message(widget::WIDGET_SET_STATUS, 6);
+        campaignSlider->SetResolution(
+            campaignHeaders.size() - (CAMPAIGN_LIST_ROWS - 1));
+    }
+    UpdateList();
+}
+
+// Complete-only: the sort predicate, by campaign name. Retail evaluates
+// the right operand's name first (VC6's right-to-left argument order for
+// the inlined string operator<) and destroys the two temporaries in
+// reverse.
+VA(0x00483240, 0xEA)  // _Insertion_sort_1/_Sort predicate call sites, retail-only
+bool CampaignHeaderPointerLess::operator()(void* left, void* right) const
+{
+    return static_cast<TCampaignBrief::CampaignHeaderStruct*>(left)
+               ->GetCampaignName()
+           < static_cast<TCampaignBrief::CampaignHeaderStruct*>(right)
+                 ->GetCampaignName();
+}
+
+#if 0  // @carcass - Complete-only list refresh: needs the type_text_scroller model for the description widget.
+VA(0x00483330, 0x281)  // LoadCampaignList's tail callee, retail-only
+void TCustomCampaignWindow::UpdateList()
+{
+    // @stub
+}
+#endif  // @carcass
 
 // Complete-only. Retail destroys the two MapTextStruct records and the
 // start-options object through `delete` (the options go through vtable
@@ -343,20 +425,14 @@ TCampaignBrief::CampaignHeaderStruct::CampaignHeaderStruct(
 // `delete`), calls vector<ScenarioStruct*>::erase(begin, end) out of line
 // (the retail label game_1fd60_sub02_14cdb0 at 0x54cdb0 is that COMDAT,
 // i.e. a `scenarios.clear()`), calls FreeData, then destroys scenarios,
-// campaign_desc, campaign_name and file_name in reverse order.
-//
-// Residual (78.53%): FreeData has ONE call site in this TU, so /Ob2 expands
-// it here regardless of size; retail's second caller is the Complete-only
-// campaign-list scanner at 0x482fd0 (unreconstructed), which keeps it out
-// of line. With FreeData expanded, spelling the clear() that retail
-// evidently wrote measures LOWER (75.72: erase expands and only its
-// _Destroy child stays a call), so the clear() is withheld until the
-// scanner lands. Pins are not used in this lane.
+// campaign_desc, campaign_name and file_name in reverse order. FreeData
+// stays a call only because LoadCampaignList gives it a second site.
 VA(0x004886a0, 0x132)  // anchor-caller(TCampaignBrief ctor), retail-only
 TCampaignBrief::CampaignHeaderStruct::~CampaignHeaderStruct()
 {
     for (unsigned int i = 0; i < scenarios.size(); ++i)
         delete scenarios[i];
+    scenarios.clear();
     FreeData();
 }
 
