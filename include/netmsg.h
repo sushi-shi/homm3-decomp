@@ -599,14 +599,12 @@ public:
     int garrisonId;
     int playerPos;
 
-#ifdef HOMM3_GAME_GARRISON_HERO_DECLS
+    // Dreamcast defines the two-argument constructor in this header
+    // (netmsg.h:619, dc 0xbd290); Complete's body is game.obj's own
+    // (game.cpp defines it, and game::ClaimGarrison builds the message
+    // through the default constructor - see the note there).
     CMCClaimGarrison() {}
     CMCClaimGarrison(int id, int player);
-#else
-    CMCClaimGarrison(int id, int player)
-        : CMapChange(RS_CLAIM_GARRISON, sizeof(CMCClaimGarrison)),
-          garrisonId(id), playerPos(player) {}
-#endif
 };
 
 class CMCClaimGenerator : public CMapChange {
