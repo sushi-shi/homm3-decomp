@@ -5806,7 +5806,7 @@ long type_school_artifact::get_value(const hero* owner, unsigned char equipped,
         caster.set_power(base_value);
         value = caster.get_raw_spell_value(spell) - value;
         if (bonus < 0)
-            best_value = _cpp_max(best_value, value);
+            best_value = _cpp_min(value, best_value);
         else
             best_value = _cpp_max(value, best_value);
     }
