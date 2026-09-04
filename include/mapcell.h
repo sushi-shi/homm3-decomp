@@ -591,19 +591,6 @@ public:
     // erasing and then splices it out - `_First` at +0x12, `_Last` at
     // +0x16, a four-byte stride and the SIXTEEN-BIT objectIndex compare are
     // all in that one body.
-    // Marker for headers that need to name this nested type in a
-    // declaration. It is not a declarator and costs no include-set
-    // population; it exists because the type is view-gated while
-    // NewfullMap - which game.h declares - takes a pointer to it, and not
-    // every TU that sees game.h has been through this branch (puzzlewindow
-    // includes mapcell.h before it defines the view).
-    // RELAY, restored 2026-08-20: game.h gates StampObject and the objects
-    // vector on this, because those declarations name TObjectCell and it is
-    // defined HERE. The view audit removed it along with the macros it
-    // resembled, but it is not a view - it is a "this type exists" signal
-    // between two headers, and game.h will not compile for mapcell.obj
-    // without it.
-#define HOMM3_NEWMAPCELL_HAS_TOBJECTCELL
     struct TObjectCell {
         union {
             unsigned short objectIndex;
@@ -645,16 +632,6 @@ public:
     // 0x4fce20, exact in src/mapcell.cpp. Declared here because findpath's
     // CalcTerrainCost calls it with the const cell in ECX.
     TAdventureObjectType get_special_terrain() const;
-#ifdef HOMM3_HERO_OBJ_VIEW
-    // Complete's hero terrain helper retained the Dreamcast accessor name
-    // but widened its result to the magic-terrain domain. The hero.obj-only
-    // non-const overload folds to get_magic_terrain_type; all ordinary const
-    // callers continue to bind the admitted object-terrain body above.
-    __forceinline int get_special_terrain()
-    {
-        return get_magic_terrain_type();
-    }
-#endif
     int get_magic_terrain_type();
     TAdventureObjectType get_map_object();
     unsigned long get_map_extraInfo();

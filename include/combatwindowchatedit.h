@@ -4,12 +4,9 @@
 
 #include <string>
 
-// remote.h normally hides CChatEdit from consumers because declaring its
-// large virtual family perturbs VC6's handle population.  combatwindow.cpp is
-// the one other retail compiland that derives from it.
-#define HOMM3_CHAT_EDIT_DECLS
+// combatwindow.cpp is the one other retail compiland that derives from
+// CChatEdit.
 #include "remote.h"
-#undef HOMM3_CHAT_EDIT_DECLS
 
 // Retail 0x4721d0 allocates 0x74 bytes, calls CChatEdit's forwarding
 // constructor, clears the byte at +0x70, then installs vtable 0x63d4bc.

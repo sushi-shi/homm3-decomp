@@ -5,21 +5,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <va.h>
-#define HOMM3_EVENTS_PRISON_DECL
-#define HOMM3_EVENTS_TURN_PAUSE_DECL
-#define HOMM3_EVENTS_GAME_INLINE_HELPERS
-// DoCombat's remote arms: the wait dialog whose payload feeds
-// ReceiveHeroTownData, and the level-update message the winner's side
-// transmits after CheckLevel.
-#define HOMM3_REMOTE_BATTLE_DLG_DECLS
-#define HOMM3_REMOTE_WAIT_READY_DECLS
 #include "advmgr_objects.h"
 #include "creature_bank.h"
 #include "swapmgr.h"
 #include "game.h"
 #include "advmgr.h"
-#undef HOMM3_EVENTS_GAME_INLINE_HELPERS
-#undef HOMM3_EVENTS_PRISON_DECL
 // DoCombat needs the full combatManager type (SetupCombat and the
 // result/raised-creature fields); added 2026-08-27 with the DoCombat
 // reconstruction and measured through the ratchet like every other
@@ -2857,7 +2847,7 @@ void advManager::DoEventArtifact(hero* current_hero, NewmapCell* cell,
 // dialog (0x5d11d0 family). Both declarations repeat verbatim at the
 // monsters_* family below.
 void AI_join_decision(hero* current_hero, TCreatureType creature,
-                      int amount);
+                      short amount);
 void do_monster_join_dialog(hero* inHero, armyGroup* monsters, int flag);
 
 // E:\gamedcs\events.cpp:838.  The reward-line collector, Dreamcast's
@@ -6006,7 +5996,7 @@ static const char* GetArmyName(int type, int count)
 // locally, the AI_approximate_strength precedent above - AI_value_of_event
 // itself is declared further up, at do_event_dragon_city, which is its
 // first consumer in this file.
-void AI_join_decision(hero* current_hero, TCreatureType creature, int amount);
+void AI_join_decision(hero* current_hero, TCreatureType creature, short amount);
 unsigned char AI_bribe_monsters(const hero* current_hero, NewmapCell* cell,
                                 TCreatureType type, int amount,
                                 long gold_cost);

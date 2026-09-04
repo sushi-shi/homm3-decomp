@@ -248,6 +248,14 @@ NewmapCell* advManager::handle_stop_on_trigger(hero* curr, NewmapCell* destCell,
 }
 
 // E:\gamedcs\cursor.cpp:490
+// Residual (97.7237%): all 17 blocks and the whole instruction stream agree.
+// The delta is one binding - retail lands `kWalkSpeedPixels[walk_speed]` in
+// EDI and keeps the old index alive in ECX, this compile reuses ECX as the
+// destination and must then spill/order the counter and startVals loads
+// around it (ecx->edi x3, eax->edx x2). why-reg v2's model reports the first
+// definitions agreeing (esi<-this, edi<-curr, ebx<-xInc) and all seven
+// catalog mutations are flat or worse; the DC statement order (521 delay,
+// 522 pixels, then the 32/walk_speed divide) is already what this body has.
 VA(0x00480380, 0x25C)  // exhaustive order + timeGetTime call, dc 0x7a7f4
 void advManager::animate_move(hero* curr, int direction, int xInc, int yInc)
 {

@@ -21,6 +21,16 @@ class type_text_scroller;
 // Retail's vector insert and constructor cleanup both prove this exact
 // source-level aggregate: a NewSMapHeader, the trivially copied setup record,
 // and one availability byte at +0x4d0.
+// The four map extents NewSMapHeader::Size takes; TCampaignBrief::Select
+// maps them onto the WHICHMAP icon's frames 0..3 (anything else is frame
+// 4). Declared with its one consumer.
+enum EMapSize {
+    MAP_SIZE_SMALL = 36,
+    MAP_SIZE_MEDIUM = 72,
+    MAP_SIZE_LARGE = 108,
+    MAP_SIZE_EXTRA_LARGE = 144
+};
+
 struct CampaignScenarioPreview : public NewSMapHeader {
     SGameSetupOptions game_setup;
     bool available;
@@ -43,17 +53,24 @@ public:
     // instead of flattening either operation into CampaignBriefHandler.
     class ScenarioStartOptions {
     public:
+        // The choice counts slot 2 answers with; UpdateBonusIcons centres
+        // the bonus frames for exactly a pair.
+        enum EChoiceCount {
+            CHOICE_COUNT_PAIR = 2
+        };
         virtual ~ScenarioStartOptions() = 0;
         virtual bool _vslot1(int option) = 0;
         virtual int _vslot2() = 0;
-        virtual char* _vslot3(int option) = 0;
+        // Slot 3 takes the running campaign record as well as the option:
+        // UpdateBonusIcons (0x458d40) pushes (&gpGame->campaign, option).
+        virtual char* _vslot3(SCampaign* campaign, int option) = 0;
         virtual int _vslot4(int option) = 0;
         virtual int _vslot5(ScenarioStruct* scenario, int option) = 0;
         virtual std::string _vslot6(CampaignHeaderStruct* campaign,
                                     int option) = 0;
         virtual int GetStartingHero(int option) = 0;
         virtual int GetPlayerPosition(int option) = 0;
-        virtual void _vslot9(TAbstractFile* stream) = 0;
+        virtual void _vslot9(std::streambuf* stream) = 0;
         virtual void _vslot10(ScenarioStruct* scenario) = 0;
         virtual void _vslot11(NewSMapHeader* mapHeader) = 0;
         virtual bool _vslot12(ScenarioStruct* scenario, int option) = 0;
@@ -63,16 +80,29 @@ public:
         int video;
         int audio;
         std::string subtitles;
+
+        // Retail 0x488fb0, the thiscall SCampaign::PlayScenarioPrologue
+        // makes on a scenario's prologue record (name provisional).
+        void Play();
     };
 
-    struct ScenarioStruct {
+    // The empty NewMapCampaignContext base is how game::NewMap receives the
+    // selected scenario: StartScenario (0x4884c0) passes `this` in that
+    // slot and NewMap calls two customcampaign.obj bodies on it. game.h
+    // cannot name a nested type, so the base carries the relationship;
+    // being empty it leaves every proven offset in place.
+    struct ScenarioStruct : public NewMapCampaignContext {
         std::string name;
         int offset;
         // Retail tests this field with a signed `jle` before loading a
         // scenario.  The width agrees with the cross-build record, but the
         // Complete codegen proves the signed PC spelling.
         int inflated_size;
-        std::vector<bool> prerequisites;
+        // Byte elements: GetAvailableScenarios (0x488f00) walks _First at
+        // +0x1c with `cmp byte ptr [ebx+edx],0` on a unit stride, and the
+        // prologue pointer follows at +0x3c (a Dinkumware vector<bool>
+        // would push it to +0x40).
+        std::vector<unsigned char> prerequisites;
         std::string region_desc;
         unsigned char region_color;
         signed char difficulty;
@@ -100,8 +130,18 @@ public:
                                      hero* sourceHero);
         // Complete-only retained wrapper at 0x4884c0.  The campaign-header
         // wrapper below is its sole direct caller.
-        void StartScenario(TAbstractFile* stream, int option);
+        void StartScenario(std::streambuf* stream, int option);
         std::string GetRegionDescription() const;
+        // Retail 0x458fe0, the header-inline COMDAT campaignbrief.obj
+        // retains: the option's bonus help text through the options
+        // record's slot 6. Name provisional.
+        std::string GetBonusText(CampaignHeaderStruct* campaign, int option);
+        ~ScenarioStruct();
+        // Retail 0x487d30: LoadScenario's callee, which inflates the map
+        // header of scenario `which` out of the campaign stream (name
+        // provisional).
+        void LoadMapHeader(std::streambuf* stream, NewSMapHeader* mapHeader,
+                           int which);
     };
 
     struct CampaignHeaderStruct {
@@ -121,7 +161,12 @@ public:
         std::string campaign_desc;
         std::vector<ScenarioStruct*> scenarios;
         unsigned char* data;
-        void* stream;
+        // FreeData (0x4887e0) destroys it through vtable slot 0 with the
+        // deleting flag, and the two loaders hand it to ScenarioStruct.
+        // A std::streambuf (a filebuf or a strstreambuf by Load's vftable
+        // stores): the loaders seek it through slot 8 with seekoff's
+        // hidden-return-plus-three ABI and wrap it in a TGzInflateBuf.
+        std::streambuf* stream;
         bool variable_difficulty;
         char pad_55[3];
         int campaign_music;
@@ -132,9 +177,19 @@ public:
         bool LoadScenario(int which, NewSMapHeader* mapHeader);
         std::string GetCampaignName() const;
         std::string GetCampaignDescription() const;
+        // Retail 0x483740: a by-value copy of file_name. It is a /Gy
+        // COMDAT sitting in customcampaignwindow.obj's band - the first
+        // object in link order that calls it - so that unit carries the
+        // definition and the claim. Name provisional.
+        std::string GetFileName() const;
         void StartMusic();
         void GetAvailableScenarios(unsigned char* available) const;
         void StartScenario(int which, int option);
+        // Retail 0x4887e0 / 0x488850, both Complete-only and named from
+        // their bodies (provisional): release the stream and the inflated
+        // data; count the scenarios that carry map data.
+        void FreeData();
+        int GetNumMaps() const;
     };
 
     // Dreamcast's LF_FIELDLIST preserves this complete nested enum.  The
@@ -307,13 +362,18 @@ public:
     void SetHumanSlot();
     void SetupCurrentTerritory();
     void UpdateAllyEnemyFlags();
+    // Retail 0x459010, Complete-only (name provisional): shows the
+    // difficulty button matching gpGame->setup.difficulty and, outside the
+    // in-game view, the two arrow buttons a variable-difficulty campaign
+    // allows around it. Select calls it right after UpdateBonusIcons.
+    void UpdateDifficultyButtons();
 
 private:
-#ifdef HOMM3_CAMPAIGNBRIEF_HANDLER_FRIEND
     // The Dreamcast procedure is S_LPROC32 (file-static) yet calls this
-    // private helper, proving the owning header grants it friendship.
+    // private helper, proving the owning header grants it friendship;
+    // campaignbrief.cpp declares the static ahead of this header so the
+    // friend binds to it.
     friend int CampaignBriefHandler(message& msg);
-#endif
     // The DC class type contains this private member in addition to the
     // same-named file-scope helper emitted by campaignbrief.obj.
     void ShowTerritorySmacker(unsigned char evilPost);

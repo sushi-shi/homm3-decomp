@@ -13,16 +13,6 @@
 // DrawToBuffer 0x43e140, animate_missile 0x43f2c0,
 // compute_attacker_bonus 0x443320, ComputeAttackerDamageBonuses
 // 0x443840, new_turn 0x446e30.
-#define HOMM3_ARMY_MIDPOINT_DECL
-#define HOMM3_ARMY_MOVE_VIEW
-#define HOMM3_ARMY_MULTI_HEAD_VIEW
-#define HOMM3_ARMY_NEW_TURN_DECL
-#define HOMM3_ARMY_POW_VIEW
-#define HOMM3_ARMY_RANGE_VIEW
-#define HOMM3_ARMY_ROUND_VIEW
-#define HOMM3_ARMY_PROTECTION_VIEW
-#define HOMM3_ARMY_SPELLS_VIEW
-#define HOMM3_ARMY_TURN_ABILITY_VIEW
 #include <algorithm>
 #include <math.h>
 #include <stdlib.h>
@@ -37,7 +27,6 @@
 // those ENUMERATORS to every consumer costs the same 0.0357 on the same
 // function (measured 2026-08-14, bisected against the field slicing in
 // the same change, which is innocent).
-#define HOMM3_ARMY_ISINCAPACITATED_DEF  // header-inline body; ai.cpp owns the 0x41f380 out-of-line copy
 #include "creaturetype.h"
 #include "army.h"
 // ai.h: the narrow EAreaAttackCreature roster - LoadResources' missile
@@ -490,7 +479,7 @@ void army::LoadResources()
         sprintf(gText, DATA_COMPGEN(0x00660a10, moveSampleFormat,
                                     "%smove.82M"),
                 monInfoSamplePrefix);
-        s = LoadSampleResource(gText);
+        s = ResourceManager::GetSample(gText);
         if (armySample[WALK_SAMPLE])
             armySample[WALK_SAMPLE]->Dispose();
         armySample[WALK_SAMPLE] = s;
@@ -512,7 +501,7 @@ void army::LoadResources()
         sprintf(gText, DATA_COMPGEN(0x006609ec, attackSampleFormat,
                                     "%sattk.82M"),
                 monInfoSamplePrefix);
-    s = LoadSampleResource(gText);
+    s = ResourceManager::GetSample(gText);
     if (armySample[ATTACK_SAMPLE])
         armySample[ATTACK_SAMPLE]->Dispose();
     armySample[ATTACK_SAMPLE] = s;
@@ -520,7 +509,7 @@ void army::LoadResources()
     sprintf(gText, DATA_COMPGEN(0x006609f8, winceSampleFormat,
                                 "%swnce.82M"),
             monInfoSamplePrefix);
-    s = LoadSampleResource(gText);
+    s = ResourceManager::GetSample(gText);
     if (armySample[WINCE_SAMPLE])
         armySample[WINCE_SAMPLE]->Dispose();
     armySample[WINCE_SAMPLE] = s;
@@ -528,7 +517,7 @@ void army::LoadResources()
     sprintf(gText, DATA_COMPGEN(0x006609e0, killSampleFormat,
                                 "%skill.82M"),
             monInfoSamplePrefix);
-    s = LoadSampleResource(gText);
+    s = ResourceManager::GetSample(gText);
     if (armySample[DIE_SAMPLE])
         armySample[DIE_SAMPLE]->Dispose();
     armySample[DIE_SAMPLE] = s;
@@ -541,7 +530,7 @@ void army::LoadResources()
         sprintf(gText, DATA_COMPGEN(0x006609d4, defendSampleFormat,
                                     "%sdfnd.82M"),
                 monInfoSamplePrefix);
-    s = LoadSampleResource(gText);
+    s = ResourceManager::GetSample(gText);
     if (armySample[DEFEND_SAMPLE])
         armySample[DEFEND_SAMPLE]->Dispose();
     armySample[DEFEND_SAMPLE] = s;
@@ -551,7 +540,7 @@ void army::LoadResources()
         sprintf(gText, DATA_COMPGEN(0x00660a04, shotSampleFormat,
                                     "%sshot.82M"),
                 monInfoSamplePrefix);
-        s = LoadSampleResource(gText);
+        s = ResourceManager::GetSample(gText);
         if (armySample[SHOOT_SAMPLE])
             armySample[SHOOT_SAMPLE]->Dispose();
         armySample[SHOOT_SAMPLE] = s;
@@ -568,14 +557,14 @@ void army::LoadResources()
         sprintf(gText, DATA_COMPGEN(0x006609c8, ext1SampleFormat,
                                     "%sext1.82M"),
                 monInfoSamplePrefix);
-        s = LoadSampleResource(gText);
+        s = ResourceManager::GetSample(gText);
         if (armySample[PRE_WALK_SAMPLE])
             armySample[PRE_WALK_SAMPLE]->Dispose();
         armySample[PRE_WALK_SAMPLE] = s;
         sprintf(gText, DATA_COMPGEN(0x006609bc, ext2SampleFormat,
                                     "%sext2.82M"),
                 monInfoSamplePrefix);
-        s = LoadSampleResource(gText);
+        s = ResourceManager::GetSample(gText);
         if (armySample[POST_WALK_SAMPLE])
             armySample[POST_WALK_SAMPLE]->Dispose();
         armySample[POST_WALK_SAMPLE] = s;
@@ -1637,10 +1626,10 @@ void army::animate_missile(army* armyToAttack)
                            gpWindowManager->screenBitmap->Width,
                            gpWindowManager->screenBitmap->Height,
                            gpWindowManager->screenBitmap->Pitch, false);
-                update_area.values[0] = x;
-                update_area.values[1] = y;
-                update_area.values[2] = right;
-                update_area.values[3] = bottom;
+                update_area.iMinX = x;
+                update_area.iMinY = y;
+                update_area.iMaxX = right;
+                update_area.iMaxY = bottom;
                 x += stepX;
                 y += stepY;
                 right += stepX;
@@ -1657,26 +1646,26 @@ void army::animate_missile(army* armyToAttack)
                               gpWindowManager->screenBitmap->Height,
                               gpWindowManager->screenBitmap->Pitch,
                               flipped, 1);
-            if (update_area.values[0] > x)
-                update_area.values[0] = x;
-            if (update_area.values[1] > y)
-                update_area.values[1] = y;
-            if (update_area.values[2] < right)
-                update_area.values[2] = right;
-            if (update_area.values[3] < bottom)
-                update_area.values[3] = bottom;
-            if (update_area.values[0] < gCombatDrawLimits694f18.values[0])
-                update_area.values[0] = gCombatDrawLimits694f18.values[0];
-            if (update_area.values[1] < gCombatDrawLimits694f18.values[1])
-                update_area.values[1] = gCombatDrawLimits694f18.values[1];
-            if (update_area.values[2] > gCombatDrawLimits694f18.values[2])
-                update_area.values[2] = gCombatDrawLimits694f18.values[2];
-            if (update_area.values[3] > gCombatDrawLimits694f18.values[3])
-                update_area.values[3] = gCombatDrawLimits694f18.values[3];
+            if (update_area.iMinX > x)
+                update_area.iMinX = x;
+            if (update_area.iMinY > y)
+                update_area.iMinY = y;
+            if (update_area.iMaxX < right)
+                update_area.iMaxX = right;
+            if (update_area.iMaxY < bottom)
+                update_area.iMaxY = bottom;
+            if (update_area.iMinX < gCombatDrawLimits694f18.iMinX)
+                update_area.iMinX = gCombatDrawLimits694f18.iMinX;
+            if (update_area.iMinY < gCombatDrawLimits694f18.iMinY)
+                update_area.iMinY = gCombatDrawLimits694f18.iMinY;
+            if (update_area.iMaxX > gCombatDrawLimits694f18.iMaxX)
+                update_area.iMaxX = gCombatDrawLimits694f18.iMaxX;
+            if (update_area.iMaxY > gCombatDrawLimits694f18.iMaxY)
+                update_area.iMaxY = gCombatDrawLimits694f18.iMaxY;
             gpWindowManager->UpdateScreen(
-                update_area.values[0], update_area.values[1],
-                update_area.values[2] - update_area.values[0] + 1,
-                update_area.values[3] - update_area.values[1] + 1);
+                update_area.iMinX, update_area.iMinY,
+                update_area.iMaxX - update_area.iMinX + 1,
+                update_area.iMaxY - update_area.iMinY + 1);
             GameTime::DelayTil(next_frame_time);
         }
     }
@@ -5483,7 +5472,7 @@ void army::attack_wall(TWallTargetId wall, long levelsDestroyed)
     startY = gpCombatManager->cells[gridIndex].field_02
              + frameInfoMissileOffset[2 * pose + 1];
 
-    sample* wallSample = LoadSampleResource(
+    sample* wallSample = ResourceManager::GetSample(
         levelsDestroyed == 0 ? DATA_COMPGEN(0x00660a84, wallMissSampleName,
                                             "WallMiss.82m")
                              : DATA_COMPGEN(0x00660a78, wallHitSampleName,
@@ -5520,21 +5509,21 @@ void army::attack_wall(TWallTargetId wall, long levelsDestroyed)
     long right = explosion->Width - halfWidth + targetX - 1;
     {
         TDrawbridgeBounds& bounds = gpCombatManager->drawbridgeBounds;
-        bounds.values[0] = x;
-        bounds.values[1] = y;
-        bounds.values[2] = right;
-        bounds.values[3] = bottom;
+        bounds.iMinX = x;
+        bounds.iMinY = y;
+        bounds.iMaxX = right;
+        bounds.iMaxY = bottom;
     }
     {
         TDrawbridgeBounds& bounds = gpCombatManager->drawbridgeBounds;
-        if (bounds.values[0] < gCombatDrawLimits694f18.values[0])
-            bounds.values[0] = gCombatDrawLimits694f18.values[0];
-        if (bounds.values[1] < gCombatDrawLimits694f18.values[1])
-            bounds.values[1] = gCombatDrawLimits694f18.values[1];
-        if (bounds.values[2] > gCombatDrawLimits694f18.values[2])
-            bounds.values[2] = gCombatDrawLimits694f18.values[2];
-        if (bounds.values[3] > gCombatDrawLimits694f18.values[3])
-            bounds.values[3] = gCombatDrawLimits694f18.values[3];
+        if (bounds.iMinX < gCombatDrawLimits694f18.iMinX)
+            bounds.iMinX = gCombatDrawLimits694f18.iMinX;
+        if (bounds.iMinY < gCombatDrawLimits694f18.iMinY)
+            bounds.iMinY = gCombatDrawLimits694f18.iMinY;
+        if (bounds.iMaxX > gCombatDrawLimits694f18.iMaxX)
+            bounds.iMaxX = gCombatDrawLimits694f18.iMaxX;
+        if (bounds.iMaxY > gCombatDrawLimits694f18.iMaxY)
+            bounds.iMaxY = gCombatDrawLimits694f18.iMaxY;
     }
 
     for (long frame = 0; frame < explosion->GetNumFrames(0); frame++) {
@@ -5543,11 +5532,11 @@ void army::attack_wall(TWallTargetId wall, long levelsDestroyed)
             gpCombatManager->DamageWall(wall, levelsDestroyed);
         gpCombatManager->DrawFrame(0, 0, 1, 100, 0, 1);
         explosion->Draw(0, frame, 0, 0,
-                        gpCombatManager->drawbridgeBounds.values[2]
-                            - gpCombatManager->drawbridgeBounds.values[0]
+                        gpCombatManager->drawbridgeBounds.iMaxX
+                            - gpCombatManager->drawbridgeBounds.iMinX
                             + 1,
-                        gpCombatManager->drawbridgeBounds.values[3]
-                            - gpCombatManager->drawbridgeBounds.values[1]
+                        gpCombatManager->drawbridgeBounds.iMaxY
+                            - gpCombatManager->drawbridgeBounds.iMinY
                             + 1,
                         gpWindowManager->screenBitmap->map,
                         targetX - explosion->Width / 2,
@@ -5556,12 +5545,12 @@ void army::attack_wall(TWallTargetId wall, long levelsDestroyed)
                         gpWindowManager->screenBitmap->Height,
                         gpWindowManager->screenBitmap->Pitch, 0, 1);
         gpWindowManager->UpdateScreen(
-            gpCombatManager->drawbridgeBounds.values[0],
-            gpCombatManager->drawbridgeBounds.values[1],
-            gpCombatManager->drawbridgeBounds.values[2]
-                - gpCombatManager->drawbridgeBounds.values[0] + 1,
-            gpCombatManager->drawbridgeBounds.values[3]
-                - gpCombatManager->drawbridgeBounds.values[1] + 1);
+            gpCombatManager->drawbridgeBounds.iMinX,
+            gpCombatManager->drawbridgeBounds.iMinY,
+            gpCombatManager->drawbridgeBounds.iMaxX
+                - gpCombatManager->drawbridgeBounds.iMinX + 1,
+            gpCombatManager->drawbridgeBounds.iMaxY
+                - gpCombatManager->drawbridgeBounds.iMinY + 1);
     }
     explosion->Dispose();
     gpCombatManager->DrawFrame(1, 0, 0, 0, 1, 0);
@@ -5867,11 +5856,11 @@ void army::PlayAnimation(int sequence, int nframes, int start_frame)
          currFrameIndex < nframes + start_frame; currFrameIndex++) {
         TDrawbridgeBounds frame = bounds;
         gpCombatManager->field_53b0->Draw(
-            frame.values[0], frame.values[1],
-            frame.values[2] - frame.values[0] + 1,
-            frame.values[3] - frame.values[1] + 1,
+            frame.iMinX, frame.iMinY,
+            frame.iMaxX - frame.iMinX + 1,
+            frame.iMaxY - frame.iMinY + 1,
             gpWindowManager->screenBitmap->map,
-            frame.values[0], frame.values[1],
+            frame.iMinX, frame.iMinY,
             gpWindowManager->screenBitmap->Width,
             gpWindowManager->screenBitmap->Height,
             gpWindowManager->screenBitmap->Pitch, false);
@@ -5884,17 +5873,17 @@ void army::PlayAnimation(int sequence, int nframes, int start_frame)
         gpCombatManager->field_13d34 = 0;
         gpCombatManager->field_13d2c = 0;
 
-        gpCombatManager->drawbridgeBounds.values[0] -= 17;
-        gpCombatManager->drawbridgeBounds.values[2] += 17;
+        gpCombatManager->drawbridgeBounds.iMinX -= 17;
+        gpCombatManager->drawbridgeBounds.iMaxX += 17;
         bounds = gpCombatManager->drawbridgeBounds;
-        if (frame.values[0] > bounds.values[0])
-            frame.values[0] = bounds.values[0];
-        if (frame.values[1] > bounds.values[1])
-            frame.values[1] = bounds.values[1];
-        if (frame.values[2] < bounds.values[2])
-            frame.values[2] = bounds.values[2];
-        if (frame.values[3] < bounds.values[3])
-            frame.values[3] = bounds.values[3];
+        if (frame.iMinX > bounds.iMinX)
+            frame.iMinX = bounds.iMinX;
+        if (frame.iMinY > bounds.iMinY)
+            frame.iMinY = bounds.iMinY;
+        if (frame.iMaxX < bounds.iMaxX)
+            frame.iMaxX = bounds.iMaxX;
+        if (frame.iMaxY < bounds.iMaxY)
+            frame.iMaxY = bounds.iMaxY;
         gpCombatManager->drawbridgeBounds = frame;
 
         gpCombatManager->field_13d30 = 1;
@@ -5905,9 +5894,9 @@ void army::PlayAnimation(int sequence, int nframes, int start_frame)
             = GameTime::NextFrameTime(
                 glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT], frameDelay);
         gpWindowManager->UpdateScreen(
-            frame.values[0], frame.values[1],
-            frame.values[2] - frame.values[0] + 1,
-            frame.values[3] - frame.values[1] + 1);
+            frame.iMinX, frame.iMinY,
+            frame.iMaxX - frame.iMinX + 1,
+            frame.iMaxY - frame.iMinY + 1);
     }
 
     if (nframes > 0)

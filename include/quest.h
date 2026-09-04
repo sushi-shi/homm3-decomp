@@ -157,6 +157,12 @@ public:
     // 0x485d80 is a bare `ret 4`; the artifact leaf removes the artifacts
     // and the resource leaf debits the player's treasury. Provisional name.
     virtual void TakePayment(hero* current_hero);
+    // Retail-only 0x56ccb0 (seerhut.obj, 68 B, the row after ~type_quest):
+    // `field_3c >= 0 && field_3c < today`, today being the game date's
+    // (month * 4 + week - 5) * 7 + day. searchArray::enter_trigger asks it
+    // before pricing a quest guard. Provisional name - no DC row carries
+    // it; the deadline comparison seerhut.cpp spells inline is its body.
+    unsigned char has_expired() const;
     // Slots 4 and 5, IDENTIFIED 2026-08-21: the family's two dialog
     // entry points. Every leaf body is the same shape - take a string
     // off one of the two base getters below, hand it to NormalDialog
@@ -372,6 +378,12 @@ public:
     virtual int GetAIValue(int player);
     virtual unsigned char is_satisfied(hero* current_hero);
     virtual void TakePayment(hero* current_hero);
+    // Retail-only 0x56ccb0 (seerhut.obj, 68 B, the row after ~type_quest):
+    // `field_3c >= 0 && field_3c < today`, today being the game date's
+    // (month * 4 + week - 5) * 7 + day. searchArray::enter_trigger asks it
+    // before pricing a quest guard. Provisional name - no DC row carries
+    // it; the deadline comparison seerhut.cpp spells inline is its body.
+    unsigned char has_expired() const;
     virtual void DoProposalDialog(hero* current_hero);
     virtual void DoProgressDialog();
     virtual std::string GetRequirementText();
@@ -393,6 +405,12 @@ public:
     virtual int GetAIValue(int player);
     virtual unsigned char is_satisfied(hero* current_hero);
     virtual void TakePayment(hero* current_hero);
+    // Retail-only 0x56ccb0 (seerhut.obj, 68 B, the row after ~type_quest):
+    // `field_3c >= 0 && field_3c < today`, today being the game date's
+    // (month * 4 + week - 5) * 7 + day. searchArray::enter_trigger asks it
+    // before pricing a quest guard. Provisional name - no DC row carries
+    // it; the deadline comparison seerhut.cpp spells inline is its body.
+    unsigned char has_expired() const;
     virtual void DoProposalDialog(hero* current_hero);
     virtual void DoProgressDialog();
     virtual std::string GetRequirementText();
@@ -413,6 +431,12 @@ public:
     virtual int GetAIValue(int player);
     virtual unsigned char is_satisfied(hero* current_hero);
     virtual void TakePayment(hero* current_hero);
+    // Retail-only 0x56ccb0 (seerhut.obj, 68 B, the row after ~type_quest):
+    // `field_3c >= 0 && field_3c < today`, today being the game date's
+    // (month * 4 + week - 5) * 7 + day. searchArray::enter_trigger asks it
+    // before pricing a quest guard. Provisional name - no DC row carries
+    // it; the deadline comparison seerhut.cpp spells inline is its body.
+    unsigned char has_expired() const;
     virtual void DoProposalDialog(hero* current_hero);
     virtual void DoProgressDialog();
     virtual std::string GetRequirementText();

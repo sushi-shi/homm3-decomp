@@ -831,96 +831,42 @@ DATA(0x0068c660) static int gLastViewArmyHoverID = -1;
 // spells whose effect has no turn count (Bind, Berserk, Disrupting Ray)
 // the strip gets a fixed descriptor instead of Duration.
 //
-// THE JOIN BLOCK IS PLACED BY DUPLICATING IT, NOT BY MOVING IT
-// (35.5280 -> 73.6288, 2026-08-20 - and it OVERTURNS the "not
-// source-addressable" verdict below, which is kept because its
-// measurements are all still true).
-//
-// The diagnosis was right: the whole residual was ONE BLOCK PLACEMENT.
-// Retail emits the animation head (glTimers load .. the siege branch) as
-// the FALL-THROUGH of the right-click arm's `operator delete` tail at
-// 0x5f4cff and lets the widget and rollover arms reach it by BACKWARD
-// jumps; we emitted the same block once, at the end, with every arm
-// falling forward into it, and the displaced branch targets across the
-// whole second half were the entire 64 points.
-//
-// What was wrong was the conclusion. Four single-copy spellings were
-// measured and all four produce the identical object (the plain
-// if/else-if chain; `animate:` between the first arm and the other two
-// with `goto animate` from both; the same with `else goto dispatch;`;
-// and, added this round, the adventureoptionswindow idiom exactly -
-// `animate:` INSIDE the first arm's braces with `goto animate` from the
-// others, 35.5040). That is not "VC6 follows the flow graph": it is VC6
-// SINKING a multi-predecessor join to the end, unconditionally, whatever
-// the source order. You cannot move such a block. You CAN stop it being
-// one: WRITE THE BLOCK TWICE. With a copy at the end of the right-click
-// arm and a copy at the tail, the first copy has a single predecessor,
-// nothing sinks it, and it lands exactly where retail's is - +38.1
-// points, and the second half's branch targets come back with it.
-// The cross-jumper then merges what it can: spelling the shared
-// DrawWindow/NextFrameTime tail once behind `goto animate_tail` (rather
-// than duplicating that too) is honoured - 671 instructions -> 648
-// against retail's 626 - so the landed shape is retail's ONE tail with
-// one extra copy of the ~14-instruction head.
-// Left: that extra head (3 of the 6 surplus branches, base 61 against
-// retail's 55) - retail has ONE head with six predecessors and no
-// spelling reaches that without re-creating the sink - plus the
-// cross-jump item below. Re-verified the hard way 2026-08-20: labelling
-// the bottom copy `animate_check:` and making the right-click arm
-// `goto animate_check;` - the goto-flow shape VC6 normally leaves alone
-// - measures 36.1680, a 38-point collapse, so the duplicated source
-// block stays. The banked verdict holds.
-//
-// (The original note, all of it still measured and still true:)
-// The CALL MULTISET IS EXACT - all 50 calls agree in order and target
-// through the string destructor, including which of the four `text +=`
-// sites retail inlines and which it calls - and the first 0x4af bytes
-// are instruction-for-instruction identical.
-// One secondary item, same class - CLOSED 2026-08-20 (cold-combatpath
-// lane), 73.6288 -> 74.4096: retail cross-jumps the dismiss and
-// upgrade arms' shared tail (`call NormalDialog` + the
-// DIALOG_RETURN_ACCEPT test) and jumps into it from the dismiss arm.
-// The sunk-join doctrine's second shape spells it: the tail lives in
-// the UPGRADE arm (whose path falls through into it) behind a
-// `check_accept:` label, and the dismiss arm ends `goto check_accept`
-// after its own NormalDialog. `int amount;` had to split from its
-// initializer so the goto crosses no initialization. (+0.78; the old
-// observation that swapping the case arms' source order is byte-inert
-// still stands.)
-// Tried and rejected elsewhere: `_cpp_max(elapsed, VIEW_ARMY_DELAY)`
-// spelled by hand for the frame pacer (it homes both operands where
-// retail folds the clamp into registers - GameTime::NextFrameTime is the
-// shape, and its argument is what puts the glTimers load BEFORE the
-// GameTime::Get call); and `creature_type_from_int` at the three enum
-// bridges here, which costs three /Ob2 candidate call sites and starves
-// three of the four `text +=` expansions retail inlines (45 branches
-// against retail's 55) - the local unions carry the same four-byte copy
-// with no call site at all.
-// NOT the residual, MEASURED so the next reader does not chase it: the
-// two text arrays' relocation FORM. Our rows reference gLuckTexts /
-// gMoraleTexts with addends 0/4/8/12/48/92 where the delinked target
-// has a separate zero-addend symbol per referenced address, and
-// gViewArmyHelp's `.rclick` carries +4 against the target's own
-// `[esi*8]` row. Replacing both arrays with ten individually claimed
-// scalars - every reloc then zero-addend, the shape
-// adventureoptionswindow's 99.94% handler has - scores 35.5280, i.e.
-// IDENTICAL to the digit. The scorer does not see the addend, so the
-// array model (which text.obj's loader proves) stays and the block
-// placement really is the whole of it.
-// Release-elided diagnostic mass is also bounded and rejected (2026-08-21):
-// 1/3/5 call-shaped entry sites are byte-flat at 74.4096 with 60 branches;
-// eight sites cross the wrong threshold and fall to 71.7264 with 63. The
-// dormant-call family cannot select retail's one-head placement phase.
+// Residual (92.57%, from 74.41; 2026-09-05): the exits are the
+// Dreamcast's `bExitFlag` device, not gotos. The dossier names the
+// byte local (sp+0x33), zeroes it right before the qualifier test
+// (line 412), sets it in the UPGRADE and DISMISS arms' accept tests and
+// in the ACCEPT arm (511-520), and tests it ONCE after the three arms
+// (583): `if (bExitFlag) { msg->id = WIDGET; dialogReturn = codeY;
+// codeY = codeX = END_DIALOG; return 2; }` followed by the one
+// animation step behind `GameTime::IsPast(glTimers[..])` (588) and
+// `return 1`. That is the whole of the placement the earlier notes
+// fought with `check_accept:`/`accepted:`/`animate_tail:` labels and a
+// duplicated right-click animation copy: VC6 threads the constant flag
+// into a shared return-2 block, cross-jumps the dismiss arm into the
+// upgrade arm's NormalDialog+test tail by itself, and the IsPast form
+// is what puts the glTimers load ahead of the GameTime::Get call
+// (77.26 -> 92.57 on that one accessor). Same device as
+// townManager::Main and advManager::ProcessKeyPress.
+// Left (90 vs 98 blocks): the morale arm's `text += morale_help` is a
+// CALL to append(const string&,size_t,size_t) here where retail expands
+// it (_Xlen/_Grow/_Eos as calls) - the /Ob2 budget at that one site,
+// ~100 B, which is exactly our size deficit; retail's luck arm calls
+// the same append (game_167a0_sub00_1b250), so the two sites straddle
+// the sequential budget. Also the default arm's `text = help.rclick`
+// homes the pointer in a register where retail spills it, and the
+// gViewArmyHelp/gLuckTexts/gMoraleTexts reloc addend FORM (masked).
 // E:\gamedcs\viewarmywindow.cpp:404
 VA(0x005f4850, 0x7D7)  // direct caller + convertID2HelpID + help table, dc 0x191804
 int TViewArmyWindow::WindowHandler(message* msg)
 {
+    unsigned char bExitFlag;
     PollSound();
 
     int result = CAdvPopup::WindowHandler(msg);
     if (result)
         return result;
 
+    bExitFlag = 0;
     if (msg->qualifier & MESSAGE_MODIFIER_RIGHT) {
         if (msg->codeX == widget::WIDGET_SELECT
             || msg->codeX == widget::WIDGET_RIGHT_SELECT) {
@@ -969,23 +915,6 @@ int TViewArmyWindow::WindowHandler(message* msg)
                 NormalDialog(text.c_str(), 4, -1, -1, iResType, 0, -1, 0,
                              -1, 0, -1, 0);
         }
-        {
-            unsigned long lastFrame =
-                glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
-            if (static_cast<long>(GameTime::Get() - lastFrame) >= 0) {
-                union {
-                    int value;
-                    TCreatureType creature;
-                } shown_type;
-                shown_type.value = ArmyType;
-                if (IsSiegeWeapon(shown_type.creature))
-                    SpriteWidget->NextRandomSiegeEngineFrame();
-                else
-                    SpriteWidget->NextRandomFrame();
-                goto animate_tail;
-            }
-        }
-        return MESSAGE_DISPATCH_CONSUME;
     } else if (msg->id == MESSAGE_WIDGET) {
         if (msg->codeX == widget::WIDGET_DESELECT) {
             switch (msg->codeY) {
@@ -1012,23 +941,20 @@ int TViewArmyWindow::WindowHandler(message* msg)
                                  GENERAL_TEXT_UPGRADE_ARMY_PROMPT),
                              2, -1, -1, 6, cost[6], resource, amount,
                              -1, 0, -1, 0);
-            check_accept:
-                if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT)
-                    break;
-                goto accepted;
+                if (gpWindowManager->dialogReturn == DIALOG_RETURN_ACCEPT)
+                    bExitFlag = 1;
+                break;
             }
             case DISMISS_ID:
                 NormalDialog(gpGeneralText->GetText(
                                  GENERAL_TEXT_DISMISS_ARMY_PROMPT),
                              2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-                goto check_accept;
+                if (gpWindowManager->dialogReturn == DIALOG_RETURN_ACCEPT)
+                    bExitFlag = 1;
+                break;
             case ACCEPT_ID:
-            accepted:
-                msg->id = MESSAGE_WIDGET;
-                gpWindowManager->dialogReturn = msg->codeY;
-                msg->codeY = widget::WIDGET_END_DIALOG;
-                msg->codeX = widget::WIDGET_END_DIALOG;
-                return MESSAGE_DISPATCH_FORWARD;
+                bExitFlag = 1;
+                break;
             }
         }
     } else if (msg->id == MESSAGE_MOUSE_MOVE) {
@@ -1088,29 +1014,30 @@ int TViewArmyWindow::WindowHandler(message* msg)
         }
     }
 
-    {
-        unsigned long lastFrame =
-            glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
-        if (static_cast<long>(GameTime::Get() - lastFrame) >= 0) {
-            union {
-                int value;
-                TCreatureType creature;
-            } shown_type;
-            shown_type.value = ArmyType;
-            if (IsSiegeWeapon(shown_type.creature))
-                SpriteWidget->NextRandomSiegeEngineFrame();
-            else
-                SpriteWidget->NextRandomFrame();
-            goto animate_tail;
-        }
+    if (bExitFlag) {
+        msg->id = MESSAGE_WIDGET;
+        gpWindowManager->dialogReturn = msg->codeY;
+        msg->codeY = widget::WIDGET_END_DIALOG;
+        msg->codeX = widget::WIDGET_END_DIALOG;
+        return MESSAGE_DISPATCH_FORWARD;
     }
-    return MESSAGE_DISPATCH_CONSUME;
-animate_tail:
-    DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-    glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] =
-        GameTime::NextFrameTime(
-            glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT],
-            VIEW_ARMY_DELAY);
+
+    if (GameTime::IsPast(glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT])) {
+        union {
+            int value;
+            TCreatureType creature;
+        } shown_type;
+        shown_type.value = ArmyType;
+        if (IsSiegeWeapon(shown_type.creature))
+            SpriteWidget->NextRandomSiegeEngineFrame();
+        else
+            SpriteWidget->NextRandomFrame();
+        DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] =
+            GameTime::NextFrameTime(
+                glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT],
+                VIEW_ARMY_DELAY);
+    }
     return MESSAGE_DISPATCH_CONSUME;
 }
 

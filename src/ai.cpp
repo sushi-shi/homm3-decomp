@@ -571,6 +571,14 @@ bool army::IsIncapacitated() const
 // our_hits (90.8), hoisting the armies row first (82.4), and swapping
 // the two get_total_hit_points declarations (79.6). Symmetric-
 // enregistered-parameter tie-break; capped.
+// Instruction census 2026-09-04: base 152 vs retail 150, and the two surplus
+// rows are ONE `fstp qword [ebp-0x1c]` / `fld qword [ebp-0x1c]` pair at the
+// kills_only join - retail keeps the product/quotient in st(0) across the
+// merge and calls __ftol straight from it, while /Op gives our `double value`
+// a home. Collapsing the if/else into one `static_cast<long>(cond ? A : B)`
+// is byte-flat at 96.3533: VC6 rounds the conditional's own temporary the
+// same way. Nothing else in the census differs, which confirms the esi<->edi
+// mirror above as the rest of the residual.
 // E:\gamedcs\ai.cpp:731
 VA(0x0041f3b0, 0x1C2)  // linkorder, dc 0x24a34
 long combatManager::get_attack_change(const army* current_army, const army* enemy, const type_AI_combat_parameters* data)
@@ -1588,6 +1596,15 @@ type_spellvalue::~type_spellvalue();
 // `mov ecx,edi / dec edi / test ecx,ecx`, i.e. it tests the value BEFORE
 // the decrement, which is the `i-- > 0` form and not the `i >= 0` one.
 // E:\gamedcs\ai.cpp:1635
+// Residual (95.8926%): the loop TAIL is byte-identical to retail's, including
+// the unsigned `ja` back edge, and the whole delta is three instructions in
+// the preheader. Retail materialises the post-decrement (`mov ecx,edi` /
+// `dec edi` / `test ecx,ecx` / `jle`, then `lea edx,[edi+2*eax]` and an
+// `inc edi` before homing it); this compile leaves EDI at the pre-decrement
+// value and folds the -1 into the address (`lea edx,[edi+2*eax-1]`). The
+// `i-- > 0` form is already retail's - the body's `continue`s make the
+// decrement unmovable out of the for-condition - so this is a fold decision,
+// not a loop-form one.
 VA(0x00420d20, 0x1D5)  // anchor-callee, dc 0x2600c
 unsigned char combatManager::choose_creature_spell(const army* current_army, long* best_value, type_AI_combat_parameters* estimate)
 {

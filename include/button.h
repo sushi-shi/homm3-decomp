@@ -100,6 +100,17 @@ public:
         // in the exact SetSleepImage and marketplace-caller expansions.
         hotKeyCodes.push_back(code);
     }
+    // Dreamcast button.h:99 (dc 0x669f4, 6 B SH4: one store). A free
+    // /Ob2 candidate site wherever a caller uses it - see
+    // TSingleSelectionWindow::CreateFilterWidgets, whose insert-expansion
+    // sequence is reproduced only with this setter in its six loops.
+    void set_disabled_frame(long frame) { disabled_frame = frame; }
+    // Complete-only, like field_40 itself (the hover/highlight frame,
+    // button.cpp:393). Provisional name. Evidence is the /Ob2 budget
+    // arithmetic of CreateFilterWidgets: retail's 12-call/7-expansion
+    // vector<widget*>::insert sequence needs exactly two free candidate
+    // sites per loop iteration, and the loop body has exactly two stores.
+    void set_highlight_frame(long frame) { field_40 = frame; }
 
     virtual int Main(message* msg);  // slot 2, retail 0x456190
 

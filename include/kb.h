@@ -189,23 +189,24 @@ DATA(0x006989f8) extern unsigned short* gMapExtra;
 // takes its y as `0x7c - font->height`, reading font+0x21, i.e.
 // TFontSpec::height at font+0x1c+5. Declare the rest as readers land.
 class font;
+// DC ?Credits@@3PAPBDA / ?smallFont@@3PAVfont@@A. CreditsWait reads the
+// scrolling text from Credits[0] and its closing line from Credits[1]
+// (retail .bss 0x6a7700 / 0x6a7704) and draws the latter with smallFont
+// (.bss 0x698a08, one of the three fonts ShutDown disposes). Their owning
+// compilands are not located yet.
+extern const char* Credits[];
+extern font* smallFont;
 DATA(0x00698a14) extern font* gpCalligraphicFont;
 // The first cell of the same run: army::DrawToBuffer (0x43e140) draws
 // the troop-count box's number with it, which is the reader the note
 // above was waiting on.
 DATA(0x00698a04) extern font* gpTinyFont;
-#if defined(HOMM3_REMOTE_WAIT_READY_DECLS) \
-        || defined(HOMM3_GAME_TRANSMIT_DECLS) \
-        || defined(HOMM3_KB_OLDMAIN_DECLS)
 // The third cell of the same canonical font run.  CWaitForReadyPlayersDlg
-// passes it to CAnimatedDlg::Setup; scoped because adding declarations to
-// a shared header is a measured VC6 include-set trigger in this tree.
+// passes it to CAnimatedDlg::Setup.
 DATA(0x00698a0c) extern font* gpMediumFont;
 // The fourth cell of the run (bigfont.fnt): the lobby window's panel
-// titles (TSingleSelectionWindow::Update, 0x584550) draw with it. Same
-// scoping rule as gpMediumFont above.
+// titles (TSingleSelectionWindow::Update, 0x584550) draw with it.
 DATA(0x00698a10) extern font* gpBigFont;
-#endif
 
 // Retail map-extra accessor used by the adventure-map adjacency scan.
 unsigned short GetMapExtra(int x, int y, int z);
@@ -214,11 +215,16 @@ unsigned short* GetMapExtraPtr(int x, int y, int z);
 // Live prototypes (claimed kb.cpp bodies; called from kbwin's
 // AppCommand and exec's DoDialog).
 void ShutDown(const char* cInExitMessage);               // 0x4f3690
-#ifdef HOMM3_GAME_TRANSMIT_DECLS
+// DC ?bInShutDown@@3_NA, retail .bss 0x69958d: ShutDown's re-entry
+// guard (kb.cpp owns the definition).
+extern bool bInShutDown;
+// Dreamcast kb.cpp:4187 tears the CD/serial layer down; Complete's body
+// is EMPTY - executive::ShutDownSystem's call lands on the image-wide
+// `ret` at 0x5bc690 that /OPT:ICF folded every empty function onto.
+void EarlyShutDownSystem();
 // DC kb.cpp:3954 names the owner; retail TransmitSaveGame calls it after a
 // failed _open and independently proves the const-character-buffer ABI.
 void FileError(const char* cBuf);                        // 0x4f35f0
-#endif
 int HandleAppSpecificMenuCommands(int idItem);           // 0x4f4350
 void CleanUpMenus();                                     // 0x4f4b50
 int GetNextHumanPlayer(int start);                       // 0x4f4ba0
@@ -229,6 +235,12 @@ void NormalDialogTimeOut(const char* cText, int iMBType, int timeOut,
     int x, int y, int iResType1, int iResExtra1, int iResType2,
     int iResExtra2, int iSpecial, int iResType3, int iResExtra3); // 0x4f6530
 void DoNormalDialog(TNormalDialogInfo dialog_info);              // 0x4f6990
+// DC kb.cpp:5385 (dc 0xe5960); retail 0x4f5d80 (1,296 B), unclaimed.
+// NormalDialog sizes its info block through it before DoNormalDialog.
+void CalculateNormalDialogSize(TNormalDialogInfo* dialog_info);
+// DC kb.cpp:2549 (dc 0xe206c); retail 0x4f0fc0, unclaimed. The dialog
+// handlers hand every message they do not consume to it.
+int EventWindowHandler(message* msg);
 void extended_dialog(const char* text,
     std::vector<type_dialog_resource>& resources,
     long x, long y, long timeout);                              // 0x4f6cf0
@@ -243,7 +255,6 @@ void __fastcall get_quickview_size(const char* text, int* width,
 // yet reconstructed; the declarators match the kbwin call sites).
 int InitMainClasses();                                   // 0x4ed650
 int oldmain();                                           // 0x4ee3e0
-#ifdef HOMM3_KB_OLDMAIN_DECLS
 // Positive Dreamcast kb.cpp boundaries used by oldmain. Their retail
 // implementations are being admitted separately; keeping the declarations
 // here lets the caller preserve the recovered source shape in the meantime.
@@ -253,7 +264,6 @@ void LostGame();
 // Retail-only dword paired with the Dreamcast-named giHighMemBuffer in
 // oldmain's low-debug-memory defaults. No surviving source symbol names it.
 DATA(0x006994ec) extern int gUnnamed6994ec;
-#endif
 // The image-wide allocation-failure handler: every `new` site that
 // null-checks its result calls it (67 B at 0x4f42c0, no args, sprintf
 // into gText then ShutDown). DC kb.obj MemError, dc 0xe44f0/64 B,
@@ -265,13 +275,11 @@ void MemError();                                         // 0x4f42c0
 void KbFn_004F4C00(int field00, unsigned char b);
 int GameUnsaved();                                       // 0x4f4310
 void CheckEndGame(int bForceWin);                        // 0x4f2ce0
-#ifdef HOMM3_REMOTE_WINLOSS_DECLS
 bool DisplayVCWinLoss(VictoryConditionStruct& victoryCondition,
                       int& bGameWon, int& bGameLost, bool remoteCheck);
 unsigned char DisplayLCWinLoss(LossConditionStruct* lossCondition,
                                int* bGameWon, int* bGameLost,
                                unsigned char remoteCheck);
-#endif
 // Retail .bss 0x6972b8, an INT that every CheckEndGame caller which then
 // wants to keep touching the adventure UI reads immediately afterwards -
 // 36 image-wide references, the bulk of them inside kb.obj's own band
@@ -332,6 +340,11 @@ void IncProgressBar(unsigned char bUpdate);
 // DECLARED, NOT CLAIMED for the same link-order-gap reason as
 // IncProgressBar above.
 void ShowProgressBar();
+// The two rows around them, DC kb.cpp:240 / :292 - retail 0x4ed230 (the
+// bar-segment painter both IncProgressBar and ShowProgressBar expand) and
+// 0x4ed450 (the teardown oldmain reaches). Named from the DC roster.
+void DrawProgressCount();
+void UnloadProgressBar();
 // CODEVIEW(E:\gamedcs\kb.cpp:292, dc 0xdf2a4) void UnloadProgressBar();
 // CODEVIEW(E:\gamedcs\kb.cpp:318, dc 0xdf330) void PollSound();
 // CODEVIEW(E:\gamedcs\kb.cpp:431, dc 0xdf4e4) void InitMainClasses();

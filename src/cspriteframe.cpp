@@ -3,7 +3,6 @@
 // 34 functions in link order; 4 compiler-generated $-thunks omitted.
 #include <va.h>
 #include <string.h>
-#define HOMM3_CSPRITEFRAME_DRAW_METHODS
 #include "cspriteframe.h"
 #include "palette.h"
 
