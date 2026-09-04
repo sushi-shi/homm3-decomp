@@ -4643,6 +4643,28 @@ unsigned char TSingleSelectionWindow::OnClickMsg(CNetMsg* pNetMsg)
 // The retail jump-table arm layout and Dreamcast's line table independently
 // prove the shared arm order below.  It is source order, not numeric selector
 // order; keep msg->codeY direct because Dreamcast has no cached-id local.
+//
+// MATCHING (2026-09-04): 91.22 -> 94.49. The PLAYERS_ANY and TEAMS_ANY arms
+// end in RebuildFilteredPlayerSetup() like their non-ANY siblings (retail
+// f91b/f982 both jump into the f98c tail that calls it; HUMANS_ANY does
+// not). Removing GetDisplayTown's inline_depth(0) pin let /Ob2 reproduce
+// retail's split - HasMultipleTowns CALLED inside the TOWN_PREV/NEXT
+// expansions, EXPANDED inside the BONUS_PREV/NEXT ones (the dead
+// `test al,al` re-test there is its inlined HasRandomAlignment check) -
+// and returned CanChooseHero to its exact row. The FILE_ROW double-click
+// reads clickTime into a local before GameTime::Get() (retail holds it in
+// ESI across the call).
+// Residual: (a) retail keeps both OnBeginGame sites out of line with
+// different *bExitFlag store registers (edx/ecx); ours allocate the same
+// register and the cross-jumper merges the BEGIN arm's tail into the
+// FILE_ROW one; (b) retail CALLS the GetRandomMapName() temporary's
+// basic_string::_Tidy and the CNewSetupInfoMsg expansion's CNetMsg base
+// ctor - both depth-2 sites whose nested budget (budget / sites-remaining)
+// is smaller in retail, i.e. retail's source has more /Ob2 candidates
+// after them than ours: OnBeginGame (0x58bce0) and
+// RebuildFilteredPlayerSetup (0x580430) are still carcass stubs here, so
+// they are not candidates in this TU; (c) the block alignment shifts by
+// one at the TOWN_PREV lookup and the remaining flow rows are that shift.
 // E:\gamedcs\singleselectionwindow.cpp:5100
 VA(0x005865b0, 0x13EA)  // anchor-callee WindowHandler's id==0x200/codeX==13 arm calls it (msg, &redraw, 0) - the DC signature exactly; size 0.57x dc 0x22d4, dc 0x13c79c
 int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
@@ -4935,6 +4957,7 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
         UpdateFilterWidgets();
         DrawWindow(0, 0xffff0001, 0xffff);
         Update();
+        RebuildFilteredPlayerSetup();
         break;
     case SSW_FILTER_HUMANS_FIRST:
     case SSW_FILTER_HUMANS_FIRST + 1:
@@ -4975,6 +4998,7 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
         UpdateFilterWidgets();
         DrawWindow(0, 0xffff0001, 0xffff);
         Update();
+        RebuildFilteredPlayerSetup();
         break;
     case SSW_FILTER_VERSION_FIRST:
     case SSW_FILTER_VERSION_FIRST + 1:
@@ -5131,7 +5155,8 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
             SetCurrentMap(map, 1);
         } else if (SelectionHeaders.size() != 0
                 && map < SelectionHeaders.size()) {
-            if (static_cast<int>(GameTime::Get() - clickTime) < 400) {
+            unsigned long lastClick = clickTime;
+            if (static_cast<int>(GameTime::Get() - lastClick) < 400) {
                 *bExitFlag = OnBeginGame();
             } else {
                 clickTime = GameTime::Get();
@@ -7526,10 +7551,8 @@ inline TTownType TSingleSelectionWindow::GetDisplayTown(int gamePos)
         player = m_players.GetCompPlayerInPos(gamePos);
     CMapHeaderData::TPlayerSlotAttributes* slotAtt =
         &gpGame->mapHeader.playerSlotAttributes[gamePos];
-#pragma inline_depth(0)
     if (slotAtt->HasRandomAlignment || HasMultipleTowns(gamePos))
         return static_cast<TTownType>(player->townIndex) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
-#pragma inline_depth()
     return pick_alignment(
         static_cast<unsigned short>(slotAtt->legalAlignments), 1);
 }
