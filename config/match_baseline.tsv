@@ -1850,6 +1850,7 @@ herodefs	?InitializeSSkillTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0xe6b10	
 hexcell	??0hexcell@@QAE@XZ	100.0000	100.0000	100.0000	0xe7150	9e28269d5592
 hexcell	?get_army@hexcell@@QBEPAVarmy@@XZ	100.0000	100.0000	100.0000	0xe7170	67652e239230
 hexcell	?get_dead_army@hexcell@@QBEPAVarmy@@H@Z	100.0000	100.0000	100.0000	0xe71b0	f2ee369a5e98
+hillfortwindow	??0THillFortWindow@@QAE@XZ	100.0000	100.0000	100.0000	0xe75f0	5e54ea9e5e0c
 hillfortwindow	??1THillFortWindow@@UAE@XZ	100.0000	100.0000	100.0000	0xe7e10	8c2d226ad6fe
 hillfortwindow	??_GTHillFortWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xe7de0	-
 hillfortwindow	?DoModal@THillFortWindow@@QAEXXZ	100.0000	100.0000	100.0000	0xe7e90	180090c5146c
