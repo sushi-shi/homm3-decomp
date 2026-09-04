@@ -3908,12 +3908,11 @@ inline void TSingleSelectionWindow::OnSortMaps(int how)
 // seeding townIndex from the row's alignment), else first human
 // slot, else the first enabled slot with its CanBeComputer dropped.
 // E:\gamedcs\singleselectionwindow.cpp:4470
-// MATCHING (2026-09-01): 76.1644%, with 104/104 CFG blocks, 57 exact,
-// six size-only and no missing blocks; the first 35 blocks are exact. The
-// remaining tail/return lowering is retained behind all positive DC facts.
-// A source-false early-return spelling of GetThisPlayer reached 91.0411% but
-// removed its proved pPlayer local and if/else/shared-return shape (and emitted
-// 107 blocks), so it is rejected rather than treated as a better source state.
+// MATCHING (2026-09-04): 91.0411% with GetThisPlayer in its DC asm shape
+// (early return in the then-arm, pPlayer only on the GetPlayer path - see
+// the helper's own note). The 2026-09-01 if/else-assign reading of that
+// helper scored 76.1644 here and cost UpdateAllyEnemyFlags/ExitDialog their
+// exact rows; it was a misreading of the DC line table, not a source fact.
 // ASSERT/TRACE audit: DC has no leading zero-emission line here, and the tested
 // carrier doses were byte-flat. No release-VERIFY carrier is evidenced.
 VA(0x00584C40, 0x40D)  // anchor-callee OnNewPlayerMsg 0x589fa0 + SetCurrentMap call it no-arg; head calls UpdateGameVars 0x583580; body is DC SetHumanSlot's seat walk verbatim, size 0.84x dc 0x4D8, dc 0x13b22c
@@ -4105,15 +4104,21 @@ void TSingleSelectionWindow::SortMaps(int how, unsigned char sendSortMsg,
     }
 }
 
-// DC line 7324..7333 proves the pPlayer local, if/else assignments and shared
-// return. Complete expands this body at the SetHumanSlot call sites.
+// DC line 7324..7333 proves the pPlayer local (sp+0x10) and a separate
+// `return pPlayer` row (7333). The DC asm also proves the then-arm is an
+// EARLY RETURN: at 7326 it forms &humanPlayers[0] straight into r0 and
+// branches to the epilogue (0x141a4c), never storing pPlayer and never
+// executing the 7333 row; only the GetPlayer path (7329) stores pPlayer
+// and falls into 7333. An if/else-assign spelling with a shared return
+// let VC6 jump-thread GetPlayer's NULL arm straight to the caller's exit
+// (UpdateAllyEnemyFlags 100 -> 32.65, ExitDialog 100 -> 68.05); the
+// early-return form keeps retail's `xor eax,eax / test eax,eax` join.
 CNetPlayerHandlerPlayer* TSingleSelectionWindow::GetThisPlayer()
 {
     CNetPlayerHandlerPlayer* pPlayer;
     if (gUnnamed6989f0 == WINDOW_MODE_6989F0_3)
-        pPlayer = &m_players.humanPlayers[0];
-    else
-        pPlayer = m_players.GetPlayer(gsThisNetPlayerInfo.dpid);
+        return &m_players.humanPlayers[0];
+    pPlayer = m_players.GetPlayer(gsThisNetPlayerInfo.dpid);
     return pPlayer;
 }
 
