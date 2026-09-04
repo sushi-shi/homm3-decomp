@@ -1365,22 +1365,17 @@ public:
     // drawing.cpp:919, DC 0x847dc; Complete's body is at 0x493cf0.
     void DrawBackground();
     void ResetLimitCreature();
-#if !defined(HOMM3_COMMAND_PLAYER_DROP_VIEW) \
-        && !defined(HOMM3_DRAWING_ARCHER_DECLS)
-    // command.cpp substitutes HandleCombatPlayerDrop for this unused member,
-    // while drawing.cpp restores it at the Dreamcast-attested end of the
-    // renderer declaration band.
+#ifndef HOMM3_DRAWING_ARCHER_DECLS
+    // drawing.cpp declares this at the Dreamcast-attested end of the
+    // renderer declaration band above.
     int DrawCreatureAndHeroSubwindows();
-#elif defined(HOMM3_COMMAND_PLAYER_DROP_VIEW)
-    unsigned char HandleCombatPlayerDrop(unsigned long dpid, message* msg);
 #endif
+    unsigned char HandleCombatPlayerDrop(unsigned long dpid, message* msg);
     // 0x493780 (68 B), drawing.obj's no-argument combat-area refresh -
     // the one of its four UpdateCombatArea overloads that takes no
     // extent. Armageddon calls it once per animation frame; its retail body
     // is reconstructed in drawing.cpp.
-#ifndef HOMM3_COMMAND_PLAYER_DROP_VIEW
     void UpdateCombatArea();                                  // 0x493780
-#endif
 #ifdef HOMM3_DRAWING_UPDATE_MOUSE_GRID_DECLS
     // drawing.obj 0x4937d0; SetCombatGrid passes the inlined current-army
     // result exactly as the DC source statement does.
