@@ -699,14 +699,14 @@ public:
     // box's neighbour hex is free.
     int frameInfoExtraNumTroopsXOffset; // +0x14c
     int frameInfoAttackFrames;    // +0x150 == sMonFrameInfo.iAttackFrames
-    char pad_154[0x4];
+    int frameInfoFidgetFrequency; // +0x154
 #elif defined(HOMM3_ARMY_POW_VIEW)
     // +0x108, the DC roster's `bPowSequenceComplete` (army@244, the same
     // flat +0x14 the band above carries). PowEffect clears it for every
     // stack before the animation loop and raises it the frame a stack
     // falls back to cs_wait, which is what stops that stack advancing
     // for the rest of the sequence.
-    char pad_fc[0x4];
+    unsigned long iLastFidgetTime;       // +0xfc
     int field_100;                       // +0x100
     int field_104;                       // +0x104
     // An INT, not the byte the name suggests (byte-proven 2026-08-20):
@@ -717,15 +717,11 @@ public:
     int bPowSequenceComplete;            // +0x108
     char pad_10c[0x44];
     int frameInfoAttackFrames;    // +0x150 == sMonFrameInfo.iAttackFrames
-    char pad_154[0x4];
+    int frameInfoFidgetFrequency; // +0x154
 #else
-#ifdef HOMM3_ARMY_CYCLE_VIEW
     // The command.obj cycle reset is an independent retail witness for
     // the DC-named last-fidget clock: it writes this dword from GameTime.
     unsigned long iLastFidgetTime; // +0xfc
-#else
-    char pad_fc[0x4];
-#endif
     // The per-frame DRAW OFFSET a stack is currently displaced by,
     // byte-proven by MirrorImage (0x5a6c70): it sets the pair from the
     // difference between the source hex's and the clone's own hexcell
@@ -747,14 +743,10 @@ public:
     // army::Fly's two already are, and in the same band comment's terms:
     // read the fields you need, do not model the record.
     int frameInfoAttackFrames;    // +0x150 == sMonFrameInfo.iAttackFrames
-#ifdef HOMM3_ARMY_CYCLE_VIEW
     // Embedded SMonFrameInfo::iFidgetFrequency (+0x44 in the 0x54 row).
     // ResetCycleTimers compares it with 51 and uses it as Random's upper
     // bound before retiming iLastFidgetTime.
     int frameInfoFidgetFrequency; // +0x154
-#else
-    char pad_154[0x4];
-#endif
 #endif
     int frameInfoWalkCycleTime;   // +0x158 == sMonFrameInfo.iWalkCycleTime
     // sMonFrameInfo.iAttackStartCycleTime (DC TMonFrameInfo@76, between
