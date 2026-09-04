@@ -26,7 +26,6 @@
 // hero.obj owns get_morale_description / get_luck_description, so the
 // owning compiland joins their gate rather than defining armygrp's
 // wider HOMM3_ARMYGRP_DESCRIPTION_API.
-#define HOMM3_HERO_OBJ_VIEW
 #include "hero.h"
 // class army - hero::modify_spell_damage (0x4e5760) reads the target
 // stack's embedded creature-traits level at +0x78.
@@ -34,9 +33,8 @@
 // gpGame / playerData / game::IsHuman: the owner-record accessors
 // (belongs_to_human, get_player) and every gpGame walk in this TU need
 // the real definitions, and game.h is where they live.
-// HOMM3_GAME_HERO_EXTRA_VIEW stays defined ACROSS this include (it used
-// to be dropped right after hero.h): hero::HeroFn_004D8B30 takes a
-// HeroExtra, and that class lives behind this same gate in game.h.
+// HOMM3_HERO_OBJ_DECLS is defined ahead of game.h: hero::HeroFn_004D8B30
+// takes a HeroExtra, and that class lives behind this gate in game.h.
 #define HOMM3_HERO_OBJ_DECLS
 #include "game.h"
 // advManager::FizzleCenter - HeroView's dismiss path calls it. The one
@@ -7180,7 +7178,7 @@ inline int hero::get_special_terrain()
     if (location == type_point(-1, -1, -1))
         return kMagicTerrainNone;
     NewmapCell* cell = gpGame->get_cell(location);
-    return cell->get_special_terrain();
+    return cell->get_magic_terrain_type();
 }
 
 // E:\gamedcs\hero.cpp:5977

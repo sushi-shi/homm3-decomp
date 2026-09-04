@@ -645,16 +645,6 @@ public:
     // 0x4fce20, exact in src/mapcell.cpp. Declared here because findpath's
     // CalcTerrainCost calls it with the const cell in ECX.
     TAdventureObjectType get_special_terrain() const;
-#ifdef HOMM3_HERO_OBJ_VIEW
-    // Complete's hero terrain helper retained the Dreamcast accessor name
-    // but widened its result to the magic-terrain domain. The hero.obj-only
-    // non-const overload folds to get_magic_terrain_type; all ordinary const
-    // callers continue to bind the admitted object-terrain body above.
-    __forceinline int get_special_terrain()
-    {
-        return get_magic_terrain_type();
-    }
-#endif
     int get_magic_terrain_type();
     TAdventureObjectType get_map_object();
     unsigned long get_map_extraInfo();
