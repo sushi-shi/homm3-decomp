@@ -989,7 +989,6 @@ public:
 };
 SIZE(LossConditionStruct, 0x24);
 
-#ifdef HOMM3_REMOTE_WINLOSS_DECLS
 // The two remote win/loss messages have one sender/loser dword between the
 // common 0x14-byte CNetMsg base and their respective condition records.
 // Retail's handlers read both payloads at +0x18 and copy 0x4c bytes for the
@@ -1027,7 +1026,6 @@ public:
     int gamePos;
 };
 SIZE(CNormalWinMsg, 0x18);
-#endif
 
 // The three serialized aggregates embedded consecutively in `game` are
 // fixed by retail's SavedGameHeader constructor, assignment calls, and copy
