@@ -1615,10 +1615,7 @@ private:
     // inside ProcessDeath's span; the carve row 0x4448f0/0xB99 with
     // dc 0x499e8 = army.cpp:3816 is the body). spells.obj's
     // SetMassSpellInfluence (0x5a66d0) and src/spells.cpp remain
-    // callers, and army.cpp now consumes the declaration too. BEHIND A
-    // VIEW because this header is in almost every TU's include closure
-    // and its declarator count is already near an include-set boundary.
-#ifdef HOMM3_ARMY_SPELLS_VIEW
+    // callers, and army.cpp now consumes the declaration too.
     // `mastery` is DC's TSkillMastery, spelled int: herospec.h's enum
     // is not in this header's closure, spells.cpp's
     // SetMassSpellInfluence forwards a plain long into the slot, and
@@ -1627,7 +1624,6 @@ private:
     // name differs, and the VA claim owns the pairing.
     void SetSpellInfluence(int spell, int power, int mastery,
                            const hero* casting_hero);
-#endif
     // Const (?ValidFlight@army@@QBA_NH_N@Z): the fly.obj body only
     // reads, and both callees it drives on `this` are already const.
     unsigned char ValidFlight(int destIndex,
