@@ -47,24 +47,26 @@ class UpdateRowsTest(unittest.TestCase):
             checkpoint_drops({key: 80.0}, {key: "same"}, rows), [])
 
     def test_changed_function_is_reported_only_when_current_score_falls(self):
-        key = ("unit", "function")
-        rows = {key: MatchRow(98.0, 98.0, 99.0, 0x5678, "old")}
-        self.assertEqual(
-            checkpoint_drops({key: 99.0}, {key: "new"}, rows), [])
-        self.assertEqual(
-            checkpoint_drops({key: 75.0}, {key: "new"}, rows),
-            [(key, 98.0, 98.0, 75.0)])
-
-    def test_changed_holdout_below_banked_max_is_never_reported(self):
-        # NEGATIVE CONTROL for the standing order "we chase MAX, not cur":
-        # a row already below its banked MAX is a holdout; even when its own
-        # source changed and it fell further, the tooling stays silent.
+        # A changed function is reported wherever it sits relative to its
+        # banked MAX: 80 -> 75 below a MAX of 98 is the editor's own drop.
         key = ("unit", "function")
         rows = {key: MatchRow(80.0, 98.0, 99.0, 0x5678, "old")}
         self.assertEqual(
-            checkpoint_drops({key: 75.0}, {key: "new"}, rows), [])
+            checkpoint_drops({key: 85.0}, {key: "new"}, rows), [])
         self.assertEqual(
-            checkpoint_drops({key: None}, {key: "new"}, rows), [])
+            checkpoint_drops({key: 75.0}, {key: "new"}, rows),
+            [(key, 80.0, 98.0, 75.0)])
+
+    def test_unchanged_holdout_below_banked_max_is_never_reported(self):
+        # NEGATIVE CONTROL for the standing order "we chase MAX, not cur":
+        # a row whose own source did not change is silent however far its
+        # current score falls below its banked MAX (even to MISSING).
+        key = ("unit", "function")
+        rows = {key: MatchRow(80.0, 98.0, 99.0, 0x5678, "same")}
+        self.assertEqual(
+            checkpoint_drops({key: 20.0}, {key: "same"}, rows), [])
+        self.assertEqual(
+            checkpoint_drops({key: None}, {key: "same"}, rows), [])
 
     def test_unrelated_dip_with_banked_max_never_fails_check(self):
         touched = ("touched.obj", "improved")
@@ -96,7 +98,7 @@ class UpdateRowsTest(unittest.TestCase):
 
         self.assertEqual(previous[unrelated].max, 98.0)
         self.assertNotIn("unrelated.obj collateral", output.getvalue())
-        self.assertIn("holdouts below their banked MAX are never reported",
+        self.assertIn("unchanged-source rows below their banked MAX",
                       output.getvalue())
 
     def test_changed_regression_is_reported_with_held_max(self):
@@ -104,7 +106,7 @@ class UpdateRowsTest(unittest.TestCase):
         report = {"units": [{"name": "unit", "functions": [{
             "name": "function", "fuzzy_match_percent": 75.0,
         }]}]}
-        rows = {key: MatchRow(98.0, 98.0, 99.0, 0x5678, "old")}
+        rows = {key: MatchRow(80.0, 98.0, 99.0, 0x5678, "old")}
         output = io.StringIO()
         with mock.patch("homm3.match.status.load_baseline",
                         return_value=rows), mock.patch(
@@ -112,7 +114,7 @@ class UpdateRowsTest(unittest.TestCase):
                             return_value={key: "new"}), \
                 contextlib.redirect_stdout(output):
             self.assertEqual(cmd_check(report), 0)
-        self.assertIn("98.00% -> 75.00% (MAX held at 98.00%)",
+        self.assertIn("80.00% -> 75.00% (MAX held at 98.00%)",
                       output.getvalue())
 
     def test_unknown_fingerprint_is_not_mistaken_for_an_edit(self):
