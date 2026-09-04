@@ -612,34 +612,6 @@ DATA(0x00687f58) extern const SSpellTraits (&akSpellTraits)[81];
 // spelldefs.cpp owner; retail /Gr passes spell/mastery in ECX/EDX.
 unsigned char SpellTargetsASingleArmy(int spell, int sslevel);
 
-// Bootstrap domain: the sentinel (GetNativeTerrain merges slots
-// against -1) plus the one enumerator a consumer has needed so far.
-// The full roster still gets its own header when more are wanted -
-// that move is the wider change terrain.h describes, and this is not
-// it.
-// eTerrainWater and eTerrainRock are admitted on retail proof, not on the DC roster
-// alone: terrain.h's ten-mask analysis recovers the permutation
-// {Lava=7, Rock=9, Dirt=0, Snow=3, Rough=5, Swamp=4, Subterranean=6,
-// Water=8, Grass=2, Sand=1} from iconwdgt's own .bss store addresses,
-// and initialize.obj repeats the identical ordering independently
-// (a chance agreement of two ten-element orderings is 1 in 10!). The
-// SPELLING is the Dreamcast enum's (eTerrainDirt=0 ... eTerrainRock=9).
-// town.obj's check_shipyard_square accepts a dock square only on terrain 8;
-// mapcell.obj's is_diggable independently rejects both 8 and 9.
-enum TTerrainType {
-    TERRAIN_NONE = -1,
-    // Terrain 7 is lava, byte-proven by terrain.h's ten-mask permutation
-    // and needed by mapcell.obj's readMapLayer, which marks a cell
-    // animated on terrain 7 or 8 and on any river or road.
-    //
-    // armygrp.h sits inside initialize.cpp's include closure through town.h;
-    // the resulting include-set sensitivity is banked in score history, not
-    // represented by a source-false TU-local enum view.
-    eTerrainLava = 7,
-    eTerrainWater = 8,
-    eTerrainRock = 9
-};
-
 // The special-ground MODE GetArmyMorale/GetArmyLuck dispatch on (the
 // dword param with sentinels 2..5): cursed ground zeroes the stat,
 // holy ground/evil fog swing morale by town alignment, the clover

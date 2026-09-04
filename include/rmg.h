@@ -2,8 +2,11 @@
 #ifndef HOMM3_RMG_H
 #define HOMM3_RMG_H
 
+#include <bitset>
+#include <string>
 #include <vector>
 #include <va.h>
+#include "terrain_type.h"
 
 class TAbstractFile;
 
@@ -267,6 +270,243 @@ struct TRmgMapPosition {
     int x;
     int y;
     int z;
+
+    TRmgMapPosition() {}
+    TRmgMapPosition(int newX, int newY, int newZ);
+};
+
+// Retail's common direction table contains eight consecutive two-dword
+// offsets.  Its cinit at 0x530da0 proves the user-provided constructor while
+// the absence of an atexit registration proves that destruction is trivial.
+// The comparator is independently used by the RMG set cluster.
+struct TPoint {
+    int x;
+    int y;
+
+    TPoint() {}
+    TPoint(int newX, int newY) : x(newX), y(newY) {}
+
+    bool operator<(const TPoint& other) const
+    {
+        return y < other.y || (y == other.y && x < other.x);
+    }
+};
+
+// The function-local river-delta table has a non-trivial empty destructor:
+// retail registers its cleanup thunk when CreateRiver first reaches the
+// table.  The type is shared here so the table has one canonical shape.
+struct TRmgRiverDeltaOffset {
+    int x;
+    int y;
+
+    TRmgRiverDeltaOffset(int newX, int newY) : x(newX), y(newY) {}
+    ~TRmgRiverDeltaOffset() {}
+};
+
+class type_object;
+
+struct TRmgMovementCost {
+    unsigned cost : 16;
+    unsigned unknown : 16;
+};
+
+// The six-bit signed land field is fixed by retail's `shl 26; sar 26`
+// extraction in the river-delta path.  The four-bit field at bit 26 is
+// tested as a unit when river routing prices an already decorated tile.
+struct TRmgGroundTile {
+    TTerrainType landType : 6;
+    unsigned unknown06 : 20;
+    unsigned decorationType : 4;
+    unsigned unknown30 : 2;
+};
+
+struct TRmgGroundTileData {
+    unsigned roadSprite : 7;
+    unsigned unknown07 : 1;
+    unsigned blockedDirections : 4;
+    unsigned unknown12 : 17;
+    unsigned roadTarget : 1;
+    unsigned riverTarget : 1;
+    unsigned impassable : 1;
+};
+
+struct TRmgObjectProperties {
+    int defNumber;                       // +0x00
+    unsigned char passable[8];           // +0x04
+    unsigned char enterable[8];          // +0x0c
+    unsigned land;                       // +0x14
+    std::bitset<10> landPage;            // +0x18
+    int type;                            // +0x1c
+    int subtype;                         // +0x20
+    int page;                            // +0x24
+    unsigned char flat;                  // +0x28
+    unsigned char hasEntrance;           // +0x29
+    char pad002a[2];
+    int enterX;                          // +0x2c
+    int enterY;                          // +0x30
+    int width;                           // +0x34
+    int height;                          // +0x38
+    unsigned char colors[8];             // +0x3c
+    unsigned char shadows[8];            // +0x44
+};
+
+struct TRmgObjectPropertiesRef {
+    TRmgObjectProperties* prototype;      // +0x00
+    int unknown04;
+    unsigned refCount;                   // +0x08
+    int prototypeIndex;
+    char opaque0010[0xd8];
+};
+
+class type_object {
+public:
+    TRmgObjectPropertiesRef* properties; // +0x04
+    TRmgMapPosition position;             // +0x08
+    unsigned char unknown14;
+    unsigned char unknown15;
+    unsigned char unknown16;
+    unsigned char unknown17;
+    unsigned char unknown18;
+    char pad0019[3];
+
+    inline type_object(TRmgObjectPropertiesRef* newProperties)
+        : properties(newProperties)
+    {
+        ++properties->refCount;
+        position.x = -1;
+        position.y = -1;
+        position.z = -1;
+        unknown14 = 0;
+        unknown15 = 0;
+        unknown16 = 0;
+        unknown17 = 0;
+        unknown18 = 0;
+    }
+
+    virtual ~type_object();
+    virtual void UnknownOperation();
+    virtual unsigned char IsWritable() const;
+    virtual void Write(TAbstractFile* outfile);
+};
+
+struct TRmgMapItem {
+    std::vector<type_object*> objects;    // +0x00
+    TRmgMapPosition previousTile;         // +0x10
+    TRmgMovementCost movement;            // +0x1c
+    unsigned zone;                        // +0x20
+    TRmgGroundTile tile;                  // +0x24
+    TRmgGroundTileData tileData;          // +0x28
+    unsigned unknown2c;                   // +0x2c
+};
+
+class TRmgMapInterface {
+public:
+    virtual ~TRmgMapInterface() {}
+};
+
+class type_random_map : public TRmgMapInterface {
+public:
+    unsigned char ownsMapItems;           // +0x04
+    char pad0005[3];
+    TRmgMapItem* mapItems;                // +0x08
+    int mapWidth;                         // +0x0c
+    int mapHeight;                        // +0x10
+    int numberLevels;                     // +0x14
+
+    inline type_random_map(type_random_map& source, int level)
+        : ownsMapItems(0),
+          mapItems(
+              source.mapItems
+              + level * source.mapWidth * source.mapHeight),
+          mapWidth(source.mapWidth),
+          mapHeight(source.mapHeight),
+          numberLevels(1)
+    {
+    }
+
+    virtual ~type_random_map()
+    {
+        if (ownsMapItems)
+            delete[] mapItems;
+    }
+
+    TRmgMapItem* GetMapItem(int x, int y);
+    inline TRmgMapItem* GetMapItem(const TRmgMapPosition& point)
+    {
+        return mapItems
+            + (point.z * mapHeight + point.y) * mapWidth
+            + point.x;
+    }
+};
+
+// Retail retains these support bodies outside CreateRiver while the adapter
+// and map-view construction remains expanded at the call site.  Keeping the
+// class definitions shared but the retained bodies in rmg_support.cpp
+// reproduces that ordinary translation-unit visibility boundary.
+class TRmgMapAdapterInterface {
+public:
+    virtual ~TRmgMapAdapterInterface() {}
+    virtual void SetTile(const TPoint& point, int value) = 0;
+    virtual void SetOverlay(const TPoint& point, int value) = 0;
+    virtual TPoint GetStart() = 0;
+    virtual TRmgMapPosition GetTile(const TPoint& point) = 0;
+    virtual int GetOverlay(const TPoint& point) = 0;
+    virtual int GetLand(const TPoint& point) = 0;
+};
+
+class TRmgMapAdapter : public TRmgMapAdapterInterface {
+public:
+    type_random_map* map;
+
+    inline TRmgMapAdapter(type_random_map* newMap) : map(newMap) {}
+
+    virtual void SetTile(const TPoint& point, int value);
+    virtual void SetOverlay(const TPoint& point, int value);
+    virtual TPoint GetStart();
+    virtual TRmgMapPosition GetTile(const TPoint& point);
+    virtual int GetOverlay(const TPoint& point);
+    virtual int GetLand(const TPoint& point);
+};
+
+class TRmgLinePainter {
+public:
+    TPoint start;
+    TRmgMapAdapterInterface* adapter;
+
+    inline TRmgLinePainter(TRmgMapAdapterInterface* newAdapter)
+        : start(newAdapter->GetStart()), adapter(newAdapter)
+    {
+    }
+    ~TRmgLinePainter() {}
+
+    virtual void* GetPattern(int value);
+    virtual void PaintTile(int value, const TRmgMapPosition& tile);
+    virtual void PaintOverlay(int value, const TRmgMapPosition& tile);
+    virtual int CanPaint(const TPoint& point);
+    virtual void PaintNeighbour(int value, const TRmgMapPosition& tile);
+    virtual int PaintPoint(const TPoint& point);
+};
+
+class TRmgLineWalker {
+public:
+    TRmgLinePainter* painter;
+    int riverType;
+    TPoint position;
+
+    TRmgLineWalker(
+        TRmgLinePainter* newPainter,
+        int newRiverType,
+        const TPoint& start);
+    void DrawTo(const TPoint& destination);
+};
+
+class TRmgRiverPainter : public TRmgLinePainter, public TRmgLineWalker {
+public:
+    TRmgRiverPainter(
+        TRmgMapAdapterInterface* newAdapter,
+        int newRiverType,
+        const TPoint& start);
+    virtual ~TRmgRiverPainter();
 };
 
 struct TRmgGeneratedTown {
@@ -294,18 +534,14 @@ enum ERmgMapVersion {
 // unobserved state without guessing at its source identity.
 class type_random_map_generator {
 public:
-    char opaque0000[0x4];
     int randomSeed;                                  // +0x004
     int mapVersion;                                  // +0x008
-    char opaque000c[0xc];
-    int mapSize;                                     // +0x018
-    char opaque001c[0x4];
-    int levels;                                      // +0x020
-    char opaque0024[0xb0];
-    std::vector<int> playerSlots;                    // +0x0d4
-    char opaque00e4[0x480];
-    std::vector<int> questSlots;                     // +0x564
-    char opaque0574[0x964];
+    type_random_map map;                             // +0x00c
+    std::vector<TRmgObjectProperties> objectsTxt;    // +0x024
+    std::vector<TRmgObjectPropertiesRef*> objectPrototypes[232]; // +0x034
+    std::vector<void*> unknownPointers;              // +0xeb4
+    std::vector<type_object*> positions;             // +0xec4
+    void* progress;                                  // +0xed4
     unsigned char fixedHumanPlayers[8];              // +0x0ed8
     char opaque0ee0[0x4];
     int playerIndexMap[16];                          // +0x0ee4
@@ -326,6 +562,13 @@ public:
     std::vector<TRmgGeneratedTown*> generatedTowns;  // +0x10e0
     std::vector<type_treasure_def*> objectGenerators; // +0x10f0
     std::vector<unsigned char> disabledKeyTents;     // +0x1100
+    int objectCountByType[232];                      // +0x1110
+    std::vector<TRmgMapPosition> roadTargets;        // +0x14b0
+    std::vector<type_object*> monolithsOneWay;       // +0x14c0
+    std::vector<type_object*> monolithsTwoWay;       // +0x14d0
+
+    virtual ~type_random_map_generator();
+    virtual void AddObject(type_object* object, TRmgMapPosition position);
 
     inline int GetSerializedMapVersion() const
     {
@@ -340,26 +583,33 @@ public:
     }
 
     void InitializeObjectGenerators();
+    // Provisional spelling: retail's water-wheel caller and the river-delta
+    // object selection prove the role; the Dreamcast build has no RMG TU.
+    void CreateRiver(TRmgMapPosition source);
     void WriteMapHeader(TAbstractFile* outfile);
 };
 
-SIZE(type_random_map_generator, 0x1110);
+SIZE(TRmgMapPosition, 0x0c);
+SIZE(TPoint, 0x08);
+SIZE(TRmgRiverDeltaOffset, 0x08);
+SIZE(TRmgMovementCost, 0x04);
+SIZE(TRmgGroundTile, 0x04);
+SIZE(TRmgGroundTileData, 0x04);
+SIZE(TRmgObjectProperties, 0x4c);
+SIZE(TRmgObjectPropertiesRef, 0xe8);
+SIZE(type_object, 0x1c);
+SIZE(TRmgMapItem, 0x30);
+SIZE(TRmgMapInterface, 0x04);
+SIZE(type_random_map, 0x18);
+SIZE(TRmgMapAdapterInterface, 0x04);
+SIZE(TRmgMapAdapter, 0x08);
+SIZE(TRmgLinePainter, 0x10);
+SIZE(TRmgLineWalker, 0x10);
+SIZE(TRmgRiverPainter, 0x20);
+SIZE(type_random_map_generator, 0x14e0);
 
 // Retail 0x6824e0 is indexed by the creature-traits level dword before
 // type_black_box_creature_def divides by that creature's AI value.
 DATA(0x006824E0) extern int gRmgCreatureValueByLevel[];
-
-// Retail's RMG set cluster stores x/y as consecutive dwords and compares y
-// first, then x. The surrounding callers reach it only from random-map
-// generation; the Dreamcast build has no corresponding RMG compiland.
-struct TPoint {
-    int x;
-    int y;
-
-    bool operator<(const TPoint& other) const
-    {
-        return y < other.y || (y == other.y && x < other.x);
-    }
-};
 
 #endif  // HOMM3_RMG_H

@@ -734,6 +734,11 @@ source = "src/rmg.cpp"
 flags = "game_o2_ml_gr_windows"
 
 [[unit]]
+unit = "rmg_support"
+source = "src/rmg_support.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
 unit = "objecttype"
 source = "src/objecttype.cpp"
 flags = "game_o2_ml_gr_windows"
