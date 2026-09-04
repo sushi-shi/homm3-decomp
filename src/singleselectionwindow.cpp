@@ -13,8 +13,6 @@
 // UpdatePlayerPositions reaches SetupFirstPlayer and the new-map bonus
 // array, both scoped behind game.h's new-map view gate.
 #define HOMM3_GAME_NEW_MAP_DECLS
-// This TU sees the real vector view of the three header lists.
-#define HOMM3_SSWINDOW_HEADER_VECTORS
 #include "advmgr.h"
 #include "game.h"
 #include "armygrp.h"

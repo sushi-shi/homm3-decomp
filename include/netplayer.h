@@ -28,13 +28,11 @@ public:
     char sName[24];       // +0x04
     int version;          // +0x1c (retail-only extension)
 
-#ifdef HOMM3_SSWINDOW_HEADER_VECTORS
     // E:\gamedcs\struct.h:340. The Dreamcast body initializes the two
     // shared fields; Complete's added version member belongs to the same
     // base boundary in the retail selection-window TU.
     CNetPlayerInfo();
     CNetPlayerInfo(char* _sName, unsigned long _dpid);
-#endif
 };
 SIZE(CNetPlayerInfo, 32);
 
