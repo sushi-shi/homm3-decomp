@@ -354,6 +354,11 @@ int town::HasGarrison()
 // backed const-member variants either emit this same order or score worse.
 #endif  // @carcass
 
+// Residual (99.9216%): 37/37 blocks, 23 branches and every call agree. The
+// only delta is the order of the two reloads at the mage-guild loop's tail -
+// retail restores `level` from [ebp-0xc] before `this` from [ebp-0x14], this
+// compile emits them the other way round. Declaring `level` outside the
+// for-init is byte-flat; the frame slots are already retail's.
 VA(0x005be030, 0x1D3)  // linkorder, dc 0x1665a0
 void town::GiveSpells(hero* forceHero)
 {
@@ -1151,6 +1156,9 @@ long town::get_legion_bonus(long dwelling)
 // in the opposite order. DC's canonical NewfullMap::cell(type_point) inline
 // spelling was measured and is byte-identical to the expression below.
 // The additional gpGame/bss_2994e8 row is relocation-name-only and cosmetic.
+// Also byte-flat: NewfullMap::cell(x,y,z) in place of the hand-written
+// subscript (this TU takes the header inline, so the named `size` local is
+// CSE'd back either way).
 VA(0x005bf900, 0x258)  // retail-only, town member, ret 4
 long town::TownFn_005BF900(long dwelling)
 {
