@@ -1597,6 +1597,9 @@ void AI_visit_war_factory(hero* current_hero)
 // cached resourceValue row. All blocks, branches and bytes through the funds
 // test are exact; the residual is only the order of six loop-tail induction
 // updates after __ftol (same instruction multiset, registers and total size).
+// Swapping the resource_values / costs declarations is byte-flat; the tail's
+// only remaining delta is EAX-vs-EDX for the reloaded costs pointer, which
+// forces the __ftol result to move out of EAX one instruction earlier.
 #pragma auto_inline(off)
 VA(0x00525120, 0xE0)
 static long value_of_war_factory(const hero* current_hero,

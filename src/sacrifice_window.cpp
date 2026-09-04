@@ -2920,9 +2920,13 @@ int type_sacrifice_window::all_artifacts(message& msg)
 // E:\gamedcs\sacrifice_window.cpp:1407
 // The constructor stores this private static callback at 0x56019e. Retail
 // proves both mode-specific reset paths and the common experience award.
-// RESIDUAL: all eleven branch mnemonics and three returns agree, but this
-// compile tail-merges put_down_artifact's redraw with the creature redraw;
-// retail keeps both source-authentic sites (96.62%, one 21-byte flow wall).
+// The pre-experience redraw is a COMMON statement after the mode if/else,
+// not the creature arm's last line: retail's artifact `je` lands ON that
+// DrawWindow block (4b8b) and the put_down path reaches it by `jmp` after
+// put_down_artifact's own inlined redraw. Written inside the else arm, VC6
+// cross-jumps put_down_artifact's tail redraw into it instead and the
+// no-held-artifact path skips the redraw entirely (96.62%); hoisting it out
+// of the arm closes the function.
 VA(0x005646a0, 0x269)  // callback address-take + dc name/signature/order
 int type_sacrifice_window::sacrifice(message& msg)
 {
@@ -2970,10 +2974,10 @@ int type_sacrifice_window::sacrifice(message& msg)
             window->creature_slider->SetState(0);
             window->creature_slider->enable(0);
             window->max_creatures_button->enable(0);
-            window->DrawWindow(
-                1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
         }
 
+        window->DrawWindow(
+            1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
         window->current_hero->GiveExperience(
             window->total_experience, 1, 1);
         window->total_experience = 0;
