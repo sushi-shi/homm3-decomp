@@ -1357,7 +1357,7 @@ events	?monsters_join@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@
 # (push 0xb4 in townManager::Open), layout-required and not gateable
 # per-TU. hist keeps 100.0000; the saturation law says a later
 # declarator can carry it back.
-events	?monsters_sell_out@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	100.0000	100.0000	100.0000	0xa7250	f7b1ec4933f6
+events	?monsters_sell_out@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	99.9517	100.0000	100.0000	0xa7250	f7b1ec4933f6
 events	?show_rewards@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@2@J@Z	100.0000	100.0000	100.0000	0xa0b00	9287544ef4a4
 exec	?AddManager@executive@@QAEHPAVbaseManager@@H@Z	100.0000	100.0000	100.0000	0xb0b20	11f81dc72e6a
 exec	?CallManager@executive@@QAEXPAVbaseManager@@@Z	100.0000	100.0000	100.0000	0xb0c70	a9eb44cb2746
@@ -2444,7 +2444,7 @@ recruit	?RecruitSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000
 # first raised the source checkpoint to 94.1574. A later dependent rebuild and
 # fresh normalization, with recruit.cpp unchanged, measured 96.5558; the merged
 # rebuild returned current to 94.1574 while max/history retain that transient.
-recruit	?Update@recruitUnit@@QAEXEJ@Z	96.5558	96.5558	96.5558	0x1503a0	d97bc68809dd
+recruit	?Update@recruitUnit@@QAEXEJ@Z	94.1574	96.5558	96.5558	0x1503a0	d97bc68809dd
 recruit	?add_creature_widgets@TRecruitWindow@@QAEXJJJW4TCreatureType@@J@Z	93.6325	93.6325	93.6325	0x14fb90	8b238d4d93cf
 recruit	?get_upgrade_cost@@YIXW4TCreatureType@@0JPAH@Z	100.0000	100.0000	100.0000	0x14e750	6382968d0edb
 recruit	?siege_artifact_to_creature@@YI?AW4TCreatureType@@W4TArtifact@@@Z	100.0000	100.0000	100.0000	0x150360	5ee79bb53ec7

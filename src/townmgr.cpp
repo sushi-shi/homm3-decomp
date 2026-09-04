@@ -21,10 +21,6 @@
 // adventuremapwindow precedent. Set before every include because
 // widget.h is reached through townmgr.h first.
 #define HOMM3_WIDGET_SET_VISIBLE_INLINE
-// The town-screen / resource-bar widget-id enums this compiland
-// dispatches on; gated to keep the declarators out of the other seven
-// includers of townmgr.h (the recruitUnit::Update include-set canary).
-#define HOMM3_TOWNMGR_WIDGET_IDS
 #include "townmgr.h"
 // advspells.obj's TeleportTo declarator, for the MoveHero that
 // DoTownGate expands inline. Gated so no other includer of advmgr.h

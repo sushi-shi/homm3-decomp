@@ -19,9 +19,6 @@ class textWidget;
 // the derived head byte at +0x34.
 class TResourceDisplay : public TSubWindow {
 public:
-#ifdef HOMM3_TOWNMGR_WIDGET_IDS
-    // GATED to townmgr.cpp with the town-screen widget ids (see
-    // townmgr.h): the include-set wall, recruitUnit::Update canary.
     // The widget-id bands the constructor stamps in its resource loop
     // (0x3e9 + i on the seven textWidgets, 0x3f1 + i on the seven
     // borders). townManager::SetCommandAndText dispatches rollover
@@ -45,7 +42,6 @@ public:
         RESOURCE_BORDER_5_ID = 0x3f6,
         RESOURCE_BORDER_6_ID = 0x3f7
     };
-#endif  /* HOMM3_TOWNMGR_WIDGET_IDS */
 
     unsigned char isSmall;
     char pad_35[3];
