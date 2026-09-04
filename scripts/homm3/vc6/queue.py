@@ -117,18 +117,10 @@ def _targets(maxima):
               "        diff them. Not recoverable mass; excluded from the ranking:")
         for u, n, s in sorted(undiffable, key=lambda r: -r[2])[:8]:
             print(f"          {s:6d} B  {u}:{n[:52]}")
-    if banked_dips:
-        print(f"[queue] {len(banked_dips)} current dip(s) are already banked "
-              "exact and are excluded from actionable ranking.")
-        print("        Inspect them as collateral, but do not rewrite source "
-              "unless an evidence/source gate fails:")
-        for u, n, mx, cur, s in sorted(
-                banked_dips,
-                key=lambda r: (r[3] is None, r[3] if r[3] is not None else 0,
-                               -r[4]))[:8]:
-            shown = "no current score" if cur is None else f"current {cur:.4f}%"
-            print(f"          {s:6d} B  {u}:{n[:44]}  {shown}; "
-                  f"MAX {mx:.4f}%")
+    # Banked-exact rows whose current score dips are holdouts: we chase MAX,
+    # not cur, and no agent recovers what is already banked by hash, so they
+    # are excluded silently - never listed, never suggested as collateral.
+    del banked_dips
     return out
 
 
