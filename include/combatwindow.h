@@ -83,9 +83,7 @@ public:
     // combatwindow.cpp:221, dc 0x69850. combatManager::Open (0x462a20)
     // is the one constructor site in the tree and pushes a single byte,
     // the placement flag it has just computed.
-#if !defined(HOMM3_COMMAND_GRID_VIEW)
     TCombatWindow(unsigned char do_placement);
-#endif
     // command.cpp and combatwindow.cpp both use the placement teardown;
     // Dreamcast and retail independently prove this class member.
     void EndPlacementPhase();                              // 0x4731f0

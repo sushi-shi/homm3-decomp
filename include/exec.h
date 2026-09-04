@@ -19,10 +19,17 @@ public:
     baseManager* currentManager;
     long dialogReturn;
 
+    // Retail 0x4b0900 - the four zero stores of Dreamcast exec.cpp:37,
+    // emitted out of line for the heap instance InitMainClasses builds.
+    executive();
     // Dreamcast exec.cpp:43 names the source boundary and oldmain is its
     // sole recovered startup caller.  Retail 0x4b0910 consumes this in ECX
     // and returns the nonzero initialization failure tested at 0x4ee414.
     int InitSystem();
+    // Retail 0x4b0990: ShutDown's teardown of the manager list (every
+    // manager but the window and mouse managers first, then those two if
+    // still active), bracketed by the sound and input managers' Close.
+    void ShutDownSystem();
     int AddManager(baseManager* newManager, int newPriority);
     void RemoveManager(baseManager* killManager);
     int DoDialog(baseManager* newDialog);
@@ -34,6 +41,12 @@ public:
 // recruit dialog is run through gpExecutive->DoDialog. The pointer stays
 // invisible to every TU with no consumer.
 extern executive* gpExecutive;  // retail .bss 0x699500
+
+// ai_player.obj's shutdown (retail 0x434590), which ShutDown calls between
+// the exit message box and the font teardown; declared on this narrow
+// surface for the same reason as the pump below - kb.cpp must not import
+// ai_player.h's roster for one call.
+void AI_shut_down();
 
 // philai.obj's cooperative main-loop pump. ai_player.obj calls it between
 // each enemy mobility calculation and path seed; keeping the declaration in

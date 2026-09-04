@@ -3,16 +3,6 @@
 // 230 functions in link order; 30 compiler-generated $-thunks omitted.
 #include <string.h>
 #include <va.h>
-#define HOMM3_CHAT_EDIT_DECLS
-#define HOMM3_REMOTE_SEND_CHAT_DECLS
-#define HOMM3_REMOTE_SOUND_DECLS
-#define HOMM3_REMOTE_WINLOSS_DECLS
-#define HOMM3_CSPRITE_CROP_ACCESSORS
-#define HOMM3_REMOTE_BATTLE_DLG_DECLS
-#define HOMM3_REMOTE_WAIT_READY_DECLS
-#define HOMM3_REMOTE_CDPLAYHEROES_LAYOUT
-#define HOMM3_REMOTE_LOBBY_DECLS
-#define HOMM3_REMOTE_PLAYER_LIST_DECLS
 #include "remote.h"
 #include "advmgr.h"
 #include "crt_stdio.h"
@@ -642,15 +632,15 @@ CNetMsgHandler* CDPlayHeroes::GetNetMsgHandler()
 VA(0x005537b0, 0x46)  // anchor-callee + arity/order-map, dc 0x11c330
 void CChatManager::Init()
 {
-    g_chatSample = LoadSampleResource(
+    g_chatSample = ResourceManager::GetSample(
         DATA_COMPGEN(0x00682b30, chatSampleName, "chat.wav"));
-    g_playerDropSample = LoadSampleResource(
+    g_playerDropSample = ResourceManager::GetSample(
         DATA_COMPGEN(0x00682b20, playerDropSampleName, "playexit.wav"));
-    g_sysMsgSample = LoadSampleResource(
+    g_sysMsgSample = ResourceManager::GetSample(
         DATA_COMPGEN(0x00682b14, systemMessageSampleName, "sysmsg.wav"));
-    g_turnDurSample = LoadSampleResource(
+    g_turnDurSample = ResourceManager::GetSample(
         DATA_COMPGEN(0x00682b04, turnDurationSampleName, "timeover.wav"));
-    g_playerEnterSample = LoadSampleResource(
+    g_playerEnterSample = ResourceManager::GetSample(
         DATA_COMPGEN(0x00682af4, playerEnterSampleName, "playcome.wav"));
 }
 

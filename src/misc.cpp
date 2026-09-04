@@ -102,6 +102,11 @@ void CheckConfigFile()
     gUnnamed698758.quickCombat &= 1;
     gUnnamed698758.moveReminder &= 1;
     gUnnamed698758.showCombatGrid &= 1;
+    // Retail masks animateSpellBook TWICE: it loads 0x298788 once, ANDs the
+    // register at +0x8f and again at +0xa5, and stores once. VC6 folds the
+    // repeat only when the two statements are adjacent - written here, seven
+    // statements apart, both masks survive (98.5030 -> 99.1000).
+    gUnnamed698758.animateSpellBook &= 1;
     gUnnamed698758.showCombatMouseHex &= 1;
     gUnnamed698758.townOutlines &= 1;
     gUnnamed698758.combatAutoSpells &= 1;

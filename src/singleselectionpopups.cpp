@@ -207,6 +207,14 @@ VA_COMPGEN(0x005754c0, 0x21, SCALAR_DELETING_DTOR, CBonusDlg)  // vtbl 0x6419d8 
 // storing vtbl 0x641a00 and normalising the frame via GetNumFrames(0)), and
 // two smalfont captions. Setup fixes the 300x225 frame; each widget is heap-
 // allocated and registered through Add.
+// Residual (98.0000%): the two CreateWin twins are instruction- and
+// flow-identical to retail; the only delta is a whole-body callee-saved
+// mirror - retail homes `this` in EDI and the icon widget in ESI, this
+// compile does the reverse (edi->esi x27, esi->edi x15 here, ebx->esi x21
+// on the Bitmap816 twin at 0x5757e0). why-reg v2's model says the reference
+// created the icon pseudo BEFORE `this`, i.e. front-end handle order, and
+// its one filtered candidate does not compile; naming the CSpriteWidget as
+// a local declared ahead of Setup is byte-flat.
 VA(0x005754f0, 0x254)  // anchor-vtable CBonusDlg::CreateWin(sprite) inlines CSpriteWidget ctor (stores vtbl 0x641a00), ret 0x14 (5 args), dc 0x12dff0
 unsigned char CBonusDlg::CreateWin(const char* title, CSprite* sprite, int frame, const char* botTitle, const char* description)
 {

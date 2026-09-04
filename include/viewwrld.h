@@ -36,6 +36,11 @@ private:
     type_point origin;
     int viewable_width;
     int viewable_height;
+    // Complete's two level callbacks (0x5fbdf0 / 0x5fbec0) are free
+    // functions the constructor hands to the level buttons; they read
+    // and write origin and the extents directly.
+    friend int ViewWorldSurfaceHandler(message& msg);
+    friend int ViewWorldUndergroundHandler(message& msg);
 
 public:
     TViewWorldWindow();

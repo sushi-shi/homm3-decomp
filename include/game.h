@@ -5,17 +5,12 @@
 #ifndef HOMM3_GAME_H
 #define HOMM3_GAME_H
 
-#if defined(HOMM3_EVENTS_GAME_INLINE_HELPERS) \
-    || defined(HOMM3_PHILAI_OBJ_DECLS)
 // The one decoded value of game::field_1f63e shared by events.obj and
 // philai.obj: Sunday is the seventh day.  DoEventTemple doubles its morale
 // reward on this rung; move_hero stops a low-value full-hourglass move on it.
-// Keep the enum in the shared domain header while limiting its compiler view
-// to the two source compilands that use the recovered name.
 enum EDayOfWeek {
     DAY_OF_WEEK_SUNDAY = 7
 };
-#endif
 
 #include <map>
 #include <vector>
@@ -249,7 +244,6 @@ struct TScenarioTown {
 };
 SIZE(TScenarioTown, 0x88);
 
-#ifdef HOMM3_GAME_NEW_MAP_DECLS
 // ProcessOnMapTowns consumes the same 0x88-byte map record through the
 // complete read-map view above and town::initialize's narrower TownExtra
 // view. The union is a representation bridge between those two admitted
@@ -265,7 +259,6 @@ inline const TownExtra* town_setup_view(const TScenarioTown* setup)
     view.scenarioTown = setup;
     return view.townExtra;
 }
-#endif
 
 class NewfullMap {
 public:
@@ -636,15 +629,13 @@ enum EMapFormatVersion {
 // Only the fields reached by reconstructed consumers are exposed. The
 // defeat-hero ids are fixed independently by AI_value_of_combat's two
 // objective-bonus branches.
-#ifdef HOMM3_VLC_CHECKS_VIEW
-// hero.cpp owns the DATA claim (0x69774c); this view only needs the
-// name for CheckForDefeatedHeroLoss's campaign-mode gate.
+// hero.cpp owns the DATA claim (0x69774c); CheckForDefeatedHeroLoss's
+// campaign-mode gate reads it.
 extern unsigned char gCampaignMode;
 
 // The upgrade-town victory's two level domains (map-format ordinals).
 // CheckForUpgradedTown (0x5f1d40) maps each to the matching
 // type_building_id bit: town/city/capitol halls, fort/citadel/castle.
-// Gated with the rest of the VLC view.
 enum EVictoryHallLevel {
     VICTORY_HALL_TOWN = 0,
     VICTORY_HALL_CITY = 1,
@@ -655,7 +646,6 @@ enum EVictoryCastleLevel {
     VICTORY_CASTLE_CITADEL = 1,
     VICTORY_CASTLE_CASTLE = 2
 };
-#endif
 
 enum EVictoryConditionType {
     // 0x5f1610 CheckForArtifactWin's main arm gates on `cmp Type,0`,
@@ -697,8 +687,6 @@ enum ELossConditionType {
     LOSS_CONDITION_TIME_LIMIT = 2
 };
 
-#if defined(HOMM3_GAME_VALIDATE_VLC_DECLS) \
- || defined(HOMM3_GAME_NEW_MAP_DECLS)
 // Campaign/scenario ordinals used by the new-map and condition-validation
 // blocks. Retail proves the values; title identities are deliberately not
 // imported from external tables.
@@ -724,10 +712,7 @@ enum EGameScenarioOrdinal {
     GAME_SCENARIO_8 = 8,
     GAME_SCENARIO_9 = 9
 };
-#endif
 
-#if defined(HOMM3_GAME_NEW_MAP_DECLS) \
- || defined(HOMM3_SCENARIOINFO_OBJ_DECLS)
 enum ENewMapStartingBonus {
     NEW_MAP_BONUS_ARTIFACT = 0,
     NEW_MAP_BONUS_GOLD = 1,
@@ -744,21 +729,15 @@ enum ENewMapHandicap {
     NEW_MAP_HANDICAP_MILD = 1,
     NEW_MAP_HANDICAP_SEVERE = 2
 };
-#endif
 
 // Retail's player-slot destructor walks these otherwise unnamed records with
 // a 0x14 stride and destroys the Dinkumware string at +0x4. The map-header
 // tree stores the same record plus a four-byte tail. Names remain ordinal
 // because no approved retail or Dreamcast symbol names them.
 struct type_map_hero_identity {
-#ifdef HOMM3_GAME_NEW_MAP_DECLS
     // Complete's LoadMap compares the whole portrait sentinel dword before
     // narrowing it into HeroExtra::PortraitNumber.
     int field_00;
-#else
-    signed char field_00;
-    char pad_01[3];
-#endif
     std::string field_04;
 };
 SIZE(type_map_hero_identity, 0x14);
@@ -829,7 +808,6 @@ struct pair<const int, type_map_hero_info> {
 }
 #endif
 
-#ifdef HOMM3_GAME_OBJ_DECLS
 // Emission-only access shim for the retained Dinkumware _Tree::_Min COMDAT.
 // The real call is inside CMapHeaderData::Save after iterator::_Inc has been
 // expanded; this derived map exposes the protected static member without
@@ -845,7 +823,6 @@ public:
     void retain_min();
     void retain_insert(const Value& value);
 };
-#endif
 
 class VictoryConditionStruct {
 public:
@@ -855,14 +832,11 @@ public:
     char pad_03;
     // CheckForArtifactTransportWin and AI_get_value_of_artifact both read
     // the full retail dword at +4 as the requested artifact ordinal.
-#ifdef HOMM3_PHILAI_OBJ_DECLS
     // Dreamcast CodeView carries the source enum type; value_of_town is the
     // first retail consumer whose register schedule distinguishes the typed
-    // member from an int-to-enum bridge. Storage remains the same dword.
+    // member from an int-to-enum bridge. Storage remains the same dword;
+    // game.cpp's loaders cross the map-format ordinal into it.
     TArtifact ArtifactNum;
-#else
-    int ArtifactNum;
-#endif
     // The Dreamcast field list (dump 0x3e34) orders ArtifactNum,
     // CreatureType, NumCreatures between AppliesToComputer and
     // ResourceType; retail widens the trailing pair to ints.
@@ -875,23 +849,17 @@ public:
     // checker needs the enum type for its armyGroup call; display-only
     // consumers use the same proven representation without pulling the enum
     // through fragile include cycles.
-#if defined(HOMM3_VLC_CHECKS_VIEW) || defined(HOMM3_PHILAI_OBJ_DECLS)
     TCreatureType CreatureType;
-#else
-    int CreatureType;
-#endif
     int NumCreatures;
     int ResourceType;
     int ResourceAmount;
     int TownX;
     int TownY;
     int TownZ;
-#if defined(HOMM3_VLC_CHECKS_VIEW) || defined(HOMM3_AI_PLAYER_OBJ_DECLS)
     // CheckForUpgradedTown (0x5f1d40) dispatches both of its switches
     // with `movsx` BYTE reads at +0x24/+0x25 - retail kept the DC pair
     // HallLevel/CastleLevel char-sized where it widened the neighbours.
-    // Gated like the pad_03 slice above. ai_player.obj joins for the
-    // same two purchase_building helpers as the enumerator above:
+    // ai_player.obj's two purchase_building helpers read them too:
     // value_of_hall reads HallLevel + HALL_TOWN_ID as its victory bar,
     // value_of_castle_upgrade indexes bitNumber[CASTLE_FORT_ID +
     // CastleLevel].
@@ -904,11 +872,7 @@ public:
     int HeroX;
     int HeroY;
     int HeroZ;
-#else
-    char pad_24[0x10];
-#endif
     int HeroID;
-#if defined(HOMM3_VLC_CHECKS_VIEW) || defined(HOMM3_PHILAI_OBJ_DECLS)
     // CheckForDefeatedMonsterWin (0x5f2390) packs the words at
     // +0x38/+0x3c and the byte at +0x40 into a type_point - the DC
     // MonsterX/MonsterY/MonsterZ trio, int-widened like the town trio.
@@ -918,9 +882,6 @@ public:
     // CheckForTimeSurvival (0x5f2810) compares the computed absolute day
     // against the full dword at +0x44.
     int NumDays;
-#else
-    char pad_38[0x10];
-#endif
     unsigned char GameWon;
     signed char playerWinner;
     char pad_4a[2];
@@ -937,10 +898,7 @@ public:
     // 0x5f1b10, CheckForTotalResources' twin. advManager::DoEvent
     // (0x4aaaa0) calls the pair back to back on the same
     // `gpGame->mapHeader.victoryCondition`, each followed by its own
-    // CheckEndGame(0). Gated purely to keep the declarator out of the
-    // other twenty-odd consumers of this header until one of them needs
-    // it. VLC_CHECKS_VIEW joins the gate for the owning TU's own
-    // reconstruction of the trio (2026-08-20).
+    // CheckEndGame(0).
     unsigned char CheckForTotalCreatures();
     // 0x5f2390. The Dreamcast decoration
     // `?CheckForDefeatedMonsterWin@VictoryConditionStruct@@QAA_NPBVhero@@
@@ -961,9 +919,7 @@ public:
     unsigned char CheckForTownCaptureWin();
     unsigned char CheckForFlaggedGeneratorWin();
     unsigned char CheckForFlaggedMineWin();
-#ifdef HOMM3_VLC_TIME_SURVIVAL_DECLS
     unsigned char CheckForTimeSurvival();
-#endif
     // Retail 0x5f1ef0 (dc 0x190124), reached as
     // `gpGame->mapHeader.victoryCondition.CheckForGrailBuildingWin()`,
     // which is exactly the `lea ecx,[gpGame+0x1f89c]` retail emits:
@@ -1011,7 +967,6 @@ public:
 };
 SIZE(LossConditionStruct, 0x24);
 
-#ifdef HOMM3_REMOTE_WINLOSS_DECLS
 // The two remote win/loss messages have one sender/loser dword between the
 // common 0x14-byte CNetMsg base and their respective condition records.
 // Retail's handlers read both payloads at +0x18 and copy 0x4c bytes for the
@@ -1049,7 +1004,6 @@ public:
     int gamePos;
 };
 SIZE(CNormalWinMsg, 0x18);
-#endif
 
 // The three serialized aggregates embedded consecutively in `game` are
 // fixed by retail's SavedGameHeader constructor, assignment calls, and copy
@@ -1080,7 +1034,6 @@ public:
         // Doing that unguarded measured recruitUnit::Update 90.84 ->
         // 88.24 while changing no offset, so the slice is scoped to the
         // one TU that reads the field. Both arms are 12 bytes at +0x0c.
-#ifdef HOMM3_GAME_NEW_MAP_DECLS
         // Complete split these two main-town fields out of the opaque PC
         // extension.  The player-slot reader writes the presence flag at
         // +0x0c and the signed town type at +0x10 before unpacking the
@@ -1088,9 +1041,6 @@ public:
         unsigned char hasMainTown;
         char pad_0d[3];
         int mainTownType;
-#else
-        char pad_0c[8];
-#endif
         type_point CastleLoc;
         signed char hasRandomHero;
         char pad_19[3];
@@ -1107,22 +1057,18 @@ public:
         TPlayerSlotAttributes()
           : CanBeHuman(0), CanBeComputer(0), AIStrategy(-1),
             legalAlignments(0), HasRandomAlignment(0), GenerateHero(0),
-#ifdef HOMM3_GAME_NEW_MAP_DECLS
             hasMainTown(0), mainTownType(-1),
-#endif
             hasRandomHero(0), nonRandomHeroId(-1),
             nonRandomHeroCustomPortrait(-1), field_30(0)
         {
             nonRandomHeroCustomName[0] = 0;
         }
 
-#ifdef HOMM3_GAME_NEW_MAP_DECLS
         // Retail extracts this PC-only reader from NewSMapHeader::Read and
         // passes the stream plus map-format version (`ret 8`).  Dreamcast
         // keeps the equivalent logic in the parent reader, so the role name
         // is provisional.
         void readMapPlayerSlot(TAbstractFile* infile, int mapVersion);
-#endif
     };
 
     int version;
@@ -1183,7 +1129,6 @@ public:
     // retail expands this exact member teardown into ~SavedGameHeader.
     // Copy assignment is compiler-generated. BackupGameHeaders proves its
     // member walk directly: base assignment, both strings, then the bitset.
-#ifdef HOMM3_SSWINDOW_HEADER_VECTORS
     // game.h:311 in the Dreamcast line table.  The selection-window TU is
     // the retail caller too.  DC names two std::string::operator= calls.
     // Keep those source operations: depth 1 retains the DC-proven helper
@@ -1201,9 +1146,7 @@ public:
         mapDescription = sDesc;
 #pragma inline_depth()
     }
-#endif
     int Save(TAbstractFile* outfile);
-#ifdef HOMM3_GAME_NEW_MAP_DECLS
     // Complete's scenario reader consumes the abstract stream and the
     // selected campaign-map ordinal (`ret 8` at retail 0x4c4390).
     int Read(TAbstractFile* infile, int campaignMap);
@@ -1224,15 +1167,12 @@ public:
     // Retail adds the saved-game version as a third stack argument to the
     // Dreamcast load helper (`ret 0xc` at 0x4c3d90).
     int loadLossCondition(char type, TAbstractFile* infile, int saveVersion);
-#endif
     // Retail carries the save-version argument absent from the Dreamcast
     // declarator; the 0x4c5630 body returns with `ret 8`.
     int Load(TAbstractFile* infile, int saveVersion);
-#if defined(HOMM3_REMOTE_LOBBY_DECLS) || defined(HOMM3_GAME_NEW_MAP_DECLS)
     // Complete's lobby path passes the setup path/name and a literal zero;
     // the retail body at 0x4c5e00 returns with `ret 0xc`.
     int Get(const char* path, const char* filename, int saveVersion);
-#endif
 };
 SIZE(NewSMapHeader, 0x304);
 
@@ -1290,12 +1230,11 @@ SIZE(SGameSetupOptions, 0x1cc);
 // SCampaign::clear_carryover_pool(TCarryOverPoolNumber) identifies the
 // +0x3c slot as the campaign's carry-over hero pools - while 0x45f7b0's
 // inner elements are trivially destroyed and its element type stays
-// unidentified. Modelled as four-dword opaque objects (rather than byte
-// arrays) because the nested vectors have four-byte alignment; that alignment
-// is what makes SCampaign's +0x39..+0x3b gap implicit. The two operations are
-// declared out of line, which is exactly the code retail emits; spelling
-// the real nested vectors would instantiate them in every game.h consumer
-// for no gain.
+// unidentified. SCampaign itself carries the real nested vectors (the
+// retail PC layout agrees with IDA's independently recovered type record);
+// these two four-dword opaque twins, with their operations declared out of
+// line, survive only for campaignwindow.cpp's SCampaignCtorView below,
+// which models the out-of-line COMDAT call boundary retail keeps there.
 class SCampaignHeroPools {
 public:
     int pad_00[4];
@@ -1313,17 +1252,6 @@ public:
     SCampaignPools4c& operator=(const SCampaignPools4c& that);
 };
 SIZE(SCampaignPools4c, 0x10);
-
-#if defined(HOMM3_CAMPAIGNWINDOW_IMPLICIT_SCAMPAIGN) \
- || defined(HOMM3_GAME_SCAMPAIGN_ASSIGN_VIEW)
-// The retail PC layout agrees with IDA's independently recovered type record:
-// these are the concrete types hidden behind the declaration-only wrappers
-// above. Expose them only where campaignwindow.obj emits the generated
-// members or game.obj reconstructs the retained generated assignment; other
-// TUs must retain retail's out-of-line COMDAT call boundary.
-typedef std::vector<std::vector<hero> > SCampaignHeroPoolsView;
-typedef std::vector<std::vector<type_artifact> > SCampaignArtifactPoolsView;
-#endif
 
 // Complete's per-scenario campaign progress record. The name and return type
 // survive in the independently located HD GetCurrentScenario signature;
@@ -1348,7 +1276,18 @@ class SCampaign {
 public:
     enum {
         PRE36_CAMPAIGN_REMAP_SOURCE = 13,
-        PRE36_CAMPAIGN_REMAP_TARGET = 20
+        PRE36_CAMPAIGN_REMAP_TARGET = 20,
+        // The constructor's currentCampaign sentinel, one past the last
+        // built-in campaign ordinal.
+        CAMPAIGN_NONE = 21,
+        // ApplyBriefingChoice's two alignment-choice sites: the third map
+        // of campaigns 0 and 4 rewrites setup.alignment[2] (names
+        // provisional, from the retail compares).
+        ALIGNMENT_CHOICE_CAMPAIGN_A = 0,
+        ALIGNMENT_CHOICE_CAMPAIGN_B = 4,
+        ALIGNMENT_CHOICE_MAP = 2,
+        BRIEFING_CHOICE_FIRST = 0,
+        BRIEFING_CHOICE_SECOND = 1
     };
 
     // Compatibility spelling for the already reconstructed vector helpers;
@@ -1391,14 +1330,10 @@ public:
     // its body copies the string at +0x14 into the hidden return object.
     std::string GetCampaignFileName() const;
     unsigned char campaignCompleted[21];
-#if defined(HOMM3_CAMPAIGNWINDOW_IMPLICIT_SCAMPAIGN) \
- || defined(HOMM3_GAME_SCAMPAIGN_ASSIGN_VIEW)
-    SCampaignHeroPoolsView carryOverHeroes;
-    SCampaignArtifactPoolsView field_4c;
-#else
-    SCampaignHeroPools carryOverHeroes;
-    SCampaignPools4c field_4c;
-#endif
+    // +0x3c / +0x4c: the carry-over hero pools and the artifact pools
+    // (see the SCampaignHeroPools note above for the retail proof).
+    std::vector<std::vector<hero> > carryOverHeroes;
+    std::vector<std::vector<type_artifact> > field_4c;
 #ifdef HOMM3_CAMPAIGNWINDOW_IMPLICIT_SCAMPAIGN
     OutOfLineMapScores mapScores;
 #else
@@ -1475,13 +1410,14 @@ public:
     // Retail 0x48b2e0 banks the selected starting option and applies the
     // campaign-specific setup overrides before the scenario stream is read.
     void ApplyBriefingChoice(int option);
+    // DC CustomCampaign.h:212 (dc 0xe6ef8); retail 0x4897d0 in
+    // customcampaign.obj.
+    unsigned char CampaignComplete();
     int get_score() const;
     int get_total_time() const;
-#ifdef HOMM3_GAME_NEW_MAP_DECLS
     // Retail 0x486440 is the 325-byte counterpart of the DC 328-byte
     // CustomCampaign.cpp row and is called on gpGame->campaign here.
     void DoPreLoadCustomization();
-#endif
     void Save(TAbstractFile* outfile);
     // Retail-only load surface at 0x48a310; SavedGameHeader::Load passes the
     // stream and save version and the callee reads both.
@@ -1529,17 +1465,19 @@ public:
 SIZE(SCampaignCtorView, 0x7c);
 #endif
 
-#ifdef HOMM3_GAME_NEW_MAP_DECLS
 // The PC campaign-new-map caller passes this object as NewMap's third
 // argument.  Retail invokes two nullary members at 0x487290/0x487900;
 // neither has a surviving name, so the address-bearing spellings remain
 // provisional while preserving the proved receiver and arity.
+// Complete's NewMap takes the selected TCampaignBrief::ScenarioStruct
+// (StartScenario 0x4884c0 passes `this`); game.h cannot name a nested
+// type, so ScenarioStruct derives from this empty stand-in and the two
+// bodies below (0x487290 / 0x487900, customcampaign.obj) are its methods.
 class NewMapCampaignContext {
 public:
     void NewMapFn_00487290();
     void NewMapFn_00487900();
 };
-#endif
 
 // Product generation recorded in SavedGameHeader::gameVersion.  The save
 // loader derives the same three rungs from the on-disk format version when an
@@ -1757,12 +1695,12 @@ SIZE(generator, 0x5c);
 // ALIGNMENT NOTE (retail-only fact, worth flagging): puzzle_guess sits
 // at the ODD offset +0x39, between extraPuzzlePieces (+0x38) and
 // iDeathCountDown (+0x3d), with numTowns pinned at +0x3e from the other
-// side. So retail's type_point is a FOUR-BYTE, ONE-BYTE-ALIGNED type,
-// while the Dreamcast's is two-byte aligned (DC puts the same member at
-// an even 54). struct.h's ordinary short-bitfield spelling reproduces the
-// DC alignment. Consumer views with retail proof may select its one-byte
-// alignment and expose this member with the stated source type; other TUs
-// retain the raw representation until their own codegen is audited.
+// side, while the Dreamcast puts the same member at an even 54. Retail
+// packed this record - as it packed hero.h's type_obscuring_object and
+// netmsg.h's CMCMoveHero, whose points also sit one byte early - so the
+// class is under pack(1) here and type_point keeps struct.h's DC-natural
+// two-byte alignment.
+#pragma pack(push, 1)
 class playerData {
 public:
     // The width of the `heroes` row below, and the cap the game enforces
@@ -1807,11 +1745,7 @@ public:
     // (x 10 bits in the first unit, y 10 + z 4 in the second) at an
     // ODD base - which is the alignment finding above, from the other
     // side.
-#if defined(HOMM3_PHILAI_OBJ_DECLS) || defined(HOMM3_AI_PLAYER_OBJ_DECLS)
     type_point puzzle_guess;
-#else
-    char puzzle_guess[4];
-#endif
     char iDeathCountDown;          // +0x3d
     // +0x3e / +0x40, the player's town roster, sliced 2026-08-08 for
     // town::Deallocate (0x5be2d0), which is the whole proof: it walks
@@ -1942,6 +1876,7 @@ public:
     bool hasGivenArtifact(int artifact);
     void guess_grail_location(long player_id);  // 0x4bae50
 };
+#pragma pack(pop)
 SIZE(playerData, 360);
 
 // Head model: GetWorldMapData hands out the embedded map record at
@@ -2017,12 +1952,7 @@ public:
     short field_1f640;
     short field_1f642;
     char field_1f644[0x20];
-#if defined(HOMM3_GAME_NEW_MAP_DECLS) \
- || defined(HOMM3_PHILAI_OBJ_DECLS)
     TArtifact field_1f664[7];
-#else
-    char field_1f664[0x1c];
-#endif
     std::vector<TBlackMarket> field_1f680;
     short ultimateArtifactX;
     short ultimateArtifactY;
@@ -2156,13 +2086,11 @@ public:
     std::vector<MonsterIdentifier> monsterIdentifiers;
 
     NewfullMap* GetWorldMapData();
-#ifdef HOMM3_GAME_SEER_HUT_DECLS
     // Retail-only 0x4cef10. The quest-monster initializer passes the editor's
     // stable object reference and receives the corresponding packed point;
     // the body is the reverse search over monsterIdentifiers above. Kept
     // ordinal because neither the Dreamcast roster nor NH3API names it.
     type_point GameFn_004CEF10(int identifier);
-#endif
     int get_new_boat_id();                    // 0x4bb170
     int CreateBoat(int x, int y, int z, int owner,
                    unsigned char remoteMove, signed char type); // 0x4bb250
@@ -2337,27 +2265,14 @@ public:
     void SetVisibility(int startX, int startY, int z,
                        int whichPlayer, int range,
                        unsigned char remote_move);            // 0x49cdd0
-    // MATCHING_DEBT: events.obj loses an exact row if these game.obj-only
-    // declarators enter its class-type stream. Reuse the existing sole-TU
-    // gate until game.h's codegen-sensitive declaration surface is split.
-#ifdef HOMM3_GAME_NEW_MAP_DECLS
     void PerDay();
     void PerWeek();
     void PerMonth();
     int TransmitSaveGame(int iToWho, int thisPlayerDead,
                          unsigned char inGame, unsigned char makeOrig);
     void DoNewTurn();
-#endif
-// SPLIT around the declarator below rather than moved, so the preprocessed
-// text every HOMM3_GAME_NEW_MAP_DECLS consumer sees is unchanged, line for
-// line - GameFn_004CA780's pattern. event_record.obj owns 0x49d6c0's body
-// and needs this ONE declarator; taking the whole gate would put nine more
-// into its class-type stream at once.
-#if defined(HOMM3_GAME_NEW_MAP_DECLS) \
-    || defined(HOMM3_EVENT_RECORD_CLEAR_DECL)
+    // event_record.obj owns 0x49d6c0's body.
     void clear_event_records(char playerId);              // 0x49d6c0
-#endif
-#ifdef HOMM3_GAME_NEW_MAP_DECLS
     // Game.h:1390 in the DC roster. Retail expands this short calendar
     // accessor at every game.obj call site and retains no standalone row.
     short get_current_turn()
@@ -2367,7 +2282,6 @@ public:
     void GiveTimeEventReward(const TTimedEvent* thisEvent);   // 0x4cd710
     void CheckForTimeEvent();                                 // 0x4cd910
     void CheckForTownEvent();                                 // 0x4cda10
-#endif
     unsigned char get_random_lith(const std::vector<type_point>* points,
                                   type_point* result, long cell_type,
                                   long excluded);            // 0x4cdb80
@@ -2409,13 +2323,8 @@ public:
                            unsigned char xferFile);
     void SetupOrigData();                      // 0x4bf1a0
     void GiveTroopsToNeutralTown(int townId);  // 0x4bf570
-#ifdef HOMM3_GAME_VALIDATE_VLC_DECLS
-    // 0x4bf780 (dc 0xaa7e0). Kept in game.obj's narrow view because one
-    // additional game member declarator changes codegen in unrelated users
-    // of this header.
+    // 0x4bf780 (dc 0xaa7e0).
     void ValidateVictoryLossConditions(unsigned char check_map_locations);
-#endif
-#ifdef HOMM3_GAME_NEW_MAP_DECLS
     // Retail carries a stream, the optional eight-hero override, a PC-only
     // campaign context, and the map-format/game-version selector (`ret 16`).
     // The Dreamcast declarator has only its filename and hero-array pair.
@@ -2457,7 +2366,6 @@ public:
     void SetCannedRumour();
     void SetMapRumour();
     void SetSpecialRumour();
-#endif
     int Save(TAbstractFile* outfile);             // 0x4be3f0
     int ComputeDailyGold(int player, unsigned char includeSilo);
     // 0x0049d630, 140 B. CORRECTED 2026-08-20: the address recorded here
@@ -2507,14 +2415,7 @@ public:
                           int occupying_hero);                   // 0x49c560
     void record_move(hero* who, int direction,
                      type_point destination);                    // 0x49cd50
-#if defined(HOMM3_EVENT_RECORD_DECLS)
     void record_teleport(hero* who, type_point destination);     // 0x49cf50
-    // DC game.h:877 (dc 0x8f270, event_record.obj): the visibility bit of
-    // every player sharing whichPlayer's team. Retail has NO out-of-line
-    // row for it - both visibility sweeps expand it at their head, and
-    // SetVisibility's own range guard is what lets VC6 drop the internal
-    // one there while ResetVisibility keeps it.
-#endif
     // Game.h:877. DispatchEvent's obelisk arm preserves this named helper;
     // retail /Ob2 folds both it and GetTeam into the arm. MoveHero's
     // Dreamcast line stream names the same nested pair, and Complete folds
@@ -2624,17 +2525,12 @@ public:
     // the Dreamcast xref graph records.
     void setup_shipyards();
     void ShowScenInfo();
-#if defined(HOMM3_NEWGAME_OBJ_DECLS) \
- || defined(HOMM3_SCENARIOINFO_OBJ_DECLS)
-    // newgame.cpp owns the retail text formatter at 0x513800. Keep this
-    // declaration in the two compiler views which call it: game.h's member
-    // population is codegen-sensitive in its many unrelated consumers.
+    // newgame.cpp owns the retail text formatter at 0x513800.
     void GetLossConditionText(char* text);
     // The Complete formatter at 0x5139e0 is the victory-condition twin.
     // Dreamcast proves the member name/signature and scenarioinfo.obj is its
     // caller, while retail fixes the one-char* thiscall ABI.
     void GetVictoryConditionText(char* text);
-#endif
     // The kingdom-overview screen, overview.obj's own body at 0x51e8d0.
     // ORDER-MAPPED, not claimed here: overview.obj's DC roster runs
     // SetupNewOverviewType (dc 0x1069fc) -> UpdateFlaggableIcon ->
@@ -2650,19 +2546,13 @@ public:
     // TurnOffAIMusic (dc 0xb1fc0). ProcessDeSelect's END_TURN arm calls it
     // once the "heroes can still move" confirm is past.
     void NextPlayer();
-#if defined(HOMM3_EVENTS_GAME_INLINE_HELPERS) \
- || defined(HOMM3_PHILAI_OBJ_DECLS)
     // Game.h:1056. GetGarrison is expanded into both DispatchEvent and
     // philai's value_of_garrison; its nested vector access remains visible
     // so the recovered source hierarchy is not flattened again.
     garrison* GetGarrison(int which) { return &garrisons[which]; }
-#endif
-#ifdef HOMM3_EVENTS_GAME_INLINE_HELPERS
-    // Game.h:1380. DispatchEvent expands this cell accessor.
+    // Game.h:1380. DispatchEvent expands this cell accessor; the
+    // out-of-line copy is ai_player.obj's, 0x42ed80.
     NewmapCell* get_cell(type_point point);
-#else
-    NewmapCell* get_cell(type_point point);      // 0x42ed80 (ai_player.obj)
-#endif
     // DC `game::GetHero`, dc 0x2eb0, 36 B, declared in E:\gamedcs\Game.h
     // line 972 - i.e. an INLINE MEMBER of this header. Most retail readers
     // expand it in place; ai_player.obj also retains the selected COMDAT at
@@ -2696,6 +2586,13 @@ public:
         if (townId == -1)
             return 0;
         return &towns[townId];
+    }
+    // Dreamcast Game.h:1410 names this ordinary inline query and retains a
+    // selected out-of-line copy in ai_player.obj. THallWindow expands the
+    // same source operation to the retail town-vector lookup.
+    bool TownAlreadyBuiltOn(int townId) const
+    {
+        return towns[townId].field_02 != 0;
     }
     // DC `game::GetCurrHero` (dc 0x2ed4, E:\gamedcs\Game.h:991) and
     // `game::GetCurrTown` (dc 0x1ff40, Game.h:1023) - the acting player's
@@ -2789,7 +2686,6 @@ DATA(0x00677998) extern double production_handicap[];
 // {2,3,4,5,4,3} by game::GiveTroopsToNeutralTown.
 DATA(0x006779b0) extern const int gNeutralTownLevelWeights[6];
 DATA(0x006779c8) extern const int gNeutralTownLevelWeightsEnd;
-#ifdef HOMM3_GAME_NEW_MAP_DECLS
 // NewMap's seven-resource rows, indexed by setup.difficulty.  The first
 // address is also the seven-int tutorial row immediately following the
 // neutral-town weights above.
@@ -2809,7 +2705,6 @@ extern unsigned char gUnnamed69d80d;
 // advmgr.cpp owns the retail datum; ResetGame only clears the turn-control
 // latch after rebuilding the session.
 extern int gbThisNetGotAdventureControl;
-#endif
 DATA(0x0067814c) extern int gHeroGoldCost;
 DATA(0x0069774c) extern unsigned char gbUnk69774c;
 // Save version 41 added this signed-byte session value. game::Load owns the
@@ -2961,13 +2856,11 @@ extern int gLocalGamePos;                   // .bss 0x699554
 // gPlayerColorNames[color] over an empty/default name. Defined by a TU
 // not yet located - extern only (the bitNumber pattern).
 extern char* gPlayerColorNames[];           // .bss 0x6a7df8
-#ifdef HOMM3_GAME_SPECIAL_RUMOUR_DECLS
 // SetSpecialRumour shares the nine-way direction table with seer-hut quest
 // descriptions, and indexes the terrain-name table by a Grail cell's ground
 // set when producing the alternative location hint.
 extern const char* gQuestMonsterDirections[9];
 DATA(0x006a5d24) extern const char* const gGrailTerrainNames[];
-#endif
 
 // Located game.cpp bodies kbwin calls (the Imm/tablet mouse hooks;
 // bodies not yet reconstructed - declarators match the kbwin call
@@ -2992,7 +2885,6 @@ void ImmMouseWindowMoved();                           // 0x4b6950
 // feedback that plays with a combat spell. Retail-only (the Dreamcast
 // build has no Immersion layer), so the NAME is a bootstrap invention
 // and the return value, which PowEffect discards, stays unmodelled.
-// Behind a view: game.h reaches most of the tree.
 void PlayImmEffect(const char* effectName, int count);  // 0x4b69f0
 void ComputeUALoc(int whichPlayer);                   // 0x4baed0
 

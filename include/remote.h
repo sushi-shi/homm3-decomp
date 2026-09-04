@@ -6,12 +6,8 @@
 #define HOMM3_REMOTE_H
 
 #include "dxplay.h"
-#ifdef HOMM3_REMOTE_CDPLAYHEROES_LAYOUT
 #include <deque>
-#endif
-#ifdef HOMM3_CHAT_EDIT_DECLS
 #include "chatedit.h"
-#endif
 
 class CNetMsg;
 class textWidget;
@@ -83,25 +79,34 @@ protected:
 };
 SIZE(CNetMsgHandler, 0x0c);
 
-#ifdef HOMM3_COMMAND_PLAYER_DROP_VIEW
-// Narrow command-TU view of the pause handler installed in combatManager.
-// Its full definition normally lives in remotedlg.h, whose dialog closure
-// command.cpp deliberately does not include. Main only needs the inherited
-// abort-message setter; retaining the complete base-plus-pointer layout makes
-// that relationship explicit without broadening the include closure.
+// CNetMsgHandlerPause - the scoped handler that parks whatever handler the
+// network singleton is carrying, installs itself for the life of a modal
+// dialog (remotedlg.h's three dialogs embed one) or a combat
+// (combatManager::field_38 owns one), and puts the old one back. Sixteen
+// bytes: CNetMsgHandler's twelve plus one pointer, and 0x557e30's
+// `mov [esi+0xc], eax` is that pointer.
+//
+// Vtable 0x640f04 is four slots wide, CNetMsgHandler's own, so the class
+// introduces nothing: slot 0 is the ??_G at 0x557eb0, slot 1 the
+// CheckHandleNet override at 0x555170, slot 2 the INHERITED
+// CNetMsgHandler::GetAbortPopupMsg at 0x557900 (already claimed), and slot 3
+// the HandleNetMsg override at 0x555180. Both overrides are five bytes of
+// `xor eax,eax` and a sized return - the pause semantics are to swallow
+// everything - and both are header-origin COMDATs in retail too, which is
+// why they sit at 0x555170/0x555180 beside CNetMsgHandler::Copy rather than
+// in the 0x557exx run with the rest of the class.
 class CNetMsgHandlerPause : public CNetMsgHandler {
 public:
     CNetMsgHandlerPause();
     virtual ~CNetMsgHandlerPause();
     virtual CNetMsg* CheckHandleNet(unsigned char inPopup,
-                                    unsigned char* msgReceived);
-    virtual CNetMsg* HandleNetMsg(CNetMsg* pNetMsg);
+                                    unsigned char* msgReceived);  // slot 1
+    virtual CNetMsg* HandleNetMsg(CNetMsg* pNetMsg);              // slot 3
 
 protected:
-    CNetMsgHandler* m_pNetMsgHandlerSave;
+    CNetMsgHandler* m_pNetMsgHandlerSave;  // +0x0c
 };
 SIZE(CNetMsgHandlerPause, 0x10);
-#endif
 
 // Adventure-map network dispatch. Retail's trade handler reads the inherited
 // m_inPopup byte through IsInPopup; the DC roster supplies the class and
@@ -163,13 +168,8 @@ public:
     void HandlePlayerDrop(unsigned long dpid);
 
 protected:
-#ifdef HOMM3_REMOTE_CDPLAYHEROES_LAYOUT
-    // MATCHING_DEBT: keep this override declaration in the existing remote-TU
-    // layout view. Exposing the otherwise unused virtual to recruit.obj changes
-    // VC6's optimizer state and regresses recruitUnit::Update.
     virtual unsigned char SysMsgCreatePlayerOrGroup(
         DPMSG_CREATEPLAYERORGROUP* message, unsigned long toId);
-#endif
     // Retail 0x5532b0, DC remote.cpp:425. Accessed by the two original
     // free-function friends below; the Dreamcast class record marks it
     // protected rather than public.
@@ -181,15 +181,11 @@ protected:
                                   bool, bool);
 
 private:
-#ifdef HOMM3_REMOTE_CDPLAYHEROES_LAYOUT
     CDPlayMsg dpMsg;                       // +0x60
     std::deque<CNetMsg*> msgQueue;         // +0x68..+0x97
     char sLocalIPAddress[80];              // +0x98..+0xe7
     unsigned long confirmId;               // +0xe8
     unsigned long currMessageId;           // +0xec
-#else
-    char m_remoteState[0x90];       // +0x60..+0xef
-#endif
     CNetMsgHandler* m_pNetMsgHandler; // +0xf0
 };
 SIZE(CDPlayHeroes, 0xf4);
@@ -299,11 +295,9 @@ void __cdecl SystemMsg(CChatManager* manager, const char* format, ...);
 void __cdecl PlayerDropMsg(CChatManager* manager, const char* format, ...);
 void __cdecl PlayerEnterMsg(CChatManager* manager, const char* format, ...);
 
-#if defined(HOMM3_CHAT_EDIT_DECLS) || defined(HOMM3_GAME_TRANSMIT_DECLS)
 enum ENetMessageRecipient {
     NET_MESSAGE_RECIPIENT_ALL = 0x7f
 };
-#endif
 
 // Retail's complete method family proves five unsigned-long lanes at
 // +0/+4/+8/+c/+10; Dreamcast CodeView supplies their source names.
@@ -378,9 +372,7 @@ void HandleNormalWinMsg(CNetMsg* pNetMsg);
 
 // remote.cpp:1529 in the DC roster (dc 0x11d1c8); retail 0x554a20. The
 // dispatcher hands it the chat text in place and the sender's slot.
-#ifndef HOMM3_COMMAND_PLAYER_DROP_VIEW
 void ReceiveChat(char* cChat, int fromWho);
-#endif
 // remote.cpp:2227, dc 0x11e01c; command's combat-drop handler forwards a
 // DPID that belongs to neither combat side to this process-wide handler;
 // both remote wait-dialog dispatchers use the same public boundary.
@@ -395,7 +387,6 @@ int TransmitRemoteData(CNetMsg* pMsg, int toWho,
                        bool compressMsg, bool guaranteed);
 int TransmitRemoteDataDPID(CNetMsg* pMsg, unsigned long dpidTo,
                            bool compressMsg, bool guaranteed);
-#ifdef HOMM3_GAME_TRANSMIT_DECLS
 // DC remote.cpp:1384 proves the two-argument public boundary. Complete's
 // wrapper ignores wasCompressed internally, but its game.obj callers still
 // materialize the null second fastcall argument in EDX.
@@ -405,20 +396,17 @@ int calc_crc_long(unsigned char* buffer, int len);
 // DC remote.cpp:1411, dc 0x11ce68; retail ReceiveSaveGame keeps this
 // cleanup boundary out of line on both fatal in-game receive paths.
 void RemoteCleanup();
-#endif
 void PollRemote();
 void SendChat(const char* cChat, int toWho);
 unsigned char LobbyLaunchConnect();
 // Dreamcast names this network-launch state directly; retail oldmain tests
 // it only while handling the missing-CD startup result.
 extern int giTCPHostStatus;
-#ifdef HOMM3_KB_OLDMAIN_DECLS
 // Dreamcast remote.cpp:1916 and retail oldmain's direct 0x555920 call.
 unsigned char TestIfLobbyLaunched();
 // Dreamcast publishes the owning remote.obj buffer and Complete's tutorial
 // setup copies its selected filename here before loading the map header.
 extern char gMapName[260];
-#endif
 
 // Retail .data 0x69954c. make_gift only uses it as the gate for sending
 // a gift/request message to a non-local human; wider role unattested.

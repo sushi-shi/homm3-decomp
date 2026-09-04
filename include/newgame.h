@@ -48,6 +48,15 @@ inline TTownType pick_next_alignment(int legal_alignments, TTownType type)
     return type;
 }
 
+// The seven resource names (retail 0x6a5e64, DATA-claimed by seerhut.cpp);
+// GetVictoryConditionText's resource arm formats one. Consumer-side plain
+// extern, the advmgr.h / ai_player.h pattern.
+extern const char* gResourceNames[7];
+// The nine map-region names (retail 0x6a5c48, DATA-claimed by seerhut.cpp;
+// game.h exposes them only to its own view). The defeat-monster arm of
+// GetVictoryConditionText indexes them by the map-third direction.
+extern const char* gQuestMonsterDirections[9];
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\newgame.cpp:191, dc 0x103494) long get_alignment_count(unsigned char legal_alignments);
 // CODEVIEW(E:\gamedcs\newgame.cpp:204, dc 0x1034b4) TTownType pick_alignment(unsigned char legal_alignments, unsigned char getFirstAvail);

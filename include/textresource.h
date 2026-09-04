@@ -50,10 +50,8 @@ enum EGeneralTextIndex {
     // GENERAL_TEXT_DRAGON_CITY_EMPTIED below is - an ungated enumerator
     // counts toward the include-set threshold in every consumer.
     GENERAL_TEXT_SKELETON_GOLD = 47,
-#ifdef HOMM3_REMOTE_SEND_CHAT_DECLS
     // TurnDurationMsg prefixes its caller-supplied warning with this row.
     GENERAL_TEXT_TURN_DURATION_PREFIX = 54,
-#endif
     // town.obj's three event-reward rows: the " and " list separator
     // (folded [Text._First + 0x238] in both show_* helpers), and the
     // two town-event dialog formats give_event_reward's helpers wrap
@@ -73,18 +71,15 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_RESOURCE_DISPLAY_1 = 64,
     GENERAL_TEXT_RESOURCE_DISPLAY_2 = 65,
     GENERAL_TEXT_QUIT = 70,
-#ifdef HOMM3_REMOTE_SEND_CHAT_DECLS
     // SendChat's command/status rows. The indices are the folded retail
     // TTextResource loads; their roles are fixed by the surrounding ping
-    // and recipient-control flow. Gated because enum population is a
-    // measured VC6 codegen input in unrelated consumers.
+    // and recipient-control flow.
     GENERAL_TEXT_CHAT_PING_COMMAND = 73,
     GENERAL_TEXT_CHAT_PING_PLAYER_FORMAT = 74,
     GENERAL_TEXT_CHAT_PING_ALL = 75,
     // CDPlayHeroes::SendIt shows this two-button row after six failed send
     // attempts and retries only when the window returns ACCEPT.
     GENERAL_TEXT_DPLAY_SEND_RETRY = 82,
-#endif
     GENERAL_TEXT_SEARCH_NOT_DIGGABLE = 98,
     GENERAL_TEXT_MAIN_MENU_CD_GENERIC_FORMAT = 107,
     GENERAL_TEXT_QUICK_INFO_INVALID_POINT = 111,
@@ -94,29 +89,20 @@ enum EGeneralTextIndex {
     // describes that consumer, which is this enum's stated convention;
     // the index is retail-byte-proven (a folded [Text._First + 0x204]).
     GENERAL_TEXT_COMBAT_SPELL_ALREADY_CAST = 129,
-#ifdef HOMM3_COMMAND_GRID_VIEW
     // ResetRound posts this line after every non-placement, non-quick round;
     // retail folds Text._First + 0x674, i.e. row 413.
     GENERAL_TEXT_COMBAT_ROUND = 413,
-#endif
-#ifndef HOMM3_COMMAND_PLAYER_DROP_VIEW
     GENERAL_TEXT_SYSTEM_OPTIONS_AUDIO_UNAVAILABLE = 151,
     GENERAL_TEXT_BACKPACK_FULL = 153,
-#else
-    // HandleCombatPlayerDrop's two 15-second notification rows replace two
-    // command-unused entries at the same parse slots: enum population is a
-    // measured VC6 handle-state input for this TU.
+    // HandleCombatPlayerDrop's two 15-second notification rows.
     GENERAL_TEXT_COMBAT_LOCAL_PLAYER_DROPPED = 416,
     GENERAL_TEXT_COMBAT_REMOTE_PLAYER_DROPPED = 417,
-#endif
     GENERAL_TEXT_BACKPACK_ARTIFACT_FORMAT = 154,
-#ifdef HOMM3_COMMAND_TOWER_STRING_VIEW
     // get_tower_string's two folded vector loads at Text._First + 0x26c and
     // +0x270. The first takes the wall name; the second takes that name,
     // skill and the double/triple archer counts.
     GENERAL_TEXT_COMBAT_WALL_DESTROYED_FORMAT = 155,
     GENERAL_TEXT_COMBAT_WALL_STATUS_FORMAT = 156,
-#endif
     GENERAL_TEXT_VIEW_ARMY_SPEED = 194,
     // The two rows above HEALTH_REMAINING in the popup, both folded
     // [Text._First + N] loads: 0x31c in
@@ -213,14 +199,12 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_LEVEL_UP_HERO_FORMAT = 446,
     GENERAL_TEXT_PUZZLE_WINDOW = 464,
     GENERAL_TEXT_DEFAULT_PLAYER_NAME = 469,
-#ifdef HOMM3_REMOTE_SEND_CHAT_DECLS
     GENERAL_TEXT_PLAYER_DROPPED = 470,
     GENERAL_TEXT_CHAT_NONHUMAN_WIRE_TAG = 474,
     GENERAL_TEXT_CHAT_NONHUMAN_LINE_TAG = 475,
     // OnPlayerDropUpdateMsg displays this row while reloading the shared
     // recovery save. Retail fixes it at [Text._First + 0xa4c].
     GENERAL_TEXT_PLAYER_DROP_RELOAD = 659,
-#endif
     GENERAL_TEXT_SYSTEM_OPTIONS_COMMAND_CONFIRM = 579,
     // The four spell-influence rollover rows TViewArmyWindow's spell
     // icons print, all folded [Text._First + N] loads in its

@@ -63,18 +63,12 @@ enum ECombatWinner {
 
 // E:\gamedcs\events.cpp:6248/6261 (dc 0x9ce40 / 0x9ceb0) - the RAII
 // turn-duration pause DoCombat holds across a whole battle. Both
-// bodies are events.cpp's own (their DC lines are events.cpp lines);
-// only the shape lives here, and only for the one TU that uses it:
-// ungated, its two declarators cost events' monsters_sell_out
-// 100.0000 -> 99.95 (the include-set canary that row's own history
-// documents) through town.cpp's shared view of this header.
-#ifdef HOMM3_EVENTS_TURN_PAUSE_DECL
+// bodies are events.cpp's own (their DC lines are events.cpp lines).
 class CTurnDurationPause {
 public:
     CTurnDurationPause();
     ~CTurnDurationPause();
 };
-#endif
 
 unsigned char AI_quick_combat(hero* attacking_hero, hero* defending_hero,
                               armyGroup* defending_army, town* defending_town,

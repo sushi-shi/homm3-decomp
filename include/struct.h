@@ -17,9 +17,6 @@
 //   z: dword @ +2, shl 2, movsx ax, sar 12     -> signed  4 bits @ 10..13
 // and can_take_town (0x428410) builds one the other way round, masking
 // the three source bytes with 0x3ff, 0x3ff and 0xf before packing.
-#if defined(HOMM3_PHILAI_OBJ_DECLS) || defined(HOMM3_AI_PLAYER_OBJ_DECLS)
-#pragma pack(push, 1)
-#endif
 struct type_point {
     short x : 10;
     short y : 10;
@@ -53,9 +50,6 @@ struct type_point {
     }
     unsigned char is_valid();
 };
-#if defined(HOMM3_PHILAI_OBJ_DECLS) || defined(HOMM3_AI_PLAYER_OBJ_DECLS)
-#pragma pack(pop)
-#endif
 
 // The shared inclusive rectangle used by the adventure and combat drawing
 // code. Dreamcast CodeView fixes the four names, offsets, and 16-byte extent;
@@ -71,7 +65,6 @@ struct SLimitData {
     SLimitData() {}
     SLimitData(int minx, int miny, int maxx, int maxy)
         : iMinX(minx), iMinY(miny), iMaxX(maxx), iMaxY(maxy) {}
-#ifdef HOMM3_DRAWING_UPDATE_GRID_DECLS
     int Width() const { return iMaxX - iMinX + 1; }
     int Height() const { return iMaxY - iMinY + 1; }
     bool Intersects(const SLimitData& limits) const
@@ -107,7 +100,6 @@ struct SLimitData {
         if (iMaxY < limits.iMaxY)
             iMaxY = limits.iMaxY;
     }
-#endif
 };
 SIZE(SLimitData, 0x10);
 

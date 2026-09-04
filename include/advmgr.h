@@ -1890,6 +1890,11 @@ public:
     // Dreamcast's advManager field list fixes this declaration order. It is
     // source evidence, not a cross-architecture structure comparison.
     void VWDrawGround(int srcX, int srcY, int z, int destX, int destY);
+    // DC viewwrld.cpp:1558 (dc 0x196040); retail 0x5fc4c0 (736 B, the
+    // viewwrld..widget bracket), still unclaimed. Both Complete level
+    // callbacks call it with the window's origin and viewable extents.
+    void VWCompleteDraw(int startX, int startY, int z, int drawwidth,
+                        int drawheight);
     void VWDrawUnderlay(int srcX, int srcY, int z, int destX, int destY);
     void VWDrawRoad(int srcX, int srcY, int z, int destX, int destY);
     void VWDrawRiver(int srcX, int srcY, int z, int destX, int destY);
@@ -2106,12 +2111,9 @@ public:
     // playerData::IsLocalHuman's bool result unwidened.
     void DoEventShipyard(NewmapCell* cell, type_point point,
                          unsigned char human_player);
-#ifdef HOMM3_EVENTS_PRISON_DECL
-    // MATCHING_DEBT: one events-only declaration view. Exposing this
-    // CodeView-proven member to all consumers perturbs unrelated exact TUs.
+    // CodeView-proven; events.obj owns the body.
     void DoEventPrison(class hero* current_hero, NewmapCell* cell,
                        type_point point, bool human_player);
-#endif
 };
 
 // Retail .bss 0x699268 (DC ?gpAdvManager@@3PAVadvManager@@A).

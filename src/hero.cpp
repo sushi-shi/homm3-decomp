@@ -26,7 +26,6 @@
 // hero.obj owns get_morale_description / get_luck_description, so the
 // owning compiland joins their gate rather than defining armygrp's
 // wider HOMM3_ARMYGRP_DESCRIPTION_API.
-#define HOMM3_HERO_OBJ_VIEW
 #include "hero.h"
 // class army - hero::modify_spell_damage (0x4e5760) reads the target
 // stack's embedded creature-traits level at +0x78.
@@ -34,10 +33,6 @@
 // gpGame / playerData / game::IsHuman: the owner-record accessors
 // (belongs_to_human, get_player) and every gpGame walk in this TU need
 // the real definitions, and game.h is where they live.
-// HOMM3_GAME_HERO_EXTRA_VIEW stays defined ACROSS this include (it used
-// to be dropped right after hero.h): hero::HeroFn_004D8B30 takes a
-// HeroExtra, and that class lives behind this same gate in game.h.
-#define HOMM3_HERO_OBJ_DECLS
 #include "game.h"
 // advManager::FizzleCenter - HeroView's dismiss path calls it. The one
 // declarator, not the whole events view; advmgr.h's own note records why.
@@ -1038,8 +1033,6 @@ hero::hero()
     gHeroScreenArmySlot = -1;
     field_11c = 0;
 }
-
-#undef HOMM3_HERO_CTOR_RELEASE_VERIFY
 
 // E:\gamedcs\hero.cpp:1233
 // Slot pinned by the two flanking claims (hero::hero 0x4d85f0 above,
@@ -4256,6 +4249,23 @@ static void show_hero_skills(int code, unsigned char right_mouse)
 // Retail likewise constructs and destroys that object in this arm, so neither
 // local exposes missing source structure; their identifier spelling cannot
 // affect code generation.
+// Lead for the next lane (2026-09-04, polish lane 2): the DC dossier's
+// `exitFlag` is NOT the base-handler result - it is initialised to 0 in
+// the CAdvPopup::WindowHandler call's delay slot, written once (`= 1`)
+// in the HERO_NAME_ID arm when dialogReturn == DIALOG_RETURN_ACCEPT (dc
+// line 3594), and tested once after the switch (line 3949: `if
+// (exitFlag) { dialogReturn = codeY; codeY = codeX = 10; return 2; }
+// return 1;`). Retail's shape agrees: one return-1 epilogue at fn+0x79
+// with 64 arms jumping back to it and the return-2 block inline after
+// the HERO_NAME_ID arm. Spelled that way here (townManager::Main closed
+// 23 points on the identical device) VC6 does produce the single shared
+// epilogue, but places it after the source-last SELECT arm
+// (show_hero_skills) instead of retail's MOUSE_MOVE `return 1`, and the
+// score falls 75.41 -> 69.34; the current inline `return 2` keeps the
+// epilogue at the end and scores higher only because more arms then
+// align. What decides where VC6 lands the threaded return-1 block is
+// the open question (Main lands it after the TOWN_x arm where retail
+// has the selector arm); solve that and this device is worth ~15 pts.
 VA(0x004dd2d0, 0x143E)  // anchor-bracket + absent-callees, dc 0xcf54c
 int THeroScreenWindow::WindowHandler(message* msg)
 {
@@ -7180,7 +7190,7 @@ inline int hero::get_special_terrain()
     if (location == type_point(-1, -1, -1))
         return kMagicTerrainNone;
     NewmapCell* cell = gpGame->get_cell(location);
-    return cell->get_special_terrain();
+    return cell->get_magic_terrain_type();
 }
 
 // E:\gamedcs\hero.cpp:5977

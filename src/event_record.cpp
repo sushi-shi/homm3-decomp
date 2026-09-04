@@ -4,11 +4,7 @@
 #include <math.h>
 #include <va.h>
 #include "event_record.h"
-#define HOMM3_EVENT_RECORD_CLEAR_DECL
-#define HOMM3_EVENT_RECORD_DECLS
 #include "game.h"
-#undef HOMM3_EVENT_RECORD_DECLS
-#undef HOMM3_EVENT_RECORD_CLEAR_DECL
 #include "abstractfile.h"
 #include "cursor.h"
 #include "inputmgr.h"
@@ -17,9 +13,7 @@
 #include "kbwin.h"
 #include "message.h"
 #include "prefs.h"
-#define HOMM3_EVENT_RECORD_MOVE_DECLS
 #include "advmgr.h"
-#undef HOMM3_EVENT_RECORD_MOVE_DECLS
 #include "kb.h"
 
 // Dreamcast CodeView attests this inline wrapper (Hero.h:196) and game.cpp

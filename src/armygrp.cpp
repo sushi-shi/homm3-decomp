@@ -1241,6 +1241,13 @@ const char* armyGroup::GetArmySizeName(int howMany, int iNameSet)
 // declaring `alignments[10]` ahead of `morale` 98.5654 (flat), moving
 // `morale` below `GetAlignments` 87.2743, and `short morale` 90.9451. The
 // landed spelling is a local maximum in every direction tested.
+// Residual (98.5654%) narrowed 2026-09-04: EVERY other row is relocation-name
+// only (the bitset<9> helpers ICF-fold onto retail's unclaimed 0x4c6e0/0x4c680/
+// 0x4c610 and bitset<145>::operator[]). The whole code delta is that retail
+// SHRINK-WRAPS `push ebx` to `morale`'s first definition - after the
+// on_cursed_ground return, which pops ESI alone - while this compile saves EBX
+// in the prologue and pops it on that path; the three epilogues then pop
+// esi/ebx in the opposite order. Same phenomenon as GetArmyMorale below.
 VA(0x0044ae60, 0x29A)  // dc-bracket forced, dc 0x4f078
 int armyGroup::GetMorale(const hero* ownerHero, const town* ownerTown,
                          const hero* otherHero, const armyGroup* otherGroup,

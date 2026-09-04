@@ -3,14 +3,6 @@
 // 54 functions in link order; 21 compiler-generated $-thunks omitted.
 #include <va.h>
 #include <string.h>
-#define HOMM3_DRAWING_UPDATE_GRID_DECLS
-#define HOMM3_DRAWING_UPDATE_MOUSE_GRID_DECLS
-#define HOMM3_DRAWING_ARCHER_DECLS
-#define HOMM3_CSPRITE_DRAW_METHODS
-#define HOMM3_CSPRITE_CROP_ACCESSORS
-#define HOMM3_ARMY_CYCLE_VIEW
-#define HOMM3_ARMY_MOVE_VIEW
-#define HOMM3_CMBTMGR_CYCLE_VIEW
 #include "drawing.h"
 #include "bitmap16.h"
 #include "bitmap816.h"
