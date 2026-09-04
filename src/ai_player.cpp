@@ -1832,8 +1832,10 @@ int value_of_castle_upgrade(town* current_town, int* extra_cost)
             if (current_town->get_growth_rate(dwelling) > 0) {
                 int creature = gTownDwellingCreatures[
                     current_town->type * 14 + dwelling];
+                const TCreatureTypeTraits* traits =
+                    akCreatureTypeTraits + creature;
                 for (int i = 0; i < 7; ++i)
-                    extra_cost[i] += akCreatureTypeTraits[creature].cost[i];
+                    extra_cost[i] += traits->cost[i];
                 value += akCreatureTypeTraits[creature].AI_value;
             }
         }

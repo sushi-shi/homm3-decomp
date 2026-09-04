@@ -339,7 +339,7 @@ ai_player	?split_army@@YIJPAVarmyGroup@@FFF@Z	100.0000	100.0000	100.0000	0x2dd70
 ai_player	?start_turn@type_AI_player@@QAEXXZ	100.0000	100.0000	100.0000	0x297c0	26ce92b515ae
 ai_player	?trade_resources@type_AI_player@@QAEXPBHJ@Z	90.1171	90.1171	90.1171	0x2a470	7e9db600b604
 ai_player	?value_of_adding_army@type_AI_creature_swapper@@IAEJW4TCreatureType@@FAAF_N@Z	89.0856	89.0856	89.0856	0x2c830	6b8649a90094
-ai_player	?value_of_castle_upgrade@@YIHPAVtown@@PAH@Z	95.5172	95.5172	95.5172	0x2b670	5d2174c63f69
+ai_player	?value_of_castle_upgrade@@YIHPAVtown@@PAH@Z	100.0000	100.0000	100.0000	0x2b670	f3ef9de885aa
 ai_player	?value_of_dwelling@@YIJPAVtown@@FPAEPAH@Z	100.0000	100.0000	100.0000	0x2b520	cb505ef769e2
 ai_player	?value_of_dwelling_upgrade@@YIJPAVtown@@FPAH@Z	100.0000	100.0000	100.0000	0x2b5b0	ed44c0985ecc
 ai_player	?value_of_hall@@YIJPAVtown@@W4type_building_id@@@Z	100.0000	100.0000	100.0000	0x2b8b0	c795dd7375ac
