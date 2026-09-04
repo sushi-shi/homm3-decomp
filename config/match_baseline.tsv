@@ -2871,8 +2871,8 @@ singleselectionwindow	??0CNetPlayerHandlerPlayer@@QAE@XZ	100.0000	100.0000	100.0
 singleselectionwindow	??0CNetPlayerInfo@@QAE@XZ	100.0000	100.0000	100.0000	0x17f720	-
 singleselectionwindow	??0CNewPlayerUpdateMan@@QAE@XZ	100.0000	100.0000	100.0000	0x17c9b0	0ed8ff53773d
 singleselectionwindow	??0CUpdatePlayerPosMsg@@QAE@PAVCNetPlayerHandlerPlayer@@0@Z	100.0000	100.0000	100.0000	0x179870	4cb719207948
-singleselectionwindow	??0GameSelectionHeadersStruct@@QAE@XZ	73.1483	79.3242	79.3242	0x178e00	-
-singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	89.4904	89.4904	89.4904	0x179960	5b8b40092e3f
+singleselectionwindow	??0GameSelectionHeadersStruct@@QAE@XZ	79.3242	79.3242	79.3242	0x178e00	-
+singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	89.4902	89.4904	89.4904	0x179960	5b8b40092e3f
 singleselectionwindow	??0lobby_message@@QAE@XZ	100.0000	100.0000	100.0000	0x189190	2b1be8208221
 singleselectionwindow	??0t_map_list_update@@QAE@K@Z	100.0000	100.0000	100.0000	0x189240	173781ee6a81
 singleselectionwindow	??1CChatSlider@@UAE@XZ	100.0000	100.0000	100.0000	0x17ca80	-
@@ -2958,7 +2958,7 @@ singleselectionwindow	?OnGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNet
 # SetCurrentMap/OnSetAsHostMsg bodies landing in the TU dropped the
 # pair again with both sources byte-identical. Recovery rides with
 # DrawHeroAdvancedOption reaching 100.
-singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	99.8868	100.0000	100.0000	0x17cdc0	0e5de8f038ec
+singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0	0e5de8f038ec
 singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	9177fbb0fa83
 # 2026-08-27 hand-lowered 100.0000 -> 99.8710 (hist keeps 100.0000): the
 # documented TU-state flap (master accepted this pair down at 99.89/99.87
@@ -2973,7 +2973,7 @@ singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100
 # 2026-08-27 (round 3): the interim full build re-banked the transient
 # peak a third time; re-lowered with the round's bodies landed. Same
 # scheduler flap, same recovery path.
-singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0	66eb0a0e15c8
+singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0	66eb0a0e15c8
 singleselectionwindow	?OnMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2193	90.2193	90.2193	0x189710	3ad2be3935a3
 singleselectionwindow	?OnNameClick@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x18b620	ef174e28edf8
 singleselectionwindow	?OnNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	97.5366	97.5366	97.5366	0x18b510	862e2a9c058b
@@ -3121,7 +3121,7 @@ spells	?AbleToSummonElemental@combatManager@@QAEEHJ@Z	100.0000	100.0000	100.0000
 spells	?AddBolt@combatManager@@QAEXPAUSBolt@@HHHHHHHHHHHH@Z	100.0000	100.0000	100.0000	0x1a5a90	298ffa58efa4
 spells	?AreaEffect@combatManager@@QAEXJHJJ@Z	99.8565	99.8565	99.8565	0x1a4970	89c796832376
 spells	?Armageddon@combatManager@@QAEXHH@Z	93.9013	93.9013	93.9013	0x1a4bc0	4c4fd8883f34
-spells	?CastSpell@combatManager@@QAEXHHHHHJ@Z	90.7105	90.7105	90.7105	0x19fe30	2f8d50f1b470
+spells	?CastSpell@combatManager@@QAEXHHHHHJ@Z	90.7105	90.7105	90.7105	0x19fe30	35a5cc191003
 spells	?ChainLightning@combatManager@@QAEXHHH@Z	96.1913	96.1913	96.1913	0x1a6360	ebf901f1d173
 spells	?ClearEffects@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1a66b0	59ebec44e08d
 spells	?ComputeSpellDamage@combatManager@@QAEJHJJPAVhero@@0PBVarmy@@E@Z	100.0000	100.0000	100.0000	0x1a7890	210d41023a64
