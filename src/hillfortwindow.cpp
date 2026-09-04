@@ -5,15 +5,20 @@
 #include <string.h>
 
 #include <va.h>
+#include "advmgr.h"
+#include "border.h"
+#include "button.h"
 #include "hillfortwindow.h"
 #include "creaturetype.h"
 #include "game.h"
 #include "hero.h"
+#include "iconwdgt.h"
 #include "kb.h"
 #include "message.h"
 #include "recruit.h"
 #include "mousemgr.h"
 #include "soundmgr.h"
+#include "textwdgt.h"
 #include "textresource.h"
 #include "viewarmywindow.h"
 #include "widget.h"
@@ -103,78 +108,138 @@ const float afUpgradeCostFactor[7] = {
     0.0f, 0.25f, 0.5f, 0.75f, 1.0f, 1.0f, 1.0f
 };
 
+// Dreamcast lines 65..165 prove the helper boundary, five surviving per-slot
+// ID locals plus the sixth derived ID row, three seven-entry loops, widget
+// order, and AddWidget sweep. Retail
+// independently corroborates all seventeen allocation/constructor sites and
+// replaces Dreamcast's final UpdateHillFort call with the Complete palette
+// broadcast below.
 // E:\gamedcs\hillfortwindow.cpp:65
-#if 0  // @carcass
-// RETAIL_LOCATED(0x004e75f0, 0x7E9): aphlftbk.pcx + vtable/global stores.
-//
-// FULLY DECODED 2026-08-14, held back on two unidentified globals only.
-// Shape (heroWindow(0x32, 0x32, 0x28c, 0x15c, 2), vftable 0x63eb68,
-// gpHillFortWindow = this, pHero = GetCurrHero(), Widgets.reserve(60)):
-//   bitmapBorder(0, 0, 0x28c, 0x15c, BACKGROUND_ID, "APhlftBk.pcx", 0x800)
-//   textWidget(0, 0x14, 0x28c, 0x15c, <G1>, "bigfont.fnt", 7, TITLE_ID,
-//              1, 0, 8)
-//   bitmapBorder(0x1e, 0x3c, 0x3a, 0x40, HERO_PORTRAIT_ID,
-//                akHeroTraits[pHero->portrait].<+0x34>, 0x800)
-//   bitmapBackedTextWidget(7, 0x142, 0x27d, 0x13, 0, "smalfont.fnt",
-//                          "APhlftrt.pcx", 1, ROLLOVER_ID, 1, 8)
-//     then RolloverWidget = Widgets.back()
-//   bitmapBorder(0x125, 0x112, 0x42, 0x20, BACKGROUND_ID, "Box64x30.pcx",
-//                0x800)
-//   button(0x126, 0x113, 0x40, 0x1e, DIALOG_RETURN_OK, "iOkay.def", 0, 1,
-//          0, 0, 2) + set_hotkey(1) + set_hotkey(0x1c)
-//   for (i = 0; i < 7; i++)   // x = 0x68 + i*0x4c, id = 0xd4 + i
-//     iconWidget(x + 3, 0x3c, 0x3a, 0x40, id - 7, "twcrport.def",
-//                0, 0, 0, 0, 0x10)
-//     textWidget(x + 3, <G2>, 0x3a, 0x40, "", "Verd10B.fnt", 1, id, 2, 0, 8)
-//     iconWidget(x, 0x80, 0x3e, 0x12, id + 7, "smalres.def", 6, 0, 0, 0,
-//                0x10)
-//     textWidget(x, 0x80, 0x3e, 0x12, "", "smalfont.fnt", 1, id + 0xe, 2,
-//                0, 8)
-//     iconWidget(x, 0x94, 0x3e, 0x12, id + 0x15, "smalres.def", 6, 0, 0,
-//                0, 0x10)
-//     textWidget(x, 0x94, 0x3e, 0x12, "", "smalfont.fnt", 1, id + 0x1c, 2,
-//                0, 8)
-//   for (i = 0; i < 7; i++)   // x = 0x68 + i*0x4c
-//     iconWidget(x, 0xed, 0x3e, 0x14, TOTAL_RES_ICON_1_ID + i,
-//                "smalres.def", i, 0, 0, 0, 0x10)
-//     textWidget(x, 0xed, 0x3e, 0x14, "", "smalfont.fnt", 1,
-//                TOTAL_RES_COST_1_ID + i, 2, 0, 8)
-//   for (i = 0; i < 7; i++)   // x = 0x6b + i*0x4c
-//     button(x, 0xab, 0x3a, 0x1d, UPGRADE_BUTTON_1_ID + i,
-//            aszUpgradeIcons[2], 0, 1, 0, 0, 2) + set_hotkey(i + 2)
-//   button(0x1e, 0xe8, 0x3a, 0x1d, UPGRADE_ALL_BUTTON_ID, "aphlf4y.def",
-//          0, 1, 0, 0, 2) + set_hotkey(0x1e)
-//   AddWidget/MemError walk (the TMainMenu idiom), then a
-//   BroadcastMessage(MESSAGE_WIDGET, WIDGET_SET_PLAYER_PALETTE_COLORS,
-//   BACKGROUND_ID, gpGame->GetLocalPlayerGamePos()).
-//
-// BOTH GLOBALS LOCATED 2026-08-14 - neither needs a new declaration.
-//
-// <G1> = .bss 0x6a7a78 is gAdventureObjectNames[HILL_FORT], already
-// declared in advmgr.h at base 0x6a79ec: HILL_FORT is adventure-object
-// type 35 and 0x6a79ec + 35*4 == 0x6a7a78 exactly. The retail switch
-// settles it independently - advManager::SetRolloverText dispatches
-// `[cell+0x1e]` through the byte table at 0x40d314 into the jump table
-// at 0x40d228, object type 35 selects case index 18, and case index 18
-// is the arm at 0x40bbca that strcpy's this cell into gText. advmgr.cpp
-// already spells that arm `strcpy(gText, gAdventureObjectNames[HILL_FORT])`.
-//
-// <G2> = .bss 0x698a14 is the calligraphic font, now declared in kb.h as
-// gpCalligraphicFont: oldmain (0x4ee3e0) fills the five-cell font block
-// 0x698a04..0x698a14 with successive loads of tiny/smalfont/medfont/
-// bigfont/Calli10R, and ShutDown (0x4f3690) releases all of them through
-// the resource vtable. +0x21 is font+0x1c+5, i.e. TFontSpec::height, so
-// the count widget's y really is `0x7c - gpCalligraphicFont->height`.
-//
-// What is still missing is the widget surface, not the globals: the body
-// needs the bitmapBackedTextWidget constructor and the AddWidget/MemError
-// walk, and it is a single 2025-byte row against roughly fifty `new`
-// sites, so it stays parked rather than land below 100%.
+VA(0x004e75f0, 0x7E9)  // anchor-vtable + anchor-global + constructor/string order, dc 0xd641c
 THillFortWindow::THillFortWindow()
+    : heroWindow(0x32, 0x32, 0x28c, 0x15c, 2)
 {
-    // @stub
+    gpHillFortWindow = this;
+    hero* pHero = GetCurrHero();
+
+    Widgets.reserve(NWIDGETS);
+
+    Widgets.push_back(new bitmapBorder(
+        0, 0, 0x28c, 0x15c, BACKGROUND_ID,
+        DATA_COMPGEN(0x0067f1e0, hillFortBackground, "APhlftBk.pcx"),
+        0x800));
+    Widgets.push_back(new textWidget(
+        0, 0x14, 0x28c, 0x15c, gAdventureObjectNames[HILL_FORT],
+        DATA_COMPGEN(0x00660b24, hillFortBigFont, "bigfont.fnt"),
+        font::HEADING, TITLE_ID, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new bitmapBorder(
+        0x1e, 0x3c, 0x3a, 0x40, HERO_PORTRAIT_ID,
+        akHeroTraits[pHero->portrait].largePortraitName, 0x800));
+    Widgets.push_back(new bitmapBackedTextWidget(
+        7, 0x142, 0x27d, 0x13, 0,
+        DATA_COMPGEN(0x0065f2f8, hillFortSmallFont, "smalfont.fnt"),
+        DATA_COMPGEN(0x0067f1d0, hillFortRolloverBackground,
+                     "APhlftrt.pcx"),
+        font::PRIMARY, ROLLOVER_ID, font::CENTER_JUSTIFIED, 8));
+    RolloverWidget = Widgets.back();
+
+    Widgets.push_back(new bitmapBorder(
+        0x125, 0x112, 0x42, 0x20, BACKGROUND_ID,
+        DATA_COMPGEN(0x0067016c, hillFortOkayBorder, "Box64x30.pcx"),
+        0x800));
+
+    button* okay = new button(
+        0x126, 0x113, 0x40, 0x1e, DIALOG_RETURN_OK,
+        DATA_COMPGEN(0x00670160, hillFortOkayButton, "iOkay.def"),
+        0, 1, 0, 0, 2);
+    okay->set_hotkey(1);
+    okay->set_hotkey(0x1c);
+    Widgets.push_back(okay);
+
+    int i;
+    int x = 0x68;
+    for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; x += 0x4c, ++i) {
+        int id = CREATURE_PORTRAIT_1_ID + i;
+        int num_id = CREATURE_NUM_1_ID + i;
+        int gold_icon_id = GOLD_ICON_1_ID + i;
+        int gold_cost_id = GOLD_COST_1_ID + i;
+        int res_icon_id = RES_ICON_1_ID + i;
+        int res_cost_id = RES_COST_1_ID + i;
+        int num_y = 0x7c - gpCalligraphicFont->fs.height;
+
+        Widgets.push_back(new iconWidget(
+            x + 3, 0x3c, 0x3a, 0x40, id,
+            DATA_COMPGEN(0x006601e0, hillFortCreatureSprite,
+                         "twcrport.def"),
+            0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+        Widgets.push_back(new textWidget(
+            x + 3, num_y, 0x3a, 0x40, "",
+            DATA_COMPGEN(0x006700b4, hillFortCountFont, "Verd10B.fnt"),
+            font::PRIMARY, num_id, font::RIGHT_JUSTIFIED, 0, 8));
+        Widgets.push_back(new iconWidget(
+            x, 0x80, 0x3e, 0x12, gold_icon_id,
+            DATA_COMPGEN(0x00660cd4, hillFortResourceSprite,
+                         "smalres.def"),
+            6, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+        Widgets.push_back(new textWidget(
+            x, 0x80, 0x3e, 0x12, "",
+            DATA_COMPGEN(0x0065f2f8, hillFortSmallFont, "smalfont.fnt"),
+            font::PRIMARY, gold_cost_id, font::RIGHT_JUSTIFIED, 0, 8));
+        Widgets.push_back(new iconWidget(
+            x, 0x94, 0x3e, 0x12, res_icon_id,
+            DATA_COMPGEN(0x00660cd4, hillFortResourceSprite,
+                         "smalres.def"),
+            6, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+        Widgets.push_back(new textWidget(
+            x, 0x94, 0x3e, 0x12, "",
+            DATA_COMPGEN(0x0065f2f8, hillFortSmallFont, "smalfont.fnt"),
+            font::PRIMARY, res_cost_id, font::RIGHT_JUSTIFIED, 0, 8));
+    }
+
+    x = 0x68;
+    for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; x += 0x4c, ++i) {
+        Widgets.push_back(new iconWidget(
+            x, 0xed, 0x3e, 0x14, TOTAL_RES_ICON_1_ID + i,
+            DATA_COMPGEN(0x00660cd4, hillFortResourceSprite,
+                         "smalres.def"),
+            i, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+        Widgets.push_back(new textWidget(
+            x, 0xed, 0x3e, 0x14, "",
+            DATA_COMPGEN(0x0065f2f8, hillFortSmallFont, "smalfont.fnt"),
+            font::PRIMARY, TOTAL_RES_COST_1_ID + i,
+            font::RIGHT_JUSTIFIED, 0, 8));
+    }
+
+    x = 0x6b;
+    for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; x += 0x4c, ++i) {
+        button* upgrade = new button(
+            x, 0xab, 0x3a, 0x1d, UPGRADE_BUTTON_1_ID + i,
+            aszUpgradeIcons[UPGRADE_STATE_TOO_EXPENSIVE], 0, 1, 0, 0, 2);
+        upgrade->set_hotkey(i + 2);
+        Widgets.push_back(upgrade);
+    }
+
+    button* upgradeAll = new button(
+        0x1e, 0xe8, 0x3a, 0x1d, UPGRADE_ALL_BUTTON_ID,
+        DATA_COMPGEN(0x0067f1a0, hillFortUpgradeAllButton, "aphlf4y.def"),
+        0, 1, 0, 0, 2);
+    upgradeAll->set_hotkey(0x1e);
+    Widgets.push_back(upgradeAll);
+
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            AddWidget(*it, -1);
+        else
+            MemError();
+    }
+
+    message msg;
+    msg.id = MESSAGE_WIDGET;
+    msg.codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
+    msg.codeY = BACKGROUND_ID;
+    msg.extra = gpGame->GetLocalPlayerGamePos();
+    gpHillFortWindow->BroadcastMessage(&msg);
 }
-#endif
 
 // Retail emits the generated wrapper between the constructor and destructor;
 // Dreamcast appends it to the compiland.

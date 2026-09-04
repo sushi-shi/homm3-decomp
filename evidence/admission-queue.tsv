@@ -2,7 +2,6 @@
 # Admission campaign only; sorted by retail size descending.
 # Use `homm3 vc6 queue --polish` only after admission.
 state	size	rva	relation	owner	candidates	label	action
-bracketed	2025	0xe75f0	bracketed	hexcell..hillfortwindow	hexcell,hillfortwindow	game_aphlftbk_pcx_e75f0	resolve the owner, then add its VA claim and body
 bracketed	1969	0x147880	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_148290_sub00_147880	resolve the owner, then add its VA claim and body
 bracketed	1943	0x143240	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_144920_sub03_143240	resolve the owner, then add its VA claim and body
 bracketed	1895	0x61ab0	bracketed	castle..cmbtmgr	castle,cmbtmgr	game_61ab0	resolve the owner, then add its VA claim and body
