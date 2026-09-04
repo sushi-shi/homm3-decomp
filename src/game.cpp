@@ -47,7 +47,6 @@
 #include <direct.h>
 #include <math.h>
 #include <memory>
-#define HOMM3_GAME_GARRISON_HERO_DECLS
 #define HOMM3_GAME_NEW_MAP_DECLS
 #define HOMM3_GAME_TRANSMIT_DECLS
 #include "game.h"
