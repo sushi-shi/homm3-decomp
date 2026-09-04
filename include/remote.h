@@ -6,9 +6,7 @@
 #define HOMM3_REMOTE_H
 
 #include "dxplay.h"
-#ifdef HOMM3_REMOTE_CDPLAYHEROES_LAYOUT
 #include <deque>
-#endif
 #ifdef HOMM3_CHAT_EDIT_DECLS
 #include "chatedit.h"
 #endif
@@ -172,13 +170,8 @@ public:
     void HandlePlayerDrop(unsigned long dpid);
 
 protected:
-#ifdef HOMM3_REMOTE_CDPLAYHEROES_LAYOUT
-    // MATCHING_DEBT: keep this override declaration in the existing remote-TU
-    // layout view. Exposing the otherwise unused virtual to recruit.obj changes
-    // VC6's optimizer state and regresses recruitUnit::Update.
     virtual unsigned char SysMsgCreatePlayerOrGroup(
         DPMSG_CREATEPLAYERORGROUP* message, unsigned long toId);
-#endif
     // Retail 0x5532b0, DC remote.cpp:425. Accessed by the two original
     // free-function friends below; the Dreamcast class record marks it
     // protected rather than public.
@@ -190,15 +183,11 @@ protected:
                                   bool, bool);
 
 private:
-#ifdef HOMM3_REMOTE_CDPLAYHEROES_LAYOUT
     CDPlayMsg dpMsg;                       // +0x60
     std::deque<CNetMsg*> msgQueue;         // +0x68..+0x97
     char sLocalIPAddress[80];              // +0x98..+0xe7
     unsigned long confirmId;               // +0xe8
     unsigned long currMessageId;           // +0xec
-#else
-    char m_remoteState[0x90];       // +0x60..+0xef
-#endif
     CNetMsgHandler* m_pNetMsgHandler; // +0xf0
 };
 SIZE(CDPlayHeroes, 0xf4);

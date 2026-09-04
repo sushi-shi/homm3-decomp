@@ -5,7 +5,6 @@
 #include <va.h>
 #define HOMM3_CHAT_EDIT_DECLS
 #define HOMM3_CSPRITE_CROP_ACCESSORS
-#define HOMM3_REMOTE_CDPLAYHEROES_LAYOUT
 #include "remote.h"
 #include "advmgr.h"
 #include "crt_stdio.h"
