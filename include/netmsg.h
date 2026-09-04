@@ -99,12 +99,8 @@ enum eRS_Messages {
     RS_HERO_UPDATE = 1066,
     RS_GIVE_ME_STUFF = 1070,
     RS_PLAYER_ACTIVE = 1071,
-#ifdef HOMM3_REMOTE_SEND_CHAT_DECLS
     // SendChat's ping command constructs the next two rungs directly.
-    // Kept in remote.cpp's netmsg view because this enum is a measured
-    // include-set/codegen trigger for unrelated consumers.
     RS_PING = 1072,
-#endif
 #if defined(HOMM3_GAME_TRANSMIT_DECLS) \
         || defined(HOMM3_REMOTE_WAIT_READY_DECLS)
     // Both transfer receiver and ready-player dispatcher consume this rung.
@@ -423,7 +419,6 @@ SIZE(CDestroyPlayerMsg, 0x18);
 
 class CChatMsg : public CNetMsg {
 public:
-#ifdef HOMM3_REMOTE_SEND_CHAT_DECLS
     char m_text[128];
 
     CChatMsg(const char* text)
@@ -433,17 +428,13 @@ public:
         size = GetSize();
     }
 
+    // The wire extent; readers consume only the address of m_text.
     unsigned long GetSize()
     {
         return strlen(m_text) + sizeof(CNetMsg) + 1;
     }
-#else
-    char m_text[1];  // flexible tail; the wire extent is GetSize's, only
-                     // the address is consumed here
-#endif
 };
 
-#ifdef HOMM3_REMOTE_SEND_CHAT_DECLS
 // netmsg.h:804 in the Dreamcast roster. Retail SendChat independently
 // proves the one-dword payload, 0x18-byte extent and constructor store order.
 class CPingMsg : public CNetMsg {
@@ -454,7 +445,6 @@ public:
         : CNetMsg(id, sizeof(CPingMsg)), m_pingTime(pingTime) {}
 };
 SIZE(CPingMsg, 0x18);
-#endif
 
 class CPlayerDroppedMsg : public CNetMsg {
 public:

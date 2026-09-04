@@ -16,7 +16,6 @@
 // reads the incoming chat text through netmsg.h's gated CChatMsg shape.
 #define HOMM3_GAME_NEW_MAP_DECLS
 #define HOMM3_CHAT_EDIT_DECLS
-#define HOMM3_REMOTE_SEND_CHAT_DECLS
 #define HOMM3_REMOTE_PLAYER_LIST_DECLS
 // This TU sees the real vector view of the three header lists.
 #define HOMM3_SSWINDOW_HEADER_VECTORS
