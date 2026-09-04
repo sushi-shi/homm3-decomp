@@ -1995,7 +1995,7 @@ kbwin	_WinMain@16	100.0000	100.0000	100.0000	0xf7a30	8659194e3890
 levelupwindow	??0TLevelUpWindow@@QAE@PAVhero@@HHH@Z	99.1299	99.1299	99.1300	0xf8880	e8212f2fbe38
 levelupwindow	??1TLevelUpWindow@@UAE@XZ	100.0000	100.0000	100.0000	0xf9730	79cec55beaa4
 levelupwindow	??_GTLevelUpWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xf9700	-
-levelupwindow	?WindowHandler@TLevelUpWindow@@UAEHPAVmessage@@@Z	77.7273	77.7273	77.7273	0xf9780	8ea6383d51a6
+levelupwindow	?WindowHandler@TLevelUpWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0xf9780	b466c0c071e2
 lodfile	??0LODFile@@QAE@XZ	100.0000	100.0000	100.0000	0xfa780	cd1434f0f2f6
 lodfile	??1LODFile@@QAE@XZ	100.0000	100.0000	100.0000	0xfa800	828ac0585646
 lodfile	?Find@LODFile@@AAEXIIPBD@Z	100.0000	100.0000	100.0000	0xfa660	89911f15fef5
