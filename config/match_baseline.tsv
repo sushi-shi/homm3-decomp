@@ -2218,6 +2218,7 @@ multiplayerwindow	?Update@TMultiPlayerWindow@@QAEXXZ	99.2080	99.2080	99.2080	0x1
 multiplayerwindow	?UpdateOK@CMPInputDlg@@QAEXXZ	100.0000	100.0000	100.0000	0x110980	9a40794dbe27
 multiplayerwindow	?WindowHandler@TMultiPlayerWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x10f940	8037720e1234
 newgame	?GetLossConditionText@game@@QAEXPAD@Z	100.0000	100.0000	100.0000	0x113800	ade52171f0bc
+newgame	?GetVictoryConditionText@game@@QAEXPAD@Z	95.4979	95.4979	95.4979	0x1139e0	1aad8be79f04
 newgame	?ShowScenInfo@game@@QAEXXZ	100.0000	100.0000	100.0000	0x113740	83f7cc64579c
 newgame	?get_alignment_count@@YIJH@Z	100.0000	100.0000	100.0000	0x1132b0	f1e04004c643
 newgame	?pick_alignment@@YI?AW4TTownType@@HE@Z	100.0000	100.0000	100.0000	0x1132d0	7d86ef3bfcb8
