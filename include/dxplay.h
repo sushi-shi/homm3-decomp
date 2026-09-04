@@ -51,7 +51,6 @@ struct DPMSG_SETPLAYERORGROUPNAME;
 struct DPMSG_SETSESSIONDESC;
 struct DPMSG_STARTSESSION;
 
-#ifdef HOMM3_REMOTE_LOBBY_DECLS
 // DirectPlay 6 structures used by remote's retail lobby-connect path. The
 // layouts are published in the Dreamcast CodeView stream and independently
 // fixed on PC by the field loads in LobbyLaunchConnect.
@@ -112,7 +111,6 @@ enum EDPlaySessionFlags {
     DPLAY_SESSION_MIGRATE_HOST = 0x4,
     DPLAY_SESSION_KEEP_ALIVE = 0x40
 };
-#endif
 
 // The SDK macro values are also the exact HRESULT immediates used by the
 // DirectPlay send path. The domain lives here instead of importing DPLAY.H's
@@ -292,13 +290,11 @@ public:
     CDPlayConnection* CreateSerialConnection(
         char* name, struct _DPCOMPORTADDRESS* comportInfo);
     unsigned char TestLobbied();
-#ifdef HOMM3_REMOTE_LOBBY_DECLS
     DPLCONNECTION* GetConnectionSettings(
         unsigned long appId, unsigned long* size);
     unsigned char SetConnectionSettings(
         unsigned long appId, DPLCONNECTION* connection);
     unsigned char Connect();
-#endif
     virtual unsigned char EnumLobbyConnections(
         CAutoArray<CDPlayConnection>* connections);
     virtual unsigned char SetGroupConnectionSettings(

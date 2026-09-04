@@ -1202,11 +1202,9 @@ public:
     // Retail carries the save-version argument absent from the Dreamcast
     // declarator; the 0x4c5630 body returns with `ret 8`.
     int Load(TAbstractFile* infile, int saveVersion);
-#if defined(HOMM3_REMOTE_LOBBY_DECLS) || defined(HOMM3_GAME_NEW_MAP_DECLS)
     // Complete's lobby path passes the setup path/name and a literal zero;
     // the retail body at 0x4c5e00 returns with `ret 0xc`.
     int Get(const char* path, const char* filename, int saveVersion);
-#endif
 };
 SIZE(NewSMapHeader, 0x304);
 
