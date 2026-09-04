@@ -10,13 +10,11 @@
 // 0x41e RS_CLAIM_GENERATOR, 1055 = 0x41f RS_CLAIM_GARRISON. The numbering
 // transfers whole, so a retail subtype constant can be named from it.
 enum eRS_Messages {
-#ifdef HOMM3_COMMAND_GRID_VIEW
     // CEndPlacementPhaseMsg's retail inline constructor stores 0x3f0;
     // the gapless DC message ladder names that value.
     RS_END_PLACEMENT_PHASE = 0x3f0,
     RS_COMBAT_MAIN = 1006,
     RS_COMBAT_END_PLACEMENT = 1008,
-#endif
     RS_COMBAT_TYPE = 0x3f1,
     // GATED for exactly the reason RS_ERASE_OBJECT below is - see that
     // note. DC eRS_Messages has RS_SET_VISIBILITY = 1021, and retail's two
@@ -169,7 +167,6 @@ public:
     }
 };
 
-#ifdef HOMM3_COMMAND_GRID_VIEW
 // DC netmsg.h:758 names the base-only message; retail ResetRound expands
 // this constructor in place and proves both the store order and 0x14 extent.
 class CEndPlacementPhaseMsg : public CNetMsg {
@@ -179,11 +176,7 @@ public:
                   sizeof(CEndPlacementPhaseMsg)) {}
 };
 SIZE(CEndPlacementPhaseMsg, 0x14);
-#endif
 
-#if defined(HOMM3_REMOTE_WAIT_READY_DECLS) \
-        || defined(HOMM3_COMMAND_GRID_VIEW) \
-        || defined(HOMM3_GAME_TRANSMIT_DECLS)
 // The header-inline owner delegates to the process-wide recycler. remote.cpp
 // can see and inline that wrapper down to delete; command.cpp retains the
 // retail out-of-line DestroyMsg call.
@@ -230,9 +223,7 @@ private:
     CNetMsg* m_pNetMsg;
 };
 SIZE(CMessageKill, 0x4);
-#endif
 
-#ifdef HOMM3_COMMAND_GRID_VIEW
 // Dreamcast publishes this exact five-dword payload and its names. Retail
 // Main copies the first four words into the pending action tuple, logs them,
 // and seeds the combat RNG from the fifth.
@@ -261,7 +252,6 @@ public:
     }
 };
 SIZE(CCombatMainMsg, 0x28);
-#endif
 
 #ifdef HOMM3_REMOTE_WAIT_READY_DECLS
 // DC netmsg.h:488 supplies the class and all four payload names. Retail's
@@ -473,8 +463,6 @@ public:
     int m_gamePos;
 };
 
-#if defined(HOMM3_REMOTE_CDPLAYHEROES_LAYOUT) \
-        || defined(HOMM3_COMMAND_GRID_VIEW)
 // netmsg.h:423 in the DC roster. Retail's CDPlayHeroes drop paths prove the
 // duplicated DPID: DirectPlay's sender cell at +4 and the message payload at
 // +0x14 both receive the dropped id.
@@ -490,7 +478,6 @@ public:
     }
 };
 SIZE(CPlayerDropMsg, 0x18);
-#endif
 
 class CPlayerDropUpdateMsg : public CNetMsg {
 public:

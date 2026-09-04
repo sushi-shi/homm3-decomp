@@ -43,21 +43,11 @@
 // pinned by their bodies and sole caller.
 #define HOMM3_ARMY_MIDPOINT_DECL
 #define HOMM3_ARMY_NEW_TURN_DECL
-#define HOMM3_ARMY_POW_VIEW
 #define HOMM3_ARMY_RESET_LATCH_DECL
-#define HOMM3_ARMY_TURN_ABILITY_VIEW
 #include <math.h>
 #include <stdlib.h>
 
 #include <va.h>
-// The three start-of-turn creature ids and their two army.obj bodies,
-// reached from SetNextArmy and nowhere else in this tree. The define
-// sits here, ahead of every header, because army.h arrives transitively
-// and a view define has to precede its header. (The spell and artifact
-// defines that used to keep it company retired 2026-08-20, when
-// armygrp.h and artifact.h stopped gating those enumerators; byte-inert,
-// since each is visible either way now.)
-#define HOMM3_ARMY_TURN_ABILITY_VIEW
 // PowEffect's own surface: its declarator and TSpellEffectID from
 // cmbtmgr.h, the five animation-state bytes plus iPostPowSpellToCast
 // and bPowSequenceComplete from army.h, the death sequence from

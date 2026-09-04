@@ -8,7 +8,6 @@
 // precedent: never defined, /OPT:ICF folded both bodies onto the const
 // row 0x5c1460).
 #include <va.h>
-#define HOMM3_VLC_CHECKS_VIEW
 #include "game.h"
 
 inline unsigned char type_point::operator==(const type_point* arg)
