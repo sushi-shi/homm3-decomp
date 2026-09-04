@@ -840,7 +840,7 @@ command	?AddArmy@combatManager@@QAEPAVarmy@@HHHHHH@Z	100.0000	100.0000	100.0000	
 command	?CheckChangeHighlighter@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x77c20	1f96ee5700dc
 command	?CheckChangeSelector@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x77ac0	dc55cc6b44a9
 command	?CheckGetAIMove@combatManager@@QAEXXZ	94.4335	94.4335	94.4335	0x77ee0	b618d13338de
-command	?CheckSetMouseDirection@combatManager@@QAEEHHH@Z	85.8951	85.8951	85.8951	0x74a00	43e12851e4bf
+command	?CheckSetMouseDirection@combatManager@@QAEEHHH@Z	97.6434	97.6434	97.6434	0x74a00	f69730c6a2c8
 command	?CheckWin@combatManager@@QAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x762f0	72c1b11c15ed
 command	?DoCommand@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x76bd0	0229304b4d03
 command	?DoVictory@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x77470	8b06082a790b
