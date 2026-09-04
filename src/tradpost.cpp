@@ -1448,7 +1448,7 @@ void DoArtifactMerchants()
         return;
     }
 
-    gpMarketArtifacts.asBytes = gpGame->field_1f664;
+    gpMarketArtifacts.asArtifacts = gpGame->field_1f664;
     CountMarkets();
     gpMarketHero = gpGame->GetHero(
         gpTownManager->townToView->visitingHeroId);
@@ -1467,7 +1467,7 @@ void DoFreelancersGuild(hero* inHero)
 {
     gMarketCount = 5;
     gpMarketHero = inHero;
-    gpMarketArtifacts.asBytes = gpGame->field_1f664;
+    gpMarketArtifacts.asArtifacts = gpGame->field_1f664;
     gMarketWindow = 4;
     gMarketSource = 3;
     DoMarket();
@@ -1489,7 +1489,7 @@ void DoFreelancersGuild(town* currentTown)
         return;
     }
 
-    gpMarketArtifacts.asBytes = gpGame->field_1f664;
+    gpMarketArtifacts.asArtifacts = gpGame->field_1f664;
     CountMarkets();
     gpMarketHero = gpGame->GetHero(currentTown->visitingHeroId);
     gMarketWindow = 4;
@@ -1504,7 +1504,7 @@ void DoFreelancersGuild(town* currentTown)
 VA(0x005e9fe0, 0xdc)  // townManager caller + market-state body, dc 0x188640
 void DoMarketplace()
 {
-    gpMarketArtifacts.asBytes = gpGame->field_1f664;
+    gpMarketArtifacts.asArtifacts = gpGame->field_1f664;
     CountMarkets();
     gpMarketHero = gpGame->GetHero(
         gpTownManager->townToView->visitingHeroId);
@@ -1518,7 +1518,7 @@ VA(0x005ea0c0, 0x32)  // anchor-callee (DoMarket) + linkorder, dc 0x18869c
 void DoTradingPost()
 {
     gMarketCount = 5;
-    gpMarketArtifacts.asBytes = gpGame->field_1f664;
+    gpMarketArtifacts.asArtifacts = gpGame->field_1f664;
     gMarketWindow = 0;
     gMarketSource = 1;
     DoMarket();

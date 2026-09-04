@@ -22,9 +22,6 @@
 // find_all_destinations' grail-spot tail calls NewfullMap::cell out of line;
 // that single statement is pinned below instead of hiding the real header
 // inline from this entire compiland.
-// Joins VICTORY_CONDITION_BUILD_GRAIL (game.h gates the enumerator);
-// find_all_destinations prices the grail spot 1968 under that victory.
-#define HOMM3_AI_PLAYER_OBJ_DECLS
 #include <va.h>
 #include <algorithm>
 #include <functional>
