@@ -4110,6 +4110,43 @@ type_adventure_cursor advManager::get_normal_cursor(NewmapCell* currCell)
 }
 #pragma auto_inline(on)
 
+// DC advmgr.cpp:4514 `?get_garrison_cursor@advManager@@AAA?AW4type_adventure_cursor@@PAVNewmapCell@@@Z`
+// (dc 0xf23c, 132 B): the hover cursor over a garrison cell - the fight
+// cursor when a manned garrison belongs to another team, otherwise the
+// cell's normal cursor. ProcessHover's GARRISON arm calls it and /Ob2
+// folds it (no retail row); a static like MouseInScrollZone above.
+static int get_garrison_cursor(advManager* mgr, NewmapCell* currCell)
+{
+    if (currCell->is_trigger) {
+        garrison& mapGarrison = gpGame->garrisons[currCell->extraInfo];
+        if (!gpGame->OnSameTeam(mapGarrison.playerOwner, gNetLocalGamePos)
+            && mapGarrison.garrisonArmy.HasCreatures())
+            return 5;
+    }
+    return mgr->get_normal_cursor(currCell);
+}
+
+// DC advmgr.cpp:10756 `?MouseInScrollZone@advManager@@QAAHXZ` (110 B): true
+// when the pointer sits in the 16-pixel scroll border of the 800x600
+// screen. Both hover handlers expand it in place (retail homes its two
+// coordinates in the dead mouseX/mouseY parameter slots); a static here
+// because no retail row is claimed for it and it reads nothing from
+// `this`.
+static int MouseInScrollZone()
+{
+    int rx;
+    int ry;
+    gpMouseManager->MouseCoords(&rx, &ry);
+    if (rx < 0 || rx >= advManager::HOVER_SCREEN_WIDTH || ry < 0
+        || ry >= advManager::HOVER_SCREEN_HEIGHT)
+        return 0;
+    if (rx >= advManager::HOVER_SCROLL_MARGIN && rx <= advManager::HOVER_SCROLL_RIGHT
+        && ry >= advManager::HOVER_SCROLL_MARGIN && ry <= advManager::HOVER_SCROLL_BOTTOM)
+        return 0;
+    return 1;
+}
+
+
 // E:\gamedcs\advmgr.cpp:4556
 // RETAIL-RECONSTRUCTED 2026-08-09 (74.7787%). Retail proves the complete
 // local-human, visibility, ownership, path reachability/turn count, object
@@ -4152,38 +4189,33 @@ type_adventure_cursor advManager::get_normal_cursor(NewmapCell* currCell)
 // block head are all byte-flat, separately and together, so the narrower
 // x86-winning scopes remain below.
 //
-// Residual (83.50%): register-homing (a whole-region eax/edi parity in
-// the inlined InMapArea walk) and three blocks of CFG topology.
-// The old over-call reading is RETIRED: SetPointer is mousemgr's - a
-// cross-TU body is never an /Ob2 candidate, so no budget ever explained
-// the 8-vs-7 call counts (dead-store doses of 16 and 64 statements
-// measured and moved nothing). The eighth call was OUR tail duplication:
-// VC6 pulled the shared SetPointer(new_cursor) join into both arms of
-// the boat-frame if/else; the ternary spelling of that increment keeps
-// the join and merged the sites, 78.80 -> 79.80 (the goto respellings
-// recorded earlier attacked the wrong pair).
-//
-// AND THE ONE REMAINING CALL-COUNT ROW IS NAMED (2026-08-20, not
-// closeable): retail emits 29 out-of-line calls to our 28, and the extra
-// one is at fn+0x596 with target 0x00404140 - a THREE-BYTE function the
-// delinker labels `sample_vslot03`. Reading the bytes around it settles
-// what it is: `mov edi,[gpAdvManager]+0x48 / mov ecx,[..+0x50] / mov
-// esi,[edi+4]` then a copy loop, then `push [edi+8] / push esi / mov
-// ecx,edi / call 0x404140` and `mov [edi+8],esi`. That is one INLINED
-// `vector<T>::erase(begin(), end())` whose `_Destroy(_First, _Last)` is
-// left as a CALL - and for a POD element `_Destroy` is an empty loop, so
-// the callee really is three bytes. Our compile inlines `_Destroy` away
-// and VC6 deletes the empty loop.
-// It is therefore the "inline the parent, call the child" shape, which
-// `inline_depth` cannot express: pinning the clear() statement would take
-// erase() out of line too, and retail expands that. Recorded so the next
-// lane does not spend a build on the over-inline knob predict-inline's
-// bucket suggests here. Release-elided TRACE carriers at 1/3/5/8/10
-// sites are byte-flat at the improved 83.50 baseline as well, so dormant
-// call candidates do not move this particular parent/child boundary.
-// Conventional release VERIFY accessors after clear_path are now bounded too
-// (2026-08-21): both one and all three `result.empty()` sites are byte-flat at
-// 83.50 with the same 28-vs-29 call and 92-vs-91 branch counts.
+// Residual (91.00%, from 83.50; 2026-09-05): the exits are INLINE, not
+// goto-shared. The Dreamcast line table spells every cursor exit as
+// `SetPointer(n, ADVENTURE_SET); advCommand = m; return 1;` at its own
+// site, and retail's layout is what VC6's cross-jumper makes of that:
+// the copy with a fall-through predecessor survives (the hero-location
+// SetPointer(2), the hero-mode shipyard SetPointer(6), the clear_path
+// SetPointer(0)) and the earlier no-hero sites jump to it, where the
+// old labels put every shared block at the end with no fall-through
+// at all. Two semantic corrections rode along, both retail-proven: the
+// same-hover path returns 1 WITHOUT the window ProcessHover (retail
+// `je` lands on the epilogue after that call), and the off-map tail is
+// `frame < FIRST || frame > LAST || !MouseInScrollZone()` (retail's
+// `jl`/`jg` both reach the SetPointer(0) call; ProcessWaitingHover's
+// tail is the other way round and keeps its `&&` form). The hero id
+// split is if/else, the path-cursor block hoists `iTurns` /
+// `iMouseOffset = 0` / `new_cursor` ahead of the visited test, computes
+// `iMouseOffset = iTurns * 6` right after `advCommand = 1` (retail
+// stores it to [ebp+0xc] before the switch), takes `else new_cursor =
+// 0` (retail's `xor eax,eax` after the arms - which is what stops the
+// default arm from falling into the join and lets ANCHOR_POINT's
+// get_normal_cursor copy survive), and orders the arms as the DC does:
+// BOAT, ANCHOR_POINT, MONSTER, HERO, GARRISON, TOWN, default. GetCell,
+// get_garrison_cursor and MouseInScrollZone are the DC's call sites.
+// Left: retail keeps `NewfullMap::cell` a CALL inside the GetCell
+// expansion and `_Destroy` a call inside clear_path's (the child-call
+// shape the old note names), one branch, and register parity in the
+// GetHero expansions (retail loads the id into ecx, ours eax).
 VA(0x0040e360, 0x918)  // anchor-callee, dc 0xf3a8
 int advManager::ProcessHover(int mouseX, int mouseY)
 {
@@ -4193,9 +4225,7 @@ int advManager::ProcessHover(int mouseX, int mouseY)
     if (InMapArea(mouseX, mouseY)) {
         int rx = mouseX / 32;
         int ry = mouseY / 32;
-        if (rx == lastHoverX && ry == lastHoverY)
-            goto process_window_hover;
-
+        if (lastHoverX != rx || lastHoverY != ry) {
         advCommand = -1;
         lastHoverX = rx;
         lastHoverY = ry;
@@ -4204,22 +4234,20 @@ int advManager::ProcessHover(int mouseX, int mouseY)
         lastMapHover.z = radarOrigin.z;
 
         if (!lastMapHover.is_valid()
-            || !(GetMapExtra(lastMapHover) & gMapVisibilityBit))
-            goto normal_cursor_exit;
+            || !(GetMapExtra(lastMapHover) & gMapVisibilityBit)) {
+            gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+            return 1;
+        }
 
-        type_point point = lastMapHover;
-        NewmapCell* currCell;
-        if (!point.is_valid())
-            currCell = fullMap->cellData;
-        else
-            currCell = fullMap->cell(point.x, point.y, point.z);
-
+        NewmapCell* currCell = GetCell(lastMapHover);
         SetRolloverText(currCell, rx, ry);
 
         if (gpCurrentPlayer->currHeroId != -1
             && gpGame->GetHero(gpCurrentPlayer->currHeroId)->z
-               != lastMapHover.z)
-            goto normal_cursor_exit;
+               != lastMapHover.z) {
+            gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+            return 1;
+        }
 
         if (gpCurrentPlayer->currHeroId == -1) {
             if (currCell->type == TOWN) {
@@ -4236,21 +4264,27 @@ int advManager::ProcessHover(int mouseX, int mouseY)
 
             if (currCell->type == HERO) {
                 hero* mapHero = gpGame->GetHero(currCell->extraInfo);
-                if (mapHero->owner == gNetLocalGamePos)
-                    goto own_hero_cursor_exit;
+                if (mapHero->owner == gNetLocalGamePos) {
+                    gpMouseManager->SetPointer(2, mouseManager::ADVENTURE_SET);
+                    advCommand = 2;
+                    return 1;
+                }
             }
 
             if (currCell->type == SHIPYARD) {
                 int owner = static_cast<int>(
                     currCell->get_trigger_cell()->get_map_extraInfo() << 24)
                     >> 24;
-                if (!gpGame->OnSameTeam(owner, gNetLocalGamePos))
-                    goto normal_cursor_exit;
-                goto shipyard_cursor_exit;
+                if (gpGame->OnSameTeam(owner, gNetLocalGamePos)) {
+                    gpMouseManager->SetPointer(6, mouseManager::ADVENTURE_SET);
+                    advCommand = 8;
+                    return 1;
+                }
             }
 
-            goto normal_cursor_exit;
-        }
+            gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+            return 1;
+        } else {
 
         hero* currHero = gpGame->GetHero(gpCurrentPlayer->currHeroId);
         // FIELD ASSIGNMENT, not the ctor, at this ONE site: the ctor form
@@ -4261,7 +4295,9 @@ int advManager::ProcessHover(int mouseX, int mouseY)
         heroPoint.y = currHero->y;
         heroPoint.z = currHero->z;
         if (PointsEqual(&heroPoint, &lastMapHover)) {
-            goto own_hero_cursor_exit;
+            gpMouseManager->SetPointer(2, mouseManager::ADVENTURE_SET);
+            advCommand = 2;
+            return 1;
         }
 
         if (currCell->flags_00_11 & 0x100) {
@@ -4279,12 +4315,16 @@ int advManager::ProcessHover(int mouseX, int mouseY)
                 int owner = static_cast<int>(
                     currCell->get_trigger_cell()->get_map_extraInfo() << 24)
                     >> 24;
-                if (gpGame->OnSameTeam(owner, gNetLocalGamePos))
-                    goto shipyard_cursor_exit;
+                if (gpGame->OnSameTeam(owner, gNetLocalGamePos)) {
+                    gpMouseManager->SetPointer(6, mouseManager::ADVENTURE_SET);
+                    advCommand = 8;
+                    return 1;
+                }
             }
 
             gpSearchArray->clear_path();
-            goto normal_cursor_exit;
+            gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+            return 1;
         }
 
         int inBoat = currHero->flags & 0x40000;
@@ -4294,18 +4334,21 @@ int advManager::ProcessHover(int mouseX, int mouseY)
                 && (currCell->type != BOAT || !currCell->is_trigger)
                 && (currCell->type != SHIPWRECK || !currCell->is_trigger)) {
                 gpSearchArray->clear_path();
-                goto normal_cursor_exit;
+                gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+                return 1;
             }
         } else if (currCell->GroundSet != eTerrainWater
                    && currCell->type != ANCHOR_POINT) {
             gpSearchArray->clear_path();
-            goto normal_cursor_exit;
+            gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+            return 1;
         }
 
         SeedTo(lastMapHover);
         pathCell* path_cell = gpSearchArray->get_cell(lastMapHover, 0);
-        int iTurns = 0;
-        int new_cursor = 0;
+        int iTurns;
+        int iMouseOffset = 0;
+        int new_cursor;
         if (path_cell->visited) {
             if (path_cell->cost <= currHero->movePoints) {
                 iTurns = 0;
@@ -4317,13 +4360,8 @@ int advManager::ProcessHover(int mouseX, int mouseY)
             }
 
             advCommand = 1;
+            iMouseOffset = iTurns * 6;
             switch (currCell->type) {
-            case ANCHOR_POINT:
-                if (cursorType == CURSOR_TYPE_8)
-                    new_cursor = 7;
-                else
-                    new_cursor = get_normal_cursor(currCell);
-                break;
             case BOAT:
                 if (cursorType != CURSOR_TYPE_8) {
                     new_cursor = 6;
@@ -4332,6 +4370,15 @@ int advManager::ProcessHover(int mouseX, int mouseY)
                     new_cursor = 0;
                     advCommand = -1;
                 }
+                break;
+            case ANCHOR_POINT:
+                if (cursorType == CURSOR_TYPE_8)
+                    new_cursor = 7;
+                else
+                    new_cursor = get_normal_cursor(currCell);
+                break;
+            case MONSTER:
+                new_cursor = 5;
                 break;
             case HERO: {
                 hero* mapHero = gpGame->GetHero(currCell->extraInfo);
@@ -4344,19 +4391,7 @@ int advManager::ProcessHover(int mouseX, int mouseY)
                 break;
             }
             case GARRISON:
-                if (currCell->is_trigger) {
-                    garrison& mapGarrison = gpGame->garrisons[currCell->extraInfo];
-                    if (!gpGame->OnSameTeam(mapGarrison.playerOwner,
-                                            gNetLocalGamePos)
-                        && mapGarrison.garrisonArmy.HasCreatures()) {
-                        new_cursor = 5;
-                        break;
-                    }
-                }
-                new_cursor = get_normal_cursor(currCell);
-                break;
-            case MONSTER:
-                new_cursor = 5;
+                new_cursor = get_garrison_cursor(this, currCell);
                 break;
             case TOWN: {
                 town* cTown = gpGame->GetTown(currCell->extraInfo);
@@ -4372,10 +4407,10 @@ int advManager::ProcessHover(int mouseX, int mouseY)
                 new_cursor = get_normal_cursor(currCell);
                 break;
             }
-
+        } else {
+            new_cursor = 0;
         }
 
-        int iMouseOffset = iTurns * 6;
         new_cursor += (cursorType == CURSOR_TYPE_8
                        && new_cursor == ADV_BOAT_EVENT_POINTER)
                           ? iTurns
@@ -4383,38 +4418,15 @@ int advManager::ProcessHover(int mouseX, int mouseY)
         gpMouseManager->SetPointer(new_cursor,
                                    mouseManager::ADVENTURE_SET);
         return 1;
-    }
-
-    if (gpMouseManager->field_50 >= HOVER_SCROLL_POINTER_FIRST
-        && gpMouseManager->field_50 <= HOVER_SCROLL_POINTER_LAST) {
-        int rx;
-        int ry;
-        gpMouseManager->MouseCoords(&rx, &ry);
-        if (rx < 0 || rx >= HOVER_SCREEN_WIDTH
-            || ry < 0 || ry >= HOVER_SCREEN_HEIGHT
-            || (rx >= HOVER_SCROLL_MARGIN && rx <= HOVER_SCROLL_RIGHT
-                && ry >= HOVER_SCROLL_MARGIN
-                && ry <= HOVER_SCROLL_BOTTOM)) {
-            gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
         }
+        }
+    } else {
+        if (gpMouseManager->field_50 < HOVER_SCROLL_POINTER_FIRST
+            || gpMouseManager->field_50 > HOVER_SCROLL_POINTER_LAST
+            || !MouseInScrollZone())
+            gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+        advWindow->ProcessHover(mouseX, mouseY);
     }
-
-process_window_hover:
-    advWindow->ProcessHover(mouseX, mouseY);
-    return 1;
-
-normal_cursor_exit:
-    gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
-    return 1;
-
-own_hero_cursor_exit:
-    gpMouseManager->SetPointer(2, mouseManager::ADVENTURE_SET);
-    advCommand = 2;
-    return 1;
-
-shipyard_cursor_exit:
-    gpMouseManager->SetPointer(6, mouseManager::ADVENTURE_SET);
-    advCommand = 8;
     return 1;
 }
 
