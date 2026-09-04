@@ -3368,6 +3368,16 @@ int TSingleSelectionWindow::GetHeader(char* dir, char* cFilename, GameSelectionH
     return gameFileProblem;
 }
 
+// Residual (67.91, 2026-09-05): the inliner mix under AssignData. Retail
+// expands operator=(const char*) -> assign(ptr) (inline strlen) and CALLS
+// assign(ptr, len) at the local arm's two sites and the main arm's title,
+// then expands assign(ptr, len) itself (_Grow/_Eos) at the last site - a
+// budget split. game.h's inline_depth(1) inside AssignData is LOAD-BEARING
+// here (removing it, or raising it to 3, expands all four sites fully:
+// 35.30); no depth reproduces retail's partial expansion. Retail also
+// keeps one materialised `&m_localHeader` (eax) as the base of every band
+// in the local arm where ours folds each offset from `this`; a
+// `GameSelectionHeadersStruct&` reference to the member measured 67.02.
 // E:\gamedcs\singleselectionwindow.cpp:3871
 VA(0x00583580, 0x30C)  // anchor-global copies the selected header's planes into gpGame (+0x1f6a0 header band, +0x4df18 setup band) off the SelectionHeaders row - the DC UpdateGameVars body shape; size 0.76x dc 0x408, dc 0x139090
 void TSingleSelectionWindow::UpdateGameVars()
