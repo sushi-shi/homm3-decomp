@@ -2030,6 +2030,18 @@ VA_COMPGEN(0x0057d100, 0x21, SCALAR_DELETING_DTOR, CEnterNameEdit)
 // Complete's desktop lobby adds this constructor-sized control builder; the
 // retained callers and the contiguous filter-widget id families establish
 // its no-argument member boundary. It has no older Dreamcast counterpart.
+//
+// EXACT (2026-09-04) from 60.93 with no statement added: retail calls
+// vector<widget*>::insert at the first twelve push_back sites and expands
+// it from the thirteenth on (nested /Ob2 budget = budget / sites-remaining,
+// docs/vc6/inliner.md s2). Written with direct member stores in the six
+// loops we expanded from site nine. Solving the bracket from both sides'
+// first-expansion sites gives cb(insert) in (B/17, B/16] and demands 15-16
+// candidate sites from site thirteen onward - two free (cb <= 40) sites
+// per loop iteration - which the loop body's two stores supply once they
+// are spelled as button's inline setters (set_disabled_frame is
+// Dreamcast button.h:99; set_highlight_frame is the Complete-only twin).
+// One setter per loop measured 84.90; two gave every one of the 366 blocks.
 VA(0x0057D170, 0x1DF7)
 void TSingleSelectionWindow::CreateFilterWidgets()
 {
@@ -2080,8 +2092,8 @@ void TSingleSelectionWindow::CreateFilterWidgets()
         326, 153, 55, 32, 0x127, "RanRand.def", 0, 1, 0, 0, 2);
     int i;
     for (i = 0; i < 9; ++i) {
-        filterCountAButtons[i]->field_40 = 2;
-        filterCountAButtons[i]->disabled_frame = 1;
+        filterCountAButtons[i]->set_highlight_frame(2);
+        filterCountAButtons[i]->set_disabled_frame(1);
         Widgets.push_back(filterCountAButtons[i]);
     }
 
@@ -2107,8 +2119,8 @@ void TSingleSelectionWindow::CreateFilterWidgets()
     filterCountBButtons[8] = new button(
         326, 219, 55, 32, 0x131, "RanRand.def", 0, 1, 0, 0, 2);
     for (i = 0; i < 9; ++i) {
-        filterCountBButtons[i]->field_40 = 2;
-        filterCountBButtons[i]->disabled_frame = 1;
+        filterCountBButtons[i]->set_highlight_frame(2);
+        filterCountBButtons[i]->set_disabled_frame(1);
         Widgets.push_back(filterCountBButtons[i]);
     }
 
@@ -2134,8 +2146,8 @@ void TSingleSelectionWindow::CreateFilterWidgets()
     filterCountCButtons[8] = new button(
         326, 285, 55, 32, 0x13b, "RanRand.def", 0, 1, 0, 0, 2);
     for (i = 0; i < 9; ++i) {
-        filterCountCButtons[i]->field_40 = 2;
-        filterCountCButtons[i]->disabled_frame = 1;
+        filterCountCButtons[i]->set_highlight_frame(2);
+        filterCountCButtons[i]->set_disabled_frame(1);
         Widgets.push_back(filterCountCButtons[i]);
     }
 
@@ -2159,8 +2171,8 @@ void TSingleSelectionWindow::CreateFilterWidgets()
     filterCountDButtons[7] = new button(
         326, 351, 55, 32, 0x144, "RanRand.def", 0, 1, 0, 0, 2);
     for (i = 0; i < 8; ++i) {
-        filterCountDButtons[i]->field_40 = 2;
-        filterCountDButtons[i]->disabled_frame = 1;
+        filterCountDButtons[i]->set_highlight_frame(2);
+        filterCountDButtons[i]->set_disabled_frame(1);
         Widgets.push_back(filterCountDButtons[i]);
     }
 
@@ -2176,8 +2188,8 @@ void TSingleSelectionWindow::CreateFilterWidgets()
     filterWaterButtons[3] = new button(
         326, 419, 55, 32, 0x149, "RanRand.def", 0, 1, 0, 0, 2);
     for (i = 0; i < 4; ++i) {
-        filterWaterButtons[i]->field_40 = 2;
-        filterWaterButtons[i]->disabled_frame = 1;
+        filterWaterButtons[i]->set_highlight_frame(2);
+        filterWaterButtons[i]->set_disabled_frame(1);
         Widgets.push_back(filterWaterButtons[i]);
     }
 
@@ -2193,8 +2205,8 @@ void TSingleSelectionWindow::CreateFilterWidgets()
     filterStrengthButtons[3] = new button(
         326, 485, 55, 32, 0x14e, "RanRand.def", 0, 1, 0, 0, 2);
     for (i = 0; i < 4; ++i) {
-        filterStrengthButtons[i]->field_40 = 2;
-        filterStrengthButtons[i]->disabled_frame = 1;
+        filterStrengthButtons[i]->set_highlight_frame(2);
+        filterStrengthButtons[i]->set_disabled_frame(1);
         Widgets.push_back(filterStrengthButtons[i]);
     }
 
