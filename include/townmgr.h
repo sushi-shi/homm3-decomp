@@ -206,14 +206,6 @@ public:
         EXIT_BUTTON_ID = 0x7800
     };
 
-#ifdef HOMM3_TOWNMGR_WIDGET_IDS
-    // (This gate also carries gCombatStamp698998's declaration at the
-    // bottom of the file - townmgr.cpp's private view of the shared
-    // frame-pacing stamp, kept out of cmbtmgr.h's include weight.)
-    // The declarators below are GATED to townmgr.cpp, their one
-    // consumer: ungated they moved recruitUnit::Update 90.84 -> 88.24
-    // through the include-set wall (townmgr.h reaches recruit.cpp),
-    // the bitmap16.h channel-mask precedent to the digit.
     enum {
         // Widget 50: townManager::SetCommandAndText's 0x32 arm reads a
         // rollover cell for it, but no admitted town-screen constructor
@@ -335,7 +327,6 @@ public:
         GARRISON_ID = 183,
         NUM_TOWN_BUTTONS = 2
     };
-#endif  /* HOMM3_TOWNMGR_WIDGET_IDS */
 
     int field_4c;    // +0x4c  town-list scroll offset (UpdateTownLocators)
     // +0x50: the panorama's hotspot buffer, one word per pixel, freed
@@ -1173,12 +1164,9 @@ void DoShipyard(int type);
 // CODEVIEW(E:\gamedcs\townmgr.cpp:5156, dc 0x181604) void* type_monster_join_window::`scalar deleting destructor'(unsigned __flags);
 // CODEVIEW(E:\gamedcs\townmgr.cpp:5156, dc 0x181638) void type_monster_join_window::~type_monster_join_window();
 
-#ifdef HOMM3_TOWNMGR_WIDGET_IDS
 // The shared frame-pacing stamp at .bss 0x698998. cmbtmgr.h owns the
 // DATA claim (advmgr's Open/Main and drawing.cpp share the cell);
-// townManager::Main paces the panorama animation with it. Gated so no
-// other includer of this header gains the declarator.
+// townManager::Main paces the panorama animation with it.
 extern unsigned long gCombatStamp698998;
-#endif  /* HOMM3_TOWNMGR_WIDGET_IDS */
 
 #endif  /* HOMM3_TOWNMGR_H */
