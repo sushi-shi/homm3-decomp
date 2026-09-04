@@ -33,14 +33,12 @@ public:
     TFileVersionInfo(const char* filename);
     ~TFileVersionInfo();
     unsigned char GetVersionInfo(const char* name, std::string* buffer);
-#ifdef HOMM3_U2DVERS_PRODUCT_VERSION_INLINE
     // DC's source-visible wrapper. Complete expands it at the selection
     // window call site into the ProductVersion GetVersionInfo call.
     unsigned char GetProductVersion(std::string* productVersion)
     {
         return GetVersionInfo("ProductVersion", productVersion);
     }
-#endif
 };
 SIZE(TFileVersionInfo, 4);
 
