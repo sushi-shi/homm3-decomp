@@ -619,14 +619,45 @@ TViewWorldWindow::~TViewWorldWindow()
     }
 }
 
-#if 0  // @carcass
+// THE VIEW-WORLD CHECKBOX STATE. advManager::ViewWorld's Dreamcast body
+// keeps view_mines / view_heroes / view_towns as locals (S_REGREL32 rows
+// at dc 0x195b48); Complete's level callbacks below read them from
+// viewwrld.obj's own .bss, which is what made them file statics.
+DATA(0x006aab68)
+static unsigned char view_mines;
+DATA(0x006aac14)
+static unsigned char view_towns;
+DATA(0x006aac30)
+static unsigned char view_heroes;
+
+// The type_func_button click code both callbacks answer, the same 13
+// TViewArmyWindow's cast-spell callback tests (viewarmywindow.cpp).
+static const int kLevelButtonClick = 13;
 
 // Complete-only address-taken callback. The constructor passes this entry to
 // the iAm003 surface button; the body clears origin.z and redraws the map.
+// Both level callbacks answer a left click (codeX 13 without the RIGHT
+// modifier) only: swap which of the two level buttons is pressed, redraw
+// the released one, repaint the world and the radar, and flip the
+// whole screen.
 VA(0x005fbdf0, 0xC6)  // address-taken at ctor+0x1033, retail-only
 int ViewWorldSurfaceHandler(message& msg)
 {
-    // @stub
+    if (msg.codeX != kLevelButtonClick
+        || (msg.qualifier & MESSAGE_MODIFIER_RIGHT))
+        return 0;
+    TViewWorldWindow* window = static_cast<TViewWorldWindow*>(msg.window);
+    window->origin.z = 0;
+    window->SurfaceButton->send_message(widget::WIDGET_CLEAR_STATUS, 6);
+    window->UndergroundButton->send_message(widget::WIDGET_SET_STATUS, 6);
+    window->UndergroundButton->Draw();
+    gpAdvManager->VWCompleteDraw(window->origin.x, window->origin.y,
+                                 window->origin.z, window->viewable_width,
+                                 window->viewable_height);
+    gpAdvManager->UpdateRadar(window->origin, 1, 1, view_mines, view_heroes,
+                              view_towns);
+    gpWindowManager->UpdateScreen(0, 0, 800, 600);
+    return 1;
 }
 
 // Complete-only address-taken callback. The constructor passes this entry to
@@ -634,10 +665,22 @@ int ViewWorldSurfaceHandler(message& msg)
 VA(0x005fbec0, 0xD0)  // address-taken at ctor+0xFEE, retail-only
 int ViewWorldUndergroundHandler(message& msg)
 {
-    // @stub
+    if (msg.codeX != kLevelButtonClick
+        || (msg.qualifier & MESSAGE_MODIFIER_RIGHT))
+        return 0;
+    TViewWorldWindow* window = static_cast<TViewWorldWindow*>(msg.window);
+    window->origin.z = 1;
+    window->SurfaceButton->send_message(widget::WIDGET_SET_STATUS, 6);
+    window->UndergroundButton->send_message(widget::WIDGET_CLEAR_STATUS, 6);
+    window->SurfaceButton->Draw();
+    gpAdvManager->VWCompleteDraw(window->origin.x, window->origin.y,
+                                 window->origin.z, window->viewable_width,
+                                 window->viewable_height);
+    gpAdvManager->UpdateRadar(window->origin, 1, 1, view_mines, view_heroes,
+                              view_towns);
+    gpWindowManager->UpdateScreen(0, 0, 800, 600);
+    return 1;
 }
-
-#endif  // @carcass
 
 #if 0  // @carcass
 
