@@ -7,6 +7,7 @@
 
 #include <vector>
 #include "window.h"
+#include "campaignbrief.h"
 
 class slider;
 class textWidget;
@@ -35,7 +36,10 @@ public:
     int firstVisible;                 // +0xec
     int selected;                     // +0xf0
     unsigned long lastClickTime;      // +0xf4
-    std::vector<void*> campaignHeaders;  // +0xf8
+    // LoadCampaignList binds insert's const T& straight to its
+    // CampaignHeaderStruct* local (address-taken, memory-homed), which a
+    // void* element would have copied through a temporary first.
+    std::vector<TCampaignBrief::CampaignHeaderStruct*> campaignHeaders;  // +0xf8
 
     TCustomCampaignWindow();
     virtual ~TCustomCampaignWindow();
@@ -51,13 +55,14 @@ public:
 };
 SIZE(TCustomCampaignWindow, 0x108);
 
-// Complete's custom-campaign list orders four-byte header pointers through
-// this predicate. The predicate body is a separate retail helper; this owner
+// Complete's custom-campaign list orders its header pointers through this
+// predicate. The predicate body is a separate retail helper; this owner
 // header carries its one authoritative type shape for the retained STL sort
 // specialization in customcampaign.obj.
 class CampaignHeaderPointerLess {
 public:
-    bool operator()(void* left, void* right) const;
+    bool operator()(TCampaignBrief::CampaignHeaderStruct* left,
+                    TCampaignBrief::CampaignHeaderStruct* right) const;
 };
 
 // The campaign music table retail reaches through the reference cell at
