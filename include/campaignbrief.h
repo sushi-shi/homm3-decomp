@@ -53,10 +53,17 @@ public:
     // instead of flattening either operation into CampaignBriefHandler.
     class ScenarioStartOptions {
     public:
+        // The choice counts slot 2 answers with; UpdateBonusIcons centres
+        // the bonus frames for exactly a pair.
+        enum EChoiceCount {
+            CHOICE_COUNT_PAIR = 2
+        };
         virtual ~ScenarioStartOptions() = 0;
         virtual bool _vslot1(int option) = 0;
         virtual int _vslot2() = 0;
-        virtual char* _vslot3(int option) = 0;
+        // Slot 3 takes the running campaign record as well as the option:
+        // UpdateBonusIcons (0x458d40) pushes (&gpGame->campaign, option).
+        virtual char* _vslot3(SCampaign* campaign, int option) = 0;
         virtual int _vslot4(int option) = 0;
         virtual int _vslot5(ScenarioStruct* scenario, int option) = 0;
         virtual std::string _vslot6(CampaignHeaderStruct* campaign,
@@ -125,6 +132,10 @@ public:
         // wrapper below is its sole direct caller.
         void StartScenario(std::streambuf* stream, int option);
         std::string GetRegionDescription() const;
+        // Retail 0x458fe0, the header-inline COMDAT campaignbrief.obj
+        // retains: the option's bonus help text through the options
+        // record's slot 6. Name provisional.
+        std::string GetBonusText(CampaignHeaderStruct* campaign, int option);
         ~ScenarioStruct();
         // Retail 0x487d30: LoadScenario's callee, which inflates the map
         // header of scenario `which` out of the campaign stream (name

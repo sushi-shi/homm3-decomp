@@ -346,14 +346,66 @@ void TCampaignBrief::AddBonusIcons()
     Widgets.push_back(difficulty_incr_button);
 }
 
-#if 0  // @carcass - Select's bonus-icon refresh; retail 663 B against the DC's 428.
-// E:\gamedcs\campaignbrief.cpp:520
+// E:\gamedcs\campaignbrief.cpp:520. Complete widens the Dreamcast's
+// three fixed slots into the options record's own count: a two-choice
+// scenario centres its frames, every shown frame carries either the
+// bitmap or the sprite form of the bonus with its help text, and the
+// frames past the count are hidden.
 VA(0x00458d40, 0x297)  // Select callee, dc-order-map after AddBonusIcons, dc 0x58c00
 void TCampaignBrief::UpdateBonusIcons()
 {
-    // @stub
+    ScenarioStruct* scenario = campaign->scenarios[selected_scenario];
+    int i;
+
+    if (scenario->options->_vslot2() == ScenarioStartOptions::CHOICE_COUNT_PAIR) {
+        start_bonus_borders[0]->x = 509;
+        start_bonus_borders[1]->x = 577;
+    } else {
+        start_bonus_borders[0]->x = 475;
+        start_bonus_borders[1]->x = 543;
+    }
+    for (i = 0; i < 2; i++) {
+        bitmap_bonus_images[i]->x = start_bonus_borders[i]->x + 1;
+        sprite_bonus_images[i]->x = start_bonus_borders[i]->x + 1;
+    }
+
+    for (i = 0; i < scenario->options->_vslot2(); i++) {
+        start_bonus_borders[i]->show();
+        start_bonus_borders[i]->send_message(
+            i == gpGame->campaign.briefingChoice ? widget::WIDGET_SET_STATUS
+                                                 : widget::WIDGET_CLEAR_STATUS,
+            4);
+        const char* name = scenario->options->_vslot3(&gpGame->campaign, i);
+        if (scenario->options->_vslot1(i)) {
+            bitmap_bonus_images[i]->show();
+            bitmap_bonus_images[i]->SetImage(name);
+            sprite_bonus_images[i]->hide();
+        } else {
+            sprite_bonus_images[i]->show();
+            sprite_bonus_images[i]->SetSprite(name);
+            sprite_bonus_images[i]->SetIconFrame(scenario->options->_vslot4(i));
+            bitmap_bonus_images[i]->hide();
+        }
+        std::string text;
+        text = scenario->GetBonusText(campaign, i);
+        bitmap_bonus_images[i]->set_help_text("", text.c_str(), 1);
+        sprite_bonus_images[i]->set_help_text("", text.c_str(), 1);
+    }
+    for (; i < 3; i++) {
+        start_bonus_borders[i]->hide();
+        bitmap_bonus_images[i]->hide();
+        sprite_bonus_images[i]->hide();
+    }
 }
-#endif  // @carcass
+
+// The header-inline getter retail retained in this object (see
+// campaignbrief.h): UpdateBonusIcons is its caller.
+VA(0x00458fe0, 0x2C)  // UpdateBonusIcons callee, retail-only
+std::string TCampaignBrief::ScenarioStruct::GetBonusText(
+    CampaignHeaderStruct* campaign, int option)
+{
+    return options->_vslot6(campaign, option);
+}
 
 // Complete-only; see campaignbrief.h.
 VA(0x00459010, 0xB0)  // Select callee, retail-only
