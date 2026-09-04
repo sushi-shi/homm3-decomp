@@ -265,13 +265,11 @@ void MemError();                                         // 0x4f42c0
 void KbFn_004F4C00(int field00, unsigned char b);
 int GameUnsaved();                                       // 0x4f4310
 void CheckEndGame(int bForceWin);                        // 0x4f2ce0
-#ifdef HOMM3_REMOTE_WINLOSS_DECLS
 bool DisplayVCWinLoss(VictoryConditionStruct& victoryCondition,
                       int& bGameWon, int& bGameLost, bool remoteCheck);
 unsigned char DisplayLCWinLoss(LossConditionStruct* lossCondition,
                                int* bGameWon, int* bGameLost,
                                unsigned char remoteCheck);
-#endif
 // Retail .bss 0x6972b8, an INT that every CheckEndGame caller which then
 // wants to keep touching the adventure UI reads immediately afterwards -
 // 36 image-wide references, the bulk of them inside kb.obj's own band
