@@ -1545,11 +1545,7 @@ private:
     // RECORDED, NOT ACTED ON: the access change and the bool retype are
     // one measured pass over the whole family (bool is not free in VC6
     // - it normalizes), and this lane only needed the declarations.
-#ifndef HOMM3_ARMY_COMMAND_ROUND_VIEW
-    // command.cpp substitutes army::ResetRound for this unused member,
-    // preserving the declaration population of that handle-sensitive TU.
     unsigned char simple_move(int hex, unsigned char restore_facing);
-#endif
     // BEHIND A VIEW, MEASURED: declaring WalkTo to every consumer of
     // this header costs command.obj's combatManager::GetCommand
     // 92.5714 -> 92.5357 with no semantic change anywhere - the
