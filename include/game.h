@@ -2318,15 +2318,8 @@ public:
                          unsigned char inGame, unsigned char makeOrig);
     void DoNewTurn();
 #endif
-// SPLIT around the declarator below rather than moved, so the preprocessed
-// text every HOMM3_GAME_NEW_MAP_DECLS consumer sees is unchanged, line for
-// line - GameFn_004CA780's pattern. event_record.obj owns 0x49d6c0's body
-// and needs this ONE declarator; taking the whole gate would put nine more
-// into its class-type stream at once.
-#if defined(HOMM3_GAME_NEW_MAP_DECLS) \
-    || defined(HOMM3_EVENT_RECORD_CLEAR_DECL)
+    // event_record.obj owns 0x49d6c0's body.
     void clear_event_records(char playerId);              // 0x49d6c0
-#endif
 #ifdef HOMM3_GAME_NEW_MAP_DECLS
     // Game.h:1390 in the DC roster. Retail expands this short calendar
     // accessor at every game.obj call site and retains no standalone row.
@@ -2473,14 +2466,7 @@ public:
                           int occupying_hero);                   // 0x49c560
     void record_move(hero* who, int direction,
                      type_point destination);                    // 0x49cd50
-#if defined(HOMM3_EVENT_RECORD_DECLS)
     void record_teleport(hero* who, type_point destination);     // 0x49cf50
-    // DC game.h:877 (dc 0x8f270, event_record.obj): the visibility bit of
-    // every player sharing whichPlayer's team. Retail has NO out-of-line
-    // row for it - both visibility sweeps expand it at their head, and
-    // SetVisibility's own range guard is what lets VC6 drop the internal
-    // one there while ResetVisibility keeps it.
-#endif
     // Game.h:877. DispatchEvent's obelisk arm preserves this named helper;
     // retail /Ob2 folds both it and GetTeam into the arm. MoveHero's
     // Dreamcast line stream names the same nested pair, and Complete folds
