@@ -24,6 +24,26 @@ typedef std::set<TPoint> TRmgPointSet;
 
 namespace {
 
+// The cinit at 0x530da0 writes these eight clockwise neighbours.  The river
+// search advances by two entries, selecting only the four cardinal offsets.
+DATA(0x0069CDC0)
+TPoint gRmgDirections[8] = {
+    TPoint(1, 0),
+    TPoint(1, 1),
+    TPoint(0, 1),
+    TPoint(-1, 1),
+    TPoint(-1, 0),
+    TPoint(-1, -1),
+    TPoint(0, -1),
+    TPoint(1, -1)
+};
+
+DATA(0x006409A0)
+static const int gLandRiverDeltaIndex[4] = {2, 0, 3, 1};
+
+DATA(0x006409B0)
+static const int gSnowRiverDeltaIndex[4] = {7, 5, 4, 6};
+
 DATA(0x00682700)
 static const char* gRmgWaterNames[3] = {
     DATA_COMPGEN(0x006827EC, rmgWaterNone, "None"),
@@ -330,7 +350,7 @@ void type_random_map_generator::InitializeObjectGenerators()
     objectGenerators.push_back(new type_black_box_spells_def(30000, 1, 5, 15));
 
     {
-        int player = playerSlots.size();
+        int player = objectPrototypes[10].size();
         disabledKeyTents.resize(player);
         for (; player--;) {
             disabledKeyTents[player] = 0;
@@ -414,7 +434,7 @@ void type_random_map_generator::InitializeObjectGenerators()
     objectGenerators.push_back(new type_scholar_def());
     objectGenerators.push_back(new type_treasure_def(82, 0, 1500, 500));
 
-    for (int quest = 0; quest < questSlots.size(); ++quest) {
+    for (int quest = 0; quest < objectPrototypes[83].size(); ++quest) {
         int creatureCount = mapVersion >= 1 ? 145 : 118;
         for (int creature = creatureCount; creature--;) {
             if (akCreatureTypeTraits[creature].level >= 0)
@@ -467,6 +487,198 @@ void type_random_map_generator::InitializeObjectGenerators()
     objectGenerators.push_back(new type_witch_hut_def());
 }
 
+// The Complete RMG has no Dreamcast counterpart.  Retail nevertheless fixes
+// the whole source-level algorithm: two parallel vectors form a descending
+// cost worklist, four cardinal neighbours relax a randomized Dijkstra search,
+// and the predecessor chain is then painted back from the first river target.
+// The water-wheel caller at 0x549870 and object type 143 selected below prove
+// the river role; the method spelling remains provisional.
+VA(0x00548DF0, 0x99F)  // water-wheel caller + river-delta object; retail-only
+void type_random_map_generator::CreateRiver(TRmgMapPosition source)
+{
+    TRmgMapPosition invalidPosition(-1, -1, -1);
+    TRmgMapItem* mapItem = map.GetMapItem(0, 0);
+    int mapItemCount = map.mapWidth * map.mapHeight * map.numberLevels;
+    while (mapItemCount--) {
+        mapItem->movement.cost = 32000;
+        mapItem->previousTile = invalidPosition;
+        ++mapItem;
+    }
+
+    std::vector<TRmgMapPosition> openPositions;
+    std::vector<int> openCosts;
+    int zeroCost = 0;
+
+    openPositions.push_back(source);
+    openCosts.push_back(zeroCost);
+    mapItem = map.GetMapItem(source);
+    mapItem->movement.cost = 0;
+    mapItem->previousTile = invalidPosition;
+
+    unsigned char sourceIsSnow;
+    int riverType;
+    if (mapItem->tile.landType == eTerrainSnow) {
+        sourceIsSnow = 1;
+        riverType = 2;
+    } else {
+        sourceIsSnow = 0;
+        riverType = 1;
+    }
+
+    --source.y;
+    openPositions.push_back(source);
+    openCosts.push_back(zeroCost);
+    mapItem = map.GetMapItem(source);
+    mapItem->movement.cost = 0;
+    mapItem->previousTile = invalidPosition;
+
+    ++source.x;
+    openPositions.push_back(source);
+    openCosts.push_back(zeroCost);
+    mapItem = map.GetMapItem(source);
+    mapItem->movement.cost = 0;
+    mapItem->previousTile = invalidPosition;
+
+    TRmgMapPosition position;
+    TRmgMapPosition nextPosition;
+    int direction;
+
+    while (!openPositions.empty()) {
+        position = openPositions.back();
+        openCosts.pop_back();
+        openPositions.pop_back();
+
+        mapItem = map.GetMapItem(position);
+        int positionCost = mapItem->movement.cost;
+        direction = 0;
+        TPoint* directionOffset = gRmgDirections;
+        for (; directionOffset < gRmgDirections + 8;
+             directionOffset += 2, direction += 2) {
+            nextPosition = TRmgMapPosition(
+                position.x + directionOffset->x,
+                position.y + directionOffset->y,
+                position.z);
+
+            if (nextPosition.x < 0 || nextPosition.x >= map.mapWidth
+                || nextPosition.y < 0 || nextPosition.y >= map.mapHeight)
+                continue;
+
+            TRmgMapItem* nextMapItem = map.GetMapItem(nextPosition);
+            TTerrainType landType = nextMapItem->tile.landType;
+            if (landType == eTerrainWater || landType == eTerrainRock
+                || nextMapItem->tileData.impassable
+                || (landType == eTerrainSnow) != sourceIsSnow)
+                continue;
+
+            int nextCost = positionCost + (rand() & 31) + 1;
+            if (nextMapItem->tile.decorationType)
+                nextCost += 30;
+
+            if (nextCost >= nextMapItem->movement.cost)
+                continue;
+
+            int oppositeDirection = ((direction - 4) >> 1) & 3;
+            if (nextMapItem->tileData.blockedDirections
+                & (1 << oppositeDirection))
+                continue;
+
+            nextMapItem->movement.cost = nextCost;
+            nextMapItem->previousTile = position;
+
+            int first = 0;
+            int last = openPositions.size();
+            while (first < last) {
+                int middle = (first + last) >> 1;
+                if (nextCost < openCosts[middle])
+                    first = middle + 1;
+                else
+                    last = middle;
+            }
+
+            openPositions.insert(openPositions.begin() + first, nextPosition);
+            openCosts.insert(openCosts.begin() + first, nextCost);
+
+            if (nextMapItem->tileData.riverTarget) {
+                openPositions.clear();
+                break;
+            }
+        }
+    }
+
+    if (!mapItem->tileData.riverTarget)
+        return;
+
+    mapItem->tileData.riverTarget = 1;
+
+    type_random_map levelMap(map, nextPosition.z);
+    TRmgMapAdapter mapAdapter(&levelMap);
+    TPoint riverPosition(nextPosition.x, nextPosition.y);
+    TRmgRiverPainter riverPainter(&mapAdapter, riverType, riverPosition);
+
+    unsigned blockedDirections = mapItem->tileData.blockedDirections;
+    if (blockedDirections) {
+        direction = 0;
+        while (!(blockedDirections & (1 << direction)))
+            ++direction;
+
+        static TRmgRiverDeltaOffset deltaOffsets[4] = {
+            TRmgRiverDeltaOffset(4, 1),
+            TRmgRiverDeltaOffset(1, 4),
+            TRmgRiverDeltaOffset(-2, 1),
+            TRmgRiverDeltaOffset(1, -2)
+        };
+
+        int deltaIndex = sourceIsSnow
+            ? gSnowRiverDeltaIndex[direction]
+            : gLandRiverDeltaIndex[direction];
+        TTerrainType landType = mapItem->tile.landType;
+        int prototypeIndex = 0;
+        for (; prototypeIndex < objectPrototypes[TERRAIN_RIVER_DELTA].size();
+             ++prototypeIndex) {
+            TRmgObjectPropertiesRef* properties =
+                objectPrototypes[TERRAIN_RIVER_DELTA][prototypeIndex];
+            if (properties->prototype->landPage.test(landType)
+                && deltaIndex-- == 0)
+                break;
+        }
+
+        if (prototypeIndex == objectPrototypes[TERRAIN_RIVER_DELTA].size())
+            return;
+
+        type_object* riverDelta = new type_object(
+            objectPrototypes[TERRAIN_RIVER_DELTA][prototypeIndex]);
+        AddObject(
+            riverDelta,
+            TRmgMapPosition(
+                nextPosition.x + deltaOffsets[direction].x,
+                nextPosition.y + deltaOffsets[direction].y,
+                nextPosition.z));
+
+        TRmgMapPosition riverMouth(
+            nextPosition.x + gRmgDirections[direction * 2].x,
+            nextPosition.y + gRmgDirections[direction * 2].y,
+            nextPosition.z);
+        TPoint riverMouthPoint(riverMouth.x, riverMouth.y);
+        riverPainter.DrawTo(riverMouthPoint);
+        mapItem = map.GetMapItem(riverMouth);
+        mapItem->tileData.riverTarget = 1;
+
+        riverPosition.x = nextPosition.x;
+        riverPosition.y = nextPosition.y;
+        riverPainter.DrawTo(riverPosition);
+        mapItem = map.GetMapItem(nextPosition);
+    }
+
+    while (mapItem->movement.cost > 0) {
+        position = mapItem->previousTile;
+        mapItem = map.GetMapItem(position);
+        mapItem->tileData.riverTarget = 1;
+        riverPosition.x = position.x;
+        riverPosition.y = position.y;
+        riverPainter.DrawTo(riverPosition);
+    }
+}
+
 // Complete's random-map pipeline calls this routine immediately before the
 // generated terrain/object stream is emitted.  The format switch, description
 // fragments, player records, team assignment, and packed availability masks
@@ -495,12 +707,12 @@ void type_random_map_generator::WriteMapHeader(TAbstractFile* outfile)
     }
 
     {
-        int intBuffer = mapSize;
+        int intBuffer = map.mapWidth;
         outfile->Write(&intBuffer, sizeof(intBuffer));
     }
 
     {
-        char byteBuffer = levels > 1;
+        char byteBuffer = map.numberLevels > 1;
         outfile->Write(&byteBuffer, sizeof(byteBuffer));
     }
 
@@ -526,8 +738,8 @@ void type_random_map_generator::WriteMapHeader(TAbstractFile* outfile)
         templateName ? templateName
                      : DATA_COMPGEN(0x0063A608, rmgEmptyText, ""),
         randomSeed,
-        mapSize,
-        levels,
+        map.mapWidth,
+        map.numberLevels,
         humanPlayerCount,
         computerPlayerCount,
         gRmgWaterNames[waterContent],

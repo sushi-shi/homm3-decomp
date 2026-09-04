@@ -6,6 +6,7 @@
 #define HOMM3_MAPCELL_H
 
 #include <vector>
+#include "terrain_type.h"
 
 class CObject;
 

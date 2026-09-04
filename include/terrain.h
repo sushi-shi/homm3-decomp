@@ -67,9 +67,9 @@
 // and the initializer funclets are the cinit excluded class - never
 // claimed as functions either.
 //
-// The shift amounts below are written as literals on purpose: the
-// TTerrainType roster still lives in armygrp.h as a bootstrap stub with
-// only the sentinel, and moving it here is a separate, wider change.
+// The shift amounts below are written as literals on purpose.  The shared
+// enum now lives in lightweight terrain_type.h; keeping it separate prevents
+// an enum-only consumer from acquiring this header's ten dynamic statics.
 //
 // WHICH TUs GET THIS HEADER - decided by retail bytes, not by the DC
 // file column. Scanning config/retail-functions.tsv for the size run
