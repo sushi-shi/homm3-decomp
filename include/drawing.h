@@ -53,12 +53,10 @@ enum ECombatGridDimensions {
 // declared here because fly.obj resets the extent through it once per
 // flight frame.
 extern TDrawbridgeBounds gCombatAreaLimits;
-#ifdef HOMM3_DRAWING_UPDATE_GRID_DECLS
 // DC names the 58,86..740,557 clip rectangle GridAreaLimits. Retail's
 // initializer at 0x462640 and UpdateGrid's four clamps prove the aggregate;
 // its storage belongs to cmbtmgr.obj and this TU only references it.
 DATA(0x00694ec8) extern SLimitData gCombatGridAreaLimits;
-#endif
 
 // The three combat animation speed multipliers at .rdata 0x63cf7c -
 // 1.0f, 0.63f and 0.4f exactly - indexed by gUnnamed698758.combatSpeed.

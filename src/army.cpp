@@ -1626,10 +1626,10 @@ void army::animate_missile(army* armyToAttack)
                            gpWindowManager->screenBitmap->Width,
                            gpWindowManager->screenBitmap->Height,
                            gpWindowManager->screenBitmap->Pitch, false);
-                update_area.values[0] = x;
-                update_area.values[1] = y;
-                update_area.values[2] = right;
-                update_area.values[3] = bottom;
+                update_area.iMinX = x;
+                update_area.iMinY = y;
+                update_area.iMaxX = right;
+                update_area.iMaxY = bottom;
                 x += stepX;
                 y += stepY;
                 right += stepX;
@@ -1646,26 +1646,26 @@ void army::animate_missile(army* armyToAttack)
                               gpWindowManager->screenBitmap->Height,
                               gpWindowManager->screenBitmap->Pitch,
                               flipped, 1);
-            if (update_area.values[0] > x)
-                update_area.values[0] = x;
-            if (update_area.values[1] > y)
-                update_area.values[1] = y;
-            if (update_area.values[2] < right)
-                update_area.values[2] = right;
-            if (update_area.values[3] < bottom)
-                update_area.values[3] = bottom;
-            if (update_area.values[0] < gCombatDrawLimits694f18.values[0])
-                update_area.values[0] = gCombatDrawLimits694f18.values[0];
-            if (update_area.values[1] < gCombatDrawLimits694f18.values[1])
-                update_area.values[1] = gCombatDrawLimits694f18.values[1];
-            if (update_area.values[2] > gCombatDrawLimits694f18.values[2])
-                update_area.values[2] = gCombatDrawLimits694f18.values[2];
-            if (update_area.values[3] > gCombatDrawLimits694f18.values[3])
-                update_area.values[3] = gCombatDrawLimits694f18.values[3];
+            if (update_area.iMinX > x)
+                update_area.iMinX = x;
+            if (update_area.iMinY > y)
+                update_area.iMinY = y;
+            if (update_area.iMaxX < right)
+                update_area.iMaxX = right;
+            if (update_area.iMaxY < bottom)
+                update_area.iMaxY = bottom;
+            if (update_area.iMinX < gCombatDrawLimits694f18.iMinX)
+                update_area.iMinX = gCombatDrawLimits694f18.iMinX;
+            if (update_area.iMinY < gCombatDrawLimits694f18.iMinY)
+                update_area.iMinY = gCombatDrawLimits694f18.iMinY;
+            if (update_area.iMaxX > gCombatDrawLimits694f18.iMaxX)
+                update_area.iMaxX = gCombatDrawLimits694f18.iMaxX;
+            if (update_area.iMaxY > gCombatDrawLimits694f18.iMaxY)
+                update_area.iMaxY = gCombatDrawLimits694f18.iMaxY;
             gpWindowManager->UpdateScreen(
-                update_area.values[0], update_area.values[1],
-                update_area.values[2] - update_area.values[0] + 1,
-                update_area.values[3] - update_area.values[1] + 1);
+                update_area.iMinX, update_area.iMinY,
+                update_area.iMaxX - update_area.iMinX + 1,
+                update_area.iMaxY - update_area.iMinY + 1);
             GameTime::DelayTil(next_frame_time);
         }
     }
@@ -5509,21 +5509,21 @@ void army::attack_wall(TWallTargetId wall, long levelsDestroyed)
     long right = explosion->Width - halfWidth + targetX - 1;
     {
         TDrawbridgeBounds& bounds = gpCombatManager->drawbridgeBounds;
-        bounds.values[0] = x;
-        bounds.values[1] = y;
-        bounds.values[2] = right;
-        bounds.values[3] = bottom;
+        bounds.iMinX = x;
+        bounds.iMinY = y;
+        bounds.iMaxX = right;
+        bounds.iMaxY = bottom;
     }
     {
         TDrawbridgeBounds& bounds = gpCombatManager->drawbridgeBounds;
-        if (bounds.values[0] < gCombatDrawLimits694f18.values[0])
-            bounds.values[0] = gCombatDrawLimits694f18.values[0];
-        if (bounds.values[1] < gCombatDrawLimits694f18.values[1])
-            bounds.values[1] = gCombatDrawLimits694f18.values[1];
-        if (bounds.values[2] > gCombatDrawLimits694f18.values[2])
-            bounds.values[2] = gCombatDrawLimits694f18.values[2];
-        if (bounds.values[3] > gCombatDrawLimits694f18.values[3])
-            bounds.values[3] = gCombatDrawLimits694f18.values[3];
+        if (bounds.iMinX < gCombatDrawLimits694f18.iMinX)
+            bounds.iMinX = gCombatDrawLimits694f18.iMinX;
+        if (bounds.iMinY < gCombatDrawLimits694f18.iMinY)
+            bounds.iMinY = gCombatDrawLimits694f18.iMinY;
+        if (bounds.iMaxX > gCombatDrawLimits694f18.iMaxX)
+            bounds.iMaxX = gCombatDrawLimits694f18.iMaxX;
+        if (bounds.iMaxY > gCombatDrawLimits694f18.iMaxY)
+            bounds.iMaxY = gCombatDrawLimits694f18.iMaxY;
     }
 
     for (long frame = 0; frame < explosion->GetNumFrames(0); frame++) {
@@ -5532,11 +5532,11 @@ void army::attack_wall(TWallTargetId wall, long levelsDestroyed)
             gpCombatManager->DamageWall(wall, levelsDestroyed);
         gpCombatManager->DrawFrame(0, 0, 1, 100, 0, 1);
         explosion->Draw(0, frame, 0, 0,
-                        gpCombatManager->drawbridgeBounds.values[2]
-                            - gpCombatManager->drawbridgeBounds.values[0]
+                        gpCombatManager->drawbridgeBounds.iMaxX
+                            - gpCombatManager->drawbridgeBounds.iMinX
                             + 1,
-                        gpCombatManager->drawbridgeBounds.values[3]
-                            - gpCombatManager->drawbridgeBounds.values[1]
+                        gpCombatManager->drawbridgeBounds.iMaxY
+                            - gpCombatManager->drawbridgeBounds.iMinY
                             + 1,
                         gpWindowManager->screenBitmap->map,
                         targetX - explosion->Width / 2,
@@ -5545,12 +5545,12 @@ void army::attack_wall(TWallTargetId wall, long levelsDestroyed)
                         gpWindowManager->screenBitmap->Height,
                         gpWindowManager->screenBitmap->Pitch, 0, 1);
         gpWindowManager->UpdateScreen(
-            gpCombatManager->drawbridgeBounds.values[0],
-            gpCombatManager->drawbridgeBounds.values[1],
-            gpCombatManager->drawbridgeBounds.values[2]
-                - gpCombatManager->drawbridgeBounds.values[0] + 1,
-            gpCombatManager->drawbridgeBounds.values[3]
-                - gpCombatManager->drawbridgeBounds.values[1] + 1);
+            gpCombatManager->drawbridgeBounds.iMinX,
+            gpCombatManager->drawbridgeBounds.iMinY,
+            gpCombatManager->drawbridgeBounds.iMaxX
+                - gpCombatManager->drawbridgeBounds.iMinX + 1,
+            gpCombatManager->drawbridgeBounds.iMaxY
+                - gpCombatManager->drawbridgeBounds.iMinY + 1);
     }
     explosion->Dispose();
     gpCombatManager->DrawFrame(1, 0, 0, 0, 1, 0);
@@ -5856,11 +5856,11 @@ void army::PlayAnimation(int sequence, int nframes, int start_frame)
          currFrameIndex < nframes + start_frame; currFrameIndex++) {
         TDrawbridgeBounds frame = bounds;
         gpCombatManager->field_53b0->Draw(
-            frame.values[0], frame.values[1],
-            frame.values[2] - frame.values[0] + 1,
-            frame.values[3] - frame.values[1] + 1,
+            frame.iMinX, frame.iMinY,
+            frame.iMaxX - frame.iMinX + 1,
+            frame.iMaxY - frame.iMinY + 1,
             gpWindowManager->screenBitmap->map,
-            frame.values[0], frame.values[1],
+            frame.iMinX, frame.iMinY,
             gpWindowManager->screenBitmap->Width,
             gpWindowManager->screenBitmap->Height,
             gpWindowManager->screenBitmap->Pitch, false);
@@ -5873,17 +5873,17 @@ void army::PlayAnimation(int sequence, int nframes, int start_frame)
         gpCombatManager->field_13d34 = 0;
         gpCombatManager->field_13d2c = 0;
 
-        gpCombatManager->drawbridgeBounds.values[0] -= 17;
-        gpCombatManager->drawbridgeBounds.values[2] += 17;
+        gpCombatManager->drawbridgeBounds.iMinX -= 17;
+        gpCombatManager->drawbridgeBounds.iMaxX += 17;
         bounds = gpCombatManager->drawbridgeBounds;
-        if (frame.values[0] > bounds.values[0])
-            frame.values[0] = bounds.values[0];
-        if (frame.values[1] > bounds.values[1])
-            frame.values[1] = bounds.values[1];
-        if (frame.values[2] < bounds.values[2])
-            frame.values[2] = bounds.values[2];
-        if (frame.values[3] < bounds.values[3])
-            frame.values[3] = bounds.values[3];
+        if (frame.iMinX > bounds.iMinX)
+            frame.iMinX = bounds.iMinX;
+        if (frame.iMinY > bounds.iMinY)
+            frame.iMinY = bounds.iMinY;
+        if (frame.iMaxX < bounds.iMaxX)
+            frame.iMaxX = bounds.iMaxX;
+        if (frame.iMaxY < bounds.iMaxY)
+            frame.iMaxY = bounds.iMaxY;
         gpCombatManager->drawbridgeBounds = frame;
 
         gpCombatManager->field_13d30 = 1;
@@ -5894,9 +5894,9 @@ void army::PlayAnimation(int sequence, int nframes, int start_frame)
             = GameTime::NextFrameTime(
                 glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT], frameDelay);
         gpWindowManager->UpdateScreen(
-            frame.values[0], frame.values[1],
-            frame.values[2] - frame.values[0] + 1,
-            frame.values[3] - frame.values[1] + 1);
+            frame.iMinX, frame.iMinY,
+            frame.iMaxX - frame.iMinX + 1,
+            frame.iMaxY - frame.iMinY + 1);
     }
 
     if (nframes > 0)

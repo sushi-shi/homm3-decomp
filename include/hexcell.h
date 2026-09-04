@@ -6,6 +6,7 @@
 #define HOMM3_HEXCELL_H
 
 #include <va.h>
+#include "struct.h"  // SLimitData, for limits()
 
 class army;
 
@@ -94,14 +95,12 @@ public:
     {
         return armySide >= 0;
     }
-#ifdef HOMM3_DRAWING_UPDATE_GRID_DECLS
     // DC HexCell.h:85. The Complete UpdateGrid caller expands the returned
     // four-word rectangle and SLimitData::Include into one union loop.
     SLimitData limits() const
     {
         return SLimitData(field_04, field_06, field_08, field_0c);
     }
-#endif
 };
 SIZE(hexcell, 0x70);
 

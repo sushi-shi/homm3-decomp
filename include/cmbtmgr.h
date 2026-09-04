@@ -29,13 +29,7 @@ struct type_artifact;
 // animation. Drawing.cpp's decoded readers prove the same min/max layout as
 // SLimitData. Keep the concrete source type consumer-scoped so the other VC6
 // units retain their already measured type-handle state.
-#ifdef HOMM3_DRAWING_UPDATE_GRID_DECLS
 typedef SLimitData TDrawbridgeBounds;
-#else
-struct TDrawbridgeBounds {
-    int values[4];
-};
-#endif
 SIZE(TDrawbridgeBounds, 0x10);
 
 // Polymorphic objects owned by combatManager at offsets where Close only
@@ -819,14 +813,10 @@ public:
     // pair from &field_5414.
     int field_5414;                    // +0x5414
     int field_5418;                    // +0x5418
-#ifdef HOMM3_DRAWING_UPDATE_GRID_DECLS
     // DC CodeView names these two adjacent SLimitData[2] arrays; DrawFrame's
     // four DrawCombatHero calls independently prove the retail offsets.
     SLimitData sCmbtHeroLimitData[2];      // +0x541c
     SLimitData sCmbtHeroFlagLimitData[2];  // +0x543c
-#else
-    char pad_541c[0x40];
-#endif
     // Per-side spells observed during combat and eligible for Eagle Eye.
     // LearnSpellFromEagleEye proves two adjacent 16-byte Dinkumware sets:
     // `(side + 0x546) << 4` addresses the selected set at +0x5460.
