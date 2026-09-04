@@ -273,6 +273,10 @@ build build/objdiff/base/customcampaign.obj: cl src/customcampaign.cpp | $
     scripts/homm3/core/cc_wrap.py
   flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = customcampaign
+build build/objdiff/base/customcampaignwindow.obj: cl $
+    src/customcampaignwindow.cpp | scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = customcampaignwindow
 build build/objdiff/base/questlogwindow.obj: cl src/questlogwindow.cpp | $
     scripts/homm3/core/cc_wrap.py
   flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
@@ -592,6 +596,7 @@ build objects: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/bitmap16.obj build/objdiff/base/bitmap24.obj $
     build/objdiff/base/mainmenu.obj build/objdiff/base/campaignbrief.obj $
     build/objdiff/base/customcampaign.obj $
+    build/objdiff/base/customcampaignwindow.obj $
     build/objdiff/base/questlogwindow.obj build/objdiff/base/lodfile.obj $
     build/objdiff/base/towngatewindow.obj build/objdiff/base/drawing.obj $
     build/objdiff/base/dimensiondoorwindow.obj $
@@ -671,6 +676,7 @@ build all: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/bitmap16.obj build/objdiff/base/bitmap24.obj $
     build/objdiff/base/mainmenu.obj build/objdiff/base/campaignbrief.obj $
     build/objdiff/base/customcampaign.obj $
+    build/objdiff/base/customcampaignwindow.obj $
     build/objdiff/base/questlogwindow.obj build/objdiff/base/lodfile.obj $
     build/objdiff/base/towngatewindow.obj build/objdiff/base/drawing.obj $
     build/objdiff/base/dimensiondoorwindow.obj $
@@ -751,6 +757,7 @@ build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
     build/objdiff/base/bitmap16.obj build/objdiff/base/bitmap24.obj $
     build/objdiff/base/mainmenu.obj build/objdiff/base/campaignbrief.obj $
     build/objdiff/base/customcampaign.obj $
+    build/objdiff/base/customcampaignwindow.obj $
     build/objdiff/base/questlogwindow.obj build/objdiff/base/lodfile.obj $
     build/objdiff/base/towngatewindow.obj build/objdiff/base/drawing.obj $
     build/objdiff/base/dimensiondoorwindow.obj $

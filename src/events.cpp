@@ -2847,7 +2847,7 @@ void advManager::DoEventArtifact(hero* current_hero, NewmapCell* cell,
 // dialog (0x5d11d0 family). Both declarations repeat verbatim at the
 // monsters_* family below.
 void AI_join_decision(hero* current_hero, TCreatureType creature,
-                      int amount);
+                      short amount);
 void do_monster_join_dialog(hero* inHero, armyGroup* monsters, int flag);
 
 // E:\gamedcs\events.cpp:838.  The reward-line collector, Dreamcast's
@@ -5996,7 +5996,7 @@ static const char* GetArmyName(int type, int count)
 // locally, the AI_approximate_strength precedent above - AI_value_of_event
 // itself is declared further up, at do_event_dragon_city, which is its
 // first consumer in this file.
-void AI_join_decision(hero* current_hero, TCreatureType creature, int amount);
+void AI_join_decision(hero* current_hero, TCreatureType creature, short amount);
 unsigned char AI_bribe_monsters(const hero* current_hero, NewmapCell* cell,
                                 TCreatureType type, int amount,
                                 long gold_cost);

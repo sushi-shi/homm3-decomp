@@ -51,6 +51,8 @@
 #include "timer.h"
 #include "textwdgt.h"
 #include "winmgr.h"
+#include "wingraph.h"
+#include "findpath.h"
 // GameUnsaved polls the town manager's baseManager status, so kb.obj is
 // one of the consumers that needs townmgr.h's guarded class prefix.
 #include "townmgr.h"
@@ -83,6 +85,89 @@ inline int max(int left, int right)
 // retail .bss 0x699578, kb.obj's own.
 DATA(0x00699578)
 int gbInPollSound;
+
+// DC ?bInShutDown@@3_NA; retail .bss 0x69958d, ShutDown's re-entry guard.
+DATA(0x0069958d)
+bool bInShutDown;
+
+// The loading-screen progress bar, kb.obj's own .bss triple right below
+// PollSound's latch: the backdrop loadbar.pcx, the loadprog.def segment
+// sprite and the number of segments lit (capped at twenty). Names
+// PROVISIONAL - the Dreamcast keeps them file-static.
+DATA(0x0069956c)
+static Bitmap16Bit* gpProgressBarBack;
+DATA(0x00699570)
+static CSprite* gpProgressBarSprite;
+DATA(0x00699574)
+static int giProgressBarCount;
+
+// E:\gamedcs\kb.cpp:240. The four progress-bar rows are the exhaustive
+// order-map of the DC's DrawProgressCount..UnloadProgressBar onto the
+// four carve rows between kb.obj's static-initializer run and PollSound;
+// the loadbar.pcx loader and the two-Dispose teardown fix the outer pair.
+// Extern and small, so /Ob2 expands this one into both callers below
+// while retail keeps the body.
+VA(0x004ed230, 0x6A)  // dc-order-map (the row before IncProgressBar), dc 0xdf160
+void DrawProgressCount()
+{
+    if (gpProgressBarSprite) {
+        for (int i = 0; i < giProgressBarCount; i++) {
+            gpProgressBarSprite->Draw(0, i, 0, 0,
+                                      gpProgressBarSprite->GetWidth(),
+                                      gpProgressBarSprite->GetHeight(),
+                                      gpWindowManager->screenBitmap,
+                                      395 + i * 18, 548, 0, 0);
+        }
+    }
+}
+
+// E:\gamedcs\kb.cpp:252. Complete drops the DC's del_Spr_from_Cache.
+VA(0x004ed2a0, 0xA7)  // dc-order-map, dc 0xdf1dc
+void IncProgressBar(unsigned char bUpdate)
+{
+    if (gpProgressBarSprite) {
+        giProgressBarCount++;
+        if (giProgressBarCount > 20)
+            giProgressBarCount = 20;
+        DrawProgressCount();
+        if (bUpdate)
+            gpWindowManager->UpdateScreen(395, 548, 358, 16);
+    }
+}
+
+// E:\gamedcs\kb.cpp:269. Complete loads the backdrop as a Bitmap16Bit
+// where the DC took a Bitmap816.
+VA(0x004ed350, 0xF3)  // dc-order-map + loadbar.pcx / loadprog.def, dc 0xdf228
+void ShowProgressBar()
+{
+    if (!gpProgressBarBack) {
+        gpProgressBarBack = ResourceManager::GetBitmap16(
+            DATA_COMPGEN(0x0067f5bc, progressBarBackName, "loadbar.pcx"));
+        gpProgressBarSprite = ResourceManager::GetSprite(
+            DATA_COMPGEN(0x0067f5ac, progressBarSpriteName, "loadprog.def"));
+        giProgressBarCount = 0;
+    }
+    if (gpProgressBarBack) {
+        gpProgressBarBack->Draw(0, 0, gpProgressBarBack->GetWidth(),
+                                gpProgressBarBack->GetHeight(),
+                                gpWindowManager->screenBitmap, 0, 0, 0);
+        DrawProgressCount();
+        gpWindowManager->UpdateScreen(0, 0, 800, 600);
+    }
+}
+
+// E:\gamedcs\kb.cpp:292
+VA(0x004ed450, 0x3D)  // dc-order-map (the row before PollSound) + two-Dispose teardown, dc 0xdf2a4
+void UnloadProgressBar()
+{
+    if (gpProgressBarBack)
+        gpProgressBarBack->Dispose();
+    if (gpProgressBarSprite)
+        gpProgressBarSprite->Dispose();
+    giProgressBarCount = 0;
+    gpProgressBarSprite = 0;
+    gpProgressBarBack = 0;
+}
 
 // E:\gamedcs\kb.cpp:318
 // The idle-time service: the mouse cursor, the palette colour cycles of
@@ -235,34 +320,6 @@ stop_credits:
 
 #if 0  // @carcass
 
-// E:\gamedcs\kb.cpp:240
-DC_ONLY(0xdf160, 0x7C)
-void DrawProgressCount()
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:252
-DC_ONLY(0xdf1dc, 0x4A)
-void IncProgressBar(unsigned char bUpdate)
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:269
-DC_ONLY(0xdf228, 0x7C)
-void ShowProgressBar()
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:292
-DC_ONLY(0xdf2a4, 0x8C)
-void UnloadProgressBar()
-{
-    // @stub
-}
-
 
 // E:\gamedcs\kb.cpp:431
 // Located by exhaustive order-mapping of the six carve rows after
@@ -271,13 +328,6 @@ void UnloadProgressBar()
 // gives the retail body its LoadMenuA call). WinMain's first gate.
 // RETAIL_LOCATED(0x004ed650, 0x4E8)  // linkorder, dc 0xdf4e4
 int InitMainClasses()
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:481
-DC_ONLY(0xdf6d0, 0x170)
-void DeleteMainClasses()
 {
     // @stub
 }
@@ -1480,6 +1530,13 @@ static int ExitNormalDialog(message* msg)
 // fifteen-second arming and the forced exit are written twice in the
 // source (turn-timer and network arms); retail expands ExitNormalDialog
 // into each.
+//
+// Residual (71.36%): retail SINKS both expansions past the function's
+// returns and gives the network arm its own EventWindowHandler tail; ours
+// keeps the first expansion inline behind a jump. Measured and rejected:
+// the early-return form `if (elapsed >= 15000) return Exit...;` in both
+// arms (71.03), the same plus an explicit `return EventWindowHandler`
+// after the inner store (71.03), and that return alone (56.56).
 VA(0x004f08d0, 0x20C)  // anchor-callee + dialog-global shape, dc 0xe1ccc
 int NormalDialogHandler(message& msg)
 {
@@ -2046,17 +2103,133 @@ void game::ShowLuckInfo(hero* thisHero, int iMBType)
                  -1, 0, -1, 0, -1, 0);
 }
 
-#if 0  // @carcass
+// E:\gamedcs\kb.cpp:481. Retail has no body of its own: a static with
+// ShutDown as its single call site, so /Ob2 expands it there (the
+// Dreamcast keeps it out of line). The delete order is the Dreamcast's
+// statement order exactly; Complete's combatManager and advManager have
+// compiler-generated destructors (both retained in kb.obj right after
+// ShutDown), soundManager's is the header inline, and the window, input,
+// town and executive managers plus the AI turn driver are trivially
+// destructible.
+DC_ONLY(0xdf6d0, 0x170)
+static void DeleteMainClasses()
+{
+    if (gpUnnamed69928c)
+        delete gpUnnamed69928c;
+    gpUnnamed69928c = 0;
+    if (gpSearchArray)
+        delete gpSearchArray;
+    gpSearchArray = 0;
+    if (gpTownManager)
+        delete gpTownManager;
+    gpTownManager = 0;
+    if (gpCombatManager)
+        delete gpCombatManager;
+    gpCombatManager = 0;
+    if (gpAdvManager)
+        delete gpAdvManager;
+    gpAdvManager = 0;
+    if (gpGame)
+        delete gpGame;
+    gpGame = 0;
+    if (gpHighScoreManager)
+        delete gpHighScoreManager;
+    gpHighScoreManager = 0;
+    if (gpSoundManager)
+        delete gpSoundManager;
+    gpSoundManager = 0;
+    if (gpWindowManager)
+        delete gpWindowManager;
+    gpWindowManager = 0;
+    if (gpMouseManager)
+        delete gpMouseManager;
+    gpMouseManager = 0;
+    if (gpInputManager)
+        delete gpInputManager;
+    gpInputManager = 0;
+    if (gpExecutive)
+        delete gpExecutive;
+    gpExecutive = 0;
+}
 
 // E:\gamedcs\kb.cpp:3867
 // Located by shape + lineage: the carve's "unexpected program
 // termination" routine, called from executive::DoDialog's four
 // manager-add failure arms (homm2's ShutDown(gExecutiveText...)).
+// Complete's statement order against the Dreamcast's: the closing-app
+// flags and the sound manager's Close come first, ResourceManager::Close
+// moved below the manager teardown, and DeleteAnimHeaders replaces the
+// Dreamcast's ResourceManager::Close/DeleteAnimHeaders pair.
 VA(0x004f3690, 0x2A2)  // anchor-callee, dc 0xe3ce4
 void ShutDown(const char* cInExitMessage)
 {
-    // @stub
+    if (!bInShutDown) {
+        bInShutDown = 1;
+        bClosingApp = 1;
+        bShutDownDone = 1;
+        gpSoundManager->Close();
+
+        if (cInExitMessage) {
+            if (gpWindowManager && gpWindowManager->screenBitmap)
+                SetFullScreenStatus(0);
+            MessageBox(hwndApp, cInExitMessage,
+                       DATA_COMPGEN(0x0067f7f4, shutDownCaption,
+                                    "Unexpected Program Termination"),
+                       MB_ICONHAND);
+        }
+
+        AI_shut_down();
+        if (gpCalligraphicFont) {
+            gpCalligraphicFont->Dispose();
+            gpCalligraphicFont = 0;
+        }
+        if (gpBigFont) {
+            gpBigFont->Dispose();
+            gpBigFont = 0;
+        }
+        if (smallFont) {
+            smallFont->Dispose();
+            smallFont = 0;
+        }
+        if (gPlayerPalette24) {
+            delete gPlayerPalette24;
+            gPlayerPalette24 = 0;
+        }
+        RemoteCleanup();
+        gpExecutive->ShutDownSystem();
+        chatMan.ShutDown();
+        DeleteAnimHeaders();
+        DeleteSoundHeaders();
+
+        if (ghGameEvent) {
+            CloseHandle(ghGameEvent);
+            ghGameEvent = 0;
+        }
+        if (gMapExtra) {
+            delete[] gMapExtra;
+            gMapExtra = 0;
+        }
+        DeleteMainClasses();
+        ResourceManager::Close();
+        AppExit();
+        timeEndPeriod(1);
+        bInShutDown = 0;
+        exit(0);
+    }
 }
+
+// The two compiler-generated destructors DeleteMainClasses instantiates:
+// retail retains kb.obj's copies immediately after ShutDown.
+VA_COMPGEN(0x004f3940, 0xA9, IMPLICIT_DTOR, combatManager)
+VA_COMPGEN(0x004f39f0, 0x6D, IMPLICIT_DTOR, advManager)
+
+// E:\gamedcs\kb.cpp:4187; Complete's body is empty (see kb.h).
+DC_ONLY(0xe4530, 0x78)
+void EarlyShutDownSystem()
+{
+}
+
+#if 0  // @carcass
 
 // E:\gamedcs\kb.cpp:3954
 DC_ONLY(0xe3dfc, 0x4C)
@@ -2096,13 +2269,6 @@ void ShowCongrats(int hsType)
 // E:\gamedcs\kb.cpp:4168
 DC_ONLY(0xe44f0, 0x40)
 void MemError()
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:4187
-DC_ONLY(0xe4530, 0x78)
-void EarlyShutDownSystem()
 {
     // @stub
 }

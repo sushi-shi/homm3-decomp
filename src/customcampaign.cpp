@@ -12,6 +12,7 @@
 #include "campaignbrief.h"
 #include "customcampaign.h"
 #include "customcampaign_legacy.h"
+#include "gzinflatebuf.h"
 #include "hero.h"
 #include "soundmgr.h"
 #include "town.h"
@@ -42,6 +43,20 @@ static const int CROSSOVER_PATROL_FIRST_SCENARIO = 6;
 static const int CROSSOVER_PATROL_LAST_SCENARIO = 7;
 static const int CROSSOVER_PATROL_HERO = 155;
 static const int CROSSOVER_PATROL_RADIUS = 10;
+
+// The two TStreamBufFile virtuals, emitted at the head of this object
+// (see gzinflatebuf.h): sgetn / sputn on the wrapped streambuf.
+VA(0x00483f10, 0x17)  // TStreamBufFile vftable 0x63dacc slot 1, retail-only
+int TStreamBufFile::Read(void* data, int size)
+{
+    return buffer->sgetn(static_cast<char*>(data), size);
+}
+
+VA(0x00483f30, 0x17)  // TStreamBufFile vftable 0x63dacc slot 2, retail-only
+int TStreamBufFile::Write(const void* data, int size)
+{
+    return buffer->sputn(static_cast<const char*>(data), size);
+}
 
 // Complete-only. Retail destroys the two MapTextStruct records and the
 // start-options object through `delete` (the options go through vtable
@@ -261,14 +276,22 @@ void TCampaignBrief::ScenarioStruct::InitializeCrossoverHero(
     gpGame->campaign.field_6c.push_back(currentHero->id);
 }
 
-#if 0  // @carcass - Complete-only map-header loader: needs TGzInflateBuf/TStreamBufFile models.
+// Complete-only. Seeks the campaign stream to this scenario's map data
+// and reads the map header out of a gzip-inflating view of it.
 VA(0x00487d30, 0x96)  // LoadScenario's sole callee, retail-only
 void TCampaignBrief::ScenarioStruct::LoadMapHeader(
-    TAbstractFile* stream, NewSMapHeader* mapHeader, int which)
+    std::streambuf* stream, NewSMapHeader* mapHeader, int which)
 {
-    // @stub
+    stream->pubseekoff(offset, std::ios::beg, std::ios::in);
+    TGzInflateBuf inflateBuf(stream);
+    TStreamBufFile file(&inflateBuf);
+    mapHeader->Read(&file, which);
 }
-#endif  // @carcass
+
+// TAbstractFile's deleting destructor; retail keeps this object's copy
+// (the vftable 0x63dac0 slot 0), being the first in link order to
+// instantiate the class.
+VA_COMPGEN(0x00487dd0, 0x23, SCALAR_DELETING_DTOR, TAbstractFile)
 
 #if 0  // Dreamcast-only carcass; retained as evidence, not emitted for retail.
 // E:\gamedcs\customcampaign.cpp:29
@@ -314,16 +337,29 @@ void SCampaign::DoPreLoadCustomization()
 }
 #endif
 
-#if 0  // @carcass - Complete scenario launcher: needs TGzInflateBuf/TStreamBufFile models.
-// TCampaignBrief::TCampaignBrief supplies exact receiver offsets, return
-// tests, and argument ABIs for this PC-only loader family.
+// Complete-only. Marks the chosen player position local and human, seeds
+// its starting hero from the scenario's options record, and starts the
+// map out of a gzip-inflating view of the campaign stream. game::NewMap
+// receives this scenario as its campaign context.
 VA(0x004884c0, 0x103)  // CampaignHeaderStruct::StartScenario sole caller
 void TCampaignBrief::ScenarioStruct::StartScenario(
-    TAbstractFile* stream, int option)
+    std::streambuf* stream, int option)
 {
-    // @stub
+    int position = options->GetPlayerPosition(option);
+    gpGame->players[position].isHuman = 1;
+    gpGame->players[position].isLocal = 1;
+
+    int playerHeroFaces[8];
+    for (int i = 0; i < 8; i++)
+        playerHeroFaces[i] = -1;
+    playerHeroFaces[position] = options->GetStartingHero(option);
+    gpGame->SetupFirstPlayer();
+
+    stream->pubseekoff(offset, std::ios::beg, std::ios::in);
+    TGzInflateBuf inflateBuf(stream);
+    TStreamBufFile file(&inflateBuf);
+    gpGame->NewMap(&file, playerHeroFaces, this, -1);
 }
-#endif  // @carcass
 
 // Complete-only. The four members default-construct (the empty
 // allocator byte is copied out of the parameter padding at [ebp+0xb]);

@@ -8,6 +8,7 @@
 #include "basemgr.h"
 #include "inputmgr.h"
 #include "mousemgr.h"
+#include "soundmgr.h"
 #include "window.h"
 #include "winmgr.h"
 #include "kbwin.h"
@@ -33,20 +34,20 @@
 // band. Retail has no out-of-line body for it: DoDialog builds its
 // local `executive dialogExec = { 0, 0, 0, 0 }` inline, which is the
 // /Ob2 single-call-site rule applied to a trivial ctor.
-DC_ONLY(0x9e510, 0xE)
-void executive::executive()
-{
-    // @stub
-}
-
-// E:\gamedcs\exec.cpp:63
-DC_ONLY(0x9e594, 0xD8)
-void executive::ShutDownSystem()
-{
-    // @stub
-}
-
 #endif  // @carcass
+
+// E:\gamedcs\exec.cpp:37. The note above dated the body to the cinit
+// run; the carve row at 0x4b0900 IS the constructor - sixteen bytes that
+// return `this` after zeroing the four members - the out-of-line copy
+// kept for InitMainClasses' heap instance.
+VA(0x004b0900, 0x10)  // dc-order-map (precedes InitSystem), dc 0x9e510
+executive::executive()
+{
+    headManager = 0;
+    tailManager = 0;
+    currentManager = 0;
+    dialogReturn = 0;
+}
 
 // gpGeneralText is the canonical TTextResource loaded from genrltxt.txt.
 
@@ -65,11 +66,35 @@ int executive::InitSystem()
     return 0;
 }
 
+// E:\gamedcs\exec.cpp:63. Complete sets the WM_QUIT guard where the
+// Dreamcast set bInShutDown, adds the sound manager's Close, and keeps
+// the (now empty) EarlyShutDownSystem call - it lands on the ICF `ret`.
+VA(0x004b0990, 0x78)  // anchor-caller ShutDown + dc-order-map, dc 0x9e594
+void executive::ShutDownSystem()
+{
+    bShutDownDone = 1;
+    gpSoundManager->Close();
+    EarlyShutDownSystem();
+
+    baseManager* thisManager = headManager;
+    while (thisManager) {
+        baseManager* nextManager = thisManager->nextManager;
+        if (thisManager != gpWindowManager && thisManager != gpMouseManager)
+            RemoveManager(thisManager);
+        thisManager = nextManager;
+    }
+    if (gpWindowManager->status == baseManager::STATUS_ACTIVE)
+        RemoveManager(gpWindowManager);
+    if (gpMouseManager->status == baseManager::STATUS_ACTIVE)
+        RemoveManager(gpMouseManager);
+    gpInputManager->Close();
+}
+
 // E:\gamedcs\exec.cpp:103
 VA(0x004b0a10, 0x10B)  // anchor-global, dc 0x9e66c
 int executive::DoDialog(baseManager* newDialog)
 {
-    executive dialogExec = { 0, 0, 0, 0 };
+    executive dialogExec;
     baseManager* savedMgr[20];
     baseManager* savedPrev[20];
     baseManager* savedNext[20];
