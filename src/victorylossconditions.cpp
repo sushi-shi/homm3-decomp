@@ -325,6 +325,12 @@ unsigned char VictoryConditionStruct::CheckForUpgradedTown()
 // model confirms identical first-definition bindings and places the
 // divergence after allocation, outside the B1 lever.
 // E:\gamedcs\victorylossconditions.cpp:184
+// Residual (99.2820%) is THREE instructions in the first type_point::operator==
+// expansion's second field test: retail loads the operand into the destination
+// (`mov edx,[ebp-0x16]` / `xor edx,edi`) where this compile lands it in ESI and
+// copies EDI into EDX first. Swapping that comparison's operands
+// (grail_town_loc == this_town_loc) is byte-flat - VC6 canonicalises the
+// bitfield xor's operand order, so the choice is not source-reachable here.
 VA(0x005f1ef0, 0x203)  // anchor-global, dc 0x190124
 unsigned char VictoryConditionStruct::CheckForGrailBuildingWin()
 {
