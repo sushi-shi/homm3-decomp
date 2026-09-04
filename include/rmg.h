@@ -10,6 +10,7 @@
 
 class TAbstractFile;
 struct TRmgZone;
+struct TRmgTerrainTile;
 
 // Complete's random-map object factories share this five-dword prefix.  The
 // constructor at 0x534160 writes the four fields, while vtable 0x640b64 proves
@@ -489,12 +490,13 @@ public:
 class TRmgMapAdapterInterface {
 public:
     virtual ~TRmgMapAdapterInterface() {}
-    virtual void SetTile(const TPoint& point, int value) = 0;
+    virtual void SetTile(
+        const TPoint& point, const TRmgTerrainTile& tile) = 0;
     virtual void SetOverlay(const TPoint& point, int value) = 0;
-    virtual TPoint GetStart() = 0;
-    virtual TRmgMapPosition GetTile(const TPoint& point) = 0;
-    virtual int GetOverlay(const TPoint& point) = 0;
+    virtual TPoint GetSize() = 0;
+    virtual TRmgTerrainTile GetTile(const TPoint& point) = 0;
     virtual int GetLand(const TPoint& point) = 0;
+    virtual int GetOverlay(const TPoint& point) = 0;
 };
 
 class TRmgMapAdapter : public TRmgMapAdapterInterface {
@@ -503,21 +505,22 @@ public:
 
     inline TRmgMapAdapter(type_random_map* newMap) : map(newMap) {}
 
-    virtual void SetTile(const TPoint& point, int value);
+    virtual void SetTile(
+        const TPoint& point, const TRmgTerrainTile& tile);
     virtual void SetOverlay(const TPoint& point, int value);
-    virtual TPoint GetStart();
-    virtual TRmgMapPosition GetTile(const TPoint& point);
-    virtual int GetOverlay(const TPoint& point);
+    virtual TPoint GetSize();
+    virtual TRmgTerrainTile GetTile(const TPoint& point);
     virtual int GetLand(const TPoint& point);
+    virtual int GetOverlay(const TPoint& point);
 };
 
 class TRmgLinePainter {
 public:
-    TPoint start;
+    TPoint size;
     TRmgMapAdapterInterface* adapter;
 
     inline TRmgLinePainter(TRmgMapAdapterInterface* newAdapter)
-        : start(newAdapter->GetStart()), adapter(newAdapter)
+        : size(newAdapter->GetSize()), adapter(newAdapter)
     {
     }
     ~TRmgLinePainter() {}
