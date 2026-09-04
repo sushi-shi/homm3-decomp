@@ -2224,6 +2224,25 @@ static void decrement_backpack_start(long slot)
 // rollover path, static-helper calls and high-level switch nesting. Complete
 // independently fixes the four 200-id hero rows, three artifact-page buttons
 // and two backpack arrows per row, plus the keyboard paging extension.
+//
+// MATCHING (2026-09-04): 76.14 -> 77.96 on two jump-table arm orders (a
+// jump-table switch lays its arms out in source order): the flaggable
+// cases run HOME, PREVIOUS, NEXT, END, CONTROL_14 (retail table +0x8e4:
+// 571a/5722 expanded, 5756 `DoFlaggableButtons(2)`, 5764 `(3)`, 5772) and
+// the keyboard cases PRIOR, NEXT, HOME, END (table +0xae4). The codeX
+// case order measured byte-flat either way.
+// Residual: the /Ob2 budget. Retail expands DoFlaggableButtons at the
+// first two sites only, CALLS UpdateFlaggableIcons inside those
+// expansions and CALLS game::GetHero at depth 3 inside the eight
+// backpack-arrow expansions; we expand all of them (+31 blocks, 162 vs
+// 131). A direction probe (the KEY_DOWN block removed) brings three of
+// those nine calls back, so our caller cb is well above retail's (>= 1.4x
+// by the sequential model) yet every retail statement is present, the
+// four row bodies are separate in retail too (four jump-table clusters)
+// and the DC roster holds no helper to shrink the caller with
+// (get_last_backpack_index, show_artifact and the two backpack steppers
+// are already used). The leaf DoFlaggableButtons is byte-exact and
+// carries retail's double size()-7 evaluation. Not spellable from here.
 // E:\gamedcs\overview.cpp:2546
 VA(0x00521960, 0xB03)  // vtable slot 9 + exhaustive call/CFG identity, dc 0x10997c
 int TOverviewWindow::WindowHandler(message* msg)
@@ -2251,18 +2270,18 @@ int TOverviewWindow::WindowHandler(message* msg)
             case OVERVIEW_FLAGGABLE_HOME_ID:
                 DoFlaggableButtons(OVERVIEW_FLAGGABLE_HOME);
                 break;
+            case OVERVIEW_FLAGGABLE_PREVIOUS_ID:
+                DoFlaggableButtons(OVERVIEW_FLAGGABLE_PREVIOUS);
+                break;
+            case OVERVIEW_FLAGGABLE_NEXT_ID:
+                DoFlaggableButtons(OVERVIEW_FLAGGABLE_NEXT);
+                break;
             case OVERVIEW_FLAGGABLE_END_ID:
                 DoFlaggableButtons(OVERVIEW_FLAGGABLE_END);
                 break;
             case OVERVIEW_CONTROL_14_ID:
                 res = 1;
                 gpWindowManager->dialogReturn = msg->codeY;
-                break;
-            case OVERVIEW_FLAGGABLE_PREVIOUS_ID:
-                DoFlaggableButtons(OVERVIEW_FLAGGABLE_PREVIOUS);
-                break;
-            case OVERVIEW_FLAGGABLE_NEXT_ID:
-                DoFlaggableButtons(OVERVIEW_FLAGGABLE_NEXT);
                 break;
 
             case OVERVIEW_SELECT_HEROES_ID:
@@ -2449,19 +2468,10 @@ int TOverviewWindow::WindowHandler(message* msg)
 
     if (msg->id == MESSAGE_KEY_DOWN) {
         switch (msg->codeX) {
-        case VK_HOME:
-            giOverviewTop[giOverviewType] = 0;
-            gpGame->SetupDynamicStuff(1, 0);
-            break;
         case VK_PRIOR:
             giOverviewTop[giOverviewType] -= 4;
             if (giOverviewTop[giOverviewType] < 0)
                 giOverviewTop[giOverviewType] = 0;
-            gpGame->SetupDynamicStuff(1, 0);
-            break;
-        case VK_END:
-            giOverviewTop[giOverviewType] =
-                giOverviewItems[giOverviewType] - 4;
             gpGame->SetupDynamicStuff(1, 0);
             break;
         case VK_NEXT:
@@ -2470,6 +2480,15 @@ int TOverviewWindow::WindowHandler(message* msg)
                     > giOverviewItems[giOverviewType] - 4)
                 giOverviewTop[giOverviewType] =
                     giOverviewItems[giOverviewType] - 4;
+            gpGame->SetupDynamicStuff(1, 0);
+            break;
+        case VK_HOME:
+            giOverviewTop[giOverviewType] = 0;
+            gpGame->SetupDynamicStuff(1, 0);
+            break;
+        case VK_END:
+            giOverviewTop[giOverviewType] =
+                giOverviewItems[giOverviewType] - 4;
             gpGame->SetupDynamicStuff(1, 0);
             break;
         }

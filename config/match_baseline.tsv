@@ -2234,7 +2234,7 @@ overview	?SetupNewOverviewType@game@@QAEXHE@Z	96.4609	100.0000	100.0000	0x11e330
 overview	?UpdateBackpack@@YIXH@Z	96.5741	96.5741	96.5741	0x122470	838327f3aed0
 overview	?UpdateFlaggableIcon@TOverviewWindow@@AAEXH@Z	100.0000	100.0000	100.0000	0x11e670	175071f99d0f
 overview	?UpdateFlaggableIcons@TOverviewWindow@@AAEXXZ	100.0000	100.0000	100.0000	0x11e7c0	5cc0bf1efd42
-overview	?WindowHandler@TOverviewWindow@@UAEHPAVmessage@@@Z	76.1414	76.1414	76.1414	0x121960	5bf1da99f0dc
+overview	?WindowHandler@TOverviewWindow@@UAEHPAVmessage@@@Z	77.9641	77.9641	77.9641	0x121960	6443706a8051
 overview	?get_last_backpack_index@@YIJJ@Z	100.0000	100.0000	100.0000	0x1225d0	ba725cb029d9
 palette	??0TPalette24@@QAE@PBE@Z	100.0000	100.0000	100.0000	0x122e80	468ea0d98910
 palette	??0TPalette24@@QAE@PBUTRGBA@@@Z	100.0000	100.0000	100.0000	0x122eb0	db67b2665478
