@@ -569,7 +569,6 @@ public:
     // Hiding its declaration changed VC6's member-handle population and
     // could manufacture a higher local score in unrelated consumers.
     int numSpellCasts;            // +0xdc
-#ifdef HOMM3_ARMY_MULTI_HEAD_VIEW
     char pad_e0[0x8];
     // NAMED 2026-08-15 from the Dreamcast member table: DC army@212 is
     // show_fire_shield against this band's already-anchored +20 shift
@@ -578,9 +577,6 @@ public:
     // byte on the head it burned, and only when adjust_damage handed
     // back a non-zero fire component.
     unsigned char show_fire_shield;  // +0xe8
-#else
-    char pad_e0[0x9];
-#endif
 #endif  // HOMM3_ARMY_COPY_VIEW
     // NAMED 2026-08-15 from the Dreamcast member table, and the three
     // bytes come out of it as one run: DC army@212/213/214 are
@@ -1490,10 +1486,8 @@ private:
     // it the way advmgr / events / hero already scope theirs. The
     // measurement is the whole justification: remove the guard and
     // GetCommand drops again.
-#ifdef HOMM3_ARMY_MULTI_HEAD_VIEW
     long get_clockwise(long direction) const;
     long get_counter_clockwise(long direction) const;
-#endif
     // DC public ?CanFit@army@@QBAHHHPAH@Z; mark_teleport's retail call
     // passes (hex, 0, 0) through a const army pointer.
     int CanFit(int destIndex, int bAllowShifting,
@@ -1930,11 +1924,9 @@ public:
     // Shield retaliation. Behind a view because a bare member
     // declaration is this header's own measured include-set trigger;
     // army.cpp is the only consumer of either.
-#ifdef HOMM3_ARMY_MULTI_HEAD_VIEW
     void do_multi_head_attack(unsigned attackMask, int* damage, int* killed,
                               long* fire_damage);
     void do_fire_shield(long damage);
-#endif
     long get_average_damage(const army* enemy, unsigned char ranged_attack,
                             long amount, unsigned char limit_damage,
                             long distance) const;               // 0x442780
@@ -2304,11 +2296,8 @@ inline bool army::is_in_area_highlight() const
 // to say where. Sliced by army::get_clockwise / get_counter_clockwise,
 // whose only located expansion is get_multi_head_directions
 // (0x448ab0). Names are bootstrap inventions - no roster attests them.
-// Scoped to army.cpp with the accessor pair above, same measurement.
-#ifdef HOMM3_ARMY_MULTI_HEAD_VIEW
 DATA(0x00660878) extern const long akWideDirectionRingIndex[8];
 DATA(0x00660898) extern const long akWideDirectionRingOrder[8];
-#endif
 
 // The five globals a walk publishes for the redraw, and their NAMES ARE
 // THE DREAMCAST LITERAL POOL'S - army::Walk's own SH4 body (dc 0x45254)
