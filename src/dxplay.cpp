@@ -21,7 +21,6 @@
 #include <va.h>
 // dxplay.cpp is the DirectPlay TU: it sees the complete DP6 value structures and
 // the lobby non-virtual member set, exactly as retail did.
-#define HOMM3_REMOTE_LOBBY_DECLS
 #include "dxplay.h"
 #include "dxplay_com.h"
 
