@@ -140,6 +140,106 @@ void PollSound()
     }
 }
 
+// E:\gamedcs\kb.cpp:722
+// The credits crawl over the closing video: the 328x580 window at
+// (460,10) is saved, the whole text is rendered once into an off-screen
+// strip, and every video frame restores the backdrop and blits the strip
+// in three phases - rising in from the bottom (startOffset), scrolling
+// (yOffset, until the strip's last 580 rows are up), then running out
+// the top (endOffset) with the closing line in smallFont once the crawl
+// has cleared the lower quarter. Any click or non-F4 key stops it.
+VA(0x004edda0, 0x407)  // anchor-callee + dc-order-map, dc 0xdfa3c
+void CreditsWait()
+{
+    font* CreditsFont = ResourceManager::GetFont("CREDITS.FNT");
+    int done = 0;
+    int yOffset = 0;
+    int textHeight = CreditsFont->LineLength(Credits[0], 328)
+        * CreditsFont->fs.height;
+    int startOffset = 580;
+    Bitmap16Bit* background = new Bitmap16Bit(328, 580);
+    if (!background)
+        MemError();
+    gpWindowManager->screenBitmap->Draw(
+        460, 10, gpWindowManager->screenBitmap->GetWidth(),
+        gpWindowManager->screenBitmap->GetHeight(), background->GetMap(0, 0),
+        0, 0, background->GetWidth(), background->GetHeight(),
+        background->GetPitch(), 1);
+    Bitmap16Bit* credits =
+        new Bitmap16Bit(328, textHeight + CreditsFont->fs.height);
+    if (!credits)
+        MemError();
+    credits->FillRect(0, 0, credits->GetWidth(), credits->GetHeight(), 1);
+    CreditsFont->DrawBoundedString(Credits[0], credits, 0, 0,
+                                   credits->GetWidth(), credits->GetHeight(),
+                                   284, 5, -1);
+    gpInputManager->Flush();
+    if (VideoNeedsUpdate())
+        VideoDrawRects();
+    int endOffset = 580;
+    while (1) {
+        if (!VideoPlaying())
+            break;
+        PollSound();
+        Process1WindowsMessage();
+        message msg = gpInputManager->GetEvent();
+        switch (msg.id) {
+        case MESSAGE_KEY_DOWN:
+            if (msg.codeX == KEYCODE_F4)
+                break;
+            // fall through
+        case MESSAGE_LEFT_BUTTON_DOWN:
+        case MESSAGE_RIGHT_BUTTON_DOWN:
+            goto stop_credits;
+        }
+        if (VideoNeedsUpdate()) {
+            Bitmap16Bit* screen = gpWindowManager->screenBitmap;
+            background->Draw(0, 0, background->GetWidth(),
+                             background->GetHeight(), screen->GetMap(0, 0),
+                             460, 10, screen->GetWidth(), screen->GetHeight(),
+                             screen->GetPitch(), 0);
+            if (startOffset) {
+                startOffset -= 2;
+                screen = gpWindowManager->screenBitmap;
+                credits->Draw(0, 0, 328, 580 - startOffset,
+                              screen->GetMap(0, 0), 460, startOffset + 10,
+                              screen->GetWidth(), screen->GetHeight(),
+                              screen->GetPitch(), 1);
+            } else if (yOffset < textHeight - 580) {
+                yOffset += 2;
+                screen = gpWindowManager->screenBitmap;
+                credits->Draw(0, yOffset, 328, 580, screen->GetMap(0, 0), 460,
+                              10, screen->GetWidth(), screen->GetHeight(),
+                              screen->GetPitch(), 1);
+            } else if (endOffset >= 0) {
+                endOffset -= 2;
+                yOffset += 2;
+                screen = gpWindowManager->screenBitmap;
+                credits->Draw(0, yOffset, 328, endOffset, screen->GetMap(0, 0),
+                              460, 10, screen->GetWidth(), screen->GetHeight(),
+                              screen->GetPitch(), 1);
+                if (endOffset < 435)
+                    smallFont->DrawBoundedString(
+                        Credits[1], gpWindowManager->screenBitmap, 460, 10,
+                        328, 580, 13, 8, -1);
+            } else {
+                done = 1;
+            }
+            gpWindowManager->UpdateScreen(460, 10, 328, 580);
+            VideoDrawRects();
+            if (done)
+                break;
+        }
+    }
+
+stop_credits:
+    if (credits)
+        delete credits;
+    if (background)
+        delete background;
+    CreditsFont->Dispose();
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\kb.cpp:240
@@ -210,12 +310,6 @@ int EarlySetup()
     // @stub
 }
 
-// E:\gamedcs\kb.cpp:722
-VA(0x004edda0, 0x407)  // anchor-callee + dc-order-map, dc 0xdfa3c
-void CreditsWait()
-{
-    // @stub
-}
 
 // E:\gamedcs\kb.cpp:814
 DC_ONLY(0xdff5c, 0x86)
@@ -292,13 +386,6 @@ int NullHandler(message* msg)
 // E:\gamedcs\kb.cpp:2279
 DC_ONLY(0xe1b94, 0x62)
 int WaitHandler(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:2332
-DC_ONLY(0xe1bf8, 0xD4)
-int ExitNormalDialog(message* msg)
 {
     // @stub
 }
@@ -1345,13 +1432,90 @@ static int PickLoadGame()
     return gpWindowManager->dialogReturn != DIALOG_RETURN_CANCEL;
 }
 
-#if 0  // @carcass: claim-only home; DC source-order body remains above
+// The normal-dialog state is private to kb.obj. Dreamcast publishes the
+// giNormalDialogMBType/giNormalDialogStart spellings; retail fixes their PC
+// cells and independently proves the saved selection/window companions.
+DATA(0x006993d4)
+static int giNormalDialogSelection;
+DATA(0x00699520)
+int giNormalDialogMBType;
+DATA(0x00699588)
+int giNormalDialogStart;
+DATA(0x00699590)
+static TDialogBox* gpNormalDialogWindow;
+
+// E:\gamedcs\kb.cpp:2332
+// The dialog's forced answer: the default button for the message-box
+// type (a coin toss between the two choices of the choose dialogs), then
+// the standard OK-widget message. Expanded into both of the handler's
+// exits in retail, so it has no body of its own.
+static int ExitNormalDialog(message* msg)
+{
+    switch (giNormalDialogMBType) {
+    case NORMAL_DIALOG_DEFAULT:
+    case NORMAL_DIALOG_ORDINAL_5:
+        gpWindowManager->dialogReturn = DIALOG_RETURN_OK;
+        break;
+    case NORMAL_DIALOG_YESNO:
+        gpWindowManager->dialogReturn = DIALOG_RETURN_DECLINE;
+        break;
+    case NORMAL_DIALOG_CHOOSE:
+    case NORMAL_DIALOG_CHOOSE_OPTIONAL:
+        if (rand() % 2)
+            gpWindowManager->dialogReturn = DIALOG_RETURN_CHOICE_2;
+        else
+            gpWindowManager->dialogReturn = DIALOG_RETURN_CHOICE_1;
+        break;
+    default:
+        gpWindowManager->dialogReturn = DIALOG_RETURN_CANCEL;
+        break;
+    }
+    msg->id = MESSAGE_WIDGET;
+    msg->codeY = 10;
+    msg->codeX = 10;
+    return MESSAGE_DISPATCH_FORWARD;
+}
+
+// E:\gamedcs\kb.cpp:2367
+// The modal dialog's idle handler: keep the adventure map's bottom view
+// animating, and force the dialog closed fifteen seconds after it opened.
+// The DC names the .data cell 0x697784 giDialogTimeout; this tree carries
+// it as winmgr.h's gDialogDeadline697784, and retail arms it here with the
+// milliseconds still left of the fifteen (start + 15000 - now)
+// once the turn timer expires or, in a network game, once a net message
+// has been handled behind it and asks for the popup to go. The
+// fifteen-second arming and the forced exit are written twice in the
+// source (turn-timer and network arms); retail expands ExitNormalDialog
+// into each.
 VA(0x004f08d0, 0x20C)  // anchor-callee + dialog-global shape, dc 0xe1ccc
 int NormalDialogHandler(message& msg)
 {
-    // @stub
+    if (gpAdvManager && gpAdvManager->advWindow)
+        gpAdvManager->advWindow->animate_bottom_view(1);
+    if (!gDialogDeadline697784 && gTurnDuration69d630.IsExpired()) {
+        if (GameTime::ElapsedSince(giNormalDialogStart) < 15000)
+            gDialogDeadline697784 = giNormalDialogStart - GameTime::Get() + 15000;
+        else
+            return ExitNormalDialog(&msg);
+    }
+    if (gNetworkActive69954c && !gDialogDeadline697784) {
+        unsigned char msgReceived = 0;
+        if (pDPlay) {
+            CNetMsgHandler* handler = pDPlay->GetNetMsgHandler();
+            if (handler) {
+                handler->CheckHandleNet(1, &msgReceived);
+                if (msgReceived && handler->GetAbortPopupMsg()) {
+                    if (GameTime::ElapsedSince(giNormalDialogStart) < 15000)
+                        gDialogDeadline697784 =
+                            giNormalDialogStart - GameTime::Get() + 15000;
+                    else
+                        return ExitNormalDialog(&msg);
+                }
+            }
+        }
+    }
+    return EventWindowHandler(&msg);
 }
-#endif
 
 // E:\gamedcs\kb.cpp:2811. The retail body independently fixes the source
 // shape: GetTeamMask expands at the head, both loops scan the eight player
@@ -3069,27 +3233,37 @@ void NormalDialogTimeOut(const char* cText, int iMBType, int timeOut,
 // (strlen via repne scasb), vector-ctor of 8 0x4c widgets, callers
 // include TAdventureMapWindow::ProcessRightSelect and AppCommand's
 // fullscreen-failure arm.
+#endif  // @carcass
+
+// E:\gamedcs\kb.cpp:5499
+// The twelve-argument front door: fill a TNormalDialogInfo (the three
+// named icons, five empty slots, the 256x128 default box with its 20/30
+// text inset), size it, and run DoNormalDialog on a by-value copy.
 VA(0x004f6570, 0x29B)  // anchor-callee, dc 0xe5fbc
 void NormalDialog(const char* cText, int iMBType, int x, int y,
     int iResType1, int iResExtra1, int iResType2, int iResExtra2,
     int iSpecial, int iTimeout, int iResType3, int iResExtra3)
 {
-    // @stub
+    TNormalDialogInfo dialog_info;
+    dialog_info.dialog_text = cText;
+    dialog_info.x = x;
+    dialog_info.y = y;
+    dialog_info.iMBType = static_cast<EMBType>(iMBType) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
+    dialog_info.iSpecial = iSpecial;
+    dialog_info.timeout = iTimeout;
+    dialog_info.width = 256;
+    dialog_info.height = 128;
+    dialog_info.text_widget_x = 20;
+    dialog_info.text_widget_y = 30;
+    dialog_info.icons[0].set(static_cast<EGameResource>(iResType1) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */, iResExtra1);
+    dialog_info.icons[1].set(static_cast<EGameResource>(iResType2) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */, iResExtra2);
+    dialog_info.icons[2].set(static_cast<EGameResource>(iResType3) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */, iResExtra3);
+    for (int i = 3; i < 8; i++)
+        dialog_info.icons[i].set(const_no_resource, -1);
+    CalculateNormalDialogSize(&dialog_info);
+    DoNormalDialog(dialog_info);
 }
 
-#endif  // @carcass
-
-// The normal-dialog state is private to kb.obj. Dreamcast publishes the
-// giNormalDialogMBType/giNormalDialogStart spellings; retail fixes their PC
-// cells and independently proves the saved selection/window companions.
-DATA(0x006993d4)
-static int giNormalDialogSelection;
-DATA(0x00699520)
-int giNormalDialogMBType;
-DATA(0x00699588)
-int giNormalDialogStart;
-DATA(0x00699590)
-static TDialogBox* gpNormalDialogWindow;
 DATA(0x00699254)
 static int gUnnamed699254;
 
