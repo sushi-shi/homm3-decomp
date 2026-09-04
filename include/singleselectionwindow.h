@@ -201,6 +201,9 @@ public:
     int unused;                                              // +0x7c8
     int assignedPos;                                         // +0x7cc
 
+    // Dreamcast singleselectionwindow.cpp:1005 (dc 0x1303fc); retail
+    // expands it into the window constructor's member initialisation.
+    CNetPlayerHandler();
     int GetNetPos(unsigned long dpid)
     {
         for (int i = 0; i < MAX_PLAYERS; ++i)
@@ -209,13 +212,16 @@ public:
         return -1;
     }
 
-    // DC GetGamePos; GetHeroFace expands it for IsFaceTaken's exclude.
+    // DC GetGamePos (dc 0x130778): the netPos local, an early `return -1`
+    // on the not-found arm (DC B1 `mov #-1,r0; bra`) and the playerPos
+    // load as the fall-through - the arm order UpdatePlayerPositions'
+    // retail expansion keeps (found path in line, -1 jumps to the join).
     int GetGamePos(unsigned long dpid)
     {
-        int net = GetNetPos(dpid);
-        if (net != -1)
-            return humanPlayers[net].playerPos;
-        return -1;
+        int netPos = GetNetPos(dpid);
+        if (netPos == -1)
+            return -1;
+        return humanPlayers[netPos].playerPos;
     }
 
     bool DeletePlayer(unsigned long dpid);
@@ -593,6 +599,9 @@ public:
     // UpdateGameVars role (dc 0x139090, void()). Called after the
     // header transfer completes.
     void UpdateGameVars();
+    // DC singleselectionwindow.cpp:2821 (dc 0x135e80); retail 0x57fb90 is
+    // the constructor's out-of-line callee at +0x2c72.
+    void UpdateMainWindow();
 #ifdef HOMM3_SSWINDOW_HEADER_VECTORS
     // Dreamcast source method; Complete retail 0x58c290. Only the owning TU
     // calls it (from OnBeginGame), so keep this declaration with that TU's
