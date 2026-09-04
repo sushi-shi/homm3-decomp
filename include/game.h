@@ -908,7 +908,8 @@ public:
     char pad_24[0x10];
 #endif
     int HeroID;
-#if defined(HOMM3_VLC_CHECKS_VIEW) || defined(HOMM3_PHILAI_OBJ_DECLS)
+#if defined(HOMM3_VLC_CHECKS_VIEW) || defined(HOMM3_PHILAI_OBJ_DECLS) \
+    || defined(HOMM3_NEWGAME_OBJ_DECLS)
     // CheckForDefeatedMonsterWin (0x5f2390) packs the words at
     // +0x38/+0x3c and the byte at +0x40 into a type_point - the DC
     // MonsterX/MonsterY/MonsterZ trio, int-widened like the town trio.
