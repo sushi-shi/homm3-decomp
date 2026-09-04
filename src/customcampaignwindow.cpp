@@ -31,8 +31,18 @@ TCustomCampaignWindow::TCustomCampaignWindow()
 // Complete-only. Scans Maps\\*.h3c through the CRT _find family (each step
 // bracketed by a _getcwd retail kept), keeps every header that loads with
 // at least one map, sorts by campaign name and sizes the slider for the
-// eighteen-row list. FreeData's second retail call site: with it in the
-// TU, /Ob2 stops expanding FreeData into ~CampaignHeaderStruct.
+// eighteen-row list.
+//
+// Residual (65.03%): the std::sort expansion. Retail CALLS _Sort (its
+// COMDAT is 0x483940, with _Median/_Unguarded_partition folded in) and
+// _Insertion_sort_1, and EXPANDS _Unguarded_insert (the predicate is
+// called straight from the unguarded loop); our /Ob2 spends the budget
+// the other way round - _Sort expanded with its children called, and
+// _Unguarded_insert called. Every other site agrees (the ctor, Load,
+// GetNumMaps and FreeData are cross-TU calls, push_back's insert(it,n,x)
+// COMDAT is called on both sides). The remaining call rows are name-only
+// (_getcwd, operator new, the Load/UpdateList stubs). Pins are not used
+// in this lane; the lever is the /Ob2 site budget.
 VA(0x00482fd0, 0x264)  // TCustomCampaignWindow ctor callee + _findfirst("*.h3c"), retail-only
 void TCustomCampaignWindow::LoadCampaignList()
 {
