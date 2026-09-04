@@ -94,11 +94,9 @@ enum EGeneralTextIndex {
     // describes that consumer, which is this enum's stated convention;
     // the index is retail-byte-proven (a folded [Text._First + 0x204]).
     GENERAL_TEXT_COMBAT_SPELL_ALREADY_CAST = 129,
-#ifdef HOMM3_COMMAND_GRID_VIEW
     // ResetRound posts this line after every non-placement, non-quick round;
     // retail folds Text._First + 0x674, i.e. row 413.
     GENERAL_TEXT_COMBAT_ROUND = 413,
-#endif
     GENERAL_TEXT_SYSTEM_OPTIONS_AUDIO_UNAVAILABLE = 151,
     GENERAL_TEXT_BACKPACK_FULL = 153,
     // HandleCombatPlayerDrop's two 15-second notification rows.
