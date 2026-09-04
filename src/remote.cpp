@@ -632,15 +632,15 @@ CNetMsgHandler* CDPlayHeroes::GetNetMsgHandler()
 VA(0x005537b0, 0x46)  // anchor-callee + arity/order-map, dc 0x11c330
 void CChatManager::Init()
 {
-    g_chatSample = LoadSampleResource(
+    g_chatSample = ResourceManager::GetSample(
         DATA_COMPGEN(0x00682b30, chatSampleName, "chat.wav"));
-    g_playerDropSample = LoadSampleResource(
+    g_playerDropSample = ResourceManager::GetSample(
         DATA_COMPGEN(0x00682b20, playerDropSampleName, "playexit.wav"));
-    g_sysMsgSample = LoadSampleResource(
+    g_sysMsgSample = ResourceManager::GetSample(
         DATA_COMPGEN(0x00682b14, systemMessageSampleName, "sysmsg.wav"));
-    g_turnDurSample = LoadSampleResource(
+    g_turnDurSample = ResourceManager::GetSample(
         DATA_COMPGEN(0x00682b04, turnDurationSampleName, "timeover.wav"));
-    g_playerEnterSample = LoadSampleResource(
+    g_playerEnterSample = ResourceManager::GetSample(
         DATA_COMPGEN(0x00682af4, playerEnterSampleName, "playcome.wav"));
 }
 
