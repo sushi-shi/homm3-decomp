@@ -59,6 +59,23 @@ static unsigned char view_heroes;
 // retained body. Dreamcast preserves the boundary, the two width locals and
 // the nested clipped loops; retail independently confirms all four screen
 // bounds and the transparent-pixel test in each expansion.
+// MEASURED, 2026-09-05, and it is a per-CALL-SITE inline split we cannot
+// currently spell. Retail emits a REAL out-of-line body for this helper at
+// 0x5f73b0's neighbour 0x5f9d90 (carve row, 316 B; the Dreamcast's own copy
+// is 328 B at dc 0x1968d0) and CALLS it from exactly three of the six view-
+// world layers - VWDrawShroud (call at 0x1f9d7c), VWDrawUnderlay (0x1fa1d2)
+// and VWDrawGround (0x1fa5f1) - while expanding it into VWDrawAdvObj,
+// VWDrawRiver and VWDrawRoad. The three that call it are the three whose
+// pre-inline bodies carry the most candidate call sites, which is the /Ob2
+// `budget / sites-remaining` quotient falling below this callee's cost.
+// Dropping `inline` here flips ALL SIX to a call:
+//   Underlay 38.86 -> 95.67, Ground 55.64 -> 92.47, but
+//   River 95.49 -> 58.09, Road 94.60 -> 59.75, AdvObj 94.84 -> 83.71.
+// Byte-weighted that trade is worth about +200 B and it puts three banked
+// rows under their MAX, so the `inline` stays. Closing it needs a per-site
+// lever (a statement pin inside VWScaleToScreenBuffer is per-CALLEE, not
+// per-site, so it cannot split the six) or a caller-shrink dose on the three
+// heavy layers.
 inline void VWClipScaleToScreenBuffer(int destX, int destY)
 {
     if (destX + giViewWorldScale < 8)
@@ -512,16 +529,111 @@ void advManager::VWDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
         VWScaleToScreenBuffer(baseX, baseY + 8);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\viewwrld.cpp:822
+// The scaled shadow layer. It is VWDrawAdvObj without the six-row draw-layer
+// split: one flat pass over the cell's objects behind the same two filters,
+// then the cursor shadows, then the hero and boat part shadows. advmgr.cpp's
+// DrawAdvObjShadow supplies the cursor block verbatim with `playerBit` where
+// the full-size renderer tests gbInViewWorld, and retail corroborates the
+// whole shape - the two TDrawParts arrays cleared six entries at a time, the
+// two ScanForHeroOrBoat calls, the drawCells/suppressDraw pair, and the
+// `part <= 5` bound on both part loops.
 VA(0x005f8be0, 0x636)  // exhaustive dc-order-map + VWCompleteDraw call order (5th layer), dc 0x1943ec
 void advManager::VWDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int destY)
 {
-    // @stub
-}
+    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth || srcY >= gMapHeight)
+        return;
 
-#endif  // @carcass
+    NewmapCell* thisCell = GetCell(type_point(srcX, srcY, z));
+    int playerBit = 1 << gpGame->GetLocalPlayerGamePos();
+    playerBit &= GetMapExtra(srcX, srcY, z);
+
+    int baseX = destX * giViewWorldScale + iVWCenterOffsetW,
+        baseY = destY * giViewWorldScale + iVWCenterOffsetH;
+
+    TDrawParts heroParts[6];
+    TDrawParts boatParts[6];
+    unsigned char foundHero =
+        ScanForHeroOrBoat(srcX, srcY, z, HERO, heroParts);
+    unsigned char foundBoat =
+        ScanForHeroOrBoat(srcX, srcY, z, BOAT, boatParts);
+
+    int drewSomething = 0;
+    memset(memoryBuffer->GetMap(0, 0), 0,
+           memoryBuffer->GetHeight() * memoryBuffer->GetPitch());
+
+    for (int numObj = 0; numObj < thisCell->objects.size(); ++numObj) {
+        NewmapCell::TObjectCell* objCell = &thisCell->objects[numObj];
+
+        CObjectType* objType =
+            &fullMap->objectTypes[
+                fullMap->objects[objCell->ObjectIndex].typeIndex];
+        CSprite* SprPtr = fullMap->sprites[
+            fullMap->objects[objCell->ObjectIndex].typeIndex];
+
+        if (!playerBit
+            && (!iVWTerrains
+                || !gAdventureObjectLandBlocked[objType->objectType][12]))
+            continue;
+
+        if (!objType->drawCells[
+                CObjectType::_getBitPos(objCell->CellX, objCell->CellY)]
+            || objType->suppressDraw)
+            continue;
+
+        drewSomething = 1;
+        SprPtr->DrawAdvObjShadow(
+            (animFrame
+             + fullMap->objects[objCell->ObjectIndex].animationOffset)
+                % SprPtr->GetNumFrames(0),
+            (objType->width - objCell->CellX - 1) * 32,
+            (objType->height - objCell->CellY - 1) * 32,
+            32, 32, memoryBuffer, 0, 0, false);
+    }
+
+    if (destY == CURSOR_DEST_Y0) {
+        if (drawCursor && playerBit) {
+            if (destX == CURSOR_DEST_X0)
+                DrawCursorShadow(0, 0);
+            else if (destX == CURSOR_DEST_X1)
+                DrawCursorShadow(1, 0);
+            else if (destX == CURSOR_DEST_X2)
+                DrawCursorShadow(2, 0);
+        }
+    } else if (destY == CURSOR_DEST_Y1) {
+        if (drawCursor && playerBit) {
+            if (destX == CURSOR_DEST_X0)
+                DrawCursorShadow(0, 1);
+            else if (destX == CURSOR_DEST_X1)
+                DrawCursorShadow(1, 1);
+            else if (destX == CURSOR_DEST_X2)
+                DrawCursorShadow(2, 1);
+        }
+    }
+
+    if (foundHero && playerBit) {
+        for (int part = 0; part <= 5; ++part) {
+            if (heroParts[part].IsValid) {
+                drewSomething = 1;
+                VWDrawHeroPartShadow(part, heroParts[part], baseX, baseY,
+                                     0, 0, 32, 32);
+            }
+        }
+    }
+
+    if (foundBoat && playerBit) {
+        for (int boatPart = 0; boatPart <= 5; ++boatPart) {
+            if (boatParts[boatPart].IsValid) {
+                drewSomething = 1;
+                VWDrawBoatPartShadow(boatPart, boatParts[boatPart],
+                                     baseX, baseY, 0, 0, 32, 32);
+            }
+        }
+    }
+
+    if (drewSomething)
+        VWScaleToScreenBuffer(baseX, baseY + 8);
+}
 
 // E:\gamedcs\viewwrld.cpp:946
 // The scaled river layer. Dreamcast supplies the statement order, the two
@@ -596,16 +708,93 @@ void advManager::VWDrawRoad(int srcX, int srcY, int z, int destX, int destY)
     VWScaleToScreenBuffer(baseX, baseY + 8);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\viewwrld.cpp:1026
+// The scaled fog layer. advmgr.cpp's exact DrawShroud (0x412220) supplies
+// the whole cloud/star decision - the same gCompleteDrawAllCells bypass, the
+// same GetCloudLookup, the same >=100 flip offset and the two frame fixups -
+// and its `goto draw_stars` idiom is the spelling that reproduces retail's
+// block layout here too. Two things are this body's own: the shroud decision
+// is LATCHED in a flag rather than returned on, so the fog tile is reached
+// through a join the non-visible path jumps straight into, and the leading
+// GetCell result is discarded exactly as the full-size renderer discards its
+// own type_point.
+// Residual (20.5312%): BLOCK LAYOUT ONLY - the skeleton agrees exactly,
+// 54 blocks against 54, 38 branches against 38, 3 returns against 3, and the
+// call streams pair one for one. Retail keeps the STAR block between the
+// cloud-lookup test and the frame fixups; VC6 SINKS ours past the fog draw
+// because the block has two predecessors and both of them are jumps. Tried
+// and rejected: `if (gCompleteDrawAllCells) goto draw_stars;` ahead of the
+// lookup (byte-identical - VC6 canonicalises the two spellings), and writing
+// the star block TWICE, which scores higher at 36.5789 but is NOT the shape
+// (55 blocks against 54, four returns against three - the cross-jumper only
+// half-merges the copies), so it is a layout coincidence rather than a
+// structural recovery and is not shipped.
 VA(0x005f9940, 0x44A)  // exhaustive dc-order-map + VWCompleteDraw call order (the iVWTerrains-gated layer), dc 0x194b48
 void advManager::VWDrawShroud(int srcX, int srcY, int z, int destX, int destY)
 {
-    // @stub
-}
+    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth)
+        return;
+    if (srcY >= gMapHeight && !gCompleteDrawAllCells)
+        return;
 
-#endif  // @carcass
+    GetCell(type_point(srcX, srcY, z));
+
+    int playerBit = 1 << gpGame->GetLocalPlayerGamePos();
+
+    if (!(playerBit & GetMapExtra(srcX, srcY, z)) && !iVWTerrains)
+        return;
+
+    int baseX = destX * giViewWorldScale + iVWCenterOffsetW;
+    int baseY = destY * giViewWorldScale + iVWCenterOffsetH;
+
+    int lookup = 0;
+    unsigned char hflip = false;
+    unsigned char bDrawShroud;
+
+    if (!gCompleteDrawAllCells
+        && ((GetMapExtra(srcX, srcY, z) & gMapVisibilityBit)
+            || gUnnamed6989f4)) {
+        bDrawShroud = false;
+        goto draw_shroud;
+    }
+
+    bDrawShroud = true;
+    if (!gCompleteDrawAllCells)
+        lookup = GetCloudLookup(srcX, srcY, z);
+    if (lookup)
+        goto adjust_cloud;
+
+    memset(memoryBuffer->GetMap(0, 0), 0,
+           memoryBuffer->GetHeight() * memoryBuffer->GetPitch());
+    starTileset->DrawShroudTile(
+        ((srcX * 85 ^ srcY * 85) / 64) & 3, 0, 0, 32, 32, memoryBuffer,
+        0, 0, false, false);
+    VWScaleToScreenBuffer(baseX, baseY + 8);
+    return;
+
+adjust_cloud:
+    if (lookup >= CLOUD_DRAW_FLIPPED_OFFSET) {
+        hflip = true;
+        lookup -= CLOUD_DRAW_FLIPPED_OFFSET;
+    }
+    if ((lookup == CLOUD_DRAW_FRAME_1 || lookup == CLOUD_DRAW_FRAME_5)
+        && (srcX & 1))
+        ++lookup;
+    if (lookup == CLOUD_DRAW_FRAME_3 && (srcY & 1))
+        lookup = CLOUD_DRAW_FRAME_4;
+
+draw_shroud:
+    if (gUnnamed6989f4)
+        return;
+    if (!bDrawShroud)
+        return;
+
+    memset(memoryBuffer->GetMap(0, 0), 0,
+           memoryBuffer->GetHeight() * memoryBuffer->GetPitch());
+    cloudIcons->DrawShroudTile(
+        lookup - 1, 0, 0, 32, 32, memoryBuffer, 0, 0, hflip, false);
+    VWScaleToScreenBuffer(baseX, baseY + 8);
+}
 
 // E:\gamedcs\viewwrld.cpp:1114
 // The scaled underlay layer. Same head as the river/road layers, then one
