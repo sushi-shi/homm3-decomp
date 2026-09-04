@@ -18,6 +18,11 @@ extern const char* gBuildingNamesDwelling[]; // 0x6a53fc, id == 15
 extern const char* gBuildingNamesTown[];     // 0x6a5390, 17 <= id < 30
 extern const char* gBuildingNamesUpgrade[];  // 0x6a6230, id >= 30
 
+// Dreamcast names this ten-entry hall-page text table. Complete retail
+// reads entries 0..9 at 0x6a7428..0x6a744c for the same Capitol, dock,
+// prerequisite, affordability, help, and empty-rollover roles.
+extern const char* cHallInfo[10];
+
 // Building-id domain landmarks the name lookup switches on (the
 // dwelling row, the town-row band start, the upgrade band start).
 // Names provisional.
@@ -41,10 +46,18 @@ extern const unsigned char NumOfTownSpecStrScreen[9];
 // The four parallel widget bands driven by SetupCastle. Values are the
 // Complete message operands; the names are reconstructed from their roles.
 enum ECastleHallWidgetId {
+    CASTLE_BUILDING_NONE = -1,
     CASTLE_BUILD_FRAME_FIRST_ID = 0x190,
     CASTLE_BUILD_NAME_FIRST_ID = 0x258,
     CASTLE_BUILD_ICON_FIRST_ID = 0x2bc,
-    CASTLE_BUILD_BUTTON_FIRST_ID = 0x320
+    CASTLE_BUILD_BUTTON_FIRST_ID = 0x320,
+    CASTLE_HALL_SLOT_COUNT = 18,
+    CASTLE_RESOURCE_TEXT_FIRST_ID = 0x3e9,
+    CASTLE_RESOURCE_TEXT_LAST_ID = 0x3f0,
+    CASTLE_RESOURCE_BORDER_FIRST_ID = 0x3f1,
+    CASTLE_RESOURCE_BORDER_LAST_ID = 0x3f7,
+    CASTLE_ROLLOVER_DRAW_FIRST_ID = 0x1f5,
+    CASTLE_ROLLOVER_TEXT_ID = 0x1f6
 };
 
 // --- globals ---

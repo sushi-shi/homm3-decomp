@@ -2697,6 +2697,13 @@ public:
             return 0;
         return &towns[townId];
     }
+    // Dreamcast Game.h:1410 names this ordinary inline query and retains a
+    // selected out-of-line copy in ai_player.obj. THallWindow expands the
+    // same source operation to the retail town-vector lookup.
+    bool TownAlreadyBuiltOn(int townId) const
+    {
+        return towns[townId].field_02 != 0;
+    }
     // DC `game::GetCurrHero` (dc 0x2ed4, E:\gamedcs\Game.h:991) and
     // `game::GetCurrTown` (dc 0x1ff40, Game.h:1023) - the acting player's
     // pair, and NOT GetHero/GetTown applied to the id. Two retail facts
