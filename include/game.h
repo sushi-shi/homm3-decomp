@@ -636,15 +636,13 @@ enum EMapFormatVersion {
 // Only the fields reached by reconstructed consumers are exposed. The
 // defeat-hero ids are fixed independently by AI_value_of_combat's two
 // objective-bonus branches.
-#ifdef HOMM3_VLC_CHECKS_VIEW
-// hero.cpp owns the DATA claim (0x69774c); this view only needs the
-// name for CheckForDefeatedHeroLoss's campaign-mode gate.
+// hero.cpp owns the DATA claim (0x69774c); CheckForDefeatedHeroLoss's
+// campaign-mode gate reads it.
 extern unsigned char gCampaignMode;
 
 // The upgrade-town victory's two level domains (map-format ordinals).
 // CheckForUpgradedTown (0x5f1d40) maps each to the matching
 // type_building_id bit: town/city/capitol halls, fort/citadel/castle.
-// Gated with the rest of the VLC view.
 enum EVictoryHallLevel {
     VICTORY_HALL_TOWN = 0,
     VICTORY_HALL_CITY = 1,
@@ -655,7 +653,6 @@ enum EVictoryCastleLevel {
     VICTORY_CASTLE_CITADEL = 1,
     VICTORY_CASTLE_CASTLE = 2
 };
-#endif
 
 enum EVictoryConditionType {
     // 0x5f1610 CheckForArtifactWin's main arm gates on `cmp Type,0`,
@@ -875,23 +872,17 @@ public:
     // checker needs the enum type for its armyGroup call; display-only
     // consumers use the same proven representation without pulling the enum
     // through fragile include cycles.
-#if defined(HOMM3_VLC_CHECKS_VIEW) || defined(HOMM3_PHILAI_OBJ_DECLS)
     TCreatureType CreatureType;
-#else
-    int CreatureType;
-#endif
     int NumCreatures;
     int ResourceType;
     int ResourceAmount;
     int TownX;
     int TownY;
     int TownZ;
-#if defined(HOMM3_VLC_CHECKS_VIEW) || defined(HOMM3_AI_PLAYER_OBJ_DECLS)
     // CheckForUpgradedTown (0x5f1d40) dispatches both of its switches
     // with `movsx` BYTE reads at +0x24/+0x25 - retail kept the DC pair
     // HallLevel/CastleLevel char-sized where it widened the neighbours.
-    // Gated like the pad_03 slice above. ai_player.obj joins for the
-    // same two purchase_building helpers as the enumerator above:
+    // ai_player.obj's two purchase_building helpers read them too:
     // value_of_hall reads HallLevel + HALL_TOWN_ID as its victory bar,
     // value_of_castle_upgrade indexes bitNumber[CASTLE_FORT_ID +
     // CastleLevel].
@@ -904,11 +895,7 @@ public:
     int HeroX;
     int HeroY;
     int HeroZ;
-#else
-    char pad_24[0x10];
-#endif
     int HeroID;
-#if defined(HOMM3_VLC_CHECKS_VIEW) || defined(HOMM3_PHILAI_OBJ_DECLS)
     // CheckForDefeatedMonsterWin (0x5f2390) packs the words at
     // +0x38/+0x3c and the byte at +0x40 into a type_point - the DC
     // MonsterX/MonsterY/MonsterZ trio, int-widened like the town trio.
@@ -918,9 +905,6 @@ public:
     // CheckForTimeSurvival (0x5f2810) compares the computed absolute day
     // against the full dword at +0x44.
     int NumDays;
-#else
-    char pad_38[0x10];
-#endif
     unsigned char GameWon;
     signed char playerWinner;
     char pad_4a[2];
@@ -937,10 +921,7 @@ public:
     // 0x5f1b10, CheckForTotalResources' twin. advManager::DoEvent
     // (0x4aaaa0) calls the pair back to back on the same
     // `gpGame->mapHeader.victoryCondition`, each followed by its own
-    // CheckEndGame(0). Gated purely to keep the declarator out of the
-    // other twenty-odd consumers of this header until one of them needs
-    // it. VLC_CHECKS_VIEW joins the gate for the owning TU's own
-    // reconstruction of the trio (2026-08-20).
+    // CheckEndGame(0).
     unsigned char CheckForTotalCreatures();
     // 0x5f2390. The Dreamcast decoration
     // `?CheckForDefeatedMonsterWin@VictoryConditionStruct@@QAA_NPBVhero@@
