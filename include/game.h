@@ -2135,13 +2135,11 @@ public:
     std::vector<MonsterIdentifier> monsterIdentifiers;
 
     NewfullMap* GetWorldMapData();
-#ifdef HOMM3_GAME_SEER_HUT_DECLS
     // Retail-only 0x4cef10. The quest-monster initializer passes the editor's
     // stable object reference and receives the corresponding packed point;
     // the body is the reverse search over monsterIdentifiers above. Kept
     // ordinal because neither the Dreamcast roster nor NH3API names it.
     type_point GameFn_004CEF10(int identifier);
-#endif
     int get_new_boat_id();                    // 0x4bb170
     int CreateBoat(int x, int y, int z, int owner,
                    unsigned char remoteMove, signed char type); // 0x4bb250

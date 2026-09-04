@@ -11,8 +11,7 @@
 #include "hero.h"
 #include "quest.h"
 // game.h for game::GetHero, which two of the slot-7 descriptions below
-// name their hero through. MEASURED on this compiland 2026-08-21.
-#define HOMM3_GAME_SEER_HUT_DECLS
+// name their hero through.
 #define HOMM3_NEWFULLMAP_INT_CELL_OUTOFLINE
 #include "game.h"
 #include "advmgr.h"
