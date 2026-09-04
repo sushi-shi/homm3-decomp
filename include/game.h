@@ -722,8 +722,6 @@ enum EGameScenarioOrdinal {
 };
 #endif
 
-#if defined(HOMM3_GAME_NEW_MAP_DECLS) \
- || defined(HOMM3_SCENARIOINFO_OBJ_DECLS)
 enum ENewMapStartingBonus {
     NEW_MAP_BONUS_ARTIFACT = 0,
     NEW_MAP_BONUS_GOLD = 1,
@@ -740,7 +738,6 @@ enum ENewMapHandicap {
     NEW_MAP_HANDICAP_MILD = 1,
     NEW_MAP_HANDICAP_SEVERE = 2
 };
-#endif
 
 // Retail's player-slot destructor walks these otherwise unnamed records with
 // a 0x14 stride and destroys the Dinkumware string at +0x4. The map-header
@@ -2574,17 +2571,12 @@ public:
     // the Dreamcast xref graph records.
     void setup_shipyards();
     void ShowScenInfo();
-#if defined(HOMM3_NEWGAME_OBJ_DECLS) \
- || defined(HOMM3_SCENARIOINFO_OBJ_DECLS)
-    // newgame.cpp owns the retail text formatter at 0x513800. Keep this
-    // declaration in the two compiler views which call it: game.h's member
-    // population is codegen-sensitive in its many unrelated consumers.
+    // newgame.cpp owns the retail text formatter at 0x513800.
     void GetLossConditionText(char* text);
     // The Complete formatter at 0x5139e0 is the victory-condition twin.
     // Dreamcast proves the member name/signature and scenarioinfo.obj is its
     // caller, while retail fixes the one-char* thiscall ABI.
     void GetVictoryConditionText(char* text);
-#endif
     // The kingdom-overview screen, overview.obj's own body at 0x51e8d0.
     // ORDER-MAPPED, not claimed here: overview.obj's DC roster runs
     // SetupNewOverviewType (dc 0x1069fc) -> UpdateFlaggableIcon ->
