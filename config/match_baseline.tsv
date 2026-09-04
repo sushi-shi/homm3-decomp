@@ -2900,7 +2900,7 @@ singleselectionwindow	?DrawBasicMapInfo@TSingleSelectionWindow@@QAEXXZ	95.5200	9
 # landed in the same TU with this function's own source byte-identical.
 # Its register-homing residual note is in-source; reaching 100 there is
 # also the documented recovery for the CEnterNameEdit pair.
-singleselectionwindow	?DrawHeroAdvancedOption@TSingleSelectionWindow@@QAEXHEH@Z	90.5627	90.5627	90.5627	0x18d510	42ff8988a302
+singleselectionwindow	?DrawHeroAdvancedOption@TSingleSelectionWindow@@QAEXHEH@Z	91.2681	91.2681	91.2681	0x18d510	42ff8988a302
 singleselectionwindow	?ExitDialog@TSingleSelectionWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x187bc0	30a0ba0eb038
 singleselectionwindow	?Finish@CNewPlayerUpdateProc@@UAEXXZ	87.0155	89.5855	89.5855	0x1795a0	a10ac565f1b2
 singleselectionwindow	?Finish@t_map_list_update@@UAEXXZ	100.0000	100.0000	100.0000	0x178930	ea9b5caf124a
@@ -2909,7 +2909,7 @@ singleselectionwindow	?GetDisplayFace@TSingleSelectionWindow@@QAEHH@Z	77.0099	77
 singleselectionwindow	?GetFileName@TSingleSelectionWindow@@QAEPBDH@Z	100.0000	100.0000	100.0000	0x183f20	07e99906abc9
 singleselectionwindow	?GetHeader@TSingleSelectionWindow@@QAEHPAD0PAUGameSelectionHeadersStruct@@@Z	100.0000	100.0000	100.0000	0x183170	1f8b0349ca10
 singleselectionwindow	?GetHeaders@TSingleSelectionWindow@@QAEXPAV?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@@Z	87.0700	87.0700	87.0700	0x182b40	c25b84753c13
-singleselectionwindow	?GetHeroFace@TSingleSelectionWindow@@QAEXHPAVCNetPlayerHandlerPlayer@@@Z	65.6968	65.6968	65.6968	0x18af20	bb55e5c94f94
+singleselectionwindow	?GetHeroFace@TSingleSelectionWindow@@QAEXHPAVCNetPlayerHandlerPlayer@@@Z	86.4387	86.4387	86.4387	0x18af20	bb55e5c94f94
 singleselectionwindow	?GetHeroName@TSingleSelectionWindow@@QAEPBDH@Z	80.5426	80.5426	80.5426	0x18d1f0	2c4ed4d43f63
 singleselectionwindow	?GetMapName@TSingleSelectionWindow@@QAEPBDH@Z	100.0000	100.0000	100.0000	0x184010	bbaad4b28fb3
 singleselectionwindow	?GetPlayer@CNetPlayerHandler@@QAEPAVCNetPlayerHandlerPlayer@@K@Z	100.0000	100.0000	100.0000	0x177ce0	f86adc210eaa
@@ -3011,7 +3011,7 @@ singleselectionwindow	?UpdateAllyEnemyFlags@TSingleSelectionWindow@@QAEXE@Z	100.
 singleselectionwindow	?UpdateFilterWidgets@TSingleSelectionWindow@@QAEXXZ	95.0755	95.0755	95.0755	0x17ef70	38bd9c53321b
 singleselectionwindow	?UpdateGameVars@TSingleSelectionWindow@@QAEXXZ	67.9099	67.9099	67.9099	0x183580	6c6326aca773
 singleselectionwindow	?UpdateNameLists@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x18c960	e1e322eccb71
-singleselectionwindow	?UpdatePlayerPositions@TSingleSelectionWindow@@QAEXE@Z	70.4601	70.4601	70.4601	0x188330	8e8d3cdd6110
+singleselectionwindow	?UpdatePlayerPositions@TSingleSelectionWindow@@QAEXE@Z	98.4856	98.4856	98.4856	0x188330	fc48e3f6365d
 singleselectionwindow	?UpdateTown@TSingleSelectionWindow@@QAEXHW4TTownType@@E@Z	100.0000	100.0000	100.0000	0x18cd50	6be56f51c2e4
 singleselectionwindow	?WindowFn_00582e90@TSingleSelectionWindow@@QAEXPAV?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x182e90	078af1123e68
 singleselectionwindow	?WindowHandler@TSingleSelectionWindow@@UAEHPAVmessage@@@Z	97.6901	97.6901	97.6901	0x187d00	252e5d706c40

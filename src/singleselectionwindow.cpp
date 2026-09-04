@@ -5471,14 +5471,18 @@ int TSingleSelectionWindow::GetThisPlayerGamePos()
 // E:\gamedcs\singleselectionwindow.cpp:6301
 #endif  // @carcass
 
-// Residual (70.5): branch census agrees 33=33 and every block matches
-// internally, but our CL places the solo-seat arm INLINE and the
-// assign-seats arm out of line where retail has the reverse - four
-// structurally different spellings (||-if/else, &&-swapped, single goto,
-// nested-if + forward goto) all canonicalize to the same inverted
-// layout, so this is the block-placement/stale-CL-generation class, not
-// a spelling. The solo arm's null-join is also thread-folded where
-// retail keeps the two-step xor/test join.
+// MATCHING (2026-09-04): 70.46 -> 98.49 on the DC line-table shape
+// (6301..6440): a plain `if (IsMultiPlayer()) {seat loop} else {solo}`
+// with no gotos, `pPlayer->IsHuman()` for the dpid tests, the solo arm
+// through GetThisPlayer() (its early-return form gives retail's
+// xor/test join), `gLocalGamePos = GetThisPlayerGamePos()`,
+// `if (IsHost() && updateCurPlayer)`, and both stores of the final
+// mode-3 if/else in each arm. The GetGamePos arm order in the header
+// (early `return -1`, playerPos as the fall-through) is what places the
+// found path in line at 0x588458. Residual: the seat loop's counter
+// lives at [ebp-0x8] here and [ebp-0xc] in retail (slot order only);
+// flipping the commit loop's strcpy/comp arms measured 84.52 and is
+// rejected.
 // Rebuilds the per-seat game state from the lobby roster: clears the
 // non-host players' local/human flags, assigns or clears each seat's
 // net identity (with the hotseat mode-3 special), commits the roster's
@@ -5494,17 +5498,13 @@ void TSingleSelectionWindow::UpdatePlayerPositions(unsigned char updateCurPlayer
         gpGame->players[i].isHuman = 0;
     }
 
-    if (!bVideoPaused) {
-        if (gUnnamed6989f0 != WINDOW_MODE_6989F0_3)
-            goto solo_seat;
-    }
-    {
+    if (IsMultiPlayer()) {
         for (int i = 0; i < 8; ++i) {
-            CNetPlayerHandlerPlayer* p = m_players.GetPlayerInPos(i);
-            if (!p)
-                p = &m_players.computerPlayers[i];
-            if (p && p->dpid != 0) {
-                gpGame->players[i].AssignNetInfo(p);
+            CNetPlayerHandlerPlayer* pPlayer = m_players.GetPlayerInPos(i);
+            if (!pPlayer)
+                pPlayer = m_players.GetCompPlayerInPos(i);
+            if (pPlayer && pPlayer->IsHuman()) {
+                gpGame->players[i].AssignNetInfo(pPlayer);
                 if (gUnnamed6989f0 == WINDOW_MODE_6989F0_3) {
                     gpGame->players[i].isLocal = 1;
                     gpGame->players[i].isHuman = 1;
@@ -5515,52 +5515,41 @@ void TSingleSelectionWindow::UpdatePlayerPositions(unsigned char updateCurPlayer
             }
         }
         if (gUnnamed6989f0 != WINDOW_MODE_6989F0_3) {
-            int pos = m_players.GetNetPos(gsThisNetPlayerInfo.dpid);
-            if (pos != -1)
-                pos = m_players.humanPlayers[pos].playerPos;
-            gLocalGamePos = pos;
-            if (pos != -1) {
+            gLocalGamePos = GetThisPlayerGamePos();
+            if (gLocalGamePos != -1) {
                 gpGame->players[gLocalGamePos].isLocal = 1;
                 gpGame->players[gLocalGamePos].isHuman = 1;
             }
-            if (!bVideoPaused || pDPlay->IsHost()) {
-                if (updateCurPlayer)
-                    gNetLocalGamePos = gLocalGamePos;
-            }
+            if (IsHost() && updateCurPlayer)
+                gNetLocalGamePos = gLocalGamePos;
         }
-        goto commit;
-    }
-
-solo_seat:
-    {
+    } else {
         gUnnamed699274 = 0;
-        CNetPlayerHandlerPlayer* p =
-            m_players.GetPlayer(gsThisNetPlayerInfo.dpid);
-        if (p) {
-            gLocalGamePos = p->playerPos;
+        CNetPlayerHandlerPlayer* pPlayer = GetThisPlayer();
+        if (pPlayer) {
+            gLocalGamePos = pPlayer->playerPos;
             gpGame->players[gLocalGamePos].isHuman = 1;
             gpGame->players[gLocalGamePos].isLocal = 1;
             gUnnamed699274 = 1;
         }
     }
 
-commit:
     for (i = 0; i < 8; ++i) {
         strcpy(gpGame->players[i].cName, gpGeneralText->GetText(469));
-        CNetPlayerHandlerPlayer* p = m_players.GetPlayerInPos(i);
-        if (p)
-            strcpy(gpGame->players[i].cName, p->sName);
+        CNetPlayerHandlerPlayer* pPlayer = m_players.GetPlayerInPos(i);
+        if (pPlayer)
+            strcpy(gpGame->players[i].cName, pPlayer->sName);
         else
-            p = &m_players.computerPlayers[i];
-        if (p) {
-            gNewMapStartingBonus[i] = p->startBonusIndex;
+            pPlayer = m_players.GetCompPlayerInPos(i);
+        if (pPlayer) {
+            gNewMapStartingBonus[i] = pPlayer->startBonusIndex;
             if (!m_flag64) {
                 gpGame->setup.startingBonus[i] =
-                    static_cast<signed char>(p->startBonusIndex);
+                    static_cast<signed char>(pPlayer->startBonusIndex);
                 gpGame->setup.startingHero[i] = -1;
-                if (p->townIndex != -1)
-                    gpGame->setup.alignment[i] = p->townIndex;
-                else if (p->dpid != 0)
+                if (pPlayer->townIndex != -1)
+                    gpGame->setup.alignment[i] = pPlayer->townIndex;
+                else if (pPlayer->IsHuman())
                     gpGame->setup.alignment[i] =
                         pCurrentHeader->setup.alignment[i];
                 else if (gpGame->setup.playerPos[i] >= 0)
@@ -5569,18 +5558,20 @@ commit:
                             .legalAlignments, 0);
             }
             if (!m_flag64)
-                gpGame->setup.handicap[i] = p->handicap;
+                gpGame->setup.handicap[i] = pPlayer->handicap;
         }
     }
 
     if (updateCurPlayer)
         gpGame->SetupFirstPlayer();
 
-    if (gUnnamed6989f0 == WINDOW_MODE_6989F0_3)
+    if (gUnnamed6989f0 == WINDOW_MODE_6989F0_3) {
         gUnnamed69778c = gNetLocalGamePos;
-    else
+        gMapVisibilityBit = 1 << gNetLocalGamePos;
+    } else {
         gUnnamed69778c = gLocalGamePos;
-    gMapVisibilityBit = 1 << gUnnamed69778c;
+        gMapVisibilityBit = 1 << gLocalGamePos;
+    }
     gCompleteDrawEnabled = gpGame->IsLocalHuman(gNetLocalGamePos);
 }
 
@@ -6792,10 +6783,11 @@ void TSingleSelectionWindow::DisplayChat()
 
 #endif  // @carcass
 
-// Residual (65.7): branch census agrees 27=27 and every arm offset
-// lines up; retail keeps the walking index in ecx and re-reads pPlayer
-// from its arg slot, ours spills the index into that slot instead -
-// the register-homing family.
+// Residual (86.44, from 65.70 on the header's DC GetGamePos arm order):
+// branch census agrees 27=27 and every arm offset lines up; retail keeps
+// the walking index in ecx, re-reads pPlayer from its arg slot and
+// defers the callee-saved pushes past the count==0 early return; ours
+// pushes first and spills the index into that slot - register homing.
 // Step the player's face selection backward or forward (by the sign of
 // `which`), wrapping an unset index and giving up with -1 once the
 // walk returns to its start, skipping every face another seat holds.
