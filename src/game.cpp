@@ -48,7 +48,6 @@
 #include <math.h>
 #include <memory>
 #define HOMM3_GAME_NEW_MAP_DECLS
-#define HOMM3_GAME_TRANSMIT_DECLS
 #include "game.h"
 // StartAITheme / TurnOnAIMusic (0x4c6f40 / 0x4c6f80) roll a theme index
 // with Random and hand the name to soundManager::StartMP3;

@@ -48,14 +48,12 @@ enum eRS_Messages {
     // at the top of this enum). Gated to advmgr's view - an ungated
     // enumerator here is a measured include-set trigger (RS_ERASE_OBJECT).
     RS_GAME_TRANSMIT_INIT = 1000,
-#ifdef HOMM3_GAME_TRANSMIT_DECLS
     RS_GAME_TRANSMIT_MAIN = 1001,
     RS_GAME_TRANSMIT_REQ = 1002,
     RS_GAME_TRANSMIT_END = 1003,
     RS_DESTROY_PLAYER = 1079,
     RS_GAME_TRANSMIT_ACK = 1080,
     RS_GAME_XFER_CONFIRM_END = 1081,
-#endif
     RS_CHAT_MSG = 1004,
     RS_COMBAT_INIT = 1005,
     RS_PLAYER_DROPPED = 1014,
@@ -122,7 +120,6 @@ enum eRS_Messages {
     RS_NORMAL_WIN = 1078
 };
 
-#ifdef HOMM3_GAME_TRANSMIT_DECLS
 // Network transfer wire limits shared by the sender and receiver.  Retail's
 // sender allocates 0x400 bytes per main message; the fixed 0x1c-byte header
 // leaves 996 payload bytes, and its idle watchdog compares against 30000 ms.
@@ -131,7 +128,6 @@ enum EGameTransmitLimits {
     GAME_TRANSMIT_PAYLOAD_SIZE = 996,
     GAME_TRANSMIT_TIMEOUT = 30000
 };
-#endif
 
 class CNetMsg {
 public:
@@ -274,7 +270,6 @@ public:
     unsigned char m_isDiff;
     unsigned char m_makeOrig;
 
-#ifdef HOMM3_GAME_TRANSMIT_DECLS
     CGameTransmitInitMsg(unsigned long fileSize,
                          unsigned long fullGameCRC,
                          unsigned long thisPlayerDead,
@@ -288,11 +283,9 @@ public:
           m_makeOrig(makeOrig)
     {
     }
-#endif
 };
 SIZE(CGameTransmitInitMsg, 0x24);
 
-#ifdef HOMM3_GAME_TRANSMIT_DECLS
 // DC netmsg.h:312..395 supplies every boundary, member and access class.
 // Retail TransmitSaveGame independently proves the x86 extents, subtype
 // immediates and inline store order at 0x4cafd0.
@@ -406,7 +399,6 @@ public:
     }
 };
 SIZE(CDestroyPlayerMsg, 0x18);
-#endif
 
 class CChatMsg : public CNetMsg {
 public:

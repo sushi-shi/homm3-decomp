@@ -91,9 +91,7 @@ public:
 // CODEVIEW(E:\gamedcs\misc.cpp:603, dc 0xfe060) int IsCDDrive(int drive);
 // CODEVIEW(E:\gamedcs\misc.cpp:634, dc 0xfe064) int SetupCDDrive();
 // CODEVIEW(E:\gamedcs\misc.cpp:764, dc 0xfe068) long FileSize(char* filename);
-#ifdef HOMM3_GAME_TRANSMIT_DECLS
 long FileSize(char* filename);
-#endif
 // CODEVIEW(E:\gamedcs\misc.cpp:784, dc 0xfe0b8) void SRand(int iSeed);
 // CODEVIEW(E:\gamedcs\misc.cpp:796, dc 0xfe0d0) int SRandom(int iLower, int iUpper);
 // CODEVIEW(E:\gamedcs\misc.cpp:820, dc 0xfe10c) std::basic_string<char,std::char_traits<char>,std::allocator<char> format_string(__$ReturnUdt, const char* format);
