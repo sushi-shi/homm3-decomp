@@ -43,7 +43,6 @@
 #include "singleselectionwindow_priv.h"
 #include "soundmgr.h"
 #define HOMM3_U2DVERS_SYSTEM_VERSION_DECLS
-#define HOMM3_U2DVERS_PRODUCT_VERSION_INLINE
 #include "u2dvers.h"
 
 // E:\gamedcs\singleselectionwindow.cpp:164
