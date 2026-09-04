@@ -270,6 +270,12 @@ class CObjectType {
 public:
     CObjectType() {}
     CObjectType(TObjectType* source);                         // 0x506080
+    // MapCell.h:565. Dreamcast retains an out-of-line copy, while Complete
+    // expands this header helper at the view-world draw-cell test.
+    static unsigned _getBitPos(unsigned x, unsigned y)
+    {
+        return 47 - y * 8 - x;
+    }
     // The DC field list names every member of this record - ImageName,
     // Width, Height, then the FOUR 48-cell masks PlacementMask,
     // PassableMask, ShadowMask, TriggerMask, then Type/Extra/IsUnderlay -

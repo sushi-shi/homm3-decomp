@@ -1221,7 +1221,7 @@ events	?DoAIEvent@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@@Z	100.00
 # synth PDB - returned the row to master's own 98.5741 to the digit
 # with events.cpp untouched. Cross-generation noise, the
 # recruit::Update revert-control precedent; hist keeps 99.1139.
-events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	98.5741	99.0481	99.1139	0xad470	907f85ec7c05
+events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	99.0481	99.0481	99.1139	0xad470	907f85ec7c05
 events	?DoCustomArtifact@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	98.2381	99.1492	99.1492	0x9f070	4d12ed56362a
 events	?DoCustomResource@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa4780	51e134850e4b
 events	?DoCustomSpellScroll@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	97.4451	97.4451	97.4451	0xa5a80	2c8331b27654
@@ -1336,7 +1336,7 @@ events	?monsters_join@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@
 # (push 0xb4 in townManager::Open), layout-required and not gateable
 # per-TU. hist keeps 100.0000; the saturation law says a later
 # declarator can carry it back.
-events	?monsters_sell_out@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	99.9517	100.0000	100.0000	0xa7250	f7b1ec4933f6
+events	?monsters_sell_out@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	100.0000	100.0000	100.0000	0xa7250	f7b1ec4933f6
 events	?show_rewards@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@2@J@Z	100.0000	100.0000	100.0000	0xa0b00	9287544ef4a4
 exec	?AddManager@executive@@QAEHPAVbaseManager@@H@Z	100.0000	100.0000	100.0000	0xb0b20	11f81dc72e6a
 exec	?CallManager@executive@@QAEXPAVbaseManager@@@Z	100.0000	100.0000	100.0000	0xb0c70	a9eb44cb2746
@@ -1918,7 +1918,7 @@ initialize	?create_requirement_masks@@YIXPBHPA_J1@Z	100.0000	100.0000	100.0000	0
 # this class: two enumerators moved the row by the same amount one
 # enumerator did on 2026-08-08, which is what a population threshold
 # looks like and not what a per-declarator penalty looks like.
-initialize	?initialize_game_data@@YIXXZ	97.0370	100.0000	100.0000	0xeb730	9bb04f467e4b
+initialize	?initialize_game_data@@YIXXZ	90.1620	100.0000	100.0000	0xeb730	9bb04f467e4b
 inputmgr	??0inputManager@@QAE@XZ	73.3333	100.0000	100.0000	0xec460	ce1b8a0744aa
 inputmgr	?AsciiConvert@inputManager@@QAEXPAVmessage@@@Z	100.0000	100.0000	100.0000	0xec6f0	b21c053d2257
 inputmgr	?Close@inputManager@@UAEXXZ	100.0000	100.0000	100.0000	0xec540	3eaa4090c58c
@@ -2601,7 +2601,7 @@ rmg	??0type_treasure_def@@QAE@HHHH@Z	100.0000	100.0000	100.0000	0x134160	fdf13f3
 rmg	??0type_witch_hut_def@@QAE@XZ	100.0000	100.0000	100.0000	0x134a60	248d29ba8ae4
 rmg	?CreateRiver@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	35.8880	35.8880	35.8880	0x148df0	36298a084078
 rmg	?InitializeObjectGenerators@type_random_map_generator@@QAEXXZ	97.4646	97.4676	97.4676	0x138b10	55bc899a64f7
-rmg	?WriteMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	95.7066	95.7066	95.7066	0x149cb0	c3736f08f0c3
+rmg	?WriteMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	95.6987	95.7066	95.7066	0x149cb0	c3736f08f0c3
 rmg	?_Inc@const_iterator@?$_Tree@UTPoint@@U1@U_Kfn@?$set@UTPoint@@U?$less@UTPoint@@@std@@V?$allocator@UTPoint@@@3@@std@@U?$less@UTPoint@@@4@V?$allocator@UTPoint@@@4@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x1b8bc0	-
 rmg	?assign_rmg_teams@@YIXHHHPBEPAD@Z	100.0000	100.0000	100.0000	0x14ab40	a44a9dbf9227
 rmg	?set@?$bitset@$0IB@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0x14ded0	-
@@ -2626,7 +2626,7 @@ sacrifice_window	?all_creatures@type_skeleton_window@@CIHAAVmessage@@@Z	100.0000
 sacrifice_window	?artifact_click@type_sacrifice_window@@QAEXJE@Z	100.0000	100.0000	100.0000	0x1632a0	0feb58f6bb2a
 sacrifice_window	?backpack_click@type_sacrifice_window@@QAEXJE@Z	86.1308	86.1308	86.1308	0x1636c0	0d5252860cd9
 sacrifice_window	?convert_with_commas@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@J@Z	100.0000	100.0000	100.0000	0x162660	928f4f20aa90
-sacrifice_window	?create_artifact_widgets@type_sacrifice_window@@AAEXAAJH@Z	99.9983	100.0000	100.0000	0x160380	834f71b0c8a5
+sacrifice_window	?create_artifact_widgets@type_sacrifice_window@@AAEXAAJH@Z	99.5918	100.0000	100.0000	0x160380	834f71b0c8a5
 sacrifice_window	?create_creature_icons@type_sacrifice_window@@AAEJJJJJJAAJPAPAViconWidget@@1PAPAVtextWidget@@E@Z	100.0000	100.0000	100.0000	0x161f70	afad52fed516
 sacrifice_window	?create_creature_icons@type_skeleton_window@@AAEXJJJJJJAAJPAPAViconWidget@@1PAPAVtextWidget@@@Z	100.0000	100.0000	100.0000	0x166760	93a2b5c2f89b
 sacrifice_window	?create_creature_widgets@type_sacrifice_window@@AAEXAAJH@Z	100.0000	100.0000	100.0000	0x1610f0	eb6a2ccb96d4
@@ -3476,8 +3476,9 @@ viewarmywindow	?create_speed_widget@TViewArmyWindow@@QAEXHH@Z	100.0000	100.0000	
 viewarmywindow	?create_spell_influence_widgets@TViewArmyWindow@@QAEXPBVarmy@@@Z	86.6570	86.6570	86.6570	0x1f65b0	ead1359e6949
 viewarmywindow	?create_upgrade_widget@TViewArmyWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1f6ae0	7268df34c10c
 viewwrld	??0TViewWorldWindow@@QAE@XZ	96.4425	96.4425	96.4425	0x1fa600	d8fe3b10cf14
-viewwrld	??1TViewWorldWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1fbd60	82df7ee1ec9b
+viewwrld	??1TViewWorldWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1fbd60	dbcb66a53979
 viewwrld	??_GTViewWorldWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1fbd30	-
+viewwrld	?VWDrawAdvObj@advManager@@QAEXHHHHH@Z	94.8383	94.8383	94.8383	0x1f82e0	b73c0fc37794
 viewwrld	ViewWorldSurfaceHandler	0.0000	0.0000	0.0000	0x1fbdf0	bc84cf43f4e2
 viewwrld	ViewWorldUndergroundHandler	0.0000	0.0000	0.0000	0x1fbec0	560f7174e1e3
 widget	??0widget@@QAE@FFFFFF@Z	100.0000	100.0000	100.0000	0x1fe340	0553215b2eec

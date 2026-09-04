@@ -1878,17 +1878,32 @@ public:
     // retail expands in line.
     void do_event_hero(class hero* current_hero, NewmapCell* cell,
                        type_point point, bool human_player);
+    void DrawGround(int srcX, int srcY, int z, int destX, int destY);
+    void DrawUnderlay(int srcX, int srcY, int z, int destX, int destY);
+    void DrawRoad(int srcX, int srcY, int z, int destX, int destY);
+    void DrawRiver(int srcX, int srcY, int z, int destX, int destY);
+    void DrawAdvObjShadow(int srcX, int srcY, int z, int destX, int destY);
+    void DrawAdvObj(int srcX, int srcY, int z, int destX, int destY);
+    void DrawArrow(int srcX, int srcY, int z, int destX, int destY);
+    void DrawArrowShadow(int srcX, int srcY, int z, int destX, int destY);
+    void DrawShroud(int srcX, int srcY, int z, int destX, int destY);
+    // Dreamcast's advManager field list fixes this declaration order. It is
+    // source evidence, not a cross-architecture structure comparison.
+    void VWDrawGround(int srcX, int srcY, int z, int destX, int destY);
+    void VWDrawUnderlay(int srcX, int srcY, int z, int destX, int destY);
+    void VWDrawRoad(int srcX, int srcY, int z, int destX, int destY);
+    void VWDrawRiver(int srcX, int srcY, int z, int destX, int destY);
+    void VWDrawAdvObjShadow(int srcX, int srcY, int z, int destX,
+                            int destY);
+    void VWDrawAdvObj(int srcX, int srcY, int z, int destX, int destY);
+    void VWDrawShroud(int srcX, int srcY, int z, int destX, int destY);
+    void VWDrawSymbols(int srcX, int srcY, int z, int destX, int destY);
+    bool ScanForHeroOrBoat(int srcX, int srcY, int z, unsigned short type,
+                           TDrawParts (&parts)[6]);
     void CompleteDraw(int startX, int startY, int z,
                       unsigned char forceDraw,
                       unsigned char updateBottomView);
     void CompleteDraw(unsigned char forceDraw);
-    void DrawAdventureMapGems();
-    void DrawGround(int srcX, int srcY, int z, int destX, int destY);
-    void DrawRiver(int srcX, int srcY, int z, int destX, int destY);
-    void DrawRoad(int srcX, int srcY, int z, int destX, int destY);
-    void DrawArrowShadow(int srcX, int srcY, int z, int destX, int destY);
-    void DrawArrow(int srcX, int srcY, int z, int destX, int destY);
-    void DrawShroud(int srcX, int srcY, int z, int destX, int destY);
     void DrawAdventureCursor();
     void TurnTo(int newDirection);
     void ForceNewHover();
@@ -1898,8 +1913,9 @@ public:
     type_adventure_cursor get_normal_cursor(NewmapCell* currCell);
     void SeedTo(type_point target);
     int GetCloudLookup(int srcX, int srcY, int z);
-    bool ScanForHeroOrBoat(int srcX, int srcY, int z, unsigned short type,
-                           TDrawParts (&parts)[6]);
+    void DrawCursor(int cellX, int cellY);
+    void DrawCursorShadow(int cellX, int cellY);
+    void DrawCursorAlpha();
     void DrawHeroPart(int part, TDrawParts& heroParts, int baseX, int baseY,
                       int tilex, int tiley, int tilew, int tileh);
     void DrawHeroPartShadow(int part, TDrawParts& heroParts, int baseX,
@@ -1910,12 +1926,19 @@ public:
     void DrawBoatPartShadow(int part, TDrawParts& boatParts, int baseX,
                             int baseY, int tilex, int tiley, int tilew,
                             int tileh);
-    void DrawAdvObjShadow(int srcX, int srcY, int z, int destX, int destY);
-    void DrawAdvObj(int srcX, int srcY, int z, int destX, int destY);
-    void DrawUnderlay(int srcX, int srcY, int z, int destX, int destY);
-    void DrawCursor(int cellX, int cellY);
-    void DrawCursorShadow(int cellX, int cellY);
-    void DrawCursorAlpha();
+    void VWDrawHeroPart(int part, TDrawParts& heroParts, int baseX,
+                        int baseY, int tilex, int tiley, int tilew,
+                        int tileh);
+    void VWDrawHeroPartShadow(int part, TDrawParts& heroParts, int baseX,
+                              int baseY, int tilex, int tiley, int tilew,
+                              int tileh);
+    void VWDrawBoatPart(int part, TDrawParts& boatParts, int baseX,
+                        int baseY, int tilex, int tiley, int tilew,
+                        int tileh);
+    void VWDrawBoatPartShadow(int part, TDrawParts& boatParts, int baseX,
+                              int baseY, int tilex, int tiley, int tilew,
+                              int tileh);
+    void DrawAdventureMapGems();
     void DrawRolloverText(char* text);
     void SetRolloverText(NewmapCell* testCell, int rx, int ry);
     unsigned char FindAdjacentMonster(type_point point, type_point* result,

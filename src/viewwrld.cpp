@@ -4,6 +4,7 @@
 // omitted. Complete adds the two retail-only level-button callbacks below.
 #include <va.h>
 #include "viewwrld.h"
+#include "advmgr.h"
 #include "bitmap16.h"
 #include "border.h"
 #include "button.h"
@@ -12,14 +13,114 @@
 #include "iconwdgt.h"
 #include "kb.h"
 #include "message.h"
+#include "recruit.h"
 #include "textresource.h"
 #include "textwdgt.h"
 #include "widget.h"
+#include "winmgr.h"
 
-// ViewWorld allocates these immediately before constructing its modal window.
-// The destructor below independently proves their concrete ownership actions.
-DATA(0x006aac20) static CSprite* gpViewWorldSymbols;
-DATA(0x006aac28) static Bitmap16Bit* gpViewWorldBuffer;
+// Dreamcast publishes this source-private renderer state by name. Retail
+// independently fixes each address through the repeated view-world draw
+// family: the scale and sampling table feed every scaled blit, the two center
+// offsets form each destination origin, and the buffer/sprite pair are owned
+// by ViewWorld's setup/teardown path.
+DATA(0x0068c6bc) int giViewWorldScale;
+DATA(0x006aab78) bool iVWTerrains;
+DATA(0x006aab84) int scaleLine[32];
+DATA(0x006aac18) int iVWCenterOffsetW;
+DATA(0x006aac1c) int iVWCenterOffsetH;
+DATA(0x006aac20) CSprite* csVWIcons;
+DATA(0x006aac28) Bitmap16Bit* memoryBuffer;
+
+// Struct.h:102. The retained Complete body belongs to advmgr.obj; retail
+// expands the same source helper at both GetCell sites in VWDrawAdvObj.
+inline type_point::type_point(short new_x, short new_y, short new_z)
+{
+    x = new_x;
+    y = new_y;
+    z = new_z;
+}
+
+// E:\gamedcs\viewwrld.cpp:166
+// Complete expands this source helper into every scaled renderer and emits no
+// retained body. Dreamcast preserves the boundary, the two width locals and
+// the nested clipped loops; retail independently confirms all four screen
+// bounds and the transparent-pixel test in each expansion.
+inline void VWClipScaleToScreenBuffer(int destX, int destY)
+{
+    if (destX + giViewWorldScale < 8)
+        return;
+    if (destX >= 600)
+        return;
+    if (destY + giViewWorldScale < 8)
+        return;
+    if (destY >= 552)
+        return;
+
+    int Mwidth = memoryBuffer->GetWidth();
+    int Swidth = gpWindowManager->screenBitmap->GetWidth();
+
+    int screenX = destX;
+    int screenY = destY;
+    if (screenX < 8)
+        screenX = 8;
+    if (screenY < 8)
+        screenY = 8;
+
+    unsigned short* screenBufferLineStart =
+        gpWindowManager->screenBitmap->GetMap(screenX, screenY);
+    unsigned short* sourceBufferLineStart = memoryBuffer->GetMap(0, 0);
+
+    for (int y = 0; y < giViewWorldScale; ++y) {
+        if (destY + y < 8 || destY + y >= 552)
+            continue;
+
+        unsigned short* screenBuffer = screenBufferLineStart;
+        for (int x = 0; x < giViewWorldScale; ++x) {
+            if (destX + x >= 8 && destX + x < 600) {
+                unsigned short color = sourceBufferLineStart[scaleLine[x]];
+                if (color)
+                    *screenBuffer = color;
+                ++screenBuffer;
+            }
+        }
+        sourceBufferLineStart =
+            memoryBuffer->GetMap(0, 0) + Mwidth * scaleLine[y];
+        screenBufferLineStart += Swidth;
+    }
+}
+
+// E:\gamedcs\viewwrld.cpp:226
+// This is the caller-facing half of the same source boundary. Retail expands
+// it into VWDrawAdvObj, including the nested clipped helper above; keeping the
+// real helpers visible lets VC6 make that decision without a synthetic gate.
+inline void VWScaleToScreenBuffer(int destX, int destY)
+{
+    if (destX < 8 || destX + giViewWorldScale >= 600
+        || destY < 8 || destY + giViewWorldScale >= 552) {
+        VWClipScaleToScreenBuffer(destX, destY);
+        return;
+    }
+
+    int Mwidth = memoryBuffer->GetWidth();
+    int Swidth = gpWindowManager->screenBitmap->GetWidth();
+    unsigned short* screenBufferLineStart =
+        gpWindowManager->screenBitmap->GetMap(destX, destY);
+    unsigned short* sourceBufferLineStart = memoryBuffer->GetMap(0, 0);
+
+    for (int y = 0; y < giViewWorldScale; ++y) {
+        unsigned short* screenBuffer = screenBufferLineStart;
+        for (int x = 0; x < giViewWorldScale; ++x) {
+            unsigned short color = sourceBufferLineStart[scaleLine[x]];
+            if (color)
+                *screenBuffer = color;
+            ++screenBuffer;
+        }
+        sourceBufferLineStart =
+            memoryBuffer->GetMap(0, 0) + Mwidth * scaleLine[y];
+        screenBufferLineStart += Swidth;
+    }
+}
 
 #if 0  // @carcass
 
@@ -39,28 +140,28 @@ void VWDrawSprite(CSprite* srcIcon, NewmapCell* thisCell, int frame, int x, int 
 
 // E:\gamedcs\viewwrld.cpp:265
 DC_ONLY(0x19308c, 0x34C)
-void advManager::VWDrawHeroPart(int part, TDrawParts* heroParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
+void advManager::VWDrawHeroPart(int part, TDrawParts& heroParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
 {
     // @stub
 }
 
 // E:\gamedcs\viewwrld.cpp:346
 DC_ONLY(0x1933d8, 0x34C)
-void advManager::VWDrawHeroPartShadow(int part, TDrawParts* heroParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
+void advManager::VWDrawHeroPartShadow(int part, TDrawParts& heroParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
 {
     // @stub
 }
 
 // E:\gamedcs\viewwrld.cpp:427
 DC_ONLY(0x193724, 0x1A8)
-void advManager::VWDrawBoatPart(int part, TDrawParts* boatParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
+void advManager::VWDrawBoatPart(int part, TDrawParts& boatParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
 {
     // @stub
 }
 
 // E:\gamedcs\viewwrld.cpp:464
 DC_ONLY(0x1938cc, 0x1A8)
-void advManager::VWDrawBoatPartShadow(int part, TDrawParts* boatParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
+void advManager::VWDrawBoatPartShadow(int part, TDrawParts& boatParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
 {
     // @stub
 }
@@ -73,11 +174,218 @@ void advManager::VWDrawSymbols(int srcX, int srcY, int z, int destX, int destY)
 }
 
 // E:\gamedcs\viewwrld.cpp:578
-DC_ONLY(0x193c74, 0x778)
+#endif  // @carcass
+
+// Dreamcast supplies the original helper boundaries, locals, scope nesting
+// and statement order. Complete's retail body independently corroborates the
+// same six-layer object walk, separate hero/boat part scopes, flagged-object
+// path, cursor cases, and final scaled-buffer helper expansion.
+VA(0x005f82e0, 0x8F1)  // link order + signature/callee/CFG corroboration, dc 0x193c74
 void advManager::VWDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 {
-    // @stub
+    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth || srcY >= gMapHeight)
+        return;
+
+    NewmapCell* thisCell = GetCell(type_point(srcX, srcY, z));
+    int playerBit = 1 << gpGame->GetLocalPlayerGamePos();
+    playerBit &= GetMapExtra(srcX, srcY, z);
+
+    int baseX = destX * giViewWorldScale + iVWCenterOffsetW,
+        baseY = destY * giViewWorldScale + iVWCenterOffsetH;
+
+    TDrawParts heroParts[6];
+    TDrawParts boatParts[6];
+    unsigned char foundHero =
+        ScanForHeroOrBoat(srcX, srcY, z, HERO, heroParts);
+    unsigned char foundBoat =
+        ScanForHeroOrBoat(srcX, srcY, z, BOAT, boatParts);
+
+    memset(memoryBuffer->GetMap(0, 0), 0,
+           memoryBuffer->GetHeight() * memoryBuffer->GetPitch());
+    int drewSomething = 0;
+
+    if (thisCell->objects.size() > 0) {
+        for (unsigned row = 0; row < 6; ++row) {
+            for (int numObj = 0; numObj < thisCell->objects.size();
+                 ++numObj) {
+                NewmapCell::TObjectCell* objCell =
+                    &thisCell->objects[numObj];
+                if (objCell->Height != row)
+                    continue;
+
+                CObjectType* objType =
+                    &fullMap->objectTypes[
+                        fullMap->objects[objCell->ObjectIndex].typeIndex];
+                CSprite* SprPtr = fullMap->sprites[
+                    fullMap->objects[objCell->ObjectIndex].typeIndex];
+                // Dreamcast line 620 performs this third CObject lookup as a
+                // standalone source statement. Its value is optimized out of
+                // Complete, but the statement is part of the original shape.
+                unsigned short objectTypeIndex =
+                    fullMap->objects[objCell->ObjectIndex].typeIndex;
+
+                if (!playerBit
+                    && (!iVWTerrains
+                        || !gAdventureObjectLandBlocked
+                                [objType->objectType][12]))
+                    continue;
+
+                if (!objType->drawCells[
+                        CObjectType::_getBitPos(objCell->CellX,
+                                                objCell->CellY)]
+                    || objType->suppressDraw)
+                    continue;
+
+                drewSomething = 1;
+                if (hasFlag(objType->objectType)) {
+                    int triggerX;
+                    int triggerY;
+                    fullMap->objects[objCell->ObjectIndex].FindTrigger(
+                        triggerX, triggerY);
+                    int owner = GetFlaggedObjectOwner(
+                        GetCell(type_point(triggerX, triggerY, z)));
+
+                    SprPtr->DrawAdvObjWithFlag(
+                        (animFrame
+                         + fullMap->objects[objCell->ObjectIndex]
+                               .animationOffset)
+                            % SprPtr->GetNumFrames(0),
+                        (objType->width - objCell->CellX - 1) * 32,
+                        (objType->height - objCell->CellY - 1) * 32,
+                        32, 32, memoryBuffer, 0, 0,
+                        gUnnamed6aacb0->playerColors[owner], false);
+                } else {
+                    SprPtr->DrawAdvObj(
+                        (animFrame
+                         + fullMap->objects[objCell->ObjectIndex]
+                               .animationOffset)
+                            % SprPtr->GetNumFrames(0),
+                        (objType->width - objCell->CellX - 1) * 32,
+                        (objType->height - objCell->CellY - 1) * 32,
+                        32, 32, memoryBuffer, 0, 0, false);
+                }
+            }
+
+            if (foundHero && playerBit) {
+                int part;
+                int partHigh;
+                int partLow;
+                if (row == OBJECT_DRAW_LAYER_HERO_FRONT) {
+                    partLow = 0;
+                    partHigh = 2;
+                } else if (row == OBJECT_DRAW_LAYER_HERO_BACK) {
+                    partLow = 3;
+                    partHigh = 5;
+                } else {
+                    continue;
+                }
+
+                for (part = partLow; part <= partHigh; ++part) {
+                    if (heroParts[part].IsValid) {
+                        drewSomething = 1;
+                        VWDrawHeroPart(part, heroParts[part], baseX, baseY,
+                                       0, 0, 32, 32);
+                    }
+                }
+            }
+
+            if (foundBoat && playerBit) {
+                int boatPart;
+                int boatPartHigh;
+                int boatPartLow;
+                if (row == OBJECT_DRAW_LAYER_HERO_FRONT) {
+                    boatPartLow = 0;
+                    boatPartHigh = 2;
+                } else if (row == OBJECT_DRAW_LAYER_HERO_BACK) {
+                    boatPartLow = 3;
+                    boatPartHigh = 5;
+                } else {
+                    continue;
+                }
+
+                for (boatPart = boatPartLow; boatPart <= boatPartHigh;
+                     ++boatPart) {
+                    if (boatParts[boatPart].IsValid) {
+                        drewSomething = 1;
+                        VWDrawBoatPart(boatPart, boatParts[boatPart], baseX, baseY,
+                                       0, 0, 32, 32);
+                    }
+                }
+            }
+
+            if (row == OBJECT_DRAW_LAYER_HERO_BACK
+                && destY == CURSOR_DEST_Y0
+                && this->drawCursor && !::gUnnamed6989f4) {
+                if (destX == CURSOR_DEST_X0) {
+                    this->DrawCursor(0, 0);
+                } else if (destX == CURSOR_DEST_X1) {
+                    this->DrawCursor(1, 0);
+                } else if (destX == CURSOR_DEST_X2) {
+                    this->DrawCursor(2, 0);
+                }
+            } else if (row == OBJECT_DRAW_LAYER_HERO_FRONT
+                       && destY == CURSOR_DEST_Y1
+                       && this->drawCursor && !::gUnnamed6989f4) {
+                if (destX == CURSOR_DEST_X0) {
+                    this->DrawCursor(0, 1);
+                } else if (destX == CURSOR_DEST_X1) {
+                    this->DrawCursor(1, 1);
+                } else if (destX == CURSOR_DEST_X2) {
+                    this->DrawCursor(2, 1);
+                }
+            }
+        }
+    } else {
+        if (foundHero && playerBit) {
+            int fallbackHeroPart;
+            for (fallbackHeroPart = 0; fallbackHeroPart <= 5;
+                 ++fallbackHeroPart) {
+                if (heroParts[fallbackHeroPart].IsValid) {
+                    drewSomething = 1;
+                    VWDrawHeroPart(fallbackHeroPart,
+                                   heroParts[fallbackHeroPart],
+                                   baseX, baseY, 0, 0, 32, 32);
+                }
+            }
+        }
+
+        if (foundBoat && playerBit) {
+            int fallbackBoatPart;
+            for (fallbackBoatPart = 0; fallbackBoatPart <= 5;
+                 ++fallbackBoatPart) {
+                if (boatParts[fallbackBoatPart].IsValid) {
+                    drewSomething = 1;
+                    VWDrawBoatPart(fallbackBoatPart,
+                                   boatParts[fallbackBoatPart],
+                                   baseX, baseY, 0, 0, 32, 32);
+                }
+            }
+        }
+
+        if (destY == CURSOR_DEST_Y0 && this->drawCursor && playerBit) {
+            if (destX == CURSOR_DEST_X0) {
+                this->DrawCursor(0, 0);
+            } else if (destX == CURSOR_DEST_X1) {
+                this->DrawCursor(1, 0);
+            } else if (destX == CURSOR_DEST_X2) {
+                this->DrawCursor(2, 0);
+            }
+        } else if (destY == CURSOR_DEST_Y1 && this->drawCursor && playerBit) {
+            if (destX == CURSOR_DEST_X0) {
+                this->DrawCursor(0, 1);
+            } else if (destX == CURSOR_DEST_X1) {
+                this->DrawCursor(1, 1);
+            } else if (destX == CURSOR_DEST_X2) {
+                this->DrawCursor(2, 1);
+            }
+        }
+    }
+
+    if (drewSomething)
+        VWScaleToScreenBuffer(baseX, baseY + 8);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\viewwrld.cpp:822
 DC_ONLY(0x1943ec, 0x462)
@@ -311,8 +619,8 @@ VA_COMPGEN(0x005fbd30, 0x21, SCALAR_DELETING_DTOR, TViewWorldWindow)
 VA(0x005fbd60, 0x86)  // vtable + owned-resource teardown, dc 0x195ac4
 TViewWorldWindow::~TViewWorldWindow()
 {
-    delete gpViewWorldBuffer;
-    gpViewWorldSymbols->Dispose();
+    delete memoryBuffer;
+    csVWIcons->Dispose();
 
     for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
         if (*it)
@@ -387,20 +695,6 @@ void TViewWorldWindow::update_radar(int mrx, int mry, float fRadarDivisor)
 // E:\gamedcs\viewwrld.cpp:1710
 DC_ONLY(0x1964dc, 0x3F4)
 int TViewWorldWindow::WindowHandler(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\viewwrld.cpp:166
-DC_ONLY(0x1968d0, 0x148)
-void VWClipScaleToScreenBuffer(int destX, int destY)
-{
-    // @stub
-}
-
-// E:\gamedcs\viewwrld.cpp:226
-DC_ONLY(0x196a18, 0x100)
-void VWScaleToScreenBuffer(int destX, int destY)
 {
     // @stub
 }

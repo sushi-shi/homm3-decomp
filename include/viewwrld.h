@@ -74,10 +74,10 @@ int ViewWorldUndergroundHandler(message& msg);
 // CODEVIEW(E:\gamedcs\viewwrld.cpp:1392, dc 0x196b18) void* TViewWorldWindow::`scalar deleting destructor'(unsigned __flags);
 
 // --- advManager ---
-// CODEVIEW(E:\gamedcs\viewwrld.cpp:265, dc 0x19308c) void advManager::VWDrawHeroPart(int part, TDrawParts* heroParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh);
-// CODEVIEW(E:\gamedcs\viewwrld.cpp:346, dc 0x1933d8) void advManager::VWDrawHeroPartShadow(int part, TDrawParts* heroParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh);
-// CODEVIEW(E:\gamedcs\viewwrld.cpp:427, dc 0x193724) void advManager::VWDrawBoatPart(int part, TDrawParts* boatParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh);
-// CODEVIEW(E:\gamedcs\viewwrld.cpp:464, dc 0x1938cc) void advManager::VWDrawBoatPartShadow(int part, TDrawParts* boatParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh);
+// CODEVIEW(E:\gamedcs\viewwrld.cpp:265, dc 0x19308c) void advManager::VWDrawHeroPart(int part, TDrawParts& heroParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh);
+// CODEVIEW(E:\gamedcs\viewwrld.cpp:346, dc 0x1933d8) void advManager::VWDrawHeroPartShadow(int part, TDrawParts& heroParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh);
+// CODEVIEW(E:\gamedcs\viewwrld.cpp:427, dc 0x193724) void advManager::VWDrawBoatPart(int part, TDrawParts& boatParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh);
+// CODEVIEW(E:\gamedcs\viewwrld.cpp:464, dc 0x1938cc) void advManager::VWDrawBoatPartShadow(int part, TDrawParts& boatParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh);
 // CODEVIEW(E:\gamedcs\viewwrld.cpp:510, dc 0x193a74) void advManager::VWDrawSymbols(int srcX, int srcY, int z, int destX, int destY);
 // CODEVIEW(E:\gamedcs\viewwrld.cpp:578, dc 0x193c74) void advManager::VWDrawAdvObj(int srcX, int srcY, int z, int destX, int destY);
 // CODEVIEW(E:\gamedcs\viewwrld.cpp:822, dc 0x1943ec) void advManager::VWDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int destY);
