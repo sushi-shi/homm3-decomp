@@ -2308,18 +2308,9 @@ public:
     // third parameter is therefore int in the Complete ABI. TSkillMastery is
     // spelled int here because its typedef lives in a header this one does
     // not include. Not claimed.
-#ifdef HOMM3_ARMY_COMMAND_ACTION_VIEW
-    // command.cpp stores the heterogeneous pending-action payload in an int
-    // slot. Keeping that source type here avoids an artificial enum cast;
-    // the ABI is unchanged because SpellID is int-sized.
-    void CastSpell(int spellId, int targetIndex,
-                   int bIsMonsterSpell, int secondaryIndex,
-                   int monster_skill, long monster_power);   // 0x59fe30
-#else
     void CastSpell(SpellID spellId, int targetIndex,
                    int bIsMonsterSpell, int secondaryIndex,
                    int monster_skill, long monster_power);   // 0x59fe30
-#endif
     // WHO cast the spell ShowSpellMessage is about to announce. The DC
     // roster calls the parameter `bIsMonsterSpell`, but retail's body
     // (0x5a8950) is a three-way `dec eax / je` chain, not a bool test,
