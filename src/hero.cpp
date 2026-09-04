@@ -4249,6 +4249,23 @@ static void show_hero_skills(int code, unsigned char right_mouse)
 // Retail likewise constructs and destroys that object in this arm, so neither
 // local exposes missing source structure; their identifier spelling cannot
 // affect code generation.
+// Lead for the next lane (2026-09-04, polish lane 2): the DC dossier's
+// `exitFlag` is NOT the base-handler result - it is initialised to 0 in
+// the CAdvPopup::WindowHandler call's delay slot, written once (`= 1`)
+// in the HERO_NAME_ID arm when dialogReturn == DIALOG_RETURN_ACCEPT (dc
+// line 3594), and tested once after the switch (line 3949: `if
+// (exitFlag) { dialogReturn = codeY; codeY = codeX = 10; return 2; }
+// return 1;`). Retail's shape agrees: one return-1 epilogue at fn+0x79
+// with 64 arms jumping back to it and the return-2 block inline after
+// the HERO_NAME_ID arm. Spelled that way here (townManager::Main closed
+// 23 points on the identical device) VC6 does produce the single shared
+// epilogue, but places it after the source-last SELECT arm
+// (show_hero_skills) instead of retail's MOUSE_MOVE `return 1`, and the
+// score falls 75.41 -> 69.34; the current inline `return 2` keeps the
+// epilogue at the end and scores higher only because more arms then
+// align. What decides where VC6 lands the threaded return-1 block is
+// the open question (Main lands it after the TOWN_x arm where retail
+// has the selector arm); solve that and this device is worth ~15 pts.
 VA(0x004dd2d0, 0x143E)  // anchor-bracket + absent-callees, dc 0xcf54c
 int THeroScreenWindow::WindowHandler(message* msg)
 {

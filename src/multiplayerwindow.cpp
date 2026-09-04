@@ -1550,6 +1550,16 @@ unsigned char GetIPAddress(char* sIPAddress)
 // null-allocation continuation. TCP setup activates the host/join/search
 // controls, publishes the local address once, refreshes the DirectPlay session
 // array and redraws the browser.
+// Residual (73.58%, polish lane 2, 2026-09-05): every instruction of
+// this body is retail's; the whole gap is ONE sunk block. The failure
+// exit (`NormalDialog(459); return 0`, ~60 B) is jump-only on both
+// sides, and retail parks it between the textWidget constructor's join
+// `jmp` and the `xor edi,edi` null arm of `new` (0x5115dd), where our
+// CL sinks it to the end of the function. Splitting the `||` into two
+// `if`s cross-jumps back to one block and moves nothing (73.53). The
+// same sunk-block placement question stands on townManager::Main's
+// return-1 block and THeroScreenWindow::WindowHandler's exitFlag
+// device; it is a C2 layout rule, not a body spelling.
 VA(0x005113f0, 0x263)  // TCP InitRemote/GetIPAddress/session-enum flow, dc 0x101784
 unsigned char TMultiPlayerWindow::OnTCP()
 {
