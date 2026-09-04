@@ -60,6 +60,20 @@ The rows (all ratcheted; floors start at the tree's current counts):
                       identifier ends in `_VIEW`. Recovered declarations,
                       helpers, layouts and source order become canonical;
                       this debt ratchets to zero and may never rise.
+  per-TU              the same scaffold under any other suffix: an
+  preprocessor        object-like `#define HOMM3_X` at the top of a .cpp
+  scaffolds           paired with `#if defined(HOMM3_X)` / `#ifdef` forks
+                      around declarations, fields, helpers, enums,
+                      layouts, friends or inline-ness so only chosen TUs
+                      see a recovered fact. The rule, precisely: any
+                      identifier `HOMM3_[A-Z0-9_]+` inside an #if /
+                      #ifdef / #ifndef / #elif / #define / #undef logical
+                      directive, EXCEPT include guards (`..._H`),
+                      function-like macro names (any `#define NAME(`
+                      anywhere in the tree, so a use of
+                      HOMM3_MAKE_DPLAY_ERROR inside a DPERR_* constant is
+                      not a scaffold) and whatever include/va.h defines
+                      (the annotation/verify machinery). Ratchets to zero.
 
 Every invocation self-tests first: each metric's embedded positive
 samples must be detected and its negatives must count zero, so the gate
@@ -170,6 +184,47 @@ def _view_preprocessor_sites(code: str, _ctx) -> list:
                        directive.group()))
     return out
 
+# Per-TU scaffolds under any other suffix. Only the conditional and
+# (un)definition directives can gate visibility; #include / #pragma /
+# #else / #endif never carry the identifier that decides a fork.
+_SCAFFOLD_DIRECTIVE = re.compile(
+    r"^[ \t]*\#[ \t]*(?:if|ifdef|ifndef|elif|define|undef)\b")
+_SCAFFOLD_IDENT = re.compile(r"\bHOMM3_[A-Z0-9_]+\b")
+_FUNCLIKE_DEFINE = re.compile(
+    r"^[ \t]*\#[ \t]*define[ \t]+([A-Za-z_]\w*)\(", re.MULTILINE)
+_ANY_DEFINE = re.compile(
+    r"^[ \t]*\#[ \t]*define[ \t]+([A-Za-z_]\w*)", re.MULTILINE)
+VA_HEADER = REPO / "include/va.h"
+
+
+def _legit_pp_names(sources) -> frozenset:
+    """Tree-wide pre-pass: every function-like macro name plus every
+    name include/va.h defines. Both are legitimate wherever they appear
+    in a directive (a use of a function-like macro inside another
+    #define is still that macro, not a scaffold)."""
+    names = set()
+    for path, code in sources:
+        names.update(_FUNCLIKE_DEFINE.findall(code))
+        if path == VA_HEADER:
+            names.update(_ANY_DEFINE.findall(code))
+    return frozenset(names)
+
+
+def _scaffold_preprocessor_sites(code: str, ctx) -> list:
+    legit = (ctx.get("pp_legit", frozenset())
+             | frozenset(_FUNCLIKE_DEFINE.findall(code)))
+    out = []
+    for directive in _PP_LOGICAL.finditer(code):
+        text = directive.group()
+        if not _SCAFFOLD_DIRECTIVE.match(text):
+            continue
+        for match in _SCAFFOLD_IDENT.finditer(text):
+            name = match.group()
+            if name.endswith("_H") or name in legit:
+                continue
+            out.append(directive.start() + match.start())
+    return out
+
 # The enum-cast row needs the tree's declared enum NAMES (collected in a
 # pre-pass over the stripped sources) - the registry travels in ctx.
 _ENUM_DECL = re.compile(r"\benum\s+([A-Za-z_]\w*)")
@@ -244,6 +299,11 @@ METRICS = (
     ("view preprocessor artifacts", _view_preprocessor_sites, False,
      "make the recovered declaration/body canonical and remove the per-TU "
      "view guard plus its companion fork"),
+    ("per-TU preprocessor scaffolds", _scaffold_preprocessor_sites, False,
+     "make the recovered declaration/layout/body canonical for EVERY "
+     "consumer, then delete the object-like `#define HOMM3_X` and its "
+     "#if/#ifdef/#else fork; never add a new per-TU guard, and reconcile "
+     "two arms to the one shape retail bytes + the DC dump prove"),
 )
 
 # All rows ratchet: floors only move down (raises are explicit --update).
@@ -268,7 +328,8 @@ def count(per_file: bool = False):
 
     names = frozenset(name for _path, code in sources
                       for name in _ENUM_DECL.findall(code))
-    ctx = {"enums": names, "enum_cast_re": _enum_cast_pattern(names)}
+    ctx = {"enums": names, "enum_cast_re": _enum_cast_pattern(names),
+           "pp_legit": _legit_pp_names(sources)}
 
     totals = {label: 0 for label, _, _, _ in METRICS}
     offenders = []
@@ -474,12 +535,46 @@ _SAMPLES["view preprocessor artifacts"] = (
      "#if defined(HOMM3_SAMPLE_DECLS)",
      _VIEW_COMMENT_SAMPLE))
 
+# The scaffold row's samples are built the same way: the prefix is split
+# so a tree-wide grep for the real identifiers never lands on this file.
+_SCAFFOLD_PREFIX = "HOMM3" + "_"
+_SCAFFOLD_DECLS = _SCAFFOLD_PREFIX + "SAMPLE_DECLS"
+_SCAFFOLD_INLINE = _SCAFFOLD_PREFIX + "SAMPLE_INLINE"
+_SCAFFOLD_LAYOUT = _SCAFFOLD_PREFIX + "SECOND_LAYOUT"
+_SCAFFOLD_ERROR = _SCAFFOLD_PREFIX + "SAMPLE_ERROR"
+_SCAFFOLD_VERIFY = _SCAFFOLD_PREFIX + "SAMPLE_VERIFY"
+_SCAFFOLD_RELEASE_VERIFY = _SCAFFOLD_PREFIX + "RELEASE_VERIFY"
+_SAMPLES["per-TU preprocessor scaffolds"] = (
+    ("#define " + _SCAFFOLD_DECLS,
+     "#undef " + _SCAFFOLD_DECLS,
+     "#if" + "def " + _SCAFFOLD_DECLS,
+     "#ifn" + "def " + _SCAFFOLD_INLINE,
+     "#if defined(" + _SCAFFOLD_DECLS + ") || \\\n    defined("
+     + _SCAFFOLD_LAYOUT + ")",
+     "#elif defined(" + _SCAFFOLD_DECLS + ")",
+     "#if !defined(" + _SCAFFOLD_INLINE + ")",
+     "  # define " + _SCAFFOLD_DECLS + " 1"),
+    ("#ifn" + "def " + _SCAFFOLD_PREFIX + "SAMPLE_H\n#define "
+     + _SCAFFOLD_PREFIX + "SAMPLE_H",
+     "#define " + _SCAFFOLD_ERROR + "(code) (0x88770000UL + (code))\n"
+     "#define DPERR_SAMPLE " + _SCAFFOLD_ERROR + "(5)",
+     "#define " + _SCAFFOLD_VERIFY + "(expression) \\\n    "
+     + _SCAFFOLD_RELEASE_VERIFY + "(expression)",
+     _SCAFFOLD_RELEASE_VERIFY + "(x == 1);",
+     "#pragma " + _SCAFFOLD_DECLS,
+     "#include <va.h>",
+     "#else\n#endif",
+     "int " + _SCAFFOLD_DECLS + " = 1;",
+     "// #define " + _SCAFFOLD_PREFIX + "COMMENT_DECLS"))
+
 
 def selftest() -> list[str]:
     failures = []
     counters = {label: sites for label, sites, _, _ in METRICS}
     names = frozenset({"eHero", "eTown"})
-    ctx = {"enums": names, "enum_cast_re": _enum_cast_pattern(names)}
+    # Mirror count()'s pre-pass: va.h's verify macro is legitimate.
+    ctx = {"enums": names, "enum_cast_re": _enum_cast_pattern(names),
+           "pp_legit": frozenset({_SCAFFOLD_RELEASE_VERIFY})}
     for label, (positives, negatives) in _SAMPLES.items():
         sites = counters[label]
         for sample in positives:
