@@ -48,6 +48,7 @@
 #include "font.h"
 #include "iconwdgt.h"
 #include "mousemgr.h"
+#include "scenarioinfo.h"
 #include "singleselectionpopups.h"
 #include "singleselectionwindow.h"
 #include "singleselectionwindow_priv.h"
@@ -642,6 +643,24 @@ void CNetPlayerHandler::CNetPlayerHandler()
 
 #endif  // @carcass
 
+// E:\gamedcs\singleselectionwindow.cpp:1005
+// Dreamcast dc 0x1303fc (the DC_ONLY row above): the two seat-array
+// constructions, the four seat counters and the computer-seat colour/name
+// loop. Retail keeps no out-of-line copy - the 11.6 KB window constructor
+// expands it between its m_players and netMsgHandler member constructions
+// (0x579a2e..0x579a9a), which is where its statements sit in retail.
+CNetPlayerHandler::CNetPlayerHandler()
+{
+    playerPos = -1;
+    playersCount = 0;
+    unused = -1;
+    assignedPos = -1;
+    for (int i = 0; i < MAX_PLAYERS; ++i) {
+        computerPlayers[i].color = i;
+        strcpy(computerPlayers[i].sName, gpGeneralText->GetText(469));
+    }
+}
+
 // Exact (208/208 bytes): Dreamcast's bounded scan calls the inline IsHuman
 // source helper and returns from the successful arm.  Flattening that helper
 // into a reversed dpid==0 loop produced the former 96.24% / 13-branch shape.
@@ -1166,23 +1185,38 @@ CUpdatePlayerPosMsg::CUpdatePlayerPosMsg(
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:1953
-VA(0x00579960, 0x2d63)  // active hardest-first reconstruction; anchor-callee CAdvPopup base ctor + embedded header/player/net-handler construction; dc 0x1309f0
+// MATCHING (2026-09-04): 75.00 -> 89.49, 437/437 blocks, 202/203 branches.
+// The body was incomplete: retail continues past the scnrback button for
+// ~0x310 B (DC 2491..2625) - the Widgets.begin()/end() AddWidget(w,-1)/
+// MemError flush, the sprite/bitmap preloads, the mode setup calls, the
+// help table, the two 8-dword fills, the save-mode focus block and the
+// 107..111 disable loop - all now present. Also restored: the
+// CNetPlayerHandler constructor body (DC 1005..1017) which retail expands
+// between the m_players and netMsgHandler member constructions; the
+// single-copy 102/103 border block; CreateFilterWidgets() inside the mode
+// textButton block; chatMan.SetPosition(-1) (was SetFocus(-1)); the
+// pDPlay null test before SetNetMsgHandler; the 391/392 widgets hidden by
+// pointer; the heading selector evaluated inside the argument list; the
+// DC accessor sites (GetWidth/GetHeight, IsMultiPlayer x6).
+// Residual: (a) inliner - retail rejects vector<widget*>::insert at the
+// 128 textButton and accepts it at 130, we do the reverse; the nested
+// budget is budget/(sites-remaining) and retail's source has one more
+// candidate after 128 that ours lacks: UpdateMainWindow (0x57fb90, still
+// a carcass stub here, so not an /Ob2 candidate in this TU). Landing its
+// body should flip both sites. (b) register homing downstream of that
+// and of the m_players ctor expansion (retail keeps the earlier zero in
+// EDI across the two seat-array ctor loops and homes the loop pointer in
+// [ebp-0x14]). (c) frame 0x348 vs 0x314: retail does not overlay
+// flagName on GetGameVersion's path buffer and overlays tempName on
+// temp_str (both 100 B); every scoping variant measured byte-flat (score
+// is masked to the frame), so the layout is left as written.
+// Measured byte-flat: `int i` function- vs block-scoped for every loop;
+// a ternary-of-two-news for the 128 textButton (85.98, rejected); the
+// adopb2 arm order (either order 87.27 at that stage; DC order kept).
+VA(0x00579960, 0x2d63)  // anchor-callee CAdvPopup base ctor + embedded header/player/net-handler construction; tail proven by the retail preload/setup call run at +0x2a56..+0x2d45; dc 0x1309f0
 TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     : CAdvPopup(0, 0, 800, 600, 0)
 {
-    m_players.playerPos = -1;
-    m_players.playersCount = 0;
-    m_players.unused = -1;
-    m_players.assignedPos = -1;
-
-    {
-        for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
-            m_players.computerPlayers[i].color = i;
-            strcpy(m_players.computerPlayers[i].sName,
-                   gpGeneralText->GetText(469));
-        }
-    }
-
     StartMouseThread();
 
     campaignMode = (gpWindowManager->dialogReturn
@@ -1211,7 +1245,7 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
         gUnnamed69fdc8 = 16;
     }
 
-    if (!m_flag64 && !m_flag65 && bVideoPaused)
+    if (!m_flag64 && !m_flag65 && bVideoPaused && pDPlay)
         pDPlay->SetNetMsgHandler(&netMsgHandler);
 
     logFile.Log(
@@ -1257,14 +1291,14 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     bitmapBorder16* tempBack = new bitmapBorder16(
         0, 0, 800, 600, 100, gText, 0x800);
     Widgets.push_back(tempBack);
-    tempBack->image->Draw(0, 0, tempBack->image->Width,
-        tempBack->image->Height, gpWindowManager->screenBitmap,
+    tempBack->image->Draw(0, 0, tempBack->image->GetWidth(),
+        tempBack->image->GetHeight(), gpWindowManager->screenBitmap,
         tempBack->x + x, tempBack->y + y, 0);
 
     bitmapBorder* w = new bitmapBorder(
         396, 6, 370, 585, 100, "GSelPop1.pcx", 0x800);
     Widgets.push_back(w);
-    w->image->Draw(0, 0, w->image->Width, w->image->Height,
+    w->image->Draw(0, 0, w->image->GetWidth(), w->image->GetHeight(),
         gpWindowManager->screenBitmap, w->x + x, w->y + y, 0);
 
     w = new bitmapBorder(3, 6, 575, 585, 101,
@@ -1272,25 +1306,11 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     w->hide();
     Widgets.push_back(w);
 
-    int heading = m_flag65 ? 2 : (m_flag64 ? 1 : 0);
-    textWidget* headingWidget = new textWidget(
-        25, 23, 367, 23, gUnnamed6a8098[heading], "medfont.fnt",
-        font::HEADING_HIGHLIGHT, 361, 5, 0, 8);
-    Widgets.push_back(headingWidget);
+    Widgets.push_back(new textWidget(
+        25, 23, 367, 23, gUnnamed6a8098[m_flag65 ? 2 : (m_flag64 ? 1 : 0)],
+        "medfont.fnt", font::HEADING_HIGHLIGHT, 361, 5, 0, 8));
 
-    if (!m_flag64) {
-        if (!m_flag65) {
-            w = new bitmapBorder(3, 6, 557, 585, 102,
-                                 "AdvOptBk.pcx", 0x800);
-            w->hide();
-            Widgets.push_back(w);
-
-            w = new bitmapBorder(3, 6, 557, 585, 103,
-                                 "RanMapBk.pcx", 0x800);
-            w->hide();
-            Widgets.push_back(w);
-        }
-    } else if (bVideoPaused || gUnnamed6989f0 == WINDOW_MODE_6989F0_3) {
+    if ((!m_flag64 && !m_flag65) || (m_flag64 && IsMultiPlayer())) {
         w = new bitmapBorder(3, 6, 557, 585, 102,
                              "AdvOptBk.pcx", 0x800);
         w->hide();
@@ -1344,19 +1364,19 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
         714, 28, 29, 23, 189, "scnrmpsz.def", 0, 0, 0, 0,
         iconWidget::ICON_STYLE_PLAIN));
     sprintf(gText, "%s", gpGeneralText->GetText(391));
-    Widgets.push_back(new textWidget(
+    textWidget* t = new textWidget(
         414, 403, 44, 23, gText, "smalfont.fnt", font::WHITE, 100,
-        font::VERT_CENTER_JUSTIFIED | font::RIGHT_JUSTIFIED, 0, 8));
+        font::VERT_CENTER_JUSTIFIED | font::RIGHT_JUSTIFIED, 0, 8);
+    Widgets.push_back(t);
     sprintf(gText, "%s", gpGeneralText->GetText(392));
-    Widgets.push_back(new textWidget(
+    textWidget* t2 = new textWidget(
         579, 403, 58, 23, gText, "smalfont.fnt", font::WHITE, 386,
-        font::VERT_CENTER_JUSTIFIED | font::RIGHT_JUSTIFIED, 0, 8));
+        font::VERT_CENTER_JUSTIFIED | font::RIGHT_JUSTIFIED, 0, 8);
+    Widgets.push_back(t2);
 
-    if (m_flag65
-        || (m_flag64 && !bVideoPaused
-            && gUnnamed6989f0 != WINDOW_MODE_6989F0_3)) {
-        GetWidget(132)->hide();
-        GetWidget(133)->hide();
+    if (m_flag65 || (m_flag64 && !IsMultiPlayer())) {
+        t->hide();
+        t2->hide();
     }
 
     {
@@ -1375,9 +1395,7 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
         }
     }
 
-    if (!m_flag65
-        && (!m_flag64 || bVideoPaused
-            || gUnnamed6989f0 == WINDOW_MODE_6989F0_3))
+    if (!m_flag65 && (!m_flag64 || IsMultiPlayer()))
         Widgets.push_back(new CHotspotWidget(456, 402, 310, 25, 387));
 
     for (int i = 0; i < gUnnamed69fdc8; ++i) {
@@ -1428,18 +1446,15 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     Widgets.push_back(new button(
         342, 92, 32, 28, 195, "scbutt5.def", 0, 1, 0, 0, 2));
 
-    int fileSliderHeight = m_flag65 ? 428 : 480;
+    int sliderHeight = m_flag65 ? 428 : 480;
     fileSlider = new slider(
-        375, 92, 16, fileSliderHeight, 337, 10, SliderFileMenu,
+        375, 92, 16, sliderHeight, 337, 10, SliderFileMenu,
         slider::BLUE, gUnnamed69fdc8, 0);
     fileSlider->hide();
     Widgets.push_back(fileSlider);
 
     char flagColors[] = "RBYGOPTS";
-    if ((!m_flag64 && !m_flag65)
-        || (m_flag64
-            && (bVideoPaused
-                || gUnnamed6989f0 == WINDOW_MODE_6989F0_3))) {
+    if ((!m_flag64 && !m_flag65) || (m_flag64 && IsMultiPlayer())) {
         durationSlider = new slider(
             58, 557, 194, 16, 338, 11, SliderDuration,
             slider::BLUE, 0, 0);
@@ -1462,16 +1477,15 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
                 0, 8));
 
             sprintf(temp_str, "adopb2%c.def", flagColors[i]);
-            if (!bVideoPaused
-                && gUnnamed6989f0 != WINDOW_MODE_6989F0_3) {
-                Widgets.push_back(new button(
-                    110, rowY + 18, 50, 24, 207 + i,
-                    temp_str, 0, 1, 0, 0, 2));
-            } else {
+            if (IsMultiPlayer()) {
                 Widgets.push_back(new textButton(
                     110, rowY + 18, 50, 24, 207 + i,
                     temp_str, gUnnamed6a7800[0], "tiny.fnt",
                     0, 1, 0, 0, 2, font::WHITE));
+            } else {
+                Widgets.push_back(new button(
+                    110, rowY + 18, 50, 24, 207 + i,
+                    temp_str, 0, 1, 0, 0, 2));
             }
 
             Widgets.push_back(new button(
@@ -1504,8 +1518,7 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
             Widgets.push_back(new CHotspotWidget(
                 328, rowY - 3, 48, 32, 378 + i));
 
-            if (!bVideoPaused
-                && gUnnamed6989f0 != WINDOW_MODE_6989F0_3) {
+            if (!IsMultiPlayer()) {
                 CEnterNameEdit* edit = new CEnterNameEdit(
                     62, rowY - 3, 97, 17, 21, emptyRolloverText,
                     "smalfont.fnt", font::PRIMARY, font::LEFT_JUSTIFIED,
@@ -1548,7 +1561,7 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
             chatSlider->SetResolution(0);
             chatSlider->SetState(0);
             chatMan.UpdateWidget(chatWidget, 0, 5);
-            SetFocus(-1);
+            chatMan.SetPosition(-1);
 
             CSingleSelectionChatEdit* edit =
                 new CSingleSelectionChatEdit(
@@ -1579,15 +1592,20 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
         }
     }
 
-    if ((!m_flag64 && !m_flag65)
-        || (m_flag64
-            && (bVideoPaused
-                || gUnnamed6989f0 == WINDOW_MODE_6989F0_3))) {
-        const char* modeText = gpGeneralText->GetText(
-            m_flag64 ? 656 : 501);
-        Widgets.push_back(new textButton(
-            414, 81, 200, 20, 128, "gspbutt.def", modeText,
-            "smalfont.fnt", 0, 1, 0, 31, 2, font::WHITE));
+    if ((!m_flag64 && !m_flag65) || (m_flag64 && IsMultiPlayer())) {
+        CreateFilterWidgets();
+        textButton* t;
+        if (m_flag64)
+            t = new textButton(
+                414, 81, 200, 20, 128, "gspbutt.def",
+                gpGeneralText->GetText(656), "smalfont.fnt",
+                0, 1, 0, 31, 2, font::WHITE);
+        else
+            t = new textButton(
+                414, 81, 200, 20, 128, "gspbutt.def",
+                gpGeneralText->GetText(501), "smalfont.fnt",
+                0, 1, 0, 31, 2, font::WHITE);
+        Widgets.push_back(t);
         Widgets.push_back(new textButton(
             414, 509, 200, 20, 129, "gspbutt.def",
             gpGeneralText->GetText(502), "smalfont.fnt",
@@ -1613,17 +1631,17 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
         634, 456, 30, 46, 111, "gspbut7.def", 0, 1, 0, 0, 2));
 
     const char* beginButtonName = "scnrbeg.def";
-    int beginHotkey = 48;
+    int key = 48;
     if (m_flag64) {
         beginButtonName = "scnrlod.def";
-        beginHotkey = 38;
+        key = 38;
     } else if (m_flag65) {
         beginButtonName = "scnrsav.def";
-        beginHotkey = 31;
+        key = 31;
     }
     button* b = new button(
         414, 535, 166, 40, 186, beginButtonName,
-        0, 1, 0, beginHotkey, 2);
+        0, 1, 0, key, 2);
     if (m_flag64)
         b->set_hotkey(28);
     Widgets.push_back(b);
@@ -1642,6 +1660,84 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
         Widgets.push_back(new button(
             584, 535, 166, 40, 188, "scnrback.def",
             0, 1, 0, 1, 2));
+    }
+
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            AddWidget(*it, -1);
+        else
+            MemError();
+    }
+
+    VersionIcon = ResourceManager::GetSprite("ScSelC.def");
+    VictoryIcon = ResourceManager::GetSprite("scnrvict.def");
+    LossIcon = ResourceManager::GetSprite("scnrloss.def");
+    TownPix = ResourceManager::GetSprite("itpa.def");
+    heroSpecificAbility = ResourceManager::GetSprite("un44.def");
+    for (i = 0; i < 163; ++i)
+        HeroPix[i] = ResourceManager::GetBitmap816(
+            akHeroTraits[i].smallPortraitName);
+    HeroPix[163] = ResourceManager::GetBitmap816("hpsrand.pcx");
+    Resource = ResourceManager::GetSprite("ScnrStar.def");
+
+    const char* colorChars = "rbygopts";
+    char tempName[100];
+    for (i = 0; i < 8; ++i) {
+        sprintf(tempName, "adop%cpnl.pcx", colorChars[i]);
+        Panels[i] = ResourceManager::GetBitmap816(tempName);
+        sprintf(tempName, "adopflg%c.pcx", colorChars[i]);
+        Flags[i] = ResourceManager::GetBitmap816(tempName);
+    }
+    randomTownBmp = ResourceManager::GetBitmap816("hpsrand0.pcx");
+    randomHeroBmp = ResourceManager::GetBitmap816("hpsrand1.pcx");
+    noHeroBmp = ResourceManager::GetBitmap816("hpsrand6.pcx");
+    currentIndex = 0;
+    currentMap = 0;
+
+    if (m_flag64)
+        SetupLoadGameMode();
+    else if (!m_flag65)
+        SetupNewGameMode();
+    StopMouseThread();
+
+    if (SelectionHeaders.size() > 0 || m_flag65)
+        SetDifficultyHiLite();
+    SetHumanSlot();
+
+    if (bVideoPaused && !m_flag65)
+        pNewPlayerUpdateMan = new CNewPlayerUpdateMan;
+
+    if ((m_flag64 && !bVideoPaused) || m_flag65) {
+        SetupScenarioOptions(0);
+    } else {
+        TurnOffFilterOptions();
+        TurnOffScenarioOptions();
+        TurnOffAdvancedOptions();
+    }
+    UpdateMainWindow();
+
+    if (bVideoPaused && !m_flag65) {
+        TurnChatOn(0);
+        if (!IsHost())
+            GetWidget(186)->enable(0);
+    }
+
+    SetHelpText(gSingleSelectionHelp, 104, 345, 0);
+    for (i = 0; i < 8; ++i) {
+        gUnnamed69fb24[i] = -1;
+        gNewMapStartingBonus[i] = 3;
+    }
+
+    if (m_flag65) {
+        SetFocus(160);
+        saveGameEdit->SetAutoDraw(1);
+        if (SelectionHeaders.size() == 0)
+            SetCurrentMap(-1, 0);
+        UpdateAllyEnemyFlags(0);
+    }
+    if (m_flag65 || m_flag64) {
+        for (i = 107; i <= 111; ++i)
+            GetWidget(i)->enable(0);
     }
 }
 
