@@ -2871,7 +2871,7 @@ singleselectionwindow	??0CNetPlayerHandlerPlayer@@QAE@XZ	100.0000	100.0000	100.0
 singleselectionwindow	??0CNetPlayerInfo@@QAE@XZ	100.0000	100.0000	100.0000	0x17f720	-
 singleselectionwindow	??0CNewPlayerUpdateMan@@QAE@XZ	100.0000	100.0000	100.0000	0x17c9b0	0ed8ff53773d
 singleselectionwindow	??0CUpdatePlayerPosMsg@@QAE@PAVCNetPlayerHandlerPlayer@@0@Z	100.0000	100.0000	100.0000	0x179870	4cb719207948
-singleselectionwindow	??0GameSelectionHeadersStruct@@QAE@XZ	73.1483	79.3242	79.3242	0x178e00	-
+singleselectionwindow	??0GameSelectionHeadersStruct@@QAE@XZ	79.3242	79.3242	79.3242	0x178e00	-
 singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	74.9955	75.2722	75.2722	0x179960	d3d7e1a1d221
 singleselectionwindow	??0lobby_message@@QAE@XZ	100.0000	100.0000	100.0000	0x189190	2b1be8208221
 singleselectionwindow	??0t_map_list_update@@QAE@K@Z	100.0000	100.0000	100.0000	0x189240	173781ee6a81

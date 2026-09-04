@@ -71,9 +71,7 @@ public:
     // visited-player bit followed by a fresh quest-pointer read.
     unsigned char QuestActiveforPlayer(
         const unsigned char playerNum) const;
-#ifdef HOMM3_QUEST_GUARD_LOAD_DECLS
     int load(TAbstractFile* infile, int saveVersion);
-#endif
 
 protected:
     // TSeerHut initializes the shared bytes in its own body; retail's store

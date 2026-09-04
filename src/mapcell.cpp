@@ -27,7 +27,6 @@
 // record in gpGame's 136-byte-stride pool at +0x98 or by calling
 // pick_alignment.
 //
-#define HOMM3_QUEST_GUARD_LOAD_DECLS
 #include <stdio.h>
 #include <va.h>
 #include <windows.h>
