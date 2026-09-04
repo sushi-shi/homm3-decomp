@@ -2580,12 +2580,9 @@ public:
     // philai's value_of_garrison; its nested vector access remains visible
     // so the recovered source hierarchy is not flattened again.
     garrison* GetGarrison(int which) { return &garrisons[which]; }
-#ifdef HOMM3_EVENTS_GAME_INLINE_HELPERS
-    // Game.h:1380. DispatchEvent expands this cell accessor.
+    // Game.h:1380. DispatchEvent expands this cell accessor; the
+    // out-of-line copy is ai_player.obj's, 0x42ed80.
     NewmapCell* get_cell(type_point point);
-#else
-    NewmapCell* get_cell(type_point point);      // 0x42ed80 (ai_player.obj)
-#endif
     // DC `game::GetHero`, dc 0x2eb0, 36 B, declared in E:\gamedcs\Game.h
     // line 972 - i.e. an INLINE MEMBER of this header. Most retail readers
     // expand it in place; ai_player.obj also retains the selected COMDAT at
