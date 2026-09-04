@@ -99,9 +99,7 @@ struct type_AI_combat_parameters {
     long side;                  // +0x20
     long enemy_side;            // +0x24
 
-#ifdef HOMM3_AI_COMBAT_PARAMS_GROUP_ACCESSOR
     long get_group() const { return side; }
-#endif
 
     type_AI_combat_parameters(const combatManager* combat, long side);
     void simulate_single_attack(const army* current_army, long* our_hits,
