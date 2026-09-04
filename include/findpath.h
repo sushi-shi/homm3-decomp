@@ -206,6 +206,15 @@ public:
     // 116 DC bytes against retail's 104) and the retail call site's shape.
     unsigned char enter_hostile_trigger(const hero* current_hero,
                                         pathCell* cell);
+    // search.obj 0x56a400 / 0x56a730, the lith-family and underground
+    // gate seeders; both parameter lists are the DC roster's
+    // (search.cpp:155 and :244).
+    void enter_lith(const hero* current_hero,
+                    const std::vector<type_point>* list, long cell_type,
+                    long excluded, pathCell* entry_point, long limit,
+                    type_search_type search_type);
+    void enter_gate(const pathCell* cell, const NewmapCell* map_cell,
+                    long limit);
     void enter_town(const hero* current_hero, long start_town,
                     const pathCell* path_cell, long limit,
                     type_search_type search_type);
