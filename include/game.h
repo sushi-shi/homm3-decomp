@@ -1469,6 +1469,10 @@ SIZE(SCampaignCtorView, 0x7c);
 // argument.  Retail invokes two nullary members at 0x487290/0x487900;
 // neither has a surviving name, so the address-bearing spellings remain
 // provisional while preserving the proved receiver and arity.
+// Complete's NewMap takes the selected TCampaignBrief::ScenarioStruct
+// (StartScenario 0x4884c0 passes `this`); game.h cannot name a nested
+// type, so ScenarioStruct derives from this empty stand-in and the two
+// bodies below (0x487290 / 0x487900, customcampaign.obj) are its methods.
 class NewMapCampaignContext {
 public:
     void NewMapFn_00487290();

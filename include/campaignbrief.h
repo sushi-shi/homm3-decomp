@@ -53,7 +53,7 @@ public:
                                     int option) = 0;
         virtual int GetStartingHero(int option) = 0;
         virtual int GetPlayerPosition(int option) = 0;
-        virtual void _vslot9(TAbstractFile* stream) = 0;
+        virtual void _vslot9(std::streambuf* stream) = 0;
         virtual void _vslot10(ScenarioStruct* scenario) = 0;
         virtual void _vslot11(NewSMapHeader* mapHeader) = 0;
         virtual bool _vslot12(ScenarioStruct* scenario, int option) = 0;
@@ -69,7 +69,12 @@ public:
         void Play();
     };
 
-    struct ScenarioStruct {
+    // The empty NewMapCampaignContext base is how game::NewMap receives the
+    // selected scenario: StartScenario (0x4884c0) passes `this` in that
+    // slot and NewMap calls two customcampaign.obj bodies on it. game.h
+    // cannot name a nested type, so the base carries the relationship;
+    // being empty it leaves every proven offset in place.
+    struct ScenarioStruct : public NewMapCampaignContext {
         std::string name;
         int offset;
         // Retail tests this field with a signed `jle` before loading a
@@ -108,13 +113,13 @@ public:
                                      hero* sourceHero);
         // Complete-only retained wrapper at 0x4884c0.  The campaign-header
         // wrapper below is its sole direct caller.
-        void StartScenario(TAbstractFile* stream, int option);
+        void StartScenario(std::streambuf* stream, int option);
         std::string GetRegionDescription() const;
         ~ScenarioStruct();
         // Retail 0x487d30: LoadScenario's callee, which inflates the map
         // header of scenario `which` out of the campaign stream (name
         // provisional).
-        void LoadMapHeader(TAbstractFile* stream, NewSMapHeader* mapHeader,
+        void LoadMapHeader(std::streambuf* stream, NewSMapHeader* mapHeader,
                            int which);
     };
 
@@ -137,7 +142,10 @@ public:
         unsigned char* data;
         // FreeData (0x4887e0) destroys it through vtable slot 0 with the
         // deleting flag, and the two loaders hand it to ScenarioStruct.
-        TAbstractFile* stream;
+        // A std::streambuf (a filebuf or a strstreambuf by Load's vftable
+        // stores): the loaders seek it through slot 8 with seekoff's
+        // hidden-return-plus-three ABI and wrap it in a TGzInflateBuf.
+        std::streambuf* stream;
         bool variable_difficulty;
         char pad_55[3];
         int campaign_music;
