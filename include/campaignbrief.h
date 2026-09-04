@@ -21,6 +21,16 @@ class type_text_scroller;
 // Retail's vector insert and constructor cleanup both prove this exact
 // source-level aggregate: a NewSMapHeader, the trivially copied setup record,
 // and one availability byte at +0x4d0.
+// The four map extents NewSMapHeader::Size takes; TCampaignBrief::Select
+// maps them onto the WHICHMAP icon's frames 0..3 (anything else is frame
+// 4). Declared with its one consumer.
+enum EMapSize {
+    MAP_SIZE_SMALL = 36,
+    MAP_SIZE_MEDIUM = 72,
+    MAP_SIZE_LARGE = 108,
+    MAP_SIZE_EXTRA_LARGE = 144
+};
+
 struct CampaignScenarioPreview : public NewSMapHeader {
     SGameSetupOptions game_setup;
     bool available;
@@ -341,6 +351,11 @@ public:
     void SetHumanSlot();
     void SetupCurrentTerritory();
     void UpdateAllyEnemyFlags();
+    // Retail 0x459010, Complete-only (name provisional): shows the
+    // difficulty button matching gpGame->setup.difficulty and, outside the
+    // in-game view, the two arrow buttons a variable-difficulty campaign
+    // allows around it. Select calls it right after UpdateBonusIcons.
+    void UpdateDifficultyButtons();
 
 private:
     // The Dreamcast procedure is S_LPROC32 (file-static) yet calls this
