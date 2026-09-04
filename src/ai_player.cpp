@@ -3386,6 +3386,14 @@ static int __cdecl MaxBuyableCreatures(
 // of 219 instructions agree; the remaining delta is VC6 stack-slot coloring
 // around the best-source state (`why-reg` distance 70), after equivalent
 // declaration and expression orders were exhausted.
+// Census 2026-09-04: base 217 vs retail 219; the two surplus retail rows are
+// a dword copy of best_number out of its recycled [ebp+8] parameter home into
+// a fresh [ebp-0x8] slot, which frees [ebp+8] to carry the resource loop's
+// counter (we keep best_number in [ebp+8] and colour that counter onto
+// [ebp-0x1c], the first loop's slot). Both spellings that name the copy in
+// source - a fresh `short count` from MaxBuyableCreatures, and `short count =
+// best_number` after the assignment - are byte-flat at 97.2740, so the extra
+// slot is the allocator's, not a source local.
 VA(0x0042d420, 0x264)  // DC method/callgraph + exact retail caller; dc 0x32038
 long type_AI_creature_purchaser::do_best_purchase(
     unsigned char trade_allowed)
