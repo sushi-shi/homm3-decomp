@@ -6,13 +6,18 @@
 #include <va.h>
 #include <string.h>
 #include "questlogwindow.h"
+#include "border.h"
+#include "button.h"
 #include "game.h"
 #include "kb.h"
 #include "message.h"
 #include "mousemgr.h"
 #include "quest.h"
 #include "seerhut.h"
+#include "slider.h"
+#include "textwdgt.h"
 #include "widget.h"
+#include "winmgr.h"
 
 DATA(0x0069cd20) static TQuestLogWindow* gpQuestLogWindow;
 
@@ -46,21 +51,86 @@ inline unsigned char TQuestGuard::QuestActiveforPlayer(
         && quest;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\questlogwindow.cpp:34
-DC_ONLY(0x1165dc, 0x28)
-void QuestSliderCallback(int state, heroWindow* parent_window)
-{
-    // @stub
-}
+// Dreamcast proves the helper call; Complete expands the 16-row version of
+// UpdateQuestLocators and otherwise retains the same scroll/store/redraw
+// sequence.  The second argument is the slider callback ABI and is unused.
+static void QuestSliderCallback(int state, heroWindow* parent_window);
 
 // E:\gamedcs\questlogwindow.cpp:43
-DC_ONLY(0x116604, 0x568)
-void TQuestLogWindow::TQuestLogWindow()
+// The DC constructor has ten individually-authored text rows. Complete's
+// retail body preserves the same statement shape after extending the visible
+// quest list to sixteen rows.  The 20-slot reserve covers the background,
+// sixteen rows, slider, and exit button before AddWidget takes ownership.
+VA(0x0052d8c0, 0x8AF)  // DoQuestLog sole caller + QuestLog.pcx, dc 0x116604
+TQuestLogWindow::TQuestLogWindow()
+  : CAdvPopup(205, 32, 389, 535, 2), firstVisibleQuest(0)
 {
-    // @stub
+    Widgets.reserve(20);
+    Widgets.push_back(new bitmapBorder(
+        0, 0, width, height, 0, "QuestLog.pcx", 0x800));
+
+    Widgets.push_back(new textWidget(
+        45, 122, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 1, 1, 0, 8));
+    Widgets.push_back(new textWidget(
+        45, 142, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 2, 1, 0, 8));
+    Widgets.push_back(new textWidget(
+        45, 162, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 3, 1, 0, 8));
+    Widgets.push_back(new textWidget(
+        45, 182, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 4, 1, 0, 8));
+    Widgets.push_back(new textWidget(
+        45, 202, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 5, 1, 0, 8));
+    Widgets.push_back(new textWidget(
+        45, 222, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 6, 1, 0, 8));
+    Widgets.push_back(new textWidget(
+        45, 242, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 7, 1, 0, 8));
+    Widgets.push_back(new textWidget(
+        45, 262, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 8, 1, 0, 8));
+    Widgets.push_back(new textWidget(
+        45, 282, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 9, 1, 0, 8));
+    Widgets.push_back(new textWidget(
+        45, 302, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 10, 1, 0, 8));
+    Widgets.push_back(new textWidget(
+        45, 322, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 11, 1, 0, 8));
+    Widgets.push_back(new textWidget(
+        45, 342, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 12, 1, 0, 8));
+    Widgets.push_back(new textWidget(
+        45, 362, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 13, 1, 0, 8));
+    Widgets.push_back(new textWidget(
+        45, 382, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 14, 1, 0, 8));
+    Widgets.push_back(new textWidget(
+        45, 402, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 15, 1, 0, 8));
+    Widgets.push_back(new textWidget(
+        45, 422, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 16, 1, 0, 8));
+
+    Widgets.push_back(new slider(
+        335, 112, 16, 343, 17, 10, QuestSliderCallback,
+        slider::BROWN, 16, 0));
+    Widgets.push_back(new button(
+        324, 470, 32, 32, DIALOG_RETURN_OK, "QLexit.def",
+        0, 1, 1, 28, 2));
+
+    for (std::vector<widget*>::iterator it = Widgets.begin();
+         it != Widgets.end(); ++it) {
+        if (*it)
+            AddWidget(*it, -1);
+        else
+            MemError();
+    }
 }
+
+// Complete emits this address-taken static immediately after its constructor,
+// unlike the older Dreamcast compiland's source-row order.
+VA(0x0052e170, 0x3A)  // slider function pointer in the constructor, dc 0x1165dc
+static void QuestSliderCallback(int state, heroWindow* parent_window)
+{
+    gpQuestLogWindow->firstVisibleQuest = state;
+    gpQuestLogWindow->UpdateQuestLocators();
+    gpQuestLogWindow->DrawWindow(
+        1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+}
+
+#if 0  // @carcass
 
 // E:\gamedcs\questlogwindow.cpp:81
 DC_ONLY(0x116b6c, 0x6A)
