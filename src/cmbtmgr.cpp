@@ -43,7 +43,6 @@
 // pinned by their bodies and sole caller.
 #define HOMM3_ARMY_MIDPOINT_DECL
 #define HOMM3_ARMY_NEW_TURN_DECL
-#define HOMM3_ARMY_POW_VIEW
 #define HOMM3_ARMY_RESET_LATCH_DECL
 #include <math.h>
 #include <stdlib.h>

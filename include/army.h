@@ -279,14 +279,12 @@ public:
     signed char iShowAttackFrameType;    // +0x02
     signed char iNextFrameType;          // +0x03
     signed char iRemainingFramesToPlay;  // +0x04
-#elif defined(HOMM3_ARMY_POW_VIEW)
+#else
     unsigned char bShowRangeFrames;      // +0x01
     signed char iShowAttackFrameType;    // +0x02
     signed char iNextFrameType;          // +0x03
     signed char iRemainingFramesToPlay;  // +0x04
     char pad_05[0x3];
-#else
-    char pad_01[0x7];
 #endif
     int iDrawPriority;                   // +0x08
 #ifdef HOMM3_ARMY_COPY_VIEW
@@ -587,11 +585,9 @@ public:
     // +0xec is a dword field and not pad.
 #ifdef HOMM3_ARMY_COPY_VIEW
     int iPostPowSpellToCast;         // +0xec
-#elif defined(HOMM3_ARMY_POW_VIEW) || defined(HOMM3_ARMY_ROUND_VIEW)
+#else
     char pad_eb[0x1];
     int iPostPowSpellToCast;         // +0xec
-#else
-    char pad_eb[0x5];
 #endif
     unsigned char hitByCreature;  // +0xf0
 #ifndef HOMM3_ARMY_COPY_VIEW
@@ -1881,9 +1877,7 @@ public:
     // 2026-08-20 so combatManager::PowEffect, whose death sweep is its
     // second decoded caller, can reach it without also taking
     // ResetRound and the round view's other twenty-six declarators.
-#if defined(HOMM3_ARMY_ROUND_VIEW) || defined(HOMM3_ARMY_POW_VIEW)
     void ProcessDeath(int bFadeElementals);
-#endif
     int get_second_grid_index() const;                          // 0x4466a0
     int get_mirror_effect() const;                              // 0x4487f0
     void consider_attack(const army* enemy, long value,
