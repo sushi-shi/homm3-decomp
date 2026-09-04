@@ -1179,14 +1179,10 @@ public:
     // while the DC-named get_special_terrain at 0x4e4fa0 returns retail's
     // integer magic-terrain id.
     TAdventureObjectType HeroFn_004E4EC0();
-#ifdef HOMM3_HERO_OBJ_VIEW
-    // Fly sees the Complete body later in hero.cpp and retail inlines it at
-    // that site. Earlier hero.obj callers see only this declaration and keep
-    // the out-of-line body, so its independently exact retail symbol remains.
-    inline int get_special_terrain();
-#else
+    // 0x4e4fa0. hero.cpp defines it `inline` below its earlier callers,
+    // so Fly expands it while the out-of-line body those callers bind
+    // stays emitted.
     int get_special_terrain();
-#endif
     long get_combat_speed_bonus();
     float GetSurrenderCostFactor();
     float GetOffenseFactor();
@@ -1252,7 +1248,6 @@ public:
     {
         return GetManaCost(iWhichSpell, 0, get_special_terrain());
     }
-#ifdef HOMM3_HERO_OBJ_VIEW
     // E:\gamedcs\Hero.h:702
     // The header helper used by GetManaCost's own-stack discount. Complete
     // folds it back to the same armyGroup::IsMember bytes.
@@ -1274,7 +1269,6 @@ public:
             iWhichSpell, 0,
             const_cast<hero*>(this)->get_special_terrain());
     }
-#endif
     // E:\gamedcs\Hero.h:724. Dreamcast retains this header helper as a
     // standalone inline body. Complete stores the resolved sex on the live
     // hero and expands this test at its spells.cpp caller.

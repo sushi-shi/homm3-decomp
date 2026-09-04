@@ -4,9 +4,7 @@
 #define HOMM3_WIDGET_HIDE_SHOW_INLINE
 #include <va.h>
 #include "swapmgr.h"
-#define HOMM3_VLC_CHECKS_VIEW
 #include "game.h"
-#undef HOMM3_VLC_CHECKS_VIEW
 #include "hero.h"
 #include "advmgr.h"
 #include "bitmap816.h"

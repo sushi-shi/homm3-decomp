@@ -346,7 +346,7 @@ ai_player	?value_of_hall@@YIJPAVtown@@W4type_building_id@@@Z	100.0000	100.0000	1
 ai_player	?value_of_hiring@@YIJPAVtown@@PAVhero@@PAVsearchArray@@@Z	99.9522	99.9522	99.9522	0x31bd0	166320dbc4bb
 ai_player	?value_of_horde@@YIJPAVtown@@W4type_building_id@@PAEPAH@Z	100.0000	100.0000	100.0000	0x2b790	0ffb63118ec0
 ai_player	?value_of_horde_upgrade@@YIJPAVtown@@W4type_building_id@@PAEPAH@Z	100.0000	100.0000	100.0000	0x2b800	5eaa0276a877
-ai_tactical	??0army@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x37a00	-
+ai_tactical	??0army@@QAE@ABV0@@Z	48.9247	100.0000	100.0000	0x37a00	-
 ai_tactical	??0type_AI_attack_hex_chooser@@QAE@PBVarmy@@0PBJPAVsearchArray@@PBUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x360c0	93d490613518
 ai_tactical	??0type_AI_combat_parameters@@QAE@PBVcombatManager@@J@Z	100.0000	100.0000	100.0000	0x35ec0	cfa0f5b47019
 ai_tactical	??0type_AI_spellcaster@@QAE@PAVcombatManager@@JE@Z	93.1850	93.1850	93.1850	0x369c0	73ed279b1210
@@ -375,7 +375,7 @@ ai_tactical	?get_air_protection_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_en
 ai_tactical	?get_air_shield_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38bc0	aff9955939cc
 ai_tactical	?get_antimagic_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	0.0000	100.0000	100.0000	0x39d40	6973d94df595
 ai_tactical	?get_area_effect_value@type_AI_spellcaster@@QAEJHJW4TSkillMastery@@J@Z	100.0000	100.0000	100.0000	0x37040	aa44fc7b2bf4
-ai_tactical	?get_attack_skill_value@type_AI_spellcaster@@QAEJPBVarmy@@0JJ@Z	68.4970	99.8503	99.8503	0x37800	482e75dd858c
+ai_tactical	?get_attack_skill_value@type_AI_spellcaster@@QAEJPBVarmy@@0JJ@Z	53.4311	99.8503	99.8503	0x37800	482e75dd858c
 ai_tactical	?get_backlash_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	0.0000	100.0000	100.0000	0x39de0	259b2f798110
 ai_tactical	?get_berserk_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x3a400	38218f1b06a2
 ai_tactical	?get_bless_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x37430	cbf586fbe355
@@ -392,7 +392,7 @@ ai_tactical	?get_curse_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_dat
 ai_tactical	?get_damage_spell_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x36f60	04385420477a
 ai_tactical	?get_damage_value@type_AI_spellcaster@@QAEJHJPBVhero@@PBVarmy@@@Z	100.0000	100.0000	100.0000	0x36e30	a48bd9346277
 ai_tactical	?get_defense_boost_value@type_AI_spellcaster@@QAEJPBVarmy@@0JN@Z	100.0000	100.0000	100.0000	0x387c0	752eec4a850c
-ai_tactical	?get_defense_skill_value@type_AI_spellcaster@@QAEJPBVarmy@@JJ@Z	22.2235	100.0000	100.0000	0x38910	651ab02d904c
+ai_tactical	?get_defense_skill_value@type_AI_spellcaster@@QAEJPBVarmy@@JJ@Z	0.0000	100.0000	100.0000	0x38910	651ab02d904c
 ai_tactical	?get_disease_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38a10	fe85b950bd3f
 ai_tactical	?get_dispel_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	0.0000	100.0000	100.0000	0x39bc0	3d130f7655e2
 ai_tactical	?get_disruptive_ray_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38dc0	b3db6a9813b4
@@ -864,7 +864,7 @@ command	?GetControl@combatManager@@QAEXXZ	87.7747	87.7747	87.7747	0x782d0	45e6f0
 command	?HandleCombatPlayerDrop@combatManager@@QAEEKPAVmessage@@@Z	100.0000	100.0000	100.0000	0x7a500	93137abf7711
 command	?Main@combatManager@@UAEHAAVmessage@@@Z	96.2267	96.2267	96.2267	0x740d0	414b21592711
 command	?ProcessCombatMsg@combatManager@@QAEHAAVmessage@@@Z	93.0970	93.0970	93.0970	0x74d80	aeebd29dc172
-command	?ProcessNextAction@combatManager@@QAEHAAVmessage@@E@Z	98.5272	100.0000	100.0000	0x78d80	71db556973e2
+command	?ProcessNextAction@combatManager@@QAEHAAVmessage@@E@Z	98.5272	100.0000	100.0000	0x78d80	ccdfa6d8ea12
 command	?ResetCycleTimers@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x79f30	cc7796439c39
 command	?ResetCyclingCreatures@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x79de0	af7308795399
 command	?ResetMouse@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x78890	acd51f725486
@@ -1818,7 +1818,7 @@ hero	?get_player@hero@@QAEPAVplayerData@@XZ	100.0000	100.0000	100.0000	0xe56b0	6
 hero	?get_primary_skill_total@hero@@QAEFXZ	99.5833	99.5833	99.5833	0xe5960	bcdbda516690
 hero	?get_rollover_text@type_artifact@@QAEXPAD@Z	100.0000	100.0000	100.0000	0xdb350	489f825e3b4c
 hero	?get_skill_award@@YI?AW4TSecondarySkill@@PBVhero@@W4TSkillMastery@@1W41@@Z	98.8073	98.8073	98.8073	0xdad00	60b5f7d5d53b
-hero	?get_special_terrain@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe4fa0	ca6f19729cd3
+hero	?get_special_terrain@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe4fa0	e39190bb7b88
 hero	?get_spell_level@hero@@QAE?AW4TSkillMastery@@HH@Z	100.0000	100.0000	100.0000	0xe5080	9de5d44e9770
 hero	?hire@hero@@QAEXHUtype_point@@@Z	100.0000	100.0000	100.0000	0xd7890	95492f7dbd73
 hero	?initialize@hero@@QAEXF@Z	82.8591	82.8591	82.8591	0xd8720	5ba2ed4f21b5
@@ -2654,7 +2654,7 @@ sacrifice_window	?all_creatures@type_skeleton_window@@CIHAAVmessage@@@Z	100.0000
 sacrifice_window	?artifact_click@type_sacrifice_window@@QAEXJE@Z	100.0000	100.0000	100.0000	0x1632a0	0feb58f6bb2a
 sacrifice_window	?backpack_click@type_sacrifice_window@@QAEXJE@Z	86.1308	86.1308	86.1308	0x1636c0	0d5252860cd9
 sacrifice_window	?convert_with_commas@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@J@Z	100.0000	100.0000	100.0000	0x162660	928f4f20aa90
-sacrifice_window	?create_artifact_widgets@type_sacrifice_window@@AAEXAAJH@Z	99.9983	100.0000	100.0000	0x160380	834f71b0c8a5
+sacrifice_window	?create_artifact_widgets@type_sacrifice_window@@AAEXAAJH@Z	99.5918	100.0000	100.0000	0x160380	834f71b0c8a5
 sacrifice_window	?create_creature_icons@type_sacrifice_window@@AAEJJJJJJAAJPAPAViconWidget@@1PAPAVtextWidget@@E@Z	100.0000	100.0000	100.0000	0x161f70	afad52fed516
 sacrifice_window	?create_creature_icons@type_skeleton_window@@AAEXJJJJJJAAJPAPAViconWidget@@1PAPAVtextWidget@@@Z	100.0000	100.0000	100.0000	0x166760	93a2b5c2f89b
 sacrifice_window	?create_creature_widgets@type_sacrifice_window@@AAEXAAJH@Z	100.0000	100.0000	100.0000	0x1610f0	eb6a2ccb96d4
