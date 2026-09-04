@@ -5,6 +5,7 @@
 #ifndef HOMM3_DXPLAY_H
 #define HOMM3_DXPLAY_H
 
+#include <string.h>  // strcpy, for CDPlayPlayer's in-class constructor
 #include <windows.h>
 #include <va.h>
 
@@ -12,23 +13,26 @@ class CDPlayConnection;
 class CDPlayAddressElement;
 class CDPlayGroup;
 class CDPlayMsg;
-#ifdef HOMM3_REMOTE_PLAYER_LIST_DECLS
-// DC's complete 0x104-byte class has a 255-byte name followed by the
-// naturally aligned DPID at +0x100. Retail independently proves that tail:
-// UpdateCurrentPlayers compares the result of CAutoArray::Get at +0x100.
+// DC's complete 0x104-byte class: a 0x100-byte name (members.csv puts
+// m_dpid at 256) followed by the DPID. Retail independently proves that
+// tail: UpdateCurrentPlayers compares the result of CAutoArray::Get at
+// +0x100. The constructor (DC dxplay.h:203) is in-class: AddPlayerEnum
+// news one per enumerated player and expands it there.
 class CDPlayPlayer {
 public:
-    char* GetName() { return m_sName; }
-    unsigned long GetId() { return m_dpid; }
+    CDPlayPlayer(char* sName, unsigned long dpid)
+    {
+        strcpy(m_sName, sName);
+        m_dpid = dpid;
+    }
+    char* GetName() { return m_sName; }         // DC dxplay.h:210
+    unsigned long GetId() { return m_dpid; }    // DC dxplay.h:211
 
 protected:
-    char m_sName[255];
-    unsigned long m_dpid;
+    char m_sName[0x100];      // +0x00
+    unsigned long m_dpid;     // +0x100
 };
 SIZE(CDPlayPlayer, 0x104);
-#else
-class CDPlayPlayer;
-#endif
 class CDPlaySession;
 template<class T> class CAutoArray;
 struct DPCAPS;
