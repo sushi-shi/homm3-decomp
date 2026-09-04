@@ -406,13 +406,11 @@ enum CombatHeroFrameType {
 
 class combatManager : public baseManager {
 public:
-#ifdef HOMM3_ARMY_RANGE_VIEW
     // drawing.cpp:666, Dreamcast dc 0x841d4. range_attack uses this
     // five-argument overload to center the Magog effect before animating it.
     unsigned char ScrollTo(int x, int y, unsigned char draw,
                            unsigned char doscroll_x,
                            unsigned char doscroll_y);
-#endif
     // DC CmbtMgr.h's complete nested enum. Command's get_tower_string takes
     // this type by value; retail indexes the same eighteen wall rows.
     enum TWallSection {
