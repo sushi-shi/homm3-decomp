@@ -3366,7 +3366,7 @@ townmgr	?GetBuildingInfo@@YIPADPBVtown@@HEE@Z	100.0000	100.0000	100.0000	0x1d2a4
 townmgr	?GetCategoryStats@@YIXHPAJPAC@Z	100.0000	100.0000	100.0000	0x1dee70	7abd5d7a8cb1
 townmgr	?GetText@TTextResource@@QBEPBDH@Z	100.0000	100.0000	100.0000	0x1cc8d0	20ece2b574c7
 townmgr	?HandleGiftMsg@CTownNetMsgHandler@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x1c66b0	a350f10638ae
-townmgr	?Main@townManager@@UAEHAAVmessage@@@Z	66.8064	66.8064	66.8064	0x1d3240	74bb904b6276
+townmgr	?Main@townManager@@UAEHAAVmessage@@@Z	90.2738	90.2738	90.2738	0x1d3240	1dba8101f88c
 townmgr	?MoveHeroFromGarrison@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d5220	86f5af5a1637
 townmgr	?NewStrips@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c6e10	ba44f2443cec
 townmgr	?Open@TTavernWindow@@UAEHHE@Z	100.0000	100.0000	100.0000	0x1d7e20	9573d2ea1a7c
