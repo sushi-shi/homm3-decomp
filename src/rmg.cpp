@@ -709,6 +709,199 @@ unsigned char type_random_map_generator::CreateSubterraneanGate(
     return 1;
 }
 
+// The road/river worklists instantiate all three of these out-of-line STL
+// bodies.  Their distinct retail extents disambiguate the two int overloads.
+VA_COMPGEN(0x00404200, 0x209, VECTOR_INSERT, Int)
+VA_COMPGEN(0x00422F50, 0x1B1, VECTOR_INSERT, Int)
+VA_COMPGEN(0x004347A0, 0x32E, VECTOR_INSERT, TRmgMapPosition)
+
+// BuildRoadCostMap and CreateRiver both materialize a separate by-value
+// position immediately before this identical descending binary search.  The
+// same expansion recurs in the surrounding retail RMG corpus, with no retained
+// standalone body.  An ordinary internal helper reproduces that boundary and
+// lets VC6 /Ob2 decide the expansions; Dreamcast has no RMG compiland, so the
+// original spelling and linkage remain provisional.
+static void InsertRmgWorkItem(
+    std::vector<TRmgMapPosition>& positions,
+    std::vector<int>& costs,
+    TRmgMapPosition position,
+    int cost)
+{
+    int first = 0;
+    int last = positions.size();
+    int middle;
+    for (;;) {
+        middle = (first + last) >> 1;
+        if (first >= last)
+            break;
+        if (cost < costs[middle])
+            first = middle + 1;
+        else
+            last = middle;
+    }
+
+    positions.insert(positions.begin() + middle, position);
+    costs.insert(costs.begin() + middle, cost);
+}
+
+// Complete's road-target pass at 0x548290 invokes this flood once for each
+// prospective source.  Retail proves the source-level worklist shape: two
+// parallel vectors sorted by descending cost, special transitions through
+// one-way/two-way monoliths and underground gates, then eight-neighbour road
+// relaxation.  The Dreamcast build has no RMG compiland, so the original
+// method spelling is unavailable and the role name remains provisional.
+// Residual: retail calls the outer two-argument position insert at the initial
+// and three transport sites, and calls both one-iterator erases; our incomplete
+// caller expands those layers.  The final neighbour inserts already choose the
+// retail overload depth.  Preserve the evidenced APIs and recover natural
+// caller/helper state rather than pinning inline depth.
+VA(0x00547880, 0x7B1)  // roadTargets caller + monolith vectors; retail-only
+void type_random_map_generator::BuildRoadCostMap(TRmgMapPosition position)
+{
+    std::vector<TRmgMapPosition> openPositions;
+    std::vector<int> openCosts;
+    int zeroCost = 0;
+
+    openPositions.insert(openPositions.end(), position);
+    openCosts.insert(openCosts.end(), zeroCost);
+
+    TRmgMapItem* mapItem = map.GetMapItem(position);
+    mapItem->movement.cost = 0;
+    mapItem->previousTile.x = -1;
+    mapItem->previousTile.y = -1;
+    mapItem->previousTile.z = -1;
+
+    while (openPositions.size()) {
+        position = openPositions.back();
+        openCosts.erase(openCosts.end() - 1);
+        openPositions.erase(openPositions.end() - 1);
+
+        mapItem = map.GetMapItem(position);
+        int positionCost = mapItem->movement.cost;
+        unsigned char currentDecorated = mapItem->tile.decorationType != 0;
+        int direction = 8;
+        unsigned char roadEntrance = mapItem->tileData.roadEntrance;
+
+        if (roadEntrance) {
+            type_object* object = mapItem->objects[0];
+            TRmgObjectProperties* properties = object->properties->prototype;
+            int objectType = properties->type;
+            if (!gAdventureObjectLandBlocked[objectType][1]
+                && !gAdventureObjectLandBlocked[objectType][2])
+                direction = 5;
+
+            switch (objectType) {
+            case LITH_ONEWAY_ENTRANCE:
+            case LITH_ONEWAY_EXIT: {
+                int subtype = properties->subtype;
+                for (int i = 0; i < monolithsOneWay.size(); ++i) {
+                    type_object* destination = monolithsOneWay[i];
+                    if (destination->properties->prototype->subtype != subtype)
+                        continue;
+
+                    TRmgMapPosition nextPosition = destination->position;
+                    TRmgMapItem* nextMapItem = map.GetMapItem(nextPosition);
+                    int nextCost = positionCost + 50;
+                    if (nextMapItem->movement.cost <= nextCost)
+                        continue;
+
+                    nextMapItem->movement.cost = nextCost;
+                    nextMapItem->previousTile = position;
+                    InsertRmgWorkItem(
+                        openPositions, openCosts, nextPosition, nextCost);
+                }
+                break;
+            }
+
+            case LITH_TWOWAY: {
+                int subtype = properties->subtype;
+                for (int i = 0; i < monolithsTwoWay.size(); ++i) {
+                    type_object* destination = monolithsTwoWay[i];
+                    if (destination->properties->prototype->subtype != subtype)
+                        continue;
+
+                    TRmgMapPosition nextPosition = destination->position;
+                    TRmgMapItem* nextMapItem = map.GetMapItem(nextPosition);
+                    int nextCost = positionCost + 50;
+                    if (nextMapItem->movement.cost <= nextCost)
+                        continue;
+
+                    nextMapItem->movement.cost = nextCost;
+                    nextMapItem->previousTile = position;
+                    InsertRmgWorkItem(
+                        openPositions, openCosts, nextPosition, nextCost);
+                }
+                break;
+            }
+
+            case UNDERGROUND_GATE: {
+                TRmgMapPosition nextPosition;
+                nextPosition.x = position.x;
+                nextPosition.y = position.y;
+                nextPosition.z = 1 - position.z;
+                TRmgMapItem* nextMapItem = map.GetMapItem(nextPosition);
+                int nextCost = positionCost + 1;
+                if (nextMapItem->movement.cost > nextCost) {
+                    nextMapItem->movement.cost = nextCost;
+                    nextMapItem->previousTile = position;
+                    InsertRmgWorkItem(
+                        openPositions, openCosts,
+                        nextPosition, nextCost);
+                }
+                break;
+            }
+            }
+        }
+
+        while (direction--) {
+            TPoint* directionOffset = &gRmgDirections[direction];
+            TRmgMapPosition nextPosition;
+            nextPosition.x = position.x + directionOffset->x;
+            nextPosition.y = position.y + directionOffset->y;
+            nextPosition.z = position.z;
+
+            if (nextPosition.x < 0 || nextPosition.x >= map.mapWidth
+                || nextPosition.y < 0 || nextPosition.y >= map.mapHeight)
+                continue;
+
+            TRmgMapItem* nextMapItem = map.GetMapItem(nextPosition);
+            if (nextMapItem->tile.landType == eTerrainWater
+                || !nextMapItem->tileData.roadPassable
+                || nextMapItem->tile.landType == eTerrainRock)
+                continue;
+
+            unsigned char nextRoadEntrance =
+                nextMapItem->tileData.roadEntrance;
+            if (nextRoadEntrance) {
+                int objectType =
+                    nextMapItem->objects[0]->properties->prototype->type;
+                const unsigned char* traits =
+                    gAdventureObjectLandBlocked[objectType];
+                if (traits[0] && !traits[2])
+                    continue;
+                if (!traits[1] && !traits[2]
+                    && direction > 0 && direction < 4)
+                    continue;
+            }
+
+            int nextCost = currentDecorated
+                               && nextMapItem->tile.decorationType
+                           ? 2 : 20;
+            if (direction & 1)
+                nextCost *= 3;
+            nextCost += positionCost;
+
+            if (nextMapItem->movement.cost <= nextCost)
+                continue;
+
+            nextMapItem->movement.cost = nextCost;
+            nextMapItem->previousTile = position;
+            InsertRmgWorkItem(
+                openPositions, openCosts, nextPosition, nextCost);
+        }
+    }
+}
+
 // The Complete RMG has no Dreamcast counterpart.  Retail nevertheless fixes
 // the whole source-level algorithm: two parallel vectors form a descending
 // cost worklist, four cardinal neighbours relax a randomized Dijkstra search,
@@ -806,19 +999,8 @@ void type_random_map_generator::CreateRiver(TRmgMapPosition source)
 
             nextMapItem->movement.cost = nextCost;
             nextMapItem->previousTile = position;
-
-            int first = 0;
-            int last = openPositions.size();
-            while (first < last) {
-                int middle = (first + last) >> 1;
-                if (nextCost < openCosts[middle])
-                    first = middle + 1;
-                else
-                    last = middle;
-            }
-
-            openPositions.insert(openPositions.begin() + first, nextPosition);
-            openCosts.insert(openCosts.begin() + first, nextCost);
+            InsertRmgWorkItem(
+                openPositions, openCosts, nextPosition, nextCost);
 
             if (nextMapItem->tileData.riverTarget) {
                 openPositions.clear();
