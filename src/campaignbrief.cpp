@@ -4,7 +4,6 @@
 #define HOMM3_GAME_NEW_MAP_DECLS
 #define HOMM3_WIDGET_SET_VISIBLE_INLINE
 #define HOMM3_WIDGET_HIDE_SHOW_INLINE
-#define HOMM3_WIDGET_RCLICK_TEXT_INLINE
 #include <va.h>
 #include <stdio.h>
 #include <string.h>
