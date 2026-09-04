@@ -605,9 +605,21 @@ public:
     // without it.
 #define HOMM3_NEWMAPCELL_HAS_TOBJECTCELL
     struct TObjectCell {
-        unsigned short objectIndex;
-        unsigned char offsets;
-        signed char layer;
+        union {
+            unsigned short objectIndex;
+            unsigned short ObjectIndex;
+        };
+        union {
+            unsigned char offsets;
+            struct {
+                signed char CellX : 4;
+                signed char CellY : 4;
+            };
+        };
+        union {
+            signed char layer;
+            signed char Height;
+        };
 
         CObject* get_object() const;
     };
