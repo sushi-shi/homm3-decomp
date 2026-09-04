@@ -391,6 +391,11 @@ source = "src/customcampaign.cpp"
 flags = "game_o2_ml_gr_windows"
 
 [[unit]]
+unit = "customcampaignwindow"
+source = "src/customcampaignwindow.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
 unit = "questlogwindow"
 source = "src/questlogwindow.cpp"
 flags = "game_o2_ml_gr_windows"
