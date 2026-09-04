@@ -593,9 +593,12 @@ unsigned char type_random_map_generator::CreateSubterraneanGate(
     otherPosition.y = position.y;
     AddObject(new type_object(gateProperties), otherPosition);
 
-    TPoint entrance(
-        position.x - gatePrototype->enterX,
-        position.y - gatePrototype->enterY);
+    position.x -= gatePrototype->enterX;
+    position.y -= gatePrototype->enterY;
+    otherPosition = destination->levelPosition;
+    otherPosition.x = position.x;
+    otherPosition.y = position.y;
+    TPoint entrance(position.x, position.y);
     source->entrances.push_back(entrance);
     destination->entrances.push_back(entrance);
 
