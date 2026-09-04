@@ -9,6 +9,8 @@
 #include "game.h"
 #include "advmgr.h"
 #include "kb.h"
+#include "quest.h"  // type_quest, the quest-guard arm of enter_trigger
+#include <stdlib.h>  // abs, check_town_portal's distance surcharge
 
 // CodeView proves that the original header supplied const-reference
 // operator==/operator!= methods.  TU-local inline spellings preserve that
@@ -89,28 +91,161 @@ int searchArray::BuildPath(const hero* current_hero, long limit)
     return result.size();
 }
 
-#if 0  // @carcass -- Dreamcast-only or reconstruction-pending rows
+// The two AI appraisal helpers the search leans on. Both live in other
+// compilands and neither has a header declaration in this tree yet:
+// AI_value_of_event's two-argument form is retail's 29-byte philai.obj
+// wrapper at 0x52bd10 (a zeroed move_cost forwarded to the three-argument
+// body philai.h declares), and AI_resource_cost's playerData form is the
+// ai_player.obj body at the decoration retail's call here names. Declared
+// TU-locally like seerhut.cpp's AI_resource_cost, so search.obj's include
+// closure does not grow for two prototypes.
+long AI_value_of_event(const hero* current_hero, type_point point);
+int AI_resource_cost(const playerData* player, const int* resources);
+
+// Dreamcast line 309 calls the source-private `int min(int, int)` from
+// includes.h:114 over the const-reference `_cpp_min` - the same two-layer
+// shape combatresultswindow.cpp keeps: retail stores both by-value
+// wrapper arguments to stack temps and selects between their addresses.
+// (<xutility>'s std::_cpp_min measured 76.46 against this pair's 94.50.)
+template <class _TYPE>
+inline const _TYPE& _cpp_min(const _TYPE& _X, const _TYPE& _Y)
+{
+    return (_Y < _X ? _Y : _X);
+}
+
+#ifdef min
+#undef min
+#endif
+inline int min(int a, int b)
+{
+    return _cpp_min(a, b);
+}
 
 // E:\gamedcs\search.cpp:113
+// A monster guarding the cell being entered: the pathCell's `monster`
+// slot remembers the one already charged for, so a second sighting of the
+// same stack costs nothing. The enemy-only search never prices it.
 VA(0x0056a360, 0x9E)  // exhaustive search.obj order-map, dc 0x12b3f0
-unsigned char check_adjacent_monster(const hero* current_hero, pathCell* entry_point, type_search_type search_type)
+unsigned char check_adjacent_monster(const hero* current_hero,
+                                     pathCell* entry_point,
+                                     type_search_type search_type)
 {
-    // @stub
+    type_point monster;
+    if (GetMapExtra(entry_point->point.x, entry_point->point.y,
+                    entry_point->point.z)
+        & MAP_EXTRA_MONSTER) {
+        if (gpAdvManager->FindAdjacentMonster(entry_point->point, &monster,
+                                              entry_point->monster)) {
+            if (search_type == const_AI_enemy_search)
+                return 1;
+            long value = AI_value_of_event(current_hero, monster);
+            if (value <= -500000000)
+                return 1;
+            if (value < 0) {
+                entry_point->monster = monster;
+                entry_point->barrier_value += value;
+            }
+        }
+    }
+    return 0;
 }
 
 // E:\gamedcs\search.cpp:155
+// Every exit of a lith family (or whirlpool) is seeded from the entry
+// cell. The AI first prices the worst monster guarding any exit into the
+// shared barrier, then pushes one exit cell per list entry: an enemy hero
+// standing on an exit is a target, a friendly one is skipped, and the
+// exit must be a live trigger of the entry's own type that is not the
+// entry itself. Whirlpools cost 16 per exit and a flat 500 of barrier
+// value; liths 100 per exit.
 VA(0x0056a400, 0x32F)  // exhaustive search.obj order-map, dc 0x12b4a8
-void searchArray::enter_lith(const hero* current_hero, const std::vector<type_point,std::allocator<type_point>* list, long cell_type, long excluded, pathCell* entry_point, long limit, type_search_type search_type)
+void searchArray::enter_lith(const hero* current_hero,
+                             const std::vector<type_point>* list,
+                             long cell_type, long excluded,
+                             pathCell* entry_point, long limit,
+                             type_search_type search_type)
 {
-    // @stub
+    type_point monster;
+    if (entry_point->cost > 0
+        && check_adjacent_monster(current_hero, entry_point, search_type))
+        return;
+    int count = list->size();
+    long barrier_value = 0;
+    if (search_type >= const_AI_search && cell_type != LITH_TWOWAY
+        && count > 0) {
+        for (int i = 0; i < count; i++) {
+            type_point exit_point = (*list)[i];
+            NewmapCell* cell = gpGame->worldMap.cell(exit_point);
+            if (cell->type == cell_type && cell->extraInfo != excluded
+                && cell->is_trigger) {
+                if (gpAdvManager->FindAdjacentMonster(
+                        exit_point, &monster, entry_point->monster)) {
+                    long value = AI_value_of_event(current_hero, monster);
+                    if (value <= -500000000)
+                        return;
+                    if (barrier_value > value)
+                        barrier_value = value;
+                }
+            }
+        }
+    }
+    pathCell exit_cell = *entry_point;
+    for (int i = 0; i < count; i++) {
+        type_point exit_point = (*list)[i];
+        NewmapCell* cell = gpGame->worldMap.cell(exit_point);
+        if (cell->type == HERO) {
+            if (gpGame->OnSameTeam(gpGame->GetHero(cell->extraInfo)->owner,
+                                   current_hero->owner))
+                continue;
+        } else if (cell->type != cell_type || cell->extraInfo == excluded
+                   || !cell->is_trigger) {
+            continue;
+        }
+        monster = entry_point->monster;
+        if (search_type >= const_AI_search && cell_type != LITH_TWOWAY)
+            gpAdvManager->FindAdjacentMonster(exit_point, &monster,
+                                              entry_point->monster);
+        exit_cell.point.x = exit_point.x;
+        exit_cell.point.y = exit_point.y;
+        exit_cell.point.z = exit_point.z;
+        if (cell_type == WHIRLPOOL) {
+            barrier_value -= 500;
+            exit_cell.adjusted_cost =
+                entry_point->adjusted_cost + (count - 1) * 16;
+        } else {
+            exit_cell.adjusted_cost =
+                entry_point->adjusted_cost + (count - 1) * 100;
+        }
+        PushPoint(entry_point, &exit_cell, entry_point->direction, 0, limit,
+                  entry_point->barrier_value + barrier_value, monster,
+                  cell->type == HERO);
+    }
 }
 
 // E:\gamedcs\search.cpp:244
+// The underground gate's paired exit. get_underground_gate_exit answers
+// (0xff, 0xff, 0xff) for an unpaired gate; the exit keeps the entry's
+// direction, cost and monster, and is a trigger only when a hero is
+// standing on it.
 VA(0x0056a730, 0x111)  // exhaustive search.obj order-map, dc 0x12b7f4
-void searchArray::enter_gate(const pathCell* cell, const NewmapCell* map_cell, long limit)
+void searchArray::enter_gate(const pathCell* cell, const NewmapCell* map_cell,
+                             long limit)
 {
-    // @stub
+    type_point exit_point = gpGame->get_underground_gate_exit(map_cell);
+    const int noGateExit = 0xff;
+    if (exit_point.x != noGateExit) {
+        pathCell exit_cell = *cell;
+        NewmapCell* exit_map_cell = gpGame->worldMap.cell(exit_point);
+        exit_cell.point.x = exit_point.x;
+        exit_cell.point.y = exit_point.y;
+        exit_cell.point.z = exit_point.z;
+        PushPoint(cell, &exit_cell, cell->direction, 0, limit,
+                  cell->barrier_value, cell->monster,
+                  exit_map_cell->type == HERO);
+    }
 }
+
+#if 0  // @carcass -- Dreamcast-only row
 
 // E:\gamedcs\search.cpp:264
 DC_ONLY(0x12b900, 0x88)
@@ -119,28 +254,204 @@ void searchArray::board_boat(const hero* current_hero, pathCell* cell)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\search.cpp:283
+// Castle Gate travel between the player's Inferno towns. The AI search
+// counts how many gates the treasury can still afford (capped at two:
+// one here, one at the far end) and charges each unbuilt gate's cost
+// into the barrier; the normal search only routes through built gates.
+// A town with a visiting hero cannot receive.
 VA(0x0056a850, 0x27E)  // exhaustive search.obj order-map, dc 0x12b988
-void searchArray::enter_town(const hero* current_hero, long start_town, const pathCell* path_cell, long limit, type_search_type search_type)
+void searchArray::enter_town(const hero* current_hero, long start_town,
+                             const pathCell* path_cell, long limit,
+                             type_search_type search_type)
 {
-    // @stub
+    town* our_town = gpGame->GetTown(start_town);
+    if (!gpGame->OnSameTeam(our_town->owner, current_hero->owner))
+        return;
+    if (our_town->type != TOWN_INFERNO)
+        return;
+    long barrier_value = 0;
+    int gates = 0;
+    int* cost = our_town->get_build_cost_array(EXTRA_1_ID);
+    playerData* player = const_cast<hero*>(current_hero)->get_player();
+    if (search_type == const_AI_search) {
+        gates = 2;
+        for (int i = 0; i < 7; i++) {
+            if (cost[i] > 0) {
+                gates = min(player->resources[i] / cost[i], gates);
+                if (!gates)
+                    break;
+            }
+        }
+    }
+    if (!our_town->HasBuilding(EXTRA_1_ID, 1)) {
+        if (!our_town->can_build(EXTRA_1_ID))
+            return;
+        if (!gates)
+            return;
+        barrier_value = -AI_resource_cost(player, cost);
+        gates--;
+    }
+    pathCell new_cell;
+    for (int i = 0; i < player->numTowns; i++) {
+        if (player->townIds[i] == start_town)
+            continue;
+        town* other_town = gpGame->GetTown(player->townIds[i]);
+        if (other_town->type != TOWN_INFERNO)
+            continue;
+        if (other_town->visitingHeroId >= 0)
+            continue;
+        new_cell = *path_cell;
+        if (!other_town->HasBuilding(EXTRA_1_ID, 1)) {
+            if (!other_town->can_build(EXTRA_1_ID))
+                continue;
+            if (!gates)
+                continue;
+            new_cell.barrier_value -= AI_resource_cost(player, cost);
+        }
+        new_cell.point.x = other_town->mapX;
+        new_cell.point.y = other_town->mapY;
+        new_cell.point.z = other_town->mapZ;
+        new_cell.castle_gate = 1;
+        PushPoint(path_cell, &new_cell, 0, 0, limit,
+                  new_cell.barrier_value + barrier_value, new_cell.monster,
+                  0);
+    }
 }
 
 // E:\gamedcs\search.cpp:367
+// A trigger the AI treats as hostile: priced once per cell (the
+// `monster` slot doubles as the "already charged" mark), refused outright
+// below -500000000, and otherwise folded into the barrier value.
 VA(0x0056aad0, 0x68)  // exhaustive search.obj order-map, dc 0x12bbc8
-unsigned char searchArray::enter_hostile_trigger(const hero* current_hero, pathCell* cell)
+unsigned char searchArray::enter_hostile_trigger(const hero* current_hero,
+                                                 pathCell* cell)
 {
-    // @stub
+    if (PointsNotEqual(cell->point, cell->monster)) {
+        long value = AI_value_of_event(current_hero, cell->point);
+        if (value <= -500000000)
+            return 0;
+        if (value < 0) {
+            cell->barrier_value += value;
+            cell->monster = cell->point;
+        }
+    }
+    return 1;
 }
 
 // E:\gamedcs\search.cpp:393
+// THE TRIGGER-CELL DISPATCH: what the search does on landing on an
+// object cell, keyed on the object type (retail lowers it as one
+// 208-entry jump table over types 8..215, so the arm order below is the
+// source's). The normal search only ever stops at garrisons and border
+// gates; the AI searches price and seed everything else. Returns whether
+// the cell is enterable at all.
+//
+// The border-guard/gate pair shares one arm (the guard first insists on
+// the full AI search), the garrison falls into the monster's
+// `search_type >= const_AI_search` answer, and the hero arm's identical
+// answer is cross-jumped onto it.
 VA(0x0056ab40, 0x50C)  // exhaustive search.obj order-map, dc 0x12bc3c
-unsigned char searchArray::enter_trigger(const hero* current_hero, pathCell* cell, long limit, type_search_type search_type)
+unsigned char searchArray::enter_trigger(const hero* current_hero,
+                                         pathCell* cell, long limit,
+                                         type_search_type search_type)
 {
-    // @stub
+    NewmapCell* map_cell = gpAdvManager->GetCell(cell->point);
+    int type = map_cell->type;
+    if (search_type == const_normal_search && type != GARRISON
+        && type != BORDER_GATE)
+        return 0;
+    switch (type) {
+    case BORDER_GUARD:
+        if (search_type < const_AI_search)
+            return 0;
+    case BORDER_GATE:
+        return (gpGame->borderTentVisitFlags[map_cell->objectIndex]
+                & gUnnamed69ccc4)
+            != 0;
+    case QUEST_GUARD: {
+        if (search_type < const_AI_search)
+            return 0;
+        TQuestGuard* guard =
+            &gpGame->worldMap.QuestGuardList[map_cell->extraInfo];
+        if (!guard->quest)
+            return 0;
+        if (guard->quest->has_expired())
+            return 0;
+        if (!(guard->visitedPlayers & (1 << current_hero->owner)))
+            return 1;
+        if (!guard->quest->is_satisfied(const_cast<hero*>(current_hero)))
+            return 0;
+        cell->barrier_value -= guard->quest->GetAIValue(current_hero->owner);
+        return 1;
+    }
+    case HERO:
+        if (gpGame->OnSameTeam(gpGame->heroAvailability[map_cell->extraInfo],
+                               current_hero->owner))
+            return 0;
+        if (search_type == const_AI_enemy_search)
+            return 1;
+        return search_type >= const_AI_search;
+    case GARRISON:
+        if (gpGame->OnSameTeam(gpGame->garrisons[map_cell->extraInfo].playerOwner,
+                               current_hero->owner))
+            return 1;
+    case MONSTER:
+        return search_type >= const_AI_search;
+    case BOAT:
+        if (cell->in_boat)
+            return 0;
+        if (search_type < const_AI_search)
+            return 0;
+        if (pay_transition_costs) {
+            cell->cost += cell->move_left;
+            cell->move_left = sea_movement;
+            cell->flying = 0;
+            cell->water_walking = 0;
+        }
+        cell->in_boat = 1;
+        get_cell(cell->point, !cell->last_can_stop)->in_boat = 1;
+        return 1;
+    case UNDERGROUND_GATE:
+        if (search_type < const_AI_enemy_search)
+            return 0;
+        if (cell->cost > 0
+            && check_adjacent_monster(current_hero, cell, search_type))
+            return 0;
+        enter_gate(cell, map_cell, limit);
+        return 0;
+    case LITH_ONEWAY_ENTRANCE:
+        if (search_type < const_AI_enemy_search)
+            return 0;
+        enter_lith(current_hero, &gpGame->lithExitPools[map_cell->objectIndex],
+                   LITH_ONEWAY_EXIT, -1, cell, limit, search_type);
+        return 0;
+    case LITH_TWOWAY:
+        if (search_type < const_AI_enemy_search)
+            return 0;
+        enter_lith(current_hero, &gpGame->lithPools[map_cell->objectIndex],
+                   LITH_TWOWAY, map_cell->extraInfo, cell, limit,
+                   search_type);
+        return 0;
+    case WHIRLPOOL:
+        if (search_type < const_AI_enemy_search)
+            return 0;
+        enter_lith(current_hero, &gpGame->whirlpools, WHIRLPOOL,
+                   map_cell->extraInfo, cell, limit, search_type);
+        return 0;
+    case TOWN:
+        if (search_type < const_AI_enemy_search)
+            return 0;
+        if (check_adjacent_monster(current_hero, cell, search_type))
+            return 0;
+        enter_town(current_hero, map_cell->extraInfo, cell, limit,
+                   search_type);
+        return 1;
+    }
+    return gAdventureObjectLandBlocked[type][0] == 0;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\search.cpp:494
 // Dreamcast retains this file-static helper as a separate procedure and
@@ -170,16 +481,73 @@ static unsigned char check_summon_boat(const hero* current_hero)
     return 1;
 }
 
-#if 0  // @carcass -- reconstruction-pending row
-
 // E:\gamedcs\search.cpp:535
+// Town Portal as a search edge. Advanced mastery and up may pick any of
+// the player's towns; below that only the nearest town on the hero's own
+// level (squared map distance, ties to the first). A town with a
+// visiting hero cannot receive. Each destination is seeded from the
+// start cell with the spell's mana cost as the move cost and a distance
+// surcharge on the adjusted cost: half a map-span per level crossed plus
+// the plane offsets, plus four, at fifty a hex.
 VA(0x0056b050, 0x3E7)  // exhaustive search.obj order-map, dc 0x12bfe0
-void searchArray::check_town_portal(const hero* current_hero, const pathCell* start_cell, long maxMobility)
+void searchArray::check_town_portal(const hero* current_hero,
+                                    const pathCell* start_cell,
+                                    long maxMobility)
 {
-    // @stub
+    hero* caster = const_cast<hero*>(current_hero);
+    if (!current_hero->SpellIsAvailable(SPELL_TOWN_PORTAL))
+        return;
+    if (current_hero->mana < caster->GetManaCost(SPELL_TOWN_PORTAL) + 20)
+        return;
+    if (start_cell->in_boat)
+        return;
+    std::vector<type_point> destinations;
+    playerData* player = caster->get_player();
+    if (caster->get_spell_level(SPELL_TOWN_PORTAL) >= eMasteryAdvanced) {
+        for (int i = 0; i < player->numTowns; i++) {
+            town* current_town = gpGame->GetTown(player->townIds[i]);
+            if (current_town->visitingHeroId < 0)
+                destinations.push_back(current_town->get_location());
+        }
+    } else {
+        long closest = 0;
+        town* closest_town = 0;
+        for (int i = 0; i < player->numTowns; i++) {
+            town* current_town = gpGame->GetTown(player->townIds[i]);
+            if (current_town->mapZ != start_cell->point.z)
+                continue;
+            int delta_y = current_town->mapY - start_cell->point.y;
+            int delta_x = current_town->mapX - start_cell->point.x;
+            int distance = delta_x * delta_x + delta_y * delta_y;
+            if (!closest_town || distance < closest) {
+                closest_town = current_town;
+                closest = distance;
+            }
+        }
+        if (!closest_town)
+            return;
+        if (closest_town->visitingHeroId >= 0)
+            return;
+        destinations.push_back(closest_town->get_location());
+    }
+    pathCell new_cell;
+    int cost = caster->get_spell_level(SPELL_TOWN_PORTAL) == eMasteryExpert
+        ? 200 : 300;
+    for (unsigned int i = 0; i < destinations.size(); i++) {
+        new_cell = *start_cell;
+        new_cell.point.x = destinations[i].x;
+        new_cell.point.y = destinations[i].y;
+        new_cell.point.z = destinations[i].z;
+        new_cell.town_portal = 1;
+        int distance = abs(new_cell.point.z - start_cell->point.z)
+                * (gMapHeight + gMapWidth) / 2
+            + abs(start_cell->point.x - new_cell.point.x)
+            + abs(new_cell.point.y - start_cell->point.y);
+        new_cell.adjusted_cost += (distance + 4) * 50;
+        PushPoint(start_cell, &new_cell, 0, cost, maxMobility, 0,
+                  start_cell->monster, 0);
+    }
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\search.cpp:621
 // Dreamcast supplies the source-level statement groups, six locals and the
