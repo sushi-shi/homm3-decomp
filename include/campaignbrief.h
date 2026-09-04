@@ -148,6 +148,11 @@ public:
         bool LoadScenario(int which, NewSMapHeader* mapHeader);
         std::string GetCampaignName() const;
         std::string GetCampaignDescription() const;
+        // Retail 0x483740: a by-value copy of file_name. It is a /Gy
+        // COMDAT sitting in customcampaignwindow.obj's band - the first
+        // object in link order that calls it - so that unit carries the
+        // definition and the claim. Name provisional.
+        std::string GetFileName() const;
         void StartMusic();
         void GetAvailableScenarios(unsigned char* available) const;
         void StartScenario(int which, int option);
