@@ -101,14 +101,10 @@ enum eRS_Messages {
     RS_PLAYER_ACTIVE = 1071,
     // SendChat's ping command constructs the next two rungs directly.
     RS_PING = 1072,
-#if defined(HOMM3_GAME_TRANSMIT_DECLS) \
-        || defined(HOMM3_REMOTE_WAIT_READY_DECLS)
     // Both transfer receiver and ready-player dispatcher consume this rung.
     // Dreamcast names it in the shared message ladder; retail ReceiveSaveGame
     // dispatches value 1015 to the host-status chat notification.
     RS_SET_AS_HOST = 1015,
-#endif
-#ifdef HOMM3_REMOTE_WAIT_READY_DECLS
     // The two consecutive ready-handshake records constructed by
     // CWaitForReadyPlayersDlg.  DC's gapless roster names the rungs;
     // retail stores 0x3f4/0x3f5 in their 20-byte base-only messages.
@@ -117,10 +113,9 @@ enum eRS_Messages {
     RS_ALL_READY_TO_PLAY = 1013,
     // The lobby keepalive pair (DC rungs verbatim); singleselectionwindow's
     // OnPingMsg builds the response as a CPingMsg, whose ctor takes this
-    // enum - same scoped view, same reason.
+    // enum.
     RS_SETUP_PING = 1047,
     RS_SETUP_PING_RESPONSE = 1048,
-#endif
     RS_GIFT = 1074,
     RS_GIFT_REQUEST = 1075,
     RS_SESSION_LOST = 1076,
@@ -176,7 +171,6 @@ SIZE(CEndPlacementPhaseMsg, 0x14);
 // retail out-of-line DestroyMsg call.
 void DestroyMsg(CNetMsg* pNetMsg);
 
-#ifdef HOMM3_REMOTE_WAIT_READY_DECLS
 class CReadyToPlayMsg : public CNetMsg {
 public:
     CReadyToPlayMsg()
@@ -196,7 +190,6 @@ public:
     }
 };
 SIZE(CAllReadyToPlayMsg, 0x14);
-#endif
 
 // remote.h:537 in DC. This four-byte owner exists solely to release a
 // dequeued message on every return arm of the owning dispatcher.
@@ -247,7 +240,6 @@ public:
 };
 SIZE(CCombatMainMsg, 0x28);
 
-#ifdef HOMM3_REMOTE_WAIT_READY_DECLS
 // DC netmsg.h:488 supplies the class and all four payload names. Retail's
 // CLevelPickWaitDlg dispatcher independently proves the 0x3c-byte wire
 // extent and every PC offset while copying the two skill bands into a hero.
@@ -264,7 +256,6 @@ public:
     int m_numSSs;                  // +0x38
 };
 SIZE(CHeroLevelUpdateMsg, 0x3c);
-#endif
 
 // Complete retail's resource-trade notification is a compact CNetMsg with
 // three dwords at +0x14. HandleTradeRequestMsg proves their player/resource/
@@ -471,14 +462,12 @@ class CPlayerDropUpdateMsg : public CNetMsg {
 public:
     unsigned long m_dpidDropped;
 
-#ifdef HOMM3_REMOTE_WAIT_READY_DECLS
     // DC netmsg.h:461 supplies the constructor and payload name. Retail's
     // two inlined HandleNewHost copies independently prove the 0x18-byte
     // extent, RS_PLAYER_DROP_UPDATE subtype, and final payload store.
     CPlayerDropUpdateMsg(unsigned long dpidDropped)
         : CNetMsg(RS_PLAYER_DROP_UPDATE, sizeof(CPlayerDropUpdateMsg)),
           m_dpidDropped(dpidDropped) {}
-#endif
 };
 SIZE(CPlayerDropUpdateMsg, 0x18);
 

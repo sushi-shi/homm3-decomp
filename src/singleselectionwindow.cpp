@@ -19,9 +19,6 @@
 #define HOMM3_REMOTE_PLAYER_LIST_DECLS
 // This TU sees the real vector view of the three header lists.
 #define HOMM3_SSWINDOW_HEADER_VECTORS
-// The launch/hold arms hand gpMediumFont to CAnimatedDlg::Setup - the
-// same scoped view CWaitForReadyPlayersDlg uses.
-#define HOMM3_REMOTE_WAIT_READY_DECLS
 #include "advmgr.h"
 #include "game.h"
 #include "armygrp.h"
