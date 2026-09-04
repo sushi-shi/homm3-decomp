@@ -9085,13 +9085,13 @@ void advManager::ShowRoute(int bUpdateScreen, int bReseed, int bChangeButton)
 // VC6's inline decision is per-CALLEE, so the pragma cannot be aimed at
 // ShowRoute alone; whatever refuses the expansion there is a property of
 // that one call site.
+#if 0  // @carcass -- canonical inline body is in struct.h
 VA(0x004192b0, 0x44)  // anchor-callee, dc 0x1edb0
 type_point::type_point(short new_x, short new_y, short new_z)
 {
-    x = new_x;
-    y = new_y;
-    z = new_z;
+    // @stub
 }
+#endif
 
 // E:\gamedcs\advmgr.cpp:10526
 // Retail retains HideRoute both here and inline in ShowRoute. It dims the

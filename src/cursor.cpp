@@ -26,16 +26,6 @@ DATA(0x0063d6dc) static const int kScrollDelayValues[5] = { 100, 50, 50, 50, 100
 // either CodeView corpus, so keep it ordinal until stronger evidence lands.
 DATA(0x006968e8) unsigned char gUnnamed6968e8;
 
-// struct.h:102 is header-inline in Dreamcast and both Dreamcast and retail
-// expand it inside OnMoveHero. Kept TU-visible pending consolidation of the
-// existing per-compiland copies into the shared header.
-inline type_point::type_point(short new_x, short new_y, short new_z)
-{
-    x = new_x;
-    y = new_y;
-    z = new_z;
-}
-
 // E:\gamedcs\cursor.cpp:52
 DC_ONLY(0x79a48, 0x3C)
 void advManager::StartCursor(int direction)

@@ -6180,16 +6180,6 @@ inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
     return (_Y < _X ? _Y : _X);
 }
 
-// The packed-point constructor, spelled file-locally exactly as game.cpp,
-// search.cpp and victorylossconditions.cpp already do - retail keeps no
-// out-of-line copy and every consumer expands it.
-inline type_point::type_point(short new_x, short new_y, short new_z)
-{
-    x = new_x;
-    y = new_y;
-    z = new_z;
-}
-
 // ai_combat.obj's army valuer (0x427650), redeclared here rather than
 // pulling ai_combat.h into a TU with two dozen exact rows - the same
 // trade the UpgradedCreatureType pair above records. /Gr fastcall with

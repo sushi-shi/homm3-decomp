@@ -8,6 +8,7 @@
 #include <va.h>
 #include <deque>
 #include <vector>
+#include "herospec.h"
 #ifdef HOMM3_ARMY_COPY_VIEW
 #include "resource.h"
 #include "monframeinfo.h"
@@ -1379,7 +1380,7 @@ public:
     long get_multi_head_directions(long our_hex, const army* enemy,
                                    long enemy_hex) const;
     long get_spell_time(int spell) const;
-    int get_spell_level(int spell) const;
+    TSkillMastery get_spell_level(int spell) const;
     unsigned char set_inside_area_effect(unsigned char arg);
     void play_sample(TSampleID id);
     void stop_sample(TSampleID id);
@@ -2100,7 +2101,7 @@ public:
     const char* GetName() const;
     const char* GetName(int count) const;
     long get_spell_time(int spell) const;
-    int get_spell_level(int spell) const;
+    TSkillMastery get_spell_level(int spell) const;
     unsigned char IsActive() const;
     unsigned char is_in_aura() const;
     unsigned char IsIncapacitated() const;
@@ -2259,9 +2260,7 @@ inline const char* army::GetName(int count) const
         return GetArmyName(creatureType, count);
     }
 
-    // SpellID and TSkillMastery are enums in the original include closure.
-    // This reconstruction's shared header exposes their retail-width int
-    // representation; the indexed source bodies and ABI are unchanged.
+    // SpellID is still represented by its retail-width int domain here.
     // E:\gamedcs\Army.h:820
 inline long army::get_spell_time(int spell) const
     {
@@ -2269,9 +2268,9 @@ inline long army::get_spell_time(int spell) const
     }
 
     // E:\gamedcs\Army.h:825
-inline int army::get_spell_level(int spell) const
+inline TSkillMastery army::get_spell_level(int spell) const
     {
-        return spell_level[spell];
+        return TSkillMastery(spell_level[spell]);
     }
 
     // E:\gamedcs\Army.h:830

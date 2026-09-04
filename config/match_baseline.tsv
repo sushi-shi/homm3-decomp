@@ -43,7 +43,7 @@ adventureoptionswindow	?WindowHandler@TAdventureOptionsWindow@@UAEHPAVmessage@@@
 adventureoptionswindow	?handle_message@CHeroWindowEx@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x5680	e9ee91f39ca4
 advmgr	??0CAdvPopup@@QAE@HHHHI@Z	100.0000	100.0000	100.0000	0x1b040	3b5291a00fae
 advmgr	??0advManager@@QAE@XZ	90.2973	90.2973	90.2973	0x6df0	02fbfcfe4389
-advmgr	??0type_point@@QAE@FFF@Z	100.0000	100.0000	100.0000	0x192b0	65bee7a55cd4
+advmgr	??0type_point@@QAE@FFF@Z	100.0000	100.0000	100.0000	0x192b0	fe2581b3af47
 advmgr	??1CAdvMgrNetMsgHandler@@UAE@XZ	100.0000	100.0000	100.0000	0x17d160	-
 advmgr	??1CAdvPopup@@UAE@XZ	100.0000	100.0000	100.0000	0x1b120	37b468aec563
 advmgr	??1CHeroWindowEx@@UAE@XZ	100.0000	100.0000	100.0000	0x1b110	-
@@ -203,7 +203,7 @@ ai_combat	?adjust_army@type_AI_combat_data@@QAEXE@Z	100.0000	100.0000	100.0000	0
 ai_combat	?cast_area_effect@type_AI_combat_data@@QBEXAAUtype_spell_choice@@AAV1@JJ@Z	100.0000	100.0000	100.0000	0x25100	c8e37acd7d4b
 ai_combat	?cast_chain_lightning@type_AI_combat_data@@QBEXAAUtype_spell_choice@@AAV1@J@Z	100.0000	100.0000	100.0000	0x24fb0	d796ff990806
 ai_combat	?cast_damage_spell@type_AI_combat_data@@QBEXAAUtype_spell_choice@@AAV1@@Z	100.0000	100.0000	100.0000	0x25260	fcc17a109889
-ai_combat	?cast_enchantment@type_AI_combat_data@@QAEXAAUtype_spell_choice@@AAV1@@Z	100.0000	100.0000	100.0000	0x25b10	353a9efcd9a5
+ai_combat	?cast_enchantment@type_AI_combat_data@@QAEXAAUtype_spell_choice@@AAV1@@Z	100.0000	100.0000	100.0000	0x25b10	1307289d3bf9
 ai_combat	?cast_enchantment@type_AI_combat_data@@QAEXAAUtype_spell_choice@@PBVhero@@E@Z	100.0000	100.0000	100.0000	0x258a0	9a70f9657497
 ai_combat	?cast_spell@type_AI_combat_data@@QAEXAAV1@W4type_speed_catagory@@@Z	87.0391	87.0391	87.0391	0x25bd0	7c9f14e60685
 ai_combat	?check_wall_archery_penalty@type_AI_combat_data@@QAEXPBVtown@@@Z	100.0000	100.0000	100.0000	0x24790	4bdc012844e3
@@ -214,7 +214,7 @@ ai_combat	?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z	94.7945	94.7945	94.
 ai_combat	?get_area_value@type_AI_combat_data@@QBEXAAUtype_spell_choice@@ABV1@JJ@Z	100.0000	100.0000	100.0000	0x24bf0	586b6ce8707b
 ai_combat	?get_attack@type_AI_combat_data@@QBEJW4type_speed_catagory@@E@Z	100.0000	100.0000	100.0000	0x26390	58292c256686
 ai_combat	?get_damage_spell_value@type_AI_combat_data@@QBEXAAUtype_spell_choice@@ABV1@@Z	100.0000	100.0000	100.0000	0x24d20	85227d46d234
-ai_combat	?get_enchantment_value@type_AI_combat_data@@QAEXAAUtype_spell_choice@@AAV1@@Z	89.4646	89.4646	89.4646	0x25510	52e9d122515a
+ai_combat	?get_enchantment_value@type_AI_combat_data@@QAEXAAUtype_spell_choice@@AAV1@@Z	89.4646	89.4646	89.4646	0x25510	519b489d98c2
 ai_combat	?get_enchantment_value@type_monster_data@@QBEJAAUtype_spell_choice@@PBVhero@@1@Z	100.0000	100.0000	100.0000	0x23c80	d7654d407628
 ai_combat	?get_fastest_speed@type_AI_combat_data@@QBEJXZ	100.0000	100.0000	100.0000	0x24960	d202c91c177f
 ai_combat	?get_final_melee_value@type_AI_combat_data@@QBEJXZ	100.0000	100.0000	100.0000	0x26450	0ae6628d7a2f
@@ -241,7 +241,7 @@ ai_player	??8type_point@@QBE_NABU0@@Z	100.0000	100.0000	100.0000	0x2ec20	994e61f
 ai_player	??_F?$vector@PAVtype_artifact_effect@@V?$allocator@PAVtype_artifact_effect@@@std@@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x324b0	-
 ai_player	??_Gtype_artifact_effect@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x324d0	-
 ai_player	??_Gtype_combat_artifact@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x33080	-
-ai_player	?AI_AttemptMove@@YIXPAVhero@@AAUHeroDestination@@AAJE@Z	84.8316	84.8316	84.8316	0x2fee0	e80ae0b2fe1f
+ai_player	?AI_AttemptMove@@YIXPAVhero@@AAUHeroDestination@@AAJE@Z	84.8316	84.8316	84.8316	0x2fee0	ba5ffaaf9878
 ai_player	?AI_arrange_army@@YIXPAVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x2d8e0	6476d3737a0d
 ai_player	?AI_build_ship@@YIXPBVhero@@JJJ@Z	100.0000	100.0000	100.0000	0x30f80	357d4741dae5
 ai_player	?AI_choose_destination@@YIHPAVhero@@JAAUHeroDestination@@AAJEE@Z	76.8679	76.8679	76.8679	0x2e0b0	111d6509ebba
@@ -265,7 +265,7 @@ ai_player	?attempt_teleport@@YIEPAVhero@@AAV?$vector@UpathCell@@V?$allocator@Upa
 ai_player	?build_markets@type_AI_player@@QAE_NPAH@Z	100.0000	100.0000	100.0000	0x2ab40	f6eec2228a6e
 ai_player	?build_path@@YIXPAVhero@@PAVsearchArray@@AAV?$vector@UpathCell@@V?$allocator@UpathCell@@@std@@@std@@AAUHeroDestination@@@Z	100.0000	100.0000	100.0000	0x30610	ae89deb9dec0
 ai_player	?buy_creatures@type_AI_player@@QAEXPAVhero@@PAVtown@@@Z	72.2248	73.6571	74.2046	0x2ba60	0f0abd7ab179
-ai_player	?buy_mage_guild@type_AI_player@@QAEXPAVhero@@PAVtown@@@Z	100.0000	100.0000	100.0000	0x2beb0	2543a0716325
+ai_player	?buy_mage_guild@type_AI_player@@QAEXPAVhero@@PAVtown@@@Z	100.0000	100.0000	100.0000	0x2beb0	78380e4c5de4
 ai_player	?calculate_demand@type_AI_player@@QAEXXZ	97.4340	97.4340	97.4340	0x28740	8844819eee6a
 ai_player	?calculate_reserve@type_AI_player@@QAEXXZ	91.2557	96.4566	96.4566	0x29ad0	ae0f0286b0dd
 ai_player	?can_take_town@@YIEPBVhero@@PBVtown@@@Z	100.0000	100.0000	100.0000	0x28410	6e41459530a0
@@ -316,10 +316,10 @@ ai_player	?get_value@type_school_artifact@@UBEJPBVhero@@EE@Z	97.7949	97.7949	97.
 ai_player	?get_value@type_scouting_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x32510	35c02b28a9cf
 ai_player	?get_value@type_shooter_bonus_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x330b0	e859ad415379
 ai_player	?get_value@type_spell_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x32f90	8fcff1107b0c
-ai_player	?get_value@type_spellcaster_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x32720	9dc7c908cc9c
+ai_player	?get_value@type_spellcaster_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x32720	34d3d32526fb
 ai_player	?get_value@type_statue_of_legion_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x33580	aac2ce1ac292
 ai_player	?get_value@type_tome_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x32c20	7e1b792d8414
-ai_player	?get_value@type_undead_king_cloak_artifact@@UBEJPBVhero@@EE@Z	96.7778	96.7778	96.7778	0x333a0	d0b0fdd6cf87
+ai_player	?get_value@type_undead_king_cloak_artifact@@UBEJPBVhero@@EE@Z	96.7778	96.7778	96.7778	0x333a0	7217c8f21064
 ai_player	?hire_heroes@type_AI_player@@QAE_NXZ	100.0000	100.0000	100.0000	0x31360	090ada3d6566
 ai_player	?initialize_artifact_effects@@YIXXZ	91.9528	91.9528	91.9528	0x34100	a14bb0e20585
 ai_player	?is_human_ally@game@@QBE_NH@Z	100.0000	100.0000	100.0000	0x2b9e0	df633736fa56
@@ -350,23 +350,23 @@ ai_tactical	??0army@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x37a00	-
 ai_tactical	??0type_AI_attack_hex_chooser@@QAE@PBVarmy@@0PBJPAVsearchArray@@PBUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x360c0	93d490613518
 ai_tactical	??0type_AI_combat_parameters@@QAE@PBVcombatManager@@J@Z	100.0000	100.0000	100.0000	0x35ec0	cfa0f5b47019
 ai_tactical	??0type_AI_spellcaster@@QAE@PAVcombatManager@@JE@Z	93.1850	93.1850	93.1850	0x369c0	73ed279b1210
-ai_tactical	??0type_spell_choice@@QAE@HHJJ@Z	100.0000	100.0000	100.0000	0x36980	49837083c201
-ai_tactical	??0type_spell_choice@@QAE@XZ	100.0000	100.0000	100.0000	0x36950	e6a49d69355d
+ai_tactical	??0type_spell_choice@@QAE@HW4TSkillMastery@@JJ@Z	100.0000	100.0000	100.0000	0x36980	49837083c201
+ai_tactical	??0type_spell_choice@@QAE@XZ	100.0000	100.0000	100.0000	0x36950	319d38fce9cc
 ai_tactical	??1type_AI_spellcaster@@UAE@XZ	100.0000	100.0000	100.0000	0x36c30	8ad7b71cf335
 ai_tactical	??_Gtype_AI_spellcaster@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x36bf0	-
 ai_tactical	?AI_get_attack_damage@@YIJPBVarmy@@J0EJ@Z	100.0000	100.0000	100.0000	0x35980	4cf50112d36d
 ai_tactical	?AI_value_of_luck@@YINJJ@Z	100.0000	100.0000	100.0000	0x35960	aa3477bfb5fb
 ai_tactical	?AI_value_of_morale@@YINJJ@Z	100.0000	100.0000	100.0000	0x35830	e5aa168661d3
-ai_tactical	?cast_spell@type_AI_spellcaster@@QAEEE@Z	100.0000	100.0000	100.0000	0x3c800	a6d5eaacff31
+ai_tactical	?cast_spell@type_AI_spellcaster@@QAEEE@Z	100.0000	100.0000	100.0000	0x3c800	694f67eb21b2
 ai_tactical	?check_adjacent_hexes@type_AI_attack_hex_chooser@@IAEXJJJ@Z	100.0000	100.0000	100.0000	0x36300	4b5a93b2e8e8
 ai_tactical	?consider_chain_lightning@type_AI_spellcaster@@QAEXPAUtype_spell_choice@@@Z	100.0000	100.0000	100.0000	0x37310	b78d1a4360ce
 ai_tactical	?consider_earthquake@type_AI_spellcaster@@QAEXPAUtype_spell_choice@@@Z	100.0000	100.0000	100.0000	0x3b8f0	6bf724ffd88c
 ai_tactical	?consider_enchantment@type_AI_spellcaster@@QAEXPAUtype_spell_choice@@J@Z	100.0000	100.0000	100.0000	0x3a910	4ce928ebaf86
-ai_tactical	?consider_resurrect@type_AI_spellcaster@@QAEXPAUtype_spell_choice@@@Z	97.0996	97.0996	97.0996	0x3aca0	a939c13cf90f
+ai_tactical	?consider_resurrect@type_AI_spellcaster@@QAEXPAUtype_spell_choice@@@Z	97.0996	97.0996	97.0996	0x3aca0	399a97b54998
 ai_tactical	?consider_sacrifice@type_AI_spellcaster@@QBEXAAUtype_spell_choice@@@Z	100.0000	100.0000	100.0000	0x3b1e0	5a5e0bede038
 ai_tactical	?consider_sacrifice@type_AI_spellcaster@@QBEXAAUtype_spell_choice@@PBVarmy@@J@Z	89.0901	89.0901	89.0901	0x3af50	a79419b3606d
 ai_tactical	?consider_single_enchantment@type_AI_spellcaster@@QAEXPAUtype_spell_choice@@J@Z	100.0000	100.0000	100.0000	0x3a670	b6abcd4fc930
-ai_tactical	?consider_spell@type_AI_spellcaster@@QAEXPAUtype_spell_choice@@@Z	98.1927	98.1927	98.1927	0x3bb20	e30c4fcc1290
+ai_tactical	?consider_spell@type_AI_spellcaster@@QAEXPAUtype_spell_choice@@@Z	98.1927	98.1927	98.1927	0x3bb20	5644e9da8196
 ai_tactical	?consider_teleport@type_AI_spellcaster@@QAEXPAUtype_spell_choice@@@Z	95.5486	95.5486	95.5486	0x3aa60	3ed19b0758e5
 ai_tactical	?find_attack_hex@type_AI_attack_hex_chooser@@QAEEXZ	100.0000	100.0000	100.0000	0x36840	5fa7184d0eee
 ai_tactical	?find_enemy_attacks@type_AI_spellcaster@@QAEXXZ	87.7343	87.7343	87.7343	0x3c040	209953f22208
@@ -374,7 +374,7 @@ ai_tactical	?get_age_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@
 ai_tactical	?get_air_protection_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x399a0	7842cc21930b
 ai_tactical	?get_air_shield_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38bc0	aff9955939cc
 ai_tactical	?get_antimagic_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	0.0000	100.0000	100.0000	0x39d40	6973d94df595
-ai_tactical	?get_area_effect_value@type_AI_spellcaster@@QAEJHJHJ@Z	100.0000	100.0000	100.0000	0x37040	aa44fc7b2bf4
+ai_tactical	?get_area_effect_value@type_AI_spellcaster@@QAEJHJW4TSkillMastery@@J@Z	100.0000	100.0000	100.0000	0x37040	aa44fc7b2bf4
 ai_tactical	?get_attack_skill_value@type_AI_spellcaster@@QAEJPBVarmy@@0JJ@Z	68.4970	99.8503	99.8503	0x37800	482e75dd858c
 ai_tactical	?get_backlash_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	0.0000	100.0000	100.0000	0x39de0	259b2f798110
 ai_tactical	?get_berserk_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x3a400	38218f1b06a2
@@ -382,9 +382,9 @@ ai_tactical	?get_bless_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_dat
 ai_tactical	?get_blind_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x39100	1df2abd0980b
 ai_tactical	?get_blood_lust_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38100	2a5c2191000f
 ai_tactical	?get_breath_bonus@@YIJJPBVarmy@@JJ0JPBUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x36760	5d00f0915844
-ai_tactical	?get_caliph_value@type_AI_spellcaster@@QAEJPBVarmy@@@Z	100.0000	100.0000	100.0000	0x3c4a0	00b2d8f0d69f
-ai_tactical	?get_cancel_value@type_AI_spellcaster@@QAEJPAVarmy@@E@Z	100.0000	100.0000	100.0000	0x39a80	1d2b00606bb1
-ai_tactical	?get_chain_lightning_value@type_AI_spellcaster@@QAEJJHPAVarmy@@@Z	100.0000	100.0000	100.0000	0x37190	153f3b636ae6
+ai_tactical	?get_caliph_value@type_AI_spellcaster@@QAEJPBVarmy@@@Z	100.0000	100.0000	100.0000	0x3c4a0	1ba40835c67f
+ai_tactical	?get_cancel_value@type_AI_spellcaster@@QAEJPAVarmy@@E@Z	100.0000	100.0000	100.0000	0x39a80	5afa1673083c
+ai_tactical	?get_chain_lightning_value@type_AI_spellcaster@@QAEJJW4TSkillMastery@@PAVarmy@@@Z	100.0000	100.0000	100.0000	0x37190	153f3b636ae6
 ai_tactical	?get_clone_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x3b2e0	f8902daa184b
 ai_tactical	?get_counterstroke_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x39e80	c1839c705499
 ai_tactical	?get_cure_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	0.0000	95.4886	95.4886	0x39c30	3d54c8d06259
@@ -399,7 +399,7 @@ ai_tactical	?get_disruptive_ray_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_en
 ai_tactical	?get_earth_protection_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x39a00	f134bd5c26f0
 ai_tactical	?get_enchantment_function@type_AI_spellcaster@@QAEP81@AEJPBVarmy@@Utype_enchant_data@@@ZH@Z	100.0000	100.0000	100.0000	0x3b690	5a48b1e917bf
 ai_tactical	?get_exchange_effect@type_AI_combat_parameters@@QAEJPBVarmy@@0J@Z	100.0000	100.0000	100.0000	0x35dc0	520a818f69d7
-ai_tactical	?get_faerie_dragon_spell_value@type_AI_spellcaster@@QAEJJJH@Z	100.0000	100.0000	100.0000	0x3c620	990b5f035631
+ai_tactical	?get_faerie_dragon_spell_value@type_AI_spellcaster@@QAEJJJH@Z	100.0000	100.0000	100.0000	0x3c620	8879250f09b8
 ai_tactical	?get_fire_protection_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x399d0	fe6f2edf2c6b
 ai_tactical	?get_fire_shield_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x3a110	9e400549dc3a
 ai_tactical	?get_forgetfulness_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x3b500	f6af743400f4
@@ -414,7 +414,7 @@ ai_tactical	?get_mirth_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_dat
 ai_tactical	?get_misfortune_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38f60	b823ff8a1b62
 ai_tactical	?get_muck_and_mire_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	96.8602	96.8602	96.8602	0x39270	b996db6b82b9
 ai_tactical	?get_multi_head_bonus@@YIJJPBVarmy@@JJ0JPBUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x36620	01a17c4c4ad1
-ai_tactical	?get_ogre_mage_value@type_AI_spellcaster@@QAEJPBVarmy@@@Z	100.0000	100.0000	100.0000	0x3c330	1a3c10bc0b58
+ai_tactical	?get_ogre_mage_value@type_AI_spellcaster@@QAEJPBVarmy@@@Z	100.0000	100.0000	100.0000	0x3c330	f7e00ece3a56
 ai_tactical	?get_poison_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x39500	21fc03b5749a
 ai_tactical	?get_prayer_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38ac0	cd9dd18df1b6
 ai_tactical	?get_precision_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38b50	ddcc82da0fbe
@@ -423,7 +423,7 @@ ai_tactical	?get_ranged_attack_value@type_AI_combat_parameters@@QAEJPBVarmy@@0@Z
 ai_tactical	?get_shield_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38c60	1bc6d48da865
 ai_tactical	?get_simple_attack_effect@type_AI_combat_parameters@@QAEJPBVarmy@@0EJ@Z	100.0000	100.0000	100.0000	0x35c70	595c177c235e
 ai_tactical	?get_simple_attack_effect@type_AI_combat_parameters@@QAEJPBVarmy@@J0JEJ@Z	99.1053	99.1053	99.1053	0x35b90	edb16b7ceb00
-ai_tactical	?get_slayer_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38d00	44613f90e625
+ai_tactical	?get_slayer_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38d00	b92b7c4b4f09
 ai_tactical	?get_sorrow_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x382c0	c48a6ea86f7a
 ai_tactical	?get_speed_value@type_AI_spellcaster@@QAEJPBVarmy@@JJ@Z	100.0000	100.0000	100.0000	0x39550	a09b8c9fedcc
 ai_tactical	?get_tough_skin_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38d90	4d5a14f19f57
@@ -1697,7 +1697,7 @@ hero	?CreatureTypeCount@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0xe2340	20e9a88
 hero	?Deallocate@hero@@QAEXEE@Z	100.0000	100.0000	100.0000	0xd9ec0	6f033442214a
 hero	?DestroySiegeWeaponArtifact@hero@@QAEXH@Z	96.5278	96.5278	96.5278	0xd9260	d330930a3f3f
 hero	?ExitDialog@THeroScreenWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0xdd2a0	290f74224019
-hero	?Fly@hero@@QAEXH@Z	100.0000	100.0000	100.0000	0xe59a0	5ab8d23a34ea
+hero	?Fly@hero@@QAEXH@Z	32.6234	100.0000	100.0000	0xe59a0	5ab8d23a34ea
 hero	?GetArcheryFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe4160	aef4289383d3
 hero	?GetDefenseFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe4310	38c53007d123
 hero	?GetEagleEyeChance@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe4420	cba4c641cf62
@@ -1724,7 +1724,7 @@ hero	?GetNthSS@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0xe23a0	1e66afe3e1b0
 hero	?GetOffenseFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe42b0	cee877b7a0e3
 hero	?GetSpecificAbilityTextShort@hero@@QAEPBDXZ	100.0000	100.0000	100.0000	0xd7220	580f66fe7728
 hero	?GetSpellDurationBonus@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe4db0	e4996ad75b43
-hero	?GetSpellSchoolLevel@hero@@QAEHW4TSpellSchool@@H@Z	100.0000	100.0000	100.0000	0xe5100	c920765589e3
+hero	?GetSpellSchoolLevel@hero@@QBE?AW4TSkillMastery@@W4TSpellSchool@@H@Z	100.0000	100.0000	100.0000	0xe5100	30341c34e25c
 hero	?GetStandSequence@boat@@QAE?AW4hero_seqid@@XZ	100.0000	100.0000	100.0000	0xd9160	345fe6457898
 hero	?GetStandSequence@hero@@QAE?AW4hero_seqid@@XZ	100.0000	100.0000	100.0000	0xd9110	d90cd8f6ce22
 hero	?GetSurrenderCostFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe4580	f60327402b64
@@ -1790,10 +1790,10 @@ hero	?any@?$bitset@$0JA@@std@@QBE_NXZ	100.0000	100.0000	100.0000	0xe64c0	-
 hero	?begin@?$vector@HV?$allocator@H@std@@@std@@QAEPAHXZ	100.0000	100.0000	100.0000	0xe64e0	37d7b278f8d9
 hero	?belongs_to_human@hero@@QAEEXZ	100.0000	100.0000	100.0000	0xd9050	c82def4ab683
 hero	?can_land@hero@@QAEEXZ	100.0000	100.0000	100.0000	0xe5ce0	44fc64896a65
-hero	?can_summon_boat@hero@@QAEEXZ	86.9922	86.9922	86.9922	0xe5550	5cd5ba087df4
+hero	?can_summon_boat@hero@@QBEEXZ	86.9922	86.9922	86.9922	0xe5550	a88a4dd4bf0c
 hero	?end@?$vector@HV?$allocator@H@std@@@std@@QAEPAHXZ	100.0000	100.0000	100.0000	0xe64f0	f7848287d42d
 hero	?equip_artifact@hero@@QAEEPBUtype_artifact@@J@Z	92.4359	93.2051	93.2051	0xe2a00	0e8b85ba9499
-hero	?find_summonable_boat@hero@@QAEPAVboat@@XZ	100.0000	100.0000	100.0000	0xe54a0	879925c9713e
+hero	?find_summonable_boat@hero@@QBEPAVboat@@XZ	100.0000	100.0000	100.0000	0xe54a0	57e6281da4a8
 hero	?get_backpack_error@hero@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TArtifact@@@Z	100.0000	100.0000	100.0000	0xe2ed0	242bc80f9530
 hero	?get_combat_speed_bonus@hero@@QAEJXZ	100.0000	100.0000	100.0000	0xe5aa0	084f850b4598
 hero	?get_combat_value_modifier@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe5400	873cb611fdf6
@@ -1810,7 +1810,7 @@ hero	?get_primary_skill_total@hero@@QAEFXZ	99.5833	99.5833	99.5833	0xe5960	bcdbd
 hero	?get_rollover_text@type_artifact@@QAEXPAD@Z	100.0000	100.0000	100.0000	0xdb350	489f825e3b4c
 hero	?get_skill_award@@YI?AW4TSecondarySkill@@PBVhero@@W4TSkillMastery@@1W41@@Z	98.8073	98.8073	98.8073	0xdad00	60b5f7d5d53b
 hero	?get_special_terrain@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe4fa0	ca6f19729cd3
-hero	?get_spell_level@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0xe5080	28085360f9f2
+hero	?get_spell_level@hero@@QAE?AW4TSkillMastery@@HH@Z	100.0000	100.0000	100.0000	0xe5080	9de5d44e9770
 hero	?hire@hero@@QAEXHUtype_point@@@Z	100.0000	100.0000	100.0000	0xd7890	95492f7dbd73
 hero	?initialize@hero@@QAEXF@Z	82.8591	82.8591	82.8591	0xd8720	5ba2ed4f21b5
 hero	?initialize@type_obscuring_object@@QAEXXZ	100.0000	100.0000	100.0000	0xd74d0	b3bc9394b84f
@@ -2626,7 +2626,7 @@ sacrifice_window	?all_creatures@type_skeleton_window@@CIHAAVmessage@@@Z	100.0000
 sacrifice_window	?artifact_click@type_sacrifice_window@@QAEXJE@Z	100.0000	100.0000	100.0000	0x1632a0	0feb58f6bb2a
 sacrifice_window	?backpack_click@type_sacrifice_window@@QAEXJE@Z	86.1308	86.1308	86.1308	0x1636c0	0d5252860cd9
 sacrifice_window	?convert_with_commas@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@J@Z	100.0000	100.0000	100.0000	0x162660	928f4f20aa90
-sacrifice_window	?create_artifact_widgets@type_sacrifice_window@@AAEXAAJH@Z	99.5918	100.0000	100.0000	0x160380	834f71b0c8a5
+sacrifice_window	?create_artifact_widgets@type_sacrifice_window@@AAEXAAJH@Z	99.9983	100.0000	100.0000	0x160380	834f71b0c8a5
 sacrifice_window	?create_creature_icons@type_sacrifice_window@@AAEJJJJJJAAJPAPAViconWidget@@1PAPAVtextWidget@@E@Z	100.0000	100.0000	100.0000	0x161f70	afad52fed516
 sacrifice_window	?create_creature_icons@type_skeleton_window@@AAEXJJJJJJAAJPAPAViconWidget@@1PAPAVtextWidget@@@Z	100.0000	100.0000	100.0000	0x166760	93a2b5c2f89b
 sacrifice_window	?create_creature_widgets@type_sacrifice_window@@AAEXAAJH@Z	100.0000	100.0000	100.0000	0x1610f0	eb6a2ccb96d4
@@ -2677,6 +2677,14 @@ scenarioinfo	?Draw@CScenarioPlayerInfoWidget@@UAEXXZ	100.0000	100.0000	100.0000	
 scenarioinfo	?OnWidgetDeselect@CScenarioInfoDlg@@UAEHHPAE@Z	100.0000	100.0000	100.0000	0x1698a0	82205d95efe8
 scenarioinfo	?UpdateAllyEnemyFlags@CScenarioInfoDlg@@QAEXXZ	100.0000	100.0000	100.0000	0x1698c0	afedf847dd90
 search	?BuildPath@searchArray@@QAEHPBVhero@@J@Z	82.5524	86.3333	86.3333	0x16a0d0	e0678cd48165
+search	?SeedPosition@searchArray@@QAEXPAVhero@@Utype_point@@1HEW4type_search_type@@HE@Z	94.8152	94.8152	94.8152	0x16b440	88f89aa8ef93
+search	check_adjacent_monster	0.0000	0.0000	0.0000	0x16a360	872b958f2b74
+search	searchArray_check_town_portal	0.0000	0.0000	0.0000	0x16b050	03a5e08b1a2d
+search	searchArray_enter_gate	0.0000	0.0000	0.0000	0x16a730	1ed618636d9e
+search	searchArray_enter_hostile_trigger	0.0000	0.0000	0.0000	0x16aad0	9b0407b69e1c
+search	searchArray_enter_lith	0.0000	0.0000	0.0000	0x16a400	315e01554b3f
+search	searchArray_enter_town	0.0000	0.0000	0.0000	0x16a850	ce16b550a78f
+search	searchArray_enter_trigger	0.0000	0.0000	0.0000	0x16ab40	0c153195968d
 seerhut	??0TQuestGuard@@QAE@XZ	100.0000	100.0000	100.0000	0x172b50	514324ad4f10
 seerhut	??0TSeerHut@@QAE@XZ	100.0000	100.0000	100.0000	0x173580	54f1688d7085
 seerhut	??0type_quest@@QAE@E@Z	100.0000	100.0000	100.0000	0x16cb80	2ad8bb511c78
@@ -2909,7 +2917,7 @@ singleselectionwindow	?OnGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNet
 # SetCurrentMap/OnSetAsHostMsg bodies landing in the TU dropped the
 # pair again with both sources byte-identical. Recovery rides with
 # DrawHeroAdvancedOption reaching 100.
-singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	99.8868	100.0000	100.0000	0x17cdc0	0e5de8f038ec
+singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0	0e5de8f038ec
 singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	9177fbb0fa83
 # 2026-08-27 hand-lowered 100.0000 -> 99.8710 (hist keeps 100.0000): the
 # documented TU-state flap (master accepted this pair down at 99.89/99.87
@@ -2924,7 +2932,7 @@ singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100
 # 2026-08-27 (round 3): the interim full build re-banked the transient
 # peak a third time; re-lowered with the round's bodies landed. Same
 # scheduler flap, same recovery path.
-singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0	66eb0a0e15c8
+singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0	66eb0a0e15c8
 singleselectionwindow	?OnMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2193	90.2193	90.2193	0x189710	3ad2be3935a3
 singleselectionwindow	?OnNameClick@TSingleSelectionWindow@@QAEXH@Z	96.3226	96.3226	96.3226	0x18b620	ef174e28edf8
 singleselectionwindow	?OnNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	97.5366	97.5366	97.5366	0x18b510	862e2a9c058b

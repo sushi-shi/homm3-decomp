@@ -1,13 +1,9 @@
 // herospec.h - the secondary-skill domain and the hero specialty table.
 //
-// A DEDICATED header rather than an addition to hero.h. hero.h sits
-// inside game.h's include closure, which four compiled TUs pull in, and
-// this tree has a byte-proven include-set sensitivity class (see the
-// initialize_game_data note in docs/): adding TYPE DEFINITIONS to a
-// widely-included header moves unrelated functions with no semantic
-// change. Only hero.cpp needs these three declarations today, so they
-// live where only hero.cpp sees them. Promoting them into hero.h is a
-// measured decision, not a free one.
+// A dedicated domain header shared by Hero.h, Army.h and the AI headers.
+// Dreamcast CodeView records one TSkillMastery enum across those interfaces;
+// keeping it here prevents the former per-subsystem int/enum twins from
+// recreating contradictory source models.
 #ifndef HOMM3_HEROSPEC_H
 #define HOMM3_HEROSPEC_H
 

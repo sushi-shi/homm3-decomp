@@ -30,13 +30,8 @@ enum EDayOfWeek {
 #include "hero.h"
 #include "creature_bank_types.h"
 #include "town.h"
-// herospec.h is deliberately NOT included here: game.h needs only the
-// secondaryskill.h domain above, while herospec.h's enum TSkillMastery is a hard C2371 against
-// ai_tactical.h's `typedef int TSkillMastery` in every AI TU that game.h
-// reaches. That name is defined BOTH ways in this tree (DC LF_ENUM vs
-// the AI headers' int) - a standing contradiction the view audit
-// flagged 2026-08-20; unifying it means retyping AI signatures and is a
-// matcher lane's call. TUs that need herospec.h include it directly.
+// hero.h supplies herospec.h's canonical TSkillMastery domain. The former
+// AI-only int typedef was removed when the typed hero helper was restored.
 // NewfullMap's object pools are std::vector<CObjectType> and
 // std::vector<CObject>: VC6 needs both element types COMPLETE at the
 // member declaration, or every later `CObject*` declarator in this

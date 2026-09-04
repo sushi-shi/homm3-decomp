@@ -99,12 +99,6 @@ inline const _TYPE& _cpp_limit(_TYPE _Lo, _TYPE _V, _TYPE _Hi)
     return (_V < _Lo ? _Lo : (_Hi < _V ? _Hi : _V));
 }
 
-// hero::skillLevel slot 7 (herospec.h's eSecSkillWisdom). Named locally,
-// the ai_combat.cpp SECONDARY_SKILL_TACTICS precedent: herospec.h cannot
-// enter this TU (ai_combat.h pulls ai_tactical.h, whose
-// `typedef int TSkillMastery` is a hard C2371 against herospec.h's enum).
-const int SECONDARY_SKILL_WISDOM = 7;
-
 // events.h publishes the same seventh-day member for its adventure-event
 // readers. Keep this TU's narrow include set while naming the calendar value
 // used by Rampart's treasury appraisal below.
@@ -163,16 +157,6 @@ const unsigned int CTA_SHOOTER = 0x4;
 // address, count and 16-byte stride to the vector-constructor iterator.
 DATA(0x00692e18)
 std::vector<type_artifact_effect*> const_artifact_effects[144];
-
-// struct.h's original three-coordinate constructor was header-inline.  This
-// TU needs both expansions below, while advmgr.obj continues to own the one
-// retained out-of-line COMDAT at 0x4192b0.
-inline type_point::type_point(short new_x, short new_y, short new_z)
-{
-    x = new_x;
-    y = new_y;
-    z = new_z;
-}
 
 // E:\gamedcs\ai_player.cpp:97
 // The DC body calls this exact family (GetHero, GetMobility, SeedPosition and
@@ -2107,7 +2091,7 @@ void type_AI_player::buy_mage_guild(hero* current_hero, town* current_town)
     building.index = current_town->field_14;
 
     if (building.index >= 5
-        || building.index >= current_hero->skillLevel[SECONDARY_SKILL_WISDOM] + 2
+        || building.index >= current_hero->skillLevel[eSecSkillWisdom] + 2
         || !current_town->can_build(building.index))
         return;
 
@@ -2127,7 +2111,7 @@ void type_AI_player::buy_mage_guild(hero* current_hero, town* current_town)
             town* other_town = gpGame->GetTown(player->townIds[town_index]);
             int other_level = other_town->field_14;
             if (other_level > building.index
-                && other_level < current_hero->skillLevel[SECONDARY_SKILL_WISDOM] + 2
+                && other_level < current_hero->skillLevel[eSecSkillWisdom] + 2
                 && other_town->can_build(other_town->field_14))
                 return;
         }
@@ -5099,7 +5083,7 @@ void AI_AttemptMove(hero* current_hero, HeroDestination& best_point,
             current_hero->UseSpell(
                 current_hero->GetManaCost(SPELL_TOWN_PORTAL));
             if (current_hero->get_spell_level(SPELL_TOWN_PORTAL)
-                == AI_MASTERY_EXPERT)
+                == eMasteryExpert)
                 current_hero->movePoints -= 200;
             else
                 current_hero->movePoints -= 300;
@@ -5733,7 +5717,7 @@ long type_spellcaster_artifact::get_value(const hero* owner, unsigned char, unsi
 {
     if (owner->value_of_power == 0)
         return 0;
-    if (owner->skillLevel[SECONDARY_SKILL_WISDOM] == 0)
+    if (owner->skillLevel[eSecSkillWisdom] == 0)
         return 0;
     return owner->army.get_AI_value() * bonus / 100;
 }
@@ -6133,13 +6117,13 @@ long type_undead_king_cloak_artifact::get_value(const hero* owner,
 
     TCreatureType creature;
     switch (owner->skillLevel[12]) {
-    case SKILL_MASTERY_BASIC:
+    case eMasteryBasic:
         creature = CREATURE_WALKING_DEAD;
         break;
-    case SKILL_MASTERY_ADVANCED:
+    case eMasteryAdvanced:
         creature = CREATURE_WIGHT;
         break;
-    case SKILL_MASTERY_EXPERT:
+    case eMasteryExpert:
         creature = CREATURE_LICH;
         break;
     }

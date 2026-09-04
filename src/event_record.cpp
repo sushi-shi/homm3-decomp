@@ -47,14 +47,6 @@ inline const _TYPE& max_ref(_TYPE _X, _TYPE _Y)
     return (_X < _Y ? _Y : _X);
 }
 
-// dc 0x8f270 (game.h:877). No retail row: both sweeps expand it.
-inline type_point::type_point(short new_x, short new_y, short new_z)
-{
-    x = new_x;
-    y = new_y;
-    z = new_z;
-}
-
 inline type_record_erase::type_record_erase(type_point _location,
                                             long _object_id,
                                             unsigned long _extra_info,

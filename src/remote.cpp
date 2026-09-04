@@ -47,13 +47,6 @@
 void StartMouseThread();
 void StopMouseThread();
 
-inline type_point::type_point(short new_x, short new_y, short new_z)
-{
-    x = new_x;
-    y = new_y;
-    z = new_z;
-}
-
 // E:\gamedcs\netmsg.h:264. DC supplies the member names and the header
 // source boundary; retail independently proves the PC offsets and this exact
 // body in both advManager::DoNetCombat and the wait-dialog constructor.

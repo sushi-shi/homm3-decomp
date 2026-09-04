@@ -134,17 +134,6 @@ DATA(0x0069ccac) static unsigned long iLastFrameRateTimer;
 // is its sole retail code reference, so this TU owns the public definition.
 DATA(0x006983f8) int bSpecialHideCursor;
 
-// These three header helpers are source-real boundaries in the Dreamcast
-// CodeView corpus. Complete's VC6 /Ob2 expands all three into value_of_town;
-// keep the boundaries in source so later score work cannot flatten away the
-// stronger source-shape evidence.
-inline type_point::type_point(short new_x, short new_y, short new_z)
-{
-    x = new_x;
-    y = new_y;
-    z = new_z;
-}
-
 inline NewmapCell* game::get_cell(type_point point)
 {
     return &worldMap.cellData[(point.z * worldMap.Size + point.y)

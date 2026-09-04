@@ -15,11 +15,6 @@
 #include "customcampaign_legacy.h"
 #include "hero.h"
 
-inline type_point::type_point(short new_x, short new_y, short new_z)
-    : x(new_x), y(new_y), z(new_z)
-{
-}
-
 // Scenario ordinals used when the fixed legacy matrices are promoted to the
 // current variable-length CampaignScenarioInfo vector.
 DATA(0x0063d8c8) static int legacyCampaignScenarioIndices[7][4];
