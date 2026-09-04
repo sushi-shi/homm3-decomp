@@ -9,8 +9,10 @@
 #include "terrain_type.h"
 
 class TAbstractFile;
+struct TRmgTownSlot;
 struct TRmgZone;
 struct TRmgTerrainTile;
+struct TPoint;
 
 // Complete's random-map object factories share this five-dword prefix.  The
 // constructor at 0x534160 writes the four fields, while vtable 0x640b64 proves
@@ -258,16 +260,6 @@ SIZE(type_quest_creature_def, 0x1c);
 SIZE(type_quest_experience_def, 0x18);
 SIZE(type_quest_gold_def, 0x18);
 
-// A generated town retains its source slot, selected alignment, and map
-// position.  The map-header writer proves every named offset through the
-// player-alignment and main-town serialization loops.
-struct TRmgTownSlot {
-    int zoneIndex;                    // +0x00
-    int kind;                       // +0x04: human (0) or computer (1)
-    char opaque0008[0x14];
-    int playerIndex;                // +0x1c
-};
-
 struct TRmgMapPosition {
     int x;
     int y;
@@ -275,6 +267,12 @@ struct TRmgMapPosition {
 
     TRmgMapPosition() {}
     TRmgMapPosition(int newX, int newY, int newZ);
+
+    // ConnectZones constructs the translated coordinate as a returned
+    // temporary before consuming it.  This inline source operation restores
+    // retail's 0x98-byte frame and temporary lifetime; the RMG compiland is
+    // absent from Dreamcast, so the operator spelling remains provisional.
+    TRmgMapPosition operator+(const TPoint& offset) const;
 };
 
 // Complete's zone-connection records are walked at a 0x1c-byte stride by
@@ -287,6 +285,18 @@ struct TRmgZoneConnection {
     unsigned char placeBorderObjects;      // +0x09
     unsigned char connected;               // +0x0a
     char opaque000b[0x11];
+};
+
+// The template-side zone record owns its connection list.  Generated zones
+// point at one of these records; the map-header writer proves the player/town
+// fields through +0x1c and ConnectZones proves the vector at +0xc8.
+struct TRmgTownSlot {
+    int zoneIndex;                    // +0x00
+    int kind;                         // +0x04: human (0) or computer (1)
+    char opaque0008[0x14];
+    int playerIndex;                  // +0x1c
+    char opaque0020[0xa8];
+    std::vector<TRmgZoneConnection> connections; // +0xc8
 };
 
 struct TRmgZoneBounds {
@@ -311,6 +321,16 @@ struct TPoint {
     {
         return y < other.y || (y == other.y && x < other.x);
     }
+};
+
+inline TRmgMapPosition TRmgMapPosition::operator+(
+    const TPoint& offset) const
+{
+    return TRmgMapPosition(x + offset.x, y + offset.y, z);
+}
+
+enum ERmgConnectionConstants {
+    RMG_SHIPYARD_WATER_OFFSET_COUNT = 4
 };
 
 // The function-local river-delta table has a non-trivial empty destructor:
@@ -338,7 +358,7 @@ struct TRmgMovementCost {
 struct TRmgZoneCellState {
     unsigned score : 16;
     signed zone : 8;
-    unsigned unknown24 : 8;
+    signed connectionEligibility : 8;
 };
 
 // The six-bit signed land field is fixed by retail's `shl 26; sar 26`
@@ -355,13 +375,15 @@ struct TRmgGroundTileData {
     unsigned roadSprite : 7;
     unsigned unknown07 : 1;
     unsigned blockedDirections : 4;
-    unsigned unknown12 : 10;
+    unsigned connectionDirection : 3;
+    unsigned unknown15 : 7;
     // BuildRoadCostMap proves these two Complete-only routing flags at bits
     // 22 and 25.  The first marks an object entrance whose adventure-object
     // traits constrain approach directions; the second admits the tile to
     // the road-cost flood.
     unsigned roadEntrance : 1;
-    unsigned unknown23 : 2;
+    unsigned unknown23 : 1;
+    unsigned connectionVisited : 1;
     unsigned roadPassable : 1;
     unsigned borderObject : 1;
     unsigned subterraneanGate : 1;
@@ -564,8 +586,9 @@ public:
 
 // A generated zone owns both its template metadata and the Complete-only
 // connection state.  WriteMapHeader proves the player/town fields through
-// +0x3c; the connection pass independently proves the bounding rectangle,
-// 0x1c-stride connection vector, and entrance vector at +0x404.
+// +0x3c; the connection pass independently proves the bounding rectangle and
+// entrance vector at +0x404.  The 0x1c-stride connection vector belongs to
+// the template record reached through `slot`, not to this generated zone.
 struct TRmgZone {
     TRmgTownSlot* slot;              // +0x00
     int alignment;                   // +0x04
@@ -576,13 +599,19 @@ struct TRmgZone {
     TRmgZoneBounds bounds;           // +0x20
     TRmgMapPosition position;        // +0x30: main town
     unsigned char active;            // +0x3c
-    char opaque003d[0x8b];
-    std::vector<TRmgZoneConnection> connections; // +0xc8
-    char opaque00d8[0x32c];
+    char opaque003d[0x3c7];
     std::vector<TPoint> entrances;   // +0x404
 };
 
-SIZE(TRmgTownSlot, 0x20);
+// The RMG progress sink is used through its third vtable slot by the zone
+// connection coordinator.  No concrete implementation is owned by rmg.cpp.
+class TRmgProgress {
+public:
+    virtual void UnknownProgressOperation0() = 0;
+    virtual void UnknownProgressOperation1() = 0;
+    virtual void Advance(int amount) = 0;
+};
+
 SIZE(TRmgMapPosition, 0xc);
 SIZE(TRmgZoneConnection, 0x1c);
 SIZE(TRmgZoneBounds, 0x10);
@@ -607,7 +636,7 @@ public:
     std::vector<TRmgObjectPropertiesRef*> objectPrototypes[232]; // +0x034
     std::vector<void*> unknownPointers;              // +0xeb4
     std::vector<type_object*> positions;             // +0xec4
-    void* progress;                                  // +0xed4
+    TRmgProgress* progress;                          // +0xed4
     unsigned char fixedHumanPlayers[8];              // +0x0ed8
     char opaque0ee0[0x4];
     int playerIndexMap[16];                          // +0x0ee4
@@ -649,8 +678,21 @@ public:
     }
 
     void InitializeObjectGenerators();
+    unsigned char CreateGroundConnection(
+        TRmgZone* source,
+        TRmgZoneConnection* connection,
+        std::vector<TRmgMapItem*>* borderItems,
+        std::vector<TRmgMapPosition>* borderPositions);
+    void FloodConnectionRegion(TRmgMapPosition position);
+    unsigned char CreateBorderConnection(
+        TRmgZone* source, TRmgZoneConnection* connection);
     unsigned char CreateSubterraneanGate(
         TRmgZone* source, TRmgZoneConnection* connection);
+    void CreateMonolithConnection(
+        TRmgZone* source,
+        TRmgZoneConnection* connection,
+        int prototypeIndex);
+    void ConnectZones();
     int PlaceBorderObject(
         TRmgMapPosition position, int count, TRmgZone* zone);
     type_object* CreateGuard(int value, TRmgZone* zone);

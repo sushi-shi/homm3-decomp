@@ -38,6 +38,17 @@ TPoint gRmgDirections[8] = {
     TPoint(1, -1)
 };
 
+// Shipyards are three tiles wide.  The connection repair pass probes the
+// four water-facing squares beside their upper and lower edges before it
+// floods the reachable water region.
+DATA(0x0069CE00)
+TPoint gRmgShipyardWaterOffsets[RMG_SHIPYARD_WATER_OFFSET_COUNT] = {
+    TPoint(-3, 0),
+    TPoint(1, 0),
+    TPoint(-3, 1),
+    TPoint(1, 1)
+};
+
 DATA(0x006409A0)
 static const int gLandRiverDeltaIndex[4] = {2, 0, 3, 1};
 
@@ -707,6 +718,220 @@ unsigned char type_random_map_generator::CreateSubterraneanGate(
     }
 
     return 1;
+}
+
+// Complete's connection coordinator has no Dreamcast counterpart.  Retail
+// proves the three-stage source shape: collect cross-zone boundary squares,
+// try each template connection through the ordinary ground/border/gate
+// helpers, then repair every remaining non-water connection with shipyard
+// reachability and monolith placement.  Helper spellings are role-based until
+// their own bodies are admitted, but the calls and signatures are fixed by
+// this function's ABI and retail CFG.  The current candidate has retail's
+// 96-block / 57-branch shape and 14-call order.  Its remaining source-level
+// residuals are VC6's excess expansion of the two initial vector inserts and
+// register/layout choices around the paired-connection searches.
+VA(0x00543240, 0x797)
+void type_random_map_generator::ConnectZones()
+{
+    std::vector<TRmgMapItem*> borderItems;
+    std::vector<TRmgMapPosition> borderPositions;
+
+    TRmgMapItem* mapItem = map.mapItems;
+    TRmgMapPosition position;
+    for (position.z = 0; position.z < map.numberLevels; ++position.z) {
+        for (position.y = 0; position.y < map.mapHeight; ++position.y) {
+            for (position.x = 0; position.x < map.mapWidth;
+                 ++position.x, ++mapItem) {
+                if (mapItem->zoneState.connectionEligibility < 0)
+                    continue;
+
+                if (mapItem->tile.landType == eTerrainWater
+                    || !mapItem->tileData.roadPassable
+                    || mapItem->tile.landType == eTerrainRock)
+                    continue;
+
+                int direction = mapItem->tileData.connectionDirection;
+                TRmgMapItem* otherMapItem = map.GetMapItem(
+                    TRmgMapPosition(
+                        position.x + gRmgDirections[direction].x,
+                        position.y + gRmgDirections[direction].y,
+                        position.z));
+                if (otherMapItem->tile.landType != eTerrainWater
+                    && otherMapItem->zoneState.zone
+                           != mapItem->zoneState.zone) {
+                    borderItems.insert(borderItems.end(), mapItem);
+                    borderPositions.insert(
+                        borderPositions.end(), position);
+                }
+            }
+        }
+    }
+
+    int prototypeIndex = 0;
+
+    // Retail constructs and destroys this empty work vector.  Its element
+    // type and abandoned role are not recoverable from the optimized body.
+    std::vector<TRmgMapPosition> connectionPositionsScratch;
+
+    int zoneIndex;
+    for (zoneIndex = 0; zoneIndex < zones.size(); ++zoneIndex) {
+        TRmgZone* zone = zones[zoneIndex];
+        TRmgTownSlot* zoneTemplate = zone->slot;
+        if (zone->terrain == eTerrainWater)
+            continue;
+
+        TRmgMapPosition levelPosition = zone->levelPosition;
+        mapItem = map.GetMapItem(0, 0, levelPosition.z);
+        for (int remaining = map.mapWidth * map.mapHeight;
+             remaining--; ++mapItem)
+            mapItem->tileData.connectionVisited = 0;
+
+        for (int connectionIndex = 0;
+             connectionIndex < zoneTemplate->connections.size();
+             ++connectionIndex) {
+            TRmgZoneConnection* connection =
+                &zoneTemplate->connections[connectionIndex];
+            if (connection->connected)
+                continue;
+
+            TRmgZone* destination =
+                zones[connection->destination->zoneIndex];
+            TRmgTownSlot* destinationTemplate = destination->slot;
+            TRmgZoneConnection* oppositeConnection;
+            int oppositeIndex = 0;
+            for (;; ++oppositeIndex) {
+                if (oppositeIndex
+                    >= destinationTemplate->connections.size()) {
+                    oppositeConnection = 0;
+                    break;
+                }
+                if (destinationTemplate->connections[oppositeIndex]
+                        .destination->zoneIndex == zoneIndex) {
+                    oppositeConnection =
+                        &destinationTemplate->connections[oppositeIndex];
+                    break;
+                }
+            }
+
+            if (CreateGroundConnection(
+                    zone,
+                    connection,
+                    &borderItems,
+                    &borderPositions)) {
+                connection->connected = 1;
+                oppositeConnection->connected = 1;
+                continue;
+            }
+
+            if (CreateBorderConnection(zone, connection)) {
+                connection->connected = 1;
+                continue;
+            }
+
+            if (destination->terrain == eTerrainWater)
+                continue;
+
+            if (CreateSubterraneanGate(zone, connection)) {
+                connection->connected = 1;
+                oppositeConnection->connected = 1;
+            }
+        }
+    }
+
+    for (zoneIndex = 0; zoneIndex < zones.size(); ++zoneIndex) {
+        TRmgZone* zone = zones[zoneIndex];
+        TRmgTownSlot* zoneTemplate = zone->slot;
+        if (zone->terrain == eTerrainWater)
+            continue;
+
+        int firstConnection = 0;
+        while (firstConnection < zoneTemplate->connections.size()
+               && zoneTemplate->connections[firstConnection].connected)
+            ++firstConnection;
+        if (firstConnection == zoneTemplate->connections.size())
+            continue;
+
+        TRmgMapPosition levelPosition = zone->levelPosition;
+        mapItem = map.GetMapItem(0, 0, levelPosition.z);
+        for (int remaining = map.mapWidth * map.mapHeight;
+             remaining--; ++mapItem)
+            mapItem->tileData.connectionVisited = 0;
+
+        int objectIndex = 0;
+        while (objectIndex < positions.size()) {
+            type_object* object = positions[objectIndex];
+            if (object->properties->prototype->type == SHIPYARD) {
+                position = object->position;
+                if (map.GetMapItem(position)->zoneState.zone == zoneIndex) {
+                    TRmgMapPosition shipyardPosition = position;
+                    int waterOffset = 0;
+                    for (;
+                         waterOffset < RMG_SHIPYARD_WATER_OFFSET_COUNT;
+                         ++waterOffset) {
+                        TRmgMapPosition waterPosition =
+                            shipyardPosition
+                            + gRmgShipyardWaterOffsets[waterOffset];
+                        if (waterPosition.x >= 0
+                            && waterPosition.x < map.mapWidth
+                            && map.GetMapItem(waterPosition)->tile.landType
+                                   == eTerrainWater)
+                            break;
+                    }
+
+                    if (waterOffset != RMG_SHIPYARD_WATER_OFFSET_COUNT)
+                        FloodConnectionRegion(object->position);
+                }
+            }
+            ++objectIndex;
+        }
+
+        for (int connectionIndex = firstConnection;
+             connectionIndex < zoneTemplate->connections.size();
+             ++connectionIndex) {
+            TRmgZoneConnection* connection =
+                &zoneTemplate->connections[connectionIndex];
+            if (connection->connected)
+                continue;
+
+            TRmgZone* destination =
+                zones[connection->destination->zoneIndex];
+            TRmgTownSlot* destinationTemplate = destination->slot;
+            TRmgZoneConnection* oppositeConnection;
+            int oppositeIndex = 0;
+            for (;; ++oppositeIndex) {
+                if (oppositeIndex
+                    >= destinationTemplate->connections.size()) {
+                    oppositeConnection = 0;
+                    break;
+                }
+                if (destinationTemplate->connections[oppositeIndex]
+                        .destination->zoneIndex == zoneIndex) {
+                    oppositeConnection =
+                        &destinationTemplate->connections[oppositeIndex];
+                    break;
+                }
+            }
+
+            if (CreateBorderConnection(zone, connection)) {
+                connection->connected = 1;
+                continue;
+            }
+
+            if (destination->terrain == eTerrainWater)
+                continue;
+
+            CreateMonolithConnection(
+                zone, connection, prototypeIndex);
+            connection->connected = 1;
+            oppositeConnection->connected = 1;
+            prototypeIndex = (prototypeIndex + 1)
+                % (objectPrototypes[LITH_TWOWAY].size()
+                   + objectPrototypes[LITH_ONEWAY_ENTRANCE].size());
+        }
+    }
+
+    if (progress)
+        progress->Advance(0x1900);
 }
 
 // The road/river worklists instantiate all three of these out-of-line STL

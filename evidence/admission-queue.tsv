@@ -2,8 +2,6 @@
 # Admission campaign only; sorted by retail size descending.
 # Use `homm3 vc6 queue --polish` only after admission.
 state	size	rva	relation	owner	candidates	label	action
-bracketed	1969	0x147880	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_148290_sub00_147880	resolve the owner, then add its VA claim and body
-bracketed	1943	0x143240	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_144920_sub03_143240	resolve the owner, then add its VA claim and body
 bracketed	1895	0x61ab0	bracketed	castle..cmbtmgr	castle,cmbtmgr	game_61ab0	resolve the owner, then add its VA claim and body
 carcass	1887	0x1b3e80	bracketed	rmg_terrain	rmg_terrain	SelectTerrainTransition	enable the existing VA claim and reconstruct its body
 bracketed	1856	0x7e820	bracketed	cspriteframe..cursor	cspriteframe,cursor	CSpriteFrame_7e820	resolve the owner, then add its VA claim and body
@@ -139,7 +137,6 @@ bracketed	817	0x190070	bracketed	singleselectionwindow..slider	singleselectionwi
 bracketed	817	0x190e50	bracketed	singleselectionwindow..slider	singleselectionwindow,slider	game_185050_sub02_190e50	resolve the owner, then add its VA claim and body
 bracketed	815	0x86110	bracketed	cursor..customcampaign	cursor,customcampaign	game_86440_sub00_86110	resolve the owner, then add its VA claim and body
 carcass	815	0x16a400	bracketed	search	search	searchArray_enter_lith	enable the existing VA claim and reconstruct its body
-bracketed	814	0x347a0	bracketed	ai_player..ai_tactical	ai_player,ai_tactical	game_29ad0_sub00_347a0	resolve the owner, then add its VA claim and body
 bracketed	810	0x1402a0	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_1402a0	resolve the owner, then add its VA claim and body
 bracketed	804	0x145250	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_144a50_sub00_145250	resolve the owner, then add its VA claim and body
 bracketed	804	0x190ad0	bracketed	singleselectionwindow..slider	singleselectionwindow,slider	game_185050_sub01_190ad0	resolve the owner, then add its VA claim and body
@@ -311,7 +308,7 @@ bracketed	526	0x152530	bracketed	recruit..remote	recruit,remote	game_152530	reso
 bracketed	526	0x194a10	bracketed	singleselectionwindow..slider	singleselectionwindow,slider	game_190ad0_sub04_194a10	resolve the owner, then add its VA claim and body
 carcass	524	0xf08d0	bracketed	kb	kb	NormalDialogHandler	enable the existing VA claim and reconstruct its body
 bracketed	522	0x116c10	bracketed	newgame..overview	newgame,overview	game_114610_sub04_116c10	resolve the owner, then add its VA claim and body
-bracketed	521	0x4200	bracketed	adventuremapwindow..adventureoptionswindow	adventuremapwindow,adventureoptionswindow	button_set_hotkey	resolve the owner, then add its VA claim and body
+carcass	521	0x4200	bracketed	rmg	rmg	__h3cg$rmg$vector_insert$Int	enable the existing VA claim and reconstruct its body
 bracketed	521	0x23130	bracketed	ai..ai_combat	ai,ai_combat	game_1f140_sub02_23130	resolve the owner, then add its VA claim and body
 bracketed	521	0x73600	bracketed	combatwindow..command	combatwindow,command	game_72e90_sub03_73600	resolve the owner, then add its VA claim and body
 bracketed	521	0x14d120	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_1510_sub10_14d120	resolve the owner, then add its VA claim and body
@@ -376,7 +373,7 @@ bracketed	435	0xd2c90	bracketed	game..gametypewindow	game,gametypewindow	game_bd
 carcass	435	0x1b6e00	bracketed	rmg_terrain	rmg_terrain	TRmgTerrainPainter_CheckSecondDiagonal	enable the existing VA claim and reconstruct its body
 bracketed	434	0x54d60	bracketed	bottomviewsubwindow..button	bottomviewsubwindow,button	game_54d60	resolve the owner, then add its VA claim and body
 bracketed	434	0x1b4960	bracketed	systemoptionswindow..text	systemoptionswindow,text	game_1b7690_sub00_1b4960	resolve the owner, then add its VA claim and body
-bracketed	433	0x22f50	bracketed	ai..ai_combat	ai,ai_combat	game_1f140_sub01_22f50	resolve the owner, then add its VA claim and body
+carcass	433	0x22f50	bracketed	rmg	rmg	__h3cg$rmg$vector_insert$Int_22f50	enable the existing VA claim and reconstruct its body
 bracketed	433	0x8e690	bracketed	customcampaign..dialogbox	customcampaign,dc_input,dc_precompiledheaders,dialogbox	game_8c610_sub04_8e690	resolve the owner, then add its VA claim and body
 bracketed	433	0x1fdd60	bracketed	viewwrld..widget	viewwrld,widget	game_1fd010_sub03_1fdd60	resolve the owner, then add its VA claim and body
 bracketed	432	0x85190	bracketed	cursor..customcampaign	cursor,customcampaign	game_87e40_sub00_85190	resolve the owner, then add its VA claim and body
