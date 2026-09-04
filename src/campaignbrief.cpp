@@ -3,23 +3,32 @@
 // 32 functions in link order; 24 compiler-generated $-thunks omitted.
 #define HOMM3_GAME_NEW_MAP_DECLS
 #define HOMM3_WIDGET_SET_VISIBLE_INLINE
+#define HOMM3_WIDGET_HIDE_SHOW_INLINE
+#define HOMM3_WIDGET_RCLICK_TEXT_INLINE
 #include <va.h>
 #include <stdio.h>
 #include <string.h>
+class message;
+static int CampaignBriefHandler(message& msg);
+#define HOMM3_CAMPAIGNBRIEF_HANDLER_FRIEND
 #include "campaignbrief.h"
+#undef HOMM3_CAMPAIGNBRIEF_HANDLER_FRIEND
 #include "advmgr.h"
 #include "border.h"
 #include "button.h"
 #include "campaignmap.h"
 #include "iconwdgt.h"
 #include "kb.h"
+#include "kbwin.h"
 #include "misc.h"
 #include "mousemgr.h"
+#include "multiplayerwindow.h"
 #include "palette.h"
 #include "soundmgr.h"
 #include "textresource.h"
 #include "textwdgt.h"
 #include "widget.h"
+#include "winmgr.h"
 
 // Temporary game snapshot made by the retail campaign-brief constructor.
 // Dreamcast names the same cross-TU cell `saveHeader`; UpdateGameVars hands
@@ -32,6 +41,17 @@ DATA(0x0069fdc4) game* saveHeader;
 // surviving PC public names either private datum.
 DATA(0x00694de8) static unsigned char gCampaignBriefViewFromGame;
 DATA(0x00694de0) static unsigned char gCampaignBriefReady;
+
+// The handler's six-frame region flash. Complete retains the counter and
+// next-frame deadline beside the ready latch; Dreamcast proves the same
+// six/125 sequence and the GameTime helper boundary independently.
+DATA(0x00694dec) static int gCampaignBriefFlashLeft;
+DATA(0x00694db0) static unsigned long gCampaignBriefFlashTime;
+
+// Dreamcast publishes the semantic table name. Complete's right-click path
+// independently fixes its THelpText stride and first-pointer use at this
+// address.
+DATA(0x006a59cc) extern THelpText gCampaignBriefHelp[];
 
 // Dreamcast publishes this helper from singleselectionwindow.cpp.  Retail's
 // constructor independently proves the /Gr two-register call at 0x459159.
@@ -90,8 +110,9 @@ void TCampaignBrief::SetupCurrentTerritory()
     // @stub
 }
 
-// E:\gamedcs\campaignbrief.cpp:481
-DC_ONLY(0x58a9c, 0x162)
+// E:\gamedcs\campaignbrief.cpp:481. Complete retains the same source helper
+// immediately after Select; CampaignBriefHandler calls it at retail +0x4f9.
+VA(0x00458010, 0x10F)  // handler caller + DC source identity, dc 0x58a9c
 void TCampaignBrief::UpdateAllyEnemyFlags()
 {
     // @stub
@@ -659,13 +680,300 @@ void TCampaignBrief::DoModal()
 {
     // @stub
 }
+#endif
 
-// E:\gamedcs\campaignbrief.cpp:1076
-DC_ONLY(0x5a324, 0x824)
-int CampaignBriefHandler(message* msg)
+// Dreamcast proves this ordinary private helper and its four source-level
+// id groups. Complete expands it into CampaignBriefHandler, so no standalone
+// x86 row remains; retaining the call here lets VC6 make that natural /Ob2
+// decision from the real body and source order.
+int TCampaignBrief::convertID2HelpID(int id) const
 {
-    // @stub
+    if (id >= MAP_CONQUERED_1_ID && id <= MAP_CONQUERED_32_ID)
+        return id - MAP_CONQUERED_1_ID;
+    if (id >= MAP_ENABLED_1_ID && id <= MAP_ENABLED_32_ID)
+        return id - MAP_ENABLED_1_ID;
+    if (id >= MAP_SELECTED_1_ID && id <= MAP_SELECTED_32_ID)
+        return id - MAP_SELECTED_1_ID;
+    return id - BACKGROUND_ID;
 }
+
+// Complete adds the null-campaign guard before the DC-proven dialog call.
+// The retained body at 0x45b1b0 is exactly the address-take that identifies
+// the static handler below as this TU's dialog callback.
+VA(0x0045b1b0, 0x28)  // handler address-take + DC DoModal, dc 0x5a308
+void TCampaignBrief::DoModal()
+{
+    if (!campaign) {
+        gpWindowManager->dialogReturn = DIALOG_RETURN_CANCEL;
+        return;
+    }
+    gpWindowManager->DoDialog(this, CampaignBriefHandler, 0);
+}
+
+// Dreamcast supplies the original statement groups, helper boundaries and
+// six-frame flash loop. Complete's retail body removes the old hero-popup
+// arm and replaces the launch sequence with its streamed campaign format;
+// every retained operation below is independently present in the x86 CFG.
+// Structural checkpoint: the flash prefix is 23/23 CFG blocks exact, and
+// retaining widget::set_visible reproduces the retail bonus-choice branch.
+// The remaining excess blocks are Dinkumware lowering inside the region
+// string assignment and NewSMapHeader construction/destruction: this build
+// expands assign/vector/tree bodies which retail retains, while expanding a
+// three-argument `text.assign(...)` spelling was a negative control (132
+// blocks, 78.07%). Keep the DC-proven operator= source fact and recover the
+// surrounding natural inline state; do not flatten or pin these boundaries.
+VA(0x0045b1e0, 0x8DB)  // DoModal address-take + full retail CFG, dc 0x5a324
+static int CampaignBriefHandler(message& msg)
+{
+    TCampaignBrief* brief = static_cast<TCampaignBrief*>(msg.window);
+    int exitFlag = 0;
+
+    if (gCampaignBriefReady) {
+        gCampaignBriefFlashLeft = 6;
+        gCampaignBriefReady = 0;
+        gCampaignBriefFlashTime =
+            GameTime::NextFrameTime(GameTime::Get(), 125);
+    }
+
+    if (gCampaignBriefFlashLeft) {
+        if (GameTime::IsPast(gCampaignBriefFlashTime)) {
+            gCampaignBriefFlashTime =
+                GameTime::NextFrameTime(gCampaignBriefFlashTime, 125);
+            --gCampaignBriefFlashLeft;
+
+            for (int i = 0;
+                 i < static_cast<int>(brief->campaign->scenarios.size());
+                ++i) {
+                if (brief->scenarios[i].available) {
+                    if (gCampaignBriefFlashLeft & 1) {
+                        brief->GetWidget(
+                            TCampaignBrief::MAP_SELECTED_1_ID + i)->hide();
+                        brief->GetWidget(
+                            TCampaignBrief::MAP_ENABLED_1_ID + i)->hide();
+                    } else {
+                        brief->GetWidget(
+                            TCampaignBrief::MAP_SELECTED_1_ID + i)->show();
+                        brief->GetWidget(
+                            TCampaignBrief::MAP_ENABLED_1_ID + i)->show();
+                    }
+                }
+            }
+
+            if (!gCampaignBriefFlashLeft)
+                brief->Select(brief->selected_scenario);
+            else
+                brief->DrawWindow(1, WINDOW_ALL_WIDGETS_LOW,
+                                  WINDOW_ALL_WIDGETS_HIGH);
+        }
+        return 0;
+    }
+
+    if (msg.qualifier & MESSAGE_MODIFIER_RIGHT) {
+        int id = msg.codeY;
+        if (id == TCampaignBrief::CHOICE_1_ID
+            || id == TCampaignBrief::CHOICE_2_ID
+            || id == TCampaignBrief::CHOICE_3_ID
+            || id == TCampaignBrief::CHOICE_1_HIGHLIGHT_ID
+            || id == TCampaignBrief::CHOICE_2_HIGHLIGHT_ID
+            || id == TCampaignBrief::CHOICE_3_HIGHLIGHT_ID
+            || (id >= 235 && id <= 239)) {
+            widget* w = brief->GetWidget(id);
+            if (w) {
+                NormalDialog(w->get_rclick_text(), 4, -1, -1, -1, 0, -1, 0,
+                             -1, 0, -1, 0);
+            }
+        } else {
+            id = brief->zBuffer[msg.mouseY * brief->width + msg.mouseX];
+            if (id && id > TCampaignBrief::BACKGROUND_ID && id < 243) {
+                int helpID = brief->convertID2HelpID(id);
+                if (helpID >= 0) {
+                    if (helpID < 100) {
+                        std::string text;
+                        text = brief->campaign->scenarios[helpID]
+                                   ->GetRegionDescription();
+                        NormalDialog(text.c_str(), 4, -1, -1, -1, 0,
+                                     -1, 0, -1, 0, -1, 0);
+                    } else {
+                        NormalDialog(gCampaignBriefHelp[helpID].text,
+                                     4, -1, -1, -1, 0, -1, 0,
+                                     -1, 0, -1, 0);
+                    }
+                }
+            }
+        }
+        return MESSAGE_DISPATCH_CONSUME;
+    }
+
+    if (msg.id != MESSAGE_WIDGET
+        || msg.codeX != widget::WIDGET_DESELECT)
+        return MESSAGE_DISPATCH_CONSUME;
+
+    switch (msg.codeY) {
+    case TCampaignBrief::RESTART_ID:
+        exitFlag = 1;
+        break;
+
+    case TCampaignBrief::VIDEO_ID:
+        gpSoundManager->StopAllSamples(1);
+        gpGame->campaign.PlayScenarioPrologue(brief->campaign);
+        brief->DrawWindow(1, WINDOW_ALL_WIDGETS_LOW,
+                          WINDOW_ALL_WIDGETS_HIGH);
+        gpSoundManager->StopAllSamples(1);
+        break;
+
+    case TCampaignBrief::MAP_ENABLED_1_ID + 0:
+    case TCampaignBrief::MAP_ENABLED_1_ID + 1:
+    case TCampaignBrief::MAP_ENABLED_1_ID + 2:
+    case TCampaignBrief::MAP_ENABLED_1_ID + 3:
+    case TCampaignBrief::MAP_ENABLED_1_ID + 4:
+    case TCampaignBrief::MAP_ENABLED_1_ID + 5:
+    case TCampaignBrief::MAP_ENABLED_1_ID + 6:
+    case TCampaignBrief::MAP_ENABLED_1_ID + 7:
+    case TCampaignBrief::MAP_ENABLED_1_ID + 8:
+    case TCampaignBrief::MAP_ENABLED_1_ID + 9:
+    case TCampaignBrief::MAP_ENABLED_1_ID + 10:
+    case TCampaignBrief::MAP_ENABLED_1_ID + 11:
+    case TCampaignBrief::MAP_ENABLED_1_ID + 12:
+    case TCampaignBrief::MAP_ENABLED_1_ID + 13:
+    case TCampaignBrief::MAP_ENABLED_1_ID + 14:
+    case TCampaignBrief::MAP_ENABLED_1_ID + 15:
+    case TCampaignBrief::MAP_ENABLED_1_ID + 16:
+    case TCampaignBrief::MAP_ENABLED_1_ID + 17:
+    case TCampaignBrief::MAP_ENABLED_1_ID + 18:
+    case TCampaignBrief::MAP_ENABLED_1_ID + 19:
+    case TCampaignBrief::MAP_ENABLED_1_ID + 20:
+    case TCampaignBrief::MAP_ENABLED_1_ID + 21:
+    case TCampaignBrief::MAP_ENABLED_1_ID + 22:
+    case TCampaignBrief::MAP_ENABLED_1_ID + 23:
+    case TCampaignBrief::MAP_ENABLED_1_ID + 24:
+    case TCampaignBrief::MAP_ENABLED_1_ID + 25:
+    case TCampaignBrief::MAP_ENABLED_1_ID + 26:
+    case TCampaignBrief::MAP_ENABLED_1_ID + 27:
+    case TCampaignBrief::MAP_ENABLED_1_ID + 28:
+    case TCampaignBrief::MAP_ENABLED_1_ID + 29:
+    case TCampaignBrief::MAP_ENABLED_1_ID + 30:
+    case TCampaignBrief::MAP_ENABLED_1_ID + 31:
+        if (!gCampaignBriefViewFromGame)
+            brief->Select(msg.codeY - TCampaignBrief::MAP_ENABLED_1_ID);
+        break;
+
+    case TCampaignBrief::MAP_SELECTED_1_ID + 0:
+    case TCampaignBrief::MAP_SELECTED_1_ID + 1:
+    case TCampaignBrief::MAP_SELECTED_1_ID + 2:
+    case TCampaignBrief::MAP_SELECTED_1_ID + 3:
+    case TCampaignBrief::MAP_SELECTED_1_ID + 4:
+    case TCampaignBrief::MAP_SELECTED_1_ID + 5:
+    case TCampaignBrief::MAP_SELECTED_1_ID + 6:
+    case TCampaignBrief::MAP_SELECTED_1_ID + 7:
+    case TCampaignBrief::MAP_SELECTED_1_ID + 8:
+    case TCampaignBrief::MAP_SELECTED_1_ID + 9:
+    case TCampaignBrief::MAP_SELECTED_1_ID + 10:
+    case TCampaignBrief::MAP_SELECTED_1_ID + 11:
+    case TCampaignBrief::MAP_SELECTED_1_ID + 12:
+    case TCampaignBrief::MAP_SELECTED_1_ID + 13:
+    case TCampaignBrief::MAP_SELECTED_1_ID + 14:
+    case TCampaignBrief::MAP_SELECTED_1_ID + 15:
+    case TCampaignBrief::MAP_SELECTED_1_ID + 16:
+    case TCampaignBrief::MAP_SELECTED_1_ID + 17:
+    case TCampaignBrief::MAP_SELECTED_1_ID + 18:
+    case TCampaignBrief::MAP_SELECTED_1_ID + 19:
+    case TCampaignBrief::MAP_SELECTED_1_ID + 20:
+    case TCampaignBrief::MAP_SELECTED_1_ID + 21:
+    case TCampaignBrief::MAP_SELECTED_1_ID + 22:
+    case TCampaignBrief::MAP_SELECTED_1_ID + 23:
+    case TCampaignBrief::MAP_SELECTED_1_ID + 24:
+    case TCampaignBrief::MAP_SELECTED_1_ID + 25:
+    case TCampaignBrief::MAP_SELECTED_1_ID + 26:
+    case TCampaignBrief::MAP_SELECTED_1_ID + 27:
+    case TCampaignBrief::MAP_SELECTED_1_ID + 28:
+    case TCampaignBrief::MAP_SELECTED_1_ID + 29:
+    case TCampaignBrief::MAP_SELECTED_1_ID + 30:
+    case TCampaignBrief::MAP_SELECTED_1_ID + 31:
+        if (!gCampaignBriefViewFromGame)
+            brief->Select(msg.codeY - TCampaignBrief::MAP_SELECTED_1_ID);
+        break;
+
+    case TCampaignBrief::CHOICE_1_ID:
+    case TCampaignBrief::CHOICE_2_ID:
+    case TCampaignBrief::CHOICE_3_ID:
+    case TCampaignBrief::CHOICE_1_HIGHLIGHT_ID:
+    case TCampaignBrief::CHOICE_2_HIGHLIGHT_ID:
+    case TCampaignBrief::CHOICE_3_HIGHLIGHT_ID:
+        if (!gCampaignBriefViewFromGame) {
+            int choice = msg.codeY < TCampaignBrief::CHOICE_1_HIGHLIGHT_ID
+                             ? msg.codeY - TCampaignBrief::CHOICE_1_ID
+                             : msg.codeY
+                                   - TCampaignBrief::CHOICE_1_HIGHLIGHT_ID;
+            gpGame->campaign.briefingChoice = choice;
+            for (int i = 0; i < 3; ++i) {
+                brief->start_bonus_borders[i]->set_visible(i == choice);
+            }
+            widget* ok = brief->GetWidget(DIALOG_RETURN_OK);
+            if (ok)
+                ok->enable(1);
+            brief->UpdateAllyEnemyFlags();
+            brief->DrawWindow(1, WINDOW_ALL_WIDGETS_LOW,
+                              WINDOW_ALL_WIDGETS_HIGH);
+        }
+        break;
+
+    case DIALOG_RETURN_CANCEL:
+        exitFlag = 1;
+        break;
+
+    case DIALOG_RETURN_OK: {
+        int selected = brief->selected_scenario;
+        int choice = gpGame->campaign.briefingChoice;
+        int difficulty = gpGame->setup.difficulty;
+
+        gpGame->campaign.currentMap = static_cast<signed char>(selected);
+        if (gpGame->campaign.currentCampaign != GAME_CAMPAIGN_2
+            || selected != GAME_SCENARIO_2)
+            gpGame->campaign.PlayScenarioPrologue(brief->campaign);
+
+        ShowProgressBar();
+        IncProgressBar(1);
+
+        NewSMapHeader mapHeader;
+        brief->campaign->LoadScenario(selected, &mapHeader);
+        gpGame->ResetGame(difficulty, selected, &mapHeader);
+        gpGame->campaign.ApplyBriefingChoice(choice);
+        memset(gNewMapStartingBonus, 3, sizeof(gNewMapStartingBonus));
+        IncProgressBar(1);
+
+        int gamePos = brief->campaign->scenarios[selected]
+                          ->options->GetPlayerPosition(choice);
+        strcpy(gpGame->players[gamePos].cName, gLocalPlayerName);
+        gLocalGamePos = gamePos;
+        brief->campaign->StartScenario(selected, choice);
+        IncProgressBar(1);
+        gpSoundManager->StopMP3();
+        IncProgressBar(1);
+        exitFlag = 1;
+        break;
+    }
+    }
+
+    if (exitFlag) {
+        msg.id = MESSAGE_WIDGET;
+        gpWindowManager->dialogReturn = msg.codeY;
+        msg.codeY = widget::WIDGET_END_DIALOG;
+        msg.codeX = widget::WIDGET_END_DIALOG;
+        return MESSAGE_DISPATCH_FORWARD;
+    }
+    return MESSAGE_DISPATCH_CONSUME;
+}
+
+// The handler's regional-help path deliberately assigns this by-value
+// result into a pre-existing string.  That source shape accounts for the
+// retained accessor plus the caller's temporary/copy/destructor sequence.
+VA(0x0045bad0, 0x134)  // sole caller CampaignBriefHandler + member offset
+std::string TCampaignBrief::ScenarioStruct::GetRegionDescription() const
+{
+    return region_desc;
+}
+
+#if 0  // Remaining Dreamcast-only carcass.
 
 // E:\gamedcs\campaignbrief.cpp:1401
 DC_ONLY(0x5ab48, 0x3A)

@@ -15,10 +15,10 @@
 
 struct _DPCOMPORTADDRESS;
 
-#ifdef HOMM3_KB_OLDMAIN_DECLS
 // multiplayerwindow.cpp owns this 21-byte preference-backed player name.
-// DoNewGame copies it into players[0].cName in retail's tutorial arm.
+// DoNewGame and the campaign launch copy it into a player cName slot.
 extern char gLocalPlayerName[21];
+#ifdef HOMM3_KB_OLDMAIN_DECLS
 extern int gUnnamed69927c;
 extern int gUnnamed699288;
 #endif

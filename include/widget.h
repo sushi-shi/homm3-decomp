@@ -182,6 +182,30 @@ public:
     // Dreamcast Widget.h:231. Retail callers reduce it to the +0x20
     // RollOver load, so no out-of-line body survives.
     const char* get_help_text() const { return RollOver; }
+#ifdef HOMM3_WIDGET_RCLICK_TEXT_INLINE
+    // Dreamcast Widget.h:236 header inline. CampaignBriefHandler folds this
+    // exact RightClick-or-RollOver choice into its retail body.
+    const char* get_rclick_text()
+    {
+        return RightClick ? RightClick : RollOver;
+    }
+#endif
+    // DC-attested name (?sleep@widget@@QAAX_N@Z, E:\gamedcs\Widget.h:244)
+    // on a RETAIL-ONLY body: DC's inline is the WIDGET_ASLEEP status-bit
+    // send_message, retail's is the nest counter below. Header-inline
+    // in both builds - retail's only call site is heroWindow's slot-8
+    // body 0x5ff5f0, where /Ob2 expands it in full.
+    void sleep(unsigned char on)
+    {
+        if (on) {
+            if (field_2C++ == 0)
+                _vslot12(1);
+        } else {
+            if (--field_2C == 0)
+                _vslot12(0);
+        }
+    }
+
     // Dreamcast header inlines used by mode-switch paths. Scope their live
     // definitions to the owning TU: even unused header bodies perturb VC6's
     // global inline budget in unrelated compilands.
@@ -214,22 +238,6 @@ public:
     // earlier obj, ICF-folded with other empty bodies). Declared only;
     // no local definition, so calls stay extern.
     void Close();
-
-    // DC-attested name (?sleep@widget@@QAAX_N@Z, E:\gamedcs\Widget.h:244)
-    // on a RETAIL-ONLY body: DC's inline is the WIDGET_ASLEEP status-bit
-    // send_message, retail's is the nest counter below. Header-inline
-    // in both builds - retail's only call site is heroWindow's slot-8
-    // body 0x5ff5f0, where /Ob2 expands it in full.
-    void sleep(unsigned char on)
-    {
-        if (on) {
-            if (field_2C++ == 0)
-                _vslot12(1);
-        } else {
-            if (--field_2C == 0)
-                _vslot12(0);
-        }
-    }
 
     virtual ~widget();                                      // slot 0
     virtual int Open(int newPriority, heroWindow* parent);  // slot 1
