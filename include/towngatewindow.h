@@ -14,6 +14,27 @@
 // stack instance spans exactly 0x7c bytes, proving the canonical total size.
 class TTownGateWindow : public CAdvPopup {
 public:
+    // Dreamcast CodeView publishes this nested enum in full. Complete's
+    // constructor independently uses every value in the same roles.
+    enum EWidgetIDs {
+        BACKGROUND_ID = 0,
+        TITLE_TEXT_ID = 1,
+        SELECT_TEXT_ID = 2,
+        ICON_ID = 3,
+        TOWN_0_ID = 4,
+        TOWN_1_ID = 5,
+        TOWN_2_ID = 6,
+        TOWN_3_ID = 7,
+        TOWN_4_ID = 8,
+        TOWN_5_ID = 9,
+        TOWN_6_ID = 10,
+        TOWN_7_ID = 11,
+        TOWN_8_ID = 12,
+        SELECTOR_ID = 13,
+        SLIDER_ID = 14,
+        NUM_TOWN_ENTRIES = 9
+    };
+
     std::vector<int> Towns;
     int topTown;
     int selectedTown;
@@ -22,6 +43,8 @@ public:
     TTownGateWindow(bool adventure_spell);
     virtual ~TTownGateWindow();
     void AddTown(int new_town);
+    void UpdateTownLocator(int i);
+    void UpdateTownLocators();
     void DoModal();
     virtual int WindowHandler(message* msg);
 };

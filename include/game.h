@@ -2531,6 +2531,22 @@ public:
         }
         return mask;
     }
+    // Game.h:897. Dreamcast emits this header helper after the town-gate
+    // callback and records one nested GetTeam call. Complete expands the
+    // same source boundary into TTownGateWindow's constructor: retail's
+    // range guard, signed teamInfo load and eight-entry count are exact.
+    unsigned char GetNumAllies(int playerNum) const
+    {
+        unsigned char numAllies = 0;
+        if (playerNum >= 0 && playerNum < 8) {
+            int team = GetTeam(playerNum);
+            for (int i = 0; i < 8; ++i) {
+                if (mapHeader.teamInfo[i] == team)
+                    ++numAllies;
+            }
+        }
+        return numAllies;
+    }
     // Game.h:917, GetInfoFlag's setter twin. It marks the whole of
     // playerNum's TEAM, which is why every events.obj handler that
     // visits a global-info object ends in an eight-iteration teamInfo
