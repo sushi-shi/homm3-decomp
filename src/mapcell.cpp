@@ -1003,6 +1003,17 @@ static void resizeSeerHutList(NewfullMap* map, int count)
 #define HOMM3_MAPCELL_LOAD_RELEASE_VERIFY(expression) \
     static_cast<void>(expression)
 
+// Residual (92.2010%): ONE inline decision in the clear() run, localised.
+// `--branches` agrees at 14/14 with nine returns and `--calls` at 31 same
+// with a single target-only row: retail EXPANDS
+// `vector<garrison>::erase(begin(), end())` at 0x1d17 - `std::copy` at
+// game_fdbc0_sub10_1095a0, then _Destroy, then the `_Last` write-back - while
+// this compile calls the erase COMDAT.  Both sides expand the SAME expression
+// two statements later for `universities` and call it for all sixteen other
+// lists, so the type is not the discriminator and neither is the spelling:
+// it is the /Ob2 quotient walking down the candidate list, with retail's
+// budget reaching one site earlier than ours.  The direction is UNDER-inline,
+// which wants a LARGER caller, and there is no honest mass to add here.
 VA(0x004fdbc0, 0x371)  // order-map: calls loadTimedEventList 0xfc500, loadTownEventList 0xfc870, Init 0xfd4f0, loadMapLayer 0xfe920 x2, loadBlackBoxList/loadMonsterList/loadMapObjects, dc 0xecb94
 int NewfullMap::Load(TAbstractFile* infile, int size, unsigned char two_layers,
                      int saveVersion)
