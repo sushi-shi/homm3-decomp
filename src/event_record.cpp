@@ -17,9 +17,7 @@
 #include "kbwin.h"
 #include "message.h"
 #include "prefs.h"
-#define HOMM3_EVENT_RECORD_MOVE_DECLS
 #include "advmgr.h"
-#undef HOMM3_EVENT_RECORD_MOVE_DECLS
 #include "kb.h"
 
 // Dreamcast CodeView attests this inline wrapper (Hero.h:196) and game.cpp

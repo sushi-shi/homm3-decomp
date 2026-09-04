@@ -17,11 +17,6 @@
 // ModifySpellDamage forwards army::creatureType into armygrp's free
 // modify_spell_damage, whose slot is TCreatureType; army.h keeps the
 // DC-typed arm of that field behind this view.
-// SpellCastWorkChance prices a stack that stands inside somebody's aura
-// at 0.8 of the plain chance and reads aura_sources.size() to find out;
-// army.h keeps the four relationship lists behind this narrow gate,
-// which admits the lists without the aura/binding member functions.
-#define HOMM3_ARMY_AURA_SOURCES_DECL
 #include "army.h"
 // LoadSpellEffect reads akSpellEffectTraits, which cmbtmgr.h keeps behind
 // this view; spells.obj is its second consumer after cmbtmgr.obj.
