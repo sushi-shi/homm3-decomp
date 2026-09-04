@@ -628,9 +628,7 @@ public:
     // the same shift combatSide/bitIndex already carry (DC group 224 ->
     // +0xf4, index 228 -> +0xf8, sMonFrameInfo 252 -> +0x110), so DC
     // 248 lands here. range_attack (0x440160) clears it as its first
-    // statement and nothing located yet reads it. BEHIND A VIEW like
-    // every other name this header scopes: the bytes are identical in
-    // both arms, only the name is TU-local.
+    // statement and nothing located yet reads it.
 #ifdef HOMM3_ARMY_COPY_VIEW
     // These five scalars precede the embedded SMonFrameInfo row in the
     // Dreamcast roster and retail copies them individually.  Naming the
@@ -643,13 +641,13 @@ public:
     char* yModify;                 // +0x10c
     SMonFrameInfo sMonFrameInfo;   // +0x110 .. +0x163
 #else
-#ifdef HOMM3_ARMY_RANGE_VIEW
     // DC army.iLastFidgetTime (members.csv army@232, the flat +0x14
     // this band carries from hitByCreature onward - the same shift that
     // lands DC index 228 on combatSide's neighbour +0xf8). InitClean
-    // (0x43d5c0) stamps GameTime::Get() into it, and the name is
-    // independently corroborated by set_inside_area_effect (0x43efe0),
-    // whose whole animation arm is about the cs_fidget sequence.
+    // (0x43d5c0) stamps GameTime::Get() into it, the command.obj cycle
+    // reset rewrites it from GameTime, and the name is independently
+    // corroborated by set_inside_area_effect (0x43efe0), whose whole
+    // animation arm is about the cs_fidget sequence.
     unsigned long iLastFidgetTime; // +0xfc
     // The per-frame DRAW OFFSET a stack is currently displaced by,
     // byte-proven by MirrorImage (0x5a6c70): it sets the pair from the
@@ -662,57 +660,30 @@ public:
     // for either, and nothing else decoded reads them yet.
     int field_100;                 // +0x100
     int field_104;                 // +0x104
-    char pad_108[0x4];
-    char* yModify;                // +0x10c
+    // +0x108, the DC roster's `bPowSequenceComplete` (army@244, the same
+    // flat +0x14 the band above carries). PowEffect clears it for every
+    // stack before the animation loop and raises it the frame a stack
+    // falls back to cs_wait, which is what stops that stack advancing
+    // for the rest of the sequence.
+    // An INT, not the byte the name suggests (byte-proven 2026-08-20):
+    // PowEffect both TESTS and STORES it a dword wide -
+    // `mov eax,[esi+0x108] / test eax,eax` and
+    // `mov dword ptr [esi+0x108],1` - where a char field would emit
+    // `mov al` / `mov byte ptr`. Measured +0.03 on that body.
+    int bPowSequenceComplete;      // +0x108
+    char* yModify;                 // +0x10c
     // sMonFrameInfo.iMissileOffset (DC SMonFrameInfo@0, short[6] -
     // monframeinfo.h carries the record), the three launch-point pairs
     // for the ranged poses ur/r/dr. Byte-proven by attack_wall
     // (0x445fd0): the first angle estimate reads the middle pair
     // [2]/[3] and the aimed shot reads [2*pose]/[2*pose+1], both
-    // movsx'd shorts at +0x110..+0x11b. Sliced in the range arm only,
-    // per the band's own "read the fields you need" rule.
+    // movsx'd shorts at +0x110..+0x11b.
     short frameInfoMissileOffset[6]; // +0x110 == sMonFrameInfo.iMissileOffset
     char pad_11c[0x30];
     // sMonFrameInfo.iExtraNumTroopsXOffset (+0x3c of the record):
     // DrawToBuffer (0x43e140) shifts the troop-count box by it when the
     // box's neighbour hex is free.
     int frameInfoExtraNumTroopsXOffset; // +0x14c
-    int frameInfoAttackFrames;    // +0x150 == sMonFrameInfo.iAttackFrames
-    int frameInfoFidgetFrequency; // +0x154
-#elif defined(HOMM3_ARMY_POW_VIEW)
-    // +0x108, the DC roster's `bPowSequenceComplete` (army@244, the same
-    // flat +0x14 the band above carries). PowEffect clears it for every
-    // stack before the animation loop and raises it the frame a stack
-    // falls back to cs_wait, which is what stops that stack advancing
-    // for the rest of the sequence.
-    unsigned long iLastFidgetTime;       // +0xfc
-    int field_100;                       // +0x100
-    int field_104;                       // +0x104
-    // An INT, not the byte the name suggests (byte-proven 2026-08-20):
-    // PowEffect both TESTS and STORES it a dword wide -
-    // `mov eax,[esi+0x108] / test eax,eax` and
-    // `mov dword ptr [esi+0x108],1` - where a char field would emit
-    // `mov al` / `mov byte ptr`. Measured +0.03 on that body.
-    int bPowSequenceComplete;            // +0x108
-    char pad_10c[0x44];
-    int frameInfoAttackFrames;    // +0x150 == sMonFrameInfo.iAttackFrames
-    int frameInfoFidgetFrequency; // +0x154
-#else
-    // The command.obj cycle reset is an independent retail witness for
-    // the DC-named last-fidget clock: it writes this dword from GameTime.
-    unsigned long iLastFidgetTime; // +0xfc
-    // The per-frame DRAW OFFSET a stack is currently displaced by,
-    // byte-proven by MirrorImage (0x5a6c70): it sets the pair from the
-    // difference between the source hex's and the clone's own hexcell
-    // screen coordinates (+0x1c4 / +0x1c6), divides both by 16, counts
-    // them down over sixteen DrawFrame steps and zeroes them at the end
-    // - i.e. the clone slides out of the caster's hex into its own.
-    // +0x100 carries the Y difference and +0x104 the X one. Names stay
-    // ADDRESS ORDINALS: the behaviour is proven, the roster has no row
-    // for either, and nothing else decoded reads them yet.
-    int field_100;                // +0x100
-    int field_104;                // +0x104
-    char pad_108[0x48];
     // Two more fields sliced out of the embedded animation-traits row,
     // both byte-proven by DoBolt (0x5a5c20): its reset tail guards the
     // whole attack-animation flush on +0x150 and divides +0x15c by the
@@ -726,7 +697,6 @@ public:
     // ResetCycleTimers compares it with 51 and uses it as Random's upper
     // bound before retiming iLastFidgetTime.
     int frameInfoFidgetFrequency; // +0x154
-#endif
     int frameInfoWalkCycleTime;   // +0x158 == sMonFrameInfo.iWalkCycleTime
     // sMonFrameInfo.iAttackStartCycleTime (DC TMonFrameInfo@76, between
     // iWalkCycleTime@72 and iFlightPixelSpan@80 exactly as the two
@@ -1461,9 +1431,7 @@ private:
     unsigned char set_inside_area_effect(unsigned char arg);  // 0x43efe0
     void play_sample(TSampleID id);          // 0x43d540
     void stop_sample(TSampleID id);          // 0x43d580
-#ifdef HOMM3_ARMY_RANGE_VIEW
     void WaitSample(TSampleID which);
-#endif
     // simple_move is PRIVATE on its own public
     // (?simple_move@army@@AAA_NH_N@Z) and every member of this movement
     // family returns `_N` - bool - and takes `restore_facing` as one:
@@ -1499,15 +1467,12 @@ private:
     // to face it, and fires between one and three volleys - and it
     // hands each volley to the private one-argument overload at
     // 0x43f900 (still a carcass), which is the animation-and-damage
-    // worker. Behind a view for the header's usual measured reason;
-    // army.cpp is the only consumer of either.
-#ifdef HOMM3_ARMY_RANGE_VIEW
+    // worker.
     void range_attack();
     void range_attack(army* armyToAttack);
     // 0x43f2c0, EH-bearing carcass in army.cpp; declared because the
     // volley worker above calls it once per shot.
     void animate_missile(army* armyToAttack);
-#endif
     unsigned char check_obstacle_attacks(unsigned char is_walking);
     // 0x440500, reconstructed in army.cpp: the attacker's on-attack
     // debuff roll (bind/blind/disease/curse/age/stone/poison/acid/
