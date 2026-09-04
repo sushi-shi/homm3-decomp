@@ -7,9 +7,7 @@
 
 #include "bitmap16.h"
 #include "csequence.h"
-#ifdef HOMM3_CSPRITE_CROP_ACCESSORS
 #include "cspriteframe.h"
-#endif
 #include "resource.h"
 
 class palette;
@@ -111,9 +109,7 @@ public:
     }
 
     // CSprite.h:148-151.  The Dreamcast image carries out-of-line copies;
-    // the retail remote caller expands these in place.  Keep this proven
-    // view out of unrelated TUs until their include closures need it too.
-#ifdef HOMM3_CSPRITE_CROP_ACCESSORS
+    // the retail remote caller expands these in place.
     int GetCroppedX(int seq, int frame) const
     {
         return s[seq]->f[frame]->GetCroppedX();
@@ -130,7 +126,6 @@ public:
     {
         return s[seq]->f[frame]->GetCroppedHeight();
     }
-#endif
 
     palette* GetPalette();
     void ColorCycle(int begin, int end, int step);
@@ -161,7 +156,6 @@ public:
                       unsigned short outcolor);
     // CSprite.h:342 header wrapper (the DC compiler emits its own copy at
     // 0x87394); retail expands the Bitmap16Bit forwarding in remote.
-#ifdef HOMM3_CSPRITE_CROP_ACCESSORS
     void DrawCreature(int seqnum, int framenum, int sx, int sy, int sw,
                       int sh, Bitmap16Bit* dst, int dx, int dy,
                       unsigned char hflip, unsigned short outcolor)
@@ -169,7 +163,6 @@ public:
         DrawCreature(seqnum, framenum, sx, sy, sw, sh, dst->map, dx, dy,
                      dst->Width, dst->Height, dst->Pitch, hflip, outcolor);
     }
-#endif
     void DrawPointer(int framenum, unsigned short* dst, int dx, int dy,
                      int dw, int dh, int dpitch, unsigned char hflip);
     void DrawInterface(int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char hflip);
@@ -216,12 +209,10 @@ public:
         DrawHeroAlpha(seqnum, framenum, sx, sy, sw, sh, dst->map, dx, dy,
                       dst->Width, dst->Height, dst->Pitch, hflip);
     }
-#ifdef HOMM3_CSPRITE_DRAW_METHODS
     void DrawSpellEffect(int seqnum, int framenum, int sx, int sy, int sw,
                          int sh, unsigned short* dst, int dx, int dy, int dw,
                          int dh, int dpitch, unsigned char hflip,
                          unsigned char alpha);
-#endif
     void DrawAdvObjShadow(int framenum, int sx, int sy, int sw, int sh,
                           unsigned short* dst, int dx, int dy, int dw,
                           int dh, int dpitch, unsigned char hflip);
