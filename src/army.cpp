@@ -479,7 +479,7 @@ void army::LoadResources()
         sprintf(gText, DATA_COMPGEN(0x00660a10, moveSampleFormat,
                                     "%smove.82M"),
                 monInfoSamplePrefix);
-        s = LoadSampleResource(gText);
+        s = ResourceManager::GetSample(gText);
         if (armySample[WALK_SAMPLE])
             armySample[WALK_SAMPLE]->Dispose();
         armySample[WALK_SAMPLE] = s;
@@ -501,7 +501,7 @@ void army::LoadResources()
         sprintf(gText, DATA_COMPGEN(0x006609ec, attackSampleFormat,
                                     "%sattk.82M"),
                 monInfoSamplePrefix);
-    s = LoadSampleResource(gText);
+    s = ResourceManager::GetSample(gText);
     if (armySample[ATTACK_SAMPLE])
         armySample[ATTACK_SAMPLE]->Dispose();
     armySample[ATTACK_SAMPLE] = s;
@@ -509,7 +509,7 @@ void army::LoadResources()
     sprintf(gText, DATA_COMPGEN(0x006609f8, winceSampleFormat,
                                 "%swnce.82M"),
             monInfoSamplePrefix);
-    s = LoadSampleResource(gText);
+    s = ResourceManager::GetSample(gText);
     if (armySample[WINCE_SAMPLE])
         armySample[WINCE_SAMPLE]->Dispose();
     armySample[WINCE_SAMPLE] = s;
@@ -517,7 +517,7 @@ void army::LoadResources()
     sprintf(gText, DATA_COMPGEN(0x006609e0, killSampleFormat,
                                 "%skill.82M"),
             monInfoSamplePrefix);
-    s = LoadSampleResource(gText);
+    s = ResourceManager::GetSample(gText);
     if (armySample[DIE_SAMPLE])
         armySample[DIE_SAMPLE]->Dispose();
     armySample[DIE_SAMPLE] = s;
@@ -530,7 +530,7 @@ void army::LoadResources()
         sprintf(gText, DATA_COMPGEN(0x006609d4, defendSampleFormat,
                                     "%sdfnd.82M"),
                 monInfoSamplePrefix);
-    s = LoadSampleResource(gText);
+    s = ResourceManager::GetSample(gText);
     if (armySample[DEFEND_SAMPLE])
         armySample[DEFEND_SAMPLE]->Dispose();
     armySample[DEFEND_SAMPLE] = s;
@@ -540,7 +540,7 @@ void army::LoadResources()
         sprintf(gText, DATA_COMPGEN(0x00660a04, shotSampleFormat,
                                     "%sshot.82M"),
                 monInfoSamplePrefix);
-        s = LoadSampleResource(gText);
+        s = ResourceManager::GetSample(gText);
         if (armySample[SHOOT_SAMPLE])
             armySample[SHOOT_SAMPLE]->Dispose();
         armySample[SHOOT_SAMPLE] = s;
@@ -557,14 +557,14 @@ void army::LoadResources()
         sprintf(gText, DATA_COMPGEN(0x006609c8, ext1SampleFormat,
                                     "%sext1.82M"),
                 monInfoSamplePrefix);
-        s = LoadSampleResource(gText);
+        s = ResourceManager::GetSample(gText);
         if (armySample[PRE_WALK_SAMPLE])
             armySample[PRE_WALK_SAMPLE]->Dispose();
         armySample[PRE_WALK_SAMPLE] = s;
         sprintf(gText, DATA_COMPGEN(0x006609bc, ext2SampleFormat,
                                     "%sext2.82M"),
                 monInfoSamplePrefix);
-        s = LoadSampleResource(gText);
+        s = ResourceManager::GetSample(gText);
         if (armySample[POST_WALK_SAMPLE])
             armySample[POST_WALK_SAMPLE]->Dispose();
         armySample[POST_WALK_SAMPLE] = s;
@@ -5472,7 +5472,7 @@ void army::attack_wall(TWallTargetId wall, long levelsDestroyed)
     startY = gpCombatManager->cells[gridIndex].field_02
              + frameInfoMissileOffset[2 * pose + 1];
 
-    sample* wallSample = LoadSampleResource(
+    sample* wallSample = ResourceManager::GetSample(
         levelsDestroyed == 0 ? DATA_COMPGEN(0x00660a84, wallMissSampleName,
                                             "WallMiss.82m")
                              : DATA_COMPGEN(0x00660a78, wallHitSampleName,

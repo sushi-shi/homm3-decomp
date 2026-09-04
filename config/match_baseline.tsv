@@ -452,7 +452,7 @@ army	?GetSpeed@army@@QBEHXZ	100.0000	100.0000	100.0000	0x48cd0	548e9a6493e5
 army	?GoBerserk@army@@QAEXXZ	100.0000	100.0000	100.0000	0x456d0	9ab479de3345
 army	?Init@army@@QAEXHHPBVhero@@HHHH@Z	100.0000	100.0000	100.0000	0x3d8b0	28bc09498414
 army	?InitClean@army@@QAEXXZ	92.6261	92.6261	92.6261	0x3d5c0	9d5a2ebce7ef
-army	?LoadResources@army@@QAEXXZ	98.6225	98.6225	98.6225	0x3d9f0	d04d2eef9e47
+army	?LoadResources@army@@QAEXXZ	98.6225	98.6225	98.6225	0x3d9f0	b18bfc256ee5
 army	?MidX@army@@QBEHXZ	100.0000	100.0000	100.0000	0x46660	9eaac4151d2e
 army	?MidY@army@@QBEHXZ	100.0000	100.0000	100.0000	0x46630	aa3d1aeda6d1
 army	?OffsetToFront@army@@QBEHH@Z	100.0000	100.0000	100.0000	0x45cd0	85b2dbb7172a
@@ -472,7 +472,7 @@ army	?adjust_damage@army@@QBEJPAV1@JEEJPAJ@Z	100.0000	100.0000	100.0000	0x43f40	
 army	?animate_missile@army@@AAEXPAV1@@Z	93.1695	93.1695	93.1695	0x3f2c0	dd0426a0d067
 army	?attack_hex@army@@QAEEHE@Z	100.0000	100.0000	100.0000	0x45a60	e88d6d24596a
 army	?attack_wall@army@@AAEXW4TWallTargetId@@ABUtype_ballistics_traits@@@Z	100.0000	100.0000	100.0000	0x45ec0	eb02d396c5bc
-army	?attack_wall@army@@AAEXW4TWallTargetId@@J@Z	91.4600	91.4600	91.4600	0x45fd0	a3606130bd9b
+army	?attack_wall@army@@AAEXW4TWallTargetId@@J@Z	91.4600	91.4600	91.4600	0x45fd0	59ff80655069
 army	?can_cast_resurrect@army@@QBE_NJ@Z	100.0000	100.0000	100.0000	0x473d0	144134940a8b
 army	?can_cast_spell@army@@QBEEJ@Z	100.0000	100.0000	100.0000	0x476c0	bd4801906407
 army	?can_shoot@army@@QBEEPBV1@@Z	100.0000	100.0000	100.0000	0x428f0	00041703250b
@@ -844,7 +844,7 @@ command	?AddArmy@combatManager@@QAEPAVarmy@@HHHHHH@Z	100.0000	100.0000	100.0000	
 command	?CheckChangeHighlighter@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x77c20	1f96ee5700dc
 command	?CheckChangeSelector@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x77ac0	dc55cc6b44a9
 command	?CheckGetAIMove@combatManager@@QAEXXZ	94.4335	94.4335	94.4335	0x77ee0	b618d13338de
-command	?CheckSetMouseDirection@combatManager@@QAEEHHH@Z	85.8951	85.8951	85.8951	0x74a00	43e12851e4bf
+command	?CheckSetMouseDirection@combatManager@@QAEEHHH@Z	97.6434	97.6434	97.6434	0x74a00	f69730c6a2c8
 command	?CheckWin@combatManager@@QAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x762f0	72c1b11c15ed
 command	?DoCommand@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x76bd0	0229304b4d03
 command	?DoVictory@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x77470	8b06082a790b
@@ -865,9 +865,9 @@ command	?DoVictory@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x77470	8b0
 # GetCommand's 62 branches and 20 returns still agree exactly. hist stays
 # at 92.5714.
 command	?GetCommand@combatManager@@QAEHH@Z	92.5714	92.5714	92.5714	0x76490	d35f38a78257
-command	?GetControl@combatManager@@QAEXXZ	87.7747	87.7747	87.7747	0x782d0	45e6f0e0e9da
+command	?GetControl@combatManager@@QAEXXZ	98.2830	98.2830	98.2830	0x782d0	64563999aa5f
 command	?HandleCombatPlayerDrop@combatManager@@QAEEKPAVmessage@@@Z	100.0000	100.0000	100.0000	0x7a500	93137abf7711
-command	?Main@combatManager@@UAEHAAVmessage@@@Z	96.2267	96.2267	96.2267	0x740d0	414b21592711
+command	?Main@combatManager@@UAEHAAVmessage@@@Z	97.6611	97.6611	97.6611	0x740d0	06c29b567153
 command	?ProcessCombatMsg@combatManager@@QAEHAAVmessage@@@Z	93.0970	93.0970	93.0970	0x74d80	aeebd29dc172
 command	?ProcessNextAction@combatManager@@QAEHAAVmessage@@E@Z	98.5272	100.0000	100.0000	0x78d80	ccdfa6d8ea12
 command	?ResetCycleTimers@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x79f30	cc7796439c39
@@ -2527,7 +2527,7 @@ remote	?HandlePlayerLost@@YIXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x1569a0	
 remote	?HandlePlayerWon@@YIXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x156940	3d6505239734
 remote	?HasOldChat@CChatManager@@QAEEXZ	100.0000	100.0000	100.0000	0x153db0	9760075ee3ce
 remote	?IgnoreKey@CChatEdit@@UAEEPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1543f0	77129503ae51
-remote	?Init@CChatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1537b0	cd5ad8d4d49c
+remote	?Init@CChatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1537b0	d4bef186ba3d
 remote	?InitConnection@@YIEPADPAU_DPCOMPORTADDRESS@@@Z	100.0000	100.0000	100.0000	0x1556e0	a2ef8bd8c351
 remote	?InitRemote@@YIEW4eNetGameType@@PBD@Z	63.6415	100.0000	100.0000	0x154410	b98459990b13
 remote	?IsClose@CTurnDuration@@QAEEK@Z	100.0000	100.0000	100.0000	0x157d00	8f67ba459bc4
@@ -3476,7 +3476,7 @@ tradpost	?Update@TSellCreatureWindow@@QAEX_N@Z	98.7522	98.7947	98.7947	0x1ec550	
 tradpost	?Update@TTradeResourceWindow@@QAEXE@Z	86.8746	86.8746	86.8746	0x1ea6e0	a7ddc7d694a9
 tradpost	?WindowHandler@TBuyArtifactWindow@@UAEHPAVmessage@@@Z	96.4352	100.0000	100.0000	0x1ed9e0	5812db4b289c
 tradpost	?WindowHandler@TGiveResourceWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ed550	fdf359440ed8
-tradpost	?WindowHandler@TSellArtifactWindow@@UAEHPAVmessage@@@Z	89.7304	89.7304	89.7304	0x1edf60	6c957e2364c0
+tradpost	?WindowHandler@TSellArtifactWindow@@UAEHPAVmessage@@@Z	90.6792	90.6792	90.6792	0x1edf60	f74afb3f3241
 tradpost	?WindowHandler@TSellCreatureWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ee890	c3e633945d2d
 tradpost	?WindowHandler@TTradeResourceWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ecfe0	d8c46c61e088
 tradpost	?get_market_value@@YIJW4EGameResource@@@Z	100.0000	100.0000	100.0000	0x1ecd10	842fb679e6dd
