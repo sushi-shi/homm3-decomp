@@ -1580,13 +1580,9 @@ void playerData::Init()
     currTownId = 0;
     shipyards.erase(shipyards.begin(), shipyards.end());
 
-    unsigned short pointWord;
-    memcpy(&pointWord, puzzle_guess, sizeof(pointWord));
-    pointWord |= 0x3ff;
-    memcpy(puzzle_guess, &pointWord, sizeof(pointWord));
-    memcpy(&pointWord, puzzle_guess + 2, sizeof(pointWord));
-    pointWord |= 0x3fff;
-    memcpy(puzzle_guess + 2, &pointWord, sizeof(pointWord));
+    puzzle_guess.x = -1;
+    puzzle_guess.y = -1;
+    puzzle_guess.z = -1;
 
     startingNumHeroes = 0;
     MysticalGardenFlags = 0;
@@ -1851,7 +1847,7 @@ int playerData::load(TAbstractFile* infile, int saveVersion)
         return -1;
     extraPuzzlePieces = value;
 
-    if (infile->Read(puzzle_guess, sizeof(puzzle_guess)) < sizeof(puzzle_guess))
+    if (infile->Read(&puzzle_guess, sizeof(puzzle_guess)) < sizeof(puzzle_guess))
         return -1;
 
     if (infile->Read(&value, sizeof(value)) < sizeof(value))
@@ -1964,7 +1960,7 @@ int playerData::save(TAbstractFile* outfile)
     if (count < sizeof(value))
         return -1;
 
-    count = outfile->Write(puzzle_guess, sizeof(puzzle_guess));
+    count = outfile->Write(&puzzle_guess, sizeof(puzzle_guess));
     if (count < sizeof(puzzle_guess))
         return -1;
 
@@ -2296,13 +2292,13 @@ char* playerData::GetName()
 // E:\gamedcs\game.cpp:1972
 // AI_attempt_puzzle_guess returns its packed four-byte point through a hidden
 // result pointer. VC6 reuses the now-dead player_id argument slot for that
-// temporary, matching retail's `lea ecx,[ebp+8]`; the dword copy preserves the
-// deliberately unaligned playerData member at +0x39.
+// temporary, matching retail's `lea ecx,[ebp+8]`; the struct copy is the one
+// dword move onto the packed playerData member at +0x39.
 VA(0x004bae50, 0x1B)  // linkorder, dc 0xa6230
 void playerData::guess_grail_location(long player_id)
 {
     type_point guess = AI_attempt_puzzle_guess(player_id);
-    memcpy(puzzle_guess, &guess, sizeof(guess));
+    puzzle_guess = guess;
 }
 
 // E:\gamedcs\game.cpp:1978
@@ -6784,11 +6780,13 @@ int NewSMapHeader::readVictoryCondition(char type, TAbstractFile* infile)
         if (version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
             int int_buffer;
             infile->Read(&int_buffer, sizeof(char));
-            victoryCondition.ArtifactNum = int_buffer & 0xff;
+            victoryCondition.ArtifactNum =
+                static_cast<TArtifact>(int_buffer & 0xff); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
         } else {
             short short_buffer;
             infile->Read(&short_buffer, sizeof(short_buffer));
-            victoryCondition.ArtifactNum = short_buffer;
+            victoryCondition.ArtifactNum =
+                static_cast<TArtifact>(short_buffer); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
         }
         break;
     }
@@ -6912,7 +6910,8 @@ int NewSMapHeader::readVictoryCondition(char type, TAbstractFile* infile)
     case VICTORY_CONDITION_TRANSPORT_ARTIFACT: {
         int int_buffer;
         infile->Read(&int_buffer, sizeof(char));
-        victoryCondition.ArtifactNum = int_buffer & 0xff;
+        victoryCondition.ArtifactNum =
+            static_cast<TArtifact>(int_buffer & 0xff); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
         infile->Read(&int_buffer, sizeof(char));
         victoryCondition.TownX = int_buffer & 0xff;
         infile->Read(&int_buffer, sizeof(char));
@@ -7084,7 +7083,8 @@ int NewSMapHeader::loadVictoryCondition(char type, TAbstractFile* infile,
     case VICTORY_CONDITION_ARTIFACT: {
         int artifact;
         infile->Read(&artifact, sizeof(char));
-        victoryCondition.ArtifactNum = artifact & 0xff;
+        victoryCondition.ArtifactNum =
+            static_cast<TArtifact>(artifact & 0xff); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
         return 0;
     }
 
@@ -7197,7 +7197,8 @@ int NewSMapHeader::loadVictoryCondition(char type, TAbstractFile* infile,
     case VICTORY_CONDITION_TRANSPORT_ARTIFACT: {
         int transport;
         infile->Read(&transport, sizeof(char));
-        victoryCondition.ArtifactNum = transport & 0xff;
+        victoryCondition.ArtifactNum =
+            static_cast<TArtifact>(transport & 0xff); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
         infile->Read(&transport, sizeof(char));
         victoryCondition.TownX = transport & 0xff;
         infile->Read(&transport, sizeof(char));

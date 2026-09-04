@@ -18,7 +18,7 @@ legally obtained `HEROES3.EXE` locally to initialize the matching workspace.
 
 | Module        | Units |     Functions exact |   Fuzzy | Fuzzy Max |
 | :------------ | ----: | ------------------: | ------: | --------: |
-| `game`        |   122 | 2731 / 3373 (81.0%) |  92.54% |    93.16% |
+| `game`        |   122 | 2731 / 3373 (81.0%) |  92.55% |    93.16% |
 | `zlib-1.1.3`  |    14 |    69 / 69 (100.0%) | 100.00% |   100.00% |
 | `(unmatched)` |     — |    0 / 1,328 (0.0%) |    0.0% |      0.0% |
 

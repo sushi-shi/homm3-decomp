@@ -112,7 +112,7 @@ advmgr	?ProcessHover@advManager@@QAEHHH@Z	83.5000	83.5000	83.5000	0xe360	cd31f1d
 advmgr	?ProcessKeyPress@advManager@@QAEHPBVmessage@@PAEPAUtype_point@@PAPAVNewmapCell@@@Z	80.4012	80.4012	80.4012	0x8c40	722b42ee0c97
 advmgr	?ProcessMapSelect@advManager@@QAEXPBVmessage@@PAUtype_point@@PAPAVNewmapCell@@@Z	91.1006	91.1006	91.1006	0xa5d0	e94ec6649fc3
 advmgr	?ProcessRadarSelect@advManager@@QAEXPBVmessage@@@Z	100.0000	100.0000	100.0000	0xa0c0	a99eac5faaf4
-advmgr	?ProcessSearch@advManager@@QAEHHHH@Z	94.6792	94.6792	94.6792	0xec90	6e52ade78630
+advmgr	?ProcessSearch@advManager@@QAEHHHH@Z	94.6792	94.6792	94.6792	0xec90	438a0713d228
 advmgr	?ProcessSelect@advManager@@QAEHPBVmessage@@PAUtype_point@@PAPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x97e0	61b96265198a
 advmgr	?ProcessWaitingHover@advManager@@QAEHHH@Z	96.1467	96.1467	96.1467	0xdeb0	20e951caf93a
 advmgr	?QuickInfo@advManager@@QAEXHHH@Z	94.8708	94.8708	94.8708	0x137c0	c166fbeda341
@@ -675,7 +675,7 @@ button	?_vslot12@button@@UAEXH@Z	100.0000	100.0000	100.0000	0x56a10	fa786de27cd0
 campaignbrief	??0CMapHeaderData@@QAE@XZ	100.0000	100.0000	100.0000	0x5a990	-
 campaignbrief	??0NewSMapHeader@@QAE@XZ	99.8438	99.8438	99.8438	0x5a7a0	-
 campaignbrief	??0SGameSetupOptions@@QAE@XZ	100.0000	100.0000	100.0000	0x5ac20	-
-campaignbrief	??0TCampaignBrief@@QAE@EE@Z	85.7661	85.7661	85.7661	0x590c0	37242c776407
+campaignbrief	??0TCampaignBrief@@QAE@EE@Z	85.7655	85.7661	85.7661	0x590c0	37242c776407
 campaignbrief	??1CMapHeaderData@@QAE@XZ	100.0000	100.0000	100.0000	0x5aab0	-
 campaignbrief	??1NewSMapHeader@@QAE@XZ	100.0000	100.0000	100.0000	0x5ad00	-
 campaignbrief	??1TCampaignBrief@@UAE@XZ	100.0000	100.0000	100.0000	0x5afb0	d4c0d4a6ee48
@@ -1241,7 +1241,7 @@ events	?DoAIEvent@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@@Z	100.00
 # synth PDB - returned the row to master's own 98.5741 to the digit
 # with events.cpp untouched. Cross-generation noise, the
 # recruit::Update revert-control precedent; hist keeps 99.1139.
-events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	98.5741	99.0481	99.1139	0xad470	907f85ec7c05
+events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	99.0481	99.0481	99.1139	0xad470	907f85ec7c05
 events	?DoCustomArtifact@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	98.2381	99.1492	99.1492	0x9f070	4d12ed56362a
 events	?DoCustomResource@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa4780	51e134850e4b
 events	?DoCustomSpellScroll@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	97.4451	97.4451	97.4451	0xa5a80	2c8331b27654
@@ -1357,7 +1357,7 @@ events	?monsters_join@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@
 # (push 0xb4 in townManager::Open), layout-required and not gateable
 # per-TU. hist keeps 100.0000; the saturation law says a later
 # declarator can carry it back.
-events	?monsters_sell_out@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	100.0000	100.0000	100.0000	0xa7250	f7b1ec4933f6
+events	?monsters_sell_out@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	99.9517	100.0000	100.0000	0xa7250	f7b1ec4933f6
 events	?show_rewards@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@2@J@Z	100.0000	100.0000	100.0000	0xa0b00	9287544ef4a4
 exec	?AddManager@executive@@QAEHPAVbaseManager@@H@Z	100.0000	100.0000	100.0000	0xb0b20	11f81dc72e6a
 exec	?CallManager@executive@@QAEXPAVbaseManager@@@Z	100.0000	100.0000	100.0000	0xb0c70	a9eb44cb2746
@@ -1486,7 +1486,7 @@ game	?HasCapitol@playerData@@QAE_NXZ	100.0000	100.0000	100.0000	0xb9f40	e95619db
 game	?HasMobileHero@playerData@@QAE_NXZ	100.0000	100.0000	100.0000	0xbab90	6c50e2167a98
 game	?HeroExtraFn_004B8450@HeroExtra@@QAEXH@Z	100.0000	100.0000	100.0000	0xb8450	87fd3bc1f064
 game	?ImmMouseWindowMoved@@YIXXZ	100.0000	100.0000	100.0000	0xb6950	c35ebc321280
-game	?Init@playerData@@QAEXXZ	100.0000	100.0000	100.0000	0xb9e20	baa9543ea0cb
+game	?Init@playerData@@QAEXXZ	100.0000	100.0000	100.0000	0xb9e20	6dd90c6055e4
 game	?InitImmMouse@@YIEPAX0@Z	100.0000	100.0000	100.0000	0xb6890	ed8007106de9
 game	?InitRandomArtifacts@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc0aa0	9f9d15a20f6e
 game	?Initialize@generator@@QAEXJ@Z	100.0000	100.0000	100.0000	0xb8860	1ee700bca0e7
@@ -1629,7 +1629,7 @@ game	?get_random_lith@game@@QAEEPBV?$vector@Utype_point@@V?$allocator@Utype_poin
 game	?get_random_lith_exit@game@@QAEEJPAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcddc0	a2c8e49c6404
 game	?get_random_whirlpool@game@@QAEEJPAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcde20	6b1cf5f7b634
 game	?get_underground_gate_exit@game@@QAE?AUtype_point@@PBVNewmapCell@@@Z	81.4103	81.4103	81.4103	0xcde40	470b7be73788
-game	?guess_grail_location@playerData@@QAEXJ@Z	100.0000	100.0000	100.0000	0xbae50	3f8ed8c1af32
+game	?guess_grail_location@playerData@@QAEXJ@Z	100.0000	100.0000	100.0000	0xbae50	af0b97a53904
 game	?hasGivenArtifact@playerData@@QAE_NH@Z	100.0000	100.0000	100.0000	0xbacb0	d819ecc3063c
 game	?insert@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@QAE?AU?$pair@Viterator@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@_N@2@ABU?$pair@$$CBHUtype_map_hero_info@@@2@@Z	100.0000	100.0000	100.0000	0xcff50	-
 game	?insert@?$vector@UTBlackMarket@@V?$allocator@UTBlackMarket@@@std@@@std@@QAEXPAUTBlackMarket@@IABU3@@Z	100.0000	100.0000	100.0000	0xd00e0	-
@@ -1644,17 +1644,17 @@ game	?insert@?$vector@Vmine@@V?$allocator@Vmine@@@std@@@std@@QAEXPAVmine@@IABV3@
 game	?insert@?$vector@Vtown@@V?$allocator@Vtown@@@std@@@std@@QAEXPAVtown@@IABV3@@Z	100.0000	100.0000	100.0000	0xd0430	-
 game	?load@SGameSetupOptions@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xbe260	8a86e3c79003
 game	?load@generator@@QAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb85a0	f401fc3d2c76
-game	?load@playerData@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xba260	5294ba1109c6
+game	?load@playerData@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xba260	cb1d78556511
 game	?loadLossCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xc3d90	af7040edd893
 game	?loadString@@YIHPAVTAbstractFile@@PAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0xbb990	ad305697b9a8
-game	?loadVictoryCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@H@Z	99.8359	99.8359	99.8359	0xc3890	bbf9506d3b67
+game	?loadVictoryCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@H@Z	99.8359	99.8359	99.8359	0xc3890	64d5284366be
 game	?load_object_vector@@YIEPAVTAbstractFile@@PAV?$vector@Utype_creature_bank@@V?$allocator@Utype_creature_bank@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0xd2870	194e8b95ddb7
 game	?match_underground_gates@game@@QAEXXZ	98.3451	98.3451	98.3451	0xc0b60	dcbaef66a614
 game	?randomize_university@game@@QAEXPAVNewmapCell@@@Z	99.7464	99.7464	99.7464	0xc06f0	c018a5a83b85
 game	?readLossCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xc3c80	930a780bc0ea
 game	?readMapPlayerSlot@TPlayerSlotAttributes@CMapHeaderData@@QAEXPAVTAbstractFile@@H@Z	95.6972	95.6972	95.7136	0xc3ef0	6c287a7afd7e
 game	?readMapString@@YIHPAVTAbstractFile@@PAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0xc6010	7815671d6fac
-game	?readVictoryCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xc3200	4eacabf2f6a5
+game	?readVictoryCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xc3200	f5ad2d4aece2
 game	?read_map_hero_setups@game@@QAEXPAVTAbstractFile@@H@Z	86.0274	86.0884	86.0884	0xc2ce0	3362f2af4fd6
 game	?record_monster_identifier@game@@QAEXHUtype_point@@@Z	100.0000	100.0000	100.0000	0xced40	1822bee44386
 game	?replace_recruit@game@@QAEXHJ@Z	100.0000	100.0000	100.0000	0xc86a0	ad6f6e851794
@@ -1665,7 +1665,7 @@ game	?resize@?$vector@Vgenerator@@V?$allocator@Vgenerator@@@std@@@std@@QAEXIABVg
 game	?resize@?$vector@Vtown@@V?$allocator@Vtown@@@std@@@std@@QAEXIABVtown@@@Z	100.0000	100.0000	100.0000	0xcf410	-
 game	?save@SGameSetupOptions@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbe140	db2a243f1157
 game	?save@generator@@QAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb86e0	6c43e518cf50
-game	?save@playerData@@QAEHPAVTAbstractFile@@@Z	99.9557	99.9557	99.9557	0xba670	dba416517c89
+game	?save@playerData@@QAEHPAVTAbstractFile@@@Z	99.9557	99.9557	99.9557	0xba670	a11c4d217cb4
 game	?saveVictoryCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xc35a0	066f0b00ef0d
 game	?save_vector@@YIEPAVTAbstractFile@@PAV?$vector@Utype_point@@V?$allocator@Utype_point@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0xd2ac0	7fc9affa4f3e
 game	?save_vector@@YIEPAVTAbstractFile@@PAV?$vector@Utype_university@@V?$allocator@Utype_university@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0xd2b20	ff34a4a02e55
@@ -1972,7 +1972,7 @@ kb	?NormalDialogTimeOut@@YIXPBDHHHHHHHHHHH@Z	100.0000	100.0000	100.0000	0xf6530	
 kb	?PickLoadGame@@YIHXZ	100.0000	100.0000	100.0000	0xf0610	4b51a872ab91
 kb	?ShowLuckInfo@game@@QAEXPAVhero@@H@Z	100.0000	100.0000	100.0000	0xf3540	19d81223c1ea
 kb	?WaitHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0xf7620	5f15859cbc9f
-kb	?oldmain@@YIHXZ	31.4343	31.9630	31.9630	0xee3e0	ead764a54d4e
+kb	?oldmain@@YIHXZ	31.5330	31.9630	31.9630	0xee3e0	ead764a54d4e
 kb	?set@type_dialog_icon@@QAEXW4EGameResource@@J@Z	99.1667	99.1667	99.1667	0xf4eb0	06cb359cd3d3
 kb	CreditsWait	0.0000	0.0000	0.0000	0xedda0	ab29717ff7fc
 kb	LostGame	0.0000	0.0000	0.0000	0xee2b0	ae165c870346
@@ -2871,8 +2871,8 @@ singleselectionwindow	??0CNetPlayerHandlerPlayer@@QAE@XZ	100.0000	100.0000	100.0
 singleselectionwindow	??0CNetPlayerInfo@@QAE@XZ	100.0000	100.0000	100.0000	0x17f720	-
 singleselectionwindow	??0CNewPlayerUpdateMan@@QAE@XZ	100.0000	100.0000	100.0000	0x17c9b0	0ed8ff53773d
 singleselectionwindow	??0CUpdatePlayerPosMsg@@QAE@PAVCNetPlayerHandlerPlayer@@0@Z	100.0000	100.0000	100.0000	0x179870	4cb719207948
-singleselectionwindow	??0GameSelectionHeadersStruct@@QAE@XZ	73.1483	79.3242	79.3242	0x178e00	-
-singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	74.9955	75.2722	75.2722	0x179960	d3d7e1a1d221
+singleselectionwindow	??0GameSelectionHeadersStruct@@QAE@XZ	79.2582	79.3242	79.3242	0x178e00	-
+singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	74.9953	75.2722	75.2722	0x179960	d3d7e1a1d221
 singleselectionwindow	??0lobby_message@@QAE@XZ	100.0000	100.0000	100.0000	0x189190	2b1be8208221
 singleselectionwindow	??0t_map_list_update@@QAE@K@Z	100.0000	100.0000	100.0000	0x189240	173781ee6a81
 singleselectionwindow	??1CChatSlider@@UAE@XZ	100.0000	100.0000	100.0000	0x17ca80	-
@@ -2958,7 +2958,7 @@ singleselectionwindow	?OnGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNet
 # SetCurrentMap/OnSetAsHostMsg bodies landing in the TU dropped the
 # pair again with both sources byte-identical. Recovery rides with
 # DrawHeroAdvancedOption reaching 100.
-singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	99.8868	100.0000	100.0000	0x17cdc0	0e5de8f038ec
+singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0	0e5de8f038ec
 singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	9177fbb0fa83
 # 2026-08-27 hand-lowered 100.0000 -> 99.8710 (hist keeps 100.0000): the
 # documented TU-state flap (master accepted this pair down at 99.89/99.87
@@ -3427,13 +3427,13 @@ tradpost	??_GTSellCreatureWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1e9c80	
 tradpost	??_GTTradeResourceWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1e1620	-
 tradpost	?ComputeTradeRatios@TSellArtifactWindow@@QAEXHHPAH00@Z	100.0000	100.0000	100.0000	0x1ecdc0	277bcc93a9f5
 tradpost	?ComputeTradeRatios@TSellCreatureWindow@@QAEXHHPAH00@Z	97.5961	97.5961	97.5961	0x1ece80	5788b3cd5ee5
-tradpost	?DoArtifactMerchants@@YIXXZ	100.0000	100.0000	100.0000	0x1e9d20	facfc446db58
+tradpost	?DoArtifactMerchants@@YIXXZ	100.0000	100.0000	100.0000	0x1e9d20	42f1a2135c5c
 tradpost	?DoBlackMarket@@YIXPAVhero@@PAD@Z	100.0000	100.0000	100.0000	0x1ea100	2d70e904e44e
-tradpost	?DoFreelancersGuild@@YIXPAVhero@@@Z	100.0000	100.0000	100.0000	0x1e9e60	080d980828f3
-tradpost	?DoFreelancersGuild@@YIXPAVtown@@@Z	100.0000	100.0000	100.0000	0x1e9ea0	b60072052543
+tradpost	?DoFreelancersGuild@@YIXPAVhero@@@Z	100.0000	100.0000	100.0000	0x1e9e60	698214bc69c8
+tradpost	?DoFreelancersGuild@@YIXPAVtown@@@Z	100.0000	100.0000	100.0000	0x1e9ea0	27377960cff7
 tradpost	?DoMarket@@YIXXZ	94.6104	94.6104	94.6104	0x1ea130	a3029aadd97d
-tradpost	?DoMarketplace@@YIXXZ	100.0000	100.0000	100.0000	0x1e9fe0	f374e817ef2c
-tradpost	?DoTradingPost@@YIXXZ	100.0000	100.0000	100.0000	0x1ea0c0	59b4b0ad928b
+tradpost	?DoMarketplace@@YIXXZ	100.0000	100.0000	100.0000	0x1e9fe0	5e637a05617d
+tradpost	?DoTradingPost@@YIXXZ	100.0000	100.0000	100.0000	0x1ea0c0	759a3b2229ee
 tradpost	?GiveResourceSlider@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1e3670	1918be540f4d
 tradpost	?SellCreatureSlider@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1e9c60	97e461efb68b
 tradpost	?SetRolloverText@TBuyArtifactWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1eddd0	bedd27956cb2

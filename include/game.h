@@ -5,17 +5,12 @@
 #ifndef HOMM3_GAME_H
 #define HOMM3_GAME_H
 
-#if defined(HOMM3_EVENTS_GAME_INLINE_HELPERS) \
-    || defined(HOMM3_PHILAI_OBJ_DECLS)
 // The one decoded value of game::field_1f63e shared by events.obj and
 // philai.obj: Sunday is the seventh day.  DoEventTemple doubles its morale
 // reward on this rung; move_hero stops a low-value full-hourglass move on it.
-// Keep the enum in the shared domain header while limiting its compiler view
-// to the two source compilands that use the recovered name.
 enum EDayOfWeek {
     DAY_OF_WEEK_SUNDAY = 7
 };
-#endif
 
 #include <map>
 #include <vector>
@@ -846,14 +841,11 @@ public:
     char pad_03;
     // CheckForArtifactTransportWin and AI_get_value_of_artifact both read
     // the full retail dword at +4 as the requested artifact ordinal.
-#ifdef HOMM3_PHILAI_OBJ_DECLS
     // Dreamcast CodeView carries the source enum type; value_of_town is the
     // first retail consumer whose register schedule distinguishes the typed
-    // member from an int-to-enum bridge. Storage remains the same dword.
+    // member from an int-to-enum bridge. Storage remains the same dword;
+    // game.cpp's loaders cross the map-format ordinal into it.
     TArtifact ArtifactNum;
-#else
-    int ArtifactNum;
-#endif
     // The Dreamcast field list (dump 0x3e34) orders ArtifactNum,
     // CreatureType, NumCreatures between AppliesToComputer and
     // ResourceType; retail widens the trailing pair to ints.
@@ -1724,12 +1716,12 @@ SIZE(generator, 0x5c);
 // ALIGNMENT NOTE (retail-only fact, worth flagging): puzzle_guess sits
 // at the ODD offset +0x39, between extraPuzzlePieces (+0x38) and
 // iDeathCountDown (+0x3d), with numTowns pinned at +0x3e from the other
-// side. So retail's type_point is a FOUR-BYTE, ONE-BYTE-ALIGNED type,
-// while the Dreamcast's is two-byte aligned (DC puts the same member at
-// an even 54). struct.h's ordinary short-bitfield spelling reproduces the
-// DC alignment. Consumer views with retail proof may select its one-byte
-// alignment and expose this member with the stated source type; other TUs
-// retain the raw representation until their own codegen is audited.
+// side, while the Dreamcast puts the same member at an even 54. Retail
+// packed this record - as it packed hero.h's type_obscuring_object and
+// netmsg.h's CMCMoveHero, whose points also sit one byte early - so the
+// class is under pack(1) here and type_point keeps struct.h's DC-natural
+// two-byte alignment.
+#pragma pack(push, 1)
 class playerData {
 public:
     // The width of the `heroes` row below, and the cap the game enforces
@@ -1774,11 +1766,7 @@ public:
     // (x 10 bits in the first unit, y 10 + z 4 in the second) at an
     // ODD base - which is the alignment finding above, from the other
     // side.
-#if defined(HOMM3_PHILAI_OBJ_DECLS) || defined(HOMM3_AI_PLAYER_OBJ_DECLS)
     type_point puzzle_guess;
-#else
-    char puzzle_guess[4];
-#endif
     char iDeathCountDown;          // +0x3d
     // +0x3e / +0x40, the player's town roster, sliced 2026-08-08 for
     // town::Deallocate (0x5be2d0), which is the whole proof: it walks
@@ -1909,6 +1897,7 @@ public:
     bool hasGivenArtifact(int artifact);
     void guess_grail_location(long player_id);  // 0x4bae50
 };
+#pragma pack(pop)
 SIZE(playerData, 360);
 
 // Head model: GetWorldMapData hands out the embedded map record at
@@ -1984,12 +1973,7 @@ public:
     short field_1f640;
     short field_1f642;
     char field_1f644[0x20];
-#if defined(HOMM3_GAME_NEW_MAP_DECLS) \
- || defined(HOMM3_PHILAI_OBJ_DECLS)
     TArtifact field_1f664[7];
-#else
-    char field_1f664[0x1c];
-#endif
     std::vector<TBlackMarket> field_1f680;
     short ultimateArtifactX;
     short ultimateArtifactY;
@@ -2592,13 +2576,10 @@ public:
     // TurnOffAIMusic (dc 0xb1fc0). ProcessDeSelect's END_TURN arm calls it
     // once the "heroes can still move" confirm is past.
     void NextPlayer();
-#if defined(HOMM3_EVENTS_GAME_INLINE_HELPERS) \
- || defined(HOMM3_PHILAI_OBJ_DECLS)
     // Game.h:1056. GetGarrison is expanded into both DispatchEvent and
     // philai's value_of_garrison; its nested vector access remains visible
     // so the recovered source hierarchy is not flattened again.
     garrison* GetGarrison(int which) { return &garrisons[which]; }
-#endif
 #ifdef HOMM3_EVENTS_GAME_INLINE_HELPERS
     // Game.h:1380. DispatchEvent expands this cell accessor.
     NewmapCell* get_cell(type_point point);
