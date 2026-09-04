@@ -7,9 +7,7 @@
 
 #include "dxplay.h"
 #include <deque>
-#ifdef HOMM3_CHAT_EDIT_DECLS
 #include "chatedit.h"
-#endif
 
 class CNetMsg;
 class textWidget;
@@ -297,11 +295,9 @@ void __cdecl SystemMsg(CChatManager* manager, const char* format, ...);
 void __cdecl PlayerDropMsg(CChatManager* manager, const char* format, ...);
 void __cdecl PlayerEnterMsg(CChatManager* manager, const char* format, ...);
 
-#if defined(HOMM3_CHAT_EDIT_DECLS) || defined(HOMM3_GAME_TRANSMIT_DECLS)
 enum ENetMessageRecipient {
     NET_MESSAGE_RECIPIENT_ALL = 0x7f
 };
-#endif
 
 // Retail's complete method family proves five unsigned-long lanes at
 // +0/+4/+8/+c/+10; Dreamcast CodeView supplies their source names.

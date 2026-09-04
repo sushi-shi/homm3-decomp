@@ -3,7 +3,6 @@
 // 230 functions in link order; 30 compiler-generated $-thunks omitted.
 #include <string.h>
 #include <va.h>
-#define HOMM3_CHAT_EDIT_DECLS
 #define HOMM3_CSPRITE_CROP_ACCESSORS
 #include "remote.h"
 #include "advmgr.h"

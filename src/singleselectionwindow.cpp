@@ -12,10 +12,8 @@
 // calls in both functions).
 #define HOMM3_WIDGET_HIDE_SHOW_INLINE
 // UpdatePlayerPositions reaches SetupFirstPlayer and the new-map bonus
-// array, both scoped behind game.h's new-map view gate; HandleNetMsg
-// reads the incoming chat text through netmsg.h's gated CChatMsg shape.
+// array, both scoped behind game.h's new-map view gate.
 #define HOMM3_GAME_NEW_MAP_DECLS
-#define HOMM3_CHAT_EDIT_DECLS
 // This TU sees the real vector view of the three header lists.
 #define HOMM3_SSWINDOW_HEADER_VECTORS
 #include "advmgr.h"
