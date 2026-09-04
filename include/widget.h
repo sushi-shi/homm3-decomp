@@ -204,10 +204,7 @@ public:
         }
     }
 
-    // Dreamcast header inlines used by mode-switch paths. Scope their live
-    // definitions to the owning TU: even unused header bodies perturb VC6's
-    // global inline budget in unrelated compilands.
-#ifdef HOMM3_WIDGET_HIDE_SHOW_INLINE
+    // Dreamcast header inlines used by mode-switch paths.
     void hide()
     {
         send_message(WIDGET_CLEAR_STATUS, WIDGET_ACTIVE | WIDGET_DRAWN);
@@ -216,11 +213,9 @@ public:
     {
         send_message(WIDGET_SET_STATUS, WIDGET_ACTIVE | WIDGET_DRAWN);
     }
-#endif
-#ifdef HOMM3_WIDGET_SET_VISIBLE_INLINE
     // DC-attested header inline (E:\gamedcs\Widget.h:263). Most retail
-    // callers fold this body into their owning function; the one retained
-    // out-of-line copy is supplied by sacrifice_window.cpp.
+    // callers fold this body into their owning function; the one COMDAT
+    // copy the linker retained (0x5629b0) is claimed in sacrifice_window.cpp.
     void set_visible(unsigned char arg)
     {
         if (arg)
@@ -228,9 +223,6 @@ public:
         else
             send_message(WIDGET_CLEAR_STATUS, WIDGET_DRAWN);
     }
-#elif defined(HOMM3_WIDGET_SET_VISIBLE_DECLS)
-    void set_visible(unsigned char arg);
-#endif
     // Non-virtual on DC and in retail: heroWindow::RemoveWidget calls
     // it DIRECTLY (0x5bc690 - a /Gy header-COMDAT the link kept from an
     // earlier obj, ICF-folded with other empty bodies). Declared only;

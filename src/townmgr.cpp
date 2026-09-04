@@ -15,12 +15,6 @@
 // first inclusion count.
 // Opens town.h's SetSummoningGenerator declarator for TCastleWindow's
 // constructor, and only for it: town.cpp never defines this.
-// widget.h's set_visible header inline (DC Widget.h:263), for
-// set_bonus_display's six show/hide sites - retail folds each into
-// `send_message(WIDGET_{SET,CLEAR}_STATUS, WIDGET_DRAWN)` in place, the
-// adventuremapwindow precedent. Set before every include because
-// widget.h is reached through townmgr.h first.
-#define HOMM3_WIDGET_SET_VISIBLE_INLINE
 #include "townmgr.h"
 // advspells.obj's TeleportTo declarator, for the MoveHero that
 // DoTownGate expands inline. Gated so no other includer of advmgr.h
