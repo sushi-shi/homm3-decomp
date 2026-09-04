@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <va.h>
-#define HOMM3_EVENTS_PRISON_DECL
 #define HOMM3_EVENTS_GAME_INLINE_HELPERS
 // DoCombat's remote arms: the wait dialog whose payload feeds
 // ReceiveHeroTownData, and the level-update message the winner's side
@@ -18,7 +17,6 @@
 #include "game.h"
 #include "advmgr.h"
 #undef HOMM3_EVENTS_GAME_INLINE_HELPERS
-#undef HOMM3_EVENTS_PRISON_DECL
 // DoCombat needs the full combatManager type (SetupCombat and the
 // result/raised-creature fields); added 2026-08-27 with the DoCombat
 // reconstruction and measured through the ratchet like every other

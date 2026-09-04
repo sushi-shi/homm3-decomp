@@ -2106,12 +2106,9 @@ public:
     // playerData::IsLocalHuman's bool result unwidened.
     void DoEventShipyard(NewmapCell* cell, type_point point,
                          unsigned char human_player);
-#ifdef HOMM3_EVENTS_PRISON_DECL
-    // MATCHING_DEBT: one events-only declaration view. Exposing this
-    // CodeView-proven member to all consumers perturbs unrelated exact TUs.
+    // CodeView-proven; events.obj owns the body.
     void DoEventPrison(class hero* current_hero, NewmapCell* cell,
                        type_point point, bool human_player);
-#endif
 };
 
 // Retail .bss 0x699268 (DC ?gpAdvManager@@3PAVadvManager@@A).
