@@ -225,16 +225,17 @@ void game::GetVictoryConditionText(char* text)
             else
                 direction = 8;
 
-            const char* monsterName;
-            if (victory.CreatureType >= 0 && victory.CreatureType <= 0x96)
-                monsterName = akCreatureTypeTraits[victory.CreatureType].m_plural_name;
-            else
-                monsterName = emptyRolloverText;
             if (!monsterZ) {
-                sprintf(text, (*gpGeneralText)[322], monsterName,
+                sprintf(text, (*gpGeneralText)[322],
+                        victory.CreatureType >= 0 && victory.CreatureType <= 0x96
+                            ? akCreatureTypeTraits[victory.CreatureType].m_plural_name
+                            : emptyRolloverText,
                         gQuestMonsterDirections[direction]);
             } else {
-                sprintf(text, (*gpGeneralText)[669], monsterName,
+                sprintf(text, (*gpGeneralText)[669],
+                        victory.CreatureType >= 0 && victory.CreatureType <= 0x96
+                            ? akCreatureTypeTraits[victory.CreatureType].m_plural_name
+                            : emptyRolloverText,
                         gQuestMonsterDirections[direction]);
             }
             break;
