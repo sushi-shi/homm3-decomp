@@ -2444,7 +2444,7 @@ recruit	?RecruitSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000
 # first raised the source checkpoint to 94.1574. A later dependent rebuild and
 # fresh normalization, with recruit.cpp unchanged, measured 96.5558; the merged
 # rebuild returned current to 94.1574 while max/history retain that transient.
-recruit	?Update@recruitUnit@@QAEXEJ@Z	94.1574	96.5558	96.5558	0x1503a0	d97bc68809dd
+recruit	?Update@recruitUnit@@QAEXEJ@Z	96.5558	96.5558	96.5558	0x1503a0	d97bc68809dd
 recruit	?add_creature_widgets@TRecruitWindow@@QAEXJJJW4TCreatureType@@J@Z	93.6325	93.6325	93.6325	0x14fb90	8b238d4d93cf
 recruit	?get_upgrade_cost@@YIXW4TCreatureType@@0JPAH@Z	100.0000	100.0000	100.0000	0x14e750	6382968d0edb
 recruit	?siege_artifact_to_creature@@YI?AW4TCreatureType@@W4TArtifact@@@Z	100.0000	100.0000	100.0000	0x150360	5ee79bb53ec7

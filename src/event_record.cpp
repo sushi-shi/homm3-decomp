@@ -4,11 +4,7 @@
 #include <math.h>
 #include <va.h>
 #include "event_record.h"
-#define HOMM3_EVENT_RECORD_CLEAR_DECL
-#define HOMM3_EVENT_RECORD_DECLS
 #include "game.h"
-#undef HOMM3_EVENT_RECORD_DECLS
-#undef HOMM3_EVENT_RECORD_CLEAR_DECL
 #include "abstractfile.h"
 #include "cursor.h"
 #include "inputmgr.h"
