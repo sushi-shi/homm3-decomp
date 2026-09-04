@@ -28,6 +28,10 @@
 // singleselectionwindow.cpp's include closure.
 namespace ResourceManager {
     TTextResource* GetText(const char* name);
+    // The constructor's sprite/bitmap preloads (retail 0x57c375..0x57c4f0):
+    // GetSprite 0x55c2e0 and GetBitmap816 0x55a800, both fastcall.
+    CSprite* GetSprite(const char* name);
+    Bitmap816* GetBitmap816(const char* name);
     // Dreamcast keeps these source helpers out of line. Complete expands the
     // one-operation bodies into the selection-window destructor; explicit
     // nullability remains at the HeroPix call site where retail tests it.
