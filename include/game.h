@@ -2947,13 +2947,11 @@ extern int gLocalGamePos;                   // .bss 0x699554
 // gPlayerColorNames[color] over an empty/default name. Defined by a TU
 // not yet located - extern only (the bitNumber pattern).
 extern char* gPlayerColorNames[];           // .bss 0x6a7df8
-#ifdef HOMM3_GAME_SPECIAL_RUMOUR_DECLS
 // SetSpecialRumour shares the nine-way direction table with seer-hut quest
 // descriptions, and indexes the terrain-name table by a Grail cell's ground
 // set when producing the alternative location hint.
 extern const char* gQuestMonsterDirections[9];
 DATA(0x006a5d24) extern const char* const gGrailTerrainNames[];
-#endif
 
 // Located game.cpp bodies kbwin calls (the Imm/tablet mouse hooks;
 // bodies not yet reconstructed - declarators match the kbwin call
