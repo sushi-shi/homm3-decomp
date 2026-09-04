@@ -692,40 +692,41 @@ void advManager::VWCompleteDraw(int startX, int startY, int z, int drawwidth,
                                 int drawheight)
 {
     int row;
+    int col;
 
     gpWindowManager->screenBitmap->FillRect(8, 8, 592, 544, 0);
     for (row = -1; row <= drawheight; row++) {
-        for (int col = -1; col <= drawwidth; col++)
+        for (col = -1; col <= drawwidth; col++)
             VWDrawGround(startX + col, startY + row, z, col, row);
     }
     for (row = -1; row <= drawheight; row++) {
-        for (int col = -1; col <= drawwidth; col++)
+        for (col = -1; col <= drawwidth; col++)
             VWDrawRiver(startX + col, startY + row, z, col, row);
     }
     for (row = -1; row <= drawheight; row++) {
-        for (int col = -1; col <= drawwidth; col++)
+        for (col = -1; col <= drawwidth; col++)
             VWDrawRoad(startX + col, startY + row, z, col, row);
     }
     for (row = -1; row <= drawheight; row++) {
-        for (int col = -1; col <= drawwidth; col++)
+        for (col = -1; col <= drawwidth; col++)
             VWDrawUnderlay(startX + col, startY + row, z, col, row);
     }
     for (row = -1; row <= drawheight; row++) {
-        for (int col = -1; col <= drawwidth; col++)
+        for (col = -1; col <= drawwidth; col++)
             VWDrawAdvObjShadow(startX + col, startY + row, z, col, row);
     }
     for (row = -1; row <= drawheight; row++) {
-        for (int col = -1; col <= drawwidth; col++)
+        for (col = -1; col <= drawwidth; col++)
             VWDrawAdvObj(startX + col, startY + row, z, col, row);
     }
     if (!iVWTerrains) {
         for (row = -1; row <= drawheight; row++) {
-            for (int col = -1; col <= drawwidth; col++)
+            for (col = -1; col <= drawwidth; col++)
                 VWDrawShroud(startX + col, startY + row, z, col, row);
         }
     }
     for (row = -1; row <= drawheight; row++) {
-        for (int col = -1; col <= drawwidth; col++)
+        for (col = -1; col <= drawwidth; col++)
             VWDrawSymbols(startX + col, startY + row, z, col, row);
     }
     DrawAdventureMapGems();

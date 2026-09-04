@@ -343,15 +343,14 @@ type_quest::~type_quest()
 }
 
 // Retail-only (see quest.h): a quest with a deadline has expired once the
-// calendar passes it. The byte result is landed in a local first, which is
-// what gives retail's `setl` materialisation.
+// calendar passes it; the compare is returned directly (retail's bare
+// `setl al`).
 VA(0x0056ccb0, 0x44)  // the row after ~type_quest; searchArray::enter_trigger caller, retail-only
 unsigned char type_quest::has_expired() const
 {
     if (field_3c < 0)
         return 0;
-    unsigned char expired = field_3c < gpGame->get_current_turn();
-    return expired;
+    return field_3c < gpGame->get_current_turn();
 }
 
 // E:\gamedcs\seerhut.cpp
