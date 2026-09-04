@@ -830,10 +830,14 @@ public:
     int lastHover;                // +0x194  ctor -1
     int lastQualifier;            // +0x198  ctor -1
     int field_19c;                // +0x19c  ctor -1
-    int field_1a0;                // +0x1a0
-    int field_1a4;                // +0x1a4
-    int field_1a8;                // +0x1a8
-    int field_1ac;                // +0x1ac
+    // +0x1a0/+0x1a8: Dreamcast townManager fields `canBuyMask` and
+    // `canBuildMask`, both T_QUAD. SetupCastle independently proves the
+    // Complete layout: it clears each pair of dwords, ORs affordable
+    // buildings into the first, and stores town::get_buildable_mask in the
+    // second. The -0x10 retail shift is the same one already established by
+    // lastHover/lastQualifier and currentDwellingIDOff.
+    __int64 canBuyMask;            // +0x1a0
+    __int64 canBuildMask;          // +0x1a8
     // +0x1b0, NAMED AND TYPED 2026-08-14 by DoHall 0x5d27b0, which
     // writes the page's resource bar into +0xc of this object twice -
     // once on the way in and once on the way out. That is
