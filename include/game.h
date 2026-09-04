@@ -942,9 +942,7 @@ public:
     unsigned char CheckForTownCaptureWin();
     unsigned char CheckForFlaggedGeneratorWin();
     unsigned char CheckForFlaggedMineWin();
-#ifdef HOMM3_VLC_TIME_SURVIVAL_DECLS
     unsigned char CheckForTimeSurvival();
-#endif
     // Retail 0x5f1ef0 (dc 0x190124), reached as
     // `gpGame->mapHeader.victoryCondition.CheckForGrailBuildingWin()`,
     // which is exactly the `lea ecx,[gpGame+0x1f89c]` retail emits:
