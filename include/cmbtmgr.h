@@ -1359,7 +1359,6 @@ public:
     // extent. Armageddon calls it once per animation frame; its retail body
     // is reconstructed in drawing.cpp.
     void UpdateCombatArea();                                  // 0x493780
-#ifdef HOMM3_DRAWING_UPDATE_MOUSE_GRID_DECLS
     // drawing.obj 0x4937d0; SetCombatGrid passes the inlined current-army
     // result exactly as the DC source statement does.
     void SetupGridForArmy(const army* thisArmy);
@@ -1378,7 +1377,6 @@ public:
     // Complete has no out-of-line copy, and the exact retail expansion in
     // UpdateMouseGrid proves its const-reference form here.
     void UpdateCombatArea(const SLimitData& area);
-#endif
 #ifdef HOMM3_DRAWING_ARCHER_DECLS
     // Dreamcast's LF_FIELDLIST fixes this complete renderer band (entries
     // 197..212). Keep even the helpers which Complete inlines away: their
