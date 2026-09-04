@@ -1952,6 +1952,7 @@ kb	?GetMapExtra@@YIGHHH@Z	100.0000	100.0000	100.0000	0xf79b0	d57379b3a90a
 kb	?GetMapExtraPtr@@YIPAGHHH@Z	100.0000	100.0000	100.0000	0xf79e0	bfdb3939e8b1
 kb	?GetNextHumanPlayer@@YIHH@Z	95.1191	95.1191	95.1191	0xf4ba0	0f6a1b063ca2
 kb	?GetTeamNames@@YIEHPAD@Z	100.0000	100.0000	100.0000	0xf1460	0d2e602c3941
+kb	?HandleAppSpecificMenuCommands@@YIHH@Z	100.0000	100.0000	100.0000	0xf4350	9c88b7086273
 kb	?KbFn_004EE1B0@@YIXHPBD@Z	100.0000	100.0000	100.0000	0xee1b0	2e4b9f393da5
 kb	?MemError@@YIXXZ	100.0000	100.0000	100.0000	0xf42c0	a3a21a3be5c1
 kb	?NormalDialogTimeOut@@YIXPBDHHHHHHHHHHH@Z	100.0000	100.0000	100.0000	0xf6530	8724fb21051e
@@ -2953,7 +2954,7 @@ singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100
 # 2026-08-27 (round 3): the interim full build re-banked the transient
 # peak a third time; re-lowered with the round's bodies landed. Same
 # scheduler flap, same recovery path.
-singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0	66eb0a0e15c8
+singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0	66eb0a0e15c8
 singleselectionwindow	?OnMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2193	90.2193	90.2193	0x189710	3ad2be3935a3
 singleselectionwindow	?OnNameClick@TSingleSelectionWindow@@QAEXH@Z	96.3226	96.3226	96.3226	0x18b620	ef174e28edf8
 singleselectionwindow	?OnNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	97.5366	97.5366	97.5366	0x18b510	862e2a9c058b

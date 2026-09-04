@@ -1880,7 +1880,7 @@ unsigned char LoadGameData()
 // E:\gamedcs\kb.cpp:4477
 // Located by the call-graph lane: sole caller is AppCommand's default
 // arm (retail 0x4f8060, homm2 lineage), size 0x7f2 vs DC Cb 0x79c.
-// RETAIL_LOCATED(0x004f4350, 0x7F2)  // anchor-callee, dc 0xe49b0
+// Promoted to the live retail claim below.
 int HandleAppSpecificMenuCommands(int idItem)
 {
     // @stub
@@ -2358,6 +2358,20 @@ void std::__destroy_aux()
 
 #endif  // @carcass
 
+// This tree still carries the spellbook id in the older combat-side enum,
+// while type_artifact's source interface correctly uses TArtifact. Preserve
+// the shared four-byte representation without an integer-to-enum cast; VC6
+// folds this established in-tree bridge away completely.
+inline TArtifact artifact_from_int(int value)
+{
+    union {
+        int integer;
+        TArtifact artifact;
+    } converted;
+    converted.integer = value;
+    return converted.artifact;
+}
+
 type_normal_dialog_frame::type_normal_dialog_frame(
     long x, long y, long w, long h, long id,
     EGameResource new_resource, long new_qualifier)
@@ -2405,6 +2419,240 @@ int GameUnsaved()
         return 1;
     if (gpTownManager && gpTownManager->status == baseManager::STATUS_ACTIVE)
         return 1;
+    return 0;
+}
+
+// E:\gamedcs\kb.cpp:4477. Dreamcast supplies the source-level dispatcher,
+// its two type_artifact scopes, helper boundaries, and statement order;
+// Complete's x86 tables independently prove the retained command values and
+// extend the army/artifact ranges. HoMM2's original KB.cpp is the source-order
+// control. Complete replaces Dreamcast's two ProcessDeath loops with the
+// retail-only Unnamed4693a0 helper and adds Win32 menu checkmarks.
+VA(0x004f4350, 0x7F2)  // anchor-callee + jump tables, dc 0xe49b0
+int HandleAppSpecificMenuCommands(int idItem)
+{
+    hero* currentHero = 0;
+    if (gpCurrentPlayer && gpGame->GetCurrHeroId() != -1)
+        currentHero = gpGame->GetCurrHero();
+
+    switch (idItem) {
+    case APP_MENU_EXIT:
+        PostMessageA(hwndApp, WM_CLOSE, 0, 0);
+        break;
+
+    case APP_MENU_FORCE_VICTORY:
+        gpGame->field_1f69c = 1;
+        if (gbUnk69774c)
+            gpGame->campaign.isCheater = 1;
+        CheckEndGame(END_GAME_FORCE_VICTORY);
+        break;
+
+    case APP_MENU_FORCE_DEFEAT:
+        CheckEndGame(END_GAME_FORCE_DEFEAT);
+        break;
+
+    case APP_MENU_TOGGLE_VIEW_ALL:
+        gpGame->field_1f69c = 1;
+        if (gbUnk69774c)
+            gpGame->campaign.isCheater = 1;
+        gpAdvManager->DebugViewAll = !gpAdvManager->DebugViewAll;
+        if (gpAdvManager->DebugViewAll)
+            CheckMenuItem(activeMenu, APP_MENU_TOGGLE_VIEW_ALL, MF_CHECKED);
+        else
+            CheckMenuItem(activeMenu, APP_MENU_TOGGLE_VIEW_ALL, MF_UNCHECKED);
+        break;
+
+    case APP_MENU_CHEAT_REVEAL: {
+        gpGame->field_1f69c = 1;
+        if (gbUnk69774c)
+            gpGame->campaign.isCheater = 1;
+        for (int level = 0; level < gpGame->GetNumMapLevels(); level++) {
+            gpGame->SetVisibility(APP_MENU_REVEAL_COORDINATE,
+                                  APP_MENU_REVEAL_COORDINATE, level,
+                                  gNetLocalGamePos, APP_MENU_REVEAL_RADIUS, 1);
+        }
+        if (currentHero)
+            gpAdvManager->Reseed(0, 0);
+        gpAdvManager->UpdateRadar(1, 1, 0, 0, 0);
+        gpAdvManager->CompleteDraw(0);
+        gpAdvManager->UpdateScreen(0, 0);
+        break;
+    }
+
+    case APP_MENU_CHEAT_MOVEMENT:
+        gpGame->field_1f69c = 1;
+        if (gbUnk69774c)
+            gpGame->campaign.isCheater = 1;
+        if (currentHero)
+            currentHero->movePoints = APP_MENU_MOVEMENT_BONUS;
+        break;
+
+    case APP_MENU_CHEAT_RESOURCES: {
+        gpGame->field_1f69c = 1;
+        if (gbUnk69774c)
+            gpGame->campaign.isCheater = 1;
+        for (int resource = 0; resource < APP_MENU_RESOURCE_COUNT; resource++) {
+            gpCurrentPlayer->resources[resource] +=
+                resource == GOLD ? APP_MENU_GOLD_BONUS
+                                 : APP_MENU_RESOURCE_BONUS;
+        }
+        if (gpAdvManager->advWindow)
+            gpAdvManager->advWindow->UpdateResourceDisplay(1, 1);
+        break;
+    }
+
+    case APP_MENU_COMBAT_ORDINAL_B798:
+        gpGame->field_1f69c = 1;
+        if (gbUnk69774c)
+            gpGame->campaign.isCheater = 1;
+        gpCombatManager->field_13d74 = !gpCombatManager->field_13d74;
+        if (gpCombatManager->field_13d74)
+            CheckMenuItem(activeMenu, APP_MENU_COMBAT_ORDINAL_B798, MF_CHECKED);
+        else
+            CheckMenuItem(activeMenu, APP_MENU_COMBAT_ORDINAL_B798, MF_UNCHECKED);
+        break;
+
+    case APP_MENU_COMBAT_DESTROY_OPPOSING_ARMY:
+        if (gpCombatManager)
+            gpCombatManager->Unnamed4693a0(1 - gpCombatManager->currentSide);
+        break;
+
+    case APP_MENU_COMBAT_DESTROY_ACTING_ARMY:
+        if (gpCombatManager)
+            gpCombatManager->Unnamed4693a0(gpCombatManager->currentSide);
+        break;
+
+    case APP_MENU_COMBAT_ORDINAL_B79B:
+        gpGame->field_1f69c = 1;
+        if (gbUnk69774c)
+            gpGame->campaign.isCheater = 1;
+        gpCombatManager->field_13d75 = !gpCombatManager->field_13d75;
+        if (gpCombatManager->field_13d75)
+            CheckMenuItem(activeMenu, APP_MENU_COMBAT_ORDINAL_B79B, MF_CHECKED);
+        else
+            CheckMenuItem(activeMenu, APP_MENU_COMBAT_ORDINAL_B79B, MF_UNCHECKED);
+        gpCombatManager->DrawFrame(1, 0, 0, 0, 1, 0);
+        break;
+
+    case APP_MENU_COMBAT_ORDINAL_B79C:
+        gpGame->field_1f69c = 1;
+        if (gbUnk69774c)
+            gpGame->campaign.isCheater = 1;
+        gpCombatManager->field_13d76 = !gpCombatManager->field_13d76;
+        if (gpCombatManager->field_13d76)
+            CheckMenuItem(activeMenu, APP_MENU_COMBAT_ORDINAL_B79C, MF_CHECKED);
+        else
+            CheckMenuItem(activeMenu, APP_MENU_COMBAT_ORDINAL_B79C, MF_UNCHECKED);
+        gpCombatManager->field_53b8 = 0;
+        gpCombatManager->DrawFrame(1, 0, 0, 0, 1, 0);
+        break;
+
+    case APP_MENU_COMBAT_REBUILD_OBSTACLES:
+        gpGame->field_1f69c = 1;
+        if (gbUnk69774c)
+            gpGame->campaign.isCheater = 1;
+        gpCombatManager->PlaceAllObstacles();
+        gpCombatManager->DrawFrame(1, 0, 0, 0, 1, 0);
+        break;
+
+    case APP_MENU_COMBAT_ORDINAL_B79E:
+        break;
+
+    default:
+        if (idItem >= APP_MENU_ARMY_FIRST && idItem < APP_MENU_ARMY_LAST) {
+            gpGame->field_1f69c = 1;
+            if (gbUnk69774c)
+                gpGame->campaign.isCheater = 1;
+            if (gpGame->GetCurrHeroId() != -1) {
+                gpGame->GiveArmy(
+                                 &gpGame->heroes[gpGame->GetCurrHeroId()].army,
+                                 idItem - APP_MENU_ARMY_FIRST,
+                                 APP_MENU_ARMY_QUANTITY, -1);
+                gpAdvManager->UpdBottomView(1, 1, 1);
+            }
+            break;
+        }
+
+        if (idItem >= APP_MENU_SECONDARY_FIRST
+                && idItem < APP_MENU_SECONDARY_LAST) {
+            gpGame->field_1f69c = 1;
+            if (gbUnk69774c)
+                gpGame->campaign.isCheater = 1;
+            if (gpCombatManager->status == baseManager::STATUS_ACTIVE)
+                currentHero = gpCombatManager->heroes[gpCombatManager->currentSide];
+            if (currentHero) {
+                currentHero->SetSS(
+                    (idItem - APP_MENU_SECONDARY_FIRST)
+                        / APP_MENU_SECONDARY_LEVELS,
+                    (idItem - APP_MENU_SECONDARY_FIRST)
+                        % APP_MENU_SECONDARY_LEVELS);
+            }
+        }
+
+        else if (idItem >= APP_MENU_ARTIFACT_FIRST
+                && idItem < APP_MENU_ARTIFACT_LAST) {
+            gpGame->field_1f69c = 1;
+            if (gbUnk69774c)
+                gpGame->campaign.isCheater = 1;
+            type_artifact artifact(
+                artifact_from_int(idItem - APP_MENU_ARTIFACT_FIRST));
+            if (currentHero)
+                currentHero->GiveArtifact(&artifact, 0, 0);
+        }
+
+        else if (idItem >= APP_MENU_SPELL_ALL
+                && idItem < APP_MENU_SPELL_LAST) {
+            if (gpCombatManager->status == baseManager::STATUS_ACTIVE)
+                currentHero = gpCombatManager->heroes[gpCombatManager->currentSide];
+            if (currentHero) {
+                type_artifact artifact(ARTIFACT_NONE);
+                gpGame->field_1f69c = 1;
+                if (gbUnk69774c)
+                    gpGame->campaign.isCheater = 1;
+                if (!currentHero->IsWieldingArtifact(ARTIFACT_SPELLBOOK)) {
+                    artifact.artifactId =
+                        artifact_from_int(ARTIFACT_SPELLBOOK);
+                    currentHero->GiveArtifact(&artifact, 1, 1);
+                }
+
+                switch (idItem) {
+                case APP_MENU_SPELL_ALL: {
+                    for (int spell = 0; spell < hero::NUM_SPELLS; spell++)
+                        currentHero->AddSpell(spell);
+                    break;
+                }
+
+                case APP_MENU_SPELL_SCHOOL_FIRST:
+                case APP_MENU_SPELL_SCHOOL_SECOND:
+                case APP_MENU_SPELL_SCHOOL_THIRD:
+                case APP_MENU_SPELL_SCHOOL_FOURTH: {
+                    for (int spell = 0; spell < hero::NUM_SPELLS; spell++) {
+                        if (akSpellTraits[spell].schoolBits
+                                & (1 << (idItem - APP_MENU_SPELL_SCHOOL_FIRST)))
+                            currentHero->AddSpell(spell);
+                    }
+                    break;
+                }
+
+                case APP_MENU_SPELL_LEVEL_ONE:
+                case APP_MENU_SPELL_LEVEL_TWO:
+                case APP_MENU_SPELL_LEVEL_THREE:
+                case APP_MENU_SPELL_LEVEL_FOUR:
+                case APP_MENU_SPELL_LEVEL_FIVE: {
+                    for (int spell = 0; spell < hero::NUM_SPELLS; spell++) {
+                        if (akSpellTraits[spell].level
+                                == idItem - APP_MENU_SPELL_LEVEL_BASE)
+                            currentHero->AddSpell(spell);
+                    }
+                    break;
+                }
+                }
+                currentHero->mana = APP_MENU_SPELL_POINTS;
+            }
+        }
+        return 1;
+    }
+
     return 0;
 }
 

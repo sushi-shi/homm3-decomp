@@ -111,6 +111,66 @@ enum EKbTeamNameCount {
     TEAM_NAMES_PAIR = 2
 };
 
+// HandleAppSpecificMenuCommands' command domain. The shared names and values
+// come from the original HoMM2 source lineage; Complete retail independently
+// proves every retained value through its two jump tables and four range
+// guards. The combat-debug members whose source names did not survive keep
+// ordinal spellings instead of acquiring guessed semantics.
+enum EAppMenuCommand {
+    APP_MENU_FORCE_VICTORY = 0x9c7b,
+    APP_MENU_FORCE_DEFEAT = 0x9c7c,
+    APP_MENU_TOGGLE_VIEW_ALL = 0x9c7e,
+    APP_MENU_EXIT = 0x9ccc,
+    APP_MENU_CHEAT_REVEAL = 0x9ccd,
+    APP_MENU_CHEAT_MOVEMENT = 0x9cce,
+    APP_MENU_CHEAT_RESOURCES = 0x9cd0,
+
+    APP_MENU_ARMY_FIRST = 0xa028,
+    APP_MENU_ARMY_LAST = 0xa0b9,
+    APP_MENU_SECONDARY_FIRST = 0xa410,
+    APP_MENU_SECONDARY_LAST = 0xa480,
+    APP_MENU_ARTIFACT_FIRST = 0xafc8,
+    APP_MENU_ARTIFACT_LAST = 0xb058,
+
+    APP_MENU_COMBAT_ORDINAL_B798 = 0xb798,
+    APP_MENU_COMBAT_DESTROY_OPPOSING_ARMY = 0xb799,
+    APP_MENU_COMBAT_DESTROY_ACTING_ARMY = 0xb79a,
+    APP_MENU_COMBAT_ORDINAL_B79B = 0xb79b,
+    APP_MENU_COMBAT_ORDINAL_B79C = 0xb79c,
+    APP_MENU_COMBAT_REBUILD_OBSTACLES = 0xb79d,
+    APP_MENU_COMBAT_ORDINAL_B79E = 0xb79e,
+
+    APP_MENU_SPELL_ALL = 0xb3b0,
+    APP_MENU_SPELL_SCHOOL_FIRST = 0xb3b1,
+    APP_MENU_SPELL_SCHOOL_SECOND = 0xb3b2,
+    APP_MENU_SPELL_SCHOOL_THIRD = 0xb3b3,
+    APP_MENU_SPELL_SCHOOL_FOURTH = 0xb3b4,
+    APP_MENU_SPELL_LEVEL_BASE = 0xb3b4,
+    APP_MENU_SPELL_LEVEL_ONE = 0xb3b5,
+    APP_MENU_SPELL_LEVEL_TWO = 0xb3b6,
+    APP_MENU_SPELL_LEVEL_THREE = 0xb3b7,
+    APP_MENU_SPELL_LEVEL_FOUR = 0xb3b8,
+    APP_MENU_SPELL_LEVEL_FIVE = 0xb3b9,
+    APP_MENU_SPELL_LAST = 0xb415
+};
+
+enum EAppMenuConstant {
+    APP_MENU_REVEAL_COORDINATE = 30,
+    APP_MENU_REVEAL_RADIUS = 180,
+    APP_MENU_MOVEMENT_BONUS = 299999,
+    APP_MENU_RESOURCE_COUNT = 7,
+    APP_MENU_RESOURCE_BONUS = 100,
+    APP_MENU_GOLD_BONUS = 100000,
+    APP_MENU_SECONDARY_LEVELS = 4,
+    APP_MENU_ARMY_QUANTITY = 5,
+    APP_MENU_SPELL_POINTS = 999
+};
+
+enum ECheckEndGameForcedResult {
+    END_GAME_FORCE_VICTORY = 1,
+    END_GAME_FORCE_DEFEAT = 2
+};
+
 extern unsigned long glTimers[10];
 
 // Retail .bss pointer cell used by both map-extra accessors. The complete
