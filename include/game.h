@@ -1129,7 +1129,6 @@ public:
     // retail expands this exact member teardown into ~SavedGameHeader.
     // Copy assignment is compiler-generated. BackupGameHeaders proves its
     // member walk directly: base assignment, both strings, then the bitset.
-#ifdef HOMM3_SSWINDOW_HEADER_VECTORS
     // game.h:311 in the Dreamcast line table.  The selection-window TU is
     // the retail caller too.  DC names two std::string::operator= calls.
     // Keep those source operations: depth 1 retains the DC-proven helper
@@ -1147,7 +1146,6 @@ public:
         mapDescription = sDesc;
 #pragma inline_depth()
     }
-#endif
     int Save(TAbstractFile* outfile);
     // Complete's scenario reader consumes the abstract stream and the
     // selected campaign-map ordinal (`ret 8` at retail 0x4c4390).
