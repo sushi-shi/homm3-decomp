@@ -3386,7 +3386,7 @@ townmgr	?SetRolloverText@TTavernWindow@@QAEXH@Z	81.4136	81.4136	81.4136	0x1d7920
 townmgr	?SetRolloverText@TThievesGuildWindow@@QAEXH@Z	94.1758	94.1758	94.1758	0x1c9710	0a961efcf30d
 townmgr	?SetupExtraStuff@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c33f0	c43032f622bc
 townmgr	?SetupMage@townManager@@QAEXPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1d6ef0	afcd68211831
-townmgr	?SetupThievesGuild@TThievesGuildWindow@@QAEXH@Z	87.0574	87.3294	87.3294	0x1dda10	1abdbce22bac
+townmgr	?SetupThievesGuild@TThievesGuildWindow@@QAEXH@Z	93.3762	93.3762	93.3762	0x1dda10	79aadf9d6391
 townmgr	?SetupTown@townManager@@QAEXE@Z	98.0945	98.0945	98.0945	0x1c6870	226ef8276bed
 townmgr	?SetupWell@townManager@@QAEXPAVTCastleWindow@@@Z	98.5801	98.5801	98.5801	0x1dd390	b88c92e68bc5
 townmgr	?SortStats@@YIXPAJPAC@Z	100.0000	100.0000	100.0000	0x1df160	e24a3b5e17da
