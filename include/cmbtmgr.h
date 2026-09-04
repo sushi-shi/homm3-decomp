@@ -1624,8 +1624,6 @@ public:
     // bytes with no DC line is the direction that is valid, so the test
     // and the call are retail's, not a misread of the SH4.
     //
-    // Behind a view for this header's usual reason (mark_moving_army
-    // above); army.cpp is the only consumer.
     // 0x469440 (434 B), thiscall with NO arguments: army::attack_hex
     // (0x445a60) calls it on gpCombatManager immediately after stamping
     // lastMovedArmy, and that call site is all that is proven about its
@@ -1834,8 +1832,7 @@ public:
     // GetNextChainLightningTarget (spells.cpp:4202, dc 0x15547c, three
     // parameters counting `this`) and ClearEffects (spells.cpp:4387,
     // dc 0x155a08, 24 B and `this` only). Declared for that call site;
-    // neither is claimed. Behind a view because cmbtmgr.h reaches most
-    // of the combat tree.
+    // neither is claimed.
     // Chain Lightning's bounce search: the nearest stack, by straight-line
     // screen distance from the stack the bolt just left, that the
     // `effected` row has not already recorded. Answers a gridIndex, or -1
@@ -2346,12 +2343,6 @@ public:
         // the Dread Knight's death-blow flash over the defender.
         eSpellEffectDeathBlow = 73
     };
-    // BEHIND A VIEW, AND THAT IS A MEASUREMENT: declaring it
-    // unconditionally costs command.obj's GetCommand 92.5714 ->
-    // 92.5357, the include-set class this header pair has now fired
-    // three times from a bare member declaration. Bisected ALONE
-    // against army.h's numSpellCasts slice, which triggers by itself
-    // as well. army.cpp is the only consumer.
     army* find_demonic_resurrection_target(int armyGroup, int targetIndex);
     // DC cmbtmgr.h:1466. Retail expands this selector in both sacrifice
     // lookup sites; no standalone body survives.
