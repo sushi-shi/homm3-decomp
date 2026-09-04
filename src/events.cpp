@@ -6,9 +6,6 @@
 #include <string.h>
 #include <va.h>
 #define HOMM3_EVENTS_GAME_INLINE_HELPERS
-// DoCombat's remote arms: the wait dialog whose payload feeds
-// ReceiveHeroTownData.
-#define HOMM3_REMOTE_BATTLE_DLG_DECLS
 #include "advmgr_objects.h"
 #include "creature_bank.h"
 #include "swapmgr.h"

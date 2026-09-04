@@ -218,7 +218,6 @@ public:
 };
 SIZE(CCombatInitMsg, 0xb40);
 
-#ifdef HOMM3_REMOTE_BATTLE_DLG_DECLS
 // The remote-combat wait dialog shares CAnimatedDlg's 0x78-byte prefix.
 // Dreamcast proves the method names and m_playerPos at the first derived
 // dword; retail 0x557090 independently reads/writes it at +0x78. The PC
@@ -261,7 +260,6 @@ public:
 // ebp-0xd58 and the next aligned local band begins at ebp-0x180, confirming
 // that full stack extent independently.
 SIZE(CWaitForRemoteBattleDlg, 0xbd8);
-#endif
 
 // CSaveScreen - the off-screen backing store the transfer dialog parks the
 // framebuffer in. DC's field list sits on a 184-byte Bitmap16Bit; retail's
