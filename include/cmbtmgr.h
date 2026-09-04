@@ -389,14 +389,12 @@ extern const unsigned char gCastleWallColumns[];
 // CodeView enum. One is the timed idle fidget; the two event-driven states
 // have no surviving public names, so their source-facing names keep the
 // retail ordinals explicit.
-#ifdef HOMM3_DRAWING_ARCHER_DECLS
 enum CombatHeroFrameType {
     COMBAT_HERO_FRAME_IDLE = 0,
     COMBAT_HERO_FRAME_FIDGET = 1,
     COMBAT_HERO_FRAME_EVENT_2 = 2,
     COMBAT_HERO_FRAME_EVENT_3 = 3
 };
-#endif
 
 class combatManager : public baseManager {
 public:
@@ -1348,11 +1346,6 @@ public:
     // drawing.cpp:919, DC 0x847dc; Complete's body is at 0x493cf0.
     void DrawBackground();
     void ResetLimitCreature();
-#ifndef HOMM3_DRAWING_ARCHER_DECLS
-    // drawing.cpp declares this at the Dreamcast-attested end of the
-    // renderer declaration band above.
-    int DrawCreatureAndHeroSubwindows();
-#endif
     unsigned char HandleCombatPlayerDrop(unsigned long dpid, message* msg);
     // 0x493780 (68 B), drawing.obj's no-argument combat-area refresh -
     // the one of its four UpdateCombatArea overloads that takes no
@@ -1377,7 +1370,6 @@ public:
     // Complete has no out-of-line copy, and the exact retail expansion in
     // UpdateMouseGrid proves its const-reference form here.
     void UpdateCombatArea(const SLimitData& area);
-#ifdef HOMM3_DRAWING_ARCHER_DECLS
     // Dreamcast's LF_FIELDLIST fixes this complete renderer band (entries
     // 197..212). Keep even the helpers which Complete inlines away: their
     // declaration order and source boundaries are compiler-state evidence.
@@ -1391,6 +1383,8 @@ public:
     int DrawArcher(const CSprite* sprite, int sequence, int frame,
                    int x, int y, SLimitData* limits,
                    unsigned char isFlipped, unsigned char colorRow);
+    // 0x4951b0, the per-stack blit (drawing.cpp:1699, dc 0x85a48);
+    // army::DrawToBuffer calls it, the body stays drawing's.
     int DrawCreature(const CSprite* sprite, int sequence, int frame,
                      int x, int y, struct SLimitData* psLimitData,
                      int id, unsigned char isFlipped, int iColor);
@@ -1402,10 +1396,16 @@ public:
                        unsigned char isFlipped);
     int DrawSpriteObject(const CSprite* sprite, int frame, int x, int y,
                          unsigned char isFlipped);
+    // 0x4953b0, drawing.obj's one-off effect blit (drawing.cpp:1804,
+    // dc 0x85d00); army::range_attack's two splash-effect loops call it
+    // once per frame with (sprite, frame, x, y, 0, 0).
     int DrawSpellEffect(const CSprite* sprite, int frame, int x, int y,
                         unsigned char isFlipped, unsigned char isAlpha);
     int DrawWall(const Bitmap816* image, int x, int y, int width, int height,
                  int destX, int destY);
+    // drawing.cpp:1991, DC 0x86098. DrawFrame supplies three wall bitmaps
+    // and army::DrawToBuffer supplies the troop-count background; the
+    // common three-argument clip/draw body at 0x4958e0 settles the identity.
     int DrawObject(const Bitmap816* image, int x, int y);
     int DrawMoatOverlay(int index);
     void DrawOccupant(int index, int iDrawPriority, int bNumBoxOnly);
@@ -1418,29 +1418,6 @@ public:
     void ComputeExtent(const CSprite* sprite, int sequence, int frame,
                        int x, int y, SLimitData* limits, int isFlipped,
                        unsigned char saveBiggestExtent);
-#else
-    void DrawFrame(unsigned char update,
-                   unsigned char bLimitCreatureEffect,
-                   unsigned char bLimitDraw, int iDelay,
-                   unsigned char bRefreshBackground,
-                   unsigned char bDoDelayTil);
-    // 0x4953b0, drawing.obj's one-off effect blit (drawing.cpp:1804,
-    // dc 0x85d00). Declared here, unclaimed, for army::range_attack's
-    // two splash-effect loops, which call it once per frame with
-    // (sprite, frame, x, y, 0, 0); the body stays drawing's.
-    int DrawSpellEffect(const CSprite* sprite, int frame, int x, int y,
-                        unsigned char isFlipped, unsigned char isAlpha);
-    // 0x4951b0, the per-stack blit (drawing.cpp:1699, dc 0x85a48).
-    // Declared here, unclaimed, for army::DrawToBuffer; the body stays
-    // drawing's.
-    int DrawCreature(const CSprite* sprite, int sequence, int frame,
-                     int x, int y, struct SLimitData* psLimitData,
-                     int id, unsigned char isFlipped, int iColor);
-    // drawing.cpp:1991, DC 0x86098. DrawFrame supplies three wall bitmaps
-    // and army::DrawToBuffer supplies the troop-count background; the
-    // common three-argument clip/draw body at 0x4958e0 settles the identity.
-    int DrawObject(const Bitmap816* image, int x, int y);
-#endif
     // command.cpp:224 (0x474040) paces the frame loop and hands each frame
     // to drawing.cpp's CycleCombatScreen (0x4960d0).
     void do_animations();
