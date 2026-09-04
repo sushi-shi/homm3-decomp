@@ -703,6 +703,7 @@ campaignwindow	__h3cg$campaignwindow$implicit_dtor$SCampaign	0.0000	100.0000	100
 castle	?CanBuy@@YIHPBVtown@@H@Z	100.0000	100.0000	100.0000	0x61130	ca57faf6f310
 castle	?GetBuildingName@@YIPBDHH@Z	100.0000	100.0000	100.0000	0x610e0	4757b0885c8c
 castle	?SetupCastle@townManager@@QAEXPAVheroWindow@@H@Z	98.0447	98.0447	98.0447	0x61190	1a25bad3171c
+castle	?WindowHandler@THallWindow@@UAEHPAVmessage@@@Z	52.9540	52.9540	52.9540	0x61ab0	ff13cb40ecf6
 cmbtmgr	??0TArcher@combatManager@@QAE@XZ	100.0000	100.0000	100.0000	0x62920	9fdaf5bfc6ad
 cmbtmgr	??0TCombatEagleEyeSide@@QAE@XZ	0.0000	0.0000	0.0000	0x62890	-
 cmbtmgr	??0combatManager@@QAE@XZ	100.0000	100.0000	100.0000	0x62760	6f386fa11acc
@@ -3396,7 +3397,7 @@ townmgr	?handle_hall_click@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d30
 townmgr	?handle_mage_guild_click@townManager@@QAEXXZ	99.4619	100.0000	100.0000	0x1ce560	513f994e28d5
 townmgr	?select_army@townManager@@QAEXPAVstrip@@HE@Z	100.0000	100.0000	100.0000	0x1c8080	980832ecc04b
 townmgr	?set_bonus_display@TTownScreenWindow@@QAEXPAVtown@@@Z	87.9325	87.9325	87.9325	0x1c5b40	3ff7515649fe
-townmgr	?set_prerequisite_text@TBuyBuildWindow@@QAEXPBVtown@@H@Z	87.4164	87.4164	87.4164	0x1d5be0	929ade941b4f
+townmgr	?set_prerequisite_text@TBuyBuildWindow@@QAEXPBVtown@@H@Z	87.4164	87.4164	87.4164	0x1d5be0	69a89320c10d
 tradpost	??0TBuyArtifactWindow@@QAE@HH@Z	100.0000	100.0000	100.0000	0x1e3730	495b92b52214
 tradpost	??0TGiveResourceWindow@@QAE@HH@Z	100.0000	100.0000	100.0000	0x1e16c0	a56d6b315f1f
 tradpost	??0TSellArtifactWindow@@QAE@HH@Z	100.0000	100.0000	100.0000	0x1e5730	832f70f441af
