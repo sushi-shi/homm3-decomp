@@ -445,6 +445,7 @@ public:
     // variables.csv, THallWindow::THallWindow fp+0x4a0).
     THallWindow(int which);
     virtual ~THallWindow();
+    virtual int WindowHandler(message* msg) OVERRIDE;
 };
 
 // The mage guild, one full-screen page of five spell rows: twenty frame

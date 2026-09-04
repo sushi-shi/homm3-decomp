@@ -6578,10 +6578,6 @@ static void clear_buybuild_buttons(TBuyBuildWindow* window, message& msg)
 // unlocated init TU (retail writer near 0x461cxx) and only read here; the
 // SetArmyCommand round-1 precedent above DATA-claims such townmgr-consumed
 // message globals - kept on townmgr as nearest consumer until that TU lands.
-DATA(0x006a7428) extern const char* gUnnamed6a7428;
-DATA(0x006a742c) extern const char* gUnnamed6a742c;
-DATA(0x006a7430) extern const char* gUnnamed6a7430;
-
 // Residual (87.42%): a register-homing wall (why-reg: flow-distance 0,
 // register-distance 68). Retail keeps lineStart in ebx across both
 // get_string_width calls and spills namePos to [ebp-0xc]; our CL makes the
@@ -6640,18 +6636,18 @@ void TBuyBuildWindow::set_prerequisite_text(const town* current_town, int buildi
 
     if (building == HALL_CAPITOL_ID) {
         if (gpGame->players[current_town->owner].HasCapitol()) {
-            rolloverText->SetText(gUnnamed6a7428);
+            rolloverText->SetText(cHallInfo[0]);
             return;
         }
     } else if (building == DOCK_ID) {
         if (!gpTownManager->townToView->CanBuildDock()) {
-            rolloverText->SetText(gUnnamed6a742c);
+            rolloverText->SetText(cHallInfo[1]);
             return;
         }
     }
 
     if (!gpTownManager->townToView->can_ever_build(building)) {
-        rolloverText->SetText(gUnnamed6a7430);
+        rolloverText->SetText(cHallInfo[2]);
         return;
     }
 

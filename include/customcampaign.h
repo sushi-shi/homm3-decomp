@@ -5,25 +5,36 @@
 #ifndef HOMM3_CUSTOMCAMPAIGN_H
 #define HOMM3_CUSTOMCAMPAIGN_H
 
-#ifdef HOMM3_KB_OLDMAIN_DECLS
 #include <vector>
 #include "window.h"
 
-// Complete-only custom-campaign browser used by kb.cpp. Retail 0x4827b0
-// derives CHeroWindowEx, leaves the 0x50..0xf7 UI tail opaque, and
-// default-constructs a Dinkumware pointer vector at +0xf8; its 0x482f10
-// destructor walks and deletes the pointed-to campaign headers before the
-// vector storage. The caller's next local begins exactly at +0x108.
+class slider;
+
+// The Complete-only "Select a Campaign" list (constructor 0x4827b0,
+// "CamCust.pcx"). Only the fields its reconstructed members touch are
+// sliced out of the pad: LoadCampaignList (0x482fd0) drives the slider at
+// +0xe8 (send_message + SetResolution) and appends to the header vector
+// at +0xf8; UpdateList (0x483330) reads the scroll origin at +0xec and
+// the selection at +0xf0. Names INVENTED.
 class TCustomCampaignWindow : public CHeroWindowEx {
 public:
-    char pad_50[0xa8];
-    std::vector<void*> campaignHeaders;
+    enum {
+        CAMPAIGN_LIST_ROWS = 18
+    };
+
+    char pad_50[0x98];
+    slider* campaignSlider;           // +0xe8
+    int firstVisible;                 // +0xec
+    int selected;                     // +0xf0
+    int field_f4;                     // +0xf4
+    std::vector<void*> campaignHeaders;  // +0xf8
 
     TCustomCampaignWindow();
     virtual ~TCustomCampaignWindow();
+    void LoadCampaignList();
+    void UpdateList();
 };
 SIZE(TCustomCampaignWindow, 0x108);
-#endif
 
 // Complete's custom-campaign list orders four-byte header pointers through
 // this predicate. The predicate body is a separate retail helper; this owner
@@ -33,6 +44,18 @@ class CampaignHeaderPointerLess {
 public:
     bool operator()(void* left, void* right) const;
 };
+
+// The campaign music table retail reaches through the reference cell at
+// .data 0x66c218 (the akHeroTraits pattern; customcampaign.cpp carries
+// the DATA claim). The table at 0x66c090 holds eight-byte rows: the MP3
+// base name ("CampainMusic01".."06") and a dword that is zero in the
+// image. CampaignHeaderStruct::StartMusic indexes it by campaign_music.
+// Names INVENTED.
+struct TCampaignMusicTraits {
+    const char* name;
+    int field_04;
+};
+extern const TCampaignMusicTraits* akCampaignMusicTraits;
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\customcampaign.cpp:70, dc 0x7cd4c) void InitCampaignMapTraits([]* map_traits);
