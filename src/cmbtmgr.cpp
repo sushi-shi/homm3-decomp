@@ -41,8 +41,6 @@
 // helpers at 0x64d40 and 0x64f50 retain address-ordinal names, but their
 // selected-stack fear check and strict move-order predicate are now fully
 // pinned by their bodies and sole caller.
-#define HOMM3_ARMY_MIDPOINT_DECL
-#define HOMM3_ARMY_NEW_TURN_DECL
 #include <math.h>
 #include <stdlib.h>
 

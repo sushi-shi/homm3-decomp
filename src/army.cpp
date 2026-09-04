@@ -13,8 +13,6 @@
 // DrawToBuffer 0x43e140, animate_missile 0x43f2c0,
 // compute_attacker_bonus 0x443320, ComputeAttackerDamageBonuses
 // 0x443840, new_turn 0x446e30.
-#define HOMM3_ARMY_MIDPOINT_DECL
-#define HOMM3_ARMY_NEW_TURN_DECL
 #include <algorithm>
 #include <math.h>
 #include <stdlib.h>
