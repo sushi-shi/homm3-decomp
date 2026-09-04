@@ -7,7 +7,6 @@
 // carcass is not force-claimed merely from roster order.
 #include <va.h>
 #include <algorithm>
-#define HOMM3_GAME_SCAMPAIGN_ASSIGN_VIEW
 #include "game.h"
 #include "abstractfile.h"
 #include "campaignbrief.h"
