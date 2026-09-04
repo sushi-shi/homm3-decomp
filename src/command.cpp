@@ -614,25 +614,34 @@ inline int combatManager::GetPointer(int inCombatCommand, int /* iHexIndex */)
 // The standalone retail body is independently fixed by its exact field graph:
 // convert the mouse/hex tuple into one of the twelve SetCombatDirections
 // slots, cache that slot's destination hex, and select its combat cursor frame
-// only when the frame changes. Residual: 85.8951%. The arithmetic, constants,
-// field accesses and branch semantics agree; candidate binds `this` to EDI and
-// direction to ESI while retail transposes them. why-reg v2 measured identical
-// definition slots, exhausted its three model-ranked declaration probes, and
-// classifies the transpose as C1 front-end state rather than source-reachable
-// handle order. The same state gives the ratio conversion a different scratch
-// home and accounts for the remaining local instruction scheduling.
+// only when the frame changes.
+// The former note banked 85.8951% as "C1 front-end state": this compile bound
+// `this` to EDI and the hex to ESI where retail transposes them, and why-reg
+// found identical definition slots.  The transpose was a CONSEQUENCE of block
+// layout, not the wall.  Retail keeps the `return 0` block INLINE - reached by
+// fall-through when is_computer_action is true and by `jne 0xe34` from the
+// IsQuickCombat test - and jumps forward to the body (`je 0xe3c`).  Written as
+// one merged `!A && !B` guard with a `goto` past the early return, VC6 sinks
+// the `return 0` instead and emits two `jne`s at it, one branch polarity wrong
+// at each end and one exit short (2 returns against retail's 3).  Splitting the
+// guard and jumping INTO the early-return arm reproduces retail exactly - the
+// same lever that moved combatManager::Main in this TU.
+// Residual (97.6377%): all 25 blocks agree EXACTLY and branches are clean at
+// 13/13 with three returns; what is left is only the ESI/EDI pair the old note
+// described, now the whole delta rather than a symptom.
 VA(0x00474a00, 0x198)  // anchor-fields combatDirections/field_132d8 + SetPointer, dc member type 0x4c8e
 unsigned char combatManager::CheckSetMouseDirection(int x, int y, int hex)
 {
     int direction;
     float slope;
 
-    if (!static_cast<const combatManager*>(this)->IsQuickCombat()
-            && !is_computer_action(get_current_army()))
-        goto determine_direction;
-    return 0;
+    if (static_cast<const combatManager*>(this)->IsQuickCombat())
+        goto not_directable;
+    if (is_computer_action(get_current_army())) {
+not_directable:
+        return 0;
+    }
 
-determine_direction:
     int xDifference = x - (hex % 17) * 44 - 14;
     int row = hex / 17;
     if (!(row & 1))
