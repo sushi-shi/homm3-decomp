@@ -27,10 +27,7 @@
 // leaves this TU is the only located caller of.
 // check_adjacent_hexes breaks a tie toward the LONGER approach for the
 // two jousters.
-#define HOMM3_ARMY_COPY_VIEW
-// The retained army copy constructor at 0x437a00 must see the four actual
-// vector members rather than the byte-layout arm used by TUs that never copy
-// an army. These two narrow declarations expose only that tail block.
+// The two narrow declarations below expose army's bound/aura tail block.
 #define HOMM3_ARMY_RESET_LATCH_DECL
 #define HOMM3_ARMY_AURA_SOURCES_DECL
 #include <va.h>
@@ -49,29 +46,6 @@ static int creature_base_hit_points(TCreatureType type)
 {
     return akCreatureTypeTraits[type].hitPoints;
 }
-
-// HOMM3_ARMY_COPY_VIEW restores the embedded traits row as one POD member so
-// VC6 copies it with retail's single rep-movsd. Keep the reconstruction's
-// established field vocabulary at the call sites while making that aggregate
-// explicit in this TU.
-#define creatureId sMonInfo.creatureId
-#define hitPoints sMonInfo.hitPoints
-#define field_c4 sMonInfo.field_c4
-#define attackSkill sMonInfo.attackSkill
-#define defenseSkill sMonInfo.defenseSkill
-#define minDamage sMonInfo.minDamage
-#define maxDamage sMonInfo.maxDamage
-
-// In the copy view the spell-state storage stays in its original aggregate
-// row, avoiding the anonymous-union duplicate that VC6 would otherwise emit
-// in army's retained implicit copy constructor. These are the named slots this
-// TU reads outside its row-walking code.
-#define magicMirrorRounds spellInfluence[36]
-#define bloodlustRounds spellInfluence[43]
-#define hypnotizeFlag spellInfluence[60]
-#define disabled_290 spellInfluence[62]
-#define disabled_2b0 spellInfluence[70]
-#define disabled_2c0 spellInfluence[74]
 
 // The reference-returning min/max this TU's call sites were compiled
 // against. They resemble <xutility>'s `_cpp_min`/`_cpp_max` (the
@@ -257,6 +231,17 @@ double AI_value_of_luck(long luck, long change)
 // in this TU. Retail and the Dreamcast CodeView roster independently name
 // the same body; the direct-symbol compiler-generated claim keeps that
 // provenance distinct from an authored ai_tactical function.
+// Residual (was EXACT under the retired HOMM3_ARMY_COPY_VIEW): retail
+// copies +0x74..+0xe7 and +0x110..+0x163 as one rep-movsd each (the DC
+// `TCreatureTypeTraits sMonInfo` / `SMonFrameInfo sMonFrameInfo`
+// aggregates), copies spellInfluence[81] and spell_level[81] as two plain
+// rows, and bumps a resource refcount for stdIcon / missileIcon /
+// armySample[8]. The canonical army layout names those bands as the
+// slices its 16 consumer TUs read (and the +0x198 named-slot union), so
+// the memberwise copy is emitted slice by slice. Recovering it means
+// adopting the DC aggregates tree-wide, not a per-TU view; the refcount
+// wrapper the view carried was an invention (DC types the three members
+// as plain CSprite* / sample*, type 0x1A63 / 0x1FE5).
 VA_COMPGEN(0x00437a00, 0x6FA, IMPLICIT_COPY_CTOR, army)
 
 // get_multi_head_bonus and get_breath_bonus (dc 0x3c608 / 0x3c708,

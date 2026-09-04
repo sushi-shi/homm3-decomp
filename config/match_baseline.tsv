@@ -346,7 +346,7 @@ ai_player	?value_of_hall@@YIJPAVtown@@W4type_building_id@@@Z	100.0000	100.0000	1
 ai_player	?value_of_hiring@@YIJPAVtown@@PAVhero@@PAVsearchArray@@@Z	99.9522	99.9522	99.9522	0x31bd0	166320dbc4bb
 ai_player	?value_of_horde@@YIJPAVtown@@W4type_building_id@@PAEPAH@Z	100.0000	100.0000	100.0000	0x2b790	0ffb63118ec0
 ai_player	?value_of_horde_upgrade@@YIJPAVtown@@W4type_building_id@@PAEPAH@Z	100.0000	100.0000	100.0000	0x2b800	5eaa0276a877
-ai_tactical	??0army@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x37a00	-
+ai_tactical	??0army@@QAE@ABV0@@Z	48.9247	100.0000	100.0000	0x37a00	-
 ai_tactical	??0type_AI_attack_hex_chooser@@QAE@PBVarmy@@0PBJPAVsearchArray@@PBUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x360c0	93d490613518
 ai_tactical	??0type_AI_combat_parameters@@QAE@PBVcombatManager@@J@Z	100.0000	100.0000	100.0000	0x35ec0	cfa0f5b47019
 ai_tactical	??0type_AI_spellcaster@@QAE@PAVcombatManager@@JE@Z	93.1850	93.1850	93.1850	0x369c0	73ed279b1210
@@ -375,7 +375,7 @@ ai_tactical	?get_air_protection_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_en
 ai_tactical	?get_air_shield_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38bc0	aff9955939cc
 ai_tactical	?get_antimagic_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	0.0000	100.0000	100.0000	0x39d40	6973d94df595
 ai_tactical	?get_area_effect_value@type_AI_spellcaster@@QAEJHJW4TSkillMastery@@J@Z	100.0000	100.0000	100.0000	0x37040	aa44fc7b2bf4
-ai_tactical	?get_attack_skill_value@type_AI_spellcaster@@QAEJPBVarmy@@0JJ@Z	68.4970	99.8503	99.8503	0x37800	482e75dd858c
+ai_tactical	?get_attack_skill_value@type_AI_spellcaster@@QAEJPBVarmy@@0JJ@Z	53.4311	99.8503	99.8503	0x37800	482e75dd858c
 ai_tactical	?get_backlash_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	0.0000	100.0000	100.0000	0x39de0	259b2f798110
 ai_tactical	?get_berserk_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x3a400	38218f1b06a2
 ai_tactical	?get_bless_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x37430	cbf586fbe355
@@ -392,7 +392,7 @@ ai_tactical	?get_curse_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_dat
 ai_tactical	?get_damage_spell_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x36f60	04385420477a
 ai_tactical	?get_damage_value@type_AI_spellcaster@@QAEJHJPBVhero@@PBVarmy@@@Z	100.0000	100.0000	100.0000	0x36e30	a48bd9346277
 ai_tactical	?get_defense_boost_value@type_AI_spellcaster@@QAEJPBVarmy@@0JN@Z	100.0000	100.0000	100.0000	0x387c0	752eec4a850c
-ai_tactical	?get_defense_skill_value@type_AI_spellcaster@@QAEJPBVarmy@@JJ@Z	22.2235	100.0000	100.0000	0x38910	651ab02d904c
+ai_tactical	?get_defense_skill_value@type_AI_spellcaster@@QAEJPBVarmy@@JJ@Z	0.0000	100.0000	100.0000	0x38910	651ab02d904c
 ai_tactical	?get_disease_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38a10	fe85b950bd3f
 ai_tactical	?get_dispel_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	0.0000	100.0000	100.0000	0x39bc0	3d130f7655e2
 ai_tactical	?get_disruptive_ray_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38dc0	b3db6a9813b4
@@ -482,7 +482,7 @@ army	?check_obstacle_attacks@army@@QAEEE@Z	100.0000	100.0000	100.0000	0x41f70	26
 army	?check_special_attack@army@@QAEEPAV1@@Z	100.0000	100.0000	100.0000	0x40500	49147539aa98
 army	?compute_attacker_bonus@army@@QBEHHEPAV1@EJ@Z	100.0000	100.0000	100.0000	0x43320	698523953542
 army	?consider_attack@army@@QAEXPBV1@JJ@Z	100.0000	100.0000	100.0000	0x48840	686954572466
-army	?do_attack@army@@QAEEPAV1@H@Z	98.9251	99.9962	99.9962	0x41610	1fa738e017fe
+army	?do_attack@army@@QAEEPAV1@H@Z	98.8868	99.9962	99.9962	0x41610	1fa738e017fe
 army	?do_attack@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x41cb0	0c17230627a2
 army	?do_fire_shield@army@@AAEXJ@Z	100.0000	100.0000	100.0000	0x409c0	3f772aa9df30
 army	?do_multi_head_attack@army@@QAEXIPAH0PAJ@Z	100.0000	100.0000	100.0000	0x40310	d1193b9e629e
@@ -859,7 +859,7 @@ command	?DoVictory@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x77470	8b0
 # automate_first_aid_tent re-exposes the same include-set/codegen class;
 # GetCommand's 62 branches and 20 returns still agree exactly. hist stays
 # at 92.5714.
-command	?GetCommand@combatManager@@QAEHH@Z	92.5357	92.5714	92.5714	0x76490	d35f38a78257
+command	?GetCommand@combatManager@@QAEHH@Z	92.5714	92.5714	92.5714	0x76490	d35f38a78257
 command	?GetControl@combatManager@@QAEXXZ	87.7747	87.7747	87.7747	0x782d0	45e6f0e0e9da
 command	?HandleCombatPlayerDrop@combatManager@@QAEEKPAVmessage@@@Z	100.0000	100.0000	100.0000	0x7a500	93137abf7711
 command	?Main@combatManager@@UAEHAAVmessage@@@Z	96.2267	96.2267	96.2267	0x740d0	414b21592711
