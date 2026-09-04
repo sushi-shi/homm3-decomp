@@ -4070,11 +4070,10 @@ void combatManager::MirrorImage(int targetIndex, int level)
 // Retail's `rep movsd` of 29 dwords into `summoned + 0x74` is the
 // embedded TCreatureTypeTraits row army.h's own note calls sMonInfo,
 // i.e. the source said `summoned.sMonInfo = akCreatureTypeTraits[type]`.
-// Modelling it as a member means restructuring army +0x74..+0xe7 into a
-// union - the span crosses HOMM3_ARMY_SPELLCAST_VIEW and
-// HOMM3_ARMY_MULTI_HEAD_VIEW and holds three of this header's measured
-// include-set canaries, so that is a layout change for the whole army
-// run and not this lane's to make. The memcpy emits the identical
+// Modelling it as a member means adopting the DC TCreatureTypeTraits
+// aggregate for army +0x74..+0xe7 tree-wide (its slices have consumers in
+// sixteen TUs), so that is a layout change for the whole army run and not
+// this lane's to make. The memcpy emits the identical
 // `mov ecx,0x1d / rep movsd`.
 //
 // BOTH LOOPS ARE GOTO LOOPS, AND THAT IS WORTH TWELVE POINTS (81.26 ->

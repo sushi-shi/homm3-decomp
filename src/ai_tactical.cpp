@@ -3,7 +3,7 @@
 // 141 functions in link order; 20 compiler-generated $-thunks omitted.
 // get_counterstroke_value special-cases the two griffins. The define
 // sits ahead of every header because armygrp.h arrives transitively and
-// a view define has to precede its header.
+// a gate define has to precede its header.
 #define HOMM3_CREATURE_GRIFFIN_DECL
 // consider_teleport reads combatManager's pending-order code back as a
 // domain member. (Its SPELL_TELEPORT define retired 2026-08-20 when
