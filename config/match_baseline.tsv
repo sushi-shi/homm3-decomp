@@ -452,7 +452,7 @@ army	?GetSpeed@army@@QBEHXZ	100.0000	100.0000	100.0000	0x48cd0	548e9a6493e5
 army	?GoBerserk@army@@QAEXXZ	100.0000	100.0000	100.0000	0x456d0	9ab479de3345
 army	?Init@army@@QAEXHHPBVhero@@HHHH@Z	100.0000	100.0000	100.0000	0x3d8b0	28bc09498414
 army	?InitClean@army@@QAEXXZ	92.6261	92.6261	92.6261	0x3d5c0	9d5a2ebce7ef
-army	?LoadResources@army@@QAEXXZ	98.6225	98.6225	98.6225	0x3d9f0	d04d2eef9e47
+army	?LoadResources@army@@QAEXXZ	98.6225	98.6225	98.6225	0x3d9f0	b18bfc256ee5
 army	?MidX@army@@QBEHXZ	100.0000	100.0000	100.0000	0x46660	9eaac4151d2e
 army	?MidY@army@@QBEHXZ	100.0000	100.0000	100.0000	0x46630	aa3d1aeda6d1
 army	?OffsetToFront@army@@QBEHH@Z	100.0000	100.0000	100.0000	0x45cd0	85b2dbb7172a
@@ -472,7 +472,7 @@ army	?adjust_damage@army@@QBEJPAV1@JEEJPAJ@Z	100.0000	100.0000	100.0000	0x43f40	
 army	?animate_missile@army@@AAEXPAV1@@Z	93.1695	93.1695	93.1695	0x3f2c0	dd0426a0d067
 army	?attack_hex@army@@QAEEHE@Z	100.0000	100.0000	100.0000	0x45a60	e88d6d24596a
 army	?attack_wall@army@@AAEXW4TWallTargetId@@ABUtype_ballistics_traits@@@Z	100.0000	100.0000	100.0000	0x45ec0	eb02d396c5bc
-army	?attack_wall@army@@AAEXW4TWallTargetId@@J@Z	91.4600	91.4600	91.4600	0x45fd0	a3606130bd9b
+army	?attack_wall@army@@AAEXW4TWallTargetId@@J@Z	91.4600	91.4600	91.4600	0x45fd0	59ff80655069
 army	?can_cast_resurrect@army@@QBE_NJ@Z	100.0000	100.0000	100.0000	0x473d0	144134940a8b
 army	?can_cast_spell@army@@QBEEJ@Z	100.0000	100.0000	100.0000	0x476c0	bd4801906407
 army	?can_shoot@army@@QBEEPBV1@@Z	100.0000	100.0000	100.0000	0x428f0	00041703250b
@@ -2502,7 +2502,7 @@ remote	?HandlePlayerLost@@YIXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x1569a0	
 remote	?HandlePlayerWon@@YIXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x156940	3d6505239734
 remote	?HasOldChat@CChatManager@@QAEEXZ	100.0000	100.0000	100.0000	0x153db0	9760075ee3ce
 remote	?IgnoreKey@CChatEdit@@UAEEPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1543f0	77129503ae51
-remote	?Init@CChatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1537b0	cd5ad8d4d49c
+remote	?Init@CChatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1537b0	d4bef186ba3d
 remote	?InitConnection@@YIEPADPAU_DPCOMPORTADDRESS@@@Z	100.0000	100.0000	100.0000	0x1556e0	a2ef8bd8c351
 remote	?InitRemote@@YIEW4eNetGameType@@PBD@Z	63.6415	100.0000	100.0000	0x154410	b98459990b13
 remote	?IsClose@CTurnDuration@@QAEEK@Z	100.0000	100.0000	100.0000	0x157d00	8f67ba459bc4
