@@ -86,6 +86,60 @@ inline int max(int left, int right)
 // use the same text-column clamp.
 #define DIALOG_ICON_MAX_TEXT_WIDTH 110
 
+// The re-entrancy latch PollSound holds while it runs; DC ?gbInPollSound@@3HA,
+// retail .bss 0x699578, kb.obj's own.
+DATA(0x00699578)
+int gbInPollSound;
+
+// E:\gamedcs\kb.cpp:318
+// The idle-time service: the mouse cursor, the palette colour cycles of
+// the water, lava and river tilesets on their own timer (110 ms in the
+// two cycle modes, 200 otherwise - the DC names the mode giCycleType;
+// this tree carries the retail dword as gCombatActive698a18), and every
+// 60 ms the remote poll plus the turn-duration warning. glTimers[7] and
+// [5] are the DC's `glTimers + 28` and `+ 20`.
+VA(0x004ed490, 0x1B5)  // anchor-global + handler-callee, dc 0xdf330
+void PollSound()
+{
+    if (!gbInPollSound) {
+        gbInPollSound = 1;
+        gpMouseManager->CheckUpdate();
+        if (GameTime::IsPast(glTimers[7])) {
+            const int fastCycleType = 3;
+            if (gCombatActive698a18 == 1
+                || gCombatActive698a18 == fastCycleType)
+                glTimers[7] = GameTime::Get() + 110;
+            else
+                glTimers[7] = GameTime::Get() + 200;
+            if (gUnnamed67f574) {
+                if (gpAdvManager->groundTileset[8]) {
+                    gpAdvManager->groundTileset[8]->ColorCycle(0xe5, 0xf0, -1);
+                    gpAdvManager->groundTileset[8]->ColorCycle(0xf2, 0xfd, -1);
+                }
+                if (gpAdvManager->groundTileset[7])
+                    gpAdvManager->groundTileset[7]->ColorCycle(0xf6, 0xfe, -1);
+                if (gpAdvManager->riverTileset[1]) {
+                    gpAdvManager->riverTileset[1]->ColorCycle(0xb7, 0xc2, -1);
+                    gpAdvManager->riverTileset[1]->ColorCycle(0xc3, 0xc8, -1);
+                }
+                if (gpAdvManager->riverTileset[3]) {
+                    gpAdvManager->riverTileset[3]->ColorCycle(0xe4, 0xef, -1);
+                    gpAdvManager->riverTileset[3]->ColorCycle(0xb7, 0xbc, -1);
+                    gpAdvManager->riverTileset[3]->ColorCycle(0xf0, 0xf5, -1);
+                }
+                if (gpAdvManager->riverTileset[4])
+                    gpAdvManager->riverTileset[4]->ColorCycle(0xf0, 0xf8, -1);
+            }
+        }
+        if (GameTime::IsPast(glTimers[5])) {
+            glTimers[5] = GameTime::Get() + 60;
+            PollRemote();
+            gTurnDuration69d630.CheckForWarning();
+        }
+        gbInPollSound = 0;
+    }
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\kb.cpp:240
@@ -116,12 +170,6 @@ void UnloadProgressBar()
     // @stub
 }
 
-// E:\gamedcs\kb.cpp:318
-VA(0x004ed490, 0x1B5)  // anchor-global + handler-callee, dc 0xdf330
-void PollSound()
-{
-    // @stub
-}
 
 // E:\gamedcs\kb.cpp:431
 // Located by exhaustive order-mapping of the six carve rows after
@@ -476,17 +524,60 @@ stop_intro:
     frame->Dispose();
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\kb.cpp:879. The retail row follows the Complete-only intro
 // helper above, preserving the executable's link order.
+//
+// The defeat video with its own MP3. The message loop is the intro
+// helper's above (F4 is the one key that does not stop it; any click or
+// other key stops it outside the first run), and it ends with the video
+// closed, the screen faded and the theme allowed to play out unless a
+// click cut it short. Complete services the sound engine inside both
+// waits where the Dreamcast only slept.
 VA(0x004ee2b0, 0x121)  // anchor-callee + dc-order-map, dc 0xdffe4
 void LostGame()
 {
-    // @stub
-}
+    unsigned char done = 0;
+    VideoOpen(34, 0, 0, 0, 0, 0, 1, 1);
+    gpSoundManager->StartMP3("UltimateLose", 1, 1);
+    for (int i = 0; i < 3; i++) {
+        Sleep(500);
+        gpSoundManager->service_sounds();
+    }
+    gpInputManager->Flush();
+    if (VideoNeedsUpdate())
+        VideoDrawRects();
+    while (1) {
+        if (!VideoPlaying())
+            break;
+        Process1WindowsMessage();
+        message msg = gpInputManager->GetEvent();
+        switch (msg.id) {
+        case MESSAGE_KEY_DOWN:
+            if (msg.codeX == KEYCODE_F4)
+                break;
+            // fall through
+        case MESSAGE_LEFT_BUTTON_DOWN:
+        case MESSAGE_RIGHT_BUTTON_DOWN:
+            if (!gbFirstTimeThrough) {
+                done = 1;
+                goto stop_video;
+            }
+            break;
+        }
+        if (VideoNeedsUpdate())
+            VideoDrawRects();
+    }
 
-#endif  // @carcass
+stop_video:
+    VideoClose();
+    gpWindowManager->FadeScreen(1, 4, 0);
+    int status;
+    do {
+        gpSoundManager->service_sounds();
+        Sleep(100);
+        status = AIL_stream_status(gMP3Stream);
+    } while (gMP3Stream && !done && status == AIL_STREAM_PLAYING);
+}
 
 // Dreamcast publishes mainBack. Complete adds a second, game-selection
 // backdrop beside it; both are private to oldmain's retail image range.
