@@ -2557,12 +2557,10 @@ public:
     void CycleCombatScreen();
 #endif
 #endif
-#ifdef HOMM3_COMMAND_TOWER_STRING_VIEW
 private:
     std::string get_tower_string(TWallSection wall, long archers,
                                  long skill) const;
 public:
-#endif
 };
 SIZE(combatManager::TWallTraits, 0x24);
 
