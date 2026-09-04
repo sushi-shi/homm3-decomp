@@ -14,10 +14,18 @@
 #include "customcampaign.h"
 #include "customcampaign_legacy.h"
 #include "hero.h"
+#include "soundmgr.h"
+#include "town.h"
+#include <string.h>
 
 // Scenario ordinals used when the fixed legacy matrices are promoted to the
 // current variable-length CampaignScenarioInfo vector.
 DATA(0x0063d8c8) static int legacyCampaignScenarioIndices[7][4];
+
+// Retail .data 0x66c218 is a reference cell (the akHeroTraits pattern)
+// holding the campaign music table at 0x66c090; only StartMusic and
+// MapTextStruct::Play read the cell, so customcampaign.obj owns it.
+DATA(0x0066c218) extern const TCampaignMusicTraits* akCampaignMusicTraits;
 
 static const int CROSSOVER_PRIMARY_ARTIFACT_SLOTS = 16;
 static const int CROSSOVER_EQUIPPED_ARTIFACT_SLOTS = 19;
@@ -35,6 +43,18 @@ static const int CROSSOVER_PATROL_FIRST_SCENARIO = 6;
 static const int CROSSOVER_PATROL_LAST_SCENARIO = 7;
 static const int CROSSOVER_PATROL_HERO = 155;
 static const int CROSSOVER_PATROL_RADIUS = 10;
+
+// Complete-only. Retail destroys the two MapTextStruct records and the
+// start-options object through `delete` (the options go through vtable
+// slot 0 with the deleting flag), then tears down the members in reverse
+// declaration order.
+VA(0x00485fe0, 0x12C)  // ~CampaignHeaderStruct's per-scenario delete callee, retail-only
+TCampaignBrief::ScenarioStruct::~ScenarioStruct()
+{
+    delete prologue;
+    delete epilogue;
+    delete options;
+}
 
 // Complete-only campaign carry-over expansion. Dreamcast's campaign path has
 // no counterpart, but its debug types still corroborate hero, army and
@@ -242,6 +262,15 @@ void TCampaignBrief::ScenarioStruct::InitializeCrossoverHero(
     gpGame->campaign.field_6c.push_back(currentHero->id);
 }
 
+#if 0  // @carcass - Complete-only map-header loader: needs TGzInflateBuf/TStreamBufFile models.
+VA(0x00487d30, 0x96)  // LoadScenario's sole callee, retail-only
+void TCampaignBrief::ScenarioStruct::LoadMapHeader(
+    TAbstractFile* stream, NewSMapHeader* mapHeader, int which)
+{
+    // @stub
+}
+#endif  // @carcass
+
 #if 0  // Dreamcast-only carcass; retained as evidence, not emitted for retail.
 // E:\gamedcs\customcampaign.cpp:29
 DC_ONLY(0x7cc8c, 0x3E)
@@ -286,71 +315,183 @@ void SCampaign::DoPreLoadCustomization()
 }
 #endif
 
-#if 0  // @carcass - Complete campaign-file loader, named by its ctor caller.
+#if 0  // @carcass - Complete scenario launcher: needs TGzInflateBuf/TStreamBufFile models.
 // TCampaignBrief::TCampaignBrief supplies exact receiver offsets, return
-// tests, and argument ABIs for this PC-only loader family.  Keeping the
-// located bodies as carcass claims gives constructor relocations their real
-// identities without pretending the loaders have been reconstructed.
+// tests, and argument ABIs for this PC-only loader family.
 VA(0x004884c0, 0x103)  // CampaignHeaderStruct::StartScenario sole caller
 void TCampaignBrief::ScenarioStruct::StartScenario(
     TAbstractFile* stream, int option)
 {
     // @stub
 }
+#endif  // @carcass
 
+// Complete-only. The four members default-construct (the empty
+// allocator byte is copied out of the parameter padding at [ebp+0xb]);
+// the body assigns the name and clears the three pointers/status.
 VA(0x004885d0, 0xCB)  // anchor-caller(TCampaignBrief ctor), retail-only
 TCampaignBrief::CampaignHeaderStruct::CampaignHeaderStruct(
     const char* filename)
 {
-    // @stub
+    file_name = filename;
+    data = 0;
+    stream = 0;
+    file_error = CAMPAIGN_FILE_OK;
 }
 
+// Complete-only. Retail deletes every scenario record (null-checked by
+// `delete`), calls vector<ScenarioStruct*>::erase(begin, end) out of line
+// (the retail label game_1fd60_sub02_14cdb0 at 0x54cdb0 is that COMDAT,
+// i.e. a `scenarios.clear()`), calls FreeData, then destroys scenarios,
+// campaign_desc, campaign_name and file_name in reverse order.
+//
+// Residual (78.53%): FreeData has ONE call site in this TU, so /Ob2 expands
+// it here regardless of size; retail's second caller is the Complete-only
+// campaign-list scanner at 0x482fd0 (unreconstructed), which keeps it out
+// of line. With FreeData expanded, spelling the clear() that retail
+// evidently wrote measures LOWER (75.72: erase expands and only its
+// _Destroy child stays a call), so the clear() is withheld until the
+// scanner lands. Pins are not used in this lane.
 VA(0x004886a0, 0x132)  // anchor-caller(TCampaignBrief ctor), retail-only
 TCampaignBrief::CampaignHeaderStruct::~CampaignHeaderStruct()
 {
-    // @stub
+    for (unsigned int i = 0; i < scenarios.size(); ++i)
+        delete scenarios[i];
+    FreeData();
+}
+
+// Complete-only; also reached from the custom-campaign list scanner
+// (0x482fd0 family). Name provisional.
+VA(0x004887e0, 0x30)  // ~CampaignHeaderStruct + 0x482fd0-family callee, retail-only
+void TCampaignBrief::CampaignHeaderStruct::FreeData()
+{
+    if (stream) {
+        delete stream;
+        stream = 0;
+    }
+    if (data) {
+        delete[] data;
+        data = 0;
+    }
 }
 
 VA(0x00488810, 0x32)  // anchor-caller(TCampaignBrief ctor), retail-only
 bool TCampaignBrief::CampaignHeaderStruct::LoadScenario(
     int which, NewSMapHeader* mapHeader)
 {
-    // @stub
+    if (!Load())
+        return false;
+    scenarios[which]->LoadMapHeader(stream, mapHeader, which);
+    return true;
 }
 
+// Complete-only; the 0x482fd0-family caller sizes the campaign list with
+// it. Name provisional.
+VA(0x00488850, 0x2F)  // 0x482fd0-family callee, retail-only
+int TCampaignBrief::CampaignHeaderStruct::GetNumMaps() const
+{
+    int numMaps = 0;
+    for (unsigned int i = 0; i < scenarios.size(); ++i) {
+        if (scenarios[i]->inflated_size > 0)
+            ++numMaps;
+    }
+    return numMaps;
+}
+
+#if 0  // @carcass - Complete campaign-file loader, named by its ctor caller.
 VA(0x00488880, 0x5D6)  // anchor-caller(TCampaignBrief ctor), retail-only
 bool TCampaignBrief::CampaignHeaderStruct::Load()
 {
     // @stub
 }
+#endif  // @carcass
 
 VA(0x00488ee0, 0x1D)  // anchor-caller(TCampaignBrief ctor), retail-only
 void TCampaignBrief::CampaignHeaderStruct::StartMusic()
 {
-    // @stub
+    gpSoundManager->StartMP3(akCampaignMusicTraits[campaign_music].name, 0, 1);
 }
 
+// Complete-only. A scenario without map data is marked unavailable and
+// already completed; otherwise every prerequisite scenario must be
+// completed in the running campaign's score table.
 VA(0x00488f00, 0xAC)  // anchor-caller(TCampaignBrief ctor), retail-only
 void TCampaignBrief::CampaignHeaderStruct::GetAvailableScenarios(
     unsigned char* available) const
 {
+    for (unsigned int i = 0; i < scenarios.size(); ++i) {
+        ScenarioStruct* scenario = scenarios[i];
+        available[i] = 1;
+        if (scenario->inflated_size <= 0) {
+            available[i] = 0;
+            gpGame->campaign.mapScores[i].completed = true;
+        } else {
+            for (unsigned int j = 0; j < scenario->prerequisites.size(); ++j) {
+                if (scenario->prerequisites[j]
+                    && !gpGame->campaign.mapScores[j].completed) {
+                    available[i] = 0;
+                    break;
+                }
+            }
+        }
+    }
+}
+
+#if 0  // @carcass - Complete-only prologue/epilogue player (video + MP3 + subtitles).
+VA(0x00488fb0, 0x528)  // PlayScenarioPrologue callee + music-cell reader, retail-only
+void TCampaignBrief::MapTextStruct::Play()
+{
     // @stub
 }
+#endif  // @carcass
 
 VA(0x004894e0, 0x1D)  // CampaignBriefHandler launch arm, retail-only
 void TCampaignBrief::CampaignHeaderStruct::StartScenario(
     int which, int option)
 {
-    // @stub
+    scenarios[which]->StartScenario(stream, option);
+}
+
+// E:\gamedcs\CustomCampaign.h:199 (dc 0xbcd90, a Dreamcast header inline
+// attributed to game.obj); retail keeps one out-of-line copy here, which
+// TCampaignWindow's constructor calls through the SCampaignCtorView proxy.
+// The five containers default-construct; the body sets the scalar state
+// and clears the completion table.
+VA(0x00489500, 0x88)  // TCampaignWindow ctor callee + member stores, dc 0xbcd90
+SCampaign::SCampaign()
+{
+    isCheater = 0;
+    secretActive = 0;
+    currentMap = -1;
+    numMapRegions = -1;
+    briefingChoice = -1;
+    crossoverArrayIndex = -1;
+    currentCampaign = CAMPAIGN_NONE;
+    memset(campaignCompleted, 0, sizeof(campaignCompleted));
+}
+
+// E:\gamedcs\CustomCampaign.h:212 (dc 0xe6ef8, attributed to kb.obj in the
+// Dreamcast build); retail's copy sits here.
+VA(0x004897d0, 0x43)  // mapScores walk on the 0x14 stride, dc 0xe6ef8
+unsigned char SCampaign::CampaignComplete()
+{
+    for (unsigned int i = 0; i < mapScores.size(); ++i) {
+        if (!mapScores[i].completed)
+            return 0;
+    }
+    return 1;
 }
 
 VA(0x0048a270, 0x2F)  // CampaignBriefHandler video/launch arms, retail-only
 void SCampaign::PlayScenarioPrologue(void* campaignHeader)
 {
-    // @stub
+    int map = currentMap;
+    gpSoundManager->StopAllSamples(1);
+    TCampaignBrief::CampaignHeaderStruct* header =
+        static_cast<TCampaignBrief::CampaignHeaderStruct*>(campaignHeader);
+    if (header->scenarios[map]->prologue)
+        header->scenarios[map]->prologue->Play();
 }
-
-#endif
 
 static unsigned char ReadCampaignByte(TAbstractFile* infile)
 {
@@ -605,13 +746,30 @@ int SCampaign::get_total_time() const
     return totalTime;
 }
 
-#if 0  // @carcass - Complete pre-launch campaign setup.
+// Complete-only pre-launch campaign setup: records the briefing choice,
+// clears the crossover id list, and on the third map of two campaigns
+// rewrites the third player slot's alignment (Inferno, or the chosen one
+// of Inferno/Dungeon) - the `sub eax,0 / je / dec / jne` selector form.
 VA(0x0048b2e0, 0x8C)  // CampaignBriefHandler launch arm, retail-only
 void SCampaign::ApplyBriefingChoice(int option)
 {
-    // @stub
+    briefingChoice = option;
+    field_6c.erase(field_6c.begin(), field_6c.end());
+    if (currentCampaign == ALIGNMENT_CHOICE_CAMPAIGN_A
+        && currentMap == ALIGNMENT_CHOICE_MAP)
+        gpGame->setup.alignment[2] = TOWN_INFERNO;
+    if (currentCampaign == ALIGNMENT_CHOICE_CAMPAIGN_B
+        && currentMap == ALIGNMENT_CHOICE_MAP) {
+        switch (option) {
+        case BRIEFING_CHOICE_FIRST:
+            gpGame->setup.alignment[2] = TOWN_INFERNO;
+            break;
+        case BRIEFING_CHOICE_SECOND:
+            gpGame->setup.alignment[2] = TOWN_DUNGEON;
+            break;
+        }
+    }
 }
-#endif
 
 // SCampaign::Load retains the range-erase COMDAT for its concrete carry-over
 // hero pools. Retail 0x48c500 proves the nested element shapes independently:

@@ -34,6 +34,18 @@ public:
     bool operator()(void* left, void* right) const;
 };
 
+// The campaign music table retail reaches through the reference cell at
+// .data 0x66c218 (the akHeroTraits pattern; customcampaign.cpp carries
+// the DATA claim). The table at 0x66c090 holds eight-byte rows: the MP3
+// base name ("CampainMusic01".."06") and a dword that is zero in the
+// image. CampaignHeaderStruct::StartMusic indexes it by campaign_music.
+// Names INVENTED.
+struct TCampaignMusicTraits {
+    const char* name;
+    int field_04;
+};
+extern const TCampaignMusicTraits* akCampaignMusicTraits;
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\customcampaign.cpp:70, dc 0x7cd4c) void InitCampaignMapTraits([]* map_traits);
 

@@ -1349,7 +1349,18 @@ class SCampaign {
 public:
     enum {
         PRE36_CAMPAIGN_REMAP_SOURCE = 13,
-        PRE36_CAMPAIGN_REMAP_TARGET = 20
+        PRE36_CAMPAIGN_REMAP_TARGET = 20,
+        // The constructor's currentCampaign sentinel, one past the last
+        // built-in campaign ordinal.
+        CAMPAIGN_NONE = 21,
+        // ApplyBriefingChoice's two alignment-choice sites: the third map
+        // of campaigns 0 and 4 rewrites setup.alignment[2] (names
+        // provisional, from the retail compares).
+        ALIGNMENT_CHOICE_CAMPAIGN_A = 0,
+        ALIGNMENT_CHOICE_CAMPAIGN_B = 4,
+        ALIGNMENT_CHOICE_MAP = 2,
+        BRIEFING_CHOICE_FIRST = 0,
+        BRIEFING_CHOICE_SECOND = 1
     };
 
     // Compatibility spelling for the already reconstructed vector helpers;
@@ -1476,6 +1487,9 @@ public:
     // Retail 0x48b2e0 banks the selected starting option and applies the
     // campaign-specific setup overrides before the scenario stream is read.
     void ApplyBriefingChoice(int option);
+    // DC CustomCampaign.h:212 (dc 0xe6ef8); retail 0x4897d0 in
+    // customcampaign.obj.
+    unsigned char CampaignComplete();
     int get_score() const;
     int get_total_time() const;
 #ifdef HOMM3_GAME_NEW_MAP_DECLS
