@@ -1181,10 +1181,7 @@ public:
     // raises the per-side latch at combatManager+0x1329c the moment it
     // finds a stack whose byte here is non-zero, so the byte is a
     // per-stack "this side has one of these" marker whose meaning that
-    // latch does not name either. Behind the pow view, which the same
-    // TU already defines.
-#if defined(HOMM3_ARMY_POW_VIEW) || defined(HOMM3_ARMY_COPY_VIEW) \
-        || defined(HOMM3_ARMY_COMMAND_ACTION_VIEW)
+    // latch does not name either.
     unsigned char field_4d8;      // +0x4d8
 #ifndef HOMM3_ARMY_COPY_VIEW
     char pad_4d9[0x3];
@@ -1195,9 +1192,6 @@ public:
     // is what the stance added. Name stays ordinal - no roster row
     // reaches it and the writer (the defend command) is not decoded.
     int field_4dc;                // +0x4dc
-#else
-    char pad_4d8[0x8];
-#endif
     // Read by combatManager::ViewArmy and forwarded as the first
     // argument of the post-dialog command. The DC name for the nearby
     // scalar run does not survive the retail STL-layout shift, so keep
@@ -1567,12 +1561,9 @@ private:
     // at depth 2 while army::Walk inlines it at depth 1.
 #endif
     unsigned char move_to(int hex, unsigned char restore_facing);
-#ifdef HOMM3_ARMY_COMMAND_ACTION_VIEW
-    // ProcessNextAction's two dispatch-only army calls. The owning army.cpp
-    // views carry the larger member families; command.cpp needs only these.
+    // ProcessNextAction's two dispatch-only army calls.
     void AttackWall(int iTargetGridIndex);
     void cast_spell(long hex);
-#endif
     // The shooting pair. 0x440160 is the public no-argument entry - it
     // resolves groupToAttack/indexToAttack into the target stack, turns
     // to face it, and fires between one and three volleys - and it

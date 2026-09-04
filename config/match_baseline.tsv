@@ -864,7 +864,7 @@ command	?GetControl@combatManager@@QAEXXZ	87.7747	87.7747	87.7747	0x782d0	45e6f0
 command	?HandleCombatPlayerDrop@combatManager@@QAEEKPAVmessage@@@Z	100.0000	100.0000	100.0000	0x7a500	93137abf7711
 command	?Main@combatManager@@UAEHAAVmessage@@@Z	96.2267	96.2267	96.2267	0x740d0	414b21592711
 command	?ProcessCombatMsg@combatManager@@QAEHAAVmessage@@@Z	93.0970	93.0970	93.0970	0x74d80	aeebd29dc172
-command	?ProcessNextAction@combatManager@@QAEHAAVmessage@@E@Z	98.5272	100.0000	100.0000	0x78d80	71db556973e2
+command	?ProcessNextAction@combatManager@@QAEHAAVmessage@@E@Z	98.5272	100.0000	100.0000	0x78d80	ccdfa6d8ea12
 command	?ResetCycleTimers@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x79f30	cc7796439c39
 command	?ResetCyclingCreatures@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x79de0	af7308795399
 command	?ResetMouse@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x78890	acd51f725486
