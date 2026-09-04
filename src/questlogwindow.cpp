@@ -262,6 +262,14 @@ int TQuestLogWindow::WindowHandler(message* msg)
 // load after the visited-player test.  The remaining delta is register
 // scheduling inside otherwise exact 19-branch/1-ret flow, not permission to
 // flatten either QuestActiveforPlayer or UpdateQuestLocators.
+// Residual (96.5463%): 38/38 blocks exact, register-distance 36. Two
+// spelling-shaped rows are NOT source-reachable - `test al,dl` vs `test dl,al`
+// on the visited-players mask is unchanged by writing `(1 << playerNum) &
+// visitedPlayers` (VC6 canonicalises `&`), and the vector receiver's
+// `add ecx,N` vs `lea ecx,[eax+N]` follows the same binding. `homm3 vc6
+// diagnose` routes this to predict-inline claiming quest_text_row is
+// under-inlined; that is a MIS-PAIRING - retail's `game_12e430_sub02_12e6b0`
+// IS the call to it (0x52e6b0), and no TU defines a body to inline.
 VA(0x0052e430, 0x27E)  // dc 0x116ccc; Complete adds QuestGuardList
 void DoQuestLog(int player)
 {
