@@ -33,6 +33,20 @@ that reproduces the retail MSVC 6.0 object code.
 - Local retail copies live outside every repo at `../orig/` (safekeeping;
   hash-verify before use). The repo never contains game bytes; `build/` is gitignored.
 
+## Standing orders for matching agents
+
+- **We chase MAX, not cur.** `config/match_baseline.tsv` banks each function's best
+  score together with the source hash it was measured at; that banked MAX is the
+  judged outcome. A function whose own source did not change and whose current score
+  fell (a header correction, a removed view scaffold, a delink generation, new claims
+  elsewhere) is observational collateral: note it in the commit message and continue.
+- **No agent recovers what is already banked by hash.** Rows sitting below their banked
+  MAX are not targets - not for polish lanes, not for view-removal lanes, not for
+  integrators. Do not keep a view guard, gate a declaration, or respell a caller to lift
+  an unrelated row back to its banked value.
+- The ratchet still fails the build for a function whose OWN source changed and regressed
+  below its MAX; that, and gate errors, are what must be fixed.
+
 ## Toolchain
 
 - Compiler: VC6 SP3 `CL.EXE` under Wine; linker: VC6 `LINK.EXE` 6.00.8447 (the
