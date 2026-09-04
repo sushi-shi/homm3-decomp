@@ -1271,12 +1271,11 @@ SIZE(SGameSetupOptions, 0x1cc);
 // SCampaign::clear_carryover_pool(TCarryOverPoolNumber) identifies the
 // +0x3c slot as the campaign's carry-over hero pools - while 0x45f7b0's
 // inner elements are trivially destroyed and its element type stays
-// unidentified. Modelled as four-dword opaque objects (rather than byte
-// arrays) because the nested vectors have four-byte alignment; that alignment
-// is what makes SCampaign's +0x39..+0x3b gap implicit. The two operations are
-// declared out of line, which is exactly the code retail emits; spelling
-// the real nested vectors would instantiate them in every game.h consumer
-// for no gain.
+// unidentified. SCampaign itself carries the real nested vectors (the
+// retail PC layout agrees with IDA's independently recovered type record);
+// these two four-dword opaque twins, with their operations declared out of
+// line, survive only for campaignwindow.cpp's SCampaignCtorView below,
+// which models the out-of-line COMDAT call boundary retail keeps there.
 class SCampaignHeroPools {
 public:
     int pad_00[4];
@@ -1294,17 +1293,6 @@ public:
     SCampaignPools4c& operator=(const SCampaignPools4c& that);
 };
 SIZE(SCampaignPools4c, 0x10);
-
-#if defined(HOMM3_CAMPAIGNWINDOW_IMPLICIT_SCAMPAIGN) \
- || defined(HOMM3_GAME_SCAMPAIGN_ASSIGN_VIEW)
-// The retail PC layout agrees with IDA's independently recovered type record:
-// these are the concrete types hidden behind the declaration-only wrappers
-// above. Expose them only where campaignwindow.obj emits the generated
-// members or game.obj reconstructs the retained generated assignment; other
-// TUs must retain retail's out-of-line COMDAT call boundary.
-typedef std::vector<std::vector<hero> > SCampaignHeroPoolsView;
-typedef std::vector<std::vector<type_artifact> > SCampaignArtifactPoolsView;
-#endif
 
 // Complete's per-scenario campaign progress record. The name and return type
 // survive in the independently located HD GetCurrentScenario signature;
@@ -1372,14 +1360,10 @@ public:
     // its body copies the string at +0x14 into the hidden return object.
     std::string GetCampaignFileName() const;
     unsigned char campaignCompleted[21];
-#if defined(HOMM3_CAMPAIGNWINDOW_IMPLICIT_SCAMPAIGN) \
- || defined(HOMM3_GAME_SCAMPAIGN_ASSIGN_VIEW)
-    SCampaignHeroPoolsView carryOverHeroes;
-    SCampaignArtifactPoolsView field_4c;
-#else
-    SCampaignHeroPools carryOverHeroes;
-    SCampaignPools4c field_4c;
-#endif
+    // +0x3c / +0x4c: the carry-over hero pools and the artifact pools
+    // (see the SCampaignHeroPools note above for the retail proof).
+    std::vector<std::vector<hero> > carryOverHeroes;
+    std::vector<std::vector<type_artifact> > field_4c;
 #ifdef HOMM3_CAMPAIGNWINDOW_IMPLICIT_SCAMPAIGN
     OutOfLineMapScores mapScores;
 #else

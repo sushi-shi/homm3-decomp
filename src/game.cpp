@@ -60,7 +60,6 @@
 #define HOMM3_GAME_VALIDATE_VLC_DECLS
 #define HOMM3_GAME_NEW_MAP_DECLS
 #define HOMM3_GAME_TRANSMIT_DECLS
-#define HOMM3_GAME_SCAMPAIGN_ASSIGN_VIEW
 #define HOMM3_VLC_TIME_SURVIVAL_DECLS
 #include "game.h"
 // StartAITheme / TurnOnAIMusic (0x4c6f40 / 0x4c6f80) roll a theme index
