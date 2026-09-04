@@ -171,8 +171,14 @@ _INLINE_DEPTH_ZERO = re.compile(
 # One preprocessor directive may span several physical lines. Count every
 # view identifier in the complete logical directive, while `_strip` keeps
 # comments and quoted fixture text from becoming false source artifacts.
+# The body class may not swallow a backslash-newline: a greedy `[^\r\n]*`
+# eats the trailing `\`, the optional continuation group then matches
+# zero times and the regex SUCCEEDS without backtracking - every
+# `|| defined(X)` on a continuation line was invisible until 2026-09-04.
+_PP_BODY = r"(?:[^\\\r\n]|\\(?!\r?\n))*"
 _PP_LOGICAL = re.compile(
-    r"^[ \t]*\#[^\r\n]*(?:\\\r?\n[^\r\n]*)*", re.MULTILINE)
+    r"^[ \t]*\#" + _PP_BODY + r"(?:\\\r?\n" + _PP_BODY + r")*",
+    re.MULTILINE)
 _VIEW_DIRECTIVE_IDENT = re.compile(r"\b[A-Z][A-Z0-9_]*_VIEW\b")
 
 
@@ -567,6 +573,22 @@ _SAMPLES["per-TU preprocessor scaffolds"] = (
      "int " + _SCAFFOLD_DECLS + " = 1;",
      "// #define " + _SCAFFOLD_PREFIX + "COMMENT_DECLS"))
 
+# Exact-count samples: a positive only proves `>= 1`, which is how the
+# continuation-line blindness above survived - the joined sample still
+# scored on its first line. These must count to the digit.
+_MULTI_SAMPLES = {
+    "view preprocessor artifacts": (
+        (_VIEW_IF_SAMPLE, 2),),
+    "per-TU preprocessor scaffolds": (
+        ("#if defined(" + _SCAFFOLD_DECLS + ") \\\n    || defined("
+         + _SCAFFOLD_LAYOUT + ")", 2),
+        ("#if 0 \\\n || defined(" + _SCAFFOLD_DECLS + ")", 1),
+        ("#if defined(" + _SCAFFOLD_DECLS + ") \\\n    || 0\nint "
+         + _SCAFFOLD_LAYOUT + ";", 1),
+        ("#define " + _SCAFFOLD_INLINE + " \\\n    1\n#define "
+         + _SCAFFOLD_DECLS, 2)),
+}
+
 
 def selftest() -> list[str]:
     failures = []
@@ -583,6 +605,13 @@ def selftest() -> list[str]:
         for sample in negatives:
             if len(sites(_strip(sample), ctx)) != 0:
                 failures.append(f"{label}: FALSE POSITIVE {sample!r}")
+    for label, samples in _MULTI_SAMPLES.items():
+        sites = counters[label]
+        for sample, expected in samples:
+            got = len(sites(_strip(sample), ctx))
+            if got != expected:
+                failures.append(f"{label}: counted {got}, expected "
+                                f"{expected} in {sample!r}")
     missing = set(counters) - set(_SAMPLES)
     failures.extend(f"{label}: NO SELFTEST SAMPLES" for label in sorted(missing))
     volatile_fix = _FIX["volatile qualifiers"]
