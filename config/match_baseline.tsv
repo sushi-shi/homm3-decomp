@@ -703,7 +703,7 @@ campaignwindow	__h3cg$campaignwindow$implicit_dtor$SCampaign	0.0000	100.0000	100
 castle	?CanBuy@@YIHPBVtown@@H@Z	100.0000	100.0000	100.0000	0x61130	ca57faf6f310
 castle	?GetBuildingName@@YIPBDHH@Z	100.0000	100.0000	100.0000	0x610e0	4757b0885c8c
 castle	?SetupCastle@townManager@@QAEXPAVheroWindow@@H@Z	98.0447	98.0447	98.0447	0x61190	1a25bad3171c
-castle	?WindowHandler@THallWindow@@UAEHPAVmessage@@@Z	52.9540	52.9540	52.9540	0x61ab0	ff13cb40ecf6
+castle	?WindowHandler@THallWindow@@UAEHPAVmessage@@@Z	93.6672	93.6672	93.6672	0x61ab0	27ceb18b8968
 cmbtmgr	??0TArcher@combatManager@@QAE@XZ	100.0000	100.0000	100.0000	0x62920	9fdaf5bfc6ad
 cmbtmgr	??0TCombatEagleEyeSide@@QAE@XZ	0.0000	0.0000	0.0000	0x62890	-
 cmbtmgr	??0combatManager@@QAE@XZ	100.0000	100.0000	100.0000	0x62760	6f386fa11acc
