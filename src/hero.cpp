@@ -33,9 +33,6 @@
 // gpGame / playerData / game::IsHuman: the owner-record accessors
 // (belongs_to_human, get_player) and every gpGame walk in this TU need
 // the real definitions, and game.h is where they live.
-// HOMM3_HERO_OBJ_DECLS is defined ahead of game.h: hero::HeroFn_004D8B30
-// takes a HeroExtra, and that class lives behind this gate in game.h.
-#define HOMM3_HERO_OBJ_DECLS
 #include "game.h"
 // advManager::FizzleCenter - HeroView's dismiss path calls it. The one
 // declarator, not the whole events view; advmgr.h's own note records why.
@@ -1036,8 +1033,6 @@ hero::hero()
     gHeroScreenArmySlot = -1;
     field_11c = 0;
 }
-
-#undef HOMM3_HERO_CTOR_RELEASE_VERIFY
 
 // E:\gamedcs\hero.cpp:1233
 // Slot pinned by the two flanking claims (hero::hero 0x4d85f0 above,

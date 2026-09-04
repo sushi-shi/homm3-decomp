@@ -41,15 +41,9 @@
 // the per-level counts at +0xbc.
 // town::get_location, for the type_point DoTownGate hands TeleportTo.
 #include "town.h"
-// game.h's grail-win declarator, for handle_hall_click's one call. Held
-// on its own gate so no other consumer of that header widens.
-// game.h's GetTownName inline, for SetupTown's title line, and its
-// ViewArmy declarator, for DoCommand's two info panels. Same gate
-// discipline: this compiland opens them, nothing else does.
+// game.h's ViewArmy declarator, for DoCommand's two info panels. This
+// compiland opens the gate, nothing else does.
 #define HOMM3_GAME_OBJ_DECLS
-#define HOMM3_TOWNMGR_GRAIL_DECLS
-#define HOMM3_TOWNMGR_TOWN_NAME_DECLS
-#define HOMM3_TOWN_OBJ_DECLS
 #include "game.h"
 #include "hero.h"
 #include "iconwdgt.h"

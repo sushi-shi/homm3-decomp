@@ -14,7 +14,6 @@
 #define HOMM3_WIDGET_SET_VISIBLE_INLINE
 #include "kb.h"
 #undef HOMM3_WIDGET_SET_VISIBLE_INLINE
-#define HOMM3_TOWN_OBJ_DECLS
 #include "game.h"
 #include "textresource.h"
 #include "advmgr.h"

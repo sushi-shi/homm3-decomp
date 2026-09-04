@@ -43,7 +43,6 @@
 // pinned by their bodies and sole caller.
 #define HOMM3_ARMY_MIDPOINT_DECL
 #define HOMM3_ARMY_NEW_TURN_DECL
-#define HOMM3_ARMY_RESET_LATCH_DECL
 #include <math.h>
 #include <stdlib.h>
 
@@ -63,7 +62,6 @@
 #include "csprite.h"  // CSprite::Dispose, for RemoveObstacle
 #include "drawing.h"  // gCombatAreaLimits / gCombatSpeedFactors, for the
                       // missile animators
-#define HOMM3_GAME_IMM_EFFECT_DECL
 #include "game.h"     // gpGame ruleset gate, for RaiseSkeletons
 #include "hero.h"   // hero::IsWieldingArtifact, for ShotIsThroughWall
 #include "findpath.h" // searchArray::lower_door, for LowerDoor

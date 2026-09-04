@@ -29,7 +29,6 @@
 // those ENUMERATORS to every consumer costs the same 0.0357 on the same
 // function (measured 2026-08-14, bisected against the field slicing in
 // the same change, which is innocent).
-#define HOMM3_ARMY_ISINCAPACITATED_DEF  // header-inline body; ai.cpp owns the 0x41f380 out-of-line copy
 #include "creaturetype.h"
 #include "army.h"
 // ai.h: the narrow EAreaAttackCreature roster - LoadResources' missile
