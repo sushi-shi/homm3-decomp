@@ -575,8 +575,8 @@ townManager::townManager()
     field_3c = 0;
     memset(MonPix, 0, sizeof(MonPix));
     memset(TownObjects, 0, sizeof(TownObjects));
-    field_1a0 = 0;
-    field_1a8 = 0;
+    canBuyMask = 0;
+    canBuildMask = 0;
     TownObjectCount = 0;
     field_110 = -1;
     TownWindow = 0;
@@ -591,8 +591,6 @@ townManager::townManager()
     lastHover = -1;
     lastQualifier = -1;
     field_19c = -1;
-    field_1a4 = 0;
-    field_1ac = 0;
 }
 
 // The town's free buildings, and the compiland's only reader of the

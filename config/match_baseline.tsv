@@ -698,6 +698,7 @@ campaignwindow	?DoModal@TCampaignWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x5f2
 campaignwindow	__h3cg$campaignwindow$implicit_dtor$SCampaign	0.0000	100.0000	100.0000	0x5f110	-
 castle	?CanBuy@@YIHPBVtown@@H@Z	100.0000	100.0000	100.0000	0x61130	ca57faf6f310
 castle	?GetBuildingName@@YIPBDHH@Z	100.0000	100.0000	100.0000	0x610e0	4757b0885c8c
+castle	?SetupCastle@townManager@@QAEXPAVheroWindow@@H@Z	98.0447	98.0447	98.0447	0x61190	1a25bad3171c
 cmbtmgr	??0TArcher@combatManager@@QAE@XZ	100.0000	100.0000	100.0000	0x62920	9fdaf5bfc6ad
 cmbtmgr	??0TCombatEagleEyeSide@@QAE@XZ	0.0000	0.0000	0.0000	0x62890	-
 cmbtmgr	??0combatManager@@QAE@XZ	100.0000	100.0000	100.0000	0x62760	6f386fa11acc
@@ -3265,7 +3266,7 @@ townmgr	??0TShipWindow@@QAE@H@Z	96.7680	100.0000	100.0000	0x1d1ef0	5a14c7e6b65f
 townmgr	??0TTavernWindow@@QAE@HH@Z	100.0000	100.0000	100.0000	0x1d70b0	144c0f6d72bf
 townmgr	??0TThievesGuildWindow@@QAE@H@Z	100.0000	100.0000	100.0000	0x1c8190	daa815466817
 townmgr	??0TTownScreenWindow@@QAE@XZ	98.9497	98.9497	98.9497	0x1c34d0	32be2baca2ef
-townmgr	??0townManager@@QAE@XZ	100.0000	100.0000	100.0000	0x1c3310	dc274f7e9931
+townmgr	??0townManager@@QAE@XZ	99.0800	100.0000	100.0000	0x1c3310	38297efef9f6
 townmgr	??0type_garrison_base_window@@QAE@PAVhero@@HPAVarmyGroup@@@Z	93.8825	98.2932	98.2932	0x1ce830	6bdd282efa14
 townmgr	??0type_monster_join_window@@QAE@PAVhero@@PAVarmyGroup@@E@Z	93.8770	93.8770	93.8770	0x1d0b40	b0aee7ca0785
 townmgr	??0type_university@@QAE@XZ	100.0000	100.0000	100.0000	0x1d2d80	576222ab9cc6

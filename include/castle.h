@@ -5,6 +5,8 @@
 #ifndef HOMM3_CASTLE_H
 #define HOMM3_CASTLE_H
 
+#include <va.h>
+
 class town;
 
 // Building-name tables, byte-proven by the retail lookup 0x4610e0:
@@ -27,6 +29,23 @@ enum EBuildingId {
 
 const char* GetBuildingName(int townType, int buildingId);
 int CanBuy(const town* currTown, int buildingId);
+
+// Retail extends the Dreamcast hall-screen table with Conflux while
+// preserving the original 18-byte row width. SetupCastle copies one row
+// into its working order and advances entries along their upgrade chains.
+DATA(0x0066cf98)
+extern const unsigned char TownSpecStructScreen[9][18];
+DATA(0x0066d03c)
+extern const unsigned char NumOfTownSpecStrScreen[9];
+
+// The four parallel widget bands driven by SetupCastle. Values are the
+// Complete message operands; the names are reconstructed from their roles.
+enum ECastleHallWidgetId {
+    CASTLE_BUILD_FRAME_FIRST_ID = 0x190,
+    CASTLE_BUILD_NAME_FIRST_ID = 0x258,
+    CASTLE_BUILD_ICON_FIRST_ID = 0x2bc,
+    CASTLE_BUILD_BUTTON_FIRST_ID = 0x320
+};
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\castle.cpp:285, dc 0x5c1d8) const char* GetBuildingName(int townType, int buildingId);
