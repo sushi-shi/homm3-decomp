@@ -694,8 +694,7 @@ enum ELossConditionType {
     LOSS_CONDITION_TIME_LIMIT = 2
 };
 
-#if defined(HOMM3_GAME_VALIDATE_VLC_DECLS) \
- || defined(HOMM3_GAME_NEW_MAP_DECLS)
+#ifdef HOMM3_GAME_NEW_MAP_DECLS
 // Campaign/scenario ordinals used by the new-map and condition-validation
 // blocks. Retail proves the values; title identities are deliberately not
 // imported from external tables.
@@ -2384,12 +2383,8 @@ public:
                            unsigned char xferFile);
     void SetupOrigData();                      // 0x4bf1a0
     void GiveTroopsToNeutralTown(int townId);  // 0x4bf570
-#ifdef HOMM3_GAME_VALIDATE_VLC_DECLS
-    // 0x4bf780 (dc 0xaa7e0). Kept in game.obj's narrow view because one
-    // additional game member declarator changes codegen in unrelated users
-    // of this header.
+    // 0x4bf780 (dc 0xaa7e0).
     void ValidateVictoryLossConditions(unsigned char check_map_locations);
-#endif
 #ifdef HOMM3_GAME_NEW_MAP_DECLS
     // Retail carries a stream, the optional eight-hero override, a PC-only
     // campaign context, and the map-format/game-version selector (`ret 16`).
