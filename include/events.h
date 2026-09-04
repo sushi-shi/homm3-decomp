@@ -6,9 +6,18 @@
 #define HOMM3_EVENTS_H
 
 #include <va.h>
+#include "armygrp.h"  // SpellID, used by spell_level_order
 
 class garrison;
 class hero;
+
+// E:\gamedcs\events.cpp:1883 (dc 0x9cdc0). The exchange dialog sorts
+// spells by descending level, then alphabetically within a level. The body
+// remains beside its original events.cpp source location so VC6 sees the
+// ordinary inline member before the two std::sort instantiations.
+struct spell_level_order {
+    unsigned char operator()(SpellID first, SpellID second);
+};
 
 // townmgr.cpp's 0x5d1130. advManager::DispatchEvent's garrison arm is the
 // one out-of-TU caller; the declarator lives HERE rather than in townmgr.h
