@@ -1761,13 +1761,9 @@ public:
         //   - 0x88 is gated on a per-side counter that must exceed 2 and
         //     is reset to 0 on success, i.e. an ability with a cooldown
         //     of three rounds, which is the enchanter's mass cast.
-        // Behind a view for this header's usual measured reason;
-        // cmbtmgr.cpp is the only consumer.
-#ifdef HOMM3_ARMY_TURN_ABILITY_VIEW
         ARMY_CREATURE_WRAITH = 0x3d,
         ARMY_CREATURE_FAERIE_DRAGON = 0x86,
         ARMY_CREATURE_ENCHANTER = 0x88,
-#endif
         // The two combat participants can_shoot (0x4428f0) admits as
         // shooters unconditionally, ahead of every other test - the
         // ballista and the arrow tower, which are the only war machines
@@ -1805,14 +1801,12 @@ public:
     //     for the enchanter and only while the per-side counter at
     //     combatManager+0x132a0 exceeds 2, clearing that counter when
     //     the answer is non-zero.
-#ifdef HOMM3_ARMY_TURN_ABILITY_VIEW
     void FaerieDragonSpell();                // 0x447510
     unsigned char Unnamed447fe0();           // 0x447fe0
     // 0x448260, reconstructed in army.cpp: the animated creature-cast
     // dispatcher. combatManager::SetNextArmy-family code is the retail
     // caller; declared with its family here.
     void cast_spell(long hex);
-#endif
     // Const on the DC roster's own mangling
     // (?is_enemy@army@@QBA_NPBV1@@Z), which is what lets
     // combatManager::enemy_is_adjacent take a const army* as the
