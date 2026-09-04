@@ -2952,7 +2952,7 @@ singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100
 # 2026-08-27 (round 3): the interim full build re-banked the transient
 # peak a third time; re-lowered with the round's bodies landed. Same
 # scheduler flap, same recovery path.
-singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0	66eb0a0e15c8
+singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0	66eb0a0e15c8
 singleselectionwindow	?OnMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2193	90.2193	90.2193	0x189710	3ad2be3935a3
 singleselectionwindow	?OnNameClick@TSingleSelectionWindow@@QAEXH@Z	96.3226	96.3226	96.3226	0x18b620	ef174e28edf8
 singleselectionwindow	?OnNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	97.5366	97.5366	97.5366	0x18b510	862e2a9c058b
@@ -3282,8 +3282,10 @@ town	?remove_garrison_hero@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1be390	1cd0
 town	?show_building_rewards@@YIXPBVtown@@PAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x1c0220	4b14797adca3
 town	?show_creature_rewards@@YIXPBVtown@@PAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@std@@@Z	99.0596	99.0596	99.0596	0x1c0400	845f989e91a6
 town	?update_shipyard@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1bf210	343d37d72f90
+towngatewindow	??0TTownGateWindow@@QAE@_N@Z	100.0000	100.0000	100.0000	0x1c1ab0	ecc87aa4934e
 towngatewindow	??1TTownGateWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1c2370	2cdf88c2600e
 towngatewindow	??_GTTownGateWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1c2340	-
+towngatewindow	?TownGateSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1c2980	b80f91f9dbde
 townmgr	??0TBlacksmithWindow@@QAE@HH@Z	100.0000	100.0000	100.0000	0x1d1360	777db8ccc983
 townmgr	??0TBuyBuildWindow@@QAE@HHH@Z	100.0000	100.0000	100.0000	0x1d55c0	97dccb7f8a0f
 townmgr	??0TCastleWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x1d86f0	8d91980e7e44
