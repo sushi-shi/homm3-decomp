@@ -8,7 +8,6 @@
 #define HOMM3_DRAWING_ARCHER_DECLS
 #define HOMM3_CSPRITE_DRAW_METHODS
 #define HOMM3_CSPRITE_CROP_ACCESSORS
-#define HOMM3_ARMY_MOVE_VIEW
 #include "drawing.h"
 #include "bitmap16.h"
 #include "bitmap816.h"

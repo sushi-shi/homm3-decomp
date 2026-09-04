@@ -357,22 +357,11 @@ public:
     // combatManager::DrawFrame that captures the clean background and
     // drops it again immediately after - "draw the field without me".
     //
-    // BEHIND THE SAME VIEW AS WalkTo, AND MEASURED. Slicing this byte
-    // unconditionally costs command.obj's GetCommand 92.5714 -> 92.5357
-    // with no semantic change anywhere - the include-set class again,
-    // fired here by a DATA member where the earlier triggers in this
-    // header were a method declaration and three enumerators. Bisected
-    // against the three includes SetupAnimation needs (drawing.h,
-    // winmgr.h, bitmap16.h), which are army.cpp-local and move nothing.
-    // Both arms spell the SAME four bytes, so the two views cannot
-    // disagree about the layout; only the name is scoped.
 #ifdef HOMM3_ARMY_COPY_VIEW
     unsigned char LetsPretendImNotHere; // +0x31
-#elif defined(HOMM3_ARMY_MOVE_VIEW)
+#else
     unsigned char LetsPretendImNotHere;  // +0x31
     char pad_32[0x2];
-#else
-    char pad_31[0x3];
 #endif
     // Creature roster id: ai_tactical compares it against the war
     // machines 0x93/0x94 (get_ranged_attack_value 0x435cb0,
@@ -400,13 +389,8 @@ public:
     // the step in progress - the run 48..100 this class already pairs
     // unshifted (facing 68/+0x44 one line above, numTroops 76/+0x4c one
     // line below). army::Walk (0x43f0b0) stores its `direction`
-    // parameter here before it touches the animation. Pad slice; behind
-    // the move view with the rest of Walk's surface.
-#ifdef HOMM3_ARMY_MOVE_VIEW
+    // parameter here before it touches the animation.
     int walkDirection;            // +0x48
-#else
-    char pad_48[0x4];
-#endif
     // Stack size: set_melee_enemies (0x43bf20) feeds it to
     // get_average_damage as the attacking creature count.
     int numTroops;                // +0x4c
@@ -1527,7 +1511,6 @@ private:
     // now one). Bisected against the other three declarations added in
     // the same change: only this one and cmbtmgr.h's mark_moving_army
     // fire it. army.cpp is the only consumer.
-#ifdef HOMM3_ARMY_MOVE_VIEW
     // 0x445cd0 (56 B), CORRECTED 2026-08-15. This row carried the name
     // `move_to` in an earlier link-order join and it is refuted by the
     // body: it takes ONE stack argument, answers 1 for direction ids
@@ -1538,7 +1521,6 @@ private:
     // The row is the COMDAT copy of the header inline, emitted because
     // attack_hex's own expansion of can_shoot leaves a real call to it
     // at depth 2 while army::Walk inlines it at depth 1.
-#endif
     unsigned char move_to(int hex, unsigned char restore_facing);
     // ProcessNextAction's two dispatch-only army calls.
     void AttackWall(int iTargetGridIndex);
@@ -2307,15 +2289,12 @@ DATA(0x00660898) extern const long akWideDirectionRingOrder[8];
 // pair is the SECOND hex of a two-hex stack and is set to -1 for a
 // one-hex one; all four are reset to -1 once the move has been placed.
 // They sit immediately below akWideDirectionRingIndex at 0x660878,
-// which is the four dwords 0x660868..0x660874 exactly. Scoped to
-// army.cpp with the rest of the move surface.
-#ifdef HOMM3_ARMY_MOVE_VIEW
+// which is the four dwords 0x660868..0x660874 exactly.
 DATA(0x00660868) extern int giWalkingFrom;
 DATA(0x0066086c) extern int giWalkingFrom2;
 DATA(0x00660870) extern int giWalkingTo;
 DATA(0x00660874) extern int giWalkingTo2;
 DATA(0x00693858) extern int giWalkingYMod;
-#endif
 
 // The caliph (creature-cast) spell predicates, both /Gr free functions
 // taking their two arguments in ECX/EDX.
