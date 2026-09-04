@@ -129,13 +129,6 @@ type_point AI_attempt_puzzle_guess(long player);
 DATA(0x00691684) int iCurHourGlassPhase;
 DATA(0x00698770) int gUnnamed698770;
 
-inline type_point::type_point(short new_x, short new_y, short new_z)
-{
-    x = new_x;
-    y = new_y;
-    z = new_z;
-}
-
 inline unsigned char type_point::operator==(const type_point* arg)
 {
     return arg->x == x && arg->y == y && arg->z == z;

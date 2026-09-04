@@ -7166,17 +7166,6 @@ TAdventureObjectType hero::HeroFn_004E4EC0()
     return cell->get_special_terrain();
 }
 
-// Hero.h/struct.h/game.h source helpers used by get_special_terrain. Their
-// ordinary retail bodies remain owned by their admitted TUs; these hero.obj
-// inline copies restore the source boundaries which /Ob2 erases here.
-inline type_point::type_point(
-    short new_x, short new_y, short new_z)
-{
-    x = new_x;
-    y = new_y;
-    z = new_z;
-}
-
 inline NewmapCell* game::get_cell(type_point point)
 {
     return &worldMap.cellData[(point.z * worldMap.Size + point.y)
@@ -7203,7 +7192,7 @@ inline int hero::get_special_terrain()
 // scan, and leaves only the combination recursion as a call, which is
 // byte-for-byte what retail emits here and in GetManaCost below.
 VA(0x004e5080, 0x7D)  // anchor-bracket, dc 0xd4e4c
-int hero::get_spell_level(SpellID spell, int magic_terrain)
+TSkillMastery hero::get_spell_level(SpellID spell, int magic_terrain)
 {
     if (spell == SPELL_ARMAGEDDON
         && IsWieldingArtifact(ARTIFACT_ARMAGEDDONS_BLADE))
@@ -7220,7 +7209,8 @@ int hero::get_spell_level(SpellID spell, int magic_terrain)
 // EARTH, water - which is NOT the mask's numeric order, and the first
 // one compares against a folded 0 rather than the running best.
 VA(0x004e5100, 0xBC)  // anchor-bracket, dc 0xd4e68
-int hero::GetSpellSchoolLevel(TSpellSchool school_mask, int magic_terrain)
+TSkillMastery hero::GetSpellSchoolLevel(TSpellSchool school_mask,
+                                        int magic_terrain) const
 {
     TSpellSchool terrain_school = const_invalid_school;
     switch (magic_terrain) {
@@ -7242,22 +7232,22 @@ int hero::GetSpellSchoolLevel(TSpellSchool school_mask, int magic_terrain)
     }
     if (school_mask & terrain_school)
         return eMasteryExpert;
-    int level = eMasteryNone;
+    TSkillMastery level = eMasteryNone;
     if (school_mask & eSchoolAir) {
         if (skillLevel[eSecSkillSchoolOfAirMagic] > level)
-            level = skillLevel[eSecSkillSchoolOfAirMagic];
+            level = TSkillMastery(skillLevel[eSecSkillSchoolOfAirMagic]);
     }
     if (school_mask & eSchoolFire) {
         if (skillLevel[eSecSkillSchoolOfFireMagic] > level)
-            level = skillLevel[eSecSkillSchoolOfFireMagic];
+            level = TSkillMastery(skillLevel[eSecSkillSchoolOfFireMagic]);
     }
     if (school_mask & eSchoolEarth) {
         if (skillLevel[eSecSkillSchoolOfEarthMagic] > level)
-            level = skillLevel[eSecSkillSchoolOfEarthMagic];
+            level = TSkillMastery(skillLevel[eSecSkillSchoolOfEarthMagic]);
     }
     if (school_mask & eSchoolWater) {
         if (skillLevel[eSecSkillSchoolOfWaterMagic] > level)
-            level = skillLevel[eSecSkillSchoolOfWaterMagic];
+            level = TSkillMastery(skillLevel[eSecSkillSchoolOfWaterMagic]);
     }
     return level;
 }
@@ -7465,7 +7455,7 @@ float hero::get_combat_value_modifier()
 
 // E:\gamedcs\hero.cpp:6180
 VA(0x004e54a0, 0xAA)  // anchor-global, dc 0xd519c
-boat* hero::find_summonable_boat()
+boat* hero::find_summonable_boat() const
 {
     boat* result = gpGame->GetHeroBoat(id, 0);
     if (result)
@@ -7504,7 +7494,7 @@ boat* hero::find_summonable_boat()
 // the point/invalid declaration order regresses to 82.87%; leaving the cell
 // result unnamed is 85.70%, and removing the call-site pin returns 75.23%.
 VA(0x004e5550, 0x15E)  // anchor-global, dc 0xd524c
-unsigned char hero::can_summon_boat()
+unsigned char hero::can_summon_boat() const
 {
     if (!available_spells[SPELL_SUMMON_BOAT])
         return 0;

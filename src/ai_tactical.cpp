@@ -908,7 +908,7 @@ long type_enchant_data::get_mastery_value()
 // default form materialising -1 and 0 into edx/ecx once.
 VA(0x00436950, 0x23)  // dc-bracket forced, dc 0x3d584
 type_spell_choice::type_spell_choice()
-    : type_enchant_data(-1, 0, 0, 0)
+    : type_enchant_data(-1, eMasteryNone, 0, 0)
 {
     value = 0;
     target = -1;
@@ -2159,9 +2159,9 @@ long type_AI_spellcaster::get_slayer_value(const army* our_army, type_enchant_da
         unsigned flags = static_cast<unsigned>(target->creatureId);
         if ((static_cast<unsigned char>(flags >> 7) & 1)
                 || ((static_cast<unsigned char>(flags >> 8) & 1)
-                    && caster.mastery >= SKILL_MASTERY_ADVANCED)
+                    && caster.mastery >= eMasteryAdvanced)
                 || ((static_cast<unsigned char>(flags >> 9) & 1)
-                    && caster.mastery >= SKILL_MASTERY_EXPERT)) {
+                    && caster.mastery >= eMasteryExpert)) {
             return get_attack_skill_value(our_army, target, caster.duration,
                                           akSpellTraits[SPELL_SLAYER]
                                               .mastery_bonus[caster.mastery]);
@@ -2809,7 +2809,7 @@ long type_AI_spellcaster::get_cancel_value(army* current_army, unsigned char bad
         TEnchantValue value_of = get_enchantment_function(spell);
         if (value_of == 0)
             continue;
-        type_enchant_data caster(spell, current_army->spell_level[spell],
+        type_enchant_data caster(spell, current_army->get_spell_level(spell),
                                  duration, duration);
         caster.field_10 = 0;
         current_army->CancelIndividualSpell(spell);
@@ -3566,7 +3566,7 @@ void type_AI_spellcaster::consider_resurrect(type_spell_choice* choice)
         if (healed < 1)
             continue;
         if (choice->spell == SPELL_RESURRECTION
-                && choice->mastery < SKILL_MASTERY_ADVANCED && field_1c)
+                && choice->mastery < eMasteryAdvanced && field_1c)
             continue;
         long value = static_cast<long>(
             our_army->get_unit_combat_value(params.lowest_attack,
@@ -4138,9 +4138,9 @@ void type_AI_spellcaster::consider_spell(type_spell_choice* choice)
         return;
     case SPELL_DISPEL: {
         consider_enchantment(choice, side);
-        if (choice->mastery == SKILL_MASTERY_ADVANCED)
+        if (choice->mastery == eMasteryAdvanced)
             consider_enchantment(choice, enemy_side);
-        if (choice->mastery == SKILL_MASTERY_EXPERT) {
+        if (choice->mastery == eMasteryExpert) {
             type_spell_choice mirror = *choice;
             consider_enchantment(&mirror, enemy_side);
             choice->value += mirror.value;
@@ -4364,7 +4364,7 @@ long type_AI_spellcaster::get_ogre_mage_value(const army* target)
 {
     if (target->bloodlustRounds)
         return 0;
-    TSkillMastery mastery = SKILL_MASTERY_ADVANCED;
+    TSkillMastery mastery = eMasteryAdvanced;
     unsigned char expert = 0;
     switch (gpCombatManager->field_53c0) {
     case COMBAT_SPELL_RESTRICTION_ALL_EXPERT:
@@ -4388,7 +4388,7 @@ long type_AI_spellcaster::get_ogre_mage_value(const army* target)
         break;
     }
     if (expert)
-        mastery = SKILL_MASTERY_EXPERT;
+        mastery = eMasteryExpert;
     type_spell_choice choice(SPELL_BLOODLUST, mastery, 6, 6);
     if (SpellTargetsASingleArmy(SPELL_BLOODLUST, mastery))
         return get_blood_lust_value(target, choice);
@@ -4416,7 +4416,7 @@ long type_AI_spellcaster::get_caliph_value(const army* target)
     for (long spell = 10; spell < 70; spell++) {
         if (!is_valid_caliph_spell(spell, target))
             continue;
-        TSkillMastery mastery = SKILL_MASTERY_ADVANCED;
+        TSkillMastery mastery = eMasteryAdvanced;
         unsigned char expert = 0;
         switch (gpCombatManager->field_53c0) {
         case COMBAT_SPELL_RESTRICTION_ALL_EXPERT:
@@ -4440,7 +4440,7 @@ long type_AI_spellcaster::get_caliph_value(const army* target)
             break;
         }
         if (expert)
-            mastery = SKILL_MASTERY_EXPERT;
+            mastery = eMasteryExpert;
         count++;
         TEnchantValue value_of = get_enchantment_function(spell);
         if (value_of != 0) {
@@ -4468,7 +4468,7 @@ VA(0x0043c620, 0x1DD)
 long type_AI_spellcaster::get_faerie_dragon_spell_value(
         long hex, long power, SpellID spell)
 {
-    TSkillMastery mastery = SKILL_MASTERY_ADVANCED;
+    TSkillMastery mastery = eMasteryAdvanced;
     unsigned char expert = 0;
     switch (gpCombatManager->field_53c0) {
     case COMBAT_SPELL_RESTRICTION_ALL_EXPERT:
@@ -4492,7 +4492,7 @@ long type_AI_spellcaster::get_faerie_dragon_spell_value(
         break;
     }
     if (expert)
-        mastery = SKILL_MASTERY_EXPERT;
+        mastery = eMasteryExpert;
 
     army* target = gpCombatManager->cells[hex].get_army();
     long base_damage;
@@ -4624,8 +4624,8 @@ healing_only_done:
             if (akSpellTraits[spell].level > 2)
                 continue;
         }
-        long mastery = our_hero->get_spell_level(spell,
-                                                 gpCombatManager->field_53c0);
+        TSkillMastery mastery = our_hero->get_spell_level(
+            spell, gpCombatManager->field_53c0);
         long cost = our_hero->GetManaCost(spell, enemy_group,
                                           gpCombatManager->field_53c0);
         if (cost > our_hero->mana)

@@ -10,6 +10,7 @@
 #include "armygrp.h"
 #include "cmbtmgr.h"
 #include "hexcell.h"
+#include "herospec.h"
 #include "spellschool.h"
 
 class hero;
@@ -28,28 +29,15 @@ struct type_AI_enemy_data {
     long total_damage;          // +0x0c
 };
 
-// Secondary-skill mastery level (NONE/BASIC/ADVANCED/EXPERT); only its
-// use as a 0..3 index into the spell-traits tables is byte-proven here
-// (get_mastery_value 0x436930 indexes m_mastery_bonus[mastery]).
-typedef int TSkillMastery;
 // The 0..3 rungs of that index. Byte-proven as a domain by
 // ai_combat's get_enchantment_value (0x425510), which gates the
 // two-sided Dispel pass on `mastery >= 2` and its fallback-slot
 // rewrite on `mastery == 2`, and by cast_enchantment (0x425b35),
-// which splits at `mastery >= 3`. The NONE/BASIC/ADVANCED/EXPERT
-// spellings are the secondary-skill roster's.
-enum ESkillMastery {
-    SKILL_MASTERY_NONE = 0,
-    SKILL_MASTERY_BASIC = 1,
-    SKILL_MASTERY_ADVANCED = 2,
-    SKILL_MASTERY_EXPERT = 3
-};
+// which splits at `mastery >= 3`. These are uses of the canonical
+// TSkillMastery ladder from herospec.h, not a second AI-only domain.
 // TSpellSchool - get_protection_value (0x4396e0) takes it. The
-// definition MOVED to spellschool.h (2026-08-08) so hero.h can see the
-// same enum: this header cannot be included from hero.h (its
-// `typedef int TSkillMastery` is a hard C2371 against herospec.h's
-// enum of the same name), and a second definition here would be the
-// duplication the domain-header split exists to avoid.
+// definition MOVED to spellschool.h (2026-08-08) so every consumer sees the
+// same enum; the mastery domain likewise comes from herospec.h above.
 
 // PROVEN layout (2026-08-07): get_mastery_value (0x436930) reads spell
 // at +0, mastery at +4; get_damage_spell_value (0x436f60) reads power

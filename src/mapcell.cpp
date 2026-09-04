@@ -50,16 +50,6 @@ static int get_team(game* thisGame, int playerNum)
     return thisGame->mapHeader.teamInfo[playerNum];
 }
 
-// Struct.h/Game.h source helpers used by get_trigger_cell. Retail expands
-// them in mapcell.obj; their ordinary out-of-line copies remain owned by the
-// compilands whose admitted rows contain them.
-inline type_point::type_point(short new_x, short new_y, short new_z)
-{
-    x = new_x;
-    y = new_y;
-    z = new_z;
-}
-
 inline NewmapCell* game::get_cell(type_point point)
 {
     return worldMap.cell(point);

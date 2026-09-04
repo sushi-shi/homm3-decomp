@@ -32,15 +32,6 @@ DATA(0x006aac1c) int iVWCenterOffsetH;
 DATA(0x006aac20) CSprite* csVWIcons;
 DATA(0x006aac28) Bitmap16Bit* memoryBuffer;
 
-// Struct.h:102. The retained Complete body belongs to advmgr.obj; retail
-// expands the same source helper at both GetCell sites in VWDrawAdvObj.
-inline type_point::type_point(short new_x, short new_y, short new_z)
-{
-    x = new_x;
-    y = new_y;
-    z = new_z;
-}
-
 // E:\gamedcs\viewwrld.cpp:166
 // Complete expands this source helper into every scaled renderer and emits no
 // retained body. Dreamcast preserves the boundary, the two width locals and

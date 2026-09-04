@@ -26,7 +26,16 @@ struct type_point {
     short z : 4;
 
     type_point() {}
-    type_point(short new_x, short new_y, short new_z);
+    // E:\\gamedcs\\struct.h:102. Dreamcast CodeView places the body in the
+    // shared header, and both Dreamcast and Complete expand it at ordinary
+    // call sites. Keep one canonical source definition here so every TU sees
+    // the real helper at the original parse point.
+    type_point(short new_x, short new_y, short new_z)
+    {
+        x = new_x;
+        y = new_y;
+        z = new_z;
+    }
     unsigned char operator==(const type_point* arg);
     // Dreamcast S_PUB32 is ??8type_point@@QBA_NABU0@@Z: bool return,
     // const member, const-reference operand. Keep the pointer overload above

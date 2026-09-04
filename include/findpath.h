@@ -5,6 +5,7 @@
 #ifndef HOMM3_FINDPATH_H
 #define HOMM3_FINDPATH_H
 
+#include <va.h>
 #include <vector>
 
 #include "struct.h"
@@ -205,6 +206,13 @@ public:
     // 116 DC bytes against retail's 104) and the retail call site's shape.
     unsigned char enter_hostile_trigger(const hero* current_hero,
                                         pathCell* cell);
+    void enter_town(const hero* current_hero, long start_town,
+                    const pathCell* path_cell, long limit,
+                    type_search_type search_type);
+    unsigned char enter_trigger(const hero* current_hero, pathCell* cell,
+                                long limit, type_search_type search_type);
+    void check_town_portal(const hero* current_hero,
+                           const pathCell* start_cell, long maxMobility);
     void PushCombatPoint(int index, int direction, int cost,
                          int flight_cost, int limit);  // 0x4b3bb0
     unsigned char FindCombatPath(const army* current_army, long current_group,
@@ -359,7 +367,7 @@ enum EMapDirection {
     MAP_DIRECTION_COUNT = 8
 };
 
-extern tilePoint normalDirTable[8];       // 0x678150
+DATA(0x00678150) extern tilePoint normalDirTable[8];
 extern const signed char gStepDeltaX[];   // 0x678150, stride 4
 extern const signed char gStepDeltaY[];   // 0x678151, stride 4
 

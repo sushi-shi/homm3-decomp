@@ -14,10 +14,10 @@
 // this edge cannot reach the initialize_game_data tripwire: nothing in
 // that closure includes hero.h.
 #include "artifact.h"
+#include "herospec.h"
 // TSpellSchool - the mask hero::GetSpellSchoolLevel and
-// hero::GetHighestSchool take. Its own domain header rather than
-// ai_tactical.h (whose `typedef int TSkillMastery` is a hard C2371
-// against herospec.h's enum) and rather than a second copy here.
+// hero::GetHighestSchool take. Its own domain header rather than a second
+// copy here.
 #include "spellschool.h"
 #include "advmgr_popup.h"
 
@@ -948,7 +948,7 @@ public:
     // 0x4e5ce0 - checks terrain, passability and blocking trigger objects.
     unsigned char can_land();
     // 0x4e5550 - checks spell access, mana, boat reachability and pool space.
-    unsigned char can_summon_boat();
+    unsigned char can_summon_boat() const;
     // 0x4e5e10 - tests whether a packed map point is inside Visions range.
     unsigned char IsInIdentifyRange(const type_point* location);
     // 0x4e5de0, RETAIL-ONLY (no DC row): the clamped field_129 getter
@@ -1149,13 +1149,14 @@ public:
     // dword domain value. philai.cpp crosses to its typed helpers without
     // changing this record's public header view.
     int SoD_get_seer_skill_value(int skill, int level);
-    // E:\gamedcs\Hero.h:981. Dreamcast records the typed
-    // get_secondary_skill(TSecondarySkill) boundary. The domain is spelled
-    // int in this split header for the same include-closure reason as the
-    // method above; its value and return width are unchanged.
-    int get_secondary_skill(int skill) const
+    // E:\gamedcs\Hero.h:981. Dreamcast records this exact typed boundary;
+    // the byte-backed skillLevel array is widened by the inline return.
+    TSkillMastery get_secondary_skill(TSecondarySkill skill) const
     {
-        return skillLevel[skill];
+        // skillLevel is the packed byte-backed persistence array.  The
+        // original typed facade necessarily widens that stored ordinal back
+        // into its CodeView-proven enum domain at this boundary.
+        return TSkillMastery(skillLevel[skill]);
     }
     float GetMagicResistanceFactor();
     // 0x4e4840, claimed in hero.cpp - cmbtmgr's
@@ -1220,8 +1221,8 @@ public:
     long modify_spell_damage(int spell, int damage, const class army* target_army);
     int GetHeroSpellBonus(int spell_id, int target_level, int value) const;
     // The spell-school quartet at 0x4e5080 / 0x4e5100 / 0x4e51c0 /
-    // 0x4e5240. Two DIVERGENCES from the Dreamcast prototypes, both
-    // forced by retail bytes:
+    // 0x4e5240. Complete has one retail-proven divergence from the
+    // Dreamcast prototypes:
     //   - the second parameter of get_spell_level / GetSpellSchoolLevel
     //     / GetManaCost is a MAGIC-TERRAIN id, not the DC's
     //     `unsigned char is_on_magic_plains`. Retail reads it with a
@@ -1232,21 +1233,18 @@ public:
     //     exactly what hero::Fly (0x4e59a0) pushes. The DC build kept
     //     only the magic-plains case and narrowed the parameter to a
     //     bool; retail's five-way form is the later one.
-    //   - the mastery returns are spelled `int`, not TSkillMastery:
-    //     that enum lives in herospec.h, and pulling herospec.h into
-    //     hero.h would put four more type definitions into game.h's
-    //     include closure (the initialize_game_data sensitivity
-    //     class). Same width, same codegen.
-    int get_spell_level(SpellID spell, int magic_terrain);
-    int GetSpellSchoolLevel(TSpellSchool school_mask, int magic_terrain);
+    // The Complete overload keeps Dreamcast's TSkillMastery return while
+    // widening only the terrain argument to the later five-way domain.
+    TSkillMastery get_spell_level(SpellID spell, int magic_terrain);
+    TSkillMastery GetSpellSchoolLevel(TSpellSchool school_mask,
+                                      int magic_terrain) const;
     TSpellSchool GetHighestSchool(TSpellSchool school_mask) const;
     int GetManaCost(int iWhichSpell, const class armyGroup* enemy,
                     int magic_terrain);
-#ifdef HOMM3_AI_PLAYER_OBJ_DECLS
     // The one-argument Hero.h facades are positive Dreamcast source facts.
     // Complete widens their terrain input, then expands each facade into the
     // same get_special_terrain + out-of-line overload pair.
-    int get_spell_level(SpellID spell)
+    TSkillMastery get_spell_level(SpellID spell)
     {
         return get_spell_level(spell, get_special_terrain());
     }
@@ -1254,7 +1252,7 @@ public:
     {
         return GetManaCost(iWhichSpell, 0, get_special_terrain());
     }
-#elif defined(HOMM3_HERO_OBJ_VIEW)
+#ifdef HOMM3_HERO_OBJ_VIEW
     // E:\gamedcs\Hero.h:702
     // The header helper used by GetManaCost's own-stack discount. Complete
     // folds it back to the same armyGroup::IsMember bytes.
@@ -1305,7 +1303,7 @@ public:
     // assembly through a NormalDialog and calls HeroFn_004DBF30 on yes.
     // ORDINAL PLACEHOLDER.
     void HeroFn_004DC100(long slot);
-    boat* find_summonable_boat();
+    boat* find_summonable_boat() const;
     // Claimed in src/hero.cpp (0x4d7900, dc 0xcaedc); declared here
     // because town::remove_garrison_hero calls it with the town's
     // owner, a type_point built from the town's map cell, and 0.

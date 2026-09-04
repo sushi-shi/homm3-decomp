@@ -881,13 +881,13 @@ void type_AI_combat_data::get_enchantment_value(type_spell_choice& choice, type_
         return;
     if (choice.spell == SPELL_DISPEL) {
         get_enchantment_value(choice, my_hero);
-        if (choice.mastery < SKILL_MASTERY_ADVANCED)
+        if (choice.mastery < eMasteryAdvanced)
             return;
         // retail copies the whole 0x24-byte record with one rep movsd
         // (0x4256b7) and compares the saved value after the second pass
         type_spell_choice saved = choice;
         defender.get_enchantment_value(choice, my_hero);
-        if (choice.mastery != SKILL_MASTERY_ADVANCED)
+        if (choice.mastery != eMasteryAdvanced)
             return;
         if (saved.value >= choice.value)
             return;
@@ -937,7 +937,7 @@ VA(0x00425b10, 0xB4)  // anchor-callee, dc 0x2af04
 void type_AI_combat_data::cast_enchantment(type_spell_choice& choice, type_AI_combat_data& defender)
 {
     if (choice.spell == SPELL_DISPEL) {
-        if (choice.mastery < SKILL_MASTERY_EXPERT) {
+        if (choice.mastery < eMasteryExpert) {
             if (choice.target < 0) {
                 if (choice.field_18 >= 0) {
                     choice.target = choice.field_18;
