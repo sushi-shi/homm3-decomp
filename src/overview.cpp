@@ -99,6 +99,16 @@ void UpdateBackpack(int iSlot);
 // the Complete-specific geometry. The admitted body reproduces all 328 retail
 // CFG blocks and the 197-call out-of-line multiset; the remaining delta is
 // register allocation and instruction scheduling, not missing source regions.
+// 2026-09-05 frame census (90.57): retail's frame is 8 B smaller because
+// its two hoisted 64-bit building-mask temps sit at [-0x4c]/[-0x48] above
+// monsterY, with monsterX BELOW monsterY (-0x84 / -0x68); ours homes the
+// temps at [-0x80]/[-0xac] with monsterX above monsterY. Every later slot
+// (currTown/currHero -0x14 vs -0x10, iLookup/luck -0x10 vs -0x14/-0x40)
+// is the same overlay one slot shifted, and retail forwards the hall/
+// castle iLookup arms into ESI where ours keeps them in memory. Measured
+// byte-inert: the DC CodeView local order, monsterX/monsterY swapped
+// (90.40, stores reorder only), currTown/currHero declared first in their
+// blocks. The DC statement order of the town block matches ours.
 // E:\gamedcs\overview.cpp:220
 VA(0x0051bd50, 0x25DC)  // exhaustive body/caller identity, dc 0x104458
 void game::SetupDynamicStuff(int bUpdate, int bForceUpdate)
