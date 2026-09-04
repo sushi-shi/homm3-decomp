@@ -340,6 +340,11 @@ void IncProgressBar(unsigned char bUpdate);
 // DECLARED, NOT CLAIMED for the same link-order-gap reason as
 // IncProgressBar above.
 void ShowProgressBar();
+// The two rows around them, DC kb.cpp:240 / :292 - retail 0x4ed230 (the
+// bar-segment painter both IncProgressBar and ShowProgressBar expand) and
+// 0x4ed450 (the teardown oldmain reaches). Named from the DC roster.
+void DrawProgressCount();
+void UnloadProgressBar();
 // CODEVIEW(E:\gamedcs\kb.cpp:292, dc 0xdf2a4) void UnloadProgressBar();
 // CODEVIEW(E:\gamedcs\kb.cpp:318, dc 0xdf330) void PollSound();
 // CODEVIEW(E:\gamedcs\kb.cpp:431, dc 0xdf4e4) void InitMainClasses();

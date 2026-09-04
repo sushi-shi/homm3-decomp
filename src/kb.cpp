@@ -90,6 +90,85 @@ int gbInPollSound;
 DATA(0x0069958d)
 bool bInShutDown;
 
+// The loading-screen progress bar, kb.obj's own .bss triple right below
+// PollSound's latch: the backdrop loadbar.pcx, the loadprog.def segment
+// sprite and the number of segments lit (capped at twenty). Names
+// PROVISIONAL - the Dreamcast keeps them file-static.
+DATA(0x0069956c)
+static Bitmap16Bit* gpProgressBarBack;
+DATA(0x00699570)
+static CSprite* gpProgressBarSprite;
+DATA(0x00699574)
+static int giProgressBarCount;
+
+// E:\gamedcs\kb.cpp:240. The four progress-bar rows are the exhaustive
+// order-map of the DC's DrawProgressCount..UnloadProgressBar onto the
+// four carve rows between kb.obj's static-initializer run and PollSound;
+// the loadbar.pcx loader and the two-Dispose teardown fix the outer pair.
+// Extern and small, so /Ob2 expands this one into both callers below
+// while retail keeps the body.
+VA(0x004ed230, 0x6A)  // dc-order-map (the row before IncProgressBar), dc 0xdf160
+void DrawProgressCount()
+{
+    if (gpProgressBarSprite) {
+        for (int i = 0; i < giProgressBarCount; i++) {
+            gpProgressBarSprite->Draw(0, i, 0, 0,
+                                      gpProgressBarSprite->GetWidth(),
+                                      gpProgressBarSprite->GetHeight(),
+                                      gpWindowManager->screenBitmap,
+                                      395 + i * 18, 548, 0, 0);
+        }
+    }
+}
+
+// E:\gamedcs\kb.cpp:252. Complete drops the DC's del_Spr_from_Cache.
+VA(0x004ed2a0, 0xA7)  // dc-order-map, dc 0xdf1dc
+void IncProgressBar(unsigned char bUpdate)
+{
+    if (gpProgressBarSprite) {
+        giProgressBarCount++;
+        if (giProgressBarCount > 20)
+            giProgressBarCount = 20;
+        DrawProgressCount();
+        if (bUpdate)
+            gpWindowManager->UpdateScreen(395, 548, 358, 16);
+    }
+}
+
+// E:\gamedcs\kb.cpp:269. Complete loads the backdrop as a Bitmap16Bit
+// where the DC took a Bitmap816.
+VA(0x004ed350, 0xF3)  // dc-order-map + loadbar.pcx / loadprog.def, dc 0xdf228
+void ShowProgressBar()
+{
+    if (!gpProgressBarBack) {
+        gpProgressBarBack = ResourceManager::GetBitmap16(
+            DATA_COMPGEN(0x0067f5bc, progressBarBackName, "loadbar.pcx"));
+        gpProgressBarSprite = ResourceManager::GetSprite(
+            DATA_COMPGEN(0x0067f5ac, progressBarSpriteName, "loadprog.def"));
+        giProgressBarCount = 0;
+    }
+    if (gpProgressBarBack) {
+        gpProgressBarBack->Draw(0, 0, gpProgressBarBack->GetWidth(),
+                                gpProgressBarBack->GetHeight(),
+                                gpWindowManager->screenBitmap, 0, 0, 0);
+        DrawProgressCount();
+        gpWindowManager->UpdateScreen(0, 0, 800, 600);
+    }
+}
+
+// E:\gamedcs\kb.cpp:292
+VA(0x004ed450, 0x3D)  // dc-order-map (the row before PollSound) + two-Dispose teardown, dc 0xdf2a4
+void UnloadProgressBar()
+{
+    if (gpProgressBarBack)
+        gpProgressBarBack->Dispose();
+    if (gpProgressBarSprite)
+        gpProgressBarSprite->Dispose();
+    giProgressBarCount = 0;
+    gpProgressBarSprite = 0;
+    gpProgressBarBack = 0;
+}
+
 // E:\gamedcs\kb.cpp:318
 // The idle-time service: the mouse cursor, the palette colour cycles of
 // the water, lava and river tilesets on their own timer (110 ms in the
@@ -240,34 +319,6 @@ stop_credits:
 }
 
 #if 0  // @carcass
-
-// E:\gamedcs\kb.cpp:240
-DC_ONLY(0xdf160, 0x7C)
-void DrawProgressCount()
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:252
-DC_ONLY(0xdf1dc, 0x4A)
-void IncProgressBar(unsigned char bUpdate)
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:269
-DC_ONLY(0xdf228, 0x7C)
-void ShowProgressBar()
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:292
-DC_ONLY(0xdf2a4, 0x8C)
-void UnloadProgressBar()
-{
-    // @stub
-}
 
 
 // E:\gamedcs\kb.cpp:431
@@ -1479,6 +1530,13 @@ static int ExitNormalDialog(message* msg)
 // fifteen-second arming and the forced exit are written twice in the
 // source (turn-timer and network arms); retail expands ExitNormalDialog
 // into each.
+//
+// Residual (71.36%): retail SINKS both expansions past the function's
+// returns and gives the network arm its own EventWindowHandler tail; ours
+// keeps the first expansion inline behind a jump. Measured and rejected:
+// the early-return form `if (elapsed >= 15000) return Exit...;` in both
+// arms (71.03), the same plus an explicit `return EventWindowHandler`
+// after the inner store (71.03), and that return alone (56.56).
 VA(0x004f08d0, 0x20C)  // anchor-callee + dialog-global shape, dc 0xe1ccc
 int NormalDialogHandler(message& msg)
 {
