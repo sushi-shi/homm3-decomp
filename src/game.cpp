@@ -47,8 +47,6 @@
 #include <direct.h>
 #include <math.h>
 #include <memory>
-#define HOMM3_GAME_CREATURE_BANK_DTOR_DECL
-#define HOMM3_GAME_CREATURE_BANK_LOAD_DECL
 #define HOMM3_GAME_GARRISON_HERO_DECLS
 #define HOMM3_GAME_OBJ_DECLS
 #define HOMM3_GAME_SEER_HUT_DECLS
