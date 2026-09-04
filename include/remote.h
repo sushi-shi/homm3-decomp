@@ -83,25 +83,34 @@ protected:
 };
 SIZE(CNetMsgHandler, 0x0c);
 
-#ifdef HOMM3_COMMAND_PLAYER_DROP_VIEW
-// Narrow command-TU view of the pause handler installed in combatManager.
-// Its full definition normally lives in remotedlg.h, whose dialog closure
-// command.cpp deliberately does not include. Main only needs the inherited
-// abort-message setter; retaining the complete base-plus-pointer layout makes
-// that relationship explicit without broadening the include closure.
+// CNetMsgHandlerPause - the scoped handler that parks whatever handler the
+// network singleton is carrying, installs itself for the life of a modal
+// dialog (remotedlg.h's three dialogs embed one) or a combat
+// (combatManager::field_38 owns one), and puts the old one back. Sixteen
+// bytes: CNetMsgHandler's twelve plus one pointer, and 0x557e30's
+// `mov [esi+0xc], eax` is that pointer.
+//
+// Vtable 0x640f04 is four slots wide, CNetMsgHandler's own, so the class
+// introduces nothing: slot 0 is the ??_G at 0x557eb0, slot 1 the
+// CheckHandleNet override at 0x555170, slot 2 the INHERITED
+// CNetMsgHandler::GetAbortPopupMsg at 0x557900 (already claimed), and slot 3
+// the HandleNetMsg override at 0x555180. Both overrides are five bytes of
+// `xor eax,eax` and a sized return - the pause semantics are to swallow
+// everything - and both are header-origin COMDATs in retail too, which is
+// why they sit at 0x555170/0x555180 beside CNetMsgHandler::Copy rather than
+// in the 0x557exx run with the rest of the class.
 class CNetMsgHandlerPause : public CNetMsgHandler {
 public:
     CNetMsgHandlerPause();
     virtual ~CNetMsgHandlerPause();
     virtual CNetMsg* CheckHandleNet(unsigned char inPopup,
-                                    unsigned char* msgReceived);
-    virtual CNetMsg* HandleNetMsg(CNetMsg* pNetMsg);
+                                    unsigned char* msgReceived);  // slot 1
+    virtual CNetMsg* HandleNetMsg(CNetMsg* pNetMsg);              // slot 3
 
 protected:
-    CNetMsgHandler* m_pNetMsgHandlerSave;
+    CNetMsgHandler* m_pNetMsgHandlerSave;  // +0x0c
 };
 SIZE(CNetMsgHandlerPause, 0x10);
-#endif
 
 // Adventure-map network dispatch. Retail's trade handler reads the inherited
 // m_inPopup byte through IsInPopup; the DC roster supplies the class and
@@ -378,9 +387,7 @@ void HandleNormalWinMsg(CNetMsg* pNetMsg);
 
 // remote.cpp:1529 in the DC roster (dc 0x11d1c8); retail 0x554a20. The
 // dispatcher hands it the chat text in place and the sender's slot.
-#ifndef HOMM3_COMMAND_PLAYER_DROP_VIEW
 void ReceiveChat(char* cChat, int fromWho);
-#endif
 // remote.cpp:2227, dc 0x11e01c; command's combat-drop handler forwards a
 // DPID that belongs to neither combat side to this process-wide handler;
 // both remote wait-dialog dispatchers use the same public boundary.

@@ -99,16 +99,11 @@ enum EGeneralTextIndex {
     // retail folds Text._First + 0x674, i.e. row 413.
     GENERAL_TEXT_COMBAT_ROUND = 413,
 #endif
-#ifndef HOMM3_COMMAND_PLAYER_DROP_VIEW
     GENERAL_TEXT_SYSTEM_OPTIONS_AUDIO_UNAVAILABLE = 151,
     GENERAL_TEXT_BACKPACK_FULL = 153,
-#else
-    // HandleCombatPlayerDrop's two 15-second notification rows replace two
-    // command-unused entries at the same parse slots: enum population is a
-    // measured VC6 handle-state input for this TU.
+    // HandleCombatPlayerDrop's two 15-second notification rows.
     GENERAL_TEXT_COMBAT_LOCAL_PLAYER_DROPPED = 416,
     GENERAL_TEXT_COMBAT_REMOTE_PLAYER_DROPPED = 417,
-#endif
     GENERAL_TEXT_BACKPACK_ARTIFACT_FORMAT = 154,
     // get_tower_string's two folded vector loads at Text._First + 0x26c and
     // +0x270. The first takes the wall name; the second takes that name,
