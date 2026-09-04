@@ -1362,15 +1362,15 @@ landmine_done:
             field_13d34 = 0;
             field_13d2c = 0;
             gpWindowManager->SaveFizzleSourceX(
-                drawbridgeBounds.values[0], drawbridgeBounds.values[1],
-                drawbridgeBounds.values[2] - drawbridgeBounds.values[0] + 1,
-                drawbridgeBounds.values[3] - drawbridgeBounds.values[1] + 1);
+                drawbridgeBounds.iMinX, drawbridgeBounds.iMinY,
+                drawbridgeBounds.iMaxX - drawbridgeBounds.iMinX + 1,
+                drawbridgeBounds.iMaxY - drawbridgeBounds.iMinY + 1);
             RemoveObstacle(obstacle_index);
             DrawFrame(0, 0, 0, 0, 1, 0);
             gpWindowManager->FizzleForwardX(
-                drawbridgeBounds.values[0], drawbridgeBounds.values[1],
-                drawbridgeBounds.values[2] - drawbridgeBounds.values[0] + 1,
-                drawbridgeBounds.values[3] - drawbridgeBounds.values[1] + 1,
+                drawbridgeBounds.iMinX, drawbridgeBounds.iMinY,
+                drawbridgeBounds.iMaxX - drawbridgeBounds.iMinX + 1,
+                drawbridgeBounds.iMaxY - drawbridgeBounds.iMinY + 1,
                 replacement_effect);
         } else {
             RemoveObstacle(obstacle_index);
@@ -4700,32 +4700,32 @@ void combatManager::Earthquake(int level)
                 int top = y - h / 2;
                 int bottom = y + (h - h / 2) - 1;
                 TDrawbridgeBounds* bounds = &drawbridgeBounds;
-                bounds->values[0] = left;
-                bounds->values[1] = top;
-                bounds->values[2] = right;
-                bounds->values[3] = bottom;
-                if (bounds->values[0] < gCombatDrawLimits694f18.values[0])
-                    bounds->values[0] = gCombatDrawLimits694f18.values[0];
-                if (bounds->values[1] < gCombatDrawLimits694f18.values[1])
-                    bounds->values[1] = gCombatDrawLimits694f18.values[1];
-                if (bounds->values[2] > gCombatDrawLimits694f18.values[2])
-                    bounds->values[2] = gCombatDrawLimits694f18.values[2];
-                if (bounds->values[3] > gCombatDrawLimits694f18.values[3])
-                    bounds->values[3] = gCombatDrawLimits694f18.values[3];
+                bounds->iMinX = left;
+                bounds->iMinY = top;
+                bounds->iMaxX = right;
+                bounds->iMaxY = bottom;
+                if (bounds->iMinX < gCombatDrawLimits694f18.iMinX)
+                    bounds->iMinX = gCombatDrawLimits694f18.iMinX;
+                if (bounds->iMinY < gCombatDrawLimits694f18.iMinY)
+                    bounds->iMinY = gCombatDrawLimits694f18.iMinY;
+                if (bounds->iMaxX > gCombatDrawLimits694f18.iMaxX)
+                    bounds->iMaxX = gCombatDrawLimits694f18.iMaxX;
+                if (bounds->iMaxY > gCombatDrawLimits694f18.iMaxY)
+                    bounds->iMaxY = gCombatDrawLimits694f18.iMaxY;
                 if (frame == kEarthquakeImpactFrame)
                     DamageWall(wall_target_from_int(i), counts[i]);
                 blast->Draw(0, frame, 0, 0,
-                            bounds->values[2] - bounds->values[0] + 1,
-                            bounds->values[3] - bounds->values[1] + 1,
+                            bounds->iMaxX - bounds->iMinX + 1,
+                            bounds->iMaxY - bounds->iMinY + 1,
                             gpWindowManager->screenBitmap->map,
                             x - blast->Width / 2, y - blast->Height / 2,
                             gpWindowManager->screenBitmap->Width,
                             gpWindowManager->screenBitmap->Height,
                             gpWindowManager->screenBitmap->Pitch, 0, 1);
                 gpWindowManager->UpdateScreen(
-                    bounds->values[0], bounds->values[1],
-                    bounds->values[2] - bounds->values[0] + 1,
-                    bounds->values[3] - bounds->values[1] + 1);
+                    bounds->iMinX, bounds->iMinY,
+                    bounds->iMaxX - bounds->iMinX + 1,
+                    bounds->iMaxY - bounds->iMinY + 1);
             }
             GameTime::DelayTil(frameTil);
         }

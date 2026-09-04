@@ -3,7 +3,6 @@
 // 7 functions in link order.
 #include <va.h>
 #include <math.h>
-#define HOMM3_DRAWING_UPDATE_GRID_DECLS
 #define HOMM3_DRAWING_UPDATE_MOUSE_GRID_DECLS
 #include "army.h"
 #include "cmbtmgr.h"

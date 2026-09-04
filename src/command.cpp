@@ -3153,14 +3153,14 @@ army* combatManager::AddArmy(int iSide, int iMonType, int iMonQty,
             field_14000[iSide][slot] = 1;
         ComputeMaxExtent();
         gpWindowManager->SaveFizzleSourceX(
-            drawbridgeBounds.values[0], drawbridgeBounds.values[1],
-            drawbridgeBounds.values[2] - drawbridgeBounds.values[0] + 1,
-            drawbridgeBounds.values[3] - drawbridgeBounds.values[1] + 1);
+            drawbridgeBounds.iMinX, drawbridgeBounds.iMinY,
+            drawbridgeBounds.iMaxX - drawbridgeBounds.iMinX + 1,
+            drawbridgeBounds.iMaxY - drawbridgeBounds.iMinY + 1);
         DrawFrame(0, 0, 0, 0, 1, 0);
         gpWindowManager->FizzleForwardX(
-            drawbridgeBounds.values[0], drawbridgeBounds.values[1],
-            drawbridgeBounds.values[2] - drawbridgeBounds.values[0] + 1,
-            drawbridgeBounds.values[3] - drawbridgeBounds.values[1] + 1, 75);
+            drawbridgeBounds.iMinX, drawbridgeBounds.iMinY,
+            drawbridgeBounds.iMaxX - drawbridgeBounds.iMinX + 1,
+            drawbridgeBounds.iMaxY - drawbridgeBounds.iMinY + 1, 75);
     }
     return newArmy;
 }
