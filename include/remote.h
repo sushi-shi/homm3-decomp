@@ -404,13 +404,11 @@ unsigned char LobbyLaunchConnect();
 // Dreamcast names this network-launch state directly; retail oldmain tests
 // it only while handling the missing-CD startup result.
 extern int giTCPHostStatus;
-#ifdef HOMM3_KB_OLDMAIN_DECLS
 // Dreamcast remote.cpp:1916 and retail oldmain's direct 0x555920 call.
 unsigned char TestIfLobbyLaunched();
 // Dreamcast publishes the owning remote.obj buffer and Complete's tutorial
 // setup copies its selected filename here before loading the map header.
 extern char gMapName[260];
-#endif
 
 // Retail .data 0x69954c. make_gift only uses it as the gate for sending
 // a gift/request message to a non-local human; wider role unattested.

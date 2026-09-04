@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define HOMM3_KB_OLDMAIN_DECLS
 #define HOMM3_GAME_TRANSMIT_DECLS
 #define HOMM3_GAME_NEW_MAP_DECLS
 #define HOMM3_NEWGAME_OBJ_DECLS
