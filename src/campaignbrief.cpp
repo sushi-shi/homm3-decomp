@@ -110,13 +110,47 @@ void TCampaignBrief::SetupCurrentTerritory()
     // @stub
 }
 
+#endif
+
+// The local player's slot in the selected scenario, DC ?playerSlot@@3HA;
+// retail .bss 0x694dcc, written by UpdateAllyEnemyFlags below.
+DATA(0x00694dcc)
+static int gCampaignBriefPlayerSlot;
+
 // E:\gamedcs\campaignbrief.cpp:481. Complete retains the same source helper
 // immediately after Select; CampaignBriefHandler calls it at retail +0x4f9.
+//
+// Lay the eight player flags out as allies (ALLY_FLAG1_ID..) and enemies
+// (ENEMY_FLAG1_ID..) of the local player's slot, hiding every flag first and skipping
+// the positions the scenario leaves empty.
 VA(0x00458010, 0x10F)  // handler caller + DC source identity, dc 0x58a9c
 void TCampaignBrief::UpdateAllyEnemyFlags()
 {
-    // @stub
+    gCampaignBriefPlayerSlot =
+        campaign->scenarios[selected_scenario]->options->GetPlayerPosition(
+            gpGame->campaign.briefingChoice);
+    int enemyFlagId = ENEMY_FLAG1_ID;
+    int allyFlagId = ALLY_FLAG1_ID;
+    for (int i = 0; i < 8; i++) {
+        GetWidget(i + ENEMY_FLAG1_ID)->hide();
+        GetWidget(i + ALLY_FLAG1_ID)->hide();
+        if (gpGame->setup.playerPos[i] >= 0) {
+            if (gpGame->OnSameTeam(i, gCampaignBriefPlayerSlot)) {
+                GetWidget(allyFlagId)->show();
+                GetWidget(allyFlagId)->send_message(
+                    widget::WIDGET_SET_ICON_FRAME, i);
+                allyFlagId++;
+            } else {
+                GetWidget(enemyFlagId)->show();
+                GetWidget(enemyFlagId)->send_message(
+                    widget::WIDGET_SET_ICON_FRAME, i);
+                enemyFlagId++;
+            }
+        }
+    }
 }
+
+#if 0  // Dreamcast-only carcass; retained as evidence, not emitted for retail.
 
 // E:\gamedcs\campaignbrief.cpp:520
 DC_ONLY(0x58c00, 0x1AC)

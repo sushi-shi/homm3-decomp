@@ -1516,21 +1516,26 @@ public:
     enum ESpellWallRowOffset {
         SPELL_WALL_SECOND_ROW = 2
     };
+    // ONE result variable, defaulted before the row test: retail's
+    // expansion in HandleCastWallSpell (0x5a3250) copies base_index into
+    // the result register ahead of the `row_offset == 1` branch and
+    // stores it once at the join, which three separate returns cannot
+    // give (they store per arm, measured 94.08 -> 100 on that body).
     int GetSpellWallHex(int base_index, int row_offset, int side)
     {
+        int hex = base_index;
         if (row_offset == 1) {
-            int hex = base_index - COMBAT_GRID_ROW_STRIDE;
+            hex = base_index - COMBAT_GRID_ROW_STRIDE;
             if ((base_index / COMBAT_GRID_ROW_STRIDE) & 1) {
                 if (side == 1)
                     --hex;
             } else if (side == 0) {
                 ++hex;
             }
-            return hex;
+        } else if (row_offset == SPELL_WALL_SECOND_ROW) {
+            hex = base_index - 2 * COMBAT_GRID_ROW_STRIDE;
         }
-        if (row_offset == SPELL_WALL_SECOND_ROW)
-            return base_index - 2 * COMBAT_GRID_ROW_STRIDE;
-        return base_index;
+        return hex;
     }
     // DC header inline (cmbtmgr.h:1525, dc 0x27f64). mark_teleport's
     // retail expansion retains the ValidHex bounds checks and the two
@@ -2102,6 +2107,11 @@ public:
     // because the body's whole shape is a jump table over the enum.
     void SpellTargetMessage(SpellID spellId, int targetIndex,
                             unsigned char first_target);       // 0x5a8690
+    // The refusal text display_failure_reason shows; DC spells.cpp:1807
+    // returns it by value, and retail's callers pass the hidden return
+    // slot straight through to format_string.
+    std::string get_failure_reason(SpellID spell, const char* msg,
+                                   long hex);                  // 0x5a2880
     void display_failure_reason(SpellID spell, const char* msg,
                                 long hex);                     // 0x5a2c60
     // The two spells.obj area collectors that fill a vector of HEXES -
@@ -2115,6 +2125,10 @@ public:
                           std::vector<long>& hexes);           // 0x5a4170
     void mark_berserk_area_effect(long hex, long mastery,
                                   std::vector<long>& hexes);   // 0x5a4430
+    // DC spells.cpp:3214; expanded into HandleCastWallSpell, no retail
+    // body of its own.
+    void mark_wall_area_effect(long target_hex, TSkillMastery mastery,
+                               std::vector<long>& result);
     // THE BATTLEFIELD'S AXIAL COORDINATE AND ITS THREE HELPERS. The DC
     // roster carries all three as combatManager members immediately in
     // front of mark_area_effect - spells.cpp:3103 hex_to_point,

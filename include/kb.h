@@ -189,6 +189,13 @@ DATA(0x006989f8) extern unsigned short* gMapExtra;
 // takes its y as `0x7c - font->height`, reading font+0x21, i.e.
 // TFontSpec::height at font+0x1c+5. Declare the rest as readers land.
 class font;
+// DC ?Credits@@3PAPBDA / ?smallFont@@3PAVfont@@A. CreditsWait reads the
+// scrolling text from Credits[0] and its closing line from Credits[1]
+// (retail .bss 0x6a7700 / 0x6a7704) and draws the latter with smallFont
+// (.bss 0x698a08, one of the three fonts ShutDown disposes). Their owning
+// compilands are not located yet.
+extern const char* Credits[];
+extern font* smallFont;
 DATA(0x00698a14) extern font* gpCalligraphicFont;
 // The first cell of the same run: army::DrawToBuffer (0x43e140) draws
 // the troop-count box's number with it, which is the reader the note
@@ -229,6 +236,12 @@ void NormalDialogTimeOut(const char* cText, int iMBType, int timeOut,
     int x, int y, int iResType1, int iResExtra1, int iResType2,
     int iResExtra2, int iSpecial, int iResType3, int iResExtra3); // 0x4f6530
 void DoNormalDialog(TNormalDialogInfo dialog_info);              // 0x4f6990
+// DC kb.cpp:5385 (dc 0xe5960); retail 0x4f5d80 (1,296 B), unclaimed.
+// NormalDialog sizes its info block through it before DoNormalDialog.
+void CalculateNormalDialogSize(TNormalDialogInfo* dialog_info);
+// DC kb.cpp:2549 (dc 0xe206c); retail 0x4f0fc0, unclaimed. The dialog
+// handlers hand every message they do not consume to it.
+int EventWindowHandler(message* msg);
 void extended_dialog(const char* text,
     std::vector<type_dialog_resource>& resources,
     long x, long y, long timeout);                              // 0x4f6cf0
