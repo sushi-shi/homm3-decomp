@@ -7,7 +7,6 @@
 #define HOMM3_COMMAND_ANIMATION_VIEW
 #define HOMM3_COMMAND_GRID_VIEW
 #define HOMM3_COMMAND_PLAYER_DROP_VIEW
-#define HOMM3_COMMAND_TOWER_STRING_VIEW
 #define HOMM3_DRAWING_UPDATE_MOUSE_GRID_DECLS
 // Both DC command routines below retain army::GetName as the source boundary,
 // while the original CreatureType.h body supplies its nested GetArmyName

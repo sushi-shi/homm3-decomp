@@ -110,13 +110,11 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_COMBAT_REMOTE_PLAYER_DROPPED = 417,
 #endif
     GENERAL_TEXT_BACKPACK_ARTIFACT_FORMAT = 154,
-#ifdef HOMM3_COMMAND_TOWER_STRING_VIEW
     // get_tower_string's two folded vector loads at Text._First + 0x26c and
     // +0x270. The first takes the wall name; the second takes that name,
     // skill and the double/triple archer counts.
     GENERAL_TEXT_COMBAT_WALL_DESTROYED_FORMAT = 155,
     GENERAL_TEXT_COMBAT_WALL_STATUS_FORMAT = 156,
-#endif
     GENERAL_TEXT_VIEW_ARMY_SPEED = 194,
     // The two rows above HEALTH_REMAINING in the popup, both folded
     // [Text._First + N] loads: 0x31c in
