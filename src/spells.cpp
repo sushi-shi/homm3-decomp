@@ -24,6 +24,7 @@
 // which admits the lists without the aura/binding member functions.
 #define HOMM3_ARMY_AURA_SOURCES_DECL
 #include "army.h"
+#include "creaturetype.h"  // GetArmyName, the header body army::GetName expands
 // LoadSpellEffect reads akSpellEffectTraits, which cmbtmgr.h keeps behind
 // this view; spells.obj is its second consumer after cmbtmgr.obj.
 // mark_area_effect's berserk arm calls mark_berserk_area_effect, whose
@@ -1581,7 +1582,8 @@ std::string combatManager::get_failure_reason(SpellID spell, const char* msg,
             && spell_traits->level < target->antiMagicSpellLevel)
             return format_string(gpGeneralText->GetText(171),
                                  akSpellTraits[SPELL_ANTI_MAGIC].name,
-                                 target->GetName());
+                                 GetArmyName(target->creatureType,
+                                             target->numTroops));
         if (spell_traits->field_0 < 0
             && target->get_owning_side() == currentSide)
             return format_string(gpGeneralText->GetText(172),
@@ -1663,7 +1665,7 @@ int handle_sacrifice_beneficiary(message& msg)
             gSacrificeBeneficiaryValidTarget = 0;
             gpMouseManager->SetPointer(0, mouseManager::COMBAT_SET);
             gpCombatManager->display_failure_reason(
-                SPELL_SACRIFICE, gpGeneralText->GetText(24), hex);
+                SPELL_SACRIFICE, gpGeneralText->GetText(543), hex);
             gpCombatManager->TurnOffHighlighter(1);
         }
         break;
@@ -1716,8 +1718,9 @@ int HandleCastSacrifice(message& msg)
         if (gpCombatManager->ValidSpellTarget(SPELL_SACRIFICE, mastery, hex,
                                               gpCombatManager->currentSide,
                                               0, 0)
-            && gpCombatManager->cells[gpCombatManager->field_44].get_army()
-                != gpCombatManager->cells[hex].get_army()) {
+            && gpCombatManager->cells[hex].get_army()
+                != gpCombatManager->cells[gpCombatManager->field_44]
+                       .get_army()) {
             gSacrificeIndexIsValid = 1;
             gpMouseManager->SetPointer(0x12, mouseManager::COMBAT_SET);
             gpCombatManager->SpellTargetMessage(SPELL_SACRIFICE, hex, 0);
@@ -1726,7 +1729,7 @@ int HandleCastSacrifice(message& msg)
             gSacrificeIndexIsValid = 0;
             gpMouseManager->SetPointer(0, mouseManager::COMBAT_SET);
             gpCombatManager->display_failure_reason(
-                SPELL_SACRIFICE, gpGeneralText->GetText(25), hex);
+                SPELL_SACRIFICE, gpGeneralText->GetText(544), hex);
             gpCombatManager->TurnOffHighlighter(1);
         }
         break;
@@ -1773,8 +1776,9 @@ void mark_area_highlights(SpellID spell, TSkillMastery mastery, long hex)
     unsigned char changed = 0;
     gpCombatManager->mark_area_effect(spell, hex, mastery, targets);
     for (int side = 0; side < 2; side++) {
-        for (int i = 0; i < gpCombatManager->numArmies[side]; i++) {
-            army* this_army = &gpCombatManager->armies[side][i];
+        army* this_army = gpCombatManager->armies[side];
+        for (int i = 0; i < gpCombatManager->numArmies[side];
+             i++, this_army++) {
             if (this_army->Is(1u << 21))
                 continue;
             if (gpCombatManager->SpellCastWorkChance(
@@ -1796,7 +1800,8 @@ void mark_area_highlights(SpellID spell, TSkillMastery mastery, long hex)
             gpCombatManager->mark_area_effect(hex, radius, include_center,
                                               hexes);
         }
-        for (int i = hexes.size() - 1; i >= 0; i--) {
+        int i = hexes.size();
+        while (i--) {
             army* target = 0;
             if (combatManager::ValidHex(hexes[i]))
                 target = gpCombatManager->cells[hexes[i]].get_army();
@@ -1819,8 +1824,9 @@ DC_ONLY(0x152484, 0xD4)
 static void clear_area_highlights()
 {
     for (int side = 0; side < 2; side++) {
-        for (int i = 0; i < gpCombatManager->numArmies[side]; i++) {
-            army* this_army = &gpCombatManager->armies[side][i];
+        army* this_army = gpCombatManager->armies[side];
+        for (int i = 0; i < gpCombatManager->numArmies[side];
+             i++, this_army++) {
             if (!this_army->Is(1u << 21))
                 this_army->set_inside_area_effect(0);
         }
@@ -1887,9 +1893,9 @@ static long gCastWallIndexToCastOn = -1;
 VA(0x005a3250, 0x31C)  // retail order+handler call, dc 0x1527bc
 int HandleCastWallSpell(message& msg)
 {
-    SpellID spell = static_cast<SpellID>(gpCombatManager->field_40) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
     hero* casting_hero =
         gpCombatManager->heroes[gpCombatManager->currentSide];
+    SpellID spell = static_cast<SpellID>(gpCombatManager->field_40) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
     gpCombatManager->do_animations();
     switch (msg.id) {
     case MESSAGE_MOUSE_MOVE: {
@@ -1963,11 +1969,12 @@ int HandleCastTeleport(message& msg)
         long hex = gpCombatManager->GetGridIndex(msg.codeX, msg.codeY);
         if (hex == gCastTeleportPreviousHex)
             break;
+        hero* current_hero =
+            gpCombatManager->heroes[gpCombatManager->currentSide];
         if (gpCombatManager->ValidSpellTarget(
                 SPELL_TELEPORT,
-                gpCombatManager->heroes[gpCombatManager->currentSide]
-                    ->get_spell_level(SPELL_TELEPORT,
-                                      gpCombatManager->field_53c0),
+                current_hero->get_spell_level(SPELL_TELEPORT,
+                                              gpCombatManager->field_53c0),
                 hex, gpCombatManager->currentSide, 1, 0)) {
             gCastTeleportArmyHex = hex;
             gpMouseManager->SetPointer(SPELL_TELEPORT + 1,
@@ -2772,8 +2779,9 @@ void combatManager::mark_area_effect(SpellID spell, long hex, long mastery,
         mark_berserk_area_effect(hex, mastery, targets);
         return;
     }
-    mark_hex_area_effect(hex, (spell == SPELL_INFERNO) + 1,
-                         spell != SPELL_FROST_RING, targets);
+    long radius = (spell == SPELL_INFERNO) + 1;
+    unsigned char include_center = spell != SPELL_FROST_RING;
+    mark_hex_area_effect(hex, radius, include_center, targets);
 }
 
 #if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows

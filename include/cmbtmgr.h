@@ -1516,21 +1516,26 @@ public:
     enum ESpellWallRowOffset {
         SPELL_WALL_SECOND_ROW = 2
     };
+    // ONE result variable, defaulted before the row test: retail's
+    // expansion in HandleCastWallSpell (0x5a3250) copies base_index into
+    // the result register ahead of the `row_offset == 1` branch and
+    // stores it once at the join, which three separate returns cannot
+    // give (they store per arm, measured 94.08 -> 100 on that body).
     int GetSpellWallHex(int base_index, int row_offset, int side)
     {
+        int hex = base_index;
         if (row_offset == 1) {
-            int hex = base_index - COMBAT_GRID_ROW_STRIDE;
+            hex = base_index - COMBAT_GRID_ROW_STRIDE;
             if ((base_index / COMBAT_GRID_ROW_STRIDE) & 1) {
                 if (side == 1)
                     --hex;
             } else if (side == 0) {
                 ++hex;
             }
-            return hex;
+        } else if (row_offset == SPELL_WALL_SECOND_ROW) {
+            hex = base_index - 2 * COMBAT_GRID_ROW_STRIDE;
         }
-        if (row_offset == SPELL_WALL_SECOND_ROW)
-            return base_index - 2 * COMBAT_GRID_ROW_STRIDE;
-        return base_index;
+        return hex;
     }
     // DC header inline (cmbtmgr.h:1525, dc 0x27f64). mark_teleport's
     // retail expansion retains the ValidHex bounds checks and the two
