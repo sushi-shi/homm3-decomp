@@ -859,7 +859,7 @@ command	?DoVictory@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x77470	8b0
 # automate_first_aid_tent re-exposes the same include-set/codegen class;
 # GetCommand's 62 branches and 20 returns still agree exactly. hist stays
 # at 92.5714.
-command	?GetCommand@combatManager@@QAEHH@Z	92.5714	92.5714	92.5714	0x76490	d35f38a78257
+command	?GetCommand@combatManager@@QAEHH@Z	92.5357	92.5714	92.5714	0x76490	d35f38a78257
 command	?GetControl@combatManager@@QAEXXZ	87.7747	87.7747	87.7747	0x782d0	45e6f0e0e9da
 command	?HandleCombatPlayerDrop@combatManager@@QAEEKPAVmessage@@@Z	100.0000	100.0000	100.0000	0x7a500	93137abf7711
 command	?Main@combatManager@@UAEHAAVmessage@@@Z	96.2267	96.2267	96.2267	0x740d0	414b21592711

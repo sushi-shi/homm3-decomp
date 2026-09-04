@@ -12,10 +12,6 @@
 // the Bitmap16Bit layout and WinGraph.h's recovered RGBto16 boundary.
 #include "bitmap16.h"
 #include "wingraph.h"  // DC-proven RGBto16 header helper and channel domain
-// ShowSpellMessage's Age arm reads origHitPoints (+0x6c) and the
-// poisonPenalty multiplier (+0x4a4) to price the hit points the stack
-// just lost; army.h keeps both behind the round view.
-#define HOMM3_ARMY_ROUND_VIEW
 // GetNextChainLightningTarget measures screen distance with army::MidX /
 // army::MidY, which army.h keeps behind this declaration view.
 // ModifySpellDamage forwards army::creatureType into armygrp's free

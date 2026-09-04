@@ -316,7 +316,7 @@ public:
     int iMirrorSourceIndex;             // +0x24
     int iMirrorDestIndex;               // +0x28
     int iRoundsLeftBeforeVanish;        // +0x2c
-#elif defined(HOMM3_ARMY_ROUND_VIEW)
+#else
     // DC army.bShowPowEffect (members.csv army@32) and
     // army.iRoundsLeftBeforeVanish (army@44) - the low run this class
     // already pairs UNSHIFTED, IsMoving 48/+0x30 through origSpeed
@@ -334,14 +334,6 @@ public:
     int iMirrorSourceIndex;        // +0x24
     int iMirrorDestIndex;          // +0x28
     int iRoundsLeftBeforeVanish;   // +0x2c
-#else
-    // PowEffect scans every stack for a raised bShowPowEffect to decide
-    // whether to load the effect sprite at all, and clears it in the closing
-    // walk. Drawing's single-stack SpellEffect overload raises and clears
-    // the same byte. The ordinary layout names that DC-attested source member
-    // while leaving the rest of the low band opaque.
-    unsigned char bShowPowEffect;  // +0x20
-    char pad_21[0xf];
 #endif
     // DC army.IsMoving (members.csv army@48, which is retail +0x30 -
     // the whole DC run 48..100 lands on retail 0x30..0x64 unshifted).
@@ -423,7 +415,7 @@ public:
     int origWalkCycleTime;        // +0x68
     int origHitPoints;            // +0x6c
     int iLuckStatus;              // +0x70
-#elif defined(HOMM3_ARMY_ROUND_VIEW)
+#else
     // DC army.origWalkCycleTime (members.csv army@104), the slot the
     // iLuckStatus note below always placed here. Sliced 2026-08-20 by
     // CancelIndividualSpell (0x444510): its HASTE and SLOW arms both
@@ -442,8 +434,6 @@ public:
     // the rest of the sweep swings plain. Pad slice - the include-set
     // canaries do not move for one.
     int iLuckStatus;               // +0x70
-#else
-    char pad_68[0xc];
 #endif
     // +0x74 starts an EMBEDDED copy of the creature's traits row (the
     // Dreamcast roster's `TCreatureTypeTraits sMonInfo` at 116, and the
@@ -1020,15 +1010,13 @@ public:
     float fireShieldStrength;     // +0x4a0
 #ifdef HOMM3_ARMY_COPY_VIEW
     float poisonPenalty;              // +0x4a4
-#elif defined(HOMM3_ARMY_ROUND_VIEW)
+#else
     // DC army.poison_penalty (members.csv army@1152), the word straight
     // after fire_shield_strength 1148/+0x4a0 in the same DC run. It is
     // a MULTIPLIER, not a count: ResetRound subtracts 0.1f from it once
     // per round, floors the result at 0.5 and rescales the stack's
     // hitPoints by what is left.
     float poisonPenalty;           // +0x4a4
-#else
-    char pad_4a4[0x4];
 #endif
     // The four Protection-from-<school> damage multipliers, DC-named
     // (members.csv army 1156/1160/1164/1168 protectionFrom{Air,Fire,
