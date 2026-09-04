@@ -64,10 +64,9 @@ enum eRS_Messages {
     RS_PLAYER_DEAD = 1018,
     RS_PLAYER_WON = 1019,
     RS_PLAYER_LOST = 1020,
-#ifdef HOMM3_SINGLESELECTION_LOBBY_MESSAGES
     // The Dreamcast eRS_Messages ladder consumed by the setup/lobby TU.
-    // Keep these on that TU's measured include view; Complete adds the final
-    // three transfer-control rungs after DC's 1081 endpoint.
+    // Complete adds the final three transfer-control rungs after DC's
+    // 1081 endpoint.
     RS_GAME_HEADER_INFO = 1023,
     RS_GAME_HEADER_INFO_INIT = 1024,
     RS_GAME_HEADER_INFO_END = 1025,
@@ -93,7 +92,6 @@ enum eRS_Messages {
     RS_GAME_TRANSMIT_PENDING = 1082,
     RS_GAME_HEADER_INFO_INIT_EX = 1083,
     RS_HEADERS_REQUEST = 1084,
-#endif
     RS_MAP_CHANGE_START = 1049,
     RS_MAP_CHANGE_END = 1063,
     RS_TRADE_REQUEST = 1064,
