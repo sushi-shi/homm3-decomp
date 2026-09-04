@@ -320,7 +320,7 @@ ai_player	?get_value@type_spellcaster_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0
 ai_player	?get_value@type_statue_of_legion_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x33580	aac2ce1ac292
 ai_player	?get_value@type_tome_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x32c20	7e1b792d8414
 ai_player	?get_value@type_undead_king_cloak_artifact@@UBEJPBVhero@@EE@Z	96.7778	96.7778	96.7778	0x333a0	7217c8f21064
-ai_player	?hire_heroes@type_AI_player@@QAE_NXZ	100.0000	100.0000	100.0000	0x31360	090ada3d6566
+ai_player	?hire_heroes@type_AI_player@@QAE_NXZ	99.9490	100.0000	100.0000	0x31360	090ada3d6566
 ai_player	?initialize_artifact_effects@@YIXXZ	91.9528	91.9528	91.9528	0x34100	a14bb0e20585
 ai_player	?is_human_ally@game@@QBE_NH@Z	100.0000	100.0000	100.0000	0x2b9e0	df633736fa56
 ai_player	?make_gift@type_AI_player@@QAEXJ@Z	84.5868	84.5868	84.5868	0x29110	9e66faf2a9da
@@ -482,7 +482,7 @@ army	?check_obstacle_attacks@army@@QAEEE@Z	100.0000	100.0000	100.0000	0x41f70	26
 army	?check_special_attack@army@@QAEEPAV1@@Z	100.0000	100.0000	100.0000	0x40500	49147539aa98
 army	?compute_attacker_bonus@army@@QBEHHEPAV1@EJ@Z	100.0000	100.0000	100.0000	0x43320	698523953542
 army	?consider_attack@army@@QAEXPBV1@JJ@Z	100.0000	100.0000	100.0000	0x48840	686954572466
-army	?do_attack@army@@QAEEPAV1@H@Z	98.8868	99.9962	99.9962	0x41610	1fa738e017fe
+army	?do_attack@army@@QAEEPAV1@H@Z	98.9251	99.9962	99.9962	0x41610	1fa738e017fe
 army	?do_attack@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x41cb0	0c17230627a2
 army	?do_fire_shield@army@@AAEXJ@Z	100.0000	100.0000	100.0000	0x409c0	3f772aa9df30
 army	?do_multi_head_attack@army@@QAEXIPAH0PAJ@Z	100.0000	100.0000	100.0000	0x40310	d1193b9e629e
