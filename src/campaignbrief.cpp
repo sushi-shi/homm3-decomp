@@ -77,27 +77,99 @@ void ShowTerritorySmacker(unsigned char bEvil2Post)
     // @stub
 }
 
+#endif
+
+// E:\gamedcs\campaignbrief.cpp:452. Complete keeps this and
+// ResetMapAndDescription as header-style inlines: neither has a retail
+// body, and Select carries both expanded - which is what makes
+// vector::size a NESTED candidate there, called out of line at both
+// loop tests (0x423110, the pointer-vector size COMDAT).
+DC_ONLY(0x589a4, 0x84)
+inline void TCampaignBrief::ClearSelected()
+{
+    for (int i = 0; i < static_cast<int>(campaign->scenarios.size()); i++) {
+        if (scenarios[i].available)
+            GetWidget(MAP_SELECTED_1_ID + i)->hide();
+    }
+}
+
+// E:\gamedcs\campaignbrief.cpp:437. The Dreamcast broadcasts the map
+// description as a second widget message; Complete hands it to the
+// scroller (type_text_scroller::SetText, 0x5ba6e0) instead.
+DC_ONLY(0x58938, 0x6A)
+inline void TCampaignBrief::ResetMapAndDescription(int which)
+{
+    message msg;
+    msg.id = MESSAGE_WIDGET;
+    msg.codeX = widget::WIDGET_SET_TEXT;
+    msg.codeY = MAP_NAME_ID;
+    msg.extraText = scenarios[which].mapName.c_str();
+    BroadcastMessage(&msg);
+    scroller->SetText(scenarios[which].mapDescription.c_str());
+}
+
 // E:\gamedcs\campaignbrief.cpp:392
+// Complete adds the game-setup / map-header copy into gpGame (skipped in
+// the in-game view), the WHICHMAP frame chosen by the map's Size, the OK
+// button enable when the scenario's options record has no choice to
+// make, and the difficulty-button refresh.
 VA(0x00457990, 0x319)  // anchor-caller(TCampaignBrief ctor), dc 0x587c4
 void TCampaignBrief::Select(int which)
 {
-    // @stub
+    if (!scenarios[which].available)
+        return;
+
+    ClearSelected();
+    GetWidget(MAP_SELECTED_1_ID + which)->show();
+    selected_scenario = which;
+    ResetMapAndDescription(which);
+
+    if (!gCampaignBriefViewFromGame) {
+        gpGame->setup = scenarios[which].game_setup;
+        gpGame->mapHeader = scenarios[which];
+    }
+
+    message msg;
+    msg.id = MESSAGE_WIDGET;
+    msg.codeX = widget::WIDGET_SET_ICON_FRAME;
+    msg.codeY = WHICHMAP_ID;
+    switch (scenarios[which].Size) {
+    case MAP_SIZE_SMALL:
+        msg.extra = 0;
+        break;
+    case MAP_SIZE_MEDIUM:
+        msg.extra = 1;
+        break;
+    case MAP_SIZE_LARGE:
+        msg.extra = 2;
+        break;
+    case MAP_SIZE_EXTRA_LARGE:
+        msg.extra = 3;
+        break;
+    default:
+        msg.extra = 4;
+        break;
+    }
+    BroadcastMessage(&msg);
+
+    if (!campaign->scenarios[which]->options->_vslot2()) {
+        widget* ok = GetWidget(DIALOG_RETURN_OK);
+        if (ok)
+            ok->enable(1);
+    }
+    UpdateBonusIcons();
+    UpdateDifficultyButtons();
+    UpdateAllyEnemyFlags();
+    DrawWindow(1, 0xffff0001, 0xffff);
 }
 
-// E:\gamedcs\campaignbrief.cpp:437
-DC_ONLY(0x58938, 0x6A)
-void TCampaignBrief::ResetMapAndDescription(int which)
-{
-    // @stub
-}
+// CMapHeaderData's compiler-generated copy assignment, which Select's
+// slicing `gpGame->mapHeader = scenarios[which]` calls as the base half of
+// NewSMapHeader's own (the two strings and the POD tail follow inline).
+// Retail retains this object's copy, the first in link order to need it.
+VA_COMPGEN(0x00457cb0, 0x2B8, IMPLICIT_COPY_ASSIGN, CMapHeaderData)
 
-// E:\gamedcs\campaignbrief.cpp:452
-DC_ONLY(0x589a4, 0x84)
-void TCampaignBrief::ClearSelected()
-{
-    // @stub
-}
-
+#if 0  // Dreamcast-only carcass; retained as evidence, not emitted for retail.
 // E:\gamedcs\campaignbrief.cpp:462
 DC_ONLY(0x58a28, 0x74)
 void TCampaignBrief::SetupCurrentTerritory()
@@ -146,13 +218,6 @@ void TCampaignBrief::UpdateAllyEnemyFlags()
 }
 
 #if 0  // Dreamcast-only carcass; retained as evidence, not emitted for retail.
-
-// E:\gamedcs\campaignbrief.cpp:520
-DC_ONLY(0x58c00, 0x1AC)
-void TCampaignBrief::UpdateBonusIcons()
-{
-    // @stub
-}
 
 // E:\gamedcs\campaignbrief.cpp:649
 DC_ONLY(0x59300, 0x1B8)
@@ -279,6 +344,37 @@ void TCampaignBrief::AddBonusIcons()
         CampaignDifficultyHandler, 2, 3);
     Widgets.push_back(difficulty_decr_button);
     Widgets.push_back(difficulty_incr_button);
+}
+
+#if 0  // @carcass - Select's bonus-icon refresh; retail 663 B against the DC's 428.
+// E:\gamedcs\campaignbrief.cpp:520
+VA(0x00458d40, 0x297)  // Select callee, dc-order-map after AddBonusIcons, dc 0x58c00
+void TCampaignBrief::UpdateBonusIcons()
+{
+    // @stub
+}
+#endif  // @carcass
+
+// Complete-only; see campaignbrief.h.
+VA(0x00459010, 0xB0)  // Select callee, retail-only
+void TCampaignBrief::UpdateDifficultyButtons()
+{
+    for (int i = 0; i < 5; i++) {
+        if (i == gpGame->setup.difficulty)
+            difficulty_buttons[i]->show();
+        else
+            difficulty_buttons[i]->hide();
+    }
+    if (!gCampaignBriefViewFromGame && difficulty_decr_button) {
+        if (gpGame->setup.difficulty > 0 && campaign->variable_difficulty)
+            difficulty_decr_button->show();
+        else
+            difficulty_decr_button->hide();
+        if (gpGame->setup.difficulty < 4 && campaign->variable_difficulty)
+            difficulty_incr_button->show();
+        else
+            difficulty_incr_button->hide();
+    }
 }
 
 // E:\gamedcs\campaignbrief.cpp:764

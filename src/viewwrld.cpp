@@ -158,7 +158,7 @@ void advManager::VWDrawBoatPartShadow(int part, TDrawParts& boatParts, int baseX
 }
 
 // E:\gamedcs\viewwrld.cpp:510
-DC_ONLY(0x193a74, 0x200)
+VA(0x005f80e0, 0x1F6)  // exhaustive dc-order-map (the row before VWDrawAdvObj) + VWCompleteDraw call order, dc 0x193a74
 void advManager::VWDrawSymbols(int srcX, int srcY, int z, int destX, int destY)
 {
     // @stub
@@ -379,42 +379,42 @@ void advManager::VWDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 #if 0  // @carcass
 
 // E:\gamedcs\viewwrld.cpp:822
-DC_ONLY(0x1943ec, 0x462)
+VA(0x005f8be0, 0x636)  // exhaustive dc-order-map + VWCompleteDraw call order (5th layer), dc 0x1943ec
 void advManager::VWDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int destY)
 {
     // @stub
 }
 
 // E:\gamedcs\viewwrld.cpp:946
-DC_ONLY(0x194850, 0x17C)
+VA(0x005f9220, 0x38A)  // exhaustive dc-order-map + VWCompleteDraw call order (2nd layer), dc 0x194850
 void advManager::VWDrawRiver(int srcX, int srcY, int z, int destX, int destY)
 {
     // @stub
 }
 
 // E:\gamedcs\viewwrld.cpp:985
-DC_ONLY(0x1949cc, 0x17C)
+VA(0x005f95b0, 0x38B)  // exhaustive dc-order-map + VWCompleteDraw call order (3rd layer), dc 0x1949cc
 void advManager::VWDrawRoad(int srcX, int srcY, int z, int destX, int destY)
 {
     // @stub
 }
 
 // E:\gamedcs\viewwrld.cpp:1026
-DC_ONLY(0x194b48, 0x284)
+VA(0x005f9940, 0x44A)  // exhaustive dc-order-map + VWCompleteDraw call order (the iVWTerrains-gated layer), dc 0x194b48
 void advManager::VWDrawShroud(int srcX, int srcY, int z, int destX, int destY)
 {
     // @stub
 }
 
 // E:\gamedcs\viewwrld.cpp:1114
-DC_ONLY(0x194dcc, 0x1E2)
+VA(0x005f9ed0, 0x310)  // exhaustive dc-order-map + VWCompleteDraw call order (4th layer), dc 0x194dcc
 void advManager::VWDrawUnderlay(int srcX, int srcY, int z, int destX, int destY)
 {
     // @stub
 }
 
 // E:\gamedcs\viewwrld.cpp:1174
-DC_ONLY(0x194fb0, 0x308)
+VA(0x005fa1e0, 0x41F)  // exhaustive dc-order-map (the row before the ctor) + VWCompleteDraw call order (1st layer), dc 0x194fb0
 void advManager::VWDrawGround(int srcX, int srcY, int z, int destX, int destY)
 {
     // @stub
@@ -682,6 +682,55 @@ int ViewWorldUndergroundHandler(message& msg)
     return 1;
 }
 
+// E:\gamedcs\viewwrld.cpp:1558. Both level callbacks above call it. The
+// eight per-layer passes are the Dreamcast's statement order exactly
+// (ground, river, road, underlay, object shadows, objects, then the
+// shroud unless the terrain-only view is on, then the symbols); Complete
+// fixes the 8,8 / 592x544 clear and the closing gem redraw.
+VA(0x005fc4c0, 0x2E0)  // anchor-callers ViewWorldSurfaceHandler / ViewWorldUndergroundHandler, dc 0x196040
+void advManager::VWCompleteDraw(int startX, int startY, int z, int drawwidth,
+                                int drawheight)
+{
+    int row;
+
+    gpWindowManager->screenBitmap->FillRect(8, 8, 592, 544, 0);
+    for (row = -1; row <= drawheight; row++) {
+        for (int col = -1; col <= drawwidth; col++)
+            VWDrawGround(startX + col, startY + row, z, col, row);
+    }
+    for (row = -1; row <= drawheight; row++) {
+        for (int col = -1; col <= drawwidth; col++)
+            VWDrawRiver(startX + col, startY + row, z, col, row);
+    }
+    for (row = -1; row <= drawheight; row++) {
+        for (int col = -1; col <= drawwidth; col++)
+            VWDrawRoad(startX + col, startY + row, z, col, row);
+    }
+    for (row = -1; row <= drawheight; row++) {
+        for (int col = -1; col <= drawwidth; col++)
+            VWDrawUnderlay(startX + col, startY + row, z, col, row);
+    }
+    for (row = -1; row <= drawheight; row++) {
+        for (int col = -1; col <= drawwidth; col++)
+            VWDrawAdvObjShadow(startX + col, startY + row, z, col, row);
+    }
+    for (row = -1; row <= drawheight; row++) {
+        for (int col = -1; col <= drawwidth; col++)
+            VWDrawAdvObj(startX + col, startY + row, z, col, row);
+    }
+    if (!iVWTerrains) {
+        for (row = -1; row <= drawheight; row++) {
+            for (int col = -1; col <= drawwidth; col++)
+                VWDrawShroud(startX + col, startY + row, z, col, row);
+        }
+    }
+    for (row = -1; row <= drawheight; row++) {
+        for (int col = -1; col <= drawwidth; col++)
+            VWDrawSymbols(startX + col, startY + row, z, col, row);
+    }
+    DrawAdventureMapGems();
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\viewwrld.cpp:1409
@@ -701,13 +750,6 @@ void TViewWorldWindow::init(type_point new_center, unsigned char updateFlag)
 // E:\gamedcs\viewwrld.cpp:1549
 DC_ONLY(0x195ffc, 0x42)
 void TViewWorldWindow::draw_window()
-{
-    // @stub
-}
-
-// E:\gamedcs\viewwrld.cpp:1558
-DC_ONLY(0x196040, 0x1E8)
-void advManager::VWCompleteDraw(int startX, int startY, int z, int drawwidth, int drawheight)
 {
     // @stub
 }
