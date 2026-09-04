@@ -825,7 +825,6 @@ struct pair<const int, type_map_hero_info> {
 }
 #endif
 
-#ifdef HOMM3_GAME_OBJ_DECLS
 // Emission-only access shim for the retained Dinkumware _Tree::_Min COMDAT.
 // The real call is inside CMapHeaderData::Save after iterator::_Inc has been
 // expanded; this derived map exposes the protected static member without
@@ -841,7 +840,6 @@ public:
     void retain_min();
     void retain_insert(const Value& value);
 };
-#endif
 
 class VictoryConditionStruct {
 public:
