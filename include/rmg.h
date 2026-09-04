@@ -355,7 +355,14 @@ struct TRmgGroundTileData {
     unsigned roadSprite : 7;
     unsigned unknown07 : 1;
     unsigned blockedDirections : 4;
-    unsigned unknown12 : 14;
+    unsigned unknown12 : 10;
+    // BuildRoadCostMap proves these two Complete-only routing flags at bits
+    // 22 and 25.  The first marks an object entrance whose adventure-object
+    // traits constrain approach directions; the second admits the tile to
+    // the road-cost flood.
+    unsigned roadEntrance : 1;
+    unsigned unknown23 : 2;
+    unsigned roadPassable : 1;
     unsigned borderObject : 1;
     unsigned subterraneanGate : 1;
     unsigned unknown28 : 1;
@@ -647,6 +654,9 @@ public:
     int PlaceBorderObject(
         TRmgMapPosition position, int count, TRmgZone* zone);
     type_object* CreateGuard(int value, TRmgZone* zone);
+    // Provisional Complete-only spelling: the 0x548290 road-target pass is
+    // the sole direct caller, and the body builds the road traversal costs.
+    void BuildRoadCostMap(TRmgMapPosition position);
     // Provisional spelling: retail's water-wheel caller and the river-delta
     // object selection prove the role; the Dreamcast build has no RMG TU.
     void CreateRiver(TRmgMapPosition source);
