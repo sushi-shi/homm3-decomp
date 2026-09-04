@@ -6,12 +6,8 @@
 #define HOMM3_REMOTE_H
 
 #include "dxplay.h"
-#ifdef HOMM3_REMOTE_CDPLAYHEROES_LAYOUT
 #include <deque>
-#endif
-#ifdef HOMM3_CHAT_EDIT_DECLS
 #include "chatedit.h"
-#endif
 
 class CNetMsg;
 class textWidget;
@@ -172,13 +168,8 @@ public:
     void HandlePlayerDrop(unsigned long dpid);
 
 protected:
-#ifdef HOMM3_REMOTE_CDPLAYHEROES_LAYOUT
-    // MATCHING_DEBT: keep this override declaration in the existing remote-TU
-    // layout view. Exposing the otherwise unused virtual to recruit.obj changes
-    // VC6's optimizer state and regresses recruitUnit::Update.
     virtual unsigned char SysMsgCreatePlayerOrGroup(
         DPMSG_CREATEPLAYERORGROUP* message, unsigned long toId);
-#endif
     // Retail 0x5532b0, DC remote.cpp:425. Accessed by the two original
     // free-function friends below; the Dreamcast class record marks it
     // protected rather than public.
@@ -190,15 +181,11 @@ protected:
                                   bool, bool);
 
 private:
-#ifdef HOMM3_REMOTE_CDPLAYHEROES_LAYOUT
     CDPlayMsg dpMsg;                       // +0x60
     std::deque<CNetMsg*> msgQueue;         // +0x68..+0x97
     char sLocalIPAddress[80];              // +0x98..+0xe7
     unsigned long confirmId;               // +0xe8
     unsigned long currMessageId;           // +0xec
-#else
-    char m_remoteState[0x90];       // +0x60..+0xef
-#endif
     CNetMsgHandler* m_pNetMsgHandler; // +0xf0
 };
 SIZE(CDPlayHeroes, 0xf4);
@@ -308,11 +295,9 @@ void __cdecl SystemMsg(CChatManager* manager, const char* format, ...);
 void __cdecl PlayerDropMsg(CChatManager* manager, const char* format, ...);
 void __cdecl PlayerEnterMsg(CChatManager* manager, const char* format, ...);
 
-#if defined(HOMM3_CHAT_EDIT_DECLS) || defined(HOMM3_GAME_TRANSMIT_DECLS)
 enum ENetMessageRecipient {
     NET_MESSAGE_RECIPIENT_ALL = 0x7f
 };
-#endif
 
 // Retail's complete method family proves five unsigned-long lanes at
 // +0/+4/+8/+c/+10; Dreamcast CodeView supplies their source names.
@@ -402,7 +387,6 @@ int TransmitRemoteData(CNetMsg* pMsg, int toWho,
                        bool compressMsg, bool guaranteed);
 int TransmitRemoteDataDPID(CNetMsg* pMsg, unsigned long dpidTo,
                            bool compressMsg, bool guaranteed);
-#ifdef HOMM3_GAME_TRANSMIT_DECLS
 // DC remote.cpp:1384 proves the two-argument public boundary. Complete's
 // wrapper ignores wasCompressed internally, but its game.obj callers still
 // materialize the null second fastcall argument in EDX.
@@ -412,20 +396,17 @@ int calc_crc_long(unsigned char* buffer, int len);
 // DC remote.cpp:1411, dc 0x11ce68; retail ReceiveSaveGame keeps this
 // cleanup boundary out of line on both fatal in-game receive paths.
 void RemoteCleanup();
-#endif
 void PollRemote();
 void SendChat(const char* cChat, int toWho);
 unsigned char LobbyLaunchConnect();
 // Dreamcast names this network-launch state directly; retail oldmain tests
 // it only while handling the missing-CD startup result.
 extern int giTCPHostStatus;
-#ifdef HOMM3_KB_OLDMAIN_DECLS
 // Dreamcast remote.cpp:1916 and retail oldmain's direct 0x555920 call.
 unsigned char TestIfLobbyLaunched();
 // Dreamcast publishes the owning remote.obj buffer and Complete's tutorial
 // setup copies its selected filename here before loading the map header.
 extern char gMapName[260];
-#endif
 
 // Retail .data 0x69954c. make_gift only uses it as the gate for sending
 // a gift/request message to a non-local human; wider role unattested.

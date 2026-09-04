@@ -10,22 +10,9 @@
 // them - the seven candidate sites are ALSO what starves the /Ob2
 // collector so basic_string::_Grow/_Eos stay retail's out-of-line
 // calls in both functions).
-#define HOMM3_WIDGET_HIDE_SHOW_INLINE
 // UpdatePlayerPositions reaches SetupFirstPlayer and the new-map bonus
-// array, both scoped behind game.h's new-map view gate; HandleNetMsg
-// reads the incoming chat text through netmsg.h's gated CChatMsg shape.
+// array, both scoped behind game.h's new-map view gate.
 #define HOMM3_GAME_NEW_MAP_DECLS
-#define HOMM3_CHAT_EDIT_DECLS
-#define HOMM3_REMOTE_SEND_CHAT_DECLS
-#define HOMM3_REMOTE_PLAYER_LIST_DECLS
-// The setup records are members of Dreamcast's one eRS_Messages ladder.
-// Scope the otherwise codegen-sensitive roster to its owning TU.
-#define HOMM3_SINGLESELECTION_LOBBY_MESSAGES
-// This TU sees the real vector view of the three header lists.
-#define HOMM3_SSWINDOW_HEADER_VECTORS
-// The launch/hold arms hand gpMediumFont to CAnimatedDlg::Setup - the
-// same scoped view CWaitForReadyPlayersDlg uses.
-#define HOMM3_REMOTE_WAIT_READY_DECLS
 #include "advmgr.h"
 #include "game.h"
 #include "armygrp.h"
@@ -54,7 +41,6 @@
 #include "singleselectionwindow_priv.h"
 #include "soundmgr.h"
 #define HOMM3_U2DVERS_SYSTEM_VERSION_DECLS
-#define HOMM3_U2DVERS_PRODUCT_VERSION_INLINE
 #include "u2dvers.h"
 
 // E:\gamedcs\singleselectionwindow.cpp:164

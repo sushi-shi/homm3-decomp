@@ -7,9 +7,7 @@
 
 #include "resource.h"
 
-#ifdef HOMM3_CSPRITEFRAME_DRAW_METHODS
 class TPalette16;
-#endif
 
 // Retail layout is byte-proven by both constructors at 0x47c2b0/0x47c360
 // and the destructor at 0x47c430.  The Dreamcast field roster agrees
@@ -40,7 +38,6 @@ union TBlendMask {
     unsigned int dword;
 };
 
-#ifdef HOMM3_CSPRITEFRAME_DRAW_METHODS
 // General-RLE control values consumed by the specialized frame renderers.
 // Their effects vary with the renderer and whether an outline color is live,
 // so the names preserve the encoded domain rather than inventing one effect.
@@ -64,7 +61,6 @@ enum TRawRowUnrollEntry {
     eRawRowUnroll6 = 6,
     eRawRowUnroll7 = 7
 };
-#endif
 
 class CSpriteFrame : public resource {
 public:
@@ -99,7 +95,6 @@ public:
     int GetCroppedX() const { return CroppedX; }
     int GetCroppedY() const { return CroppedY; }
 
-#ifdef HOMM3_CSPRITEFRAME_DRAW_METHODS
     void Clip(int& sx, int& sy, int& sw, int& sh, int& dx, int& dy,
               int dw, int dh, unsigned char hflip,
               unsigned char vflip) const;
@@ -147,7 +142,6 @@ public:
                          unsigned short* dst, int dx, int dy, int dw, int dh,
                          int dpitch, TPalette16& pal, unsigned char hflip,
                          unsigned char alpha) const;
-#endif
 
     // Static: retail takes rmask/gmask in ecx/edx with bmask on the
     // stack and never touches a `this`, which under /Gr is exactly a

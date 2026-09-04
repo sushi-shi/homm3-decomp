@@ -201,18 +201,12 @@ DATA(0x00698a14) extern font* gpCalligraphicFont;
 // the troop-count box's number with it, which is the reader the note
 // above was waiting on.
 DATA(0x00698a04) extern font* gpTinyFont;
-#if defined(HOMM3_REMOTE_WAIT_READY_DECLS) \
-        || defined(HOMM3_GAME_TRANSMIT_DECLS) \
-        || defined(HOMM3_KB_OLDMAIN_DECLS)
 // The third cell of the same canonical font run.  CWaitForReadyPlayersDlg
-// passes it to CAnimatedDlg::Setup; scoped because adding declarations to
-// a shared header is a measured VC6 include-set trigger in this tree.
+// passes it to CAnimatedDlg::Setup.
 DATA(0x00698a0c) extern font* gpMediumFont;
 // The fourth cell of the run (bigfont.fnt): the lobby window's panel
-// titles (TSingleSelectionWindow::Update, 0x584550) draw with it. Same
-// scoping rule as gpMediumFont above.
+// titles (TSingleSelectionWindow::Update, 0x584550) draw with it.
 DATA(0x00698a10) extern font* gpBigFont;
-#endif
 
 // Retail map-extra accessor used by the adventure-map adjacency scan.
 unsigned short GetMapExtra(int x, int y, int z);
@@ -221,11 +215,9 @@ unsigned short* GetMapExtraPtr(int x, int y, int z);
 // Live prototypes (claimed kb.cpp bodies; called from kbwin's
 // AppCommand and exec's DoDialog).
 void ShutDown(const char* cInExitMessage);               // 0x4f3690
-#ifdef HOMM3_GAME_TRANSMIT_DECLS
 // DC kb.cpp:3954 names the owner; retail TransmitSaveGame calls it after a
 // failed _open and independently proves the const-character-buffer ABI.
 void FileError(const char* cBuf);                        // 0x4f35f0
-#endif
 int HandleAppSpecificMenuCommands(int idItem);           // 0x4f4350
 void CleanUpMenus();                                     // 0x4f4b50
 int GetNextHumanPlayer(int start);                       // 0x4f4ba0
@@ -256,7 +248,6 @@ void __fastcall get_quickview_size(const char* text, int* width,
 // yet reconstructed; the declarators match the kbwin call sites).
 int InitMainClasses();                                   // 0x4ed650
 int oldmain();                                           // 0x4ee3e0
-#ifdef HOMM3_KB_OLDMAIN_DECLS
 // Positive Dreamcast kb.cpp boundaries used by oldmain. Their retail
 // implementations are being admitted separately; keeping the declarations
 // here lets the caller preserve the recovered source shape in the meantime.
@@ -266,7 +257,6 @@ void LostGame();
 // Retail-only dword paired with the Dreamcast-named giHighMemBuffer in
 // oldmain's low-debug-memory defaults. No surviving source symbol names it.
 DATA(0x006994ec) extern int gUnnamed6994ec;
-#endif
 // The image-wide allocation-failure handler: every `new` site that
 // null-checks its result calls it (67 B at 0x4f42c0, no args, sprintf
 // into gText then ShutDown). DC kb.obj MemError, dc 0xe44f0/64 B,
@@ -278,13 +268,11 @@ void MemError();                                         // 0x4f42c0
 void KbFn_004F4C00(int field00, unsigned char b);
 int GameUnsaved();                                       // 0x4f4310
 void CheckEndGame(int bForceWin);                        // 0x4f2ce0
-#ifdef HOMM3_REMOTE_WINLOSS_DECLS
 bool DisplayVCWinLoss(VictoryConditionStruct& victoryCondition,
                       int& bGameWon, int& bGameLost, bool remoteCheck);
 unsigned char DisplayLCWinLoss(LossConditionStruct* lossCondition,
                                int* bGameWon, int* bGameLost,
                                unsigned char remoteCheck);
-#endif
 // Retail .bss 0x6972b8, an INT that every CheckEndGame caller which then
 // wants to keep touching the adventure UI reads immediately afterwards -
 // 36 image-wide references, the bulk of them inside kb.obj's own band

@@ -15,16 +15,6 @@
 // first inclusion count.
 // Opens town.h's SetSummoningGenerator declarator for TCastleWindow's
 // constructor, and only for it: town.cpp never defines this.
-// widget.h's set_visible header inline (DC Widget.h:263), for
-// set_bonus_display's six show/hide sites - retail folds each into
-// `send_message(WIDGET_{SET,CLEAR}_STATUS, WIDGET_DRAWN)` in place, the
-// adventuremapwindow precedent. Set before every include because
-// widget.h is reached through townmgr.h first.
-#define HOMM3_WIDGET_SET_VISIBLE_INLINE
-// The town-screen / resource-bar widget-id enums this compiland
-// dispatches on; gated to keep the declarators out of the other seven
-// includers of townmgr.h (the recruitUnit::Update include-set canary).
-#define HOMM3_TOWNMGR_WIDGET_IDS
 #include "townmgr.h"
 // advspells.obj's TeleportTo declarator, for the MoveHero that
 // DoTownGate expands inline. Gated so no other includer of advmgr.h
@@ -41,15 +31,6 @@
 // the per-level counts at +0xbc.
 // town::get_location, for the type_point DoTownGate hands TeleportTo.
 #include "town.h"
-// game.h's grail-win declarator, for handle_hall_click's one call. Held
-// on its own gate so no other consumer of that header widens.
-// game.h's GetTownName inline, for SetupTown's title line, and its
-// ViewArmy declarator, for DoCommand's two info panels. Same gate
-// discipline: this compiland opens them, nothing else does.
-#define HOMM3_GAME_OBJ_DECLS
-#define HOMM3_TOWNMGR_GRAIL_DECLS
-#define HOMM3_TOWNMGR_TOWN_NAME_DECLS
-#define HOMM3_TOWN_OBJ_DECLS
 #include "game.h"
 #include "hero.h"
 #include "iconwdgt.h"

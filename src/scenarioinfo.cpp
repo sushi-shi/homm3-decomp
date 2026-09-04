@@ -8,7 +8,6 @@
 #include "border.h"
 #include "button.h"
 #include "csprite.h"
-#define HOMM3_SCENARIOINFO_OBJ_DECLS
 #include "game.h"
 #include "font.h"
 #include "hero.h"

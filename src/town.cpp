@@ -9,7 +9,6 @@
 #include "advmgr.h"
 #include "cursor.h"
 #include "exec.h"
-#define HOMM3_TOWN_OBJ_DECLS
 #include "game.h"
 #include "events.h"
 #include "kb.h"

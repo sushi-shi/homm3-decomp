@@ -6,15 +6,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define HOMM3_KB_OLDMAIN_DECLS
-#define HOMM3_GAME_TRANSMIT_DECLS
 #define HOMM3_GAME_NEW_MAP_DECLS
-#define HOMM3_NEWGAME_OBJ_DECLS
-#define HOMM3_REMOTE_WINLOSS_DECLS
-#define HOMM3_WIDGET_SET_VISIBLE_INLINE
 #include "kb.h"
-#undef HOMM3_WIDGET_SET_VISIBLE_INLINE
-#define HOMM3_TOWN_OBJ_DECLS
 #include "game.h"
 #include "textresource.h"
 #include "advmgr.h"
