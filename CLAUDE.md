@@ -44,8 +44,12 @@ that reproduces the retail MSVC 6.0 object code.
   MAX are not targets - not for polish lanes, not for view-removal lanes, not for
   integrators. Do not keep a view guard, gate a declaration, or respell a caller to lift
   an unrelated row back to its banked value.
-- The ratchet still fails the build for a function whose OWN source changed and regressed
-  below its MAX; that, and gate errors, are what must be fixed.
+- The tooling is built as a pit of success for this: `homm3 build` / `homm3 status check`
+  report a drop only for a function whose own source changed while it sat AT its banked
+  MAX; holdouts (rows already below their banked MAX) and unchanged rows are never
+  reported, and `homm3 vc6 queue --polish` never lists banked-exact dips. No score
+  regression is fatal - the evidence/source gates (banked rows, VA claims, single-view,
+  cleanliness floors) decide admissibility, and those are what must be fixed.
 
 ## Toolchain
 
