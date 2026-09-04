@@ -356,7 +356,6 @@ public:
     // unshifted). SetupAnimation (0x446830) raises it across the single
     // combatManager::DrawFrame that captures the clean background and
     // drops it again immediately after - "draw the field without me".
-    //
 #ifdef HOMM3_ARMY_COPY_VIEW
     unsigned char LetsPretendImNotHere; // +0x31
 #else
@@ -840,21 +839,11 @@ public:
     // proves, +0x210..+0x21c is indices 30..33, i.e. SPELL_PROTECTION_AIR
     // (30) .. SPELL_PROTECTION_EARTH (33), directly after
     // SPELL_FIRE_SHIELD (29) at +0x20c above.
-    // BEHIND A VIEW, AND THAT IS A MEASUREMENT: this slice alone, with
-    // the float run below left as its pad, costs command.obj's
-    // GetCommand 92.5714 -> 92.5357 - the include-set class, at the same
-    // two values this header's round-row union already records. Slicing
-    // both halves unconditionally costs exactly the same one function
-    // and nothing else in the tree; gating both returns it.
-#ifdef HOMM3_ARMY_PROTECTION_VIEW
     int protectionFromAirRounds;   // +0x210
     int protectionFromFireRounds;  // +0x214
     int protectionFromWaterRounds; // +0x218
     int protectionFromEarthRounds; // +0x21c
     char pad_220[0x8];
-#else
-    char pad_210[0x18];
-#endif
     // SPELL_MAGIC_MIRROR's entry in the 81-dword spellInfluence row.
     int magicMirrorRounds;        // +0x228
     char pad_22c[0x10];
@@ -1072,10 +1061,8 @@ public:
     // per round, floors the result at 0.5 and rescales the stack's
     // hitPoints by what is left.
     float poisonPenalty;           // +0x4a4
-#elif defined(HOMM3_ARMY_PROTECTION_VIEW)
-    char pad_4a4[0x4];
 #else
-    char pad_4a4[0x14];
+    char pad_4a4[0x4];
 #endif
     // The four Protection-from-<school> damage multipliers, DC-named
     // (members.csv army 1156/1160/1164/1168 protectionFrom{Air,Fire,
@@ -1085,28 +1072,10 @@ public:
     // retail +0x4b8, so the four words between them are +0x4a8..+0x4b4
     // in DC order. ModifySpellDamageForSpells (0x5a7bb0) reads all four
     // and pairs each with the round counter at +0x210..+0x21c above.
-    // BEHIND THE SAME VIEW AS THE COUNTERS, AND THAT IS A MEASUREMENT:
-    // slicing this pad alone, with the counters above left gated, costs
-    // command.obj's GetCommand 92.5714 -> 92.5357 all by itself - so the
-    // two halves each trip the include-set class independently, at the
-    // same two values this header's neighbours already record.
-    // The #elif keeps every arm's declarator COUNT unchanged for TUs
-    // that do not ask for the view: with neither view the run is still
-    // one pad_4a4[0x14], and with the round view alone it is still
-    // poisonPenalty + pad_4a8[0x10]. Every field is declared once.
-#ifdef HOMM3_ARMY_COPY_VIEW
     float protectionFromAirFactor;   // +0x4a8
     float protectionFromFireFactor;  // +0x4ac
     float protectionFromWaterFactor; // +0x4b0
     float protectionFromEarthFactor; // +0x4b4
-#elif defined(HOMM3_ARMY_PROTECTION_VIEW)
-    float protectionFromAirFactor;   // +0x4a8
-    float protectionFromFireFactor;  // +0x4ac
-    float protectionFromWaterFactor; // +0x4b0
-    float protectionFromEarthFactor; // +0x4b4
-#elif defined(HOMM3_ARMY_ROUND_VIEW)
-    char pad_4a8[0x10];
-#endif
     // The two damage multipliers ComputeDefenderDamageReduction pairs
     // with shieldRounds and airShieldRounds above.
     float shieldFactor;           // +0x4b8
