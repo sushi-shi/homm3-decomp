@@ -1050,7 +1050,6 @@ public:
     // Slayer's mastery level: get_adjusted_attack admits creature bit 7
     // at any level, bit 8 from 2 up and bit 9 from 3 up.
     int slayerLevel;              // +0x48c
-#ifdef HOMM3_ARMY_ROUND_VIEW
     // DC army.counterstrokeBonus (members.csv army@1136 on the flat
     // +0x24 shift retaliationCount 1072/+0x454 fixes for this run;
     // slayerLevel 1128/+0x48c two lines above is the same shift).
@@ -1061,16 +1060,10 @@ public:
     // do_multi_head_attack (0x440310) hands it straight to
     // adjust_damage's fifth parameter, the one the DC prototype calls
     // `distance`, which is the Champion's per-hex charge bonus.
+    // process_move_then_attack clears it before movement and once more
+    // after the strike.
     int joustBonus;                // +0x490
     int counterstrokeBonus;        // +0x494
-#elif defined(HOMM3_ARMY_PROCESS_MOVE_VIEW)
-    // process_move_then_attack clears the charge distance before movement
-    // and once more after the strike. DC names the same +0x490 field.
-    int joustBonus;                // +0x490
-    char pad_494[0x4];
-#else
-    char pad_490[0x8];
-#endif
     // Frenzy's defense-to-attack conversion factor: while frenzyRounds
     // is up, get_adjusted_attack answers
     // `get_adjusted_defense(enemy, 0) * this + attack`. It is also what
@@ -1711,14 +1704,12 @@ public:
         // town's run eight slots later. NH3API spellings.
         ARMY_CREATURE_GRIFFIN = 0x4,
         ARMY_CREATURE_ROYAL_GRIFFIN = 0x5,
-#ifdef HOMM3_ARMY_PROCESS_MOVE_VIEW
         // The two Dungeon flyers that strike and return to their starting
         // hex. process_move_then_attack compares exactly 0x48/0x49 before
         // applying the Blind/Stone/Paralyze return guards. NH3API spellings;
         // the ids also follow from Dungeon's 0x46..0x53 fourteen-slot run.
         ARMY_CREATURE_HARPY = 0x48,
         ARMY_CREATURE_HARPY_HAG = 0x49,
-#endif
         // The two creatures that bring down a wall segment without a
         // catapult, and AttackWall (0x445d30) is what proves both: its
         // switch answers 0x5e with ballistics row 1 and 0x5f with row
