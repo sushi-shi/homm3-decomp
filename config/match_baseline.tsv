@@ -312,7 +312,7 @@ ai_player	?get_value@type_morale_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	1
 ai_player	?get_value@type_movement_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x326e0	cdd4f6a339c8
 ai_player	?get_value@type_necromancy_artifact@@UBEJPBVhero@@EE@Z	82.5645	82.5645	82.5645	0x32640	902f021c295e
 ai_player	?get_value@type_power_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x325e0	556b92ca1e21
-ai_player	?get_value@type_school_artifact@@UBEJPBVhero@@EE@Z	97.7949	97.7949	97.7949	0x32890	f54739fb9c1f
+ai_player	?get_value@type_school_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x32890	c0c11251f4cc
 ai_player	?get_value@type_scouting_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x32510	35c02b28a9cf
 ai_player	?get_value@type_shooter_bonus_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x330b0	e859ad415379
 ai_player	?get_value@type_spell_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x32f90	8fcff1107b0c
