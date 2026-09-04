@@ -2888,7 +2888,7 @@ singleselectionwindow	?CanChooseTown@TSingleSelectionWindow@@QAEEH@Z	100.0000	10
 singleselectionwindow	?CheckFaces@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x18bbc0	eace3ab1f0f6
 singleselectionwindow	?CheckHandleNet@CSingleSelectionNetMsgHandler@@UAEPAVCNetMsg@@EPAE@Z	100.0000	100.0000	100.0000	0x18e310	8595838fd025
 singleselectionwindow	?CheckMissingHeaders@TSingleSelectionWindow@@QAEEK@Z	100.0000	100.0000	100.0000	0x1895c0	c817f873ea6a
-singleselectionwindow	?CreateFilterWidgets@TSingleSelectionWindow@@QAEXXZ	60.9284	60.9284	60.9284	0x17d170	fc036ea68eee
+singleselectionwindow	?CreateFilterWidgets@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x17d170	9e879f801614
 singleselectionwindow	?DeletePlayer@CNetPlayerHandler@@QAE_NK@Z	100.0000	100.0000	100.0000	0x177c90	3e1bd2c1c89a
 singleselectionwindow	?DisplayChat@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x18ae80	51f029c675b0
 singleselectionwindow	?DoModal@TSingleSelectionWindow@@UAEHE@Z	100.0000	100.0000	100.0000	0x184bf0	a7f4cf150e2a
