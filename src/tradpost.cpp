@@ -3689,12 +3689,23 @@ void TBuyArtifactWindow::SetRolloverText(int codeY)
 // NormalDialog, whereas the older DC-era reconstruction admitted 13..15.
 // Keep that retail-corroborated semantic skew while preserving the DC
 // scopes, command order, accessor, and named rotation/trade helpers.
-// Residual (89.73%): candidate has 66 CFG blocks versus retail's 65 and
-// four returns versus five. Retail duplicates the Quick View popup/epilogue
-// across its equipped/backpack arms; DC instead proves one type_artifact
-// local followed by one shared ViewArtifact statement, so the shared source
-// call is retained. This hybrid exceeds both the former 86.57% spelling and
-// the discarded 87.20% parent, whose slots 13..15 contradicted retail.
+// The former note saw retail duplicating the Quick View popup/epilogue
+// across its equipped/backpack arms and kept the shared DC-shaped statement
+// anyway (66 blocks against 65, four returns against five).  Retail is the
+// authority here and its bytes are unambiguous: `call ViewArtifact / mov
+// eax,1 / ret 4` appears TWICE, once at 0xe8d8 ending the equipped arm and
+// once at 0xe92d ending the backpack arm, with no shared join between them.
+// Both predecessors of the DC-shaped join are jumps, which is exactly the
+// case VC6 sinks rather than merges, so the single statement can never
+// produce that pair.  Writing the call and the return inside each arm:
+//   66/65 blocks -> 63/63, four returns -> five, the one-sided ViewArtifact
+//   reference gone (20 calls agreeing, none one-sided), 89.7288 -> 90.6801.
+// Residual (90.6801%): 484 instruction rows still differ across the two
+// nested jump-table switches, and `--branches` reports the arm pairing as
+// meaningless, so the remaining debt is arm LAYOUT in those tables rather
+// than any further statement.  The slots 13..17 NormalDialog skew is
+// retail-corroborated and stays; it is what beat the discarded 87.20%
+// parent whose 13..15 contradicted retail.
 VA(0x005edf60, 0x75f)  // anchor-vtable 0x643aac slot 9, dc 0x18c00c
 int TSellArtifactWindow::WindowHandler(message* msg)
 {
@@ -3780,14 +3791,16 @@ int TSellArtifactWindow::WindowHandler(message* msg)
             type_artifact artifact;
             if (artifactSlot < 18) {
                 artifact = *gpMarketHero->get_artifact(artifactSlot);
+                gpMarketHero->ViewArtifact(&artifact, 1);
+                return MESSAGE_DISPATCH_CONSUME;
             } else {
                 int numInBackpack = gpMarketHero->get_number_in_backpack(1);
                 int slot = ((gBackpackStart & 0xff) + artifactSlot - 18)
                            % numInBackpack;
                 artifact = gpMarketHero->backpack[slot];
+                gpMarketHero->ViewArtifact(&artifact, 1);
+                return MESSAGE_DISPATCH_CONSUME;
             }
-            gpMarketHero->ViewArtifact(&artifact, 1);
-            return MESSAGE_DISPATCH_CONSUME;
         }
 
         case MARKET_WIDGET_ACTIVATE:
