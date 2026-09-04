@@ -208,11 +208,9 @@ unsigned short* GetMapExtraPtr(int x, int y, int z);
 // Live prototypes (claimed kb.cpp bodies; called from kbwin's
 // AppCommand and exec's DoDialog).
 void ShutDown(const char* cInExitMessage);               // 0x4f3690
-#ifdef HOMM3_GAME_TRANSMIT_DECLS
 // DC kb.cpp:3954 names the owner; retail TransmitSaveGame calls it after a
 // failed _open and independently proves the const-character-buffer ABI.
 void FileError(const char* cBuf);                        // 0x4f35f0
-#endif
 int HandleAppSpecificMenuCommands(int idItem);           // 0x4f4350
 void CleanUpMenus();                                     // 0x4f4b50
 int GetNextHumanPlayer(int start);                       // 0x4f4ba0
