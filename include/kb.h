@@ -215,6 +215,13 @@ unsigned short* GetMapExtraPtr(int x, int y, int z);
 // Live prototypes (claimed kb.cpp bodies; called from kbwin's
 // AppCommand and exec's DoDialog).
 void ShutDown(const char* cInExitMessage);               // 0x4f3690
+// DC ?bInShutDown@@3_NA, retail .bss 0x69958d: ShutDown's re-entry
+// guard (kb.cpp owns the definition).
+extern bool bInShutDown;
+// Dreamcast kb.cpp:4187 tears the CD/serial layer down; Complete's body
+// is EMPTY - executive::ShutDownSystem's call lands on the image-wide
+// `ret` at 0x5bc690 that /OPT:ICF folded every empty function onto.
+void EarlyShutDownSystem();
 // DC kb.cpp:3954 names the owner; retail TransmitSaveGame calls it after a
 // failed _open and independently proves the const-character-buffer ABI.
 void FileError(const char* cBuf);                        // 0x4f35f0

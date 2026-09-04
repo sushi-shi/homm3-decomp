@@ -1370,12 +1370,14 @@ events	?monsters_join@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@
 # declarator can carry it back.
 events	?monsters_sell_out@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	100.0000	100.0000	100.0000	0xa7250	f7b1ec4933f6
 events	?show_rewards@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@2@J@Z	100.0000	100.0000	100.0000	0xa0b00	9287544ef4a4
+exec	??0executive@@QAE@XZ	100.0000	100.0000	100.0000	0xb0900	e5caaee573f2
 exec	?AddManager@executive@@QAEHPAVbaseManager@@H@Z	100.0000	100.0000	100.0000	0xb0b20	11f81dc72e6a
 exec	?CallManager@executive@@QAEXPAVbaseManager@@@Z	100.0000	100.0000	100.0000	0xb0c70	a9eb44cb2746
-exec	?DoDialog@executive@@QAEHPAVbaseManager@@@Z	100.0000	100.0000	100.0000	0xb0a10	16ffd133dd52
+exec	?DoDialog@executive@@QAEHPAVbaseManager@@@Z	100.0000	100.0000	100.0000	0xb0a10	b052c80f100b
 exec	?InitSystem@executive@@QAEHXZ	100.0000	100.0000	100.0000	0xb0910	67d06eebf68d
 exec	?MainLoop@executive@@QAEXXZ	100.0000	100.0000	100.0000	0xb0e40	d98a0a0cc5bc
 exec	?RemoveManager@executive@@QAEXPAVbaseManager@@@Z	100.0000	100.0000	100.0000	0xb0bf0	d777fd91ddc9
+exec	?ShutDownSystem@executive@@QAEXXZ	100.0000	100.0000	100.0000	0xb0990	5dfb6de627df
 findpath	??0searchArray@@QAE@XZ	100.0000	100.0000	100.0000	0xb1370	d3b0bd3dadf1
 findpath	??1searchArray@@QAE@XZ	100.0000	100.0000	100.0000	0xb13e0	62c3039992a2
 findpath	?CalcTerrainCost@@YIHPBVNewmapCell@@HHJJJJJE@Z	100.0000	100.0000	100.0000	0xb1740	c1ac09d9aed8
@@ -1965,6 +1967,8 @@ inputmgr	?MouseMessageHandler@@YIHPAXIIJ@Z	100.0000	100.0000	100.0000	0xec290	7c
 inputmgr	?Open@inputManager@@UAEHH@Z	100.0000	100.0000	100.0000	0xec4d0	8332e8526402
 inputmgr	?PeekEvent@inputManager@@QAE?AVmessage@@XZ	100.0000	100.0000	100.0000	0xec640	3e82547dc77d
 kb	??0CNetMsg@@QAE@W4eRS_Messages@@K@Z	100.0000	100.0000	100.0000	0xf2930	c08c11f46c9e
+kb	??1advManager@@QAE@XZ	100.0000	100.0000	100.0000	0xf39f0	-
+kb	??1combatManager@@QAE@XZ	71.8085	71.8085	71.8085	0xf3940	-
 kb	?CleanUpMenus@@YIXXZ	100.0000	100.0000	100.0000	0xf4b50	5ad85acac0be
 kb	?CreditsWait@@YIXXZ	95.2930	95.2930	95.2930	0xedda0	e424e5d34744
 kb	?DisplayVCWinLoss@@YI_NAAVVictoryConditionStruct@@AAH1_N@Z	94.9521	94.9521	94.9521	0xf15e0	0fa75f4e1fc3
@@ -1987,10 +1991,10 @@ kb	?NormalDialogTimeOut@@YIXPBDHHHHHHHHHHH@Z	100.0000	100.0000	100.0000	0xf6530	
 kb	?PickLoadGame@@YIHXZ	100.0000	100.0000	100.0000	0xf0610	4b51a872ab91
 kb	?PollSound@@YIXXZ	100.0000	100.0000	100.0000	0xed490	25e47bb545a2
 kb	?ShowLuckInfo@game@@QAEXPAVhero@@H@Z	100.0000	100.0000	100.0000	0xf3540	19d81223c1ea
+kb	?ShutDown@@YIXPBD@Z	100.0000	100.0000	100.0000	0xf3690	7882bdc1e193
 kb	?WaitHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0xf7620	5f15859cbc9f
 kb	?oldmain@@YIHXZ	31.5330	31.9630	31.9630	0xee3e0	ead764a54d4e
 kb	?set@type_dialog_icon@@QAEXW4EGameResource@@J@Z	99.1667	99.1667	99.1667	0xf4eb0	06cb359cd3d3
-kb	ShutDown	0.0000	0.0000	0.0000	0xf3690	2c65224c7488
 kbwin	?AppAbout@@YGHPAUHWND__@@IIJ@Z	100.0000	100.0000	100.0000	0xf8140	b6d6a9ba7939
 kbwin	?AppCommand@@YIJPAUHWND__@@IIJ@Z	100.0000	100.0000	100.0000	0xf8060	ab51fe2b9295
 kbwin	?AppExit@@YIXXZ	100.0000	100.0000	100.0000	0xf7fa0	c903c9e1abc5

@@ -51,6 +51,8 @@
 #include "timer.h"
 #include "textwdgt.h"
 #include "winmgr.h"
+#include "wingraph.h"
+#include "findpath.h"
 // GameUnsaved polls the town manager's baseManager status, so kb.obj is
 // one of the consumers that needs townmgr.h's guarded class prefix.
 #include "townmgr.h"
@@ -83,6 +85,10 @@ inline int max(int left, int right)
 // retail .bss 0x699578, kb.obj's own.
 DATA(0x00699578)
 int gbInPollSound;
+
+// DC ?bInShutDown@@3_NA; retail .bss 0x69958d, ShutDown's re-entry guard.
+DATA(0x0069958d)
+bool bInShutDown;
 
 // E:\gamedcs\kb.cpp:318
 // The idle-time service: the mouse cursor, the palette colour cycles of
@@ -271,13 +277,6 @@ void UnloadProgressBar()
 // gives the retail body its LoadMenuA call). WinMain's first gate.
 // RETAIL_LOCATED(0x004ed650, 0x4E8)  // linkorder, dc 0xdf4e4
 int InitMainClasses()
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:481
-DC_ONLY(0xdf6d0, 0x170)
-void DeleteMainClasses()
 {
     // @stub
 }
@@ -2046,17 +2045,133 @@ void game::ShowLuckInfo(hero* thisHero, int iMBType)
                  -1, 0, -1, 0, -1, 0);
 }
 
-#if 0  // @carcass
+// E:\gamedcs\kb.cpp:481. Retail has no body of its own: a static with
+// ShutDown as its single call site, so /Ob2 expands it there (the
+// Dreamcast keeps it out of line). The delete order is the Dreamcast's
+// statement order exactly; Complete's combatManager and advManager have
+// compiler-generated destructors (both retained in kb.obj right after
+// ShutDown), soundManager's is the header inline, and the window, input,
+// town and executive managers plus the AI turn driver are trivially
+// destructible.
+DC_ONLY(0xdf6d0, 0x170)
+static void DeleteMainClasses()
+{
+    if (gpUnnamed69928c)
+        delete gpUnnamed69928c;
+    gpUnnamed69928c = 0;
+    if (gpSearchArray)
+        delete gpSearchArray;
+    gpSearchArray = 0;
+    if (gpTownManager)
+        delete gpTownManager;
+    gpTownManager = 0;
+    if (gpCombatManager)
+        delete gpCombatManager;
+    gpCombatManager = 0;
+    if (gpAdvManager)
+        delete gpAdvManager;
+    gpAdvManager = 0;
+    if (gpGame)
+        delete gpGame;
+    gpGame = 0;
+    if (gpHighScoreManager)
+        delete gpHighScoreManager;
+    gpHighScoreManager = 0;
+    if (gpSoundManager)
+        delete gpSoundManager;
+    gpSoundManager = 0;
+    if (gpWindowManager)
+        delete gpWindowManager;
+    gpWindowManager = 0;
+    if (gpMouseManager)
+        delete gpMouseManager;
+    gpMouseManager = 0;
+    if (gpInputManager)
+        delete gpInputManager;
+    gpInputManager = 0;
+    if (gpExecutive)
+        delete gpExecutive;
+    gpExecutive = 0;
+}
 
 // E:\gamedcs\kb.cpp:3867
 // Located by shape + lineage: the carve's "unexpected program
 // termination" routine, called from executive::DoDialog's four
 // manager-add failure arms (homm2's ShutDown(gExecutiveText...)).
+// Complete's statement order against the Dreamcast's: the closing-app
+// flags and the sound manager's Close come first, ResourceManager::Close
+// moved below the manager teardown, and DeleteAnimHeaders replaces the
+// Dreamcast's ResourceManager::Close/DeleteAnimHeaders pair.
 VA(0x004f3690, 0x2A2)  // anchor-callee, dc 0xe3ce4
 void ShutDown(const char* cInExitMessage)
 {
-    // @stub
+    if (!bInShutDown) {
+        bInShutDown = 1;
+        bClosingApp = 1;
+        bShutDownDone = 1;
+        gpSoundManager->Close();
+
+        if (cInExitMessage) {
+            if (gpWindowManager && gpWindowManager->screenBitmap)
+                SetFullScreenStatus(0);
+            MessageBox(hwndApp, cInExitMessage,
+                       DATA_COMPGEN(0x0067f7f4, shutDownCaption,
+                                    "Unexpected Program Termination"),
+                       MB_ICONHAND);
+        }
+
+        AI_shut_down();
+        if (gpCalligraphicFont) {
+            gpCalligraphicFont->Dispose();
+            gpCalligraphicFont = 0;
+        }
+        if (gpBigFont) {
+            gpBigFont->Dispose();
+            gpBigFont = 0;
+        }
+        if (smallFont) {
+            smallFont->Dispose();
+            smallFont = 0;
+        }
+        if (gPlayerPalette24) {
+            delete gPlayerPalette24;
+            gPlayerPalette24 = 0;
+        }
+        RemoteCleanup();
+        gpExecutive->ShutDownSystem();
+        chatMan.ShutDown();
+        DeleteAnimHeaders();
+        DeleteSoundHeaders();
+
+        if (ghGameEvent) {
+            CloseHandle(ghGameEvent);
+            ghGameEvent = 0;
+        }
+        if (gMapExtra) {
+            delete[] gMapExtra;
+            gMapExtra = 0;
+        }
+        DeleteMainClasses();
+        ResourceManager::Close();
+        AppExit();
+        timeEndPeriod(1);
+        bInShutDown = 0;
+        exit(0);
+    }
 }
+
+// The two compiler-generated destructors DeleteMainClasses instantiates:
+// retail retains kb.obj's copies immediately after ShutDown.
+VA_COMPGEN(0x004f3940, 0xA9, IMPLICIT_DTOR, combatManager)
+VA_COMPGEN(0x004f39f0, 0x6D, IMPLICIT_DTOR, advManager)
+
+// E:\gamedcs\kb.cpp:4187; Complete's body is empty (see kb.h).
+DC_ONLY(0xe4530, 0x78)
+void EarlyShutDownSystem()
+{
+}
+
+#if 0  // @carcass
 
 // E:\gamedcs\kb.cpp:3954
 DC_ONLY(0xe3dfc, 0x4C)
@@ -2096,13 +2211,6 @@ void ShowCongrats(int hsType)
 // E:\gamedcs\kb.cpp:4168
 DC_ONLY(0xe44f0, 0x40)
 void MemError()
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:4187
-DC_ONLY(0xe4530, 0x78)
-void EarlyShutDownSystem()
 {
     // @stub
 }
