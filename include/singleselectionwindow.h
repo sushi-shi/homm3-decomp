@@ -212,13 +212,16 @@ public:
         return -1;
     }
 
-    // DC GetGamePos; GetHeroFace expands it for IsFaceTaken's exclude.
+    // DC GetGamePos (dc 0x130778): the netPos local, an early `return -1`
+    // on the not-found arm (DC B1 `mov #-1,r0; bra`) and the playerPos
+    // load as the fall-through - the arm order UpdatePlayerPositions'
+    // retail expansion keeps (found path in line, -1 jumps to the join).
     int GetGamePos(unsigned long dpid)
     {
-        int net = GetNetPos(dpid);
-        if (net != -1)
-            return humanPlayers[net].playerPos;
-        return -1;
+        int netPos = GetNetPos(dpid);
+        if (netPos == -1)
+            return -1;
+        return humanPlayers[netPos].playerPos;
     }
 
     bool DeletePlayer(unsigned long dpid);
