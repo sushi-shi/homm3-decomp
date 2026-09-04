@@ -1467,6 +1467,14 @@ public:
     // campaign's ordinal and its data-file name; CampaignWindowHandler's
     // deselect arm is the caller that proves the shape. Provisional name.
     void select_campaign(int campaignIndex, const char* filename);
+    // Complete's campaign-brief handler supplies an opaque campaign-header
+    // record here.  The pointee is nested in TCampaignBrief, which is not
+    // nameable at this earlier point in game.h's include graph; the receiver,
+    // one-pointer ABI and prologue-video role are retail-byte proven.
+    void PlayScenarioPrologue(void* campaignHeader);
+    // Retail 0x48b2e0 banks the selected starting option and applies the
+    // campaign-specific setup overrides before the scenario stream is read.
+    void ApplyBriefingChoice(int option);
     int get_score() const;
     int get_total_time() const;
 #ifdef HOMM3_GAME_NEW_MAP_DECLS

@@ -291,6 +291,13 @@ void SCampaign::DoPreLoadCustomization()
 // tests, and argument ABIs for this PC-only loader family.  Keeping the
 // located bodies as carcass claims gives constructor relocations their real
 // identities without pretending the loaders have been reconstructed.
+VA(0x004884c0, 0x103)  // CampaignHeaderStruct::StartScenario sole caller
+void TCampaignBrief::ScenarioStruct::StartScenario(
+    TAbstractFile* stream, int option)
+{
+    // @stub
+}
+
 VA(0x004885d0, 0xCB)  // anchor-caller(TCampaignBrief ctor), retail-only
 TCampaignBrief::CampaignHeaderStruct::CampaignHeaderStruct(
     const char* filename)
@@ -329,6 +336,20 @@ void TCampaignBrief::CampaignHeaderStruct::GetAvailableScenarios(
 {
     // @stub
 }
+
+VA(0x004894e0, 0x1D)  // CampaignBriefHandler launch arm, retail-only
+void TCampaignBrief::CampaignHeaderStruct::StartScenario(
+    int which, int option)
+{
+    // @stub
+}
+
+VA(0x0048a270, 0x2F)  // CampaignBriefHandler video/launch arms, retail-only
+void SCampaign::PlayScenarioPrologue(void* campaignHeader)
+{
+    // @stub
+}
+
 #endif
 
 static unsigned char ReadCampaignByte(TAbstractFile* infile)
@@ -583,6 +604,14 @@ int SCampaign::get_total_time() const
 
     return totalTime;
 }
+
+#if 0  // @carcass - Complete pre-launch campaign setup.
+VA(0x0048b2e0, 0x8C)  // CampaignBriefHandler launch arm, retail-only
+void SCampaign::ApplyBriefingChoice(int option)
+{
+    // @stub
+}
+#endif
 
 // SCampaign::Load retains the range-erase COMDAT for its concrete carry-over
 // hero pools. Retail 0x48c500 proves the nested element shapes independently:

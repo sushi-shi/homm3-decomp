@@ -31,6 +31,34 @@ SIZE(CampaignScenarioPreview, 0x4d4);
 // fixes every field used by the campaign constructor and destructor.
 class TCampaignBrief : public heroWindow {
 public:
+    struct ScenarioStruct;
+    struct CampaignHeaderStruct;
+
+    // Complete's campaign file supplies one polymorphic starting-options
+    // record per scenario.  The two names below are role-based, but the
+    // vtable positions and one-int ABIs are fixed by the retail launch path:
+    // slot 7 supplies the hero id and slot 8 supplies the player position.
+    // The earlier slots remain ordinal placeholders until their consumers
+    // are admitted; keeping them here preserves the real indirect calls
+    // instead of flattening either operation into CampaignBriefHandler.
+    class ScenarioStartOptions {
+    public:
+        virtual ~ScenarioStartOptions() = 0;
+        virtual bool _vslot1(int option) = 0;
+        virtual int _vslot2() = 0;
+        virtual char* _vslot3(int option) = 0;
+        virtual int _vslot4(int option) = 0;
+        virtual int _vslot5(ScenarioStruct* scenario, int option) = 0;
+        virtual std::string _vslot6(CampaignHeaderStruct* campaign,
+                                    int option) = 0;
+        virtual int GetStartingHero(int option) = 0;
+        virtual int GetPlayerPosition(int option) = 0;
+        virtual void _vslot9(TAbstractFile* stream) = 0;
+        virtual void _vslot10(ScenarioStruct* scenario) = 0;
+        virtual void _vslot11(NewSMapHeader* mapHeader) = 0;
+        virtual bool _vslot12(ScenarioStruct* scenario, int option) = 0;
+    };
+
     struct MapTextStruct {
         int video;
         int audio;
@@ -61,7 +89,7 @@ public:
         std::vector<int> hero_placeholders;
         std::bitset<145> crossover_creatures;
         std::bitset<144> crossover_artifacts;
-        void* options;
+        ScenarioStartOptions* options;
 
         // Complete's campaign-map loader calls this on the selected
         // scenario record for each matching map hero placeholder.  The
@@ -70,6 +98,10 @@ public:
         // 0x492-byte carry-over hero vector stride.
         void InitializeCrossoverHero(HeroPlaceholderData* placeholder,
                                      hero* sourceHero);
+        // Complete-only retained wrapper at 0x4884c0.  The campaign-header
+        // wrapper below is its sole direct caller.
+        void StartScenario(TAbstractFile* stream, int option);
+        std::string GetRegionDescription() const;
     };
 
     struct CampaignHeaderStruct {
@@ -102,6 +134,7 @@ public:
         std::string GetCampaignDescription() const;
         void StartMusic();
         void GetAvailableScenarios(unsigned char* available) const;
+        void StartScenario(int which, int option);
     };
 
     // Dreamcast's LF_FIELDLIST preserves this complete nested enum.  The
@@ -276,6 +309,11 @@ public:
     void UpdateAllyEnemyFlags();
 
 private:
+#ifdef HOMM3_CAMPAIGNBRIEF_HANDLER_FRIEND
+    // The Dreamcast procedure is S_LPROC32 (file-static) yet calls this
+    // private helper, proving the owning header grants it friendship.
+    friend int CampaignBriefHandler(message& msg);
+#endif
     // The DC class type contains this private member in addition to the
     // same-named file-scope helper emitted by campaignbrief.obj.
     void ShowTerritorySmacker(unsigned char evilPost);
