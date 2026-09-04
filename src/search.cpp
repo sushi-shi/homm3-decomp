@@ -367,18 +367,19 @@ unsigned char searchArray::enter_trigger(const hero* current_hero,
     case BORDER_GUARD:
         if (search_type < const_AI_search)
             return 0;
-    case BORDER_GATE:
-        return (gpGame->borderTentVisitFlags[map_cell->objectIndex]
-                & gUnnamed69ccc4)
+    case BORDER_GATE: {
+        unsigned char visited =
+            (gpGame->borderTentVisitFlags[map_cell->objectIndex]
+             & gUnnamed69ccc4)
             != 0;
+        return visited;
+    }
     case QUEST_GUARD: {
         if (search_type < const_AI_search)
             return 0;
         TQuestGuard* guard =
             &gpGame->worldMap.QuestGuardList[map_cell->extraInfo];
-        if (!guard->quest)
-            return 0;
-        if (guard->quest->has_expired())
+        if (!guard->quest || guard->quest->has_expired())
             return 0;
         if (!(guard->visitedPlayers & (1 << current_hero->owner)))
             return 1;
