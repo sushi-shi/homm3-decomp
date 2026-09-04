@@ -1448,7 +1448,6 @@ public:
     void ComputeExtent(const CSprite* sprite, int sequence, int frame,
                        int x, int y, SLimitData* limits, int isFlipped,
                        unsigned char saveBiggestExtent);
-    void CycleCombatScreen();
 #else
     void DrawFrame(unsigned char update,
                    unsigned char bLimitCreatureEffect,
@@ -1472,6 +1471,10 @@ public:
     // common three-argument clip/draw body at 0x4958e0 settles the identity.
     int DrawObject(const Bitmap816* image, int x, int y);
 #endif
+    // command.cpp:224 (0x474040) paces the frame loop and hands each frame
+    // to drawing.cpp's CycleCombatScreen (0x4960d0).
+    void do_animations();
+    void CycleCombatScreen();
     // Dreamcast drawing.cpp:1568 and spells.cpp:1643 both retain this
     // boundary. Complete likewise calls the same out-of-line body from
     // CastSpell's Remove Obstacle arm, so it is not drawing-TU-only.
@@ -2552,10 +2555,6 @@ public:
     unsigned char process_move_then_attack(message* msg);
     void process_first_aid(army* currentArmy);
     void ResetCyclingCreatures();
-#ifdef HOMM3_COMMAND_ANIMATION_VIEW
-    void do_animations();
-    void CycleCombatScreen();
-#endif
 #endif
 private:
     std::string get_tower_string(TWallSection wall, long archers,
@@ -2586,9 +2585,7 @@ extern combatManager* gpCombatManager;
 // its address ordinal.
 DATA(0x00695030) extern long gSurrenderCost695030;
 #endif
-#if !defined(HOMM3_COMMAND_GRID_VIEW) || defined(HOMM3_COMMAND_ANIMATION_VIEW)
 DATA(0x00698998) extern unsigned long gCombatStamp698998;
-#endif
 DATA(0x006989b8) extern unsigned long gCombatStamp6989b8;
 DATA(0x006985a3) extern unsigned char gCombatFlag6985a3;
 DATA(0x00697744) extern unsigned char gCombatFlag697744;
