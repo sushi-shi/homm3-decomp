@@ -2621,6 +2621,14 @@ rmg_support	??0TRmgMapPosition@@QAE@HHH@Z	100.0000	100.0000	100.0000	0x1355c0	76
 rmg_support	??0TRmgRiverPainter@@QAE@PAVTRmgMapAdapterInterface@@HABUTPoint@@@Z	99.7073	99.7073	99.7073	0x15ee50	8389dfff6b8b
 rmg_support	??1TRmgRiverPainter@@UAE@XZ	100.0000	100.0000	100.0000	0x15eda0	60a4b1f5e76b
 rmg_support	?GetMapItem@type_random_map@@QAEPAUTRmgMapItem@@HH@Z	100.0000	100.0000	100.0000	0x146990	890199bad0d2
+rmg_terrain	?GetPackedCell@TRmgTerrainPainter@@QAEPAUTRmgPackedTerrainCell@@ABUTPoint@@@Z	100.0000	100.0000	100.0000	0x1b48d0	80cfdea71a03
+rmg_terrain	?InitializePackedCell@TRmgTerrainPainter@@QAEXABUTPoint@@I@Z	100.0000	100.0000	100.0000	0x1b3dd0	1530cd6d2434
+rmg_terrain	?PaintTransitions@TRmgTerrainPainter@@QAEXXZ	74.7623	74.7623	74.7623	0x1b5a70	094364ec1316
+rmg_terrain	SelectTerrainTransition	0.0000	0.0000	0.0000	0x1b3e80	520848ff4875
+rmg_terrain	TRmgTerrainPainter_BuildNeighbourKinds	0.0000	0.0000	0.0000	0x1b68a0	322097c1bc8f
+rmg_terrain	TRmgTerrainPainter_CheckFirstDiagonal	0.0000	0.0000	0.0000	0x1b6ba0	bef473f08649
+rmg_terrain	TRmgTerrainPainter_CheckSecondDiagonal	0.0000	0.0000	0.0000	0x1b6e00	c0697b82984a
+rmg_terrain	TRmgTerrainPainter_GetTransitionStrength	0.0000	0.0000	0.0000	0x1b6fd0	84a34fd69689
 sacrifice_window	??0type_sacrifice_window@@QAE@PAVhero@@H@Z	100.0000	100.0000	100.0000	0x15fdd0	e3c4b7caa364
 sacrifice_window	??0type_skeleton_window@@QAE@PAVarmyGroup@@@Z	98.3508	98.3508	98.3508	0x1654f0	7b3203c0fe49
 sacrifice_window	??1type_sacrifice_window@@UAE@XZ	100.0000	100.0000	100.0000	0x1623a0	2862ff7bfb2e
