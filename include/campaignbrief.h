@@ -330,11 +330,11 @@ public:
     void UpdateAllyEnemyFlags();
 
 private:
-#ifdef HOMM3_CAMPAIGNBRIEF_HANDLER_FRIEND
     // The Dreamcast procedure is S_LPROC32 (file-static) yet calls this
-    // private helper, proving the owning header grants it friendship.
+    // private helper, proving the owning header grants it friendship;
+    // campaignbrief.cpp declares the static ahead of this header so the
+    // friend binds to it.
     friend int CampaignBriefHandler(message& msg);
-#endif
     // The DC class type contains this private member in addition to the
     // same-named file-scope helper emitted by campaignbrief.obj.
     void ShowTerritorySmacker(unsigned char evilPost);

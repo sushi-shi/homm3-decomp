@@ -9,9 +9,7 @@
 #include <string.h>
 class message;
 static int CampaignBriefHandler(message& msg);
-#define HOMM3_CAMPAIGNBRIEF_HANDLER_FRIEND
 #include "campaignbrief.h"
-#undef HOMM3_CAMPAIGNBRIEF_HANDLER_FRIEND
 #include "advmgr.h"
 #include "border.h"
 #include "button.h"
