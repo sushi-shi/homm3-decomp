@@ -41,9 +41,6 @@
 // the per-level counts at +0xbc.
 // town::get_location, for the type_point DoTownGate hands TeleportTo.
 #include "town.h"
-// game.h's ViewArmy declarator, for DoCommand's two info panels. This
-// compiland opens the gate, nothing else does.
-#define HOMM3_GAME_OBJ_DECLS
 #include "game.h"
 #include "hero.h"
 #include "iconwdgt.h"
