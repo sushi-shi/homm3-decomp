@@ -2102,6 +2102,11 @@ public:
     // because the body's whole shape is a jump table over the enum.
     void SpellTargetMessage(SpellID spellId, int targetIndex,
                             unsigned char first_target);       // 0x5a8690
+    // The refusal text display_failure_reason shows; DC spells.cpp:1807
+    // returns it by value, and retail's callers pass the hidden return
+    // slot straight through to format_string.
+    std::string get_failure_reason(SpellID spell, const char* msg,
+                                   long hex);                  // 0x5a2880
     void display_failure_reason(SpellID spell, const char* msg,
                                 long hex);                     // 0x5a2c60
     // The two spells.obj area collectors that fill a vector of HEXES -
@@ -2115,6 +2120,10 @@ public:
                           std::vector<long>& hexes);           // 0x5a4170
     void mark_berserk_area_effect(long hex, long mastery,
                                   std::vector<long>& hexes);   // 0x5a4430
+    // DC spells.cpp:3214; expanded into HandleCastWallSpell, no retail
+    // body of its own.
+    void mark_wall_area_effect(long target_hex, TSkillMastery mastery,
+                               std::vector<long>& result);
     // THE BATTLEFIELD'S AXIAL COORDINATE AND ITS THREE HELPERS. The DC
     // roster carries all three as combatManager members immediately in
     // front of mark_area_effect - spells.cpp:3103 hex_to_point,
