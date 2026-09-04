@@ -3,7 +3,6 @@
 // 78 functions in link order; 20 compiler-generated $-thunks omitted.
 #define HOMM3_ARMY_CYCLE_VIEW
 #define HOMM3_ARMY_PROCESS_MOVE_VIEW
-#define HOMM3_CMBTMGR_CYCLE_VIEW
 #define HOMM3_COMMAND_GRID_VIEW
 #define HOMM3_COMMAND_PLAYER_DROP_VIEW
 #define HOMM3_DRAWING_UPDATE_MOUSE_GRID_DECLS
