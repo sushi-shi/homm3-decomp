@@ -2536,16 +2536,27 @@ void combatManager::CheckGetAIMove()
 // body exactly between CheckGetAIMove and ResetMouse; Dreamcast independently
 // publishes the GetControl name, void thiscall signature and the same UI/AI
 // call graph. Complete adds the network/local-human gates visible below.
-// RESIDUAL (87.77473%): both streams contain 79 blocks, 52 branches and two
-// returns; blocks 0..25 and the shared ResetMouse/DoSpellAI tail agree, and
-// every retail UI state transition is present. Retail keeps the three-block
-// automated-control arm in front of the long local-human arm, while this SP3
-// C1 stream permutes it behind that arm and makes a few corresponding scratch
-// register choices. Positive/negative structured conditions, a nested form and
-// explicit local labels are byte-identical; duplicating the final tail regresses
-// to 69.56%, and named player/hero locals regress to 79.98%/86.46%. Nesting the
-// ordinary button updates under the non-placement arm is the last semantic
-// correction (86.21% -> this score), so the compiler-layout residual is kept.
+// The former note called the 87.77473% plateau a compiler layout choice -
+// "retail keeps the three-block automated-control arm in front of the long
+// local-human arm, while this SP3 C1 stream permutes it behind that arm" -
+// after finding positive/negative conditions, a nested form and explicit
+// local labels all byte-identical.  Every one of those spellings still fed
+// VC6 a MERGED guard, and a merged `||` cannot produce retail's layout:
+// `if (A || B) X; else Y;` lowers to two `jne`s at a SUNK X.  Retail instead
+// jumps INTO the automated arm from the IsQuickCombat test (`jne 0x4826`)
+// and sinks the local-human arm off the is_computer_action test
+// (`je 0x4881`), so the automated block is the FALL-THROUGH reached by two
+// predecessors, one of them a jump.  Splitting the guard and labelling the
+// surviving arm - the same lever combatManager::Main needed two functions
+// up - reproduces it exactly: 79-vs-79 blocks with 21 flow-kind and 19
+// target-shift mismatches becomes 79 EXACT blocks, `--branches` goes from
+// many-flips to clean at 52/52, and the score 87.7747 -> 98.2810.
+// Residual (98.2810%): an ECX/EAX scratch pair around get_current_army's
+// index chain and the DisableAllButtons receiver load, nothing structural.
+// The semantic corrections the old note records still stand: the ordinary
+// button updates stay nested under the non-placement arm, and duplicating
+// the final tail (69.56%) and named player/hero locals (79.98%/86.46%)
+// remain rejected.
 VA(0x004782d0, 0x5B5)  // exhaustive command order-map + body, dc 0x6f198
 void combatManager::GetControl()
 {
@@ -2579,8 +2590,10 @@ void combatManager::GetControl()
 
     if (combatWindow && combatWindow->controlSubWindow) {
         if (field_132c4 != zero || gbUnk691209) {
-            if (static_cast<const combatManager*>(this)->IsQuickCombat()
-                    || is_computer_action(get_current_army())) {
+            if (static_cast<const combatManager*>(this)->IsQuickCombat())
+                goto automated_control;
+            if (is_computer_action(get_current_army())) {
+automated_control:
                 static_cast<type_combat_sub_window*>(
                     combatWindow->controlSubWindow)->DisableAllButtons();
                 if (field_132c4 && sideIsAI[currentSide]) {
