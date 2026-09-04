@@ -182,14 +182,12 @@ public:
     // Dreamcast Widget.h:231. Retail callers reduce it to the +0x20
     // RollOver load, so no out-of-line body survives.
     const char* get_help_text() const { return RollOver; }
-#ifdef HOMM3_WIDGET_RCLICK_TEXT_INLINE
     // Dreamcast Widget.h:236 header inline. CampaignBriefHandler folds this
     // exact RightClick-or-RollOver choice into its retail body.
     const char* get_rclick_text()
     {
         return RightClick ? RightClick : RollOver;
     }
-#endif
     // DC-attested name (?sleep@widget@@QAAX_N@Z, E:\gamedcs\Widget.h:244)
     // on a RETAIL-ONLY body: DC's inline is the WIDGET_ASLEEP status-bit
     // send_message, retail's is the nest counter below. Header-inline
