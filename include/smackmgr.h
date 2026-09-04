@@ -99,6 +99,10 @@ unsigned char VideoPlaying();      // 0x597990
 void VideoDrawRects();         // 0x5979d0
 void VideoShutDown();          // 0x597c70
 void DeleteSoundHeaders();     // 0x5986e0
+// Complete frees three header lists where the Dreamcast frees AnimHeader
+// and VideoHeader (.bss 0x69fe2c, 0x69fde0, 0x69fe28 - unmodelled);
+// ShutDown calls it right before DeleteSoundHeaders.
+void DeleteAnimHeaders();      // 0x598440
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\smackmgr.cpp:75, dc 0x14ac30) void VideoSoundOnOff();

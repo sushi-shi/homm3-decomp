@@ -4842,6 +4842,32 @@ TSecondarySkill AI_choose_secondary_skill(const hero* our_hero,
     return second;
 }
 
+// E:\gamedcs\philai.cpp:4204. The purchaser takes the offered stack by
+// address, is asked for the hero's own morale, spends the current
+// player's gold, and is told whether an Angelic Alliance is in play.
+VA(0x0052bc60, 0xAB)  // dc-order-map after AI_choose_secondary_skill + sole caller GiveBlackBoxReward, dc 0x114adc
+void AI_join_decision(hero* current_hero, TCreatureType creature,
+                      short amount)
+{
+    type_AI_creature_purchaser purchaser(current_hero->owner, creature,
+                                         &amount, 1);
+    unsigned char has_angelic_alliance =
+        gpGame->players[current_hero->owner].hasGivenArtifact(
+            ARTIFACT_ANGELIC_ALLIANCE);
+    purchaser.do_purchase(&current_hero->army,
+                          current_hero->GetMorale(0, 0, 0), 0,
+                          gpCurrentPlayer->resources, 0,
+                          has_angelic_alliance);
+}
+
+// E:\gamedcs\philai.cpp:4217
+VA(0x0052bd10, 0x1D)  // dc-order-map after AI_join_decision, dc 0x114b44
+long AI_value_of_event(const hero* current_hero, type_point point)
+{
+    long move_cost = 0;
+    return AI_value_of_event(current_hero, point, move_cost);
+}
+
 
 #if 0  // @carcass
 

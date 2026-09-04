@@ -48,6 +48,14 @@ long AI_get_spell_value(const hero* our_hero, SpellID spell);
 // 0x528040.
 long AI_value_of_event(const hero* current_hero, type_point point,
                        long& move_cost);
+// Dreamcast line 4217: the two-argument form seeds a zero move cost and
+// forwards. Retail 0x52bd10, the row after AI_join_decision.
+long AI_value_of_event(const hero* current_hero, type_point point);
+// Dreamcast line 4204, retail 0x52bc60 (events.obj's GiveBlackBoxReward is
+// the caller): let the AI buy the joining creatures through a
+// type_AI_creature_purchaser seeded with the offered stack.
+void AI_join_decision(hero* current_hero, TCreatureType creature,
+                      short amount);
 
 // Source-real appraisal boundaries used by AI_value_of_event. Several are
 // expanded or revision-adapted in Complete, but keeping these declarations

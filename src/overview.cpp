@@ -868,7 +868,7 @@ void TOverviewWindow::UpdateFlaggableIcon(int i)
 
         field_70[i]->SetText(
             format_string(
-                DATA_COMPGEN(0x006755b4, overviewFlaggableCountFormat, "%d"),
+                DATA_COMPGEN(0x006755b4, overviewFlaggableCountFormat, "%i"),
                 field_60[iOverviewFlaggableTop + i].field_04).c_str());
         field_70[i]->send_message(
             widget::WIDGET_SET_STATUS,

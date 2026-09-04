@@ -342,6 +342,17 @@ type_quest::~type_quest()
 {
 }
 
+// Retail-only (see quest.h): a quest with a deadline has expired once the
+// calendar passes it; the compare is returned directly (retail's bare
+// `setl al`).
+VA(0x0056ccb0, 0x44)  // the row after ~type_quest; searchArray::enter_trigger caller, retail-only
+unsigned char type_quest::has_expired() const
+{
+    if (field_3c < 0)
+        return 0;
+    return field_3c < gpGame->get_current_turn();
+}
+
 // E:\gamedcs\seerhut.cpp
 VA(0x0056d3e0, 0x2A)  // anchor-vtable 0x641788 slot 6, retail-only
 std::string type_experience_quest::GetRequirementText()

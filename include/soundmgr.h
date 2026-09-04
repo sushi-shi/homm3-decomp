@@ -189,6 +189,17 @@ public:
     CRITICAL_SECTION section_MP3_name_change;
 
     soundManager();
+    // Complete-only (no Dreamcast row): ShutDown (0x4f3690) deletes the
+    // manager with this body expanded - the vftable store and the three
+    // DeleteCriticalSection calls on +0x90 / +0xa8 / +0xc0 in that order.
+    // Non-virtual: the retail vftable 0x63fe54 has only baseManager's
+    // three slots.
+    ~soundManager()
+    {
+        DeleteCriticalSection(&section_sound_call);
+        DeleteCriticalSection(&section_MP3_change);
+        DeleteCriticalSection(&section_MP3_name_change);
+    }
     virtual int Open(int newPriority);
     virtual void Close();
     ds_memsample* MemorySample(sample* sPtr);

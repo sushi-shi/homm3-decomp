@@ -215,6 +215,13 @@ unsigned short* GetMapExtraPtr(int x, int y, int z);
 // Live prototypes (claimed kb.cpp bodies; called from kbwin's
 // AppCommand and exec's DoDialog).
 void ShutDown(const char* cInExitMessage);               // 0x4f3690
+// DC ?bInShutDown@@3_NA, retail .bss 0x69958d: ShutDown's re-entry
+// guard (kb.cpp owns the definition).
+extern bool bInShutDown;
+// Dreamcast kb.cpp:4187 tears the CD/serial layer down; Complete's body
+// is EMPTY - executive::ShutDownSystem's call lands on the image-wide
+// `ret` at 0x5bc690 that /OPT:ICF folded every empty function onto.
+void EarlyShutDownSystem();
 // DC kb.cpp:3954 names the owner; retail TransmitSaveGame calls it after a
 // failed _open and independently proves the const-character-buffer ABI.
 void FileError(const char* cBuf);                        // 0x4f35f0
@@ -333,6 +340,11 @@ void IncProgressBar(unsigned char bUpdate);
 // DECLARED, NOT CLAIMED for the same link-order-gap reason as
 // IncProgressBar above.
 void ShowProgressBar();
+// The two rows around them, DC kb.cpp:240 / :292 - retail 0x4ed230 (the
+// bar-segment painter both IncProgressBar and ShowProgressBar expand) and
+// 0x4ed450 (the teardown oldmain reaches). Named from the DC roster.
+void DrawProgressCount();
+void UnloadProgressBar();
 // CODEVIEW(E:\gamedcs\kb.cpp:292, dc 0xdf2a4) void UnloadProgressBar();
 // CODEVIEW(E:\gamedcs\kb.cpp:318, dc 0xdf330) void PollSound();
 // CODEVIEW(E:\gamedcs\kb.cpp:431, dc 0xdf4e4) void InitMainClasses();
