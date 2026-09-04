@@ -3,7 +3,6 @@
 // 86 functions in link order; 20 compiler-generated $-thunks omitted.
 #define HOMM3_ARMY_MIDPOINT_DECL
 #define HOMM3_ARMY_PROTECTION_VIEW
-#define HOMM3_ARMY_SPELLS_VIEW
 #include <va.h>
 // AreaEffect hands akSpellTraits[spell].m_effect (+0x08) to drawing's
 // hex-taking SpellEffect; armygrp.h keeps that slice behind this view.
