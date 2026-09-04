@@ -3450,7 +3450,7 @@ tradpost	?Update@TSellCreatureWindow@@QAEX_N@Z	98.7522	98.7947	98.7947	0x1ec550	
 tradpost	?Update@TTradeResourceWindow@@QAEXE@Z	86.8746	86.8746	86.8746	0x1ea6e0	a7ddc7d694a9
 tradpost	?WindowHandler@TBuyArtifactWindow@@UAEHPAVmessage@@@Z	96.4352	100.0000	100.0000	0x1ed9e0	5812db4b289c
 tradpost	?WindowHandler@TGiveResourceWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ed550	fdf359440ed8
-tradpost	?WindowHandler@TSellArtifactWindow@@UAEHPAVmessage@@@Z	89.7304	89.7304	89.7304	0x1edf60	6c957e2364c0
+tradpost	?WindowHandler@TSellArtifactWindow@@UAEHPAVmessage@@@Z	90.6792	90.6792	90.6792	0x1edf60	f74afb3f3241
 tradpost	?WindowHandler@TSellCreatureWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ee890	c3e633945d2d
 tradpost	?WindowHandler@TTradeResourceWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ecfe0	d8c46c61e088
 tradpost	?get_market_value@@YIJW4EGameResource@@@Z	100.0000	100.0000	100.0000	0x1ecd10	842fb679e6dd
