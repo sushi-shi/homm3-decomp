@@ -317,44 +317,50 @@ public:
     // the same movzx/inc shape, 2026-08-20).
     int GetNumLevels() { return HasTwoLevels + 1; }
 
-    // Header inlines in the original map class (DC MapCell.h:895/906).
-    // COMPILE-REQUIRED GATE (view audit 2026-08-20): advmgr.cpp carries
-    // cell(int,int,int) OUT OF LINE under `#pragma auto_inline(off)` -
-    // the MapCell.h COMDAT the retail link filed in advmgr's span, VA
-    // 0x408770 - plus the DC_ONLY cell(type_point) stub, so the header
-    // bodies visible there are C2084. Every other TU takes the inlines:
-    // InsertObject and advManager::EraseObj expand the (x,y,z) lookup in
-    // place, and type_obscuring_object::{obscure,restore}_cell expand
-    // the packed-point overload verbatim.
+    // THE TWO MAP-SQUARE ACCESSORS (DC MapCell.h:895/906).
+    //
+    // cell(type_point) has NO retail body - the DC row at dc 0x1f9f4 is the
+    // WinCE build's out-of-line copy of a header inline - so it is a header
+    // inline for EVERY compiland and its expansion leaves behind the call
+    // to the three-scalar form.
+    //
+    // cell(int,int,int) is a header inline too, and MEASURED so: modelling
+    // it as a declaration-only member with one out-of-line definition -
+    // which its real 49-byte retail body at 0x408770 invites - costs the
+    // tree 3091 -> 3058 exact functions and 95.12% -> 94.77% fuzzy, because
+    // sixteen compilands expand the `(z*Size + y)*Size + x` lookup on a
+    // 38-byte stride in place. The retail COMDAT is what an inline's
+    // out-of-line copy looks like when one TU's call sites decline it.
+    //
+    // COMPILE-REQUIRED FORK, and the only surviving one. advmgr.cpp is that
+    // TU: it defines the 0x408770 COMDAT itself under `auto_inline(off)`,
+    // which is a redefinition (C2084) unless the body is hidden there. That
+    // pin is load-bearing, not cosmetic - letting advmgr take the header
+    // inline and pair the COMDAT the compiler then still emits costs
+    // thirteen rows in that unit, DoAdvCommand 94.2359 -> 78.3433,
+    // ProcessHover 91.6263 -> 88.1523, DrawAdvObjShadow 85.2335 -> 82.1711,
+    // DrawUnderlay 92.7034 -> 89.6562, and DrawBoatPart/DrawBoatPartShadow
+    // off 100.0000 (measured 2026-09-05).
+    //
+    // The SECOND arm of this fork is RETIRED: philai.cpp and seerhut.cpp
+    // used to take the same declaration-only spelling for cell(int,int,int)
+    // while keeping the packed-point wrapper. It was buying nothing in
+    // philai - get_value_of_spring 76.6104 -> 100.0000 and get_value_of_well
+    // 75.2436 -> 100.0000 without it - and in seerhut it bought one row,
+    // SetDefaultText 98.3426 -> 93.0020, by imposing an inline decision the
+    // source cannot express. Net +2 exact functions; max/hist keep the peak.
 #ifdef HOMM3_NEWFULLMAP_CELL_OUTOFLINE
     NewmapCell* cell(int x, int y, int z);
-    NewmapCell* cell(type_point point);
-#elif defined(HOMM3_NEWFULLMAP_INT_CELL_OUTOFLINE)
-    // Some compilands saw the three-scalar implementation out of line but
-    // retained the packed-point header wrapper. The wrapper's by-value
-    // parameter then becomes a real local while its tail remains a call.
-    NewmapCell* cell(int x, int y, int z);
-    NewmapCell* cell(type_point point)
-    {
-        return cell(point.x, point.y, point.z);
-    }
 #else
-    // Header inline in the original map class. InsertObject expands this
-    // three-dimensional row-major lookup, and so does advManager::EraseObj
-    // - `(z*Size + y)*Size + x` then a *38 stride, all in line; other
-    // compilation personalities retain the out-of-line declaration until
-    // their own call sites prove that expansion.
-    // victorylossconditions joins for CheckForDefeatedMonsterWin's map
-    // sweep (2026-08-20).
     NewmapCell* cell(int x, int y, int z)
     {
         return &cellData[(z * Size + y) * Size + x];
     }
+#endif
     NewmapCell* cell(type_point point)
     {
         return cell(point.x, point.y, point.z);
     }
-#endif
     int Load(TAbstractFile* infile, int size, unsigned char twoLayers,
              int saveVersion);
     int Save(TAbstractFile* outfile, int size, unsigned char twoLayers);

@@ -2517,7 +2517,7 @@ philai	?DoAI@philAI@@QAEXH@Z	90.2537	90.2537	90.2537	0x125e80	574dbbf4dad6
 philai	?GetTurnAIVars@philAI@@QAEXH@Z	96.5957	97.8723	97.8723	0x127960	478682a95693
 philai	?LuckIncreaseValue@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0x127d80	8a4eb278b3d4
 philai	?MoraleIncreaseValue@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0x127cf0	2b16a4ff44e6
-philai	?MoveHero@@YIXPAVhero@@PAJEPAE@Z	86.6362	86.6362	86.6362	0x1261f0	d21de014b1cb
+philai	?MoveHero@@YIXPAVhero@@PAJEPAE@Z	86.3549	86.6362	86.6362	0x1261f0	d21de014b1cb
 philai	?NetValueOfArtifact@@YIHPBVhero@@HHHW4EGameResource@@@Z	100.0000	100.0000	100.0000	0x129810	bb1a978c2530
 philai	?OnSameTeam@game@@QBE_NHH@Z	100.0000	100.0000	100.0000	0x1296d0	783f4828a9be
 philai	?PlayerKnowsCell@ExtraInfoUnion@@QBE_NF@Z	100.0000	100.0000	100.0000	0x129690	a1b78735bac0
@@ -2552,8 +2552,8 @@ philai	?get_mass_damage_spell_value@type_spellvalue@@IBEJHHJ@Z	100.0000	100.0000
 philai	?get_raw_spell_value@type_spellvalue@@QBEJH@Z	100.0000	100.0000	100.0000	0x1273d0	5142b6244ec6
 philai	?get_school_value@@YIJPBVhero@@W4TSecondarySkill@@@Z	100.0000	100.0000	100.0000	0x124d20	d66a42c2c0c9
 philai	?get_skill_value@@YIJPBVhero@@W4TSecondarySkill@@E@Z	78.1958	78.1958	78.1958	0x124690	399749ef6f39
-philai	?get_value_of_spring@@YIJPBVhero@@PBVNewmapCell@@G@Z	76.6104	100.0000	100.0000	0x12b810	2a0946f8c0e9
-philai	?get_value_of_well@@YIJPBVhero@@G@Z	75.2436	100.0000	100.0000	0x12a510	3fdad508cb33
+philai	?get_value_of_spring@@YIJPBVhero@@PBVNewmapCell@@G@Z	100.0000	100.0000	100.0000	0x12b810	2a0946f8c0e9
+philai	?get_value_of_well@@YIJPBVhero@@G@Z	100.0000	100.0000	100.0000	0x12a510	3fdad508cb33
 philai	?move_hero@@YIXPAVhero@@EAAE@Z	100.0000	100.0000	100.0000	0x1267b0	9fce1d44ceff
 philai	?value_of_bank@@YIJPBVhero@@PAVNewmapCell@@@Z	92.2043	100.0000	100.0000	0x129920	5dcd21c686e3
 philai	?value_of_custom_item@@YIJPBVhero@@PAVNewmapCell@@J@Z	100.0000	100.0000	100.0000	0x129890	f545ae1973de
@@ -3062,7 +3062,7 @@ seerhut	?SetDefaultText@type_belong_to_player_quest@@UAEXXZ	100.0000	100.0000	10
 seerhut	?SetDefaultText@type_creature_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x1713c0	e83bc6a88c70
 seerhut	?SetDefaultText@type_defeat_hero_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x16e6f0	06461e5f3612
 seerhut	?SetDefaultText@type_experience_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x16d720	ba63f07b4646
-seerhut	?SetDefaultText@type_monster_quest@@UAEXXZ	98.3426	98.3426	98.3426	0x16ef20	a595f8ae0892
+seerhut	?SetDefaultText@type_monster_quest@@UAEXXZ	93.0020	98.3426	98.3426	0x16ef20	a595f8ae0892
 seerhut	?SetDefaultText@type_resource_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x171cc0	0b35a94b034a
 seerhut	?SetDefaultText@type_skill_quest@@UAEXXZ	96.5299	96.5299	96.5299	0x16e0d0	c384cd65f3dd
 seerhut	?TakePayment@type_artifact_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x16f860	7781cac6567d

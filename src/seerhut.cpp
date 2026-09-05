@@ -12,7 +12,6 @@
 #include "quest.h"
 // game.h for game::GetHero, which two of the slot-7 descriptions below
 // name their hero through.
-#define HOMM3_NEWFULLMAP_INT_CELL_OUTOFLINE
 #include "game.h"
 #include "advmgr.h"
 #include "winmgr.h"
@@ -1251,6 +1250,11 @@ void type_monster_quest::Save(TAbstractFile* file)
 // one missing `_Eos`. The traits-length/two-argument spelling below is the
 // measured form that reproduces retail's otherwise-unique middle-north
 // assignment block.
+// Residual (93.0020%, peak 98.3426%): `worldMap.cell(position)` below.
+// Retail expands the packed-point wrapper and CALLS the three-scalar
+// accessor (0x408770); this compile expands both. The peak came from a
+// per-TU declaration-only view of cell(int,int,int) - an imposed inline
+// decision, not a source fact - retired 2026-09-05 with game.h's fork.
 // E:\gamedcs\seerhut.cpp
 VA(0x0056ef20, 0x57C)  // anchor-vtable 0x64183c slot 14 + quest-monster pool
 void type_monster_quest::SetDefaultText()
