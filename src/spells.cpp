@@ -651,6 +651,23 @@ unsigned char combatManager::check_fire_wall(long hex, army* current_army,
     return 1;
 }
 
+// The Enchanter's shot resolution, and Complete-only: the Dreamcast roster
+// runs check_fire_wall straight into CastSpell with nothing between them.
+// army::animate_missile (0x43f2c0) is its ONE caller and the whole body is a
+// Magic Arrow volley - five sprites at the five angles in the projectile
+// table pair immediately above - fired from the launch point the caller
+// computed to the target stack's own centre. The quick-combat gate is the
+// same one animate_missile opens with; retail re-tests it here rather than
+// relying on the caller.
+VA(0x0059fde0, 0x44)  // sole caller (army::animate_missile) + magic-arrow table pair, retail-only
+void combatManager::Unnamed59FDE0(int x, int y, army* target)
+{
+    if (!static_cast<const combatManager*>(this)->IsQuickCombat()) {
+        ShootAnimatedMissile(x, y, target->MidX(), target->MidY(), 5,
+                             gMagicArrowAngles, gMagicArrowSprites);
+    }
+}
+
 VA(0x0059fe30, 0x2A4F)  // retail largest-unadmitted row, dc 0x14f7dc
 void combatManager::CastSpell(SpellID spellId, int targetIndex,
                               int bIsMonsterSpell,

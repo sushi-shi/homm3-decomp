@@ -79,6 +79,15 @@ unsigned char DDSetFullScreenStatus(int iNewStatus);     // 0x601a00
 struct tagRECT;
 void RobAppBlit(tagRECT* comb_rect);                     // 0x5ffe70
 
+// The adventure-map complete-redraw latch, read by winmgr's fizzle pair
+// (heroWindowManager::SaveFizzleSourceX / ::FizzleForwardX) before they touch
+// the screen surface. DECLARATION ONLY - advmgr.h owns the DATA claim on
+// .bss 0x6989c0 and a second claim on the same RVA is a fatal duplicate at
+// delink time. Declared here rather than in winmgr.h because this header has
+// eight includers against winmgr.h's seventy, and a declarator's cost is
+// paid by every TU in the closure.
+extern int gCompleteDrawEnabled;                         // .bss 0x6989c0
+
 // Fullscreen-toggle inhibitor read by SetFullScreenStatus's leading test.
 // That test is the ONLY reference to .bss 0x6989d4 anywhere in the image (a
 // whole-image scan for the absolute operand returns exactly one hit), so no
