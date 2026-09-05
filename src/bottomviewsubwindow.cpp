@@ -1427,6 +1427,15 @@ TBottomViewEnemyTurn::TBottomViewEnemyTurn(heroWindow* parent)
 // image-wide reference to this class's table.
 VA_COMPGEN(0x00453640, 0x21, SCALAR_DELETING_DTOR, TBottomViewEnemyTurn)
 
+// Two Dinkumware COMDATs from the iostream closure this compiland drags in.
+// Both byte-verified against the emitted templates rather than on size:
+// 0.984 over 174 bytes for the ostream constructor and 0.977 over 267 for
+// the numpunct one. The claim-10 sweep had proposed `xsgetn` and `grouping`
+// for these two rows on size alone, and neither survives a look at the
+// bytes - which is the whole point of the note on this region.
+VA_COMPGEN(0x00453970, 0xAE, CLASS_CTOR, basic_ostream)
+VA_COMPGEN(0x00455820, 0x10B, CLASS_CTOR, numpunct)
+
 
 // E:\gamedcs\bottomviewsubwindow.cpp:643
 VA(0x00453670, 0x78)  // anchor-vtable, dc 0x5706c
