@@ -243,6 +243,23 @@ public:
     int m_amount;
 };
 
+// The three sentinel hero selectors a campaign bonus can carry, byte-read
+// off the picker's own jump chain at 0x4840d0 (`cmp ecx,-3 / -2 / -1`
+// with the plain-id arm falling through). Names are role inventions.
+enum ECampaignBonusHero {
+    CAMPAIGN_BONUS_HERO_STRONGEST = -3,
+    CAMPAIGN_BONUS_HERO_FIRST = -2,
+    CAMPAIGN_BONUS_HERO_NONE = -1
+};
+
+// The bonus applier's shared hero picker (0x4840d0), a /Gr free function
+// taking the selector in ECX and the player in EDX. Three selectors are
+// sentinels - -3 is "the player's strongest hero" by primary-skill total
+// plus secondary-skill levels, -2 is "the player's first hero" and -1 is
+// none - and any other value is a hero id that only answers when the hero
+// already belongs to that player. Retail-only, name provisional.
+hero* GetCampaignBonusHero(int heroSelector, int whichPlayer);
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\customcampaign.cpp:70, dc 0x7cd4c) void InitCampaignMapTraits([]* map_traits);
 
