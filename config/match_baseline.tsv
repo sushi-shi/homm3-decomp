@@ -3383,12 +3383,16 @@ singleselectionpopups	??0CHeroDlg@@QAE@E@Z	100.0000	100.0000	100.0000	0x175a70	5
 singleselectionpopups	??0CHotspotWidget@@QAE@HHHHH@Z	100.0000	100.0000	100.0000	0x175220	d8450891c262
 singleselectionpopups	??0CTeamAlignmentDlg@@QAE@E@Z	100.0000	100.0000	100.0000	0x1764d0	1820ac43b413
 singleselectionpopups	??0CTownDlg@@QAE@E@Z	100.0000	100.0000	100.0000	0x175e10	48ab346b572f
+singleselectionpopups	??0TRandomMapProgress@@QAE@H@Z	100.0000	100.0000	100.0000	0x176f00	f5a44d01a958
 singleselectionpopups	??1CBitmapWidget@@UAE@XZ	100.0000	100.0000	100.0000	0x175a60	-
 singleselectionpopups	??1CTeamAlignmentDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x176530	-
+singleselectionpopups	??1TRandomMapProgress@@UAE@XZ	100.0000	100.0000	100.0000	0x1770c0	64365da88096
 singleselectionpopups	??_GCBonusDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1754c0	-
 singleselectionpopups	??_GCHeroDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x175e30	-
 singleselectionpopups	??_GCHotspotWidget@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x175260	-
 singleselectionpopups	??_GCSpriteWidget@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1757b0	-
+singleselectionpopups	??_GTRandomMapProgress@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x177090	-
+singleselectionpopups	?Advance@TRandomMapProgress@@UAEXH@Z	100.0000	100.0000	100.0000	0x177320	d96bbd140f0c
 singleselectionpopups	?CreateWin@CBonusDlg@@QAEEPBDPAVBitmap816@@00@Z	95.5075	95.5075	95.5075	0x1757e0	c76bae7bb9c8
 singleselectionpopups	?CreateWin@CBonusDlg@@QAEEPBDPAVCSprite@@H00@Z	98.0000	98.0000	98.0000	0x1754f0	09006518463c
 singleselectionpopups	?CreateWin@CHeroDlg@@QAEEPAVBitmap816@@PBDPAVCSprite@@H11@Z	93.9279	93.9279	93.9279	0x175a90	b6dab2614e30
@@ -3397,8 +3401,10 @@ singleselectionpopups	?CreateWin@CTownDlg@@QAEEPAVCSprite@@HW4TTownType@@@Z	98.6
 singleselectionpopups	?Draw@CBitmapWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x175a20	42a30f029b9f
 singleselectionpopups	?Draw@CSpriteWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x175750	bf732620ec2c
 singleselectionpopups	?GetTeams@CTeamAlignmentDlg@@QAEXXZ	100.0000	100.0000	100.0000	0x176930	0c538aa1d313
+singleselectionpopups	?LoadProgFn_00577180@TRandomMapProgress@@QAEXXZ	100.0000	100.0000	100.0000	0x177180	2e6769643e47
 singleselectionpopups	?Main@CHotspotWidget@@UAEHPAVmessage@@@Z	94.2771	94.2771	94.2771	0x175290	a0e628cd5441
 singleselectionpopups	?Main@CSpriteWidget@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x175a10	41c528056a5a
+singleselectionpopups	?SetTotal@TRandomMapProgress@@UAEXH@Z	100.0000	100.0000	100.0000	0x177300	c8a7ef7d1bb8
 singleselectionpopups	?_Ucopy@?$vector@PAVwidget@@V?$allocator@PAVwidget@@@std@@@std@@IAEPAPAVwidget@@PBQAV3@0PAPAV3@@Z	100.0000	100.0000	100.0000	0x174ce0	-
 singleselectionpopups	?handle_message@CSingleSelPopup@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x175430	d47e955ee4df
 singleselectionwindow	??0?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x18ff80	-
@@ -3512,7 +3518,7 @@ singleselectionwindow	?OnGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNet
 # SetCurrentMap/OnSetAsHostMsg bodies landing in the TU dropped the
 # pair again with both sources byte-identical. Recovery rides with
 # DrawHeroAdvancedOption reaching 100.
-singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	99.8868	100.0000	100.0000	0x17cdc0	0e5de8f038ec
+singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0	0e5de8f038ec
 singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	9177fbb0fa83
 # 2026-08-27 hand-lowered 100.0000 -> 99.8710 (hist keeps 100.0000): the
 # documented TU-state flap (master accepted this pair down at 99.89/99.87
@@ -3527,7 +3533,7 @@ singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100
 # 2026-08-27 (round 3): the interim full build re-banked the transient
 # peak a third time; re-lowered with the round's bodies landed. Same
 # scheduler flap, same recovery path.
-singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0	66eb0a0e15c8
+singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0	66eb0a0e15c8
 singleselectionwindow	?OnMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2193	90.2193	90.2193	0x189710	3ad2be3935a3
 singleselectionwindow	?OnNameClick@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x18b620	ef174e28edf8
 singleselectionwindow	?OnNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	97.5366	97.5366	97.5366	0x18b510	862e2a9c058b
