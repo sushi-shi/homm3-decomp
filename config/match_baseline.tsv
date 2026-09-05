@@ -3162,7 +3162,7 @@ spells	?HandleCastTeleport@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1a357
 spells	?HandleCastWallSpell@@YIHAAVmessage@@@Z	99.9703	99.9703	99.9703	0x1a3250	fcd4bfe58cdf
 spells	?HandleGetTeleportDestination@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1a37d0	288a3f189d84
 spells	?HasValidSpellTarget@combatManager@@QAEEHJJEJ@Z	100.0000	100.0000	100.0000	0x1a40d0	7c8be7ea45f1
-spells	?InitiateSpell@combatManager@@QAEXHH@Z	89.4253	89.4253	89.4253	0x19ec50	f3d24cbd9a02
+spells	?InitiateSpell@combatManager@@QAEXHH@Z	89.8044	89.8044	89.8044	0x19ec50	039db4404b9d
 spells	?LoadSpellEffect@combatManager@@QAEPAVCSprite@@H@Z	100.0000	100.0000	100.0000	0x1a92f0	b8d6895d9116
 spells	?MirrorImage@combatManager@@QAEXHH@Z	82.3404	82.3404	82.3404	0x1a6c70	ee7fd7c139af
 spells	?ModifySpellDamage@combatManager@@QAEJJHPBVhero@@0PBVarmy@@E@Z	88.4854	88.4854	88.4854	0x1a78e0	cc075767214e
