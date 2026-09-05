@@ -192,6 +192,9 @@ ai	?mark_multiheaded_enemy@combatManager@@QAEXPBVarmy@@0PAJJPAVsearchArray@@PAUt
 ai	?move_toward@combatManager@@QAEEPBVarmy@@JPBJE@Z	100.0000	100.0000	100.0000	0x1f580	b27aade1e3e5
 ai	?place_shooter@combatManager@@QAEXPBVarmy@@@Z	82.4884	82.4884	82.4884	0x22060	bd12864f585c
 ai	?should_stay_in_castle@combatManager@@QAEEPAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x213f0	625a5545daff
+ai	?simulate_actions@combatManager@@QAEJAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@JJ@Z	100.0000	100.0000	100.0000	0x22880	ecacc92c5d31
+ai	?simulate_combat@combatManager@@QAEXJE@Z	99.9512	99.9512	99.9512	0x22a40	3d882f91bcdf
+ai	?simulate_melee_attack@combatManager@@QAEXPAVarmy@@0J@Z	100.0000	100.0000	100.0000	0x227a0	84892daa8a44
 ai_combat	??0type_AI_combat_data@@QAE@PBVhero@@PBVarmyGroup@@N0PBVtown@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x23ee0	7a3cf1c93721
 ai_combat	??0type_monster_vector@@QAE@ABU0@@Z	100.0000	100.0000	100.0000	0x276c0	aaea26c81479
 ai_combat	?AI_approximate_strength@@YIJPBVhero@@@Z	100.0000	100.0000	100.0000	0x27650	8fb9a1444291

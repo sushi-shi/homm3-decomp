@@ -1781,6 +1781,20 @@ public:
     // stack arguments. Declared so that constructor can spell the
     // call; not claimed, and the body belongs to the ai.obj lane.
     void simulate_combat(long side, unsigned char simulated);  // 0x422a40
+    // The three rows between compute_fire_shield_damage (0x422440, dc
+    // 0x27318) and simulate_combat, in the order DC's own ai.obj roster
+    // gives them: simulate_melee_attack(5) at ai.cpp:2433 / dc 0x2746c,
+    // simulate_melee_attack(3) at ai.cpp:2490 / dc 0x275e8 and
+    // simulate_actions at ai.cpp:2516 / dc 0x27698.  The retail call
+    // chain runs the same way round - 0x422a40 calls 0x422880 calls
+    // 0x4227a0 calls 0x4224e0 - and the sizes track at 1.8x, 1.24x and
+    // 1.26x of the SH4 bodies.
+    void simulate_melee_attack(army* current_army, long hex, army* target,
+                               long enemy_hex, long our_group);  // 0x4224e0
+    void simulate_melee_attack(army* current_army, army* target,
+                               long our_group);                  // 0x4227a0
+    long simulate_actions(std::vector<army*>& list, long i,
+                          long our_group);                       // 0x422880
     // command.cpp:3038. The retail call at 0x477f3d occupies the exact
     // AICheckRetreat statement slot in Dreamcast CheckGetAIMove, and the
     // helper's other retail caller sits in ai.obj.
