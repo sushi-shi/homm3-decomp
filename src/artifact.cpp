@@ -217,6 +217,17 @@ const TCombinationArtifact* gCombinationArtifacts = aCombinationArtifacts;
 // apply here - B0..B2's three guards already agree with retail block for
 // block. The second extra block is a label on the release-diagnostic call in
 // the epilogue.
+// 2026-09-06, polish lane 20: naming that hoist in the SOURCE - a
+// `const TStringVector& values = traitsSheet->GetRow(row);` in the
+// stringBytes loop, matching the second loop - is the structural fix and a
+// scoring LOSS, so it is NOT shipped: the skeleton goes 83/81 blocks with
+// TWO exact and 52 flow-kind mismatches to 82/81 with TWENTY-FIVE exact
+// and 31, branches close to 42/42, and the objdiff number still falls
+// 80.5133 -> 79.8700 because the whole prologue re-allocates (the first
+// divergence moves from B3 to B0+0x28). Anyone who can close that prologue
+// should start from this spelling, not from the current one. Also measured
+// and rejected: `traitsSheet.get()->GetRow(row)` (80.5133, byte-flat) and
+// swapping the two strlen operands (78.6900).
 VA(0x0044cd50, 0x5E8)  // anchor-strings/caller, dc 0x4fec0
 unsigned char InitializeArtifactTraitsTable()
 {

@@ -1290,7 +1290,7 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     inScenarioOptions = 0;
     inFilterOptions = 0;
     field_37F = 0;
-    clickTime = timeGetTime();
+    clickTime = GameTime::Get();
 
     if (!m_flag65) {
         for (int i = 0; i < 8; ++i)

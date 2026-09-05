@@ -321,7 +321,7 @@ ai_player	?buy_mage_guild@type_AI_player@@QAEXPAVhero@@PAVtown@@@Z	100.0000	100.
 ai_player	?calculate_demand@type_AI_player@@QAEXXZ	97.4340	97.4340	97.4340	0x28740	8844819eee6a
 ai_player	?calculate_reserve@type_AI_player@@QAEXXZ	91.2557	96.4566	96.4566	0x29ad0	ae0f0286b0dd
 ai_player	?can_take_town@@YIEPBVhero@@PBVtown@@@Z	100.0000	100.0000	100.0000	0x28410	6e41459530a0
-ai_player	?can_trade_resources@type_AI_player@@QAE_NPBHPAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	81.0339	81.3465	81.3465	0x2a580	bcf1d18fceac
+ai_player	?can_trade_resources@type_AI_player@@QAE_NPBHPAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	81.0339	81.3465	81.3465	0x2a580	1552eb71c950
 ai_player	?check_move_spell@@YIEPAVhero@@AAV?$vector@UpathCell@@V?$allocator@UpathCell@@@std@@@std@@JHE@Z	100.0000	100.0000	100.0000	0x309a0	9420dcf94e8d
 ai_player	?check_towns@type_town_threat_checker@@QAEXXZ	100.0000	100.0000	100.0000	0x280e0	e4abb799b70e
 ai_player	?check_trade_supply@type_AI_player@@QAE_NPBHJPAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	85.8333	85.8333	85.8333	0x2a2b0	6ebd26d802e8
@@ -1239,7 +1239,7 @@ customcampaign	?Read@TCampaignStartHeroOption@@UAEXPAVTAbstractFile@@@Z	88.9802	
 customcampaign	?Read@TStreamBufFile@@UAEHPAXH@Z	100.0000	100.0000	100.0000	0x83f10	d4a8f9e13d4a
 customcampaign	?ReadLengthPrefixedString@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAVTAbstractFile@@@Z	81.6506	81.6506	81.6506	0x85d90	20e8cfd1014a
 customcampaign	?RehomeCampaignHeroSetup@game@@QAEXH@Z	49.1225	49.1225	49.1225	0x86110	d4483c5b6cf7
-customcampaign	?Save@SCampaign@@QAEXPAVTAbstractFile@@@Z	78.4646	78.4646	78.4646	0x8ae90	2cca34ef9629
+customcampaign	?Save@SCampaign@@QAEXPAVTAbstractFile@@@Z	78.8074	78.8074	78.8074	0x8ae90	d3bd1792a3da
 customcampaign	?SetTown@TCampaignBonus@@UAEXH@Z	100.0000	100.0000	100.0000	0x85d80	b2d708d08c05
 customcampaign	?SetTown@TCampaignBuildingBonus@@UAEXH@Z	100.0000	100.0000	100.0000	0x847e0	00d1522bb39b
 customcampaign	?SetTown@TCampaignStartBonusOption@@UAEXPAVCMapHeaderData@@@Z	100.0000	100.0000	100.0000	0x853c0	745aa6792b93
@@ -1274,7 +1274,7 @@ customcampaign	?_Xran@?$bitset@$0JB@@std@@ABEXXZ	100.0000	100.0000	100.0000	0x8d
 customcampaign	?_slot12@TCampaignStartCrossoverOption@@UBE_NPAXH@Z	100.0000	100.0000	100.0000	0x859e0	4cf949b1e784
 customcampaign	?_slot12@TCampaignStartOption@@UBE_NPAXH@Z	100.0000	100.0000	100.0000	0x85000	2041f90bd928
 customcampaign	?_slot5@TCampaignStartCrossoverOption@@UBEHPAXH@Z	100.0000	100.0000	100.0000	0x859b0	205cbb807bc5
-customcampaign	?_slot5@TCampaignStartOption@@UBEHPAXH@Z	71.7308	71.7308	71.7308	0x84f80	47e5f4c5248d
+customcampaign	?_slot5@TCampaignStartOption@@UBEHPAXH@Z	100.0000	100.0000	100.0000	0x84f80	7fe4f812a50a
 customcampaign	?_slot7@TCampaignStartHeroOption@@UBEHH@Z	100.0000	100.0000	100.0000	0x85d60	9dd981a309f9
 customcampaign	?_slot7@TCampaignStartOption@@UBEHH@Z	100.0000	100.0000	100.0000	0x85090	1c2746dad99c
 customcampaign	?capacity@?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x8ce20	-
@@ -2806,7 +2806,7 @@ overview	?get_last_backpack_index@@YIJJ@Z	100.0000	100.0000	100.0000	0x1225d0	ba
 palette	??0TPalette16@@QAE@PBDPBVTPalette24@@HHHHHH@Z	94.9365	94.9365	94.9365	0x122770	e1d982a54953
 palette	??0TPalette16@@QAE@PBG@Z	100.0000	100.0000	100.0000	0x1226a0	41cb58ce43f7
 palette	??0TPalette16@@QAE@PBV0@@Z	100.0000	100.0000	100.0000	0x1228e0	be401a545fc6
-palette	??0TPalette16@@QAE@PBVTPalette24@@@Z	88.7183	88.7183	88.7183	0x122810	57ecd8ee7d7a
+palette	??0TPalette16@@QAE@PBVTPalette24@@@Z	98.9155	98.9155	98.9155	0x122810	691959d17233
 palette	??0TPalette16@@QAE@PBVTPalette24@@HHHHHH@Z	94.8548	94.8548	94.8548	0x1226d0	8c20642a3f98
 palette	??0TPalette16@@QAE@XZ	100.0000	100.0000	100.0000	0x122650	3e83907f8b18
 palette	??0TPalette24@@QAE@PBE@Z	100.0000	100.0000	100.0000	0x122e80	468ea0d98910
@@ -3510,7 +3510,7 @@ singleselectionwindow	??0GameSelectionHeadersStruct@@QAE@XZ	73.1483	79.3242	79.3
 singleselectionwindow	??0NewSMapHeader@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x18fa60	-
 singleselectionwindow	??0SCampaign@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x18fc10	-
 singleselectionwindow	??0SavedGameHeader@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x193f50	-
-singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	93.6778	93.6778	93.6778	0x179960	59261759d4c1
+singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	93.6935	93.6935	93.6935	0x179960	ebbcb676165f
 singleselectionwindow	??0lobby_message@@QAE@XZ	100.0000	100.0000	100.0000	0x189190	2b1be8208221
 singleselectionwindow	??0t_map_list_update@@QAE@K@Z	100.0000	100.0000	100.0000	0x189240	173781ee6a81
 singleselectionwindow	??1?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x18ea70	-
