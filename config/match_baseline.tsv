@@ -704,6 +704,7 @@ bottomviewsubwindow	??0bad_cast@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x5
 bottomviewsubwindow	??0bad_cast@std@@QAE@PBD@Z	100.0000	100.0000	100.0000	0x54a10	-
 bottomviewsubwindow	??0ios_base@std@@IAE@XZ	100.0000	100.0000	100.0000	0x515c0	-
 bottomviewsubwindow	??0strstreambuf@std@@QAE@H@Z	100.0000	100.0000	100.0000	0x51600	-
+bottomviewsubwindow	??1?$basic_ostream@DU?$char_traits@D@std@@@std@@UAE@XZ	100.0000	100.0000	100.0000	0x53a20	-
 bottomviewsubwindow	??1?$basic_streambuf@DU?$char_traits@D@std@@@std@@UAE@XZ	100.0000	100.0000	100.0000	0x54000	-
 bottomviewsubwindow	??1?$numpunct@D@std@@UAE@XZ	100.0000	100.0000	100.0000	0x55bf0	-
 bottomviewsubwindow	??1TBottomViewEnemyTurn@@UAE@XZ	100.0000	100.0000	100.0000	0x53670	d9e2660fc763
@@ -715,6 +716,7 @@ bottomviewsubwindow	??1TBottomViewResourceMessage@@UAE@XZ	100.0000	100.0000	100.
 bottomviewsubwindow	??1TBottomViewTown@@UAE@XZ	100.0000	100.0000	100.0000	0x52b00	bd09da0ac1f4
 bottomviewsubwindow	??1sentry@?$basic_ostream@DU?$char_traits@D@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x54320	-
 bottomviewsubwindow	??1type_bottom_view_window@@UAE@XZ	100.0000	100.0000	100.0000	0x50d50	7bf99d8681a0
+bottomviewsubwindow	??4?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@QAEAAV01@D@Z	100.0000	100.0000	100.0000	0x557a0	-
 bottomviewsubwindow	??6std@@YAAAV?$basic_ostream@DU?$char_traits@D@std@@@0@AAV10@PBD@Z	100.0000	100.0000	100.0000	0x54450	-
 bottomviewsubwindow	??_Dostrstream@std@@QAEXXZ	100.0000	100.0000	100.0000	0x51750	-
 bottomviewsubwindow	??_GTBottomViewEnemyTurn@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x53640	-
@@ -755,6 +757,7 @@ bottomviewsubwindow	?opfx@?$basic_ostream@DU?$char_traits@D@std@@@std@@QAE_NXZ	1
 bottomviewsubwindow	?put@?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEAAV12@D@Z	100.0000	100.0000	100.0000	0x53dd0	-
 bottomviewsubwindow	?sputc@?$basic_streambuf@DU?$char_traits@D@std@@@std@@QAEHD@Z	100.0000	100.0000	100.0000	0x54a30	-
 bottomviewsubwindow	?truename@?$numpunct@D@std@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@XZ	100.0000	100.0000	100.0000	0x55780	-
+bottomviewsubwindow	?uflow@?$basic_streambuf@DU?$char_traits@D@std@@@std@@MAEHXZ	100.0000	100.0000	100.0000	0x54080	-
 bottomviewsubwindow	?xsgetn@?$basic_streambuf@DU?$char_traits@D@std@@@std@@MAEHPADH@Z	100.0000	100.0000	100.0000	0x540b0	-
 bottomviewsubwindow	?xsputn@?$basic_streambuf@DU?$char_traits@D@std@@@std@@MAEHPBDH@Z	100.0000	100.0000	100.0000	0x54150	-
 button	??0button@@QAE@HHHHHPBDHHEHH@Z	100.0000	100.0000	100.0000	0x55ef0	a60516324f5e
@@ -774,6 +777,7 @@ button	?Select@button@@QAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x56860	e3d
 button	?SetPlayerPaletteColors@button@@QAEXH@Z	100.0000	100.0000	100.0000	0x569e0	dc6ad15ff688
 button	?_vslot12@button@@UAEXH@Z	100.0000	100.0000	100.0000	0x56a10	fa786de27cd0
 campaignbrief	??0?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@std@@QAE@ABU?$less@H@1@ABV?$allocator@Utype_map_hero_info@@@1@@Z	100.0000	100.0000	100.0000	0x5bf70	-
+campaignbrief	??0?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x5dcb0	-
 campaignbrief	??0CMapHeaderData@@QAE@XZ	100.0000	100.0000	100.0000	0x5a990	-
 campaignbrief	??0LossConditionStruct@@QAE@XZ	100.0000	100.0000	100.0000	0x5bac0	-
 campaignbrief	??0NewSMapHeader@@QAE@XZ	99.8438	99.8438	99.8438	0x5a7a0	-
@@ -801,6 +805,7 @@ campaignbrief	?Select@TCampaignBrief@@QAEXH@Z	92.1064	92.1064	92.1064	0x57990	8f
 campaignbrief	?UpdateAllyEnemyFlags@TCampaignBrief@@QAEXXZ	86.8125	86.8125	86.8125	0x58010	0a990c5eb338
 campaignbrief	?UpdateBonusIcons@TCampaignBrief@@QAEXXZ	95.3700	95.3700	95.3700	0x58d40	288e1c1bcbaf
 campaignbrief	?UpdateDifficultyButtons@TCampaignBrief@@QAEXXZ	100.0000	100.0000	100.0000	0x59010	a54768111cfd
+campaignbrief	?_Buynode@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@IAEPAU_Node@12@PAU312@W4_Redbl@12@@Z	100.0000	100.0000	100.0000	0x5dea0	-
 campaignbrief	?_Construct@std@@YIXPAU?$pair@$$CBHUtype_map_hero_info@@@1@ABU21@@Z	100.0000	100.0000	100.0000	0x5d590	-
 campaignbrief	?_Construct@std@@YIXPAUCampaignScenarioPreview@@ABU2@@Z	91.0748	91.0748	91.0748	0x5d700	-
 campaignbrief	?_Construct@std@@YIXPAUtype_map_hero_identity@@ABU2@@Z	100.0000	100.0000	100.0000	0x5d420	-
@@ -953,6 +958,7 @@ combatwindow	?_Freeze@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@st
 combatwindow	?combat_message@TCombatWindow@@QAEXPBDEE@Z	100.0000	100.0000	100.0000	0x72e90	98c0e7200e58
 combatwindow	?find@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QBEIPBDII@Z	100.0000	100.0000	100.0000	0x734f0	-
 combatwindow	?handle_widget_hover@TCombatWindow@@UAEXPAVwidget@@@Z	100.0000	100.0000	100.0000	0x72b80	10d2222cf54f
+combatwindow	?insert@?$vector@PAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$allocator@PAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@QAEXPAPAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@IABQAV32@@Z	100.0000	100.0000	100.0000	0x73600	-
 combatwindow	?scroll_down@TCombatWindow@@SIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x72e40	13e5bd5d61e1
 combatwindow	?scroll_rollover@TCombatWindow@@QAEXJ@Z	100.0000	100.0000	100.0000	0x72db0	32fd4b037678
 combatwindow	?scroll_up@TCombatWindow@@SIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x72df0	ac2cc98b30d8
@@ -1104,6 +1110,7 @@ customcampaign	?StartScenario@CampaignHeaderStruct@TCampaignBrief@@QAEXHH@Z	100.
 customcampaign	?StartScenario@ScenarioStruct@TCampaignBrief@@QAEXPAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@H@Z	100.0000	100.0000	100.0000	0x884c0	1e966a01130f
 customcampaign	?Write@TStreamBufFile@@UAEHPBXH@Z	100.0000	100.0000	100.0000	0x83f30	651082a5fb27
 customcampaign	?_Destroy@?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@IAEXPAUtype_artifact@@0@Z	100.0000	100.0000	100.0000	0x4140	-
+customcampaign	?_Destroy@?$vector@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@V?$allocator@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@@2@@std@@IAEXPAV?$vector@Vhero@@V?$allocator@Vhero@@@std@@@2@0@Z	100.0000	100.0000	100.0000	0x8c5b0	-
 customcampaign	?_Sort@std@@YIXPAVhero@@0UCrossoverHeroStronger@@0@Z	100.0000	100.0000	100.0000	0x8f7e0	-
 customcampaign	?_Sort_0@std@@YIXPAVhero@@0UCrossoverHeroStronger@@0@Z	100.0000	100.0000	100.0000	0x8f2b0	-
 customcampaign	?_Ucopy@?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@IAEPAVhero@@PBV3@0PAV3@@Z	99.9286	99.9286	99.9286	0x8d8d0	-

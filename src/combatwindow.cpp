@@ -950,3 +950,11 @@ VA_COMPGEN(0x004734f0, 0x87, BASIC_STRING_FIND, char)
 
 // COMDAT pairing: _Freeze on the char instantiation, mnemonic agreement 0.927.
 VA_COMPGEN(0x00473580, 0x76, BASIC_STRING_FREEZE, char)
+
+// COMDAT pairing: vector<std::string*>::insert. Three addresses resemble the
+// pointer-element insert and the widget one is already claimed at 0x14d120
+// (lane 16, on the caller set); this is the string* instantiation, reached
+// from TCombatWindow::combat_message and from TCustomCampaignWindow's
+// LoadCampaignList - two different units, which a compiland-local look-alike
+// never is.
+VA_COMPGEN(0x00473600, 0x209, VECTOR_INSERT, string_ptr)

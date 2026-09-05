@@ -1424,3 +1424,7 @@ VA_COMPGEN(0x0048d970, 0x2C, VECTOR_UFILL, hero)
 // resemble the same COMDAT - advmgr 0x1ba90/0x1b7b0/0x1b920 at 354/361/367 B
 // and castle 0x60700 at 293 - and the size settles it.
 VA_COMPGEN(0x00487bd0, 0x160, CLASS_CTOR, out_of_range)
+
+// COMDAT pairing: vector<vector<hero>>::_Destroy - reached from game and from
+// two sites in this unit's own segment.
+VA_COMPGEN(0x0048c5b0, 0x53, VECTOR_DESTROY, hero_vector)
