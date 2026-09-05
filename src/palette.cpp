@@ -143,7 +143,12 @@ void TPalette16::Convert24to16(const unsigned char* p24, int rbits, int rshift,
 // 0.02 - VC6 canonicalises them). The byte cast IS a real lever, but only
 // in combination with the pointer-ADVANCING loop form, which is worse
 // overall: advance+cast measures 93.24/87.46 against subscript+no-cast's
-// 94.85/94.94.
+// 94.85/94.94.  Re-swept 2026-09-05 with the drop moved into three named
+// loop-invariant locals consumed by the shift (which is the shape retail
+// has): `unsigned char`/`char` x cast-the-difference / cast-the-parameter /
+// `= 8` then `-= bits` compound / interleaved declaration - all six land at
+// 81.15-81.18 and 81.71, well under the int form.  The 8-bit width is
+// therefore NOT reachable through the local's type here.
 VA(0x005226d0, 0x9D)  // dc-order-map + six-field conversion loop, dc 0x10a338
 TPalette16::TPalette16(const TPalette24* p24, int rbits, int rshift,
                        int gbits, int gshift, int bbits, int bshift)
@@ -170,17 +175,30 @@ TPalette16::TPalette16(const char* name, const TPalette24* p24,
 // in its field for any of the 555/565 layouts SetPixelFormat installs. The
 // three scales are hoisted; the three MASKS are re-read from their statics at
 // every use, two of them inside the loop.
-// Residual (88.72%): the four-block skeleton and the whole scale prologue
-// agree - red into ECX, green into ESI, blue into EDX, in that order - and
-// what is left is register/slot assignment inside the loop plus which mask
-// gets re-read where. Two levers were decisive and are recorded because both
-// contradict a standing note: (1) the three scale factors MUST be named
-// locals, 44.86 -> 75.99 - written inline in the expression VC6 refuses to
-// hoist them out of the loop, where retail computes all three once; (2) the
-// `|` operand order is NOT canonicalised here - five of the six orders sit at
-// exactly 75.99 and `blue | red | green` alone reaches 88.72. The masks
-// themselves stay unhoisted on purpose: retail re-reads green_mask and
-// blue_mask from their statics on every iteration.
+// Three levers are decisive and all three contradict a standing note:
+// (1) the three scale factors MUST be named locals, 44.86 -> 75.99 - written
+// inline in the expression VC6 refuses to hoist them out of the loop, where
+// retail computes all three once; (2) the `|` operand order is NOT
+// canonicalised here - five of the six orders sit at exactly 75.99/76.17 and
+// `blue | red | green` alone reaches the peak, re-measured on top of (3);
+// (3) DECLARATION ORDER: `dst` must be declared BEFORE `src`, 88.72 ->
+// 98.92 (2026-09-05). The two pointers compete for the dead `p24` parameter
+// home at [ebp+8], and retail spends that slot on the loop COUNTER while
+// keeping dst at [ebp-4]; declaring dst first is what hands the recycled
+// home to the counter instead of to dst. The masks themselves stay unhoisted
+// on purpose: retail re-reads green_mask and blue_mask from their statics on
+// every iteration.
+// Residual (98.92%): the loop evaluates green, blue, red where retail
+// evaluates red, blue, green, which also costs the induction pointer's bias
+// (our 0x1c with a [+1] first read against retail's 0x1d with [-1]). The
+// evaluation order is NOT reachable from the source here - measured and
+// rejected on top of the declaration fix: all six `|` permutations (76.17
+// except the kept one), per-channel named locals in retail's r/b/g order
+// (76.17), naming red alone (76.17), `+` for `|` (97.23), explicit
+// `blue | (red | green)` parenthesisation (98.92, byte-flat), `*dst++`
+// (98.92, byte-flat), an `unsigned` counter (98.92, byte-flat), advancing
+// src before dst (98.92, byte-flat), and biasing src by +1 with [-1]/[0]/[1]
+// subscripts to reproduce the 0x1d pointer directly (73.92).
 VA(0x00522810, 0xC6)  // dc-order-map + the three TPalette16 mask statics, dc 0x10a508
 TPalette16::TPalette16(const TPalette24* p24)
     : resource(0, RESOURCE_TYPE_NONE)
@@ -188,8 +206,8 @@ TPalette16::TPalette16(const TPalette24* p24)
     unsigned int red_scale = (red_mask + red_mask) & ~red_mask;
     unsigned int green_scale = (green_mask + green_mask) & ~green_mask;
     unsigned int blue_scale = (blue_mask + blue_mask) & ~blue_mask;
-    const unsigned char* src = p24->colors.data[0];
     unsigned short* dst = data;
+    const unsigned char* src = p24->colors.data[0];
     for (int index = 0; index < 256; ++index) {
         *dst = static_cast<unsigned short>(
             (((src[2] * blue_scale) >> 8) & blue_mask)
