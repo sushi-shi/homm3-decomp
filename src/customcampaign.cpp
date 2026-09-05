@@ -13,7 +13,9 @@
 #include "game.h"
 #include "campaignmap.h"
 #include "abstractfile.h"
+#include "artifact.h"
 #include "campaignbrief.h"
+#include "castle.h"
 #include "customcampaign.h"
 #include "customcampaign_legacy.h"
 #include "gzinflatebuf.h"
@@ -24,11 +26,13 @@
 #include "kb.h"
 #include "kbwin.h"
 #include "message.h"
+#include "misc.h"
 #include "prefs.h"
 #include "resourcemanager.h"
 #include "sample.h"
 #include "smackmgr.h"
 #include "soundmgr.h"
+#include "sskilltraits.h"
 #include "textresource.h"
 #include "town.h"
 #include "winmgr.h"
@@ -126,6 +130,470 @@ bool CrossoverHeroStronger::operator()(hero& lhs, hero& rhs) const
     if (leftValue != rightValue)
         return leftValue > rightValue;
     return lhs.id > rhs.id;
+}
+
+// --- the eight campaign start bonuses ---
+//
+// Every body below is one vftable slot of the hierarchy customcampaign.h
+// describes; they are emitted in the order retail has them, which is one
+// class at a time with the abstract root's two defaults falling between
+// the secondary-skill and resource groups.
+
+// COMDAT pairing: the root's scalar deleting destructor - the `mov
+// [esi], 0x63d938` in it is the same vftable restore the out-of-line
+// destructor at 0x485370 does, inlined.
+VA_COMPGEN(0x00484020, 0x23, SCALAR_DELETING_DTOR, TCampaignBonus)
+
+VA(0x00484050, 0x3D)  // anchor-vtable (0x63daa0+0x18 and 0x63da20+0x18), retail-only
+void TCampaignSpellBonus::Read(TAbstractFile* file)
+{
+    {
+        short heroId;
+        file->Read(&heroId, sizeof(short));
+        m_hero = heroId;
+    }
+    {
+        unsigned char spell;
+        file->Read(&spell, sizeof(unsigned char));
+        m_spell = spell;
+    }
+}
+
+VA(0x00484090, 0x6)  // anchor-string (SpellBon.def), retail-only
+const char* TCampaignSpellBonus::GetIconDefName() const
+{
+    return DATA_COMPGEN(0x00677248, spellBonusDefName, "SpellBon.def");
+}
+
+VA(0x004840a0, 0x25)  // anchor-vtable (0x63daa0+0x14), retail-only
+void TCampaignSpellBonus::Apply(int whichPlayer) const
+{
+    hero* target = GetCampaignBonusHero(m_hero, whichPlayer);
+    if (target != 0)
+        target->AddSpell(m_spell);
+}
+
+// The shared hero picker. `best` and the player record are both live
+// before the selector is tested, which is what puts them in the
+// prologue; numHeroes is re-read from the record on every pass.
+VA(0x004840d0, 0x155)  // anchor-callee (five bonus appliers), retail-only
+hero* GetCampaignBonusHero(int heroSelector, int whichPlayer)
+{
+    hero* best = 0;
+    playerData* player = &gpGame->players[whichPlayer];
+    switch (heroSelector) {
+    case CAMPAIGN_BONUS_HERO_STRONGEST: {
+        for (int iHero = 0; iHero < player->numHeroes; ++iHero) {
+            int heroId = player->heroes[iHero];
+            hero* candidate = heroId == -1 ? 0 : &gpGame->heroes[heroId];
+            if (best != 0) {
+                int bestTotal = best->get_primary_skill_total();
+                int bestSkills = 0;
+                int iSkill;
+                for (iSkill = 0; iSkill < 28; ++iSkill)
+                    bestSkills += best->skillLevel[iSkill];
+                int candidateTotal = candidate->get_primary_skill_total();
+                int candidateSkills = 0;
+                for (iSkill = 0; iSkill < 28; ++iSkill)
+                    candidateSkills += candidate->skillLevel[iSkill];
+                if (bestSkills + bestTotal >= candidateSkills + candidateTotal)
+                    continue;
+            }
+            best = candidate;
+        }
+        return best;
+    }
+    case CAMPAIGN_BONUS_HERO_FIRST:
+        if (player->numHeroes == 0)
+            return 0;
+        if (player->heroes[0] == -1)
+            return 0;
+        return &gpGame->heroes[player->heroes[0]];
+    case CAMPAIGN_BONUS_HERO_NONE:
+        return 0;
+    }
+    hero* chosen = &gpGame->heroes[heroSelector];
+    return chosen->owner == whichPlayer ? chosen : 0;
+}
+
+// The two spell rows share the general-text pair 708/709: the campaign
+// brief shows one for a learned spell and one for the scroll that
+// carries it.
+VA(0x00484230, 0x46)  // anchor-vtable (0x63daa0+0x10), retail-only
+std::string TCampaignSpellBonus::GetText() const
+{
+    return format_string(gpGeneralText->Text[708], akSpellTraits[m_spell].name);
+}
+
+VA(0x00484280, 0x46)  // anchor-vtable (0x63da20+0x10), retail-only
+std::string TCampaignSpellScrollBonus::GetText() const
+{
+    return format_string(gpGeneralText->Text[709], akSpellTraits[m_spell].name);
+}
+
+VA(0x004842d0, 0x3B)  // anchor-vtable (0x63da20+0x14), retail-only
+void TCampaignSpellScrollBonus::Apply(int whichPlayer) const
+{
+    hero* target = GetCampaignBonusHero(m_hero, whichPlayer);
+    if (target != 0) {
+        type_artifact scroll(ARTIFACT_SPELL_SCROLL, m_spell);
+        target->GiveArtifact(&scroll, 0, 0);
+    }
+}
+
+VA(0x004844f0, 0x51)  // anchor-vtable (0x63da80+0x18), retail-only
+void TCampaignCreatureBonus::Read(TAbstractFile* file)
+{
+    {
+        short value;
+        file->Read(&value, sizeof(short));
+        m_hero = value;
+        file->Read(&value, sizeof(short));
+        m_creature = value;
+    }
+    {
+        unsigned short count;
+        file->Read(&count, sizeof(unsigned short));
+        m_count = count;
+    }
+}
+
+VA(0x00484550, 0x6)  // anchor-string (twcrport.def), retail-only
+const char* TCampaignCreatureBonus::GetIconDefName() const
+{
+    return "twcrport.def";
+}
+
+VA(0x00484560, 0x7)  // anchor-vtable (0x63da80+0xc), retail-only
+int TCampaignCreatureBonus::GetIconIndex() const
+{
+    return m_creature + 2;
+}
+
+// Singular against plural on a count of exactly one, and an empty name
+// for any creature outside the 0..150 table.
+VA(0x00484570, 0x7A)  // anchor-vtable (0x63da80+0x10), retail-only
+std::string TCampaignCreatureBonus::GetText() const
+{
+    const char* name;
+    if (m_creature < 0 || m_creature > 150)
+        name = "";
+    else if (m_count == 1)
+        name = akCreatureTypeTraits[m_creature].m_name;
+    else
+        name = akCreatureTypeTraits[m_creature].m_plural_name;
+    return format_string(gpGeneralText->Text[718], m_count, name);
+}
+
+VA(0x004845f0, 0x24)  // anchor-vtable (0x63da60+0x18), retail-only
+void TCampaignBuildingBonus::Read(TAbstractFile* file)
+{
+    {
+        unsigned char building;
+        file->Read(&building, sizeof(unsigned char));
+        m_building = building;
+    }
+}
+
+VA(0x00484620, 0x3)  // anchor-vtable (0x63da60+4), retail-only
+bool TCampaignBuildingBonus::IsBuildingBonus() const
+{
+    return true;
+}
+
+VA(0x00484630, 0x17)  // anchor-vtable (0x63da60+8), retail-only
+const char* TCampaignBuildingBonus::GetIconDefName() const
+{
+    return gCampaignBuildingIconNames[m_town][m_building];
+}
+
+VA(0x004847a0, 0x3C)  // anchor-callee (GetBuildingName 0x4610e0), retail-only
+std::string TCampaignBuildingBonus::GetText() const
+{
+    const char* format = gpGeneralText->Text[708];
+    return format_string(format, GetBuildingName(m_town, m_building));
+}
+
+VA(0x004847e0, 0x22)  // anchor-vtable (0x63da60+0x1c), retail-only
+void TCampaignBuildingBonus::SetTown(int town)
+{
+    m_town = town;
+    m_building = gCampaignBuildingRemap[town][m_building];
+}
+
+VA(0x00484810, 0x6)  // anchor-string (ArtifBon.def), retail-only
+const char* TCampaignArtifactBonus::GetIconDefName() const
+{
+    return DATA_COMPGEN(0x00677258, artifactBonusDefName, "ArtifBon.def");
+}
+
+VA(0x00484820, 0x40)  // anchor-vtable (0x63da40+0x10), retail-only
+std::string TCampaignArtifactBonus::GetText() const
+{
+    return format_string(gpGeneralText->Text[708],
+                         akArtifactTraits[m_artifact].name);
+}
+
+VA(0x00484860, 0x3B)  // anchor-vtable (0x63da40+0x14), retail-only
+void TCampaignArtifactBonus::Apply(int whichPlayer) const
+{
+    hero* target = GetCampaignBonusHero(m_hero, whichPlayer);
+    if (target != 0) {
+        type_artifact granted(m_artifact, -1);
+        target->GiveArtifact(&granted, 0, 0);
+    }
+}
+
+VA(0x004848a0, 0x38)  // anchor-vtable (0x63da40+0x18), retail-only
+void TCampaignArtifactBonus::Read(TAbstractFile* file)
+{
+    short value;
+    file->Read(&value, sizeof(short));
+    m_hero = value;
+    file->Read(&value, sizeof(short));
+    m_artifact = value;
+}
+
+VA(0x004848e0, 0x6)  // anchor-string (PSkilBon.def), retail-only
+const char* TCampaignPrimarySkillBonus::GetIconDefName() const
+{
+    return DATA_COMPGEN(0x00677268, primarySkillBonusDefName, "PSkilBon.def");
+}
+
+// The frame is the strongest of the four deltas, and ties keep the FIRST:
+// the compare is `>` against a running best that starts at zero, so an
+// all-negative row still answers 0.
+VA(0x004848f0, 0x1E)  // anchor-vtable (0x63da00+0xc), retail-only
+int TCampaignPrimarySkillBonus::GetIconIndex() const
+{
+    int best = 0;
+    int bestValue = 0;
+    for (int iSkill = 0; iSkill < 4; ++iSkill) {
+        if (m_skills[iSkill] > bestValue) {
+            bestValue = m_skills[iSkill];
+            best = iSkill;
+        }
+    }
+    return best;
+}
+
+// The list of positive deltas, joined with ", " and a final " and ".
+// The running counter is decremented AFTER the row is appended, so it is
+// the number of rows still to come that picks the separator.
+VA(0x00484910, 0x275)  // anchor-vtable (0x63da00+0x10), retail-only
+std::string TCampaignPrimarySkillBonus::GetText() const
+{
+    std::string list;
+    int remaining = 0;
+    int iStat;
+    for (iStat = 0; iStat < 4; ++iStat)
+        if (m_skills[iStat] > 0)
+            ++remaining;
+    for (iStat = 0; iStat < 4; ++iStat) {
+        if (m_skills[iStat] > 0) {
+            list += format_string(
+                DATA_COMPGEN(0x00677278, primarySkillBonusFormat, "+%d %s"),
+                m_skills[iStat], gPrimarySkillNames[iStat]);
+            --remaining;
+            if (remaining == 1)
+                list += gpGeneralText->Text[142];
+            else if (remaining > 0)
+                list += ", ";
+        }
+    }
+    list = format_string(gpGeneralText->Text[708], list.c_str());
+    return list;
+}
+
+// Each delta is added to the CLAMPED current value: anything above 99
+// saturates there, a positive value is taken as it stands, and a
+// non-positive one falls back to the stat's own floor - zero for attack
+// and defence, one for power and knowledge.
+VA(0x00484b90, 0x5D)  // anchor-vtable (0x63da00+0x14), retail-only
+void TCampaignPrimarySkillBonus::Apply(int whichPlayer) const
+{
+    hero* target = GetCampaignBonusHero(m_hero, whichPlayer);
+    if (target != 0) {
+        for (int iStat = 0; iStat < 4; ++iStat) {
+            int current;
+            if (target->stats[iStat] > 99)
+                current = 99;
+            else if (target->stats[iStat] > 0)
+                current = target->stats[iStat];
+            else
+                current = iStat >= 2;
+            target->stats[iStat] = current + m_skills[iStat];
+        }
+    }
+}
+
+VA(0x00484bf0, 0x31)  // anchor-vtable (0x63da00+0x18), retail-only
+void TCampaignPrimarySkillBonus::Read(TAbstractFile* file)
+{
+    short heroId;
+    file->Read(&heroId, sizeof(short));
+    m_hero = heroId;
+    file->Read(m_skills, sizeof(m_skills));
+}
+
+VA(0x00484c30, 0x6)  // anchor-string (SSkilBon.def), retail-only
+const char* TCampaignSecondarySkillBonus::GetIconDefName() const
+{
+    return DATA_COMPGEN(0x00677280, secondarySkillBonusDefName, "SSkilBon.def");
+}
+
+VA(0x00484c40, 0xE)  // anchor-vtable (0x63d9e0+0xc), retail-only
+int TCampaignSecondarySkillBonus::GetIconIndex() const
+{
+    return m_skill * 3 + m_level - 1;
+}
+
+VA(0x00484c50, 0x4B)  // anchor-vtable (0x63d9e0+0x10), retail-only
+std::string TCampaignSecondarySkillBonus::GetText() const
+{
+    return format_string(gpGeneralText->Text[719],
+                         gSkillMasteryNamesBiased[m_level],
+                         akSSkillTraits[m_skill].name);
+}
+
+// A skill the hero does not have yet goes through GiveSS, which also
+// takes the free slot; an already-known one is written in place. Either
+// way a hero who is already better keeps what he has.
+VA(0x00484ca0, 0x4F)  // anchor-vtable (0x63d9e0+0x14), retail-only
+void TCampaignSecondarySkillBonus::Apply(int whichPlayer) const
+{
+    hero* target = GetCampaignBonusHero(m_hero, whichPlayer);
+    if (target != 0 && target->skillLevel[m_skill] <= m_level) {
+        if (target->skillLevel[m_skill] == 0)
+            target->GiveSS(m_skill, m_level);
+        else
+            target->skillLevel[m_skill] = m_level;
+    }
+}
+
+VA(0x00484cf0, 0x56)  // anchor-vtable (0x63d9e0+0x18), retail-only
+void TCampaignSecondarySkillBonus::Read(TAbstractFile* file)
+{
+    {
+        short heroId;
+        file->Read(&heroId, sizeof(short));
+        m_hero = heroId;
+    }
+    {
+        unsigned char value;
+        file->Read(&value, sizeof(unsigned char));
+        m_skill = value;
+        file->Read(&value, sizeof(unsigned char));
+        m_level = value;
+    }
+}
+
+VA(0x00484d50, 0x3)  // anchor-vtable (seven of the eight bonus vftables +4), retail-only
+bool TCampaignBonus::IsBuildingBonus() const
+{
+    return false;
+}
+
+VA(0x00484d60, 0x6)  // anchor-string (BoRes.def), retail-only
+const char* TCampaignResourceBonus::GetIconDefName() const
+{
+    return DATA_COMPGEN(0x00677290, resourceBonusDefName, "BoRes.def");
+}
+
+// The two negative selectors are the mixed rows: -3 takes frame 7 and
+// every other negative frame 8, which retail spells as a `setne` on -3
+// added to seven.
+VA(0x00484d70, 0x15)  // anchor-vtable (0x63d9c0+0xc), retail-only
+int TCampaignResourceBonus::GetIconIndex() const
+{
+    if (m_resource < 0)
+        return (m_resource != -3) + 7;
+    return m_resource;
+}
+
+// The mixed rows take their own general-text lines; the seven plain ones
+// take the shared resource-name table, and anything else leaves the name
+// null for format_string to print as an empty %s.
+VA(0x00484d90, 0x8E)  // anchor-vtable (0x63d9c0+0x10), retail-only
+std::string TCampaignResourceBonus::GetText() const
+{
+    const char* name = 0;
+    switch (m_resource) {
+    case WOOD:
+    case MERCURY:
+    case ORE:
+    case SULFUR:
+    case CRYSTAL:
+    case GEMS:
+    case GOLD:
+        name = gResourceNames[m_resource];
+        break;
+    case CAMPAIGN_BONUS_RESOURCE_WOOD_AND_ORE:
+        name = gpGeneralText->Text[722];
+        break;
+    case CAMPAIGN_BONUS_RESOURCE_RARE:
+        name = gpGeneralText->Text[723];
+        break;
+    case CAMPAIGN_BONUS_RESOURCE_NONE:
+        break;
+    }
+    return format_string(gpGeneralText->Text[718], m_amount, name);
+}
+
+// Every arm re-reads the amount out of the object; retail never keeps it
+// in a register across the four rare-resource stores.
+VA(0x00484e20, 0xDE)  // anchor-vtable (0x63d9c0+0x14), retail-only
+void TCampaignResourceBonus::Apply(int whichPlayer) const
+{
+    playerData* player = &gpGame->players[whichPlayer];
+    switch (m_resource) {
+    case WOOD:
+    case MERCURY:
+    case ORE:
+    case SULFUR:
+    case CRYSTAL:
+    case GEMS:
+    case GOLD:
+        player->resources[m_resource] += m_amount;
+        break;
+    case CAMPAIGN_BONUS_RESOURCE_WOOD_AND_ORE:
+        player->resources[WOOD] += m_amount;
+        player->resources[ORE] += m_amount;
+        break;
+    case CAMPAIGN_BONUS_RESOURCE_RARE:
+        player->resources[MERCURY] += m_amount;
+        player->resources[SULFUR] += m_amount;
+        player->resources[CRYSTAL] += m_amount;
+        player->resources[GEMS] += m_amount;
+        break;
+    case CAMPAIGN_BONUS_RESOURCE_NONE:
+        break;
+    }
+}
+
+VA(0x00484f00, 0x37)  // anchor-vtable (0x63d9c0+0x18), retail-only
+void TCampaignResourceBonus::Read(TAbstractFile* file)
+{
+    {
+        char resource;
+        file->Read(&resource, sizeof(char));
+        m_resource = resource;
+    }
+    {
+        int amount;
+        file->Read(&amount, sizeof(int));
+        m_amount = amount;
+    }
+}
+
+VA(0x00485370, 0x7)  // anchor-vtable (0x63d938+0), retail-only
+TCampaignBonus::~TCampaignBonus()
+{
+}
+
+VA(0x00485d80, 0x3)  // anchor-vtable (0x63d938+0x1c), retail-only
+void TCampaignBonus::SetTown(int)
+{
 }
 
 // Complete-only. The six string/vector/bitset members take their own
