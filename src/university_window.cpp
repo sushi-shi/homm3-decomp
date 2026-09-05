@@ -322,8 +322,46 @@ void type_university_window::set_selection_mode()
     selected_skill.skill = eSecSkillNone;
 }
 
+// E:\gamedcs\university_window.cpp:285. The unclaimed-in-span row between
+// the constructor (ends 0x5f0752) and DoModal (0x5f0a20), and the
+// Dreamcast's own next row in the same gap. The body names itself: it
+// takes the skill record by reference (`ret 4`, and reads +0/+4/+8/+0x10
+// of it), reads the hero's skillLevel row, the class traits' gain chance,
+// the skill count against 8, and finishes with the button's frame and
+// rollover text - the four rollover states of a university skill button.
+VA(0x005f0790, 0x284)  // link-order gap + record layout, dc 0x18f2f8
+void type_university_window::update_skill_button(type_university_skill& skill)
+{
+    std::string text;
+
+    if (current_hero->skillLevel[skill.skill] > 0) {
+        text = (*gpGeneralText)[605];
+        skill.top_bar->SetIconFrame(0);
+        skill.bottom_bar->SetIconFrame(0);
+    } else if (akHeroClasses[current_hero->heroClass]
+                   .gainSecondarySkillChance[skill.skill] == 0) {
+        text = (*gpGeneralText)[606];
+        skill.top_bar->SetIconFrame(2);
+        skill.bottom_bar->SetIconFrame(2);
+    } else if (current_hero->skillCount == MAX_SECONDARY_SKILLS) {
+        text = (*gpGeneralText)[607];
+        skill.top_bar->SetIconFrame(2);
+        skill.bottom_bar->SetIconFrame(2);
+    } else {
+        text = format_string((*gpGeneralText)[608], gSkillMasteryNames[0],
+                             akSSkillTraits[skill.skill].name, TUITION);
+        if (skill.top_bar)
+            skill.top_bar->SetIconFrame(1);
+        if (skill.bottom_bar)
+            skill.bottom_bar->SetIconFrame(1);
+    }
+    skill.button->SetIconFrame((skill.skill + 1) * 3);
+    skill.button->set_help_text(text.c_str(), 0, 1);
+}
+
 // E:\gamedcs\university_window.cpp:344
 VA(0x005f0a20, 0x92)  // modal call sites + inlined selection helper, dc 0x18f508
+
 int type_university_window::DoModal(unsigned char bFade)
 {
     set_selection_mode();
@@ -331,6 +369,74 @@ int type_university_window::DoModal(unsigned char bFade)
 }
 
 // E:\gamedcs\university_window.cpp:419
+// E:\gamedcs\university_window.cpp:354. The second unclaimed-in-span row,
+// between DoModal (ends 0x5f0ab2) and handle_widget_hover, and the
+// Dreamcast's own next row in that gap. Its first three arms are
+// update_skill_button's first three, arm for arm and text row for text
+// row - the same skillLevel / gainSecondarySkillChance / skillCount
+// ladder - which is what identifies it; past them it switches the window
+// into purchase mode.
+//
+// `help_text` is declared, constructed and destroyed WITHOUT EVER BEING
+// ASSIGNED - the Dreamcast source at line 391 assigns it, Complete reuses
+// new_text at that site instead and left the local behind. Retail's own
+// default constructor and scope-exit destructor for it are in the bytes;
+// transcribed, not invented.
+VA(0x005f0ac0, 0x2F2)  // link-order gap + shared arm ladder, dc 0x18f52c
+void type_university_window::skill_click(TSecondarySkill skill)
+{
+    std::string help_text;
+    unsigned int i;
+
+    if (current_hero->skillLevel[skill] > 0) {
+        NormalDialog((*gpGeneralText)[605], NORMAL_DIALOG_DEFAULT, -1, -1,
+                     -1, 0, -1, 0, -1, 0, -1, 0);
+        return;
+    }
+    if (akHeroClasses[current_hero->heroClass]
+            .gainSecondarySkillChance[skill] == 0) {
+        NormalDialog((*gpGeneralText)[606], NORMAL_DIALOG_DEFAULT, -1, -1,
+                     -1, 0, -1, 0, -1, 0, -1, 0);
+        return;
+    }
+    if (current_hero->skillCount == MAX_SECONDARY_SKILLS) {
+        NormalDialog((*gpGeneralText)[607], NORMAL_DIALOG_DEFAULT, -1, -1,
+                     -1, 0, -1, 0, -1, 0, -1, 0);
+        return;
+    }
+
+    for (i = 0; i < selection_widgets.size(); i++)
+        selection_widgets[i]->hide();
+    for (i = 0; i < purchase_widgets.size(); i++)
+        purchase_widgets[i]->show();
+
+    std::string new_text;
+    const char* skillName = akSSkillTraits[skill].name;
+
+    new_text = format_string((*gpGeneralText)[609], gSkillMasteryNames[0],
+                             skillName, TUITION);
+    selected_skill.skill = skill;
+    selected_skill.button->set_skill(skill, 1);
+    selected_skill.text_widget->SetText(skillName);
+    purchase_text_widget->SetText(new_text.c_str());
+    new_text = format_string((*gpGeneralText)[610], skillName);
+    purchase_button->set_help_text(new_text.c_str(), 0, 1);
+    update_skill_button(selected_skill);
+    purchase_button->enable(
+        current_hero->get_player()->resources[GOLD] >= TUITION);
+    DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+}
+// Residual (98.3269%): one register role. Retail loads
+// selected_skill.button into EAX and stores the two button fields
+// through it; the inline set_skill call makes it the member call's
+// `this` and our compile keeps it in ECX, which renames the two stores
+// and the text-widget load that follows. Tried and rejected: a named
+// `type_university_skill_button* button` local (byte-flat at 98.3269)
+// and moving `selected_skill.skill = skill` below the set_skill call
+// (98.2560). Naming the skill string is what bought the 5.9 before it -
+// retail computes akSSkillTraits[skill].name ONCE into EDI and pushes
+// that register at all three sites (92.4767 -> 98.3269).
+
 // Identified by shape: heroWindow slot 4 (one widget* argument, `ret 4`),
 // reading widget::RollOver at +0x20 and dispatching slot 13
 // (textWidget::SetText) through the +0x70 rollover pointer before a
