@@ -18573,7 +18573,7 @@ VA_COMPGEN(0x0045c200, 0x53E, TREE_ERASE_ITERATOR, type_map_hero_info)
 // with 0x91 (145). The claim therefore moves here: game.obj and rmg.obj are
 // the only two that emit `?_Xran@?$bitset@$0IB@@`, customcampaign.obj does
 // not emit it at all.
-VA_COMPGEN(0x0048edf0, 0xC8, BITSET_XRAN, Bitset129)
+VA_COMPGEN(0x0048edf0, 0xCB, BITSET_XRAN, Bitset129)
 
 // COMDAT pairing: vector<vector<hero>>::operator=, decided by its own callee
 // list: it calls the vector<hero>::operator= claimed at 0x5ff30, which is

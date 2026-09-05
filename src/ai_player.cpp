@@ -9249,13 +9249,13 @@ VA_COMPGEN(0x00435240, 0x4E, STD_MEDIAN, type_creature_value_greater)
 // COMPARE in each caller can. Every caller of 0x346d0 guards the call with
 // `cmp <reg>, 0x90`, and one of them is the already-claimed
 // bitset<144>::set at 0x4cf9a0.
-VA_COMPGEN(0x004346d0, 0xC8, BITSET_XRAN, Bitset144)
+VA_COMPGEN(0x004346d0, 0xCB, BITSET_XRAN, Bitset144)
 
 // COMDAT pairing: bitset<9>::_Xran, by the same bound-compare lever: all four
 // callers of 0x34ad0 guard with `cmp <reg>, 0x9`, among them armygrp's
 // claimed bitset<9>::set (0x44c680) and bitset<9>::reference::operator=
 // (0x44c610).
-VA_COMPGEN(0x00434ad0, 0xC8, BITSET_XRAN, Bitset9)
+VA_COMPGEN(0x00434ad0, 0xCB, BITSET_XRAN, Bitset9)
 
 // COMDAT pairing: std::_Unguarded_insert<type_creature_value>. The ARITY
 // pins the instantiation: type_creature_value is 12 B (TCreatureType, long,
