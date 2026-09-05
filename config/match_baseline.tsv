@@ -1204,6 +1204,8 @@ customcampaign	?_Ucopy@?$vector@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@
 customcampaign	?_Ucopy@?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@IAEPAVhero@@PBV3@0PAV3@@Z	100.0000	100.0000	100.0000	0x8d440	-
 customcampaign	?_Ufill@?$vector@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@V?$allocator@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@@2@@std@@IAEXPAV?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@2@IABV32@@Z	100.0000	100.0000	100.0000	0x8d910	-
 customcampaign	?_Ufill@?$vector@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@V?$allocator@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@@2@@std@@IAEXPAV?$vector@Vhero@@V?$allocator@Vhero@@@std@@@2@IABV32@@Z	100.0000	100.0000	100.0000	0x8d8a0	-
+customcampaign	?_Unguarded_insert@std@@YIXPAVhero@@V2@UCrossoverHeroStronger@@@Z	75.6322	75.6322	75.6322	0x8f940	-
+customcampaign	?_Unguarded_partition@std@@YIPAVhero@@PAV2@0V2@UCrossoverHeroStronger@@@Z	75.8913	75.8913	75.8913	0x8fc20	-
 customcampaign	?_Xran@?$bitset@$07@std@@ABEXXZ	100.0000	100.0000	100.0000	0x8da70	-
 customcampaign	?_Xran@?$bitset@$0JB@@std@@ABEXXZ	100.0000	100.0000	100.0000	0x8d9a0	-
 customcampaign	?_slot7@TCampaignStartOption@@UBEHH@Z	100.0000	100.0000	100.0000	0x85090	1c2746dad99c

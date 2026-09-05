@@ -2432,6 +2432,16 @@ VA_COMPGEN(0x0048f7e0, 0x159, STD_SORT, hero_crossoverherostronger)
 // COMDAT pairing: std::_Sort_0<hero, CrossoverHeroStronger>, agreement 0.985.
 VA_COMPGEN(0x0048f2b0, 0x333, STD_SORT_0, hero_crossoverherostronger)
 
+// Two more members of the same sort instantiation, and 0x48f940 CORRECTS
+// the HD name map, which calls it `TDialogBox::TDialogBox`: it takes a
+// `hero` BY VALUE (`ret 0x498` = the 0x492 record padded to 0x494 plus
+// the empty predicate), walks BACKWARDS with `sub edi,0x492`, expands the
+// CrossoverHeroStronger compare inline at every step and finishes with one
+// `hero::operator=` - which is Dinkumware's _Unguarded_insert verbatim and
+// has nothing to do with dialogbox.obj.
+VA_COMPGEN(0x0048f940, 0xF4, STD_UNGUARDED_INSERT, hero_crossoverherostronger)
+VA_COMPGEN(0x0048fc20, 0x195, STD_UNGUARDED_PARTITION, hero_crossoverherostronger)
+
 // COMDAT pairing: bitset<145>::_Xran and bitset<8>::_Xran. Five byte-identical
 // `_Xran` bodies survive in the image, so the discriminator is the BOUND
 // COMPARE in each caller: 0x8d9a0's four callers all guard with `cmp <reg>,
