@@ -395,6 +395,39 @@ void TCampaignBrief::ScenarioStruct::MarkCrossoverHeroes(unsigned char* wanted)
 // inflating stream. Its first two operations are already read out of the
 // bytes: `name = ReadLengthPrefixedString(infile)` and a four-byte read into
 // inflated_size (+0x14).
+//
+// DECODED 2026-09-05, and the whole blocker is the TAIL. The body's shape:
+//   * name = ReadLengthPrefixedString(infile)  (0x485d90, returns by value,
+//     assigned through basic_string::assign then _Tidy'd);
+//   * infile->Read(&inflated_size, 4) through the TAbstractFile vtable
+//     slot 1 ([edx+4] - every stream read below is that same slot);
+//   * a prerequisite BITMASK of (numScenarios + 7) / 8 bytes, read into one
+//     dword and unpacked with `1 << i` / setne into a vector<bool>-ish
+//     member at +0x18 (0x8bf00 is the push_back);
+//   * three bitset planes assigned through
+//     bitset<0x1b>/<0x1a>/<0x19>::reference::operator= (0x8ea60, 0x8e9f0,
+//     0x8ead0) off bitset<0x1b>::operator[] (0xcef80) - the 0x81-bounded
+//     walk at 0x1e88 is the last of them, copying five dwords out of a
+//     [ebp-0x4c] temp into [ebp-0x60] first;
+//   * then ONE byte read (0x1dde) whose `dec/je` chain is a three-case
+//     switch selecting the scenario's START OPTIONS record.
+//
+// The switch is the blocker, and it needs THREE Complete-only classes over
+// FOUR vtables - a 13-slot base at 0x63d958 (0x34 B) and one concrete
+// vtable each:
+//   case 1 -> operator new(0x18), base vtable, a std::string constructed at
+//             +8 (0x5157d0), then the concrete vtable 0x63d98c;
+//   case 2 -> operator new(0x14), base vtable, a std::string at +4, then the
+//             concrete vtable 0x63dad8;
+//   case 3 -> operator new(0x14) and the out-of-line constructor 0x4883d0,
+//             which stores a byte at +4, zeroes +8/+0xc/+0x10 and installs
+//             the concrete vtable 0x63db0c;
+//   default -> the member stays null.
+// The result lands in this->field_a4 (+0xa4) and the function ends by
+// calling ITS vtable slot 9 ([vtbl+0x24]) with the stream - the record's own
+// Read. So the remaining work is modelling those three classes and slot 9;
+// everything above the switch is ordinary reconstruction against members
+// this file already names.
 VA(0x00487e40, 0x586)  // anchor-caller(CampaignHeaderStruct::Load +0x379), retail-only
 void TCampaignBrief::ScenarioStruct::Read(TAbstractFile* infile,
                                           int numScenarios,
