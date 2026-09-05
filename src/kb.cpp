@@ -218,6 +218,38 @@ void PollSound()
     }
 }
 
+// E:\gamedcs\kb.cpp:431
+// The twelve manager singletons, in allocation order. Identified from the
+// body rather than from link order: retail's row here `new`s executive,
+// inputManager, mouseManager, heroWindowManager, soundManager,
+// highScoreManager, game, advManager, combatManager, townManager,
+// searchArray and the AI turn driver into their .bss slots, which is
+// exactly the Dreamcast InitMainClasses. The unwind states 0..0xb are one
+// per `new`, and that EH frame is why /Ob2 leaves the body out of line:
+// its single caller (EarlySetup) has no EH frame of its own, and VC6 will
+// not expand a callee that introduces EH state into a caller that has none.
+//
+// Residual (99.99%): ONE immediate - `push 0x4e7cc` against retail's
+// `push 0x4e7d0` for the `game` allocation. Our `class game` model is four
+// bytes short of retail's object; the note beside its last member records
+// the measurement. Every other allocation size and every block matches.
+VA(0x004edb40, 0x256)  // anchor-callee (EarlySetup) + twelve ctor calls, dc 0xdf4e4
+void InitMainClasses()
+{
+    gpExecutive = new executive;
+    gpInputManager = new inputManager;
+    gpMouseManager = new mouseManager;
+    gpWindowManager = new heroWindowManager;
+    gpSoundManager = new soundManager;
+    gpHighScoreManager = new highScoreManager;
+    gpGame = new game;
+    gpAdvManager = new advManager;
+    gpCombatManager = new combatManager;
+    gpTownManager = new townManager;
+    gpSearchArray = new searchArray;
+    gpUnnamed69928c = new CAITurnDriver69928c;
+}
+
 // E:\gamedcs\kb.cpp:722
 // The credits crawl over the closing video: the 328x580 window at
 // (460,10) is saved, the whole text is rendered once into an off-screen
@@ -320,17 +352,6 @@ stop_credits:
 
 #if 0  // @carcass
 
-
-// E:\gamedcs\kb.cpp:431
-// Located by exhaustive order-mapping of the six carve rows after
-// PollSound onto the six DC kb.cpp functions PollSound..oldmain
-// (492->1256 B: the WinCE build strips the Win32 menu loading that
-// gives the retail body its LoadMenuA call). WinMain's first gate.
-// RETAIL_LOCATED(0x004ed650, 0x4E8)  // linkorder, dc 0xdf4e4
-int InitMainClasses()
-{
-    // @stub
-}
 
 // E:\gamedcs\kb.cpp:553
 DC_ONLY(0xdf840, 0x12)

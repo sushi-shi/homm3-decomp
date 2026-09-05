@@ -253,7 +253,13 @@ void __fastcall get_quickview_size(const char* text, int* width,
                                    int* height);                 // 0x4f62a0
 // Located kb.cpp bodies kbwin's WinMain / AppWndProc call (bodies not
 // yet reconstructed; the declarators match the kbwin call sites).
-int InitMainClasses();                                   // 0x4ed650
+// WinMain's first gate. The retail row at 0x4ed650 is the Dreamcast
+// EarlySetup - it guards on bEarlySetupDone, calls InitMainClasses,
+// GetDesktopInfo, ReadPrefs/WritePrefs, ResourceManager::SetPath/Open and
+// then the whole LoadGameData table run - NOT InitMainClasses, whose own
+// body is the twelve manager `new`s at 0x4edb40.
+int EarlySetup();                                        // 0x4ed650
+void InitMainClasses();                                  // 0x4edb40
 int oldmain();                                           // 0x4ee3e0
 // Positive Dreamcast kb.cpp boundaries used by oldmain. Their retail
 // implementations are being admitted separately; keeping the declarations
