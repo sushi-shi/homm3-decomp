@@ -782,8 +782,15 @@ std::string TCampaignBrief::CampaignHeaderStruct::GetCampaignDescription() const
 VA_COMPGEN(0x0045a7a0, 0x1A3, CLASS_CTOR, NewSMapHeader)
 VA_COMPGEN(0x0045a990, 0x119, CLASS_CTOR, CMapHeaderData)
 VA_COMPGEN(0x0045aab0, 0xCC, IMPLICIT_DTOR, CMapHeaderData)
-VA_COMPGEN(0x0045ab80, 0x9B, IMPLICIT_DTOR,
-           CMapHeaderData_TPlayerSlotAttributes)
+// The owner token has to be the class the DEMANGLER produces from the
+// emitted symbol - `??1TPlayerSlotAttributes@CMapHeaderData@@QAE@XZ` keys as
+// `tplayerslotattributes_tplayerslotattributes@dtor`, with no enclosing-class
+// prefix - so the qualified spelling this row carried left it unpaired at
+// 0.0000. The slot record's DEFAULT CONSTRUCTOR at 0x45a950 stays unclaimed
+// for a related reason: our object emits both the default and the copy
+// constructor under one key while retail retained only the default, and the
+// model pairs a claim group only when the two counts agree.
+VA_COMPGEN(0x0045ab80, 0x9B, IMPLICIT_DTOR, TPlayerSlotAttributes)
 VA_COMPGEN(0x0045ac20, 0xD2, CLASS_CTOR, SGameSetupOptions)
 
 // Dreamcast attributes this retained destructor to campaignbrief.cpp:192,
