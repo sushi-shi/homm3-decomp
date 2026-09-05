@@ -868,6 +868,16 @@ inline void CNewPlayerUpdateProc::RequestConfirmation()
 // retail now have 10 branches and 3 returns; two symbolic branch targets
 // still differ around the derived loop's exhaustion/teardown placement.
 // E:\gamedcs\singleselectionwindow.cpp:1282
+// Residual (71.8957%): identical instruction for instruction; two branches
+// land on a different block. Retail's back edge re-enters INSIDE the loop,
+// past the header-count guard - i.e. its first `m_nextHeader >= size()` test
+// runs once, as a pre-loop guard, and only the bottom copy is in the loop.
+// MEASURED and rejected three ways: the guard lifted above a `for` with the
+// tail written inline (48.64), lifted above the same `for` keeping the goto
+// tail layout (48.64), and lifted above a `do { } while (++k < 5)` (43.78).
+// All three reproduce retail's TOPOLOGY and lose 23-28 points to block
+// LAYOUT, so the shape below is a local maximum: keep the guard as the
+// loop's first statement and let the two branch targets differ.
 VA(0x00577DE0, 0x228)  // anchor-vtable vtbl 0x641d38 slot1 - the slot WindowHandler's inlined Man::Tick dispatches; Complete-only override shaped from the Dreamcast base Tick at 0x148130
 void t_map_list_update::Tick()
 {
@@ -1580,18 +1590,16 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
 
     if ((!m_flag64 && !m_flag65) || (m_flag64 && IsMultiPlayer())) {
         CreateFilterWidgets();
-        textButton* t;
         if (m_flag64)
-            t = new textButton(
+            Widgets.push_back(new textButton(
                 414, 81, 200, 20, 128, "gspbutt.def",
                 gpGeneralText->GetText(656), "smalfont.fnt",
-                0, 1, 0, 31, 2, font::WHITE);
+                0, 1, 0, 31, 2, font::WHITE));
         else
-            t = new textButton(
+            Widgets.push_back(new textButton(
                 414, 81, 200, 20, 128, "gspbutt.def",
                 gpGeneralText->GetText(501), "smalfont.fnt",
-                0, 1, 0, 31, 2, font::WHITE);
-        Widgets.push_back(t);
+                0, 1, 0, 31, 2, font::WHITE));
         Widgets.push_back(new textButton(
             414, 509, 200, 20, 129, "gspbutt.def",
             gpGeneralText->GetText(502), "smalfont.fnt",
