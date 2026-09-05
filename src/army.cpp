@@ -7547,3 +7547,15 @@ VA_COMPGEN(0x00448d70, 0x3D, VECTOR_CLEAR, army)
 
 // COMDAT pairing: deque<int>::iterator::operator+=, agreement 0.935.
 VA_COMPGEN(0x004491c0, 0x69, DEQUE_ITERATOR_ADD_ASSIGN, int)
+
+// COMDAT pairing: vector<army*>::erase(first, last), agreement 1.000. The
+// object emits two erase arms keyed here (54 B and 51 B); only this one has
+// the carve extent.
+VA_COMPGEN(0x00448d30, 0x36, VECTOR_ERASE, army)
+
+// COMDAT pairing: deque<int>::iterator::operator++ and ::operator--, both
+// 51 bytes and byte-identical apart from the step they add - 0x449230 adds
+// +4 and 0x449270 adds -4 (materialized as 0xfffffffc), which is the whole
+// difference between the two bodies on our side as well.
+VA_COMPGEN(0x00449230, 0x33, DEQUE_ITERATOR_INC, int)
+VA_COMPGEN(0x00449270, 0x33, DEQUE_ITERATOR_DEC, int)

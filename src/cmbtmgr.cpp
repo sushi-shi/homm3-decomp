@@ -5524,3 +5524,15 @@ void std::__destroy_aux()
 // COMDAT pairing: combatManager::TObstacleVector::_Ucopy - the hand-modelled
 // obstacle container's uninitialised copy, `ret 0xc` for its three pointers.
 VA_COMPGEN(0x0046b1a0, 0x3B, VECTOR_UCOPY, tobstaclevector)
+
+// COMDAT pairing: combatManager::TObstacleVector::size, the hand-modelled
+// container's in-class inline. Not a std::vector member and not confusable
+// with one - it reads `begin` at +4 and `end` at +8 (there is a member ahead
+// of them) and guards the subtraction with `begin == 0`, which is the
+// header's own `begin == 0 ? 0 : end - begin` and nothing else in the image.
+// The 24-byte element stride of the reciprocal divide is TObstacle's.
+VA_COMPGEN(0x00517750, 0x21, VECTOR_SIZE, TObstacleVector)
+
+// COMDAT pairing: combatManager::TObstacleVector::_Ufill, the sibling of the
+// already-claimed _Ucopy, agreement 1.000 at an exactly equal 49-byte extent.
+VA_COMPGEN(0x0046b1e0, 0x31, VECTOR_UFILL, TObstacleVector)
