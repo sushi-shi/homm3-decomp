@@ -1752,6 +1752,7 @@ game	?Init@playerData@@QAEXXZ	100.0000	100.0000	100.0000	0xb9e20	6dd90c6055e4
 game	?InitImmMouse@@YIEPAX0@Z	100.0000	100.0000	100.0000	0xb6890	ed8007106de9
 game	?InitRandomArtifacts@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc0aa0	9f9d15a20f6e
 game	?Initialize@generator@@QAEXJ@Z	100.0000	100.0000	100.0000	0xb8860	1ee700bca0e7
+game	?InitializeRandomTavernText@@YIEXZ	100.0000	100.0000	100.0000	0xb8410	6a1df78c4bc2
 game	?InsertObject@game@@QAEXHHHHHH@Z	100.0000	100.0000	100.0000	0xc9890	f40fa915015d
 game	?IsHuman@game@@QBE_NH@Z	100.0000	100.0000	100.0000	0xce940	7959d8bc7ecf
 game	?IsHuman@playerData@@QBE_NXZ	100.0000	100.0000	100.0000	0xbada0	69ff836b3c81
