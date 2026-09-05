@@ -1187,3 +1187,25 @@ void DeleteAnimHeaders()
 }
 
 #endif  // @carcass
+
+// COMDAT pairing: basic_string<char>::append(size_t, char) - the fill form,
+// which the mangled suffix `@ID@Z` separates from the already-modelled
+// pointer form `@PBDI@Z`. Agreement 0.994 here against 0.834 for the
+// pointer-form objects, so the suffix and the score agree.
+VA_COMPGEN(0x004b5f40, 0xCF, BASIC_STRING_APPEND_COUNT, char)
+
+// COMDAT pairing: basic_string<char>::assign(size_t, char) - `ret 8` for its
+// two stack arguments, against the `@ABV12@II@Z` form's three and the
+// `@PBDI@Z` form's two pointers. smackmgr.obj emits exactly these two assign
+// overloads and the other is claimed at 0x4860.
+VA_COMPGEN(0x0051a780, 0xBC, BASIC_STRING_ASSIGN_COUNT, char)
+
+// COMDAT pairing: basic_string<char>::operator[](size_t), `ret 4`.
+VA_COMPGEN(0x0051a840, 0x98, BASIC_STRING_SUBSCRIPT, char)
+
+// COMDAT pairing: basic_string<char>::basic_string(const basic_string&).
+// smackmgr.obj emits exactly ONE string constructor, so the ctor group has a
+// single member and binds directly - no zip to get wrong. `ret 4` matches the
+// one reference argument, and the callers span customcampaign, game (twice),
+// this unit and three further segments.
+VA_COMPGEN(0x00460700, 0x125, CLASS_CTOR, basic_string)

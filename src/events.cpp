@@ -9257,3 +9257,7 @@ VA_COMPGEN(0x004af500, 0x4D, VECTOR_DESTROY, string)
 
 // COMDAT pairing: vector<std::string>::~vector, agreement 0.950.
 VA_COMPGEN(0x004af2c0, 0x6B, VECTOR_DTOR, string)
+
+// COMDAT pairing: vector<std::string>::_Ucopy (thiscall, three pointer
+// arguments, `ret 0xc`).
+VA_COMPGEN(0x004af800, 0x38, VECTOR_UCOPY, string)
