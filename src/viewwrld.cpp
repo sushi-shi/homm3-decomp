@@ -1203,6 +1203,21 @@ void advManager::VWDrawGround(int srcX, int srcY, int z, int destX, int destY)
 // adds the two address-taken surface/underground controls. Retail corroborates
 // every revised row through the 45 operator-new EH states and constructor-call
 // stream. The ViewWorld caller's adjacent stack local proves sizeof(*this)=0x78.
+// Residual (96.4425%) PRICED AS CALLER MASS, polish 16, and the direction is
+// DOWN.  The visible defect is an UNDER-inline: at the first two widget sites
+// retail expands `vector<widget*>::push_back` into its `insert(_Last, 1, x)`
+// call (`push edx / push 1 / push eax`) where this compile CALLS the
+// out-of-line `push_back` COMDAT with one argument, which is the /Ob2
+// `budget / sites-remaining` quotient starving the EARLIEST sites. The
+// textbook fix is to grow caller_cb, and it does not work here: an `if (0)`
+// carrier after `Widgets.reserve(NWIDGETS)` - the measuring instrument, not a
+// fix, and deliberately not shipped - gives
+//   N = 1,2,3,5 -> 96.30 | 10 -> 96.09 | 20 -> 90.59 | 30 -> 90.31 |
+//   40 -> 84.95
+// monotone down with no plateau anywhere, so more mass over-inlines faster
+// than it recovers push_back. The lever this body wants is the numerator from
+// the other side (SHRINK the caller), and the Dreamcast roster names no helper
+// to lift these blocks into, so it is out of reach without invented source.
 VA(0x005fa600, 0x1726)  // caller stack extent + vtable 0x643c54, dc 0x1952b8
 TViewWorldWindow::TViewWorldWindow()
     : CAdvPopup(0, 0, 800, 600, 0)
