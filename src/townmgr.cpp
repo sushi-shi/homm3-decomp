@@ -1407,6 +1407,15 @@ inline townObject::~townObject()
 // strength reduction retail keeps).
 
 // E:\gamedcs\townmgr.cpp:2897
+// 2026-09-06: the WIDGET_SET_STATUS message writes `extra` BEFORE `codeY`.
+// Retail emits `[ebp-0x2c]=5 / [ebp-0x18]=0x1000 / [ebp-0x28]=0x9a`; every
+// other message block in this body writes codeY then extra and already
+// agreed, so the order is a fact of this one block.  Worth only +0.0082 in
+// score (the two stores are the same bytes transposed) but it moves the
+// first byte-level divergence from fn+0x134 to fn+0x499.
+// Residual (98.1038%): pure schedule in the strip-setup tail - retail hoists
+// `mov eax,-2` and `lea edi,[ebx+0x40]` above the three `esi` stores where
+// this compile issues them after; the instruction multiset is identical.
 VA(0x005c6870, 0x59F)  // anchor-caller(Open 0x5c63c0 + Main) + anchor-callee(UnloadTown/NewStrips/RedrawTownScreen) + anchor-string %sBack.pcx, dc 0x16bba4
 void townManager::SetupTown(unsigned char fade)
 {
@@ -1440,8 +1449,8 @@ void townManager::SetupTown(unsigned char fade)
     TownWindow->BroadcastMessage(&msg);
 
     msg.codeX = widget::WIDGET_SET_STATUS;
-    msg.codeY = 154;
     msg.extra = widget::WIDGET_DIMMED_NODRAW;
+    msg.codeY = 154;
     TownWindow->BroadcastMessage(&msg);
 
     gpGame->GetLocalPlayer();
