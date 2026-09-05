@@ -225,37 +225,204 @@ void VWDrawSprite(CSprite* srcIcon, NewmapCell* thisCell, int frame, int x, int 
                   gpWindowManager->screenBitmap, x, y, false, true);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\viewwrld.cpp:265
+// advManager::DrawHeroPart's view-world twin. Same five sprite rows in the
+// same order - the three boat rows behind the ON_BOAT flag, the flag and
+// class rows otherwise - drawn into memoryBuffer at (0,0) instead of the
+// screen bitmap, so baseX/baseY go unread. Two differences are retail's and
+// not the full-size renderer's: the cell lookup is a bare GetCell (no
+// invalid-point arm), and the else arm carries NO owner range guard.
+//
+// Residual (98.2385%, both twins to the digit): the SAME nine-byte spill
+// advmgr's DrawHeroPart/DrawHeroPartShadow carry at 98.1840 - at the third
+// sprite row our CL lands the inlined GetNumFrames divisor in a recycled
+// parameter home (`mov [ebp+N],ecx` / `mov [ebp+N],0`) where retail keeps it
+// in ECX (`xor ecx,ecx`). 27 of 28 blocks exact, 13/13 branches, identical
+// call multiset. The four bodies are a free in-compile A/B for that wall.
 VA(0x005f7500, 0x3F7)  // exhaustive dc-order-map inside the VWDrawAdvObj bracket, dc 0x19308c
 void advManager::VWDrawHeroPart(int part, TDrawParts& heroParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
 {
-    // @stub
+    hero* currHero = gpGame->GetHero(heroParts.id);
+
+    int HeroCellY = part % 3;
+    int HeroCellX = part / 3;
+
+    if (currHero->flags & 0x40000) {
+        boat* currBoat = gpGame->GetHeroBoat(currHero->id, true);
+        NewmapCell* heroCell = GetCell(currHero->get_location());
+
+        if (!(heroCell->flags_00_11 & 0x200)) {
+            boatFrothIcons[currBoat->type]->DrawHero(
+                currHero->GetStandSequence(),
+                animFrame
+                    % boatFrothIcons[currBoat->type]->GetNumFrames(hs_stand_n),
+                tilex + (2 - HeroCellY) * 32,
+                tiley - HeroCellX * 32 + 32, tilew, tileh,
+                memoryBuffer, 0, 0,
+                currHero->GetHflip());
+        }
+
+        boatFlagIcons[currBoat->type][currBoat->playerOwner]->DrawHero(
+            currHero->GetStandSequence(),
+            animFrame % boatFlagIcons[currBoat->type][currBoat->playerOwner]
+                                ->GetNumFrames(hs_stand_n),
+            tilex + (2 - HeroCellY) * 32,
+            tiley - HeroCellX * 32 + 32, tilew, tileh,
+            memoryBuffer, 0, 0,
+            currHero->GetHflip());
+
+        boatIcons[currBoat->type]->DrawHero(
+            currHero->GetStandSequence(),
+            animFrame
+                % boatIcons[currBoat->type]->GetNumFrames(hs_stand_n),
+            tilex + (2 - HeroCellY) * 32,
+            tiley - HeroCellX * 32 + 32, tilew, tileh,
+            memoryBuffer, 0, 0,
+            currHero->GetHflip());
+    } else {
+        flagIcons[currHero->owner]->DrawHero(
+            currHero->GetStandSequence(),
+            animFrame % flagIcons[currHero->owner]->GetNumFrames(hs_stand_n),
+            tilex + (2 - HeroCellY) * 32,
+            tiley - HeroCellX * 32 + 32, tilew, tileh,
+            memoryBuffer, 0, 0,
+            currHero->GetHflip());
+
+        cursorIcons[currHero->heroClass]->DrawHero(
+            currHero->GetStandSequence(),
+            animFrame
+                % cursorIcons[currHero->heroClass]->GetNumFrames(hs_stand_n),
+            tilex + (2 - HeroCellY) * 32,
+            tiley - HeroCellX * 32 + 32, tilew, tileh,
+            memoryBuffer, 0, 0,
+            currHero->GetHflip());
+    }
 }
 
 // E:\gamedcs\viewwrld.cpp:346
 VA(0x005f7900, 0x3F7)  // exhaustive dc-order-map inside the VWDrawAdvObj bracket, dc 0x1933d8
 void advManager::VWDrawHeroPartShadow(int part, TDrawParts& heroParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
 {
-    // @stub
+    hero* currHero = gpGame->GetHero(heroParts.id);
+
+    int HeroCellY = part % 3;
+    int HeroCellX = part / 3;
+
+    if (currHero->flags & 0x40000) {
+        boat* currBoat = gpGame->GetHeroBoat(currHero->id, true);
+        NewmapCell* heroCell = GetCell(currHero->get_location());
+
+        if (!(heroCell->flags_00_11 & 0x200)) {
+            boatFrothIcons[currBoat->type]->DrawHeroShadow(
+                currHero->GetStandSequence(),
+                animFrame
+                    % boatFrothIcons[currBoat->type]->GetNumFrames(hs_stand_n),
+                tilex + (2 - HeroCellY) * 32,
+                tiley - HeroCellX * 32 + 32, tilew, tileh,
+                memoryBuffer, 0, 0,
+                currHero->GetHflip());
+        }
+
+        boatFlagIcons[currBoat->type][currBoat->playerOwner]->DrawHeroShadow(
+            currHero->GetStandSequence(),
+            animFrame % boatFlagIcons[currBoat->type][currBoat->playerOwner]
+                                ->GetNumFrames(hs_stand_n),
+            tilex + (2 - HeroCellY) * 32,
+            tiley - HeroCellX * 32 + 32, tilew, tileh,
+            memoryBuffer, 0, 0,
+            currHero->GetHflip());
+
+        boatIcons[currBoat->type]->DrawHeroShadow(
+            currHero->GetStandSequence(),
+            animFrame
+                % boatIcons[currBoat->type]->GetNumFrames(hs_stand_n),
+            tilex + (2 - HeroCellY) * 32,
+            tiley - HeroCellX * 32 + 32, tilew, tileh,
+            memoryBuffer, 0, 0,
+            currHero->GetHflip());
+    } else {
+        flagIcons[currHero->owner]->DrawHeroShadow(
+            currHero->GetStandSequence(),
+            animFrame % flagIcons[currHero->owner]->GetNumFrames(hs_stand_n),
+            tilex + (2 - HeroCellY) * 32,
+            tiley - HeroCellX * 32 + 32, tilew, tileh,
+            memoryBuffer, 0, 0,
+            currHero->GetHflip());
+
+        cursorIcons[currHero->heroClass]->DrawHeroShadow(
+            currHero->GetStandSequence(),
+            animFrame
+                % cursorIcons[currHero->heroClass]->GetNumFrames(hs_stand_n),
+            tilex + (2 - HeroCellY) * 32,
+            tiley - HeroCellX * 32 + 32, tilew, tileh,
+            memoryBuffer, 0, 0,
+            currHero->GetHflip());
+    }
 }
 
 // E:\gamedcs\viewwrld.cpp:427
+// advManager::DrawBoatPart's view-world twin, statement for statement: the
+// only differences are the DESTINATION - the off-screen memoryBuffer at
+// (0,0), through CSprite's Bitmap16Bit DrawHero wrapper, so baseX/baseY go
+// unread - and the cell lookup, which goes straight through GetCell here.
 VA(0x005f7d00, 0x1E1)  // exhaustive dc-order-map inside the VWDrawAdvObj bracket, dc 0x193724
 void advManager::VWDrawBoatPart(int part, TDrawParts& boatParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
 {
-    // @stub
+    boat* currBoat = &gpGame->boats[boatParts.id];
+    int BoatCellY = part % 3;
+    int BoatCellX = part / 3;
+    NewmapCell* boatCell = GetCell(
+        type_point(currBoat->x, currBoat->y, currBoat->z));
+
+    if (!(boatCell->flags_00_11 & 0x200)) {
+        boatFrothIcons[currBoat->type]->DrawHero(
+            currBoat->GetStandSequence(),
+            animFrame
+                % boatFrothIcons[currBoat->type]->GetNumFrames(hs_stand_n),
+            tilex + (2 - BoatCellY) * 32,
+            tiley - BoatCellX * 32 + 32, tilew, tileh,
+            memoryBuffer, 0, 0,
+            currBoat->facing > hero::kFacingS);
+    }
+
+    boatIcons[currBoat->type]->DrawHero(
+        currBoat->GetStandSequence(),
+        animFrame % boatIcons[currBoat->type]->GetNumFrames(hs_stand_n),
+        tilex + (2 - BoatCellY) * 32,
+        tiley - BoatCellX * 32 + 32, tilew, tileh,
+        memoryBuffer, 0, 0,
+        currBoat->facing > hero::kFacingS);
 }
 
 // E:\gamedcs\viewwrld.cpp:464
 VA(0x005f7ef0, 0x1E1)  // exhaustive dc-order-map inside the VWDrawAdvObj bracket, dc 0x1938cc
 void advManager::VWDrawBoatPartShadow(int part, TDrawParts& boatParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
 {
-    // @stub
-}
+    boat* currBoat = &gpGame->boats[boatParts.id];
+    int BoatCellY = part % 3;
+    int BoatCellX = part / 3;
+    NewmapCell* boatCell = GetCell(
+        type_point(currBoat->x, currBoat->y, currBoat->z));
 
-#endif  // @carcass
+    if (!(boatCell->flags_00_11 & 0x200)) {
+        boatFrothIcons[currBoat->type]->DrawHeroShadow(
+            currBoat->GetStandSequence(),
+            animFrame
+                % boatFrothIcons[currBoat->type]->GetNumFrames(hs_stand_n),
+            tilex + (2 - BoatCellY) * 32,
+            tiley - BoatCellX * 32 + 32, tilew, tileh,
+            memoryBuffer, 0, 0,
+            currBoat->facing > hero::kFacingS);
+    }
+
+    boatIcons[currBoat->type]->DrawHeroShadow(
+        currBoat->GetStandSequence(),
+        animFrame % boatIcons[currBoat->type]->GetNumFrames(hs_stand_n),
+        tilex + (2 - BoatCellY) * 32,
+        tiley - BoatCellX * 32 + 32, tilew, tileh,
+        memoryBuffer, 0, 0,
+        currBoat->facing > hero::kFacingS);
+}
 
 // E:\gamedcs\viewwrld.cpp:510
 // The overlay pass: one VWsymbol.def icon per trigger cell whose object type
