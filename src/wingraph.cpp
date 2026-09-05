@@ -9,6 +9,7 @@
 #include "kbwin.h"
 #include "misc.h"
 #include "palette.h"
+#include "bitmap16.h"
 #include "mousemgr.h"
 #include "resourcemanager.h"
 #include "smackmgr.h"
@@ -35,6 +36,14 @@ DATA(0x006aacc0) IDirectDrawSurface* gpDDSBack;
 DATA(0x006aacd0) static IDirectDrawClipper* gpDDClipper;
 DATA(0x006aacb4) static int gWinGraphBusy;
 DATA(0x006aacd4) static unsigned char gInDirectDrawError;
+
+// wingraph's own Bitmap16Bit VIEW of the locked back surface, referenced
+// (never owned) at every DDCreateSurface and re-referenced after each
+// successful Blt retry. File-static: 0x6aac70 is touched from exactly four
+// places and all four are rows in this compiland (0x1ffdf5 - the dynamic
+// initializer that constructs it 0x0-by-0x0 - 0x1ffe11, 0x2001a9, 0x2006c2).
+// NAME provisional: no roster attests it.
+DATA(0x006aac70) static Bitmap16Bit gDDSurfaceBitmap(0, 0);
 
 // The first 16 bytes of the old DirectDraw pixel-format record. Its three
 // live channel masks are separately owned at 0x68c860..68 by mousemgr.cpp,
@@ -195,6 +204,62 @@ void SetPlayerPaletteColors(TPalette24* pal, int whichPlayer)
 {
     memcpy(pal->colors.data[224], gPlayerPalette24->colors.data[whichPlayer * 32],
            32 * 3);
+}
+
+// The one surface factory: DDInitGraphics builds the 800x600 primary
+// through it with bPrimary set, and the back buffer with it clear. Only the
+// offscreen arm is locked and published - the lock's own DDSURFACEDESC is
+// what feeds both Bitmap16Bit references, so the surface pointer, pitch and
+// extent all come back through the same descriptor the create filled in.
+// Retail reuses the bPrimary parameter home for the created surface, which
+// is why the flag is cached in a register before the call.
+// E:\gamedcs\wingraph.cpp:1013
+VA(0x006005f0, 0xE4)  // anchor-caller(DDInitGraphics, both surfaces) + header identification, dc 0x1992b0
+IDirectDrawSurface* DDCreateSurface(unsigned long width, unsigned long height,
+                                    int bPrimary)
+{
+    DDSURFACEDESC surfaceDesc;
+    IDirectDrawSurface* surface;
+
+    memset(&surfaceDesc, 0, sizeof(surfaceDesc));
+    surfaceDesc.dwSize = sizeof(surfaceDesc);
+    if (bPrimary) {
+        surfaceDesc.dwFlags = DDSD_CAPS;
+        surfaceDesc.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE;
+    } else {
+        surfaceDesc.dwFlags = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH;
+        surfaceDesc.ddsCaps.dwCaps =
+            DDSCAPS_OFFSCREENPLAIN | DDSCAPS_SYSTEMMEMORY;
+        surfaceDesc.dwHeight = height;
+        surfaceDesc.dwWidth = width;
+    }
+
+    HRESULT result = gpDirectDraw->CreateSurface(&surfaceDesc, &surface, 0);
+    if (result != DD_OK)
+        DDSD(result,
+             DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                          "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"),
+             0x263);
+
+    if (!bPrimary) {
+        result = surface->Lock(0, &surfaceDesc, DDLOCK_WAIT, 0);
+        if (result != DD_OK)
+            DDSD(result,
+                 DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                              "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"),
+                 0x26a);
+
+        if (gpWindowManager->screenBitmap) {
+            gpWindowManager->screenBitmap->reference(
+                surfaceDesc.dwWidth, surfaceDesc.dwHeight, surfaceDesc.lPitch,
+                static_cast<unsigned short*>(surfaceDesc.lpSurface));
+        }
+        gDDSurfaceBitmap.reference(
+            surfaceDesc.dwWidth, surfaceDesc.dwHeight, surfaceDesc.lPitch,
+            static_cast<unsigned short*>(surfaceDesc.lpSurface));
+    }
+
+    return surface;
 }
 
 // The Dreamcast line table groups the re-entry test, RestoreDisplayMode,
