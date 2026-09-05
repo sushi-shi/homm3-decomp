@@ -699,6 +699,57 @@ void SmackManager::SetPixelFormat(unsigned long red_mask,
     }
 }
 
+// The three flat Smacker-track wrappers that close out smackmgr.obj.
+// Complete's smack layer is a pair of module globals rather than the
+// Dreamcast's SmackManager object, so these keep the DC compiland's
+// namespace spelling. Retail's own VideoDrawCurrentFrame (0x597740)
+// and VideoClose (0x5975f0) expand the first and third bodies inline,
+// which is what proves the guard order and the store order here.
+namespace SmackManager {
+
+// Decode the current video frame into the offscreen buffer, but only
+// while a frame is pending and the track is not paused. The pair
+// (this and GotoSmackerFrame below) is what remote.obj's
+// CGameTransferSmack::SetPercentage seeks-and-draws with.
+// Name provisional: the DC roster stops at CloseSmacker.
+VA(0x00598e80, 0x25)  // anchor-callee(SmackDoFrame) + anchor-caller(CGameTransferSmack::SetPercentage), retail-only
+void DrawSmackerFrame()
+{
+    if (gSmackVideo && gSmackFrameReady && !gSmackPaused)
+        SmackDoFrame(gSmackVideo);
+}
+
+// E:\gamedcs\smackmgr.cpp:1074. VideoClose expands this body verbatim
+// ahead of CloseBinkVideo, which proves both the close order and the
+// five-store teardown; retail keeps the out-of-line copy for
+// remote.obj's ~CGameTransferSmack.
+VA(0x00599050, 0x43)  // anchor-caller(~CGameTransferSmack) + inlined-in VideoClose, dc 0x14ae00
+void CloseSmacker()
+{
+    if (gSmackVideo)
+        SmackClose(gSmackVideo);
+    if (gSmackVideo2)
+        SmackClose(gSmackVideo2);
+    gSmackVideo2 = 0;
+    gSmackVideo = 0;
+    gSmackPaused = 0;
+    gSmackFrameReady = 0;
+    gSmackDirty = 0;
+}
+
+// Seek the video track. Fastcall: the frame index arrives in ECX and
+// is pushed straight through to SmackGoto, so the wrapper takes one
+// argument and returns with a bare `ret`.
+// Name provisional: the DC roster stops at CloseSmacker.
+VA(0x005990a0, 0x1C)  // anchor-callee(SmackGoto) + anchor-caller(CGameTransferSmack::SetPercentage), retail-only
+void GotoSmackerFrame(unsigned long frame)
+{
+    if (gSmackVideo && gSmackFrameReady)
+        SmackGoto(gSmackVideo, frame);
+}
+
+}  // namespace SmackManager
+
 #if 0  // @carcass
 
 // E:\gamedcs\smackmgr.cpp:535
@@ -725,13 +776,6 @@ unsigned char LoadSoundHeaders()
 // E:\gamedcs\smackmgr.cpp:1001
 DC_ONLY(0x14adfc, 0x4)
 void SmackManager::NextSmackerFrame()
-{
-    // @stub
-}
-
-// E:\gamedcs\smackmgr.cpp:1074
-DC_ONLY(0x14ae00, 0x4C)
-void SmackManager::CloseSmacker()
 {
     // @stub
 }
