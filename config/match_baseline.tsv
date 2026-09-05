@@ -2511,7 +2511,7 @@ overview	?DoRollover@TOverviewWindow@@AAEXH@Z	97.8485	98.5053	98.5053	0x120e30	0
 overview	?Overview@game@@QAEXXZ	100.0000	100.0000	100.0000	0x11e8d0	acbb8b63299e
 overview	?OverviewSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x11fa20	d405249777ca
 overview	?ProcessIconSelect@game@@QAEHHE@Z	94.7322	94.7322	94.7322	0x11ee50	042a4f8cf2fd
-overview	?SetupDynamicStuff@game@@QAEXHH@Z	90.9107	90.9107	90.9107	0x11bd50	714ded670a01
+overview	?SetupDynamicStuff@game@@QAEXHH@Z	91.7373	91.7373	91.7373	0x11bd50	ed2be216d5f0
 overview	?SetupNewOverviewType@game@@QAEXHE@Z	96.4609	100.0000	100.0000	0x11e330	aa25ff2c3eaa
 overview	?UpdateBackpack@@YIXH@Z	96.5741	96.5741	96.5741	0x122470	838327f3aed0
 overview	?UpdateFlaggableIcon@TOverviewWindow@@AAEXH@Z	100.0000	100.0000	100.0000	0x11e670	ca624c71e9f9
