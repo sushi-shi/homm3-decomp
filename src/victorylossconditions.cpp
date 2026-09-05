@@ -893,3 +893,10 @@ unsigned char LossConditionStruct::CheckForTimeLimitExpired()
     }
     return 0;
 }
+
+// COMDAT pairing: basic_string<char>::basic_string(const char*, const
+// allocator&). Same single-member-group argument as smackmgr's copy ctor
+// above: victorylossconditions.obj emits exactly one string constructor and
+// it is this overload. `ret 8` matches its two arguments, and the callers
+// reach hero, mapcell, rmg, this unit and three segments.
+VA_COMPGEN(0x0048b370, 0xC1, CLASS_CTOR, basic_string)

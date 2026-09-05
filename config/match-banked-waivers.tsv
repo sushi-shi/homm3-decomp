@@ -19,3 +19,5 @@
 0x1ae5b0	master-merge: swapmgr swapManager::Reset partial (68.03%) reverted to master's curated @stub; recon deferred
 0x1af150	master-merge: swapmgr swapManager::UpdateBackpack partial (93.28%) reverted to master's curated @stub; recon deferred
 0x1b0ef0	master-merge: swapmgr swapManager::update_all_slots partial (89.21%) reverted to master's curated @stub; recon deferred
+# --- lane/claim-17 (2026-09-05): an address corrected, not a claim abandoned. ---
+0x087bd0	claim-17: address corrected. out_of_range's ctor claim in customcampaign named the right class and the wrong OVERLOAD - the object emits only the copy ctor, and 0x87bd0 is the STRING ctor (it calls ??0exception@@QAE@ABQBD@Z, scores 1.000 with an exact 352=352 size match against victorylossconditions' string-ctor COMDAT, and 0x4700 is the one referenced from a ThrowInfo copy-ctor slot). The claim moved to 0x4700 and is EXACT there against 91.3692 here. 0x87bd0 stays unclaimed: every object emitting the string ctor also emits the copy ctor, and their COFF order runs opposite to RVA order, so a two-member group would zip crossed.

@@ -4272,3 +4272,8 @@ VA_COMPGEN(0x00423820, 0x87, STD_UNGUARDED_PARTITION, army_ptr_func_moves_before
 
 // COMDAT pairing: std::_Unguarded_insert<army*, func_moves_before>, 0.976.
 VA_COMPGEN(0x004237c0, 0x5E, STD_UNGUARDED_INSERT, army_ptr_func_moves_before)
+
+// COMDAT pairing: func_moves_before::operator()(const army*, const army*) -
+// `ret 8` for the two pointer arguments. ai.obj's already-paired
+// _Unguarded_insert<army*, func_moves_before> is this predicate's consumer.
+VA_COMPGEN(0x004235c0, 0x44, FUNCTOR_CALL, func_moves_before)

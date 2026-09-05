@@ -1619,3 +1619,50 @@ VA_COMPGEN(0x00453d90, 0x3B, IOS_BASE_GETLOC, char)
 // 0x53cd0, 0x54a10; the similarity agrees with that zip in both directions
 // (0.857 each way, 0.786 crossed).
 VA_COMPGEN(0x00454a10, 0x1C, CLASS_CTOR, bad_cast)
+
+// COMDAT pairing: numpunct<char>'s three virtual string accessors. All three
+// bodies are byte-identical apart from the member they read, and the layout
+// in VC6's own <xlocnum> - `char *_Gr; _E _Dp, _Ks, *_Nf, *_Nt;` after the
+// 8 B locale::facet base - names them: +8 is _Gr, +0x10 is _Nf, +0x14 is _Nt.
+// vtbl_245728, installed by the already-claimed numpunct<char> ctor at
+// 0x55820 and dtor at 0x55bf0, confirms the same zip from the other side:
+// slot 3 = 0x55950, slot 4 = 0x55a20, slot 5 = 0x55af0.
+VA_COMPGEN(0x00455950, 0xCF, NUMPUNCT_DO_GROUPING, char)
+VA_COMPGEN(0x00455a20, 0xCF, NUMPUNCT_DO_FALSENAME, char)
+VA_COMPGEN(0x00455af0, 0xCF, NUMPUNCT_DO_TRUENAME, char)
+
+// COMDAT pairing: the three public wrappers, separated by the vtable slot
+// each dispatches through - [eax+0xc] is slot 3 (do_grouping), [eax+0x10]
+// slot 4 (do_falsename), [eax+0x14] slot 5 (do_truename).
+VA_COMPGEN(0x00455760, 0x1E, NUMPUNCT_FALSENAME, char)
+VA_COMPGEN(0x00455780, 0x1E, NUMPUNCT_TRUENAME, char)
+VA_COMPGEN(0x00455800, 0x1E, NUMPUNCT_GROUPING, char)
+
+// COMDAT pairing: _Tidyfac's two instantiations. The object emits exactly
+// four such COMDATs and the image has exactly four candidate bodies; the
+// static `_Ptr` each pair shares is the discriminator. 0x55c20 stores into
+// bss_294d9c and 0x55d20 reads and clears it; 0x55ca0/0x55dc0 do the same
+// with bss_294da0. Which static belongs to which facet is settled by the
+// constructors: 0x53a30 calls the claimed num_put<char> ctor at 0x546e0 and
+// then 0x55c20, while 0x11ab90 installs numpunct<char>'s vtbl_245728 and
+// then stores into bss_294da0.
+VA_COMPGEN(0x00455c20, 0x7B, TIDYFAC_NUM_PUT_SAVE, char)
+VA_COMPGEN(0x00455ca0, 0x7B, TIDYFAC_NUMPUNCT_SAVE, char)
+VA_COMPGEN(0x00455d20, 0x92, TIDYFAC_NUM_PUT_TIDY, char)
+VA_COMPGEN(0x00455dc0, 0x92, TIDYFAC_NUMPUNCT_TIDY, char)
+
+// COMDAT pairing: basic_streambuf<char>::uflow. Not reached by any rel32 call
+// at all - it is installed as slot 5 of FOUR vtables, one of them the named
+// ??_7TGzInflateBuf@@6B@, which is exactly what a defaulted virtual of the
+// stream base looks like.
+VA_COMPGEN(0x00454080, 0x2B, STREAMBUF_UFLOW, char)
+
+// COMDAT pairing: ostreambuf_iterator<char>::operator=(char), reached from
+// two CRT sites and three of this unit's own - cross-image reach.
+VA_COMPGEN(0x004557a0, 0x5C, OSTREAMBUF_ITERATOR_ASSIGN, char)
+
+// COMDAT pairing: basic_ostream<char>'s destructor. The whole 15 B body is
+// the virtual-base vtable fixup - `mov eax,[ecx-4] / mov edx,[eax+4] /
+// mov [edx+ecx-4], const_2456e8 / ret` - which only a virtually-derived
+// stream class emits.
+VA_COMPGEN(0x00453a20, 0xF, IMPLICIT_DTOR, basic_ostream)

@@ -5081,3 +5081,8 @@ void std::swap(TSecondarySkill* __a, TSecondarySkill* __b)
 
 
 #endif  // @carcass
+
+// COMDAT pairing: std::_Unguarded_insert<type_creature_value, greater>. See
+// ai_player's unpredicated twin: `ret 0x10` against its `ret 0xc` is the
+// empty predicate's four stack bytes, and nothing else separates the two.
+VA_COMPGEN(0x0052bd50, 0x42, STD_UNGUARDED_INSERT, type_creature_value_greater)

@@ -3091,3 +3091,18 @@ VA_COMPGEN(0x0055d7e0, 0x5D, STRINGBUF_PBACKFAIL, char)
 
 // COMDAT pairing: underflow on the char instantiation, mnemonic agreement 0.938.
 VA_COMPGEN(0x0055d840, 0x5A, STRINGBUF_UNDERFLOW, char)
+
+// WITHDRAWN: 0x15ecf0 is NOT basic_streambuf<char>::setg, despite being the
+// only candidate in the image scoring above 0.88 against that COMDAT. The
+// arity refutes it - retail ends `ret 8` (two stack arguments) where setg
+// takes three char* and must end `ret 0xc` - and the body copies two dwords
+// out of two pointed-to objects into this+0/this+4, which setg does not do.
+// Left unowned; it is a two-argument thiscall belonging to this segment.
+
+// COMDAT pairing: std::operator+(const string&, const char*). The two
+// operator+ overloads are one key, but each object emits exactly one of them
+// and they differ: seerhut's is the (const&, const&) form already claimed at
+// 0x174d10, this one is the (const&, const char*) form, reached from
+// ResourceManager::Open, GetBitmap816, LoadBitmap16 and LoadPalette - each
+// appending a literal extension to a path.
+VA_COMPGEN(0x004b7ec0, 0x114, BASIC_STRING_CONCAT, char)
