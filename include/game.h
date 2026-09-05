@@ -526,13 +526,19 @@ class town;
 // and a 70-bit spell set at +0x320. HeroFn_004D8B30 independently reaches
 // the tail flags and closes the total size. Names beyond those surviving in
 // the Dreamcast roster remain provisional.
-// PACKED. The head below is what forces it: `location` is a type_point
-// (short bitfields, align 2) and retail puts it at +0x301, immediately
-// after a single byte - natural alignment would slide it to +0x302 and
-// shift the whole tail. pack(1) is layout-NEUTRAL against the pads it
-// replaces (every offset and the 0x334 total are unchanged) and matches
-// the precedent in hero.h, mapcell.h, findpath.h and seerhut.h.
-#pragma pack(push, 1)
+// NATURALLY ALIGNED except for one packed band. Retail's compiler-generated
+// HeroExtra copy (game::RehomeCampaignHeroSetup 0x4c6110 and the crossover
+// bodies) skips +0x01..+0x03, +0x1b, +0x23, +0x39..+0x3b, +0x307,
+// +0x31d..+0x31f and +0x331..+0x333 - i.e. every declared pad below is a
+// COMPILER pad in retail, not a member, so a whole-class pack(1) makes our
+// copies walk them byte-by-byte where retail moves dwords. Natural
+// alignment reproduces all 30 member offsets and the 0x334 total on its
+// own EXCEPT `location`, a type_point of short bitfields (align 2) that
+// retail puts at +0x301 right after a single byte and copies as one
+// unaligned dword; a pack(1) band over +0x300..+0x306 is the whole of the
+// packing this record needs. Measured layout-neutral with an offsetof
+// probe over every member (2026-09-06).
+#pragma pack(push, 8)
 class HeroExtra {
 public:
     // +0x00..+0x67 decoded by hero::HeroFn_004D8B30, which reads every
@@ -542,45 +548,40 @@ public:
     // this record. The two fields the Dreamcast build has no counterpart
     // for are the dword at +0x08 and the flag at +0x1a.
     signed char Owner;              // +0x00
-    char pad_001[0x3];
     int id;                         // +0x04
     int field_008;                  // +0x08 - copied to hero::field_01e
     unsigned char bCustomName;      // +0x0c
     char Name[13];                  // +0x0d - Complete strcpy destination
     unsigned char bCustomExperience;// +0x1a
-    char pad_01b;
     int Experience;                 // +0x1c
     unsigned char bCustomPortraitNumber;  // +0x20
     unsigned char PortraitNumber;         // +0x21
     unsigned char bCustomSecondarySkills; // +0x22
-    char pad_023;
     int NumSecondarySkills;         // +0x24 - signed, the loop bound
     char secondarySkill[8];         // +0x28 - movsx, so plain char
     char secondarySkillLevel[8];    // +0x30
     unsigned char bCustomArmies;    // +0x38
-    char pad_039[0x3];
     int armies[7];                  // +0x3c
     short numTroops[7];             // +0x58 - movsx word
     unsigned char GroupFormation;   // +0x66 - no retail body reads it
     unsigned char bCustomArtifacts; // +0x67
     type_artifact artifacts[19];
     type_artifact backpack[64];
+#pragma pack(push, 1)
     unsigned char numInBackpack;    // +0x300 - no retail body reads it
-    type_point location;            // +0x301
+    type_point location;            // +0x301 - unaligned, hence the band
     signed char PatrolRadius;       // +0x305 - sign gates the patrol XY
-    unsigned char customName;
-    char pad_307;
+    unsigned char customName;       // +0x306
+#pragma pack(pop)
     std::basic_string<char, std::char_traits<char>, std::allocator<char> > name;
     // +0x318 is the hero's SEX, not experience: HeroFn_004D8B30 gates it
     // on `!= -1` and stores it into hero::sex at +0x3d5. The real
     // Experience is the dword at +0x1c above. Renamed 2026-08-20.
     int sex;
-    unsigned char customSpells;
-    char pad_31d[0x3];
-    std::bitset<70> spells;
+    unsigned char customSpells;     // +0x31c
+    std::bitset<70> spells;         // +0x320
     unsigned char customPrimarySkills;
-    signed char primarySkills[4];
-    char pad_331[0x3];
+    signed char primarySkills[4];   // +0x32d, class trails to 0x334
 
     HeroExtra();
     // Retail-only reset helper reached by game::SetupOrigData.
