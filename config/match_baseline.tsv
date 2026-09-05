@@ -583,6 +583,7 @@ bitmap16	??0Bitmap16Bit@@QAE@PBDHH@Z	100.0000	100.0000	100.0000	0x4e050	1007f10e
 bitmap16	??1Bitmap16Bit@@UAE@XZ	100.0000	100.0000	100.0000	0x4e100	7b1ed76e43e8
 bitmap16	??_GBitmap16Bit@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x4e020	-
 bitmap16	?Colorize@Bitmap16Bit@@QAEXHHHHG@Z	92.0385	92.0385	92.0385	0x4e780	8833cf87733c
+bitmap16	?Colorize@Bitmap16Bit@@QAEXHHHHMM@Z	98.8301	98.8301	98.8301	0x4e940	72475ee11deb
 bitmap16	?Darken@Bitmap16Bit@@QAEXHHHH@Z	100.0000	100.0000	100.0000	0x4e5f0	e4fb764cccb1
 bitmap16	?Darken@Bitmap16Bit@@QAEXHHHHPAVBitmap816@@HH@Z	100.0000	100.0000	100.0000	0x4e6a0	fed5b38bb10e
 bitmap16	?Draw@Bitmap16Bit@@QBEXHHHHPAGHHHHH_N@Z	81.3095	81.3095	81.3095	0x4e2b0	d3b3eaba0af0
@@ -2559,6 +2560,7 @@ remote	?DrawWindow@CAnimatedDlg@@UAEXEHH@Z	100.0000	100.0000	100.0000	0x154e90	0
 remote	?GetAbortPopupMsg@CNetMsgHandler@@UAEPAVCNetMsg@@XZ	100.0000	100.0000	100.0000	0x157900	f1884c1fd4e7
 remote	?GetNetMsgHandler@CDPlayHeroes@@QAEPAVCNetMsgHandler@@XZ	100.0000	100.0000	100.0000	0x1537a0	0e9b8f9bb05a
 remote	?GetRemoteData@@YIPAVCNetMsg@@EPAE@Z	100.0000	100.0000	100.0000	0x154400	05d8f053fd87
+remote	?GetRemoteData@CDPlayHeroes@@QAEPAVCNetMsg@@EPAE@Z	80.8571	80.8571	80.8571	0x153040	7cf0cac3aa0b
 remote	?HandleMPlayerLaunch@@YIEXZ	96.0500	98.3167	98.3167	0x155aa0	fbbe11f41dd4
 remote	?HandleNetMsg@CNetMsgHandler@@UAEPAVCNetMsg@@PAV2@@Z	100.0000	100.0000	100.0000	0x157920	9b3bbef3a17e
 remote	?HandleNetMsg@CNetMsgHandlerPause@@UAEPAVCNetMsg@@PAV2@@Z	100.0000	100.0000	100.0000	0x155180	4688fd9ad604
@@ -2589,7 +2591,8 @@ remote	?Pause@CTurnDuration@@QAEXXZ	100.0000	100.0000	100.0000	0x157dd0	df453d86
 remote	?PauseTimeOuts@CChatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x154050	7e887272191a
 remote	?PlayerDropMsg@@YAXPAVCChatManager@@PBDZZ	100.0000	100.0000	100.0000	0x153b60	f4a6c8e5198b
 remote	?PlayerEnterMsg@@YAXPAVCChatManager@@PBDZZ	100.0000	100.0000	100.0000	0x153c30	e114ca3074c6
-remote	?PollRemote@@YIXXZ	100.0000	100.0000	100.0000	0x1546b0	247cab36b766
+remote	?PollRemote@@YIXXZ	0.0000	100.0000	100.0000	0x1546b0	247cab36b766
+remote	?PollRemote@CDPlayHeroes@@QAE_NXZ	68.1355	68.1355	68.1355	0x152b60	9adb977c4462
 remote	?ReceiveChat@@YIXPADH@Z	100.0000	100.0000	100.0000	0x154a20	76682a18ba16
 remote	?RemoteCleanup@@YIXXZ	81.7222	100.0000	100.0000	0x1544b0	5e1c74da22d4
 remote	?Restore@CSaveScreen@@QAEXE@Z	100.0000	100.0000	100.0000	0x157390	bfdee37b1b64
@@ -2613,6 +2616,9 @@ remote	?Start@CGameTransferSmack@@QAEXXZ	100.0000	100.0000	100.0000	0x157480	15f
 remote	?Start@CTurnDuration@@QAEXXZ	100.0000	100.0000	100.0000	0x157d90	e37ded6d9158
 remote	?Stop@CGameTransferSmack@@QAEXXZ	100.0000	100.0000	100.0000	0x1575e0	d6c8e956047f
 remote	?SysMsgCreatePlayerOrGroup@CDPlayHeroes@@MAEEPAUDPMSG_CREATEPLAYERORGROUP@@K@Z	100.0000	100.0000	100.0000	0x152b40	626eb532c47e
+remote	?SysMsgDestroyPlayerOrGroup@CDPlayHeroes@@MAEEPAUDPMSG_DESTROYPLAYERORGROUP@@K@Z	97.6166	97.6166	97.6166	0x152920	c35e64126d2e
+remote	?SysMsgHost@CDPlayHeroes@@MAEEPAUDPMSG_GENERIC@@K@Z	100.0000	100.0000	100.0000	0x152530	e217367d6af9
+remote	?SysMsgSessionLost@CDPlayHeroes@@MAEEPAUDPMSG_GENERIC@@K@Z	100.0000	100.0000	100.0000	0x152740	f7a5db50dc3a
 remote	?SystemMsg@@YAXPAVCChatManager@@PBDZZ	100.0000	100.0000	100.0000	0x153aa0	39b645d5c0f5
 remote	?TestIfLobbyLaunched@@YIEXZ	100.0000	100.0000	100.0000	0x155920	cc5d173e558c
 remote	?TickAnimation@CAnimatedDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x154e10	a7282e639fa4
@@ -2828,6 +2834,8 @@ seerhut	?DoSeerEvent@TSeerHut@@QAEXPAVhero@@_N@Z	44.4753	46.3642	46.3642	0x17367
 seerhut	?GetAIValue@type_artifact_quest@@UAEHH@Z	96.4706	100.0000	100.0000	0x16f5a0	e8c4868db654
 seerhut	?GetAIValue@type_creature_quest@@UAEHH@Z	100.0000	100.0000	100.0000	0x170480	386e7f03466e
 seerhut	?GetAIValue@type_resource_quest@@UAEHH@Z	100.0000	100.0000	100.0000	0x171560	d5ac193e3376
+seerhut	?GetProgressDialogText@type_quest@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16d310	81eb553cb8ee
+seerhut	?GetProposalDialogText@type_quest@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16d240	ced8d5a702d1
 seerhut	?GetQuestDescription@type_artifact_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16f730	8db2a72c49c8
 seerhut	?GetQuestDescription@type_be_hero_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x172160	7b1fc86a9210
 seerhut	?GetQuestDescription@type_belong_to_player_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x172670	20939d27e13a
@@ -2896,6 +2904,7 @@ seerhut	?create_quest@@YIPAVtype_quest@@HE@Z	100.0000	100.0000	100.0000	0x173240
 seerhut	?getSeerLogText@TSeerHut@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x174070	20aeaa778b1e
 seerhut	?getValue@TSeerHut@@QAEHPAVhero@@@Z	100.0000	100.0000	100.0000	0x1735a0	df61d06c06c2
 seerhut	?getValue@TSeerReward@@QAEHPBVhero@@@Z	100.0000	100.0000	100.0000	0x173a70	62163b28f36a
+seerhut	?get_time_limit_text@type_quest@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	85.1124	85.1124	85.1124	0x16d040	046e486c8f30
 seerhut	?giveReward@TSeerReward@@QAEXPAVhero@@_N@Z	100.0000	100.0000	100.0000	0x173c80	bdc252fb841b
 seerhut	?has_expired@type_quest@@QBEEXZ	100.0000	100.0000	100.0000	0x16ccb0	deb5a329d123
 seerhut	?is_satisfied@type_artifact_quest@@UAEEPAVhero@@@Z	100.0000	100.0000	100.0000	0x16f800	c39f4885a8ce
@@ -3133,9 +3142,10 @@ smackmgr	?CloseSmacker@SmackManager@@YIXXZ	100.0000	100.0000	100.0000	0x199050	1
 smackmgr	?DeleteAnimHeaders@@YIXXZ	100.0000	100.0000	100.0000	0x198440	16913871eab2
 smackmgr	?DeleteSoundHeaders@@YIXXZ	100.0000	100.0000	100.0000	0x1986e0	0a3016c080b2
 smackmgr	?DrawSmackerFrame@SmackManager@@YIXXZ	100.0000	100.0000	100.0000	0x198e80	6d16c5fe1f92
+smackmgr	?GetDriveArchivePath@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x197d00	39cb172c9b6e
 smackmgr	?GotoSmackerFrame@SmackManager@@YIXK@Z	100.0000	100.0000	100.0000	0x1990a0	dbf7bb35d30f
-smackmgr	?LoadAnimHeaders@@YIEXZ	100.0000	100.0000	100.0000	0x198210	6229b5e7df58
-smackmgr	?LoadSoundHeaders@@YIEXZ	100.0000	100.0000	100.0000	0x1984a0	991012f385e7
+smackmgr	?LoadAnimHeaders@@YIEXZ	100.0000	100.0000	100.0000	0x198210	9d00abba944c
+smackmgr	?LoadSoundHeaders@@YIEXZ	100.0000	100.0000	100.0000	0x1984a0	cf225054ae06
 smackmgr	?NextSmackerFrame@SmackManager@@YIXXZ	90.7265	90.7265	90.7265	0x198eb0	991431e60c1b
 smackmgr	?OpenSmackerTrack@@YIPAUSmack@@PBDKK@Z	100.0000	100.0000	100.0000	0x198790	6d95dcba7cff
 smackmgr	?SetPixelFormat@SmackManager@@YIXKKK@Z	100.0000	100.0000	100.0000	0x198a40	69d2b1564ad6
@@ -3723,15 +3733,21 @@ winfile	?SeekEnd@File@@UAEKXZ	100.0000	100.0000	100.0000	0x1ffcb0	e37299de9f30
 winfile	?Write@File@@UAEKPAXK@Z	100.0000	100.0000	100.0000	0x1ffc50	4d327d93ded8
 wingraph	?AppPaint@@YIHPAX0@Z	100.0000	100.0000	100.0000	0x201820	27f27632049b
 wingraph	?CleanUpWinGraphics@@YIXXZ	100.0000	100.0000	100.0000	0x201890	f135c44f8301
+wingraph	?DDBlit@@YIXPAUIDirectDrawSurface4@@PBUtagRECT@@01K@Z	63.7654	63.7654	63.7654	0x2001d0	3409e9908dc3
 wingraph	?DDCleanUpWinGraphics@@YIXXZ	100.0000	100.0000	100.0000	0x2018a0	0f8f7ec883c0
+wingraph	?DDCreateSurface@@YIPAUIDirectDrawSurface@@KKH@Z	100.0000	100.0000	100.0000	0x2005f0	8ade851aa924
 wingraph	?DDInitGraphics@@YIXXZ	100.0000	100.0000	100.0000	0x2014f0	c6c58ec076c0
+wingraph	?DDResetDisplayMode@@YIXPAUtagRECT@@@Z	100.0000	100.0000	100.0000	0x2003c0	44ff796ac15f
 wingraph	?DDRestoreSurfaces@@YIJXZ	100.0000	100.0000	100.0000	0x2013a0	0d3fca2c20e3
 wingraph	?DDSD@@YIXHPADH@Z	100.0000	100.0000	100.0000	0x2006e0	12f7c35f5389
 wingraph	?GetDesktopHeight@@YIHXZ	100.0000	100.0000	100.0000	0x2014d0	f235c37e719b
 wingraph	?GetDesktopInfo@@YIEXZ	100.0000	100.0000	100.0000	0x201460	326b880d6d7d
 wingraph	?GetDesktopWidth@@YIHXZ	100.0000	100.0000	100.0000	0x2014c0	8c74e87bf698
 wingraph	?InitGraphics@@YIXXZ	100.0000	100.0000	100.0000	0x2014e0	d2ada750e91f
+wingraph	?RobAppBlit@@YIXPAUtagRECT@@@Z	100.0000	100.0000	100.0000	0x1ffe70	a66d2f205c0c
 wingraph	?SetFullScreenStatus@@YIEH@Z	100.0000	100.0000	100.0000	0x2019a0	cdc0a825754f
+wingraph	?SetPlayerPaletteColors@@YIXPAVTPalette24@@H@Z	100.0000	100.0000	100.0000	0x1ffe40	0facd84b819c
+wingraph	?SetPlayerPaletteColors@@YIXPAVpalette@@H@Z	100.0000	100.0000	100.0000	0x1ffe20	6876b08dcc93
 winmgr	?AddWindow@heroWindowManager@@QAEXPAVheroWindow@@HE@Z	100.0000	100.0000	100.0000	0x2023b0	c6dd0ba0dc0c
 winmgr	?BroadcastMessage@heroWindowManager@@QAEHHHHH@Z	100.0000	100.0000	100.0000	0x202370	ddfa5510b44b
 winmgr	?Close@heroWindowManager@@UAEXXZ	100.0000	100.0000	100.0000	0x2022d0	a3e7ff74e627
