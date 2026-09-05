@@ -109,6 +109,24 @@ static inline void GetGameVersion(char* version)
         version[0] = 0;
 }
 
+// COMDAT pairing: singleselectionwindow.obj is the only compiland in the
+// tree that emits ?copy@std@@YIPAV?$vector@Vhero@@... (710 B), and 710 is
+// exactly the retail row's size, with 1.000 mnemonic agreement. The
+// element is itself a template, so the compgen owner token collapses to a
+// bare `std_copy` group; the claim therefore carries the declarator and
+// joins by content size against that group's two members (710 / 435).
+#if 0  // @carcass: Dinkumware instantiation emitted by this compiland
+
+VA(0x0048e220, 0x2C6)  // COMDAT pairing (unique 710 B ?copy@std@@ in this obj)
+std::vector<hero>* std::copy(std::vector<hero>* first,
+                             std::vector<hero>* last,
+                             std::vector<hero>* dest)
+{
+    // @stub
+}
+
+#endif  // @carcass
+
 // Validate a save name from the entry line: refuse on a full disk,
 // strip the extension, confirm an overwrite through NormalDialog's
 // ACCEPT slot (pre-armed so a fresh name passes), then commit the
@@ -9384,6 +9402,134 @@ TSingleSelectionWindow::~TSingleSelectionWindow()
 // TSingleSelectionWindow vtable 0x241cac slot 0. E:\gamedcs\singleselectionwindow.cpp:2632
 VA_COMPGEN(0x0057d130, 0x21, SCALAR_DELETING_DTOR, TSingleSelectionWindow)  // dc 0x1495e4
 
+// Retail 0x58e700, the seat-assignment entry the nine OnNewPlayerMsg /
+// OnUpdatePlayerPosMsg sites reach. Complete-only in this shape: DC's
+// SetNewPlayerSlot takes a dpid and returns a byte, retail's takes the
+// CNetPlayerInfo record and returns nothing (no exit sets a result).
+//
+// It seats the player, recomputes the shared game-context level through
+// the same feature-bitset intersection GetPlayerCount runs, and when that
+// level MOVES it rebuilds the filtered setup, re-gates the advanced pane
+// against the new level, and - when the level drops to zero - walks the
+// eight map slots and clears every seat still holding the ninth (Conflux)
+// alignment. The inner GetPlayerInPos scan is expanded THREE times, once
+// per use, each with its computer-bank fallback.
+// Residual (63.07%): pure OVER-INLINE, and this lane cannot spend the
+// lever. Retail inlines GetPlayerCount into this body (writing the call is
+// worth 57.56 -> 62.61 over hand-expanding it) but then keeps the bitset<4>
+// members that GetPlayerCount reaches OUT of line - its ctor, flip,
+// operator&= and BOTH `test` sites - and keeps CheckFaces out of line as
+// well; our compile expands all six. That is the statement-pin family, and
+// the cleanliness floor holds inline-depth pins at 357 falling-only, so the
+// only admissible route is caller-shrink into helpers the Dreamcast roster
+// does not name. Reading the legal-alignment mask zero-extended is worth
+// +0.46 and is a byte fact - retail emits `xor ecx,ecx / mov cx,[esi+8]`
+// where the signed member gives `movsx`. Measured and byte-flat: folding
+// the two `required` ternaries into their test() arguments, and spelling
+// the alignment gate as `!A && (A || count <= 1)` to reproduce retail's
+// DUPLICATED HasRandomAlignment test (VC6 folds the redundancy away).
+VA(0x0058e700, 0x2F9)  // header-declared identity + anchor-callee AddNewPlayer/TurnOffAdvancedOptions, retail-only
+void TSingleSelectionWindow::SetNewPlayerSlot(CNetPlayerInfo* pPlayer)
+{
+    m_players.AddNewPlayer(pPlayer);
+
+    int level = GetPlayerCount();
+    if (level == field_1898)
+        return;
+
+    unsigned char rebuild = field_37F;
+    field_1898 = level;
+    if (rebuild)
+        RebuildFilteredPlayerSetup();
+    if (!inAdvancedOptions)
+        return;
+
+    if (m_flag64) {
+        int gameVersion = pCurrentHeader->saved.gameVersion;
+        int required = gameVersion == GAME_VERSION_SOD
+                       ? 2 : gameVersion == GAME_VERSION_AB;
+        if (!gGameContextFeatures[field_1898].test(required))
+            TurnOffAdvancedOptions();
+        return;
+    }
+
+    if (!field_37F) {
+        int mapVersion = gpGame->mapHeader.version;
+        int required = mapVersion > MAP_FORMAT_ARMAGEDDONS_BLADE
+                       ? 2 : mapVersion > MAP_FORMAT_RESTORATION_OF_ERATHIA;
+        if (!gGameContextFeatures[field_1898].test(required))
+            TurnOffAdvancedOptions();
+    }
+    if (!inAdvancedOptions)
+        return;
+    if (field_1898 != 0)
+        return;
+
+    { for (int pos = 0; pos < CNetPlayerHandler::MAX_PLAYERS; pos++) {
+            if (gpGame->setup.playerPos[pos] < 0)
+                continue;
+            CNetPlayerHandlerPlayer* player = m_players.GetPlayerInPos(pos);
+            if (!player)
+                player = m_players.GetCompPlayerInPos(pos);
+            if (!player)
+                continue;
+
+            const CMapHeaderData::TPlayerSlotAttributes& attributes =
+                gpGame->mapHeader.playerSlotAttributes[pos];
+            CNetPlayerHandlerPlayer* owner = m_players.GetPlayerInPos(pos);
+            if (!owner)
+                owner = m_players.GetCompPlayerInPos(pos);
+
+            int town;
+            if (!attributes.HasRandomAlignment
+                && get_alignment_count(static_cast<unsigned short>(
+                       attributes.legalAlignments)) <= 1)
+                town = pick_alignment(
+                    static_cast<unsigned short>(attributes.legalAlignments), 1);
+            else
+                town = owner->townIndex;
+            if (town != TOWN_CONFLUX)
+                continue;
+
+            player->townIndex = -1;
+            CNetPlayerHandlerPlayer* reset = m_players.GetPlayerInPos(pos);
+            if (!reset)
+                reset = m_players.GetCompPlayerInPos(pos);
+            if (!reset)
+                continue;
+            reset->townIndex = -1;
+            reset->heroIndex = -1;
+            MakeHeroFilter();
+            CheckFaces();
+            DrawHeroAdvancedOption(pos, 1, -1);
+        }
+    }
+}
+
+// Retail 0x58ea00, the row this header already declared as GetPlayerCount
+// (the DC name; retail's takes no filter byte). It is NOT a player count:
+// the walk intersects the game-context feature bitsets of every seated
+// human and answers the HIGHEST feature index all of them share, which is
+// what the +0x1898 cache holds and what gates the advanced options.
+// `test` expands with its bounds check in line and keeps the _Xran call on
+// the throw path.
+VA(0x0058ea00, 0x6E)  // header-declared identity + anchor-caller (the +0x1898 cache), retail-only
+int TSingleSelectionWindow::GetPlayerCount()
+{
+    std::bitset<4> features = ~std::bitset<4>();
+    CNetPlayerHandlerPlayer* player = m_players.humanPlayers;
+    { for (int i = CNetPlayerHandler::MAX_PLAYERS; i != 0; i--, player++) {
+            if (player->dpid)
+                features &= gGameContextFeatures[player->version];
+        }
+    }
+
+    int level = 3;
+    while (!features.test(level))
+        level--;
+    return level;
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:4071
@@ -9507,6 +9653,35 @@ void* CAutoArray<int>::`scalar deleting destructor'(unsigned __flags)
 // one), a named lhs/rhs pair (81.78 - one call but `mov` where retail
 // pushes in each arm), declaring sb ahead of the buffers (82.94). The
 // shared `int order` form below is the best of the four.
+// COMDAT pairings against this compiland's own template instantiations,
+// each the only candidate of its exact size in singleselectionwindow.obj:
+// three vector copy constructors (102 / 141 / 135 B). They share one
+// authority key (`vector_vector`), so they join by content size, which is
+// unambiguous in both directions here.
+//
+// SIZE ALONE IS NOT A PAIRING, and 0x58ea00 was the counter-example: it is
+// the only unclaimed 110-byte row in this span and _Tree<int,
+// type_map_hero_info>::_Erase is the only 110-byte COMDAT this obj emits,
+// yet that claim scored 12.15%. Reading the body settled it instead - the
+// 0x7c-stride walk masking against gGameContextFeatures is GetPlayerCount,
+// reconstructed above.
+
+#if 0  // @carcass: Dinkumware instantiations emitted by this compiland
+
+VA(0x0058fe80, 0x66)  // COMDAT pairing (unique 102 B in this obj)
+std::vector<int>::vector(const std::vector<int>& other)
+{
+    // @stub
+}
+
+VA(0x0058fef0, 0x8D)  // COMDAT pairing (unique 141 B in this obj)
+std::vector<hero>::vector(const std::vector<hero>& other)
+{
+    // @stub
+}
+
+#endif  // @carcass
+
 VA_COMPGEN(0x005903b0, 0x13D, FUNCTOR_CALL, TSortMapsByName)  // anchor-callee _Sort_0 BY_NAME (0x590070) calls it; anchor-global the 'AUTOSAVE.' literal at 0x683968 and rolloverSpaceSeparator's " " seed; ret 8 on two const& args + thiscall functor, retail-only
 inline bool TSortMapsByName::operator()(const GameSelectionHeadersStruct& a,
                                  const GameSelectionHeadersStruct& b) const
@@ -9785,6 +9960,17 @@ VA_COMPGEN(0x00593730, 0x2BB, STD_UNGUARDED_INSERT,
 
 VA_COMPGEN(0x005939f0, 0x551, STD_MEDIAN,
            gameselectionheadersstruct_tsortmapsbyname)  // 1st call in _Sort
+#if 0  // @carcass: Dinkumware instantiation emitted by this compiland
+
+VA(0x00594290, 0x87)  // COMDAT pairing (unique 135 B in this obj)
+std::vector<CampaignScenarioInfo>::vector(
+    const std::vector<CampaignScenarioInfo>& other)
+{
+    // @stub
+}
+
+#endif  // @carcass
+
 VA_COMPGEN(0x00594320, 0x3B8, STD_UNGUARDED_PARTITION,
            gameselectionheadersstruct_tsortmapsbyname)  // 2nd call in _Sort
 VA_COMPGEN(0x005946e0, 0x321, STD_MEDIAN,

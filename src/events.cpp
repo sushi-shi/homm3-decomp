@@ -8660,7 +8660,7 @@ int advManager::DoNetCombat(CNetMsg* pNetMsg)
 // back-level file.
 const int NET_COMBAT_SAVE_VERSION = 42;
 
-// Residual on both (98.19% / 97.99%): one `push ecx`. Retail carries NO
+// Residual on both (98.19% / 97.99%): one `push ecx`. Retail carries NO// Residual on both (98.19% / 97.99%): one `push ecx`. Retail carries NO
 // frame at all - it homes the byte buffer at [ebp+0xb] and the dword at
 // [ebp+8], overlapping inside the dead `infile` parameter slot once that
 // pointer is live in ESI. Block-scoping the pair and swapping their
