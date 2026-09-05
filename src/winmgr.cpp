@@ -633,23 +633,9 @@ void heroWindowManager::SaveFizzleSource(int startX, int startY, int width, int 
     // @stub
 }
 
-// E:\gamedcs\winmgr.cpp:1125
-VA(0x00602cc0, 0xF2)  // anchor-callee + exhaustive tail order, dc 0x19b5c0
-void heroWindowManager::SaveFizzleSourceX(int startX, int startY, int width, int height)
-{
-    // @stub
-}
-
 // E:\gamedcs\winmgr.cpp:1194
 DC_ONLY(0x19b66c, 0x28E)
 void heroWindowManager::FizzleForward(int startX, int startY, int width, int height, int iFadeTime)
-{
-    // @stub
-}
-
-// E:\gamedcs\winmgr.cpp:1314
-VA(0x00602dc0, 0x2F7)  // anchor-import + exhaustive tail order, dc 0x19b8fc
-void heroWindowManager::FizzleForwardX(int startX, int startY, int width, int height, int iFadeTime)
 {
     // @stub
 }
@@ -700,6 +686,160 @@ const unsigned char* Bitmap816::GetMap(int x, int y)
 }
 
 #endif  // @carcass
+
+// E:\gamedcs\winmgr.cpp:1125. Save the screen rectangle the fizzle will
+// blend FROM. The rectangle is clamped into the 800x600 screen first, the
+// previous source bitmap is released, and a fresh one is grabbed straight out
+// of the manager's own screen surface.
+VA(0x00602cc0, 0xF2)  // anchor-callee + exhaustive tail order, dc 0x19b5c0
+void heroWindowManager::SaveFizzleSourceX(int startX, int startY, int width,
+                                          int height)
+{
+    if (gCompleteDrawEnabled) {
+        if (startX < 0) {
+            width += startX;
+            startX = 0;
+        }
+        if (startY < 0) {
+            height += startY;
+            startY = 0;
+        }
+        if (startX + width > 800)
+            width = 800 - startX;
+        if (startY + height > 600)
+            height = 600 - startY;
+
+        if (width > 0 && height > 0) {
+            delete field_4C;
+            field_4C = new Bitmap16Bit(width, height);
+            field_4C->Grab(gpWindowManager->screenBitmap->map,
+                           startX, startY,
+                           gpWindowManager->screenBitmap->Width,
+                           gpWindowManager->screenBitmap->Height,
+                           gpWindowManager->screenBitmap->Pitch);
+        }
+    }
+}
+
+// E:\gamedcs\winmgr.cpp:1314. Cross-fade the saved fizzle source forward
+// into the live screen over eight frames, then blit the destination in whole.
+//
+// Each frame interpolates the three 16-bit colour channels separately with a
+// 16.16 fraction: `alpha = (frame << 16) / 8`, and per channel
+// `((b & M) - (a & M)) * alpha >> 16) + (a & M)` re-masked with M. The three
+// results are OR'd red | green | blue - retail evaluates the operands
+// right-to-left (the blue channel's arithmetic comes first) and combines them
+// left-associatively, which is what that spelling produces.
+//
+// The row pointers step by Pitch BYTES through the Bitmap16MapPointer union,
+// the same view Bitmap16Bit::Draw uses; the manager's colour cycling is
+// latched off for the whole fade and restored with the saved source.
+//
+// ONE `RECT` serves both blit sites - retail writes the same four slots at
+// [ebp-0x54] in the frame loop and after it, and two separate declarations
+// cost the exact 0x10 of frame the record occupies (0x90 against retail's
+// 0x80). Its field order differs between the two sites and that is source:
+// left/right/top/bottom inside the loop, left/top/right/bottom after it.
+//
+// Residual (75.39%): register allocation, in two linked places. Retail
+// materialises the literal zero ONCE in EBX and spends it on every guard
+// (`cmp ecx, ebx` where we emit `test ecx, ecx`) and on the two coordinate
+// resets, which costs it the width/height registers - so it RELOADS both
+// from their parameter homes at each clip, where we keep them live. Inside
+// the blend loop the consequence is the induction choice: retail walks the
+// SAVED row and biases the other two off it, we walk the destination row,
+// and our two pixel loads then land in registers already holding pointers
+// (`mov cx, word ptr [ecx]` plus an explicit `and ecx, 0xffff` against
+// retail's `xor esi, esi` / `mov si, word ptr [ecx]`). All 27 blocks, 14
+// branches and 10 calls agree and the frame is exact. All six declaration
+// orders of the three row pointers were swept: 73.40 / 73.51 / 74.10 /
+// 74.22 / 75.38 / 75.39, and reading `to` before `from` costs 2.9.
+VA(0x00602dc0, 0x2F7)  // anchor-import + exhaustive tail order, dc 0x19b8fc
+void heroWindowManager::FizzleForwardX(int startX, int startY, int width,
+                                       int height, int iFadeTime)
+{
+    if (gCompleteDrawEnabled) {
+        if (startX < 0) {
+            width += startX;
+            startX = 0;
+        }
+        if (startY < 0) {
+            height += startY;
+            startY = 0;
+        }
+        if (startX + width > 800)
+            width = 800 - startX;
+        if (startY + height > 600)
+            height = 600 - startY;
+
+        if (width > 0 && height > 0) {
+            int savedColorCycling = colorCyclingOn;
+            colorCyclingOn = 0;
+            if (iFadeTime == -1)
+                iFadeTime = 33;
+
+            RECT rect;
+            Bitmap16Bit destination(width, height);
+            destination.Grab(screenBitmap->map, startX, startY,
+                             screenBitmap->Width, screenBitmap->Height,
+                             screenBitmap->Pitch);
+
+            for (int frame = 0; frame < 8; frame++) {
+                unsigned long deadline = GameTime::Get() + iFadeTime;
+                int alpha = (frame << 16) / 8;
+
+                Bitmap16MapPointer source;
+                source.pixels = field_4C->GetMap(0, 0);
+                Bitmap16MapPointer target;
+                target.pixels = destination.GetMap(0, 0);
+                Bitmap16MapPointer screen;
+                screen.pixels = screenBitmap->GetMap(startX, startY);
+
+                for (int row = 0; row < height; row++) {
+                    for (int col = 0; col < width; col++) {
+                        unsigned short from = source.pixels[col];
+                        unsigned short to = target.pixels[col];
+                        screen.pixels[col] = static_cast<unsigned short>(
+                            (((((to & gColorMaskRed)
+                                - (from & gColorMaskRed)) * alpha >> 16)
+                              + (from & gColorMaskRed)) & gColorMaskRed)
+                            | (((((to & gColorMaskGreen)
+                                  - (from & gColorMaskGreen)) * alpha >> 16)
+                                + (from & gColorMaskGreen)) & gColorMaskGreen)
+                            | (((((to & gColorMaskBlue)
+                                  - (from & gColorMaskBlue)) * alpha >> 16)
+                                + (from & gColorMaskBlue)) & gColorMaskBlue));
+                    }
+                    screen.bytes += screenBitmap->Pitch;
+                    target.bytes += destination.Pitch;
+                    source.bytes += field_4C->Pitch;
+                }
+
+                PollSound();
+                rect.left = startX;
+                rect.right = startX + width;
+                rect.top = startY;
+                rect.bottom = startY + height;
+                RobAppBlit(&rect);
+                GameTime::DelayTil(deadline);
+            }
+
+            destination.Draw(0, 0, width, height, screenBitmap->map,
+                             startX, startY, screenBitmap->Width,
+                             screenBitmap->Height, screenBitmap->Pitch,
+                             false);
+            rect.left = startX;
+            rect.top = startY;
+            rect.right = startX + width;
+            rect.bottom = startY + height;
+            RobAppBlit(&rect);
+
+            colorCyclingOn = savedColorCycling;
+            delete field_4C;
+            field_4C = 0;
+        }
+    }
+}
 
 // E:\gamedcs\winmgr.cpp:1447. The fizzle buffer is released through the
 // same virtual slot-0 + flag-1 tail Close uses on the manager's two
