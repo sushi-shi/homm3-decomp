@@ -4409,6 +4409,10 @@ void std::__pop_heap_aux(army** __first, army** __last, army** __formal, func_mo
 
 #endif  // @carcass
 
+// COMDAT pairing: vector<army*>::size - ai.obj's own copy, 19 B against
+// the 19-byte emitted COMDAT and the only candidate of that size here.
+VA_COMPGEN(0x00423110, 0x13, VECTOR_SIZE, army)
+
 // COMDAT pairing: vector<army*>::insert, agreement 0.985
 // (230 base vs 223 retail instructions).
 VA_COMPGEN(0x00423130, 0x209, VECTOR_INSERT, army)

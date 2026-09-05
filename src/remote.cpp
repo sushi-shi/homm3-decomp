@@ -4165,6 +4165,14 @@ CNetMsgHandlerPause::CNetMsgHandlerPause()
 // inlining it the way it does CNetMsgHandler's.
 VA_COMPGEN(0x00557eb0, 0x21, SCALAR_DELETING_DTOR, CNetMsgHandlerPause)
 
+// UNCLAIMED IN SPAN: 0x558490 (108 B) is one of the two
+// CAutoArray `scalar deleting destructor' COMDATs - remote.obj emits both
+// the CDPlaySession and the CDPlayPlayer instantiation at exactly 108 B and
+// retail carries only this one row, so a SCALAR_DELETING_DTOR claim on the
+// shared `cautoarray_cautoarray@gdtor` key is ambiguous in both directions
+// and the join refuses it. Its sibling 0x5583b0 (84 B) is the second
+// ~CAutoArray, whose twin is already claimed at 0x558350.
+
 // deque<CNetMsg*>'s back-block allocator, the half of the pair army.obj's
 // int deque needed the freeing side of. Byte-verified against the emitted
 // COMDAT at 0.967 over 322 bytes.
@@ -4186,6 +4194,20 @@ CNetMsgHandlerPause::~CNetMsgHandlerPause()
     if (pDPlay)
         pDPlay->SetNetMsgHandler(m_pNetMsgHandlerSave);
 }
+
+// COMDAT pairing: deque<CNetMsg*>'s own destructor, 160 B against
+// remote.obj's single 160-byte COMDAT, and the owner of the DEQUE_BUYBACK
+// row claimed just below. Declarator form: _demangle_key keys a deque
+// destructor `deque_deque@dtor`, which no compgen kind builds.
+#if 0  // @carcass: Dinkumware instantiations emitted by this compiland
+
+VA(0x00557fe0, 0xA0)  // COMDAT pairing (unique 160 B in this obj)
+std::deque<CNetMsg*>::~deque()
+{
+    // @stub
+}
+
+#endif  // @carcass
 
 // E:\gamedcs\remote.cpp:3114
 #if 0  // @carcass

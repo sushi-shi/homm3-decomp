@@ -9525,6 +9525,35 @@ void* CAutoArray<int>::`scalar deleting destructor'(unsigned __flags)
 // one), a named lhs/rhs pair (81.78 - one call but `mov` where retail
 // pushes in each arm), declaring sb ahead of the buffers (82.94). The
 // shared `int order` form below is the best of the four.
+// COMDAT pairings against this compiland's own template instantiations,
+// each the only candidate of its exact size in singleselectionwindow.obj:
+// three vector copy constructors (102 / 141 / 135 B). They share one
+// authority key (`vector_vector`), so they join by content size, which is
+// unambiguous in both directions here.
+//
+// SIZE ALONE IS NOT A PAIRING, and 0x58ea00 is the counter-example: it is
+// the only unclaimed 110-byte row in this span and _Tree<int,
+// type_map_hero_info>::_Erase is the only 110-byte COMDAT this obj emits,
+// yet the claim scores 12.15%. Retail's body walks a 0x7c-stride table
+// eight times masking a dword against 0x299240 - a bitset scan, not a tree
+// teardown - so the row stays unidentified.
+
+#if 0  // @carcass: Dinkumware instantiations emitted by this compiland
+
+VA(0x0058fe80, 0x66)  // COMDAT pairing (unique 102 B in this obj)
+std::vector<int>::vector(const std::vector<int>& other)
+{
+    // @stub
+}
+
+VA(0x0058fef0, 0x8D)  // COMDAT pairing (unique 141 B in this obj)
+std::vector<hero>::vector(const std::vector<hero>& other)
+{
+    // @stub
+}
+
+#endif  // @carcass
+
 VA_COMPGEN(0x005903b0, 0x13D, FUNCTOR_CALL, TSortMapsByName)  // anchor-callee _Sort_0 BY_NAME (0x590070) calls it; anchor-global the 'AUTOSAVE.' literal at 0x683968 and rolloverSpaceSeparator's " " seed; ret 8 on two const& args + thiscall functor, retail-only
 inline bool TSortMapsByName::operator()(const GameSelectionHeadersStruct& a,
                                  const GameSelectionHeadersStruct& b) const
@@ -9803,6 +9832,17 @@ VA_COMPGEN(0x00593730, 0x2BB, STD_UNGUARDED_INSERT,
 
 VA_COMPGEN(0x005939f0, 0x551, STD_MEDIAN,
            gameselectionheadersstruct_tsortmapsbyname)  // 1st call in _Sort
+#if 0  // @carcass: Dinkumware instantiation emitted by this compiland
+
+VA(0x00594290, 0x87)  // COMDAT pairing (unique 135 B in this obj)
+std::vector<CampaignScenarioInfo>::vector(
+    const std::vector<CampaignScenarioInfo>& other)
+{
+    // @stub
+}
+
+#endif  // @carcass
+
 VA_COMPGEN(0x00594320, 0x3B8, STD_UNGUARDED_PARTITION,
            gameselectionheadersstruct_tsortmapsbyname)  // 2nd call in _Sort
 VA_COMPGEN(0x005946e0, 0x321, STD_MEDIAN,
