@@ -1428,3 +1428,365 @@ void CSpriteFrame::DrawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
         }
     }
 }
+
+// E:\gamedcs\cspriteframe.cpp:3365
+// The tileset shadow pass: same packed-cell walk as DrawTile above, with the
+// palette write replaced by a blend of what is already on the destination.
+// Nothing here reads `pal` - the parameter survives because CSprite's two
+// wrappers (0x47bfa0, 0x47bff0) pass it - and nothing reads the raw encoding
+// either, which is why the body opens by returning on eEncodeRaw instead of
+// carrying DrawTile's unrolled raw arm.
+//
+// Only two blends exist and the jump table at 0x47ef20 says which codes reach
+// them: 1 and 2 take three quarters of the destination
+// (`(p>>2)&div4mask + (p>>1)&div2mask`), 3 and 4 take a half, code 7's opaque
+// run is skipped over rather than drawn, and every other code just advances.
+// The mask widths are read straight from the bytes - div4mask is ANDed as a
+// word and div2mask as a dword in all four arms.
+//
+// Residual (97.90%): 156 of 156 blocks, all 72 branches and all 4 returns
+// agree; what is left is register roles in two places. In the three-quarter
+// blend retail computes the div4mask term into the COPY (`mov bx,ax / shr
+// bx,2 / and bx,word[div4mask]`) and the div2mask term into the original,
+// while this compile assigns them the other way round and still emits the
+// same `add ebx,eax` and the same store. Source order is NOT the lever:
+// writing the div2mask term first is byte-flat to the digit, and so is
+// naming either term in its own local (the div4-term local measured 97.90
+// exactly, and naming the load `color` - the spelling the half blend needs -
+// LOSES 0.88 here). The remaining hunk is the same class one arm up, where
+// the line pointer is built in EDX rather than EDI before the identical
+// store. Both are B-family homing on values that arrive as parameters.
+VA(0x0047e820, 0x740)  // anchor-callee (CSprite::DrawTileShadow/DrawShroudTile) + DC source identity
+void CSpriteFrame::DrawTileShadow(int sx, int sy, int sw, int sh,
+                                  unsigned short* dst, int dx, int dy, int dw,
+                                  int dh, int dpitch, TPalette16& pal,
+                                  unsigned char hflip,
+                                  unsigned char vflip) const
+{
+    static const unsigned char kOpaqueRunCode = 7;
+
+    if (EncodingMethod == eEncodeRaw)
+        return;
+
+    Clip(sx, sy, sw, sh, dx, dy, dw, dh, hflip, vflip);
+    if (sw > 0) {
+        if (sh > 0) {
+            const unsigned short* aLineOffset =
+                static_cast<const unsigned short*>(
+                    static_cast<const void*>(map));
+            if (!vflip) {
+                if (!hflip) {
+                    unsigned short* lineDst =
+                        static_cast<unsigned short*>(static_cast<void*>(
+                        static_cast<unsigned char*>(static_cast<void*>(dst)) +
+                        dy * dpitch + dx * 2));
+
+                    for (int y = sy; y < sy + sh; ++y) {
+                        unsigned short* out = lineDst;
+                        const unsigned char* src = map + aLineOffset[y];
+                        unsigned int skipped = 0;
+                        unsigned char packet = *src;
+                        unsigned char code = packet >> 5;
+                        unsigned int run = (packet & 31) + 1;
+                        ++src;
+
+                        while (skipped + run <=
+                               static_cast<unsigned int>(sx)) {
+                            skipped += run;
+                            if (code == kOpaqueRunCode)
+                                src += run;
+                            packet = *src;
+                            code = packet >> 5;
+                            run = (packet & 31) + 1;
+                            ++src;
+                        }
+                        run += skipped - sx;
+                        if (code == kOpaqueRunCode)
+                            src += sx - skipped;
+
+                        unsigned int remaining = sw;
+                        do {
+                            if (run > remaining)
+                                run = remaining;
+                            if (code == kOpaqueRunCode) {
+                                out += run;
+                                src += run;
+                            } else {
+                                switch (code) {
+                                case eRleControlShadow75:
+                                case eRleControlShadow2: {
+                                    unsigned int count = run;
+                                    do {
+                                        *out = ((*out >> 2) & div4mask)
+                                             + ((*out >> 1) & div2mask.dword);
+                                        ++out;
+                                    } while (--count);
+                                    break;
+                                }
+                                case eRleControlShadow3:
+                                case eRleControlShadow50: {
+                                    unsigned int count = run;
+                                    do {
+                                        unsigned int color = *out;
+                                        *out = (color >> 1) & div2mask.dword;
+                                        ++out;
+                                    } while (--count);
+                                    break;
+                                }
+                                default:
+                                    out += run;
+                                    break;
+                                }
+                            }
+                            remaining -= run;
+                            if (!remaining)
+                                break;
+                            packet = *src;
+                            code = packet >> 5;
+                            run = (packet & 31) + 1;
+                            ++src;
+                        } while (remaining);
+
+                        lineDst =
+                            static_cast<unsigned short*>(static_cast<void*>(
+                                static_cast<unsigned char*>(
+                                    static_cast<void*>(lineDst)) + dpitch));
+                    }
+                } else {
+                    unsigned short* lineDst =
+                        static_cast<unsigned short*>(static_cast<void*>(
+                        static_cast<unsigned char*>(static_cast<void*>(dst)) +
+                        dy * dpitch + (dx + sw) * 2));
+
+                    for (int y = sy; y < sy + sh; ++y) {
+                        unsigned short* out = lineDst;
+                        const unsigned char* src = map + aLineOffset[y];
+                        unsigned int skipped = 0;
+                        unsigned char packet = *src;
+                        unsigned char code = packet >> 5;
+                        unsigned int run = (packet & 31) + 1;
+                        ++src;
+
+                        while (skipped + run <=
+                               static_cast<unsigned int>(sx)) {
+                            skipped += run;
+                            if (code == kOpaqueRunCode)
+                                src += run;
+                            packet = *src;
+                            code = packet >> 5;
+                            run = (packet & 31) + 1;
+                            ++src;
+                        }
+                        run += skipped - sx;
+                        if (code == kOpaqueRunCode)
+                            src += sx - skipped;
+
+                        unsigned int remaining = sw;
+                        do {
+                            if (run > remaining)
+                                run = remaining;
+                            if (code == kOpaqueRunCode) {
+                                out -= run;
+                                src += run;
+                            } else {
+                                switch (code) {
+                                case eRleControlShadow75:
+                                case eRleControlShadow2: {
+                                    unsigned int count = run;
+                                    do {
+                                        --out;
+                                        *out = ((*out >> 2) & div4mask)
+                                             + ((*out >> 1) & div2mask.dword);
+                                    } while (--count);
+                                    break;
+                                }
+                                case eRleControlShadow3:
+                                case eRleControlShadow50: {
+                                    unsigned int count = run;
+                                    do {
+                                        unsigned int color = out[-1];
+                                        --out;
+                                        *out = (color >> 1) & div2mask.dword;
+                                    } while (--count);
+                                    break;
+                                }
+                                default:
+                                    out -= run;
+                                    break;
+                                }
+                            }
+                            remaining -= run;
+                            if (!remaining)
+                                break;
+                            packet = *src;
+                            code = packet >> 5;
+                            run = (packet & 31) + 1;
+                            ++src;
+                        } while (remaining);
+
+                        lineDst =
+                            static_cast<unsigned short*>(static_cast<void*>(
+                                static_cast<unsigned char*>(
+                                    static_cast<void*>(lineDst)) + dpitch));
+                    }
+                }
+            } else {
+                if (!hflip) {
+                    unsigned short* lineDst =
+                        static_cast<unsigned short*>(static_cast<void*>(
+                        static_cast<unsigned char*>(static_cast<void*>(dst)) +
+                        (dy + sh - 1) * dpitch + dx * 2));
+
+                    for (int y = sy; y < sy + sh; ++y) {
+                        unsigned short* out = lineDst;
+                        const unsigned char* src = map + aLineOffset[y];
+                        unsigned int skipped = 0;
+                        unsigned char packet = *src;
+                        unsigned char code = packet >> 5;
+                        unsigned int run = (packet & 31) + 1;
+                        ++src;
+
+                        while (skipped + run <=
+                               static_cast<unsigned int>(sx)) {
+                            skipped += run;
+                            if (code == kOpaqueRunCode)
+                                src += run;
+                            packet = *src;
+                            code = packet >> 5;
+                            run = (packet & 31) + 1;
+                            ++src;
+                        }
+                        run += skipped - sx;
+                        if (code == kOpaqueRunCode)
+                            src += sx - skipped;
+
+                        unsigned int remaining = sw;
+                        do {
+                            if (run > remaining)
+                                run = remaining;
+                            if (code == kOpaqueRunCode) {
+                                out += run;
+                                src += run;
+                            } else {
+                                switch (code) {
+                                case eRleControlShadow75:
+                                case eRleControlShadow2: {
+                                    unsigned int count = run;
+                                    do {
+                                        *out = ((*out >> 2) & div4mask)
+                                             + ((*out >> 1) & div2mask.dword);
+                                        ++out;
+                                    } while (--count);
+                                    break;
+                                }
+                                case eRleControlShadow3:
+                                case eRleControlShadow50: {
+                                    unsigned int count = run;
+                                    do {
+                                        unsigned int color = *out;
+                                        *out = (color >> 1) & div2mask.dword;
+                                        ++out;
+                                    } while (--count);
+                                    break;
+                                }
+                                default:
+                                    out += run;
+                                    break;
+                                }
+                            }
+                            remaining -= run;
+                            if (!remaining)
+                                break;
+                            packet = *src;
+                            code = packet >> 5;
+                            run = (packet & 31) + 1;
+                            ++src;
+                        } while (remaining);
+
+                        lineDst =
+                            static_cast<unsigned short*>(static_cast<void*>(
+                                static_cast<unsigned char*>(
+                                    static_cast<void*>(lineDst)) - dpitch));
+                    }
+                } else {
+                    unsigned short* lineDst =
+                        static_cast<unsigned short*>(static_cast<void*>(
+                        static_cast<unsigned char*>(static_cast<void*>(dst)) +
+                        (dy + sh - 1) * dpitch + (dx + sw) * 2));
+
+                    for (int y = sy; y < sy + sh; ++y) {
+                        unsigned short* out = lineDst;
+                        const unsigned char* src = map + aLineOffset[y];
+                        unsigned int skipped = 0;
+                        unsigned char packet = *src;
+                        unsigned char code = packet >> 5;
+                        unsigned int run = (packet & 31) + 1;
+                        ++src;
+
+                        while (skipped + run <=
+                               static_cast<unsigned int>(sx)) {
+                            skipped += run;
+                            if (code == kOpaqueRunCode)
+                                src += run;
+                            packet = *src;
+                            code = packet >> 5;
+                            run = (packet & 31) + 1;
+                            ++src;
+                        }
+                        run += skipped - sx;
+                        if (code == kOpaqueRunCode)
+                            src += sx - skipped;
+
+                        unsigned int remaining = sw;
+                        do {
+                            if (run > remaining)
+                                run = remaining;
+                            if (code == kOpaqueRunCode) {
+                                out -= run;
+                                src += run;
+                            } else {
+                                switch (code) {
+                                case eRleControlShadow75:
+                                case eRleControlShadow2: {
+                                    unsigned int count = run;
+                                    do {
+                                        --out;
+                                        *out = ((*out >> 2) & div4mask)
+                                             + ((*out >> 1) & div2mask.dword);
+                                    } while (--count);
+                                    break;
+                                }
+                                case eRleControlShadow3:
+                                case eRleControlShadow50: {
+                                    unsigned int count = run;
+                                    do {
+                                        unsigned int color = out[-1];
+                                        --out;
+                                        *out = (color >> 1) & div2mask.dword;
+                                    } while (--count);
+                                    break;
+                                }
+                                default:
+                                    out -= run;
+                                    break;
+                                }
+                            }
+                            remaining -= run;
+                            if (!remaining)
+                                break;
+                            packet = *src;
+                            code = packet >> 5;
+                            run = (packet & 31) + 1;
+                            ++src;
+                        } while (remaining);
+
+                        lineDst =
+                            static_cast<unsigned short*>(static_cast<void*>(
+                                static_cast<unsigned char*>(
+                                    static_cast<void*>(lineDst)) - dpitch));
+                    }
+                }
+            }
+        }
+    }
+}
