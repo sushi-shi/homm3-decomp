@@ -868,6 +868,19 @@ VA_COMPGEN(0x0045c960, 0x3AD, VECTOR_INSERT, CampaignScenarioPreview)
 // authority group.
 VA_COMPGEN(0x0045cf70, 0x2BE, IMPLICIT_COPY_ASSIGN, TPlayerSlotAttributes)
 
+// NewSMapHeader's compiler-generated copy assignment, and the twin of the
+// already-exact base ??4CMapHeaderData at 0x457cb0: the two bodies walk the
+// SAME field map - dword +0, the byte run to +0x14, dword +0x18, byte +0x1c,
+// the vector<TArtifact> assign at +0x20, `rep movsd` 0x13 then 9 dwords, the
+// eight 0x44-byte TPlayerSlotAttributes assigns from +0xa0 to +0x2c0, and the
+// heroPlayerSetups map's erase/_Copy pair at +0x2c0 - and this one then runs
+// on past CMapHeaderData's 0x2d0 end into the DERIVED strings: a called
+// `basic_string::assign(str, 0, npos)` at +0x2d0 and an expanded one at
+// +0x2e0. game.h's `NewSMapHeader : public CMapHeaderData` carries exactly
+// those two strings after the base, so the base half is inlined here rather
+// than delegated. Retail keeps 0x457cb0 too, which is why both survive.
+VA_COMPGEN(0x0045cd10, 0x25A, IMPLICIT_COPY_ASSIGN, NewSMapHeader)
+
 VA_COMPGEN(0x0045d270, 0xFF, TREE_COPY_NODE, type_map_hero_info)
 
 // The generic Dreamcast tree-increment dossier (dc 0x64214) proves the
