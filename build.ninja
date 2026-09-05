@@ -109,6 +109,10 @@ build build/objdiff/base/iconwdgt.obj: cl src/iconwdgt.cpp | $
     scripts/homm3/core/cc_wrap.py
   flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = iconwdgt
+build build/objdiff/base/textscroller.obj: cl src/textscroller.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = textscroller
 build build/objdiff/base/textwdgt.obj: cl src/textwdgt.cpp | $
     scripts/homm3/core/cc_wrap.py
   flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
@@ -183,11 +187,11 @@ build build/objdiff/base/resourcedisplay.obj: cl src/resourcedisplay.cpp | $
   unit = resourcedisplay
 build build/objdiff/base/resourcemanager.obj: cl src/resourcemanager.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /MT /Gr /GX /D_WINDOWS
   unit = resourcemanager
 build build/objdiff/base/spells.obj: cl src/spells.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /MT /Gr /GX /D_WINDOWS
   unit = spells
 build build/objdiff/base/creaturetype.obj: cl src/creaturetype.cpp | $
     scripts/homm3/core/cc_wrap.py
@@ -358,7 +362,7 @@ build build/objdiff/base/hero.obj: cl src/hero.cpp | $
   unit = hero
 build build/objdiff/base/game.obj: cl src/game.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /MT /Gr /GX /D_WINDOWS
   unit = game
 build build/objdiff/base/mapcell.obj: cl src/mapcell.cpp | $
     scripts/homm3/core/cc_wrap.py
@@ -366,7 +370,7 @@ build build/objdiff/base/mapcell.obj: cl src/mapcell.cpp | $
   unit = mapcell
 build build/objdiff/base/cmbtmgr.obj: cl src/cmbtmgr.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /MT /Gr /GX /D_WINDOWS
   unit = cmbtmgr
 build build/objdiff/base/command.obj: cl src/command.cpp | $
     scripts/homm3/core/cc_wrap.py
@@ -425,7 +429,7 @@ build build/objdiff/base/multiplayerwindow.obj: cl $
   unit = multiplayerwindow
 build build/objdiff/base/singleselectionwindow.obj: cl $
     src/singleselectionwindow.cpp | scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /MT /Gr /GX /D_WINDOWS
   unit = singleselectionwindow
 build build/objdiff/base/diff.obj: cl src/diff.cpp | $
     scripts/homm3/core/cc_wrap.py
@@ -459,6 +463,10 @@ build build/objdiff/base/spelldefs.obj: cl src/spelldefs.cpp | $
     scripts/homm3/core/cc_wrap.py
   flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = spelldefs
+build build/objdiff/base/seerhuttext.obj: cl src/seerhuttext.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = seerhuttext
 build build/objdiff/base/scenarioinfo.obj: cl src/scenarioinfo.cpp | $
     scripts/homm3/core/cc_wrap.py
   flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
@@ -555,9 +563,17 @@ build build/objdiff/base/rmg_terrain.obj: cl src/rmg_terrain.cpp | $
     scripts/homm3/core/cc_wrap.py
   flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = rmg_terrain
-build build/objdiff/base/objecttype.obj: cl src/objecttype.cpp | $
+build build/objdiff/base/objnames.obj: cl src/objnames.cpp | $
     scripts/homm3/core/cc_wrap.py
   flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = objnames
+build build/objdiff/base/forcefeedback.obj: cl src/forcefeedback.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /MT /Gr /GX /D_WINDOWS
+  unit = forcefeedback
+build build/objdiff/base/objecttype.obj: cl src/objecttype.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /MT /Gr /GX /D_WINDOWS
   unit = objecttype
 build build/objdiff/base/gzfile.obj: cl src/gzfile.cpp | $
     scripts/homm3/core/cc_wrap.py
@@ -565,7 +581,7 @@ build build/objdiff/base/gzfile.obj: cl src/gzfile.cpp | $
   unit = gzfile
 build build/objdiff/base/gzinflatebuf.obj: cl src/gzinflatebuf.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /MT /Gr /GX /D_WINDOWS
   unit = gzinflatebuf
 build objects: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
@@ -579,15 +595,16 @@ build objects: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/button.obj build/objdiff/base/widget.obj $
     build/objdiff/base/window.obj build/objdiff/base/resource.obj $
     build/objdiff/base/border.obj build/objdiff/base/iconwdgt.obj $
-    build/objdiff/base/textwdgt.obj build/objdiff/base/textntry.obj $
-    build/objdiff/base/textresource.obj build/objdiff/base/hiscore.obj $
-    build/objdiff/base/sample.obj build/objdiff/base/font.obj $
-    build/objdiff/base/exec.obj build/objdiff/base/inputmgr.obj $
-    build/objdiff/base/findpath.obj build/objdiff/base/smackmgr.obj $
-    build/objdiff/base/path.obj build/objdiff/base/monframeinfo.obj $
-    build/objdiff/base/initialize.obj build/objdiff/base/winfile.obj $
-    build/objdiff/base/strip.obj build/objdiff/base/winmgr.obj $
-    build/objdiff/base/subwindow.obj build/objdiff/base/resourcedisplay.obj $
+    build/objdiff/base/textscroller.obj build/objdiff/base/textwdgt.obj $
+    build/objdiff/base/textntry.obj build/objdiff/base/textresource.obj $
+    build/objdiff/base/hiscore.obj build/objdiff/base/sample.obj $
+    build/objdiff/base/font.obj build/objdiff/base/exec.obj $
+    build/objdiff/base/inputmgr.obj build/objdiff/base/findpath.obj $
+    build/objdiff/base/smackmgr.obj build/objdiff/base/path.obj $
+    build/objdiff/base/monframeinfo.obj build/objdiff/base/initialize.obj $
+    build/objdiff/base/winfile.obj build/objdiff/base/strip.obj $
+    build/objdiff/base/winmgr.obj build/objdiff/base/subwindow.obj $
+    build/objdiff/base/resourcedisplay.obj $
     build/objdiff/base/resourcemanager.obj build/objdiff/base/spells.obj $
     build/objdiff/base/creaturetype.obj $
     build/objdiff/base/creature_bank.obj build/objdiff/base/u2dvers.obj $
@@ -632,9 +649,9 @@ build objects: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/combatresultswindow.obj $
     build/objdiff/base/combatoptionswindow.obj $
     build/objdiff/base/combatwindow.obj build/objdiff/base/spelldefs.obj $
-    build/objdiff/base/scenarioinfo.obj build/objdiff/base/dialogbox.obj $
-    build/objdiff/base/puzzlewindow.obj build/objdiff/base/remote.obj $
-    build/objdiff/base/university_window.obj $
+    build/objdiff/base/seerhuttext.obj build/objdiff/base/scenarioinfo.obj $
+    build/objdiff/base/dialogbox.obj build/objdiff/base/puzzlewindow.obj $
+    build/objdiff/base/remote.obj build/objdiff/base/university_window.obj $
     build/objdiff/base/csequence.obj build/objdiff/base/cursor.obj $
     build/objdiff/base/event_record.obj $
     build/objdiff/base/singleselectionpopups.obj $
@@ -646,7 +663,8 @@ build objects: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/swapmgr.obj build/objdiff/base/tradpost.obj $
     build/objdiff/base/seerhut.obj build/objdiff/base/sacrifice_window.obj $
     build/objdiff/base/rmg.obj build/objdiff/base/rmg_support.obj $
-    build/objdiff/base/rmg_terrain.obj build/objdiff/base/objecttype.obj $
+    build/objdiff/base/rmg_terrain.obj build/objdiff/base/objnames.obj $
+    build/objdiff/base/forcefeedback.obj build/objdiff/base/objecttype.obj $
     build/objdiff/base/gzfile.obj build/objdiff/base/gzinflatebuf.obj
 build all: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
@@ -660,15 +678,16 @@ build all: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/button.obj build/objdiff/base/widget.obj $
     build/objdiff/base/window.obj build/objdiff/base/resource.obj $
     build/objdiff/base/border.obj build/objdiff/base/iconwdgt.obj $
-    build/objdiff/base/textwdgt.obj build/objdiff/base/textntry.obj $
-    build/objdiff/base/textresource.obj build/objdiff/base/hiscore.obj $
-    build/objdiff/base/sample.obj build/objdiff/base/font.obj $
-    build/objdiff/base/exec.obj build/objdiff/base/inputmgr.obj $
-    build/objdiff/base/findpath.obj build/objdiff/base/smackmgr.obj $
-    build/objdiff/base/path.obj build/objdiff/base/monframeinfo.obj $
-    build/objdiff/base/initialize.obj build/objdiff/base/winfile.obj $
-    build/objdiff/base/strip.obj build/objdiff/base/winmgr.obj $
-    build/objdiff/base/subwindow.obj build/objdiff/base/resourcedisplay.obj $
+    build/objdiff/base/textscroller.obj build/objdiff/base/textwdgt.obj $
+    build/objdiff/base/textntry.obj build/objdiff/base/textresource.obj $
+    build/objdiff/base/hiscore.obj build/objdiff/base/sample.obj $
+    build/objdiff/base/font.obj build/objdiff/base/exec.obj $
+    build/objdiff/base/inputmgr.obj build/objdiff/base/findpath.obj $
+    build/objdiff/base/smackmgr.obj build/objdiff/base/path.obj $
+    build/objdiff/base/monframeinfo.obj build/objdiff/base/initialize.obj $
+    build/objdiff/base/winfile.obj build/objdiff/base/strip.obj $
+    build/objdiff/base/winmgr.obj build/objdiff/base/subwindow.obj $
+    build/objdiff/base/resourcedisplay.obj $
     build/objdiff/base/resourcemanager.obj build/objdiff/base/spells.obj $
     build/objdiff/base/creaturetype.obj $
     build/objdiff/base/creature_bank.obj build/objdiff/base/u2dvers.obj $
@@ -713,9 +732,9 @@ build all: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/combatresultswindow.obj $
     build/objdiff/base/combatoptionswindow.obj $
     build/objdiff/base/combatwindow.obj build/objdiff/base/spelldefs.obj $
-    build/objdiff/base/scenarioinfo.obj build/objdiff/base/dialogbox.obj $
-    build/objdiff/base/puzzlewindow.obj build/objdiff/base/remote.obj $
-    build/objdiff/base/university_window.obj $
+    build/objdiff/base/seerhuttext.obj build/objdiff/base/scenarioinfo.obj $
+    build/objdiff/base/dialogbox.obj build/objdiff/base/puzzlewindow.obj $
+    build/objdiff/base/remote.obj build/objdiff/base/university_window.obj $
     build/objdiff/base/csequence.obj build/objdiff/base/cursor.obj $
     build/objdiff/base/event_record.obj $
     build/objdiff/base/singleselectionpopups.obj $
@@ -727,7 +746,8 @@ build all: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/swapmgr.obj build/objdiff/base/tradpost.obj $
     build/objdiff/base/seerhut.obj build/objdiff/base/sacrifice_window.obj $
     build/objdiff/base/rmg.obj build/objdiff/base/rmg_support.obj $
-    build/objdiff/base/rmg_terrain.obj build/objdiff/base/objecttype.obj $
+    build/objdiff/base/rmg_terrain.obj build/objdiff/base/objnames.obj $
+    build/objdiff/base/forcefeedback.obj build/objdiff/base/objecttype.obj $
     build/objdiff/base/gzfile.obj build/objdiff/base/gzinflatebuf.obj
 default all
 build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
@@ -742,15 +762,16 @@ build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
     build/objdiff/base/button.obj build/objdiff/base/widget.obj $
     build/objdiff/base/window.obj build/objdiff/base/resource.obj $
     build/objdiff/base/border.obj build/objdiff/base/iconwdgt.obj $
-    build/objdiff/base/textwdgt.obj build/objdiff/base/textntry.obj $
-    build/objdiff/base/textresource.obj build/objdiff/base/hiscore.obj $
-    build/objdiff/base/sample.obj build/objdiff/base/font.obj $
-    build/objdiff/base/exec.obj build/objdiff/base/inputmgr.obj $
-    build/objdiff/base/findpath.obj build/objdiff/base/smackmgr.obj $
-    build/objdiff/base/path.obj build/objdiff/base/monframeinfo.obj $
-    build/objdiff/base/initialize.obj build/objdiff/base/winfile.obj $
-    build/objdiff/base/strip.obj build/objdiff/base/winmgr.obj $
-    build/objdiff/base/subwindow.obj build/objdiff/base/resourcedisplay.obj $
+    build/objdiff/base/textscroller.obj build/objdiff/base/textwdgt.obj $
+    build/objdiff/base/textntry.obj build/objdiff/base/textresource.obj $
+    build/objdiff/base/hiscore.obj build/objdiff/base/sample.obj $
+    build/objdiff/base/font.obj build/objdiff/base/exec.obj $
+    build/objdiff/base/inputmgr.obj build/objdiff/base/findpath.obj $
+    build/objdiff/base/smackmgr.obj build/objdiff/base/path.obj $
+    build/objdiff/base/monframeinfo.obj build/objdiff/base/initialize.obj $
+    build/objdiff/base/winfile.obj build/objdiff/base/strip.obj $
+    build/objdiff/base/winmgr.obj build/objdiff/base/subwindow.obj $
+    build/objdiff/base/resourcedisplay.obj $
     build/objdiff/base/resourcemanager.obj build/objdiff/base/spells.obj $
     build/objdiff/base/creaturetype.obj $
     build/objdiff/base/creature_bank.obj build/objdiff/base/u2dvers.obj $
@@ -795,9 +816,9 @@ build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
     build/objdiff/base/combatresultswindow.obj $
     build/objdiff/base/combatoptionswindow.obj $
     build/objdiff/base/combatwindow.obj build/objdiff/base/spelldefs.obj $
-    build/objdiff/base/scenarioinfo.obj build/objdiff/base/dialogbox.obj $
-    build/objdiff/base/puzzlewindow.obj build/objdiff/base/remote.obj $
-    build/objdiff/base/university_window.obj $
+    build/objdiff/base/seerhuttext.obj build/objdiff/base/scenarioinfo.obj $
+    build/objdiff/base/dialogbox.obj build/objdiff/base/puzzlewindow.obj $
+    build/objdiff/base/remote.obj build/objdiff/base/university_window.obj $
     build/objdiff/base/csequence.obj build/objdiff/base/cursor.obj $
     build/objdiff/base/event_record.obj $
     build/objdiff/base/singleselectionpopups.obj $
@@ -809,7 +830,8 @@ build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
     build/objdiff/base/swapmgr.obj build/objdiff/base/tradpost.obj $
     build/objdiff/base/seerhut.obj build/objdiff/base/sacrifice_window.obj $
     build/objdiff/base/rmg.obj build/objdiff/base/rmg_support.obj $
-    build/objdiff/base/rmg_terrain.obj build/objdiff/base/objecttype.obj $
+    build/objdiff/base/rmg_terrain.obj build/objdiff/base/objnames.obj $
+    build/objdiff/base/forcefeedback.obj build/objdiff/base/objecttype.obj $
     build/objdiff/base/gzfile.obj build/objdiff/base/gzinflatebuf.obj | $
     scripts/homm3/build/link.py
 build candidate: phony build/exe/HEROES3.candidate.EXE
