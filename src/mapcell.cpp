@@ -5756,6 +5756,56 @@ void NewfullMap::NewfullMapFn_00505F20(CObject* object, int objectType,
     object->typeIndex = objectTypeIndex[objectType][i].field_42;
 }
 
+// The map-editor template's conversion into the runtime object-type record,
+// and the first row past NewfullMapFn_00505F20 - the constructor
+// NewfullMapFn_00505DA0 calls once per row of objects.txt, whose address
+// advmgr_objects.h already records against this class.
+//
+// The four 48-cell masks are transposed cell by cell through the class's own
+// _getBitPos(x, y) = 47 - y * 8 - x. The stores are all `set(pos, value)`,
+// which retail keeps out of line.
+//
+// Residual (39.16%): the bitset members, and only them. Retail CALLS
+// bitset<48>::test at two of the four reads and expands the range check at
+// the other two (its six branches are the three loop back edges plus those
+// two checks and the bitset<10> one); our /Ob2 budget expands more of them,
+// which is the whole 24-vs-14 block surplus and all five target-only calls.
+// The two calls that do pair - basic_string::_Tidy and bitset<10>::_Tidy -
+// and the GetImageName/assign pair are already right, as is the field
+// transcription. Measured: all four reads spelled `test()` is 39.16, retail's
+// own two-and-two split is 22.87, and all four as `operator[]` is 12.95, so
+// the spelling that reads closest to retail is NOT the one its budget
+// produces here - the lever is a statement pin this lane may not add.
+//
+// Only nine of the template's fields cross: the image name, the two sizes,
+// the four masks, the recommended-terrain mask, the type, the subtype and
+// the underlay flag. hasTrigger, triggerCell, slotCategory and terrainMask
+// are not copied here.
+VA(0x00506080, 0x1D4)  // sole caller NewfullMapFn_00505DA0 + advmgr_objects.h address, retail-only
+CObjectType::CObjectType(TObjectType* source)
+{
+    ImageName = source->GetImageName();
+    width = static_cast<signed char>(source->imageInfo.objectSize.x);
+    height = static_cast<signed char>(source->imageInfo.objectSize.y);
+
+    for (unsigned y = 0; y < 6; y++) {
+        for (unsigned x = 0; x < 8; x++) {
+            unsigned pos = _getBitPos(x, y);
+            drawCells.set(pos, source->imageInfo.drawMask.test(pos));
+            passableCells.set(pos, source->passableMask.test(pos));
+            shadowCells.set(pos, source->imageInfo.shadowMask.test(pos));
+            triggerCells.set(pos, source->triggerMask.test(pos));
+        }
+    }
+
+    for (int terrain = 0; terrain < 10; terrain++)
+        mask_34.set(terrain, source->recommendedTerrainMask[terrain]);
+
+    objectType = source->objectType;
+    extra = source->subtype;
+    suppressDraw = source->isUnderlay;
+}
+
 // These Dinkumware template members are already emitted by NewfullMap's
 // vector members.  The annotations only pair their named VC6 COMDATs with
 // the contiguous retail run; there are deliberately no source definitions.

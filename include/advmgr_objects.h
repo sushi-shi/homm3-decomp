@@ -256,6 +256,17 @@ struct TObjectType {
     unsigned char hasTrigger;
     TPoint triggerCell;
     TImageInfo imageInfo;
+
+    // Retail 0x514960, thiscall with no arguments. DECLARED ONLY: the body
+    // belongs to the unadmitted Complete-only .msk/objects compiland in the
+    // newgame..overview gap, where two function-local statics cache a table
+    // of image records and this member returns the +0x0c string of the row
+    // `imageNumber` selects (or a static empty string when the index is out
+    // of range). The ROLE is proven by its one caller - the result is what
+    // CObjectType's conversion constructor assigns into ImageName - and the
+    // NAME follows the role; nothing attests it.
+    const std::basic_string<char, std::char_traits<char>,
+                            std::allocator<char> >& GetImageName();
 };
 SIZE(TObjectType, 0x4c);
 
