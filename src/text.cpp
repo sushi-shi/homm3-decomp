@@ -188,6 +188,79 @@ const char* gCampaignRegionNames[23];
 
 // 0x006a8014 - datum claimed at src/hero.cpp:2961 (gHeroScreenText0)
 const char* cHeroScreen[33];
+// --- Help.txt's 23 THelpText tables (below), Dreamcast-named ---
+
+// 0x006a52d0 - datum claimed at src/spellbookwindow.cpp:52 (gSpellbookHelpText)
+THelpText gSpellbookHelp[11];
+
+// 0x006a53a8 - datum claimed at src/tradpost.cpp:1341 (gGiveHelpText)
+THelpText gGiveResourceWindowHelp[5];
+
+DATA(0x006a55a8)
+THelpText gCombatOptionsHelp[39];
+
+// 0x006a56e0 - datum claimed at src/adventuremapwindow.cpp:29
+THelpText gAdventureWindowHelp[27];
+
+// 0x006a5868 - datum claimed at src/tradpost.cpp:1342 (gMarketHelpText)
+THelpText gResourceWindowHelp[6];
+
+DATA(0x006a59c8)
+THelpText gCampaignBriefHelp[62];
+
+DATA(0x006a5f80)
+THelpText gCampaignWindowHelp[24];
+
+// 0x006a6530 - datum claimed at src/adventureoptionswindow.cpp:20
+THelpText gAdventureOptionsHelp[7];
+
+DATA(0x006a6570)
+THelpText gMultiSelectionHelp[25];
+
+DATA(0x006a6638)
+THelpText gSacrificeWindowHelp2[20];
+
+// 0x006a6968 - datum claimed at src/combatcontrolsubwindow.cpp:28 (gCombatSubWindowHelp)
+THelpText gCombatWindowHelp[11];
+
+DATA(0x006a6bf8)
+THelpText gNewGameHelp[5];
+
+DATA(0x006a6c20)
+THelpText gMainMenuHelp[5];
+
+// 0x006a6c50 - datum claimed at src/tradpost.cpp:1343 (gSellArtHelpText)
+THelpText gSellArtifactWindowHelp[5];
+
+DATA(0x006a6c80)
+THelpText gSingleSelectionHelp[245];
+
+// 0x006a7458 - datum claimed at src/viewarmywindow.cpp:156
+THelpText gViewArmyHelp[15];
+
+DATA(0x006a7518)
+TSpreadsheetResource* HelpText;
+
+// 0x006a7558 - datum claimed at src/recruit.cpp:72 (gRecruitMaximumRolloverText)
+THelpText gRecruitHelp[3];
+
+DATA(0x006a7580)
+THelpText gSystemOptionsHelp[48];
+
+DATA(0x006a7750)
+THelpText gMPHelp[8];
+
+DATA(0x006a77d0)
+THelpText gTransformerWindowHelp[3];
+
+// 0x006a7da8 - datum claimed at src/tradpost.cpp:1344 (gBuyArtHelpText)
+THelpText gBuyArtifactWindowHelp[5];
+
+// 0x006a7dd8 - datum claimed at src/university_window.cpp:33 (gUniversityWindowHelp)
+THelpText gUniversityWindowHelp2[4];
+
+// 0x006a7e98 - datum claimed at src/tradpost.cpp:1345 (gSellCreaHelpText)
+THelpText gSellCreatureWindowHelp[5];
 // --- Arraytxt.txt's 24 destination tables (below), Dreamcast-named ---
 
 // 0x006a532c - datum claimed at src/viewarmywindow.cpp:168 (gLuckTexts)
@@ -692,6 +765,227 @@ unsigned char InitializeTentColorText()
     return 1;
 }
 
+// Help.txt is Arraytxt.txt's spreadsheet twin: one running row index
+// walks the file once, each window's help table takes its own run of
+// (rollover, right-click) column pairs, and TWO rows are skipped between
+// runs. FOURTEEN of the 23 destinations already carry a THelpText claim
+// at exactly these addresses from the consumer side - gAdventureWindowHelp,
+// gAdventureOptionsHelp, gCombatSubWindowHelp, gViewArmyHelp,
+// gSpellbookHelpText, gSacrificeWindowHelp, gMarketHelpText, gGiveHelpText,
+// gBuyArtHelpText, gSellArtHelpText, gSellCreaHelpText,
+// gUniversityWindowHelp and two more - and seven of those consumers'
+// element COUNTS match this loader's run lengths exactly. That is the
+// order-map's proof.
+
+// E:\gamedcs\text.cpp:641
+VA(0x005b98b0, 0x405)  // Help.txt literal + 23 THelpText tables, dc 0x161ae4
+unsigned char InitializeHelpText()
+{
+    int i;
+    unsigned int j;
+
+    HelpText = ResourceManager::GetSpreadsheet(
+        DATA_COMPGEN(0x00688784, helpTextName, "Help.txt"));
+    if (!HelpText)
+        return 0;
+
+    i = 3;
+    for (j = 0; j < 5; j++, i++) {
+        const TSpreadsheetResource::TStringVector& row =
+            HelpText->GetRow(i);
+
+        gMainMenuHelp[j].text = row[0];
+        gMainMenuHelp[j].rclick = row[1];
+    }
+    i += 2;
+    for (j = 0; j < 5; j++, i++) {
+        const TSpreadsheetResource::TStringVector& row =
+            HelpText->GetRow(i);
+
+        gNewGameHelp[j].text = row[0];
+        gNewGameHelp[j].rclick = row[1];
+    }
+    i += 2;
+    for (j = 0; j < 245; j++, i++) {
+        const TSpreadsheetResource::TStringVector& row =
+            HelpText->GetRow(i);
+
+        gSingleSelectionHelp[j].text = row[0];
+        gSingleSelectionHelp[j].rclick = row[1];
+    }
+    i += 2;
+    for (j = 0; j < 25; j++, i++) {
+        const TSpreadsheetResource::TStringVector& row =
+            HelpText->GetRow(i);
+
+        gMultiSelectionHelp[j].text = row[0];
+        gMultiSelectionHelp[j].rclick = row[1];
+    }
+    i += 2;
+    for (j = 0; j < 27; j++, i++) {
+        const TSpreadsheetResource::TStringVector& row =
+            HelpText->GetRow(i);
+
+        gAdventureWindowHelp[j].text = row[0];
+        gAdventureWindowHelp[j].rclick = row[1];
+    }
+    i += 2;
+    for (j = 0; j < 48; j++, i++) {
+        const TSpreadsheetResource::TStringVector& row =
+            HelpText->GetRow(i);
+
+        gSystemOptionsHelp[j].text = row[0];
+        gSystemOptionsHelp[j].rclick = row[1];
+    }
+    i += 2;
+    for (j = 0; j < 7; j++, i++) {
+        const TSpreadsheetResource::TStringVector& row =
+            HelpText->GetRow(i);
+
+        gAdventureOptionsHelp[j].text = row[0];
+        gAdventureOptionsHelp[j].rclick = row[1];
+    }
+    i += 2;
+    for (j = 0; j < 11; j++, i++) {
+        const TSpreadsheetResource::TStringVector& row =
+            HelpText->GetRow(i);
+
+        gCombatWindowHelp[j].text = row[0];
+        gCombatWindowHelp[j].rclick = row[1];
+    }
+    i += 2;
+    for (j = 0; j < 39; j++, i++) {
+        const TSpreadsheetResource::TStringVector& row =
+            HelpText->GetRow(i);
+
+        gCombatOptionsHelp[j].text = row[0];
+        gCombatOptionsHelp[j].rclick = row[1];
+    }
+    i += 2;
+    for (j = 0; j < 15; j++, i++) {
+        const TSpreadsheetResource::TStringVector& row =
+            HelpText->GetRow(i);
+
+        gViewArmyHelp[j].text = row[0];
+        gViewArmyHelp[j].rclick = row[1];
+    }
+    i += 2;
+    for (j = 0; j < 11; j++, i++) {
+        const TSpreadsheetResource::TStringVector& row =
+            HelpText->GetRow(i);
+
+        gSpellbookHelp[j].text = row[0];
+        gSpellbookHelp[j].rclick = row[1];
+    }
+    i += 2;
+    for (j = 0; j < 62; j++, i++) {
+        const TSpreadsheetResource::TStringVector& row =
+            HelpText->GetRow(i);
+
+        gCampaignBriefHelp[j].text = row[0];
+        gCampaignBriefHelp[j].rclick = row[1];
+    }
+    i += 2;
+    for (j = 0; j < 24; j++, i++) {
+        const TSpreadsheetResource::TStringVector& row =
+            HelpText->GetRow(i);
+
+        gCampaignWindowHelp[j].text = row[0];
+        gCampaignWindowHelp[j].rclick = row[1];
+    }
+    i += 2;
+    for (j = 0; j < 3; j++, i++) {
+        const TSpreadsheetResource::TStringVector& row =
+            HelpText->GetRow(i);
+
+        gRecruitHelp[j].text = row[0];
+        gRecruitHelp[j].rclick = row[1];
+    }
+    i += 2;
+    for (j = 0; j < 8; j++, i++) {
+        const TSpreadsheetResource::TStringVector& row =
+            HelpText->GetRow(i);
+
+        gMPHelp[j].text = row[0];
+        gMPHelp[j].rclick = row[1];
+    }
+    i += 2;
+    for (j = 0; j < 20; j++, i++) {
+        const TSpreadsheetResource::TStringVector& row =
+            HelpText->GetRow(i);
+
+        gSacrificeWindowHelp2[j].text = row[0];
+        gSacrificeWindowHelp2[j].rclick = row[1];
+    }
+    i += 2;
+    for (j = 0; j < 3; j++, i++) {
+        const TSpreadsheetResource::TStringVector& row =
+            HelpText->GetRow(i);
+
+        gTransformerWindowHelp[j].text = row[0];
+        gTransformerWindowHelp[j].rclick = row[1];
+    }
+    i += 2;
+    for (j = 0; j < 6; j++, i++) {
+        const TSpreadsheetResource::TStringVector& row =
+            HelpText->GetRow(i);
+
+        gResourceWindowHelp[j].text = row[0];
+        gResourceWindowHelp[j].rclick = row[1];
+    }
+    i += 2;
+    for (j = 0; j < 5; j++, i++) {
+        const TSpreadsheetResource::TStringVector& row =
+            HelpText->GetRow(i);
+
+        gGiveResourceWindowHelp[j].text = row[0];
+        gGiveResourceWindowHelp[j].rclick = row[1];
+    }
+    i += 2;
+    for (j = 0; j < 5; j++, i++) {
+        const TSpreadsheetResource::TStringVector& row =
+            HelpText->GetRow(i);
+
+        gBuyArtifactWindowHelp[j].text = row[0];
+        gBuyArtifactWindowHelp[j].rclick = row[1];
+    }
+    i += 2;
+    for (j = 0; j < 5; j++, i++) {
+        const TSpreadsheetResource::TStringVector& row =
+            HelpText->GetRow(i);
+
+        gSellArtifactWindowHelp[j].text = row[0];
+        gSellArtifactWindowHelp[j].rclick = row[1];
+    }
+    i += 2;
+    for (j = 0; j < 5; j++, i++) {
+        const TSpreadsheetResource::TStringVector& row =
+            HelpText->GetRow(i);
+
+        gSellCreatureWindowHelp[j].text = row[0];
+        gSellCreatureWindowHelp[j].rclick = row[1];
+    }
+    i += 2;
+    for (j = 0; j < 4; j++, i++) {
+        const TSpreadsheetResource::TStringVector& row =
+            HelpText->GetRow(i);
+
+        gUniversityWindowHelp2[j].text = row[0];
+        gUniversityWindowHelp2[j].rclick = row[1];
+    }
+    return 1;
+}
+// Two spellings are load-bearing here and neither is cosmetic. The row
+// must be NAMED (`const TStringVector& row = HelpText->GetRow(i)`):
+// spelled as two `GetRow(i)[k]` expressions VC6 re-reads
+// Spreadsheet._First for the second column, where retail keeps the ROW
+// pointer live across the store and only re-reads row._First - 73.91
+// against 95.89, 25 of the 49 blocks. And the counter is UNSIGNED: the
+// destination walk ends on `jb`, and a signed `int j` preserves its own
+// signedness through the strength reduction and emits `jl` - 95.89
+// against 100.0000. (Arraytxt's runs are the opposite: they end on `jl`
+// and keep `int`.)
+
 // Arraytxt.txt is one flat text list read straight through: a running
 // index walks it once, each table takes its own run, and ONE row is
 // skipped between runs (the file's section separator) - which is the
@@ -800,13 +1094,6 @@ unsigned char InitializeArrayText()
 }
 
 #if 0  // @carcass
-
-// E:\gamedcs\text.cpp:641
-DC_ONLY(0x161ae4, 0x822)
-unsigned char InitializeHelpText()
-{
-    // @stub
-}
 
 // E:\gamedcs\TextResource.h:113
 DC_ONLY(0x162910, 0x24)
