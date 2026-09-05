@@ -1673,8 +1673,8 @@ VA_COMPGEN(0x0048f2b0, 0x333, STD_SORT_0, hero_crossoverherostronger)
 // 0x48edf0, which lane 16 claimed here as bitset145 on similarity alone,
 // compares against 0x81 (129) at all three of its callers and has moved to
 // game.cpp - customcampaign.obj does not emit a bitset<129> instantiation.
-VA_COMPGEN(0x0048d9a0, 0xC8, BITSET_XRAN, Bitset145)
-VA_COMPGEN(0x0048da70, 0xC8, BITSET_XRAN, Bitset8)
+VA_COMPGEN(0x0048d9a0, 0xCB, BITSET_XRAN, Bitset145)
+VA_COMPGEN(0x0048da70, 0xCB, BITSET_XRAN, Bitset8)
 
 // COMDAT pairing: hero::_Ucopy, mnemonic agreement 0.966.
 VA_COMPGEN(0x0048d8d0, 0x38, VECTOR_UCOPY, hero)
