@@ -1202,3 +1202,10 @@ VA_COMPGEN(0x0051a780, 0xBC, BASIC_STRING_ASSIGN_COUNT, char)
 
 // COMDAT pairing: basic_string<char>::operator[](size_t), `ret 4`.
 VA_COMPGEN(0x0051a840, 0x98, BASIC_STRING_SUBSCRIPT, char)
+
+// COMDAT pairing: basic_string<char>::basic_string(const basic_string&).
+// smackmgr.obj emits exactly ONE string constructor, so the ctor group has a
+// single member and binds directly - no zip to get wrong. `ret 4` matches the
+// one reference argument, and the callers span customcampaign, game (twice),
+// this unit and three further segments.
+VA_COMPGEN(0x00460700, 0x125, CLASS_CTOR, basic_string)
