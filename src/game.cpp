@@ -3970,6 +3970,19 @@ int game::Load(TAbstractFile* infile)
 // immediately after game::Load. Source has no hand-written body: the direct
 // symbol claim binds the emitted COMDAT while max/history banks the including-
 // TU transitions caused by restoring the coherent implicit header state.
+//
+// MEASURED 2026-09-05, and the claim is PROVEN CORRECT: the only reason
+// game.obj does not emit this COMDAT is that our compile expands
+// `gpGame->campaign = saved.campaign` at game::Load's line above, where
+// retail calls it. Forcing that ONE statement out of line emits the symbol
+// and the row scores 100.0000 over all 777 bytes on the first try, taking
+// game.obj 93.5690 -> 94.2050 against 0.47 off game::Load (60.5547 ->
+// 60.0776, MAX held at 92.41). It is not shipped, because the only lever
+// that reaches it is a committed `#pragma inline_depth(0)` and the pin
+// floor is falling-only. The route that IS open is the one game.h's own
+// note names: game::Load carrying retail's caller mass, after which the
+// expansion should stop being affordable on its own. Re-take it then, and
+// expect the row at 100 immediately.
 VA_COMPGEN(0x004bdc70, 0x309, IMPLICIT_COPY_ASSIGN, SCampaign)
 
 // E:\gamedcs\game.cpp:3257, dc 0xa8b48.
