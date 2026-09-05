@@ -1736,6 +1736,15 @@ gzfile	??_GTGzFile@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xd6cd0	-
 gzfile	??_GTOpenFailure@TGzFile@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xd6d30	-
 gzfile	?Read@TGzFile@@UAEHPAXH@Z	100.0000	100.0000	100.0000	0xd6d80	d8d74584e733
 gzfile	?Write@TGzFile@@UAEHPBXH@Z	100.0000	100.0000	100.0000	0xd6da0	c861271538fe
+gzinflatebuf	??0TAllocationFailure@@QAE@XZ	100.0000	100.0000	100.0000	0xd6b80	92689dd90756
+gzinflatebuf	??0TDataError@TGzInflateBuf@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0xd6690	-
+gzinflatebuf	??0TDataError@TGzInflateBuf@@QAE@XZ	100.0000	100.0000	100.0000	0xd65e0	ef530792f879
+gzinflatebuf	??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z	27.3005	27.3005	27.3005	0xd6050	321e65f27832
+gzinflatebuf	??1TGzInflateBuf@@UAE@XZ	100.0000	100.0000	100.0000	0xd6820	cc97722e33a5
+gzinflatebuf	??_GTGzInflateBuf@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xd67f0	-
+gzinflatebuf	?get_byte@TGzInflateBuf@@AAEHXZ	100.0000	100.0000	100.0000	0xd5fd0	186479b817b7
+gzinflatebuf	?read_byte@TGzInflateBuf@@AAEHXZ	100.0000	100.0000	100.0000	0xd6ba0	63561e1ff873
+gzinflatebuf	?underflow@TGzInflateBuf@@UAEHXZ	80.8063	80.8063	80.8063	0xd6920	ece74ef592cd
 gzio	@check_header@4	100.0000	100.0000	100.0000	0x206490	-
 gzio	@destroy@4	100.0000	100.0000	100.0000	0x206640	-
 gzio	@do_flush@8	100.0000	100.0000	100.0000	0x2069c0	-
