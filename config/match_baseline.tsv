@@ -161,6 +161,7 @@ advmgr	?set_witch_hut_help_text@@YIXPADPAVhero@@PAVNewmapCell@@PBD3@Z	100.0000	1
 advspells	?CheckCastSpell@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c2f0	bbe51132d223
 ai	??1type_spellvalue@@QAE@XZ	100.0000	100.0000	100.0000	0x20cf0	-
 ai	?DoCompAI@combatManager@@QAEXH@Z	98.4697	98.4697	98.4697	0x221f0	2e3e65e4a47b
+ai	?DoSpellAI@combatManager@@QAEEXZ	100.0000	100.0000	100.0000	0x22da0	2bfe2c39d7b4
 ai	?IsIncapacitated@army@@QBE_NXZ	100.0000	100.0000	100.0000	0x1f380	0d867a728c71
 ai	?SOD_choose_faerie_dragon_spell@combatManager@@AAE_NPBVarmy@@AAJAAUtype_AI_combat_parameters@@@Z	94.5177	94.5177	94.5177	0x20f00	19a0d208c129
 ai	?attempt_shooter_defense@combatManager@@QAEEPBVarmy@@PAVsearchArray@@PBUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x20760	bcd3a968c203
