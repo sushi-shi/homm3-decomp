@@ -92,7 +92,7 @@ advmgr	?GetFlaggedObjectOwner@@YIHPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0
 advmgr	?GetRouteArrayPtr@advManager@@QAEPAGHHH@Z	100.0000	100.0000	100.0000	0x1b010	90d03721f759
 advmgr	?GetSoundId@advManager@@QAE?AW4e_looping_sound_id@@HHH@Z	94.5074	94.5074	94.5074	0x18620	14094771376d
 advmgr	?HandleGiftMsg@CAdvMgrNetMsgHandler@@IAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x6a20	d4337d53c59b
-advmgr	?HandleNetMsg@CAdvMgrNetMsgHandler@@MAEPAVCNetMsg@@PAV2@@Z	100.0000	100.0000	100.0000	0x5e30	50b67ad27e81
+advmgr	?HandleNetMsg@CAdvMgrNetMsgHandler@@MAEPAVCNetMsg@@PAV2@@Z	100.0000	100.0000	100.0000	0x5e30	5b342f2400c4
 advmgr	?HandleTradeRequestMsg@CAdvMgrNetMsgHandler@@MAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x6bf0	a7883b2b24fb
 advmgr	?HeroQuickView@advManager@@QAEXHHHE@Z	100.0000	100.0000	100.0000	0x16590	1296f3f0df48
 advmgr	?HideRoute@advManager@@QAEXHHH@Z	100.0000	100.0000	100.0000	0x19300	a01c254e1d1b
@@ -1995,8 +1995,10 @@ kb	?GetMapExtraPtr@@YIPAGHHH@Z	100.0000	100.0000	100.0000	0xf79e0	bfdb3939e8b1
 kb	?GetNextHumanPlayer@@YIHH@Z	95.1191	95.1191	95.1191	0xf4ba0	0f6a1b063ca2
 kb	?GetTeamNames@@YIEHPAD@Z	100.0000	100.0000	100.0000	0xf1460	0d2e602c3941
 kb	?HandleAppSpecificMenuCommands@@YIHH@Z	100.0000	100.0000	100.0000	0xf4350	9c88b7086273
+kb	?HandleRemoteDeadPlayerExit@@YIXHE@Z	100.0000	100.0000	100.0000	0xf4c00	84f8099494ff
 kb	?IncProgressBar@@YIXE@Z	100.0000	100.0000	100.0000	0xed2a0	488bb10c4844
 kb	?InitMainClasses@@YIXXZ	99.9943	99.9943	99.9943	0xedb40	35baf3748adb
+kb	?InterpretCommandLine@@YIHXZ	99.6273	99.6273	99.6273	0xf0690	13f887fff10f
 kb	?KbFn_004EE1B0@@YIXHPBD@Z	100.0000	100.0000	100.0000	0xee1b0	2e4b9f393da5
 kb	?LostGame@@YIXXZ	100.0000	100.0000	100.0000	0xee2b0	e28e4114a854
 kb	?MemError@@YIXXZ	100.0000	100.0000	100.0000	0xf42c0	a3a21a3be5c1
@@ -2483,7 +2485,7 @@ recruit	?RecruitSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000
 # first raised the source checkpoint to 94.1574. A later dependent rebuild and
 # fresh normalization, with recruit.cpp unchanged, measured 96.5558; the merged
 # rebuild returned current to 94.1574 while max/history retain that transient.
-recruit	?Update@recruitUnit@@QAEXEJ@Z	94.1574	96.5558	96.5558	0x1503a0	d97bc68809dd
+recruit	?Update@recruitUnit@@QAEXEJ@Z	96.5558	96.5558	96.5558	0x1503a0	d97bc68809dd
 # 2026-09-05 DELIBERATE LOWER: add_creature_widgets reached 100.0000 only through a
 # `creature_background` file-static the Dreamcast roster does not name (recruit.obj has
 # no such helper) - a caller-shrink dose steering the /Ob2 budget, i.e. an inverse
@@ -2710,7 +2712,7 @@ sacrifice_window	?all_creatures@type_skeleton_window@@CIHAAVmessage@@@Z	100.0000
 sacrifice_window	?artifact_click@type_sacrifice_window@@QAEXJE@Z	100.0000	100.0000	100.0000	0x1632a0	0feb58f6bb2a
 sacrifice_window	?backpack_click@type_sacrifice_window@@QAEXJE@Z	86.1308	86.1308	86.1308	0x1636c0	0d5252860cd9
 sacrifice_window	?convert_with_commas@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@J@Z	100.0000	100.0000	100.0000	0x162660	928f4f20aa90
-sacrifice_window	?create_artifact_widgets@type_sacrifice_window@@AAEXAAJH@Z	99.5918	100.0000	100.0000	0x160380	834f71b0c8a5
+sacrifice_window	?create_artifact_widgets@type_sacrifice_window@@AAEXAAJH@Z	99.9983	100.0000	100.0000	0x160380	834f71b0c8a5
 sacrifice_window	?create_creature_icons@type_sacrifice_window@@AAEJJJJJJAAJPAPAViconWidget@@1PAPAVtextWidget@@E@Z	100.0000	100.0000	100.0000	0x161f70	afad52fed516
 sacrifice_window	?create_creature_icons@type_skeleton_window@@AAEXJJJJJJAAJPAPAViconWidget@@1PAPAVtextWidget@@@Z	100.0000	100.0000	100.0000	0x166760	93a2b5c2f89b
 sacrifice_window	?create_creature_widgets@type_sacrifice_window@@AAEXAAJH@Z	100.0000	100.0000	100.0000	0x1610f0	eb6a2ccb96d4

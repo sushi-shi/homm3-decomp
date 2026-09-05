@@ -442,12 +442,7 @@ int PickLoadGame()
     // @stub
 }
 
-// E:\gamedcs\kb.cpp:2174
-DC_ONLY(0xe1990, 0x1FE)
-int InterpretCommandLine()
-{
-    // @stub
-}
+// E:\gamedcs\kb.cpp:2174 - promoted to a live claim (see below).
 
 // E:\gamedcs\kb.cpp:2270
 DC_ONLY(0xe1b90, 0x4)
@@ -1505,6 +1500,81 @@ static int PickLoadGame()
     return gpWindowManager->dialogReturn != DIALOG_RETURN_CANCEL;
 }
 
+// Two write-only process cells whose ONLY retail reference in the whole
+// image is the reset run below (verified with a reloc census), so kb.obj
+// owns them under the same rule as oldmain's private cells above. The
+// .data one ships initialized to 1 and is re-armed here.
+DATA(0x006783d8)
+static int gUnnamed6783d8 = 1;
+DATA(0x00698a38)
+static int gUnnamed698a38;
+
+// E:\gamedcs\kb.cpp:2174
+// EarlySetup's last gate: reset the process-wide session flags, take the
+// default scenario name from general text, then walk the upper-cased
+// command line once. A space followed by `?`/`h`/`H` asks for the usage
+// message, which the tail turns into a ShutDown; a `/` introduces one of
+// three switches - `/I<digit>` sets the intro-video mode, `/S<digit>`
+// sets the silent latch to its complement, and the eight-character
+// `/NWCGRAIL` unlocks the developer menu set EarlySetup loads at the end.
+// Every switch checks the characters it needs are still inside the string
+// before reading them. The return is unconditionally 1.
+// Residual (99.63%): one encoding choice - retail zeroes the gbMPlayer
+// BYTE with an immediate (`mov byte ptr [mem], 0`) while our compile
+// spends the already-zeroed EBX on it (`mov byte ptr [mem], bl`), one
+// byte shorter. Everything else - blocks, branches, calls and every
+// other store - is identical.
+VA(0x004f0690, 0x238)  // anchor-caller (EarlySetup) + gcCommandLine walk, dc 0xe1990
+int InterpretCommandLine()
+{
+    int bShowUsage = 0;
+    int i;
+    int length;
+
+    gUnnamed6783d8 = 1;
+    gUnnamed6993dc = 1;
+    gbMPlayer = 0;
+    gUnnamed698a38 = 0;
+    gUnnamed6989c8 = 0;
+    gbNoSound = 0;
+    gUnnamed6994f0 = 0;
+    strcpy(gMapName, gpGeneralText->Text[101]);
+    length = strlen(gcCommandLine);
+    _strupr(gcCommandLine);
+    for (i = 0; i < length; i++) {
+        if (gcCommandLine[i] == ' ' && i + 1 < length
+            && (gcCommandLine[i + 1] == '?' || gcCommandLine[i + 1] == 'h'
+                || gcCommandLine[i + 1] == 'H'))
+            bShowUsage = 1;
+        if (gcCommandLine[i] == '/' && i + 1 < length) {
+            switch (toupper(gcCommandLine[i + 1])) {
+            case 'I':
+                if (i + 2 < length)
+                    giShowIntro = gcCommandLine[i + 2] - '0';
+                break;
+            case 'N':
+                if (i + 8 < length
+                    && toupper(gcCommandLine[i + 2]) == 'W'
+                    && toupper(gcCommandLine[i + 3]) == 'C'
+                    && toupper(gcCommandLine[i + 4]) == 'G'
+                    && toupper(gcCommandLine[i + 5]) == 'R'
+                    && toupper(gcCommandLine[i + 6]) == 'A'
+                    && toupper(gcCommandLine[i + 7]) == 'I'
+                    && toupper(gcCommandLine[i + 8]) == 'L')
+                    gUnnamed698a34 = 1;
+                break;
+            case 'S':
+                if (i + 2 < length)
+                    gbNoSound = 1 - (gcCommandLine[i + 2] - '0');
+                break;
+            }
+        }
+    }
+    if (bShowUsage)
+        ShutDown(gpGeneralText->Text[444]);
+    return 1;
+}
+
 // The normal-dialog state is private to kb.obj. Dreamcast publishes the
 // giNormalDialogMBType/giNormalDialogStart spellings; retail fixes their PC
 // cells and independently proves the saved selection/window companions.
@@ -2316,12 +2386,7 @@ int GetNextHumanPlayer(int start)
     // @stub
 }
 
-// E:\gamedcs\kb.cpp:4806
-DC_ONLY(0xe5214, 0x94)
-void HandleRemoteDeadPlayerExit(int iDPGamePos, unsigned char showMsg)
-{
-    // @stub
-}
+// E:\gamedcs\kb.cpp:4806 - promoted to a live claim (see below).
 
 // E:\gamedcs\kb.cpp:4855
 DC_ONLY(0xe52a8, 0x10)
@@ -3322,6 +3387,75 @@ int GetNextHumanPlayer(int start)
             break;
     }
     return -1;
+}
+
+// E:\gamedcs\kb.cpp:4806
+// A network player has left the game dead. For a remote seat that is just
+// the RS_PLAYER_DEAD broadcast plus the local notification; for THIS
+// machine's seat the turn has to be handed on, so the next live human seat
+// is picked (retail expands GetNextHumanPlayer here, keeping both of its
+// -1 exits), and when the dead seat was also the acting one the whole
+// acting-player triple is re-pointed and every hero the new seat owns -
+// its own roster, the two tavern recruits, and each town's garrison hero -
+// has its movement allowance re-primed from GetMobility. The save is then
+// handed to the new seat, and a refused transfer is fatal.
+VA(0x004f4c00, 0x2AA)  // anchor-caller (remote HandleNetMsg) + RS_PLAYER_DEAD shape, dc 0xe5214
+void HandleRemoteDeadPlayerExit(int iDPGamePos, unsigned char showMsg)
+{
+    if (gNetworkActive69954c) {
+        if (iDPGamePos == gpGame->GetLocalPlayerGamePos()) {
+            int iNextPlayer = GetNextHumanPlayer(iDPGamePos);
+            if (iNextPlayer != -1) {
+                CPlayerDeadMsg deadMsg(iDPGamePos);
+                TransmitRemoteData(&deadMsg, 127, false, true);
+                if (iDPGamePos == gNetLocalGamePos) {
+                    int i;
+
+                    gNetLocalGamePos = iNextPlayer;
+                    gpCurrentPlayer = &gpGame->players[iNextPlayer];
+                    gUnnamed69ccc4 = 1 << iNextPlayer;
+                    for (i = 0;
+                         i < gpGame->players[gNetLocalGamePos].numHeroes;
+                         i++) {
+                        hero* pHero = &gpGame->heroes
+                            [gpGame->players[gNetLocalGamePos].heroes[i]];
+                        pHero->maxMovePoints = pHero->movePoints =
+                            pHero->GetMobility();
+                    }
+                    for (i = 0; i < 2; i++) {
+                        if (gpGame->players[gNetLocalGamePos].recruits[i]
+                            != -1) {
+                            hero* pHero = gpGame->GetHero(
+                                gpGame->players[gNetLocalGamePos]
+                                    .recruits[i]);
+                            pHero->maxMovePoints = pHero->movePoints =
+                                pHero->GetMobility();
+                        }
+                    }
+                    for (i = 0;
+                         i < gpGame->players[gNetLocalGamePos].numTowns;
+                         i++) {
+                        town* pTown = gpGame->GetTown(
+                            gpGame->players[gNetLocalGamePos].townIds[i]);
+                        if (pTown->garrisonHeroId >= 0) {
+                            hero* pHero =
+                                gpGame->GetHero(pTown->garrisonHeroId);
+                            pHero->maxMovePoints = pHero->movePoints =
+                                pHero->GetMobility();
+                            pHero->field_11c = 0;
+                        }
+                    }
+                }
+                if (!gpGame->TransmitSaveGame(iNextPlayer, 0, 1, 0))
+                    ShutDown(0);
+            }
+            RemoteCleanup();
+        } else {
+            CPlayerDeadMsg deadMsg(iDPGamePos);
+            TransmitRemoteData(&deadMsg, 127, false, true);
+            HandlePlayerDead(iDPGamePos, showMsg);
+        }
+    }
 }
 
 // E:\gamedcs\kb.cpp:4897. Dreamcast supplies the switch order, helper
