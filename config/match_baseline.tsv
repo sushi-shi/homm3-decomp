@@ -14,6 +14,7 @@ adventuremapwindow	??_GTAdventureMapWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000
 adventuremapwindow	?Activate@CGameChatEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x22b0	5582f5bcc3f3
 adventuremapwindow	?CheckAdvCheatCode@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	90.5910	90.5910	90.5910	0x2450	ec4fd0a665ee
 adventuremapwindow	?ClearBottomView@TAdventureMapWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x3ee0	c44f40d9b96c
+adventuremapwindow	?Close@TAdventureMapWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x14d0	463fe91487af
 adventuremapwindow	?DoHeroKnob@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x3220	5b941b78c07c
 adventuremapwindow	?DoTownKnob@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x3280	6132348c8553
 adventuremapwindow	?DrawChatText@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x3f20	ac1b75da0e1d
@@ -22,6 +23,7 @@ adventuremapwindow	?GetRealWidth@widget@@UAEHXZ	100.0000	100.0000	100.0000	0x21e
 adventuremapwindow	?HighlightLocators@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x38c0	e5ef448a01de
 adventuremapwindow	?OnEscape@CGameChatEdit@@UAEHVmessage@@@Z	100.0000	100.0000	100.0000	0x2240	527b10fb4244
 adventuremapwindow	?OnKeyPress@CGameChatEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x21f0	3c8406355b17
+adventuremapwindow	?Open@TAdventureMapWindow@@UAEHHE@Z	100.0000	100.0000	100.0000	0x1400	7f7e56075fb8
 adventuremapwindow	?ProcessHover@TAdventureMapWindow@@QAEEHH@Z	100.0000	100.0000	100.0000	0x3010	bfd10bf53b10
 adventuremapwindow	?ProcessRightSelect@TAdventureMapWindow@@QAEEPBVmessage@@@Z	100.0000	100.0000	100.0000	0x2e70	80df558fe952
 adventuremapwindow	?SendChat@CAdventurMapChatEdit@@UAEXPBDH@Z	77.4872	77.4872	77.4872	0x22e0	3c4a402470cb

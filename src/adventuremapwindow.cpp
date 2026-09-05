@@ -13,6 +13,7 @@
 #include "game.h"
 #include "hero.h"
 #include "iconwdgt.h"
+#include "imm_mouse.h"
 #include "inputmgr.h"
 #include "kb.h"
 #include "town.h"
@@ -199,6 +200,67 @@ inline CAdventurMapChatEdit::CAdventurMapChatEdit(
                     justification, backgroundIcon, backgroundFrame, id,
                     style, readType, insetX, insetY)
 {
+}
+
+// The first two bodies the retail link placed in .text - this compiland is
+// alphabetically first and these are its two Complete-only window
+// virtuals, which is why they sit AHEAD of the constructor at 0x401510.
+//
+// CARVE CORRECTION shipped with them: 0x1400 was three rows (167 + 6 + 21)
+// with three bytes owned by nothing in between. It is ONE 197-byte
+// EH-bearing function - 0x14a7 is its unwind funclet (`mov eax, 0x4014ad
+// / ret`, the continuation address), 0x14ad the `mov edi,[ebp+0xc]`
+// restore that funclet resumes at, and 0x14b0 the shared epilogue all
+// three arms jump to.
+//
+// Immersion force feedback brackets the base window: Open installs a
+// full-screen mouse effect once the base has opened, Close tears it down
+// before the base closes. The effect is constructed over an 800x600 rect
+// built on the frame, and retail calls Start() on the NEW-EXPRESSION's
+// result - which is why the allocation's null arm still stores and still
+// calls, with a null receiver.
+//
+// TWO spellings carry the whole 30 points, and the first is a construct
+// the bytes name outright: the funclet at 0x14a7 returns a CONTINUATION
+// ADDRESS (`mov eax, 0x4014ad / ret`), which is a CATCH handler, not the
+// `lea ecx,<local> / jmp dtor` shape a new-expression's own cleanup takes
+// - so the effect creation sits in a `try` with an EMPTY `catch (...)`,
+// and 0x14ad is that catch's continuation, reloading `result` from the
+// frame home it was spilled to. Without it: 70.18 (one arm short, one
+// `ret` short, and Start() cross-jumped into a single tail where retail
+// duplicates it into both arms of the allocation's null test). With it:
+// 98.15. The RECT is then built BEFORE the try - retail emits its four
+// stores contiguously and the try-entry state store after them, where a
+// RECT inside the try lets VC6 interleave the state store between the
+// second and third. That last line is worth the remaining 1.85.
+VA(0x00401400, 0xC5)  // anchor-vtable slot 1; anchor-callee heroWindow::Open; retail-only
+int TAdventureMapWindow::Open(int zOrder, unsigned char update)
+{
+    int result = heroWindow::Open(zOrder, update);
+    if (result == 0) {
+        RECT area;
+        area.left = 0;
+        area.top = 0;
+        area.right = 800;
+        area.bottom = 600;
+        try {
+            TImmMouseEffect* effect =
+                new TImmMouseEffect(&area, 10000, 16, 10000, 1, 0);
+            immersion = effect;
+            effect->Start();
+        }
+        catch (...) {
+        }
+    }
+    return result;
+}
+
+VA(0x004014d0, 0x3C)  // anchor-vtable slot 2; anchor-callee heroWindow::Close; retail-only
+void TAdventureMapWindow::Close(unsigned char update)
+{
+    delete static_cast<TImmMouseEffect*>(immersion);
+    immersion = 0;
+    heroWindow::Close(update);
 }
 
 // E:\gamedcs\adventuremapwindow.cpp:318. Dreamcast proves the base, the
