@@ -1179,6 +1179,29 @@ type_point advManager::get_mouse_map_point(__$ReturnUdt)
 //     branch census CLEAN at 80/80 and still LOSES, 93.7900. So the flip
 //     is now known to be reachable and known to cost 0.45; the kept
 //     positive form remains the scoring winner.
+//     2026-09-06, polish lane 22 - and the 0.45 is NOT a second polarity
+//     flip or a spelling: the inverse form buys the clean 80/80 census by
+//     MERGING a block (120 against retail's 121, one missing) and the
+//     skeleton collapses with it, 113 exact blocks down to 16 and 0
+//     flow-kind mismatches up to 53. The two are in tension, not additive.
+//     Retail's own layout at 0x407d97 confirms the POSITIVE source: every
+//     `||` arm that succeeds jumps FORWARD to the movePoints block at
+//     0x407d9e, the last test falls through into the 0xea5f block at
+//     0x407d97, and that block jumps OVER movePoints - retail simply emits
+//     the else-arm first. It is a block-placement choice VC6 makes for us;
+//     do not spend another lane on this spelling.
+//   The remaining lead is the FRAME, and it is now localised. Ours is 0x84
+//   against retail's 0x80 and the shift is uniform: -0x4 / -0x8 / -0xc
+//   agree, and from there down every slot of ours is retail's minus four
+//   (0x14->0x10, 0x1a->0x16, 0x1c->0x18, 0x22->0x1e, 0x24->0x20,
+//   0x44->0x40, 0x64->0x60, 0x84->0x80). So we allocate ONE dead dword at
+//   [ebp-0x10] that no instruction in the body ever reads or writes. The
+//   first real divergence after the prologue is the radarOrigin type_point
+//   pack at advmgr.cpp:1528: we update the packed word IN PLACE with VC6's
+//   xor idiom (`xor word ptr [ebp-0x1c], ax`) where retail builds the value
+//   whole with and/shl/or. Whoever takes this next should look for the
+//   type_point local whose lifetime forces that dead slot, not for another
+//   branch spelling.
 //   #46 (+0x46d) is the step loop's back edge: retail exits with `js`
 //     and returns with an UNCONDITIONAL `jmp` because it keeps
 //     gpSearchArray live in eax across the edge and reloads it at the
