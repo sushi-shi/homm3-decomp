@@ -202,6 +202,9 @@ public:
     }
     virtual int Open(int newPriority);
     virtual void Close();
+    // baseManager's third pure slot. Declared so kb's InitMainClasses can
+    // `new` this manager; the vftable at 0x63fe54 already carries the slot.
+    virtual int Main(message& msg);
     ds_memsample* MemorySample(sample* sPtr);
     // Retail-only 0x59a030. The remote chat path calls operation 4 to ask
     // whether its current Miles sample is still playing; operation 1 returns

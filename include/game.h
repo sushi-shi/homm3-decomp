@@ -2079,6 +2079,14 @@ public:
     // `_Destroy` loop at all. The exact record_monster_identifier body at
     // 0x4ced40 appends the identifier/packed-point pair at an eight-byte
     // stride, byte-proving both the member and its element layout.
+    // MEASURED 2026-09-05 and NOT yet modelled: retail's own `new game`
+    // (kb's InitMainClasses at 0x4edb40, `push 0x4e7d0`) says the object is
+    // 0x4e7d0 bytes, while this class ends at 0x4e7cc - the sixteen-byte
+    // Dinkumware vector below starts at +0x4e7bc. So FOUR bytes at +0x4e7cc
+    // are unaccounted for, past every member any located body reads. Adding
+    // them is tail-only and shifts no offset, but it is one more declarator
+    // in the tree's include-set canary header, so it is left for a lane that
+    // can re-measure the whole tree behind it.
     struct MonsterIdentifier {
         int identifier;
         type_point point;
@@ -2279,6 +2287,12 @@ public:
     {
         return (field_1f642 * 4 + field_1f640 - 5) * 7 + field_1f63e;
     }
+    // kb.obj's pair (DC kb.cpp:4077 / :4095, dc 0xe4298 / 0xe4300; retail
+    // 0x4f3e30 / 0x4f3eb0). Declared here because they are `game` members -
+    // retail passes the record in ECX at both rows - while their bodies stay
+    // with the rest of kb.cpp.
+    short get_base_map_score();
+    short get_map_score();
     void GiveTimeEventReward(const TTimedEvent* thisEvent);   // 0x4cd710
     void CheckForTimeEvent();                                 // 0x4cd910
     void CheckForTownEvent();                                 // 0x4cda10

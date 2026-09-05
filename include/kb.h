@@ -224,7 +224,13 @@ extern bool bInShutDown;
 void EarlyShutDownSystem();
 // DC kb.cpp:3954 names the owner; retail TransmitSaveGame calls it after a
 // failed _open and independently proves the const-character-buffer ABI.
-void FileError(const char* cBuf);                        // 0x4f35f0
+// 0x4f3a60, and NOT the 0x4f35f0 this line used to carry - that byte lies
+// inside game::ShowLuckInfo's row and is not a boundary on this image.
+void FileError(const char* cBuf);                        // 0x4f3a60
+// The five .rdata score multipliers game::get_map_score indexes with
+// setup.difficulty. Owning TU not located; extern only (the gTownSizeNames
+// pattern).
+extern const float gMapScoreDifficultyFactor[];          // 0x67f558
 int HandleAppSpecificMenuCommands(int idItem);           // 0x4f4350
 void CleanUpMenus();                                     // 0x4f4b50
 int GetNextHumanPlayer(int start);                       // 0x4f4ba0
@@ -253,7 +259,13 @@ void __fastcall get_quickview_size(const char* text, int* width,
                                    int* height);                 // 0x4f62a0
 // Located kb.cpp bodies kbwin's WinMain / AppWndProc call (bodies not
 // yet reconstructed; the declarators match the kbwin call sites).
-int InitMainClasses();                                   // 0x4ed650
+// WinMain's first gate. The retail row at 0x4ed650 is the Dreamcast
+// EarlySetup - it guards on bEarlySetupDone, calls InitMainClasses,
+// GetDesktopInfo, ReadPrefs/WritePrefs, ResourceManager::SetPath/Open and
+// then the whole LoadGameData table run - NOT InitMainClasses, whose own
+// body is the twelve manager `new`s at 0x4edb40.
+int EarlySetup();                                        // 0x4ed650
+void InitMainClasses();                                  // 0x4edb40
 int oldmain();                                           // 0x4ee3e0
 // Positive Dreamcast kb.cpp boundaries used by oldmain. Their retail
 // implementations are being admitted separately; keeping the declarations
