@@ -1730,7 +1730,7 @@ hero	??_GTHeroScreenWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xe1520	-
 hero	?AddSpell@hero@@QAEXH@Z	100.0000	100.0000	100.0000	0xd9330	a1e8c11f06c3
 hero	?ApplyBattleLossTemps@hero@@QAEXXZ	100.0000	100.0000	100.0000	0xda710	3fa115fcffa1
 hero	?ApplyBattleWinTemps@hero@@QAEXXZ	100.0000	100.0000	100.0000	0xda510	4eb30d4b1b66
-hero	?CheckLevel@hero@@QAEXXZ	83.4342	83.4342	83.4342	0xda720	62221da77008
+hero	?CheckLevel@hero@@QAEXXZ	87.1338	87.1338	87.1338	0xda720	03d2d919b741
 hero	?CreatureTypeCount@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0xe2340	20e9a887c55f
 hero	?Deallocate@hero@@QAEXEE@Z	100.0000	100.0000	100.0000	0xd9ec0	6f033442214a
 hero	?DestroySiegeWeaponArtifact@hero@@QAEXH@Z	96.5278	96.5278	96.5278	0xd9260	d330930a3f3f

@@ -529,7 +529,7 @@ public:
     // (DC 152, retail +0x91), so the pair fills this pad exactly).
     // RETAIL BYTE-PROOF, both from hero::CheckLevel (0x4da720): it seeds
     // the level-up RNG with
-    //   SRand(level*214013 + iLevelSeed*156823 + 153567)
+    //   SRand(level*214013 + iLevelSeed*156823 + 154079)
     // reading +0x8f ZERO-extended (`xor ecx,ecx / mov cl,[ebx+0x8f]`,
     // which is what types it unsigned), and it stores the new level's LOW
     // BYTE into +0x90 (`mov dl,[ebx+0x55] / mov [ebx+0x90],dl`) whenever
