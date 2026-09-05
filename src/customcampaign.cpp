@@ -2235,6 +2235,16 @@ void TCampaignBrief::CampaignHeaderStruct::GetAvailableScenarios(
 // MP3, and pumps the message loop until all three have been finished for
 // their linger interval or the user clicks or keys out. The four flag/clock
 // pairs (subtitle, speech, video) are what the tail conjunction tests.
+// Residual (83.88%): calls AGREE 38 = 38 and branches agree 55 = 55; the
+// whole gap is TWO ADJACENT BRANCHES SWAPPING PLACES (#24/#25 at fn+0x2c0
+// and fn+0x2e1, base jge/je against retail je/jge). Retail SINKS the
+// `else if (scroll_y < text_height - MARGIN) ++scroll_y;` block below the
+// FillRect argument setup and jumps back to it (`jmp 0x4892fa` at 0x48929f,
+// the block itself at 0x4892a1), where we lay it inline; every one of the
+// 21 target-shifted blocks is that one displacement. Tried and rejected
+// 2026-09-06: inverting the two arms so the !scroll_delay case leads
+// (82.36) and flattening both arms onto `redraw &&` conditions (83.88,
+// byte-flat). It is a C2 block-placement choice, not the condition order.
 VA(0x00488fb0, 0x528)  // PlayScenarioPrologue callee + music-cell reader, retail-only
 void TCampaignBrief::MapTextStruct::Play()
 {
