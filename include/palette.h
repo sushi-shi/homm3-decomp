@@ -112,6 +112,11 @@ public:
     // (palette.cpp:194, dc 0x10a8a0); font::SetPalette calls the
     // retail body at 0x522910.
     TPalette16* operator=(const TPalette16* from);
+    // DC palette.cpp:210 (dc 0x10a910). Retail keeps NO out-of-line copy -
+    // /Ob2 expanded it into each of its constructor call sites - but the
+    // boundary is the DC roster's own, not an invention.
+    void Convert24to16(const unsigned char* p24, int rbits, int rshift,
+                       int gbits, int gshift, int bbits, int bshift);
     void Cycle(int begin, int end, int step);
     // The four army::DrawToBuffer (0x43e140) needs for its tint arms -
     // the clone's rolling hue (AdjustHSV over PaletteEffect), the

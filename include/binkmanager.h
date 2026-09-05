@@ -88,6 +88,8 @@ __declspec(dllimport) int __stdcall _BinkDoFrame(Bink* bnk);
 __declspec(dllimport) int __stdcall _BinkCopyToBuffer(
     Bink* bnk, void* destination, int pitch, unsigned long height,
     unsigned long x, unsigned long y, unsigned long flags);
+__declspec(dllimport) Bink* __stdcall _BinkOpen(void* handle,
+                                                unsigned long flags);
 __declspec(dllimport) void __stdcall _BinkClose(Bink* bnk);
 __declspec(dllimport) int __stdcall _BinkWait(Bink* bnk);
 __declspec(dllimport) void __stdcall _BinkNextFrame(Bink* bnk);
