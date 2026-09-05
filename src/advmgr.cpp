@@ -7795,6 +7795,20 @@ static inline void append_town_quick_view_income_header(std::string& text)
 // roster's one function-scope `long i` for all three non-building loops is
 // also byte-flat both before and after the resource helper, so the original
 // scoped counters remain.
+// 92.9384 -> 93.0865 (2026-09-06): the garrison-hero arm CLEARS the
+// separator flag.  Retail's `first` byte lives at [ebp+0x17] on both sides
+// and retail writes it five times (=1 at the head, =0 right after the
+// hero-name append, =0 in the army loop, =1 before the building loop, =0 in
+// the building loop) where this compile wrote it only four - so the town's
+// first army entry gets its ", " separator whenever a garrison hero was
+// named.  The store sits immediately after `append(const char*, size_type)`
+// for `hero->name` (retail fn+0x1f0), which places it inside the `if`.
+// Residual (93.0865%): the quick-info separator's own
+// `append(const char*, size_type)` expansion.  Retail keeps
+// `basic_string::_Eos` OUT of line at both of its sites and caches the
+// string's `_Len` at [ebp-0x18]; this compile expands `_Eos` and uses
+// [ebp-0x14].  Same /Ob2 depth class as the BVResMsg/BVMessage `_Tidy`
+// wall - the pin is measured catastrophic there and is not retried here.
 VA(0x004167a0, 0x7DB)  // anchor-callee, dc 0x19674
 void advManager::TownQuickView(int townId, int x, int y,
                                unsigned char display_drop_shadow)
@@ -7827,8 +7841,10 @@ void advManager::TownQuickView(int townId, int x, int y,
 
         text = thisTown->cName;
         text += "\n\n";
-        if (thisTown->garrisonHeroId >= 0)
+        if (thisTown->garrisonHeroId >= 0) {
             text += gpGame->GetHero(thisTown->garrisonHeroId)->name;
+            first = 0;
+        }
 
         for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
             if (thisTown->get_army().armies[i] != -1) {
