@@ -511,7 +511,7 @@ army	?GetSpeed@army@@QBEHXZ	100.0000	100.0000	100.0000	0x48cd0	05b48d008b8d
 army	?GoBerserk@army@@QAEXXZ	100.0000	100.0000	100.0000	0x456d0	9ab479de3345
 army	?Init@army@@QAEXHHPBVhero@@HHHH@Z	100.0000	100.0000	100.0000	0x3d8b0	28bc09498414
 army	?InitClean@army@@QAEXXZ	92.6261	92.6261	92.6261	0x3d5c0	9d5a2ebce7ef
-army	?LoadResources@army@@QAEXXZ	100.0000	100.0000	100.0000	0x3d9f0	123cc8c6096e
+army	?LoadResources@army@@QAEXXZ	100.0000	100.0000	100.0000	0x3d9f0	e4367e838328
 army	?MidX@army@@QBEHXZ	100.0000	100.0000	100.0000	0x46660	bcbd9f15a12d
 army	?MidY@army@@QBEHXZ	100.0000	100.0000	100.0000	0x46630	aa3d1aeda6d1
 army	?OffsetToFront@army@@QBEHH@Z	100.0000	100.0000	100.0000	0x45cd0	85b2dbb7172a
@@ -1347,7 +1347,7 @@ drawing	?UpdateGrid@combatManager@@QAEHHH@Z	100.0000	100.0000	100.0000	0x93930	3
 drawing	?UpdateMouseGrid@combatManager@@QAEXHAAV?$vector@JV?$allocator@J@std@@@std@@E@Z	100.0000	100.0000	100.0000	0x93ea0	3b78bad0181f
 drawing	?UpdateMouseGrid@combatManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0x94390	d349de9de0ae
 drawing	?format_rounded@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@JJ@Z	100.0000	100.0000	100.0000	0x93650	480bccc45aab
-drawing	?get_estimated_damage@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBVarmy@@PAV3@EJ@Z	100.0000	100.0000	100.0000	0x933d0	46dbc1de7bfc
+drawing	?get_estimated_damage@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBVarmy@@PAV3@EJ@Z	100.0000	100.0000	100.0000	0x933d0	d5c7120a8b6f
 drawing	?show_creature_spell_error@combatManager@@AAE_NPADPBVarmy@@@Z	82.4044	82.4044	82.4044	0x922f0	7250dc1b14cc
 drawing	__h3cg$drawing$static_dtor$old_hexes	100.0000	100.0000	100.0000	0x94370	-
 dxplay	??0CDPlayLobby@@QAE@XZ	100.0000	100.0000	100.0000	0x98870	d771bae990ba
@@ -1914,7 +1914,7 @@ game	?TurnOffAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6fd0	fe47952c046
 game	?TurnOnAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6f80	0d6fe6e9e2a0
 game	?ValidateVictoryLossConditions@game@@QAEXE@Z	89.6148	89.6148	89.6148	0xbf780	51847b4f5a1d
 game	?ViewArmy@game@@QAEXAAVarmyGroup@@HPBVhero@@PBVtown@@HHEE@Z	83.8710	96.9556	96.9556	0xc6c50	019c611c565c
-game	?WaitForPlayer@game@@QAEXPADH@Z	100.0000	100.0000	100.0000	0xca840	130d813115c7
+game	?WaitForPlayer@game@@QAEXPADH@Z	100.0000	100.0000	100.0000	0xca840	14726064d168
 game	?_Construct@std@@YIXPAUTRumour@game@@ABU23@@Z	100.0000	100.0000	100.0000	0xd3a10	-
 game	?_Construct@std@@YIXPAUtype_creature_bank@@ABU2@@Z	100.0000	100.0000	100.0000	0xd3d30	-
 game	?_Construct@std@@YIXPAV?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@1@ABV21@@Z	100.0000	100.0000	100.0000	0x5fdc0	-
@@ -3164,8 +3164,8 @@ resourcemanager	?setg@?$basic_streambuf@DU?$char_traits@D@std@@@std@@IAEXPAD00@Z
 resourcemanager	?str@?$basic_ostringstream@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@XZ	100.0000	100.0000	100.0000	0x15d600	-
 resourcemanager	?str@?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@XZ	100.0000	100.0000	100.0000	0x15e570	-
 resourcemanager	?underflow@?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@MAEHXZ	100.0000	100.0000	100.0000	0x15d840	-
-resourcemanager	@game_null_159510@12	89.3910	89.3910	89.3910	0x159510	05be0fb37f98
-resourcemanager	@game_sprite_1599e0@12	86.9559	86.9559	86.9559	0x1599e0	dfb0d3eb0887
+resourcemanager	@game_null_159510@12	89.3910	89.3910	89.3910	0x159510	8e254a7e6155
+resourcemanager	@game_sprite_1599e0@12	86.9559	86.9559	86.9559	0x1599e0	d198be5c7e9e
 rmg	??0type_black_box_creature_def@@QAE@H@Z	100.0000	100.0000	100.0000	0x134250	e2adc0087d3a
 rmg	??0type_shrine_def@@QAE@HH@Z	100.0000	100.0000	100.0000	0x1349d0	1621d989a619
 rmg	??0type_spell_scroll_def@@QAE@HH@Z	100.0000	100.0000	100.0000	0x134ea0	bd98d234413a
@@ -3454,7 +3454,7 @@ singleselectionwindow	??0GameSelectionHeadersStruct@@QAE@XZ	73.1483	79.3242	79.3
 singleselectionwindow	??0NewSMapHeader@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x18fa60	-
 singleselectionwindow	??0SCampaign@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x18fc10	-
 singleselectionwindow	??0SavedGameHeader@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x193f50	-
-singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	93.6778	93.6778	93.6778	0x179960	0da7889bd3b9
+singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	93.6778	93.6778	93.6778	0x179960	59261759d4c1
 singleselectionwindow	??0lobby_message@@QAE@XZ	100.0000	100.0000	100.0000	0x189190	2b1be8208221
 singleselectionwindow	??0t_map_list_update@@QAE@K@Z	100.0000	100.0000	100.0000	0x189240	173781ee6a81
 singleselectionwindow	??1?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x18ea70	-
@@ -3545,7 +3545,7 @@ singleselectionwindow	?OnBeginGame@TSingleSelectionWindow@@QAEEXZ	78.7597	78.759
 singleselectionwindow	?OnDeleteFile@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x18dfb0	0c1240222da8
 singleselectionwindow	?OnGameHeaderInfoInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	81.3049	81.3049	81.3049	0x18a440	b994de0ac2d3
 singleselectionwindow	?OnGameHeaderInfoInitMsgEx@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18a780	846acb6f2ce7
-singleselectionwindow	?OnGameHeaderInfoMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18aa40	b2daafa8b9d6
+singleselectionwindow	?OnGameHeaderInfoMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18aa40	f24d7c980efb
 singleselectionwindow	?OnGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x189b20	61f7b1dce734
 # 2026-08-27 (round 3) hand-lowered 100.0000 -> 99.8868 (hist keeps
 # 100.0000): the same documented TU-state flap as OnKillFocus below -
@@ -3749,12 +3749,12 @@ soundmgr	?WaitEndSampleThread@@YAXPAX@Z	92.0000	92.0000	92.0000	0x19a6b0	3c7d574
 soundmgr	?WaitSample@soundManager@@QAEXPAVds_memsample@@H@Z	100.0000	100.0000	100.0000	0x199ec0	4e0c2d4a7b1e
 soundmgr	?launch_sample@@YIXPBDHH@Z	100.0000	100.0000	100.0000	0x19a590	fd40c4638b00
 soundmgr	?service_sounds@soundManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19a7d0	f6b0ffef62a0
-spellbookwindow	??0TSpellbookWindow@@QAE@PBVhero@@PBVarmyGroup@@W4TSpellContext@0@H@Z	100.0000	100.0000	100.0000	0x19bdf0	b6a94035b2da
+spellbookwindow	??0TSpellbookWindow@@QAE@PBVhero@@PBVarmyGroup@@W4TSpellContext@0@H@Z	100.0000	100.0000	100.0000	0x19bdf0	93b2a916ccce
 spellbookwindow	??1TSpellbookWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x19c8f0	0e9a0a414042
 spellbookwindow	??MTSpellbookEntry@TSpellbookWindow@@QBE_NABV01@@Z	100.0000	100.0000	100.0000	0x19dbe0	298d7c180680
 spellbookwindow	??_GTSpellbookWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x19c8c0	-
 spellbookwindow	?Close@TSpellbookWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x19c990	2a459745f56a
-spellbookwindow	?GotoPage@TSpellbookWindow@@QAEXH@Z	88.8745	88.8745	88.8745	0x19c9a0	ac3404ada21d
+spellbookwindow	?GotoPage@TSpellbookWindow@@QAEXH@Z	88.8745	88.8745	88.8745	0x19c9a0	0b9c47a4ff93
 spellbookwindow	?Open@TSpellbookWindow@@UAEHHE@Z	100.0000	100.0000	100.0000	0x19c970	67001e2f7fe4
 spellbookwindow	?WindowHandler@TSpellbookWindow@@UAEHPAVmessage@@@Z	99.9011	99.9011	99.9011	0x19d040	afd2f6cd1887
 spellbookwindow	?_Insertion_sort_1@std@@YIXPAVTSpellbookEntry@TSpellbookWindow@@00@Z	100.0000	100.0000	100.0000	0x19def0	-

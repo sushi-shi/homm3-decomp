@@ -10884,7 +10884,7 @@ void game::WaitForPlayer(char* cText, int iPlayer)
     gpSoundManager->field_84 = 1;
     gpSoundManager->StopMP3();
     SAMPLE2 sample2 = LoadPlaySample(
-        DATA_COMPGEN(0x00677ec8, newWeekSample, "newweek.wav"));
+        DATA_COMPGEN(0x00677ec8, newWeekSample, "NewWeek.wav"));
 
     gpAdvManager->CompleteDraw(1);
     gpAdvManager->advWindow->UpdateHeroLocators(0, 1, 0);
