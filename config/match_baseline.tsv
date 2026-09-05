@@ -801,7 +801,7 @@ campaignbrief	??0CMapHeaderData@@QAE@XZ	100.0000	100.0000	100.0000	0x5a990	-
 campaignbrief	??0LossConditionStruct@@QAE@XZ	100.0000	100.0000	100.0000	0x5bac0	-
 campaignbrief	??0NewSMapHeader@@QAE@XZ	99.8438	99.8438	99.8438	0x5a7a0	-
 campaignbrief	??0SGameSetupOptions@@QAE@XZ	100.0000	100.0000	100.0000	0x5ac20	-
-campaignbrief	??0TCampaignBrief@@QAE@EE@Z	85.7655	85.7661	85.7661	0x590c0	37242c776407
+campaignbrief	??0TCampaignBrief@@QAE@EE@Z	85.7661	85.7661	85.7661	0x590c0	37242c776407
 campaignbrief	??0TPlayerSlotAttributes@CMapHeaderData@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x5da70	-
 campaignbrief	??0TPlayerSlotAttributes@CMapHeaderData@@QAE@XZ	65.9200	65.9200	65.9200	0x5a950	-
 campaignbrief	??1?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x5b140	-
@@ -2366,7 +2366,7 @@ kb	?GetTeamNames@@YIEHPAD@Z	100.0000	100.0000	100.0000	0xf1460	0d2e602c3941
 kb	?HandleAppSpecificMenuCommands@@YIHH@Z	100.0000	100.0000	100.0000	0xf4350	9c88b7086273
 kb	?HandleRemoteDeadPlayerExit@@YIXHE@Z	100.0000	100.0000	100.0000	0xf4c00	84f8099494ff
 kb	?IncProgressBar@@YIXE@Z	100.0000	100.0000	100.0000	0xed2a0	488bb10c4844
-kb	?InitMainClasses@@YIXXZ	99.9943	99.9943	99.9943	0xedb40	35baf3748adb
+kb	?InitMainClasses@@YIXXZ	100.0000	100.0000	100.0000	0xedb40	35baf3748adb
 kb	?InterpretCommandLine@@YIHXZ	99.6273	99.6273	99.6273	0xf0690	13f887fff10f
 kb	?KbFn_004EE1B0@@YIXHPBD@Z	100.0000	100.0000	100.0000	0xee1b0	2e4b9f393da5
 kb	?LostGame@@YIXXZ	100.0000	100.0000	100.0000	0xee2b0	e28e4114a854
@@ -3442,7 +3442,7 @@ singleselectionwindow	??0GameSelectionHeadersStruct@@QAE@XZ	73.1483	79.3242	79.3
 singleselectionwindow	??0NewSMapHeader@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x18fa60	-
 singleselectionwindow	??0SCampaign@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x18fc10	-
 singleselectionwindow	??0SavedGameHeader@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x193f50	-
-singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	93.6776	93.6776	93.6776	0x179960	0da7889bd3b9
+singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	93.6778	93.6778	93.6778	0x179960	0da7889bd3b9
 singleselectionwindow	??0lobby_message@@QAE@XZ	100.0000	100.0000	100.0000	0x189190	2b1be8208221
 singleselectionwindow	??0t_map_list_update@@QAE@K@Z	100.0000	100.0000	100.0000	0x189240	173781ee6a81
 singleselectionwindow	??1?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x18ea70	-
