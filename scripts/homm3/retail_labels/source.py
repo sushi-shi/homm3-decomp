@@ -269,6 +269,21 @@ CHAR_STREAM_MEMBERS = (
     ("?_Tidy@?$_Tidyfac@V?$ctype@D", None, "tidyfac_ctype_tidy"),
     ("?_Save@?$_Tidyfac@V?$num_get@D", None, "tidyfac_num_get_save"),
     ("?_Tidy@?$_Tidyfac@V?$num_get@D", None, "tidyfac_num_get_tidy"),
+    # --- basic_filebuf<char>, the <fstream> half --------------------------
+    # Keyed on the TEMPLATE name for the same reason basic_stringbuf's two
+    # members are: basic_streambuf and basic_stringbuf have members of these
+    # names too, and all three COMDATs can live in one object.
+    ("?overflow@?$basic_filebuf@D", None, "filebuf_overflow"),
+    ("?pbackfail@?$basic_filebuf@D", None, "filebuf_pbackfail"),
+    ("?underflow@?$basic_filebuf@D", None, "filebuf_underflow"),
+    ("?uflow@?$basic_filebuf@D", None, "filebuf_uflow"),
+    ("?seekoff@?$basic_filebuf@D", None, "filebuf_seekoff"),
+    ("?seekpos@?$basic_filebuf@D", None, "filebuf_seekpos"),
+    ("?setbuf@?$basic_filebuf@D", None, "filebuf_setbuf"),
+    ("?sync@?$basic_filebuf@D", None, "filebuf_sync"),
+    ("?_Init@?$basic_filebuf@D", None, "filebuf_init"),
+    ("?_Init@?$basic_streambuf@D", None, "streambuf_init"),
+    ("?do_length@?$codecvt@DDH", None, "codecvt_do_length"),
 )
 
 
@@ -792,6 +807,13 @@ def _std_algorithm_element(rest: str):
         depth += 1
     if rest.startswith("V?$basic_string@D"):
         return "string", max(0, depth - 1)
+    # A vector-of-vector algorithm: the element is itself `vector<T>`, whose
+    # mangling starts `?$` and so cannot reach the class-name match below.
+    # The `<T>_vector` spelling is the one VECTOR_INSERT already uses for
+    # these containers (`hero_vector`, `type_artifact_vector`).
+    vector_element = re.match(r"V\?\$vector@[VU]([A-Za-z_]\w*)@", rest)
+    if vector_element:
+        return vector_element.group(1) + "_vector", max(0, depth - 1)
     match = re.match(r"[VU]([A-Za-z_]\w*)@", rest)
     if match:
         return match.group(1), max(0, depth - 1)
@@ -814,6 +836,10 @@ def _std_algorithm_key(mangled: str):
         return None
     element, depth = decoded
     owner = element.lower() + "_ptr" * depth
+    if element.endswith("_vector"):
+        # The element's own `U<Element>@@` would otherwise be read as a
+        # predicate; a vector-of-vector instantiation carries none here.
+        return f"{owner}@{STD_ALGORITHMS[member]}"
     if "U?$greater@" in mangled:
         owner += "_greater"
     else:
