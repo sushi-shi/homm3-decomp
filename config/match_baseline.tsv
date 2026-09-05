@@ -693,6 +693,7 @@ campaignbrief	??0NewSMapHeader@@QAE@XZ	99.8438	99.8438	99.8438	0x5a7a0	-
 campaignbrief	??0SGameSetupOptions@@QAE@XZ	100.0000	100.0000	100.0000	0x5ac20	-
 campaignbrief	??0TCampaignBrief@@QAE@EE@Z	85.7655	85.7661	85.7661	0x590c0	37242c776407
 campaignbrief	??1CMapHeaderData@@QAE@XZ	100.0000	100.0000	100.0000	0x5aab0	-
+campaignbrief	??1CampaignScenarioPreview@@QAE@XZ	100.0000	100.0000	100.0000	0x5ae70	-
 campaignbrief	??1NewSMapHeader@@QAE@XZ	100.0000	100.0000	100.0000	0x5ad00	-
 campaignbrief	??1TCampaignBrief@@UAE@XZ	100.0000	100.0000	100.0000	0x5afb0	d4c0d4a6ee48
 campaignbrief	??1TPlayerSlotAttributes@CMapHeaderData@@QAE@XZ	38.0299	38.0299	38.0299	0x5ab80	-
@@ -1737,8 +1738,8 @@ gzfile	??_GTOpenFailure@TGzFile@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xd6d30	-
 gzfile	?Read@TGzFile@@UAEHPAXH@Z	100.0000	100.0000	100.0000	0xd6d80	d8d74584e733
 gzfile	?Write@TGzFile@@UAEHPBXH@Z	100.0000	100.0000	100.0000	0xd6da0	c861271538fe
 gzinflatebuf	??0TAllocationFailure@@QAE@XZ	100.0000	100.0000	100.0000	0xd6b80	92689dd90756
-gzinflatebuf	??0TDataError@TGzInflateBuf@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0xd6690	-
-gzinflatebuf	??0TDataError@TGzInflateBuf@@QAE@XZ	100.0000	100.0000	100.0000	0xd65e0	ef530792f879
+gzinflatebuf	??0TDataError@TGzInflateBuf@@QAE@ABV01@@Z	0.0000	100.0000	100.0000	0xd65e0	ef530792f879
+gzinflatebuf	??0TDataError@TGzInflateBuf@@QAE@XZ	31.7752	100.0000	100.0000	0xd6690	-
 gzinflatebuf	??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z	76.4458	76.4458	76.4458	0xd6050	88b0a132da7c
 gzinflatebuf	??1TGzInflateBuf@@UAE@XZ	100.0000	100.0000	100.0000	0xd6820	cc97722e33a5
 gzinflatebuf	??_GTGzInflateBuf@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xd67f0	-
