@@ -11,6 +11,50 @@
 // faction-specific building-name column when no visiting hero is present.
 extern const char* gSpecialBuildingNames[10][11];
 
+// --- the game-data table loaders, in link order after
+// InitializeGeneralText.  The Dreamcast text.obj roster names 26 rows
+// between InitializeGeneralText and TSpreadsheetResource's header
+// methods; the retail band 0x5b9110..0x5b9cc0 holds 27 in the same
+// order, and every one of them is corroborated by the .txt literal it
+// opens (campbttn/mineevnt/regions/camphigh/terrname/objnames/restypes/
+// minename/plcolors/priskill/skilllev/bldgneut/bldgspec/dwelling/
+// townname/herobios/castinfo/tvrninfo/hallinfo/tcommand/overview/
+// heroscrn/campdiag/credits/help/arraytxt).  The 27th, 0x5b9880 over
+// tentcolr.txt, has no Dreamcast counterpart - a Complete-only row, and
+// the only unpaired one in the span, which is what makes the order-map
+// exhaustive.  Declared here for kb.obj's EarlySetup, which runs the
+// whole table through its LoadGameData chain; bodies are not claimed
+// yet.
+unsigned char InitializeGeneralText();               // 0x5b90f0
+unsigned char InitializeCustomCampaignText();        // 0x5b9110
+unsigned char InitializeMineEventText();             // 0x5b9150
+unsigned char InitializeCampaignRegionNames();       // 0x5b9180
+unsigned char InitializeHighScoreDefaults();         // 0x5b91d0
+unsigned char InitializeTerrainNames();              // 0x5b92a0
+unsigned char InitializeAdvObjNames();               // 0x5b92d0
+unsigned char InitializeResourceNames();             // 0x5b9310
+unsigned char InitializeMineNames();                 // 0x5b9340
+unsigned char InitializePlayerColors();              // 0x5b9370
+unsigned char InitializePrimaryStatNames();          // 0x5b93c0
+unsigned char InitializeSecondarySkillLevelNames();  // 0x5b93f0
+unsigned char InitializeNeutralBuildingText();       // 0x5b9450
+unsigned char InitializeSpecialBuildingText();       // 0x5b94e0
+unsigned char InitializeDwellingText();              // 0x5b9570
+unsigned char InitializeTownNameText();              // 0x5b9600
+unsigned char InitializeHeroBioText();               // 0x5b9680
+unsigned char InitializeCastleText();                // 0x5b96c0
+unsigned char InitializeTavernText();                // 0x5b96f0
+unsigned char InitializeHallText();                  // 0x5b9720
+unsigned char InitializeTownText();                  // 0x5b9750
+unsigned char InitializeOverviewText();              // 0x5b9790
+unsigned char InitializeHeroText();                  // 0x5b97c0
+unsigned char InitializeCampaignDialogText();        // 0x5b9800
+unsigned char InitializeCreditsText();               // 0x5b9840
+// Complete-only: tentcolr.txt, the border-guard tent colour names.
+unsigned char InitializeTentColorText();             // 0x5b9880
+unsigned char InitializeHelpText();                  // 0x5b98b0
+unsigned char InitializeArrayText();                 // 0x5b9cc0
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\text.cpp:49, dc 0x160ff4) void CheckTextResource();
 // CODEVIEW(E:\gamedcs\text.cpp:86, dc 0x160ff8) void CheckSpreadsheetResource();

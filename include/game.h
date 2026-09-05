@@ -2052,7 +2052,12 @@ public:
     char pad_4e646[2];
     std::vector<TRumour> rumours;             // +0x4e648
     char field_4e658[0x1c];
-    char pad_4e674[8];
+    char pad_4e674[4];
+    // +0x4e678, sliced out of that pad 2026-09-05: kb.obj's InitVars
+    // (expanded into EarlySetup at 0x4eda80) stores a dword zero here
+    // through gpGame, and that is the only located reference. Role
+    // unattested - ordinal placeholder.
+    int field_4e678;
     // +0x4e67c / +0x4e6fc / +0x4e77c - the teleport-destination pools,
     // all std::vector<type_point>. The two arrays are indexed by the
     // monolith colour (`color << 4` in both wrappers) and the gap
