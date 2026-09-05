@@ -1003,7 +1003,7 @@ command	?valid_wall_target@combatManager@@QAEEW4TWallTargetId@@@Z	100.0000	100.0
 compress	@compress2@20	100.0000	100.0000	100.0000	0x206b40	-
 crc32	@crc32@12	100.0000	100.0000	100.0000	0x205af0	-
 creature_bank	??0type_creature_bank_traits@@QAE@XZ	100.0000	100.0000	100.0000	0x7aad0	2dbea7ccab6e
-creature_bank	?initialize_creature_bank@@YIXPAUtype_creature_bank@@W4type_creature_bank_type@@@Z	95.2716	95.2716	95.2716	0x7ad90	48cb784f6bd9
+creature_bank	?initialize_creature_bank@@YIXPAUtype_creature_bank@@W4type_creature_bank_type@@@Z	98.1075	98.1075	98.1075	0x7ad90	5d91c0f11b1d
 creaturetype	?IsBaseCreature@@YIHW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x7b120	d197cebfb413
 creaturetype	?IsSiegeWeapon@@YIEW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x7b180	52d82d222f3c
 creaturetype	?UpgradedCreatureType@@YI?AW4TCreatureType@@W41@@Z	100.0000	100.0000	100.0000	0x7b1a0	ca18647b867b
