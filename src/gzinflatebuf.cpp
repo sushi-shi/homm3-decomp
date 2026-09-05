@@ -125,10 +125,10 @@ TGzInflateBuf::TGzInflateBuf(std::streambuf* newSource)
     if (ok) {
         int method = read_byte();
         if (method != Z_DEFLATED)
-            throw TDataError(std::string());
+            throw TDataError();
         int flags = read_byte();
         if ((flags & 0xe0) != 0)
-            throw TDataError(std::string());
+            throw TDataError();
         int skip = 6;
         do {
             read_byte();
@@ -149,8 +149,7 @@ TGzInflateBuf::TGzInflateBuf(std::streambuf* newSource)
         }
         if ((flags & 2) != 0) {
             read_byte();
-            if (get_byte() == -1)
-                throw TDataError(std::string());
+            read_byte();
         }
         if (inflateInit2(&stream, -MAX_WBITS) == Z_MEM_ERROR)
             throw TAllocationFailure();
