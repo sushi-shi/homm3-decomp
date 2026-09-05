@@ -1044,11 +1044,11 @@ compress	@compress2@20	100.0000	100.0000	100.0000	0x206b40	-
 crc32	@crc32@12	100.0000	100.0000	100.0000	0x205af0	-
 creature_bank	??0type_creature_bank_traits@@QAE@XZ	100.0000	100.0000	100.0000	0x7aad0	2dbea7ccab6e
 creature_bank	?initialize_creature_bank@@YIXPAUtype_creature_bank@@W4type_creature_bank_type@@@Z	98.1075	98.1075	98.1075	0x7ad90	5d91c0f11b1d
+creaturetype	?InitializeCreatureTypeTraits@@YIXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	100.0000	100.0000	100.0000	0x7b480	78a734f5e740
 creaturetype	?InitializeCreatureTypeTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0x7b290	d4b5050cb084
 creaturetype	?IsBaseCreature@@YIHW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x7b120	d197cebfb413
 creaturetype	?IsSiegeWeapon@@YIEW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x7b180	52d82d222f3c
 creaturetype	?UpgradedCreatureType@@YI?AW4TCreatureType@@W41@@Z	100.0000	100.0000	100.0000	0x7b1a0	ca18647b867b
-creaturetype	InitializeCreatureTypeTraits	0.0000	0.0000	0.0000	0x7b480	3f52e7723dd7
 csequence	??0CSequence@@AAE@H@Z	100.0000	100.0000	100.0000	0x7b840	11ed9593dec7
 csequence	??1CSequence@@AAE@XZ	100.0000	100.0000	100.0000	0x7b890	0467d169004b
 csequence	?AddFrame@CSequence@@AAEHPAVCSpriteFrame@@@Z	100.0000	100.0000	100.0000	0x7b8a0	f2a8f5d93ebd
@@ -3757,7 +3757,7 @@ town	?increase_population@town@@QAEXW4TCreatureType@@0J@Z	100.0000	100.0000	100.
 town	?initialize@town@@QAEXPBVTownExtra@@@Z	100.0000	100.0000	100.0000	0x1c0670	6c604eaecf04
 town	?initialize_buildings@@YIXPAVtown@@PBVTownExtra@@@Z	100.0000	100.0000	100.0000	0x1c08c0	fdcd7aca7bee
 town	?initialize_hordes@town@@SIXXZ	100.0000	100.0000	100.0000	0x1bdf60	2453506fb508
-town	?initialize_spells@town@@QAEXPBVTownExtra@@@Z	97.6742	97.7386	97.7386	0x1be600	7ede4222f099
+town	?initialize_spells@town@@QAEXPBVTownExtra@@@Z	97.7386	97.7386	97.7386	0x1be600	7ede4222f099
 town	?is_legal_building@town@@QBEEW4type_building_id@@@Z	100.0000	100.0000	100.0000	0x1c12a0	e3dcc8598062
 town	?load@town@@QAEHPAVTAbstractFile@@H@Z	98.0017	98.0017	98.0017	0x1bcd60	c2a37557aae6
 town	?remove_garrison_hero@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1be390	1cd0c5fe4f8a
