@@ -1003,6 +1003,7 @@ command	?valid_wall_target@combatManager@@QAEEW4TWallTargetId@@@Z	100.0000	100.0
 compress	@compress2@20	100.0000	100.0000	100.0000	0x206b40	-
 crc32	@crc32@12	100.0000	100.0000	100.0000	0x205af0	-
 creature_bank	??0type_creature_bank_traits@@QAE@XZ	100.0000	100.0000	100.0000	0x7aad0	2dbea7ccab6e
+creature_bank	?initialize_creature_bank@@YIXPAUtype_creature_bank@@W4type_creature_bank_type@@@Z	95.2716	95.2716	95.2716	0x7ad90	48cb784f6bd9
 creaturetype	?IsBaseCreature@@YIHW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x7b120	d197cebfb413
 creaturetype	?IsSiegeWeapon@@YIEW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x7b180	52d82d222f3c
 creaturetype	?UpgradedCreatureType@@YI?AW4TCreatureType@@W41@@Z	100.0000	100.0000	100.0000	0x7b1a0	ca18647b867b
@@ -1088,7 +1089,7 @@ customcampaign	?PlayScenarioEpilogue@SCampaign@@QAEXPAX@Z	100.0000	100.0000	100.
 customcampaign	?PlayScenarioPrologue@SCampaign@@QAEXPAX@Z	100.0000	100.0000	100.0000	0x8a270	f20101db493f
 customcampaign	?PruneCrossoverHeroes@SCampaign@@QAEXPAX@Z	12.3264	12.3264	12.3264	0x89e20	3be750b33cd0
 customcampaign	?Read@TStreamBufFile@@UAEHPAXH@Z	100.0000	100.0000	100.0000	0x83f10	d4a8f9e13d4a
-customcampaign	?Save@SCampaign@@QAEXPAVTAbstractFile@@@Z	78.4646	78.4646	78.4646	0x8ae90	9cd6b95d6cb0
+customcampaign	?Save@SCampaign@@QAEXPAVTAbstractFile@@@Z	78.4646	78.4646	78.4646	0x8ae90	2cca34ef9629
 customcampaign	?StartMusic@CampaignHeaderStruct@TCampaignBrief@@QAEXXZ	100.0000	100.0000	100.0000	0x88ee0	4daeb5fd6b1f
 customcampaign	?StartScenario@CampaignHeaderStruct@TCampaignBrief@@QAEXHH@Z	100.0000	100.0000	100.0000	0x894e0	00db9222128a
 customcampaign	?StartScenario@ScenarioStruct@TCampaignBrief@@QAEXPAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@H@Z	100.0000	100.0000	100.0000	0x884c0	1e966a01130f
