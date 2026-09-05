@@ -3,16 +3,22 @@
 // This compiland is absent from the Dreamcast roster. Retail groups
 // TObjectType::setImageName, TObjectTypeTable::load and the global image-name
 // registry here; the registry's tree nodes hold a VC6 std::string at +0x0c.
+#include <stdlib.h>
+
 #include <va.h>
 #define _MT
 #include <yvals.h>
 #undef _MT
 #include <map>
 #include <string>
+#include <strstream>
 #include <vector>
 
 #include "advmgr_objects.h"
+#include "exceptions.h"
 #include "objecttype.h"
+#include "resourcemanager.h"
+#include "textresource.h"
 
 // The registry's implicit default constructor, emitted as its own COMDAT:
 // the _Tree constructor (shared-nil refcount at 0x69cba0, nil node at
@@ -76,6 +82,47 @@ TObjectType& TObjectType::setTriggerMask(const std::bitset<48>& mask)
         triggerCell.y = noTriggerY;
     }
     return *this;
+}
+
+// Retail 0x514d80, the objects.txt reader NewfullMapFn_00505DA0 drives.
+// The whole shape is published by the function's own EH data at 0x650150:
+// eight states, ONE try block spanning states 3..7, and a type-less
+// (`catch (...)`) handler at 0x514ff3 that Disposes the text resource and
+// rethrows - which is why state 3 itself carries no destructor and the
+// resource pointer lives in the dead parameter home rather than a holder.
+// The unwind funclets name the rest: 0x62e730 destroys the throw path's
+// string temporary, 0x62e738 the exception object, and 0x62e743/5d/68 the
+// per-row stream's virtual base (guarded by the construction flag at
+// [ebp-0x14]), its strstreambuf and the stream itself.
+//
+// Residual (69.25%): an /Ob2 SWAP inside the resize temporary's inline
+// TObjectType constructor. Retail CALLS `bitset<48>::bitset(unsigned
+// long)` at 0x5154a0 and EXPANDS `operator~` (the copy plus a flip call);
+// we do the exact opposite, so the argument constructor's 32-bit set loop
+// arrives as eleven extra blocks. Retail also expands TImageInfo's
+// implicit default constructor where we call it - giving an explicit
+// empty inline one is byte-flat, measured. The doctrinal lever for the
+// over-inline half is caller-shrink, and this body has nothing to lift:
+// its statements are all accounted for by the EH state transcript.
+VA(0x00514d80, 0x273)  // anchor-callee ResourceManager::GetText + anchor-bracket NewfullMapFn_00505DA0; retail-only
+void TObjectTypeTable::load(char* filename)
+{
+    TTextResource* text = ResourceManager::GetText(filename);
+    if (text == 0)
+        throw TRuntimeError();
+
+    try {
+        int count = atoi(text->GetText(0));
+        objectTypes.resize(count);
+        for (int i = 0; i < count; ++i) {
+            std::istrstream row(text->GetText(i + 1));
+            row >> objectTypes[i];
+        }
+    } catch (...) {
+        text->Dispose();
+        throw;
+    }
+    text->Dispose();
 }
 
 // Retail 0x517780 is the nine-block Dinkumware tree-successor walk, reached
