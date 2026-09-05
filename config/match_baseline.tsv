@@ -4190,7 +4190,7 @@ viewwrld	??1TViewWorldWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1fbd60	dbcb66a
 viewwrld	??_GTViewWorldWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1fbd30	-
 viewwrld	?VWCompleteDraw@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x1fc4c0	f85745d6e952
 viewwrld	?VWDrawAdvObj@advManager@@QAEXHHHHH@Z	96.4955	96.4955	96.4955	0x1f82e0	b73c0fc37794
-viewwrld	?VWDrawAdvObjShadow@advManager@@QAEXHHHHH@Z	83.9809	83.9809	83.9809	0x1f8be0	59399670e38f
+viewwrld	?VWDrawAdvObjShadow@advManager@@QAEXHHHHH@Z	87.0572	87.0572	87.0572	0x1f8be0	01382db65df2
 viewwrld	?VWDrawBoatPart@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	100.0000	100.0000	100.0000	0x1f7d00	13bb04b93baa
 viewwrld	?VWDrawBoatPartShadow@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	100.0000	100.0000	100.0000	0x1f7ef0	e9a2787317aa
 viewwrld	?VWDrawGround@advManager@@QAEXHHHHH@Z	55.2155	55.6351	55.6351	0x1fa1e0	f46f4ba308e3

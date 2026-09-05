@@ -807,6 +807,20 @@ void advManager::VWDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 // whole shape - the two TDrawParts arrays cleared six entries at a time, the
 // two ScanForHeroOrBoat calls, the drawCells/suppressDraw pair, and the
 // `part <= 5` bound on both part loops.
+// Residual (87.06%): `baseY` is DECLARED FIRST here - retail loads both
+// iVWCenterOffsetW and iVWCenterOffsetH before either imul and multiplies
+// destY first (`mov esi,eax / imul eax,[ebp+0x18] / imul esi,[ebp+0x14]`),
+// which the baseX-first comma declaration cannot produce; the swap alone is
+// worth 83.9809 -> 87.0563 and also fixes the prologue (retail loads srcX
+// before `push ebx`) and srcX's register. MEASURED AND REJECTED at this
+// plateau: splitting playerBit into VWDrawAdvObj's two-statement `1 << pos`
+// then `&= GetMapExtra` form (byte-flat, 87.0563); the same baseY-first swap
+// in VWDrawAdvObj itself (byte-flat, 96.4955). What is left is srcX/srcY:
+// retail RE-READS both parameter homes for the inlined type_point
+// (`mov ecx,[ebp+8] / mov esi,[ebp+0xc]` between the two bitfield words)
+// where we still hold them in registers across the guard, plus the one
+// under-inlined `memoryBuffer->GetMap(0,0)` inside VWScaleToScreenBuffer's
+// row loop, which retail folds to `mov ebx,[memoryBuffer] / mov ebx,[ebx+0x30]`.
 VA(0x005f8be0, 0x636)  // exhaustive dc-order-map + VWCompleteDraw call order (5th layer), dc 0x1943ec
 void advManager::VWDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int destY)
 {
@@ -817,8 +831,8 @@ void advManager::VWDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int de
     int playerBit = (1 << gpGame->GetLocalPlayerGamePos())
         & GetMapExtra(srcX, srcY, z);
 
-    int baseX = destX * giViewWorldScale + iVWCenterOffsetW,
-        baseY = destY * giViewWorldScale + iVWCenterOffsetH;
+    int baseY = destY * giViewWorldScale + iVWCenterOffsetH,
+        baseX = destX * giViewWorldScale + iVWCenterOffsetW;
 
     TDrawParts heroParts[6];
     TDrawParts boatParts[6];
