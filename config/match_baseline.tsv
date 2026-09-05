@@ -3191,6 +3191,8 @@ singleselectionwindow	??0CNewPlayerUpdateMan@@QAE@XZ	100.0000	100.0000	100.0000	
 singleselectionwindow	??0CUpdatePlayerPosMsg@@QAE@PAVCNetPlayerHandlerPlayer@@0@Z	100.0000	100.0000	100.0000	0x179870	4cb719207948
 singleselectionwindow	??0GameSelectionHeadersStruct@@QAE@ABU0@@Z	86.2344	86.2344	86.2344	0x1904f0	-
 singleselectionwindow	??0GameSelectionHeadersStruct@@QAE@XZ	73.1483	79.3242	79.3242	0x178e00	-
+singleselectionwindow	??0SCampaign@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x18fc10	-
+singleselectionwindow	??0SavedGameHeader@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x193f50	-
 singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	93.6776	93.6776	93.6776	0x179960	0da7889bd3b9
 singleselectionwindow	??0lobby_message@@QAE@XZ	100.0000	100.0000	100.0000	0x189190	2b1be8208221
 singleselectionwindow	??0t_map_list_update@@QAE@K@Z	100.0000	100.0000	100.0000	0x189240	173781ee6a81
@@ -3380,6 +3382,7 @@ singleselectionwindow	?_Sort_0@std@@YIXPAUGameSelectionHeadersStruct@@0UTSortMap
 singleselectionwindow	?_Sort_0@std@@YIXPAUGameSelectionHeadersStruct@@0UTSortMapsBySize@@0@Z	91.9961	91.9961	91.9961	0x191310	-
 singleselectionwindow	?_Sort_0@std@@YIXPAUGameSelectionHeadersStruct@@0UTSortMapsByVersion@@0@Z	100.0000	100.0000	100.0000	0x190e50	-
 singleselectionwindow	?_Sort_0@std@@YIXPAUGameSelectionHeadersStruct@@0UTSortMapsByVictory@@0@Z	100.0000	100.0000	100.0000	0x191970	-
+singleselectionwindow	?_Ucopy@?$vector@UCampaignScenarioInfo@@V?$allocator@UCampaignScenarioInfo@@@std@@@std@@IAEPAUCampaignScenarioInfo@@PBU3@0PAU3@@Z	100.0000	100.0000	100.0000	0x18fe40	-
 singleselectionwindow	?_Ucopy@?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@IAEPAUGameSelectionHeadersStruct@@PBU3@0PAU3@@Z	100.0000	100.0000	100.0000	0x18f0b0	-
 singleselectionwindow	?_Unguarded_insert@std@@YIXPAUGameSelectionHeadersStruct@@U2@UTSortMapsByLoss@@@Z	100.0000	100.0000	100.0000	0x193730	-
 singleselectionwindow	?_Unguarded_insert@std@@YIXPAUGameSelectionHeadersStruct@@U2@UTSortMapsByName@@@Z	79.7608	79.7608	79.7608	0x1921e0	-
