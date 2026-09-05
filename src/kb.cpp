@@ -1013,6 +1013,15 @@ static Bitmap16Bit* gameSelectBack;
 // in this function).
 DATA(0x0069953c)
 static int gUnnamed69953c;
+DATA(0x00699558)
+static int gUnnamed699558;
+// oldmain's own scenario-summary scratch: the only retail reference to
+// this .bss cell is the sprintf that formats general text row 116 with
+// the finished game's turn number. The extent is NOT proven - nothing
+// else in the image touches the 0x12c bytes up to gpSoundManager's
+// neighbour - so the declared width is a placeholder, not a claim.
+DATA(0x00699294)
+static char gUnnamed699294[300];
 DATA(0x00699584)
 static int gUnnamed699584;
 DATA(0x006972e8)
@@ -1022,6 +1031,30 @@ static unsigned char gUnnamed6972e8;
 // VC6 build expands DoNewGame and DoLoadGame into oldmain but retains the
 // three modal leaf helpers below as real functions.  Keep the source
 // boundaries and let /Ob2 make that per-caller decision.
+// The two numeric domains oldmain's end-of-game arm screens on, named
+// here rather than in a shared header because oldmain is their only
+// reader. bDefeatedAllPlayers is remote.obj's cell: remote.cpp writes 0
+// and 1 for lost/won, and the campaign-map arm below writes 2 for "this
+// campaign map was already scored". The campaign ordinals are the rows
+// of SCampaign::campaignCompleted (0..20); 3 and 18 are the two whose
+// completion runs the epilogue frame and the congratulations screen with
+// no following page, and 20 is the last row there is. Ordinal spellings -
+// neither the Dreamcast dump nor retail names these rows.
+const int GAME_RESULT_LOCAL_PLAYER_LOST = 0;
+const int GAME_RESULT_CAMPAIGN_MAP_SCORED = 2;
+const int CAMPAIGN_ORDINAL_03 = 3;
+const int CAMPAIGN_ORDINAL_18 = 18;
+const int CAMPAIGN_ORDINAL_LAST = 20;
+
+// remote.cpp owns the body (0x51d900); declared here rather than in
+// remote.h so oldmain's one call site adds no declarator to the header's
+// include closure. advmgr.cpp owns SaveGame (E:\gamedcs\advmgr.cpp:9693)
+// and ShowCongrats is defined further down this file; both are declared
+// locally for the same reason.
+void WaitForReadyToPlayMsg();
+unsigned char SaveGame(unsigned char bCampaignWinMode);
+void ShowCongrats(int hsType);
+
 static int DoNewGame();
 static unsigned char DoCampaignWindow();
 static int DoSinglePlayerWindow();
@@ -1051,6 +1084,27 @@ inline void ShowCredits()
 // Keep the named helper boundaries visible while this first admission is
 // iterated. Any boundary retail expands is an explicit VC6 inline problem,
 // not permission to flatten the recovered source shape by hand.
+// Residual (73.05%): three regions, all measured 2026-09-05.
+//  - The first ShowProgressBar/IncProgressBar pair in the emitted body is
+//    NOT a threaded copy of the block below: it is DoNewGame's own
+//    TUTORIAL_ID arm (kb.cpp:1700), a separate source site that /Ob2
+//    prices against DoNewGame's budget rather than oldmain's. Retail
+//    CALLS both there and EXPANDS them at oldmain's own setup site and in
+//    the campaign-map arm; we expand at all three, which costs ~120 B and
+//    shifts three blocks, and every block index after it reads as
+//    divergent for that reason alone. All four progress-bar bodies are
+//    EXACT, so their front-end cost estimates match retail's - the
+//    difference is how much of DoNewGame's budget the sites AHEAD of the
+//    TUTORIAL arm consume, and those sites are the ones the existing
+//    inline_depth(0) boundaries hold out of line. Not reachable without
+//    re-pricing those pins.
+//  - Two customcampaign.obj SCampaign members (0x489820, 1536 B, and
+//    0x48a2a0, 112 B) run over the end-of-game CampaignHeaderStruct
+//    between Load and SaveGame(1). Both carve rows are unclaimed and no
+//    Dreamcast identity is proven for them, so the calls are omitted.
+//  - The DoNewGame/DoLoadGame menu tail (retail +0xd60..+0xf40) still
+//    diverges: retail reaches `gUnnamed699584 = 0` from a CREDITS_ID
+//    test on dialogReturn that this reconstruction does not yet spell.
 VA(0x004ee3e0, 0x1C04)
 int oldmain()
 {
@@ -1304,9 +1358,6 @@ int oldmain()
             break;
         }
 
-        if (unused)
-            continue;
-
         if (command == TMainMenu::NEW_GAME_ID
             || command == TMainMenu::LOAD_GAME_ID
             || command == TMainMenu::RESTART_ID) {
@@ -1318,30 +1369,254 @@ int oldmain()
             for (int i = 0; i < 8; ++i)
                 playerSave[i] = gpGame->players[i];
 
-            gpGame->ResetGame(0, 0, 0);
-            IncProgressBar(1);
-            gpGame->SetupFirstPlayer();
-            gpGame->NewMap(gpGame->setup.path, gpGame->setup.filename, 0, -1);
-            IncProgressBar(1);
-            IncProgressBar(1);
+            int alignment[8];
+            memcpy(alignment, gpGame->setup.alignment, sizeof(alignment));
 
+            if (gbUnk69774c)
+                gpGame->ResetGame(gpGame->setup.difficulty,
+                                  gpGame->campaign.currentMap,
+                                  &gpGame->mapHeader);
+            else
+                gpGame->ResetGame(gpGame->setup.difficulty, 0, 0);
+
+            if (gbUnk69774c) {
+                TCampaignBrief::CampaignHeaderStruct campaignBrief(
+                    gpGame->campaign.GetCampaignFileName().c_str());
+                int briefingChoice = gpGame->campaign.briefingChoice;
+                int currentMap = gpGame->campaign.currentMap;
+                campaignBrief.Load();
+                gpGame->campaign.ApplyBriefingChoice(briefingChoice);
+                int playerPos =
+                    campaignBrief.scenarios[currentMap]
+                        ->options->GetPlayerPosition(briefingChoice);
+                gpGame->players[playerPos].isHuman = 1;
+                gpGame->players[playerPos].isLocal = 1;
+                gLocalGamePos = playerPos;
+                IncProgressBar(1);
+                gpGame->SetupFirstPlayer();
+                campaignBrief.StartScenario(currentMap, briefingChoice);
+            } else {
+                for (int j = 0; j < 8; ++j) {
+                    if ((1 << alignment[j])
+                        & gpGame->mapHeader.playerSlotAttributes[j]
+                              .legalAlignments) {
+                        gpGame->setup.alignment[j] = alignment[j];
+                        gUnnamed69fb24[j] = gpGame->setup.startingHero[j];
+                    }
+                    strcpy(gpGame->players[j].cName, playerSave[j].cName);
+                    gpGame->players[j].isLocal = playerSave[j].isLocal;
+                    gpGame->players[j].isHuman = playerSave[j].isHuman;
+                    gNewMapStartingBonus[j] = gpGame->setup.startingBonus[j];
+                }
+
+                IncProgressBar(1);
+                gpGame->SetupFirstPlayer();
+                gpGame->NewMap(gpGame->setup.path, gpGame->setup.filename,
+                               gUnnamed69fb24, gpGame->f_1f698);
+            }
+            IncProgressBar(1);
+            IncProgressBar(1);
+        } else {
+            gUnnamed699584 = 0;
+        }
+
+        mainBack->Dispose();
+        mainBack = 0;
+        gameSelectBack->Dispose();
+        gameSelectBack = 0;
+        VideoClose();
+
+        if (!unused) {
+        runGame:
+            gpWindowManager->colorCyclingOn = 1;
             ComputeAdvNetControl();
+            gUnnamed699558 = 1;
             gpSoundManager->StopAllSamples(1);
 
-            if (gpExecutive->AddManager(gpAdvManager, -1))
-                ShutDown("Initialization failed!");
-            gpExecutive->MainLoop();
-            gpExecutive->RemoveManager(gpAdvManager);
-            gpWindowManager->FadeScreen(0, 8, false);
+            if (gbUnk69774c
+                && gpGame->campaign.mapScores[gpGame->campaign.currentMap]
+                       .completed) {
+                giProgressBarCount = 20;
+                ShowProgressBar();
+                bDefeatedAllPlayers = GAME_RESULT_CAMPAIGN_MAP_SCORED;
+                UnloadProgressBar();
+                goto endOfGameBody;
+            }
 
-            if (gbGameOver) {
+            if (gpExecutive->AddManager(gpAdvManager, -1))
+                ShutDown((*gpGeneralText)[1]);
+            UnloadProgressBar();
+
+            if (bVideoPaused) {
+                WaitForReadyToPlayMsg();
+                gpGame->GetLocalPlayer()->quickCombat = gCombatQuickMode69877c;
+                CCombatTypeMsg combatTypeMsg(gCombatQuickMode69877c);
+                TransmitRemoteData(&combatTypeMsg, 0x7f, false, true);
+            }
+
+            if (command == TMainMenu::NEW_GAME_ID
+                || command == TMainMenu::RESTART_ID
+                || gUnnamed699584) {
+                gUnnamed699584 = 0;
+                launch_sample(
+                    DATA_COMPGEN(0x00660c80, oldMainNewDaySample,
+                                 "newday.wav"),
+                    30000, 3);
+                gpGame->CheckForTimeEvent();
+                gpGame->CheckForTownEvent();
+            }
+
+            gTurnDuration69d630.Start();
+            gpExecutive->MainLoop();
+            gpSoundManager->field_84 = 1;
+            gUnnamed691209 = 0;
+            gpSoundManager->StopAllSamples(1);
+            gpExecutive->RemoveManager(gpAdvManager);
+            gpWindowManager->FadeScreen(1, 4, false);
+
+            if (gGameCommand != TMainMenu::RESTART_ID)
                 RemoteCleanup();
+            if (gbDPlayReady)
+                unused = 1;
+        }
+
+        if (gbGameOver) {
+        endOfGameBody:
+            RemoteCleanup();
+            gCompleteDrawEnabled = 1;
+            gpMouseManager->SetPointer(0, mouseManager::DEFAULT_SET);
+            sprintf(gUnnamed699294, (*gpGeneralText)[116],
+                    gpGame->get_current_turn());
+
+            if (!bDefeatedAllPlayers) {
                 LostGame();
-                gbGameOver = 0;
+            } else if (gbUnk69774c) {
+                SCampaign& campaign = gpGame->campaign;
+
+                if (bDefeatedAllPlayers != GAME_RESULT_CAMPAIGN_MAP_SCORED) {
+                    TCampaignBrief::CampaignHeaderStruct campaignBrief(
+                        campaign.GetCampaignFileName().c_str());
+                    campaignBrief.Load();
+                    // Residual: retail runs two customcampaign.obj
+                    // SCampaign members over campaignBrief here - the
+                    // 1536 B body at 0x489820 before SaveGame and the
+                    // 112 B one at 0x48a2a0 after it. Both carve rows are
+                    // still unclaimed and neither DC name that fits
+                    // (give_custom_items / mark_campaign_map_won) is
+                    // proven on this image, so the two calls are left out
+                    // rather than written under a guessed identity.
+                    SaveGame(1);
+                    if ((campaign.currentCampaign == CAMPAIGN_ORDINAL_03
+                         && campaign.CampaignComplete())
+                        || (campaign.currentCampaign == CAMPAIGN_ORDINAL_18
+                            && campaign.CampaignComplete())) {
+                        if (campaign.currentCampaign == CAMPAIGN_ORDINAL_03)
+                            KbFn_004EE1B0(
+                                32,
+                                DATA_COMPGEN(0x0067f6d8,
+                                             oldMainCampaignIntroFrame,
+                                             "IntroRim.pcx"));
+                        ShowCongrats(0);
+                        if (gbShowHighScore) {
+                            gbShowHighScore = 0;
+                            gpHighScoreManager->ViewHiScore();
+                        }
+                        gbGameOver = 0;
+                        gbUnk69774c = 0;
+                        continue;
+                    }
+                }
+
+                int nextCampaign;
+                if (campaign.currentCampaign < 7)
+                    nextCampaign = 0;
+                else
+                    nextCampaign = (campaign.currentCampaign >= 13) + 1;
+
+                if (campaign.CampaignComplete()
+                    && bDefeatedAllPlayers
+                           != GAME_RESULT_CAMPAIGN_MAP_SCORED) {
+                    ShowCongrats(0);
+                    if (gbShowHighScore) {
+                        gbShowHighScore = 0;
+                        gpHighScoreManager->ViewHiScore();
+                    }
+                    if (campaign.currentCampaign != CAMPAIGN_ORDINAL_LAST) {
+                        gbUnk69774c = 1;
+                    nextWonCampaign:
+                        {
+                            TCampaignWindow campaignWindow(0, nextCampaign);
+                            campaignWindow.DoModal();
+                        }
+                        VideoOpen(33, 0, 0, 800, 600, 1, 0, 1);
+                        VideoPause();
+                        if (gpWindowManager->dialogReturn
+                            == DIALOG_RETURN_CANCEL)
+                            goto endOfGame;
+                        {
+                            TCampaignBrief campaignBriefWindow(0, 0);
+                            campaignBriefWindow.DoModal();
+                        }
+                        if (gpWindowManager->dialogReturn
+                            == DIALOG_RETURN_CANCEL)
+                            goto nextWonCampaign;
+                        gbGameOver = 0;
+                        gUnnamed699584 = 1;
+                        goto runGame;
+                    }
+                } else if (bDefeatedAllPlayers
+                               == GAME_RESULT_CAMPAIGN_MAP_SCORED
+                           && campaign.CampaignComplete()) {
+                    if (campaign.currentCampaign != CAMPAIGN_ORDINAL_LAST) {
+                        gbUnk69774c = 1;
+                    nextLostCampaign:
+                        {
+                            TCampaignWindow campaignWindow(0, nextCampaign);
+                            campaignWindow.DoModal();
+                        }
+                        VideoOpen(33, 0, 0, 800, 600, 1, 0, 1);
+                        VideoPause();
+                        if (gpWindowManager->dialogReturn
+                            != DIALOG_RETURN_CANCEL) {
+                            {
+                                TCampaignBrief campaignBriefWindow(0, 0);
+                                campaignBriefWindow.DoModal();
+                            }
+                            if (gpWindowManager->dialogReturn
+                                == DIALOG_RETURN_CANCEL)
+                                goto nextLostCampaign;
+                        }
+                    }
+                } else {
+                    TCampaignBrief campaignBriefWindow(0, 0);
+                    campaignBriefWindow.DoModal();
+                }
+
+                if (gpWindowManager->dialogReturn != DIALOG_RETURN_CANCEL) {
+                    gbGameOver = 0;
+                    gUnnamed699584 = 1;
+                    goto runGame;
+                }
+            } else {
+                ShowCongrats(1);
+                if (!gbShowHighScore)
+                    gpWindowManager->colorCyclingOn = 1;
+                else
+                    gpSoundManager->StartMP3(
+                        DATA_COMPGEN(0x0066c29c, congratsMusicName,
+                                     "Win Scenario"),
+                        0, 1);
+            }
+
+        endOfGame:
+            gbGameOver = 0;
+            if (gbShowHighScore) {
+                gbShowHighScore = 0;
+                gpHighScoreManager->ViewHiScore();
             }
         }
 
-        if (gbDPlayReady)
+        if (bVideoPaused)
             unused = 1;
     }
 
