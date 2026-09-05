@@ -742,8 +742,8 @@ enum EOverviewExit {
 // 0x41800000, 0x413d70a4 and 0x40f5c28f exactly. No attested name.
 extern float gUnnamed68c6b8;
 
-// The four square map dimensions gMapWidth/gMapHeight take, named so
-// UpdateRadar's three `switch (gMapHeight)` bodies case on a domain rather
+// The four square map dimensions MAP_WIDTH/MAP_HEIGHT take, named so
+// UpdateRadar's three `switch (MAP_HEIGHT)` bodies case on a domain rather
 // than on literals. The values are retail's own switch labels, decoded out
 // of the two 109-byte index tables at 0x4135e4 and 0x413714; the names are
 // HoMM3's published map sizes. advmgr.h already carried 144 as

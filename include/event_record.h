@@ -18,12 +18,12 @@ class boat;
 class NewmapCell;
 
 // The world extents both visibility sweeps clamp against. DECLARATIONS
-// ONLY - findpath.h owns the DATA claims on 0x6783c8 / 0x6783cc, and a
+// ONLY - game.h owns the DATA claims on 0x6783c8 / 0x6783cc, and a
 // second claim on one RVA is a fatal duplicate at delink time. Declared
-// here rather than by including findpath.h, whose closure event_record.obj
+// here rather than by including game.h, whose closure event_record.obj
 // does not otherwise need.
-extern int gMapWidth;
-extern int gMapHeight;
+extern int MAP_WIDTH;
+extern int MAP_HEIGHT;
 
 // Record discriminant returned by get_type(); values byte-proven from the
 // retail get_type bodies (mov eax,N / ret) reached through each class vtable.

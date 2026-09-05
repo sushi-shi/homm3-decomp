@@ -7,6 +7,35 @@
 # date: 2026-08-04
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 # 11943 functions; size INCLUDES jump tables
+# BOUNDARY CORRECTION 2026-09-06: objecttype.obj's four EH-bearing
+# Dinkumware extraction operators are ONE function each, not the two or
+# three rows the carve carried. Every one has the same shape and every
+# split is proven by retail bytes: the main span ends on a `jmp` FORWARD
+# past its own carved extent into a continuation, a typed catch funclet
+# sits between them ending in the VC6 `mov eax,<continuation>; ret` that
+# hands the runtime that very address, and the carve then began the
+# continuation row 3 or 6 bytes LATE - dropping the register restores the
+# funclet's return lands on. All continuations inherit the parent EBP
+# frame and return through its single epilogue.
+#   0x515270 operator>>(istream&,int&)      347 -> 519 (0x207), absorbing
+#     the 0x5153cb funclet (`mov eax,0x5153f1; ret`) and the 0x5153f1
+#     continuation the carve started at 0x5153f4; body `jmp 0x5153f4` at
+#     0x5153c9; ends 0x515476, nops to 0x51547f.
+#   0x515560 operator>>(istream&,bitset<48>&) 353 -> 589 (0x24d): funclet
+#     0x5156c1 (`mov eax,0x5156e7; ret`), continuation 0x5156e7 (carve
+#     0x5156ed), body `jmp 0x5156ed` at 0x5156c9; ends 0x5157ac.
+#   0x5157f0 operator>>(istream&,bitset<9>&)  353 -> 583 (0x247): funclet
+#     0x515951 (`mov eax,0x515977; ret`), continuation 0x515977 (carve
+#     0x51597d); ends 0x515a36.
+#   0x517830 operator>>(istream&,string&)     568 -> 702 (0x2be): funclet
+#     0x517a68 (`mov eax,0x517a85; ret`), continuation 0x517a85 (carve
+#     0x517a88, reached by `jmp 0x517a88` at 0x5179e1), PLUS the wholly
+#     unowned 0x517ad3..0x517aed `_Xlen` throw block that `je 0x517ad3` at
+#     0x517902 branches into off the parent frame ([ebp-0x34]); ends
+#     0x517aed, two nops, then 0x517af0's own prologue.
+# Each corrected size equals what our stock VC6 specialization already
+# emits for that operator to the byte (519/589/583/702), which is the
+# independent confirmation. 11948 rows since.
 # BOUNDARY CORRECTION 2026-09-01: ResourceManager::LoadFontData is one
 # 378-byte EH-bearing function at 0x15b750. The 17-byte split at 0x15b8b9
 # is its typed catch handler: the .rdata HandlerType relocation names that
@@ -3475,20 +3504,14 @@ rva	size
 0x115010	408
 0x1151b0	170
 0x115260	15
-0x115270	347
-0x1153cb	38
-0x1153f4	131
+0x115270	519
 0x115480	20
 0x1154a0	97
 0x115510	73
-0x115560	353
-0x1156c1	38
-0x1156ed	192
+0x115560	589
 0x1157b0	32
 0x1157d0	27
-0x1157f0	353
-0x115951	38
-0x11597d	186
+0x1157f0	583
 0x115a40	50
 0x115a80	409
 0x115c20	116
@@ -3532,9 +3555,7 @@ rva	size
 0x117680	203
 0x117750	33
 0x117780	163
-0x117830	568
-0x117a68	29
-0x117a88	75
+0x117830	702
 0x117af0	29
 0x117b10	50
 0x117b50	20

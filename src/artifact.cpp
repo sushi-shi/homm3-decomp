@@ -228,6 +228,30 @@ const TCombinationArtifact* gCombinationArtifacts = aCombinationArtifacts;
 // should start from this spelling, not from the current one. Also measured
 // and rejected: `traitsSheet.get()->GetRow(row)` (80.5133, byte-flat) and
 // swapping the two strlen operands (78.6900).
+// 2026-09-06, polish lane 22 - the prologue slot was NOT found, and the two
+// facts that bound it are now on the record. Retail's frame is our frame
+// (0x50 either way), so nothing is missing from it; the divergence is one
+// register permutation, sheet->ESI / zero->ECX against our EAX / EBX, and it
+// is downstream of TWO body decisions we do not reproduce:
+//   - retail re-reads the sheet's row-vector `_First` (`mov eax,[esi+0x20]`)
+//     ONCE per iteration and then applies the row index TWICE from it, so it
+//     has no named `values` AND no LICM hoist. Naming `values` buys the block
+//     alignment and kills the second application; leaving it unnamed keeps
+//     the second application and gets the hoist. Neither spelling can have
+//     both, and no spelling of the receiver changes it - a named
+//     `TSpreadsheetResource* sheet` used in the loops is BYTE-FLAT with
+//     `traitsSheet->` (79.87 both), and `.get()` likewise.
+//   - retail RE-STORES stringBytes to its [ebp-0x20] home every iteration
+//     (`lea eax,[ecx+eax+2] / mov [ebp-0x20],eax`) where we accumulate in
+//     EBX. Hoisting its declaration to function scope, so its live range
+//     spans the TResourcePtr's EH region, does move it but only to 79.97.
+// Measured and rejected this round: named `values` in the stringBytes loop
+// 79.87, + a named raw `sheet` used by the guard too 76.23 (and it loses a
+// `ret`: 2 against retail's 3), + `sheet` named after the guard 79.87
+// (byte-flat), + `traitsSheet.get()->GetRow` 79.87 (byte-flat), named
+// `values` with stringBytes at function scope 79.97. `for (int row = ...)`
+// in both loops does not compile under VC6's old for-scope rule (C2374).
+// The shipped 80.5129 spelling stands.
 VA(0x0044cd50, 0x5E8)  // anchor-strings/caller, dc 0x4fec0
 unsigned char InitializeArtifactTraitsTable()
 {
