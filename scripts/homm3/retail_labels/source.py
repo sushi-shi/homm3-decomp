@@ -153,6 +153,13 @@ TEMPLATE_ARGS_RE = re.compile(r"<[^<>]*>")
 TEMPLATE_MEMBER_RE = re.compile(r"^\?(\w+)@\?\$(\w+)@.*?@(\w+)@@")
 GLOBAL_TEMPLATE_MEMBER_RE = re.compile(r"^\?(\w+)@\?\$(\w+)@.*@@@@")
 IDENT_RE = re.compile(r"[^0-9A-Za-z_]+")
+#: VC6's builtin-type letters, for the containers whose element is a
+#: primitive and therefore carries no class name to key on.
+DEQUE_PRIMITIVE_ELEMENT = {"C": "signed_char", "D": "char",
+                           "E": "unsigned_char", "F": "short",
+                           "G": "unsigned_short", "H": "int",
+                           "I": "unsigned_int", "J": "long",
+                           "K": "unsigned_long"}
 COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "STATIC_CTOR", "SCALAR_DELETING_DTOR",
                  "VECTOR_DELETING_DTOR", "DEFAULT_CTOR_CLOSURE",
@@ -172,6 +179,7 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "TREE_CONST_ITERATOR_DEC", "TREE_CONST_ITERATOR_INC",
                  "TREE_COPY", "TREE_COPY_NODE", "TREE_ERASE",
                  "STRINGBUF_OVERFLOW", "STRINGBUF_INIT",
+                 "DEQUE_FREEFRONT", "DEQUE_FREEBACK",
                  "BASIC_STRING_ASSIGN_PTR_SIZE",
                  "OSTREAM_PUT", "OSTREAM_INSERT_CSTR",
                  "INSERTION_SORT_1",
@@ -680,6 +688,19 @@ def _demangle_key(mangled: str):
         return "char@stringbuf_overflow"
     if mangled.startswith("?_Init@?$basic_stringbuf@D"):
         return "char@stringbuf_init"
+    # deque's two block-freeing helpers. Its element is a PRIMITIVE here
+    # (`?$deque@H` is deque<int>), which the class-name regexes above
+    # cannot reach - VC6 spells builtin types as a single letter with no
+    # `@` terminator - so the code is decoded directly. The owner spelling
+    # follows the one std::copy's int arms already use.
+    deque_primitive = re.match(
+        r"^\?(_Free(?:front|back))@\?\$deque@([CDEFGHIJK])V\?\$allocator@",
+        mangled)
+    if deque_primitive:
+        element = DEQUE_PRIMITIVE_ELEMENT.get(deque_primitive.group(2))
+        if element:
+            member = deque_primitive.group(1).lstrip("_").lower()
+            return f"{element}@deque_{member}"
     vector_element = re.search(
         r"\?\$vector@(?:(?:P[AB][VU])|(?:V|U|W4))?"
         r"([A-Za-z_]\w*)@", mangled)
@@ -755,6 +776,13 @@ def _demangle_key(mangled: str):
     if (mangled.startswith("?_Insertion_sort_1@std@@")
             and "CampaignHeaderPointerLess" in mangled):
         return "campaignheaderpointerless@insertion_sort_1"
+    # The spellbook's own list sort. Named explicitly beside the campaign
+    # one rather than generalized: the two instantiations put DIFFERENT
+    # things in the mangling (that one names its predicate, this one its
+    # element), so no single extraction covers both.
+    if (mangled.startswith("?_Insertion_sort_1@std@@")
+            and "TSpellbookEntry" in mangled):
+        return "tspellbookentry@insertion_sort_1"
     if mangled.startswith(
             "?xsputn@?$basic_streambuf@DU?$char_traits@D@std@@@std@@"):
         return "char@streambuf_xsputn"
@@ -1042,6 +1070,8 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                                or "$tree_erase$" in r["name"]
                                or "$stringbuf_overflow$" in r["name"]
                                or "$stringbuf_init$" in r["name"]
+                               or "$deque_freefront$" in r["name"]
+                               or "$deque_freeback$" in r["name"]
                                or "$basic_string_assign_ptr_size$" in r["name"]
                                or "$ostream_put$" in r["name"]
                                or "$ostream_insert_cstr$" in r["name"]
@@ -1168,6 +1198,13 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
         if tree_extra is not None:
             owner = row["name"].rsplit("$", 1)[1].lower()
             claim_keys.setdefault(f"{owner}@tree_{tree_extra}",
+                                  []).append(row)
+            continue
+        deque_member = next((member for member in ("freefront", "freeback")
+                             if f"$deque_{member}$" in row["name"]), None)
+        if deque_member is not None:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}@deque_{deque_member}",
                                   []).append(row)
             continue
         stringbuf_member = next((member for member in ("overflow", "init")
