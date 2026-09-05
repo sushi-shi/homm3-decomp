@@ -224,6 +224,14 @@ CHAR_STREAM_MEMBERS = (
      "ostreambuf_iterator_assign"),
     ("?_Decref@facet@locale@std@@", None, "locale_facet_decref"),
     ("?_Incref@facet@locale@std@@", None, "locale_facet_incref"),
+    ("??Bid@locale@std@@", None, "locale_id_cast"),
+    ("?seekoff@?$basic_streambuf@D", None, "streambuf_seekoff"),
+    ("?seekpos@?$basic_streambuf@D", None, "streambuf_seekpos"),
+    ("?str@?$basic_ostringstream@D", None, "ostringstream_str"),
+    # `operator<<(int)`. The free `operator<<(const char*)` is already an arm
+    # of its own above; this is the MEMBER overload, so it keys here.
+    ("??6?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEAAV01@H@Z", None,
+     "ostream_insert_int"),
     ("?getloc@ios_base@std@@", None, "ios_base_getloc"),
     # --- the INPUT half of the same family -------------------------------
     # num_get<char, istreambuf_iterator<char>>'s nine do_get overloads,
@@ -321,6 +329,8 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "DEQUE_ERASE", "VECTOR_RESERVE", "VECTOR_CLEAR",
                  "EXCEPTION_DORAISE", "FUNCTOR_CALL",
                  "DEQUE_ITERATOR_ADD_ASSIGN",
+                 "DEQUE_ITERATOR_INC", "DEQUE_ITERATOR_DEC",
+                 "DEQUE_PUSH_BACK", "DEQUE_GROWMAP",
                  "STREAMBUF_XSPUTN",
                  "PAIR_CONST_INT_DTOR",
                  "STD_CONSTRUCT", "STD_COPY",
@@ -939,6 +949,15 @@ def _demangle_key(mangled: str):
     # cannot reach - VC6 spells builtin types as a single letter with no
     # `@` terminator - so the code is decoded directly. The owner spelling
     # follows the one std::copy's int arms already use.
+    # deque over a POINTER element - `?$deque@PAV<Class>@@`. The primitive
+    # table below cannot reach these, and the two members claimed so far are
+    # the message queue's push_back and its map growth helper.
+    deque_pointer = re.match(
+        r"^\?(push_back|_Growmap)@\?\$deque@P[AB](?:V|U)([A-Za-z_]\w*)@",
+        mangled)
+    if deque_pointer:
+        member = deque_pointer.group(1).lstrip("_").lower()
+        return f"{deque_pointer.group(2).lower()}_ptr@deque_{member}"
     deque_primitive = re.match(
         r"^\?(_Free(?:front|back))@\?\$deque@([CDEFGHIJK])V\?\$allocator@",
         mangled)
@@ -1044,6 +1063,13 @@ def _demangle_key(mangled: str):
             "??5@YIAAV?$basic_istream@DU?$char_traits@D@std@@@std@@AAV01@"
             "AAV?$bitset@"):
         return f"bitset{bitset_width}@istream_extract_bitset"
+    deque_iterator = re.match(
+        r"^\?\?([EF])iterator@\?\$deque@([CDEFGHIJK])V\?\$allocator@",
+        mangled)
+    if deque_iterator:
+        element = DEQUE_PRIMITIVE_ELEMENT[deque_iterator.group(2)]
+        member = "inc" if deque_iterator.group(1) == "E" else "dec"
+        return f"{element}@deque_iterator_{member}"
     iterator_width = _template_width(mangled, "bitset_iterator")
     if iterator_width is not None and mangled.startswith(
             "??D?$bitset_iterator@"):
@@ -1109,6 +1135,8 @@ def _demangle_key(mangled: str):
         return "tobstaclevector@vector_ucopy"
     if mangled.startswith("?size@TObstacleVector@combatManager@@"):
         return "tobstaclevector@vector_size"
+    if mangled.startswith("?_Ufill@TObstacleVector@combatManager@@"):
+        return "tobstaclevector@vector_ufill"
     algorithm_key = _std_algorithm_key(mangled)
     if algorithm_key:
         return algorithm_key
@@ -1426,6 +1454,10 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                                or "$deque_freefront$" in r["name"]
                                or "$deque_freeback$" in r["name"]
                                or "$deque_buyback$" in r["name"]
+                               or "$deque_push_back$" in r["name"]
+                               or "$deque_growmap$" in r["name"]
+                               or "$deque_iterator_inc$" in r["name"]
+                               or "$deque_iterator_dec$" in r["name"]
                                or "$basic_string_assign_ptr_size$" in r["name"]
                                or "$ostream_put$" in r["name"]
                                or "$ostream_insert_cstr$" in r["name"]
@@ -1586,7 +1618,9 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                                   []).append(row)
             continue
         deque_member = next((member for member in ("freefront", "freeback",
-                                                   "buyback")
+                                                   "buyback", "push_back",
+                                                   "growmap", "iterator_inc",
+                                                   "iterator_dec")
                              if f"$deque_{member}$" in row["name"]), None)
         if deque_member is not None:
             owner = row["name"].rsplit("$", 1)[1].lower()
