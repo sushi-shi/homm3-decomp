@@ -284,13 +284,12 @@ enum ECampaignBonusType {
 // vector at +0x70 and a five-dword bit block at +0x90).
 class TCampaignStartOption {
 public:
-    // 0x484f40, an out-of-line definition every derived construction
-    // inlines: the linker keeps the unreferenced plain body (only COMDATs
-    // are /OPT:REF'd), which is why the image carries a copy nothing calls.
-    TCampaignStartOption();
-    // 0x484f50 is the root's `??_G`, and it restores the vptr INLINE with
-    // no call - so the base destructor itself is trivial.
-    virtual ~TCampaignStartOption() {}
+    // 0x484f40, and it is the DESTRUCTOR, not a constructor: the body is
+    // one vptr store with no `mov eax,ecx`, which no VC6 constructor emits.
+    // Defined out of line in the .cpp so the plain body is emitted at all;
+    // 0x484f50, the root's `??_G`, then inlines it, as does every derived
+    // destructor.
+    virtual ~TCampaignStartOption();
     virtual bool IsBuildingBonus(int which) const = 0;
     virtual int GetCount() const = 0;
     virtual const char* GetIconDefName(void* scenario, int which) const = 0;
@@ -360,7 +359,6 @@ struct TCampaignCrossoverChoice {
 // Read's `new` site, so no declarator is needed here.
 class TCampaignStartCrossoverOption : public TCampaignStartOption {
 public:
-    virtual ~TCampaignStartCrossoverOption();
     virtual bool IsBuildingBonus(int which) const;
     virtual int GetCount() const;
     virtual const char* GetIconDefName(void* campaign, int which) const;
@@ -393,7 +391,6 @@ struct TCampaignHeroChoice {
 class TCampaignStartHeroOption : public TCampaignStartOption {
 public:
     TCampaignStartHeroOption();
-    virtual ~TCampaignStartHeroOption();
     virtual bool IsBuildingBonus(int which) const;
     virtual int GetCount() const;
     virtual const char* GetIconDefName(void* campaign, int which) const;
@@ -408,6 +405,16 @@ public:
     std::vector<TCampaignHeroChoice> m_choices;
 };
 SIZE(TCampaignStartHeroOption, 0x14);
+
+// The starting-options type byte ScenarioStruct::Read switches on, in its
+// own `dec/je` chain order. Zero (and anything past three) leaves the
+// scenario without a record at all. Names are role inventions.
+enum ECampaignStartOptionType {
+    CAMPAIGN_START_OPTION_NONE = 0,
+    CAMPAIGN_START_OPTION_BONUS = 1,
+    CAMPAIGN_START_OPTION_CROSSOVER = 2,
+    CAMPAIGN_START_OPTION_HERO = 3
+};
 
 // The building bonus's two per-town tables, both indexed with the town
 // as the outer row: 0x6755b8 gives the icon .def name for each of a
