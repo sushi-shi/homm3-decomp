@@ -7050,6 +7050,11 @@ long army::get_AI_target_time(long speed) const
 // E:\gamedcs\army.cpp:5790
 #endif  // @carcass
 
+// COMDAT pairing: vector<army*>::erase, exact 54 B against the larger of
+// the two erase overloads army.obj emits (the other is 51 B, so the join
+// resolves by content size).
+VA_COMPGEN(0x00448d30, 0x36, VECTOR_ERASE, army)
+
 VA(0x00448cd0, 0x4B)  // anchor-global, dc 0x4c918
 int army::GetSpeed() const
 {
