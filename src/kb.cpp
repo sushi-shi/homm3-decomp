@@ -3370,6 +3370,14 @@ void type_dialog_icon::set(EGameResource _resource, long _qualifier)
     }
 }
 
+// type_dialog_icon's two other implicit special members, both already
+// emitted by this object because TNormalDialogInfo holds an array of eight
+// of them: the default constructor runs the two std::string sub-objects and
+// zeroes the eleven scalars, the destructor tears the two strings down.
+// Retail places them immediately before NormalDialogTimeOut.
+VA_COMPGEN(0x004f6490, 0x2A, CLASS_CTOR, type_dialog_icon)
+VA_COMPGEN(0x004f64c0, 0x6D, IMPLICIT_DTOR, type_dialog_icon)
+
 // E:\gamedcs\kb.cpp:5488.  The retail predecessor of NormalDialog is the
 // same argument-reordering wrapper as the Dreamcast body, shortened to
 // 52 bytes by x86 stack loads: /Gr keeps cText/iMBType in ecx/edx, so
@@ -3429,6 +3437,15 @@ static int gUnnamed699254;
 void PollSound();
 int NormalDialogHandler(message& msg);
 static int WaitHandler(message& msg);
+
+// The implicit copy constructor of type_dialog_icon, emitted because
+// DoNormalDialog takes its TNormalDialogInfo BY VALUE and the aggregate's
+// own implicit copy is expanded at every caller while the element boundary
+// is retained. extended_dialog below calls this one eight times in a row
+// (0x4f78dd) building that by-value argument; the body copies the two
+// selectors, both std::strings and the nine trailing dwords, and returns
+// `this` with `ret 4`, which is exactly the generated form.
+VA_COMPGEN(0x004f6810, 0x179, IMPLICIT_COPY_CTOR, type_dialog_icon)
 
 // E:\gamedcs\kb.cpp:5531. Dreamcast supplies the source-level class,
 // helper, local and statement boundaries. Retail independently proves the
@@ -3752,6 +3769,50 @@ static int WaitHandler(message& msg)
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;
+}
+
+// E:\gamedcs\kb.cpp:5909. The Dreamcast supplies the identity, the exact
+// parameter list and the eight-icon paging shape. Retail fixes the Complete
+// geometry (256x128 with the text widget at 25,30), the NORMAL_DIALOG_DEFAULT
+// type and the -1 special, and proves that the two text-widget extents and
+// the expansion flag are left for CalculateNormalDialogSize to fill in - they
+// are never written here and are read straight out of the block when the
+// by-value argument is built.
+VA(0x004f7690, 0x312)  // anchor-global + dc parameter list, dc 0xe6cf0
+void extended_dialog(const char* text,
+                     std::vector<type_dialog_resource>& resources,
+                     long x, long y, long timeout)
+{
+    unsigned int shown = 0;
+
+    do {
+        int count = resources.size() - shown;
+        if (count > 8)
+            count = 8;
+
+        TNormalDialogInfo dialog_info;
+        dialog_info.dialog_text = text;
+        dialog_info.x = x;
+        dialog_info.y = y;
+        dialog_info.width = 256;
+        dialog_info.height = 128;
+        dialog_info.text_widget_x = 25;
+        dialog_info.text_widget_y = 30;
+        dialog_info.iMBType = NORMAL_DIALOG_DEFAULT;
+        dialog_info.iSpecial = -1;
+        dialog_info.timeout = timeout;
+
+        int icon;
+        for (icon = 0; icon < count; ++icon) {
+            dialog_info.icons[icon].set(static_cast<EGameResource>(resources[shown].resource) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */, resources[shown].qualifier);
+            ++shown;
+        }
+        for (; icon < 8; ++icon)
+            dialog_info.icons[icon].set(const_no_resource, -1);
+
+        CalculateNormalDialogSize(&dialog_info);
+        DoNormalDialog(dialog_info);
+    } while (shown < resources.size());
 }
 
 VA(0x004f79b0, 0x25)  // decorated identity + map-extents arithmetic

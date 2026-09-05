@@ -51,6 +51,13 @@ struct SVideoDescriptor {
 };
 extern SVideoDescriptor gVideoDescriptors[];   // .data 0x6839c8
 
+// The two Smacker track handles smackmgr.obj defines. Declared here for the
+// campaign prologue player, which watches gSmackVideo/gSmackVideo2 to decide
+// when the video half of its wait has finished. Definitions and DATA claims
+// stay in src/smackmgr.cpp.
+extern Smack* gSmackVideo;
+extern Smack* gSmackVideo2;
+
 // Foreign globals without an owning header yet (all provisional):
 extern int* gpVideoGameState;    // .bss 0x69923c - the forced-bink state pair
 extern int gbVideoNoSkip;        // .bss 0x699524 - nonzero blocks the user abort

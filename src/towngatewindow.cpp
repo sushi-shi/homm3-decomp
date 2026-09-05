@@ -134,6 +134,12 @@ TTownGateWindow::~TTownGateWindow()
     }
 }
 
+// The widget-vector growth path this window's constructor drives. Retail's
+// /OPT:ICF leaves ONE 431-byte body between the destructor and the first
+// window method for a four-byte element - the same COMDAT the int town list
+// would fold onto.
+VA_COMPGEN(0x005c2400, 0x1AF, VECTOR_INSERT, widget)
+
 #if 0  // @carcass
 
 // E:\gamedcs\towngatewindow.cpp:110
