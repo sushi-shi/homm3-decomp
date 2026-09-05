@@ -3019,7 +3019,7 @@ remote	??_GCNetMsgHandlerPause@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x157eb0	-
 remote	??_GCSaveScreen@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x157310	-
 remote	??_GCWaitForReadyPlayersDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1554b0	-
 remote	??_GCWaitForRemoteBattleDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x157060	-
-remote	?Add@?$CAutoArray@VCDPlaySession@@@@UAEEPAVCDPlaySession@@@Z	27.3704	27.3704	27.3704	0x158410	ddb55d5f91b5
+remote	?Add@?$CAutoArray@VCDPlaySession@@@@UAEEPAVCDPlaySession@@@Z	100.0000	100.0000	100.0000	0x158410	ddb55d5f91b5
 remote	?AddChat@@YAXPAVCChatManager@@PBDZZ	96.6326	96.6326	96.6326	0x153840	5f4fd23d26ab
 remote	?CalcDimensions@CAnimatedDlg@@UAEXPBDPAVfont@@AAH222@Z	100.0000	100.0000	100.0000	0x154c30	37ddc13fbdfb
 remote	?CalcDimensions@CGameTransferDlg@@UAEXPBDPAVfont@@AAH222@Z	100.0000	100.0000	100.0000	0x157790	77dc5de8daf0
