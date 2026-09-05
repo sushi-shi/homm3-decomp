@@ -941,3 +941,12 @@ void std::__destroy_aux()
 }
 
 #endif  // @carcass
+
+// COMDAT pairing: substr on the char instantiation, mnemonic agreement 1.000.
+VA_COMPGEN(0x00473350, 0x1A0, BASIC_STRING_SUBSTR, char)
+
+// COMDAT pairing: find on the char instantiation, mnemonic agreement 0.923.
+VA_COMPGEN(0x004734f0, 0x87, BASIC_STRING_FIND, char)
+
+// COMDAT pairing: _Freeze on the char instantiation, mnemonic agreement 0.927.
+VA_COMPGEN(0x00473580, 0x76, BASIC_STRING_FREEZE, char)

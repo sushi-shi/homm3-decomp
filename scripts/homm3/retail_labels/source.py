@@ -160,6 +160,36 @@ DEQUE_PRIMITIVE_ELEMENT = {"C": "signed_char", "D": "char",
                            "G": "unsigned_short", "H": "int",
                            "I": "unsigned_int", "J": "long",
                            "K": "unsigned_long"}
+#: The char-instantiated stream and string members VC6 emits as COMDATs.
+#: Every one of these templates exists only as `<char, char_traits<char>,
+#: allocator<char>>` in this image, so the instantiation carries no useful
+#: owner and they all key "char" - the spelling `stringbuf_overflow` and
+#: `basic_string_assign_ptr_size` already established. Entries are
+#: (mangled prefix, required mangled suffix or None, key suffix); the
+#: suffix is what separates two overloads of one member.
+CHAR_STREAM_MEMBERS = (
+    ("?_Iput@?$num_put@D", None, "num_put_iput"),
+    ("?_Fput@?$num_put@D", None, "num_put_fput"),
+    ("?_Rep@?$num_put@D", None, "num_put_rep"),
+    ("?str@?$basic_stringbuf@D", None, "stringbuf_str"),
+    ("?seekoff@?$basic_stringbuf@D", None, "stringbuf_seekoff"),
+    ("?seekpos@?$basic_stringbuf@D", None, "stringbuf_seekpos"),
+    ("?pbackfail@?$basic_stringbuf@D", None, "stringbuf_pbackfail"),
+    ("?underflow@?$basic_stringbuf@D", None, "stringbuf_underflow"),
+    ("?substr@?$basic_string@D", None, "basic_string_substr"),
+    ("?_Grow@?$basic_string@D", None, "basic_string_grow"),
+    ("?append@?$basic_string@D", "@ABV12@II@Z", "basic_string_append_str"),
+    ("?append@?$basic_string@D", "@PBDI@Z", "basic_string_append_ptr"),
+    ("?find@?$basic_string@D", None, "basic_string_find"),
+    ("?_Freeze@?$basic_string@D", None, "basic_string_freeze"),
+    ("?xsgetn@?$basic_streambuf@D", None, "streambuf_xsgetn"),
+    ("?sputc@?$basic_streambuf@D", None, "streambuf_sputc"),
+    ("?opfx@?$basic_ostream@D", None, "ostream_opfx"),
+    ("??Hstd@@YA?AV?$basic_string@D", None, "basic_string_concat"),
+    ("?_Decref@facet@locale@std@@", None, "locale_facet_decref"),
+)
+
+
 COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "STATIC_CTOR", "SCALAR_DELETING_DTOR",
                  "VECTOR_DELETING_DTOR", "DEFAULT_CTOR_CLOSURE",
@@ -194,6 +224,7 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "CLASS_CTOR",
                  "IMPLICIT_COPY_CTOR", "IMPLICIT_COPY_ASSIGN",
                  "IMPLICIT_DTOR"}
+COMPGEN_KINDS |= {member.upper() for _p, _s, member in CHAR_STREAM_MEMBERS}
 
 
 def mask_lexical_noise(blob: str) -> str:
@@ -891,6 +922,10 @@ def _demangle_key(mangled: str):
     algorithm_key = _std_algorithm_key(mangled)
     if algorithm_key:
         return algorithm_key
+    for prefix, suffix, member in CHAR_STREAM_MEMBERS:
+        if mangled.startswith(prefix) and (suffix is None
+                                           or mangled.endswith(suffix)):
+            return f"char@{member}"
     if mangled.startswith(
             "?xsputn@?$basic_streambuf@DU?$char_traits@D@std@@@std@@"):
         return "char@streambuf_xsputn"
@@ -1197,6 +1232,9 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                                or "$std_copy_backward$" in r["name"]
                                or "$std_fill$" in r["name"]
                                or "$streambuf_xsputn$" in r["name"]
+                               or any(f"${member}$" in r["name"]
+                                      for _p, _s, member
+                                      in CHAR_STREAM_MEMBERS)
                                or "$pair_const_int_dtor$" in r["name"]
                                or "$std_construct$" in r["name"]
                                or "$std_copy$" in r["name"]
@@ -1376,6 +1414,13 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
         if tree_or_deque is not None:
             owner = row["name"].rsplit("$", 1)[1].lower()
             claim_keys.setdefault(f"{owner}@{tree_or_deque}", []).append(row)
+            continue
+        char_member = next(
+            (member for _p, _s, member in CHAR_STREAM_MEMBERS
+             if f"${member}$" in row["name"]), None)
+        if char_member is not None:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}@{char_member}", []).append(row)
             continue
         if "$streambuf_xsputn$" in row["name"]:
             owner = row["name"].rsplit("$", 1)[1].lower()

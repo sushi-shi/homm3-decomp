@@ -1561,3 +1561,24 @@ VA_COMPGEN(0x00454320, 0x63, IMPLICIT_DTOR, sentry)
 
 // COMDAT pairing: fpos::0?$fpos, mnemonic agreement 0.909.
 VA_COMPGEN(0x00454390, 0x3C, CLASS_CTOR, fpos)
+
+// COMDAT pairing: _Iput on the char instantiation, mnemonic agreement 1.000.
+VA_COMPGEN(0x004552d0, 0x3FE, NUM_PUT_IPUT, char)
+
+// COMDAT pairing: _Fput on the char instantiation, mnemonic agreement 1.000.
+VA_COMPGEN(0x00454f20, 0x3A1, NUM_PUT_FPUT, char)
+
+// COMDAT pairing: xsgetn on the char instantiation, mnemonic agreement 0.946.
+VA_COMPGEN(0x004540b0, 0x98, STREAMBUF_XSGETN, char)
+
+// COMDAT pairing: _Rep on the char instantiation, mnemonic agreement 0.935.
+VA_COMPGEN(0x004556d0, 0x82, NUM_PUT_REP, char)
+
+// COMDAT pairing: opfx on the char instantiation, mnemonic agreement 0.926.
+VA_COMPGEN(0x004543d0, 0x74, OSTREAM_OPFX, char)
+
+// COMDAT pairing: sputc on the char instantiation, mnemonic agreement 0.932.
+VA_COMPGEN(0x00454a30, 0x4B, STREAMBUF_SPUTC, char)
+
+// COMDAT pairing: _Decref on the char instantiation, mnemonic agreement 0.918.
+VA_COMPGEN(0x00453d30, 0x3B, LOCALE_FACET_DECREF, char)

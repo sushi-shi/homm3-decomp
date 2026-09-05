@@ -11583,3 +11583,9 @@ VA_COMPGEN(0x0041b410, 0xC8, BITSET_XRAN, bitset48)
 
 // COMDAT pairing: logic_error::0logic_error, mnemonic agreement 0.974.
 VA_COMPGEN(0x0041bc30, 0x159, CLASS_CTOR, logic_error)
+
+// COMDAT pairing: append on the char instantiation, mnemonic agreement 0.960.
+VA_COMPGEN(0x0041b250, 0xE6, BASIC_STRING_APPEND_STR, char)
+
+// COMDAT pairing: append on the char instantiation, mnemonic agreement 0.955.
+VA_COMPGEN(0x0041b340, 0xC2, BASIC_STRING_APPEND_PTR, char)
