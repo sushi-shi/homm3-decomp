@@ -983,6 +983,186 @@ void CSpriteFrame::DrawAdvObjImpl(int sx, int sy, int sw, int sh,
     }
 }
 
+// E:\gamedcs\cspriteframe.cpp:3949
+// The alpha adventure-object pass, and DrawAdvObjImpl's packed-cell decoder
+// verbatim: same `sx & ~31` cell entry, same word cell table, same packet
+// walk, same three run arms. Only the writes differ - the literal run and the
+// flag-color run are each blended half-and-half against the destination
+// instead of stored - and the encoding dispatch is gone, because this entry is
+// only ever reached from DrawSpellEffect's own eEncodeAdvObjRLE arm, which has
+// already made that decision.
+//
+// The identity comes from that caller, which is EXACT: 0x47efca reaches this
+// body with the flag color 0 in slot 12 and hflip in slot 13, and
+// DrawAdvObjWithFlagAlpha is the only member of this class with that argument
+// order - DrawAdvObjImpl takes hflip in slot 12 and its flag color last.
+//
+// Residual (98.00%): 83 of 83 blocks, 42 of 42 branches and both returns
+// agree, and the call multiset is empty on both sides. The two size-only
+// blocks are one register pair transposed across the row-loop setup - retail
+// forms `sy + sh` with `lea ebx,[edx+ecx]` and keeps the cell-entry mask in
+// ECX where this compile uses the two the other way round - which is B-family
+// homing on values that arrive as parameters, the same class DrawTileShadow
+// left behind two rows up.
+VA(0x0047d4f0, 0x43C)  // anchor-caller (DrawSpellEffect 0x47efca) + DC source identity
+void CSpriteFrame::DrawAdvObjWithFlagAlpha(int sx, int sy, int sw, int sh,
+                                           unsigned short* dst, int dx, int dy,
+                                           int dw, int dh, int dpitch,
+                                           TPalette16& pal,
+                                           unsigned short flagcolor,
+                                           unsigned char hflip) const
+{
+    unsigned int cellsPerLine;
+    unsigned short* aCellOffset;
+
+    Clip(sx, sy, sw, sh, dx, dy, dw, dh, hflip, 0);
+    if (sw > 0) {
+        if (sh > 0) {
+
+            cellsPerLine = static_cast<unsigned int>(CroppedWidth) >> 5;
+            aCellOffset = static_cast<unsigned short*>(static_cast<void*>(map));
+
+            if (!hflip) {
+                unsigned short* lineDst =
+                    static_cast<unsigned short*>(static_cast<void*>(
+                    static_cast<unsigned char*>(static_cast<void*>(dst)) +
+                    dy * dpitch + dx * 2));
+
+                for (int y = sy; y < sy + sh; ++y) {
+                    unsigned short* out = lineDst;
+                    unsigned int skipped = static_cast<unsigned int>(sx) & ~31U;
+                    const unsigned char* src =
+                        map + aCellOffset[y * cellsPerLine +
+                                          (static_cast<unsigned int>(sx) >> 5)];
+                    unsigned char packet = *src;
+                    unsigned char code = packet >> 5;
+                    unsigned int run = (packet & 31) + 1;
+                    ++src;
+
+                    while (skipped + run <= static_cast<unsigned int>(sx)) {
+                        skipped += run;
+                        if (code == eRleControlOutline7)
+                            src += run;
+                        packet = *src;
+                        code = packet >> 5;
+                        run = (packet & 31) + 1;
+                        ++src;
+                    }
+
+                    run += skipped - sx;
+                    if (code == eRleControlOutline7)
+                        src += sx - skipped;
+
+                    unsigned int remaining = sw;
+                    do {
+                        if (run > remaining)
+                            run = remaining;
+                        if (code == eRleControlOutline7) {
+                            unsigned int count = run;
+                            do {
+                                *out = (div2mask.dword
+                                        & (pal.data[*src++] >> 1))
+                                     + (div2mask.dword & (*out >> 1));
+                                ++out;
+                            } while (--count);
+                        } else if (code == eRleControlOutline5 && flagcolor) {
+                            unsigned int count = run;
+                            do {
+                                *out = (div2mask.dword & (*out >> 1))
+                                     + (div2mask.dword & (flagcolor >> 1));
+                                ++out;
+                            } while (--count);
+                        } else {
+                            out += run;
+                        }
+                        remaining -= run;
+                        if (!remaining)
+                            break;
+                        packet = *src;
+                        code = packet >> 5;
+                        run = (packet & 31) + 1;
+                        ++src;
+                    } while (remaining);
+
+                    lineDst =
+                        static_cast<unsigned short*>(static_cast<void*>(
+                            static_cast<unsigned char*>(
+                                static_cast<void*>(lineDst)) +
+                            dpitch));
+                }
+            } else {
+                unsigned short* lineDst =
+                    static_cast<unsigned short*>(static_cast<void*>(
+                    static_cast<unsigned char*>(static_cast<void*>(dst)) +
+                    dy * dpitch + (dx + sw) * 2));
+
+                for (int y = sy; y < sy + sh; ++y) {
+                    unsigned short* out = lineDst;
+                    unsigned int skipped = static_cast<unsigned int>(sx) & ~31U;
+                    const unsigned char* src =
+                        map + aCellOffset[y * cellsPerLine +
+                                          (static_cast<unsigned int>(sx) >> 5)];
+                    unsigned char packet = *src;
+                    unsigned char code = packet >> 5;
+                    unsigned int run = (packet & 31) + 1;
+                    ++src;
+
+                    while (skipped + run <= static_cast<unsigned int>(sx)) {
+                        skipped += run;
+                        if (code == eRleControlOutline7)
+                            src += run;
+                        packet = *src;
+                        code = packet >> 5;
+                        run = (packet & 31) + 1;
+                        ++src;
+                    }
+
+                    run += skipped - sx;
+                    if (code == eRleControlOutline7)
+                        src += sx - skipped;
+
+                    unsigned int remaining = sw;
+                    do {
+                        if (run > remaining)
+                            run = remaining;
+                        if (code == eRleControlOutline7) {
+                            unsigned int count = run;
+                            do {
+                                --out;
+                                *out = (div2mask.dword
+                                        & (pal.data[*src++] >> 1))
+                                     + (div2mask.dword & (*out >> 1));
+                            } while (--count);
+                        } else if (code == eRleControlOutline5 && flagcolor) {
+                            unsigned int count = run;
+                            do {
+                                --out;
+                                *out = (div2mask.dword & (*out >> 1))
+                                     + (div2mask.dword & (flagcolor >> 1));
+                            } while (--count);
+                        } else {
+                            out -= run;
+                        }
+                        remaining -= run;
+                        if (!remaining)
+                            break;
+                        packet = *src;
+                        code = packet >> 5;
+                        run = (packet & 31) + 1;
+                        ++src;
+                    } while (remaining);
+
+                    lineDst =
+                        static_cast<unsigned short*>(static_cast<void*>(
+                            static_cast<unsigned char*>(
+                                static_cast<void*>(lineDst)) +
+                            dpitch));
+                }
+            }
+        }
+    }
+}
+
 // E:\gamedcs\cspriteframe.cpp:2856.  Raw tiles are palette-indexed rows;
 // encoded tiles use a word row-offset table and the same packed packet byte as
 // adventure cells.  Only code seven carries pixels in this renderer.
