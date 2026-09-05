@@ -10085,3 +10085,11 @@ VA_COMPGEN(0x0058ffc0, 0xA8, TREE_INIT, type_map_hero_info)
 VA_COMPGEN(0x00590810, 0x2BD, IMPLICIT_COPY_CTOR, CMapHeaderData)
 VA_COMPGEN(0x005941b0, 0x6C, VECTOR_COPY_CTOR, hero_vector)
 VA_COMPGEN(0x00594220, 0x6C, VECTOR_COPY_CTOR, type_artifact_vector)
+
+// COMDAT pairing: `bitset<156>::_Tidy`, the only 156-bit bitset in the image
+// and this TU's own instantiation. Retail's 0x45c1a0 stores its argument into
+// five words walking DOWN from `this+0x10` and then trims the top word with
+// `and dword ptr [esi], 0x0fffffff` - 4 full words plus 28 bits is 156, and
+// _Nw+1 = 5 confirms it. Byte-identical to the emitted
+// `?_Tidy@?$bitset@$0JM@@std@@AAEXK@Z` over all 40 bytes.
+VA_COMPGEN(0x0045c1a0, 0x28, BITSET_TIDY, Bitset156)

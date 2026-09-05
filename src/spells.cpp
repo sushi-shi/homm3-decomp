@@ -6174,3 +6174,15 @@ std::_Rb_tree_node<enum** std::_Rb_tree<enum SpellID,enum SpellID,std::_Identity
 // COMDAT pairing: _Tree<int, int, set>::insert, agreement 0.936. Its key and
 // value are the same primitive, so the map regexes cannot name it.
 VA_COMPGEN(0x005a9450, 0x115, TREE_INSERT, int_set)
+
+// The other two out-of-line `_Tree<int, int, set>` members spells.obj emits,
+// in the compiland's own COMDAT order behind the `insert` above: the node
+// inserter and the iterator's predecessor walk. Sizes pair one for one with
+// the same two members of the image's OTHER _Tree instantiations - 0x2F9 and
+// 0xB3 are exactly what map<int, type_map_hero_info> (0x4d1d50 / 0x4d27b0)
+// and map<CImmEnclosure*, RECT> (0x4b7a50 / 0x4b7db0) measure - and both
+// retail bodies are EH-bearing where ours are not, which is the same
+// `std::_Lockit` threading-model residual the cmbtmgr half of this
+// instantiation carries.
+VA_COMPGEN(0x005a9570, 0x2F9, TREE_NODE_INSERT, int_set)
+VA_COMPGEN(0x005a9870, 0xB3, TREE_CONST_ITERATOR_DEC, int_set)

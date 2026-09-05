@@ -961,8 +961,14 @@ def _demangle_key(mangled: str):
         r"\?\$_Tree@P(?:A|B)?(?:V|U)([A-Za-z_]\w*)@", mangled)
     tree_string_owner = re.search(
         r"\?\$_Tree@V\?\$basic_string@D", mangled)
+    # `set<primitive>`'s members. The optional `const_iterator@` segment is
+    # what lets the nested iterator's `_Inc`/`_Dec` reach this arm: the
+    # class-keyed trees below use `re.search` and never noticed, but this one
+    # is anchored, so without it `?_Dec@const_iterator@?$_Tree@HH...` fell out
+    # of the whole function as None and banked an unjoined 0.0000 row.
     tree_set_primitive = re.match(
-        r"^\?\w+@\?\$_Tree@([CDEFGHIJK])\1U_Kfn@\?\$set@\1", mangled)
+        r"^\?\w+@(?:const_iterator@)?\?\$_Tree@([CDEFGHIJK])\1U_Kfn@"
+        r"\?\$set@\1", mangled)
     tree_owner = ((DEQUE_PRIMITIVE_ELEMENT[tree_set_primitive.group(1)]
                    + "_set") if tree_set_primitive else
                   tree_value.group(1) if tree_value else
@@ -2463,6 +2469,18 @@ def selftest() -> list[str]:
     for mangled, expected in bitset_cases.items():
         if _demangle_key(mangled) != expected:
             failures.append(f"MSVC {expected} key regressed")
+    # NEGATIVE CONTROL for the set<primitive> arm: the backreference in
+    # `([CDEFGHIJK])\1U_Kfn@...set@\1` must keep rejecting a name whose
+    # three element letters do not agree, with or without the nested
+    # `const_iterator@` segment the arm now tolerates.
+    for bad in ("?_Dec@const_iterator@?$_Tree@HDU_Kfn@?$set@H"
+                "U?$less@H@std@@@std@@QAEXXZ",
+                "?_Dec@?$_Tree@HHU_Kfn@?$set@DU?$less@D@std@@@std@@QAEXXZ"):
+        key = _demangle_key(bad)
+        if key is not None and key.startswith(("int@", "int_set@",
+                                               "char@", "char_set@")):
+            failures.append("MSVC set<primitive> element backreference "
+                            "stopped rejecting a mismatched key")
     if _demangle_key(
             "?_Min@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@"
             "U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@"
@@ -2471,6 +2489,15 @@ def selftest() -> list[str]:
             "PAU312@@Z") != "type_map_hero_info@tree_min":
         failures.append("MSVC map tree _Min key regressed")
     tree_member_cases = {
+        # set<int>: the nested const_iterator's members key like the flat
+        # ones. NEGATIVE CONTROL below - the backreference must still reject
+        # a mangled name whose key and value letters disagree.
+        "?_Dec@const_iterator@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@"
+        "V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@QAEXXZ":
+            "int_set@tree_const_iterator_dec",
+        "?_Insert@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@"
+        "V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@":
+            "int_set@tree_node_insert",
         "?insert@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@":
             "type_map_hero_info@tree_insert",
         "?_Insert@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@":
