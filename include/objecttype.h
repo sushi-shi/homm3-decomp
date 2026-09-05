@@ -7,6 +7,7 @@
 #ifndef HOMM3_OBJECTTYPE_H
 #define HOMM3_OBJECTTYPE_H
 
+#include <istream>
 #include <map>
 #include <string>
 #include <vector>
@@ -37,13 +38,11 @@ public:
     std::vector<TNameIndex::iterator> rows;
 };
 
-// The "no trigger cell" sentinel, {8, 6} - the object mask grid's own
-// dimensions - living in .rdata at 0x640278. It is ONE eight-byte datum,
-// not two ints: both of its consumers (setTriggerMask's else arm and the
-// TObjectType default constructor that load() expands) issue both loads
-// before either store, which is a struct copy and not two assignments.
-// No compiland in the tree defines it yet; declared with its only
-// reconstructed consumers.
-extern const TObjectType::TPoint gNoTriggerCell;  /* 0x640278 */
+
+// The per-row parser TObjectTypeTable::load runs over each objects.txt
+// line, retail 0x514b80. Free and therefore __fastcall under /Gr: the
+// stream arrives in ECX and the record in EDX, and it answers the stream
+// so the caller can chain.
+std::istream& operator>>(std::istream& is, TObjectType& objectType);
 
 #endif  /* HOMM3_OBJECTTYPE_H */
