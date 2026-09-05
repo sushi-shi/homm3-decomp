@@ -66,6 +66,23 @@ static const int CROSSOVER_PATROL_RADIUS = 10;
 static const int CROSSOVER_SECONDARY_SKILLS = 28;
 static const int CROSSOVER_BACKPACK_SLOTS = 64;
 
+// The three scenario overrides the bonus appliers carry, all four values
+// retail's: the creature bonus hands its stack to a faction-matching town
+// on campaign 1's first map and campaign 3's second, and the building
+// bonus grants a zero building index to EVERY town on campaign 1's fourth
+// map. Names are role inventions.
+static const int CREATURE_BONUS_TOWN_CAMPAIGN_A = 1;
+static const int CREATURE_BONUS_TOWN_SCENARIO_A = 0;
+static const int CREATURE_BONUS_TOWN_CAMPAIGN_B = 3;
+static const int CREATURE_BONUS_TOWN_SCENARIO_B = 1;
+static const int BUILDING_BONUS_ALL_TOWNS_CAMPAIGN = 1;
+static const int BUILDING_BONUS_ALL_TOWNS_SCENARIO = 3;
+// Building indices from 0x25 up are the upgraded dwellings; granting one
+// also grants the base row seven slots below it.
+static const int BUILDING_BONUS_FIRST_UPGRADE = 0x25;
+static const int BUILDING_BONUS_UPGRADE_STRIDE = 7;
+
+
 // MapTextStruct::Play's own domain. Every value is retail's; the names are
 // ROLE inventions - no Dreamcast row survives for this Complete-only body.
 // The two video ordinals that select the lowered origin are the compare set
@@ -241,6 +258,61 @@ void TCampaignSpellScrollBonus::Apply(int whichPlayer) const
     }
 }
 
+// The creature bonus is the only one with a fallback chain: the picked
+// hero first, then the player's other heroes, then his towns, stopping
+// at the first stack that accepts. Two campaign maps get a different
+// rule entirely - Long Live The Queen (campaign 1, map 0) and the third
+// map of campaign 3 hand the stack to whichever town matches the
+// creature's own faction. The four dragon ids that answer -1 when
+// f_1f698 is clear are retail's; the field's role is unattested.
+VA(0x00484310, 0x1D5)  // anchor-vtable (0x63da80+0x14), retail-only
+void TCampaignCreatureBonus::Apply(int whichPlayer) const
+{
+    playerData* player = &gpGame->players[whichPlayer];
+    if ((gpGame->campaign.currentCampaign == CREATURE_BONUS_TOWN_CAMPAIGN_A &&
+         gpGame->campaign.currentMap == CREATURE_BONUS_TOWN_SCENARIO_A) ||
+        (gpGame->campaign.currentCampaign == CREATURE_BONUS_TOWN_CAMPAIGN_B &&
+         gpGame->campaign.currentMap == CREATURE_BONUS_TOWN_SCENARIO_B)) {
+        int creature = m_creature;
+        int faction;
+        if (gpGame->f_1f698 == 0 &&
+            (creature == CREATURE_AIR_ELEMENTAL ||
+             creature == CREATURE_EARTH_ELEMENTAL ||
+             creature == CREATURE_FIRE_ELEMENTAL ||
+             creature == CREATURE_WATER_ELEMENTAL))
+            faction = -1;
+        else
+            faction = akCreatureTypeTraits[creature].townType;
+        for (int iTown = 0; iTown < player->numTowns; ++iTown) {
+            town* garrison = gpGame->GetTown(player->townIds[iTown]);
+            if (garrison->type == faction) {
+                const_cast<armyGroup&>(
+                    static_cast<const town*>(garrison)->get_army())
+                    .Add(creature, m_count, -1);
+                return;
+            }
+        }
+    }
+    hero* target = GetCampaignBonusHero(m_hero, whichPlayer);
+    if (target == 0)
+        return;
+    if (target->army.Add(m_creature, m_count, -1) != 0)
+        return;
+    int i;
+    for (i = 0; i < player->numHeroes; ++i) {
+        hero* other = gpGame->GetHero(player->heroes[i]);
+        if (other->army.Add(m_creature, m_count, -1) != 0)
+            return;
+    }
+    for (i = 0; i < player->numTowns; ++i) {
+        town* garrison = gpGame->GetTown(player->townIds[i]);
+        if (const_cast<armyGroup&>(
+                static_cast<const town*>(garrison)->get_army())
+                .Add(m_creature, m_count, -1) != 0)
+            return;
+    }
+}
+
 VA(0x004844f0, 0x51)  // anchor-vtable (0x63da80+0x18), retail-only
 void TCampaignCreatureBonus::Read(TAbstractFile* file)
 {
@@ -305,6 +377,44 @@ VA(0x00484630, 0x17)  // anchor-vtable (0x63da60+8), retail-only
 const char* TCampaignBuildingBonus::GetIconDefName() const
 {
     return gCampaignBuildingIconNames[m_town][m_building];
+}
+
+// The building bonus is the only one that has to pick a town, and the
+// third map of campaign 1 overrides the pick: a zero building index
+// there is granted to EVERY town the player owns. Otherwise the map's
+// own main-town square wins when the header declares one and the square
+// still resolves, and the player's first town is the fallback. Building
+// indices from 0x25 up also build the row seven slots below them, which
+// is retail's upgrade-implies-base rule.
+VA(0x00484650, 0x146)  // anchor-vtable (0x63da60+0x14), retail-only
+void TCampaignBuildingBonus::Apply(int whichPlayer) const
+{
+    playerData* player = &gpGame->players[whichPlayer];
+    CMapHeaderData::TPlayerSlotAttributes* slot =
+        &gpGame->mapHeader.playerSlotAttributes[whichPlayer];
+    if (player->numTowns == 0)
+        return;
+    if (gpGame->campaign.currentCampaign == BUILDING_BONUS_ALL_TOWNS_CAMPAIGN &&
+        gpGame->campaign.currentMap == BUILDING_BONUS_ALL_TOWNS_SCENARIO &&
+        m_building == 0) {
+        for (int iTown = 0; iTown < player->numTowns; ++iTown) {
+            town* each = gpGame->GetTown(player->townIds[iTown]);
+            each->BuildBuilding(m_building, 0, 0);
+        }
+        return;
+    }
+    town* target = 0;
+    if (slot->hasMainTown) {
+        int townId = gpGame->GetTownId(slot->CastleLoc.x, slot->CastleLoc.y,
+                                       slot->CastleLoc.z);
+        if (townId >= 0)
+            target = gpGame->GetTown(townId);
+    }
+    if (target == 0)
+        target = gpGame->GetTown(player->townIds[0]);
+    if (m_building >= BUILDING_BONUS_FIRST_UPGRADE)
+        target->BuildBuilding(m_building - BUILDING_BONUS_UPGRADE_STRIDE, 0, 0);
+    target->BuildBuilding(m_building, 0, 0);
 }
 
 VA(0x004847a0, 0x3C)  // anchor-callee (GetBuildingName 0x4610e0), retail-only
@@ -586,9 +696,157 @@ void TCampaignResourceBonus::Read(TAbstractFile* file)
     }
 }
 
+// --- the scenario's starting-options chooser (see customcampaign.h) ---
+
+// The root's scalar deleting destructor: the base teardown is one vptr
+// store, so nothing is called.
+VA_COMPGEN(0x00484f50, 0x23, SCALAR_DELETING_DTOR, TCampaignStartOption)
+
+// Slot 7, inherited unchanged by all three concrete options.
+VA(0x00485090, 0x6)  // anchor-vtable (0x63d958+0x1c and both children), retail-only
+int TCampaignStartOption::_slot7(int which) const
+{
+    return -1;
+}
+
+// The bonus list's own destructor: every element is deleted through
+// TCampaignBonus's virtual destructor, then the vector's own teardown.
+VA(0x004850a0, 0x8E)  // anchor-callee (0x485130's ??_G), retail-only
+TCampaignStartBonusOption::~TCampaignStartBonusOption()
+{
+    for (unsigned int i = 0; i < m_bonuses.size(); ++i)
+        delete m_bonuses[i];
+}
+
+VA_COMPGEN(0x00485130, 0x21, SCALAR_DELETING_DTOR, TCampaignStartBonusOption)
+
+VA(0x00485160, 0x13)  // anchor-vtable (0x63d98c+8), retail-only
+int TCampaignStartBonusOption::GetCount() const
+{
+    return m_bonuses.size();
+}
+
+VA(0x00485180, 0x6)  // anchor-vtable (0x63d98c+0x20), retail-only
+int TCampaignStartBonusOption::GetPlayer(int which) const
+{
+    return m_player;
+}
+
+// The list reader, and the whole proof of the bonus hierarchy: a player
+// byte, a count byte, then that many records, each one a type byte 0..7
+// that selects the concrete class to `new`. The reader deserializes into
+// the DEAD PARAMETER HOME - retail reads the player and the count straight
+// over [ebp+8], which is the same block-scope lever the bonus Reads
+// needed - and the switch has NO default arm: an out-of-range type falls
+// through to the shared tail with the pointer still uninitialised.
+// Residual (95.69%): retail materializes the loop's trip count as
+// `(count-1)+1` behind a `test/je` zero guard where our CL emits the
+// count straight into EBX. Tried and rejected: `i < count` (-0.23),
+// `unsigned int count` (flat), `count` widened outside the block
+// (-0.86 at 94.83), a separate block for the count read (-86.6 - it
+// re-prices the whole body's inlining), the pointer declared before the
+// type read (flat).
+VA(0x00485190, 0x1B0)  // anchor-vtable (0x63d98c+0x24), retail-only
+void TCampaignStartBonusOption::Read(TAbstractFile* file)
+{
+    int count;
+    {
+        unsigned char value;
+        file->Read(&value, sizeof(unsigned char));
+        m_player = value;
+        file->Read(&value, sizeof(unsigned char));
+        count = value;
+    }
+    for (int i = 0; i != count; ++i) {
+        unsigned char type;
+        file->Read(&type, sizeof(unsigned char));
+        TCampaignBonus* bonus;
+        switch (type) {
+        case CAMPAIGN_BONUS_SPELL:
+            bonus = new TCampaignSpellBonus;
+            break;
+        case CAMPAIGN_BONUS_CREATURE:
+            bonus = new TCampaignCreatureBonus;
+            break;
+        case CAMPAIGN_BONUS_BUILDING:
+            bonus = new TCampaignBuildingBonus;
+            break;
+        case CAMPAIGN_BONUS_ARTIFACT:
+            bonus = new TCampaignArtifactBonus;
+            break;
+        case CAMPAIGN_BONUS_SPELL_SCROLL:
+            bonus = new TCampaignSpellScrollBonus;
+            break;
+        case CAMPAIGN_BONUS_PRIMARY_SKILL:
+            bonus = new TCampaignPrimarySkillBonus;
+            break;
+        case CAMPAIGN_BONUS_SECONDARY_SKILL:
+            bonus = new TCampaignSecondarySkillBonus;
+            break;
+        case CAMPAIGN_BONUS_RESOURCE:
+            bonus = new TCampaignResourceBonus;
+            break;
+        }
+        bonus->Read(file);
+        m_bonuses.push_back(bonus);
+    }
+}
+
+// The scalar deleting destructor the SEVEN derived bonus classes share:
+// each one's teardown is the base's, so /OPT:ICF folds all seven onto this
+// address, which every derived vftable's slot 0 points at.
+VA_COMPGEN(0x00485340, 0x21, SCALAR_DELETING_DTOR, TCampaignSpellBonus)
+
 VA(0x00485370, 0x7)  // anchor-vtable (0x63d938+0), retail-only
 TCampaignBonus::~TCampaignBonus()
 {
+}
+
+// Residual (97.79%): retail keeps the briefing choice in EDX and the
+// vector's _First in ECX, our CL the other way round. Tried and
+// rejected: the choice read inline at both uses (-63.8),
+// `m_bonuses.size() > chosen` (-3.42).
+VA(0x00485380, 0x32)  // anchor-vtable (0x63d98c+0x28), retail-only
+void TCampaignStartBonusOption::Apply(void* scenario)
+{
+    unsigned int chosen = gpGame->campaign.briefingChoice;
+    if (chosen < m_bonuses.size())
+        m_bonuses[chosen]->Apply(m_player);
+}
+
+// The town every building bonus is bound to is the map header's own main
+// town type for this option's player.
+VA(0x004853c0, 0x46)  // anchor-vtable (0x63d98c+0x2c), retail-only
+void TCampaignStartBonusOption::SetTown(CMapHeaderData* header)
+{
+    for (unsigned int i = 0; i < m_bonuses.size(); ++i)
+        m_bonuses[i]->SetTown(header->playerSlotAttributes[m_player].mainTownType);
+}
+
+VA(0x00485410, 0x15)  // anchor-vtable (0x63d98c+0x10), retail-only
+int TCampaignStartBonusOption::GetIconIndex(int which) const
+{
+    return m_bonuses[which]->GetIconIndex();
+}
+
+VA(0x00485430, 0x15)  // anchor-vtable (0x63d98c+4), retail-only
+bool TCampaignStartBonusOption::IsBuildingBonus(int which) const
+{
+    return m_bonuses[which]->IsBuildingBonus();
+}
+
+VA(0x00485450, 0x15)  // anchor-vtable (0x63d98c+0xc), retail-only
+const char* TCampaignStartBonusOption::GetIconDefName(void* scenario,
+                                                     int which) const
+{
+    return m_bonuses[which]->GetIconDefName();
+}
+
+VA(0x00485470, 0x27)  // anchor-vtable (0x63d98c+0x18), retail-only
+std::string TCampaignStartBonusOption::GetText(void* scenario,
+                                               int which) const
+{
+    return m_bonuses[which]->GetText();
 }
 
 VA(0x00485d80, 0x3)  // anchor-vtable (0x63d938+0x1c), retail-only
@@ -2174,6 +2432,16 @@ VA_COMPGEN(0x0048f7e0, 0x159, STD_SORT, hero_crossoverherostronger)
 // COMDAT pairing: std::_Sort_0<hero, CrossoverHeroStronger>, agreement 0.985.
 VA_COMPGEN(0x0048f2b0, 0x333, STD_SORT_0, hero_crossoverherostronger)
 
+// Two more members of the same sort instantiation, and 0x48f940 CORRECTS
+// the HD name map, which calls it `TDialogBox::TDialogBox`: it takes a
+// `hero` BY VALUE (`ret 0x498` = the 0x492 record padded to 0x494 plus
+// the empty predicate), walks BACKWARDS with `sub edi,0x492`, expands the
+// CrossoverHeroStronger compare inline at every step and finishes with one
+// `hero::operator=` - which is Dinkumware's _Unguarded_insert verbatim and
+// has nothing to do with dialogbox.obj.
+VA_COMPGEN(0x0048f940, 0xF4, STD_UNGUARDED_INSERT, hero_crossoverherostronger)
+VA_COMPGEN(0x0048fc20, 0x195, STD_UNGUARDED_PARTITION, hero_crossoverherostronger)
+
 // COMDAT pairing: bitset<145>::_Xran and bitset<8>::_Xran. Five byte-identical
 // `_Xran` bodies survive in the image, so the discriminator is the BOUND
 // COMPARE in each caller: 0x8d9a0's four callers all guard with `cmp <reg>,
@@ -2291,6 +2559,16 @@ VA_COMPGEN(0x0048d410, 0x26, VECTOR_DESTROY, hero)
 // 0.973 - the census had already named it `exe_filebuf_open` off the same
 // vtable's construction path.
 VA_COMPGEN(0x0048d4b0, 0xE2, FILEBUF_INIT, char)
+
+// COMDAT pairing: vector<type_artifact>::_Ucopy. The retail body is an
+// EIGHT-byte element copy - `mov esi,[ecx] / mov [eax],esi / mov
+// esi,[ecx+4] / mov [eax+4],esi / add ecx,8` - with `this` dead, three
+// stack arguments and `ret 0xc`, i.e. the protected member rather than the
+// free `std::copy` (which is /Gr fastcall and would take its first two
+// arguments in registers). The null test inside the loop is placement
+// new's, which is what makes it _Ucopy rather than copy. 53 bytes on both
+// sides and the only 53-byte candidate either way.
+VA_COMPGEN(0x0048dc10, 0x35, VECTOR_UCOPY, type_artifact)
 
 // COMDAT pairing: locale::locale(const locale&), agreement 1.000.
 VA_COMPGEN(0x0048d800, 0x19, CLASS_CTOR, locale)

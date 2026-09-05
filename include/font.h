@@ -5,6 +5,8 @@
 #ifndef HOMM3_FONT_H
 #define HOMM3_FONT_H
 
+#include <string>
+#include <vector>
 #include "resource.h"
 #include "palette.h"
 
@@ -140,6 +142,12 @@ public:
     int LineWidth(const char* text);
     int LongestLineWidth(const char* str);
     int longest_word_length(const char* str);
+    // Retail 0x4b5b90, font.obj's tail. The `fs.abc[' ']` triple it reads
+    // at this+0x1bc/0x1c0/0x1c4 is what types the receiver as a font and
+    // the second parameter as a pixel box width; NH3API corroborates the
+    // name and the three-parameter shape only.
+    void FillLinesVector(const char* str, int boxWidth,
+                         std::vector<std::string>& result);
 };
 
 // Retail .bss 0x698a08, a loaded `font*` that four bodies read (0x4514b1

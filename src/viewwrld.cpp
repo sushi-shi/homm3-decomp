@@ -1063,6 +1063,15 @@ draw_shroud:
     VWScaleToScreenBuffer(baseX, baseY + 8);
 }
 
+// Retail keeps an OUT-OF-LINE copy of the clipped scaler here: VC6 emits a
+// standalone COMDAT for an `inline` free function whenever a call site
+// declines to expand it, and viewwrld.obj has one at exactly this size.
+// The claim cannot sit on the definition (viewwrld.cpp:161, ahead of every
+// other VA in this file and so out of increasing order), so a
+// RE-DECLARATION carries it at the address's own place in link order.
+VA(0x005f9d90, 0x13C)  // linkorder (between VWDrawShroud and VWDrawUnderlay), dc 0x1968d0
+void VWClipScaleToScreenBuffer(int destX, int destY);
+
 // E:\gamedcs\viewwrld.cpp:1114
 // The scaled underlay layer. Same head as the river/road layers, then one
 // flat pass over the cell's object list with no draw-layer split and no
