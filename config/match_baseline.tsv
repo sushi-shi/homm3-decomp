@@ -1133,8 +1133,9 @@ customcampaign	?_Init@?$basic_filebuf@DU?$char_traits@D@std@@@std@@IAEXPAU_iobuf
 customcampaign	?_Init@?$basic_streambuf@DU?$char_traits@D@std@@@std@@IAEXXZ	100.0000	100.0000	100.0000	0x8bea0	-
 customcampaign	?_Sort@std@@YIXPAVhero@@0UCrossoverHeroStronger@@0@Z	100.0000	100.0000	100.0000	0x8f7e0	-
 customcampaign	?_Sort_0@std@@YIXPAVhero@@0UCrossoverHeroStronger@@0@Z	100.0000	100.0000	100.0000	0x8f2b0	-
+customcampaign	?_Ucopy@?$vector@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@V?$allocator@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@@2@@std@@IAEPAV?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@2@PBV32@0PAV32@@Z	100.0000	100.0000	100.0000	0x8d8d0	-
 customcampaign	?_Ucopy@?$vector@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@V?$allocator@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@@2@@std@@IAEPAV?$vector@Vhero@@V?$allocator@Vhero@@@std@@@2@PBV32@0PAV32@@Z	100.0000	100.0000	100.0000	0x8d860	-
-customcampaign	?_Ucopy@?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@IAEPAVhero@@PBV3@0PAV3@@Z	99.9286	99.9286	99.9286	0x8d8d0	-
+customcampaign	?_Ucopy@?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@IAEPAVhero@@PBV3@0PAV3@@Z	100.0000	100.0000	100.0000	0x8d440	-
 customcampaign	?_Ufill@?$vector@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@V?$allocator@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@@2@@std@@IAEXPAV?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@2@IABV32@@Z	100.0000	100.0000	100.0000	0x8d910	-
 customcampaign	?_Ufill@?$vector@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@V?$allocator@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@@2@@std@@IAEXPAV?$vector@Vhero@@V?$allocator@Vhero@@@std@@@2@IABV32@@Z	100.0000	100.0000	100.0000	0x8d8a0	-
 customcampaign	?_Xran@?$bitset@$07@std@@ABEXXZ	100.0000	100.0000	100.0000	0x8da70	-
@@ -1153,7 +1154,9 @@ customcampaign	?get_score@SCampaign@@QBEHXZ	100.0000	100.0000	100.0000	0x8b200	7
 customcampaign	?get_total_time@SCampaign@@QBEHXZ	100.0000	100.0000	100.0000	0x8b280	e320ba64afbf
 customcampaign	?insert@?$vector@UCampaignScenarioInfo@@V?$allocator@UCampaignScenarioInfo@@@std@@@std@@QAEXPAUCampaignScenarioInfo@@IABU3@@Z	100.0000	100.0000	100.0000	0x8cae0	-
 customcampaign	?insert@?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@QAEXPAUtype_artifact@@IABU3@@Z	100.0000	100.0000	100.0000	0x14d330	-
+customcampaign	?insert@?$vector@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@V?$allocator@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@@2@@std@@QAEPAV?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@2@PAV32@ABV32@@Z	100.0000	100.0000	100.0000	0x8c610	-
 customcampaign	?insert@?$vector@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@V?$allocator@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@@2@@std@@QAEXPAV?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@2@IABV32@@Z	100.0000	100.0000	100.0000	0x8c7a0	-
+customcampaign	?insert@?$vector@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@V?$allocator@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@@2@@std@@QAEPAV?$vector@Vhero@@V?$allocator@Vhero@@@std@@@2@PAV32@ABV32@@Z	100.0000	100.0000	100.0000	0x8c0e0	-
 customcampaign	?insert@?$vector@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@V?$allocator@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@@2@@std@@QAEXPAV?$vector@Vhero@@V?$allocator@Vhero@@@std@@@2@IABV32@@Z	100.0000	100.0000	100.0000	0x8c270	-
 customcampaign	?insert@?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@QAEXPAVhero@@IABV3@@Z	100.0000	100.0000	100.0000	0x8d060	-
 customcampaign	?overflow@?$basic_filebuf@DU?$char_traits@D@std@@@std@@MAEHH@Z	100.0000	100.0000	100.0000	0x8b4e0	-

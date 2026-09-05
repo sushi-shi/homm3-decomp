@@ -1555,6 +1555,15 @@ VA_COMPGEN(0x0048B470, 0x23, VECTOR_SIZE, hero)
 VA_COMPGEN(0x004AF4E0, 0x13, VECTOR_SIZE, hero_vector)
 VA_COMPGEN(0x0048C270, 0x285, VECTOR_INSERT, hero_vector)
 VA_COMPGEN(0x0048C7A0, 0x285, VECTOR_INSERT, type_artifact_vector)
+// ...and the SINGLE-element arm of the same two overload groups, 387 bytes
+// each against the count arms' 645. Which element type each belongs to is
+// read off its own named callees: 0x48c0e0 calls _Construct<vector<hero>> at
+// 0x45fce0 and _Destroy<vector<vector<hero>>> at 0x48c5b0, 0x48c610 calls the
+// type_artifact twins at 0x45fdc0 and 0x48caa0. Each group is now two claims
+// against the object's two COMDATs, zipping by RVA against COFF order with
+// the 387-byte arm first on both sides.
+VA_COMPGEN(0x0048c0e0, 0x183, VECTOR_INSERT, hero_vector)
+VA_COMPGEN(0x0048c610, 0x183, VECTOR_INSERT, type_artifact_vector)
 VA_COMPGEN(0x0048CA30, 0x6A, VECTOR_ERASE, type_artifact_vector)
 VA_COMPGEN(0x0048CAE0, 0x2E4, VECTOR_INSERT, CampaignScenarioInfo)
 VA_COMPGEN(0x0048CDD0, 0x44, VECTOR_ERASE, CampaignScenarioInfo)
@@ -1676,8 +1685,16 @@ VA_COMPGEN(0x0048f2b0, 0x333, STD_SORT_0, hero_crossoverherostronger)
 VA_COMPGEN(0x0048d9a0, 0xCB, BITSET_XRAN, Bitset145)
 VA_COMPGEN(0x0048da70, 0xCB, BITSET_XRAN, Bitset8)
 
-// COMDAT pairing: hero::_Ucopy, mnemonic agreement 0.966.
-VA_COMPGEN(0x0048d8d0, 0x38, VECTOR_UCOPY, hero)
+// COMDAT pairing: vector<vector<type_artifact>>::_Ucopy. This address WAS
+// claimed as vector<hero>::_Ucopy on a 0.966 mnemonic agreement, and the row
+// stuck at 99.9286 because the two never had the same extent - our
+// vector<hero>::_Ucopy compiles to 62 bytes and the carve here is 56. The
+// callers settle both: 0x48c610, whose _Construct and _Destroy callees make
+// it vector<vector<type_artifact>>::insert, calls THIS body for its _Ucopy,
+// while vector<hero>::_Ucopy is 0x48d440 below - 62 bytes exactly, calling
+// _Construct<hero> at 0x4603a0 over a 0x492 stride.
+VA_COMPGEN(0x0048d440, 0x3E, VECTOR_UCOPY, hero)
+VA_COMPGEN(0x0048d8d0, 0x38, VECTOR_UCOPY, type_artifact_vector)
 
 // COMDAT pairing: hero::copy_backward, mnemonic agreement 0.918.
 VA_COMPGEN(0x0048e880, 0x3B, STD_COPY_BACKWARD, hero)
