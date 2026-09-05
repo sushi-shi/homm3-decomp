@@ -3099,9 +3099,10 @@ smackmgr	?DrawSmackerFrame@SmackManager@@YIXXZ	100.0000	100.0000	100.0000	0x198e
 smackmgr	?GotoSmackerFrame@SmackManager@@YIXK@Z	100.0000	100.0000	100.0000	0x1990a0	dbf7bb35d30f
 smackmgr	?LoadAnimHeaders@@YIEXZ	100.0000	100.0000	100.0000	0x198210	6229b5e7df58
 smackmgr	?LoadSoundHeaders@@YIEXZ	100.0000	100.0000	100.0000	0x1984a0	991012f385e7
-smackmgr	?NextSmackerFrame@SmackManager@@YIXXZ	90.7265	90.7265	90.7265	0x198eb0	5397996a37b1
+smackmgr	?NextSmackerFrame@SmackManager@@YIXXZ	90.7265	90.7265	90.7265	0x198eb0	991431e60c1b
 smackmgr	?OpenSmackerTrack@@YIPAUSmack@@PBDKK@Z	100.0000	100.0000	100.0000	0x198790	6d95dcba7cff
 smackmgr	?SetPixelFormat@SmackManager@@YIXKKK@Z	100.0000	100.0000	100.0000	0x198a40	69d2b1564ad6
+smackmgr	?ShowVideo@@YIXHHHHHHHH@Z	48.6988	48.6988	48.6988	0x198af0	63873bf9e4eb
 smackmgr	?VideoClose@@YIXXZ	95.9231	95.9231	95.9231	0x1975f0	ca01a06f3f34
 smackmgr	?VideoDrawCurrentFrame@@YIXXZ	100.0000	100.0000	100.0000	0x197740	64f4bb33e498
 smackmgr	?VideoDrawRects@@YIXXZ	89.6347	89.6347	89.6347	0x1979d0	7798c771e248

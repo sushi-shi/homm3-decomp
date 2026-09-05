@@ -65,19 +65,24 @@ __declspec(dllimport) void __stdcall _SmackUseMMX(unsigned long on);
 __declspec(dllimport) void __stdcall _SmackVolumePan(Smack* smk, unsigned long trackFlags, unsigned long volume, unsigned long pan);
 }
 
-// Per-id video descriptor table in a foreign TU's .data (0x6839c8,
-// stride 20; ids below VIDEO_ID_FIRST_TABLED never consult it). Only
-// the two bytes the wrappers read are modeled: +0 selects the bink
-// arm, +2 requests the fade-out after a user abort. Names provisional;
+// Per-id video descriptor table in a foreign TU's .data (0x6839c0,
+// stride 20; ids below VIDEO_ID_FIRST_TABLED never consult it). The
+// record starts EIGHT bytes below the flag byte the earlier wrappers
+// modelled it from: ShowVideo reads the two archive stems it opens the
+// video and audio Smacker tracks with out of +0 and +4, so the byte
+// that selects the bink arm is at +8, not at +0. Names provisional;
 // owning TU unknown - declared with its known consumer until the
 // owner's TU lands.
 struct SVideoDescriptor {
-    unsigned char useBink;      // +0
-    unsigned char field_1;      // +1
-    unsigned char fadeOnAbort;  // +2
-    char pad_3[17];             // 20-byte stride
+    const char* smkStem;        // +0   video track archive stem
+    const char* smkAudioStem;   // +4   audio-only track ("" = none)
+    unsigned char useBink;      // +8
+    unsigned char field_9;      // +9
+    unsigned char fadeOnAbort;  // +0x0a
+    unsigned char field_b;      // +0x0b
+    char pad_c[8];              // 20-byte stride
 };
-extern SVideoDescriptor gVideoDescriptors[];   // .data 0x6839c8
+extern SVideoDescriptor gVideoDescriptors[];   // .data 0x6839c0
 
 // The two Smacker track handles smackmgr.obj defines. Declared here for the
 // campaign prologue player, which watches gSmackVideo/gSmackVideo2 to decide
@@ -89,6 +94,7 @@ extern Smack* gSmackVideo2;
 // Foreign globals without an owning header yet (all provisional):
 extern int* gpVideoGameState;    // .bss 0x69923c - the forced-bink state pair
 extern int gbVideoNoSkip;        // .bss 0x699524 - nonzero blocks the user abort
+extern int gUnnamed699290;       // .bss 0x699290 - nonzero suppresses the video sound tracks
 
 // Video ids as the wrappers dispatch them. Names are bootstrap ROLE
 // inventions (no DC/NH3API roster survives for the numeric ids): ids
