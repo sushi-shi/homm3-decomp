@@ -49,6 +49,20 @@ struct type_point {
         return x != arg.x || y != arg.y || z != arg.z;
     }
     unsigned char is_valid();
+    // E:\gamedcs\struct.h:120, and advspells.obj's own Dreamcast roster
+    // retains it out of line (dc 0x22fe4, 0x2e B). Retail has no body:
+    // advManager::TownGate (0x41d360) is the admitted witness and EXPANDS
+    // it twice in one statement pair - once for the `< best` test and
+    // once for the store into `best`, each time as
+    // `(this->x - p2->x)^2 + (this->y - p2->y)^2` with the two 10-bit
+    // bitfields sign-extended through the shl/movsx/sar triple. The z
+    // plane takes no part, which is what makes it a MAP distance.
+    int DistanceSquared(const type_point* p2) const
+    {
+        int dy = y - p2->y;
+        int dx = x - p2->x;
+        return dx * dx + dy * dy;
+    }
 };
 
 // The shared inclusive rectangle used by the adventure and combat drawing

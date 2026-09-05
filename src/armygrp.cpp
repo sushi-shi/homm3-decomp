@@ -283,6 +283,12 @@ TSplitWindow::TSplitWindow(int x2, int y2, TCreatureType thisArmy)
 // the standard VC6 scalar-deleting wrapper calls the real destructor below.
 VA_COMPGEN(0x00449df0, 0x21, SCALAR_DELETING_DTOR, TSplitWindow)
 
+// `bitset<9>::set(size_t, bool)`. Byte-verified against the COMDAT
+// armygrp.obj already emits - the two mnemonic streams agree EXACTLY over
+// all 96 bytes. The width comes out of the mangling: `?$bitset@$08` is
+// VC6's single-digit non-type form, i.e. 8 + 1.
+VA_COMPGEN(0x0044c680, 0x60, BITSET_SET, Bitset9)
+
 // E:\gamedcs\armygrp.cpp:135
 VA(0x00449e20, 0x6B)  // anchor-callee, dc 0x4e11c
 TSplitWindow::~TSplitWindow()
