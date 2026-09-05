@@ -9153,7 +9153,7 @@ void game::NextPlayer()
 
     if (gpCurrentPlayer->IsLocalHuman())
         gTurnDuration69d630.Start();
-    GameFn_004CC7D0(this);
+    DoNewTurn();
     if (gpCurrentPlayer->IsLocalHuman())
         gpAdvManager->ForceNewHover();
 }
