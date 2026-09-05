@@ -18,6 +18,7 @@
 #include "kb.h"
 #include "message.h"
 #include "misc.h"
+#include "mousemgr.h"
 #include "recruit.h"
 #include "quicktownwindow.h"
 #include "resourcedisplay.h"
@@ -922,6 +923,187 @@ void TOverviewWindow::DoFlaggableButtons(int which)
 
     UpdateFlaggableIcons();
     gpWindowManager->UpdateScreen(731, 45, 66, 398);
+}
+
+// E:\gamedcs\overview.cpp:1314. The kingdom-overview screen's own modal
+// driver: it allocates the five dynamic-widget arrays, rebuilds the hero
+// roster from the local player, opens TOverviewWindow, seeds the mine and
+// daily-income readouts, runs the modal loop and tears everything down.
+//
+// The five allocations are ten times the size the clear and teardown loops
+// walk - 0x2bc0 / 0x2bc0 / 0x2bc0 / 0x140 / 0x1e0 bytes against four rows of
+// 70/70/70/2/3 pointers - so the source allocates for forty rows and only
+// ever uses four. The four-row 70/2/3 geometry is the same one
+// SetupDynamicStuff walks above.
+//
+// The widget-id bands are byte-proven and unnamed in either symbol stream:
+// codeY 20..26 are the seven mine-count texts (one per resource, filled from
+// the mine pool scan) and codeY 27 is the daily-income text. They are left
+// as literals rather than grown into EOverviewIconId because overview.h is
+// this TU's private header and the enum's declarator count is an
+// include-set input to the four large bodies around this one.
+//
+// Three spellings are byte-load-bearing here and each was A/B'd against the
+// retail bytes:
+//   - the three-slot title clear is a LOOP, not three assignments. VC6
+//     unrolls the constant three-trip body, and only the loop form gives
+//     retail's own `xor eax, eax` zero pseudo for the pointer stores; three
+//     written-out assignments reuse the message constructor's zero in EBX
+//     (99.04 against 99.34, one whole block size-only).
+//   - `res` is zeroed with `memset`, not `= {0}`. The aggregate initializer
+//     stores res[0] as a byte IMMEDIATE and fills the remaining six from the
+//     zero register; retail fills all seven from the register in one
+//     dword/word/byte run, which is exactly the constant-size memset
+//     intrinsic (99.34 -> 100.0000). Enumerating all seven elements is worse
+//     still (95.36).
+//   - inside the mine-count loop the two constant message fields are written
+//     BEFORE the sprintf and codeY AFTER it; retail schedules codeY's store
+//     past the call because it rides the loop's own induction register.
+//     Writing all three before the sprintf costs 1.78, all three after 2.18.
+VA(0x0051e8d0, 0x57B)  // span-exhaustive order-map + body identity, dc 0x106e90
+void game::Overview()
+{
+    giOverviewReturnAction = -1;
+    giOverviewReturnActionExtra = -1;
+
+    message msg;
+    msg.id = MESSAGE_WIDGET;
+
+    gpAdvManager->TrimLoopingSounds(4);
+    gpAdvManager->DemobilizeCurrHero(0, 1);
+    gpWindowManager->FadeScreen(1, 4, 1);
+
+    for (int title_slot = 0; title_slot < 3; title_slot++)
+        textWidgetTitle[title_slot] = 0;
+
+    textWidgetDynamic = new textWidget*[40 * 70];
+    iconWidgetDynamic = new iconWidget*[40 * 70];
+    bitmapBorderDynamic = new bitmapBorder*[40 * 70];
+    buttonDynamic = new button*[40 * 2];
+    textButtonDynamic = new textButton*[40 * 3];
+
+    int row;
+    int item;
+    for (row = 0; row < 4; row++) {
+        for (item = 0; item < 70; item++) {
+            int slot = row * 70 + item;
+            textWidgetDynamic[slot] = 0;
+            iconWidgetDynamic[slot] = 0;
+            bitmapBorderDynamic[slot] = 0;
+        }
+        for (item = 0; item < 2; item++)
+            buttonDynamic[row * 2 + item] = 0;
+        for (item = 0; item < 3; item++)
+            textButtonDynamic[row * 3 + item] = 0;
+    }
+
+    iLastDynamicType = -1;
+    iLastDynamicTop = -1;
+
+    giOverviewItems[0] = 0;
+    for (int hero_slot = 0;
+         hero_slot < gpGame->GetLocalPlayer()->numHeroes; hero_slot++) {
+        gOverviewHeroIds[giOverviewItems[0]] =
+            gpGame->GetLocalPlayer()->heroes[hero_slot];
+        giOverviewItems[0]++;
+    }
+    giOverviewItems[1] = gpGame->GetLocalPlayer()->numTowns;
+
+    if (giOverviewItems[0] > 0) {
+        memset(gOverviewBackpackStart, 0, giOverviewItems[0]);
+        memset(gOverviewHeroArtifactPage, 0, giOverviewItems[0]);
+    }
+
+    gpMouseManager->SetPointer(0, mouseManager::DEFAULT_SET);
+
+    overWin = new TOverviewWindow();
+    if (!overWin)
+        MemError();
+
+    msg.codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
+    msg.codeY = 0;
+    msg.extra = gpGame->GetLocalPlayerGamePos();
+    overWin->BroadcastMessage(&msg);
+
+    msg.codeY = 197;
+    overWin->BroadcastMessage(&msg);
+
+    SetWinText(overWin, 9);
+
+    overviewBank = new TResourceDisplay(overWin, 1);
+    overviewBank->Update(1, 0);
+
+    char res[7];
+    memset(res, 0, sizeof(res));
+
+    for (unsigned mine_index = 0; mine_index < mines.size(); mine_index++) {
+        if (mines[mine_index].playerOwner == gpGame->GetLocalPlayerGamePos()
+                && !mines[mine_index].field_02
+                && mines[mine_index].type >= 0
+                && mines[mine_index].type <= 6)
+            res[mines[mine_index].type]++;
+    }
+
+    for (int resource = 0; resource < 7; resource++) {
+        msg.codeX = widget::WIDGET_SET_TEXT;
+        msg.extraText = gText;
+        sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                res[resource]);
+        msg.codeY = resource + 20;
+        overWin->BroadcastMessage(&msg);
+    }
+
+    iOverviewFlaggableTop = 0;
+    static_cast<TOverviewWindow*>(overWin)->UpdateFlaggableIcons();
+
+    msg.codeX = widget::WIDGET_SET_TEXT;
+    msg.codeY = 27;
+    msg.extraText = gText;
+    sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+            ComputeDailyGold(gpGame->GetLocalPlayerGamePos(), 1));
+    overWin->BroadcastMessage(&msg);
+
+    SetupNewOverviewType(giOverviewType, 0);
+    overWin->DoModal(1);
+    gpWindowManager->FadeScreen(1, 4, 1);
+
+    for (row = 0; row < 4; row++) {
+        for (item = 0; item < 70; item++) {
+            int slot = row * 70 + item;
+            delete textWidgetDynamic[slot];
+            delete iconWidgetDynamic[slot];
+            delete bitmapBorderDynamic[slot];
+        }
+        for (item = 0; item < 2; item++)
+            delete buttonDynamic[row * 2 + item];
+        for (item = 0; item < 3; item++)
+            delete textButtonDynamic[row * 3 + item];
+    }
+
+    for (int title = 0; title < 3; title++) {
+        if (textWidgetTitle[title]) {
+            delete textWidgetTitle[title];
+            textWidgetTitle[title] = 0;
+        }
+    }
+
+    delete overWin;
+    overWin = 0;
+    if (overviewBank) {
+        delete overviewBank;
+        overviewBank = 0;
+    }
+
+    delete[] textWidgetDynamic;
+    textWidgetDynamic = 0;
+    delete[] iconWidgetDynamic;
+    iconWidgetDynamic = 0;
+    delete[] bitmapBorderDynamic;
+    bitmapBorderDynamic = 0;
+    delete[] buttonDynamic;
+    buttonDynamic = 0;
+    delete[] textButtonDynamic;
+    textButtonDynamic = 0;
 }
 
 // E:\gamedcs\overview.cpp:1647. Dreamcast proves this helper boundary, its
