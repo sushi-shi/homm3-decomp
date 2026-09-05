@@ -972,6 +972,7 @@ customcampaign	?InitializeCrossoverHero@ScenarioStruct@TCampaignBrief@@QAEXPAUHe
 customcampaign	?Load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	55.7915	55.7915	55.7915	0x8a310	f2ec1fa4aeeb
 customcampaign	?LoadMapHeader@ScenarioStruct@TCampaignBrief@@QAEXPAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@PAVNewSMapHeader@@H@Z	100.0000	100.0000	100.0000	0x87d30	3ede48bd4a11
 customcampaign	?LoadScenario@CampaignHeaderStruct@TCampaignBrief@@QAE_NHPAVNewSMapHeader@@@Z	100.0000	100.0000	100.0000	0x88810	40cf52fbb7ea
+customcampaign	?Play@MapTextStruct@TCampaignBrief@@QAEXXZ	82.8249	82.8249	82.8249	0x88fb0	abf4b7a12602
 customcampaign	?PlayScenarioPrologue@SCampaign@@QAEXPAX@Z	100.0000	100.0000	100.0000	0x8a270	f20101db493f
 customcampaign	?Read@TStreamBufFile@@UAEHPAXH@Z	100.0000	100.0000	100.0000	0x83f10	d4a8f9e13d4a
 customcampaign	?StartMusic@CampaignHeaderStruct@TCampaignBrief@@QAEXXZ	100.0000	100.0000	100.0000	0x88ee0	4daeb5fd6b1f
@@ -993,7 +994,6 @@ customcampaign	?size@?$vector@UCampaignScenarioInfo@@V?$allocator@UCampaignScena
 customcampaign	?size@?$vector@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@V?$allocator@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@@2@@std@@QBEIXZ	100.0000	100.0000	100.0000	0xaf4e0	-
 customcampaign	?size@?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x8b470	-
 customcampaign	TCampaignBrief_CampaignHeaderStruct_Load	0.0000	0.0000	0.0000	0x88880	47fb4b8d9098
-customcampaign	TCampaignBrief_MapTextStruct_Play	0.0000	0.0000	0.0000	0x88fb0	a8a3538fcbb6
 customcampaign	__h3cg$customcampaign$vector_destroy$type_artifact	0.0000	100.0000	100.0000	0x4140	-
 customcampaignwindow	??0TCustomCampaignWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x827b0	893291fd4aaf
 customcampaignwindow	??1TCustomCampaignWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x82f10	4e3abaca1d97
