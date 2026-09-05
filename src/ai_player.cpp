@@ -1374,6 +1374,15 @@ bool type_AI_player::can_trade_resources(const int* cost, int* supply,
             market_value = static_cast<long>(
                 get_market_value(game_resource_from_int(i)) * supply[i]
                 * efficiency + market_value);
+        // Retail's second guard is `je`, not `jge`: spelling this
+        // `supply[i] != 0` (or the bare `supply[i]`) takes the branch
+        // census CLEAN at 45/45 and measures 81.1900 - ABOVE the current
+        // 81.0339 but still under the row's banked 81.3465 MAX, which was
+        // set in an older delink generation, so it is recorded rather than
+        // shipped. The rest of the gap is the induction base: retail walks
+        // `supply` with ESI and biases `cost` off it, we walk `cost` and
+        // bias `supply`; the ICF-folded vector<long>/vector<army*> call
+        // rows are cosmetic.
         } else if (supply[i] < 0) {
             long on_hand = gpGame->players[team].resources[i];
             long value = get_market_value(game_resource_from_int(i));

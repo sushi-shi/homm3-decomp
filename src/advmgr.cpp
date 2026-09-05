@@ -1170,6 +1170,15 @@ type_point advManager::get_mouse_map_point(__$ReturnUdt)
 //     condition as a ternary feeding one initialiser. A fourth spelling,
 //     initialising to 0xea5f and conditionally assigning movePoints,
 //     adds a branch and regresses 77.3765 -> 76.9612.
+//     RE-MEASURED 2026-09-06 on the post-unpeel 94.2359 shape, because
+//     every verdict above predates it: the ternary and the De Morgan twin
+//     are still byte-flat at 94.2359, initialising to 0xea5f and
+//     conditionally assigning movePoints is 93.9100 (and still flips), and
+//     the untried INVERSE - initialise to movePoints, overwrite with
+//     0xea5f under the negated guard - is the one spelling that takes the
+//     branch census CLEAN at 80/80 and still LOSES, 93.7900. So the flip
+//     is now known to be reachable and known to cost 0.45; the kept
+//     positive form remains the scoring winner.
 //   #46 (+0x46d) is the step loop's back edge: retail exits with `js`
 //     and returns with an UNCONDITIONAL `jmp` because it keeps
 //     gpSearchArray live in eax across the edge and reloads it at the
