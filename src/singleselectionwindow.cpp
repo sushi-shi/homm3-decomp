@@ -2651,8 +2651,12 @@ void TSingleSelectionWindow::SetupFilterOptions()
 // header's strings; we expand the first (it becomes an inline _Tidy). (2)
 // Inside AssignData retail expands operator=(const char*) at both sites -
 // one down to assign(), one a level further to _Grow - while game.h's
-// load-bearing inline_depth(1) leaves us calling operator= outright; that
-// pragma is pinned by UpdateGameVars and is not ours to move. (3) The
+// load-bearing inline_depth(1) leaves us calling operator= outright.
+// MEASURED 2026-09-05 by deleting that pragma and re-diffing three of its
+// callers in one compile: this row 71.5355 -> 81.0800, OnBeginGame 78.7597
+// -> 77.2700, UpdateGameVars 67.9099 -> 38.0800. So the pragma is NOT inert
+// (contra "only N=0 bites"), it is worth +9.5 here and -29.8 there, and the
+// split wants a per-call-site knob rather than a per-callee one. (3) The
 // SendPlayerPositions expansion: retail CALLS ??0CNetPlayerHandlerPlayer
 // for m_netPlayer[8] and only ??0CNetPlayerInfo for m_compPlayer[8], while
 // our budget expands both loops in full - the same per-site split
@@ -8038,6 +8042,15 @@ unsigned char TSingleSelectionWindow::CanChooseHero(int gamePos)
 // and the button.cpp/hero.cpp _Grow walls. Tried and rejected: a dead
 // second find site (75.99 - the collector moves the wrong way).
 // E:\gamedcs\singleselectionwindow.cpp:8107
+// Residual (85.2679%): the map lookup only. Retail expands find() but CALLS
+// map::end() at both of the two sites inside it, while our budget expands
+// those too; the caller's own `!= end()` is inline on both sides. No pin is
+// available for a callee two levels down. Fixed here: testing
+// nonRandomHeroCustomPortrait WITHOUT landing it in heroId first (retail
+// returns the loaded value straight out of the shared epilogue rather than
+// storing it - 77.0099 -> 84.5300, and the branch view goes clean), plus a
+// named `setups` reference for the map (+0.74; retail holds its address in
+// ESI across the whole tail).
 VA(0x0058D0E0, 0x10A)  // anchor-callee DrawHeroAdvancedOption calls it (gamePos) in both mode arms and indexes the heroFaces plates with the result (-1 = the random/none plates); head is the GetPlayerInPos scan, size 1.02x dc 0x104, dc 0x143444
 int TSingleSelectionWindow::GetDisplayFace(int gamePos)
 {
@@ -8048,23 +8061,22 @@ int TSingleSelectionWindow::GetDisplayFace(int gamePos)
         &gpGame->mapHeader.playerSlotAttributes[gamePos];
     int heroId;
     if (m_flag64) {
-        heroId = slot->nonRandomHeroCustomPortrait;
-        if (heroId != -1)
-            return heroId;
+        if (slot->nonRandomHeroCustomPortrait != -1)
+            return slot->nonRandomHeroCustomPortrait;
         heroId = gpGame->setup.startingHero[gamePos];
     } else if (slot->GenerateHero || slot->hasRandomHero) {
         if (p->heroIndex == -1)
             return -1;
         heroId = p->availableHeroes[p->heroIndex];
     } else {
+        if (slot->nonRandomHeroCustomPortrait != -1)
+            return slot->nonRandomHeroCustomPortrait;
         heroId = slot->nonRandomHeroCustomPortrait;
-        if (heroId != -1)
-            return heroId;
     }
-    std::map<int, type_map_hero_info>::iterator it =
-        gpGame->mapHeader.heroPlayerSetups.find(heroId);
-    if (it != gpGame->mapHeader.heroPlayerSetups.end()
-            && it->second.field_00 != -1)
+    std::map<int, type_map_hero_info>& setups =
+        gpGame->mapHeader.heroPlayerSetups;
+    std::map<int, type_map_hero_info>::iterator it = setups.find(heroId);
+    if (it != setups.end() && it->second.field_00 != -1)
         heroId = it->second.field_00;
     return heroId;
 }
@@ -8130,6 +8142,7 @@ VA(0x0058D1F0, 0x1E7)  // anchor-callee DrawHeroAdvancedOption pushes its return
 const char* TSingleSelectionWindow::GetHeroName(int gamePos)
 {
     std::map<int, type_map_hero_info>::iterator it;
+    int heroId;
     CMapHeaderData::TPlayerSlotAttributes* slot =
         &gpGame->mapHeader.playerSlotAttributes[gamePos];
     if (m_flag64) {
@@ -8137,7 +8150,7 @@ const char* TSingleSelectionWindow::GetHeroName(int gamePos)
             if (strlen(slot->nonRandomHeroCustomName) != 0)
                 return slot->nonRandomHeroCustomName;
         }
-        int heroId = gpGame->setup.startingHero[gamePos];
+        heroId = gpGame->setup.startingHero[gamePos];
         if (heroId == -1)
             return gpGeneralText->GetText(524);
         it = gpGame->mapHeader.heroPlayerSetups.find(heroId);
