@@ -1397,3 +1397,15 @@ VA_COMPGEN(0x0048f7e0, 0x159, STD_SORT, hero_crossoverherostronger)
 
 // COMDAT pairing: std::_Sort_0<hero, CrossoverHeroStronger>, agreement 0.985.
 VA_COMPGEN(0x0048f2b0, 0x333, STD_SORT_0, hero_crossoverherostronger)
+
+// COMDAT pairing: bitset145::_Xran, mnemonic agreement 0.978.
+VA_COMPGEN(0x0048edf0, 0xC8, BITSET_XRAN, bitset145)
+
+// COMDAT pairing: hero::_Ucopy, mnemonic agreement 0.966.
+VA_COMPGEN(0x0048d8d0, 0x38, VECTOR_UCOPY, hero)
+
+// COMDAT pairing: hero::copy_backward, mnemonic agreement 0.918.
+VA_COMPGEN(0x0048e880, 0x3B, STD_COPY_BACKWARD, hero)
+
+// COMDAT pairing: hero::_Ufill, mnemonic agreement 0.913.
+VA_COMPGEN(0x0048d970, 0x2C, VECTOR_UFILL, hero)

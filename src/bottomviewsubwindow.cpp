@@ -1543,3 +1543,21 @@ void TBottomViewEnemyTurn::animate()
     crest->Draw();
     crest->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_UPDATE);
 }
+
+// COMDAT pairing: basic_streambuf::1?$basic_streambuf, mnemonic agreement 1.000.
+VA_COMPGEN(0x00454000, 0x50, IMPLICIT_DTOR, basic_streambuf)
+
+// COMDAT pairing: numpunct::1?$numpunct, mnemonic agreement 0.970.
+VA_COMPGEN(0x00455bf0, 0x2F, IMPLICIT_DTOR, numpunct)
+
+// COMDAT pairing: basic_streambuf::0?$basic_streambuf, mnemonic agreement 0.937.
+VA_COMPGEN(0x00453f50, 0xA9, CLASS_CTOR, basic_streambuf)
+
+// COMDAT pairing: num_put::0?$num_put, mnemonic agreement 0.931.
+VA_COMPGEN(0x004546e0, 0x5C, CLASS_CTOR, num_put)
+
+// COMDAT pairing: sentry::1sentry, mnemonic agreement 0.911.
+VA_COMPGEN(0x00454320, 0x63, IMPLICIT_DTOR, sentry)
+
+// COMDAT pairing: fpos::0?$fpos, mnemonic agreement 0.909.
+VA_COMPGEN(0x00454390, 0x3C, CLASS_CTOR, fpos)

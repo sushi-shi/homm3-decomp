@@ -9135,3 +9135,12 @@ VA_COMPGEN(0x004af9d0, 0x165, STD_COPY_BACKWARD, string)
 // COMDAT pairing: std::fill<std::string>, agreement 0.971 against 0.944 for
 // copy_backward, which pairs with 0xaf9d0 instead.
 VA_COMPGEN(0x004af870, 0x154, STD_FILL, string)
+
+// COMDAT pairing: cturndurationpause::1CTurnDurationPause, mnemonic agreement 1.000.
+VA_COMPGEN(0x004ae9b0, 0x50, IMPLICIT_DTOR, cturndurationpause)
+
+// COMDAT pairing: ccombatinitmsg::1CCombatInitMsg, mnemonic agreement 0.938.
+VA_COMPGEN(0x004ad130, 0xB4, IMPLICIT_DTOR, ccombatinitmsg)
+
+// COMDAT pairing: clevelpickwaitdlg::1CLevelPickWaitDlg, mnemonic agreement 0.902.
+VA_COMPGEN(0x004aeb00, 0x4B, IMPLICIT_DTOR, clevelpickwaitdlg)

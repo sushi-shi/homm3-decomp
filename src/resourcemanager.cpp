@@ -3058,3 +3058,12 @@ ResourceManager::TCacheMap::lower_bound_iterator(TCacheIterator* result,
     return result;
 }
 #pragma auto_inline(on)
+
+// COMDAT pairing: basic_ostringstream::_G?$basic_ostringstream, mnemonic agreement 1.000.
+VA_COMPGEN(0x0055dae0, 0x30, SCALAR_DELETING_DTOR, basic_ostringstream)
+
+// COMDAT pairing: basic_stringbuf::0?$basic_stringbuf, mnemonic agreement 0.994.
+VA_COMPGEN(0x0055e440, 0xFF, CLASS_CTOR, basic_stringbuf)
+
+// COMDAT pairing: basic_ostringstream::1?$basic_ostringstream, mnemonic agreement 0.944.
+VA_COMPGEN(0x0055d530, 0xC2, IMPLICIT_DTOR, basic_ostringstream)
