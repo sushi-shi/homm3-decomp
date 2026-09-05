@@ -4182,6 +4182,7 @@ viewarmywindow	?create_upgrade_widget@TViewArmyWindow@@QAEXXZ	100.0000	100.0000	
 viewwrld	??0TViewWorldWindow@@QAE@XZ	96.4425	96.4425	96.4425	0x1fa600	d8fe3b10cf14
 viewwrld	??1TViewWorldWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1fbd60	dbcb66a53979
 viewwrld	??_GTViewWorldWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1fbd30	-
+viewwrld	?VWClipScaleToScreenBuffer@@YIXHH@Z	100.0000	100.0000	100.0000	0x1f9d90	b50f216125e8
 viewwrld	?VWCompleteDraw@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x1fc4c0	f85745d6e952
 viewwrld	?VWDrawAdvObj@advManager@@QAEXHHHHH@Z	96.4955	96.4955	96.4955	0x1f82e0	b73c0fc37794
 viewwrld	?VWDrawAdvObjShadow@advManager@@QAEXHHHHH@Z	83.9809	83.9809	83.9809	0x1f8be0	59399670e38f
