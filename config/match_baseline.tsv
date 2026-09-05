@@ -2903,7 +2903,7 @@ singleselectionwindow	??0CNetPlayerInfo@@QAE@XZ	100.0000	100.0000	100.0000	0x17f
 singleselectionwindow	??0CNewPlayerUpdateMan@@QAE@XZ	100.0000	100.0000	100.0000	0x17c9b0	0ed8ff53773d
 singleselectionwindow	??0CUpdatePlayerPosMsg@@QAE@PAVCNetPlayerHandlerPlayer@@0@Z	100.0000	100.0000	100.0000	0x179870	4cb719207948
 singleselectionwindow	??0GameSelectionHeadersStruct@@QAE@XZ	79.3242	79.3242	79.3242	0x178e00	-
-singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	89.4902	89.4904	89.4904	0x179960	5b8b40092e3f
+singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	92.3499	92.3499	92.3499	0x179960	5b8b40092e3f
 singleselectionwindow	??0lobby_message@@QAE@XZ	100.0000	100.0000	100.0000	0x189190	2b1be8208221
 singleselectionwindow	??0t_map_list_update@@QAE@K@Z	100.0000	100.0000	100.0000	0x189240	173781ee6a81
 singleselectionwindow	??1CChatSlider@@UAE@XZ	100.0000	100.0000	100.0000	0x17ca80	-
@@ -3054,6 +3054,7 @@ singleselectionwindow	?Update@TSingleSelectionWindow@@QAEHXZ	98.9811	98.9811	98.
 singleselectionwindow	?UpdateAllyEnemyFlags@TSingleSelectionWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x185300	2c20fda4ec7c
 singleselectionwindow	?UpdateFilterWidgets@TSingleSelectionWindow@@QAEXXZ	95.0755	95.0755	95.0755	0x17ef70	38bd9c53321b
 singleselectionwindow	?UpdateGameVars@TSingleSelectionWindow@@QAEXXZ	67.9099	67.9099	67.9099	0x183580	6c6326aca773
+singleselectionwindow	?UpdateMainWindow@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x17fb90	6df63d32a090
 singleselectionwindow	?UpdateNameLists@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x18c960	e1e322eccb71
 singleselectionwindow	?UpdatePlayerPositions@TSingleSelectionWindow@@QAEXE@Z	98.4856	98.4856	98.4856	0x188330	fc48e3f6365d
 singleselectionwindow	?UpdateTown@TSingleSelectionWindow@@QAEXHW4TTownType@@E@Z	100.0000	100.0000	100.0000	0x18cd50	6be56f51c2e4
@@ -3070,7 +3071,6 @@ singleselectionwindow	TSingleSelectionWindow_GenerateRandomMap	0.0000	0.0000	0.0
 singleselectionwindow	TSingleSelectionWindow_OnBeginGame	0.0000	0.0000	0.0000	0x18bce0	5b18a61fa80f
 singleselectionwindow	TSingleSelectionWindow_RebuildFilteredPlayerSetup	0.0000	0.0000	0.0000	0x180430	5172ebddf208
 singleselectionwindow	TSingleSelectionWindow_SetupFilterOptions	0.0000	0.0000	0.0000	0x17feb0	ff836e6b743f
-singleselectionwindow	TSingleSelectionWindow_UpdateMainWindow	0.0000	0.0000	0.0000	0x17fb90	ec76c6501793
 singleselectionwindow	__h3cg$singleselectionwindow$scalar_deleting_dtor$CNewPlayerUpdateTask	0.0000	0.0000	0.0000	0x183ec0	-
 slider	??0slider@@QAE@HHHHHHP6IXHPAVheroWindow@@@ZW4EGraphics@0@HE@Z	100.0000	100.0000	100.0000	0x1960d0	63299852860c
 slider	??1slider@@UAE@XZ	100.0000	100.0000	100.0000	0x196180	dfc35120dc55
