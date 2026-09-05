@@ -208,6 +208,8 @@ CHAR_STREAM_MEMBERS = (
     ("?assign@?$basic_string@D", "@ABV12@II@Z",
      "basic_string_assign_str"),
     ("?append@?$basic_string@D", "@ID@Z", "basic_string_append_count"),
+    ("?assign@?$basic_string@D", "@ID@Z", "basic_string_assign_count"),
+    ("??A?$basic_string@D", None, "basic_string_subscript"),
     ("?_Split@?$basic_string@D", None, "basic_string_split"),
     ("?erase@?$basic_string@D", None, "basic_string_erase"),
     ("?find@?$basic_string@D", None, "basic_string_find"),

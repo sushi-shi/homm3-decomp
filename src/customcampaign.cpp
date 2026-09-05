@@ -1419,11 +1419,25 @@ VA_COMPGEN(0x0048e880, 0x3B, STD_COPY_BACKWARD, hero)
 // COMDAT pairing: hero::_Ufill, mnemonic agreement 0.913.
 VA_COMPGEN(0x0048d970, 0x2C, VECTOR_UFILL, hero)
 
-// COMDAT pairing: out_of_range::out_of_range(const&), agreement 0.940 and an
-// EXACT size match (352 B against the object's 352). Four other addresses
-// resemble the same COMDAT - advmgr 0x1ba90/0x1b7b0/0x1b920 at 354/361/367 B
-// and castle 0x60700 at 293 - and the size settles it.
-VA_COMPGEN(0x00487bd0, 0x160, CLASS_CTOR, out_of_range)
+// COMDAT pairing: out_of_range::out_of_range(const out_of_range&). This
+// address moved from 0x487bd0 (lane 16), which had the right class and the
+// wrong OVERLOAD: customcampaign.obj emits only the copy constructor, so the
+// group of one bound it to whatever address was claimed, and 0x487bd0 is the
+// STRING constructor. Three independent facts say so - 0x487bd0 calls
+// `??0exception@@QAE@ABQBD@Z`, the const char* form that only
+// `logic_error(const string&) : exception("")` inlined into it produces,
+// while 0x4700 calls `??0exception@@QAE@ABV0@@Z`; 0x487bd0 scores 1.000 with
+// an exact 352 = 352 size match against victorylossconditions' string-ctor
+// COMDAT where 0x4700 scores 0.973 at +9; and 0x4700 is referenced as data
+// from a ThrowInfo copy-constructor slot (const_247f90+0x18), which is where
+// a copy ctor and nothing else appears. Both install out_of_range's
+// vtbl_2455cc - the vtable this lane pinned to out_of_range from _Xran's own
+// reloc rows, where our `??_7out_of_range@std@@6B@` sits opposite it.
+// 0x487bd0 is left unclaimed: the only objects emitting the string ctor also
+// emit the copy ctor, and their COFF order (string, copy) runs opposite to
+// the RVA order (0x4700, 0x487bd0), so a two-member group there would zip
+// crossed.
+VA_COMPGEN(0x00404700, 0x157, CLASS_CTOR, out_of_range)
 
 // COMDAT pairing: vector<vector<hero>>::_Destroy - reached from game and from
 // two sites in this unit's own segment.
