@@ -9697,6 +9697,19 @@ VA_COMPGEN(0x0058fc10, 0x222, IMPLICIT_COPY_CTOR, SCampaign)
 VA_COMPGEN(0x0058fe40, 0x3B, VECTOR_UCOPY, CampaignScenarioInfo)
 VA_COMPGEN(0x00593f50, 0x259, IMPLICIT_COPY_CTOR, SavedGameHeader)
 
+// The _Tree copy ctor NewSMapHeader's own copy calls for heroPlayerSetups
+// (slot 5 of that zip); its group holds this row alone.
+VA_COMPGEN(0x0058ff80, 0x31, IMPLICIT_COPY_CTOR, _Tree)
+
+// std::copy_backward<GameSelectionHeadersStruct*>: the element-only row the
+// three _Sort_0 instantiations whose _Insertion_sort_1 did not inline it
+// (BY_SIZE twice, BY_VICTORY and BY_LOSS once each) reach. It walks
+// `sub esi,0xca4` BACKWARD through the element stride, which is what separates
+// it from std::copy at 0x58f160. It only became claimable once
+// GameSelectionHeadersStruct's copy ctor went implicit - before that our
+// compile inlined the whole body and emitted no COMDAT at all.
+VA_COMPGEN(0x00591650, 0x318, STD_COPY_BACKWARD, gameselectionheadersstruct)
+
 // ---------------------------------------------------------------------------
 // SortMaps' six std::sort instantiations (0x590070..0x595e10).
 //

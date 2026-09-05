@@ -3190,6 +3190,7 @@ singleselectionpopups	?Main@CHotspotWidget@@UAEHPAVmessage@@@Z	94.2771	94.2771	9
 singleselectionpopups	?Main@CSpriteWidget@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x175a10	41c528056a5a
 singleselectionpopups	?_Ucopy@?$vector@PAVwidget@@V?$allocator@PAVwidget@@@std@@@std@@IAEPAPAVwidget@@PBQAV3@0PAPAV3@@Z	100.0000	100.0000	100.0000	0x174ce0	-
 singleselectionpopups	?handle_message@CSingleSelPopup@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x175430	d47e955ee4df
+singleselectionwindow	??0?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x18ff80	-
 singleselectionwindow	??0CGameHeaderInfoMsg@@QAE@EHPAUGameSelectionHeadersStruct@@@Z	98.7952	98.7952	98.7952	0x179060	8c8619e8294c
 singleselectionwindow	??0CNetPlayerHandlerPlayer@@QAE@XZ	100.0000	100.0000	100.0000	0x17c790	82fac650b924
 singleselectionwindow	??0CNetPlayerInfo@@QAE@XZ	100.0000	100.0000	100.0000	0x17f720	-
@@ -3403,6 +3404,7 @@ singleselectionwindow	?_Unguarded_partition@std@@YIPAUGameSelectionHeadersStruct
 singleselectionwindow	?_Unguarded_partition@std@@YIPAUGameSelectionHeadersStruct@@PAU2@0U2@UTSortMapsByVersion@@@Z	60.0897	60.0897	60.0897	0x194f20	-
 singleselectionwindow	?_Unguarded_partition@std@@YIPAUGameSelectionHeadersStruct@@PAU2@0U2@UTSortMapsByVictory@@@Z	100.0000	100.0000	100.0000	0x195920	-
 singleselectionwindow	?capacity@?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x18ebb0	-
+singleselectionwindow	?copy_backward@std@@YIPAUGameSelectionHeadersStruct@@PAU2@00@Z	37.4381	37.4381	37.4381	0x191650	-
 singleselectionwindow	?erase@?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@QAEPAUGameSelectionHeadersStruct@@PAU3@0@Z	100.0000	100.0000	100.0000	0x18ef20	-
 singleselectionwindow	?handle_message@CHostWaitDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1891b0	2f7d258a8d85
 singleselectionwindow	?insert@?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@QAEXPAUGameSelectionHeadersStruct@@IABU3@@Z	100.0000	100.0000	100.0000	0x18ebe0	-
