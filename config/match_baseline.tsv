@@ -1971,6 +1971,7 @@ inputmgr	?MouseMessageHandler@@YIHPAXIIJ@Z	100.0000	100.0000	100.0000	0xec290	7c
 inputmgr	?Open@inputManager@@UAEHH@Z	100.0000	100.0000	100.0000	0xec4d0	8332e8526402
 inputmgr	?PeekEvent@inputManager@@QAE?AVmessage@@XZ	100.0000	100.0000	100.0000	0xec640	3e82547dc77d
 kb	??0CNetMsg@@QAE@W4eRS_Messages@@K@Z	100.0000	100.0000	100.0000	0xf2930	c08c11f46c9e
+kb	??0type_dialog_icon@@QAE@ABU0@@Z	100.0000	100.0000	100.0000	0xf6810	-
 kb	??1advManager@@QAE@XZ	100.0000	100.0000	100.0000	0xf39f0	-
 kb	??1combatManager@@QAE@XZ	71.8085	71.8085	71.8085	0xf3940	-
 kb	?CleanUpMenus@@YIXXZ	100.0000	100.0000	100.0000	0xf4b50	5ad85acac0be
@@ -2001,6 +2002,7 @@ kb	?ShowProgressBar@@YIXXZ	100.0000	100.0000	100.0000	0xed350	f5a9fccf0270
 kb	?ShutDown@@YIXPBD@Z	100.0000	100.0000	100.0000	0xf3690	7882bdc1e193
 kb	?UnloadProgressBar@@YIXXZ	100.0000	100.0000	100.0000	0xed450	515a13a44eda
 kb	?WaitHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0xf7620	5f15859cbc9f
+kb	?extended_dialog@@YIXPBDAAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@std@@JJJ@Z	92.7911	92.7911	92.7911	0xf7690	094ca28af910
 kb	?oldmain@@YIHXZ	29.6021	31.9630	31.9630	0xee3e0	ead764a54d4e
 kb	?set@type_dialog_icon@@QAEXW4EGameResource@@J@Z	99.1667	99.1667	99.1667	0xf4eb0	06cb359cd3d3
 kbwin	?AppAbout@@YGHPAUHWND__@@IIJ@Z	100.0000	100.0000	100.0000	0xf8140	b6d6a9ba7939
