@@ -263,7 +263,7 @@ ai_player	??_Gtype_combat_artifact@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x33080
 ai_player	?AI_AttemptMove@@YIXPAVhero@@AAUHeroDestination@@AAJE@Z	84.8316	84.8316	84.8316	0x2fee0	ba5ffaaf9878
 ai_player	?AI_arrange_army@@YIXPAVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x2d8e0	6476d3737a0d
 ai_player	?AI_build_ship@@YIXPBVhero@@JJJ@Z	100.0000	100.0000	100.0000	0x30f80	357d4741dae5
-ai_player	?AI_choose_destination@@YIHPAVhero@@JAAUHeroDestination@@AAJEE@Z	76.8679	76.8679	76.8679	0x2e0b0	111d6509ebba
+ai_player	?AI_choose_destination@@YIHPAVhero@@JAAUHeroDestination@@AAJEE@Z	77.0775	77.0775	77.0775	0x2e0b0	e2b2d372757c
 ai_player	?AI_consolidate_army@@YIXPAVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x2d870	5423f5fef321
 ai_player	?AI_equip_artifacts@@YIXPAVhero@@@Z	100.0000	100.0000	100.0000	0x33b40	dcb3719bb73f
 ai_player	?AI_get_artifact_player_value@@YIJABUtype_artifact@@J@Z	100.0000	100.0000	100.0000	0x33aa0	5752a68b522e
@@ -1560,7 +1560,7 @@ game	?LoadBoatPool@game@@QAEHPAVTAbstractFile@@@Z	99.6447	99.6447	99.6447	0xb9a0
 game	?LoadGame@game@@QAEHPBDHH@Z	100.0000	100.0000	100.0000	0xbf330	fc53c93a80bc
 game	?LoadGarrisonPool@game@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xb96f0	e574c834f8c2
 game	?LoadHeroId@@YIHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xba210	a3d376c1431f
-game	?LoadMap@game@@QAE_NPAVTAbstractFile@@@Z	70.6470	70.6470	70.6470	0xc2450	0e3481827409
+game	?LoadMap@game@@QAE_NPAVTAbstractFile@@@Z	70.6990	70.6990	70.6990	0xc2450	fda9f419eb3b
 game	?LoadMinePool@game@@QAEHPAVTAbstractFile@@H@Z	98.8718	100.0000	100.0000	0xb9340	2a102f6e81b3
 game	?LoadRumours@game@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbbe40	793f39b40d8e
 game	?LoadSignPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9070	f739107b463c
@@ -1578,7 +1578,7 @@ game	?PerWeek@game@@QAEXXZ	98.8948	99.8370	99.8370	0xc8780	7ff5e5973f62
 game	?ProcessOnMapHeroes@game@@QAEXXZ	100.0000	100.0000	100.0000	0xcae10	ffdda8517461
 game	?ProcessOnMapTowns@game@@QAEXXZ	80.3907	80.3907	80.3907	0xcaa70	b0c29d113d71
 game	?ProcessRandomObjects@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc9dd0	2816acedb377
-game	?RandomizeEvents@game@@QAEXXZ	86.9275	86.9275	86.9275	0xc0cc0	5cc2e739f394
+game	?RandomizeEvents@game@@QAEXXZ	87.0102	87.0102	87.0102	0xc0cc0	3efd4fa8d663
 game	?RandomizeHolyGrail@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc0870	aa8c18ac68ba
 game	?Read@NewSMapHeader@@QAEHPAVTAbstractFile@@H@Z	91.5614	91.5614	91.5614	0xc4390	832db94cb2ff
 game	?ReadHeroId@@YIHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xba1c0	391772931dc6
@@ -2347,7 +2347,7 @@ overview	?DoRollover@TOverviewWindow@@AAEXH@Z	97.8485	98.5053	98.5053	0x120e30	0
 overview	?Overview@game@@QAEXXZ	100.0000	100.0000	100.0000	0x11e8d0	acbb8b63299e
 overview	?OverviewSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x11fa20	d405249777ca
 overview	?ProcessIconSelect@game@@QAEHHE@Z	94.7322	94.7322	94.7322	0x11ee50	042a4f8cf2fd
-overview	?SetupDynamicStuff@game@@QAEXHH@Z	90.5699	90.5699	90.5699	0x11bd50	f385ac22aff9
+overview	?SetupDynamicStuff@game@@QAEXHH@Z	90.9107	90.9107	90.9107	0x11bd50	714ded670a01
 overview	?SetupNewOverviewType@game@@QAEXHE@Z	96.4609	100.0000	100.0000	0x11e330	aa25ff2c3eaa
 overview	?UpdateBackpack@@YIXH@Z	96.5741	96.5741	96.5741	0x122470	838327f3aed0
 overview	?UpdateFlaggableIcon@TOverviewWindow@@AAEXH@Z	100.0000	100.0000	100.0000	0x11e670	ca624c71e9f9
