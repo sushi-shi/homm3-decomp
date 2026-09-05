@@ -195,6 +195,7 @@ CHAR_STREAM_MEMBERS = (
     ("?opfx@?$basic_ostream@D", None, "ostream_opfx"),
     ("??Hstd@@YA?AV?$basic_string@D", None, "basic_string_concat"),
     ("?_Decref@facet@locale@std@@", None, "locale_facet_decref"),
+    ("?getloc@ios_base@std@@", None, "ios_base_getloc"),
 )
 
 
@@ -919,6 +920,14 @@ def _demangle_key(mangled: str):
         return f"bitset{iterator_width}@bitset_iterator_deref"
     if mangled.startswith("?_Construct@std@@YIXPAV?$basic_string@D"):
         return "string@std_construct"
+    # ...and over a map's value_type, whose element is `pair<const int, T>`.
+    # Keyed on T with a `_pair` suffix, the spelling `pair_const_int_dtor`
+    # already uses for the same shape.
+    construct_pair = re.match(
+        r"^\?_Construct@std@@YIXPAU\?\$pair@\$\$CBH(?:V|U)([A-Za-z_]\w*)@",
+        mangled)
+    if construct_pair:
+        return f"{construct_pair.group(1).lower()}_pair@std_construct"
     construct_owner = re.match(
         r"^\?_Construct@std@@YIXPA(?:V|U)([A-Za-z_]\w*)@", mangled)
     if construct_owner:

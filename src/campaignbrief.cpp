@@ -1362,3 +1362,7 @@ VA_COMPGEN(0x0045d700, 0x1D6, STD_CONSTRUCT, CampaignScenarioPreview)
 
 // COMDAT pairing: _Tree<int, type_map_hero_info>::erase(first, last), 0.961.
 VA_COMPGEN(0x0045c070, 0x12B, TREE_ERASE_RANGE, type_map_hero_info)
+
+// COMDAT pairing: std::_Construct<pair<const int, type_map_hero_info>>, 0.993
+// against a 368 B object; newgame's two candidates are 347 and 343 B.
+VA_COMPGEN(0x0045d590, 0x16E, STD_CONSTRUCT, type_map_hero_info_pair)
