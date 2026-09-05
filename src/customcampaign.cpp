@@ -1407,6 +1407,63 @@ void TCampaignBrief::ScenarioStruct::InitializeCrossoverHero(
     gpGame->campaign.field_6c.push_back(currentHero->id);
 }
 
+// Complete-only, and the sibling of InitializeCrossoverHero above: the map
+// hero placeholders that carry no crossover hero. The record's own hero id
+// picks the path - -1 asks the game for a starting hero of the player's
+// alignment, anything else re-homes the carried setup record first - and
+// the rest is the shared tail: the hero lands on the object's trigger cell,
+// steps one west off a town entrance, and is registered with its player,
+// the availability table, the hero pool map and the fog.
+VA(0x00487020, 0x263)  // anchor-caller(0x487290's two placeholder loops), retail-only
+void TCampaignBrief::ScenarioStruct::PlaceStartingHero(
+    HeroPlaceholderData* placeholder)
+{
+    int heroId = placeholder->heroId;
+    int owner = static_cast<signed char>(placeholder->owner);
+    if (heroId == -1) {
+        heroId = gpGame->GetStartingHeroId(gpGame->setup.alignment[owner],
+                                           owner, 0);
+    } else {
+        gpGame->RehomeCampaignHeroSetup(heroId);
+    }
+
+    if (gpGame->setup.startingHero[owner] == -1)
+        gpGame->setup.startingHero[owner] = heroId;
+
+    CObject* object = placeholder->object;
+    hero* currentHero = gpGame->GetHero(heroId);
+    currentHero->initialize(static_cast<short>(heroId));
+    currentHero->field_01e = 0;
+
+    int triggerX;
+    int triggerY;
+    object->FindTrigger(triggerX, triggerY);
+    currentHero->x = static_cast<short>(triggerX);
+    currentHero->y = static_cast<short>(triggerY);
+    currentHero->z = object->z;
+    currentHero->owner = static_cast<signed char>(placeholder->owner);
+    gpGame->SetRandomHeroArmies(currentHero->id, 0, 0);
+    currentHero->maxMovePoints = currentHero->movePoints
+        = currentHero->GetMobility();
+
+    type_point heroLocation(currentHero->x, currentHero->y, currentHero->z);
+    --heroLocation.x;
+    if (heroLocation.x >= 0) {
+        NewmapCell* cell = gpGame->worldMap.cell(heroLocation);
+        if (cell->type == TOWN && cell->is_trigger)
+            --currentHero->x;
+    }
+
+    gpGame->players[currentHero->owner].heroes[
+        gpGame->players[currentHero->owner].numHeroes] = currentHero->id;
+    ++gpGame->players[currentHero->owner].numHeroes;
+    currentHero->obscure_cell();
+    gpGame->heroAvailability[currentHero->id] = currentHero->owner;
+    gpGame->heroPoolMap[currentHero->id].set(currentHero->owner);
+    gpGame->SetVisibility(currentHero->x, currentHero->y, currentHero->z,
+                          currentHero->owner, currentHero->GetVisibility(), 1);
+}
+
 // Complete-only. Seeks the campaign stream to this scenario's map data
 // and reads the map header out of a gzip-inflating view of it.
 VA(0x00487d30, 0x96)  // LoadScenario's sole callee, retail-only

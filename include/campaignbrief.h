@@ -140,6 +140,14 @@ public:
         // 0x492-byte carry-over hero vector stride.
         void InitializeCrossoverHero(HeroPlaceholderData* placeholder,
                                      hero* sourceHero);
+        // Retail 0x487020, the placeholder half of the same pass: a map
+        // hero placeholder with no carried hero behind it becomes a live
+        // hero of the player's own alignment (or the carried record is
+        // re-homed first), is dropped on the object's trigger cell and
+        // registered with its player, the availability table and the
+        // fog. `this` is dead in the body - the receiver is fixed by the
+        // call site, not by the code. Name provisional.
+        void PlaceStartingHero(HeroPlaceholderData* placeholder);
         // Complete-only retained wrapper at 0x4884c0.  The campaign-header
         // wrapper below is its sole direct caller.
         void StartScenario(std::streambuf* stream, int option);
