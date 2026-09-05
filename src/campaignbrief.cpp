@@ -972,9 +972,9 @@ static int CampaignBriefHandler(message& msg)
                 int helpID = brief->convertID2HelpID(id);
                 if (helpID >= 0) {
                     if (helpID < 100) {
-                        std::string text;
-                        text = brief->campaign->scenarios[helpID]
-                                   ->GetRegionDescription();
+                        std::string text =
+                            brief->campaign->scenarios[helpID]
+                                ->GetRegionDescription();
                         NormalDialog(text.c_str(), 4, -1, -1, -1, 0,
                                      -1, 0, -1, 0, -1, 0);
                     } else {
@@ -1148,9 +1148,17 @@ static int CampaignBriefHandler(message& msg)
     return MESSAGE_DISPATCH_CONSUME;
 }
 
-// The handler's regional-help path deliberately assigns this by-value
-// result into a pre-existing string.  That source shape accounts for the
-// retained accessor plus the caller's temporary/copy/destructor sequence.
+// The handler's regional-help path COPY-INITIALISES from this by-value
+// result; it does not assign it into a pre-existing string.  Measured
+// 2026-09-05: the assign shape makes VC6 emit basic_string::erase twice plus
+// _Tidy and _Grow out of line at the call site, four calls retail does not
+// have, and twenty blocks of operator= that it does not have either
+// (CampaignBriefHandler 80.9821 -> 87.3081, and its branch count comes back
+// to retail's 65 exactly).  With copy-initialisation the returned string IS
+// the caller's local - VC6 hands the accessor the local's address as the
+// return slot - so the accessor stays out of line here, which is what the
+// claim below needs, and the only cleanup left is the one operator delete
+// retail emits.
 VA(0x0045bad0, 0x134)  // sole caller CampaignBriefHandler + member offset
 std::string TCampaignBrief::ScenarioStruct::GetRegionDescription() const
 {
