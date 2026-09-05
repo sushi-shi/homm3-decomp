@@ -1115,6 +1115,22 @@ inline void ShowCredits()
 // censuses now agree exactly (2 = 2, 7 = 7). The goto form is right for a
 // top-tested loop whose back edge is the ONLY edge; here the label also
 // had a fall-in predecessor, which is what let the peeler duplicate it.
+// Callee census after that edit - the two leads that are left:
+//  - THREE unclaimed retail rows in kb's own band are compiler-emitted
+//    forwarding overloads this reconstruction spells past. 0x4efff0 (25 B)
+//    is Bitmap16Bit::GetMap(x,y); 0x4f0010 (59 B) is the Bitmap16Bit::Draw
+//    overload taking a Bitmap16Bit* destination, which expands it into the
+//    Width/Height/Pitch/map argument run of the raw PAG form; 0x4f0050
+//    (71 B) is the same forwarder for CSprite::Draw. Retail CALLS them 5, 3
+//    and 5 times; we reach the raw PAG overloads directly (CSprite::Draw x5,
+//    GetMap x3) and never emit a wrapper. Claiming the three rows and
+//    spelling the destination-bitmap overload at those sites is the next
+//    concrete step, and it is worth more than anything else left here.
+//  - The progress-bar inline split: retail's oldmain holds 6
+//    DrawProgressCount sites against our 3 and CALLS ShowProgressBar once
+//    where we expand all three of ours, which is also where the +1 on
+//    UpdateScreen / GetBitmap16 / GetSprite / Bitmap16Bit::Draw comes from.
+//    The DoNewGame inlining boundary is what decides it.
 VA(0x004ee3e0, 0x1C04)
 int oldmain()
 {
