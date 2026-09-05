@@ -136,22 +136,23 @@ TTownGateWindow::~TTownGateWindow()
     }
 }
 
-// The widget-vector growth path this window's constructor drives. Retail's
-// /OPT:ICF leaves ONE 431-byte body between the destructor and the first
-// window method for a four-byte element - the same COMDAT the int town list
-// would fold onto.
-VA_COMPGEN(0x005c2400, 0x1AF, VECTOR_INSERT, widget)
-
-#if 0  // @carcass
-
+// Withdrawn 2026-09-05 (claim lane 16): this was claimed as
+// VA_COMPGEN(0x005c2400, 0x1AF, VECTOR_INSERT, widget) on a mnemonic
+// resemblance to a four-byte-element vector::insert COMDAT. It is not a
+// COMDAT at all. Retail enters with the vector at `this + 0x60` - it does
+// `lea esi, [ecx + 0x60]` and reads _First/_Last/_End through esi - which
+// no vector member ever does, since a real insert receives the vector
+// ITSELF in ecx. TTownGateWindow::Towns sits at exactly 0x60 (CAdvPopup is
+// 0x60 bytes), the inserted value arrives as the one stack argument at
+// [ebp+8], and the count is the constant 1. So the row is the DC roster's
+// own AddTown with the whole insert expanded into it, and the DC body is
+// 28 bytes - one statement.
 // E:\gamedcs\towngatewindow.cpp:110
-DC_ONLY(0x169890, 0x1C)
+VA(0x005c2400, 0x1AF)  // dc 0x169890, promoted from DC_ONLY on body evidence
 void TTownGateWindow::AddTown(int new_town)
 {
-    // @stub
+    Towns.push_back(new_town);
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\towngatewindow.cpp:115
 // One row per visible list slot. Retail cross-jumps all four tail
