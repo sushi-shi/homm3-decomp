@@ -2973,9 +2973,13 @@ void combatManager::find_AI_targets(long our_group, const army* current_army,
                 if (ours->GetSpeed() == 0 && time > 0)
                     continue;
             }
-            long effect = data->get_simple_attack_effect(
-                ours, theirs, shooter,
-                time > ours->GetSpeed() ? 0 : time);
+            long effect;
+            if (time > ours->GetSpeed())
+                effect = data->get_simple_attack_effect(ours, theirs,
+                                                        shooter, 0);
+            else
+                effect = data->get_simple_attack_effect(ours, theirs,
+                                                        shooter, time);
             ours->consider_attack(theirs, effect, time);
         }
     }
