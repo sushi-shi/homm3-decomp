@@ -2886,6 +2886,101 @@ void combatManager::simulate_combat(long our_group, unsigned char checking_surre
     field_48 = saved_48;
 }
 
+// E:\gamedcs\ai.cpp:2608. Score every enemy stack as a target for every
+// stack of `our_group`, leaving the best in each attacker's AI_target
+// quartet. A shooter is seeded at range 1 and never walks; anything else
+// has its reachable set laid down by SeedCombatPosition first and then
+// reads the per-hex arrival cost back out of the search array.
+// Residual (78.8%): addressing, not structure - the block count is exact
+// (46 = 46), the call streams agree 9 = 9, and the frame is one dword over.
+// Retail computes `&armies[our_group][0]` and `&armies[enemy_group][0]`
+// AHEAD of each loop's numArmies guard and walks both with `add reg,0x548`;
+// ours computes them inside. Tried and rejected: the four AI_target stores
+// through the `ours` pointer (63.59 - VC6 then biases the induction
+// variable onto +0x53c and needs a second one for the army base, which is
+// the whole 15-point difference and why they are written as subscripts);
+// full subscripts everywhere with no pointer local (64.26); an explicit
+// `ours++` pointer walk on both loops (78.70) and on the outer alone
+// (70.69); declaring the pointers above their loops (78.81, byte-flat);
+// inlining the get_simple_attack_effect result into the consider_attack
+// argument list (77.79).
+VA(0x00422b20, 0x278)  // anchor-caller(choose_shooter_action/choose_melee_action) + anchor-callee(SeedCombatPosition), dc 0x27888
+void combatManager::find_AI_targets(long our_group, const army* current_army,
+                                    unsigned char melee_only,
+                                    type_AI_combat_parameters* data,
+                                    searchArray* search_array)
+{
+    long enemy_group = 1 - our_group;
+    if (search_array == 0)
+        search_array = gpSearchArray;
+
+    for (long i = 0; i < numArmies[our_group]; i++) {
+        army* ours = &armies[our_group][i];
+        armies[our_group][i].AI_target = 0;
+        armies[our_group][i].AI_target_value = 0;
+        armies[our_group][i].AI_possible_targets = 0;
+        armies[our_group][i].AI_target_time = 0;
+        if (static_cast<unsigned char>(
+                static_cast<unsigned>(ours->creatureId) >> 21)
+            & 1)
+            continue;
+        if ((static_cast<unsigned char>(
+                 static_cast<unsigned>(ours->creatureId) >> 6)
+             & 1)
+            && ours->creatureType != CREATURE_BALLISTA)
+            continue;
+        if (data->simulated && ours->get_total_hit_points(1) == 0)
+            continue;
+        if (ours->disabled_2b0 > 1)
+            continue;
+        if (ours->disabled_290 > 1)
+            continue;
+        if (ours->hypnotizeFlag)
+            continue;
+        if (ours->berserkFlag)
+            continue;
+        if (ours == current_army)
+            continue;
+
+        unsigned char shooter = ours->can_shoot(0);
+        if (shooter) {
+            if (melee_only)
+                continue;
+        } else if (melee_only) {
+            search_array->SeedCombatPosition(ours, our_group, ours->GetSpeed(),
+                                             bCreaturePlacement, -1);
+        } else {
+            search_array->SeedCombatPosition(ours, our_group, 0x7f,
+                                             bCreaturePlacement, -1);
+        }
+
+        for (long j = 0; j < numArmies[enemy_group]; j++) {
+            army* theirs = &armies[enemy_group][j];
+            if (theirs->creatureType == CREATURE_ARROW_TOWER)
+                continue;
+            if (melee_only && theirs->field_190 >= ours->field_190)
+                continue;
+            if (!shooter && !cells[theirs->gridIndex].field_4a)
+                continue;
+            if (data->simulated && theirs->get_total_hit_points(1) == 0)
+                continue;
+
+            long time;
+            if (shooter) {
+                time = 1;
+            } else {
+                time = search_array->get_hex(theirs->gridIndex)->cost;
+                if (ours->GetSpeed() == 0 && time > 0)
+                    continue;
+            }
+            long effect = data->get_simple_attack_effect(
+                ours, theirs, shooter,
+                time > ours->GetSpeed() ? 0 : time);
+            ours->consider_attack(theirs, effect, time);
+        }
+    }
+}
+
 // E:\gamedcs\ai.cpp:2699. The combat AI's spell turn: eight refusals and
 // then a type_AI_spellcaster over the current side.  The refusals are, in
 // order, a per-side latch, the placement phase, the acting stack's own
@@ -2932,13 +3027,6 @@ unsigned char combatManager::DoSpellAI()
 }
 
 #if 0  // @carcass
-
-// E:\gamedcs\ai.cpp:2608
-DC_ONLY(0x27888, 0x28E)
-void combatManager::find_AI_targets(long our_group, const army* current_army, unsigned char melee_only, const type_AI_combat_parameters* data, searchArray* search_array)
-{
-    // @stub
-}
 
 // E:\gamedcs\ai_spellvalue.h:124
 DC_ONLY(0x27c74, 0x4)

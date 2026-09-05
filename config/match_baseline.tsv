@@ -178,6 +178,7 @@ ai	?choose_shooter_target@combatManager@@QAEJPBVarmy@@PAUtype_AI_combat_paramete
 ai	?choose_spell_action@combatManager@@QAEEPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x21280	734d48037174
 ai	?choose_to_run@combatManager@@QAEEPBVarmy@@PBJPBVsearchArray@@@Z	100.0000	100.0000	100.0000	0x208f0	1015736a05f0
 ai	?compute_fire_shield_damage@combatManager@@QAEJJPBVarmy@@0J@Z	100.0000	100.0000	100.0000	0x22440	bb0c3bd0ee12
+ai	?find_AI_targets@combatManager@@QAEXJPBVarmy@@EPAUtype_AI_combat_parameters@@PAVsearchArray@@@Z	78.8163	78.8163	78.8163	0x22b20	79603ab1b594
 ai	?find_attack_hexes@@YIXPBVarmy@@JJJJPBVsearchArray@@PAV?$vector@JV?$allocator@J@std@@@std@@@Z	87.1099	87.1099	87.1099	0x20060	d1ee58fdf845
 ai	?find_move_order@combatManager@@QAEXPAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x1f140	7ba394020172
 ai	?get_area_attack_value@@YIJPBVarmy@@JJPAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x1eda0	667cdcec272f
