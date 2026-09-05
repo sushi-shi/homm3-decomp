@@ -2560,6 +2560,16 @@ VA_COMPGEN(0x0048d410, 0x26, VECTOR_DESTROY, hero)
 // vtable's construction path.
 VA_COMPGEN(0x0048d4b0, 0xE2, FILEBUF_INIT, char)
 
+// COMDAT pairing: vector<type_artifact>::_Ucopy. The retail body is an
+// EIGHT-byte element copy - `mov esi,[ecx] / mov [eax],esi / mov
+// esi,[ecx+4] / mov [eax+4],esi / add ecx,8` - with `this` dead, three
+// stack arguments and `ret 0xc`, i.e. the protected member rather than the
+// free `std::copy` (which is /Gr fastcall and would take its first two
+// arguments in registers). The null test inside the loop is placement
+// new's, which is what makes it _Ucopy rather than copy. 53 bytes on both
+// sides and the only 53-byte candidate either way.
+VA_COMPGEN(0x0048dc10, 0x35, VECTOR_UCOPY, type_artifact)
+
 // COMDAT pairing: locale::locale(const locale&), agreement 1.000.
 VA_COMPGEN(0x0048d800, 0x19, CLASS_CTOR, locale)
 
