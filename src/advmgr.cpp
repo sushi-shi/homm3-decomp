@@ -6080,6 +6080,12 @@ draw_stars:
 // are byte-flat at 92.7034%, including the attested Obj temporary used only by
 // FindTrigger. With exact flow and no extra evaluated expression in retail,
 // there is no byte evidence for manufacturing a release VERIFY carrier here.
+// The type_point constructor lever (a PER-SITE fact elsewhere in the tree) is
+// bounded here too, 2026-09-06: at the DrawHeroCell site, three field stores
+// score 91.6110 and `type_point point(srcX, srcY, z)` is byte-flat at
+// 92.7034; at the FindTrigger site `type_point triggerPoint(triggerX,
+// triggerY, z)` scores 91.2827.  The written default-then-assign form is the
+// maximum at both.
 VA(0x00412470, 0x482)  // linkorder, dc 0x142e0
 void advManager::DrawUnderlay(int srcX, int srcY, int z, int destX, int destY)
 {
@@ -9946,7 +9952,7 @@ void advManager::ViewPuzzle()
     int pos = gpGame->GetLocalPlayerGamePos();
     gpGame->SetupPuzzlePieces(pos, 0);
     TPuzzleWindow puzzle(pos >= 0 ? gpGame->setup.alignment[pos] : -1);
-    SAMPLE2 sample2 = LoadPlaySample("obelisk.wav");
+    SAMPLE2 sample2 = LoadPlaySample("Obelisk.wav");
     puzzle.UpdatePuzzle(1);
     DrawAdventureMapGems();
     gpWindowManager->UpdateScreen(0, 0, 800, 600);
