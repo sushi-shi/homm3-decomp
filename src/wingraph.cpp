@@ -156,13 +156,6 @@ void DDCleanUpWinGraphics()
     // @stub
 }
 
-// E:\gamedcs\wingraph.cpp:1627
-DC_ONLY(0x19a114, 0xF6)
-long DDRestoreSurfaces()
-{
-    // @stub
-}
-
 // E:\gamedcs\wingraph.cpp:1691
 DC_ONLY(0x19a20c, 0x28)
 void ResizeWindow()
@@ -730,6 +723,53 @@ void DDSD(int iDDErr, char* cFile, int iLine)
               iLine);
     ShutDown(gText);
     gInDirectDrawError = 0;
+}
+
+// E:\gamedcs\wingraph.cpp:1627
+// The row immediately before GetDesktopInfo, which is exactly where the
+// Dreamcast roster puts DDRestoreSurfaces once the two source-static
+// neighbours (ResizeWindow, DDSetFullScreenStatus) are accounted for, and
+// the body says the same thing: five surface slots, each asked IsLost
+// (vtable +0x60) and, on DDERR_SURFACELOST, Restore (+0x6c), with the
+// first failing HRESULT returned. The three mouse surfaces are
+// mousemgr.cpp's, in its declaration order.
+//
+// Retail RE-READS each global for the Restore call rather than keeping the
+// IsLost receiver live, which is what the separate-statement spelling gives.
+VA(0x006013a0, 0xC0)  // dc-order-map (the row before GetDesktopInfo) + IsLost/Restore pairs, dc 0x19a114
+long DDRestoreSurfaces()
+{
+    long result;
+
+    if (gpDDSPrimary && gpDDSPrimary->IsLost() == DDERR_SURFACELOST) {
+        result = gpDDSPrimary->Restore();
+        if (result)
+            return result;
+    }
+    if (gpDDSBack && gpDDSBack->IsLost() == DDERR_SURFACELOST) {
+        result = gpDDSBack->Restore();
+        if (result)
+            return result;
+    }
+    if (gpDDSMouseSurface
+        && gpDDSMouseSurface->IsLost() == DDERR_SURFACELOST) {
+        result = gpDDSMouseSurface->Restore();
+        if (result)
+            return result;
+    }
+    if (gpDDSMouseSaveSurface
+        && gpDDSMouseSaveSurface->IsLost() == DDERR_SURFACELOST) {
+        result = gpDDSMouseSaveSurface->Restore();
+        if (result)
+            return result;
+    }
+    if (gpDDSMouseScratchSurface
+        && gpDDSMouseScratchSurface->IsLost() == DDERR_SURFACELOST) {
+        result = gpDDSMouseScratchSurface->Restore();
+        if (result)
+            return result;
+    }
+    return 0;
 }
 
 // E:\gamedcs\wingraph.cpp:1833
