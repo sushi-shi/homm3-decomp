@@ -170,6 +170,8 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "BITSET_TEST", "BITSET_XRAN", "TREE_MIN",
                  "TREE_INSERT", "TREE_NODE_INSERT",
                  "TREE_CONST_ITERATOR_DEC", "TREE_CONST_ITERATOR_INC",
+                 "TREE_COPY", "TREE_COPY_NODE", "TREE_ERASE",
+                 "STRINGBUF_OVERFLOW", "STRINGBUF_INIT",
                  "BASIC_STRING_ASSIGN_PTR_SIZE",
                  "OSTREAM_PUT", "OSTREAM_INSERT_CSTR",
                  "INSERTION_SORT_1",
@@ -660,6 +662,24 @@ def _demangle_key(mangled: str):
         return f"{tree_owner.lower()}@tree_const_iterator_dec"
     if mangled.startswith("?_Inc@const_iterator@?$_Tree@") and tree_owner:
         return f"{tree_owner.lower()}@tree_const_iterator_inc"
+    # _Tree's two _Copy overloads and its node eraser. `_Copy` is
+    # overloaded on the SAME class, so the two arms are separate kinds
+    # rather than one two-member group: the node form is the one whose
+    # return type is `_Node*` (`IAEPAU_Node@`), the whole-tree form takes
+    # `const _Tree&` and returns void.
+    if mangled.startswith("?_Copy@?$_Tree@") and tree_owner:
+        if "IAEPAU_Node@" in mangled:
+            return f"{tree_owner.lower()}@tree_copy_node"
+        return f"{tree_owner.lower()}@tree_copy"
+    if mangled.startswith("?_Erase@?$_Tree@") and tree_owner:
+        return f"{tree_owner.lower()}@tree_erase"
+    # basic_stringbuf's two out-of-line members. Keyed on the TEMPLATE
+    # name, not on `_Init` alone: basic_streambuf has a nullary `_Init` of
+    # its own and both COMDATs can live in one object.
+    if mangled.startswith("?overflow@?$basic_stringbuf@D"):
+        return "char@stringbuf_overflow"
+    if mangled.startswith("?_Init@?$basic_stringbuf@D"):
+        return "char@stringbuf_init"
     vector_element = re.search(
         r"\?\$vector@(?:(?:P[AB][VU])|(?:V|U|W4))?"
         r"([A-Za-z_]\w*)@", mangled)
@@ -1017,6 +1037,11 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                                or "$tree_node_insert$" in r["name"]
                                or "$tree_const_iterator_dec$" in r["name"]
                                or "$tree_const_iterator_inc$" in r["name"]
+                               or "$tree_copy$" in r["name"]
+                               or "$tree_copy_node$" in r["name"]
+                               or "$tree_erase$" in r["name"]
+                               or "$stringbuf_overflow$" in r["name"]
+                               or "$stringbuf_init$" in r["name"]
                                or "$basic_string_assign_ptr_size$" in r["name"]
                                or "$ostream_put$" in r["name"]
                                or "$ostream_insert_cstr$" in r["name"]
@@ -1136,6 +1161,22 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             owner = row["name"].rsplit("$", 1)[1].lower()
             claim_keys.setdefault(
                 f"{owner}@tree_const_iterator_inc", []).append(row)
+            continue
+        tree_extra = next((member for member in (
+            "copy_node", "copy", "erase")
+            if f"$tree_{member}$" in row["name"]), None)
+        if tree_extra is not None:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}@tree_{tree_extra}",
+                                  []).append(row)
+            continue
+        stringbuf_member = next((member for member in ("overflow", "init")
+                                 if f"$stringbuf_{member}$" in row["name"]),
+                                None)
+        if stringbuf_member is not None:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}@stringbuf_{stringbuf_member}",
+                                  []).append(row)
             continue
         if "$basic_string_assign_ptr_size$" in row["name"]:
             owner = row["name"].rsplit("$", 1)[1].lower()

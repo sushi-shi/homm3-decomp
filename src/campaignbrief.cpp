@@ -837,6 +837,13 @@ VA_COMPGEN(0x0045bac0, 0xE, CLASS_CTOR, LossConditionStruct)
 // against the emitted COMDAT at 0.984 mnemonic agreement over 190 bytes.
 VA_COMPGEN(0x0045bf70, 0xBE, CLASS_CTOR, map)
 
+// The map's two copy engines, and the reason this file owns four rows for
+// one container: `_Copy` is overloaded, so retail emits both bodies.
+// 0x45c740 is the whole-tree form (`void _Copy(const _Tree&)`, 0.967
+// mnemonic agreement over 357 bytes) and 0x45d270 the recursive node form
+// (`_Node* _Copy(_Node*, _Node*)`, 0.994 over 255).
+VA_COMPGEN(0x0045c740, 0x165, TREE_COPY, type_map_hero_info)
+
 // The scenario vector's own teardown, and the sole caller of the preview
 // destructor claimed above: it walks its elements with the 0x4d4 stride,
 // frees the block and zeroes the three pointers - Dinkumware's `_Tidy`
@@ -846,6 +853,8 @@ VA_COMPGEN(0x0045c030, 0x3B, VECTOR_DTOR, CampaignScenarioPreview)
 // push_back on the layout-proven 0x4d4-byte preview retains Dinkumware's
 // three-argument vector::insert specialization in campaignbrief.obj.
 VA_COMPGEN(0x0045c960, 0x3AD, VECTOR_INSERT, CampaignScenarioPreview)
+
+VA_COMPGEN(0x0045d270, 0xFF, TREE_COPY_NODE, type_map_hero_info)
 
 // The generic Dreamcast tree-increment dossier (dc 0x64214) proves the
 // successor walk. Retail's sole direct caller at 0x45c070 and the already

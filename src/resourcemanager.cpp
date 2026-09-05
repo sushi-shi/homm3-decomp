@@ -3027,7 +3027,15 @@ ResourceManager::TCacheMap::find_tree(const TCacheMapKey& key)
 // what the claim-10 sweep had (it offered `grouping` and `basic_stringbuf`'s
 // scalar deleting dtor for these two rows).
 VA_COMPGEN(0x0055d410, 0x117, CLASS_CTOR, basic_ostringstream)
+VA_COMPGEN(0x0055d630, 0x1AD, STRINGBUF_OVERFLOW, char)
 VA_COMPGEN(0x0055db40, 0x7D, IMPLICIT_DTOR, basic_stringbuf)
+
+// The resource cache's own map teardown helper, and the two remaining
+// stringbuf members. All three byte-verified against the emitted COMDATs
+// (0.977 / 0.992 / 0.978); `_Erase` keys off the tree's NAMED key type,
+// TCacheMapKey, exactly as the iterator-increment claim below does.
+VA_COMPGEN(0x0055e760, 0x7E, TREE_ERASE, TCacheMapKey)
+VA_COMPGEN(0x0055eaf0, 0xDC, STRINGBUF_INIT, char)
 
 // Complete uses VC6/Dinkumware rather than Dreamcast's STLport, but preserves
 // the iterator-increment boundary: RemapGraphics, SaturateGraphics, Close and
