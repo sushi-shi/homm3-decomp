@@ -1455,6 +1455,17 @@ LegacyCampaignHero::LegacyCampaignHero()
 // and field_6c's two-byte placeholders. The pool loop indexes both +0x3c and
 // +0x4c off one strength-reduced byte offset because both outer vectors have
 // the same 16-byte element.
+// Residual (78.4646%): FOUR frame bytes and the register pair that rides
+// on them. 38/38 blocks with 28 exact, branches clean 16/16 and the call
+// streams AGREE outright; every remaining row is one of the ten size-only
+// blocks. Retail's frame is 0x10 and lands its second byte buffer in the
+// dead `outfile` parameter home at [ebp+0xb], which also gives `this` EBX
+// and leaves EDI free; ours takes [ebp-0x14] instead, so `this` gets EDI.
+// Tried and rejected: block-scoping the two buffers inside each of the
+// three counted runs DOES put a buffer at [ebp+0xb], but it buys three more
+// slots with it (frame 0x1c) and measures 78.4808 - inside the noise, and
+// the wrong direction on the frame. For-scoping the five loop counters is
+// byte-flat to the digit and kept only because it reads better.
 VA(0x0048ae90, 0x370)  // link-order successor of LegacyCampaignHero's ctor; SCampaign::Load's mirror
 void SCampaign::Save(TAbstractFile* outfile)
 {
@@ -1483,8 +1494,8 @@ void SCampaign::Save(TAbstractFile* outfile)
 
     char_buffer = mapScores.size();
     outfile->Write(&char_buffer, sizeof(char_buffer));
-    unsigned int scenario;
-    for (scenario = 0; scenario < mapScores.size(); ++scenario) {
+    for (unsigned int scenario = 0; scenario < mapScores.size();
+         ++scenario) {
         char_buffer = mapScores[scenario].completed;
         outfile->Write(&char_buffer, sizeof(char_buffer));
         int_buffer = mapScores[scenario].days;
@@ -1499,21 +1510,18 @@ void SCampaign::Save(TAbstractFile* outfile)
 
     char_buffer = carryOverHeroes.size();
     outfile->Write(&char_buffer, sizeof(char_buffer));
-    unsigned int pool;
-    for (pool = 0; pool < carryOverHeroes.size(); ++pool) {
+    for (unsigned int pool = 0; pool < carryOverHeroes.size(); ++pool) {
         char_buffer = carryOverHeroes[pool].size();
         outfile->Write(&char_buffer, sizeof(char_buffer));
 
-        unsigned int whichHero;
-        for (whichHero = 0; whichHero < carryOverHeroes[pool].size();
-             ++whichHero)
+        for (unsigned int whichHero = 0;
+             whichHero < carryOverHeroes[pool].size(); ++whichHero)
             carryOverHeroes[pool][whichHero].save(outfile);
 
         int_buffer = field_4c[pool].size();
         outfile->Write(&int_buffer, 2);
-        unsigned int whichArtifact;
-        for (whichArtifact = 0; whichArtifact < field_4c[pool].size();
-             ++whichArtifact) {
+        for (unsigned int whichArtifact = 0;
+             whichArtifact < field_4c[pool].size(); ++whichArtifact) {
             int_buffer = field_4c[pool][whichArtifact].artifactId;
             outfile->Write(&int_buffer, 2);
             int_buffer = field_4c[pool][whichArtifact].extra;
@@ -1523,8 +1531,8 @@ void SCampaign::Save(TAbstractFile* outfile)
 
     char_buffer = field_6c.size();
     outfile->Write(&char_buffer, sizeof(char_buffer));
-    unsigned int placeholder;
-    for (placeholder = 0; placeholder < field_6c.size(); ++placeholder) {
+    for (unsigned int placeholder = 0; placeholder < field_6c.size();
+         ++placeholder) {
         int_buffer = field_6c[placeholder];
         outfile->Write(&int_buffer, 2);
     }
