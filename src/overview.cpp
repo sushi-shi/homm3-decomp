@@ -1654,6 +1654,13 @@ TOverviewWindow::TOverviewWindow()
         Widgets.push_back(field_70.back());
     }
 
+    // SEVEN resource icons, not six (found 2026-09-05 by the tree-wide
+    // `push imm32 / call operator new` census: retail's constructor emits
+    // seven 72-byte iconWidget allocations here against our six). The
+    // seventh is retail 0x51fd4f - `push 0x1f4 / push 0x1ee / push 0x44 /
+    // push 0x36 / push 0x23 / OvMines.def / push 6` - i.e. the gold column
+    // at x=500, widget id 35, frame 6, filling the gap between the sixth
+    // mine and the eight 80-byte count labels below. 78.9277 -> 82.7097.
     Widgets.push_back(new iconWidget(
         20, 494, 68, 54, 29, "OvMines.def", 0, 0, 0, 0,
         iconWidget::ICON_STYLE_PLAIN));
@@ -1671,6 +1678,9 @@ TOverviewWindow::TOverviewWindow()
         iconWidget::ICON_STYLE_PLAIN));
     Widgets.push_back(new iconWidget(
         420, 494, 68, 54, 34, "OvMines.def", 5, 0, 0, 0,
+        iconWidget::ICON_STYLE_PLAIN));
+    Widgets.push_back(new iconWidget(
+        500, 494, 68, 54, 35, "OvMines.def", 6, 0, 0, 0,
         iconWidget::ICON_STYLE_PLAIN));
 
     Widgets.push_back(new textWidget(

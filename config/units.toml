@@ -61,9 +61,21 @@ game_o2_ml_gr_windows = [
 #   gzinflatebuf 4, rmg 4, cmbtmgr 2, spells 2.
 # Six of those already expose the external-lock view with a local
 # `#define _MT` around <yvals.h> (objecttype, game, resourcemanager,
-# gzinflatebuf, rmg, rmg_terrain) and their _Lockit rows already carry the
-# calls; the flag is NOT usable there - /MT plus the local define is a
-# C2373 `_errno` redefinition (measured on objecttype).
+# gzinflatebuf, rmg, rmg_terrain). /MT plus that local define is a C2373
+# `_errno` redefinition, which is what the 2026-09-05 sweep measured - but
+# REMOVING the define and flipping the flag is legal and is retail's truth,
+# because /MT defines _MT for the whole compiland (2026-09-05, polish 19,
+# each unit measured on its own build with every tree row diffed):
+#   objecttype       define removed + /MT: +9 exact, 0 fell. The nine
+#     num_get<char>::do_get COMDATs (93.24/93.28/93.28/93.72/93.72/94.20/
+#     94.20/97.90/99.30) all reach 100.0000 - the local define only reached
+#     <yvals.h>, while retail's <istream> COMDATs need the _MT view too.
+#   resourcemanager  define removed + /MT: +2 exact, 0 fell -
+#     basic_stringbuf<char>::seekpos 87.97 -> 100 and ::seekoff 91.74 -> 100.
+#   gzinflatebuf     define removed + /MT: byte-flat tree-wide (0 moved).
+#   game             define removed + /MT: byte-flat tree-wide (0 moved).
+# The last two are kept because the flag is the retail fact and the local
+# define is a scaffold; rmg / rmg_terrain are left on the define (owned).
 # The three that had neither joined here, each measured on its own build
 # with the whole tree's per-row scores diffed before and after:
 #   singleselectionwindow (6 sites) - CMapHeaderData(const&) 0x590810
@@ -323,7 +335,7 @@ flags = "game_o2_ml_gr_windows"
 [[unit]]
 unit = "resourcemanager"
 source = "src/resourcemanager.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "spells"
@@ -546,7 +558,7 @@ flags = "game_o2_ml_gr_windows"
 [[unit]]
 unit = "game"
 source = "src/game.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "mapcell"
@@ -813,7 +825,7 @@ flags = "game_o2_mt_gr_windows"
 [[unit]]
 unit = "objecttype"
 source = "src/objecttype.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "gzfile"
@@ -823,4 +835,4 @@ flags = "game_o2_ml_gr_windows"
 [[unit]]
 unit = "gzinflatebuf"
 source = "src/gzinflatebuf.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"

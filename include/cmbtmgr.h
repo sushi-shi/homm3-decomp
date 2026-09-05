@@ -583,7 +583,20 @@ public:
 
         TObstacleVector(const TAllocator& value = TAllocator())
             : allocator(value), begin(0), end(0), capacity(0) {}
-        ~TObstacleVector();
+        // DEFINED HERE, not declared-only: retail EXPANDS this teardown
+        // into ~combatManager (kb.obj 0x4f3975 - `mov eax,[esi+0x13d5c] /
+        // push eax / call ??3 / xor eax,eax / mov [esi+0x13d5c],eax /
+        // [+0x13d60] / [+0x13d64]`), which no out-of-line declaration can
+        // produce. TObstacle is a POD, so Dinkumware's _Destroy loop folds
+        // away and the body is exactly the deallocate plus the three
+        // pointer resets, unguarded.
+        ~TObstacleVector()
+        {
+            delete begin;
+            begin = 0;
+            end = 0;
+            capacity = 0;
+        }
 
         void Destroy(TObstacle* first, TObstacle* last);
         // Dreamcast's DrawFrame line 1211 preserves the Dinkumware

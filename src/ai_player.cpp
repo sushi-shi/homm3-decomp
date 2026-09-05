@@ -4550,6 +4550,23 @@ long find_all_destinations(hero* current_hero, searchArray* search_array,
 // two point builds and SeedPosition argument formation; why-reg reports the
 // schedule aligned, so local-renaming proposals are a measured handle-state
 // wall rather than permission to flatten a DC-proven helper.
+//
+// 77.6134 -> 91.6997 (2026-09-05): EVERY type_point BUILT FROM THREE FRESH
+// COORDINATES IS A CONSTRUCTOR CALL, NOT THREE FIELD ASSIGNMENTS. A default
+// -constructed point followed by `.x =`/`.y =`/`.z =` makes VC6 apply the
+// bitfield xor-trick to each field separately (`xor ax, word ptr [mem] /
+// and eax, 0x3ff / xor eax, edi / and ah, -0x3d`); the constructor form lets
+// it merge the two fields that share the +2 unit into retail's single
+// clear-then-or (`mov edx, dword ptr [mem] / and edx, 0xffffc000 /
+// and ecx, 0x3ff / and eax, 0xf / xor edx, ecx / shl eax, 0xa / or edx, eax
+// / mov word ptr [mem], dx`). Three doses: danger_point +8.23, a fresh
+// `start` local for the hero's own seed +1.00, `friend_point` +4.86.
+// MEASURED AND REJECTED: `point = type_point(a, b, c)` into an existing
+// function-scope local scores 83.00 (a copy through a temporary, not the
+// merge); the constructor form on `target` scores 88.25, because retail
+// reassigns that one in the is_valid arm and so declares it uninitialised.
+// Residual (91.70%): a whole-body EBX/EDI transposition - retail keeps
+// `current_hero` in EBX and the packing temp in EDI, we do the reverse.
 // E:\gamedcs\ai_player.cpp:3044
 // Seeds the hero's own search, then for every OTHER hero of the current
 // player seeds a friendly allied search from that hero's path target (or
@@ -4568,10 +4585,8 @@ long mark_destinations(hero* current_hero, long max_distance,
     long hero_danger;
     type_point point;
     {
-        type_point danger_point;
-        danger_point.x = current_hero->x;
-        danger_point.y = current_hero->y;
-        danger_point.z = current_hero->z;
+        type_point danger_point(current_hero->x, current_hero->y,
+                                current_hero->z);
         long* danger_zones = search_array->danger_zones;
         if (danger_zones == 0)
             hero_danger = 0;
@@ -4579,10 +4594,8 @@ long mark_destinations(hero* current_hero, long max_distance,
             hero_danger = *get_danger_cell(danger_zones, danger_point);
     }
     gpAdvManager->advWindow->animate_bottom_view(0);
-    point.x = current_hero->x;
-    point.y = current_hero->y;
-    point.z = current_hero->z;
-    search_array->SeedPosition(current_hero, point, type_point(-1, -1, -1),
+    type_point start(current_hero->x, current_hero->y, current_hero->z);
+    search_array->SeedPosition(current_hero, start, type_point(-1, -1, -1),
                                max_distance,
                                (current_hero->flags >> 18) & 1, search_type,
                                move_points, 0);
@@ -4591,10 +4604,8 @@ long mark_destinations(hero* current_hero, long max_distance,
         hero* friendly = gpGame->GetHero(gpCurrentPlayer->heroes[i]);
         if (friendly == current_hero)
             continue;
-        point.x = friendly->x;
-        point.y = friendly->y;
-        point.z = friendly->z;
-        pathCell* friend_cell = search_array->get_cell(point, 0);
+        type_point friend_point(friendly->x, friendly->y, friendly->z);
+        pathCell* friend_cell = search_array->get_cell(friend_point, 0);
         if (!friend_cell->visited)
             continue;
 
