@@ -695,9 +695,11 @@ button	?Select@button@@QAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x56860	e3d
 button	?SetPlayerPaletteColors@button@@QAEXH@Z	100.0000	100.0000	100.0000	0x569e0	dc6ad15ff688
 button	?_vslot12@button@@UAEXH@Z	100.0000	100.0000	100.0000	0x56a10	fa786de27cd0
 campaignbrief	??0CMapHeaderData@@QAE@XZ	100.0000	100.0000	100.0000	0x5a990	-
+campaignbrief	??0LossConditionStruct@@QAE@XZ	100.0000	100.0000	100.0000	0x5bac0	-
 campaignbrief	??0NewSMapHeader@@QAE@XZ	99.8438	99.8438	99.8438	0x5a7a0	-
 campaignbrief	??0SGameSetupOptions@@QAE@XZ	100.0000	100.0000	100.0000	0x5ac20	-
 campaignbrief	??0TCampaignBrief@@QAE@EE@Z	85.7655	85.7661	85.7661	0x590c0	37242c776407
+campaignbrief	??1?$vector@UCampaignScenarioPreview@@V?$allocator@UCampaignScenarioPreview@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x5c030	-
 campaignbrief	??1CMapHeaderData@@QAE@XZ	100.0000	100.0000	100.0000	0x5aab0	-
 campaignbrief	??1CampaignScenarioPreview@@QAE@XZ	100.0000	100.0000	100.0000	0x5ae70	-
 campaignbrief	??1NewSMapHeader@@QAE@XZ	100.0000	100.0000	100.0000	0x5ad00	-
