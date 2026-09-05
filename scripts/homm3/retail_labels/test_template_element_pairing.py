@@ -99,6 +99,85 @@ class TemplateElementPairingTest(unittest.TestCase):
                 [claim(0x1000, "CImmEnclosure_auto_ptr")], []), {})
 
 
+#: `CAutoArray`'s two instantiations are the OTHER shape this oracle has to
+#: cover, and they are NOT ICF-folded: each `??_G` stores its own vftable,
+#: so the two bodies (and their two vftables) stay distinct - retail carries
+#: 0x512670 for CDPlaySession and 0x558490 for CDPlayPlayer. One key,
+#: two real rows, and the element is the only thing that separates them.
+GDTOR_SESSION = "??_G?$CAutoArray@VCDPlaySession@@@@UAEPAXI@Z"
+GDTOR_PLAYER = "??_G?$CAutoArray@VCDPlayPlayer@@@@UAEPAXI@Z"
+DTOR_SESSION = "??1?$CAutoArray@VCDPlaySession@@@@UAE@XZ"
+DTOR_PLAYER = "??1?$CAutoArray@VCDPlayPlayer@@@@UAE@XZ"
+
+
+class ScalarDeletingDtorElementTest(unittest.TestCase):
+    """The same oracle over `??_G`, whose owner casing differs from its
+    claim spelling - the template is `CAutoArray`, the owner `cautoarray`."""
+
+    GDTORS = [(GDTOR_SESSION, 0x70), (GDTOR_PLAYER, 0x70)]
+    DTORS = [(DTOR_SESSION, 0x60), (DTOR_PLAYER, 0x60)]
+
+    def gclaim(self, rva, owner):
+        return {"rva": rva, "size": 0x6C, "channel": "src-VA_COMPGEN",
+                "name": f"__h3cg$remote$scalar_deleting_dtor${owner}"}
+
+    def test_the_scalar_deleting_dtor_pairs_by_element(self):
+        self.assertEqual(
+            source._template_element_pairing(
+                [self.gclaim(0x158490, "CDPlayPlayer_CAutoArray")],
+                self.GDTORS),
+            {0x158490: GDTOR_PLAYER})
+
+    def test_the_ordinary_dtor_of_the_same_template_pairs_too(self):
+        self.assertEqual(
+            source._template_element_pairing(
+                [claim(0x1583b0, "CDPlayPlayer_CAutoArray", 0x54, "remote")],
+                self.DTORS),
+            {0x1583b0: DTOR_PLAYER})
+
+    def test_a_gdtor_claim_never_reads_the_dtor_group(self):
+        # the marker chooses the mangled PREFIX; a ??_G claim offered the
+        # ??1 names must find nothing rather than bind the wrong function
+        self.assertEqual(
+            source._template_element_pairing(
+                [self.gclaim(0x158490, "CDPlayPlayer_CAutoArray")],
+                self.DTORS), {})
+        self.assertEqual(
+            source._template_element_pairing(
+                [claim(0x1583b0, "CDPlayPlayer_CAutoArray", 0x54, "remote")],
+                self.GDTORS), {})
+
+    def test_a_one_part_cautoarray_owner_keeps_the_old_key(self):
+        # dxplay and multiplayerwindow claim plain `CAutoArray`; those must
+        # keep keying `cautoarray_cautoarray@gdtor` and be left here
+        self.assertIsNone(source._template_dtor_owner("cautoarray"))
+        self.assertEqual(
+            source._template_element_pairing(
+                [self.gclaim(0x112670, "CAutoArray")], self.GDTORS), {})
+
+    def test_the_template_casing_is_read_from_the_table(self):
+        self.assertEqual(source._template_dtor_owner("CDPlayPlayer_CAutoArray"),
+                         ("cdplayplayer", "cautoarray"))
+        self.assertEqual(
+            source._mangled_template_element(GDTOR_PLAYER, "cautoarray",
+                                             "??_G"),
+            "cdplayplayer")
+        # ...and the lowercased spelling is NOT what the mangled name has,
+        # so a table lookup that regressed to the key would return None
+        self.assertIsNone(
+            source._mangled_template_element(
+                "??_G?$cautoarray@VCDPlayPlayer@@@@UAEPAXI@Z", "cautoarray",
+                "??_G"))
+
+    def test_both_instantiations_still_share_one_key(self):
+        for name in (GDTOR_SESSION, GDTOR_PLAYER):
+            self.assertEqual(source._demangle_key(name),
+                             "cautoarray_cautoarray@gdtor")
+        for name in (DTOR_SESSION, DTOR_PLAYER):
+            self.assertEqual(source._demangle_key(name),
+                             "cautoarray_cautoarray@dtor")
+
+
 class TemplateDtorOwnerTest(unittest.TestCase):
     """The two decodes, on their own."""
 

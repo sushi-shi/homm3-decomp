@@ -25,6 +25,8 @@
 #ifndef HOMM3_ARRAY_H
 #define HOMM3_ARRAY_H
 
+#include <string.h>  // memcpy, the grow copy Add inlines
+
 #include "va.h"
 
 template<class T>
@@ -61,20 +63,28 @@ public:
         size = allocSize = 0;
     }
 
+    // Retail's own shape, read off the one row the whole link carries for
+    // this member (0x558410, slot 1 of both CAutoArray vftables): the
+    // capacity test compares allocSize against size and not the other way
+    // round, allocSize grows BEFORE the allocation so `new` takes the new
+    // capacity rather than the sum, the copy is a `memcpy` of size*4 BYTES
+    // (retail inlines it as rep movsd + rep movsb over a byte count, which
+    // an element loop cannot produce) sharing the `if (pArray)` guard with
+    // the delete, and the tail stores through the VIRTUAL Put - `call
+    // [vfptr+0xc]`, slot 3 - after the count has already been bumped.
     virtual unsigned char Add(T* element)
     {
-        if (size >= allocSize) {
-            T** grown = new T*[allocSize + step];
-            for (unsigned long i = 0; i < size; ++i)
-                grown[i] = pArray[i];
-            if (pArray)
-                delete [] pArray;
-            pArray = grown;
+        if (allocSize <= size) {
             allocSize += step;
+            T** grown = new T*[allocSize];
+            if (pArray) {
+                memcpy(grown, pArray, size * sizeof(T*));
+                delete [] pArray;
+            }
+            pArray = grown;
         }
-        pArray[size] = element;
         ++size;
-        return 1;
+        return Put(size - 1, element);
     }
 
     virtual T* Get(unsigned long elementNbr)

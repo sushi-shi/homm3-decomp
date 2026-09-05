@@ -13,6 +13,9 @@
 #include "mousemgr.h"
 #include "resourcemanager.h"
 #include "smackmgr.h"
+// DDSetFullScreenStatus brackets the mode change with a pause of the
+// music stream.
+#include "soundmgr.h"
 #include "winmgr.h"
 
 // Private desktop metrics, written as one consecutive triple by
@@ -1464,5 +1467,124 @@ unsigned char SetFullScreenStatus(int bFullScreenOn)
     if (bFullScreenOn)
         gpMouseManager->Update(1);
     WritePrefs();
+    return bChanged;
+}
+
+// E:\gamedcs\wingraph.cpp:1712 - the mode change itself, emitted straight
+// after its wrapper, which is the file-static emission pattern the header
+// note already records. The whole body is one linear sequence and the
+// retail bytes read it out: grab the screen into an 800x600 scratch,
+// tear DirectDraw down, re-query the desktop, restyle the window, bring
+// DirectDraw back up, remap and blit the scratch back, then reset the
+// pointer and, in full screen, re-place the window.
+//
+// Two things worth reading twice. GetDesktopInfo is EXPANDED here (its
+// GetDC / three GetDeviceCaps / ReleaseDC block and the `== 16` compare
+// are inline) exactly as it is in DDResetDisplayMode; and the colour-mask
+// triple is saved BEFORE the teardown and compared AFTER the rebuild, so
+// the remap only runs when DirectDraw came back in a different pixel
+// format - which is what bitmap16.h's own note about `0x7e0 ? 6 : 5`
+// describes from the other end.
+// Residual (94.58%): register allocation only - all 14 branches and all 31
+// calls agree, and 23 of 28 blocks are byte-exact. What is left is which
+// scratch register each of the three mask compares and the Grab/Draw
+// argument loads land in (retail runs Width through ESI where we use ECX,
+// and rotates EAX/ECX/EDX one place through the mask block), plus the
+// resulting `push esi` save point. Three source levers were measured and
+// two paid: hoisting GetDesktopInfo into a named local, which is what makes
+// the desktop query UNCONDITIONAL and puts iStatus in its own frame slot
+// (85.4440 -> 91.8531, and it is what closes every branch); reading
+// iWindowX/iWindowY into locals ABOVE the `if (!bWindowedMode)`, which is
+// where retail loads them (91.8567 -> 94.5813); and declaring the three
+// saved masks blue/green/red rather than red/green/blue, worth 0.0036.
+VA(0x00601a00, 0x31C)  // anchor-caller (SetFullScreenStatus) + dc order, dc 0x19a234
+unsigned char DDSetFullScreenStatus(int iNewStatus)
+{
+    int iStatus = iNewStatus;
+    Bitmap16Bit savedScreen(800, 600);
+
+    if (bWindowedMode == iNewStatus)
+        return 1;
+    if (gWinGraphBusy)
+        return 0;
+
+    unsigned char bChanged = 1;
+    gWinGraphBusy = 1;
+    if (gMP3Stream)
+        AIL_pause_stream(gMP3Stream, 1);
+    VideoPause();
+    Sleep(100);
+
+    unsigned long savedBlue = 0;
+    unsigned long savedGreen = 0;
+    unsigned long savedRed = 0;
+    if (!bClosingApp) {
+        Bitmap16Bit* screen = gpWindowManager->screenBitmap;
+        savedScreen.Grab(screen->map, 0, 0, screen->Width, screen->Height,
+                         screen->Pitch);
+        savedBlue = gColorMaskBlue;
+        savedGreen = gColorMaskGreen;
+        savedRed = gColorMaskRed;
+    }
+
+    DDCleanUpWinGraphics();
+    gWinGraphBusy = 0;
+
+    unsigned char bDesktopOk = GetDesktopInfo();
+    if (iStatus == 0 && !bDesktopOk) {
+        iStatus = 1;
+        bChanged = 0;
+    }
+    bWindowedMode = iStatus;
+
+    if (bWindowedMode) {
+        SetWindowLong(hwndApp, GWL_STYLE, WS_POPUP | WS_VISIBLE);
+        SetWindowLong(hwndApp, GWL_EXSTYLE, WS_EX_TOPMOST);
+    } else {
+        SetWindowLong(hwndApp, GWL_STYLE, WINDOWED_WINDOW_STYLE);
+        SetWindowLong(hwndApp, GWL_EXSTYLE, 0);
+    }
+
+    DDInitGraphics();
+    gWinGraphBusy = 1;
+
+    if (!bClosingApp) {
+        if (savedBlue != gColorMaskBlue || savedGreen != gColorMaskGreen
+            || savedRed != gColorMaskRed) {
+            savedScreen.Remap(savedGreen == GREEN_MASK_565
+                                  ? BITMAP_GREEN_BITS_565
+                                  : BITMAP_GREEN_BITS_1555);
+            ResourceManager::RemapGraphics();
+        }
+        Bitmap16Bit* screen = gpWindowManager->screenBitmap;
+        savedScreen.Draw(0, 0, 800, 600, screen->map, 0, 0, screen->Width,
+                         screen->Height, screen->Pitch, false);
+    }
+
+    gpMouseManager->Reset();
+    gpMouseManager->LoadFrame(gpMouseManager->field_50);
+
+    int windowX = iWindowX;
+    int windowY = iWindowY;
+    if (!bWindowedMode) {
+        RECT windowRect;
+        windowRect.left = 0;
+        windowRect.top = 0;
+        windowRect.right = 800;
+        windowRect.bottom = 600;
+        AdjustWindowRectEx(&windowRect, WINDOWED_WINDOW_STYLE, 1, 0);
+        MoveWindow(hwndApp, windowX, windowY,
+                   windowRect.right - windowRect.left,
+                   windowRect.bottom - windowRect.top, 1);
+        WritePrefs();
+    }
+
+    KBChangeMenu(0);
+    VideoRealignBuffers();
+    if (gMP3Stream)
+        AIL_pause_stream(gMP3Stream, 0);
+    VideoResume();
+    Sleep(100);
+    gWinGraphBusy = 0;
     return bChanged;
 }

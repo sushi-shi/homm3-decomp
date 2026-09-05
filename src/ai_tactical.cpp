@@ -4890,6 +4890,18 @@ void std::construct(SpellID* __p, const SpellID* __value)
 
 #endif  // @carcass
 
+// COMDAT pairing: `~TResourceHandle<T>`, and this one really is ICF-folded.
+// The body is six instructions with NO relocation at all - `mov ecx,[ecx] /
+// test / je / mov eax,[ecx] / jmp [eax+4]`, the held resource released
+// through slot 1 of its own vftable - so the element type never reaches the
+// bytes, and the CSprite and sample instantiations this object emits are
+// literally the same 12 bytes. Retail carries ONE row for both, which is
+// why neither length nor definition order can name it: the row IS both
+// functions. The owner is the bare template and the join's ICF oracle binds
+// it, recording the second spelling as an alias. It sits 8 bytes past the
+// end of this compiland's last claimed function, in its COMDAT tail.
+VA_COMPGEN(0x0043cb10, 0xC, IMPLICIT_DTOR, TResourceHandle)
+
 // COMDAT pairing: ai_tactical.obj's own out-of-line ~army - the only
 // unpaired COMDAT it emits at this scale (270 B against the retail row's
 // 310, 0.905 mnemonic agreement) and the last unclaimed row of the span

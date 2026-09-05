@@ -782,6 +782,15 @@ void searchArray::SeedPosition(hero* current_hero, type_point start,
         current_hero->obscure_cell();
 }
 
+// COMDAT pairing: `vector<pathCell*>::erase(iterator, iterator)`, the range
+// overload the path array's pruning reaches. Byte-identical to this object's
+// own COMDAT over all 25 instructions - the four-byte copy-down loop with
+// its `pop ebx` join, the `_Last` write-back and the `ret 8` returning the
+// old end through `[ebp+8]`. search.obj is the only object in the bracket
+// that instantiates a vector over `pathCell*`; seerhut's nearest look-alikes
+// are the string and dialog-resource `_Ucopy`s, at 0.68 and 0.64.
+VA_COMPGEN(0x0056bd30, 0x33, VECTOR_ERASE, pathCell)
+
 #if 0  // @carcass -- Dreamcast-only rows
 
 // E:\gamedcs\game.h:1395
