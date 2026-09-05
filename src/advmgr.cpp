@@ -746,8 +746,14 @@ int advManager::Open(int newPriority)
     if (gpGame->worldMap.HasTwoLevels + 1 < 2)
         advWindow->WidgetSetStatus(4, 8);
 
+    // The cache loop's counter is UNSIGNED: retail closes it with
+    // `cmp esi,0x26 / jb` at 0x406fd0+0x28e where a signed `int` can only
+    // emit `jl`. 97.7989 -> 97.9314 and the branch view goes clean 36/36.
+    // MEASURED AND REJECTED at that plateau: hoisting one shared
+    // `resource* graphic` above the if/else so both arms share retail's
+    // [ebp-0x10] slot - 97.9057, the per-arm declarations are right.
     CachedGraphics.reserve(38);
-    for (int cached = 0; cached < 38; cached++) {
+    for (unsigned int cached = 0; cached < 38; cached++) {
         char reversed[16];
         strcpy(reversed, kAdvCachedGraphicNames[cached]);
         _strrev(reversed);
