@@ -77,12 +77,28 @@ void advManager::SummonBoat(TSkillMastery level)
 }
 
 // E:\gamedcs\advspells.cpp:328
-// Decoded but not landed: needs the four map-clip globals at
-// 0x691250..0x69125c, which nothing models yet, plus the obscuring-object
-// array behind gpGame+0x4e3bc. Its shape is TSkuttleBoatWindow -> a
-// Random(1,100) roll against mastery_bonus[level] -> the fizzle animation
-// (SaveFizzleSourceX / CompleteDraw / FizzleForwardX / Reseed) on success
-// or a sprintf'd refusal on failure, joining at UseSpell(GetManaCost(1)).
+// FULLY DECODED, NOT LANDED - it needs two declarations nothing models yet
+// and the next lane should not re-derive them:
+//   * The adventure-map clip rectangle at .data 0x691250 / 0x691254 /
+//     0x691258 / 0x69125c. The cinit at 0x405db0 (advmgr.obj, excluded
+//     class) is their whole writer and sets 8, 8, 0x267, 0x227 - left,
+//     top, right, bottom in screen pixels. The image references each of
+//     the four exactly FOUR times: that cinit plus 0x41cb61 / 0x41cc57
+//     (SummonBoat) and 0x41cf47 (this body). Two consumers only, so they
+//     belong in a NARROW header, not in advmgr.h.
+//   * The type_obscuring_object array behind gpGame+0x4e3bc, indexed by
+//     the cell's own dword with a 40-byte stride.
+// Its shape: TSkuttleBoatWindow -> Random(1,100) against
+// mastery_bonus[level] -> on success the fizzle animation over the
+// obscured cell's rect, clamped against those four bounds
+// (LoadPlaySample / SaveFizzleSourceX / CompleteDraw / FizzleForwardX /
+// Reseed / WaitEndSample); on failure a sprintf of general-text row 338
+// with the hero's name. Both paths join at
+// UseSpell(GetManaCost(1, 0, get_special_terrain())), and the window
+// returning dialogReturn == 0 short-circuits to general-text row 732 -
+// the same GENERAL_TEXT_ADVENTURE_SPELL_NO_TARGET DimensionDoor posts.
+// The two screen coordinates come off advManager::radarOrigin's 10-bit
+// bitfields (`mov cx,[this+0xe4] / shl cx,6 / movsx / sar edx,6`).
 VA(0x0041cdf0, 0x29D)  // anchor-vtable TSkuttleBoatWindow ctor/dtor, dc 0x22054
 void advManager::SkuttleBoat(TSkillMastery level)
 {
