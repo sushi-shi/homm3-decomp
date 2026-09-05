@@ -9211,3 +9211,34 @@ VA_COMPGEN(0x00434ba0, 0x43, VECTOR_UCOPY, HeroDestination)
 // COMDAT pairing: vector<pathCell>::_Ucopy, agreement 0.952; the
 // type_creature_source arm scores 0.531 at operand level.
 VA_COMPGEN(0x00434bf0, 0x3D, VECTOR_UCOPY, pathCell)
+
+// COMDAT pairing: std::_Sort<type_creature_value, greater>, agreement 0.979.
+// The default-predicate arm scores 0.932 here and 0.976 at 0x34e80, so the
+// two instantiations separate cleanly.
+VA_COMPGEN(0x00434ce0, 0x199, STD_SORT, type_creature_value_greater)
+
+// COMDAT pairing: std::_Sort<type_creature_value>, agreement 0.976.
+VA_COMPGEN(0x00434e80, 0x191, STD_SORT, type_creature_value)
+
+// COMDAT pairing: std::_Sort<long>, agreement 0.995.
+VA_COMPGEN(0x00435070, 0xCF, STD_SORT, long)
+
+// COMDAT pairing: std::_Insertion_sort_1<type_creature_value, greater>,
+// agreement 0.955 against 0.920 for the default-predicate arm.
+VA_COMPGEN(0x00435160, 0xD5, INSERTION_SORT_1, type_creature_value_greater)
+
+// COMDAT pairing: std::_Insertion_sort_1<type_creature_value>, agreement
+// 0.955 against 0.920 for the greater arm.
+VA_COMPGEN(0x00435310, 0xD5, INSERTION_SORT_1, type_creature_value)
+
+// COMDAT pairing: std::_Insertion_sort_1<long>, agreement 0.926.
+VA_COMPGEN(0x004353f0, 0x67, INSERTION_SORT_1, long)
+
+// COMDAT pairing: std::_Unguarded_partition<type_creature_value, greater>,
+// agreement 0.929.
+VA_COMPGEN(0x00435290, 0x78, STD_UNGUARDED_PARTITION, type_creature_value_greater)
+
+// COMDAT pairing: std::_Median<type_creature_value, greater>, agreement
+// 0.971. Its element arrives BY VALUE, so the key is decoded from the
+// return type rather than from a pointer parameter.
+VA_COMPGEN(0x00435240, 0x4E, STD_MEDIAN, type_creature_value_greater)

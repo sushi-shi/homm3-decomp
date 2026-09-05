@@ -2374,3 +2374,9 @@ void std::__pop_heap_aux(type_monster_data* __first, type_monster_data* __last, 
 // verified against the emitted COMDAT at 0.987 mnemonic agreement over 740
 // bytes - the largest single row the COMDAT pass recovered.
 VA_COMPGEN(0x00427780, 0x2E4, VECTOR_INSERT, type_monster_data)
+
+// COMDAT pairing: std::_Sort<type_monster_data>, agreement 0.983.
+VA_COMPGEN(0x00427a90, 0x19B, STD_SORT, type_monster_data)
+
+// COMDAT pairing: std::_Unguarded_partition<type_monster_data>, 0.913.
+VA_COMPGEN(0x00427c30, 0x64, STD_UNGUARDED_PARTITION, type_monster_data)
