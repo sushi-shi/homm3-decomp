@@ -2348,7 +2348,7 @@ philai	?AI_bribe_monsters@@YIEPBVhero@@PAVNewmapCell@@W4TCreatureType@@FJ@Z	100.
 philai	?AI_choose_resource_or_experience@@YIEPBVhero@@W4EGameResource@@HH@Z	100.0000	100.0000	100.0000	0x127fe0	567f5fe7b35f
 philai	?AI_choose_secondary_skill@@YI?AW4TSecondarySkill@@PBVhero@@W41@1E@Z	100.0000	100.0000	100.0000	0x12bbd0	0f2e5122f3b7
 philai	?AI_enter_garrison@@YIXPAVhero@@PAVgarrison@@@Z	100.0000	100.0000	100.0000	0x124370	7cdfb5fc12c1
-philai	?AI_enter_town@@YIXPAVhero@@PAVtown@@@Z	99.1543	99.5109	99.5109	0x1253d0	e69b5532e2a3
+philai	?AI_enter_town@@YIXPAVhero@@PAVtown@@@Z	99.1804	99.5109	99.5109	0x1253d0	e69b5532e2a3
 philai	?AI_examine_map@@YAXXZ	100.0000	100.0000	100.0000	0x12b9c0	80c8df47c261
 philai	?AI_friendly_hero_meeting@@YIXPAVhero@@0@Z	100.0000	100.0000	100.0000	0x125dc0	8c658f499984
 philai	?AI_get_spell_value@@YIJPBVhero@@H@Z	100.0000	100.0000	100.0000	0x127640	2d4e4d939119
@@ -2561,11 +2561,12 @@ remote	?GetAbortPopupMsg@CNetMsgHandler@@UAEPAVCNetMsg@@XZ	100.0000	100.0000	100
 remote	?GetNetMsgHandler@CDPlayHeroes@@QAEPAVCNetMsgHandler@@XZ	100.0000	100.0000	100.0000	0x1537a0	0e9b8f9bb05a
 remote	?GetRemoteData@@YIPAVCNetMsg@@EPAE@Z	100.0000	100.0000	100.0000	0x154400	05d8f053fd87
 remote	?GetRemoteData@CDPlayHeroes@@QAEPAVCNetMsg@@EPAE@Z	80.8571	80.8571	80.8571	0x153040	7cf0cac3aa0b
-remote	?HandleMPlayerLaunch@@YIEXZ	96.0500	98.3167	98.3167	0x155aa0	fbbe11f41dd4
+remote	?HandleLowLevelMsg@CDPlayHeroes@@QAEEPAVCNetMsg@@@Z	50.5525	50.5525	50.5525	0x152db0	7994d4de79a1
+remote	?HandleMPlayerLaunch@@YIEXZ	100.0000	100.0000	100.0000	0x155aa0	fbbe11f41dd4
 remote	?HandleNetMsg@CNetMsgHandler@@UAEPAVCNetMsg@@PAV2@@Z	100.0000	100.0000	100.0000	0x157920	9b3bbef3a17e
 remote	?HandleNetMsg@CNetMsgHandlerPause@@UAEPAVCNetMsg@@PAV2@@Z	100.0000	100.0000	100.0000	0x155180	4688fd9ad604
 remote	?HandleNormalWinMsg@@YIXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x1569f0	7b9cacbfdb87
-remote	?HandlePlayerDead@@YIXHE@Z	94.6127	100.0000	100.0000	0x156780	a09fd5c03994
+remote	?HandlePlayerDead@@YIXHE@Z	100.0000	100.0000	100.0000	0x156780	a09fd5c03994
 remote	?HandlePlayerDrop@@YIXK@Z	100.0000	100.0000	100.0000	0x156430	05f09e5d3f52
 remote	?HandlePlayerDrop@CDPlayHeroes@@QAEXK@Z	100.0000	100.0000	100.0000	0x153580	d5f0daf09975
 remote	?HandlePlayerLost@@YIXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x1569a0	1c5460787a87
@@ -2574,14 +2575,14 @@ remote	?HasOldChat@CChatManager@@QAEEXZ	100.0000	100.0000	100.0000	0x153db0	9760
 remote	?IgnoreKey@CChatEdit@@UAEEPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1543f0	77129503ae51
 remote	?Init@CChatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1537b0	d4bef186ba3d
 remote	?InitConnection@@YIEPADPAU_DPCOMPORTADDRESS@@@Z	100.0000	100.0000	100.0000	0x1556e0	a2ef8bd8c351
-remote	?InitRemote@@YIEW4eNetGameType@@PBD@Z	63.6415	100.0000	100.0000	0x154410	b98459990b13
+remote	?InitRemote@@YIEW4eNetGameType@@PBD@Z	100.0000	100.0000	100.0000	0x154410	b98459990b13
 remote	?IsClose@CTurnDuration@@QAEEK@Z	100.0000	100.0000	100.0000	0x157d00	8f67ba459bc4
 remote	?IsExpired@CTurnDuration@@QAEEXZ	100.0000	100.0000	100.0000	0x157aa0	fe8e473603ab
 remote	?IsOn@CTurnDuration@@QAEEXZ	100.0000	100.0000	100.0000	0x157a80	d4cc9786488c
 remote	?IsOpen@CChatEdit@@UAE_NXZ	100.0000	100.0000	100.0000	0x1543e0	fe857de2fdca
 remote	?IsSaved@CSaveScreen@@QAEEXZ	100.0000	100.0000	100.0000	0x157400	85bb9eaf0933
 remote	?KillOldChat@CChatManager@@QAEXXZ	96.6265	96.6265	96.6265	0x153df0	71de8ae89c52
-remote	?LobbyLaunchConnect@@YIEXZ	94.4898	100.0000	100.0000	0x155ef0	8f1a867fc59b
+remote	?LobbyLaunchConnect@@YIEXZ	100.0000	100.0000	100.0000	0x155ef0	8f1a867fc59b
 remote	?OnEnter@CChatEdit@@UAEHVmessage@@@Z	100.0000	100.0000	100.0000	0x154380	5e1a9f645822
 remote	?OnEscape@CChatEdit@@UAEHVmessage@@@Z	100.0000	100.0000	100.0000	0x1543c0	cce22ad64aec
 remote	?OnFunctionKey@CChatEdit@@UAEHVmessage@@H@Z	100.0000	100.0000	100.0000	0x154330	14a3a419ebfc
@@ -2594,7 +2595,7 @@ remote	?PlayerEnterMsg@@YAXPAVCChatManager@@PBDZZ	100.0000	100.0000	100.0000	0x1
 remote	?PollRemote@@YIXXZ	0.0000	100.0000	100.0000	0x1546b0	247cab36b766
 remote	?PollRemote@CDPlayHeroes@@QAE_NXZ	68.1355	68.1355	68.1355	0x152b60	9adb977c4462
 remote	?ReceiveChat@@YIXPADH@Z	100.0000	100.0000	100.0000	0x154a20	76682a18ba16
-remote	?RemoteCleanup@@YIXXZ	81.7222	100.0000	100.0000	0x1544b0	5e1c74da22d4
+remote	?RemoteCleanup@@YIXXZ	100.0000	100.0000	100.0000	0x1544b0	5e1c74da22d4
 remote	?Restore@CSaveScreen@@QAEXE@Z	100.0000	100.0000	100.0000	0x157390	bfdee37b1b64
 remote	?RestoreScreen@CGameTransferSmack@@QAEXXZ	100.0000	100.0000	100.0000	0x1576b0	77cc49e4b9b0
 remote	?Resume@CTurnDuration@@QAEXXZ	100.0000	100.0000	100.0000	0x157df0	19daea34d725
@@ -3058,7 +3059,7 @@ singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100
 # 2026-08-27 (round 3): the interim full build re-banked the transient
 # peak a third time; re-lowered with the round's bodies landed. Same
 # scheduler flap, same recovery path.
-singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0	66eb0a0e15c8
+singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0	66eb0a0e15c8
 singleselectionwindow	?OnMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2193	90.2193	90.2193	0x189710	3ad2be3935a3
 singleselectionwindow	?OnNameClick@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x18b620	ef174e28edf8
 singleselectionwindow	?OnNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	97.5366	97.5366	97.5366	0x18b510	862e2a9c058b

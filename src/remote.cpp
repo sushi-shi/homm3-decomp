@@ -62,6 +62,17 @@ inline CLogFile::CLogFile(char* sLogFileName)
     strcpy(m_logFileName, sLogFileName);
 }
 
+// E:\gamedcs\struct.h:340. The definition belongs in this TU as well as in
+// the selection window's: retail's RemoteCleanup (0x5544b0) and the copy of
+// it inlined into HandleLowLevelMsg (0x552e77) both EXPAND the three stores
+// where a declaration-only view emits `call ??0CNetPlayerInfo@@QAE@XZ`.
+inline CNetPlayerInfo::CNetPlayerInfo()
+{
+    dpid = 0;
+    sName[0] = 0;
+    version = *gpVideoGameState;
+}
+
 DATA(0x0069d648) CLogFile logFile(
     DATA_COMPGEN(0x00682a3c, remoteGameLogName, "game.log"));
 // The global constructor consists solely of the inlined strcpy above;
@@ -522,6 +533,69 @@ void CChatManager::PlayerEnterMsg(const char* cChatMsg)
 
 // E:\gamedcs\remote.cpp:1033
 #endif  // @carcass
+
+// E:\gamedcs\remote.cpp:304. The DirectPlay layer's own three rungs, taken
+// before PollRemote offers anything to the higher-level dispatchers: answer a
+// ping, report a ping's round trip in the chat pane, and act on a host's
+// destroy-player order. Everything else is refused - the default arm returns
+// 0 and PollRemote queues the message.
+//
+// The Dreamcast line table (remote.cpp:304-346) fixes the whole shape: a
+// switch with three braced cases, a `default: return FALSE` and a shared
+// `return TRUE` past the switch, and named calls to RemoteCleanup,
+// ReceiveChat, HandlePlayerDrop and TransmitRemoteDataDPID. Retail expands
+// all four here. TransmitRemoteDataDPID's compressMsg argument folds to
+// false, so CompressMsg and its DestroyMsg partner vanish and only the
+// SendIt tail survives; RemoteCleanup arrives as the ClearChat fill loop
+// over twenty 0x88-byte CChatStr records and the DirectPlay teardown.
+VA(0x00552db0, 0x28F)  // anchor-caller(PollRemote 0x552b60) + anchor-callee(SendIt/AddChat/ShutDown) + dc-order-map, dc 0x11bc88
+unsigned char CDPlayHeroes::HandleLowLevelMsg(CNetMsg* pNetMsg)
+{
+    switch (pNetMsg->subType) {
+    case RS_PING:
+        {
+            CPingResponseMsg sTemp(
+                static_cast<CPingMsg*>(pNetMsg)->m_pingTime, RS_PING_REPLY);
+            TransmitRemoteDataDPID(&sTemp, pNetMsg->field_04, false, false);
+        }
+        break;
+
+    case RS_PING_REPLY:
+        {
+            char sTemp[256];
+            sprintf(sTemp,
+                    gpGeneralText->GetText(
+                        GENERAL_TEXT_CHAT_PING_RESULT_FORMAT),
+                    GameTime::ElapsedSince(
+                        static_cast<CPingMsg*>(pNetMsg)->m_pingTime));
+            ReceiveChat(sTemp, pNetMsg->field_00);
+        }
+        break;
+
+    case RS_DESTROY_PLAYER:
+        {
+            unsigned long dpid =
+                static_cast<CDestroyPlayerMsg*>(pNetMsg)->m_dpid;
+            if (dpid == gsThisNetPlayerInfo.dpid) {
+                RemoteCleanup();
+                NormalDialog(
+                    gpGeneralText->GetText(
+                        GENERAL_TEXT_REMOTE_SESSION_DESTROYED),
+                    1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                ShutDown(0);
+            }
+            else {
+                HandlePlayerDrop(dpid);
+            }
+        }
+        break;
+
+    default:
+        return 0;
+    }
+
+    return 1;
+}
 
 // E:\gamedcs\remote.cpp:350. The queue reader, and CompressMsg's exact
 // mirror: take the front message, optionally unlink it, and if it carries an
