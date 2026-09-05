@@ -464,7 +464,7 @@ rva	name
 0x216e39	cxx_20dedb_sub18_216e39
 0x216e8d	??1type_info@@UAE@XZ
 0x216eb6	crt_216eb6
-0x216ed2	exe_new
+0x216ed2	??2@YAPAXI@Z
 0x216ee0	?_JumpToContinuation@@YGXPAXPAUEHRegistrationNode@@@Z
 0x216f14	crt_21cffd_sub00_216f14
 0x216f1b	crt_21cffd_sub01_216f1b

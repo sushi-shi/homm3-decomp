@@ -343,6 +343,31 @@ CHAR_STREAM_MEMBERS = (
     # `std_basic_string__nullstr`, which no macro argument can produce.
     ("?deallocate@?$allocator@D", None, "allocator_deallocate"),
     ("?_Nullstr@?$basic_string@D", None, "basic_string_nullstr"),
+    # --- the <xlocale> facet block basic_filebuf drags in -----------------
+    # `_Initcvt` is what imbues the file buffer with its codecvt facet, and
+    # the six members below are everything that conversion reaches:
+    # basic_streambuf's `getloc` (whose whole body is locale's COPY
+    # constructor expanded - the `_Lockit` scope plus the saturating refcount
+    # increment), the `_Addfac`/`_Tidyfac` pair that installs the facet in a
+    # locale and tears it down at exit, and the facet's own virtuals.
+    # `codecvt<char,char,int>` converts nothing, so FOUR of those virtuals
+    # are constant returns that /OPT:ICF folded in PAIRS - do_encoding with
+    # do_max_length (both `return 1`), do_in with do_out (both `return
+    # noconv` after copying the two range pointers back). Each pair therefore
+    # keys as ONE member, and `_icf_group_pairing` binds the single retail
+    # row to the first COFF spelling with the other recorded as its alias.
+    ("?_Initcvt@?$basic_filebuf@D", None, "filebuf_initcvt"),
+    ("?getloc@?$basic_streambuf@D", None, "streambuf_getloc"),
+    ("?_Save@?$_Tidyfac@V?$codecvt@D", None, "tidyfac_codecvt_save"),
+    ("?_Tidy@?$_Tidyfac@V?$codecvt@D", None, "tidyfac_codecvt_tidy"),
+    ("?_Addfac@std@@YI?AVlocale@1@V21@PAV?$codecvt@D", None,
+     "locale_addfac_codecvt"),
+    ("?do_always_noconv@codecvt_base@std@@", None,
+     "codecvt_base_do_always_noconv"),
+    ("?do_encoding@codecvt_base@std@@", None, "codecvt_base_do_encoding"),
+    ("?do_max_length@codecvt_base@std@@", None, "codecvt_base_do_encoding"),
+    ("?do_in@?$codecvt@D", None, "codecvt_do_in"),
+    ("?do_out@?$codecvt@D", None, "codecvt_do_in"),
 )
 
 
@@ -386,7 +411,7 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "TREE_CONST_ITERATOR_CTOR",
                  "TREE_ITERATOR_EQUAL", "TREE_LOWER_BOUND",
                  "STREAMBUF_XSPUTN",
-                 "PAIR_CONST_INT_DTOR",
+                 "PAIR_CONST_INT_DTOR", "PAIR_CTOR",
                  "STD_CONSTRUCT", "STD_COPY",
                  "CLASS_CTOR",
                  "IMPLICIT_COPY_CTOR", "IMPLICIT_COPY_ASSIGN",
@@ -1323,6 +1348,15 @@ def _demangle_key(mangled: str):
         r"^\?\?1\?\$pair@\$\$CBH(?:V|U)([A-Za-z_]\w*)@@@std@@", mangled)
     if pair_const_int:
         return f"{pair_const_int.group(1).lower()}@pair_const_int_dtor"
+    # ...and the map<string,int> value_type's two-argument constructor,
+    # which the generic `??0` arm below reduces to the useless `pair_pair` -
+    # a key EVERY pair constructor in a TU shares, including the
+    # `pair<iterator, bool>` that `_Tree::insert` returns. Keyed
+    # `string_int_pair`, the spelling `_Construct`'s own arm above already
+    # uses for the same value type.
+    if (mangled.startswith("??0?$pair@$$CBV?$basic_string@D")
+            and mangled.endswith("@ABH@Z")):
+        return "string_int_pair@pair_ctor"
     if mangled.startswith("??_D"):
         # MSVC's `vbase destructor' closure. Claim-only carcass rows use
         # the compiler's own backtick spelling, which scan_file normalizes
@@ -2065,6 +2099,10 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             owner = row["name"].rsplit("$", 1)[1].lower()
             claim_keys.setdefault(
                 f"{owner}@pair_const_int_dtor", []).append(row)
+            continue
+        if "$pair_ctor$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}@pair_ctor", []).append(row)
             continue
         if "$std_construct$" in row["name"]:
             owner = row["name"].rsplit("$", 1)[1].lower()
