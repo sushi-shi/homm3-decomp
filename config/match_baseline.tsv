@@ -1203,6 +1203,7 @@ customcampaign	?Load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	59.0405	59.0405	59.040
 customcampaign	?LoadMapHeader@ScenarioStruct@TCampaignBrief@@QAEXPAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@PAVNewSMapHeader@@H@Z	100.0000	100.0000	100.0000	0x87d30	3ede48bd4a11
 customcampaign	?LoadScenario@CampaignHeaderStruct@TCampaignBrief@@QAE_NHPAVNewSMapHeader@@@Z	100.0000	100.0000	100.0000	0x88810	40cf52fbb7ea
 customcampaign	?MarkCrossoverHeroes@ScenarioStruct@TCampaignBrief@@QAEXPAE@Z	100.0000	100.0000	100.0000	0x87e10	6ceadd79996e
+customcampaign	?PlaceStartingHero@ScenarioStruct@TCampaignBrief@@QAEXPAUHeroPlaceholderData@@@Z	93.5215	93.5215	93.5215	0x87020	15b3e6f45419
 customcampaign	?Play@MapTextStruct@TCampaignBrief@@QAEXXZ	83.8848	83.8848	83.8848	0x88fb0	050e401b33b9
 customcampaign	?PlayScenarioEpilogue@SCampaign@@QAEXPAX@Z	100.0000	100.0000	100.0000	0x8a2a0	44199f541435
 customcampaign	?PlayScenarioPrologue@SCampaign@@QAEXPAX@Z	100.0000	100.0000	100.0000	0x8a270	f20101db493f
