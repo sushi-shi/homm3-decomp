@@ -224,7 +224,7 @@ ai	?move_toward@combatManager@@QAEEPBVarmy@@JPBJE@Z	100.0000	100.0000	100.0000	0
 ai	?place_shooter@combatManager@@QAEXPBVarmy@@@Z	82.4884	82.4884	82.4884	0x22060	856f728fc391
 ai	?should_stay_in_castle@combatManager@@QAEEPAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x213f0	625a5545daff
 ai	?simulate_actions@combatManager@@QAEJAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@JJ@Z	100.0000	100.0000	100.0000	0x22880	f193b982f3b8
-ai	?simulate_combat@combatManager@@QAEXJE@Z	99.9512	99.9512	99.9512	0x22a40	3d882f91bcdf
+ai	?simulate_combat@combatManager@@QAEXJE@Z	100.0000	100.0000	100.0000	0x22a40	3f1d89871860
 ai	?simulate_melee_attack@combatManager@@QAEXPAVarmy@@0J@Z	100.0000	100.0000	100.0000	0x227a0	4c0b58102b37
 ai	?simulate_melee_attack@combatManager@@QAEXPAVarmy@@J0JJ@Z	77.5103	77.5103	77.5103	0x224e0	474479da9abd
 ai	?size@?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x23110	-
