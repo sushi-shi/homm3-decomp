@@ -3388,6 +3388,21 @@ VA_COMPGEN(0x0048bea0, 0x58, STREAMBUF_INIT, char)
 VA_COMPGEN(0x0048ce20, 0x23, VECTOR_CAPACITY, hero)
 VA_COMPGEN(0x0048d410, 0x26, VECTOR_DESTROY, hero)
 
+// COMDAT pairing: the SINGLE-element arm of vector<hero>::insert, the last
+// unclaimed callee of SCampaign::CompleteCurrentMap (retail calls it at
+// 0x48a3de, at the first of that body's seven crossover appends, and expands
+// it at the other six). The overload is settled by the frame, not by
+// similarity: `ret 8` against the count arm's `ret 0xc` at 0x48d060, and the
+// tail recomputes `_First + _O * 0x492` into EAX - the ITERATOR return that
+// only `insert(iterator, const _Ty&)` has. Its whole callee set is the
+// vector<hero> family already claimed here: _Construct<hero> 0x4603a0,
+// _Ucopy 0x48d440, _Destroy 0x48d410, size 0x48b470, plus operator new and
+// operator delete for the grow arm. The count arm is inlined into it with
+// _M folded to 1, which is why the capacity test reads `cmp edx, 1`.
+// Our own compile expands both levels at all seven sites, so this row has no
+// base twin yet and pairs by size against the count arm rather than zipping.
+VA_COMPGEN(0x0048ce50, 0x210, VECTOR_INSERT, hero)
+
 // COMDAT pairing: basic_filebuf<char>::_Init(FILE*, _Initfl), agreement
 // 0.973 - the census had already named it `exe_filebuf_open` off the same
 // vtable's construction path.
