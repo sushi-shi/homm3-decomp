@@ -49,6 +49,7 @@
 #include "soundmgr.h"
 #include "sskilltraits.h"
 #include "timer.h"
+#include "text.h"
 #include "textwdgt.h"
 #include "winmgr.h"
 #include "wingraph.h"
@@ -227,6 +228,303 @@ void PollSound()
     }
 }
 
+// kb.obj's own once-only latch: a reloc census over the whole image finds
+// exactly two references to 0x699580 and both are in EarlySetup, so kb.cpp
+// owns it under the same rule as oldmain's private cells below. The cell at
+// 0x6985bc is the same case - InitVars' single zero store is its only
+// reference anywhere.
+DATA(0x00699580)
+static int bEarlySetupDone;
+DATA(0x006985bc)
+static int gUnnamed6985bc;
+
+// The startup callees whose own rows are still unclaimed. Every name is the
+// Dreamcast CodeView spelling for the compiland the retail address falls in,
+// and every one is independently corroborated by the .txt or table literal
+// its body opens:
+//   0x5bc690  the image-wide `ret` /OPT:ICF folded every empty function
+//             onto. The Dreamcast calls logFile.InitLogFile() at kb.cpp:648;
+//             Complete passes the log directory ".\" and the body is empty.
+//   0x56c3e0  seerhut.obj    InitializeSeerHutText            (seerhut.txt)
+//   0x4b8410  game.obj       InitializeRandomTavernText       (randtvrn.txt)
+//   0x47ab30  creature_bank  initialize_creature_bank_traits  (crbanks.txt)
+//   0x405d20  advmgr.obj     InitializeCreatureGeneratorNames (crgen1.txt)
+//   0x47b290  creaturetype   InitializeCreatureTypeTraitsTable(crtraits.txt)
+//   0x41b500  the second objnames.txt reader, and the ONLY call in the
+//             table run whose result is not tested - an ordinal name until
+//             a Dreamcast row is found for it.
+//   0x5c14c0  town.obj       InitializeBuildingCostsTables    (building.txt)
+//   0x405d80  advmgr.obj     InitializeExtraInfoText
+//   0x4d71a0  hero.obj       InitializeHeroSpecificAbilitiesTable
+//                                                             (herospec.txt)
+//   0x45e250  the campaign-music table reader (cmpmusic.txt); no Dreamcast
+//             row exists for it either, so the name stays ordinal.
+// The remaining declarations below are the ordinary free functions whose
+// bodies are claimed elsewhere but whose owner headers carry them only as
+// CODEVIEW comments.
+void InitLogFile(const char* path);
+unsigned char InitializeSeerHutText();
+unsigned char InitializeRandomTavernText();
+unsigned char initialize_creature_bank_traits();
+unsigned char InitializeCreatureGeneratorNames();
+unsigned char InitializeCreatureTypeTraitsTable();
+void GameFn_0041B500();
+unsigned char InitializeBuildingCostsTables();
+unsigned char InitializeExtraInfoText();
+unsigned char InitializeHeroSpecificAbilitiesTable();
+unsigned char CampaignMapFn_0045E250();
+int InterpretCommandLine();
+unsigned char InitializeAdventureEventText();
+unsigned char InitializeSpellTraitsTable();
+unsigned char InitializeHeroTraitsTable();
+unsigned char InitializeHeroClassTraitsTable();
+unsigned char initialize_ballistics_table();
+unsigned char InitializeSSkillTraitsTable();
+unsigned char InitializeArtifactTraitsTable();
+unsigned char InitializeVCDescriptions();
+unsigned char InitializeLCDescriptions();
+unsigned char InitializeTurnDurationText();
+unsigned char InitializeCreatureAnimationTraitsTable();
+unsigned char InitializeArtifactEventText();
+unsigned char InitializeRandomSignText();
+unsigned char InitializeCampaignMapTraitsTable();
+void AI_initialize();
+void ReadPrefs();
+void WritePrefs();
+int SetupCDDrive();
+unsigned char LoadAnimHeaders();
+unsigned char LoadSoundHeaders();
+namespace ResourceManager {
+bool Open(bool bCheckCd, bool bLoadLod, int* piResult);
+}
+
+// E:\gamedcs\kb.cpp:4214. Source-static and single-call: retail has no
+// standalone body because /Ob2 expands the whole run into EarlySetup, where
+// every `return 0` lands on the one ShutDown. The order is retail's; the
+// four event/sign/tavern rows genuinely appear TWICE, once before the
+// creature tables and once after.
+static unsigned char LoadGameData()
+{
+    if (!InitializeGeneralText())
+        return 0;
+    if (!InitializeCustomCampaignText())
+        return 0;
+    if (!InitializeSeerHutText())
+        return 0;
+    if (!InitializeMineEventText())
+        return 0;
+    if (!InitializeAdventureEventText())
+        return 0;
+    if (!InitializeArtifactEventText())
+        return 0;
+    if (!InitializeRandomSignText())
+        return 0;
+    if (!InitializeRandomTavernText())
+        return 0;
+    if (!InitializeCampaignRegionNames())
+        return 0;
+    if (!InitializeHighScoreDefaults())
+        return 0;
+    if (!InitializeTerrainNames())
+        return 0;
+    if (!InitializeAdvObjNames())
+        return 0;
+    if (!InitializeResourceNames())
+        return 0;
+    if (!InitializeMineNames())
+        return 0;
+    if (!InitializePlayerColors())
+        return 0;
+    if (!InitializePrimaryStatNames())
+        return 0;
+    if (!InitializeSecondarySkillLevelNames())
+        return 0;
+    if (!initialize_creature_bank_traits())
+        return 0;
+    if (!InitializeCreatureGeneratorNames())
+        return 0;
+    if (!InitializeAdventureEventText())
+        return 0;
+    if (!InitializeArtifactEventText())
+        return 0;
+    if (!InitializeRandomSignText())
+        return 0;
+    if (!InitializeRandomTavernText())
+        return 0;
+    if (!InitializeCreatureTypeTraitsTable())
+        return 0;
+    GameFn_0041B500();
+    if (!InitializeArtifactTraitsTable())
+        return 0;
+    if (!InitializeSpellTraitsTable())
+        return 0;
+    if (!InitializeHeroTraitsTable())
+        return 0;
+    if (!InitializeHeroClassTraitsTable())
+        return 0;
+    if (!initialize_ballistics_table())
+        return 0;
+    if (!InitializeSSkillTraitsTable())
+        return 0;
+    if (!InitializeBuildingCostsTables())
+        return 0;
+    if (!InitializeVCDescriptions())
+        return 0;
+    if (!InitializeLCDescriptions())
+        return 0;
+    if (!InitializeTurnDurationText())
+        return 0;
+    if (!InitializeExtraInfoText())
+        return 0;
+    if (!combatManager::LoadWallTraitsTable())
+        return 0;
+    if (!InitializeHelpText())
+        return 0;
+    if (!InitializeCreatureAnimationTraitsTable())
+        return 0;
+    if (!InitializeNeutralBuildingText())
+        return 0;
+    if (!InitializeSpecialBuildingText())
+        return 0;
+    if (!InitializeDwellingText())
+        return 0;
+    if (!InitializeTownNameText())
+        return 0;
+    if (!InitializeHeroSpecificAbilitiesTable())
+        return 0;
+    if (!InitializeHeroBioText())
+        return 0;
+    if (!InitializeCastleText())
+        return 0;
+    if (!InitializeTavernText())
+        return 0;
+    if (!InitializeHallText())
+        return 0;
+    if (!InitializeTownText())
+        return 0;
+    if (!InitializeOverviewText())
+        return 0;
+    if (!InitializeHeroText())
+        return 0;
+    if (!InitializeCampaignDialogText())
+        return 0;
+    if (!InitializeCreditsText())
+        return 0;
+    if (!InitializeTentColorText())
+        return 0;
+    if (!InitializeWinSetupText())
+        return 0;
+    if (!InitializeArrayText())
+        return 0;
+    return CampaignMapFn_0045E250();
+}
+
+// E:\gamedcs\kb.cpp:3763. Source-static and single-call for the same reason
+// LoadGameData is: retail expands the whole reset into EarlySetup's tail.
+static void InitVars()
+{
+    NULL_SAMPLE2.resSample = 0;
+    NULL_SAMPLE2.playSample = 0;
+    gGameCommand = -1;
+    gUnnamed6985bc = 0;
+    gpGame->field_4e678 = 0;
+    strcpy(gpGame->setup.filename,
+           DATA_COMPGEN(0x0067f5c8, defaultScenarioName, "test.h3m"));
+    gpGame->setup.fileInitialized = 0;
+    memset(glTimers, 0, sizeof(glTimers));
+    gbInSetup698400 = 0;
+    if (gUnnamed698a34) {
+        dfltMenu = LoadMenu(ghInstance, MAKEINTRESOURCE(0x6f));
+        gameMenu = LoadMenu(ghInstance, MAKEINTRESOURCE(0x71));
+    } else {
+        dfltMenu = LoadMenu(ghInstance, MAKEINTRESOURCE(0x6e));
+        gameMenu = LoadMenu(ghInstance, MAKEINTRESOURCE(0x70));
+    }
+}
+
+// E:\gamedcs\kb.cpp:645
+// WinMain's first gate, and the Dreamcast line program matches it row for
+// row (dc 0xdf91c): the once-only latch, the log directory, the twelve
+// manager singletons, the desktop probe, the preferences round trip, the
+// resource archive, the whole game-data table run, the AI tables and the
+// command line - then, only if the command line asked for a game, the CD
+// probe, the video and sound archives, the click sample and the process
+// variable reset.  Complete adds the object-type loader before
+// AI_initialize and expands both LoadGameData and InitVars in place.
+// Residual (94.25%): three branches more than retail, spread over the
+// LoadGameData expansion rather than concentrated - the call stream
+// itself agrees positionally at all 81 sites (47 of the pairings are
+// reloc-name-only, 41 against still-unclaimed retail labels and six
+// against `bool` spellings of the same declarator). Tried and rejected:
+// writing the two .smk scans as goto loops with the unconditional back
+// edge retail emits - byte-flat to the digit, so the surplus is not the
+// loop rotation.
+VA(0x004ed650, 0x4E8)  // anchor-caller (kbwin WinMain) + dc-order-map, dc 0xdf91c
+int EarlySetup()
+{
+    int iOpenResult;
+
+    if (bEarlySetupDone)
+        return 0;
+    InitLogFile(DATA_COMPGEN(0x0067f690, logDirectory, ".\\"));
+    InitMainClasses();
+    unsigned char bDesktopOk = GetDesktopInfo();
+    ReadPrefs();
+    if (!bWindowedMode && !bDesktopOk) {
+        bWindowedMode = 1;
+        WritePrefs();
+    }
+    ResourceManager::SetPath(
+        DATA_COMPGEN(0x00677d88, dataDirectoryPrefix, ".\\DATA\\"));
+    if (!ResourceManager::Open(1, 1, &iOpenResult))
+        ShutDown(iOpenResult == 1
+                     ? DATA_COMPGEN(0x0067f64c, filesMissingMessage,
+                           "Files from Heroes III are missing.   "
+                           "Please reinstall Heroes III.")
+                     : DATA_COMPGEN(0x0067f614, resourcesUnavailableMessage,
+                           "Unable to initialize resources - possible "
+                           "disk problem."));
+    if (!LoadGameData())
+        ShutDown(DATA_COMPGEN(0x0067f5fc, remoteInitializationFailed,
+            "Initialization failed!"));
+    gpGame->worldMap.NewfullMapFn_00505DA0();
+    AI_initialize();
+    if (!InterpretCommandLine())
+        return 1;
+    gCDDriveNumber = SetupCDDrive();
+    if (!LoadAnimHeaders())
+        ShutDown(DATA_COMPGEN(0x0067f614, resourcesUnavailableMessage,
+            "Unable to initialize resources - possible disk problem."));
+    if (!LoadSoundHeaders())
+        ShutDown(DATA_COMPGEN(0x0067f614, resourcesUnavailableMessage,
+            "Unable to initialize resources - possible disk problem."));
+    if (gCDDriveNumber) {
+        int i;
+
+        for (i = 0; i < gVideoHeaderCount; i++)
+            if (!_strcmpi(gVideoHeader3[i].name,
+                          DATA_COMPGEN(0x0067f5ec, expansionTwoVideoName,
+                              "h3x2_rne1.smk")))
+                goto have_cd_version;
+        for (i = 0; i < gVideoHeaderCount; i++)
+            if (!_strcmpi(gVideoHeader3[i].name,
+                          DATA_COMPGEN(0x0067f5e0, expansionOneVideoName,
+                              "h3abab1.smk"))) {
+                gCDDriveNumber = 6;
+                goto have_cd_version;
+            }
+        gCDDriveNumber = 5;
+    }
+
+have_cd_version:
+    button::click_sample = ResourceManager::GetSample(
+        DATA_COMPGEN(0x0067f5d4, buttonClickSampleName, "button.wav"));
+    InitVars();
+    InitializeCampaignMapTraitsTable();
+    bEarlySetupDone = 1;
+    return 1;
+}
+
 // E:\gamedcs\kb.cpp:431
 // The twelve manager singletons, in allocation order. Identified from the
 // body rather than from link order: retail's row here `new`s executive,
@@ -376,12 +674,7 @@ void SetupCDRom()
     // @stub
 }
 
-// E:\gamedcs\kb.cpp:645
-DC_ONLY(0xdf91c, 0x11E)
-int EarlySetup()
-{
-    // @stub
-}
+// E:\gamedcs\kb.cpp:645 - promoted to a live claim (see below).
 
 
 // E:\gamedcs\kb.cpp:814
@@ -558,12 +851,8 @@ void CheckEndGame(int bForceWin)
     // @stub
 }
 
-// E:\gamedcs\kb.cpp:3763
-DC_ONLY(0xe3a04, 0x60)
-void InitVars()
-{
-    // @stub
-}
+// E:\gamedcs\kb.cpp:3763 - reconstructed above as the source-static
+// retail expands into EarlySetup.
 
 // E:\gamedcs\kb.cpp:3798
 DC_ONLY(0xe3a64, 0x11E)
@@ -2353,12 +2642,8 @@ int GameUnsaved()
     // @stub
 }
 
-// E:\gamedcs\kb.cpp:4214
-DC_ONLY(0xe45dc, 0x3D4)
-unsigned char LoadGameData()
-{
-    // @stub
-}
+// E:\gamedcs\kb.cpp:4214 - reconstructed above as the source-static
+// retail expands into EarlySetup.
 
 // E:\gamedcs\kb.cpp:4477
 // Located by the call-graph lane: sole caller is AppCommand's default
