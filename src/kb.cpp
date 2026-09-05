@@ -1807,6 +1807,39 @@ static int DoNewGame()
     return gpWindowManager->dialogReturn != TGameTypeWindow::QUIT_ID;
 }
 
+// The two Bitmap16Bit header inlines kb.obj emits out of line, both
+// unclaimed-in-span between oldmain and DoCampaignWindow. 0x4efff0 is
+// GetMap: 25 B, `this+0x2c * y + this+0x30 + 2*x` with `ret 8`, which is
+// the accessor verbatim. 0x4f0010 is the eight-argument forwarding Draw
+// overload: it loads the destination bitmap's Pitch/Height/Width/map from
+// +0x2c/+0x28/+0x24/+0x30 and tail-calls the eleven-argument raw-pointer
+// Draw at 0x44e2b0, with `ret 0x20` for its eight stack arguments. Both
+// bodies live in bitmap16.h, so the claims sit here in the compiland that
+// emits the COMDATs and carry declarators only.
+#if 0  // @carcass: header inlines emitted by this compiland
+
+VA(0x004efff0, 0x19)  // COMDAT owner (kb.obj emits ?GetMap@Bitmap16Bit@@QAEPAGHH@Z), body in bitmap16.h
+unsigned short* Bitmap16Bit::GetMap(int x, int y)
+{
+    // @stub
+}
+
+VA(0x004f0010, 0x3B)  // COMDAT owner + anchor-callee the 0x44e2b0 raw Draw, body in bitmap16.h
+void Bitmap16Bit::Draw(int srcX, int srcY, int srcWidth, int srcHeight,
+                       Bitmap16Bit* dst, int dstX, int dstY, bool flipped) const
+{
+    // @stub
+}
+
+#endif  // @carcass
+
+// UNCLAIMED IN SPAN, and the lead is a missing CALL SITE rather than a
+// missing claim: 0x4f0050 (71 B) is CSprite::Draw's own Bitmap16Bit
+// forwarding overload (csprite.h:139) - it loads map/Width/Height/Pitch
+// off the destination and tail-calls 0x47bcf0 with eleven arguments,
+// `ret 0x2c`. Retail's kb.obj emits that COMDAT and ours does not, so
+// some kb.cpp body still to be reconstructed calls it.
+
 // E:\gamedcs\kb.cpp:1962. Dreamcast proves the helper boundary and nested
 // TCampaignWindow/TCampaignBrief lifetimes. Complete adds the campaign-set
 // and custom-campaign chooser branches; retail oldmain+0x91c performs a bare

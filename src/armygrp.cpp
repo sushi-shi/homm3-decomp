@@ -2333,3 +2333,7 @@ std::basic_string<char,std::char_traits<char>,std::allocator<char> >::_M_range_i
 // COMDAT pairing: bitset<9>::reference::operator=, agreement 0.922; the
 // neighbouring 0x4c680 row scores 0.600 against the same COMDAT.
 VA_COMPGEN(0x0044c610, 0x67, BITSET_REFERENCE_ASSIGN, bitset9)
+
+// COMDAT pairing: the same bitset<9> instantiation's _Tidy, 23 B against
+// this compiland's single 23-byte COMDAT.
+VA_COMPGEN(0x0044c6e0, 0x17, BITSET_TIDY, bitset9)

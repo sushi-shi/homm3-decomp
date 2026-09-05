@@ -621,7 +621,10 @@ public:
     // CNetPlayerInfo record itself: OnNewPlayerMsg hands it
     // &pMsg->m_playerInfo and OnUpdatePlayerPosMsg a full seat record
     // (derived-to-base). DC's takes the dpid alone.
-    unsigned char SetNewPlayerSlot(CNetPlayerInfo* pPlayer);
+    // ...and it returns nothing: the retail body sets no result on any of
+    // its four exits, and every one of its nine call sites discards the
+    // value. DC's is `unsigned char`.
+    void SetNewPlayerSlot(CNetPlayerInfo* pPlayer);
     // Dreamcast and Complete both retain the source-level town enum here.
     void UpdateTown(int pos, TTownType town, unsigned char inPopup);
     void UpdateNameLists();

@@ -41,6 +41,11 @@ inline const _TYPE& min_ref(_TYPE _X, _TYPE _Y)
     return (_X < _Y ? _X : _Y);
 }
 
+// ai_player.obj's artifact valuer (0x433aa0), declared file-locally the
+// way ai_player.cpp itself declares it - no header owns it yet.
+long AI_get_artifact_player_value(const type_artifact& artifact,
+                                  long player_id);
+
 // Dreamcast's source calls SRandom in the cyclops wall selector. Complete's
 // retail relocation names Random, so preserve the boundary through the same
 // fold-away adapter used by the other shared callers.
@@ -72,30 +77,352 @@ inline const _TYPE& min_ref_xvalue(_TYPE _X, const _TYPE& _Y)
     return (_X < _Y_copy ? _X : _Y_copy);
 }
 
-#if 0  // @carcass
+// THE HEAD OF ai.obj, 0x41e190..0x41eac0 (2026-09-05). The three rows
+// between the compiland's ten terrain.h bitset initializers
+// (0x41ddc0..0x41e18f, the excluded cinit class, with their atexit
+// thunk at 0x41dda0) and the already-claimed get_total_combat_value
+// (0x41eac0) are ai.cpp's own first three bodies, in DC roster order:
+// ChooseBallistaTarget (dc 0x23450, 766 B), failed_siege (dc 0x23750,
+// 332 B) and AICheckRetreat (dc 0x2389c, 1680 B) against retail's 680,
+// 297 and 1350 - ratios 0.89/0.89/0.80 against get_total_combat_value's
+// own 0.82. Three further proofs land on the same map: 0x41e570 calls
+// 0x41e440 as a thiscall with no argument, which is exactly the
+// failed_siege edge the DC xref census records inside AICheckRetreat;
+// cmbtmgr.h already carried 0x41e570 = AICheckRetreat from command.cpp's
+// call site alone; and the NH3API IDB, whose HD pressing runs a constant
+// +0x180 ahead of retail through this whole region (init_bitset_41E190 =
+// our 0x41e010, get_total_combat_value 0x41ec40 = our 0x41eac0), names
+// 0x41e310/0x41e5c0/0x41e6f0 with these three mangled symbols in order.
+// That also retires the `Unnamed41e190` ordinal: the IDB prototype
+// carries the DC parameter names verbatim.
 
 // E:\gamedcs\ai.cpp:43
-DC_ONLY(0x23450, 0x2FE)
+// The arrow tower's / ballista's target picker. `attack_skill` is a DEAD
+// parameter in retail - nothing reads [ebp+0xc] - and the DC prototype
+// names it, so it is transcribed rather than dropped. The scan runs
+// TWICE with the identical body: the first pass prices each stack with
+// the estimate's own kills_only, and when that pass leaves no candidate
+// (or none worth a positive score) the whole walk repeats with kills_only
+// forced to 0. Both passes keep the running best - the retry does not
+// reset best_value or result - and both re-read numArmies[target_group]
+// through the back edge.
+//
+// Residual (99.89%): one immediate - retail keeps its int-to-double
+// conversion in a COMPILER TEMP at [ebp-8], the top of the frame, and
+// pushes the four-byte locals below it (best_value -0xc, the `this`
+// spill -0x10, result -0x14); the named `double damage` that is the only
+// spelling found to emit the fild BEFORE the ComputeDefenderDamageReduction
+// call is allocated with the other named locals, at -0x14, so every frame
+// displacement shifts one slot. Tried and rejected: the conversion left
+// anonymous inside the multiply, in its own statement or with an explicit
+// static_cast<double>, both 96.29 - VC6 then evaluates the CALL first and
+// converts afterwards; declaring the double at function scope instead of
+// in the loop body is byte-identical to declaring it in the loop.
+VA(0x0041e190, 0x2A8)  // order-map(DC ai.obj head) + anchor-callee find_AI_targets, dc 0x23450
 int combatManager::ChooseBallistaTarget(int target_group, int attack_skill, int average_damage)
 {
-    // @stub
+    double damage;
+    long best_value = 0;
+    long result = -1;
+    type_AI_combat_parameters estimate(this, 1 - target_group);
+
+    find_AI_targets(target_group, 0, 0, &estimate, 0);
+
+    { for (long i = 0; i < numArmies[target_group]; i++) {
+            army* current_army = &armies[target_group][i];
+            if (current_army->Is(1u << 21))
+                continue;
+            damage = average_damage;
+            long value = static_cast<long>(
+                damage * current_army->ComputeDefenderDamageReduction(1));
+            value = current_army->get_loss_combat_value(
+                estimate.lowest_attack, estimate.lowest_defense, 1, value,
+                estimate.kills_only);
+            if (!current_army->cannot_attack() && current_army->get_AI_target()
+                    && current_army->get_AI_target_time() <= 5)
+                value /= current_army->get_AI_target_time();
+            else
+                value /= 5;
+            if (value >= best_value) {
+                best_value = value;
+                result = i;
+            }
+        }
+    }
+
+    if (!estimate.kills_only)
+        return result;
+    if (result >= 0 && best_value > 0)
+        return result;
+
+    { { for (long i = 0; i < numArmies[target_group]; i++) {
+                army* current_army = &armies[target_group][i];
+                if (current_army->Is(1u << 21))
+                    continue;
+                damage = average_damage;
+                long value = static_cast<long>(
+                    damage * current_army->ComputeDefenderDamageReduction(1));
+                value = current_army->get_loss_combat_value(
+                    estimate.lowest_attack, estimate.lowest_defense, 1, value, 0);
+                if (!current_army->cannot_attack() && current_army->get_AI_target()
+                        && current_army->get_AI_target_time() <= 5)
+                    value /= current_army->get_AI_target_time();
+                else
+                    value /= 5;
+                if (value >= best_value) {
+                    best_value = value;
+                    result = i;
+                }
+            }
+        }
+    }
+    return result;
 }
 
 // E:\gamedcs\ai.cpp:113
-DC_ONLY(0x23750, 0x14C)
+// The attacker-side census that tells AICheckRetreat a walled combat is
+// unwinnable: no live attacking stack may fly or shoot, every wall
+// segment must still be standing, and every live defender that is not
+// the arrow tower must still be inside the castle. Both stack walks
+// re-read currentSide through the back edge - retail reloads +0x132c0
+// for each bound test - and the wall census strength-reduces its
+// four-entry static into the 0x63abc0..0x63abd0 pointer walk.
+VA(0x0041e440, 0x129)  // order-map(DC ai.obj head) + anchor-caller AICheckRetreat, dc 0x23750
 unsigned char combatManager::failed_siege()
 {
-    // @stub
+    DATA(0x0063abc0) static const TWallTargetId walls[4] = {
+        WALL_TARGET_1, WALL_TARGET_2, WALL_TARGET_4, WALL_TARGET_5
+    };
+
+    army* current_army = armies[currentSide];
+    if (field_132f4 == COMBAT_FORTIFICATION_NONE)
+        return 0;
+    if (drawbridgeState != DRAWBRIDGE_UP)
+        return 0;
+    if (currentSide == 1)
+        return 0;
+
+    { for (long i = 0; i < numArmies[currentSide]; i++, current_army++) {
+            unsigned attributes = current_army->sMonInfo.attributes;
+            unsigned char dead = static_cast<unsigned char>(attributes >> 21);
+            if ((dead & 1) != 0)
+                continue;
+            if ((attributes & ((1u << 1) | (1u << 5))) != 0)
+                return 0;
+            if (current_army->can_shoot(0))
+                return 0;
+        }
+    }
+
+    { for (long i = 0; i < 4; i++) {
+            if (!get_wall_strength(walls[i]))
+                return 0;
+        }
+    }
+
+    army* enemy_army = armies[1 - currentSide];
+    { for (long i = 0; i < numArmies[1 - currentSide]; i++, enemy_army++) {
+            unsigned char dead = static_cast<unsigned char>(
+                static_cast<unsigned>(enemy_army->sMonInfo.attributes) >> 21);
+            if ((dead & 1) != 0)
+                continue;
+            if (enemy_army->creatureType == CREATURE_ARROW_TOWER)
+                continue;
+            if (!InCastle(enemy_army->gridIndex))
+                return 0;
+        }
+    }
+    return 1;
 }
 
 // E:\gamedcs\ai.cpp:162
-DC_ONLY(0x2389c, 0x690)
+// The whole retreat decision, and the DC local roster names four of its
+// variables verbatim (surrender_cost, combat_value, iSideFV, artifact).
+// Five gates, then a value model:
+//   - a non-AI side is gated on the scenario difficulty, and difficulty 1
+//     only retreats on a coin flip;
+//   - either hero wielding artifact 0x7d (Shackles of War) forbids it, and
+//     so does being the target of a defeat-hero victory condition;
+//   - a retreating hero needs a Tavern to arrive in, so the owner's town
+//     roster is censused for one; if the only such town IS the town under
+//     siege and we are the defender, there is nowhere to go;
+//   - a defender in a siege additionally needs a Stronghold's Escape
+//     Tunnel (town type 6, SPECIAL_BUILDING_ID);
+//   - failed_siege answers yes outright.
+// The value model prices the hero's equipped and backpack artifacts at
+// max(AI value, half the traits cost), refuses to retreat a poor and
+// inexperienced hero, retreats unconditionally when no stack of ours is
+// still standing, refuses when the treasury cannot cover the surrender
+// price plus 2500, and finally compares our side's share of the total
+// fight value against a difficulty- and experience-adjusted threshold.
+//
+// The guards are written as retail wrote them - ONE `return 0` at the
+// bottom of a nested-if pyramid. Written as thirteen early returns the
+// body scores 60.44 with seventeen epilogues against retail's four; the
+// pyramid alone is +24.22 and makes the branch census exact (54/54
+// branches, 4/4 rets).
+//
+// Residual (95.39%): the town census keeps `i` in a memory slot and
+// numTowns in EBX where retail does the reverse - retail's `xor ebx,ebx`
+// serves count, the flag AND the index, so the numTowns guard compares
+// against the zero REGISTER, and with EDI then holding the player record
+// retail must RELOAD gpGame for the players base where our EDI still
+// carries it from the victory-condition test. One allocation cascade,
+// four instructions. Tried and rejected, all byte-flat: initialising the
+// index before the numTowns guard, hoisting the index to the enclosing
+// block, dropping the braces around the loop, and dropping the named
+// numTowns so the bound is the compiler's own CSE of player->numTowns.
+// The two remaining singles are a `lea` scheduled one slot late in the
+// army scan and the fight-value walk's +0x4c bias emitted as a separate
+// `add` rather than folded into the base `lea`.
+//
+// Levers that paid, in order: the nested-if pyramid (60.44 -> 84.66);
+// naming the AI_get_artifact_player_value result so the call is
+// evaluated BEFORE the traits-cost operand of max_ref - VC6 evaluates
+// by-value arguments right to left, and with the call first the
+// half-cost no longer has to survive it, which frees EDI for the loop
+// index and lets combat_value live in EBX (84.66 -> 94.82); naming the
+// attribute word so the flag test is `test ecx, 0x4000000` and not
+// Is()'s shr/test pair, plus naming the final quotient so the division
+// result round-trips through its own float slot (94.82 -> 95.33); and
+// subscripting the fight-value walk instead of walking a named pointer
+// (95.33 -> 95.39).
+VA(0x0041e570, 0x546)  // order-map(DC ai.obj head) + anchor-callee failed_siege, dc 0x2389c
 unsigned char combatManager::AICheckRetreat()
 {
-    // @stub
-}
+    if (heroes[currentSide]
+        && (sideIsAI[currentSide]
+            || (gpGame->setup.difficulty
+                && (gpGame->setup.difficulty != 1 || Random(1, 100) > 50)))
+        && (!heroes[0] || !heroes[0]->IsWieldingArtifact(0x7d))
+        && (!heroes[1] || !heroes[1]->IsWieldingArtifact(0x7d))
+        && (gpGame->mapHeader.victoryCondition.Type != VICTORY_CONDITION_DEFEAT_HERO
+            || gpGame->mapHeader.victoryCondition.HeroID
+               != heroes[currentSide]->id)) {
+        long iSideFV = currentSide;
+        long count = 0;
+        unsigned char besieged_town_only = 0;
+        playerData* player = &gpGame->players[heroes[currentSide]->owner];
+        long numTowns = player->numTowns;
+        if (numTowns > 0) {
+            { for (long i = 0; i < numTowns; i++) {
+                    town* current_town = gpGame->GetTown(player->townIds[i]);
+                    if (current_town->HasBuilding(TAVERN_ID, 1)) {
+                        count++;
+                        if (defendingTown == current_town)
+                            besieged_town_only = 1;
+                    }
+                }
+            }
+            if (count
+                && (count != 1 || iSideFV != 1 || !besieged_town_only)
+                && (!defendingTown || iSideFV != 1
+                    || (defendingTown->type == TOWN_STRONGHOLD
+                        && defendingTown->HasBuilding(SPECIAL_BUILDING_ID, 1)))) {
+                if (failed_siege())
+                    return 1;
 
-#endif  // @carcass
+                long combat_value = 0;
+                type_artifact artifact;
+                { for (long i = 0; i < 19; i++) {
+                        artifact = heroes[currentSide]->equipped[i];
+                        if (artifact.artifactId == ARTIFACT_NONE)
+                            continue;
+                        long artifact_value = AI_get_artifact_player_value(
+                            artifact, playerIds[currentSide]);
+                        combat_value += max_ref(
+                            artifact_value,
+                            static_cast<long>(
+                                akArtifactTraits[artifact.artifactId].cost / 2));
+                    }
+                }
+                { for (long i = 0; i < 64; i++) {
+                        artifact = heroes[currentSide]->backpack[i];
+                        if (artifact.artifactId == ARTIFACT_NONE)
+                            continue;
+                        long artifact_value = AI_get_artifact_player_value(
+                            artifact, playerIds[currentSide]);
+                        combat_value += max_ref(
+                            artifact_value,
+                            static_cast<long>(
+                                akArtifactTraits[artifact.artifactId].cost / 2));
+                    }
+                }
+                if (combat_value >= 1000
+                    || heroes[currentSide]->experience >= 2000) {
+                    long surrender_cost = get_surrender_cost();
+                    simulate_combat(currentSide, 1);
+
+                    long remaining = numArmies[currentSide];
+                    army* current_army = armies[currentSide];
+                    while (remaining-- > 0) {
+                        if (!(current_army->Is(1u << 21))
+                            && !(current_army->Is(1u << 6))
+                            && current_army->get_total_hit_points(1) > 0)
+                            break;
+                        current_army++;
+                    }
+                    if (remaining < 0)
+                        return 1;
+                    if (player->resources[GOLD] >= surrender_cost + 2500) {
+                        long fight_values[2];
+                        { for (long side = 0; side < 2; side++) {
+                                long fight_value = 0;
+                                { for (long i = 0; i < 20; i++) {
+                                        army* side_army = &armies[side][i];
+                                        if (side_army->creatureType < 0)
+                                            continue;
+                                        if (side_army->numTroops <= 0)
+                                            continue;
+                                        long value =
+                                            side_army->numTroops
+                                            * side_army->sMonInfo.baseFightValue;
+                                        unsigned attributes =
+                                            side_army->sMonInfo.attributes;
+                                        if (!(attributes & (1u << 26)))
+                                            value = static_cast<long>(value * 1.2);
+                                        fight_value += value;
+                                    }
+                                }
+                                fight_values[side] = fight_value;
+                                if (defendingTown && side == 1)
+                                    fight_values[1] =
+                                        static_cast<long>(fight_value * 1.1);
+                            }
+                        }
+                        fight_values[1 - currentSide] = static_cast<long>(
+                            fight_values[1 - currentSide] * 1.1);
+
+                        float threshold = 0.16f;
+                        if (combat_value > 10000)
+                            threshold = 0.22f;
+                        else if (combat_value > 5000)
+                            threshold = 0.21f;
+                        else if (combat_value > 0)
+                            threshold = 0.2f;
+                        threshold -= (4 - gpGame->setup.difficulty) * 0.015;
+                        float experience_bonus =
+                            heroes[currentSide]->experience / 200000;
+                        if (experience_bonus > 0.03)
+                            experience_bonus = 0.03f;
+                        threshold += experience_bonus;
+                        if (!currentSide)
+                            threshold -= 0.06f;
+                        if (threshold > 0.16)
+                            threshold = 0.16f;
+                        float ratio =
+                            static_cast<float>(fight_values[currentSide])
+                            / static_cast<float>(fight_values[0]
+                                                 + fight_values[1]);
+                        if (ratio < threshold)
+                            return 1;
+                    }
+                }
+            }
+        }
+    }
+    return 0;
+}
 
 // E:\gamedcs\ai.cpp:339
 // The four ai_tactical callers (0x435fb3..0x435ff8, the combat-
@@ -4266,6 +4593,10 @@ void std::__pop_heap_aux(army** __first, army** __last, army** __formal, func_mo
 }
 
 #endif  // @carcass
+
+// COMDAT pairing: vector<army*>::size - ai.obj's own copy, 19 B against
+// the 19-byte emitted COMDAT and the only candidate of that size here.
+VA_COMPGEN(0x00423110, 0x13, VECTOR_SIZE, army)
 
 // COMDAT pairing: vector<army*>::insert, agreement 0.985
 // (230 base vs 223 retail instructions).
