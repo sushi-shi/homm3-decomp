@@ -385,10 +385,18 @@ CTownDlg::CTownDlg(unsigned char newGameMode)
 VA_COMPGEN(0x00575e30, 0x21, SCALAR_DELETING_DTOR, CHeroDlg)  // vtbl 0x641a68/0x641a90/0x641ab8 slot0; ICF folds CTownDlg (dc 0x12f36c) + CTeamAlignmentDlg (dc 0x12f3a0) dtors, dc 0x12f338
 
 // E:\gamedcs\singleselectionpopups.cpp:302
-// Residual (87.28%): the 24-branch / 2-return sequence and ordered call
-// multiset agree. The remaining frame/register class is one slot (our 0x14
-// frame vs retail 0x18) plus a 273-slot visible distance. A bounded 1,785-form
-// depth-1..3 AST tree over 25 clean mutations found no improvement.
+// FIXED 87.2839% -> 98.6504% (2026-09-05). The old note's "one slot (our 0x14
+// frame vs retail 0x18)" WAS the whole wall, and the missing local is the row
+// centre. The two dwelling rows start at `width / 2 - 68` and `width / 2 - 88`;
+// written as two expressions VC6 re-derives the signed halving (`cdq/sub/sar`
+// off `[this+0x20]`) in the second preheader, which costs six instructions,
+// pushes iconX into EBX instead of retail's dead-parameter home `[ebp+8]`, and
+// leaves a one-instruction loop header the preheader has to `jmp` past. Retail
+// computes the centre ONCE into `[ebp-0x1c]` and both preheaders just bias it
+// (`lea eax,[ecx-0x58]`). Naming it makes the skeletons identical: 50/50
+// blocks, zero flow-kind, size-only, target-shift or missing rows.
+// Residual (98.6504%): one register divergence at +0xe5, inside the
+// CSpriteWidget Add; every other asm row is an unclaimed-reloc name.
 VA(0x00575e60, 0x670)  // anchor-vtable CTownDlg::CreateWin inlines CSpriteWidget ctor (stores vtbl 0x641a00), ret 0xc (3 args), dc 0x12e708
 unsigned char CTownDlg::CreateWin(CSprite* town, int frame, TTownType townType)
 {
@@ -406,7 +414,8 @@ unsigned char CTownDlg::CreateWin(CSprite* town, int frame, TTownType townType)
         gpGeneralText->GetText(80), "medfont.fnt", font::PRIMARY,
         -1, 1, 0, 8));
 
-    int iconX = width / 2 - 68;
+    int centerX = width / 2;
+    int iconX = centerX - 68;
     int textX = iconX - 10;
     int creatureBase = townType * (2 * TOWN_DWELLING_COUNT);
     int slot;
@@ -424,7 +433,7 @@ unsigned char CTownDlg::CreateWin(CSprite* town, int frame, TTownType townType)
         textX += 52;
     }
 
-    iconX = width / 2 - 88;
+    iconX = centerX - 88;
     textX = iconX - 10;
     for (slot = 3; slot < TOWN_DWELLING_COUNT; ++slot) {
         int creature = gTownDwellingCreatures[creatureBase + slot];

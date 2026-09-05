@@ -2885,7 +2885,7 @@ singleselectionpopups	?CreateWin@CBonusDlg@@QAEEPBDPAVBitmap816@@00@Z	95.5075	95
 singleselectionpopups	?CreateWin@CBonusDlg@@QAEEPBDPAVCSprite@@H00@Z	98.0000	98.0000	98.0000	0x1754f0	09006518463c
 singleselectionpopups	?CreateWin@CHeroDlg@@QAEEPAVBitmap816@@PBDPAVCSprite@@H11@Z	93.9279	93.9279	93.9279	0x175a90	b6dab2614e30
 singleselectionpopups	?CreateWin@CTeamAlignmentDlg@@QAEEXZ	99.1096	99.1096	99.1096	0x176540	c37ff47d8769
-singleselectionpopups	?CreateWin@CTownDlg@@QAEEPAVCSprite@@HW4TTownType@@@Z	87.2762	87.2762	87.2762	0x175e60	f87a84c7a275
+singleselectionpopups	?CreateWin@CTownDlg@@QAEEPAVCSprite@@HW4TTownType@@@Z	98.6504	98.6504	98.6504	0x175e60	561910e47a99
 singleselectionpopups	?Draw@CBitmapWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x175a20	42a30f029b9f
 singleselectionpopups	?Draw@CSpriteWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x175750	bf732620ec2c
 singleselectionpopups	?GetTeams@CTeamAlignmentDlg@@QAEXXZ	100.0000	100.0000	100.0000	0x176930	0c538aa1d313
