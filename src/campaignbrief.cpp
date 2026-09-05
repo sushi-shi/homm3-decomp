@@ -1165,14 +1165,29 @@ std::string TCampaignBrief::ScenarioStruct::GetRegionDescription() const
     return region_desc;
 }
 
-#if 0  // Remaining Dreamcast-only carcass.
-
-// E:\gamedcs\campaignbrief.cpp:1401
-DC_ONLY(0x5ab48, 0x3A)
-std::basic_string<char,std::char_traits<char>,std::allocator<char> get_campaign_name(__$ReturnUdt)
+// E:\gamedcs\campaignbrief.cpp:1401. Promoted from the Dreamcast-only
+// carcass on body evidence: a FASTCALL free function with no stack
+// arguments whose only parameter is the hidden std::string return
+// pointer in ECX, sitting immediately after this TU's last claimed row
+// (0x45bad0 ends at 0x45bc04). Its call chain is the whole
+// identification - SCampaign::GetCampaignFileName off gpGame->campaign,
+// a heap CampaignHeaderStruct over that name, Load, and
+// CampaignHeaderStruct::GetCampaignName by value. The header object is
+// never freed; that is retail's, transcribed and not invented.
+VA(0x0045bc10, 0xC0)  // link-order tail + call chain, dc 0x5ab48
+std::string get_campaign_name()
 {
-    // @stub
+    // The temporary is destroyed at the end of ITS OWN statement and the
+    // pointer is used after: retail's own order, transcribed.
+    const char* fileName = gpGame->campaign.GetCampaignFileName().c_str();
+    TCampaignBrief::CampaignHeaderStruct* header =
+        new TCampaignBrief::CampaignHeaderStruct(fileName);
+
+    header->Load();
+    return header->GetCampaignName();
 }
+
+#if 0  // Remaining Dreamcast-only carcass.
 
 // E:\gamedcs\campaignbrief.cpp:1409
 DC_ONLY(0x5ab84, 0x60)

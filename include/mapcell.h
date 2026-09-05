@@ -472,6 +472,12 @@ public:
     // DoWanderingMonsterResult needs the monster fields AND objectIndex
     // from the same record. This anonymous union is the retail-visible
     // half of the DC's `NewmapCell : public ExtraInfoUnion`.
+    // kb.obj's PlayerDead adds the shipyard arm: it reads the owner off
+    // the CELL (`mov eax,[cell] / shl eax,0x18 / sar eax,0x18`), which is
+    // the signed 8-bit bitfield at bit 0 of the dword and NOT what a
+    // `char` member or a mask over the plain arm produces.  Same encoding
+    // as advmgr_objects.h's CObject arm - the object's dword is what ends
+    // up here.
     union {
         unsigned long extraInfo;
         MonsterInfo monster_info;
@@ -480,6 +486,7 @@ public:
         ScholarInfo scholar_info;
         SeaChestInfo sea_chest_info;
         PyramidInfo pyramid_info;
+        ShipyardInfo shipyard_info;
     };
     // +0x04 and +0x08: two int allocation units of SIGNED 8-BIT
     // BITFIELDS, sliced 2026-08-08 out of the old `unsigned char
