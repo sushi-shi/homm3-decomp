@@ -495,4 +495,4 @@ unsigned std::_Base_bitset<18,unsigned long>::_S_whichbit(unsigned __pos)
 // COMDAT pairing: bitset<19>::_Xran - `cmp <reg>, 0x13` guards the call at
 // 0x4d380 and at hero's HeroFn_004E2550, and artifact.obj is the only object
 // that emits `?_Xran@?$bitset@$0BD@@`. The nineteen artifact slots.
-VA_COMPGEN(0x0044d400, 0xC8, BITSET_XRAN, Bitset19)
+VA_COMPGEN(0x0044d400, 0xCB, BITSET_XRAN, Bitset19)
