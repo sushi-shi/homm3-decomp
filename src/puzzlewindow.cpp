@@ -500,14 +500,35 @@ static long check_match(long player, long first_x, long first_y,
 // their const references DIRECTLY to `x`, `y` and the four accumulators -
 // `lea ecx,[ebp-0x24]` on the counter's own home - which takes the
 // induction variable's address and forbids the rewrite, while retail copies
-// every operand into the same two temporaries ([ebp-0x30]/[ebp-0x2c]) and
-// leaves x, y, max_x and min_y in EDX, EAX, ESI and EBX. The frame is four
-// bytes over retail's 0x80 for the same reason: six values memory-homed
-// against retail's two. Tried and rejected, all byte-flat or worse:
-// swapping every min/max argument pair (79.1706), hoisting `x` and `y` to
-// function scope (79.1843 to the digit). What is wanted is an argument form
-// that is an RVALUE on both sides, and no plausible source spelling for it
-// has been found - a cast would be inventing one.
+// every operand into the same two temporaries ([ebp-0x30]/[ebp-0x2c]).
+//
+// 79.1843 -> 85.9430 (2026-09-05), and the note above named the answer
+// without reaching it: the operand form IS the lever, and the spelling that
+// supplies it is a NAMED LOCAL, not a cast.
+//  - `int cur_x = x; int cur_y = y;` inside the visible arm, with the four
+//    reducers reading those instead of the induction variables: 79.1843 ->
+//    82.6674, and the block skeleton goes from ZERO exact blocks to 57 of
+//    70 with flow-kind and target-shift both at 0. Copying only x (77.12)
+//    or only y (82.22) is worse than copying both; copying the four
+//    accumulators as well is worse again (80.76); naming `x + 1` / `y + 1`
+//    costs 2.9. `x + 0` scores 82.78 and is not shipped - it is an invented
+//    token for the same effect the local gets honestly.
+//  - the two window bounds are then NESTED reducer calls whose INNER result
+//    retail lands in a temp of its own: `int span_x = _cpp_max(first_x - 9,
+//    first_x - min_x); int start_x = _cpp_max(span_x, 0);` and the same for
+//    limit_x/end_x/span_y/limit_y. Naming the two start bounds' inners is
+//    +2.16, naming all four is +2.99 (-> 85.6551), and it retires the last
+//    two branch-polarity flips: branches now AGREE 40 = 40.
+//  - the four reducers are then emitted MINS FIRST: min_x, min_y, max_x,
+//    max_y is 85.9430 against 85.6551 for the x-then-y pairing, 85.81 for
+//    two per-axis blocks, 85.68 for maxes first and 85.17 for interleaved.
+//
+// Residual (85.94%): 70 = 70 blocks with 58 exact, 40 = 40 branches
+// agreeing, calls agreeing, and 12 size-only blocks left. All of it is slot
+// layout: retail runs every reducer operand through ONE pair of temporaries
+// ([ebp-0x30]/[ebp-0x2c]) and memory-homes `min_x` at [ebp-0x80], re-reading
+// it per iteration, where we spread the copies over four slots and keep
+// min_x in ESI. Our frame is 0x84 against retail's 0x80 for that reason.
 VA(0x0052cf10, 0x5B4)  // anchor-caller AI_attempt_puzzle_guess +0x39d, dc 0x115be8
 type_point match_puzzle(long player, type_AI_puzzle_tile (*puzzle_map)[17])
 {
@@ -532,10 +553,12 @@ type_point match_puzzle(long player, type_AI_puzzle_tile (*puzzle_map)[17])
                     first_y = y;
                     found = 1;
                 }
-                min_x = std::_cpp_min(x, min_x);
-                max_x = std::_cpp_max(max_x, x + 1);
-                min_y = std::_cpp_min(y, min_y);
-                max_y = std::_cpp_max(max_y, y + 1);
+                int cur_x = x;
+                int cur_y = y;
+                min_x = std::_cpp_min(cur_x, min_x);
+                min_y = std::_cpp_min(cur_y, min_y);
+                max_x = std::_cpp_max(max_x, cur_x + 1);
+                max_y = std::_cpp_max(max_y, cur_y + 1);
             }
         }
     }
@@ -546,16 +569,16 @@ type_point match_puzzle(long player, type_AI_puzzle_tile (*puzzle_map)[17])
     int ties = 0;
     int best = 0;
 
-    int start_x =
-        std::_cpp_max(std::_cpp_max(first_x - 9, first_x - min_x), 0);
-    int end_x = std::_cpp_min(
-        MAP_WIDTH,
-        std::_cpp_min(MAP_WIDTH - max_x + first_x, MAP_WIDTH + first_x - 9));
-    int start_y =
-        std::_cpp_max(std::_cpp_max(first_y - 8, first_y - min_y), 0);
-    int end_y = std::_cpp_min(
-        MAP_HEIGHT,
-        std::_cpp_min(MAP_WIDTH - max_y + first_y, MAP_HEIGHT + first_y - 8));
+    int span_x = std::_cpp_max(first_x - 9, first_x - min_x);
+    int start_x = std::_cpp_max(span_x, 0);
+    int limit_x = std::_cpp_min(MAP_WIDTH - max_x + first_x,
+                                MAP_WIDTH + first_x - 9);
+    int end_x = std::_cpp_min(MAP_WIDTH, limit_x);
+    int span_y = std::_cpp_max(first_y - 8, first_y - min_y);
+    int start_y = std::_cpp_max(span_y, 0);
+    int limit_y = std::_cpp_min(MAP_WIDTH - max_y + first_y,
+                                MAP_HEIGHT + first_y - 8);
+    int end_y = std::_cpp_min(MAP_HEIGHT, limit_y);
 
     type_point scan;
     for (scan.z = 0; scan.z < gpGame->worldMap.GetNumLevels(); ++scan.z) {

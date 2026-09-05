@@ -128,6 +128,29 @@ void UpdateBackpack(int iSlot);
 // byte-inert: the DC CodeView local order, monsterX/monsterY swapped
 // (90.40, stores reorder only), currTown/currHero declared first in their
 // blocks. The DC statement order of the town block matches ours.
+//
+// 90.9107 -> 91.7418 (2026-09-05): the town row's TWO `iLookup` chains
+// carry their default in a FINAL `else` ARM, not in a leading assignment.
+// Written `iLookup = 0; if (capitol) 1; else if (city) 2; else if (town)
+// 3;` VC6 gives the variable a memory home and stores each arm's constant
+// to it; written with the default as the chain's own `else`, retail's
+// shape returns - iLookup lives in ESI, the third test sets `esi,3`
+// SPECULATIVELY before its own `jne` to the join, and the else arm
+// materialises the default by reloading the slot rather than `xor`ing.
+// The two chains are independent doses: hall alone +0.33, castle alone
+// +0.34, both +0.83. Byte-flat on top of that (VC6 folds the dead store):
+// keeping the leading `iLookup = 0;`/`= 3;` as well, either or both, and
+// `int iLookup = 0;` at the declaration.
+//
+// Residual (91.74%): 145 = 145 branches with TWO polarity flips left, and
+// both are one shared header inline. `GetTown`'s null arm at overview.cpp
+// :214 emits `cmp eax,-1 / jne <compute>` here where retail emits `je
+// <null>` and falls through into the town-pointer arithmetic; the
+// remaining hall-chain flip is the same inline's second reader. game.h
+// spells it `if (townId == -1) return 0; return &towns[townId];`, which is
+// what every OTHER caller wants, so this is the shared-inline-with-two-
+// retail-decisions class and the fix would be a duplicate helper the
+// Dreamcast roster does not name.
 // E:\gamedcs\overview.cpp:220
 VA(0x0051bd50, 0x25DC)  // exhaustive body/caller identity, dc 0x104458
 void game::SetupDynamicStuff(int bUpdate, int bForceUpdate)
@@ -239,13 +262,14 @@ void game::SetupDynamicStuff(int bUpdate, int bForceUpdate)
             overWin->AddWidget(iconWidgetDynamic[slot + iCurBitmap], -1);
             iCurBitmap++;
 
-            iLookup = 0;
             if (currTown->HasBuilding(HALL_CAPITOL_ID, false))
                 iLookup = 1;
             else if (currTown->HasBuilding(HALL_CITY_ID, false))
                 iLookup = 2;
             else if (currTown->HasBuilding(HALL_TOWN_ID, false))
                 iLookup = 3;
+            else
+                iLookup = 0;
 
             iconWidgetDynamic[slot + iCurBitmap] = new iconWidget(
                 91, row * 116 + 55, 38, 38, rowWidgetId + 51,
@@ -256,13 +280,14 @@ void game::SetupDynamicStuff(int bUpdate, int bForceUpdate)
             overWin->AddWidget(iconWidgetDynamic[slot + iCurBitmap], -1);
             iCurBitmap++;
 
-            iLookup = 3;
             if (currTown->HasBuilding(CASTLE_FORT_ID, false))
                 iLookup = 0;
             else if (currTown->HasBuilding(CASTLE_CITADEL_ID, false))
                 iLookup = 1;
             else if (currTown->HasBuilding(CASTLE_CASTLE_ID, false))
                 iLookup = 2;
+            else
+                iLookup = 3;
 
             iconWidgetDynamic[slot + iCurBitmap] = new iconWidget(
                 133, row * 116 + 55, 38, 38, rowWidgetId + 52,
@@ -1723,15 +1748,14 @@ TOverviewWindow::TOverviewWindow()
             }
             if (item < 0) {
                 item = field_60.size();
+                // The mine arm's append is `push_back`, not a pinned
+                // `insert(end(), record)`: the pin was worth +1.82 when it
+                // was written and is worth -0.65 now (78.9297 unpinned
+                // against 78.2776 pinned, both under the 80.0954 the row
+                // banked in an older delink generation), so the debt buys
+                // nothing and goes.
                 overview_item_record record = { 'U', 0 };
-                overview_item_record* position = field_60.end();
-                // TOverviewWindow::TOverviewWindow -> vector::insert:
-                // retail calls the two-argument body here. Without this
-                // statement pin VC6 flattens it into the three-argument
-                // overload, adding a count argument and changing the CFG.
-#pragma inline_depth(0)
-                field_60.insert(position, record);
-#pragma inline_depth()
+                field_60.push_back(record);
             }
             ++field_60[item].field_04;
         } else if (current.type == mine::MINE_TYPE_LIGHTHOUSE) {
@@ -1743,13 +1767,7 @@ TOverviewWindow::TOverviewWindow()
             if (item < 0) {
                 item = field_60.size();
                 overview_item_record record = { 'R', 0 };
-                overview_item_record* position = field_60.end();
-                // TOverviewWindow::TOverviewWindow -> vector::insert:
-                // the second retail mine branch has the same direct-call
-                // boundary; flattening is the matching negative control.
-#pragma inline_depth(0)
-                field_60.insert(position, record);
-#pragma inline_depth()
+                field_60.push_back(record);
             }
             ++field_60[item].field_04;
         }
