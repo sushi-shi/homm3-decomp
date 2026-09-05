@@ -654,6 +654,12 @@ public:
     // slot-int precedent) - an enum return would need a cast.
     static int UpgradedDwellingID(int id);
 
+    // building.txt's reader, and a STATIC member: retail's body never
+    // touches ECX and kb's start-up table run calls it with no receiver.
+    // Promoted from a CODEVIEW comment 2026-09-06 with the body; the three
+    // cost tables below are the ones it fills.
+    static unsigned char InitializeBuildingCostsTables();
+
     // DC public ?included_buildings@town@@2PAY0CM@_JA (44-slot __int64
     // rows). Retail .bss 0x6a8bb8, nine 0x160-stride rows to 0x6a9818
     // (the DC build carries eight); filled by initialize.cpp's
@@ -673,9 +679,10 @@ public:
     // ?DwellingCosts@town@@1PAY1O@6HA = int(*)[14][7]).
     // The index arithmetic retail emits is the proof of the strides:
     // 9*type + (building-17) for the special row, 14*type +
-    // (building-30) for the dwelling row. Definitions live in the TU
-    // that fills them (town::InitializeBuildingCostsTables, not yet
-    // located in retail) - declared, not claimed, here.
+    // (building-30) for the dwelling row. LOCATED 2026-09-06: the TU
+    // that fills them is this one, and the three definitions now sit in
+    // src/town.cpp beside InitializeBuildingCostsTables (0x5c14c0), whose
+    // three walks end exactly on the next table's address.
     // NeutralBuildingCosts' leading bound is the only soft number: the
     // 17 rows the band uses end 8 bytes short of SpecialBuildingCosts.
     static int NeutralBuildingCosts[SPECIAL_BUILDING_ID][NUM_RESOURCES];
@@ -898,7 +905,6 @@ extern const type_building_id gHordeBuildings[4];
 // CODEVIEW(E:\gamedcs\town.cpp:2375, dc 0x168bd0) armyGroup* town::get_army();
 // CODEVIEW(E:\gamedcs\town.cpp:2385, dc 0x168bf8) const armyGroup* town::get_army();
 // CODEVIEW(E:\gamedcs\town.cpp:2397, dc 0x168c20) type_building_id town::UpgradedDwellingID(type_building_id id);
-// CODEVIEW(E:\gamedcs\town.cpp:2419, dc 0x168c3c) unsigned char town::InitializeBuildingCostsTables();
 // CODEVIEW(E:\gamedcs\Town.h:331, dc 0x168dfc) void town::set_mask(__int64 new_mask);
 
 // --- townManager ---
