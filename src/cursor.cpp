@@ -75,14 +75,75 @@ void advManager::StopCursor(unsigned char standEnd)
 
 #if 0  // @carcass
 
-// E:\gamedcs\cursor.cpp:110
+#endif  // @carcass
+
+// E:\gamedcs\cursor.cpp:110. The moving hero's own sprite pass - the third
+// member of the DrawCursorAlpha/DrawCursor/DrawCursorShadow family and the
+// only one that reaches the boat froth and the boat flag.
+//
+// Every call goes through CSprite::DrawHero's Bitmap16Bit header wrapper,
+// which Complete expands into the raw map/Width/Height/Pitch call, and every
+// animated flag frame is the same `(animFrame + cursorFrameCount) % 8` the
+// alpha twin uses (retail's signed and/jns/dec/or/inc modulo idiom).
+//
+// Residual (80.32%): register homing, the same one DrawCursorShadow carries.
+// All 14 blocks, 8 branches and 7 calls agree; retail binds EBX to CellX and
+// HOMES refY in the recycled CellX parameter slot, re-reading it at each of
+// the seven argument sites, while our compile binds EBX to refY and re-reads
+// CellX. `why-reg --model` reports the first definitions AGREEING (esi/ebx/edi
+// in the same slots) and puts the divergence past the B1 minimum slice.
+// Measured and rejected: refY assigned before refX (80.31), dropping refY and
+// writing `CellY * 32` at all seven sites (78.96), and hoisting
+// `curr->GetHflip()` into the `hflip` byte local the Dreamcast roster names
+// (71.73 - retail recomputes `cmp [hero+0x47],4 / seta` at every call).
 VA(0x0047f860, 0x2D9)  // draw call set + ret 8, dc 0x79b0c
 void advManager::DrawCursor(int CellX, int CellY)
 {
-    // @stub
-}
+    if (gCompleteDrawEnabled) {
+        if (!bSpecialHideCursor) {
+            int refX = (CellX + 8) * 32;
+            int refY = CellY * 32;
 
-#endif  // @carcass
+            hero* curr = gpGame->GetHero(gpCurrentPlayer->currHeroId);
+            if (curr) {
+                if (curr->flags & 0x40000) {
+                    boat* currBoat = gpGame->GetHeroBoat(curr->id, 1);
+
+                    if (!GetCell(curr->get_location())->IsBeachBorder) {
+                        boatFrothIcons[currBoat->type]->DrawHero(
+                            cursorSequence, cursorFrameCount,
+                            CellX * 32, refY, 32, 32,
+                            gpWindowManager->screenBitmap,
+                            refX, refY + 232, curr->GetHflip());
+                    }
+                    boatFlagIcons[currBoat->type][currBoat->playerOwner]
+                        ->DrawHero(
+                            cursorSequence,
+                            (animFrame + cursorFrameCount) % 8,
+                            CellX * 32, refY, 32, 32,
+                            gpWindowManager->screenBitmap,
+                            refX, refY + 232, curr->GetHflip());
+                    boatIcons[currBoat->type]->DrawHero(
+                        cursorSequence, cursorFrameCount,
+                        CellX * 32, refY, 32, 32,
+                        gpWindowManager->screenBitmap,
+                        refX, refY + 232, curr->GetHflip());
+                } else {
+                    flagIcons[curr->owner]->DrawHero(
+                        cursorSequence, (animFrame + cursorFrameCount) % 8,
+                        CellX * 32, refY, 32, 32,
+                        gpWindowManager->screenBitmap,
+                        refX, refY + 232, curr->GetHflip());
+                    cursorIcons[curr->heroClass]->DrawHero(
+                        cursorSequence, cursorFrameCount,
+                        CellX * 32, refY, 32, 32,
+                        gpWindowManager->screenBitmap,
+                        refX, refY + 232, curr->GetHflip());
+                }
+            }
+        }
+    }
+}
 
 // E:\gamedcs\cursor.cpp:199. The shadow pass of the same cursor the two
 // neighbours draw: one CSprite::DrawHeroShadow per hero, through the
@@ -649,16 +710,53 @@ NewmapCell* advManager::MoveHero(int direction, unsigned char standEnd, type_poi
     return returnCell;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\cursor.cpp:961
+// E:\gamedcs\cursor.cpp:961. After a step, look for a wandering monster on
+// one of the eight neighbouring squares and, if one is there, stop the walk
+// cursor and run the encounter.
+//
+// The (0xff, 0xff, 0xff) point is the same invalid-point sentinel
+// game::SetupAdjacentMons already uses: retail's packed stores clear bits 8..9
+// and set only bits 0..7, which is three widened 0xff values and not the
+// Dreamcast's (-1, -1, -1). The one point serves as BOTH the result buffer and
+// the `excluded` by-value argument.
+//
+// The whole StopCursor(1) body is expanded here rather than called, and the
+// second GetCell is a discarded call retail keeps - transcribed as written.
+//
+// `location` has to be a NAMED local even though it feeds one call: retail
+// builds the hero's packed point BEFORE the sentinel, and writing
+// `curr->get_location()` in the argument list builds it after (74.82 against
+// 95.32). Declaring the sentinel first is worse again (74.32).
+//
+// Residual (95.32%): ONE branch polarity, in game.h's GetHero expansion.
+// Retail lays the id == -1 arm out AFTER the address computation and reaches
+// it with `je`; our compile emits the null arm first and jumps to the
+// computation with `jne`. The same header inline in ValidMoveWithEvent 500
+// bytes below reaches 100.0000 with retail's own `jne` layout, so this is a
+// C2 block-ordering choice and not a source difference; every other block,
+// all nine calls and the whole call order already agree.
 VA(0x00481900, 0x1C1)  // exhaustive cursor-tail order/call set, dc 0x7bbbc
 void advManager::CheckAdjacentMon(int* bFoughtBattle)
 {
-    // @stub
-}
+    hero* curr = gpGame->GetHero(gpCurrentPlayer->currHeroId);
+    type_point location = curr->get_location();
+    type_point monster(0xff, 0xff, 0xff);
 
-#endif  // @carcass
+    if (FindAdjacentMonster(location, &monster, monster)) {
+        StopCursor(1);
+        curr->pathTargetY = -1;
+        curr->pathTargetX = -1;
+        CompleteDraw(0);
+        UpdateScreen(0, 0);
+
+        NewmapCell* monsterCell = GetCell(monster);
+        GetCell(curr->get_location());
+        DoEventWanderingMonster(monsterCell, curr, monster,
+                                gpCurrentPlayer->IsLocalHuman()
+                                    && !gUnnamed691209);
+        *bFoughtBattle = 1;
+    }
+}
 
 // E:\gamedcs\cursor.cpp:989. The step-onto-a-hero variant: a destination
 // carrying another hero is a legal step only when both parties are afloat,
