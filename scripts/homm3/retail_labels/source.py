@@ -75,6 +75,7 @@ build (the `homm3 delink` chain does).
 from __future__ import annotations
 
 import bisect
+import hashlib
 import itertools
 import os
 import re
@@ -177,7 +178,17 @@ DEQUE_PRIMITIVE_ELEMENT = {"C": "signed_char", "D": "char",
 #: `_template_element_pairing` splits it by the element the CLAIM names -
 #: spelled `<Element>_<template>`, the same two-part owner `hero_vector`
 #: established for the shared vector-constructor group.
-SINGLE_ARG_TEMPLATE_DTORS = ("auto_ptr",)
+#: Keys are the LOWERCASED spelling a claim owner carries; values are the
+#: template's real casing, which is what the mangled name spells.
+#: `CAutoArray` needs both halves - `??1` AND the `??_G` scalar deleting
+#: destructor - because its two instantiations are NOT ICF-folded (each
+#: stores its own vftable) yet still share one join key.
+SINGLE_ARG_TEMPLATE_DTORS = {"auto_ptr": "auto_ptr",
+                             "cautoarray": "CAutoArray"}
+#: The claim markers a `<Element>_<template>` owner is honoured on, and the
+#: mangled prefix each one's symbols carry.
+TEMPLATE_DTOR_MARKERS = {"$implicit_dtor$": "??1",
+                         "$scalar_deleting_dtor$": "??_G"}
 #: The char-instantiated stream and string members VC6 emits as COMDATs.
 #: Every one of these templates exists only as `<char, char_traits<char>,
 #: allocator<char>>` in this image, so the instantiation carries no useful
@@ -318,6 +329,20 @@ CHAR_STREAM_MEMBERS = (
     ("?_Init@?$basic_filebuf@D", None, "filebuf_init"),
     ("?_Init@?$basic_streambuf@D", None, "streambuf_init"),
     ("?do_length@?$codecvt@DDH", None, "codecvt_do_length"),
+    # `logic_error::what`, the one member of the <stdexcept> block
+    # that survives as its own COMDAT. Not a char TEMPLATE, but it
+    # rides this table for the same reason `_Maklocstr` and the two
+    # `use_facet` arms do: one prefix names it image-wide, and the
+    # generic tail's `std_logic_error_what` cannot be spelled by a
+    # VA_COMPGEN claim.
+    ("?what@logic_error@std@@", None, "logic_error_what"),
+    # `allocator<char>::deallocate` and `basic_string<char>::_Nullstr`.
+    # Both are single-instantiation in this image, so they key `char` with
+    # the rest; without a kind neither is spellable, because the generic
+    # tail reduces them to `std_allocator_deallocate` and
+    # `std_basic_string__nullstr`, which no macro argument can produce.
+    ("?deallocate@?$allocator@D", None, "allocator_deallocate"),
+    ("?_Nullstr@?$basic_string@D", None, "basic_string_nullstr"),
 )
 
 
@@ -356,6 +381,10 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "DEQUE_ITERATOR_ADD_ASSIGN",
                  "DEQUE_ITERATOR_INC", "DEQUE_ITERATOR_DEC",
                  "DEQUE_PUSH_BACK", "DEQUE_GROWMAP",
+                 "DEQUE_CONST_ITERATOR_CTOR",
+                 "DEQUE_CONST_ITERATOR_CTOR_NODE",
+                 "TREE_CONST_ITERATOR_CTOR",
+                 "TREE_ITERATOR_EQUAL", "TREE_LOWER_BOUND",
                  "STREAMBUF_XSPUTN",
                  "PAIR_CONST_INT_DTOR",
                  "STD_CONSTRUCT", "STD_COPY",
@@ -987,6 +1016,21 @@ def _demangle_key(mangled: str):
         return f"{tree_owner.lower()}@tree_const_iterator_dec"
     if mangled.startswith("?_Inc@const_iterator@?$_Tree@") and tree_owner:
         return f"{tree_owner.lower()}@tree_const_iterator_inc"
+    # The nested iterators' remaining surface. All three keep the tree
+    # owner rather than the generic tail's spelling, which cannot tell one
+    # tree from another: `??0const_iterator@...` reduces to
+    # `const_iterator_const_iterator` - a key deque's own nested iterator
+    # produces too - and `??8iterator@...` to `iterator_operator_equal`.
+    if mangled.startswith("??0const_iterator@?$_Tree@") and tree_owner:
+        return f"{tree_owner.lower()}@tree_const_iterator_ctor"
+    if mangled.startswith("??8iterator@?$_Tree@") and tree_owner:
+        return f"{tree_owner.lower()}@tree_iterator_equal"
+    # ...and the PUBLIC bound search, whose `_Lbound` half already keys
+    # above: it is a separate kind rather than a group member because the
+    # two live in one object and are 23 and 73 bytes here against 23 and 73
+    # in retail, which the size oracle can read only when both are claimed.
+    if mangled.startswith("?lower_bound@?$_Tree@") and tree_owner:
+        return f"{tree_owner.lower()}@tree_lower_bound"
     # _Tree's two _Copy overloads and its node eraser. `_Copy` is
     # overloaded on the SAME class, so the two arms are separate kinds
     # rather than one two-member group: the node form is the one whose
@@ -1051,6 +1095,23 @@ def _demangle_key(mangled: str):
     if deque_pointer:
         member = deque_pointer.group(1).lstrip("_").lower()
         return f"{deque_pointer.group(2).lower()}_ptr@deque_{member}"
+    # deque's nested `const_iterator`'s default constructor, over the same
+    # POINTER element the two members above key on. The generic `??0` arm
+    # reduces it to `const_iterator_const_iterator`, which _Tree's own
+    # nested iterator produces as well, so it needs the element back.
+    deque_const_iterator = re.match(
+        r"^\?\?0const_iterator@\?\$deque@P[AB](?:V|U)([A-Za-z_]\w*)@",
+        mangled)
+    if deque_const_iterator:
+        # Two overloads share this spelling and one object emits both, so
+        # the ARITY separates them the way it separates basic_string's
+        # append/assign pairs: the nullary form ends `QAE@XZ`, the
+        # `(cur, node)` form carries its two pointer arguments. Left as one
+        # group they would have to be told apart by length alone.
+        member = ("deque_const_iterator_ctor"
+                  if mangled.endswith("@XZ")
+                  else "deque_const_iterator_ctor_node")
+        return f"{deque_const_iterator.group(1).lower()}_ptr@{member}"
     deque_primitive = re.match(
         r"^\?(_Free(?:front|back))@\?\$deque@([CDEFGHIJK])V\?\$allocator@",
         mangled)
@@ -1321,6 +1382,29 @@ def _demangle_key(mangled: str):
 
 
 def _base_authority_names(unit: str) -> dict:
+    """The `key -> [(mangled, content_size)...]` half of the base-obj scan;
+    see `_base_authority_scan`."""
+    return _base_authority_scan(unit)[0]
+
+
+def _base_authority_digests(unit: str) -> dict:
+    """`mangled -> sha1 of the symbol's section content AND its relocation
+    stream`, the side channel the ICF oracle reads.
+
+    The relocations are load-bearing and were a real defect when they were
+    left out: remote.obj's `??_G?$CAutoArray@VCDPlaySession@@` and
+    `??_G?$CAutoArray@VCDPlayPlayer@@` have IDENTICAL section bytes,
+    because the one thing that separates them - the vftable each stores -
+    is a relocation, and a relocation's field is zero in the object. They
+    are NOT folded in retail: the two vftables 0x6400d8 and 0x640f24 differ
+    in exactly one slot, their own `??_G`, which is what keeps the bodies
+    (and therefore the tables) distinct. Digesting content alone read them
+    as twins and bound the claim to a spelling already proven at another
+    address, which the delinker refused - correctly."""
+    return _base_authority_scan(unit)[1]
+
+
+def _base_authority_scan(unit: str) -> tuple:
     """key -> [(mangled, content_size)...] defined text symbols (external
     or file-static function) of the
     unit's compiled base obj, each key's list in DEFINITION order (COFF
@@ -1332,14 +1416,17 @@ def _base_authority_names(unit: str) -> dict:
     unclaimed members retail dropped."""
     obj = common.HOMM3_DIR / f"build/objdiff/base/{unit}.obj"
     if not obj.is_file():
-        return {}
+        return {}, {}
     data = obj.read_bytes()
     nsec, = struct.unpack_from("<H", data, 2)
     section_sizes = {}
+    section_bytes = {}
+    section_relocs = {}
     for index in range(nsec):
         header = 20 + index * 40
         raw_size, raw_offset = struct.unpack_from("<II", data, header + 16)
         content = raw_size
+        raw = b""
         if raw_offset:
             raw = data[raw_offset:raw_offset + raw_size]
             run = 0
@@ -1347,6 +1434,12 @@ def _base_authority_names(unit: str) -> dict:
                 run += 1
             content = raw_size - run
         section_sizes[index + 1] = content
+        reloc_offset, = struct.unpack_from("<I", data, header + 24)
+        reloc_count, = struct.unpack_from("<H", data, header + 32)
+        section_relocs[index + 1] = [
+            struct.unpack_from("<IIH", data, reloc_offset + entry * 10)
+            for entry in range(reloc_count)] if reloc_offset else []
+        section_bytes[index + 1] = raw[:content]
     symoff, nsyms = struct.unpack_from("<II", data, 8)
     strtab = symoff + nsyms * 18
     def symname(o):
@@ -1380,10 +1473,19 @@ def _base_authority_names(unit: str) -> dict:
         aux = data[o + 17]
         o += 18 * (1 + aux)
         i += 1 + aux
-    groups = {}
-    for _section, key, name, content in sorted(ordered):
+    groups, digests = {}, {}
+    for section, key, name, content in sorted(ordered):
         groups.setdefault(key, []).append((name, content))
-    return groups
+        body = section_bytes.get(section)
+        if body is None:
+            digests[name] = ""
+            continue
+        stream = hashlib.sha1(body)
+        for offset, symbol_index, kind in section_relocs.get(section, ()):
+            target = symname(symoff + symbol_index * 18)
+            stream.update(f"|{offset:x},{kind:x},{target}".encode())
+        digests[name] = stream.hexdigest()
+    return groups, digests
 
 
 def ir_bind(unit: str, rows: list[dict], ir_names: dict,
@@ -1565,14 +1667,16 @@ def _template_dtor_owner(owner: str):
     return None
 
 
-def _mangled_template_element(mangled: str, template: str):
+def _mangled_template_element(mangled: str, template: str,
+                              prefix: str = "??1"):
     """The lowercased type argument of a `??1?$<template>@<Arg>@std@@`
     destructor, or None when the name is not that template's dtor. Class,
     struct, enum and pointer-to-class arguments all carry a plain
     identifier; a BUILTIN argument is a single letter with no `@`
     terminator, decoded through DEQUE_PRIMITIVE_ELEMENT exactly as deque's
     and vector's primitive elements are."""
-    head = re.escape(f"??1?${template}@")
+    spelling = SINGLE_ARG_TEMPLATE_DTORS.get(template, template)
+    head = re.escape(f"{prefix}?${spelling}@")
     primitive = re.match(f"^{head}([CDEFGHIJK])@std@@", mangled)
     if primitive:
         return DEQUE_PRIMITIVE_ELEMENT[primitive.group(1)]
@@ -1606,17 +1710,68 @@ def _template_element_pairing(candidates: list[dict],
     it."""
     out = {}
     for row in candidates:
-        if "$implicit_dtor$" not in row["name"]:
+        prefix = next((mangled_prefix
+                       for marker, mangled_prefix in
+                       TEMPLATE_DTOR_MARKERS.items()
+                       if marker in row["name"]), None)
+        if prefix is None:
             continue
         split = _template_dtor_owner(row["name"].rsplit("$", 1)[1])
         if split is None:
             continue
         element, template = split
         names = [name for name, _content in mangled_group
-                 if _mangled_template_element(name, template) == element]
+                 if _mangled_template_element(name, template, prefix)
+                 == element]
         if len(names) == 1:
             out[row["rva"]] = names[0]
     return out
+
+
+def _icf_group_pairing(candidates: list[dict], mangled_group: list,
+                       digests: dict) -> dict:
+    """{claim rva -> mangled} for a group whose remaining base symbols are
+    BYTE-IDENTICAL to one another - the twins /OPT:ICF folded onto ONE
+    retail row - against exactly one remaining claim.
+
+    This is the shape no other oracle can reach, and it is not rare: a
+    class template whose body does not depend on its argument emits one
+    COMDAT per instantiation, all with the same content, and the retail
+    link keeps one. remote.obj emits `??_G?$CAutoArray@VCDPlaySession@@`
+    and `??_G?$CAutoArray@VCDPlayPlayer@@` at the same 112 bytes with the
+    same instructions; retail carries a single 108-byte row for both.
+    - the positional zip cannot run: two names against one claim is a
+      count mismatch, not an order question;
+    - `_size_pairing` never sees it for the same reason, and could not
+      split it anyway - identical bodies are identical lengths;
+    - the count-mismatch fallback needs an EXACT content match unique in
+      both directions, and both names fit or neither does.
+    So the claim banked 0.0000 with the ratchet clean, and a note in
+    remote.cpp recorded the row as unclaimable.
+
+    When the twins are genuinely identical the question the other oracles
+    are trying to answer does not exist: the row IS both functions, and
+    every candidate name labels the same bytes. One claim therefore binds
+    it, deterministically to the first name in the group's COFF order,
+    with the rest recorded as aliases in `row["icf_aliases"]` so the label
+    join can still say what else the row is called.
+
+    Deliberately narrow. It requires ONE unbound claim and TWO OR MORE
+    names, every one of them sharing a single digest: a group holding two
+    DIFFERENT bodies is a real ambiguity and still declines, which is what
+    keeps this from becoming a blind first-name fallback.
+
+    Pure in (candidates, mangled_group, digests) so the negative control
+    can drive it."""
+    if len(candidates) != 1 or len(mangled_group) < 2:
+        return {}
+    names = [name for name, _content in mangled_group]
+    seen = {digests.get(name) for name in names}
+    if len(seen) != 1 or not next(iter(seen)):
+        return {}
+    row = candidates[0]
+    row["icf_aliases"] = names[1:]
+    return {row["rva"]: names[0]}
 
 
 def _ctor_kind_pairing(candidates: list[dict], mangled_group: list,
@@ -1679,8 +1834,9 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                                   for marker in JOINED_COMPGEN_MARKERS)))]
     if not unit_rows:
         return
+    groups, digests = _base_authority_scan(unit)
     authority = {key: [(n, c) for n, c in group if n not in taken]
-                 for key, group in _base_authority_names(unit).items()}
+                 for key, group in groups.items()}
     authority = {key: group for key, group in authority.items() if group}
     if not authority:
         return
@@ -1690,6 +1846,16 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
         if "$scalar_deleting_dtor$" in row["name"]:
             # ??_G claims join the base publics like source functions do
             owner = row["name"].rsplit("$", 1)[1].lower()
+            # ...and a `<Element>_<template>` owner keys the shared
+            # template group, exactly as the `??1` branch below does:
+            # `_demangle_key`'s ??_G arm keeps only the stable template
+            # name, so every instantiation a TU emits lands in one group.
+            split = _template_dtor_owner(owner)
+            if split is not None:
+                template = split[1]
+                claim_keys.setdefault(f"{template}_{template}@gdtor",
+                                      []).append(row)
+                continue
             claim_keys.setdefault(f"{owner}_{owner}@gdtor",
                                   []).append(row)
             continue
@@ -1873,6 +2039,10 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             (kind for kind in ("tree_erase_iterator", "tree_erase_range",
                                "tree_lbound", "tree_ubound", "tree_find",
                                "tree_init", "tree_copy_assign",
+                               "tree_const_iterator_ctor",
+                               "tree_iterator_equal", "tree_lower_bound",
+                               "deque_const_iterator_ctor_node",
+                               "deque_const_iterator_ctor",
                                "deque_erase")
              if f"${kind}$" in row["name"]), None)
         if tree_or_deque is not None:
@@ -1999,6 +2169,19 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             {r.get("joined") for r in candidates
              if r["channel"] == "src-VA+base"})
         for row in candidates:
+            mangled = pairing.get(row["rva"])
+            if mangled is not None:
+                row["joined"] = mangled
+                row["channel"] = "src-VA+base"
+        # ...and last, the case where the group is not ambiguous at all
+        # because its members are the SAME BYTES: /OPT:ICF folded them onto
+        # one retail row, so one claim names it however many spellings the
+        # base object emits.
+        unbound = [r for r in candidates if r["channel"] != "src-VA+base"]
+        free = [(n, c) for n, c in mangled_group
+                if n not in {r.get("joined") for r in candidates}]
+        pairing = _icf_group_pairing(unbound, free, digests)
+        for row in unbound:
             mangled = pairing.get(row["rva"])
             if mangled is not None:
                 row["joined"] = mangled
@@ -2517,6 +2700,27 @@ def selftest() -> list[str]:
         "?_Inc@const_iterator@?$_Tree@PAVCImmEnclosure@@"
         "U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@":
             "cimmenclosure@tree_const_iterator_inc",
+        # The three arms added with the enclosure map's remaining surface.
+        # Each one exists because the generic tail collapses the owner away:
+        # `??0const_iterator@` -> `const_iterator_const_iterator` (a key
+        # deque's nested iterator produces as well), `??8iterator@` ->
+        # `iterator_operator_equal`, and `?lower_bound@` -> a
+        # TEMPLATE_MEMBER_RE spelling shared by every tree in the image.
+        "??0const_iterator@?$_Tree@PAVCImmEnclosure@@"
+        "U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@QAE@PAU_Node@12@@Z":
+            "cimmenclosure@tree_const_iterator_ctor",
+        "??8iterator@?$_Tree@PAVCImmEnclosure@@"
+        "U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@QBE_NABV012@@Z":
+            "cimmenclosure@tree_iterator_equal",
+        "?lower_bound@?$_Tree@PAVCImmEnclosure@@"
+        "U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@"
+        "QAE?AViterator@12@ABQAVCImmEnclosure@@@Z":
+            "cimmenclosure@tree_lower_bound",
+        # ...and the same three over a map keyed by VALUE, to prove the
+        # owner is read and not hardcoded to the pointer arm.
+        "??0const_iterator@?$_Tree@HU?$pair@$$CBH"
+        "Utype_map_hero_info@@@std@@QAE@PAU_Node@12@@Z":
+            "type_map_hero_info@tree_const_iterator_ctor",
     }
     for mangled, expected in tree_member_cases.items():
         if _demangle_key(mangled) != expected:
@@ -2547,6 +2751,67 @@ def selftest() -> list[str]:
         "?_Erase@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@")
     if unrelated_tree_key in tree_member_cases.values():
         failures.append("uncontracted MSVC tree member gained a tree key")
+    # NEGATIVE CONTROLS for the three nested-iterator arms above. The two
+    # containers' nested `const_iterator` constructors are DIFFERENT
+    # functions that the generic `??0` tail spells identically, so each
+    # arm must claim only its own container...
+    deque_iterator_ctor = _demangle_key(
+        "??0const_iterator@?$deque@PAVCNetMsg@@"
+        "V?$allocator@PAVCNetMsg@@@std@@@std@@QAE@XZ")
+    if deque_iterator_ctor != "cnetmsg_ptr@deque_const_iterator_ctor":
+        failures.append("MSVC deque const_iterator ctor key regressed")
+    if deque_iterator_ctor in tree_member_cases.values():
+        failures.append("a deque nested iterator reached a _Tree key")
+    # ...and a deque over a PRIMITIVE element carries no class name for the
+    # pointer arm to read, so it must decline rather than key on a letter.
+    for bad in ("??0const_iterator@?$deque@HV?$allocator@H@std@@@std@@QAE@XZ",
+                "??0iterator@?$deque@PAVCNetMsg@@"
+                "V?$allocator@PAVCNetMsg@@@std@@@std@@QAE@XZ"):
+        if _demangle_key(bad) == "cnetmsg_ptr@deque_const_iterator_ctor":
+            failures.append("the deque const_iterator arm stopped rejecting "
+                            f"{bad!r}")
+    # ...and the NODE overload of the same constructor must key apart from
+    # the nullary one: remote.obj emits both and a single group would have
+    # to be split by length alone.
+    node_ctor = _demangle_key(
+        "??0const_iterator@?$deque@PAVCNetMsg@@"
+        "V?$allocator@PAVCNetMsg@@@std@@@std@@QAE@PAPAVCNetMsg@@"
+        "PAPAPAV3@@Z")
+    if node_ctor != "cnetmsg_ptr@deque_const_iterator_ctor_node":
+        failures.append("MSVC deque const_iterator(cur, node) key regressed")
+    if node_ctor == deque_iterator_ctor:
+        failures.append("the deque const_iterator overloads share one key")
+    # The two single-instantiation library members that ride
+    # CHAR_STREAM_MEMBERS beside `logic_error::what`. Their negative
+    # controls are the OTHER instantiations of the same templates, which
+    # this image does not carry and a widened prefix would swallow.
+    if _demangle_key("?deallocate@?$allocator@D@std@@QAEXPAXI@Z") \
+            != "char@allocator_deallocate":
+        failures.append("MSVC allocator<char>::deallocate key regressed")
+    if _demangle_key(
+            "?_Nullstr@?$basic_string@DU?$char_traits@D@std@@"
+            "V?$allocator@D@2@@std@@CAPBDXZ") \
+            != "char@basic_string_nullstr":
+        failures.append("MSVC basic_string<char>::_Nullstr key regressed")
+    for bad, arm in (("?deallocate@?$allocator@H@std@@QAEXPAXI@Z",
+                      "char@allocator_deallocate"),
+                     ("?allocate@?$allocator@D@std@@QAEPAXII@Z",
+                      "char@allocator_deallocate"),
+                     ("?_Nullstr@?$basic_string@GU?$char_traits@G@std@@"
+                      "V?$allocator@G@2@@std@@CAPBGXZ",
+                      "char@basic_string_nullstr")):
+        if _demangle_key(bad) == arm:
+            failures.append(f"the {arm} arm stopped rejecting {bad!r}")
+    # `logic_error::what` rides CHAR_STREAM_MEMBERS; its sibling
+    # `runtime_error` and the ctor of the same class must not follow it.
+    if _demangle_key("?what@logic_error@std@@UBEPBDXZ")             != "char@logic_error_what":
+        failures.append("MSVC logic_error::what key regressed")
+    for bad in ("?what@runtime_error@std@@UBEPBDXZ",
+                "??0logic_error@std@@QAE@ABV?$basic_string@D"
+                "U?$char_traits@D@std@@V?$allocator@D@2@@1@@Z"):
+        if _demangle_key(bad) == "char@logic_error_what":
+            failures.append("the logic_error::what arm stopped rejecting "
+                            f"{bad!r}")
     if _demangle_key(
             "?_Destroy@?$vector@VTTimedEvent@@V?$allocator@VTTimedEvent@@"
             "@std@@@std@@IAEXPAVTTimedEvent@@0@Z") != \

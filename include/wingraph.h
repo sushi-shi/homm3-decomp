@@ -74,6 +74,19 @@ long DDRestoreSurfaces();                                // 0x6013a0
 void DDCleanUpWinGraphics();                             // 0x6018a0
 unsigned char DDSetFullScreenStatus(int iNewStatus);     // 0x601a00
 
+// The windowed frame DDSetFullScreenStatus restores, and the 565 green
+// mask it tests the rebuilt surface against. Both are written as raw
+// immediates by retail (0x10ca0000 and 0x7e0); the style decomposes
+// exactly, and the mask is the value bitmap16.h's Remap note already
+// names from the other side.
+// (this header is included where <windows.h> is not, so the style is
+// spelled as its own value: WS_VISIBLE 0x10000000 | WS_CAPTION 0x00c00000
+// | WS_SYSMENU 0x00080000 | WS_MINIMIZEBOX 0x00020000.)
+enum {
+    WINDOWED_WINDOW_STYLE = 0x10ca0000,
+    GREEN_MASK_565 = 0x7e0
+};
+
 // The blitter AppPaint hands its damaged rectangle to; the wingraph roster's
 // RobAppBlit slot (fastcall, one tagRECT* in ecx).
 struct tagRECT;

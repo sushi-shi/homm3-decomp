@@ -1408,6 +1408,17 @@ unsigned char& std::basic_string<char>::_Refcnt(const char* s)
 
 #endif  // @carcass
 
+// COMDAT pairing: `allocator<char>::deallocate` and
+// `basic_string<char>::_Nullstr`, the two remaining Dinkumware rows of
+// this span. Both are byte-identical to this compiland's own COMDAT over
+// every instruction: deallocate is `push [ebp+8] / call operator delete /
+// ret 8` - a two-argument thiscall that discards the count - and _Nullstr
+// is the two-instruction `mov eax, <empty string> / ret`, whose datum is
+// the same 0x63a608 `logic_error::what` falls back to. Each template has
+// exactly ONE instantiation in this image, so neither name is ambiguous.
+VA_COMPGEN(0x0045c1e0, 0x13, ALLOCATOR_DEALLOCATE, char)
+VA_COMPGEN(0x0045dca0, 0x6, BASIC_STRING_NULLSTR, char)
+
 // The slot record's compiler-generated COPY constructor, 0.850 against the
 // 583-byte ??0TPlayerSlotAttributes@CMapHeaderData@@QAE@ABV01@@Z. It
 // shares one authority key with the default constructor claimed at
