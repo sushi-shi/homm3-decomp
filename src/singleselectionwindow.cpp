@@ -9504,6 +9504,14 @@ VA_COMPGEN(0x0058f080, 0x26, VECTOR_DESTROY, GameSelectionHeadersStruct)
 VA_COMPGEN(0x0058f0b0, 0x3E, VECTOR_UCOPY, GameSelectionHeadersStruct)
 VA_COMPGEN(0x0058f480, 0x2C3, STD_CONSTRUCT, GameSelectionHeadersStruct)
 
+// The element copy ctor itself. Retail keeps it out of line for the six
+// _Sort/_Median/_Unguarded_partition families (its three `_Ty(*it)` temps
+// are what _Sort's leading call triple builds) and EXPANDS it into
+// std::_Construct at 0x58f480 - the per-site split /Ob2 produces on its
+// own once the member is implicit, which is why the header no longer
+// declares it away.
+VA_COMPGEN(0x005904f0, 0x31B, IMPLICIT_COPY_CTOR, GameSelectionHeadersStruct)
+
 // ---------------------------------------------------------------------------
 // SortMaps' six std::sort instantiations (0x590070..0x595e10).
 //
