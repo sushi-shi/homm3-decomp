@@ -210,7 +210,7 @@ ai	?get_attack_change@combatManager@@QAEJPBVarmy@@0PBUtype_AI_combat_parameters@
 ai	?get_total_combat_value@combatManager@@QBEJJJJE@Z	100.0000	100.0000	100.0000	0x1eac0	63fbd5b9ae8d
 ai	?has_ranged_advantage@combatManager@@QAEEPAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x20a80	1272b06aad15
 ai	?insert@?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@QAEXPAPAVarmy@@IABQAV3@@Z	100.0000	100.0000	100.0000	0x23130	-
-ai	?mark_enemy_attacks@combatManager@@QAEXPBVarmy@@PAJ1PAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x20260	4bcfa1984de8
+ai	?mark_enemy_attacks@combatManager@@QAEXPBVarmy@@PAJ1PAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x20260	d1f6673552b4
 ai	?mark_firewalls@combatManager@@QAEXPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x214f0	35d5173bced4
 ai	?mark_friendly_armies@combatManager@@QAEXPBVarmy@@PAJJPBUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x1fb60	4147d0c6289f
 ai	?mark_moat@combatManager@@QAEXPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	79.9375	79.9375	79.9375	0x21590	f3bb926f7b99
@@ -512,7 +512,7 @@ army	?SetupAnimation@army@@QAEXXZ	100.0000	100.0000	100.0000	0x46830	7afa0abf1e7
 army	?Turn@army@@QAEXE@Z	91.7125	91.7125	91.7125	0x46720	32f075cd13f8
 army	?Unnamed447fe0@army@@QAEEXZ	100.0000	100.0000	100.0000	0x47fe0	ea20c93099ae
 army	?Walk@army@@QAEXHEE@Z	100.0000	100.0000	100.0000	0x3f0b0	141b4ce937fa
-army	?WalkTo@army@@QAEEHE@Z	93.3162	93.3162	93.3162	0x41fa0	18e8c7a27bf4
+army	?WalkTo@army@@QAEEHE@Z	93.3162	93.3162	93.3162	0x41fa0	ff4097b842fb
 army	?_Freeback@?$deque@HV?$allocator@H@std@@@std@@IAEXXZ	100.0000	100.0000	100.0000	0x49130	-
 army	?_Freefront@?$deque@HV?$allocator@H@std@@@std@@IAEXXZ	100.0000	100.0000	100.0000	0x490b0	-
 army	?add_aura@army@@QAEXXZ	100.0000	100.0000	100.0000	0x3ea70	e6d056a6b049
@@ -527,9 +527,9 @@ army	?can_shoot@army@@QBEEPBV1@@Z	100.0000	100.0000	100.0000	0x428f0	24e2d7e88a6
 army	?cast_caliph_spell@army@@QAEXJ@Z	100.0000	100.0000	100.0000	0x47ee0	01203177f357
 army	?cast_spell@army@@QAEXJ@Z	100.0000	100.0000	100.0000	0x48260	a6da4989e8bc
 army	?check_obstacle_attacks@army@@QAEEE@Z	100.0000	100.0000	100.0000	0x41f70	2674aa843736
-army	?check_special_attack@army@@QAEEPAV1@@Z	100.0000	100.0000	100.0000	0x40500	49147539aa98
+army	?check_special_attack@army@@QAEEPAV1@@Z	100.0000	100.0000	100.0000	0x40500	3a3de949e580
 army	?clear@?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x48d70	-
-army	?compute_attacker_bonus@army@@QBEHHEPAV1@EJ@Z	100.0000	100.0000	100.0000	0x43320	698523953542
+army	?compute_attacker_bonus@army@@QBEHHEPAV1@EJ@Z	100.0000	100.0000	100.0000	0x43320	43fdf6593dcb
 army	?consider_attack@army@@QAEXPBV1@JJ@Z	100.0000	100.0000	100.0000	0x48840	686954572466
 army	?do_attack@army@@QAEEPAV1@H@Z	98.8868	99.9962	99.9962	0x41610	1fa738e017fe
 army	?do_attack@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x41cb0	0c17230627a2
@@ -970,7 +970,7 @@ command	?DoVictory@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x77470	8b0
 # automate_first_aid_tent re-exposes the same include-set/codegen class;
 # GetCommand's 62 branches and 20 returns still agree exactly. hist stays
 # at 92.5714.
-command	?GetCommand@combatManager@@QAEHH@Z	92.5357	92.5714	92.5714	0x76490	2428ad3c2637
+command	?GetCommand@combatManager@@QAEHH@Z	92.5714	92.5714	92.5714	0x76490	2428ad3c2637
 command	?GetControl@combatManager@@QAEXXZ	98.2830	98.2830	98.2830	0x782d0	64563999aa5f
 command	?HandleCombatPlayerDrop@combatManager@@QAEEKPAVmessage@@@Z	100.0000	100.0000	100.0000	0x7a500	93137abf7711
 command	?Main@combatManager@@UAEHAAVmessage@@@Z	97.6611	97.6611	97.6611	0x740d0	f9eda22ca5c0
@@ -1505,7 +1505,7 @@ events	?monsters_join@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@
 # (push 0xb4 in townManager::Open), layout-required and not gateable
 # per-TU. hist keeps 100.0000; the saturation law says a later
 # declarator can carry it back.
-events	?monsters_sell_out@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	100.0000	100.0000	100.0000	0xa7250	f7b1ec4933f6
+events	?monsters_sell_out@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	99.9517	100.0000	100.0000	0xa7250	f7b1ec4933f6
 events	?show_rewards@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@2@J@Z	100.0000	100.0000	100.0000	0xa0b00	9287544ef4a4
 exec	??0executive@@QAE@XZ	100.0000	100.0000	100.0000	0xb0900	e5caaee573f2
 exec	?AddManager@executive@@QAEHPAVbaseManager@@H@Z	100.0000	100.0000	100.0000	0xb0b20	11f81dc72e6a
