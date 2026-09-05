@@ -1289,6 +1289,13 @@ bool type_AI_player::check_trade_supply(const int* cost, long number,
 // E:\gamedcs\ai_player.cpp:1446
 // Residual (90.12%): control flow, callees and vector cleanup agree; the
 // remaining delta is register homing around the two supply checks.
+// EXACT 2026-09-05. `trade_qty.clear()`, not the longhand
+// `erase(begin(), end())`: retail CALLS the range-erase COMDAT here, and
+// clear()'s own wrapper takes the /Ob2 site so the nested erase is priced
+// at budget/sites-remaining instead of the whole remaining budget
+// (90.1171 -> 100.0000). The lever is DIRECTION-DEPENDENT and must be
+// measured per site - the same substitution costs make_gift 0.70 above and
+// NewSMapHeader::Read 18.93.
 VA(0x0042a470, 0x110)  // retail link order + arity, dc 0x304cc
 void type_AI_player::trade_resources(const int* cost, long number)
 {
@@ -1299,7 +1306,7 @@ void type_AI_player::trade_resources(const int* cost, long number)
     if (!can_trade_resources(cost, supply, trade_qty))
         return;
     if (build_markets(supply)) {
-        trade_qty.erase(trade_qty.begin(), trade_qty.end());
+        trade_qty.clear();
         if (!check_trade_supply(cost, number, supply, trade_qty))
             return;
         if (!can_trade_resources(cost, supply, trade_qty))

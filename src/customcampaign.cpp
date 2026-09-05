@@ -782,7 +782,11 @@ void TCampaignBrief::MapTextStruct::Play()
                                      font::CENTER_JUSTIFIED, -1);
     }
 
-    sample* speech = speech_name ? ResourceManager::GetSample(speech_name) : 0;
+    sample* speech;
+    if (!speech_name)
+        speech = 0;
+    else
+        speech = ResourceManager::GetSample(speech_name);
 
     gpInputManager->Flush();
     gpWindowManager->UpdateScreen(0, 0, 800, 600);
@@ -980,30 +984,29 @@ const int CAMPAIGN_MAP_ORDINAL_07 = 7;
 // off the bodies: this one banks the finished map's score, allocates the
 // campaign's crossover slot, prunes the pool and collects the winner's
 // heroes.
-// Residual (0.00%): objdiff does NOT decline this pair - it scores it, and
-// the score is a true zero. `report.json` omits `fuzzy_match_percent`
-// whenever it is exactly 0.0 (protobuf default-value elision), which reads
-// like a missing measurement; objdiff-cli one-shot on the same pair reports
-// `match_percent 0.0` with 156 of 971 aligned rows identical and 449
-// DIFF_INSERT rows. The insert cost alone exceeds the target's max score, so
-// the percentage FLOORS at zero: any edit that brings the 0xa54 body back
-// toward retail's 0x600 lifts it off 0 immediately. The whole delta is ONE
-// /Ob2 decision run backwards.
-// Retail keeps every crossover insert OUT of line - one 2-arg
-// vector<hero>::insert wrapper (0x48ce50) at the hero loop and six 3-arg
-// insert(_P, 1, _X) calls (0x48d060) at the town and campaign-fixup arms -
-// and spends what is left expanding CampaignComplete plus two
-// vector<CampaignScenarioInfo>::size() at the tail. We inline the 2-arg
-// wrapper (free at cost <= 40) and then EXPAND three of the six 3-arg
-// inserts, which burns the budget and leaves the tail calling
-// CampaignComplete and size() out of line - both directions of the same
-// sequential spend. The call order reads exactly that way: base 63 calls
-// against retail's 19, with three _Ucopy/_Ufill/copy_backward/fill
-// expansion blocks where retail has three calls. The known lever is a
-// statement-scoped inline_depth(0) on the seven insert sites (with
-// end()/GetHero hoisted out of each pinned statement first, since retail
-// keeps both inline); this lane is not permitted to add pins, so the row
-// is left carrying the reconstruction for whoever is.
+// Every crossover append is `push_back`, not `insert(end(), ...)`, and that
+// is the whole of what used to be a 0.00% row. VC6 prices an /Ob2 call site
+// at the CALLEE's front-end size, so `insert(_P, 1, _X)` written directly
+// puts the 740-byte three-argument insert AT the site and it is expanded at
+// three of the six crossover appends; `push_back` puts its own free wrapper
+// there and the nested insert is then priced at budget/sites-remaining and
+// declines at all six, which is retail's call ledger exactly. The two pool
+// appends take the same treatment and reach retail's 2-argument wrapper
+// calls at 0x48c0e0 / 0x48c610. 0.0000 -> 78.6801, and the body went 0xa54
+// -> 0x5fe against retail's 0x600 with 17 of 19 calls pairing in order.
+// Byte-flat control: the hero-loop append spelled `insert(crossover.end(),
+// *GetHero(...))` measures 78.6801 to the digit, so only the six 1-count
+// appends carry the decision.
+//
+// Residual (78.68%): retail holds the literal zero in EDI across the whole
+// body (`xor edi,edi` at fn+0x27, before the completed test) and spends it
+// on complete_order's store, the index compare and the size() null tests;
+// we materialise it in EAX after get_map_score, which costs the inverted
+// `je`/`jne` polarity at every size() null arm and one dword of frame
+// (0x34 against retail's 0x30). Retail also CALLS the POD
+// `_Destroy<type_artifact>` on the second temp where our compile elides it
+// entirely, and calls the 2-argument insert wrapper at the hero loop where
+// we reach the 3-argument one.
 VA(0x00489820, 0x600)  // anchor-caller(oldmain end-of-campaign arm), retail-only
 void SCampaign::CompleteCurrentMap(void* campaignHeader)
 {
@@ -1019,8 +1022,8 @@ void SCampaign::CompleteCurrentMap(void* campaignHeader)
 
     if (scenario.index < 0) {
         scenario.index = carryOverHeroes.size();
-        carryOverHeroes.insert(carryOverHeroes.end(), std::vector<hero>());
-        field_4c.insert(field_4c.end(), std::vector<type_artifact>());
+        carryOverHeroes.push_back(std::vector<hero>());
+        field_4c.push_back(std::vector<type_artifact>());
     }
 
     crossoverArrayIndex = scenario.index;
@@ -1059,31 +1062,29 @@ void SCampaign::CompleteCurrentMap(void* campaignHeader)
 
     playerData* player = &gpGame->players[gamePos];
     for (int iHero = 0; iHero < player->numHeroes; ++iHero)
-        crossover.insert(crossover.end(),
-                         *gpGame->GetHero(player->heroes[iHero]));
+        crossover.push_back(*gpGame->GetHero(player->heroes[iHero]));
 
     for (int iTown = 0; iTown < player->numTowns; ++iTown) {
         town* thisTown = gpGame->GetTown(player->townIds[iTown]);
         if (thisTown->garrisonHeroId >= 0)
-            crossover.insert(crossover.end(), 1,
-                             *gpGame->GetHero(thisTown->garrisonHeroId));
+            crossover.push_back(*gpGame->GetHero(thisTown->garrisonHeroId));
     }
 
     if (currentCampaign == CAMPAIGN_ORDINAL_07
         && currentMap == CAMPAIGN_MAP_ORDINAL_06) {
         if (gpGame->heroes[155].owner != gamePos)
-            crossover.insert(crossover.end(), 1, gpGame->heroes[155]);
+            crossover.push_back(gpGame->heroes[155]);
     }
     if (currentCampaign == CAMPAIGN_ORDINAL_18
         && currentMap == CAMPAIGN_MAP_ORDINAL_07) {
         if (gpGame->heroes[27].owner != gamePos)
-            crossover.insert(crossover.end(), 1, gpGame->heroes[27]);
+            crossover.push_back(gpGame->heroes[27]);
         if (gpGame->heroes[102].owner != gamePos)
-            crossover.insert(crossover.end(), 1, gpGame->heroes[102]);
+            crossover.push_back(gpGame->heroes[102]);
         if (gpGame->heroes[148].owner != gamePos)
-            crossover.insert(crossover.end(), 1, gpGame->heroes[148]);
+            crossover.push_back(gpGame->heroes[148]);
         if (gpGame->heroes[96].owner != gamePos)
-            crossover.insert(crossover.end(), 1, gpGame->heroes[96]);
+            crossover.push_back(gpGame->heroes[96]);
     }
 
     field_4c[crossoverArrayIndex].clear();
@@ -1258,6 +1259,12 @@ static short ReadCampaignWord(TAbstractFile* infile)
     return value;
 }
 
+// The two leading clears are `clear()`, not `erase(begin(), end())`:
+// retail CALLS both range-erase COMDATs (0x48a345, 0x48a355) where the
+// longhand form makes VC6 expand them, because clear()'s own wrapper takes
+// the /Ob2 site and the nested erase then gets budget/sites-remaining
+// instead of the whole remaining budget. 55.7915 -> 59.0405 on that line.
+//
 // Complete-only campaign deserializer. The >=28 arm is the field-for-field
 // inverse of retail SCampaign::Save at 0x48ae90. The older arm is fixed by
 // the 0x66a9-byte Read, the compiler-generated 2x8 LegacyCampaignHero
@@ -1267,8 +1274,8 @@ static short ReadCampaignWord(TAbstractFile* infile)
 VA(0x0048a310, 0xB1E)  // SavedGameHeader::Load caller + member/helper graph
 void SCampaign::Load(TAbstractFile* infile, int saveVersion)
 {
-    mapScores.erase(mapScores.begin(), mapScores.end());
-    carryOverHeroes.erase(carryOverHeroes.begin(), carryOverHeroes.end());
+    mapScores.clear();
+    carryOverHeroes.clear();
 
     if (saveVersion < 28) {
         // The out-of-line LegacyCampaignHero constructor below makes VC6

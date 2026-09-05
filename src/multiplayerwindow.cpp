@@ -489,7 +489,7 @@ TMultiPlayerWindow::TMultiPlayerWindow()
     widget* gs = new slider(337, 81, 16, 330, 122, 10, SliderGames,
                             slider::BLUE, 0, 0);
     gameSlider = gs;
-    Widgets.insert(Widgets.end(), gs);
+    Widgets.push_back(gs);
 
     int sessionRowY = 112;
     for (int i = 0; sessionRowY < 412; sessionRowY += 25, i++)
@@ -500,7 +500,7 @@ TMultiPlayerWindow::TMultiPlayerWindow()
 
     widget* mapBorder = new bitmapBorder(16, 77, 338, 335, 129, "mumap.pcx", 0x800);
     splash = mapBorder;
-    Widgets.insert(Widgets.end(), mapBorder);
+    Widgets.push_back(mapBorder);
 
     AddWidgetsToMessageStream();
     SetFocus(playerName->id);
@@ -1592,7 +1592,7 @@ unsigned char TMultiPlayerWindow::OnTCP()
         textWidget* ipWidget = new textWidget(
             0, 16, width, 50, 0, "bigfont.fnt", font::PRIMARY,
             IP_ADDRESS_ID, 1, 0, 8);
-        Widgets.insert(Widgets.end(), ipWidget);
+        Widgets.push_back(ipWidget);
         AddWidget(ipWidget, -1);
         sprintf(addressText, gpGeneralText->GetText(460), ipAddress);
         ipWidget->SetText(addressText);
