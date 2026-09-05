@@ -89,6 +89,12 @@ inline int max(int left, int right)
 // The eight fixed player seats CheckEndGame and its callers walk.
 #define GAME_PLAYER_COUNT 8
 
+// The dialog reply the close button answers with. winmgr.h's
+// EDialogReturnType has no enumerator for it yet (armygrp_split.h spells
+// the same value DIALOG_RETURN_SPLIT_CLOSE for its own window), so the
+// name is local until a lane can price the shared header.
+#define DIALOG_RETURN_CLOSE 0x7800
+
 #define DIALOG_ICON_MAX_ROWS 2
 #define DIALOG_ICON_ROW_SINGLE 1
 #define DIALOG_ICON_ROW_PAIR 2
@@ -778,12 +784,7 @@ unsigned char type_normal_dialog_frame::handle_click(unsigned char down_click, u
     // @stub
 }
 
-// E:\gamedcs\kb.cpp:2549
-DC_ONLY(0xe206c, 0x1EE)
-int EventWindowHandler(message* msg)
-{
-    // @stub
-}
+// E:\gamedcs\kb.cpp:2549 - promoted to a live claim (see below).
 
 // E:\gamedcs\kb.cpp:2630
 DC_ONLY(0xe225c, 0x10)
@@ -1944,6 +1945,88 @@ int NormalDialogHandler(message& msg)
         }
     }
     return EventWindowHandler(&msg);
+}
+
+// E:\gamedcs\kb.cpp:2549
+// Every message the normal dialog's own widgets do not consume ends here.
+// An armed deadline that has run out answers DIALOG_RETURN_TIMEOUT for the
+// window; otherwise a deselect on one of the dialog's reply buttons is
+// turned into the window's answer.  The two picture choices of the
+// iMBType-7/10 dialogs are a radio pair: selecting one clears the other,
+// enables the OK button, remembers the choice, and redraws - and OK then
+// answers with the remembered choice rather than with its own id.  Every
+// answering path rewrites the message into the forwarded shape and
+// disarms the deadline.
+// Residual (82.08%): blocks 20 = 20, branch view clean, and the ONLY
+// remaining difference is one constant-allocation decision - retail
+// keeps the ten in EDI (saved at entry) and spends it on the switch
+// range bound, on both NORMAL_DIALOG_CHOOSE_OPTIONAL compares and on
+// the two message stores, where our compile uses immediates and gives
+// EDI a lifetime that ends inside the deadline arm. Tried and rejected:
+// the chained `codeX = codeY = 10` store (byte-flat).
+// The +32.6 that got here was the switch shape: retail FALLS THROUGH
+// from the OK arm into the plain-reply group (jump-table entry 0 is
+// that arm's own tail), and the two picture-choice arms come first in
+// source order.
+VA(0x004f0fc0, 0x1C3)  // decorated identity (kb.h) + dialog-global shape, dc 0xe206c
+int EventWindowHandler(message* msg)
+{
+    if (gDialogDeadline697784 && GameTime::IsPast(gDialogDeadline697784)) {
+        msg->id = MESSAGE_WIDGET;
+        gpWindowManager->dialogReturn = DIALOG_RETURN_TIMEOUT;
+        goto forward_answer;
+    }
+    if (msg->id == MESSAGE_WIDGET
+        && msg->codeX == widget::WIDGET_DESELECT) {
+        switch (msg->codeY) {
+        case DIALOG_RETURN_CHOICE_1:
+            if (giNormalDialogMBType == NORMAL_DIALOG_CHOOSE_OPTIONAL
+                || giNormalDialogMBType == NORMAL_DIALOG_CHOOSE) {
+                gpNormalDialogWindow->GetWidget(DIALOG_RETURN_CHOICE_1)
+                    ->send_message(widget::WIDGET_SET_STATUS, 4);
+                gpNormalDialogWindow->GetWidget(DIALOG_RETURN_CHOICE_2)
+                    ->send_message(widget::WIDGET_CLEAR_STATUS, 4);
+                gpNormalDialogWindow->GetWidget(DIALOG_RETURN_OK)->enable(1);
+                giNormalDialogSelection = DIALOG_RETURN_CHOICE_1;
+                gpNormalDialogWindow->DrawWindow(1, -65535, 65535);
+            }
+            break;
+
+        case DIALOG_RETURN_CHOICE_2:
+            if (giNormalDialogMBType == NORMAL_DIALOG_CHOOSE_OPTIONAL
+                || giNormalDialogMBType == NORMAL_DIALOG_CHOOSE) {
+                gpNormalDialogWindow->GetWidget(DIALOG_RETURN_CHOICE_1)
+                    ->send_message(widget::WIDGET_CLEAR_STATUS, 4);
+                gpNormalDialogWindow->GetWidget(DIALOG_RETURN_CHOICE_2)
+                    ->send_message(widget::WIDGET_SET_STATUS, 4);
+                gpNormalDialogWindow->GetWidget(DIALOG_RETURN_OK)->enable(1);
+                giNormalDialogSelection = DIALOG_RETURN_CHOICE_2;
+                gpNormalDialogWindow->DrawWindow(1, -65535, 65535);
+            }
+            break;
+
+        case DIALOG_RETURN_OK:
+            if (giNormalDialogMBType == NORMAL_DIALOG_CHOOSE_OPTIONAL
+                || giNormalDialogMBType == NORMAL_DIALOG_CHOOSE) {
+                gpWindowManager->dialogReturn = giNormalDialogSelection;
+                goto forward_answer;
+            }
+            // fall through
+        case DIALOG_RETURN_CLOSE:
+        case DIALOG_RETURN_CANCEL:
+        case DIALOG_RETURN_ACCEPT:
+        case DIALOG_RETURN_DECLINE:
+            gpWindowManager->dialogReturn = msg->codeY;
+            goto forward_answer;
+        }
+    }
+    return MESSAGE_DISPATCH_CONSUME;
+
+forward_answer:
+    msg->codeY = 10;
+    msg->codeX = 10;
+    gDialogDeadline697784 = 0;
+    return MESSAGE_DISPATCH_FORWARD;
 }
 
 // E:\gamedcs\kb.cpp:2811. The retail body independently fixes the source
