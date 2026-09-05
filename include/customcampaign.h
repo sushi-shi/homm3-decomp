@@ -5,6 +5,7 @@
 #ifndef HOMM3_CUSTOMCAMPAIGN_H
 #define HOMM3_CUSTOMCAMPAIGN_H
 
+#include <string>
 #include <vector>
 #include "window.h"
 #include "campaignbrief.h"
@@ -88,6 +89,200 @@ class hero;
 struct CrossoverHeroStronger {
     bool operator()(hero& lhs, hero& rhs) const;
 };
+
+// The eight campaign start bonuses. THE HIERARCHY IS BYTE-PROVEN by the
+// bonus-list reader at 0x485190, which switches a type byte 0..7 and
+// `new`s an object of the matching vftable:
+//   0 spell 0x63daa0 (12 B)   1 creature 0x63da80 (16 B)
+//   2 building 0x63da60 (12)  3 artifact 0x63da40 (12)
+//   4 scroll 0x63da20 (12)    5 primary skill 0x63da00 (12)
+//   6 secondary skill 0x63d9e0 (16)  7 resource 0x63d9c0 (12)
+// Every vftable is eight slots wide and the abstract root's own is
+// 0x63d938 - six `__purecall` entries between the deleting destructor at
+// slot 0 and the do-nothing slot 7. The slot ROLES read off the bodies:
+// slot 1 is the building predicate (only 0x63da60 answers true), slot 2
+// returns the icon .def name, slot 3 the frame in it, slot 4 the
+// format_string'd description, slot 5 applies the bonus to a player and
+// slot 6 deserializes it. NAMES ARE ROLE INVENTIONS - the compiland has
+// no Dreamcast twin (the port's SCampaign::give_custom_items did all of
+// this longhand) and no RTTI descriptor names any of these classes.
+class TAbstractFile;
+
+class TCampaignBonus {
+public:
+    // Out of line at 0x485370, seven bytes of vftable restore; its
+    // scalar deleting destructor is 0x484020.
+    virtual ~TCampaignBonus();
+    // 0x484d50. Pure in retail's own vftable, which means each concrete
+    // class carried its own copy and the linker folded the seven `false`
+    // bodies onto one address; one out-of-line definition here produces
+    // that one address.
+    virtual bool IsBuildingBonus() const;
+    virtual const char* GetIconDefName() const = 0;
+    virtual int GetIconIndex() const = 0;
+    virtual std::string GetText() const = 0;
+    virtual void Apply(int whichPlayer) const = 0;
+    virtual void Read(TAbstractFile* file) = 0;
+    // 0x485d80, `ret 4`. Only the building bonus overrides it (0x4847e0),
+    // where the town remaps the building index.
+    virtual void SetTown(int town);
+};
+
+// Spell: the hero id it is granted to and the spell. Read takes a SIGNED
+// word then an unsigned byte (0x484050).
+class TCampaignSpellBonus : public TCampaignBonus {
+public:
+    virtual const char* GetIconDefName() const;
+    virtual int GetIconIndex() const { return m_spell; }
+    virtual std::string GetText() const;
+    virtual void Apply(int whichPlayer) const;
+    virtual void Read(TAbstractFile* file);
+
+    int m_hero;
+    int m_spell;
+};
+
+// The scroll shares the spell's whole surface except the description and
+// the apply, which is what puts its Read, icon name and icon frame at the
+// SAME addresses in both vftables (0x484050 / 0x484090 / the folded
+// three-byte getter).
+class TCampaignSpellScrollBonus : public TCampaignSpellBonus {
+public:
+    virtual std::string GetText() const;
+    virtual void Apply(int whichPlayer) const;
+};
+
+// Creature: hero, creature type and count, all three read as words
+// (0x4844f0) - the first two signed, the count unsigned.
+class TCampaignCreatureBonus : public TCampaignBonus {
+public:
+    virtual const char* GetIconDefName() const;
+    virtual int GetIconIndex() const;
+    virtual std::string GetText() const;
+    virtual void Apply(int whichPlayer) const;
+    virtual void Read(TAbstractFile* file);
+
+    int m_hero;
+    int m_creature;
+    int m_count;
+};
+
+// Building: the only bonus whose Read fills ONE field (0x4845f0 reads a
+// single byte into the building slot); the town arrives later through
+// SetTown, which is also where the building index is remapped.
+class TCampaignBuildingBonus : public TCampaignBonus {
+public:
+    virtual bool IsBuildingBonus() const;
+    virtual const char* GetIconDefName() const;
+    virtual int GetIconIndex() const { return 0; }
+    virtual std::string GetText() const;
+    virtual void Apply(int whichPlayer) const;
+    virtual void Read(TAbstractFile* file);
+    virtual void SetTown(int town);
+
+    int m_town;
+    int m_building;
+};
+
+// Artifact: hero and artifact, both signed words (0x4848a0).
+class TCampaignArtifactBonus : public TCampaignBonus {
+public:
+    virtual const char* GetIconDefName() const;
+    virtual int GetIconIndex() const { return m_artifact; }
+    virtual std::string GetText() const;
+    virtual void Apply(int whichPlayer) const;
+    virtual void Read(TAbstractFile* file);
+
+    int m_hero;
+    int m_artifact;
+};
+
+// Primary skills: a signed word hero id and then the four skill deltas
+// read as raw bytes straight into the object (0x484bf0's `add edi,8`
+// before a four-byte Read is what proves the array is the member, not
+// four ints).
+class TCampaignPrimarySkillBonus : public TCampaignBonus {
+public:
+    virtual const char* GetIconDefName() const;
+    virtual int GetIconIndex() const;
+    virtual std::string GetText() const;
+    virtual void Apply(int whichPlayer) const;
+    virtual void Read(TAbstractFile* file);
+
+    int m_hero;
+    char m_skills[4];
+};
+
+// Secondary skill: a signed word hero id, then the skill and its mastery
+// as unsigned bytes (0x484cf0).
+class TCampaignSecondarySkillBonus : public TCampaignBonus {
+public:
+    virtual const char* GetIconDefName() const;
+    virtual int GetIconIndex() const;
+    virtual std::string GetText() const;
+    virtual void Apply(int whichPlayer) const;
+    virtual void Read(TAbstractFile* file);
+
+    int m_hero;
+    int m_skill;
+    int m_level;
+};
+
+// Resource: a SIGNED byte selector and a full dword amount (0x484f00).
+// The negative selectors are the two mixed rows the icon frame folds onto
+// 7 and 8 (0x484d70).
+class TCampaignResourceBonus : public TCampaignBonus {
+public:
+    virtual const char* GetIconDefName() const;
+    virtual int GetIconIndex() const;
+    virtual std::string GetText() const;
+    virtual void Apply(int whichPlayer) const;
+    virtual void Read(TAbstractFile* file);
+
+    int m_resource;
+    int m_amount;
+};
+
+// The building bonus's two per-town tables, both indexed with the town
+// as the outer row: 0x6755b8 gives the icon .def name for each of a
+// town's 44 building slots and 0x6888c0 remaps a bonus's building index
+// when the town is set (41 rows a town). Neither table is claimed yet, so
+// the outer bound is left open rather than invented.
+extern const char* gCampaignBuildingIconNames[][44];
+extern const int gCampaignBuildingRemap[][41];
+
+// The two mixed resource selectors a resource bonus can carry beside the
+// seven EGameResource rows, byte-read off the ten-entry jump tables the
+// description (0x484d90) and the applier (0x484e20) share: -3 pays wood
+// AND ore, -2 pays all four rare resources. Names are role inventions.
+enum ECampaignBonusResource {
+    CAMPAIGN_BONUS_RESOURCE_WOOD_AND_ORE = -3,
+    CAMPAIGN_BONUS_RESOURCE_RARE = -2,
+    CAMPAIGN_BONUS_RESOURCE_NONE = -1
+};
+
+// The seven localized resource names, as advmgr.h / ai_player.h /
+// newgame.h / tradpost_widgets.h already declare them; the resource
+// bonus's description indexes the same table and this is the cheaper
+// include-set edge.
+extern const char* gResourceNames[7];
+
+// The three sentinel hero selectors a campaign bonus can carry, byte-read
+// off the picker's own jump chain at 0x4840d0 (`cmp ecx,-3 / -2 / -1`
+// with the plain-id arm falling through). Names are role inventions.
+enum ECampaignBonusHero {
+    CAMPAIGN_BONUS_HERO_STRONGEST = -3,
+    CAMPAIGN_BONUS_HERO_FIRST = -2,
+    CAMPAIGN_BONUS_HERO_NONE = -1
+};
+
+// The bonus applier's shared hero picker (0x4840d0), a /Gr free function
+// taking the selector in ECX and the player in EDX. Three selectors are
+// sentinels - -3 is "the player's strongest hero" by primary-skill total
+// plus secondary-skill levels, -2 is "the player's first hero" and -1 is
+// none - and any other value is a hero id that only answers when the hero
+// already belongs to that player. Retail-only, name provisional.
+hero* GetCampaignBonusHero(int heroSelector, int whichPlayer);
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\customcampaign.cpp:70, dc 0x7cd4c) void InitCampaignMapTraits([]* map_traits);
