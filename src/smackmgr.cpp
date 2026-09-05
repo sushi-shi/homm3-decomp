@@ -55,6 +55,10 @@ std::string GetCampaignArchiveStem();  // 0x597d00, name provisional
 #define SMACKBUFFER555 0x80000000
 #define SMACKBUFFER565 0xC0000000
 
+// The constant half of OpenSmackerTrack's SmackOpen mask; the 0x1000 bit is
+// what makes SmackOpen read from an already-open archive HANDLE.
+#define SMACKOPEN_FROM_ARCHIVE 0x1140
+
 // The remaining smackmgr.obj bodies, declared ahead of their first
 // in-TU call site. ShowVideo (0x598af0) opens the handle pair and
 // primes the blit state; SmackManager::NextSmackerFrame (0x598eb0) is
@@ -779,6 +783,71 @@ void DeleteSoundHeaders()
         delete[] SoundHeaderCampaign;
         SoundHeaderCampaign = 0;
     }
+}
+
+// The archive lookup ShowVideo opens both of its tracks through: append
+// '.smk' to the stem, then walk the three directories in priority order and
+// SmackOpen the first hit straight out of the archive handle (the 0x1000 bit
+// in the flag mask is what makes SmackOpen take a HANDLE rather than a
+// name). The expansion directory is consulted TWICE - ahead of the base
+// archive at *gpVideoGameState 1, behind the campaign archive at 3 - which
+// is the whole reason the body is 683 bytes.
+// Name provisional: the DC roster stubs this compiland's whole video layer.
+VA(0x00598790, 0x2AB)  // anchor-caller(ShowVideo, both tracks) + anchor-string('.smk'), retail-only
+Smack* OpenSmackerTrack(const char* stem, unsigned long flags,
+                        unsigned long extraFlags)
+{
+    char name[40];
+    int i;
+
+    strcpy(name, stem);
+    strcat(name, ".smk");
+
+    if (*gpVideoGameState == VIDEO_GAME_STATE_EXPANSION_ARCHIVES) {
+        for (i = 0; i < gVideoCount1; i++) {
+            if (_strcmpi(gVideoHeader1[i].name, name) == 0) {
+                gpSoundManager->service_sounds();
+                SetFilePointer(gVideoFile1, gVideoHeader1[i].offset, 0,
+                    FILE_BEGIN);
+                return SmackOpen(gVideoFile1,
+                    flags | extraFlags | SMACKOPEN_FROM_ARCHIVE, -1);
+            }
+        }
+    }
+
+    for (i = 0; i < gVideoCount2; i++) {
+        if (_strcmpi(gVideoHeader2[i].name, name) == 0) {
+            gpSoundManager->service_sounds();
+            SetFilePointer(gVideoFile2, gVideoHeader2[i].offset, 0, FILE_BEGIN);
+            return SmackOpen(gVideoFile2,
+                flags | extraFlags | SMACKOPEN_FROM_ARCHIVE, -1);
+        }
+    }
+
+    if (gVideoFile3) {
+        for (i = 0; i < gVideoCount3; i++) {
+            if (_strcmpi(gVideoHeader3[i].name, name) == 0) {
+                gpSoundManager->service_sounds();
+                SetFilePointer(gVideoFile3, gVideoHeader3[i].offset, 0,
+                    FILE_BEGIN);
+                return SmackOpen(gVideoFile3,
+                    flags | extraFlags | SMACKOPEN_FROM_ARCHIVE, -1);
+            }
+        }
+    }
+
+    if (*gpVideoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH) {
+        for (i = 0; i < gVideoCount1; i++) {
+            if (_strcmpi(gVideoHeader1[i].name, name) == 0) {
+                gpSoundManager->service_sounds();
+                SetFilePointer(gVideoFile1, gVideoHeader1[i].offset, 0,
+                    FILE_BEGIN);
+                return SmackOpen(gVideoFile1,
+                    flags | extraFlags | SMACKOPEN_FROM_ARCHIVE, -1);
+            }
+        }
+    }
+    return 0;
 }
 
 // E:\gamedcs\smackmgr.cpp:811. The Dreamcast dossier (dc 0x14ad24)
