@@ -171,6 +171,20 @@ enum ECheckEndGameForcedResult {
     END_GAME_FORCE_DEFEAT = 2
 };
 
+// The five columns of the end-of-game score sheet CongratsWait draws.
+// Retail dispatches the value line through a five-entry jump table on the
+// column ordinal, and each arm is what names the column: the calendar day
+// count, the base map score, the difficulty row from the ARRAYTXT table,
+// the rated final score, and the rank string ShowCongrats formats.
+enum ECongratsColumn {
+    CONGRATS_COLUMN_DAYS = 0,
+    CONGRATS_COLUMN_BASE_SCORE = 1,
+    CONGRATS_COLUMN_DIFFICULTY = 2,
+    CONGRATS_COLUMN_SCORE = 3,
+    CONGRATS_COLUMN_RANK = 4,
+    CONGRATS_COLUMN_COUNT = 5
+};
+
 extern unsigned long glTimers[10];
 
 // Retail .bss pointer cell used by both map-extra accessors. The complete
@@ -281,10 +295,12 @@ DATA(0x006994ec) extern int gUnnamed6994ec;
 // into gText then ShutDown). DC kb.obj MemError, dc 0xe44f0/64 B,
 // kb.cpp:4168 - arity and role both agree.
 void MemError();                                         // 0x4f42c0
-// Retail-only 0x4f4c00, kb's band, an ordinal placeholder: HandleNetMsg's
-// game-transmit arm calls it with the message's field_00 and a set byte
-// when the transfer-gate dword at +0x1c is up. Not claimed here.
-void KbFn_004F4C00(int field00, unsigned char b);
+// 0x4f4c00, in kb's band. HandleNetMsg's game-transmit arm calls it with
+// the message's field_00 and a set byte when the transfer-gate dword at
+// +0x1c is up, which is exactly the Dreamcast's
+// HandleRemoteDeadPlayerExit(iDPGamePos, showMsg) - same arity, same
+// widths, and the body's RS_PLAYER_DEAD broadcast settles the role.
+void HandleRemoteDeadPlayerExit(int iDPGamePos, unsigned char showMsg);
 int GameUnsaved();                                       // 0x4f4310
 void CheckEndGame(int bForceWin);                        // 0x4f2ce0
 bool DisplayVCWinLoss(VictoryConditionStruct& victoryCondition,

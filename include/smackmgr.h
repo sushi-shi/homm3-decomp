@@ -111,6 +111,25 @@ void DeleteSoundHeaders();     // 0x5986e0
 // ShutDown calls it right before DeleteSoundHeaders.
 void DeleteAnimHeaders();      // 0x598440
 
+// The video-archive directory record. LoadAnimHeaders (0x598210) sizes its
+// allocation `new VideoHeaderStruct[count + 2]` as (11*count + 22) * 4 and
+// reads 44*count bytes into it, so the record is 44 bytes; kb.obj's
+// EarlySetup walks the third directory with exactly that stride and
+// _strcmpi's the member name at offset 0 against two .smk literals, which
+// is what fixes the name field's position and the whole extent. The
+// trailing dword is whatever LoadAnimHeaders' own reader puts there.
+struct VideoHeaderStruct {
+    char name[40];
+    int field_28;
+};
+SIZE(VideoHeaderStruct, 0x2c);
+
+// smackmgr.cpp owns the DATA claims on the three directory pointers; this
+// is the third of them plus the shared entry count EarlySetup and the
+// loader both read.
+DATA(0x0069fe2c) extern VideoHeaderStruct* gVideoHeader3;
+DATA(0x0069fe3c) extern int gVideoHeaderCount;
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\smackmgr.cpp:75, dc 0x14ac30) void VideoSoundOnOff();
 // CODEVIEW(E:\gamedcs\smackmgr.cpp:105, dc 0x14ac34) void VideoRealignBuffers();

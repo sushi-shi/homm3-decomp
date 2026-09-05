@@ -19,6 +19,7 @@
 #include "campaignbrief.h"
 #include "campaignwindow.h"
 #include "castle.h"
+#include "command.h"
 #include "cmbtmgr.h"
 #include "creaturetype.h"
 #include "csprite.h"
@@ -49,6 +50,7 @@
 #include "soundmgr.h"
 #include "sskilltraits.h"
 #include "timer.h"
+#include "text.h"
 #include "textwdgt.h"
 #include "winmgr.h"
 #include "wingraph.h"
@@ -80,6 +82,24 @@ inline int max(int left, int right)
 // type_dialog_icon::set's two Dreamcast min calls and retail's equality exit
 // use the same text-column clamp.
 #define DIALOG_ICON_MAX_TEXT_WIDTH 110
+
+// The icon grid CalculateNormalDialogSize lays out: at most two rows of at
+// most four, and retail dispatches each row's centring through a four-entry
+// jump table on the row's icon count.
+// The eight fixed player seats CheckEndGame and its callers walk.
+#define GAME_PLAYER_COUNT 8
+
+// The dialog reply the close button answers with. winmgr.h's
+// EDialogReturnType has no enumerator for it yet (armygrp_split.h spells
+// the same value DIALOG_RETURN_SPLIT_CLOSE for its own window), so the
+// name is local until a lane can price the shared header.
+#define DIALOG_RETURN_CLOSE 0x7800
+
+#define DIALOG_ICON_MAX_ROWS 2
+#define DIALOG_ICON_ROW_SINGLE 1
+#define DIALOG_ICON_ROW_PAIR 2
+#define DIALOG_ICON_ROW_TRIPLE 3
+#define DIALOG_ICON_ROW_QUAD 4
 
 // The re-entrancy latch PollSound holds while it runs; DC ?gbInPollSound@@3HA,
 // retail .bss 0x699578, kb.obj's own.
@@ -216,6 +236,303 @@ void PollSound()
         }
         gbInPollSound = 0;
     }
+}
+
+// kb.obj's own once-only latch: a reloc census over the whole image finds
+// exactly two references to 0x699580 and both are in EarlySetup, so kb.cpp
+// owns it under the same rule as oldmain's private cells below. The cell at
+// 0x6985bc is the same case - InitVars' single zero store is its only
+// reference anywhere.
+DATA(0x00699580)
+static int bEarlySetupDone;
+DATA(0x006985bc)
+static int gUnnamed6985bc;
+
+// The startup callees whose own rows are still unclaimed. Every name is the
+// Dreamcast CodeView spelling for the compiland the retail address falls in,
+// and every one is independently corroborated by the .txt or table literal
+// its body opens:
+//   0x5bc690  the image-wide `ret` /OPT:ICF folded every empty function
+//             onto. The Dreamcast calls logFile.InitLogFile() at kb.cpp:648;
+//             Complete passes the log directory ".\" and the body is empty.
+//   0x56c3e0  seerhut.obj    InitializeSeerHutText            (seerhut.txt)
+//   0x4b8410  game.obj       InitializeRandomTavernText       (randtvrn.txt)
+//   0x47ab30  creature_bank  initialize_creature_bank_traits  (crbanks.txt)
+//   0x405d20  advmgr.obj     InitializeCreatureGeneratorNames (crgen1.txt)
+//   0x47b290  creaturetype   InitializeCreatureTypeTraitsTable(crtraits.txt)
+//   0x41b500  the second objnames.txt reader, and the ONLY call in the
+//             table run whose result is not tested - an ordinal name until
+//             a Dreamcast row is found for it.
+//   0x5c14c0  town.obj       InitializeBuildingCostsTables    (building.txt)
+//   0x405d80  advmgr.obj     InitializeExtraInfoText
+//   0x4d71a0  hero.obj       InitializeHeroSpecificAbilitiesTable
+//                                                             (herospec.txt)
+//   0x45e250  the campaign-music table reader (cmpmusic.txt); no Dreamcast
+//             row exists for it either, so the name stays ordinal.
+// The remaining declarations below are the ordinary free functions whose
+// bodies are claimed elsewhere but whose owner headers carry them only as
+// CODEVIEW comments.
+void InitLogFile(const char* path);
+unsigned char InitializeSeerHutText();
+unsigned char InitializeRandomTavernText();
+unsigned char initialize_creature_bank_traits();
+unsigned char InitializeCreatureGeneratorNames();
+unsigned char InitializeCreatureTypeTraitsTable();
+void GameFn_0041B500();
+unsigned char InitializeBuildingCostsTables();
+unsigned char InitializeExtraInfoText();
+unsigned char InitializeHeroSpecificAbilitiesTable();
+unsigned char CampaignMapFn_0045E250();
+int InterpretCommandLine();
+unsigned char InitializeAdventureEventText();
+unsigned char InitializeSpellTraitsTable();
+unsigned char InitializeHeroTraitsTable();
+unsigned char InitializeHeroClassTraitsTable();
+unsigned char initialize_ballistics_table();
+unsigned char InitializeSSkillTraitsTable();
+unsigned char InitializeArtifactTraitsTable();
+unsigned char InitializeVCDescriptions();
+unsigned char InitializeLCDescriptions();
+unsigned char InitializeTurnDurationText();
+unsigned char InitializeCreatureAnimationTraitsTable();
+unsigned char InitializeArtifactEventText();
+unsigned char InitializeRandomSignText();
+unsigned char InitializeCampaignMapTraitsTable();
+void AI_initialize();
+void ReadPrefs();
+void WritePrefs();
+int SetupCDDrive();
+unsigned char LoadAnimHeaders();
+unsigned char LoadSoundHeaders();
+namespace ResourceManager {
+bool Open(bool bCheckCd, bool bLoadLod, int* piResult);
+}
+
+// E:\gamedcs\kb.cpp:4214. Source-static and single-call: retail has no
+// standalone body because /Ob2 expands the whole run into EarlySetup, where
+// every `return 0` lands on the one ShutDown. The order is retail's; the
+// four event/sign/tavern rows genuinely appear TWICE, once before the
+// creature tables and once after.
+static unsigned char LoadGameData()
+{
+    if (!InitializeGeneralText())
+        return 0;
+    if (!InitializeCustomCampaignText())
+        return 0;
+    if (!InitializeSeerHutText())
+        return 0;
+    if (!InitializeMineEventText())
+        return 0;
+    if (!InitializeAdventureEventText())
+        return 0;
+    if (!InitializeArtifactEventText())
+        return 0;
+    if (!InitializeRandomSignText())
+        return 0;
+    if (!InitializeRandomTavernText())
+        return 0;
+    if (!InitializeCampaignRegionNames())
+        return 0;
+    if (!InitializeHighScoreDefaults())
+        return 0;
+    if (!InitializeTerrainNames())
+        return 0;
+    if (!InitializeAdvObjNames())
+        return 0;
+    if (!InitializeResourceNames())
+        return 0;
+    if (!InitializeMineNames())
+        return 0;
+    if (!InitializePlayerColors())
+        return 0;
+    if (!InitializePrimaryStatNames())
+        return 0;
+    if (!InitializeSecondarySkillLevelNames())
+        return 0;
+    if (!initialize_creature_bank_traits())
+        return 0;
+    if (!InitializeCreatureGeneratorNames())
+        return 0;
+    if (!InitializeAdventureEventText())
+        return 0;
+    if (!InitializeArtifactEventText())
+        return 0;
+    if (!InitializeRandomSignText())
+        return 0;
+    if (!InitializeRandomTavernText())
+        return 0;
+    if (!InitializeCreatureTypeTraitsTable())
+        return 0;
+    GameFn_0041B500();
+    if (!InitializeArtifactTraitsTable())
+        return 0;
+    if (!InitializeSpellTraitsTable())
+        return 0;
+    if (!InitializeHeroTraitsTable())
+        return 0;
+    if (!InitializeHeroClassTraitsTable())
+        return 0;
+    if (!initialize_ballistics_table())
+        return 0;
+    if (!InitializeSSkillTraitsTable())
+        return 0;
+    if (!InitializeBuildingCostsTables())
+        return 0;
+    if (!InitializeVCDescriptions())
+        return 0;
+    if (!InitializeLCDescriptions())
+        return 0;
+    if (!InitializeTurnDurationText())
+        return 0;
+    if (!InitializeExtraInfoText())
+        return 0;
+    if (!combatManager::LoadWallTraitsTable())
+        return 0;
+    if (!InitializeHelpText())
+        return 0;
+    if (!InitializeCreatureAnimationTraitsTable())
+        return 0;
+    if (!InitializeNeutralBuildingText())
+        return 0;
+    if (!InitializeSpecialBuildingText())
+        return 0;
+    if (!InitializeDwellingText())
+        return 0;
+    if (!InitializeTownNameText())
+        return 0;
+    if (!InitializeHeroSpecificAbilitiesTable())
+        return 0;
+    if (!InitializeHeroBioText())
+        return 0;
+    if (!InitializeCastleText())
+        return 0;
+    if (!InitializeTavernText())
+        return 0;
+    if (!InitializeHallText())
+        return 0;
+    if (!InitializeTownText())
+        return 0;
+    if (!InitializeOverviewText())
+        return 0;
+    if (!InitializeHeroText())
+        return 0;
+    if (!InitializeCampaignDialogText())
+        return 0;
+    if (!InitializeCreditsText())
+        return 0;
+    if (!InitializeTentColorText())
+        return 0;
+    if (!InitializeWinSetupText())
+        return 0;
+    if (!InitializeArrayText())
+        return 0;
+    return CampaignMapFn_0045E250();
+}
+
+// E:\gamedcs\kb.cpp:3763. Source-static and single-call for the same reason
+// LoadGameData is: retail expands the whole reset into EarlySetup's tail.
+static void InitVars()
+{
+    NULL_SAMPLE2.resSample = 0;
+    NULL_SAMPLE2.playSample = 0;
+    gGameCommand = -1;
+    gUnnamed6985bc = 0;
+    gpGame->field_4e678 = 0;
+    strcpy(gpGame->setup.filename,
+           DATA_COMPGEN(0x0067f5c8, defaultScenarioName, "test.h3m"));
+    gpGame->setup.fileInitialized = 0;
+    memset(glTimers, 0, sizeof(glTimers));
+    gbInSetup698400 = 0;
+    if (gUnnamed698a34) {
+        dfltMenu = LoadMenu(ghInstance, MAKEINTRESOURCE(0x6f));
+        gameMenu = LoadMenu(ghInstance, MAKEINTRESOURCE(0x71));
+    } else {
+        dfltMenu = LoadMenu(ghInstance, MAKEINTRESOURCE(0x6e));
+        gameMenu = LoadMenu(ghInstance, MAKEINTRESOURCE(0x70));
+    }
+}
+
+// E:\gamedcs\kb.cpp:645
+// WinMain's first gate, and the Dreamcast line program matches it row for
+// row (dc 0xdf91c): the once-only latch, the log directory, the twelve
+// manager singletons, the desktop probe, the preferences round trip, the
+// resource archive, the whole game-data table run, the AI tables and the
+// command line - then, only if the command line asked for a game, the CD
+// probe, the video and sound archives, the click sample and the process
+// variable reset.  Complete adds the object-type loader before
+// AI_initialize and expands both LoadGameData and InitVars in place.
+// Residual (94.25%): three branches more than retail, spread over the
+// LoadGameData expansion rather than concentrated - the call stream
+// itself agrees positionally at all 81 sites (47 of the pairings are
+// reloc-name-only, 41 against still-unclaimed retail labels and six
+// against `bool` spellings of the same declarator). Tried and rejected:
+// writing the two .smk scans as goto loops with the unconditional back
+// edge retail emits - byte-flat to the digit, so the surplus is not the
+// loop rotation.
+VA(0x004ed650, 0x4E8)  // anchor-caller (kbwin WinMain) + dc-order-map, dc 0xdf91c
+int EarlySetup()
+{
+    int iOpenResult;
+
+    if (bEarlySetupDone)
+        return 0;
+    InitLogFile(DATA_COMPGEN(0x0067f690, logDirectory, ".\\"));
+    InitMainClasses();
+    unsigned char bDesktopOk = GetDesktopInfo();
+    ReadPrefs();
+    if (!bWindowedMode && !bDesktopOk) {
+        bWindowedMode = 1;
+        WritePrefs();
+    }
+    ResourceManager::SetPath(
+        DATA_COMPGEN(0x00677d88, dataDirectoryPrefix, ".\\DATA\\"));
+    if (!ResourceManager::Open(1, 1, &iOpenResult))
+        ShutDown(iOpenResult == 1
+                     ? DATA_COMPGEN(0x0067f64c, filesMissingMessage,
+                           "Files from Heroes III are missing.   "
+                           "Please reinstall Heroes III.")
+                     : DATA_COMPGEN(0x0067f614, resourcesUnavailableMessage,
+                           "Unable to initialize resources - possible "
+                           "disk problem."));
+    if (!LoadGameData())
+        ShutDown(DATA_COMPGEN(0x0067f5fc, remoteInitializationFailed,
+            "Initialization failed!"));
+    gpGame->worldMap.NewfullMapFn_00505DA0();
+    AI_initialize();
+    if (!InterpretCommandLine())
+        return 1;
+    gCDDriveNumber = SetupCDDrive();
+    if (!LoadAnimHeaders())
+        ShutDown(DATA_COMPGEN(0x0067f614, resourcesUnavailableMessage,
+            "Unable to initialize resources - possible disk problem."));
+    if (!LoadSoundHeaders())
+        ShutDown(DATA_COMPGEN(0x0067f614, resourcesUnavailableMessage,
+            "Unable to initialize resources - possible disk problem."));
+    if (gCDDriveNumber) {
+        int i;
+
+        for (i = 0; i < gVideoHeaderCount; i++)
+            if (!_strcmpi(gVideoHeader3[i].name,
+                          DATA_COMPGEN(0x0067f5ec, expansionTwoVideoName,
+                              "h3x2_rne1.smk")))
+                goto have_cd_version;
+        for (i = 0; i < gVideoHeaderCount; i++)
+            if (!_strcmpi(gVideoHeader3[i].name,
+                          DATA_COMPGEN(0x0067f5e0, expansionOneVideoName,
+                              "h3abab1.smk"))) {
+                gCDDriveNumber = 6;
+                goto have_cd_version;
+            }
+        gCDDriveNumber = 5;
+    }
+
+have_cd_version:
+    button::click_sample = ResourceManager::GetSample(
+        DATA_COMPGEN(0x0067f5d4, buttonClickSampleName, "button.wav"));
+    InitVars();
+    InitializeCampaignMapTraitsTable();
+    bEarlySetupDone = 1;
+    return 1;
 }
 
 // E:\gamedcs\kb.cpp:431
@@ -367,12 +684,7 @@ void SetupCDRom()
     // @stub
 }
 
-// E:\gamedcs\kb.cpp:645
-DC_ONLY(0xdf91c, 0x11E)
-int EarlySetup()
-{
-    // @stub
-}
+// E:\gamedcs\kb.cpp:645 - promoted to a live claim (see below).
 
 
 // E:\gamedcs\kb.cpp:814
@@ -433,12 +745,7 @@ int PickLoadGame()
     // @stub
 }
 
-// E:\gamedcs\kb.cpp:2174
-DC_ONLY(0xe1990, 0x1FE)
-int InterpretCommandLine()
-{
-    // @stub
-}
+// E:\gamedcs\kb.cpp:2174 - promoted to a live claim (see below).
 
 // E:\gamedcs\kb.cpp:2270
 DC_ONLY(0xe1b90, 0x4)
@@ -477,12 +784,7 @@ unsigned char type_normal_dialog_frame::handle_click(unsigned char down_click, u
     // @stub
 }
 
-// E:\gamedcs\kb.cpp:2549
-DC_ONLY(0xe206c, 0x1EE)
-int EventWindowHandler(message* msg)
-{
-    // @stub
-}
+// E:\gamedcs\kb.cpp:2549 - promoted to a live claim (see below).
 
 // E:\gamedcs\kb.cpp:2630
 DC_ONLY(0xe225c, 0x10)
@@ -519,12 +821,8 @@ void SendPlayerWon()
     // @stub
 }
 
-// E:\gamedcs\kb.cpp:2878
-DC_ONLY(0xe296c, 0x3A)
-void SendPlayerLost()
-{
-    // @stub
-}
+// E:\gamedcs\kb.cpp:2878 - reconstructed above as the inline helper
+// retail expands at every DisplayLCWinLoss arm.
 
 // E:\gamedcs\kb.cpp:2888
 DC_ONLY(0xe29a8, 0xB1A)
@@ -540,26 +838,12 @@ int GetEnemyCount()
     // @stub
 }
 
-// E:\gamedcs\kb.cpp:3440
-DC_ONLY(0xe3558, 0x228)
-unsigned char DisplayLCWinLoss(LossConditionStruct* LossCondition, int* bGameWon, int* bGameLost, unsigned char remoteCheck)
-{
-    // @stub
-}
+// E:\gamedcs\kb.cpp:3440 - promoted to a live claim (see below).
 
-// E:\gamedcs\kb.cpp:3566
-DC_ONLY(0xe3780, 0x282)
-void CheckEndGame(int bForceWin)
-{
-    // @stub
-}
+// E:\gamedcs\kb.cpp:3566 - promoted to a live claim (see below).
 
-// E:\gamedcs\kb.cpp:3763
-DC_ONLY(0xe3a04, 0x60)
-void InitVars()
-{
-    // @stub
-}
+// E:\gamedcs\kb.cpp:3763 - reconstructed above as the source-static
+// retail expands into EarlySetup.
 
 // E:\gamedcs\kb.cpp:3798
 DC_ONLY(0xe3a64, 0x11E)
@@ -1496,6 +1780,81 @@ static int PickLoadGame()
     return gpWindowManager->dialogReturn != DIALOG_RETURN_CANCEL;
 }
 
+// Two write-only process cells whose ONLY retail reference in the whole
+// image is the reset run below (verified with a reloc census), so kb.obj
+// owns them under the same rule as oldmain's private cells above. The
+// .data one ships initialized to 1 and is re-armed here.
+DATA(0x006783d8)
+static int gUnnamed6783d8 = 1;
+DATA(0x00698a38)
+static int gUnnamed698a38;
+
+// E:\gamedcs\kb.cpp:2174
+// EarlySetup's last gate: reset the process-wide session flags, take the
+// default scenario name from general text, then walk the upper-cased
+// command line once. A space followed by `?`/`h`/`H` asks for the usage
+// message, which the tail turns into a ShutDown; a `/` introduces one of
+// three switches - `/I<digit>` sets the intro-video mode, `/S<digit>`
+// sets the silent latch to its complement, and the eight-character
+// `/NWCGRAIL` unlocks the developer menu set EarlySetup loads at the end.
+// Every switch checks the characters it needs are still inside the string
+// before reading them. The return is unconditionally 1.
+// Residual (99.63%): one encoding choice - retail zeroes the gbMPlayer
+// BYTE with an immediate (`mov byte ptr [mem], 0`) while our compile
+// spends the already-zeroed EBX on it (`mov byte ptr [mem], bl`), one
+// byte shorter. Everything else - blocks, branches, calls and every
+// other store - is identical.
+VA(0x004f0690, 0x238)  // anchor-caller (EarlySetup) + gcCommandLine walk, dc 0xe1990
+int InterpretCommandLine()
+{
+    int bShowUsage = 0;
+    int i;
+    int length;
+
+    gUnnamed6783d8 = 1;
+    gUnnamed6993dc = 1;
+    gbMPlayer = 0;
+    gUnnamed698a38 = 0;
+    gUnnamed6989c8 = 0;
+    gbNoSound = 0;
+    gUnnamed6994f0 = 0;
+    strcpy(gMapName, gpGeneralText->Text[101]);
+    length = strlen(gcCommandLine);
+    _strupr(gcCommandLine);
+    for (i = 0; i < length; i++) {
+        if (gcCommandLine[i] == ' ' && i + 1 < length
+            && (gcCommandLine[i + 1] == '?' || gcCommandLine[i + 1] == 'h'
+                || gcCommandLine[i + 1] == 'H'))
+            bShowUsage = 1;
+        if (gcCommandLine[i] == '/' && i + 1 < length) {
+            switch (toupper(gcCommandLine[i + 1])) {
+            case 'I':
+                if (i + 2 < length)
+                    giShowIntro = gcCommandLine[i + 2] - '0';
+                break;
+            case 'N':
+                if (i + 8 < length
+                    && toupper(gcCommandLine[i + 2]) == 'W'
+                    && toupper(gcCommandLine[i + 3]) == 'C'
+                    && toupper(gcCommandLine[i + 4]) == 'G'
+                    && toupper(gcCommandLine[i + 5]) == 'R'
+                    && toupper(gcCommandLine[i + 6]) == 'A'
+                    && toupper(gcCommandLine[i + 7]) == 'I'
+                    && toupper(gcCommandLine[i + 8]) == 'L')
+                    gUnnamed698a34 = 1;
+                break;
+            case 'S':
+                if (i + 2 < length)
+                    gbNoSound = 1 - (gcCommandLine[i + 2] - '0');
+                break;
+            }
+        }
+    }
+    if (bShowUsage)
+        ShutDown(gpGeneralText->Text[444]);
+    return 1;
+}
+
 // The normal-dialog state is private to kb.obj. Dreamcast publishes the
 // giNormalDialogMBType/giNormalDialogStart spellings; retail fixes their PC
 // cells and independently proves the saved selection/window companions.
@@ -1588,6 +1947,88 @@ int NormalDialogHandler(message& msg)
     return EventWindowHandler(&msg);
 }
 
+// E:\gamedcs\kb.cpp:2549
+// Every message the normal dialog's own widgets do not consume ends here.
+// An armed deadline that has run out answers DIALOG_RETURN_TIMEOUT for the
+// window; otherwise a deselect on one of the dialog's reply buttons is
+// turned into the window's answer.  The two picture choices of the
+// iMBType-7/10 dialogs are a radio pair: selecting one clears the other,
+// enables the OK button, remembers the choice, and redraws - and OK then
+// answers with the remembered choice rather than with its own id.  Every
+// answering path rewrites the message into the forwarded shape and
+// disarms the deadline.
+// Residual (82.08%): blocks 20 = 20, branch view clean, and the ONLY
+// remaining difference is one constant-allocation decision - retail
+// keeps the ten in EDI (saved at entry) and spends it on the switch
+// range bound, on both NORMAL_DIALOG_CHOOSE_OPTIONAL compares and on
+// the two message stores, where our compile uses immediates and gives
+// EDI a lifetime that ends inside the deadline arm. Tried and rejected:
+// the chained `codeX = codeY = 10` store (byte-flat).
+// The +32.6 that got here was the switch shape: retail FALLS THROUGH
+// from the OK arm into the plain-reply group (jump-table entry 0 is
+// that arm's own tail), and the two picture-choice arms come first in
+// source order.
+VA(0x004f0fc0, 0x1C3)  // decorated identity (kb.h) + dialog-global shape, dc 0xe206c
+int EventWindowHandler(message* msg)
+{
+    if (gDialogDeadline697784 && GameTime::IsPast(gDialogDeadline697784)) {
+        msg->id = MESSAGE_WIDGET;
+        gpWindowManager->dialogReturn = DIALOG_RETURN_TIMEOUT;
+        goto forward_answer;
+    }
+    if (msg->id == MESSAGE_WIDGET
+        && msg->codeX == widget::WIDGET_DESELECT) {
+        switch (msg->codeY) {
+        case DIALOG_RETURN_CHOICE_1:
+            if (giNormalDialogMBType == NORMAL_DIALOG_CHOOSE_OPTIONAL
+                || giNormalDialogMBType == NORMAL_DIALOG_CHOOSE) {
+                gpNormalDialogWindow->GetWidget(DIALOG_RETURN_CHOICE_1)
+                    ->send_message(widget::WIDGET_SET_STATUS, 4);
+                gpNormalDialogWindow->GetWidget(DIALOG_RETURN_CHOICE_2)
+                    ->send_message(widget::WIDGET_CLEAR_STATUS, 4);
+                gpNormalDialogWindow->GetWidget(DIALOG_RETURN_OK)->enable(1);
+                giNormalDialogSelection = DIALOG_RETURN_CHOICE_1;
+                gpNormalDialogWindow->DrawWindow(1, -65535, 65535);
+            }
+            break;
+
+        case DIALOG_RETURN_CHOICE_2:
+            if (giNormalDialogMBType == NORMAL_DIALOG_CHOOSE_OPTIONAL
+                || giNormalDialogMBType == NORMAL_DIALOG_CHOOSE) {
+                gpNormalDialogWindow->GetWidget(DIALOG_RETURN_CHOICE_1)
+                    ->send_message(widget::WIDGET_CLEAR_STATUS, 4);
+                gpNormalDialogWindow->GetWidget(DIALOG_RETURN_CHOICE_2)
+                    ->send_message(widget::WIDGET_SET_STATUS, 4);
+                gpNormalDialogWindow->GetWidget(DIALOG_RETURN_OK)->enable(1);
+                giNormalDialogSelection = DIALOG_RETURN_CHOICE_2;
+                gpNormalDialogWindow->DrawWindow(1, -65535, 65535);
+            }
+            break;
+
+        case DIALOG_RETURN_OK:
+            if (giNormalDialogMBType == NORMAL_DIALOG_CHOOSE_OPTIONAL
+                || giNormalDialogMBType == NORMAL_DIALOG_CHOOSE) {
+                gpWindowManager->dialogReturn = giNormalDialogSelection;
+                goto forward_answer;
+            }
+            // fall through
+        case DIALOG_RETURN_CLOSE:
+        case DIALOG_RETURN_CANCEL:
+        case DIALOG_RETURN_ACCEPT:
+        case DIALOG_RETURN_DECLINE:
+            gpWindowManager->dialogReturn = msg->codeY;
+            goto forward_answer;
+        }
+    }
+    return MESSAGE_DISPATCH_CONSUME;
+
+forward_answer:
+    msg->codeY = 10;
+    msg->codeX = 10;
+    gDialogDeadline697784 = 0;
+    return MESSAGE_DISPATCH_FORWARD;
+}
+
 // E:\gamedcs\kb.cpp:2811. The retail body independently fixes the source
 // shape: GetTeamMask expands at the head, both loops scan the eight player
 // slots in ascending order, disabled players are omitted, and the separator
@@ -1645,6 +2086,21 @@ inline void SendPlayerWon()
         CPlayerWonMsg msg(
             gpGame->mapHeader.victoryCondition.playerWinner,
             gpGame->mapHeader.victoryCondition);
+        TransmitRemoteData(&msg, 127, false, true);
+        gbGameOver = 1;
+    }
+}
+
+// E:\gamedcs\kb.cpp:2878, SendPlayerWon's twin. Retail expands it at every
+// DisplayLCWinLoss arm; the record it builds - RS_PLAYER_LOST, 0x3c bytes,
+// the losing seat at +0x14 and the map's own loss condition assigned over a
+// default-constructed member at +0x18 - is what proves CPlayerLostMsg's
+// layout and its constructor's statement order.
+inline void SendPlayerLost()
+{
+    if (gNetworkActive69954c) {
+        CPlayerLostMsg msg(gpGame->mapHeader.lossCondition.playerLoser,
+                           gpGame->mapHeader.lossCondition);
         TransmitRemoteData(&msg, 127, false, true);
         gbGameOver = 1;
     }
@@ -2099,6 +2555,272 @@ CNetMsg::CNetMsg(eRS_Messages subType, unsigned long size)
 }
 #endif
 
+// E:\gamedcs\kb.cpp:3440
+// The loss-condition half of the pair, and the twin of DisplayVCWinLoss
+// above: a three-arm switch on the map's own loss condition, each arm
+// gated on the condition having actually fired and on the losing seat
+// sharing the local player's team.  The town and hero arms name what was
+// lost, the time-limit arm has a fixed row.  Every arm ends the same way -
+// the network broadcast (or the bare latch when this call is already the
+// remote echo), then the message - and the return is the pair of flags the
+// caller passed in.
+// Residual (79.05%): the emitted body is 894 B - retail's size exactly -
+// with 46 = 46 blocks and a clean branch view, so nothing is missing.
+// One inline decision cascades through the whole register allocation:
+// retail EXPANDS LossConditionStruct's default constructor inside the
+// two SendPlayerLost expansions (three byte stores sharing the -1 it
+// keeps in EBX for the dialog arguments) where our compile CALLS it and
+// therefore keeps 0 in EBX and spends immediates on the -1s. The
+// CNetMsg base constructor already agrees at all three sites - expanded
+// twice, called once against the 0x4f2930 COMDAT - so this is the
+// budget running out one level deeper, not a spelling.
+VA(0x004f2960, 0x37E)  // decorated identity (kb.h) + anchor-caller (CheckEndGame), dc 0xe3558
+unsigned char DisplayLCWinLoss(LossConditionStruct* lossCondition,
+                               int* bGameWon, int* bGameLost,
+                               unsigned char remoteCheck)
+{
+    int localPos = gpGame->GetLocalPlayerGamePos();
+
+    switch (lossCondition->Type) {
+    case LOSS_CONDITION_LOSE_TOWN:
+        if (lossCondition->GameLost
+            && gpGame->OnSameTeam(localPos, lossCondition->playerLoser)) {
+            *bGameLost = 1;
+            sprintf(gText, (*gpGeneralText)[252],
+                    gpGame->GetTown(
+                        gpGame->GetTownId(lossCondition->TownX,
+                                          lossCondition->TownY,
+                                          lossCondition->TownZ))
+                        ->cName.c_str());
+            if (remoteCheck)
+                gbGameOver = 1;
+            else
+                SendPlayerLost();
+            NormalDialog(gText, NORMAL_DIALOG_DEFAULT, -1, -1, -1, 0, -1, 0,
+                         -1, 0, -1, 0);
+        }
+        break;
+
+    case LOSS_CONDITION_LOSE_HERO:
+        if (lossCondition->GameLost
+            && gpGame->OnSameTeam(localPos, lossCondition->playerLoser)) {
+            *bGameLost = 1;
+            if (localPos == lossCondition->playerLoser) {
+                sprintf(gText, (*gpGeneralText)[254],
+                        gpGame->GetHero(lossCondition->HeroID)->name);
+            } else {
+                char* cLoserName =
+                    gpGame->GetPlayerName(lossCondition->playerLoser);
+                if (cLoserName)
+                    sprintf(gText, (*gpGeneralText)[671], cLoserName,
+                            gpGame->GetHero(lossCondition->HeroID)->name);
+            }
+            if (remoteCheck)
+                gbGameOver = 1;
+            else
+                SendPlayerLost();
+            NormalDialog(gText, NORMAL_DIALOG_DEFAULT, -1, -1, -1, 0, -1, 0,
+                         -1, 0, -1, 0);
+        }
+        break;
+
+    case LOSS_CONDITION_TIME_LIMIT:
+        if (lossCondition->GameLost) {
+            if (remoteCheck)
+                gbGameOver = 1;
+            else
+                SendPlayerLost();
+            *bGameLost = 1;
+            NormalDialog((*gpGeneralText)[255], NORMAL_DIALOG_DEFAULT, -1, -1,
+                         -1, 0, -1, 0, -1, 0, -1, 0);
+        }
+        break;
+    }
+
+    return *bGameWon || *bGameLost;
+}
+
+// The re-entry latch CheckEndGame holds while it runs; its only five
+// references in the whole image are that row's own read and four writes, so
+// kb.cpp owns it under the same rule as oldmain's private cells.
+DATA(0x0069958c)
+static unsigned char bInCheckEndGame;
+
+// E:\gamedcs\kb.cpp:2636. 0x4f11a0, the row EventWindowHandler's band puts
+// between TrueFalseDialogHandler and GetTeamNames, and the two call sites
+// below fix its ABI: one int in ECX, no return. Not claimed here.
+void PlayerDead(int gamePos);
+
+// E:\gamedcs\kb.cpp:3566
+// The end-of-turn adjudicator, and it runs at most once at a time.
+// Stage one walks the eight seats: a seat with neither heroes nor towns is
+// dead now, a seat with heroes but no towns starts (or runs out) the
+// seven-day countdown, and anything holding a town has its countdown
+// cleared.  Stage two counts the live seats outside the local player's
+// team, then puts the map's own victory and loss conditions through
+// DisplayVCWinLoss / DisplayLCWinLoss.  Standard victory - the last team
+// standing - only counts when the map allows it, and in a network game it
+// is announced with RS_NORMAL_WIN before the dialog.  The bForceWin
+// argument overrides everything.  The `gosolo` latch pair is honoured
+// three times over: the acting seat is temporarily made local so the
+// dialogs address it, and put back on the way out.
+// Residual (89.45%): blocks 85 = 85 and the branch view is clean; two
+// codegen decisions are left. (1) Our CL CROSS-JUMPS the two per-seat
+// NormalDialog calls - the dead-seat notice and the countdown-expiry
+// notice share their last five pushes - into one site where retail
+// keeps both; there is no source difference to break the merge, the
+// argument lists already differ in the middle. (2) Retail CALLS
+// game::GetTeam inside its GetTeamMask expansion where we expand it at
+// depth 2, and the frame is 0x2c against retail's 0x30 - one named
+// local short. Tried and rejected: promoting bStandardVictoryAllowed
+// and teamMask to function scope (byte-flat, and the frame does not
+// move).
+VA(0x004f2ce0, 0x5BA)  // decorated identity (kb.h) + dc-order-map, dc 0xe3780
+void CheckEndGame(int bForceWin)
+{
+    int bGameWon;
+    int bGameLost;
+    int iLiveOpponents;
+    unsigned char bTookLocalControl;
+    int i;
+
+    if (!gbThisNetGotAdventureControl)
+        return;
+    if (gbInSetup698400)
+        return;
+    if (gbGameOver)
+        return;
+    if (bInCheckEndGame)
+        return;
+    bInCheckEndGame = 1;
+    bTookLocalControl = 0;
+    if (gUnnamed691209 && gNetLocalGamePos == gUnnamed69120c
+        && !gpGame->players[gUnnamed69120c].isLocal) {
+        gpGame->players[gUnnamed69120c].isHuman = 1;
+        bTookLocalControl = 1;
+        gpGame->players[gUnnamed69120c].isLocal = 1;
+    }
+
+    for (i = 0; i < GAME_PLAYER_COUNT; i++) {
+        if (gpGame->playerDisabled[i])
+            continue;
+        if (gpGame->players[i].numHeroes == 0) {
+            if (gpGame->players[i].numTowns != 0) {
+                gpGame->players[i].iDeathCountDown = -1;
+                continue;
+            }
+            PlayerDead(i);
+            if (i == gpGame->GetLocalPlayerGamePos()) {
+                gUnnamed691209 = 0;
+                NormalDialog(gpGeneralText->Text[96], NORMAL_DIALOG_DEFAULT,
+                             -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            } else {
+                sprintf(gText, gpGeneralText->Text[6],
+                        gpGame->GetPlayerName(i));
+                NormalDialog(gText, NORMAL_DIALOG_DEFAULT, -1, -1, 10, i,
+                             -1, -1, -1, 5000, -1, 0);
+            }
+        } else if (gpGame->players[i].numTowns == 0) {
+            if (gpGame->players[i].iDeathCountDown == -1) {
+                if (gpGame->IsLocalHuman(i) && i == gNetLocalGamePos) {
+                    sprintf(gText, gpGeneralText->Text[7],
+                            gpGame->GetPlayerName(i));
+                    NormalDialog(gText, NORMAL_DIALOG_DEFAULT, -1, -1, 10, i,
+                                 -1, 0, -1, 0, -1, 0);
+                }
+                gpGame->players[i].iDeathCountDown = 7;
+            } else if (gpGame->players[i].iDeathCountDown == 0) {
+                PlayerDead(i);
+                if (gpGame->IsLocalHuman(i) && i == gNetLocalGamePos) {
+                    sprintf(gText, gpGeneralText->Text[8],
+                            gpGame->GetPlayerName(i));
+                    gUnnamed691209 = 0;
+                } else {
+                    sprintf(gText, gpGeneralText->Text[9],
+                            gpGame->GetPlayerName(i));
+                }
+                NormalDialog(gText, NORMAL_DIALOG_DEFAULT, -1, -1, 10, i,
+                             -1, 0, -1, 0, -1, 0);
+            }
+        } else {
+            gpGame->players[i].iDeathCountDown = -1;
+        }
+    }
+
+    if (gUnnamed691209 && gNetLocalGamePos == gUnnamed69120c
+        && bTookLocalControl) {
+        gpGame->players[gUnnamed69120c].isHuman = 0;
+        gpGame->players[gUnnamed69120c].isLocal = 0;
+    }
+
+    iLiveOpponents = 0;
+    unsigned char teamMask =
+        gpGame->GetTeamMask(gpGame->GetLocalPlayerGamePos());
+    for (i = 0; i < GAME_PLAYER_COUNT; i++)
+        if (!gpGame->playerDisabled[i] && !(teamMask & (1 << i)))
+            iLiveOpponents++;
+
+    bTookLocalControl = 0;
+    if (gUnnamed691209 && gNetLocalGamePos == gUnnamed69120c
+        && !gpCurrentPlayer->isLocal) {
+        gpCurrentPlayer->isLocal = 1;
+        bTookLocalControl = 1;
+        gpCurrentPlayer->isHuman = 1;
+    }
+
+    int bStandardVictoryAllowed = 1;
+    bGameWon = 0;
+    bGameLost = 0;
+    if (!DisplayVCWinLoss(gpGame->mapHeader.victoryCondition, bGameWon,
+                          bGameLost, 0))
+        DisplayLCWinLoss(&gpGame->mapHeader.lossCondition, &bGameWon,
+                         &bGameLost, 0);
+    if (gpGame->mapHeader.victoryCondition.Type != -1
+        && !gpGame->mapHeader.victoryCondition.AllowNormalVictory)
+        bStandardVictoryAllowed = 0;
+    if (bGameLost) {
+        gbGameOver = 1;
+        bDefeatedAllPlayers = 0;
+    }
+    if (bGameWon) {
+        gbGameOver = 1;
+        bDefeatedAllPlayers = 1;
+    }
+    if (bStandardVictoryAllowed && iLiveOpponents == 0) {
+        gUnnamed69951c = 1;
+        gbGameOver = 1;
+        bGameWon = 1;
+        bDefeatedAllPlayers = 1;
+        if (gNetworkActive69954c) {
+            CNormalWinMsg winMsg(gpGame->GetLocalPlayerGamePos());
+            TransmitRemoteData(&winMsg, 127, false, true);
+        }
+        NormalDialog(gpGeneralText->Text[660], NORMAL_DIALOG_DEFAULT, -1, -1,
+                     -1, 0, -1, 0, -1, 0, -1, 0);
+    } else {
+        for (i = 0; i < GAME_PLAYER_COUNT; i++)
+            if (!gpGame->playerDisabled[i] && gpGame->IsLocalHuman(i))
+                break;
+        if (i == GAME_PLAYER_COUNT) {
+            gbGameOver = 1;
+            bDefeatedAllPlayers = 0;
+        }
+    }
+
+    if (bForceWin == END_GAME_FORCE_VICTORY) {
+        gbGameOver = 1;
+        bDefeatedAllPlayers = 1;
+    } else if (bForceWin == END_GAME_FORCE_DEFEAT) {
+        bDefeatedAllPlayers = 0;
+        gbGameOver = 1;
+    } else if (!gbGameOver && gUnnamed691209
+               && gNetLocalGamePos == gUnnamed69120c && bTookLocalControl) {
+        gpCurrentPlayer->isLocal = 0;
+        gpCurrentPlayer->isHuman = 0;
+    }
+    bInCheckEndGame = 0;
+}
+
 VA(0x004f3540, 0x14B)
 void game::ShowLuckInfo(hero* thisHero, int iMBType)
 {
@@ -2252,19 +2974,9 @@ void EarlyShutDownSystem()
 
 #if 0  // @carcass
 
-// E:\gamedcs\kb.cpp:3970
-DC_ONLY(0xe3e48, 0x450)
-void CongratsWait(int mode, char* rank, int iBase, int iScore, int iDayz)
-{
-    // @stub
-}
+// E:\gamedcs\kb.cpp:3970 - promoted to a live claim (see below).
 
-// E:\gamedcs\kb.cpp:4102
-DC_ONLY(0xe4330, 0x1BE)
-void ShowCongrats(int hsType)
-{
-    // @stub
-}
+// E:\gamedcs\kb.cpp:4102 - promoted to a live claim (see below).
 
 // E:\gamedcs\kb.cpp:4168
 DC_ONLY(0xe44f0, 0x40)
@@ -2284,12 +2996,8 @@ int GameUnsaved()
     // @stub
 }
 
-// E:\gamedcs\kb.cpp:4214
-DC_ONLY(0xe45dc, 0x3D4)
-unsigned char LoadGameData()
-{
-    // @stub
-}
+// E:\gamedcs\kb.cpp:4214 - reconstructed above as the source-static
+// retail expands into EarlySetup.
 
 // E:\gamedcs\kb.cpp:4477
 // Located by the call-graph lane: sole caller is AppCommand's default
@@ -2317,12 +3025,7 @@ int GetNextHumanPlayer(int start)
     // @stub
 }
 
-// E:\gamedcs\kb.cpp:4806
-DC_ONLY(0xe5214, 0x94)
-void HandleRemoteDeadPlayerExit(int iDPGamePos, unsigned char showMsg)
-{
-    // @stub
-}
+// E:\gamedcs\kb.cpp:4806 - promoted to a live claim (see below).
 
 // E:\gamedcs\kb.cpp:4855
 DC_ONLY(0xe52a8, 0x10)
@@ -2334,12 +3037,7 @@ int CheckMem()
 // E:\gamedcs\kb.cpp:4897
 // Promoted to the live retail claim below.
 
-// E:\gamedcs\kb.cpp:5206
-DC_ONLY(0xe5960, 0x574)
-void CalculateNormalDialogSize(TNormalDialogInfo* dialog_info)
-{
-    // @stub
-}
+// E:\gamedcs\kb.cpp:5206 - promoted to a live claim (see below).
 
 // E:\gamedcs\kb.cpp:5478
 DC_ONLY(0xe5f60, 0x6)
@@ -2779,6 +3477,116 @@ void FileError(const char* cBuf)
     NormalDialog(cTemp, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
 }
 
+// E:\gamedcs\kb.cpp:3970
+// The end-of-game score sheet, drawn over the closing video.  Five 160 px
+// columns run across the bottom of the 800x600 frame: the general-text
+// labels (rows 439-442 and 677) at y=450 and the matching values at
+// y=540, each value built into one scratch buffer by a switch on the
+// column index - days, base score, the difficulty name, the final score,
+// and the rank string ShowCongrats formatted for us.  The whole run is
+// drawn once, then again on every video frame that asks for one, until
+// the movie ends or any mouse button (or a key other than F4) stops it.
+// The Dreamcast first parameter survives in Complete's ABI but its body
+// no longer reads it; ShowCongrats still passes the high-score type.
+VA(0x004f3ab0, 0x374)  // anchor-caller (ShowCongrats) + dc-order-map, dc 0xe3e48
+void CongratsWait(int mode, char* rank, int iBase, int iScore, int iDayz)
+{
+    font* pFont = ResourceManager::GetFont("HiScore.fnt");
+    const char* labels[5] = {
+        gpGeneralText->Text[439],
+        gpGeneralText->Text[440],
+        gpGeneralText->Text[441],
+        gpGeneralText->Text[442],
+        gpGeneralText->Text[677]
+    };
+    char cTemp[100];
+    int i;
+    int x;
+
+    gpInputManager->Flush();
+    VideoDrawCurrentFrame();
+    for (i = 0; i < CONGRATS_COLUMN_COUNT; i++) {
+        x = i * 160;
+        pFont->DrawBoundedString(labels[i], gpWindowManager->screenBitmap,
+                                 x, 450, 160, 100, 281, 5, -1);
+        switch (i) {
+        case CONGRATS_COLUMN_DAYS:
+            sprintf(cTemp, DATA_COMPGEN(0x00660a1c, dialogDecimalFormat,
+                "%d"), iDayz);
+            break;
+        case CONGRATS_COLUMN_BASE_SCORE:
+            sprintf(cTemp, DATA_COMPGEN(0x00660a1c, dialogDecimalFormat,
+                "%d"), iBase);
+            break;
+        case CONGRATS_COLUMN_DIFFICULTY:
+            strcpy(cTemp, gUnnamed6a77ec[gpGame->setup.difficulty]);
+            break;
+        case CONGRATS_COLUMN_SCORE:
+            sprintf(cTemp, DATA_COMPGEN(0x00660a1c, dialogDecimalFormat,
+                "%d"), iScore);
+            break;
+        case CONGRATS_COLUMN_RANK:
+            strcpy(cTemp, rank);
+            break;
+        }
+        pFont->DrawBoundedString(cTemp, gpWindowManager->screenBitmap,
+                                 x, 540, 160, 50, 281, 5, -1);
+    }
+    gpWindowManager->UpdateScreen(0, 0, 800, 600);
+    while (VideoPlaying()) {
+        PollSound();
+        Process1WindowsMessage();
+        message msg = gpInputManager->GetEvent();
+        switch (msg.id) {
+        case MESSAGE_KEY_DOWN:
+            if (msg.codeX != KEYCODE_F4)
+                goto stop_congrats;
+            break;
+        case MESSAGE_LEFT_BUTTON_DOWN:
+        case MESSAGE_LEFT_BUTTON_UP:
+        case MESSAGE_RIGHT_BUTTON_DOWN:
+        case MESSAGE_RIGHT_BUTTON_UP:
+            goto stop_congrats;
+        }
+        if (VideoNeedsUpdate()) {
+            for (i = 0; i < CONGRATS_COLUMN_COUNT; i++) {
+                x = i * 160;
+                pFont->DrawBoundedString(labels[i],
+                                         gpWindowManager->screenBitmap,
+                                         x, 450, 160, 100, 281, 5, -1);
+                switch (i) {
+                case CONGRATS_COLUMN_DAYS:
+                    sprintf(cTemp, DATA_COMPGEN(0x00660a1c,
+                        dialogDecimalFormat, "%d"), iDayz);
+                    break;
+                case CONGRATS_COLUMN_BASE_SCORE:
+                    sprintf(cTemp, DATA_COMPGEN(0x00660a1c,
+                        dialogDecimalFormat, "%d"), iBase);
+                    break;
+                case CONGRATS_COLUMN_DIFFICULTY:
+                    strcpy(cTemp,
+                           gUnnamed6a77ec[gpGame->setup.difficulty]);
+                    break;
+                case CONGRATS_COLUMN_SCORE:
+                    sprintf(cTemp, DATA_COMPGEN(0x00660a1c,
+                        dialogDecimalFormat, "%d"), iScore);
+                    break;
+                case CONGRATS_COLUMN_RANK:
+                    strcpy(cTemp, rank);
+                    break;
+                }
+                pFont->DrawBoundedString(cTemp,
+                                         gpWindowManager->screenBitmap,
+                                         x, 540, 160, 50, 281, 5, -1);
+            }
+            VideoDrawRects();
+        }
+    }
+
+stop_congrats:
+    pFont->Dispose();
+}
+
 // E:\gamedcs\kb.cpp:4077
 // game.h's own get_current_turn expression appears here verbatim, which is
 // what identifies the row: the same three calendar words at +0x1f63e /
@@ -2811,6 +3619,69 @@ short game::get_map_score()
 {
     return static_cast<short>(static_cast<float>(get_base_map_score())
                               * gMapScoreDifficultyFactor[setup.difficulty]);
+}
+
+// Retail-only 0x45bc10, a free function sitting in the
+// campaignbrief..campaignmap band: it builds a
+// TCampaignBrief::CampaignHeaderStruct over the file
+// SCampaign::GetCampaignFileName names, Loads it and returns
+// CampaignHeaderStruct::GetCampaignName by value (the header object is
+// never freed - transcribed, not invented).  Declared file-locally
+// because ShowCongrats is its only located caller; not claimed here.
+std::string GetCurrentCampaignName();
+
+// E:\gamedcs\kb.cpp:4102
+// The victory screen.  The four numbers the high-score table wants are
+// gathered per high-score type - a scenario win reads the map score
+// family and the calendar, a campaign win the campaign's own score and
+// elapsed time with a flat 100% rating - and the rank line is the name of
+// the creature highScoreManager::GetMonType picks for the score, upcased,
+// or the cheat row when gpGame's cheat latch is up.  Then the closing
+// movie and "Win Scenario" run under CongratsWait, and the result is
+// banked before the screen fades.
+VA(0x004f3f60, 0x357)  // anchor-callee (CongratsWait/AddScoreToHighScore) + "Win Scenario", dc 0xe4330
+void ShowCongrats(int hsType)
+{
+    std::string sLand;
+    int iBase;
+    int iScore;
+    int iDayz;
+    int iRating;
+    char cTemp[32];
+
+    gpMouseManager->HidePointer();
+    gpWindowManager->colorCyclingOn = 0;
+    if (hsType == 1) {
+        iBase = gpGame->get_base_map_score();
+        iScore = gpGame->get_map_score();
+        iDayz = gpGame->get_current_turn();
+        iRating = static_cast<int>(
+            gMapScoreDifficultyFactor[gpGame->setup.difficulty] * 100.0f);
+        sLand = gpGame->mapHeader.mapName.c_str();
+    } else {
+        iBase = iScore = gpGame->campaign.get_score();
+        iDayz = gpGame->campaign.get_total_time();
+        iRating = 100;
+        sLand = GetCurrentCampaignName();
+    }
+
+    int iMonType = highScoreManager::GetMonType(iScore, hsType);
+    sprintf(cTemp, iMonType >= 0 && iMonType <= 150
+                       ? akCreatureTypeTraits[iMonType].m_name
+                       : "");
+    if (gpGame->field_1f69c)
+        strcpy(cTemp, gpGeneralText->Text[261]);
+    cTemp[0] = static_cast<char>(toupper(cTemp[0]));
+    VideoOpen(0x23, 0, 0, 0, 0, 1, 0, 1);
+    gpSoundManager->StartMP3(
+        DATA_COMPGEN(0x0066c29c, congratsMusicName, "Win Scenario"), 0, 1);
+    CongratsWait(hsType, cTemp, iBase, iScore, iDayz);
+    VideoClose();
+    gpHighScoreManager->AddScoreToHighScore(iScore, iDayz, iRating, hsType,
+                                           sLand.c_str());
+    gpMouseManager->ShowPointer(0);
+    gpWindowManager->colorCyclingOn = 1;
+    gpWindowManager->FadeScreen(1, 4, 0);
 }
 
 // This tree still carries the spellbook id in the older combat-side enum,
@@ -3157,6 +4028,75 @@ int GetNextHumanPlayer(int start)
     return -1;
 }
 
+// E:\gamedcs\kb.cpp:4806
+// A network player has left the game dead. For a remote seat that is just
+// the RS_PLAYER_DEAD broadcast plus the local notification; for THIS
+// machine's seat the turn has to be handed on, so the next live human seat
+// is picked (retail expands GetNextHumanPlayer here, keeping both of its
+// -1 exits), and when the dead seat was also the acting one the whole
+// acting-player triple is re-pointed and every hero the new seat owns -
+// its own roster, the two tavern recruits, and each town's garrison hero -
+// has its movement allowance re-primed from GetMobility. The save is then
+// handed to the new seat, and a refused transfer is fatal.
+VA(0x004f4c00, 0x2AA)  // anchor-caller (remote HandleNetMsg) + RS_PLAYER_DEAD shape, dc 0xe5214
+void HandleRemoteDeadPlayerExit(int iDPGamePos, unsigned char showMsg)
+{
+    if (gNetworkActive69954c) {
+        if (iDPGamePos == gpGame->GetLocalPlayerGamePos()) {
+            int iNextPlayer = GetNextHumanPlayer(iDPGamePos);
+            if (iNextPlayer != -1) {
+                CPlayerDeadMsg deadMsg(iDPGamePos);
+                TransmitRemoteData(&deadMsg, 127, false, true);
+                if (iDPGamePos == gNetLocalGamePos) {
+                    int i;
+
+                    gNetLocalGamePos = iNextPlayer;
+                    gpCurrentPlayer = &gpGame->players[iNextPlayer];
+                    gUnnamed69ccc4 = 1 << iNextPlayer;
+                    for (i = 0;
+                         i < gpGame->players[gNetLocalGamePos].numHeroes;
+                         i++) {
+                        hero* pHero = &gpGame->heroes
+                            [gpGame->players[gNetLocalGamePos].heroes[i]];
+                        pHero->maxMovePoints = pHero->movePoints =
+                            pHero->GetMobility();
+                    }
+                    for (i = 0; i < 2; i++) {
+                        if (gpGame->players[gNetLocalGamePos].recruits[i]
+                            != -1) {
+                            hero* pHero = gpGame->GetHero(
+                                gpGame->players[gNetLocalGamePos]
+                                    .recruits[i]);
+                            pHero->maxMovePoints = pHero->movePoints =
+                                pHero->GetMobility();
+                        }
+                    }
+                    for (i = 0;
+                         i < gpGame->players[gNetLocalGamePos].numTowns;
+                         i++) {
+                        town* pTown = gpGame->GetTown(
+                            gpGame->players[gNetLocalGamePos].townIds[i]);
+                        if (pTown->garrisonHeroId >= 0) {
+                            hero* pHero =
+                                gpGame->GetHero(pTown->garrisonHeroId);
+                            pHero->maxMovePoints = pHero->movePoints =
+                                pHero->GetMobility();
+                            pHero->field_11c = 0;
+                        }
+                    }
+                }
+                if (!gpGame->TransmitSaveGame(iNextPlayer, 0, 1, 0))
+                    ShutDown(0);
+            }
+            RemoteCleanup();
+        } else {
+            CPlayerDeadMsg deadMsg(iDPGamePos);
+            TransmitRemoteData(&deadMsg, 127, false, true);
+            HandlePlayerDead(iDPGamePos, showMsg);
+        }
+    }
+}
+
 // E:\gamedcs\kb.cpp:4897. Dreamcast supplies the switch order, helper
 // boundaries, statement groups and text-wrapping scopes. Retail corroborates
 // the Complete-only Conflux enum insertion, every field offset, packed
@@ -3408,6 +4348,197 @@ void type_dialog_icon::set(EGameResource _resource, long _qualifier)
             if (textWidth == DIALOG_ICON_MAX_TEXT_WIDTH)
                 break;
         }
+    }
+}
+
+// E:\gamedcs\kb.cpp:5206
+// The whole geometry pass over a TNormalDialogInfo, in four stages.
+// (1) The icon grid: at most two rows of at most four, so the row count is
+// ceil(icons/4) and the per-row count ceil(icons/rows); the widest sprite
+// or caption, the largest caption overhang, and the per-row sprite and
+// caption heights all fall out of one walk.  (2) The text block: the width
+// starts at max(256, longest word) and the wrap is re-measured until the
+// longest line fits, growing by half each pass up to 578 while the block is
+// still taller than two thirds of its width, then settling on the longest
+// wrapped line; over 200 px it is clamped and the expansion flag goes up.
+// (3) The box: width and height are rounded up to a 64 px grid with the
+// popup type getting the lower floors, and the box is re-centred whenever
+// its origin is unset or it would run off the 800x600 screen.  (4) Icon
+// placement: each row is centred by a four-arm jump table on its icon
+// count, then every icon's caption is centred under its sprite.
+// Residual (92.17%): three register/scheduling classes, all downstream of
+// one another - retail materialises the 128 floor in EDX and keeps it live
+// from the width clamp to the height max where we use immediates; retail
+// re-reads dialog_info->width at the two centring tests where our compile
+// keeps it in EBX across the row-height loop; and the LineLength product
+// lands in the zero-extended byte register with the width reloaded after
+// it rather than before.  Tried and rejected: the chained
+// `sprite[0] = sprite[1] = text[0] = text[1] = 0` zeroing (92.14, and it
+// does not reproduce the descending store order either), and swapping the
+// LineLength/fs.height multiply operands (byte-flat - VC6 canonicalises).
+VA(0x004f5d80, 0x51C)  // anchor-caller (get_quickview_size/NormalDialog) + dc-order-map, dc 0xe5960
+void CalculateNormalDialogSize(TNormalDialogInfo* dialog_info)
+{
+    int spriteRowHeight[DIALOG_ICON_MAX_ROWS] = {0, 0};
+    int textRowHeight[DIALOG_ICON_MAX_ROWS] = {0, 0};
+    int maxIconOverhang = 0;
+    int numIcons = 0;
+    int iconRows;
+    int i;
+    int iconsPerRow;
+    int maxIconWidth = 0;
+
+    for (i = 0; i < 8; i++)
+        if (dialog_info->icons[i].resource != -1)
+            numIcons++;
+    iconRows = (numIcons + 3) / 4;
+    if (iconRows > 0)
+        iconsPerRow = (numIcons + iconRows - 1) / iconRows;
+    for (i = 0; i < 8; i++) {
+        if (dialog_info->icons[i].resource != -1) {
+            int iRow = i / iconsPerRow;
+            maxIconWidth = max(dialog_info->icons[i].spriteWidth,
+                               maxIconWidth);
+            maxIconWidth = max(dialog_info->icons[i].textWidth, maxIconWidth);
+            maxIconOverhang = max(maxIconOverhang,
+                                  dialog_info->icons[i].textWidth
+                                      - dialog_info->icons[i].spriteWidth);
+            spriteRowHeight[iRow] = max(spriteRowHeight[iRow],
+                                        dialog_info->icons[i].spriteHeight);
+            textRowHeight[iRow] = max(textRowHeight[iRow],
+                                      dialog_info->icons[i].textHeight);
+        }
+    }
+
+    dialog_info->width = 40;
+    if (numIcons > 0) {
+        int perRow = (numIcons + iconRows - 1) / iconRows;
+        dialog_info->width = max(40, (perRow - 1) * (maxIconOverhang + 40)
+                                         + perRow * maxIconWidth + 40);
+    }
+
+    font* pFont = gpMediumFont;
+    dialog_info->text_expansion = false;
+    dialog_info->text_widget_width = max(
+        256, pFont->longest_word_length(dialog_info->dialog_text.c_str()));
+    int longestLine =
+        pFont->LongestLineWidth(dialog_info->dialog_text.c_str());
+    for (;;) {
+        dialog_info->text_widget_height =
+            pFont->LineLength(dialog_info->dialog_text.c_str(),
+                              dialog_info->text_widget_width)
+            * pFont->fs.height;
+        if (longestLine > dialog_info->text_widget_width) {
+            if (dialog_info->text_widget_width < 578
+                && (dialog_info->text_widget_height > 200
+                    || 3 * dialog_info->text_widget_height
+                           > 2 * dialog_info->text_widget_width)) {
+                dialog_info->text_widget_width =
+                    min(3 * dialog_info->text_widget_width / 2, 578);
+                continue;
+            }
+            dialog_info->text_widget_width =
+                pFont->LongestWrappedLineWidth(
+                    dialog_info->dialog_text.c_str(),
+                    dialog_info->text_widget_width);
+            break;
+        }
+        dialog_info->text_widget_width = longestLine;
+        break;
+    }
+    if (dialog_info->text_widget_height > 200) {
+        dialog_info->text_widget_height = 200;
+        dialog_info->text_expansion = true;
+    }
+
+    dialog_info->width =
+        (max(dialog_info->width, dialog_info->text_widget_width + 50) + 63)
+        & ~63;
+    if (dialog_info->iMBType == NORMAL_DIALOG_POPUP
+        && dialog_info->width < 128)
+        dialog_info->width = 128;
+    if (dialog_info->iMBType != NORMAL_DIALOG_POPUP
+        && dialog_info->width < 256)
+        dialog_info->width = 256;
+    dialog_info->text_widget_width = dialog_info->width - 50;
+
+    int boxHeight = dialog_info->text_widget_height + 60;
+    if (numIcons > 0) {
+        boxHeight += 20;
+        for (i = 0; i < iconRows; i++)
+            boxHeight += textRowHeight[i] + spriteRowHeight[i];
+        boxHeight += 20 * iconRows - 20;
+    }
+    if (dialog_info->iMBType != NORMAL_DIALOG_POPUP)
+        boxHeight += 50;
+    dialog_info->height = (boxHeight + 63) & ~63;
+    dialog_info->height = max(dialog_info->height, 128);
+    dialog_info->text_widget_y += (dialog_info->height - boxHeight) / 2;
+    if (dialog_info->x == -1 || dialog_info->x + dialog_info->width >= 799)
+        dialog_info->x = (800 - dialog_info->width) / 2;
+    if (dialog_info->y == -1 || dialog_info->y + dialog_info->height >= 599)
+        dialog_info->y = (600 - dialog_info->height) / 2;
+    if (numIcons == 0)
+        return;
+
+    int iconY = dialog_info->height - textRowHeight[0] - 30;
+    if (dialog_info->iMBType != NORMAL_DIALOG_POPUP)
+        iconY -= 50;
+    if (iconRows == DIALOG_ICON_MAX_ROWS)
+        iconY -= textRowHeight[1] + spriteRowHeight[1] + 20;
+    int firstInRow = 0;
+    for (i = 0; i < iconRows; i++) {
+        int rowsLeft = iconRows - i;
+        int inRow = (numIcons - firstInRow + rowsLeft - 1) / rowsLeft;
+        switch (inRow) {
+        case DIALOG_ICON_ROW_SINGLE:
+            dialog_info->icons[firstInRow].spriteX =
+                (dialog_info->width
+                 - dialog_info->icons[firstInRow].spriteWidth) / 2;
+            break;
+        case DIALOG_ICON_ROW_PAIR:
+            dialog_info->icons[firstInRow].spriteX =
+                (dialog_info->width - maxIconOverhang - 40) / 2
+                - dialog_info->icons[firstInRow].spriteWidth;
+            dialog_info->icons[firstInRow + 1].spriteX =
+                (dialog_info->width + maxIconOverhang + 40) / 2;
+            break;
+        case DIALOG_ICON_ROW_TRIPLE:
+            dialog_info->icons[firstInRow + 1].spriteX =
+                (dialog_info->width
+                 - dialog_info->icons[firstInRow + 1].spriteWidth) / 2;
+            dialog_info->icons[firstInRow].spriteX =
+                dialog_info->icons[firstInRow + 1].spriteX
+                - dialog_info->icons[firstInRow].spriteWidth - 40;
+            dialog_info->icons[firstInRow + 2].spriteX =
+                dialog_info->icons[firstInRow + 1].spriteX
+                + dialog_info->icons[firstInRow + 1].spriteWidth + 40;
+            break;
+        case DIALOG_ICON_ROW_QUAD:
+            dialog_info->icons[firstInRow + 1].spriteX =
+                (dialog_info->width - maxIconOverhang - 40) / 2
+                - dialog_info->icons[firstInRow + 1].spriteWidth;
+            dialog_info->icons[firstInRow].spriteX =
+                dialog_info->icons[firstInRow + 1].spriteX
+                - dialog_info->icons[firstInRow].spriteWidth - 40;
+            dialog_info->icons[firstInRow + 2].spriteX =
+                (dialog_info->width + maxIconOverhang + 40) / 2;
+            dialog_info->icons[firstInRow + 3].spriteX =
+                dialog_info->icons[firstInRow + 2].spriteX
+                + dialog_info->icons[firstInRow + 2].spriteWidth + 40;
+            break;
+        }
+        for (int k = 0; k < inRow; k++) {
+            dialog_info->icons[firstInRow + k].textY = iconY;
+            dialog_info->icons[firstInRow + k].spriteY =
+                iconY - dialog_info->icons[firstInRow + k].spriteHeight;
+            dialog_info->icons[firstInRow + k].textX =
+                dialog_info->icons[firstInRow + k].spriteX
+                + (dialog_info->icons[firstInRow + k].spriteWidth
+                   - dialog_info->icons[firstInRow + k].textWidth) / 2;
+        }
+        firstInRow += inRow;
+        iconY += textRowHeight[1] + spriteRowHeight[1] + 20;
     }
 }
 
