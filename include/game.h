@@ -2721,6 +2721,14 @@ DATA(0x00697748) extern int giMonthType;
 DATA(0x00698834) extern int giMonthTypeExtra;
 // Shared UI text table: attack, defense, spell power, and knowledge.
 DATA(0x006a5390) extern const char* gPrimarySkillNames[4];
+// The map's live width and height, Dreamcast-named (`?MAP_WIDTH@@3HA` /
+// `?MAP_HEIGHT@@3HA` in kb.obj's PlayerDead scan) and initialised to 72 -
+// a Medium map - in retail's .data.  96 retail bodies reference the pair,
+// so it belongs in this header rather than any one consumer's; kb.obj's
+// PlayerDead is the byte-proven reader here, walking y over MAP_HEIGHT and
+// x over MAP_WIDTH while indexing worldMap by its own Size.
+DATA(0x006783c8) extern int MAP_WIDTH;
+DATA(0x006783cc) extern int MAP_HEIGHT;
 DATA(0x00677978) extern int mine_production[6];
 DATA(0x00677998) extern double production_handicap[];
 // Six weighted neutral-town dwelling levels, byte-proven as
