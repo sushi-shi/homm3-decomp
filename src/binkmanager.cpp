@@ -4,6 +4,10 @@
 #include <va.h>
 #include "binkmanager.h"
 #include "bitmap16.h"   // screenBitmap map/Pitch/Height
+#include "inputmgr.h"   // gpInputManager, KEYCODE_F4
+#include "kbwin.h"      // PollSound / Process1WindowsMessage
+#include "message.h"
+#include "mousemgr.h"   // gpMouseManager
 #include "prefs.h"      // gUnnamed698758.soundVolume
 #include "smackmgr.h"   // gVideoDescriptors, VideoDrawRects, VideoClose
 #include "wingraph.h"   // gpDDSBack
@@ -229,13 +233,104 @@ void CloseBinkVideo()
     gBinkDirty = 0;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\binkmanager.cpp:376
-DC_ONLY(0x50a98, 0x4)
-int BinkManager::PlayBink(int id, int x, int y, int w, int h)
+// E:\gamedcs\binkmanager.cpp:376 (dc 0x50a98) - the compiland's last row and
+// smackmgr.cpp's VideoPlay tail-calls it by this free-function spelling. The
+// SMACKER TWIN is VideoPlay's own non-bink arm, statement for statement:
+// the same field_84 latch, the same `if (w < 0) vw = video->Width` pair, the
+// same F4-exempt abort filter around PollSound/Process1WindowsMessage, and
+// the same `aborted && fadeOnAbort` tail.
+// Residual (88.1839%): the register-homing family, and it is a clean MIRROR.
+// The call stream agrees 15 = 15, the branch count and the single return
+// agree, and every value lands in the right place - retail just keeps `vh` in
+// EBX with `vw` recycled into the `h` parameter home at [ebp+0x10], where our
+// CL keeps `vw` in EBX with `vh` in the `w` home at [ebp+0xc], and the zero it
+// compares against materialises in EAX on one side and not the other.
+// Tried: swapping the vw/vh declaration order (+0.22 and no slot change),
+// handing OpenBinkVideo `vw, vh` instead of `w, h` and testing `vw < 0`
+// instead of `w < 0` - the twin's own spelling, kept - both byte-flat.
+VA(0x0044DD20, 0x227)  // dc-order-map + caller (smackmgr VideoPlay), dc 0x50a98
+int PlayBinkVideo(int id, int x, int y, int w, int h)
 {
-    // @stub
-}
+    int vh = h;
+    int vw = w;
+    int updateX;
+    int updateY;
+    unsigned char result;
+    unsigned char aborted;
 
-#endif  // @carcass
+    gpSoundManager->field_84 = 1;
+    OpenBinkVideo(id, x, y, vw, vh, 0, 0);
+    if (!gBinkVideo) {
+        result = 0;
+    } else {
+        gpMouseManager->HidePointer();
+        if (vw < 0)
+            vw = gBinkVideo->Width;
+        if (vh < 0)
+            vh = gBinkVideo->Height;
+        if (id != VIDEO_ID_OVERLAY_BLIT) {
+            updateX = x + (vw - gBinkVideo->Width) / 2;
+            gBinkX = updateX;
+            updateY = y + (vh - gBinkVideo->Height) / 2;
+            gBinkY = updateY;
+        } else {
+            updateX = 0;
+            updateY = 0;
+            vw = gBinkVideo->Width;
+            vh = gBinkVideo->Height;
+        }
+        gBinkBuffer = 2 * gBinkX
+            + gpWindowManager->screenBitmap->Pitch * gBinkY
+            + static_cast<unsigned char*>(
+                  static_cast<void*>(gpWindowManager->screenBitmap->map));
+        aborted = 0;
+        gpInputManager->Flush();
+        while (1) {
+            if (gBinkVideo == 0)
+                break;
+            PollSound();
+            Process1WindowsMessage();
+            {
+                message msg = gpInputManager->GetEvent();
+                switch (msg.id) {
+                    case MESSAGE_KEY_DOWN:
+                        if (msg.codeX == KEYCODE_F4)
+                            break;
+                        // fall through
+                    case MESSAGE_LEFT_BUTTON_DOWN:
+                    case MESSAGE_RIGHT_BUTTON_DOWN:
+                        if (!gbVideoNoSkip) {
+                            aborted = 1;
+                            goto stop_playback;
+                        }
+                        break;
+                }
+            }
+            if (VideoNeedsUpdate())
+                VideoDrawRects();
+        }
+stop_playback:
+        if (gBinkVideo) {
+            _BinkPause(gBinkVideo, 1);
+            _BinkClose(gBinkVideo);
+        }
+        if (gBinkVideo2) {
+            _BinkPause(gBinkVideo2, 1);
+            _BinkClose(gBinkVideo2);
+        }
+        gBinkVideo2 = 0;
+        gBinkVideo = 0;
+        gBinkPaused = 0;
+        gBinkFrameReady = 0;
+        gBinkDirty = 0;
+        if (aborted && gVideoDescriptors[id].fadeOnAbort)
+            gpWindowManager->FadeScreen(1, 4, 0);
+        else
+            gpWindowManager->UpdateScreen(updateX, updateY, vw, vh);
+        gpMouseManager->ShowPointer(0);
+        result = !aborted;
+    }
+    gBinkPaused = 0;
+    gBinkFrameReady = 0;
+    return result;
+}
