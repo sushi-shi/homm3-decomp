@@ -2877,7 +2877,7 @@ void ImmMouseWindowMoved();                           // 0x4b6950
 // feedback that plays with a combat spell. Retail-only (the Dreamcast
 // build has no Immersion layer), so the NAME is a bootstrap invention
 // and the return value, which PowEffect discards, stays unmodelled.
-void PlayImmEffect(const char* effectName, int count);  // 0x4b69f0
+unsigned char PlayImmEffect(const char* effectName, int count);  // 0x4b69f0
 void ComputeUALoc(int whichPlayer);                   // 0x4baed0
 
 // --- globals ---

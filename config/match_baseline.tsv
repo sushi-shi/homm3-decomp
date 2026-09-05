@@ -1637,6 +1637,11 @@ font	?LongestWrappedLineWidth@font@@QAEHPBDH@Z	100.0000	100.0000	100.0000	0xb5a8
 font	?SetPalette@font@@QAEXPBVTPalette16@@@Z	100.0000	100.0000	100.0000	0xb5180	7719895bd9cc
 font	?get_string_width@font@@QAEJPBD@Z	100.0000	100.0000	100.0000	0xb57d0	de731fa8de43
 font	?longest_word_length@font@@QAEHPBD@Z	100.0000	100.0000	100.0000	0xb5a10	96ee18f513ef
+forcefeedback	??0TImmMouseEffect@@QAE@PBUtagRECT@@JKKEE@Z	100.0000	100.0000	100.0000	0xb6dc0	dcae6b21237c
+forcefeedback	??0t_enclosure@force_feedback@@QAE@PBUtagRECT@@JKKEE@Z	97.9845	97.9845	97.9845	0xb6a50	d0e614062640
+forcefeedback	?PlayImmEffect@@YIEPBDH@Z	73.1579	73.1579	73.1579	0xb69f0	06c656d92d32
+forcefeedback	?Start@TImmMouseEffect@@QAEEXZ	72.5000	72.5000	72.5000	0xb6f30	ec725f41d85e
+forcefeedback	?Stop@TImmMouseEffect@@QAEXXZ	100.0000	100.0000	100.0000	0xb6f50	ebcf155b3807
 game	??0?$bitset@$0BM@@std@@QAE@K@Z	100.0000	100.0000	100.0000	0xcf870	-
 game	??0CMCClaimGarrison@@QAE@HH@Z	100.0000	100.0000	100.0000	0xc23e0	335cb56766c1
 game	??0HeroExtra@@QAE@XZ	100.0000	100.0000	100.0000	0xce4b0	443ed6fcdff2
@@ -1662,7 +1667,7 @@ game	??1CGameTransferDlg@@UAE@XZ	100.0000	100.0000	100.0000	0xcbcf0	-
 game	??1HeroExtra@@QAE@XZ	100.0000	100.0000	100.0000	0xce520	-
 game	??1SavedGameHeader@@QAE@XZ	100.0000	100.0000	100.0000	0xbdf80	-
 game	??1Sign@@QAE@XZ	100.0000	100.0000	100.0000	0xb9230	-
-game	??1TImmMouseEffect@@QAE@XZ	44.8228	44.8228	44.8228	0xb6e40	369ff19b63d7
+game	??1TImmMouseEffect@@QAE@XZ	100.0000	100.0000	100.0000	0xb6e40	7b6e26b82c1c
 game	??1TPickRandomTownName@@QAE@XZ	100.0000	100.0000	100.0000	0xcaa40	-
 game	??1TScenarioTown@@QAE@XZ	100.0000	100.0000	100.0000	0xd4450	-
 game	??1game@@QAE@XZ	100.0000	100.0000	100.0000	0xce5b0	63b88e3526aa
