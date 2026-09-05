@@ -1486,7 +1486,7 @@ game	?CheckForTownEvent@game@@QAEXXZ	100.0000	100.0000	100.0000	0xcda10	e2b48df3
 game	?ClaimGarrison@game@@QAEXHH@Z	84.4118	84.4118	84.4118	0xc6960	729f2a534f80
 game	?ClaimGenerator@game@@QAEXHH@Z	100.0000	100.0000	100.0000	0xc67b0	fdb8284891f3
 game	?ClaimMine@game@@QAEXHHW4type_action_type@@@Z	100.0000	100.0000	100.0000	0xc66e0	f3d11f1a5ce0
-game	?ClaimShipyard@game@@QAEXUtype_point@@H@Z	77.4860	77.4860	77.4860	0xc6a30	dda4168ae6fb
+game	?ClaimShipyard@game@@QAEXUtype_point@@H@Z	98.6034	98.6034	98.6034	0xc6a30	1907da06d2ab
 game	?ClaimTown@game@@QAEXHHEE@Z	100.0000	100.0000	100.0000	0xc61e0	312dd538ea8a
 game	?ClearNetInfo@playerData@@QAEXXZ	100.0000	100.0000	100.0000	0xba170	8baf765bdf9a
 game	?ComputeDailyGold@game@@QAEHHE@Z	100.0000	100.0000	100.0000	0xc7930	3578060f8dd0
