@@ -763,7 +763,7 @@ cmbtmgr	?SetupAdjacencyArray@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x
 cmbtmgr	?SetupAndLoadObstacles@combatManager@@QAEXXZ	98.1402	98.1402	98.1402	0x66290	e1280d4cefce
 cmbtmgr	?SetupCombat@combatManager@@QAEXUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HHHE@Z	100.0000	100.0000	100.0000	0x639f0	9a212de8b1a4
 cmbtmgr	?ShootAnimatedMissile@combatManager@@QAEXHHHHHPBMPBQBD@Z	93.5088	93.5088	93.5088	0x67db0	3500e132b812
-cmbtmgr	?ShootBallisticMissile@combatManager@@QAEXHHHHPBVCSprite@@@Z	89.3406	89.3406	89.3406	0x67a00	56f611eddf88
+cmbtmgr	?ShootBallisticMissile@combatManager@@QAEXHHHHPBVCSprite@@@Z	90.5938	90.5938	90.5938	0x67a00	961ae6e2f793
 cmbtmgr	?ShootMissile@combatManager@@QAEXHHHHPBMPBVCSprite@@@Z	93.9760	93.9760	93.9760	0x68220	4421328166a2
 cmbtmgr	?ShotIsNotOptimal@combatManager@@QAEEPBVarmy@@0@Z	100.0000	100.0000	100.0000	0x67600	7101bc205de2
 cmbtmgr	?ShotIsThroughWall@combatManager@@QAEEPBVarmy@@HH@Z	100.0000	100.0000	100.0000	0x67510	6990585b75f2
