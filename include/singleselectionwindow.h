@@ -578,6 +578,9 @@ public:
     // calls it (from OnBeginGame), so keep this declaration with that TU's
     // existing private lobby-message/vector view.
     unsigned char BeginSavedGame();
+    // Retail 0x58c570, DC singleselectionwindow.cpp:7822. OnBeginGame's
+    // other launch arm, likewise private to the owning TU.
+    unsigned char BeginNewGame();
     // The disk header reader family around it, visible only to the
     // owning TU (the vectors gate): GetHeaders scans the picked
     // directory ("random_maps"/"games"/"maps" by mode) into the lists;
