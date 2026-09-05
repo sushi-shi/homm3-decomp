@@ -11,14 +11,21 @@ adler32	@adler32@12	100.0000	100.0000	100.0000	0x206ca0	-
 adventuremapwindow	??0TAdventureMapWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x1510	00fa95de20cc
 adventuremapwindow	??1TAdventureMapWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x2b10	edbb40617def
 adventuremapwindow	??_GTAdventureMapWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x2ae0	-
+adventuremapwindow	?Activate@CGameChatEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x22b0	5582f5bcc3f3
 adventuremapwindow	?CheckAdvCheatCode@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	90.5910	90.5910	90.5910	0x2450	ec4fd0a665ee
 adventuremapwindow	?ClearBottomView@TAdventureMapWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x3ee0	c44f40d9b96c
 adventuremapwindow	?DoHeroKnob@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x3220	5b941b78c07c
 adventuremapwindow	?DoTownKnob@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x3280	6132348c8553
 adventuremapwindow	?DrawChatText@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x3f20	ac1b75da0e1d
+adventuremapwindow	?GetRealHeight@widget@@UAEHXZ	100.0000	100.0000	100.0000	0x21d0	98918f2dedd5
+adventuremapwindow	?GetRealWidth@widget@@UAEHXZ	100.0000	100.0000	100.0000	0x21e0	7b81f259822a
 adventuremapwindow	?HighlightLocators@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x38c0	e5ef448a01de
+adventuremapwindow	?OnEscape@CGameChatEdit@@UAEHVmessage@@@Z	100.0000	100.0000	100.0000	0x2240	527b10fb4244
+adventuremapwindow	?OnKeyPress@CGameChatEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x21f0	3c8406355b17
 adventuremapwindow	?ProcessHover@TAdventureMapWindow@@QAEEHH@Z	100.0000	100.0000	100.0000	0x3010	bfd10bf53b10
 adventuremapwindow	?ProcessRightSelect@TAdventureMapWindow@@QAEEPBVmessage@@@Z	100.0000	100.0000	100.0000	0x2e70	80df558fe952
+adventuremapwindow	?SendChat@CAdventurMapChatEdit@@UAEXPBDH@Z	77.4872	77.4872	77.4872	0x22e0	3c4a402470cb
+adventuremapwindow	?SendChatCleanup@CGameChatEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x2280	b4ff93fd6b8a
 adventuremapwindow	?SetElevationToggleImage@TAdventureMapWindow@@QAEEH@Z	96.9512	100.0000	100.0000	0x3c40	0df4e9cb919d
 adventuremapwindow	?SetSleepImage@TAdventureMapWindow@@QAEXH@Z	86.6667	100.0000	100.0000	0x3cc0	eb469edf3fb7
 adventuremapwindow	?UpdateButtons@TAdventureMapWindow@@QAEXEE@Z	100.0000	100.0000	100.0000	0x3f60	b0960bb3fc2d
@@ -966,7 +973,10 @@ cspriteframe	?DrawTile@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@EE@Z	81.4249
 cspriteframe	?GetSize@CSpriteFrame@@UBEIXZ	100.0000	100.0000	100.0000	0x7c560	b733f08b7525
 cspriteframe	?SetPixelFormat@CSpriteFrame@@SIXIII@Z	100.0000	100.0000	100.0000	0x7c460	14fdf9e7d6f8
 cursor	??9type_point@@QBE_NABU0@@Z	100.0000	100.0000	100.0000	0x82340	8a56cf619630
+cursor	?CheckAdjacentMon@advManager@@QAEXPAH@Z	95.3191	95.3191	95.3191	0x81900	d48f038104d1
+cursor	?DrawCursor@advManager@@QAEXHH@Z	80.3240	80.3240	80.3240	0x7f860	334fcfada298
 cursor	?DrawCursorAlpha@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x7fc80	f88e01d23684
+cursor	?DrawCursorShadow@advManager@@QAEXHH@Z	72.5446	72.5446	72.5446	0x7fb40	39948baa081a
 cursor	?GetMoveShowIt@advManager@@QAEHPAVhero@@H@Z	100.0000	100.0000	100.0000	0x80000	bc03c3596322
 cursor	?MoveHero@advManager@@QAEPAVNewmapCell@@HEPAUtype_point@@PAHE1E@Z	89.5139	89.5139	89.5139	0x805e0	d5e4c46dc99f
 cursor	?OnHideHero@advManager@@QAEXPAVCMapChange@@@Z	100.0000	100.0000	100.0000	0x81fd0	04ab79a0f668
@@ -975,14 +985,11 @@ cursor	?ProcessMapChangeNew@advManager@@QAEXPAVCMapChange@@@Z	100.0000	100.0000	
 cursor	?SendMapChange@@YIXPAVCMapChange@@@Z	100.0000	100.0000	100.0000	0x82390	22f828296a19
 cursor	?StopCursor@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x7f7d0	4c61d41b55e7
 cursor	?TurnTo@advManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x7ffe0	403a24945d74
+cursor	?ValidMove@advManager@@QAEHPAVhero@@HHE@Z	100.0000	100.0000	100.0000	0x81be0	2b860a427080
+cursor	?ValidMoveWithEvent@advManager@@QAEHPAVhero@@H@Z	100.0000	100.0000	100.0000	0x81ad0	3b4865985848
 cursor	?animate_move@advManager@@QAEXPAVhero@@HHH@Z	97.7237	97.7237	97.7237	0x80380	4538013021e0
 cursor	?end_move_hero@advManager@@AAEPAVNewmapCell@@PAVhero@@PAV2@EJJEPAH@Z	100.0000	100.0000	100.0000	0x80090	885e2974ab10
 cursor	?handle_stop_on_trigger@advManager@@AAEPAVNewmapCell@@PAVhero@@PAV2@EEPAHJJ@Z	100.0000	100.0000	100.0000	0x80240	36b8c8c29a01
-cursor	advManager_CheckAdjacentMon	0.0000	0.0000	0.0000	0x81900	0eb57ca2e0bc
-cursor	advManager_DrawCursor	0.0000	0.0000	0.0000	0x7f860	ad7d179cd2c4
-cursor	advManager_DrawCursorShadow	0.0000	0.0000	0.0000	0x7fb40	7637b83ff3cf
-cursor	advManager_ValidMove	0.0000	0.0000	0.0000	0x81be0	33eeaa6d2a1f
-cursor	advManager_ValidMoveWithEvent	0.0000	0.0000	0.0000	0x81ad0	dee616486353
 customcampaign	??0CampaignHeaderStruct@TCampaignBrief@@QAE@PBD@Z	100.0000	100.0000	100.0000	0x885d0	c81b1564e203
 customcampaign	??0LegacyCampaignHero@@QAE@XZ	100.0000	100.0000	100.0000	0x8ae30	d00745bb485b
 customcampaign	??0SCampaign@@QAE@XZ	100.0000	100.0000	100.0000	0x89500	92aa89488ce8
@@ -2105,6 +2112,7 @@ mainmenu	??1TMainMenu@@UAE@XZ	100.0000	100.0000	100.0000	0xfb660	8cb9205dc179
 mainmenu	??_GTMainMenu@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xfb630	-
 mainmenu	?DoModal@TMainMenu@@QAEXXZ	100.0000	100.0000	100.0000	0xfb6e0	2c725647dbbc
 mainmenu	?MainMenuHandler@@YIHAAVmessage@@@Z	93.1746	93.1746	93.1746	0xfb710	dfd062d78034
+mapcell	??0CObjectType@@QAE@PAUTObjectType@@@Z	39.1636	39.1636	39.1636	0x106080	99893e87c66e
 mapcell	??0NewfullMap@@QAE@XZ	100.0000	100.0000	100.0000	0xfd060	fb0f6ae54745
 mapcell	??0NewmapCell@@QAE@XZ	100.0000	100.0000	100.0000	0xfd650	36b54decc94c
 mapcell	??1?$vector@VBlackBoxData@@V?$allocator@VBlackBoxData@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x106350	-
@@ -2326,23 +2334,24 @@ multiplayerwindow	?UpdateOK@CMPInputDlg@@QAEXXZ	100.0000	100.0000	100.0000	0x110
 multiplayerwindow	?WindowHandler@TMultiPlayerWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x10f940	8037720e1234
 newgame	?GetLossConditionText@game@@QAEXPAD@Z	100.0000	100.0000	100.0000	0x113800	ade52171f0bc
 newgame	?GetVictoryConditionText@game@@QAEXPAD@Z	100.0000	100.0000	100.0000	0x1139e0	562e072ce57a
+newgame	?InitNewGame@game@@QAEXHHPAVNewSMapHeader@@PAVTAbstractFile@@@Z	26.5235	26.5235	26.5235	0x113320	d52bf04217c4
 newgame	?ShowScenInfo@game@@QAEXXZ	100.0000	100.0000	100.0000	0x113740	83f7cc64579c
 newgame	?get_alignment_count@@YIJH@Z	100.0000	100.0000	100.0000	0x1132b0	f1e04004c643
 newgame	?pick_alignment@@YI?AW4TTownType@@HE@Z	100.0000	100.0000	100.0000	0x1132d0	7d86ef3bfcb8
-newgame	game_InitNewGame	0.0000	0.0000	0.0000	0x113320	a978141c8f54
 objecttype	?_Inc@const_iterator@?$_Tree@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V12@U_Kfn@?$set@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@2@U?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x117780	-
 overview	??0TOverviewWindow@@QAE@XZ	78.2776	80.0954	80.0954	0x11fa40	e8df282f3bdd
 overview	??1TOverviewWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x120d90	048fab1d8faa
 overview	??_GTOverviewWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x120d60	-
 overview	?DoFlaggableButtons@TOverviewWindow@@AAEXH@Z	100.0000	100.0000	100.0000	0x11e7f0	37a25d45af3d
 overview	?DoRollover@TOverviewWindow@@AAEXH@Z	97.8485	98.5053	98.5053	0x120e30	002ed33473bf
+overview	?Overview@game@@QAEXXZ	100.0000	100.0000	100.0000	0x11e8d0	acbb8b63299e
 overview	?OverviewSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x11fa20	d405249777ca
 overview	?ProcessIconSelect@game@@QAEHHE@Z	94.7322	94.7322	94.7322	0x11ee50	042a4f8cf2fd
 overview	?SetupDynamicStuff@game@@QAEXHH@Z	90.5699	90.5699	90.5699	0x11bd50	f385ac22aff9
 overview	?SetupNewOverviewType@game@@QAEXHE@Z	96.4609	100.0000	100.0000	0x11e330	aa25ff2c3eaa
 overview	?UpdateBackpack@@YIXH@Z	96.5741	96.5741	96.5741	0x122470	838327f3aed0
 overview	?UpdateFlaggableIcon@TOverviewWindow@@AAEXH@Z	100.0000	100.0000	100.0000	0x11e670	ca624c71e9f9
-overview	?UpdateFlaggableIcons@TOverviewWindow@@AAEXXZ	100.0000	100.0000	100.0000	0x11e7c0	5cc0bf1efd42
+overview	?UpdateFlaggableIcons@TOverviewWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x11e7c0	5cc0bf1efd42
 overview	?WindowHandler@TOverviewWindow@@UAEHPAVmessage@@@Z	80.0996	80.0996	80.0996	0x121960	ab3c478aa622
 overview	?get_last_backpack_index@@YIJJ@Z	100.0000	100.0000	100.0000	0x1225d0	ba725cb029d9
 palette	??0TPalette24@@QAE@PBE@Z	100.0000	100.0000	100.0000	0x122e80	468ea0d98910
@@ -3084,7 +3093,7 @@ singleselectionwindow	?OnGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNet
 # SetCurrentMap/OnSetAsHostMsg bodies landing in the TU dropped the
 # pair again with both sources byte-identical. Recovery rides with
 # DrawHeroAdvancedOption reaching 100.
-singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0	0e5de8f038ec
+singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	99.8868	100.0000	100.0000	0x17cdc0	0e5de8f038ec
 singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	9177fbb0fa83
 # 2026-08-27 hand-lowered 100.0000 -> 99.8710 (hist keeps 100.0000): the
 # documented TU-state flap (master accepted this pair down at 99.89/99.87
@@ -3281,6 +3290,7 @@ spells	?SpellCastWorkChance@combatManager@@QAEMHJPBVarmy@@EEJ@Z	100.0000	100.000
 spells	?SpellCastWorks@combatManager@@QAEEHJPBVarmy@@EJ@Z	100.0000	100.0000	100.0000	0x1a8640	d59134a22e8d
 spells	?SpellTargetMessage@combatManager@@QAEXHHE@Z	100.0000	100.0000	100.0000	0x1a8690	9cf732f301c4
 spells	?SummonElemental@combatManager@@QAEXHW4TCreatureType@@HH@Z	71.8173	93.4375	93.4375	0x1a7080	74fef5ef261c
+spells	?Unnamed59FDE0@combatManager@@QAEXHHPAVarmy@@@Z	100.0000	100.0000	100.0000	0x19fde0	a812dc2c7357
 spells	?ValidSpellTarget@combatManager@@QAEEHJJJEJ@Z	88.4937	88.4937	88.4937	0x1a39c0	61a003dfba43
 spells	?ValidSpellTargetArmy@combatManager@@QAEEHHPBVarmy@@EJ@Z	100.0000	100.0000	100.0000	0x1a3c80	110edc19289c
 spells	?check_fire_wall@combatManager@@QAEEJPAVarmy@@E@Z	100.0000	100.0000	100.0000	0x19fcd0	a30a123e82ea
@@ -3646,6 +3656,7 @@ u2dvers	??1TFileVersionInfo@@QAE@XZ	100.0000	100.0000	100.0000	0x1eedf0	0305b619
 u2dvers	?GetVersionInfo@TFileVersionInfo@@QAEEPBDPAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0x1eee00	984ca2abfa72
 uncompr	@uncompress@16	100.0000	100.0000	100.0000	0x206be0	-
 university_window	??0type_university_window@@QAE@PAVhero@@PBUtype_university@@E@Z	87.8950	87.8950	87.8950	0x1ef500	baa66d520537
+university_window	??_Gtype_university_window@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1f0760	-
 university_window	?DoModal@type_university_window@@UAEHE@Z	100.0000	100.0000	100.0000	0x1f0a20	5c5d65c58c4e
 university_window	?ExitDialog@type_university_window@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1f1180	fd96ecac9df9
 university_window	?cancel_click@type_university_window@@KIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1f0e00	fd43efd4fe86
@@ -3799,12 +3810,12 @@ winmgr	?DoQuickView@heroWindowManager@@QAEXPAVheroWindow@@@Z	100.0000	100.0000	1
 winmgr	?FadeFromBlack@heroWindowManager@@QAEXH@Z	88.1358	88.1358	88.1358	0x2032e0	a4243310e752
 winmgr	?FadeScreen@heroWindowManager@@QAEXHHE@Z	100.0000	100.0000	100.0000	0x202c50	3d9cefc7099b
 winmgr	?FadeToBlack@heroWindowManager@@QAEXHE@Z	88.5116	88.5116	88.5116	0x2030e0	844f2a377353
+winmgr	?FizzleForwardX@heroWindowManager@@QAEXHHHHH@Z	75.3882	75.3882	75.3882	0x202dc0	7a3cbee73989
 winmgr	?Main@heroWindowManager@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x202320	8f6459671348
 winmgr	?ReleaseFizzleSource@heroWindowManager@@QAEXXZ	100.0000	100.0000	100.0000	0x2030c0	ef7d54f3f76c
 winmgr	?RemoveWindow@heroWindowManager@@QAEXPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x2024a0	69ac376c00bf
+winmgr	?SaveFizzleSourceX@heroWindowManager@@QAEXHHHH@Z	100.0000	100.0000	100.0000	0x202cc0	d4fc7325cf4e
 winmgr	?UpdateScreen@heroWindowManager@@QAEXHHHH@Z	100.0000	100.0000	100.0000	0x202bd0	c785d0cd6be6
-winmgr	heroWindowManager_FizzleForwardX	0.0000	0.0000	0.0000	0x202dc0	a52c262f8ead
-winmgr	heroWindowManager_SaveFizzleSourceX	0.0000	0.0000	0.0000	0x202cc0	5d5570466a5f
 zutil	@zcalloc@12	100.0000	100.0000	100.0000	0x206c70	-
 zutil	@zcfree@8	100.0000	100.0000	100.0000	0x206c90	-
 # DELIBERATE LOWER 2026-08-20, integrating lane/town-vlc across the view

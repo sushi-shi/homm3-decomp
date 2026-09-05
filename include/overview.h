@@ -107,9 +107,14 @@ public:
     virtual ~TOverviewWindow();
     virtual int WindowHandler(message* msg);
 
+    // Public because game::Overview drives the strip directly: retail
+    // expands this body inline there (the seven-call loop plus the
+    // DrawWindow redraw at 0x51ec5d..0x51ec7d) while keeping the
+    // out-of-line copy at 0x51e7c0 for the window's own two callers.
+    void UpdateFlaggableIcons();
+
 private:
     void UpdateFlaggableIcon(int i);
-    void UpdateFlaggableIcons();
     void DoFlaggableButtons(int which);
     void ClearButtons(int slot);
     void UpdateRollover(char* cText);

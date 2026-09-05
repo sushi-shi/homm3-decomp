@@ -5,6 +5,17 @@
 #ifndef HOMM3_ADVENTUREMAPWINDOW_H
 #define HOMM3_ADVENTUREMAPWINDOW_H
 
+class message;
+
+// Retail 0x5547c0, remote.obj's free chat transmitter (remote.h:419 declares
+// the same prototype). DECLARED HERE so adventuremapwindow.cpp's own chat
+// sink can reach it without pulling remote.h - which drags dxplay.h and
+// <deque> into this TU's include closure.
+void SendChat(const char* cChat, int toWho);
+// Retail .bss 0x69954c, the network-session latch (remote.h owns the
+// canonical declaration; same reason as above).
+extern int gNetworkActive69954c;
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\adventuremapwindow.cpp:63, dc 0x3b0) void CheckAdvCheatCode(std::basic_string<char,std::char_traits<char>,std::allocator<char>& chatString);
 // CODEVIEW(..\stlport\config/stl_wince.h:41, dc 0x2cb8) void* operator new(unsigned __formal, void* _P);
