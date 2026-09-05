@@ -429,3 +429,6 @@ int game::GetSideDesc(char* rText, int iStartPos, int iEndPos)
 }
 
 #endif  // @carcass
+
+// COMDAT pairing: type_map_hero_identity::0type_map_hero_identity, mnemonic agreement 0.913.
+VA_COMPGEN(0x00517c30, 0x13F, CLASS_CTOR, type_map_hero_identity)

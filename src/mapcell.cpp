@@ -9505,3 +9505,6 @@ VA_COMPGEN(0x00508cf0, 0x3B9, VECTOR_INSERT, TScenarioTown)
 // COMDAT pairing: vector<TQuestGuard>::insert, agreement 0.989
 // (320 base vs 313 retail instructions).
 VA_COMPGEN(0x00507ad0, 0x2F9, VECTOR_INSERT, TQuestGuard)
+
+// COMDAT pairing: bitset10::set, mnemonic agreement 1.000.
+VA_COMPGEN(0x00506820, 0x60, BITSET_SET, bitset10)

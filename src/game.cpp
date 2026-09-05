@@ -18553,3 +18553,9 @@ VA_COMPGEN(0x004d32e0, 0x344, STD_COPY_BACKWARD, town)
 
 // COMDAT pairing: std::fill<town>, agreement 0.992.
 VA_COMPGEN(0x004d2fe0, 0x2FC, STD_FILL, town)
+
+// COMDAT pairing: _tree::1?$_Tree, mnemonic agreement 0.959.
+VA_COMPGEN(0x004b61f0, 0x6E, IMPLICIT_DTOR, _tree)
+
+// COMDAT pairing: out_of_range::1out_of_range, mnemonic agreement 0.909.
+VA_COMPGEN(0x004b6be0, 0x4B, IMPLICIT_DTOR, out_of_range)
