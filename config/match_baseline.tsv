@@ -1974,6 +1974,7 @@ inputmgr	?PeekEvent@inputManager@@QAE?AVmessage@@XZ	100.0000	100.0000	100.0000	0
 kb	??0CNetMsg@@QAE@W4eRS_Messages@@K@Z	100.0000	100.0000	100.0000	0xf2930	c08c11f46c9e
 kb	??0type_dialog_icon@@QAE@ABU0@@Z	100.0000	100.0000	100.0000	0xf6810	-
 kb	??0type_dialog_icon@@QAE@XZ	100.0000	100.0000	100.0000	0xf6490	-
+kb	??1TNormalDialogInfo@@QAE@XZ	100.0000	100.0000	100.0000	0xf6410	-
 kb	??1advManager@@QAE@XZ	100.0000	100.0000	100.0000	0xf39f0	-
 kb	??1combatManager@@QAE@XZ	71.8085	71.8085	71.8085	0xf3940	-
 kb	??1type_dialog_icon@@QAE@XZ	100.0000	100.0000	100.0000	0xf64c0	-
@@ -1985,6 +1986,7 @@ kb	?DoMultiPlayerWindow@@YIHXZ	100.0000	100.0000	100.0000	0xf0590	732e54afec3c
 kb	?DoNormalDialog@@YIXUTNormalDialogInfo@@@Z	99.8554	99.8554	99.8554	0xf6990	b381947e06f8
 kb	?DoSinglePlayerWindow@@YIHXZ	99.1549	99.1549	99.1549	0xf0490	e1a6fe4ef5bb
 kb	?DrawProgressCount@@YIXXZ	100.0000	100.0000	100.0000	0xed230	a745829ef928
+kb	?FileError@@YIXPBD@Z	100.0000	100.0000	100.0000	0xf3a60	1a1fb33324ec
 kb	?GameUnsaved@@YIHXZ	100.0000	100.0000	100.0000	0xf4310	8134b9e04baa
 kb	?GetMapExtra@@YIGHHH@Z	100.0000	100.0000	100.0000	0xf79b0	d57379b3a90a
 kb	?GetMapExtraPtr@@YIPAGHHH@Z	100.0000	100.0000	100.0000	0xf79e0	bfdb3939e8b1
@@ -1992,6 +1994,7 @@ kb	?GetNextHumanPlayer@@YIHH@Z	95.1191	95.1191	95.1191	0xf4ba0	0f6a1b063ca2
 kb	?GetTeamNames@@YIEHPAD@Z	100.0000	100.0000	100.0000	0xf1460	0d2e602c3941
 kb	?HandleAppSpecificMenuCommands@@YIHH@Z	100.0000	100.0000	100.0000	0xf4350	9c88b7086273
 kb	?IncProgressBar@@YIXE@Z	100.0000	100.0000	100.0000	0xed2a0	488bb10c4844
+kb	?InitMainClasses@@YIXXZ	99.9943	99.9943	99.9943	0xedb40	35baf3748adb
 kb	?KbFn_004EE1B0@@YIXHPBD@Z	100.0000	100.0000	100.0000	0xee1b0	2e4b9f393da5
 kb	?LostGame@@YIXXZ	100.0000	100.0000	100.0000	0xee2b0	e28e4114a854
 kb	?MemError@@YIXXZ	100.0000	100.0000	100.0000	0xf42c0	a3a21a3be5c1
@@ -2006,6 +2009,9 @@ kb	?ShutDown@@YIXPBD@Z	100.0000	100.0000	100.0000	0xf3690	7882bdc1e193
 kb	?UnloadProgressBar@@YIXXZ	100.0000	100.0000	100.0000	0xed450	515a13a44eda
 kb	?WaitHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0xf7620	5f15859cbc9f
 kb	?extended_dialog@@YIXPBDAAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@std@@JJJ@Z	92.7911	92.7911	92.7911	0xf7690	094ca28af910
+kb	?get_base_map_score@game@@QAEFXZ	100.0000	100.0000	100.0000	0xf3e30	08a36f004890
+kb	?get_map_score@game@@QAEFXZ	100.0000	100.0000	100.0000	0xf3eb0	cd6028d198ab
+kb	?get_quickview_size@@YIXPBDPAH1@Z	100.0000	100.0000	100.0000	0xf62a0	c57fea7e1252
 kb	?oldmain@@YIHXZ	29.6021	31.9630	31.9630	0xee3e0	ead764a54d4e
 kb	?set@type_dialog_icon@@QAEXW4EGameResource@@J@Z	99.1667	99.1667	99.1667	0xf4eb0	06cb359cd3d3
 kbwin	?AppAbout@@YGHPAUHWND__@@IIJ@Z	100.0000	100.0000	100.0000	0xf8140	b6d6a9ba7939
@@ -2019,7 +2025,7 @@ kbwin	?KBChangeMenu@@YIXPAUHMENU__@@@Z	100.0000	100.0000	100.0000	0xf8180	f33b63
 kbwin	?Process1WindowsMessage@@YIXXZ	100.0000	100.0000	100.0000	0xf7fb0	70a9d8b827e5
 kbwin	?SetMenus@@YIXPAUHMENU__@@H@Z	100.0000	100.0000	100.0000	0xf8220	b3dfc64bb836
 kbwin	?SetNoDialogMenus@@YIXH@Z	100.0000	100.0000	100.0000	0xf81e0	6294abbdc46c
-kbwin	_WinMain@16	100.0000	100.0000	100.0000	0xf7a30	8659194e3890
+kbwin	_WinMain@16	100.0000	100.0000	100.0000	0xf7a30	4bad5aec22eb
 levelupwindow	??0TLevelUpWindow@@QAE@PAVhero@@HHH@Z	99.1299	99.1299	99.1300	0xf8880	e8212f2fbe38
 levelupwindow	??1TLevelUpWindow@@UAE@XZ	100.0000	100.0000	100.0000	0xf9730	79cec55beaa4
 levelupwindow	??_GTLevelUpWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xf9700	-
@@ -2701,7 +2707,7 @@ sacrifice_window	?all_creatures@type_skeleton_window@@CIHAAVmessage@@@Z	100.0000
 sacrifice_window	?artifact_click@type_sacrifice_window@@QAEXJE@Z	100.0000	100.0000	100.0000	0x1632a0	0feb58f6bb2a
 sacrifice_window	?backpack_click@type_sacrifice_window@@QAEXJE@Z	86.1308	86.1308	86.1308	0x1636c0	0d5252860cd9
 sacrifice_window	?convert_with_commas@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@J@Z	100.0000	100.0000	100.0000	0x162660	928f4f20aa90
-sacrifice_window	?create_artifact_widgets@type_sacrifice_window@@AAEXAAJH@Z	99.5918	100.0000	100.0000	0x160380	834f71b0c8a5
+sacrifice_window	?create_artifact_widgets@type_sacrifice_window@@AAEXAAJH@Z	99.9983	100.0000	100.0000	0x160380	834f71b0c8a5
 sacrifice_window	?create_creature_icons@type_sacrifice_window@@AAEJJJJJJAAJPAPAViconWidget@@1PAPAVtextWidget@@E@Z	100.0000	100.0000	100.0000	0x161f70	afad52fed516
 sacrifice_window	?create_creature_icons@type_skeleton_window@@AAEXJJJJJJAAJPAPAViconWidget@@1PAPAVtextWidget@@@Z	100.0000	100.0000	100.0000	0x166760	93a2b5c2f89b
 sacrifice_window	?create_creature_widgets@type_sacrifice_window@@AAEXAAJH@Z	100.0000	100.0000	100.0000	0x1610f0	eb6a2ccb96d4
@@ -3343,7 +3349,10 @@ town	?update_shipyard@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1bf210	343d37d72
 towngatewindow	??0TTownGateWindow@@QAE@_N@Z	100.0000	100.0000	100.0000	0x1c1ab0	ecc87aa4934e
 towngatewindow	??1TTownGateWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1c2370	2cdf88c2600e
 towngatewindow	??_GTTownGateWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1c2340	-
+towngatewindow	?DoModal@TTownGateWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1c2770	8268ead8aeed
 towngatewindow	?TownGateSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1c2980	b80f91f9dbde
+towngatewindow	?UpdateTownLocator@TTownGateWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1c25b0	9892c3b6bfa4
+towngatewindow	?WindowHandler@TTownGateWindow@@UAEHPAVmessage@@@Z	69.8969	69.8969	69.8969	0x1c2840	4d6ce3982e5e
 towngatewindow	?insert@?$vector@PAVwidget@@V?$allocator@PAVwidget@@@std@@@std@@QAEXPAPAVwidget@@IABQAV3@@Z	32.0621	32.0621	32.0621	0x1c2400	-
 townmgr	??0TBlacksmithWindow@@QAE@HH@Z	100.0000	100.0000	100.0000	0x1d1360	777db8ccc983
 townmgr	??0TBuyBuildWindow@@QAE@HHH@Z	100.0000	100.0000	100.0000	0x1d55c0	97dccb7f8a0f
@@ -3570,7 +3579,11 @@ viewwrld	??_GTViewWorldWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1fbd30	-
 viewwrld	?VWCompleteDraw@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x1fc4c0	f85745d6e952
 viewwrld	?VWDrawAdvObj@advManager@@QAEXHHHHH@Z	94.8383	94.8383	94.8383	0x1f82e0	b73c0fc37794
 viewwrld	?VWDrawAdvObjShadow@advManager@@QAEXHHHHH@Z	82.3950	82.3950	82.3950	0x1f8be0	70d53d7ebca0
+viewwrld	?VWDrawBoatPart@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	100.0000	100.0000	100.0000	0x1f7d00	13bb04b93baa
+viewwrld	?VWDrawBoatPartShadow@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	100.0000	100.0000	100.0000	0x1f7ef0	e9a2787317aa
 viewwrld	?VWDrawGround@advManager@@QAEXHHHHH@Z	55.6351	55.6351	55.6351	0x1fa1e0	f46f4ba308e3
+viewwrld	?VWDrawHeroPart@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	98.2385	98.2385	98.2385	0x1f7500	03c4fe06e1d0
+viewwrld	?VWDrawHeroPartShadow@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	98.2385	98.2385	98.2385	0x1f7900	c1fa706a25f7
 viewwrld	?VWDrawRiver@advManager@@QAEXHHHHH@Z	95.4910	95.4910	95.4910	0x1f9220	3ec5e78699ac
 viewwrld	?VWDrawRoad@advManager@@QAEXHHHHH@Z	94.5979	94.5979	94.5979	0x1f95b0	1c5a9fa7654e
 viewwrld	?VWDrawShroud@advManager@@QAEXHHHHH@Z	20.5312	20.5312	20.5312	0x1f9940	66ace4b8adcf
@@ -3579,10 +3592,6 @@ viewwrld	?VWDrawSymbols@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x1f8
 viewwrld	?VWDrawUnderlay@advManager@@QAEXHHHHH@Z	38.8566	38.8566	38.8566	0x1f9ed0	07edcd1e12e8
 viewwrld	?ViewWorldSurfaceHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1fbdf0	6564c6c11a60
 viewwrld	?ViewWorldUndergroundHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1fbec0	9ef6e09cbd1a
-viewwrld	advManager_VWDrawBoatPart	0.0000	0.0000	0.0000	0x1f7d00	a75c0daf69b0
-viewwrld	advManager_VWDrawBoatPartShadow	0.0000	0.0000	0.0000	0x1f7ef0	0b264636ff53
-viewwrld	advManager_VWDrawHeroPart	0.0000	0.0000	0.0000	0x1f7500	7487856c5943
-viewwrld	advManager_VWDrawHeroPartShadow	0.0000	0.0000	0.0000	0x1f7900	29914656e6c4
 widget	??0widget@@QAE@FFFFFF@Z	100.0000	100.0000	100.0000	0x1fe340	0553215b2eec
 widget	??0widget@@QAE@XZ	100.0000	100.0000	100.0000	0x1fe410	6042558f56f5
 widget	??1widget@@UAE@XZ	100.0000	100.0000	100.0000	0x1fe430	4a29d8bc037a
@@ -3646,6 +3655,7 @@ wingraph	?AppPaint@@YIHPAX0@Z	100.0000	100.0000	100.0000	0x201820	27f27632049b
 wingraph	?CleanUpWinGraphics@@YIXXZ	100.0000	100.0000	100.0000	0x201890	f135c44f8301
 wingraph	?DDCleanUpWinGraphics@@YIXXZ	100.0000	100.0000	100.0000	0x2018a0	0f8f7ec883c0
 wingraph	?DDInitGraphics@@YIXXZ	100.0000	100.0000	100.0000	0x2014f0	c6c58ec076c0
+wingraph	?DDRestoreSurfaces@@YIJXZ	100.0000	100.0000	100.0000	0x2013a0	0d3fca2c20e3
 wingraph	?DDSD@@YIXHPADH@Z	100.0000	100.0000	100.0000	0x2006e0	12f7c35f5389
 wingraph	?GetDesktopHeight@@YIHXZ	100.0000	100.0000	100.0000	0x2014d0	f235c37e719b
 wingraph	?GetDesktopInfo@@YIEXZ	100.0000	100.0000	100.0000	0x201460	326b880d6d7d
