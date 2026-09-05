@@ -1605,3 +1605,17 @@ VA_COMPGEN(0x00454d60, 0x1B2, NUM_PUT_DO_PUT, char)
 
 // COMDAT pairing: bad_cast::_Doraise, agreement 1.000.
 VA_COMPGEN(0x00453c80, 0x1D, EXCEPTION_DORAISE, bad_cast)
+
+// COMDAT pairing: bad_cast::bad_cast(const&), agreement 0.857 against a 32 B
+// object; resourcemanager's two 19 B candidates score 0.762.
+VA_COMPGEN(0x00453cd0, 0x1C, CLASS_CTOR, bad_cast)
+
+// COMDAT pairing: ios_base::getloc, agreement 0.906 against a 64 B object;
+// quicktownwindow's 28 B candidate scores 0.750.
+VA_COMPGEN(0x00453d90, 0x3B, IOS_BASE_GETLOC, char)
+
+// COMDAT pairing: bad_cast::bad_cast(const char*), the second half of the
+// ctor overload group. COFF order is (const&, const char*) and RVA order is
+// 0x53cd0, 0x54a10; the similarity agrees with that zip in both directions
+// (0.857 each way, 0.786 crossed).
+VA_COMPGEN(0x00454a10, 0x1C, CLASS_CTOR, bad_cast)

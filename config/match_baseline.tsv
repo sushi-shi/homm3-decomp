@@ -697,6 +697,8 @@ bottomviewsubwindow	??0TBottomViewMessage@@QAE@PAVheroWindow@@PBV?$basic_string@
 bottomviewsubwindow	??0TBottomViewNewTurn@@QAE@PAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x50dd0	444601294b0e
 bottomviewsubwindow	??0TBottomViewResourceMessage@@QAE@PAVheroWindow@@HHPBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	91.2973	91.2973	91.2973	0x51220	b0454c8ef134
 bottomviewsubwindow	??0TBottomViewTown@@QAE@PAVheroWindow@@@Z	94.0054	98.7476	98.7476	0x521f0	c3953011f95a
+bottomviewsubwindow	??0bad_cast@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x53cd0	-
+bottomviewsubwindow	??0bad_cast@std@@QAE@PBD@Z	100.0000	100.0000	100.0000	0x54a10	-
 bottomviewsubwindow	??0ios_base@std@@IAE@XZ	100.0000	100.0000	100.0000	0x515c0	-
 bottomviewsubwindow	??0strstreambuf@std@@QAE@H@Z	100.0000	100.0000	100.0000	0x51600	-
 bottomviewsubwindow	??1?$basic_streambuf@DU?$char_traits@D@std@@@std@@UAE@XZ	100.0000	100.0000	100.0000	0x54000	-
@@ -736,6 +738,7 @@ bottomviewsubwindow	?do_put@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@
 bottomviewsubwindow	?do_put@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DO@Z	100.0000	100.0000	100.0000	0x54c90	-
 bottomviewsubwindow	?do_put@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DPBX@Z	100.0000	100.0000	100.0000	0x54d60	-
 bottomviewsubwindow	?do_put@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@D_N@Z	100.0000	100.0000	100.0000	0x54770	-
+bottomviewsubwindow	?getloc@ios_base@std@@QBE?AVlocale@2@XZ	100.0000	100.0000	100.0000	0x53d90	-
 bottomviewsubwindow	?opfx@?$basic_ostream@DU?$char_traits@D@std@@@std@@QAE_NXZ	100.0000	100.0000	100.0000	0x543d0	-
 bottomviewsubwindow	?put@?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEAAV12@D@Z	100.0000	100.0000	100.0000	0x53dd0	-
 bottomviewsubwindow	?sputc@?$basic_streambuf@DU?$char_traits@D@std@@@std@@QAEHD@Z	100.0000	100.0000	100.0000	0x54a30	-
@@ -785,6 +788,7 @@ campaignbrief	?Select@TCampaignBrief@@QAEXH@Z	92.1064	92.1064	92.1064	0x57990	8f
 campaignbrief	?UpdateAllyEnemyFlags@TCampaignBrief@@QAEXXZ	86.8125	86.8125	86.8125	0x58010	0a990c5eb338
 campaignbrief	?UpdateBonusIcons@TCampaignBrief@@QAEXXZ	95.3700	95.3700	95.3700	0x58d40	288e1c1bcbaf
 campaignbrief	?UpdateDifficultyButtons@TCampaignBrief@@QAEXXZ	100.0000	100.0000	100.0000	0x59010	a54768111cfd
+campaignbrief	?_Construct@std@@YIXPAU?$pair@$$CBHUtype_map_hero_info@@@1@ABU21@@Z	100.0000	100.0000	100.0000	0x5d590	-
 campaignbrief	?_Construct@std@@YIXPAUCampaignScenarioPreview@@ABU2@@Z	91.0748	91.0748	91.0748	0x5d700	-
 campaignbrief	?_Construct@std@@YIXPAUtype_map_hero_identity@@ABU2@@Z	100.0000	100.0000	100.0000	0x5d420	-
 campaignbrief	?_Copy@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@IAEPAU_Node@12@PAU312@0@Z	100.0000	100.0000	100.0000	0x5d270	-
@@ -1061,6 +1065,7 @@ cursor	?handle_stop_on_trigger@advManager@@AAEPAVNewmapCell@@PAVhero@@PAV2@EEPAH
 customcampaign	??0CampaignHeaderStruct@TCampaignBrief@@QAE@PBD@Z	100.0000	100.0000	100.0000	0x885d0	c81b1564e203
 customcampaign	??0LegacyCampaignHero@@QAE@XZ	100.0000	100.0000	100.0000	0x8ae30	d00745bb485b
 customcampaign	??0SCampaign@@QAE@XZ	100.0000	100.0000	100.0000	0x89500	92aa89488ce8
+customcampaign	??0out_of_range@std@@QAE@ABV01@@Z	91.3692	91.3692	91.3692	0x87bd0	-
 customcampaign	??1CampaignHeaderStruct@TCampaignBrief@@QAE@XZ	78.5339	78.5339	78.5339	0x886a0	2c81b379a033
 customcampaign	??1ScenarioStruct@TCampaignBrief@@QAE@XZ	100.0000	100.0000	100.0000	0x85fe0	5186890e3d45
 customcampaign	??_GTAbstractFile@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x87dd0	-
