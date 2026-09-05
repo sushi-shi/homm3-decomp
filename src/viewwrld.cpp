@@ -55,6 +55,19 @@ DATA(0x006aac30)
 static unsigned char view_heroes;
 
 // E:\gamedcs\viewwrld.cpp:166
+// The inner loop reads its source pixel THROUGH A NAMED POINTER that it
+// dereferences twice; it does not subscript into a `color` local. Retail
+// proves it in both halves of this boundary - the out-of-line body at
+// 0x5f9d90 and every expansion - by materialising the address
+// (`lea eax,[ecx+eax*2]; mov ax,[eax]`) where a subscript folds straight
+// into the load (`mov cx,[edi+2*ecx]`). Two uses are what forces it: a
+// one-use pointer local folds back to the subscript, and testing the
+// subscript twice instead loses the CSE and scores worse. Measured
+// 2026-09-05 across all six scaled renderers - Road 94.5979 -> 99.5374,
+// River 95.4910 -> 98.5412, Underlay 38.8566 -> 42.1275, Shroud 91.0938 ->
+// 92.8835, AdvObj 94.8383 -> 96.4955, AdvObjShadow 82.7004 -> 83.9809; only
+// Ground moved down (55.6351 -> 55.2155, four bytes, still expanding the
+// clip helper at its last site).
 // Complete expands this source helper into every scaled renderer and emits no
 // retained body. Dreamcast preserves the boundary, the two width locals and
 // the nested clipped loops; retail independently confirms all four screen
@@ -72,10 +85,28 @@ static unsigned char view_heroes;
 //   Underlay 38.86 -> 95.67, Ground 55.64 -> 92.47, but
 //   River 95.49 -> 58.09, Road 94.60 -> 59.75, AdvObj 94.84 -> 83.71.
 // Byte-weighted that trade is worth about +200 B and it puts three banked
-// rows under their MAX, so the `inline` stays. Closing it needs a per-site
-// lever (a statement pin inside VWScaleToScreenBuffer is per-CALLEE, not
-// per-site, so it cannot split the six) or a caller-shrink dose on the three
-// heavy layers.
+// rows under their MAX, so the `inline` stays.
+// QUANTIFIED, 2026-09-05, with the /Ob2 site-count instrument
+// (docs/vc6/inliner.md 5.9): the deficit on the two callers that still
+// over-inline is EXACTLY ONE CANDIDATE SITE, and it sits AT OR AFTER their
+// final VWScaleToScreenBuffer call. One free candidate appended after
+// VWDrawUnderlay's `if (drewSomething) VWScaleToScreenBuffer(...)` raises
+// `sites-remaining` from 1 to 2, halves the nested budget and flips the
+// decision outright: 38.8566 -> 95.6693, with no other row moving.
+// VWDrawGround is the same shape one site later - its first scale site
+// already divides by >=5 and calls the helper on BOTH sides; only its last
+// site, at divisor 1, diverges. So the residual is a real missing statement
+// at the tail of those two bodies, not a helper spelling: neither the
+// Dreamcast line table nor retail's own tail (the call at 0x5f9d90 is the
+// last instruction before the epilogue) shows one, so it is a Complete-era
+// statement with no DC row, and the free site is an INSTRUMENT ONLY.
+// Measured and rejected as the cb lever: the Dreamcast clip helper carries
+// two more clamps than this body - `else if (screenX > 600) screenX = 600;`
+// and `else if (screenY > 552) screenY = 552;` at dc lines 192/193 and
+// 197/198, proved by the `mov.w 600,r5` / `mov.w 552,r6` arms - but VC6
+// EMITS them rather than folding them against the entry guards, and they
+// cost River 95.49 -> 95.03, Road 94.60 -> 94.06, AdvObj 94.84 -> 94.23 and
+// Underlay 38.86 -> 38.50. Complete dropped them; RoE had them.
 inline void VWClipScaleToScreenBuffer(int destX, int destY)
 {
     if (destX + giViewWorldScale < 8)
@@ -108,9 +139,10 @@ inline void VWClipScaleToScreenBuffer(int destX, int destY)
         unsigned short* screenBuffer = screenBufferLineStart;
         for (int x = 0; x < giViewWorldScale; ++x) {
             if (destX + x >= 8 && destX + x < 600) {
-                unsigned short color = sourceBufferLineStart[scaleLine[x]];
-                if (color)
-                    *screenBuffer = color;
+                unsigned short* sourcePixel =
+                    sourceBufferLineStart + scaleLine[x];
+                if (*sourcePixel)
+                    *screenBuffer = *sourcePixel;
                 ++screenBuffer;
             }
         }
@@ -141,9 +173,9 @@ inline void VWScaleToScreenBuffer(int destX, int destY)
     for (int y = 0; y < giViewWorldScale; ++y) {
         unsigned short* screenBuffer = screenBufferLineStart;
         for (int x = 0; x < giViewWorldScale; ++x) {
-            unsigned short color = sourceBufferLineStart[scaleLine[x]];
-            if (color)
-                *screenBuffer = color;
+            unsigned short* sourcePixel = sourceBufferLineStart + scaleLine[x];
+            if (*sourcePixel)
+                *screenBuffer = *sourcePixel;
             ++screenBuffer;
         }
         sourceBufferLineStart =
@@ -712,8 +744,8 @@ void advManager::VWDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int de
         return;
 
     NewmapCell* thisCell = GetCell(type_point(srcX, srcY, z));
-    int playerBit = 1 << gpGame->GetLocalPlayerGamePos();
-    playerBit &= GetMapExtra(srcX, srcY, z);
+    int playerBit = (1 << gpGame->GetLocalPlayerGamePos())
+        & GetMapExtra(srcX, srcY, z);
 
     int baseX = destX * giViewWorldScale + iVWCenterOffsetW,
         baseY = destY * giViewWorldScale + iVWCenterOffsetH;
@@ -885,17 +917,17 @@ void advManager::VWDrawRoad(int srcX, int srcY, int z, int destX, int destY)
 // through a join the non-visible path jumps straight into, and the leading
 // GetCell result is discarded exactly as the full-size renderer discards its
 // own type_point.
-// Residual (20.5312%): BLOCK LAYOUT ONLY - the skeleton agrees exactly,
-// 54 blocks against 54, 38 branches against 38, 3 returns against 3, and the
-// call streams pair one for one. Retail keeps the STAR block between the
-// cloud-lookup test and the frame fixups; VC6 SINKS ours past the fog draw
-// because the block has two predecessors and both of them are jumps. Tried
-// and rejected: `if (gCompleteDrawAllCells) goto draw_stars;` ahead of the
-// lookup (byte-identical - VC6 canonicalises the two spellings), and writing
-// the star block TWICE, which scores higher at 36.5789 but is NOT the shape
-// (55 blocks against 54, four returns against three - the cross-jumper only
-// half-merges the copies), so it is a layout coincidence rather than a
-// structural recovery and is not shipped.
+// The star arm is a POSITIVE `if (!lookup) { ...; return; }` block, not a
+// forward `goto adjust_cloud` over it. Both spellings describe the same CFG
+// - 54 blocks, 38 branches, 3 returns either way - but the goto leaves the
+// star block with two jump predecessors and VC6 SINKS it past the fog draw,
+// which cost 70.6 points (20.5312 -> 91.0938 on the inversion alone). With
+// the guard positive, B12 falls into the star block and every block lands
+// where retail put it: 49 of 54 exact, 0 target-shift, 0 flow-kind.
+// Residual (92.8835%): the size-only blocks left are inside the two
+// VWScaleToScreenBuffer expansions, not this body - one extra out-of-line
+// GetMap in the star expansion, which is a per-site /Ob2 decision inside
+// the helper and not a statement of this function.
 VA(0x005f9940, 0x44A)  // exhaustive dc-order-map + VWCompleteDraw call order (the iVWTerrains-gated layer), dc 0x194b48
 void advManager::VWDrawShroud(int srcX, int srcY, int z, int destX, int destY)
 {
@@ -928,18 +960,16 @@ void advManager::VWDrawShroud(int srcX, int srcY, int z, int destX, int destY)
     bDrawShroud = true;
     if (!gCompleteDrawAllCells)
         lookup = GetCloudLookup(srcX, srcY, z);
-    if (lookup)
-        goto adjust_cloud;
+    if (!lookup) {
+        memset(memoryBuffer->GetMap(0, 0), 0,
+               memoryBuffer->GetHeight() * memoryBuffer->GetPitch());
+        starTileset->DrawShroudTile(
+            ((srcX * 85 ^ srcY * 85) / 64) & 3, 0, 0, 32, 32, memoryBuffer,
+            0, 0, false, false);
+        VWScaleToScreenBuffer(baseX, baseY + 8);
+        return;
+    }
 
-    memset(memoryBuffer->GetMap(0, 0), 0,
-           memoryBuffer->GetHeight() * memoryBuffer->GetPitch());
-    starTileset->DrawShroudTile(
-        ((srcX * 85 ^ srcY * 85) / 64) & 3, 0, 0, 32, 32, memoryBuffer,
-        0, 0, false, false);
-    VWScaleToScreenBuffer(baseX, baseY + 8);
-    return;
-
-adjust_cloud:
     if (lookup >= CLOUD_DRAW_FLIPPED_OFFSET) {
         hflip = true;
         lookup -= CLOUD_DRAW_FLIPPED_OFFSET;
