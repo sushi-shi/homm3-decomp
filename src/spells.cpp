@@ -556,6 +556,101 @@ static int update_spell_target(long hex)
 VA(0x0059f8a0, 0x293)  // retail caller+CFG role, dc 0x152240
 void mark_area_highlights(SpellID spell, TSkillMastery mastery, long hex);
 
+// E:\gamedcs\spells.cpp:517 / 570. The last two unclaimed rows in
+// spells.obj's span, and the DC roster's last two unplaced ones between
+// InitiateSpell and CastSpell. Arity settles the pairing on its own -
+// both are `ret 0xc` thiscall members over (long, army*, unsigned char)
+// - and the bodies name themselves: 0x59fb40 asks SpellCastWorkChance
+// about SPELL_LAND_MINE (0xb) and plays landkill.wav, 0x59fcd0 asks
+// about SPELL_FIRE_WALL (0xd). combatManager::Unnamed46a520's own
+// caller pair (cmbtmgr.cpp:4792/4794) already calls both by these
+// names.
+VA(0x0059fb40, 0x182)  // arity + spell-id body evidence, dc 0x14f51c
+unsigned char combatManager::check_landmine(long hex, army* current_army,
+                                            unsigned char is_walking)
+{
+    if (!current_army->numTroops)
+        return 0;
+    if ((cells[hex].field_10 & 8) == 0)
+        return 0;
+
+    TObstacle* obstacle = &GetObstacle(cells[hex].field_14);
+
+    // Not TObstacle::IsVisible: that header inline reads `is_visible ||
+    // owner == side`, and retail tests the two the other way round.
+    if (obstacle->IsVisible(current_army->combatSide))
+        return 0;
+
+    if (SpellCastWorkChance(SPELL_LAND_MINE, obstacle->owner, current_army,
+                            0, 1, 0) <= 0.0f)
+        return 0;
+
+    if (is_walking)
+        current_army->stop_sample(army::TSampleID(0));
+
+    long base = obstacle->spell_damage;
+    long damage = ModifySpellDamage(base, SPELL_LAND_MINE,
+                                    heroes[obstacle->owner],
+                                    current_army->get_controller(),
+                                    current_army, 1);
+    int deaths = current_army->Damage(damage);
+
+    damage_message(akSpellTraits[SPELL_LAND_MINE].name, 1, damage,
+                   current_army, deaths);
+    RemoveObstacle(cells[hex].field_14);
+
+    SAMPLE2 sample;
+
+    if (!static_cast<const combatManager*>(this)->IsQuickCombat()) {
+        sample = LoadPlaySample(
+            DATA_COMPGEN(0x00688410, landMineSoundName, "landkill.wav"));
+        current_army->bShowPowEffect = 1;
+    }
+    PowEffect(0x39, 1);
+    if (!static_cast<const combatManager*>(this)->IsQuickCombat())
+        WaitEndSample(sample, -1);
+
+    if (current_army->numTroops > 0 && is_walking)
+        current_army->play_sample(army::TSampleID(0));
+    CheckRebirth();
+    return 1;
+}
+
+VA(0x0059fcd0, 0x10E)  // arity + spell-id body evidence, dc 0x14f6ac
+unsigned char combatManager::check_fire_wall(long hex, army* current_army,
+                                             unsigned char is_walking)
+{
+    if (!current_army->numTroops)
+        return 0;
+    if ((cells[hex].field_10 & 0x10) == 0)
+        return 0;
+
+    TObstacle* obstacle = &GetObstacle(cells[hex].field_14);
+
+    if (SpellCastWorkChance(SPELL_FIRE_WALL, obstacle->owner, current_army,
+                            0, 1, 0) <= 0.0f)
+        return 0;
+
+    if (is_walking)
+        current_army->stop_sample(army::TSampleID(0));
+
+    long base = obstacle->spell_damage;
+    long damage = ModifySpellDamage(base, SPELL_FIRE_WALL,
+                                    heroes[obstacle->owner],
+                                    current_army->get_controller(),
+                                    current_army, 1);
+    int deaths = current_army->Damage(damage);
+
+    damage_message(akSpellTraits[SPELL_FIRE_WALL].name, 1, damage,
+                   current_army, deaths);
+    PowEffect(-1, 1);
+
+    if (current_army->numTroops > 0 && is_walking)
+        current_army->play_sample(army::TSampleID(0));
+    CheckRebirth();
+    return 1;
+}
+
 VA(0x0059fe30, 0x2A4F)  // retail largest-unadmitted row, dc 0x14f7dc
 void combatManager::CastSpell(SpellID spellId, int targetIndex,
                               int bIsMonsterSpell,
