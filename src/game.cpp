@@ -672,6 +672,47 @@ void ImmMouseWindowMoved()
 // corroborates the helper boundary; the Immersion integration is retail-only.
 VA_COMPGEN(0x004B7330, 0xA3, TREE_CONST_ITERATOR_INC, CImmEnclosure)
 
+// TAdventureMapWindow's slot-2 Close override (0x4014d0) reaches this body as
+// `mov ecx,edi / call 0x4b6e40 / push edi / call operator delete` on its owned
+// +0x9c member - the split form of `delete`, which types 0x4b6e40 as that
+// member's destructor. The implementation destructor is inlined here as
+// retail's only copy, which is what puts the whole
+// map<CImmEnclosure*, RECT>::erase(const key_type&) chain in this body:
+// _Ubound out of line at 0x4b7e70, lower_bound at 0x4b79b0, the discarded
+// _Distance walk over the claimed const_iterator::_Inc, and erase(first, last)
+// at 0x4b7200. The `_Pairii(lower_bound, upper_bound)` argument pair evaluates
+// right to left, so upper_bound lands first; the count _Distance returns is
+// dead because the caller drops erase's return value.
+//
+// Residual (44.8%): retail carries a C++ EH frame here and this compile does
+// not, which costs the prologue, the epilogue and the two out-of-line
+// iterator helpers retail calls (the 14-byte iterator ctor at 0x4b7da0 and
+// the 25-byte operator== at 0x4b73e0, both expanded here). The frame is not
+// decoration - it is the whole residual, and retail's own EH data says what
+// produces it. FuncInfo 0x64cec8 has one unwind state whose action (0x62b6a0)
+// is `mov ecx,[ebp-0x20] / jmp 0x4b7020`, handing the IMPLEMENTATION pointer
+// to a 19-byte body that is only `if (+0) { if (+4) delete +4; }`. An
+// unwind that DESTROYS a sub-object is not what a delete-expression emits;
+// it is what a destructor body emits while a base or member is still alive.
+// So the implementation is really two levels - a sub-object holding the
+// owned-flag/enclosure pair, and a derived body holding the erase - and
+// 0x4b7020 is that sub-object's own destructor.
+// TRIED AND REJECTED: modelling it that way. Splitting the class in two
+// (either base or member) is correct against the EH data and scores 14.62,
+// because VC6 then refuses to expand the EH-introducing implementation
+// destructor into this EH-less caller and emits a plain call instead. That
+// refusal is the wall, not the budget: a 16-statement `if (0)` carrier in
+// this body left the split version byte-flat to the digit, so no amount of
+// caller mass buys the expansion back. The flat spelling below is what this
+// compiler can express; the two-level model is the better reading and needs
+// a lever that reaches the EH-frame decision.
+VA(0x004b6e40, 0xE3)  // anchor-callee (TAdventureMapWindow::Close), retail-only
+TImmMouseEffect::~TImmMouseEffect()
+{
+    if (m_created)
+        delete m_impl;
+}
+
 // Retail-only HeroExtra reset used by game::SetupOrigData.  No Dreamcast
 // procedure row names it; the receiver layout and sole caller prove the role,
 // so the address remains in the source spelling.
@@ -18619,3 +18660,14 @@ VA_COMPGEN(0x0048caa0, 0x38, VECTOR_DESTROY, type_artifact_vector)
 // _Ucopy resemble this address; type_university wins on agreement (0.907
 // against 0.810 for the next) and `ret 0xc` matches its three pointers.
 VA_COMPGEN(0x00434c70, 0x49, VECTOR_UCOPY, type_university)
+
+// COMDAT pairing: map<CImmEnclosure*, RECT>::erase, both overloads, newly
+// emitted by the TImmMouseEffect destructor above. The chain is closed on
+// both sides: the range overload at 0x4b7200 is reached from that destructor
+// (0x4b6eea) and from the already-claimed tree destructor at 0x4b61f0
+// (0x4b6204, `erase(begin(), end())`), and it is the ONLY caller of 0x4b74a0
+// (0x4b72fd) - exactly `while (_F != _L) erase(_F++)`. Sizes corroborate
+// independently: resourcemanager's TCacheMapKey tree, the other pointer-keyed
+// map in the tree, carries this same pair at 0x50F and 0x121.
+VA_COMPGEN(0x004b7200, 0x121, TREE_ERASE_RANGE, CImmEnclosure)
+VA_COMPGEN(0x004b74a0, 0x50F, TREE_ERASE_ITERATOR, CImmEnclosure)

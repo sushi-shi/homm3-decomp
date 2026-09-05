@@ -1612,6 +1612,7 @@ game	??1CGameTransferDlg@@UAE@XZ	100.0000	100.0000	100.0000	0xcbcf0	-
 game	??1HeroExtra@@QAE@XZ	100.0000	100.0000	100.0000	0xce520	-
 game	??1SavedGameHeader@@QAE@XZ	100.0000	100.0000	100.0000	0xbdf80	-
 game	??1Sign@@QAE@XZ	100.0000	100.0000	100.0000	0xb9230	-
+game	??1TImmMouseEffect@@QAE@XZ	44.8228	44.8228	44.8228	0xb6e40	369ff19b63d7
 game	??1TPickRandomTownName@@QAE@XZ	100.0000	100.0000	100.0000	0xcaa40	-
 game	??1TScenarioTown@@QAE@XZ	100.0000	100.0000	100.0000	0xd4450	-
 game	??1game@@QAE@XZ	100.0000	100.0000	100.0000	0xce5b0	63b88e3526aa
@@ -1813,6 +1814,8 @@ game	?copy_backward@std@@YIPAVtown@@PAV2@00@Z	100.0000	100.0000	100.0000	0xd32e0
 game	?count@?$bitset@$0BM@@std@@QBEIXZ	100.0000	100.0000	100.0000	0xcf8d0	-
 game	?count@?$bitset@$0JB@@std@@QBEIXZ	100.0000	100.0000	100.0000	0xcf010	-
 game	?erase@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@QAE?AViterator@12@V312@@Z	100.0000	100.0000	100.0000	0x5c200	-
+game	?erase@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@U_Kfn@?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@3@U?$less@PAVCImmEnclosure@@@3@V?$allocator@UtagRECT@@@3@@std@@QAE?AViterator@12@V312@0@Z	100.0000	100.0000	100.0000	0xb7200	-
+game	?erase@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@U_Kfn@?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@3@U?$less@PAVCImmEnclosure@@@3@V?$allocator@UtagRECT@@@3@@std@@QAE?AViterator@12@V312@@Z	100.0000	100.0000	100.0000	0xb74a0	-
 game	?erase@?$vector@UTBlackMarket@@V?$allocator@UTBlackMarket@@@std@@@std@@QAEPAUTBlackMarket@@PAU3@0@Z	100.0000	100.0000	100.0000	0xd03e0	-
 game	?erase@?$vector@UTRumour@game@@V?$allocator@UTRumour@game@@@std@@@std@@QAEPAUTRumour@game@@PAU34@0@Z	100.0000	100.0000	100.0000	0xd16e0	-
 game	?erase@?$vector@Utype_creature_bank@@V?$allocator@Utype_creature_bank@@@std@@@std@@QAEPAUtype_creature_bank@@PAU3@0@Z	100.0000	100.0000	100.0000	0xd4d20	-
