@@ -3302,6 +3302,7 @@ singleselectionwindow	?GetHeroFace@TSingleSelectionWindow@@QAEXHPAVCNetPlayerHan
 singleselectionwindow	?GetHeroName@TSingleSelectionWindow@@QAEPBDH@Z	80.5798	80.5798	80.5798	0x18d1f0	90f9cbd1bb2b
 singleselectionwindow	?GetMapName@TSingleSelectionWindow@@QAEPBDH@Z	100.0000	100.0000	100.0000	0x184010	bbaad4b28fb3
 singleselectionwindow	?GetPlayer@CNetPlayerHandler@@QAEPAVCNetPlayerHandlerPlayer@@K@Z	100.0000	100.0000	100.0000	0x177ce0	f86adc210eaa
+singleselectionwindow	?GetPlayerCount@TSingleSelectionWindow@@QAEHXZ	100.0000	100.0000	100.0000	0x18ea00	bd2caec8ce7c
 singleselectionwindow	?GetPlayerInPos@CNetPlayerHandler@@QAEPAVCNetPlayerHandlerPlayer@@H@Z	100.0000	100.0000	100.0000	0x177bb0	2a3c60e7653f
 singleselectionwindow	?GetRandomMapName@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	99.4390	99.4390	99.4390	0x1879a0	d097732b47d8
 singleselectionwindow	?Go@CNewPlayerUpdateProc@@UAEXXZ	100.0000	100.0000	100.0000	0x1789f0	18b8bfbd5036
@@ -3376,6 +3377,7 @@ singleselectionwindow	?SetCurrentMap@TSingleSelectionWindow@@QAEXHE@Z	99.9874	99
 singleselectionwindow	?SetDifficultyHiLite@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x186060	bb24a651e754
 singleselectionwindow	?SetFilter@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x185d90	2ecaed8a359d
 singleselectionwindow	?SetHumanSlot@TSingleSelectionWindow@@QAEXXZ	91.0411	91.0411	91.0411	0x184c40	724dcde598b6
+singleselectionwindow	?SetNewPlayerSlot@TSingleSelectionWindow@@QAEXPAVCNetPlayerInfo@@@Z	63.0729	63.0729	63.0729	0x18e700	2219f29725ba
 singleselectionwindow	?SetNextPlayer@CNetPlayerHandler@@QAEEH@Z	100.0000	100.0000	100.0000	0x177ae0	4c3eb8268fb4
 singleselectionwindow	?SetResolution@CChatSlider@@UAEXH@Z	100.0000	100.0000	100.0000	0x17c9d0	bf03de3a1dd7
 singleselectionwindow	?SetState@CChatSlider@@UAEXH@Z	100.0000	100.0000	100.0000	0x17ca00	c4f553fae318
