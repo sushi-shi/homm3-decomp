@@ -9807,3 +9807,55 @@ VA_COMPGEN(0x00595b30, 0x2DF, STD_MEDIAN,
            gameselectionheadersstruct_tsortmapsbyloss)
 VA_COMPGEN(0x00595e10, 0x204, STD_UNGUARDED_PARTITION,
            gameselectionheadersstruct_tsortmapsbyloss)
+
+// ---------------------------------------------------------------------------
+// The rest of the element copy ctor's sub-object chain, and the map's two
+// remaining out-of-line members. Every row here was IDENTIFIED by an earlier
+// lane and left unclaimable because the join could not name it; the three
+// join oracles this lane added (element, ctor-kind, and keys for _Tree's
+// _Init / operator=) are what let the claims land. Each identification is
+// re-derived from retail bytes below rather than inherited.
+//
+//   0x58eb10  _Tree<int,type_map_hero_info>::operator=   54 B. `if (this !=
+//             &x) { erase(begin(), end()); _Multi = x._Multi; _Copy(x); }
+//             return *this;` - it calls the range `erase` at 0x45c070 and
+//             `_Copy` at 0x45c740, both already named, stores the byte at
+//             +1 between them, returns `this` in eax and `ret 4`. Our own
+//             COMDAT is 54 B on the nose.
+//   0x58ffc0  _Tree<...>::_Init   168 B. Constructs a `_Lockit`, buys the
+//             shared _Nil node under the `0x694df4` guard, bumps
+//             `_Nilrefs` at 0x694df0, buys the head node and writes
+//             `_Left/_Parent/_Right` through it, then releases the lock -
+//             <xtree>'s `_Init` exactly. (Our compile emits 144 B, so this
+//             one banks low; the pairing is the point.)
+//   0x58fa60  ??0NewSMapHeader(const&)   426 B. Slot 1 of the element copy
+//             ctor's zip, and the only row in the chain that CALLS the
+//             _Tree copy ctor at 0x58ff80 - heroPlayerSetups - beside its
+//             two `basic_string::assign` calls for the name/description.
+//   0x590810  ??0CMapHeaderData(const&)  701 B. It INLINES the _Init above
+//             (the same _Lockit/_Buynode/_Nilrefs sequence) and then calls
+//             `_Copy`, which is the shape a class that OWNS the tree has;
+//             it also copies the `type_map_hero_identity` vector through
+//             `_Construct`. Both rows sit in the group their DEFAULT ctor
+//             holds too - the linker took retail's copies of those from
+//             campaignbrief - which is what the ctor-kind oracle resolves.
+//   0x5941b0  vector<vector<hero>>(const&)            108 B, and
+//   0x594220  vector<vector<type_artifact>>(const&)   108 B: the twins the
+//             sizes can never separate. Retail names them itself - 0x5941b0
+//             calls `_Construct<vector<hero>>` at 0x45fce0 and 0x594220
+//             calls `_Construct<vector<type_artifact>>` at 0x45fdc0.
+//
+// Not claimable, and recorded so no later lane re-derives it: 0x58f160
+// (787 B) is `std::copy<GameSelectionHeadersStruct*>`, but this compiland
+// emits TWO instantiations of it - the const-source `PBU2@0PAU2@` and the
+// mutable-source `PAU2@00@` - each 772 B and byte-identical, which is why
+// /OPT:ICF folded them onto retail's single row. One claim against a
+// two-member group of equal length is ambiguous in both directions and
+// every oracle in the join refuses it, correctly.
+
+VA_COMPGEN(0x0058eb10, 0x36, TREE_COPY_ASSIGN, type_map_hero_info)
+VA_COMPGEN(0x0058fa60, 0x1AA, IMPLICIT_COPY_CTOR, NewSMapHeader)
+VA_COMPGEN(0x0058ffc0, 0xA8, TREE_INIT, type_map_hero_info)
+VA_COMPGEN(0x00590810, 0x2BD, IMPLICIT_COPY_CTOR, CMapHeaderData)
+VA_COMPGEN(0x005941b0, 0x6C, VECTOR_COPY_CTOR, hero_vector)
+VA_COMPGEN(0x00594220, 0x6C, VECTOR_COPY_CTOR, type_artifact_vector)

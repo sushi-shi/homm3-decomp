@@ -3330,13 +3330,17 @@ singleselectionpopups	?Main@CSpriteWidget@@UAEHPAVmessage@@@Z	100.0000	100.0000	
 singleselectionpopups	?_Ucopy@?$vector@PAVwidget@@V?$allocator@PAVwidget@@@std@@@std@@IAEPAPAVwidget@@PBQAV3@0PAPAV3@@Z	100.0000	100.0000	100.0000	0x174ce0	-
 singleselectionpopups	?handle_message@CSingleSelPopup@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x175430	d47e955ee4df
 singleselectionwindow	??0?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x18ff80	-
+singleselectionwindow	??0?$vector@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@V?$allocator@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@@2@@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x194220	-
+singleselectionwindow	??0?$vector@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@V?$allocator@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@@2@@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x1941b0	-
 singleselectionwindow	??0CGameHeaderInfoMsg@@QAE@EHPAUGameSelectionHeadersStruct@@@Z	98.7952	98.7952	98.7952	0x179060	8c8619e8294c
+singleselectionwindow	??0CMapHeaderData@@QAE@ABV0@@Z	75.4231	75.4231	75.4231	0x190810	-
 singleselectionwindow	??0CNetPlayerHandlerPlayer@@QAE@XZ	100.0000	100.0000	100.0000	0x17c790	82fac650b924
 singleselectionwindow	??0CNetPlayerInfo@@QAE@XZ	100.0000	100.0000	100.0000	0x17f720	-
 singleselectionwindow	??0CNewPlayerUpdateMan@@QAE@XZ	100.0000	100.0000	100.0000	0x17c9b0	0ed8ff53773d
 singleselectionwindow	??0CUpdatePlayerPosMsg@@QAE@PAVCNetPlayerHandlerPlayer@@0@Z	100.0000	100.0000	100.0000	0x179870	4cb719207948
 singleselectionwindow	??0GameSelectionHeadersStruct@@QAE@ABU0@@Z	86.2344	86.2344	86.2344	0x1904f0	-
 singleselectionwindow	??0GameSelectionHeadersStruct@@QAE@XZ	73.1483	79.3242	79.3242	0x178e00	-
+singleselectionwindow	??0NewSMapHeader@@QAE@ABV0@@Z	90.9044	90.9044	90.9044	0x18fa60	-
 singleselectionwindow	??0SCampaign@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x18fc10	-
 singleselectionwindow	??0SavedGameHeader@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x193f50	-
 singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	93.6776	93.6776	93.6776	0x179960	0da7889bd3b9
@@ -3351,6 +3355,7 @@ singleselectionwindow	??1CNewMapHeaderInfoMsg@@QAE@XZ	90.5686	90.5686	90.5686	0x
 singleselectionwindow	??1CNewPlayerUpdateTask@@QAE@XZ	100.0000	100.0000	100.0000	0x183ef0	b95fa1d4d1e0
 singleselectionwindow	??1GameSelectionHeadersStruct@@QAE@XZ	100.0000	100.0000	100.0000	0x178290	-
 singleselectionwindow	??1TSingleSelectionWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x183b40	94d2ac6b3cc8
+singleselectionwindow	??4?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	0x18eb10	-
 singleselectionwindow	??4GameSelectionHeadersStruct@@QAEAAU0@ABU0@@Z	85.0352	85.0352	85.0352	0x178440	f3c750268564
 singleselectionwindow	??4SavedGameHeader@@QAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0x1792c0	-
 singleselectionwindow	??4playerData@@QAEAAV0@ABV0@@Z	53.0315	53.0315	53.0315	0x18f750	-
@@ -3511,6 +3516,7 @@ singleselectionwindow	?WindowFn_00582e90@TSingleSelectionWindow@@QAEXPAV?$vector
 singleselectionwindow	?WindowHandler@TSingleSelectionWindow@@UAEHPAVmessage@@@Z	97.6901	97.6901	97.6901	0x187d00	252e5d706c40
 singleselectionwindow	?_Construct@std@@YIXPAUGameSelectionHeadersStruct@@ABU2@@Z	51.7634	51.7634	51.7634	0x18f480	-
 singleselectionwindow	?_Destroy@?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@IAEXPAUGameSelectionHeadersStruct@@0@Z	100.0000	100.0000	100.0000	0x18f080	-
+singleselectionwindow	?_Init@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@IAEXXZ	72.5472	72.5472	72.5472	0x18ffc0	-
 singleselectionwindow	?_Median@std@@YI?AUGameSelectionHeadersStruct@@U2@00UTSortMapsByLoss@@@Z	100.0000	100.0000	100.0000	0x195b30	-
 singleselectionwindow	?_Median@std@@YI?AUGameSelectionHeadersStruct@@U2@00UTSortMapsByName@@@Z	95.7960	95.7960	95.7960	0x1939f0	-
 singleselectionwindow	?_Median@std@@YI?AUGameSelectionHeadersStruct@@U2@00UTSortMapsByPlayers@@@Z	100.0000	100.0000	100.0000	0x1946e0	-
