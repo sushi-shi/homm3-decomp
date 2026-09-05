@@ -3370,6 +3370,14 @@ void type_dialog_icon::set(EGameResource _resource, long _qualifier)
     }
 }
 
+// type_dialog_icon's two other implicit special members, both already
+// emitted by this object because TNormalDialogInfo holds an array of eight
+// of them: the default constructor runs the two std::string sub-objects and
+// zeroes the eleven scalars, the destructor tears the two strings down.
+// Retail places them immediately before NormalDialogTimeOut.
+VA_COMPGEN(0x004f6490, 0x2A, CLASS_CTOR, type_dialog_icon)
+VA_COMPGEN(0x004f64c0, 0x6D, IMPLICIT_DTOR, type_dialog_icon)
+
 // E:\gamedcs\kb.cpp:5488.  The retail predecessor of NormalDialog is the
 // same argument-reordering wrapper as the Dreamcast body, shortened to
 // 52 bytes by x86 stack loads: /Gr keeps cText/iMBType in ecx/edx, so
