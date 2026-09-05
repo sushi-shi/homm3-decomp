@@ -1748,15 +1748,14 @@ TOverviewWindow::TOverviewWindow()
             }
             if (item < 0) {
                 item = field_60.size();
+                // The mine arm's append is `push_back`, not a pinned
+                // `insert(end(), record)`: the pin was worth +1.82 when it
+                // was written and is worth -0.65 now (78.9297 unpinned
+                // against 78.2776 pinned, both under the 80.0954 the row
+                // banked in an older delink generation), so the debt buys
+                // nothing and goes.
                 overview_item_record record = { 'U', 0 };
-                overview_item_record* position = field_60.end();
-                // TOverviewWindow::TOverviewWindow -> vector::insert:
-                // retail calls the two-argument body here. Without this
-                // statement pin VC6 flattens it into the three-argument
-                // overload, adding a count argument and changing the CFG.
-#pragma inline_depth(0)
-                field_60.insert(position, record);
-#pragma inline_depth()
+                field_60.push_back(record);
             }
             ++field_60[item].field_04;
         } else if (current.type == mine::MINE_TYPE_LIGHTHOUSE) {
@@ -1768,13 +1767,7 @@ TOverviewWindow::TOverviewWindow()
             if (item < 0) {
                 item = field_60.size();
                 overview_item_record record = { 'R', 0 };
-                overview_item_record* position = field_60.end();
-                // TOverviewWindow::TOverviewWindow -> vector::insert:
-                // the second retail mine branch has the same direct-call
-                // boundary; flattening is the matching negative control.
-#pragma inline_depth(0)
-                field_60.insert(position, record);
-#pragma inline_depth()
+                field_60.push_back(record);
             }
             ++field_60[item].field_04;
         }
