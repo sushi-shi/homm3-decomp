@@ -204,6 +204,19 @@ const TCombinationArtifact* gCombinationArtifacts = aCombinationArtifacts;
 // unsigned flag loops in this new optimizer phase still regresses to 79.5069,
 // so the signed x86-winning spelling remains; the old source-helper and loop
 // grids above already exhaust the other structural families.
+// 2026-09-05, easy lane 3 - the FIRST divergence localised, so the block
+// alignment below is one shift, not 52 independent placements. B3/B4/B5:
+// retail's stringBytes loop is ONE 28-instruction block whose head re-reads
+// `[esi+0x20]` (the sheet's row-vector _First) EVERY iteration, keeping the
+// sheet pointer live in ESI and homing stringBytes in `[ebp-0x20]`. This
+// compile hoists that member read into `[ebp-0x24]` before the loop, so the
+// loop needs a one-instruction header to reload it that the preheader has to
+// `jmp` past (the 83rd block), and stringBytes then wins ESI instead. Both
+// halves are the same decision: it is the LICM of `traitsSheet->GetRow`'s
+// base, not a guard or a return shape, and the merged-guard lever does not
+// apply here - B0..B2's three guards already agree with retail block for
+// block. The second extra block is a label on the release-diagnostic call in
+// the epilogue.
 VA(0x0044cd50, 0x5E8)  // anchor-strings/caller, dc 0x4fec0
 unsigned char InitializeArtifactTraitsTable()
 {
