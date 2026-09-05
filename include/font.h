@@ -5,6 +5,9 @@
 #ifndef HOMM3_FONT_H
 #define HOMM3_FONT_H
 
+#include <string>
+#include <vector>
+
 #include "resource.h"
 #include "palette.h"
 
@@ -137,6 +140,14 @@ public:
     long get_string_width(const char* arg);
     int LineLength(const char* str, int boxWidth);
     int LongestWrappedLineWidth(const char* str, int boxWidth);
+    // Complete-only wrapper (0x4b5b90, thiscall, `ret 0xc`): it takes the
+    // string, the pixel box width and the destination line vector, and it
+    // has no Dreamcast counterpart in font.obj's roster. The scroller
+    // constructor 0x5b9fb0 and its SetText 0x5ba6e0 both call it with
+    // `mov ecx, <font*>` and all three arguments on the stack, which is
+    // what fixes it as a font member rather than a free /Gr function.
+    void FillLinesVector(const char* text, int boxWidth,
+                         std::vector<std::string>* lines);
     int LineWidth(const char* text);
     int LongestLineWidth(const char* str);
     int longest_word_length(const char* str);
