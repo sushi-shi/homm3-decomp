@@ -3,12 +3,15 @@
 // 23 functions in link order; 20 compiler-generated $-thunks omitted.
 #include <va.h>
 #include "advmgr.h"
+#include "advspells.h"
 #include "armygrp.h"
 #include "dimensiondoorwindow.h"
 #include "exec.h"
 #include "game.h"
 #include "kb.h"
+#include "misc.h"
 #include "mousemgr.h"
+#include "soundmgr.h"
 #include "spellbookwindow.h"
 #include "winmgr.h"
 
@@ -76,36 +79,86 @@ void advManager::SummonBoat(TSkillMastery level)
     // @stub
 }
 
-// E:\gamedcs\advspells.cpp:328
-// FULLY DECODED, NOT LANDED - it needs two declarations nothing models yet
-// and the next lane should not re-derive them:
-//   * The adventure-map clip rectangle at .data 0x691250 / 0x691254 /
-//     0x691258 / 0x69125c. The cinit at 0x405db0 (advmgr.obj, excluded
-//     class) is their whole writer and sets 8, 8, 0x267, 0x227 - left,
-//     top, right, bottom in screen pixels. The image references each of
-//     the four exactly FOUR times: that cinit plus 0x41cb61 / 0x41cc57
-//     (SummonBoat) and 0x41cf47 (this body). Two consumers only, so they
-//     belong in a NARROW header, not in advmgr.h.
-//   * The type_obscuring_object array behind gpGame+0x4e3bc, indexed by
-//     the cell's own dword with a 40-byte stride.
-// Its shape: TSkuttleBoatWindow -> Random(1,100) against
-// mastery_bonus[level] -> on success the fizzle animation over the
-// obscured cell's rect, clamped against those four bounds
-// (LoadPlaySample / SaveFizzleSourceX / CompleteDraw / FizzleForwardX /
-// Reseed / WaitEndSample); on failure a sprintf of general-text row 338
-// with the hero's name. Both paths join at
-// UseSpell(GetManaCost(1, 0, get_special_terrain())), and the window
-// returning dialogReturn == 0 short-circuits to general-text row 732 -
-// the same GENERAL_TEXT_ADVENTURE_SPELL_NO_TARGET DimensionDoor posts.
-// The two screen coordinates come off advManager::radarOrigin's 10-bit
-// bitfields (`mov cx,[this+0xe4] / shl cx,6 / movsx / sar edx,6`).
-VA(0x0041cdf0, 0x29D)  // anchor-vtable TSkuttleBoatWindow ctor/dtor, dc 0x22054
-void advManager::SkuttleBoat(TSkillMastery level)
-{
-    // @stub
-}
-
 #endif  /* @carcass part 1 */
+
+// E:\gamedcs\advspells.cpp:328
+// The Scuttle Boat handler. TSkuttleBoatWindow picks the target; a
+// cancelled pick (dialogReturn 0) posts the same general-text row 732
+// DimensionDoor posts and charges nothing. Otherwise the mastery roll
+// decides, and BOTH outcomes fall through to the shared UseSpell tail -
+// retail charges the mana whether or not the boat actually sank.
+// Residual (98.4651%): a pure callee-saved transposition - retail binds
+// `this` to EBX and the shared zero to EDI, we bind them the other way
+// round, and the swap propagates through the rect math (ebx->edi x15,
+// edi->ebx x6). why-reg --model reports the definition slots and their
+// ORDER agreeing on both sides with only the bindings permuted, i.e. C1
+// handle state rather than a spelling; its one model-filtered candidate
+// (swap the cellX/cellY declarations) doubles the distance. Tried and
+// rejected, both byte-flat: splitting `hero* who` into a declaration plus
+// a later assignment to make it the earliest call-crossing pseudo, and
+// the const-receiver cast below (which buys the right callee NAME and no
+// bytes). 18/18 blocks exact, branches clean, call streams positionally
+// identical.
+VA(0x0041cdf0, 0x29D)  // anchor-vtable TSkuttleBoatWindow ctor/dtor, dc 0x22054
+void advManager::SkuttleBoat(int level)
+{
+    const SSpellTraits* traits = &akSpellTraits[SPELL_SCUTTLE_BOAT];
+
+    {
+        TSkuttleBoatWindow window;
+        window.DoModal(0);
+    }
+
+    if (gpWindowManager->dialogReturn == 0) {
+        NormalDialog(
+            gpGeneralText->GetText(GENERAL_TEXT_ADVENTURE_SPELL_NO_TARGET),
+            1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return;
+    }
+
+    hero* who = gpCurrentPlayer->currHeroId != -1
+                    ? &gpGame->heroes[gpCurrentPlayer->currHeroId]
+                    : 0;
+
+    if (Random(1, 100)
+        <= akSpellTraits[SPELL_SCUTTLE_BOAT].mastery_bonus[level]) {
+        // The CONST get_map_center overload is the one retail calls here
+        // (?get_map_center@advManager@@QBE...); /OPT:ICF folded the pair onto
+        // one row, so the receiver cast costs no bytes and buys the name.
+        boat& theBoat = gpGame->boats[
+            GetCell(static_cast<const advManager*>(this)->get_map_center())
+                ->extraInfo];
+        theBoat.restore_cell();
+
+        // The fizzle covers the boat's sprite footprint: one cell of slack
+        // left and above, three cells wide and two deep, in 32-pixel map
+        // cells relative to the current radar origin.
+        int cellX = theBoat.x - radarOrigin.x;
+        int cellY = theBoat.y - radarOrigin.y;
+        SLimitData limits(32 * cellX - 32, 32 * cellY - 32,
+                          32 * (cellX + 3), 32 * (cellY + 2));
+        limits.Clip(gAdvMapViewLimits);
+
+        SAMPLE2 sample = LoadPlaySample(traits->m_sample);
+        gpWindowManager->SaveFizzleSourceX(limits.iMinX, limits.iMinY,
+                                           limits.Width(), limits.Height());
+        CompleteDraw(0);
+        gpWindowManager->FizzleForwardX(limits.iMinX, limits.iMinY,
+                                        limits.Width(), limits.Height(), -1);
+        theBoat.allocated = 0;
+        Reseed(0, 0);
+        WaitEndSample(sample, -1);
+    } else if (gpGame->IsLocalHuman(who->owner)) {
+        sprintf(gText,
+                gpGeneralText->GetText(
+                    GENERAL_TEXT_SCUTTLE_BOAT_FAILED_FORMAT),
+                who->name);
+        NormalDialog(gText, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    }
+
+    who->UseSpell(who->GetManaCost(SPELL_SCUTTLE_BOAT, 0,
+                                   who->get_special_terrain()));
+}
 
 // E:\gamedcs\advspells.cpp:397
 // The order-map over advspells.obj's seven retail bodies is settled by

@@ -148,6 +148,11 @@ enum EGeneralTextIndex {
     // immediately before ShutDown(0).
     GENERAL_TEXT_REMOTE_SESSION_DESTROYED = 329,
     GENERAL_TEXT_QUICK_INFO_DIGGABLE = 331,
+    // The one-vararg format advManager::SkuttleBoat (0x41cdf0) sprintf's
+    // the caster's name into when the mastery roll fails
+    // ([Text._First + 0x548]) - the row immediately below DimensionDoor's
+    // own limit format. Name provisional.
+    GENERAL_TEXT_SCUTTLE_BOAT_FAILED_FORMAT = 338,
     // A one-vararg format DimensionDoor sprintf's the caster's name into
     // when dWalkSpellsCast has reached this mastery's cap
     // ([Text._First + 0x54c]). Name provisional.
