@@ -218,16 +218,25 @@ type_AI_puzzle_tile::type_AI_puzzle_tile(NewmapCell* cell, type_point point)
     }
 }
 
-#if 0  // @carcass: remaining AI/puzzle helpers are not reconstructed yet
-
-// E:\gamedcs\puzzlewindow.cpp:319
+// E:\gamedcs\puzzlewindow.cpp:319. Retail keeps NO out-of-line row: the one
+// caller is check_match below, and /Ob2 expands the whole chain there. The
+// comparison is byte-proven by that expansion, which XORs the packed words
+// and masks each group - `test ecx,0x3ff` for object_type, `test cl,0xff` for
+// the two four-bit offsets together, `test cl,0x1f` for terrain, `test
+// ecx,0x1fe0` for river and road together, and `test dl,1` for diggable.
+// has_grail and visible are deliberately NOT compared.
 DC_ONLY(0x1156bc, 0xC0)
-unsigned char type_AI_puzzle_tile::operator==(const type_AI_puzzle_tile* arg)
+unsigned char type_AI_puzzle_tile::operator==(
+    const type_AI_puzzle_tile* arg) const
 {
-    // @stub
+    return object_type == arg->object_type
+        && object_x == arg->object_x
+        && object_y == arg->object_y
+        && terrain == arg->terrain
+        && river == arg->river
+        && road == arg->road
+        && diggable == arg->diggable;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\puzzlewindow.cpp:334
 VA(0x0052c8b0, 0xFC)  // bracketed between tile ctor and AI attempt, dc 0x11577c
@@ -283,22 +292,6 @@ unsigned char mark_AI_puzzle(long player, unsigned char* visible)
 // E:\gamedcs\puzzlewindow.cpp:445
 DC_ONLY(0x115944, 0x12C)
 void create_AI_puzzle_map(long player, unsigned char* visible, long puzzle_x, long puzzle_y, []* puzzle_map)
-{
-    // @stub
-}
-
-// E:\gamedcs\puzzlewindow.cpp:472
-DC_ONLY(0x115a70, 0x176)
-long check_match(long player, long first_x, long first_y, type_point origin, []* puzzle_map)
-{
-    // @stub
-}
-
-// E:\gamedcs\puzzlewindow.cpp:520 - retail keeps this one out of line at
-// 0x52cf10 (1460 B) and AI_attempt_puzzle_guess calls it; the declaration
-// lives in puzzlewindow.h.
-DC_ONLY(0x115be8, 0x37C)
-type_point match_puzzle(__$ReturnUdt, long player, []* puzzle_map)
 {
     // @stub
 }
@@ -430,6 +423,147 @@ type_point AI_attempt_puzzle_guess(long player)
     result.x = -1;
     result.y = -1;
     result.z = -1;
+    return result;
+}
+
+// E:\gamedcs\puzzlewindow.cpp:472. Retail expands this file static into
+// match_puzzle below - its only call site - so no out-of-line retail row
+// exists; the Dreamcast build kept one at dc 0x115a70. `origin` arrives BY
+// VALUE and is rebased in place (the dword copy at match_puzzle+0x26c then
+// two bitfield writes), and both index parameters are reused as the scan's
+// own counters: `first_y` keeps the caller's value as its lower bound while
+// `first_x` restarts at zero. A single mismatched tile answers zero
+// immediately, which is why retail's failure edge jumps straight past the
+// caller's score test.
+DC_ONLY(0x115a70, 0x176)
+static long check_match(long player, long first_x, long first_y,
+                        type_point origin,
+                        type_AI_puzzle_tile (*puzzle_map)[17])
+{
+    long playerMask = 1 << player;
+    origin.x = origin.x - first_x;
+    origin.y = origin.y - first_y;
+    long matches = 0;
+
+    type_point point;
+    point.z = origin.z;
+    for (; first_y < 17; ++first_y) {
+        point.y = origin.y + first_y;
+        for (first_x = 0; first_x < 19; ++first_x) {
+            point.x = origin.x + first_x;
+            if (!point.is_valid())
+                continue;
+            if (!puzzle_map[first_x][first_y].visible)
+                continue;
+            if (!(GetMapExtra(point.x, point.y, point.z) & playerMask))
+                continue;
+            type_AI_puzzle_tile tile(
+                gpGame->worldMap.cell(point.x, point.y, point.z), point);
+            if (puzzle_map[first_x][first_y] == &tile)
+                ++matches;
+            else
+                return 0;
+        }
+    }
+    return matches;
+}
+
+// E:\gamedcs\puzzlewindow.cpp:520. The one AI/puzzle helper retail keeps out
+// of line, called from AI_attempt_puzzle_guess above; the declaration lives
+// in puzzlewindow.h so both sides of that call agree.
+//
+// Three phases. First a bounding-box sweep of the uncovered puzzle tiles that
+// also remembers the FIRST visible one in row-major order - `found` is a
+// separate latch because first_x/first_y are the scan's anchor, not the box's
+// corner. Then the scan window, four nested _cpp_min/_cpp_max pairs whose
+// const-reference temporaries are what put every operand in its own stack
+// slot; the +9/+8 biases are the same puzzle-centre offsets
+// AI_attempt_puzzle_guess re-applies to the answer. Finally the map sweep:
+// every (x, y, z) the anchor could sit on is scored by check_match, the best
+// score wins, and a tie count above two answers (-1,-1,-1) - retail builds
+// that refusal in the dead `puzzle_map` parameter home rather than reusing
+// `result`.
+//
+// The MAP_WIDTH in the Y window's first bound is retail's own: the second
+// operand of that pair reads MAP_HEIGHT, and the two globals are loaded
+// separately, so no CSE could have produced it. Transcribed as found.
+VA(0x0052cf10, 0x5B4)  // anchor-caller AI_attempt_puzzle_guess +0x39d, dc 0x115be8
+type_point match_puzzle(long player, type_AI_puzzle_tile (*puzzle_map)[17])
+{
+    type_point result;
+    result.x = -1;
+    result.y = -1;
+    result.z = -1;
+
+    unsigned char found = 0;
+    int first_x;
+    int first_y;
+    int min_x = 19;
+    int max_x = 0;
+    int min_y = 17;
+    int max_y = 0;
+
+    for (int x = 0; x < 19; ++x) {
+        for (int y = 0; y < 17; ++y) {
+            if (puzzle_map[x][y].visible) {
+                if (!found) {
+                    first_x = x;
+                    first_y = y;
+                    found = 1;
+                }
+                min_x = std::_cpp_min(x, min_x);
+                max_x = std::_cpp_max(max_x, x + 1);
+                min_y = std::_cpp_min(y, min_y);
+                max_y = std::_cpp_max(max_y, y + 1);
+            }
+        }
+    }
+
+    if (!found)
+        return result;
+
+    int ties = 0;
+    int best = 0;
+
+    int start_x =
+        std::_cpp_max(std::_cpp_max(first_x - 9, first_x - min_x), 0);
+    int end_x = std::_cpp_min(
+        MAP_WIDTH,
+        std::_cpp_min(MAP_WIDTH - max_x + first_x, MAP_WIDTH + first_x - 9));
+    int start_y =
+        std::_cpp_max(std::_cpp_max(first_y - 8, first_y - min_y), 0);
+    int end_y = std::_cpp_min(
+        MAP_HEIGHT,
+        std::_cpp_min(MAP_WIDTH - max_y + first_y, MAP_HEIGHT + first_y - 8));
+
+    type_point scan;
+    for (scan.z = 0; scan.z < gpGame->worldMap.GetNumLevels(); ++scan.z) {
+        for (scan.y = start_y; scan.y < end_y; ++scan.y) {
+            for (scan.x = start_x; scan.x < end_x; ++scan.x) {
+                int count =
+                    check_match(player, first_x, first_y, scan, puzzle_map);
+                if (count != 0 && count >= best && count * 2 >= best) {
+                    ++ties;
+                    if (count > best) {
+                        if (count > best * 2)
+                            ties = 1;
+                        best = count;
+                        result.x = scan.x - first_x + 9;
+                        result.y = scan.y - first_y + 8;
+                        result.z = scan.z;
+                    }
+                }
+            }
+        }
+    }
+
+    if (ties > 2) {
+        type_point ambiguous;
+        ambiguous.x = -1;
+        ambiguous.y = -1;
+        ambiguous.z = -1;
+        return ambiguous;
+    }
     return result;
 }
 

@@ -2595,6 +2595,7 @@ puzzlewindow	?AI_attempt_puzzle_guess@@YI?AUtype_point@@J@Z	97.1621	97.1621	97.1
 puzzlewindow	?UpdatePuzzle@TPuzzleWindow@@QAEHH@Z	100.0000	100.0000	100.0000	0x12c6c0	34a059e6b8d9
 puzzlewindow	?WindowHandler@TPuzzleWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x12c640	86e9c14d488e
 puzzlewindow	?mark_puzzle@Bitmap816@@QAEXPAEJJ@Z	100.0000	100.0000	100.0000	0x12c8b0	6e09b505ce58
+puzzlewindow	?match_puzzle@@YI?AUtype_point@@JPAY0BB@Utype_AI_puzzle_tile@@@Z	79.1843	79.1843	79.1843	0x12cf10	1c8d86b14b40
 questlogwindow	??0TQuestLogWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x12d8c0	b23447582f0c
 questlogwindow	??1TQuestLogWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x12e1e0	7ad7c6e06db8
 questlogwindow	??_GTQuestLogWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x12e1b0	-
