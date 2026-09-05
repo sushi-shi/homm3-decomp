@@ -18547,3 +18547,9 @@ VA_COMPGEN(0x004d27b0, 0xB3, TREE_CONST_ITERATOR_DEC, type_map_hero_info)
 // COMDAT pairing: std::copy<type_map_hero_identity>, agreement 0.987
 // (156 base vs 152 retail instructions).
 VA_COMPGEN(0x004d2e50, 0x18C, STD_COPY, type_map_hero_identity)
+
+// COMDAT pairing: std::copy_backward<town>, agreement 0.984.
+VA_COMPGEN(0x004d32e0, 0x344, STD_COPY_BACKWARD, town)
+
+// COMDAT pairing: std::fill<town>, agreement 0.992.
+VA_COMPGEN(0x004d2fe0, 0x2FC, STD_FILL, town)

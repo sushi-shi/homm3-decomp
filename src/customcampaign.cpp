@@ -1391,3 +1391,9 @@ void TArtifactRequirement::set(TArtifact _artifact, char _guard_bit)
     // @stub
 }
 #endif
+
+// COMDAT pairing: std::_Sort<hero, CrossoverHeroStronger>, agreement 0.972.
+VA_COMPGEN(0x0048f7e0, 0x159, STD_SORT, hero_crossoverherostronger)
+
+// COMDAT pairing: std::_Sort_0<hero, CrossoverHeroStronger>, agreement 0.985.
+VA_COMPGEN(0x0048f2b0, 0x333, STD_SORT_0, hero_crossoverherostronger)

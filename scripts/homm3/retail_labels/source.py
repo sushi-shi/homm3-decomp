@@ -183,6 +183,9 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "BASIC_STRING_ASSIGN_PTR_SIZE",
                  "OSTREAM_PUT", "OSTREAM_INSERT_CSTR",
                  "INSERTION_SORT_1",
+                 "STD_SORT", "STD_SORT_0", "STD_MEDIAN",
+                 "STD_UNGUARDED_PARTITION", "STD_UNGUARDED_INSERT",
+                 "STD_COPY_BACKWARD", "STD_FILL",
                  "STREAMBUF_XSPUTN",
                  "PAIR_CONST_INT_DTOR",
                  "STD_CONSTRUCT", "STD_COPY",
@@ -633,6 +636,76 @@ def _bitset_width(mangled: str) -> int | None:
     return _template_width(mangled, "bitset")
 
 
+#: The `std::` sequence algorithms VC6 emits as ordinary COMDATs. Each is
+#: keyed on the CONTAINER ELEMENT plus the comparison predicate, because a
+#: single unit routinely emits several instantiations of one of them (in
+#: ai_player: `_Sort` over type_creature_value with `greater`, over
+#: type_creature_value with the default, and over `long`) and the member
+#: name alone cannot tell them apart.
+STD_ALGORITHMS = {"_Sort": "std_sort", "_Sort_0": "std_sort_0",
+                  "_Median": "std_median",
+                  "_Unguarded_partition": "std_unguarded_partition",
+                  "_Unguarded_insert": "std_unguarded_insert",
+                  "_Insertion_sort_1": "insertion_sort_1",
+                  "copy_backward": "std_copy_backward",
+                  "fill": "std_fill"}
+STD_ALGORITHM_RE = re.compile(
+    r"^\?(" + "|".join(sorted(STD_ALGORITHMS, key=len, reverse=True))
+    + r")@std@@YI(.*)$")
+#: A trailing `U<Name>@@` that is not the element is the predicate; a
+#: `greater<T>` arrives as a template and is named for its template.
+STD_PREDICATE_RE = re.compile(r"U([A-Za-z_]\w*)@@")
+
+
+def _std_algorithm_element(rest: str):
+    """(element, pointer_depth) for the first real type in a mangled
+    argument list, or None. `rest` is everything after `YI`: a void return
+    (`X`), a by-value return (`?A<T>`) and any number of `PA`/`PB`
+    pointer prefixes are stripped first, so `_Median`'s by-value element
+    and `_Sort`'s `T*` first parameter decode the same way."""
+    if rest.startswith("X"):
+        rest = rest[1:]
+    elif rest.startswith("?A"):
+        rest = rest[2:]
+    depth = 0
+    while rest[:2] in ("PA", "PB"):
+        rest = rest[2:]
+        depth += 1
+    if rest.startswith("V?$basic_string@D"):
+        return "string", max(0, depth - 1)
+    match = re.match(r"[VU]([A-Za-z_]\w*)@", rest)
+    if match:
+        return match.group(1), max(0, depth - 1)
+    if rest[:1] in DEQUE_PRIMITIVE_ELEMENT:
+        return DEQUE_PRIMITIVE_ELEMENT[rest[0]], max(0, depth - 1)
+    return None
+
+
+def _std_algorithm_key(mangled: str):
+    """`<element>[_ptr][_<predicate>]@<member>` for one of the sequence
+    algorithms above, or None. Returns None rather than a partial key when
+    the element cannot be decoded, so an unmodelled instantiation stays
+    unclaimed instead of colliding with a modelled one."""
+    match = STD_ALGORITHM_RE.match(mangled)
+    if not match:
+        return None
+    member, rest = match.group(1), match.group(2)
+    decoded = _std_algorithm_element(rest)
+    if not decoded:
+        return None
+    element, depth = decoded
+    owner = element.lower() + "_ptr" * depth
+    if "U?$greater@" in mangled:
+        owner += "_greater"
+    else:
+        predicate = next(
+            (name for name in STD_PREDICATE_RE.findall(rest)
+             if name.lower() != element.lower()), None)
+        if predicate:
+            owner += "_" + predicate.lower()
+    return f"{owner}@{STD_ALGORITHMS[member]}"
+
+
 def _demangle_key(mangled: str):
     """Normalized join key for one MSVC public name: ?Method@Class@@... ->
     class_method, matching scan_file's declarator spelling (:: -> _).
@@ -792,6 +865,9 @@ def _demangle_key(mangled: str):
     if (mangled.startswith("?_Insertion_sort_1@std@@")
             and "TSpellbookEntry" in mangled):
         return "tspellbookentry@insertion_sort_1"
+    algorithm_key = _std_algorithm_key(mangled)
+    if algorithm_key:
+        return algorithm_key
     if mangled.startswith(
             "?xsputn@?$basic_streambuf@DU?$char_traits@D@std@@@std@@"):
         return "char@streambuf_xsputn"
@@ -1086,6 +1162,13 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                                or "$ostream_put$" in r["name"]
                                or "$ostream_insert_cstr$" in r["name"]
                                or "$insertion_sort_1$" in r["name"]
+                               or "$std_sort$" in r["name"]
+                               or "$std_sort_0$" in r["name"]
+                               or "$std_median$" in r["name"]
+                               or "$std_unguarded_partition$" in r["name"]
+                               or "$std_unguarded_insert$" in r["name"]
+                               or "$std_copy_backward$" in r["name"]
+                               or "$std_fill$" in r["name"]
                                or "$streambuf_xsputn$" in r["name"]
                                or "$pair_const_int_dtor$" in r["name"]
                                or "$std_construct$" in r["name"]
@@ -1244,6 +1327,16 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             owner = row["name"].rsplit("$", 1)[1].lower()
             claim_keys.setdefault(
                 f"{owner}@insertion_sort_1", []).append(row)
+            continue
+        algorithm = next(
+            (kind for kind in ("std_sort_0", "std_sort", "std_median",
+                               "std_unguarded_partition",
+                               "std_unguarded_insert",
+                               "std_copy_backward", "std_fill")
+             if f"${kind}$" in row["name"]), None)
+        if algorithm is not None:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}@{algorithm}", []).append(row)
             continue
         if "$streambuf_xsputn$" in row["name"]:
             owner = row["name"].rsplit("$", 1)[1].lower()

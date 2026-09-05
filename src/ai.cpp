@@ -4260,3 +4260,15 @@ void std::__pop_heap_aux(army** __first, army** __last, army** __formal, func_mo
 // COMDAT pairing: vector<army*>::insert, agreement 0.985
 // (230 base vs 223 retail instructions).
 VA_COMPGEN(0x00423130, 0x209, VECTOR_INSERT, army)
+
+// COMDAT pairing: std::_Sort<army*, func_moves_before>, agreement 0.973.
+VA_COMPGEN(0x00423630, 0x186, STD_SORT, army_ptr_func_moves_before)
+
+// COMDAT pairing: std::_Sort_0<army*, func_moves_before>, agreement 0.998.
+VA_COMPGEN(0x00423340, 0x27F, STD_SORT_0, army_ptr_func_moves_before)
+
+// COMDAT pairing: std::_Unguarded_partition<army*, func_moves_before>, 0.927.
+VA_COMPGEN(0x00423820, 0x87, STD_UNGUARDED_PARTITION, army_ptr_func_moves_before)
+
+// COMDAT pairing: std::_Unguarded_insert<army*, func_moves_before>, 0.976.
+VA_COMPGEN(0x004237c0, 0x5E, STD_UNGUARDED_INSERT, army_ptr_func_moves_before)
