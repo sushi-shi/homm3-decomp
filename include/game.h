@@ -1665,10 +1665,18 @@ SIZE(generator, 0x5c);
 // iDeathCountDown (+0x3d), with numTowns pinned at +0x3e from the other
 // side, while the Dreamcast puts the same member at an even 54. Retail
 // packed this record - as it packed hero.h's type_obscuring_object and
-// netmsg.h's CMCMoveHero, whose points also sit one byte early - so the
-// class is under pack(1) here and type_point keeps struct.h's DC-natural
-// two-byte alignment.
-#pragma pack(push, 1)
+// netmsg.h's CMCMoveHero, whose points also sit one byte early - but ONLY
+// across that one band. Retail's own compiler-generated copy assignment
+// (0x58f750) settles the rest: it copies +0x00, +0x01, +0x04, the eight
+// heroes, the two recruits, +0x30, +0x34, +0x38, then puzzle_guess as ONE
+// UNALIGNED DWORD at +0x39, +0x3d/+0x3e/+0x3f, the 0x48-byte townIds run
+// and +0x88 - and SKIPS +0x02..+0x03 and +0x31..+0x33 outright. Those are
+// compiler pads in retail, not members, so declaring them under a
+// whole-class pack(1) made our copy walk them byte-by-byte. Natural
+// alignment reproduces all 30 member offsets and the 0x168 total on its
+// own; a pack(1) band over +0x38..+0x3f is all the packing this record
+// needs. Measured layout-neutral with an offsetof probe (2026-09-06).
+#pragma pack(push, 8)
 class playerData {
 public:
     // The width of the `heroes` row below, and the cap the game enforces
@@ -1687,7 +1695,6 @@ public:
     // +0x01. Signed: FindHero/NextHero both `movsx` it and gate on
     // `test/jle`.
     signed char numHeroes;
-    char pad_02[2];
     // +0x04. DC spells it `currHero` (a char at DC 2); retail widened
     // it to a dword - NextHero compares the full register against -1.
     // Name kept as-is because advmgr.obj already writes it.
@@ -1703,8 +1710,8 @@ public:
     // eight bytes.
     int recruits[2];
     unsigned char startingNumHeroes;  // +0x30
-    char pad_31[3];
     int personality;               // +0x34
+#pragma pack(push, 1)
     char extraPuzzlePieces;        // +0x38
     // +0x39. A type_point by DC type; see the alignment note above.
     // playerData::Init settles both the offset and the BIT layout:
@@ -1727,6 +1734,7 @@ public:
     // currTownId from the unsigned char this header used to carry.
     char numTowns;        // +0x3e
     char currTownId;      // +0x3f (advManager::DeactivateCurrTown stores -1)
+#pragma pack(pop)
     // 0x48 entries, now PROVEN three ways: "nothing addresses
     // +0x40..+0x88" from the retail side; the DC repack lands
     // `placement_help_enabled` exactly at +0x88 (DC towns 61..133 ==
@@ -1735,7 +1743,6 @@ public:
     // dwords, i.e. exactly 72 bytes.
     char townIds[0x48];   // +0x40
     unsigned char placement_help_enabled;  // +0x88
-    char pad_89[3];
     // +0x8c. DC `std::vector<type_point> shipyards` - twelve bytes of
     // STLport there, sixteen of Dinkumware here, which is exactly the
     // slack that puts resources back on its proven +0x9c. Retail then
@@ -1765,7 +1772,6 @@ public:
     char cName[21];
     unsigned char isLocal;              // +0xe1
     unsigned char isHuman;              // +0xe2
-    char pad_e3[1];
     int quickCombat;                    // +0xe4
     // +0xe8. DC type `AI`, 128 B here (0x168 - 0xe8). Only the first
     // dword is retail-proven by both playerData constructors. Retail
@@ -1795,8 +1801,7 @@ public:
     // +0x128 / +0x160. calculate_demand writes each computed resource
     // value to the AI record as a double, then rounds a running sum of
     // the first six entries and stores one tenth of it at +0x160.
-    char ai_pad_124[4];
-    double resourceValue[7];
+    double resourceValue[7];            // +0x128
     int averageResourceValue;
     float turnValueOfAvgArtifact;
 

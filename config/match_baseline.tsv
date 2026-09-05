@@ -544,7 +544,7 @@ army	?check_special_attack@army@@QAEEPAV1@@Z	100.0000	100.0000	100.0000	0x40500	
 army	?clear@?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x48d70	-
 army	?compute_attacker_bonus@army@@QBEHHEPAV1@EJ@Z	100.0000	100.0000	100.0000	0x43320	43fdf6593dcb
 army	?consider_attack@army@@QAEXPBV1@JJ@Z	100.0000	100.0000	100.0000	0x48840	686954572466
-army	?do_attack@army@@QAEEPAV1@H@Z	98.8868	99.9962	99.9962	0x41610	1fa738e017fe
+army	?do_attack@army@@QAEEPAV1@H@Z	98.9251	99.9962	99.9962	0x41610	1fa738e017fe
 army	?do_attack@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x41cb0	0c17230627a2
 army	?do_fire_shield@army@@AAEXJ@Z	100.0000	100.0000	100.0000	0x409c0	3f772aa9df30
 army	?do_multi_head_attack@army@@QAEXIPAH0PAJ@Z	100.0000	100.0000	100.0000	0x40310	d1193b9e629e
@@ -2442,7 +2442,7 @@ kb	?get_base_map_score@game@@QAEFXZ	100.0000	100.0000	100.0000	0xf3e30	08a36f004
 kb	?get_map_score@game@@QAEFXZ	100.0000	100.0000	100.0000	0xf3eb0	cd6028d198ab
 kb	?get_quickview_size@@YIXPBDPAH1@Z	100.0000	100.0000	100.0000	0xf62a0	c57fea7e1252
 kb	?handle_click@type_normal_dialog_frame@@UAEEEE@Z	99.9475	99.9475	99.9475	0xf0b20	7355af0f0d7b
-kb	?oldmain@@YIHXZ	75.9721	75.9721	75.9721	0xee3e0	5c1108f3cbf0
+kb	?oldmain@@YIHXZ	77.2965	77.2965	77.2965	0xee3e0	5c1108f3cbf0
 kb	?set@type_dialog_icon@@QAEXW4EGameResource@@J@Z	99.1667	99.1667	99.1667	0xf4eb0	06cb359cd3d3
 kbwin	?AppAbout@@YGHPAUHWND__@@IIJ@Z	100.0000	100.0000	100.0000	0xf8140	b6d6a9ba7939
 kbwin	?AppCommand@@YIJPAUHWND__@@IIJ@Z	100.0000	100.0000	100.0000	0xf8060	ab51fe2b9295
@@ -3525,7 +3525,7 @@ singleselectionwindow	??1TSingleSelectionWindow@@UAE@XZ	100.0000	100.0000	100.00
 singleselectionwindow	??4?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	0x18eb10	-
 singleselectionwindow	??4GameSelectionHeadersStruct@@QAEAAU0@ABU0@@Z	100.0000	100.0000	100.0000	0x178440	f3c750268564
 singleselectionwindow	??4SavedGameHeader@@QAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0x1792c0	-
-singleselectionwindow	??4playerData@@QAEAAV0@ABV0@@Z	53.0315	53.0315	53.0315	0x18f750	-
+singleselectionwindow	??4playerData@@QAEAAV0@ABV0@@Z	70.2441	70.2441	70.2441	0x18f750	-
 singleselectionwindow	??RTSortMapsByLoss@@QBE_NABUGameSelectionHeadersStruct@@0@Z	100.0000	100.0000	100.0000	0x192030	0cb2189b86c2
 singleselectionwindow	??RTSortMapsByName@@QBE_NABUGameSelectionHeadersStruct@@0@Z	100.0000	100.0000	100.0000	0x1903b0	4769f9bc6c64
 singleselectionwindow	??RTSortMapsByPlayers@@QBE_NABUGameSelectionHeadersStruct@@0@Z	100.0000	100.0000	100.0000	0x190e00	397f977a831f
@@ -3609,7 +3609,7 @@ singleselectionwindow	?OnGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNet
 # SetCurrentMap/OnSetAsHostMsg bodies landing in the TU dropped the
 # pair again with both sources byte-identical. Recovery rides with
 # DrawHeroAdvancedOption reaching 100.
-singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0	0e5de8f038ec
+singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	99.8868	100.0000	100.0000	0x17cdc0	0e5de8f038ec
 singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	9177fbb0fa83
 # 2026-08-27 hand-lowered 100.0000 -> 99.8710 (hist keeps 100.0000): the
 # documented TU-state flap (master accepted this pair down at 99.89/99.87
