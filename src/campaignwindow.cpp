@@ -344,9 +344,26 @@ DATA(0x0066cad8) static int lastCampaignHoverID;
 // 80.44, so retail genuinely uses the fused `GetWidget(id)->send_message(...)`
 // spelling in this handler. The same edit costs MainMenuHandler 1.1 (90.07 ->
 // 88.94). The lever is per-call-site, not a house style.
+// 2026-09-05: the sunk-join lever moved it 81.6402 -> 84.4595. Hoisting `id` to
+// a bodyless function-scope declaration (so the key-down arm may `goto` into
+// the widget block) and writing the end-dialog tail INSIDE the surviving
+// `id > CAMPAIGN_LAST_ID` arm, with the select arm `goto end_dialog`-ing back
+// into it, buys retail's `jle` forward to the select arm and its 13-instruction
+// else block. Residual (84.4595%): retail falls through the CANCEL guard into
+// end_dialog (`jne consume`) while our CL inverts it (`je end_dialog`) and
+// inlines a THIRD copy of the 6-instruction consume epilogue - 3 rets against
+// retail's 2 - because end_dialog's LAST layout predecessor is the key-down arm
+// and VC6 parks a join after its last predecessor, not its first. Measured and
+// rejected: `goto select_campaign` forward out of the guard (VC6 hoists the arm
+// back inline, 75.4242); writing the end-dialog tail a second time at the
+// key-down site per the two-jump-predecessor recipe (cross-jumper splits it
+// three ways, 32 blocks, 83.9316); inverting the CANCEL nesting to
+// `if (id == CANCEL) { ... } goto consume;` (byte-flat, VC6 canonicalises both).
 VA(0x0045f2f0, 0x26C)  // DoModal address-take + Complete video/widget CFG, dc 0x5bd94
 int CampaignWindowHandler(message& msg)
 {
+    int id;
+
     if (gBinkDirty) {
         gpCampaignWindow->DrawWindow(0, 0x80, 0x86);
         gpWindowManager->UpdateScreen(gBinkX, gBinkY,
@@ -356,28 +373,27 @@ int CampaignWindowHandler(message& msg)
     if (msg.id == MESSAGE_WIDGET) {
         if (msg.codeX != widget::WIDGET_DESELECT)
             goto consume;
-        {
-            int id = msg.codeY;
-            if (id < TCampaignWindow::CAMPAIGN_FIRST_ID)
+        id = msg.codeY;
+        if (id < TCampaignWindow::CAMPAIGN_FIRST_ID)
+            goto consume;
+        if (id > TCampaignWindow::CAMPAIGN_LAST_ID) {
+            if (id != DIALOG_RETURN_CANCEL)
                 goto consume;
-            if (id > TCampaignWindow::CAMPAIGN_LAST_ID) {
-                if (id != DIALOG_RETURN_CANCEL)
-                    goto consume;
-            } else {
-                gpGame->campaign.select_campaign(
-                    id - TCampaignWindow::CAMPAIGN_FIRST_ID,
-                    gCampaignFileNames[
-                        id - TCampaignWindow::CAMPAIGN_FIRST_ID]);
-                gBinkPaused = 1;
-                _BinkPause(gBinkVideo, 1);
-            }
-        }
 end_dialog:
-        msg.id = MESSAGE_WIDGET;
-        gpWindowManager->dialogReturn = msg.codeY;
-        msg.codeY = widget::WIDGET_END_DIALOG;
-        msg.codeX = widget::WIDGET_END_DIALOG;
-        return MESSAGE_DISPATCH_FORWARD;
+            msg.id = MESSAGE_WIDGET;
+            gpWindowManager->dialogReturn = msg.codeY;
+            msg.codeY = widget::WIDGET_END_DIALOG;
+            msg.codeX = widget::WIDGET_END_DIALOG;
+            return MESSAGE_DISPATCH_FORWARD;
+        } else {
+            gpGame->campaign.select_campaign(
+                id - TCampaignWindow::CAMPAIGN_FIRST_ID,
+                gCampaignFileNames[
+                    id - TCampaignWindow::CAMPAIGN_FIRST_ID]);
+            gBinkPaused = 1;
+            _BinkPause(gBinkVideo, 1);
+            goto end_dialog;
+        }
     }
 
     if (msg.id == MESSAGE_KEY_DOWN) {
