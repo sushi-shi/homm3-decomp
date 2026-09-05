@@ -981,3 +981,6 @@ void* THighScoreWindow::`scalar deleting destructor'(unsigned __flags)
 }
 
 #endif  // @carcass
+
+// COMDAT pairing: vector<widget*>::reserve, agreement 0.993.
+VA_COMPGEN(0x004ea630, 0x9F, VECTOR_RESERVE, widget)

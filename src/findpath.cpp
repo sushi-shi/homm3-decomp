@@ -2076,3 +2076,7 @@ pathCell* std::__copy_backward(pathCell* __first, pathCell* __last, pathCell* __
 }
 
 #endif  // @carcass
+
+// COMDAT pairing: vector<pathCell>::insert, agreement 0.987
+// (307 base vs 299 retail instructions).
+VA_COMPGEN(0x004b3f70, 0x2F3, VECTOR_INSERT, pathCell)

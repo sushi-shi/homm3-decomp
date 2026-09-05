@@ -3058,3 +3058,36 @@ ResourceManager::TCacheMap::lower_bound_iterator(TCacheIterator* result,
     return result;
 }
 #pragma auto_inline(on)
+
+// COMDAT pairing: basic_ostringstream::_G?$basic_ostringstream, mnemonic agreement 1.000.
+VA_COMPGEN(0x0055dae0, 0x30, SCALAR_DELETING_DTOR, basic_ostringstream)
+
+// COMDAT pairing: basic_stringbuf::0?$basic_stringbuf, mnemonic agreement 0.994.
+VA_COMPGEN(0x0055e440, 0xFF, CLASS_CTOR, basic_stringbuf)
+
+// COMDAT pairing: basic_ostringstream::1?$basic_ostringstream, mnemonic agreement 0.944.
+VA_COMPGEN(0x0055d530, 0xC2, IMPLICIT_DTOR, basic_ostringstream)
+
+// COMDAT pairing: _Tree<TCacheMapKey, resource*>::erase(iterator), agreement
+// 0.999 (433 base vs 432 retail instructions). The admission queue carried
+// this row as an unowned `resourcemanager..sacrifice_window` bracket entry;
+// it is resourcemanager's own COMDAT.
+VA_COMPGEN(0x0055dcf0, 0x50F, TREE_ERASE_ITERATOR, TCacheMapKey)
+
+// COMDAT pairing: _Tree<TCacheMapKey, resource*>::erase(first, last), 0.960.
+VA_COMPGEN(0x0055e200, 0x121, TREE_ERASE_RANGE, TCacheMapKey)
+
+// COMDAT pairing: str on the char instantiation, mnemonic agreement 0.976.
+VA_COMPGEN(0x0055e570, 0x1C5, STRINGBUF_STR, char)
+
+// COMDAT pairing: seekoff on the char instantiation, mnemonic agreement 0.945.
+VA_COMPGEN(0x0055d8a0, 0x15B, STRINGBUF_SEEKOFF, char)
+
+// COMDAT pairing: seekpos on the char instantiation, mnemonic agreement 0.919.
+VA_COMPGEN(0x0055da00, 0xD8, STRINGBUF_SEEKPOS, char)
+
+// COMDAT pairing: pbackfail on the char instantiation, mnemonic agreement 0.968.
+VA_COMPGEN(0x0055d7e0, 0x5D, STRINGBUF_PBACKFAIL, char)
+
+// COMDAT pairing: underflow on the char instantiation, mnemonic agreement 0.938.
+VA_COMPGEN(0x0055d840, 0x5A, STRINGBUF_UNDERFLOW, char)

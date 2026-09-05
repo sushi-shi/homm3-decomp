@@ -1491,3 +1491,13 @@ void* TRecruitQuickWindow::`scalar deleting destructor'(unsigned __flags)
 }
 
 #endif  // @carcass
+
+// COMDAT pairing: vector<widget*>::insert, agreement 0.985. Three addresses
+// resembled this COMDAT and the CALLER SET settles it: 0x14d120 is reached
+// from TAdventureMapWindow's and TAdventureOptionsWindow's constructors
+// among others - window ctors pushing widgets, in units all over the tree,
+// which is what a single shared COMDAT looks like. combatwindow 0x73600 has
+// exactly ONE caller, TCombatWindow::combat_message, so it is that unit's
+// own vector and not this COMDAT; towngatewindow 0x5c2400 turned out to be
+// AddTown with the insert expanded into it.
+VA_COMPGEN(0x0054d120, 0x209, VECTOR_INSERT, widget)
