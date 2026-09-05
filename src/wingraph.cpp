@@ -8,6 +8,7 @@
 #include "kb.h"
 #include "kbwin.h"
 #include "misc.h"
+#include "palette.h"
 #include "mousemgr.h"
 #include "resourcemanager.h"
 #include "smackmgr.h"
@@ -172,6 +173,29 @@ unsigned char DDSetFullScreenStatus(int iNewStatus)
 
 // E:\gamedcs\wingraph.cpp:1857
 #endif  // @carcass
+
+// The two player-colour painters, the first rows of wingraph.obj. Both copy
+// the LAST 32 palette entries - the player-colour range - out of the
+// Players.pal resource oldmain loaded, indexed by player: 32 RGB555 words
+// for the 16-bit target, 32 RGB triples for the 24-bit one. The +0x1c source
+// bias is the resource head both TPalette16 and TPalette24 carry, and the
+// destination offsets (0x1c0 and 0x2bc) are what fix entry 224 as the range's
+// first colour in each layout.
+// E:\gamedcs\wingraph.cpp:72
+VA(0x005ffe20, 0x1E)  // anchor-caller(bitmapBorder/button::SetPlayerPaletteColors) + dc-order-map, dc 0x198af4
+void SetPlayerPaletteColors(palette* pal, int whichPlayer)
+{
+    memcpy(&pal->data[224], &gPlayerPalette->data[whichPlayer * 32],
+           32 * sizeof(unsigned short));
+}
+
+// E:\gamedcs\wingraph.cpp:83
+VA(0x005ffe40, 0x22)  // anchor-caller(bitmapBorder::SetPlayerPaletteColors) + dc-order-map, dc 0x198b1c
+void SetPlayerPaletteColors(TPalette24* pal, int whichPlayer)
+{
+    memcpy(pal->colors.data[224], gPlayerPalette24->colors.data[whichPlayer * 32],
+           32 * 3);
+}
 
 // The Dreamcast line table groups the re-entry test, RestoreDisplayMode,
 // error-name switch, formatter and shutdown into the same source statements
