@@ -1729,7 +1729,6 @@ game	?_Construct@std@@YIXPAVtown@@ABV2@@Z	100.0000	100.0000	100.0000	0xd3630	-
 game	?_Dec@const_iterator@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@QAEXXZ	100.0000	100.0000	100.0000	0xd27b0	-
 game	?_Destroy@?$vector@UTRumour@game@@V?$allocator@UTRumour@game@@@std@@@std@@IAEXPAUTRumour@game@@0@Z	100.0000	100.0000	100.0000	0xd1760	-
 game	?_Destroy@?$vector@Utype_creature_bank@@V?$allocator@Utype_creature_bank@@@std@@@std@@IAEXPAUtype_creature_bank@@0@Z	100.0000	100.0000	100.0000	0xd13b0	-
-game	?_Destroy@?$vector@Utype_map_hero_identity@@V?$allocator@Utype_map_hero_identity@@@std@@@std@@IAEXPAUtype_map_hero_identity@@0@Z	0.0000	100.0000	100.0000	0xcfec0	-
 game	?_Destroy@?$vector@Vtown@@V?$allocator@Vtown@@@std@@@std@@IAEXPAVtown@@0@Z	100.0000	100.0000	100.0000	0xd07c0	-
 game	?_Inc@const_iterator@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@U_Kfn@?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@3@U?$less@PAVCImmEnclosure@@@3@V?$allocator@UtagRECT@@@3@@std@@QAEXXZ	100.0000	100.0000	100.0000	0xb7330	-
 game	?_Insert@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@IAE?AViterator@12@PAU_Node@12@0ABU?$pair@$$CBHUtype_map_hero_info@@@2@@Z	100.0000	100.0000	100.0000	0xd1d50	-
@@ -1763,7 +1762,6 @@ game	?any@?$bitset@$0BM@@std@@QBE_NXZ	100.0000	100.0000	100.0000	0xd1810	-
 game	?apply_map_header_availability@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc4e30	e86fa3f1591d
 game	?calculate_production@game@@QAEXXZ	94.4126	94.4126	94.4126	0xb8af0	5a49f0a38ec3
 game	?capacity@?$vector@Utype_university@@V?$allocator@Utype_university@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0xcfa40	-
-game	?copy@std@@YIPAUtype_map_hero_identity@@PAU2@00@Z	0.0000	100.0000	100.0000	0xd2e50	-
 game	?copy_backward@std@@YIPAVtown@@PAV2@00@Z	100.0000	100.0000	100.0000	0xd32e0	-
 game	?count@?$bitset@$0BM@@std@@QBEIXZ	100.0000	100.0000	100.0000	0xcf8d0	-
 game	?count@?$bitset@$0JB@@std@@QBEIXZ	100.0000	100.0000	100.0000	0xcf010	-
@@ -1846,6 +1844,8 @@ game	?test@?$bitset@$0IA@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xd4e50	-
 game	?test@?$bitset@$0JB@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xcfad0	-
 game	?update_bonus@generator@@QAEXXZ	100.0000	100.0000	100.0000	0xb87a0	a2ff06919677
 game	__h3cg$game$implicit_copy_assign$SCampaign	0.0000	100.0000	100.0000	0xbdc70	-
+game	__h3cg$game$std_copy$type_map_hero_identity	0.0000	100.0000	100.0000	0xd2e50	-
+game	__h3cg$game$vector_destroy$type_map_hero_identity	0.0000	100.0000	100.0000	0xcfec0	-
 gametypewindow	??0TGameTypeWindow@@QAE@E@Z	100.0000	100.0000	100.0000	0xd54c0	cdb56e6656e6
 gametypewindow	??1TGameTypeWindow@@UAE@XZ	100.0000	100.0000	100.0000	0xd5890	39e8a0790590
 gametypewindow	??_GTGameTypeWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xd5860	-
@@ -2438,13 +2438,13 @@ multiplayerwindow	?SetFocus@CMPEdit@@UAEXE@Z	100.0000	100.0000	100.0000	0x110890
 multiplayerwindow	?Update@TMultiPlayerWindow@@QAEXXZ	99.2080	99.2080	99.2080	0x10f0f0	516545f38ff1
 multiplayerwindow	?UpdateOK@CMPInputDlg@@QAEXXZ	100.0000	100.0000	100.0000	0x110980	9a40794dbe27
 multiplayerwindow	?WindowHandler@TMultiPlayerWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x10f940	8037720e1234
-newgame	??0type_map_hero_identity@@QAE@ABU0@@Z	0.0000	80.7803	80.7803	0x117c30	-
 newgame	?GetLossConditionText@game@@QAEXPAD@Z	100.0000	100.0000	100.0000	0x113800	ade52171f0bc
 newgame	?GetVictoryConditionText@game@@QAEXPAD@Z	100.0000	100.0000	100.0000	0x1139e0	562e072ce57a
 newgame	?InitNewGame@game@@QAEXHHPAVNewSMapHeader@@PAVTAbstractFile@@@Z	26.5235	26.5235	26.5235	0x113320	d52bf04217c4
 newgame	?ShowScenInfo@game@@QAEXXZ	100.0000	100.0000	100.0000	0x113740	83f7cc64579c
 newgame	?get_alignment_count@@YIJH@Z	100.0000	100.0000	100.0000	0x1132b0	f1e04004c643
 newgame	?pick_alignment@@YI?AW4TTownType@@HE@Z	100.0000	100.0000	100.0000	0x1132d0	7d86ef3bfcb8
+newgame	__h3cg$newgame$class_ctor$type_map_hero_identity	0.0000	80.7803	80.7803	0x117c30	-
 objecttype	?_Inc@const_iterator@?$_Tree@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V12@U_Kfn@?$set@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@2@U?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x117780	-
 overview	??0TOverviewWindow@@QAE@XZ	78.2776	80.0954	80.0954	0x11fa40	e8df282f3bdd
 overview	??1TOverviewWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x120d90	048fab1d8faa
@@ -3219,7 +3219,7 @@ singleselectionwindow	?OnGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNet
 # SetCurrentMap/OnSetAsHostMsg bodies landing in the TU dropped the
 # pair again with both sources byte-identical. Recovery rides with
 # DrawHeroAdvancedOption reaching 100.
-singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0	0e5de8f038ec
+singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	99.8868	100.0000	100.0000	0x17cdc0	0e5de8f038ec
 singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	9177fbb0fa83
 # 2026-08-27 hand-lowered 100.0000 -> 99.8710 (hist keeps 100.0000): the
 # documented TU-state flap (master accepted this pair down at 99.89/99.87

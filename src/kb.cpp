@@ -40,9 +40,7 @@
 #include "newgame.h"
 #include "palette.h"
 #include "prefs.h"
-#define HOMM3_MULTIPLAYERWINDOW_OWNS_DXPLAY_TYPES
 #include "remote.h"
-#undef HOMM3_MULTIPLAYERWINDOW_OWNS_DXPLAY_TYPES
 #include "resourcemanager.h"
 #include "savegame.h"
 #include "singleselectionwindow.h"
