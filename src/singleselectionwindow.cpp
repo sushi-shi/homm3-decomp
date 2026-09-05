@@ -9471,3 +9471,339 @@ void* CAutoArray<int>::`scalar deleting destructor'(unsigned __flags)
 }
 
 #endif  // @carcass
+
+// ---------------------------------------------------------------------------
+// SortMaps' six column comparators. The functors are declared in the priv
+// header and defined here so /Ob2 makes retail's own per-site decision: each
+// row below is the out-of-line COMDAT the six _Sort_0 instantiations CALL,
+// and retail expands the same body inside _Median and _Unguarded_partition.
+//
+// The two text comparators share one shape - two 256-byte " "-seeded buffers,
+// the net-mode switch from the +0x58c title to setup.filename (+0x33d), and
+// the "AUTOSAVE." prefix rule that re-seats a savegame name behind a leading
+// space so it sorts first - and BY_VERSION simply guards it with the format
+// compare. `direction` swaps the operands rather than the predicate: retail
+// pushes __strcmpi's two arguments in the opposite order per arm.
+
+// The row the delinker named `game_autosave_1903b0` for its "AUTOSAVE."
+// reference. Buffer order is byte-proven: the a-side strcat targets
+// [ebp-0x104] (the first-declared array) and the b-side [ebp-0x204].
+//
+// `inline` is LOAD-BEARING and asymmetric with its BY_VERSION twin: /Ob2
+// will not take a 317 B body from a plain out-of-class definition, so
+// _Median/_Unguarded_partition/_Unguarded_insert BY_NAME all CALLED what
+// retail expands (32.24 / 14.65 / 46.40). Marking it inline moves those to
+// 95.80 / 85.75 / 79.76 with _Sort_0 and _Sort holding at 100.0000 and the
+// out-of-line COMDAT still emitted for _Sort_0's own call. The identical
+// keyword on BY_VERSION is a LOSS - it expands there at every site, its two
+// COMDATs stop being emitted and both rows fall to 0.0000 - so only this one
+// carries it.
+//
+// Residual (83.89%): retail loads the " " seed TWICE (once per buffer) and
+// keeps `this` memory-homed at [ebp-4], re-reading it for isNet and again
+// for direction; we CSE the literal load and hold `this` in esi, which also
+// picks edx over retail's ecx for the setl. Tried and rejected: two `return
+// _strcmpi(...)` arms (75.17 - two calls, two rets where retail cross-jumps
+// one), a named lhs/rhs pair (81.78 - one call but `mov` where retail
+// pushes in each arm), declaring sb ahead of the buffers (82.94). The
+// shared `int order` form below is the best of the four.
+VA_COMPGEN(0x005903b0, 0x13D, FUNCTOR_CALL, TSortMapsByName)  // anchor-callee _Sort_0 BY_NAME (0x590070) calls it; anchor-global the 'AUTOSAVE.' literal at 0x683968 and rolloverSpaceSeparator's " " seed; ret 8 on two const& args + thiscall functor, retail-only
+inline bool TSortMapsByName::operator()(const GameSelectionHeadersStruct& a,
+                                 const GameSelectionHeadersStruct& b) const
+{
+    char nameA[256] = " ";
+    char nameB[256] = " ";
+    const char* sa = a.title;
+    const char* sb = b.title;
+
+    if (isNet) {
+        sa = a.setup.filename;
+        sb = b.setup.filename;
+        if (_strnicmp(sa, DATA_COMPGEN(0x00683968, autosavePrefix,
+                                       "AUTOSAVE."), 9) == 0) {
+            strcat(nameA, sa);
+            sa = nameA;
+        }
+        if (_strnicmp(sb, DATA_COMPGEN(0x00683968, autosavePrefix,
+                                       "AUTOSAVE."), 9) == 0) {
+            strcat(nameB, sb);
+            sb = nameB;
+        }
+    }
+
+    int order;
+    if (direction)
+        order = _strcmpi(sb, sa);
+    else
+        order = _strcmpi(sa, sb);
+    return order < 0;
+}
+
+// numPlayers*10 + maxNumHumanPlayers is the rank: retail forms it with
+// `lea eax,[eax+eax*4]` then `lea esi,[ebx+eax*2]` off the +6/+8 bytes.
+VA_COMPGEN(0x00590e00, 0x4F, FUNCTOR_CALL, TSortMapsByPlayers)  // anchor-callee _Sort_0 BY_PLAYERS (0x590ad0) calls it; the only row in the band reading CMapHeaderData's +6/+8 player counts, retail-only
+bool TSortMapsByPlayers::operator()(const GameSelectionHeadersStruct& a,
+                                    const GameSelectionHeadersStruct& b) const
+{
+    int rankA = a.header.numPlayers * 10 + a.header.maxNumHumanPlayers;
+    int rankB = b.header.numPlayers * 10 + b.header.maxNumHumanPlayers;
+
+    if (direction)
+        return rankB < rankA;
+    return rankA < rankB;
+}
+
+// The format compare is the outer test and the name compare its equal arm -
+// retail's `cmp eax,edi / jne <sunk tail>` puts the version arm last. Unlike
+// BY_NAME this one keeps TWO __strcmpi calls with duplicated tails, so the
+// merged `int order` form is not its shape.
+//
+// Residual (81.35%): calls agree 4/4 and branches agree 6/6; the delta is the
+// same literal-CSE / this-homing register family as BY_NAME's, and its
+// _Median / _Unguarded_partition (38.21 / 60.09) are the under-inline BY_NAME
+// closed with `inline` - measured here and REJECTED, both rows go to 0.0000
+// because the COMDATs stop being emitted at all.
+VA_COMPGEN(0x00591190, 0x180, FUNCTOR_CALL, TSortMapsByVersion)  // anchor-callee _Sort_0 BY_VERSION (0x590e50) calls it; same 'AUTOSAVE.'/" " text shape as BY_NAME behind a leading header.version compare, retail-only
+bool TSortMapsByVersion::operator()(const GameSelectionHeadersStruct& a,
+                                    const GameSelectionHeadersStruct& b) const
+{
+    if (a.header.version == b.header.version) {
+        char nameA[256] = " ";
+        char nameB[256] = " ";
+        const char* sa = a.title;
+        const char* sb = b.title;
+
+        if (isNet) {
+            sa = a.setup.filename;
+            sb = b.setup.filename;
+            if (_strnicmp(sa, DATA_COMPGEN(0x00683968, autosavePrefix,
+                                           "AUTOSAVE."), 9) == 0) {
+                strcat(nameA, sa);
+                sa = nameA;
+            }
+            if (_strnicmp(sb, DATA_COMPGEN(0x00683968, autosavePrefix,
+                                           "AUTOSAVE."), 9) == 0) {
+                strcat(nameB, sb);
+                sb = nameB;
+            }
+        }
+
+        if (direction)
+            return _strcmpi(sb, sa) < 0;
+        return _strcmpi(sa, sb) < 0;
+    }
+
+    if (direction)
+        return b.header.version < a.header.version;
+    return a.header.version < b.header.version;
+}
+
+// BY_SIZE has NO out-of-line row: retail expands `header.Size` (+0x18) at
+// every site, including the two inside _Sort_0 BY_SIZE (0x591310).
+bool TSortMapsBySize::operator()(const GameSelectionHeadersStruct& a,
+                                 const GameSelectionHeadersStruct& b) const
+{
+    if (direction)
+        return b.header.Size < a.header.Size;
+    return a.header.Size < b.header.Size;
+}
+
+// The condition bytes: victory at CMapHeaderData +0x30, loss at +0x7c (the
+// struct sizes 0x4c and 0x24 place them there and retail sign-extends both).
+VA_COMPGEN(0x00591cb0, 0x33, FUNCTOR_CALL, TSortMapsByVictory)  // anchor-callee _Sort_0 BY_VICTORY (0x591970) calls it; movsx of the signed byte at header +0x30 = victoryCondition.Type, retail-only
+bool TSortMapsByVictory::operator()(const GameSelectionHeadersStruct& a,
+                                    const GameSelectionHeadersStruct& b) const
+{
+    int typeA = a.header.victoryCondition.Type;
+    int typeB = b.header.victoryCondition.Type;
+
+    if (direction)
+        return typeB < typeA;
+    return typeA < typeB;
+}
+
+VA_COMPGEN(0x00592030, 0x33, FUNCTOR_CALL, TSortMapsByLoss)  // anchor-callee _Sort_0 BY_LOSS (0x591cf0) calls it; movsx of the signed byte at header +0x7c = lossCondition.Type, retail-only
+bool TSortMapsByLoss::operator()(const GameSelectionHeadersStruct& a,
+                                 const GameSelectionHeadersStruct& b) const
+{
+    int typeA = a.header.lossCondition.Type;
+    int typeB = b.header.lossCondition.Type;
+
+    if (direction)
+        return typeB < typeA;
+    return typeA < typeB;
+}
+
+// ---------------------------------------------------------------------------
+// The vector<GameSelectionHeadersStruct> machinery behind HeadersA /
+// TransferHeaders / SelectionHeaders (0x58ea70..0x58f480). Every row is
+// placed by its call-graph position and confirmed by the reloc sequence our
+// own COMDAT emits:
+//
+//   0x58ea70  ~vector   reached only by `jmp` from the ctor's and
+//             WindowFn_00583b40's unwind funclets; ~GameSelectionHeadersStruct
+//             then operator delete, and it is 59 B on BOTH sides.
+//   0x58eab0  size()    reads _Last  ([ecx+8]);  BYTE-IDENTICAL to ours.
+//   0x58ebb0  capacity() reads _End  ([ecx+0xc]); the same body one field over.
+//   0x58ebe0  insert(where, n, x)  the row SortMaps' refill loop pins; calls
+//             operator new, _Construct, ~T, operator delete and T::operator=,
+//             matching our COMDAT's reloc order.
+//   0x58ef20  erase(first, last)   three relocs in our order -
+//             NewSMapHeader::operator=, SavedGameHeader::operator=, ~T.
+//   0x58f080  _Destroy  one ~T call, and the six vector users reach it.
+//   0x58f0b0  _Ucopy    the `_Construct(_X, *_F); _F += 0xca4` walk, ret 0xc.
+//   0x58f480  _Construct  the row _Ucopy and insert's four sites call; retail
+//             INLINES the copy ctor into it (707 B) where we still call the
+//             out-of-line ??0GameSelectionHeadersStruct at 0x5904f0, so this
+//             row banks low - the pairing is the point, not the score.
+
+VA_COMPGEN(0x0058ea70, 0x3B, VECTOR_DTOR, GameSelectionHeadersStruct)
+VA_COMPGEN(0x0058eab0, 0x21, VECTOR_SIZE, GameSelectionHeadersStruct)
+VA_COMPGEN(0x0058ebb0, 0x21, VECTOR_CAPACITY, GameSelectionHeadersStruct)
+VA_COMPGEN(0x0058ebe0, 0x33C, VECTOR_INSERT, GameSelectionHeadersStruct)
+VA_COMPGEN(0x0058ef20, 0x152, VECTOR_ERASE, GameSelectionHeadersStruct)
+VA_COMPGEN(0x0058f080, 0x26, VECTOR_DESTROY, GameSelectionHeadersStruct)
+VA_COMPGEN(0x0058f0b0, 0x3E, VECTOR_UCOPY, GameSelectionHeadersStruct)
+VA_COMPGEN(0x0058f480, 0x2C3, STD_CONSTRUCT, GameSelectionHeadersStruct)
+
+// The element copy ctor itself. Retail keeps it out of line for the six
+// _Sort/_Median/_Unguarded_partition families (its three `_Ty(*it)` temps
+// are what _Sort's leading call triple builds) and EXPANDS it into
+// std::_Construct at 0x58f480 - the per-site split /Ob2 produces on its
+// own once the member is implicit, which is why the header no longer
+// declares it away.
+VA_COMPGEN(0x005904f0, 0x31B, IMPLICIT_COPY_CTOR, GameSelectionHeadersStruct)
+
+// The element copy ctor's own sub-object chain, placed by a POSITIONAL zip of
+// our COMDAT's reloc stream against retail's call stream - the two agree
+// 11-for-11 inside ??0GameSelectionHeadersStruct, 9-for-9 inside _Construct
+// and 14-for-14 inside _Median<...,TSortMapsByPlayers>, which is what fixes
+// each row:
+//
+//   0x58fa60  ??0NewSMapHeader(const&)        0x58fc10  ??0SCampaign(const&)
+//   0x58fe40  _Ucopy<CampaignScenarioInfo>    0x58fe80  ??0vector<int>(const&)
+//   0x58fef0  ??0vector<hero>(const&)         0x58ff80  ??0_Tree(const&)
+//   0x58ffc0  _Tree::_Init                    0x590810  ??0CMapHeaderData(const&)
+//   0x593f50  ??0SavedGameHeader(const&)      0x5941b0  ??0vector<vector<hero>>
+//   0x594220  ??0vector<vector<type_artifact>>  0x594290  ??0vector<CampaignScenarioInfo>
+//
+// Only three of those can be claimed through the existing channels. The four
+// vector copy ctors and the _Tree pair all key to the same `vector_vector` /
+// `_tree__tree` group, and NewSMapHeader's and CMapHeaderData's groups hold
+// their default ctors too - whose retail copies the linker took from
+// campaignbrief - so a single claim cannot zip them. They are identified
+// above and left for a lane that adds the key.
+VA_COMPGEN(0x0058fc10, 0x222, IMPLICIT_COPY_CTOR, SCampaign)
+VA_COMPGEN(0x0058fe40, 0x3B, VECTOR_UCOPY, CampaignScenarioInfo)
+VA_COMPGEN(0x00593f50, 0x259, IMPLICIT_COPY_CTOR, SavedGameHeader)
+
+// The _Tree copy ctor NewSMapHeader's own copy calls for heroPlayerSetups
+// (slot 5 of that zip); its group holds this row alone.
+VA_COMPGEN(0x0058ff80, 0x31, IMPLICIT_COPY_CTOR, _Tree)
+
+// playerData::operator=, slot 9 of a 9-for-9 zip against BackupGameHeaders -
+// the row it calls per player after the header and campaign assignments.
+// (Slot 8 differs only by ICF: our vector<int>::operator= folded onto
+// retail's vector<TArtifact>::operator=.)
+VA_COMPGEN(0x0058f750, 0x30A, IMPLICIT_COPY_ASSIGN, playerData)
+
+// std::copy_backward<GameSelectionHeadersStruct*>: the element-only row the
+// three _Sort_0 instantiations whose _Insertion_sort_1 did not inline it
+// (BY_SIZE twice, BY_VICTORY and BY_LOSS once each) reach. It walks
+// `sub esi,0xca4` BACKWARD through the element stride, which is what separates
+// it from std::copy at 0x58f160. It only became claimable once
+// GameSelectionHeadersStruct's copy ctor went implicit - before that our
+// compile inlined the whole body and emitted no COMDAT at all.
+VA_COMPGEN(0x00591650, 0x318, STD_COPY_BACKWARD, gameselectionheadersstruct)
+
+// ---------------------------------------------------------------------------
+// SortMaps' six std::sort instantiations (0x590070..0x595e10).
+//
+// `std::sort(first, last, Pred)` is a one-line inline wrapper, so the row
+// SortMaps CALLS is Dinkumware's `_Sort_0`; SortMaps' six-entry jump table
+// reaches them in source-switch order and the two isNet-computing arms
+// (0x590070, 0x590e50) are BY_NAME and BY_VERSION exactly as the switch
+// writes them, which fixes the functor of every family:
+//
+//   0x590070 BY_NAME  0x590ad0 BY_PLAYERS  0x590e50 BY_VERSION
+//   0x591310 BY_SIZE  0x591970 BY_VICTORY  0x591cf0 BY_LOSS
+//
+// Inside a family the member is read straight off the call graph, and every
+// one of the six agrees to the byte: the 334 B row is `_Sort` (it is the only
+// SELF-RECURSIVE row, matching <algorithm>'s two `_Sort(_M,_L,...)` /
+// `_Sort(_F,_M,...)` tail calls, and our own COMDAT is 334 B on the nose);
+// the two rows it calls after its three `_Ty(*it)` copy-ctor calls are, in
+// that order, `_Median` then `_Unguarded_partition`, matching the single
+// `_Unguarded_partition(_F, _L, _Median(...), _P)` statement; and the one
+// remaining row each `_Sort_0` calls is `_Unguarded_insert` (its inlined
+// `_Insertion_sort_1` is what reaches it - our compile inlines that member
+// too, and emits no COMDAT for it either).
+//
+// The comparator bodies beside them are the functors' operator()s and the
+// shared 0x591650 is `std::copy_backward<GameSelectionHeadersStruct*>` (it
+// walks `sub esi,0xca4` backwards through the element stride and is reached
+// only from the three families whose _Insertion_sort_1 did not inline it);
+// neither is claimable yet - see the residual note at the foot of this block.
+
+VA_COMPGEN(0x00590070, 0x331, STD_SORT_0,
+           gameselectionheadersstruct_tsortmapsbyname)  // SortMaps arm 0
+VA_COMPGEN(0x00590ad0, 0x324, STD_SORT_0,
+           gameselectionheadersstruct_tsortmapsbyplayers)  // SortMaps arm 1
+VA_COMPGEN(0x00590e50, 0x331, STD_SORT_0,
+           gameselectionheadersstruct_tsortmapsbyversion)  // SortMaps arm 2
+VA_COMPGEN(0x00591310, 0x335, STD_SORT_0,
+           gameselectionheadersstruct_tsortmapsbysize)  // SortMaps arm 3
+VA_COMPGEN(0x00591970, 0x332, STD_SORT_0,
+           gameselectionheadersstruct_tsortmapsbyvictory)  // SortMaps arm 4
+VA_COMPGEN(0x00591cf0, 0x332, STD_SORT_0,
+           gameselectionheadersstruct_tsortmapsbyloss)  // SortMaps arm 5
+
+VA_COMPGEN(0x00592090, 0x14E, STD_SORT,
+           gameselectionheadersstruct_tsortmapsbyname)  // self-recursive, 1.00x
+VA_COMPGEN(0x005921e0, 0x38C, STD_UNGUARDED_INSERT,
+           gameselectionheadersstruct_tsortmapsbyname)
+VA_COMPGEN(0x00592570, 0x14E, STD_SORT,
+           gameselectionheadersstruct_tsortmapsbyplayers)  // self-recursive
+VA_COMPGEN(0x005926c0, 0x2D6, STD_UNGUARDED_INSERT,
+           gameselectionheadersstruct_tsortmapsbyplayers)
+VA_COMPGEN(0x005929a0, 0x14E, STD_SORT,
+           gameselectionheadersstruct_tsortmapsbyversion)  // self-recursive
+VA_COMPGEN(0x00592af0, 0x2C5, STD_UNGUARDED_INSERT,
+           gameselectionheadersstruct_tsortmapsbyversion)
+VA_COMPGEN(0x00592dc0, 0x14E, STD_SORT,
+           gameselectionheadersstruct_tsortmapsbysize)  // self-recursive
+VA_COMPGEN(0x00592f10, 0x2B6, STD_UNGUARDED_INSERT,
+           gameselectionheadersstruct_tsortmapsbysize)
+VA_COMPGEN(0x005931d0, 0x14E, STD_SORT,
+           gameselectionheadersstruct_tsortmapsbyvictory)  // self-recursive
+VA_COMPGEN(0x00593320, 0x2B8, STD_UNGUARDED_INSERT,
+           gameselectionheadersstruct_tsortmapsbyvictory)
+VA_COMPGEN(0x005935e0, 0x14E, STD_SORT,
+           gameselectionheadersstruct_tsortmapsbyloss)  // self-recursive
+VA_COMPGEN(0x00593730, 0x2BB, STD_UNGUARDED_INSERT,
+           gameselectionheadersstruct_tsortmapsbyloss)
+
+VA_COMPGEN(0x005939f0, 0x551, STD_MEDIAN,
+           gameselectionheadersstruct_tsortmapsbyname)  // 1st call in _Sort
+VA_COMPGEN(0x00594320, 0x3B8, STD_UNGUARDED_PARTITION,
+           gameselectionheadersstruct_tsortmapsbyname)  // 2nd call in _Sort
+VA_COMPGEN(0x005946e0, 0x321, STD_MEDIAN,
+           gameselectionheadersstruct_tsortmapsbyplayers)
+VA_COMPGEN(0x00594a10, 0x20E, STD_UNGUARDED_PARTITION,
+           gameselectionheadersstruct_tsortmapsbyplayers)
+VA_COMPGEN(0x00594c20, 0x2FD, STD_MEDIAN,
+           gameselectionheadersstruct_tsortmapsbyversion)
+VA_COMPGEN(0x00594f20, 0x21B, STD_UNGUARDED_PARTITION,
+           gameselectionheadersstruct_tsortmapsbyversion)
+VA_COMPGEN(0x00595140, 0x2E0, STD_MEDIAN,
+           gameselectionheadersstruct_tsortmapsbysize)
+VA_COMPGEN(0x00595420, 0x213, STD_UNGUARDED_PARTITION,
+           gameselectionheadersstruct_tsortmapsbysize)
+VA_COMPGEN(0x00595640, 0x2DC, STD_MEDIAN,
+           gameselectionheadersstruct_tsortmapsbyvictory)
+VA_COMPGEN(0x00595920, 0x201, STD_UNGUARDED_PARTITION,
+           gameselectionheadersstruct_tsortmapsbyvictory)
+VA_COMPGEN(0x00595b30, 0x2DF, STD_MEDIAN,
+           gameselectionheadersstruct_tsortmapsbyloss)
+VA_COMPGEN(0x00595e10, 0x204, STD_UNGUARDED_PARTITION,
+           gameselectionheadersstruct_tsortmapsbyloss)

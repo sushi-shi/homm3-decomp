@@ -47,6 +47,7 @@
 // ModifySpellDamage's four "the spell did more/less than the table row"
 // messages; textresource.h keeps those enumerators behind this view.
 #include "textresource.h"  // gpGeneralText
+#include "spellbookwindow.h"  // TSpellbookWindow, the row ViewSpells opens
 #include "winmgr.h"  // gpWindowManager, DoBolt's per-pass UpdateScreen
 #include <stdlib.h>  // abs, the signed intrinsic mark_area_effect uses
 #include <math.h>    // sqrt for the chain-lightning bounce search;
@@ -233,6 +234,95 @@ unsigned char combatManager::check_fire_wall(long hex, army* current_army, unsig
 // lifetime, and the retained helper boundaries. Complete adds the initial
 // already-cast guard and the creatureSpell selector; its retail jump table and
 // call graph independently prove those changes.
+// Complete's combat spell-book entry point, and the DC roster's
+// combatManager::ViewSpells (spells.cpp:97, ONE parameter) - the row
+// immediately before InitiateSpell (spells.cpp:176) there, and immediately
+// before the claimed InitiateSpell at 0x59ec50 here, with no gap between
+// them. Both call sites (DoCommand's spell-book case and ProcessCombatMsg)
+// pass `this` only, compare the result against -1 and forward it straight
+// into InitiateSpell, which is what fixes the int return.
+//
+// The two refusal messages are asymmetric on purpose: the Orb of Inhibition
+// line names the hero HOLDING it (heroes[i], the loop's own index) and puts
+// the hero before the artifact, while the Recanter's Cloak line names the
+// CASTING hero (heroes[currentSide]) and puts the artifact first. Retail
+// forms both that way and the argument order is visible in its push order.
+// Residual (90.14%): the merged-return class, and it is the WHOLE delta -
+// calls agree 11/11 at report level, branch COUNT agrees 22/22, and the only
+// polarity flips (+0x32, +0x4b) are the first two guards. Retail DUPLICATES
+// the seven-instruction `or eax,-1` + fs:[0] unwind epilogue at each of its
+// nine exits; our C2 cross-jumps two of them into a shared block and jumps
+// there, so we run 7 rets against retail's 9 and every following block
+// shifts. Nothing in the guards' spelling reaches that decision - they are
+// already two separate `return -1;` statements, which is the form the
+// house rule prescribes.
+VA(0x0059e900, 0x34F)  // anchor-callee DoCommand's spell-book case and ProcessCombatMsg call it with `this` only and forward the result to InitiateSpell; anchor-callee TSpellbookWindow's ctor/DoModal/dtor triple; the row ends exactly where the claimed InitiateSpell begins, dc-order spells.cpp:97
+int combatManager::ViewSpells()
+{
+    int i;
+
+    if (!heroes[currentSide])
+        return -1;
+
+    if (field_54b4[currentSide] && !field_13d74)
+        return -1;
+
+    if (field_53c4) {
+        NormalDialog(gpGeneralText->GetText(685), 1, -1, -1, -1, 0, -1, 0, -1,
+                     0, -1, 0);
+        return -1;
+    }
+
+    for (i = 0; i < 2; ++i) {
+        if (heroes[i]
+            && heroes[i]->IsWieldingArtifact(ARTIFACT_ORB_OF_INHIBITION)) {
+            NormalDialog(
+                format_string(
+                    gpGeneralText->GetText(684), heroes[i]->name,
+                    akArtifactTraits[ARTIFACT_ORB_OF_INHIBITION].name)
+                    .c_str(),
+                1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            return -1;
+        }
+    }
+
+    // The last two arguments are byte-proven from retail's push order and
+    // read the other way round from the declarator's names: the CONTEXT is
+    // the literal eContextCombat and it is `magicTerrain` that receives the
+    // combat's spell-restriction code.
+    TSpellbookWindow(heroes[currentSide], armyGroups[1 - currentSide],
+                     TSpellbookWindow::eContextCombat, field_53c0)
+        .DoModal(0);
+
+    if (gpWindowManager->dialogReturn == DIALOG_RETURN_CANCEL)
+        return -1;
+
+    int level = akSpellTraits[gpWindowManager->dialogReturn].level;
+    if (level > 1 && field_53c0 == COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS) {
+        NormalDialog(gpGeneralText->GetText(748), 1, -1, -1, -1, 0, -1, 0, -1,
+                     0, -1, 0);
+        return -1;
+    }
+
+    if (level > 2) {
+        for (i = 0; i < 2; ++i) {
+            if (heroes[i]
+                && heroes[i]->IsWieldingArtifact(ARTIFACT_RECANTERS_CLOAK)) {
+                NormalDialog(
+                    format_string(
+                        gpGeneralText->GetText(537),
+                        akArtifactTraits[ARTIFACT_RECANTERS_CLOAK].name,
+                        heroes[currentSide]->name)
+                        .c_str(),
+                    1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                return -1;
+            }
+        }
+    }
+
+    return gpWindowManager->dialogReturn;
+}
+
 // Residual (89.80%, 2026-09-05): retail reaches GetGridIndex through the
 // GLOBAL at both mouse-pick sites (`mov ecx,[0x6993d0]` at 0x59ee4f and
 // 0x59eff6) rather than through `this`, even though `this` IS
