@@ -142,6 +142,9 @@ public:
         // provisional).
         void LoadMapHeader(std::streambuf* stream, NewSMapHeader* mapHeader,
                            int which);
+        // Retail 0x487e10: flags this scenario's hero placeholders in
+        // SCampaign::PruneCrossoverHeroes' per-hero-id table (provisional).
+        void MarkCrossoverHeroes(unsigned char* wanted);
     };
 
     struct CampaignHeaderStruct {

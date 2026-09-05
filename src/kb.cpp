@@ -1105,6 +1105,32 @@ inline void ShowCredits()
 //  - The DoNewGame/DoLoadGame menu tail (retail +0xd60..+0xf40) still
 //    diverges: retail reaches `gUnnamed699584 = 0` from a CREDITS_ID
 //    test on dialogReturn that this reconstruction does not yet spell.
+// 2026-09-05: 73.3528 -> 75.9724 on the two campaign-continue arms alone.
+// Written as a backward `goto` into a label above the TCampaignWindow
+// block, VC6 PEELED each arm - the whole window/VideoOpen/VideoPause/
+// brief body was emitted TWICE, giving 4 TCampaignWindow constructions
+// and 11 VideoPause calls against retail's 2 and 7, and two ~0xa0-byte
+// surplus blocks. `while (1) { ... break; }` emits one copy with retail's
+// own backward `je` into the constructor's argument pushes, and both
+// censuses now agree exactly (2 = 2, 7 = 7). The goto form is right for a
+// top-tested loop whose back edge is the ONLY edge; here the label also
+// had a fall-in predecessor, which is what let the peeler duplicate it.
+// Callee census after that edit - the two leads that are left:
+//  - THREE unclaimed retail rows in kb's own band are compiler-emitted
+//    forwarding overloads this reconstruction spells past. 0x4efff0 (25 B)
+//    is Bitmap16Bit::GetMap(x,y); 0x4f0010 (59 B) is the Bitmap16Bit::Draw
+//    overload taking a Bitmap16Bit* destination, which expands it into the
+//    Width/Height/Pitch/map argument run of the raw PAG form; 0x4f0050
+//    (71 B) is the same forwarder for CSprite::Draw. Retail CALLS them 5, 3
+//    and 5 times; we reach the raw PAG overloads directly (CSprite::Draw x5,
+//    GetMap x3) and never emit a wrapper. Claiming the three rows and
+//    spelling the destination-bitmap overload at those sites is the next
+//    concrete step, and it is worth more than anything else left here.
+//  - The progress-bar inline split: retail's oldmain holds 6
+//    DrawProgressCount sites against our 3 and CALLS ShowProgressBar once
+//    where we expand all three of ours, which is also where the +1 on
+//    UpdateScreen / GetBitmap16 / GetSprite / Bitmap16Bit::Draw comes from.
+//    The DoNewGame inlining boundary is what decides it.
 VA(0x004ee3e0, 0x1C04)
 int oldmain()
 {
@@ -1537,23 +1563,25 @@ int oldmain()
                     }
                     if (campaign.currentCampaign != CAMPAIGN_ORDINAL_LAST) {
                         gbUnk69774c = 1;
-                    nextWonCampaign:
-                        {
-                            TCampaignWindow campaignWindow(0, nextCampaign);
-                            campaignWindow.DoModal();
+                        while (1) {
+                            {
+                                TCampaignWindow campaignWindow(
+                                    0, nextCampaign);
+                                campaignWindow.DoModal();
+                            }
+                            VideoOpen(33, 0, 0, 800, 600, 1, 0, 1);
+                            VideoPause();
+                            if (gpWindowManager->dialogReturn
+                                == DIALOG_RETURN_CANCEL)
+                                goto endOfGame;
+                            {
+                                TCampaignBrief campaignBriefWindow(0, 0);
+                                campaignBriefWindow.DoModal();
+                            }
+                            if (gpWindowManager->dialogReturn
+                                != DIALOG_RETURN_CANCEL)
+                                break;
                         }
-                        VideoOpen(33, 0, 0, 800, 600, 1, 0, 1);
-                        VideoPause();
-                        if (gpWindowManager->dialogReturn
-                            == DIALOG_RETURN_CANCEL)
-                            goto endOfGame;
-                        {
-                            TCampaignBrief campaignBriefWindow(0, 0);
-                            campaignBriefWindow.DoModal();
-                        }
-                        if (gpWindowManager->dialogReturn
-                            == DIALOG_RETURN_CANCEL)
-                            goto nextWonCampaign;
                         gbGameOver = 0;
                         gUnnamed699584 = 1;
                         goto runGame;
@@ -1563,22 +1591,24 @@ int oldmain()
                            && campaign.CampaignComplete()) {
                     if (campaign.currentCampaign != CAMPAIGN_ORDINAL_LAST) {
                         gbUnk69774c = 1;
-                    nextLostCampaign:
-                        {
-                            TCampaignWindow campaignWindow(0, nextCampaign);
-                            campaignWindow.DoModal();
-                        }
-                        VideoOpen(33, 0, 0, 800, 600, 1, 0, 1);
-                        VideoPause();
-                        if (gpWindowManager->dialogReturn
-                            != DIALOG_RETURN_CANCEL) {
+                        while (1) {
+                            {
+                                TCampaignWindow campaignWindow(
+                                    0, nextCampaign);
+                                campaignWindow.DoModal();
+                            }
+                            VideoOpen(33, 0, 0, 800, 600, 1, 0, 1);
+                            VideoPause();
+                            if (gpWindowManager->dialogReturn
+                                == DIALOG_RETURN_CANCEL)
+                                break;
                             {
                                 TCampaignBrief campaignBriefWindow(0, 0);
                                 campaignBriefWindow.DoModal();
                             }
                             if (gpWindowManager->dialogReturn
-                                == DIALOG_RETURN_CANCEL)
-                                goto nextLostCampaign;
+                                != DIALOG_RETURN_CANCEL)
+                                break;
                         }
                     }
                 } else {
@@ -3167,16 +3197,16 @@ void CheckEndGame(int bForceWin)
                 NormalDialog(gpGeneralText->Text[96], NORMAL_DIALOG_DEFAULT,
                              -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             } else {
-                sprintf(gText, gpGeneralText->Text[6],
-                        gpGame->GetPlayerName(i));
+                const char* deadFormat = gpGeneralText->Text[6];
+                sprintf(gText, deadFormat, gpGame->GetPlayerName(i));
                 NormalDialog(gText, NORMAL_DIALOG_DEFAULT, -1, -1, 10, i,
                              -1, -1, -1, 5000, -1, 0);
             }
         } else if (gpGame->players[i].numTowns == 0) {
             if (gpGame->players[i].iDeathCountDown == -1) {
                 if (gpGame->IsLocalHuman(i) && i == gNetLocalGamePos) {
-                    sprintf(gText, gpGeneralText->Text[7],
-                            gpGame->GetPlayerName(i));
+                    const char* warnFormat = gpGeneralText->Text[7];
+                    sprintf(gText, warnFormat, gpGame->GetPlayerName(i));
                     NormalDialog(gText, NORMAL_DIALOG_DEFAULT, -1, -1, 10, i,
                                  -1, 0, -1, 0, -1, 0);
                 }
@@ -3184,12 +3214,12 @@ void CheckEndGame(int bForceWin)
             } else if (gpGame->players[i].iDeathCountDown == 0) {
                 PlayerDead(i);
                 if (gpGame->IsLocalHuman(i) && i == gNetLocalGamePos) {
-                    sprintf(gText, gpGeneralText->Text[8],
-                            gpGame->GetPlayerName(i));
+                    const char* localFormat = gpGeneralText->Text[8];
+                    sprintf(gText, localFormat, gpGame->GetPlayerName(i));
                     gUnnamed691209 = 0;
                 } else {
-                    sprintf(gText, gpGeneralText->Text[9],
-                            gpGame->GetPlayerName(i));
+                    const char* otherFormat = gpGeneralText->Text[9];
+                    sprintf(gText, otherFormat, gpGame->GetPlayerName(i));
                 }
                 NormalDialog(gText, NORMAL_DIALOG_DEFAULT, -1, -1, 10, i,
                              -1, 0, -1, 0, -1, 0);
