@@ -887,7 +887,7 @@ command	?automate_first_aid_tent@combatManager@@QAEEXZ	98.0451	98.1203	98.1203	0
 command	?do_animations@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x74040	27696fba95ba
 command	?get_surrender_cost@combatManager@@QAEJXZ	100.0000	100.0000	100.0000	0x77a00	8fa812f0287e
 command	?get_tower_string@combatManager@@ABE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TWallSection@1@JJ@Z	100.0000	100.0000	100.0000	0x7a2d0	8238c96bb1e7
-command	?is_computer_action@combatManager@@QAEEPBVarmy@@@Z	81.3696	81.3696	81.3696	0x74bf0	cd3eeac26b98
+command	?is_computer_action@combatManager@@QAEEPBVarmy@@@Z	81.3696	81.3696	81.3696	0x74bf0	45c846365801
 command	?is_computer_action@combatManager@@QAEEXZ	100.0000	100.0000	100.0000	0x74ba0	a13a7565f528
 command	?is_outside_placement_boundry@combatManager@@QAEEHH@Z	100.0000	100.0000	100.0000	0x763f0	121e7d3afbb8
 command	?process_first_aid@combatManager@@QAEXPAVarmy@@@Z	100.0000	100.0000	100.0000	0x78b90	91444258c0b3
