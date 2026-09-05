@@ -591,7 +591,7 @@ void InitMainClasses()
 VA(0x004edda0, 0x407)  // anchor-callee + dc-order-map, dc 0xdfa3c
 void CreditsWait()
 {
-    font* CreditsFont = ResourceManager::GetFont("CREDITS.FNT");
+    font* CreditsFont = ResourceManager::GetFont("Credits.fnt");
     int done = 0;
     int textHeight = CreditsFont->LineLength(Credits[0], 328)
         * CreditsFont->fs.height;

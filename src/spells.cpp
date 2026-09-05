@@ -4488,6 +4488,15 @@ void combatManager::SetMassSpellInfluence(const hero* casting_hero, SpellID spel
 // direct subscripting scores 84.1279%. why-reg reports identical first
 // bindings and a past-first-def divergence, so neither remainder is a B1
 // creation-order edit.
+// The wince/death latch loop's first divergence, measured 2026-09-06: retail
+// materialises the ZERO in EBX (`xor ebx,ebx / cmp [eax+numTroops],ebx`) and
+// spends it again on `currFrameIndex = 0`, which keeps EBX busy and stops the
+// `stack.currFrameType` CSE - retail re-reads `[eax]` at BOTH arm compares.
+// This compile loads numTroops into EBX, `test`s it, then recycles EBX for the
+// cached currFrameType and stores an immediate 0.  Both source levers for
+// putting the constant in a register are byte-flat at 96.3708: writing the
+// guard `0 >= stack.numTroops`, and naming one `int resetFrame = 0` shared by
+// the compare and the store (VC6 folds it back to an immediate either way).
 VA(0x005a67c0, 0x4AC)  // order-map+arity, dc 0x155b28
 void combatManager::ShowMassSpell(const unsigned char (*bEffected)[20],
                                   int spellEffect, unsigned char bShowWince)
