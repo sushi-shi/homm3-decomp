@@ -3339,10 +3339,10 @@ town	?update_shipyard@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1bf210	343d37d72
 towngatewindow	??0TTownGateWindow@@QAE@_N@Z	100.0000	100.0000	100.0000	0x1c1ab0	ecc87aa4934e
 towngatewindow	??1TTownGateWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1c2370	2cdf88c2600e
 towngatewindow	??_GTTownGateWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1c2340	-
-towngatewindow	?DoModal@TTownGateWindow@@QAEXXZ	73.6620	73.6620	73.6620	0x1c2770	cb06357023b2
+towngatewindow	?DoModal@TTownGateWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1c2770	8268ead8aeed
 towngatewindow	?TownGateSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1c2980	b80f91f9dbde
-towngatewindow	?UpdateTownLocator@TTownGateWindow@@QAEXH@Z	69.6544	69.6544	69.6544	0x1c25b0	8a061d656bfc
-towngatewindow	?WindowHandler@TTownGateWindow@@UAEHPAVmessage@@@Z	57.2165	57.2165	57.2165	0x1c2840	db4f6238588b
+towngatewindow	?UpdateTownLocator@TTownGateWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1c25b0	9892c3b6bfa4
+towngatewindow	?WindowHandler@TTownGateWindow@@UAEHPAVmessage@@@Z	69.8969	69.8969	69.8969	0x1c2840	4d6ce3982e5e
 towngatewindow	?insert@?$vector@PAVwidget@@V?$allocator@PAVwidget@@@std@@@std@@QAEXPAPAVwidget@@IABQAV3@@Z	32.0621	32.0621	32.0621	0x1c2400	-
 townmgr	??0TBlacksmithWindow@@QAE@HH@Z	100.0000	100.0000	100.0000	0x1d1360	777db8ccc983
 townmgr	??0TBuyBuildWindow@@QAE@HHH@Z	100.0000	100.0000	100.0000	0x1d55c0	97dccb7f8a0f
