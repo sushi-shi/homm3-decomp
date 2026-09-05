@@ -3322,7 +3322,7 @@ systemoptionswindow	??_GTSystemOptionsWindow@@UAEPAXI@Z	100.0000	100.0000	100.00
 systemoptionswindow	?DoModal@TSystemOptionsWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1b30b0	3b9820683b03
 systemoptionswindow	?WindowHandler@TSystemOptionsWindow@@UAEHPAVmessage@@@Z	94.3957	94.3957	94.3957	0x1b3140	87bb0e263b3c
 text	?InitializeAdvObjNames@@YIEXZ	100.0000	100.0000	100.0000	0x1b92d0	f9ff5fe03d8f
-text	?InitializeArrayText@@YIEXZ	98.0258	98.0258	98.0258	0x1b9cc0	a2150199ebd8
+text	?InitializeArrayText@@YIEXZ	98.0258	98.0258	98.0258	0x1b9cc0	877dacfc0f9b
 text	?InitializeCampaignDialogText@@YIEXZ	100.0000	100.0000	100.0000	0x1b9800	2fb067abdc90
 text	?InitializeCampaignRegionNames@@YIEXZ	100.0000	100.0000	100.0000	0x1b9180	442b835d3c8b
 text	?InitializeCastleText@@YIEXZ	100.0000	100.0000	100.0000	0x1b96c0	27e465a92fc7
