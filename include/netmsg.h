@@ -466,7 +466,16 @@ SIZE(CPlayerDropUpdateMsg, 0x18);
 class CPlayerDeadMsg : public CNetMsg {
 public:
     int m_gamePos;
+
+    // kb.obj's HandleRemoteDeadPlayerExit (0x4f4c00) builds this message at
+    // both of its transmit sites and proves the whole record: the base
+    // constructor's five stores in their declared order, the RS_PLAYER_DEAD
+    // subtype, a 0x18 extent, and the seat number landing at +0x14.
+    CPlayerDeadMsg(int gamePos)
+        : CNetMsg(RS_PLAYER_DEAD, sizeof(CPlayerDeadMsg)),
+          m_gamePos(gamePos) {}
 };
+SIZE(CPlayerDeadMsg, 0x18);
 
 
 class CTradeRequestMsg : public CNetMsg {
