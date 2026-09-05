@@ -9473,6 +9473,138 @@ void* CAutoArray<int>::`scalar deleting destructor'(unsigned __flags)
 #endif  // @carcass
 
 // ---------------------------------------------------------------------------
+// SortMaps' six column comparators. The functors are declared in the priv
+// header and defined here so /Ob2 makes retail's own per-site decision: each
+// row below is the out-of-line COMDAT the six _Sort_0 instantiations CALL,
+// and retail expands the same body inside _Median and _Unguarded_partition.
+//
+// The two text comparators share one shape - two 256-byte " "-seeded buffers,
+// the net-mode switch from the +0x58c title to setup.filename (+0x33d), and
+// the "AUTOSAVE." prefix rule that re-seats a savegame name behind a leading
+// space so it sorts first - and BY_VERSION simply guards it with the format
+// compare. `direction` swaps the operands rather than the predicate: retail
+// pushes __strcmpi's two arguments in the opposite order per arm.
+
+// The row the delinker named `game_autosave_1903b0` for its "AUTOSAVE."
+// reference. Buffer order is byte-proven: the a-side strcat targets
+// [ebp-0x104] (the first-declared array) and the b-side [ebp-0x204].
+VA_COMPGEN(0x005903b0, 0x13D, FUNCTOR_CALL, TSortMapsByName)  // anchor-callee _Sort_0 BY_NAME (0x590070) calls it; anchor-global the 'AUTOSAVE.' literal at 0x683968 and rolloverSpaceSeparator's " " seed; ret 8 on two const& args + thiscall functor, retail-only
+bool TSortMapsByName::operator()(const GameSelectionHeadersStruct& a,
+                                 const GameSelectionHeadersStruct& b) const
+{
+    char nameA[256] = " ";
+    char nameB[256] = " ";
+    const char* sa = a.title;
+    const char* sb = b.title;
+
+    if (isNet) {
+        sa = a.setup.filename;
+        sb = b.setup.filename;
+        if (_strnicmp(sa, DATA_COMPGEN(0x00683968, autosavePrefix,
+                                       "AUTOSAVE."), 9) == 0) {
+            strcat(nameA, sa);
+            sa = nameA;
+        }
+        if (_strnicmp(sb, DATA_COMPGEN(0x00683968, autosavePrefix,
+                                       "AUTOSAVE."), 9) == 0) {
+            strcat(nameB, sb);
+            sb = nameB;
+        }
+    }
+
+    if (direction)
+        return _strcmpi(sb, sa) < 0;
+    return _strcmpi(sa, sb) < 0;
+}
+
+// numPlayers*10 + maxNumHumanPlayers is the rank: retail forms it with
+// `lea eax,[eax+eax*4]` then `lea esi,[ebx+eax*2]` off the +6/+8 bytes.
+VA_COMPGEN(0x00590e00, 0x4F, FUNCTOR_CALL, TSortMapsByPlayers)  // anchor-callee _Sort_0 BY_PLAYERS (0x590ad0) calls it; the only row in the band reading CMapHeaderData's +6/+8 player counts, retail-only
+bool TSortMapsByPlayers::operator()(const GameSelectionHeadersStruct& a,
+                                    const GameSelectionHeadersStruct& b) const
+{
+    int rankA = a.header.numPlayers * 10 + a.header.maxNumHumanPlayers;
+    int rankB = b.header.numPlayers * 10 + b.header.maxNumHumanPlayers;
+
+    if (direction)
+        return rankB < rankA;
+    return rankA < rankB;
+}
+
+// The format compare is the outer test and the name compare its equal arm -
+// retail's `cmp eax,edi / jne <sunk tail>` puts the version arm last.
+VA_COMPGEN(0x00591190, 0x180, FUNCTOR_CALL, TSortMapsByVersion)  // anchor-callee _Sort_0 BY_VERSION (0x590e50) calls it; same 'AUTOSAVE.'/" " text shape as BY_NAME behind a leading header.version compare, retail-only
+bool TSortMapsByVersion::operator()(const GameSelectionHeadersStruct& a,
+                                    const GameSelectionHeadersStruct& b) const
+{
+    if (a.header.version == b.header.version) {
+        char nameA[256] = " ";
+        char nameB[256] = " ";
+        const char* sa = a.title;
+        const char* sb = b.title;
+
+        if (isNet) {
+            sa = a.setup.filename;
+            sb = b.setup.filename;
+            if (_strnicmp(sa, DATA_COMPGEN(0x00683968, autosavePrefix,
+                                           "AUTOSAVE."), 9) == 0) {
+                strcat(nameA, sa);
+                sa = nameA;
+            }
+            if (_strnicmp(sb, DATA_COMPGEN(0x00683968, autosavePrefix,
+                                           "AUTOSAVE."), 9) == 0) {
+                strcat(nameB, sb);
+                sb = nameB;
+            }
+        }
+
+        if (direction)
+            return _strcmpi(sb, sa) < 0;
+        return _strcmpi(sa, sb) < 0;
+    }
+
+    if (direction)
+        return b.header.version < a.header.version;
+    return a.header.version < b.header.version;
+}
+
+// BY_SIZE has NO out-of-line row: retail expands `header.Size` (+0x18) at
+// every site, including the two inside _Sort_0 BY_SIZE (0x591310).
+bool TSortMapsBySize::operator()(const GameSelectionHeadersStruct& a,
+                                 const GameSelectionHeadersStruct& b) const
+{
+    if (direction)
+        return b.header.Size < a.header.Size;
+    return a.header.Size < b.header.Size;
+}
+
+// The condition bytes: victory at CMapHeaderData +0x30, loss at +0x7c (the
+// struct sizes 0x4c and 0x24 place them there and retail sign-extends both).
+VA_COMPGEN(0x00591cb0, 0x33, FUNCTOR_CALL, TSortMapsByVictory)  // anchor-callee _Sort_0 BY_VICTORY (0x591970) calls it; movsx of the signed byte at header +0x30 = victoryCondition.Type, retail-only
+bool TSortMapsByVictory::operator()(const GameSelectionHeadersStruct& a,
+                                    const GameSelectionHeadersStruct& b) const
+{
+    int typeA = a.header.victoryCondition.Type;
+    int typeB = b.header.victoryCondition.Type;
+
+    if (direction)
+        return typeB < typeA;
+    return typeA < typeB;
+}
+
+VA_COMPGEN(0x00592030, 0x33, FUNCTOR_CALL, TSortMapsByLoss)  // anchor-callee _Sort_0 BY_LOSS (0x591cf0) calls it; movsx of the signed byte at header +0x7c = lossCondition.Type, retail-only
+bool TSortMapsByLoss::operator()(const GameSelectionHeadersStruct& a,
+                                 const GameSelectionHeadersStruct& b) const
+{
+    int typeA = a.header.lossCondition.Type;
+    int typeB = b.header.lossCondition.Type;
+
+    if (direction)
+        return typeB < typeA;
+    return typeA < typeB;
+}
+
+// ---------------------------------------------------------------------------
 // The vector<GameSelectionHeadersStruct> machinery behind HeadersA /
 // TransferHeaders / SelectionHeaders (0x58ea70..0x58f480). Every row is
 // placed by its call-graph position and confirmed by the reloc sequence our
