@@ -1190,6 +1190,15 @@ type_point advManager::get_mouse_map_point(__$ReturnUdt)
 // surplus block and takes the skeleton to 121/121 with 96 exact blocks, but
 // the ratchet number falls to 89.9938 - measured both ways, the guard
 // stays.
+// 2026-09-05: 90.2547 -> 94.2359 by UNPEELING that head. `route_walk_step:`
+// had both a fall-in predecessor (the `if (i < 0)` guard falling through)
+// and a backward `goto route_walk_step`, which is exactly the shape VC6
+// peels; wrapping the body in `while (1)` and leaving `route_walk_next:` at
+// the END of the loop as a forward-only continue point keeps the guard AND
+// gives 121/121 blocks with retail's unconditional back edge. calls now
+// AGREE 81 = 81 and only ONE polarity flip is left tree-wide in this body
+// (#15, the BuildPath budget select below). Same lever as wingraph's DDBlit
+// and cmbtmgr's place_obstacle.
 VA(0x00407b80, 0xBF0)  // anchor-global, dc 0x7a8c
 NewmapCell* advManager::DoAdvCommand(type_point* trigger_point)
 {
@@ -1297,8 +1306,8 @@ NewmapCell* advManager::DoAdvCommand(type_point* trigger_point)
         int i = gpSearchArray->result.size() - 1;
         if (i < 0)
             goto route_walk_done;
-    route_walk_step:
-        {
+        while (1) {
+            {
                 int bNoMove;
                 int bFoughtBattle;
                 eventCell = MoveHero(gpSearchArray->result[i]->direction,
@@ -1340,10 +1349,10 @@ NewmapCell* advManager::DoAdvCommand(type_point* trigger_point)
                     msg = gpInputManager->GetEvent();
                 }
             }
-    route_walk_next:
-        if (--i < 0)
-            goto route_walk_done;
-        goto route_walk_step;
+        route_walk_next:
+            if (--i < 0)
+                goto route_walk_done;
+        }
 
     route_walk_done:
         seedingValid = 0;
@@ -8513,17 +8522,28 @@ DATA(0x0063a64c) static const int akSoundVolumes[8] = { 32, 28, 20, 10,
 // allowed to claim a free slot. The four running edge counters are what
 // make retail emit inc/inc/dec/dec rather than indexed addressing.
 //
-// Residual (63.94%): register-homing only (flow-distance 0 as of
-// 2026-08-20, the k-loop guard now byte-matches). The function is branch-
-// for-branch identical to retail - 15 branches, 1 return, identical call
-// multiset - and why-reg v2 confirms the definition slots and their order
-// agree on BOTH sides, with only the ebx/edi bindings permuted: retail
-// holds `this` in edi and hoists the 0x7f idle priority into ebx, we hold
-// `this` in ebx and spend edi on the loop counter that retail memory-homes.
-// Since the value that must move first is `this` - a parameter - no local
-// spelling reaches it; this is C1 front-end handle state, the bounded
-// class. The one lever the model did find (creating `y` before `x`) is
-// applied above and is worth 16 slots / +0.27.
+// The above was the standing residual note; its VERDICT was wrong and the
+// evidence is left here because the probe that refuted it is cheap:
+//   "Residual (63.94%): register-homing only ... why-reg v2 confirms the
+//    definition slots and their order agree on BOTH sides, with only the
+//    ebx/edi bindings permuted: retail holds `this` in edi ... we hold
+//    `this` in ebx ... Since the value that must move first is `this` - a
+//    parameter - no local spelling reaches it; this is C1 front-end handle
+//    state, the bounded class."
+// 2026-09-05: 63.9403 -> 75.4123 by DELETING the three `x`/`y`/`z` caches
+// and re-reading `point.x`/`point.y`/`point.z` at every use. Retail reads
+// the by-value parameter's own slot fresh before each InsertSound push
+// (`mov edx,[ebp+0xc]` five times in the ring body) and recycles [ebp+8]
+// and [ebp+0xc] for the ring coordinates; three named locals is what took
+// the extra frame word (0x30 against retail's 0x2c) AND what pushed `this`
+// out of EDI. With the caches gone the frame is retail's exactly and
+// `this` is in EDI on both sides - the permutation the note called C1
+// handle state was downstream of a source fact after all. Dose matters:
+// dropping `z` alone is 69.42, all three is 75.41.
+// Residual (75.41%): the first loop's counter. Retail materialises
+// `mov dword ptr [ebp-0x1c], 4` where we keep the strength-reduced count
+// in EBX, so retail has one more call-crossing pseudo than we do at that
+// point and spills the count; every later divergence is that one binding.
 VA(0x004183d0, 0x245)  // anchor-global, dc 0x1b164
 void advManager::SetEnvironmentOrigin(type_point point, int reset)
 {
@@ -8550,18 +8570,14 @@ void advManager::SetEnvironmentOrigin(type_point point, int reset)
 
     touchedSounds = 0;
 
-    int y = point.y;
-    int x = point.x;
-    int z = point.z;
-
     int soundsType;
     for (soundsType = 1; soundsType <= 2; soundsType++) {
-        InsertSound(x, y, z, 0, soundsType);
+        InsertSound(point.x, point.y, point.z, 0, soundsType);
 
-        int xMin = x;
-        int yMin = y;
-        int xMax = x;
-        int yMax = y;
+        int xMin = point.x;
+        int yMin = point.y;
+        int xMax = point.x;
+        int yMax = point.y;
         int ring;
         int edgeLength;
         for (ring = 0, edgeLength = 0; edgeLength < 8;
@@ -8584,10 +8600,10 @@ void advManager::SetEnvironmentOrigin(type_point point, int reset)
             k = edgeLength;
             if (edgeLength > 0) {
                 do {
-                    InsertSound(topX, yMin, z, ring, soundsType);
-                    InsertSound(xMax, rightY, z, ring, soundsType);
-                    InsertSound(bottomX, yMax, z, ring, soundsType);
-                    InsertSound(xMin, leftY, z, ring, soundsType);
+                    InsertSound(topX, yMin, point.z, ring, soundsType);
+                    InsertSound(xMax, rightY, point.z, ring, soundsType);
+                    InsertSound(bottomX, yMax, point.z, ring, soundsType);
+                    InsertSound(xMin, leftY, point.z, ring, soundsType);
                     topX++;
                     rightY++;
                     bottomX--;
