@@ -1101,6 +1101,12 @@ static short ReadCampaignWord(TAbstractFile* infile)
     return value;
 }
 
+// The two leading clears are `clear()`, not `erase(begin(), end())`:
+// retail CALLS both range-erase COMDATs (0x48a345, 0x48a355) where the
+// longhand form makes VC6 expand them, because clear()'s own wrapper takes
+// the /Ob2 site and the nested erase then gets budget/sites-remaining
+// instead of the whole remaining budget. 55.7915 -> 59.0405 on that line.
+//
 // Complete-only campaign deserializer. The >=28 arm is the field-for-field
 // inverse of retail SCampaign::Save at 0x48ae90. The older arm is fixed by
 // the 0x66a9-byte Read, the compiler-generated 2x8 LegacyCampaignHero
@@ -1110,8 +1116,8 @@ static short ReadCampaignWord(TAbstractFile* infile)
 VA(0x0048a310, 0xB1E)  // SavedGameHeader::Load caller + member/helper graph
 void SCampaign::Load(TAbstractFile* infile, int saveVersion)
 {
-    mapScores.erase(mapScores.begin(), mapScores.end());
-    carryOverHeroes.erase(carryOverHeroes.begin(), carryOverHeroes.end());
+    mapScores.clear();
+    carryOverHeroes.clear();
 
     if (saveVersion < 28) {
         // The out-of-line LegacyCampaignHero constructor below makes VC6
