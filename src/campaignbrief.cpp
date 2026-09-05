@@ -807,6 +807,16 @@ VA_COMPGEN(0x0045ad00, 0x13E, IMPLICIT_DTOR, NewSMapHeader)
 // emits no classic /Z7 line records for this compiler-generated body.
 VA_COMPGEN(0x0045ae40, 0x21, SCALAR_DELETING_DTOR, TCampaignBrief)
 
+// 0x45ae70 is a SECOND, byte-for-byte copy of 0x45ad00's ~NewSMapHeader, and
+// the owner is settled by its only caller: the 59-byte teardown at 0x45c030
+// walks its elements with a 0x4d4 stride, which is the CampaignScenarioPreview
+// this file already claims a vector::insert for at 0x45c960. The preview
+// derives from NewSMapHeader and adds only POD (SGameSetupOptions plus a
+// bool), so its implicit destructor is the base's walk verbatim - retail
+// EXPANDS the base COMDAT into it where our compile calls it, which is the
+// whole residual on this row and not a modelling difference.
+VA_COMPGEN(0x0045ae70, 0x13E, IMPLICIT_DTOR, CampaignScenarioPreview)
+
 // push_back on the layout-proven 0x4d4-byte preview retains Dinkumware's
 // three-argument vector::insert specialization in campaignbrief.obj.
 VA_COMPGEN(0x0045c960, 0x3AD, VECTOR_INSERT, CampaignScenarioPreview)
