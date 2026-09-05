@@ -3907,6 +3907,13 @@ void TSingleSelectionWindow::DrawBasicMapInfo()
         gpWindowManager->screenBitmap, 666, 454, 83, 48, 4, 5, -1);
     if (chatShowing != 0)
         return;
+    // The victory line copies the description TWICE, and retail proves it:
+    // 0x5840f0+0xfb0 runs the inlined strcpy unconditionally, then BOTH
+    // short-circuit failure edges (`cmp dl,-1 / je` and the
+    // AllowNormalVictory `je`) land on a SECOND inlined copy of the same
+    // strcpy at +0x1022 before the shared tail. Written with the `else` the
+    // row is EXACT (95.5200 -> 100.0000); without it the two edges fall into
+    // the shared tail and the block count is one short.
     char vcText[256];
     signed char vcType = vc->Type;
     const char* desc = gVictoryConditionDesc[vcType + 1];
@@ -3916,6 +3923,8 @@ void TSingleSelectionWindow::DrawBasicMapInfo()
                 DATA_COMPGEN(0x006837b4, vcOrFormat, "%s %s %s"),
                 desc, gpGeneralText->GetText(5),
                 gVictoryConditionDesc[0]);
+    else
+        strcpy(vcText, desc);
     char lcText[256];
     strcpy(lcText, gLossConditionDesc[lc->Type + 1]);
     gUnnamed698a08->DrawBoundedString(vcText,
