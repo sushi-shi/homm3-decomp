@@ -351,3 +351,8 @@ static void CustomCampaignSliderHandler(int state, heroWindow* window)
 // out-of-line predicate calls. The stock VC6 template is byte-identical.
 VA_COMPGEN(0x00483AA0, 0xA0, INSERTION_SORT_1,
            CampaignHeaderPointerLess)
+
+// COMDAT pairing: std::_Sort<CampaignHeaderStruct*, CampaignHeaderPointerLess>
+// - agreement 0.972 and the only object in the image emitting that
+// instantiation is this one.
+VA_COMPGEN(0x00483940, 0x151, STD_SORT, campaignheaderstruct_ptr)

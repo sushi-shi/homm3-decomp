@@ -179,6 +179,7 @@ advspells	?SummonBoat@advManager@@QAEXH@Z	91.1018	91.4864	91.4864	0x1c8a0	fdd94c
 advspells	?TeleportTo@advManager@@QAEXPAVhero@@Utype_point@@PBDEEE@Z	100.0000	100.0000	100.0000	0x1d930	4d7a32ebaa89
 advspells	?TownGate@advManager@@QAEXH@Z	99.0386	99.0386	99.0386	0x1d360	702cdb9eab97
 ai	??1type_spellvalue@@QAE@XZ	100.0000	100.0000	100.0000	0x20cf0	-
+ai	??Rfunc_moves_before@@QBE_NPBVarmy@@0@Z	100.0000	100.0000	100.0000	0x235c0	-
 ai	?DoCompAI@combatManager@@QAEXH@Z	98.4697	98.4697	98.4697	0x221f0	2e3e65e4a47b
 ai	?DoSpellAI@combatManager@@QAEEXZ	100.0000	100.0000	100.0000	0x22da0	e6d0af37140e
 ai	?IsIncapacitated@army@@QBE_NXZ	100.0000	100.0000	100.0000	0x1f380	0d867a728c71
@@ -300,7 +301,11 @@ ai_player	?_Sort@std@@YIXPAUtype_creature_value@@00@Z	100.0000	100.0000	100.0000
 ai_player	?_Sort@std@@YIXPAUtype_creature_value@@0U?$greater@Utype_creature_value@@@1@0@Z	100.0000	100.0000	100.0000	0x34ce0	-
 ai_player	?_Ucopy@?$vector@UHeroDestination@@V?$allocator@UHeroDestination@@@std@@@std@@IAEPAUHeroDestination@@PBU3@0PAU3@@Z	93.3750	93.3750	93.3750	0x34ba0	-
 ai_player	?_Ucopy@?$vector@UpathCell@@V?$allocator@UpathCell@@@std@@@std@@IAEPAUpathCell@@PBU3@0PAU3@@Z	100.0000	100.0000	100.0000	0x34bf0	-
+ai_player	?_Unguarded_insert@std@@YIXPAJJ@Z	100.0000	100.0000	100.0000	0x35140	-
+ai_player	?_Unguarded_insert@std@@YIXPAUtype_creature_value@@U2@@Z	100.0000	100.0000	100.0000	0x35020	-
 ai_player	?_Unguarded_partition@std@@YIPAUtype_creature_value@@PAU2@0U2@U?$greater@Utype_creature_value@@@1@@Z	100.0000	100.0000	100.0000	0x35290	-
+ai_player	?_Xran@?$bitset@$08@std@@ABEXXZ	95.5882	95.5882	95.5882	0x34ad0	-
+ai_player	?_Xran@?$bitset@$0JA@@std@@ABEXXZ	95.5882	95.5882	95.5882	0x346d0	-
 ai_player	?add_artifact@@YIEPAVhero@@Utype_artifact@@PAJ0J2J@Z	100.0000	100.0000	100.0000	0x33e20	491424c42444
 ai_player	?add_creatures@type_AI_creature_swapper@@IAEXW4TCreatureType@@FF@Z	100.0000	100.0000	100.0000	0x2c130	83f7182af229
 ai_player	?attempt_step@@YIEPAVhero@@PAUpathCell@@EE@Z	100.0000	100.0000	100.0000	0x2fc50	bb64170c20f3
@@ -620,6 +625,7 @@ armygrp	?modify_spell_damage@@YIJJHW4TCreatureType@@@Z	100.0000	100.0000	100.000
 armygrp	?save@armyGroup@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x4aa00	cd44bbd14fe7
 armygrp	?set@?$bitset@$08@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0x4c680	-
 artifact	?InitializeArtifactTraitsTable@@YIEXZ	80.5129	80.5129	80.5129	0x4cd50	b01098ff8b71
+artifact	?_Xran@?$bitset@$0BD@@std@@ABEXXZ	95.5882	95.5882	95.5882	0x4d400	-
 artifact	__h3cg$artifact$static_dtor$artifactSlotStrings	100.0000	100.0000	100.0000	0x4d340	-
 artifact	__h3cg$artifact$static_dtor$artifactStrings	100.0000	100.0000	100.0000	0x4d360	-
 basemgr	??0baseManager@@QAE@XZ	100.0000	100.0000	100.0000	0x4d530	687e8eebaf66
@@ -701,6 +707,7 @@ bottomviewsubwindow	??0bad_cast@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x5
 bottomviewsubwindow	??0bad_cast@std@@QAE@PBD@Z	100.0000	100.0000	100.0000	0x54a10	-
 bottomviewsubwindow	??0ios_base@std@@IAE@XZ	100.0000	100.0000	100.0000	0x515c0	-
 bottomviewsubwindow	??0strstreambuf@std@@QAE@H@Z	100.0000	100.0000	100.0000	0x51600	-
+bottomviewsubwindow	??1?$basic_ostream@DU?$char_traits@D@std@@@std@@UAE@XZ	100.0000	100.0000	100.0000	0x53a20	-
 bottomviewsubwindow	??1?$basic_streambuf@DU?$char_traits@D@std@@@std@@UAE@XZ	100.0000	100.0000	100.0000	0x54000	-
 bottomviewsubwindow	??1?$numpunct@D@std@@UAE@XZ	100.0000	100.0000	100.0000	0x55bf0	-
 bottomviewsubwindow	??1TBottomViewEnemyTurn@@UAE@XZ	100.0000	100.0000	100.0000	0x53670	d9e2660fc763
@@ -712,6 +719,7 @@ bottomviewsubwindow	??1TBottomViewResourceMessage@@UAE@XZ	100.0000	100.0000	100.
 bottomviewsubwindow	??1TBottomViewTown@@UAE@XZ	100.0000	100.0000	100.0000	0x52b00	bd09da0ac1f4
 bottomviewsubwindow	??1sentry@?$basic_ostream@DU?$char_traits@D@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x54320	-
 bottomviewsubwindow	??1type_bottom_view_window@@UAE@XZ	100.0000	100.0000	100.0000	0x50d50	7bf99d8681a0
+bottomviewsubwindow	??4?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@QAEAAV01@D@Z	100.0000	100.0000	100.0000	0x557a0	-
 bottomviewsubwindow	??6std@@YAAAV?$basic_ostream@DU?$char_traits@D@std@@@0@AAV10@PBD@Z	100.0000	100.0000	100.0000	0x54450	-
 bottomviewsubwindow	??_Dostrstream@std@@QAEXXZ	100.0000	100.0000	100.0000	0x51750	-
 bottomviewsubwindow	??_GTBottomViewEnemyTurn@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x53640	-
@@ -730,18 +738,29 @@ bottomviewsubwindow	?_Doraise@bad_cast@std@@MBEXXZ	100.0000	100.0000	100.0000	0x
 bottomviewsubwindow	?_Fput@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@KA?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DPBDII@Z	100.0000	100.0000	100.0000	0x54f20	-
 bottomviewsubwindow	?_Iput@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@KA?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DPADI@Z	100.0000	100.0000	100.0000	0x552d0	-
 bottomviewsubwindow	?_Rep@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@KI?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@DI@Z	100.0000	100.0000	100.0000	0x556d0	-
+bottomviewsubwindow	?_Save@?$_Tidyfac@V?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@@std@@SAPAV?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@2@PAV32@@Z	100.0000	100.0000	100.0000	0x55c20	-
+bottomviewsubwindow	?_Save@?$_Tidyfac@V?$numpunct@D@std@@@std@@SAPAV?$numpunct@D@2@PAV32@@Z	100.0000	100.0000	100.0000	0x55ca0	-
+bottomviewsubwindow	?_Tidy@?$_Tidyfac@V?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@@std@@SAXXZ	100.0000	100.0000	100.0000	0x55d20	-
+bottomviewsubwindow	?_Tidy@?$_Tidyfac@V?$numpunct@D@std@@@std@@SAXXZ	100.0000	100.0000	100.0000	0x55dc0	-
 bottomviewsubwindow	?animate@TBottomViewEnemyTurn@@UAEXXZ	100.0000	100.0000	100.0000	0x536f0	0e79eeb98cd5
 bottomviewsubwindow	?animate@TBottomViewNewTurn@@UAEXXZ	100.0000	100.0000	100.0000	0x511a0	a5b26fc67c45
+bottomviewsubwindow	?do_falsename@?$numpunct@D@std@@MBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@XZ	100.0000	100.0000	100.0000	0x55a20	-
+bottomviewsubwindow	?do_grouping@?$numpunct@D@std@@MBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@XZ	100.0000	100.0000	100.0000	0x55950	-
 bottomviewsubwindow	?do_put@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DJ@Z	100.0000	100.0000	100.0000	0x54a80	-
 bottomviewsubwindow	?do_put@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DK@Z	100.0000	100.0000	100.0000	0x54b20	-
 bottomviewsubwindow	?do_put@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DN@Z	100.0000	100.0000	100.0000	0x54bc0	-
 bottomviewsubwindow	?do_put@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DO@Z	100.0000	100.0000	100.0000	0x54c90	-
 bottomviewsubwindow	?do_put@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DPBX@Z	100.0000	100.0000	100.0000	0x54d60	-
 bottomviewsubwindow	?do_put@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@D_N@Z	100.0000	100.0000	100.0000	0x54770	-
+bottomviewsubwindow	?do_truename@?$numpunct@D@std@@MBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@XZ	100.0000	100.0000	100.0000	0x55af0	-
+bottomviewsubwindow	?falsename@?$numpunct@D@std@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@XZ	100.0000	100.0000	100.0000	0x55760	-
 bottomviewsubwindow	?getloc@ios_base@std@@QBE?AVlocale@2@XZ	100.0000	100.0000	100.0000	0x53d90	-
+bottomviewsubwindow	?grouping@?$numpunct@D@std@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@XZ	100.0000	100.0000	100.0000	0x55800	-
 bottomviewsubwindow	?opfx@?$basic_ostream@DU?$char_traits@D@std@@@std@@QAE_NXZ	100.0000	100.0000	100.0000	0x543d0	-
 bottomviewsubwindow	?put@?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEAAV12@D@Z	100.0000	100.0000	100.0000	0x53dd0	-
 bottomviewsubwindow	?sputc@?$basic_streambuf@DU?$char_traits@D@std@@@std@@QAEHD@Z	100.0000	100.0000	100.0000	0x54a30	-
+bottomviewsubwindow	?truename@?$numpunct@D@std@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@XZ	100.0000	100.0000	100.0000	0x55780	-
+bottomviewsubwindow	?uflow@?$basic_streambuf@DU?$char_traits@D@std@@@std@@MAEHXZ	100.0000	100.0000	100.0000	0x54080	-
 bottomviewsubwindow	?xsgetn@?$basic_streambuf@DU?$char_traits@D@std@@@std@@MAEHPADH@Z	100.0000	100.0000	100.0000	0x540b0	-
 bottomviewsubwindow	?xsputn@?$basic_streambuf@DU?$char_traits@D@std@@@std@@MAEHPBDH@Z	100.0000	100.0000	100.0000	0x54150	-
 button	??0button@@QAE@HHHHHPBDHHEHH@Z	100.0000	100.0000	100.0000	0x55ef0	a60516324f5e
@@ -761,6 +780,7 @@ button	?Select@button@@QAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x56860	e3d
 button	?SetPlayerPaletteColors@button@@QAEXH@Z	100.0000	100.0000	100.0000	0x569e0	dc6ad15ff688
 button	?_vslot12@button@@UAEXH@Z	100.0000	100.0000	100.0000	0x56a10	fa786de27cd0
 campaignbrief	??0?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@std@@QAE@ABU?$less@H@1@ABV?$allocator@Utype_map_hero_info@@@1@@Z	100.0000	100.0000	100.0000	0x5bf70	-
+campaignbrief	??0?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x5dcb0	-
 campaignbrief	??0CMapHeaderData@@QAE@XZ	100.0000	100.0000	100.0000	0x5a990	-
 campaignbrief	??0LossConditionStruct@@QAE@XZ	100.0000	100.0000	100.0000	0x5bac0	-
 campaignbrief	??0NewSMapHeader@@QAE@XZ	99.8438	99.8438	99.8438	0x5a7a0	-
@@ -788,12 +808,14 @@ campaignbrief	?Select@TCampaignBrief@@QAEXH@Z	92.1064	92.1064	92.1064	0x57990	8f
 campaignbrief	?UpdateAllyEnemyFlags@TCampaignBrief@@QAEXXZ	86.8125	86.8125	86.8125	0x58010	0a990c5eb338
 campaignbrief	?UpdateBonusIcons@TCampaignBrief@@QAEXXZ	95.3700	95.3700	95.3700	0x58d40	288e1c1bcbaf
 campaignbrief	?UpdateDifficultyButtons@TCampaignBrief@@QAEXXZ	100.0000	100.0000	100.0000	0x59010	a54768111cfd
+campaignbrief	?_Buynode@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@IAEPAU_Node@12@PAU312@W4_Redbl@12@@Z	100.0000	100.0000	100.0000	0x5dea0	-
 campaignbrief	?_Construct@std@@YIXPAU?$pair@$$CBHUtype_map_hero_info@@@1@ABU21@@Z	100.0000	100.0000	100.0000	0x5d590	-
 campaignbrief	?_Construct@std@@YIXPAUCampaignScenarioPreview@@ABU2@@Z	91.0748	91.0748	91.0748	0x5d700	-
 campaignbrief	?_Construct@std@@YIXPAUtype_map_hero_identity@@ABU2@@Z	100.0000	100.0000	100.0000	0x5d420	-
 campaignbrief	?_Copy@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@IAEPAU_Node@12@PAU312@0@Z	100.0000	100.0000	100.0000	0x5d270	-
 campaignbrief	?_Copy@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@IAEXABV12@@Z	100.0000	100.0000	100.0000	0x5c740	-
 campaignbrief	?_Inc@const_iterator@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x5d370	-
+campaignbrief	?_Ucopy@?$vector@Utype_map_hero_identity@@V?$allocator@Utype_map_hero_identity@@@std@@@std@@IAEPAUtype_map_hero_identity@@PBU3@0PAU3@@Z	100.0000	100.0000	100.0000	0x5d230	-
 campaignbrief	?erase@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@QAE?AViterator@12@V312@0@Z	98.9798	98.9798	98.9798	0x5c070	-
 campaignbrief	?get_campaign_name@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x5bc10	80bcbea63411
 campaignbrief	?insert@?$vector@UCampaignScenarioPreview@@V?$allocator@UCampaignScenarioPreview@@@std@@@std@@QAEXPAUCampaignScenarioPreview@@IABU3@@Z	100.0000	100.0000	100.0000	0x5c960	-
@@ -880,6 +902,7 @@ cmbtmgr	?Unnamed46a520@combatManager@@QAEXPAVarmy@@@Z	100.0000	100.0000	100.0000
 cmbtmgr	?UpdateArmyGroup@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x641f0	18ef1a85941e
 cmbtmgr	?UpdateArmyLuckAndMorale@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x69750	2771d18d280f
 cmbtmgr	?ViewArmy@combatManager@@QAEXPAVarmy@@H@Z	100.0000	100.0000	100.0000	0x68860	2818de794e02
+cmbtmgr	?_Ucopy@TObstacleVector@combatManager@@QAEPAUTObstacle@2@PBU32@0PAU32@@Z	100.0000	100.0000	100.0000	0x6b1a0	-
 cmbtmgr	?check_obstacle_attacks@combatManager@@QAEEPAVarmy@@E@Z	100.0000	100.0000	100.0000	0x6a570	7e6708be380f
 cmbtmgr	?damage_message@combatManager@@QAEXPBDJJPBVarmy@@J@Z	100.0000	100.0000	100.0000	0x69a90	ee21f4178e3b
 cmbtmgr	?enemy_is_adjacent@combatManager@@QBEEPBVarmy@@H0@Z	100.0000	100.0000	100.0000	0x69600	ebf78501abef
@@ -940,6 +963,7 @@ combatwindow	?_Freeze@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@st
 combatwindow	?combat_message@TCombatWindow@@QAEXPBDEE@Z	100.0000	100.0000	100.0000	0x72e90	98c0e7200e58
 combatwindow	?find@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QBEIPBDII@Z	100.0000	100.0000	100.0000	0x734f0	-
 combatwindow	?handle_widget_hover@TCombatWindow@@UAEXPAVwidget@@@Z	100.0000	100.0000	100.0000	0x72b80	10d2222cf54f
+combatwindow	?insert@?$vector@PAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$allocator@PAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@QAEXPAPAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@IABQAV32@@Z	100.0000	100.0000	100.0000	0x73600	-
 combatwindow	?scroll_down@TCombatWindow@@SIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x72e40	13e5bd5d61e1
 combatwindow	?scroll_rollover@TCombatWindow@@QAEXJ@Z	100.0000	100.0000	100.0000	0x72db0	32fd4b037678
 combatwindow	?scroll_up@TCombatWindow@@SIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x72df0	ac2cc98b30d8
@@ -1065,9 +1089,11 @@ cursor	?handle_stop_on_trigger@advManager@@AAEPAVNewmapCell@@PAVhero@@PAV2@EEPAH
 customcampaign	??0CampaignHeaderStruct@TCampaignBrief@@QAE@PBD@Z	100.0000	100.0000	100.0000	0x885d0	c81b1564e203
 customcampaign	??0LegacyCampaignHero@@QAE@XZ	100.0000	100.0000	100.0000	0x8ae30	d00745bb485b
 customcampaign	??0SCampaign@@QAE@XZ	100.0000	100.0000	100.0000	0x89500	92aa89488ce8
-customcampaign	??0out_of_range@std@@QAE@ABV01@@Z	91.3692	91.3692	91.3692	0x87bd0	-
+customcampaign	??0hero@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x60850	-
+customcampaign	??0out_of_range@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x4700	-
 customcampaign	??1CampaignHeaderStruct@TCampaignBrief@@QAE@XZ	78.5339	78.5339	78.5339	0x886a0	2c81b379a033
 customcampaign	??1ScenarioStruct@TCampaignBrief@@QAE@XZ	100.0000	100.0000	100.0000	0x85fe0	5186890e3d45
+customcampaign	??4?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	0x5ff30	-
 customcampaign	??_GTAbstractFile@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x87dd0	-
 customcampaign	??_H@YGXPAXIHP6EX0@Z@Z	100.0000	100.0000	100.0000	0x13d0	-
 customcampaign	?ApplyBriefingChoice@SCampaign@@QAEXH@Z	100.0000	100.0000	100.0000	0x8b2e0	a359310356da
@@ -1090,12 +1116,15 @@ customcampaign	?StartMusic@CampaignHeaderStruct@TCampaignBrief@@QAEXXZ	100.0000	
 customcampaign	?StartScenario@CampaignHeaderStruct@TCampaignBrief@@QAEXHH@Z	100.0000	100.0000	100.0000	0x894e0	00db9222128a
 customcampaign	?StartScenario@ScenarioStruct@TCampaignBrief@@QAEXPAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@H@Z	100.0000	100.0000	100.0000	0x884c0	1e966a01130f
 customcampaign	?Write@TStreamBufFile@@UAEHPBXH@Z	100.0000	100.0000	100.0000	0x83f30	651082a5fb27
+customcampaign	?_Construct@std@@YIXPAVhero@@ABV2@@Z	100.0000	100.0000	100.0000	0x603a0	-
 customcampaign	?_Destroy@?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@IAEXPAUtype_artifact@@0@Z	100.0000	100.0000	100.0000	0x4140	-
+customcampaign	?_Destroy@?$vector@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@V?$allocator@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@@2@@std@@IAEXPAV?$vector@Vhero@@V?$allocator@Vhero@@@std@@@2@0@Z	100.0000	100.0000	100.0000	0x8c5b0	-
 customcampaign	?_Sort@std@@YIXPAVhero@@0UCrossoverHeroStronger@@0@Z	100.0000	100.0000	100.0000	0x8f7e0	-
 customcampaign	?_Sort_0@std@@YIXPAVhero@@0UCrossoverHeroStronger@@0@Z	100.0000	100.0000	100.0000	0x8f2b0	-
 customcampaign	?_Ucopy@?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@IAEPAVhero@@PBV3@0PAV3@@Z	99.9286	99.9286	99.9286	0x8d8d0	-
 customcampaign	?_Ufill@?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@IAEXPAVhero@@IABV3@@Z	100.0000	100.0000	100.0000	0x8d970	-
-customcampaign	?_Xran@?$bitset@$0JB@@std@@ABEXXZ	95.5882	95.5882	95.5882	0x8edf0	-
+customcampaign	?_Xran@?$bitset@$07@std@@ABEXXZ	95.5882	95.5882	95.5882	0x8da70	-
+customcampaign	?_Xran@?$bitset@$0JB@@std@@ABEXXZ	95.5882	95.5882	95.5882	0x8d9a0	-
 customcampaign	?copy_backward@std@@YIPAVhero@@PAV2@00@Z	100.0000	100.0000	100.0000	0x8e880	-
 customcampaign	?erase@?$vector@UCampaignScenarioInfo@@V?$allocator@UCampaignScenarioInfo@@@std@@@std@@QAEPAUCampaignScenarioInfo@@PAU3@0@Z	100.0000	100.0000	100.0000	0x8cdd0	-
 customcampaign	?erase@?$vector@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@V?$allocator@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@@2@@std@@QAEPAV?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@2@PAV32@0@Z	100.0000	100.0000	100.0000	0x8ca30	-
@@ -1126,6 +1155,7 @@ customcampaignwindow	?LoadCampaignList@TCustomCampaignWindow@@QAEXXZ	99.9196	99.
 customcampaignwindow	?OnWidgetDeselect@TCustomCampaignWindow@@UAEHHPAE@Z	100.0000	100.0000	100.0000	0x835c0	ae4a7a376808
 customcampaignwindow	?UpdateList@TCustomCampaignWindow@@QAEXXZ	93.8038	93.8038	93.8038	0x83330	218c31badbdb
 customcampaignwindow	?_Insertion_sort_1@std@@YIXPAPAUCampaignHeaderStruct@TCampaignBrief@@0VCampaignHeaderPointerLess@@0@Z	100.0000	100.0000	100.0000	0x83aa0	-
+customcampaignwindow	?_Sort@std@@YIXPAPAUCampaignHeaderStruct@TCampaignBrief@@0VCampaignHeaderPointerLess@@0@Z	100.0000	100.0000	100.0000	0x83940	-
 deflate	@deflate@8	100.0000	100.0000	100.0000	0x204ac0	-
 deflate	@deflateEnd@4	100.0000	100.0000	100.0000	0x204e10	-
 deflate	@deflateInit2_@32	100.0000	100.0000	100.0000	0x204850	-
@@ -1456,6 +1486,7 @@ events	?_Construct@std@@YIXPAV?$basic_string@DU?$char_traits@D@std@@V?$allocator
 events	?_Destroy@?$vector@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@IAEXPAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@0@Z	100.0000	100.0000	100.0000	0xaf500	-
 events	?_Sort@std@@YIXPAH0Uspell_level_order@@0@Z	100.0000	100.0000	100.0000	0xb00b0	-
 events	?_Sort_0@std@@YIXPAH0Uspell_level_order@@0@Z	100.0000	100.0000	100.0000	0xafcb0	-
+events	?_Ucopy@?$vector@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@IAEPAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@PBV32@0PAV32@@Z	100.0000	100.0000	100.0000	0xaf800	-
 events	?_Unguarded_insert@std@@YIXPAHHUspell_level_order@@@Z	100.0000	100.0000	100.0000	0xb0350	-
 events	?_Unguarded_partition@std@@YIPAHPAH0HUspell_level_order@@@Z	100.0000	100.0000	100.0000	0xb0400	-
 events	?copy_backward@std@@YIPAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@PAV21@00@Z	100.0000	100.0000	100.0000	0xaf9d0	-
@@ -1530,6 +1561,7 @@ findpath	?PushCombatPoint@searchArray@@QAEXHHHHH@Z	90.2555	90.2555	90.2555	0xb3b
 findpath	?PushPoint@searchArray@@QAEXPBUpathCell@@PAU2@HHHJUtype_point@@H@Z	87.5488	87.5488	87.5488	0xb1a70	dbb2a3ea9d4a
 findpath	?SeedCombatPosition@searchArray@@QAEXPBVarmy@@JJEJ@Z	89.8177	89.8177	89.8177	0xb2da0	99550029ca88
 findpath	?TestPossibleDirections@searchArray@@QAEXPAVhero@@PAUpathCell@@JJEUtype_point@@JW4type_search_type@@J@Z	99.2000	99.2000	99.2000	0xb2300	d013f8a66d2e
+findpath	?copy@std@@YIPAUpathCell@@PAU2@00@Z	100.0000	100.0000	100.0000	0xb4270	-
 findpath	?getCellData@searchArray@@QAEPAUpathCell@@J@Z	100.0000	100.0000	100.0000	0xb3b90	7898a35c2424
 findpath	?get_travel_time@searchArray@@QAEJPBVarmy@@J@Z	100.0000	100.0000	100.0000	0xb3f20	9801e76404ba
 findpath	?insert@?$vector@UpathCell@@V?$allocator@UpathCell@@@std@@@std@@QAEXPAUpathCell@@IABU3@@Z	100.0000	100.0000	100.0000	0xb3f70	-
@@ -1572,6 +1604,8 @@ game	??1?$pair@$$CBHUtype_map_hero_info@@@std@@QAE@XZ	100.0000	100.0000	100.0000
 game	??1?$vector@UTRumour@game@@V?$allocator@UTRumour@game@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xcf7c0	-
 game	??1?$vector@UTScenarioTown@@V?$allocator@UTScenarioTown@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xcf0b0	-
 game	??1?$vector@Utype_creature_bank@@V?$allocator@Utype_creature_bank@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xcf780	-
+game	??1?$vector@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@V?$allocator@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@@2@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x5f7b0	-
+game	??1?$vector@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@V?$allocator@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@@2@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x5f560	-
 game	??1?$vector@VSign@@V?$allocator@VSign@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xcf6f0	-
 game	??1?$vector@Vtown@@V?$allocator@Vtown@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xcf3d0	-
 game	??1CGameTransferDlg@@UAE@XZ	100.0000	100.0000	100.0000	0xcbcf0	-
@@ -1584,11 +1618,15 @@ game	??1game@@QAE@XZ	100.0000	100.0000	100.0000	0xce5b0	63b88e3526aa
 game	??1out_of_range@std@@UAE@XZ	100.0000	100.0000	100.0000	0xb6be0	-
 game	??1playerData@@QAE@XZ	100.0000	100.0000	100.0000	0xce570	293b0ee86f68
 game	??1type_creature_bank@@QAE@XZ	100.0000	100.0000	100.0000	0xc2420	771f9d5722f4
+game	??4?$vector@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@V?$allocator@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@@2@@std@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	0x5f5e0	-
 game	??4CObjectType@@QAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0xd40c0	-
 game	??4reference@?$bitset@$04@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0000	0xcf800	-
 game	??4reference@?$bitset@$07@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0000	0xd4490	-
 game	??4reference@?$bitset@$0BM@@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0000	0xcf8f0	-
 game	??4reference@?$bitset@$0EG@@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0000	0xcefa0	-
+game	??4reference@?$bitset@$0IB@@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0000	0x8ead0	-
+game	??4reference@?$bitset@$0JA@@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0000	0x8e9f0	-
+game	??4reference@?$bitset@$0JB@@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0000	0x8ea60	-
 game	??4reference@?$bitset@$0JM@@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0000	0xcf040	-
 game	??4town@@QAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0xd3df0	-
 game	??4type_creature_bank@@QAEAAU0@ABU0@@Z	100.0000	100.0000	100.0000	0xd4260	-
@@ -1724,6 +1762,8 @@ game	?ViewArmy@game@@QAEXAAVarmyGroup@@HPBVhero@@PBVtown@@HHEE@Z	83.8710	96.9556
 game	?WaitForPlayer@game@@QAEXPADH@Z	100.0000	100.0000	100.0000	0xca840	130d813115c7
 game	?_Construct@std@@YIXPAUTRumour@game@@ABU23@@Z	100.0000	100.0000	100.0000	0xd3a10	-
 game	?_Construct@std@@YIXPAUtype_creature_bank@@ABU2@@Z	100.0000	100.0000	100.0000	0xd3d30	-
+game	?_Construct@std@@YIXPAV?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@1@ABV21@@Z	100.0000	100.0000	100.0000	0x5fdc0	-
+game	?_Construct@std@@YIXPAV?$vector@Vhero@@V?$allocator@Vhero@@@std@@@1@ABV21@@Z	100.0000	100.0000	100.0000	0x5fce0	-
 game	?_Construct@std@@YIXPAVCObjectType@@ABV2@@Z	100.0000	100.0000	100.0000	0xd3b70	-
 game	?_Construct@std@@YIXPAVSign@@ABV2@@Z	100.0000	100.0000	100.0000	0xd3880	-
 game	?_Construct@std@@YIXPAVboat@@ABV2@@Z	100.0000	100.0000	100.0000	0xd39f0	-
@@ -1732,6 +1772,7 @@ game	?_Dec@const_iterator@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn
 game	?_Destroy@?$vector@UTRumour@game@@V?$allocator@UTRumour@game@@@std@@@std@@IAEXPAUTRumour@game@@0@Z	100.0000	100.0000	100.0000	0xd1760	-
 game	?_Destroy@?$vector@Utype_creature_bank@@V?$allocator@Utype_creature_bank@@@std@@@std@@IAEXPAUtype_creature_bank@@0@Z	100.0000	100.0000	100.0000	0xd13b0	-
 game	?_Destroy@?$vector@Utype_map_hero_identity@@V?$allocator@Utype_map_hero_identity@@@std@@@std@@IAEXPAUtype_map_hero_identity@@0@Z	100.0000	100.0000	100.0000	0xcfec0	-
+game	?_Destroy@?$vector@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@V?$allocator@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@@2@@std@@IAEXPAV?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@2@0@Z	100.0000	100.0000	100.0000	0x8caa0	-
 game	?_Destroy@?$vector@Vtown@@V?$allocator@Vtown@@@std@@@std@@IAEXPAVtown@@0@Z	100.0000	100.0000	100.0000	0xd07c0	-
 game	?_Inc@const_iterator@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@U_Kfn@?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@3@U?$less@PAVCImmEnclosure@@@3@V?$allocator@UtagRECT@@@3@@std@@QAEXXZ	100.0000	100.0000	100.0000	0xb7330	-
 game	?_Insert@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@IAE?AViterator@12@PAU_Node@12@0ABU?$pair@$$CBHUtype_map_hero_info@@@2@@Z	100.0000	100.0000	100.0000	0xd1d50	-
@@ -1741,6 +1782,7 @@ game	?_Tidy@?$bitset@$07@std@@AAEXK@Z	100.0000	100.0000	100.0000	0xcff30	-
 game	?_Tidy@?$bitset@$0BM@@std@@AAEXK@Z	100.0000	100.0000	100.0000	0xd1830	-
 game	?_Tidy@?$bitset@$0EG@@std@@AAEXK@Z	100.0000	100.0000	100.0000	0xcfa10	-
 game	?_Tidy@?$bitset@$0IA@@std@@AAEXK@Z	100.0000	100.0000	100.0000	0xd4e90	-
+game	?_Ucopy@?$vector@Utype_university@@V?$allocator@Utype_university@@@std@@@std@@IAEPAUtype_university@@PBU3@0PAU3@@Z	100.0000	100.0000	100.0000	0x34c70	-
 game	?_Ucopy@?$vector@Vboat@@V?$allocator@Vboat@@@std@@@std@@IAEPAVboat@@PBV3@0PAV3@@Z	100.0000	100.0000	100.0000	0xd2210	-
 game	?_Ucopy@?$vector@Vgenerator@@V?$allocator@Vgenerator@@@std@@@std@@IAEPAVgenerator@@PBV3@0PAV3@@Z	100.0000	100.0000	100.0000	0xd4f80	-
 game	?_Ucopy@?$vector@Vtown@@V?$allocator@Vtown@@@std@@@std@@IAEPAVtown@@PBV3@0PAV3@@Z	100.0000	100.0000	100.0000	0xd21a0	-
@@ -1754,6 +1796,7 @@ game	?_Xran@?$bitset@$04@std@@ABEXXZ	100.0000	100.0000	100.0000	0xd2610	-
 game	?_Xran@?$bitset@$0BM@@std@@ABEXXZ	100.0000	100.0000	100.0000	0xd26e0	-
 game	?_Xran@?$bitset@$0EG@@std@@ABEXXZ	100.0000	100.0000	100.0000	0xd1c80	-
 game	?_Xran@?$bitset@$0IA@@std@@ABEXXZ	100.0000	100.0000	100.0000	0xd5000	-
+game	?_Xran@?$bitset@$0IB@@std@@ABEXXZ	95.5882	95.5882	95.5882	0x8edf0	-
 game	?_Xran@?$bitset@$0JM@@std@@ABEXXZ	100.0000	100.0000	100.0000	0xd2090	-
 game	?_Xran@?$bitset@$0M@@std@@ABEXXZ	100.0000	100.0000	100.0000	0xd4eb0	-
 # EXACT 2026-08-30. The former 98.9923 deliberate lower was source-false:
@@ -2549,6 +2592,7 @@ philai	?ValueOfSpell@hero@@QBEHH@Z	100.0000	100.0000	100.0000	0x127aa0	6366031b8
 philai	?ValueOfStables@@YIHPBVhero@@PAJ@Z	100.0000	100.0000	100.0000	0x12aac0	39373c5d0391
 philai	?ValueOfTreasure@@YIHPBVhero@@@Z	100.0000	100.0000	100.0000	0x12b4e0	d8afc6eae5e6
 philai	?ValueOfTree@@YIHPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x12b5a0	73d329d3dde8
+philai	?_Unguarded_insert@std@@YIXPAUtype_creature_value@@U2@U?$greater@Utype_creature_value@@@1@@Z	100.0000	100.0000	100.0000	0x12bd50	-
 philai	?buy_artifacts@@YIXPAVhero@@PAW4TArtifact@@J@Z	97.0093	98.1308	98.1308	0x124400	449e7c61275e
 philai	?buy_siege_engine@@YIXPAVhero@@PAVtown@@W4type_building_id@@W4TArtifact@@@Z	98.7234	100.0000	100.0000	0x125ca0	4df179ba0465
 philai	?buy_special_building@@YIXPAVhero@@PAVtown@@@Z	99.2405	100.0000	100.0000	0x1259e0	7e579e56a42a
@@ -2816,6 +2860,7 @@ resourcemanager	??0TResourceLODSlot@@QAE@PBD@Z	100.0000	100.0000	100.0000	0x1591
 resourcemanager	??1?$basic_ostringstream@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@UAE@XZ	100.0000	100.0000	100.0000	0x15d530	-
 resourcemanager	??1?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@UAE@XZ	100.0000	100.0000	100.0000	0x15db40	-
 resourcemanager	??1?$map@UTCacheMapKey@ResourceManager@@PAVresource@@U?$less@UTCacheMapKey@ResourceManager@@@std@@V?$allocator@U?$pair@$$CBUTCacheMapKey@ResourceManager@@PAVresource@@@std@@@5@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x159440	-
+resourcemanager	??Hstd@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@0@ABV10@PBD@Z	100.0000	100.0000	100.0000	0xb7ec0	-
 resourcemanager	??_D?$basic_ostringstream@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x1594f0	-
 resourcemanager	??_G?$basic_ostringstream@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x15dae0	-
 resourcemanager	??_Gt_lod_file_adapter@ResourceManager@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x15a7d0	-
@@ -3324,6 +3369,8 @@ slider	?SetState@slider@@UAEXH@Z	100.0000	100.0000	100.0000	0x1961e0	865d5534b3b
 slider	?UpdateResolution@slider@@UAEXH@Z	100.0000	100.0000	100.0000	0x1970b0	de523f66917e
 slider	?enable@slider@@UAEXE@Z	100.0000	100.0000	100.0000	0x197140	09ea1f3d7a32
 slider	?initialize@slider@@IAEXPBD@Z	100.0000	100.0000	100.0000	0x196050	aa3ab5eb7c34
+smackmgr	??0?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x60700	-
+smackmgr	??A?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAADI@Z	100.0000	100.0000	100.0000	0x11a840	-
 smackmgr	?CloseSmacker@SmackManager@@YIXXZ	100.0000	100.0000	100.0000	0x199050	115dfa95ad79
 smackmgr	?DeleteAnimHeaders@@YIXXZ	100.0000	100.0000	100.0000	0x198440	16913871eab2
 smackmgr	?DeleteSoundHeaders@@YIXXZ	100.0000	100.0000	100.0000	0x1986e0	0a3016c080b2
@@ -3350,6 +3397,8 @@ smackmgr	?VideoRestart@@YIXXZ	100.0000	100.0000	100.0000	0x197900	b9317f2d483b
 smackmgr	?VideoResume@@YIXXZ	100.0000	100.0000	100.0000	0x197850	219da5b0d0a1
 smackmgr	?VideoShutDown@@YIXXZ	100.0000	100.0000	100.0000	0x197c70	5b5b45640a91
 smackmgr	?VideoSoundOnOff@@YIXXZ	100.0000	100.0000	100.0000	0x1971b0	535c7885a628
+smackmgr	?append@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@ID@Z	100.0000	100.0000	100.0000	0xb5f40	-
+smackmgr	?assign@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@ID@Z	100.0000	100.0000	100.0000	0x11a780	-
 soundmgr	??0soundManager@@QAE@XZ	100.0000	100.0000	100.0000	0x199760	f3dc08d924d7
 soundmgr	?AdjustMusicVolumes@soundManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19a1b0	f38726a08d0d
 soundmgr	?AdjustSoundVolumes@soundManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19a0c0	e94917bf11ef
@@ -3389,6 +3438,7 @@ spellbookwindow	?Open@TSpellbookWindow@@UAEHHE@Z	100.0000	100.0000	100.0000	0x19
 spellbookwindow	?WindowHandler@TSpellbookWindow@@UAEHPAVmessage@@@Z	99.9011	99.9011	99.9011	0x19d040	afd2f6cd1887
 spellbookwindow	?_Insertion_sort_1@std@@YIXPAVTSpellbookEntry@TSpellbookWindow@@00@Z	100.0000	100.0000	100.0000	0x19def0	-
 spellbookwindow	?_Sort@std@@YIXPAVTSpellbookEntry@TSpellbookWindow@@00@Z	100.0000	100.0000	100.0000	0x19dc90	-
+spellbookwindow	?erase@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@II@Z	100.0000	100.0000	100.0000	0x1bdb0	-
 spellbookwindow	?get_spell_description@TSpellbookWindow@@AAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@HPBVhero@@E@Z	96.8000	96.8000	96.8000	0x19baa0	368d8d6e41c8
 spelldefs	?InitializeSpellTraits@@YIXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	100.0000	100.0000	100.0000	0x19e150	4e33d1e76770
 spelldefs	?InitializeSpellTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0x19e090	59446a0b5e03
@@ -3807,6 +3857,7 @@ university_window	?handle_widget_hover@type_university_window@@UAEXPAVwidget@@@Z
 university_window	?purchase_click@type_university_window@@KIHAAVmessage@@@Z	94.7553	94.7553	94.7553	0x1f0f60	e6775d76fa39
 university_window	?skill_click@type_university_window@@QAEXW4TSecondarySkill@@@Z	98.3268	98.3268	98.3268	0x1f0ac0	e390867771ab
 university_window	?update_skill_button@type_university_window@@IAEXAAUtype_university_skill@@@Z	100.0000	100.0000	100.0000	0x1f0790	1d388ed37ce9
+victorylossconditions	??0?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAE@PBDABV?$allocator@D@1@@Z	100.0000	100.0000	100.0000	0x8b370	-
 victorylossconditions	?CheckForArtifactTransportWin@VictoryConditionStruct@@QAEEPBVhero@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x1f2860	10dec993b8aa
 victorylossconditions	?CheckForArtifactWin@VictoryConditionStruct@@QAEEXZ	98.2057	98.2057	98.2057	0x1f1610	9d6a0fa53dbd
 victorylossconditions	?CheckForDefeatedHeroLoss@LossConditionStruct@@QAEEPBVhero@@@Z	75.8636	75.8636	75.8636	0x1f2a40	77cbe67963b6
@@ -3833,6 +3884,8 @@ viewarmywindow	??1TViewArmyWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1f45e0	1f
 viewarmywindow	??_GTViewArmyWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1f3b20	-
 viewarmywindow	?DoModal@TViewArmyWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1f47f0	55d754aa4559
 viewarmywindow	?WindowHandler@TViewArmyWindow@@UAEHPAVmessage@@@Z	92.5744	92.5744	92.5744	0x1f4850	0fb446d5f96b
+viewarmywindow	?_Split@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEXXZ	100.0000	100.0000	100.0000	0x4ce0	-
+viewarmywindow	?assign@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@ABV12@II@Z	100.0000	100.0000	100.0000	0x4860	-
 viewarmywindow	?convertID2HelpID@TViewArmyWindow@@QBEHH@Z	100.0000	100.0000	100.0000	0x1f46c0	b4f7672d6128
 viewarmywindow	?create_attack_widget@TViewArmyWindow@@QAEXHH@Z	100.0000	100.0000	100.0000	0x1f5340	f086a7054632
 viewarmywindow	?create_damage_widget@TViewArmyWindow@@QAEXPBUTCreatureTypeTraits@@PBVhero@@@Z	100.0000	100.0000	100.0000	0x1f5860	151db9c9b9a2
