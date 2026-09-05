@@ -1968,8 +1968,8 @@ gzfile	?Read@TGzFile@@UAEHPAXH@Z	100.0000	100.0000	100.0000	0xd6d80	d8d74584e733
 gzfile	?Write@TGzFile@@UAEHPBXH@Z	100.0000	100.0000	100.0000	0xd6da0	c861271538fe
 gzinflatebuf	??0TAllocationFailure@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x1b920	-
 gzinflatebuf	??0TAllocationFailure@@QAE@XZ	100.0000	100.0000	100.0000	0xd6b80	92689dd90756
-gzinflatebuf	??0TDataError@TGzInflateBuf@@QAE@ABV01@@Z	0.0000	100.0000	100.0000	0xd65e0	ef530792f879
-gzinflatebuf	??0TDataError@TGzInflateBuf@@QAE@XZ	31.7752	100.0000	100.0000	0xd6690	-
+gzinflatebuf	??0TDataError@TGzInflateBuf@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0xd6690	-
+gzinflatebuf	??0TDataError@TGzInflateBuf@@QAE@XZ	100.0000	100.0000	100.0000	0xd65e0	ef530792f879
 gzinflatebuf	??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z	91.5985	91.5985	91.5985	0xd6050	9b37d907d923
 gzinflatebuf	??0TRuntimeError@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x1b7b0	-
 gzinflatebuf	??0runtime_error@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z	100.0000	100.0000	100.0000	0x1ba90	-
