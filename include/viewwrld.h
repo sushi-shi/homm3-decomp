@@ -20,7 +20,22 @@ class type_func_button;
 // Dreamcast RolloverWidget at +0x60.
 class TViewWorldWindow : public CAdvPopup {
 public:
-    enum EOtherWidgetIDs { MAP_ID = 0 };
+    // The constructor's own append order fixes every id below: the three
+    // magnification buttons carry VWMag1/VWMag2/VWMag4.def at 16, 17 and
+    // 18, the puzzle button VWPuz.def at 19, and the 144x144 mini-map
+    // border at 20. WindowHandler cases on all five plus the house
+    // 0x7802 accept id. Spellings are role-based - neither corpus names
+    // them - and the scale each magnification arm installs is what fixes
+    // WHICH is which (16 -> 7.68f, 17 -> 11.84f, 18 -> 16.0f).
+    enum EOtherWidgetIDs {
+        MAP_ID = 0,
+        MAGNIFY_FAR_ID = 16,
+        MAGNIFY_MID_ID = 17,
+        MAGNIFY_FULL_ID = 18,
+        PUZZLE_ID = 19,
+        RADAR_ID = 20,
+        ACCEPT_ID = 0x7802
+    };
     // Dreamcast's older revision reserves two slots. Complete's constructor
     // compares the Dinkumware vector capacity against 0x28 and allocates 160
     // bytes, directly proving the revised constant.
