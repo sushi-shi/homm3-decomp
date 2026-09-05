@@ -263,6 +263,40 @@ DIRECT_SYMBOL_COMPGEN_KINDS = frozenset({
     "IMPLICIT_COPY_CTOR",
     "IMPLICIT_COPY_ASSIGN",
     "IMPLICIT_DTOR",
+    # The istream/locale half of the char stream family. Every name here
+    # must also exist in retail_labels.source's CHAR_STREAM_MEMBERS (or, for
+    # TREE_FIND, its _Tree arm); a kind registered there and NOT here reaches
+    # this module as a pending semantic claim and an overload group trips the
+    # duplicate-name check, because a group's members share one key by
+    # design.
+    "NUM_GET_DO_GET",
+    "NUM_GET_GETIFLD",
+    "ISTREAM_IPFX",
+    "STREAMBUF_SGETC",
+    "STREAMBUF_SBUMPC",
+    "BASIC_IOS_SETSTATE",
+    "BASIC_IOS_CLEAR",
+    "ISTREAMBUF_ITERATOR_PEEK",
+    "ISTREAMBUF_ITERATOR_INC",
+    "ISTREAMBUF_ITERATOR_EQUAL",
+    "ISTREAMBUF_ITERATOR_DEREF",
+    "CTYPE_IS",
+    "CTYPE_DO_TOLOWER_CHAR",
+    "CTYPE_DO_TOLOWER_RANGE",
+    "CTYPE_DO_TOUPPER_CHAR",
+    "CTYPE_DO_TOUPPER_RANGE",
+    "BASIC_STRING_COMPARE_STR",
+    "BASIC_STRING_COMPARE_SUBSTR",
+    "BASIC_STRING_REPLACE",
+    "BASIC_STRING_RFIND",
+    "MAKLOCSTR",
+    "USE_FACET_CTYPE",
+    "USE_FACET_NUMPUNCT",
+    "TIDYFAC_CTYPE_SAVE",
+    "TIDYFAC_CTYPE_TIDY",
+    "TIDYFAC_NUM_GET_SAVE",
+    "TIDYFAC_NUM_GET_TIDY",
+    "TREE_FIND",
 })
 
 
