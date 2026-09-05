@@ -16,6 +16,7 @@ import sys
 
 from homm3 import manifest
 from homm3.core import codeview, common
+from homm3.core import cc_wrap
 from homm3.core.cc_wrap import scan_header_deps
 
 
@@ -117,7 +118,8 @@ def _first_body_line(lines: list[str], begin_line: int) -> int:
 def _cache_inputs(source: Path) -> list[Path]:
     inputs = [source.resolve()]
     inputs.extend(Path(path) for path in scan_header_deps(
-        source, common.HOMM3_DIR / "include"))
+        source, common.HOMM3_DIR / "include",
+        common.HOMM3_DIR / cc_wrap.ZLIB_INC))
     return sorted(set(inputs), key=str)
 
 

@@ -486,6 +486,16 @@ def scan_file(path, functions: set[int],
                     raw = TEMPLATE_ARGS_RE.sub("", raw)
                 last = DECLARATOR_RE.findall(raw + "(")
                 raw = last[-1] if last else raw
+                # A NESTED class's constructor or destructor is spelled
+                # `Outer::Inner::Inner`, but MSVC mangles it `??0Inner@Outer@@`
+                # and _demangle_key keys that as `inner_inner` - so the
+                # three-component declarator never joins and the claim keeps a
+                # flat carve name forever. Drop the enclosing qualifiers for
+                # exactly this shape (last two components equal modulo the
+                # destructor tilde); every other declarator is untouched.
+                parts = raw.split("::")
+                if len(parts) > 2 and parts[-1].lstrip("~") == parts[-2]:
+                    raw = "::".join(parts[-2:])
             name = IDENT_RE.sub("_", raw).strip("_")[:64]
             if not name:
                 name = f"fn_{rva:x}"
