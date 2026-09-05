@@ -405,37 +405,46 @@ TRecruitWindow::~TRecruitWindow()
     }
 }
 
+// Lifted out of add_creature_widgets to drop that body's front-end cb: the
+// /Ob2 budget is clamp(2*caller_cb, 1000, 35000), and the whole residual there
+// is one nested vector<widget*>::size() our compile could afford to expand.
+// Single call site, so /Ob2 expands it back and no out-of-line copy is emitted.
+static long creature_background(TCreatureType creature)
+{
+    return gpGame->f_1f698 == 0
+            && (creature == CREATURE_AIR_ELEMENTAL
+                || creature == CREATURE_EARTH_ELEMENTAL
+                || creature == CREATURE_FIRE_ELEMENTAL
+                || creature == CREATURE_WATER_ELEMENTAL)
+        ? -1 : akCreatureTypeTraits[creature].townType;
+}
+
 // E:\gamedcs\recruit.cpp:302
 // Retail's Complete-only elemental-card rule is the four-compare chain at
 // 0x54fbd5: when the campaign/version flag is zero, the four base elementals
 // use background index -1 (the deliberately biased akCreatureBackgrounds
 // base). `name_y` is genuinely unused here; the constructor uses it for the
 // adjacent name widgets after calling this helper.
-// Residual (93.6325%): blocks B0..B24, including all three allocations and
-// constructor calls, are instruction-for-instruction exact. The only delta is
-// the slow-growth tail of the FINAL Widgets.push_back: retail leaves the last
-// vector<widget*>::size() at 0x423110 out of line and therefore merges its
-// empty/non-empty return, while this VC6 compile inlines that 19-byte helper
-// and emits one duplicate exit. predict-inline measures 17 candidate calls
-// versus retail's 18. A statement-scoped inline_depth(1) is byte-flat, while
-// depth(0) de-inlines the whole push_back edge and falls to 51.8481%; it cannot
-// isolate the nested size() call. Other source-form controls: named border
+// EXACT since 2026-09-05, from 93.6325%. The old residual below was right
+// about the mechanism and wrong that it was unreachable: blocks B0..B24 were
+// already instruction-exact and the only delta was the final
+// Widgets.push_back's nested vector<widget*>::size(), which retail leaves out
+// of line at 0x423110 (so its empty/non-empty arms merge) and this compile
+// expanded - one extra branch and one duplicate epilogue, 3 rets against 2.
+// A statement pin cannot reach it, as the old note measured (depth(1)
+// byte-flat, depth(0) de-inlines the whole push_back edge to 51.8481%), but
+// the pin is not the only knob: /Ob2's budget is clamp(2*caller_cb, ...), so
+// lifting the elemental-background chain into the single-call-site static
+// above drops caller_cb, the budget with it, and the nested size() goes back
+// out of line. 93.6325 -> 100.0000, 35/35 blocks, no other row moved.
+// Historical negatives, all measured on the un-lifted body: named border
 // temporary 93.59%; direct count-insert 79.10%; direct single-insert 87.60%.
-// All preserve the values but perturb more of Dinkumware's insertion lowering,
-// so the natural push_back form below is the banked maximum. Inline-budget /
-// generation residual, not missing game logic.
 VA(0x0054fb90, 0x30D)  // anchor-callee + anchor-global, dc 0x119820
 void TRecruitWindow::add_creature_widgets(long start_x, long start_y, long name_y, TCreatureType creature, long slot)
 {
     Widgets.push_back(new bitmapBorder(start_x, start_y, 100, 130,
         slot + 0x21e,
-        akCreatureBackgrounds[
-            gpGame->f_1f698 == 0
-                && (creature == CREATURE_AIR_ELEMENTAL
-                    || creature == CREATURE_EARTH_ELEMENTAL
-                    || creature == CREATURE_FIRE_ELEMENTAL
-                    || creature == CREATURE_WATER_ELEMENTAL)
-            ? -1 : akCreatureTypeTraits[creature].townType],
+        akCreatureBackgrounds[creature_background(creature)],
         0x800));
 
     creature_widgets[slot] = new iconWidget(start_x, start_y, 100, 130,

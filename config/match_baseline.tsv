@@ -225,7 +225,7 @@ ai_combat	?get_spell_damage@type_monster_data@@QBEJHPBVhero@@0J@Z	100.0000	100.0
 ai_combat	?get_total@type_AI_combat_data@@QBEJXZ	100.0000	100.0000	100.0000	0x27750	4226bc1ffa99
 ai_combat	?inflict_damage@type_AI_combat_data@@QAEXJJ@Z	100.0000	100.0000	100.0000	0x26300	dd05427386d1
 ai_combat	?inflict_melee_damage@type_AI_combat_data@@QAEJJJJ@Z	100.0000	100.0000	100.0000	0x26170	1f05d418dada
-ai_combat	?initialize_creatures@type_AI_combat_data@@QAEXNPBVhero@@@Z	91.0075	91.0075	91.0075	0x24120	4bd7e82ab7fc
+ai_combat	?initialize_creatures@type_AI_combat_data@@QAEXNPBVhero@@@Z	91.9548	91.9548	91.9548	0x24120	04678536d519
 ai_combat	?kill@type_AI_combat_data@@QAEXXZ	100.0000	100.0000	100.0000	0x262b0	19c6a5b5165a
 ai_combat	?simulate_combat@type_AI_combat_data@@QAEXAAV1@@Z	100.0000	100.0000	100.0000	0x26bc0	55e323c352a3
 ai_combat	?take_damage@type_monster_data@@QAEJJ@Z	100.0000	100.0000	100.0000	0x23ea0	f560b32b5895
@@ -702,7 +702,7 @@ campaignmap	__h3cg$campaignmap$static_dtor$campaignNames	100.0000	100.0000	100.0
 campaignwindow	??0TCampaignWindow@@QAE@EH@Z	98.4726	98.4726	98.4726	0x5ea40	8637a9869f6d
 campaignwindow	??1TCampaignWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x5f210	aee78d937417
 campaignwindow	??_GTCampaignWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x5f0e0	-
-campaignwindow	?CampaignWindowHandler@@YIHAAVmessage@@@Z	81.6384	81.6384	81.6384	0x5f2f0	623dede97335
+campaignwindow	?CampaignWindowHandler@@YIHAAVmessage@@@Z	84.4576	84.4576	84.4576	0x5f2f0	52f73ae83d4d
 campaignwindow	?DoModal@TCampaignWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x5f2c0	da4900d2fde7
 campaignwindow	__h3cg$campaignwindow$implicit_dtor$SCampaign	0.0000	100.0000	100.0000	0x5f110	-
 castle	?CanBuy@@YIHPBVtown@@H@Z	100.0000	100.0000	100.0000	0x61130	ca57faf6f310
@@ -763,8 +763,8 @@ cmbtmgr	?SetNextArmy@combatManager@@QAEXHH@Z	99.6497	99.6497	99.6497	0x65330	eb3
 cmbtmgr	?SetupAdjacencyArray@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x640a0	1ec64dc6109f
 cmbtmgr	?SetupAndLoadObstacles@combatManager@@QAEXXZ	98.1402	98.1402	98.1402	0x66290	e1280d4cefce
 cmbtmgr	?SetupCombat@combatManager@@QAEXUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HHHE@Z	100.0000	100.0000	100.0000	0x639f0	9a212de8b1a4
-cmbtmgr	?ShootAnimatedMissile@combatManager@@QAEXHHHHHPBMPBQBD@Z	93.5088	93.5088	93.5088	0x67db0	3500e132b812
-cmbtmgr	?ShootBallisticMissile@combatManager@@QAEXHHHHPBVCSprite@@@Z	89.3406	89.3406	89.3406	0x67a00	56f611eddf88
+cmbtmgr	?ShootAnimatedMissile@combatManager@@QAEXHHHHHPBMPBQBD@Z	94.9649	94.9649	94.9649	0x67db0	1a1d1ad24f19
+cmbtmgr	?ShootBallisticMissile@combatManager@@QAEXHHHHPBVCSprite@@@Z	90.5938	90.5938	90.5938	0x67a00	961ae6e2f793
 cmbtmgr	?ShootMissile@combatManager@@QAEXHHHHPBMPBVCSprite@@@Z	93.9760	93.9760	93.9760	0x68220	4421328166a2
 cmbtmgr	?ShotIsNotOptimal@combatManager@@QAEEPBVarmy@@0@Z	100.0000	100.0000	100.0000	0x67600	7101bc205de2
 cmbtmgr	?ShotIsThroughWall@combatManager@@QAEEPBVarmy@@HH@Z	100.0000	100.0000	100.0000	0x67510	6990585b75f2
@@ -2475,7 +2475,7 @@ recruit	?RecruitSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000
 # fresh normalization, with recruit.cpp unchanged, measured 96.5558; the merged
 # rebuild returned current to 94.1574 while max/history retain that transient.
 recruit	?Update@recruitUnit@@QAEXEJ@Z	94.1574	96.5558	96.5558	0x1503a0	d97bc68809dd
-recruit	?add_creature_widgets@TRecruitWindow@@QAEXJJJW4TCreatureType@@J@Z	93.6325	93.6325	93.6325	0x14fb90	8b238d4d93cf
+recruit	?add_creature_widgets@TRecruitWindow@@QAEXJJJW4TCreatureType@@J@Z	100.0000	100.0000	100.0000	0x14fb90	c56a02f98a4f
 recruit	?get_upgrade_cost@@YIXW4TCreatureType@@0JPAH@Z	100.0000	100.0000	100.0000	0x14e750	6382968d0edb
 recruit	?siege_artifact_to_creature@@YI?AW4TCreatureType@@W4TArtifact@@@Z	100.0000	100.0000	100.0000	0x150360	5ee79bb53ec7
 remote	??0CAnimatedDlg@@QAE@XZ	100.0000	100.0000	100.0000	0x154a50	9e5901052fee
@@ -2890,7 +2890,7 @@ singleselectionpopups	?CreateWin@CBonusDlg@@QAEEPBDPAVBitmap816@@00@Z	95.5075	95
 singleselectionpopups	?CreateWin@CBonusDlg@@QAEEPBDPAVCSprite@@H00@Z	98.0000	98.0000	98.0000	0x1754f0	09006518463c
 singleselectionpopups	?CreateWin@CHeroDlg@@QAEEPAVBitmap816@@PBDPAVCSprite@@H11@Z	93.9279	93.9279	93.9279	0x175a90	b6dab2614e30
 singleselectionpopups	?CreateWin@CTeamAlignmentDlg@@QAEEXZ	99.1096	99.1096	99.1096	0x176540	c37ff47d8769
-singleselectionpopups	?CreateWin@CTownDlg@@QAEEPAVCSprite@@HW4TTownType@@@Z	87.2762	87.2762	87.2762	0x175e60	f87a84c7a275
+singleselectionpopups	?CreateWin@CTownDlg@@QAEEPAVCSprite@@HW4TTownType@@@Z	98.6504	98.6504	98.6504	0x175e60	561910e47a99
 singleselectionpopups	?Draw@CBitmapWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x175a20	42a30f029b9f
 singleselectionpopups	?Draw@CSpriteWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x175750	bf732620ec2c
 singleselectionpopups	?GetTeams@CTeamAlignmentDlg@@QAEXXZ	100.0000	100.0000	100.0000	0x176930	0c538aa1d313

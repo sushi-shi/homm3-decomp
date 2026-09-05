@@ -811,6 +811,16 @@ static const int gHeroArmyCoords[7][2] = {
 // 2026-08-14). dc 0x558a8 line 229 calls it by name; see the note on
 // TBottomViewTown below for why that accessor is not GetHero applied to
 // gpCurrentPlayer->currHeroId.
+// 2026-09-05, easy lane 3 - first divergence localised. The stat sweep's
+// `>= 2` test is an INDUCTION-VARIABLE selection: retail keeps the
+// gHeroStatCoords row pointer live and tests it directly
+// (`cmp esi, offset gHeroStatCoords+0x10 / setge al`), while this compile
+// keeps the hero stat-block pointer and rebuilds the index as
+// `(K - slot) + ptr` compared against 2, which costs the extra `mov eax,esi`
+// copy at the bitset shift (retail clobbers its index register because the
+// index is dead), a spilled difference in `[ebp-0x10]`, and the
+// one-instruction loop header the preheader `jmp`s past. Two lockstep IVs,
+// and VC6 picks the survivor itself; not a guard or return shape.
 VA(0x00451ab0, 0x68A)  // anchor-vtable 0x63bb2c + advManager::UpdBottomViewHero, dc 0x558a8
 TBottomViewHero::TBottomViewHero(heroWindow* parent)
     : type_bottom_view_window(parent)
