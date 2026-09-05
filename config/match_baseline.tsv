@@ -726,6 +726,8 @@ campaignbrief	?Select@TCampaignBrief@@QAEXH@Z	92.1064	92.1064	92.1064	0x57990	8f
 campaignbrief	?UpdateAllyEnemyFlags@TCampaignBrief@@QAEXXZ	86.8125	86.8125	86.8125	0x58010	0a990c5eb338
 campaignbrief	?UpdateBonusIcons@TCampaignBrief@@QAEXXZ	95.3700	95.3700	95.3700	0x58d40	288e1c1bcbaf
 campaignbrief	?UpdateDifficultyButtons@TCampaignBrief@@QAEXXZ	100.0000	100.0000	100.0000	0x59010	a54768111cfd
+campaignbrief	?_Copy@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@IAEPAU_Node@12@PAU312@0@Z	100.0000	100.0000	100.0000	0x5d270	-
+campaignbrief	?_Copy@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@IAEXABV12@@Z	100.0000	100.0000	100.0000	0x5c740	-
 campaignbrief	?_Inc@const_iterator@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x5d370	-
 campaignbrief	?get_campaign_name@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x5bc10	80bcbea63411
 campaignbrief	?insert@?$vector@UCampaignScenarioPreview@@V?$allocator@UCampaignScenarioPreview@@@std@@@std@@QAEXPAUCampaignScenarioPreview@@IABU3@@Z	100.0000	100.0000	100.0000	0x5c960	-
@@ -2730,11 +2732,14 @@ resourcemanager	?SaturateGraphics@ResourceManager@@YIXXZ	97.8722	100.0000	100.00
 resourcemanager	?SetPath@ResourceManager@@YIXPBD@Z	100.0000	100.0000	100.0000	0x15a5c0	d085d67fac64
 resourcemanager	?SetPixelFormat@ResourceManager@@YIXKKK@Z	100.0000	100.0000	100.0000	0x15a6b0	4de25b191581
 resourcemanager	?Write@t_stdio_file_adapter@ResourceManager@@UAEHPBXH@Z	100.0000	100.0000	100.0000	0x159140	647bbbd056c9
+resourcemanager	?_Erase@?$_Tree@UTCacheMapKey@ResourceManager@@U?$pair@$$CBUTCacheMapKey@ResourceManager@@PAVresource@@@std@@U_Kfn@?$map@UTCacheMapKey@ResourceManager@@PAVresource@@U?$less@UTCacheMapKey@ResourceManager@@@std@@V?$allocator@U?$pair@$$CBUTCacheMapKey@ResourceManager@@PAVresource@@@std@@@5@@4@U?$less@UTCacheMapKey@ResourceManager@@@4@V?$allocator@U?$pair@$$CBUTCacheMapKey@ResourceManager@@PAVresource@@@std@@@4@@std@@IAEXPAU_Node@12@@Z	100.0000	100.0000	100.0000	0x15e760	-
 resourcemanager	?_Inc@const_iterator@?$_Tree@UTCacheMapKey@ResourceManager@@U?$pair@$$CBUTCacheMapKey@ResourceManager@@PAVresource@@@std@@U_Kfn@?$map@UTCacheMapKey@ResourceManager@@PAVresource@@U?$less@UTCacheMapKey@ResourceManager@@@std@@V?$allocator@U?$pair@$$CBUTCacheMapKey@ResourceManager@@PAVresource@@@std@@@5@@4@U?$less@UTCacheMapKey@ResourceManager@@@4@V?$allocator@U?$pair@$$CBUTCacheMapKey@ResourceManager@@PAVresource@@@std@@@4@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x15e390	-
+resourcemanager	?_Init@?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@IAEXPBDIH@Z	100.0000	100.0000	100.0000	0x15eaf0	-
 resourcemanager	?find@TCacheMap@ResourceManager@@QAE?AUTCacheIterator@2@ABUTCacheMapKey@2@@Z	100.0000	100.0000	100.0000	0x15d3b0	7efc1cfaa62e
 resourcemanager	?find_tree@TCacheMap@ResourceManager@@QAE?AUTCacheIterator@2@ABUTCacheMapKey@2@@Z	100.0000	100.0000	100.0000	0x15e330	4c731a71170e
 resourcemanager	?insert_wrapper@TCacheMap@ResourceManager@@QAE?AUTCacheInsertResult@2@ABUTCacheValue@2@@Z	100.0000	100.0000	100.0000	0x15d380	b3f79dd3b1bd
 resourcemanager	?lower_bound_iterator@TCacheMap@ResourceManager@@QAEPAUTCacheIterator@2@PAU32@ABUTCacheMapKey@2@@Z	100.0000	100.0000	100.0000	0x15e740	63b1bbc81736
+resourcemanager	?overflow@?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@MAEHH@Z	100.0000	100.0000	100.0000	0x15d630	-
 resourcemanager	@game_null_159510@12	89.3910	89.3910	89.3910	0x159510	05be0fb37f98
 resourcemanager	@game_sprite_1599e0@12	86.1324	86.1324	86.1324	0x1599e0	2b9e35926224
 rmg	??0type_black_box_creature_def@@QAE@H@Z	100.0000	100.0000	100.0000	0x134250	e2adc0087d3a
