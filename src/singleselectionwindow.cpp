@@ -12,7 +12,6 @@
 // calls in both functions).
 // UpdatePlayerPositions reaches SetupFirstPlayer and the new-map bonus
 // array, both scoped behind game.h's new-map view gate.
-#define HOMM3_GAME_NEW_MAP_DECLS
 #include "advmgr.h"
 #include "game.h"
 #include "armygrp.h"

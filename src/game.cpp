@@ -47,7 +47,6 @@
 #include <direct.h>
 #include <math.h>
 #include <memory>
-#define HOMM3_GAME_NEW_MAP_DECLS
 #include "game.h"
 // StartAITheme / TurnOnAIMusic (0x4c6f40 / 0x4c6f80) roll a theme index
 // with Random and hand the name to soundManager::StartMP3;
@@ -6402,56 +6401,6 @@ static inline void read_map_player_name(char* destination,
     strcpy(destination, name.c_str());
 }
 
-// The VC6 vector members are inline at their declarations, so auto_inline is
-// not enough to recreate retail's clear -> erase boundary.  The header's
-// storage-neutral derived view exposes the protected triplet and pins only
-// copy and _Destroy, leaving clear itself expanded in the reader.
-__forceinline void TMapPlayerHeroVectorAccess::clear_retail()
-{
-    iterator last = _Last;
-    iterator first = _First;
-#pragma inline_depth(0)
-    iterator copiedEnd = std::copy(last, last, first);
-#pragma inline_depth()
-#pragma inline_depth(0)
-    _Destroy(copiedEnd, _Last);
-#pragma inline_depth()
-    _Last = copiedEnd;
-}
-
-__forceinline void TMapPlayerHeroVectorAccess::resize_retail(
-    unsigned int count, const type_map_hero_identity& value)
-{
-    size_type currentSize = _First == 0 ? 0 : _Last - _First;
-    if (currentSize < count) {
-        iterator position = _Last;
-#pragma inline_depth(0)
-        insert(position, count - size(), value);
-#pragma inline_depth()
-    } else {
-        size_type oldSize;
-#pragma inline_depth(0)
-        oldSize = size();
-#pragma inline_depth()
-        if (count < oldSize) {
-#pragma inline_depth(0)
-            erase(_First + count, _Last);
-#pragma inline_depth()
-        }
-    }
-}
-
-// The extra aggregate preserves resize's two retail default identities and
-// reduces the short-lived one's teardown to one semantic string-destructor
-// call.  Keeping the destructor definition out of class is codegen-relevant:
-// at depth two VC6 retains basic_string::~basic_string, while depth three
-// expands through _Tidy and its four reference-count blocks.
-#pragma inline_depth(2)
-__forceinline TMapPlayerHeroResizeValue::~TMapPlayerHeroResizeValue()
-{
-}
-#pragma inline_depth()
-
 // The retail player-slot reader expands vector::erase/resize themselves but
 // retains the algorithms each operation reaches.  One wrapper level lets the
 // local depth cap reproduce that two-level boundary without changing either
@@ -7452,7 +7401,13 @@ void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
         nonRandomHeroCustomName[0] = 0;
     }
 
-    field_34.clear_retail();
+    // Retail retains std::copy and _Destroy as CALLS inside this clear and
+    // the resize below; this compile expands both. A TU-local derived
+    // access view used to impose that boundary by hand (95.6972 against
+    // 67.5422) at the price of retyping the member - see game.h's field_34
+    // note for the two retail rows that refute it. The residual is the
+    // OVER-inline class on hand-unreachable Dinkumware children.
+    field_34.clear();
     if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA)
         return;
 
@@ -7464,15 +7419,7 @@ void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
 
     int heroCount;
     infile->Read(&heroCount, sizeof(heroCount));
-#pragma inline_depth(1)
-    type_map_hero_identity retainedDefault;
-#pragma inline_depth()
-    {
-#pragma inline_depth(1)
-        TMapPlayerHeroResizeValue resizeValue;
-#pragma inline_depth()
-        field_34.resize_retail(heroCount, resizeValue.value);
-    }
+    field_34.resize(heroCount);
     if (heroCount > 0) {
         int heroIndex = 0;
         do {
