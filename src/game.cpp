@@ -6472,6 +6472,13 @@ __forceinline TMapPlayerHeroResizeValue::~TMapPlayerHeroResizeValue()
 // layer keeps operator[] and test expanded but leaves `_Xran` as the call
 // retail makes. Rumour failure uses a return-site depth pin so both failed
 // string reads share one out-of-line destructor and one retail-shaped exit.
+// Residual (70.70%): the field_4e658 read loop expands bitset<28>::_Xran
+// where retail CALLS it (0x4c2927), and the expanded out_of_range +
+// message string are the whole 0x18-byte frame surplus ([ebp-0x9c] and
+// [ebp-0x40]). Retail's shape is `test`'s body inlined with _Xran out of
+// line, which is a depth-2 A9 decision. Measured and rejected: a statement
+// pin on that read (-0.80, it takes the whole expansion out of line);
+// spelling it `serializedSkillCopy.test(skill)` (70.70 -> 20.20).
 VA(0x004c2450, 0x88E)  // sole NewMap caller + full stream/callee sequence
 bool game::LoadMap(TAbstractFile* mapFile)
 {
@@ -6541,10 +6548,9 @@ bool game::LoadMap(TAbstractFile* mapFile)
                      & (1 << (legacyBit & 7))) != 0;
 #pragma inline_depth()
             }
-            std::bitset<129> serializedCopy = serializedArtifacts;
             for (unsigned int copyBit = 0; copyBit < 129; ++copyBit) {
 #pragma inline_depth(0)
-                disabledArtifacts[copyBit] = serializedCopy[copyBit];
+                disabledArtifacts[copyBit] = serializedArtifacts[copyBit];
 #pragma inline_depth()
             }
         }
