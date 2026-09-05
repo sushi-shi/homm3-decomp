@@ -20,11 +20,12 @@ VA(0x005eeda0, 0x4C)  // anchor-import (version.dll), dc 0x18e3b0
 TFileVersionInfo::TFileVersionInfo(const char* filename)
 {
     unsigned long ignoredHandle;
-    unsigned long size = GetFileVersionInfoSizeA(filename, &ignoredHandle);
+    unsigned long size = GetFileVersionInfoSizeA(
+        const_cast<char*>(filename), &ignoredHandle);
     if (size > 0) {
         data = new char[size];
         if (data)
-            GetFileVersionInfoA(filename, 0, size, data);
+            GetFileVersionInfoA(const_cast<char*>(filename), 0, size, data);
     } else {
         data = 0;
     }
@@ -49,20 +50,25 @@ unsigned char TFileVersionInfo::GetVersionInfo(const char* name, std::string* bu
             "\\StringFileInfo\\040904B0\\");
         subBlock += name;
 
-        char* value;
+        // VerQueryValue hands back a pointer into the version block, so
+        // the SDK types it `LPVOID *`; the queried value is the character
+        // buffer the caller copies out.
+        void* value;
         unsigned int length;
         found = static_cast<unsigned char>(
-            VerQueryValueA(data, subBlock.c_str(), &value, &length) != 0);
+            VerQueryValueA(data, const_cast<char*>(subBlock.c_str()),
+                &value, &length) != 0);
         if (!found) {
             subBlock = DATA_COMPGEN(0x00643b40, versionInfo040904e4,
                 "\\StringFileInfo\\040904e4\\");
             subBlock += name;
             found = static_cast<unsigned char>(
-                VerQueryValueA(data, subBlock.c_str(), &value, &length) != 0);
+                VerQueryValueA(data, const_cast<char*>(subBlock.c_str()),
+                    &value, &length) != 0);
         }
 
         if (found)
-            buffer->assign(value, length);
+            buffer->assign(static_cast<const char*>(value), length);
     }
     return found;
 }

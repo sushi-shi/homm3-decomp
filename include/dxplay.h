@@ -8,6 +8,7 @@
 #include <string.h>  // strcpy, for CDPlayPlayer's in-class constructor
 #include <windows.h>
 #include <va.h>
+#include "array.h"  // CAutoArray, every Enum* out-parameter
 
 class CDPlayConnection;
 class CDPlayAddressElement;
@@ -442,120 +443,14 @@ public:
 };
 SIZE(CDPlayConnection, 0x98);
 
-// array.h's complete template surface and layout come from Dreamcast
-// CodeView.  Retail independently confirms the seven-slot virtual order in
-// four admitted vtables, as well as the +8/+c/+10 array bookkeeping used by
-// the shared method bodies at 0x499fc0..0x512670.  The small bodies stay in
-// the header: VC6 inlines them into remote::HandleMPlayerLaunch exactly as it
-// did in retail.
-#ifndef HOMM3_MULTIPLAYERWINDOW_OWNS_DXPLAY_TYPES
-template<class T>
-class CAutoArray {
-public:
-    CAutoArray()
-    {
-        step = 25;
-        size = 0;
-        allocSize = 0;
-        pArray = 0;
-    }
-
-    virtual ~CAutoArray()
-    {
-        Destroy(1);
-    }
-
-    void Destroy(unsigned char deleteData)
-    {
-        for (unsigned long i = 0; i < size; ++i) {
-            T* element = Get(i);
-            if (deleteData)
-                delete element;
-        }
-
-        if (pArray)
-            delete [] pArray;
-        pArray = 0;
-        size = allocSize = 0;
-    }
-
-    void SetStep(unsigned long newStep) { step = newStep; }
-    virtual unsigned char Add(T* element);
-    virtual T* Get(unsigned long elementNbr)
-    {
-        if (elementNbr >= size)
-            return 0;
-        return pArray[elementNbr];
-    }
-    virtual unsigned char Put(unsigned long elementNbr, T* element);
-    virtual unsigned char Delete(unsigned long elementNbr);
-    virtual unsigned char Insert(unsigned long nextElementNbr, T* element);
-    virtual unsigned long GetCount() { return size; }
-
-protected:
-    unsigned long step;       // +0x04
-    T** pArray;               // +0x08
-    unsigned long allocSize;  // +0x0c
-    unsigned long size;       // +0x10
-};
-
-// The non-inline array virtuals. Get/GetCount/Destroy/~ stay inline in the
-// class (VC6 expands them into the enum wrappers exactly as retail did); Put is
-// the one non-inline virtual retail keeps out of line in dxplay.obj. Add/Delete/
-// Insert instantiate only for the address-element array's vtable and ICF-fold
-// onto identical instantiations outside this TU.
-template<class T>
-unsigned char CAutoArray<T>::Put(unsigned long elementNbr, T* element)
-{
-    if (elementNbr >= size)
-        return 0;
-    pArray[elementNbr] = element;
-    return 1;
-}
-
-template<class T>
-unsigned char CAutoArray<T>::Add(T* element)
-{
-    if (size >= allocSize) {
-        T** grown = new T*[allocSize + step];
-        for (unsigned long i = 0; i < size; ++i)
-            grown[i] = pArray[i];
-        if (pArray)
-            delete [] pArray;
-        pArray = grown;
-        allocSize += step;
-    }
-    pArray[size] = element;
-    ++size;
-    return 1;
-}
-
-template<class T>
-unsigned char CAutoArray<T>::Delete(unsigned long elementNbr)
-{
-    if (elementNbr >= size)
-        return 0;
-    for (unsigned long i = elementNbr; i + 1 < size; ++i)
-        pArray[i] = pArray[i + 1];
-    --size;
-    return 1;
-}
-
-template<class T>
-unsigned char CAutoArray<T>::Insert(unsigned long nextElementNbr, T* element)
-{
-    if (nextElementNbr > size)
-        return 0;
-    Add(element);
-    for (unsigned long i = size - 1; i > nextElementNbr; --i)
-        pArray[i] = pArray[i - 1];
-    pArray[nextElementNbr] = element;
-    return 1;
-}
-
 // The Windows structure consumed here preserves the complete Dreamcast
-// value layout.  HandleMPlayerLaunch's inlined Get(0) reaches guidInstance
-// at +4, which is the retail proof needed by this TU.
+// value layout (E:\gamedcs\dxplay.h:57 for the constructor, :96 for
+// IsPasswordProtected).  HandleMPlayerLaunch's inlined Get(0) reaches
+// guidInstance at +4, which is the retail proof needed by that TU, and the
+// three predicates are the multiplayer window's - IsJoinDisabled has its own
+// retail row at 0x5112c0.  This class was carried a SECOND time in
+// multiplayerwindow.h behind a per-TU macro; the two copies had the same
+// layout and disjoint member sets, and this is the union.
 class CDPlaySession {
 public:
     CDPlaySession(const DPSESSIONDESC2* lpSession);
@@ -571,9 +466,30 @@ public:
     unsigned long dwUser2;      // +0x100
     unsigned long dwUser3;      // +0x104
     unsigned long dwUser4;      // +0x108
+
+    unsigned char IsJoinDisabled()
+    {
+        if (dwFlags & 0x20)
+            return 1;
+        if (dwFlags & 1)
+            return 1;
+        unsigned char disabled = playerCount == maxPlayers;
+        return disabled;
+    }
+
+    bool IsJoinDisabledInline()
+    {
+        return (dwFlags & 0x21) || playerCount == maxPlayers;
+    }
+
+    unsigned char IsPasswordProtected()
+    {
+        if (dwFlags & 0x400)
+            return 1;
+        return 0;
+    }
 };
 SIZE(CDPlaySession, 0x10c);
-#endif
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\dxplay.cpp:1941, dc 0x8bba4) int EnumAddressCallback(const _GUID* guidDataType, unsigned long dwDataSize, const void* lpData, void* lpContext);

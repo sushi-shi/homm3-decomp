@@ -5,24 +5,17 @@
 #ifndef HOMM3_U2DVERS_H
 #define HOMM3_U2DVERS_H
 
+// version.dll's three entry points come from the SDK (<winver.h>, reached
+// through <windows.h>), which declares them APIENTRY with no DECLSPEC_IMPORT
+// - so they are called through the executable's own stdcall thunks, exactly
+// as the retail bytes do. This header used to carry narrow-typed private
+// redeclarations that CLASHED with the SDK's wherever a consumer had already
+// seen <windows.h>, and a per-TU #ifndef hid the clash; the SDK prototypes
+// are the real ones and the call sites below take their `LPSTR` / `LPVOID*`
+// spellings.
+#include <windows.h>
 #include <string>
 #include "va.h"
-
-// version.dll imports are called through the executable's stdcall thunks,
-// so this TU deliberately uses plain declarations rather than dllimport.
-// The narrow pointer types model the byte-proven call sites without casts:
-// the constructor reuses its filename slot as the ignored handle output,
-// and VerQueryValue returns the queried character buffer.
-#ifndef HOMM3_U2DVERS_SYSTEM_VERSION_DECLS
-extern "C" unsigned long __stdcall GetFileVersionInfoSizeA(
-    const char* filename, unsigned long* ignoredHandle);
-extern "C" int __stdcall GetFileVersionInfoA(
-    const char* filename, unsigned long ignoredHandle,
-    unsigned long size, void* data);
-extern "C" int __stdcall VerQueryValueA(
-    const void* data, const char* subBlock,
-    char** value, unsigned int* length);
-#endif
 
 // PROVEN retail layout: both ctor and dtor access only the allocation
 // pointer at +0; callers allocate four bytes for the object.
