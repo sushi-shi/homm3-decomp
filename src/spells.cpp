@@ -6034,3 +6034,7 @@ std::_Rb_tree_node<enum** std::_Rb_tree<enum SpellID,enum SpellID,std::_Identity
 }
 
 #endif
+
+// COMDAT pairing: _Tree<int, int, set>::insert, agreement 0.936. Its key and
+// value are the same primitive, so the map regexes cannot name it.
+VA_COMPGEN(0x005a9450, 0x115, TREE_INSERT, int_set)

@@ -9154,3 +9154,10 @@ VA_COMPGEN(0x004af350, 0x183, VECTOR_INSERT, string)
 
 // COMDAT pairing: std::_Construct<std::string>, agreement 0.972.
 VA_COMPGEN(0x004afb40, 0x167, STD_CONSTRUCT, string)
+
+// COMDAT pairing: spell_level_order::operator(), agreement 0.954. The unit's
+// _Sort/_Unguarded_* rows above all carry this predicate.
+VA_COMPGEN(0x004b0000, 0x8A, FUNCTOR_CALL, spell_level_order)
+
+// COMDAT pairing: vector<std::string>::_Destroy, agreement 0.960.
+VA_COMPGEN(0x004af500, 0x4D, VECTOR_DESTROY, string)

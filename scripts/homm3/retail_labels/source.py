@@ -171,6 +171,14 @@ CHAR_STREAM_MEMBERS = (
     ("?_Iput@?$num_put@D", None, "num_put_iput"),
     ("?_Fput@?$num_put@D", None, "num_put_fput"),
     ("?_Rep@?$num_put@D", None, "num_put_rep"),
+    # num_put::do_put is SIX overloads separated only by the final
+    # parameter letter (_N bool, J long, K unsigned long, N double,
+    # O long double, PBX const void*). They share one key deliberately:
+    # claimed together they form a six-member overload group, which the
+    # join zips by RVA order against COFF order - and the two arms whose
+    # sizes are unique (bool 658 B, const void* 448 B) sit at the ends of
+    # both orders, which is what confirms the zip.
+    ("?do_put@?$num_put@D", None, "num_put_do_put"),
     ("?str@?$basic_stringbuf@D", None, "stringbuf_str"),
     ("?seekoff@?$basic_stringbuf@D", None, "stringbuf_seekoff"),
     ("?seekpos@?$basic_stringbuf@D", None, "stringbuf_seekpos"),
@@ -217,7 +225,9 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "STD_UNGUARDED_PARTITION", "STD_UNGUARDED_INSERT",
                  "STD_COPY_BACKWARD", "STD_FILL",
                  "TREE_ERASE_ITERATOR", "TREE_ERASE_RANGE",
-                 "DEQUE_ERASE", "VECTOR_RESERVE",
+                 "DEQUE_ERASE", "VECTOR_RESERVE", "VECTOR_CLEAR",
+                 "EXCEPTION_DORAISE", "FUNCTOR_CALL",
+                 "DEQUE_ITERATOR_ADD_ASSIGN",
                  "STREAMBUF_XSPUTN",
                  "PAIR_CONST_INT_DTOR",
                  "STD_CONSTRUCT", "STD_COPY",
@@ -762,14 +772,18 @@ def _demangle_key(mangled: str):
         r"\?\$_Tree@P(?:A|B)?(?:V|U)([A-Za-z_]\w*)@", mangled)
     tree_string_owner = re.search(
         r"\?\$_Tree@V\?\$basic_string@D", mangled)
-    tree_owner = (tree_value.group(1) if tree_value else
+    tree_set_primitive = re.match(
+        r"^\?\w+@\?\$_Tree@([CDEFGHIJK])\1U_Kfn@\?\$set@\1", mangled)
+    tree_owner = ((DEQUE_PRIMITIVE_ELEMENT[tree_set_primitive.group(1)]
+                   + "_set") if tree_set_primitive else
+                  tree_value.group(1) if tree_value else
                   tree_named_owner.group(1) if tree_named_owner else
                   tree_pointer_owner.group(1) if tree_pointer_owner else
                   "string" if tree_string_owner else None)
     if mangled.startswith("?_Min@?$_Tree@") and tree_value:
         return f"{tree_value.group(1).lower()}@tree_min"
-    if mangled.startswith("?insert@?$_Tree@") and tree_value:
-        return f"{tree_value.group(1).lower()}@tree_insert"
+    if mangled.startswith("?insert@?$_Tree@") and tree_owner:
+        return f"{tree_owner.lower()}@tree_insert"
     if mangled.startswith("?_Insert@?$_Tree@") and tree_value:
         return f"{tree_value.group(1).lower()}@tree_node_insert"
     if mangled.startswith("?_Dec@const_iterator@?$_Tree@") and tree_owner:
@@ -816,6 +830,12 @@ def _demangle_key(mangled: str):
         if element:
             member = deque_primitive.group(1).lstrip("_").lower()
             return f"{element}@deque_{member}"
+    deque_iterator = re.match(
+        r"^\?\?Yiterator@\?\$deque@([CDEFGHIJK])V\?\$allocator@", mangled)
+    if deque_iterator:
+        element = DEQUE_PRIMITIVE_ELEMENT.get(deque_iterator.group(1))
+        if element:
+            return f"{element}@deque_iterator_add_assign"
     deque_erase = re.match(
         r"^\?erase@\?\$deque@([CDEFGHIJK])V\?\$allocator@", mangled)
     if deque_erase:
@@ -855,6 +875,8 @@ def _demangle_key(mangled: str):
         return f"{vector_owner}@vector_size"
     if mangled.startswith("?capacity@?$vector@") and vector_owner:
         return f"{vector_owner}@vector_capacity"
+    if mangled.startswith("?clear@?$vector@") and vector_owner:
+        return f"{vector_owner}@vector_clear"
     if mangled.startswith("?reserve@?$vector@") and vector_owner:
         return f"{vector_owner}@vector_reserve"
     if mangled.startswith("?resize@?$vector@") and vector_owner:
@@ -932,6 +954,12 @@ def _demangle_key(mangled: str):
     if (mangled.startswith("?assign@?$basic_string@D")
             and mangled.endswith("@PBDI@Z")):
         return "char@basic_string_assign_ptr_size"
+    doraise = re.match(r"^\?_Doraise@([A-Za-z_]\w*)@std@@", mangled)
+    if doraise:
+        return f"{doraise.group(1).lower()}@exception_doraise"
+    functor_call = re.match(r"^\?\?R([A-Za-z_]\w*)@@", mangled)
+    if functor_call:
+        return f"{functor_call.group(1).lower()}@functor_call"
     if mangled.startswith("??_G"):
         # scalar deleting destructor - joined by the VA_COMPGEN
         # SCALAR_DELETING_DTOR claims (owner = the class)
@@ -1186,6 +1214,10 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                                or "$vector_capacity$" in r["name"]
                                or "$vector_constructor_iterator$" in r["name"]
                                or "$vector_reserve$" in r["name"]
+                               or "$vector_clear$" in r["name"]
+                               or "$exception_doraise$" in r["name"]
+                               or "$functor_call$" in r["name"]
+                               or "$deque_iterator_add_assign$" in r["name"]
                                or "$vector_resize$" in r["name"]
                                or "$vector_insert$" in r["name"]
                                or "$vector_erase$" in r["name"]
@@ -1281,6 +1313,14 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             continue
         if "$vector_constructor_iterator$" in row["name"]:
             claim_keys.setdefault("vector_constructor_iterator", []).append(row)
+            continue
+        simple = next(
+            (kind for kind in ("vector_clear", "exception_doraise",
+                               "functor_call", "deque_iterator_add_assign")
+             if f"${kind}$" in row["name"]), None)
+        if simple is not None:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}@{simple}", []).append(row)
             continue
         if "$vector_reserve$" in row["name"]:
             owner = row["name"].rsplit("$", 1)[1].lower()

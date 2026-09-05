@@ -155,6 +155,7 @@ advmgr	?UpdateRadar@advManager@@QAEXUtype_point@@EEEEE@Z	91.2477	91.2477	91.2477
 advmgr	?UpdateScreen@advManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0xf270	d8787382a606
 advmgr	?ViewPuzzle@advManager@@QAEXXZ	85.6339	85.6339	85.6339	0x1a7f0	4ede4d97bbc5
 advmgr	?WindowHandler@CAdvPopup@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1b1c0	9bc2420b5496
+advmgr	?_Doraise@out_of_range@std@@MBEXXZ	100.0000	100.0000	100.0000	0x1bc10	-
 advmgr	?_Xran@?$bitset@$0DA@@std@@ABEXXZ	95.5882	95.5882	95.5882	0x1b410	-
 advmgr	?append@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@ABV12@II@Z	100.0000	100.0000	100.0000	0x1b250	-
 advmgr	?append@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@PBDI@Z	100.0000	100.0000	100.0000	0x1b340	-
@@ -479,6 +480,7 @@ ai_tactical	?should_attack_now@type_AI_spellcaster@@QAEEPBVarmy@@@Z	86.6781	86.6
 ai_tactical	?simulate_attack@type_AI_combat_parameters@@QAEXPBVarmy@@PAJ01EJ@Z	100.0000	100.0000	100.0000	0x359b0	caf075d501df
 ai_tactical	?unimplemented@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x3b680	aee1cb81d6a6
 ai_tactical	?value_of_luck_and_morale@@YINJJNN@Z	100.0000	100.0000	100.0000	0x35850	2a36425d03bb
+army	??Yiterator@?$deque@HV?$allocator@H@std@@@std@@QAEAAV012@H@Z	93.9535	93.9535	93.9535	0x491c0	-
 army	?AttackWall@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x45d30	36e14f00c8bf
 army	?CanFit@army@@QBEHHHPAH@Z	100.0000	100.0000	100.0000	0x46c40	ed43fc4a8c37
 army	?CancelIndividualSpell@army@@QAEXH@Z	97.3596	97.3596	97.3596	0x44510	887d7a91edf1
@@ -526,6 +528,7 @@ army	?cast_caliph_spell@army@@QAEXJ@Z	100.0000	100.0000	100.0000	0x47ee0	0120317
 army	?cast_spell@army@@QAEXJ@Z	100.0000	100.0000	100.0000	0x48260	b628d7ef120f
 army	?check_obstacle_attacks@army@@QAEEE@Z	100.0000	100.0000	100.0000	0x41f70	2674aa843736
 army	?check_special_attack@army@@QAEEPAV1@@Z	100.0000	100.0000	100.0000	0x40500	49147539aa98
+army	?clear@?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x48d70	-
 army	?compute_attacker_bonus@army@@QBEHHEPAV1@EJ@Z	100.0000	100.0000	100.0000	0x43320	698523953542
 army	?consider_attack@army@@QAEXPBV1@JJ@Z	100.0000	100.0000	100.0000	0x48840	686954572466
 army	?do_attack@army@@QAEEPAV1@H@Z	98.8868	99.9962	99.9962	0x41610	1fa738e017fe
@@ -721,11 +724,18 @@ bottomviewsubwindow	??_Gostrstream@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x5
 bottomviewsubwindow	??_Gstrstreambuf@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x516f0	-
 bottomviewsubwindow	??_Gtype_bottom_view_window@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x50d20	-
 bottomviewsubwindow	?_Decref@facet@locale@std@@QAEPAV123@XZ	100.0000	100.0000	100.0000	0x53d30	-
+bottomviewsubwindow	?_Doraise@bad_cast@std@@MBEXXZ	100.0000	100.0000	100.0000	0x53c80	-
 bottomviewsubwindow	?_Fput@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@KA?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DPBDII@Z	100.0000	100.0000	100.0000	0x54f20	-
 bottomviewsubwindow	?_Iput@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@KA?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DPADI@Z	100.0000	100.0000	100.0000	0x552d0	-
 bottomviewsubwindow	?_Rep@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@KI?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@DI@Z	100.0000	100.0000	100.0000	0x556d0	-
 bottomviewsubwindow	?animate@TBottomViewEnemyTurn@@UAEXXZ	100.0000	100.0000	100.0000	0x536f0	0e79eeb98cd5
 bottomviewsubwindow	?animate@TBottomViewNewTurn@@UAEXXZ	100.0000	100.0000	100.0000	0x511a0	a5b26fc67c45
+bottomviewsubwindow	?do_put@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DJ@Z	100.0000	100.0000	100.0000	0x54a80	-
+bottomviewsubwindow	?do_put@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DK@Z	100.0000	100.0000	100.0000	0x54b20	-
+bottomviewsubwindow	?do_put@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DN@Z	100.0000	100.0000	100.0000	0x54bc0	-
+bottomviewsubwindow	?do_put@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DO@Z	100.0000	100.0000	100.0000	0x54c90	-
+bottomviewsubwindow	?do_put@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DPBX@Z	100.0000	100.0000	100.0000	0x54d60	-
+bottomviewsubwindow	?do_put@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@D_N@Z	100.0000	100.0000	100.0000	0x54770	-
 bottomviewsubwindow	?opfx@?$basic_ostream@DU?$char_traits@D@std@@@std@@QAE_NXZ	100.0000	100.0000	100.0000	0x543d0	-
 bottomviewsubwindow	?put@?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEAAV12@D@Z	100.0000	100.0000	100.0000	0x53dd0	-
 bottomviewsubwindow	?sputc@?$basic_streambuf@DU?$char_traits@D@std@@@std@@QAEHD@Z	100.0000	100.0000	100.0000	0x54a30	-
@@ -1350,6 +1360,7 @@ events	??1CCombatInitMsg@@QAE@XZ	100.0000	100.0000	100.0000	0xad130	-
 events	??1CLevelPickWaitDlg@@UAE@XZ	100.0000	100.0000	100.0000	0xaeb00	-
 events	??1CTurnDurationPause@@QAE@XZ	100.0000	100.0000	100.0000	0xae9b0	-
 events	??1type_university_window@@UAE@XZ	100.0000	100.0000	100.0000	0xaaa40	-
+events	??Rspell_level_order@@QAEEHH@Z	100.0000	100.0000	100.0000	0xb0000	-
 events	?CombatMonsterEvent@advManager@@QAEHPAVhero@@HPAHPAVNewmapCell@@Utype_point@@W4TCreatureType@@HH4HH@Z	99.2966	99.2966	99.2966	0xac580	df673b90a2ee
 events	?CreatureBankEvent@advManager@@QAEHPAVhero@@PAVNewmapCell@@PBDUtype_point@@E@Z	89.3406	89.3406	89.3406	0xabdc0	e51ed47f07d1
 events	?DispatchEvent@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	99.3727	99.9881	99.9911	0xa84f0	fd7311de7e5f
@@ -1435,6 +1446,7 @@ events	?ReceiveHeroTownData@advManager@@QAEXPAVCCombatInitMsg@@PAHPAUtype_point@
 events	?SendHeroTownData@advManager@@QAEXUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HHHEE@Z	100.0000	100.0000	100.0000	0xaeb50	2c14fbe3b862
 events	?TownEvent@advManager@@QAEXPAVNewmapCell@@Utype_point@@E@Z	100.0000	100.0000	100.0000	0xaafd0	5605431b97a1
 events	?_Construct@std@@YIXPAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@ABV21@@Z	100.0000	100.0000	100.0000	0xafb40	-
+events	?_Destroy@?$vector@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@IAEXPAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@0@Z	100.0000	100.0000	100.0000	0xaf500	-
 events	?_Sort@std@@YIXPAH0Uspell_level_order@@0@Z	100.0000	100.0000	100.0000	0xb00b0	-
 events	?_Sort_0@std@@YIXPAH0Uspell_level_order@@0@Z	100.0000	100.0000	100.0000	0xafcb0	-
 events	?_Unguarded_insert@std@@YIXPAHHUspell_level_order@@@Z	100.0000	100.0000	100.0000	0xb0350	-
@@ -3411,6 +3423,7 @@ spells	?find_spell_target@combatManager@@QAEPAVarmy@@HJJEJ@Z	100.0000	100.0000	1
 spells	?get_elemental_type@@YI?AW4TCreatureType@@H@Z	100.0000	100.0000	100.0000	0x1a9360	04eaf845849b
 spells	?get_failure_reason@combatManager@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@HPBDJ@Z	100.0000	100.0000	100.0000	0x1a2880	30843eacc634
 spells	?handle_sacrifice_beneficiary@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1a2d00	858590934880
+spells	?insert@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@QAE?AU?$pair@Viterator@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@_N@2@ABH@Z	80.3361	80.3361	80.3361	0x1a9450	-
 spells	?is_valid_teleport@combatManager@@QAEEPBVarmy@@J@Z	100.0000	100.0000	100.0000	0x1a3700	dfbb2ca83ade
 spells	?mark_area_effect@combatManager@@QAEXHJJAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x1a4920	629fa19164dd
 spells	?mark_area_effect@combatManager@@QAEXJJEAAV?$vector@JV?$allocator@J@std@@@std@@@Z	100.0000	100.0000	100.0000	0x1a4170	5930b1d92f34

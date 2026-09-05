@@ -1582,3 +1582,26 @@ VA_COMPGEN(0x00454a30, 0x4B, STREAMBUF_SPUTC, char)
 
 // COMDAT pairing: _Decref on the char instantiation, mnemonic agreement 0.918.
 VA_COMPGEN(0x00453d30, 0x3B, LOCALE_FACET_DECREF, char)
+
+// COMDAT pairing: num_put::do_put(bool), agreement 1.000. Six do_put
+// overloads share one key and zip as an overload group; this arm and the
+// const void* arm below have unique sizes and anchor both ends of the zip.
+VA_COMPGEN(0x00454770, 0x292, NUM_PUT_DO_PUT, char)
+
+// COMDAT pairing: num_put::do_put(long) - second in both COFF and RVA order.
+VA_COMPGEN(0x00454a80, 0x9F, NUM_PUT_DO_PUT, char)
+
+// COMDAT pairing: num_put::do_put(unsigned long).
+VA_COMPGEN(0x00454b20, 0x9F, NUM_PUT_DO_PUT, char)
+
+// COMDAT pairing: num_put::do_put(double).
+VA_COMPGEN(0x00454bc0, 0xCA, NUM_PUT_DO_PUT, char)
+
+// COMDAT pairing: num_put::do_put(long double).
+VA_COMPGEN(0x00454c90, 0xCE, NUM_PUT_DO_PUT, char)
+
+// COMDAT pairing: num_put::do_put(const void*), agreement 0.977.
+VA_COMPGEN(0x00454d60, 0x1B2, NUM_PUT_DO_PUT, char)
+
+// COMDAT pairing: bad_cast::_Doraise, agreement 1.000.
+VA_COMPGEN(0x00453c80, 0x1D, EXCEPTION_DORAISE, bad_cast)
