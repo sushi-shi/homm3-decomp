@@ -5768,6 +5768,24 @@ static __forceinline void randomize_witch_hut(NewmapCell* cell)
 // Moving RELIC in source order, `inline_depth(1)` on the bank cleanups,
 // repeating the MAGIC_SPRING expression, and hoisting either Witch reference
 // conversion were each measured separately and rejected by the ratchet.
+// RE-MEASURED 2026-09-05, and the RELIC verdict now has a mechanism worth
+// recording. Retail emits FIVE BLACK_BOX arms but SIX artifact-class call
+// sites: ANY (0xe) and RELIC (0x10) sit adjacent in the hot run at
+// retail+0x351/+0x361 while TREASURE/MINOR/MAJOR are cross-jumped onto
+// SHIPWRECK_SURVIVOR's threshold chain, whose OWN relic arm survives
+// separately at retail+0xf7d. Writing RELIC second in the source (ANY,
+// RELIC, TREASURE, MINOR, MAJOR) reproduces the hot pair exactly and takes
+// the block skeleton from 9 exact / 131 flow-kind to 54 exact / 68 - by
+// far the largest structural move available here - but the cross-jumper
+// then merges SHIPWRECK's relic arm BACKWARDS into the new hot copy
+// instead of keeping both, so one site is still missing and fuzzy reads
+// 86.7325 against 86.9275. The residual is which of two identical blocks
+// the cross-jumper elects as canonical, not a source fact; re-take this
+// pairing if a later change gives the two blocks different predecessors.
+// The two remaining REAL call divergences are both over-inlines that need
+// a statement pin: retail CALLS ExtraInfoUnion::SetWagon(EGameResource,
+// short) at randomize_wagon's first store and ExtraInfoUnion::set_pyramid
+// at randomize_pyramid's, and this CL expands both.
 VA(0x004c0cc0, 0x1668)  // NewMap caller + dc order, dc 0xac910
 void game::RandomizeEvents()
 {
@@ -9135,7 +9153,7 @@ void game::NextPlayer()
 
     if (gpCurrentPlayer->IsLocalHuman())
         gTurnDuration69d630.Start();
-    GameFn_004CC7D0(this);
+    DoNewTurn();
     if (gpCurrentPlayer->IsLocalHuman())
         gpAdvManager->ForceNewHover();
 }
