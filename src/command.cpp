@@ -3100,10 +3100,10 @@ void combatManager::ResetCycleTimers()
     for (int side = 0; side < 2; side++) {
         for (int slot = 0; slot < numArmies[side]; slot++) {
             army* stack = &armies[side][slot];
-            if (stack->frameInfoFidgetFrequency > 51) {
+            if (stack->sMonFrameInfo.iFidgetFrequency > 51) {
                 stack->iLastFidgetTime =
-                    now + 2 * Random(50, stack->frameInfoFidgetFrequency)
-                        - stack->frameInfoFidgetFrequency;
+                    now + 2 * Random(50, stack->sMonFrameInfo.iFidgetFrequency)
+                        - stack->sMonFrameInfo.iFidgetFrequency;
             }
         }
     }

@@ -13,6 +13,8 @@
 // Costs no consumer anything: all 24 TUs whose closure reaches army.h
 // already had armygrp.h in that closure.
 #include "armygrp.h"
+// SMonFrameInfo, the type of the embedded `sMonFrameInfo` row at +0x110.
+#include "monframeinfo.h"
 
 class hero;
 class armyGroup;
@@ -524,16 +526,29 @@ public:
     // combatSide (+0xf4) as armySide. Renaming waits on a lane that
     // owns the ai_tactical call sites.
     int bitIndex;                 // +0xf8
-    // +0x110 starts an EMBEDDED copy of the creature's ANIMATION traits
-    // row - the DC roster's `SMonFrameInfo sMonFrameInfo` at 252, whose
-    // 84-byte layout monframeinfo.h already carries. The pairing is
-    // positional and exact: DC 336 stdIcon lands on retail +0x164 and
-    // DC 348 armySample on the +0x170 play_sample already proved, so
-    // retail +0x110 == DC 252 with no shift across the record. Only the
-    // two fields army::Fly reads are sliced out, the same way sMonInfo
-    // above is sliced; the record itself is not modelled as such,
-    // because that would put monframeinfo.h in every army.h consumer's
-    // include closure.
+    // +0x110 is an EMBEDDED copy of the creature's ANIMATION traits row
+    // - the DC roster's `SMonFrameInfo sMonFrameInfo` at 252, whose
+    // 84-byte layout monframeinfo.h already carries - ADOPTED AS SUCH
+    // 2026-09-05, the same correction sMonInfo above just took. The
+    // pairing is positional and exact: DC 336 stdIcon lands on retail
+    // +0x164 and DC 348 armySample on the +0x170 play_sample already
+    // proved, so retail +0x110 == DC 252 with no shift across the
+    // record, and the eight fields the bodies below read land on the
+    // record's own offsets with no shift either.
+    //
+    // WHAT SETTLED IT: army's compiler-generated copy constructor
+    // (0x437a00) copies this band with ONE `rep movsd` of 0x15 dwords
+    // at fn+0x17f - 84 bytes, exactly sizeof(SMonFrameInfo), running
+    // from +0x110 to +0x164 - where the flat slices gave three dword
+    // pairs, a short `rep movsd` of 0xc and seven more pairs. It was
+    // the first byte-level divergence left in the body once sMonInfo
+    // was adopted. The old note here said modelling the record "would
+    // put monframeinfo.h in every army.h consumer's include closure";
+    // it does, and the cost is measured in the commit rather than
+    // assumed - monframeinfo.h is one struct, one extern and va.h.
+    //
+    // The evidence for each field follows in offset order, as it was
+    // recorded while the fields were sliced out one at a time.
     // +0x10c, the DC roster's `yModify` (army@248, a char*) - retail
     // sits a flat +0x14 above the DC record from hitByCreature onward,
     // the same shift combatSide/bitIndex already carry (DC group 224 ->
@@ -577,12 +592,12 @@ public:
     // (0x445fd0): the first angle estimate reads the middle pair
     // [2]/[3] and the aimed shot reads [2*pose]/[2*pose+1], both
     // movsx'd shorts at +0x110..+0x11b.
-    short frameInfoMissileOffset[6]; // +0x110 == sMonFrameInfo.iMissileOffset
-    char pad_11c[0x30];
+    // -> sMonFrameInfo.iMissileOffset          (+0x110, row +0x00)
+    // -> sMonFrameInfo.fArrowAngle[12]         (+0x11c, row +0x0c)
     // sMonFrameInfo.iExtraNumTroopsXOffset (+0x3c of the record):
     // DrawToBuffer (0x43e140) shifts the troop-count box by it when the
     // box's neighbour hex is free.
-    int frameInfoExtraNumTroopsXOffset; // +0x14c
+    // -> sMonFrameInfo.iExtraNumTroopsXOffset  (+0x14c, row +0x3c)
     // Two more fields sliced out of the embedded animation-traits row,
     // both byte-proven by DoBolt (0x5a5c20): its reset tail guards the
     // whole attack-animation flush on +0x150 and divides +0x15c by the
@@ -591,19 +606,20 @@ public:
     // iAttackStartCycleTime (+0x4c). The pair is sliced the same way
     // army::Fly's two already are, and in the same band comment's terms:
     // read the fields you need, do not model the record.
-    int frameInfoAttackFrames;    // +0x150 == sMonFrameInfo.iAttackFrames
+    // -> sMonFrameInfo.iAttackFrames           (+0x150, row +0x40)
     // Embedded SMonFrameInfo::iFidgetFrequency (+0x44 in the 0x54 row).
     // ResetCycleTimers compares it with 51 and uses it as Random's upper
     // bound before retiming iLastFidgetTime.
-    int frameInfoFidgetFrequency; // +0x154
-    int frameInfoWalkCycleTime;   // +0x158 == sMonFrameInfo.iWalkCycleTime
+    // -> sMonFrameInfo.iFidgetFrequency        (+0x154, row +0x44)
+    // -> sMonFrameInfo.iWalkCycleTime          (+0x158, row +0x48)
     // sMonFrameInfo.iAttackStartCycleTime (DC TMonFrameInfo@76, between
     // iWalkCycleTime@72 and iFlightPixelSpan@80 exactly as the two
     // proven neighbours sit here). Byte-proven by cast_spell (0x448260):
     // the cast loop's per-frame delay is this word over the sequence's
     // frame count.
-    int frameInfoAttackStartCycleTime; // +0x15c
-    int frameInfoFlightPixelSpan; // +0x160 == sMonFrameInfo.iFlightPixelSpan
+    // -> sMonFrameInfo.iAttackStartCycleTime   (+0x15c, row +0x4c)
+    // -> sMonFrameInfo.iFlightPixelSpan        (+0x160, row +0x50)
+    SMonFrameInfo sMonFrameInfo;  // +0x110 .. +0x164, 84 B
     // DC army.stdIcon (members.csv army@336). army::Fly asks it for the
     // walk sequence's frame count through CSprite::GetNumFrames, which
     // is what fixes the type: the retail expansion is that inline's
