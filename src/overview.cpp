@@ -1614,6 +1614,25 @@ void OverviewSliderCallback(int state, heroWindow* parent_window)
 // vtable store, exact following destructor and address-taken slider callback
 // jointly fix this identity and extent.
 // E:\gamedcs\overview.cpp:2017
+// DIAGNOSED 2026-09-06, and it is NOT missing source mass: this compile
+// emits MORE than retail, not less - 268 blocks against 241, 127 branches
+// against 108, and ELEVEN base-only calls, every one of them the guts of
+// `vector<overview_item_record>::insert` (_Ufill, _Ucopy x2, _Destroy,
+// operator new/delete) plus five out-of-line `_Construct`.  Retail CALLS
+// insert at all six append sites (its first one pairs with ours at fn+0xfdc)
+// and INLINES `_Construct`; we do the exact inverse at five of the six,
+// which is one /Ob2 budget decision showing up in both directions at once -
+// expanding insert spends the budget, and the later `_Construct` sites are
+// then starved out of line.  27 blocks / 6 sites is one insert expansion
+// each, so the whole structural deficit is that decision.
+// Measured and rejected 2026-09-06: spelling all six appends
+// `insert(field_60.end(), record)` instead of `push_back(record)` scores
+// 80.9765 against 82.7097 and leaves the block count at 268 - the library
+// level is not what selects the expansion.  The lever the doctrine names for
+// an OVER-inline this size is caller-shrink, but the six item-record search
+// loops are identical enough to fold into one helper and the Dreamcast
+// overview.obj roster names no such function (its own ctor is a different,
+// 2692 B revision), so that helper would be invented source.
 VA(0x0051fa40, 0x1311)  // exhaustive ctor/callback/dtor identity, dc 0x1084f0
 TOverviewWindow::TOverviewWindow()
     : CAdvPopup(0, 0, 800, 600, 0)
