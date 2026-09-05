@@ -834,6 +834,113 @@ TCombatCreatureSubWindow::~TCombatCreatureSubWindow()
     }
 }
 
+// E:\gamedcs\combatcontrolsubwindow.cpp:688
+// The full-stat arm is the `view_level == 1` one: it prints base(adjusted)
+// pairs for attack and defense out of the creature's own traits row, the
+// damage span, the hit points, the clamped morale and luck icons, and the
+// stack count (the override wins unless it is -1). Both arms then run the
+// three standing-spell icons over the LAST three entries of the stack's
+// spell-influence queue and set the overlay text.
+VA(0x0046dc30, 0x2C2)  // roster order + "%d(%d)" pair + the three spell icons, dc 0x66648
+void TCombatCreatureSubWindow::Update(const army* info, const hero* owner)
+{
+    char buffer[64];
+    army* mutableInfo = const_cast<army*>(info);
+
+    backgroundWidget->SetPlayerPaletteColors(
+        owner != 0 ? owner->owner : gpGame->GetLocalPlayerGamePos());
+
+    if (viewLevel == 1) {
+        creatureIcon->SetIconFrame(info->creatureType + 2);
+        const TCreatureTypeTraits& traits =
+            akCreatureTypeTraits[info->creatureType];
+
+        unsigned char canShoot = info->can_shoot(0);
+        long attack = info->get_adjusted_attack(0, canShoot);
+        long defense = info->get_adjusted_defense(0, 1);
+        if (canShoot)
+            attack = std::_cpp_max(attack, info->get_adjusted_attack(0, 0));
+
+        sprintf(buffer, "%d(%d)", traits.attackSkill, attack);
+        attackText->SetText(buffer);
+        sprintf(buffer, "%d(%d)", traits.defenseSkill, defense);
+        defenseText->SetText(buffer);
+
+        if (info->sMonInfo.damageLowBound != info->sMonInfo.damageHighBound) {
+            sprintf(buffer, "%d-%d", info->sMonInfo.damageLowBound,
+                    info->sMonInfo.damageHighBound);
+        } else {
+            sprintf(buffer, "%d", info->sMonInfo.damageLowBound);
+        }
+        damageText->SetText(buffer);
+
+        sprintf(buffer, "%d", info->sMonInfo.hitPoints);
+        speedText->SetText(buffer);
+
+        moraleIcon->SetIconFrame(info->GetMorale(1) + 3);
+        luckIcon->SetIconFrame(info->GetLuck(1) + 3);
+
+        int count = info->numTroopsToShowOverride;
+        if (count == -1)
+            count = info->numTroops;
+        sprintf(buffer, "%d", count);
+        countText->SetText(buffer);
+    }
+
+    unsigned int iSpell = std::_cpp_max(
+        0, static_cast<int>(info->SpellInfluenceQueue.size()) - 3);
+    for (int iIcon = 0; iIcon < 3; ++iIcon) {
+        int frame;
+        if (iSpell < info->SpellInfluenceQueue.size()) {
+            frame = mutableInfo->SpellInfluenceQueue[iSpell] + 1;
+        } else {
+            frame = 0;
+        }
+        spellIcons[iIcon]->SetIconFrame(frame);
+        ++iSpell;
+    }
+
+    if (info->SpellInfluenceQueue.size() != 0)
+        spellText->SetText("");
+    else
+        spellText->SetText(gpGeneralText->GetText(675));
+}
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:773
+VA(0x0046df00, 0x73)  // roster order + the sibling panel's own Show body, dc 0x668e8
+void TCombatCreatureSubWindow::Show()
+{
+    if (!shown) {
+        SaveBackground();
+        for (std::vector<widget*>::iterator current = Widgets.begin();
+             current != Widgets.end(); ++current) {
+            if (*current)
+                (*current)->status |= widget::WIDGET_ACTIVE |
+                                      widget::WIDGET_DRAWN;
+        }
+        Draw(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        gpWindowManager->UpdateScreen(
+            x + parentWindow->x, y + parentWindow->y, width, height);
+        shown = true;
+    }
+}
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:820
+VA(0x0046df80, 0x3A)  // combatManager::DoCommand's four-panel close, dc 0x66970
+void TCombatCreatureSubWindow::UnShow()
+{
+    if (shown) {
+        for (std::vector<widget*>::iterator current = Widgets.begin();
+             current != Widgets.end(); ++current) {
+            if (*current)
+                (*current)->status &= ~(widget::WIDGET_ACTIVE |
+                                        widget::WIDGET_DRAWN);
+        }
+        RestoreBackground();
+        shown = false;
+    }
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:562
