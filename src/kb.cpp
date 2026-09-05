@@ -3019,6 +3019,12 @@ CNetMsg::CNetMsg(eRS_Messages subType, unsigned long size)
 // CNetMsg base constructor already agrees at all three sites - expanded
 // twice, called once against the 0x4f2930 COMDAT - so this is the
 // budget running out one level deeper, not a spelling.
+// 2026-09-05: the trailing `||` now goes through an `unsigned char`
+// local, which is what gives retail's byte-wide `xor al,al` /
+// `mov al,1` instead of `xor eax,eax` / `mov eax,1` (79.0534 ->
+// 79.1102). The remaining epilogue difference is downstream of the same
+// register story: retail's EBX holds -1 and is dead by the compares, so
+// its three pops sit AHEAD of them and are shared between both arms.
 VA(0x004f2960, 0x37E)  // decorated identity (kb.h) + anchor-caller (CheckEndGame), dc 0xe3558
 unsigned char DisplayLCWinLoss(LossConditionStruct* lossCondition,
                                int* bGameWon, int* bGameLost,
@@ -3082,7 +3088,8 @@ unsigned char DisplayLCWinLoss(LossConditionStruct* lossCondition,
         break;
     }
 
-    return *bGameWon || *bGameLost;
+    unsigned char gameOver = *bGameWon || *bGameLost;
+    return gameOver;
 }
 
 // The re-entry latch CheckEndGame holds while it runs; its only five
