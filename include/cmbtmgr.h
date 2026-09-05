@@ -1762,9 +1762,13 @@ public:
     // ai_tactical bodies, every one of which the DC graph also records
     // as a find_AI_targets caller. Its own VA claim wants the ai.obj
     // span recomputed past 0x4224d9 and is left to that lane.
+    // The parameters object is NOT const here: the body calls the
+    // non-const type_AI_combat_parameters::get_simple_attack_effect
+    // (?...@@QAEJPBVarmy@@0EJ@Z) on it, and every caller in the tree
+    // already passes a non-const object.
     void find_AI_targets(long our_group, const army* current_army,
                          unsigned char melee_only,
-                         const type_AI_combat_parameters* data,
+                         type_AI_combat_parameters* data,
                          searchArray* search_array);          // 0x422b20
     // 0x422a40 (224 B), the row IMMEDIATELY BEFORE find_AI_targets on
     // both sides: DC's own ai.obj roster puts
