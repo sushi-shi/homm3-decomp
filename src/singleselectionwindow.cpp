@@ -4811,17 +4811,139 @@ void TSingleSelectionWindow::SetDifficultyHiLite()
     BroadcastMessage(&select);
 }
 
-#if 0  // @carcass - Complete-only random-map generator pending full body
-
 // Generates a map after resolving any random filter rungs. Its single
 // const-char* argument and return byte are fixed by both retained callers.
+// Every "random" rung (-1) is rolled here first, clamped against the seat
+// count, and the resolved values plus the eight seats' town picks go into
+// the request record. The mouse thread runs for the duration and the modal
+// progress bar advances one step; the generator's result code selects one of
+// three general-text failure dialogs.
+//
+// Residual (91.9718%): one construct, and it is a shared-helper conflict
+// rather than a spelling. Retail EXPANDS StopMouseThread here (SetEvent,
+// WaitForSingleObject, the two CloseHandles and the pointer restore all
+// inline, one extra branch) while keeping it OUT of line at
+// SetupScenarioOptions - which is what the `#pragma auto_inline(off)`
+// around its definition above buys. Measured both ways in one build:
+// dropping the pragma takes this row 91.9718 -> 96.9735 and
+// SetupScenarioOptions 100.0000 -> 90.1470, a net loss of about 100 bytes
+// and a ratchet break, so the pragma stays and this call stays a call.
+// Fixed here: the request/progress/path locals live in their OWN BLOCK,
+// which retail proves by destroying them once before StopMouseThread rather
+// than per switch arm - worth 80.8024 -> 91.9718 on the brace alone.
 VA(0x005860E0, 0x4CC)
 unsigned char TSingleSelectionWindow::GenerateRandomMap(const char* name)
 {
-    // @stub
-}
+    int players = field_18A0[2];
+    int humans = field_18A0[3];
+    int teams = field_18A0[4];
+    int alliances = field_18A0[5];
 
-#endif  // @carcass
+    if (players == -1) {
+        int seated = 0;
+        for (int j = 0; j < CNetPlayerHandler::MAX_PLAYERS; ++j) {
+            CNetPlayerHandlerPlayer* p = m_players.GetPlayerInPos(j);
+            if (p && p->dpid != 0)
+                ++seated;
+        }
+        players = seated + rand() % (9 - seated);
+    }
+
+    if (humans == -1)
+        humans = rand() % players + 1;
+    if (humans == 0 || humans > players)
+        humans = players;
+
+    if (players == CNetPlayerHandler::MAX_PLAYERS) {
+        teams = 0;
+        alliances = 0;
+    } else {
+        if (teams == -1)
+            teams = rand() % (9 - players);
+        if (teams + players > 8)
+            teams = 8 - players;
+        if (teams == 0) {
+            alliances = teams;
+        } else {
+            if (alliances == -1)
+                alliances = rand() % teams + 1;
+            if (alliances == 0)
+                alliances = teams;
+            else if (alliances > teams)
+                alliances = players;
+        }
+    }
+
+    int monsters = field_18A0[6];
+    int water = field_18A0[7] - 1;
+    if (water == -2)
+        water = rand() % 3 - 1;
+
+    int mapVersion;
+    if (field_1898 == SINGLE_SELECTION_CONTEXT_2
+            || field_1898 == SINGLE_SELECTION_CONTEXT_3)
+        mapVersion = GAME_VERSION_SOD;
+    else
+        mapVersion = field_1898 == SINGLE_SELECTION_CONTEXT_1
+            ? GAME_VERSION_AB
+            : GAME_VERSION_ROE;
+
+    gpMouseManager->SetPointer(1, mouseManager::ADVENTURE_SET);
+    StartMouseThread();
+
+    int result;
+    {
+        TRandomMapRequest request(field_18A0[0], field_18A0[0],
+                                  field_18A0[1]);
+        TRandomMapProgress progress(1);
+
+        request.field_34 = players;
+        request.field_38 = humans;
+        request.field_3C = teams;
+        request.field_40 = alliances;
+        request.field_44 = monsters;
+        request.field_48 = water;
+        request.mapVersion = mapVersion;
+
+        for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
+            CNetPlayerHandlerPlayer* pPlayer = m_players.GetPlayerInPos(i);
+            if (!pPlayer)
+                pPlayer = m_players.GetCompPlayerInPos(i);
+            if (pPlayer->dpid != 0)
+                request.isHumanSeat[i] = 1;
+            request.townType[i] = pPlayer->townIndex;
+        }
+
+        std::string path(DATA_COMPGEN(0x006837d4, randomMapsPrefix,
+                                      "random_maps\\"));
+        path += name;
+
+        result = request.Generate(path.c_str(), &progress);
+        progress.done = std::_cpp_min(progress.done + 1, progress.steps);
+        progress.LoadProgFn_00577180();
+    }
+
+    StopMouseThread();
+    gpMouseManager->SetPointer(0, mouseManager::DEFAULT_SET);
+
+    switch (result) {
+    case RANDOM_MAP_OK:
+        return 1;
+    case RANDOM_MAP_FAILED_1:
+        NormalDialog(gpGeneralText->GetText(750), 1, -1, -1, -1, 0, -1, 0, -1,
+                     0, -1, 0);
+        break;
+    case RANDOM_MAP_FAILED_2:
+        NormalDialog(gpGeneralText->GetText(751), 1, -1, -1, -1, 0, -1, 0, -1,
+                     0, -1, 0);
+        break;
+    case RANDOM_MAP_FAILED_3:
+        NormalDialog(gpGeneralText->GetText(752), 1, -1, -1, -1, 0, -1, 0, -1,
+                     0, -1, 0);
+        break;
+    }
+    return 0;
+}
 
 #if 0  // @carcass
 
