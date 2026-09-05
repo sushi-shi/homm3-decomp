@@ -7540,3 +7540,12 @@ SpellID** std::__copy_backward(SpellID** __first, SpellID** __last, SpellID** __
 // claim-10 sweep.
 VA_COMPGEN(0x004490b0, 0x73, DEQUE_FREEFRONT, int)
 VA_COMPGEN(0x00449130, 0x8E, DEQUE_FREEBACK, int)
+
+// COMDAT pairing: deque<int>::erase(first, last), agreement 0.996.
+VA_COMPGEN(0x00448db0, 0x2FE, DEQUE_ERASE, int)
+
+// COMDAT pairing: vector<army*>::clear, agreement 0.954.
+VA_COMPGEN(0x00448d70, 0x3D, VECTOR_CLEAR, army)
+
+// COMDAT pairing: deque<int>::iterator::operator+=, agreement 0.935.
+VA_COMPGEN(0x004491c0, 0x69, DEQUE_ITERATOR_ADD_ASSIGN, int)

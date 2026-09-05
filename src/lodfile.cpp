@@ -631,3 +631,7 @@ int LODFile::read(void* dest, int numBytes)
     }
     return 0;
 }
+
+// COMDAT pairing: vector<LODEntry>::insert, agreement 0.990
+// (253 base vs 248 retail instructions).
+VA_COMPGEN(0x004fac40, 0x26B, VECTOR_INSERT, LODEntry)

@@ -652,3 +652,11 @@ void CBitmapWidget::zBufferDraw()
 }
 
 #endif  // @carcass
+
+// COMDAT pairing: vector<widget*>::_Ucopy, agreement 0.978. Same caller-set
+// argument as the insert above: 0x174ce0 is reached from TAdventureMapWindow's
+// constructor and SetSleepImage, and from TTownGateWindow::AddTown's expanded
+// insert - cross-unit reach that only a shared COMDAT has. dialogbox 0x8dba0
+// (49 B, identical similarity) is reached only from unresolved labels inside
+// its own two segments.
+VA_COMPGEN(0x00574ce0, 0x2F, VECTOR_UCOPY, widget)

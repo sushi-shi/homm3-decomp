@@ -1391,3 +1391,27 @@ void TArtifactRequirement::set(TArtifact _artifact, char _guard_bit)
     // @stub
 }
 #endif
+
+// COMDAT pairing: std::_Sort<hero, CrossoverHeroStronger>, agreement 0.972.
+VA_COMPGEN(0x0048f7e0, 0x159, STD_SORT, hero_crossoverherostronger)
+
+// COMDAT pairing: std::_Sort_0<hero, CrossoverHeroStronger>, agreement 0.985.
+VA_COMPGEN(0x0048f2b0, 0x333, STD_SORT_0, hero_crossoverherostronger)
+
+// COMDAT pairing: bitset145::_Xran, mnemonic agreement 0.978.
+VA_COMPGEN(0x0048edf0, 0xC8, BITSET_XRAN, bitset145)
+
+// COMDAT pairing: hero::_Ucopy, mnemonic agreement 0.966.
+VA_COMPGEN(0x0048d8d0, 0x38, VECTOR_UCOPY, hero)
+
+// COMDAT pairing: hero::copy_backward, mnemonic agreement 0.918.
+VA_COMPGEN(0x0048e880, 0x3B, STD_COPY_BACKWARD, hero)
+
+// COMDAT pairing: hero::_Ufill, mnemonic agreement 0.913.
+VA_COMPGEN(0x0048d970, 0x2C, VECTOR_UFILL, hero)
+
+// COMDAT pairing: out_of_range::out_of_range(const&), agreement 0.940 and an
+// EXACT size match (352 B against the object's 352). Four other addresses
+// resemble the same COMDAT - advmgr 0x1ba90/0x1b7b0/0x1b920 at 354/361/367 B
+// and castle 0x60700 at 293 - and the size settles it.
+VA_COMPGEN(0x00487bd0, 0x160, CLASS_CTOR, out_of_range)
