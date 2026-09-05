@@ -1464,6 +1464,124 @@ void TCampaignBrief::ScenarioStruct::PlaceStartingHero(
                           currentHero->owner, currentHero->GetVisibility(), 1);
 }
 
+// The map placeholders are handed the campaign's carried heroes strongest
+// first, so retail sorts them by their power rating before the pass below.
+// Retail-only, name provisional (the whole std::sort instantiation this
+// predicate pulls into customcampaign.obj is at 0x48eec0 and its helpers).
+bool HeroPlaceholderStronger::operator()(const HeroPlaceholderData& left,
+                                         const HeroPlaceholderData& right)
+    const
+{
+    return static_cast<signed char>(left.powerRating)
+        > static_cast<signed char>(right.powerRating);
+}
+
+// Complete-only, and game::NewMap's second campaign callee (the first is
+// SCampaign::DoPreLoadCustomization). The scenario's chosen start option
+// names the crossover slot, that slot's hero pool is copied out of the
+// campaign, and the map's placeholders take from it in power-rating order:
+// a placeholder that names a specific hero id takes that hero (and drops it
+// from the local pool so it cannot be handed out twice), and the remaining
+// unnamed placeholders belonging to the option's own player take whatever is
+// left. Anything the loss condition pins to a specific cell, and the
+// player's first hero if it still has none, falls back to the placeholder
+// path in PlaceStartingHero above.
+VA(0x00487290, 0x664)  // anchor-caller(game::NewMap +0x7ce), retail-only
+void TCampaignBrief::ScenarioStruct::PlaceCrossoverHeroes()
+{
+    SCampaign* campaign = &gpGame->campaign;
+    int choice = campaign->briefingChoice;
+    int player = options->GetPlayerPosition(choice);
+    int slot = options->_vslot5(this, choice);
+    campaign->mapScores[campaign->currentMap].index = slot;
+
+    std::vector<hero> heroes;
+    std::vector<HeroPlaceholderData> placeholders =
+        gpGame->worldMap.heroPlaceholders;
+    if (placeholders.size() == 0)
+        return;
+
+    std::sort(placeholders.begin(), placeholders.end(),
+              HeroPlaceholderStronger());
+
+    if (slot >= 0)
+        heroes = campaign->carryOverHeroes[slot];
+
+    HeroPlaceholderData* placeholder;
+    unsigned int iPlaceholder;
+    for (iPlaceholder = 0; iPlaceholder < placeholders.size();
+         ++iPlaceholder) {
+        placeholder = &placeholders[iPlaceholder];
+        if (placeholder->heroId == -1)
+            continue;
+
+        int carried;
+        for (carried = heroes.size() - 1; carried >= 0; --carried) {
+            if (heroes[carried].id == placeholder->heroId)
+                break;
+        }
+        if (carried >= 0)
+            heroes.erase(heroes.begin() + carried);
+
+        for (int iPool = campaign->carryOverHeroes.size() - 1; iPool >= 0;
+             --iPool) {
+            for (int iHero = campaign->carryOverHeroes[iPool].size() - 1;
+                 iHero >= 0; --iHero) {
+                if (campaign->carryOverHeroes[iPool][iHero].id
+                    == placeholder->heroId) {
+                    hero* carriedHero =
+                        &campaign->carryOverHeroes[iPool][iHero];
+                    if (carriedHero)
+                        InitializeCrossoverHero(placeholder, carriedHero);
+                    goto nextPlaceholder;
+                }
+            }
+        }
+    nextPlaceholder:
+        ;
+    }
+
+    if (heroes.size() != 0) {
+        for (iPlaceholder = 0; iPlaceholder < placeholders.size();
+             ++iPlaceholder) {
+            placeholder = &placeholders[iPlaceholder];
+            if (placeholder->heroId == -1
+                && static_cast<signed char>(placeholder->owner) == player) {
+                InitializeCrossoverHero(placeholder, heroes.begin());
+                heroes.erase(heroes.begin());
+                if (heroes.size() == 0)
+                    break;
+            }
+        }
+    }
+
+    if (gpGame->mapHeader.lossCondition.Type == 1) {
+        type_point lossHero(gpGame->mapHeader.lossCondition.HeroX,
+                            gpGame->mapHeader.lossCondition.HeroY,
+                            gpGame->mapHeader.lossCondition.HeroZ);
+        NewmapCell* cell = gpGame->worldMap.cell(lossHero.x, lossHero.y,
+                                                 lossHero.z);
+        if (!cell->is_trigger || cell->type != HERO) {
+            for (iPlaceholder = 0; iPlaceholder < placeholders.size();
+                 ++iPlaceholder) {
+                placeholder = &placeholders[iPlaceholder];
+                CObject* object = placeholder->object;
+                int triggerX;
+                int triggerY;
+                object->FindTrigger(triggerX, triggerY);
+                if (triggerX == lossHero.x && triggerY == lossHero.y
+                    && object->z == lossHero.z) {
+                    PlaceStartingHero(placeholder);
+                    return;
+                }
+            }
+        }
+    }
+
+    if (gpGame->players[player].numHeroes == 0)
+        PlaceStartingHero(placeholder);
+}
+
 // Complete-only. Seeks the campaign stream to this scenario's map data
 // and reads the map header out of a gzip-inflating view of it.
 VA(0x00487d30, 0x96)  // LoadScenario's sole callee, retail-only
@@ -2963,6 +3081,12 @@ void TArtifactRequirement::set(TArtifact _artifact, char _guard_bit)
 #endif
 
 // COMDAT pairing: std::_Sort<hero, CrossoverHeroStronger>, agreement 0.972.
+// The map hero placeholders' own sort, instantiated by
+// ScenarioStruct::PlaceCrossoverHeroes. Both bodies are byte-identical to
+// this compile's instruction stream.
+VA_COMPGEN(0x0048eec0, 0x3ED, STD_SORT_0, HeroPlaceholderData_HeroPlaceholderStronger)
+VA_COMPGEN(0x0048f630, 0x1AE, STD_SORT, HeroPlaceholderData_HeroPlaceholderStronger)
+
 VA_COMPGEN(0x0048f7e0, 0x159, STD_SORT, hero_crossoverherostronger)
 
 // COMDAT pairing: std::_Sort_0<hero, CrossoverHeroStronger>, agreement 0.985.
@@ -2975,6 +3099,7 @@ VA_COMPGEN(0x0048f2b0, 0x333, STD_SORT_0, hero_crossoverherostronger)
 // CrossoverHeroStronger compare inline at every step and finishes with one
 // `hero::operator=` - which is Dinkumware's _Unguarded_insert verbatim and
 // has nothing to do with dialogbox.obj.
+VA_COMPGEN(0x0048fa40, 0x1D7, STD_MEDIAN, hero_crossoverherostronger)
 VA_COMPGEN(0x0048f940, 0xF4, STD_UNGUARDED_INSERT, hero_crossoverherostronger)
 VA_COMPGEN(0x0048fc20, 0x195, STD_UNGUARDED_PARTITION, hero_crossoverherostronger)
 

@@ -90,6 +90,17 @@ struct CrossoverHeroStronger {
     bool operator()(hero& lhs, hero& rhs) const;
 };
 
+// The map's own hero placeholders are sorted by their power rating before
+// the campaign hands out its carried heroes: the strongest placeholder gets
+// the first carried hero. Retail instantiates std::sort over it in
+// customcampaign.obj (0x48eec0 and its helpers). The rating is compared
+// SIGNED. Role name; no Dreamcast row covers it.
+struct HeroPlaceholderData;
+struct HeroPlaceholderStronger {
+    bool operator()(const HeroPlaceholderData& left,
+                    const HeroPlaceholderData& right) const;
+};
+
 // The crossover-hero score the ordering above compares: the primary-skill
 // total plus the 28 secondary mastery bytes. Retail keeps it as a separate
 // /Gr free body at 0x483f50 (the hero arrives in ECX and it returns with a
