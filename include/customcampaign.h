@@ -77,6 +77,18 @@ struct TCampaignMusicTraits {
 };
 extern const TCampaignMusicTraits* akCampaignMusicTraits;
 
+// The ordering both of SCampaign::PruneCrossoverHeroes' std::sort calls
+// instantiate: strongest crossover hero first, by primary skills plus the 28
+// secondary mastery bytes, then by experience, then by hero id. Retail emits
+// the operator() (0x483f80) as a plain customcampaign.obj body immediately
+// behind the two TStreamBufFile virtuals, and `this` is dead in it - the
+// functor is empty. The class name is a ROLE invention; no Dreamcast row
+// survives for it.
+class hero;
+struct CrossoverHeroStronger {
+    bool operator()(hero& lhs, hero& rhs) const;
+};
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\customcampaign.cpp:70, dc 0x7cd4c) void InitCampaignMapTraits([]* map_traits);
 

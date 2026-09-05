@@ -329,18 +329,20 @@ void RobAppBlit(tagRECT* comb_rect)
 // bridges DDSURFACEDESC. The vtable prefix through Restore is identical in
 // both generations, so no byte depends on the choice.
 //
-// Residual (63.77%): VC6 INVERTS all three retry loops - it emits the Blt
-// once as the loop guard and a second time at the bottom - where retail has
-// exactly one Blt per arm and an unconditional `jmp` back edge, and it gives
-// each arm its own epilogue where retail cross-jumps all three onto one
-// `ret 0xc`. The three surplus calls and the two surplus rets are the whole
-// difference; every other call pairs 1:1 in order. This is the merged-return
-// / tail-merge class, not a spelling: four shapes were measured and are
-// BYTE-IDENTICAL to the digit - `while (Blt(...) == LOST) {...}`,
-// `label: if (Blt(...) == LOST) { ...; goto label; }` (the exact
-// Process1WindowsMessage idiom), the same with a forward `goto done` and one
-// shared exit label, and the same again with the Blt result in a named
-// HRESULT declared outside the loop. VC6 canonicalises all four.
+// EXACT (100.0000%, 2026-09-05). The three retry arms are
+// `while (1) { if (Blt(...) != LOST) goto done; <recovery> }` - an infinite
+// loop whose ONLY exit is the forward `goto` out of the function. The
+// previous note recorded this as the merged-return / tail-merge class after
+// four measurements ("VC6 INVERTS all three retry loops... every shape is
+// BYTE-IDENTICAL"), and the conclusion was wrong: all four of those shapes
+// keep a LABEL that both falls in and is jumped back to, and VC6 PEELS such
+// a label - it emits the Blt once as a guard and a second time at the
+// bottom, giving three surplus calls and two surplus rets. Wrapping the same
+// statements in `while (1)` removes the fall-in predecessor, so VC6 emits
+// one Blt per arm with retail's unconditional `jmp` back edge and
+// cross-jumps all three epilogues onto the single `ret 0xc`. 63.77 -> 100.
+// Same lever, same day: kb::oldmain's two campaign-continue arms, 73.35 ->
+// 75.97.
 // E:\gamedcs\wingraph.cpp:931
 VA(0x006001d0, 0x1E1)  // anchor-caller(mousemgr, six sites) + header identification, dc 0x199170
 void DDBlit(IDirectDrawSurface4* dstSurface, const tagRECT* dstRect,
@@ -355,29 +357,29 @@ void DDBlit(IDirectDrawSurface4* dstSurface, const tagRECT* dstRect,
                static_cast<void*>(gpDDSPrimary))) {
         RECT region = *dstRect;
         GameTime::Get();
-    retry_to_primary:
-        if (gpDDSPrimary->Blt(&region,
-                static_cast<IDirectDrawSurface*>(
-                    static_cast<void*>(srcSurface)),
-                const_cast<RECT*>(srcRect), flags, 0)
-            != DDERR_SURFACELOST) {
-            goto done;
+        while (1) {
+            if (gpDDSPrimary->Blt(&region,
+                    static_cast<IDirectDrawSurface*>(
+                        static_cast<void*>(srcSurface)),
+                    const_cast<RECT*>(srcRect), flags, 0)
+                != DDERR_SURFACELOST) {
+                goto done;
+            }
+            if (gpDDSPrimary->IsLost() == DDERR_SURFACELOST) {
+                HRESULT result = gpDDSPrimary->Restore();
+                if (result == DDERR_WRONGMODE)
+                    DDResetDisplayMode(&region);
+                else if (result != DD_OK)
+                    DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                                  "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x1b4);
+            }
+            if (srcSurface->IsLost() == DDERR_SURFACELOST) {
+                HRESULT result = DDRestoreSurfaces();
+                if (result != DD_OK)
+                    DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                                  "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x1bb);
+            }
         }
-        if (gpDDSPrimary->IsLost() == DDERR_SURFACELOST) {
-            HRESULT result = gpDDSPrimary->Restore();
-            if (result == DDERR_WRONGMODE)
-                DDResetDisplayMode(&region);
-            else if (result != DD_OK)
-                DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
-                              "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x1b4);
-        }
-        if (srcSurface->IsLost() == DDERR_SURFACELOST) {
-            HRESULT result = DDRestoreSurfaces();
-            if (result != DD_OK)
-                DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
-                              "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x1bb);
-        }
-        goto retry_to_primary;
     }
 
     if (srcSurface
@@ -385,45 +387,45 @@ void DDBlit(IDirectDrawSurface4* dstSurface, const tagRECT* dstRect,
                static_cast<void*>(gpDDSPrimary))) {
         RECT region = *srcRect;
         GameTime::Get();
-    retry_from_primary:
-        if (dstSurface->Blt(const_cast<RECT*>(dstRect),
-                static_cast<IDirectDrawSurface4*>(
-                    static_cast<void*>(gpDDSPrimary)),
-                &region, flags, 0)
-            != DDERR_SURFACELOST) {
-            goto done;
+        while (1) {
+            if (dstSurface->Blt(const_cast<RECT*>(dstRect),
+                    static_cast<IDirectDrawSurface4*>(
+                        static_cast<void*>(gpDDSPrimary)),
+                    &region, flags, 0)
+                != DDERR_SURFACELOST) {
+                goto done;
+            }
+            if (gpDDSPrimary->IsLost() == DDERR_SURFACELOST) {
+                HRESULT result = gpDDSPrimary->Restore();
+                if (result == DDERR_WRONGMODE)
+                    DDResetDisplayMode(&region);
+                else if (result != DD_OK)
+                    DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                                  "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x1ef);
+            }
+            if (dstSurface->IsLost() == DDERR_SURFACELOST) {
+                HRESULT result = DDRestoreSurfaces();
+                if (result != DD_OK)
+                    DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                                  "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x1f6);
+            }
         }
-        if (gpDDSPrimary->IsLost() == DDERR_SURFACELOST) {
-            HRESULT result = gpDDSPrimary->Restore();
-            if (result == DDERR_WRONGMODE)
-                DDResetDisplayMode(&region);
-            else if (result != DD_OK)
-                DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
-                              "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x1ef);
-        }
-        if (dstSurface->IsLost() == DDERR_SURFACELOST) {
-            HRESULT result = DDRestoreSurfaces();
-            if (result != DD_OK)
-                DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
-                              "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x1f6);
-        }
-        goto retry_from_primary;
     }
 
     GameTime::Get();
-retry_offscreen:
-    if (dstSurface->Blt(const_cast<RECT*>(dstRect), srcSurface,
-            const_cast<RECT*>(srcRect), flags, 0)
-        != DDERR_SURFACELOST) {
-        goto done;
+    while (1) {
+        if (dstSurface->Blt(const_cast<RECT*>(dstRect), srcSurface,
+                const_cast<RECT*>(srcRect), flags, 0)
+            != DDERR_SURFACELOST) {
+            goto done;
+        }
+        {
+            HRESULT result = DDRestoreSurfaces();
+            if (result != DD_OK)
+                DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                                  "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x233);
+        }
     }
-    {
-        HRESULT result = DDRestoreSurfaces();
-        if (result != DD_OK)
-            DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
-                              "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x233);
-    }
-    goto retry_offscreen;
 
 done:
     ;
