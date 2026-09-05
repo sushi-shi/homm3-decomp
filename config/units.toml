@@ -628,6 +628,13 @@ unit = "spelldefs"
 source = "src/spelldefs.cpp"
 flags = "game_o2_ml_gr_windows"
 
+# Complete-only compiland between search.obj and seerhut.obj; no Dreamcast
+# roster names it, so the unit name is provisional.
+[[unit]]
+unit = "seerhuttext"
+source = "src/seerhuttext.cpp"
+flags = "game_o2_ml_gr_windows"
+
 [[unit]]
 unit = "scenarioinfo"
 source = "src/scenarioinfo.cpp"
