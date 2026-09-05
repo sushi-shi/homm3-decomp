@@ -2524,6 +2524,16 @@ int TSeerHut::getValue(hero* currentHero)
 // the retail-proven standalone function (100% -> absent) and lowered this row
 // to 42.5710%. Dreamcast DoSeerEvent calls neither getValue nor an equivalent
 // helper, so that inference was reverted rather than made fatal.
+// 2026-09-05 titration (not shipped): eight dead plain statements are
+// byte-flat at 44.48, ONE dead `std::string` takes the row to 83.56 with
+// both helpers expanded - the enabler is the caller's own EH frame, not
+// the /Ob2 budget. Defining both helpers `inline` before this body is
+// byte-flat. Retail's unwind map numbers DoEmptyDialog's two objects 0/1
+// and the completion temporary 2 (ours, once framed, numbers the
+// completion temporary 0), so its front end registered the no-quest
+// arm's objects first; retail's frame holds nothing beyond the three
+// helper temporaries ([-0x20] shared by both arms, [-0x30]). No
+// Dreamcast-proven construct supplies the frame from this caller.
 VA(0x00573670, 0x400)  // code plus two retail switch tables in the admitted row
 void TSeerHut::DoSeerEvent(hero* current_hero, bool human_player)
 {

@@ -99,6 +99,16 @@ void UpdateBackpack(int iSlot);
 // the Complete-specific geometry. The admitted body reproduces all 328 retail
 // CFG blocks and the 197-call out-of-line multiset; the remaining delta is
 // register allocation and instruction scheduling, not missing source regions.
+// 2026-09-05 frame census (90.57): retail's frame is 8 B smaller because
+// its two hoisted 64-bit building-mask temps sit at [-0x4c]/[-0x48] above
+// monsterY, with monsterX BELOW monsterY (-0x84 / -0x68); ours homes the
+// temps at [-0x80]/[-0xac] with monsterX above monsterY. Every later slot
+// (currTown/currHero -0x14 vs -0x10, iLookup/luck -0x10 vs -0x14/-0x40)
+// is the same overlay one slot shifted, and retail forwards the hall/
+// castle iLookup arms into ESI where ours keeps them in memory. Measured
+// byte-inert: the DC CodeView local order, monsterX/monsterY swapped
+// (90.40, stores reorder only), currTown/currHero declared first in their
+// blocks. The DC statement order of the town block matches ours.
 // E:\gamedcs\overview.cpp:220
 VA(0x0051bd50, 0x25DC)  // exhaustive body/caller identity, dc 0x104458
 void game::SetupDynamicStuff(int bUpdate, int bForceUpdate)
@@ -2242,7 +2252,21 @@ static void decrement_backpack_start(long slot)
 // and the DC roster holds no helper to shrink the caller with
 // (get_last_backpack_index, show_artifact and the two backpack steppers
 // are already used). The leaf DoFlaggableButtons is byte-exact and
-// carries retail's double size()-7 evaluation. Not spellable from here.
+// carries retail's double size()-7 evaluation.
+// 2026-09-05: 77.96 -> 80.10 on two Dreamcast facts: the twelve page arms
+// read `giOverviewTop[0]` (DC loads the array's first element with no
+// type shift, where its helpers shift by giOverviewType) - less front-end
+// mass, and the row-3 arrows moved to retail's GetHero /
+// get_last_backpack_index(long) calls; and the mouse-move block returns
+// on the cache hit (DC line 2857) before the store/DoRollover/second
+// return - retail's two epilogues with the DoRollover block sunk.
+// Instrumented (not shipped): five dead statements inside
+// DoFlaggableButtons take this row to 83.07 by pushing the leaf past the
+// 1000-cb candidacy filter (it is then CALLED at all four sites and
+// get_last_backpack_index expands again), so retail's leaf sits within a
+// few statements of ours and the rest is caller mass: the SELECT arm
+// falls through into the mouse test only once msg keeps EDI, which needs
+// the HOME/PREV expansions to stop expanding UpdateFlaggableIcons.
 // E:\gamedcs\overview.cpp:2546
 VA(0x00521960, 0xB03)  // vtable slot 9 + exhaustive call/CFG identity, dc 0x10997c
 int TOverviewWindow::WindowHandler(message* msg)
@@ -2297,14 +2321,14 @@ int TOverviewWindow::WindowHandler(message* msg)
 
             case OVERVIEW_ROW_FIRST_ID + OVERVIEW_HERO_ARTIFACT_PAGE_1_ID:
                 if (giOverviewType == 0) {
-                    gOverviewHeroArtifactPage[giOverviewTop[giOverviewType]] =
+                    gOverviewHeroArtifactPage[giOverviewTop[0]] =
                         OVERVIEW_HERO_EQUIPPED_PAGE_1;
                     gpGame->SetupNewOverviewType(0, 1);
                 }
                 break;
             case OVERVIEW_ROW_FIRST_ID + OVERVIEW_HERO_ARTIFACT_PAGE_2_ID:
                 if (giOverviewType == 0) {
-                    gOverviewHeroArtifactPage[giOverviewTop[giOverviewType]] =
+                    gOverviewHeroArtifactPage[giOverviewTop[0]] =
                         OVERVIEW_HERO_EQUIPPED_PAGE_2;
                     gpGame->SetupNewOverviewType(0, 1);
                 }
@@ -2312,9 +2336,9 @@ int TOverviewWindow::WindowHandler(message* msg)
             case OVERVIEW_ROW_FIRST_ID + OVERVIEW_HERO_ARTIFACT_PAGE_3_ID:
                 if (giOverviewType == 0
                         && gOverviewHeroArtifactPage[
-                               giOverviewTop[giOverviewType]]
+                               giOverviewTop[0]]
                            != OVERVIEW_HERO_BACKPACK_PAGE) {
-                    gOverviewHeroArtifactPage[giOverviewTop[giOverviewType]] =
+                    gOverviewHeroArtifactPage[giOverviewTop[0]] =
                         OVERVIEW_HERO_BACKPACK_PAGE;
                     gpGame->SetupNewOverviewType(0, 1);
                 }
@@ -2334,7 +2358,7 @@ int TOverviewWindow::WindowHandler(message* msg)
                     + OVERVIEW_HERO_ARTIFACT_PAGE_1_ID:
                 if (giOverviewType == 0) {
                     gOverviewHeroArtifactPage[
-                        giOverviewTop[giOverviewType] + 1] =
+                        giOverviewTop[0] + 1] =
                         OVERVIEW_HERO_EQUIPPED_PAGE_1;
                     gpGame->SetupNewOverviewType(0, 1);
                 }
@@ -2343,7 +2367,7 @@ int TOverviewWindow::WindowHandler(message* msg)
                     + OVERVIEW_HERO_ARTIFACT_PAGE_2_ID:
                 if (giOverviewType == 0) {
                     gOverviewHeroArtifactPage[
-                        giOverviewTop[giOverviewType] + 1] =
+                        giOverviewTop[0] + 1] =
                         OVERVIEW_HERO_EQUIPPED_PAGE_2;
                     gpGame->SetupNewOverviewType(0, 1);
                 }
@@ -2352,10 +2376,10 @@ int TOverviewWindow::WindowHandler(message* msg)
                     + OVERVIEW_HERO_ARTIFACT_PAGE_3_ID:
                 if (giOverviewType == 0
                         && gOverviewHeroArtifactPage[
-                               giOverviewTop[giOverviewType] + 1]
+                               giOverviewTop[0] + 1]
                            != OVERVIEW_HERO_BACKPACK_PAGE) {
                     gOverviewHeroArtifactPage[
-                        giOverviewTop[giOverviewType] + 1] =
+                        giOverviewTop[0] + 1] =
                         OVERVIEW_HERO_BACKPACK_PAGE;
                     gpGame->SetupNewOverviewType(0, 1);
                 }
@@ -2375,7 +2399,7 @@ int TOverviewWindow::WindowHandler(message* msg)
                     + OVERVIEW_HERO_ARTIFACT_PAGE_1_ID:
                 if (giOverviewType == 0) {
                     gOverviewHeroArtifactPage[
-                        giOverviewTop[giOverviewType] + 2] =
+                        giOverviewTop[0] + 2] =
                         OVERVIEW_HERO_EQUIPPED_PAGE_1;
                     gpGame->SetupNewOverviewType(0, 1);
                 }
@@ -2384,7 +2408,7 @@ int TOverviewWindow::WindowHandler(message* msg)
                     + OVERVIEW_HERO_ARTIFACT_PAGE_2_ID:
                 if (giOverviewType == 0) {
                     gOverviewHeroArtifactPage[
-                        giOverviewTop[giOverviewType] + 2] =
+                        giOverviewTop[0] + 2] =
                         OVERVIEW_HERO_EQUIPPED_PAGE_2;
                     gpGame->SetupNewOverviewType(0, 1);
                 }
@@ -2393,10 +2417,10 @@ int TOverviewWindow::WindowHandler(message* msg)
                     + OVERVIEW_HERO_ARTIFACT_PAGE_3_ID:
                 if (giOverviewType == 0
                         && gOverviewHeroArtifactPage[
-                               giOverviewTop[giOverviewType] + 2]
+                               giOverviewTop[0] + 2]
                            != OVERVIEW_HERO_BACKPACK_PAGE) {
                     gOverviewHeroArtifactPage[
-                        giOverviewTop[giOverviewType] + 2] =
+                        giOverviewTop[0] + 2] =
                         OVERVIEW_HERO_BACKPACK_PAGE;
                     gpGame->SetupNewOverviewType(0, 1);
                 }
@@ -2416,7 +2440,7 @@ int TOverviewWindow::WindowHandler(message* msg)
                     + OVERVIEW_HERO_ARTIFACT_PAGE_1_ID:
                 if (giOverviewType == 0) {
                     gOverviewHeroArtifactPage[
-                        giOverviewTop[giOverviewType] + 3] =
+                        giOverviewTop[0] + 3] =
                         OVERVIEW_HERO_EQUIPPED_PAGE_1;
                     gpGame->SetupNewOverviewType(0, 1);
                 }
@@ -2425,7 +2449,7 @@ int TOverviewWindow::WindowHandler(message* msg)
                     + OVERVIEW_HERO_ARTIFACT_PAGE_2_ID:
                 if (giOverviewType == 0) {
                     gOverviewHeroArtifactPage[
-                        giOverviewTop[giOverviewType] + 3] =
+                        giOverviewTop[0] + 3] =
                         OVERVIEW_HERO_EQUIPPED_PAGE_2;
                     gpGame->SetupNewOverviewType(0, 1);
                 }
@@ -2434,10 +2458,10 @@ int TOverviewWindow::WindowHandler(message* msg)
                     + OVERVIEW_HERO_ARTIFACT_PAGE_3_ID:
                 if (giOverviewType == 0
                         && gOverviewHeroArtifactPage[
-                               giOverviewTop[giOverviewType] + 3]
+                               giOverviewTop[0] + 3]
                            != OVERVIEW_HERO_BACKPACK_PAGE) {
                     gOverviewHeroArtifactPage[
-                        giOverviewTop[giOverviewType] + 3] =
+                        giOverviewTop[0] + 3] =
                         OVERVIEW_HERO_BACKPACK_PAGE;
                     gpGame->SetupNewOverviewType(0, 1);
                 }
@@ -2459,10 +2483,10 @@ int TOverviewWindow::WindowHandler(message* msg)
 
     if (msg->id == MESSAGE_MOUSE_MOVE) {
         gpWindowManager->ConvertToHover(*msg);
-        if (gpWindowManager->lastHover != msg->codeY) {
-            gpWindowManager->lastHover = msg->codeY;
-            DoRollover(msg->codeY);
-        }
+        if (gpWindowManager->lastHover == msg->codeY)
+            return MESSAGE_DISPATCH_CONSUME;
+        gpWindowManager->lastHover = msg->codeY;
+        DoRollover(msg->codeY);
         return MESSAGE_DISPATCH_CONSUME;
     }
 
