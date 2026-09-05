@@ -547,7 +547,7 @@ army	?get_attack_direction@army@@QBEJJPBV1@J@Z	100.0000	100.0000	100.0000	0x4584
 army	?get_attack_modifier@army@@QBEJPBV1@E@Z	100.0000	100.0000	100.0000	0x42550	c4fe8ce69fcd
 army	?get_average_damage@army@@QBEJPBV1@EJEJ@Z	100.0000	100.0000	100.0000	0x42780	661aea781819
 army	?get_average_damage@army@@QBENXZ	100.0000	100.0000	100.0000	0x426f0	fc441b73233a
-army	?get_berserk_targets@army@@QBEXAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	92.5170	92.5170	92.5170	0x45490	74224e9f6797
+army	?get_berserk_targets@army@@QBEXAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	92.5170	92.5170	92.5170	0x45490	64e77021b597
 army	?get_controller@army@@QBEPAVhero@@XZ	100.0000	100.0000	100.0000	0x42690	9c660b71c78e
 army	?get_controlling_side@army@@QBEHXZ	100.0000	100.0000	100.0000	0x40140	ceab6b46b98c
 army	?get_defense_modifier@army@@QBEJXZ	100.0000	100.0000	100.0000	0x42660	f00838b6b3a4
@@ -883,7 +883,7 @@ cmbtmgr	?ViewArmy@combatManager@@QAEXPAVarmy@@H@Z	100.0000	100.0000	100.0000	0x6
 cmbtmgr	?check_obstacle_attacks@combatManager@@QAEEPAVarmy@@E@Z	100.0000	100.0000	100.0000	0x6a570	7e6708be380f
 cmbtmgr	?damage_message@combatManager@@QAEXPBDJJPBVarmy@@J@Z	100.0000	100.0000	100.0000	0x69a90	ee21f4178e3b
 cmbtmgr	?enemy_is_adjacent@combatManager@@QBEEPBVarmy@@H0@Z	100.0000	100.0000	100.0000	0x69600	ebf78501abef
-cmbtmgr	?get_distance@@YIJJJ@Z	100.0000	100.0000	100.0000	0x69670	1588cfc46734
+cmbtmgr	?get_distance@combatManager@@SIJJJ@Z	100.0000	100.0000	100.0000	0x69670	d97874f56a58
 cmbtmgr	?is_adjacent@combatManager@@QBEEHH@Z	100.0000	100.0000	100.0000	0x674c0	8030571d2f9b
 cmbtmgr	?mark_tower_army@combatManager@@QAEXPBVarmy@@@Z	100.0000	100.0000	100.0000	0x6a460	4243f6c14cc9
 cmbtmgr	?place_obstacle@combatManager@@QAEEH@Z	79.1518	79.1518	79.1518	0x66010	0e08981dc7ac
@@ -1520,7 +1520,7 @@ findpath	??1searchArray@@QAE@XZ	100.0000	100.0000	100.0000	0xb13e0	62c3039992a2
 findpath	?CalcTerrainCost@@YIHPBVNewmapCell@@HHJJJJJE@Z	100.0000	100.0000	100.0000	0xb1740	c1ac09d9aed8
 findpath	?Clear@searchArray@@QAEXJJJ@Z	100.0000	100.0000	100.0000	0xb1530	729883c150d3
 findpath	?Close@searchArray@@QAEXXZ	100.0000	100.0000	100.0000	0xb1500	089bb45888a1
-findpath	?FindCombatPath@searchArray@@QAEEPBVarmy@@JJEJJ@Z	87.6468	87.6468	87.6468	0xb3400	a6a8016256b2
+findpath	?FindCombatPath@searchArray@@QAEEPBVarmy@@JJEJJ@Z	87.6468	87.6468	87.6468	0xb3400	9c98fae86cbb
 findpath	?GetTerrainCost@@YIHPAVhero@@Utype_point@@HH@Z	100.0000	100.0000	100.0000	0xb18c0	9365931b7150
 findpath	?Init@searchArray@@QAEXXZ	100.0000	100.0000	100.0000	0xb1460	028212de95de
 findpath	?MinimumTerrainCost@@YIHPBVNewmapCell@@HJJJE@Z	100.0000	100.0000	100.0000	0xb1880	b240130b71a1
@@ -1539,7 +1539,7 @@ fly	?Fly@army@@QAEHH@Z	100.0000	100.0000	100.0000	0xb4a40	ea01ff7da034
 fly	?FlyTo@army@@QAEHHE@Z	100.0000	100.0000	100.0000	0xb49c0	a33d73b5623c
 fly	?Teleport@army@@QAEHH@Z	100.0000	100.0000	100.0000	0xb4f10	4778ef6d8bf7
 fly	?TeleportTo@army@@QAEHHE@Z	100.0000	100.0000	100.0000	0xb4e90	efe8f398a429
-fly	?ValidFlight@army@@QBEEHE@Z	100.0000	100.0000	100.0000	0xb46c0	79add2355185
+fly	?ValidFlight@army@@QBEEHE@Z	100.0000	100.0000	100.0000	0xb46c0	4b43e11226af
 font	??0font@@QAE@PBDABUTFontSpec@0@HPAE@Z	100.0000	100.0000	100.0000	0xb5070	5cd9fe343d9e
 font	??1font@@UAE@XZ	100.0000	100.0000	100.0000	0xb5110	a11bc4bb2883
 font	??_Gfont@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xb5040	-

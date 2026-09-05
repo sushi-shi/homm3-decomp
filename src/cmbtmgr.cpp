@@ -4145,7 +4145,7 @@ unsigned char combatManager::enemy_is_adjacent(const army* current_army, int gri
 // made with InCastle, LeftOfMoat and GetTargetWallIndex. The body is
 // the offset-to-axial hex distance over the 17-column grid.
 VA(0x00469670, 0xD2)  // anchor-bracket, dc 0x62e4c
-long get_distance(long start, long stop)
+long combatManager::get_distance(long start, long stop)
 {
     int sx = start % 0x11;
     int sy = start / 0x11;
