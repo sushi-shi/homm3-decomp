@@ -81,6 +81,15 @@ inline int max(int left, int right)
 // use the same text-column clamp.
 #define DIALOG_ICON_MAX_TEXT_WIDTH 110
 
+// The icon grid CalculateNormalDialogSize lays out: at most two rows of at
+// most four, and retail dispatches each row's centring through a four-entry
+// jump table on the row's icon count.
+#define DIALOG_ICON_MAX_ROWS 2
+#define DIALOG_ICON_ROW_SINGLE 1
+#define DIALOG_ICON_ROW_PAIR 2
+#define DIALOG_ICON_ROW_TRIPLE 3
+#define DIALOG_ICON_ROW_QUAD 4
+
 // The re-entrancy latch PollSound holds while it runs; DC ?gbInPollSound@@3HA,
 // retail .bss 0x699578, kb.obj's own.
 DATA(0x00699578)
@@ -2324,12 +2333,7 @@ int CheckMem()
 // E:\gamedcs\kb.cpp:4897
 // Promoted to the live retail claim below.
 
-// E:\gamedcs\kb.cpp:5206
-DC_ONLY(0xe5960, 0x574)
-void CalculateNormalDialogSize(TNormalDialogInfo* dialog_info)
-{
-    // @stub
-}
+// E:\gamedcs\kb.cpp:5206 - promoted to a live claim (see below).
 
 // E:\gamedcs\kb.cpp:5478
 DC_ONLY(0xe5f60, 0x6)
@@ -3571,6 +3575,197 @@ void type_dialog_icon::set(EGameResource _resource, long _qualifier)
             if (textWidth == DIALOG_ICON_MAX_TEXT_WIDTH)
                 break;
         }
+    }
+}
+
+// E:\gamedcs\kb.cpp:5206
+// The whole geometry pass over a TNormalDialogInfo, in four stages.
+// (1) The icon grid: at most two rows of at most four, so the row count is
+// ceil(icons/4) and the per-row count ceil(icons/rows); the widest sprite
+// or caption, the largest caption overhang, and the per-row sprite and
+// caption heights all fall out of one walk.  (2) The text block: the width
+// starts at max(256, longest word) and the wrap is re-measured until the
+// longest line fits, growing by half each pass up to 578 while the block is
+// still taller than two thirds of its width, then settling on the longest
+// wrapped line; over 200 px it is clamped and the expansion flag goes up.
+// (3) The box: width and height are rounded up to a 64 px grid with the
+// popup type getting the lower floors, and the box is re-centred whenever
+// its origin is unset or it would run off the 800x600 screen.  (4) Icon
+// placement: each row is centred by a four-arm jump table on its icon
+// count, then every icon's caption is centred under its sprite.
+// Residual (92.17%): three register/scheduling classes, all downstream of
+// one another - retail materialises the 128 floor in EDX and keeps it live
+// from the width clamp to the height max where we use immediates; retail
+// re-reads dialog_info->width at the two centring tests where our compile
+// keeps it in EBX across the row-height loop; and the LineLength product
+// lands in the zero-extended byte register with the width reloaded after
+// it rather than before.  Tried and rejected: the chained
+// `sprite[0] = sprite[1] = text[0] = text[1] = 0` zeroing (92.14, and it
+// does not reproduce the descending store order either), and swapping the
+// LineLength/fs.height multiply operands (byte-flat - VC6 canonicalises).
+VA(0x004f5d80, 0x51C)  // anchor-caller (get_quickview_size/NormalDialog) + dc-order-map, dc 0xe5960
+void CalculateNormalDialogSize(TNormalDialogInfo* dialog_info)
+{
+    int spriteRowHeight[DIALOG_ICON_MAX_ROWS] = {0, 0};
+    int textRowHeight[DIALOG_ICON_MAX_ROWS] = {0, 0};
+    int maxIconOverhang = 0;
+    int numIcons = 0;
+    int iconRows;
+    int i;
+    int iconsPerRow;
+    int maxIconWidth = 0;
+
+    for (i = 0; i < 8; i++)
+        if (dialog_info->icons[i].resource != -1)
+            numIcons++;
+    iconRows = (numIcons + 3) / 4;
+    if (iconRows > 0)
+        iconsPerRow = (numIcons + iconRows - 1) / iconRows;
+    for (i = 0; i < 8; i++) {
+        if (dialog_info->icons[i].resource != -1) {
+            int iRow = i / iconsPerRow;
+            maxIconWidth = max(dialog_info->icons[i].spriteWidth,
+                               maxIconWidth);
+            maxIconWidth = max(dialog_info->icons[i].textWidth, maxIconWidth);
+            maxIconOverhang = max(maxIconOverhang,
+                                  dialog_info->icons[i].textWidth
+                                      - dialog_info->icons[i].spriteWidth);
+            spriteRowHeight[iRow] = max(spriteRowHeight[iRow],
+                                        dialog_info->icons[i].spriteHeight);
+            textRowHeight[iRow] = max(textRowHeight[iRow],
+                                      dialog_info->icons[i].textHeight);
+        }
+    }
+
+    dialog_info->width = 40;
+    if (numIcons > 0) {
+        int perRow = (numIcons + iconRows - 1) / iconRows;
+        dialog_info->width = max(40, (perRow - 1) * (maxIconOverhang + 40)
+                                         + perRow * maxIconWidth + 40);
+    }
+
+    font* pFont = gpMediumFont;
+    dialog_info->text_expansion = false;
+    dialog_info->text_widget_width = max(
+        256, pFont->longest_word_length(dialog_info->dialog_text.c_str()));
+    int longestLine =
+        pFont->LongestLineWidth(dialog_info->dialog_text.c_str());
+    for (;;) {
+        dialog_info->text_widget_height =
+            pFont->LineLength(dialog_info->dialog_text.c_str(),
+                              dialog_info->text_widget_width)
+            * pFont->fs.height;
+        if (longestLine > dialog_info->text_widget_width) {
+            if (dialog_info->text_widget_width < 578
+                && (dialog_info->text_widget_height > 200
+                    || 3 * dialog_info->text_widget_height
+                           > 2 * dialog_info->text_widget_width)) {
+                dialog_info->text_widget_width =
+                    min(3 * dialog_info->text_widget_width / 2, 578);
+                continue;
+            }
+            dialog_info->text_widget_width =
+                pFont->LongestWrappedLineWidth(
+                    dialog_info->dialog_text.c_str(),
+                    dialog_info->text_widget_width);
+            break;
+        }
+        dialog_info->text_widget_width = longestLine;
+        break;
+    }
+    if (dialog_info->text_widget_height > 200) {
+        dialog_info->text_widget_height = 200;
+        dialog_info->text_expansion = true;
+    }
+
+    dialog_info->width =
+        (max(dialog_info->width, dialog_info->text_widget_width + 50) + 63)
+        & ~63;
+    if (dialog_info->iMBType == NORMAL_DIALOG_POPUP
+        && dialog_info->width < 128)
+        dialog_info->width = 128;
+    if (dialog_info->iMBType != NORMAL_DIALOG_POPUP
+        && dialog_info->width < 256)
+        dialog_info->width = 256;
+    dialog_info->text_widget_width = dialog_info->width - 50;
+
+    int boxHeight = dialog_info->text_widget_height + 60;
+    if (numIcons > 0) {
+        boxHeight += 20;
+        for (i = 0; i < iconRows; i++)
+            boxHeight += textRowHeight[i] + spriteRowHeight[i];
+        boxHeight += 20 * iconRows - 20;
+    }
+    if (dialog_info->iMBType != NORMAL_DIALOG_POPUP)
+        boxHeight += 50;
+    dialog_info->height = (boxHeight + 63) & ~63;
+    dialog_info->height = max(dialog_info->height, 128);
+    dialog_info->text_widget_y += (dialog_info->height - boxHeight) / 2;
+    if (dialog_info->x == -1 || dialog_info->x + dialog_info->width >= 799)
+        dialog_info->x = (800 - dialog_info->width) / 2;
+    if (dialog_info->y == -1 || dialog_info->y + dialog_info->height >= 599)
+        dialog_info->y = (600 - dialog_info->height) / 2;
+    if (numIcons == 0)
+        return;
+
+    int iconY = dialog_info->height - textRowHeight[0] - 30;
+    if (dialog_info->iMBType != NORMAL_DIALOG_POPUP)
+        iconY -= 50;
+    if (iconRows == DIALOG_ICON_MAX_ROWS)
+        iconY -= textRowHeight[1] + spriteRowHeight[1] + 20;
+    int firstInRow = 0;
+    for (i = 0; i < iconRows; i++) {
+        int rowsLeft = iconRows - i;
+        int inRow = (numIcons - firstInRow + rowsLeft - 1) / rowsLeft;
+        switch (inRow) {
+        case DIALOG_ICON_ROW_SINGLE:
+            dialog_info->icons[firstInRow].spriteX =
+                (dialog_info->width
+                 - dialog_info->icons[firstInRow].spriteWidth) / 2;
+            break;
+        case DIALOG_ICON_ROW_PAIR:
+            dialog_info->icons[firstInRow].spriteX =
+                (dialog_info->width - maxIconOverhang - 40) / 2
+                - dialog_info->icons[firstInRow].spriteWidth;
+            dialog_info->icons[firstInRow + 1].spriteX =
+                (dialog_info->width + maxIconOverhang + 40) / 2;
+            break;
+        case DIALOG_ICON_ROW_TRIPLE:
+            dialog_info->icons[firstInRow + 1].spriteX =
+                (dialog_info->width
+                 - dialog_info->icons[firstInRow + 1].spriteWidth) / 2;
+            dialog_info->icons[firstInRow].spriteX =
+                dialog_info->icons[firstInRow + 1].spriteX
+                - dialog_info->icons[firstInRow].spriteWidth - 40;
+            dialog_info->icons[firstInRow + 2].spriteX =
+                dialog_info->icons[firstInRow + 1].spriteX
+                + dialog_info->icons[firstInRow + 1].spriteWidth + 40;
+            break;
+        case DIALOG_ICON_ROW_QUAD:
+            dialog_info->icons[firstInRow + 1].spriteX =
+                (dialog_info->width - maxIconOverhang - 40) / 2
+                - dialog_info->icons[firstInRow + 1].spriteWidth;
+            dialog_info->icons[firstInRow].spriteX =
+                dialog_info->icons[firstInRow + 1].spriteX
+                - dialog_info->icons[firstInRow].spriteWidth - 40;
+            dialog_info->icons[firstInRow + 2].spriteX =
+                (dialog_info->width + maxIconOverhang + 40) / 2;
+            dialog_info->icons[firstInRow + 3].spriteX =
+                dialog_info->icons[firstInRow + 2].spriteX
+                + dialog_info->icons[firstInRow + 2].spriteWidth + 40;
+            break;
+        }
+        for (int k = 0; k < inRow; k++) {
+            dialog_info->icons[firstInRow + k].textY = iconY;
+            dialog_info->icons[firstInRow + k].spriteY =
+                iconY - dialog_info->icons[firstInRow + k].spriteHeight;
+            dialog_info->icons[firstInRow + k].textX =
+                dialog_info->icons[firstInRow + k].spriteX
+                + (dialog_info->icons[firstInRow + k].spriteWidth
+                   - dialog_info->icons[firstInRow + k].textWidth) / 2;
+        }
+        firstInRow += inRow;
+        iconY += textRowHeight[1] + spriteRowHeight[1] + 20;
     }
 }
 
