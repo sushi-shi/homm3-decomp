@@ -44,6 +44,10 @@ extern const char* gUnnamed6a5e14[];
 
 enum ESingleSelectionGameContext {
     SINGLE_SELECTION_CONTEXT_1 = 1,
+    // The middle context RebuildFilteredPlayerSetup groups with
+    // SINGLE_SELECTION_CONTEXT_3 when it picks the synthesized map's
+    // format version.
+    SINGLE_SELECTION_CONTEXT_2 = 2,
     SINGLE_SELECTION_CONTEXT_3 = 3
 };
 

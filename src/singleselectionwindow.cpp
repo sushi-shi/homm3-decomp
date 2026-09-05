@@ -2635,14 +2635,118 @@ void TSingleSelectionWindow::SetupFilterOptions()
     }
 }
 
-#if 0  // @carcass
-
+// Synthesize a random-map header from the eight filter slots and install it
+// as the window's own selection row. The map-format version follows the
+// running game context (RoE 14, AB 21, SoD 28), the seat table is filled
+// from the two player-count filters, and the header/setup transfer into
+// gpGame repeats UpdateGameVars' field_37F arm verbatim (retail duplicates
+// those statements rather than sharing the guarded body). The tail resets
+// every seat's hero/town choice, redraws, and mirrors the new positions to
+// the other machines through SendPlayerPositions.
+//
+// Residual (71.54%): every statement is present and the call streams agree
+// on 20 of 22 real sites; what is left is three /Ob2 decisions in the same
+// body, all of them budget rather than spelling. (1) Retail CALLS
+// basic_string::basic_string(const allocator&) for BOTH of the local
+// header's strings; we expand the first (it becomes an inline _Tidy). (2)
+// Inside AssignData retail expands operator=(const char*) at both sites -
+// one down to assign(), one a level further to _Grow - while game.h's
+// load-bearing inline_depth(1) leaves us calling operator= outright; that
+// pragma is pinned by UpdateGameVars and is not ours to move. (3) The
+// SendPlayerPositions expansion: retail CALLS ??0CNetPlayerHandlerPlayer
+// for m_netPlayer[8] and only ??0CNetPlayerInfo for m_compPlayer[8], while
+// our budget expands both loops in full - the same per-site split
+// singleselectionwindow.h:165 records for the two other CUpdatePlayerPosMsg
+// sites. The frame is 8 B short for exactly this reason: retail's two extra
+// dword temps hold the char* operands live across its expanded operator=.
+// Tried and rejected: field_18A0[4] + field_18A0[2] operand order
+// (byte-flat). Fixed here: the version ternary is `== CONTEXT_1 ? 21 : 14`
+// (retail's `and al,-7 / add eax,0x15`), not the other way round.
 VA(0x00580430, 0x63B)  // Complete-only filtered player/setup rebuild
 void TSingleSelectionWindow::RebuildFilteredPlayerSetup()
 {
-    // @stub
+    gpGame->SetupOrigData();
+
+    NewSMapHeader header;
+    header.lossCondition.Type = -1;
+    header.victoryCondition.Type = -1;
+    header.isPlayable = 1;
+    header.difficulty = 1;
+    header.HasTwoLayers = field_18A0[1] > 1;
+    if (field_1898 == SINGLE_SELECTION_CONTEXT_2
+            || field_1898 == SINGLE_SELECTION_CONTEXT_3)
+        header.version = 28;
+    else
+        header.version = field_1898 == SINGLE_SELECTION_CONTEXT_1 ? 21 : 14;
+    header.minNumHumanPlayers = 1;
+    if (field_18A0[2] == -1)
+        header.maxNumHumanPlayers = 8;
+    else
+        header.maxNumHumanPlayers =
+            static_cast<unsigned char>(field_18A0[2]);
+    if (field_18A0[2] == -1 || field_18A0[4] == -1)
+        header.numPlayers = 8;
+    else
+        header.numPlayers =
+            static_cast<unsigned char>(field_18A0[2] + field_18A0[4]);
+
+    for (int i = 0; i < 8; ++i) {
+        header.teamInfo[i] = static_cast<signed char>(i);
+        header.playerSlotAttributes[i].legalAlignments = 0x1ff;
+        header.playerSlotAttributes[i].CanBeHuman =
+            i < header.maxNumHumanPlayers;
+        header.playerSlotAttributes[i].HasRandomAlignment = 1;
+        header.playerSlotAttributes[i].GenerateHero = 1;
+        header.playerSlotAttributes[i].nonRandomHeroId = -1;
+        if (i < header.numPlayers)
+            header.playerSlotAttributes[i].CanBeComputer = 1;
+        else
+            header.playerSlotAttributes[i].CanBeComputer = 0;
+    }
+    header.Size = field_18A0[0];
+    header.numTeams = 0;
+
+    memset(m_localHeader.heroAvailability, -1,
+           sizeof(m_localHeader.heroAvailability));
+    strcpy(m_localHeader.title, gpGeneralText->GetText(741));
+    strcpy(m_localHeader.description, gpGeneralText->GetText(742));
+    m_localHeader.header = header;
+
+    gpGame->InitNewGame(gpGame->setup.difficulty, 0, &header, 0);
+    m_localHeader.setup = gpGame->setup;
+    pCurrentHeader = &m_localHeader;
+
+    gpGame->setup = m_localHeader.setup;
+    memcpy(gpGame->heroAvailability, m_localHeader.heroAvailability,
+           sizeof(m_localHeader.heroAvailability));
+    gpGame->mapHeader.AssignData(&m_localHeader.header, m_localHeader.title,
+                                 m_localHeader.description);
+    gpGame->setup.turnDuration = static_cast<signed char>(durationIndex);
+    gpGame->setup.difficulty = static_cast<signed char>(lastDiff);
+    static_cast<CScrollTextWidget*>(field_196c)
+        ->SetText(m_localHeader.description);
+
+    for (int j = 0; j < CNetPlayerHandler::MAX_PLAYERS; ++j) {
+        m_players.humanPlayers[j].heroIndex = -1;
+        m_players.humanPlayers[j].townIndex = -1;
+        m_players.computerPlayers[j].heroIndex = -1;
+        m_players.computerPlayers[j].townIndex = -1;
+    }
+    SetHumanSlot();
+    MakeHeroFilter();
+
+    if (IsHost()) {
+        UpdateAllyEnemyFlags(1);
+        widget* w = GetWidget(186);
+        w->enable(1);
+        w->Draw();
+    }
+    DrawWindow(0, 0xffff0001, 0xffff);
+    Update();
+
+    if (bVideoPaused && pDPlay->IsHost())
+        SendPlayerPositions(0);
 }
-#endif  // @carcass
 
 // Dreamcast fixes the early TurnOffScenarioOptions return, the following
 // TurnOffAdvancedOptions boundary, the ShowWidget loop/call family, and the
