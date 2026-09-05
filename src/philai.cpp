@@ -1286,6 +1286,53 @@ static double gAIPathfindingMapFactor[3] = {1.0, 1.0, 1.0};
 DATA(0x00681878)
 static double gAIWaterMapFraction = 1.0;
 
+// Residual (78.1958%, ANATOMISED 2026-09-05 - the whole gap is TWO
+// cross-jumps we make and retail does not, plus their register fallout).
+// The two sides agree on everything structural: 48 conditional branches
+// each, the call census AGREES, and the 28-entry jump table pairs
+// index-for-index INCLUDING its repeat pattern (indices 3/12/21 share one
+// target, 6/9 share another, on both sides).  Retail has 44 `ret` sites to
+// our 43, and the missing one is named:
+//  - eSecSkillDefense (index 23).  Both sides compute `army_value * 7 / 100`
+//    for Offense (22) and Defense (23), and retail EMITS BOTH - 0x24 bytes
+//    each at fn+0x490 and fn+0x4b4 - because its two copies are NOT
+//    byte-identical: the `mov eax,0x51eb851f` is scheduled third in Offense
+//    and second in Defense, and the shift temporary is EDX in one and ECX in
+//    the other.  Our Offense arm is byte-identical to retail's Offense arm;
+//    our Defense arm is `lea ecx,[8*edi] / sub ecx,edi / jmp` into it.  That
+//    single merge is the missing `ret` and 0x16 of the gap.
+//  - eSecSkillIntelligence (index 24), 0x43 more.  Retail keeps the two
+//    GetPrimarySkill(3) expansions separate, loading `[esi+0x479]` INSIDE
+//    each arm (fn+0x4d8 and fn+0x4f5); we hoist that one byte load above the
+//    `test dl,dl`, which makes the !complex_choice tail byte-identical to the
+//    SchoolOfEarthMagic arm's and lets C2 cross-jump it away to fn+0x3c8.
+//    The hoist is what enables the merge - it is the same defect twice.
+// WHAT ACTUALLY BLOCKS RETAIL'S MERGES IS ONE SCRATCH REGISTER, and it is
+// systematic across this body.  Retail's two `army_value / 50` arms are
+// byte-identical except for the shift temporary - ECX at fn+0x13a (the
+// Leadership/Luck copy) and EDX at fn+0x406 (BattleTactics) - and its
+// Offense/Defense pair differs only in that register plus where the
+// `mov eax,0x51eb851f` is scheduled.  Nothing semantic separates any of
+// them; C2's first-fit allocator simply reached a different point in its
+// preference order at each site, and near-identical is enough to defeat the
+// cross-jumper.  Our compile picks the same register at both Offense and
+// Defense, so it merges them.  That makes this a `why-reg` residual wearing
+// a control-flow mask, and the knob is whatever moves the pseudo creation
+// count between the arms - not the arms' own spelling.
+// MEASURED, both directions, 2026-09-05:
+//  - Grouping the three identical `army_value / 20` cases
+//    (Scouting/Necromancy/Learning) at the LEARNING position REPRODUCES
+//    RETAIL'S PLACEMENT EXACTLY - the shared body moves from our fn+0x113
+//    (right after the index-2 arm) to fn+0x48f, between the index-20 and
+//    index-22 arms, which is retail's fn+0x475 to the block.  It still LOSES,
+//    78.1958 -> 77.7488, because the same renumbering makes C2 merge the
+//    BattleTactics arm into the Leadership/Luck copy as well: the ret count
+//    goes 43 -> 41 and index 19 starts sharing index 6/9's target, which
+//    retail does not do.  So the grouping is probably the right source shape
+//    and it is paying for a second-order register effect; whoever lands it
+//    must keep BattleTactics' arm distinct at the same time.
+//  - A named `long defense_value = army_value * 7;` in the Defense arm is
+//    byte-flat to the digit - VC6 folds it straight back.
 VA(0x00524690, 0x684)  // anchor-callee, dc 0x1135ac
 long get_skill_value(const hero* our_hero, TSecondarySkill skill,
                      unsigned char complex_choice)
