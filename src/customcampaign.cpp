@@ -47,6 +47,14 @@ DATA(0x0063d8c8) static int legacyCampaignScenarioIndices[7][4];
 // MapTextStruct::Play read the cell, so customcampaign.obj owns it.
 DATA(0x0066c218) extern const TCampaignMusicTraits* akCampaignMusicTraits;
 
+// The campaign file version at which a scenario's crossover-artifact plane
+// widened from 129 bits to 144; ScenarioStruct::Read still reads and widens
+// the narrow plane below it.
+static const int CAMPAIGN_VERSION_WIDE_ARTIFACTS = 6;
+static const int CROSSOVER_CREATURE_BITS = 145;
+static const int CROSSOVER_ARTIFACT_BITS = 144;
+static const int CROSSOVER_LEGACY_ARTIFACT_BITS = 129;
+
 static const int CROSSOVER_PRIMARY_ARTIFACT_SLOTS = 16;
 static const int CROSSOVER_EQUIPPED_ARTIFACT_SLOTS = 19;
 static const int CROSSOVER_PRIMARY_SKILLS = 4;
@@ -698,12 +706,11 @@ void TCampaignResourceBonus::Read(TAbstractFile* file)
 
 // --- the scenario's starting-options chooser (see customcampaign.h) ---
 
-// The root's constructor, out of line and CALLED BY NOTHING: every derived
-// construction inlines it (the two sibling options store the base vptr and
-// then their own), and a plain non-COMDAT body survives /OPT:REF, so the
-// image keeps this orphan copy.
-VA(0x00484f40, 0x7)  // anchor-vtable (installs 0x63d958), retail-only
-TCampaignStartOption::TCampaignStartOption()
+// The root's destructor, out of line. Nothing calls it - the `??_G` below
+// and both sibling destructors expand the single vptr store - but a plain
+// non-COMDAT body is emitted and kept regardless.
+VA(0x00484f40, 0x7)  // anchor-vtable (restores 0x63d958), retail-only
+TCampaignStartOption::~TCampaignStartOption()
 {
 }
 
@@ -722,8 +729,8 @@ int TCampaignStartOption::_slot5(void* scenarioRecord, int which) const
     TCampaignBrief::ScenarioStruct* scenario =
         static_cast<TCampaignBrief::ScenarioStruct*>(scenarioRecord);
     int player = GetPlayer(which);
-    if (scenario->crossover_artifacts.count() != 0
-        || scenario->hero_placeholders.size() != 0
+    if (scenario->crossover_artifacts.count() > 0
+        || scenario->hero_placeholders.size() > 0
         || scenario->heroes_status[player] > 0)
         return gpGame->campaign.crossoverArrayIndex;
     return -1;
@@ -746,12 +753,14 @@ bool TCampaignStartOption::_slot12(void* scenarioRecord, int value) const
             return false;
 
     int count = GetCount();
-    if (count == 0)
-        return _slot5(scenario, -1) == value;
-
-    for (int iChoice = 0; iChoice < count; ++iChoice)
-        if (_slot5(scenario, iChoice) == value)
+    if (count == 0) {
+        if (_slot5(scenario, -1) == value)
             return true;
+    } else {
+        for (int iChoice = 0; iChoice < count; ++iChoice)
+            if (_slot5(scenario, iChoice) == value)
+                return true;
+    }
     return false;
 }
 
@@ -1079,6 +1088,34 @@ void TCampaignBonus::SetTown(int)
 {
 }
 
+// hero.h's length-prefixed string reader, and customcampaign.obj is where
+// its single body lives (game.cpp and this file are its callers). /Gr makes
+// it fastcall, so the hidden return object arrives in ECX and the stream in
+// EDX. The 512-byte chunk buffer is retail's: the payload is copied into the
+// string's own frozen buffer half a kilobyte at a time.
+VA(0x00485d90, 0x1BB)  // anchor-caller(ScenarioStruct::Read +0x2b), retail-only
+std::string ReadLengthPrefixedString(TAbstractFile* infile)
+{
+    unsigned int length = 0;
+    infile->Read(&length, sizeof(unsigned int));
+
+    unsigned int remaining = length;
+    std::string text;
+    text.resize(length);
+    std::string::iterator dest = text.begin();
+    while (remaining > 0) {
+        char chunk[512];
+        unsigned int count = remaining;
+        if (count >= sizeof(chunk))
+            count = sizeof(chunk);
+        infile->Read(chunk, count);
+        std::copy(chunk, chunk + count, dest);
+        dest += count;
+        remaining -= count;
+    }
+    return text;
+}
+
 // Complete-only. The six string/vector/bitset members take their own
 // default constructors in declaration order; the body clears the two text
 // records, the start-options pointer and the eight carry-over hero slots.
@@ -1340,53 +1377,169 @@ void TCampaignBrief::ScenarioStruct::MarkCrossoverHeroes(unsigned char* wanted)
         wanted[hero_placeholders[iPlaceholder]] = 1;
 }
 
-#if 0  // @carcass - Complete's scenario-record reader, Load's per-record callee.
-// Reached only from CampaignHeaderStruct::Load's creation loop, which hands
-// it the region's scenario count and the campaign file version alongside the
-// inflating stream. Its first two operations are already read out of the
-// bytes: `name = ReadLengthPrefixedString(infile)` and a four-byte read into
-// inflated_size (+0x14).
+// Complete-only, reached only from CampaignHeaderStruct::Load's creation
+// loop, which hands it the region's scenario count and the campaign file
+// version alongside the inflating stream. Every read goes through the same
+// TAbstractFile vtable slot 1.
 //
-// DECODED 2026-09-05, and the whole blocker is the TAIL. The body's shape:
-//   * name = ReadLengthPrefixedString(infile)  (0x485d90, returns by value,
-//     assigned through basic_string::assign then _Tidy'd);
-//   * infile->Read(&inflated_size, 4) through the TAbstractFile vtable
-//     slot 1 ([edx+4] - every stream read below is that same slot);
-//   * a prerequisite BITMASK of (numScenarios + 7) / 8 bytes, read into one
-//     dword and unpacked with `1 << i` / setne into a vector<bool>-ish
-//     member at +0x18 (0x8bf00 is the push_back);
-//   * three bitset planes assigned through
-//     bitset<0x1b>/<0x1a>/<0x19>::reference::operator= (0x8ea60, 0x8e9f0,
-//     0x8ead0) off bitset<0x1b>::operator[] (0xcef80) - the 0x81-bounded
-//     walk at 0x1e88 is the last of them, copying five dwords out of a
-//     [ebp-0x4c] temp into [ebp-0x60] first;
-//   * then ONE byte read (0x1dde) whose `dec/je` chain is a three-case
-//     switch selecting the scenario's START OPTIONS record.
+// The prerequisite bitmap is (numScenarios + 7) / 8 bytes read into ONE
+// dword and unpacked a bit at a time into the byte vector at +0x18, and the
+// two crossover planes are Dinkumware bitsets built the same way that
+// game::LoadMap builds the map's own artifact plane. Campaign files older
+// than version 6 carry a 129-bit artifact plane, which is copied bit by bit
+// into the 144-bit member.
 //
-// The switch is the blocker, and it needs THREE Complete-only classes over
-// FOUR vtables - a 13-slot base at 0x63d958 (0x34 B) and one concrete
-// vtable each:
-//   case 1 -> operator new(0x18), base vtable, a std::string constructed at
-//             +8 (0x5157d0), then the concrete vtable 0x63d98c;
-//   case 2 -> operator new(0x14), base vtable, a std::string at +4, then the
-//             concrete vtable 0x63dad8;
-//   case 3 -> operator new(0x14) and the out-of-line constructor 0x4883d0,
-//             which stores a byte at +4, zeroes +8/+0xc/+0x10 and installs
-//             the concrete vtable 0x63db0c;
-//   default -> the member stays null.
-// The result lands in this->field_a4 (+0xa4) and the function ends by
-// calling ITS vtable slot 9 ([vtbl+0x24]) with the stream - the record's own
-// Read. So the remaining work is modelling those three classes and slot 9;
-// everything above the switch is ordinary reconstruction against members
-// this file already names.
+// The tail is the whole reason this row waited: a type byte selects one of
+// THREE starting-options records, all of them Complete-only classes that
+// customcampaign.h now models (0x63d98c, 0x63dad8, 0x63db0c behind the
+// abstract 0x63d958), and the function ends by handing the stream to
+// whichever one it built through its own slot 9.
+//
+// The `void*` hop on `options` is not a modelling claim: campaignbrief.h
+// carries a SECOND model of the same retail class (ScenarioStartOptions,
+// same thirteen slots, non-const declarators) which the campaign-brief
+// window's reconstructions already use, and the two must stay compatible
+// until one of them is retired. The cast is compile-time only.
+//
+// Residual: no statement pins are used here, so this CL expands the bitset
+// throw paths retail leaves out of line.
 VA(0x00487e40, 0x586)  // anchor-caller(CampaignHeaderStruct::Load +0x379), retail-only
 void TCampaignBrief::ScenarioStruct::Read(TAbstractFile* infile,
                                           int numScenarios,
                                           int campaignVersion)
 {
-    // @stub
+    name = ReadLengthPrefixedString(infile);
+
+    {
+        int size;
+        infile->Read(&size, sizeof(int));
+        inflated_size = size;
+    }
+
+    int prerequisiteBits = 0;
+    infile->Read(&prerequisiteBits, (numScenarios + 7) / 8);
+    for (int iPrereq = 0; iPrereq < numScenarios; ++iPrereq)
+        prerequisites.push_back((prerequisiteBits & (1 << iPrereq)) != 0);
+
+    {
+        unsigned char value;
+        infile->Read(&value, sizeof(unsigned char));
+        region_color = value;
+        infile->Read(&value, sizeof(unsigned char));
+        difficulty = value;
+    }
+
+    region_desc = ReadLengthPrefixedString(infile);
+
+    {
+        unsigned char present;
+        infile->Read(&present, sizeof(unsigned char));
+        if (present) {
+            prologue = new MapTextStruct;
+            unsigned char value;
+            infile->Read(&value, sizeof(unsigned char));
+            prologue->video = value;
+            infile->Read(&value, sizeof(unsigned char));
+            prologue->audio = value;
+            prologue->subtitles = ReadLengthPrefixedString(infile);
+        } else {
+            prologue = 0;
+        }
+    }
+
+    {
+        unsigned char present;
+        infile->Read(&present, sizeof(unsigned char));
+        if (present) {
+            epilogue = new MapTextStruct;
+            unsigned char value;
+            infile->Read(&value, sizeof(unsigned char));
+            epilogue->video = value;
+            infile->Read(&value, sizeof(unsigned char));
+            epilogue->audio = value;
+            epilogue->subtitles = ReadLengthPrefixedString(infile);
+        } else {
+            epilogue = 0;
+        }
+    }
+
+    {
+        unsigned char flags;
+        infile->Read(&flags, sizeof(unsigned char));
+        retain_xp = flags & 1;
+        retain_pskills = (flags >> 1) & 1;
+        retain_sskills = (flags >> 2) & 1;
+        retain_spellbook = (flags >> 3) & 1;
+        retain_artifacts = (flags >> 4) & 1;
+    }
+
+    {
+        std::bitset<145> serializedCreatures(0);
+        unsigned char creatureBits[19];
+        infile->Read(creatureBits, sizeof(creatureBits));
+        for (unsigned int iCreature = 0;
+             iCreature < CROSSOVER_CREATURE_BITS; ++iCreature) {
+            std::bitset<145>::reference serializedBit =
+                serializedCreatures[iCreature];
+            serializedBit = (creatureBits[iCreature >> 3]
+                             & (1 << (iCreature & 7))) != 0;
+        }
+        crossover_creatures = serializedCreatures;
+    }
+
+    if (campaignVersion >= CAMPAIGN_VERSION_WIDE_ARTIFACTS) {
+        std::bitset<144> serializedArtifacts(0);
+        unsigned char artifactBits[18];
+        infile->Read(artifactBits, sizeof(artifactBits));
+        for (unsigned int iArtifact = 0;
+             iArtifact < CROSSOVER_ARTIFACT_BITS; ++iArtifact) {
+            std::bitset<144>::reference serializedBit =
+                serializedArtifacts[iArtifact];
+            serializedBit = (artifactBits[iArtifact >> 3]
+                             & (1 << (iArtifact & 7))) != 0;
+        }
+        crossover_artifacts = serializedArtifacts;
+    } else {
+        std::bitset<129> serializedArtifacts(0);
+        unsigned char artifactBits[17];
+        infile->Read(artifactBits, sizeof(artifactBits));
+        for (unsigned int iArtifact = 0;
+             iArtifact < CROSSOVER_LEGACY_ARTIFACT_BITS; ++iArtifact) {
+            std::bitset<129>::reference serializedBit =
+                serializedArtifacts[iArtifact];
+            serializedBit = (artifactBits[iArtifact >> 3]
+                             & (1 << (iArtifact & 7))) != 0;
+        }
+        const std::bitset<129> legacyArtifacts = serializedArtifacts;
+        for (unsigned int iLegacy = 0;
+             iLegacy < CROSSOVER_LEGACY_ARTIFACT_BITS; ++iLegacy)
+            crossover_artifacts[iLegacy] = legacyArtifacts[iLegacy];
+    }
+
+    unsigned char optionType;
+    infile->Read(&optionType, sizeof(unsigned char));
+    void* record;
+    switch (optionType) {
+    case CAMPAIGN_START_OPTION_BONUS:
+        record = new TCampaignStartBonusOption;
+        options = static_cast<ScenarioStartOptions*>(record);
+        break;
+    case CAMPAIGN_START_OPTION_CROSSOVER:
+        record = new TCampaignStartCrossoverOption;
+        options = static_cast<ScenarioStartOptions*>(record);
+        break;
+    case CAMPAIGN_START_OPTION_HERO:
+        record = new TCampaignStartHeroOption;
+        options = static_cast<ScenarioStartOptions*>(record);
+        break;
+    default:
+        options = 0;
+        break;
+    }
+    if (options)
+        static_cast<TCampaignStartOption*>(static_cast<void*>(options))
+            ->Read(infile);
 }
-#endif  // @carcass
 
 #if 0  // Dreamcast-only carcass; retained as evidence, not emitted for retail.
 // E:\gamedcs\customcampaign.cpp:29
@@ -1450,15 +1603,8 @@ TCampaignStartHeroOption::TCampaignStartHeroOption()
 VA_COMPGEN(0x00488400, 0x21, SCALAR_DELETING_DTOR, TCampaignStartCrossoverOption)
 VA_COMPGEN(0x00488430, 0x21, SCALAR_DELETING_DTOR, TCampaignStartHeroOption)
 
-VA(0x00488460, 0x2C)  // anchor-callee(0x488400's `??_G`), retail-only
-TCampaignStartCrossoverOption::~TCampaignStartCrossoverOption()
-{
-}
-
-VA(0x00488490, 0x2C)  // anchor-callee(0x488430's `??_G`), retail-only
-TCampaignStartHeroOption::~TCampaignStartHeroOption()
-{
-}
+VA_COMPGEN(0x00488460, 0x2C, IMPLICIT_DTOR, TCampaignStartCrossoverOption)
+VA_COMPGEN(0x00488490, 0x2C, IMPLICIT_DTOR, TCampaignStartHeroOption)
 
 VA(0x004884c0, 0x103)  // CampaignHeaderStruct::StartScenario sole caller
 void TCampaignBrief::ScenarioStruct::StartScenario(
