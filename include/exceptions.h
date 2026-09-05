@@ -23,12 +23,29 @@
 // The three-slot vftables retail keeps for this family (0x63aba8 and its
 // neighbour at 0x63abb4) are byte-identical copies of Dinkumware's
 // {deleting dtor, what, _Doraise}, so no level below adds a virtual.
-class TDebugBreak : public std::runtime_error {
+//
+// LAYOUT CORRECTED 2026-09-05 from the throw records' own CatchableType
+// arrays, which publish sizeof and the this-displacement of every base.
+// 0x6486d0 (TRuntimeError) lists, in order:
+//     TRuntimeError        size 32  mdisp 0
+//     TDebugBreak          size  1  mdisp 29
+//     runtime_error        size 28  mdisp 0
+//     exception            size 12  mdisp 0
+// and 0x6486c0 (TAllocationFailure) prepends a size-32 mdisp-0 row for
+// itself. So TDebugBreak is an EMPTY class carried as a SEPARATE BASE at
+// +0x1d, not a link in a single chain under runtime_error: a chain would
+// give it size 28 and displacement 0. The 29 is what an empty base gets
+// when MSVC defers it past the 28-byte runtime_error subobject, and the
+// two copy constructors in the advmgr..advspells gap corroborate it
+// directly - 0x41b7b0 and 0x41b920 both open by copying the byte at
+// `[src+0x1d]` into `[dst+0x1d]` before forwarding to
+// `exception::exception(const exception&)` and the string at +0xc.
+class TDebugBreak {
 public:
     TDebugBreak(const char* text);
 };
 
-class TRuntimeError : public TDebugBreak {
+class TRuntimeError : public TDebugBreak, public std::runtime_error {
 public:
     TRuntimeError(const char* text);  // 0x49a0c0
 };

@@ -1553,6 +1553,9 @@ void advManager::ViewWorld(int iWhatToDraw, int level)
 // local is declared BELOW the two extent assignments, not above them.
 // Residual (98.89%): one instruction, the loop counter's `mov [i], eax`,
 // which retail schedules after the table store and we schedule before it.
+// Byte-flat and rejected: a `while` loop with the increment as the last
+// body statement, `++i` in the header, and landing the ftol result in a
+// named `long` before the table store.
 VA(0x005fc240, 0x274)  // anchor-caller ViewWorld, anchor-callee UpdateRadar, dc 0x195d30
 void TViewWorldWindow::init(type_point new_center, unsigned char updateFlag)
 {
@@ -1716,8 +1719,9 @@ void TViewWorldWindow::update_view_world(message* msg)
 // helper signature - const-ref parameters returning by value 76.34,
 // const-ref both ways 78.76, by-value both ways 76.34, against 80.75 for
 // by-value parameters returning `const _TYPE&` - and on the argument form:
-// an explicit `<int>` template argument and `origin.x + 0` are both
-// byte-flat, and naming the two reads in int locals costs 6.93.
+// an explicit `<int>` template argument, `origin.x + 0`, a
+// `static_cast<int>` around the RESULT and a `long` domain throughout are
+// all byte-flat, and naming the two reads in int locals costs 6.93.
 VA(0x005fc8f0, 0x213)  // anchor-callee UpdateRadar + VWCompleteDraw, anchor-caller WindowHandler, dc 0x1962fc
 void TViewWorldWindow::update_radar(int mrx, int mry, float fRadarDivisor)
 {
