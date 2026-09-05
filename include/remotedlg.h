@@ -163,7 +163,11 @@ public:
     // declarator; re-measure the include-set-sensitive rows of the
     // five includers on merge.
     t_complex_net_message();
-    t_complex_net_message(int subType);
+    // eRS_Messages, not int: the constructor reaches the message image
+    // through CNetMsg's own two-argument constructor (the vptr store lands
+    // AFTER the five member stores, which only a member-initialiser list
+    // produces), and CNetMsg's first parameter is the DC-attested enum.
+    t_complex_net_message(eRS_Messages subType);
     virtual unsigned char read(TAbstractFile* infile);
     virtual unsigned char write(TAbstractFile* outfile) const;
     unsigned char RemoteFn_00512E00(CNetMsg* pNetMsg);
@@ -171,16 +175,19 @@ public:
     // message and hand it to the transport (toWho / compress /
     // guaranteed mirror TransmitRemoteData's tail). Ordinal name for
     // the same reason as its receive twin. Not claimed from here.
-    unsigned char RemoteFn_00512D40(int toWho, unsigned char compressMsg,
-                                    unsigned char guaranteed);
+    // The two flags are BOOL, not byte: retail pushes both parameter slots
+    // straight through to the transport, which takes `_N` in its own
+    // mangled name, and a byte parameter would have to be normalised with a
+    // `test`/`setne` pair at each site first.
+    unsigned char RemoteFn_00512D40(int toWho, bool compressMsg,
+                                    bool guaranteed);
     // 0x512c80, the DPID-addressed send twin (its args mirror
     // TransmitRemoteDataDPID's tail); CNewPlayerUpdateProc's
     // HandleRequests hands each re-requested header row through it.
     // ADDITIVE 2026-08-27 (round 3) - one declarator; re-measure the
     // include-set-sensitive rows of the five includers on merge.
-    unsigned char RemoteFn_00512C80(unsigned long dpid,
-                                    unsigned char compressMsg,
-                                    unsigned char guaranteed);
+    unsigned char RemoteFn_00512C80(unsigned long dpid, bool compressMsg,
+                                    bool guaranteed);
 
     CNetMsg netmsg;  // +0x04
 };

@@ -2721,6 +2721,15 @@ multiplayerwindow	?SetFocus@CMPEdit@@UAEXE@Z	100.0000	100.0000	100.0000	0x110890
 multiplayerwindow	?Update@TMultiPlayerWindow@@QAEXXZ	99.2080	99.2080	99.2080	0x10f0f0	516545f38ff1
 multiplayerwindow	?UpdateOK@CMPInputDlg@@QAEXXZ	100.0000	100.0000	100.0000	0x110980	9a40794dbe27
 multiplayerwindow	?WindowHandler@TMultiPlayerWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x10f940	8037720e1234
+netmsg	??0t_complex_net_message@@QAE@W4eRS_Messages@@@Z	100.0000	100.0000	100.0000	0x112c50	184b15d84935
+netmsg	??0t_complex_net_message@@QAE@XZ	100.0000	100.0000	100.0000	0x112c20	4d4e95336a91
+netmsg	??1t_memory_file@@UAE@XZ	100.0000	100.0000	100.0000	0x112b00	d7dbf2d1e9a6
+netmsg	??_Gt_memory_file@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x112ad0	-
+netmsg	?Read@t_memory_file@@UAEHPAXH@Z	100.0000	100.0000	100.0000	0x112b30	cc84767b55f8
+netmsg	?RemoteFn_00512C80@t_complex_net_message@@QAEEK_N0@Z	100.0000	100.0000	100.0000	0x112c80	4f8e227d0a2d
+netmsg	?RemoteFn_00512D40@t_complex_net_message@@QAEEH_N0@Z	100.0000	100.0000	100.0000	0x112d40	fa95bda5b817
+netmsg	?RemoteFn_00512E00@t_complex_net_message@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x112e00	f9b1e0775e59
+netmsg	?Write@t_memory_file@@UAEHPBXH@Z	100.0000	100.0000	100.0000	0x112b80	c19daf743b50
 newgame	?GetLossConditionText@game@@QAEXPAD@Z	100.0000	100.0000	100.0000	0x113800	ade52171f0bc
 newgame	?GetVictoryConditionText@game@@QAEXPAD@Z	100.0000	100.0000	100.0000	0x1139e0	562e072ce57a
 newgame	?InitNewGame@game@@QAEXHHPAVNewSMapHeader@@PAVTAbstractFile@@@Z	18.7059	26.5235	26.5235	0x113320	d52bf04217c4

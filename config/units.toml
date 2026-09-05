@@ -844,3 +844,8 @@ flags = "game_o2_ml_gr_windows"
 unit = "gzinflatebuf"
 source = "src/gzinflatebuf.cpp"
 flags = "game_o2_mt_gr_windows"
+
+[[unit]]
+unit = "netmsg"
+source = "src/netmsg.cpp"
+flags = "game_o2_ml_gr_windows"
