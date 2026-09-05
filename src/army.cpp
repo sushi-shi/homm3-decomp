@@ -468,9 +468,9 @@ void army::LoadResources()
             ->IsQuickCombat())
         return;
 
-    memcpy(frameInfoMissileOffset, &gMonFrameInfo[creatureType],
+    memcpy(sMonFrameInfo.iMissileOffset, &gMonFrameInfo[creatureType],
            sizeof(SMonFrameInfo));
-    origWalkCycleTime = frameInfoWalkCycleTime;
+    origWalkCycleTime = sMonFrameInfo.iWalkCycleTime;
 
     sample* s;
     if (!(Is(1u << 6))) {
@@ -1025,7 +1025,7 @@ void army::DrawToBuffer(int x, int y, int bNumBoxOnly)
             xoff -= 0x25;
             yoff = -0xf;
         } else {
-            xoff += frameInfoExtraNumTroopsXOffset;
+            xoff += sMonFrameInfo.iExtraNumTroopsXOffset;
         }
         if (facing == 0)
             xoff = -xoff;
@@ -1547,11 +1547,11 @@ void army::animate_missile(army* armyToAttack)
     play_sample(SHOOT_SAMPLE);
 
     int frames;
-    if (frameInfoAttackFrames > 0)
-        frames = frameInfoAttackFrames;
+    if (sMonFrameInfo.iAttackFrames > 0)
+        frames = sMonFrameInfo.iAttackFrames;
     else
         frames = stdIcon->GetNumFrames(currFrameType);
-    long delay = frameInfoAttackStartCycleTime / frames;
+    long delay = sMonFrameInfo.iAttackStartCycleTime / frames;
     for (currFrameIndex = 0; currFrameIndex < frames; currFrameIndex++) {
         gpCombatManager->DrawFrame(1, 1, 0, delay, 1, 1);
     }
@@ -4525,11 +4525,11 @@ void army::CancelIndividualSpell(int spell)
     case SPELL_HASTE:
         if (!(Is(1u << 6))) {
             sMonInfo.speed -= tailwindBonus;
-            frameInfoWalkCycleTime = origWalkCycleTime;
+            sMonFrameInfo.iWalkCycleTime = origWalkCycleTime;
         }
         break;
     case SPELL_SLOW:
-        frameInfoWalkCycleTime = origWalkCycleTime;
+        sMonFrameInfo.iWalkCycleTime = origWalkCycleTime;
         break;
     case SPELL_AGE:
         adjust_hitpoints();
@@ -4784,7 +4784,7 @@ void army::SetSpellInfluence(int spell, int power, int mastery,
                 tailwindBonus += casting_hero->GetHeroSpellBonus(
                     spell, sMonInfo.level, amount);
             sMonInfo.speed = sMonInfo.speed + tailwindBonus;
-            frameInfoWalkCycleTime =
+            sMonFrameInfo.iWalkCycleTime =
                 static_cast<long>(origWalkCycleTime * 0.65);
         }
         break;
@@ -4792,7 +4792,7 @@ void army::SetSpellInfluence(int spell, int power, int mastery,
         if (!(Is(1u << 6))) {
             CancelIndividualSpell(SPELL_HASTE);
             slowFactor = amount / 100.0;
-            frameInfoWalkCycleTime =
+            sMonFrameInfo.iWalkCycleTime =
                 static_cast<long>(origWalkCycleTime * 1.5);
         }
         break;
@@ -5427,12 +5427,12 @@ void army::attack_wall(TWallTargetId wall, long levelsDestroyed)
     long startX;
     if (facing == 1)
         startX = gpCombatManager->cells[gridIndex].field_00
-                 + frameInfoMissileOffset[2];
+                 + sMonFrameInfo.iMissileOffset[2];
     else
         startX = gpCombatManager->cells[gridIndex].field_00
-                 - frameInfoMissileOffset[2];
+                 - sMonFrameInfo.iMissileOffset[2];
     int startY = gpCombatManager->cells[gridIndex].field_02
-                 + frameInfoMissileOffset[3];
+                 + sMonFrameInfo.iMissileOffset[3];
 
     // dy is declared AFTER the abs: startY has to stay live across the
     // branch, which is what keeps retail from folding it into the
@@ -5463,12 +5463,12 @@ void army::attack_wall(TWallTargetId wall, long levelsDestroyed)
     }
     if (facing == 1)
         startX = gpCombatManager->cells[gridIndex].field_00
-                 + frameInfoMissileOffset[2 * pose];
+                 + sMonFrameInfo.iMissileOffset[2 * pose];
     else
         startX = gpCombatManager->cells[gridIndex].field_00
-                 - frameInfoMissileOffset[2 * pose];
+                 - sMonFrameInfo.iMissileOffset[2 * pose];
     startY = gpCombatManager->cells[gridIndex].field_02
-             + frameInfoMissileOffset[2 * pose + 1];
+             + sMonFrameInfo.iMissileOffset[2 * pose + 1];
 
     sample* wallSample = ResourceManager::GetSample(
         levelsDestroyed == 0 ? DATA_COMPGEN(0x00660a84, wallMissSampleName,
@@ -5481,10 +5481,10 @@ void army::attack_wall(TWallTargetId wall, long levelsDestroyed)
     ds_memsample* shootMemSample =
         gpSoundManager->MemorySample(armySample[SHOOT_SAMPLE]);
 
-    const int frames = frameInfoAttackFrames <= 0
+    const int frames = sMonFrameInfo.iAttackFrames <= 0
                            ? stdIcon->GetNumFrames(currFrameType)
-                           : frameInfoAttackFrames;
-    long delay = frameInfoAttackStartCycleTime / frames;
+                           : sMonFrameInfo.iAttackFrames;
+    long delay = sMonFrameInfo.iAttackStartCycleTime / frames;
     for (currFrameIndex = 0; currFrameIndex < frames; currFrameIndex++) {
         gpCombatManager->DrawFrame(1, 1, 0, delay, 1, 1);
     }
@@ -5842,7 +5842,7 @@ void army::PlayAnimation(int sequence, int nframes, int start_frame)
     int frameDelay;
     if (sequence == 0)
         frameDelay = static_cast<int>(
-            static_cast<float>(frameInfoWalkCycleTime)
+            static_cast<float>(sMonFrameInfo.iWalkCycleTime)
             * gCombatSpeedFactors[gUnnamed698758.combatSpeed]
             / static_cast<float>(stdIcon->GetNumFrames(0)));
     else
@@ -6798,7 +6798,7 @@ void army::cast_spell(long hex)
             frames = stdIcon->GetNumFrames(currFrameType);
         }
         play_sample(SHOOT_SAMPLE);
-        long delay = frameInfoAttackStartCycleTime / frames;
+        long delay = sMonFrameInfo.iAttackStartCycleTime / frames;
         for (currFrameIndex = 0; currFrameIndex < frames;
              currFrameIndex++) {
             gpCombatManager->DrawFrame(1, 1, 0, delay, 1, 1);

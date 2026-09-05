@@ -285,9 +285,9 @@ int army::Fly(int destIndex)
     long spanY = gpCombatManager->cells[destIndex].field_02 - startY;
     long iTtlLoops = static_cast<long>(
         sqrt(static_cast<double>(spanX * spanX + spanY * spanY)));
-    if (frameInfoFlightPixelSpan > 0)
-        iTtlLoops = (iTtlLoops + frameInfoFlightPixelSpan / 2)
-                    / frameInfoFlightPixelSpan;
+    if (sMonFrameInfo.iFlightPixelSpan > 0)
+        iTtlLoops = (iTtlLoops + sMonFrameInfo.iFlightPixelSpan / 2)
+                    / sMonFrameInfo.iFlightPixelSpan;
     else
         iTtlLoops = 1;
 
@@ -309,7 +309,7 @@ int army::Fly(int destIndex)
         float x = static_cast<float>(startX);
         float y = static_cast<float>(startY);
         const int FLY_PERIOD = static_cast<long>(
-            static_cast<float>(frameInfoWalkCycleTime)
+            static_cast<float>(sMonFrameInfo.iWalkCycleTime)
             * gCombatSpeedFactors[gUnnamed698758.combatSpeed]
             / static_cast<float>(numFlapFrames));
 

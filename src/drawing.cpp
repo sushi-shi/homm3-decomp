@@ -2097,7 +2097,7 @@ void combatManager::CycleCombatScreen()
                         || (stack->currFrameType == cs_wait
                             && stack->stdIcon->GetNumFrames(cs_fidget) > 0
                             && GameTime::ElapsedSince(stack->iLastFidgetTime)
-                                > stack->frameInfoFidgetFrequency))) {
+                                > stack->sMonFrameInfo.iFidgetFrequency))) {
                 MarkCreatureEffect(side, slot);
                 CyclingCreatures = 1;
                 bCycleMonster[side][slot] = 1;
@@ -2179,7 +2179,7 @@ void combatManager::CycleCombatScreen()
                     continue;
                 }
 
-                if (stack->frameInfoFidgetFrequency
+                if (stack->sMonFrameInfo.iFidgetFrequency
                         && SafeRandom(0, 100) >= 8)
                     stack->currFrameIndex++;
                 if (stack->currFrameIndex
@@ -2187,12 +2187,12 @@ void combatManager::CycleCombatScreen()
                     stack->currFrameType = cs_wait;
                     stack->currFrameIndex = 0;
                     stack->iLastFidgetTime = GameTime::Get();
-                    if (stack->frameInfoFidgetFrequency > 0) {
+                    if (stack->sMonFrameInfo.iFidgetFrequency > 0) {
                         stack->iLastFidgetTime = static_cast<unsigned long>(
                             stack->iLastFidgetTime
                             + (SafeRandom(
-                                   0, stack->frameInfoFidgetFrequency) * 0.5
-                               - stack->frameInfoFidgetFrequency * 0.25));
+                                   0, stack->sMonFrameInfo.iFidgetFrequency) * 0.5
+                               - stack->sMonFrameInfo.iFidgetFrequency * 0.25));
                     }
                 }
             }

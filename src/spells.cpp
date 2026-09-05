@@ -3959,13 +3959,13 @@ done:
         // frame before the pointer comes back, so the stack is not
         // left frozen mid-swing behind the bolt.
         army* pArmy = get_current_army();
-        if (pArmy->frameInfoAttackFrames) {
+        if (pArmy->sMonFrameInfo.iAttackFrames) {
             long iFrames;
             {
                 CSprite* icon = pArmy->stdIcon;
                 iFrames = icon->GetNumFrames(pArmy->currFrameType);
             }
-            long iFrameDelay = pArmy->frameInfoAttackStartCycleTime / iFrames;
+            long iFrameDelay = pArmy->sMonFrameInfo.iAttackStartCycleTime / iFrames;
             while (pArmy->currFrameIndex < iFrames) {
                 // Written as two calls, not as a ternary argument: retail
                 // BRANCHES over the one differing push and shares the other
