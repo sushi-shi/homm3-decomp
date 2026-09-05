@@ -48,7 +48,11 @@ class CImmProject;
 class CIFCErrors {
 private:
     __declspec(dllimport) static unsigned long m_dwErrHandlingFlags;
-    friend class t_ifc_errors_writer;
+    // The initializer at 0x4b6260 writes this private static directly
+    // (`mov eax,[__imp_?m_dwErrHandlingFlags@CIFCErrors@@0KA] / mov
+    // [eax],1`), which only a friend can do; the vendor header must have
+    // named retail's own initializer class here.
+    friend class TImmMouseRuntime;
 };
 
 // The device handle CImmMouse is passed as. No import mentions a member
@@ -57,6 +61,16 @@ private:
 // `?CreateEffect@CImmProject@@...`), so it is modelled as the empty first
 // base it has to be for that to hold.
 class CImmDevice {
+public:
+    // POLYMORPHIC, and retail proves it from the call sites: the
+    // initializer at 0x4b6260 hands `mouse.get()` straight to
+    // CImmProject::LoadProjectFromMemory's `CImmDevice*` and stores the
+    // same register into gImmDevice with NO adjustment and no null test.
+    // An empty non-polymorphic base sits at +4 behind CImmMouse's own
+    // vfptr, which is exactly the `test/lea +4/xor` sequence VC6 then
+    // emits and retail does not have - so the vptr is the BASE's and
+    // CImmMouse's virtuals are overrides.
+    virtual ~CImmDevice();
 };
 
 // Client-side vftable 0x63e618, slot for slot:

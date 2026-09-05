@@ -2857,14 +2857,10 @@ DATA(0x006a5d24) extern const char* const gGrailTerrainNames[];
 // Located game.cpp bodies kbwin calls (the Imm/tablet mouse hooks;
 // bodies not yet reconstructed - declarators match the kbwin call
 // sites).
-// Retail proves only this wrapper's static lifetime in InitImmMouse. Its
-// implementation-owning constructor is the separately bounded 0x4b6260
-// body; the class name remains provisional pending stronger name evidence.
-class TImmMouseRuntime {
-public:
-    TImmMouseRuntime(void* hInst, void* hwnd);
-    ~TImmMouseRuntime();
-};
+// TImmMouseRuntime moved to imm_mouse.h 2026-09-05, beside the compiland
+// that DEFINES its constructor (0x4b6260): only game.cpp and
+// forcefeedback.cpp need the name, and its throw type has to be nested in
+// it, which game.h's include closure should not have to carry.
 
 unsigned char InitImmMouse(void* hInst, void* hwnd);  // 0x4b6890
 void ImmMouseWindowMoved();                           // 0x4b6950
