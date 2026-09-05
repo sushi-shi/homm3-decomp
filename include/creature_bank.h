@@ -27,12 +27,42 @@ enum type_creature_bank_type {
     CREATURE_BANK_COUNT
 };
 
+// The three guard shapes initialize_creature_bank's splitter knows, named
+// because they are switch labels and the tree cases on enumerators. Retail
+// dispatches on armyGroup::GetNumArmies() and handles exactly these three -
+// one stack becomes five groups, two become 2+3 and three become 2+2 - so
+// the domain is real even though no external source names it. PROVISIONAL.
+enum type_creature_bank_guard_shape {
+    CREATURE_BANK_GUARDS_ONE_STACK = 1,
+    CREATURE_BANK_GUARDS_TWO_STACKS = 2,
+    CREATURE_BANK_GUARDS_THREE_STACKS = 3
+};
+
 // Retail's constructor at 0x47aad0 walks four records at a 0x60 stride and
 // invokes armyGroup::armyGroup at the start of each. The still-unread tail
 // is kept opaque until initialize_creature_bank names its reward fields.
 struct type_creature_bank_level {
     armyGroup guards;
-    char pad_038[0x28];
+    // SLICED out of the old pad 2026-09-05 by initialize_creature_bank
+    // (0x47ad90), the only body that reads any of it. Its opening copy is a
+    // `rep movsd` of 14 dwords for the guards, a second of seven for the
+    // resource row, then one dword at +0x54 and one byte at +0x58 - the same
+    // prefix type_creature_bank carries. The six trailing bytes are all read
+    // as SIGNED chars: +0x59 is the weight the level roll walks down, +0x5a
+    // the upgrade roll's threshold, and +0x5b..+0x5e are four artifact
+    // counts whose names come from the class argument each loop hands
+    // game::GetRandomArtifactId - 2, 4, 8 and 16, walked in that reverse
+    // order. Those four names are PROVISIONAL; nothing attests them.
+    int resources[7];
+    TCreatureType reward_creature;
+    signed char reward_creatures;
+    signed char chance;
+    signed char upgrade_chance;
+    signed char treasure_artifacts;
+    signed char minor_artifacts;
+    signed char major_artifacts;
+    signed char relic_artifacts;
+    char pad_05f;
 
     type_creature_bank_level() {}
 };
@@ -56,7 +86,7 @@ extern const type_creature_bank_traits* const_creature_bank_traits;
 // CODEVIEW(E:\gamedcs\creature_bank.cpp:32, dc 0x70fe0) void initialize_creature_bank_level(type_creature_bank_level* traits, const std::vector<char* resource);
 // CODEVIEW(E:\gamedcs\creature_bank.cpp:67, dc 0x7112c) unsigned char initialize_creature_bank_traits();
 // CODEVIEW(E:\gamedcs\creature_bank.cpp:146, dc 0x71218) void split_slot(armyGroup* army_group, long slot, long groups);
-// CODEVIEW(E:\gamedcs\creature_bank.cpp:166, dc 0x712d0)
+// CODEVIEW(E:\gamedcs\creature_bank.cpp:166, dc 0x712d0) - retail 0x47ad90.
 void initialize_creature_bank(type_creature_bank* bank,
                               type_creature_bank_type type);
 
