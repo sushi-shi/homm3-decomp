@@ -360,7 +360,18 @@ unsigned char type_quest::has_expired() const
 // reason recorded above type_experience_quest::Save - retail colours each
 // dead scratch over the incoming argument slot, and the flag lands in that
 // slot's padding byte at [ebp+0x0b].
-// Residual (25.6% / 10.5%): ONE /Ob2 decision, three times over in each
+// The three string reads BIND THE BY-VALUE RETURN BY `const&` at FUNCTION
+// scope. Written as a plain `member = ReadLengthPrefixedString(file)` each
+// temporary dies at the end of its own full expression and VC6 expands
+// `~basic_string` down to the refcount test and `operator delete`; bound by
+// const reference the three temporaries live to the epilogue and retail's
+// out-of-line `_Tidy` calls come back. 25.6259 -> 49.7043 here and
+// 10.4998 -> 41.9271 on LoadFromMap, with blocks 32 -> 16 against retail's
+// 11 and branches 18 -> 9 against 6. Measured and rejected: the same
+// bindings BLOCK-scoped one statement each (21.97 / 6.64) - the lifetime
+// must reach the epilogue.
+//
+// Residual (49.7% / 41.9%): ONE /Ob2 decision, three times over in each
 // body. Both sides call ReadLengthPrefixedString and both CALL
 // basic_string::assign(const basic_string&, size_type, size_type) - the
 // two objects agree instruction for instruction up to there - but retail
@@ -388,9 +399,12 @@ void type_quest::Load(TAbstractFile* file, int version)
         file->Read(&extra, sizeof(extra));
         field_3c = extra;
     }
-    proposalText = ReadLengthPrefixedString(file);
-    progressText = ReadLengthPrefixedString(file);
-    completionText = ReadLengthPrefixedString(file);
+    const std::string& proposal = ReadLengthPrefixedString(file);
+    proposalText = proposal;
+    const std::string& progress = ReadLengthPrefixedString(file);
+    progressText = progress;
+    const std::string& completion = ReadLengthPrefixedString(file);
+    completionText = completion;
 }
 
 // Slot 12's base body: the h3m form. Same three strings, but only the
@@ -405,9 +419,12 @@ void type_quest::LoadFromMap(TAbstractFile* file)
         file->Read(&extra, sizeof(extra));
         field_3c = extra;
     }
-    proposalText = ReadLengthPrefixedString(file);
-    progressText = ReadLengthPrefixedString(file);
-    completionText = ReadLengthPrefixedString(file);
+    const std::string& proposal = ReadLengthPrefixedString(file);
+    proposalText = proposal;
+    const std::string& progress = ReadLengthPrefixedString(file);
+    progressText = progress;
+    const std::string& completion = ReadLengthPrefixedString(file);
+    completionText = completion;
 }
 
 
