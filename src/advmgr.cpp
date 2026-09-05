@@ -4211,10 +4211,15 @@ static int MouseInScrollZone()
 // get_normal_cursor copy survive), and orders the arms as the DC does:
 // BOAT, ANCHOR_POINT, MONSTER, HERO, GARRISON, TOWN, default. GetCell,
 // get_garrison_cursor and MouseInScrollZone are the DC's call sites.
-// Left: retail keeps `NewfullMap::cell` a CALL inside the GetCell
-// expansion and `_Destroy` a call inside clear_path's (the child-call
-// shape the old note names), one branch, and register parity in the
-// GetHero expansions (retail loads the id into ecx, ours eax).
+// The `NewfullMap::cell` CALL inside the GetCell expansion is now spelled
+// (91.0034 -> 91.6263): the guard is written out at this site so the
+// square is reached through the accessor, which this TU compiles out of
+// line, while the standalone GetCell body at 0x412bd0 keeps the longhand
+// subscript and stays exact. Left: `_Destroy` is a CALL inside retail's
+// clear_path expansion and an expansion in ours - the vendored-header
+// child-call shape, unreachable without a pin inside <vector> - plus one
+// branch and register parity in the GetHero expansions (retail loads the
+// id into ecx, ours eax).
 VA(0x0040e360, 0x918)  // anchor-callee, dc 0xf3a8
 int advManager::ProcessHover(int mouseX, int mouseY)
 {
@@ -4238,7 +4243,17 @@ int advManager::ProcessHover(int mouseX, int mouseY)
             return 1;
         }
 
-        NewmapCell* currCell = GetCell(lastMapHover);
+        // Retail expands the GetCell guard here but reaches the square
+        // through NewfullMap::cell, which this TU compiles out of line -
+        // the standalone GetCell body at 0x412bd0 keeps the longhand
+        // subscript and is exact, so the two spellings really do coexist
+        // in retail's own source.
+        NewmapCell* currCell;
+        if (!lastMapHover.is_valid())
+            currCell = fullMap->cellData;
+        else
+            currCell = fullMap->cell(lastMapHover.x, lastMapHover.y,
+                                     lastMapHover.z);
         SetRolloverText(currCell, rx, ry);
 
         if (gpCurrentPlayer->currHeroId != -1
@@ -6352,21 +6367,28 @@ void advManager::UpdateRadar(type_point origin, unsigned char updateFlag, unsign
 
     // The acting player's live hero, and its map square, so the cell loop
     // below can paint that one square in the owner's colour.
-    // MEASURED AND REJECTED (2026-08-21), both readings of the one real
-    // structural divergence left in this body. Retail inverts the guard and
-    // duplicates the null store into the else arm
-    // (`jne <work> / mov [ebp-0x38],edx / jmp <join>`) where we hoist it
-    // ahead of the test; spelling that as an explicit `else currentHero = 0;`
-    // costs 90.6495 -> 89.9633. And retail re-reads `origin` from its
-    // parameter home at the z compare (`mov cx, word ptr [ebp+0xa]`) where we
-    // hold it in ESI, but dropping the `int z = origin.z;` cache and reading
-    // `origin.z` at both uses costs 90.6495 -> 90.3991. The rest is the
+    // The two knobs the 2026-08-21 note banked as REJECTED (-0.69 for the
+    // explicit else arm, -0.25 for dropping the `int z = origin.z;` cache)
+    // are worth +0.60 TOGETHER, which is the non-monotone-combination rule
+    // exactly: measure the pair, not each knob. With both applied the
+    // branch polarity at the currentHero guard flips to retail's `jne`
+    // (the zero store is the FALL-THROUGH arm, so the null case is the
+    // `if` and the lookup the `else`), and the third knob - initialising
+    // `revealed` from the whole && chain instead of `= 0` plus a guarded
+    // `= 1` - gives retail's `mov al,1 / jmp / xor al,al` and takes the
+    // branch view CLEAN. 90.6495 -> 91.2477.
+    // Still rejected, re-measured here: widening `visibilityBit` to the
+    // `int` retail plainly holds at [ebp-0x44] (`and eax,0xffff / test
+    // ecx,eax` against our byte `test cl,al`) costs 0.12 with the bool
+    // initialiser in place and 0.71 without it. The rest is the
     // callee-saved role of `this`: retail keeps it in ECX and spills to
     // [ebp-0x8], we move it to ESI - the bounded C1 handle-state class.
     int heroX = -1;
     int heroY = -1;
-    hero* currentHero = 0;
-    if (localPlayer->currHeroId != -1) {
+    hero* currentHero;
+    if (localPlayer->currHeroId == -1) {
+        currentHero = 0;
+    } else {
         currentHero = &gpGame->heroes[localPlayer->currHeroId];
         if (currentHero && currentHero->z == origin.z) {
             heroX = currentHero->x;
@@ -6392,7 +6414,6 @@ void advManager::UpdateRadar(type_point origin, unsigned char updateFlag, unsign
     }
 
     unsigned char visibilityBit = gMapVisibilityBit;
-    int z = origin.z;
     for (int y = 0; y <= lastRow; y++) {
         unsigned short* dest = destRow;
         switch (gMapHeight) {
@@ -6418,13 +6439,12 @@ void advManager::UpdateRadar(type_point origin, unsigned char updateFlag, unsign
 
         for (int x = 0; x <= lastColumn; x++) {
             NewmapCell* cell = &fullMap->cellData[
-                (z * fullMap->Size + y) * fullMap->Size + x];
+                (origin.z * fullMap->Size + y) * fullMap->Size + x];
 
-            unsigned char revealed = 0;
-            if (!gCompleteDrawAllCells
-                && (visibilityBit & GetMapExtra(x, y, z)) && x >= 0
-                && y >= 0 && x < gMapWidth && y < gMapHeight)
-                revealed = 1;
+            unsigned char revealed =
+                !gCompleteDrawAllCells
+                && (visibilityBit & GetMapExtra(x, y, origin.z)) && x >= 0
+                && y >= 0 && x < gMapWidth && y < gMapHeight;
             if (view_mines && cell->type == MINE)
                 revealed = 1;
             if (view_heros && cell->type == HERO)
