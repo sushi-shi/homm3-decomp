@@ -88,6 +88,12 @@ DATA(0x0069faa8) std::vector<std::string> gSeerHutNames;
 // `continue`. Measured and worse: a named `std::string entry = name;` local
 // (77.62) and spelling the append as `insert(end(), 1, name)` (23.68), which
 // is what retail's out-of-line callee is but not what its source wrote.
+// `homm3 vc6 why-reg --model` closes it: the definition slots and their
+// order AGREE on both sides and only the ebx/edi bindings are permuted, so
+// the two compiles fed the allocator the same pseudos in a different
+// PROCESSING order - front-end handle state, the C1 class, with no local
+// lever. Its one model-passing candidate (naming the cell pointer as a long
+// local) measured +4 slots worse.
 VA(0x0056c3e0, 0x183)  // anchor-string(seerhut.txt 0x683214) + anchor-callee(LoadSeerHutTextColumn 0x56c120) + retail-only
 unsigned char InitializeSeerHutText()
 {
