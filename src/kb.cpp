@@ -1131,6 +1131,31 @@ inline void ShowCredits()
 //    where we expand all three of ours, which is also where the +1 on
 //    UpdateScreen / GetBitmap16 / GetSprite / Bitmap16Bit::Draw comes from.
 //    The DoNewGame inlining boundary is what decides it.
+// PRICED 2026-09-05 (measured, then REVERTED - that lane could not add
+// pins). The progress-bar split above is worth 75.9721 -> 84.3222, and it
+// takes exactly two kinds of `#pragma inline_depth(0)`:
+//  - one inside IncProgressBar's and one inside ShowProgressBar's OWN body,
+//    around their `DrawProgressCount();` statement. That is the depth-2
+//    refusal retail makes when those helpers are EXPANDED into oldmain
+//    (5 IncProgressBar expansions each leaving a DrawProgressCount CALL,
+//    plus one from an expanded ShowProgressBar = retail's 6), and it alone
+//    is worth 75.9721 -> 82.5065 with base blocks 297 -> 276.
+//    IT COSTS THE TWO HELPERS' OWN ROWS: retail's out-of-line
+//    IncProgressBar and ShowProgressBar bodies EXPAND DrawProgressCount, so
+//    the pin drops them 100.0000 -> 28.0000 and 100.0000 -> 49.1463. A pin
+//    inside a shared inline is a per-CALLEE knob, so the two cannot be
+//    separated; whoever lands this must either accept the two exact rows or
+//    find the caller-mass that produces the split naturally.
+//  - four call-site pins in DoNewGame's TUTORIAL_ID arm, which cost nothing
+//    elsewhere: ShowProgressBar+IncProgressBar together at the head of the
+//    arm (+0.06 and 5 more exact blocks), the IncProgressBar after
+//    ResetGame (+0.01, exact blocks 80 -> 88), and the NewMap arm's
+//    IncProgressBar PAIR (+1.74, exact blocks 88 -> 103). Retail calls
+//    IncProgressBar exactly 4 times and both censuses then agree.
+// Also measured and REFUTED here: `#pragma inline_depth(1)` at the four
+// oldmain-body IncProgressBar sites - the "inline the parent, call the
+// child" spelling - is BYTE-FLAT to the digit, one more confirmation that
+// only N=0 bites.
 VA(0x004ee3e0, 0x1C04)
 int oldmain()
 {
