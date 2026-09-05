@@ -275,7 +275,7 @@ build build/objdiff/base/campaignbrief.obj: cl src/campaignbrief.cpp | $
   unit = campaignbrief
 build build/objdiff/base/customcampaign.obj: cl src/customcampaign.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /MT /Gr /GX /D_WINDOWS
   unit = customcampaign
 build build/objdiff/base/customcampaignwindow.obj: cl $
     src/customcampaignwindow.cpp | scripts/homm3/core/cc_wrap.py
@@ -583,6 +583,10 @@ build build/objdiff/base/gzinflatebuf.obj: cl src/gzinflatebuf.cpp | $
     scripts/homm3/core/cc_wrap.py
   flags = /nologo /c /O2 /Ob2 /Oy- /Op /MT /Gr /GX /D_WINDOWS
   unit = gzinflatebuf
+build build/objdiff/base/netmsg.obj: cl src/netmsg.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = netmsg
 build objects: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
     build/objdiff/base/deflate.obj build/objdiff/base/gzio.obj $
@@ -665,7 +669,8 @@ build objects: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/rmg.obj build/objdiff/base/rmg_support.obj $
     build/objdiff/base/rmg_terrain.obj build/objdiff/base/objnames.obj $
     build/objdiff/base/forcefeedback.obj build/objdiff/base/objecttype.obj $
-    build/objdiff/base/gzfile.obj build/objdiff/base/gzinflatebuf.obj
+    build/objdiff/base/gzfile.obj build/objdiff/base/gzinflatebuf.obj $
+    build/objdiff/base/netmsg.obj
 build all: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
     build/objdiff/base/deflate.obj build/objdiff/base/gzio.obj $
@@ -748,7 +753,8 @@ build all: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/rmg.obj build/objdiff/base/rmg_support.obj $
     build/objdiff/base/rmg_terrain.obj build/objdiff/base/objnames.obj $
     build/objdiff/base/forcefeedback.obj build/objdiff/base/objecttype.obj $
-    build/objdiff/base/gzfile.obj build/objdiff/base/gzinflatebuf.obj
+    build/objdiff/base/gzfile.obj build/objdiff/base/gzinflatebuf.obj $
+    build/objdiff/base/netmsg.obj
 default all
 build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
@@ -832,6 +838,6 @@ build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
     build/objdiff/base/rmg.obj build/objdiff/base/rmg_support.obj $
     build/objdiff/base/rmg_terrain.obj build/objdiff/base/objnames.obj $
     build/objdiff/base/forcefeedback.obj build/objdiff/base/objecttype.obj $
-    build/objdiff/base/gzfile.obj build/objdiff/base/gzinflatebuf.obj | $
-    scripts/homm3/build/link.py
+    build/objdiff/base/gzfile.obj build/objdiff/base/gzinflatebuf.obj $
+    build/objdiff/base/netmsg.obj | scripts/homm3/build/link.py
 build candidate: phony build/exe/HEROES3.candidate.EXE
