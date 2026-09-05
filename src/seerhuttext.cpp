@@ -102,3 +102,35 @@ unsigned char InitializeSeerHutText()
     sheet->Dispose();
     return 1;
 }
+
+// Retail 0x56c960. Join a string vector into one localized list: every entry
+// after the first is preceded by ", " except the last, which takes general
+// text 142 - the localized final conjunction. The index guard is SIGNED
+// (`jle` on the strength-reduced byte offset) while the bound and the
+// last-entry test are unsigned, which is exactly an `int i` against
+// `items.size()`.
+//
+// Both separator arms expand basic_string::append in full and the
+// cross-jumper merges their copy tails, which is what two `+=` statements in
+// an if/else produce; the return is the ordinary copy construction of the
+// accumulator, `_Tidy()` plus `assign(result, 0, npos)`.
+//
+// EXACT on the first spelling: 32 of 32 blocks, 18 of 18 branches, both
+// returns.
+VA(0x0056c960, 0x216)  // anchor-string(", " 0x66032c) + anchor-callee(basic_string::_Grow/_Eos) + bracket(seerhut.obj caller 0x16dfa0), retail-only
+std::string JoinTextList(const std::vector<std::string>& items)
+{
+    std::string result;
+
+    for (int i = 0; i < items.size(); ++i) {
+        if (i > 0) {
+            if (i == items.size() - 1)
+                result += gpGeneralText->GetText(142);
+            else
+                result += DATA_COMPGEN(0x0066032c, seerHutListSeparator, ", ");
+        }
+        result += items[i];
+    }
+
+    return result;
+}

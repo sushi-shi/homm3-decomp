@@ -52,4 +52,9 @@ void LoadSeerHutTextColumn(TSpreadsheetResource* sheet,
 // Retail 0x56c3e0. The compiland's entry point.
 unsigned char InitializeSeerHutText();
 
+// Retail 0x56c960. Join a string vector into one localized list. Free
+// fastcall under /Gr with a by-value return, so the hidden result pointer
+// takes ECX and the vector reference EDX.
+std::string JoinTextList(const std::vector<std::string>& items);
+
 #endif /* HOMM3_SEERHUTTEXT_H */
