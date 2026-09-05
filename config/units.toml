@@ -44,6 +44,12 @@ game_o2_ml_gr_windows = [
 # strstreambuf constructor contain std::_Lockit scopes around Dinkumware
 # runtime state. /ML removes those calls; /MT reproduces both retail bodies
 # while leaving the campaign-window destructor unchanged.
+# ForceFeedback.obj joined them 2026-09-05 on the same test, four rows at
+# once: yvals.h gives _Lockit an out-of-line constructor only under _MT, and
+# retail's map<CImmEnclosure*, RECT> members carry those calls - the
+# constructor 0x4b6f60, `insert` 0x4b70e0, `_Insert` 0x4b7a50 and
+# `const_iterator::_Dec` 0x4b7db0 go 86.75/80.34/81.14/51.19 -> EXACT on
+# the flag change alone, with the unit's other nine rows unmoved.
 game_o2_mt_gr_windows = [
   "/nologo",
   "/c",
@@ -763,7 +769,7 @@ flags = "game_o2_ml_gr_windows"
 [[unit]]
 unit = "forcefeedback"
 source = "src/forcefeedback.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "objecttype"
