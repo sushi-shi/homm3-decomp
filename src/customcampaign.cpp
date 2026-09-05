@@ -1727,3 +1727,79 @@ VA_COMPGEN(0x00460850, 0x4B1, IMPLICIT_COPY_CTOR, hero)
 // three segments. `/Gr` puts both arguments in registers, so retail ends on
 // a bare `ret`.
 VA_COMPGEN(0x004603a0, 0x355, STD_CONSTRUCT, hero)
+
+// --- basic_filebuf<char> and the <fstream> COMDAT block --------------------
+//
+// This is the compiland that includes <fstream>, so the whole
+// basic_filebuf<char> instantiation is its contribution. The pairing here is
+// not a similarity argument: the census already reads these rows off the
+// filebuf VTABLE and names them `exe_filebuf_vslotNN`, and NN is the
+// Dinkumware virtual order straight out of VC6's <streambuf> - 0 destructor,
+// 1 overflow, 2 pbackfail, 3 showmanyc, 4 underflow, 5 uflow, 6 xsgetn,
+// 7 xsputn, 8 seekoff, 9 seekpos, 10 setbuf, 11 sync, 12 imbue. Every slot
+// this object defines is claimed below, and six of the eight agree with the
+// compiled COMDAT to the byte (481, 432, 48, 489, 50, 27).
+VA_COMPGEN(0x0048b4e0, 0x1E1, FILEBUF_OVERFLOW, char)
+VA_COMPGEN(0x0048b6d0, 0x1B0, FILEBUF_PBACKFAIL, char)
+VA_COMPGEN(0x0048b880, 0x30, FILEBUF_UNDERFLOW, char)
+VA_COMPGEN(0x0048b8b0, 0x1E9, FILEBUF_UFLOW, char)
+
+// Slots 8 and 9. Vtable-proven like their siblings, but our bodies are
+// larger than retail's (158 vs 134, 416 vs 392), so these two arrive as
+// partial rows rather than exact ones - a real pairing with a real residual,
+// not a doubtful identification.
+VA_COMPGEN(0x0048baa0, 0x86, FILEBUF_SEEKOFF, char)
+VA_COMPGEN(0x0048bb30, 0x188, FILEBUF_SEEKPOS, char)
+
+VA_COMPGEN(0x0048bcc0, 0x32, FILEBUF_SETBUF, char)
+VA_COMPGEN(0x0048bd00, 0x1B, FILEBUF_SYNC, char)
+
+// Slot 0 of the same vtable, which is what makes this one of the three
+// indistinguishable 33-byte ??_G bodies in the span that CAN be named.
+VA_COMPGEN(0x0048bd20, 0x21, SCALAR_DELETING_DTOR, basic_filebuf)
+
+// COMDAT pairing: basic_streambuf<char>::_Init(), agreement 1.000 - the
+// nullary base initializer, distinct from basic_stringbuf's three-argument
+// _Init already claimed in resourcemanager.
+VA_COMPGEN(0x0048bea0, 0x58, STREAMBUF_INIT, char)
+
+// COMDAT pairing: vector<hero>::capacity and vector<hero>::_Destroy,
+// agreements 0.933 and 1.000. Both are reached from the campaign's
+// carry-over hero vector.
+VA_COMPGEN(0x0048ce20, 0x23, VECTOR_CAPACITY, hero)
+VA_COMPGEN(0x0048d410, 0x26, VECTOR_DESTROY, hero)
+
+// COMDAT pairing: basic_filebuf<char>::_Init(FILE*, _Initfl), agreement
+// 0.973 - the census had already named it `exe_filebuf_open` off the same
+// vtable's construction path.
+VA_COMPGEN(0x0048d4b0, 0xE2, FILEBUF_INIT, char)
+
+// COMDAT pairing: locale::locale(const locale&), agreement 1.000.
+VA_COMPGEN(0x0048d800, 0x19, CLASS_CTOR, locale)
+
+// COMDAT pairing: the vector-of-vector growth helpers, split between the
+// two element types by their CALLERS rather than by similarity - the two
+// 387-byte inserts at 0x48c0e0 and 0x48c610 are already distinguished from
+// each other by named callees (0x48c0e0 calls _Construct<vector<hero>> at
+// 0x45fce0 and _Destroy<vector<vector<hero>>> at 0x48c5b0; 0x48c610 calls
+// the type_artifact twins at 0x45fdc0 and 0x48caa0), and each of the
+// helpers below is called from exactly one of them. The sizes agree
+// independently: our fill/copy_backward come out 645/713 for the hero arm
+// and 416/433 for the type_artifact arm, matching the carve exactly.
+VA_COMPGEN(0x0048d860, 0x38, VECTOR_UCOPY, hero_vector)
+VA_COMPGEN(0x0048d8a0, 0x29, VECTOR_UFILL, hero_vector)
+VA_COMPGEN(0x0048d910, 0x29, VECTOR_UFILL, type_artifact_vector)
+VA_COMPGEN(0x0048dcc0, 0x285, STD_FILL, hero_vector)
+VA_COMPGEN(0x0048df50, 0x2C9, STD_COPY_BACKWARD, hero_vector)
+VA_COMPGEN(0x0048e4f0, 0x1A0, STD_FILL, type_artifact_vector)
+VA_COMPGEN(0x0048e690, 0x1B1, STD_COPY_BACKWARD, type_artifact_vector)
+
+// COMDAT pairing: codecvt<char,char,int>'s constructor and do_length,
+// agreements 0.900 and 1.000. The facet's other four virtuals sit at
+// 0x48ebd0 (3 B), 0x48ebe0 (6 B) and 0x48ebf0 (28 B), each of which is ONE
+// retail row wanted by TWO identical members (do_always_noconv against
+// codecvt_base's, do_encoding against do_max_length, do_in against do_out) -
+// folded bodies that no evidence in the image can separate. They stay
+// unclaimed.
+VA_COMPGEN(0x0048eb60, 0x67, CLASS_CTOR, codecvt)
+VA_COMPGEN(0x0048ec10, 0x18, CODECVT_DO_LENGTH, char)
