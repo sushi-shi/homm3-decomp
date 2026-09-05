@@ -750,13 +750,19 @@ unsigned char combatManager::is_computer_action()
 // Tried and rejected: spelling the default arm's `&&` as two `== 0`
 // breaks with the `return 1` last, which flips the polarity our CL
 // already agrees on elsewhere and LOSES ground (81.37 -> 80.97).
+// CORRECTED 2026-09-05: "every instruction and operand agrees" was not true
+// of the RELOCATION. The owner load's call edge is `army::get_controller`
+// (0x442690), not `get_owner` (0x4426d0) - the flipped-side reader, which is
+// also what the hypnotize ternary below re-derives. objdiff scores relocs at
+// function_reloc_diffs=none, so the wrong callee cost no fuzzy and hid here;
+// the census is now clean and the residual really is the merged-return family.
 VA(0x00474bf0, 0x188)  // anchor-global, dc 0x6bebc
 unsigned char combatManager::is_computer_action(const army* current_army)
 {
     if (static_cast<const combatManager*>(this)->IsQuickCombat())
         return 1;
 
-    hero* owner = current_army->get_owner();
+    hero* owner = current_army->get_controller();
     switch (current_army->creatureType) {
     case CREATURE_BALLISTA:
     case CREATURE_ARROW_TOWER:
