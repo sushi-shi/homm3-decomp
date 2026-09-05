@@ -26,6 +26,13 @@
 #include "prefs.h"
 
 struct SoundHeaderStruct;
+// The video-archive directory record. LoadAnimHeaders (0x598210) sizes its
+// allocation `new VideoHeaderStruct[count + 2]` as (11*count + 22) * 4 and
+// then ReadFiles 44*count bytes into it, so the record is 44 bytes - four
+// short of SoundHeaderStruct, which is the same name/offset pair plus a
+// size. Left incomplete on purpose: only `delete[]` reaches it here, the
+// same way SoundHeaderStruct is reached above.
+struct VideoHeaderStruct;
 
 // The Smack/Bink handle views and the smackw32/binkw32 dllimport
 // surface live in smackmgr.h / binkmanager.h; the underscored import
@@ -69,6 +76,14 @@ DATA(0x0069fe44) int gVideoPauseCount;
 DATA(0x0069fe48) HANDLE gVideoFile1;               // VideoShutDown's CloseHandle trio
 DATA(0x0069fe4c) HANDLE gVideoFile2;
 DATA(0x0069fe50) HANDLE gVideoFile3;
+// The three archive directories the handles above index. LoadAnimHeaders
+// (0x598210) pairs them one for one - it stores 0x69fe2c right after opening
+// the file it puts in gVideoFile3, 0x69fe28 with gVideoFile1 and 0x69fde0
+// with gVideoFile2 - and DeleteAnimHeaders then frees them 3, 2, 1, exactly
+// the order VideoShutDown closes the handles in. Names provisional.
+DATA(0x0069fde0) VideoHeaderStruct* gVideoHeader2;
+DATA(0x0069fe28) VideoHeaderStruct* gVideoHeader1;
+DATA(0x0069fe2c) VideoHeaderStruct* gVideoHeader3;
 DATA(0x0069fe54) int gInVideoNextFrame;            // reentry latch
 DATA(0x0069fe5c) unsigned char gSmackFrameReady;   // SmackDoFrame is allowed
 
@@ -586,6 +601,26 @@ void VideoShutDown()
     gVideoFile1 = 0;
     gVideoFile2 = 0;
     gVideoFile3 = 0;
+}
+
+// E:\gamedcs\smackmgr.cpp:569. The Dreamcast frees an AnimHeader and a
+// VideoHeader here; Complete frees three archive directories and clears
+// each pointer, in the same 3/2/1 order VideoShutDown closes their handles.
+VA(0x00598440, 0x55)  // anchor-caller(ShutDown, immediately before DeleteSoundHeaders), dc 0x14ac6c
+void DeleteAnimHeaders()
+{
+    if (gVideoHeader3) {
+        delete[] gVideoHeader3;
+        gVideoHeader3 = 0;
+    }
+    if (gVideoHeader2) {
+        delete[] gVideoHeader2;
+        gVideoHeader2 = 0;
+    }
+    if (gVideoHeader1) {
+        delete[] gVideoHeader1;
+        gVideoHeader1 = 0;
+    }
 }
 
 // E:\gamedcs\smackmgr.cpp:631. Dreamcast proves the alternating
