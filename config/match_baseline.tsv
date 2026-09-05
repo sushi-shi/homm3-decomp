@@ -2826,7 +2826,7 @@ sample	??0sample@@QAE@PBDPBXJJJJ@Z	100.0000	100.0000	100.0000	0x166da0	27f3c7545
 sample	??1sample@@UAE@XZ	100.0000	100.0000	100.0000	0x166e60	456fa32a79bd
 sample	??_Gsample@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x166e30	-
 sample	?GetSize@sample@@UBEIXZ	100.0000	100.0000	100.0000	0x166e90	b35cdff407a5
-scenarioinfo	??0CScenarioInfoDlg@@QAE@XZ	95.7756	95.7756	95.7756	0x167290	1aae4ab8d0c7
+scenarioinfo	??0CScenarioInfoDlg@@QAE@XZ	95.9787	95.9787	95.9787	0x167290	ebf844f2b093
 scenarioinfo	??1CScenarioInfoDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x169800	201d072d5b3d
 scenarioinfo	??1CScenarioPlayerInfoWidget@@UAE@XZ	100.0000	100.0000	100.0000	0x169770	cddf9610d751
 scenarioinfo	??_GCScenarioInfoDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1697d0	-
