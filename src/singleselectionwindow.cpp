@@ -1349,11 +1349,11 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
         Widgets.push_back(w);
     }
 
-    sprintf(gText, "%s", gpGeneralText->GetText(493));
+    sprintf(gText, "%s:", gpGeneralText->GetText(493));
     Widgets.push_back(new textWidget(
         414, 435, 334, 19, gText, "smalfont.fnt", font::PRIMARY_HIGHLIGHT,
         132, font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-    sprintf(gText, "%s", gpGeneralText->GetText(219));
+    sprintf(gText, "%s:", gpGeneralText->GetText(219));
     Widgets.push_back(new textWidget(
         665, 435, 84, 19, gText, "smalfont.fnt", font::PRIMARY_HIGHLIGHT,
         133, font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
@@ -1390,12 +1390,12 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     Widgets.push_back(new iconWidget(
         714, 28, 29, 23, 189, "scnrmpsz.def", 0, 0, 0, 0,
         iconWidget::ICON_STYLE_PLAIN));
-    sprintf(gText, "%s", gpGeneralText->GetText(391));
+    sprintf(gText, "%s:", gpGeneralText->GetText(391));
     textWidget* t = new textWidget(
         414, 403, 44, 23, gText, "smalfont.fnt", font::WHITE, 100,
         font::VERT_CENTER_JUSTIFIED | font::RIGHT_JUSTIFIED, 0, 8);
     Widgets.push_back(t);
-    sprintf(gText, "%s", gpGeneralText->GetText(392));
+    sprintf(gText, "%s:", gpGeneralText->GetText(392));
     textWidget* t2 = new textWidget(
         579, 403, 58, 23, gText, "smalfont.fnt", font::WHITE, 386,
         font::VERT_CENTER_JUSTIFIED | font::RIGHT_JUSTIFIED, 0, 8);

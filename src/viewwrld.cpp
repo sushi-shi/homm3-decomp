@@ -1363,10 +1363,10 @@ TViewWorldWindow::TViewWorldWindow()
 #pragma inline_depth()
 
     UndergroundButton = new type_func_button(
-        686, 538, 32, 32, -1, "iAm010.def",
+        686, 538, 32, 32, -1, "iam010.def",
         ViewWorldUndergroundHandler, 0, 1);
     SurfaceButton = new type_func_button(
-        686, 538, 32, 32, -1, "iAm003.def",
+        686, 538, 32, 32, -1, "iam003.def",
         ViewWorldSurfaceHandler, 0, 1);
     // INLINE BOUNDARY: TViewWorldWindow::TViewWorldWindow ->
     // vector<widget*>::insert. These level controls are Complete-only, while

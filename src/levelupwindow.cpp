@@ -292,13 +292,13 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gained_skill,
             second_choice, 0, 0, 0, 0x10);
         Widgets.push_back(rightIcon);
 
-        sprintf(gText, "%s %s", gSkillMasteryNames[first_choice % 3],
+        sprintf(gText, "%s\n%s", gSkillMasteryNames[first_choice % 3],
                 akLevelUpSkillTraits[first_choice / 3 - 1].name);
         textWidget* leftLabel = new textWidget(
             102, 375, 87, 40, gText, "smalfont.fnt", font::PRIMARY,
             TEXT6_ID, 5, 0, 8);
         Widgets.push_back(leftLabel);
-        sprintf(gText, "%s %s", gSkillMasteryNames[second_choice % 3],
+        sprintf(gText, "%s\n%s", gSkillMasteryNames[second_choice % 3],
                 akLevelUpSkillTraits[second_choice / 3 - 1].name);
         textWidget* rightLabel = new textWidget(
             200, 375, 87, 40, gText, "smalfont.fnt", font::PRIMARY,
@@ -322,7 +322,7 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gained_skill,
             170, 326, 44, 44, SKILLICON_1_ID, "secskill.def",
             first_choice, 0, 0, 0, 0x10);
         Widgets.push_back(soleIcon);
-        sprintf(gText, "%s %s", gSkillMasteryNames[first_choice % 3],
+        sprintf(gText, "%s\n%s", gSkillMasteryNames[first_choice % 3],
                 akLevelUpSkillTraits[first_choice / 3 - 1].name);
         textWidget* soleLabel = new textWidget(
             149, 375, 87, 40, gText, "smalfont.fnt", font::PRIMARY,

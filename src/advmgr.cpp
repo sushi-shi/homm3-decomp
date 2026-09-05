@@ -9937,7 +9937,7 @@ void advManager::ViewPuzzle()
     int pos = gpGame->GetLocalPlayerGamePos();
     gpGame->SetupPuzzlePieces(pos, 0);
     TPuzzleWindow puzzle(pos >= 0 ? gpGame->setup.alignment[pos] : -1);
-    SAMPLE2 sample2 = LoadPlaySample("obelisk.wav");
+    SAMPLE2 sample2 = LoadPlaySample("Obelisk.wav");
     puzzle.UpdatePuzzle(1);
     DrawAdventureMapGems();
     gpWindowManager->UpdateScreen(0, 0, 800, 600);
