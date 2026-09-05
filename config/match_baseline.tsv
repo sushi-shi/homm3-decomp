@@ -3356,6 +3356,7 @@ slider	?SetState@slider@@UAEXH@Z	100.0000	100.0000	100.0000	0x1961e0	865d5534b3b
 slider	?UpdateResolution@slider@@UAEXH@Z	100.0000	100.0000	100.0000	0x1970b0	de523f66917e
 slider	?enable@slider@@UAEXE@Z	100.0000	100.0000	100.0000	0x197140	09ea1f3d7a32
 slider	?initialize@slider@@IAEXPBD@Z	100.0000	100.0000	100.0000	0x196050	aa3ab5eb7c34
+smackmgr	??0?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x60700	-
 smackmgr	??A?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAADI@Z	100.0000	100.0000	100.0000	0x11a840	-
 smackmgr	?CloseSmacker@SmackManager@@YIXXZ	100.0000	100.0000	100.0000	0x199050	115dfa95ad79
 smackmgr	?DeleteAnimHeaders@@YIXXZ	100.0000	100.0000	100.0000	0x198440	16913871eab2
@@ -3841,6 +3842,7 @@ university_window	?handle_widget_hover@type_university_window@@UAEXPAVwidget@@@Z
 university_window	?purchase_click@type_university_window@@KIHAAVmessage@@@Z	94.7553	94.7553	94.7553	0x1f0f60	e6775d76fa39
 university_window	?skill_click@type_university_window@@QAEXW4TSecondarySkill@@@Z	98.3268	98.3268	98.3268	0x1f0ac0	e390867771ab
 university_window	?update_skill_button@type_university_window@@IAEXAAUtype_university_skill@@@Z	100.0000	100.0000	100.0000	0x1f0790	1d388ed37ce9
+victorylossconditions	??0?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAE@PBDABV?$allocator@D@1@@Z	100.0000	100.0000	100.0000	0x8b370	-
 victorylossconditions	?CheckForArtifactTransportWin@VictoryConditionStruct@@QAEEPBVhero@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x1f2860	10dec993b8aa
 victorylossconditions	?CheckForArtifactWin@VictoryConditionStruct@@QAEEXZ	98.2057	98.2057	98.2057	0x1f1610	9d6a0fa53dbd
 victorylossconditions	?CheckForDefeatedHeroLoss@LossConditionStruct@@QAEEPBVhero@@@Z	75.8636	75.8636	75.8636	0x1f2a40	77cbe67963b6
