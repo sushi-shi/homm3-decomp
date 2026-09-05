@@ -232,6 +232,13 @@ CHAR_STREAM_MEMBERS = (
     # of its own above; this is the MEMBER overload, so it keys here.
     ("??6?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEAAV01@H@Z", None,
      "ostream_insert_int"),
+    # ...and the two extractions that mirror it: the MEMBER `operator>>(int&)`
+    # and the FREE `operator>>(istream&, string&)`. Both key on their whole
+    # mangled prefix, since `??5` carries no class of its own.
+    ("??5?$basic_istream@DU?$char_traits@D@std@@@std@@QAEAAV01@AAH@Z", None,
+     "istream_extract_int"),
+    ("??5std@@YAAAV?$basic_istream@DU?$char_traits@D@std@@@0@AAV10@AAV"
+     "?$basic_string@D", None, "istream_extract_string"),
     ("?getloc@ios_base@std@@", None, "ios_base_getloc"),
     # --- the INPUT half of the same family -------------------------------
     # num_get<char, istreambuf_iterator<char>>'s nine do_get overloads,

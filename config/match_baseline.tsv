@@ -2563,11 +2563,14 @@ objecttype	??0invalid_argument@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x11
 objecttype	??0logic_error@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x44e0	-
 objecttype	??0runtime_error@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x1bc30	-
 objecttype	??0strstreambuf@std@@QAE@PBDH@Z	100.0000	100.0000	100.0000	0x1165f0	-
+objecttype	??1?$basic_istream@DU?$char_traits@D@std@@@std@@UAE@XZ	100.0000	100.0000	100.0000	0x115260	-
 objecttype	??1?$ctype@D@std@@UAE@XZ	100.0000	100.0000	100.0000	0x116160	-
 objecttype	??1TObjectImageNameTable@@QAE@XZ	100.0000	100.0000	100.0000	0x114130	-
+objecttype	??5?$basic_istream@DU?$char_traits@D@std@@@std@@QAEAAV01@AAH@Z	49.1803	49.1803	49.1803	0x115270	-
 objecttype	??5@YIAAV?$basic_istream@DU?$char_traits@D@std@@@std@@AAV01@AAUTObjectType@@@Z	76.6378	76.6378	76.6378	0x114b80	5b651aebcf85
 objecttype	??5@YIAAV?$basic_istream@DU?$char_traits@D@std@@@std@@AAV01@AAV?$bitset@$08@1@@Z	30.4839	30.4839	30.4839	0x1157f0	-
 objecttype	??5@YIAAV?$basic_istream@DU?$char_traits@D@std@@@std@@AAV01@AAV?$bitset@$0DA@@1@@Z	28.8710	28.8710	28.8710	0x115560	-
+objecttype	??5std@@YAAAV?$basic_istream@DU?$char_traits@D@std@@@0@AAV10@AAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@0@@Z	75.1842	75.1842	75.1842	0x117830	-
 objecttype	??A?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QBEABDI@Z	100.0000	100.0000	100.0000	0x116e20	-
 objecttype	??D?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@QBEABDXZ	100.0000	100.0000	100.0000	0x11a730	-
 objecttype	??_G?$basic_istream@DU?$char_traits@D@std@@@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x115a40	-
