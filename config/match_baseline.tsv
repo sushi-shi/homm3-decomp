@@ -1916,10 +1916,12 @@ hiscore	??_GTHighScoreWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xe9d90	-
 hiscore	?AddScoreToHighScore@highScoreManager@@QAEHHHHHPBD@Z	100.0000	100.0000	100.0000	0xe91d0	8b5c7f54d4bc
 hiscore	?GetMonType@highScoreManager@@SIHHH@Z	100.0000	100.0000	100.0000	0xe9830	9d3cf7054fbc
 hiscore	?GetRolloverWidget@CHSInputDlg@@UAEPAVtextWidget@@XZ	100.0000	100.0000	100.0000	0xe97f0	0ab312814b61
+hiscore	?HighScoreWindowHandler@@YIHAAVmessage@@@Z	78.3889	78.3889	78.3889	0xea1d0	be7a88d275c1
 hiscore	?OnKeyPress@CHighScoreEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0xe9710	7354e9b8b2d2
 hiscore	?OnWidgetDeselect@CHSInputDlg@@UAEHHPAE@Z	100.0000	100.0000	100.0000	0xe9790	14a9b70c186d
 hiscore	?Open@highScoreManager@@UAEHH@Z	100.0000	100.0000	100.0000	0xe90a0	c22b6bd8ce22
 hiscore	?ResetHighScores@highScoreManager@@QAEXXZ	100.0000	100.0000	100.0000	0xe8fb0	78bb2c63bb44
+hiscore	?Update@THighScoreWindow@@QAEXXZ	100.0000	100.0000	100.0000	0xe9e50	89b14a07e686
 hiscore	?ViewHiScore@highScoreManager@@QAEXXZ	100.0000	100.0000	100.0000	0xe9110	1ec55771b15a
 iconwdgt	??0iconWidget@@QAE@HHHHHPBDHHEIH@Z	100.0000	100.0000	100.0000	0xea720	908b757fb8d2
 iconwdgt	??1iconWidget@@UAE@XZ	100.0000	100.0000	100.0000	0xea7b0	c0e7392619bd
