@@ -69,6 +69,20 @@ static void split_slot(armyGroup* army_group, long slot, long groups)
 // elementals answer -1 and every other type delegates to the free
 // creature-traits helper. Its guard condition is spelled longhand ahead of
 // it, exactly as retail emits the same compare twice.
+// THREE NAMED LOCALS IN THE UPGRADE TAIL ARE WORTH +2.84 (95.2716 ->
+// 98.1132) and take the skeleton to 78/78 exact. Retail hoists the guard's
+// creature type into a register ABOVE the f_1f698 test at both `if`s, and
+// merges the -1 and the promoted id into ONE store at the foot of the
+// second - which is game::UpgradedCreatureType (0x529710) EXPANDED, its
+// `return -1` arm materialising in EAX for the caller's store. Reading
+// `bank->guards.armyTypes[slot]` at each use instead lets VC6 re-materialise
+// the load inside each compare block and duplicate the store.
+//
+// Residual (98.1132%): reloc NAMES only. All four push_back sites call the
+// vector insert COMDAT that the retail link folded with
+// vector<widget*>::insert; our object names its own vector<TArtifact>
+// instantiation. The report scores calls and relocs as AGREE and the
+// skeleton has no divergent block.
 VA(0x0047ad90, 0x36E)  // anchor-callee(armyGroup::Add + GetRandomArtifactId), dc 0x712d0
 void initialize_creature_bank(type_creature_bank* bank,
                               type_creature_bank_type type)
@@ -117,15 +131,16 @@ void initialize_creature_bank(type_creature_bank* bank,
     }
 
     if (Random(1, 100) <= level->upgrade_chance) {
-        if (!(gpGame->f_1f698 == 0
-              && is_base_elemental(bank->guards.armies[slot]))
-            && IsBaseCreature(bank->guards.armyTypes[slot])) {
-            if (gpGame->f_1f698 == 0
-                && is_base_elemental(bank->guards.armies[slot]))
-                bank->guards.armies[slot] = -1;
+        TCreatureType current = bank->guards.armyTypes[slot];
+        if (!(gpGame->f_1f698 == 0 && is_base_elemental(current))
+            && IsBaseCreature(current)) {
+            TCreatureType promoted = bank->guards.armyTypes[slot];
+            int upgraded;
+            if (gpGame->f_1f698 == 0 && is_base_elemental(promoted))
+                upgraded = -1;
             else
-                bank->guards.armyTypes[slot] =
-                    UpgradedCreatureType(bank->guards.armyTypes[slot]);
+                upgraded = UpgradedCreatureType(promoted);
+            bank->guards.armies[slot] = upgraded;
         }
     }
 }
