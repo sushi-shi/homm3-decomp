@@ -1428,3 +1428,22 @@ VA_COMPGEN(0x00487bd0, 0x160, CLASS_CTOR, out_of_range)
 // COMDAT pairing: vector<vector<hero>>::_Destroy - reached from game and from
 // two sites in this unit's own segment.
 VA_COMPGEN(0x0048c5b0, 0x53, VECTOR_DESTROY, hero_vector)
+
+// COMDAT pairing: vector<hero>::operator=. The caller set is the whole
+// argument and it is unambiguous - SCampaign::PruneCrossoverHeroes, the
+// already-claimed vector<vector<hero>>::insert and ::erase (which assign
+// elements of exactly this type), and game's SCampaign::operator=. Mnemonic
+// agreement is 1.000 against a 704 B object and `ret 4` matches the one
+// reference argument.
+VA_COMPGEN(0x0045ff30, 0x2C0, VECTOR_COPY_ASSIGN, hero)
+
+// COMDAT pairing: hero's compiler-generated copy constructor, reached from
+// the already-claimed std::_Sort<hero, CrossoverHeroStronger> and
+// _Sort_0 - a by-value sort of hero is exactly what materialises it.
+VA_COMPGEN(0x00460850, 0x4B1, IMPLICIT_COPY_CTOR, hero)
+
+// COMDAT pairing: std::_Construct<hero>, reached from the already-claimed
+// vector<hero>::insert and vector<hero>::_Ufill among nine callers across
+// three segments. `/Gr` puts both arguments in registers, so retail ends on
+// a bare `ret`.
+VA_COMPGEN(0x004603a0, 0x355, STD_CONSTRUCT, hero)
