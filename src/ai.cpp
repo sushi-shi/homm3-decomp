@@ -112,7 +112,7 @@ long combatManager::get_total_combat_value(long side, long lowest_attack, long l
     const army* current_army = armies[side];
     for (long i = 0; i < numArmies[side]; i++, current_army++) {
         unsigned char dead = static_cast<unsigned char>(
-            static_cast<unsigned>(current_army->creatureId) >> 21);
+            static_cast<unsigned>(current_army->sMonInfo.attributes) >> 21);
         if ((dead & 1) != 0 || current_army->creatureType == CREATURE_ARROW_TOWER)
             continue;
         if (!include_cripples) {
@@ -191,7 +191,7 @@ long combatManager::choose_shooter_target(const army* current_army, type_AI_comb
     for (long i = 0; i < numArmies[enemy_group]; i++) {
         army* target = &armies[enemy_group][i];
         unsigned char dead = static_cast<unsigned char>(
-            static_cast<unsigned>(target->creatureId) >> 21);
+            static_cast<unsigned>(target->sMonInfo.attributes) >> 21);
         if ((dead & 1) != 0 || target->creatureType == CREATURE_ARROW_TOWER)
             continue;
         if (data->simulated && target->get_total_hit_points(1) == 0)
@@ -201,7 +201,7 @@ long combatManager::choose_shooter_target(const army* current_army, type_AI_comb
         long value;
         if (is_area_effect) {
             value = get_area_attack_value(current_army, hex, our_group, data);
-            if (target->creatureId & 1) {
+            if (target->sMonInfo.attributes & 1) {
                 long second_value = get_area_attack_value(
                     current_army, target->get_second_grid_index(), our_group,
                     data);
@@ -431,12 +431,12 @@ static long get_move_order(const army* current_army)
     if (current_army->disabled_290 > 1 || current_army->disabled_2b0 > 1)
         return -10000;
     unsigned char waited = static_cast<unsigned char>(
-        static_cast<unsigned>(current_army->creatureId) >> 26);
+        static_cast<unsigned>(current_army->sMonInfo.attributes) >> 26);
     if ((waited & 1) != 0
             || const_cast<army*>(current_army)->IsIncapacitated())
         return current_army->GetSpeed() - 1000;
     unsigned char reversed = static_cast<unsigned char>(
-        static_cast<unsigned>(current_army->creatureId) >> 25);
+        static_cast<unsigned>(current_army->sMonInfo.attributes) >> 25);
     if ((reversed & 1) != 0 || gpCombatManager->field_13de4)
         return -current_army->GetSpeed();
     return current_army->GetSpeed();
@@ -477,7 +477,7 @@ void combatManager::find_move_order(std::vector<army*>* result)
             if (current_army->creatureType == CREATURE_ARROW_TOWER)
                 continue;
             unsigned char dead = static_cast<unsigned char>(
-                static_cast<unsigned>(current_army->creatureId) >> 21);
+                static_cast<unsigned>(current_army->sMonInfo.attributes) >> 21);
             if ((dead & 1) != 0)
                 continue;
             current_army->field_190 = get_move_order(current_army);
@@ -609,10 +609,10 @@ long combatManager::get_attack_change(const army* current_army, const army* enem
                                                          data->lowest_defense, 0, 0);
         double value;
         if (data->kills_only) {
-            damage = (enemy_hits % enemy->hitPoints + damage) / enemy->hitPoints;
+            damage = (enemy_hits % enemy->sMonInfo.hitPoints + damage) / enemy->sMonInfo.hitPoints;
             value = damage * unit_value;
         } else {
-            value = damage * unit_value / enemy->hitPoints;
+            value = damage * unit_value / enemy->sMonInfo.hitPoints;
         }
         long change = static_cast<long>(value) - friendly->get_AI_target_value();
         if (friendly->get_AI_target() == enemy && change > 0)
@@ -703,7 +703,7 @@ unsigned char combatManager::move_toward(const army* current_army, long target_h
                 consider_waiting = 0;
             } else {
                 best_danger = enemy_attacks[hex];
-                if (current_army->creatureId & 1)
+                if (current_army->sMonInfo.attributes & 1)
                     best_danger = min_ref(
                             enemy_attacks[hex
                                     + (current_army->facing != 0 ? 1 : -1)],
@@ -725,7 +725,7 @@ unsigned char combatManager::move_toward(const army* current_army, long target_h
                     const pathCell* cell = gpSearchArray->cellData == 0
                             ? 0 : &gpSearchArray->cellData[hex];
                     if (cell->flight_cost == 0) {
-                        long second_hex = (current_army->creatureId & 1)
+                        long second_hex = (current_army->sMonInfo.attributes & 1)
                                 ? hex + (current_army->facing != 0 ? 1 : -1) : hex;
                         if (!(((step <= limit && committed) || consider_waiting)
                                     && enemy_attacks != 0)
@@ -738,7 +738,7 @@ unsigned char combatManager::move_toward(const army* current_army, long target_h
                                 committed = 1;
                                 if (enemy_attacks != 0) {
                                     best_danger = enemy_attacks[hex];
-                                    if (current_army->creatureId & 1)
+                                    if (current_army->sMonInfo.attributes & 1)
                                         best_danger = min_ref_xvalue(
                                                 enemy_attacks[second_hex],
                                                 best_danger);
@@ -746,7 +746,7 @@ unsigned char combatManager::move_toward(const army* current_army, long target_h
                             }
                         }
                         if ((static_cast<unsigned char>(static_cast<unsigned>(
-                                        current_army->creatureId) >> 1) & 1) == 0) {
+                                        current_army->sMonInfo.attributes) >> 1) & 1) == 0) {
                             if (gpSearchArray->bIsMoatSlowed[
                                         static_cast<short>(hex)]
                                     || gpSearchArray->bIsMoatSlowed[
@@ -1004,7 +1004,7 @@ static void find_attack_hexes(const army* our_army, const army* enemy, const sea
     long sides = (our_army->Is(1u << 0)) ? 8 : 6;
     find_attack_hexes(our_army, our_army->gridIndex, 0, sides,
                       enemy->GetSpeed(), search_array, result);
-    if (enemy->creatureId & 1) {
+    if (enemy->sMonInfo.attributes & 1) {
         long second_hex = our_army->gridIndex - (enemy->facing ? 1 : -1);
         if (enemy->facing == 0)
             find_attack_hexes(our_army, second_hex, 0, 3, enemy->GetSpeed(),
@@ -1227,7 +1227,7 @@ void combatManager::mark_enemy_attacks(const army* our_army, long* enemy_attacks
             if (enemy_attacks[hex] < floor_value)
                 enemy_attacks[hex] = floor_value;
         }
-        if (enemy->creatureId & 1) {
+        if (enemy->sMonInfo.attributes & 1) {
             long direction = enemy->facing ? 1 : 4;
             for (long hex = 0; hex < COMBAT_GRID_CELLS; hex++) {
                 const pathCell* cell = gpSearchArray->cellData == 0
@@ -1286,7 +1286,7 @@ unsigned char combatManager::choose_defense_hex(const army* current_army, const 
     *open_hexes = 0;
     *best_hex = -1;
     for (long direction = 0; direction < 8; direction++) {
-        if (direction >= 6 && !(client->creatureId & 1))
+        if (direction >= 6 && !(client->sMonInfo.attributes & 1))
             continue;
         long hex = client->get_adjacent_hex(client->gridIndex, direction);
         if (hex < 0 || hex >= COMBAT_GRID_CELLS)
@@ -1305,7 +1305,7 @@ unsigned char combatManager::choose_defense_hex(const army* current_army, const 
                 ? 1
                 : search_array->get_travel_time(current_army, hex);
         long contact;
-        if ((current_army->creatureId & 1)
+        if ((current_army->sMonInfo.attributes & 1)
                 && client->is_adjacent(hex + (current_army->facing ? 1 : -1)))
             contact = 2;
         else
@@ -1413,7 +1413,7 @@ unsigned char combatManager::choose_to_run(const army* our_army, const long* ene
         return 0;
 
     long worst_danger = enemy_attacks[our_army->gridIndex];
-    if (our_army->creatureId & 1) {
+    if (our_army->sMonInfo.attributes & 1) {
         long second_hex = our_army->get_second_grid_index();
         worst_danger = min_ref(
             enemy_attacks[second_hex], worst_danger);
@@ -1440,7 +1440,7 @@ unsigned char combatManager::choose_to_run(const army* our_army, const long* ene
             continue;
 
         long danger = enemy_attacks[hex];
-        if (our_army->creatureId & 1) {
+        if (our_army->sMonInfo.attributes & 1) {
             long second_hex = hex + (our_army->facing ? 1 : -1);
             danger = min_ref(enemy_attacks[second_hex], danger);
         }
@@ -1726,7 +1726,7 @@ unsigned char combatManager::choose_resurrect_action(const army* current_army, l
     long best_hex = -1;
     if ((current_army->creatureType != CREATURE_ARCHANGEL
             && current_army->creatureType != CREATURE_PIT_LORD)
-            || current_army->numSpellCasts <= 0)
+            || current_army->sMonInfo.hasSpell <= 0)
         return 0;
     army temp;
     if (current_army->creatureType == CREATURE_PIT_LORD)
@@ -1741,7 +1741,7 @@ unsigned char combatManager::choose_resurrect_action(const army* current_army, l
         long hex = target->gridIndex;
         if (current_army->creatureType == CREATURE_PIT_LORD) {
             if (find_animate_dead_target(estimate->side, hex) != target) {
-                if ((target->creatureId & 1) == 0)
+                if ((target->sMonInfo.attributes & 1) == 0)
                     continue;
                 hex = target->get_second_grid_index();
                 if (find_animate_dead_target(estimate->side, hex) != target)
@@ -1751,7 +1751,7 @@ unsigned char combatManager::choose_resurrect_action(const army* current_army, l
                 continue;
         } else {
             if (find_resurrection_target(estimate->side, hex, 1) != target) {
-                if ((target->creatureId & 1) == 0)
+                if ((target->sMonInfo.attributes & 1) == 0)
                     continue;
                 hex = target->get_second_grid_index();
                 if (find_resurrection_target(estimate->side, hex, 1) != target)
@@ -1810,7 +1810,7 @@ unsigned char combatManager::choose_spell_action(const army* current_army, long*
         return 0;
     if (!can_cast_spells(estimate->side, 0))
         return 0;
-    if (current_army->numSpellCasts == 0)
+    if (current_army->sMonInfo.hasSpell == 0)
         return 0;
     switch (current_army->creatureType) {
     case CREATURE_ARCHANGEL:
@@ -2176,7 +2176,7 @@ unsigned char combatManager::choose_melee_target(const army* current_army, unsig
                 continue;
         }
         if (stay_in_castle && !InCastle(enemy->gridIndex)
-                && (!(enemy->creatureId & 1)
+                && (!(enemy->sMonInfo.attributes & 1)
                     || !InCastle(enemy->get_second_grid_index())))
             continue;
 
@@ -2318,7 +2318,7 @@ unsigned char combatManager::choose_melee_target(const army* current_army, unsig
                         : &gpSearchArray->cellData[hex];
                 if (cell->visited) {
                     if (!IsInMoat(hex, 0)) {
-                        if (!(current_army->creatureId & 1))
+                        if (!(current_army->sMonInfo.attributes & 1))
                             break;
                         if (!IsInMoat(hex + (current_army->facing ? 1 : -1), 0))
                             break;
@@ -2484,7 +2484,7 @@ void combatManager::place_shooter(const army* current_army)
             continue;
         long value = 0;
         for (long dir = 0; dir < 8; dir++) {
-            if (dir >= 6 && !(current_army->creatureId & 1))
+            if (dir >= 6 && !(current_army->sMonInfo.attributes & 1))
                 continue;
             long adjacent = current_army->get_adjacent_hex(new_hex, dir);
             if (!ValidHex(adjacent))
@@ -2606,7 +2606,7 @@ void combatManager::berserk_attack(army* current_army, const army* target)
     if (hex >= 0 && hex < COMBAT_GRID_CELLS
             && (hex % COMBAT_GRID_ROW_STRIDE == 0
                 || hex % COMBAT_GRID_ROW_STRIDE == COMBAT_GRID_LAST_COLUMN)
-            && (target->creatureId & 1))
+            && (target->sMonInfo.attributes & 1))
         hex = target->get_second_grid_index();
     gpSearchArray->FindCombatPath(current_army, -1, hex, bCreaturePlacement,
                                   127, -1);
@@ -2652,7 +2652,7 @@ long combatManager::compute_fire_shield_damage(long damage, const army* attacker
     if (!target->fireShieldRounds && target->creatureType != CREATURE_EFREET_SULTAN)
         return 0;
     unsigned char fire_immune = static_cast<unsigned char>(
-        static_cast<unsigned>(attacker->creatureId) >> 14);
+        static_cast<unsigned>(attacker->sMonInfo.attributes) >> 14);
     if (fire_immune & 1)
         return 0;
     damage = static_cast<long>(target->get_fire_shield_strength()
@@ -2710,7 +2710,7 @@ void combatManager::simulate_melee_attack(army* current_army, long hex,
                                           long our_group)
 {
     unsigned char multi_head = static_cast<unsigned char>(
-        static_cast<unsigned>(current_army->creatureId) >> 19);
+        static_cast<unsigned>(current_army->sMonInfo.attributes) >> 19);
     if (multi_head & 1) {
         long directions = current_army->get_multi_head_directions(hex, target,
                                                                   enemy_hex);
@@ -2739,7 +2739,7 @@ void combatManager::simulate_melee_attack(army* current_army, long hex,
                            gpSearchArray->get_hex(hex)->cost, 0, 0);
 
     unsigned char breath = static_cast<unsigned char>(
-        static_cast<unsigned>(current_army->creatureId) >> 3);
+        static_cast<unsigned>(current_army->sMonInfo.attributes) >> 3);
     if (breath & 1) {
         long direction = current_army->get_attack_direction(hex, target,
                                                             enemy_hex);
@@ -2775,7 +2775,7 @@ void combatManager::simulate_melee_attack(army* current_army, army* target,
                           our_group);
 
     unsigned char no_retaliation = static_cast<unsigned char>(
-        static_cast<unsigned>(current_army->creatureId) >> 16);
+        static_cast<unsigned>(current_army->sMonInfo.attributes) >> 16);
     if (!(no_retaliation & 1) && !target->disabled_2b0
         && target->retaliationCount > 0
         && (gpGame->setup.difficulty > 0 || sideIsAI[our_group]))
@@ -2783,7 +2783,7 @@ void combatManager::simulate_melee_attack(army* current_army, army* target,
                               1 - our_group);
 
     unsigned char double_attack = static_cast<unsigned char>(
-        static_cast<unsigned>(current_army->creatureId) >> 15);
+        static_cast<unsigned>(current_army->sMonInfo.attributes) >> 15);
     if ((double_attack & 1) && target->AI_expected_damage < hit_points)
         simulate_melee_attack(current_army, hex, target, target->gridIndex,
                               our_group);
@@ -2806,7 +2806,7 @@ long combatManager::simulate_actions(std::vector<army*>& list, long i,
         army* current_army = list[i];
         if (current_army->IsIncapacitated()
             || (static_cast<unsigned char>(
-                    static_cast<unsigned>(current_army->creatureId) >> 21)
+                    static_cast<unsigned>(current_army->sMonInfo.attributes) >> 21)
                 & 1)
             || current_army->creatureType == CREATURE_FIRST_AID_TENT
             || current_army->creatureType == CREATURE_AMMO_CART
@@ -2921,11 +2921,11 @@ void combatManager::find_AI_targets(long our_group, const army* current_army,
         armies[our_group][i].AI_possible_targets = 0;
         armies[our_group][i].AI_target_time = 0;
         if (static_cast<unsigned char>(
-                static_cast<unsigned>(ours->creatureId) >> 21)
+                static_cast<unsigned>(ours->sMonInfo.attributes) >> 21)
             & 1)
             continue;
         if ((static_cast<unsigned char>(
-                 static_cast<unsigned>(ours->creatureId) >> 6)
+                 static_cast<unsigned>(ours->sMonInfo.attributes) >> 6)
              & 1)
             && ours->creatureType != CREATURE_BALLISTA)
             continue;
@@ -2997,7 +2997,7 @@ unsigned char combatManager::DoSpellAI()
     if (bCreaturePlacement)
         return 0;
     if (static_cast<unsigned char>(
-            static_cast<unsigned>(armies[actingSide][actingSlot].creatureId)
+            static_cast<unsigned>(armies[actingSide][actingSlot].sMonInfo.attributes)
             >> 6)
         & 1)
         return 0;

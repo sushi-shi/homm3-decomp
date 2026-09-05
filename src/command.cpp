@@ -307,7 +307,7 @@ int combatManager::Main(message& msg)
                 }
 
                 if (wallStrength[wall] == 0) {
-                    currentArmy->creatureId |= 0x200000;
+                    currentArmy->sMonInfo.attributes |= 0x200000;
                     field_3c = 12;
                     towerTurn = 1;
                 } else if (static_cast<const combatManager*>(this)->IsQuickCombat()
@@ -813,6 +813,42 @@ unsigned char combatManager::is_computer_action(const army* current_army)
 // command.obj order slot immediately after is_computer_action, both direct
 // calls from Main, the reference-parameter decorated ABI, and the obstacle
 // diagnostic literal in Dreamcast's line-1348 statement group.
+// CENSUS 2026-09-05 (93.0970): the two cross-jumped arms are NAMED, and the
+// whole residual reduces to ONE cause upstream of them.
+// Positional alignment of the two call streams pairs our six `IsHuman` arms
+// against retail's four.  Ours sit after ViewSpells+InitiateSpell (+0x224),
+// after the first NormalDialog (+0x2c0), after the second NormalDialog
+// (+0x48a), after SetupGridForArmy+DrawFrame twice (+0xd0b, +0xe82) and after
+// SetPointer+ViewArmy (+0x10ce).  Retail has the LAST FOUR of those and not
+// the first and third: at the InitiateSpell arm it emits
+// `mov ecx,[ebx+0x132c0] / mov eax,[ebx+4*ecx+0x54a8] / jmp <the first
+// NormalDialog arm's own test>` - a cross-jump into the sibling arm's tail
+// starting at that arm's `test eax,eax`.
+// WHY OURS CANNOT MERGE THERE, and it is not a spelling of the arms: retail
+// tests those zeros with `test eax,eax` while we compare against a ZERO CACHED
+// IN ESI (`cmp dword ptr [ebx+0x132b4], esi`), and we cache 1 in EDI as well
+// (`mov edi,1` at fn+0x1d, against retail's `cmp ecx,1` immediate).  The two
+// arms therefore have tails that are byte-identical to each other but carry an
+// extra live-register dependency, and C2 declines the merge.  Census: our
+// `push esi` 20 / `cmp ..,esi` 39 against retail 12 / 27.
+// AND THE CONSTANT CACHE IS DOWNSTREAM OF THE FRAME, WHOSE 0x14 IS NOW
+// FULLY ACCOUNTED FOR - it is ONE overlay decision, not missing locals.
+// Retail reserves 0x60 and lays out three non-overlapping regions:
+// [-0x60,-0x40) the hidden return temporary PeekEvent fills, [-0x40,-0x20)
+// `msgTemp` (32 B), [-0x20,-0xc) the network arm's `CEndPlacementPhaseMsg
+// placementMsg` (0x14 B), with mouseX/mouseY at -0xc/-0x8.  We reserve 0x4c
+// because C2 OVERLAID msgTemp onto placementMsg: our msgTemp sits at -0x2c
+// and spans -0x2c..-0xc, straight across placementMsg's -0x20..-0xc, and the
+// two never live at once (one is the WIDGET arm, the other MOUSE_MOVE).  So
+// retail's msgTemp must be LIVE across the network arm and ours is not, which
+// is a use of msgTemp our reconstruction does not have - not a missing
+// declaration.  Every ebp slot below -0x20 and the three `lea`s match
+// one-for-one otherwise, and the class sizes are confirmed by retail's own
+// `mov [ebp-0x14],0x14` (sizeof CEndPlacementPhaseMsg) and by the 8-dword
+// `rep movsd` into msgTemp.
+// MEASURED AND REJECTED here: declaring msgTemp above mouseX/mouseY is
+// byte-flat (93.0970 to the digit, frame still 0x4c), so declaration order is
+// not the lever - only a real second use of msgTemp can be.
 VA(0x00474d80, 0x114D)  // exhaustive command order-map + callers + literal/call graph, dc 0x6c070
 int combatManager::ProcessCombatMsg(message& msg)
 {
@@ -1120,7 +1156,7 @@ int combatManager::ProcessCombatMsg(message& msg)
             {
                 army* currentArmy = get_current_army();
                 if (currentArmy->creatureType == CREATURE_FAERIE_DRAGON
-                        && currentArmy->numSpellCasts) {
+                        && currentArmy->sMonInfo.hasSpell) {
                     InitiateSpell(currentArmy->field_4e0, 1);
                     if (field_3c == 1)
                         field_3c = 10;
@@ -1351,7 +1387,7 @@ void combatManager::auto_resolve_combat()
                 stack->numTroops =
                     localArmies[side].numTroops[stack->originalIndex];
                 if (stack->numTroops == 0)
-                    stack->creatureId |= 0x200000;
+                    stack->sMonInfo.attributes |= 0x200000;
             }
         }
     }
@@ -1634,7 +1670,7 @@ int combatManager::GetCommand(int newIndex)
             || !is_outside_placement_boundry(currentArmy->combatSide,
                                              newIndex)) {
         gpSearchArray->SeedCombatPosition(currentArmy, currentSide,
-                                          currentArmy->field_c4,
+                                          currentArmy->sMonInfo.speed,
                                           bCreaturePlacement, -1);
         if (cells[newIndex].field_4a || cells[newIndex].field_4b)
             return (currentArmy->Is(1u << 1)) ? COMBAT_COMMAND_FLY
@@ -2746,7 +2782,7 @@ unsigned char combatManager::process_move_then_attack(message* msg)
         currentArmy->check_obstacle_attacks(0);
     }
 
-    currentArmy->creatureId |= 0x04000000;
+    currentArmy->sMonInfo.attributes |= 0x04000000;
     currentArmy->joustBonus = 0;
     if (field_40 != -1 && oldGridIndex != field_40
             && (currentArmy->creatureType == army::ARMY_CREATURE_HARPY
@@ -2792,7 +2828,7 @@ void combatManager::process_first_aid(army* currentArmy)
         int result = targetArmy->topCreatureDamage;
         result = std::_cpp_min(maximum, result);
         targetArmy->topCreatureDamage -= result;
-        currentArmy->creatureId |= 0x04000000;
+        currentArmy->sMonInfo.attributes |= 0x04000000;
 
         if (!static_cast<const combatManager*>(this)->IsQuickCombat()) {
             SAMPLE2 sample = LoadPlaySample(
@@ -2886,7 +2922,7 @@ int combatManager::ProcessNextAction(message& msg, unsigned char automaticTurn)
         ResetCyclingCreatures();
         currentArmy->move_to(field_44, 1);
         currentArmy->joustBonus = 0;
-        currentArmy->creatureId |= 0x04000000;
+        currentArmy->sMonInfo.attributes |= 0x04000000;
         if (CheckWin(&msg)) {
             gbProcessingCombatAction = 0;
             ResetMouse();
@@ -2901,7 +2937,7 @@ int combatManager::ProcessNextAction(message& msg, unsigned char automaticTurn)
         field_14030[0] = 1;
         ResetCyclingCreatures();
         currentArmy->attack_hex(field_44, 1);
-        currentArmy->creatureId |= 0x04000000;
+        currentArmy->sMonInfo.attributes |= 0x04000000;
         if (CheckWin(&msg)) {
             gbProcessingCombatAction = 0;
             ResetMouse();
@@ -2920,7 +2956,7 @@ int combatManager::ProcessNextAction(message& msg, unsigned char automaticTurn)
         field_14030[0] = 1;
         ResetCyclingCreatures();
         currentArmy->cast_spell(field_44);
-        currentArmy->creatureId |= 0x04000000;
+        currentArmy->sMonInfo.attributes |= 0x04000000;
         CheckApplyGoodMorale(actingSide, actingSlot);
         iReturn = 1;
         ResetCycleTimers();
@@ -2964,13 +3000,13 @@ int combatManager::ProcessNextAction(message& msg, unsigned char automaticTurn)
         break;
 
     case kCombatActionDefend:
-        if (!(currentArmy->creatureId & 0x0c000000)) {
-            currentArmy->creatureId |= 0x04000000;
+        if (!(currentArmy->sMonInfo.attributes & 0x0c000000)) {
+            currentArmy->sMonInfo.attributes |= 0x04000000;
             if (!bCreaturePlacement && !(currentArmy->Is(1u << 6))) {
                 std::string message;
-                currentArmy->creatureId |= 0x08000000;
+                currentArmy->sMonInfo.attributes |= 0x08000000;
                 currentArmy->field_4dc = std::_cpp_max(
-                    currentArmy->defenseSkill * 20 / 100, 1);
+                    currentArmy->sMonInfo.defenseSkill * 20 / 100, 1);
 
                 if (currentArmy->numTroops == 1)
                     message = format_string(gpGeneralText->GetText(121),
@@ -2984,7 +3020,7 @@ int combatManager::ProcessNextAction(message& msg, unsigned char automaticTurn)
             } else {
                 currentArmy->field_4dc = 0;
             }
-            currentArmy->defenseSkill += currentArmy->field_4dc;
+            currentArmy->sMonInfo.defenseSkill += currentArmy->field_4dc;
         }
         memset(field_14030 + 1, 0, COMBAT_GRID_CELLS);
         currentArmy->check_obstacle_attacks(0);
@@ -2992,7 +3028,7 @@ int combatManager::ProcessNextAction(message& msg, unsigned char automaticTurn)
         break;
 
     case kCombatActionWait: {
-        currentArmy->creatureId |= 0x02000000;
+        currentArmy->sMonInfo.attributes |= 0x02000000;
         if (!bCreaturePlacement) {
             std::string message;
             if (currentArmy->numTroops == 1)
@@ -3013,7 +3049,7 @@ int combatManager::ProcessNextAction(message& msg, unsigned char automaticTurn)
         ResetCyclingCreatures();
         field_14030[0] = 1;
         currentArmy->AttackWall(field_44);
-        currentArmy->creatureId |= 0x04000000;
+        currentArmy->sMonInfo.attributes |= 0x04000000;
         CheckApplyGoodMorale(actingSide, actingSlot);
         iReturn = 1;
         ResetCycleTimers();
@@ -3025,7 +3061,7 @@ int combatManager::ProcessNextAction(message& msg, unsigned char automaticTurn)
         break;
 
     case AI_ORDER_NONE:
-        currentArmy->creatureId |= 0x04000000;
+        currentArmy->sMonInfo.attributes |= 0x04000000;
         iReturn = 1;
         break;
     }
@@ -3100,10 +3136,10 @@ void combatManager::ResetCycleTimers()
     for (int side = 0; side < 2; side++) {
         for (int slot = 0; slot < numArmies[side]; slot++) {
             army* stack = &armies[side][slot];
-            if (stack->frameInfoFidgetFrequency > 51) {
+            if (stack->sMonFrameInfo.iFidgetFrequency > 51) {
                 stack->iLastFidgetTime =
-                    now + 2 * Random(50, stack->frameInfoFidgetFrequency)
-                        - stack->frameInfoFidgetFrequency;
+                    now + 2 * Random(50, stack->sMonFrameInfo.iFidgetFrequency)
+                        - stack->sMonFrameInfo.iFidgetFrequency;
             }
         }
     }
@@ -3167,9 +3203,9 @@ army* combatManager::AddArmy(int iSide, int iMonType, int iMonQty,
         }
         if (stack->numTroops == 0
                 && (static_cast<unsigned char>(static_cast<unsigned>(
-                        stack->creatureId) >> 21) & 1)
+                        stack->sMonInfo.attributes) >> 21) & 1)
                 && (static_cast<unsigned char>(static_cast<unsigned>(
-                        stack->creatureId) >> 22) & 1)) {
+                        stack->sMonInfo.attributes) >> 22) & 1)) {
             slot = candidate;
             replaced = 1;
             break;
@@ -3182,7 +3218,7 @@ army* combatManager::AddArmy(int iSide, int iMonType, int iMonQty,
     newArmy->Init(iMonType, iMonQty, heroes[iSide], iSide, slot, iGridIndex,
                   -1);
     newArmy->LoadResources();
-    newArmy->creatureId |= iSetAttributes;
+    newArmy->sMonInfo.attributes |= iSetAttributes;
     if (!replaced)
         numArmies[iSide]++;
 

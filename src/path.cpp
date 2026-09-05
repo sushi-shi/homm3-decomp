@@ -112,7 +112,7 @@ VA(0x00523b20, 0x89)  // anchor-global, dc 0x10c9ec
 unsigned army::GetAttackMask(int currIndex, int criteria, int iLiteralTargetIndex) const
 {
     int testCellIndex;
-    unsigned char twoHex = static_cast<unsigned char>(creatureId & 1);
+    unsigned char twoHex = static_cast<unsigned char>(sMonInfo.attributes & 1);
     unsigned bit = 1;
     unsigned mask = twoHex ? 0 : 0xc0;
     int dirs = twoHex ? 8 : 6;
@@ -156,7 +156,7 @@ int army::ValidAttack(int currIndex, int direction, int criteria, int iLiteralIn
     if (currIndex >= 187)
         return 0;
     int cell = currIndex;
-    if (creatureId & 1) {
+    if (sMonInfo.attributes & 1) {
         if (direction == COMBAT_DIRECTION_WIDE_UPPER) {
             cell = GetAdjacentCellIndex(currIndex, facing ? 0 : 5);
         } else if (direction == COMBAT_DIRECTION_WIDE_LOWER) {
@@ -231,7 +231,7 @@ off_grid:
 VA(0x00523df0, 0x86)  // anchor-bracket, dc 0x10cc80
 long army::get_adjacent_hex(long hex, long direction) const
 {
-    if (creatureId & 1) {
+    if (sMonInfo.attributes & 1) {
         if (facing == 0) {
             if (direction >= 3)
                 hex--;
