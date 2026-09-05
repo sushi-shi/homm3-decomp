@@ -621,7 +621,11 @@ void TCampaignBrief::MapTextStruct::Play()
                                      font::CENTER_JUSTIFIED, -1);
     }
 
-    sample* speech = speech_name ? ResourceManager::GetSample(speech_name) : 0;
+    sample* speech;
+    if (!speech_name)
+        speech = 0;
+    else
+        speech = ResourceManager::GetSample(speech_name);
 
     gpInputManager->Flush();
     gpWindowManager->UpdateScreen(0, 0, 800, 600);
