@@ -4896,3 +4896,9 @@ unsigned char std::operator!=(const std::_Deque_iterator_base<CNetMsg* __x, cons
 }
 
 #endif  // @carcass
+
+// COMDAT pairing: deque<CNetMsg*>::push_back and its map-growth helper
+// _Growmap, agreements 1.000 and 1.000 at exactly equal extents. This object
+// is the only one that instantiates the message queue.
+VA_COMPGEN(0x00558080, 0x2CF, DEQUE_PUSH_BACK, CNetMsg_ptr)
+VA_COMPGEN(0x00558660, 0x6D, DEQUE_GROWMAP, CNetMsg_ptr)

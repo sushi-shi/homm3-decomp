@@ -18660,3 +18660,8 @@ VA_COMPGEN(0x00487bd0, 0x160, CLASS_CTOR, out_of_range)
 VA_COMPGEN(0x004b79d0, 0x7E, TREE_ERASE, CImmEnclosure)
 VA_COMPGEN(0x004b7d50, 0x49, TREE_LBOUND, CImmEnclosure)
 VA_COMPGEN(0x004b7e70, 0x49, TREE_UBOUND, CImmEnclosure)
+
+// COMDAT pairing: _Tree<int, pair<const int, type_map_hero_info>>::_Erase,
+// agreement 0.952 at an exactly equal 173-byte extent; this object is the
+// only one that instantiates the tree.
+VA_COMPGEN(0x0045c8b0, 0xAD, TREE_ERASE, type_map_hero_info)

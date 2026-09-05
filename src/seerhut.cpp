@@ -3403,3 +3403,7 @@ VA_COMPGEN(0x00574d10, 0x120, BASIC_STRING_CONCAT, char)
 // when it reaches zero - ahead of the delete, which no other ??_G in the
 // image looks like.
 VA_COMPGEN(0x004b7080, 0x56, SCALAR_DELETING_DTOR, basic_string)
+
+// COMDAT pairing: vector<basic_string<char>>::_Ufill, agreement 1.000 at an
+// exactly equal 41-byte extent.
+VA_COMPGEN(0x004af840, 0x29, VECTOR_UFILL, string)

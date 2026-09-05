@@ -8306,3 +8306,7 @@ void h3_stl_comdat_anchor(std::vector<int>& v, const int& value,
     artifacts.any();
 }
 #pragma inline_depth()
+
+// COMDAT pairing: bitset<144>::test, agreement 1.000 at an exactly equal
+// 55-byte extent.
+VA_COMPGEN(0x0044d4d0, 0x37, BITSET_TEST, Bitset144)

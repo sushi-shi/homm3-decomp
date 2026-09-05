@@ -3114,3 +3114,9 @@ VA_COMPGEN(0x004b7ec0, 0x114, BASIC_STRING_CONCAT, char)
 // reached from 0x48d5a0), but this object is one of the two that emit it at
 // retail's size; customcampaign's own copy is 13 bytes.
 VA_COMPGEN(0x0048d7d0, 0x28, LOCALE_FACET_INCREF, char)
+
+// COMDAT pairing: basic_ostringstream<char>::str and
+// basic_streambuf<char>::setg, agreements 1.000 and 1.000 at exactly equal
+// 33-byte extents.
+VA_COMPGEN(0x0055d600, 0x21, OSTRINGSTREAM_STR, char)
+VA_COMPGEN(0x0055e540, 0x21, STREAMBUF_SETG, char)

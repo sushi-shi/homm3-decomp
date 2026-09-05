@@ -626,3 +626,7 @@ void* bitmapBorder16::`scalar deleting destructor'(unsigned __flags)
 
 
 #endif  // @carcass
+
+// COMDAT pairing: bitset<10>::_Xran, agreement 0.901 at an exactly equal
+// 203-byte extent, and the only bitset width this object instantiates.
+VA_COMPGEN(0x00404410, 0xCB, BITSET_XRAN, Bitset10)
