@@ -9161,3 +9161,6 @@ VA_COMPGEN(0x004b0000, 0x8A, FUNCTOR_CALL, spell_level_order)
 
 // COMDAT pairing: vector<std::string>::_Destroy, agreement 0.960.
 VA_COMPGEN(0x004af500, 0x4D, VECTOR_DESTROY, string)
+
+// COMDAT pairing: vector<std::string>::~vector, agreement 0.950.
+VA_COMPGEN(0x004af2c0, 0x6B, VECTOR_DTOR, string)
