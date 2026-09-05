@@ -3,6 +3,7 @@
 // compiland's real name and every identifier below are PROVISIONAL; the
 // retail bodies are the only evidence.
 #include <string>
+#include <vector>
 
 #include <va.h>
 #include "resourcemanager.h"
@@ -44,4 +45,60 @@ void LoadSeerHutTextColumn(TSpreadsheetResource* sheet,
     }
 
     column->completion = sheet->GetRow(47)[col];
+}
+
+DATA(0x0069e728) TSeerHutTextColumn gSeerHutTextA[3];
+DATA(0x0069f0e8) TSeerHutTextColumn gSeerHutTextB[3];
+DATA(0x0069faa8) std::vector<std::string> gSeerHutNames;
+
+// Retail 0x56c3e0. The compiland's entry point: pull seerhut.txt out of the
+// resource cache, fill both three-column tables from it, then walk every row
+// from 50 to the end and append each non-blank first cell to the name list.
+//
+// Two guards, and only the first disposes nothing either: neither the missing
+// spreadsheet nor the short one releases the resource, where the success tail
+// does. The row count is re-read on EVERY iteration of the name walk - retail
+// reloads _First and _Last at the loop head rather than caching a bound.
+//
+// Residual (79.88%): a three-way register permutation and one inline
+// decision, both downstream of where `sheet` lands. Retail keeps it in EBX -
+// pushed alone at entry, with ESI/EDI pushed later, inside the region past
+// both guards - and never spills it; our compile puts it in EDI, pushes EDI
+// at entry, and homes it at [ebp-0x18], which is the whole 4-byte frame
+// surplus (0x1c against retail's 0x18). Every block is otherwise
+// instruction-for-instruction retail with the three callee-saved registers
+// rotated (sheet EBX->EDI, the column counter ESI->ESI, the record offset
+// EDI->EBX). The one call-stream divergence rides along: retail CALLS
+// basic_string::assign for the appended name and we expand it down to
+// _Grow.
+// Measured and byte-flat: hoisting both loop counters to function scope
+// ahead of `sheet`, and writing the blank-cell guard positively instead of
+// `continue`. Measured and worse: a named `std::string entry = name;` local
+// (77.62) and spelling the append as `insert(end(), 1, name)` (23.68), which
+// is what retail's out-of-line callee is but not what its source wrote.
+VA(0x0056c3e0, 0x183)  // anchor-string(seerhut.txt 0x683214) + anchor-callee(LoadSeerHutTextColumn 0x56c120) + retail-only
+unsigned char InitializeSeerHutText()
+{
+    TSpreadsheetResource* sheet = ResourceManager::GetSpreadsheet(
+        DATA_COMPGEN(0x00683214, seerHutSpreadsheetName, "seerhut.txt"));
+    if (!sheet)
+        return 0;
+
+    if (sheet->GetNumberOfRows() < 60)
+        return 0;
+
+    for (int c = 0; c < 3; ++c) {
+        LoadSeerHutTextColumn(sheet, &gSeerHutTextB[c], c + 1);
+        LoadSeerHutTextColumn(sheet, &gSeerHutTextA[c], c + 4);
+    }
+
+    for (int row = 50; row < sheet->GetNumberOfRows(); ++row) {
+        const char* name = sheet->GetRow(row)[0];
+        if (!name[0] || name[0] == ' ')
+            continue;
+        gSeerHutNames.push_back(name);
+    }
+
+    sheet->Dispose();
+    return 1;
 }
