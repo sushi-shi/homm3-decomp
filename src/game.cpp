@@ -18566,3 +18566,36 @@ VA_COMPGEN(0x0048caa0, 0x38, VECTOR_DESTROY, type_artifact_vector)
 // _Ucopy resemble this address; type_university wins on agreement (0.907
 // against 0.810 for the next) and `ret 0xc` matches its three pointers.
 VA_COMPGEN(0x00434c70, 0x49, VECTOR_UCOPY, type_university)
+
+// COMDAT pairing: the campaign carry-over pools' remaining element rows in
+// the campaignwindow..castle bracket, each placed by a POSITIONAL zip of our
+// COMDAT's reloc stream against retail's call stream.
+//
+// vector<vector<hero>>::operator= (0x45f5e0, already claimed) agrees 8-for-8
+// with retail, and slots 2 and 5 name two of these outright: the artifact
+// twin at 0x45f810 is the same 461 B body one element type over, reached from
+// the TCampaignWindow constructor, SavedGameHeader::Reset and
+// SavedGameHeader::operator=, and it calls _Construct<vector<type_artifact>>
+// exactly where the hero twin calls _Construct<vector<hero>>.
+VA_COMPGEN(0x0045f810, 0x1CD, VECTOR_COPY_ASSIGN, type_artifact_vector)
+
+// Slot 5 of that zip: vector<hero>::~vector, the row ~SCampaign,
+// vector<vector<hero>>::operator= and vector<vector<hero>>::insert all reach.
+VA_COMPGEN(0x0045fc50, 0x3B, VECTOR_DTOR, hero)
+
+// hero declares no destructor, so this is the implicit teardown its own
+// vector<hero>::~vector and scalar-deleting dtor call.
+VA_COMPGEN(0x0045fc90, 0x4A, IMPLICIT_DTOR, hero)
+
+// The two `??_G` vector rows. They share one join group, and the zip fixes
+// both ends of it: slot 2 of vector<vector<hero>>::operator= is the hero
+// instantiation (0x45fe60) and the artifact operator= at 0x45f810 reaches
+// its own twin at 0x45fec0 from the matching slot, so the RVA order the
+// claims are written in is the COFF order the group zips against.
+VA_COMPGEN(0x0045fe60, 0x53, SCALAR_DELETING_DTOR, vector)
+VA_COMPGEN(0x0045fec0, 0x3A, SCALAR_DELETING_DTOR, vector)
+
+// Slot 1 of vector<vector<hero>>::~vector: hero's scalar deleting dtor, also
+// reached from vector<hero>::operator=, PruneCrossoverHeroes and
+// vector<vector<hero>>::erase.
+VA_COMPGEN(0x0045ff00, 0x21, SCALAR_DELETING_DTOR, hero)
