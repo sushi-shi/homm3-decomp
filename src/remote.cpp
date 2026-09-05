@@ -510,6 +510,16 @@ bool CDPlayHeroes::TransmitRemoteDataDPID(CNetMsg* pMsg,
 // at the header and AL live through the HRESULT compares. `while`, explicit
 // header-break and call-site inline_depth(1/2) forms do not recover that
 // schedule. Caching GetLastError in a named local regresses it to 85.00%.
+// 2026-09-05, easy lane 3. Two deltas, one cause. Retail's retry loop is
+// UNROTATED - `cmp retries,5 / jg <exit>` at the head and a bare `jmp <head>`
+// at the tail - and its ShutDown failure arm falls into the SAME 7-instruction
+// epilogue as the loop exit, so retail has 2 returns to our 3. Measured and
+// rejected: the goto-loop spelling (`retries = 0; retry: if (retries > 5) goto
+// failed; ... ++retries; goto retry; failed: return false;`), which is
+// BYTE-IDENTICAL to the `for` - VC6 constant-folds the head test away because
+// `retries = 0` immediately dominates it, then rotates, so no source form
+// reachable from a zero initialiser reproduces the top test. The doctrine that
+// VC6 does not rotate goto flow does not survive a foldable guard.
 VA(0x005533d0, 0x1AB)  // anchor-strings + virtual-slots + dc-order-map
 bool CDPlayHeroes::SendIt(CNetMsg* pMsg, unsigned long dpidTo,
                           bool guaranteed)
