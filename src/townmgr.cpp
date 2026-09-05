@@ -515,7 +515,51 @@ void townObject::DrawHotspot()
     // @stub
 }
 
-// E:\gamedcs\townmgr.cpp:1925
+// E:\gamedcs\townmgr.cpp:1925, retail 0x5c2ff0 (799 B) - READ OUT but not
+// yet written, 2026-09-06. Everything below is decoded from the bytes; what
+// stopped the reconstruction is one modelling gap, named at the end.
+//
+//   if (visible) {
+//       town* t = gpTownManager->townToView;
+//       if (t->type == 5 && objId == 0x15) {
+//           // the two-phase arm, mage guild level 5 (bitNumber[4] against
+//           // the built mask at t+0x150) choosing which ten-frame band
+//           // runs: frames 10..19 when it is up, 0..9 when it is not.
+//           // Each half draws the band's FIRST frame, then draws
+//           // currFrame again unless currFrame already IS that first
+//           // frame, then advances currFrame under `incFrame == 1` and
+//           // wraps it back to the band's start.
+//       } else if (t->type == 0 && (objId == 6 || objId == 0x14)) {
+//           // dock / dock-with-boat on a Castle town: currFrame is
+//           // FORCED to 1 or 0 by bitNumber[8] (Citadel) against the
+//           // SECOND mask at t+0x158, not animated.
+//       }
+//       if (numFrames > 2) {
+//           // draw frame 0, then currFrame when it is not 0, then
+//           // advance and wrap on numFrames
+//       } else {
+//           // ONE draw with a TERNARY frame - retail branches INSIDE the
+//           // argument list and both arms reach the same call:
+//           // `objIcon->Draw(0, numFrames ? currFrame : 0, ...)`
+//       }
+//   }
+//   if (gUnnamed6aa9e8 == objId && objOutline && *(int*)0x698784)
+//       objOutline->Draw(0, 0, w, h, gpWindowManager->screenBitmap, x, y, 1);
+//   if (drawHotspots && objHotspot)
+//       objHotspot->zBufferDraw(0, 0, w, h, <zbuffer>, x, y, objId + 1);
+//
+// Every CSprite::Draw here is the same fourteen-argument shape the
+// constructor's siblings use - `objIcon->Draw(0, frame, 0, 0,
+// objIcon->GetWidth(), objIcon->GetHeight(),
+// gpWindowManager->screenBitmap->map, x, y, ->Width, ->Height, ->Pitch,
+// 0, 1)`.
+//
+// THE GAP: the hotspot's z-buffer is `gpTownManager->TownWindow->[+0x50]`,
+// and TownWindow is declared `heroWindow*` while heroWindow ends at 0x4c
+// (CHeroWindowEx's rolloverId is the +0x4c slot). So +0x50 belongs to
+// TTownScreenWindow, which this header does not model that far. Modelling
+// that member - and the two ordinal globals 0x698784 and the already
+// declared 0x6aa9e8 (the hovered object id) - is what the body needs.
 DC_ONLY(0x16a2b0, 0x2EA)
 void townObject::Draw(int incFrame, unsigned char drawHotspots)
 {
