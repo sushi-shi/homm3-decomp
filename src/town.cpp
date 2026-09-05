@@ -1126,11 +1126,11 @@ type_building_id town::BuildBuilding(int buildingId,
         if (buildingId == EXTRA_0_ID) {
             gpGame->SetVisibility(mapX, mapY, mapZ, owner, 20, 0);
         } else if (buildingId == HOLY_GRAIL_ID) {
-            gpGame->SetVisibility(gMapWidth / 2, gMapHeight / 2, 0, owner,
-                                  gMapWidth, 0);
+            gpGame->SetVisibility(MAP_WIDTH / 2, MAP_HEIGHT / 2, 0, owner,
+                                  MAP_WIDTH, 0);
             if (gpGame->worldMap.GetNumLevels() > 1)
-                gpGame->SetVisibility(gMapWidth / 2, gMapHeight / 2, 1,
-                                      owner, gMapWidth, 0);
+                gpGame->SetVisibility(MAP_WIDTH / 2, MAP_HEIGHT / 2, 1,
+                                      owner, MAP_WIDTH, 0);
         }
     }
 
@@ -2004,9 +2004,9 @@ VA(0x005c0c90, 0x89)  // anchor-caller + arity (/Gr, 3 args), dc 0x167f68
 unsigned char check_shipyard_square(town* current_town, long x, long y)
 {
     if (x >= 0) {
-        if (x < gMapWidth) {
+        if (x < MAP_WIDTH) {
             if (y >= 0) {
-                if (y < gMapHeight) {
+                if (y < MAP_HEIGHT) {
                     int size = gpGame->worldMap.Size;
                     NewmapCell* cell = &gpGame->worldMap.cellData[
                         (current_town->mapZ * size + y) * size + x];
