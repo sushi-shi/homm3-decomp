@@ -51,7 +51,6 @@ adventureoptionswindow	?WindowHandler@TAdventureOptionsWindow@@UAEHPAVmessage@@@
 adventureoptionswindow	?handle_message@CHeroWindowEx@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x5680	e9ee91f39ca4
 advmgr	??0CAdvPopup@@QAE@HHHHI@Z	100.0000	100.0000	100.0000	0x1b040	3b5291a00fae
 advmgr	??0advManager@@QAE@XZ	90.2973	90.2973	90.2973	0x6df0	02fbfcfe4389
-advmgr	??0logic_error@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x1bc30	-
 advmgr	??0type_point@@QAE@FFF@Z	100.0000	100.0000	100.0000	0x192b0	fe2581b3af47
 advmgr	??1CAdvMgrNetMsgHandler@@UAE@XZ	100.0000	100.0000	100.0000	0x17d160	-
 advmgr	??1CAdvPopup@@UAE@XZ	100.0000	100.0000	100.0000	0x1b120	37b468aec563
@@ -155,7 +154,6 @@ advmgr	?UpdateRadar@advManager@@QAEXUtype_point@@EEEEE@Z	91.2477	91.2477	91.2477
 advmgr	?UpdateScreen@advManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0xf270	d8787382a606
 advmgr	?ViewPuzzle@advManager@@QAEXXZ	85.6339	85.6339	85.6339	0x1a7f0	4ede4d97bbc5
 advmgr	?WindowHandler@CAdvPopup@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1b1c0	9bc2420b5496
-advmgr	?_Doraise@out_of_range@std@@MBEXXZ	100.0000	100.0000	100.0000	0x1bc10	-
 advmgr	?_Xran@?$bitset@$0DA@@std@@ABEXXZ	100.0000	100.0000	100.0000	0x1b410	-
 advmgr	?append@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@ABV12@II@Z	100.0000	100.0000	100.0000	0x1b250	-
 advmgr	?append@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@PBDI@Z	100.0000	100.0000	100.0000	0x1b340	-
@@ -2542,6 +2540,8 @@ objecttype	??0?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@st
 objecttype	??0?$pair@Viterator@?$_Tree@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$pair@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@2@U_Kfn@?$map@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@HU?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@2@U?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@std@@_N@std@@QAE@ABViterator@?$_Tree@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$pair@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@2@U_Kfn@?$map@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@HU?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@2@U?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@1@AB_N@Z	100.0000	100.0000	100.0000	0x11b150	-
 objecttype	??0TObjectImageNameTable@@QAE@XZ	100.0000	100.0000	100.0000	0x114060	-
 objecttype	??0invalid_argument@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x116f30	-
+objecttype	??0logic_error@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x44e0	-
+objecttype	??0runtime_error@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x1bc30	-
 objecttype	??0strstreambuf@std@@QAE@PBDH@Z	100.0000	100.0000	100.0000	0x1165f0	-
 objecttype	??1?$ctype@D@std@@UAE@XZ	100.0000	100.0000	100.0000	0x116160	-
 objecttype	??1TObjectImageNameTable@@QAE@XZ	100.0000	100.0000	100.0000	0x114130	-
@@ -2558,6 +2558,7 @@ objecttype	?GetImageName@TObjectType@@QAEABV?$basic_string@DU?$char_traits@D@std
 objecttype	?_Construct@std@@YIXPAU?$pair@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@1@ABU21@@Z	100.0000	100.0000	100.0000	0x11b6d0	-
 objecttype	?_Dec@const_iterator@?$_Tree@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$pair@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@2@U_Kfn@?$map@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@HU?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@2@U?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x11b5d0	-
 objecttype	?_Doraise@invalid_argument@std@@MBEXXZ	100.0000	100.0000	100.0000	0x116f10	-
+objecttype	?_Doraise@runtime_error@std@@MBEXXZ	100.0000	100.0000	100.0000	0x1bc10	-
 objecttype	?_Erase@?$_Tree@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$pair@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@2@U_Kfn@?$map@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@HU?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@2@U?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@std@@IAEXPAU_Node@12@@Z	100.0000	100.0000	100.0000	0x1175d0	-
 objecttype	?_Getifld@?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@CAHPADAAV?$istreambuf_iterator@DU?$char_traits@D@std@@@2@1HABVlocale@2@@Z	100.0000	100.0000	100.0000	0x11a1f0	-
 objecttype	?_Inc@?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@AAEXXZ	100.0000	100.0000	100.0000	0x11a8e0	-

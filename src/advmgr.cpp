@@ -11581,8 +11581,16 @@ void std::__destroy_aux(pathCell** __pointer, __false_type __formal)
 // advmgr instantiates exactly one bitset width, so the pairing is unambiguous.
 VA_COMPGEN(0x0041b410, 0xCB, BITSET_XRAN, bitset48)
 
-// COMDAT pairing: logic_error::0logic_error, mnemonic agreement 0.974.
-VA_COMPGEN(0x0041bc30, 0x159, CLASS_CTOR, logic_error)
+// 0x41bc30 and 0x41bc10 WERE claimed here as logic_error's copy constructor
+// (agreement 0.974) and out_of_range::_Doraise (agreement 1.000). RETAIL
+// RTTI REFUTES BOTH, twice over: the CatchableType at 0x648648, whose
+// TypeDescriptor reads `.?AVruntime_error@std@@`, names 0x41bc30 as its
+// copyFunction, and 0x41bc10 throws through the _ThrowInfo at 0x6487a8 whose
+// catchable list is `runtime_error / exception` - an out_of_range would list
+// out_of_range and logic_error too. 0x41bc10 also CALLS 0x41bc30, so the two
+// belong to one class either way. advmgr.obj emits neither runtime_error
+// member, so both claims moved to objecttype.cpp, which does; logic_error's
+// real copy constructor is 0x4044e0, named by the CatchableType at 0x647f70.
 
 // COMDAT pairing: append on the char instantiation, mnemonic agreement 0.960.
 VA_COMPGEN(0x0041b250, 0xE6, BASIC_STRING_APPEND_STR, char)
@@ -11590,5 +11598,3 @@ VA_COMPGEN(0x0041b250, 0xE6, BASIC_STRING_APPEND_STR, char)
 // COMDAT pairing: append on the char instantiation, mnemonic agreement 0.955.
 VA_COMPGEN(0x0041b340, 0xC2, BASIC_STRING_APPEND_PTR, char)
 
-// COMDAT pairing: out_of_range::_Doraise, agreement 1.000.
-VA_COMPGEN(0x0041bc10, 0x1D, EXCEPTION_DORAISE, out_of_range)
