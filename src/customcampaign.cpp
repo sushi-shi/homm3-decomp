@@ -698,9 +698,62 @@ void TCampaignResourceBonus::Read(TAbstractFile* file)
 
 // --- the scenario's starting-options chooser (see customcampaign.h) ---
 
+// The root's constructor, out of line and CALLED BY NOTHING: every derived
+// construction inlines it (the two sibling options store the base vptr and
+// then their own), and a plain non-COMDAT body survives /OPT:REF, so the
+// image keeps this orphan copy.
+VA(0x00484f40, 0x7)  // anchor-vtable (installs 0x63d958), retail-only
+TCampaignStartOption::TCampaignStartOption()
+{
+}
+
 // The root's scalar deleting destructor: the base teardown is one vptr
 // store, so nothing is called.
 VA_COMPGEN(0x00484f50, 0x23, SCALAR_DELETING_DTOR, TCampaignStartOption)
+
+// Slot 5, inherited by the bonus list and the starting-hero option (the
+// crossover option overrides it at 0x4859b0). The answer is the campaign's
+// running crossover slot as soon as the scenario carries anything to carry
+// over - a crossover artifact, a hero placeholder, or a positive status for
+// this option's own player - and -1 otherwise.
+VA(0x00484f80, 0x7F)  // anchor-vtable (0x63d958+0x14, 0x63d98c+0x14, 0x63db0c+0x14), retail-only
+int TCampaignStartOption::_slot5(void* scenarioRecord, int which) const
+{
+    TCampaignBrief::ScenarioStruct* scenario =
+        static_cast<TCampaignBrief::ScenarioStruct*>(scenarioRecord);
+    int player = GetPlayer(which);
+    if (scenario->crossover_artifacts.count() != 0
+        || scenario->hero_placeholders.size() != 0
+        || scenario->heroes_status[player] > 0)
+        return gpGame->campaign.crossoverArrayIndex;
+    return -1;
+}
+
+// Slot 12, inherited by the bonus list and the starting-hero option (the
+// crossover option overrides it at 0x4859e0): every scenario this one lists
+// as a prerequisite must already be completed, and then one of the option's
+// own choices must answer slot 5 with the value asked about. An option with
+// no choices at all is asked with -1.
+VA(0x00485000, 0x8B)  // anchor-vtable (0x63d958+0x30, 0x63d98c+0x30, 0x63db0c+0x30), retail-only
+bool TCampaignStartOption::_slot12(void* scenarioRecord, int value) const
+{
+    TCampaignBrief::ScenarioStruct* scenario =
+        static_cast<TCampaignBrief::ScenarioStruct*>(scenarioRecord);
+    for (unsigned int iPrereq = 0;
+         iPrereq < scenario->prerequisites.size(); ++iPrereq)
+        if (scenario->prerequisites[iPrereq]
+            && !gpGame->campaign.mapScores[iPrereq].completed)
+            return false;
+
+    int count = GetCount();
+    if (count == 0)
+        return _slot5(scenario, -1) == value;
+
+    for (int iChoice = 0; iChoice < count; ++iChoice)
+        if (_slot5(scenario, iChoice) == value)
+            return true;
+    return false;
+}
 
 // Slot 7, inherited unchanged by all three concrete options.
 VA(0x00485090, 0x6)  // anchor-vtable (0x63d958+0x1c and both children), retail-only
@@ -847,6 +900,178 @@ std::string TCampaignStartBonusOption::GetText(void* scenario,
                                                int which) const
 {
     return m_bonuses[which]->GetText();
+}
+
+// --- the crossover-hero starting option (vftable 0x63dad8) ---
+
+VA(0x004854a0, 0x12)  // anchor-vtable (0x63dad8+8), retail-only
+int TCampaignStartCrossoverOption::GetCount() const
+{
+    return m_choices.size();
+}
+
+// The icon is the large portrait of the first hero waiting in the carry-over
+// pool the choice names; an empty pool falls back to the blank locator
+// frame. The pool is reached through the campaign's own scenario table -
+// mapScores[choice.scenario].index is the crossover slot.
+VA(0x004854c0, 0x6E)  // anchor-string (hpl000kn.pcx), retail-only
+const char* TCampaignStartCrossoverOption::GetIconDefName(void* campaignRecord,
+                                                          int which) const
+{
+    SCampaign* campaign = static_cast<SCampaign*>(campaignRecord);
+    std::vector<hero>& pool = campaign->carryOverHeroes
+        [campaign->mapScores[m_choices[which].scenario].index];
+    if (pool.size() == 0)
+        return "hpl000kn.pcx";
+    return akHeroTraits[pool[0].portrait].largePortraitName;
+}
+
+// The help text names the MAP the heroes come from, which is not the choice's
+// own scenario but the last completed scenario sharing its crossover slot;
+// the map name itself is only available after re-opening the campaign file
+// and inflating that scenario's header.
+VA(0x00485530, 0x260)  // anchor-callee(CampaignHeaderStruct::Load 0x488880), retail-only
+std::string TCampaignStartCrossoverOption::GetText(void* campaignRecord,
+                                                   int which) const
+{
+    TCampaignBrief::CampaignHeaderStruct* campaign =
+        static_cast<TCampaignBrief::CampaignHeaderStruct*>(campaignRecord);
+    int slot = gpGame->campaign.mapScores[m_choices[which].scenario].index;
+    int source = -1;
+    for (unsigned int iScore = 0;
+         iScore < gpGame->campaign.mapScores.size(); ++iScore)
+        if (gpGame->campaign.mapScores[iScore].completed
+            && gpGame->campaign.mapScores[iScore].index == slot
+            && (source < 0
+                || gpGame->campaign.mapScores[iScore].complete_order
+                       >= gpGame->campaign.mapScores[source].complete_order))
+            source = iScore;
+
+    NewSMapHeader mapHeader;
+    if (campaign->Load())
+        campaign->scenarios[source]->LoadMapHeader(campaign->stream,
+                                                   &mapHeader, source);
+    return format_string(gpGeneralText->Text[720], mapHeader.mapName.c_str());
+}
+
+// The player position the pool is handed to. Slot 12 asks with -1 when the
+// option carries no choices at all, which reads the first slot instead.
+VA(0x00485790, 0x17)  // anchor-vtable (0x63dad8+0x20), retail-only
+int TCampaignStartCrossoverOption::GetPlayer(int which) const
+{
+    if (which < 0)
+        which = 0;
+    return m_choices[which].player;
+}
+
+VA(0x004857b0, 0x1F4)  // anchor-vtable (0x63dad8+0x24), retail-only
+void TCampaignStartCrossoverOption::Read(TAbstractFile* file)
+{
+    unsigned char count;
+    file->Read(&count, sizeof(unsigned char));
+    for (int i = 0; i != count; ++i) {
+        TCampaignCrossoverChoice choice;
+        {
+            signed char player;
+            file->Read(&player, sizeof(signed char));
+            choice.player = player;
+        }
+        {
+            signed char scenario;
+            file->Read(&scenario, sizeof(signed char));
+            choice.scenario = scenario;
+        }
+        m_choices.push_back(choice);
+    }
+}
+
+VA(0x004859b0, 0x24)  // anchor-vtable (0x63dad8+0x14), retail-only
+int TCampaignStartCrossoverOption::_slot5(void* scenario, int which) const
+{
+    return gpGame->campaign.mapScores[m_choices[which].scenario].index;
+}
+
+VA(0x004859e0, 0x44)  // anchor-vtable (0x63dad8+0x30), retail-only
+bool TCampaignStartCrossoverOption::_slot12(void* scenario, int value) const
+{
+    for (unsigned int iChoice = 0; iChoice < m_choices.size(); ++iChoice)
+        if (_slot5(scenario, iChoice) == value)
+            return true;
+    return false;
+}
+
+// Slot 1 for BOTH crossover options - `mov al,1; ret 4`, and /OPT:ICF folds
+// the two identical bodies onto this one address, so only this copy carries
+// the claim (the starting-hero twin below is defined and left unclaimed).
+VA(0x00485a30, 0x5)  // anchor-vtable (0x63dad8+4 and 0x63db0c+4), retail-only
+bool TCampaignStartCrossoverOption::IsBuildingBonus(int which) const
+{
+    return true;
+}
+
+// --- the starting-hero option (vftable 0x63db0c) ---
+
+bool TCampaignStartHeroOption::IsBuildingBonus(int which) const
+{
+    return true;
+}
+
+VA(0x00485a40, 0x13)  // anchor-vtable (0x63db0c+8), retail-only
+int TCampaignStartHeroOption::GetCount() const
+{
+    return m_choices.size();
+}
+
+VA(0x00485a60, 0x30)  // anchor-string (CBONN1A3.pcx), retail-only
+const char* TCampaignStartHeroOption::GetIconDefName(void* campaign,
+                                                     int which) const
+{
+    if (m_choices[which].hero == -1)
+        return "CBONN1A3.pcx";
+    return akHeroTraits[m_choices[which].hero].largePortraitName;
+}
+
+VA(0x00485a90, 0xBA)  // anchor-vtable (0x63db0c+0x18), retail-only
+std::string TCampaignStartHeroOption::GetText(void* campaign, int which) const
+{
+    if (m_choices[which].hero == -1)
+        return gpGeneralText->Text[721];
+    return format_string(gpGeneralText->Text[716],
+                         akHeroTraits[m_choices[which].hero].defaultName);
+}
+
+VA(0x00485b50, 0x10)  // anchor-vtable (0x63db0c+0x20), retail-only
+int TCampaignStartHeroOption::GetPlayer(int which) const
+{
+    return m_choices[which].player;
+}
+
+VA(0x00485b60, 0x1FB)  // anchor-vtable (0x63db0c+0x24), retail-only
+void TCampaignStartHeroOption::Read(TAbstractFile* file)
+{
+    signed char count;
+    file->Read(&count, sizeof(signed char));
+    m_choices.clear();
+    for (int i = 0; i != count; ++i) {
+        TCampaignHeroChoice choice;
+        {
+            signed char player;
+            file->Read(&player, sizeof(signed char));
+            choice.player = player;
+        }
+        {
+            short heroId;
+            file->Read(&heroId, sizeof(short));
+            choice.hero = heroId;
+        }
+        m_choices.push_back(choice);
+    }
+}
+
+VA(0x00485d60, 0x11)  // anchor-vtable (0x63db0c+0x1c), retail-only
+int TCampaignStartHeroOption::_slot7(int which) const
+{
+    return m_choices[which].hero;
 }
 
 VA(0x00485d80, 0x3)  // anchor-vtable (0x63d938+0x1c), retail-only
@@ -1211,6 +1436,30 @@ void SCampaign::DoPreLoadCustomization()
 // its starting hero from the scenario's options record, and starts the
 // map out of a gzip-inflating view of the campaign stream. game::NewMap
 // receives this scenario as its campaign context.
+// The starting-hero option's own constructor. It is the ONE of the three
+// options retail keeps out of line: its vector's default constructor is
+// expanded here (three zero stores plus the allocator byte), which makes the
+// inherited base vptr store dead and lets it fall away - the two sibling
+// options keep theirs because the vector constructor is a call at their
+// (inlined) construction sites.
+VA(0x004883d0, 0x21)  // anchor-caller(ScenarioStruct::Read's type-3 arm), retail-only
+TCampaignStartHeroOption::TCampaignStartHeroOption()
+{
+}
+
+VA_COMPGEN(0x00488400, 0x21, SCALAR_DELETING_DTOR, TCampaignStartCrossoverOption)
+VA_COMPGEN(0x00488430, 0x21, SCALAR_DELETING_DTOR, TCampaignStartHeroOption)
+
+VA(0x00488460, 0x2C)  // anchor-callee(0x488400's `??_G`), retail-only
+TCampaignStartCrossoverOption::~TCampaignStartCrossoverOption()
+{
+}
+
+VA(0x00488490, 0x2C)  // anchor-callee(0x488430's `??_G`), retail-only
+TCampaignStartHeroOption::~TCampaignStartHeroOption()
+{
+}
+
 VA(0x004884c0, 0x103)  // CampaignHeaderStruct::StartScenario sole caller
 void TCampaignBrief::ScenarioStruct::StartScenario(
     std::streambuf* stream, int option)
