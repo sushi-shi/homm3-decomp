@@ -72,10 +72,28 @@ static unsigned char view_heroes;
 //   Underlay 38.86 -> 95.67, Ground 55.64 -> 92.47, but
 //   River 95.49 -> 58.09, Road 94.60 -> 59.75, AdvObj 94.84 -> 83.71.
 // Byte-weighted that trade is worth about +200 B and it puts three banked
-// rows under their MAX, so the `inline` stays. Closing it needs a per-site
-// lever (a statement pin inside VWScaleToScreenBuffer is per-CALLEE, not
-// per-site, so it cannot split the six) or a caller-shrink dose on the three
-// heavy layers.
+// rows under their MAX, so the `inline` stays.
+// QUANTIFIED, 2026-09-05, with the /Ob2 site-count instrument
+// (docs/vc6/inliner.md 5.9): the deficit on the two callers that still
+// over-inline is EXACTLY ONE CANDIDATE SITE, and it sits AT OR AFTER their
+// final VWScaleToScreenBuffer call. One free candidate appended after
+// VWDrawUnderlay's `if (drewSomething) VWScaleToScreenBuffer(...)` raises
+// `sites-remaining` from 1 to 2, halves the nested budget and flips the
+// decision outright: 38.8566 -> 95.6693, with no other row moving.
+// VWDrawGround is the same shape one site later - its first scale site
+// already divides by >=5 and calls the helper on BOTH sides; only its last
+// site, at divisor 1, diverges. So the residual is a real missing statement
+// at the tail of those two bodies, not a helper spelling: neither the
+// Dreamcast line table nor retail's own tail (the call at 0x5f9d90 is the
+// last instruction before the epilogue) shows one, so it is a Complete-era
+// statement with no DC row, and the free site is an INSTRUMENT ONLY.
+// Measured and rejected as the cb lever: the Dreamcast clip helper carries
+// two more clamps than this body - `else if (screenX > 600) screenX = 600;`
+// and `else if (screenY > 552) screenY = 552;` at dc lines 192/193 and
+// 197/198, proved by the `mov.w 600,r5` / `mov.w 552,r6` arms - but VC6
+// EMITS them rather than folding them against the entry guards, and they
+// cost River 95.49 -> 95.03, Road 94.60 -> 94.06, AdvObj 94.84 -> 94.23 and
+// Underlay 38.86 -> 38.50. Complete dropped them; RoE had them.
 inline void VWClipScaleToScreenBuffer(int destX, int destY)
 {
     if (destX + giViewWorldScale < 8)
@@ -712,8 +730,8 @@ void advManager::VWDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int de
         return;
 
     NewmapCell* thisCell = GetCell(type_point(srcX, srcY, z));
-    int playerBit = 1 << gpGame->GetLocalPlayerGamePos();
-    playerBit &= GetMapExtra(srcX, srcY, z);
+    int playerBit = (1 << gpGame->GetLocalPlayerGamePos())
+        & GetMapExtra(srcX, srcY, z);
 
     int baseX = destX * giViewWorldScale + iVWCenterOffsetW,
         baseY = destY * giViewWorldScale + iVWCenterOffsetH;
