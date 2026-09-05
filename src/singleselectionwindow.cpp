@@ -5657,7 +5657,10 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
 // zero the memset intrinsic already materialised. Tried and rejected:
 // `i = 0;` written above the memset (98.95), the memset moved below the loop
 // (89.16), and hoisting `int i;` to the declaration block (byte-flat - a bare
-// declaration creates no pseudo).
+// declaration creates no pseudo). Byte-flat as well (2026-09-05, 99.44 to the
+// digit): scoping the counter into the `for` and deleting the function-scope
+// declaration, declaring `int i;` FIRST of all the locals, and rewriting the
+// loop as `i = 0; while (i < 15) { ...; ++i; }`.
 VA(0x005879A0, 0x219)
 std::string GetRandomMapName()
 {

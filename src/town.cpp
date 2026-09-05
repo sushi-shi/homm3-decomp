@@ -1379,7 +1379,10 @@ long town::get_legion_bonus(long dwelling)
 // The additional gpGame/bss_2994e8 row is relocation-name-only and cosmetic.
 // Also byte-flat: NewfullMap::cell(x,y,z) in place of the hand-written
 // subscript (this TU takes the header inline, so the named `size` local is
-// CSE'd back either way).
+// CSE'd back either way). Byte-flat too (measured 2026-09-05, all 99.85 to
+// the digit): the subscript re-associated as `x + size*(y + size*z)`, both
+// `Size` reads written inline with no named local, and the whole index
+// landed in a named `int index` before the subscript.
 VA(0x005bf900, 0x258)  // retail-only, town member, ret 4
 long town::TownFn_005BF900(long dwelling)
 {

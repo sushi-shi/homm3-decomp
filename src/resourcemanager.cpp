@@ -405,9 +405,17 @@ void __fastcall game_null_159510(const char* caller,
 // six size-only). Retail calls assign for the early cases and expands four
 // late sites. The explicit strlen plus assign-only pin ratchets N=0 70.5441,
 // N=1 flat, N=2 76.7853, N=3 flat, N=4 78.4735 (negative control), and N=5
-// 86.1324. Predict-inline leaves only one ios_base destructor and one
-// string::_Tidy over-inlined; the remaining six blocks are size-only stream
-// frame coloring rather than a missing semantic branch.
+// 86.1324 -> 86.9559: the message stream is BLOCK-SCOPED. Retail's frame is
+// 0xac against our 0x130, and the 0x84 surplus is exactly one ostringstream -
+// retail overlays the default arm's `numericType` onto `message`, which VC6
+// will only do once `message` has a scope of its own. The frame is now
+// retail's to the byte. MEASURED AND REJECTED: the identical scope in
+// game_null_159510 above COSTS 2.62 (89.3910 -> 86.7726) even though it makes
+// that frame exact too - it adds five early-return destructor blocks there,
+// so this is a per-function verdict, not a rule. Predict-inline leaves only
+// one ios_base destructor and one string::_Tidy over-inlined; the remaining
+// six blocks are size-only stream frame coloring rather than a missing
+// semantic branch.
 VA(0x005599e0, 0x448)  // anchor-caller + retail type-name jump table; wall
 void __fastcall game_sprite_1599e0(const char* caller,
                                    int resourceType,
@@ -502,6 +510,7 @@ void __fastcall game_sprite_1599e0(const char* caller,
     }
     }
 
+    {
 #pragma inline_depth(0)
     std::ostringstream message;
 #pragma inline_depth()
@@ -520,6 +529,7 @@ void __fastcall game_sprite_1599e0(const char* caller,
         DATA_COMPGEN(0x00682f08, resourceManagerCaption,
                      "ResourceManager"),
         0);
+    }
 #pragma inline_depth(0)
 }
 #pragma inline_depth()
@@ -1273,6 +1283,16 @@ TPalette16* ResourceManager::GetPalette(const char* name)
 // 96.8864, and a named path local is 99.8773 while losing exact LoadFont.
 // why-reg's nine legal probes are flat or worse. Treat this as TU/C1 state, not
 // permission to remove the Dreamcast-proven local names or statement shape.
+// Residual (99.9273%): the frame is 8 bytes too large and every slot below
+// the two read buffers is shifted with it. Retail OVERLAYS the block-scoped
+// `t_stdio_file_adapter stream` onto the dead `gResourcePath + name` string
+// temporary (both at [ebp-0x28]) and lands `result` at [ebp-0x20]; this
+// compile gives the adapter its own pair at [ebp-0x24]/[ebp-0x20] and puts
+// `result` below it, which pushes header/rgba down by 8. Measured and
+// rejected 2026-09-05: `result` declared after `file` 99.93 (byte-flat),
+// the adapter hoisted above the `try` 98.73, both together 98.73. The two
+// read buffers cannot be block-scoped - the LOD path below reads through
+// them too.
 VA(0x0055b470, 0x2D1)  // dc/hd public identity + retail palette-file shape, dc 0x121ec8
 TPalette24* ResourceManager::GetPalette24(const char* name)
 {

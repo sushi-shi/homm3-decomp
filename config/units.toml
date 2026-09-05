@@ -50,6 +50,40 @@ game_o2_ml_gr_windows = [
 # constructor 0x4b6f60, `insert` 0x4b70e0, `_Insert` 0x4b7a50 and
 # `const_iterator::_Dec` 0x4b7db0 go 86.75/80.34/81.14/51.19 -> EXACT on
 # the flag change alone, with the unit's other nine rows unmoved.
+#
+# SYSTEMATIC SWEEP 2026-09-05. Retail .text was scanned for every E8 rel32
+# landing on ??0_Lockit (0x20b598) or ??1_Lockit (0x20b634); each call site
+# was mapped through config/retail-functions.tsv to its owning carve row and
+# through config/match_baseline.tsv to its unit. 341 of the 662 sites sit in
+# the game band, and they resolve to exactly eleven compilands:
+#   objecttype 106, game 75, resourcemanager 43, bottomviewsubwindow 42,
+#   campaignbrief 40, forcefeedback 17, singleselectionwindow 6,
+#   gzinflatebuf 4, rmg 4, cmbtmgr 2, spells 2.
+# Six of those already expose the external-lock view with a local
+# `#define _MT` around <yvals.h> (objecttype, game, resourcemanager,
+# gzinflatebuf, rmg, rmg_terrain) and their _Lockit rows already carry the
+# calls; the flag is NOT usable there - /MT plus the local define is a
+# C2373 `_errno` redefinition (measured on objecttype).
+# The three that had neither joined here, each measured on its own build
+# with the whole tree's per-row scores diffed before and after:
+#   singleselectionwindow (6 sites) - CMapHeaderData(const&) 0x590810
+#     97.52 -> 100, ~CNewMapHeaderInfoMsg 0x58a300 90.57 -> 97.06,
+#     map<int,type_map_hero_info> _Tree::_Init 0x58ffc0 72.55 -> 100.
+#   cmbtmgr (2 sites) - ~TCombatEagleEyeSide 0x4628b0 81.67 -> 100.
+#   spells (2 sites) - set<int> _Tree::insert 0x5a9450 80.34 -> 100.
+# +4 exact rows, +74.4 summed fuzzy, and NO row anywhere in the tree fell.
+# singleselectionwindow.obj joined them 2026-09-05, found by a systematic
+# scan of retail .text for E8 rel32 calls landing on ??0_Lockit (0x20b598)
+# and ??1_Lockit (0x20b634): its `CMapHeaderData(const&)` 0x590810,
+# `CNewMapHeaderInfoMsg::~CNewMapHeaderInfoMsg` 0x58a300 and the
+# map<int,type_map_hero_info> `_Tree::_Init` 0x58ffc0 carry six of them.
+# Measured 97.52/90.57/72.55 -> 100.0000/97.06/100.0000, +2 exact rows,
+# no other row in the tree moved in either direction.
+# The same scan attributes every other retail _Lockit call site in the game
+# band to objecttype, game, resourcemanager, gzinflatebuf, rmg, rmg_terrain
+# (all six already expose the external-lock view with a local `#define _MT`
+# around <yvals.h>), to the three /MT units above, or to cmbtmgr / spells -
+# whose single sites were measured and REJECTED (see below).
 game_o2_mt_gr_windows = [
   "/nologo",
   "/c",
@@ -294,7 +328,7 @@ flags = "game_o2_ml_gr_windows"
 [[unit]]
 unit = "spells"
 source = "src/spells.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "creaturetype"
@@ -522,7 +556,7 @@ flags = "game_o2_ml_gr_windows"
 [[unit]]
 unit = "cmbtmgr"
 source = "src/cmbtmgr.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "command"
@@ -597,7 +631,7 @@ flags = "game_o2_ml_gr_windows"
 [[unit]]
 unit = "singleselectionwindow"
 source = "src/singleselectionwindow.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "diff"

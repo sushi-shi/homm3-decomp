@@ -226,11 +226,23 @@ TGzInflateBuf::~TGzInflateBuf()
 
 // 0x4d6920: drain the source into the 0x200-byte output half, either
 // through inflate or, for a non-gzip member, by straight copy.
+//
+// The FIRST guard reads `avail_in <= 0`, not `== 0`: retail inverts it to
+// `ja` (unsigned above) where `== 0` can only ever emit `jne`, and the two
+// are the same test on zlib's `uInt`. 80.8063 -> 81.1188. The second guard
+// really is `== 0` - retail emits `jne` there.
+//
+// Residual (81.12%): the eight trailer `read_byte()` sites. Retail CALLS
+// read_byte at three of them and expands five; our /Ob2 budget expands all
+// eight, which is the 22-vs-18 branch surplus, the eleven base-only
+// get_byte/throw triples and the 0x20-against-0x3c frame. That is the
+// over-inline class, whose levers here are a statement pin and a
+// caller-shrink helper - neither open to this lane.
 VA(0x004d6920, 0x251)  // anchor-vtable ??_7TGzInflateBuf@@6B@ slot 4 + anchor-import @inflate@8, retail-only
 int TGzInflateBuf::underflow()
 {
     while (stream.avail_out > 0) {
-        if (stream.avail_in == 0 && source_eof)
+        if (stream.avail_in <= 0 && source_eof)
             break;
         if (stream.avail_in == 0) {
             int count = source->sgetn(
