@@ -110,53 +110,32 @@ TGzInflateBuf::TGzInflateBuf(std::streambuf* newSource)
         ok = 0;
     }
     if (ok) {
-        int method = get_byte();
-        if (method == -1)
-            throw TDataError();
+        int method = read_byte();
         if (method != Z_DEFLATED)
             throw TDataError(std::string());
-        int flags = get_byte();
-        if (flags == -1)
-            throw TDataError();
+        int flags = read_byte();
         if ((flags & 0xe0) != 0)
             throw TDataError(std::string());
         int skip = 6;
         do {
-            if (get_byte() == -1)
-                throw TDataError();
+            read_byte();
         } while (--skip > 0);
         if ((flags & 4) != 0) {
-            int low = get_byte();
-            if (low == -1)
-                throw TDataError();
-            int high = get_byte();
-            if (high == -1)
-                throw TDataError();
-            unsigned extra = (high << 8) + low;
-            while (extra-- != 0) {
-                if (get_byte() == -1)
-                    throw TDataError();
-            }
+            int low = read_byte();
+            unsigned extra = (read_byte() << 8) + low;
+            while (extra-- != 0)
+                read_byte();
         }
         if ((flags & 8) != 0) {
-            int c;
-            do {
-                c = get_byte();
-                if (c == -1)
-                    throw TDataError();
-            } while (c != 0);
+            while (read_byte() != 0) {
+            }
         }
         if ((flags & 0x10) != 0) {
-            int c;
-            do {
-                c = get_byte();
-                if (c == -1)
-                    throw TDataError();
-            } while (c != 0);
+            while (read_byte() != 0) {
+            }
         }
         if ((flags & 2) != 0) {
-            if (get_byte() == -1)
-                throw TDataError();
+            read_byte();
             if (get_byte() == -1)
                 throw TDataError(std::string());
         }
