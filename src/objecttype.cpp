@@ -84,6 +84,68 @@ TObjectType& TObjectType::setTriggerMask(const std::bitset<48>& mask)
     return *this;
 }
 
+// Retail 0x514b80, the per-row parser load() runs over every objects.txt
+// line after the first. Free and __fastcall under /Gr (stream in ECX,
+// record in EDX), and it answers the stream.
+//
+// The row's nine fields are read as ONE chained expression: the image
+// name, two 48-cell masks, TWO NINE-BIT terrain sets (0x44c6e0 masks with
+// 0x1ff where the record's own members mask with 0x3ff), then four ints
+// through basic_istream's member operator>>, whose four target addresses
+// retail pushes ahead of the string extractor's own two arguments.
+//
+// The record is then filled through the two chaining setters' RETURN
+// values - retail reloads EAX after each call rather than re-reading the
+// parameter, which is what fixes the references below - and
+// TAdventureObjectType arrives through the same union idiom
+// NewfullMap::readObjectType already uses for this exact field.
+//
+// The `recommendedTerrainMask &= terrain` whose result is discarded two
+// statements later is retail's, not a transcription slip: retail issues
+// the operator&= call on the member at 0x514d04 and then overwrites the
+// member at 0x514d12, and a store cannot be moved across that call.
+// Residual (76.64%): frame exact at 0x64, and the whole delta is one
+// /Ob2 split. Retail CALLS bitset<48>::_Tidy twice and bitset<9>::_Tidy
+// once at the head and EXPANDS the string's _Tidy(true) at the tail (its
+// second `ret` and its operator delete); we do the exact opposite. The
+// lever for the over-inlined half is caller-shrink and this body has no
+// mass to lift.
+VA(0x00514b80, 0x1F7)  // anchor-caller 0x514d80 per-row loop; anchor-callee setImageName/setTriggerMask; retail-only
+std::istream& operator>>(std::istream& is, TObjectType& objectType)
+{
+    std::string imageName;
+    std::bitset<48> passable;
+    std::bitset<48> trigger;
+    std::bitset<9> terrainRead;
+    std::bitset<9> recommendedRead;
+    union {
+        int raw;
+        TAdventureObjectType typed;
+    } typeRead;
+    int subtype;
+    int slotCategory;
+    int underlay;
+
+    is >> imageName >> passable >> trigger >> terrainRead >> recommendedRead
+        >> typeRead.raw >> subtype >> slotCategory >> underlay;
+
+    std::bitset<10> recommendedTerrain(recommendedRead.to_ulong());
+    std::bitset<10> terrain(terrainRead.to_ulong());
+
+    TObjectType& named = objectType.setImageName(imageName);
+    named.passableMask = passable | ~named.imageInfo.drawMask;
+
+    TObjectType& row = named.setTriggerMask(trigger);
+    row.recommendedTerrainMask &= terrain;
+    row.terrainMask = terrain;
+    row.recommendedTerrainMask = recommendedTerrain;
+    row.objectType = typeRead.typed;
+    row.subtype = subtype;
+    row.slotCategory = slotCategory;
+    row.isUnderlay = underlay != 0;
+    return is;
+}
+
 // Retail 0x514d80, the objects.txt reader NewfullMapFn_00505DA0 drives.
 // The whole shape is published by the function's own EH data at 0x650150:
 // eight states, ONE try block spanning states 3..7, and a type-less
