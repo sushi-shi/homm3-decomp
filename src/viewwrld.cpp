@@ -86,6 +86,23 @@ static unsigned char view_heroes;
 //   River 95.49 -> 58.09, Road 94.60 -> 59.75, AdvObj 94.84 -> 83.71.
 // Byte-weighted that trade is worth about +200 B and it puts three banked
 // rows under their MAX, so the `inline` stays.
+// RE-MEASURED 2026-09-05 at the current baselines, and it BOUNDS the
+// residual precisely: dropping `inline` takes Underlay 42.1275 -> 99.9583
+// and Ground 55.2155 -> 96.8886 (better than the numbers above, which were
+// taken before the pointer-local CSE landed), against River 98.5412 ->
+// 58.6207, Road 99.5374 -> 57.0968, AdvObj 96.4955 -> 83.7963,
+// AdvObjShadow 83.9809 -> 67.5063 and Shroud flat. Byte-weighted that is
+// -412 B and it drops four banked rows under their MAX, so it still stays.
+// What it proves is worth more than the trade: with retail's inline
+// decision in place VWDrawUnderlay is 99.96% - its whole 784 B body is
+// already byte-correct and the ONLY thing left in it is this one /Ob2
+// decision. Two candidate-adding respellings of the object walk were
+// measured on Underlay and both LOSE (dropping the redundant
+// `objects.size() > 0` guard 42.1275 -> 40.2597 - it is not byte-free
+// after all; `!objects.empty()` for the same guard 42.1275 -> 41.8933),
+// which agrees with the placement rule: a site BEFORE the scale call
+// cannot move the divisor at it. The missing candidate is still one
+// statement at or after the final scale call.
 // QUANTIFIED, 2026-09-05, with the /Ob2 site-count instrument
 // (docs/vc6/inliner.md 5.9): the deficit on the two callers that still
 // over-inline is EXACTLY ONE CANDIDATE SITE, and it sits AT OR AFTER their
