@@ -3103,6 +3103,7 @@ seerhut	?quest_type@type_belong_to_player_quest@@UAEHXZ	100.0000	100.0000	100.00
 seerhut	?quest_type@type_defeat_hero_quest@@UAEHXZ	100.0000	100.0000	100.0000	0x16e3d0	b378bb94388f
 seerhut	?quest_type@type_monster_quest@@UAEHXZ	100.0000	100.0000	100.0000	0x16ebc0	2132ee49efd9
 seerhut	?read@TQuestGuard@@QAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x1734e0	7601b0255349
+seerhut	?read@TSeerHut@@QAEXPAVTAbstractFile@@@Z	76.6567	76.6567	76.6567	0x174610	b3e020a2d563
 seerhut	?save@TQuestGuard@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x173520	4af04b37a0b0
 seerhut	?save@TSeerHut@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x173fd0	3f53613a2426
 seerhut	?skill_requirement_text@type_skill_quest@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAY03$$CBC@Z	100.0000	100.0000	100.0000	0x16dfa0	2de5fc7e8020
