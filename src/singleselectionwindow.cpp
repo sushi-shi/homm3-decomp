@@ -5110,7 +5110,7 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
         if (pThisPlayer) {
             pThisPlayer->heroIndex = -1;
             TTownType townType = GetDisplayTown(i);
-            int legal = static_cast<unsigned short>(
+            unsigned short legal = static_cast<unsigned short>(
                 gpGame->mapHeader.playerSlotAttributes[i].legalAlignments);
             if (!field_1898)
                 legal &= ~0x100;
@@ -5137,7 +5137,7 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
         if (pThisPlayer) {
             pThisPlayer->heroIndex = -1;
             TTownType townType = GetDisplayTown(i);
-            int legal = static_cast<unsigned short>(
+            unsigned short legal = static_cast<unsigned short>(
                 gpGame->mapHeader.playerSlotAttributes[i].legalAlignments);
             if (!field_1898)
                 legal &= ~0x100;
@@ -5488,15 +5488,16 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
         if (m_flag65) {
             field_68 = msg->codeY - SSW_FILE_ROW_FIRST;
             SetCurrentMap(map, 1);
-        } else if (SelectionHeaders.size() != 0
-                && map < SelectionHeaders.size()) {
+        } else if (map < SelectionHeaders.size()) {
             unsigned long lastClick = clickTime;
             if (static_cast<int>(GameTime::Get() - lastClick) < 400) {
                 *bExitFlag = OnBeginGame();
             } else {
                 clickTime = GameTime::Get();
-                if (SelectionHeaders.size() != 0
-                        && map < SelectionHeaders.size()
+                // Retail's second guard reads size() > map (`cmp edx,edi /
+                // jbe`), the first map < size() (`cmp edi,edx / jae`), and
+                // neither carries a separate size() != 0 test.
+                if (SelectionHeaders.size() > map
                         && (!bVideoPaused || IsHost()))
                     SetCurrentMap(map, 1);
             }
@@ -5517,8 +5518,10 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
         if (!pThisPlayer)
             pThisPlayer = m_players.GetCompPlayerInPos(i);
         if (pThisPlayer) {
-            unsigned char noHero = pThisPlayer->heroIndex == -1
-                && !HasRandomHero(i) && !HasNonRandomHero(i);
+            unsigned char noHero = 0;
+            if (pThisPlayer->heroIndex == -1 && !HasRandomHero(i)
+                    && !HasNonRandomHero(i))
+                noHero = 1;
             --pThisPlayer->startBonusIndex;
             if (pThisPlayer->startBonusIndex < 0
                     || (pThisPlayer->startBonusIndex == 0 && noHero))
@@ -5547,8 +5550,10 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
         if (!pThisPlayer)
             pThisPlayer = m_players.GetCompPlayerInPos(i);
         if (pThisPlayer) {
-            unsigned char noHero = pThisPlayer->heroIndex == -1
-                && !HasRandomHero(i) && !HasNonRandomHero(i);
+            unsigned char noHero = 0;
+            if (pThisPlayer->heroIndex == -1 && !HasRandomHero(i)
+                    && !HasNonRandomHero(i))
+                noHero = 1;
             pThisPlayer->startBonusIndex =
                 (pThisPlayer->startBonusIndex + 1) % 4;
             if (pThisPlayer->startBonusIndex == 0 && noHero)
