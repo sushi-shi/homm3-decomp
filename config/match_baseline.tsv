@@ -122,7 +122,7 @@ advmgr	?SaveGame@@YIEE@Z	100.0000	100.0000	100.0000	0x18160	82f9544efca0
 advmgr	?ScanForHeroOrBoat@advManager@@QAE_NHHHGAAY05UTDrawParts@@@Z	100.0000	100.0000	100.0000	0xfb30	bf12f53ebccb
 advmgr	?ScreenScroll@advManager@@QAEXHH@Z	97.8177	97.8177	97.8177	0x195c0	101924e85d7a
 advmgr	?SeedTo@advManager@@QAEXUtype_point@@@Z	100.0000	100.0000	100.0000	0x194a0	4e87ce523fb9
-advmgr	?SetEnvironmentOrigin@advManager@@QAEXUtype_point@@H@Z	63.9403	63.9403	63.9403	0x183d0	46a7f4d86752
+advmgr	?SetEnvironmentOrigin@advManager@@QAEXUtype_point@@H@Z	75.4080	75.4080	75.4080	0x183d0	31adb9c926f0
 advmgr	?SetHeroContext@advManager@@QAEXHHEE@Z	99.2746	99.2746	99.2746	0x17b20	67bd9ddfde14
 advmgr	?SetInitialMapOrigin@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19990	d4815376fb68
 advmgr	?SetRolloverText@advManager@@QAEXPAVNewmapCell@@HH@Z	93.9598	93.9598	93.9598	0xb150	eb4d9abd46d1
