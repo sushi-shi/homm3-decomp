@@ -20,8 +20,12 @@
 // nothing but a rename.
 #include <va.h>
 
+#include <fstream>
+#include <string>
+
 #include "forcefeedback.h"
 #include "imm_mouse.h"
+#include "resourcemanager.h"
 
 // .bss 0x696d60..0x696d90. The map is constructed by retail's own cinit
 // at 0x4b61b0 (excluded class, never claimed as source); its `_Nil` and
@@ -40,6 +44,64 @@ DATA(0x00696d88) CImmCompoundEffect* gImmEffect;
 // the rest of this compiland, in the advmgr..advspells gap, which is
 // ordinary COMDAT placement; the vftable reference is what owns it.
 VA_COMPGEN(0x0041bed0, 0x21, SCALAR_DELETING_DTOR, t_create_failure)
+
+// The Immersion layer's whole bring-up, and ONE function: the carve split
+// it into three entries plus a two-byte hole, which config/
+// retail-functions.tsv now merges (see its 2026-09-05 note). Retail's
+// `catch (...)` funclet sits INSIDE the emitted body, between the try's
+// `jmp` past it and the continuation the funclet returns the address of.
+//
+// Retail's own class name is `t_initializer`, in ForceFeedback.cpp's
+// unnamed namespace - see imm_mouse.h, where the role name and the nested
+// throw type are documented.
+VA(0x004b6260, 0x462)  // anchor-import (CImmMouse::Initialize) + anchor-rtti, retail-only
+TImmMouseRuntime::TImmMouseRuntime(void* hInst, void* hwnd)
+{
+    gImmWindow = static_cast<HWND>(hwnd);
+    gImmWindowX = 0;
+    gImmWindowY = 0;
+    ClientToScreen(static_cast<HWND>(hwnd),
+                   static_cast<POINT*>(static_cast<void*>(&gImmWindowX)));
+    CIFCErrors::m_dwErrHandlingFlags = 1;
+
+    std::auto_ptr<CImmMouse> mouse(new CImmMouse);
+    if (!mouse->Initialize(hInst, hwnd, 4))
+        throw t_initialize_failure();
+
+    std::auto_ptr<char> project;
+    try {
+        std::filebuf file;
+        if (file.open((std::string("data\\") + "H3Shad.ifr").c_str(),
+                      std::ios_base::in | std::ios_base::binary) == 0)
+            throw t_initialize_failure();
+        int size = file.pubseekoff(0, std::ios_base::end);
+        file.pubseekoff(0, std::ios_base::beg);
+        project = std::auto_ptr<char>(new char[size]);
+        file.sgetn(project.get(), size);
+    } catch (...) {
+        LODFile* resource = ResourceManager::PointToBitmapResource("H3Shad.ifr");
+        if (resource == 0)
+            throw t_initialize_failure();
+        int size = ResourceManager::GetBitmapResourceSize("H3Shad.ifr");
+        project = std::auto_ptr<char>(new char[size]);
+        ResourceManager::ReadFromBitmapResource(resource, project.get(), size);
+    }
+
+    std::auto_ptr<CImmProject> immProject(new CImmProject);
+    if (!immProject->LoadProjectFromMemory(project.get(), mouse.get()))
+        throw t_initialize_failure();
+    gImmDevice = mouse.release();
+    gImmProject = immProject.release();
+}
+
+// COMDAT pairings the constructor above forces out: the throw type's own
+// scalar deleting destructor and the copy constructor `throw` needs
+// (CatchableType 0x64cc68 names the latter at exactly this address), and
+// the client-side `??_G` for the dllimported CImmMouse - slot 0 of the
+// vftable at 0x63e618, the same shape as CImmEnclosure's at 0x4b6c30.
+VA_COMPGEN(0x004b66d0, 0x21, SCALAR_DELETING_DTOR, t_initialize_failure)
+VA_COMPGEN(0x004b6700, 0x22, SCALAR_DELETING_DTOR, CImmMouse)
+VA_COMPGEN(0x004b6730, 0x157, IMPLICIT_COPY_CTOR, t_initialize_failure)
 
 // The combat-spell rumble. Destroys whatever effect is still loaded,
 // creates the named one against the default device and starts it for

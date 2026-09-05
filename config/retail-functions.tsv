@@ -115,6 +115,20 @@
 # 0xd5000), which are byte-exact in game.cpp at that size. Rows corrected:
 # 0x4410, 0x1b410, 0x346d0, 0x34ad0, 0x4d400, 0x8d9a0, 0x8da70, 0x8edf0,
 # 0x116e40, 0x117680. Row count unchanged.
+# BOUNDARY CORRECTION 2026-09-05: ForceFeedback.obj's t_initializer
+# constructor at 0xb6260 is ONE 1122-byte EH-bearing function through
+# 0xb66c1. The carve split it into three entries plus a two-byte hole:
+# 0xb6260 (747 B) ends on the `e9 b0 00 00 00` at 0xb6545, a `jmp 0xb65fb`
+# that skips the piece the carve called 0xb654b; that piece is the
+# function's own `catch (...)` funclet - it runs on the parent's EBP frame,
+# reads the parent's auto_ptr at [ebp-0x14]/[ebp-0x18], and ends `mov eax,
+# 0xb65f9 / ret`, i.e. it RETURNS the continuation address 0xb65f9 rather
+# than returning to a caller; the two unowned bytes at 0xb65f9 are the
+# `33 db` (xor ebx,ebx) that continuation lands on, and 0xb65fb (199 B) is
+# the rest of the constructor, ending on the `ret 8` at 0xb66bf that
+# 0xb6260's own `sub esp,0x108` prologue set up. 747+174+2+199 = 1122 and
+# 0xb6260+1122 = 0xb66c2, where fourteen bytes of alignment run to the next
+# carved entry at 0xb66d0. Row count 11959 -> 11957.
 rva	size
 0x1000	89
 0x1060	96
@@ -2330,9 +2344,7 @@ rva	size
 0xb6190	32
 0xb61b0	39
 0xb61f0	110
-0xb6260	747
-0xb654b	174
-0xb65fb	199
+0xb6260	1122
 0xb66d0	33
 0xb6700	34
 0xb6730	343
