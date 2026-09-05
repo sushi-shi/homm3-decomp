@@ -1099,12 +1099,19 @@ inline void ShowCredits()
 // iterated. Any boundary retail expands is an explicit VC6 inline problem,
 // not permission to flatten the recovered source shape by hand.
 // Residual (73.05%): three regions, all measured 2026-09-05.
-//  - The NEW_GAME arm's threaded copy of the setup block CALLS
-//    ShowProgressBar/IncProgressBar in retail and EXPANDS them here,
-//    which costs ~120 B and shifts three blocks. The later copy and the
-//    campaign-map arm expand them on both sides, so this is a per-site
-//    /Ob2 split our single source site cannot express; a statement pin
-//    is the known lever and is out of scope for this lane.
+//  - The first ShowProgressBar/IncProgressBar pair in the emitted body is
+//    NOT a threaded copy of the block below: it is DoNewGame's own
+//    TUTORIAL_ID arm (kb.cpp:1700), a separate source site that /Ob2
+//    prices against DoNewGame's budget rather than oldmain's. Retail
+//    CALLS both there and EXPANDS them at oldmain's own setup site and in
+//    the campaign-map arm; we expand at all three, which costs ~120 B and
+//    shifts three blocks, and every block index after it reads as
+//    divergent for that reason alone. All four progress-bar bodies are
+//    EXACT, so their front-end cost estimates match retail's - the
+//    difference is how much of DoNewGame's budget the sites AHEAD of the
+//    TUTORIAL arm consume, and those sites are the ones the existing
+//    inline_depth(0) boundaries hold out of line. Not reachable without
+//    re-pricing those pins.
 //  - Two customcampaign.obj SCampaign members (0x489820, 1536 B, and
 //    0x48a2a0, 112 B) run over the end-of-game CampaignHeaderStruct
 //    between Load and SaveGame(1). Both carve rows are unclaimed and no
