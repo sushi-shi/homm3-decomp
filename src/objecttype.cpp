@@ -45,7 +45,17 @@ VA_COMPGEN(0x00514060, 0xCA, CLASS_CTOR, TObjectImageNameTable)
 // The tail RE-READS the cache's _First between every member of the copy,
 // because `this` may alias the vector's storage - that is the plain
 // assignment, not a hoisting failure.
-// Residual (33.86%): three /Ob2 over-inlines and nothing else. Retail
+// The registry row append is `rows.insert(rows.end(), found)` and the .msk
+// cache append is `imageCache.push_back(newRecord)` - the two spellings are
+// NOT interchangeable and they interact: rows-insert + cache-push_back is
+// 42.6324, both push_back 33.8620 (the state this replaces), both insert
+// 34.1581, and rows-push_back + cache-insert 29.9091. VC6 prices an /Ob2
+// site at the callee's own front-end size, so `insert(end(), x)` charges
+// vector::insert at the site while `push_back(x)` charges a free wrapper
+// and prices the nested insert at budget/sites-remaining; which of the two
+// reproduces retail depends on how much budget the site has left.
+//
+// Residual (42.63%): three /Ob2 over-inlines and nothing else. Retail
 // CALLS the registry's own constructor, the pair constructor at 0x517c30
 // and basic_string::append at 0x41b340; we expand all three, and append's
 // expanded _Xlen throw path is exactly the 16 frame bytes (0x70 vs 0x60)
@@ -71,7 +81,7 @@ TObjectType& TObjectType::setImageName(
         found = imageNames.nameIndex.insert(
             TObjectImageNameTable::TNameIndex::value_type(
                 name, imageNames.rows.size())).first;
-        imageNames.rows.push_back(found);
+        imageNames.rows.insert(imageNames.rows.end(), found);
     }
     imageNumber = found->second;
 
