@@ -1440,6 +1440,96 @@ LegacyCampaignHero::LegacyCampaignHero()
 {
 }
 
+// SCampaign::Load's mirror, and the row the constructor above sits in front
+// of. Every scalar goes out through ONE stack slot, so the two buffers here
+// are what retail addresses at [ebp+8] and [ebp+0xb]. Seven leading bytes -
+// the three flags, currentCampaign, numMapRegions, crossoverArrayIndex and
+// briefingChoice all NARROWED to a byte - then the campaign filename as a
+// four-byte length plus its characters, then the 21 completion flags.
+//
+// Three counted runs follow, each with its count written first and each
+// re-reading size() across its own back edge: the map scores (completed,
+// days, score, complete_order, index - the last two narrowed), the carry-over
+// pools (a byte of hero count, hero::save per hero, then the SAME index into
+// field_4c for a two-byte artifact count and two two-byte fields per record),
+// and field_6c's two-byte placeholders. The pool loop indexes both +0x3c and
+// +0x4c off one strength-reduced byte offset because both outer vectors have
+// the same 16-byte element.
+VA(0x0048ae90, 0x370)  // link-order successor of LegacyCampaignHero's ctor; SCampaign::Load's mirror
+void SCampaign::Save(TAbstractFile* outfile)
+{
+    char char_buffer;
+    int int_buffer;
+
+    char_buffer = isCheater;
+    outfile->Write(&char_buffer, sizeof(char_buffer));
+    char_buffer = secretActive;
+    outfile->Write(&char_buffer, sizeof(char_buffer));
+    char_buffer = currentMap;
+    outfile->Write(&char_buffer, sizeof(char_buffer));
+    char_buffer = currentCampaign;
+    outfile->Write(&char_buffer, sizeof(char_buffer));
+    char_buffer = numMapRegions;
+    outfile->Write(&char_buffer, sizeof(char_buffer));
+    char_buffer = crossoverArrayIndex;
+    outfile->Write(&char_buffer, sizeof(char_buffer));
+    char_buffer = briefingChoice;
+    outfile->Write(&char_buffer, sizeof(char_buffer));
+
+    int_buffer = campaignFilename.length();
+    outfile->Write(&int_buffer, sizeof(int_buffer));
+    outfile->Write(campaignFilename.c_str(), campaignFilename.length());
+    outfile->Write(campaignCompleted, sizeof(campaignCompleted));
+
+    char_buffer = mapScores.size();
+    outfile->Write(&char_buffer, sizeof(char_buffer));
+    unsigned int scenario;
+    for (scenario = 0; scenario < mapScores.size(); ++scenario) {
+        char_buffer = mapScores[scenario].completed;
+        outfile->Write(&char_buffer, sizeof(char_buffer));
+        int_buffer = mapScores[scenario].days;
+        outfile->Write(&int_buffer, sizeof(int_buffer));
+        int_buffer = mapScores[scenario].score;
+        outfile->Write(&int_buffer, sizeof(int_buffer));
+        char_buffer = mapScores[scenario].complete_order;
+        outfile->Write(&char_buffer, sizeof(char_buffer));
+        char_buffer = mapScores[scenario].index;
+        outfile->Write(&char_buffer, sizeof(char_buffer));
+    }
+
+    char_buffer = carryOverHeroes.size();
+    outfile->Write(&char_buffer, sizeof(char_buffer));
+    unsigned int pool;
+    for (pool = 0; pool < carryOverHeroes.size(); ++pool) {
+        char_buffer = carryOverHeroes[pool].size();
+        outfile->Write(&char_buffer, sizeof(char_buffer));
+
+        unsigned int whichHero;
+        for (whichHero = 0; whichHero < carryOverHeroes[pool].size();
+             ++whichHero)
+            carryOverHeroes[pool][whichHero].save(outfile);
+
+        int_buffer = field_4c[pool].size();
+        outfile->Write(&int_buffer, 2);
+        unsigned int whichArtifact;
+        for (whichArtifact = 0; whichArtifact < field_4c[pool].size();
+             ++whichArtifact) {
+            int_buffer = field_4c[pool][whichArtifact].artifactId;
+            outfile->Write(&int_buffer, 2);
+            int_buffer = field_4c[pool][whichArtifact].extra;
+            outfile->Write(&int_buffer, 2);
+        }
+    }
+
+    char_buffer = field_6c.size();
+    outfile->Write(&char_buffer, sizeof(char_buffer));
+    unsigned int placeholder;
+    for (placeholder = 0; placeholder < field_6c.size(); ++placeholder) {
+        int_buffer = field_6c[placeholder];
+        outfile->Write(&int_buffer, 2);
+    }
+}
+
 // SCampaign::Load's retained Dinkumware helper cluster.  The element and
 // nested-element types are independently fixed by the +0x5c/+0x3c/+0x4c
 // member layouts and by the caller's 0x14/0x492/0x10/8-byte strides.
