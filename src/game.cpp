@@ -18684,3 +18684,24 @@ VA_COMPGEN(0x004b74a0, 0x50F, TREE_ERASE_ITERATOR, CImmEnclosure)
 // emits only the copy; the COMDAT itself is identical wherever it appears,
 // which is why /OPT:ICF left one retail copy for the whole link.
 VA_COMPGEN(0x00487bd0, 0x160, CLASS_CTOR, out_of_range)
+
+// COMDAT pairing: the rest of map<CImmEnclosure*, RECT>'s out-of-line tree
+// surface, reached from the TImmMouseEffect destructor above. _Lbound and
+// _Ubound are the same 73 bytes and differ only in which way round they
+// compare, which is exactly how <xtree> writes them and is decisive here:
+// 0x4b7d50 is `cmp [node+0xc], key / jae` = `key_compare(_Key(_X), _Kv)`,
+// _Lbound's polarity, and 0x4b7e70 is `cmp key, [node+0xc] / jae` =
+// `key_compare(_Kv, _Key(_X))`, _Ubound's. The call graph corroborates both
+// independently: 0x4b7d50 has exactly one caller, the out-of-line lower_bound
+// at 0x4b79b0, while 0x4b7e70 is called straight from the destructor, which
+// is where upper_bound is expanded. _Erase is erase(iterator, iterator)'s
+// whole-tree arm.
+//
+// NOT claimed here: 0x4b6f60, the 190-byte map<int, type_map_hero_info>
+// constructor this unit also emits. The name is already proven at 0x45bf70 in
+// campaignbrief, so retail carries two un-folded copies of one COMDAT and only
+// the first can hold the label; a second claim is refused as a duplicate
+// proven name, which is the delinker working correctly.
+VA_COMPGEN(0x004b79d0, 0x7E, TREE_ERASE, CImmEnclosure)
+VA_COMPGEN(0x004b7d50, 0x49, TREE_LBOUND, CImmEnclosure)
+VA_COMPGEN(0x004b7e70, 0x49, TREE_UBOUND, CImmEnclosure)
