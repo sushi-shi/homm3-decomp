@@ -157,11 +157,8 @@ void DeleteAnimHeaders();      // 0x598440
 // EarlySetup walks the third directory with exactly that stride and
 // _strcmpi's the member name at offset 0 against two .smk literals, which
 // is what fixes the name field's position and the whole extent. The
-// trailing dword is whatever LoadAnimHeaders' own reader puts there.
-struct VideoHeaderStruct {
-    char name[40];
-    int field_28;
-};
+// trailing dword is whatever LoadAnimHeaders' own reader puts there (the
+// record itself is defined once, above, next to SoundHeaderStruct).
 SIZE(VideoHeaderStruct, 0x2c);
 
 // smackmgr.cpp owns the DATA claims on the three directory pointers; this
