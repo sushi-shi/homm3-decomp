@@ -158,6 +158,18 @@ class VectorOwnerTest(unittest.TestCase):
     def test_a_non_vector_name_has_no_element(self):
         self.assertIsNone(source._vector_owner("??0NewSMapHeader@@QAE@XZ"))
 
+    def test_the_default_ctor_closure_arm_still_resolves(self):
+        # regression: `??_F` read one of the locals the extraction moved,
+        # and the NameError only fired once a delink reached a vector
+        # `default constructor closure' - not on any build
+        self.assertEqual(
+            source._demangle_key(
+                "??_F?$vector@VCObjectType@@V?$allocator@VCObjectType@@"
+                "@std@@@std@@QAEXXZ"),
+            "cobjecttype@fctor")
+        self.assertEqual(source._demangle_key("??_FTFoo@@QAEXXZ"),
+                         "tfoo@fctor")
+
     def test_the_kind_is_registered_both_sides(self):
         self.assertIn("VECTOR_COPY_CTOR", source.COMPGEN_KINDS)
         self.assertIn("VECTOR_COPY_CTOR", DIRECT_SYMBOL_COMPGEN_KINDS)
