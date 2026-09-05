@@ -2935,6 +2935,12 @@ char* std::__copy(char* __first, char* __last, char* __result, std::random_acces
 
 #endif  // @carcass
 
+// UNCLAIMED IN SPAN: 0x404690 (75 B) and events' 0x4ad0e0 (74 B) both
+// score high against ??1?$basic_string@D...@QAE@XZ (0.898 / 0.957), but
+// only ONE retail row can carry that name - the linker selects a single
+// copy of the COMDAT - and neither size is close to the 62 bytes our
+// compile emits. Left unclaimed rather than banked on a guess.
+
 // COMDAT pairing: basic_string<char>::_Eos, 20 B against this compiland's
 // single 20-byte COMDAT.
 #if 0  // @carcass: Dinkumware instantiations emitted by this compiland

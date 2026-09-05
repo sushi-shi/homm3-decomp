@@ -779,6 +779,11 @@ std::string TCampaignBrief::CampaignHeaderStruct::GetCampaignDescription() const
 // generated members.  Their ownership is fixed by the called sub-object
 // offsets and by the matching constructor/destructor call streams.
 VA_COMPGEN(0x0045a7a0, 0x1A3, CLASS_CTOR, NewSMapHeader)
+// The nested slot record's own default constructor, between
+// NewSMapHeader's and CMapHeaderData's in retail's COMDAT order where the
+// DC roster puts it first (dc 0x5ac3c, 68 B against 63). Its destructor is
+// already claimed at 0x45ab80.
+VA_COMPGEN(0x0045a950, 0x3F, CLASS_CTOR, TPlayerSlotAttributes)
 VA_COMPGEN(0x0045a990, 0x119, CLASS_CTOR, CMapHeaderData)
 VA_COMPGEN(0x0045aab0, 0xCC, IMPLICIT_DTOR, CMapHeaderData)
 // The owner token has to be the class the DEMANGLER produces from the
@@ -856,6 +861,12 @@ VA_COMPGEN(0x0045c030, 0x3B, VECTOR_DTOR, CampaignScenarioPreview)
 // push_back on the layout-proven 0x4d4-byte preview retains Dinkumware's
 // three-argument vector::insert specialization in campaignbrief.obj.
 VA_COMPGEN(0x0045c960, 0x3AD, VECTOR_INSERT, CampaignScenarioPreview)
+
+// The slot record's compiler-generated copy assignment, 0.890 mnemonic
+// agreement against campaignbrief.obj's 774-byte
+// ??4TPlayerSlotAttributes@CMapHeaderData@@ and the only member of its
+// authority group.
+VA_COMPGEN(0x0045cf70, 0x2BE, IMPLICIT_COPY_ASSIGN, TPlayerSlotAttributes)
 
 VA_COMPGEN(0x0045d270, 0xFF, TREE_COPY_NODE, type_map_hero_info)
 
@@ -1381,7 +1392,19 @@ unsigned char& std::basic_string<char>::_Refcnt(const char* s)
     // @stub
 }
 
-VA(0x0045dc90, 0xF)  // COMDAT pairing (unique 15 B in this obj)
+
+#endif  // @carcass
+
+// The slot record's compiler-generated COPY constructor, 0.850 against the
+// 583-byte ??0TPlayerSlotAttributes@CMapHeaderData@@QAE@ABV01@@Z. It
+// shares one authority key with the default constructor claimed at
+// 0x45a950, so the two join as a pair in RVA order against the object's
+// COFF order.
+VA_COMPGEN(0x0045da70, 0x21B, IMPLICIT_COPY_CTOR, TPlayerSlotAttributes)
+
+#if 0  // @carcass: Dinkumware instantiations emitted by this compiland
+
+VA(0x0045dc90, 0xF)  // COMDAT pairing (unique 15 B in this obj)VA(0x0045dc90, 0xF)  // COMDAT pairing (unique 15 B in this obj)
 void std::char_traits<char>::assign(char& to, const char& from)
 {
     // @stub

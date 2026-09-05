@@ -408,6 +408,7 @@ ai_tactical	??0type_AI_combat_parameters@@QAE@PBVcombatManager@@J@Z	100.0000	100
 ai_tactical	??0type_AI_spellcaster@@QAE@PAVcombatManager@@JE@Z	93.1850	93.1850	93.1850	0x369c0	73ed279b1210
 ai_tactical	??0type_spell_choice@@QAE@HW4TSkillMastery@@JJ@Z	100.0000	100.0000	100.0000	0x36980	49837083c201
 ai_tactical	??0type_spell_choice@@QAE@XZ	100.0000	100.0000	100.0000	0x36950	319d38fce9cc
+ai_tactical	??1army@@QAE@XZ	85.6629	85.6629	85.6629	0x3d400	af6cf572ce37
 ai_tactical	??1type_AI_spellcaster@@UAE@XZ	100.0000	100.0000	100.0000	0x36c30	8ad7b71cf335
 ai_tactical	??_Gtype_AI_spellcaster@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x36bf0	-
 ai_tactical	?AI_get_attack_damage@@YIJPBVarmy@@J0EJ@Z	100.0000	100.0000	100.0000	0x35980	ba80b853e792
@@ -549,6 +550,7 @@ army	?do_multi_head_attack@army@@QAEXIPAH0PAJ@Z	100.0000	100.0000	100.0000	0x403
 army	?do_post_attack@army@@AAEXPAV1@HHH@Z	88.0894	96.6787	96.6787	0x40bc0	5fc8b1f80afa
 army	?enemy_is_adjacent@army@@QBEEPBV1@@Z	100.0000	100.0000	100.0000	0x429f0	5c407b318f30
 army	?erase@?$deque@HV?$allocator@H@std@@@std@@QAE?AViterator@12@V312@0@Z	100.0000	100.0000	100.0000	0x48db0	-
+army	?erase@?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@QAEPAPAVarmy@@PAPAV3@@Z	100.0000	100.0000	100.0000	0x48d30	-
 army	?erase_item@@YIXAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@PBVarmy@@@Z	100.0000	100.0000	100.0000	0x3ea00	e270b0800799
 army	?get_AI_target_time@army@@QBEJJ@Z	100.0000	100.0000	100.0000	0x48bd0	29a8f7e0d2f3
 army	?get_adjusted_attack@army@@QBEJPBV1@E@Z	100.0000	100.0000	100.0000	0x42410	c2188dea6f59
@@ -793,6 +795,8 @@ campaignbrief	??0LossConditionStruct@@QAE@XZ	100.0000	100.0000	100.0000	0x5bac0	
 campaignbrief	??0NewSMapHeader@@QAE@XZ	99.8438	99.8438	99.8438	0x5a7a0	-
 campaignbrief	??0SGameSetupOptions@@QAE@XZ	100.0000	100.0000	100.0000	0x5ac20	-
 campaignbrief	??0TCampaignBrief@@QAE@EE@Z	85.7655	85.7661	85.7661	0x590c0	37242c776407
+campaignbrief	??0TPlayerSlotAttributes@CMapHeaderData@@QAE@ABV01@@Z	90.8281	90.8281	90.8281	0x5da70	-
+campaignbrief	??0TPlayerSlotAttributes@CMapHeaderData@@QAE@XZ	65.9200	65.9200	65.9200	0x5a950	-
 campaignbrief	??1?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x5b140	-
 campaignbrief	??1?$vector@UCampaignScenarioPreview@@V?$allocator@UCampaignScenarioPreview@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x5c030	-
 campaignbrief	??1CMapHeaderData@@QAE@XZ	100.0000	100.0000	100.0000	0x5aab0	-
@@ -802,6 +806,7 @@ campaignbrief	??1TCampaignBrief@@UAE@XZ	100.0000	100.0000	100.0000	0x5afb0	d4c0d
 campaignbrief	??1TPlayerSlotAttributes@CMapHeaderData@@QAE@XZ	100.0000	100.0000	100.0000	0x5ab80	-
 campaignbrief	??4?$vector@Utype_map_hero_identity@@V?$allocator@Utype_map_hero_identity@@@std@@@std@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	0x5bcd0	-
 campaignbrief	??4CMapHeaderData@@QAEAAV0@ABV0@@Z	57.2794	57.2794	57.2794	0x57cb0	-
+campaignbrief	??4TPlayerSlotAttributes@CMapHeaderData@@QAEAAV01@ABV01@@Z	88.0375	88.0375	88.0375	0x5cf70	-
 campaignbrief	??4type_map_hero_identity@@QAEAAU0@ABU0@@Z	100.0000	100.0000	100.0000	0x5d8e0	-
 campaignbrief	??_GTCampaignBrief@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x5ae40	-
 campaignbrief	?AddBonusIcons@TCampaignBrief@@QAEXXZ	98.8391	98.8391	98.8391	0x58120	6d10bdbfa83c
