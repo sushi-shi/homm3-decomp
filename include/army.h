@@ -359,6 +359,22 @@ public:
     // 0x78 is sMonInfo + 4, TCreatureTypeTraits::level. The embedded
     // record is not modelled as such yet; that is a layout change for
     // the whole army run.
+    // PRICED 2026-09-05: the retail bytes now settle both the extent and
+    // the worth. army's compiler-generated copy constructor (0x437a00,
+    // ai_tactical.obj) copies this band with ONE `rep movsd` of 0x1d
+    // dwords at fn+0xe7 - 116 bytes, exactly sizeof(TCreatureTypeTraits),
+    // running from +0x74 to +0xe8 - where the nineteen slices below give
+    // nineteen load/store pairs. That single difference is most of the
+    // row's 48.92% and 912 recoverable bytes, and it is the first byte-
+    // level divergence in the whole body (the preceding 0xe7 bytes are
+    // exact). MEASURED AND REJECTED as a shortcut: wrapping the band in an
+    // anonymous union `{ int sMonInfoRow[29]; struct { <the slices> }; }`
+    // - VC6 memberwise-copies BOTH union alternatives, emitting retail's
+    // `rep movsd` AND then all nineteen pairs, 48.92 -> 26.47. The real
+    // fix is a named POD sub-struct member, which renames every consumer;
+    // `hitPoints`, `attackSkill` and `defenseSkill` collide with the
+    // identically-named fields in armygrp.h and hero.h, so the rename is
+    // not mechanical and spans ~15 TUs. It belongs to a dedicated lane.
     int monInfoTownType;          // +0x74 == sMonInfo.townType
     int monInfoLevel;             // +0x78 == sMonInfo.level
     // TCreatureTypeTraits::cSamplePrefix (+0x8 of the row), byte-proven

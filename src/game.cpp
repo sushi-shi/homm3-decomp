@@ -535,6 +535,16 @@ const int PUZZLE_PLACEABLE_PIECES = 47;
 const int RETAIL_CREATURE_GENERATOR_2 = 18;
 const int RETAIL_CREATURE_GENERATOR_3 = 19;
 
+// RandomizeEvents residual (87.01%): retail emits a SEPARATE jump-table arm
+// for BLACK_BOX_RANDOM_RELIC (0x4c19d1) where our cross-jumper folds it onto
+// the WARRIOR_TOMB if-chain's identical `push 0x10` block, and it keeps BOTH
+// SetWagon overloads out of line where we expand the two-argument one.
+// Measured and rejected: reordering the black-box arms so RELIC comes second
+// (-0.20); pinning the two-argument SetWagon (-1.51, a knock-on re-price);
+// routing REFUGEE_CAMP's GetRandomMonster through gpGame as retail does at
+// 0x4c1652 (-0.14, so the reload is right and something downstream pays for
+// it); narrowing RandomizeShrine's bitset pin to the subscript alone so the
+// ctor expands onto retail's `_Tidy` call (-0.50).
 // Random-map placeholder domains recovered from RandomizeEvents' retail
 // switch. They are source-local because no cross-TU enum identity survives.
 const int BLACK_BOX_RANDOM_ANY = 1;
@@ -6265,9 +6275,11 @@ void game::RandomizeEvents()
                         id = 8;
                     else
                         id = 16;
+                    // 0x4c1b01 loads gpGame for this call where the
+                    // if-chain feeding `id` just above keeps `this`.
                     tempCell->extraInfo =
                         (tempCell->extraInfo & 0xff80001f) | 1
-                        | ((GetRandomArtifactId(id) & 0x3ff) << 13);
+                        | ((gpGame->GetRandomArtifactId(id) & 0x3ff) << 13);
                     break;
 
                 case WATER_WHEEL:
@@ -6460,6 +6472,13 @@ __forceinline TMapPlayerHeroResizeValue::~TMapPlayerHeroResizeValue()
 // layer keeps operator[] and test expanded but leaves `_Xran` as the call
 // retail makes. Rumour failure uses a return-site depth pin so both failed
 // string reads share one out-of-line destructor and one retail-shaped exit.
+// Residual (70.70%): the field_4e658 read loop expands bitset<28>::_Xran
+// where retail CALLS it (0x4c2927), and the expanded out_of_range +
+// message string are the whole 0x18-byte frame surplus ([ebp-0x9c] and
+// [ebp-0x40]). Retail's shape is `test`'s body inlined with _Xran out of
+// line, which is a depth-2 A9 decision. Measured and rejected: a statement
+// pin on that read (-0.80, it takes the whole expansion out of line);
+// spelling it `serializedSkillCopy.test(skill)` (70.70 -> 20.20).
 VA(0x004c2450, 0x88E)  // sole NewMap caller + full stream/callee sequence
 bool game::LoadMap(TAbstractFile* mapFile)
 {
@@ -6529,10 +6548,9 @@ bool game::LoadMap(TAbstractFile* mapFile)
                      & (1 << (legacyBit & 7))) != 0;
 #pragma inline_depth()
             }
-            std::bitset<129> serializedCopy = serializedArtifacts;
             for (unsigned int copyBit = 0; copyBit < 129; ++copyBit) {
 #pragma inline_depth(0)
-                disabledArtifacts[copyBit] = serializedCopy[copyBit];
+                disabledArtifacts[copyBit] = serializedArtifacts[copyBit];
 #pragma inline_depth()
             }
         }
