@@ -9196,3 +9196,18 @@ void std::__pop_heap_aux(long* __first, long* __last, long* __formal)
 
 
 #endif  // @carcass
+
+// COMDAT pairing: vector<type_creature_source>::size, agreement 1.000.
+VA_COMPGEN(0x00434600, 0x20, VECTOR_SIZE, type_creature_source)
+
+// COMDAT pairing: vector<type_creature_source>::erase, agreement 0.959 and the
+// highest operand-level agreement in the whole sweep (0.904).
+VA_COMPGEN(0x00434680, 0x4D, VECTOR_ERASE, type_creature_source)
+
+// COMDAT pairing: vector<HeroDestination>::_Ucopy, agreement 0.941; the
+// type_creature_source and pathCell arms score 0.806 and 0.523 at operand level.
+VA_COMPGEN(0x00434ba0, 0x43, VECTOR_UCOPY, HeroDestination)
+
+// COMDAT pairing: vector<pathCell>::_Ucopy, agreement 0.952; the
+// type_creature_source arm scores 0.531 at operand level.
+VA_COMPGEN(0x00434bf0, 0x3D, VECTOR_UCOPY, pathCell)

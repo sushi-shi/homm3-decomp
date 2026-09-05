@@ -4256,3 +4256,7 @@ void std::__pop_heap_aux(army** __first, army** __last, army** __formal, func_mo
 }
 
 #endif  // @carcass
+
+// COMDAT pairing: vector<army*>::insert, agreement 0.985
+// (230 base vs 223 retail instructions).
+VA_COMPGEN(0x00423130, 0x209, VECTOR_INSERT, army)
