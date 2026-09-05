@@ -267,6 +267,18 @@ struct TObjectType {
     // NAME follows the role; nothing attests it.
     const std::basic_string<char, std::char_traits<char>,
                             std::allocator<char> >& GetImageName();
+
+    // Retail 0x514610 and 0x514a60, both in the same Complete-only
+    // compiland and both returning *this - the per-row `>>` at 0x514b80
+    // chains them off each other's result. setImageName resolves the
+    // record's name through the image-name registry into `imageNumber`
+    // (and, on a miss, loads the row's .msk to append one); setTriggerMask
+    // stores `mask & ~passableMask`, sets `hasTrigger` from its any(), and
+    // scans the 8x6 grid for the first set cell. NAMES ARE PROVISIONAL.
+    TObjectType& setImageName(
+        const std::basic_string<char, std::char_traits<char>,
+                                std::allocator<char> >& name);
+    TObjectType& setTriggerMask(const std::bitset<48>& mask);
 };
 SIZE(TObjectType, 0x4c);
 
