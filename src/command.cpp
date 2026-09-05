@@ -813,6 +813,33 @@ unsigned char combatManager::is_computer_action(const army* current_army)
 // command.obj order slot immediately after is_computer_action, both direct
 // calls from Main, the reference-parameter decorated ABI, and the obstacle
 // diagnostic literal in Dreamcast's line-1348 statement group.
+// CENSUS 2026-09-05 (93.0970): the two cross-jumped arms are NAMED, and the
+// whole residual reduces to ONE cause upstream of them.
+// Positional alignment of the two call streams pairs our six `IsHuman` arms
+// against retail's four.  Ours sit after ViewSpells+InitiateSpell (+0x224),
+// after the first NormalDialog (+0x2c0), after the second NormalDialog
+// (+0x48a), after SetupGridForArmy+DrawFrame twice (+0xd0b, +0xe82) and after
+// SetPointer+ViewArmy (+0x10ce).  Retail has the LAST FOUR of those and not
+// the first and third: at the InitiateSpell arm it emits
+// `mov ecx,[ebx+0x132c0] / mov eax,[ebx+4*ecx+0x54a8] / jmp <the first
+// NormalDialog arm's own test>` - a cross-jump into the sibling arm's tail
+// starting at that arm's `test eax,eax`.
+// WHY OURS CANNOT MERGE THERE, and it is not a spelling of the arms: retail
+// tests those zeros with `test eax,eax` while we compare against a ZERO CACHED
+// IN ESI (`cmp dword ptr [ebx+0x132b4], esi`), and we cache 1 in EDI as well
+// (`mov edi,1` at fn+0x1d, against retail's `cmp ecx,1` immediate).  The two
+// arms therefore have tails that are byte-identical to each other but carry an
+// extra live-register dependency, and C2 declines the merge.  Census: our
+// `push esi` 20 / `cmp ..,esi` 39 against retail 12 / 27.
+// AND THE CONSTANT CACHE IS ITSELF DOWNSTREAM OF THE FRAME.  Retail reserves
+// 0x60 and we reserve 0x4c - FIVE dwords of named locals we do not have (it
+// also writes `mov dword ptr [ebp+8],0` and `mov dword ptr [ebp-8],0x14`, i.e.
+// it recycles the `msg` parameter home).  More named locals means more
+// register pressure, which is exactly what stops C2 parking 0 and 1 in
+// ESI/EDI for the whole body.  So the order of work here is: find the five
+// missing locals FIRST; the constant cache and both missing cross-jumps are
+// predicted to follow, and no arm-level respelling can reach them while the
+// zero is register-homed.
 VA(0x00474d80, 0x114D)  // exhaustive command order-map + callers + literal/call graph, dc 0x6c070
 int combatManager::ProcessCombatMsg(message& msg)
 {

@@ -625,6 +625,26 @@ public:
     // is what fixes the type: the retail expansion is that inline's
     // exact three-part shape (numSequences at +0x28, validSeqMask at
     // +0x2c, s at +0x1c) against the CSprite layout csprite.h proves.
+    // THE COPY CONSTRUCTOR SAYS THESE SLOTS ARE NOT RAW POINTERS
+    // (2026-09-05, and it is the next prize in this class).  With sMonInfo
+    // and sMonFrameInfo adopted, the first divergence left in the
+    // compiler-generated `army::army(const army&)` (0x437a00) is at
+    // fn+0x192: retail copies stdIcon, missileIcon and EVERY element of
+    // armySample[8] through a REFCOUNTING copy - `mov ecx,[src+off] / cmp
+    // ecx,edx / mov [dst+off],ecx / je skip / inc dword ptr [ecx+0x18]`,
+    // with an eight-iteration loop over the array and an EH state store
+    // (`mov [ebp-4],0`) across the run - i.e. these members have a class
+    // type with a copy constructor and a destructor, not `CSprite*` /
+    // `sample*`.  +0x18 is `resource::ReferenceCount`: vptr 0, Name[13]
+    // 4..16, resType +0x14, ReferenceCount +0x18.  image_height at +0x16c
+    // is copied as a plain dword in the middle of that run, which is what
+    // proves the refcount belongs to the POINTER members and not to a
+    // wrapper spanning the whole band.
+    // The Dreamcast build does NOT have it: DC type 0x1A63 is LF_POINTER
+    // to 0x17D3 and 0x1FE5 is LF_ARRAY of 32 bytes of those pointers, both
+    // plain.  So the handle class is Complete-era and no roster names it;
+    // adopting it means naming a type on retail bytes alone, which is a
+    // decision above a polish lane.  Worth roughly 600 B on the copy ctor.
     CSprite* stdIcon;             // +0x164
     // DC army.missileIcon (members.csv army@340, right between stdIcon
     // @336 = +0x164 and image_height @344 = +0x16c). attack_wall
