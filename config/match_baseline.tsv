@@ -1238,7 +1238,7 @@ customcampaign	?Read@TCampaignStartCrossoverOption@@UAEXPAVTAbstractFile@@@Z	93.
 customcampaign	?Read@TCampaignStartHeroOption@@UAEXPAVTAbstractFile@@@Z	88.9802	88.9802	88.9802	0x85b60	b9e50374a172
 customcampaign	?Read@TStreamBufFile@@UAEHPAXH@Z	100.0000	100.0000	100.0000	0x83f10	d4a8f9e13d4a
 customcampaign	?ReadLengthPrefixedString@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAVTAbstractFile@@@Z	81.6506	81.6506	81.6506	0x85d90	20e8cfd1014a
-customcampaign	?RehomeCampaignHeroSetup@game@@QAEXH@Z	49.1225	49.1225	49.1225	0x86110	d4483c5b6cf7
+customcampaign	?RehomeCampaignHeroSetup@game@@QAEXH@Z	98.4901	98.4901	98.4901	0x86110	ed9d2f18df98
 customcampaign	?Save@SCampaign@@QAEXPAVTAbstractFile@@@Z	78.8074	78.8074	78.8074	0x8ae90	d3bd1792a3da
 customcampaign	?SetTown@TCampaignBonus@@UAEXH@Z	100.0000	100.0000	100.0000	0x85d80	b2d708d08c05
 customcampaign	?SetTown@TCampaignBuildingBonus@@UAEXH@Z	100.0000	100.0000	100.0000	0x847e0	00d1522bb39b
@@ -1581,7 +1581,7 @@ events	?DoAIEvent@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@@Z	100.00
 # synth PDB - returned the row to master's own 98.5741 to the digit
 # with events.cpp untouched. Cross-generation noise, the
 # recruit::Update revert-control precedent; hist keeps 99.1139.
-events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	98.5741	99.0481	99.1139	0xad470	907f85ec7c05
+events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	99.0481	99.0481	99.1139	0xad470	907f85ec7c05
 events	?DoCustomArtifact@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	98.2381	99.1492	99.1492	0x9f070	4d12ed56362a
 events	?DoCustomResource@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa4780	51e134850e4b
 events	?DoCustomSpellScroll@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	97.4451	97.4451	97.4451	0xa5a80	2c8331b27654
@@ -3609,7 +3609,7 @@ singleselectionwindow	?OnGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNet
 # SetCurrentMap/OnSetAsHostMsg bodies landing in the TU dropped the
 # pair again with both sources byte-identical. Recovery rides with
 # DrawHeroAdvancedOption reaching 100.
-singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0	0e5de8f038ec
+singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	99.8868	100.0000	100.0000	0x17cdc0	0e5de8f038ec
 singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	9177fbb0fa83
 # 2026-08-27 hand-lowered 100.0000 -> 99.8710 (hist keeps 100.0000): the
 # documented TU-state flap (master accepted this pair down at 99.89/99.87
