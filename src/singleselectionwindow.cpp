@@ -2525,17 +2525,31 @@ void TSingleSelectionWindow::ShowWidget(int id)
     pWidget->enable(IsHost() || m_flag65);
 }
 
-#if 0  // @carcass
-
-// Complete expands the shared DC refresh with its scenario/filter/random-map
-// widget families. The sole constructor call and the retail show/enable runs
-// prove the retained boundary despite the revision-size increase.
+// Re-arm the eight lobby buttons plus the chat toggle through the
+// Dreamcast-proven ShowWidget helper, which this caller expands at every
+// site (OnSetAsHostMsg writes the same nine sites and keeps only the last
+// one out of line). The 0x82 seat is gated on the game-context feature
+// bit exactly as it is there, and the tail re-disables the chat toggle
+// when the load-game mode has no headers to show.
 // E:\gamedcs\singleselectionwindow.cpp:2821
 VA(0x0057FB90, 0x31C)  // Complete-expanded DC UpdateMainWindow, dc 0x135e80
 void TSingleSelectionWindow::UpdateMainWindow()
 {
-    // @stub
+    ShowWidget(128);
+    ShowWidget(129);
+    if (gGameContextFeatures[*gpVideoGameState].test(1))
+        ShowWidget(130);
+    ShowWidget(107);
+    ShowWidget(108);
+    ShowWidget(109);
+    ShowWidget(110);
+    ShowWidget(111);
+    ShowWidget(186);
+    if (SelectionHeaders.size() == 0 && m_flag64)
+        GetWidget(186)->enable(0);
 }
+
+#if 0  // @carcass
 
 VA(0x0057FEB0, 0x57A)  // Complete-only filter-option control builder
 void TSingleSelectionWindow::SetupFilterOptions()
