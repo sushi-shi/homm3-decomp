@@ -1218,10 +1218,25 @@ CUpdatePlayerPosMsg::CUpdatePlayerPosMsg(
 // body should flip both sites. (b) register homing downstream of that
 // and of the m_players ctor expansion (retail keeps the earlier zero in
 // EDI across the two seat-array ctor loops and homes the loop pointer in
-// [ebp-0x14]). (c) frame 0x348 vs 0x314: retail does not overlay
-// flagName on GetGameVersion's path buffer and overlays tempName on
-// temp_str (both 100 B); every scoping variant measured byte-flat (score
-// is masked to the frame), so the layout is left as written.
+// [ebp-0x14]). (c) frame: CLOSED 2026-09-06 at `sub esp,0x314`, retail's
+// exactly (93.6778 -> 95.6922), and the earlier note that read "every
+// scoping variant byte-flat, layout left as written" was looking at the
+// wrong construct. The flag-row loop indexes TWO different colour arrays,
+// not one: `AOFLGB%c.DEF` takes the uppercase local flagColors[] while
+// `adopb2%c.def` takes the LOWERCASE literal - the same "rbygopts" the
+// preload loop below already used, which retail pools once at 0x641ae0
+// and reads at all three sites (`mov eax,offset const_241ae0 / sub
+// eax,edi` here, `movsx [edi + const_241ae0]` twice in the preload loop).
+// Writing both sprintfs off the one local array made `&flagColors + i`
+// the loop's only induction variable, so VC6 had to precompute THIRTEEN
+// `K - &flagColors` biases into stack slots (0xc7 0xcf 0xd7 0xdf 0xe7
+// 0xef 0xf7 0xff 0x159 0x161 0x16a 0x172 0x17a) - exactly the 0x30 of
+// surplus frame. With two arrays the induction is retail's `edi = 263+i`
+// with every other widget id derived by `lea`, and only the two biased
+// bases (`&flagColors - 263`, `"rbygopts" - 263`) are homed. Still open
+// in the preheader: retail keeps rowY itself in EBX (`mov ebx,0x85`, then
+// `sub edx,y / sub edx,3`) where this compiler reassociates the -3 into
+// the induction (`mov ebx,0x82`).
 // Measured byte-flat: `int i` function- vs block-scoped for every loop;
 // a ternary-of-two-news for the 128 textButton (85.98, rejected); the
 // adopb2 arm order (either order 87.27 at that stage; DC order kept).
@@ -1493,7 +1508,7 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
                 font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED,
                 0, 8));
 
-            sprintf(temp_str, "adopb2%c.def", flagColors[i]);
+            sprintf(temp_str, "adopb2%c.def", "rbygopts"[i]);
             widget* handicapButton;
             if (IsMultiPlayer()) {
                 handicapButton = new textButton(
