@@ -395,6 +395,11 @@ CNetMsg* GetRemoteData(unsigned char removeFromQueue,
 int calc_crc_long(unsigned char* buffer, int len);
 // DC remote.cpp:1411, dc 0x11ce68; retail ReceiveSaveGame keeps this
 // cleanup boundary out of line on both fatal in-game receive paths.
+// Retail .data 0x699510, remote.cpp's DATA claim. The kb.obj
+// adjudicator sets it beside gbGameOver on every terminal path, so kb
+// is a second reader and needs the declaration here rather than a
+// line-initial extern in the .cpp.
+extern int bDefeatedAllPlayers;
 void RemoteCleanup();
 void PollRemote();
 void SendChat(const char* cChat, int toWho);
