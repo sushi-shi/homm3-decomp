@@ -2252,30 +2252,9 @@ void EarlyShutDownSystem()
 
 #if 0  // @carcass
 
-// E:\gamedcs\kb.cpp:3954
-DC_ONLY(0xe3dfc, 0x4C)
-void FileError(const char* cBuf)
-{
-    // @stub
-}
-
 // E:\gamedcs\kb.cpp:3970
 DC_ONLY(0xe3e48, 0x450)
 void CongratsWait(int mode, char* rank, int iBase, int iScore, int iDayz)
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:4077
-DC_ONLY(0xe4298, 0x66)
-short game::get_base_map_score()
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:4095
-DC_ONLY(0xe4300, 0x2E)
-short game::get_map_score()
 {
     // @stub
 }
@@ -2792,6 +2771,54 @@ void std::__destroy_aux()
 }
 
 #endif  // @carcass
+
+// E:\gamedcs\kb.cpp:3954
+// The row straight after ShutDown, which is where the Dreamcast roster puts
+// FileError (76 B against retail's 77), and the body agrees: one 500-byte
+// scratch buffer, the general-text row 11 as the format, and the plain
+// one-button NormalDialog with every slot switched off.
+VA(0x004f3a60, 0x4D)  // dc-order-map (the row after ShutDown) + NormalDialog call shape, dc 0xe3dfc
+void FileError(const char* cBuf)
+{
+    char cTemp[500];
+
+    sprintf(cTemp, (*gpGeneralText)[11], cBuf);
+    NormalDialog(cTemp, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+}
+
+// E:\gamedcs\kb.cpp:4077
+// game.h's own get_current_turn expression appears here verbatim, which is
+// what identifies the row: the same three calendar words at +0x1f63e /
+// +0x1f640 / +0x1f642 in the same short-typed shape, then the two 25-point
+// bonuses and the 200-point base. Both queries go through gpGame, not `this`.
+//
+// The divisor is playerData +0x3e, which this tree models as `numTowns` on
+// town::Deallocate's byte-proven walk. It reads like a difficulty term in a
+// score formula; the offset is what retail loads either way, and nothing here
+// re-opens that identification.
+VA(0x004f3e30, 0x7A)  // dc-order-map + the get_current_turn expression, dc 0xe4298
+short game::get_base_map_score()
+{
+    short turn = get_current_turn();
+    playerData* player = gpGame->GetLocalPlayer();
+    int gamePos = gpGame->GetLocalPlayerGamePos();
+
+    return static_cast<short>((gUnnamed69950c == gamePos ? 25 : 0)
+                              - (turn + 10) / (player->numTowns + 5)
+                              + (gUnnamed69951c ? 25 : 0)
+                              + 200);
+}
+
+// E:\gamedcs\kb.cpp:4095
+// Retail EXPANDS get_base_map_score here (46 B on Dreamcast against 167
+// here), then scales by the .rdata float row the setup difficulty selects.
+// The fild/fstp/fld round trip is the `float` cast under /Op.
+VA(0x004f3eb0, 0xA7)  // dc-order-map + inlined get_base_map_score, dc 0xe4300
+short game::get_map_score()
+{
+    return static_cast<short>(static_cast<float>(get_base_map_score())
+                              * gMapScoreDifficultyFactor[setup.difficulty]);
+}
 
 // This tree still carries the spellbook id in the older combat-side enum,
 // while type_artifact's source interface correctly uses TArtifact. Preserve

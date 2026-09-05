@@ -224,7 +224,13 @@ extern bool bInShutDown;
 void EarlyShutDownSystem();
 // DC kb.cpp:3954 names the owner; retail TransmitSaveGame calls it after a
 // failed _open and independently proves the const-character-buffer ABI.
-void FileError(const char* cBuf);                        // 0x4f35f0
+// 0x4f3a60, and NOT the 0x4f35f0 this line used to carry - that byte lies
+// inside game::ShowLuckInfo's row and is not a boundary on this image.
+void FileError(const char* cBuf);                        // 0x4f3a60
+// The five .rdata score multipliers game::get_map_score indexes with
+// setup.difficulty. Owning TU not located; extern only (the gTownSizeNames
+// pattern).
+extern const float gMapScoreDifficultyFactor[];          // 0x67f558
 int HandleAppSpecificMenuCommands(int idItem);           // 0x4f4350
 void CleanUpMenus();                                     // 0x4f4b50
 int GetNextHumanPlayer(int start);                       // 0x4f4ba0

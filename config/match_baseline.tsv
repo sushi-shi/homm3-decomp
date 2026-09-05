@@ -1985,6 +1985,7 @@ kb	?DoMultiPlayerWindow@@YIHXZ	100.0000	100.0000	100.0000	0xf0590	732e54afec3c
 kb	?DoNormalDialog@@YIXUTNormalDialogInfo@@@Z	99.8554	99.8554	99.8554	0xf6990	b381947e06f8
 kb	?DoSinglePlayerWindow@@YIHXZ	99.1549	99.1549	99.1549	0xf0490	e1a6fe4ef5bb
 kb	?DrawProgressCount@@YIXXZ	100.0000	100.0000	100.0000	0xed230	a745829ef928
+kb	?FileError@@YIXPBD@Z	100.0000	100.0000	100.0000	0xf3a60	1a1fb33324ec
 kb	?GameUnsaved@@YIHXZ	100.0000	100.0000	100.0000	0xf4310	8134b9e04baa
 kb	?GetMapExtra@@YIGHHH@Z	100.0000	100.0000	100.0000	0xf79b0	d57379b3a90a
 kb	?GetMapExtraPtr@@YIPAGHHH@Z	100.0000	100.0000	100.0000	0xf79e0	bfdb3939e8b1
@@ -2007,6 +2008,8 @@ kb	?ShutDown@@YIXPBD@Z	100.0000	100.0000	100.0000	0xf3690	7882bdc1e193
 kb	?UnloadProgressBar@@YIXXZ	100.0000	100.0000	100.0000	0xed450	515a13a44eda
 kb	?WaitHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0xf7620	5f15859cbc9f
 kb	?extended_dialog@@YIXPBDAAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@std@@JJJ@Z	92.7911	92.7911	92.7911	0xf7690	094ca28af910
+kb	?get_base_map_score@game@@QAEFXZ	100.0000	100.0000	100.0000	0xf3e30	08a36f004890
+kb	?get_map_score@game@@QAEFXZ	100.0000	100.0000	100.0000	0xf3eb0	cd6028d198ab
 kb	?oldmain@@YIHXZ	29.6021	31.9630	31.9630	0xee3e0	ead764a54d4e
 kb	?set@type_dialog_icon@@QAEXW4EGameResource@@J@Z	99.1667	99.1667	99.1667	0xf4eb0	06cb359cd3d3
 kbwin	?AppAbout@@YGHPAUHWND__@@IIJ@Z	100.0000	100.0000	100.0000	0xf8140	b6d6a9ba7939
