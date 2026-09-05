@@ -2359,15 +2359,27 @@ void TSingleSelectionWindow::UpdateFilterWidgets()
         WidgetSetStatus(0x11d, 0x10);
     for (i = 0x11f; i <= 0x127; ++i)
         WidgetClearStatus(i, 0x10);
+    // Residual (95.52%): the `== -1` guard is tested TWICE in retail - after
+    // `cmp eax,-1 / jne` sets lo/hi it emits a SECOND bare `jne` on the still
+    // live flags at 0x57ef70+0xae6 before the 0x127 / +0x11e arms - so the
+    // lo/hi assignment and the widget arm are two separate ifs, not one
+    // if/else. 95.0755 -> 95.5228, branches 32/32. What is left is the
+    // _cpp_min pair: retail COPIES both operands to stack slots
+    // (`mov [ebp-0xc],eax` for field_18A0[3] and a self-store of hi onto
+    // [ebp-0x4]) and then selects between the two addresses, where we bind
+    // the member lvalue with `lea eax,[esi+0x18ac]` and never copy.
+    // MEASURED AND REJECTED, both byte-flat at 95.5228: static_cast<int> on
+    // both _cpp_min operands, and landing the result in a named `int` local.
     int lo = field_18A0[2];
     int hi = field_18A0[2];
     if (field_18A0[2] == -1) {
         lo = 1;
         hi = 8;
-        WidgetSetStatus(0x127, 0x10);
-    } else {
-        WidgetSetStatus(field_18A0[2] + 0x11e, 0x10);
     }
+    if (field_18A0[2] == -1)
+        WidgetSetStatus(0x127, 0x10);
+    else
+        WidgetSetStatus(field_18A0[2] + 0x11e, 0x10);
     for (i = 0x129; i <= 0x131; ++i)
         WidgetClearStatus(i, 0x10);
     for (i = 0x12a; i < hi + 0x129; ++i)
