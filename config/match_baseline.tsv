@@ -1090,7 +1090,7 @@ customcampaign	??0CampaignHeaderStruct@TCampaignBrief@@QAE@PBD@Z	100.0000	100.00
 customcampaign	??0LegacyCampaignHero@@QAE@XZ	100.0000	100.0000	100.0000	0x8ae30	d00745bb485b
 customcampaign	??0SCampaign@@QAE@XZ	100.0000	100.0000	100.0000	0x89500	92aa89488ce8
 customcampaign	??0hero@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x60850	-
-customcampaign	??0out_of_range@std@@QAE@ABV01@@Z	91.3692	91.3692	91.3692	0x87bd0	-
+customcampaign	??0out_of_range@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x4700	-
 customcampaign	??1CampaignHeaderStruct@TCampaignBrief@@QAE@XZ	78.5339	78.5339	78.5339	0x886a0	2c81b379a033
 customcampaign	??1ScenarioStruct@TCampaignBrief@@QAE@XZ	100.0000	100.0000	100.0000	0x85fe0	5186890e3d45
 customcampaign	??4?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	0x5ff30	-
@@ -3356,6 +3356,7 @@ slider	?SetState@slider@@UAEXH@Z	100.0000	100.0000	100.0000	0x1961e0	865d5534b3b
 slider	?UpdateResolution@slider@@UAEXH@Z	100.0000	100.0000	100.0000	0x1970b0	de523f66917e
 slider	?enable@slider@@UAEXE@Z	100.0000	100.0000	100.0000	0x197140	09ea1f3d7a32
 slider	?initialize@slider@@IAEXPBD@Z	100.0000	100.0000	100.0000	0x196050	aa3ab5eb7c34
+smackmgr	??A?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAADI@Z	100.0000	100.0000	100.0000	0x11a840	-
 smackmgr	?CloseSmacker@SmackManager@@YIXXZ	100.0000	100.0000	100.0000	0x199050	115dfa95ad79
 smackmgr	?DeleteAnimHeaders@@YIXXZ	100.0000	100.0000	100.0000	0x198440	16913871eab2
 smackmgr	?DeleteSoundHeaders@@YIXXZ	100.0000	100.0000	100.0000	0x1986e0	0a3016c080b2
@@ -3383,6 +3384,7 @@ smackmgr	?VideoResume@@YIXXZ	100.0000	100.0000	100.0000	0x197850	219da5b0d0a1
 smackmgr	?VideoShutDown@@YIXXZ	100.0000	100.0000	100.0000	0x197c70	5b5b45640a91
 smackmgr	?VideoSoundOnOff@@YIXXZ	100.0000	100.0000	100.0000	0x1971b0	535c7885a628
 smackmgr	?append@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@ID@Z	100.0000	100.0000	100.0000	0xb5f40	-
+smackmgr	?assign@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@ID@Z	100.0000	100.0000	100.0000	0x11a780	-
 soundmgr	??0soundManager@@QAE@XZ	100.0000	100.0000	100.0000	0x199760	f3dc08d924d7
 soundmgr	?AdjustMusicVolumes@soundManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19a1b0	f38726a08d0d
 soundmgr	?AdjustSoundVolumes@soundManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19a0c0	e94917bf11ef
