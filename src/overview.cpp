@@ -2780,6 +2780,17 @@ int TOverviewWindow::WindowHandler(message* msg)
 // every DC-proven local, statement group and scope while banking the best VC6
 // lowering found.
 // E:\gamedcs\overview.cpp:1528
+// Residual (96.5741%): ONE surplus instruction and one encoder tie-break.
+// Retail restores `iSlotOff` into EBX at the FOOT of the row loop
+// (`mov ebx,[ebp-0xc]` immediately before `inc edi`), so the one reload
+// serves both the next iteration's `lea ebx,[ebx+edi+0x82]` and the three
+// post-loop uses; this compile reloads it at the loop HEAD instead and then
+// needs a second reload after the loop.  The remaining row is the B18 SIB
+// tie-break, `lea ebx,[ebx+edi+0x82]` against `lea ebx,[edi+ebx+0x82]`.
+// Measured and rejected 2026-09-06, byte-flat at 96.5741: writing the
+// widget id as `iSlotOff + i + 130` instead of `i + iSlotOff + 130` - VC6
+// canonicalises the addend order exactly as it does for `&`, so the SIB
+// order is not reachable from the source operand order.
 VA(0x00522470, 0x15E)  // body/arity identified, dc 0x107668
 void UpdateBackpack(int iSlot)
 {

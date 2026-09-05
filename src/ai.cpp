@@ -120,6 +120,13 @@ inline const _TYPE& min_ref_xvalue(_TYPE _X, const _TYPE& _Y)
 // static_cast<double>, both 96.29 - VC6 then evaluates the CALL first and
 // converts afterwards; declaring the double at function scope instead of
 // in the loop body is byte-identical to declaring it in the loop.
+// Residual (99.8919%): one stack-home cycle and nothing else.  Retail puts
+// the three entry stores at [-0x10]/[-0xc]/[-0x14] and its `double` scratch at
+// [-0x8]; ours has them at [-0x8]/[-0x4]/[-0xc] with the double at [-0x14] -
+// the same overlay rotated, on an equal frame.  Measured and rejected
+// 2026-09-06, both byte-flat at 99.8919: declaring `double damage` third
+// (after `result`) and declaring it last (after `estimate`).  Declaration
+// order does not move a slot cycle; see playerData::save for the same result.
 VA(0x0041e190, 0x2A8)  // order-map(DC ai.obj head) + anchor-callee find_AI_targets, dc 0x23450
 int combatManager::ChooseBallistaTarget(int target_group, int attack_skill, int average_damage)
 {
