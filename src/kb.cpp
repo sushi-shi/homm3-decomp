@@ -820,12 +820,8 @@ void SendPlayerWon()
     // @stub
 }
 
-// E:\gamedcs\kb.cpp:2878
-DC_ONLY(0xe296c, 0x3A)
-void SendPlayerLost()
-{
-    // @stub
-}
+// E:\gamedcs\kb.cpp:2878 - reconstructed above as the inline helper
+// retail expands at every DisplayLCWinLoss arm.
 
 // E:\gamedcs\kb.cpp:2888
 DC_ONLY(0xe29a8, 0xB1A)
@@ -841,12 +837,7 @@ int GetEnemyCount()
     // @stub
 }
 
-// E:\gamedcs\kb.cpp:3440
-DC_ONLY(0xe3558, 0x228)
-unsigned char DisplayLCWinLoss(LossConditionStruct* LossCondition, int* bGameWon, int* bGameLost, unsigned char remoteCheck)
-{
-    // @stub
-}
+// E:\gamedcs\kb.cpp:3440 - promoted to a live claim (see below).
 
 // E:\gamedcs\kb.cpp:3566 - promoted to a live claim (see below).
 
@@ -2017,6 +2008,21 @@ inline void SendPlayerWon()
     }
 }
 
+// E:\gamedcs\kb.cpp:2878, SendPlayerWon's twin. Retail expands it at every
+// DisplayLCWinLoss arm; the record it builds - RS_PLAYER_LOST, 0x3c bytes,
+// the losing seat at +0x14 and the map's own loss condition assigned over a
+// default-constructed member at +0x18 - is what proves CPlayerLostMsg's
+// layout and its constructor's statement order.
+inline void SendPlayerLost()
+{
+    if (gNetworkActive69954c) {
+        CPlayerLostMsg msg(gpGame->mapHeader.lossCondition.playerLoser,
+                           gpGame->mapHeader.lossCondition);
+        TransmitRemoteData(&msg, 127, false, true);
+        gbGameOver = 1;
+    }
+}
+
 // E:\gamedcs\kb.cpp:2888. The DC line program supplies the reference ABI,
 // 256-byte sNames local, switch/source order, helper boundaries and all ten
 // RoE-era message families. Retail corroborates those facts and adds the two
@@ -2465,6 +2471,91 @@ CNetMsg::CNetMsg(eRS_Messages subType, unsigned long size)
     // @stub: the authoritative active body is in netmsg.h
 }
 #endif
+
+// E:\gamedcs\kb.cpp:3440
+// The loss-condition half of the pair, and the twin of DisplayVCWinLoss
+// above: a three-arm switch on the map's own loss condition, each arm
+// gated on the condition having actually fired and on the losing seat
+// sharing the local player's team.  The town and hero arms name what was
+// lost, the time-limit arm has a fixed row.  Every arm ends the same way -
+// the network broadcast (or the bare latch when this call is already the
+// remote echo), then the message - and the return is the pair of flags the
+// caller passed in.
+// Residual (79.05%): the emitted body is 894 B - retail's size exactly -
+// with 46 = 46 blocks and a clean branch view, so nothing is missing.
+// One inline decision cascades through the whole register allocation:
+// retail EXPANDS LossConditionStruct's default constructor inside the
+// two SendPlayerLost expansions (three byte stores sharing the -1 it
+// keeps in EBX for the dialog arguments) where our compile CALLS it and
+// therefore keeps 0 in EBX and spends immediates on the -1s. The
+// CNetMsg base constructor already agrees at all three sites - expanded
+// twice, called once against the 0x4f2930 COMDAT - so this is the
+// budget running out one level deeper, not a spelling.
+VA(0x004f2960, 0x37E)  // decorated identity (kb.h) + anchor-caller (CheckEndGame), dc 0xe3558
+unsigned char DisplayLCWinLoss(LossConditionStruct* lossCondition,
+                               int* bGameWon, int* bGameLost,
+                               unsigned char remoteCheck)
+{
+    int localPos = gpGame->GetLocalPlayerGamePos();
+
+    switch (lossCondition->Type) {
+    case LOSS_CONDITION_LOSE_TOWN:
+        if (lossCondition->GameLost
+            && gpGame->OnSameTeam(localPos, lossCondition->playerLoser)) {
+            *bGameLost = 1;
+            sprintf(gText, (*gpGeneralText)[252],
+                    gpGame->GetTown(
+                        gpGame->GetTownId(lossCondition->TownX,
+                                          lossCondition->TownY,
+                                          lossCondition->TownZ))
+                        ->cName.c_str());
+            if (remoteCheck)
+                gbGameOver = 1;
+            else
+                SendPlayerLost();
+            NormalDialog(gText, NORMAL_DIALOG_DEFAULT, -1, -1, -1, 0, -1, 0,
+                         -1, 0, -1, 0);
+        }
+        break;
+
+    case LOSS_CONDITION_LOSE_HERO:
+        if (lossCondition->GameLost
+            && gpGame->OnSameTeam(localPos, lossCondition->playerLoser)) {
+            *bGameLost = 1;
+            if (localPos == lossCondition->playerLoser) {
+                sprintf(gText, (*gpGeneralText)[254],
+                        gpGame->GetHero(lossCondition->HeroID)->name);
+            } else {
+                char* cLoserName =
+                    gpGame->GetPlayerName(lossCondition->playerLoser);
+                if (cLoserName)
+                    sprintf(gText, (*gpGeneralText)[671], cLoserName,
+                            gpGame->GetHero(lossCondition->HeroID)->name);
+            }
+            if (remoteCheck)
+                gbGameOver = 1;
+            else
+                SendPlayerLost();
+            NormalDialog(gText, NORMAL_DIALOG_DEFAULT, -1, -1, -1, 0, -1, 0,
+                         -1, 0, -1, 0);
+        }
+        break;
+
+    case LOSS_CONDITION_TIME_LIMIT:
+        if (lossCondition->GameLost) {
+            if (remoteCheck)
+                gbGameOver = 1;
+            else
+                SendPlayerLost();
+            *bGameLost = 1;
+            NormalDialog((*gpGeneralText)[255], NORMAL_DIALOG_DEFAULT, -1, -1,
+                         -1, 0, -1, 0, -1, 0, -1, 0);
+        }
+        break;
+    }
+
+    return *bGameWon || *bGameLost;
+}
 
 // The re-entry latch CheckEndGame holds while it runs; its only five
 // references in the whole image are that row's own read and four writes, so
