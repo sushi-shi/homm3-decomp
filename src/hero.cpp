@@ -7653,7 +7653,7 @@ long hero::modify_spell_damage(SpellID spell, int damage,
     value = (factor + 1.0f) * value;
     if (target_army)
         value = static_cast<float>(
-                    GetHeroSpellBonus(spell, target_army->monInfoLevel,
+                    GetHeroSpellBonus(spell, target_army->sMonInfo.level,
                                       static_cast<int>(value)))
                 + value;
     return static_cast<long>(value);
