@@ -1911,7 +1911,7 @@ gzfile	?Write@TGzFile@@UAEHPBXH@Z	100.0000	100.0000	100.0000	0xd6da0	c861271538f
 gzinflatebuf	??0TAllocationFailure@@QAE@XZ	100.0000	100.0000	100.0000	0xd6b80	92689dd90756
 gzinflatebuf	??0TDataError@TGzInflateBuf@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0xd6690	-
 gzinflatebuf	??0TDataError@TGzInflateBuf@@QAE@XZ	100.0000	100.0000	100.0000	0xd65e0	ef530792f879
-gzinflatebuf	??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z	87.7808	87.7808	87.7808	0xd6050	d94949a33ebd
+gzinflatebuf	??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z	91.5985	91.5985	91.5985	0xd6050	9b37d907d923
 gzinflatebuf	??1TGzInflateBuf@@UAE@XZ	100.0000	100.0000	100.0000	0xd6820	cc97722e33a5
 gzinflatebuf	??_GTGzInflateBuf@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xd67f0	-
 gzinflatebuf	?get_byte@TGzInflateBuf@@AAEHXZ	100.0000	100.0000	100.0000	0xd5fd0	186479b817b7
