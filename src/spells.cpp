@@ -757,6 +757,48 @@ void combatManager::Unnamed59FDE0(int x, int y, army* target)
     }
 }
 
+// Residual (92.78%, 2026-09-05, opened at 91.47): the per-arm size census
+// below is the map. Decode retail's 38-entry jump table at fn+0x2970 and
+// its 71-byte index table at fn+0x2a08, invert them onto SpellID, and
+// subtract consecutive layout offsets on both sides; the same arithmetic
+// over our own jump table gives a per-arm byte delta that localises every
+// remaining divergence to one case body.
+//   ARM ORDER IS NOT THE PROBLEM - MEASURED AND REFUTED HERE.  A standing
+//   brief said the one-sided ShowSpellMessage/DrawFrame/SpellEffect calls
+//   were a jump-table arm-order fact.  Sorting both tables by target gives
+//   the IDENTICAL arm sequence, including the shared LIGHTNING_BOLT/
+//   TITANS arm, the shared RESURRECTION/ANIMATE_DEAD and BIND/AGE arms,
+//   and the SHIELD..PARALYZE block sitting between ARMAGEDDON and STONE.
+//   Do not spend a round reordering the cases.
+// After the hero-row un-caching the prologue delta is 7 bytes (was 147).
+// What is left, in bytes of (ours - retail) per arm:
+//   FIRE_WALL +31, FORCE_FIELD +24, DESTROY_UNDEAD +21, DISPEL_HELPFUL +17
+//   DEATH_RIPPLE -27, MAGIC_ARROW -26, ACID_BREATH -20, post-switch -20,
+//   STONE -19, POISON -17, SHIELD..PARALYZE -13, BERSERK -6, BLOODLUST +6
+// Every one of those is the SAME class and it is C2's cross-jumper, not a
+// spelling: the arms' instruction streams are byte-identical and only the
+// surviving copy of a shared tail differs.  Retail keeps POISON's own
+// `SpellEffect(traits->m_effect, target, 100, N)` tail and merges BIND/AGE
+// and the SHIELD block into it (`push 0 / jmp` into POISON at +0x1781);
+// we keep DISPEL_HELPFUL's copy - the LAST in layout order - and merge all
+// three into that.  The pairing is visible in the census: POISON -17 and
+// DISPEL_HELPFUL +17 are the same seventeen bytes.  Retail runs the other
+// way round at FORCE_FIELD/FIRE_WALL, where ITS FIRE_WALL arm jumps into
+// FORCE_FIELD's ShowSpellMessage at +0x9db and we emit both.  This is the
+// merged-return / surviving-copy class docs/vc6 records for the retail CL
+// generation, and it is exactly what hero.cpp's THeroScreenWindow::
+// WindowHandler note calls "which member of the epilogue merge-set C2
+// emits in place".  No source bracketing reaches it.
+// The frame is 0x80 against retail's 0x94.  The 0x14 is a SECOND TObstacle
+// stack slot: retail gives {QUICKSAND, LAND_MINE} [-0x90] and
+// {FORCE_FIELD, FIRE_WALL} [-0x5c], we coalesce all four onto [-0x8c].
+// MEASURED AND REJECTED: hoisting FIRE_WALL's `TObstacle new_wall` out of
+// its for-body to case-block scope (so the two pairs sit at different
+// scope depths) is byte-flat AND leaves the frame at 0x80 - VC6 coalesces
+// disjoint case scopes regardless of nesting depth.
+// One real lead not yet spelled: at +0x2379 retail reads
+// `[ebx + 4*ecx + 0x54bc]` - one ELEMENT of the array - where we take
+// `lea eax,[ebx+0x54bc]` and walk it as a pointer.
 VA(0x0059fe30, 0x2A4F)  // retail largest-unadmitted row, dc 0x14f7dc
 void combatManager::CastSpell(SpellID spellId, int targetIndex,
                               int bIsMonsterSpell,
@@ -836,18 +878,24 @@ void combatManager::CastSpell(SpellID spellId, int targetIndex,
     // Complete extends that exact arm for artifact casts; retail +0x2db
     // tests the already-nonzero value against SPELL_CASTER_ARTIFACT.
     if (!bIsMonsterSpell || bIsMonsterSpell == SPELL_CASTER_ARTIFACT) {
-        int hero_row = akHeroClasses[casting_hero->heroClass].townType * 2
-            + akHeroTraits[casting_hero->id].sex;
         if (currentSide == 0)
-            castX = kCombatHeroSprites[hero_row].castX - 43;
+            castX = kCombatHeroSprites[
+                akHeroClasses[casting_hero->heroClass].townType * 2
+                + akHeroTraits[casting_hero->id].sex].castX - 43;
         else
             castX = creatureSprites[1]->GetWidth()
-                - kCombatHeroSprites[hero_row].castX + 693;
-        castY = kCombatHeroSprites[hero_row].castY - 19;
+                - kCombatHeroSprites[
+                    akHeroClasses[casting_hero->heroClass].townType * 2
+                    + akHeroTraits[casting_hero->id].sex].castX + 693;
+        castY = kCombatHeroSprites[
+            akHeroClasses[casting_hero->heroClass].townType * 2
+            + akHeroTraits[casting_hero->id].sex].castY - 19;
 
         field_53e4[currentSide] = 4;
         for (int frame = 0;
-             frame < kCombatHeroSprites[hero_row].castFrame; frame++) {
+             frame < kCombatHeroSprites[
+                 akHeroClasses[casting_hero->heroClass].townType * 2
+                 + akHeroTraits[casting_hero->id].sex].castFrame; frame++) {
             field_53ec[currentSide] = frame;
             DrawFrame(1, 1, 0, 100, 1, 1);
         }
@@ -1707,11 +1755,11 @@ landmine_done:
     // lookup as source boundaries. Retail folds GetNumFrames but preserves
     // the same completion loop, state reset, final DrawFrame, and selector
     // update in this order.
-    if (bIsMonsterSpell != SPELL_CASTER_CREATURE) {
+    if (!bIsMonsterSpell || bIsMonsterSpell == SPELL_CASTER_ARTIFACT) {
         int nframes = creatureSprites[currentSide]->GetNumFrames(4);
-        int hero_row = akHeroClasses[casting_hero->heroClass].townType * 2
-            + akHeroTraits[casting_hero->id].sex;
-        for (int frame = kCombatHeroSprites[hero_row].castFrame;
+        for (int frame = kCombatHeroSprites[
+                 akHeroClasses[casting_hero->heroClass].townType * 2
+                 + akHeroTraits[casting_hero->id].sex].castFrame;
              frame < nframes; ++frame) {
             field_53ec[currentSide] = frame;
             DrawFrame(1, 0, 0, 100, 1, 1);
