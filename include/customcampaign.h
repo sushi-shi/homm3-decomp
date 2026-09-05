@@ -90,6 +90,14 @@ struct CrossoverHeroStronger {
     bool operator()(hero& lhs, hero& rhs) const;
 };
 
+// The crossover-hero score the ordering above compares: the primary-skill
+// total plus the 28 secondary mastery bytes. Retail keeps it as a separate
+// /Gr free body at 0x483f50 (the hero arrives in ECX and it returns with a
+// bare `ret`), which the sort's own helpers CALL while the standalone
+// operator() expands it twice. Retail-only, name provisional - no Dreamcast
+// row covers it.
+int GetCrossoverHeroValue(hero* candidate);
+
 // The eight campaign start bonuses. THE HIERARCHY IS BYTE-PROVEN by the
 // bonus-list reader at 0x485190, which switches a type byte 0..7 and
 // `new`s an object of the matching vftable:

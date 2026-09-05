@@ -138,16 +138,24 @@ int TStreamBufFile::Write(const void* data, int size)
     return buffer->sputn(static_cast<const char*>(data), size);
 }
 
+// The score the ordering below compares. Retail keeps it out of line and
+// calls it from the sort's own expanded comparators, while operator() itself
+// expands it twice - the /Ob2 split between a 155 B caller and the 471 B one.
+VA(0x00483f50, 0x26)  // anchor-callee(0x48fa40's comparator expansion), retail-only
+int GetCrossoverHeroValue(hero* candidate)
+{
+    int primary = candidate->get_primary_skill_total();
+    int skills = 0;
+    for (int iSkill = 0; iSkill < CROSSOVER_SECONDARY_SKILLS; ++iSkill)
+        skills += candidate->skillLevel[iSkill];
+    return skills + primary;
+}
+
 VA(0x00483f80, 0x9B)  // anchor-callee(std::sort<hero*> 0x48f2b0), retail-only
 bool CrossoverHeroStronger::operator()(hero& lhs, hero& rhs) const
 {
-    int leftValue = lhs.get_primary_skill_total();
-    int iSkill;
-    for (iSkill = 0; iSkill < CROSSOVER_SECONDARY_SKILLS; ++iSkill)
-        leftValue += lhs.skillLevel[iSkill];
-    int rightValue = rhs.get_primary_skill_total();
-    for (iSkill = 0; iSkill < CROSSOVER_SECONDARY_SKILLS; ++iSkill)
-        rightValue += rhs.skillLevel[iSkill];
+    int leftValue = GetCrossoverHeroValue(&lhs);
+    int rightValue = GetCrossoverHeroValue(&rhs);
     if (leftValue != rightValue)
         return leftValue > rightValue;
     leftValue += lhs.experience;
@@ -1666,6 +1674,7 @@ TCampaignBrief::CampaignHeaderStruct::~CampaignHeaderStruct()
 {
     for (unsigned int i = 0; i < scenarios.size(); ++i)
         delete scenarios[i];
+    scenarios.clear();
     FreeData();
 }
 
@@ -2106,6 +2115,30 @@ SCampaign::SCampaign()
     crossoverArrayIndex = -1;
     currentCampaign = CAMPAIGN_NONE;
     memset(campaignCompleted, 0, sizeof(campaignCompleted));
+}
+
+// Complete-only. The custom-campaign window's accept arm hands the chosen
+// ordinal and its .h3c name here: the running campaign is reset to the new
+// file's first map, its carry-over pools are emptied, and one blank score row
+// is pushed for every scenario the header file turns out to hold. The header
+// record is a LOCAL - retail expands its constructor, its Load-time scenario
+// teardown and its destructor into this body. Name provisional.
+VA(0x00489590, 0x233)  // anchor-caller(CampaignWindowHandler's deselect arm), retail-only
+void SCampaign::select_campaign(int campaignIndex, const char* filename)
+{
+    mapScores.clear();
+    currentCampaign = campaignIndex;
+    currentMap = 0;
+    crossoverArrayIndex = -1;
+    campaignFilename = filename;
+    carryOverHeroes.clear();
+
+    TCampaignBrief::CampaignHeaderStruct campaign(filename);
+    campaign.Load();
+    int count = campaign.scenarios.size();
+    CampaignScenarioInfo blank;
+    for (int iScenario = 0; iScenario < count; ++iScenario)
+        mapScores.push_back(blank);
 }
 
 // E:\gamedcs\CustomCampaign.h:212 (dc 0xe6ef8, attributed to kb.obj in the
@@ -2994,3 +3027,19 @@ VA_COMPGEN(0x0048e690, 0x1B1, STD_COPY_BACKWARD, type_artifact_vector)
 // unclaimed.
 VA_COMPGEN(0x0048eb60, 0x67, CLASS_CTOR, codecvt)
 VA_COMPGEN(0x0048ec10, 0x18, CODECVT_DO_LENGTH, char)
+
+// The two starting-options records' own vector helpers, all four proved by
+// the call sites in their Read bodies. The crossover choice is a two-byte
+// element and the hero choice an eight-byte one, which is why the hero
+// option's _Ucopy folds onto vector<type_artifact>'s (same width) and only
+// its _Ufill survives as its own address.
+VA_COMPGEN(0x0048dba0, 0x31, VECTOR_UCOPY, TCampaignCrossoverChoice)
+VA_COMPGEN(0x0048dbe0, 0x28, VECTOR_UFILL, TCampaignCrossoverChoice)
+VA_COMPGEN(0x0048dc50, 0x2C, VECTOR_UFILL, TCampaignHeroChoice)
+VA_COMPGEN(0x0048e9e0, 0xB, STD_CONSTRUCT, TCampaignCrossoverChoice)
+
+// ScenarioStruct::Read's prerequisite push_back. Retail keeps this insert's
+// own _Ucopy/_Ufill/_Construct out of line (0x48db40 / 0x48db70 / 0x48e9d0)
+// where this CL expands all three into it, so the pairing is identity, not a
+// score.
+VA_COMPGEN(0x0048bf00, 0x1AD, VECTOR_INSERT, unsigned_char)
