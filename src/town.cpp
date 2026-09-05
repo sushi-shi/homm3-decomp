@@ -37,22 +37,244 @@ DATA(0x00699500) extern executive* gpExecutive;
 DATA(0x006a8bb8)
 __int64 town::included_buildings[TOWN_TYPE_COUNT][TOWN_BUILDING_SLOTS];
 
-// E:\gamedcs\town.cpp:458
-#if 0  // @carcass
-DC_ONLY(0x165628, 0x360)
-int town::load(void* infile)
+// The saved-game town name became a length-prefixed string at save
+// version 25; before it, thirteen fixed bytes.
+const int SAVE_VERSION_TOWN_NAME_STRING = 25;
+const int TOWN_NAME_FIXED_LENGTH = 13;
+
+// E:\gamedcs\town.cpp:458, promoted from the carcass. Complete widens the
+// Dreamcast signature with the save version - retail is `ret 8` where save
+// below is `ret 4` - because only the reader has to cope with the old
+// fixed-width name. Its two callers are game::Load's town pool and
+// CCombatInitMsg::read, which deserializes the by-value town it carries.
+//
+// Every offset the body touches is already in town.h: the ten leading
+// bytes, the garrison at +0xe0, the two hero ids through game.h's
+// LoadHeroId, the name into kb's shared gText buffer, then population,
+// generatorBonus, mageGuildSpellCounts, the three building masks, the
+// mage-guild spell grid, a 70-BYTE buffer unpacked one BIT at a time into
+// the bitset<70>, and a packed byte that splits three ways.
+// Residual (98.00%): frame exact at 0x54, branches and the whole call
+// multiset agree, and the only byte-level divergence is which stack slot
+// holds the spilled `this` - retail [ebp-8], ours [ebp-4]. Swapping the
+// two locals' declaration order is byte-flat, measured.
+//
+// The lever that got here was the NAME ASSIGNMENT: retail expands
+// `cName = gText` INSIDE BOTH arms of the version test (two _Xlen, six
+// _Tidy, two _Copy), not once after the join. Writing it once cost eight
+// branches and six calls, 88.56 against 98.00.
+VA(0x005bcd60, 0x586)  // carcass promotion, dc 0x165628; anchor-callee armyGroup::load + LoadHeroId; callers game::Load and CCombatInitMsg::read
+int town::load(TAbstractFile* infile, int saveVersion)
 {
-    // @stub
+    char char_buffer;
+    unsigned char spellBuf[70];
+
+    if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
+        return -1;
+    id = char_buffer;
+    if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
+        return -1;
+    owner = char_buffer;
+    if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
+        return -1;
+    field_02 = char_buffer;
+    if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
+        return -1;
+    threatening_heroes = char_buffer;
+    if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
+        return -1;
+    type = char_buffer;
+    if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
+        return -1;
+    mapX = char_buffer;
+    if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
+        return -1;
+    mapY = char_buffer;
+    if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
+        return -1;
+    mapZ = char_buffer;
+    if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
+        return -1;
+    dockSite = char_buffer;
+    if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
+        return -1;
+    dockSiteY = char_buffer;
+
+    if (garrison.load(infile) < 0)
+        return -1;
+
+    garrisonHeroId = LoadHeroId(infile, saveVersion);
+    visitingHeroId = LoadHeroId(infile, saveVersion);
+
+    if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
+        return -1;
+    field_14 = char_buffer;
+    if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
+        return -1;
+    field_32 = char_buffer;
+
+    if (saveVersion >= SAVE_VERSION_TOWN_NAME_STRING) {
+        unsigned short nameLength;
+        infile->Read(&nameLength, sizeof(nameLength));
+        infile->Read(gText, nameLength);
+        gText[nameLength] = 0;
+        cName = gText;
+    } else {
+        infile->Read(gText, TOWN_NAME_FIXED_LENGTH);
+        cName = gText;
+    }
+
+    if (infile->Read(population, sizeof(population)) < sizeof(population))
+        return -1;
+    infile->Read(generatorBonus, sizeof(generatorBonus));
+    if (infile->Read(mageGuildSpellCounts, sizeof(mageGuildSpellCounts))
+        < sizeof(mageGuildSpellCounts))
+        return -1;
+    if (infile->Read(&built, sizeof(built)) < sizeof(built))
+        return -1;
+    if (infile->Read(&active, sizeof(active)) < sizeof(active))
+        return -1;
+    if (infile->Read(&available, sizeof(available)) < sizeof(available))
+        return -1;
+    if (infile->Read(mageGuildSpells, sizeof(mageGuildSpells))
+        < sizeof(mageGuildSpells))
+        return -1;
+
+    if (infile->Read(spellBuf, sizeof(spellBuf)) < sizeof(spellBuf))
+        return -1;
+    for (int spell = 0; spell < 70; ++spell) {
+        spells.set(spell,
+                   (spellBuf[spell / 8] & (1 << (spell % 8))) != 0);
+    }
+
+    if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
+        return -1;
+    field_33 = char_buffer & 1;
+    field_34 = (char_buffer >> 1) & 7;
+    field_38 = char_buffer >> 4;
+
+    if (infile->Read(&summoningType, sizeof(summoningType))
+        < sizeof(summoningType))
+        return -1;
+    if (infile->Read(&summoningPopulation, sizeof(summoningPopulation))
+        < sizeof(summoningPopulation))
+        return -1;
+    return 0;
 }
 
-// E:\gamedcs\town.cpp:616
-DC_ONLY(0x165988, 0x3D4)
-int town::save(void* outfile)
+// E:\gamedcs\town.cpp:616, promoted from the carcass and the mirror of
+// load above. It always writes the modern length-prefixed name, it packs
+// field_38/field_34/field_33 back into one byte, and it re-packs the
+// bitset<70> into 70 bytes of which only the first nine carry bits.
+VA(0x005bd2f0, 0x402)  // carcass promotion, dc 0x165988; anchor-callee armyGroup::save; caller game::Save's town pool
+int town::save(TAbstractFile* outfile)
 {
-    // @stub
-}
+    char char_buffer;
+    unsigned char spellBuf[70];
 
-#endif  // @carcass
+    char_buffer = id;
+    if (outfile->Write(&char_buffer, sizeof(char_buffer))
+        < sizeof(char_buffer))
+        return -1;
+    char_buffer = owner;
+    if (outfile->Write(&char_buffer, sizeof(char_buffer))
+        < sizeof(char_buffer))
+        return -1;
+    char_buffer = field_02;
+    if (outfile->Write(&char_buffer, sizeof(char_buffer))
+        < sizeof(char_buffer))
+        return -1;
+    char_buffer = threatening_heroes;
+    if (outfile->Write(&char_buffer, sizeof(char_buffer))
+        < sizeof(char_buffer))
+        return -1;
+    char_buffer = type;
+    if (outfile->Write(&char_buffer, sizeof(char_buffer))
+        < sizeof(char_buffer))
+        return -1;
+    char_buffer = mapX;
+    if (outfile->Write(&char_buffer, sizeof(char_buffer))
+        < sizeof(char_buffer))
+        return -1;
+    char_buffer = mapY;
+    if (outfile->Write(&char_buffer, sizeof(char_buffer))
+        < sizeof(char_buffer))
+        return -1;
+    char_buffer = mapZ;
+    if (outfile->Write(&char_buffer, sizeof(char_buffer))
+        < sizeof(char_buffer))
+        return -1;
+    char_buffer = dockSite;
+    if (outfile->Write(&char_buffer, sizeof(char_buffer))
+        < sizeof(char_buffer))
+        return -1;
+    char_buffer = dockSiteY;
+    if (outfile->Write(&char_buffer, sizeof(char_buffer))
+        < sizeof(char_buffer))
+        return -1;
+
+    if (garrison.save(outfile) < 0)
+        return -1;
+
+    char_buffer = garrisonHeroId;
+    if (outfile->Write(&char_buffer, sizeof(char_buffer))
+        < sizeof(char_buffer))
+        return -1;
+    char_buffer = visitingHeroId;
+    if (outfile->Write(&char_buffer, sizeof(char_buffer))
+        < sizeof(char_buffer))
+        return -1;
+    char_buffer = field_14;
+    if (outfile->Write(&char_buffer, sizeof(char_buffer))
+        < sizeof(char_buffer))
+        return -1;
+    char_buffer = field_32;
+    if (outfile->Write(&char_buffer, sizeof(char_buffer))
+        < sizeof(char_buffer))
+        return -1;
+
+    unsigned short nameLength = cName.size();
+    outfile->Write(&nameLength, sizeof(nameLength));
+    outfile->Write(cName.c_str(), cName.size());
+
+    if (outfile->Write(population, sizeof(population)) < sizeof(population))
+        return -1;
+    outfile->Write(generatorBonus, sizeof(generatorBonus));
+    if (outfile->Write(mageGuildSpellCounts, sizeof(mageGuildSpellCounts))
+        < sizeof(mageGuildSpellCounts))
+        return -1;
+    if (outfile->Write(&built, sizeof(built)) < sizeof(built))
+        return -1;
+    if (outfile->Write(&active, sizeof(active)) < sizeof(active))
+        return -1;
+    if (outfile->Write(&available, sizeof(available)) < sizeof(available))
+        return -1;
+    if (outfile->Write(mageGuildSpells, sizeof(mageGuildSpells))
+        < sizeof(mageGuildSpells))
+        return -1;
+
+    memset(spellBuf, 0, sizeof(spellBuf));
+    for (int spell = 0; spell < 70; ++spell) {
+        if (spells.test(spell))
+            spellBuf[spell / 8] |= 1 << (spell % 8);
+    }
+    if (outfile->Write(spellBuf, sizeof(spellBuf)) < sizeof(spellBuf))
+        return -1;
+
+    char_buffer = static_cast<char>(
+        (((field_38 & 7) << 3 | (field_34 & 7)) << 1) | field_33);
+    if (outfile->Write(&char_buffer, sizeof(char_buffer))
+        < sizeof(char_buffer))
+        return -1;
+
+    if (outfile->Write(&summoningType, sizeof(summoningType))
+        < sizeof(summoningType))
+        return -1;
+    if (outfile->Write(&summoningPopulation, sizeof(summoningPopulation))
+        < sizeof(summoningPopulation))
+        return -1;
+    return 0;
+}
 
 // E:\gamedcs\town.cpp:761
 VA(0x005bd700, 0x47)  // active fort mask + faction/state/small frame, dc 0x165d5c

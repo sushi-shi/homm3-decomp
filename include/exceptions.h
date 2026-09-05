@@ -42,11 +42,24 @@
 // `exception::exception(const exception&)` and the string at +0xc.
 class TDebugBreak {
 public:
+    // 0x524360, two bytes: `mov eax,ecx / ret`. The image-name table's
+    // loader constructs the base with no argument at all before running
+    // the runtime_error base, so the family carries a default constructor
+    // beside the message-carrying one.
+    TDebugBreak();
     TDebugBreak(const char* text);
 };
 
 class TRuntimeError : public TDebugBreak, public std::runtime_error {
 public:
+    // INLINE, and the throw at 0x514dba is what proves it: retail expands
+    // the whole constructor at that site - TDebugBreak's out-of-line
+    // 0x524360 for the empty base at +0x1d, a DEFAULT-constructed
+    // std::string handed to runtime_error's out-of-line 0x41ba90, then the
+    // 0x63abb4 vftable store - where the message-carrying form below is a
+    // single call. Base order is declaration order, and retail runs
+    // TDebugBreak first.
+    TRuntimeError() : std::runtime_error(std::string()) {}
     TRuntimeError(const char* text);  // 0x49a0c0
 };
 
