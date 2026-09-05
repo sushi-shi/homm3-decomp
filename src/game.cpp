@@ -18671,3 +18671,16 @@ VA_COMPGEN(0x00434c70, 0x49, VECTOR_UCOPY, type_university)
 // map in the tree, carries this same pair at 0x50F and 0x121.
 VA_COMPGEN(0x004b7200, 0x121, TREE_ERASE_RANGE, CImmEnclosure)
 VA_COMPGEN(0x004b74a0, 0x50F, TREE_ERASE_ITERATOR, CImmEnclosure)
+
+// COMDAT pairing: out_of_range's `const string&` constructor - the overload
+// lane 17 identified at this address and then had to leave unclaimed, because
+// every unit emitting it also emits the copy constructor and the two zip by
+// COFF order against an opposite RVA order (0x4700 copy, 0x487bd0 string).
+// The join's own count-mismatch path resolves it without touching the tooling:
+// one claim against a two-name group falls through to an EXACT content-size
+// match, and the sizes are unambiguous in both directions - the string form is
+// 352 bytes and the copy form 343, matching the two carve extents exactly.
+// game.obj is claimed rather than customcampaign.obj because customcampaign
+// emits only the copy; the COMDAT itself is identical wherever it appears,
+// which is why /OPT:ICF left one retail copy for the whole link.
+VA_COMPGEN(0x00487bd0, 0x160, CLASS_CTOR, out_of_range)
