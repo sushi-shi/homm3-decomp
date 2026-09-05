@@ -99,6 +99,16 @@ enum EGeneralTextIndex {
     // describes that consumer, which is this enum's stated convention;
     // the index is retail-byte-proven (a folded [Text._First + 0x204]).
     GENERAL_TEXT_COMBAT_SPELL_ALREADY_CAST = 129,
+    // advManager::SummonBoat's four outcome lines, all folded
+    // [Text._First + N] loads in one body: 0x538 when the caster is already
+    // at sea (sprintf'd with the hero's name), 0x53c when no adjacent water
+    // tile is free, 0x540 when neither a summonable boat nor a new one can
+    // be produced, and 0x544 when the mastery roll fails (also name-fed).
+    // Indexes are retail-byte-proven; the names describe the consumers.
+    GENERAL_TEXT_SUMMON_BOAT_ALREADY_AT_SEA_FORMAT = 334,
+    GENERAL_TEXT_SUMMON_BOAT_NO_WATER = 335,
+    GENERAL_TEXT_SUMMON_BOAT_NONE_AVAILABLE = 336,
+    GENERAL_TEXT_SUMMON_BOAT_FAILED_FORMAT = 337,
     // advManager::TownGate's three refusals, all folded [Text._First + N]
     // loads in one body: 0x1f0 when the chosen town already has a visiting
     // hero, 0x1f4 when the caster's team owns no town at all, and 0x220

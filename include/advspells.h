@@ -32,6 +32,15 @@
 // description; nothing attests a spelling.
 DATA(0x00691250) extern SLimitData gAdvMapViewLimits;
 
+// The world extents advManager::SummonBoat's eight-neighbour scan clamps
+// against before asking for a cell. DECLARATIONS ONLY - findpath.h owns the
+// DATA claims on 0x6783c8 / 0x6783cc, and a second claim on one RVA is a
+// fatal duplicate at delink time. Declared here rather than by including
+// findpath.h, whose closure advspells.obj does not otherwise need; this is
+// exactly what event_record.h does with the same pair.
+extern int gMapWidth;
+extern int gMapHeight;
+
 // --- CMCTeleportHero ---
 // CODEVIEW(E:\gamedcs\netmsg.h:563, dc 0x23170) void CMCTeleportHero::CMCTeleportHero(signed char heroId, type_point point);
 
