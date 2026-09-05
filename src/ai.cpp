@@ -15,6 +15,8 @@
 #include "hero.h"
 #include "misc.h"
 #include "prefs.h"
+#include "csprite.h"   // TResourceHandle<CSprite>::~TResourceHandle calls resource::Dispose
+#include "sample.h"    // TResourceHandle<sample>::~TResourceHandle calls resource::Dispose
 #include "soundmgr.h"
 
 // A by-value, reference-RETURNING min - compute_fire_shield_damage

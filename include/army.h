@@ -222,7 +222,7 @@ public:
         if (resource)
             ++resource->ReferenceCount;
     }
-    ~TResourceHandle() {}
+    ~TResourceHandle() { if (resource) resource->Dispose(); }
 
     TResourceHandle& operator=(T* newResource)
     {
