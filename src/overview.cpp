@@ -115,6 +115,16 @@ void UpdateBackpack(int iSlot);
 // reuses that live zero (`je` straight to the join at 0x51bfb6) where we must
 // materialise 0 into the currTown slot. Tried and rejected: declaring `slot`
 // below the break guard, which is where retail computes row*70 (-0.12).
+// RE-MEASURED and EXTENDED 2026-09-05: the -0.12 above reproduces exactly
+// (90.7853).  Three further probes at the same iCurBitmap register fact,
+// all byte-flat or worse: declaring `slot` AFTER `rowWidgetId` but still
+// above the guard is 90.8843, so the head's two-statement order is not the
+// lever either; BLOCK-SCOPING both counters inside the row loop
+// (`int iCurBitmap = 0; int iCurText = 0;` replacing the function-scope
+// pair) is byte-flat AND leaves the frame at 0xa0, which proves the eight
+// surplus bytes are NOT those two slots; swapping the two zero assignments,
+// and swapping the two function-scope declarations, are both byte-flat.
+// The eight bytes are in the array/temporary overlay described above.
 // byte-inert: the DC CodeView local order, monsterX/monsterY swapped
 // (90.40, stores reorder only), currTown/currHero declared first in their
 // blocks. The DC statement order of the town block matches ours.

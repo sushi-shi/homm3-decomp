@@ -354,14 +354,14 @@ void combatManager::InitiateSpell(SpellID spellToCast, int creatureSpell)
                                              field_44, 1, 0);
             if (target && spellToCast != SPELL_DISPEL
                     && target->combatSide != currentSide
-                    && !(target->creatureId & (1 << 21))
+                    && !(target->sMonInfo.attributes & (1 << 21))
                     && target->get_mirror_effect() >= Random(1, 100)) {
                 TPickANumber picker(0, numArmies[currentSide] - 1);
                 int picked;
                 do {
                     picked = picker.Pick();
                 } while (picked >= 0
-                         && ((armies[currentSide][picked].creatureId
+                         && ((armies[currentSide][picked].sMonInfo.attributes
                               & (1 << 21))
                              || armies[currentSide][picked].gridIndex
                                     == MIRROR_IMAGE_EXCLUDED_HEX));
@@ -1206,7 +1206,7 @@ landmine_done:
                                   casting_hero);
         ShowSpellMessage(bIsMonsterSpell, spellId, target);
         if (!static_cast<const combatManager*>(this)->IsQuickCombat()) {
-            target->creatureId |= 0x40000000;
+            target->sMonInfo.attributes |= 0x40000000;
             ResetLimitCreature();
             MarkCreatureEffect(target->combatSide, target->bitIndex);
             ComputeMaxExtent();
@@ -1214,7 +1214,7 @@ landmine_done:
                 target->PaletteEffect = frame * 0.1;
                 DrawFrame(1, 1, 0, 100, 1, 1);
             }
-            target->creatureId &= ~0x40000000;
+            target->sMonInfo.attributes &= ~0x40000000;
             DrawFrame(1, 1, 0, 0, 1, 0);
         }
         break;
@@ -1225,7 +1225,7 @@ landmine_done:
                                       casting_hero);
             ShowSpellMessage(bIsMonsterSpell, spellId, target);
             if (!static_cast<const combatManager*>(this)->IsQuickCombat()) {
-                target->creatureId |= 0x20000000;
+                target->sMonInfo.attributes |= 0x20000000;
                 ResetLimitCreature();
                 MarkCreatureEffect(target->combatSide, target->bitIndex);
                 ComputeMaxExtent();
@@ -1241,7 +1241,7 @@ landmine_done:
                         DrawFrame(1, 1, 0, 100, 1, 1);
                     }
                 }
-                target->creatureId &= ~0x20000000;
+                target->sMonInfo.attributes &= ~0x20000000;
                 DrawFrame(1, 1, 0, 0, 1, 0);
             }
         } else {
@@ -1256,7 +1256,7 @@ landmine_done:
                         for (int index = 0; index < numArmies[side]; ++index) {
                             if (effected[side][index]) {
                                 army* effected_army = &armies[side][index];
-                                effected_army->creatureId |= 0x20000000;
+                                effected_army->sMonInfo.attributes |= 0x20000000;
                                 MarkCreatureEffect(side, index);
                             }
                         }
@@ -1290,7 +1290,7 @@ landmine_done:
                     for (int side = 0; side < 2; ++side) {
                         for (int index = 0; index < numArmies[side]; ++index) {
                             if (effected[side][index])
-                                armies[side][index].creatureId &= ~0x20000000;
+                                armies[side][index].sMonInfo.attributes &= ~0x20000000;
                         }
                     }
                 }
@@ -1424,10 +1424,10 @@ landmine_done:
                 (akCreatureTypeTraits[sacrifice_army->creatureType].hitPoints
                  + traits->mastery_bonus[mastery] + monster_power)
                 * sacrifice_army->numTroops;
-            sacrifice_army->Damage(sacrifice_army->hitPoints
+            sacrifice_army->Damage(sacrifice_army->sMonInfo.hitPoints
                                    * sacrifice_army->numTroops);
             sacrifice_army->bShowPowEffect = 1;
-            sacrifice_army->creatureId |= 0x10000000;
+            sacrifice_army->sMonInfo.attributes |= 0x10000000;
             ShowSpellMessage(bIsMonsterSpell, spellId, sacrifice_army);
             PowEffect(eSpellEffectSacrifice_Slay, 1);
             Resurrect(target, hit_points_resurrected, 0);
@@ -1445,21 +1445,21 @@ landmine_done:
                                  gDisruptingRayAngles,
                                  gDisruptingRaySprites);
         }
-        int previous_skill = target->defenseSkill;
-        target->defenseSkill -= traits->mastery_bonus[mastery];
+        int previous_skill = target->sMonInfo.defenseSkill;
+        target->sMonInfo.defenseSkill -= traits->mastery_bonus[mastery];
         if (casting_hero) {
-            target->defenseSkill -= casting_hero->GetHeroSpellBonus(
-                SPELL_DISRUPTING_RAY, target->monInfoLevel,
+            target->sMonInfo.defenseSkill -= casting_hero->GetHeroSpellBonus(
+                SPELL_DISRUPTING_RAY, target->sMonInfo.level,
                 traits->mastery_bonus[mastery]);
         }
-        if (target->defenseSkill < 0)
-            target->defenseSkill = 0;
+        if (target->sMonInfo.defenseSkill < 0)
+            target->sMonInfo.defenseSkill = 0;
         SpellEffect(traits->m_effect, target, 100, 0);
         target->SetSpellInfluence(spellId, monster_power, mastery,
                                   casting_hero);
         if (!static_cast<const combatManager*>(this)->IsQuickCombat()) {
             sprintf(gText, gpGeneralText->GetText(92),
-                    previous_skill - target->defenseSkill);
+                    previous_skill - target->sMonInfo.defenseSkill);
             combatWindow->combat_message(gText, 1, 0);
         }
         break;
@@ -1571,13 +1571,13 @@ landmine_done:
     // CastSpell+0x2040 fixes the three-point reduction, zero clamp, dead
     // legacy sprintf and the temporary format_string message in this order.
     case SPELL_ACID_BREATH_DEFENSE: {
-        int previous_skill = target->defenseSkill;
-        target->defenseSkill -= 3;
-        if (target->defenseSkill < 0)
-            target->defenseSkill = 0;
+        int previous_skill = target->sMonInfo.defenseSkill;
+        target->sMonInfo.defenseSkill -= 3;
+        if (target->sMonInfo.defenseSkill < 0)
+            target->sMonInfo.defenseSkill = 0;
         SpellEffect(traits->m_effect, target, 100, 0);
         if (!static_cast<const combatManager*>(this)->IsQuickCombat()) {
-            int reduction = previous_skill - target->defenseSkill;
+            int reduction = previous_skill - target->sMonInfo.defenseSkill;
             sprintf(gText, gpGeneralText->GetText(92), reduction);
             combatWindow->combat_message(
                 format_string(DATA_COMPGEN(
@@ -3959,13 +3959,13 @@ done:
         // frame before the pointer comes back, so the stack is not
         // left frozen mid-swing behind the bolt.
         army* pArmy = get_current_army();
-        if (pArmy->frameInfoAttackFrames) {
+        if (pArmy->sMonFrameInfo.iAttackFrames) {
             long iFrames;
             {
                 CSprite* icon = pArmy->stdIcon;
                 iFrames = icon->GetNumFrames(pArmy->currFrameType);
             }
-            long iFrameDelay = pArmy->frameInfoAttackStartCycleTime / iFrames;
+            long iFrameDelay = pArmy->sMonFrameInfo.iAttackStartCycleTime / iFrames;
             while (pArmy->currFrameIndex < iFrames) {
                 // Written as two calls, not as a ternary argument: retail
                 // BRANCHES over the one differing push and shares the other
@@ -4542,7 +4542,7 @@ void combatManager::MirrorImage(int targetIndex, int level)
                             AddArmy(currentSide, source->creatureType,
                                     source->numTroops, hex, 0x800000, 0);
                             army* mirror = cells[hex].get_army();
-                            mirror->creatureId |= 0x400000;
+                            mirror->sMonInfo.attributes |= 0x400000;
                             mirror->iRoundsLeftBeforeVanish =
                                 heroes[currentSide]->GetSpellDurationBonus()
                                 + spellPower[currentSide];
@@ -4648,8 +4648,7 @@ void combatManager::SummonElemental(SpellID spell, TCreatureType iMonType,
 {
     army summoned;
     summoned.InitClean();
-    memcpy(&summoned.monInfoTownType, &akCreatureTypeTraits[iMonType],
-           sizeof(TCreatureTypeTraits));
+    summoned.sMonInfo = akCreatureTypeTraits[iMonType];
     int leftColumn = 1;
     int rightColumn = 15;
     summoned.combatSide = currentSide;
@@ -4840,9 +4839,9 @@ void combatManager::Resurrect(army* target_army, long hit_points_resurrected,
         total = target_army->get_total_hit_points(0);
     total += hit_points_resurrected;
     target_army->numTroops =
-        (target_army->hitPoints + total - 1) / target_army->hitPoints;
+        (target_army->sMonInfo.hitPoints + total - 1) / target_army->sMonInfo.hitPoints;
     target_army->topCreatureDamage =
-        target_army->numTroops * target_army->hitPoints - total;
+        target_army->numTroops * target_army->sMonInfo.hitPoints - total;
     if (target_army->numTroops > target_army->origNumTroops) {
         target_army->numTroops = target_army->origNumTroops;
         target_army->topCreatureDamage = 0;
@@ -4902,7 +4901,7 @@ void combatManager::Resurrect(army* target_army, long hit_points_resurrected,
         } }
     }
 
-    target_army->creatureId &= ~0x00200000;
+    target_army->sMonInfo.attributes &= ~0x00200000;
     target_army->bShowPowEffect = 0;
     DrawFrame(1, 0, 0, 0, 1, 0);
 }
@@ -4924,7 +4923,7 @@ inline void combatManager::Resurrect(SpellID spell, int target_hex,
             akSpellTraits[spell].mastery_bonus[mastery]
             + akSpellTraits[spell].power_factor * power;
         hit_points_resurrected += casting_hero->GetHeroSpellBonus(
-            spell, target_army->monInfoLevel, hit_points_resurrected);
+            spell, target_army->sMonInfo.level, hit_points_resurrected);
         unsigned char temporary =
             spell == SPELL_RESURRECTION && mastery < eMasteryAdvanced;
         Resurrect(target_army, hit_points_resurrected, temporary);
@@ -5447,9 +5446,9 @@ float combatManager::SpellCastWorkChance(SpellID spell, long side,
                 * akSpellTraits[SPELL_HYPNOTIZE].power_factor
             + akSpellTraits[SPELL_HYPNOTIZE].mastery_bonus[mastery];
         value += casting_hero->GetHeroSpellBonus(SPELL_HYPNOTIZE,
-                                                 target->monInfoLevel, value);
+                                                 target->sMonInfo.level, value);
         if (target->magicMirrorRounds
-            || target->hitPoints * target->numTroops > value)
+            || target->sMonInfo.hitPoints * target->numTroops > value)
             return 0.0f;
         break;
     }
@@ -5465,7 +5464,7 @@ float combatManager::SpellCastWorkChance(SpellID spell, long side,
     case SPELL_CLONE:
         if ((target->Is(1u << 23)) || target->iMirrorDestIndex != -1)
             return 0.0f;
-        if (target->monInfoLevel + 1
+        if (target->sMonInfo.level + 1
             > akSpellTraits[SPELL_CLONE].mastery_bonus[
                   casting_hero->get_spell_level(SPELL_CLONE, field_53c0)])
             return 0.0f;
@@ -5484,11 +5483,11 @@ float combatManager::SpellCastWorkChance(SpellID spell, long side,
             value = spellPower[side] * akSpellTraits[spell].power_factor
                 + akSpellTraits[spell].mastery_bonus[mastery];
             value += casting_hero->GetHeroSpellBonus(spell,
-                                                     target->monInfoLevel,
+                                                     target->sMonInfo.level,
                                                      value);
         }
         if (target->numTroops >= target->origNumTroops
-            || target->hitPoints > value)
+            || target->sMonInfo.hitPoints > value)
             return 0.0f;
         break;
     }
@@ -5701,7 +5700,7 @@ void combatManager::ShowSpellMessage(int bIsMonsterSpell, SpellID spellId,
             long lost = static_cast<long>(
                             static_cast<float>(targetArmy->origHitPoints)
                             * targetArmy->poisonPenalty + 0.95f)
-                - targetArmy->hitPoints;
+                - targetArmy->sMonInfo.hitPoints;
             if (targetArmy->numTroops == 1)
                 message = format_string(gpGeneralText->GetText(552),
                                         targetName, lost);

@@ -1264,9 +1264,9 @@ void searchArray::SeedCombatPosition(const army* thisArmy, long current_group, l
                     || !gpCombatManager->is_outside_placement_boundry(
                             current_group, i))) {
             gpCombatManager->cells[i].field_4a = 1;
-            if ((thisArmy->creatureId & 1)
+            if ((thisArmy->sMonInfo.attributes & 1)
                     && (static_cast<unsigned char>(static_cast<unsigned>(
-                            thisArmy->creatureId) >> 6) & 1) == 0) {
+                            thisArmy->sMonInfo.attributes) >> 6) & 1) == 0) {
                 long second = i + (thisArmy->facing != 0 ? 1 : -1);
                 if (second < 0 || second >= COMBAT_GRID_CELLS
                         || (second % COMBAT_GRID_ROW_STRIDE != 0
@@ -1289,10 +1289,10 @@ void searchArray::SeedCombatPosition(const army* thisArmy, long current_group, l
         const army* enemy = gpCombatManager->armies[other];
         for (long j = 0; j < gpCombatManager->numArmies[other]; j++, enemy++) {
             if ((static_cast<unsigned char>(static_cast<unsigned>(
-                        enemy->creatureId) >> 21) & 1) == 0
+                        enemy->sMonInfo.attributes) >> 21) & 1) == 0
                     && enemy->creatureType != CREATURE_ARROW_TOWER) {
                 gpCombatManager->cells[enemy->gridIndex].field_4a = 1;
-                if (enemy->creatureId & 1)
+                if (enemy->sMonInfo.attributes & 1)
                     gpCombatManager->cells[enemy->get_second_grid_index()]
                             .field_4a = 1;
             }
@@ -1349,13 +1349,13 @@ void searchArray::mark_teleport(const army* current_army, long current_group)
                 ++enemy_index, ++enemy) {
             if (enemy == current_army
                     || (static_cast<unsigned char>(static_cast<unsigned>(
-                            enemy->creatureId) >> 21) & 1)
+                            enemy->sMonInfo.attributes) >> 21) & 1)
                     || enemy->creatureType == CREATURE_ARROW_TOWER)
                 continue;
 
             long direction =
                 (static_cast<unsigned char>(static_cast<unsigned>(
-                    enemy->creatureId)) & 1) ? 8 : 6;
+                    enemy->sMonInfo.attributes)) & 1) ? 8 : 6;
             while (direction-- > 0) {
                 long adjacent = enemy->get_adjacent_hex(enemy->gridIndex,
                                                         direction);
@@ -1374,7 +1374,7 @@ void searchArray::mark_teleport(const army* current_army, long current_group)
             // Retail repeats the same anchor-hex mark for a wide stack;
             // preserve the original behavior rather than "fixing" it.
             if (static_cast<unsigned char>(static_cast<unsigned>(
-                    enemy->creatureId)) & 1)
+                    enemy->sMonInfo.attributes)) & 1)
                 mark_enemy(enemy->gridIndex, 1);
         }
     }
@@ -1415,7 +1415,7 @@ VA(0x004b3290, 0x16F)  // anchor-callee, dc 0xa0804
 void searchArray::set_moat(const army* current_army)
 {
     memset(bIsMoatSlowed, 0, 187);
-    unsigned char flying = static_cast<unsigned char>(static_cast<unsigned>(current_army->creatureId) >> 1);
+    unsigned char flying = static_cast<unsigned char>(static_cast<unsigned>(current_army->sMonInfo.attributes) >> 1);
     if (flying & 1)
         return;
     if (current_army->creatureType == CREATURE_ARCH_DEVIL)
@@ -1445,7 +1445,7 @@ void searchArray::set_moat(const army* current_army)
         }
     } }
     bIsMoatSlowed[current_army->gridIndex] = 0;
-    if (current_army->creatureId & 1)
+    if (current_army->sMonInfo.attributes & 1)
         bIsMoatSlowed[current_army->get_second_grid_index()] = 0;
 }
 
@@ -1513,7 +1513,7 @@ unsigned char searchArray::check_enemy_armies(long hex, long cost,
         return 0;
 
     mark_enemy_searched(this, enemy->gridIndex, cost);
-    if (enemy->creatureId & 1)
+    if (enemy->sMonInfo.attributes & 1)
         mark_enemy_searched(this, enemy->get_second_grid_index(), cost);
     return hex == destination;
 }
@@ -1813,7 +1813,7 @@ unsigned char searchArray::FindCombatPath(const army* current_army,
 
             long flight_cost = 0;
             unsigned char moat = 0;
-            if (!(current_army->creatureId & 1)) {
+            if (!(current_army->sMonInfo.attributes & 1)) {
                 moat = is_moat(adjacent);
             } else {
                 long side_step = current_army->facing ? 1 : -1;
@@ -1837,7 +1837,7 @@ unsigned char searchArray::FindCombatPath(const army* current_army,
                 if (limit <= base_speed) {
                     if (is_moat(hex))
                         blocked = 1;
-                    if ((current_army->creatureId & 1)
+                    if ((current_army->sMonInfo.attributes & 1)
                             && is_moat(static_cast<short>(
                                     cell.point.x
                                     + (current_army->facing ? 1 : -1))))
@@ -1847,7 +1847,7 @@ unsigned char searchArray::FindCombatPath(const army* current_army,
                     if (check_enemy_armies(adjacent, enemy_cost, current_group,
                                            destination))
                         goto found;
-                    if (current_army->creatureId & 1) {
+                    if (current_army->sMonInfo.attributes & 1) {
                         long tail = adjacent
                             + (current_army->facing ? 1 : -1);
                         if (tail >= 0 && tail < COMBAT_GRID_CELLS
@@ -1857,7 +1857,7 @@ unsigned char searchArray::FindCombatPath(const army* current_army,
                             goto found;
                     }
                 }
-                if (!(((static_cast<unsigned>(current_army->creatureId) >> 1)
+                if (!(((static_cast<unsigned>(current_army->sMonInfo.attributes) >> 1)
                             & 1)
                         || current_army->creatureType == CREATURE_DEVIL
                         || current_army->creatureType == CREATURE_ARCH_DEVIL))
