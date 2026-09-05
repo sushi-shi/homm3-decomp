@@ -179,6 +179,7 @@ advspells	?SummonBoat@advManager@@QAEXH@Z	91.1018	91.4864	91.4864	0x1c8a0	fdd94c
 advspells	?TeleportTo@advManager@@QAEXPAVhero@@Utype_point@@PBDEEE@Z	100.0000	100.0000	100.0000	0x1d930	4d7a32ebaa89
 advspells	?TownGate@advManager@@QAEXH@Z	99.0386	99.0386	99.0386	0x1d360	702cdb9eab97
 ai	??1type_spellvalue@@QAE@XZ	100.0000	100.0000	100.0000	0x20cf0	-
+ai	??Rfunc_moves_before@@QBE_NPBVarmy@@0@Z	100.0000	100.0000	100.0000	0x235c0	-
 ai	?DoCompAI@combatManager@@QAEXH@Z	98.4697	98.4697	98.4697	0x221f0	2e3e65e4a47b
 ai	?DoSpellAI@combatManager@@QAEEXZ	100.0000	100.0000	100.0000	0x22da0	2bfe2c39d7b4
 ai	?IsIncapacitated@army@@QBE_NXZ	100.0000	100.0000	100.0000	0x1f380	0d867a728c71
@@ -300,6 +301,8 @@ ai_player	?_Sort@std@@YIXPAUtype_creature_value@@00@Z	100.0000	100.0000	100.0000
 ai_player	?_Sort@std@@YIXPAUtype_creature_value@@0U?$greater@Utype_creature_value@@@1@0@Z	100.0000	100.0000	100.0000	0x34ce0	-
 ai_player	?_Ucopy@?$vector@UHeroDestination@@V?$allocator@UHeroDestination@@@std@@@std@@IAEPAUHeroDestination@@PBU3@0PAU3@@Z	93.3750	93.3750	93.3750	0x34ba0	-
 ai_player	?_Ucopy@?$vector@UpathCell@@V?$allocator@UpathCell@@@std@@@std@@IAEPAUpathCell@@PBU3@0PAU3@@Z	100.0000	100.0000	100.0000	0x34bf0	-
+ai_player	?_Unguarded_insert@std@@YIXPAJJ@Z	100.0000	100.0000	100.0000	0x35140	-
+ai_player	?_Unguarded_insert@std@@YIXPAUtype_creature_value@@U2@@Z	100.0000	100.0000	100.0000	0x35020	-
 ai_player	?_Unguarded_partition@std@@YIPAUtype_creature_value@@PAU2@0U2@U?$greater@Utype_creature_value@@@1@@Z	100.0000	100.0000	100.0000	0x35290	-
 ai_player	?_Xran@?$bitset@$08@std@@ABEXXZ	95.5882	95.5882	95.5882	0x34ad0	-
 ai_player	?_Xran@?$bitset@$0JA@@std@@ABEXXZ	95.5882	95.5882	95.5882	0x346d0	-
@@ -812,6 +815,7 @@ campaignbrief	?_Construct@std@@YIXPAUtype_map_hero_identity@@ABU2@@Z	100.0000	10
 campaignbrief	?_Copy@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@IAEPAU_Node@12@PAU312@0@Z	100.0000	100.0000	100.0000	0x5d270	-
 campaignbrief	?_Copy@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@IAEXABV12@@Z	100.0000	100.0000	100.0000	0x5c740	-
 campaignbrief	?_Inc@const_iterator@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x5d370	-
+campaignbrief	?_Ucopy@?$vector@Utype_map_hero_identity@@V?$allocator@Utype_map_hero_identity@@@std@@@std@@IAEPAUtype_map_hero_identity@@PBU3@0PAU3@@Z	100.0000	100.0000	100.0000	0x5d230	-
 campaignbrief	?erase@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@QAE?AViterator@12@V312@0@Z	98.9798	98.9798	98.9798	0x5c070	-
 campaignbrief	?get_campaign_name@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x5bc10	80bcbea63411
 campaignbrief	?insert@?$vector@UCampaignScenarioPreview@@V?$allocator@UCampaignScenarioPreview@@@std@@@std@@QAEXPAUCampaignScenarioPreview@@IABU3@@Z	100.0000	100.0000	100.0000	0x5c960	-
@@ -898,6 +902,7 @@ cmbtmgr	?Unnamed46a520@combatManager@@QAEXPAVarmy@@@Z	100.0000	100.0000	100.0000
 cmbtmgr	?UpdateArmyGroup@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x641f0	18ef1a85941e
 cmbtmgr	?UpdateArmyLuckAndMorale@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x69750	2771d18d280f
 cmbtmgr	?ViewArmy@combatManager@@QAEXPAVarmy@@H@Z	100.0000	100.0000	100.0000	0x68860	2818de794e02
+cmbtmgr	?_Ucopy@TObstacleVector@combatManager@@QAEPAUTObstacle@2@PBU32@0PAU32@@Z	100.0000	100.0000	100.0000	0x6b1a0	-
 cmbtmgr	?check_obstacle_attacks@combatManager@@QAEEPAVarmy@@E@Z	100.0000	100.0000	100.0000	0x6a570	c8bcd4971027
 cmbtmgr	?damage_message@combatManager@@QAEXPBDJJPBVarmy@@J@Z	100.0000	100.0000	100.0000	0x69a90	ee21f4178e3b
 cmbtmgr	?enemy_is_adjacent@combatManager@@QBEEPBVarmy@@H0@Z	100.0000	100.0000	100.0000	0x69600	ebf78501abef
@@ -1477,6 +1482,7 @@ events	?_Construct@std@@YIXPAV?$basic_string@DU?$char_traits@D@std@@V?$allocator
 events	?_Destroy@?$vector@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@IAEXPAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@0@Z	100.0000	100.0000	100.0000	0xaf500	-
 events	?_Sort@std@@YIXPAH0Uspell_level_order@@0@Z	100.0000	100.0000	100.0000	0xb00b0	-
 events	?_Sort_0@std@@YIXPAH0Uspell_level_order@@0@Z	100.0000	100.0000	100.0000	0xafcb0	-
+events	?_Ucopy@?$vector@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@IAEPAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@PBV32@0PAV32@@Z	100.0000	100.0000	100.0000	0xaf800	-
 events	?_Unguarded_insert@std@@YIXPAHHUspell_level_order@@@Z	100.0000	100.0000	100.0000	0xb0350	-
 events	?_Unguarded_partition@std@@YIPAHPAH0HUspell_level_order@@@Z	100.0000	100.0000	100.0000	0xb0400	-
 events	?copy_backward@std@@YIPAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@PAV21@00@Z	100.0000	100.0000	100.0000	0xaf9d0	-
@@ -1549,6 +1555,7 @@ findpath	?PushCombatPoint@searchArray@@QAEXHHHHH@Z	90.2555	90.2555	90.2555	0xb3b
 findpath	?PushPoint@searchArray@@QAEXPBUpathCell@@PAU2@HHHJUtype_point@@H@Z	87.5488	87.5488	87.5488	0xb1a70	dbb2a3ea9d4a
 findpath	?SeedCombatPosition@searchArray@@QAEXPBVarmy@@JJEJ@Z	89.8177	89.8177	89.8177	0xb2da0	5391ca711993
 findpath	?TestPossibleDirections@searchArray@@QAEXPAVhero@@PAUpathCell@@JJEUtype_point@@JW4type_search_type@@J@Z	99.2000	99.2000	99.2000	0xb2300	d013f8a66d2e
+findpath	?copy@std@@YIPAUpathCell@@PAU2@00@Z	100.0000	100.0000	100.0000	0xb4270	-
 findpath	?getCellData@searchArray@@QAEPAUpathCell@@J@Z	100.0000	100.0000	100.0000	0xb3b90	7898a35c2424
 findpath	?get_travel_time@searchArray@@QAEJPBVarmy@@J@Z	100.0000	100.0000	100.0000	0xb3f20	9801e76404ba
 findpath	?insert@?$vector@UpathCell@@V?$allocator@UpathCell@@@std@@@std@@QAEXPAUpathCell@@IABU3@@Z	100.0000	100.0000	100.0000	0xb3f70	-
@@ -2561,6 +2568,7 @@ philai	?ValueOfSpell@hero@@QBEHH@Z	100.0000	100.0000	100.0000	0x127aa0	6366031b8
 philai	?ValueOfStables@@YIHPBVhero@@PAJ@Z	100.0000	100.0000	100.0000	0x12aac0	39373c5d0391
 philai	?ValueOfTreasure@@YIHPBVhero@@@Z	100.0000	100.0000	100.0000	0x12b4e0	d8afc6eae5e6
 philai	?ValueOfTree@@YIHPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x12b5a0	73d329d3dde8
+philai	?_Unguarded_insert@std@@YIXPAUtype_creature_value@@U2@U?$greater@Utype_creature_value@@@1@@Z	100.0000	100.0000	100.0000	0x12bd50	-
 philai	?buy_artifacts@@YIXPAVhero@@PAW4TArtifact@@J@Z	97.0093	98.1308	98.1308	0x124400	449e7c61275e
 philai	?buy_siege_engine@@YIXPAVhero@@PAVtown@@W4type_building_id@@W4TArtifact@@@Z	98.7234	100.0000	100.0000	0x125ca0	4df179ba0465
 philai	?buy_special_building@@YIXPAVhero@@PAVtown@@@Z	99.2405	100.0000	100.0000	0x1259e0	7e579e56a42a

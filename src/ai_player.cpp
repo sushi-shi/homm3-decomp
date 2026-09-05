@@ -9256,3 +9256,15 @@ VA_COMPGEN(0x004346d0, 0xC8, BITSET_XRAN, Bitset144)
 // claimed bitset<9>::set (0x44c680) and bitset<9>::reference::operator=
 // (0x44c610).
 VA_COMPGEN(0x00434ad0, 0xC8, BITSET_XRAN, Bitset9)
+
+// COMDAT pairing: std::_Unguarded_insert<type_creature_value>. The ARITY
+// pins the instantiation: type_creature_value is 12 B (TCreatureType, long,
+// short - padded), /Gr puts the pointer in ecx and the by-value element on
+// the stack, and retail ends `ret 0xc`. The predicated twin in philai ends
+// `ret 0x10` - the same 12 B plus the empty greater<> - so the two overloads
+// separate on four bytes of stack.
+VA_COMPGEN(0x00435020, 0x42, STD_UNGUARDED_INSERT, type_creature_value)
+
+// COMDAT pairing: std::_Unguarded_insert<long>. Both parameters are register
+// arguments under /Gr, so this one ends on a bare `ret`.
+VA_COMPGEN(0x00435140, 0x1C, STD_UNGUARDED_INSERT, long)
