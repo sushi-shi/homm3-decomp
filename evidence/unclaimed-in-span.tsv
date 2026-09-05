@@ -2,14 +2,7 @@
 # Functions inside an EXISTING unit's inferred link-order
 # span that no match_baseline row claims.
 unit	functions	bytes
-kb	26	12684
-university_window	3	1431
-overview	1	1403
-towngatewindow	4	1383
-spells	3	724
-adventuremapwindow	7	573
-campaignbrief	2	381
 viewwrld	1	316
-wingraph	1	192
-bitmap16	1	165
+kb	6	198
+campaignbrief	1	63
 textwdgt	2	4

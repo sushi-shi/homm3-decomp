@@ -632,6 +632,25 @@ inline int ValueOfMapArtifact(const hero* current_hero, NewmapCell* cell)
 // the same field walks and control flow after inlining: guardians,
 // experience/resources, primary and secondary skills, artifacts, spells,
 // then joinable creatures.
+// The SecondarySkills loop's duplicated `value +=` is DELIBERATE, and the
+// merge is measured (polish 16). It is the whole of AI_value_of_event's
+// one remaining branch-polarity divergence: retail cross-jumps the two arms
+// onto ONE `imul ecx,[ebp-4] / add esi,ecx` tail and reaches it with
+// `jl` where this compile duplicates the tail and emits `jge`. Writing the
+// merge in source DOES close the polarity - branches go from one flip to
+// clean - and costs 0.0331 anyway (97.7399 -> 97.7068, and the skeleton's
+// exact-block count FALLS 34 -> 25), because the merged form transposes the
+// enclosing loop's registers: retail and the duplicated form both hold the
+// index in EAX and the accumulator in ESI, the merged form swaps them.
+// FOUR spellings were measured and all produce the byte-identical object at
+// 97.7068 - a named `int amount = level` with `amount = level - current_level`,
+// the same with `amount -= current_level`, reusing `level` itself as the
+// accumulator (no new local at all), and a `goto` into an explicit
+// `add_skill:` label reproducing retail's jump exactly. A fifth, an
+// if/else-if/else chain with a trailing `continue`, is worse still (97.16,
+// and the polarity flip comes back). The merge is therefore a FIXED POINT
+// this compiler reaches from any source shape; the cost is the register
+// transposition, not the spelling, so do not re-try the merge family.
 inline int ValueOfBlackBox(const hero* current_hero, NewmapCell* cell)
 {
     BlackBoxData* black_box = cell->get_black_box();

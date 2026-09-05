@@ -156,6 +156,13 @@ GLOBAL_TEMPLATE_MEMBER_RE = re.compile(r"^\?(\w+)@\?\$(\w+)@.*@@@@")
 IDENT_RE = re.compile(r"[^0-9A-Za-z_]+")
 #: VC6's builtin-type letters, for the containers whose element is a
 #: primitive and therefore carries no class name to key on.
+#: The tail of an MSVC COPY constructor: one parameter, `const <self>&`,
+#: written as a back-reference to the class's own name (`ABV0` plus the
+#: qualifier chain - `ABV0@` unqualified, `ABV01@` inside one namespace).
+#: It is what separates a compiler-generated copy ctor from every other
+#: ctor in the same overload group; an allocator-taking ctor whose argument
+#: is a DIFFERENT class spells its own name after `ABV` and never matches.
+COPY_CTOR_TAIL_RE = re.compile(r"@AB[VU]0\d*@@Z$")
 DEQUE_PRIMITIVE_ELEMENT = {"C": "signed_char", "D": "char",
                            "E": "unsigned_char", "F": "short",
                            "G": "unsigned_short", "H": "int",
@@ -312,7 +319,7 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "VECTOR_CONSTRUCTOR_ITERATOR",
                  "VECTOR_RESIZE", "VECTOR_INSERT", "VECTOR_ERASE",
                  "VECTOR_DESTROY", "VECTOR_UCOPY", "VECTOR_UFILL",
-                 "VECTOR_COPY_ASSIGN",
+                 "VECTOR_COPY_ASSIGN", "VECTOR_COPY_CTOR",
                  "BITSET_TIDY", "BITSET_CTOR",
                  "BITSET_SUBSCRIPT", "BITSET_REFERENCE_ASSIGN",
                  "BITSET_ITERATOR_DEREF",
@@ -323,7 +330,7 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "TREE_INSERT", "TREE_NODE_INSERT",
                  "TREE_CONST_ITERATOR_DEC", "TREE_CONST_ITERATOR_INC",
                  "TREE_COPY", "TREE_COPY_NODE", "TREE_ERASE",
-                 "TREE_BUYNODE",
+                 "TREE_BUYNODE", "TREE_INIT", "TREE_COPY_ASSIGN",
                  "STRINGBUF_OVERFLOW", "STRINGBUF_INIT",
                  "DEQUE_FREEFRONT", "DEQUE_FREEBACK", "DEQUE_BUYBACK",
                  "BASIC_STRING_ASSIGN_PTR_SIZE",
@@ -346,6 +353,21 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "IMPLICIT_COPY_CTOR", "IMPLICIT_COPY_ASSIGN",
                  "IMPLICIT_DTOR"}
 COMPGEN_KINDS |= {member.upper() for _p, _s, member in CHAR_STREAM_MEMBERS}
+#: The kinds that name NO pre-existing COFF symbol - MSVC's anonymous
+#: static-initialization thunks, which the canonicalizer RENAMES rather
+#: than joins. Every other kind claims a symbol cl already emitted, so
+#: every other kind takes part in join_unit's name-authority join; the
+#: markers are derived here rather than restated there, because the
+#: restatement was a silent opt-out: a kind missing from it reached the
+#: join as an unjoinable row that banks 0.0000 with the ratchet clean.
+#: (`homm3.build.canonicalize_data_symbols.DIRECT_SYMBOL_COMPGEN_KINDS`
+#: is the same partition seen from the other side, and the test pins them
+#: equal.)
+ANONYMOUS_COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT",
+                           "STATIC_DTOR", "STATIC_CTOR"}
+JOINED_COMPGEN_MARKERS = tuple(
+    sorted(f"${kind.lower()}$"
+           for kind in COMPGEN_KINDS - ANONYMOUS_COMPGEN_KINDS))
 
 
 def mask_lexical_noise(blob: str) -> str:
@@ -871,6 +893,41 @@ def _std_algorithm_key(mangled: str):
     return f"{owner}@{STD_ALGORITHMS[member]}"
 
 
+def _vector_owner(mangled: str):
+    """The element spelling `std::vector`'s member keys are built from, or
+    None when the name is not a vector member. Extracted from
+    `_demangle_key` so the join can read a mangled name's element WITHOUT
+    the key that hides it: every vector CONSTRUCTOR keys to the shared
+    `vector_vector` group (the generic `??0` arm keeps only the stable
+    template name, and a lexical `std::vector<T>::vector` declarator
+    reduces to exactly that spelling), so the element is the only thing
+    left that can tell two ctors in that group apart."""
+    vector_string_element = "?$vector@V?$basic_string@D" in mangled
+    #: `vector<std::string *>` - a POINTER to the string, which the
+    #: class regex below cannot reach either (`PAV?$basic_string` has
+    #: no plain identifier after the pointer prefix).
+    vector_string_ptr_element = ("?$vector@PAV?$basic_string@D"
+                                 in mangled)
+    #: A vector over a BUILTIN element carries no class name at all - VC6
+    #: spells the type as a single letter with no `@` terminator - so the
+    #: class regex below cannot reach it. Decoded like deque's.
+    vector_primitive = re.match(
+        r"^\?\??\w*@?\?\$vector@([CDEFGHIJK])V\?\$allocator@", mangled)
+    vector_element = re.search(
+        r"\?\$vector@(?:(?:P[AB][VU])|(?:V|U|W4))?"
+        r"([A-Za-z_]\w*)@", mangled)
+    nested_vector_element = re.search(
+        r"\?\$vector@V\?\$vector@(?:V|U)([A-Za-z_]\w*)@", mangled)
+    return (
+        f"{nested_vector_element.group(1).lower()}_vector"
+        if nested_vector_element else
+        "string_ptr" if vector_string_ptr_element else
+        "string" if vector_string_element else
+        DEQUE_PRIMITIVE_ELEMENT[vector_primitive.group(1)]
+        if vector_primitive else
+        vector_element.group(1).lower() if vector_element else None)
+
+
 def _demangle_key(mangled: str):
     """Normalized join key for one MSVC public name: ?Method@Class@@... ->
     class_method, matching scan_file's declarator spelling (:: -> _).
@@ -927,6 +984,18 @@ def _demangle_key(mangled: str):
         return f"{tree_owner.lower()}@tree_buynode"
     if mangled.startswith("?_Erase@?$_Tree@") and tree_owner:
         return f"{tree_owner.lower()}@tree_erase"
+    # `_Tree::_Init` and `_Tree::operator=`, keyed on the tree owner like
+    # every member above rather than through the generic template arms at
+    # the foot of this function. Neither generic spelling can be named by a
+    # claim: `_Init` lands on TEMPLATE_MEMBER_RE's `std__tree__init`, which
+    # collides with basic_streambuf's and basic_filebuf's own nullary
+    # `_Init`, and `??4` splits the mangled class on `@@` - a separator a
+    # template ARGUMENT LIST already carries - producing the unusable
+    # `?$_tree_?$_tree_operator`.
+    if mangled.startswith("?_Init@?$_Tree@") and tree_owner:
+        return f"{tree_owner.lower()}@tree_init"
+    if mangled.startswith("??4?$_Tree@") and tree_owner:
+        return f"{tree_owner.lower()}@tree_copy_assign"
     # The two bound searches. Same class, same 73-byte shape, and they
     # differ only in which way round the key compare runs, so they are
     # separate kinds for the same reason `_Copy` and `erase` are: a
@@ -995,30 +1064,7 @@ def _demangle_key(mangled: str):
     if deque_class:
         member = deque_class.group(1).lstrip("_").lower()
         return f"{deque_class.group(2).lower()}@deque_{member}"
-    vector_string_element = "?$vector@V?$basic_string@D" in mangled
-    #: `vector<std::string *>` - a POINTER to the string, which the
-    #: class regex below cannot reach either (`PAV?$basic_string` has
-    #: no plain identifier after the pointer prefix).
-    vector_string_ptr_element = ("?$vector@PAV?$basic_string@D"
-                                 in mangled)
-    #: A vector over a BUILTIN element carries no class name at all - VC6
-    #: spells the type as a single letter with no `@` terminator - so the
-    #: class regex below cannot reach it. Decoded like deque's, above.
-    vector_primitive = re.match(
-        r"^\?\??\w*@?\?\$vector@([CDEFGHIJK])V\?\$allocator@", mangled)
-    vector_element = re.search(
-        r"\?\$vector@(?:(?:P[AB][VU])|(?:V|U|W4))?"
-        r"([A-Za-z_]\w*)@", mangled)
-    nested_vector_element = re.search(
-        r"\?\$vector@V\?\$vector@(?:V|U)([A-Za-z_]\w*)@", mangled)
-    vector_owner = (
-        f"{nested_vector_element.group(1).lower()}_vector"
-        if nested_vector_element else
-        "string_ptr" if vector_string_ptr_element else
-        "string" if vector_string_element else
-        DEQUE_PRIMITIVE_ELEMENT[vector_primitive.group(1)]
-        if vector_primitive else
-        vector_element.group(1).lower() if vector_element else None)
+    vector_owner = _vector_owner(mangled)
     if mangled.startswith("??1?$vector@") and vector_owner:
         return f"{vector_owner}@vector_dtor"
     if mangled.startswith("??_H@"):
@@ -1186,6 +1232,12 @@ def _demangle_key(mangled: str):
         # vector<CObjectType>; VA_COMPGEN's identifier-only owner names the
         # element class, which is stable even though the full template type
         # cannot be a macro argument without exposing its comma list.
+        # The INNERMOST class name, deliberately: this arm predates
+        # `_vector_owner`'s composite spellings and keeps its own regex so
+        # a nested element still keys the way the admitted claim spells it.
+        vector_element = re.search(
+            r"\?\$vector@(?:(?:P[AB][VU])|(?:V|U|W4))?"
+            r"([A-Za-z_]\w*)@", mangled)
         if vector_element:
             return f"{vector_element.group(1).lower()}@fctor"
         cls = mangled[4:].split("@@", 1)[0].split("@")[0]
@@ -1442,6 +1494,89 @@ def _size_pairing(by_rva: list[dict], mangled_group: list) -> list | None:
     return found
 
 
+def _element_pairing(candidates: list[dict], mangled_group: list) -> dict:
+    """{claim rva -> mangled} for the group members a claim's OWNER names
+    outright - the strongest oracle in the join, because it appeals to
+    neither definition order nor length.
+
+    `std::vector`'s constructors all share the `vector_vector` key: the
+    generic `??0` arm keeps only a class template's stable name, and a
+    lexical `std::vector<T>::vector` declarator reduces to exactly the same
+    spelling. So one group holds every element's ctors at once, and the
+    two weaker oracles both fail on it. The positional zip is wrong because
+    a COPY ctor is compiler-generated - cl emits it where it is first
+    NEEDED, not where the class is written - and `_size_pairing` cannot
+    separate two elements whose bodies are the same length.
+    singleselectionwindow is both cases: its five element copy ctors sit in
+    COFF order hero, int, vector<hero>, vector<type_artifact>,
+    CampaignScenarioInfo against an rva order that leads with int, and the
+    two nested-vector ones are 108 bytes on BOTH sides.
+
+    A `VECTOR_COPY_CTOR` claim carries the element in its own owner, and
+    the mangled name spells it out, so the pairing is forced whenever the
+    element names exactly one free symbol. Claims of every other kind, and
+    elements naming two symbols, are left to the oracles below.
+
+    Pure in (candidates, mangled_group) so the negative control can drive
+    it."""
+    by_element = {}
+    for name, _content in mangled_group:
+        if not name.startswith("??0") or not COPY_CTOR_TAIL_RE.search(name):
+            continue
+        element = _vector_owner(name)
+        if element:
+            by_element.setdefault(element, []).append(name)
+    out = {}
+    for row in candidates:
+        if "$vector_copy_ctor$" not in row["name"]:
+            continue
+        names = by_element.get(row["name"].rsplit("$", 1)[1].lower(), ())
+        if len(names) == 1:
+            out[row["rva"]] = names[0]
+    return out
+
+
+def _ctor_kind_pairing(candidates: list[dict], mangled_group: list,
+                       used: set | None = None) -> dict:
+    """{claim rva -> mangled} for the constructor halves a group's CLAIM
+    KIND names uniquely - decided without any appeal to length.
+
+    A count mismatch between a claim group and its base object's mangled
+    names normally means the base emits overloads retail dropped, and
+    `join_unit` settles those by EXACT content size. That oracle cannot
+    reach the commonest shape in this tree: a class whose default ctor and
+    whose compiler-generated copy ctor share one `Class_Class` key, where
+    the linker took retail's default ctor from ANOTHER compiland, so this
+    unit's retail band contains only the copy. The sizes decide nothing
+    there because a claim's retail extent and our COMDAT's length are not
+    equal for an unmatched reconstruction - singleselectionwindow's
+    `NewSMapHeader` copy ctor is 426 B in retail against 462 B here.
+
+    The kinds decide it instead. `IMPLICIT_COPY_CTOR` and `CLASS_CTOR` say
+    which half a CLAIM is; `ABV0<n>` at the end of the mangled name - a
+    back-reference to the class's own name - says which half a SYMBOL is.
+    Where each half holds exactly one of each, the pairing is forced.
+    Anything less declines and the group stays labeled.
+
+    `used` names are already spoken for by the size pass and never offered
+    twice. Pure in (candidates, mangled_group, used) so the negative
+    control can drive it."""
+    used = used or set()
+    free = [name for name, _content in mangled_group
+            if name not in used and name.startswith("??0")]
+    halves = (("$implicit_copy_ctor$",
+               [n for n in free if COPY_CTOR_TAIL_RE.search(n)]),
+              ("$class_ctor$",
+               [n for n in free if not COPY_CTOR_TAIL_RE.search(n)]))
+    out = {}
+    for marker, names in halves:
+        rows = [r for r in candidates
+                if marker in r["name"] and r["channel"] != "src-VA+base"]
+        if len(rows) == 1 and len(names) == 1:
+            out[rows[0]["rva"]] = names[0]
+    return out
+
+
 def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
     """The base-obj name-authority join, in place: a compiled unit's public
     symbols carry the TRUE MSVC spellings; uniquely-joined claims adopt
@@ -1457,84 +1592,8 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                  if not r.get("ir_unconfirmed")
                  and (r["channel"] == "src-VA"
                       or (r["channel"] == "src-VA_COMPGEN"
-                          and ("$scalar_deleting_dtor$" in r["name"]
-                               or "$vector_deleting_dtor$" in r["name"]
-                               or "$default_ctor_closure$" in r["name"]
-                               or "$vector_dtor$" in r["name"]
-                               or "$vector_size$" in r["name"]
-                               or "$vector_capacity$" in r["name"]
-                               or "$vector_constructor_iterator$" in r["name"]
-                               or "$vector_reserve$" in r["name"]
-                               or "$vector_clear$" in r["name"]
-                               or "$exception_doraise$" in r["name"]
-                               or "$functor_call$" in r["name"]
-                               or "$deque_iterator_add_assign$" in r["name"]
-                               or "$vector_resize$" in r["name"]
-                               or "$vector_insert$" in r["name"]
-                               or "$vector_erase$" in r["name"]
-                               or "$vector_destroy$" in r["name"]
-                               or "$vector_ucopy$" in r["name"]
-                               or "$vector_ufill$" in r["name"]
-                               or "$vector_copy_assign$" in r["name"]
-                               or "$bitset_tidy$" in r["name"]
-                               or "$bitset_ctor$" in r["name"]
-                               or "$bitset_subscript$" in r["name"]
-                               or "$bitset_reference_assign$" in r["name"]
-                               or "$bitset_iterator_deref$" in r["name"]
-                               or "$bitset_flip$" in r["name"]
-                               or "$bitset_count$" in r["name"]
-                               or "$bitset_any$" in r["name"]
-                               or "$bitset_set$" in r["name"]
-                               or "$bitset_test$" in r["name"]
-                               or "$bitset_xran$" in r["name"]
-                               or "$bitset_xinv$" in r["name"]
-                               or "$istream_extract_bitset$" in r["name"]
-                               or "$tree_min$" in r["name"]
-                               or "$tree_insert$" in r["name"]
-                               or "$tree_node_insert$" in r["name"]
-                               or "$tree_const_iterator_dec$" in r["name"]
-                               or "$tree_const_iterator_inc$" in r["name"]
-                               or "$tree_buynode$" in r["name"]
-                               or "$tree_copy$" in r["name"]
-                               or "$tree_copy_node$" in r["name"]
-                               or "$tree_erase$" in r["name"]
-                               or "$tree_lbound$" in r["name"]
-                               or "$tree_ubound$" in r["name"]
-                               or "$tree_erase_iterator$" in r["name"]
-                               or "$tree_erase_range$" in r["name"]
-                               or "$tree_find$" in r["name"]
-                               or "$deque_erase$" in r["name"]
-                               or "$stringbuf_overflow$" in r["name"]
-                               or "$stringbuf_init$" in r["name"]
-                               or "$deque_freefront$" in r["name"]
-                               or "$deque_freeback$" in r["name"]
-                               or "$deque_buyback$" in r["name"]
-                               or "$deque_push_back$" in r["name"]
-                               or "$deque_growmap$" in r["name"]
-                               or "$deque_iterator_inc$" in r["name"]
-                               or "$deque_iterator_dec$" in r["name"]
-                               or "$basic_string_assign_ptr_size$" in r["name"]
-                               or "$ostream_put$" in r["name"]
-                               or "$ostream_insert_cstr$" in r["name"]
-                               or "$insertion_sort_1$" in r["name"]
-                               or "$std_sort$" in r["name"]
-                               or "$std_sort_0$" in r["name"]
-                               or "$std_median$" in r["name"]
-                               or "$std_unguarded_partition$" in r["name"]
-                               or "$std_unguarded_insert$" in r["name"]
-                               or "$std_copy_backward$" in r["name"]
-                               or "$std_fill$" in r["name"]
-                               or "$streambuf_xsputn$" in r["name"]
-                               or any(f"${member}$" in r["name"]
-                                      for _p, _s, member
-                                      in CHAR_STREAM_MEMBERS)
-                               or "$pair_const_int_dtor$" in r["name"]
-                               or "$std_construct$" in r["name"]
-                               or "$std_copy$" in r["name"]
-                               or "$class_ctor$" in r["name"]
-                               or "$implicit_copy_ctor$" in r["name"]
-                               or "$implicit_copy_assign$" in r["name"]
-                               or "$implicit_dtor$" in r["name"])))]
+                          and any(marker in r["name"]
+                                  for marker in JOINED_COMPGEN_MARKERS)))]
     if not unit_rows:
         return
     authority = {key: [(n, c) for n, c in group if n not in taken]
@@ -1571,6 +1630,14 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
         if "$vector_capacity$" in row["name"]:
             owner = row["name"].rsplit("$", 1)[1].lower()
             claim_keys.setdefault(f"{owner}@vector_capacity", []).append(row)
+            continue
+        if "$vector_copy_ctor$" in row["name"]:
+            # std::vector's copy ctor shares the `vector_vector` key with
+            # every other vector ctor - both the mangled spelling and a
+            # lexical `std::vector<T>::vector` declarator reduce to it - so
+            # the claim keys there too and `_element_pairing` reads the
+            # element out of the claim's own OWNER.
+            claim_keys.setdefault("vector_vector", []).append(row)
             continue
         if "$vector_constructor_iterator$" in row["name"]:
             claim_keys.setdefault("vector_constructor_iterator", []).append(row)
@@ -1722,6 +1789,7 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
         tree_or_deque = next(
             (kind for kind in ("tree_erase_iterator", "tree_erase_range",
                                "tree_lbound", "tree_ubound", "tree_find",
+                               "tree_init", "tree_copy_assign",
                                "deque_erase")
              if f"${kind}$" in row["name"]), None)
         if tree_or_deque is not None:
@@ -1777,6 +1845,23 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
         candidates = claim_keys.get(key)
         if not candidates:
             continue  # unimplemented group: leave labeled
+        # The element-named members bind FIRST and leave the group: an
+        # owner that names its instantiation cannot be mis-paired, and
+        # taking both sides out keeps the weaker oracles below honest
+        # about what is left. Empty for every group but the shared vector
+        # ctor one, where it is the only oracle that works.
+        bound = _element_pairing(candidates, mangled_group)
+        if bound:
+            for row in candidates:
+                mangled = bound.get(row["rva"])
+                if mangled is not None:
+                    row["joined"] = mangled
+                    row["channel"] = "src-VA+base"
+            candidates = [r for r in candidates if r["rva"] not in bound]
+            mangled_group = [(n, c) for n, c in mangled_group
+                             if n not in set(bound.values())]
+            if not candidates or not mangled_group:
+                continue
         if len(candidates) == len(mangled_group):
             # overload groups zip in order: claims by rva (link
             # order), mangled names by COFF section (definition
@@ -1809,6 +1894,18 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                 continue
             row["joined"] = mangled
             row["channel"] = "src-VA+base"
+        # ...and where the LENGTHS decide nothing, the claim kind still
+        # can: a default ctor sitting beside its compiler-generated copy
+        # ctor is one group whose two halves both sides can name.
+        pairing = _ctor_kind_pairing(
+            candidates, mangled_group,
+            {r.get("joined") for r in candidates
+             if r["channel"] == "src-VA+base"})
+        for row in candidates:
+            mangled = pairing.get(row["rva"])
+            if mangled is not None:
+                row["joined"] = mangled
+                row["channel"] = "src-VA+base"
 
 
 def _fragment_rows(rows: list[dict]) -> list[list[str]]:
