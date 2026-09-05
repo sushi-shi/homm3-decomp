@@ -59,6 +59,11 @@ std::string GetCampaignArchiveStem();  // 0x597d00, name provisional
 // what makes SmackOpen read from an already-open archive HANDLE.
 #define SMACKOPEN_FROM_ARCHIVE 0x1140
 
+// The Smacker track selection mask ShowVideo hands SmackOpen and
+// SmackVolumePan, and the extra bit that opens a track as audio-only.
+#define SMACK_TRACK_MASK 0xfe000
+#define SMACKOPEN_AUDIO_ONLY 0x200
+
 // The remaining smackmgr.obj bodies, declared ahead of their first
 // in-TU call site. ShowVideo (0x598af0) opens the handle pair and
 // primes the blit state; SmackManager::NextSmackerFrame (0x598eb0) is
@@ -87,6 +92,13 @@ DATA(0x0069fe0c) int gSmackReqHeight;              // ShowVideo arg 5
 DATA(0x0069fe10) int gSmackVideoId;                // ShowVideo arg 1
 DATA(0x0069fe14) int gSmackLoop;                   // ShowVideo arg 6
 DATA(0x0069fe1c) int gSmackAdvance;                // ShowVideo arg 8 (byte-narrowed on the way in)
+// The descriptor row ShowVideo takes its audio-track flag from, which is
+// NOT the id it is opening (that goes to gSmackVideoId above). Provisional.
+DATA(0x0069fdec) int gVideoDescriptorIndex;
+// Nonzero once ShowVideo has decided the Miles driver is live and the user
+// has sound turned up; it is what selects the 0xfe000 track mask on both
+// SmackOpen calls. Provisional.
+DATA(0x0069fe58) int gVideoSoundReady;
 // Entry counts, one per archive directory; each is the dword LoadAnimHeaders
 // reads before sizing its (count + 2) allocation.
 DATA(0x0069fde4) int gVideoCount1;
@@ -893,6 +905,92 @@ void SmackManager::SetPixelFormat(unsigned long red_mask,
     }
 }
 
+// The Smacker half of VideoOpen/VideoPlay: tear the previous pair down,
+// open the audio-only track and then the video track out of the archives,
+// prime the blit state and latch every argument the per-frame pump reads
+// back. Fastcall arity is fixed by the frame: id in ECX, x in EDX, six more
+// on the stack and `ret 0x18`, exactly VideoOpen's eight-argument forward.
+// The Smacker volume scale (3640 * "Sound Volume") and the 0xfe000 track
+// mask are transcribed from the two SmackVolumePan sites.
+// Residual (48.7%): the three VideoClose() sites only. Retail EXPANDS all
+// three (base 17 blocks against retail's 42) and does it three different
+// ways - the first two keep VideoResume out of line, the third expands it
+// and CALLS CloseSmacker instead. Every other call pairs: OpenSmackerTrack
+// twice, SmackUseMMX, both SmackVolumePans, all three SmackToBuffers.
+// Tried and rejected: `inline void VideoClose()` (the documented /Ob2 lever
+// for a large out-of-class definition) DOES make it expand, but expands
+// VideoResume with it at every site - 75 blocks, ShowVideo 41.02 and
+// VideoClose's own row to 0.00; writing the close sequence longhand at all
+// three sites is worse still (59 blocks, 16.07) for the same reason - the
+// bigger caller buys VideoResume an expansion retail does not make. The
+// separation retail has needs a per-site pin, which this lane may not add.
+VA(0x00598af0, 0x385)  // anchor-caller(VideoPlay/VideoOpen) + anchor-callee(OpenSmackerTrack), retail-only
+void ShowVideo(int id, int x, int y, int w, int h, int loop, int autoDraw,
+               int advance)
+{
+    if (gUnnamed699290 == 0 && gpSoundManager->ds != 0
+        && gUnnamed698758.soundVolume != 0)
+        gVideoSoundReady = 1;
+    else
+        gVideoSoundReady = 0;
+
+    VideoClose();
+    SmackUseMMX(1);
+
+    gSmackVideoId = id;
+    gSmackPaused = 0;
+    gSmackVideo2 = 0;
+    gSmackAdvance = static_cast<unsigned char>(advance);
+    gSmackBufferFlags = (GreenBits == VIDEO_PIXEL_FORMAT_RGB565)
+                            ? SMACKBUFFER565 : SMACKBUFFER555;
+
+    if (gVideoDescriptors[id].smkAudioStem != "") {
+        gSmackVideo2 = OpenSmackerTrack(gVideoDescriptors[id].smkAudioStem,
+            gVideoSoundReady ? SMACK_TRACK_MASK : 0, SMACKOPEN_AUDIO_ONLY);
+        if (!gSmackVideo2) {
+            VideoClose();
+            return;
+        }
+        SmackVolumePan(gSmackVideo2, SMACK_TRACK_MASK,
+            3640 * gUnnamed698758.soundVolume, 0x8000);
+        SmackToBuffer(gSmackVideo2, x, y,
+            gpWindowManager->screenBitmap->Pitch,
+            gpWindowManager->screenBitmap->Height,
+            gpWindowManager->screenBitmap->map, gSmackBufferFlags);
+    }
+
+    gSmackVideo = OpenSmackerTrack(gVideoDescriptors[id].smkStem,
+        gVideoSoundReady ? SMACK_TRACK_MASK : 0,
+        gVideoDescriptors[gVideoDescriptorIndex].field_b ? SMACKOPEN_AUDIO_ONLY : 0);
+    if (!gSmackVideo) {
+        VideoClose();
+        return;
+    }
+
+    gSmackAutoDraw = autoDraw;
+    if (w <= 0)
+        w = gSmackVideo->Width;
+    if (h <= 0)
+        h = gSmackVideo->Height;
+    gSmackReqWidth = w;
+    gSmackReqHeight = h;
+    gSmackLoop = loop;
+    gSmackX = x;
+    gSmackY = y;
+    SmackVolumePan(gSmackVideo, SMACK_TRACK_MASK,
+        3640 * gUnnamed698758.soundVolume, 0x8000);
+    SmackToBuffer(gSmackVideo, gSmackX, gSmackY,
+        gpWindowManager->screenBitmap->Pitch,
+        gpWindowManager->screenBitmap->Height,
+        gpWindowManager->screenBitmap->map, gSmackBufferFlags);
+    if (gSmackVideo2)
+        SmackToBuffer(gSmackVideo2, gSmackX, gSmackY,
+            gpWindowManager->screenBitmap->Pitch,
+            gpWindowManager->screenBitmap->Height,
+            gpWindowManager->screenBitmap->map, gSmackBufferFlags);
+    gSmackFrameReady = 1;
+}
+
 // The three flat Smacker-track wrappers that close out smackmgr.obj.
 // Complete's smack layer is a pair of module globals rather than the
 // Dreamcast's SmackManager object, so these keep the DC compiland's
@@ -951,7 +1049,7 @@ void NextSmackerFrame()
             gpSoundManager->service_sounds();
             SmackClose(gSmackVideo);
             gSmackVideo = 0;
-            if (gVideoDescriptors[gSmackVideoId].field_1) {
+            if (gVideoDescriptors[gSmackVideoId].field_9) {
                 SmackDoFrame(gSmackVideo2);
                 gpWindowManager->FadeScreen(0, 4, 0);
             }
