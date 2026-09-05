@@ -405,9 +405,17 @@ void __fastcall game_null_159510(const char* caller,
 // six size-only). Retail calls assign for the early cases and expands four
 // late sites. The explicit strlen plus assign-only pin ratchets N=0 70.5441,
 // N=1 flat, N=2 76.7853, N=3 flat, N=4 78.4735 (negative control), and N=5
-// 86.1324. Predict-inline leaves only one ios_base destructor and one
-// string::_Tidy over-inlined; the remaining six blocks are size-only stream
-// frame coloring rather than a missing semantic branch.
+// 86.1324 -> 86.9559: the message stream is BLOCK-SCOPED. Retail's frame is
+// 0xac against our 0x130, and the 0x84 surplus is exactly one ostringstream -
+// retail overlays the default arm's `numericType` onto `message`, which VC6
+// will only do once `message` has a scope of its own. The frame is now
+// retail's to the byte. MEASURED AND REJECTED: the identical scope in
+// game_null_159510 above COSTS 2.62 (89.3910 -> 86.7726) even though it makes
+// that frame exact too - it adds five early-return destructor blocks there,
+// so this is a per-function verdict, not a rule. Predict-inline leaves only
+// one ios_base destructor and one string::_Tidy over-inlined; the remaining
+// six blocks are size-only stream frame coloring rather than a missing
+// semantic branch.
 VA(0x005599e0, 0x448)  // anchor-caller + retail type-name jump table; wall
 void __fastcall game_sprite_1599e0(const char* caller,
                                    int resourceType,
@@ -502,6 +510,7 @@ void __fastcall game_sprite_1599e0(const char* caller,
     }
     }
 
+    {
 #pragma inline_depth(0)
     std::ostringstream message;
 #pragma inline_depth()
@@ -520,6 +529,7 @@ void __fastcall game_sprite_1599e0(const char* caller,
         DATA_COMPGEN(0x00682f08, resourceManagerCaption,
                      "ResourceManager"),
         0);
+    }
 #pragma inline_depth(0)
 }
 #pragma inline_depth()
