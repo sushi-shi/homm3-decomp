@@ -161,9 +161,9 @@ advmgr	?set_witch_hut_help_text@@YIXPADPAVhero@@PAVNewmapCell@@PBD3@Z	100.0000	1
 advspells	?CheckCastSpell@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c2f0	bbe51132d223
 advspells	?DimensionDoor@advManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x1d090	c97eb065f8d7
 advspells	?SkuttleBoat@advManager@@QAEXH@Z	98.4651	98.4651	98.4651	0x1cdf0	ef7c7049b5d5
+advspells	?SummonBoat@advManager@@QAEXH@Z	91.1018	91.4864	91.4864	0x1c8a0	fdd94ce99a6b
 advspells	?TownGate@advManager@@QAEXH@Z	99.0386	99.0386	99.0386	0x1d360	702cdb9eab97
 advspells	advManager_CastSpell	0.0000	0.0000	0.0000	0x1c490	c64aa2b09757
-advspells	advManager_SummonBoat	0.0000	0.0000	0.0000	0x1c8a0	b17834fd0644
 advspells	advManager_TeleportTo	0.0000	0.0000	0.0000	0x1d930	fbb5e7cb98ff
 ai	??1type_spellvalue@@QAE@XZ	100.0000	100.0000	100.0000	0x20cf0	-
 ai	?DoCompAI@combatManager@@QAEXH@Z	98.4697	98.4697	98.4697	0x221f0	2e3e65e4a47b
@@ -494,7 +494,7 @@ army	?check_obstacle_attacks@army@@QAEEE@Z	100.0000	100.0000	100.0000	0x41f70	26
 army	?check_special_attack@army@@QAEEPAV1@@Z	100.0000	100.0000	100.0000	0x40500	49147539aa98
 army	?compute_attacker_bonus@army@@QBEHHEPAV1@EJ@Z	100.0000	100.0000	100.0000	0x43320	698523953542
 army	?consider_attack@army@@QAEXPBV1@JJ@Z	100.0000	100.0000	100.0000	0x48840	686954572466
-army	?do_attack@army@@QAEEPAV1@H@Z	98.9251	99.9962	99.9962	0x41610	1fa738e017fe
+army	?do_attack@army@@QAEEPAV1@H@Z	98.8868	99.9962	99.9962	0x41610	1fa738e017fe
 army	?do_attack@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x41cb0	0c17230627a2
 army	?do_fire_shield@army@@AAEXJ@Z	100.0000	100.0000	100.0000	0x409c0	3f772aa9df30
 army	?do_multi_head_attack@army@@QAEXIPAH0PAJ@Z	100.0000	100.0000	100.0000	0x40310	d1193b9e629e

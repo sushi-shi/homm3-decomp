@@ -7,6 +7,7 @@
 #include "armygrp.h"
 #include "dimensiondoorwindow.h"
 #include "exec.h"
+#include "findpath.h"
 #include "game.h"
 #include "kb.h"
 #include "misc.h"
@@ -87,14 +88,147 @@ void advManager::CastSpell(SpellID whichSpell)
     // @stub
 }
 
+#endif  /* @carcass part 1 */
+
 // E:\gamedcs\advspells.cpp:171
+// Summon Boat. The caster must be ashore; the spell then looks for the
+// first free water tile in the eight-neighbour order findpath's
+// normalDirTable fixes, rolls against the mastery row, and either MOVES the
+// hero's own summonable boat there (fizzling it out of its old square first,
+// but only while that square is on the displayed 19x17 radar window) or, at
+// advanced mastery and above, builds a new one.
+//
+// The old-position visibility test is what the two SLimitData clips are
+// for: retail keeps the boat's former cell out of the fizzle when it is off
+// the current view, which is why the first fizzle block carries no sample
+// and the second one does.
+//
+// Residual (91.1002%): two classes, both recorded rather than ground.
+//  * The three refusal blocks. Retail gives each dialog its OWN epilogue
+//    and sends every silent (not-a-local-human) exit to the function's
+//    final one; our CL cross-jumps them onto one shared block placed after
+//    the first dialog, which shifts the whole later block layout. This is
+//    the merged-return class. Writing `return;` INSIDE the `if` as well as
+//    after it is byte-flat, so it is not source-reachable from here.
+//  * `[ebp+8]` reloads inside the radar-window test: retail keeps the
+//    extracted origin in ECX across `movsx edx,dx` and stores it back,
+//    where we spill and re-read - one extra instruction in each of two
+//    blocks. Register pressure, not a spelling.
+// Also measured: `break` out of the search loop plus a post-loop
+// `direction == MAP_DIRECTION_COUNT` test scores 91.4864 - HIGHER - but it
+// emits a compare retail does not have (32 branches against retail's 31)
+// and leaves 12 exact blocks against this version's 14. The `goto` is the
+// faithful shape: retail's loop simply falls out into the message.
+// Byte-flat: `radarOrigin.z == theBoat->z` operand order (91.09).
 VA(0x0041c8a0, 0x54D)  // anchor-callee hero::find_summonable_boat + game::CreateBoat, dc 0x21b84
-void advManager::SummonBoat(TSkillMastery level)
+void advManager::SummonBoat(int level)
 {
-    // @stub
+    const SSpellTraits* traits = &akSpellTraits[SPELL_SUMMON_BOAT];
+
+    hero* who = gpGame->GetHero(gpCurrentPlayer->currHeroId);
+    if (who == 0)
+        return;
+
+    if (GetCell(who->get_location())->GroundSet == eTerrainWater) {
+        if (gpGame->IsLocalHuman(who->owner)) {
+            sprintf(gText,
+                    gpGeneralText->GetText(
+                        GENERAL_TEXT_SUMMON_BOAT_ALREADY_AT_SEA_FORMAT),
+                    who->name);
+            NormalDialog(gText, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        }
+        return;
+    }
+
+    int destX;
+    int destY;
+    int direction;
+    for (direction = 0; direction < MAP_DIRECTION_COUNT; direction++) {
+        destX = who->x + normalDirTable[direction].x;
+        destY = who->y + normalDirTable[direction].y;
+        if (destX >= 0 && destX < gMapWidth && destY >= 0
+            && destY < gMapHeight) {
+            NewmapCell* cell = GetCell(type_point(destX, destY, who->z));
+            if (cell->type_value == 0 && cell->GroundSet == eTerrainWater)
+                goto found;
+        }
+    }
+    if (gpGame->IsLocalHuman(who->owner)) {
+        NormalDialog(
+            gpGeneralText->GetText(GENERAL_TEXT_SUMMON_BOAT_NO_WATER),
+            1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    }
+    return;
+
+found:
+    if (Random(1, 100) <= traits->mastery_bonus[level]) {
+        boat* theBoat = who->find_summonable_boat();
+        if (theBoat != 0) {
+            theBoat->restore_cell();
+            // Only fizzle the boat's OLD square while it is on the radar
+            // window - 19 cells across and 17 down from radarOrigin.
+            if (theBoat->z == radarOrigin.z
+                && theBoat->x >= radarOrigin.x
+                && theBoat->x < radarOrigin.x + 19
+                && theBoat->y >= radarOrigin.y
+                && theBoat->y < radarOrigin.y + 17) {
+                int oldX = theBoat->x - radarOrigin.x;
+                int oldY = theBoat->y - radarOrigin.y;
+                SLimitData oldLimits(32 * oldX - 32, 32 * oldY - 32,
+                                     32 * (oldX + 3), 32 * (oldY + 2));
+                oldLimits.Clip(gAdvMapViewLimits);
+                gpWindowManager->SaveFizzleSourceX(
+                    oldLimits.iMinX, oldLimits.iMinY, oldLimits.Width(),
+                    oldLimits.Height());
+                CompleteDraw(0);
+                gpWindowManager->FizzleForwardX(
+                    oldLimits.iMinX, oldLimits.iMinY, oldLimits.Width(),
+                    oldLimits.Height(), -1);
+            }
+            theBoat->x = destX;
+            theBoat->y = destY;
+            theBoat->z = who->z;
+            theBoat->obscure_cell();
+        } else {
+            if (level < 2
+                || gpGame->CreateBoat(destX, destY, who->z, who->owner, 0, 0)
+                       < 0) {
+                if (gpGame->IsLocalHuman(who->owner)) {
+                    NormalDialog(
+                        gpGeneralText->GetText(
+                            GENERAL_TEXT_SUMMON_BOAT_NONE_AVAILABLE),
+                        1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                }
+                return;
+            }
+        }
+
+        int cellX = destX - radarOrigin.x;
+        int cellY = destY - radarOrigin.y;
+        SLimitData limits(32 * cellX - 32, 32 * cellY - 32,
+                          32 * (cellX + 3), 32 * (cellY + 2));
+        limits.Clip(gAdvMapViewLimits);
+
+        SAMPLE2 sample = LoadPlaySample(traits->m_sample);
+        gpWindowManager->SaveFizzleSourceX(limits.iMinX, limits.iMinY,
+                                           limits.Width(), limits.Height());
+        CompleteDraw(0);
+        gpWindowManager->FizzleForwardX(limits.iMinX, limits.iMinY,
+                                        limits.Width(), limits.Height(), -1);
+        UpdateScreen(0, 0);
+        Reseed(0, 0);
+        WaitEndSample(sample, -1);
+    } else if (gpGame->IsLocalHuman(who->owner)) {
+        sprintf(gText,
+                gpGeneralText->GetText(GENERAL_TEXT_SUMMON_BOAT_FAILED_FORMAT),
+                who->name);
+        NormalDialog(gText, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    }
+
+    who->UseSpell(who->GetManaCost(SPELL_SUMMON_BOAT, 0,
+                                   who->get_special_terrain()));
 }
 
-#endif  /* @carcass part 1 */
 
 // E:\gamedcs\advspells.cpp:328
 // The Scuttle Boat handler. TSkuttleBoatWindow picks the target; a
