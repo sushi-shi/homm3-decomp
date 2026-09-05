@@ -5536,3 +5536,36 @@ VA_COMPGEN(0x00517750, 0x21, VECTOR_SIZE, TObstacleVector)
 // COMDAT pairing: combatManager::TObstacleVector::_Ufill, the sibling of the
 // already-claimed _Ucopy, agreement 1.000 at an exactly equal 49-byte extent.
 VA_COMPGEN(0x0046b1e0, 0x31, VECTOR_UFILL, TObstacleVector)
+
+// The `std::set<int>` _Tree COMDAT surface. `TCombatEagleEyeSide::spells` is
+// this TU's only red-black tree, and its element mangles as a plain `H`, so
+// cmbtmgr.obj emits exactly four out-of-line _Tree members - the two public
+// `erase` overloads, the recursive node eraser `_Erase`, and the iterator's
+// `_Inc`. Retail's rows sit in one contiguous run at 0x46a740..0x46ae00 with
+// the same relative order and the same member set; 0x46ae00 is independently
+// named `?_Inc@const_iterator@?$_Tree@HHU_Kfn@?$set@H...` by the runtime map,
+// which fixes the whole family's element type as `int` and not `SpellID`.
+// spells.obj's already-claimed 0x5a9450 `insert` is the fifth member of the
+// same instantiation, emitted from the other consumer.
+//
+// The residual on all four is one class: retail's bodies open with
+// `call ??0_Lockit@std@@QAE@XZ` and close with the matching release, i.e.
+// retail compiled this TU with a threading model that gives `std::_Lockit`
+// a real body, while our /ML profile inlines it to nothing. That is the
+// per-unit flags question, not a spelling.
+//
+// erase(iterator, iterator) - the range form, `ret 0xc` for the hidden
+// return plus two by-value iterators.
+VA_COMPGEN(0x0046a740, 0x121, TREE_ERASE_RANGE, int_set)
+
+// erase(iterator) - the single-iterator form, `ret 8`.
+VA_COMPGEN(0x0046a870, 0x50F, TREE_ERASE_ITERATOR, int_set)
+
+// _Erase(_Node*) - the recursive teardown; retail's body calls itself at
+// 0x46adc1 and frees each node through `operator delete`.
+VA_COMPGEN(0x0046ad80, 0x7E, TREE_ERASE, int_set)
+
+// const_iterator::_Inc is the family's fifth member and sits at 0x46ae00,
+// named outright by the runtime map. NOT CLAIMED: the function-universe
+// classifier bands that row as runtime code, and a claim on it fails the
+// CLASS-overlap gate. Left to whoever re-bands the runtime split.
