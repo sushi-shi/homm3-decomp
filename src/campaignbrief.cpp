@@ -1359,3 +1359,6 @@ VA_COMPGEN(0x0045d420, 0x170, STD_CONSTRUCT, type_map_hero_identity)
 // COMDAT pairing: std::_Construct<CampaignScenarioPreview>, agreement 0.929
 // (150 base vs 147 retail instructions).
 VA_COMPGEN(0x0045d700, 0x1D6, STD_CONSTRUCT, CampaignScenarioPreview)
+
+// COMDAT pairing: _Tree<int, type_map_hero_info>::erase(first, last), 0.961.
+VA_COMPGEN(0x0045c070, 0x12B, TREE_ERASE_RANGE, type_map_hero_info)

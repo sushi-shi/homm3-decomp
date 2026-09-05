@@ -18559,3 +18559,8 @@ VA_COMPGEN(0x004b61f0, 0x6E, IMPLICIT_DTOR, _tree)
 
 // COMDAT pairing: out_of_range::1out_of_range, mnemonic agreement 0.909.
 VA_COMPGEN(0x004b6be0, 0x4B, IMPLICIT_DTOR, out_of_range)
+
+// COMDAT pairing: _Tree<int, type_map_hero_info>::erase(iterator), 0.998
+// (453 base vs 451 retail instructions). The admission queue carried this as
+// an unowned `campaignbrief..campaignmap` bracket row.
+VA_COMPGEN(0x0045c200, 0x53E, TREE_ERASE_ITERATOR, type_map_hero_info)
