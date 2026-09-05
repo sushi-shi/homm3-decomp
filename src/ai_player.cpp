@@ -4943,12 +4943,19 @@ static unsigned char check_move_spell(hero* current_hero,
 // retains that shape but adds the cursed-ground guard, uses its extra
 // pathCell flag as the entry gate, tests last_can_stop in the search, and
 // widens the platform-sized teleport window from 6x5 to 9x8 map squares.
-// The 99.9658% residual is bounded: VC6 moves destination_index's initial
-// store across best_savings's store, selects EDX rather than EAX for the final
-// UseSpell argument, and the delinked retail operand names data_2604fc+0 where
-// the candidate object names const_thresholds-4. Those relocation spellings
-// have the same effective indexed address; do not model that stripped-image
-// symbol-name limitation by changing the proven six-long table in source.
+// The old note read "VC6 moves destination_index's initial store across
+// best_savings's store" and treated that as bounded.  It was a SOURCE ORDER
+// fact, not an optimizer one: retail emits `mov [ebp-8],-1` INSIDE the
+// get_location() expansion, i.e. before best_savings, and declaring
+// `destination_index = -1;` AHEAD of the get_location call reproduces it
+// (99.9658 -> 99.9756, the one-sided instruction gone).  Measured and
+// rejected: moving BOTH stores ahead of the call, 99.9722.
+// Residual (99.9756%): one register choice - EDX rather than EAX for the
+// final UseSpell argument, six masked rows - plus the delinked retail
+// operand naming data_2604fc+0 where the candidate object names
+// const_thresholds-4.  Those relocation spellings have the same effective
+// indexed address; do not model that stripped-image symbol-name limitation
+// by changing the proven six-long table in source.
 DATA(0x00660500) static const long const_thresholds[6] = {
     1000, 150, 100, 75, 50, 25
 };
@@ -5018,9 +5025,9 @@ static unsigned char attempt_teleport(hero* current_hero,
     // placement immediately before that call also reproduces retail VC6's
     // interleaved lifetime; moving it after the call falls to 96.3350%.
     long path_index = step - 1;
+    destination_index = -1;
     start_point = current_hero->get_location();
     best_savings = 0;
-    destination_index = -1;
 
     do {
         will_teleport = 0;

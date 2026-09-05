@@ -154,7 +154,7 @@ advmgr	?UpdBottomViewTown@advManager@@QAEEE@Z	100.0000	100.0000	100.0000	0x164f0
 advmgr	?UpdateRadar@advManager@@QAEXEEEEE@Z	100.0000	100.0000	100.0000	0x13790	e31ae2610a4b
 advmgr	?UpdateRadar@advManager@@QAEXUtype_point@@EEEEE@Z	91.2477	91.2477	91.2477	0x12c40	555b9bfbe65f
 advmgr	?UpdateScreen@advManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0xf270	d8787382a606
-advmgr	?ViewPuzzle@advManager@@QAEXXZ	85.6339	85.6339	85.6339	0x1a7f0	4ede4d97bbc5
+advmgr	?ViewPuzzle@advManager@@QAEXXZ	85.6339	85.6339	85.6339	0x1a7f0	3ab1ccdbe138
 advmgr	?WindowHandler@CAdvPopup@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1b1c0	9bc2420b5496
 advmgr	?_Xran@?$bitset@$0DA@@std@@ABEXXZ	100.0000	100.0000	100.0000	0x1b410	-
 advmgr	?append@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@ABV12@II@Z	100.0000	100.0000	100.0000	0x1b250	-
@@ -314,7 +314,7 @@ ai_player	?_Xran@?$bitset@$0JA@@std@@ABEXXZ	100.0000	100.0000	100.0000	0x346d0	-
 ai_player	?add_artifact@@YIEPAVhero@@Utype_artifact@@PAJ0J2J@Z	100.0000	100.0000	100.0000	0x33e20	491424c42444
 ai_player	?add_creatures@type_AI_creature_swapper@@IAEXW4TCreatureType@@FF@Z	100.0000	100.0000	100.0000	0x2c130	83f7182af229
 ai_player	?attempt_step@@YIEPAVhero@@PAUpathCell@@EE@Z	100.0000	100.0000	100.0000	0x2fc50	bb64170c20f3
-ai_player	?attempt_teleport@@YIEPAVhero@@AAV?$vector@UpathCell@@V?$allocator@UpathCell@@@std@@@std@@J@Z	99.9658	99.9658	99.9658	0x30ab0	39dc2d8a9c4f
+ai_player	?attempt_teleport@@YIEPAVhero@@AAV?$vector@UpathCell@@V?$allocator@UpathCell@@@std@@@std@@J@Z	99.9755	99.9755	99.9755	0x30ab0	7855cdd53ab2
 ai_player	?build_markets@type_AI_player@@QAE_NPAH@Z	100.0000	100.0000	100.0000	0x2ab40	f6eec2228a6e
 ai_player	?build_path@@YIXPAVhero@@PAVsearchArray@@AAV?$vector@UpathCell@@V?$allocator@UpathCell@@@std@@@std@@AAUHeroDestination@@@Z	100.0000	100.0000	100.0000	0x30610	ae89deb9dec0
 ai_player	?buy_creatures@type_AI_player@@QAEXPAVhero@@PAVtown@@@Z	72.2248	73.6571	74.2046	0x2ba60	0f0abd7ab179
@@ -2408,7 +2408,7 @@ kb	?CalculateNormalDialogSize@@YIXPAUTNormalDialogInfo@@@Z	92.1688	92.1688	92.16
 kb	?CheckEndGame@@YIXH@Z	90.6191	90.6191	90.6191	0xf2ce0	a9ae3c65720d
 kb	?CleanUpMenus@@YIXXZ	100.0000	100.0000	100.0000	0xf4b50	5ad85acac0be
 kb	?CongratsWait@@YIXHPADHHH@Z	96.8467	96.8467	96.8467	0xf3ab0	767bdf8cc153
-kb	?CreditsWait@@YIXXZ	96.0634	96.0634	96.0634	0xedda0	59aef42716e7
+kb	?CreditsWait@@YIXXZ	96.0634	96.0634	96.0634	0xedda0	0f2b256360a9
 kb	?DisplayLCWinLoss@@YIEPAVLossConditionStruct@@PAH1E@Z	79.1107	79.1107	79.1107	0xf2960	2fdab48e3629
 kb	?DisplayVCWinLoss@@YI_NAAVVictoryConditionStruct@@AAH1_N@Z	94.9521	94.9521	94.9521	0xf15e0	0fa75f4e1fc3
 kb	?DoCampaignWindow@@YIEXZ	98.3910	98.3910	98.3910	0xf00a0	68ef1062200d
@@ -2466,7 +2466,7 @@ kbwin	?Process1WindowsMessage@@YIXXZ	100.0000	100.0000	100.0000	0xf7fb0	70a9d8b8
 kbwin	?SetMenus@@YIXPAUHMENU__@@H@Z	100.0000	100.0000	100.0000	0xf8220	b3dfc64bb836
 kbwin	?SetNoDialogMenus@@YIXH@Z	100.0000	100.0000	100.0000	0xf81e0	6294abbdc46c
 kbwin	_WinMain@16	100.0000	100.0000	100.0000	0xf7a30	4bad5aec22eb
-levelupwindow	??0TLevelUpWindow@@QAE@PAVhero@@HHH@Z	99.1299	99.1299	99.1300	0xf8880	e8212f2fbe38
+levelupwindow	??0TLevelUpWindow@@QAE@PAVhero@@HHH@Z	99.1299	99.1299	99.1300	0xf8880	35c2f79a9140
 levelupwindow	??1TLevelUpWindow@@UAE@XZ	100.0000	100.0000	100.0000	0xf9730	79cec55beaa4
 levelupwindow	??_GTLevelUpWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xf9700	-
 levelupwindow	?WindowHandler@TLevelUpWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0xf9780	b466c0c071e2
@@ -3498,7 +3498,7 @@ singleselectionpopups	?Advance@TRandomMapProgress@@UAEXH@Z	100.0000	100.0000	100
 singleselectionpopups	?CreateWin@CBonusDlg@@QAEEPBDPAVBitmap816@@00@Z	95.5075	95.5075	95.5075	0x1757e0	c76bae7bb9c8
 singleselectionpopups	?CreateWin@CBonusDlg@@QAEEPBDPAVCSprite@@H00@Z	98.0000	98.0000	98.0000	0x1754f0	09006518463c
 singleselectionpopups	?CreateWin@CHeroDlg@@QAEEPAVBitmap816@@PBDPAVCSprite@@H11@Z	93.9279	93.9279	93.9279	0x175a90	b6dab2614e30
-singleselectionpopups	?CreateWin@CTeamAlignmentDlg@@QAEEXZ	99.1096	99.1096	99.1096	0x176540	c37ff47d8769
+singleselectionpopups	?CreateWin@CTeamAlignmentDlg@@QAEEXZ	99.1096	99.1096	99.1096	0x176540	0f3a761cb8f0
 singleselectionpopups	?CreateWin@CTownDlg@@QAEEPAVCSprite@@HW4TTownType@@@Z	98.6504	98.6504	98.6504	0x175e60	561910e47a99
 singleselectionpopups	?Draw@CBitmapWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x175a20	42a30f029b9f
 singleselectionpopups	?Draw@CSpriteWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x175750	bf732620ec2c
@@ -3528,7 +3528,7 @@ singleselectionwindow	??0GameSelectionHeadersStruct@@QAE@XZ	73.1483	79.3242	79.3
 singleselectionwindow	??0NewSMapHeader@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x18fa60	-
 singleselectionwindow	??0SCampaign@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x18fc10	-
 singleselectionwindow	??0SavedGameHeader@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x193f50	-
-singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	93.6935	93.6935	93.6935	0x179960	1b9baa566b1f
+singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	95.7079	95.7079	95.7079	0x179960	e92668059d44
 singleselectionwindow	??0lobby_message@@QAE@XZ	100.0000	100.0000	100.0000	0x189190	2b1be8208221
 singleselectionwindow	??0t_map_list_update@@QAE@K@Z	100.0000	100.0000	100.0000	0x189240	173781ee6a81
 singleselectionwindow	??1?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x18ea70	-
@@ -4307,7 +4307,7 @@ viewarmywindow	?create_shots_widget@TViewArmyWindow@@QAEXPBUTCreatureTypeTraits@
 viewarmywindow	?create_speed_widget@TViewArmyWindow@@QAEXHH@Z	100.0000	100.0000	100.0000	0x1f62f0	16f6e6987461
 viewarmywindow	?create_spell_influence_widgets@TViewArmyWindow@@QAEXPBVarmy@@@Z	86.6570	86.6570	86.6570	0x1f65b0	ead1359e6949
 viewarmywindow	?create_upgrade_widget@TViewArmyWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1f6ae0	7268df34c10c
-viewwrld	??0TViewWorldWindow@@QAE@XZ	96.4425	96.4425	96.4425	0x1fa600	d8fe3b10cf14
+viewwrld	??0TViewWorldWindow@@QAE@XZ	96.4425	96.4425	96.4425	0x1fa600	2de53e85ff09
 viewwrld	??1TViewWorldWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1fbd60	dbcb66a53979
 viewwrld	??_GTViewWorldWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1fbd30	-
 viewwrld	?VWClipScaleToScreenBuffer@@YIXHH@Z	100.0000	100.0000	100.0000	0x1f9d90	b50f216125e8

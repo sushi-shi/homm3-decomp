@@ -580,6 +580,12 @@ int town::HasGarrison()
 // retail restores `level` from [ebp-0xc] before `this` from [ebp-0x14], this
 // compile emits them the other way round. Declaring `level` outside the
 // for-init is byte-flat; the frame slots are already retail's.
+// Residual (99.9216%): one scheduling pair at the mage-guild loop's back edge -
+// retail loads `level` before the two condition operands, this compile after.
+// Measured and rejected 2026-09-06: swapping the `&&` operands so `level <=
+// field_14` is tested first costs TEN points (99.9216 -> 89.4392) by
+// re-threading the whole guard, so the written operand order is retail's and
+// only the load order differs.
 VA(0x005be030, 0x1D3)  // linkorder, dc 0x1665a0
 void town::GiveSpells(hero* forceHero)
 {
