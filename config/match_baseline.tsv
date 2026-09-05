@@ -301,6 +301,8 @@ ai_player	?_Sort@std@@YIXPAUtype_creature_value@@0U?$greater@Utype_creature_valu
 ai_player	?_Ucopy@?$vector@UHeroDestination@@V?$allocator@UHeroDestination@@@std@@@std@@IAEPAUHeroDestination@@PBU3@0PAU3@@Z	93.3750	93.3750	93.3750	0x34ba0	-
 ai_player	?_Ucopy@?$vector@UpathCell@@V?$allocator@UpathCell@@@std@@@std@@IAEPAUpathCell@@PBU3@0PAU3@@Z	100.0000	100.0000	100.0000	0x34bf0	-
 ai_player	?_Unguarded_partition@std@@YIPAUtype_creature_value@@PAU2@0U2@U?$greater@Utype_creature_value@@@1@@Z	100.0000	100.0000	100.0000	0x35290	-
+ai_player	?_Xran@?$bitset@$08@std@@ABEXXZ	95.5882	95.5882	95.5882	0x34ad0	-
+ai_player	?_Xran@?$bitset@$0JA@@std@@ABEXXZ	95.5882	95.5882	95.5882	0x346d0	-
 ai_player	?add_artifact@@YIEPAVhero@@Utype_artifact@@PAJ0J2J@Z	100.0000	100.0000	100.0000	0x33e20	491424c42444
 ai_player	?add_creatures@type_AI_creature_swapper@@IAEXW4TCreatureType@@FF@Z	100.0000	100.0000	100.0000	0x2c130	83f7182af229
 ai_player	?attempt_step@@YIEPAVhero@@PAUpathCell@@EE@Z	100.0000	100.0000	100.0000	0x2fc50	bb64170c20f3
@@ -620,6 +622,7 @@ armygrp	?modify_spell_damage@@YIJJHW4TCreatureType@@@Z	100.0000	100.0000	100.000
 armygrp	?save@armyGroup@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x4aa00	cd44bbd14fe7
 armygrp	?set@?$bitset@$08@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0x4c680	-
 artifact	?InitializeArtifactTraitsTable@@YIEXZ	80.5129	80.5129	80.5129	0x4cd50	b01098ff8b71
+artifact	?_Xran@?$bitset@$0BD@@std@@ABEXXZ	95.5882	95.5882	95.5882	0x4d400	-
 artifact	__h3cg$artifact$static_dtor$artifactSlotStrings	100.0000	100.0000	100.0000	0x4d340	-
 artifact	__h3cg$artifact$static_dtor$artifactStrings	100.0000	100.0000	100.0000	0x4d360	-
 basemgr	??0baseManager@@QAE@XZ	100.0000	100.0000	100.0000	0x4d530	687e8eebaf66
@@ -730,18 +733,28 @@ bottomviewsubwindow	?_Doraise@bad_cast@std@@MBEXXZ	100.0000	100.0000	100.0000	0x
 bottomviewsubwindow	?_Fput@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@KA?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DPBDII@Z	100.0000	100.0000	100.0000	0x54f20	-
 bottomviewsubwindow	?_Iput@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@KA?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DPADI@Z	100.0000	100.0000	100.0000	0x552d0	-
 bottomviewsubwindow	?_Rep@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@KI?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@DI@Z	100.0000	100.0000	100.0000	0x556d0	-
+bottomviewsubwindow	?_Save@?$_Tidyfac@V?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@@std@@SAPAV?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@2@PAV32@@Z	100.0000	100.0000	100.0000	0x55c20	-
+bottomviewsubwindow	?_Save@?$_Tidyfac@V?$numpunct@D@std@@@std@@SAPAV?$numpunct@D@2@PAV32@@Z	100.0000	100.0000	100.0000	0x55ca0	-
+bottomviewsubwindow	?_Tidy@?$_Tidyfac@V?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@@std@@SAXXZ	100.0000	100.0000	100.0000	0x55d20	-
+bottomviewsubwindow	?_Tidy@?$_Tidyfac@V?$numpunct@D@std@@@std@@SAXXZ	100.0000	100.0000	100.0000	0x55dc0	-
 bottomviewsubwindow	?animate@TBottomViewEnemyTurn@@UAEXXZ	100.0000	100.0000	100.0000	0x536f0	0e79eeb98cd5
 bottomviewsubwindow	?animate@TBottomViewNewTurn@@UAEXXZ	100.0000	100.0000	100.0000	0x511a0	a5b26fc67c45
+bottomviewsubwindow	?do_falsename@?$numpunct@D@std@@MBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@XZ	100.0000	100.0000	100.0000	0x55a20	-
+bottomviewsubwindow	?do_grouping@?$numpunct@D@std@@MBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@XZ	100.0000	100.0000	100.0000	0x55950	-
 bottomviewsubwindow	?do_put@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DJ@Z	100.0000	100.0000	100.0000	0x54a80	-
 bottomviewsubwindow	?do_put@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DK@Z	100.0000	100.0000	100.0000	0x54b20	-
 bottomviewsubwindow	?do_put@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DN@Z	100.0000	100.0000	100.0000	0x54bc0	-
 bottomviewsubwindow	?do_put@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DO@Z	100.0000	100.0000	100.0000	0x54c90	-
 bottomviewsubwindow	?do_put@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DPBX@Z	100.0000	100.0000	100.0000	0x54d60	-
 bottomviewsubwindow	?do_put@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@D_N@Z	100.0000	100.0000	100.0000	0x54770	-
+bottomviewsubwindow	?do_truename@?$numpunct@D@std@@MBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@XZ	100.0000	100.0000	100.0000	0x55af0	-
+bottomviewsubwindow	?falsename@?$numpunct@D@std@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@XZ	100.0000	100.0000	100.0000	0x55760	-
 bottomviewsubwindow	?getloc@ios_base@std@@QBE?AVlocale@2@XZ	100.0000	100.0000	100.0000	0x53d90	-
+bottomviewsubwindow	?grouping@?$numpunct@D@std@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@XZ	100.0000	100.0000	100.0000	0x55800	-
 bottomviewsubwindow	?opfx@?$basic_ostream@DU?$char_traits@D@std@@@std@@QAE_NXZ	100.0000	100.0000	100.0000	0x543d0	-
 bottomviewsubwindow	?put@?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEAAV12@D@Z	100.0000	100.0000	100.0000	0x53dd0	-
 bottomviewsubwindow	?sputc@?$basic_streambuf@DU?$char_traits@D@std@@@std@@QAEHD@Z	100.0000	100.0000	100.0000	0x54a30	-
+bottomviewsubwindow	?truename@?$numpunct@D@std@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@XZ	100.0000	100.0000	100.0000	0x55780	-
 bottomviewsubwindow	?xsgetn@?$basic_streambuf@DU?$char_traits@D@std@@@std@@MAEHPADH@Z	100.0000	100.0000	100.0000	0x540b0	-
 bottomviewsubwindow	?xsputn@?$basic_streambuf@DU?$char_traits@D@std@@@std@@MAEHPBDH@Z	100.0000	100.0000	100.0000	0x54150	-
 button	??0button@@QAE@HHHHHPBDHHEHH@Z	100.0000	100.0000	100.0000	0x55ef0	a60516324f5e
@@ -1095,7 +1108,8 @@ customcampaign	?_Sort@std@@YIXPAVhero@@0UCrossoverHeroStronger@@0@Z	100.0000	100
 customcampaign	?_Sort_0@std@@YIXPAVhero@@0UCrossoverHeroStronger@@0@Z	100.0000	100.0000	100.0000	0x8f2b0	-
 customcampaign	?_Ucopy@?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@IAEPAVhero@@PBV3@0PAV3@@Z	99.9286	99.9286	99.9286	0x8d8d0	-
 customcampaign	?_Ufill@?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@IAEXPAVhero@@IABV3@@Z	100.0000	100.0000	100.0000	0x8d970	-
-customcampaign	?_Xran@?$bitset@$0JB@@std@@ABEXXZ	95.5882	95.5882	95.5882	0x8edf0	-
+customcampaign	?_Xran@?$bitset@$07@std@@ABEXXZ	95.5882	95.5882	95.5882	0x8da70	-
+customcampaign	?_Xran@?$bitset@$0JB@@std@@ABEXXZ	95.5882	95.5882	95.5882	0x8d9a0	-
 customcampaign	?copy_backward@std@@YIPAVhero@@PAV2@00@Z	100.0000	100.0000	100.0000	0x8e880	-
 customcampaign	?erase@?$vector@UCampaignScenarioInfo@@V?$allocator@UCampaignScenarioInfo@@@std@@@std@@QAEPAUCampaignScenarioInfo@@PAU3@0@Z	100.0000	100.0000	100.0000	0x8cdd0	-
 customcampaign	?erase@?$vector@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@V?$allocator@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@@2@@std@@QAEPAV?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@2@PAV32@0@Z	100.0000	100.0000	100.0000	0x8ca30	-
@@ -1752,6 +1766,7 @@ game	?_Xran@?$bitset@$04@std@@ABEXXZ	100.0000	100.0000	100.0000	0xd2610	-
 game	?_Xran@?$bitset@$0BM@@std@@ABEXXZ	100.0000	100.0000	100.0000	0xd26e0	-
 game	?_Xran@?$bitset@$0EG@@std@@ABEXXZ	100.0000	100.0000	100.0000	0xd1c80	-
 game	?_Xran@?$bitset@$0IA@@std@@ABEXXZ	100.0000	100.0000	100.0000	0xd5000	-
+game	?_Xran@?$bitset@$0IB@@std@@ABEXXZ	95.5882	95.5882	95.5882	0x8edf0	-
 game	?_Xran@?$bitset@$0JM@@std@@ABEXXZ	100.0000	100.0000	100.0000	0xd2090	-
 game	?_Xran@?$bitset@$0M@@std@@ABEXXZ	100.0000	100.0000	100.0000	0xd4eb0	-
 # EXACT 2026-08-30. The former 98.9923 deliberate lower was source-false:
