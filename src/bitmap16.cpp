@@ -97,10 +97,101 @@ Bitmap16Bit::~Bitmap16Bit()
         delete[] map;
 }
 
+// E:\gamedcs\bitmap16.cpp:224/234/243/253. The four pixel-format converters
+// the compiland's own Remap runs the surface through. NONE of them has a
+// retail row: /Ob2 expands all four at Remap's two arms, which is the only
+// place in the image that reaches them, so the shift/mask chains below are
+// read straight out of that body.
+unsigned long color1555to8888(unsigned short color)
+{
+    return ((((((color & 0xffff8000) << 7 | (color & 0x7c00)) << 3)
+              | (color & 0x3e0))
+             << 3
+             | (color & 0x1f))
+            << 3);
+}
+
+unsigned long color0565to8888(unsigned short color)
+{
+    return ((((color & 0xf800) << 3 | (color & 0x7e0)) << 2 | (color & 0x1f))
+            << 3);
+}
+
+unsigned short color8888to1555(unsigned long color)
+{
+    return static_cast<unsigned short>(((color >> 9) & 0x7c00)
+                                       | ((color >> 6) & 0x3e0)
+                                       | ((color >> 3) & 0x1f)
+                                       | ((color >> 16) & 0x8000));
+}
+
+unsigned short color8888to0565(unsigned long color)
+{
+    return static_cast<unsigned short>(((color >> 8) & 0xf800)
+                                       | ((color >> 5) & 0x7e0)
+                                       | ((color >> 3) & 0x1f));
+}
+
+// E:\gamedcs\bitmap16.cpp:262. Re-encode the whole surface between the two
+// 16-bit layouts after a display-mode change; wingraph 0x601bfe is the
+// caller and feeds `mask == 0x7e0 ? 6 : 5`, which is what names the
+// parameter. The walk is COLUMN-major - the outer counter runs to Width and
+// indexes the pixel, the inner runs to Height and indexes the row - and the
+// parameter is re-read at every pixel.
+VA(0x0044e130, 0x110)  // anchor-caller(wingraph mode change) + order-map(DC bitmap16.obj), dc 0x50fd4
+void Bitmap16Bit::Remap(int old_green_bits)
+{
+    for (int col = 0; col < Width; col++) {
+        for (int row = 0; row < Height; row++) {
+            Bitmap16MapPointer pixel;
+            pixel.pixels = map;
+            pixel.bytes += row * Pitch + col * sizeof(unsigned short);
+            if (old_green_bits == BITMAP_GREEN_BITS_565)
+                *pixel.pixels = color8888to1555(color0565to8888(*pixel.pixels));
+            else
+                *pixel.pixels = color8888to0565(color1555to8888(*pixel.pixels));
+        }
+    }
+}
+
 VA(0x0044e240, 0x07)  // vtable slot 2: fixed object extent + pixel bytes
 unsigned int Bitmap16Bit::GetSize() const
 {
     return sizeof(*this) + DataSize;
+}
+
+// E:\gamedcs\bitmap16.cpp:335. Re-point the bitmap at memory somebody else
+// owns: drop whatever this object allocated, then take the caller's extent,
+// stride and pointer and mark the map borrowed.
+// Residual (94.8%): one scheduled load. Retail pulls `pitch` into EDX
+// between the extent product and the two size stores; ours loads it after
+// them. Naming the product in an `int size` local ahead of the run is worth
+// 8.81 (85.95 -> 94.76) - the two size stores then share one register and
+// free EDX early - but no further arrangement closes it: the local placed
+// after the Width store (85.95), a second local for the stride (94.76,
+// byte-flat), DataSize before ImageSize (85.95) and both chained-assignment
+// forms (85.95) were all measured.
+VA(0x0044e250, 0x5D)  // order-map(DC bitmap16.obj, between Remap and Draw), dc 0x51154
+void Bitmap16Bit::reference(int w, int h, int pitch, unsigned short* data)
+{
+    Width = 0;
+    Height = 0;
+    DataSize = 0;
+    ImageSize = 0;
+    if (map) {
+        if (!referenced)
+            delete[] map;
+        map = 0;
+        referenced = 0;
+    }
+    int size = w * h * 2;
+    Width = w;
+    Height = h;
+    ImageSize = size;
+    DataSize = size;
+    Pitch = pitch;
+    map = data;
+    referenced = 1;
 }
 
 // E:\gamedcs\bitmap16.cpp:541. The general blit: clip a negative
@@ -407,39 +498,14 @@ void Bitmap16Bit::Colorize(int x, int y, int width, int height,
 #if 0  // @carcass
 
 // E:\gamedcs\bitmap16.cpp:224
-DC_ONLY(0x50f34, 0x2C)
-unsigned long color1555to8888(unsigned short color)
-{
-    // @stub
-}
 
 // E:\gamedcs\bitmap16.cpp:234
-DC_ONLY(0x50f60, 0x20)
-unsigned long color0565to8888(unsigned short color)
-{
-    // @stub
-}
 
 // E:\gamedcs\bitmap16.cpp:243
-DC_ONLY(0x50f80, 0x2E)
-unsigned short color8888to1555(unsigned long color)
-{
-    // @stub
-}
 
 // E:\gamedcs\bitmap16.cpp:253
-DC_ONLY(0x50fb0, 0x22)
-unsigned short color8888to0565(unsigned long color)
-{
-    // @stub
-}
 
 // E:\gamedcs\bitmap16.cpp:262
-DC_ONLY(0x50fd4, 0xA4)
-void Bitmap16Bit::Remap(int old_green_bits)
-{
-    // @stub
-}
 
 // E:\gamedcs\bitmap16.cpp:294
 DC_ONLY(0x51078, 0xDA)
@@ -449,11 +515,6 @@ void Bitmap16Bit::import(int w, int h, const unsigned short* data, int size)
 }
 
 // E:\gamedcs\bitmap16.cpp:335
-DC_ONLY(0x51154, 0x44)
-void Bitmap16Bit::reference(int w, int h, int pitch, unsigned short* data)
-{
-    // @stub
-}
 
 // E:\gamedcs\bitmap16.cpp:358
 DC_ONLY(0x51198, 0x90)
