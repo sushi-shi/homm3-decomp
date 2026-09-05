@@ -337,10 +337,8 @@ void army::initialize(int type, long number, const hero* owner,
     memcpy(&creatureType, &type, sizeof(creatureType));
     numTroops = number;
     iDrawPriority = 4;
-    TCreatureTypeTraits* traits = static_cast<TCreatureTypeTraits*>(
-        static_cast<void*>(&monInfoTownType));
-    memcpy(traits, &akCreatureTypeTraits[type],
-           sizeof(TCreatureTypeTraits));
+    TCreatureTypeTraits* traits = &sMonInfo;
+    *traits = akCreatureTypeTraits[type];
     traits->townType =
         (gpGame->f_1f698 == 0
          && (type == CREATURE_AIR_ELEMENTAL
@@ -353,16 +351,16 @@ void army::initialize(int type, long number, const hero* owner,
         owner->HeroFn_004E6120(type, traits);
     if (gpCombatManager->field_53c0
             != COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS
-        && akNativeTerrains[monInfoTownType]
+        && akNativeTerrains[sMonInfo.townType]
                == gpCombatManager->terrainType)
         field_4d8 = 1;
     else
         field_4d8 = 0;
     if (field_4d8) {
         if (!(Is(1u << 6)))
-            field_c4++;
-        attackSkill++;
-        defenseSkill++;
+            sMonInfo.speed++;
+        sMonInfo.attackSkill++;
+        sMonInfo.defenseSkill++;
     }
     facing = 1 - new_group;
     currFrameType = cs_wait;
@@ -382,8 +380,8 @@ void army::initialize(int type, long number, const hero* owner,
     bSomeUnitsDamaged = 0;
     show_fire_shield = 0;
     origNumTroops = numTroops;
-    baseSpeed = field_c4;
-    origHitPoints = hitPoints;
+    baseSpeed = sMonInfo.speed;
+    origHitPoints = sMonInfo.hitPoints;
     poisonPenalty = 1.0f;
 }
 
@@ -470,15 +468,15 @@ void army::LoadResources()
             ->IsQuickCombat())
         return;
 
-    memcpy(frameInfoMissileOffset, &gMonFrameInfo[creatureType],
+    memcpy(sMonFrameInfo.iMissileOffset, &gMonFrameInfo[creatureType],
            sizeof(SMonFrameInfo));
-    origWalkCycleTime = frameInfoWalkCycleTime;
+    origWalkCycleTime = sMonFrameInfo.iWalkCycleTime;
 
     sample* s;
     if (!(Is(1u << 6))) {
         sprintf(gText, DATA_COMPGEN(0x00660a10, moveSampleFormat,
                                     "%smove.82M"),
-                monInfoSamplePrefix);
+                sMonInfo.cSamplePrefix);
         s = ResourceManager::GetSample(gText);
         if (armySample[WALK_SAMPLE])
             armySample[WALK_SAMPLE]->Dispose();
@@ -492,15 +490,15 @@ void army::LoadResources()
     if (creatureType == CREATURE_BALLISTA)
         sprintf(gText, DATA_COMPGEN(0x00660a04, shotSampleFormat,
                                     "%sshot.82M"),
-                monInfoSamplePrefix);
+                sMonInfo.cSamplePrefix);
     else if (Is(1u << 6))
         sprintf(gText, DATA_COMPGEN(0x006609f8, winceSampleFormat,
                                     "%swnce.82M"),
-                monInfoSamplePrefix);
+                sMonInfo.cSamplePrefix);
     else
         sprintf(gText, DATA_COMPGEN(0x006609ec, attackSampleFormat,
                                     "%sattk.82M"),
-                monInfoSamplePrefix);
+                sMonInfo.cSamplePrefix);
     s = ResourceManager::GetSample(gText);
     if (armySample[ATTACK_SAMPLE])
         armySample[ATTACK_SAMPLE]->Dispose();
@@ -508,7 +506,7 @@ void army::LoadResources()
 
     sprintf(gText, DATA_COMPGEN(0x006609f8, winceSampleFormat,
                                 "%swnce.82M"),
-            monInfoSamplePrefix);
+            sMonInfo.cSamplePrefix);
     s = ResourceManager::GetSample(gText);
     if (armySample[WINCE_SAMPLE])
         armySample[WINCE_SAMPLE]->Dispose();
@@ -516,7 +514,7 @@ void army::LoadResources()
 
     sprintf(gText, DATA_COMPGEN(0x006609e0, killSampleFormat,
                                 "%skill.82M"),
-            monInfoSamplePrefix);
+            sMonInfo.cSamplePrefix);
     s = ResourceManager::GetSample(gText);
     if (armySample[DIE_SAMPLE])
         armySample[DIE_SAMPLE]->Dispose();
@@ -525,11 +523,11 @@ void army::LoadResources()
     if (Is(1u << 6))
         sprintf(gText, DATA_COMPGEN(0x006609f8, winceSampleFormat,
                                     "%swnce.82M"),
-                monInfoSamplePrefix);
+                sMonInfo.cSamplePrefix);
     else
         sprintf(gText, DATA_COMPGEN(0x006609d4, defendSampleFormat,
                                     "%sdfnd.82M"),
-                monInfoSamplePrefix);
+                sMonInfo.cSamplePrefix);
     s = ResourceManager::GetSample(gText);
     if (armySample[DEFEND_SAMPLE])
         armySample[DEFEND_SAMPLE]->Dispose();
@@ -539,7 +537,7 @@ void army::LoadResources()
         || creatureType == CREATURE_OGRE_MAGE) {
         sprintf(gText, DATA_COMPGEN(0x00660a04, shotSampleFormat,
                                     "%sshot.82M"),
-                monInfoSamplePrefix);
+                sMonInfo.cSamplePrefix);
         s = ResourceManager::GetSample(gText);
         if (armySample[SHOOT_SAMPLE])
             armySample[SHOOT_SAMPLE]->Dispose();
@@ -556,14 +554,14 @@ void army::LoadResources()
         || creatureType == CREATURE_ARCH_DEVIL) {
         sprintf(gText, DATA_COMPGEN(0x006609c8, ext1SampleFormat,
                                     "%sext1.82M"),
-                monInfoSamplePrefix);
+                sMonInfo.cSamplePrefix);
         s = ResourceManager::GetSample(gText);
         if (armySample[PRE_WALK_SAMPLE])
             armySample[PRE_WALK_SAMPLE]->Dispose();
         armySample[PRE_WALK_SAMPLE] = s;
         sprintf(gText, DATA_COMPGEN(0x006609bc, ext2SampleFormat,
                                     "%sext2.82M"),
-                monInfoSamplePrefix);
+                sMonInfo.cSamplePrefix);
         s = ResourceManager::GetSample(gText);
         if (armySample[POST_WALK_SAMPLE])
             armySample[POST_WALK_SAMPLE]->Dispose();
@@ -737,7 +735,7 @@ void army::SetLuck(const hero* ownerHero, const armyGroup* ownerGroup,
         value -= luckPenalty;
 
     if (magicTerrain == MAGIC_TERRAIN_CLOVER_FIELD) {
-        switch (monInfoTownType) {
+        switch (sMonInfo.townType) {
         case TOWN_CASTLE:
         case TOWN_RAMPART:
         case TOWN_TOWER:
@@ -800,7 +798,7 @@ void army::SetMorale(const hero* ownerHero, const armyGroup* ownerGroup,
         value -= moralePenalty;
 
     if (magicTerrain == MAGIC_TERRAIN_HOLY_GROUND) {
-        switch (monInfoTownType) {
+        switch (sMonInfo.townType) {
         case TOWN_CASTLE:
         case TOWN_RAMPART:
         case TOWN_TOWER:
@@ -820,7 +818,7 @@ holy_done:
         ;
     }
     if (magicTerrain == MAGIC_TERRAIN_EVIL_FOG) {
-        switch (monInfoTownType) {
+        switch (sMonInfo.townType) {
         case TOWN_CASTLE:
         case TOWN_RAMPART:
         case TOWN_TOWER:
@@ -1013,7 +1011,7 @@ void army::DrawToBuffer(int x, int y, int bNumBoxOnly)
             xoff = 0x16;
             yoff = -0xf;
         }
-        if (creatureId & 1) {
+        if (sMonInfo.attributes & 1) {
             xoff += 0x2c;
             step = 2;
         }
@@ -1027,7 +1025,7 @@ void army::DrawToBuffer(int x, int y, int bNumBoxOnly)
             xoff -= 0x25;
             yoff = -0xf;
         } else {
-            xoff += frameInfoExtraNumTroopsXOffset;
+            xoff += sMonFrameInfo.iExtraNumTroopsXOffset;
         }
         if (facing == 0)
             xoff = -xoff;
@@ -1082,7 +1080,7 @@ void army::DrawToBuffer(int x, int y, int bNumBoxOnly)
             switch (x & 0xf) {
             case SPELL_EFFECT_PLACE_OVERHEAD:
                 ex = gpCombatManager->cells[gridIndex].field_00;
-                if (creatureId & 1)
+                if (sMonInfo.attributes & 1)
                     ex += facing ? 22 : -22;
                 ex -= gpCombatManager->powSprite->Width / 2;
                 ey = gpCombatManager->cells[gridIndex].field_02
@@ -1090,7 +1088,7 @@ void army::DrawToBuffer(int x, int y, int bNumBoxOnly)
                 break;
             case SPELL_EFFECT_PLACE_CENTERED:
                 ex = gpCombatManager->cells[gridIndex].field_00;
-                if (creatureId & 1)
+                if (sMonInfo.attributes & 1)
                     ex += facing ? 22 : -22;
                 ex -= gpCombatManager->powSprite->Width / 2;
                 ey = gpCombatManager->cells[gridIndex].field_02
@@ -1099,7 +1097,7 @@ void army::DrawToBuffer(int x, int y, int bNumBoxOnly)
                 break;
             case SPELL_EFFECT_PLACE_ABOVE:
                 ex = gpCombatManager->cells[gridIndex].field_00;
-                if (creatureId & 1)
+                if (sMonInfo.attributes & 1)
                     ex += facing ? 22 : -22;
                 ex -= gpCombatManager->powSprite->Width / 2;
                 ey = gpCombatManager->cells[gridIndex].field_02
@@ -1527,7 +1525,7 @@ void army::animate_missile(army* armyToAttack)
 
     int targetX = gpCombatManager->cells[armyToAttack->gridIndex]
                       .field_00;
-    if (armyToAttack->creatureId & 1)
+    if (armyToAttack->sMonInfo.attributes & 1)
         targetX += armyToAttack->facing ? 22 : -22;
     int targetY = gpCombatManager->cells[armyToAttack->gridIndex]
                       .field_02
@@ -1549,11 +1547,11 @@ void army::animate_missile(army* armyToAttack)
     play_sample(SHOOT_SAMPLE);
 
     int frames;
-    if (frameInfoAttackFrames > 0)
-        frames = frameInfoAttackFrames;
+    if (sMonFrameInfo.iAttackFrames > 0)
+        frames = sMonFrameInfo.iAttackFrames;
     else
         frames = stdIcon->GetNumFrames(currFrameType);
-    long delay = frameInfoAttackStartCycleTime / frames;
+    long delay = sMonFrameInfo.iAttackStartCycleTime / frames;
     for (currFrameIndex = 0; currFrameIndex < frames; currFrameIndex++) {
         gpCombatManager->DrawFrame(1, 1, 0, delay, 1, 1);
     }
@@ -1746,7 +1744,7 @@ void army::range_attack(army* armyToAttack)
     animate_missile(armyToAttack);
     if (!get_owner()
         || !get_owner()->IsWieldingArtifact(ARTIFACT_AMMO_CART))
-        shotsLeft--;
+        sMonInfo.numShots--;
     if (creatureType == CREATURE_MAGOG) {
         long effect = akSpellTraits[SPELL_FIREBALL].m_effect;
         if (effect != -1
@@ -2217,7 +2215,7 @@ unsigned char army::check_special_attack(army* target)
         }
         return 0;
     case CREATURE_RUST_DRAGON:
-        if (target->numTroops > 0 && target->defenseSkill > 0)
+        if (target->numTroops > 0 && target->sMonInfo.defenseSkill > 0)
             target->iPostPowSpellToCast = SPELL_ACID_BREATH_DEFENSE;
         return 0;
     case CREATURE_WYVERN_MONARCH:
@@ -2340,14 +2338,14 @@ void army::do_post_attack(army* target, int iDamage, int iKilled,
         if (target->Is(1u << 4)) {
             long dead_vampires = 0;
             long missing_life =
-                hitPoints * (origNumTroops - numTroops) + topCreatureDamage;
+                sMonInfo.hitPoints * (origNumTroops - numTroops) + topCreatureDamage;
             long damage_recovered = min(iDamage, total_life);
             damage_recovered = min(damage_recovered, missing_life);
             topCreatureDamage -= damage_recovered;
             if (topCreatureDamage < 0) {
                 dead_vampires =
-                    (hitPoints - topCreatureDamage - 1) / hitPoints;
-                topCreatureDamage += hitPoints * dead_vampires;
+                    (sMonInfo.hitPoints - topCreatureDamage - 1) / sMonInfo.hitPoints;
+                topCreatureDamage += sMonInfo.hitPoints * dead_vampires;
                 numTroops += dead_vampires;
             }
             if (damage_recovered > 0) {
@@ -2394,7 +2392,7 @@ void army::do_post_attack(army* target, int iDamage, int iKilled,
             dead = min(dead, (numTroops + 9) / 10);
             if (dead > 0) {
                 long damage =
-                    target->hitPoints * dead - target->topCreatureDamage;
+                    target->sMonInfo.hitPoints * dead - target->topCreatureDamage;
                 std::string text;
                 if (dead == 1)
                     text = format_string((*gpGeneralText)[119],
@@ -2487,7 +2485,7 @@ void army::do_post_attack(army* target, int iDamage, int iKilled,
 
     case CREATURE_RUST_DRAGON:
         if (target->numTroops > 0 && Random(1, 100) <= 20) {
-            long damage = Random(minDamage, maxDamage) * numTroops / 2;
+            long damage = Random(sMonInfo.damageLowBound, sMonInfo.damageHighBound) * numTroops / 2;
             if (damage > 0) {
                 std::string text;
                 SAMPLE2 sample;
@@ -2921,7 +2919,7 @@ unsigned char army::WalkTo(int destIndex, unsigned char restore_facing)
             succeeded = 0;
             stop = i;
         }
-        if (creatureId & 1) {
+        if (sMonInfo.attributes & 1) {
             long second_hex = GetAdjacentCellIndex(gridIndex, direction)
                               + (facing ? 1 : -1);
             if (gpSearchArray
@@ -2985,7 +2983,7 @@ VA(0x00442410, 0x13B)  // anchor-global, dc 0x47690
 long army::get_adjusted_attack(const army* enemy,
                                unsigned char ranged_attack) const
 {
-    long attack = attackSkill;
+    long attack = sMonInfo.attackSkill;
     if (ranged_attack) {
         if (precisionRounds)
             attack += precisionAmount;
@@ -3007,7 +3005,7 @@ long army::get_adjusted_attack(const army* enemy,
             if (gpCombatManager->heroes[get_controlling_side()]) {
                 hero* casting_hero =
                     gpCombatManager->heroes[get_controlling_side()];
-                attack += casting_hero->GetHeroSpellBonus(55, monInfoLevel, 8);
+                attack += casting_hero->GetHeroSpellBonus(55, sMonInfo.level, 8);
             }
         }
     }
@@ -3041,7 +3039,7 @@ long army::get_adjusted_defense(const army* enemy,
 {
     if (frenzy_included && frenzyRounds)
         return 0;
-    long defense = defenseSkill;
+    long defense = sMonInfo.defenseSkill;
     if (enemy) {
         if (enemy->creatureType == ARMY_CREATURE_BEHEMOTH)
             defense = static_cast<long>(defense - defense * 0.4f);
@@ -3050,7 +3048,7 @@ long army::get_adjusted_defense(const army* enemy,
     }
     if (gpCombatManager->field_53a8) {
         int second_hex;
-        if (creatureId & 1)
+        if (sMonInfo.attributes & 1)
             second_hex = gridIndex + (facing ? 1 : -1);
         else
             second_hex = -1;
@@ -3217,10 +3215,10 @@ VA(0x004426f0, 0x8B)  // anchor-callee, dc 0x47a14
 double army::get_average_damage() const
 {
     if (blessRounds)
-        return blessAmount + maxDamage;
+        return blessAmount + sMonInfo.damageHighBound;
     if (curseRounds)
-        return _cpp_max(minDamage - curseAmount, 1);
-    return (maxDamage + minDamage) / 2.0;
+        return _cpp_max(sMonInfo.damageLowBound - curseAmount, 1);
+    return (sMonInfo.damageHighBound + sMonInfo.damageLowBound) / 2.0;
 }
 
 // E:\gamedcs\army.cpp:2756
@@ -3254,7 +3252,7 @@ long army::get_average_damage(const army* enemy, unsigned char ranged_attack, lo
     if (enemy->Is(1u << 23))
         total_life = 1;
     else
-        total_life = enemy->hitPoints * enemy->numTroops
+        total_life = enemy->sMonInfo.hitPoints * enemy->numTroops
                      - enemy->topCreatureDamage;
     if (damage < 1)
         damage = 1;
@@ -3441,7 +3439,7 @@ inline unsigned char army::can_shoot(const army* excluded) const
     if (creatureType == ARMY_CREATURE_BALLISTA
         || creatureType == ARMY_CREATURE_ARROW_TOWER)
         return 1;
-    if (!(Is(1u << 2)) || shotsLeft <= 0)
+    if (!(Is(1u << 2)) || sMonInfo.numShots <= 0)
         return 0;
     hero* controller = get_controller();
     int bCanShoot = 1;
@@ -3530,7 +3528,7 @@ double army::get_unit_combat_value(long lowest_attack, long lowest_defense,
         }
     }
     if (blessRounds || curseRounds) {
-        long damage_range = minDamage + maxDamage;
+        long damage_range = sMonInfo.damageLowBound + sMonInfo.damageHighBound;
         double base_average = damage_range / 2.0;
         double average_damage = get_average_damage();
         attack = average_damage / base_average * attack;
@@ -3539,13 +3537,13 @@ double army::get_unit_combat_value(long lowest_attack, long lowest_defense,
         attack = attack + attack;
     double result = sqrt(attack * defense)
                     * akCreatureTypeTraits[creatureType].baseFightValue;
-    if (creatureId & 0x400040) {
+    if (sMonInfo.attributes & 0x400040) {
         long total = get_total_hit_points(0);
         long sum = 0;
         army* group = gpCombatManager->armies[combatSide];
         for (long i = 0; i < gpCombatManager->numArmies[combatSide];
              i++, group++) {
-            if (!(group->creatureId & 0x1d0)) {
+            if (!(group->sMonInfo.attributes & 0x1d0)) {
                 sum += group->get_total_hit_points(0);
             }
         }
@@ -3606,8 +3604,8 @@ long army::get_total_combat_value(long lowest_attack, long lowest_defense) const
                                          ranged, 0);
     if (Is(1u << 23))
         return static_cast<long>(numTroops * value / 5.0);
-    return static_cast<long>((hitPoints * numTroops - topCreatureDamage)
-                             * value / hitPoints);
+    return static_cast<long>((sMonInfo.hitPoints * numTroops - topCreatureDamage)
+                             * value / sMonInfo.hitPoints);
 }
 
 #if 0  // @carcass
@@ -3627,9 +3625,9 @@ long army::get_loss_combat_value(long lowest_attack, long lowest_defense,
     if (kills_only)
         value = 1000.0;
     long lost = 0;
-    if (damage % hitPoints + topCreatureDamage >= hitPoints)
+    if (damage % sMonInfo.hitPoints + topCreatureDamage >= sMonInfo.hitPoints)
         lost = topCreatureDamage;
-    return static_cast<long>((lost + damage) * value / hitPoints);
+    return static_cast<long>((lost + damage) * value / sMonInfo.hitPoints);
 }
 
 #if 0  // @carcass
@@ -3644,7 +3642,7 @@ long army::get_total_hit_points(unsigned char simulated) const
     if (Is(1u << 23))
         total = 1;
     else
-        total = hitPoints * numTroops - topCreatureDamage;
+        total = sMonInfo.hitPoints * numTroops - topCreatureDamage;
     if (simulated)
         total = max(total - AI_expected_damage, 0);
     return total;
@@ -3705,11 +3703,11 @@ int army::ComputeBaseDamage(unsigned char simulate_only) const
     int high;
     if (creatureType == ARMY_CREATURE_BALLISTA) {
         const hero* shooter = get_controller();
-        low = (shooter->GetPrimarySkill(0) + 1) * minDamage;
-        high = (shooter->GetPrimarySkill(0) + 1) * maxDamage;
+        low = (shooter->GetPrimarySkill(0) + 1) * sMonInfo.damageLowBound;
+        high = (shooter->GetPrimarySkill(0) + 1) * sMonInfo.damageHighBound;
     } else {
-        low = minDamage;
-        high = maxDamage;
+        low = sMonInfo.damageLowBound;
+        high = sMonInfo.damageHighBound;
     }
 
     int damage;
@@ -3870,7 +3868,7 @@ int army::compute_attacker_bonus(int base_damage, unsigned char is_shooting,
                 + static_cast<float>(bonus));
         if (spellInfluence[SPELL_BLESS])
             total += controller->GetHeroSpellBonus(SPELL_BLESS,
-                                                   monInfoLevel,
+                                                   sMonInfo.level,
                                                    base_damage);
     }
     return total;
@@ -4026,7 +4024,7 @@ double army::ComputeAttackerDamageReduction(const army* defender,
         reduction *= 0.5;
     if (is_shooting) {
         int hex = gridIndex;
-        if (creatureId & 1)
+        if (sMonInfo.attributes & 1)
             hex += facing ? 1 : -1;
         if (gpCombatManager->ShotIsThroughWall(this, hex, defender->gridIndex))
             reduction *= 0.5;
@@ -4184,8 +4182,8 @@ VA(0x00444090, 0x8F)  // anchor-global, dc 0x492c8
 int army::Damage(int damage)
 {
     int total = damage + topCreatureDamage;
-    int killed = total / hitPoints;
-    topCreatureDamage = total % hitPoints;
+    int killed = total / sMonInfo.hitPoints;
+    topCreatureDamage = total % sMonInfo.hitPoints;
     if (Is(1u << 23)) {
         killed = numTroops;
         topCreatureDamage = 0;
@@ -4367,7 +4365,7 @@ void army::ProcessDeath(int bFadeElementals)
     // ProcessDeath's own /Ob2 budget the way retail's source did.
     CancelAllSpells_(this);
 
-    creatureId |= 0x200000;
+    sMonInfo.attributes |= 0x200000;
     bAllUnitsKilled = 0;
 
     if (gpCombatManager->ValidHex(gridIndex)) {
@@ -4450,12 +4448,12 @@ void army::CancelSpellType(int iSpellType)
 inline void army::adjust_hitpoints()
 {
     if (spellInfluence[SPELL_AGE])
-        hitPoints = static_cast<int>(
+        sMonInfo.hitPoints = static_cast<int>(
             origHitPoints * poisonPenalty * 0.5f + 0.95f);
     else
-        hitPoints = static_cast<int>(
+        sMonInfo.hitPoints = static_cast<int>(
             origHitPoints * poisonPenalty + 0.95f);
-    topCreatureDamage = min(topCreatureDamage, hitPoints - 1);
+    topCreatureDamage = min(topCreatureDamage, sMonInfo.hitPoints - 1);
 }
 
 // Take one standing spell off this stack: clear its round row, undo
@@ -4513,32 +4511,32 @@ void army::CancelIndividualSpell(int spell)
         add_aura();
         break;
     case SPELL_STONE_SKIN:
-        defenseSkill -= toughskinBonus;
+        sMonInfo.defenseSkill -= toughskinBonus;
         break;
     case SPELL_WEAKNESS:
-        attackSkill += weaknessPenalty;
+        sMonInfo.attackSkill += weaknessPenalty;
         break;
     case SPELL_PRAYER:
-        attackSkill -= prayerBonus;
-        defenseSkill -= prayerBonus;
+        sMonInfo.attackSkill -= prayerBonus;
+        sMonInfo.defenseSkill -= prayerBonus;
         if (!(Is(1u << 6)))
-            field_c4 -= prayerBonus;
+            sMonInfo.speed -= prayerBonus;
         break;
     case SPELL_HASTE:
         if (!(Is(1u << 6))) {
-            field_c4 -= tailwindBonus;
-            frameInfoWalkCycleTime = origWalkCycleTime;
+            sMonInfo.speed -= tailwindBonus;
+            sMonFrameInfo.iWalkCycleTime = origWalkCycleTime;
         }
         break;
     case SPELL_SLOW:
-        frameInfoWalkCycleTime = origWalkCycleTime;
+        sMonFrameInfo.iWalkCycleTime = origWalkCycleTime;
         break;
     case SPELL_AGE:
         adjust_hitpoints();
         break;
     case SPELL_DISEASE:
-        attackSkill += diseaseAttackPenalty;
-        defenseSkill += diseaseDefensePenalty;
+        sMonInfo.attackSkill += diseaseAttackPenalty;
+        sMonInfo.defenseSkill += diseaseDefensePenalty;
         break;
     }
     TSpellQueue::iterator it = std::find(SpellInfluenceQueue.begin(),
@@ -4729,39 +4727,39 @@ void army::SetSpellInfluence(int spell, int power, int mastery,
         bloodlustAmount = amount;
         if (casting_hero)
             bloodlustAmount += casting_hero->GetHeroSpellBonus(
-                spell, monInfoLevel, amount);
+                spell, sMonInfo.level, amount);
         break;
     case SPELL_PRECISION:
         precisionAmount = amount;
         if (casting_hero)
             precisionAmount += casting_hero->GetHeroSpellBonus(
-                spell, monInfoLevel, amount);
+                spell, sMonInfo.level, amount);
         break;
     case SPELL_WEAKNESS:
         weaknessPenalty = amount;
         if (casting_hero)
             weaknessPenalty += casting_hero->GetHeroSpellBonus(
-                spell, monInfoLevel, amount);
-        if (attackSkill < weaknessPenalty)
-            weaknessPenalty = attackSkill;
-        attackSkill = attackSkill - weaknessPenalty;
+                spell, sMonInfo.level, amount);
+        if (sMonInfo.attackSkill < weaknessPenalty)
+            weaknessPenalty = sMonInfo.attackSkill;
+        sMonInfo.attackSkill = sMonInfo.attackSkill - weaknessPenalty;
         break;
     case SPELL_STONE_SKIN:
         toughskinBonus = amount;
         if (casting_hero)
             toughskinBonus += casting_hero->GetHeroSpellBonus(
-                spell, monInfoLevel, amount);
-        defenseSkill = defenseSkill + toughskinBonus;
+                spell, sMonInfo.level, amount);
+        sMonInfo.defenseSkill = sMonInfo.defenseSkill + toughskinBonus;
         break;
     case SPELL_PRAYER:
         prayerBonus = amount;
         if (casting_hero)
             prayerBonus += casting_hero->GetHeroSpellBonus(
-                spell, monInfoLevel, amount);
-        attackSkill = attackSkill + prayerBonus;
-        defenseSkill = defenseSkill + prayerBonus;
+                spell, sMonInfo.level, amount);
+        sMonInfo.attackSkill = sMonInfo.attackSkill + prayerBonus;
+        sMonInfo.defenseSkill = sMonInfo.defenseSkill + prayerBonus;
         if (!(Is(1u << 6)))
-            field_c4 = field_c4 + prayerBonus;
+            sMonInfo.speed = sMonInfo.speed + prayerBonus;
         break;
     case SPELL_MIRTH:
         moraleBonus = amount;
@@ -4773,7 +4771,7 @@ void army::SetSpellInfluence(int spell, int power, int mastery,
         luckBonus = amount;
         if (casting_hero)
             luckBonus += casting_hero->GetHeroSpellBonus(
-                spell, monInfoLevel, amount);
+                spell, sMonInfo.level, amount);
         break;
     case SPELL_MISFORTUNE:
         luckPenalty = amount;
@@ -4784,9 +4782,9 @@ void army::SetSpellInfluence(int spell, int power, int mastery,
             tailwindBonus = amount;
             if (casting_hero)
                 tailwindBonus += casting_hero->GetHeroSpellBonus(
-                    spell, monInfoLevel, amount);
-            field_c4 = field_c4 + tailwindBonus;
-            frameInfoWalkCycleTime =
+                    spell, sMonInfo.level, amount);
+            sMonInfo.speed = sMonInfo.speed + tailwindBonus;
+            sMonFrameInfo.iWalkCycleTime =
                 static_cast<long>(origWalkCycleTime * 0.65);
         }
         break;
@@ -4794,7 +4792,7 @@ void army::SetSpellInfluence(int spell, int power, int mastery,
         if (!(Is(1u << 6))) {
             CancelIndividualSpell(SPELL_HASTE);
             slowFactor = amount / 100.0;
-            frameInfoWalkCycleTime =
+            sMonFrameInfo.iWalkCycleTime =
                 static_cast<long>(origWalkCycleTime * 1.5);
         }
         break;
@@ -4820,10 +4818,10 @@ void army::SetSpellInfluence(int spell, int power, int mastery,
         blindFactor = amount / 100.0;
         break;
     case SPELL_DISEASE:
-        diseaseDefensePenalty = min(2, defenseSkill);
-        diseaseAttackPenalty = min(2, attackSkill);
-        attackSkill = attackSkill - diseaseAttackPenalty;
-        defenseSkill = defenseSkill - diseaseDefensePenalty;
+        diseaseDefensePenalty = min(2, sMonInfo.defenseSkill);
+        diseaseAttackPenalty = min(2, sMonInfo.attackSkill);
+        sMonInfo.attackSkill = sMonInfo.attackSkill - diseaseAttackPenalty;
+        sMonInfo.defenseSkill = sMonInfo.defenseSkill - diseaseDefensePenalty;
         break;
     case SPELL_POISON: {
         poisonPenalty = static_cast<float>(
@@ -4833,7 +4831,7 @@ void army::SetSpellInfluence(int spell, int power, int mastery,
     }
     case SPELL_AGE:
         adjust_hitpoints();
-        topCreatureDamage = min(topCreatureDamage, hitPoints - 1);
+        topCreatureDamage = min(topCreatureDamage, sMonInfo.hitPoints - 1);
         break;
     case SPELL_MAGIC_MIRROR:
         backlashChance = amount;
@@ -4957,10 +4955,10 @@ long army::get_attack_direction(long our_hex, const army* enemy,
                                 long enemy_hex) const
 {
     long second_hex = enemy_hex;
-    if (enemy->creatureId & 1)
+    if (enemy->sMonInfo.attributes & 1)
         second_hex = enemy_hex + (enemy->facing ? 1 : -1);
     for (long direction = 0; direction < 8; direction++) {
-        if (direction < COMBAT_DIRECTION_COUNT || (creatureId & 1)) {
+        if (direction < COMBAT_DIRECTION_COUNT || (sMonInfo.attributes & 1)) {
             long hex = get_adjacent_hex(our_hex, direction);
             if (hex == enemy_hex || hex == second_hex)
                 return direction;
@@ -4986,7 +4984,7 @@ inline long army::get_attack_direction(long our_hex, const army* enemy) const
     long best = -1;
     long direction = 0;
     for (;;) {
-        if (direction < COMBAT_DIRECTION_COUNT || (creatureId & 1)) {
+        if (direction < COMBAT_DIRECTION_COUNT || (sMonInfo.attributes & 1)) {
             long hex = get_adjacent_hex(our_hex, direction);
             if (hex >= 0 && hex < COMBAT_GRID_CELLS
                 && enemy == gpCombatManager->cells[hex].get_army()) {
@@ -5429,12 +5427,12 @@ void army::attack_wall(TWallTargetId wall, long levelsDestroyed)
     long startX;
     if (facing == 1)
         startX = gpCombatManager->cells[gridIndex].field_00
-                 + frameInfoMissileOffset[2];
+                 + sMonFrameInfo.iMissileOffset[2];
     else
         startX = gpCombatManager->cells[gridIndex].field_00
-                 - frameInfoMissileOffset[2];
+                 - sMonFrameInfo.iMissileOffset[2];
     int startY = gpCombatManager->cells[gridIndex].field_02
-                 + frameInfoMissileOffset[3];
+                 + sMonFrameInfo.iMissileOffset[3];
 
     // dy is declared AFTER the abs: startY has to stay live across the
     // branch, which is what keeps retail from folding it into the
@@ -5465,12 +5463,12 @@ void army::attack_wall(TWallTargetId wall, long levelsDestroyed)
     }
     if (facing == 1)
         startX = gpCombatManager->cells[gridIndex].field_00
-                 + frameInfoMissileOffset[2 * pose];
+                 + sMonFrameInfo.iMissileOffset[2 * pose];
     else
         startX = gpCombatManager->cells[gridIndex].field_00
-                 - frameInfoMissileOffset[2 * pose];
+                 - sMonFrameInfo.iMissileOffset[2 * pose];
     startY = gpCombatManager->cells[gridIndex].field_02
-             + frameInfoMissileOffset[2 * pose + 1];
+             + sMonFrameInfo.iMissileOffset[2 * pose + 1];
 
     sample* wallSample = ResourceManager::GetSample(
         levelsDestroyed == 0 ? DATA_COMPGEN(0x00660a84, wallMissSampleName,
@@ -5483,10 +5481,10 @@ void army::attack_wall(TWallTargetId wall, long levelsDestroyed)
     ds_memsample* shootMemSample =
         gpSoundManager->MemorySample(armySample[SHOOT_SAMPLE]);
 
-    const int frames = frameInfoAttackFrames <= 0
+    const int frames = sMonFrameInfo.iAttackFrames <= 0
                            ? stdIcon->GetNumFrames(currFrameType)
-                           : frameInfoAttackFrames;
-    long delay = frameInfoAttackStartCycleTime / frames;
+                           : sMonFrameInfo.iAttackFrames;
+    long delay = sMonFrameInfo.iAttackStartCycleTime / frames;
     for (currFrameIndex = 0; currFrameIndex < frames; currFrameIndex++) {
         gpCombatManager->DrawFrame(1, 1, 0, delay, 1, 1);
     }
@@ -5591,12 +5589,12 @@ void army::Cure(int level, int iSpellPower, const hero* casting_hero)
 {
     poisonPenalty = 1.0f;
     if (spellInfluence[SPELL_AGE])
-        hitPoints = static_cast<int>(
+        sMonInfo.hitPoints = static_cast<int>(
             static_cast<float>(origHitPoints) * 0.5f + 0.95f);
     else
-        hitPoints = static_cast<int>(
+        sMonInfo.hitPoints = static_cast<int>(
             static_cast<float>(origHitPoints) + 0.95f);
-    topCreatureDamage = _cpp_min(topCreatureDamage, hitPoints - 1);
+    topCreatureDamage = _cpp_min(topCreatureDamage, sMonInfo.hitPoints - 1);
     CancelIndividualSpell(SPELL_CURSE);
     CancelIndividualSpell(SPELL_WEAKNESS);
     CancelIndividualSpell(SPELL_SORROW);
@@ -5614,7 +5612,7 @@ void army::Cure(int level, int iSpellPower, const hero* casting_hero)
     int healed = akSpellTraits[SPELL_CURE].mastery_bonus[level]
                  + akSpellTraits[SPELL_CURE].power_factor * iSpellPower;
     if (casting_hero)
-        healed += casting_hero->GetHeroSpellBonus(SPELL_CURE, monInfoLevel,
+        healed += casting_hero->GetHeroSpellBonus(SPELL_CURE, sMonInfo.level,
                                                   healed);
     topCreatureDamage -= healed;
     if (topCreatureDamage < 0)
@@ -5658,7 +5656,7 @@ VA(0x00446660, 0x35)  // anchor-global (body) + call-site pairing, dc 0x4b1a8
 int army::MidX() const
 {
     int x = gpCombatManager->cells[gridIndex].field_00;
-    if (creatureId & 1)
+    if (sMonInfo.attributes & 1)
         x += facing ? 22 : -22;
     return x;
 }
@@ -5727,7 +5725,7 @@ unsigned char army::is_adjacent(int hex) const
 {
     if (gpCombatManager->is_adjacent(gridIndex, hex))
         return 1;
-    if (creatureId & 1) {
+    if (sMonInfo.attributes & 1) {
         int second_hex = gridIndex + (facing ? 1 : -1);
         return gpCombatManager->is_adjacent(second_hex, hex);
     }
@@ -5844,7 +5842,7 @@ void army::PlayAnimation(int sequence, int nframes, int start_frame)
     int frameDelay;
     if (sequence == 0)
         frameDelay = static_cast<int>(
-            static_cast<float>(frameInfoWalkCycleTime)
+            static_cast<float>(sMonFrameInfo.iWalkCycleTime)
             * gCombatSpeedFactors[gUnnamed698758.combatSpeed]
             / static_cast<float>(stdIcon->GetNumFrames(0)));
     else
@@ -5938,7 +5936,7 @@ int army::CanFit(int destIndex, int bAllowShifting, int* iNewDestIndex) const
             return 0;
     }
 
-    if (!(creatureId & 1))
+    if (!(sMonInfo.attributes & 1))
         return 1;
 
     int otherIndex = GetAdjacentCellIndex(destIndex, facing ? 1 : 4);
@@ -6001,8 +5999,8 @@ void army::new_turn()
         return;
     field_4f0 = 1;
     if (Is(1u << 27)) {
-        defenseSkill -= field_4dc;
-        creatureId &= ~0x08000000;
+        sMonInfo.defenseSkill -= field_4dc;
+        sMonInfo.attributes &= ~0x08000000;
     }
     if (gpCombatManager->bCreaturePlacement != 0)
         return;
@@ -6069,7 +6067,7 @@ void army::ResetRound()
     if (numTroops <= 0)
         return;
 
-    creatureId &= 0xf8ffffff;
+    sMonInfo.attributes &= 0xf8ffffff;
     field_4f0 = 0;
     retaliationCount = 1;
     if (creatureType == ARMY_CREATURE_GRIFFIN)
@@ -6097,17 +6095,17 @@ void army::ResetRound()
         iRoundsLeftBeforeVanish--;
 
     if (spellInfluence[SPELL_POISON] > 0) {
-        int oldHitPoints = hitPoints;
+        int oldHitPoints = sMonInfo.hitPoints;
         double factor = _cpp_max<double>(poisonPenalty - 0.1f, 0.5);
         poisonPenalty = static_cast<float>(factor);
         if (spellInfluence[SPELL_AGE])
-            hitPoints = static_cast<int>(
+            sMonInfo.hitPoints = static_cast<int>(
                 origHitPoints * poisonPenalty * 0.5f + 0.95f);
         else
-            hitPoints = static_cast<int>(
+            sMonInfo.hitPoints = static_cast<int>(
                 origHitPoints * poisonPenalty + 0.95f);
-        topCreatureDamage = _cpp_min(topCreatureDamage, hitPoints - 1);
-        if (oldHitPoints - hitPoints > 0) {
+        topCreatureDamage = _cpp_min(topCreatureDamage, sMonInfo.hitPoints - 1);
+        if (oldHitPoints - sMonInfo.hitPoints > 0) {
             bShowPowEffect = 1;
             bSomeUnitsDamaged = 1;
             SAMPLE2 sample;
@@ -6131,10 +6129,10 @@ long army::get_resurrection_size(const army* target) const
 {
     if (creatureType == CREATURE_ARCHANGEL) {
         int missing = target->origNumTroops - target->numTroops;
-        int raised = numTroops * 100 / target->hitPoints;
+        int raised = numTroops * 100 / target->sMonInfo.hitPoints;
         return _cpp_min(raised, missing);
     }
-    int total_life = target->hitPoints * target->origNumTroops;
+    int total_life = target->sMonInfo.hitPoints * target->origNumTroops;
     int raised = _cpp_min(total_life, numTroops * 50)
         / akCreatureTypeTraits[ARMY_CREATURE_DEMON].hitPoints;
     return _cpp_min(raised, target->origNumTroops);
@@ -6151,7 +6149,7 @@ bool army::can_cast_resurrect(long hex) const
 {
     if ((creatureType != CREATURE_ARCHANGEL
          && creatureType != ARMY_CREATURE_PIT_LORD)
-        || numSpellCasts <= 0)
+        || sMonInfo.hasSpell <= 0)
         return 0;
     long side = get_controlling_side();
     if (!gpCombatManager->can_cast_spells(side, 0))
@@ -6206,7 +6204,7 @@ void army::FaerieDragonSpell()
 {
     long total = 0;
     const int* p = gFaerieDragonSpells;
-    if (numSpellCasts == 0)
+    if (sMonInfo.hasSpell == 0)
         return;
     while (*p >= 0) {
         total += *++p;
@@ -6265,7 +6263,7 @@ void army::FaerieDragonSpell()
 VA(0x004476c0, 0x3BA)  // anchor-global + dc-callgraph, dc 0x4beec
 unsigned char army::can_cast_spell(long hex) const
 {
-    if (numSpellCasts == 0)
+    if (sMonInfo.hasSpell == 0)
         return 0;
     if (!gpCombatManager->can_cast_spells(get_controlling_side(), 0))
         return 0;
@@ -6458,7 +6456,7 @@ unsigned char spell_is_valid_on_target(int spell, const army* target)
         if (target->creatureType == army::ARMY_CREATURE_BALLISTA
             || target->creatureType == army::ARMY_CREATURE_ARROW_TOWER) {
             shoots = 1;
-        } else if (!(target->Is(1u << 2)) || target->shotsLeft <= 0) {
+        } else if (!(target->Is(1u << 2)) || target->sMonInfo.numShots <= 0) {
             shoots = 0;
         } else {
             hero* controller = target->get_controller();
@@ -6800,14 +6798,14 @@ void army::cast_spell(long hex)
             frames = stdIcon->GetNumFrames(currFrameType);
         }
         play_sample(SHOOT_SAMPLE);
-        long delay = frameInfoAttackStartCycleTime / frames;
+        long delay = sMonFrameInfo.iAttackStartCycleTime / frames;
         for (currFrameIndex = 0; currFrameIndex < frames;
              currFrameIndex++) {
             gpCombatManager->DrawFrame(1, 1, 0, delay, 1, 1);
         }
         currFrameIndex = frames - 1;
     }
-    numSpellCasts--;
+    sMonInfo.hasSpell--;
     switch (creatureType) {
     case CREATURE_ARCHANGEL: {
         army* target = gpCombatManager->find_resurrection_target(
@@ -6995,16 +6993,16 @@ long army::get_multi_head_directions(long our_hex, const army* enemy,
                                      long enemy_hex) const
 {
     long mask = 0xff;
-    if (!(creatureId & 1))
+    if (!(sMonInfo.attributes & 1))
         mask = 0x3f;
     if (creatureType == ARMY_CREATURE_CERBERUS) {
         long enemy_second = enemy_hex;
-        if (enemy->creatureId & 1)
+        if (enemy->sMonInfo.attributes & 1)
             enemy_second = enemy_hex + (enemy->facing ? 1 : -1);
 
         long direction;
         for (long d = 0; d < 8; d++) {
-            if (d < COMBAT_DIRECTION_COUNT || (creatureId & 1)) {
+            if (d < COMBAT_DIRECTION_COUNT || (sMonInfo.attributes & 1)) {
                 long hex = get_adjacent_hex(our_hex, d);
                 if (hex == enemy_hex || hex == enemy_second) {
                     direction = d;
@@ -7055,7 +7053,7 @@ long army::get_AI_target_time(long speed) const
 VA(0x00448cd0, 0x4B)  // anchor-global, dc 0x4c918
 int army::GetSpeed() const
 {
-    int speed = field_c4;
+    int speed = sMonInfo.speed;
     if (slowRounds) {
         if (Is(1u << 6))
             return 0;
