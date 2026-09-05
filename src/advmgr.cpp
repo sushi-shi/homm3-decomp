@@ -1179,6 +1179,17 @@ type_point advManager::get_mouse_map_point(__$ReturnUdt)
 // branches against retail's 80, with both polarity flips unchanged. The
 // narrower per-iteration output-flag scope below is the retail-byte winner;
 // DC local scopes are name/type evidence, not x86 allocation evidence.
+// The route walk is a GOTO LOOP, not a `for` (88.5537 -> 90.2547). Retail's
+// back edge is `dec / mov [ebp-0x10],edi / js <done>` followed by an
+// UNCONDITIONAL jump to the head; a `for (i = n-1; i >= 0; i--)` gives the
+// rotated single `jns <head>` instead, and the two `continue` arms become
+// `goto route_walk_next`. Left at that spelling: VC6 still PEELS the head
+// into the back edge (29 instructions duplicated where retail emits
+// `mov eax,[gpSearchArray] / jmp <head>`), which is why the block count is
+// 122 against retail's 121. Dropping the `if (i < 0)` guard removes that
+// surplus block and takes the skeleton to 121/121 with 96 exact blocks, but
+// the ratchet number falls to 89.9938 - measured both ways, the guard
+// stays.
 VA(0x00407b80, 0xBF0)  // anchor-global, dc 0x7a8c
 NewmapCell* advManager::DoAdvCommand(type_point* trigger_point)
 {
@@ -1283,49 +1294,56 @@ NewmapCell* advManager::DoAdvCommand(type_point* trigger_point)
         gpInputManager->Flush();
 
         unsigned char interrupted = 0;
-        int i;
-        for (i = gpSearchArray->result.size() - 1; i >= 0; i--) {
-            int bNoMove;
-            int bFoughtBattle;
-            eventCell = MoveHero(gpSearchArray->result[i]->direction,
-                                 i == 0, trigger_point, &bNoMove, 0,
-                                 &bFoughtBattle, 0);
-            advWindow->UpdateHeroLocator(-1, 1, 1);
-            if (eventCell)
-                break;
-            if (bNoMove)
-                break;
-            if (bFoughtBattle)
-                break;
-            if (gUnnamed69777c)
-                break;
-
-            if (!(currHero->flags & 0x40000)
-                && (currHero->flightLevel != -1
-                    || currHero->IsWieldingArtifact(0x48))
-                && !currHero->can_land())
-                continue;
-            if (!(currHero->flags & 0x40000)
-                && (currHero->waterWalkLevel != -1
-                    || currHero->IsWieldingArtifact(0x5a))
-                && !currHero->can_land())
-                continue;
-
-            Process1WindowsMessage();
-            message msg = gpInputManager->GetEvent();
-            while (msg.id) {
-                if (msg.id == MESSAGE_KEY_DOWN
-                    || msg.id == MESSAGE_LEFT_BUTTON_DOWN
-                    || msg.id == MESSAGE_RIGHT_BUTTON_DOWN
-                    || msg.id == MESSAGE_WIDGET) {
-                    interrupted = 1;
-                    StopCursor(1);
+        int i = gpSearchArray->result.size() - 1;
+        if (i < 0)
+            goto route_walk_done;
+    route_walk_step:
+        {
+                int bNoMove;
+                int bFoughtBattle;
+                eventCell = MoveHero(gpSearchArray->result[i]->direction,
+                                     i == 0, trigger_point, &bNoMove, 0,
+                                     &bFoughtBattle, 0);
+                advWindow->UpdateHeroLocator(-1, 1, 1);
+                if (eventCell)
                     goto route_walk_done;
-                }
+                if (bNoMove)
+                    goto route_walk_done;
+                if (bFoughtBattle)
+                    goto route_walk_done;
+                if (gUnnamed69777c)
+                    goto route_walk_done;
+
+                if (!(currHero->flags & 0x40000)
+                    && (currHero->flightLevel != -1
+                        || currHero->IsWieldingArtifact(0x48))
+                    && !currHero->can_land())
+                    goto route_walk_next;
+                if (!(currHero->flags & 0x40000)
+                    && (currHero->waterWalkLevel != -1
+                        || currHero->IsWieldingArtifact(0x5a))
+                    && !currHero->can_land())
+                    goto route_walk_next;
+
                 Process1WindowsMessage();
-                msg = gpInputManager->GetEvent();
+                message msg = gpInputManager->GetEvent();
+                while (msg.id) {
+                    if (msg.id == MESSAGE_KEY_DOWN
+                        || msg.id == MESSAGE_LEFT_BUTTON_DOWN
+                        || msg.id == MESSAGE_RIGHT_BUTTON_DOWN
+                        || msg.id == MESSAGE_WIDGET) {
+                        interrupted = 1;
+                        StopCursor(1);
+                        goto route_walk_done;
+                    }
+                    Process1WindowsMessage();
+                    msg = gpInputManager->GetEvent();
+                }
             }
-        }
+    route_walk_next:
+        if (--i < 0)
+            goto route_walk_done;
+        goto route_walk_step;
 
     route_walk_done:
         seedingValid = 0;
