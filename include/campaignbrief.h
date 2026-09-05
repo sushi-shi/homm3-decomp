@@ -152,6 +152,11 @@ public:
         // hero placeholders are sorted by power rating and handed the
         // scenario's carried heroes, strongest first. Name provisional.
         void PlaceCrossoverHeroes();
+        // Retail 0x487900, game::NewMap's third campaign callee: every
+        // artifact the scenario's carry-over pool still holds is offered to
+        // the option's player, and the option's own Apply runs last. Name
+        // provisional.
+        void GiveCrossoverArtifacts();
         // Complete-only retained wrapper at 0x4884c0.  The campaign-header
         // wrapper below is its sole direct caller.
         void StartScenario(std::streambuf* stream, int option);
