@@ -859,7 +859,7 @@ cmbtmgr	??0TArcher@combatManager@@QAE@XZ	100.0000	100.0000	100.0000	0x62920	9fda
 cmbtmgr	??0TCombatEagleEyeSide@@QAE@XZ	0.0000	0.0000	0.0000	0x62890	-
 cmbtmgr	??0combatManager@@QAE@XZ	100.0000	100.0000	100.0000	0x62760	6f386fa11acc
 cmbtmgr	??1TArcher@combatManager@@QAE@XZ	100.0000	100.0000	100.0000	0x62930	-
-cmbtmgr	??1TCombatEagleEyeSide@@QAE@XZ	81.6667	100.0000	100.0000	0x628b0	-
+cmbtmgr	??1TCombatEagleEyeSide@@QAE@XZ	100.0000	100.0000	100.0000	0x628b0	-
 cmbtmgr	??1TPickANumber@@QAE@XZ	100.0000	100.0000	100.0000	0x66260	-
 cmbtmgr	?CalculateGainedExperience@combatManager@@QAEXHPAH@Z	75.0110	75.0110	75.0110	0x6a350	d32ff90545fe
 cmbtmgr	?CheckApplyBadMorale@combatManager@@QAEHHH@Z	97.7333	97.7333	97.7333	0x64b40	77145df5c1ab
@@ -3432,7 +3432,7 @@ singleselectionwindow	??0?$vector@V?$vector@Utype_artifact@@V?$allocator@Utype_a
 singleselectionwindow	??0?$vector@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@V?$allocator@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@@2@@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x1941b0	-
 singleselectionwindow	??0?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x18fef0	e6a96138ff51
 singleselectionwindow	??0CGameHeaderInfoMsg@@QAE@EHPAUGameSelectionHeadersStruct@@@Z	98.7952	98.7952	98.7952	0x179060	8c8619e8294c
-singleselectionwindow	??0CMapHeaderData@@QAE@ABV0@@Z	97.5214	97.5214	97.5214	0x190810	-
+singleselectionwindow	??0CMapHeaderData@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x190810	-
 singleselectionwindow	??0CNetPlayerHandlerPlayer@@QAE@XZ	100.0000	100.0000	100.0000	0x17c790	82fac650b924
 singleselectionwindow	??0CNetPlayerInfo@@QAE@XZ	100.0000	100.0000	100.0000	0x17f720	-
 singleselectionwindow	??0CNewPlayerUpdateMan@@QAE@XZ	100.0000	100.0000	100.0000	0x17c9b0	0ed8ff53773d
@@ -3450,7 +3450,7 @@ singleselectionwindow	??1CChatSlider@@UAE@XZ	100.0000	100.0000	100.0000	0x17ca80
 singleselectionwindow	??1CChatWidget@@UAE@XZ	100.0000	100.0000	100.0000	0x17cba0	c32e26731f90
 singleselectionwindow	??1CGameHeaderInfoMsg@@QAE@XZ	100.0000	100.0000	100.0000	0x178760	-
 singleselectionwindow	??1CHostWaitDlg@@UAE@XZ	0.0000	0.0000	0.0000	0x189230	d92e236478cf
-singleselectionwindow	??1CNewMapHeaderInfoMsg@@QAE@XZ	90.5686	90.5686	90.5686	0x18a300	b61fdfca3e91
+singleselectionwindow	??1CNewMapHeaderInfoMsg@@QAE@XZ	97.0588	97.0588	97.0588	0x18a300	b61fdfca3e91
 singleselectionwindow	??1CNewPlayerUpdateTask@@QAE@XZ	100.0000	100.0000	100.0000	0x183ef0	b95fa1d4d1e0
 singleselectionwindow	??1GameSelectionHeadersStruct@@QAE@XZ	100.0000	100.0000	100.0000	0x178290	-
 singleselectionwindow	??1TSingleSelectionWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x183b40	94d2ac6b3cc8
@@ -3617,7 +3617,7 @@ singleselectionwindow	?WindowFn_00582e90@TSingleSelectionWindow@@QAEXPAV?$vector
 singleselectionwindow	?WindowHandler@TSingleSelectionWindow@@UAEHPAVmessage@@@Z	97.6901	97.6901	97.6901	0x187d00	252e5d706c40
 singleselectionwindow	?_Construct@std@@YIXPAUGameSelectionHeadersStruct@@ABU2@@Z	100.0000	100.0000	100.0000	0x18f480	-
 singleselectionwindow	?_Destroy@?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@IAEXPAUGameSelectionHeadersStruct@@0@Z	100.0000	100.0000	100.0000	0x18f080	-
-singleselectionwindow	?_Init@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@IAEXXZ	72.5472	72.5472	72.5472	0x18ffc0	-
+singleselectionwindow	?_Init@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@IAEXXZ	100.0000	100.0000	100.0000	0x18ffc0	-
 singleselectionwindow	?_Median@std@@YI?AUGameSelectionHeadersStruct@@U2@00UTSortMapsByLoss@@@Z	100.0000	100.0000	100.0000	0x195b30	-
 singleselectionwindow	?_Median@std@@YI?AUGameSelectionHeadersStruct@@U2@00UTSortMapsByName@@@Z	95.7960	95.7960	95.7960	0x1939f0	-
 singleselectionwindow	?_Median@std@@YI?AUGameSelectionHeadersStruct@@U2@00UTSortMapsByPlayers@@@Z	100.0000	100.0000	100.0000	0x1946e0	-
@@ -3802,7 +3802,7 @@ spells	?find_spell_target@combatManager@@QAEPAVarmy@@HJJEJ@Z	100.0000	100.0000	1
 spells	?get_elemental_type@@YI?AW4TCreatureType@@H@Z	100.0000	100.0000	100.0000	0x1a9360	04eaf845849b
 spells	?get_failure_reason@combatManager@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@HPBDJ@Z	100.0000	100.0000	100.0000	0x1a2880	30843eacc634
 spells	?handle_sacrifice_beneficiary@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1a2d00	858590934880
-spells	?insert@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@QAE?AU?$pair@Viterator@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@_N@2@ABH@Z	80.3361	80.3361	80.3361	0x1a9450	-
+spells	?insert@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@QAE?AU?$pair@Viterator@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@_N@2@ABH@Z	100.0000	100.0000	100.0000	0x1a9450	-
 spells	?is_valid_teleport@combatManager@@QAEEPBVarmy@@J@Z	100.0000	100.0000	100.0000	0x1a3700	dfbb2ca83ade
 spells	?mark_area_effect@combatManager@@QAEXHJJAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x1a4920	629fa19164dd
 spells	?mark_area_effect@combatManager@@QAEXJJEAAV?$vector@JV?$allocator@J@std@@@std@@@Z	100.0000	100.0000	100.0000	0x1a4170	5930b1d92f34
