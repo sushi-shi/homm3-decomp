@@ -1983,6 +1983,7 @@ kb	?CheckEndGame@@YIXH@Z	89.4452	89.4452	89.4452	0xf2ce0	f7599ef47a4c
 kb	?CleanUpMenus@@YIXXZ	100.0000	100.0000	100.0000	0xf4b50	5ad85acac0be
 kb	?CongratsWait@@YIXHPADHHH@Z	96.8467	96.8467	96.8467	0xf3ab0	767bdf8cc153
 kb	?CreditsWait@@YIXXZ	95.2930	95.2930	95.2930	0xedda0	e424e5d34744
+kb	?DisplayLCWinLoss@@YIEPAVLossConditionStruct@@PAH1E@Z	79.0534	79.0534	79.0534	0xf2960	ffccd13bc798
 kb	?DisplayVCWinLoss@@YI_NAAVVictoryConditionStruct@@AAH1_N@Z	94.9521	94.9521	94.9521	0xf15e0	0fa75f4e1fc3
 kb	?DoCampaignWindow@@YIEXZ	98.3910	98.3910	98.3910	0xf00a0	68ef1062200d
 kb	?DoMultiPlayerWindow@@YIHXZ	100.0000	100.0000	100.0000	0xf0590	732e54afec3c
@@ -3021,7 +3022,7 @@ singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100
 # 2026-08-27 (round 3): the interim full build re-banked the transient
 # peak a third time; re-lowered with the round's bodies landed. Same
 # scheduler flap, same recovery path.
-singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0	66eb0a0e15c8
+singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0	66eb0a0e15c8
 singleselectionwindow	?OnMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2193	90.2193	90.2193	0x189710	3ad2be3935a3
 singleselectionwindow	?OnNameClick@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x18b620	ef174e28edf8
 singleselectionwindow	?OnNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	97.5366	97.5366	97.5366	0x18b510	862e2a9c058b
