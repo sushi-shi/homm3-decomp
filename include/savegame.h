@@ -27,11 +27,13 @@
 // +4, and game::SaveGame's frame puts the object at ebp-0x1c with the
 // next local at ebp-0x14.
 //
-// DECLARED, NOT DEFINED - the bodies belong to whichever unit the
-// bracket resolves to, and a consumer only needs the layout and the two
-// entry points. The virtual overrides are declared so the class is
-// concrete enough to instantiate; nothing here emits a vftable, because
-// no constructor body in this TU ever initialises a vptr.
+// DEFINED IN src/gzfile.cpp since 2026-09-05, which is the compiland the
+// cinit pair 0x4d6c30 / 0x4d6dc0 brackets; the eight bodies there are
+// exact. A consumer still only needs the layout and the two entry points -
+// nothing here emits a vftable, because no constructor body in a consuming
+// TU ever initialises a vptr. `file` is a MEMBER INITIALISER, not a body
+// assignment: that is what keeps TAbstractFile's vptr store live ahead of
+// @gzopen@8 and moves TGzFile's own store behind it (92.76% -> exact).
 class TGzFile : public TAbstractFile {
 public:
     // Retail RTTI at 0x677d48 and its two-entry catchable-type array prove

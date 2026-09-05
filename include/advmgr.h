@@ -1972,6 +1972,9 @@ public:
                        unsigned char update);
     void CheckCastSpell();
     void CastSpell(int whichSpell);
+    // advspells.obj's, retail 0x41d090 (dc 0x2225c). The mastery is
+    // spelled `int` for the reason ViewWorld's is (see below).
+    void DimensionDoor(int level);
     void MobilizeCurrHero(int bInMove, unsigned char waitingPlayer,
                           unsigned char drawChanges);
     void SetTownContext(int townId, unsigned char waitingPlayer,

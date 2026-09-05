@@ -287,8 +287,18 @@ const char* gSpeedNames[21];
 DATA(0x006a5d24)
 const char* cRumourTerrainDescriptions[10];
 
+// NOT gBorderGuardColors, however the Dreamcast public at dc 0x34f50
+// reads: that name arrived here by FILL POSITION, and retail's own bytes
+// refute it. The whole image references 0x6a5d60 exactly twice - the fill
+// below and 0x469ecc, inside combatManager's moat worker at 0x469e50,
+// which loads `[4*defendingTown->type + 0x6a5d60]` and hands it to
+// damage_message as the message string. Nine entries, indexed by TOWN
+// TYPE, consumed as a message: that is the moat attacker line per faction,
+// and no border-guard consumer reads the array at all. Name is still an
+// invention (cmbtmgr.h declares the same datum under it), but it is the
+// role the retail bytes prove.
 DATA(0x006a5d60)
-const char* gBorderGuardColors[9];
+const char* gMoatDamageMessages[9];
 
 DATA(0x006a5e14)
 const char* AGRText[3];
@@ -1089,7 +1099,7 @@ unsigned char InitializeArrayText()
         gTownSizeNames[j] = ArrayText->GetText(i);
     i++;
     for (j = 0; j < 9; j++, i++)
-        gBorderGuardColors[j] = ArrayText->GetText(i);
+        gMoatDamageMessages[j] = ArrayText->GetText(i);
     return 1;
 }
 
