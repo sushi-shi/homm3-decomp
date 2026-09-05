@@ -1713,11 +1713,11 @@ landmine_done:
     // lookup as source boundaries. Retail folds GetNumFrames but preserves
     // the same completion loop, state reset, final DrawFrame, and selector
     // update in this order.
-    if (bIsMonsterSpell != SPELL_CASTER_CREATURE) {
+    if (!bIsMonsterSpell || bIsMonsterSpell == SPELL_CASTER_ARTIFACT) {
         int nframes = creatureSprites[currentSide]->GetNumFrames(4);
-        int hero_row = akHeroClasses[casting_hero->heroClass].townType * 2
-            + akHeroTraits[casting_hero->id].sex;
-        for (int frame = kCombatHeroSprites[hero_row].castFrame;
+        for (int frame = kCombatHeroSprites[
+                 akHeroClasses[casting_hero->heroClass].townType * 2
+                 + akHeroTraits[casting_hero->id].sex].castFrame;
              frame < nframes; ++frame) {
             field_53ec[currentSide] = frame;
             DrawFrame(1, 0, 0, 100, 1, 1);
