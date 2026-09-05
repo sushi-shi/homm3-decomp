@@ -171,6 +171,19 @@ public:
     // whether the caller passes a hero. Slot 4 takes one; the skill
     // leaf 0x56dad0 is what types it, reading `[arg + 0x476]`, which is
     // hero::stats. NAMES provisional: no roster row has this arity.
+    // ONE OF THESE TWO NAME PAIRS IS INVERTED (found 2026-09-05, bytes,
+    // recorded rather than acted on). The two base text getters the leaves
+    // take their string off are 0x56d240 and 0x56d310, and the xref graph
+    // pairs them one-for-one with slot 4 and slot 5: every DoProposalDialog
+    // calls 0x56d240, which reads +0x18, and every DoProgressDialog calls
+    // 0x56d310, which reads +0x08. So the slot-4 dialog shows the SECOND
+    // string of the h3m triple and slot 5 the FIRST - which contradicts
+    // either the proposalText/progressText roles above (assigned off slot
+    // 13's write order) or these two slot names. Both name sets are
+    // provisional and nothing in the image settles which one to flip;
+    // renaming either would touch forty reconstructed leaf bodies for no
+    // byte, so the observation is banked here for the lane that closes the
+    // two getters.
     virtual void DoProposalDialog(hero* current_hero);
     virtual void DoProgressDialog();
     // Slot 6. Pure in the base and overridden everywhere.

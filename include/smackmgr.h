@@ -10,6 +10,24 @@ void SetPixelFormat(unsigned long redMask, unsigned long greenMask,
                     unsigned long blueMask);             // 0x598a40
 }
 
+// The two archive directory records. LoadSoundHeaders (0x5984a0) sizes its
+// allocation `new SoundHeaderStruct[count + 2]` as (3*count + 6) * 16 and
+// then ReadFiles 48*count bytes into it; LoadAnimHeaders (0x598210) does
+// (11*count + 22) * 4 against 44*count. So the stride is 48 and 44. The
+// split inside the record is byte-proven by the 0x598790 lookup, which
+// walks the video directory in 0x2c steps, strcmpi's from offset 0 and
+// seeks to the dword at +0x28: a 40-byte name followed by the file offset,
+// with the sound record carrying a size behind it.
+struct SoundHeaderStruct {
+    char name[40];
+    unsigned long offset;
+    unsigned long size;
+};
+struct VideoHeaderStruct {
+    char name[40];
+    unsigned long offset;
+};
+
 // Partial byte-proven view of the Smacker handle (radlib SmackTag);
 // only the members the smackmgr wrappers touch are modeled. Width/
 // Height are unsigned (VideoPlay centers with shr); the LastRect
@@ -18,7 +36,10 @@ struct Smack {
     unsigned long Version;   // +0x000
     unsigned long Width;     // +0x004
     unsigned long Height;    // +0x008
-    char pad_c[0x374];       // +0x00c..0x37f (unmodeled header/palette)
+    unsigned long Frames;    // +0x00c
+    char pad_10[0x364];      // +0x010..0x373 (unmodeled header/palette)
+    unsigned long FrameNum;  // +0x374
+    char pad_378[8];         // +0x378..0x37f
     long LastRectx;          // +0x380
     long LastRecty;          // +0x384
     long LastRectw;          // +0x388
@@ -35,21 +56,33 @@ __declspec(dllimport) unsigned long __stdcall _SmackToBufferRect(Smack* smk, uns
 __declspec(dllimport) unsigned long __stdcall _SmackDoFrame(Smack* smk);
 __declspec(dllimport) void __stdcall _SmackGoto(Smack* smk, unsigned long frame);
 __declspec(dllimport) void __stdcall _SmackClose(Smack* smk);
+// The rest of the surface, consumed only by smackmgr.cpp itself: the
+// per-frame pump's wait/advance pair and ShowVideo's open path.
+__declspec(dllimport) unsigned long __stdcall _SmackWait(Smack* smk);
+__declspec(dllimport) void __stdcall _SmackNextFrame(Smack* smk);
+__declspec(dllimport) Smack* __stdcall _SmackOpen(void* handle, unsigned long flags, long extra);
+__declspec(dllimport) void __stdcall _SmackUseMMX(unsigned long on);
+__declspec(dllimport) void __stdcall _SmackVolumePan(Smack* smk, unsigned long trackFlags, unsigned long volume, unsigned long pan);
 }
 
-// Per-id video descriptor table in a foreign TU's .data (0x6839c8,
-// stride 20; ids below VIDEO_ID_FIRST_TABLED never consult it). Only
-// the two bytes the wrappers read are modeled: +0 selects the bink
-// arm, +2 requests the fade-out after a user abort. Names provisional;
+// Per-id video descriptor table in a foreign TU's .data (0x6839c0,
+// stride 20; ids below VIDEO_ID_FIRST_TABLED never consult it). The
+// record starts EIGHT bytes below the flag byte the earlier wrappers
+// modelled it from: ShowVideo reads the two archive stems it opens the
+// video and audio Smacker tracks with out of +0 and +4, so the byte
+// that selects the bink arm is at +8, not at +0. Names provisional;
 // owning TU unknown - declared with its known consumer until the
 // owner's TU lands.
 struct SVideoDescriptor {
-    unsigned char useBink;      // +0
-    unsigned char field_1;      // +1
-    unsigned char fadeOnAbort;  // +2
-    char pad_3[17];             // 20-byte stride
+    const char* smkStem;        // +0   video track archive stem
+    const char* smkAudioStem;   // +4   audio-only track ("" = none)
+    unsigned char useBink;      // +8
+    unsigned char field_9;      // +9
+    unsigned char fadeOnAbort;  // +0x0a
+    unsigned char field_b;      // +0x0b
+    char pad_c[8];              // 20-byte stride
 };
-extern SVideoDescriptor gVideoDescriptors[];   // .data 0x6839c8
+extern SVideoDescriptor gVideoDescriptors[];   // .data 0x6839c0
 
 // The two Smacker track handles smackmgr.obj defines. Declared here for the
 // campaign prologue player, which watches gSmackVideo/gSmackVideo2 to decide
@@ -61,6 +94,7 @@ extern Smack* gSmackVideo2;
 // Foreign globals without an owning header yet (all provisional):
 extern int* gpVideoGameState;    // .bss 0x69923c - the forced-bink state pair
 extern int gbVideoNoSkip;        // .bss 0x699524 - nonzero blocks the user abort
+extern int gUnnamed699290;       // .bss 0x699290 - nonzero suppresses the video sound tracks
 
 // Video ids as the wrappers dispatch them. Names are bootstrap ROLE
 // inventions (no DC/NH3API roster survives for the numeric ids): ids
@@ -77,7 +111,13 @@ enum EVideoId {
 // The two *gpVideoGameState values that force VIDEO_ID_STATE_GATED
 // onto the bink arm (byte-derived; the pointee's real domain arrives
 // with its owning TU - names provisional).
+// Two disjoint pairs are attested on this global. {2, 3} force
+// VIDEO_ID_STATE_GATED onto the bink arm (VideoPlay / VideoOpen);
+// {1, 3} open the h3ab_ahd expansion archives (LoadAnimHeaders /
+// LoadSoundHeaders). Value 3 is a member of both sets, so it keeps the
+// name the bink gate gave it. Names are role names, provisional.
 enum EVideoGameState {
+    VIDEO_GAME_STATE_EXPANSION_ARCHIVES = 0x1,
     VIDEO_GAME_STATE_FORCED_BINK_LOW = 0x2,
     VIDEO_GAME_STATE_FORCED_BINK_HIGH = 0x3
 };
