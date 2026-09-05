@@ -1794,7 +1794,7 @@ unsigned char searchArray::FindCombatPath(const army* current_army,
 
         if (destination >= 0 && destination < COMBAT_GRID_CELLS
                 && cell.flight_cost == 0) {
-            long distance = get_distance(cell.point.x, destination);
+            long distance = combatManager::get_distance(cell.point.x, destination);
             if (distance < best_distance) {
                 best_hex = cell.point.x;
                 best_distance = distance;
