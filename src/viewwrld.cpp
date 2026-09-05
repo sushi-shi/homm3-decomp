@@ -55,6 +55,19 @@ DATA(0x006aac30)
 static unsigned char view_heroes;
 
 // E:\gamedcs\viewwrld.cpp:166
+// The inner loop reads its source pixel THROUGH A NAMED POINTER that it
+// dereferences twice; it does not subscript into a `color` local. Retail
+// proves it in both halves of this boundary - the out-of-line body at
+// 0x5f9d90 and every expansion - by materialising the address
+// (`lea eax,[ecx+eax*2]; mov ax,[eax]`) where a subscript folds straight
+// into the load (`mov cx,[edi+2*ecx]`). Two uses are what forces it: a
+// one-use pointer local folds back to the subscript, and testing the
+// subscript twice instead loses the CSE and scores worse. Measured
+// 2026-09-05 across all six scaled renderers - Road 94.5979 -> 99.5374,
+// River 95.4910 -> 98.5412, Underlay 38.8566 -> 42.1275, Shroud 91.0938 ->
+// 92.8835, AdvObj 94.8383 -> 96.4955, AdvObjShadow 82.7004 -> 83.9809; only
+// Ground moved down (55.6351 -> 55.2155, four bytes, still expanding the
+// clip helper at its last site).
 // Complete expands this source helper into every scaled renderer and emits no
 // retained body. Dreamcast preserves the boundary, the two width locals and
 // the nested clipped loops; retail independently confirms all four screen
@@ -126,9 +139,10 @@ inline void VWClipScaleToScreenBuffer(int destX, int destY)
         unsigned short* screenBuffer = screenBufferLineStart;
         for (int x = 0; x < giViewWorldScale; ++x) {
             if (destX + x >= 8 && destX + x < 600) {
-                unsigned short color = sourceBufferLineStart[scaleLine[x]];
-                if (color)
-                    *screenBuffer = color;
+                unsigned short* sourcePixel =
+                    sourceBufferLineStart + scaleLine[x];
+                if (*sourcePixel)
+                    *screenBuffer = *sourcePixel;
                 ++screenBuffer;
             }
         }
@@ -159,9 +173,9 @@ inline void VWScaleToScreenBuffer(int destX, int destY)
     for (int y = 0; y < giViewWorldScale; ++y) {
         unsigned short* screenBuffer = screenBufferLineStart;
         for (int x = 0; x < giViewWorldScale; ++x) {
-            unsigned short color = sourceBufferLineStart[scaleLine[x]];
-            if (color)
-                *screenBuffer = color;
+            unsigned short* sourcePixel = sourceBufferLineStart + scaleLine[x];
+            if (*sourcePixel)
+                *screenBuffer = *sourcePixel;
             ++screenBuffer;
         }
         sourceBufferLineStart =
@@ -910,12 +924,10 @@ void advManager::VWDrawRoad(int srcX, int srcY, int z, int destX, int destY)
 // which cost 70.6 points (20.5312 -> 91.0938 on the inversion alone). With
 // the guard positive, B12 falls into the star block and every block lands
 // where retail put it: 49 of 54 exact, 0 target-shift, 0 flow-kind.
-// Residual (91.0938%): the five size-only blocks are all inside the two
-// VWScaleToScreenBuffer expansions, not this body - three instructions of
-// inner-loop addressing (retail materialises the source address with a
-// `lea` where ours folds it into the load) plus one extra out-of-line
-// GetMap in the star expansion. They are the same rows that hold River,
-// Road and AdvObj under 100, so the fix belongs at the helper.
+// Residual (92.8835%): the size-only blocks left are inside the two
+// VWScaleToScreenBuffer expansions, not this body - one extra out-of-line
+// GetMap in the star expansion, which is a per-site /Ob2 decision inside
+// the helper and not a statement of this function.
 VA(0x005f9940, 0x44A)  // exhaustive dc-order-map + VWCompleteDraw call order (the iVWTerrains-gated layer), dc 0x194b48
 void advManager::VWDrawShroud(int srcX, int srcY, int z, int destX, int destY)
 {
