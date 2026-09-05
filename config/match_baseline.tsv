@@ -1155,6 +1155,7 @@ customcampaignwindow	?LoadCampaignList@TCustomCampaignWindow@@QAEXXZ	99.9196	99.
 customcampaignwindow	?OnWidgetDeselect@TCustomCampaignWindow@@UAEHHPAE@Z	100.0000	100.0000	100.0000	0x835c0	ae4a7a376808
 customcampaignwindow	?UpdateList@TCustomCampaignWindow@@QAEXXZ	93.8038	93.8038	93.8038	0x83330	218c31badbdb
 customcampaignwindow	?_Insertion_sort_1@std@@YIXPAPAUCampaignHeaderStruct@TCampaignBrief@@0VCampaignHeaderPointerLess@@0@Z	100.0000	100.0000	100.0000	0x83aa0	-
+customcampaignwindow	?_Sort@std@@YIXPAPAUCampaignHeaderStruct@TCampaignBrief@@0VCampaignHeaderPointerLess@@0@Z	100.0000	100.0000	100.0000	0x83940	-
 deflate	@deflate@8	100.0000	100.0000	100.0000	0x204ac0	-
 deflate	@deflateEnd@4	100.0000	100.0000	100.0000	0x204e10	-
 deflate	@deflateInit2_@32	100.0000	100.0000	100.0000	0x204850	-
@@ -1613,6 +1614,7 @@ game	??1game@@QAE@XZ	100.0000	100.0000	100.0000	0xce5b0	63b88e3526aa
 game	??1out_of_range@std@@UAE@XZ	100.0000	100.0000	100.0000	0xb6be0	-
 game	??1playerData@@QAE@XZ	100.0000	100.0000	100.0000	0xce570	293b0ee86f68
 game	??1type_creature_bank@@QAE@XZ	100.0000	100.0000	100.0000	0xc2420	771f9d5722f4
+game	??4?$vector@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@V?$allocator@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@@2@@std@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	0x5f5e0	-
 game	??4CObjectType@@QAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0xd40c0	-
 game	??4reference@?$bitset@$04@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0000	0xcf800	-
 game	??4reference@?$bitset@$07@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0000	0xd4490	-
@@ -3373,6 +3375,7 @@ smackmgr	?VideoRestart@@YIXXZ	100.0000	100.0000	100.0000	0x197900	b9317f2d483b
 smackmgr	?VideoResume@@YIXXZ	100.0000	100.0000	100.0000	0x197850	219da5b0d0a1
 smackmgr	?VideoShutDown@@YIXXZ	100.0000	100.0000	100.0000	0x197c70	5b5b45640a91
 smackmgr	?VideoSoundOnOff@@YIXXZ	100.0000	100.0000	100.0000	0x1971b0	535c7885a628
+smackmgr	?append@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@ID@Z	100.0000	100.0000	100.0000	0xb5f40	-
 soundmgr	??0soundManager@@QAE@XZ	100.0000	100.0000	100.0000	0x199760	f3dc08d924d7
 soundmgr	?AdjustMusicVolumes@soundManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19a1b0	f38726a08d0d
 soundmgr	?AdjustSoundVolumes@soundManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19a0c0	e94917bf11ef
@@ -3412,6 +3415,7 @@ spellbookwindow	?Open@TSpellbookWindow@@UAEHHE@Z	100.0000	100.0000	100.0000	0x19
 spellbookwindow	?WindowHandler@TSpellbookWindow@@UAEHPAVmessage@@@Z	99.9011	99.9011	99.9011	0x19d040	afd2f6cd1887
 spellbookwindow	?_Insertion_sort_1@std@@YIXPAVTSpellbookEntry@TSpellbookWindow@@00@Z	100.0000	100.0000	100.0000	0x19def0	-
 spellbookwindow	?_Sort@std@@YIXPAVTSpellbookEntry@TSpellbookWindow@@00@Z	100.0000	100.0000	100.0000	0x19dc90	-
+spellbookwindow	?erase@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@II@Z	100.0000	100.0000	100.0000	0x1bdb0	-
 spellbookwindow	?get_spell_description@TSpellbookWindow@@AAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@HPBVhero@@E@Z	96.8000	96.8000	96.8000	0x19baa0	368d8d6e41c8
 spelldefs	?InitializeSpellTraits@@YIXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	100.0000	100.0000	100.0000	0x19e150	4e33d1e76770
 spelldefs	?InitializeSpellTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0x19e090	59446a0b5e03
@@ -3854,6 +3858,8 @@ viewarmywindow	??1TViewArmyWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1f45e0	1f
 viewarmywindow	??_GTViewArmyWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1f3b20	-
 viewarmywindow	?DoModal@TViewArmyWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1f47f0	55d754aa4559
 viewarmywindow	?WindowHandler@TViewArmyWindow@@UAEHPAVmessage@@@Z	92.5744	92.5744	92.5744	0x1f4850	0fb446d5f96b
+viewarmywindow	?_Split@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEXXZ	100.0000	100.0000	100.0000	0x4ce0	-
+viewarmywindow	?assign@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@ABV12@II@Z	100.0000	100.0000	100.0000	0x4860	-
 viewarmywindow	?convertID2HelpID@TViewArmyWindow@@QBEHH@Z	100.0000	100.0000	100.0000	0x1f46c0	b4f7672d6128
 viewarmywindow	?create_attack_widget@TViewArmyWindow@@QAEXHH@Z	100.0000	100.0000	100.0000	0x1f5340	f086a7054632
 viewarmywindow	?create_damage_widget@TViewArmyWindow@@QAEXPBUTCreatureTypeTraits@@PBVhero@@@Z	100.0000	100.0000	100.0000	0x1f5860	151db9c9b9a2

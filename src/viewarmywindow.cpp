@@ -1450,3 +1450,15 @@ void TViewArmyWindow::create_dismiss_widget()
     dismiss->set_hotkey(32);
     Widgets.push_back(dismiss);
 }
+
+// COMDAT pairing: basic_string<char>::assign(const basic_string&, size_t,
+// size_t). Mnemonic agreement is 1.000, and the identification was already
+// proven from the other side: our own bitset<N>::_Xran emits a call to this
+// exact decorated name at the position where retail calls 0x4860 (visible as
+// a reloc-name-only row in that function's asm diff).
+VA_COMPGEN(0x00404860, 0x210, BASIC_STRING_ASSIGN_STR, char)
+
+// COMDAT pairing: basic_string<char>::_Split - the reference-count split that
+// assign/_Freeze reach; a nullary private thiscall in the same Dinkumware
+// block as _Tidy (0x40f0), _Grow (0x4a90) and the assign above.
+VA_COMPGEN(0x00404ce0, 0xD8, BASIC_STRING_SPLIT, char)

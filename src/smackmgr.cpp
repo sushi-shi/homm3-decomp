@@ -1187,3 +1187,9 @@ void DeleteAnimHeaders()
 }
 
 #endif  // @carcass
+
+// COMDAT pairing: basic_string<char>::append(size_t, char) - the fill form,
+// which the mangled suffix `@ID@Z` separates from the already-modelled
+// pointer form `@PBDI@Z`. Agreement 0.994 here against 0.834 for the
+// pointer-form objects, so the suffix and the score agree.
+VA_COMPGEN(0x004b5f40, 0xCF, BASIC_STRING_APPEND_COUNT, char)
