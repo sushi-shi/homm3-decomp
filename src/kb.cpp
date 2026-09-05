@@ -2341,13 +2341,6 @@ void CalculateNormalDialogSize(TNormalDialogInfo* dialog_info)
     // @stub
 }
 
-// E:\gamedcs\kb.cpp:5441
-DC_ONLY(0xe5ed4, 0x8C)
-void get_quickview_size(const char* text, int* width, int* height)
-{
-    // @stub
-}
-
 // E:\gamedcs\kb.cpp:5478
 DC_ONLY(0xe5f60, 0x6)
 TDialogBox* GetCurrentNormalDialog()
@@ -3417,6 +3410,33 @@ void type_dialog_icon::set(EGameResource _resource, long _qualifier)
         }
     }
 }
+
+// E:\gamedcs\kb.cpp:5441
+// The measure-only front door: build a popup-shaped TNormalDialogInfo with
+// no icons at all, size it, and hand back the box. Retail's entry proves the
+// Complete ABI - text in ECX, the width pointer in EDX, the height pointer on
+// the stack - and the frame is one whole 0x2a0 record plus the EH state.
+VA(0x004f62a0, 0x162)  // dc-order-map + CalculateNormalDialogSize call, dc 0xe5ed4
+void get_quickview_size(const char* text, int* width, int* height)
+{
+    TNormalDialogInfo dialog_info;
+    dialog_info.dialog_text = text;
+    dialog_info.iMBType = NORMAL_DIALOG_POPUP;
+    dialog_info.x = -1;
+    dialog_info.y = -1;
+    for (int i = 0; i < 8; i++)
+        dialog_info.icons[i].set(const_no_resource, 0);
+    CalculateNormalDialogSize(&dialog_info);
+    *width = dialog_info.width;
+    *height = dialog_info.height;
+}
+
+// TNormalDialogInfo's implicit destructor, which NormalDialog's by-value
+// local instantiates: the eight-element `icons` array through the vector
+// destructor iterator (0x4c stride, ??1type_dialog_icon as the element
+// hook) and then dialog_text's Dinkumware teardown - members in reverse
+// declaration order, exactly as this header models them.
+VA_COMPGEN(0x004f6410, 0x74, IMPLICIT_DTOR, TNormalDialogInfo)
 
 // type_dialog_icon's two other implicit special members, both already
 // emitted by this object because TNormalDialogInfo holds an array of eight
