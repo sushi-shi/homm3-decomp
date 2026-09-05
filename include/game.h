@@ -2079,6 +2079,14 @@ public:
     // `_Destroy` loop at all. The exact record_monster_identifier body at
     // 0x4ced40 appends the identifier/packed-point pair at an eight-byte
     // stride, byte-proving both the member and its element layout.
+    // MEASURED 2026-09-05 and NOT yet modelled: retail's own `new game`
+    // (kb's InitMainClasses at 0x4edb40, `push 0x4e7d0`) says the object is
+    // 0x4e7d0 bytes, while this class ends at 0x4e7cc - the sixteen-byte
+    // Dinkumware vector below starts at +0x4e7bc. So FOUR bytes at +0x4e7cc
+    // are unaccounted for, past every member any located body reads. Adding
+    // them is tail-only and shifts no offset, but it is one more declarator
+    // in the tree's include-set canary header, so it is left for a lane that
+    // can re-measure the whole tree behind it.
     struct MonsterIdentifier {
         int identifier;
         type_point point;

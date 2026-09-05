@@ -61,7 +61,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, LPSTR szCmdLine, int sw)
     memset(gcCommandLine, 0, 61);
     strncpy(gcCommandLine, szCmdLine, 60);
     timeBeginPeriod(1);
-    if (!InitMainClasses())
+    if (!EarlySetup())
         return 0;
     if (!hPrev) {
         appClass.hCursor = 0;
