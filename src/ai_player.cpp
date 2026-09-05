@@ -4004,6 +4004,14 @@ static __forceinline void unblock_lith(hero* current_hero,
 // the destructor to a second operator delete, while retail retains one
 // unclaimed destructor call beside the strategic-map delete. Preserve the
 // coherent DC helper/statement shape across that backend budget split.
+// Residual (77.08%): the four inlined unblock_lith `obscure_cell` arms.
+// Retail keeps all four separate because their blocks are not byte-equal -
+// the first takes its receiver from EDI (0x42e429) while the other three
+// reload [ebp-0x20], and two of those use different scratch registers - so
+// its cross-jumper leaves them alone; ours emits three identical blocks and
+// folds the TOWN-owner arm onto the first. That is downstream of which
+// register holds current_hero after the get_cell call, and the 4-byte frame
+// deficit (0xe8 vs 0xec) goes with it.
 VA(0x0042e0b0, 0xb6e)  // anchor-caller move_hero + order bracket, dc 0x33cf8
 int AI_choose_destination(hero* current_hero, long max_distance,
                           HeroDestination& best_point,
@@ -4032,7 +4040,11 @@ int AI_choose_destination(hero* current_hero, long max_distance,
     nearby_cost = current_hero->maxMovePoints * 21 / 100;
     best_distance = 0x7fff;
     no_towns = 0;
-    if (!gpCurrentPlayer->numTowns)
+    // Retail forms the player record from the global index here, not from
+    // the cached pointer: 0x42e397 loads gpGame and reads
+    // [eax + 8*edx + 0x20b0e] with edx = 45 * gNetLocalGamePos, i.e.
+    // players[gNetLocalGamePos].numTowns at the 360-byte stride.
+    if (!gpGame->players[gNetLocalGamePos].numTowns)
         no_towns = 1;
     best_point.is_critical = 0;
 
