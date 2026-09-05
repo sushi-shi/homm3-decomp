@@ -990,9 +990,16 @@ landmine_done:
         break;
     }
 
+    // The LIGHTNING_BOLT arm passes the spellId PARAMETER, not the literal:
+    // retail computes this arm's akSpellTraits row from `[ebp+8]` at
+    // fn+0x1e4e (`mov eax,[ebp+8] / shl ecx,4 / add ecx,eax`) where every
+    // neighbouring arm folds its own constant row offset. The literal is
+    // also what let VC6 cross-jump this arm's damage_message/CheckRebirth
+    // tail into IMPLOSION's identical one - retail emits both copies.
+    // 90.7105 -> 91.2759 on the one token.
     case SPELL_LIGHTNING_BOLT: {
         SpellEffect(1, target, 10, 0);
-        int damage = ComputeSpellDamage(SPELL_LIGHTNING_BOLT, monster_power,
+        int damage = ComputeSpellDamage(spellId, monster_power,
                                         mastery, casting_hero, other_hero,
                                         target, 1);
         int deaths = target->Damage(damage);
