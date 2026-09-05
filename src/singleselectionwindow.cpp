@@ -2359,15 +2359,27 @@ void TSingleSelectionWindow::UpdateFilterWidgets()
         WidgetSetStatus(0x11d, 0x10);
     for (i = 0x11f; i <= 0x127; ++i)
         WidgetClearStatus(i, 0x10);
+    // Residual (95.52%): the `== -1` guard is tested TWICE in retail - after
+    // `cmp eax,-1 / jne` sets lo/hi it emits a SECOND bare `jne` on the still
+    // live flags at 0x57ef70+0xae6 before the 0x127 / +0x11e arms - so the
+    // lo/hi assignment and the widget arm are two separate ifs, not one
+    // if/else. 95.0755 -> 95.5228, branches 32/32. What is left is the
+    // _cpp_min pair: retail COPIES both operands to stack slots
+    // (`mov [ebp-0xc],eax` for field_18A0[3] and a self-store of hi onto
+    // [ebp-0x4]) and then selects between the two addresses, where we bind
+    // the member lvalue with `lea eax,[esi+0x18ac]` and never copy.
+    // MEASURED AND REJECTED, both byte-flat at 95.5228: static_cast<int> on
+    // both _cpp_min operands, and landing the result in a named `int` local.
     int lo = field_18A0[2];
     int hi = field_18A0[2];
     if (field_18A0[2] == -1) {
         lo = 1;
         hi = 8;
-        WidgetSetStatus(0x127, 0x10);
-    } else {
-        WidgetSetStatus(field_18A0[2] + 0x11e, 0x10);
     }
+    if (field_18A0[2] == -1)
+        WidgetSetStatus(0x127, 0x10);
+    else
+        WidgetSetStatus(field_18A0[2] + 0x11e, 0x10);
     for (i = 0x129; i <= 0x131; ++i)
         WidgetClearStatus(i, 0x10);
     for (i = 0x12a; i < hi + 0x129; ++i)
@@ -3907,6 +3919,13 @@ void TSingleSelectionWindow::DrawBasicMapInfo()
         gpWindowManager->screenBitmap, 666, 454, 83, 48, 4, 5, -1);
     if (chatShowing != 0)
         return;
+    // The victory line copies the description TWICE, and retail proves it:
+    // 0x5840f0+0xfb0 runs the inlined strcpy unconditionally, then BOTH
+    // short-circuit failure edges (`cmp dl,-1 / je` and the
+    // AllowNormalVictory `je`) land on a SECOND inlined copy of the same
+    // strcpy at +0x1022 before the shared tail. Written with the `else` the
+    // row is EXACT (95.5200 -> 100.0000); without it the two edges fall into
+    // the shared tail and the block count is one short.
     char vcText[256];
     signed char vcType = vc->Type;
     const char* desc = gVictoryConditionDesc[vcType + 1];
@@ -3916,6 +3935,8 @@ void TSingleSelectionWindow::DrawBasicMapInfo()
                 DATA_COMPGEN(0x006837b4, vcOrFormat, "%s %s %s"),
                 desc, gpGeneralText->GetText(5),
                 gVictoryConditionDesc[0]);
+    else
+        strcpy(vcText, desc);
     char lcText[256];
     strcpy(lcText, gLossConditionDesc[lc->Type + 1]);
     gUnnamed698a08->DrawBoundedString(vcText,
@@ -5114,6 +5135,11 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
         }
         break;
 
+    // Both town arms read the member BACK for UpdateTown: retail stores
+    // townType to pThisPlayer->townIndex and then re-loads +0x24
+    // (`mov esi,[esi+0x24]`) for the call, where passing the local kept it
+    // live in a register and duplicated the legalAlignments `test`.
+    // 97.3769 -> 97.5628.
     case SSW_TOWN_PREV_FIRST:
     case SSW_TOWN_PREV_FIRST + 1:
     case SSW_TOWN_PREV_FIRST + 2:
@@ -5137,7 +5163,9 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
             pThisPlayer->townIndex = townType;
             CTownUpdateMsg netMsg(i, townType);
             TransmitRemoteDataDPID(&netMsg, 0, false, true);
-            UpdateTown(i, townType, 0);
+            UpdateTown(i,
+                       static_cast<TTownType>(pThisPlayer->townIndex) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */,
+                       0);
         }
         break;
     }
@@ -5164,7 +5192,9 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
             pThisPlayer->townIndex = townType;
             CTownUpdateMsg netMsg(i, townType);
             TransmitRemoteDataDPID(&netMsg, 0, false, true);
-            UpdateTown(i, townType, 0);
+            UpdateTown(i,
+                       static_cast<TTownType>(pThisPlayer->townIndex) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */,
+                       0);
         }
         break;
     }
@@ -5255,6 +5285,13 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
         // Measured negative (2026-09-01): statement-scoped inline_depth(1)
         // is byte-flat and does not preserve retail's nested _Tidy call.
         // Do not retain an inert inline-control artifact here.
+        // Confirmed 2026-09-05 as one of the row's two remaining OVER-inlines
+        // (the other is `SendSetupInfo`'s CNetMsg base ctor at 0x5865b0+0x6ab,
+        // which retail CALLS - `push 0x204 / push 0x402 / lea ecx,[ebp-0x25c]
+        // / call ??0CNetMsg` - against our five inline field stores). The
+        // statement order here is already retail's: the temporary is torn
+        // down BEFORE the `test bl,bl`, so only the expansion differs. Both
+        // want a caller-shrink or a site pin and neither is available.
         if (GenerateRandomMap(GetRandomMapName().c_str()))
             NormalDialog(gpGeneralText->GetText(749),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);

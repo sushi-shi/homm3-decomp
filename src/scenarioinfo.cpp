@@ -94,16 +94,20 @@ CScenarioInfoDlg::CScenarioInfoDlg()
         576, 397, 58, 23, gText, "smalfont.fnt", font::WHITE, 386,
         font::VERT_CENTER_JUSTIFIED | font::RIGHT_JUSTIFIED, 0, 8));
 
+    NewSMapHeader& mapHeader = gpGame->mapHeader;
+    VictoryConditionStruct& vc = mapHeader.victoryCondition;
+    LossConditionStruct& lc = mapHeader.lossCondition;
+
     Widgets.push_back(new textWidget(
-        419, 39, 324, 30, gpGame->mapHeader.mapName.c_str(),
+        419, 39, 324, 30, mapHeader.mapName.c_str(),
         "bigfont.fnt", font::HEADING_HIGHLIGHT, 100, 0, 0, 8));
     Widgets.push_back(new CScrollTextWidget(
-        gpGame->mapHeader.mapDescription.c_str(), 419, 149, 319, 115,
+        mapHeader.mapDescription.c_str(), 419, 149, 319, 115,
         "smalfont.fnt", font::WHITE, slider::BLUE));
 
     Widgets.push_back(new textWidget(
         411, 448, 89, 48,
-        gUnnamed6a77ec[gpGame->mapHeader.difficulty], "smalfont.fnt",
+        gUnnamed6a77ec[mapHeader.difficulty], "smalfont.fnt",
         font::WHITE, 100, font::VERT_CENTER_JUSTIFIED, 0, 8));
     sprintf(sTemp, "%d%%",
             gDifficultyRatingPercent[gpGame->setup.difficulty]);
@@ -226,18 +230,33 @@ CScenarioInfoDlg::CScenarioInfoDlg()
         Widgets.push_back(new CHotspotWidget(325, y, 48, 32, 378 + i));
     }
 
+    // Residual (96.36%): retail forms all three of these addresses from ONE
+    // gpGame load at the mapName statement - `lea edi,[eax+0x1f86c]` (this
+    // reference), `lea edx,[eax+0x1f89c]` (victoryCondition) and
+    // `add eax,0x1f8e8` (lossCondition), spilling the last two to
+    // [ebp-0x20]/[ebp-0x18] - which is why the two condition references are
+    // declared here and not at their icons. Hoisting them is worth
+    // 95.9787 -> 96.3603. MEASURED AND REJECTED at the same plateau:
+    // pointers instead of references (byte-flat, 96.3603); dropping the
+    // `mapHeader` reference and hoisting only vc/lc (96.2189); spelling the
+    // player loop's slot through `mapHeader` too (95.7259); dropping the
+    // `slot` cache for three longhand subscripts (95.7649, and it ADDS a
+    // branch). The remaining delta is the player loop: retail tests
+    // `playerPos[i] < 0` as `cmp byte ptr [..],0 / jl` in the block that
+    // falls out of the loop preheader while we emit a `jmp` into it (our one
+    // surplus branch), and retail's two strength-reduced loop bases are
+    // 0x20 higher than ours (0x1f7d4/0x1f640 against 0x1f7b4/0x1f620) with
+    // an extra `add edx,0x70` third base at [ebp-0x3c].
     iconWidget* victory = new iconWidget(
         417, 302, 32, 24, -1, "scnrvict.def", 0, 0, 0, 0,
         iconWidget::ICON_STYLE_PLAIN);
-    VictoryConditionStruct* vc = &gpGame->mapHeader.victoryCondition;
-    victory->SetIconFrame(vc->Type >= 0 ? vc->Type : 11);
+    victory->SetIconFrame(vc.Type >= 0 ? vc.Type : 11);
     Widgets.push_back(victory);
 
     iconWidget* loss = new iconWidget(
         417, 359, 32, 24, -1, "scnrloss.def", 0, 0, 0, 0,
         iconWidget::ICON_STYLE_PLAIN);
-    LossConditionStruct* lc = &gpGame->mapHeader.lossCondition;
-    loss->SetIconFrame(lc->Type >= 0 ? lc->Type : 3);
+    loss->SetIconFrame(lc.Type >= 0 ? lc.Type : 3);
     Widgets.push_back(loss);
 
     Widgets.push_back(new button(
