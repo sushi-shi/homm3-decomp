@@ -513,6 +513,71 @@ void CChatManager::PlayerEnterMsg(const char* cChatMsg)
 // E:\gamedcs\remote.cpp:1033
 #endif  // @carcass
 
+// E:\gamedcs\remote.cpp:350. The queue reader, and CompressMsg's exact
+// mirror: take the front message, optionally unlink it, and if it carries an
+// original size that differs from its own, expand it into a fresh block with
+// the header copied verbatim and the payload run through zlib. field_10 is
+// what CompressMsg stamps with the ORIGINAL total size, so equal sizes mean
+// "was never compressed" and the message is handed back untouched.
+//
+// The null test on the freshly allocated block sits AFTER the store into it,
+// which is retail's own order, not a scheduling artifact we could move.
+//
+// Residual (80.86%): one target-only call inside the INLINED pop_front -
+// retail keeps a deque helper out of line there and our expansion takes it -
+// plus two surplus epilogues the cross-jumper did not merge. Both sit inside
+// Dinkumware's own template body, which this TU may not pin into.
+VA(0x00553040, 0x1D1)  // anchor-caller(the free GetRemoteData wrapper, CheckHandleNet) + dc-order-map, dc 0x11bd5c
+CNetMsg* CDPlayHeroes::GetRemoteData(unsigned char removeFromQueue,
+                                     unsigned char* wasCompressed)
+{
+    if (wasCompressed)
+        *wasCompressed = 0;
+    if (!bVideoPaused)
+        return 0;
+    if (!msgQueue.size())
+        return 0;
+
+    CNetMsg* pNetMsg = msgQueue.front();
+    if (!pNetMsg)
+        return 0;
+
+    if (removeFromQueue)
+        msgQueue.pop_front();
+
+    if (!pNetMsg->field_10 || pNetMsg->field_10 == pNetMsg->size)
+        return pNetMsg;
+
+    unsigned long uncompressedSize = pNetMsg->field_10 + sizeof(CNetMsg);
+    void* storage = ::operator new(uncompressedSize);
+    CNetMsg* uncompressedMsg = static_cast<CNetMsg*>(storage);
+    memcpy(uncompressedMsg, pNetMsg, sizeof(CNetMsg));
+
+    uncompressedSize -= sizeof(CNetMsg);
+    if (uncompress(
+            static_cast<unsigned char*>(storage) + sizeof(CNetMsg),
+            &uncompressedSize,
+            static_cast<const unsigned char*>(
+                static_cast<const void*>(pNetMsg)) + sizeof(CNetMsg),
+            pNetMsg->size - sizeof(CNetMsg))) {
+        ::operator delete(storage);
+        ::operator delete(pNetMsg);
+        return 0;
+    }
+
+    uncompressedMsg->size = uncompressedSize + sizeof(CNetMsg);
+    if (!uncompressedMsg) {
+        ::operator delete(pNetMsg);
+        return 0;
+    }
+
+    if (removeFromQueue)
+        ::operator delete(pNetMsg);
+    if (wasCompressed)
+        *wasCompressed = 1;
+    return uncompressedMsg;
+}
+
 // E:\gamedcs\remote.cpp:407
 // HD 0x553620 maps instruction/operand-bijectively to this retail row; the
 // Dreamcast class record supplies the public member name and bool signature.
