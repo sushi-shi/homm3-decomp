@@ -1718,6 +1718,7 @@ forcefeedback	??0TImmMouseRuntime@@QAE@PAX0@Z	99.9970	99.9970	99.9970	0xb6260	09
 forcefeedback	??0t_create_failure@t_enclosure@force_feedback@@QAE@ABV012@@Z	100.0000	100.0000	100.0000	0xb6c60	-
 forcefeedback	??0t_enclosure@force_feedback@@QAE@PBUtagRECT@@JKKEE@Z	99.9922	99.9922	99.9922	0xb6a50	037c8a3ed058
 forcefeedback	??0t_initialize_failure@TImmMouseRuntime@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0xb6730	-
+forcefeedback	??1?$auto_ptr@VCImmEnclosure@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xb7020	-
 forcefeedback	??_GCImmEnclosure@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xb6c30	-
 forcefeedback	??_GCImmMouse@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xb6700	-
 forcefeedback	??_Gt_create_failure@t_enclosure@force_feedback@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1bed0	-
@@ -1728,7 +1729,6 @@ forcefeedback	?Stop@TImmMouseEffect@@QAEXXZ	100.0000	100.0000	100.0000	0xb6f50	e
 forcefeedback	?_Dec@const_iterator@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@U_Kfn@?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@3@U?$less@PAVCImmEnclosure@@@3@V?$allocator@UtagRECT@@@3@@std@@QAEXXZ	100.0000	100.0000	100.0000	0xb7db0	-
 forcefeedback	?_Insert@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@U_Kfn@?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@3@U?$less@PAVCImmEnclosure@@@3@V?$allocator@UtagRECT@@@3@@std@@IAE?AViterator@12@PAU_Node@12@0ABU?$pair@QAVCImmEnclosure@@UtagRECT@@@2@@Z	100.0000	100.0000	100.0000	0xb7a50	-
 forcefeedback	?insert@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@U_Kfn@?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@3@U?$less@PAVCImmEnclosure@@@3@V?$allocator@UtagRECT@@@3@@std@@QAE?AU?$pair@Viterator@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@U_Kfn@?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@3@U?$less@PAVCImmEnclosure@@@3@V?$allocator@UtagRECT@@@3@@std@@_N@2@ABU?$pair@QAVCImmEnclosure@@UtagRECT@@@2@@Z	100.0000	100.0000	100.0000	0xb70e0	-
-forcefeedback	__h3cg$forcefeedback$implicit_dtor$auto_ptr	0.0000	100.0000	100.0000	0xb7020	-
 game	??0?$bitset@$0BM@@std@@QAE@K@Z	100.0000	100.0000	100.0000	0xcf870	-
 game	??0CMCClaimGarrison@@QAE@HH@Z	100.0000	100.0000	100.0000	0xc23e0	335cb56766c1
 game	??0HeroExtra@@QAE@XZ	100.0000	100.0000	100.0000	0xce4b0	443ed6fcdff2
