@@ -604,3 +604,20 @@ VA_COMPGEN(0x0041bc30, 0x159, CLASS_CTOR, runtime_error)
 // is this header's nested type and no other object instantiates the vector,
 // which is why the sizes agree to the byte.
 VA_COMPGEN(0x0046aeb0, 0x2E4, VECTOR_INSERT, TImageInfo)
+
+// COMDAT pairing: basic_istream<char>'s destructor, agreement 0.750 on a
+// 15-byte body - the virtual-base vtable fixup, and 1:1 in this object.
+VA_COMPGEN(0x00515260, 0xF, IMPLICIT_DTOR, basic_istream)
+
+// COMDAT pairing: the two extraction operators the registry loader runs
+// through. Neither is a similarity argument - the FACET each one builds
+// names it outright. 0x515270 constructs num_get<char> at 0x517d70 and
+// registers it through _Tidyfac<num_get>::_Save at 0x51aed0, so it is
+// basic_istream<char>::operator>>(int&); 0x517830 constructs ctype<char> at
+// 0x515f50, registers it through _Tidyfac<ctype>::_Save at 0x51ae50 and then
+// drives basic_string::_Grow / _Split over sgetc/sbumpc, which is the free
+// whitespace-delimited operator>>(istream&, string&). Both compile larger
+// than retail (519 against 347, 702 against 568) because retail keeps the
+// scan out of line, so both arrive as partial rows.
+VA_COMPGEN(0x00515270, 0x15B, ISTREAM_EXTRACT_INT, char)
+VA_COMPGEN(0x00517830, 0x238, ISTREAM_EXTRACT_STRING, char)
