@@ -189,8 +189,8 @@ static std::string get_estimated_damage(const army* currentArmy,
                                         unsigned char ranged,
                                         long distance)
 {
-    long low = currentArmy->minDamage * currentArmy->numTroops;
-    long high = currentArmy->maxDamage * currentArmy->numTroops;
+    long low = currentArmy->sMonInfo.damageLowBound * currentArmy->numTroops;
+    long high = currentArmy->sMonInfo.damageHighBound * currentArmy->numTroops;
     std::string result;
 
     if (currentArmy->blessRounds || currentArmy->curseRounds) {
@@ -268,7 +268,7 @@ bool combatManager::show_creature_spell_error(
         goto no_error;
     }
 
-    if (!currentArmy->numSpellCasts) {
+    if (!currentArmy->sMonInfo.hasSpell) {
         if (currentArmy->numTroops == 1) {
             sprintf(buffer, (*gpGeneralText)[697],
                     currentArmy->GetName());
@@ -373,7 +373,7 @@ void combatManager::CombatMessage(int command)
     long distance;
     switch (command) {
     case COMBAT_COMMAND_NONE:
-        if (currentArmy->Is(1u << 2) && currentArmy->shotsLeft == 0
+        if (currentArmy->Is(1u << 2) && currentArmy->sMonInfo.numShots == 0
                 && targetArmy)
             strcpy(gText, (*gpGeneralText)[299]);
         else
@@ -410,13 +410,13 @@ void combatManager::CombatMessage(int command)
             currentArmy, currentHits, targetArmy, 1, distance);
         if (!gUnnamed698758.combatArmyInfoLevel) {
             sprintf(gText, (*gpGeneralText)[221], targetArmy->GetName());
-        } else if (currentArmy->shotsLeft == 1) {
+        } else if (currentArmy->sMonInfo.numShots == 1) {
             sprintf(gText, (*gpGeneralText)[38], targetArmy->GetName(),
                     get_estimated_damage(currentArmy, targetArmy, 1,
                                          distance).c_str());
         } else {
             sprintf(gText, (*gpGeneralText)[41], targetArmy->GetName(),
-                    currentArmy->shotsLeft,
+                    currentArmy->sMonInfo.numShots,
                     get_estimated_damage(currentArmy, targetArmy, 1,
                                          distance).c_str());
         }
@@ -758,7 +758,7 @@ void combatManager::SetupGridForArmy(const army* thisArmy)
     for (int i = 0; i < COMBAT_GRID_CELLS; i++) {
         if (i == thisArmy->gridIndex) {
             field_0107[i] = 1;
-        } else if ((thisArmy->creatureId & 1)
+        } else if ((thisArmy->sMonInfo.attributes & 1)
                    && i == thisArmy->gridIndex
                        + (thisArmy->facing ? 1 : -1)) {
             field_0107[i] = 1;

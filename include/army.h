@@ -9,6 +9,10 @@
 #include <deque>
 #include <vector>
 #include "herospec.h"
+// TCreatureTypeTraits, the type of the embedded `sMonInfo` row at +0x74.
+// Costs no consumer anything: all 24 TUs whose closure reaches army.h
+// already had armygrp.h in that closure.
+#include "armygrp.h"
 
 class hero;
 class armyGroup;
@@ -348,40 +352,44 @@ public:
     // the rest of the sweep swings plain. Pad slice - the include-set
     // canaries do not move for one.
     int iLuckStatus;               // +0x70
-    // +0x74 starts an EMBEDDED copy of the creature's traits row (the
-    // Dreamcast roster's `TCreatureTypeTraits sMonInfo` at 116, and the
-    // retail offsets already proven in this class agree with it field
-    // for field: `creatureId` +0x84 is sMonInfo.attributes +0x10,
-    // `hitPoints` +0xc0 is sMonInfo.hitPoints +0x4c, `field_c4` +0xc4
-    // is sMonInfo.speed +0x50). Only the one field a body reads is
-    // sliced out here - hero::modify_spell_damage (0x4e5760) hands
-    // `[army + 0x78]` to GetHeroSpellBonus as the target LEVEL, and
-    // 0x78 is sMonInfo + 4, TCreatureTypeTraits::level. The embedded
-    // record is not modelled as such yet; that is a layout change for
-    // the whole army run.
-    // PRICED 2026-09-05: the retail bytes now settle both the extent and
-    // the worth. army's compiler-generated copy constructor (0x437a00,
-    // ai_tactical.obj) copies this band with ONE `rep movsd` of 0x1d
-    // dwords at fn+0xe7 - 116 bytes, exactly sizeof(TCreatureTypeTraits),
-    // running from +0x74 to +0xe8 - where the nineteen slices below give
-    // nineteen load/store pairs. That single difference is most of the
-    // row's 48.92% and 912 recoverable bytes, and it is the first byte-
-    // level divergence in the whole body (the preceding 0xe7 bytes are
-    // exact). MEASURED AND REJECTED as a shortcut: wrapping the band in an
-    // anonymous union `{ int sMonInfoRow[29]; struct { <the slices> }; }`
+    // +0x74 is an EMBEDDED copy of the creature's traits row - the
+    // Dreamcast roster's `TCreatureTypeTraits sMonInfo` at 116, ADOPTED
+    // AS SUCH 2026-09-05. The retail offsets this class had already
+    // proven agree with the DC record field for field: `creatureId`
+    // +0x84 is sMonInfo.attributes +0x10, `hitPoints` +0xc0 is
+    // sMonInfo.hitPoints +0x4c, `field_c4` +0xc4 is sMonInfo.speed
+    // +0x50, and hero::modify_spell_damage (0x4e5760) hands
+    // `[army + 0x78]` to GetHeroSpellBonus as the target LEVEL, which
+    // is sMonInfo + 4, TCreatureTypeTraits::level.
+    //
+    // WHAT SETTLED THE EXTENT (2026-09-05): army's compiler-generated
+    // copy constructor (0x437a00, ai_tactical.obj) copies this band with
+    // ONE `rep movsd` of 0x1d dwords at fn+0xe7 - 116 bytes, exactly
+    // sizeof(TCreatureTypeTraits), running from +0x74 to +0xe8 - where
+    // the nineteen flat slices this header used to carry gave nineteen
+    // load/store pairs. That single difference was the FIRST byte-level
+    // divergence in the whole body (the preceding 0xe7 bytes were
+    // already exact) and most of the row's 48.92% / 912 recoverable
+    // bytes. MEASURED AND REJECTED as a shortcut: wrapping the band in
+    // an anonymous union `{ int sMonInfoRow[29]; struct { <slices> }; }`
     // - VC6 memberwise-copies BOTH union alternatives, emitting retail's
-    // `rep movsd` AND then all nineteen pairs, 48.92 -> 26.47. The real
-    // fix is a named POD sub-struct member, which renames every consumer;
-    // `hitPoints`, `attackSkill` and `defenseSkill` collide with the
-    // identically-named fields in armygrp.h and hero.h, so the rename is
-    // not mechanical and spans ~15 TUs. It belongs to a dedicated lane.
-    int monInfoTownType;          // +0x74 == sMonInfo.townType
-    int monInfoLevel;             // +0x78 == sMonInfo.level
+    // `rep movsd` AND then all nineteen pairs, 48.92 -> 26.47. Only the
+    // named sub-object gives the single `rep movsd`.
+    //
+    // The include cost is NIL: every one of the 24 TUs whose closure
+    // reaches army.h already had armygrp.h in that closure, so the
+    // `#include "armygrp.h"` this member needs adds no declarator to any
+    // consumer's include-set population.
+    //
+    // The evidence for each field of the row follows, in offset order,
+    // as it was recorded while the fields were sliced out one at a time.
+    // -> sMonInfo.townType        (+0x74, row +0x00)
+    // -> sMonInfo.level           (+0x78, row +0x04)
     // TCreatureTypeTraits::cSamplePrefix (+0x8 of the row), byte-proven
     // by LoadResources (0x43d9f0): every one of its eight sprintf's
     // hands this pointer to a "%s....82M" format. Pad slice.
-    const char* monInfoSamplePrefix;  // +0x7c == sMonInfo.cSamplePrefix
-    char pad_80[0x4];
+    // -> sMonInfo.cSamplePrefix   (+0x7c, row +0x08)
+    // -> sMonInfo.m_sprite_name   (+0x80, row +0x0c)
     // A BITFIELD word, not an id: bit 0 is the two-hex marker in
     // get_adjacent_hex, GetAttackMask, PlaceArmyInGrid (0x4687c0) and
     // RemoveArmyFromGrid (0x468730), and CombatIsOver / IsWinner read
@@ -390,7 +398,7 @@ public:
     // walk tests the full int against -1". It does not - the -1
     // empty-slot test in both 0x465830 and 0x4658b0 is on +0x34,
     // creatureType. Both functions are byte-exact on that reading.)
-    int creatureId;               // +0x84
+    // -> sMonInfo.attributes      (+0x84, row +0x10)
     // Three more slices out of the SAME embedded traits row, byte-proven
     // by TCombatResultsWindow's constructor (0x4702d0): when a side has no
     // hero it names that side's strongest stack, reading +0x88 for one
@@ -399,28 +407,28 @@ public:
     // m_name (+0x14), m_plural_name (+0x18) and AI_value (+0x40) - the
     // same three-field spacing the struct already has, which is what makes
     // the pairing positional rather than nominal.
-    const char* monInfoName;        // +0x88 == sMonInfo.m_name
-    const char* monInfoPluralName;  // +0x8c == sMonInfo.m_plural_name
-    char pad_90[0x24];
-    int monInfoAIValue;             // +0xb4 == sMonInfo.AI_value
-    char pad_b8[0x8];
+    // -> sMonInfo.m_name          (+0x88, row +0x14)
+    // -> sMonInfo.m_plural_name   (+0x8c, row +0x18)
+    // -> sMonInfo.special_ability (+0x90) and cost[7] (+0x94..+0xb0)
+    // -> sMonInfo.AI_value        (+0xb4, row +0x40)
+    // -> sMonInfo.growthRate/horde_growth_rate (+0xb8/+0xbc)
     // Hit points per creature: AI_get_attack_damage (0x435980) and the
     // attack-hex chooser ctor (0x4360c0) both divide a stack's total
     // hit points by it with the (hp + total - 1)/hp ceiling idiom.
-    int hitPoints;                // +0xc0
+    // -> sMonInfo.hitPoints       (+0xc0, row +0x4c)
     // Per-creature threat weight the hypnotize pricer multiplies by the
     // spell's turn count before seeding the combat search
     // (get_hypnotize_value 0x43a500). Name pending a writer.
-    int field_c4;                 // +0xc4
+    // -> sMonInfo.speed           (+0xc4, row +0x50)
     // The stack's attack rating: get_attack_skill_value (0x437800)
     // copies the army and adds the spell's bonus to THIS word on the
     // copy before re-pricing its damage. Name provisional.
-    int attackSkill;              // +0xc8
+    // -> sMonInfo.attackSkill     (+0xc8, row +0x54)
     // The stack's defense rating: get_defense_skill_value (0x438910)
     // copies the army, adds the spell's bonus to THIS word on the copy
     // and re-prices the enemy's damage against it (0x443e30 twice).
     // Name provisional - no roster attests it.
-    int defenseSkill;             // +0xcc
+    // -> sMonInfo.defenseSkill    (+0xcc, row +0x58)
     // The damage figure a Curse takes its bite out of: get_curse_value
     // (0x43b370) subtracts SPELL_CURSE's mastery row from THIS word,
     // floors the result at 1 and divides it by the stack's own
@@ -429,19 +437,19 @@ public:
     // only scores positive for the caster - when the word is the LOW
     // end of the damage range, which is exactly what Curse forces a
     // stack to roll. Name provisional; no roster attests it.
-    int minDamage;                // +0xd0
+    // -> sMonInfo.damageLowBound  (+0xd0, row +0x5c)
     // The high end of the same range, byte-proven by get_bless_value
     // (0x437430): Bless adds SPELL_BLESS's mastery row to THIS word and
     // divides the sum by the stack's own get_average_damage(), which is
     // above 1 - the spell scores POSITIVE for the caster - exactly when
     // the word is the range's top. The mirror of minDamage's proof, and
     // the two sit adjacent. Name provisional; no roster attests it.
-    int maxDamage;                // +0xd4
+    // -> sMonInfo.damageHighBound (+0xd4, row +0x60)
     // Shots remaining. can_shoot (0x4428f0) refuses a shooter whose
     // count here has fallen to zero or below - the second half of the
     // "is this stack a shooter right now" test, after the creature's
     // own shooter bit Is(1u << 2).
-    int shotsLeft;                // +0xd8
+    // -> sMonInfo.numShots        (+0xd8, row +0x64)
     // Spell charges left on this stack, the word straight after
     // shotsLeft in the same embedded traits row: can_cast_resurrect
     // (0x4473d0) refuses an Archangel or a Pit Lord whose count here
@@ -464,8 +472,9 @@ public:
     // This is an original class member, not a TU-specific score control.
     // Hiding its declaration changed VC6's member-handle population and
     // could manufacture a higher local score in unrelated consumers.
-    int numSpellCasts;            // +0xdc
-    char pad_e0[0x8];
+    // -> sMonInfo.hasSpell        (+0xdc, row +0x68)
+    // -> sMonInfo.wanderingLow/wanderingHigh (+0xe0/+0xe4)
+    TCreatureTypeTraits sMonInfo;  // +0x74 .. +0xe8, 116 B
     // NAMED 2026-08-15 from the Dreamcast member table: DC army@212 is
     // show_fire_shield against this band's already-anchored +20 shift
     // (DC hitByCreature 220 = retail +0xf0, six lines below).
@@ -1851,7 +1860,7 @@ inline bool army::can_cast_resurrect() const
     {
         return (creatureType == ARMY_CREATURE_ARCHANGEL
                 || creatureType == ARMY_CREATURE_PIT_LORD)
-               && numSpellCasts > 0;
+               && sMonInfo.hasSpell > 0;
     }
 
     // E:\gamedcs\Army.h:724
@@ -1894,7 +1903,7 @@ inline bool army::NeedToTurn(int direction) const
     // E:\gamedcs\Army.h:765
 inline bool army::Is(unsigned attribute) const
     {
-        return (creatureId & attribute) != 0;
+        return (sMonInfo.attributes & attribute) != 0;
     }
 
     // E:\gamedcs\Army.h:770
