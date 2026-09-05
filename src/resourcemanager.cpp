@@ -2581,6 +2581,11 @@ sample* ResourceManager::GetSample(const char* name)
 // loop, which is what retail's spare `mov [ebp-0x30],eax` in that block does -
 // 88.8617 -> 88.3126. Register-homing class; the block-shape levers do not
 // reach it.
+// The frame is 0x8ec against retail's 0x8e8, and the surplus dword is NOT the
+// cache key: spelling the lookup as GetSample's `TCacheMapKey key(name);`
+// instead of default-construct + strncpy is byte-flat at 88.8617 with the
+// frame still 0x8ec (measured 2026-09-06), so the defaulting-default-ctor
+// reading does not apply here.
 VA(0x0055c7b0, 0x743)  // anchor-caller/body records, dc 0x122320; wall
 CSprite* ResourceManager::GetSprite(const char* name)
 {
