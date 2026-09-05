@@ -2001,7 +2001,7 @@ kb	??1advManager@@QAE@XZ	100.0000	100.0000	100.0000	0xf39f0	-
 kb	??1combatManager@@QAE@XZ	71.8085	71.8085	71.8085	0xf3940	-
 kb	??1type_dialog_icon@@QAE@XZ	100.0000	100.0000	100.0000	0xf64c0	-
 kb	?CalculateNormalDialogSize@@YIXPAUTNormalDialogInfo@@@Z	92.1688	92.1688	92.1688	0xf5d80	1ee3ea8092d1
-kb	?CheckEndGame@@YIXH@Z	89.4452	89.4452	89.4452	0xf2ce0	f7599ef47a4c
+kb	?CheckEndGame@@YIXH@Z	90.6191	90.6191	90.6191	0xf2ce0	a9ae3c65720d
 kb	?CleanUpMenus@@YIXXZ	100.0000	100.0000	100.0000	0xf4b50	5ad85acac0be
 kb	?CongratsWait@@YIXHPADHHH@Z	96.8467	96.8467	96.8467	0xf3ab0	767bdf8cc153
 kb	?CreditsWait@@YIXXZ	95.2930	95.2930	95.2930	0xedda0	e424e5d34744
