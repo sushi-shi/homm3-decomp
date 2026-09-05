@@ -62,6 +62,9 @@ int GetDesktopHeight();                                  // 0x6014d0
 // against this depth and the result is the function's return value.
 enum { DESKTOP_REQUIRED_BITS_PER_PIXEL = 16 };
 unsigned char GetDesktopInfo();                          // 0x601460
+// The surface-restore sweep DDBlit's retry loops call; defined in this TU
+// below its two callers, so it needs the declaration here.
+long DDRestoreSurfaces();                                // 0x6013a0
 
 // The two DirectDraw workers the wrappers above hand off to. Retail emits
 // each immediately after its own wrapper (0x6018a0 follows
@@ -92,6 +95,12 @@ IDirectDrawSurface* DDCreateSurface(unsigned long width,
 void DDBlit(IDirectDrawSurface4* dstSurface, const tagRECT* dstRect,
             IDirectDrawSurface4* srcSurface, const tagRECT* srcRect,
             unsigned long flags);                        // 0x6001d0
+// The DDERR_WRONGMODE arm of DDBlit's two primary-surface retry loops, and
+// its only caller: it re-establishes the display when Restore reports the
+// mode changed under us, taking the blit's own working rectangle so the
+// windowed path can re-origin it against the moved client area. Complete
+// only; the Dreamcast roster has no row for it and the NAME is provisional.
+void DDResetDisplayMode(tagRECT* region);                // 0x6003c0
 // The screen blit winmgr hands a rectangle to: heroWindowManager's
 // UpdateScreen (0x602bd0) and both fades (0x6030e0 / 0x6032e0) call
 // 0x5ffe70 with `lea ecx, <rect>` and nothing else, i.e. the /Gr
