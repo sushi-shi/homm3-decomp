@@ -148,6 +148,10 @@ public:
         // fog. `this` is dead in the body - the receiver is fixed by the
         // call site, not by the code. Name provisional.
         void PlaceStartingHero(HeroPlaceholderData* placeholder);
+        // Retail 0x487290, game::NewMap's second campaign callee: the map's
+        // hero placeholders are sorted by power rating and handed the
+        // scenario's carried heroes, strongest first. Name provisional.
+        void PlaceCrossoverHeroes();
         // Complete-only retained wrapper at 0x4884c0.  The campaign-header
         // wrapper below is its sole direct caller.
         void StartScenario(std::streambuf* stream, int option);
