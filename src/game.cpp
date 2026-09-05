@@ -11239,6 +11239,22 @@ void game::ProcessOnMapHeroes()
 // `unsigned char isDiff = 0;` down to the `if (inGame)` is +0.04 and is not
 // shipped - retail stores only the diffSize zero at that point, so the
 // declaration position is a real question, but 0.04 does not evidence it.
+// [polish 16] The FIRST CDestroyPlayerMsg site does not cache the dpid, and
+// retail says so directly: at fn+0x14d3e it forms `ebx = &players[iToWho]`
+// once and then reads `[ebx+0x20b98]` THREE times - into the DestroyPlayer
+// argument, into HandlePlayerDrop's ecx, and into the recycled `[ebp+0x10]`
+// home - where a `killDPID` local put the value in esi and pushed that. The
+// two sites are NOT symmetric and the knobs do not add: un-caching the
+// iToWho site alone is 82.1332 -> 82.2224, the loop site alone 82.1980, and
+// BOTH TOGETHER 82.0300, below baseline. Only the first is shipped.
+// The frame is still 8 B over (0x3ac against retail's 0x3a4) and the slot
+// census says where: the three CNetMsg temporaries line up at a shift of 0
+// (the 0x0c..0x64 dword run is identical), then 4 (base's first 0x3eb msg at
+// -0x68 against retail's -0x64), then 8 (the 0x3e8 msg at -0xb4 against
+// -0xac, the second 0x3eb msg at -0xdc against -0xd4, and everything below
+// including the 0x351-byte cFileName buffer at -0x3b8 against -0x3b0). So
+// the surplus is TWO separate 4-byte steps in the msg-temporary band, not
+// one 8-byte local - do not go looking for a single surplus dword.
 VA(0x004cafd0, 0xD14)  // retail body + typed catch + continuation/tables
 int game::TransmitSaveGame(int iToWho, int thisPlayerDead,
                            unsigned char inGame, unsigned char makeOrig)
@@ -11423,10 +11439,10 @@ int game::TransmitSaveGame(int iToWho, int thisPlayerDead,
                     if (gpWindowManager->dialogReturn
                             != DIALOG_RETURN_ACCEPT) {
                         if (inGame && iToWho != NET_MESSAGE_RECIPIENT_ALL) {
-                            unsigned long killDPID = players[iToWho].dpid;
-                            pDPlay->DestroyPlayer(killDPID);
-                            HandlePlayerDrop(killDPID);
-                            CDestroyPlayerMsg destroyMsg(killDPID);
+                            pDPlay->DestroyPlayer(players[iToWho].dpid);
+                            HandlePlayerDrop(players[iToWho].dpid);
+                            CDestroyPlayerMsg destroyMsg(
+                                players[iToWho].dpid);
                             players[iToWho].ClearNetInfo();
                             gUnnamed69d80d = 1;
                             TransmitRemoteDataDPID(&destroyMsg, 0,

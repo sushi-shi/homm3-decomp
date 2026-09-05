@@ -206,6 +206,15 @@ void RecruitSliderCallback(int state, heroWindow* parent_window)
 // parameter/local 97.38/97.45%. `homm3 vc6 why-reg --model` sees 407
 // register-visible slots; its only legal first-created parameter alias is
 // copy-propagated and flat, classifying the rest as front-end handle state.
+// [polish 16] Two more measured and rejected, and they bound the shape from
+// both sides: the declaration form is inert - hoisting the initialiser to
+// first use (`int resource_shift = altResource ? 0 : 0x18;` with no separate
+// declaration) is byte-flat at 99.0102 to the digit - and the interleave is
+// NOT source-movable: retail's `mov eax,[esi+4]` sits above the neg/sbb
+// chain, but writing the selection AFTER `Widgets.reserve(49)` to produce
+// that order costs 4.82 (94.1908, four size-only blocks). The `and al,-0x18`
+// is a CONSEQUENCE of landing in EAX, not a cause - VC6 has no 8-bit form
+// for EDI - so nothing at this site can move the allocation. WALL.
 VA(0x0054e850, 0x1295)  // unique x86/DC structure + constructor call, dc 0x118bb4
 TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource,
                                recruitUnit* recruit_info)
