@@ -958,6 +958,7 @@ cspriteframe	?GetSize@CSpriteFrame@@UBEIXZ	100.0000	100.0000	100.0000	0x7c560	b7
 cspriteframe	?SetPixelFormat@CSpriteFrame@@SIXIII@Z	100.0000	100.0000	100.0000	0x7c460	14fdf9e7d6f8
 cursor	??9type_point@@QBE_NABU0@@Z	100.0000	100.0000	100.0000	0x82340	8a56cf619630
 cursor	?DrawCursorAlpha@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x7fc80	f88e01d23684
+cursor	?DrawCursorShadow@advManager@@QAEXHH@Z	72.5446	72.5446	72.5446	0x7fb40	39948baa081a
 cursor	?GetMoveShowIt@advManager@@QAEHPAVhero@@H@Z	100.0000	100.0000	100.0000	0x80000	bc03c3596322
 cursor	?MoveHero@advManager@@QAEPAVNewmapCell@@HEPAUtype_point@@PAHE1E@Z	89.5139	89.5139	89.5139	0x805e0	d5e4c46dc99f
 cursor	?OnHideHero@advManager@@QAEXPAVCMapChange@@@Z	100.0000	100.0000	100.0000	0x81fd0	04ab79a0f668
@@ -966,14 +967,13 @@ cursor	?ProcessMapChangeNew@advManager@@QAEXPAVCMapChange@@@Z	100.0000	100.0000	
 cursor	?SendMapChange@@YIXPAVCMapChange@@@Z	100.0000	100.0000	100.0000	0x82390	22f828296a19
 cursor	?StopCursor@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x7f7d0	4c61d41b55e7
 cursor	?TurnTo@advManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x7ffe0	403a24945d74
+cursor	?ValidMove@advManager@@QAEHPAVhero@@HHE@Z	100.0000	100.0000	100.0000	0x81be0	2b860a427080
+cursor	?ValidMoveWithEvent@advManager@@QAEHPAVhero@@H@Z	100.0000	100.0000	100.0000	0x81ad0	3b4865985848
 cursor	?animate_move@advManager@@QAEXPAVhero@@HHH@Z	97.7237	97.7237	97.7237	0x80380	4538013021e0
 cursor	?end_move_hero@advManager@@AAEPAVNewmapCell@@PAVhero@@PAV2@EJJEPAH@Z	100.0000	100.0000	100.0000	0x80090	885e2974ab10
 cursor	?handle_stop_on_trigger@advManager@@AAEPAVNewmapCell@@PAVhero@@PAV2@EEPAHJJ@Z	100.0000	100.0000	100.0000	0x80240	36b8c8c29a01
 cursor	advManager_CheckAdjacentMon	0.0000	0.0000	0.0000	0x81900	0eb57ca2e0bc
 cursor	advManager_DrawCursor	0.0000	0.0000	0.0000	0x7f860	ad7d179cd2c4
-cursor	advManager_DrawCursorShadow	0.0000	0.0000	0.0000	0x7fb40	7637b83ff3cf
-cursor	advManager_ValidMove	0.0000	0.0000	0.0000	0x81be0	33eeaa6d2a1f
-cursor	advManager_ValidMoveWithEvent	0.0000	0.0000	0.0000	0x81ad0	dee616486353
 customcampaign	??0CampaignHeaderStruct@TCampaignBrief@@QAE@PBD@Z	100.0000	100.0000	100.0000	0x885d0	c81b1564e203
 customcampaign	??0LegacyCampaignHero@@QAE@XZ	100.0000	100.0000	100.0000	0x8ae30	d00745bb485b
 customcampaign	??0SCampaign@@QAE@XZ	100.0000	100.0000	100.0000	0x89500	92aa89488ce8

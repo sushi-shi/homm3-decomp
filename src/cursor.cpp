@@ -82,14 +82,40 @@ void advManager::DrawCursor(int CellX, int CellY)
     // @stub
 }
 
-// E:\gamedcs\cursor.cpp:199
+#endif  // @carcass
+
+// E:\gamedcs\cursor.cpp:199. The shadow pass of the same cursor the two
+// neighbours draw: one CSprite::DrawHeroShadow per hero, through the
+// Bitmap16Bit header wrapper that Complete expands into the raw
+// map/Width/Height/Pitch call.
 VA(0x0047fb40, 0x140)  // shadow draw call set + ret 8, dc 0x79ea8
 void advManager::DrawCursorShadow(int CellX, int CellY)
 {
-    // @stub
-}
+    if (gCompleteDrawEnabled) {
+        if (!bSpecialHideCursor) {
+            int refY = CellY * 32;
+            int refX = (CellX + 8) * 32;
 
-#endif  // @carcass
+            hero* curr = gpGame->GetHero(gpCurrentPlayer->currHeroId);
+            if (curr) {
+                if (curr->flags & 0x40000) {
+                    boat* currBoat = gpGame->GetHeroBoat(curr->id, 1);
+                    boatIcons[currBoat->type]->DrawHeroShadow(
+                        cursorSequence, cursorFrameCount,
+                        CellX * 32, refY, 32, 32,
+                        gpWindowManager->screenBitmap,
+                        refX, refY + 232, curr->GetHflip());
+                } else {
+                    cursorIcons[curr->heroClass]->DrawHeroShadow(
+                        cursorSequence, cursorFrameCount,
+                        CellX * 32, refY, 32, 32,
+                        gpWindowManager->screenBitmap,
+                        refX, refY + 232, curr->GetHflip());
+                }
+            }
+        }
+    }
+}
 
 // E:\gamedcs\cursor.cpp:247
 VA(0x0047fc80, 0x35A)  // alpha draw/cursor animation call set, dc 0x7a024
@@ -632,26 +658,126 @@ void advManager::CheckAdjacentMon(int* bFoughtBattle)
     // @stub
 }
 
-// E:\gamedcs\cursor.cpp:989
+#endif  // @carcass
+
+// E:\gamedcs\cursor.cpp:989. The step-onto-a-hero variant: a destination
+// carrying another hero is a legal step only when both parties are afloat,
+// and everything else defers to ValidMove with the event flag set.
+//
+// The map lookup is the NewfullMap::cell(x,y,z) header inline expanded in
+// place - cursor.obj takes the inline view, unlike advmgr.obj - and the
+// occupying hero comes back through the game.h GetHero inline, whose -1 arm
+// is what makes retail read `flags` off a null pointer on the empty-cell
+// path. That read is retail's own and is transcribed as written.
 VA(0x00481ad0, 0x10D)  // exhaustive order + sole ValidMove call, dc 0x7bdcc
-int advManager::ValidMoveWithEvent(hero* thisHero, int direction)
+int advManager::ValidMoveWithEvent(hero* who, int direction)
 {
-    // @stub
+    int destX = who->x + normalDirTable[direction].x;
+    int destY = who->y + normalDirTable[direction].y;
+
+    if (destX < 0 || destX > MAP_WIDTH - 1
+            || destY < 0 || destY > MAP_HEIGHT - 1)
+        return 0;
+
+    NewmapCell* destCell = fullMap->cell(destX, destY, who->z);
+    if (destCell->type != HERO)
+        return ValidMove(who, direction, 1, 0);
+
+    if (who->flags & 0x40000) {
+        hero* occupant = gpGame->GetHero(destCell->extraInfo);
+        return (occupant->flags & 0x40000) ? 1 : 0;
+    }
+    return 1;
 }
 
-// E:\gamedcs\cursor.cpp:1027
-VA(0x00481be0, 0x2ED)  // exhaustive order + ret 0x10/call set, dc 0x7bee4
-int advManager::ValidMove(const hero* currHero, int direction, int bWithEvent, unsigned char normal_move_only)
-{
-    // @stub
-}
-
+// E:\gamedcs\cursor.cpp:1027. The single-step legality rule, and the whole
+// water/flight/boat matrix lives here.
+//
+// Both bounds are compared against MAP_WIDTH - retail loads 0x6783c8 once and
+// reuses the register for the y test too, so the height global is never read.
+// That is retail's own bug and is transcribed as written.
+//
+// The two Hero.h __forceinline predicates carry the on-boat test themselves,
+// which is why the water-object arm needs its OWN `!(flags & 0x40000)` guard
+// while the diagonal-corner arm does not: on a boat CanWalkOnWater is false,
+// so `!(CanWalkOnWater && !bLandOnly)` is already true there and retail jumps
+// straight into the corner rule.
+//
 // E:\gamedcs\cursor.cpp:1124. Dreamcast's line/scope stream proves the
 // GetHero -> get_location -> type_point helper nesting before the three
 // cursor.cpp statements. Complete independently preserves that exact shape:
 // the accessor's -1 arm, packed point construction/comparison, then calls to
 // SetHeroContext, MoveHero and DoAIEvent in the same order.
-#endif  // @carcass
+VA(0x00481be0, 0x2ED)  // exhaustive order + ret 0x10/call set, dc 0x7bee4
+int advManager::ValidMove(hero* who, int direction, int bComputerMove,
+                          unsigned char bLandOnly)
+{
+    int stepX = normalDirTable[direction].x;
+    int srcX = who->x;
+    int stepY = normalDirTable[direction].y;
+    int srcY = who->y;
+    int destX = srcX + stepX;
+    int destY = srcY + stepY;
+
+    if (destX < 0 || destX >= MAP_WIDTH || destY < 0 || destY >= MAP_WIDTH)
+        return 0;
+
+    if (who->IsFlying(0) && !bLandOnly)
+        return 1;
+
+    NewmapCell* destCell = fullMap->cell(destX, destY, who->z);
+    NewmapCell* srcCell = fullMap->cell(srcX, srcY, who->z);
+
+    if (destCell->IsBlocked)
+        return 0;
+
+    if (destCell->GroundSet == eTerrainWater) {
+        if (!(who->flags & 0x40000)
+                && !(who->CanWalkOnWater(0) && !bLandOnly)) {
+            if (!(destCell->type == BOAT && destCell->is_trigger)
+                    && !(destCell->type == SHIPWRECK
+                         && destCell->is_trigger))
+                return 0;
+        }
+
+        if (srcCell->GroundSet == eTerrainWater && stepX && stepY
+                && !(who->CanWalkOnWater(0) && !bLandOnly)) {
+            if (fullMap->cell(srcX + stepX, srcY, who->z)->GroundSet
+                    != eTerrainWater)
+                return 0;
+            if (fullMap->cell(srcX, srcY + stepY, who->z)->GroundSet
+                    != eTerrainWater)
+                return 0;
+        }
+    } else {
+        if ((who->flags & 0x40000) && destCell->type != ANCHOR_POINT)
+            return 0;
+        if ((who->flags & 0x40000) && destCell->type == ANCHOR_POINT)
+            return 1;
+    }
+
+    int dirMask = 1 << direction;
+    int stepsSouth = dirMask & 0x38;
+    if (dirMask & 0x83) {
+        if (srcCell->cell_is_trigger()
+                && !gAdventureObjectTraits[srcCell->get_map_object()][1])
+            return 0;
+    }
+    if (stepsSouth) {
+        if (destCell->cell_is_trigger()
+                && !gAdventureObjectTraits[destCell->get_map_object()][1])
+            return 0;
+    }
+
+    if (destCell->type == HERO
+            && destCell->get_map_object() == SANCTUARY) {
+        hero* occupant = gpGame->GetHero(destCell->extraInfo);
+        if (occupant->owner != who->owner)
+            return 0;
+    }
+
+    return 1;
+}
 
 VA(0x00481ed0, 0xF9)  // exhaustive order + helper/call/CFG identity, dc 0x7c1d8
 void advManager::OnMoveHero(CMapChange* pMapChange)
