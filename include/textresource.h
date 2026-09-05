@@ -99,6 +99,31 @@ enum EGeneralTextIndex {
     // describes that consumer, which is this enum's stated convention;
     // the index is retail-byte-proven (a folded [Text._First + 0x204]).
     GENERAL_TEXT_COMBAT_SPELL_ALREADY_CAST = 129,
+    // The Visions arm of advManager::CastSpell posts this line after
+    // raising the caster's own visions level ([Text._First + 0x108]).
+    GENERAL_TEXT_VISIONS_CAST = 66,
+    // The Fly arm refuses here when the caster is aboard a boat
+    // ([Text._First + 0x304]). Both indexes retail-byte-proven; names
+    // describe the consumers.
+    GENERAL_TEXT_SPELL_NOT_WHILE_ON_BOAT = 193,
+    // advManager::SummonBoat's four outcome lines, all folded
+    // [Text._First + N] loads in one body: 0x538 when the caster is already
+    // at sea (sprintf'd with the hero's name), 0x53c when no adjacent water
+    // tile is free, 0x540 when neither a summonable boat nor a new one can
+    // be produced, and 0x544 when the mastery roll fails (also name-fed).
+    // Indexes are retail-byte-proven; the names describe the consumers.
+    GENERAL_TEXT_SUMMON_BOAT_ALREADY_AT_SEA_FORMAT = 334,
+    GENERAL_TEXT_SUMMON_BOAT_NO_WATER = 335,
+    GENERAL_TEXT_SUMMON_BOAT_NONE_AVAILABLE = 336,
+    GENERAL_TEXT_SUMMON_BOAT_FAILED_FORMAT = 337,
+    // advManager::TownGate's three refusals, all folded [Text._First + N]
+    // loads in one body: 0x1f0 when the chosen town already has a visiting
+    // hero, 0x1f4 when the caster's team owns no town at all, and 0x220
+    // when the caster is aboard a boat (hero flags & 0x40000). Indexes are
+    // retail-byte-proven; the names describe those three consumers.
+    GENERAL_TEXT_TOWN_PORTAL_TOWN_OCCUPIED = 124,
+    GENERAL_TEXT_TOWN_PORTAL_NO_TOWN = 125,
+    GENERAL_TEXT_SPELL_NOT_FROM_BOAT = 136,
     // DimensionDoor's movement gate refuses here when the caster has no
     // movement points left ([Text._First + 0x1f8]). Name provisional.
     GENERAL_TEXT_SPELL_NEEDS_MOVEMENT = 126,
@@ -148,6 +173,11 @@ enum EGeneralTextIndex {
     // immediately before ShutDown(0).
     GENERAL_TEXT_REMOTE_SESSION_DESTROYED = 329,
     GENERAL_TEXT_QUICK_INFO_DIGGABLE = 331,
+    // The one-vararg format advManager::SkuttleBoat (0x41cdf0) sprintf's
+    // the caster's name into when the mastery roll fails
+    // ([Text._First + 0x548]) - the row immediately below DimensionDoor's
+    // own limit format. Name provisional.
+    GENERAL_TEXT_SCUTTLE_BOAT_FAILED_FORMAT = 338,
     // A one-vararg format DimensionDoor sprintf's the caster's name into
     // when dWalkSpellsCast has reached this mastery's cap
     // ([Text._First + 0x54c]). Name provisional.
