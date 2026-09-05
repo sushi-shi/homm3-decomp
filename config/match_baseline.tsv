@@ -3004,7 +3004,7 @@ singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100
 # 2026-08-27 (round 3): the interim full build re-banked the transient
 # peak a third time; re-lowered with the round's bodies landed. Same
 # scheduler flap, same recovery path.
-singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0	66eb0a0e15c8
+singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0	66eb0a0e15c8
 singleselectionwindow	?OnMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2193	90.2193	90.2193	0x189710	3ad2be3935a3
 singleselectionwindow	?OnNameClick@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x18b620	ef174e28edf8
 singleselectionwindow	?OnNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	97.5366	97.5366	97.5366	0x18b510	862e2a9c058b
@@ -3020,6 +3020,7 @@ singleselectionwindow	?OnWidgetDeselect@TSingleSelectionWindow@@QAEHPAVmessage@@
 singleselectionwindow	?PlayerDropped@CNewPlayerUpdateMan@@QAEXK@Z	100.0000	100.0000	100.0000	0x189480	7985a12e7dcb
 singleselectionwindow	?ProcessMouse@@YGIPAX@Z	100.0000	100.0000	100.0000	0x177740	adf8e7219c52
 singleselectionwindow	?ProcessRightSelect@TSingleSelectionWindow@@UAEEH@Z	88.9695	88.9695	88.9695	0x1822d0	acd1959d03ce
+singleselectionwindow	?RebuildFilteredPlayerSetup@TSingleSelectionWindow@@QAEXXZ	71.5355	71.5355	71.5355	0x180430	9b77f7d3adf5
 singleselectionwindow	?ReceiveChat@TSingleSelectionWindow@@QAEXKPADE@Z	100.0000	100.0000	100.0000	0x18ae10	0bc859154d59
 singleselectionwindow	?SaveValid@@YIEPBD@Z	100.0000	100.0000	100.0000	0x177360	f85d34b44ef4
 singleselectionwindow	?SendChat@CSingleSelectionChatEdit@@UAEXPBDH@Z	100.0000	100.0000	100.0000	0x17cc00	af89320f7f09
@@ -3070,7 +3071,6 @@ singleselectionwindow	GetRandomMapName	0.0000	0.0000	0.0000	0x1879a0	f5a63457cca
 singleselectionwindow	TSingleSelectionWindow_BeginNewGame	0.0000	0.0000	0.0000	0x18c570	e5a5f3c8dbef
 singleselectionwindow	TSingleSelectionWindow_GenerateRandomMap	0.0000	0.0000	0.0000	0x1860e0	ffdf5b582de2
 singleselectionwindow	TSingleSelectionWindow_OnBeginGame	0.0000	0.0000	0.0000	0x18bce0	5b18a61fa80f
-singleselectionwindow	TSingleSelectionWindow_RebuildFilteredPlayerSetup	0.0000	0.0000	0.0000	0x180430	5172ebddf208
 singleselectionwindow	__h3cg$singleselectionwindow$scalar_deleting_dtor$CNewPlayerUpdateTask	0.0000	0.0000	0.0000	0x183ec0	-
 slider	??0slider@@QAE@HHHHHHP6IXHPAVheroWindow@@@ZW4EGraphics@0@HE@Z	100.0000	100.0000	100.0000	0x1960d0	63299852860c
 slider	??1slider@@UAE@XZ	100.0000	100.0000	100.0000	0x196180	dfc35120dc55
