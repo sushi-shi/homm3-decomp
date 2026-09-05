@@ -1098,6 +1098,20 @@ inline void ShowCredits()
 // Keep the named helper boundaries visible while this first admission is
 // iterated. Any boundary retail expands is an explicit VC6 inline problem,
 // not permission to flatten the recovered source shape by hand.
+// Residual (73.05%): three regions, all measured 2026-09-05.
+//  - The NEW_GAME arm's threaded copy of the setup block CALLS
+//    ShowProgressBar/IncProgressBar in retail and EXPANDS them here,
+//    which costs ~120 B and shifts three blocks. The later copy and the
+//    campaign-map arm expand them on both sides, so this is a per-site
+//    /Ob2 split our single source site cannot express; a statement pin
+//    is the known lever and is out of scope for this lane.
+//  - Two customcampaign.obj SCampaign members (0x489820, 1536 B, and
+//    0x48a2a0, 112 B) run over the end-of-game CampaignHeaderStruct
+//    between Load and SaveGame(1). Both carve rows are unclaimed and no
+//    Dreamcast identity is proven for them, so the calls are omitted.
+//  - The DoNewGame/DoLoadGame menu tail (retail +0xd60..+0xf40) still
+//    diverges: retail reaches `gUnnamed699584 = 0` from a CREDITS_ID
+//    test on dialogReturn that this reconstruction does not yet spell.
 VA(0x004ee3e0, 0x1C04)
 int oldmain()
 {
