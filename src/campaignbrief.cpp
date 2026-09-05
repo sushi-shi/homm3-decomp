@@ -817,12 +817,32 @@ VA_COMPGEN(0x0045ae40, 0x21, SCALAR_DELETING_DTOR, TCampaignBrief)
 // whole residual on this row and not a modelling difference.
 VA_COMPGEN(0x0045ae70, 0x13E, IMPLICIT_DTOR, CampaignScenarioPreview)
 
+// The campaign's `map<int, type_map_hero_info>` teardown, and the first of
+// four rows this file owns for that one container. Byte-verified against the
+// COMDAT campaignbrief.obj already emits: 37 instructions against retail's
+// 36 over 110 bytes, agreeing instruction for instruction - _Erase on the
+// head's child, operator delete on the head, both pointers zeroed, then the
+// _Lockit pair around the shared allocator refcount at 0x694df0/0x694df4.
+VA_COMPGEN(0x0045b140, 0x6E, IMPLICIT_DTOR, map)
+
 // The map header's loss-condition record. Its whole retail body is the
 // three defaults the header's own constructor writes - 0xff, 0, 0xff at
 // +0x00, +0x22 and +0x23 - and campaignbrief.obj is where the COMDAT
 // lands because TCampaignBrief's preview vector constructs one per
 // scenario. The delinker already labelled the row from the class.
 VA_COMPGEN(0x0045bac0, 0xE, CLASS_CTOR, LossConditionStruct)
+
+// The same map's two-argument constructor - `map(const key_compare&, const
+// allocator_type&)`, the form the copy path builds through. Byte-verified
+// against the emitted COMDAT at 0.984 mnemonic agreement over 190 bytes.
+VA_COMPGEN(0x0045bf70, 0xBE, CLASS_CTOR, map)
+
+// The map's two copy engines, and the reason this file owns four rows for
+// one container: `_Copy` is overloaded, so retail emits both bodies.
+// 0x45c740 is the whole-tree form (`void _Copy(const _Tree&)`, 0.967
+// mnemonic agreement over 357 bytes) and 0x45d270 the recursive node form
+// (`_Node* _Copy(_Node*, _Node*)`, 0.994 over 255).
+VA_COMPGEN(0x0045c740, 0x165, TREE_COPY, type_map_hero_info)
 
 // The scenario vector's own teardown, and the sole caller of the preview
 // destructor claimed above: it walks its elements with the 0x4d4 stride,
@@ -834,12 +854,19 @@ VA_COMPGEN(0x0045c030, 0x3B, VECTOR_DTOR, CampaignScenarioPreview)
 // three-argument vector::insert specialization in campaignbrief.obj.
 VA_COMPGEN(0x0045c960, 0x3AD, VECTOR_INSERT, CampaignScenarioPreview)
 
+VA_COMPGEN(0x0045d270, 0xFF, TREE_COPY_NODE, type_map_hero_info)
+
 // The generic Dreamcast tree-increment dossier (dc 0x64214) proves the
 // successor walk. Retail's sole direct caller at 0x45c070 and the already
 // emitted campaignbrief.obj public identify the concrete instantiation as
 // map<int, type_map_hero_info>::const_iterator::_Inc. The candidate public is
 // byte-identical across the 0xA3-byte EH-bearing retail body before relocation.
 VA_COMPGEN(0x0045D370, 0xA3, TREE_CONST_ITERATOR_INC, type_map_hero_info)
+
+// type_map_hero_identity's implicit copy-assign, the element operation the
+// map's node copy drives. Byte-verified against the emitted COMDAT at 0.973
+// mnemonic agreement over 343 bytes.
+VA_COMPGEN(0x0045d8e0, 0x157, IMPLICIT_COPY_ASSIGN, type_map_hero_identity)
 
 // E:\gamedcs\campaignbrief.cpp:1011
 // Exact checkpoint (2026-09-01): all 15 retail CFG blocks and all 399 bytes

@@ -4165,6 +4165,11 @@ CNetMsgHandlerPause::CNetMsgHandlerPause()
 // inlining it the way it does CNetMsgHandler's.
 VA_COMPGEN(0x00557eb0, 0x21, SCALAR_DELETING_DTOR, CNetMsgHandlerPause)
 
+// deque<CNetMsg*>'s back-block allocator, the half of the pair army.obj's
+// int deque needed the freeing side of. Byte-verified against the emitted
+// COMDAT at 0.967 over 322 bytes.
+VA_COMPGEN(0x00558500, 0x142, DEQUE_BUYBACK, CNetMsg)
+
 // E:\gamedcs\remote.cpp:3105 - put the parked handler back, then run the
 // base destructor. Both vptr stores are visible: 0x640f04 on entry, then
 // 0x640f14 before ~CNetMsgHandler's own body, which /Ob2 inlines here.
