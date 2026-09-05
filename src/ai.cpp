@@ -2904,6 +2904,12 @@ void combatManager::simulate_combat(long our_group, unsigned char checking_surre
 // (70.69); declaring the pointers above their loops (78.81, byte-flat);
 // inlining the get_simple_attack_effect result into the consider_attack
 // argument list (77.79).
+// Re-measured 2026-09-05 in the two-call inline structure below (the
+// verdicts above predate it): hoisting BOTH pointer initialisers above
+// their loop guards with `i++, ours++` in the for-header scores 83.08,
+// the outer one alone 84.84 - both under the 87.36 subscript form. The
+// hoist is therefore not the lever for retail's pre-guard `lea esi` and
+// its unconditional prologue `push esi`.
 VA(0x00422b20, 0x278)  // anchor-caller(choose_shooter_action/choose_melee_action) + anchor-callee(SeedCombatPosition), dc 0x27888
 void combatManager::find_AI_targets(long our_group, const army* current_army,
                                     unsigned char melee_only,
