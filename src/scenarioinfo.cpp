@@ -27,12 +27,20 @@
 #include "winmgr.h"
 
 // E:\gamedcs\scenarioinfo.cpp:258
+// 2026-09-05: 95.7756 -> 95.9787 by moving the `vc` and `lc` pointers down
+// to their only use. Retail's first instruction after the CAdvPopup base
+// ctor reads `[esi+0x34]` - a member of the object under construction, the
+// Widgets vector for reserve(100) - where the hoisted declarations made this
+// compile load gpGame and spill both derived pointers to frame slots first.
+// Spelling the two conditions inline with no local at all is byte-identical
+// at 95.9787, so the locals are kept for the DC source shape.
+// Residual (95.98%): the frame is 0xa5c against retail's 0xa78 - seven
+// dwords of named locals this reconstruction does not have - and one branch
+// is missing (164 against 163 with 331 = 331 blocks).
 VA(0x00567290, 0x2109)  // anchor CAdvPopup ctor + GSelPop1.pcx + DC source shape, dc 0x129db4
 CScenarioInfoDlg::CScenarioInfoDlg()
     : CAdvPopup(7, 18, 763, 585, 2)
 {
-    VictoryConditionStruct* vc = &gpGame->mapHeader.victoryCondition;
-    LossConditionStruct* lc = &gpGame->mapHeader.lossCondition;
     char sTemp[256];
     char LossText[1024];
     char tempName[256];
@@ -221,12 +229,14 @@ CScenarioInfoDlg::CScenarioInfoDlg()
     iconWidget* victory = new iconWidget(
         417, 302, 32, 24, -1, "scnrvict.def", 0, 0, 0, 0,
         iconWidget::ICON_STYLE_PLAIN);
+    VictoryConditionStruct* vc = &gpGame->mapHeader.victoryCondition;
     victory->SetIconFrame(vc->Type >= 0 ? vc->Type : 11);
     Widgets.push_back(victory);
 
     iconWidget* loss = new iconWidget(
         417, 359, 32, 24, -1, "scnrloss.def", 0, 0, 0, 0,
         iconWidget::ICON_STYLE_PLAIN);
+    LossConditionStruct* lc = &gpGame->mapHeader.lossCondition;
     loss->SetIconFrame(lc->Type >= 0 ? lc->Type : 3);
     Widgets.push_back(loss);
 
