@@ -2036,7 +2036,7 @@ kb	?extended_dialog@@YIXPBDAAV?$vector@Utype_dialog_resource@@V?$allocator@Utype
 kb	?get_base_map_score@game@@QAEFXZ	100.0000	100.0000	100.0000	0xf3e30	08a36f004890
 kb	?get_map_score@game@@QAEFXZ	100.0000	100.0000	100.0000	0xf3eb0	cd6028d198ab
 kb	?get_quickview_size@@YIXPBDPAH1@Z	100.0000	100.0000	100.0000	0xf62a0	c57fea7e1252
-kb	?oldmain@@YIHXZ	29.6021	31.9630	31.9630	0xee3e0	ead764a54d4e
+kb	?oldmain@@YIHXZ	73.0477	73.0477	73.0477	0xee3e0	e053644d0c37
 kb	?set@type_dialog_icon@@QAEXW4EGameResource@@J@Z	99.1667	99.1667	99.1667	0xf4eb0	06cb359cd3d3
 kbwin	?AppAbout@@YGHPAUHWND__@@IIJ@Z	100.0000	100.0000	100.0000	0xf8140	b6d6a9ba7939
 kbwin	?AppCommand@@YIJPAUHWND__@@IIJ@Z	100.0000	100.0000	100.0000	0xf8060	ab51fe2b9295
