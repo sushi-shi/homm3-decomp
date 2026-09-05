@@ -65,7 +65,14 @@ public:
 
 class TAllocationFailure : public TRuntimeError {
 public:
-    TAllocationFailure();  // 0x4d6b80, in gzinflatebuf.obj
+    // INLINE, and the two throw sites prove it from opposite sides:
+    // objnames.obj's InitializeAdventureObjectNames (0x41b500) EXPANDS the
+    // whole body at its throw - the literal, the out-of-line
+    // TRuntimeError(const char*) at 0x49a0c0, then the 0x63aba8 vftable
+    // store - while gzinflatebuf.obj keeps the 0x4d6b80 COMDAT and calls
+    // it at all three of its throws. Same source, two /Ob2 verdicts; a
+    // definition confined to gzinflatebuf.cpp can only produce the second.
+    TAllocationFailure() : TRuntimeError("Allocation failure.") {}
 };
 
 #endif  /* HOMM3_EXCEPTIONS_H */

@@ -193,8 +193,10 @@ public:
 
     // The SeerHutList twin of TQuestGuard::read, reached the same way from
     // readObject's SEER arm. Declared separately because the TQuestGuard
-    // base is private here.
-    int read(TAbstractFile* infile);
+    // base is private here. VOID, corrected 2026-09-05 when the body came
+    // in: retail's 0x574610 sets no return register at any exit, exactly as
+    // TQuestGuard::read does, and its one caller discards the result.
+    void read(TAbstractFile* infile);
     // 0x574a90, `ret 8` - the savegame reader, called by NewfullMap::Load on
     // every element of the list it has just resized.
     int load(TAbstractFile* infile, int saveVersion);
