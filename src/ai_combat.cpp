@@ -2368,3 +2368,9 @@ void std::__pop_heap_aux(type_monster_data* __first, type_monster_data* __last, 
 }
 
 #endif  // @carcass
+
+// push_back on the combat AI's monster table retains Dinkumware's
+// three-argument vector::insert specialization in ai_combat.obj. Byte-
+// verified against the emitted COMDAT at 0.987 mnemonic agreement over 740
+// bytes - the largest single row the COMDAT pass recovered.
+VA_COMPGEN(0x00427780, 0x2E4, VECTOR_INSERT, type_monster_data)

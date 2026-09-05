@@ -179,7 +179,7 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "TREE_CONST_ITERATOR_DEC", "TREE_CONST_ITERATOR_INC",
                  "TREE_COPY", "TREE_COPY_NODE", "TREE_ERASE",
                  "STRINGBUF_OVERFLOW", "STRINGBUF_INIT",
-                 "DEQUE_FREEFRONT", "DEQUE_FREEBACK",
+                 "DEQUE_FREEFRONT", "DEQUE_FREEBACK", "DEQUE_BUYBACK",
                  "BASIC_STRING_ASSIGN_PTR_SIZE",
                  "OSTREAM_PUT", "OSTREAM_INSERT_CSTR",
                  "INSERTION_SORT_1",
@@ -701,6 +701,15 @@ def _demangle_key(mangled: str):
         if element:
             member = deque_primitive.group(1).lstrip("_").lower()
             return f"{element}@deque_{member}"
+    # ...and the block-BUYING half, whose deque element here is an
+    # ordinary pointer-to-class, so the usual `P[AB](V|U)<Name>@` shape
+    # names it.
+    deque_class = re.match(
+        r"^\?(_Buyback)@\?\$deque@(?:P[AB])?(?:V|U)([A-Za-z_]\w*)@",
+        mangled)
+    if deque_class:
+        member = deque_class.group(1).lstrip("_").lower()
+        return f"{deque_class.group(2).lower()}@deque_{member}"
     vector_element = re.search(
         r"\?\$vector@(?:(?:P[AB][VU])|(?:V|U|W4))?"
         r"([A-Za-z_]\w*)@", mangled)
@@ -1072,6 +1081,7 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                                or "$stringbuf_init$" in r["name"]
                                or "$deque_freefront$" in r["name"]
                                or "$deque_freeback$" in r["name"]
+                               or "$deque_buyback$" in r["name"]
                                or "$basic_string_assign_ptr_size$" in r["name"]
                                or "$ostream_put$" in r["name"]
                                or "$ostream_insert_cstr$" in r["name"]
@@ -1200,7 +1210,8 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             claim_keys.setdefault(f"{owner}@tree_{tree_extra}",
                                   []).append(row)
             continue
-        deque_member = next((member for member in ("freefront", "freeback")
+        deque_member = next((member for member in ("freefront", "freeback",
+                                                   "buyback")
                              if f"$deque_{member}$" in row["name"]), None)
         if deque_member is not None:
             owner = row["name"].rsplit("$", 1)[1].lower()
