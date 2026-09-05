@@ -53,13 +53,6 @@ void TPalette16::TPalette16(const tagRGBQUAD* quad, int rbits, int rshift, int g
     // @stub
 }
 
-// E:\gamedcs\palette.cpp:92
-DC_ONLY(0x10a508, 0xD8)
-void TPalette16::TPalette16(const TPalette24* p24)
-{
-    // @stub
-}
-
 // E:\gamedcs\palette.cpp:116
 DC_ONLY(0x10a5e0, 0xC2)
 void TPalette16::TPalette16(const TRGBA* rgba)
@@ -168,6 +161,43 @@ TPalette16::TPalette16(const char* name, const TPalette24* p24,
 {
     Convert24to16(p24->colors.data[0], rbits, rshift, gbits, gshift,
                   bbits, bshift);
+}
+
+// The mask-driven overload: no explicit bit fields, the three static
+// TPalette16 masks instead. Retail scales each 8-bit channel by
+// `(mask + mask) & ~mask` - the single bit just above a contiguous mask, i.e.
+// 2^(hi+1) - multiplies, shifts right by 8 and masks, which lands the channel
+// in its field for any of the 555/565 layouts SetPixelFormat installs. The
+// three scales are hoisted; the three MASKS are re-read from their statics at
+// every use, two of them inside the loop.
+// Residual (88.72%): the four-block skeleton and the whole scale prologue
+// agree - red into ECX, green into ESI, blue into EDX, in that order - and
+// what is left is register/slot assignment inside the loop plus which mask
+// gets re-read where. Two levers were decisive and are recorded because both
+// contradict a standing note: (1) the three scale factors MUST be named
+// locals, 44.86 -> 75.99 - written inline in the expression VC6 refuses to
+// hoist them out of the loop, where retail computes all three once; (2) the
+// `|` operand order is NOT canonicalised here - five of the six orders sit at
+// exactly 75.99 and `blue | red | green` alone reaches 88.72. The masks
+// themselves stay unhoisted on purpose: retail re-reads green_mask and
+// blue_mask from their statics on every iteration.
+VA(0x00522810, 0xC6)  // dc-order-map + the three TPalette16 mask statics, dc 0x10a508
+TPalette16::TPalette16(const TPalette24* p24)
+    : resource(0, RESOURCE_TYPE_NONE)
+{
+    unsigned int red_scale = (red_mask + red_mask) & ~red_mask;
+    unsigned int green_scale = (green_mask + green_mask) & ~green_mask;
+    unsigned int blue_scale = (blue_mask + blue_mask) & ~blue_mask;
+    const unsigned char* src = p24->colors.data[0];
+    unsigned short* dst = data;
+    for (int index = 0; index < 256; ++index) {
+        *dst = static_cast<unsigned short>(
+            (((src[2] * blue_scale) >> 8) & blue_mask)
+            | (((src[0] * red_scale) >> 8) & red_mask)
+            | (((src[1] * green_scale) >> 8) & green_mask));
+        ++dst;
+        src += 3;
+    }
 }
 
 // The pointer-taking copy constructor, and the payload-only assignment behind
