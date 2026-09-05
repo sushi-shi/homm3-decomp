@@ -559,7 +559,7 @@ public:
         // participating bytes at +0x9/+0xa.
         bool IsVisible(int side) const
         {
-            return is_visible || owner == side;
+            return side == owner || is_visible;
         }
     };
 

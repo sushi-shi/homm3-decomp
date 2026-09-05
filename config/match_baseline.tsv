@@ -711,6 +711,7 @@ campaignbrief	?UpdateAllyEnemyFlags@TCampaignBrief@@QAEXXZ	86.8125	86.8125	86.81
 campaignbrief	?UpdateBonusIcons@TCampaignBrief@@QAEXXZ	95.3700	95.3700	95.3700	0x58d40	288e1c1bcbaf
 campaignbrief	?UpdateDifficultyButtons@TCampaignBrief@@QAEXXZ	100.0000	100.0000	100.0000	0x59010	a54768111cfd
 campaignbrief	?_Inc@const_iterator@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x5d370	-
+campaignbrief	?get_campaign_name@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x5bc10	80bcbea63411
 campaignbrief	?insert@?$vector@UCampaignScenarioPreview@@V?$allocator@UCampaignScenarioPreview@@@std@@@std@@QAEXPAUCampaignScenarioPreview@@IABU3@@Z	100.0000	100.0000	100.0000	0x5c960	-
 campaignmap	?InitializeCampaignMapTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0x5dee0	4134d1efefe4
 campaignmap	__h3cg$campaignmap$static_dtor$campaignNames	100.0000	100.0000	100.0000	0x5e1f0	-
@@ -1973,7 +1974,7 @@ initialize	?create_requirement_masks@@YIXPBHPA_J1@Z	100.0000	100.0000	100.0000	0
 # this class: two enumerators moved the row by the same amount one
 # enumerator did on 2026-08-08, which is what a population threshold
 # looks like and not what a per-declarator penalty looks like.
-initialize	?initialize_game_data@@YIXXZ	97.0370	100.0000	100.0000	0xeb730	9bb04f467e4b
+initialize	?initialize_game_data@@YIXXZ	94.0741	100.0000	100.0000	0xeb730	9bb04f467e4b
 inputmgr	??0inputManager@@QAE@XZ	73.3333	100.0000	100.0000	0xec460	ce1b8a0744aa
 inputmgr	?AsciiConvert@inputManager@@QAEXPAVmessage@@@Z	100.0000	100.0000	100.0000	0xec6f0	b21c053d2257
 inputmgr	?Close@inputManager@@UAEXXZ	100.0000	100.0000	100.0000	0xec540	3eaa4090c58c
@@ -2025,9 +2026,11 @@ kb	?NormalDialog@@YIXPBDHHHHHHHHHHH@Z	93.6191	93.6191	93.6191	0xf6570	718a7464f6
 kb	?NormalDialogHandler@@YIHAAVmessage@@@Z	71.3624	71.3624	71.3624	0xf08d0	472344c07fd2
 kb	?NormalDialogTimeOut@@YIXPBDHHHHHHHHHHH@Z	100.0000	100.0000	100.0000	0xf6530	8724fb21051e
 kb	?PickLoadGame@@YIHXZ	100.0000	100.0000	100.0000	0xf0610	4b51a872ab91
+kb	?PlayerDead@@YIXH@Z	100.0000	100.0000	100.0000	0xf11a0	8940f058d666
 kb	?PollSound@@YIXXZ	100.0000	100.0000	100.0000	0xed490	25e47bb545a2
-kb	?ShowCongrats@@YIXH@Z	87.6938	87.6938	87.6938	0xf3f60	0713ff6e2374
+kb	?ShowCongrats@@YIXH@Z	87.6938	87.6938	87.6938	0xf3f60	0a1eae63b3db
 kb	?ShowLuckInfo@game@@QAEXPAVhero@@H@Z	100.0000	100.0000	100.0000	0xf3540	19d81223c1ea
+kb	?ShowMoraleInfo@game@@QAEXPAVhero@@H@Z	100.0000	100.0000	100.0000	0xf32a0	effb636d6a78
 kb	?ShowProgressBar@@YIXXZ	100.0000	100.0000	100.0000	0xed350	f5a9fccf0270
 kb	?ShutDown@@YIXPBD@Z	100.0000	100.0000	100.0000	0xf3690	7882bdc1e193
 kb	?UnloadProgressBar@@YIXXZ	100.0000	100.0000	100.0000	0xed450	515a13a44eda
@@ -2036,6 +2039,7 @@ kb	?extended_dialog@@YIXPBDAAV?$vector@Utype_dialog_resource@@V?$allocator@Utype
 kb	?get_base_map_score@game@@QAEFXZ	100.0000	100.0000	100.0000	0xf3e30	08a36f004890
 kb	?get_map_score@game@@QAEFXZ	100.0000	100.0000	100.0000	0xf3eb0	cd6028d198ab
 kb	?get_quickview_size@@YIXPBDPAH1@Z	100.0000	100.0000	100.0000	0xf62a0	c57fea7e1252
+kb	?handle_click@type_normal_dialog_frame@@UAEEEE@Z	99.9475	99.9475	99.9475	0xf0b20	7355af0f0d7b
 kb	?oldmain@@YIHXZ	29.6021	31.9630	31.9630	0xee3e0	ead764a54d4e
 kb	?set@type_dialog_icon@@QAEXW4EGameResource@@J@Z	99.1667	99.1667	99.1667	0xf4eb0	06cb359cd3d3
 kbwin	?AppAbout@@YGHPAUHWND__@@IIJ@Z	100.0000	100.0000	100.0000	0xf8140	b6d6a9ba7939
@@ -3030,7 +3034,7 @@ singleselectionwindow	?OnGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNet
 # SetCurrentMap/OnSetAsHostMsg bodies landing in the TU dropped the
 # pair again with both sources byte-identical. Recovery rides with
 # DrawHeroAdvancedOption reaching 100.
-singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	99.8868	100.0000	100.0000	0x17cdc0	0e5de8f038ec
+singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0	0e5de8f038ec
 singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	9177fbb0fa83
 # 2026-08-27 hand-lowered 100.0000 -> 99.8710 (hist keeps 100.0000): the
 # documented TU-state flap (master accepted this pair down at 99.89/99.87
@@ -3045,7 +3049,7 @@ singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100
 # 2026-08-27 (round 3): the interim full build re-banked the transient
 # peak a third time; re-lowered with the round's bodies landed. Same
 # scheduler flap, same recovery path.
-singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0	66eb0a0e15c8
+singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0	66eb0a0e15c8
 singleselectionwindow	?OnMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2193	90.2193	90.2193	0x189710	3ad2be3935a3
 singleselectionwindow	?OnNameClick@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x18b620	ef174e28edf8
 singleselectionwindow	?OnNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	97.5366	97.5366	97.5366	0x18b510	862e2a9c058b
@@ -3228,6 +3232,8 @@ spells	?SpellTargetMessage@combatManager@@QAEXHHE@Z	100.0000	100.0000	100.0000	0
 spells	?SummonElemental@combatManager@@QAEXHW4TCreatureType@@HH@Z	71.8173	93.4375	93.4375	0x1a7080	74fef5ef261c
 spells	?ValidSpellTarget@combatManager@@QAEEHJJJEJ@Z	88.4937	88.4937	88.4937	0x1a39c0	61a003dfba43
 spells	?ValidSpellTargetArmy@combatManager@@QAEEHHPBVarmy@@EJ@Z	100.0000	100.0000	100.0000	0x1a3c80	110edc19289c
+spells	?check_fire_wall@combatManager@@QAEEJPAVarmy@@E@Z	100.0000	100.0000	100.0000	0x19fcd0	a30a123e82ea
+spells	?check_landmine@combatManager@@QAEEJPAVarmy@@E@Z	100.0000	100.0000	100.0000	0x19fb40	87eb88fb81a9
 spells	?demonic_resurrection@combatManager@@QAEXPBVarmy@@PAV2@@Z	100.0000	100.0000	100.0000	0x1a7390	edaedb0045b6
 spells	?display_failure_reason@combatManager@@QAEXHPBDJ@Z	100.0000	100.0000	100.0000	0x1a2c60	76ac16d6559a
 spells	?find_animate_dead_target@combatManager@@QAEPAVarmy@@HH@Z	100.0000	100.0000	100.0000	0x1a3f50	e138f71286c7
@@ -3289,7 +3295,34 @@ systemoptionswindow	??1TSystemOptionsWindow@@UAE@XZ	100.0000	100.0000	100.0000	0
 systemoptionswindow	??_GTSystemOptionsWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1b3010	-
 systemoptionswindow	?DoModal@TSystemOptionsWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1b30b0	3b9820683b03
 systemoptionswindow	?WindowHandler@TSystemOptionsWindow@@UAEHPAVmessage@@@Z	94.3957	94.3957	94.3957	0x1b3140	87bb0e263b3c
+text	?InitializeAdvObjNames@@YIEXZ	100.0000	100.0000	100.0000	0x1b92d0	f9ff5fe03d8f
+text	?InitializeArrayText@@YIEXZ	98.0258	98.0258	98.0258	0x1b9cc0	a2150199ebd8
+text	?InitializeCampaignDialogText@@YIEXZ	100.0000	100.0000	100.0000	0x1b9800	2fb067abdc90
+text	?InitializeCampaignRegionNames@@YIEXZ	100.0000	100.0000	100.0000	0x1b9180	442b835d3c8b
+text	?InitializeCastleText@@YIEXZ	100.0000	100.0000	100.0000	0x1b96c0	27e465a92fc7
+text	?InitializeCreditsText@@YIEXZ	100.0000	100.0000	100.0000	0x1b9840	8642c8d00037
+text	?InitializeCustomCampaignText@@YIEXZ	100.0000	100.0000	100.0000	0x1b9110	8ea94fdd7a07
+text	?InitializeDwellingText@@YIEXZ	100.0000	100.0000	100.0000	0x1b9570	914b63686c50
 text	?InitializeGeneralText@@YIEXZ	100.0000	100.0000	100.0000	0x1b90f0	23ec87607971
+text	?InitializeHallText@@YIEXZ	100.0000	100.0000	100.0000	0x1b9720	29bfb30672a7
+text	?InitializeHelpText@@YIEXZ	100.0000	100.0000	100.0000	0x1b98b0	16300d592399
+text	?InitializeHeroBioText@@YIEXZ	100.0000	100.0000	100.0000	0x1b9680	c10035f80fb3
+text	?InitializeHeroText@@YIEXZ	100.0000	100.0000	100.0000	0x1b97c0	2281a9889349
+text	?InitializeHighScoreDefaults@@YIEXZ	99.3846	99.3846	99.3846	0x1b91d0	21fa6ff9c094
+text	?InitializeMineEventText@@YIEXZ	100.0000	100.0000	100.0000	0x1b9150	d049b9a953f9
+text	?InitializeMineNames@@YIEXZ	100.0000	100.0000	100.0000	0x1b9340	c976e86a2f1a
+text	?InitializeNeutralBuildingText@@YIEXZ	100.0000	100.0000	100.0000	0x1b9450	b17c1b4c5799
+text	?InitializeOverviewText@@YIEXZ	100.0000	100.0000	100.0000	0x1b9790	e300056f30d7
+text	?InitializePlayerColors@@YIEXZ	100.0000	100.0000	100.0000	0x1b9370	a95fae4d84ad
+text	?InitializePrimaryStatNames@@YIEXZ	100.0000	100.0000	100.0000	0x1b93c0	671b3bea14eb
+text	?InitializeResourceNames@@YIEXZ	100.0000	100.0000	100.0000	0x1b9310	4dcaf2df2a78
+text	?InitializeSecondarySkillLevelNames@@YIEXZ	100.0000	100.0000	100.0000	0x1b93f0	bdd0dc781f1d
+text	?InitializeSpecialBuildingText@@YIEXZ	100.0000	100.0000	100.0000	0x1b94e0	c5e4da604f23
+text	?InitializeTavernText@@YIEXZ	100.0000	100.0000	100.0000	0x1b96f0	078fd0ca8502
+text	?InitializeTentColorText@@YIEXZ	100.0000	100.0000	100.0000	0x1b9880	8fc1279b5d71
+text	?InitializeTerrainNames@@YIEXZ	100.0000	100.0000	100.0000	0x1b92a0	895d068c0a92
+text	?InitializeTownNameText@@YIEXZ	100.0000	100.0000	100.0000	0x1b9600	5b7fd83ed644
+text	?InitializeTownText@@YIEXZ	100.0000	100.0000	100.0000	0x1b9750	0f85dceda288
 textntry	??0textEntryWidget@@QAE@HHHHHPBD0W4TColor@font@@I0HHHHHH@Z	100.0000	100.0000	100.0000	0x1ba920	7bcd344cbd82
 textntry	??1textEntryWidget@@UAE@XZ	100.0000	100.0000	100.0000	0x1baae0	0ee13f09fa3c
 textntry	??_GtextEntryWidget@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1ba8f0	-
@@ -3569,6 +3602,8 @@ university_window	?exit_click@type_university_window@@KIHAAVmessage@@@Z	100.0000
 university_window	?handle_click@type_university_skill_button@@UAEEEE@Z	100.0000	100.0000	100.0000	0x1ef490	c3989b472843
 university_window	?handle_widget_hover@type_university_window@@UAEXPAVwidget@@@Z	100.0000	100.0000	100.0000	0x1f0dc0	a3d184c5ea5a
 university_window	?purchase_click@type_university_window@@KIHAAVmessage@@@Z	94.7553	94.7553	94.7553	0x1f0f60	e6775d76fa39
+university_window	?skill_click@type_university_window@@QAEXW4TSecondarySkill@@@Z	98.3268	98.3268	98.3268	0x1f0ac0	e390867771ab
+university_window	?update_skill_button@type_university_window@@IAEXAAUtype_university_skill@@@Z	100.0000	100.0000	100.0000	0x1f0790	1d388ed37ce9
 victorylossconditions	?CheckForArtifactTransportWin@VictoryConditionStruct@@QAEEPBVhero@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x1f2860	10dec993b8aa
 victorylossconditions	?CheckForArtifactWin@VictoryConditionStruct@@QAEEXZ	98.2057	98.2057	98.2057	0x1f1610	9d6a0fa53dbd
 victorylossconditions	?CheckForDefeatedHeroLoss@LossConditionStruct@@QAEEPBVhero@@@Z	75.8636	75.8636	75.8636	0x1f2a40	77cbe67963b6

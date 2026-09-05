@@ -712,11 +712,17 @@ public:
 };
 SIZE(CMCDeadHero, 0x1c);
 
+// kb.obj's PlayerDead expands this constructor at its one broadcast site
+// and proves the whole record: CNetMsg's five stores in their declared
+// order, the RS_DEAD_PLAYER subtype, a 0x18 extent, and the seat number
+// landing at +0x14.
 class CMCDeadPlayer : public CMapChange {
 public:
     int playerPos;
 
-    CMCDeadPlayer(int player);
+    CMCDeadPlayer(int player)
+        : CMapChange(RS_DEAD_PLAYER, sizeof(CMCDeadPlayer)),
+          playerPos(player) {}
 };
 SIZE(CMCDeadPlayer, 0x18);
 
