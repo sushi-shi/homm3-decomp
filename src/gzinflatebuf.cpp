@@ -80,6 +80,35 @@ int TGzInflateBuf::get_byte()
 // leaves _Owns provably false and VC6 folds both the test and the store
 // away. Constructing it takes the frame from 0x1a8 to retail's 0x1b4 and
 // makes fn+0xbd..0xcf byte-identical (76.4458 -> 77.3300).
+//
+// The header walk's two LOOP FORMS, 87.7808 -> 91.6008 in two doses, and
+// the second only pays after the first:
+//  - the six reserved bytes are a counted `for (int skip = 6; skip > 0;
+//    --skip)`, not `do { } while (--skip > 0)`. Measured: for-down 90.3211,
+//    for-up / while-up / braced-for 89.8207 all three to the digit,
+//    do-while(--skip != 0) 87.7038, six unrolled read_byte() calls 74.9020.
+//  - the two name/comment skips are then `while (1) { if (read_byte() == 0)
+//    break; }`. Written `while (read_byte() != 0) { }` VC6 PEELS the
+//    condition - it emits read_byte once as the guard and again at the
+//    bottom - which is why the call census carried one surplus get_byte.
+//    This is wingraph DDBlit's lever, and it MEASURED NEGATIVE before the
+//    skip loop moved (85.93 for both, 86.83/86.89 for either alone against
+//    an 87.78 baseline) and +1.28 after it: a rejected knob is only
+//    rejected for the inline structure it was measured in.
+//
+// Residual (91.60%): 61 vs 61 blocks with 54 exact, and TWO branches short.
+// Retail carries a SECOND `--stream.next_in; ++stream.avail_in; throw
+// false;` block, sunk and reloading `this` from [ebp-x], where our source
+// has one; it also loads gz_magic[0] into EBX ahead of the first compare
+// where we read it as a memory operand, and CALLS basic_string::_Tidy on
+// the TDataError path where we expand it. Measured and rejected for the
+// second pushback: the same statement in the gz_magic[0] arm (85.22), in
+// the second EOF arm (85.72), and nested inside the gz_magic[1] arm
+// (88.97); for the compare, a named `int magic0 = gz_magic[0]` hoisted
+// above the read (90.50) or taken after it (byte-flat), and folding the
+// EOF and magic tests into one `||` (83.60). The `extra` skip loop is
+// likewise at a local maximum: while(1)+break 83.40, an explicit
+// decrement 88.67, a counted `for` 89.52.
 VA(0x004d6050, 0x58A)  // anchor-vtable ??_7TGzInflateBuf@@6B@ + anchor-import @inflateInit2_@16, retail-only
 TGzInflateBuf::TGzInflateBuf(std::streambuf* newSource)
     : source(newSource),
@@ -129,10 +158,8 @@ TGzInflateBuf::TGzInflateBuf(std::streambuf* newSource)
         int flags = read_byte();
         if ((flags & 0xe0) != 0)
             throw TDataError();
-        int skip = 6;
-        do {
+        for (int skip = 6; skip > 0; --skip)
             read_byte();
-        } while (--skip > 0);
         if ((flags & 4) != 0) {
             int low = read_byte();
             unsigned extra = (read_byte() << 8) + low;
@@ -140,11 +167,15 @@ TGzInflateBuf::TGzInflateBuf(std::streambuf* newSource)
                 read_byte();
         }
         if ((flags & 8) != 0) {
-            while (read_byte() != 0) {
+            while (1) {
+                if (read_byte() == 0)
+                    break;
             }
         }
         if ((flags & 0x10) != 0) {
-            while (read_byte() != 0) {
+            while (1) {
+                if (read_byte() == 0)
+                    break;
             }
         }
         if ((flags & 2) != 0) {

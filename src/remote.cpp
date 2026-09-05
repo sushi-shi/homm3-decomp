@@ -190,31 +190,45 @@ unsigned char CDPlayHeroes::SysMsgCreatePlayerOrGroup(
 // QueueMsg is expanded here, this time with the message's own runtime size
 // rather than a folded constant.
 //
-// Residual (68.14%): VC6 INVERTS the drain loop - it emits the Receive call
-// twice, once as the guard and once at the bottom - where retail has one
-// call and three plain back edges into it. Same class as DDBlit's three
-// retry loops in wingraph.obj, and the same three spellings are again
-// BYTE-IDENTICAL to the digit: `while (Receive(...)) { ... continue; }`,
-// the Process1WindowsMessage `poll: if (Receive(...)) { ...; goto poll; }`,
-// and the two guards folded into nested ifs over one shared tail.
+// EXACT (100.0000%, 2026-09-05), and it took wingraph DDBlit's lever plus
+// two smaller facts. The drain loop is `while (1) { if (!Receive(...))
+// break; ... }`: written `while (Receive(...))` VC6 PEELS the guard,
+// emitting the Receive call twice - once ahead of the loop and once at the
+// bottom - where retail has one call with three plain back edges into it
+// (68.1355 -> 93.1818; the `poll:`/`goto poll` label form is byte-identical
+// to the rotated one and does NOT fix it, exactly as DDBlit's note records).
+// The error tail is then `if (m_hRes != NO_MESSAGES) { ...; return false; }
+// return true;` and not the early-out spelling: retail falls THROUGH into
+// the log block and jumps to the success return, which is the one polarity
+// flip left at 93.18 (-> 100.0000).
 //
-// KNOWN COST, recorded rather than pinned: giving this member a body costs
-// the FREE PollRemote wrapper at 0x5546b0 its exactness (100.0000 -> 0.0000
-// cur; its banked MAX is untouched) because VC6 expands this callee there.
-// The wrapper is 259 B, so its /Ob2 budget is the 1000 floor, and retail's
-// compile priced this callee ABOVE that floor while ours prices it below -
-// i.e. the reconstruction is still short of retail's front-end mass, which
-// is what the loop inversion above is a symptom of too. A
-// `#pragma auto_inline(off)` here would hide both symptoms; the honest fix
-// is the missing construct, so neither is applied.
+// The two message filters are SEPARATE `if`s, not `a || b`, and that is a
+// /Ob2 fact rather than a byte one - both spellings emit the same object.
+// The free PollRemote wrapper at 0x5546b0 is 259 B, so its budget is the
+// 1000 floor, and this callee's front-end cost sits within ONE STATEMENT of
+// that floor: an `if (0)` titration of 1, 2, 3, 4, 6, 8, 10 and 40 inert
+// statements here restores the wrapper to 100.0000 at every dose including
+// the first, and the `||` form is exactly that one statement short.
+// Splitting it is real source mass, so the wrapper comes back WITH the
+// member exact - 0.0000 -> 100.0000 cur, no pin and no carrier. Measured
+// and rejected: the DC-shaped error arm INSIDE the loop's failure branch,
+// which is what remote.cpp:230-246 of the Dreamcast line table describes,
+// prices the callee correctly but costs the member its block order (93.18);
+// and `GetLastError()` in place of either tail `m_hRes` read - two of which
+// the same DC rows attest - costs 43.95 / 53.73, because the tail read is
+// CSE'd with the loop's.
 VA(0x00552b60, 0x24B)  // anchor-string(DPlay Receive error) + anchor-callee(HandleLowLevelMsg) + dc-order-map, dc 0x11bb9c
 bool CDPlayHeroes::PollRemote()
 {
     unsigned long fromId;
     unsigned long toId;
 
-    while (Receive(&fromId, &toId, &dpMsg, 1)) {
-        if (fromId == gsThisNetPlayerInfo.dpid || !fromId)
+    while (1) {
+        if (!Receive(&fromId, &toId, &dpMsg, 1))
+            break;
+        if (fromId == gsThisNetPlayerInfo.dpid)
+            continue;
+        if (!fromId)
             continue;
         CNetMsg* pNetMsg =
             static_cast<CNetMsg*>(static_cast<void*>(dpMsg.pData));
@@ -223,15 +237,15 @@ bool CDPlayHeroes::PollRemote()
         QueueMsg(pNetMsg);
     }
 
-    if (m_hRes == DPLAY_RECEIVE_ERROR_NO_MESSAGES)
-        return true;
-
-    char description[256];
-    GetErrorDesc(m_hRes, description);
-    logFile.Log(DATA_COMPGEN(0x00682a98, dplayReceiveErrorLog,
-                            "DPlay Receive error [%s]"),
-                description);
-    return false;
+    if (m_hRes != DPLAY_RECEIVE_ERROR_NO_MESSAGES) {
+        char description[256];
+        GetErrorDesc(m_hRes, description);
+        logFile.Log(DATA_COMPGEN(0x00682a98, dplayReceiveErrorLog,
+                                "DPlay Receive error [%s]"),
+                    description);
+        return false;
+    }
+    return true;
 }
 
 // DC names the network singleton pDPlay; retail references at 0x69d808 and

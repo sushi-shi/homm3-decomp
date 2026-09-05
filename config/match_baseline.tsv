@@ -1970,7 +1970,7 @@ gzinflatebuf	??0TAllocationFailure@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x1b9
 gzinflatebuf	??0TAllocationFailure@@QAE@XZ	100.0000	100.0000	100.0000	0xd6b80	92689dd90756
 gzinflatebuf	??0TDataError@TGzInflateBuf@@QAE@ABV01@@Z	0.0000	100.0000	100.0000	0xd65e0	ef530792f879
 gzinflatebuf	??0TDataError@TGzInflateBuf@@QAE@XZ	31.7752	100.0000	100.0000	0xd6690	-
-gzinflatebuf	??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z	87.7808	87.7808	87.7808	0xd6050	d94949a33ebd
+gzinflatebuf	??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z	91.5985	91.5985	91.5985	0xd6050	9b37d907d923
 gzinflatebuf	??0TRuntimeError@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x1b7b0	-
 gzinflatebuf	??0runtime_error@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z	100.0000	100.0000	100.0000	0x1ba90	-
 gzinflatebuf	??1TGzInflateBuf@@UAE@XZ	100.0000	100.0000	100.0000	0xd6820	cc97722e33a5
@@ -2640,7 +2640,7 @@ objecttype	?use_facet@std@@YAABV?$ctype@D@1@ABVlocale@1@PBV21@_N@Z	100.0000	100.
 objecttype	?use_facet@std@@YAABV?$numpunct@D@1@ABVlocale@1@PBV21@_N@Z	100.0000	100.0000	100.0000	0x11ab90	-
 objnames	??1TTextResourceGuard@@QAE@XZ	100.0000	100.0000	100.0000	0x1bd90	e6a9bcd817a7
 objnames	?InitializeAdventureObjectNames@@YIXXZ	100.0000	100.0000	100.0000	0x1b500	8e77da136c72
-overview	??0TOverviewWindow@@QAE@XZ	78.2776	80.0954	80.0954	0x11fa40	e8df282f3bdd
+overview	??0TOverviewWindow@@QAE@XZ	78.9277	80.0954	80.0954	0x11fa40	adec4e3b1b02
 overview	??1TOverviewWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x120d90	048fab1d8faa
 overview	??_GTOverviewWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x120d60	-
 overview	?DoFlaggableButtons@TOverviewWindow@@AAEXH@Z	100.0000	100.0000	100.0000	0x11e7f0	37a25d45af3d
@@ -2648,7 +2648,7 @@ overview	?DoRollover@TOverviewWindow@@AAEXH@Z	97.8485	98.5053	98.5053	0x120e30	0
 overview	?Overview@game@@QAEXXZ	100.0000	100.0000	100.0000	0x11e8d0	acbb8b63299e
 overview	?OverviewSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x11fa20	d405249777ca
 overview	?ProcessIconSelect@game@@QAEHHE@Z	94.7322	94.7322	94.7322	0x11ee50	042a4f8cf2fd
-overview	?SetupDynamicStuff@game@@QAEXHH@Z	90.9107	90.9107	90.9107	0x11bd50	714ded670a01
+overview	?SetupDynamicStuff@game@@QAEXHH@Z	91.7373	91.7373	91.7373	0x11bd50	ed2be216d5f0
 overview	?SetupNewOverviewType@game@@QAEXHE@Z	96.4609	100.0000	100.0000	0x11e330	aa25ff2c3eaa
 overview	?UpdateBackpack@@YIXH@Z	96.5741	96.5741	96.5741	0x122470	838327f3aed0
 overview	?UpdateFlaggableIcon@TOverviewWindow@@AAEXH@Z	100.0000	100.0000	100.0000	0x11e670	ca624c71e9f9
@@ -2778,7 +2778,7 @@ puzzlewindow	?AI_attempt_puzzle_guess@@YI?AUtype_point@@J@Z	97.1621	97.1621	97.1
 puzzlewindow	?UpdatePuzzle@TPuzzleWindow@@QAEHH@Z	100.0000	100.0000	100.0000	0x12c6c0	34a059e6b8d9
 puzzlewindow	?WindowHandler@TPuzzleWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x12c640	86e9c14d488e
 puzzlewindow	?mark_puzzle@Bitmap816@@QAEXPAEJJ@Z	100.0000	100.0000	100.0000	0x12c8b0	6e09b505ce58
-puzzlewindow	?match_puzzle@@YI?AUtype_point@@JPAY0BB@Utype_AI_puzzle_tile@@@Z	79.1843	79.1843	79.1843	0x12cf10	1c8d86b14b40
+puzzlewindow	?match_puzzle@@YI?AUtype_point@@JPAY0BB@Utype_AI_puzzle_tile@@@Z	85.9449	85.9449	85.9449	0x12cf10	c78ca95ebda2
 puzzlewindow	?test@?$bitset@$0DA@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0x1067e0	-
 questlogwindow	??0TQuestLogWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x12d8c0	b23447582f0c
 questlogwindow	??1TQuestLogWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x12e1e0	7ad7c6e06db8
@@ -2939,8 +2939,8 @@ remote	?Pause@CTurnDuration@@QAEXXZ	100.0000	100.0000	100.0000	0x157dd0	df453d86
 remote	?PauseTimeOuts@CChatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x154050	7e887272191a
 remote	?PlayerDropMsg@@YAXPAVCChatManager@@PBDZZ	100.0000	100.0000	100.0000	0x153b60	f4a6c8e5198b
 remote	?PlayerEnterMsg@@YAXPAVCChatManager@@PBDZZ	100.0000	100.0000	100.0000	0x153c30	e114ca3074c6
-remote	?PollRemote@@YIXXZ	0.0000	100.0000	100.0000	0x1546b0	247cab36b766
-remote	?PollRemote@CDPlayHeroes@@QAE_NXZ	68.1355	68.1355	68.1355	0x152b60	9adb977c4462
+remote	?PollRemote@@YIXXZ	100.0000	100.0000	100.0000	0x1546b0	247cab36b766
+remote	?PollRemote@CDPlayHeroes@@QAE_NXZ	100.0000	100.0000	100.0000	0x152b60	5817b8cc4773
 remote	?ReceiveChat@@YIXPADH@Z	100.0000	100.0000	100.0000	0x154a20	76682a18ba16
 remote	?RemoteCleanup@@YIXXZ	100.0000	100.0000	100.0000	0x1544b0	5e1c74da22d4
 remote	?Restore@CSaveScreen@@QAEXE@Z	100.0000	100.0000	100.0000	0x157390	bfdee37b1b64
@@ -3078,8 +3078,8 @@ rmg	?InitializeObjectGenerators@type_random_map_generator@@QAEXXZ	97.4646	97.467
 rmg	?WriteMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	95.6987	95.7066	95.7066	0x149cb0	12d6f5f28f76
 rmg	?_Inc@const_iterator@?$_Tree@UTPoint@@U1@U_Kfn@?$set@UTPoint@@U?$less@UTPoint@@@std@@V?$allocator@UTPoint@@@3@@std@@U?$less@UTPoint@@@4@V?$allocator@UTPoint@@@4@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x1b8bc0	-
 rmg	?assign_rmg_teams@@YIXHHHPBEPAD@Z	100.0000	100.0000	100.0000	0x14ab40	a44a9dbf9227
-rmg	?insert@?$vector@HV?$allocator@H@std@@@std@@QAEPAHPAHABH@Z	44.6278	44.6278	44.6278	0x4200	-
-rmg	?insert@?$vector@HV?$allocator@H@std@@@std@@QAEXPAHIABH@Z	26.1667	26.1667	26.1667	0x22f50	-
+rmg	?insert@?$vector@HV?$allocator@H@std@@@std@@QAEPAHPAHABH@Z	100.0000	100.0000	100.0000	0x22f50	-
+rmg	?insert@?$vector@HV?$allocator@H@std@@@std@@QAEXPAHIABH@Z	100.0000	100.0000	100.0000	0x4200	-
 rmg	?insert@?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@std@@QAEXPAUTRmgMapPosition@@IABU3@@Z	100.0000	100.0000	100.0000	0x347a0	-
 rmg	?set@?$bitset@$0IB@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0x14ded0	-
 rmg_support	??0TRmgMapPosition@@QAE@HHH@Z	100.0000	100.0000	100.0000	0x1355c0	7618b419e43e
