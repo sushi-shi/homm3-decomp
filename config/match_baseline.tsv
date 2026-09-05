@@ -1078,7 +1078,7 @@ customcampaign	?FreeData@CampaignHeaderStruct@TCampaignBrief@@QAEXXZ	100.0000	10
 customcampaign	?GetAvailableScenarios@CampaignHeaderStruct@TCampaignBrief@@QBEXPAE@Z	100.0000	100.0000	100.0000	0x88f00	54417e832b4c
 customcampaign	?GetNumMaps@CampaignHeaderStruct@TCampaignBrief@@QBEHXZ	100.0000	100.0000	100.0000	0x88850	9b6d7dc6272c
 customcampaign	?InitializeCrossoverHero@ScenarioStruct@TCampaignBrief@@QAEXPAUHeroPlaceholderData@@PAVhero@@@Z	89.9737	90.3468	90.3468	0x86590	71fd9dcba9df
-customcampaign	?Load@CampaignHeaderStruct@TCampaignBrief@@QAE_NXZ	45.6886	45.6886	45.6886	0x88880	c8e381c5e516
+customcampaign	?Load@CampaignHeaderStruct@TCampaignBrief@@QAE_NXZ	49.5351	49.5351	49.5351	0x88880	0604e159da45
 customcampaign	?Load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	55.7915	55.7915	55.7915	0x8a310	f2ec1fa4aeeb
 customcampaign	?LoadMapHeader@ScenarioStruct@TCampaignBrief@@QAEXPAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@PAVNewSMapHeader@@H@Z	100.0000	100.0000	100.0000	0x87d30	3ede48bd4a11
 customcampaign	?LoadScenario@CampaignHeaderStruct@TCampaignBrief@@QAE_NHPAVNewSMapHeader@@@Z	100.0000	100.0000	100.0000	0x88810	40cf52fbb7ea

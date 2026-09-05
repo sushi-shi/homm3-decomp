@@ -570,6 +570,27 @@ int TCampaignBrief::CampaignHeaderStruct::GetNumMaps() const
 // LOD bitmap resources; either way the raw campaign stream is wrapped in a
 // TGzInflateBuf for the header block, and again per scenario for the map
 // header the start-options record then folds into the scenario.
+//
+// Residual (49.5%): the /Ob2 budget, in ONE direction - every remaining
+// divergence is a callee we expand and retail calls, and the extra four EH
+// cleanup regions `vc6 diagnose` reports are that expansion's own
+// partially-constructed subobjects, not a missing lifetime. Two clusters
+// carry it: `NewSMapHeader mapHeader;` (retail calls the compiler-generated
+// ??0CMapHeaderData@@QAE@XZ at 0x45a990 - campaignbrief.obj emits and
+// claims that COMDAT - while our CL expands its five member constructions
+// in place) and `scenario->hero_placeholders = mapHeader.placeholders`
+// (retail calls the vector operator= COMDAT; we expand it into twelve
+// size/capacity/_Ucopy/_Destroy calls). The two documented levers for this
+// class are a statement pin and a caller-shrink helper split, and both are
+// closed here: this lane adds no inline_depth pins, and the Dreamcast
+// roster names no helper to split out of a Complete-only body. The frame
+// is 12 bytes over retail's 0x528 for the same reason - our fpos temporary
+// pair and the memory-homed running offset are pushed apart by the
+// expansions above, where retail keeps the offset in ESI throughout.
+//
+// Measured and kept: dispatching the six header reads through a
+// TAbstractFile* rather than the concrete TStreamBufFile local is worth
+// +3.85 (45.6886 -> 49.5379) - see the note at the pointer's declaration.
 VA(0x00488880, 0x5D6)  // anchor-caller(TCampaignBrief ctor), retail-only
 bool TCampaignBrief::CampaignHeaderStruct::Load()
 {
@@ -608,33 +629,39 @@ bool TCampaignBrief::CampaignHeaderStruct::Load()
     int numScenarios;
     {
         TGzInflateBuf inflateBuf(stream);
-        TStreamBufFile file(&inflateBuf);
+        TStreamBufFile streamFile(&inflateBuf);
+        // Retail reads through the abstract interface, not through the
+        // concrete local: every read is an indirect `call [vptr+4]` on
+        // TStreamBufFile's slot 1. Spelling `streamFile.Read(...)` instead
+        // lets VC6 resolve the call statically and expand the one-line body,
+        // which turns all six reads into direct sgetn calls on the inflater.
+        TAbstractFile* file = &streamFile;
         int intBuffer;
-        file.Read(&intBuffer, 4);
+        file->Read(&intBuffer, 4);
         campaign_version = intBuffer;
         if (campaign_version < 4) {
             file_error = CAMPAIGN_FILE_VERSION_UNSUPPORTED;
             return false;
         }
-        file.Read(&intBuffer, 1);
+        file->Read(&intBuffer, 1);
         region_map = intBuffer & 0xff;
-        campaign_name = ReadLengthPrefixedString(&file);
+        campaign_name = ReadLengthPrefixedString(file);
         if (campaign_name.length() == 0)
             campaign_name = gpGeneralText->GetText(509);
-        campaign_desc = ReadLengthPrefixedString(&file);
+        campaign_desc = ReadLengthPrefixedString(file);
         char charBuffer;
-        file.Read(&charBuffer, 1);
+        file->Read(&charBuffer, 1);
         variable_difficulty = charBuffer != 0;
         if (campaign_version < 5)
             campaign_music = 0x25;
         else {
-            file.Read(&charBuffer, 1);
+            file->Read(&charBuffer, 1);
             campaign_music = charBuffer;
         }
         numScenarios = akCampaignMapTraits[region_map].m_numRegions;
         for (int iNew = 0; iNew < numScenarios; ++iNew) {
             ScenarioStruct* scenario = new ScenarioStruct;
-            scenario->Read(&file, numScenarios, campaign_version);
+            scenario->Read(file, numScenarios, campaign_version);
             scenarios.push_back(scenario);
         }
     }
