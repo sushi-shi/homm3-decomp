@@ -737,11 +737,24 @@ int TCampaignStartOption::_slot5(void* scenarioRecord, int which) const
     TCampaignBrief::ScenarioStruct* scenario =
         static_cast<TCampaignBrief::ScenarioStruct*>(scenarioRecord);
     int player = GetPlayer(which);
+    // The crossover index must land in a NAMED local initialised to -1 and
+    // overwritten under the guard, not in either `return` form: retail sinks
+    // the `-1` epilogue to the end of the body and FALLS THROUGH the last
+    // test into the index load, which is what this spelling produces.
+    // 71.7308 -> 100.0000 (2026-09-05). Measured and rejected: two returns
+    // with the guard as written (71.73, the last test emits `jg` against
+    // retail's `jle` and the wrong epilogue is sunk), the fully inverted
+    // `== 0 && == 0 && <= 0` chain returning -1 (69.52 - `count() == 0`
+    // degrades retail's `ja` to `jne`), `!= 0` for the last operand (71.73),
+    // nested ifs over one shared tail (69.52), splitting the last operand
+    // into its own guard with a duplicated index return (58.27, three
+    // epilogues), and a ternary (71.73).
+    int result = -1;
     if (scenario->crossover_artifacts.count() > 0
         || scenario->hero_placeholders.size() > 0
         || scenario->heroes_status[player] > 0)
-        return gpGame->campaign.crossoverArrayIndex;
-    return -1;
+        result = gpGame->campaign.crossoverArrayIndex;
+    return result;
 }
 
 // Slot 12, inherited by the bonus list and the starting-hero option (the
@@ -948,6 +961,16 @@ const char* TCampaignStartCrossoverOption::GetIconDefName(void* campaignRecord,
 // own scenario but the last completed scenario sharing its crossover slot;
 // the map name itself is only available after re-opening the campaign file
 // and inflating that scenario's header.
+// Residual (85.98%): 19/19 blocks with 18 exact and the branch census
+// clean 11/11; the whole gap is ONE /Ob2 decision, and the call stream
+// names it outright. Retail CALLS `ScenarioStruct::LoadMapHeader`
+// (0x487d30) where our CL expands it - the pubseekoff through vtable slot
+// 8, the TGzInflateBuf constructor, `NewSMapHeader::Read` and the
+// inflate-buffer destructor all arrive inline as four base-only calls.
+// The source already WRITES the call, so this is not a missing statement;
+// it is the over-inline family, and both documented levers are closed
+// here (this lane adds no statement pins, and the Dreamcast roster names
+// no helper to split out of a Complete-only body).
 VA(0x00485530, 0x260)  // anchor-callee(CampaignHeaderStruct::Load 0x488880), retail-only
 std::string TCampaignStartCrossoverOption::GetText(void* campaignRecord,
                                                    int which) const
@@ -1707,8 +1730,21 @@ void TCampaignBrief::ScenarioStruct::MarkCrossoverHeroes(unsigned char* wanted)
 // window's reconstructions already use, and the two must stay compatible
 // until one of them is retired. The cast is compile-time only.
 //
-// Residual: no statement pins are used here, so this CL expands the bitset
-// throw paths retail leaves out of line.
+// Residual (39.42%): no statement pins are used here, so this CL expands
+// the bitset throw paths retail leaves out of line. 2026-09-06 the call
+// stream names the boundary EXACTLY: retail CALLS
+// `bitset<N>::operator[](size_t)` and `bitset<N>::reference::operator=(bool)`
+// as retained COMDATs at all three widths (145/144/129) and we expand both,
+// dragging the whole `basic_string(ptr,alloc) + out_of_range(string) +
+// _CxxThrowException` throw path inline at every store - which is the 76
+// against 45 blocks and the 11 base-only calls. Lane 26's suggested probe
+// is now MEASURED AND REJECTED: routing the three serialization loops and
+// the legacy copy through the Dinkumware wrappers retail calls -
+// `set(i, v)` for the stores and `test(i)` for the legacy read instead of
+// the `reference` idiom - costs 39.4200 -> 28.4500, because `set` is one
+// level SHALLOWER and lets VC6 expand more, not less. The `[]`/`reference`
+// spelling below is the closest reachable form; the residual is the
+// over-inline family and needs the statement pin this lane may not add.
 VA(0x00487e40, 0x586)  // anchor-caller(CampaignHeaderStruct::Load +0x379), retail-only
 void TCampaignBrief::ScenarioStruct::Read(TAbstractFile* infile,
                                           int numScenarios,
@@ -2947,64 +2983,70 @@ LegacyCampaignHero::LegacyCampaignHero()
 // and field_6c's two-byte placeholders. The pool loop indexes both +0x3c and
 // +0x4c off one strength-reduced byte offset because both outer vectors have
 // the same 16-byte element.
-// Residual (78.4646%): FOUR frame bytes and the register pair that rides
-// on them. 38/38 blocks with 28 exact, branches clean 16/16 and the call
-// streams AGREE outright; every remaining row is one of the ten size-only
-// blocks. Retail's frame is 0x10 and lands its second byte buffer in the
-// dead `outfile` parameter home at [ebp+0xb], which also gives `this` EBX
-// and leaves EDI free; ours takes [ebp-0x14] instead, so `this` gets EDI.
-// Tried and rejected: block-scoping the two buffers inside each of the
-// three counted runs DOES put a buffer at [ebp+0xb], but it buys three more
-// slots with it (frame 0x1c) and measures 78.4808 - inside the noise, and
-// the wrong direction on the frame. For-scoping the five loop counters is
-// byte-flat to the digit and kept only because it reads better.
+// 78.4646 -> 78.8138 (2026-09-05): retail uses TWO byte buffers, and the
+// split is readable straight off the stores - `isCheater` goes through
+// [ebp-1] and EVERY later byte write through [ebp+0xb], the dead `outfile`
+// parameter home. A second named char after the first write reproduces
+// that exactly: our compile now spends [ebp+0xb] the same way. The earlier
+// note read the same fact as "block-scope the two buffers inside each of
+// the three counted runs", which is the wrong shape (78.4808).
+// Residual (78.8138%): TWO frame dwords. 38/38 blocks with 28 exact,
+// branches clean 16/16 and the call streams AGREE outright; every
+// remaining row is one of the ten size-only blocks. Retail's frame is 0x10
+// and holds exactly three dwords (int_buffer plus ONE live counter pair),
+// ours 0x18 with five - VC6 gives each `for`-scoped counter its own slot
+// where retail reuses two. Measured and rejected: collapsing the five
+// counters onto a shared `i`/`j` pair at function scope, both with the
+// pair declared before and after the buffers (78.7965 each, 0.02 under
+// the kept spelling), and for-scoping them individually (byte-flat).
 VA(0x0048ae90, 0x370)  // link-order successor of LegacyCampaignHero's ctor; SCampaign::Load's mirror
 void SCampaign::Save(TAbstractFile* outfile)
 {
     char char_buffer;
+    char flag;
     int int_buffer;
 
     char_buffer = isCheater;
     outfile->Write(&char_buffer, sizeof(char_buffer));
-    char_buffer = secretActive;
-    outfile->Write(&char_buffer, sizeof(char_buffer));
-    char_buffer = currentMap;
-    outfile->Write(&char_buffer, sizeof(char_buffer));
-    char_buffer = currentCampaign;
-    outfile->Write(&char_buffer, sizeof(char_buffer));
-    char_buffer = numMapRegions;
-    outfile->Write(&char_buffer, sizeof(char_buffer));
-    char_buffer = crossoverArrayIndex;
-    outfile->Write(&char_buffer, sizeof(char_buffer));
-    char_buffer = briefingChoice;
-    outfile->Write(&char_buffer, sizeof(char_buffer));
+    flag = secretActive;
+    outfile->Write(&flag, sizeof(flag));
+    flag = currentMap;
+    outfile->Write(&flag, sizeof(flag));
+    flag = currentCampaign;
+    outfile->Write(&flag, sizeof(flag));
+    flag = numMapRegions;
+    outfile->Write(&flag, sizeof(flag));
+    flag = crossoverArrayIndex;
+    outfile->Write(&flag, sizeof(flag));
+    flag = briefingChoice;
+    outfile->Write(&flag, sizeof(flag));
 
     int_buffer = campaignFilename.length();
     outfile->Write(&int_buffer, sizeof(int_buffer));
     outfile->Write(campaignFilename.c_str(), campaignFilename.length());
     outfile->Write(campaignCompleted, sizeof(campaignCompleted));
 
-    char_buffer = mapScores.size();
-    outfile->Write(&char_buffer, sizeof(char_buffer));
+    flag = mapScores.size();
+    outfile->Write(&flag, sizeof(flag));
     for (unsigned int scenario = 0; scenario < mapScores.size();
          ++scenario) {
-        char_buffer = mapScores[scenario].completed;
-        outfile->Write(&char_buffer, sizeof(char_buffer));
+        flag = mapScores[scenario].completed;
+        outfile->Write(&flag, sizeof(flag));
         int_buffer = mapScores[scenario].days;
         outfile->Write(&int_buffer, sizeof(int_buffer));
         int_buffer = mapScores[scenario].score;
         outfile->Write(&int_buffer, sizeof(int_buffer));
-        char_buffer = mapScores[scenario].complete_order;
-        outfile->Write(&char_buffer, sizeof(char_buffer));
-        char_buffer = mapScores[scenario].index;
-        outfile->Write(&char_buffer, sizeof(char_buffer));
+        flag = mapScores[scenario].complete_order;
+        outfile->Write(&flag, sizeof(flag));
+        flag = mapScores[scenario].index;
+        outfile->Write(&flag, sizeof(flag));
     }
 
-    char_buffer = carryOverHeroes.size();
-    outfile->Write(&char_buffer, sizeof(char_buffer));
+    flag = carryOverHeroes.size();
+    outfile->Write(&flag, sizeof(flag));
     for (unsigned int pool = 0; pool < carryOverHeroes.size(); ++pool) {
-        char_buffer = carryOverHeroes[pool].size();
-        outfile->Write(&char_buffer, sizeof(char_buffer));
+        flag = carryOverHeroes[pool].size();
+        outfile->Write(&flag, sizeof(flag));
 
         for (unsigned int whichHero = 0;
              whichHero < carryOverHeroes[pool].size(); ++whichHero)
@@ -3021,8 +3063,8 @@ void SCampaign::Save(TAbstractFile* outfile)
         }
     }
 
-    char_buffer = field_6c.size();
-    outfile->Write(&char_buffer, sizeof(char_buffer));
+    flag = field_6c.size();
+    outfile->Write(&flag, sizeof(flag));
     for (unsigned int placeholder = 0; placeholder < field_6c.size();
          ++placeholder) {
         int_buffer = field_6c[placeholder];
