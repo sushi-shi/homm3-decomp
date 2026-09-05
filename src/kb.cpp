@@ -1497,15 +1497,9 @@ int oldmain()
                     TCampaignBrief::CampaignHeaderStruct campaignBrief(
                         campaign.GetCampaignFileName().c_str());
                     campaignBrief.Load();
-                    // Residual: retail runs two customcampaign.obj
-                    // SCampaign members over campaignBrief here - the
-                    // 1536 B body at 0x489820 before SaveGame and the
-                    // 112 B one at 0x48a2a0 after it. Both carve rows are
-                    // still unclaimed and neither DC name that fits
-                    // (give_custom_items / mark_campaign_map_won) is
-                    // proven on this image, so the two calls are left out
-                    // rather than written under a guessed identity.
+                    campaign.CompleteCurrentMap(&campaignBrief);
                     SaveGame(1);
+                    campaign.PlayScenarioEpilogue(&campaignBrief);
                     if ((campaign.currentCampaign == CAMPAIGN_ORDINAL_03
                          && campaign.CampaignComplete())
                         || (campaign.currentCampaign == CAMPAIGN_ORDINAL_18
@@ -3025,6 +3019,12 @@ CNetMsg::CNetMsg(eRS_Messages subType, unsigned long size)
 // CNetMsg base constructor already agrees at all three sites - expanded
 // twice, called once against the 0x4f2930 COMDAT - so this is the
 // budget running out one level deeper, not a spelling.
+// 2026-09-05: the trailing `||` now goes through an `unsigned char`
+// local, which is what gives retail's byte-wide `xor al,al` /
+// `mov al,1` instead of `xor eax,eax` / `mov eax,1` (79.0534 ->
+// 79.1102). The remaining epilogue difference is downstream of the same
+// register story: retail's EBX holds -1 and is dead by the compares, so
+// its three pops sit AHEAD of them and are shared between both arms.
 VA(0x004f2960, 0x37E)  // decorated identity (kb.h) + anchor-caller (CheckEndGame), dc 0xe3558
 unsigned char DisplayLCWinLoss(LossConditionStruct* lossCondition,
                                int* bGameWon, int* bGameLost,
@@ -3088,7 +3088,8 @@ unsigned char DisplayLCWinLoss(LossConditionStruct* lossCondition,
         break;
     }
 
-    return *bGameWon || *bGameLost;
+    unsigned char gameOver = *bGameWon || *bGameLost;
+    return gameOver;
 }
 
 // The re-entry latch CheckEndGame holds while it runs; its only five

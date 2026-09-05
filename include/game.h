@@ -1429,6 +1429,16 @@ public:
     // nameable at this earlier point in game.h's include graph; the receiver,
     // one-pointer ABI and prologue-video role are retail-byte proven.
     void PlayScenarioPrologue(void* campaignHeader);
+    // Retail 0x48a2a0, the prologue player's twin on the scenario's
+    // epilogue record; oldmain's end-of-campaign arm calls the two
+    // Complete-only members below on gpGame->campaign, 0x489820 before
+    // SaveGame(1) and this one after it. 0x489e20 is 0x489820's own tail
+    // call. Same opaque campaign-header parameter and the same reason,
+    // and all three names are role-based and provisional: the Dreamcast
+    // customcampaign.obj roster stops before them.
+    void CompleteCurrentMap(void* campaignHeader);
+    void PruneCrossoverHeroes(void* campaignHeader);
+    void PlayScenarioEpilogue(void* campaignHeader);
     // Retail 0x48b2e0 banks the selected starting option and applies the
     // campaign-specific setup overrides before the scenario stream is read.
     void ApplyBriefingChoice(int option);

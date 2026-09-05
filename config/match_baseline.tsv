@@ -488,7 +488,7 @@ army	?check_obstacle_attacks@army@@QAEEE@Z	100.0000	100.0000	100.0000	0x41f70	26
 army	?check_special_attack@army@@QAEEPAV1@@Z	100.0000	100.0000	100.0000	0x40500	49147539aa98
 army	?compute_attacker_bonus@army@@QBEHHEPAV1@EJ@Z	100.0000	100.0000	100.0000	0x43320	698523953542
 army	?consider_attack@army@@QAEXPBV1@JJ@Z	100.0000	100.0000	100.0000	0x48840	686954572466
-army	?do_attack@army@@QAEEPAV1@H@Z	98.8868	99.9962	99.9962	0x41610	1fa738e017fe
+army	?do_attack@army@@QAEEPAV1@H@Z	98.9251	99.9962	99.9962	0x41610	1fa738e017fe
 army	?do_attack@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x41cb0	0c17230627a2
 army	?do_fire_shield@army@@AAEXJ@Z	100.0000	100.0000	100.0000	0x409c0	3f772aa9df30
 army	?do_multi_head_attack@army@@QAEXIPAH0PAJ@Z	100.0000	100.0000	100.0000	0x40310	d1193b9e629e
@@ -983,6 +983,7 @@ customcampaign	??_GTAbstractFile@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x87dd0	-
 customcampaign	??_H@YGXPAXIHP6EX0@Z@Z	100.0000	100.0000	100.0000	0x13d0	-
 customcampaign	?ApplyBriefingChoice@SCampaign@@QAEXH@Z	100.0000	100.0000	100.0000	0x8b2e0	a359310356da
 customcampaign	?CampaignComplete@SCampaign@@QAEEXZ	100.0000	100.0000	100.0000	0x897d0	f23d701094f5
+customcampaign	?CompleteCurrentMap@SCampaign@@QAEXPAX@Z	0.0000	0.0000	0.0000	0x89820	75fcf15b7f94
 customcampaign	?FreeData@CampaignHeaderStruct@TCampaignBrief@@QAEXXZ	100.0000	100.0000	100.0000	0x887e0	9dfe11ce2969
 customcampaign	?GetAvailableScenarios@CampaignHeaderStruct@TCampaignBrief@@QBEXPAE@Z	100.0000	100.0000	100.0000	0x88f00	54417e832b4c
 customcampaign	?GetNumMaps@CampaignHeaderStruct@TCampaignBrief@@QBEHXZ	100.0000	100.0000	100.0000	0x88850	9b6d7dc6272c
@@ -991,12 +992,14 @@ customcampaign	?Load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	55.7915	55.7915	55.791
 customcampaign	?LoadMapHeader@ScenarioStruct@TCampaignBrief@@QAEXPAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@PAVNewSMapHeader@@H@Z	100.0000	100.0000	100.0000	0x87d30	3ede48bd4a11
 customcampaign	?LoadScenario@CampaignHeaderStruct@TCampaignBrief@@QAE_NHPAVNewSMapHeader@@@Z	100.0000	100.0000	100.0000	0x88810	40cf52fbb7ea
 customcampaign	?Play@MapTextStruct@TCampaignBrief@@QAEXXZ	82.8249	82.8249	82.8249	0x88fb0	abf4b7a12602
+customcampaign	?PlayScenarioEpilogue@SCampaign@@QAEXPAX@Z	100.0000	100.0000	100.0000	0x8a2a0	44199f541435
 customcampaign	?PlayScenarioPrologue@SCampaign@@QAEXPAX@Z	100.0000	100.0000	100.0000	0x8a270	f20101db493f
 customcampaign	?Read@TStreamBufFile@@UAEHPAXH@Z	100.0000	100.0000	100.0000	0x83f10	d4a8f9e13d4a
 customcampaign	?StartMusic@CampaignHeaderStruct@TCampaignBrief@@QAEXXZ	100.0000	100.0000	100.0000	0x88ee0	4daeb5fd6b1f
 customcampaign	?StartScenario@CampaignHeaderStruct@TCampaignBrief@@QAEXHH@Z	100.0000	100.0000	100.0000	0x894e0	00db9222128a
 customcampaign	?StartScenario@ScenarioStruct@TCampaignBrief@@QAEXPAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@H@Z	100.0000	100.0000	100.0000	0x884c0	1e966a01130f
 customcampaign	?Write@TStreamBufFile@@UAEHPBXH@Z	100.0000	100.0000	100.0000	0x83f30	651082a5fb27
+customcampaign	?_Destroy@?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@IAEXPAUtype_artifact@@0@Z	100.0000	100.0000	100.0000	0x4140	-
 customcampaign	?erase@?$vector@UCampaignScenarioInfo@@V?$allocator@UCampaignScenarioInfo@@@std@@@std@@QAEPAUCampaignScenarioInfo@@PAU3@0@Z	100.0000	100.0000	100.0000	0x8cdd0	-
 customcampaign	?erase@?$vector@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@V?$allocator@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@@2@@std@@QAEPAV?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@2@PAV32@0@Z	100.0000	100.0000	100.0000	0x8ca30	-
 customcampaign	?erase@?$vector@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@V?$allocator@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@@2@@std@@QAEPAV?$vector@Vhero@@V?$allocator@Vhero@@@std@@@2@PAV32@0@Z	100.0000	100.0000	100.0000	0x8c500	-
@@ -1011,8 +1014,8 @@ customcampaign	?insert@?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@QAEXPAVhe
 customcampaign	?size@?$vector@UCampaignScenarioInfo@@V?$allocator@UCampaignScenarioInfo@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x8b440	-
 customcampaign	?size@?$vector@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@V?$allocator@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@@2@@std@@QBEIXZ	100.0000	100.0000	100.0000	0xaf4e0	-
 customcampaign	?size@?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x8b470	-
+customcampaign	SCampaign_PruneCrossoverHeroes	0.0000	0.0000	0.0000	0x89e20	8d43114d1ffc
 customcampaign	TCampaignBrief_CampaignHeaderStruct_Load	0.0000	0.0000	0.0000	0x88880	47fb4b8d9098
-customcampaign	__h3cg$customcampaign$vector_destroy$type_artifact	0.0000	100.0000	100.0000	0x4140	-
 customcampaignwindow	??0TCustomCampaignWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x827b0	893291fd4aaf
 customcampaignwindow	??1TCustomCampaignWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x82f10	4e3abaca1d97
 customcampaignwindow	??RCampaignHeaderPointerLess@@QBE_NPAUCampaignHeaderStruct@TCampaignBrief@@0@Z	100.0000	100.0000	100.0000	0x83240	0625172778ee
@@ -1548,7 +1551,7 @@ game	?MineTypesOwned@game@@QAEHHH@Z	100.0000	100.0000	100.0000	0xbae70	7cef522cb
 game	?NewMap@game@@QAEEPBD0PAHH@Z	99.4000	99.4000	99.4000	0xc0520	7759a62b2368
 game	?NewMap@game@@QAEXPAVTAbstractFile@@PAHPAVNewMapCampaignContext@@H@Z	99.5041	100.0000	100.0000	0xbfe70	d45f6040108c
 game	?NextHero@playerData@@QAEHXZ	100.0000	100.0000	100.0000	0xbaa40	bbee40b3fef4
-game	?NextPlayer@game@@QAEXXZ	81.3343	83.3584	83.3584	0xc6fe0	c7d620e21950
+game	?NextPlayer@game@@QAEXXZ	81.3343	83.3584	83.3584	0xc6fe0	4b3560fe742d
 game	?NextTown@playerData@@QAEHXZ	100.0000	100.0000	100.0000	0xbab40	26cceeec0c05
 game	?NumOfGivenArtifact@playerData@@QAEHH@Z	100.0000	100.0000	100.0000	0xbabd0	844a551634f3
 game	?PerDay@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc7fe0	cd941bf0bd89
@@ -2000,7 +2003,7 @@ kb	?CheckEndGame@@YIXH@Z	89.4452	89.4452	89.4452	0xf2ce0	f7599ef47a4c
 kb	?CleanUpMenus@@YIXXZ	100.0000	100.0000	100.0000	0xf4b50	5ad85acac0be
 kb	?CongratsWait@@YIXHPADHHH@Z	96.8467	96.8467	96.8467	0xf3ab0	767bdf8cc153
 kb	?CreditsWait@@YIXXZ	95.2930	95.2930	95.2930	0xedda0	e424e5d34744
-kb	?DisplayLCWinLoss@@YIEPAVLossConditionStruct@@PAH1E@Z	79.0534	79.0534	79.0534	0xf2960	ffccd13bc798
+kb	?DisplayLCWinLoss@@YIEPAVLossConditionStruct@@PAH1E@Z	79.1107	79.1107	79.1107	0xf2960	2fdab48e3629
 kb	?DisplayVCWinLoss@@YI_NAAVVictoryConditionStruct@@AAH1_N@Z	94.9521	94.9521	94.9521	0xf15e0	0fa75f4e1fc3
 kb	?DoCampaignWindow@@YIEXZ	98.3910	98.3910	98.3910	0xf00a0	68ef1062200d
 kb	?DoMultiPlayerWindow@@YIHXZ	100.0000	100.0000	100.0000	0xf0590	732e54afec3c
@@ -2041,7 +2044,7 @@ kb	?get_base_map_score@game@@QAEFXZ	100.0000	100.0000	100.0000	0xf3e30	08a36f004
 kb	?get_map_score@game@@QAEFXZ	100.0000	100.0000	100.0000	0xf3eb0	cd6028d198ab
 kb	?get_quickview_size@@YIXPBDPAH1@Z	100.0000	100.0000	100.0000	0xf62a0	c57fea7e1252
 kb	?handle_click@type_normal_dialog_frame@@UAEEEE@Z	99.9475	99.9475	99.9475	0xf0b20	7355af0f0d7b
-kb	?oldmain@@YIHXZ	73.0477	73.0477	73.0477	0xee3e0	e053644d0c37
+kb	?oldmain@@YIHXZ	73.3528	73.3528	73.3528	0xee3e0	564d2c991100
 kb	?set@type_dialog_icon@@QAEXW4EGameResource@@J@Z	99.1667	99.1667	99.1667	0xf4eb0	06cb359cd3d3
 kbwin	?AppAbout@@YGHPAUHWND__@@IIJ@Z	100.0000	100.0000	100.0000	0xf8140	b6d6a9ba7939
 kbwin	?AppCommand@@YIJPAUHWND__@@IIJ@Z	100.0000	100.0000	100.0000	0xf8060	ab51fe2b9295
@@ -2560,7 +2563,7 @@ remote	?DrawWindow@CAnimatedDlg@@UAEXEHH@Z	100.0000	100.0000	100.0000	0x154e90	0
 remote	?GetAbortPopupMsg@CNetMsgHandler@@UAEPAVCNetMsg@@XZ	100.0000	100.0000	100.0000	0x157900	f1884c1fd4e7
 remote	?GetNetMsgHandler@CDPlayHeroes@@QAEPAVCNetMsgHandler@@XZ	100.0000	100.0000	100.0000	0x1537a0	0e9b8f9bb05a
 remote	?GetRemoteData@@YIPAVCNetMsg@@EPAE@Z	100.0000	100.0000	100.0000	0x154400	05d8f053fd87
-remote	?GetRemoteData@CDPlayHeroes@@QAEPAVCNetMsg@@EPAE@Z	80.8571	80.8571	80.8571	0x153040	7cf0cac3aa0b
+remote	?GetRemoteData@CDPlayHeroes@@QAEPAVCNetMsg@@EPAE@Z	86.2571	86.2571	86.2571	0x153040	ed979fd69cf4
 remote	?HandleMPlayerLaunch@@YIEXZ	96.0500	98.3167	98.3167	0x155aa0	fbbe11f41dd4
 remote	?HandleNetMsg@CNetMsgHandler@@UAEPAVCNetMsg@@PAV2@@Z	100.0000	100.0000	100.0000	0x157920	9b3bbef3a17e
 remote	?HandleNetMsg@CNetMsgHandlerPause@@UAEPAVCNetMsg@@PAV2@@Z	100.0000	100.0000	100.0000	0x155180	4688fd9ad604
@@ -3058,7 +3061,7 @@ singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100
 # 2026-08-27 (round 3): the interim full build re-banked the transient
 # peak a third time; re-lowered with the round's bodies landed. Same
 # scheduler flap, same recovery path.
-singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0	66eb0a0e15c8
+singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0	66eb0a0e15c8
 singleselectionwindow	?OnMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2193	90.2193	90.2193	0x189710	3ad2be3935a3
 singleselectionwindow	?OnNameClick@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x18b620	ef174e28edf8
 singleselectionwindow	?OnNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	97.5366	97.5366	97.5366	0x18b510	862e2a9c058b
@@ -3430,7 +3433,7 @@ towngatewindow	??_GTTownGateWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1c234
 towngatewindow	?DoModal@TTownGateWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1c2770	8268ead8aeed
 towngatewindow	?TownGateSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1c2980	b80f91f9dbde
 towngatewindow	?UpdateTownLocator@TTownGateWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1c25b0	9892c3b6bfa4
-towngatewindow	?WindowHandler@TTownGateWindow@@UAEHPAVmessage@@@Z	69.8969	69.8969	69.8969	0x1c2840	4d6ce3982e5e
+towngatewindow	?WindowHandler@TTownGateWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1c2840	92eb8ae964b7
 towngatewindow	?insert@?$vector@PAVwidget@@V?$allocator@PAVwidget@@@std@@@std@@QAEXPAPAVwidget@@IABQAV3@@Z	32.0621	32.0621	32.0621	0x1c2400	-
 townmgr	??0TBlacksmithWindow@@QAE@HH@Z	100.0000	100.0000	100.0000	0x1d1360	777db8ccc983
 townmgr	??0TBuyBuildWindow@@QAE@HHH@Z	100.0000	100.0000	100.0000	0x1d55c0	97dccb7f8a0f
