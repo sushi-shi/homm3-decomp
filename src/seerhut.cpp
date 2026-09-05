@@ -3396,3 +3396,10 @@ void TSeerHut::read(TAbstractFile* infile)
 
 // COMDAT pairing: Hstd on the char instantiation, mnemonic agreement 1.000.
 VA_COMPGEN(0x00574d10, 0x120, BASIC_STRING_CONCAT, char)
+
+// COMDAT pairing: basic_string<char>'s scalar deleting destructor, agreement
+// 1.000 at an exactly equal 86-byte extent. The body is _Tidy expanded in
+// place - the reference-count byte at `_Ptr[-1]`, saturating at 0xff, freed
+// when it reaches zero - ahead of the delete, which no other ??_G in the
+// image looks like.
+VA_COMPGEN(0x004b7080, 0x56, SCALAR_DELETING_DTOR, basic_string)

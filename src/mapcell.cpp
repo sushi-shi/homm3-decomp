@@ -9508,3 +9508,9 @@ VA_COMPGEN(0x00507ad0, 0x2F9, VECTOR_INSERT, TQuestGuard)
 
 // COMDAT pairing: bitset10::set, mnemonic agreement 1.000.
 VA_COMPGEN(0x00506820, 0x60, BITSET_SET, bitset10)
+
+// COMDAT pairing: vector<CMapObjectData*>::clear, agreement 1.000 at an
+// exactly equal 61-byte extent. The 4-byte element stride of its copy loop
+// is the pointer element, and CMapObjectData is this header's type, so no
+// other compiland can be the owner.
+VA_COMPGEN(0x0048b4a0, 0x3D, VECTOR_CLEAR, CMapObjectData)
