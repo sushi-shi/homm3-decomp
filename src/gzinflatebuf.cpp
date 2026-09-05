@@ -274,3 +274,30 @@ int TGzInflateBuf::read_byte()
         throw TDataError();
     return c;
 }
+
+// COMDAT pairing: the two implicit copy constructors of the game's own
+// runtime_error family, made by the throw sites that copy an exception into
+// its exception object. exceptions.h already cited both bodies as its own
+// corroboration for the TDebugBreak-as-separate-empty-base layout - "0x41b7b0
+// and 0x41b920 both open by copying the byte at `[src+0x1d]` into `[dst+0x1d]`
+// before forwarding to `exception::exception(const exception&)` and the string
+// at +0xc" - so the class and the role were settled before this claim; what
+// was missing was the address split. Content sizes settle it: this TU emits
+// the two copies at exactly 361 and 367 bytes, which are exactly the two carve
+// extents, and the wider one is TAllocationFailure's because it carries the
+// extra TRuntimeError subobject. Mnemonic agreement corroborates the same
+// assignment at 0.975 and 0.996.
+// COMDAT pairing: std::runtime_error's `const string&` constructor - the base
+// this family's own constructors call, and the one exceptions.h has named
+// since it decoded the throw records ("0x41ba90 (354 B) is
+// std::runtime_error::runtime_error(const string&)'s COMDAT"). Retail settles
+// both halves of that sentence by itself: the body installs vftable 0x645640,
+// whose RTTI Complete Object Locator reads `.?AVruntime_error@std@@`, and it
+// reaches `??0exception@@QAE@ABQBD@Z` - the const char* form that only
+// `runtime_error(const string&) : exception("") , _Str(_S)` produces, where
+// the copy constructor beside it takes exception's copy form. This TU emits it
+// at exactly 354 bytes against the copy's 345, so the one-claim group binds on
+// size with no ambiguity either way.
+VA_COMPGEN(0x0041ba90, 0x162, CLASS_CTOR, runtime_error)
+VA_COMPGEN(0x0041b7b0, 0x169, IMPLICIT_COPY_CTOR, TRuntimeError)
+VA_COMPGEN(0x0041b920, 0x16F, IMPLICIT_COPY_CTOR, TAllocationFailure)

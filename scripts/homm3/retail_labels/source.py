@@ -255,6 +255,7 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "STD_UNGUARDED_PARTITION", "STD_UNGUARDED_INSERT",
                  "STD_COPY_BACKWARD", "STD_FILL",
                  "TREE_ERASE_ITERATOR", "TREE_ERASE_RANGE",
+                 "TREE_LBOUND", "TREE_UBOUND",
                  "DEQUE_ERASE", "VECTOR_RESERVE", "VECTOR_CLEAR",
                  "EXCEPTION_DORAISE", "FUNCTOR_CALL",
                  "DEQUE_ITERATOR_ADD_ASSIGN",
@@ -833,6 +834,15 @@ def _demangle_key(mangled: str):
         return f"{tree_owner.lower()}@tree_buynode"
     if mangled.startswith("?_Erase@?$_Tree@") and tree_owner:
         return f"{tree_owner.lower()}@tree_erase"
+    # The two bound searches. Same class, same 73-byte shape, and they
+    # differ only in which way round the key compare runs, so they are
+    # separate kinds for the same reason `_Copy` and `erase` are: a
+    # two-member group would have to be told apart by size alone, and
+    # here the sizes are equal.
+    if mangled.startswith("?_Lbound@?$_Tree@") and tree_owner:
+        return f"{tree_owner.lower()}@tree_lbound"
+    if mangled.startswith("?_Ubound@?$_Tree@") and tree_owner:
+        return f"{tree_owner.lower()}@tree_ubound"
     # ...and the PUBLIC `erase`, which is overloaded on one class: the
     # range form takes two iterators (`V312@0@Z`), the single form one
     # (`V312@@Z`). Two kinds rather than a two-member overload group, for
@@ -1311,6 +1321,8 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                                or "$tree_copy$" in r["name"]
                                or "$tree_copy_node$" in r["name"]
                                or "$tree_erase$" in r["name"]
+                               or "$tree_lbound$" in r["name"]
+                               or "$tree_ubound$" in r["name"]
                                or "$tree_erase_iterator$" in r["name"]
                                or "$tree_erase_range$" in r["name"]
                                or "$deque_erase$" in r["name"]
@@ -1520,6 +1532,7 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             continue
         tree_or_deque = next(
             (kind for kind in ("tree_erase_iterator", "tree_erase_range",
+                               "tree_lbound", "tree_ubound",
                                "deque_erase")
              if f"${kind}$" in row["name"]), None)
         if tree_or_deque is not None:

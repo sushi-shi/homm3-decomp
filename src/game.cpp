@@ -671,6 +671,47 @@ void ImmMouseWindowMoved()
 // corroborates the helper boundary; the Immersion integration is retail-only.
 VA_COMPGEN(0x004B7330, 0xA3, TREE_CONST_ITERATOR_INC, CImmEnclosure)
 
+// TAdventureMapWindow's slot-2 Close override (0x4014d0) reaches this body as
+// `mov ecx,edi / call 0x4b6e40 / push edi / call operator delete` on its owned
+// +0x9c member - the split form of `delete`, which types 0x4b6e40 as that
+// member's destructor. The implementation destructor is inlined here as
+// retail's only copy, which is what puts the whole
+// map<CImmEnclosure*, RECT>::erase(const key_type&) chain in this body:
+// _Ubound out of line at 0x4b7e70, lower_bound at 0x4b79b0, the discarded
+// _Distance walk over the claimed const_iterator::_Inc, and erase(first, last)
+// at 0x4b7200. The `_Pairii(lower_bound, upper_bound)` argument pair evaluates
+// right to left, so upper_bound lands first; the count _Distance returns is
+// dead because the caller drops erase's return value.
+//
+// Residual (44.8%): retail carries a C++ EH frame here and this compile does
+// not, which costs the prologue, the epilogue and the two out-of-line
+// iterator helpers retail calls (the 14-byte iterator ctor at 0x4b7da0 and
+// the 25-byte operator== at 0x4b73e0, both expanded here). The frame is not
+// decoration - it is the whole residual, and retail's own EH data says what
+// produces it. FuncInfo 0x64cec8 has one unwind state whose action (0x62b6a0)
+// is `mov ecx,[ebp-0x20] / jmp 0x4b7020`, handing the IMPLEMENTATION pointer
+// to a 19-byte body that is only `if (+0) { if (+4) delete +4; }`. An
+// unwind that DESTROYS a sub-object is not what a delete-expression emits;
+// it is what a destructor body emits while a base or member is still alive.
+// So the implementation is really two levels - a sub-object holding the
+// owned-flag/enclosure pair, and a derived body holding the erase - and
+// 0x4b7020 is that sub-object's own destructor.
+// TRIED AND REJECTED: modelling it that way. Splitting the class in two
+// (either base or member) is correct against the EH data and scores 14.62,
+// because VC6 then refuses to expand the EH-introducing implementation
+// destructor into this EH-less caller and emits a plain call instead. That
+// refusal is the wall, not the budget: a 16-statement `if (0)` carrier in
+// this body left the split version byte-flat to the digit, so no amount of
+// caller mass buys the expansion back. The flat spelling below is what this
+// compiler can express; the two-level model is the better reading and needs
+// a lever that reaches the EH-frame decision.
+VA(0x004b6e40, 0xE3)  // anchor-callee (TAdventureMapWindow::Close), retail-only
+TImmMouseEffect::~TImmMouseEffect()
+{
+    if (m_created)
+        delete m_impl;
+}
+
 // Retail-only HeroExtra reset used by game::SetupOrigData.  No Dreamcast
 // procedure row names it; the receiver layout and sole caller prove the role,
 // so the address remains in the source spelling.
@@ -18520,7 +18561,7 @@ VA_COMPGEN(0x0045c200, 0x53E, TREE_ERASE_ITERATOR, type_map_hero_info)
 // with 0x91 (145). The claim therefore moves here: game.obj and rmg.obj are
 // the only two that emit `?_Xran@?$bitset@$0IB@@`, customcampaign.obj does
 // not emit it at all.
-VA_COMPGEN(0x0048edf0, 0xC8, BITSET_XRAN, Bitset129)
+VA_COMPGEN(0x0048edf0, 0xCB, BITSET_XRAN, Bitset129)
 
 // COMDAT pairing: vector<vector<hero>>::operator=, decided by its own callee
 // list: it calls the vector<hero>::operator= claimed at 0x5ff30, which is
@@ -18562,7 +18603,60 @@ VA_COMPGEN(0x0045fdc0, 0x9C, STD_CONSTRUCT, type_artifact_vector)
 VA_COMPGEN(0x0045f7b0, 0x59, VECTOR_DTOR, type_artifact_vector)
 VA_COMPGEN(0x0048caa0, 0x38, VECTOR_DESTROY, type_artifact_vector)
 
+// COMDAT pairing: vector<vector<type_artifact>>::operator=, the artifact twin
+// of the hero-pool assignment claimed at 0x45f5e0 above. Both compile to the
+// same 461 bytes because the outer assignment differs only in which inner
+// operator= it calls per element - which is also why /OPT:ICF could not fold
+// them - and 0x45f810 is the copy whose per-element callee is the
+// vector<type_artifact> assignment, mnemonic agreement 0.992.
+VA_COMPGEN(0x0045f810, 0x1CD, VECTOR_COPY_ASSIGN, type_artifact_vector)
+
 // COMDAT pairing: vector<type_university>::_Ucopy. Five instantiations of
 // _Ucopy resemble this address; type_university wins on agreement (0.907
 // against 0.810 for the next) and `ret 0xc` matches its three pointers.
 VA_COMPGEN(0x00434c70, 0x49, VECTOR_UCOPY, type_university)
+
+// COMDAT pairing: map<CImmEnclosure*, RECT>::erase, both overloads, newly
+// emitted by the TImmMouseEffect destructor above. The chain is closed on
+// both sides: the range overload at 0x4b7200 is reached from that destructor
+// (0x4b6eea) and from the already-claimed tree destructor at 0x4b61f0
+// (0x4b6204, `erase(begin(), end())`), and it is the ONLY caller of 0x4b74a0
+// (0x4b72fd) - exactly `while (_F != _L) erase(_F++)`. Sizes corroborate
+// independently: resourcemanager's TCacheMapKey tree, the other pointer-keyed
+// map in the tree, carries this same pair at 0x50F and 0x121.
+VA_COMPGEN(0x004b7200, 0x121, TREE_ERASE_RANGE, CImmEnclosure)
+VA_COMPGEN(0x004b74a0, 0x50F, TREE_ERASE_ITERATOR, CImmEnclosure)
+
+// COMDAT pairing: out_of_range's `const string&` constructor - the overload
+// lane 17 identified at this address and then had to leave unclaimed, because
+// every unit emitting it also emits the copy constructor and the two zip by
+// COFF order against an opposite RVA order (0x4700 copy, 0x487bd0 string).
+// The join's own count-mismatch path resolves it without touching the tooling:
+// one claim against a two-name group falls through to an EXACT content-size
+// match, and the sizes are unambiguous in both directions - the string form is
+// 352 bytes and the copy form 343, matching the two carve extents exactly.
+// game.obj is claimed rather than customcampaign.obj because customcampaign
+// emits only the copy; the COMDAT itself is identical wherever it appears,
+// which is why /OPT:ICF left one retail copy for the whole link.
+VA_COMPGEN(0x00487bd0, 0x160, CLASS_CTOR, out_of_range)
+
+// COMDAT pairing: the rest of map<CImmEnclosure*, RECT>'s out-of-line tree
+// surface, reached from the TImmMouseEffect destructor above. _Lbound and
+// _Ubound are the same 73 bytes and differ only in which way round they
+// compare, which is exactly how <xtree> writes them and is decisive here:
+// 0x4b7d50 is `cmp [node+0xc], key / jae` = `key_compare(_Key(_X), _Kv)`,
+// _Lbound's polarity, and 0x4b7e70 is `cmp key, [node+0xc] / jae` =
+// `key_compare(_Kv, _Key(_X))`, _Ubound's. The call graph corroborates both
+// independently: 0x4b7d50 has exactly one caller, the out-of-line lower_bound
+// at 0x4b79b0, while 0x4b7e70 is called straight from the destructor, which
+// is where upper_bound is expanded. _Erase is erase(iterator, iterator)'s
+// whole-tree arm.
+//
+// NOT claimed here: 0x4b6f60, the 190-byte map<int, type_map_hero_info>
+// constructor this unit also emits. The name is already proven at 0x45bf70 in
+// campaignbrief, so retail carries two un-folded copies of one COMDAT and only
+// the first can hold the label; a second claim is refused as a duplicate
+// proven name, which is the delinker working correctly.
+VA_COMPGEN(0x004b79d0, 0x7E, TREE_ERASE, CImmEnclosure)
+VA_COMPGEN(0x004b7d50, 0x49, TREE_LBOUND, CImmEnclosure)
+VA_COMPGEN(0x004b7e70, 0x49, TREE_UBOUND, CImmEnclosure)

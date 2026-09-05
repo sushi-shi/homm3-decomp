@@ -105,6 +105,16 @@
 # vptr / ret`) followed by 0x90 padding, each storing its own class's
 # vftable and each allocating exactly the size event_record.h models for
 # that class (0x18/0x18/0x10/0x10/0x18/0x20/0x18/0x10/0x1c/0x0c). 11948 rows.
+# BOUNDARY CORRECTION 2026-09-05: ten bitset<N>::_Xran throw helpers were
+# carved 3 bytes short at 200 B. Retail's bytes at entry+200 are `5f 5e 5b`
+# (pop edi / pop esi / pop ebx) followed by five 0x90 alignment bytes, so the
+# true extent is 203 B and the next carved entry starts at +208 in every case.
+# Proof of class: all ten share the identical `55 8b ec 6a ff 68 <handler>`
+# EH prologue and `5f 5e 5b` epilogue with the seven _Xran bodies the carve
+# already sized 203 (0xd1850, 0xd1c80, 0xd2090, 0xd2610, 0xd26e0, 0xd4eb0,
+# 0xd5000), which are byte-exact in game.cpp at that size. Rows corrected:
+# 0x4410, 0x1b410, 0x346d0, 0x34ad0, 0x4d400, 0x8d9a0, 0x8da70, 0x8edf0,
+# 0x116e40, 0x117680. Row count unchanged.
 rva	size
 0x1000	89
 0x1060	96
@@ -160,7 +170,7 @@ rva	size
 0x4140	3
 0x4150	161
 0x4200	521
-0x4410	200
+0x4410	203
 0x44e0	345
 0x4640	29
 0x4660	33
@@ -326,7 +336,7 @@ rva	size
 0x1b1c0	135
 0x1b250	230
 0x1b340	194
-0x1b410	200
+0x1b410	203
 0x1b4e0	32
 0x1b500	651
 0x1b7b0	361
@@ -602,9 +612,9 @@ rva	size
 0x34620	35
 0x34650	38
 0x34680	77
-0x346d0	200
+0x346d0	203
 0x347a0	814
-0x34ad0	200
+0x34ad0	203
 0x34ba0	67
 0x34bf0	61
 0x34c30	51
@@ -898,7 +908,7 @@ rva	size
 0x4d360	22
 0x4d380	96
 0x4d3e0	23
-0x4d400	200
+0x4d400	203
 0x4d4d0	55
 0x4d510	32
 0x4d530	69
@@ -1784,8 +1794,8 @@ rva	size
 0x8d910	41
 0x8d940	38
 0x8d970	44
-0x8d9a0	200
-0x8da70	200
+0x8d9a0	203
+0x8da70	203
 0x8db40	36
 0x8db70	36
 0x8dba0	49
@@ -1817,7 +1827,7 @@ rva	size
 0x8ece0	55
 0x8ed20	37
 0x8ed50	146
-0x8edf0	200
+0x8edf0	203
 0x8eec0	1005
 0x8f2b0	819
 0x8f5f0	63
@@ -3494,12 +3504,12 @@ rva	size
 0x116ae0	299
 0x116c10	522
 0x116e20	28
-0x116e40	200
+0x116e40	203
 0x116f10	29
 0x116f30	343
 0x117090	1342
 0x1175d0	173
-0x117680	200
+0x117680	203
 0x117750	33
 0x117780	163
 0x117830	568
