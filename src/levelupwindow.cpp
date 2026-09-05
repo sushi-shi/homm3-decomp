@@ -401,6 +401,17 @@ TLevelUpWindow::~TLevelUpWindow()
 // push 4; push 6; mov ecx,eax; call send_message`), where the fused
 // `GetWidget(id)->send_message(a,b)` spelling pushes the arguments first. Each
 // widget is bound to a pointer local below to reproduce retail's order.
+// EXACT 2026-09-05 (77.73 -> 100.00): the "tail topology" above was the
+// RETURN STRUCTURE. Retail shares one `return 0` epilogue (+0x10eb) among
+// the KEY breaks, the mouse-move fallthrough, the non-widget id, the codeX
+// default and the right-qualifier test, and keeps a second copy only at the
+// codeY switch's fallthrough (+0x11dc): an if / else-if / else-if chain
+// over msg->id with ONE trailing `return 0;`, the RIGHT_SELECT arm falling
+// through into DESELECT (retail's chain fallthrough arm at +0x1109 runs into
+// the qualifier test), `break` where the arms bail, and one `return 0;`
+// after the codeY switch. Seven separate `return 0;` statements had cost
+// seven duplicated epilogues AND made VC6 cross-jump the four
+// enable/DrawWindow/`return 1` tails that retail keeps separate.
 VA(0x004f9780, 0x440)  // vtable slot 9+linkorder, dc 0xe8c64
 int TLevelUpWindow::WindowHandler(message* msg)
 {
@@ -462,86 +473,80 @@ int TLevelUpWindow::WindowHandler(message* msg)
             return MESSAGE_DISPATCH_CONSUME;
         }
         }
-        return 0;
-    }
-
-    if (msg->id == MESSAGE_MOUSE_MOVE) {
+    } else if (msg->id == MESSAGE_MOUSE_MOVE) {
         int hoverID = gpLevelUpWindow->findWidget(msg->mouseX, msg->mouseY);
         if (hoverID != lastIMHoverID) {
             lastIMHoverID = hoverID;
             if (hoverID != -1)
                 gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
         }
-        return 0;
-    }
+    } else if (msg->id == MESSAGE_WIDGET) {
+        switch (msg->codeX) {
+        case widget::WIDGET_RIGHT_SELECT:
+            switch (msg->codeY) {
+            case SKILLICON_1_ID:
+            case SKILLBORDER_1_ID:
+                NormalDialog(LevelUpSkillName(gpLevelUpWindow->left_skill),
+                    4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                break;
+            case SKILLICON_2_ID:
+            case SKILLBORDER_2_ID:
+                NormalDialog(LevelUpSkillName(gpLevelUpWindow->right_skill),
+                    4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                break;
+            }
+            // The right-click arm shares the selection tail below.
+        case widget::WIDGET_DESELECT:
+            if (msg->qualifier & MESSAGE_MODIFIER_RIGHT)
+                break;
 
-    if (msg->id != MESSAGE_WIDGET)
-        return 0;
+            switch (msg->codeY) {
+            case SKILLICON_1_ID:
+            case SKILLBORDER_1_ID: {
+                widget* rightBorder =
+                    gpLevelUpWindow->GetWidget(SKILLBORDER_2_ID);
+                widget* leftBorder =
+                    gpLevelUpWindow->GetWidget(SKILLBORDER_1_ID);
+                leftBorder->send_message(
+                    widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
+                if (rightBorder)
+                    rightBorder->send_message(
+                        widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
+                gpLevelUpWindow->Selected = SKILLICON_1_ID;
+                widget* accept =
+                    gpLevelUpWindow->GetWidget(LEVELUP_ACCEPT_ID);
+                accept->enable(1);
+                gpLevelUpWindow->DrawWindow(1, 0xffff0001, 0xffff);
+                return MESSAGE_DISPATCH_CONSUME;
+            }
 
-    switch (msg->codeX) {
-    case widget::WIDGET_DESELECT:
-        break;
+            case SKILLICON_2_ID:
+            case SKILLBORDER_2_ID: {
+                widget* leftBorder =
+                    gpLevelUpWindow->GetWidget(SKILLBORDER_1_ID);
+                leftBorder->send_message(
+                    widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
+                widget* rightBorder =
+                    gpLevelUpWindow->GetWidget(SKILLBORDER_2_ID);
+                rightBorder->send_message(
+                    widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
+                gpLevelUpWindow->Selected = SKILLICON_2_ID;
+                widget* accept =
+                    gpLevelUpWindow->GetWidget(LEVELUP_ACCEPT_ID);
+                accept->enable(1);
+                gpLevelUpWindow->DrawWindow(1, 0xffff0001, 0xffff);
+                return MESSAGE_DISPATCH_CONSUME;
+            }
 
-    case widget::WIDGET_RIGHT_SELECT:
-        switch (msg->codeY) {
-        case SKILLICON_1_ID:
-        case SKILLBORDER_1_ID:
-            NormalDialog(LevelUpSkillName(gpLevelUpWindow->left_skill),
-                4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-            break;
-        case SKILLICON_2_ID:
-        case SKILLBORDER_2_ID:
-            NormalDialog(LevelUpSkillName(gpLevelUpWindow->right_skill),
-                4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-            break;
+            case LEVELUP_ACCEPT_ID:
+                msg->id = MESSAGE_WIDGET;
+                gpWindowManager->dialogReturn = gpLevelUpWindow->Selected;
+                msg->codeY = widget::WIDGET_END_DIALOG;
+                msg->codeX = widget::WIDGET_END_DIALOG;
+                return MESSAGE_DISPATCH_FORWARD;
+            }
+            return 0;
         }
-        break;
-
-    default:
-        return 0;
-    }
-
-    if (msg->qualifier & MESSAGE_MODIFIER_RIGHT)
-        return 0;
-
-    switch (msg->codeY) {
-    case SKILLICON_1_ID:
-    case SKILLBORDER_1_ID: {
-        widget* rightBorder = gpLevelUpWindow->GetWidget(SKILLBORDER_2_ID);
-        widget* leftBorder = gpLevelUpWindow->GetWidget(SKILLBORDER_1_ID);
-        leftBorder->send_message(
-            widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
-        if (rightBorder)
-            rightBorder->send_message(
-                widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
-        gpLevelUpWindow->Selected = SKILLICON_1_ID;
-        widget* accept = gpLevelUpWindow->GetWidget(LEVELUP_ACCEPT_ID);
-        accept->enable(1);
-        gpLevelUpWindow->DrawWindow(1, 0xffff0001, 0xffff);
-        return MESSAGE_DISPATCH_CONSUME;
-    }
-
-    case SKILLICON_2_ID:
-    case SKILLBORDER_2_ID: {
-        widget* leftBorder = gpLevelUpWindow->GetWidget(SKILLBORDER_1_ID);
-        leftBorder->send_message(
-            widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
-        widget* rightBorder = gpLevelUpWindow->GetWidget(SKILLBORDER_2_ID);
-        rightBorder->send_message(
-            widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
-        gpLevelUpWindow->Selected = SKILLICON_2_ID;
-        widget* accept = gpLevelUpWindow->GetWidget(LEVELUP_ACCEPT_ID);
-        accept->enable(1);
-        gpLevelUpWindow->DrawWindow(1, 0xffff0001, 0xffff);
-        return MESSAGE_DISPATCH_CONSUME;
-    }
-
-    case LEVELUP_ACCEPT_ID:
-        msg->id = MESSAGE_WIDGET;
-        gpWindowManager->dialogReturn = gpLevelUpWindow->Selected;
-        msg->codeY = widget::WIDGET_END_DIALOG;
-        msg->codeX = widget::WIDGET_END_DIALOG;
-        return MESSAGE_DISPATCH_FORWARD;
     }
 
     return 0;
