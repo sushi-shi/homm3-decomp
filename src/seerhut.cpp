@@ -3166,3 +3166,6 @@ std::string TSeerHut::SeerHutFn_005743E0(int player)
 
     return text;
 }
+
+// COMDAT pairing: Hstd on the char instantiation, mnemonic agreement 1.000.
+VA_COMPGEN(0x00574d10, 0x120, BASIC_STRING_CONCAT, char)

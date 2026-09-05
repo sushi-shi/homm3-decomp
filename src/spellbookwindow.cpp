@@ -1374,3 +1374,7 @@ void std::__pop_heap_aux(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookW
     // @stub
 }
 #endif
+
+// COMDAT pairing: std::_Sort<TSpellbookEntry>, agreement 1.000 over all 235
+// instructions. Sits beside the unit's _Insertion_sort_1 over the same element.
+VA_COMPGEN(0x0059dc90, 0x260, STD_SORT, tspellbookentry)
