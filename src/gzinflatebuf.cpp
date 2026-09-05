@@ -30,6 +30,7 @@
 #if defined(_MSC_VER) && !defined(__clang__)
 #define _MT
 #endif
+#include <memory>
 #include <stdexcept>
 #include <string>
 
@@ -68,6 +69,17 @@ int TGzInflateBuf::get_byte()
 // 0x4d6050: build the window, then walk the gzip member header exactly as
 // zlib's gzio.c check_header does. A failed magic pair is caught here and
 // demotes the stream to raw pass-through (ok = 0) rather than propagating.
+//
+// The 8-byte local at [ebp-0x30] IS a live `std::auto_ptr<unsigned char>`,
+// contrary to the note this replaces: unwind funclet 2
+// (0x62c913, `lea ecx,[ebp-0x30]; jmp 0x4b7040`) is
+// `if (*(char*)this) operator delete(*(void**)((char*)this+4))`, which is
+// VC6 <memory>'s `~auto_ptr` on `{bool _Owns; _Ty *_Ptr;}` exactly. Retail
+// stores the immediate 1 into _Owns because `_P != 0` is already proven by
+// the throw above it, and neither exit destroys it because `release()`
+// leaves _Owns provably false and VC6 folds both the test and the store
+// away. Constructing it takes the frame from 0x1a8 to retail's 0x1b4 and
+// makes fn+0xbd..0xcf byte-identical (76.4458 -> 77.3300).
 VA(0x004d6050, 0x58A)  // anchor-vtable ??_7TGzInflateBuf@@6B@ + anchor-import @inflateInit2_@16, retail-only
 TGzInflateBuf::TGzInflateBuf(std::streambuf* newSource)
     : source(newSource),
@@ -81,6 +93,7 @@ TGzInflateBuf::TGzInflateBuf(std::streambuf* newSource)
     buffer = new unsigned char[0x400];
     if (buffer == 0)
         throw TAllocationFailure();
+    std::auto_ptr<unsigned char> ownedBuffer(buffer);
     out_buffer = buffer + 0x200;
     setg(static_cast<char*>(static_cast<void*>(out_buffer)),
          static_cast<char*>(static_cast<void*>(out_buffer)),
@@ -143,6 +156,7 @@ TGzInflateBuf::TGzInflateBuf(std::streambuf* newSource)
             throw TAllocationFailure();
         inflating = 1;
     }
+    ownedBuffer.release();
 }
 
 // 0x4d65e0: the message-less form. `std::runtime_error`'s inline string
