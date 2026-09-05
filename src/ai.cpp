@@ -14,6 +14,8 @@
 #include "game.h"
 #include "hero.h"
 #include "misc.h"
+#include "prefs.h"
+#include "soundmgr.h"
 
 // A by-value, reference-RETURNING min - compute_fire_shield_damage
 // (0x422440) homes both operands in dead argument slots and selects
@@ -2884,18 +2886,56 @@ void combatManager::simulate_combat(long our_group, unsigned char checking_surre
     field_48 = saved_48;
 }
 
+// E:\gamedcs\ai.cpp:2699. The combat AI's spell turn: eight refusals and
+// then a type_AI_spellcaster over the current side.  The refusals are, in
+// order, a per-side latch, the placement phase, the acting stack's own
+// "no spells" bit, a human player who has neither handed his turns to the
+// AI with Combat Auto Spells on nor started a quick combat, the field_53c4
+// latch, a side with no hero, a hero without a spell book (artifact 0), and
+// either hero wearing artifact 0x7e.
+VA(0x00422da0, 0x1AD)  // anchor-caller(CheckGetAIMove) + anchor-callee(type_AI_spellcaster::cast_spell), dc 0x27b18
+unsigned char combatManager::DoSpellAI()
+{
+    field_3c = 0;
+    if (field_54b4[currentSide])
+        return 0;
+    if (bCreaturePlacement)
+        return 0;
+    if (static_cast<unsigned char>(
+            static_cast<unsigned>(armies[actingSide][actingSlot].creatureId)
+            >> 6)
+        & 1)
+        return 0;
+    if (playerIds[currentSide] >= 0
+        && gpGame->IsHuman(playerIds[currentSide])
+        && !((field_132c4 || gbUnk691209)
+             && gUnnamed698758.combatAutoSpells)
+        && !static_cast<const combatManager*>(this)->IsQuickCombat())
+        return 0;
+    long side = currentSide;
+    if (field_53c4)
+        return 0;
+    if (!heroes[side])
+        return 0;
+    if (!heroes[side]->IsWieldingArtifact(0))
+        return 0;
+    if (heroes[0] && heroes[0]->IsWieldingArtifact(0x7e))
+        return 0;
+    if (heroes[1] && heroes[1]->IsWieldingArtifact(0x7e))
+        return 0;
+
+    type_AI_spellcaster caster(this, currentSide, 0);
+    if (caster.cast_spell(AICheckRetreat()))
+        return 1;
+    field_3c = 0;
+    return 0;
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\ai.cpp:2608
 DC_ONLY(0x27888, 0x28E)
 void combatManager::find_AI_targets(long our_group, const army* current_army, unsigned char melee_only, const type_AI_combat_parameters* data, searchArray* search_array)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai.cpp:2699
-DC_ONLY(0x27b18, 0x15C)
-unsigned char combatManager::DoSpellAI()
 {
     // @stub
 }
