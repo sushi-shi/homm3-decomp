@@ -27,12 +27,12 @@
 #include "prefs.h"
 #include "textresource.h"
 
-// The campaign-relative archive stem both loaders open their third archive
-// from, and the one body in the bracket still unclaimed (0x597d00, 1294 B:
-// a per-character basic_string::append chain over obfuscated literals).
-// Declared, not defined - the reconstruction of its two callers does not
-// depend on it.
-std::string GetCampaignArchiveStem();  // 0x597d00, name provisional
+// The drive letter the misc.obj install scan settled on. It is WRITTEN at
+// 0x50c278 inside that scan (still unclaimed) and READ only there and by
+// GetDriveArchivePath below, which is why the definition is left with its
+// owning TU: 0x6839b8's .data neighbours are singleselectionwindow's and
+// spellbookwindow's blocks, not smackmgr's. Retail initialises it to 'd'.
+DATA(0x006839b8) extern char gArchiveDriveLetter;
 
 // The Smack/Bink handle views and the smackw32/binkw32 dllimport
 // surface live in smackmgr.h / binkmanager.h; the underscored import
@@ -646,6 +646,76 @@ void VideoShutDown()
     gVideoFile3 = 0;
 }
 
+// The base archive's path on the drive the misc.obj install scan selected.
+// That scan (in the unclaimed 0x50c1cb body) walks GetLogicalDrives, writes
+// each candidate letter to gArchiveDriveLetter, and _open()s what this
+// function returns; smackmgr's own two loaders then open their third archive
+// from it, the sound loader after swapping the extension for .snd.
+//
+// The literal is obfuscated one character at a time, exactly as retail
+// spells it: twenty-five `+=` of a masked byte followed by twenty-five
+// `[i] ^=` of the matching key, which decode to ":heroes3\\data\\heroes3.vid"
+// behind the scanned drive letter. VC6 expands basic_string::operator[]
+// through index 0x11 and runs out of /Ob2 budget after it, so the last eight
+// subscripts become CALLS - retail's split exactly.
+VA(0x00597d00, 0x50E)  // anchor-caller(LoadAnimHeaders, LoadSoundHeaders) + anchor-global(gArchiveDriveLetter)
+std::string GetDriveArchivePath()
+{
+    std::string path;
+    path = gArchiveDriveLetter;
+    path += '\xe3';
+    path += '\xad';
+    path += '\xa9';
+    path += '\xac';
+    path += '\xb2';
+    path += '\xae';
+    path += '\xab';
+    path += '\xfc';
+    path += '\xd6';
+    path += '\xbe';
+    path += '\xa2';
+    path += '\xac';
+    path += '\xaa';
+    path += '\x82';
+    path += '\xa7';
+    path += '\xbc';
+    path += '\xf8';
+    path += '\xb6';
+    path += '\xba';
+    path += '\xba';
+    path += '\xf2';
+    path += '\xa4';
+    path += '\xbd';
+    path += '\xb0';
+    path += '\xbd';
+    path[1] ^= '\xd9';
+    path[2] ^= '\xc5';
+    path[3] ^= '\xcc';
+    path[4] ^= '\xde';
+    path[5] ^= '\xdd';
+    path[6] ^= '\xcb';
+    path[7] ^= '\xd8';
+    path[8] ^= '\xcf';
+    path[9] ^= '\x8a';
+    path[10] ^= '\xda';
+    path[11] ^= '\xc3';
+    path[12] ^= '\xd8';
+    path[13] ^= '\xcb';
+    path[14] ^= '\xde';
+    path[15] ^= '\xcf';
+    path[16] ^= '\xd9';
+    path[17] ^= '\x8a';
+    path[18] ^= '\xd9';
+    path[19] ^= '\xdf';
+    path[20] ^= '\xc9';
+    path[21] ^= '\xc1';
+    path[22] ^= '\x8a';
+    path[23] ^= '\xcb';
+    path[24] ^= '\xd9';
+    path[25] ^= '\xd9';
+    return path;
+}
+
 // E:\gamedcs\smackmgr.cpp:535. Complete opens three video archives where the
 // Dreamcast stub opens none: a campaign-relative one built from the
 // 0x597d00 stem, the expansion archive behind the same *gpVideoGameState
@@ -655,7 +725,7 @@ unsigned char LoadAnimHeaders()
 {
     DWORD nread;
 
-    gVideoFile3 = CreateFileA(GetCampaignArchiveStem().c_str(), GENERIC_READ,
+    gVideoFile3 = CreateFileA(GetDriveArchivePath().c_str(), GENERIC_READ,
         FILE_SHARE_READ, 0, OPEN_EXISTING,
         FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, 0);
     if (gVideoFile3 != INVALID_HANDLE_VALUE) {
@@ -750,7 +820,7 @@ unsigned char LoadSoundHeaders()
         ReadFile(SoundFileCD, SoundHeaderCD, 48 * SoundCountCD, &nread, 0);
     }
 
-    strcpy(path, GetCampaignArchiveStem().c_str());
+    strcpy(path, GetDriveArchivePath().c_str());
     strtok(path, ".");
     strcat(path, ".snd");
     SoundFileCampaign = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, 0,
