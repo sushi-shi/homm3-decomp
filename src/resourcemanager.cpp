@@ -1273,6 +1273,16 @@ TPalette16* ResourceManager::GetPalette(const char* name)
 // 96.8864, and a named path local is 99.8773 while losing exact LoadFont.
 // why-reg's nine legal probes are flat or worse. Treat this as TU/C1 state, not
 // permission to remove the Dreamcast-proven local names or statement shape.
+// Residual (99.9273%): the frame is 8 bytes too large and every slot below
+// the two read buffers is shifted with it. Retail OVERLAYS the block-scoped
+// `t_stdio_file_adapter stream` onto the dead `gResourcePath + name` string
+// temporary (both at [ebp-0x28]) and lands `result` at [ebp-0x20]; this
+// compile gives the adapter its own pair at [ebp-0x24]/[ebp-0x20] and puts
+// `result` below it, which pushes header/rgba down by 8. Measured and
+// rejected 2026-09-05: `result` declared after `file` 99.93 (byte-flat),
+// the adapter hoisted above the `try` 98.73, both together 98.73. The two
+// read buffers cannot be block-scoped - the LOD path below reads through
+// them too.
 VA(0x0055b470, 0x2D1)  // dc/hd public identity + retail palette-file shape, dc 0x121ec8
 TPalette24* ResourceManager::GetPalette24(const char* name)
 {
