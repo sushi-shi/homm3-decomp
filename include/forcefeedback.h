@@ -94,6 +94,12 @@ public:
 protected:
     virtual int prepare_device();
     virtual void reset();
+
+private:
+    // SIZE IS RETAIL-PROVEN: TImmMouseRuntime's `new CImmMouse` at
+    // 0x4b62af pushes 0x2c, so the object is 44 bytes - the shared vfptr
+    // plus 40 the vendor header spells and no import names.
+    char m_reserved[0x28];
 };
 
 // The compound effect a project hands back. Non-virtual throughout
@@ -137,6 +143,12 @@ public:
                    unsigned long f, unsigned long g, unsigned long h,
                    CImmEffect* effect, long i, unsigned long j);
     int SetRect(const RECT* rect);
+
+private:
+    // SIZE IS RETAIL-PROVEN: t_enclosure's `new CImmEnclosure` at
+    // 0x4b6a6f pushes 0xe0, so the object is 224 bytes - the shared
+    // vfptr plus 220 the vendor header spells and no import names.
+    char m_reserved[0xdc];
 };
 
 // The project file. Its constructor is NOT in the import table and
