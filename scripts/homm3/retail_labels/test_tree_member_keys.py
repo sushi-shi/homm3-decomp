@@ -114,6 +114,22 @@ class CompgenKindRegistrationTest(unittest.TestCase):
             self.assertIn(kind, source.COMPGEN_KINDS)
             self.assertIn(kind, DIRECT_SYMBOL_COMPGEN_KINDS)
 
+    def test_the_join_admits_exactly_the_named_kinds(self):
+        # the THIRD list of the same partition, and the one with no
+        # diagnostic: a kind missing from join_unit's marker set reaches
+        # the join as an unjoinable row that banks 0.0000 with the ratchet
+        # clean. It is derived from COMPGEN_KINDS now; this pins the
+        # derivation against the canonicalizer's independent copy.
+        self.assertEqual(
+            set(source.JOINED_COMPGEN_MARKERS),
+            {f"${kind.lower()}$" for kind in DIRECT_SYMBOL_COMPGEN_KINDS})
+
+    def test_the_anonymous_kinds_are_kept_out_of_the_join(self):
+        for kind in source.ANONYMOUS_COMPGEN_KINDS:
+            self.assertNotIn(f"${kind.lower()}$",
+                             source.JOINED_COMPGEN_MARKERS)
+            self.assertIn(kind, source.COMPGEN_KINDS)
+
 
 if __name__ == "__main__":
     unittest.main()

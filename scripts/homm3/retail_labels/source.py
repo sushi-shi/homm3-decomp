@@ -353,6 +353,21 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "IMPLICIT_COPY_CTOR", "IMPLICIT_COPY_ASSIGN",
                  "IMPLICIT_DTOR"}
 COMPGEN_KINDS |= {member.upper() for _p, _s, member in CHAR_STREAM_MEMBERS}
+#: The kinds that name NO pre-existing COFF symbol - MSVC's anonymous
+#: static-initialization thunks, which the canonicalizer RENAMES rather
+#: than joins. Every other kind claims a symbol cl already emitted, so
+#: every other kind takes part in join_unit's name-authority join; the
+#: markers are derived here rather than restated there, because the
+#: restatement was a silent opt-out: a kind missing from it reached the
+#: join as an unjoinable row that banks 0.0000 with the ratchet clean.
+#: (`homm3.build.canonicalize_data_symbols.DIRECT_SYMBOL_COMPGEN_KINDS`
+#: is the same partition seen from the other side, and the test pins them
+#: equal.)
+ANONYMOUS_COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT",
+                           "STATIC_DTOR", "STATIC_CTOR"}
+JOINED_COMPGEN_MARKERS = tuple(
+    sorted(f"${kind.lower()}$"
+           for kind in COMPGEN_KINDS - ANONYMOUS_COMPGEN_KINDS))
 
 
 def mask_lexical_noise(blob: str) -> str:
@@ -1217,6 +1232,12 @@ def _demangle_key(mangled: str):
         # vector<CObjectType>; VA_COMPGEN's identifier-only owner names the
         # element class, which is stable even though the full template type
         # cannot be a macro argument without exposing its comma list.
+        # The INNERMOST class name, deliberately: this arm predates
+        # `_vector_owner`'s composite spellings and keeps its own regex so
+        # a nested element still keys the way the admitted claim spells it.
+        vector_element = re.search(
+            r"\?\$vector@(?:(?:P[AB][VU])|(?:V|U|W4))?"
+            r"([A-Za-z_]\w*)@", mangled)
         if vector_element:
             return f"{vector_element.group(1).lower()}@fctor"
         cls = mangled[4:].split("@@", 1)[0].split("@")[0]
@@ -1571,84 +1592,8 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                  if not r.get("ir_unconfirmed")
                  and (r["channel"] == "src-VA"
                       or (r["channel"] == "src-VA_COMPGEN"
-                          and ("$scalar_deleting_dtor$" in r["name"]
-                               or "$vector_deleting_dtor$" in r["name"]
-                               or "$default_ctor_closure$" in r["name"]
-                               or "$vector_dtor$" in r["name"]
-                               or "$vector_size$" in r["name"]
-                               or "$vector_capacity$" in r["name"]
-                               or "$vector_constructor_iterator$" in r["name"]
-                               or "$vector_reserve$" in r["name"]
-                               or "$vector_clear$" in r["name"]
-                               or "$exception_doraise$" in r["name"]
-                               or "$functor_call$" in r["name"]
-                               or "$deque_iterator_add_assign$" in r["name"]
-                               or "$vector_resize$" in r["name"]
-                               or "$vector_insert$" in r["name"]
-                               or "$vector_erase$" in r["name"]
-                               or "$vector_destroy$" in r["name"]
-                               or "$vector_ucopy$" in r["name"]
-                               or "$vector_ufill$" in r["name"]
-                               or "$vector_copy_assign$" in r["name"]
-                               or "$bitset_tidy$" in r["name"]
-                               or "$bitset_ctor$" in r["name"]
-                               or "$bitset_subscript$" in r["name"]
-                               or "$bitset_reference_assign$" in r["name"]
-                               or "$bitset_iterator_deref$" in r["name"]
-                               or "$bitset_flip$" in r["name"]
-                               or "$bitset_count$" in r["name"]
-                               or "$bitset_any$" in r["name"]
-                               or "$bitset_set$" in r["name"]
-                               or "$bitset_test$" in r["name"]
-                               or "$bitset_xran$" in r["name"]
-                               or "$bitset_xinv$" in r["name"]
-                               or "$istream_extract_bitset$" in r["name"]
-                               or "$tree_min$" in r["name"]
-                               or "$tree_insert$" in r["name"]
-                               or "$tree_node_insert$" in r["name"]
-                               or "$tree_const_iterator_dec$" in r["name"]
-                               or "$tree_const_iterator_inc$" in r["name"]
-                               or "$tree_buynode$" in r["name"]
-                               or "$tree_copy$" in r["name"]
-                               or "$tree_copy_node$" in r["name"]
-                               or "$tree_erase$" in r["name"]
-                               or "$tree_lbound$" in r["name"]
-                               or "$tree_ubound$" in r["name"]
-                               or "$tree_erase_iterator$" in r["name"]
-                               or "$tree_erase_range$" in r["name"]
-                               or "$tree_find$" in r["name"]
-                               or "$deque_erase$" in r["name"]
-                               or "$stringbuf_overflow$" in r["name"]
-                               or "$stringbuf_init$" in r["name"]
-                               or "$deque_freefront$" in r["name"]
-                               or "$deque_freeback$" in r["name"]
-                               or "$deque_buyback$" in r["name"]
-                               or "$deque_push_back$" in r["name"]
-                               or "$deque_growmap$" in r["name"]
-                               or "$deque_iterator_inc$" in r["name"]
-                               or "$deque_iterator_dec$" in r["name"]
-                               or "$basic_string_assign_ptr_size$" in r["name"]
-                               or "$ostream_put$" in r["name"]
-                               or "$ostream_insert_cstr$" in r["name"]
-                               or "$insertion_sort_1$" in r["name"]
-                               or "$std_sort$" in r["name"]
-                               or "$std_sort_0$" in r["name"]
-                               or "$std_median$" in r["name"]
-                               or "$std_unguarded_partition$" in r["name"]
-                               or "$std_unguarded_insert$" in r["name"]
-                               or "$std_copy_backward$" in r["name"]
-                               or "$std_fill$" in r["name"]
-                               or "$streambuf_xsputn$" in r["name"]
-                               or any(f"${member}$" in r["name"]
-                                      for _p, _s, member
-                                      in CHAR_STREAM_MEMBERS)
-                               or "$pair_const_int_dtor$" in r["name"]
-                               or "$std_construct$" in r["name"]
-                               or "$std_copy$" in r["name"]
-                               or "$class_ctor$" in r["name"]
-                               or "$implicit_copy_ctor$" in r["name"]
-                               or "$implicit_copy_assign$" in r["name"]
-                               or "$implicit_dtor$" in r["name"])))]
+                          and any(marker in r["name"]
+                                  for marker in JOINED_COMPGEN_MARKERS)))]
     if not unit_rows:
         return
     authority = {key: [(n, c) for n, c in group if n not in taken]
