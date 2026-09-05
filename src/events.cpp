@@ -9144,3 +9144,13 @@ VA_COMPGEN(0x004ad130, 0xB4, IMPLICIT_DTOR, ccombatinitmsg)
 
 // COMDAT pairing: clevelpickwaitdlg::1CLevelPickWaitDlg, mnemonic agreement 0.902.
 VA_COMPGEN(0x004aeb00, 0x4B, IMPLICIT_DTOR, clevelpickwaitdlg)
+
+// COMDAT pairing: vector<std::string>::insert(pos, n, val), agreement 0.985.
+// Its one-element sibling below is the other half of the overload group.
+VA_COMPGEN(0x004af550, 0x2A5, VECTOR_INSERT, string)
+
+// COMDAT pairing: vector<std::string>::insert(pos, val), agreement 0.975.
+VA_COMPGEN(0x004af350, 0x183, VECTOR_INSERT, string)
+
+// COMDAT pairing: std::_Construct<std::string>, agreement 0.972.
+VA_COMPGEN(0x004afb40, 0x167, STD_CONSTRUCT, string)
