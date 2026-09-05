@@ -171,6 +171,20 @@ enum ECheckEndGameForcedResult {
     END_GAME_FORCE_DEFEAT = 2
 };
 
+// The five columns of the end-of-game score sheet CongratsWait draws.
+// Retail dispatches the value line through a five-entry jump table on the
+// column ordinal, and each arm is what names the column: the calendar day
+// count, the base map score, the difficulty row from the ARRAYTXT table,
+// the rated final score, and the rank string ShowCongrats formats.
+enum ECongratsColumn {
+    CONGRATS_COLUMN_DAYS = 0,
+    CONGRATS_COLUMN_BASE_SCORE = 1,
+    CONGRATS_COLUMN_DIFFICULTY = 2,
+    CONGRATS_COLUMN_SCORE = 3,
+    CONGRATS_COLUMN_RANK = 4,
+    CONGRATS_COLUMN_COUNT = 5
+};
+
 extern unsigned long glTimers[10];
 
 // Retail .bss pointer cell used by both map-extra accessors. The complete
