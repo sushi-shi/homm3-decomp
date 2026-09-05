@@ -2549,13 +2549,93 @@ void TSingleSelectionWindow::UpdateMainWindow()
         GetWidget(186)->enable(0);
 }
 
-#if 0  // @carcass
-
+// The exact mirror of TurnOffFilterOptions above: the same 57 widget ids
+// in the same order, shown rather than hidden. Retail reaches it only from
+// the new-game lobby (both mode flags clear), toggles the pane off when it
+// is already up, and drops the scenario/advanced panes before raising this
+// one. The trailing field_37F latch runs the filtered rebuild exactly once
+// per window.
 VA(0x0057FEB0, 0x57A)  // Complete-only filter-option control builder
 void TSingleSelectionWindow::SetupFilterOptions()
 {
-    // @stub
+    if (m_flag64 || m_flag65)
+        return;
+
+    if (inFilterOptions) {
+        TurnOffFilterOptions();
+        return;
+    }
+
+    TurnOffScenarioOptions();
+    TurnOffAdvancedOptions();
+
+    GetWidget(103)->show();
+    GetWidget(280)->show();
+    GetWidget(281)->show();
+    GetWidget(282)->show();
+    GetWidget(283)->show();
+    GetWidget(284)->show();
+    GetWidget(285)->show();
+    GetWidget(286)->show();
+    GetWidget(287)->show();
+    GetWidget(288)->show();
+    GetWidget(289)->show();
+    GetWidget(290)->show();
+    GetWidget(291)->show();
+    GetWidget(292)->show();
+    GetWidget(293)->show();
+    GetWidget(294)->show();
+    GetWidget(295)->show();
+    GetWidget(296)->show();
+    GetWidget(297)->show();
+    GetWidget(298)->show();
+    GetWidget(299)->show();
+    GetWidget(300)->show();
+    GetWidget(301)->show();
+    GetWidget(302)->show();
+    GetWidget(303)->show();
+    GetWidget(304)->show();
+    GetWidget(305)->show();
+    GetWidget(306)->show();
+    GetWidget(307)->show();
+    GetWidget(308)->show();
+    GetWidget(309)->show();
+    GetWidget(310)->show();
+    GetWidget(311)->show();
+    GetWidget(312)->show();
+    GetWidget(313)->show();
+    GetWidget(314)->show();
+    GetWidget(315)->show();
+    GetWidget(316)->show();
+    GetWidget(317)->show();
+    GetWidget(318)->show();
+    GetWidget(319)->show();
+    GetWidget(320)->show();
+    GetWidget(321)->show();
+    GetWidget(322)->show();
+    GetWidget(323)->show();
+    GetWidget(324)->show();
+    GetWidget(325)->show();
+    GetWidget(326)->show();
+    GetWidget(327)->show();
+    GetWidget(328)->show();
+    GetWidget(329)->show();
+    GetWidget(330)->show();
+    GetWidget(331)->show();
+    GetWidget(332)->show();
+    GetWidget(333)->show();
+    GetWidget(334)->show();
+    GetWidget(335)->show();
+
+    UpdateGameVars();
+    inFilterOptions = 1;
+    if (!field_37F) {
+        field_37F = 1;
+        RebuildFilteredPlayerSetup();
+    }
 }
+
+#if 0  // @carcass
 
 VA(0x00580430, 0x63B)  // Complete-only filtered player/setup rebuild
 void TSingleSelectionWindow::RebuildFilteredPlayerSetup()
