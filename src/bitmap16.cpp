@@ -341,6 +341,69 @@ void Bitmap16Bit::Darken(int x, int y, int w, int h, Bitmap816* mask,
     }
 }
 
+// E:\gamedcs\bitmap16.cpp:815. The 16-bit-colour Colorize: convert the
+// colour to hue/saturation and hand both to the float overload below.
+// The three channel levels are taken through the live pixel masks and
+// normalised by the mask itself, so each is 0..1; the HSV sextant test then
+// treats the BLUE-masked level as the formula's red - the argument rotation
+// is retail's, and the sextant constants (2.0f / 4.0f, *60, +360, /360) are
+// read straight off 0x63b9dc / 0x63b9e0 / 0x63b9d8 / 0x63b9d4.
+// Residual (92.0%): a three-way register rename (EBX/ESI/EDI) and one
+// hoisted reload, from the first level onwards; every block, branch and
+// frame slot pairs and the prologue is byte-identical through +0x4b.
+// The declaration order of the three levels is LOAD-BEARING and is fixed by
+// the masks, not by the score: VC6 emits them in declaration order, and
+// only (blue, green, red) reproduces retail's 0x694d68 / 0x694d60 / 0x694d64
+// sequence. All six permutations were swept - (green, blue, red) scores
+// 93.30, higher, but emits the masks in the wrong order, so it is scoring a
+// DIFFERENT function and is rejected.
+VA(0x0044e780, 0x1BF)  // anchor-callee(the float Colorize) + order-map(DC bitmap16.obj), dc 0x5177c
+void Bitmap16Bit::Colorize(int x, int y, int width, int height,
+                           unsigned short color)
+{
+    float blue_level = static_cast<float>(color & gColorMaskBlue)
+                       / static_cast<float>(gColorMaskBlue);
+    float green_level = static_cast<float>(color & gColorMaskGreen)
+                        / static_cast<float>(gColorMaskGreen);
+    float red_level = static_cast<float>(color & gColorMaskRed)
+                      / static_cast<float>(gColorMaskRed);
+
+    float top = blue_level;
+    if (blue_level <= green_level)
+        top = green_level;
+    if (top < red_level)
+        top = red_level;
+
+    float bottom = green_level;
+    if (blue_level <= green_level)
+        bottom = blue_level;
+    if (bottom > red_level)
+        bottom = red_level;
+
+    float saturation;
+    if (top == 0.0)
+        saturation = 0.0f;
+    else
+        saturation = (top - bottom) / top;
+
+    float hue;
+    if (saturation == 0.0) {
+        hue = 0.0f;
+    } else {
+        float span = top - bottom;
+        if (blue_level == top)
+            hue = (green_level - red_level) / span;
+        else if (green_level == top)
+            hue = (red_level - blue_level) / span + 2.0f;
+        else
+            hue = (blue_level - green_level) / span + 4.0f;
+        hue *= 60.0f;
+        if (hue < 0.0)
+            hue += 360.0f;
+    }
+    Colorize(x, y, width, height, hue / 360.0f, saturation);
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\bitmap16.cpp:224
