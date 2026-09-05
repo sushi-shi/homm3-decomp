@@ -3076,3 +3076,18 @@ VA_COMPGEN(0x0055dcf0, 0x50F, TREE_ERASE_ITERATOR, TCacheMapKey)
 
 // COMDAT pairing: _Tree<TCacheMapKey, resource*>::erase(first, last), 0.960.
 VA_COMPGEN(0x0055e200, 0x121, TREE_ERASE_RANGE, TCacheMapKey)
+
+// COMDAT pairing: str on the char instantiation, mnemonic agreement 0.976.
+VA_COMPGEN(0x0055e570, 0x1C5, STRINGBUF_STR, char)
+
+// COMDAT pairing: seekoff on the char instantiation, mnemonic agreement 0.945.
+VA_COMPGEN(0x0055d8a0, 0x15B, STRINGBUF_SEEKOFF, char)
+
+// COMDAT pairing: seekpos on the char instantiation, mnemonic agreement 0.919.
+VA_COMPGEN(0x0055da00, 0xD8, STRINGBUF_SEEKPOS, char)
+
+// COMDAT pairing: pbackfail on the char instantiation, mnemonic agreement 0.968.
+VA_COMPGEN(0x0055d7e0, 0x5D, STRINGBUF_PBACKFAIL, char)
+
+// COMDAT pairing: underflow on the char instantiation, mnemonic agreement 0.938.
+VA_COMPGEN(0x0055d840, 0x5A, STRINGBUF_UNDERFLOW, char)

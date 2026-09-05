@@ -2934,3 +2934,6 @@ char* std::__copy(char* __first, char* __last, char* __result, std::random_acces
 
 
 #endif  // @carcass
+
+// COMDAT pairing: _Grow on the char instantiation, mnemonic agreement 0.971.
+VA_COMPGEN(0x00404a90, 0x122, BASIC_STRING_GROW, char)
