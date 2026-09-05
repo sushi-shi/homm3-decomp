@@ -371,6 +371,19 @@ inline type_speed_catagory type_AI_combat_data::get_catagory(
 // id to 88.56874%, and swapping the adjacent unit.creature/unit.slot stores to
 // 90.92844%. why-branch still sees the same 58 conditional branches and two
 // returns, with only a 101-vs-103 block partition; none of these selects it.
+// 2026-09-05: 91.0111 -> 91.9520. `archery_modifier` is a real if/ELSE in
+// retail, not the default-then-override form: it branches over a two-
+// instruction else arm that materialises the 0.2 double, where
+// `archery_modifier = 0.2; if (my_hero) ...` makes VC6 store both halves of
+// the constant unconditionally inside the guard block. (This is the opposite
+// of the levelup-window rule that a branched ternary ARGUMENT wants
+// `x = a; if (c) x = b;` - read the lowering, not the shape.) Flow-kind
+// blocks fell 50 -> 33 on that one edit.
+// Residual (91.9520%): one missing block that is retail DEAD CODE - retail
+// memory-homes `this` at [ebp-0x8] and reloads it into ECX, and the reload it
+// left at the wall-penalty join (+0x77e) has no predecessor at all, since both
+// guards and the divide arm jump past it. This compile keeps `this` in EBX for
+// the whole body, so there is no reload to strand. Not source-reachable.
 VA(0x00424120, 0x66E)  // dc-callgraph unique, dc 0x29f58
 void type_AI_combat_data::initialize_creatures(double base_modifier, const hero* enemy_hero)
 {
@@ -405,9 +418,10 @@ void type_AI_combat_data::initialize_creatures(double base_modifier, const hero*
                          * base_modifier;
     }
 
-    archery_modifier = 0.2;
     if (my_hero)
         archery_modifier = my_hero->GetArcheryFactor() / 5.0;
+    else
+        archery_modifier = 0.2;
 
     speed_bonus = 0;
     if (my_hero)

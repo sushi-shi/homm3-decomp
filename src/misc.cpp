@@ -453,6 +453,13 @@ void ReadPrefs()
 // are the patch jump and the synthetic CRT identity attached to _getcwd;
 // the registry-query run and the live strcpy instructions are otherwise
 // instruction-for-instruction retail.
+// 2026-09-05, easy lane 3 - the 2 missing blocks are retail DEAD CODE, not a
+// spelling. At +0xb6a retail `jmp`s over seventeen NOPs and a five-instruction
+// `shr ecx,2 / rep movsd / mov ecx,eax / and ecx,3 / rep movsb` memcpy tail
+// that NOTHING branches to; the live path is the two-instruction global-to-
+// global dword copy above it, which is exactly what this compile emits with no
+// jump and no stranded tail. Everything else (B0..B7, 438-instruction block
+// included) is exact. Do not spend a lane on this row.
 VA(0x0050b7b0, 0x657)  // anchor-callgraph (called by ReadPrefs), dc 0xfdbc0
 void ReadPrefsFromRegistry()
 {

@@ -2127,6 +2127,21 @@ hero* DetermineHeroToMove(int player_id, unsigned char* is_last_hero);
 // and taking the row to 25.9647% (20 branches against 42).  The expansion is
 // the mass that justifies its own inlining, so the two accessors cannot be
 // pushed to depth 2 by any statement in this body.
+// 2026-09-05, easy lane 3 - the census names it exactly: retail CALLS
+// game::GetTown at +0x2a0 and game::GetHero at +0x2c1 inside the second
+// hero-selection copy, where this compile expands both (16 calls same, 2
+// target-only, nothing base-only). That is the OVER-inline direction, so the
+// knob is caller_cb, not a pin. Measured and rejected: lifting the whole
+// garrison-promotion block (numHeroes guard + town sweep) into a
+// single-call-site file static - the dose OVERSHOOTS badly, 90.2542 ->
+// 79.4310, and the two calls do NOT come back out of line.
+// For the next lane: the DC roster has a static `move_all_heroes` (156 B, dc
+// 0x10f0d0) sitting immediately before DoAI, and DC's DoAI is only 192 B
+// against retail's 866. So retail's source almost certainly calls
+// move_all_heroes TWICE and /Ob2 expands it twice with different nested
+// decisions - which is exactly the note below about the selector being
+// retained in the first copy and expanded in the second. Reconstructing that
+// helper is the real fix, and it is a reconstruction job, not polish.
 VA(0x00525e80, 0x362)  // anchor-callee, dc 0x10f16c
 void philAI::DoAI(int whichPlayer)
 {
