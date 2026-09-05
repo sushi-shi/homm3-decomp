@@ -2979,6 +2979,7 @@ singleselectionwindow	?IsVersionCompatible@TSingleSelectionWindow@@QAEEPBD@Z	100
 singleselectionwindow	?MakeHeroFilter@TSingleSelectionWindow@@QAEXXZ	87.3429	87.3429	87.3429	0x183890	f9bfa6cb1a83
 singleselectionwindow	?NewPlayer@CNewPlayerUpdateMan@@QAEXK@Z	100.0000	100.0000	100.0000	0x18a280	58894ede70c1
 singleselectionwindow	?OnBadVersionMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18df50	65c8466f6086
+singleselectionwindow	?OnBeginGame@TSingleSelectionWindow@@QAEEXZ	78.7597	78.7597	78.7597	0x18bce0	e0fdbb934541
 singleselectionwindow	?OnDeleteFile@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x18dfb0	0c1240222da8
 singleselectionwindow	?OnGameHeaderInfoInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	81.3049	81.3049	81.3049	0x18a440	b994de0ac2d3
 singleselectionwindow	?OnGameHeaderInfoInitMsgEx@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18a780	846acb6f2ce7
@@ -3005,7 +3006,7 @@ singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100
 # 2026-08-27 (round 3): the interim full build re-banked the transient
 # peak a third time; re-lowered with the round's bodies landed. Same
 # scheduler flap, same recovery path.
-singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0	66eb0a0e15c8
+singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0	66eb0a0e15c8
 singleselectionwindow	?OnMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2193	90.2193	90.2193	0x189710	3ad2be3935a3
 singleselectionwindow	?OnNameClick@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x18b620	ef174e28edf8
 singleselectionwindow	?OnNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	97.5366	97.5366	97.5366	0x18b510	862e2a9c058b
@@ -3070,7 +3071,6 @@ singleselectionwindow	?write@CGameHeaderInfoMsg@@UBEEPAVTAbstractFile@@@Z	100.00
 singleselectionwindow	?write@CNewMapHeaderInfoMsg@@UBEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x177a30	ea03c0a6e3df
 singleselectionwindow	TSingleSelectionWindow_BeginNewGame	0.0000	0.0000	0.0000	0x18c570	e5a5f3c8dbef
 singleselectionwindow	TSingleSelectionWindow_GenerateRandomMap	0.0000	0.0000	0.0000	0x1860e0	ffdf5b582de2
-singleselectionwindow	TSingleSelectionWindow_OnBeginGame	0.0000	0.0000	0.0000	0x18bce0	5b18a61fa80f
 singleselectionwindow	__h3cg$singleselectionwindow$scalar_deleting_dtor$CNewPlayerUpdateTask	0.0000	0.0000	0.0000	0x183ec0	-
 slider	??0slider@@QAE@HHHHHHP6IXHPAVheroWindow@@@ZW4EGraphics@0@HE@Z	100.0000	100.0000	100.0000	0x1960d0	63299852860c
 slider	??1slider@@UAE@XZ	100.0000	100.0000	100.0000	0x196180	dfc35120dc55

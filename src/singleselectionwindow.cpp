@@ -7411,15 +7411,155 @@ void TSingleSelectionWindow::SendPlayerFaces()
     }
 }
 
-#if 0  // @carcass - DC-shaped launch bodies remain queued
-
+// The begin-button gate. Complete prefixes DC's body with the random-map
+// arm: generate the picked slot, read its header back into the window's own
+// row and push it into gpGame exactly as UpdateGameVars' field_37F arm does.
+// Then the five refusals - map format against the running game context (one
+// test for a save, one comparison for a scenario), the disabled begin
+// button, an empty list, the local seat having no position, and fewer than
+// two seated players in a network game - before the pointer/session/progress
+// preamble hands off to BeginSavedGame or BeginNewGame.
+//
+// Residual (78.76%): 1433 emitted bytes against retail's 1455, every
+// statement present, and the whole gap is ONE sequential /Ob2 budget
+// difference. Retail EXPANDS AssignData's two operator=(const char*) sites
+// (down to assign(), the same pair RebuildFilteredPlayerSetup shows) and,
+// having spent that budget early, CALLS bitset<4>::_Xran at the
+// game-context test; we call operator= and therefore still have budget to
+// expand the whole _Xran throw path (basic_string ctor + out_of_range ctor
+// + _CxxThrowException, ~50 B) inline, which also costs the EBX/EDX
+// binding around the bit test and two extra epilogues. The knob is
+// game.h's AssignData, which the campaign pins. Fixed here: naming
+// `GameSelectionHeadersStruct* pHeader = &m_localHeader;` (+0.55 - retail
+// spills `this` at entry and repurposes the callee-saved register for the
+// row) and adopting SetupScenarioOptions' proven
+// `static_cast<const std::bitset<4>&>(...)[class]` + `Text.begin()` dialog
+// idiom over `.test()` + `GetText()` (+0.52).
+// E:\gamedcs\singleselectionwindow.cpp:7698
 VA(0x0058BCE0, 0x5AF)  // begin-button caller and DC source shape, dc 0x142674
 unsigned char TSingleSelectionWindow::OnBeginGame()
 {
-    // @stub
-}
+    if (field_37F) {
+        std::string name = GetRandomMapName();
+        if (bVideoPaused) {
+            CNetMsg msg(RS_GAME_TRANSMIT_PENDING, sizeof(CNetMsg));
+            TransmitRemoteDataDPID(&msg, 0, false, true);
+        }
+        GameSelectionHeadersStruct* pHeader = &m_localHeader;
+        if (!GenerateRandomMap(name.c_str())
+                || GetHeader(DATA_COMPGEN(0x006836ac, randomMapsDir,
+                                          "random_maps"),
+                             const_cast<char*>(name.c_str()), pHeader))
+            return 0;
+        gpGame->setup = pHeader->setup;
+        memcpy(gpGame->heroAvailability, pHeader->heroAvailability,
+               sizeof(pHeader->heroAvailability));
+        gpGame->mapHeader.AssignData(&pHeader->header, pHeader->title,
+                                     pHeader->description);
+        gpGame->setup.turnDuration = static_cast<signed char>(durationIndex);
+        gpGame->setup.difficulty = static_cast<signed char>(lastDiff);
+        static_cast<CScrollTextWidget*>(field_196c)
+            ->SetText(pHeader->description);
+    }
 
-#endif  // @carcass
+    if (!m_flag64 && gpGame->mapHeader.version != MAP_FORMAT_SHADOW_OF_DEATH
+            && gpGame->mapHeader.version != MAP_FORMAT_RESTORATION_OF_ERATHIA
+            && gpGame->mapHeader.version != MAP_FORMAT_ARMAGEDDONS_BLADE)
+        return 0;
+
+    if (m_flag64) {
+        int gameVersionClass;
+        if (pCurrentHeader->saved.gameVersion == GAME_VERSION_SOD)
+            gameVersionClass = GAME_VERSION_SOD;
+        else
+            gameVersionClass =
+                pCurrentHeader->saved.gameVersion == GAME_VERSION_AB;
+
+        if (!static_cast<const std::bitset<4>&>(
+                gGameContextFeatures[field_1898])[gameVersionClass]) {
+            char** text;
+            const char* gameType;
+            if (*gpVideoGameState == SINGLE_SELECTION_CONTEXT_1) {
+                text = gpGeneralText->Text.begin();
+                gameType = text[746];
+            } else {
+                text = gpGeneralText->Text.begin();
+                gameType = text[747];
+            }
+            NormalDialog(format_string(text[744], gameType).c_str(), 1, -1, -1,
+                         -1, 0, -1, 0, -1, 0, -1, 0);
+            return 0;
+        }
+    } else {
+        int mapVersionClass;
+        if (gpGame->mapHeader.version > MAP_FORMAT_ARMAGEDDONS_BLADE)
+            mapVersionClass = GAME_VERSION_SOD;
+        else
+            mapVersionClass = gpGame->mapHeader.version
+                > MAP_FORMAT_RESTORATION_OF_ERATHIA;
+
+        if (field_1898 < mapVersionClass) {
+            char** text;
+            const char* gameType;
+            if (*gpVideoGameState == SINGLE_SELECTION_CONTEXT_1) {
+                text = gpGeneralText->Text.begin();
+                gameType = text[746];
+            } else {
+                text = gpGeneralText->Text.begin();
+                gameType = text[747];
+            }
+            NormalDialog(format_string(text[745], gameType).c_str(), 1, -1, -1,
+                         -1, 0, -1, 0, -1, 0, -1, 0);
+            return 0;
+        }
+    }
+
+    widget* beginButton = GetWidget(186);
+    if (beginButton && (beginButton->status & widget::WIDGET_DISABLED))
+        return 0;
+
+    if (SelectionHeaders.size() == 0 && !field_37F) {
+        NormalDialog(gpGeneralText->GetText(530), 1, -1, -1, -1, 0, -1, 0, -1,
+                     0, -1, 0);
+        return 0;
+    }
+
+    CNetPlayerHandlerPlayer* player = GetThisPlayer();
+    if (!m_flag64 && player->playerPos == -1) {
+        NormalDialog(gpGeneralText->GetText(531), 1, -1, -1, -1, 0, -1, 0, -1,
+                     0, -1, 0);
+        return 0;
+    }
+
+    if (bVideoPaused || gUnnamed6989f0 == WINDOW_MODE_6989F0_3) {
+        int seated = 0;
+        for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
+            if (m_players.humanPlayers[i].dpid != 0
+                    && m_players.humanPlayers[i].playerPos != -1)
+                ++seated;
+        }
+        if (seated < 2) {
+            NormalDialog(gpGeneralText->GetText(83), 1, -1, -1, -1, 0, -1, 0,
+                         -1, 0, -1, 0);
+            return 0;
+        }
+    }
+
+    gpMouseManager->SetPointer(1, mouseManager::ADVENTURE_SET);
+
+    if (bVideoPaused) {
+        DPSESSIONDESC2* pSessionDesc = pDPlay->GetCurrSession();
+        pSessionDesc->dwFlags |= 0x21;
+        pDPlay->UpdateSessionDesc(pSessionDesc);
+        ::operator delete(pSessionDesc);
+    }
+
+    ShowProgressBar();
+
+    if (m_flag64)
+        return BeginSavedGame();
+    return BeginNewGame();
+}
 
 // Load the selected save while retaining the lobby's calendar state. DC
 // proves the four progress ticks, scoped launch message, four calendar
