@@ -573,6 +573,7 @@ artifact	__h3cg$artifact$static_dtor$artifactStrings	100.0000	100.0000	100.0000	
 basemgr	??0baseManager@@QAE@XZ	100.0000	100.0000	100.0000	0x4d530	687e8eebaf66
 binkmanager	?RestartBink@BinkManager@@SIXXZ	100.0000	100.0000	100.0000	0x4da50	20d03e6309f1
 bitmap16	??0Bitmap16Bit@@QAE@HH@Z	100.0000	100.0000	100.0000	0x4df70	a4eca84aac08
+bitmap16	??0Bitmap16Bit@@QAE@PBDHH@Z	100.0000	100.0000	100.0000	0x4e050	1007f10e515d
 bitmap16	??1Bitmap16Bit@@UAE@XZ	100.0000	100.0000	100.0000	0x4e100	7b1ed76e43e8
 bitmap16	??_GBitmap16Bit@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x4e020	-
 bitmap16	?Darken@Bitmap16Bit@@QAEXHHHH@Z	100.0000	100.0000	100.0000	0x4e5f0	e4fb764cccb1
@@ -1972,8 +1973,10 @@ inputmgr	?Open@inputManager@@UAEHH@Z	100.0000	100.0000	100.0000	0xec4d0	8332e852
 inputmgr	?PeekEvent@inputManager@@QAE?AVmessage@@XZ	100.0000	100.0000	100.0000	0xec640	3e82547dc77d
 kb	??0CNetMsg@@QAE@W4eRS_Messages@@K@Z	100.0000	100.0000	100.0000	0xf2930	c08c11f46c9e
 kb	??0type_dialog_icon@@QAE@ABU0@@Z	100.0000	100.0000	100.0000	0xf6810	-
+kb	??0type_dialog_icon@@QAE@XZ	100.0000	100.0000	100.0000	0xf6490	-
 kb	??1advManager@@QAE@XZ	100.0000	100.0000	100.0000	0xf39f0	-
 kb	??1combatManager@@QAE@XZ	71.8085	71.8085	71.8085	0xf3940	-
+kb	??1type_dialog_icon@@QAE@XZ	100.0000	100.0000	100.0000	0xf64c0	-
 kb	?CleanUpMenus@@YIXXZ	100.0000	100.0000	100.0000	0xf4b50	5ad85acac0be
 kb	?CreditsWait@@YIXXZ	95.2930	95.2930	95.2930	0xedda0	e424e5d34744
 kb	?DisplayVCWinLoss@@YI_NAAVVictoryConditionStruct@@AAH1_N@Z	94.9521	94.9521	94.9521	0xf15e0	0fa75f4e1fc3
