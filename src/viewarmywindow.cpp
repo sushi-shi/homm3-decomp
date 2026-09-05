@@ -79,16 +79,6 @@ const int& _cpp_clamp(const int& _Lo, const int& _V, const int& _Hi);
 //  * armyGroup's describers take TCreatureType where army::creatureType
 //    and this window's own ArmyType are both spelled int for the same
 //    header-closure reason.
-inline const TCreatureTypeTraits* stack_traits_of(const int* first_field)
-{
-    union {
-        const int* field;
-        const TCreatureTypeTraits* traits;
-    } storage;
-    storage.field = first_field;
-    return storage.traits;
-}
-
 inline TCreatureType creature_type_from_int(int value)
 {
     union {
@@ -320,8 +310,7 @@ TViewArmyWindow::TViewArmyWindow(const army* this_army, int x0, int y0,
 {
     // The stack's OWN traits row is the copy embedded in army at +0x74
     // (army.h's sMonInfo slice); the table row is the unmodified one.
-    const TCreatureTypeTraits* stack_traits =
-        stack_traits_of(&this_army->monInfoTownType);
+    const TCreatureTypeTraits* stack_traits = &this_army->sMonInfo;
     const TCreatureTypeTraits* type_traits =
         &akCreatureTypeTraits[this_army->creatureType];
 

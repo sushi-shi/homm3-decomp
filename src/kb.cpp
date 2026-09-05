@@ -1126,6 +1126,17 @@ inline void ShowCredits()
 //    GetMap x3) and never emit a wrapper. Claiming the three rows and
 //    spelling the destination-bitmap overload at those sites is the next
 //    concrete step, and it is worth more than anything else left here.
+//    CHECKED 2026-09-05 - the SPELLING half is already done and the CLAIM
+//    half is currently unreachable. All four oldmain Bitmap16Bit::Draw sites
+//    already call the eight-argument destination-bitmap overload
+//    (bitmap16.h:100), and CSprite has the same wrapper at csprite.h:139;
+//    what differs is that VC6 EXPANDS all three wrappers where retail calls
+//    them. Consequently our kb.obj emits no COMDAT for any of them - its
+//    whole symbol table is 50 rows with no Bitmap16Bit or CSprite entry - so
+//    a VA() claim on 0xefff0 / 0xf0010 / 0xf0050 would land on a symbol the
+//    base object does not contain and register as a 0.0000 MISSING row. The
+//    claim can only follow the inline decision, not lead it, and the inline
+//    decision is the same /Ob2 budget question as the progress-bar split.
 //  - The progress-bar inline split: retail's oldmain holds 6
 //    DrawProgressCount sites against our 3 and CALLS ShowProgressBar once
 //    where we expand all three of ours, which is also where the +1 on

@@ -1319,7 +1319,7 @@ void combatManager::CheckApplyGoodMorale(int group, int index)
         return;
     if (Random(1, 24) > stack->GetMorale(1))
         return;
-    stack->creatureId = (stack->creatureId & ~0x04000000) | 0x01000000;
+    stack->sMonInfo.attributes = (stack->sMonInfo.attributes & ~0x04000000) | 0x01000000;
     if (!IsQuickCombat()) {
         SAMPLE2 sample = LoadPlaySample(
             DATA_COMPGEN(0x0066ff6c, goodMoraleSampleName, "GoodMrle.wav"));
@@ -1356,7 +1356,7 @@ int combatManager::CheckApplyBadMorale(int group, int index)
         army* stack = &armies[group][index];
         if (Random(1, 12) <= -stack->GetMorale(1)) {
             if (sideIsAI[group] || Random(1, 4) != 1) {
-                stack->creatureId |= 0x04000000;
+                stack->sMonInfo.attributes |= 0x04000000;
                 if (!IsQuickCombat()) {
                     SAMPLE2 sample = LoadPlaySample(DATA_COMPGEN(
                         0x0066ff7c, badMoraleSampleName, "BadMrle.wav"));
@@ -1417,7 +1417,7 @@ unsigned char combatManager::Unnamed464d40(army* selected)
     if (rand() % 10 > 0)
         return 0;
 
-    selected->creatureId |= 1 << 26;
+    selected->sMonInfo.attributes |= 1 << 26;
     if (!IsQuickCombat()) {
         SAMPLE2 sample = LoadPlaySample(DATA_COMPGEN(
             0x0066ff88, fearSampleName, "Fear.wav"));
@@ -1500,7 +1500,7 @@ unsigned char combatManager::NextArmy(unsigned char checking_for_bad_morale)
                 if (stack->field_4f0 && stack->IsIncapacitated())
                     continue;
                 if (bCreaturePlacement) {
-                    if (!stack->field_c4)
+                    if (!stack->sMonInfo.speed)
                         continue;
                 }
                 if (bCreaturePlacement) {
@@ -1542,7 +1542,7 @@ unsigned char combatManager::NextArmy(unsigned char checking_for_bad_morale)
             checking_for_bad_morale = 0;
             for (int s = 0; s < 2; s++) {
                 for (int j = 0; j < numArmies[s]; j++)
-                    armies[s][j].creatureId &= ~(1 << 25);
+                    armies[s][j].sMonInfo.attributes &= ~(1 << 25);
             }
         }
     }
@@ -1740,11 +1740,11 @@ static unsigned char SideIsWipedOut(const army* row)
         if (row[slot].creatureType == -1)
             continue;
         unsigned char removed = static_cast<unsigned char>(
-            static_cast<unsigned>(row[slot].creatureId) >> 21);
+            static_cast<unsigned>(row[slot].sMonInfo.attributes) >> 21);
         if (removed & 1)
             continue;
         unsigned char flags = static_cast<unsigned char>(
-            static_cast<unsigned>(row[slot].creatureId) >> 6);
+            static_cast<unsigned>(row[slot].sMonInfo.attributes) >> 6);
         if ((flags & 1) == 0)
             return 0;
     }
@@ -1777,15 +1777,15 @@ unsigned char combatManager::IsWinner(int this_side) const
         if (a.creatureType == -1)
             continue;
         unsigned char high = static_cast<unsigned char>(
-            static_cast<unsigned>(a.creatureId) >> 22);
+            static_cast<unsigned>(a.sMonInfo.attributes) >> 22);
         if (high & 1)
             continue;
         unsigned char flags = static_cast<unsigned char>(
-            static_cast<unsigned>(a.creatureId) >> 6);
+            static_cast<unsigned>(a.sMonInfo.attributes) >> 6);
         if (flags & 1)
             continue;
         unsigned char removed = static_cast<unsigned char>(
-            static_cast<unsigned>(a.creatureId) >> 21);
+            static_cast<unsigned>(a.sMonInfo.attributes) >> 21);
         if ((removed & 1) == 0)
             goto have_stack;
     }
@@ -1800,11 +1800,11 @@ have_stack:
         if (a.creatureType == -1)
             continue;
         unsigned char removed = static_cast<unsigned char>(
-            static_cast<unsigned>(a.creatureId) >> 21);
+            static_cast<unsigned>(a.sMonInfo.attributes) >> 21);
         if (removed & 1)
             continue;
         unsigned char flags = static_cast<unsigned char>(
-            static_cast<unsigned>(a.creatureId) >> 6);
+            static_cast<unsigned>(a.sMonInfo.attributes) >> 6);
         if ((flags & 1) == 0)
             return 0;
     }
@@ -1861,21 +1861,21 @@ void combatManager::DamageWall(TWallTargetId target_wall, int damage)
             int slot = archers[2].armySlot;
             wallStrength[17] = 0;
             wallStanding[17] = 0;
-            armies[1][slot].creatureId |= 1 << 21;
+            armies[1][slot].sMonInfo.attributes |= 1 << 21;
             break;
         }
         case WALL_TARGET_6: {
             int slot = archers[1].armySlot;
             wallStrength[16] = 0;
             wallStanding[16] = 0;
-            armies[1][slot].creatureId |= 1 << 21;
+            armies[1][slot].sMonInfo.attributes |= 1 << 21;
             break;
         }
         case WALL_TARGET_7: {
             int slot = archers[0].armySlot;
             wallStrength[15] = 0;
             wallStanding[15] = 0;
-            armies[1][slot].creatureId |= 1 << 21;
+            armies[1][slot].sMonInfo.attributes |= 1 << 21;
             break;
         }
         }
@@ -2904,7 +2904,7 @@ unsigned char combatManager::should_lower_door(army* this_army, long hex) const
     if (hex == COMBAT_HEX_GATE || hex == COMBAT_HEX_GATE_MOAT
             || hex == COMBAT_HEX_OUTER_MOAT)
         return 1;
-    if (!(this_army->creatureId & 1))
+    if (!(this_army->sMonInfo.attributes & 1))
         return 0;
     long second = hex + (this_army->facing != 0 ? 1 : -1);
     if (second == COMBAT_HEX_GATE || second == COMBAT_HEX_GATE_MOAT
@@ -3065,11 +3065,11 @@ unsigned char combatManager::ShotIsNotOptimal(const army* attacker, const army* 
 
     int source = attacker->gridIndex;
     int dest = defender->gridIndex;
-    if (attacker->creatureId & 1)
+    if (attacker->sMonInfo.attributes & 1)
         source = attacker->get_second_grid_index();
     if (get_distance(source, dest) <= 10)
         return 0;
-    if (!(defender->creatureId & 1))
+    if (!(defender->sMonInfo.attributes & 1))
         return 1;
     dest = defender->get_second_grid_index();
     return get_distance(source, dest) > 10;
@@ -3679,7 +3679,7 @@ void combatManager::RemoveArmyFromGrid(const army& a)
     cells[a.gridIndex].armySlot = -1;
     cells[a.gridIndex].armySide = -1;
     cells[a.gridIndex].field_1a = -1;
-    if (a.creatureId & 1) {
+    if (a.sMonInfo.attributes & 1) {
         int hex = a.gridIndex + (a.facing != 0 ? 1 : -1);
         cells[hex].armySlot = -1;
         cells[hex].armySide = -1;
@@ -3699,7 +3699,7 @@ void combatManager::PlaceArmyInGrid(const army& a, int hex)
     cells[hex].armySide = static_cast<signed char>(a.combatSide);
     cells[hex].armySlot = static_cast<signed char>(a.bitIndex);
     cells[hex].field_1a = -1;
-    if (a.creatureId & 1) {
+    if (a.sMonInfo.attributes & 1) {
         cells[hex].field_1a = a.facing == 0;
         int second = hex + (a.facing != 0 ? 1 : -1);
         cells[second].armySide = static_cast<signed char>(a.combatSide);
@@ -4087,11 +4087,11 @@ void combatManager::CheckRebirth()
         for (int slot = 0; slot < numArmies[side]; slot++, stack++) {
             if (stack->creatureType != CREATURE_PHOENIX
                     || !(stack->Is(1u << 21))
-                    || stack->numSpellCasts <= 0
+                    || stack->sMonInfo.hasSpell <= 0
                     || (stack->Is(1u << 23)))
                 continue;
 
-            stack->numSpellCasts--;
+            stack->sMonInfo.hasSpell--;
             stack->numTroops = 0;
             stack->topCreatureDamage = 0;
             int resurrected = stack->origNumTroops / 5;
@@ -4103,11 +4103,11 @@ void combatManager::CheckRebirth()
             if (!resurrected)
                 continue;
 
-            stack->creatureId |= 1 << 26;
+            stack->sMonInfo.attributes |= 1 << 26;
             if (!IsQuickCombat())
                 launch_sample(akSpellTraits[SPELL_RESURRECTION].m_sample,
                               -1, 3);
-            Resurrect(stack, stack->hitPoints * resurrected, 0);
+            Resurrect(stack, stack->sMonInfo.hitPoints * resurrected, 0);
         }
     }
 }
@@ -4695,11 +4695,11 @@ void combatManager::CalculateGainedExperience(int side, int* experience_gained)
         if (a.creatureType == -1)
             continue;
         unsigned char high = static_cast<unsigned char>(
-            static_cast<unsigned>(a.creatureId) >> 22);
+            static_cast<unsigned>(a.sMonInfo.attributes) >> 22);
         if (high & 1)
             continue;
         unsigned char flags = static_cast<unsigned char>(
-            static_cast<unsigned>(a.creatureId) >> 6);
+            static_cast<unsigned>(a.sMonInfo.attributes) >> 6);
         if (flags & 1)
             continue;
         total += (a.origNumTroops - a.numTroops)
@@ -4781,7 +4781,7 @@ void combatManager::Unnamed46a520(army* stack)
 {
     memset(field_14030 + 1, 0, COMBAT_GRID_CELLS);
     field_14030[stack->gridIndex + 1] = 1;
-    if (stack->creatureId & 1)
+    if (stack->sMonInfo.attributes & 1)
         field_14030[stack->get_second_grid_index() + 1] = 1;
 }
 
@@ -4808,7 +4808,7 @@ unsigned char combatManager::check_obstacle_attacks(army* this_army,
         }
     }
 
-    if (this_army->creatureId & 1) {
+    if (this_army->sMonInfo.attributes & 1) {
         hex = this_army->get_second_grid_index();
         if (!field_14030[hex + 1]) {
             field_14030[hex + 1] = 1;

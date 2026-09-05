@@ -224,7 +224,7 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
             if (stack.creatureType != -1 &&
                     stack.creatureType != CREATURE_ARROW_TOWER) {
                 numMons++;
-                int value = stack.monInfoAIValue;
+                int value = stack.sMonInfo.AI_value;
                 if (value > amount) {
                     amount = value;
                     type = TCreatureType(slot);
@@ -234,8 +234,8 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
         Widgets.push_back(new textWidget(
             89, 37, 115, 20,
             numMons > 1
-                ? gpCombatManager->armies[0][type].monInfoPluralName
-                : gpCombatManager->armies[0][type].monInfoName,
+                ? gpCombatManager->armies[0][type].sMonInfo.m_plural_name
+                : gpCombatManager->armies[0][type].sMonInfo.m_name,
             "smalfont.fnt", font::WHITE, ATTACKER_NAME, 0, 0, 8));
         Widgets.push_back(new iconWidget(
             21, 38, 58, 64, ATTACKER_PORTRAIT, "TwCrPort.def",
@@ -264,7 +264,7 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
             if (stack.creatureType != -1 &&
                     stack.creatureType != CREATURE_ARROW_TOWER) {
                 numMons++;
-                int value = stack.monInfoAIValue;
+                int value = stack.sMonInfo.AI_value;
                 if (value > amount) {
                     amount = value;
                     type = TCreatureType(slot);
@@ -274,8 +274,8 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
         Widgets.push_back(new textWidget(
             266, 37, 115, 20,
             numMons > 1
-                ? gpCombatManager->armies[1][type].monInfoPluralName
-                : gpCombatManager->armies[1][type].monInfoName,
+                ? gpCombatManager->armies[1][type].sMonInfo.m_plural_name
+                : gpCombatManager->armies[1][type].sMonInfo.m_name,
             "smalfont.fnt", font::WHITE, DEFENDER_NAME, 2, 0, 8));
         Widgets.push_back(new iconWidget(
             392, 38, 58, 64, DEFENDER_PORTRAIT, "TwCrPort.def",
