@@ -223,6 +223,7 @@ CHAR_STREAM_MEMBERS = (
     ("??4?$ostreambuf_iterator@D", None,
      "ostreambuf_iterator_assign"),
     ("?_Decref@facet@locale@std@@", None, "locale_facet_decref"),
+    ("?_Incref@facet@locale@std@@", None, "locale_facet_incref"),
     ("?getloc@ios_base@std@@", None, "ios_base_getloc"),
     # --- the INPUT half of the same family -------------------------------
     # num_get<char, istreambuf_iterator<char>>'s nine do_get overloads,
@@ -301,7 +302,8 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "BITSET_ITERATOR_DEREF",
                  "BITSET_FLIP",
                  "BITSET_COUNT", "BITSET_ANY", "BITSET_SET",
-                 "BITSET_TEST", "BITSET_XRAN", "TREE_MIN",
+                 "BITSET_TEST", "BITSET_XRAN", "BITSET_XINV",
+                 "ISTREAM_EXTRACT_BITSET", "TREE_MIN",
                  "TREE_INSERT", "TREE_NODE_INSERT",
                  "TREE_CONST_ITERATOR_DEC", "TREE_CONST_ITERATOR_INC",
                  "TREE_COPY", "TREE_COPY_NODE", "TREE_ERASE",
@@ -1030,10 +1032,18 @@ def _demangle_key(mangled: str):
         if mangled.startswith("??4reference@?$bitset@"):
             return f"bitset{bitset_width}@bitset_reference_assign"
         for member in (
-                "_Tidy", "_Xran", "flip", "count", "any", "set", "test"):
+                "_Tidy", "_Xran", "_Xinv", "flip", "count", "any", "set",
+                "test"):
             if mangled.startswith(f"?{member}@?$bitset@"):
                 return (f"bitset{bitset_width}@bitset_"
                         f"{member.lstrip('_').lower()}")
+    # `operator>>(basic_istream<char>&, bitset<N>&)` - a free function, so it
+    # carries no class to key on; the WIDTH is the only thing separating this
+    # image's two instantiations, exactly as it does for the members above.
+    if bitset_width is not None and mangled.startswith(
+            "??5@YIAAV?$basic_istream@DU?$char_traits@D@std@@@std@@AAV01@"
+            "AAV?$bitset@"):
+        return f"bitset{bitset_width}@istream_extract_bitset"
     iterator_width = _template_width(mangled, "bitset_iterator")
     if iterator_width is not None and mangled.startswith(
             "??D?$bitset_iterator@"):
@@ -1097,6 +1107,8 @@ def _demangle_key(mangled: str):
     # the claim reads with its siblings instead of needing a new kind.
     if mangled.startswith("?_Ucopy@TObstacleVector@combatManager@@"):
         return "tobstaclevector@vector_ucopy"
+    if mangled.startswith("?size@TObstacleVector@combatManager@@"):
+        return "tobstaclevector@vector_size"
     algorithm_key = _std_algorithm_key(mangled)
     if algorithm_key:
         return algorithm_key
@@ -1392,6 +1404,8 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                                or "$bitset_set$" in r["name"]
                                or "$bitset_test$" in r["name"]
                                or "$bitset_xran$" in r["name"]
+                               or "$bitset_xinv$" in r["name"]
+                               or "$istream_extract_bitset$" in r["name"]
                                or "$tree_min$" in r["name"]
                                or "$tree_insert$" in r["name"]
                                or "$tree_node_insert$" in r["name"]
@@ -1520,12 +1534,17 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             continue
         bitset_member = next((member for member in (
             "ctor", "subscript", "reference_assign", "flip", "count",
-            "any", "set", "test", "xran")
+            "any", "set", "test", "xran", "xinv")
             if f"$bitset_{member}$" in row["name"]), None)
         if bitset_member is not None:
             owner = row["name"].rsplit("$", 1)[1].lower()
             claim_keys.setdefault(
                 f"{owner}@bitset_{bitset_member}", []).append(row)
+            continue
+        if "$istream_extract_bitset$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(
+                f"{owner}@istream_extract_bitset", []).append(row)
             continue
         if "$bitset_iterator_deref$" in row["name"]:
             owner = row["name"].rsplit("$", 1)[1].lower()
