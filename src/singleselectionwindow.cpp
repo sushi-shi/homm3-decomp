@@ -868,6 +868,16 @@ inline void CNewPlayerUpdateProc::RequestConfirmation()
 // retail now have 10 branches and 3 returns; two symbolic branch targets
 // still differ around the derived loop's exhaustion/teardown placement.
 // E:\gamedcs\singleselectionwindow.cpp:1282
+// Residual (71.8957%): identical instruction for instruction; two branches
+// land on a different block. Retail's back edge re-enters INSIDE the loop,
+// past the header-count guard - i.e. its first `m_nextHeader >= size()` test
+// runs once, as a pre-loop guard, and only the bottom copy is in the loop.
+// MEASURED and rejected three ways: the guard lifted above a `for` with the
+// tail written inline (48.64), lifted above the same `for` keeping the goto
+// tail layout (48.64), and lifted above a `do { } while (++k < 5)` (43.78).
+// All three reproduce retail's TOPOLOGY and lose 23-28 points to block
+// LAYOUT, so the shape below is a local maximum: keep the guard as the
+// loop's first statement and let the two branch targets differ.
 VA(0x00577DE0, 0x228)  // anchor-vtable vtbl 0x641d38 slot1 - the slot WindowHandler's inlined Man::Tick dispatches; Complete-only override shaped from the Dreamcast base Tick at 0x148130
 void t_map_list_update::Tick()
 {
@@ -1432,7 +1442,12 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     Widgets.push_back(new button(
         342, 92, 32, 28, 195, "scbutt5.def", 0, 1, 0, 0, 2));
 
-    int sliderHeight = m_flag65 ? 428 : 480;
+    // Retail loads 480 unconditionally and overwrites it under m_flag65
+    // (`mov esi,0x1e0 / test al,al / je / mov esi,0x1ac`); the ternary
+    // spelling folds the pair branchlessly and loses the je.
+    int sliderHeight = 480;
+    if (m_flag65)
+        sliderHeight = 428;
     fileSlider = new slider(
         375, 92, 16, sliderHeight, 337, 10, SliderFileMenu,
         slider::BLUE, gUnnamed69fdc8, 0);
@@ -1463,16 +1478,18 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
                 0, 8));
 
             sprintf(temp_str, "adopb2%c.def", flagColors[i]);
+            widget* handicapButton;
             if (IsMultiPlayer()) {
-                Widgets.push_back(new textButton(
+                handicapButton = new textButton(
                     110, rowY + 18, 50, 24, 207 + i,
                     temp_str, gUnnamed6a7800[0], "tiny.fnt",
-                    0, 1, 0, 0, 2, font::WHITE));
+                    0, 1, 0, 0, 2, font::WHITE);
             } else {
-                Widgets.push_back(new button(
+                handicapButton = new button(
                     110, rowY + 18, 50, 24, 207 + i,
-                    temp_str, 0, 1, 0, 0, 2));
+                    temp_str, 0, 1, 0, 0, 2);
             }
+            Widgets.push_back(handicapButton);
 
             Widgets.push_back(new button(
                 164, rowY, 11, 24, 215 + i,
@@ -1580,18 +1597,16 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
 
     if ((!m_flag64 && !m_flag65) || (m_flag64 && IsMultiPlayer())) {
         CreateFilterWidgets();
-        textButton* t;
         if (m_flag64)
-            t = new textButton(
+            Widgets.push_back(new textButton(
                 414, 81, 200, 20, 128, "gspbutt.def",
                 gpGeneralText->GetText(656), "smalfont.fnt",
-                0, 1, 0, 31, 2, font::WHITE);
+                0, 1, 0, 31, 2, font::WHITE));
         else
-            t = new textButton(
+            Widgets.push_back(new textButton(
                 414, 81, 200, 20, 128, "gspbutt.def",
                 gpGeneralText->GetText(501), "smalfont.fnt",
-                0, 1, 0, 31, 2, font::WHITE);
-        Widgets.push_back(t);
+                0, 1, 0, 31, 2, font::WHITE));
         Widgets.push_back(new textButton(
             414, 509, 200, 20, 129, "gspbutt.def",
             gpGeneralText->GetText(502), "smalfont.fnt",
@@ -2525,30 +2540,232 @@ void TSingleSelectionWindow::ShowWidget(int id)
     pWidget->enable(IsHost() || m_flag65);
 }
 
-#if 0  // @carcass
-
-// Complete expands the shared DC refresh with its scenario/filter/random-map
-// widget families. The sole constructor call and the retail show/enable runs
-// prove the retained boundary despite the revision-size increase.
+// Re-arm the eight lobby buttons plus the chat toggle through the
+// Dreamcast-proven ShowWidget helper, which this caller expands at every
+// site (OnSetAsHostMsg writes the same nine sites and keeps only the last
+// one out of line). The 0x82 seat is gated on the game-context feature
+// bit exactly as it is there, and the tail re-disables the chat toggle
+// when the load-game mode has no headers to show.
 // E:\gamedcs\singleselectionwindow.cpp:2821
 VA(0x0057FB90, 0x31C)  // Complete-expanded DC UpdateMainWindow, dc 0x135e80
 void TSingleSelectionWindow::UpdateMainWindow()
 {
-    // @stub
+    ShowWidget(128);
+    ShowWidget(129);
+    if (gGameContextFeatures[*gpVideoGameState].test(1))
+        ShowWidget(130);
+    ShowWidget(107);
+    ShowWidget(108);
+    ShowWidget(109);
+    ShowWidget(110);
+    ShowWidget(111);
+    ShowWidget(186);
+    if (SelectionHeaders.size() == 0 && m_flag64)
+        GetWidget(186)->enable(0);
 }
 
+// The exact mirror of TurnOffFilterOptions above: the same 57 widget ids
+// in the same order, shown rather than hidden. Retail reaches it only from
+// the new-game lobby (both mode flags clear), toggles the pane off when it
+// is already up, and drops the scenario/advanced panes before raising this
+// one. The trailing field_37F latch runs the filtered rebuild exactly once
+// per window.
 VA(0x0057FEB0, 0x57A)  // Complete-only filter-option control builder
 void TSingleSelectionWindow::SetupFilterOptions()
 {
-    // @stub
+    if (m_flag64 || m_flag65)
+        return;
+
+    if (inFilterOptions) {
+        TurnOffFilterOptions();
+        return;
+    }
+
+    TurnOffScenarioOptions();
+    TurnOffAdvancedOptions();
+
+    GetWidget(103)->show();
+    GetWidget(280)->show();
+    GetWidget(281)->show();
+    GetWidget(282)->show();
+    GetWidget(283)->show();
+    GetWidget(284)->show();
+    GetWidget(285)->show();
+    GetWidget(286)->show();
+    GetWidget(287)->show();
+    GetWidget(288)->show();
+    GetWidget(289)->show();
+    GetWidget(290)->show();
+    GetWidget(291)->show();
+    GetWidget(292)->show();
+    GetWidget(293)->show();
+    GetWidget(294)->show();
+    GetWidget(295)->show();
+    GetWidget(296)->show();
+    GetWidget(297)->show();
+    GetWidget(298)->show();
+    GetWidget(299)->show();
+    GetWidget(300)->show();
+    GetWidget(301)->show();
+    GetWidget(302)->show();
+    GetWidget(303)->show();
+    GetWidget(304)->show();
+    GetWidget(305)->show();
+    GetWidget(306)->show();
+    GetWidget(307)->show();
+    GetWidget(308)->show();
+    GetWidget(309)->show();
+    GetWidget(310)->show();
+    GetWidget(311)->show();
+    GetWidget(312)->show();
+    GetWidget(313)->show();
+    GetWidget(314)->show();
+    GetWidget(315)->show();
+    GetWidget(316)->show();
+    GetWidget(317)->show();
+    GetWidget(318)->show();
+    GetWidget(319)->show();
+    GetWidget(320)->show();
+    GetWidget(321)->show();
+    GetWidget(322)->show();
+    GetWidget(323)->show();
+    GetWidget(324)->show();
+    GetWidget(325)->show();
+    GetWidget(326)->show();
+    GetWidget(327)->show();
+    GetWidget(328)->show();
+    GetWidget(329)->show();
+    GetWidget(330)->show();
+    GetWidget(331)->show();
+    GetWidget(332)->show();
+    GetWidget(333)->show();
+    GetWidget(334)->show();
+    GetWidget(335)->show();
+
+    UpdateGameVars();
+    inFilterOptions = 1;
+    if (!field_37F) {
+        field_37F = 1;
+        RebuildFilteredPlayerSetup();
+    }
 }
 
+// Synthesize a random-map header from the eight filter slots and install it
+// as the window's own selection row. The map-format version follows the
+// running game context (RoE 14, AB 21, SoD 28), the seat table is filled
+// from the two player-count filters, and the header/setup transfer into
+// gpGame repeats UpdateGameVars' field_37F arm verbatim (retail duplicates
+// those statements rather than sharing the guarded body). The tail resets
+// every seat's hero/town choice, redraws, and mirrors the new positions to
+// the other machines through SendPlayerPositions.
+//
+// Residual (71.54%): every statement is present and the call streams agree
+// on 20 of 22 real sites; what is left is three /Ob2 decisions in the same
+// body, all of them budget rather than spelling. (1) Retail CALLS
+// basic_string::basic_string(const allocator&) for BOTH of the local
+// header's strings; we expand the first (it becomes an inline _Tidy). (2)
+// Inside AssignData retail expands operator=(const char*) at both sites -
+// one down to assign(), one a level further to _Grow - while game.h's
+// load-bearing inline_depth(1) leaves us calling operator= outright.
+// MEASURED 2026-09-05 by deleting that pragma and re-diffing three of its
+// callers in one compile: this row 71.5355 -> 81.0800, OnBeginGame 78.7597
+// -> 77.2700, UpdateGameVars 67.9099 -> 38.0800. So the pragma is NOT inert
+// (contra "only N=0 bites"), it is worth +9.5 here and -29.8 there, and the
+// split wants a per-call-site knob rather than a per-callee one. (3) The
+// SendPlayerPositions expansion: retail CALLS ??0CNetPlayerHandlerPlayer
+// for m_netPlayer[8] and only ??0CNetPlayerInfo for m_compPlayer[8], while
+// our budget expands both loops in full - the same per-site split
+// singleselectionwindow.h:165 records for the two other CUpdatePlayerPosMsg
+// sites. The frame is 8 B short for exactly this reason: retail's two extra
+// dword temps hold the char* operands live across its expanded operator=.
+// Tried and rejected: field_18A0[4] + field_18A0[2] operand order
+// (byte-flat). Fixed here: the version ternary is `== CONTEXT_1 ? 21 : 14`
+// (retail's `and al,-7 / add eax,0x15`), not the other way round.
 VA(0x00580430, 0x63B)  // Complete-only filtered player/setup rebuild
 void TSingleSelectionWindow::RebuildFilteredPlayerSetup()
 {
-    // @stub
+    gpGame->SetupOrigData();
+
+    NewSMapHeader header;
+    header.lossCondition.Type = -1;
+    header.victoryCondition.Type = -1;
+    header.isPlayable = 1;
+    header.difficulty = 1;
+    header.HasTwoLayers = field_18A0[1] > 1;
+    if (field_1898 == SINGLE_SELECTION_CONTEXT_2
+            || field_1898 == SINGLE_SELECTION_CONTEXT_3)
+        header.version = 28;
+    else
+        header.version = field_1898 == SINGLE_SELECTION_CONTEXT_1 ? 21 : 14;
+    header.minNumHumanPlayers = 1;
+    if (field_18A0[2] == -1)
+        header.maxNumHumanPlayers = 8;
+    else
+        header.maxNumHumanPlayers =
+            static_cast<unsigned char>(field_18A0[2]);
+    if (field_18A0[2] == -1 || field_18A0[4] == -1)
+        header.numPlayers = 8;
+    else
+        header.numPlayers =
+            static_cast<unsigned char>(field_18A0[2] + field_18A0[4]);
+
+    for (int i = 0; i < 8; ++i) {
+        header.teamInfo[i] = static_cast<signed char>(i);
+        header.playerSlotAttributes[i].legalAlignments = 0x1ff;
+        header.playerSlotAttributes[i].CanBeHuman =
+            i < header.maxNumHumanPlayers;
+        header.playerSlotAttributes[i].HasRandomAlignment = 1;
+        header.playerSlotAttributes[i].GenerateHero = 1;
+        header.playerSlotAttributes[i].nonRandomHeroId = -1;
+        if (i < header.numPlayers)
+            header.playerSlotAttributes[i].CanBeComputer = 1;
+        else
+            header.playerSlotAttributes[i].CanBeComputer = 0;
+    }
+    header.Size = field_18A0[0];
+    header.numTeams = 0;
+
+    memset(m_localHeader.heroAvailability, -1,
+           sizeof(m_localHeader.heroAvailability));
+    strcpy(m_localHeader.title, gpGeneralText->GetText(741));
+    strcpy(m_localHeader.description, gpGeneralText->GetText(742));
+    m_localHeader.header = header;
+
+    gpGame->InitNewGame(gpGame->setup.difficulty, 0, &header, 0);
+    m_localHeader.setup = gpGame->setup;
+    pCurrentHeader = &m_localHeader;
+
+    gpGame->setup = m_localHeader.setup;
+    memcpy(gpGame->heroAvailability, m_localHeader.heroAvailability,
+           sizeof(m_localHeader.heroAvailability));
+    gpGame->mapHeader.AssignData(&m_localHeader.header, m_localHeader.title,
+                                 m_localHeader.description);
+    gpGame->setup.turnDuration = static_cast<signed char>(durationIndex);
+    gpGame->setup.difficulty = static_cast<signed char>(lastDiff);
+    static_cast<CScrollTextWidget*>(field_196c)
+        ->SetText(m_localHeader.description);
+
+    for (int j = 0; j < CNetPlayerHandler::MAX_PLAYERS; ++j) {
+        m_players.humanPlayers[j].heroIndex = -1;
+        m_players.humanPlayers[j].townIndex = -1;
+        m_players.computerPlayers[j].heroIndex = -1;
+        m_players.computerPlayers[j].townIndex = -1;
+    }
+    SetHumanSlot();
+    MakeHeroFilter();
+
+    if (IsHost()) {
+        UpdateAllyEnemyFlags(1);
+        widget* w = GetWidget(186);
+        w->enable(1);
+        w->Draw();
+    }
+    DrawWindow(0, 0xffff0001, 0xffff);
+    Update();
+
+    if (bVideoPaused && pDPlay->IsHost())
+        SendPlayerPositions(0);
 }
-#endif  // @carcass
 
 // Dreamcast fixes the early TurnOffScenarioOptions return, the following
 // TurnOffAdvancedOptions boundary, the ShowWidget loop/call family, and the
@@ -4613,17 +4830,139 @@ void TSingleSelectionWindow::SetDifficultyHiLite()
     BroadcastMessage(&select);
 }
 
-#if 0  // @carcass - Complete-only random-map generator pending full body
-
 // Generates a map after resolving any random filter rungs. Its single
 // const-char* argument and return byte are fixed by both retained callers.
+// Every "random" rung (-1) is rolled here first, clamped against the seat
+// count, and the resolved values plus the eight seats' town picks go into
+// the request record. The mouse thread runs for the duration and the modal
+// progress bar advances one step; the generator's result code selects one of
+// three general-text failure dialogs.
+//
+// Residual (91.9718%): one construct, and it is a shared-helper conflict
+// rather than a spelling. Retail EXPANDS StopMouseThread here (SetEvent,
+// WaitForSingleObject, the two CloseHandles and the pointer restore all
+// inline, one extra branch) while keeping it OUT of line at
+// SetupScenarioOptions - which is what the `#pragma auto_inline(off)`
+// around its definition above buys. Measured both ways in one build:
+// dropping the pragma takes this row 91.9718 -> 96.9735 and
+// SetupScenarioOptions 100.0000 -> 90.1470, a net loss of about 100 bytes
+// and a ratchet break, so the pragma stays and this call stays a call.
+// Fixed here: the request/progress/path locals live in their OWN BLOCK,
+// which retail proves by destroying them once before StopMouseThread rather
+// than per switch arm - worth 80.8024 -> 91.9718 on the brace alone.
 VA(0x005860E0, 0x4CC)
 unsigned char TSingleSelectionWindow::GenerateRandomMap(const char* name)
 {
-    // @stub
-}
+    int players = field_18A0[2];
+    int humans = field_18A0[3];
+    int teams = field_18A0[4];
+    int alliances = field_18A0[5];
 
-#endif  // @carcass
+    if (players == -1) {
+        int seated = 0;
+        for (int j = 0; j < CNetPlayerHandler::MAX_PLAYERS; ++j) {
+            CNetPlayerHandlerPlayer* p = m_players.GetPlayerInPos(j);
+            if (p && p->dpid != 0)
+                ++seated;
+        }
+        players = seated + rand() % (9 - seated);
+    }
+
+    if (humans == -1)
+        humans = rand() % players + 1;
+    if (humans == 0 || humans > players)
+        humans = players;
+
+    if (players == CNetPlayerHandler::MAX_PLAYERS) {
+        teams = 0;
+        alliances = 0;
+    } else {
+        if (teams == -1)
+            teams = rand() % (9 - players);
+        if (teams + players > 8)
+            teams = 8 - players;
+        if (teams == 0) {
+            alliances = teams;
+        } else {
+            if (alliances == -1)
+                alliances = rand() % teams + 1;
+            if (alliances == 0)
+                alliances = teams;
+            else if (alliances > teams)
+                alliances = players;
+        }
+    }
+
+    int monsters = field_18A0[6];
+    int water = field_18A0[7] - 1;
+    if (water == -2)
+        water = rand() % 3 - 1;
+
+    int mapVersion;
+    if (field_1898 == SINGLE_SELECTION_CONTEXT_2
+            || field_1898 == SINGLE_SELECTION_CONTEXT_3)
+        mapVersion = GAME_VERSION_SOD;
+    else
+        mapVersion = field_1898 == SINGLE_SELECTION_CONTEXT_1
+            ? GAME_VERSION_AB
+            : GAME_VERSION_ROE;
+
+    gpMouseManager->SetPointer(1, mouseManager::ADVENTURE_SET);
+    StartMouseThread();
+
+    int result;
+    {
+        TRandomMapRequest request(field_18A0[0], field_18A0[0],
+                                  field_18A0[1]);
+        TRandomMapProgress progress(1);
+
+        request.field_34 = players;
+        request.field_38 = humans;
+        request.field_3C = teams;
+        request.field_40 = alliances;
+        request.field_44 = monsters;
+        request.field_48 = water;
+        request.mapVersion = mapVersion;
+
+        for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
+            CNetPlayerHandlerPlayer* pPlayer = m_players.GetPlayerInPos(i);
+            if (!pPlayer)
+                pPlayer = m_players.GetCompPlayerInPos(i);
+            if (pPlayer->dpid != 0)
+                request.isHumanSeat[i] = 1;
+            request.townType[i] = pPlayer->townIndex;
+        }
+
+        std::string path(DATA_COMPGEN(0x006837d4, randomMapsPrefix,
+                                      "random_maps\\"));
+        path += name;
+
+        result = request.Generate(path.c_str(), &progress);
+        progress.done = std::_cpp_min(progress.done + 1, progress.steps);
+        progress.LoadProgFn_00577180();
+    }
+
+    StopMouseThread();
+    gpMouseManager->SetPointer(0, mouseManager::DEFAULT_SET);
+
+    switch (result) {
+    case RANDOM_MAP_OK:
+        return 1;
+    case RANDOM_MAP_FAILED_1:
+        NormalDialog(gpGeneralText->GetText(750), 1, -1, -1, -1, 0, -1, 0, -1,
+                     0, -1, 0);
+        break;
+    case RANDOM_MAP_FAILED_2:
+        NormalDialog(gpGeneralText->GetText(751), 1, -1, -1, -1, 0, -1, 0, -1,
+                     0, -1, 0);
+        break;
+    case RANDOM_MAP_FAILED_3:
+        NormalDialog(gpGeneralText->GetText(752), 1, -1, -1, -1, 0, -1, 0, -1,
+                     0, -1, 0);
+        break;
+    }
+    return 0;
+}
 
 #if 0  // @carcass
 
@@ -4650,17 +4989,20 @@ unsigned char TSingleSelectionWindow::OnClickMsg(CNetMsg* pNetMsg)
 // and returned CanChooseHero to its exact row. The FILE_ROW double-click
 // reads clickTime into a local before GameTime::Get() (retail holds it in
 // ESI across the call).
-// Residual: (a) retail keeps both OnBeginGame sites out of line with
-// different *bExitFlag store registers (edx/ecx); ours allocate the same
-// register and the cross-jumper merges the BEGIN arm's tail into the
-// FILE_ROW one; (b) retail CALLS the GetRandomMapName() temporary's
-// basic_string::_Tidy and the CNewSetupInfoMsg expansion's CNetMsg base
-// ctor - both depth-2 sites whose nested budget (budget / sites-remaining)
-// is smaller in retail, i.e. retail's source has more /Ob2 candidates
-// after them than ours: OnBeginGame (0x58bce0) and
-// RebuildFilteredPlayerSetup (0x580430) are still carcass stubs here, so
-// they are not candidates in this TU; (c) the block alignment shifts by
-// one at the TOWN_PREV lookup and the remaining flow rows are that shift.
+// MATCHING (2026-09-05): 94.4890 -> 97.3769, and (a) below is CLOSED - the
+// second OnBeginGame call site came back once the file-row bounds guards
+// were written retail's way (see the note at that arm). Residual: retail
+// CALLS the GetRandomMapName() temporary's basic_string::_Tidy and the
+// CNewSetupInfoMsg expansion's CNetMsg base constructor, both depth-2
+// sites whose nested budget (budget / sites-remaining) is smaller in
+// retail; that is the last three branches (144 against 141). The earlier
+// prediction here - that the residual would lift once OnBeginGame and
+// RebuildFilteredPlayerSetup stopped being carcass stubs and became /Ob2
+// candidates in this TU - is REFUTED: both landed on 2026-09-05 and this
+// row did not move by a digit. One more instruction pair is
+// pick_next_alignment's `cmp 8 / jg` against retail's `cmp 9 / jge`;
+// spelling it `>= TOWN_CONFLUX + 1` in newgame.h does produce retail's
+// encoding and costs 0.25 overall, so it stays.
 // E:\gamedcs\singleselectionwindow.cpp:5100
 VA(0x005865b0, 0x13EA)  // anchor-callee WindowHandler's id==0x200/codeX==13 arm calls it (msg, &redraw, 0) - the DC signature exactly; size 0.57x dc 0x22d4, dc 0x13c79c
 int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
@@ -4771,7 +5113,7 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
         if (pThisPlayer) {
             pThisPlayer->heroIndex = -1;
             TTownType townType = GetDisplayTown(i);
-            int legal = static_cast<unsigned short>(
+            unsigned short legal = static_cast<unsigned short>(
                 gpGame->mapHeader.playerSlotAttributes[i].legalAlignments);
             if (!field_1898)
                 legal &= ~0x100;
@@ -4798,7 +5140,7 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
         if (pThisPlayer) {
             pThisPlayer->heroIndex = -1;
             TTownType townType = GetDisplayTown(i);
-            int legal = static_cast<unsigned short>(
+            unsigned short legal = static_cast<unsigned short>(
                 gpGame->mapHeader.playerSlotAttributes[i].legalAlignments);
             if (!field_1898)
                 legal &= ~0x100;
@@ -5149,15 +5491,16 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
         if (m_flag65) {
             field_68 = msg->codeY - SSW_FILE_ROW_FIRST;
             SetCurrentMap(map, 1);
-        } else if (SelectionHeaders.size() != 0
-                && map < SelectionHeaders.size()) {
+        } else if (map < SelectionHeaders.size()) {
             unsigned long lastClick = clickTime;
             if (static_cast<int>(GameTime::Get() - lastClick) < 400) {
                 *bExitFlag = OnBeginGame();
             } else {
                 clickTime = GameTime::Get();
-                if (SelectionHeaders.size() != 0
-                        && map < SelectionHeaders.size()
+                // Retail's second guard reads size() > map (`cmp edx,edi /
+                // jbe`), the first map < size() (`cmp edi,edx / jae`), and
+                // neither carries a separate size() != 0 test.
+                if (SelectionHeaders.size() > map
                         && (!bVideoPaused || IsHost()))
                     SetCurrentMap(map, 1);
             }
@@ -5178,8 +5521,10 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
         if (!pThisPlayer)
             pThisPlayer = m_players.GetCompPlayerInPos(i);
         if (pThisPlayer) {
-            unsigned char noHero = pThisPlayer->heroIndex == -1
-                && !HasRandomHero(i) && !HasNonRandomHero(i);
+            unsigned char noHero = 0;
+            if (pThisPlayer->heroIndex == -1 && !HasRandomHero(i)
+                    && !HasNonRandomHero(i))
+                noHero = 1;
             --pThisPlayer->startBonusIndex;
             if (pThisPlayer->startBonusIndex < 0
                     || (pThisPlayer->startBonusIndex == 0 && noHero))
@@ -5208,8 +5553,10 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
         if (!pThisPlayer)
             pThisPlayer = m_players.GetCompPlayerInPos(i);
         if (pThisPlayer) {
-            unsigned char noHero = pThisPlayer->heroIndex == -1
-                && !HasRandomHero(i) && !HasNonRandomHero(i);
+            unsigned char noHero = 0;
+            if (pThisPlayer->heroIndex == -1 && !HasRandomHero(i)
+                    && !HasNonRandomHero(i))
+                noHero = 1;
             pThisPlayer->startBonusIndex =
                 (pThisPlayer->startBonusIndex + 1) % 4;
             if (pThisPlayer->startBonusIndex == 0 && noHero)
@@ -5246,17 +5593,64 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
     return 0;
 }
 
-#if 0  // @carcass - Complete-only random-map name helper pending full body
-
 // Hidden std::string result in ECX, no explicit stack args. Retail enumerates
-// random_maps/*.h3m and returns the generated filename.
+// random_maps/*.h3m and returns the generated filename: it builds the fifteen
+// canonical slot names, stamps each existing file's write time into the
+// matching slot (absent slots keep their zero), and returns the slot with the
+// smallest stamp - i.e. the free slot if there is one, otherwise the oldest.
+//
+// Residual (99.4390%): three bytes. Retail keeps the sprintf loop counter in
+// EDX behind its own `xor edx,edx`, while our compile CSEs it onto the EAX
+// zero the memset intrinsic already materialised. Tried and rejected:
+// `i = 0;` written above the memset (98.95), the memset moved below the loop
+// (89.16), and hoisting `int i;` to the declaration block (byte-flat - a bare
+// declaration creates no pseudo).
 VA(0x005879A0, 0x219)
 std::string GetRandomMapName()
 {
-    // @stub
-}
+    char names[15][30];
+    int times[15];
+    _finddata_t fileinfo;
+    int i;
 
-#endif  // @carcass
+    _chdir(DATA_COMPGEN(0x006836ac, randomMapsDir, "random_maps"));
+    long hFind = _findfirst(DATA_COMPGEN(0x00683494, mapFileSpec, "*.h3m"),
+                            &fileinfo);
+    if (hFind == -1) {
+        _chdir(DATA_COMPGEN(0x006755a0, parentDirectory, ".."));
+        return DATA_COMPGEN(0x006837f8, firstRandomMapName,
+                            "random_map_1.h3m");
+    }
+
+    memset(times, 0, sizeof(times));
+    for (i = 0; i < 15; ++i)
+        sprintf(names[i],
+                DATA_COMPGEN(0x006837e4, randomMapNameFormat,
+                             "random_map_%i.h3m"),
+                i + 1);
+
+    do {
+        for (int j = 0; j < 15; ++j) {
+            if (_strcmpi(names[j], fileinfo.name) == 0) {
+                times[j] = fileinfo.time_write;
+                break;
+            }
+        }
+    } while (_findnext(hFind, &fileinfo) == 0);
+
+    _chdir(DATA_COMPGEN(0x006755a0, parentDirectory, ".."));
+    _findclose(hFind);
+
+    int oldest = times[0];
+    int which = 0;
+    for (int k = 1; k < 15; ++k) {
+        if (times[k] < oldest) {
+            which = k;
+            oldest = times[k];
+        }
+    }
+    return names[which];
+}
 
 // On the way out of a network lobby: detach the net-message handler,
 // clear the chat pane, and dump the final seat map into the network
@@ -7166,15 +7560,155 @@ void TSingleSelectionWindow::SendPlayerFaces()
     }
 }
 
-#if 0  // @carcass - DC-shaped launch bodies remain queued
-
+// The begin-button gate. Complete prefixes DC's body with the random-map
+// arm: generate the picked slot, read its header back into the window's own
+// row and push it into gpGame exactly as UpdateGameVars' field_37F arm does.
+// Then the five refusals - map format against the running game context (one
+// test for a save, one comparison for a scenario), the disabled begin
+// button, an empty list, the local seat having no position, and fewer than
+// two seated players in a network game - before the pointer/session/progress
+// preamble hands off to BeginSavedGame or BeginNewGame.
+//
+// Residual (78.76%): 1433 emitted bytes against retail's 1455, every
+// statement present, and the whole gap is ONE sequential /Ob2 budget
+// difference. Retail EXPANDS AssignData's two operator=(const char*) sites
+// (down to assign(), the same pair RebuildFilteredPlayerSetup shows) and,
+// having spent that budget early, CALLS bitset<4>::_Xran at the
+// game-context test; we call operator= and therefore still have budget to
+// expand the whole _Xran throw path (basic_string ctor + out_of_range ctor
+// + _CxxThrowException, ~50 B) inline, which also costs the EBX/EDX
+// binding around the bit test and two extra epilogues. The knob is
+// game.h's AssignData, which the campaign pins. Fixed here: naming
+// `GameSelectionHeadersStruct* pHeader = &m_localHeader;` (+0.55 - retail
+// spills `this` at entry and repurposes the callee-saved register for the
+// row) and adopting SetupScenarioOptions' proven
+// `static_cast<const std::bitset<4>&>(...)[class]` + `Text.begin()` dialog
+// idiom over `.test()` + `GetText()` (+0.52).
+// E:\gamedcs\singleselectionwindow.cpp:7698
 VA(0x0058BCE0, 0x5AF)  // begin-button caller and DC source shape, dc 0x142674
 unsigned char TSingleSelectionWindow::OnBeginGame()
 {
-    // @stub
-}
+    if (field_37F) {
+        std::string name = GetRandomMapName();
+        if (bVideoPaused) {
+            CNetMsg msg(RS_GAME_TRANSMIT_PENDING, sizeof(CNetMsg));
+            TransmitRemoteDataDPID(&msg, 0, false, true);
+        }
+        GameSelectionHeadersStruct* pHeader = &m_localHeader;
+        if (!GenerateRandomMap(name.c_str())
+                || GetHeader(DATA_COMPGEN(0x006836ac, randomMapsDir,
+                                          "random_maps"),
+                             const_cast<char*>(name.c_str()), pHeader))
+            return 0;
+        gpGame->setup = pHeader->setup;
+        memcpy(gpGame->heroAvailability, pHeader->heroAvailability,
+               sizeof(pHeader->heroAvailability));
+        gpGame->mapHeader.AssignData(&pHeader->header, pHeader->title,
+                                     pHeader->description);
+        gpGame->setup.turnDuration = static_cast<signed char>(durationIndex);
+        gpGame->setup.difficulty = static_cast<signed char>(lastDiff);
+        static_cast<CScrollTextWidget*>(field_196c)
+            ->SetText(pHeader->description);
+    }
 
-#endif  // @carcass
+    if (!m_flag64 && gpGame->mapHeader.version != MAP_FORMAT_SHADOW_OF_DEATH
+            && gpGame->mapHeader.version != MAP_FORMAT_RESTORATION_OF_ERATHIA
+            && gpGame->mapHeader.version != MAP_FORMAT_ARMAGEDDONS_BLADE)
+        return 0;
+
+    if (m_flag64) {
+        int gameVersionClass;
+        if (pCurrentHeader->saved.gameVersion == GAME_VERSION_SOD)
+            gameVersionClass = GAME_VERSION_SOD;
+        else
+            gameVersionClass =
+                pCurrentHeader->saved.gameVersion == GAME_VERSION_AB;
+
+        if (!static_cast<const std::bitset<4>&>(
+                gGameContextFeatures[field_1898])[gameVersionClass]) {
+            char** text;
+            const char* gameType;
+            if (*gpVideoGameState == SINGLE_SELECTION_CONTEXT_1) {
+                text = gpGeneralText->Text.begin();
+                gameType = text[746];
+            } else {
+                text = gpGeneralText->Text.begin();
+                gameType = text[747];
+            }
+            NormalDialog(format_string(text[744], gameType).c_str(), 1, -1, -1,
+                         -1, 0, -1, 0, -1, 0, -1, 0);
+            return 0;
+        }
+    } else {
+        int mapVersionClass;
+        if (gpGame->mapHeader.version > MAP_FORMAT_ARMAGEDDONS_BLADE)
+            mapVersionClass = GAME_VERSION_SOD;
+        else
+            mapVersionClass = gpGame->mapHeader.version
+                > MAP_FORMAT_RESTORATION_OF_ERATHIA;
+
+        if (field_1898 < mapVersionClass) {
+            char** text;
+            const char* gameType;
+            if (*gpVideoGameState == SINGLE_SELECTION_CONTEXT_1) {
+                text = gpGeneralText->Text.begin();
+                gameType = text[746];
+            } else {
+                text = gpGeneralText->Text.begin();
+                gameType = text[747];
+            }
+            NormalDialog(format_string(text[745], gameType).c_str(), 1, -1, -1,
+                         -1, 0, -1, 0, -1, 0, -1, 0);
+            return 0;
+        }
+    }
+
+    widget* beginButton = GetWidget(186);
+    if (beginButton && (beginButton->status & widget::WIDGET_DISABLED))
+        return 0;
+
+    if (SelectionHeaders.size() == 0 && !field_37F) {
+        NormalDialog(gpGeneralText->GetText(530), 1, -1, -1, -1, 0, -1, 0, -1,
+                     0, -1, 0);
+        return 0;
+    }
+
+    CNetPlayerHandlerPlayer* player = GetThisPlayer();
+    if (!m_flag64 && player->playerPos == -1) {
+        NormalDialog(gpGeneralText->GetText(531), 1, -1, -1, -1, 0, -1, 0, -1,
+                     0, -1, 0);
+        return 0;
+    }
+
+    if (bVideoPaused || gUnnamed6989f0 == WINDOW_MODE_6989F0_3) {
+        int seated = 0;
+        for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
+            if (m_players.humanPlayers[i].dpid != 0
+                    && m_players.humanPlayers[i].playerPos != -1)
+                ++seated;
+        }
+        if (seated < 2) {
+            NormalDialog(gpGeneralText->GetText(83), 1, -1, -1, -1, 0, -1, 0,
+                         -1, 0, -1, 0);
+            return 0;
+        }
+    }
+
+    gpMouseManager->SetPointer(1, mouseManager::ADVENTURE_SET);
+
+    if (bVideoPaused) {
+        DPSESSIONDESC2* pSessionDesc = pDPlay->GetCurrSession();
+        pSessionDesc->dwFlags |= 0x21;
+        pDPlay->UpdateSessionDesc(pSessionDesc);
+        ::operator delete(pSessionDesc);
+    }
+
+    ShowProgressBar();
+
+    if (m_flag64)
+        return BeginSavedGame();
+    return BeginNewGame();
+}
 
 // Load the selected save while retaining the lobby's calendar state. DC
 // proves the four progress ticks, scoped launch message, four calendar
@@ -7238,15 +7772,76 @@ unsigned char TSingleSelectionWindow::BeginSavedGame()
     return 1;
 }
 
-#if 0  // @carcass - DC-shaped launch bodies remain queued
-
+// The new-scenario launch arm. Size the world, reseat the duration and the
+// player positions, announce the launch, then hand the picked scenario to
+// game::NewMap with the per-seat hero choices resolved through each seat's
+// own availability list. On a network game the fresh map header, the seat
+// map and the whole save image go out to the other machines before the last
+// progress tick.
+//
+// Residual (74.90%): branches and block count agree exactly; the whole gap
+// is the CNewMapHeaderInfoMsg construction. Retail CALLS NewSMapHeader's
+// default constructor and EXPANDS its operator= (base assign call, two
+// string assigns, the bitset copied inline); we do the mirror image -
+// expand the constructor (CMapHeaderData ctor + two string ctors + bitset
+// ctor + the body's zero run) and CALL operator=. That is the same
+// sequential /Ob2 budget split OnBeginGame and RebuildFilteredPlayerSetup
+// show, and it costs a knock-on register binding: retail keeps `this` in
+// EBX and re-materialises the zero three times, while our long-lived CSE'd
+// zero takes EBX and spills `this`. Tried and rejected: `int iReturn` for
+// the TransmitSaveGame result, which the DC local list names (74.65 against
+// 74.90 without it - CodeView locals are a lower bound), and dropping
+// `inline` from the message constructor (byte-flat; one call site, so /Ob2
+// expands it either way). Fixed here: the DC-named `pPlayer` row pointer in
+// the seat loop is worth +4.22 and makes the branch view clean.
+// E:\gamedcs\singleselectionwindow.cpp:7822
 VA(0x0058C570, 0x3E7)  // OnBeginGame new arm, dc 0x1429e8
 unsigned char TSingleSelectionWindow::BeginNewGame()
 {
-    // @stub
-}
+    int gameVersionClass;
+    if (field_1898 == SINGLE_SELECTION_CONTEXT_2
+            || field_1898 == SINGLE_SELECTION_CONTEXT_3)
+        gameVersionClass = GAME_VERSION_SOD;
+    else
+        gameVersionClass = field_1898 == SINGLE_SELECTION_CONTEXT_1;
 
-#endif  // @carcass
+    gpGame->SetMapSize(gpGame->mapHeader.Size, gpGame->mapHeader.Size);
+    UpdateTurnDuration();
+    UpdatePlayerPositions(1);
+    IncProgressBar(1);
+
+    if (bVideoPaused) {
+        CNetMsg msg(RS_LAUNCHING_GAME, sizeof(CNetMsg));
+        TransmitRemoteDataDPID(&msg, 0, false, true);
+    }
+
+    gpGame->SetupOrigData();
+    IncProgressBar(1);
+
+    strcpy(gMapName, gpGame->setup.filename);
+    memset(gUnnamed69fb24, -1, sizeof(gUnnamed69fb24));
+    for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
+        CNetPlayerHandlerPlayer* pPlayer = &m_players.humanPlayers[i];
+        if (pPlayer->playerPos != -1 && pPlayer->heroIndex != -1)
+            gUnnamed69fb24[pPlayer->playerPos] =
+                pPlayer->availableHeroes[pPlayer->heroIndex];
+    }
+    gpGame->NewMap(gpGame->setup.path, gMapName, gUnnamed69fb24,
+                   gameVersionClass);
+    IncProgressBar(1);
+
+    if (bVideoPaused) {
+        CNewMapHeaderInfoMsg mapHeaderMsg(&gpGame->mapHeader);
+        mapHeaderMsg.RemoteFn_00512D40(0, 0, 1);
+        SendPlayerPositions(0);
+        gUnnamed69d810 = gNetLocalGamePos;
+        if (!gpGame->TransmitSaveGame(0x7f, 0, 0, 1) && !gUnnamed69d80d)
+            return 0;
+    }
+
+    IncProgressBar(1);
+    return 1;
+}
 
 // Rebuild the two 4-seat name columns: each human seat's name on its
 // own line ("%s\n" - the pooled literal advmgr owns as
@@ -7470,6 +8065,15 @@ unsigned char TSingleSelectionWindow::CanChooseHero(int gamePos)
 // and the button.cpp/hero.cpp _Grow walls. Tried and rejected: a dead
 // second find site (75.99 - the collector moves the wrong way).
 // E:\gamedcs\singleselectionwindow.cpp:8107
+// Residual (85.2679%): the map lookup only. Retail expands find() but CALLS
+// map::end() at both of the two sites inside it, while our budget expands
+// those too; the caller's own `!= end()` is inline on both sides. No pin is
+// available for a callee two levels down. Fixed here: testing
+// nonRandomHeroCustomPortrait WITHOUT landing it in heroId first (retail
+// returns the loaded value straight out of the shared epilogue rather than
+// storing it - 77.0099 -> 84.5300, and the branch view goes clean), plus a
+// named `setups` reference for the map (+0.74; retail holds its address in
+// ESI across the whole tail).
 VA(0x0058D0E0, 0x10A)  // anchor-callee DrawHeroAdvancedOption calls it (gamePos) in both mode arms and indexes the heroFaces plates with the result (-1 = the random/none plates); head is the GetPlayerInPos scan, size 1.02x dc 0x104, dc 0x143444
 int TSingleSelectionWindow::GetDisplayFace(int gamePos)
 {
@@ -7480,23 +8084,22 @@ int TSingleSelectionWindow::GetDisplayFace(int gamePos)
         &gpGame->mapHeader.playerSlotAttributes[gamePos];
     int heroId;
     if (m_flag64) {
-        heroId = slot->nonRandomHeroCustomPortrait;
-        if (heroId != -1)
-            return heroId;
+        if (slot->nonRandomHeroCustomPortrait != -1)
+            return slot->nonRandomHeroCustomPortrait;
         heroId = gpGame->setup.startingHero[gamePos];
     } else if (slot->GenerateHero || slot->hasRandomHero) {
         if (p->heroIndex == -1)
             return -1;
         heroId = p->availableHeroes[p->heroIndex];
     } else {
+        if (slot->nonRandomHeroCustomPortrait != -1)
+            return slot->nonRandomHeroCustomPortrait;
         heroId = slot->nonRandomHeroCustomPortrait;
-        if (heroId != -1)
-            return heroId;
     }
-    std::map<int, type_map_hero_info>::iterator it =
-        gpGame->mapHeader.heroPlayerSetups.find(heroId);
-    if (it != gpGame->mapHeader.heroPlayerSetups.end()
-            && it->second.field_00 != -1)
+    std::map<int, type_map_hero_info>& setups =
+        gpGame->mapHeader.heroPlayerSetups;
+    std::map<int, type_map_hero_info>::iterator it = setups.find(heroId);
+    if (it != setups.end() && it->second.field_00 != -1)
         heroId = it->second.field_00;
     return heroId;
 }
@@ -7562,6 +8165,7 @@ VA(0x0058D1F0, 0x1E7)  // anchor-callee DrawHeroAdvancedOption pushes its return
 const char* TSingleSelectionWindow::GetHeroName(int gamePos)
 {
     std::map<int, type_map_hero_info>::iterator it;
+    int heroId;
     CMapHeaderData::TPlayerSlotAttributes* slot =
         &gpGame->mapHeader.playerSlotAttributes[gamePos];
     if (m_flag64) {
@@ -7569,7 +8173,7 @@ const char* TSingleSelectionWindow::GetHeroName(int gamePos)
             if (strlen(slot->nonRandomHeroCustomName) != 0)
                 return slot->nonRandomHeroCustomName;
         }
-        int heroId = gpGame->setup.startingHero[gamePos];
+        heroId = gpGame->setup.startingHero[gamePos];
         if (heroId == -1)
             return gpGeneralText->GetText(524);
         it = gpGame->mapHeader.heroPlayerSetups.find(heroId);
@@ -7882,11 +8486,16 @@ void TSingleSelectionWindow::DrawHeroAdvancedOption(int playerPos,
         unsigned char townChosen = 1;
         if (town == -1)
             townChosen = 0;
+        // The window-mode disjunct is OUTER, not part of the
+        // CanChooseTown/townChosen group, and the dpid test sits beside
+        // the host test rather than inside it: retail's `!IsHost` and
+        // `dpid != 0` arms both jump to the gUnnamed6989f0 compare, not
+        // past it (branch topology clean at 49/49 once written this way).
         if (GetThisPlayerGamePos() == playerPos
-                || ((bVideoPaused == 0
-                        || (pDPlay->IsHost() && p->dpid == 0))
-                    && (CanChooseTown(playerPos) || townChosen != 0
-                        || gUnnamed6989f0 == WINDOW_MODE_6989F0_3))) {
+                || ((bVideoPaused == 0 || pDPlay->IsHost())
+                    && p->dpid == 0
+                    && (CanChooseTown(playerPos) || townChosen != 0))
+                || gUnnamed6989f0 == WINDOW_MODE_6989F0_3) {
             bonusLeft->enable(1);
             bonusRight->enable(1);
             bonusLeft->send_message(widget::WIDGET_SET_STATUS, 6);
