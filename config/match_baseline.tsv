@@ -1068,6 +1068,7 @@ compress	@compress2@20	100.0000	100.0000	100.0000	0x206b40	-
 crc32	@crc32@12	100.0000	100.0000	100.0000	0x205af0	-
 creature_bank	??0type_creature_bank_traits@@QAE@XZ	100.0000	100.0000	100.0000	0x7aad0	2dbea7ccab6e
 creature_bank	?initialize_creature_bank@@YIXPAUtype_creature_bank@@W4type_creature_bank_type@@@Z	98.1075	98.1075	98.1075	0x7ad90	5d91c0f11b1d
+creature_bank	?initialize_creature_bank_traits@@YIEXZ	88.8910	89.4313	89.4313	0x7ab30	936d754ee98a
 creaturetype	?InitializeCreatureTypeTraits@@YIXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	100.0000	100.0000	100.0000	0x7b480	78a734f5e740
 creaturetype	?InitializeCreatureTypeTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0x7b290	d4b5050cb084
 creaturetype	?IsBaseCreature@@YIHW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x7b120	d197cebfb413
