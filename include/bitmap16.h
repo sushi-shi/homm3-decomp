@@ -31,6 +31,15 @@ union Bitmap16ConstMapPointer {
 // Darken's retail body is 0x44e5f0 (called by widget::Dim).
 class Bitmap816;
 
+// The two green-channel widths a 16-bit surface comes in. wingraph's
+// mode-change path (0x601bfe) picks between them with
+// `greenMask == 0x7e0 ? 6 : 5` and hands the answer to Remap, which is the
+// only consumer; the DC roster names that parameter old_green_bits.
+enum EBitmapGreenBits {
+    BITMAP_GREEN_BITS_1555 = 5,
+    BITMAP_GREEN_BITS_565 = 6
+};
+
 class Bitmap16Bit : public resource {
 public:
     int DataSize;
@@ -69,6 +78,10 @@ public:
         result.bytes += y * Pitch + x * sizeof(unsigned short);
         return result.pixels;
     }
+    // DC bitmap16.cpp:262. wingraph's mode-change path (0x601bfe) is the
+    // caller and hands it `mask == 0x7e0 ? 6 : 5`, which is what the DC
+    // roster names old_green_bits.
+    void Remap(int old_green_bits);
     void reference(int w, int h, int pitch, unsigned short* data);
     void Darken(int x, int y, int w, int h);
     // DC bitmap16.cpp:778; UpdateGrid's seven pushes and retail target
