@@ -75,6 +75,7 @@ build (the `homm3 delink` chain does).
 from __future__ import annotations
 
 import bisect
+import itertools
 import os
 import re
 import struct
@@ -1257,6 +1258,53 @@ def _report_size_mismatch(unit, row, mangled, content, problems) -> None:
         f"annotation binds to whatever declaration FOLLOWS it).")
 
 
+#: Widest overload group the size oracle brute-forces. Real groups hold
+#: two or three members; the guard exists so a pathological key can never
+#: cost a factorial.
+MAX_SIZE_PAIRING_GROUP = 6
+
+
+def _size_pairing(by_rva: list[dict], mangled_group: list) -> list | None:
+    """The one assignment of claims to base symbols in which EVERY claim's
+    retail extent equals its symbol's compiled content size, or None when
+    there is no such assignment or more than one.
+
+    The positional zip below rests on "COFF section order == claim rva
+    order", which holds for definitions the SOURCE writes: cl emits one
+    COMDAT per definition in source order, and the linker keeps that order
+    inside a TU. It does NOT hold once a COMPILER-GENERATED member joins
+    the group - cl emits an implicit copy ctor/assign/dtor where it is
+    first needed, not where the class is written - and the zip then swaps
+    the whole group silently, because both spellings are real names of
+    real symbols and nothing downstream can tell they were exchanged.
+    That is exactly what happened to `TGzInflateBuf::TDataError`: retail's
+    175-byte default ctor at 0x4d65e0 (no `[ebp+8]`, calls
+    `exception(const char* const&)`) took the copy ctor's mangled name and
+    its 343-byte copy ctor at 0x4d6690 took the default's, and 518 banked
+    bytes read 31.78 and 0.00 with the ratchet clean.
+
+    Sizes are the stronger evidence whenever they decide: a byte-exact
+    claim and its base symbol are the SAME length, so a group whose sizes
+    admit exactly one perfect matching has named its own pairing. Anything
+    less - a claim no symbol's length fits, two symbols of one length -
+    is ambiguous and falls back to the definition-order assumption.
+
+    Pure in (by_rva, mangled_group) so the negative control can drive it.
+    """
+    if not 0 < len(by_rva) <= MAX_SIZE_PAIRING_GROUP:
+        return None
+    names = [name for name, _content in mangled_group]
+    sizes = [content for _name, content in mangled_group]
+    found = None
+    for order in itertools.permutations(range(len(names))):
+        if any(by_rva[i]["size"] != sizes[j] for i, j in enumerate(order)):
+            continue
+        if found is not None:
+            return None                 # ambiguous: the zip keeps the group
+        found = [names[j] for j in order]
+    return found
+
+
 def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
     """The base-obj name-authority join, in place: a compiled unit's public
     symbols carry the TRUE MSVC spellings; uniquely-joined claims adopt
@@ -1578,10 +1626,14 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
         if len(candidates) == len(mangled_group):
             # overload groups zip in order: claims by rva (link
             # order), mangled names by COFF section (definition
-            # order) - the same order for a VC6 TU
-            for row, (mangled, _content) in zip(
-                    sorted(candidates, key=lambda r: r["rva"]),
-                    mangled_group):
+            # order) - the same order for a VC6 TU, EXCEPT where the
+            # group holds a compiler-generated member (see
+            # _size_pairing): there the sizes settle it instead.
+            by_rva = sorted(candidates, key=lambda r: r["rva"])
+            pairing = _size_pairing(by_rva, mangled_group)
+            if pairing is None:
+                pairing = [name for name, _content in mangled_group]
+            for row, mangled in zip(by_rva, pairing):
                 row["joined"] = mangled
                 row["channel"] = "src-VA+base"
             continue
