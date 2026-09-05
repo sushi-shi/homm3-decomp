@@ -318,6 +318,13 @@ CHAR_STREAM_MEMBERS = (
     ("?_Init@?$basic_filebuf@D", None, "filebuf_init"),
     ("?_Init@?$basic_streambuf@D", None, "streambuf_init"),
     ("?do_length@?$codecvt@DDH", None, "codecvt_do_length"),
+    # `logic_error::what`, the one member of the <stdexcept> block
+    # that survives as its own COMDAT. Not a char TEMPLATE, but it
+    # rides this table for the same reason `_Maklocstr` and the two
+    # `use_facet` arms do: one prefix names it image-wide, and the
+    # generic tail's `std_logic_error_what` cannot be spelled by a
+    # VA_COMPGEN claim.
+    ("?what@logic_error@std@@", None, "logic_error_what"),
 )
 
 
@@ -356,6 +363,9 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "DEQUE_ITERATOR_ADD_ASSIGN",
                  "DEQUE_ITERATOR_INC", "DEQUE_ITERATOR_DEC",
                  "DEQUE_PUSH_BACK", "DEQUE_GROWMAP",
+                 "DEQUE_CONST_ITERATOR_CTOR",
+                 "TREE_CONST_ITERATOR_CTOR",
+                 "TREE_ITERATOR_EQUAL", "TREE_LOWER_BOUND",
                  "STREAMBUF_XSPUTN",
                  "PAIR_CONST_INT_DTOR",
                  "STD_CONSTRUCT", "STD_COPY",
@@ -987,6 +997,21 @@ def _demangle_key(mangled: str):
         return f"{tree_owner.lower()}@tree_const_iterator_dec"
     if mangled.startswith("?_Inc@const_iterator@?$_Tree@") and tree_owner:
         return f"{tree_owner.lower()}@tree_const_iterator_inc"
+    # The nested iterators' remaining surface. All three keep the tree
+    # owner rather than the generic tail's spelling, which cannot tell one
+    # tree from another: `??0const_iterator@...` reduces to
+    # `const_iterator_const_iterator` - a key deque's own nested iterator
+    # produces too - and `??8iterator@...` to `iterator_operator_equal`.
+    if mangled.startswith("??0const_iterator@?$_Tree@") and tree_owner:
+        return f"{tree_owner.lower()}@tree_const_iterator_ctor"
+    if mangled.startswith("??8iterator@?$_Tree@") and tree_owner:
+        return f"{tree_owner.lower()}@tree_iterator_equal"
+    # ...and the PUBLIC bound search, whose `_Lbound` half already keys
+    # above: it is a separate kind rather than a group member because the
+    # two live in one object and are 23 and 73 bytes here against 23 and 73
+    # in retail, which the size oracle can read only when both are claimed.
+    if mangled.startswith("?lower_bound@?$_Tree@") and tree_owner:
+        return f"{tree_owner.lower()}@tree_lower_bound"
     # _Tree's two _Copy overloads and its node eraser. `_Copy` is
     # overloaded on the SAME class, so the two arms are separate kinds
     # rather than one two-member group: the node form is the one whose
@@ -1051,6 +1076,16 @@ def _demangle_key(mangled: str):
     if deque_pointer:
         member = deque_pointer.group(1).lstrip("_").lower()
         return f"{deque_pointer.group(2).lower()}_ptr@deque_{member}"
+    # deque's nested `const_iterator`'s default constructor, over the same
+    # POINTER element the two members above key on. The generic `??0` arm
+    # reduces it to `const_iterator_const_iterator`, which _Tree's own
+    # nested iterator produces as well, so it needs the element back.
+    deque_const_iterator = re.match(
+        r"^\?\?0const_iterator@\?\$deque@P[AB](?:V|U)([A-Za-z_]\w*)@",
+        mangled)
+    if deque_const_iterator:
+        return (f"{deque_const_iterator.group(1).lower()}_ptr"
+                "@deque_const_iterator_ctor")
     deque_primitive = re.match(
         r"^\?(_Free(?:front|back))@\?\$deque@([CDEFGHIJK])V\?\$allocator@",
         mangled)
@@ -1873,6 +1908,9 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             (kind for kind in ("tree_erase_iterator", "tree_erase_range",
                                "tree_lbound", "tree_ubound", "tree_find",
                                "tree_init", "tree_copy_assign",
+                               "tree_const_iterator_ctor",
+                               "tree_iterator_equal", "tree_lower_bound",
+                               "deque_const_iterator_ctor",
                                "deque_erase")
              if f"${kind}$" in row["name"]), None)
         if tree_or_deque is not None:
@@ -2517,6 +2555,27 @@ def selftest() -> list[str]:
         "?_Inc@const_iterator@?$_Tree@PAVCImmEnclosure@@"
         "U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@":
             "cimmenclosure@tree_const_iterator_inc",
+        # The three arms added with the enclosure map's remaining surface.
+        # Each one exists because the generic tail collapses the owner away:
+        # `??0const_iterator@` -> `const_iterator_const_iterator` (a key
+        # deque's nested iterator produces as well), `??8iterator@` ->
+        # `iterator_operator_equal`, and `?lower_bound@` -> a
+        # TEMPLATE_MEMBER_RE spelling shared by every tree in the image.
+        "??0const_iterator@?$_Tree@PAVCImmEnclosure@@"
+        "U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@QAE@PAU_Node@12@@Z":
+            "cimmenclosure@tree_const_iterator_ctor",
+        "??8iterator@?$_Tree@PAVCImmEnclosure@@"
+        "U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@QBE_NABV012@@Z":
+            "cimmenclosure@tree_iterator_equal",
+        "?lower_bound@?$_Tree@PAVCImmEnclosure@@"
+        "U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@"
+        "QAE?AViterator@12@ABQAVCImmEnclosure@@@Z":
+            "cimmenclosure@tree_lower_bound",
+        # ...and the same three over a map keyed by VALUE, to prove the
+        # owner is read and not hardcoded to the pointer arm.
+        "??0const_iterator@?$_Tree@HU?$pair@$$CBH"
+        "Utype_map_hero_info@@@std@@QAE@PAU_Node@12@@Z":
+            "type_map_hero_info@tree_const_iterator_ctor",
     }
     for mangled, expected in tree_member_cases.items():
         if _demangle_key(mangled) != expected:
@@ -2547,6 +2606,35 @@ def selftest() -> list[str]:
         "?_Erase@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@")
     if unrelated_tree_key in tree_member_cases.values():
         failures.append("uncontracted MSVC tree member gained a tree key")
+    # NEGATIVE CONTROLS for the three nested-iterator arms above. The two
+    # containers' nested `const_iterator` constructors are DIFFERENT
+    # functions that the generic `??0` tail spells identically, so each
+    # arm must claim only its own container...
+    deque_iterator_ctor = _demangle_key(
+        "??0const_iterator@?$deque@PAVCNetMsg@@"
+        "V?$allocator@PAVCNetMsg@@@std@@@std@@QAE@XZ")
+    if deque_iterator_ctor != "cnetmsg_ptr@deque_const_iterator_ctor":
+        failures.append("MSVC deque const_iterator ctor key regressed")
+    if deque_iterator_ctor in tree_member_cases.values():
+        failures.append("a deque nested iterator reached a _Tree key")
+    # ...and a deque over a PRIMITIVE element carries no class name for the
+    # pointer arm to read, so it must decline rather than key on a letter.
+    for bad in ("??0const_iterator@?$deque@HV?$allocator@H@std@@@std@@QAE@XZ",
+                "??0iterator@?$deque@PAVCNetMsg@@"
+                "V?$allocator@PAVCNetMsg@@@std@@@std@@QAE@XZ"):
+        if _demangle_key(bad) == "cnetmsg_ptr@deque_const_iterator_ctor":
+            failures.append("the deque const_iterator arm stopped rejecting "
+                            f"{bad!r}")
+    # `logic_error::what` rides CHAR_STREAM_MEMBERS; its sibling
+    # `runtime_error` and the ctor of the same class must not follow it.
+    if _demangle_key("?what@logic_error@std@@UBEPBDXZ")             != "char@logic_error_what":
+        failures.append("MSVC logic_error::what key regressed")
+    for bad in ("?what@runtime_error@std@@UBEPBDXZ",
+                "??0logic_error@std@@QAE@ABV?$basic_string@D"
+                "U?$char_traits@D@std@@V?$allocator@D@2@@1@@Z"):
+        if _demangle_key(bad) == "char@logic_error_what":
+            failures.append("the logic_error::what arm stopped rejecting "
+                            f"{bad!r}")
     if _demangle_key(
             "?_Destroy@?$vector@VTTimedEvent@@V?$allocator@VTTimedEvent@@"
             "@std@@@std@@IAEXPAVTTimedEvent@@0@Z") != \
