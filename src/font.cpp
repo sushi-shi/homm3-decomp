@@ -848,6 +848,23 @@ int font::LongestWrappedLineWidth(const char* str, int boxWidth)
 // committed to it, and `wordWidth` is the next word measured ahead of
 // its copy. A word that cannot fit even an empty line is broken
 // character by character in the inner loop.
+// Residual (87.95%): ONE branch, and it is a C2 constant-propagation
+// difference, not a spelling (bounded 2026-09-06). Calls agree 19 = 19,
+// branches agree 31 = 31 and `--branches` names the whole gap as branch #12,
+// the `jle` at fn+0x1f1: retail lands on the space-append loop's guard,
+// we land past it. The cause is visible one instruction earlier. Retail
+// materialises the zero in EAX and stores it to BOTH spaceCount ([ebp-0x1c])
+// and spaceWidth ([ebp+8]) - `xor eax,eax / mov [ebp-0x1c],eax /
+// mov [ebp+8],eax` - then re-reads boxWidth in the compare; our C2
+// propagates `spaceCount = 0` into the loop instead, drops the store
+// entirely, folds the remaining zero as an immediate and therefore has EAX
+// free to hoist boxWidth. Everything downstream (the extra blocks, the
+// branch target) follows from that one dead store. Tried and rejected, all
+// on 2026-09-06: `spaceWidth = spaceCount = 0` and `spaceCount = spaceWidth
+// = 0` (both byte-flat at 87.95 - VC6 folds the chain), swapping the two
+// plain assignments (byte-flat), hoisting spaceWidth/spaceCount to function
+// scope (byte-flat), `iSpace < spaceCount` for the append loop (87.81), and
+// declaring blankWidth ahead of the two counters (86.72).
 VA(0x004b5b90, 0x3A5)  // anchor-member (fs.abc[' '] at this+0x1bc), retail-only
 void font::FillLinesVector(const char* str, int boxWidth,
                            std::vector<std::string>& result)
