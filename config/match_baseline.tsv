@@ -819,6 +819,7 @@ campaignbrief	??1TCampaignBrief@@UAE@XZ	100.0000	100.0000	100.0000	0x5afb0	d4c0d
 campaignbrief	??1TPlayerSlotAttributes@CMapHeaderData@@QAE@XZ	100.0000	100.0000	100.0000	0x5ab80	-
 campaignbrief	??4?$vector@Utype_map_hero_identity@@V?$allocator@Utype_map_hero_identity@@@std@@@std@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	0x5bcd0	-
 campaignbrief	??4CMapHeaderData@@QAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0x57cb0	-
+campaignbrief	??4NewSMapHeader@@QAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0x5cd10	-
 campaignbrief	??4TPlayerSlotAttributes@CMapHeaderData@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	0x5cf70	-
 campaignbrief	??4type_map_hero_identity@@QAEAAU0@ABU0@@Z	100.0000	100.0000	100.0000	0x5d8e0	-
 campaignbrief	??_GTCampaignBrief@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x5ae40	-
@@ -3652,6 +3653,7 @@ singleselectionwindow	?_Sort_0@std@@YIXPAUGameSelectionHeadersStruct@@0UTSortMap
 singleselectionwindow	?_Sort_0@std@@YIXPAUGameSelectionHeadersStruct@@0UTSortMapsBySize@@0@Z	91.9961	91.9961	91.9961	0x191310	-
 singleselectionwindow	?_Sort_0@std@@YIXPAUGameSelectionHeadersStruct@@0UTSortMapsByVersion@@0@Z	100.0000	100.0000	100.0000	0x190e50	-
 singleselectionwindow	?_Sort_0@std@@YIXPAUGameSelectionHeadersStruct@@0UTSortMapsByVictory@@0@Z	100.0000	100.0000	100.0000	0x191970	-
+singleselectionwindow	?_Tidy@?$bitset@$0JM@@std@@AAEXK@Z	100.0000	100.0000	100.0000	0x5c1a0	-
 singleselectionwindow	?_Ucopy@?$vector@UCampaignScenarioInfo@@V?$allocator@UCampaignScenarioInfo@@@std@@@std@@IAEPAUCampaignScenarioInfo@@PBU3@0PAU3@@Z	100.0000	100.0000	100.0000	0x18fe40	-
 singleselectionwindow	?_Ucopy@?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@IAEPAUGameSelectionHeadersStruct@@PBU3@0PAU3@@Z	100.0000	100.0000	100.0000	0x18f0b0	-
 singleselectionwindow	?_Unguarded_insert@std@@YIXPAUGameSelectionHeadersStruct@@U2@UTSortMapsByLoss@@@Z	100.0000	100.0000	100.0000	0x193730	-
