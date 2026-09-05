@@ -4937,4 +4937,10 @@ unsigned char std::operator!=(const std::_Deque_iterator_base<CNetMsg* __x, cons
 // _Growmap, agreements 1.000 and 1.000 at exactly equal extents. This object
 // is the only one that instantiates the message queue.
 VA_COMPGEN(0x00558080, 0x2CF, DEQUE_PUSH_BACK, CNetMsg_ptr)
+// ...and the nested const_iterator's default constructor, the third member
+// of the same instantiation: `mov eax,ecx / xor ecx,ecx` and four zero
+// stores, byte-identical to this object's COMDAT over all seven
+// instructions. It is the message queue's `begin()`/`end()` iterator, and
+// remote.obj is again the only object that instantiates the queue.
+VA_COMPGEN(0x00558650, 0x10, DEQUE_CONST_ITERATOR_CTOR, CNetMsg_ptr)
 VA_COMPGEN(0x00558660, 0x6D, DEQUE_GROWMAP, CNetMsg_ptr)
