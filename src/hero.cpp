@@ -4287,6 +4287,27 @@ static void show_hero_skills(int code, unsigned char right_mouse)
 // align. What decides where VC6 lands the threaded return-1 block is
 // the open question (Main lands it after the TOWN_x arm where retail
 // has the selector arm); solve that and this device is worth ~15 pts.
+// CENSUS 2026-09-05 (the sema CFG/call/reloc views are UNUSABLE on this row -
+// the block builder gives up at the first inline jump table and reports
+// "target 24 blocks / 8 calls"; the RAW `sema disasm` of both sides is
+// complete, 1431 rows, and is the only usable oracle here).
+// Retail emits 15 `NormalDialog` CALLS; this compile emits SIX out of the
+// eleven source sites, because our C2 cross-jumps every right-click help arm
+// (`test bl,bl / je <exit> / 12 pushes / mov ecx,<help text> / mov edx,4 /
+// JMP <shared call>`) while retail ends each arm with its own `call
+// NormalDialog / jmp <exit>` - behaviour-catalog D7, cross-jumping we perform
+// and retail does not, and the same class as the shared `je` in
+// game::ValidateVictoryLossConditions.  Retail also expands
+// hero::HeroScreenUpdate's two dialog sites inline (0x4de1da..0x4de320:
+// `add eax,-0x32 / mov cl,[eax+ecx+0x476]`, the 99-clamp, `setge cl`, the
+// `or ecx,0x10000` pack and `mov ecx,[4*eax+0x6a7540]`).
+// Two independent frame facts, both unexplained: retail reserves 0x14c and
+// this compile 0x144 - EIGHT bytes short, i.e. two named locals missing -
+// and retail homes `right_mouse` in the DEAD `msg` PARAMETER SLOT [ebp+8]
+// with `this` at [ebp-0x18] and localPlayer at [ebp-0x10], where we use
+// [ebp-0x20] / [ebp-0x24] / [ebp-0x18].  Retail's shared `return 1` epilogue
+// sits at fn+0x7e, immediately after the MOUSE_MOVE arm's `mov eax,1`
+// fall-through; ours is threaded to fn+0x128a at the very end.
 VA(0x004dd2d0, 0x143E)  // anchor-bracket + absent-callees, dc 0xcf54c
 int THeroScreenWindow::WindowHandler(message* msg)
 {
