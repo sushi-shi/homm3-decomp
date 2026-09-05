@@ -407,6 +407,7 @@ ai_tactical	??0type_AI_combat_parameters@@QAE@PBVcombatManager@@J@Z	100.0000	100
 ai_tactical	??0type_AI_spellcaster@@QAE@PAVcombatManager@@JE@Z	93.1850	93.1850	93.1850	0x369c0	73ed279b1210
 ai_tactical	??0type_spell_choice@@QAE@HW4TSkillMastery@@JJ@Z	100.0000	100.0000	100.0000	0x36980	49837083c201
 ai_tactical	??0type_spell_choice@@QAE@XZ	100.0000	100.0000	100.0000	0x36950	319d38fce9cc
+ai_tactical	??1?$TResourceHandle@VCSprite@@@@QAE@XZ	100.0000	100.0000	100.0000	0x3cb10	-
 ai_tactical	??1army@@QAE@XZ	100.0000	100.0000	100.0000	0x3d400	af6cf572ce37
 ai_tactical	??1type_AI_spellcaster@@UAE@XZ	100.0000	100.0000	100.0000	0x36c30	8ad7b71cf335
 ai_tactical	??_Gtype_AI_spellcaster@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x36bf0	-
@@ -2994,6 +2995,7 @@ remote	??0CNetMsgHandlerPause@@QAE@XZ	100.0000	100.0000	100.0000	0x157e30	efe3d5
 remote	??0CSaveScreen@@QAE@HH@Z	100.0000	100.0000	100.0000	0x1572e0	bd29f93a04f0
 remote	??0CWaitForRemoteBattleDlg@@QAE@XZ	100.0000	100.0000	100.0000	0x156f20	bc821e4fa521
 remote	??0const_iterator@?$deque@PAVCNetMsg@@V?$allocator@PAVCNetMsg@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x158650	-
+remote	??1?$CAutoArray@VCDPlayPlayer@@@@UAE@XZ	100.0000	100.0000	100.0000	0x1583b0	-
 remote	??1?$deque@PAVCNetMsg@@V?$allocator@PAVCNetMsg@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x157fe0	b5aefcd01237
 remote	??1CAnimatedDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x154ab0	da1f073be5a3
 remote	??1CDPlayHeroes@@UAE@XZ	100.0000	100.0000	100.0000	0x152320	b1b43146e709
@@ -3002,6 +3004,7 @@ remote	??1CNetMsgHandler@@UAE@XZ	41.8750	41.8750	41.8750	0x1578d0	9abc5e32e1d3
 remote	??1CNetMsgHandlerPause@@UAE@XZ	91.1111	91.1111	91.1111	0x157ee0	4dd2efe30195
 remote	??1CSaveScreen@@UAE@XZ	100.0000	100.0000	100.0000	0x157340	-
 remote	??1CWaitForReadyPlayersDlg@@UAE@XZ	79.7500	90.9167	90.9167	0x1554e0	-
+remote	??_G?$CAutoArray@VCDPlayPlayer@@@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x158490	-
 remote	??_GCAnimatedDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x154a80	-
 remote	??_GCDPlayHeroes@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1522f0	-
 remote	??_GCGameTransferDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x157760	-
