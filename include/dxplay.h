@@ -103,6 +103,29 @@ struct DPLCONNECTION {
 };
 SIZE(DPLCONNECTION, 0x28);
 
+// DirectPlay's player/group destruction notification. remote.obj's override
+// of the system-message slot reads only the leading discriminator and the
+// id of the station that left, which is what fixes them at +4 and +8; the
+// tail follows dplay.h's published record so the struct is not a fake.
+struct DPMSG_DESTROYPLAYERORGROUP {
+    unsigned long dwType;
+    unsigned long dwPlayerType;
+    unsigned long dpId;
+    void* lpLocalData;
+    unsigned long dwLocalDataSize;
+    void* lpRemoteData;
+    unsigned long dwRemoteDataSize;
+    DPNAME dpnName;
+    unsigned long dpIdParent;
+    unsigned long dwFlags;
+};
+
+// dplay.h's DPPLAYERTYPE_ pair, the domain of the field above.
+enum EDPlayerType {
+    DPPLAYERTYPE_GROUP = 0,
+    DPPLAYERTYPE_PLAYER = 1
+};
+
 enum EDPlayConnectionFlags {
     DPLAY_CONNECTION_CREATE_SESSION = 0x2
 };
