@@ -186,6 +186,16 @@ unsigned char CDPlayHeroes::SysMsgCreatePlayerOrGroup(
 // BYTE-IDENTICAL to the digit: `while (Receive(...)) { ... continue; }`,
 // the Process1WindowsMessage `poll: if (Receive(...)) { ...; goto poll; }`,
 // and the two guards folded into nested ifs over one shared tail.
+//
+// KNOWN COST, recorded rather than pinned: giving this member a body costs
+// the FREE PollRemote wrapper at 0x5546b0 its exactness (100.0000 -> 0.0000
+// cur; its banked MAX is untouched) because VC6 expands this callee there.
+// The wrapper is 259 B, so its /Ob2 budget is the 1000 floor, and retail's
+// compile priced this callee ABOVE that floor while ours prices it below -
+// i.e. the reconstruction is still short of retail's front-end mass, which
+// is what the loop inversion above is a symptom of too. A
+// `#pragma auto_inline(off)` here would hide both symptoms; the honest fix
+// is the missing construct, so neither is applied.
 VA(0x00552b60, 0x24B)  // anchor-string(DPlay Receive error) + anchor-callee(HandleLowLevelMsg) + dc-order-map, dc 0x11bb9c
 bool CDPlayHeroes::PollRemote()
 {
