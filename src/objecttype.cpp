@@ -6,9 +6,7 @@
 #include <stdlib.h>
 
 #include <va.h>
-#define _MT
 #include <yvals.h>
-#undef _MT
 #include <map>
 #include <string>
 #include <strstream>

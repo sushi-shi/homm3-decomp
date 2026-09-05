@@ -1398,10 +1398,9 @@ long town::TownFn_005BF900(long dwelling)
     if (visitingHeroId >= 0) {
         visiting_hero = current_game->GetHero(visitingHeroId);
     } else {
-        type_point point;
-        point.x = mapX;
-        point.y = mapY;
-        point.z = mapZ;
+        // Constructor form, not default-then-assign: it merges the y|z
+        // bitfield unit into one clear-then-or (99.8469 -> 100.0000).
+        type_point point(mapX, mapY, mapZ);
         int size = current_game->worldMap.Size;
         NewmapCell* cell = &current_game->worldMap.cellData[
             (point.z * size + point.y) * size + point.x];

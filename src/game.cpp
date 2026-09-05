@@ -31,9 +31,6 @@
 // nested cleanup states those calls require. Keep the pinned /ML runtime, but
 // expose the header's external-lock declarations while this TU is parsed;
 // the byte verdict below is the authority for that otherwise hidden PCH view.
-#if defined(_MSC_VER) && !defined(__clang__)
-#define _MT
-#endif
 #include "advmgr_objects.h"
 #include "advmgr.h"
 #include "bitset_iterator.h"
@@ -103,9 +100,6 @@ type_point AI_attempt_puzzle_guess(long player);
 #include <fcntl.h>
 #include <io.h>
 #include <sys/stat.h>
-#if defined(_MSC_VER) && !defined(__clang__)
-#undef _MT
-#endif
 
 // Retail/HD evidence names the hourglass animation phase; NextPlayer is its
 // game.obj writer. The second dword is the byte-proven autosave preference
@@ -10890,7 +10884,7 @@ void game::WaitForPlayer(char* cText, int iPlayer)
     gpSoundManager->field_84 = 1;
     gpSoundManager->StopMP3();
     SAMPLE2 sample2 = LoadPlaySample(
-        DATA_COMPGEN(0x00677ec8, newWeekSample, "newweek.wav"));
+        DATA_COMPGEN(0x00677ec8, newWeekSample, "NewWeek.wav"));
 
     gpAdvManager->CompleteDraw(1);
     gpAdvManager->advWindow->UpdateHeroLocators(0, 1, 0);

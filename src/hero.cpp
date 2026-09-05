@@ -7873,10 +7873,9 @@ unsigned char hero::IsInIdentifyRange(const type_point* location)
         range = 3;
 
     if (z == location->z) {
-        type_point heroLocation;
-        heroLocation.x = x;
-        heroLocation.y = y;
-        heroLocation.z = z;
+        // Constructor form, not default-then-assign: it merges the y|z
+        // bitfield unit into one clear-then-or (98.6813 -> 100.0000).
+        type_point heroLocation(x, y, z);
 
         int xDistance = location->x - heroLocation.x;
         int yDistance = location->y - heroLocation.y;
