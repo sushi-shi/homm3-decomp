@@ -2951,12 +2951,12 @@ singleselectionwindow	?Finish@CNewPlayerUpdateProc@@UAEXXZ	87.0155	89.5855	89.58
 singleselectionwindow	?Finish@t_map_list_update@@UAEXXZ	100.0000	100.0000	100.0000	0x178930	ea9b5caf124a
 singleselectionwindow	?GenerateRandomMap@TSingleSelectionWindow@@QAEEPBD@Z	91.9735	91.9735	91.9735	0x1860e0	b98cb0b0fe42
 singleselectionwindow	?GetCurrentScenario@SCampaign@@QAEPAUCampaignScenarioInfo@@XZ	100.0000	100.0000	100.0000	0x17c780	bc7af54de7f2
-singleselectionwindow	?GetDisplayFace@TSingleSelectionWindow@@QAEHH@Z	77.0099	77.0099	77.0099	0x18d0e0	416e57b126f8
+singleselectionwindow	?GetDisplayFace@TSingleSelectionWindow@@QAEHH@Z	85.2673	85.2673	85.2673	0x18d0e0	92d84b43f953
 singleselectionwindow	?GetFileName@TSingleSelectionWindow@@QAEPBDH@Z	100.0000	100.0000	100.0000	0x183f20	07e99906abc9
 singleselectionwindow	?GetHeader@TSingleSelectionWindow@@QAEHPAD0PAUGameSelectionHeadersStruct@@@Z	100.0000	100.0000	100.0000	0x183170	1f8b0349ca10
 singleselectionwindow	?GetHeaders@TSingleSelectionWindow@@QAEXPAV?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@@Z	87.0700	87.0700	87.0700	0x182b40	c25b84753c13
 singleselectionwindow	?GetHeroFace@TSingleSelectionWindow@@QAEXHPAVCNetPlayerHandlerPlayer@@@Z	86.4387	86.4387	86.4387	0x18af20	bb55e5c94f94
-singleselectionwindow	?GetHeroName@TSingleSelectionWindow@@QAEPBDH@Z	80.5426	80.5426	80.5426	0x18d1f0	2c4ed4d43f63
+singleselectionwindow	?GetHeroName@TSingleSelectionWindow@@QAEPBDH@Z	80.5798	80.5798	80.5798	0x18d1f0	90f9cbd1bb2b
 singleselectionwindow	?GetMapName@TSingleSelectionWindow@@QAEPBDH@Z	100.0000	100.0000	100.0000	0x184010	bbaad4b28fb3
 singleselectionwindow	?GetPlayer@CNetPlayerHandler@@QAEPAVCNetPlayerHandlerPlayer@@K@Z	100.0000	100.0000	100.0000	0x177ce0	f86adc210eaa
 singleselectionwindow	?GetPlayerInPos@CNetPlayerHandler@@QAEPAVCNetPlayerHandlerPlayer@@H@Z	100.0000	100.0000	100.0000	0x177bb0	2a3c60e7653f
