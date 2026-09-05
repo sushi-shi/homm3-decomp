@@ -3389,12 +3389,13 @@ VA_COMPGEN(0x0048e4f0, 0x1A0, STD_FILL, type_artifact_vector)
 VA_COMPGEN(0x0048e690, 0x1B1, STD_COPY_BACKWARD, type_artifact_vector)
 
 // COMDAT pairing: codecvt<char,char,int>'s constructor and do_length,
-// agreements 0.900 and 1.000. The facet's other four virtuals sit at
-// 0x48ebd0 (3 B), 0x48ebe0 (6 B) and 0x48ebf0 (28 B), each of which is ONE
-// retail row wanted by TWO identical members (do_always_noconv against
-// codecvt_base's, do_encoding against do_max_length, do_in against do_out) -
-// folded bodies that no evidence in the image can separate. They stay
-// unclaimed.
+// agreements 0.900 and 1.000. The facet's other virtuals sit at 0x48ebd0
+// (3 B), 0x48ebe0 (6 B) and 0x48ebf0 (28 B); this note used to leave them
+// unclaimed as "folded bodies that no evidence in the image can separate",
+// which had the fold backwards - a row that IS two functions needs one
+// claim, not two, and the ICF oracle records the second spelling as its
+// alias. All three are claimed at the foot of this file. (do_always_noconv
+// is NOT folded with anything: `mov al,1 / ret` is its own three bytes.)
 VA_COMPGEN(0x0048eb60, 0x67, CLASS_CTOR, codecvt)
 VA_COMPGEN(0x0048ec10, 0x18, CODECVT_DO_LENGTH, char)
 
@@ -3413,3 +3414,58 @@ VA_COMPGEN(0x0048e9e0, 0xB, STD_CONSTRUCT, TCampaignCrossoverChoice)
 // where this CL expands all three into it, so the pairing is identity, not a
 // score.
 VA_COMPGEN(0x0048bf00, 0x1AD, VECTOR_INSERT, unsigned_char)
+
+// --- the <fstream> facet block, claimed 2026-09-06 -------------------------
+//
+// basic_filebuf<char>::_Initcvt is the root of this whole group: it takes
+// the buffer's locale, pulls codecvt<char,char,int> out of it, and caches
+// the facet's answers to encoding()/always_noconv() in the buffer. Retail
+// keeps every step of that out of line, and each row below pairs against a
+// COMDAT this object already emits.
+//
+// The destructor and the conversion setup, both named by their mnemonic
+// agreement against the object's own free COMDATs (0.885 and 0.887, and no
+// second candidate above 0.45 in either case):
+VA_COMPGEN(0x0048bd50, 0x14F, IMPLICIT_DTOR, basic_filebuf)
+VA_COMPGEN(0x0048d5a0, 0x22E, FILEBUF_INITCVT, char)
+
+// basic_streambuf<char>::getloc. Its whole body IS locale's copy
+// constructor expanded - read _Loc from this+0x34, store it through the
+// hidden return pointer, then a `_Lockit` scope around the saturating
+// `if (_Refs != (size_t)-1) ++_Refs`. That pair of `_Lockit` calls
+// (0x60b598 / 0x60b634) is the retail evidence that flipped this compiland
+// to /MT; see config/units.toml.
+VA_COMPGEN(0x0048d820, 0x3B, STREAMBUF_GETLOC, char)
+
+// std::copy over hero*, the forward twin of the copy_backward already
+// claimed at 0x48e880: `while (first != last) *dest++ = *first++` with
+// hero::operator= called and both pointers stepping by 0x492. The const and
+// non-const source overloads compile to the same bytes and /OPT:ICF folded
+// them, so one claim names the row and the other spelling is its alias.
+VA_COMPGEN(0x0048dc80, 0x3B, STD_COPY, hero)
+
+// The facet's installation and teardown. _Addfac copies the locale, adds
+// the codecvt to its facet vector and hands the locale back; _Tidyfac's
+// static pair is the exit hook - _Save parks the facet in 0x696940 under a
+// `_Lockit` and registers _Tidy with atexit (`push 0x48ed50 / call
+// _atexit` at 0x48ecae is the link between the two rows).
+VA_COMPGEN(0x0048e8c0, 0x102, LOCALE_ADDFAC_CODECVT, char)
+VA_COMPGEN(0x0048ec60, 0x7B, TIDYFAC_CODECVT_SAVE, char)
+VA_COMPGEN(0x0048ed50, 0x92, TIDYFAC_CODECVT_TIDY, char)
+
+// The facet's own virtuals. codecvt<char,char,int> converts nothing, so
+// four of them are constant returns and /OPT:ICF folded them in PAIRS:
+// do_encoding and do_max_length are both `mov eax,1 / ret`, and do_in and
+// do_out are both the same eleven instructions (write the two range
+// pointers back through their reference parameters and return `noconv`,
+// which is 3). do_always_noconv is `mov al,1 / ret` and stands alone. This
+// replaces the note above that left the three addresses unclaimed as
+// "folded bodies that no evidence in the image can separate": the fold is
+// exactly what makes them claimable - one claim per ROW, the second name in
+// each pair recorded as its ICF alias.
+VA_COMPGEN(0x0048ebd0, 0x3, CODECVT_BASE_DO_ALWAYS_NOCONV, char)
+VA_COMPGEN(0x0048ebe0, 0x6, CODECVT_BASE_DO_ENCODING, char)
+VA_COMPGEN(0x0048ebf0, 0x1C, CODECVT_DO_IN, char)
+
+// ...and the facet's scalar deleting destructor, slot 0 of its vftable.
+VA_COMPGEN(0x0048ec30, 0x21, SCALAR_DELETING_DTOR, codecvt)

@@ -96,6 +96,14 @@ game_o2_ml_gr_windows = [
 # (all six already expose the external-lock view with a local `#define _MT`
 # around <yvals.h>), to the three /MT units above, or to cmbtmgr / spells -
 # whose single sites were measured and REJECTED (see below).
+# customcampaign joined them 2026-09-06. That scan had missed it because its
+# two sites sit in COMDATs nothing had claimed yet: `basic_streambuf<char>::
+# getloc` (0x48d820) and `_Tidyfac<codecvt<char,char,int> >::_Save`
+# (0x48ec60) each carry a `call 0x60b598` / `call 0x60b634` pair around the
+# facet refcount, and `_Save`'s is inside an fs:[0] frame that only the
+# locking form needs. Flipping the flag: +2 exact rows -
+# basic_filebuf<char>::seekoff 79.8214 -> 100.0000 and ::seekpos
+# 92.4667 -> 100.0000 - and NO row anywhere in the tree fell.
 game_o2_mt_gr_windows = [
   "/nologo",
   "/c",
@@ -445,7 +453,7 @@ flags = "game_o2_mt_gr_windows"
 [[unit]]
 unit = "customcampaign"
 source = "src/customcampaign.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "customcampaignwindow"
@@ -836,3 +844,8 @@ flags = "game_o2_ml_gr_windows"
 unit = "gzinflatebuf"
 source = "src/gzinflatebuf.cpp"
 flags = "game_o2_mt_gr_windows"
+
+[[unit]]
+unit = "netmsg"
+source = "src/netmsg.cpp"
+flags = "game_o2_ml_gr_windows"
