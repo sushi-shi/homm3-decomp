@@ -323,6 +323,84 @@ done:
     ;
 }
 
+// The DDERR_WRONGMODE recovery DDBlit's two primary-surface loops call when
+// Restore reports the display mode changed underneath the game. If we were
+// already fullscreen the mode is simply re-asserted and the primary
+// restored; otherwise the primary and its clipper are dropped, the desktop
+// caps re-read, and - unless the desktop is itself 16-bit - the window is
+// pushed into fullscreen (popup style, topmost, no menu) with the blit's own
+// rectangle re-origined against the moved client area, which is why the
+// caller hands its working copy in. Either way the primary is rebuilt and,
+// if we ended up fullscreen, the preference is written back.
+//
+// The desktop-caps block is GetDesktopInfo expanded: it is a small extern
+// with an out-of-line body further down this TU, so /Ob2 takes it here and
+// leaves the emitted copy for the other callers.
+// E:\gamedcs\wingraph.cpp
+VA(0x006003c0, 0x22D)  // anchor-caller(DDBlit, both primary retry loops), retail-only
+void DDResetDisplayMode(tagRECT* region)
+{
+    if (bWindowedMode) {
+        HRESULT result = gpDirectDraw->SetCooperativeLevel(
+            hwndApp, DDSCL_EXCLUSIVE | DDSCL_FULLSCREEN | DDSCL_ALLOWREBOOT);
+        if (result != DD_OK)
+            DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                              "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x157);
+        result = gpDirectDraw->SetDisplayMode(800, 600, 16);
+        if (result != DD_OK)
+            DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                              "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x15b);
+        result = gpDDSPrimary->Restore();
+        if (result != DD_OK)
+            DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                              "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x15f);
+        return;
+    }
+
+    unsigned char desktopIsHighColor = GetDesktopInfo();
+
+    HRESULT result = gpDDSPrimary->SetClipper(0);
+    if (result != DD_OK)
+        DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                              "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x168);
+    gpDDSPrimary->Release();
+    gpDDSPrimary = 0;
+
+    if (!desktopIsHighColor) {
+        POINT origin;
+        origin.x = 0;
+        origin.y = 0;
+        ScreenToClient(hwndApp, &origin);
+        OffsetRect(region, origin.x, origin.y);
+        gpDDClipper->Release();
+        gpDDClipper = 0;
+        bWindowedMode = 1;
+        SetWindowLongA(hwndApp, GWL_STYLE, WS_POPUP | WS_VISIBLE);
+        SetWindowLongA(hwndApp, GWL_EXSTYLE, WS_EX_TOPMOST);
+        KBChangeMenu(0);
+        result = gpDirectDraw->SetCooperativeLevel(
+            hwndApp, DDSCL_EXCLUSIVE | DDSCL_FULLSCREEN | DDSCL_ALLOWREBOOT);
+        if (result != DD_OK)
+            DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                              "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x17e);
+        result = gpDirectDraw->SetDisplayMode(800, 600, 16);
+        if (result != DD_OK)
+            DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                              "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x182);
+    }
+
+    gpDDSPrimary = DDCreateSurface(800, 600, 1);
+
+    if (!bWindowedMode) {
+        result = gpDDSPrimary->SetClipper(gpDDClipper);
+        if (result != DD_OK)
+            DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                              "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x18c);
+    } else {
+        WritePrefs();
+    }
+}
+
 // The one surface factory: DDInitGraphics builds the 800x600 primary
 // through it with bPrimary set, and the back buffer with it clear. Only the
 // offscreen arm is locked and published - the lock's own DDSURFACEDESC is
