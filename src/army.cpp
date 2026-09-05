@@ -132,14 +132,62 @@ inline int SRandom(int lower, int upper)
     return Random(lower, upper);
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\army.cpp:52
-DC_ONLY(0x436b8, 0xF4)
-void army::army()
+// E:\gamedcs\army.cpp:52 (dc 0x436b8) - retail 0x43d250, the FIRST row of
+// army.obj's span: the compiland's cinit/atexit thunk opens at 0x43ce60 and
+// the nine ~95-byte rows between it and this one are the /Gy header COMDATs
+// the link parked ahead of the first real body.  The constructor is fixed by
+// its member-construction run alone: the two TResourceHandle<CSprite> heads
+// at +0x164/+0x168, the `??_L` eh-vector-constructor-iterator over EIGHT
+// FOUR-byte elements at +0x170 (armySample), the deque<int> at +0x420 and
+// the four vector<army*> at +0x4f4/+0x504/+0x514/+0x524 - every one of them
+// a member this header already models, in declaration order, with unwind
+// states 1..7 across the run.
+// Residual (95.9799%): ONE inline decision, and nothing else - every
+// other instruction pairs.  Retail expands BOTH `deque<int>::iterator`
+// default constructions inside the deque's own default constructor (four
+// inline dword zero-stores at +0x424..+0x430); our /O2 calls
+// `??0const_iterator@?$deque@HV?$allocator@H@std@@@std@@` for the first
+// and expands the second, which also adds the intervening unwind-state
+// store retail does not need.  It is the UNDER-inline direction (grow the
+// caller), and this body has no mass to give: writing the eight-sample
+// loop ahead of the icon disposals measured 64.60 and the literal 8 in
+// place of MAX_SAMPLES is byte-flat.
+// The array element destructor retail hands to `??_L` (0x43cb10) IS
+// observable and its body is `if (resource) resource->Dispose()`, but
+// TResourceHandle's destructor cannot carry it: `T` is incomplete in every
+// TU that sees army.h without csprite.h/sound.h, and giving it that body
+// fails the build with C2027 on CSprite and sample.  The relocation is a
+// name-only difference the ratchet already ignores.
+VA(0x0043d250, 0x1A8)  // anchor-global + member-construction run, dc 0x436b8
+army::army()
 {
-    // @stub
+    if (stdIcon)
+        stdIcon->Dispose();
+    stdIcon = 0;
+    if (missileIcon)
+        missileIcon->Dispose();
+    missileIcon = 0;
+    image_height = 0;
+    gridIndex = 0;
+    for (int i = 0; i < MAX_SAMPLES; i++) {
+        if (armySample[i])
+            armySample[i]->Dispose();
+        armySample[i] = 0;
+    }
+    side = -1;
+    slot = -1;
+    field_18 = 0;
+    pathTarget = 0;
+    yModify = 0;
+    field_0c = 1;
+    field_100 = 0;
+    field_104 = 0;
+    retaliationCount = 1;
+    IsMoving = 0;
+    LetsPretendImNotHere = 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:77
 DC_ONLY(0x437ac, 0x84)
