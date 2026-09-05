@@ -5,6 +5,7 @@
 #ifndef HOMM3_CUSTOMCAMPAIGN_H
 #define HOMM3_CUSTOMCAMPAIGN_H
 
+#include <string>
 #include <vector>
 #include "window.h"
 #include "campaignbrief.h"
@@ -87,6 +88,159 @@ extern const TCampaignMusicTraits* akCampaignMusicTraits;
 class hero;
 struct CrossoverHeroStronger {
     bool operator()(hero& lhs, hero& rhs) const;
+};
+
+// The eight campaign start bonuses. THE HIERARCHY IS BYTE-PROVEN by the
+// bonus-list reader at 0x485190, which switches a type byte 0..7 and
+// `new`s an object of the matching vftable:
+//   0 spell 0x63daa0 (12 B)   1 creature 0x63da80 (16 B)
+//   2 building 0x63da60 (12)  3 artifact 0x63da40 (12)
+//   4 scroll 0x63da20 (12)    5 primary skill 0x63da00 (12)
+//   6 secondary skill 0x63d9e0 (16)  7 resource 0x63d9c0 (12)
+// Every vftable is eight slots wide and the abstract root's own is
+// 0x63d938 - six `__purecall` entries between the deleting destructor at
+// slot 0 and the do-nothing slot 7. The slot ROLES read off the bodies:
+// slot 1 is the building predicate (only 0x63da60 answers true), slot 2
+// returns the icon .def name, slot 3 the frame in it, slot 4 the
+// format_string'd description, slot 5 applies the bonus to a player and
+// slot 6 deserializes it. NAMES ARE ROLE INVENTIONS - the compiland has
+// no Dreamcast twin (the port's SCampaign::give_custom_items did all of
+// this longhand) and no RTTI descriptor names any of these classes.
+class TAbstractFile;
+
+class TCampaignBonus {
+public:
+    // Out of line at 0x485370, seven bytes of vftable restore; its
+    // scalar deleting destructor is 0x484020.
+    virtual ~TCampaignBonus();
+    // 0x484d50. Pure in retail's own vftable, which means each concrete
+    // class carried its own copy and the linker folded the seven `false`
+    // bodies onto one address; one out-of-line definition here produces
+    // that one address.
+    virtual bool IsBuildingBonus() const;
+    virtual const char* GetIconDefName() const = 0;
+    virtual int GetIconIndex() const = 0;
+    virtual std::string GetText() const = 0;
+    virtual void Apply(int whichPlayer) const = 0;
+    virtual void Read(TAbstractFile* file) = 0;
+    // 0x485d80, `ret 4`. Only the building bonus overrides it (0x4847e0),
+    // where the town remaps the building index.
+    virtual void SetTown(int town);
+};
+
+// Spell: the hero id it is granted to and the spell. Read takes a SIGNED
+// word then an unsigned byte (0x484050).
+class TCampaignSpellBonus : public TCampaignBonus {
+public:
+    virtual const char* GetIconDefName() const;
+    virtual int GetIconIndex() const { return m_spell; }
+    virtual std::string GetText() const;
+    virtual void Apply(int whichPlayer) const;
+    virtual void Read(TAbstractFile* file);
+
+    int m_hero;
+    int m_spell;
+};
+
+// The scroll shares the spell's whole surface except the description and
+// the apply, which is what puts its Read, icon name and icon frame at the
+// SAME addresses in both vftables (0x484050 / 0x484090 / the folded
+// three-byte getter).
+class TCampaignSpellScrollBonus : public TCampaignSpellBonus {
+public:
+    virtual std::string GetText() const;
+    virtual void Apply(int whichPlayer) const;
+};
+
+// Creature: hero, creature type and count, all three read as words
+// (0x4844f0) - the first two signed, the count unsigned.
+class TCampaignCreatureBonus : public TCampaignBonus {
+public:
+    virtual const char* GetIconDefName() const;
+    virtual int GetIconIndex() const;
+    virtual std::string GetText() const;
+    virtual void Apply(int whichPlayer) const;
+    virtual void Read(TAbstractFile* file);
+
+    int m_hero;
+    int m_creature;
+    int m_count;
+};
+
+// Building: the only bonus whose Read fills ONE field (0x4845f0 reads a
+// single byte into the building slot); the town arrives later through
+// SetTown, which is also where the building index is remapped.
+class TCampaignBuildingBonus : public TCampaignBonus {
+public:
+    virtual bool IsBuildingBonus() const;
+    virtual const char* GetIconDefName() const;
+    virtual int GetIconIndex() const { return 0; }
+    virtual std::string GetText() const;
+    virtual void Apply(int whichPlayer) const;
+    virtual void Read(TAbstractFile* file);
+    virtual void SetTown(int town);
+
+    int m_town;
+    int m_building;
+};
+
+// Artifact: hero and artifact, both signed words (0x4848a0).
+class TCampaignArtifactBonus : public TCampaignBonus {
+public:
+    virtual const char* GetIconDefName() const;
+    virtual int GetIconIndex() const { return m_artifact; }
+    virtual std::string GetText() const;
+    virtual void Apply(int whichPlayer) const;
+    virtual void Read(TAbstractFile* file);
+
+    int m_hero;
+    int m_artifact;
+};
+
+// Primary skills: a signed word hero id and then the four skill deltas
+// read as raw bytes straight into the object (0x484bf0's `add edi,8`
+// before a four-byte Read is what proves the array is the member, not
+// four ints).
+class TCampaignPrimarySkillBonus : public TCampaignBonus {
+public:
+    virtual const char* GetIconDefName() const;
+    virtual int GetIconIndex() const;
+    virtual std::string GetText() const;
+    virtual void Apply(int whichPlayer) const;
+    virtual void Read(TAbstractFile* file);
+
+    int m_hero;
+    char m_skills[4];
+};
+
+// Secondary skill: a signed word hero id, then the skill and its mastery
+// as unsigned bytes (0x484cf0).
+class TCampaignSecondarySkillBonus : public TCampaignBonus {
+public:
+    virtual const char* GetIconDefName() const;
+    virtual int GetIconIndex() const;
+    virtual std::string GetText() const;
+    virtual void Apply(int whichPlayer) const;
+    virtual void Read(TAbstractFile* file);
+
+    int m_hero;
+    int m_skill;
+    int m_level;
+};
+
+// Resource: a SIGNED byte selector and a full dword amount (0x484f00).
+// The negative selectors are the two mixed rows the icon frame folds onto
+// 7 and 8 (0x484d70).
+class TCampaignResourceBonus : public TCampaignBonus {
+public:
+    virtual const char* GetIconDefName() const;
+    virtual int GetIconIndex() const;
+    virtual std::string GetText() const;
+    virtual void Apply(int whichPlayer) const;
+    virtual void Read(TAbstractFile* file);
+
+    int m_resource;
+    int m_amount;
 };
 
 // --- globals ---

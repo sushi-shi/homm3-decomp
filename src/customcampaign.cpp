@@ -128,6 +128,209 @@ bool CrossoverHeroStronger::operator()(hero& lhs, hero& rhs) const
     return lhs.id > rhs.id;
 }
 
+// --- the eight campaign start bonuses ---
+//
+// Every body below is one vftable slot of the hierarchy customcampaign.h
+// describes; they are emitted in the order retail has them, which is one
+// class at a time with the abstract root's two defaults falling between
+// the secondary-skill and resource groups.
+
+// COMDAT pairing: the root's scalar deleting destructor - the `mov
+// [esi], 0x63d938` in it is the same vftable restore the out-of-line
+// destructor at 0x485370 does, inlined.
+VA_COMPGEN(0x00484020, 0x23, SCALAR_DELETING_DTOR, TCampaignBonus)
+
+VA(0x00484050, 0x3D)  // anchor-vtable (0x63daa0+0x18 and 0x63da20+0x18), retail-only
+void TCampaignSpellBonus::Read(TAbstractFile* file)
+{
+    {
+        short heroId;
+        file->Read(&heroId, sizeof(short));
+        m_hero = heroId;
+    }
+    {
+        unsigned char spell;
+        file->Read(&spell, sizeof(unsigned char));
+        m_spell = spell;
+    }
+}
+
+VA(0x00484090, 0x6)  // anchor-string (SpellBon.def), retail-only
+const char* TCampaignSpellBonus::GetIconDefName() const
+{
+    return DATA_COMPGEN(0x00677248, spellBonusDefName, "SpellBon.def");
+}
+
+VA(0x004844f0, 0x51)  // anchor-vtable (0x63da80+0x18), retail-only
+void TCampaignCreatureBonus::Read(TAbstractFile* file)
+{
+    {
+        short value;
+        file->Read(&value, sizeof(short));
+        m_hero = value;
+        file->Read(&value, sizeof(short));
+        m_creature = value;
+    }
+    {
+        unsigned short count;
+        file->Read(&count, sizeof(unsigned short));
+        m_count = count;
+    }
+}
+
+VA(0x00484550, 0x6)  // anchor-string (twcrport.def), retail-only
+const char* TCampaignCreatureBonus::GetIconDefName() const
+{
+    return "twcrport.def";
+}
+
+VA(0x00484560, 0x7)  // anchor-vtable (0x63da80+0xc), retail-only
+int TCampaignCreatureBonus::GetIconIndex() const
+{
+    return m_creature + 2;
+}
+
+VA(0x004845f0, 0x24)  // anchor-vtable (0x63da60+0x18), retail-only
+void TCampaignBuildingBonus::Read(TAbstractFile* file)
+{
+    {
+        unsigned char building;
+        file->Read(&building, sizeof(unsigned char));
+        m_building = building;
+    }
+}
+
+VA(0x00484620, 0x3)  // anchor-vtable (0x63da60+4), retail-only
+bool TCampaignBuildingBonus::IsBuildingBonus() const
+{
+    return true;
+}
+
+VA(0x00484810, 0x6)  // anchor-string (ArtifBon.def), retail-only
+const char* TCampaignArtifactBonus::GetIconDefName() const
+{
+    return DATA_COMPGEN(0x00677258, artifactBonusDefName, "ArtifBon.def");
+}
+
+VA(0x004848a0, 0x38)  // anchor-vtable (0x63da40+0x18), retail-only
+void TCampaignArtifactBonus::Read(TAbstractFile* file)
+{
+    short value;
+    file->Read(&value, sizeof(short));
+    m_hero = value;
+    file->Read(&value, sizeof(short));
+    m_artifact = value;
+}
+
+VA(0x004848e0, 0x6)  // anchor-string (PSkilBon.def), retail-only
+const char* TCampaignPrimarySkillBonus::GetIconDefName() const
+{
+    return DATA_COMPGEN(0x00677268, primarySkillBonusDefName, "PSkilBon.def");
+}
+
+// The frame is the strongest of the four deltas, and ties keep the FIRST:
+// the compare is `>` against a running best that starts at zero, so an
+// all-negative row still answers 0.
+VA(0x004848f0, 0x1E)  // anchor-vtable (0x63da00+0xc), retail-only
+int TCampaignPrimarySkillBonus::GetIconIndex() const
+{
+    int best = 0;
+    int bestValue = 0;
+    for (int iSkill = 0; iSkill < 4; ++iSkill) {
+        if (m_skills[iSkill] > bestValue) {
+            bestValue = m_skills[iSkill];
+            best = iSkill;
+        }
+    }
+    return best;
+}
+
+VA(0x00484bf0, 0x31)  // anchor-vtable (0x63da00+0x18), retail-only
+void TCampaignPrimarySkillBonus::Read(TAbstractFile* file)
+{
+    short heroId;
+    file->Read(&heroId, sizeof(short));
+    m_hero = heroId;
+    file->Read(m_skills, sizeof(m_skills));
+}
+
+VA(0x00484c30, 0x6)  // anchor-string (SSkilBon.def), retail-only
+const char* TCampaignSecondarySkillBonus::GetIconDefName() const
+{
+    return DATA_COMPGEN(0x00677280, secondarySkillBonusDefName, "SSkilBon.def");
+}
+
+VA(0x00484c40, 0xE)  // anchor-vtable (0x63d9e0+0xc), retail-only
+int TCampaignSecondarySkillBonus::GetIconIndex() const
+{
+    return m_skill * 3 + m_level - 1;
+}
+
+VA(0x00484cf0, 0x56)  // anchor-vtable (0x63d9e0+0x18), retail-only
+void TCampaignSecondarySkillBonus::Read(TAbstractFile* file)
+{
+    {
+        short heroId;
+        file->Read(&heroId, sizeof(short));
+        m_hero = heroId;
+    }
+    {
+        unsigned char value;
+        file->Read(&value, sizeof(unsigned char));
+        m_skill = value;
+        file->Read(&value, sizeof(unsigned char));
+        m_level = value;
+    }
+}
+
+VA(0x00484d50, 0x3)  // anchor-vtable (seven of the eight bonus vftables +4), retail-only
+bool TCampaignBonus::IsBuildingBonus() const
+{
+    return false;
+}
+
+VA(0x00484d60, 0x6)  // anchor-string (BoRes.def), retail-only
+const char* TCampaignResourceBonus::GetIconDefName() const
+{
+    return DATA_COMPGEN(0x00677290, resourceBonusDefName, "BoRes.def");
+}
+
+// The two negative selectors are the mixed rows: -3 takes frame 7 and
+// every other negative frame 8, which retail spells as a `setne` on -3
+// added to seven.
+VA(0x00484d70, 0x15)  // anchor-vtable (0x63d9c0+0xc), retail-only
+int TCampaignResourceBonus::GetIconIndex() const
+{
+    if (m_resource < 0)
+        return (m_resource != -3) + 7;
+    return m_resource;
+}
+
+VA(0x00484f00, 0x37)  // anchor-vtable (0x63d9c0+0x18), retail-only
+void TCampaignResourceBonus::Read(TAbstractFile* file)
+{
+    {
+        char resource;
+        file->Read(&resource, sizeof(char));
+        m_resource = resource;
+    }
+    {
+        int amount;
+        file->Read(&amount, sizeof(int));
+        m_amount = amount;
+    }
+}
+
+VA(0x00485370, 0x7)  // anchor-vtable (0x63d938+0), retail-only
+TCampaignBonus::~TCampaignBonus()
+{
+}
+
+VA(0x00485d80, 0x3)  // anchor-vtable (0x63d938+0x1c), retail-only
+void TCampaignBonus::SetTown(int)
+{
+}
+
 // Complete-only. The six string/vector/bitset members take their own
 // default constructors in declaration order; the body clears the two text
 // records, the start-options pointer and the eight carry-over hero slots.
