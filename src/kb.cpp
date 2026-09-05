@@ -23,6 +23,7 @@
 #include "cmbtmgr.h"
 #include "creaturetype.h"
 #include "csprite.h"
+#include "cursor.h"
 #include "customcampaign.h"
 #include "dialogbox.h"
 #include "kbwin.h"
@@ -793,12 +794,7 @@ int TrueFalseDialogHandler(message* msg)
     // @stub
 }
 
-// E:\gamedcs\kb.cpp:2636
-DC_ONLY(0xe226c, 0x234)
-void PlayerDead(int iWhichPlayer)
-{
-    // @stub
-}
+// E:\gamedcs\kb.cpp:2636 - promoted to a live claim (see below).
 
 // E:\gamedcs\kb.cpp:2720
 DC_ONLY(0xe24a0, 0x366)
@@ -2027,6 +2023,85 @@ forward_answer:
     msg->codeX = 10;
     gDialogDeadline697784 = 0;
     return MESSAGE_DISPATCH_FORWARD;
+}
+
+// E:\gamedcs\kb.cpp:2636. Promoted from DC_ONLY on body evidence: one
+// fastcall seat number, and CheckEndGame's two `mov ecx,i / call 0x4f11a0`
+// sites are the only callers in kb's band. The Dreamcast statement map
+// (36 rows over kb.cpp:2636..2714) supplies the whole shape - the level/
+// y/x shipyard sweep, the mine, generator and garrison pools in that
+// order, the reverse hero walk, the two tavern recruits, and the
+// remote-exit fork - and retail corroborates every one of them.
+VA(0x004f11a0, 0x2bc)  // anchor-callee (CheckEndGame), dc 0xe226c
+void PlayerDead(int iWhichPlayer)
+{
+    int level;
+    int y;
+    int x;
+    int i;
+
+    gCombatFlag6985a3 = 0;   // DC gbRetreatWin
+    gCombatFlag697744 = 0;   // DC gbSurrenderWin
+
+    playerData* player = &gpGame->players[iWhichPlayer];
+    gpGame->playerDisabled[iWhichPlayer] = 1;
+
+    for (level = 0; level < gpGame->GetNumMapLevels(); level++) {
+        for (y = 0; y < MAP_HEIGHT; y++) {
+            for (x = 0; x < MAP_WIDTH; x++) {
+                NewmapCell* cell = gpGame->worldMap.cell(x, y, level);
+
+                if (cell->is_trigger && cell->type_value == SHIPYARD &&
+                    cell->shipyard_info.owner == iWhichPlayer) {
+                    gpGame->ClaimShipyard(
+                        type_point(static_cast<short>(x),
+                                   static_cast<short>(y),
+                                   static_cast<short>(level)), -1);
+                }
+            }
+        }
+    }
+
+    for (i = 0; i < gpGame->mines.size(); i++) {
+        if (gpGame->mines[i].playerOwner == iWhichPlayer)
+            gpGame->ClaimMine(i, -1, const_normal_action);
+    }
+
+    for (i = 0; i < gpGame->generators.size(); i++) {
+        if (gpGame->generators[i].playerOwner == iWhichPlayer)
+            gpGame->ClaimGenerator(i, -1);
+    }
+
+    for (i = 0; i < gpGame->garrisons.size(); i++) {
+        if (gpGame->garrisons[i].playerOwner == iWhichPlayer)
+            gpGame->ClaimGarrison(i, -1);
+    }
+
+    for (i = player->numHeroes - 1; i >= 0; i--)
+        gpGame->GetHero(player->heroes[i])->Deallocate(1, 0);
+
+    // The recruit id MUST be named: read through `player->recruits[i]` at
+    // both uses, VC6 emits `cmp byte [eax + ecx + 0x4df18]` with the id as
+    // the SIB base where retail has gpGame there (99.9078 -> 100.0000 on
+    // the local alone; a nested-if spelling is byte-flat at 99.9078).
+    for (i = 0; i < 2; i++) {
+        int recruitId = player->recruits[i];
+        if (recruitId != -1 && gpGame->heroAvailability[recruitId] ==
+                hero::HERO_AVAILABILITY_TAVERN_POOL)
+            gpGame->heroAvailability[recruitId] = -1;
+    }
+
+    // kbwin.h spells this flag `bVideoPaused`; the Dreamcast names the same
+    // guard `gbRemoteOn` here, and every consumer in the tree reads it that
+    // way (`bVideoPaused && pDPlay`, `bVideoPaused && !IsLocalHuman()`).
+    if (bVideoPaused) {
+        if (gpGame->IsHuman(iWhichPlayer)) {
+            HandleRemoteDeadPlayerExit(iWhichPlayer, 0);
+        } else {
+            CMCDeadPlayer deadMsg(iWhichPlayer);
+            SendMapChange(&deadMsg);
+        }
+    }
 }
 
 // E:\gamedcs\kb.cpp:2811. The retail body independently fixes the source
