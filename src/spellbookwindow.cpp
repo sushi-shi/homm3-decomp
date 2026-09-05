@@ -200,7 +200,7 @@ TSpellbookWindow::TSpellbookWindow(const hero* h, const armyGroup* g, TSpellbook
     {
         bitmapBorder* background = new bitmapBorder(
             0, 0, 620, 595, BACKGROUND_ID,
-            DATA_COMPGEN(0x00684bcc, spellbookBackground, "spelback.pcx"),
+            DATA_COMPGEN(0x00684bcc, spellbookBackground, "Spelback.pcx"),
             0x800);
         background->SetPlayerPaletteColors(
             h->owner >= 0 ? h->owner : gpGame->GetLocalPlayerGamePos());
@@ -233,7 +233,7 @@ TSpellbookWindow::TSpellbookWindow(const hero* h, const armyGroup* g, TSpellbook
         for (column = 117; column < 289; column += 86) {
             Widgets.push_back(new iconWidget(
                 column, row, 78, 65, id++,
-                DATA_COMPGEN(0x00660208, spellIcons, "SPELLS.DEF"),
+                DATA_COMPGEN(0x00660208, spellIcons, "spells.def"),
                 0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
         }
     }
@@ -242,7 +242,7 @@ TSpellbookWindow::TSpellbookWindow(const hero* h, const armyGroup* g, TSpellbook
         for (column = 333; column < 505; column += 86) {
             Widgets.push_back(new iconWidget(
                 column, row, 78, 65, id++,
-                DATA_COMPGEN(0x00660208, spellIcons, "SPELLS.DEF"),
+                DATA_COMPGEN(0x00660208, spellIcons, "spells.def"),
                 0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
         }
     }
@@ -291,13 +291,13 @@ TSpellbookWindow::TSpellbookWindow(const hero* h, const armyGroup* g, TSpellbook
 
     PreviousPageWidget = new bitmapBorder(
         97, 77, 33, 39, PREVIOUS_PAGE_ID,
-        DATA_COMPGEN(0x00684ba4, spellbookPreviousPage, "speltrnl.pcx"),
+        DATA_COMPGEN(0x00684ba4, spellbookPreviousPage, "SpelTrnL.pcx"),
         0x800);
     Widgets.push_back(PreviousPageWidget);
 
     NextPageWidget = new bitmapBorder(
         487, 74, 29, 32, NEXT_PAGE_ID,
-        DATA_COMPGEN(0x00684b94, spellbookNextPage, "speltrnr.pcx"),
+        DATA_COMPGEN(0x00684b94, spellbookNextPage, "SpelTrnR.pcx"),
         0x800);
     Widgets.push_back(NextPageWidget);
 
@@ -491,7 +491,7 @@ void TSpellbookWindow::GotoPage(int page)
         if (entry.Mastery > 0) {
             sprintf(gText,
                     DATA_COMPGEN(0x00684bec, spellInfoWithMastery,
-                                 "{%s} %s/%s %s: %d"),
+                                 "{%s}\n%s/%s\n%s: %d"),
                     akSpellTraits[display_spell].name,
                     get_level_string(display_spell),
                     gSecondarySkillLevels[entry.Mastery],
@@ -501,7 +501,7 @@ void TSpellbookWindow::GotoPage(int page)
         } else {
             sprintf(gText,
                     DATA_COMPGEN(0x00684bdc, spellInfoWithoutMastery,
-                                 "{%s} %s %s: %d"),
+                                 "{%s}\n%s\n%s: %d"),
                     akSpellTraits[display_spell].name,
                     get_level_string(display_spell), (*gpGeneralText)[388],
                     const_cast<hero*>(Hero)->GetManaCost(

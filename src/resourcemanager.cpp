@@ -383,9 +383,9 @@ void __fastcall game_null_159510(const char* caller,
         << DATA_COMPGEN(0x00682f2c, missingResourcePrefix,
                         " could not find the \"")
         << typeName.c_str()
-        << DATA_COMPGEN(0x00682f44, missingResourceMiddle, "\" resource ")
+        << DATA_COMPGEN(0x00682f44, missingResourceMiddle, "\" resource \"")
         << resourceName
-        << DATA_COMPGEN(0x00682f54, missingResourceSuffix, ".");
+        << DATA_COMPGEN(0x00682f54, missingResourceSuffix, "\".");
     MessageBoxA(
         GetForegroundWindow(), message.str().c_str(),
         DATA_COMPGEN(0x00682f08, resourceManagerCaption,
@@ -519,9 +519,9 @@ void __fastcall game_sprite_1599e0(const char* caller,
         << DATA_COMPGEN(0x00682f2c, missingResourcePrefix,
                         " could not find the \"")
         << typeName.c_str()
-        << DATA_COMPGEN(0x00682f44, missingResourceMiddle, "\" resource ")
+        << DATA_COMPGEN(0x00682f44, missingResourceMiddle, "\" resource \"")
         << resourceName
-        << DATA_COMPGEN(0x00682f54, missingResourceSuffix, ".");
+        << DATA_COMPGEN(0x00682f54, missingResourceSuffix, "\".");
     MessageBoxA(
         GetForegroundWindow(), message.str().c_str(),
         DATA_COMPGEN(0x00682f08, resourceManagerCaption,
@@ -2470,9 +2470,9 @@ static __forceinline void ReportMissingSample(const char* name)
         << DATA_COMPGEN(0x00682f2c, missingResourcePrefix,
                         " could not find the \"")
         << DATA_COMPGEN(0x00683084, sampleResourceKind, "sfx")
-        << DATA_COMPGEN(0x00682f44, missingResourceMiddle, "\" resource ")
+        << DATA_COMPGEN(0x00682f44, missingResourceMiddle, "\" resource \"")
         << name
-        << DATA_COMPGEN(0x00682f54, missingResourceSuffix, ".");
+        << DATA_COMPGEN(0x00682f54, missingResourceSuffix, "\".");
     MessageBoxA(
         GetForegroundWindow(), message.str().c_str(),
         DATA_COMPGEN(0x00682f08, resourceManagerCaption,

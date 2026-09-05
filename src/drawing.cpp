@@ -210,7 +210,7 @@ static std::string get_estimated_damage(const army* currentArmy,
     } else {
         result = format_string(
             DATA_COMPGEN(0x006772dc, estimatedDamageRangeFormat,
-                         "%s - %s"),
+                         "%s-%s"),
             format_rounded(low, high).c_str(),
             format_rounded(high, high).c_str());
     }

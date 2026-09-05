@@ -669,7 +669,7 @@ void army::LoadResources()
         case CREATURE_GOG:
         case CREATURE_MAGOG:
             missileName = DATA_COMPGEN(0x00660974, gogMissileName,
-                                       "cprgog.def");
+                                       "cprgogx.def");
             break;
         case CREATURE_LICH:
         case CREATURE_POWER_LICH:
