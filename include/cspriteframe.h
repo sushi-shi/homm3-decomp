@@ -43,6 +43,14 @@ union TBlendMask {
 // so the names preserve the encoded domain rather than inventing one effect.
 enum TRleControlCode {
     eRleControlShadow75 = 1,
+    // Codes 2 and 3 are proven by DrawTileShadow's jump table alone: its
+    // dispatch is `dec eax / cmp eax,3 / ja default / jmp [table+eax*4]`
+    // over four entries at 0x47ef20, and the table pairs 1 with 2 onto the
+    // three-quarter blend and 3 with 4 onto the half blend. Named for the
+    // domain, not for an effect, like the outline codes below - no other
+    // renderer in this compiland dispatches on either value.
+    eRleControlShadow2 = 2,
+    eRleControlShadow3 = 3,
     eRleControlShadow50 = 4,
     eRleControlOutline5 = 5,
     eRleControlOutline6 = 6,

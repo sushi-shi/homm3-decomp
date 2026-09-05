@@ -1066,6 +1066,7 @@ cspriteframe	?Draw@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@EE@Z	100.0000	10
 cspriteframe	?DrawAdvObjImpl@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@EG@Z	100.0000	100.0000	100.0000	0x7d0a0	5a27230717ce
 cspriteframe	?DrawCreatureImpl@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@EGE@Z	95.9000	95.9000	95.9000	0x7c9e0	18d91e0f5d2d
 cspriteframe	?DrawTile@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@EE@Z	81.4249	83.2115	83.2115	0x7dd40	31ff46cec542
+cspriteframe	?DrawTileShadow@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@EE@Z	97.8963	97.8963	97.8963	0x7e820	d2a664d0886c
 cspriteframe	?GetSize@CSpriteFrame@@UBEIXZ	100.0000	100.0000	100.0000	0x7c560	b733f08b7525
 cspriteframe	?SetPixelFormat@CSpriteFrame@@SIXIII@Z	100.0000	100.0000	100.0000	0x7c460	14fdf9e7d6f8
 cursor	??9type_point@@QBE_NABU0@@Z	100.0000	100.0000	100.0000	0x82340	8a56cf619630
