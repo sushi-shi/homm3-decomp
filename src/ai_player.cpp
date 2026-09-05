@@ -3849,6 +3849,7 @@ static __forceinline void mark_strategic_map(
     for (short i = 0; i < destinations.size(); ++i) {
         point = destinations[i];
         NewmapCell* cell = gpAdvManager->GetCell(point.point);
+        int type = cell->type;
         if (!(GetMapExtra(point.point.x, point.point.y, point.point.z)
               & gUnnamed69ccc4)) {
             strategic_map[point.point.z * level_size
@@ -3858,7 +3859,6 @@ static __forceinline void mark_strategic_map(
         }
 
         was_trigger = cell->is_trigger;
-        int type = cell->type;
         if (gAdventureObjectTraits[type][0])
             cell->is_trigger = 0;
 
@@ -3921,7 +3921,11 @@ static __forceinline void unblock_lith(hero* current_hero,
                                        HeroDestination& destination,
                                        long& best_distance)
 {
-    unsigned char was_on_map = current_hero->is_on_map();
+    // Complete snapshots the underlying byte directly (`mov cl,[hero+6] /
+    // mov [ebp+0x17],cl` at 0x42e3f0); `is_on_map()`'s bool facade
+    // normalizes it through `setne` and cannot produce that pair. Same
+    // later-revision spelling search.cpp:581 already carries.
+    unsigned char was_on_map = current_hero->valid;
     current_hero->restore_cell();
     // unblock_lith -> get_location -> game::get_cell: DC line 3578 and
     // Complete both retain this nested pair on the unnamed temporary.
@@ -4011,7 +4015,23 @@ static __forceinline void unblock_lith(hero* current_hero,
 // the destructor to a second operator delete, while retail retains one
 // unclaimed destructor call beside the strategic-map delete. Preserve the
 // coherent DC helper/statement shape across that backend budget split.
-// Residual (77.08%): the four inlined unblock_lith `obscure_cell` arms.
+// 77.08 -> 81.89 (2026-09-05), two statement facts in the two folded
+// helpers, both read straight off retail's schedule:
+//  - mark_strategic_map reads `cell->type` BEFORE the GetMapExtra guard.
+//    Retail loads `[ebx+0x1e]` at 0x42e19f, four instructions after the
+//    GetCell that produced EBX and 0x2a bytes AHEAD of the GetMapExtra
+//    call at 0x42e1c9; no compiler may hoist a load across that opaque
+//    call, so the early read is a source fact and not a schedule. Written
+//    after the guard (where the value is first USED) VC6 spills the cell
+//    pointer to the dead `[ebp+0x14]` parameter home and keeps the packed
+//    point dword live in EBX instead; written before it, retail's EBX/cell
+//    allocation returns. +4.52 on its own.
+//  - unblock_lith's `was_on_map` is the raw `valid` byte, not
+//    `is_on_map()`. Retail emits `mov cl,[edi+6] / mov [ebp+0x17],cl`;
+//    the bool facade adds `test`/`setne` that no spelling of the
+//    assignment removes. +0.29, and search.cpp:581 already carries the
+//    same finding with the same reasoning.
+// Residual (81.89%): the four inlined unblock_lith `obscure_cell` arms.
 // Retail keeps all four separate because their blocks are not byte-equal -
 // the first takes its receiver from EDI (0x42e429) while the other three
 // reload [ebp-0x20], and two of those use different scratch registers - so
