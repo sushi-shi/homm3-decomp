@@ -763,7 +763,9 @@ SIZE(type_map_hero_identity, 0x14);
 // campaignbrief's _Tree::_Copy 100.0000 -> 84.1429 and game's _Tree::erase
 // 100.0000 -> 92.1530. Its one point in favour - it retains newgame's
 // type_map_hero_identity copy ctor through the base copy - is bought back
-// by the plain field_34 vector below.
+// by the plain field_34 vector below - an argument that no longer
+// stands either way: that "retained copy ctor" was 0x517c30, and
+// 0x517c30 is objecttype's `pair<const string, int>` constructor.
 struct type_map_hero_info {
     int field_00;
     std::string field_04;
@@ -1072,11 +1074,14 @@ public:
         // retained COMDATs - but it CHANGES THE MEMBER'S TYPE, and retail
         // refutes that directly: campaignbrief's ~TPlayerSlotAttributes
         // (0x45c2f0, 155 B) is byte-EXACT over the plain vector and 38.0299
-        // over the derived one, and newgame's retained
-        // type_map_hero_identity copy ctor (0x517c30, 319 B) is only
-        // emitted at all with the plain vector. A 62-point swing on a
-        // 155-byte destructor is a layout fact; the reader's residual is
-        // the /Ob2 boundary class.
+        // over the derived one. A 62-point swing on a 155-byte destructor
+        // is a layout fact; the reader's residual is the /Ob2 boundary
+        // class. (A second corroboration once stood here - "newgame's
+        // retained type_map_hero_identity copy ctor (0x517c30, 319 B) is
+        // only emitted at all with the plain vector" - and it was a
+        // misidentification: 0x517c30 is objecttype's
+        // `pair<const string, int>` constructor, `ret 8` over two
+        // references with the string at +0x00. It is claimed there now.)
         std::vector<type_map_hero_identity> field_34;
 
         TPlayerSlotAttributes()

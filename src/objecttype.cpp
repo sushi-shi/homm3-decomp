@@ -18,6 +18,24 @@
 #include "resourcemanager.h"
 #include "textresource.h"
 
+// The registry map's value_type constructor, retail 0x517c30: the string
+// copy expanded in place (allocator byte, _Tidy's three zero stores, then
+// assign(_X, 0, npos)) and the mapped index read back through its
+// reference. `ret 8` and the int at +0x10 are what separate it from
+// type_map_hero_identity's copy constructor, which takes ONE reference and
+// carries its int at +0.
+VA_COMPGEN(0x00517c30, 0x13F, PAIR_CTOR, string_int_pair)
+#if defined(_MSC_VER) && !defined(__clang__)
+std::pair<const std::basic_string<char, std::char_traits<char>,
+                                  std::allocator<char> >, int>::pair(
+    const std::basic_string<char, std::char_traits<char>,
+                            std::allocator<char> >& firstValue,
+    const int& secondValue)
+    : first(firstValue), second(secondValue)
+{
+}
+#endif
+
 // The registry's implicit default constructor, emitted as its own COMDAT:
 // the _Tree constructor (shared-nil refcount at 0x69cba0, nil node at
 // 0x69cba4, _Lockit around the head-node purchase) followed by the four
