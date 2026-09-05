@@ -852,6 +852,11 @@ def _demangle_key(mangled: str):
         member = deque_class.group(1).lstrip("_").lower()
         return f"{deque_class.group(2).lower()}@deque_{member}"
     vector_string_element = "?$vector@V?$basic_string@D" in mangled
+    #: A vector over a BUILTIN element carries no class name at all - VC6
+    #: spells the type as a single letter with no `@` terminator - so the
+    #: class regex below cannot reach it. Decoded like deque's, above.
+    vector_primitive = re.match(
+        r"^\?\??\w*@?\?\$vector@([CDEFGHIJK])V\?\$allocator@", mangled)
     vector_element = re.search(
         r"\?\$vector@(?:(?:P[AB][VU])|(?:V|U|W4))?"
         r"([A-Za-z_]\w*)@", mangled)
@@ -861,6 +866,8 @@ def _demangle_key(mangled: str):
         f"{nested_vector_element.group(1).lower()}_vector"
         if nested_vector_element else
         "string" if vector_string_element else
+        DEQUE_PRIMITIVE_ELEMENT[vector_primitive.group(1)]
+        if vector_primitive else
         vector_element.group(1).lower() if vector_element else None)
     if mangled.startswith("??1?$vector@") and vector_owner:
         return f"{vector_owner}@vector_dtor"

@@ -797,6 +797,7 @@ campaignmap	?InitializeCampaignMapTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	
 campaignmap	__h3cg$campaignmap$static_dtor$campaignNames	100.0000	100.0000	100.0000	0x5e1f0	-
 campaignwindow	??0TCampaignWindow@@QAE@EH@Z	98.4726	98.4726	98.4726	0x5ea40	8637a9869f6d
 campaignwindow	??1TCampaignWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x5f210	aee78d937417
+campaignwindow	??4?$vector@HV?$allocator@H@std@@@std@@QAEAAV01@ABV01@@Z	94.4333	94.4333	94.4333	0x601f0	-
 campaignwindow	??4?$vector@UCampaignScenarioInfo@@V?$allocator@UCampaignScenarioInfo@@@std@@@std@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	0x5f9e0	-
 campaignwindow	??_GTCampaignWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x5f0e0	-
 campaignwindow	?CampaignWindowHandler@@YIHAAVmessage@@@Z	84.4576	84.4576	84.4576	0x5f2f0	52f73ae83d4d
@@ -1356,6 +1357,7 @@ event_record	?undo@type_record_move_hero@@UAEXXZ	100.0000	100.0000	100.0000	0x9a
 event_record	?undo@type_record_show_boat@@UAEXXZ	100.0000	100.0000	100.0000	0x9b100	2790cfe498ef
 event_record	?undo@type_record_show_hero@@UAEXXZ	100.0000	100.0000	100.0000	0x9b960	bdc4c2af12e5
 event_record	?undo@type_record_shroud@@UAEXXZ	100.0000	100.0000	100.0000	0x9bf20	b49d62e47a06
+events	??1?$vector@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xaf2c0	-
 events	??1CCombatInitMsg@@QAE@XZ	100.0000	100.0000	100.0000	0xad130	-
 events	??1CLevelPickWaitDlg@@UAE@XZ	100.0000	100.0000	100.0000	0xaeb00	-
 events	??1CTurnDurationPause@@QAE@XZ	100.0000	100.0000	100.0000	0xae9b0	-
@@ -2867,10 +2869,10 @@ rmg	?InitializeObjectGenerators@type_random_map_generator@@QAEXXZ	97.4646	97.467
 rmg	?WriteMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	95.6987	95.7066	95.7066	0x149cb0	12d6f5f28f76
 rmg	?_Inc@const_iterator@?$_Tree@UTPoint@@U1@U_Kfn@?$set@UTPoint@@U?$less@UTPoint@@@std@@V?$allocator@UTPoint@@@3@@std@@U?$less@UTPoint@@@4@V?$allocator@UTPoint@@@4@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x1b8bc0	-
 rmg	?assign_rmg_teams@@YIXHHHPBEPAD@Z	100.0000	100.0000	100.0000	0x14ab40	a44a9dbf9227
+rmg	?insert@?$vector@HV?$allocator@H@std@@@std@@QAEPAHPAHABH@Z	44.6278	44.6278	44.6278	0x4200	-
+rmg	?insert@?$vector@HV?$allocator@H@std@@@std@@QAEXPAHIABH@Z	26.1667	26.1667	26.1667	0x22f50	-
 rmg	?insert@?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@std@@QAEXPAUTRmgMapPosition@@IABU3@@Z	100.0000	100.0000	100.0000	0x347a0	-
 rmg	?set@?$bitset@$0IB@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0x14ded0	-
-rmg	__h3cg$rmg$vector_insert$Int	0.0000	0.0000	0.0000	0x4200	-
-rmg	__h3cg$rmg$vector_insert$Int_22f50	0.0000	0.0000	0.0000	0x22f50	-
 rmg_support	??0TRmgMapPosition@@QAE@HHH@Z	100.0000	100.0000	100.0000	0x1355c0	7618b419e43e
 rmg_support	??0TRmgRiverPainter@@QAE@PAVTRmgMapAdapterInterface@@HABUTPoint@@@Z	99.7073	99.7073	99.7073	0x15ee50	8389dfff6b8b
 rmg_support	??1TRmgRiverPainter@@UAE@XZ	100.0000	100.0000	100.0000	0x15eda0	60a4b1f5e76b
