@@ -3725,7 +3725,10 @@ viewwrld	?VWDrawUnderlay@advManager@@QAEXHHHHH@Z	42.1275	42.1275	42.1275	0x1f9ed
 viewwrld	?ViewWorld@advManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0x1fbf90	139fcf10c2f1
 viewwrld	?ViewWorldSurfaceHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1fbdf0	6564c6c11a60
 viewwrld	?ViewWorldUndergroundHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1fbec0	9ef6e09cbd1a
+viewwrld	?WindowHandler@TViewWorldWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1fcb10	510e896eb2a5
 viewwrld	?init@TViewWorldWindow@@QAEXUtype_point@@E@Z	98.8939	98.8939	98.8939	0x1fc240	6dab825b0db3
+viewwrld	?update_radar@TViewWorldWindow@@AAEXHHM@Z	80.7500	80.7500	80.7500	0x1fc8f0	f63a3f41f0f3
+viewwrld	?update_view_world@TViewWorldWindow@@AAEXPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1fc7a0	70ec5adec0de
 widget	??0widget@@QAE@FFFFFF@Z	100.0000	100.0000	100.0000	0x1fe340	0553215b2eec
 widget	??0widget@@QAE@XZ	100.0000	100.0000	100.0000	0x1fe410	6042558f56f5
 widget	??1widget@@UAE@XZ	100.0000	100.0000	100.0000	0x1fe430	4a29d8bc037a
