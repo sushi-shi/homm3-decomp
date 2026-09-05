@@ -1119,6 +1119,8 @@ customcampaign	??_GTAbstractFile@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x87dd0	-
 customcampaign	??_GTCampaignBonus@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x84020	-
 customcampaign	??_H@YGXPAXIHP6EX0@Z@Z	100.0000	100.0000	100.0000	0x13d0	-
 customcampaign	?Apply@TCampaignArtifactBonus@@UBEXH@Z	100.0000	100.0000	100.0000	0x84860	6995524a91c7
+customcampaign	?Apply@TCampaignBuildingBonus@@UBEXH@Z	100.0000	100.0000	100.0000	0x84650	4554fce4d9ae
+customcampaign	?Apply@TCampaignCreatureBonus@@UBEXH@Z	100.0000	100.0000	100.0000	0x84310	7b21001b60fb
 customcampaign	?Apply@TCampaignPrimarySkillBonus@@UBEXH@Z	100.0000	100.0000	100.0000	0x84b90	8da6373de755
 customcampaign	?Apply@TCampaignResourceBonus@@UBEXH@Z	100.0000	100.0000	100.0000	0x84e20	94bc19d36560
 customcampaign	?Apply@TCampaignSecondarySkillBonus@@UBEXH@Z	100.0000	100.0000	100.0000	0x84ca0	6834ff218354
