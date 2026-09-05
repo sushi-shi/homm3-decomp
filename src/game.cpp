@@ -18656,6 +18656,14 @@ VA_COMPGEN(0x0045fdc0, 0x9C, STD_CONSTRUCT, type_artifact_vector)
 VA_COMPGEN(0x0045f7b0, 0x59, VECTOR_DTOR, type_artifact_vector)
 VA_COMPGEN(0x0048caa0, 0x38, VECTOR_DESTROY, type_artifact_vector)
 
+// COMDAT pairing: vector<vector<type_artifact>>::operator=, the artifact twin
+// of the hero-pool assignment claimed at 0x45f5e0 above. Both compile to the
+// same 461 bytes because the outer assignment differs only in which inner
+// operator= it calls per element - which is also why /OPT:ICF could not fold
+// them - and 0x45f810 is the copy whose per-element callee is the
+// vector<type_artifact> assignment, mnemonic agreement 0.992.
+VA_COMPGEN(0x0045f810, 0x1CD, VECTOR_COPY_ASSIGN, type_artifact_vector)
+
 // COMDAT pairing: vector<type_university>::_Ucopy. Five instantiations of
 // _Ucopy resemble this address; type_university wins on agreement (0.907
 // against 0.810 for the next) and `ret 0xc` matches its three pointers.
