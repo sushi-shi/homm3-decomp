@@ -9473,6 +9473,38 @@ void* CAutoArray<int>::`scalar deleting destructor'(unsigned __flags)
 #endif  // @carcass
 
 // ---------------------------------------------------------------------------
+// The vector<GameSelectionHeadersStruct> machinery behind HeadersA /
+// TransferHeaders / SelectionHeaders (0x58ea70..0x58f480). Every row is
+// placed by its call-graph position and confirmed by the reloc sequence our
+// own COMDAT emits:
+//
+//   0x58ea70  ~vector   reached only by `jmp` from the ctor's and
+//             WindowFn_00583b40's unwind funclets; ~GameSelectionHeadersStruct
+//             then operator delete, and it is 59 B on BOTH sides.
+//   0x58eab0  size()    reads _Last  ([ecx+8]);  BYTE-IDENTICAL to ours.
+//   0x58ebb0  capacity() reads _End  ([ecx+0xc]); the same body one field over.
+//   0x58ebe0  insert(where, n, x)  the row SortMaps' refill loop pins; calls
+//             operator new, _Construct, ~T, operator delete and T::operator=,
+//             matching our COMDAT's reloc order.
+//   0x58ef20  erase(first, last)   three relocs in our order -
+//             NewSMapHeader::operator=, SavedGameHeader::operator=, ~T.
+//   0x58f080  _Destroy  one ~T call, and the six vector users reach it.
+//   0x58f0b0  _Ucopy    the `_Construct(_X, *_F); _F += 0xca4` walk, ret 0xc.
+//   0x58f480  _Construct  the row _Ucopy and insert's four sites call; retail
+//             INLINES the copy ctor into it (707 B) where we still call the
+//             out-of-line ??0GameSelectionHeadersStruct at 0x5904f0, so this
+//             row banks low - the pairing is the point, not the score.
+
+VA_COMPGEN(0x0058ea70, 0x3B, VECTOR_DTOR, GameSelectionHeadersStruct)
+VA_COMPGEN(0x0058eab0, 0x21, VECTOR_SIZE, GameSelectionHeadersStruct)
+VA_COMPGEN(0x0058ebb0, 0x21, VECTOR_CAPACITY, GameSelectionHeadersStruct)
+VA_COMPGEN(0x0058ebe0, 0x33C, VECTOR_INSERT, GameSelectionHeadersStruct)
+VA_COMPGEN(0x0058ef20, 0x152, VECTOR_ERASE, GameSelectionHeadersStruct)
+VA_COMPGEN(0x0058f080, 0x26, VECTOR_DESTROY, GameSelectionHeadersStruct)
+VA_COMPGEN(0x0058f0b0, 0x3E, VECTOR_UCOPY, GameSelectionHeadersStruct)
+VA_COMPGEN(0x0058f480, 0x2C3, STD_CONSTRUCT, GameSelectionHeadersStruct)
+
+// ---------------------------------------------------------------------------
 // SortMaps' six std::sort instantiations (0x590070..0x595e10).
 //
 // `std::sort(first, last, Pred)` is a one-line inline wrapper, so the row
