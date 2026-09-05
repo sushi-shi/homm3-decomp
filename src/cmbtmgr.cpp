@@ -2159,6 +2159,13 @@ void combatManager::ResetHitByCreature()
 // (0x46a650) on the member; our pin forces ~TPickANumber itself out
 // of line with the base receiver. The exact split needs depth 1
 // inlined + depth 2 called, which no pragma spells (only N=0 bites).
+// 2026-09-05: 75.5550 -> 79.1503 and the branch view went CLEAN (18 = 18,
+// 2 = 2 rets) by turning the `next_hex:` retry into `while (1) { ... }`
+// with the label moved to the END of the loop body as a forward continue
+// point. The old shape put the label at the TOP of the body, where it had
+// BOTH a fall-in predecessor and eight backward gotos, and VC6 peels such a
+// label. Same lever as wingraph's DDBlit (63.77 -> 100) and kb::oldmain
+// (73.35 -> 75.97) the same day. Both pins are untouched.
 // RE-OPENED 2026-08-20 against the numerator lever and STRENGTHENED,
 // two measurements: lifting the eight obstacle-record stores into a
 // single-call-site static (the BuyBuild caller-shrink, the only
@@ -2174,76 +2181,78 @@ unsigned char combatManager::place_obstacle(int obstacle_id)
     const TObstacleInfo* shape = &ObstacleInfo[obstacle_id];
     TPickANumber picker(0x12, 0xa8);
     int hex;
-next_hex:
-    hex = picker.Pick();
-    if (hex < 0x12)
+    while (1) {
+        hex = picker.Pick();
+        if (hex < 0x12)
 #pragma inline_depth(0)
-        return 0;
+            return 0;
 #pragma inline_depth()
-    {
-        int row = hex / COMBAT_GRID_ROW_STRIDE;
-        if (shape->minRow > row)
-            goto next_hex;
-        int column = hex % COMBAT_GRID_ROW_STRIDE;
-        if (column == 0)
-            goto next_hex;
-        if (shape->width + column > 15)
-            goto next_hex;
-        if (cells[hex].field_10 & 0x3f)
-            goto next_hex;
-        int row_is_odd = row & 1;
-        for (int i = 0; i < shape->extra_hex_count; i++) {
-            unsigned char cell_index = shape->extra_hex_offsets[i] + hex;
-            if (row_is_odd
-                    && ((cell_index / COMBAT_GRID_ROW_STRIDE) & 1) == 0)
-                cell_index--;
-            int cell_column = cell_index % COMBAT_GRID_ROW_STRIDE;
-            if (cell_column <= 2)
+        {
+            int row = hex / COMBAT_GRID_ROW_STRIDE;
+            if (shape->minRow > row)
                 goto next_hex;
-            if (cell_column >= 14)
+            int column = hex % COMBAT_GRID_ROW_STRIDE;
+            if (column == 0)
                 goto next_hex;
-            if (cells[cell_index].field_10 & 0x3f)
+            if (shape->width + column > 15)
                 goto next_hex;
-        }
+            if (cells[hex].field_10 & 0x3f)
+                goto next_hex;
+            int row_is_odd = row & 1;
+            for (int i = 0; i < shape->extra_hex_count; i++) {
+                unsigned char cell_index = shape->extra_hex_offsets[i] + hex;
+                if (row_is_odd
+                        && ((cell_index / COMBAT_GRID_ROW_STRIDE) & 1) == 0)
+                    cell_index--;
+                int cell_column = cell_index % COMBAT_GRID_ROW_STRIDE;
+                if (cell_column <= 2)
+                    goto next_hex;
+                if (cell_column >= 14)
+                    goto next_hex;
+                if (cells[cell_index].field_10 & 0x3f)
+                    goto next_hex;
+            }
 
-        if (gpGame->f_1f698 < 2 && field_132f4 >= 2
-                && defendingTown->type == TOWN_STRONGHOLD) {
-            int wall_column = gCastleWallColumns[row];
-            if (wall_column == COMBAT_HEX_GATE)
-                wall_column = 0x5d;
-            if (shape->width + hex >= wall_column - 2)
-                goto next_hex;
-        }
+            if (gpGame->f_1f698 < 2 && field_132f4 >= 2
+                    && defendingTown->type == TOWN_STRONGHOLD) {
+                int wall_column = gCastleWallColumns[row];
+                if (wall_column == COMBAT_HEX_GATE)
+                    wall_column = 0x5d;
+                if (shape->width + hex >= wall_column - 2)
+                    goto next_hex;
+            }
 
-        TObstacle obstacle;
-        obstacle.sprite = ResourceManager::GetSprite(shape->spriteName);
-        obstacle.shape = shape;
-        obstacle.hex = static_cast<unsigned char>(hex);
-        obstacle.owner = -1;
-        obstacle.is_visible = 1;
-        obstacle.spell_damage = 0;
-        obstacle.field_10 = 0;
-        obstacle.field_14 = -1;
-        // OVER-INLINE, pinned. insert is defined in this TU so that
-        // SetupAndLoadObstacles can expand it the way retail does; retail
-        // CALLS it here (0x46aeb0), and without the pin our /Ob2 expands
-        // it at both sites.
+            TObstacle obstacle;
+            obstacle.sprite = ResourceManager::GetSprite(shape->spriteName);
+            obstacle.shape = shape;
+            obstacle.hex = static_cast<unsigned char>(hex);
+            obstacle.owner = -1;
+            obstacle.is_visible = 1;
+            obstacle.spell_damage = 0;
+            obstacle.field_10 = 0;
+            obstacle.field_14 = -1;
+            // OVER-INLINE, pinned. insert is defined in this TU so that
+            // SetupAndLoadObstacles can expand it the way retail does; retail
+            // CALLS it here (0x46aeb0), and without the pin our /Ob2 expands
+            // it at both sites.
 #pragma inline_depth(0)
-        obstacles.insert(obstacles.end, 1, obstacle);
+            obstacles.insert(obstacles.end, 1, obstacle);
 #pragma inline_depth()
-        // Retail CALLS PlaceObstacle here - predict-inline reads it as
-        // `base x0 vs retail x1`, i.e. 191 bytes our /Ob2 was expanding
-        // inline and retail was not. Scoped to this one statement so that
-        // PlaceAllObstacles, which is already exact WITH the call, is not
-        // disturbed (the auto_inline(off)-around-the-callee form would
-        // have reached it too).
-        int obstacle_slot = obstacles.size() - 1;
+            // Retail CALLS PlaceObstacle here - predict-inline reads it as
+            // `base x0 vs retail x1`, i.e. 191 bytes our /Ob2 was expanding
+            // inline and retail was not. Scoped to this one statement so that
+            // PlaceAllObstacles, which is already exact WITH the call, is not
+            // disturbed (the auto_inline(off)-around-the-callee form would
+            // have reached it too).
+            int obstacle_slot = obstacles.size() - 1;
 #pragma inline_depth(0)
-        PlaceObstacle(&obstacle, obstacle_slot, hex, 2);
+            PlaceObstacle(&obstacle, obstacle_slot, hex, 2);
 #pragma inline_depth()
-        return 1;
+            return 1;
+        }
+    next_hex:
+        ;
     }
-    goto next_hex;
 }
 
 // Dinkumware's three-arm `vector<T>::insert(iterator, size_type, const T&)`
