@@ -2041,7 +2041,7 @@ void combatManager::Unnamed465f20()
     if (armies[actingSide][actingSlot].gridIndex != COMBAT_HEX_KEEP)
         numArchers = (numArchers + 1) / 2;
 
-    int target = Unnamed41e190(0, archerLevel, numArchers * 6 / 2);
+    int target = ChooseBallistaTarget(0, archerLevel, numArchers * 6 / 2);
     if (target < 0) {
         field_3c = AI_ORDER_NONE;
         return;

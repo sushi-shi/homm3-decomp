@@ -1574,11 +1574,18 @@ public:
     // so the declaration takes the int retail actually pushes and the
     // enum waits for the lane that reconstructs the body.
     void KeepAttack(int iTowerPos);                           // 0x465ad0
-    // Retail-only tower AI helper and its retail-only AI selector. Their
-    // bodies/callers prove the signatures but no roster row supplies a name,
-    // so both retain address ordinals.
+    // Retail-only tower AI helper. Its body/callers prove the signature
+    // but no roster row supplies a name, so it retains an address ordinal.
     void Unnamed465f20();                                     // 0x465f20
-    int Unnamed41e190(int side, int archerLevel, int damage); // 0x41e190
+    // The arrow tower's target selector, at the HEAD of ai.obj rather
+    // than in cmbtmgr.obj: 0x41e190 is the first ai.cpp body after that
+    // compiland's ten terrain.h bitset initializers, and the DC roster,
+    // the NH3API IDB (0x41e310 in the HD pressing, a constant +0x180
+    // ahead of retail through this region) and the body's own
+    // find_AI_targets / get_loss_combat_value calls all name it
+    // ChooseBallistaTarget with these three parameters.
+    int ChooseBallistaTarget(int target_group, int attack_skill,
+                             int average_damage);             // 0x41e190
     // DC header inline (CmbtMgr.h:1555, dc 0x4cc74, 24 B) with an
     // out-of-line copy on that build and NONE on retail, so /Ob2 took
     // every retail site: army::do_multi_head_attack (0x440310) carries
@@ -1803,6 +1810,9 @@ public:
     // AICheckRetreat statement slot in Dreamcast CheckGetAIMove, and the
     // helper's other retail caller sits in ai.obj.
     unsigned char AICheckRetreat();                            // 0x41e570
+    // AICheckRetreat's own siege census, the ai.obj row directly before
+    // it (dc 0x23750); its only retail caller is that function.
+    unsigned char failed_siege();                              // 0x41e440
     // 0x5a93a0, the row IMMEDIATELY AFTER get_elemental_type (0x5a9360)
     // in spells.obj - which is exactly where DC's own spells.cpp
     // roster puts combatManager::AbleToSummonElemental (spells.cpp:5912,

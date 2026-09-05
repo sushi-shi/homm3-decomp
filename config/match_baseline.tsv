@@ -202,6 +202,7 @@ ai	?choose_shooter_target@combatManager@@QAEJPBVarmy@@PAUtype_AI_combat_paramete
 ai	?choose_spell_action@combatManager@@QAEEPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x21280	ff167d617608
 ai	?choose_to_run@combatManager@@QAEEPBVarmy@@PBJPBVsearchArray@@@Z	100.0000	100.0000	100.0000	0x208f0	2d39e1fe220c
 ai	?compute_fire_shield_damage@combatManager@@QAEJJPBVarmy@@0J@Z	100.0000	100.0000	100.0000	0x22440	84da210774de
+ai	?failed_siege@combatManager@@QAEEXZ	100.0000	100.0000	100.0000	0x1e440	fbc2b5506511
 ai	?find_AI_targets@combatManager@@QAEXJPBVarmy@@EPAUtype_AI_combat_parameters@@PAVsearchArray@@@Z	87.3622	87.3622	87.3622	0x22b20	1cca3a47b1e3
 ai	?find_attack_hexes@@YIXPBVarmy@@JJJJPBVsearchArray@@PAV?$vector@JV?$allocator@J@std@@@std@@@Z	87.1099	87.1099	87.1099	0x20060	d1ee58fdf845
 ai	?find_move_order@combatManager@@QAEXPAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x1f140	395ede15add7
@@ -223,6 +224,8 @@ ai	?simulate_actions@combatManager@@QAEJAAV?$vector@PAVarmy@@V?$allocator@PAVarm
 ai	?simulate_combat@combatManager@@QAEXJE@Z	99.9512	99.9512	99.9512	0x22a40	3d882f91bcdf
 ai	?simulate_melee_attack@combatManager@@QAEXPAVarmy@@0J@Z	100.0000	100.0000	100.0000	0x227a0	4c0b58102b37
 ai	?simulate_melee_attack@combatManager@@QAEXPAVarmy@@J0JJ@Z	77.5103	77.5103	77.5103	0x224e0	474479da9abd
+ai	combatManager_AICheckRetreat	0.0000	0.0000	0.0000	0x1e570	209f021aa465
+ai	combatManager_ChooseBallistaTarget	0.0000	0.0000	0.0000	0x1e190	26c39bbfc713
 ai_combat	??0type_AI_combat_data@@QAE@PBVhero@@PBVarmyGroup@@N0PBVtown@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x23ee0	7a3cf1c93721
 ai_combat	??0type_monster_vector@@QAE@ABU0@@Z	100.0000	100.0000	100.0000	0x276c0	aaea26c81479
 ai_combat	?AI_approximate_strength@@YIJPBVhero@@@Z	100.0000	100.0000	100.0000	0x27650	8fb9a1444291
@@ -895,7 +898,7 @@ cmbtmgr	?ShotIsThroughWall@combatManager@@QAEEPBVarmy@@HH@Z	100.0000	100.0000	10
 cmbtmgr	?StopCombatSounds@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x639e0	313b62a81581
 cmbtmgr	?Unnamed464d40@combatManager@@QAEEPAVarmy@@@Z	91.0961	91.0961	91.0961	0x64d40	3dc15d7e32c2
 cmbtmgr	?Unnamed464f50@combatManager@@QAEEPBVarmy@@0@Z	100.0000	100.0000	100.0000	0x64f50	47f69f0febd2
-cmbtmgr	?Unnamed465f20@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x65f20	b63851df306b
+cmbtmgr	?Unnamed465f20@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x65f20	ace82f00ae9d
 cmbtmgr	?Unnamed4693a0@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x693a0	16343c38abc0
 cmbtmgr	?Unnamed469e50@combatManager@@QAEEHPAVarmy@@E@Z	100.0000	100.0000	100.0000	0x69e50	9159b9a70677
 cmbtmgr	?Unnamed46a520@combatManager@@QAEXPAVarmy@@@Z	100.0000	100.0000	100.0000	0x6a520	5d996f6e34df
