@@ -301,11 +301,24 @@ bool TCampaignBuildingBonus::IsBuildingBonus() const
     return true;
 }
 
+VA(0x00484630, 0x17)  // anchor-vtable (0x63da60+8), retail-only
+const char* TCampaignBuildingBonus::GetIconDefName() const
+{
+    return gCampaignBuildingIconNames[m_town][m_building];
+}
+
 VA(0x004847a0, 0x3C)  // anchor-callee (GetBuildingName 0x4610e0), retail-only
 std::string TCampaignBuildingBonus::GetText() const
 {
     const char* format = gpGeneralText->Text[708];
     return format_string(format, GetBuildingName(m_town, m_building));
+}
+
+VA(0x004847e0, 0x22)  // anchor-vtable (0x63da60+0x1c), retail-only
+void TCampaignBuildingBonus::SetTown(int town)
+{
+    m_town = town;
+    m_building = gCampaignBuildingRemap[town][m_building];
 }
 
 VA(0x00484810, 0x6)  // anchor-string (ArtifBon.def), retail-only
@@ -468,6 +481,66 @@ int TCampaignResourceBonus::GetIconIndex() const
     if (m_resource < 0)
         return (m_resource != -3) + 7;
     return m_resource;
+}
+
+// The mixed rows take their own general-text lines; the seven plain ones
+// take the shared resource-name table, and anything else leaves the name
+// null for format_string to print as an empty %s.
+VA(0x00484d90, 0x8E)  // anchor-vtable (0x63d9c0+0x10), retail-only
+std::string TCampaignResourceBonus::GetText() const
+{
+    const char* name = 0;
+    switch (m_resource) {
+    case WOOD:
+    case MERCURY:
+    case ORE:
+    case SULFUR:
+    case CRYSTAL:
+    case GEMS:
+    case GOLD:
+        name = gResourceNames[m_resource];
+        break;
+    case CAMPAIGN_BONUS_RESOURCE_WOOD_AND_ORE:
+        name = gpGeneralText->Text[722];
+        break;
+    case CAMPAIGN_BONUS_RESOURCE_RARE:
+        name = gpGeneralText->Text[723];
+        break;
+    case CAMPAIGN_BONUS_RESOURCE_NONE:
+        break;
+    }
+    return format_string(gpGeneralText->Text[718], m_amount, name);
+}
+
+// Every arm re-reads the amount out of the object; retail never keeps it
+// in a register across the four rare-resource stores.
+VA(0x00484e20, 0xDE)  // anchor-vtable (0x63d9c0+0x14), retail-only
+void TCampaignResourceBonus::Apply(int whichPlayer) const
+{
+    playerData* player = &gpGame->players[whichPlayer];
+    switch (m_resource) {
+    case WOOD:
+    case MERCURY:
+    case ORE:
+    case SULFUR:
+    case CRYSTAL:
+    case GEMS:
+    case GOLD:
+        player->resources[m_resource] += m_amount;
+        break;
+    case CAMPAIGN_BONUS_RESOURCE_WOOD_AND_ORE:
+        player->resources[WOOD] += m_amount;
+        player->resources[ORE] += m_amount;
+        break;
+    case CAMPAIGN_BONUS_RESOURCE_RARE:
+        player->resources[MERCURY] += m_amount;
+        player->resources[SULFUR] += m_amount;
+        player->resources[CRYSTAL] += m_amount;
+        player->resources[GEMS] += m_amount;
+        break;
+    case CAMPAIGN_BONUS_RESOURCE_NONE:
+        break;
+    }
 }
 
 VA(0x00484f00, 0x37)  // anchor-vtable (0x63d9c0+0x18), retail-only

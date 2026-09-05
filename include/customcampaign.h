@@ -243,6 +243,30 @@ public:
     int m_amount;
 };
 
+// The building bonus's two per-town tables, both indexed with the town
+// as the outer row: 0x6755b8 gives the icon .def name for each of a
+// town's 44 building slots and 0x6888c0 remaps a bonus's building index
+// when the town is set (41 rows a town). Neither table is claimed yet, so
+// the outer bound is left open rather than invented.
+extern const char* gCampaignBuildingIconNames[][44];
+extern const int gCampaignBuildingRemap[][41];
+
+// The two mixed resource selectors a resource bonus can carry beside the
+// seven EGameResource rows, byte-read off the ten-entry jump tables the
+// description (0x484d90) and the applier (0x484e20) share: -3 pays wood
+// AND ore, -2 pays all four rare resources. Names are role inventions.
+enum ECampaignBonusResource {
+    CAMPAIGN_BONUS_RESOURCE_WOOD_AND_ORE = -3,
+    CAMPAIGN_BONUS_RESOURCE_RARE = -2,
+    CAMPAIGN_BONUS_RESOURCE_NONE = -1
+};
+
+// The seven localized resource names, as advmgr.h / ai_player.h /
+// newgame.h / tradpost_widgets.h already declare them; the resource
+// bonus's description indexes the same table and this is the cheaper
+// include-set edge.
+extern const char* gResourceNames[7];
+
 // The three sentinel hero selectors a campaign bonus can carry, byte-read
 // off the picker's own jump chain at 0x4840d0 (`cmp ecx,-3 / -2 / -1`
 // with the plain-id arm falling through). Names are role inventions.

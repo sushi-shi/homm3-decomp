@@ -1120,6 +1120,7 @@ customcampaign	??_GTCampaignBonus@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x84020	
 customcampaign	??_H@YGXPAXIHP6EX0@Z@Z	100.0000	100.0000	100.0000	0x13d0	-
 customcampaign	?Apply@TCampaignArtifactBonus@@UBEXH@Z	100.0000	100.0000	100.0000	0x84860	6995524a91c7
 customcampaign	?Apply@TCampaignPrimarySkillBonus@@UBEXH@Z	100.0000	100.0000	100.0000	0x84b90	8da6373de755
+customcampaign	?Apply@TCampaignResourceBonus@@UBEXH@Z	100.0000	100.0000	100.0000	0x84e20	94bc19d36560
 customcampaign	?Apply@TCampaignSecondarySkillBonus@@UBEXH@Z	100.0000	100.0000	100.0000	0x84ca0	6834ff218354
 customcampaign	?Apply@TCampaignSpellBonus@@UBEXH@Z	100.0000	100.0000	100.0000	0x840a0	a0d9b5a873b4
 customcampaign	?Apply@TCampaignSpellScrollBonus@@UBEXH@Z	100.0000	100.0000	100.0000	0x842d0	a0d288814495
@@ -1130,6 +1131,7 @@ customcampaign	?FreeData@CampaignHeaderStruct@TCampaignBrief@@QAEXXZ	100.0000	10
 customcampaign	?GetAvailableScenarios@CampaignHeaderStruct@TCampaignBrief@@QBEXPAE@Z	100.0000	100.0000	100.0000	0x88f00	54417e832b4c
 customcampaign	?GetCampaignBonusHero@@YIPAVhero@@HH@Z	100.0000	100.0000	100.0000	0x840d0	a0921b3de63a
 customcampaign	?GetIconDefName@TCampaignArtifactBonus@@UBEPBDXZ	100.0000	100.0000	100.0000	0x84810	2b0b966311b7
+customcampaign	?GetIconDefName@TCampaignBuildingBonus@@UBEPBDXZ	100.0000	100.0000	100.0000	0x84630	e183ca054312
 customcampaign	?GetIconDefName@TCampaignCreatureBonus@@UBEPBDXZ	100.0000	100.0000	100.0000	0x84550	d2bbffb80a4e
 customcampaign	?GetIconDefName@TCampaignPrimarySkillBonus@@UBEPBDXZ	100.0000	100.0000	100.0000	0x848e0	dab60e8dfda4
 customcampaign	?GetIconDefName@TCampaignResourceBonus@@UBEPBDXZ	100.0000	100.0000	100.0000	0x84d60	0f4fc936d6ee
@@ -1143,6 +1145,7 @@ customcampaign	?GetNumMaps@CampaignHeaderStruct@TCampaignBrief@@QBEHXZ	100.0000	
 customcampaign	?GetText@TCampaignArtifactBonus@@UBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	99.9565	99.9565	99.9565	0x84820	8aea22b19c75
 customcampaign	?GetText@TCampaignBuildingBonus@@UBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	99.9545	99.9545	99.9545	0x847a0	c912029a2d75
 customcampaign	?GetText@TCampaignCreatureBonus@@UBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x84570	9b313516d0c2
+customcampaign	?GetText@TCampaignResourceBonus@@UBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x84d90	252ecc9e5487
 customcampaign	?GetText@TCampaignSecondarySkillBonus@@UBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x84c50	43d01adf90c9
 customcampaign	?GetText@TCampaignSpellBonus@@UBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	99.9600	99.9600	99.9600	0x84230	5d6ba2ecd839
 customcampaign	?GetText@TCampaignSpellScrollBonus@@UBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	99.9600	99.9600	99.9600	0x84280	092b0dc1c401
@@ -1168,6 +1171,7 @@ customcampaign	?Read@TCampaignSpellBonus@@UAEXPAVTAbstractFile@@@Z	100.0000	100.
 customcampaign	?Read@TStreamBufFile@@UAEHPAXH@Z	100.0000	100.0000	100.0000	0x83f10	d4a8f9e13d4a
 customcampaign	?Save@SCampaign@@QAEXPAVTAbstractFile@@@Z	78.4646	78.4646	78.4646	0x8ae90	2cca34ef9629
 customcampaign	?SetTown@TCampaignBonus@@UAEXH@Z	100.0000	100.0000	100.0000	0x85d80	b2d708d08c05
+customcampaign	?SetTown@TCampaignBuildingBonus@@UAEXH@Z	100.0000	100.0000	100.0000	0x847e0	00d1522bb39b
 customcampaign	?StartMusic@CampaignHeaderStruct@TCampaignBrief@@QAEXXZ	100.0000	100.0000	100.0000	0x88ee0	4daeb5fd6b1f
 customcampaign	?StartScenario@CampaignHeaderStruct@TCampaignBrief@@QAEXHH@Z	100.0000	100.0000	100.0000	0x894e0	00db9222128a
 customcampaign	?StartScenario@ScenarioStruct@TCampaignBrief@@QAEXPAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@H@Z	100.0000	100.0000	100.0000	0x884c0	1e966a01130f
