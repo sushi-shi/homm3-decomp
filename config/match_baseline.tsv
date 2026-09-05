@@ -479,6 +479,8 @@ army	?Turn@army@@QAEXE@Z	91.7125	91.7125	91.7125	0x46720	32f075cd13f8
 army	?Unnamed447fe0@army@@QAEEXZ	100.0000	100.0000	100.0000	0x47fe0	ea20c93099ae
 army	?Walk@army@@QAEXHEE@Z	100.0000	100.0000	100.0000	0x3f0b0	141b4ce937fa
 army	?WalkTo@army@@QAEEHE@Z	93.3162	93.3162	93.3162	0x41fa0	18e8c7a27bf4
+army	?_Freeback@?$deque@HV?$allocator@H@std@@@std@@IAEXXZ	100.0000	100.0000	100.0000	0x49130	-
+army	?_Freefront@?$deque@HV?$allocator@H@std@@@std@@IAEXXZ	100.0000	100.0000	100.0000	0x490b0	-
 army	?add_aura@army@@QAEXXZ	100.0000	100.0000	100.0000	0x3ea70	e6d056a6b049
 army	?adjust_damage@army@@QBEJPAV1@JEEJPAJ@Z	100.0000	100.0000	100.0000	0x43f40	6eace58e71c0
 army	?animate_missile@army@@AAEXPAV1@@Z	93.1695	93.1695	93.1695	0x3f2c0	dd0426a0d067
@@ -3256,6 +3258,7 @@ spellbookwindow	?Close@TSpellbookWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x19
 spellbookwindow	?GotoPage@TSpellbookWindow@@QAEXH@Z	88.8745	88.8745	88.8745	0x19c9a0	ac3404ada21d
 spellbookwindow	?Open@TSpellbookWindow@@UAEHHE@Z	100.0000	100.0000	100.0000	0x19c970	67001e2f7fe4
 spellbookwindow	?WindowHandler@TSpellbookWindow@@UAEHPAVmessage@@@Z	99.9011	99.9011	99.9011	0x19d040	afd2f6cd1887
+spellbookwindow	?_Insertion_sort_1@std@@YIXPAVTSpellbookEntry@TSpellbookWindow@@00@Z	100.0000	100.0000	100.0000	0x19def0	-
 spellbookwindow	?get_spell_description@TSpellbookWindow@@AAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@HPBVhero@@E@Z	96.8000	96.8000	96.8000	0x19baa0	368d8d6e41c8
 spelldefs	?InitializeSpellTraits@@YIXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	100.0000	100.0000	100.0000	0x19e150	4e33d1e76770
 spelldefs	?InitializeSpellTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0x19e090	59446a0b5e03
