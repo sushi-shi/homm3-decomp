@@ -1909,8 +1909,8 @@ gzfile	??_GTOpenFailure@TGzFile@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xd6d30	-
 gzfile	?Read@TGzFile@@UAEHPAXH@Z	100.0000	100.0000	100.0000	0xd6d80	d8d74584e733
 gzfile	?Write@TGzFile@@UAEHPBXH@Z	100.0000	100.0000	100.0000	0xd6da0	c861271538fe
 gzinflatebuf	??0TAllocationFailure@@QAE@XZ	100.0000	100.0000	100.0000	0xd6b80	92689dd90756
-gzinflatebuf	??0TDataError@TGzInflateBuf@@QAE@ABV01@@Z	0.0000	100.0000	100.0000	0xd65e0	ef530792f879
-gzinflatebuf	??0TDataError@TGzInflateBuf@@QAE@XZ	31.7752	100.0000	100.0000	0xd6690	-
+gzinflatebuf	??0TDataError@TGzInflateBuf@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0xd6690	-
+gzinflatebuf	??0TDataError@TGzInflateBuf@@QAE@XZ	100.0000	100.0000	100.0000	0xd65e0	ef530792f879
 gzinflatebuf	??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z	87.7808	87.7808	87.7808	0xd6050	d94949a33ebd
 gzinflatebuf	??1TGzInflateBuf@@UAE@XZ	100.0000	100.0000	100.0000	0xd6820	cc97722e33a5
 gzinflatebuf	??_GTGzInflateBuf@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xd67f0	-
@@ -2935,8 +2935,8 @@ rmg	?InitializeObjectGenerators@type_random_map_generator@@QAEXXZ	97.4646	97.467
 rmg	?WriteMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	95.6987	95.7066	95.7066	0x149cb0	12d6f5f28f76
 rmg	?_Inc@const_iterator@?$_Tree@UTPoint@@U1@U_Kfn@?$set@UTPoint@@U?$less@UTPoint@@@std@@V?$allocator@UTPoint@@@3@@std@@U?$less@UTPoint@@@4@V?$allocator@UTPoint@@@4@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x1b8bc0	-
 rmg	?assign_rmg_teams@@YIXHHHPBEPAD@Z	100.0000	100.0000	100.0000	0x14ab40	a44a9dbf9227
-rmg	?insert@?$vector@HV?$allocator@H@std@@@std@@QAEPAHPAHABH@Z	44.6278	44.6278	44.6278	0x4200	-
-rmg	?insert@?$vector@HV?$allocator@H@std@@@std@@QAEXPAHIABH@Z	26.1667	26.1667	26.1667	0x22f50	-
+rmg	?insert@?$vector@HV?$allocator@H@std@@@std@@QAEPAHPAHABH@Z	100.0000	100.0000	100.0000	0x22f50	-
+rmg	?insert@?$vector@HV?$allocator@H@std@@@std@@QAEXPAHIABH@Z	100.0000	100.0000	100.0000	0x4200	-
 rmg	?insert@?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@std@@QAEXPAUTRmgMapPosition@@IABU3@@Z	100.0000	100.0000	100.0000	0x347a0	-
 rmg	?set@?$bitset@$0IB@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0x14ded0	-
 rmg_support	??0TRmgMapPosition@@QAE@HHH@Z	100.0000	100.0000	100.0000	0x1355c0	7618b419e43e
