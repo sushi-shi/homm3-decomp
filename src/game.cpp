@@ -4827,12 +4827,29 @@ inline unsigned char validate_is_human_team(game* thisGame, int teamNum)
 }
 
 // E:\gamedcs\game.cpp:4050
-// Residual wall (89.04%): the semantic blocks, calls, and field offsets are
-// proved, but VC6 retains two source-shape differences (105 branches / two
-// exits here versus retail's 103 / one).  A compound campaign predicate
-// (73.44%), shared-label gotos (71.68%), a switch (79.20%), direct HeroXYZ
-// fields (87.67%), and the class-member IsHumanTeam spelling (88.74%) all
-// measured worse; the remaining cross-jump and duplicated tail are bounded.
+// Residual wall (89.61%): the semantic blocks, calls, and field offsets are
+// proved.  A compound campaign predicate (73.44%), shared-label gotos
+// (71.68%), a switch (79.20%), direct HeroXYZ fields (87.67%), and the
+// class-member IsHumanTeam spelling (88.74%) all measured worse.
+//
+// Retail's campaign chain cross-jumps every `AllowNormalVictory = 0` tail
+// into ONE store at 0x4bf835 and shares a single `je` at 0x4bf840, so each
+// arm ends `cmp eax,<last>` + `jmp <shared je>` and the `= 1` store is the
+// fall-through.  That is the polarity of `if (map != K) = 1; else = 0;`.
+// Spelling the CAMPAIGN_5/3 arm that way is worth 89.0407 -> 89.6120: it
+// deletes our odd `mov byte ptr [ecx+0x1f89d], al` (the `test eax,eax` zero
+// reused as the stored value) and puts retail's `test eax,eax` at the tail.
+// The same inversion on the multi-value arms (7, 14, 15, 16, 18) is
+// BYTE-FLAT - VC6 canonicalises `a||b||c` and `!a&&!b&&!c` to one shape - so
+// those stay in their positive form.  On the single-value arms (CAMPAIGN_2,
+// CAMPAIGN_8) it is a LOSS (89.61 -> 87.49 -> 86.15) and the whole-chain
+// inversion scores 86.15: dropping their stores removes a pseudo, and the
+// two `type_point` stack slots SWAP (retail and this compile both put
+// vchero_loc at [ebp-8] and poolhero_loc at [ebp-0x10]; after the extra
+// inversions they trade, which re-displaces ~50 downstream rows).  The
+// residual is therefore C2 cross-jump aggressiveness (4 `= 0` stores here
+// against retail's 1) plus retail's UNMERGED num_living_players store, and
+// no arm spelling reaches it without paying the slot swap.
 VA(0x004bf780, 0x6E2)  // order-map + whole-function identity, dc 0xaa7e0
 void game::ValidateVictoryLossConditions(unsigned char check_map_locations)
 {
@@ -4853,10 +4870,10 @@ void game::ValidateVictoryLossConditions(unsigned char check_map_locations)
         } else if (gbUnk69774c) {
             if (campaign_number == GAME_CAMPAIGN_5
                 || campaign_number == GAME_CAMPAIGN_3) {
-                if (map == GAME_SCENARIO_0)
-                    mapHeader.victoryCondition.AllowNormalVictory = 0;
-                else
+                if (map != GAME_SCENARIO_0)
                     mapHeader.victoryCondition.AllowNormalVictory = 1;
+                else
+                    mapHeader.victoryCondition.AllowNormalVictory = 0;
             } else if (campaign_number == GAME_CAMPAIGN_2) {
                 if (map == GAME_SCENARIO_1)
                     mapHeader.victoryCondition.AllowNormalVictory = 0;
