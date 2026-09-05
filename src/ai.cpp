@@ -92,13 +92,87 @@ inline const _TYPE& min_ref_xvalue(_TYPE _X, const _TYPE& _Y)
 // carries the DC parameter names verbatim.
 
 // E:\gamedcs\ai.cpp:43
-#if 0  // @carcass
+// The arrow tower's / ballista's target picker. `attack_skill` is a DEAD
+// parameter in retail - nothing reads [ebp+0xc] - and the DC prototype
+// names it, so it is transcribed rather than dropped. The scan runs
+// TWICE with the identical body: the first pass prices each stack with
+// the estimate's own kills_only, and when that pass leaves no candidate
+// (or none worth a positive score) the whole walk repeats with kills_only
+// forced to 0. Both passes keep the running best - the retry does not
+// reset best_value or result - and both re-read numArmies[target_group]
+// through the back edge.
+//
+// Residual (99.89%): one immediate - retail keeps its int-to-double
+// conversion in a COMPILER TEMP at [ebp-8], the top of the frame, and
+// pushes the four-byte locals below it (best_value -0xc, the `this`
+// spill -0x10, result -0x14); the named `double damage` that is the only
+// spelling found to emit the fild BEFORE the ComputeDefenderDamageReduction
+// call is allocated with the other named locals, at -0x14, so every frame
+// displacement shifts one slot. Tried and rejected: the conversion left
+// anonymous inside the multiply, in its own statement or with an explicit
+// static_cast<double>, both 96.29 - VC6 then evaluates the CALL first and
+// converts afterwards; declaring the double at function scope instead of
+// in the loop body is byte-identical to declaring it in the loop.
 VA(0x0041e190, 0x2A8)  // order-map(DC ai.obj head) + anchor-callee find_AI_targets, dc 0x23450
 int combatManager::ChooseBallistaTarget(int target_group, int attack_skill, int average_damage)
 {
-    // @stub
+    double damage;
+    long best_value = 0;
+    long result = -1;
+    type_AI_combat_parameters estimate(this, 1 - target_group);
+
+    find_AI_targets(target_group, 0, 0, &estimate, 0);
+
+    { for (long i = 0; i < numArmies[target_group]; i++) {
+            army* current_army = &armies[target_group][i];
+            if (current_army->Is(1u << 21))
+                continue;
+            damage = average_damage;
+            long value = static_cast<long>(
+                damage * current_army->ComputeDefenderDamageReduction(1));
+            value = current_army->get_loss_combat_value(
+                estimate.lowest_attack, estimate.lowest_defense, 1, value,
+                estimate.kills_only);
+            if (!current_army->cannot_attack() && current_army->get_AI_target()
+                    && current_army->get_AI_target_time() <= 5)
+                value /= current_army->get_AI_target_time();
+            else
+                value /= 5;
+            if (value >= best_value) {
+                best_value = value;
+                result = i;
+            }
+        }
+    }
+
+    if (!estimate.kills_only)
+        return result;
+    if (result >= 0 && best_value > 0)
+        return result;
+
+    { { for (long i = 0; i < numArmies[target_group]; i++) {
+                army* current_army = &armies[target_group][i];
+                if (current_army->Is(1u << 21))
+                    continue;
+                damage = average_damage;
+                long value = static_cast<long>(
+                    damage * current_army->ComputeDefenderDamageReduction(1));
+                value = current_army->get_loss_combat_value(
+                    estimate.lowest_attack, estimate.lowest_defense, 1, value, 0);
+                if (!current_army->cannot_attack() && current_army->get_AI_target()
+                        && current_army->get_AI_target_time() <= 5)
+                    value /= current_army->get_AI_target_time();
+                else
+                    value /= 5;
+                if (value >= best_value) {
+                    best_value = value;
+                    result = i;
+                }
+            }
+        }
+    }
+    return result;
 }
-#endif  // @carcass
 
 // E:\gamedcs\ai.cpp:113
 // The attacker-side census that tells AICheckRetreat a walled combat is
