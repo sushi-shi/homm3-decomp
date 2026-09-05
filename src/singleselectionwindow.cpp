@@ -9488,8 +9488,27 @@ void* CAutoArray<int>::`scalar deleting destructor'(unsigned __flags)
 // The row the delinker named `game_autosave_1903b0` for its "AUTOSAVE."
 // reference. Buffer order is byte-proven: the a-side strcat targets
 // [ebp-0x104] (the first-declared array) and the b-side [ebp-0x204].
+//
+// `inline` is LOAD-BEARING and asymmetric with its BY_VERSION twin: /Ob2
+// will not take a 317 B body from a plain out-of-class definition, so
+// _Median/_Unguarded_partition/_Unguarded_insert BY_NAME all CALLED what
+// retail expands (32.24 / 14.65 / 46.40). Marking it inline moves those to
+// 95.80 / 85.75 / 79.76 with _Sort_0 and _Sort holding at 100.0000 and the
+// out-of-line COMDAT still emitted for _Sort_0's own call. The identical
+// keyword on BY_VERSION is a LOSS - it expands there at every site, its two
+// COMDATs stop being emitted and both rows fall to 0.0000 - so only this one
+// carries it.
+//
+// Residual (83.89%): retail loads the " " seed TWICE (once per buffer) and
+// keeps `this` memory-homed at [ebp-4], re-reading it for isNet and again
+// for direction; we CSE the literal load and hold `this` in esi, which also
+// picks edx over retail's ecx for the setl. Tried and rejected: two `return
+// _strcmpi(...)` arms (75.17 - two calls, two rets where retail cross-jumps
+// one), a named lhs/rhs pair (81.78 - one call but `mov` where retail
+// pushes in each arm), declaring sb ahead of the buffers (82.94). The
+// shared `int order` form below is the best of the four.
 VA_COMPGEN(0x005903b0, 0x13D, FUNCTOR_CALL, TSortMapsByName)  // anchor-callee _Sort_0 BY_NAME (0x590070) calls it; anchor-global the 'AUTOSAVE.' literal at 0x683968 and rolloverSpaceSeparator's " " seed; ret 8 on two const& args + thiscall functor, retail-only
-bool TSortMapsByName::operator()(const GameSelectionHeadersStruct& a,
+inline bool TSortMapsByName::operator()(const GameSelectionHeadersStruct& a,
                                  const GameSelectionHeadersStruct& b) const
 {
     char nameA[256] = " ";
@@ -9512,9 +9531,12 @@ bool TSortMapsByName::operator()(const GameSelectionHeadersStruct& a,
         }
     }
 
+    int order;
     if (direction)
-        return _strcmpi(sb, sa) < 0;
-    return _strcmpi(sa, sb) < 0;
+        order = _strcmpi(sb, sa);
+    else
+        order = _strcmpi(sa, sb);
+    return order < 0;
 }
 
 // numPlayers*10 + maxNumHumanPlayers is the rank: retail forms it with
@@ -9532,7 +9554,15 @@ bool TSortMapsByPlayers::operator()(const GameSelectionHeadersStruct& a,
 }
 
 // The format compare is the outer test and the name compare its equal arm -
-// retail's `cmp eax,edi / jne <sunk tail>` puts the version arm last.
+// retail's `cmp eax,edi / jne <sunk tail>` puts the version arm last. Unlike
+// BY_NAME this one keeps TWO __strcmpi calls with duplicated tails, so the
+// merged `int order` form is not its shape.
+//
+// Residual (81.35%): calls agree 4/4 and branches agree 6/6; the delta is the
+// same literal-CSE / this-homing register family as BY_NAME's, and its
+// _Median / _Unguarded_partition (38.21 / 60.09) are the under-inline BY_NAME
+// closed with `inline` - measured here and REJECTED, both rows go to 0.0000
+// because the COMDATs stop being emitted at all.
 VA_COMPGEN(0x00591190, 0x180, FUNCTOR_CALL, TSortMapsByVersion)  // anchor-callee _Sort_0 BY_VERSION (0x590e50) calls it; same 'AUTOSAVE.'/" " text shape as BY_NAME behind a leading header.version compare, retail-only
 bool TSortMapsByVersion::operator()(const GameSelectionHeadersStruct& a,
                                     const GameSelectionHeadersStruct& b) const
