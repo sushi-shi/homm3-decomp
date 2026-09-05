@@ -1602,6 +1602,7 @@ game	??1?$pair@$$CBHUtype_map_hero_info@@@std@@QAE@XZ	100.0000	100.0000	100.0000
 game	??1?$vector@UTRumour@game@@V?$allocator@UTRumour@game@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xcf7c0	-
 game	??1?$vector@UTScenarioTown@@V?$allocator@UTScenarioTown@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xcf0b0	-
 game	??1?$vector@Utype_creature_bank@@V?$allocator@Utype_creature_bank@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xcf780	-
+game	??1?$vector@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@V?$allocator@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@@2@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x5f7b0	-
 game	??1?$vector@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@V?$allocator@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@@2@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x5f560	-
 game	??1?$vector@VSign@@V?$allocator@VSign@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xcf6f0	-
 game	??1?$vector@Vtown@@V?$allocator@Vtown@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xcf3d0	-
@@ -1769,6 +1770,7 @@ game	?_Dec@const_iterator@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn
 game	?_Destroy@?$vector@UTRumour@game@@V?$allocator@UTRumour@game@@@std@@@std@@IAEXPAUTRumour@game@@0@Z	100.0000	100.0000	100.0000	0xd1760	-
 game	?_Destroy@?$vector@Utype_creature_bank@@V?$allocator@Utype_creature_bank@@@std@@@std@@IAEXPAUtype_creature_bank@@0@Z	100.0000	100.0000	100.0000	0xd13b0	-
 game	?_Destroy@?$vector@Utype_map_hero_identity@@V?$allocator@Utype_map_hero_identity@@@std@@@std@@IAEXPAUtype_map_hero_identity@@0@Z	100.0000	100.0000	100.0000	0xcfec0	-
+game	?_Destroy@?$vector@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@V?$allocator@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@@2@@std@@IAEXPAV?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@2@0@Z	100.0000	100.0000	100.0000	0x8caa0	-
 game	?_Destroy@?$vector@Vtown@@V?$allocator@Vtown@@@std@@@std@@IAEXPAVtown@@0@Z	100.0000	100.0000	100.0000	0xd07c0	-
 game	?_Inc@const_iterator@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@U_Kfn@?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@3@U?$less@PAVCImmEnclosure@@@3@V?$allocator@UtagRECT@@@3@@std@@QAEXXZ	100.0000	100.0000	100.0000	0xb7330	-
 game	?_Insert@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@IAE?AViterator@12@PAU_Node@12@0ABU?$pair@$$CBHUtype_map_hero_info@@@2@@Z	100.0000	100.0000	100.0000	0xd1d50	-
@@ -1778,6 +1780,7 @@ game	?_Tidy@?$bitset@$07@std@@AAEXK@Z	100.0000	100.0000	100.0000	0xcff30	-
 game	?_Tidy@?$bitset@$0BM@@std@@AAEXK@Z	100.0000	100.0000	100.0000	0xd1830	-
 game	?_Tidy@?$bitset@$0EG@@std@@AAEXK@Z	100.0000	100.0000	100.0000	0xcfa10	-
 game	?_Tidy@?$bitset@$0IA@@std@@AAEXK@Z	100.0000	100.0000	100.0000	0xd4e90	-
+game	?_Ucopy@?$vector@Utype_university@@V?$allocator@Utype_university@@@std@@@std@@IAEPAUtype_university@@PBU3@0PAU3@@Z	100.0000	100.0000	100.0000	0x34c70	-
 game	?_Ucopy@?$vector@Vboat@@V?$allocator@Vboat@@@std@@@std@@IAEPAVboat@@PBV3@0PAV3@@Z	100.0000	100.0000	100.0000	0xd2210	-
 game	?_Ucopy@?$vector@Vgenerator@@V?$allocator@Vgenerator@@@std@@@std@@IAEPAVgenerator@@PBV3@0PAV3@@Z	100.0000	100.0000	100.0000	0xd4f80	-
 game	?_Ucopy@?$vector@Vtown@@V?$allocator@Vtown@@@std@@@std@@IAEPAVtown@@PBV3@0PAV3@@Z	100.0000	100.0000	100.0000	0xd21a0	-

@@ -18606,3 +18606,16 @@ VA_COMPGEN(0x0045fce0, 0xD1, STD_CONSTRUCT, hero_vector)
 // vector<hero>::_Ucopy - hero carries the artifact vector, so copying a hero
 // range constructs one.
 VA_COMPGEN(0x0045fdc0, 0x9C, STD_CONSTRUCT, type_artifact_vector)
+
+// COMDAT pairing: vector<vector<type_artifact>>::~vector and its ::_Destroy -
+// the artifact half of the campaign carry-over pools whose hero half this
+// lane claimed at 0x5f560/0x8c5b0. Arity matches both (`ret` for the nullary
+// destructor, `ret 8` for _Destroy's two pointers) and 0x5f7b0 is reached
+// from campaignwindow, singleselectionwindow and three further segments.
+VA_COMPGEN(0x0045f7b0, 0x59, VECTOR_DTOR, type_artifact_vector)
+VA_COMPGEN(0x0048caa0, 0x38, VECTOR_DESTROY, type_artifact_vector)
+
+// COMDAT pairing: vector<type_university>::_Ucopy. Five instantiations of
+// _Ucopy resemble this address; type_university wins on agreement (0.907
+// against 0.810 for the next) and `ret 0xc` matches its three pointers.
+VA_COMPGEN(0x00434c70, 0x49, VECTOR_UCOPY, type_university)
