@@ -991,3 +991,15 @@ void std::_STL_alloc_proxy<widget * *,widget *,std::allocator<widget *> >::_STL_
 }
 
 #endif  // @carcass
+
+// COMDAT pairing: `std::vector<T>::~vector` for a trivially-destructible T.
+// Dinkumware's dtor is `_Tidy()` and for such a T that reduces to
+// `deallocate(_First)` plus the three-pointer zeroing, so EVERY POD-element
+// instantiation compiles to the same 38 bytes and /OPT:ICF folds them onto
+// one row: sweeping the whole carve for a byte-identical 38-byte body finds
+// 0x46a650 and nothing else, so this is the image's single vector teardown
+// and `vector<widget*>` - this TU's own out-of-line instantiation, byte-equal
+// to it here - is as good a name for it as any other element. It is the first
+// row of the COMDAT pool that follows cmbtmgr's last body (which ends exactly
+// at 0x46a650) and precedes that TU's `set<int>` _Tree family.
+VA_COMPGEN(0x0046a650, 0x26, VECTOR_DTOR, widget)

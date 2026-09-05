@@ -20,6 +20,16 @@
 # 0x53e98 restore of the parent's saved ESI/EDI between them. Both pieces use
 # the parent's EBP frame and return through its ret 4 epilogue; the stock VC6
 # header specialization reproduces the merged body byte-for-byte. 11940 rows.
+# BOUNDARY CORRECTION 2026-09-05: armygrp.obj's two `bitset<N>::_Xran`
+# throwers at 0x4c720 and 0x4c830 are ONE function each - 0x10b and 0x122
+# bytes - not the four rows the carve carried. Both split points are plain
+# straight-line continuations, not entries: 0x4c74f opens `cmp esi,ebx / jbe`
+# on registers 0x4c720's prologue set and falls through from its
+# `mov [ebp-4],ebx`, and 0x4c86c does the same after 0x4c830's five-word
+# zeroing loop. Neither has a prologue, both inherit the parent's EBP frame
+# and its fs:[0] handler (0x6284a0 / 0x6284c0), and the parents' last
+# instruction before each split is a store, not a branch. Same defect the two
+# 2026-09-02 corrections below record. 11955 rows since.
 # BOUNDARY CORRECTION 2026-09-02: the Dinkumware
 # operator<<(basic_ostream<char>&, const char*) body at 0x54450 is one
 # 0x284-byte EH-bearing function through 0x546d4. The carve split its
@@ -911,10 +921,8 @@ rva	size
 0x4c680	96
 0x4c6e0	23
 0x4c700	32
-0x4c720	47
-0x4c74f	220
-0x4c830	60
-0x4c86c	230
+0x4c720	267
+0x4c830	290
 0x4c960	664
 0x4cc00	325
 0x4cd50	1512

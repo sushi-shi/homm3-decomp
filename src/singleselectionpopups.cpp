@@ -668,6 +668,75 @@ void CBitmapWidget::zBufferDraw()
 #endif  // @carcass
 
 // ============================================================================
+// The scenario-setup "Resource" starting bonus, in two halves.
+// ============================================================================
+//
+// PROVISIONAL NAMES - both bodies are retail-only (the AB-age Dreamcast roster
+// has no row for either, and the Conflux arm each of them carries is
+// Complete-era by construction). What they ARE is fully determined:
+//
+//   * they sit INSIDE this compiland's claimed extent, between GetTeams
+//     (0x576930 + 0xd1) and TRandomMapProgress' constructor (0x576f00), so
+//     they are singleselectionpopups.obj's and no neighbour's;
+//   * their sole caller is 0x5699c0, the CHeroWindowEx::ProcessRightSelect
+//     override in another compiland - which is why /Ob2 never expanded a
+//     one-call-site extern - and it dispatches widget ids 0x16a..0x183 in
+//     four bands: hero (setup+0x1a4), town (setup+0x10), start bonus
+//     (setup+0x1c4) and the team-alignment dialog;
+//   * the bonus band's own four-arm switch reaches these two only from the
+//     arm whose CBonusDlg::CreateWin argument list is
+//     (GetText(86), sprite, <town-derived frame>, f(town), g(town)) - i.e.
+//     the botTitle and description of the RESOURCE bonus;
+//   * the argument is the same `setup+0x10` per-player slot the town arm
+//     hands to CTownDlg::CreateWin as a `TTownType`, and it arrives in ECX
+//     under /Gr with the bodies ending in a bare `ret`;
+//   * the arm map is HoMM3's resource-special table exactly - Rampart
+//     crystal, Tower gems, Inferno AND Conflux mercury (the case-8 slot of
+//     the jump table points at case 3's arm in both bodies, and the caller
+//     folds 8 to 3 for the sprite frame the same way), Dungeon sulfur, and
+//     Castle / Necropolis / Stronghold / Fortress falling to the default
+//     wood-and-ore row.
+//
+// The two differ only in their text bank: 693..696 with default 90 for the
+// short bottom title, 689..692 with default 94 for the description block.
+
+VA(0x00576e00, 0x80)  // anchor-bracket (between 0x576930 and 0x576f00) + sole caller 0x5699c0's CBonusDlg botTitle argument, retail-only
+const char* GetStartingResourceName(TTownType town)
+{
+    switch (town) {
+    case TOWN_RAMPART:
+        return gpGeneralText->GetText(693);
+    case TOWN_TOWER:
+        return gpGeneralText->GetText(694);
+    case TOWN_INFERNO:
+    case TOWN_CONFLUX:
+        return gpGeneralText->GetText(695);
+    case TOWN_DUNGEON:
+        return gpGeneralText->GetText(696);
+    default:
+        return gpGeneralText->GetText(90);
+    }
+}
+
+VA(0x00576e80, 0x80)  // anchor-bracket + sole caller 0x5699c0's CBonusDlg description argument, retail-only
+const char* GetStartingResourceDescription(TTownType town)
+{
+    switch (town) {
+    case TOWN_RAMPART:
+        return gpGeneralText->GetText(689);
+    case TOWN_TOWER:
+        return gpGeneralText->GetText(690);
+    case TOWN_INFERNO:
+    case TOWN_CONFLUX:
+        return gpGeneralText->GetText(691);
+    case TOWN_DUNGEON:
+        return gpGeneralText->GetText(692);
+    default:
+        return gpGeneralText->GetText(94);
+    }
+}
+
+// ============================================================================
 // TRandomMapProgress - the modal progress bar around the generator run.
 // ============================================================================
 //

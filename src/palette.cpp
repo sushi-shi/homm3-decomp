@@ -39,27 +39,6 @@ long ftol(double d)
     // @stub
 }
 
-// E:\gamedcs\palette.cpp:56
-DC_ONLY(0x10a2a8, 0x48)
-void TPalette16::TPalette16()
-{
-    // @stub
-}
-
-// E:\gamedcs\palette.cpp:61
-DC_ONLY(0x10a2f0, 0x48)
-void TPalette16::TPalette16(const unsigned short* data)
-{
-    // @stub
-}
-
-// E:\gamedcs\palette.cpp:67
-DC_ONLY(0x10a338, 0x72)
-void TPalette16::TPalette16(const TPalette24* p24, int rbits, int rshift, int gbits, int gshift, int bbits, int bshift)
-{
-    // @stub
-}
-
 // E:\gamedcs\palette.cpp:73
 DC_ONLY(0x10a3ac, 0x6E)
 void TPalette16::TPalette16(const TRGBA* rgba, int rbits, int rshift, int gbits, int gshift, int bbits, int bshift)
@@ -70,20 +49,6 @@ void TPalette16::TPalette16(const TRGBA* rgba, int rbits, int rshift, int gbits,
 // E:\gamedcs\palette.cpp:79
 DC_ONLY(0x10a41c, 0x7C)
 void TPalette16::TPalette16(const tagRGBQUAD* quad, int rbits, int rshift, int gbits, int gshift, int bbits, int bshift)
-{
-    // @stub
-}
-
-// E:\gamedcs\palette.cpp:86
-DC_ONLY(0x10a498, 0x70)
-void TPalette16::TPalette16(const char* name, const TPalette24* p24, int rbits, int rshift, int gbits, int gshift, int bbits, int bshift)
-{
-    // @stub
-}
-
-// E:\gamedcs\palette.cpp:92
-DC_ONLY(0x10a508, 0xD8)
-void TPalette16::TPalette16(const TPalette24* p24)
 {
     // @stub
 }
@@ -109,28 +74,149 @@ void TPalette16::TPalette16(const char* name, const TPalette24* p24)
     // @stub
 }
 
-// E:\gamedcs\palette.cpp:189
-DC_ONLY(0x10a854, 0x4A)
-void TPalette16::TPalette16(const TPalette16* copy)
-{
-    // @stub
-}
-
-// E:\gamedcs\palette.cpp:194
-DC_ONLY(0x10a8a0, 0x40)
-TPalette16* TPalette16::operator=(const TPalette16* from)
-{
-    // @stub
-}
-
 // E:\gamedcs\palette.cpp:204
 #endif  // @carcass
+
+// The TPalette16 constructor run, order-mapped one for one onto the DC
+// roster's own. DC defines eleven constructors plus operator= in source-line
+// order 56/61/67/73/79/86/92/116/140/165/189/194; retail keeps seven of them
+// in EXACTLY that relative order - (), (const unsigned short*),
+// (p24, six ints), (name, p24, six ints), (p24), (copy), operator= - with the
+// five unreferenced overloads (the TRGBA and tagRGBQUAD arms and the
+// two-argument name/p24 one) discarded by /OPT:REF. Every body opens with the
+// same `resource(0, RESOURCE_TYPE_NONE)` base call and TPalette16 vptr store
+// the TPalette24 family below already matches byte for byte, except the
+// name-taking one, which passes its name and 0x60 - RESOURCE_TYPE_PALETTE.
+
+VA(0x00522650, 0x16)  // dc-order-map head + null-name resource ctor + TPalette16 vtable 0x640368, dc 0x10a2a8
+TPalette16::TPalette16()
+    : resource(0, RESOURCE_TYPE_NONE)
+{
+}
 
 // Dreamcast names the compiler wrapper and its destructor/delete pair at
 // palette.cpp:57. Retail independently fixes the identity: this 33-byte body
 // calls the already exact TPalette16 destructor at 0x522940 before testing the
 // low deleting flag. The base object already emits the decorated wrapper.
 VA_COMPGEN(0x00522670, 0x21, SCALAR_DELETING_DTOR, TPalette16)
+
+// The raw 16-bit table overload: 0x80 dwords straight into the payload at
+// +0x1c, the same shape TPalette24's raw-data constructor has at 0x522e80.
+VA(0x005226a0, 0x2D)  // dc-order-map + exact 0x200-byte payload copy, dc 0x10a2f0
+TPalette16::TPalette16(const unsigned short* newData)
+    : resource(0, RESOURCE_TYPE_NONE)
+{
+    memcpy(data, newData, sizeof(data));
+}
+
+// The two six-bit-field constructors, and DC's own Convert24to16 boundary
+// (palette.cpp:210) that both expand. Retail keeps no out-of-line copy of the
+// helper: /Ob2 took it into every caller, which is why the two bodies below
+// are 157 and 159 bytes rather than a call apiece. The pair differs only in
+// the resource base - the second names the palette and passes
+// RESOURCE_TYPE_PALETTE - so it is a free in-compile A/B on one loop.
+void TPalette16::Convert24to16(const unsigned char* p24, int rbits, int rshift,
+                               int gbits, int gshift, int bbits, int bshift)
+{
+    for (int index = 0; index < 256; ++index) {
+        data[index] = static_cast<unsigned short>(
+            ((p24[3 * index] >> (8 - rbits))
+             << rshift)
+            | ((p24[3 * index + 1] >> (8 - gbits))
+               << gshift)
+            | ((p24[3 * index + 2] >> (8 - bbits))
+               << bshift));
+    }
+}
+
+// Residual (94.85% / 94.94%): the loop bodies are byte-identical - same
+// `p24 + 0x1e` induction bias, same [eax-1]/[eax-5]/[eax-3] read order, same
+// `movzx di,bl` pair and same countdown - and the whole delta is the
+// loop-invariant hoist ahead of them: retail loads the three bit-widths as
+// BYTES and subtracts in 8-bit (`mov cl,[ebp+0xc] / mov dl,8 / sub dl,cl`),
+// spilling two byte results into parameter padding, where we compute the
+// three differences in dwords and spill dwords. Tried and REJECTED, both
+// measured on the pair: `static_cast<unsigned char>(8 - Xbits)` around the
+// difference (90.60/90.81), `8 - static_cast<unsigned char>(Xbits)` around
+// the parameter (77.65/79.59), three named `unsigned char` drop locals ahead
+// of the loop (91.34), and all six `|` operand orders (byte-flat within
+// 0.02 - VC6 canonicalises them). The byte cast IS a real lever, but only
+// in combination with the pointer-ADVANCING loop form, which is worse
+// overall: advance+cast measures 93.24/87.46 against subscript+no-cast's
+// 94.85/94.94.
+VA(0x005226d0, 0x9D)  // dc-order-map + six-field conversion loop, dc 0x10a338
+TPalette16::TPalette16(const TPalette24* p24, int rbits, int rshift,
+                       int gbits, int gshift, int bbits, int bshift)
+    : resource(0, RESOURCE_TYPE_NONE)
+{
+    Convert24to16(p24->colors.data[0], rbits, rshift, gbits, gshift,
+                  bbits, bshift);
+}
+
+VA(0x00522770, 0x9F)  // dc-order-map + named resource ctor (0x60 = RESOURCE_TYPE_PALETTE), dc 0x10a498
+TPalette16::TPalette16(const char* name, const TPalette24* p24,
+                       int rbits, int rshift, int gbits, int gshift,
+                       int bbits, int bshift)
+    : resource(name, RESOURCE_TYPE_PALETTE)
+{
+    Convert24to16(p24->colors.data[0], rbits, rshift, gbits, gshift,
+                  bbits, bshift);
+}
+
+// The mask-driven overload: no explicit bit fields, the three static
+// TPalette16 masks instead. Retail scales each 8-bit channel by
+// `(mask + mask) & ~mask` - the single bit just above a contiguous mask, i.e.
+// 2^(hi+1) - multiplies, shifts right by 8 and masks, which lands the channel
+// in its field for any of the 555/565 layouts SetPixelFormat installs. The
+// three scales are hoisted; the three MASKS are re-read from their statics at
+// every use, two of them inside the loop.
+// Residual (88.72%): the four-block skeleton and the whole scale prologue
+// agree - red into ECX, green into ESI, blue into EDX, in that order - and
+// what is left is register/slot assignment inside the loop plus which mask
+// gets re-read where. Two levers were decisive and are recorded because both
+// contradict a standing note: (1) the three scale factors MUST be named
+// locals, 44.86 -> 75.99 - written inline in the expression VC6 refuses to
+// hoist them out of the loop, where retail computes all three once; (2) the
+// `|` operand order is NOT canonicalised here - five of the six orders sit at
+// exactly 75.99 and `blue | red | green` alone reaches 88.72. The masks
+// themselves stay unhoisted on purpose: retail re-reads green_mask and
+// blue_mask from their statics on every iteration.
+VA(0x00522810, 0xC6)  // dc-order-map + the three TPalette16 mask statics, dc 0x10a508
+TPalette16::TPalette16(const TPalette24* p24)
+    : resource(0, RESOURCE_TYPE_NONE)
+{
+    unsigned int red_scale = (red_mask + red_mask) & ~red_mask;
+    unsigned int green_scale = (green_mask + green_mask) & ~green_mask;
+    unsigned int blue_scale = (blue_mask + blue_mask) & ~blue_mask;
+    const unsigned char* src = p24->colors.data[0];
+    unsigned short* dst = data;
+    for (int index = 0; index < 256; ++index) {
+        *dst = static_cast<unsigned short>(
+            (((src[2] * blue_scale) >> 8) & blue_mask)
+            | (((src[0] * red_scale) >> 8) & red_mask)
+            | (((src[1] * green_scale) >> 8) & green_mask));
+        ++dst;
+        src += 3;
+    }
+}
+
+// The pointer-taking copy constructor, and the payload-only assignment behind
+// it - both the TPalette24 shapes with the 0x200-byte table in place of the
+// 0x300-byte one, and the assignment keeps the resource identity.
+VA(0x005228e0, 0x30)  // dc-order-map + exact payload extent, dc 0x10a854
+TPalette16::TPalette16(const TPalette16* copy)
+    : resource(0, RESOURCE_TYPE_NONE)
+{
+    memcpy(data, copy->data, sizeof(data));
+}
+
+VA(0x00522910, 0x21)  // dc-order-map + payload-only assignment, dc 0x10a8a0
+TPalette16* TPalette16::operator=(const TPalette16* from)
+{
+    if (this != from)
+        memcpy(data, from->data, sizeof(data));
+    return this;
+}
 
 VA(0x00522940, 0xB)  // anchor-global, dc 0x10a8e0
 TPalette16::~TPalette16()
@@ -201,13 +287,6 @@ void TPalette16::AdjustSaturation(float amount)
 }
 
 #if 0  // @carcass
-
-// E:\gamedcs\palette.cpp:210
-DC_ONLY(0x10a910, 0x88)
-void TPalette16::Convert24to16(const unsigned char* p24, int rbits, int rshift, int gbits, int gshift, int bbits, int bshift)
-{
-    // @stub
-}
 
 // E:\gamedcs\palette.cpp:236
 DC_ONLY(0x10a998, 0x7E)
