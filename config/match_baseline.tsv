@@ -2852,6 +2852,7 @@ seerhut	?Save@type_creature_quest@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	10
 seerhut	?Save@type_defeat_hero_quest@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x16e5f0	dd54c641388d
 seerhut	?Save@type_experience_quest@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x16d630	49ea5759bfab
 seerhut	?Save@type_monster_quest@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x16ee20	803a81c35c4f
+seerhut	?Save@type_quest@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x16cf70	a8d7c42c0dc8
 seerhut	?Save@type_resource_quest@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x171be0	449bb6521918
 seerhut	?Save@type_skill_quest@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x16dec0	3d4e05df93c5
 seerhut	?SeerHutFn_005741B0@TSeerHut@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@Z	100.0000	100.0000	100.0000	0x1741b0	8022b04b6dd4

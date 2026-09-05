@@ -411,6 +411,44 @@ void type_quest::LoadFromMap(TAbstractFile* file)
     completionText = ReadLengthPrefixedString(file);
 }
 
+
+// Slot 13's BASE body - the run quest.h records as inlined into all eight
+// leaves. The leaves spell it longhand and are exact; this is the copy the
+// base vtable itself points at, which is the same run with no payload in
+// front of it.
+// E:\gamedcs\seerhut.cpp
+VA(0x0056cf70, 0xCD)  // anchor-vtable 0x64174c slot 13 + the run every leaf Save repeats, retail-only
+void type_quest::Save(TAbstractFile* file)
+{
+    {
+        unsigned char flag = field_04;
+        file->Write(&flag, sizeof(flag));
+    }
+    {
+        unsigned char row = static_cast<unsigned char>(field_38);
+        file->Write(&row, sizeof(row));
+    }
+    {
+        int extra = field_3c;
+        file->Write(&extra, sizeof(extra));
+    }
+    {
+        int length = proposalText.length();
+        file->Write(&length, sizeof(length));
+        file->Write(proposalText.c_str(), proposalText.length());
+    }
+    {
+        int length = progressText.length();
+        file->Write(&length, sizeof(length));
+        file->Write(progressText.c_str(), progressText.length());
+    }
+    {
+        int length = completionText.length();
+        file->Write(&length, sizeof(length));
+        file->Write(completionText.c_str(), completionText.length());
+    }
+}
+
 // E:\gamedcs\seerhut.cpp
 VA(0x0056d3e0, 0x2A)  // anchor-vtable 0x641788 slot 6, retail-only
 std::string type_experience_quest::GetRequirementText()
