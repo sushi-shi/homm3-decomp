@@ -18770,3 +18770,16 @@ VA_COMPGEN(0x0045ff00, 0x21, SCALAR_DELETING_DTOR, hero)
 // agreement 0.952 at an exactly equal 173-byte extent; this object is the
 // only one that instantiates the tree.
 VA_COMPGEN(0x0045c8b0, 0xAD, TREE_ERASE, type_map_hero_info)
+
+// bitset<145>::_Tidy, sitting in the <fstream> COMDAT run this object also
+// contributes to (0x48e9f0/0x48ea60/0x48ead0 are its three
+// bitset::reference::operator= rows and 0x48edf0 its bitset<129>::_Xran).
+// The identity is arithmetic, not similarity: the body writes its argument
+// into FIVE consecutive words counting down from this+0x10, i.e. _Nw = 4,
+// and then trims the top word with `and dword ptr [esi], 0x1ffff` - a mask
+// of exactly N % 32 = 17 bits, so N = 4*32 + 17 = 145. Its two neighbours
+// 0x48c0b0 and 0x48ed20 are the same body with masks 0xffff and 1, i.e.
+// bitset<144> and bitset<129>; neither is claimable yet, because no
+// compiland emits their _Tidy - both bitsets reach retail only through
+// members this tree still expands.
+VA_COMPGEN(0x0048d480, 0x28, BITSET_TIDY, Bitset145)
