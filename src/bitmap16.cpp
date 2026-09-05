@@ -65,6 +65,28 @@ Bitmap16Bit::Bitmap16Bit(int w, int h)
     }
 }
 
+// E:\gamedcs\bitmap16.cpp:71's named twin, immediately after the two-argument
+// form. It differs in three byte-proven ways: the resource base takes the
+// name and RESOURCE_TYPE_BITMAP16 (the 0x12 the retail push carries, which
+// RemapGraphics' jump table independently proves), `referenced` is an
+// INITIALISER here rather than a branch-local (its byte store lands before
+// the vftable store, i.e. inside the member-init run), and the allocation
+// guard is SIGNED - `jle` twice, against the two-argument form's plain
+// truth tests.
+VA(0x0044e050, 0xA5)  // in-span, name/type base ctor + vftable 0x63b9c8
+Bitmap16Bit::Bitmap16Bit(const char* name, int w, int h)
+    : resource(name, RESOURCE_TYPE_BITMAP16),
+      ImageSize(w * h * 2), Width(w), Height(h), Pitch(w * 2),
+      referenced(0)
+{
+    DataSize = ImageSize;
+
+    if (w > 0 && h > 0)
+        map = new unsigned short[DataSize / 2];
+    else
+        map = 0;
+}
+
 // E:\gamedcs\bitmap16.cpp:208
 VA(0x0044e100, 0x29)  // unique dtor body + vtable, dc 0x50ebc
 Bitmap16Bit::~Bitmap16Bit()

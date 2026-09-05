@@ -85,6 +85,15 @@ extern SUnnamed698758 gUnnamed698758;
 // published by Dreamcast CodeView and their roles/addresses are independently
 // confirmed by the retail preference I/O and oldmain benchmark block.
 // Definitions + DATA claims in src/misc.cpp.
+// Retail .bss 0x698780, the subtitle toggle. It sits in the same prefs
+// personality as the four dwords below - the registry reader/writer at
+// 0x50b27d/0x50b294/0x50b536 and the two address-taken checkbox bindings at
+// 0x50b983/0x50bf27 are five of its ten sites - and the campaign prologue
+// player reads it to decide whether the subtitle strip is built and
+// scrolled. Name is a ROLE invention; no DEFINITION or DATA claim yet,
+// because misc.obj's own span has not been carved that far.
+extern int gbShowSubtitles;     // 0x698780
+
 extern int gbFirstTimeThrough;  // 0x699524, "First Time"
 extern int giTestDecomp;        // 0x699528, "Test Decomp"
 extern int giTestRead;          // 0x69952c, "Test Read"
