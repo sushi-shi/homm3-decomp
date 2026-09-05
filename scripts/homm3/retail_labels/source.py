@@ -179,6 +179,23 @@ CHAR_STREAM_MEMBERS = (
     # sizes are unique (bool 658 B, const void* 448 B) sit at the ends of
     # both orders, which is what confirms the zip.
     ("?do_put@?$num_put@D", None, "num_put_do_put"),
+    # numpunct<char>'s three string accessors and their three virtual
+    # implementations. All six bodies are near-identical, so the pairing is
+    # made on the member offset each `do_` reads (_Gr at +8, _Nf at +0x10,
+    # _Nt at +0x14, straight out of VC6's own <xlocnum>) and on the vtable
+    # slot each public wrapper calls through (slots 3/4/5 of vtbl_245728).
+    ("?do_grouping@?$numpunct@D", None, "numpunct_do_grouping"),
+    ("?do_falsename@?$numpunct@D", None, "numpunct_do_falsename"),
+    ("?do_truename@?$numpunct@D", None, "numpunct_do_truename"),
+    ("?grouping@?$numpunct@D", None, "numpunct_grouping"),
+    ("?falsename@?$numpunct@D", None, "numpunct_falsename"),
+    ("?truename@?$numpunct@D", None, "numpunct_truename"),
+    # _Tidyfac's two instantiations share one body shape and are separated by
+    # the static `_Ptr` each one writes and clears.
+    ("?_Save@?$_Tidyfac@V?$numpunct@D", None, "tidyfac_numpunct_save"),
+    ("?_Tidy@?$_Tidyfac@V?$numpunct@D", None, "tidyfac_numpunct_tidy"),
+    ("?_Save@?$_Tidyfac@V?$num_put@D", None, "tidyfac_num_put_save"),
+    ("?_Tidy@?$_Tidyfac@V?$num_put@D", None, "tidyfac_num_put_tidy"),
     ("?str@?$basic_stringbuf@D", None, "stringbuf_str"),
     ("?seekoff@?$basic_stringbuf@D", None, "stringbuf_seekoff"),
     ("?seekpos@?$basic_stringbuf@D", None, "stringbuf_seekpos"),

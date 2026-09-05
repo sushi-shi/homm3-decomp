@@ -1398,8 +1398,17 @@ VA_COMPGEN(0x0048f7e0, 0x159, STD_SORT, hero_crossoverherostronger)
 // COMDAT pairing: std::_Sort_0<hero, CrossoverHeroStronger>, agreement 0.985.
 VA_COMPGEN(0x0048f2b0, 0x333, STD_SORT_0, hero_crossoverherostronger)
 
-// COMDAT pairing: bitset145::_Xran, mnemonic agreement 0.978.
-VA_COMPGEN(0x0048edf0, 0xC8, BITSET_XRAN, bitset145)
+// COMDAT pairing: bitset<145>::_Xran and bitset<8>::_Xran. Five byte-identical
+// `_Xran` bodies survive in the image, so the discriminator is the BOUND
+// COMPARE in each caller: 0x8d9a0's four callers all guard with `cmp <reg>,
+// 0x91` (145) - among them game's claimed bitset<145>::set (0x4cfa60) and
+// ::test (0x4cfad0) - and 0x8da70's eight with `cmp <reg>, 0x8`, among them
+// game's claimed bitset<8>::set (0x4d4cc0) and ::test (0x4cfef0).
+// 0x48edf0, which lane 16 claimed here as bitset145 on similarity alone,
+// compares against 0x81 (129) at all three of its callers and has moved to
+// game.cpp - customcampaign.obj does not emit a bitset<129> instantiation.
+VA_COMPGEN(0x0048d9a0, 0xC8, BITSET_XRAN, Bitset145)
+VA_COMPGEN(0x0048da70, 0xC8, BITSET_XRAN, Bitset8)
 
 // COMDAT pairing: hero::_Ucopy, mnemonic agreement 0.966.
 VA_COMPGEN(0x0048d8d0, 0x38, VECTOR_UCOPY, hero)

@@ -18564,3 +18564,13 @@ VA_COMPGEN(0x004b6be0, 0x4B, IMPLICIT_DTOR, out_of_range)
 // (453 base vs 451 retail instructions). The admission queue carried this as
 // an unowned `campaignbrief..campaignmap` bracket row.
 VA_COMPGEN(0x0045c200, 0x53E, TREE_ERASE_ITERATOR, type_map_hero_info)
+
+// COMDAT pairing: bitset<129>::_Xran. This address arrived on lane 16 as
+// `bitset145` from a 0.978 similarity score; the bound compare refutes that.
+// All three callers of 0x48edf0 guard with `cmp <reg>, 0x81` (129) - the two
+// customcampaign-segment callers 0x8ead0/0x8ece0 and rmg's claimed
+// bitset<129>::set at 0x14ded0 - while the four callers of 0x8d9a0 all guard
+// with 0x91 (145). The claim therefore moves here: game.obj and rmg.obj are
+// the only two that emit `?_Xran@?$bitset@$0IB@@`, customcampaign.obj does
+// not emit it at all.
+VA_COMPGEN(0x0048edf0, 0xC8, BITSET_XRAN, Bitset129)
