@@ -98,24 +98,9 @@ public:
 };
 SIZE(TRandomMapRequest, 0x50);
 
-// The modal progress bar retail raises around the generator run (constructor
-// 0x576f00, destructor 0x5770c0). Only the extent and the two counters this
-// TU reads are modelled; the sprite/dialog state above them belongs to the
-// owning unit. Ordinal name - no symbol survives.
-class TRandomMapProgress {
-public:
-    char pad_00[4];
-    int steps;                      // +0x04
-    int done;                       // +0x08
-    char pad_0c[0x30 - 0x0c];
-
-    TRandomMapProgress(int steps);
-    ~TRandomMapProgress();
-    // Retail 0x577180, the no-argument repaint the caller runs after each
-    // step; ordinal name.
-    void LoadProgFn_00577180();
-};
-SIZE(TRandomMapProgress, 0x30);
+// TRandomMapProgress and its abstract base now live in
+// singleselectionpopups.h - singleselectionpopups.obj owns every one of their
+// retail bodies (0x576f00..0x577320) and this TU already includes that header.
 
 // Complete-only random-map filename chooser. Retail 0x5879a0 receives the
 // hidden std::string result in ECX under /Gr; it is a free function, not a
