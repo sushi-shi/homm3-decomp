@@ -4343,6 +4343,18 @@ static void show_hero_skills(int code, unsigned char right_mouse)
 // homes `right_mouse` in the DEAD `msg` parameter slot [ebp+8] while we
 // spend a numbered local on it - both consistent with the frame being
 // allocated after a different set of blocks survived.
+// A third fact that BOUNDS the search: both sides emit exactly TWO `ret 4`
+// sites, and the SECOND one (the HERO_NAME arm's `return 2`) is at the same
+// place on both - base fn+0x198 against retail fn+0x19b.  So the merge-set
+// question is only about which copy of `return 1` survives in place, and
+// everything downstream of fn+0x19b is already aligned.
+// MEASURED AND REJECTED 2026-09-05: wrapping everything after the MOUSE_MOVE
+// arm in an `else` (dropping that arm's own `return 1` so the arm falls into
+// a single trailing one - the shape retail's layout literally has, if/body,
+// join, else-body) scores 70.97 against 74.22, and the epilogue does NOT
+// move: it is still the last block, at fn+0x1291.  So the `else` is not the
+// construct that puts retail's join early, and no source bracketing tried so
+// far reaches C2's choice of surviving copy.
 VA(0x004dd2d0, 0x143E)  // anchor-bracket + absent-callees, dc 0xcf54c
 int THeroScreenWindow::WindowHandler(message* msg)
 {

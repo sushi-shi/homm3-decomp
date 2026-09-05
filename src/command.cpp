@@ -831,15 +831,24 @@ unsigned char combatManager::is_computer_action(const army* current_army)
 // arms therefore have tails that are byte-identical to each other but carry an
 // extra live-register dependency, and C2 declines the merge.  Census: our
 // `push esi` 20 / `cmp ..,esi` 39 against retail 12 / 27.
-// AND THE CONSTANT CACHE IS ITSELF DOWNSTREAM OF THE FRAME.  Retail reserves
-// 0x60 and we reserve 0x4c - FIVE dwords of named locals we do not have (it
-// also writes `mov dword ptr [ebp+8],0` and `mov dword ptr [ebp-8],0x14`, i.e.
-// it recycles the `msg` parameter home).  More named locals means more
-// register pressure, which is exactly what stops C2 parking 0 and 1 in
-// ESI/EDI for the whole body.  So the order of work here is: find the five
-// missing locals FIRST; the constant cache and both missing cross-jumps are
-// predicted to follow, and no arm-level respelling can reach them while the
-// zero is register-homed.
+// AND THE CONSTANT CACHE IS DOWNSTREAM OF THE FRAME, WHOSE 0x14 IS NOW
+// FULLY ACCOUNTED FOR - it is ONE overlay decision, not missing locals.
+// Retail reserves 0x60 and lays out three non-overlapping regions:
+// [-0x60,-0x40) the hidden return temporary PeekEvent fills, [-0x40,-0x20)
+// `msgTemp` (32 B), [-0x20,-0xc) the network arm's `CEndPlacementPhaseMsg
+// placementMsg` (0x14 B), with mouseX/mouseY at -0xc/-0x8.  We reserve 0x4c
+// because C2 OVERLAID msgTemp onto placementMsg: our msgTemp sits at -0x2c
+// and spans -0x2c..-0xc, straight across placementMsg's -0x20..-0xc, and the
+// two never live at once (one is the WIDGET arm, the other MOUSE_MOVE).  So
+// retail's msgTemp must be LIVE across the network arm and ours is not, which
+// is a use of msgTemp our reconstruction does not have - not a missing
+// declaration.  Every ebp slot below -0x20 and the three `lea`s match
+// one-for-one otherwise, and the class sizes are confirmed by retail's own
+// `mov [ebp-0x14],0x14` (sizeof CEndPlacementPhaseMsg) and by the 8-dword
+// `rep movsd` into msgTemp.
+// MEASURED AND REJECTED here: declaring msgTemp above mouseX/mouseY is
+// byte-flat (93.0970 to the digit, frame still 0x4c), so declaration order is
+// not the lever - only a real second use of msgTemp can be.
 VA(0x00474d80, 0x114D)  // exhaustive command order-map + callers + literal/call graph, dc 0x6c070
 int combatManager::ProcessCombatMsg(message& msg)
 {
