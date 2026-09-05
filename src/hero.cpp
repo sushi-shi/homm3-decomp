@@ -2335,7 +2335,27 @@ TSecondarySkill get_skill_award(const hero* current_hero,
 // destructor runs BEFORE the dialogReturn chain, where the second arm's
 // GiveSS runs INSIDE its window's lifetime.
 //
-// Residual (83.4%): closed from 46.28 by pinning hero::GiveSS with
+// Residual (87.13%): three source facts landed 2026-09-05, in this order.
+// (1) The SRand seed constant is 154079 (0x259df), read straight off
+// retail's `lea ecx,[eax+ecx+0x259df]`; the tree had 153567 (0x257df).
+// (2) VC6 lowers `signed * 214013` with `imul r,r,0x343fd` but expands the
+// SAME constant into retail's seven-step lea/shift chain when the
+// multiplicand is UNSIGNED (`lea [eax+2*eax]` 3x, `lea [eax+4*ecx]` 13x,
+// `shl 4` 208x, `add` 209x, `shl 8` 53504x, `sub` 53503x,
+// `lea [eax+4*edx]` 214013x). `static_cast<unsigned>(level)` is worth
+// 85.17 -> 87.13; the sibling `iLevelSeed * 156823` stays signed and
+// retail keeps its `imul` there, which corroborates the split.
+// (3) `int roll = Random(1,100);` is declared BEFORE `int stat = 0;` -
+// retail schedules `xor esi,esi / mov [ebp-0x14],esi` between the
+// `cmp cx,9` operand loads, after the Random call (84.18 -> 85.17); and
+// both `chances` selections are written `if (level <= LOW_LEVEL_LAST)
+// <plain>; else <10P>`, which is the fall-through polarity retail has
+// (`jg` to the 10P arm), worth 83.44 -> 84.18.
+// Rejected at the new plateau: reordering the SRand sum (byte-flat three
+// ways) and a nested `if` with an `unsigned char isOverrideHero` local for
+// retail's `sete dl` (85.41, WORSE).
+//
+// Earlier history: closed from 46.28 by pinning hero::GiveSS with
 // `#pragma auto_inline(off)` - `predict-inline` named it the sole
 // OVER-inline, expanded at all six sites here where retail keeps a real
 // call at the two that survive cross-jumping, worth 23 conditional
@@ -2387,24 +2407,25 @@ void hero::CheckLevel()
             sprintf(gText,
                     gpGeneralText->GetText(GENERAL_TEXT_LEVEL_UP_TITLE_FORMAT),
                     name);
-            SRand(level * 214013 + iLevelSeed * 156823 + 153567);
+            SRand(static_cast<unsigned>(level) * 214013
+                  + iLevelSeed * 156823 + 154079);
 
-            int stat = 0;
             int roll = Random(1, 100);
+            int stat = 0;
             const signed char* chances;
-            if (level > LEVEL_UP_LOW_LEVEL_LAST)
-                chances = akHeroClasses[heroClass].gainPrimarySkillChance10P;
-            else
+            if (level <= LEVEL_UP_LOW_LEVEL_LAST)
                 chances = akHeroClasses[heroClass].gainPrimarySkillChance;
+            else
+                chances = akHeroClasses[heroClass].gainPrimarySkillChance10P;
             if (gCampaignMode &&
                 gpGame->campaign.currentCampaign == LEVEL_UP_CAMPAIGN_OVERRIDE &&
                 id == LEVEL_UP_OVERRIDE_HERO_ID) {
-                if (level > LEVEL_UP_LOW_LEVEL_LAST)
-                    chances = akHeroClasses[eClassBarbarian]
-                                  .gainPrimarySkillChance10P;
-                else
+                if (level <= LEVEL_UP_LOW_LEVEL_LAST)
                     chances = akHeroClasses[eClassBarbarian]
                                   .gainPrimarySkillChance;
+                else
+                    chances = akHeroClasses[eClassBarbarian]
+                                  .gainPrimarySkillChance10P;
                 roll = Random(1, chances[0] + chances[1]);
             }
             while (roll > chances[stat]) {
