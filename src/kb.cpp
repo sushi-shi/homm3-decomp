@@ -1497,15 +1497,9 @@ int oldmain()
                     TCampaignBrief::CampaignHeaderStruct campaignBrief(
                         campaign.GetCampaignFileName().c_str());
                     campaignBrief.Load();
-                    // Residual: retail runs two customcampaign.obj
-                    // SCampaign members over campaignBrief here - the
-                    // 1536 B body at 0x489820 before SaveGame and the
-                    // 112 B one at 0x48a2a0 after it. Both carve rows are
-                    // still unclaimed and neither DC name that fits
-                    // (give_custom_items / mark_campaign_map_won) is
-                    // proven on this image, so the two calls are left out
-                    // rather than written under a guessed identity.
+                    campaign.CompleteCurrentMap(&campaignBrief);
                     SaveGame(1);
+                    campaign.PlayScenarioEpilogue(&campaignBrief);
                     if ((campaign.currentCampaign == CAMPAIGN_ORDINAL_03
                          && campaign.CampaignComplete())
                         || (campaign.currentCampaign == CAMPAIGN_ORDINAL_18
