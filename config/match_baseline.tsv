@@ -4117,6 +4117,7 @@ townmgr	??0TTavernWindow@@QAE@HH@Z	100.0000	100.0000	100.0000	0x1d70b0	144c0f6d7
 townmgr	??0TThievesGuildWindow@@QAE@H@Z	100.0000	100.0000	100.0000	0x1c8190	daa815466817
 townmgr	??0TTownScreenWindow@@QAE@XZ	98.9497	98.9497	98.9497	0x1c34d0	32be2baca2ef
 townmgr	??0townManager@@QAE@XZ	99.0800	100.0000	100.0000	0x1c3310	38297efef9f6
+townmgr	??0townObject@@QAE@HHPBD@Z	100.0000	100.0000	100.0000	0x1c2ea0	caca6f80ac64
 townmgr	??0type_garrison_base_window@@QAE@PAVhero@@HPAVarmyGroup@@@Z	93.8825	98.2932	98.2932	0x1ce830	6bdd282efa14
 townmgr	??0type_monster_join_window@@QAE@PAVhero@@PAVarmyGroup@@E@Z	93.8770	93.8770	93.8770	0x1d0b40	b0aee7ca0785
 townmgr	??0type_university@@QAE@XZ	100.0000	100.0000	100.0000	0x1d2d80	576222ab9cc6
