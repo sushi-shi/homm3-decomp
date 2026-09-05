@@ -2831,12 +2831,14 @@ seerhut	?Load@type_creature_quest@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	1
 seerhut	?Load@type_defeat_hero_quest@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x16e580	cc93a56f23f2
 seerhut	?Load@type_experience_quest@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x16d5f0	210b8f830140
 seerhut	?Load@type_monster_quest@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x16ed90	c0e415a4b103
+seerhut	?Load@type_quest@@UAEXPAVTAbstractFile@@H@Z	25.6261	25.6261	25.6261	0x16cd00	3f23a14ebef9
 seerhut	?Load@type_resource_quest@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x171b80	c02897ae74d3
 seerhut	?Load@type_skill_quest@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x16de60	cfb87973f705
 seerhut	?LoadFromMap@type_artifact_quest@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x16fea0	ae41eaf17076
 seerhut	?LoadFromMap@type_be_hero_quest@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x172230	33f8d2fdc7ea
 seerhut	?LoadFromMap@type_creature_quest@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x171070	22ad5ad9b604
 seerhut	?LoadFromMap@type_experience_quest@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x16edf0	effd9c543c07
+seerhut	?LoadFromMap@type_quest@@UAEXPAVTAbstractFile@@@Z	10.5000	10.5000	10.5000	0x16ce50	25ffd0dbdd72
 seerhut	?LoadFromMap@type_resource_quest@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x171bb0	b325e4442a2d
 seerhut	?LoadFromMap@type_skill_quest@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x16de90	b4789cba94ff
 seerhut	?NotifyHeroDefeated@type_defeat_hero_quest@@UAEXHH@Z	100.0000	100.0000	100.0000	0x16e550	c1036832a4ee
