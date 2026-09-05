@@ -1790,3 +1790,152 @@ void CSpriteFrame::DrawTileShadow(int sx, int sy, int sw, int sh,
         }
     }
 }
+
+// E:\gamedcs\cspriteframe.cpp:3776
+// The general-RLE spell-effect pass. Without alpha it is Draw's transparent
+// blit verbatim (`tblit` 1), so the whole body below is the alpha case: literal
+// runs are blended half-and-half against what is already on the destination,
+// and every encoded control run is skipped rather than filled - which is the
+// one place it departs from Draw, whose non-literal arm installs pal.data[code].
+//
+// The two delegations are proven by arity and argument order. 0x47f39c hands
+// the tileset/raw encodings to DrawTile with a trailing 0, exactly as Draw
+// does; 0x47efca hands the adventure-object encoding to 0x47d4f0 with the flag
+// color 0 in slot 12 and hflip in slot 13, which is DrawAdvObjWithFlagAlpha's
+// signature and no other in this class - DrawAdvObjImpl takes hflip in slot 12
+// and its flag color last.
+VA(0x0047ef60, 0x47C)  // anchor-callee (CSprite::DrawSpellEffect) + DC source identity
+void CSpriteFrame::DrawSpellEffect(int sx, int sy, int sw, int sh,
+                                   unsigned short* dst, int dx, int dy, int dw,
+                                   int dh, int dpitch, TPalette16& pal,
+                                   unsigned char hflip,
+                                   unsigned char alpha) const
+{
+    if (!alpha) {
+        Draw(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip, 1);
+        return;
+    }
+
+    if (EncodingMethod == eEncodeTilesetRLE || EncodingMethod == eEncodeRaw) {
+        DrawTile(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch,
+                 pal, hflip, 0);
+        return;
+    }
+    else if (EncodingMethod == eEncodeAdvObjRLE) {
+        DrawAdvObjWithFlagAlpha(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch,
+                                pal, 0, hflip);
+        return;
+    }
+
+    const unsigned int* aLineOffset;
+    static const unsigned char kOpaqueRunCode = gRleLiteralRunCode;
+    Clip(sx, sy, sw, sh, dx, dy, dw, dh, hflip, 0);
+
+    if (sw > 0 && sh > 0) {
+        aLineOffset =
+            static_cast<const unsigned int*>(static_cast<const void*>(map));
+        if (!hflip) {
+            unsigned short* lineDst =
+                static_cast<unsigned short*>(static_cast<void*>(
+                static_cast<unsigned char*>(static_cast<void*>(dst))
+                + dy * dpitch + dx * 2));
+
+            for (int y = sy; y < sy + sh; ++y) {
+                unsigned short* out = lineDst;
+                unsigned int skipped = 0;
+                const unsigned char* src = map + aLineOffset[y];
+                unsigned char code = *src++;
+                unsigned int run = *src++ + 1;
+
+                while (skipped + run <= static_cast<unsigned int>(sx)) {
+                    skipped += run;
+                    if (code == kOpaqueRunCode)
+                        src += run;
+                    code = *src++;
+                    run = *src++ + 1;
+                }
+
+                run += skipped - sx;
+                if (code == kOpaqueRunCode)
+                    src += sx - skipped;
+
+                unsigned int remaining = sw;
+                do {
+                    if (run > remaining)
+                        run = remaining;
+                    if (code == kOpaqueRunCode) {
+                        unsigned int count = run;
+                        do {
+                            *out = (div2mask.dword
+                                    & (pal.data[*src++] >> 1))
+                                 + (div2mask.dword & (*out >> 1));
+                            ++out;
+                        } while (--count);
+                    } else {
+                        out += run;
+                    }
+                    remaining -= run;
+                    if (!remaining)
+                        break;
+                    code = *src++;
+                    run = *src++ + 1;
+                } while (remaining);
+
+                lineDst = static_cast<unsigned short*>(static_cast<void*>(
+                    static_cast<unsigned char*>(static_cast<void*>(lineDst))
+                    + dpitch));
+            }
+        } else {
+            unsigned short* lineDst =
+                static_cast<unsigned short*>(static_cast<void*>(
+                static_cast<unsigned char*>(static_cast<void*>(dst))
+                + dy * dpitch + (dx + sw) * 2));
+
+            for (int y = sy; y < sy + sh; ++y) {
+                unsigned short* out = lineDst;
+                unsigned int skipped = 0;
+                const unsigned char* src = map + aLineOffset[y];
+                unsigned char code = *src++;
+                unsigned int run = *src++ + 1;
+
+                while (skipped + run <= static_cast<unsigned int>(sx)) {
+                    skipped += run;
+                    if (code == kOpaqueRunCode)
+                        src += run;
+                    code = *src++;
+                    run = *src++ + 1;
+                }
+
+                run += skipped - sx;
+                if (code == kOpaqueRunCode)
+                    src += sx - skipped;
+
+                unsigned int remaining = sw;
+                do {
+                    if (run > remaining)
+                        run = remaining;
+                    if (code == kOpaqueRunCode) {
+                        unsigned int count = run;
+                        do {
+                            --out;
+                            *out = (div2mask.dword
+                                    & (pal.data[*src++] >> 1))
+                                 + (div2mask.dword & (*out >> 1));
+                        } while (--count);
+                    } else {
+                        out -= run;
+                    }
+                    remaining -= run;
+                    if (!remaining)
+                        break;
+                    code = *src++;
+                    run = *src++ + 1;
+                } while (remaining);
+
+                lineDst = static_cast<unsigned short*>(static_cast<void*>(
+                    static_cast<unsigned char*>(static_cast<void*>(lineDst))
+                    + dpitch));
+            }
+        }
+    }
+}
