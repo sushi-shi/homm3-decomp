@@ -9272,3 +9272,7 @@ VA_COMPGEN(0x004af800, 0x38, VECTOR_UCOPY, string)
 // or customcampaign are calling. /OPT:ICF then folds overview's own copy onto
 // this one, which is why a single retail body serves both.
 VA_COMPGEN(0x0054cba0, 0x1C5, VECTOR_INSERT, type_dialog_resource)
+
+// COMDAT pairing: town's implicit destructor, agreement 1.000 at an exactly
+// equal 74-byte extent.
+VA_COMPGEN(0x004ad0e0, 0x4A, IMPLICIT_DTOR, town)
