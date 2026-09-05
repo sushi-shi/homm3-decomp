@@ -27,9 +27,6 @@
 // _Locimp::_Init; that is the external-lock view of <yvals.h>, so expose it
 // while this TU is parsed exactly as game.obj does. The pinned /ML runtime
 // is unchanged.
-#if defined(_MSC_VER) && !defined(__clang__)
-#define _MT
-#endif
 #include <memory>
 #include <stdexcept>
 #include <string>
