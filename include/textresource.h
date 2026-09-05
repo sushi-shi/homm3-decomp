@@ -99,6 +99,14 @@ enum EGeneralTextIndex {
     // describes that consumer, which is this enum's stated convention;
     // the index is retail-byte-proven (a folded [Text._First + 0x204]).
     GENERAL_TEXT_COMBAT_SPELL_ALREADY_CAST = 129,
+    // advManager::TownGate's three refusals, all folded [Text._First + N]
+    // loads in one body: 0x1f0 when the chosen town already has a visiting
+    // hero, 0x1f4 when the caster's team owns no town at all, and 0x220
+    // when the caster is aboard a boat (hero flags & 0x40000). Indexes are
+    // retail-byte-proven; the names describe those three consumers.
+    GENERAL_TEXT_TOWN_PORTAL_TOWN_OCCUPIED = 124,
+    GENERAL_TEXT_TOWN_PORTAL_NO_TOWN = 125,
+    GENERAL_TEXT_SPELL_NOT_FROM_BOAT = 136,
     // DimensionDoor's movement gate refuses here when the caster has no
     // movement points left ([Text._First + 0x1f8]). Name provisional.
     GENERAL_TEXT_SPELL_NEEDS_MOVEMENT = 126,
