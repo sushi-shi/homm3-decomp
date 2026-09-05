@@ -3,7 +3,16 @@
 // 10 functions in link order; 3 compiler-generated $-thunks omitted.
 #include <va.h>
 #include "creaturetype.h"
+#include "resourcemanager.h"
+#include "textresource.h"
 #include "town.h"
+
+// creaturetype.cpp's own second half, declared file-locally: the per-row
+// parser is EXTERN (retail emits it out of line at 0x47b480 with a single
+// call site, and /Ob2 folds a single-call-site STATIC away regardless of
+// size), so the table function below reaches it by plain declaration.
+void InitializeCreatureTypeTraits(int id,
+                                  const TSpreadsheetResource::TStringVector& values);
 
 #if 0  // @carcass
 
@@ -79,17 +88,85 @@ TCreatureType UpgradedCreatureType(TCreatureType type)
         akCreatureTypeTraits[type].townType * 14 + creatureIndex + 7];
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\creaturetype.cpp:259
-DC_ONLY(0x71968, 0x1D8)
+// The crtraits.txt loader, order-mapped onto the DC roster: it is the row
+// directly after UpgradedCreatureType in creaturetype.obj (dc 0x71968,
+// 472 B against 489) and it owns the "crtraits.txt" literal. TWELVE written
+// out loops, one per town faction plus the neutral runs, with the sheet's
+// three blank separator rows skipped between each - 150 creature ids over
+// rows 2..184. The first loop's index IS the creature id, which is why it
+// alone tests EDI against 14 while the other eleven carry their own
+// counter. The row-count guard reads 179 even though the last row the walk
+// touches is 184; that is retail's own sanity check, transcribed as found.
+VA(0x0047b290, 0x1E9)  // dc-order-map + anchor-global crtraits.txt, dc 0x71968
 unsigned char InitializeCreatureTypeTraitsTable()
 {
-    // @stub
+    TSpreadsheetResource* traitsSheet = ResourceManager::GetSpreadsheet(
+        DATA_COMPGEN(0x00675514, creatureTraitsSpreadsheetName,
+                     "crtraits.txt"));
+    if (!traitsSheet)
+        return 0;
+    if (traitsSheet->GetNumberOfRows() < 179) {
+        traitsSheet->Dispose();
+        return 0;
+    }
+
+    int id = 0;
+    int row = 2;
+    for (; id < 14; id++, row++)
+        InitializeCreatureTypeTraits(id, traitsSheet->GetRow(row));
+    row += 3;
+    { for (int i = 0; i < 14; i++, id++, row++)
+            InitializeCreatureTypeTraits(id, traitsSheet->GetRow(row));
+    }
+    row += 3;
+    { for (int i = 0; i < 14; i++, id++, row++)
+            InitializeCreatureTypeTraits(id, traitsSheet->GetRow(row));
+    }
+    row += 3;
+    { for (int i = 0; i < 14; i++, id++, row++)
+            InitializeCreatureTypeTraits(id, traitsSheet->GetRow(row));
+    }
+    row += 3;
+    { for (int i = 0; i < 14; i++, id++, row++)
+            InitializeCreatureTypeTraits(id, traitsSheet->GetRow(row));
+    }
+    row += 3;
+    { for (int i = 0; i < 14; i++, id++, row++)
+            InitializeCreatureTypeTraits(id, traitsSheet->GetRow(row));
+    }
+    row += 3;
+    { for (int i = 0; i < 14; i++, id++, row++)
+            InitializeCreatureTypeTraits(id, traitsSheet->GetRow(row));
+    }
+    row += 3;
+    { for (int i = 0; i < 14; i++, id++, row++)
+            InitializeCreatureTypeTraits(id, traitsSheet->GetRow(row));
+    }
+    row += 3;
+    { for (int i = 0; i < 6; i++, id++, row++)
+            InitializeCreatureTypeTraits(id, traitsSheet->GetRow(row));
+    }
+    row += 3;
+    { for (int i = 0; i < 14; i++, id++, row++)
+            InitializeCreatureTypeTraits(id, traitsSheet->GetRow(row));
+    }
+    row += 3;
+    { for (int i = 0; i < 13; i++, id++, row++)
+            InitializeCreatureTypeTraits(id, traitsSheet->GetRow(row));
+    }
+    row += 3;
+    { for (int i = 0; i < 5; i++, id++, row++)
+            InitializeCreatureTypeTraits(id, traitsSheet->GetRow(row));
+    }
+    traitsSheet->Dispose();
+    return 1;
 }
 
+#if 0  // @carcass
+
 // E:\gamedcs\creaturetype.cpp:416
-DC_ONLY(0x71b40, 0x350)
+VA(0x0047b480, 0x322)  // dc-order-map (the row after the table loader), dc 0x71b40
 void InitializeCreatureTypeTraits(int id, const std::vector<char* resource)
 {
     // @stub
