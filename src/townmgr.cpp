@@ -118,13 +118,15 @@ inline type_building_id building_id_from_int(int value)
     return storage.building;
 }
 
-// resourcemanager.h's one entry point this compiland needs, declared
-// file-locally rather than by including that header: BuyBuild is its
-// sole consumer here and townmgr.obj's include closure is load-bearing
-// for the rest of the file (the initialize_game_data precedent).
+// resourcemanager.h's two entry points this compiland needs, declared
+// file-locally rather than by including that header: BuyBuild and
+// townObject's constructor are their sole consumers here and
+// townmgr.obj's include closure is load-bearing for the rest of the
+// file (the initialize_game_data precedent).
 class CSprite;
 namespace ResourceManager {
 CSprite* GetSprite(const char* name);
+Bitmap816* GetBitmap816(const char* name);
 }
 
 
@@ -492,13 +494,6 @@ DATA(0x006a6524) extern const char* gUnnamed6a6524;
 
 #if 0  // @carcass
 
-// E:\gamedcs\townmgr.cpp:1855
-DC_ONLY(0x16a0b0, 0xF4)
-void townObject::townObject(int iTownType, int iObjPos, const char* basename)
-{
-    // @stub
-}
-
 // E:\gamedcs\townmgr.cpp:1900
 DC_ONLY(0x16a1a4, 0x80)
 void townObject::~townObject()
@@ -528,6 +523,69 @@ void townObject::Draw(int incFrame, unsigned char drawHotspots)
 }
 
 #endif  // @carcass
+
+// The two townObject tables, indexed together by `iObjPos +
+// TOWN_BUILDING_SLOTS * iTownType`. Their EXTENTS chain, which is what
+// fixes the position record's shape: 396 name pointers at 0x68a38c end
+// exactly on 0x68a9bc, and 396 six-byte position records from there end
+// exactly on 0x68b304, which is the first byte of the string pool the
+// name table points into. So the record is THREE shorts and the
+// constructor reads the SECOND and THIRD of them - the first is read
+// nowhere in the image (the only two references to either table are the
+// constructor's own). Names are provisional; nothing attests them.
+DATA(0x0068a38c) extern const char* const gTownObjectNames[];
+DATA(0x0068a9bc) extern const short gTownObjectPositions[][3];
+
+// E:\gamedcs\townmgr.cpp:1855, retail 0x5c2ea0 - townmgr.obj's FIRST
+// carve row, sitting ahead of townManager's own constructor. Two
+// sixteen-byte name buffers on the frame: the animation comes from the
+// CALLER's basename (`%s.def`), while the outline and hotspot masks come
+// from the compiland's own name table (`%s.pcx`) with the second
+// character overwritten - TOxxxxxx.pcx for the outline, TZxxxxxx.pcx for
+// the hotspot, which is what the lone `mov byte ptr [ebp-0x1b], 0x5a`
+// spells.
+VA(0x005c2ea0, 0x147)  // anchor-global 0x68a9bc positions + 0x68a38c names; anchor-callee border(6); dc 0x16a0b0
+townObject::townObject(int iTownType, int iObjPos, const char* basename)
+{
+    char defName[16];
+    char maskName[16];
+
+    currFrame = 0;
+    objIcon = 0;
+    objBorder = 0;
+    visible = 1;
+
+    int slot = iObjPos + TOWN_BUILDING_SLOTS * iTownType;
+    x = gTownObjectPositions[slot][1];
+    y = gTownObjectPositions[slot][2];
+    objId = iObjPos;
+
+    sprintf(defName, DATA_COMPGEN(0x0068c1c4, townObjectSpriteFormat,
+                                  "%s.def"), basename);
+    objIcon = ResourceManager::GetSprite(defName);
+    numFrames = objIcon->GetNumFrames(0);
+    w = objIcon->GetWidth();
+    h = objIcon->GetHeight();
+
+    if (iObjPos != -1) {
+        objBorder = new border(x, y, w, h, iObjPos, 1);
+        if (!objBorder)
+            MemError();
+    }
+
+    const char* maskName_ =
+        gTownObjectNames[iObjPos + TOWN_BUILDING_SLOTS * iTownType];
+    if (maskName_[0] != 0) {
+        sprintf(maskName, DATA_COMPGEN(0x0068c1bc, townObjectMaskFormat,
+                                       "%s.pcx"), maskName_);
+        objOutline = ResourceManager::GetBitmap816(maskName);
+        maskName[1] = 'Z';
+        objHotspot = ResourceManager::GetBitmap816(maskName);
+    } else {
+        objOutline = 0;
+        objHotspot = 0;
+    }
+}
 
 // The manager constructor, and with it the whole class layout. It is
 // the only body in the compiland that calls baseManager's constructor
