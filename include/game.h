@@ -1028,7 +1028,10 @@ public:
     public:
         unsigned char CanBeHuman;
         unsigned char CanBeComputer;
-        char pad_02[2];
+        // +0x02..+0x03 is an UNNAMED alignment hole, byte-proven by retail's
+        // synthesized copy ctor 0x45da70: it copies +0 and +1 as bytes and
+        // then the dword at +4 directly. A named pad here adds a word copy
+        // retail does not have.
         int AIStrategy;
         short legalAlignments;
         unsigned char HasRandomAlignment;
@@ -1052,11 +1055,11 @@ public:
         // +0x0c and the signed town type at +0x10 before unpacking the
         // coordinate at +0x14.
         unsigned char hasMainTown;
-        char pad_0d[3];
+        // +0x0d..+0x0f: alignment hole (0x45da70 goes +0x0c byte -> +0x10 dword).
         int mainTownType;
         type_point CastleLoc;
         signed char hasRandomHero;
-        char pad_19[3];
+        // +0x19..+0x1b: alignment hole (0x45da70 goes +0x18 byte -> +0x1c dword).
         int nonRandomHeroId;
         int nonRandomHeroCustomPortrait;
         char nonRandomHeroCustomName[12];
@@ -1104,10 +1107,13 @@ public:
     unsigned char maxHeroLevel;
     unsigned char numTeams;
     signed char teamInfo[8];
-    char pad_15[3];
+    // +0x15..+0x17: alignment hole. Retail's synthesized GameSelection-
+    // HeadersStruct copy ctor (0x5904f0) copies the dword at +0x11 and then
+    // the dword at +0x18 with nothing between; a named pad adds a word+byte
+    // pair retail lacks.
     int Size;
     unsigned char HasTwoLayers;
-    char pad_1d[3];
+    // +0x1d..+0x1f: alignment hole (0x5904f0 goes +0x1c byte -> +0x20 vector).
     std::vector<int> placeholders;
     VictoryConditionStruct victoryCondition;
     LossConditionStruct lossCondition;

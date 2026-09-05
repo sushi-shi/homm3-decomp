@@ -116,7 +116,19 @@ int type_university_window::WindowHandler(message* msg)
 // so roughly 30-45 statements of caller_cb are missing and the whole
 // under-inline (retail expands vector<widget*>::_Ucopy/_Ufill/size 16/8/16
 // times against our 12/6/12, and the cancel button's `vector<int>::insert`)
-// follows from that one threshold.  The widget roster itself is NOT short:
+// follows from that one threshold.
+// LOCALISED 2026-09-05, and it is ONE SITE: every block up to the rollover
+// widget's construction pairs, and the final AddWidget loop pairs (retail
+// 0x5f077e..0x5f07a7 against our own), so the entire 568 B is the LAST
+// `Widgets.push_back(rollover_widget)`. Retail expands it whole - the
+// capacity test at 0x5f069e, the realloc arm 0x5f06b9..0x5f075c (size/size/
+// size/operator new/_Ucopy/_Ufill/_Ucopy/_Destroy/operator delete) and the
+// shift arm 0x5f0761..0x5f07e6 - roughly 0x148 B; we emit the two size()
+// calls and then CALL vector<widget*>::insert. Nothing else in the body
+// diverges structurally, so the lever is caller_cb at that final site and
+// nothing local to the statement. New inline-depth pins are not available
+// (the cleanliness floor is falling-only), so this needs the real missing
+// mass, not a knob.  The widget roster itself is NOT short:
 // the normalised constructor-call streams agree element for element, and
 // retail's single extra `operator new` (28 vs 27) sits in a run of
 // ctor-less allocations - it is a vector REALLOCATION bought by the extra
@@ -124,12 +136,17 @@ int type_university_window::WindowHandler(message* msg)
 // rows, 28 ctors) matches this body statement for statement, including both
 // `set_hotkey` calls on the exit button, the SetIconFrame/two-TTextResource
 // help text, and the tuition sprintf.  Do not ship the carrier.
+// Declaring `widget_id` as the FIRST body statement - retail spills 100 to
+// its own slot BEFORE the five member stores, we spilled it after - is
+// worth 87.8950 -> 88.1490 and makes the `this` home agree at [ebp-0x18].
 VA(0x005ef500, 0x1252)  // Univers1.pcx + two call-site modes, dc 0x18e790
 type_university_window::type_university_window(
     hero* new_hero, const type_university* university,
     unsigned char bTownUniversity)
     : CAdvPopup(0, 0, 800, 600, 0)
 {
+    long widget_id = 100;
+
     current_hero = new_hero;
     x = 135;
     y = 206;
@@ -137,7 +154,6 @@ type_university_window::type_university_window(
     height = 388;
     type = 18;
 
-    long widget_id = 100;
     widget* new_widget = new bitmapBorder(
         0, 0, 465, 388, widget_id++, "univers1.pcx", 0x800);
     static_cast<bitmapBorder*>(new_widget)->SetPlayerPaletteColors(
