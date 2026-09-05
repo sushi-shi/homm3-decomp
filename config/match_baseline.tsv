@@ -1090,7 +1090,7 @@ cursor	?DrawCursor@advManager@@QAEXHH@Z	80.3240	80.3240	80.3240	0x7f860	334fcfad
 cursor	?DrawCursorAlpha@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x7fc80	f88e01d23684
 cursor	?DrawCursorShadow@advManager@@QAEXHH@Z	72.5446	72.5446	72.5446	0x7fb40	39948baa081a
 cursor	?GetMoveShowIt@advManager@@QAEHPAVhero@@H@Z	100.0000	100.0000	100.0000	0x80000	bc03c3596322
-cursor	?MoveHero@advManager@@QAEPAVNewmapCell@@HEPAUtype_point@@PAHE1E@Z	89.5139	89.5139	89.5139	0x805e0	d5e4c46dc99f
+cursor	?MoveHero@advManager@@QAEPAVNewmapCell@@HEPAUtype_point@@PAHE1E@Z	89.5139	89.5139	89.5139	0x805e0	be5ec31a3375
 cursor	?OnHideHero@advManager@@QAEXPAVCMapChange@@@Z	100.0000	100.0000	100.0000	0x81fd0	04ab79a0f668
 cursor	?OnMoveHero@advManager@@QAEXPAVCMapChange@@@Z	100.0000	100.0000	100.0000	0x81ed0	831cc6211424
 cursor	?ProcessMapChangeNew@advManager@@QAEXPAVCMapChange@@@Z	100.0000	100.0000	100.0000	0x82010	1916421b762d
