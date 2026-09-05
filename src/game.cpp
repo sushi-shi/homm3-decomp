@@ -18579,3 +18579,30 @@ VA_COMPGEN(0x0048edf0, 0xC8, BITSET_XRAN, Bitset129)
 // list: it calls the vector<hero>::operator= claimed at 0x5ff30, which is
 // exactly what the outer assignment does per element.
 VA_COMPGEN(0x0045f5e0, 0x1CD, VECTOR_COPY_ASSIGN, hero_vector)
+
+// COMDAT pairing: three bitset<N>::reference::operator=(bool). Same lever as
+// the _Xran family - the bodies are identical apart from the bound they test,
+// and each one's own `cmp esi, <N>` names it: 0x8e9f0 tests 0x90 (144),
+// 0x8ea60 tests 0x91 (145), 0x8ead0 tests 0x81 (129). All three are among the
+// callers whose compares identified the _Xran copies in the first place, so
+// the two families corroborate each other. The already-claimed set/test rows
+// for the same three widths sit at 0x4cf9a0, 0x4cfa60 and rmg's 0x14ded0.
+VA_COMPGEN(0x0048e9f0, 0x6A, BITSET_REFERENCE_ASSIGN, Bitset144)
+VA_COMPGEN(0x0048ea60, 0x6A, BITSET_REFERENCE_ASSIGN, Bitset145)
+VA_COMPGEN(0x0048ead0, 0x6A, BITSET_REFERENCE_ASSIGN, Bitset129)
+
+// COMDAT pairing: vector<vector<hero>>::~vector - reached from
+// TCampaignWindow's constructor, ~SavedGameHeader and three
+// singleselectionwindow destructors, all of which hold campaign hero pools.
+VA_COMPGEN(0x0045f560, 0x7A, VECTOR_DTOR, hero_vector)
+
+// COMDAT pairing: std::_Construct<vector<hero>>, decided by two callers that
+// are themselves claimed COMDATs of the same family - the
+// vector<vector<hero>>::operator= at 0x5f5e0 and ::insert at 0x8c270.
+VA_COMPGEN(0x0045fce0, 0xD1, STD_CONSTRUCT, hero_vector)
+
+// COMDAT pairing: std::_Construct<vector<type_artifact>>, likewise reached
+// from the claimed vector<vector<type_artifact>>::insert at 0x8c7a0 and from
+// vector<hero>::_Ucopy - hero carries the artifact vector, so copying a hero
+// range constructs one.
+VA_COMPGEN(0x0045fdc0, 0x9C, STD_CONSTRUCT, type_artifact_vector)
