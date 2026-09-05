@@ -377,6 +377,34 @@ int TCampaignPrimarySkillBonus::GetIconIndex() const
     return best;
 }
 
+// The list of positive deltas, joined with ", " and a final " and ".
+// The running counter is decremented AFTER the row is appended, so it is
+// the number of rows still to come that picks the separator.
+VA(0x00484910, 0x275)  // anchor-vtable (0x63da00+0x10), retail-only
+std::string TCampaignPrimarySkillBonus::GetText() const
+{
+    std::string list;
+    int remaining = 0;
+    int iStat;
+    for (iStat = 0; iStat < 4; ++iStat)
+        if (m_skills[iStat] > 0)
+            ++remaining;
+    for (iStat = 0; iStat < 4; ++iStat) {
+        if (m_skills[iStat] > 0) {
+            list += format_string(
+                DATA_COMPGEN(0x00677278, primarySkillBonusFormat, "+%d %s"),
+                m_skills[iStat], gPrimarySkillNames[iStat]);
+            --remaining;
+            if (remaining == 1)
+                list += gpGeneralText->Text[142];
+            else if (remaining > 0)
+                list += ", ";
+        }
+    }
+    list = format_string(gpGeneralText->Text[708], list.c_str());
+    return list;
+}
+
 // Each delta is added to the CLAMPED current value: anything above 99
 // saturates there, a positive value is taken as it stands, and a
 // non-positive one falls back to the stat's own floor - zero for attack
