@@ -141,7 +141,7 @@ advmgr	?SetTownContext@advManager@@QAEXHEE@Z	93.8054	93.8054	93.8054	0x17830	067
 advmgr	?SetTreeHelpText@@YIXPADPAVhero@@PAVNewmapCell@@PBD3@Z	100.0000	100.0000	100.0000	0xdb00	8821e50e48f1
 advmgr	?ShowRoute@advManager@@QAEXHHH@Z	83.0188	83.0188	83.0188	0x18dd0	7a864123b6ce
 advmgr	?StartLocalPlayerTurn@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19e00	061b0a2b1b37
-advmgr	?TownQuickView@advManager@@QAEXHHHE@Z	92.9411	92.9411	92.9411	0x167a0	859f579cb9fe
+advmgr	?TownQuickView@advManager@@QAEXHHHE@Z	93.0922	93.0922	93.0922	0x167a0	00d781d67cb8
 advmgr	?TrimLoopingSounds@advManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x1a1e0	656fe0331a9e
 advmgr	?UpdBottomView@advManager@@QAEXEEE@Z	100.0000	100.0000	100.0000	0x15de0	9292a4ae5057
 advmgr	?UpdBottomViewEnemyTurn@advManager@@QAEEE@Z	100.0000	100.0000	100.0000	0x15f20	559c2747c48d
