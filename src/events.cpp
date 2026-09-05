@@ -8652,6 +8652,99 @@ int advManager::DoNetCombat(CNetMsg* pNetMsg)
 //      x3 with CheckEndGame; loser-side sound (Random/sprintf/
 //      LoadPlaySample "COMBT*.wav"); MobilizeCurrHero; Resume; clear busy
 //      seats; return winner.
+// The combat-init payload's two serializers, slots 0 and 1 of vtable
+// 0x63e508. Their scalar prefix is written by SendHeroTownData and read
+// back by ReceiveHeroTownData; the tail hands the four sub-objects to the
+// serializers they own - armyGroup's, town's and hero's - with the
+// CURRENT save version baked in, because a net packet is never a
+// back-level file.
+const int NET_COMBAT_SAVE_VERSION = 42;
+
+// Residual on both (98.19% / 97.99%): one `push ecx`. Retail carries NO
+// frame at all - it homes the byte buffer at [ebp+0xb] and the dword at
+// [ebp+8], overlapping inside the dead `infile` parameter slot once that
+// pointer is live in ESI. Block-scoping the pair and swapping their
+// declaration order are both byte-flat, measured.
+VA(0x004ad1f0, 0x148)  // anchor-vtable 0x63e508 slot 0; anchor-callee town::load + hero::load, retail-only
+unsigned char CCombatInitMsg::read(TAbstractFile* infile)
+{
+    char char_buffer;
+    int int_buffer;
+
+    infile->Read(&m_point, sizeof(m_point));
+    infile->Read(&char_buffer, sizeof(char_buffer));
+    m_leftHero = char_buffer != 0;
+    infile->Read(&char_buffer, sizeof(char_buffer));
+    m_rightTown = char_buffer != 0;
+    infile->Read(&char_buffer, sizeof(char_buffer));
+    m_rightHero = char_buffer != 0;
+    infile->Read(&int_buffer, sizeof(int_buffer));
+    m_seed = int_buffer;
+    infile->Read(&char_buffer, sizeof(char_buffer));
+    m_winner = char_buffer;
+    infile->Read(&char_buffer, sizeof(char_buffer));
+    m_retreatWin = char_buffer != 0;
+    infile->Read(&char_buffer, sizeof(char_buffer));
+    m_combatSurrender = char_buffer != 0;
+    infile->Read(&char_buffer, sizeof(char_buffer));
+    m_leftOwner = char_buffer;
+    infile->Read(&int_buffer, sizeof(int_buffer));
+    m_leftGold = int_buffer;
+    infile->Read(&char_buffer, sizeof(char_buffer));
+    m_rightOwner = char_buffer;
+    infile->Read(&int_buffer, sizeof(int_buffer));
+    m_rightGold = int_buffer;
+
+    m_leftArmyGroup.load(infile);
+    m_rightArmyGroup.load(infile);
+    m_town.load(infile, NET_COMBAT_SAVE_VERSION);
+    m_leftHeroData.load(infile, NET_COMBAT_SAVE_VERSION);
+    m_rightHeroData.load(infile, NET_COMBAT_SAVE_VERSION);
+    return 1;
+}
+
+// The mirror. `write` is const across this whole message family - it is
+// the base class's virtual - while every sub-object's own save() is not,
+// so the four member calls go through one const_cast rather than four.
+VA(0x004ad340, 0x126)  // anchor-vtable 0x63e508 slot 1; anchor-callee town::save + hero::save, retail-only
+unsigned char CCombatInitMsg::write(TAbstractFile* outfile) const
+{
+    char char_buffer;
+    int int_buffer;
+    CCombatInitMsg* record = const_cast<CCombatInitMsg*>(this);
+
+    outfile->Write(&m_point, sizeof(m_point));
+    char_buffer = m_leftHero;
+    outfile->Write(&char_buffer, sizeof(char_buffer));
+    char_buffer = m_rightTown;
+    outfile->Write(&char_buffer, sizeof(char_buffer));
+    char_buffer = m_rightHero;
+    outfile->Write(&char_buffer, sizeof(char_buffer));
+    int_buffer = m_seed;
+    outfile->Write(&int_buffer, sizeof(int_buffer));
+    char_buffer = m_winner;
+    outfile->Write(&char_buffer, sizeof(char_buffer));
+    char_buffer = m_retreatWin;
+    outfile->Write(&char_buffer, sizeof(char_buffer));
+    char_buffer = m_combatSurrender;
+    outfile->Write(&char_buffer, sizeof(char_buffer));
+    char_buffer = m_leftOwner;
+    outfile->Write(&char_buffer, sizeof(char_buffer));
+    int_buffer = m_leftGold;
+    outfile->Write(&int_buffer, sizeof(int_buffer));
+    char_buffer = m_rightOwner;
+    outfile->Write(&char_buffer, sizeof(char_buffer));
+    int_buffer = m_rightGold;
+    outfile->Write(&int_buffer, sizeof(int_buffer));
+
+    record->m_leftArmyGroup.save(outfile);
+    record->m_rightArmyGroup.save(outfile);
+    record->m_town.save(outfile);
+    record->m_leftHeroData.save(outfile);
+    record->m_rightHeroData.save(outfile);
+    return 1;
+}
+
 // cText/alternate_layout ride to SetupCombat; bFinishHeroes gates the
 // level-pick wait.  All callees are already declared (cmbtmgr.h,
 // remotedlg.h, exec.h, game.h).
