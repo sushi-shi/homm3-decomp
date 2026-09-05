@@ -179,6 +179,23 @@ CHAR_STREAM_MEMBERS = (
     # sizes are unique (bool 658 B, const void* 448 B) sit at the ends of
     # both orders, which is what confirms the zip.
     ("?do_put@?$num_put@D", None, "num_put_do_put"),
+    # numpunct<char>'s three string accessors and their three virtual
+    # implementations. All six bodies are near-identical, so the pairing is
+    # made on the member offset each `do_` reads (_Gr at +8, _Nf at +0x10,
+    # _Nt at +0x14, straight out of VC6's own <xlocnum>) and on the vtable
+    # slot each public wrapper calls through (slots 3/4/5 of vtbl_245728).
+    ("?do_grouping@?$numpunct@D", None, "numpunct_do_grouping"),
+    ("?do_falsename@?$numpunct@D", None, "numpunct_do_falsename"),
+    ("?do_truename@?$numpunct@D", None, "numpunct_do_truename"),
+    ("?grouping@?$numpunct@D", None, "numpunct_grouping"),
+    ("?falsename@?$numpunct@D", None, "numpunct_falsename"),
+    ("?truename@?$numpunct@D", None, "numpunct_truename"),
+    # _Tidyfac's two instantiations share one body shape and are separated by
+    # the static `_Ptr` each one writes and clears.
+    ("?_Save@?$_Tidyfac@V?$numpunct@D", None, "tidyfac_numpunct_save"),
+    ("?_Tidy@?$_Tidyfac@V?$numpunct@D", None, "tidyfac_numpunct_tidy"),
+    ("?_Save@?$_Tidyfac@V?$num_put@D", None, "tidyfac_num_put_save"),
+    ("?_Tidy@?$_Tidyfac@V?$num_put@D", None, "tidyfac_num_put_tidy"),
     ("?str@?$basic_stringbuf@D", None, "stringbuf_str"),
     ("?seekoff@?$basic_stringbuf@D", None, "stringbuf_seekoff"),
     ("?seekpos@?$basic_stringbuf@D", None, "stringbuf_seekpos"),
@@ -188,12 +205,23 @@ CHAR_STREAM_MEMBERS = (
     ("?_Grow@?$basic_string@D", None, "basic_string_grow"),
     ("?append@?$basic_string@D", "@ABV12@II@Z", "basic_string_append_str"),
     ("?append@?$basic_string@D", "@PBDI@Z", "basic_string_append_ptr"),
+    ("?assign@?$basic_string@D", "@ABV12@II@Z",
+     "basic_string_assign_str"),
+    ("?append@?$basic_string@D", "@ID@Z", "basic_string_append_count"),
+    ("?assign@?$basic_string@D", "@ID@Z", "basic_string_assign_count"),
+    ("??A?$basic_string@D", None, "basic_string_subscript"),
+    ("?_Split@?$basic_string@D", None, "basic_string_split"),
+    ("?erase@?$basic_string@D", None, "basic_string_erase"),
     ("?find@?$basic_string@D", None, "basic_string_find"),
     ("?_Freeze@?$basic_string@D", None, "basic_string_freeze"),
     ("?xsgetn@?$basic_streambuf@D", None, "streambuf_xsgetn"),
     ("?sputc@?$basic_streambuf@D", None, "streambuf_sputc"),
     ("?opfx@?$basic_ostream@D", None, "ostream_opfx"),
     ("??Hstd@@YA?AV?$basic_string@D", None, "basic_string_concat"),
+    ("?uflow@?$basic_streambuf@D", None, "streambuf_uflow"),
+    ("?setg@?$basic_streambuf@D", None, "streambuf_setg"),
+    ("??4?$ostreambuf_iterator@D", None,
+     "ostreambuf_iterator_assign"),
     ("?_Decref@facet@locale@std@@", None, "locale_facet_decref"),
     ("?getloc@ios_base@std@@", None, "ios_base_getloc"),
 )
@@ -217,6 +245,7 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "TREE_INSERT", "TREE_NODE_INSERT",
                  "TREE_CONST_ITERATOR_DEC", "TREE_CONST_ITERATOR_INC",
                  "TREE_COPY", "TREE_COPY_NODE", "TREE_ERASE",
+                 "TREE_BUYNODE",
                  "STRINGBUF_OVERFLOW", "STRINGBUF_INIT",
                  "DEQUE_FREEFRONT", "DEQUE_FREEBACK", "DEQUE_BUYBACK",
                  "BASIC_STRING_ASSIGN_PTR_SIZE",
@@ -800,6 +829,8 @@ def _demangle_key(mangled: str):
         if "IAEPAU_Node@" in mangled:
             return f"{tree_owner.lower()}@tree_copy_node"
         return f"{tree_owner.lower()}@tree_copy"
+    if mangled.startswith("?_Buynode@?$_Tree@") and tree_owner:
+        return f"{tree_owner.lower()}@tree_buynode"
     if mangled.startswith("?_Erase@?$_Tree@") and tree_owner:
         return f"{tree_owner.lower()}@tree_erase"
     # ...and the PUBLIC `erase`, which is overloaded on one class: the
@@ -853,6 +884,11 @@ def _demangle_key(mangled: str):
         member = deque_class.group(1).lstrip("_").lower()
         return f"{deque_class.group(2).lower()}@deque_{member}"
     vector_string_element = "?$vector@V?$basic_string@D" in mangled
+    #: `vector<std::string *>` - a POINTER to the string, which the
+    #: class regex below cannot reach either (`PAV?$basic_string` has
+    #: no plain identifier after the pointer prefix).
+    vector_string_ptr_element = ("?$vector@PAV?$basic_string@D"
+                                 in mangled)
     #: A vector over a BUILTIN element carries no class name at all - VC6
     #: spells the type as a single letter with no `@` terminator - so the
     #: class regex below cannot reach it. Decoded like deque's, above.
@@ -866,6 +902,7 @@ def _demangle_key(mangled: str):
     vector_owner = (
         f"{nested_vector_element.group(1).lower()}_vector"
         if nested_vector_element else
+        "string_ptr" if vector_string_ptr_element else
         "string" if vector_string_element else
         DEQUE_PRIMITIVE_ELEMENT[vector_primitive.group(1)]
         if vector_primitive else
@@ -928,6 +965,14 @@ def _demangle_key(mangled: str):
         mangled)
     if construct_pair:
         return f"{construct_pair.group(1).lower()}_pair@std_construct"
+    #: `_Construct<vector<T>>` - the element is itself a template, which
+    #: the identifier regex below cannot reach. Keyed `<t>_vector` like
+    #: nested_vector_element above, so it reads with its siblings.
+    construct_vector = re.match(
+        r"^\?_Construct@std@@YIXPAV\?\$vector@(?:V|U)([A-Za-z_]\w*)@",
+        mangled)
+    if construct_vector:
+        return f"{construct_vector.group(1).lower()}_vector@std_construct"
     construct_owner = re.match(
         r"^\?_Construct@std@@YIXPA(?:V|U)([A-Za-z_]\w*)@", mangled)
     if construct_owner:
@@ -957,6 +1002,11 @@ def _demangle_key(mangled: str):
     if (mangled.startswith("?_Insertion_sort_1@std@@")
             and "TSpellbookEntry" in mangled):
         return "tspellbookentry@insertion_sort_1"
+    # combatManager::TObstacleVector is a HAND-MODELLED container whose
+    # members VC6 emits like any other; key it onto the vector family so
+    # the claim reads with its siblings instead of needing a new kind.
+    if mangled.startswith("?_Ucopy@TObstacleVector@combatManager@@"):
+        return "tobstaclevector@vector_ucopy"
     algorithm_key = _std_algorithm_key(mangled)
     if algorithm_key:
         return algorithm_key
@@ -1257,6 +1307,7 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                                or "$tree_node_insert$" in r["name"]
                                or "$tree_const_iterator_dec$" in r["name"]
                                or "$tree_const_iterator_inc$" in r["name"]
+                               or "$tree_buynode$" in r["name"]
                                or "$tree_copy$" in r["name"]
                                or "$tree_copy_node$" in r["name"]
                                or "$tree_erase$" in r["name"]
@@ -1395,6 +1446,10 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
         if "$tree_insert$" in row["name"]:
             owner = row["name"].rsplit("$", 1)[1].lower()
             claim_keys.setdefault(f"{owner}@tree_insert", []).append(row)
+            continue
+        if "$tree_buynode$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}@tree_buynode", []).append(row)
             continue
         if "$tree_node_insert$" in row["name"]:
             owner = row["name"].rsplit("$", 1)[1].lower()

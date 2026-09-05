@@ -1366,3 +1366,18 @@ VA_COMPGEN(0x0045c070, 0x12B, TREE_ERASE_RANGE, type_map_hero_info)
 // COMDAT pairing: std::_Construct<pair<const int, type_map_hero_info>>, 0.993
 // against a 368 B object; newgame's two candidates are 347 and 343 B.
 VA_COMPGEN(0x0045d590, 0x16E, STD_CONSTRUCT, type_map_hero_info_pair)
+
+// COMDAT pairing: map<int, type_map_hero_info>'s COPY constructor, the second
+// half of the two-member ctor group whose first half is already claimed at
+// 0x45bf70 (190 B, the less+allocator form). 0x45dcb0 calls _Tree::_Copy and
+// _Construct<pair<const int, type_map_hero_info>>, which only the copy form
+// does, and RVA order matches COFF order in both arms.
+VA_COMPGEN(0x0045dcb0, 0x1E5, CLASS_CTOR, map)
+
+// COMDAT pairing: _Tree<int, type_map_hero_info>::_Buynode - reached from the
+// copy ctor above and from seg_0019, and campaignbrief.obj emits exactly one.
+VA_COMPGEN(0x0045dea0, 0x1D, TREE_BUYNODE, type_map_hero_info)
+
+// COMDAT pairing: vector<type_map_hero_identity>::_Ucopy (thiscall, three
+// pointer arguments, `ret 0xc`).
+VA_COMPGEN(0x0045d230, 0x38, VECTOR_UCOPY, type_map_hero_identity)

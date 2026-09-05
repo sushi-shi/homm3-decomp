@@ -18564,3 +18564,58 @@ VA_COMPGEN(0x004b6be0, 0x4B, IMPLICIT_DTOR, out_of_range)
 // (453 base vs 451 retail instructions). The admission queue carried this as
 // an unowned `campaignbrief..campaignmap` bracket row.
 VA_COMPGEN(0x0045c200, 0x53E, TREE_ERASE_ITERATOR, type_map_hero_info)
+
+// COMDAT pairing: bitset<129>::_Xran. This address arrived on lane 16 as
+// `bitset145` from a 0.978 similarity score; the bound compare refutes that.
+// All three callers of 0x48edf0 guard with `cmp <reg>, 0x81` (129) - the two
+// customcampaign-segment callers 0x8ead0/0x8ece0 and rmg's claimed
+// bitset<129>::set at 0x14ded0 - while the four callers of 0x8d9a0 all guard
+// with 0x91 (145). The claim therefore moves here: game.obj and rmg.obj are
+// the only two that emit `?_Xran@?$bitset@$0IB@@`, customcampaign.obj does
+// not emit it at all.
+VA_COMPGEN(0x0048edf0, 0xC8, BITSET_XRAN, Bitset129)
+
+// COMDAT pairing: vector<vector<hero>>::operator=, decided by its own callee
+// list: it calls the vector<hero>::operator= claimed at 0x5ff30, which is
+// exactly what the outer assignment does per element.
+VA_COMPGEN(0x0045f5e0, 0x1CD, VECTOR_COPY_ASSIGN, hero_vector)
+
+// COMDAT pairing: three bitset<N>::reference::operator=(bool). Same lever as
+// the _Xran family - the bodies are identical apart from the bound they test,
+// and each one's own `cmp esi, <N>` names it: 0x8e9f0 tests 0x90 (144),
+// 0x8ea60 tests 0x91 (145), 0x8ead0 tests 0x81 (129). All three are among the
+// callers whose compares identified the _Xran copies in the first place, so
+// the two families corroborate each other. The already-claimed set/test rows
+// for the same three widths sit at 0x4cf9a0, 0x4cfa60 and rmg's 0x14ded0.
+VA_COMPGEN(0x0048e9f0, 0x6A, BITSET_REFERENCE_ASSIGN, Bitset144)
+VA_COMPGEN(0x0048ea60, 0x6A, BITSET_REFERENCE_ASSIGN, Bitset145)
+VA_COMPGEN(0x0048ead0, 0x6A, BITSET_REFERENCE_ASSIGN, Bitset129)
+
+// COMDAT pairing: vector<vector<hero>>::~vector - reached from
+// TCampaignWindow's constructor, ~SavedGameHeader and three
+// singleselectionwindow destructors, all of which hold campaign hero pools.
+VA_COMPGEN(0x0045f560, 0x7A, VECTOR_DTOR, hero_vector)
+
+// COMDAT pairing: std::_Construct<vector<hero>>, decided by two callers that
+// are themselves claimed COMDATs of the same family - the
+// vector<vector<hero>>::operator= at 0x5f5e0 and ::insert at 0x8c270.
+VA_COMPGEN(0x0045fce0, 0xD1, STD_CONSTRUCT, hero_vector)
+
+// COMDAT pairing: std::_Construct<vector<type_artifact>>, likewise reached
+// from the claimed vector<vector<type_artifact>>::insert at 0x8c7a0 and from
+// vector<hero>::_Ucopy - hero carries the artifact vector, so copying a hero
+// range constructs one.
+VA_COMPGEN(0x0045fdc0, 0x9C, STD_CONSTRUCT, type_artifact_vector)
+
+// COMDAT pairing: vector<vector<type_artifact>>::~vector and its ::_Destroy -
+// the artifact half of the campaign carry-over pools whose hero half this
+// lane claimed at 0x5f560/0x8c5b0. Arity matches both (`ret` for the nullary
+// destructor, `ret 8` for _Destroy's two pointers) and 0x5f7b0 is reached
+// from campaignwindow, singleselectionwindow and three further segments.
+VA_COMPGEN(0x0045f7b0, 0x59, VECTOR_DTOR, type_artifact_vector)
+VA_COMPGEN(0x0048caa0, 0x38, VECTOR_DESTROY, type_artifact_vector)
+
+// COMDAT pairing: vector<type_university>::_Ucopy. Five instantiations of
+// _Ucopy resemble this address; type_university wins on agreement (0.907
+// against 0.810 for the next) and `ret 0xc` matches its three pointers.
+VA_COMPGEN(0x00434c70, 0x49, VECTOR_UCOPY, type_university)

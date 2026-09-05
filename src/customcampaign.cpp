@@ -1398,8 +1398,17 @@ VA_COMPGEN(0x0048f7e0, 0x159, STD_SORT, hero_crossoverherostronger)
 // COMDAT pairing: std::_Sort_0<hero, CrossoverHeroStronger>, agreement 0.985.
 VA_COMPGEN(0x0048f2b0, 0x333, STD_SORT_0, hero_crossoverherostronger)
 
-// COMDAT pairing: bitset145::_Xran, mnemonic agreement 0.978.
-VA_COMPGEN(0x0048edf0, 0xC8, BITSET_XRAN, bitset145)
+// COMDAT pairing: bitset<145>::_Xran and bitset<8>::_Xran. Five byte-identical
+// `_Xran` bodies survive in the image, so the discriminator is the BOUND
+// COMPARE in each caller: 0x8d9a0's four callers all guard with `cmp <reg>,
+// 0x91` (145) - among them game's claimed bitset<145>::set (0x4cfa60) and
+// ::test (0x4cfad0) - and 0x8da70's eight with `cmp <reg>, 0x8`, among them
+// game's claimed bitset<8>::set (0x4d4cc0) and ::test (0x4cfef0).
+// 0x48edf0, which lane 16 claimed here as bitset145 on similarity alone,
+// compares against 0x81 (129) at all three of its callers and has moved to
+// game.cpp - customcampaign.obj does not emit a bitset<129> instantiation.
+VA_COMPGEN(0x0048d9a0, 0xC8, BITSET_XRAN, Bitset145)
+VA_COMPGEN(0x0048da70, 0xC8, BITSET_XRAN, Bitset8)
 
 // COMDAT pairing: hero::_Ucopy, mnemonic agreement 0.966.
 VA_COMPGEN(0x0048d8d0, 0x38, VECTOR_UCOPY, hero)
@@ -1410,8 +1419,45 @@ VA_COMPGEN(0x0048e880, 0x3B, STD_COPY_BACKWARD, hero)
 // COMDAT pairing: hero::_Ufill, mnemonic agreement 0.913.
 VA_COMPGEN(0x0048d970, 0x2C, VECTOR_UFILL, hero)
 
-// COMDAT pairing: out_of_range::out_of_range(const&), agreement 0.940 and an
-// EXACT size match (352 B against the object's 352). Four other addresses
-// resemble the same COMDAT - advmgr 0x1ba90/0x1b7b0/0x1b920 at 354/361/367 B
-// and castle 0x60700 at 293 - and the size settles it.
-VA_COMPGEN(0x00487bd0, 0x160, CLASS_CTOR, out_of_range)
+// COMDAT pairing: out_of_range::out_of_range(const out_of_range&). This
+// address moved from 0x487bd0 (lane 16), which had the right class and the
+// wrong OVERLOAD: customcampaign.obj emits only the copy constructor, so the
+// group of one bound it to whatever address was claimed, and 0x487bd0 is the
+// STRING constructor. Three independent facts say so - 0x487bd0 calls
+// `??0exception@@QAE@ABQBD@Z`, the const char* form that only
+// `logic_error(const string&) : exception("")` inlined into it produces,
+// while 0x4700 calls `??0exception@@QAE@ABV0@@Z`; 0x487bd0 scores 1.000 with
+// an exact 352 = 352 size match against victorylossconditions' string-ctor
+// COMDAT where 0x4700 scores 0.973 at +9; and 0x4700 is referenced as data
+// from a ThrowInfo copy-constructor slot (const_247f90+0x18), which is where
+// a copy ctor and nothing else appears. Both install out_of_range's
+// vtbl_2455cc - the vtable this lane pinned to out_of_range from _Xran's own
+// reloc rows, where our `??_7out_of_range@std@@6B@` sits opposite it.
+// 0x487bd0 is left unclaimed: the only objects emitting the string ctor also
+// emit the copy ctor, and their COFF order (string, copy) runs opposite to
+// the RVA order (0x4700, 0x487bd0), so a two-member group there would zip
+// crossed.
+VA_COMPGEN(0x00404700, 0x157, CLASS_CTOR, out_of_range)
+
+// COMDAT pairing: vector<vector<hero>>::_Destroy - reached from game and from
+// two sites in this unit's own segment.
+VA_COMPGEN(0x0048c5b0, 0x53, VECTOR_DESTROY, hero_vector)
+
+// COMDAT pairing: vector<hero>::operator=. The caller set is the whole
+// argument and it is unambiguous - SCampaign::PruneCrossoverHeroes, the
+// already-claimed vector<vector<hero>>::insert and ::erase (which assign
+// elements of exactly this type), and game's SCampaign::operator=. Mnemonic
+// agreement is 1.000 against a 704 B object and `ret 4` matches the one
+// reference argument.
+VA_COMPGEN(0x0045ff30, 0x2C0, VECTOR_COPY_ASSIGN, hero)
+
+// COMDAT pairing: hero's compiler-generated copy constructor, reached from
+// the already-claimed std::_Sort<hero, CrossoverHeroStronger> and
+// _Sort_0 - a by-value sort of hero is exactly what materialises it.
+VA_COMPGEN(0x00460850, 0x4B1, IMPLICIT_COPY_CTOR, hero)
+
+// COMDAT pairing: std::_Construct<hero>, reached from the already-claimed
+// vector<hero>::insert and vector<hero>::_Ufill among nine callers across
+// three segments. `/Gr` puts both arguments in registers, so retail ends on
+// a bare `ret`.
+VA_COMPGEN(0x004603a0, 0x355, STD_CONSTRUCT, hero)
