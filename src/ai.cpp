@@ -72,29 +72,97 @@ inline const _TYPE& min_ref_xvalue(_TYPE _X, const _TYPE& _Y)
     return (_X < _Y_copy ? _X : _Y_copy);
 }
 
-#if 0  // @carcass
+// THE HEAD OF ai.obj, 0x41e190..0x41eac0 (2026-09-05). The three rows
+// between the compiland's ten terrain.h bitset initializers
+// (0x41ddc0..0x41e18f, the excluded cinit class, with their atexit
+// thunk at 0x41dda0) and the already-claimed get_total_combat_value
+// (0x41eac0) are ai.cpp's own first three bodies, in DC roster order:
+// ChooseBallistaTarget (dc 0x23450, 766 B), failed_siege (dc 0x23750,
+// 332 B) and AICheckRetreat (dc 0x2389c, 1680 B) against retail's 680,
+// 297 and 1350 - ratios 0.89/0.89/0.80 against get_total_combat_value's
+// own 0.82. Three further proofs land on the same map: 0x41e570 calls
+// 0x41e440 as a thiscall with no argument, which is exactly the
+// failed_siege edge the DC xref census records inside AICheckRetreat;
+// cmbtmgr.h already carried 0x41e570 = AICheckRetreat from command.cpp's
+// call site alone; and the NH3API IDB, whose HD pressing runs a constant
+// +0x180 ahead of retail through this whole region (init_bitset_41E190 =
+// our 0x41e010, get_total_combat_value 0x41ec40 = our 0x41eac0), names
+// 0x41e310/0x41e5c0/0x41e6f0 with these three mangled symbols in order.
+// That also retires the `Unnamed41e190` ordinal: the IDB prototype
+// carries the DC parameter names verbatim.
 
 // E:\gamedcs\ai.cpp:43
-DC_ONLY(0x23450, 0x2FE)
+#if 0  // @carcass
+VA(0x0041e190, 0x2A8)  // order-map(DC ai.obj head) + anchor-callee find_AI_targets, dc 0x23450
 int combatManager::ChooseBallistaTarget(int target_group, int attack_skill, int average_damage)
 {
     // @stub
 }
+#endif  // @carcass
 
 // E:\gamedcs\ai.cpp:113
-DC_ONLY(0x23750, 0x14C)
+// The attacker-side census that tells AICheckRetreat a walled combat is
+// unwinnable: no live attacking stack may fly or shoot, every wall
+// segment must still be standing, and every live defender that is not
+// the arrow tower must still be inside the castle. Both stack walks
+// re-read currentSide through the back edge - retail reloads +0x132c0
+// for each bound test - and the wall census strength-reduces its
+// four-entry static into the 0x63abc0..0x63abd0 pointer walk.
+VA(0x0041e440, 0x129)  // order-map(DC ai.obj head) + anchor-caller AICheckRetreat, dc 0x23750
 unsigned char combatManager::failed_siege()
 {
-    // @stub
+    DATA(0x0063abc0) static const TWallTargetId walls[4] = {
+        WALL_TARGET_1, WALL_TARGET_2, WALL_TARGET_4, WALL_TARGET_5
+    };
+
+    army* current_army = armies[currentSide];
+    if (field_132f4 == COMBAT_FORTIFICATION_NONE)
+        return 0;
+    if (drawbridgeState != DRAWBRIDGE_UP)
+        return 0;
+    if (currentSide == 1)
+        return 0;
+
+    { for (long i = 0; i < numArmies[currentSide]; i++, current_army++) {
+            unsigned attributes = current_army->sMonInfo.attributes;
+            unsigned char dead = static_cast<unsigned char>(attributes >> 21);
+            if ((dead & 1) != 0)
+                continue;
+            if ((attributes & ((1u << 1) | (1u << 5))) != 0)
+                return 0;
+            if (current_army->can_shoot(0))
+                return 0;
+        }
+    }
+
+    { for (long i = 0; i < 4; i++) {
+            if (!get_wall_strength(walls[i]))
+                return 0;
+        }
+    }
+
+    army* enemy_army = armies[1 - currentSide];
+    { for (long i = 0; i < numArmies[1 - currentSide]; i++, enemy_army++) {
+            unsigned char dead = static_cast<unsigned char>(
+                static_cast<unsigned>(enemy_army->sMonInfo.attributes) >> 21);
+            if ((dead & 1) != 0)
+                continue;
+            if (enemy_army->creatureType == CREATURE_ARROW_TOWER)
+                continue;
+            if (!InCastle(enemy_army->gridIndex))
+                return 0;
+        }
+    }
+    return 1;
 }
 
 // E:\gamedcs\ai.cpp:162
-DC_ONLY(0x2389c, 0x690)
+#if 0  // @carcass
+VA(0x0041e570, 0x546)  // order-map(DC ai.obj head) + anchor-callee failed_siege, dc 0x2389c
 unsigned char combatManager::AICheckRetreat()
 {
     // @stub
 }
-
 #endif  // @carcass
 
 // E:\gamedcs\ai.cpp:339
