@@ -8664,15 +8664,36 @@ void game::ClaimGarrison(int garrisonId, int newPlayerOwner)
 //     narrower loop postcondition `VERIFY(index <= shipyards.size())` is
 //     byte-flat on the guard-only 72.0950 object. None recovers the retained
 //     guardless register phase, so both guard and carriers remain unshipped.
+// 2026-09-05: 77.4860 -> 98.6034, and it RETIRES every "guard rejected"
+// measurement above - all of them were taken against the longhand cell
+// subscript, and the guard is only correct once that is gone. Three edits,
+// in this order:
+//   1. `worldMap.cell(location)` instead of the hand-expanded
+//      `cellData[x + Size*(y + Size*z)]` (77.4860 -> 78.9441). game.cpp does
+//      not opt out of the inline accessor, so this is the mapcell-accessor
+//      lever, not a call.
+//   2. the erase guard the earlier notes kept rejecting, re-tried on the new
+//      body: 78.9441 -> 88.5493 with 15 = 15 branches. Its compare must be
+//      UNSIGNED - `index < oldPlayer->shipyards.size()` with no cast; the
+//      `static_cast<long>` form is the same 15 branches at 88.55 while the
+//      bare one is 95.0587.
+//   3. `gpGame->GetHero(...)` rather than the member call, even though
+//      `this` IS gpGame here: retail reloads the global and indexes the hero
+//      array off it (`mov eax,[gpGame] / lea ecx,[eax + 2*edx + 0x21620]`)
+//      where the member form indexes off `this` in EBX. 95.0587 -> 98.6034,
+//      and `this` moves into ESI as retail has it. Same tell as
+//      InitiateSpell's two mouse-pick sites.
+// Residual (98.60%): one block. Retail reloads mapCell into EAX at the END
+// of the obscuring-hero arm so the join reads `[eax]`; we reload it in the
+// join itself. Hoisting the shipyardInfo declaration above the arm is
+// byte-flat.
 VA(0x004c6a30, 0x21F)  // anchor-global, dc 0xb1a50
 void game::ClaimShipyard(type_point location, int newPlayerOwner)
 {
     hero* obscuringHero = 0;
-    NewmapCell* mapCell =
-        &worldMap.cellData[location.x + worldMap.Size *
-            (location.y + worldMap.Size * location.z)];
+    NewmapCell* mapCell = worldMap.cell(location);
     if (mapCell->type == HERO) {
-        obscuringHero = GetHero(mapCell->extraInfo);
+        obscuringHero = gpGame->GetHero(mapCell->extraInfo);
         obscuringHero->restore_cell();
     }
 
@@ -8691,7 +8712,9 @@ void game::ClaimShipyard(type_point location, int newPlayerOwner)
                     break;
                 ++index;
             }
-            oldPlayer->shipyards.erase(oldPlayer->shipyards.begin() + index);
+            if (index < oldPlayer->shipyards.size())
+                oldPlayer->shipyards.erase(
+                    oldPlayer->shipyards.begin() + index);
         }
 
         if (newPlayerOwner >= 0) {
@@ -11164,6 +11187,18 @@ void game::ProcessOnMapHeroes()
 // Residual: register homing - retail keeps bytesLeft in EBX and re-reads
 // pGameTransmitMainMsg per use, and rotates the confirmation loop with its
 // reload block at the head; our frame is 8 B larger.
+// 2026-09-05: 81.8730 -> 82.1341. Retail loads `gpGame` five times in this
+// body and this reconstruction loaded it ZERO times - the three player-scan
+// loops reach the local seat through `gpGame->GetLocalPlayerGamePos()`, not
+// the member call, even though `this` IS gpGame (same tell as ClaimShipyard
+// and InitiateSpell). Both censuses now read 5. Measured and rejected in the
+// same pass: putting `gpGame->` on the loops' own `players[i]` as well costs
+// 1.72 (82.13 -> 80.41), and the blanket rewrite of every `players[...]` in
+// the body costs 1.82 - the global belongs on the accessor call only.
+// Also byte-flat: swapping the isDiff/diffSize declaration order. Moving
+// `unsigned char isDiff = 0;` down to the `if (inGame)` is +0.04 and is not
+// shipped - retail stores only the diffSize zero at that point, so the
+// declaration position is a real question, but 0.04 does not evidence it.
 VA(0x004cafd0, 0xD14)  // retail body + typed catch + continuation/tables
 int game::TransmitSaveGame(int iToWho, int thisPlayerDead,
                            unsigned char inGame, unsigned char makeOrig)
@@ -11360,7 +11395,7 @@ int game::TransmitSaveGame(int iToWho, int thisPlayerDead,
                         } else {
                             for (int i = 0; i < 8; ++i) {
                                 if (players[i].IsHuman() && !playerDone[i]
-                                        && i != GetLocalPlayerGamePos()) {
+                                        && i != gpGame->GetLocalPlayerGamePos()) {
                                     unsigned long killDPID =
                                         players[i].dpid;
                                     pDPlay->DestroyPlayer(killDPID);
@@ -11381,7 +11416,7 @@ int game::TransmitSaveGame(int iToWho, int thisPlayerDead,
                 dataTimeOutStart = GameTime::Get();
                 for (int i = 0; i < 8; ++i) {
                     if (players[i].IsHuman() && !playerDone[i]
-                            && i != GetLocalPlayerGamePos()) {
+                            && i != gpGame->GetLocalPlayerGamePos()) {
                         CGameTransmitEndMsg resendEnd(
                             giMonthType, giMonthTypeExtra,
                             giWeekType, giWeekTypeExtra, diffSize);
@@ -11440,7 +11475,7 @@ int game::TransmitSaveGame(int iToWho, int thisPlayerDead,
                     playerDone[pConfirmMsg->field_00] = 1;
                     for (int i = 0; i < 8; ++i) {
                         if (players[i].IsHuman() && !playerDone[i]
-                                && i != GetLocalPlayerGamePos()) {
+                                && i != gpGame->GetLocalPlayerGamePos()) {
                             done = 0;
                             break;
                         }
