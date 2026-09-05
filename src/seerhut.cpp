@@ -353,6 +353,102 @@ unsigned char type_quest::has_expired() const
     return field_3c < gpGame->get_current_turn();
 }
 
+
+// Slot 11's BASE body, the run every leaf chains to after its own payload.
+// The savegame form carries three fields the h3m form below does not: the
+// two-valued selector at +0x04, the text-table row at +0x38, and the
+// deadline. The three scalar reads keep their own nested scopes for the
+// reason recorded above type_experience_quest::Save - retail colours each
+// dead scratch over the incoming argument slot, and the flag lands in that
+// slot's padding byte at [ebp+0x0b].
+// Residual (25.6% / 10.5%): ONE /Ob2 decision, three times over in each
+// body. Both sides call ReadLengthPrefixedString and both CALL
+// basic_string::assign(const basic_string&, size_type, size_type) - the
+// two objects agree instruction for instruction up to there - but retail
+// then CALLS basic_string::_Tidy on the dying temporary where ours expands
+// it, which is the whole 32-blocks-against-11 difference. hero::load's own
+// residual note records the same pair matching in a 1695-byte caller, so
+// this is the /Ob2 budget floor at a small caller and not a source fact;
+// the lever is a per-site pin, which this lane may not add.
+// E:\gamedcs\seerhut.cpp
+VA(0x0056cd00, 0x14F)  // anchor-vtable 0x64174c slot 11 + the chain from all eight leaf Loads, retail-only
+void type_quest::Load(TAbstractFile* file, int version)
+{
+    {
+        unsigned char flag;
+        file->Read(&flag, sizeof(flag));
+        field_04 = flag != 0;
+    }
+    {
+        unsigned char row;
+        file->Read(&row, sizeof(row));
+        field_38 = row;
+    }
+    {
+        int extra;
+        file->Read(&extra, sizeof(extra));
+        field_3c = extra;
+    }
+    proposalText = ReadLengthPrefixedString(file);
+    progressText = ReadLengthPrefixedString(file);
+    completionText = ReadLengthPrefixedString(file);
+}
+
+// Slot 12's base body: the h3m form. Same three strings, but only the
+// deadline ahead of them - the selector and the table row are savegame-only,
+// which is the split quest.h records between the two loaders.
+// E:\gamedcs\seerhut.cpp
+VA(0x0056ce50, 0x11E)  // anchor-vtable 0x64174c slot 12 + the chain from all eight leaf LoadFromMaps, retail-only
+void type_quest::LoadFromMap(TAbstractFile* file)
+{
+    {
+        int extra;
+        file->Read(&extra, sizeof(extra));
+        field_3c = extra;
+    }
+    proposalText = ReadLengthPrefixedString(file);
+    progressText = ReadLengthPrefixedString(file);
+    completionText = ReadLengthPrefixedString(file);
+}
+
+
+// Slot 13's BASE body - the run quest.h records as inlined into all eight
+// leaves. The leaves spell it longhand and are exact; this is the copy the
+// base vtable itself points at, which is the same run with no payload in
+// front of it.
+// E:\gamedcs\seerhut.cpp
+VA(0x0056cf70, 0xCD)  // anchor-vtable 0x64174c slot 13 + the run every leaf Save repeats, retail-only
+void type_quest::Save(TAbstractFile* file)
+{
+    {
+        unsigned char flag = field_04;
+        file->Write(&flag, sizeof(flag));
+    }
+    {
+        unsigned char row = static_cast<unsigned char>(field_38);
+        file->Write(&row, sizeof(row));
+    }
+    {
+        int extra = field_3c;
+        file->Write(&extra, sizeof(extra));
+    }
+    {
+        int length = proposalText.length();
+        file->Write(&length, sizeof(length));
+        file->Write(proposalText.c_str(), proposalText.length());
+    }
+    {
+        int length = progressText.length();
+        file->Write(&length, sizeof(length));
+        file->Write(progressText.c_str(), progressText.length());
+    }
+    {
+        int length = completionText.length();
+        file->Write(&length, sizeof(length));
+        file->Write(completionText.c_str(), completionText.length());
+    }
+}
+
 // E:\gamedcs\seerhut.cpp
 VA(0x0056d3e0, 0x2A)  // anchor-vtable 0x641788 slot 6, retail-only
 std::string type_experience_quest::GetRequirementText()

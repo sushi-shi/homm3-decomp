@@ -13,6 +13,7 @@
 #include <windows.h>
 #include <ddraw.h>
 #include <string.h>
+#include <string>
 #include "smackmgr.h"
 #include "binkmanager.h"
 #include "wingraph.h"
@@ -24,15 +25,14 @@
 #include "bitmap16.h"
 #include "message.h"
 #include "prefs.h"
+#include "textresource.h"
 
-struct SoundHeaderStruct;
-// The video-archive directory record. LoadAnimHeaders (0x598210) sizes its
-// allocation `new VideoHeaderStruct[count + 2]` as (11*count + 22) * 4 and
-// then ReadFiles 44*count bytes into it, so the record is 44 bytes - four
-// short of SoundHeaderStruct, which is the same name/offset pair plus a
-// size. Left incomplete on purpose: only `delete[]` reaches it here, the
-// same way SoundHeaderStruct is reached above.
-struct VideoHeaderStruct;
+// The campaign-relative archive stem both loaders open their third archive
+// from, and the one body in the bracket still unclaimed (0x597d00, 1294 B:
+// a per-character basic_string::append chain over obfuscated literals).
+// Declared, not defined - the reconstruction of its two callers does not
+// depend on it.
+std::string GetCampaignArchiveStem();  // 0x597d00, name provisional
 
 // The Smack/Bink handle views and the smackw32/binkw32 dllimport
 // surface live in smackmgr.h / binkmanager.h; the underscored import
@@ -45,25 +45,65 @@ struct VideoHeaderStruct;
 #define BinkPause _BinkPause
 #define BinkDDSurfaceType _BinkDDSurfaceType
 #define BinkGetRects _BinkGetRects
+#define SmackWait _SmackWait
+#define SmackNextFrame _SmackNextFrame
+#define SmackOpen _SmackOpen
+#define SmackUseMMX _SmackUseMMX
+#define SmackVolumePan _SmackVolumePan
 
 // SmackToBuffer surface-format flags (radlib smack.h).
 #define SMACKBUFFER555 0x80000000
 #define SMACKBUFFER565 0xC0000000
 
-// The smack/bink neighbours in the 0x198xxx TU right after this one
-// (ShowVideo 0x598af0 opens the handle pair and runs the timer;
-// 0x598eb0 advances/decodes one Smacker frame). Names provisional.
+// The constant half of OpenSmackerTrack's SmackOpen mask; the 0x1000 bit is
+// what makes SmackOpen read from an already-open archive HANDLE.
+#define SMACKOPEN_FROM_ARCHIVE 0x1140
+
+// The Smacker track selection mask ShowVideo hands SmackOpen and
+// SmackVolumePan, and the extra bit that opens a track as audio-only.
+#define SMACK_TRACK_MASK 0xfe000
+#define SMACKOPEN_AUDIO_ONLY 0x200
+
+// The remaining smackmgr.obj bodies, declared ahead of their first
+// in-TU call site. ShowVideo (0x598af0) opens the handle pair and
+// primes the blit state; SmackManager::NextSmackerFrame (0x598eb0) is
+// the DC-named per-frame pump, proven by its SmackNextFrame call
+// (the only body in the compiland that makes one).
 void ShowVideo(int id, int x, int y, int w, int h, int a6, int a7, int a8);
-void NextSmackFrame();          // 0x598eb0
+namespace SmackManager {
+void NextSmackerFrame();
+}
+
 
 // smackmgr.obj .bss cluster 0x69fdf5..0x69fe5c (names provisional;
 // the unreferenced gaps belong to members only the 0x198xxx TU
 // touches).
+DATA(0x0069fdf4) unsigned char gSmackAutoDraw;     // ShowVideo arg 7: pump its own VideoDrawRects
 DATA(0x0069fdf5) unsigned char gSmackDirty;        // decoded frame awaits a blit
 DATA(0x0069fdf8) Smack* gSmackVideo;               // video track handle
 DATA(0x0069fdfc) Smack* gSmackVideo2;              // audio-only track handle
 DATA(0x0069fe00) int gSmackX;                      // blit origin on the screen bitmap
 DATA(0x0069fe04) int gSmackY;
+// ShowVideo latches its own arguments into this quartet for the pump to
+// read back: the requested extent, the id it dispatched on, whether the
+// last frame loops, and whether NextSmackerFrame may advance at all.
+DATA(0x0069fe08) int gSmackReqWidth;               // ShowVideo arg 4
+DATA(0x0069fe0c) int gSmackReqHeight;              // ShowVideo arg 5
+DATA(0x0069fe10) int gSmackVideoId;                // ShowVideo arg 1
+DATA(0x0069fe14) int gSmackLoop;                   // ShowVideo arg 6
+DATA(0x0069fe1c) int gSmackAdvance;                // ShowVideo arg 8 (byte-narrowed on the way in)
+// The descriptor row ShowVideo takes its audio-track flag from, which is
+// NOT the id it is opening (that goes to gSmackVideoId above). Provisional.
+DATA(0x0069fdec) int gVideoDescriptorIndex;
+// Nonzero once ShowVideo has decided the Miles driver is live and the user
+// has sound turned up; it is what selects the 0xfe000 track mask on both
+// SmackOpen calls. Provisional.
+DATA(0x0069fe58) int gVideoSoundReady;
+// Entry counts, one per archive directory; each is the dword LoadAnimHeaders
+// reads before sizing its (count + 2) allocation.
+DATA(0x0069fde4) int gVideoCount1;
+DATA(0x0069fe34) int gVideoCount2;
+DATA(0x0069fe3c) int gVideoCount3;
 DATA(0x0069fe18) int gSmackPaused;
 DATA(0x0069fe20) unsigned long gSmackBufferFlags;  // SMACKBUFFER555/565
 DATA(0x0069fddc) int RedShift;
@@ -99,6 +139,9 @@ DATA(0x00682e7c) HANDLE SoundFileCD = INVALID_HANDLE_VALUE;
 DATA(0x0069d850) SoundHeaderStruct* SoundHeaderCD;
 DATA(0x00682e84) HANDLE SoundFileCampaign = INVALID_HANDLE_VALUE;
 DATA(0x0069d84c) SoundHeaderStruct* SoundHeaderCampaign;
+DATA(0x0069e5a8) int SoundCount;
+DATA(0x0069e5a4) int SoundCountCD;
+DATA(0x0069e5ac) int SoundCountCampaign;
 
 // E:\gamedcs\smackmgr.cpp:75
 VA(0x005971b0, 0x3B)  // anchor-global, dc 0x14ac30
@@ -365,7 +408,7 @@ void VideoNextFrame()
     gInVideoNextFrame = 1;
     if (gSmackVideo || gSmackVideo2) {
         if (!gSmackPaused)
-            NextSmackFrame();
+            SmackManager::NextSmackerFrame();
     }
     if (gBinkVideo || gBinkVideo2) {
         if (!gBinkPaused)
@@ -603,6 +646,54 @@ void VideoShutDown()
     gVideoFile3 = 0;
 }
 
+// E:\gamedcs\smackmgr.cpp:535. Complete opens three video archives where the
+// Dreamcast stub opens none: a campaign-relative one built from the
+// 0x597d00 stem, the expansion archive behind the same *gpVideoGameState
+// gate the sound loader uses, and the base archive.
+VA(0x00598210, 0x223)  // anchor-callee(0x597d00 stem) + order-map, dc 0x14ac68
+unsigned char LoadAnimHeaders()
+{
+    DWORD nread;
+
+    gVideoFile3 = CreateFileA(GetCampaignArchiveStem().c_str(), GENERIC_READ,
+        FILE_SHARE_READ, 0, OPEN_EXISTING,
+        FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, 0);
+    if (gVideoFile3 != INVALID_HANDLE_VALUE) {
+        ReadFile(gVideoFile3, &gVideoCount3, 4, &nread, 0);
+        gVideoHeader3 = new VideoHeaderStruct[gVideoCount3 + 2];
+        ReadFile(gVideoFile3, gVideoHeader3, 44 * gVideoCount3, &nread, 0);
+    } else {
+        gVideoFile3 = 0;
+    }
+
+    if (*gpVideoGameState == VIDEO_GAME_STATE_EXPANSION_ARCHIVES
+        || *gpVideoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH) {
+        gVideoFile1 = CreateFileA("data\\h3ab_ahd.vid", GENERIC_READ,
+            FILE_SHARE_READ, 0, OPEN_EXISTING,
+            FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, 0);
+        if (gVideoFile1 == INVALID_HANDLE_VALUE) {
+            MessageBoxA(hwndApp, gpGeneralText->GetText(535),
+                gpGeneralText->GetText(536), 0);
+            return 0;
+        }
+        ReadFile(gVideoFile1, &gVideoCount1, 4, &nread, 0);
+        gVideoHeader1 = new VideoHeaderStruct[gVideoCount1 + 2];
+        ReadFile(gVideoFile1, gVideoHeader1, 44 * gVideoCount1, &nread, 0);
+    }
+
+    gVideoFile2 = CreateFileA("data\\Video.vid", GENERIC_READ, FILE_SHARE_READ,
+        0, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, 0);
+    if (gVideoFile2 == INVALID_HANDLE_VALUE) {
+        MessageBoxA(hwndApp, gpGeneralText->GetText(535),
+            gpGeneralText->GetText(536), 0);
+        return 0;
+    }
+    ReadFile(gVideoFile2, &gVideoCount2, 4, &nread, 0);
+    gVideoHeader2 = new VideoHeaderStruct[gVideoCount2 + 2];
+    ReadFile(gVideoFile2, gVideoHeader2, 44 * gVideoCount2, &nread, 0);
+    return 1;
+}
+
 // E:\gamedcs\smackmgr.cpp:569. The Dreamcast frees an AnimHeader and a
 // VideoHeader here; Complete frees three archive directories and clears
 // each pointer, in the same 3/2/1 order VideoShutDown closes their handles.
@@ -621,6 +712,56 @@ void DeleteAnimHeaders()
         delete[] gVideoHeader1;
         gVideoHeader1 = 0;
     }
+}
+
+// E:\gamedcs\smackmgr.cpp:585. The sound mirror of LoadAnimHeaders, in the
+// same three-archive shape - except that the campaign archive is derived
+// here rather than opened blind: the stem is strtok'd at its first '.' and
+// ".snd" appended, and a missing campaign archive is not an error.
+VA(0x005984a0, 0x240)  // anchor-callee(0x597d00 stem) + order-map, dc 0x14aca0
+unsigned char LoadSoundHeaders()
+{
+    DWORD nread;
+    char path[52];
+
+    SoundFile = CreateFileA("data\\heroes3.snd", GENERIC_READ, FILE_SHARE_READ,
+        0, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, 0);
+    if (SoundFile == INVALID_HANDLE_VALUE) {
+        MessageBoxA(hwndApp, gpGeneralText->GetText(664),
+            gpGeneralText->GetText(665), 0);
+        return 0;
+    }
+    ReadFile(SoundFile, &SoundCount, 4, &nread, 0);
+    SoundHeader = new SoundHeaderStruct[SoundCount + 2];
+    ReadFile(SoundFile, SoundHeader, 48 * SoundCount, &nread, 0);
+
+    if (*gpVideoGameState == VIDEO_GAME_STATE_EXPANSION_ARCHIVES
+        || *gpVideoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH) {
+        SoundFileCD = CreateFileA("data\\h3ab_ahd.snd", GENERIC_READ,
+            FILE_SHARE_READ, 0, OPEN_EXISTING,
+            FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, 0);
+        if (SoundFileCD == INVALID_HANDLE_VALUE) {
+            MessageBoxA(hwndApp, gpGeneralText->GetText(664),
+                gpGeneralText->GetText(665), 0);
+            return 0;
+        }
+        ReadFile(SoundFileCD, &SoundCountCD, 4, &nread, 0);
+        SoundHeaderCD = new SoundHeaderStruct[SoundCountCD + 2];
+        ReadFile(SoundFileCD, SoundHeaderCD, 48 * SoundCountCD, &nread, 0);
+    }
+
+    strcpy(path, GetCampaignArchiveStem().c_str());
+    strtok(path, ".");
+    strcat(path, ".snd");
+    SoundFileCampaign = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, 0,
+        OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, 0);
+    if (SoundFileCampaign != INVALID_HANDLE_VALUE) {
+        ReadFile(SoundFileCampaign, &SoundCountCampaign, 4, &nread, 0);
+        SoundHeaderCampaign = new SoundHeaderStruct[SoundCountCampaign + 2];
+        ReadFile(SoundFileCampaign, SoundHeaderCampaign,
+            48 * SoundCountCampaign, &nread, 0);
+    }
+    return 1;
 }
 
 // E:\gamedcs\smackmgr.cpp:631. Dreamcast proves the alternating
@@ -654,6 +795,71 @@ void DeleteSoundHeaders()
         delete[] SoundHeaderCampaign;
         SoundHeaderCampaign = 0;
     }
+}
+
+// The archive lookup ShowVideo opens both of its tracks through: append
+// '.smk' to the stem, then walk the three directories in priority order and
+// SmackOpen the first hit straight out of the archive handle (the 0x1000 bit
+// in the flag mask is what makes SmackOpen take a HANDLE rather than a
+// name). The expansion directory is consulted TWICE - ahead of the base
+// archive at *gpVideoGameState 1, behind the campaign archive at 3 - which
+// is the whole reason the body is 683 bytes.
+// Name provisional: the DC roster stubs this compiland's whole video layer.
+VA(0x00598790, 0x2AB)  // anchor-caller(ShowVideo, both tracks) + anchor-string('.smk'), retail-only
+Smack* OpenSmackerTrack(const char* stem, unsigned long flags,
+                        unsigned long extraFlags)
+{
+    char name[40];
+    int i;
+
+    strcpy(name, stem);
+    strcat(name, ".smk");
+
+    if (*gpVideoGameState == VIDEO_GAME_STATE_EXPANSION_ARCHIVES) {
+        for (i = 0; i < gVideoCount1; i++) {
+            if (_strcmpi(gVideoHeader1[i].name, name) == 0) {
+                gpSoundManager->service_sounds();
+                SetFilePointer(gVideoFile1, gVideoHeader1[i].offset, 0,
+                    FILE_BEGIN);
+                return SmackOpen(gVideoFile1,
+                    flags | extraFlags | SMACKOPEN_FROM_ARCHIVE, -1);
+            }
+        }
+    }
+
+    for (i = 0; i < gVideoCount2; i++) {
+        if (_strcmpi(gVideoHeader2[i].name, name) == 0) {
+            gpSoundManager->service_sounds();
+            SetFilePointer(gVideoFile2, gVideoHeader2[i].offset, 0, FILE_BEGIN);
+            return SmackOpen(gVideoFile2,
+                flags | extraFlags | SMACKOPEN_FROM_ARCHIVE, -1);
+        }
+    }
+
+    if (gVideoFile3) {
+        for (i = 0; i < gVideoCount3; i++) {
+            if (_strcmpi(gVideoHeader3[i].name, name) == 0) {
+                gpSoundManager->service_sounds();
+                SetFilePointer(gVideoFile3, gVideoHeader3[i].offset, 0,
+                    FILE_BEGIN);
+                return SmackOpen(gVideoFile3,
+                    flags | extraFlags | SMACKOPEN_FROM_ARCHIVE, -1);
+            }
+        }
+    }
+
+    if (*gpVideoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH) {
+        for (i = 0; i < gVideoCount1; i++) {
+            if (_strcmpi(gVideoHeader1[i].name, name) == 0) {
+                gpSoundManager->service_sounds();
+                SetFilePointer(gVideoFile1, gVideoHeader1[i].offset, 0,
+                    FILE_BEGIN);
+                return SmackOpen(gVideoFile1,
+                    flags | extraFlags | SMACKOPEN_FROM_ARCHIVE, -1);
+            }
+        }
+    }
+    return 0;
 }
 
 // E:\gamedcs\smackmgr.cpp:811. The Dreamcast dossier (dc 0x14ad24)
@@ -699,39 +905,213 @@ void SmackManager::SetPixelFormat(unsigned long red_mask,
     }
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\smackmgr.cpp:535
-DC_ONLY(0x14ac68, 0x4)
-unsigned char LoadAnimHeaders()
+// The Smacker half of VideoOpen/VideoPlay: tear the previous pair down,
+// open the audio-only track and then the video track out of the archives,
+// prime the blit state and latch every argument the per-frame pump reads
+// back. Fastcall arity is fixed by the frame: id in ECX, x in EDX, six more
+// on the stack and `ret 0x18`, exactly VideoOpen's eight-argument forward.
+// The Smacker volume scale (3640 * "Sound Volume") and the 0xfe000 track
+// mask are transcribed from the two SmackVolumePan sites.
+// Residual (48.7%): the three VideoClose() sites only. Retail EXPANDS all
+// three (base 17 blocks against retail's 42) and does it three different
+// ways - the first two keep VideoResume out of line, the third expands it
+// and CALLS CloseSmacker instead. Every other call pairs: OpenSmackerTrack
+// twice, SmackUseMMX, both SmackVolumePans, all three SmackToBuffers.
+// Tried and rejected: `inline void VideoClose()` (the documented /Ob2 lever
+// for a large out-of-class definition) DOES make it expand, but expands
+// VideoResume with it at every site - 75 blocks, ShowVideo 41.02 and
+// VideoClose's own row to 0.00; writing the close sequence longhand at all
+// three sites is worse still (59 blocks, 16.07) for the same reason - the
+// bigger caller buys VideoResume an expansion retail does not make. The
+// separation retail has needs a per-site pin, which this lane may not add.
+VA(0x00598af0, 0x385)  // anchor-caller(VideoPlay/VideoOpen) + anchor-callee(OpenSmackerTrack), retail-only
+void ShowVideo(int id, int x, int y, int w, int h, int loop, int autoDraw,
+               int advance)
 {
-    // @stub
+    if (gUnnamed699290 == 0 && gpSoundManager->ds != 0
+        && gUnnamed698758.soundVolume != 0)
+        gVideoSoundReady = 1;
+    else
+        gVideoSoundReady = 0;
+
+    VideoClose();
+    SmackUseMMX(1);
+
+    gSmackVideoId = id;
+    gSmackPaused = 0;
+    gSmackVideo2 = 0;
+    gSmackAdvance = static_cast<unsigned char>(advance);
+    gSmackBufferFlags = (GreenBits == VIDEO_PIXEL_FORMAT_RGB565)
+                            ? SMACKBUFFER565 : SMACKBUFFER555;
+
+    if (gVideoDescriptors[id].smkAudioStem != "") {
+        gSmackVideo2 = OpenSmackerTrack(gVideoDescriptors[id].smkAudioStem,
+            gVideoSoundReady ? SMACK_TRACK_MASK : 0, SMACKOPEN_AUDIO_ONLY);
+        if (!gSmackVideo2) {
+            VideoClose();
+            return;
+        }
+        SmackVolumePan(gSmackVideo2, SMACK_TRACK_MASK,
+            3640 * gUnnamed698758.soundVolume, 0x8000);
+        SmackToBuffer(gSmackVideo2, x, y,
+            gpWindowManager->screenBitmap->Pitch,
+            gpWindowManager->screenBitmap->Height,
+            gpWindowManager->screenBitmap->map, gSmackBufferFlags);
+    }
+
+    gSmackVideo = OpenSmackerTrack(gVideoDescriptors[id].smkStem,
+        gVideoSoundReady ? SMACK_TRACK_MASK : 0,
+        gVideoDescriptors[gVideoDescriptorIndex].field_b ? SMACKOPEN_AUDIO_ONLY : 0);
+    if (!gSmackVideo) {
+        VideoClose();
+        return;
+    }
+
+    gSmackAutoDraw = autoDraw;
+    if (w <= 0)
+        w = gSmackVideo->Width;
+    if (h <= 0)
+        h = gSmackVideo->Height;
+    gSmackReqWidth = w;
+    gSmackReqHeight = h;
+    gSmackLoop = loop;
+    gSmackX = x;
+    gSmackY = y;
+    SmackVolumePan(gSmackVideo, SMACK_TRACK_MASK,
+        3640 * gUnnamed698758.soundVolume, 0x8000);
+    SmackToBuffer(gSmackVideo, gSmackX, gSmackY,
+        gpWindowManager->screenBitmap->Pitch,
+        gpWindowManager->screenBitmap->Height,
+        gpWindowManager->screenBitmap->map, gSmackBufferFlags);
+    if (gSmackVideo2)
+        SmackToBuffer(gSmackVideo2, gSmackX, gSmackY,
+            gpWindowManager->screenBitmap->Pitch,
+            gpWindowManager->screenBitmap->Height,
+            gpWindowManager->screenBitmap->map, gSmackBufferFlags);
+    gSmackFrameReady = 1;
 }
+
+// The three flat Smacker-track wrappers that close out smackmgr.obj.
+// Complete's smack layer is a pair of module globals rather than the
+// Dreamcast's SmackManager object, so these keep the DC compiland's
+// namespace spelling. Retail's own VideoDrawCurrentFrame (0x597740)
+// and VideoClose (0x5975f0) expand the first and third bodies inline,
+// which is what proves the guard order and the store order here.
+namespace SmackManager {
+
+// Decode the current video frame into the offscreen buffer, but only
+// while a frame is pending and the track is not paused. The pair
+// (this and GotoSmackerFrame below) is what remote.obj's
+// CGameTransferSmack::SetPercentage seeks-and-draws with.
+// Name provisional: the DC roster stops at CloseSmacker.
+VA(0x00598e80, 0x25)  // anchor-callee(SmackDoFrame) + anchor-caller(CGameTransferSmack::SetPercentage), retail-only
+void DrawSmackerFrame()
+{
+    if (gSmackVideo && gSmackFrameReady && !gSmackPaused)
+        SmackDoFrame(gSmackVideo);
+}
+
+// E:\gamedcs\smackmgr.cpp:1001. The per-frame pump VideoNextFrame drives.
+// Identified by its SmackNextFrame call - the only one in the compiland -
+// which is what separates it from the DrawSmackerFrame wrapper above; the
+// DC row is a 4-byte stub, so only the order-map and the callee prove it.
+// Residual (90.7%): block ORDER of the four-guard bail only. Retail emits
+// it FIRST among the sunk blocks with its own duplicated epilogue
+// (pop edi / mov [gSmackDirty],bl / pop esi / pop ebx / ret) and lets the
+// UpdateScreen arm fall into the shared one; ours emits it LAST and shares.
+// Every other block now pairs one-for-one, and the call streams agree
+// 13 = 13.  Tried and rejected: four split `if (..) { dirty = 0; return; }`
+// guards (76.07), `goto` to a trailing bail label (51.03), the bail as the
+// `if` arm with the whole body in an `else` (90.73, byte-flat both
+// polarities), explicit `== 0` comparisons (90.73, byte-flat).  Writing the
+// last-frame test as `>=` with the SmackNextFrame case in the trailing
+// `else` is what costs 14.8 - the `<` arm must come FIRST.
+VA(0x00598eb0, 0x193)  // anchor-caller(VideoNextFrame) + anchor-callee(SmackNextFrame), dc 0x14adfc
+void NextSmackerFrame()
+{
+    Smack* smk = gSmackVideo;
+    if (!smk)
+        smk = gSmackVideo2;
+    if (!smk || !gSmackFrameReady || SmackWait(smk) || !gSmackAdvance) {
+        gSmackDirty = 0;
+        return;
+    }
+    gSmackDirty = 1;
+    if (gSmackPaused)
+        return;
+    SmackDoFrame(smk);
+    if (smk->FrameNum < smk->Frames - 1) {
+        SmackNextFrame(smk);
+    } else if (gSmackLoop) {
+        if (gSmackVideo && gSmackVideo2) {
+            if (gVideoDescriptors[gSmackVideoId].fadeOnAbort)
+                gpWindowManager->FadeScreen(1, 4, 0);
+            gpSoundManager->service_sounds();
+            SmackClose(gSmackVideo);
+            gSmackVideo = 0;
+            if (gVideoDescriptors[gSmackVideoId].field_9) {
+                SmackDoFrame(gSmackVideo2);
+                gpWindowManager->FadeScreen(0, 4, 0);
+            }
+        } else {
+            SmackNextFrame(smk);
+        }
+    } else {
+        if (gSmackVideo)
+            SmackClose(gSmackVideo);
+        if (gSmackVideo2)
+            SmackClose(gSmackVideo2);
+        gSmackVideo2 = 0;
+        gSmackVideo = 0;
+        gSmackPaused = 0;
+        gSmackFrameReady = 0;
+        gSmackDirty = 0;
+        if (gVideoDescriptors[gSmackVideoId].fadeOnAbort)
+            gpWindowManager->FadeScreen(1, 4, 0);
+        else
+            gpWindowManager->UpdateScreen(0, 0, 0x320, 0x258);
+        return;
+    }
+    if (gSmackAutoDraw)
+        VideoDrawRects();
+}
+
+// E:\gamedcs\smackmgr.cpp:1074. VideoClose expands this body verbatim
+// ahead of CloseBinkVideo, which proves both the close order and the
+// five-store teardown; retail keeps the out-of-line copy for
+// remote.obj's ~CGameTransferSmack.
+VA(0x00599050, 0x43)  // anchor-caller(~CGameTransferSmack) + inlined-in VideoClose, dc 0x14ae00
+void CloseSmacker()
+{
+    if (gSmackVideo)
+        SmackClose(gSmackVideo);
+    if (gSmackVideo2)
+        SmackClose(gSmackVideo2);
+    gSmackVideo2 = 0;
+    gSmackVideo = 0;
+    gSmackPaused = 0;
+    gSmackFrameReady = 0;
+    gSmackDirty = 0;
+}
+
+// Seek the video track. Fastcall: the frame index arrives in ECX and
+// is pushed straight through to SmackGoto, so the wrapper takes one
+// argument and returns with a bare `ret`.
+// Name provisional: the DC roster stops at CloseSmacker.
+VA(0x005990a0, 0x1C)  // anchor-callee(SmackGoto) + anchor-caller(CGameTransferSmack::SetPercentage), retail-only
+void GotoSmackerFrame(unsigned long frame)
+{
+    if (gSmackVideo && gSmackFrameReady)
+        SmackGoto(gSmackVideo, frame);
+}
+
+}  // namespace SmackManager
+
+#if 0  // @carcass
 
 // E:\gamedcs\smackmgr.cpp:569
 DC_ONLY(0x14ac6c, 0x32)
 void DeleteAnimHeaders()
-{
-    // @stub
-}
-
-// E:\gamedcs\smackmgr.cpp:585
-DC_ONLY(0x14aca0, 0x26)
-unsigned char LoadSoundHeaders()
-{
-    // @stub
-}
-
-// E:\gamedcs\smackmgr.cpp:1001
-DC_ONLY(0x14adfc, 0x4)
-void SmackManager::NextSmackerFrame()
-{
-    // @stub
-}
-
-// E:\gamedcs\smackmgr.cpp:1074
-DC_ONLY(0x14ae00, 0x4C)
-void SmackManager::CloseSmacker()
 {
     // @stub
 }

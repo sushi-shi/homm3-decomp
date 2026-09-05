@@ -24,13 +24,6 @@ void Bitmap816::Bitmap816(int w, int h)
     // @stub
 }
 
-// E:\gamedcs\bitmap816.cpp:79
-DC_ONLY(0x53960, 0x106)
-void Bitmap816::Bitmap816(const char* name, int w, int h, unsigned char* data, TPalette16* p16, int csize)
-{
-    // @stub
-}
-
 // E:\gamedcs\bitmap816.cpp:125
 DC_ONLY(0x53a68, 0xA4)
 void Bitmap816::Bitmap816(const char* name, int rbits, int rshift, int gbits, int gshift, int bbits, int bshift)
@@ -38,15 +31,43 @@ void Bitmap816::Bitmap816(const char* name, int rbits, int rshift, int gbits, in
     // @stub
 }
 
-// E:\gamedcs\bitmap816.cpp:133
-DC_ONLY(0x53b0c, 0x96)
-void Bitmap816::Bitmap816(const char* name, const char* path, int rbits, int rshift, int gbits, int gshift, int bbits, int bshift)
-{
-    // @stub
-}
-
 // E:\gamedcs\bitmap816.cpp:145
 #endif  // @carcass
+
+// E:\gamedcs\bitmap816.cpp:79. The take-a-buffer constructor: the caller's
+// extent and palette, and a copy of its pixels. A zero csize means "as many
+// bytes as the extent needs", which is what the ImageSize fallback is.
+VA(0x0044f800, 0xCA)  // order-map(DC bitmap816.obj, the compiland's first surviving ctor), dc 0x53960
+Bitmap816::Bitmap816(const char* name, int w, int h, unsigned char* data,
+                     TPalette16* palette16, int dataSize)
+    : resource(name, RESOURCE_TYPE_BITMAP),
+      ImageSize(w * h), Width(w), Height(h), Pitch(w), p16(palette16)
+{
+    DataSize = dataSize ? dataSize : ImageSize;
+    map = new unsigned char[DataSize];
+    if (map)
+        memcpy(map, data, DataSize);
+}
+
+// E:\gamedcs\bitmap816.cpp:133. The load-from-disk constructor: an empty
+// surface, then the PCX importer over `path` and `name` pasted together.
+// Residual (99.99%): reloc names only - our TPalette16 default ctor pairs
+// against retail's still-unclaimed row.
+VA(0x0044f8d0, 0xF8)  // anchor-callee(importPCXFile) + order-map(DC bitmap816.obj), dc 0x53b0c
+Bitmap816::Bitmap816(const char* name, const char* path,
+                     int rbits, int rshift, int gbits, int gshift,
+                     int bbits, int bshift)
+    : resource(name, RESOURCE_TYPE_BITMAP),
+      DataSize(0), ImageSize(0), Width(0), Height(0), Pitch(0), map(0)
+{
+    // 264, not MAX_PATH: retail's frame is 0x10c with the `this` copy
+    // taking four of it and the buffer starting at [ebp-0x118].
+    char filename[264];
+
+    strcpy(filename, path);
+    strcat(filename, name);
+    importPCXFile(filename, rbits, rshift, gbits, gshift, bbits, bshift);
+}
 
 // E:\gamedcs\bitmap816.cpp:145
 VA(0x0044f9d0, 0x70)  // anchor-global, dc 0x53ba4
