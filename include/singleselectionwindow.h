@@ -177,14 +177,13 @@ struct GameSelectionHeadersStruct {
         memset(description, 0, sizeof(description));
         setup.difficulty = 1;
     }
-    // The copy ctor stays DECLARED-ONLY so its call sites keep
-    // retail's out-of-line call (the declare-but-do-not-define
-    // lever). operator= is IMPLICIT: the synthesized memberwise body
-    // is retail's 0x578440 COMDAT, and /Ob2 then reproduces retail's
-    // per-site split - called in SortMaps'/OnDeleteFile's move loops
-    // and the SelectionHeaders mirror, expanded for
-    // OnGameHeaderInfoMsg's source-list row.
-    GameSelectionHeadersStruct(const GameSelectionHeadersStruct& that);
+    // Both the copy ctor and operator= are IMPLICIT: the synthesized
+    // memberwise bodies are retail's 0x5904f0 and 0x578440 COMDATs, and
+    // /Ob2 reproduces retail's per-site split on each - operator= called
+    // in SortMaps'/OnDeleteFile's move loops and the SelectionHeaders
+    // mirror, expanded for OnGameHeaderInfoMsg's source-list row; the
+    // copy ctor called from the six _Sort/_Median/_Unguarded_partition
+    // families and expanded into std::_Construct at 0x58f480.
 };
 SIZE(GameSelectionHeadersStruct, 0xCA4);
 
