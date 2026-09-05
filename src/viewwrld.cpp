@@ -13,7 +13,9 @@
 #include "iconwdgt.h"
 #include "kb.h"
 #include "message.h"
+#include "mousemgr.h"
 #include "recruit.h"
+#include "resourcemanager.h"
 #include "textresource.h"
 #include "textwdgt.h"
 #include "widget.h"
@@ -42,6 +44,16 @@ static unsigned char view_mines;
 DATA(0x006aab78) bool iVWTerrains;
 DATA(0x006aab79)
 static unsigned char view_resources;
+// The half-extents init derives from the two viewable dimensions and the
+// three view-world readers below consume. Only viewwrld.obj references
+// either address (four dir32 sites each: init writes both, and
+// update_view_world / update_radar / WindowHandler read them), which is
+// what makes them file statics rather than shared globals. The names are
+// role-based house placeholders; neither CodeView corpus spells them.
+DATA(0x006aab7c)
+static int view_half_height;
+DATA(0x006aab80)
+static int view_half_width;
 DATA(0x006aab84) int scaleLine[32];
 DATA(0x006aac08)
 static unsigned char view_artifacts;
@@ -201,16 +213,35 @@ inline void VWScaleToScreenBuffer(int destX, int destY)
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\viewwrld.cpp:100
+// The magic-number float-to-int conversion. Retail emits NO body for it:
+// the Dreamcast row is `static`, TViewWorldWindow::init's scale-table loop
+// is its only call site, and VC6 expands a single-call-site static without
+// retaining it (the surrounding carve rows leave no ~98 B slot for one).
+// Two facts are retail's rather than the Dreamcast's, both read off init's
+// expansion. The addend is 2^52 + 2^51 written as a FLOAT: retail
+// materialises it with `mov dword ptr [slot], 0x59c00000` followed by
+// `fld dword ptr [slot]`, which is a float local, not the qword pool entry
+// a `double` literal folds to. And the operand ORDER is magic + d - the
+// float is what reaches the x87 stack first, with `fadd qword ptr` taking
+// the double argument as the memory operand.
 DC_ONLY(0x192ee8, 0x62)
-long ftol(double d)
+static long ftol(double d)
 {
-    // @stub
-}
+    union {
+        double whole;
+        long low;
+    } bits;
+    union {
+        float value;
+        long raw;
+    } magic;
 
-#endif  // @carcass
+    magic.raw = 0x59c00000;
+    bits.whole = d;
+    bits.whole = magic.value + bits.whole;
+    return bits.low;
+}
 
 // E:\gamedcs\viewwrld.cpp:110
 // The view-world symbol blit, shared by all five VWDrawSymbols arms.
@@ -1391,6 +1422,167 @@ int ViewWorldUndergroundHandler(message& msg)
     return 1;
 }
 
+// E:\gamedcs\viewwrld.cpp:1409
+// The View Earth / View Air spell entry. Both dispatches are compare
+// chains, so the ARM LAYOUT is the compiler's and only the ascending
+// compare order is source evidence: iWhatToDraw 3 before 5, mastery 2
+// before 3, with mastery 1 reaching the default arm. The two ladders are
+// HoMM3's published ones - earth shows resources at any mastery, adds the
+// mines at advanced and the terrain layer at expert; air shows artifacts,
+// adds heroes at advanced and towns at expert - and retail duplicates the
+// air default's single store rather than merging it, which the earth arm
+// (whose tail falls straight into the join) does not.
+// The window is a BLOCK-scoped local: retail runs its whole inlined
+// destructor - scratch buffer, icon sprite, widget loop, ~CAdvPopup - in
+// front of the closing UpdateRadar, not at the function's brace.
+// Two receivers are the GLOBAL and not `this`, byte-proven: retail reloads
+// gpAdvManager into ECX in front of DemobilizeCurrHero and VWCompleteDraw
+// while keeping `this` live in EDI for the two calls that follow the
+// dialog. And map_center goes through type_point's three-argument
+// constructor, not three field assignments - the ctor's `short`
+// parameters are what make every bitfield extraction SIXTEEN bit
+// (`sar dx,6` / `sar cx,6` / `sar ax,0xc`) where a field-to-field copy
+// stays 32-bit and folds z in place.
+VA(0x005fbf90, 0x2A3)  // anchor-callee init + VWCompleteDraw, "VWsymbol.def", dc 0x195b48
+void advManager::ViewWorld(int iWhatToDraw, int level)
+{
+    gUnnamed6aac3c = 1;
+    view_artifacts = 0;
+    view_towns = 0;
+    view_heroes = 0;
+    view_resources = 0;
+    iVWTerrains = 0;
+    view_mines = 0;
+
+    switch (iWhatToDraw) {
+    case SPELL_VIEW_EARTH:
+        switch (level) {
+        case eMasteryAdvanced:
+            view_mines = 1;
+            view_resources = 1;
+            break;
+        case eMasteryExpert:
+            iVWTerrains = 1;
+            view_mines = 1;
+            view_resources = 1;
+            break;
+        default:
+            view_resources = 1;
+            break;
+        }
+        break;
+    case SPELL_VIEW_AIR:
+        switch (level) {
+        case eMasteryAdvanced:
+            view_heroes = 1;
+            view_artifacts = 1;
+            break;
+        case eMasteryExpert:
+            view_towns = 1;
+            view_heroes = 1;
+            view_artifacts = 1;
+            break;
+        default:
+            view_artifacts = 1;
+            break;
+        }
+        break;
+    }
+
+    gUnnamed68c6b8 = VIEW_WORLD_TILE_SCALE_MID;
+    giViewWorldScale = 11;
+    csVWIcons = ResourceManager::GetSprite("VWsymbol.def");
+    memoryBuffer = new Bitmap16Bit(64, 64);
+    gpAdvManager->DemobilizeCurrHero(0, 1);
+    gpWindowManager->colorCyclingOn = 0;
+    gCombatActive698a18 = 2;
+    {
+        TViewWorldWindow view_world_window;
+        type_point map_center(radarOrigin.x + 9, radarOrigin.y + 8,
+                              radarOrigin.z);
+
+        view_world_window.init(map_center, 0);
+        gpAdvManager->VWCompleteDraw(view_world_window.origin.x,
+                                     view_world_window.origin.y,
+                                     view_world_window.origin.z,
+                                     view_world_window.viewable_width,
+                                     view_world_window.viewable_height);
+        gpWindowManager->colorCyclingOn = 1;
+        view_world_window.DoModal(0);
+    }
+    gUnnamed6aac3c = 0;
+    UpdateRadar(0, 1, view_mines, view_heroes, view_towns);
+    gpWindowManager->colorCyclingOn = 0;
+    RedrawAdvScreen(1, 0);
+    gCombatActive698a18 = 0;
+    gpWindowManager->colorCyclingOn = 1;
+}
+
+// E:\gamedcs\viewwrld.cpp:1496
+// Recentres the view-world map on new_center and repaints the radar.
+// Every division by two here is retail's bare `sar reg,1` - an arithmetic
+// shift, not the cdq/sub pair a signed `/ 2` compiles to - so the source
+// wrote `>> 1`. The scale table is the one call site of the file's `ftol`,
+// and the two clamped extents are compared against MAP_WIDTH/MAP_HEIGHT
+// for EQUALITY: a map that exactly fills the view keeps the origin at
+// (0, 0, new_center.z) with no clamping at all.
+// iSkipLevel's DECLARATION SITE is worth 13.5 points (83.37 -> 96.87):
+// retail issues the `fdiv` after both integer divisions, so the float
+// local is declared BELOW the two extent assignments, not above them.
+// Residual (98.89%): one instruction, the loop counter's `mov [i], eax`,
+// which retail schedules after the table store and we schedule before it.
+VA(0x005fc240, 0x274)  // anchor-caller ViewWorld, anchor-callee UpdateRadar, dc 0x195d30
+void TViewWorldWindow::init(type_point new_center, unsigned char updateFlag)
+{
+    int i;
+
+    viewable_width = 608 / giViewWorldScale;
+    viewable_height = 544 / giViewWorldScale;
+    float iSkipLevel = 32.0f / gUnnamed68c6b8;
+    for (i = 0; i < giViewWorldScale; i++)
+        scaleLine[i] = ftol(static_cast<float>(i) * iSkipLevel);
+
+    if (viewable_width > MAP_WIDTH)
+        viewable_width = MAP_WIDTH;
+    if (viewable_height > MAP_HEIGHT)
+        viewable_height = MAP_HEIGHT;
+    view_half_width = viewable_width >> 1;
+    view_half_height = viewable_height >> 1;
+
+    origin.y = 0;
+    origin.x = 0;
+    origin.z = new_center.z;
+    if (viewable_width != MAP_WIDTH) {
+        origin.x = new_center.x - (viewable_width >> 1);
+        if (origin.x < 0)
+            origin.x = 0;
+        if (origin.x + viewable_width >= MAP_WIDTH)
+            origin.x = MAP_WIDTH - viewable_width;
+    }
+    if (viewable_height != MAP_HEIGHT) {
+        origin.y = new_center.y - (viewable_height >> 1);
+        if (origin.y < 0)
+            origin.y = 0;
+        if (origin.y + viewable_height >= MAP_HEIGHT)
+            origin.y = MAP_HEIGHT - viewable_height;
+    }
+
+    iVWCenterOffsetW = (608 - viewable_width * giViewWorldScale) >> 1;
+    iVWCenterOffsetH = (544 - viewable_height * giViewWorldScale) >> 1;
+    gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+    gpAdvManager->UpdateRadar(origin, updateFlag, 1, view_mines, view_heroes,
+                              view_towns);
+    if (gpGame->worldMap.GetNumLevels() > 1) {
+        if (origin.z == 1) {
+            UndergroundButton->send_message(widget::WIDGET_CLEAR_STATUS, 6);
+            SurfaceButton->send_message(widget::WIDGET_SET_STATUS, 6);
+        } else {
+            SurfaceButton->send_message(widget::WIDGET_CLEAR_STATUS, 6);
+            UndergroundButton->send_message(widget::WIDGET_SET_STATUS, 6);
+        }
+    }
+}
+
 // E:\gamedcs\viewwrld.cpp:1558. Both level callbacks above call it. The
 // eight per-layer passes are the Dreamcast's statement order exactly
 // (ground, river, road, underlay, object shadows, objects, then the
@@ -1442,20 +1634,6 @@ void advManager::VWCompleteDraw(int startX, int startY, int z, int drawwidth,
 }
 
 #if 0  // @carcass
-
-// E:\gamedcs\viewwrld.cpp:1409
-DC_ONLY(0x195b48, 0x1E6)
-void advManager::ViewWorld(int iWhatToDraw, TSkillMastery level)
-{
-    // @stub
-}
-
-// E:\gamedcs\viewwrld.cpp:1496
-DC_ONLY(0x195d30, 0x2CA)
-void TViewWorldWindow::init(type_point new_center, unsigned char updateFlag)
-{
-    // @stub
-}
 
 // E:\gamedcs\viewwrld.cpp:1549
 DC_ONLY(0x195ffc, 0x42)

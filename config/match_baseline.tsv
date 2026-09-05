@@ -1411,7 +1411,7 @@ events	?monsters_join@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@
 # (push 0xb4 in townManager::Open), layout-required and not gateable
 # per-TU. hist keeps 100.0000; the saturation law says a later
 # declarator can carry it back.
-events	?monsters_sell_out@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	99.9517	100.0000	100.0000	0xa7250	f7b1ec4933f6
+events	?monsters_sell_out@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	100.0000	100.0000	100.0000	0xa7250	f7b1ec4933f6
 events	?show_rewards@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@2@J@Z	100.0000	100.0000	100.0000	0xa0b00	9287544ef4a4
 exec	??0executive@@QAE@XZ	100.0000	100.0000	100.0000	0xb0900	e5caaee573f2
 exec	?AddManager@executive@@QAEHPAVbaseManager@@H@Z	100.0000	100.0000	100.0000	0xb0b20	11f81dc72e6a
@@ -1838,7 +1838,7 @@ hero	?GetVisibility@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe4070	95a689b2be07
 # unit's reference differently and the comparison moves with our
 # object unchanged. The header audit above found nothing because
 # there was nothing in the headers to find.
-hero	?GiveArtifact@hero@@QAEEPBUtype_artifact@@EE@Z	65.7490	75.1012	75.1012	0xe3070	67ddcbc18a6b
+hero	?GiveArtifact@hero@@QAEEPBUtype_artifact@@EE@Z	68.9069	75.1012	75.1012	0xe3070	67ddcbc18a6b
 hero	?GiveExperience@hero@@QAEHHHE@Z	100.0000	100.0000	100.0000	0xe33b0	f855005f641d
 hero	?GiveResource@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xe3600	934aedcd34c8
 hero	?GiveSS@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0xe22d0	8cb3163ef67c
@@ -2015,7 +2015,7 @@ initialize	?create_requirement_masks@@YIXPBHPA_J1@Z	100.0000	100.0000	100.0000	0
 # this class: two enumerators moved the row by the same amount one
 # enumerator did on 2026-08-08, which is what a population threshold
 # looks like and not what a per-declarator penalty looks like.
-initialize	?initialize_game_data@@YIXXZ	94.0741	100.0000	100.0000	0xeb730	9bb04f467e4b
+initialize	?initialize_game_data@@YIXXZ	97.0370	100.0000	100.0000	0xeb730	9bb04f467e4b
 inputmgr	??0inputManager@@QAE@XZ	73.3333	100.0000	100.0000	0xec460	ce1b8a0744aa
 inputmgr	?AsciiConvert@inputManager@@QAEXPAVmessage@@@Z	100.0000	100.0000	100.0000	0xec6f0	b21c053d2257
 inputmgr	?Close@inputManager@@UAEXXZ	100.0000	100.0000	100.0000	0xec540	3eaa4090c58c
@@ -2748,7 +2748,7 @@ rmg	?CreateRiver@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	38.2780	38.
 rmg	?CreateSubterraneanGate@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	76.9439	76.9439	76.9439	0x142080	38a429be544f
 rmg	?GetMapItem@type_random_map@@QAEPAUTRmgMapItem@@UTRmgMapPosition@@@Z	100.0000	100.0000	100.0000	0x1378e0	5df55a259e35
 rmg	?InitializeObjectGenerators@type_random_map_generator@@QAEXXZ	97.4646	97.4676	97.4676	0x138b10	55bc899a64f7
-rmg	?WriteMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	95.6987	95.7066	95.7066	0x149cb0	12d6f5f28f76
+rmg	?WriteMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	95.7066	95.7066	95.7066	0x149cb0	12d6f5f28f76
 rmg	?_Inc@const_iterator@?$_Tree@UTPoint@@U1@U_Kfn@?$set@UTPoint@@U?$less@UTPoint@@@std@@V?$allocator@UTPoint@@@3@@std@@U?$less@UTPoint@@@4@V?$allocator@UTPoint@@@4@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x1b8bc0	-
 rmg	?assign_rmg_teams@@YIXHHHPBEPAD@Z	100.0000	100.0000	100.0000	0x14ab40	a44a9dbf9227
 rmg	?insert@?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@std@@QAEXPAUTRmgMapPosition@@IABU3@@Z	100.0000	100.0000	100.0000	0x347a0	-
@@ -3002,7 +3002,7 @@ singleselectionwindow	??0CNetPlayerHandlerPlayer@@QAE@XZ	100.0000	100.0000	100.0
 singleselectionwindow	??0CNetPlayerInfo@@QAE@XZ	100.0000	100.0000	100.0000	0x17f720	-
 singleselectionwindow	??0CNewPlayerUpdateMan@@QAE@XZ	100.0000	100.0000	100.0000	0x17c9b0	0ed8ff53773d
 singleselectionwindow	??0CUpdatePlayerPosMsg@@QAE@PAVCNetPlayerHandlerPlayer@@0@Z	100.0000	100.0000	100.0000	0x179870	4cb719207948
-singleselectionwindow	??0GameSelectionHeadersStruct@@QAE@XZ	79.3242	79.3242	79.3242	0x178e00	-
+singleselectionwindow	??0GameSelectionHeadersStruct@@QAE@XZ	73.1483	79.3242	79.3242	0x178e00	-
 singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	93.6776	93.6776	93.6776	0x179960	0da7889bd3b9
 singleselectionwindow	??0lobby_message@@QAE@XZ	100.0000	100.0000	100.0000	0x189190	2b1be8208221
 singleselectionwindow	??0t_map_list_update@@QAE@K@Z	100.0000	100.0000	100.0000	0x189240	173781ee6a81
@@ -3108,7 +3108,7 @@ singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100
 # 2026-08-27 (round 3): the interim full build re-banked the transient
 # peak a third time; re-lowered with the round's bodies landed. Same
 # scheduler flap, same recovery path.
-singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0	66eb0a0e15c8
+singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0	66eb0a0e15c8
 singleselectionwindow	?OnMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2193	90.2193	90.2193	0x189710	3ad2be3935a3
 singleselectionwindow	?OnNameClick@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x18b620	ef174e28edf8
 singleselectionwindow	?OnNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	97.5366	97.5366	97.5366	0x18b510	862e2a9c058b
@@ -3722,8 +3722,10 @@ viewwrld	?VWDrawShroud@advManager@@QAEXHHHHH@Z	92.8835	92.8835	92.8835	0x1f9940	
 viewwrld	?VWDrawSprite@@YIXPAVCSprite@@PAVNewmapCell@@HHHH@Z	86.8151	86.8151	86.8151	0x1f73b0	94e1f60c6c38
 viewwrld	?VWDrawSymbols@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x1f80e0	6a4f0bde7cf0
 viewwrld	?VWDrawUnderlay@advManager@@QAEXHHHHH@Z	42.1275	42.1275	42.1275	0x1f9ed0	07edcd1e12e8
+viewwrld	?ViewWorld@advManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0x1fbf90	139fcf10c2f1
 viewwrld	?ViewWorldSurfaceHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1fbdf0	6564c6c11a60
 viewwrld	?ViewWorldUndergroundHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1fbec0	9ef6e09cbd1a
+viewwrld	?init@TViewWorldWindow@@QAEXUtype_point@@E@Z	98.8939	98.8939	98.8939	0x1fc240	6dab825b0db3
 widget	??0widget@@QAE@FFFFFF@Z	100.0000	100.0000	100.0000	0x1fe340	0553215b2eec
 widget	??0widget@@QAE@XZ	100.0000	100.0000	100.0000	0x1fe410	6042558f56f5
 widget	??1widget@@UAE@XZ	100.0000	100.0000	100.0000	0x1fe430	4a29d8bc037a
