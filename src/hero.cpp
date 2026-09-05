@@ -2335,7 +2335,27 @@ TSecondarySkill get_skill_award(const hero* current_hero,
 // destructor runs BEFORE the dialogReturn chain, where the second arm's
 // GiveSS runs INSIDE its window's lifetime.
 //
-// Residual (83.4%): closed from 46.28 by pinning hero::GiveSS with
+// Residual (87.13%): three source facts landed 2026-09-05, in this order.
+// (1) The SRand seed constant is 154079 (0x259df), read straight off
+// retail's `lea ecx,[eax+ecx+0x259df]`; the tree had 153567 (0x257df).
+// (2) VC6 lowers `signed * 214013` with `imul r,r,0x343fd` but expands the
+// SAME constant into retail's seven-step lea/shift chain when the
+// multiplicand is UNSIGNED (`lea [eax+2*eax]` 3x, `lea [eax+4*ecx]` 13x,
+// `shl 4` 208x, `add` 209x, `shl 8` 53504x, `sub` 53503x,
+// `lea [eax+4*edx]` 214013x). `static_cast<unsigned>(level)` is worth
+// 85.17 -> 87.13; the sibling `iLevelSeed * 156823` stays signed and
+// retail keeps its `imul` there, which corroborates the split.
+// (3) `int roll = Random(1,100);` is declared BEFORE `int stat = 0;` -
+// retail schedules `xor esi,esi / mov [ebp-0x14],esi` between the
+// `cmp cx,9` operand loads, after the Random call (84.18 -> 85.17); and
+// both `chances` selections are written `if (level <= LOW_LEVEL_LAST)
+// <plain>; else <10P>`, which is the fall-through polarity retail has
+// (`jg` to the 10P arm), worth 83.44 -> 84.18.
+// Rejected at the new plateau: reordering the SRand sum (byte-flat three
+// ways) and a nested `if` with an `unsigned char isOverrideHero` local for
+// retail's `sete dl` (85.41, WORSE).
+//
+// Earlier history: closed from 46.28 by pinning hero::GiveSS with
 // `#pragma auto_inline(off)` - `predict-inline` named it the sole
 // OVER-inline, expanded at all six sites here where retail keeps a real
 // call at the two that survive cross-jumping, worth 23 conditional
@@ -2387,24 +2407,25 @@ void hero::CheckLevel()
             sprintf(gText,
                     gpGeneralText->GetText(GENERAL_TEXT_LEVEL_UP_TITLE_FORMAT),
                     name);
-            SRand(level * 214013 + iLevelSeed * 156823 + 153567);
+            SRand(static_cast<unsigned>(level) * 214013
+                  + iLevelSeed * 156823 + 154079);
 
-            int stat = 0;
             int roll = Random(1, 100);
+            int stat = 0;
             const signed char* chances;
-            if (level > LEVEL_UP_LOW_LEVEL_LAST)
-                chances = akHeroClasses[heroClass].gainPrimarySkillChance10P;
-            else
+            if (level <= LEVEL_UP_LOW_LEVEL_LAST)
                 chances = akHeroClasses[heroClass].gainPrimarySkillChance;
+            else
+                chances = akHeroClasses[heroClass].gainPrimarySkillChance10P;
             if (gCampaignMode &&
                 gpGame->campaign.currentCampaign == LEVEL_UP_CAMPAIGN_OVERRIDE &&
                 id == LEVEL_UP_OVERRIDE_HERO_ID) {
-                if (level > LEVEL_UP_LOW_LEVEL_LAST)
-                    chances = akHeroClasses[eClassBarbarian]
-                                  .gainPrimarySkillChance10P;
-                else
+                if (level <= LEVEL_UP_LOW_LEVEL_LAST)
                     chances = akHeroClasses[eClassBarbarian]
                                   .gainPrimarySkillChance;
+                else
+                    chances = akHeroClasses[eClassBarbarian]
+                                  .gainPrimarySkillChance10P;
                 roll = Random(1, chances[0] + chances[1]);
             }
             while (roll > chances[stat]) {
@@ -4266,6 +4287,27 @@ static void show_hero_skills(int code, unsigned char right_mouse)
 // align. What decides where VC6 lands the threaded return-1 block is
 // the open question (Main lands it after the TOWN_x arm where retail
 // has the selector arm); solve that and this device is worth ~15 pts.
+// CENSUS 2026-09-05 (the sema CFG/call/reloc views are UNUSABLE on this row -
+// the block builder gives up at the first inline jump table and reports
+// "target 24 blocks / 8 calls"; the RAW `sema disasm` of both sides is
+// complete, 1431 rows, and is the only usable oracle here).
+// Retail emits 15 `NormalDialog` CALLS; this compile emits SIX out of the
+// eleven source sites, because our C2 cross-jumps every right-click help arm
+// (`test bl,bl / je <exit> / 12 pushes / mov ecx,<help text> / mov edx,4 /
+// JMP <shared call>`) while retail ends each arm with its own `call
+// NormalDialog / jmp <exit>` - behaviour-catalog D7, cross-jumping we perform
+// and retail does not, and the same class as the shared `je` in
+// game::ValidateVictoryLossConditions.  Retail also expands
+// hero::HeroScreenUpdate's two dialog sites inline (0x4de1da..0x4de320:
+// `add eax,-0x32 / mov cl,[eax+ecx+0x476]`, the 99-clamp, `setge cl`, the
+// `or ecx,0x10000` pack and `mov ecx,[4*eax+0x6a7540]`).
+// Two independent frame facts, both unexplained: retail reserves 0x14c and
+// this compile 0x144 - EIGHT bytes short, i.e. two named locals missing -
+// and retail homes `right_mouse` in the DEAD `msg` PARAMETER SLOT [ebp+8]
+// with `this` at [ebp-0x18] and localPlayer at [ebp-0x10], where we use
+// [ebp-0x20] / [ebp-0x24] / [ebp-0x18].  Retail's shared `return 1` epilogue
+// sits at fn+0x7e, immediately after the MOUSE_MOVE arm's `mov eax,1`
+// fall-through; ours is threaded to fn+0x128a at the very end.
 VA(0x004dd2d0, 0x143E)  // anchor-bracket + absent-callees, dc 0xcf54c
 int THeroScreenWindow::WindowHandler(message* msg)
 {

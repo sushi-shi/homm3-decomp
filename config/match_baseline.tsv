@@ -1582,7 +1582,7 @@ game	?StartAITheme@@YIXXZ	100.0000	100.0000	100.0000	0xc6f40	45c7f5426a57
 game	?TransmitSaveGame@game@@QAEHHHEE@Z	81.8730	81.8730	81.8730	0xcafd0	36ffd6920dd2
 game	?TurnOffAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6fd0	fe47952c0464
 game	?TurnOnAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6f80	0d6fe6e9e2a0
-game	?ValidateVictoryLossConditions@game@@QAEXE@Z	89.0407	89.0407	89.0407	0xbf780	263527e8a4bf
+game	?ValidateVictoryLossConditions@game@@QAEXE@Z	89.6148	89.6148	89.6148	0xbf780	51847b4f5a1d
 game	?ViewArmy@game@@QAEXAAVarmyGroup@@HPBVhero@@PBVtown@@HHEE@Z	83.8710	96.9556	96.9556	0xc6c50	019c611c565c
 game	?WaitForPlayer@game@@QAEXPADH@Z	100.0000	100.0000	100.0000	0xca840	130d813115c7
 game	?_Construct@std@@YIXPAUTRumour@game@@ABU23@@Z	100.0000	100.0000	100.0000	0xd3a10	-
@@ -1731,7 +1731,7 @@ hero	??_GTHeroScreenWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xe1520	-
 hero	?AddSpell@hero@@QAEXH@Z	100.0000	100.0000	100.0000	0xd9330	a1e8c11f06c3
 hero	?ApplyBattleLossTemps@hero@@QAEXXZ	100.0000	100.0000	100.0000	0xda710	3fa115fcffa1
 hero	?ApplyBattleWinTemps@hero@@QAEXXZ	100.0000	100.0000	100.0000	0xda510	4eb30d4b1b66
-hero	?CheckLevel@hero@@QAEXXZ	83.4342	83.4342	83.4342	0xda720	62221da77008
+hero	?CheckLevel@hero@@QAEXXZ	87.1338	87.1338	87.1338	0xda720	03d2d919b741
 hero	?CreatureTypeCount@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0xe2340	20e9a887c55f
 hero	?Deallocate@hero@@QAEXEE@Z	100.0000	100.0000	100.0000	0xd9ec0	6f033442214a
 hero	?DestroySiegeWeaponArtifact@hero@@QAEXH@Z	96.5278	96.5278	96.5278	0xd9260	d330930a3f3f
@@ -3167,7 +3167,7 @@ spells	?HandleCastTeleport@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1a357
 spells	?HandleCastWallSpell@@YIHAAVmessage@@@Z	99.9703	99.9703	99.9703	0x1a3250	fcd4bfe58cdf
 spells	?HandleGetTeleportDestination@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1a37d0	288a3f189d84
 spells	?HasValidSpellTarget@combatManager@@QAEEHJJEJ@Z	100.0000	100.0000	100.0000	0x1a40d0	7c8be7ea45f1
-spells	?InitiateSpell@combatManager@@QAEXHH@Z	89.4253	89.4253	89.4253	0x19ec50	f3d24cbd9a02
+spells	?InitiateSpell@combatManager@@QAEXHH@Z	89.8044	89.8044	89.8044	0x19ec50	039db4404b9d
 spells	?LoadSpellEffect@combatManager@@QAEPAVCSprite@@H@Z	100.0000	100.0000	100.0000	0x1a92f0	b8d6895d9116
 spells	?MirrorImage@combatManager@@QAEXHH@Z	82.3404	82.3404	82.3404	0x1a6c70	ee7fd7c139af
 spells	?ModifySpellDamage@combatManager@@QAEJJHPBVhero@@0PBVarmy@@E@Z	88.4854	88.4854	88.4854	0x1a78e0	cc075767214e
