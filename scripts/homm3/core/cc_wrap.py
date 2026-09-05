@@ -25,14 +25,18 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 HOMM3_DIR = next((p for p in SCRIPT_DIR.parents if (p / "flake.nix").exists()), SCRIPT_DIR)
 
 _INC_RE = re.compile(r'^[ \t]*#[ \t]*include[ \t]*[<"]([^>"]+)[>"]', re.M)
+# The one vendored SDK on the game INCLUDE path: retail's own zlib 1.1.3.
+ZLIB_INC = "vendor/zlib-1.1.3"
 
-def scan_header_deps(src, inc_root):
+def scan_header_deps(src, *inc_roots):
     """Recover header dependencies independently of compiler diagnostic output: recursively resolve
-    every `#include` against the repo include root (+ each file's own dir for "quoted"
-    includes) and return the repo headers reached. System headers (<string.h> etc.) don't
-    resolve under inc_root and are skipped — they never change. Over-approximates (ignores
-    #if), which is SAFE for a depfile: worst case an extra rebuild, never a stale obj."""
-    src = Path(src).resolve(); inc_root = Path(inc_root)
+    every `#include` against the search roots (+ each file's own dir for "quoted"
+    includes) and return the in-tree headers reached. System headers (<string.h> etc.) don't
+    resolve under any root and are skipped — they never change. Over-approximates (ignores
+    #if), which is SAFE for a depfile: worst case an extra rebuild, never a stale obj.
+    The roots are the same list cc_wrap puts on INCLUDE minus the toolchain, in the
+    same order, so <zlib.h> resolves here exactly as it does for CL."""
+    src = Path(src).resolve(); inc_roots = [Path(r) for r in inc_roots]
     seen = set(); stack = [src]
     while stack:
         f = stack.pop()
@@ -44,7 +48,7 @@ def scan_header_deps(src, inc_root):
         except OSError:
             continue
         for inc in _INC_RE.findall(text):
-            for cand in (f.parent / inc, inc_root / inc):
+            for cand in [f.parent / inc] + [r / inc for r in inc_roots]:
                 if cand.is_file():
                     stack.append(cand.resolve()); break
     return sorted(str(p) for p in seen if p != src)
@@ -106,10 +110,15 @@ def main():
     if not Path(os.environ.get("WINEPREFIX", "")).is_dir():   # same anti-stale anchor
         os.environ["WINEPREFIX"] = str(HOMM3_DIR / "build/wineprefix")
     ensure_wineserver()
-    # Do not expose vendor SDK directories implicitly. The current zlib sources
-    # resolve their quoted headers from their own source directory.
+    # No vendor SDK directory is exposed implicitly EXCEPT zlib: the vendored
+    # zlib-1.1.3 tree is the exact library retail links (it matches 100%), so
+    # its <zlib.h> is the true record of z_stream for the game TUs that embed
+    # one. It goes LAST so it can never shadow a CRT or repo header, and the
+    # zlib TUs themselves are unaffected - they resolve quoted headers from
+    # their own source directory.
     incs = [msvc / "include"]
     if (HOMM3_DIR / "include").is_dir(): incs.append(HOMM3_DIR / "include")
+    if (HOMM3_DIR / ZLIB_INC).is_dir(): incs.append(HOMM3_DIR / ZLIB_INC)
     os.environ["INCLUDE"] = ";".join(winepath_w(p) for p in incs)
     cmd = ["wine", str(cl), *flags, f"/Fo{winepath_w(out)}", winepath_w(src)]
     output, rc = _run_cl(cmd, out)
@@ -117,7 +126,7 @@ def main():
         sys.stderr.write(f"[cc_wrap] FAILED {src.name} -> {out}\n" + "\n".join(output.strip().splitlines()[-15:]) + "\n")
         sys.exit(rc or 1)
     # Emit a conservative depfile so Ninja recompiles on local-header edits.
-    deps = scan_header_deps(src, HOMM3_DIR / "include")
+    deps = scan_header_deps(src, HOMM3_DIR / "include", HOMM3_DIR / ZLIB_INC)
     dep_list = " ".join(d.replace(" ", "\\ ") for d in deps)
     Path(str(out) + ".d").write_text(f"{a.out}: {dep_list}\n")
     sys.exit(0)

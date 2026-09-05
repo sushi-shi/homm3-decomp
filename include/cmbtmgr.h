@@ -2641,7 +2641,13 @@ DATA(0x0063bd18) extern const int gMoatDamage[];
 
 // The nine faction-specific moat attacker strings filled by the game-array
 // text loader and indexed by defendingTown->type in the retail-only moat
-// worker at 0x469e50. Name is a BOOTSTRAP INVENTION.
+// worker at 0x469e50. Name is a BOOTSTRAP INVENTION, but the ROLE is
+// settled: text.cpp used to define the same datum as `gBorderGuardColors`
+// (the Dreamcast public at dc 0x34f50, transferred here by its position in
+// InitializeArrayText's fill run). The whole retail image references
+// 0x6a5d60 exactly twice - that fill and 0x469ecc - and no border-guard
+// body reads it, so the town-type indexing is the only attested use.
+// text.cpp now defines it under this name; do not reintroduce the second.
 DATA(0x006a5d60) extern const char* gMoatDamageMessages[9];
 
 // The thirty-two hexes two facing boats occupy, at .rdata 0x63d368.
