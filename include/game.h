@@ -748,46 +748,31 @@ struct type_map_hero_identity {
 };
 SIZE(type_map_hero_identity, 0x14);
 
-#ifdef HOMM3_GAME_NEW_MAP_DECLS
-// game.obj needs the protected Dinkumware vector triplet to recreate the
-// player-slot reader's retained copy/destroy/insert/erase boundaries.  This
-// view adds no storage and is exposed only to that TU.
-class TMapPlayerHeroVectorAccess
-    : public std::vector<type_map_hero_identity> {
-public:
-    __forceinline void clear_retail();
-    __forceinline void resize_retail(
-        unsigned int count, const type_map_hero_identity& value);
-};
-
-// One aggregate layer reproduces the two default identities created around
-// the inlined resize operation without changing the identity representation.
-struct TMapPlayerHeroResizeValue {
-    type_map_hero_identity value;
-
-    __forceinline ~TMapPlayerHeroResizeValue();
-};
-
-// game.obj's constructor copies these three members directly. Other TUs keep
-// the equivalent inherited view below so this PC-only declaration does not
-// perturb their already-banked compiler state.
+// The map header's per-player hero customization record: the identity above
+// plus one eight-player availability mask. Complete's new-map normalization
+// compares that mask with bitset<8>(0xff) and copies its single backing
+// dword straight into game::heroPoolMap, which is what types the +0x14 word
+// as a bitset rather than a plain int; the 0x18 size and every offset are
+// the same either way. It was modelled BOTH ways in this tree - this record
+// for the four TUs that read the mask, an inherited `int field_14` twin for
+// everyone else - and the two spellings never met.
+// The members are DIRECT rather than inherited, and retail settles it with
+// three rows: the inherited spelling (which needs the three-argument
+// constructor to assign the base members in its body instead of
+// initialising them) costs ??0type_map_hero_info 100.0000 -> 84.0169,
+// campaignbrief's _Tree::_Copy 100.0000 -> 84.1429 and game's _Tree::erase
+// 100.0000 -> 92.1530. Its one point in favour - it retains newgame's
+// type_map_hero_identity copy ctor through the base copy - is bought back
+// by the plain field_34 vector below.
 struct type_map_hero_info {
-    // The map header stores one eight-player availability mask. The new-map
-    // normalization body compares it with bitset<8>(0xff) and copies the
-    // single backing dword directly into game::heroPoolMap.
-    type_map_hero_info() {}
-    type_map_hero_info(int identity, std::string name,
-                       std::bitset<8> availability);
-
     int field_00;
     std::string field_04;
     std::bitset<8> field_14;
+
+    type_map_hero_info() {}
+    type_map_hero_info(int identity, std::string name,
+                       std::bitset<8> availability);
 };
-#else
-struct type_map_hero_info : public type_map_hero_identity {
-    int field_14;
-};
-#endif
 SIZE(type_map_hero_info, 0x18);
 
 // VC6 retains this map value's implicit destructor in game.obj. Specializing
@@ -1076,11 +1061,20 @@ public:
         int nonRandomHeroCustomPortrait;
         char nonRandomHeroCustomName[12];
         int field_30;
-#ifdef HOMM3_GAME_NEW_MAP_DECLS
-        TMapPlayerHeroVectorAccess field_34;
-#else
+        // A PLAIN vector, settled 2026-09-05 against a TU-local derived
+        // access view that used to stand here for game.obj. The view exists
+        // to expose Dinkumware's protected triplet so clear()/resize() can
+        // be hand-expanded with the copy/_Destroy children pinned out of
+        // line, which is worth readMapPlayerSlot 67.5422 -> 95.6972 and two
+        // retained COMDATs - but it CHANGES THE MEMBER'S TYPE, and retail
+        // refutes that directly: campaignbrief's ~TPlayerSlotAttributes
+        // (0x45c2f0, 155 B) is byte-EXACT over the plain vector and 38.0299
+        // over the derived one, and newgame's retained
+        // type_map_hero_identity copy ctor (0x517c30, 319 B) is only
+        // emitted at all with the plain vector. A 62-point swing on a
+        // 155-byte destructor is a layout fact; the reader's residual is
+        // the /Ob2 boundary class.
         std::vector<type_map_hero_identity> field_34;
-#endif
 
         TPlayerSlotAttributes()
           : CanBeHuman(0), CanBeComputer(0), AIStrategy(-1),

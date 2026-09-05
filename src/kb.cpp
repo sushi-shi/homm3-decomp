@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define HOMM3_GAME_NEW_MAP_DECLS
 #include "kb.h"
 #include "game.h"
 #include "textresource.h"
