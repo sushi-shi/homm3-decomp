@@ -1105,6 +1105,16 @@ inline void ShowCredits()
 //  - The DoNewGame/DoLoadGame menu tail (retail +0xd60..+0xf40) still
 //    diverges: retail reaches `gUnnamed699584 = 0` from a CREDITS_ID
 //    test on dialogReturn that this reconstruction does not yet spell.
+// 2026-09-05: 73.3528 -> 75.9724 on the two campaign-continue arms alone.
+// Written as a backward `goto` into a label above the TCampaignWindow
+// block, VC6 PEELED each arm - the whole window/VideoOpen/VideoPause/
+// brief body was emitted TWICE, giving 4 TCampaignWindow constructions
+// and 11 VideoPause calls against retail's 2 and 7, and two ~0xa0-byte
+// surplus blocks. `while (1) { ... break; }` emits one copy with retail's
+// own backward `je` into the constructor's argument pushes, and both
+// censuses now agree exactly (2 = 2, 7 = 7). The goto form is right for a
+// top-tested loop whose back edge is the ONLY edge; here the label also
+// had a fall-in predecessor, which is what let the peeler duplicate it.
 VA(0x004ee3e0, 0x1C04)
 int oldmain()
 {
@@ -1537,23 +1547,25 @@ int oldmain()
                     }
                     if (campaign.currentCampaign != CAMPAIGN_ORDINAL_LAST) {
                         gbUnk69774c = 1;
-                    nextWonCampaign:
-                        {
-                            TCampaignWindow campaignWindow(0, nextCampaign);
-                            campaignWindow.DoModal();
+                        while (1) {
+                            {
+                                TCampaignWindow campaignWindow(
+                                    0, nextCampaign);
+                                campaignWindow.DoModal();
+                            }
+                            VideoOpen(33, 0, 0, 800, 600, 1, 0, 1);
+                            VideoPause();
+                            if (gpWindowManager->dialogReturn
+                                == DIALOG_RETURN_CANCEL)
+                                goto endOfGame;
+                            {
+                                TCampaignBrief campaignBriefWindow(0, 0);
+                                campaignBriefWindow.DoModal();
+                            }
+                            if (gpWindowManager->dialogReturn
+                                != DIALOG_RETURN_CANCEL)
+                                break;
                         }
-                        VideoOpen(33, 0, 0, 800, 600, 1, 0, 1);
-                        VideoPause();
-                        if (gpWindowManager->dialogReturn
-                            == DIALOG_RETURN_CANCEL)
-                            goto endOfGame;
-                        {
-                            TCampaignBrief campaignBriefWindow(0, 0);
-                            campaignBriefWindow.DoModal();
-                        }
-                        if (gpWindowManager->dialogReturn
-                            == DIALOG_RETURN_CANCEL)
-                            goto nextWonCampaign;
                         gbGameOver = 0;
                         gUnnamed699584 = 1;
                         goto runGame;
@@ -1563,22 +1575,24 @@ int oldmain()
                            && campaign.CampaignComplete()) {
                     if (campaign.currentCampaign != CAMPAIGN_ORDINAL_LAST) {
                         gbUnk69774c = 1;
-                    nextLostCampaign:
-                        {
-                            TCampaignWindow campaignWindow(0, nextCampaign);
-                            campaignWindow.DoModal();
-                        }
-                        VideoOpen(33, 0, 0, 800, 600, 1, 0, 1);
-                        VideoPause();
-                        if (gpWindowManager->dialogReturn
-                            != DIALOG_RETURN_CANCEL) {
+                        while (1) {
+                            {
+                                TCampaignWindow campaignWindow(
+                                    0, nextCampaign);
+                                campaignWindow.DoModal();
+                            }
+                            VideoOpen(33, 0, 0, 800, 600, 1, 0, 1);
+                            VideoPause();
+                            if (gpWindowManager->dialogReturn
+                                == DIALOG_RETURN_CANCEL)
+                                break;
                             {
                                 TCampaignBrief campaignBriefWindow(0, 0);
                                 campaignBriefWindow.DoModal();
                             }
                             if (gpWindowManager->dialogReturn
-                                == DIALOG_RETURN_CANCEL)
-                                goto nextLostCampaign;
+                                != DIALOG_RETURN_CANCEL)
+                                break;
                         }
                     }
                 } else {
