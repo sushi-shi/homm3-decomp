@@ -457,6 +457,11 @@ DATA(0x006a77c4) extern const char* gInfernoWeekFormat;
 // runtime reader.
 DATA(0x00696d9c) extern const char* gCannedRumours[256];
 
+// randtvrn.txt itself, kept alive because the table above points into it.
+// InitializeRandomTavernText is its only writer and nothing else in the
+// image reads the slot.
+DATA(0x00697294) extern TTextResource* gpRandomTavernText;
+
 // The PC-only save-version remap is a real inline source boundary. Retail's
 // three expansions read through an unsigned dword buffer, keep the decoded id
 // in EAX, and join each direct-return arm at the caller's destination store.
@@ -575,13 +580,6 @@ const int GAME_DIFFICULTY_EXPERT = 3;
 const int GAME_DIFFICULTY_IMPOSSIBLE = 4;
 
 #if 0  // @carcass
-
-// E:\gamedcs\game.cpp:208
-DC_ONLY(0xa2af8, 0x62)
-unsigned char InitializeRandomTavernText()
-{
-    // @stub
-}
 
 // E:\gamedcs\game.cpp:348
 DC_ONLY(0xa2b5c, 0x3A)
@@ -711,6 +709,24 @@ VA_COMPGEN(0x004B7330, 0xA3, TREE_CONST_ITERATOR_INC, CImmEnclosure)
 VA(0x004b6e40, 0xE3)  // anchor-callee (TAdventureMapWindow::Close), retail-only
 TImmMouseEffect::~TImmMouseEffect()
 {
+}
+
+// E:\gamedcs\game.cpp:208
+// The canned-rumour table's loader. `Text` is TTextResource's
+// vector<char*> at +0x1c, so its `_First` is the `[eax+0x20]` retail
+// re-reads on every iteration; the walk is a plain int index scaled by
+// four (`cmp ecx,0x400` with a SIGNED `jl`), which is what keeps the
+// bound at 256 entries rather than the resource's own row count.
+VA(0x004b8410, 0x33)  // anchor-string (randtvrn.txt), dc 0xa2af8
+unsigned char InitializeRandomTavernText()
+{
+    gpRandomTavernText = ResourceManager::GetText(
+        DATA_COMPGEN(0x00677d20, randomTavernTextName, "randtvrn.txt"));
+    if (gpRandomTavernText == 0)
+        return 0;
+    for (int i = 0; i < 256; i++)
+        gCannedRumours[i] = gpRandomTavernText->Text[i];
+    return 1;
 }
 
 // Retail-only HeroExtra reset used by game::SetupOrigData.  No Dreamcast
