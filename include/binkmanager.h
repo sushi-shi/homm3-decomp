@@ -24,7 +24,13 @@ struct BinkRect {
 struct BINK {
     unsigned long Width;      // +0x00
     unsigned long Height;     // +0x04
-    char pad_8[0x28];         // +0x08..0x2f
+    // Pad slice, in place: the per-frame pump compares +0x0c against +0x08
+    // and stops the video when they meet, and DrawCurrentBinkFrame runs
+    // BinkDoFrame only while +0x0c is 1 - the first-frame test.  That is
+    // the SDK's Frames / FrameNum pair and nothing else fits.
+    unsigned long Frames;     // +0x08
+    unsigned long FrameNum;   // +0x0c
+    char pad_10[0x20];        // +0x10..0x2f
     BinkRect FrameRects[8];   // +0x30
     long NumRects;            // +0xb0
 };
@@ -82,13 +88,18 @@ __declspec(dllimport) int __stdcall _BinkDoFrame(Bink* bnk);
 __declspec(dllimport) int __stdcall _BinkCopyToBuffer(
     Bink* bnk, void* destination, int pitch, unsigned long height,
     unsigned long x, unsigned long y, unsigned long flags);
+__declspec(dllimport) void __stdcall _BinkClose(Bink* bnk);
+__declspec(dllimport) int __stdcall _BinkWait(Bink* bnk);
+__declspec(dllimport) void __stdcall _BinkNextFrame(Bink* bnk);
+__declspec(dllimport) void __stdcall _BinkGetSummary(Bink* bnk,
+                                                     BINKSUMMARY* sum);
 }
 
 // Dreamcast proves these are static members (the `YA` decorated forms and
 // static data roster); retail supplies the full PC implementations.
 class BinkManager {
 public:
-    static BINK* GetBinkFilePtr(char* filename, int binkOptions);
+    static BINK* GetBinkFilePtr(const char* filename, int binkOptions);
     static void SetPixelFormat(unsigned long redMask,
                                unsigned long greenMask,
                                unsigned long blueMask);
@@ -129,8 +140,24 @@ extern int gBinkY;                   // 0x694cc8
 extern int gBinkUpdateWidth;         // 0x694ccc
 extern int gBinkUpdateHeight;        // 0x694cd0
 extern int gBinkVideoId;             // 0x694cd4 (VIDEO_ID_OVERLAY_BLIT plays via the overlay Blt)
+// 0x694cd8 closes the 12-dword snapshot campaignwindow.cpp copies out of
+// gBinkVideo. NextBinkFrame consults it when the first track reaches its last
+// frame: with it set AND both handles live it closes track one and carries on
+// with track two, otherwise it ends the playback outright. Provisional name.
+extern int gBinkChainTrack;          // 0x694cd8
 extern int gBinkPaused;              // 0x694cdc
 extern unsigned char gBinkDirty;     // 0x694ce0
+// The dirty-rect gate the per-frame pump tests before calling
+// VideoDrawRects; the mirror of smackmgr's own rect switch. Provisional.
+extern unsigned char gBinkUseDirtyRects;  // 0x694ca8
+// Raised while a bink is actually running: DrawCurrentBinkFrame and
+// NextBinkFrame both refuse to touch the handles without it, and CloseBink
+// drops it. The mirror of smackmgr's gSmackFrameReady. Provisional.
+extern unsigned char gBinkFrameReady;     // 0x694d5c
+// The bink twin of smackmgr's gVideoSoundReady, raised by OpenBinkVideo
+// out of exactly the same three-way gate (gUnnamed699290 == 0 &&
+// gpSoundManager->ds != 0 && gUnnamed698758.soundVolume != 0). Provisional.
+extern int gBinkSoundReady;               // 0x694d58
 
 // --- BinkManager ---
 // CODEVIEW(E:\gamedcs\binkmanager.cpp:79, dc 0x50a7c) BINK* BinkManager::GetBinkFilePtr(char* filename, int binkOptions);

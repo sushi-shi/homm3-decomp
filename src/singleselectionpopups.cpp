@@ -44,6 +44,20 @@
 #include "iconwdgt.h"
 #include "textresource.h"
 #include "textwdgt.h"
+#include "kb.h"
+#include "resourcemanager.h"
+#include "font.h"
+
+// VC6's own <xutility> reference-returning min, declared file-locally for the
+// same reason textwdgt.cpp declares one: TRandomMapProgress::Advance stores
+// BOTH operands to stack temps and selects between their ADDRESSES with two
+// LEAs, which no value-returning spelling produces, and the TU needs no other
+// STL surface.
+template <class _TYPE>
+inline const _TYPE& ssp_cpp_min(_TYPE _X, _TYPE _Y)
+{
+    return (_Y < _X ? _Y : _X);
+}
 
 // ============================================================================
 // CHotspotWidget - a bare rectangular click target.
@@ -652,6 +666,114 @@ void CBitmapWidget::zBufferDraw()
 }
 
 #endif  // @carcass
+
+// ============================================================================
+// TRandomMapProgress - the modal progress bar around the generator run.
+// ============================================================================
+//
+// The whole family is vtable-proven: 0x641b14 slot 0 is the scalar deleting
+// destructor 0x577090, slot 1 the SetTotal override 0x577300 and slot 2 the
+// Advance override 0x577320, and 0x576f00 is the only body that stores that
+// vtable.  The base's own constructor 0x530e20 sits in the
+// quicktownwindow..recruit span and is left unclaimed.
+
+VA(0x00576F00, 0x190)  // anchor-vtable 0x641b14 + loadprog.def / TDialogBox(240,236,320,128,0x12), retail-only
+TRandomMapProgress::TRandomMapProgress(int totalSteps)
+    : TProgressSink(totalSteps)
+{
+    barSprite = ResourceManager::GetSprite(
+        DATA_COMPGEN(0x0067F5AC, progressBarSpriteName, "loadprog.def"));
+    drawnPosition = 0;
+    window = new TDialogBox(240, 236, 320, 128, 0x12);
+
+    const char* caption = gpGeneralText->GetText(761);
+    int captionWidth = gpMediumFont->get_string_width(caption);
+    int captionX = (window->width - captionWidth) / 2;
+    textWidget* captionWidget = new textWidget(
+        captionX, 30, captionWidth, 20, caption,
+        DATA_COMPGEN(0x0065F2EC, progressBarFontName, "medfont.fnt"),
+        font::PRIMARY, -1, 1, 0, 8);
+    widgets.push_back(captionWidget);
+
+    for (unsigned int i = 0; i < widgets.size(); i++)
+        window->AddWidget(widgets[i], -1);
+    gpWindowManager->AddWindow(window, -1, 1);
+    LoadProgFn_00577180();
+    gpWindowManager->UpdateScreen(0, 0, 800, 600);
+}
+
+// Slot 0 of vtable 0x641b14.
+VA_COMPGEN(0x00577090, 0x21, SCALAR_DELETING_DTOR, TRandomMapProgress)
+
+VA(0x005770C0, 0xBE)  // anchor-vtable 0x641b14 (the vptr store) + RemoveWindow, retail-only
+TRandomMapProgress::~TRandomMapProgress()
+{
+    gpWindowManager->RemoveWindow(window);
+    delete window;
+    if (barSprite)
+        barSprite->Dispose();
+    for (unsigned int i = 0; i < widgets.size(); i++)
+        delete widgets[i];
+}
+
+// The repaint.  The bar is two rows of up to sixteen sprite frames: retail
+// scales the position to 0..256 (`done * 256 / total`), paints position/16
+// frames on the row at window->y + 0x3c and position%16 on the row at
+// window->y + 0x50, and returns early when the scaled position has not moved.
+VA(0x00577180, 0x17F)  // anchor-callee (the constructor and both vtable overrides), retail-only
+void TRandomMapProgress::LoadProgFn_00577180()
+{
+    if (!barSprite)
+        return;
+    if (steps <= 0)
+        return;
+
+    int position = done * 256 / steps;
+    int fullRow = position / 16;
+    if (position == drawnPosition)
+        return;
+    drawnPosition = position;
+    int partialRow = position % 16;
+    window->DrawWindow(0, 0xffff0001, 0xffff);
+
+    for (int i = 0; i < fullRow; i++) {
+        barSprite->Draw(0, i, 0, 0, barSprite->Width, barSprite->Height,
+                        gpWindowManager->screenBitmap->map,
+                        window->x + i * 18 + 16, window->y + 0x3c,
+                        gpWindowManager->screenBitmap->Width,
+                        gpWindowManager->screenBitmap->Height,
+                        gpWindowManager->screenBitmap->Pitch, 0, 0);
+    }
+    for (int j = 0; j < partialRow; j++) {
+        barSprite->Draw(0, j, 0, 0, barSprite->Width, barSprite->Height,
+                        gpWindowManager->screenBitmap->map,
+                        window->x + j * 18 + 16, window->y + 0x50,
+                        gpWindowManager->screenBitmap->Width,
+                        gpWindowManager->screenBitmap->Height,
+                        gpWindowManager->screenBitmap->Pitch, 0, 0);
+    }
+
+    gpWindowManager->UpdateScreen(window->x + 16, window->y + 0x3c, 0x120, 16);
+    gpWindowManager->UpdateScreen(window->x + 16, window->y + 0x50, 0x120, 16);
+}
+
+// Slot 1 of vtable 0x641b14 - the base's SetTotal override.
+VA(0x00577300, 0x12)  // anchor-vtable 0x641b14 slot 1, retail-only
+void TRandomMapProgress::SetTotal(int totalSteps)
+{
+    steps = totalSteps;
+    LoadProgFn_00577180();
+}
+
+// Slot 2 - the base's pure Advance. The clamp is VC6's own reference-returning
+// _cpp_min: both operands go to stack temps and the two LEAs select between
+// their ADDRESSES, which no value-returning spelling produces.
+VA(0x00577320, 0x31)  // anchor-vtable 0x641b14 slot 2, retail-only
+void TRandomMapProgress::Advance(int amount)
+{
+    done = ssp_cpp_min<int>(done + amount, steps);
+    LoadProgFn_00577180();
+}
 
 // COMDAT pairing: vector<widget*>::_Ucopy, agreement 0.978. Same caller-set
 // argument as the insert above: 0x174ce0 is reached from TAdventureMapWindow's

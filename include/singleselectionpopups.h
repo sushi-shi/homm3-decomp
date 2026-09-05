@@ -10,6 +10,8 @@
 #include "message.h"
 
 class CSprite;
+
+class CSprite;
 class Bitmap816;
 enum TTownType;
 
@@ -122,5 +124,51 @@ public:
     int CountNumPlayers(int teamNbr);
     void GetTeams();
 };
+
+// The abstract progress sink the random-map generator drives.  Retail's
+// constructor 0x530e20 - inside the quicktownwindow..recruit span, so it is
+// declared here and NOT claimed - stores vtable 0x6409c0, the step total at
+// +4 and zero at +8; that vtable is three slots wide, a scalar deleting
+// destructor at 0x530e40, a SetTotal body at 0x530e80, and a PURE third slot
+// (_purecall 0x617d9a) which is exactly the slot TRandomMapProgress overrides
+// at 0x577320.  Ordinal name - no symbol survives.
+class TProgressSink {
+public:
+    // Kept as `steps`: singleselectionwindow.cpp already reads it by that
+    // name through the class this header now owns.
+    int steps;   // +0x04
+    int done;    // +0x08
+
+    TProgressSink(int totalSteps);
+    virtual ~TProgressSink();                      // slot 0, retail 0x530e70
+    virtual void SetTotal(int totalSteps);         // slot 1, retail 0x530e80
+    virtual void Advance(int amount) = 0;          // slot 2, pure at the base
+};
+SIZE(TProgressSink, 0xc);
+
+// The modal progress bar retail raises around the generator run.  Vtable
+// 0x641b14 names three of its four bodies outright (0x577090 scalar deleting
+// destructor, 0x577300 SetTotal, 0x577320 Advance); the constructor 0x576f00
+// and the repaint 0x577180 reach the rest.  Ordinal name.
+class TRandomMapProgress : public TProgressSink {
+public:
+    std::vector<widget*> widgets;   // +0x0c
+    heroWindow* window;             // +0x1c
+    CSprite* barSprite;             // +0x20
+    // The last permille-ish position Draw painted, cached so a repaint at an
+    // unchanged position costs nothing.  Retail compares the fresh
+    // `done * 256 / total` against it and returns when they agree.
+    int drawnPosition;              // +0x24
+    char pad_28[0x30 - 0x28];
+
+    TRandomMapProgress(int totalSteps);
+    virtual ~TRandomMapProgress();
+    virtual void SetTotal(int totalSteps);
+    virtual void Advance(int amount);
+    // Ordinal name, retained from the earlier singleselectionwindow.h model
+    // because that TU already calls it by this spelling.
+    void LoadProgFn_00577180();  // retail 0x577180
+};
+SIZE(TRandomMapProgress, 0x30);
 
 #endif  /* HOMM3_SINGLESELECTIONPOPUPS_H */

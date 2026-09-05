@@ -192,6 +192,11 @@ source = "src/iconwdgt.cpp"
 flags = "game_o2_ml_gr_windows"
 
 [[unit]]
+unit = "textscroller"
+source = "src/textscroller.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
 unit = "textwdgt"
 source = "src/textwdgt.cpp"
 flags = "game_o2_ml_gr_windows"

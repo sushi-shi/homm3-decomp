@@ -3,6 +3,16 @@
 // 8 functions in link order.
 #include <va.h>
 #include "binkmanager.h"
+#include "bitmap16.h"   // screenBitmap map/Pitch/Height
+#include "inputmgr.h"   // gpInputManager, KEYCODE_F4
+#include "kbwin.h"      // PollSound / Process1WindowsMessage
+#include "message.h"
+#include "mousemgr.h"   // gpMouseManager
+#include "prefs.h"      // gUnnamed698758.soundVolume
+#include "smackmgr.h"   // gVideoDescriptors, VideoDrawRects, VideoClose
+#include "wingraph.h"   // gpDDSBack
+#include "soundmgr.h"   // gpSoundManager->service_sounds
+#include "winmgr.h"
 
 // Dreamcast publishes this exact name and the old 112-byte SDK type. Retail
 // oldmain addresses the same object at 0x694ce8.
@@ -25,22 +35,89 @@ void BinkManager::SetPixelFormat()
     // @stub
 }
 
-// E:\gamedcs\binkmanager.cpp:132
-DC_ONLY(0x50a84, 0x4)
-void BinkManager::OpenBink()
-{
-    // @stub
-}
-
-// E:\gamedcs\binkmanager.cpp:204
-DC_ONLY(0x50a88, 0x4)
-void BinkManager::DrawCurrentBinkFrame()
-{
-    // @stub
-}
-
 // E:\gamedcs\binkmanager.cpp:232
 #endif  // @carcass
+
+// E:\gamedcs\binkmanager.cpp:132 (dc 0x50a84). smackmgr.cpp's ShowVideo is
+// this body's SMACKER TWIN and its head is the same statement for statement -
+// the same three-way sound gate, the same `smkAudioStem != ""` audio-track
+// arm with its failure close, the same `if (w <= 0) w = video->Width` pair.
+VA(0x0044D830, 0x1A3)  // dc-order-map + caller (PlayBink 0x44dd20), dc 0x50a84
+void OpenBinkVideo(int id, int x, int y, int w, int h, int loop,
+                   int useDirtyRects)
+{
+    if (gUnnamed699290 == 0 && gpSoundManager->ds != 0
+        && gUnnamed698758.soundVolume != 0)
+        gBinkSoundReady = 1;
+    else
+        gBinkSoundReady = 0;
+
+    VideoClose();
+    gBinkSurfaceType = _BinkDDSurfaceType(gpDDSBack);
+    gBinkVideoId = id;
+    gBinkPaused = 0;
+
+    if (gVideoDescriptors[id].smkAudioStem != "") {
+        gBinkVideo2 = BinkManager::GetBinkFilePtr(
+            gVideoDescriptors[id].smkAudioStem, 0x400000);
+        if (!gBinkVideo2) {
+            CloseBinkVideo();
+            return;
+        }
+    }
+
+    gBinkVideo = BinkManager::GetBinkFilePtr(
+        gVideoDescriptors[id].smkStem,
+        gVideoDescriptors[id].field_b ? 0x400000 : 0);
+    if (!gBinkVideo) {
+        CloseBinkVideo();
+        return;
+    }
+
+    gBinkUseDirtyRects = static_cast<unsigned char>(useDirtyRects);
+    if (w <= 0)
+        w = gBinkVideo->Width;
+    if (h <= 0)
+        h = gBinkVideo->Height;
+    gBinkChainTrack = loop;
+    gBinkX = x;
+    gBinkY = y;
+    gBinkUpdateWidth = w;
+    gBinkUpdateHeight = h;
+    gBinkBuffer = 2 * x + gpWindowManager->screenBitmap->Pitch * y
+        + static_cast<unsigned char*>(
+              static_cast<void*>(gpWindowManager->screenBitmap->map));
+    gBinkPitch = gpWindowManager->screenBitmap->Pitch;
+    gBinkHeight = gpWindowManager->screenBitmap->Height;
+    gBinkFrameReady = 1;
+}
+
+// E:\gamedcs\binkmanager.cpp:204 (dc 0x50a88). The DC row is a 4-byte stub -
+// the Dreamcast port has no Bink - so the Complete body below is the whole
+// evidence, and its order-map is exact: the compiland runs 0x44d5a0,
+// 0x44d830, 0x44d9e0, 0x44da50 (RestartBink, already claimed), 0x44daa0,
+// 0x44dcc0, 0x44dd20 against the DC roster's GetBinkFilePtr, OpenBink,
+// DrawCurrentBinkFrame, RestartBink, NextBinkFrame, CloseBink, PlayBink.
+// smackmgr.cpp's VideoDrawCurrentFrame calls this one by the free-function
+// spelling this header already declares.
+VA(0x0044d9e0, 0x6E)  // dc-order-map + caller (smackmgr VideoDrawCurrentFrame), dc 0x50a88
+void DrawCurrentBinkFrame()
+{
+    Bink* video;
+    if (gBinkVideo && gBinkFrameReady) {
+        if (gBinkVideo->FrameNum == 1)
+            _BinkDoFrame(gBinkVideo);
+        video = gBinkVideo;
+    } else if (gBinkVideo2 && gBinkFrameReady) {
+        if (gBinkVideo2->FrameNum == 1)
+            _BinkDoFrame(gBinkVideo2);
+        video = gBinkVideo2;
+    } else {
+        return;
+    }
+    _BinkCopyToBuffer(video, gBinkBuffer, gBinkPitch, gBinkHeight, 0, 0,
+                      gBinkSurfaceType);
+}
 
 // E:\gamedcs\binkmanager.cpp:232
 VA(0x0044da50, 0x4D)  // caller role + body + source order, dc 0x50a8c
@@ -54,27 +131,206 @@ void BinkManager::RestartBink()
     }
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\binkmanager.cpp:252
-DC_ONLY(0x50a90, 0x4)
-void BinkManager::NextBinkFrame()
+// E:\gamedcs\binkmanager.cpp:252 (dc 0x50a90) - the per-frame pump.
+// smackmgr.cpp's VideoNextFrame calls it by this free-function spelling.
+// Residual (92.9169%): block LAYOUT only - every instruction pairs, the call
+// stream agrees 18 = 18 and the branch polarities match. Retail sinks the
+// not-ready tail BETWEEN the chained-track block and the end-of-playback
+// block (0x44dbed, before 0x44dbf8) where our CL parks it last, so three
+// guards land on a different block index. Measured: three separate
+// `gBinkDirty = 0; return;` bodies 85.88 (six exits against retail's four),
+// one shared `goto` 92.58 with the third guard's polarity inverted, folding
+// the last two guards into `||` 92.92, duplicating the third guard's tail
+// 89.43, and a `goto drawRects` that puts the label physically ahead of the
+// repaint tail is byte-flat at 92.92.
+VA(0x0044DAA0, 0x21A)  // dc-order-map + caller (smackmgr VideoNextFrame), dc 0x50a90
+void NextBinkFrame()
 {
-    // @stub
+    Bink* video = gBinkVideo;
+    if (!video) {
+        video = gBinkVideo2;
+        if (!video)
+            goto notReady;
+    }
+    if (!gBinkFrameReady || _BinkWait(video))
+        goto notReady;
+
+    gBinkDirty = 1;
+    if (gBinkPaused)
+        return;
+
+    _BinkDoFrame(video);
+    _BinkCopyToBuffer(video, gBinkBuffer, gBinkPitch, gBinkHeight, 0, 0,
+                      gBinkSurfaceType);
+
+    if (video->FrameNum == video->Frames) {
+        if (gBinkChainTrack) {
+            if (gBinkVideo && gBinkVideo2) {
+                if (gVideoDescriptors[gBinkVideoId].fadeOnAbort)
+                    gpWindowManager->FadeScreen(1, 4, 0);
+                gpSoundManager->service_sounds();
+                _BinkClose(gBinkVideo);
+                gBinkVideo = 0;
+                video = gBinkVideo2;
+                if (gVideoDescriptors[gBinkVideoId].field_9) {
+                    _BinkDoFrame(video);
+                    _BinkCopyToBuffer(video, gBinkBuffer, gBinkPitch,
+                                      gBinkHeight, 0, 0, gBinkSurfaceType);
+                    gpWindowManager->FadeScreen(0, 4, 0);
+                }
+            } else {
+                _BinkNextFrame(video);
+            }
+        } else {
+            _BinkGetSummary(video, &BinkSummary);
+            if (gBinkVideo) {
+                _BinkPause(gBinkVideo, 1);
+                _BinkClose(gBinkVideo);
+            }
+            if (gBinkVideo2) {
+                _BinkPause(gBinkVideo2, 1);
+                _BinkClose(gBinkVideo2);
+            }
+            gBinkVideo2 = 0;
+            gBinkVideo = 0;
+            gBinkPaused = 0;
+            gBinkFrameReady = 0;
+            gBinkDirty = 0;
+            if (gVideoDescriptors[gBinkVideoId].fadeOnAbort)
+                gpWindowManager->FadeScreen(1, 4, 0);
+            else
+                gpWindowManager->UpdateScreen(0, 0, 800, 600);
+            return;
+        }
+    } else {
+        _BinkNextFrame(video);
+    }
+    if (gBinkUseDirtyRects)
+        VideoDrawRects();
+    return;
+
+notReady:
+    gBinkDirty = 0;
 }
 
-// E:\gamedcs\binkmanager.cpp:345
-DC_ONLY(0x50a94, 0x4)
-void BinkManager::CloseBink()
+// E:\gamedcs\binkmanager.cpp:345 (dc 0x50a94) - the free-function spelling
+// smackmgr.cpp's VideoClose already calls.
+VA(0x0044dcc0, 0x60)  // dc-order-map + caller (smackmgr VideoClose), dc 0x50a94
+void CloseBinkVideo()
 {
-    // @stub
+    if (gBinkVideo) {
+        _BinkPause(gBinkVideo, 1);
+        _BinkClose(gBinkVideo);
+    }
+    if (gBinkVideo2) {
+        _BinkPause(gBinkVideo2, 1);
+        _BinkClose(gBinkVideo2);
+    }
+    gBinkVideo2 = 0;
+    gBinkVideo = 0;
+    gBinkPaused = 0;
+    gBinkFrameReady = 0;
+    gBinkDirty = 0;
 }
 
-// E:\gamedcs\binkmanager.cpp:376
-DC_ONLY(0x50a98, 0x4)
-int BinkManager::PlayBink(int id, int x, int y, int w, int h)
+// E:\gamedcs\binkmanager.cpp:376 (dc 0x50a98) - the compiland's last row and
+// smackmgr.cpp's VideoPlay tail-calls it by this free-function spelling. The
+// SMACKER TWIN is VideoPlay's own non-bink arm, statement for statement:
+// the same field_84 latch, the same `if (w < 0) vw = video->Width` pair, the
+// same F4-exempt abort filter around PollSound/Process1WindowsMessage, and
+// the same `aborted && fadeOnAbort` tail.
+// Residual (88.1839%): the register-homing family, and it is a clean MIRROR.
+// The call stream agrees 15 = 15, the branch count and the single return
+// agree, and every value lands in the right place - retail just keeps `vh` in
+// EBX with `vw` recycled into the `h` parameter home at [ebp+0x10], where our
+// CL keeps `vw` in EBX with `vh` in the `w` home at [ebp+0xc], and the zero it
+// compares against materialises in EAX on one side and not the other.
+// Tried: swapping the vw/vh declaration order (+0.22 and no slot change),
+// handing OpenBinkVideo `vw, vh` instead of `w, h` and testing `vw < 0`
+// instead of `w < 0` - the twin's own spelling, kept - both byte-flat.
+VA(0x0044DD20, 0x227)  // dc-order-map + caller (smackmgr VideoPlay), dc 0x50a98
+int PlayBinkVideo(int id, int x, int y, int w, int h)
 {
-    // @stub
-}
+    int vh = h;
+    int vw = w;
+    int updateX;
+    int updateY;
+    unsigned char result;
+    unsigned char aborted;
 
-#endif  // @carcass
+    gpSoundManager->field_84 = 1;
+    OpenBinkVideo(id, x, y, vw, vh, 0, 0);
+    if (!gBinkVideo) {
+        result = 0;
+    } else {
+        gpMouseManager->HidePointer();
+        if (vw < 0)
+            vw = gBinkVideo->Width;
+        if (vh < 0)
+            vh = gBinkVideo->Height;
+        if (id != VIDEO_ID_OVERLAY_BLIT) {
+            updateX = x + (vw - gBinkVideo->Width) / 2;
+            gBinkX = updateX;
+            updateY = y + (vh - gBinkVideo->Height) / 2;
+            gBinkY = updateY;
+        } else {
+            updateX = 0;
+            updateY = 0;
+            vw = gBinkVideo->Width;
+            vh = gBinkVideo->Height;
+        }
+        gBinkBuffer = 2 * gBinkX
+            + gpWindowManager->screenBitmap->Pitch * gBinkY
+            + static_cast<unsigned char*>(
+                  static_cast<void*>(gpWindowManager->screenBitmap->map));
+        aborted = 0;
+        gpInputManager->Flush();
+        while (1) {
+            if (gBinkVideo == 0)
+                break;
+            PollSound();
+            Process1WindowsMessage();
+            {
+                message msg = gpInputManager->GetEvent();
+                switch (msg.id) {
+                    case MESSAGE_KEY_DOWN:
+                        if (msg.codeX == KEYCODE_F4)
+                            break;
+                        // fall through
+                    case MESSAGE_LEFT_BUTTON_DOWN:
+                    case MESSAGE_RIGHT_BUTTON_DOWN:
+                        if (!gbVideoNoSkip) {
+                            aborted = 1;
+                            goto stop_playback;
+                        }
+                        break;
+                }
+            }
+            if (VideoNeedsUpdate())
+                VideoDrawRects();
+        }
+stop_playback:
+        if (gBinkVideo) {
+            _BinkPause(gBinkVideo, 1);
+            _BinkClose(gBinkVideo);
+        }
+        if (gBinkVideo2) {
+            _BinkPause(gBinkVideo2, 1);
+            _BinkClose(gBinkVideo2);
+        }
+        gBinkVideo2 = 0;
+        gBinkVideo = 0;
+        gBinkPaused = 0;
+        gBinkFrameReady = 0;
+        gBinkDirty = 0;
+        if (aborted && gVideoDescriptors[id].fadeOnAbort)
+            gpWindowManager->FadeScreen(1, 4, 0);
+        else
+            gpWindowManager->UpdateScreen(updateX, updateY, vw, vh);
+        gpMouseManager->ShowPointer(0);
+        result = !aborted;
+    }
+    gBinkPaused = 0;
+    gBinkFrameReady = 0;
+    return result;
+}
