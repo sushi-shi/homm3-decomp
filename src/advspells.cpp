@@ -5,6 +5,7 @@
 #include "advmgr.h"
 #include "advspells.h"
 #include "armygrp.h"
+#include "cursor.h"
 #include "dimensiondoorwindow.h"
 #include "exec.h"
 #include "findpath.h"
@@ -649,17 +650,122 @@ void advManager::Flight(int level)
     WaitEndSample(sample, -1);
 }
 
-#if 0  // @carcass: remaining untouched bodies (continued)
 // E:\gamedcs\advspells.cpp:703
-// advmgr.h already carries the identification: `ret 0x18` against six
-// parameters, 1124/1116 = 1.007, and the third pushed argument is
-// "telptout.wav" at 0x67775c. DimensionDoor above calls it for real.
+// The shared teleport primitive: Dimension Door, Town Portal, both lith
+// handlers and townmgr's DoTownGate all land here. gCompleteDrawEnabled is
+// SAVED at entry and RESTORED at exit, and in between it is this body's own
+// working "did anything visible change" flag - which is why almost every
+// block below is gated on it.
+//
+// Its three parameters do three different jobs: bIsRemoteMove means another
+// machine's hero, so no map-change packet, no recentring and no fizzle -
+// just re-obscure the cell; is_replay only suppresses the packet; and
+// draw_changes decides whether the sample plays and whether the visibility
+// scan runs at all.
 VA(0x0041d930, 0x464)  // anchor-import telptout.wav + arity ret 0x18, dc 0x22b88
-void advManager::TeleportTo(hero* who, type_point destination, const char* sample_name, unsigned char bIsRemoteMove, unsigned char draw_changes, unsigned char is_replay)
+void advManager::TeleportTo(hero* who, type_point destination,
+                            const char* sample_name,
+                            unsigned char bIsRemoteMove,
+                            unsigned char draw_changes,
+                            unsigned char is_replay)
 {
-    // @stub
+    int savedCompleteDraw = gCompleteDrawEnabled;
+    if (!draw_changes)
+        gCompleteDrawEnabled = 0;
+
+    if (!bIsRemoteMove && !is_replay) {
+        CMCTeleportHero mapChange(who->id, destination);
+        SendMapChange(&mapChange);
+        gpGame->record_teleport(who, destination);
+    }
+
+    NewmapCell* destinationCell = GetCell(destination);
+    GetCell(who->get_location());
+
+    unsigned char wasMobile = bCurHeroMobile;
+    SetHeroContext(who->id, 0, 0, draw_changes);
+
+    SAMPLE2 sample;
+    sample.playSample = 0;
+    if (draw_changes || gpCurrentPlayer->IsLocalHuman()) {
+        sample = LoadPlaySample(sample_name);
+        CompleteDraw(0);
+        if (draw_changes && !gpCurrentPlayer->IsLocalHuman()) {
+            if ((gUnnamed698790 == 0
+                 && MapExtraPosAndAdjacentsSet(who->x, who->y, who->z,
+                                               gMapVisibilityBit))
+                || MapExtraPosAndAdjacentsSet(destination.x, destination.y,
+                                              destination.z,
+                                              gMapVisibilityBit)) {
+                gCompleteDrawEnabled = 1;
+            } else {
+                gCompleteDrawEnabled = 0;
+            }
+        }
+    }
+    if (gCompleteDrawEnabled)
+        HideRoute(1, 1, 1);
+
+    if (!bIsRemoteMove) {
+        if (gCompleteDrawEnabled || gpCurrentPlayer->IsLocalHuman()) {
+            // The map view is 19x17 cells, so the origin lands nine left
+            // and eight up from the arrival square.
+            radarOrigin.x = destination.x - 9;
+            radarOrigin.y = destination.y - 8;
+            radarOrigin.z = destination.z;
+            advWindow->SetElevationToggleImage(radarOrigin.z);
+        }
+    } else {
+        who->restore_cell();
+    }
+
+    who->x = destination.x;
+    who->y = destination.y;
+    who->z = destination.z;
+    gpGame->SetVisibility(destination.x, destination.y, destination.z,
+                          gNetLocalGamePos, who->GetVisibility(),
+                          bIsRemoteMove);
+
+    if ((gCompleteDrawEnabled || gpCurrentPlayer->IsLocalHuman())
+        && !bIsRemoteMove) {
+        if (gCompleteDrawEnabled) {
+            gpWindowManager->SaveFizzleSourceX(8, 8, 0x250, 0x220);
+            gpAdvManager->RedrawAdvScreen(0, 0);
+            gpWindowManager->FizzleForwardX(8, 8, 0x250, 0x220, -1);
+            if (sample.playSample != 0)
+                WaitEndSample(sample, -1);
+        }
+    } else {
+        drawCursor = 0;
+        if (bIsRemoteMove)
+            who->obscure_cell();
+    }
+
+    if (!wasMobile)
+        DemobilizeCurrHero(0, draw_changes);
+
+    if (gCompleteDrawEnabled) {
+        SetEnvironmentOrigin(type_point(radarOrigin.x + 9, radarOrigin.y + 8,
+                                        radarOrigin.z),
+                             1);
+    }
+
+    if (destinationCell->GroundSet != field_58 && gCompleteDrawEnabled) {
+        field_58 = destinationCell->GroundSet;
+        gpSoundManager->SwitchAmbientMusic(gTerrainMusicIds[field_58]);
+    }
+
+    Reseed(0, 0);
+    if (gCompleteDrawEnabled) {
+        UpdateRadar(1, 1, 0, 0, 0);
+        CompleteDraw(0);
+        ForceNewHover();
+    }
+
+    gCompleteDrawEnabled = savedCompleteDraw;
 }
 
+#if 0  // @carcass: remaining untouched bodies (continued)
 // E:\gamedcs\struct.h:120
 DC_ONLY(0x22fe4, 0x2E)
 int type_point::DistanceSquared(const type_point* p2)
