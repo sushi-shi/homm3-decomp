@@ -831,6 +831,10 @@ VA_COMPGEN(0x0045b140, 0x6E, IMPLICIT_DTOR, map)
 // scenario. The delinker already labelled the row from the class.
 VA_COMPGEN(0x0045bac0, 0xE, CLASS_CTOR, LossConditionStruct)
 
+// COMDAT pairing: vector<type_map_hero_identity>'s copy assignment, 661 B
+// against campaignbrief.obj's single 661-byte COMDAT.
+VA_COMPGEN(0x0045bcd0, 0x295, VECTOR_COPY_ASSIGN, type_map_hero_identity)
+
 // The same map's two-argument constructor - `map(const key_compare&, const
 // allocator_type&)`, the form the copy path builds through. Byte-verified
 // against the emitted COMDAT at 0.984 mnemonic agreement over 190 bytes.
@@ -1365,6 +1369,25 @@ VA_COMPGEN(0x0045c070, 0x12B, TREE_ERASE_RANGE, type_map_hero_info)
 // COMDAT pairing: std::_Construct<pair<const int, type_map_hero_info>>, 0.993
 // against a 368 B object; newgame's two candidates are 347 and 343 B.
 VA_COMPGEN(0x0045d590, 0x16E, STD_CONSTRUCT, type_map_hero_info_pair)
+
+// COMDAT pairing: basic_string<char>::_Refcnt, 15 B against this
+// compiland's single 15-byte COMDAT. Declarator form: _demangle_key keys
+// the basic_string helpers flat, with no owner arm for a compgen kind.
+#if 0  // @carcass: Dinkumware instantiations emitted by this compiland
+
+VA(0x0045c1d0, 0xB)  // COMDAT pairing (unique 11 B in this obj)
+unsigned char& std::basic_string<char>::_Refcnt(const char* s)
+{
+    // @stub
+}
+
+VA(0x0045dc90, 0xF)  // COMDAT pairing (unique 15 B in this obj)
+void std::char_traits<char>::assign(char& to, const char& from)
+{
+    // @stub
+}
+
+#endif  // @carcass
 
 // COMDAT pairing: map<int, type_map_hero_info>'s COPY constructor, the second
 // half of the two-member ctor group whose first half is already claimed at

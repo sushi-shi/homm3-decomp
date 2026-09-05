@@ -5524,3 +5524,19 @@ void std::__destroy_aux()
 // COMDAT pairing: combatManager::TObstacleVector::_Ucopy - the hand-modelled
 // obstacle container's uninitialised copy, `ret 0xc` for its three pointers.
 VA_COMPGEN(0x0046b1a0, 0x3B, VECTOR_UCOPY, tobstaclevector)
+
+// COMDAT pairing: the _Ufill half of the same hand-modelled container, 49 B
+// against cmbtmgr.obj's single 49-byte COMDAT. The claim carries a
+// declarator rather than a VECTOR_UFILL kind because _demangle_key keys a
+// NESTED container's _Ufill flat (combatmanager_tobstaclevector__ufill)
+// where it keys its _Ucopy as tobstaclevector@vector_ucopy.
+#if 0  // @carcass: Dinkumware-shaped member of the hand-modelled container
+
+VA(0x0046b1e0, 0x31)  // COMDAT pairing (unique 49 B in this obj)
+void combatManager::TObstacleVector::_Ufill(TObstacle* first, unsigned count,
+                                            const TObstacle& value)
+{
+    // @stub
+}
+
+#endif  // @carcass
