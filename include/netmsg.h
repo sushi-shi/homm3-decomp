@@ -699,7 +699,12 @@ public:
     int heroId;
     type_point point;
 
-    CMCTeleportHero(int id, type_point location);
+    // Retail has NO out-of-line body: advManager::TeleportTo (0x41d930) is
+    // the only constructor site in the image and expands it, sharing the
+    // CNetMsg base's zero register with the `gCompleteDrawEnabled = 0` store
+    // above it. Same member-initialiser shape as CMCMoveHero's next door.
+    CMCTeleportHero(int id, type_point location)
+        : CMapChange(RS_TELEPORT_HERO, 0x1c), heroId(id), point(location) {}
 };
 SIZE(CMCTeleportHero, 0x1c);
 
