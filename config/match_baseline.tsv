@@ -64,7 +64,7 @@ advmgr	?DeactivateCurrHero@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x175a
 advmgr	?DeactivateCurrTown@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x17570	65cf91ab93a3
 advmgr	?DemobilizeCurrHero@advManager@@QAEXEE@Z	100.0000	100.0000	100.0000	0x17680	0e81b70808b2
 advmgr	?DisableButtons@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1a2e0	d6a15e176a45
-advmgr	?DoAdvCommand@advManager@@QAEPAVNewmapCell@@PAUtype_point@@@Z	90.2547	90.2547	90.2547	0x7b80	cbabf5eefc18
+advmgr	?DoAdvCommand@advManager@@QAEPAVNewmapCell@@PAUtype_point@@@Z	94.2359	94.2359	94.2359	0x7b80	69c897dd8221
 advmgr	?DoAdventureOptions@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1ab00	7e482f83bb0c
 advmgr	?DoSystemOptions@advManager@@QAEEXZ	100.0000	100.0000	100.0000	0x1ac00	f0fa0f6b3869
 advmgr	?DrawAdvObj@advManager@@QAEXHHHHH@Z	87.5901	87.5901	87.5901	0x10c00	1156912974aa

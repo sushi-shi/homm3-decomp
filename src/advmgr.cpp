@@ -1190,6 +1190,15 @@ type_point advManager::get_mouse_map_point(__$ReturnUdt)
 // surplus block and takes the skeleton to 121/121 with 96 exact blocks, but
 // the ratchet number falls to 89.9938 - measured both ways, the guard
 // stays.
+// 2026-09-05: 90.2547 -> 94.2359 by UNPEELING that head. `route_walk_step:`
+// had both a fall-in predecessor (the `if (i < 0)` guard falling through)
+// and a backward `goto route_walk_step`, which is exactly the shape VC6
+// peels; wrapping the body in `while (1)` and leaving `route_walk_next:` at
+// the END of the loop as a forward-only continue point keeps the guard AND
+// gives 121/121 blocks with retail's unconditional back edge. calls now
+// AGREE 81 = 81 and only ONE polarity flip is left tree-wide in this body
+// (#15, the BuildPath budget select below). Same lever as wingraph's DDBlit
+// and cmbtmgr's place_obstacle.
 VA(0x00407b80, 0xBF0)  // anchor-global, dc 0x7a8c
 NewmapCell* advManager::DoAdvCommand(type_point* trigger_point)
 {
@@ -1297,8 +1306,8 @@ NewmapCell* advManager::DoAdvCommand(type_point* trigger_point)
         int i = gpSearchArray->result.size() - 1;
         if (i < 0)
             goto route_walk_done;
-    route_walk_step:
-        {
+        while (1) {
+            {
                 int bNoMove;
                 int bFoughtBattle;
                 eventCell = MoveHero(gpSearchArray->result[i]->direction,
@@ -1340,10 +1349,10 @@ NewmapCell* advManager::DoAdvCommand(type_point* trigger_point)
                     msg = gpInputManager->GetEvent();
                 }
             }
-    route_walk_next:
-        if (--i < 0)
-            goto route_walk_done;
-        goto route_walk_step;
+        route_walk_next:
+            if (--i < 0)
+                goto route_walk_done;
+        }
 
     route_walk_done:
         seedingValid = 0;
