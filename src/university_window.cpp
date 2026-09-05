@@ -322,6 +322,12 @@ void type_university_window::set_selection_mode()
     selected_skill.skill = eSecSkillNone;
 }
 
+// Retail vtable slot 0, the compiler-generated wrapper the delete path
+// reaches. Its 33 bytes are the canonical destructor-then-conditional-delete
+// sequence and it is the only row between the constructor (ends 0x5f0752) and
+// update_skill_button (0x5f0790).
+VA_COMPGEN(0x005f0760, 0x21, SCALAR_DELETING_DTOR, type_university_window)
+
 // E:\gamedcs\university_window.cpp:285. The unclaimed-in-span row between
 // the constructor (ends 0x5f0752) and DoModal (0x5f0a20), and the
 // Dreamcast's own next row in the same gap. The body names itself: it
