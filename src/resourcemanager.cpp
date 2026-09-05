@@ -2552,6 +2552,17 @@ sample* ResourceManager::GetSample(const char* name)
 // cannot reproduce retail's downstream handle state. The prechecked do/while
 // below is the best form and preserves retail's frame-index/name-offset init
 // order.
+// 2026-09-05, easy lane 3 - first divergence localised to the frame loop's
+// header. Retail carries a ZERO in ESI for the whole body (materialised once
+// before the sequence loop) and homes `frameIndex` purely in `[ebp-0x28]`;
+// this compile binds ESI to frameIndex, so it must re-zero ESI at every outer
+// iteration and reload it at the top of the inner loop from the slot it just
+// wrote - a one-instruction loop header the preheader `jmp`s past, which is
+// the whole 73-vs-72 block count and every `!!` after B23. Measured and
+// rejected: hoisting `sequence.sequenceNumber` into a local before the inner
+// loop, which is what retail's spare `mov [ebp-0x30],eax` in that block does -
+// 88.8617 -> 88.3126. Register-homing class; the block-shape levers do not
+// reach it.
 VA(0x0055c7b0, 0x743)  // anchor-caller/body records, dc 0x122320; wall
 CSprite* ResourceManager::GetSprite(const char* name)
 {
