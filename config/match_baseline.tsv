@@ -238,6 +238,7 @@ ai_combat	?get_total@type_AI_combat_data@@QBEJXZ	100.0000	100.0000	100.0000	0x27
 ai_combat	?inflict_damage@type_AI_combat_data@@QAEXJJ@Z	100.0000	100.0000	100.0000	0x26300	dd05427386d1
 ai_combat	?inflict_melee_damage@type_AI_combat_data@@QAEJJJJ@Z	100.0000	100.0000	100.0000	0x26170	1f05d418dada
 ai_combat	?initialize_creatures@type_AI_combat_data@@QAEXNPBVhero@@@Z	91.9548	91.9548	91.9548	0x24120	04678536d519
+ai_combat	?insert@?$vector@Utype_monster_data@@V?$allocator@Utype_monster_data@@@std@@@std@@QAEXPAUtype_monster_data@@IABU3@@Z	100.0000	100.0000	100.0000	0x27780	-
 ai_combat	?kill@type_AI_combat_data@@QAEXXZ	100.0000	100.0000	100.0000	0x262b0	19c6a5b5165a
 ai_combat	?simulate_combat@type_AI_combat_data@@QAEXAAV1@@Z	100.0000	100.0000	100.0000	0x26bc0	55e323c352a3
 ai_combat	?take_damage@type_monster_data@@QAEJJ@Z	100.0000	100.0000	100.0000	0x23ea0	f560b32b5895
@@ -2679,6 +2680,7 @@ remote	?UpdateWidgetText@CChatManager@@QAEXHPAVtextWidget@@@Z	100.0000	100.0000	
 remote	?Wait@CWaitForRemoteBattleDlg@@QAEXH@Z	100.0000	100.0000	100.0000	0x157090	295232c6d221
 remote	?WaitForLevels@CLevelPickWaitDlg@@QAEXH@Z	100.0000	100.0000	100.0000	0x156ba0	0241a383016a
 remote	?WaitForReadyToPlayMsg@@YIXXZ	84.4720	84.4720	84.4720	0x154f10	35800d8982ed
+remote	?_Buyback@?$deque@PAVCNetMsg@@V?$allocator@PAVCNetMsg@@@std@@@std@@IAEXXZ	100.0000	100.0000	100.0000	0x158500	-
 remote	?handle_message@CAnimatedDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x154d90	2b6f4adffdbc
 remote	?handle_message@CLevelPickWaitDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x156c20	b05d22fa68f5
 remote	?handle_message@CWaitForReadyPlayersDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x155190	b27aba841293
