@@ -2252,19 +2252,9 @@ void EarlyShutDownSystem()
 
 #if 0  // @carcass
 
-// E:\gamedcs\kb.cpp:3970
-DC_ONLY(0xe3e48, 0x450)
-void CongratsWait(int mode, char* rank, int iBase, int iScore, int iDayz)
-{
-    // @stub
-}
+// E:\gamedcs\kb.cpp:3970 - promoted to a live claim (see below).
 
-// E:\gamedcs\kb.cpp:4102
-DC_ONLY(0xe4330, 0x1BE)
-void ShowCongrats(int hsType)
-{
-    // @stub
-}
+// E:\gamedcs\kb.cpp:4102 - promoted to a live claim (see below).
 
 // E:\gamedcs\kb.cpp:4168
 DC_ONLY(0xe44f0, 0x40)
@@ -2779,6 +2769,116 @@ void FileError(const char* cBuf)
     NormalDialog(cTemp, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
 }
 
+// E:\gamedcs\kb.cpp:3970
+// The end-of-game score sheet, drawn over the closing video.  Five 160 px
+// columns run across the bottom of the 800x600 frame: the general-text
+// labels (rows 439-442 and 677) at y=450 and the matching values at
+// y=540, each value built into one scratch buffer by a switch on the
+// column index - days, base score, the difficulty name, the final score,
+// and the rank string ShowCongrats formatted for us.  The whole run is
+// drawn once, then again on every video frame that asks for one, until
+// the movie ends or any mouse button (or a key other than F4) stops it.
+// The Dreamcast first parameter survives in Complete's ABI but its body
+// no longer reads it; ShowCongrats still passes the high-score type.
+VA(0x004f3ab0, 0x374)  // anchor-caller (ShowCongrats) + dc-order-map, dc 0xe3e48
+void CongratsWait(int mode, char* rank, int iBase, int iScore, int iDayz)
+{
+    font* pFont = ResourceManager::GetFont("HiScore.fnt");
+    const char* labels[5] = {
+        gpGeneralText->Text[439],
+        gpGeneralText->Text[440],
+        gpGeneralText->Text[441],
+        gpGeneralText->Text[442],
+        gpGeneralText->Text[677]
+    };
+    char cTemp[100];
+    int i;
+    int x;
+
+    gpInputManager->Flush();
+    VideoDrawCurrentFrame();
+    for (i = 0; i < CONGRATS_COLUMN_COUNT; i++) {
+        x = i * 160;
+        pFont->DrawBoundedString(labels[i], gpWindowManager->screenBitmap,
+                                 x, 450, 160, 100, 281, 5, -1);
+        switch (i) {
+        case CONGRATS_COLUMN_DAYS:
+            sprintf(cTemp, DATA_COMPGEN(0x00660a1c, dialogDecimalFormat,
+                "%d"), iDayz);
+            break;
+        case CONGRATS_COLUMN_BASE_SCORE:
+            sprintf(cTemp, DATA_COMPGEN(0x00660a1c, dialogDecimalFormat,
+                "%d"), iBase);
+            break;
+        case CONGRATS_COLUMN_DIFFICULTY:
+            strcpy(cTemp, gUnnamed6a77ec[gpGame->setup.difficulty]);
+            break;
+        case CONGRATS_COLUMN_SCORE:
+            sprintf(cTemp, DATA_COMPGEN(0x00660a1c, dialogDecimalFormat,
+                "%d"), iScore);
+            break;
+        case CONGRATS_COLUMN_RANK:
+            strcpy(cTemp, rank);
+            break;
+        }
+        pFont->DrawBoundedString(cTemp, gpWindowManager->screenBitmap,
+                                 x, 540, 160, 50, 281, 5, -1);
+    }
+    gpWindowManager->UpdateScreen(0, 0, 800, 600);
+    while (VideoPlaying()) {
+        PollSound();
+        Process1WindowsMessage();
+        message msg = gpInputManager->GetEvent();
+        switch (msg.id) {
+        case MESSAGE_KEY_DOWN:
+            if (msg.codeX != KEYCODE_F4)
+                goto stop_congrats;
+            break;
+        case MESSAGE_LEFT_BUTTON_DOWN:
+        case MESSAGE_LEFT_BUTTON_UP:
+        case MESSAGE_RIGHT_BUTTON_DOWN:
+        case MESSAGE_RIGHT_BUTTON_UP:
+            goto stop_congrats;
+        }
+        if (VideoNeedsUpdate()) {
+            for (i = 0; i < CONGRATS_COLUMN_COUNT; i++) {
+                x = i * 160;
+                pFont->DrawBoundedString(labels[i],
+                                         gpWindowManager->screenBitmap,
+                                         x, 450, 160, 100, 281, 5, -1);
+                switch (i) {
+                case CONGRATS_COLUMN_DAYS:
+                    sprintf(cTemp, DATA_COMPGEN(0x00660a1c,
+                        dialogDecimalFormat, "%d"), iDayz);
+                    break;
+                case CONGRATS_COLUMN_BASE_SCORE:
+                    sprintf(cTemp, DATA_COMPGEN(0x00660a1c,
+                        dialogDecimalFormat, "%d"), iBase);
+                    break;
+                case CONGRATS_COLUMN_DIFFICULTY:
+                    strcpy(cTemp,
+                           gUnnamed6a77ec[gpGame->setup.difficulty]);
+                    break;
+                case CONGRATS_COLUMN_SCORE:
+                    sprintf(cTemp, DATA_COMPGEN(0x00660a1c,
+                        dialogDecimalFormat, "%d"), iScore);
+                    break;
+                case CONGRATS_COLUMN_RANK:
+                    strcpy(cTemp, rank);
+                    break;
+                }
+                pFont->DrawBoundedString(cTemp,
+                                         gpWindowManager->screenBitmap,
+                                         x, 540, 160, 50, 281, 5, -1);
+            }
+            VideoDrawRects();
+        }
+    }
+
+stop_congrats:
+    pFont->Dispose();
+}
+
 // E:\gamedcs\kb.cpp:4077
 // game.h's own get_current_turn expression appears here verbatim, which is
 // what identifies the row: the same three calendar words at +0x1f63e /
@@ -2811,6 +2911,69 @@ short game::get_map_score()
 {
     return static_cast<short>(static_cast<float>(get_base_map_score())
                               * gMapScoreDifficultyFactor[setup.difficulty]);
+}
+
+// Retail-only 0x45bc10, a free function sitting in the
+// campaignbrief..campaignmap band: it builds a
+// TCampaignBrief::CampaignHeaderStruct over the file
+// SCampaign::GetCampaignFileName names, Loads it and returns
+// CampaignHeaderStruct::GetCampaignName by value (the header object is
+// never freed - transcribed, not invented).  Declared file-locally
+// because ShowCongrats is its only located caller; not claimed here.
+std::string GetCurrentCampaignName();
+
+// E:\gamedcs\kb.cpp:4102
+// The victory screen.  The four numbers the high-score table wants are
+// gathered per high-score type - a scenario win reads the map score
+// family and the calendar, a campaign win the campaign's own score and
+// elapsed time with a flat 100% rating - and the rank line is the name of
+// the creature highScoreManager::GetMonType picks for the score, upcased,
+// or the cheat row when gpGame's cheat latch is up.  Then the closing
+// movie and "Win Scenario" run under CongratsWait, and the result is
+// banked before the screen fades.
+VA(0x004f3f60, 0x357)  // anchor-callee (CongratsWait/AddScoreToHighScore) + "Win Scenario", dc 0xe4330
+void ShowCongrats(int hsType)
+{
+    std::string sLand;
+    int iBase;
+    int iScore;
+    int iDayz;
+    int iRating;
+    char cTemp[32];
+
+    gpMouseManager->HidePointer();
+    gpWindowManager->colorCyclingOn = 0;
+    if (hsType == 1) {
+        iBase = gpGame->get_base_map_score();
+        iScore = gpGame->get_map_score();
+        iDayz = gpGame->get_current_turn();
+        iRating = static_cast<int>(
+            gMapScoreDifficultyFactor[gpGame->setup.difficulty] * 100.0f);
+        sLand = gpGame->mapHeader.mapName.c_str();
+    } else {
+        iBase = iScore = gpGame->campaign.get_score();
+        iDayz = gpGame->campaign.get_total_time();
+        iRating = 100;
+        sLand = GetCurrentCampaignName();
+    }
+
+    int iMonType = highScoreManager::GetMonType(iScore, hsType);
+    sprintf(cTemp, iMonType >= 0 && iMonType <= 150
+                       ? akCreatureTypeTraits[iMonType].m_name
+                       : "");
+    if (gpGame->field_1f69c)
+        strcpy(cTemp, gpGeneralText->Text[261]);
+    cTemp[0] = static_cast<char>(toupper(cTemp[0]));
+    VideoOpen(0x23, 0, 0, 0, 0, 1, 0, 1);
+    gpSoundManager->StartMP3(
+        DATA_COMPGEN(0x0066c29c, congratsMusicName, "Win Scenario"), 0, 1);
+    CongratsWait(hsType, cTemp, iBase, iScore, iDayz);
+    VideoClose();
+    gpHighScoreManager->AddScoreToHighScore(iScore, iDayz, iRating, hsType,
+                                           sLand.c_str());
+    gpMouseManager->ShowPointer(0);
+    gpWindowManager->colorCyclingOn = 1;
+    gpWindowManager->FadeScreen(1, 4, 0);
 }
 
 // This tree still carries the spellbook id in the older combat-side enum,
