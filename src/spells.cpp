@@ -836,18 +836,24 @@ void combatManager::CastSpell(SpellID spellId, int targetIndex,
     // Complete extends that exact arm for artifact casts; retail +0x2db
     // tests the already-nonzero value against SPELL_CASTER_ARTIFACT.
     if (!bIsMonsterSpell || bIsMonsterSpell == SPELL_CASTER_ARTIFACT) {
-        int hero_row = akHeroClasses[casting_hero->heroClass].townType * 2
-            + akHeroTraits[casting_hero->id].sex;
         if (currentSide == 0)
-            castX = kCombatHeroSprites[hero_row].castX - 43;
+            castX = kCombatHeroSprites[
+                akHeroClasses[casting_hero->heroClass].townType * 2
+                + akHeroTraits[casting_hero->id].sex].castX - 43;
         else
             castX = creatureSprites[1]->GetWidth()
-                - kCombatHeroSprites[hero_row].castX + 693;
-        castY = kCombatHeroSprites[hero_row].castY - 19;
+                - kCombatHeroSprites[
+                    akHeroClasses[casting_hero->heroClass].townType * 2
+                    + akHeroTraits[casting_hero->id].sex].castX + 693;
+        castY = kCombatHeroSprites[
+            akHeroClasses[casting_hero->heroClass].townType * 2
+            + akHeroTraits[casting_hero->id].sex].castY - 19;
 
         field_53e4[currentSide] = 4;
         for (int frame = 0;
-             frame < kCombatHeroSprites[hero_row].castFrame; frame++) {
+             frame < kCombatHeroSprites[
+                 akHeroClasses[casting_hero->heroClass].townType * 2
+                 + akHeroTraits[casting_hero->id].sex].castFrame; frame++) {
             field_53ec[currentSide] = frame;
             DrawFrame(1, 1, 0, 100, 1, 1);
         }
