@@ -168,6 +168,16 @@
 # 0xb6260's own `sub esp,0x108` prologue set up. 747+174+2+199 = 1122 and
 # 0xb6260+1122 = 0xb66c2, where fourteen bytes of alignment run to the next
 # carved entry at 0xb66d0. Row count 11959 -> 11957.
+# BOUNDARY CORRECTION 2026-09-06: the image's FIRST carved entry,
+# TAdventureMapWindow::Open at 0x1400, is one 197-byte EH-bearing function
+# through its `ret 8` at 0x14c2, not the three rows the carve carried.
+# 0x14a7 (6 B) is its unwind funclet - `mov eax, 0x4014ad / ret`, the
+# continuation address _JumpToContinuation resumes at - and 0x14b0 (21 B)
+# is the shared epilogue its three arms jump to. The THREE BYTES between
+# them, 0x14ad `mov edi,[ebp+0xc]`, were owned by no row at all, which is
+# the same omission the 0x53dd0 correction above records. 167+6+3+21 = 197
+# and 0x1400+197 = 0x14c5, where eleven bytes of alignment run to
+# TAdventureMapWindow::Close at 0x14d0. Row count 11957 -> 11955.
 rva	size
 0x1000	89
 0x1060	96
@@ -180,9 +190,7 @@ rva	size
 0x1310	95
 0x1370	95
 0x13d0	40
-0x1400	167
-0x14a7	6
-0x14b0	21
+0x1400	197
 0x14d0	60
 0x1510	3253
 0x21d0	5
