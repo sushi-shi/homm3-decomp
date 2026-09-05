@@ -340,7 +340,14 @@ void VWDrawSprite(CSprite* srcIcon, NewmapCell* thisCell, int frame, int x, int 
 // sprite row our CL lands the inlined GetNumFrames divisor in a recycled
 // parameter home (`mov [ebp+N],ecx` / `mov [ebp+N],0`) where retail keeps it
 // in ECX (`xor ecx,ecx`). 27 of 28 blocks exact, 13/13 branches, identical
-// call multiset. The four bodies are a free in-compile A/B for that wall.
+// call multiset. The four bodies are a free in-compile A/B for that wall, and
+// two source levers for it are now measured and REJECTED (2026-09-06, on
+// VWDrawHeroPart): naming the sprite (`CSprite* boatIcon =
+// boatIcons[currBoat->type];`) so the receiver and the GetNumFrames divisor
+// share one pointer costs 0.09 (98.2385 -> 98.1467), and hoisting the two
+// repeated coordinate expressions into `heroX`/`heroY` locals ahead of the
+// boat test - five identical sites - collapses the body to 75.1244.  The
+// parameter homes must stay recyclable.
 VA(0x005f7500, 0x3F7)  // exhaustive dc-order-map inside the VWDrawAdvObj bracket, dc 0x19308c
 void advManager::VWDrawHeroPart(int part, TDrawParts& heroParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
 {
