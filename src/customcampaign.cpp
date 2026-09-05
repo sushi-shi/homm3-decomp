@@ -7,7 +7,11 @@
 // carcass is not force-claimed merely from roster order.
 #include <va.h>
 #include <algorithm>
+#include <direct.h>
+#include <fstream>
+#include <strstream>
 #include "game.h"
+#include "campaignmap.h"
 #include "abstractfile.h"
 #include "campaignbrief.h"
 #include "customcampaign.h"
@@ -25,6 +29,7 @@
 #include "sample.h"
 #include "smackmgr.h"
 #include "soundmgr.h"
+#include "textresource.h"
 #include "town.h"
 #include "winmgr.h"
 #include <string.h>
@@ -121,6 +126,20 @@ bool CrossoverHeroStronger::operator()(hero& lhs, hero& rhs) const
     if (leftValue != rightValue)
         return leftValue > rightValue;
     return lhs.id > rhs.id;
+}
+
+// Complete-only. The six string/vector/bitset members take their own
+// default constructors in declaration order; the body clears the two text
+// records, the start-options pointer and the eight carry-over hero slots.
+// Everything retail leaves alone - offset, inflated_size, region_color,
+// difficulty and the five retain flags - is written by the reader below.
+VA(0x00485f50, 0x8B)  // ~ScenarioStruct's immediate predecessor, retail-only
+TCampaignBrief::ScenarioStruct::ScenarioStruct()
+{
+    prologue = 0;
+    epilogue = 0;
+    options = 0;
+    memset(heroes_status, 0, sizeof(heroes_status));
 }
 
 // Complete-only. Retail destroys the two MapTextStruct records and the
@@ -370,6 +389,21 @@ void TCampaignBrief::ScenarioStruct::MarkCrossoverHeroes(unsigned char* wanted)
         wanted[hero_placeholders[iPlaceholder]] = 1;
 }
 
+#if 0  // @carcass - Complete's scenario-record reader, Load's per-record callee.
+// Reached only from CampaignHeaderStruct::Load's creation loop, which hands
+// it the region's scenario count and the campaign file version alongside the
+// inflating stream. Its first two operations are already read out of the
+// bytes: `name = ReadLengthPrefixedString(infile)` and a four-byte read into
+// inflated_size (+0x14).
+VA(0x00487e40, 0x586)  // anchor-caller(CampaignHeaderStruct::Load +0x379), retail-only
+void TCampaignBrief::ScenarioStruct::Read(TAbstractFile* infile,
+                                          int numScenarios,
+                                          int campaignVersion)
+{
+    // @stub
+}
+#endif  // @carcass
+
 #if 0  // Dreamcast-only carcass; retained as evidence, not emitted for retail.
 // E:\gamedcs\customcampaign.cpp:29
 DC_ONLY(0x7cc8c, 0x3E)
@@ -519,13 +553,113 @@ int TCampaignBrief::CampaignHeaderStruct::GetNumMaps() const
     return numMaps;
 }
 
-#if 0  // @carcass - Complete campaign-file loader, named by its ctor caller.
+// Complete-only campaign-file loader. Six callees identify it end to end:
+//   * 0x488eb0, ScenarioStruct's scalar deleting destructor, reached by the
+//     `delete scenarios[i]` sweep the destructor above already writes;
+//   * 0x48b4a0, the out-of-line vector<T*>::clear COMDAT (mapcell.cpp's
+//     ~NewfullMap reaches the same one);
+//   * 0x485d90, hero.h's ReadLengthPrefixedString - the /Gr free reader that
+//     returns by value, so the hidden return pointer takes ECX and the
+//     stream is pushed out to EDX;
+//   * 0x485f50 / 0x487e40, ScenarioStruct's constructor and record reader,
+//     both claimed above;
+//   * std::filebuf and std::strstreambuf, proven by `_Fiopen(name, 0x21)`
+//     into `_Init(_F, _Openfl)` + `_Initcvt()` on a 0x54-byte object, and by
+//     `_Init(size, data, 0, 0)` on a 0x50-byte one.
+// The file is looked for in the maps directory first and falls back to the
+// LOD bitmap resources; either way the raw campaign stream is wrapped in a
+// TGzInflateBuf for the header block, and again per scenario for the map
+// header the start-options record then folds into the scenario.
 VA(0x00488880, 0x5D6)  // anchor-caller(TCampaignBrief ctor), retail-only
 bool TCampaignBrief::CampaignHeaderStruct::Load()
 {
-    // @stub
+    if (stream)
+        return true;
+
+    for (unsigned int iScenario = 0; iScenario < scenarios.size();
+         ++iScenario)
+        delete scenarios[iScenario];
+    scenarios.clear();
+    FreeData();
+
+    std::filebuf* fileBuf = new std::filebuf;
+    char currentDirectory[200];
+    _getcwd(currentDirectory, sizeof(currentDirectory));
+    _chdir(DATA_COMPGEN(0x006772d0, oldMainMapsDir, "maps"));
+    fileBuf->open(file_name.c_str(), std::ios::in | std::ios::binary);
+    _chdir(DATA_COMPGEN(0x006755a0, parentDirectory, ".."));
+    if (!fileBuf->is_open()) {
+        delete fileBuf;
+        LODFile* resource =
+            ResourceManager::PointToBitmapResource(file_name.c_str());
+        if (!resource) {
+            file_error = CAMPAIGN_FILE_OPEN_FAILED;
+            return false;
+        }
+        int resourceSize =
+            ResourceManager::GetBitmapResourceSize(file_name.c_str());
+        data = new unsigned char[resourceSize];
+        ResourceManager::ReadFromBitmapResource(resource, data, resourceSize);
+        stream = new std::strstreambuf(data, resourceSize);
+    } else {
+        stream = fileBuf;
+    }
+
+    int numScenarios;
+    {
+        TGzInflateBuf inflateBuf(stream);
+        TStreamBufFile file(&inflateBuf);
+        int intBuffer;
+        file.Read(&intBuffer, 4);
+        campaign_version = intBuffer;
+        if (campaign_version < 4) {
+            file_error = CAMPAIGN_FILE_VERSION_UNSUPPORTED;
+            return false;
+        }
+        file.Read(&intBuffer, 1);
+        region_map = intBuffer & 0xff;
+        campaign_name = ReadLengthPrefixedString(&file);
+        if (campaign_name.length() == 0)
+            campaign_name = gpGeneralText->GetText(509);
+        campaign_desc = ReadLengthPrefixedString(&file);
+        char charBuffer;
+        file.Read(&charBuffer, 1);
+        variable_difficulty = charBuffer != 0;
+        if (campaign_version < 5)
+            campaign_music = 0x25;
+        else {
+            file.Read(&charBuffer, 1);
+            campaign_music = charBuffer;
+        }
+        numScenarios = akCampaignMapTraits[region_map].m_numRegions;
+        for (int iNew = 0; iNew < numScenarios; ++iNew) {
+            ScenarioStruct* scenario = new ScenarioStruct;
+            scenario->Read(&file, numScenarios, campaign_version);
+            scenarios.push_back(scenario);
+        }
+    }
+
+    int mapOffset = stream->pubseekoff(0, std::ios::cur, std::ios::in);
+    NewSMapHeader mapHeader;
+    for (int iScenario2 = 0; iScenario2 < numScenarios; ++iScenario2) {
+        ScenarioStruct* scenario = scenarios[iScenario2];
+        scenario->offset = mapOffset;
+        if (scenario->inflated_size > 0) {
+            mapOffset += scenario->inflated_size;
+            stream->pubseekoff(scenario->offset, std::ios::beg,
+                               std::ios::in);
+            TGzInflateBuf inflateBuf(stream);
+            TStreamBufFile file(&inflateBuf);
+            mapHeader.Read(&file, iScenario2);
+            scenario->options->_vslot11(&mapHeader);
+            scenario->hero_placeholders = mapHeader.placeholders;
+            for (int iSlot = 0; iSlot < 8; ++iSlot)
+                scenario->heroes_status[iSlot] =
+                    mapHeader.playerSlotAttributes[iSlot].field_30;
+        }
+    }
+    return true;
 }
-#endif  // @carcass
 
 VA(0x00488ee0, 0x1D)  // anchor-caller(TCampaignBrief ctor), retail-only
 void TCampaignBrief::CampaignHeaderStruct::StartMusic()

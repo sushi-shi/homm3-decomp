@@ -121,6 +121,18 @@ public:
         std::bitset<144> crossover_artifacts;
         ScenarioStartOptions* options;
 
+        // Retail 0x485f50, immediately ahead of the destructor: the three
+        // record pointers and the eight carry-over hero slots are cleared
+        // by hand while the six string/vector/bitset members take their
+        // own default constructors.
+        ScenarioStruct();
+        // Retail 0x487e40 (`ret 0xc`): reads one scenario record out of
+        // the campaign stream. The second argument is the region's own
+        // scenario count (the prerequisite bitmap's width) and the third
+        // the campaign file version. Name provisional - no Dreamcast row
+        // covers this Complete-only type.
+        void Read(TAbstractFile* infile, int numScenarios,
+                  int campaignVersion);
         // Complete's campaign-map loader calls this on the selected
         // scenario record for each matching map hero placeholder.  The
         // receiver offsets prove this is ScenarioStruct itself; both
