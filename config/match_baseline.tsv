@@ -3460,7 +3460,7 @@ singleselectionwindow	?DeletePlayer@CNetPlayerHandler@@QAE_NK@Z	100.0000	100.000
 singleselectionwindow	?DisplayChat@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x18ae80	51f029c675b0
 singleselectionwindow	?DoModal@TSingleSelectionWindow@@UAEHE@Z	100.0000	100.0000	100.0000	0x184bf0	a7f4cf150e2a
 singleselectionwindow	?Draw@CChatWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x17ca90	dba5fe00a3d9
-singleselectionwindow	?DrawBasicMapInfo@TSingleSelectionWindow@@QAEXXZ	95.5200	95.5200	95.5200	0x1840f0	8444654bba6e
+singleselectionwindow	?DrawBasicMapInfo@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1840f0	e31592d19511
 # 2026-08-27 hand-lowered 90.5627 -> 89.7825 (hist keeps 90.5627): TU
 # optimizer-state coupling, not a source change - the row moved when the
 # round-2 stub lifts (TurnOff pair, the five advanced-option accessors)
