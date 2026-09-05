@@ -45,25 +45,44 @@ struct VideoHeaderStruct;
 #define BinkPause _BinkPause
 #define BinkDDSurfaceType _BinkDDSurfaceType
 #define BinkGetRects _BinkGetRects
+#define SmackWait _SmackWait
+#define SmackNextFrame _SmackNextFrame
+#define SmackOpen _SmackOpen
+#define SmackUseMMX _SmackUseMMX
+#define SmackVolumePan _SmackVolumePan
 
 // SmackToBuffer surface-format flags (radlib smack.h).
 #define SMACKBUFFER555 0x80000000
 #define SMACKBUFFER565 0xC0000000
 
-// The smack/bink neighbours in the 0x198xxx TU right after this one
-// (ShowVideo 0x598af0 opens the handle pair and runs the timer;
-// 0x598eb0 advances/decodes one Smacker frame). Names provisional.
+// The remaining smackmgr.obj bodies, declared ahead of their first
+// in-TU call site. ShowVideo (0x598af0) opens the handle pair and
+// primes the blit state; SmackManager::NextSmackerFrame (0x598eb0) is
+// the DC-named per-frame pump, proven by its SmackNextFrame call
+// (the only body in the compiland that makes one).
 void ShowVideo(int id, int x, int y, int w, int h, int a6, int a7, int a8);
-void NextSmackFrame();          // 0x598eb0
+namespace SmackManager {
+void NextSmackerFrame();
+}
+
 
 // smackmgr.obj .bss cluster 0x69fdf5..0x69fe5c (names provisional;
 // the unreferenced gaps belong to members only the 0x198xxx TU
 // touches).
+DATA(0x0069fdf4) unsigned char gSmackAutoDraw;     // ShowVideo arg 7: pump its own VideoDrawRects
 DATA(0x0069fdf5) unsigned char gSmackDirty;        // decoded frame awaits a blit
 DATA(0x0069fdf8) Smack* gSmackVideo;               // video track handle
 DATA(0x0069fdfc) Smack* gSmackVideo2;              // audio-only track handle
 DATA(0x0069fe00) int gSmackX;                      // blit origin on the screen bitmap
 DATA(0x0069fe04) int gSmackY;
+// ShowVideo latches its own arguments into this quartet for the pump to
+// read back: the requested extent, the id it dispatched on, whether the
+// last frame loops, and whether NextSmackerFrame may advance at all.
+DATA(0x0069fe08) int gSmackReqWidth;               // ShowVideo arg 4
+DATA(0x0069fe0c) int gSmackReqHeight;              // ShowVideo arg 5
+DATA(0x0069fe10) int gSmackVideoId;                // ShowVideo arg 1
+DATA(0x0069fe14) int gSmackLoop;                   // ShowVideo arg 6
+DATA(0x0069fe1c) int gSmackAdvance;                // ShowVideo arg 8 (byte-narrowed on the way in)
 DATA(0x0069fe18) int gSmackPaused;
 DATA(0x0069fe20) unsigned long gSmackBufferFlags;  // SMACKBUFFER555/565
 DATA(0x0069fddc) int RedShift;
@@ -365,7 +384,7 @@ void VideoNextFrame()
     gInVideoNextFrame = 1;
     if (gSmackVideo || gSmackVideo2) {
         if (!gSmackPaused)
-            NextSmackFrame();
+            SmackManager::NextSmackerFrame();
     }
     if (gBinkVideo || gBinkVideo2) {
         if (!gBinkPaused)
@@ -719,6 +738,71 @@ void DrawSmackerFrame()
         SmackDoFrame(gSmackVideo);
 }
 
+// E:\gamedcs\smackmgr.cpp:1001. The per-frame pump VideoNextFrame drives.
+// Identified by its SmackNextFrame call - the only one in the compiland -
+// which is what separates it from the DrawSmackerFrame wrapper above; the
+// DC row is a 4-byte stub, so only the order-map and the callee prove it.
+// Residual (90.7%): block ORDER of the four-guard bail only. Retail emits
+// it FIRST among the sunk blocks with its own duplicated epilogue
+// (pop edi / mov [gSmackDirty],bl / pop esi / pop ebx / ret) and lets the
+// UpdateScreen arm fall into the shared one; ours emits it LAST and shares.
+// Every other block now pairs one-for-one, and the call streams agree
+// 13 = 13.  Tried and rejected: four split `if (..) { dirty = 0; return; }`
+// guards (76.07), `goto` to a trailing bail label (51.03), the bail as the
+// `if` arm with the whole body in an `else` (90.73, byte-flat both
+// polarities), explicit `== 0` comparisons (90.73, byte-flat).  Writing the
+// last-frame test as `>=` with the SmackNextFrame case in the trailing
+// `else` is what costs 14.8 - the `<` arm must come FIRST.
+VA(0x00598eb0, 0x193)  // anchor-caller(VideoNextFrame) + anchor-callee(SmackNextFrame), dc 0x14adfc
+void NextSmackerFrame()
+{
+    Smack* smk = gSmackVideo;
+    if (!smk)
+        smk = gSmackVideo2;
+    if (!smk || !gSmackFrameReady || SmackWait(smk) || !gSmackAdvance) {
+        gSmackDirty = 0;
+        return;
+    }
+    gSmackDirty = 1;
+    if (gSmackPaused)
+        return;
+    SmackDoFrame(smk);
+    if (smk->FrameNum < smk->Frames - 1) {
+        SmackNextFrame(smk);
+    } else if (gSmackLoop) {
+        if (gSmackVideo && gSmackVideo2) {
+            if (gVideoDescriptors[gSmackVideoId].fadeOnAbort)
+                gpWindowManager->FadeScreen(1, 4, 0);
+            gpSoundManager->service_sounds();
+            SmackClose(gSmackVideo);
+            gSmackVideo = 0;
+            if (gVideoDescriptors[gSmackVideoId].field_1) {
+                SmackDoFrame(gSmackVideo2);
+                gpWindowManager->FadeScreen(0, 4, 0);
+            }
+        } else {
+            SmackNextFrame(smk);
+        }
+    } else {
+        if (gSmackVideo)
+            SmackClose(gSmackVideo);
+        if (gSmackVideo2)
+            SmackClose(gSmackVideo2);
+        gSmackVideo2 = 0;
+        gSmackVideo = 0;
+        gSmackPaused = 0;
+        gSmackFrameReady = 0;
+        gSmackDirty = 0;
+        if (gVideoDescriptors[gSmackVideoId].fadeOnAbort)
+            gpWindowManager->FadeScreen(1, 4, 0);
+        else
+            gpWindowManager->UpdateScreen(0, 0, 0x320, 0x258);
+        return;
+    }
+    if (gSmackAutoDraw)
+        VideoDrawRects();
+}
+
 // E:\gamedcs\smackmgr.cpp:1074. VideoClose expands this body verbatim
 // ahead of CloseBinkVideo, which proves both the close order and the
 // five-store teardown; retail keeps the out-of-line copy for
@@ -769,13 +853,6 @@ void DeleteAnimHeaders()
 // E:\gamedcs\smackmgr.cpp:585
 DC_ONLY(0x14aca0, 0x26)
 unsigned char LoadSoundHeaders()
-{
-    // @stub
-}
-
-// E:\gamedcs\smackmgr.cpp:1001
-DC_ONLY(0x14adfc, 0x4)
-void SmackManager::NextSmackerFrame()
 {
     // @stub
 }

@@ -18,7 +18,10 @@ struct Smack {
     unsigned long Version;   // +0x000
     unsigned long Width;     // +0x004
     unsigned long Height;    // +0x008
-    char pad_c[0x374];       // +0x00c..0x37f (unmodeled header/palette)
+    unsigned long Frames;    // +0x00c
+    char pad_10[0x364];      // +0x010..0x373 (unmodeled header/palette)
+    unsigned long FrameNum;  // +0x374
+    char pad_378[8];         // +0x378..0x37f
     long LastRectx;          // +0x380
     long LastRecty;          // +0x384
     long LastRectw;          // +0x388
@@ -35,6 +38,13 @@ __declspec(dllimport) unsigned long __stdcall _SmackToBufferRect(Smack* smk, uns
 __declspec(dllimport) unsigned long __stdcall _SmackDoFrame(Smack* smk);
 __declspec(dllimport) void __stdcall _SmackGoto(Smack* smk, unsigned long frame);
 __declspec(dllimport) void __stdcall _SmackClose(Smack* smk);
+// The rest of the surface, consumed only by smackmgr.cpp itself: the
+// per-frame pump's wait/advance pair and ShowVideo's open path.
+__declspec(dllimport) unsigned long __stdcall _SmackWait(Smack* smk);
+__declspec(dllimport) void __stdcall _SmackNextFrame(Smack* smk);
+__declspec(dllimport) Smack* __stdcall _SmackOpen(void* handle, unsigned long flags, long extra);
+__declspec(dllimport) void __stdcall _SmackUseMMX(unsigned long on);
+__declspec(dllimport) void __stdcall _SmackVolumePan(Smack* smk, unsigned long trackFlags, unsigned long volume, unsigned long pan);
 }
 
 // Per-id video descriptor table in a foreign TU's .data (0x6839c8,
