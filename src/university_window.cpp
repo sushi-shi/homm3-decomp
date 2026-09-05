@@ -108,6 +108,22 @@ int type_university_window::WindowHandler(message* msg)
 // E:\gamedcs\university_window.cpp:102. Dreamcast supplies the original
 // 89-statement constructor shape; retail corroborates every shared widget and
 // adds the bTownUniversity image arm plus the Complete purchase view.
+// Residual (87.8950%) MEASURED AS CALLER MASS, 2026-09-05.  An `if (0)`
+// carrier after `long widget_id = 100;` - the measuring instrument, NOT a fix,
+// and deliberately not shipped - gives
+//   N = 2,5 -> 86.74 | 10 -> 82.07 | 20 -> 82.16 |
+//   N = 30,35,40,45 -> 94.7025 (a four-wide plateau) | 50 -> 93.63 | 60 -> 93.31
+// so roughly 30-45 statements of caller_cb are missing and the whole
+// under-inline (retail expands vector<widget*>::_Ucopy/_Ufill/size 16/8/16
+// times against our 12/6/12, and the cancel button's `vector<int>::insert`)
+// follows from that one threshold.  The widget roster itself is NOT short:
+// the normalised constructor-call streams agree element for element, and
+// retail's single extra `operator new` (28 vs 27) sits in a run of
+// ctor-less allocations - it is a vector REALLOCATION bought by the extra
+// inlined growth path, not a missing widget.  The Dreamcast roster (89 source
+// rows, 28 ctors) matches this body statement for statement, including both
+// `set_hotkey` calls on the exit button, the SetIconFrame/two-TTextResource
+// help text, and the tuition sprintf.  Do not ship the carrier.
 VA(0x005ef500, 0x1252)  // Univers1.pcx + two call-site modes, dc 0x18e790
 type_university_window::type_university_window(
     hero* new_hero, const type_university* university,
