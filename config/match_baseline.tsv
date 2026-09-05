@@ -2252,7 +2252,7 @@ kb	?CalculateNormalDialogSize@@YIXPAUTNormalDialogInfo@@@Z	92.1688	92.1688	92.16
 kb	?CheckEndGame@@YIXH@Z	90.6191	90.6191	90.6191	0xf2ce0	a9ae3c65720d
 kb	?CleanUpMenus@@YIXXZ	100.0000	100.0000	100.0000	0xf4b50	5ad85acac0be
 kb	?CongratsWait@@YIXHPADHHH@Z	96.8467	96.8467	96.8467	0xf3ab0	767bdf8cc153
-kb	?CreditsWait@@YIXXZ	95.2930	95.2930	95.2930	0xedda0	e424e5d34744
+kb	?CreditsWait@@YIXXZ	96.0634	96.0634	96.0634	0xedda0	59aef42716e7
 kb	?DisplayLCWinLoss@@YIEPAVLossConditionStruct@@PAH1E@Z	79.1107	79.1107	79.1107	0xf2960	2fdab48e3629
 kb	?DisplayVCWinLoss@@YI_NAAVVictoryConditionStruct@@AAH1_N@Z	94.9521	94.9521	94.9521	0xf15e0	0fa75f4e1fc3
 kb	?DoCampaignWindow@@YIEXZ	98.3910	98.3910	98.3910	0xf00a0	68ef1062200d

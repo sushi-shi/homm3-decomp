@@ -573,14 +573,28 @@ void InitMainClasses()
 // (yOffset, until the strip's last 580 rows are up), then running out
 // the top (endOffset) with the closing line in smallFont once the crawl
 // has cleared the lower quarter. Any click or non-F4 key stops it.
+// The declaration order of `textHeight` and `yOffset` is load-bearing and
+// measured (polish 16, 95.2930 -> 96.0634): retail schedules the `yOffset = 0`
+// store BETWEEN LineLength's call and the `imul` that finishes textHeight, and
+// the `startOffset = 580` store AFTER textHeight's own store, which is what
+// declaring yOffset AFTER textHeight produces. The frame is unchanged - both
+// orders give the identical slots - so this is pure store scheduling.
+// Byte-identical alternative: splitting yOffset into a bare declaration plus a
+// later `yOffset = 0;` assignment (96.0634 to the digit). Rejected: moving
+// `startOffset` up beside yOffset instead costs 1.19 (94.87).
+// Residual (96.06%): two register-allocation mirrors with no source lever
+// found - the screenBitmap->Draw argument run loads gpWindowManager one slot
+// earlier in retail and lands background->GetMap in EDX where ours uses EAX,
+// and the `new Bitmap16Bit(328, textHeight + fs.height)` block is the same
+// three instructions with EDX/EDI/ECX against our ECX/EBX/EDX.
 VA(0x004edda0, 0x407)  // anchor-callee + dc-order-map, dc 0xdfa3c
 void CreditsWait()
 {
     font* CreditsFont = ResourceManager::GetFont("CREDITS.FNT");
     int done = 0;
-    int yOffset = 0;
     int textHeight = CreditsFont->LineLength(Credits[0], 328)
         * CreditsFont->fs.height;
+    int yOffset = 0;
     int startOffset = 580;
     Bitmap16Bit* background = new Bitmap16Bit(328, 580);
     if (!background)
