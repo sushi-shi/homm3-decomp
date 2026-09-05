@@ -10999,6 +10999,32 @@ inline const char* GetRandomTownName(int townType)
 // while this build calls the nested vector::size/_Grow helpers. Explicitly
 // spelling resize scored 66.13, assign(ptr,strlen(ptr)) scored 79.45, and
 // statement-local inline_depth(3) was byte-flat; retain the semantic source.
+//
+// THE HOLE IS MEASURED (2026-09-05) AND IT IS CALLER MASS, NOT A SPELLING.
+// An `if (0)` carrier at the head of the body - the measuring instrument,
+// NOT a fix, and deliberately not shipped - gives a sharp peak:
+//   N =  1,2,3,5,8,20 -> 80.3907 (flat, the /Ob2 1000-byte floor)
+//   N = 30, 40        -> 84.2809
+//   N = 50            -> 98.6301   <- CFG CLOSED: 57 vs 57 blocks (56 exact),
+//                                     31 vs 31 branches, calls AGREE, and
+//                                     only 10 masked instruction rows left
+//   N = 60            -> 89.4404
+//   N = 70, 90, 150   -> 85.71 / 76.87 / 51.08
+// At the peak retail's `_Grow` expansion appears with its `max_size`/`_Xlen`
+// /`_Tidy` x3/`_Copy` call set exactly, and the `vector<town>::size` census
+// closes 1-vs-1.  So every statement, call, constant and field offset in this
+// body is already correct and the ONLY divergence is that our caller_cb sits
+// under the threshold where 2*caller_cb clears the 1000-byte floor by enough
+// to buy the assign->_Grow expansion.  Byte-for-byte comparison of the head
+// (ResetRandomTownNames' inlined 0x18-stride loop, the resize, the whole
+// z/y/x scan, the RANDOM_TOWN arm and the custom-name assign) shows retail
+// and this compile agreeing instruction for instruction with only slot
+// displacements differing, so the missing mass is NOT in any of them.
+// The Dreamcast body has four statements this one does not (dc rows 9876,
+// 9878, 9880 `pick_alignment`, 9884 - 62 SH4 B, and the unused `owner` local
+// they would write); retail's RANDOM_TOWN arm does NOT emit them, but a
+// front-end-visible / C2-eliminated statement would carry cb without
+// emitting.  That is the shape to look for - do not ship the carrier.
 VA(0x004caa70, 0x39C)  // DC name/order + retail map/vector/string shape
 void game::ProcessOnMapTowns()
 {
