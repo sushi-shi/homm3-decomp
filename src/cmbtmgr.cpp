@@ -3340,6 +3340,19 @@ void combatManager::ShootBallisticMissile(int startX, int startY, int destX,
 // own top pick - 20 slots of register distance BETTER but 90.71 fuzzy,
 // the two metrics ranking it opposite ways), `frame` hoisted above the
 // Bitmap16Bit (90.17), and `right`/`bottom` ahead of ARROW_DELAY (90.59).
+// 2026-09-05: 93.5075 -> 94.9636 on ShootBallisticMissile's lever (see its
+// note above). Retail computes `right` and `bottom` in a FIVE-instruction
+// preheader AFTER the loop's `cmp nframes,0 / jle`, keeping only `frame = 0`
+// and `step = 0` above it; a plain `for` puts all four above the guard.
+// Scoping right/bottom inside an explicit `if (nframes > 0)` and hoisting
+// `step` out reproduces the split - blocks now 54/54 with zero flow-kind,
+// target-shift or missing rows against 53-vs-54 with 26 flow-kind before.
+// Residual (94.9636%): one size-only block; registers and scheduling only.
+// NOTE FOR ShootMissile BELOW: the identical edit REGRESSES it, twice. Its
+// skeleton does close the same way (62/62, zero flow) but fuzzy falls
+// 93.9772 -> 92.4708 with `step` hoisted and 92.3592 with `step` left in the
+// for-init, so the block-shape win is paid for in register allocation there.
+// Not a spelling to re-try without a different register story.
 VA(0x00467db0, 0x46A)  // dc-bracket forced, dc 0x619a8
 void combatManager::ShootAnimatedMissile(int startX, int startY, int destX,
                                          int destY, int nsprites,
@@ -3403,58 +3416,61 @@ void combatManager::ShootAnimatedMissile(int startX, int startY, int destX,
         gCombatSpeedFactors[gUnnamed698758.combatSpeed] * 33.0f);
 
     int frame = 0;
-    int right = x + width - 1;
-    int bottom = y + height - 1;
-    for (int step = 0; step < nframes; step++) {
-        unsigned long next_frame_time = GameTime::Get() + ARROW_DELAY;
-        if (step != 0) {
-            saved.Draw(0, 0, width, height,
-                       gpWindowManager->screenBitmap->map, x, y,
+    int step = 0;
+    if (nframes > 0) {
+        int right = x + width - 1;
+        int bottom = y + height - 1;
+        for (; step < nframes; step++) {
+            unsigned long next_frame_time = GameTime::Get() + ARROW_DELAY;
+            if (step != 0) {
+                saved.Draw(0, 0, width, height,
+                           gpWindowManager->screenBitmap->map, x, y,
+                           gpWindowManager->screenBitmap->Width,
+                           gpWindowManager->screenBitmap->Height,
+                           gpWindowManager->screenBitmap->Pitch, false);
+                update_area.iMinX = x;
+                update_area.iMinY = y;
+                update_area.iMaxX = right;
+                update_area.iMaxY = bottom;
+                x += addX;
+                right += addX;
+                y += addY;
+                bottom += addY;
+            }
+            saved.Grab(gpWindowManager->screenBitmap->map, x, y,
                        gpWindowManager->screenBitmap->Width,
                        gpWindowManager->screenBitmap->Height,
-                       gpWindowManager->screenBitmap->Pitch, false);
-            update_area.iMinX = x;
-            update_area.iMinY = y;
-            update_area.iMaxX = right;
-            update_area.iMaxY = bottom;
-            x += addX;
-            right += addX;
-            y += addY;
-            bottom += addY;
+                       gpWindowManager->screenBitmap->Pitch);
+            missile->Draw(0, frame, 0, 0, width, height,
+                          gpWindowManager->screenBitmap->map, x, y,
+                          gpWindowManager->screenBitmap->Width,
+                          gpWindowManager->screenBitmap->Height,
+                          gpWindowManager->screenBitmap->Pitch, flipped, 1);
+            if (update_area.iMinX > x)
+                update_area.iMinX = x;
+            if (update_area.iMinY > y)
+                update_area.iMinY = y;
+            if (update_area.iMaxX < right)
+                update_area.iMaxX = right;
+            if (update_area.iMaxY < bottom)
+                update_area.iMaxY = bottom;
+            if (update_area.iMinX < gCombatDrawLimits694f18.iMinX)
+                update_area.iMinX = gCombatDrawLimits694f18.iMinX;
+            if (update_area.iMinY < gCombatDrawLimits694f18.iMinY)
+                update_area.iMinY = gCombatDrawLimits694f18.iMinY;
+            if (update_area.iMaxX > gCombatDrawLimits694f18.iMaxX)
+                update_area.iMaxX = gCombatDrawLimits694f18.iMaxX;
+            if (update_area.iMaxY > gCombatDrawLimits694f18.iMaxY)
+                update_area.iMaxY = gCombatDrawLimits694f18.iMaxY;
+            gpWindowManager->UpdateScreen(
+                update_area.iMinX, update_area.iMinY,
+                update_area.iMaxX - update_area.iMinX + 1,
+                update_area.iMaxY - update_area.iMinY + 1);
+            ++frame;
+            if (frame >= missile->GetNumFrames(0))
+                frame = 0;
+            GameTime::DelayTil(next_frame_time);
         }
-        saved.Grab(gpWindowManager->screenBitmap->map, x, y,
-                   gpWindowManager->screenBitmap->Width,
-                   gpWindowManager->screenBitmap->Height,
-                   gpWindowManager->screenBitmap->Pitch);
-        missile->Draw(0, frame, 0, 0, width, height,
-                      gpWindowManager->screenBitmap->map, x, y,
-                      gpWindowManager->screenBitmap->Width,
-                      gpWindowManager->screenBitmap->Height,
-                      gpWindowManager->screenBitmap->Pitch, flipped, 1);
-        if (update_area.iMinX > x)
-            update_area.iMinX = x;
-        if (update_area.iMinY > y)
-            update_area.iMinY = y;
-        if (update_area.iMaxX < right)
-            update_area.iMaxX = right;
-        if (update_area.iMaxY < bottom)
-            update_area.iMaxY = bottom;
-        if (update_area.iMinX < gCombatDrawLimits694f18.iMinX)
-            update_area.iMinX = gCombatDrawLimits694f18.iMinX;
-        if (update_area.iMinY < gCombatDrawLimits694f18.iMinY)
-            update_area.iMinY = gCombatDrawLimits694f18.iMinY;
-        if (update_area.iMaxX > gCombatDrawLimits694f18.iMaxX)
-            update_area.iMaxX = gCombatDrawLimits694f18.iMaxX;
-        if (update_area.iMaxY > gCombatDrawLimits694f18.iMaxY)
-            update_area.iMaxY = gCombatDrawLimits694f18.iMaxY;
-        gpWindowManager->UpdateScreen(
-            update_area.iMinX, update_area.iMinY,
-            update_area.iMaxX - update_area.iMinX + 1,
-            update_area.iMaxY - update_area.iMinY + 1);
-        ++frame;
-        if (frame >= missile->GetNumFrames(0))
-            frame = 0;
-        GameTime::DelayTil(next_frame_time);
     }
 
     saved.Draw(0, 0, width, height, gpWindowManager->screenBitmap->map, x, y,
