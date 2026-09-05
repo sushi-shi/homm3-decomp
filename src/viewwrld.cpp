@@ -885,17 +885,19 @@ void advManager::VWDrawRoad(int srcX, int srcY, int z, int destX, int destY)
 // through a join the non-visible path jumps straight into, and the leading
 // GetCell result is discarded exactly as the full-size renderer discards its
 // own type_point.
-// Residual (20.5312%): BLOCK LAYOUT ONLY - the skeleton agrees exactly,
-// 54 blocks against 54, 38 branches against 38, 3 returns against 3, and the
-// call streams pair one for one. Retail keeps the STAR block between the
-// cloud-lookup test and the frame fixups; VC6 SINKS ours past the fog draw
-// because the block has two predecessors and both of them are jumps. Tried
-// and rejected: `if (gCompleteDrawAllCells) goto draw_stars;` ahead of the
-// lookup (byte-identical - VC6 canonicalises the two spellings), and writing
-// the star block TWICE, which scores higher at 36.5789 but is NOT the shape
-// (55 blocks against 54, four returns against three - the cross-jumper only
-// half-merges the copies), so it is a layout coincidence rather than a
-// structural recovery and is not shipped.
+// The star arm is a POSITIVE `if (!lookup) { ...; return; }` block, not a
+// forward `goto adjust_cloud` over it. Both spellings describe the same CFG
+// - 54 blocks, 38 branches, 3 returns either way - but the goto leaves the
+// star block with two jump predecessors and VC6 SINKS it past the fog draw,
+// which cost 70.6 points (20.5312 -> 91.0938 on the inversion alone). With
+// the guard positive, B12 falls into the star block and every block lands
+// where retail put it: 49 of 54 exact, 0 target-shift, 0 flow-kind.
+// Residual (91.0938%): the five size-only blocks are all inside the two
+// VWScaleToScreenBuffer expansions, not this body - three instructions of
+// inner-loop addressing (retail materialises the source address with a
+// `lea` where ours folds it into the load) plus one extra out-of-line
+// GetMap in the star expansion. They are the same rows that hold River,
+// Road and AdvObj under 100, so the fix belongs at the helper.
 VA(0x005f9940, 0x44A)  // exhaustive dc-order-map + VWCompleteDraw call order (the iVWTerrains-gated layer), dc 0x194b48
 void advManager::VWDrawShroud(int srcX, int srcY, int z, int destX, int destY)
 {
@@ -928,18 +930,16 @@ void advManager::VWDrawShroud(int srcX, int srcY, int z, int destX, int destY)
     bDrawShroud = true;
     if (!gCompleteDrawAllCells)
         lookup = GetCloudLookup(srcX, srcY, z);
-    if (lookup)
-        goto adjust_cloud;
+    if (!lookup) {
+        memset(memoryBuffer->GetMap(0, 0), 0,
+               memoryBuffer->GetHeight() * memoryBuffer->GetPitch());
+        starTileset->DrawShroudTile(
+            ((srcX * 85 ^ srcY * 85) / 64) & 3, 0, 0, 32, 32, memoryBuffer,
+            0, 0, false, false);
+        VWScaleToScreenBuffer(baseX, baseY + 8);
+        return;
+    }
 
-    memset(memoryBuffer->GetMap(0, 0), 0,
-           memoryBuffer->GetHeight() * memoryBuffer->GetPitch());
-    starTileset->DrawShroudTile(
-        ((srcX * 85 ^ srcY * 85) / 64) & 3, 0, 0, 32, 32, memoryBuffer,
-        0, 0, false, false);
-    VWScaleToScreenBuffer(baseX, baseY + 8);
-    return;
-
-adjust_cloud:
     if (lookup >= CLOUD_DRAW_FLIPPED_OFFSET) {
         hflip = true;
         lookup -= CLOUD_DRAW_FLIPPED_OFFSET;
