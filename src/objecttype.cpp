@@ -62,7 +62,7 @@ TObjectType& TObjectType::setImageName(
     const std::basic_string<char, std::char_traits<char>,
                             std::allocator<char> >& name)
 {
-    static TObjectImageNameTable imageNames;
+    TObjectImageNameTable& imageNames = GetObjectImageNames();
 
     unsigned int oldCount = imageNames.rows.size();
     TObjectImageNameTable::TNameIndex::iterator found =
@@ -140,7 +140,7 @@ const std::basic_string<char, std::char_traits<char>, std::allocator<char> >&
 TObjectType::GetImageName()
 {
     static std::string emptyImageName;
-    static TObjectImageNameTable imageNames;
+    TObjectImageNameTable& imageNames = GetObjectImageNames();
 
     if (imageNumber < imageNames.rows.size())
         return imageNames.rows[imageNumber]->first;

@@ -3171,5 +3171,211 @@ std::string TSeerHut::SeerHutFn_005743E0(int player)
     return text;
 }
 
+// 0x574610, `ret 4` - the SeerHutList twin of TQuestGuard::read, reached
+// from readObject's SEER arm (mapcell.cpp:4191) on the temporary hut it has
+// just default-constructed. Three parts.
+//
+// The quest. Restoration of Erathia's map format has no quest record at all:
+// the seer hut carries one artifact ordinal, and the reader synthesises the
+// quest around it - a type_artifact_quest whose single artifact is that
+// ordinal, whose field_38 text row is picked at random out of three, and
+// whose artifact is struck off the map's own pool. Every later format reads
+// the quest type byte and hands the record to the factory, exactly as the
+// guard's reader does; the only difference from TQuestGuard::read is the
+// flags argument, which is 1 here and 0 there.
+//
+// The reward. One type byte, then a jump-table switch whose ten arms are the
+// TSeerRewardType roster; the two-byte artifact and creature ordinals narrow
+// to one byte on Restoration of Erathia maps, which is why those two arms
+// re-read gpGame->mapHeader.version. Retail reads all of them through ONE
+// four-byte stack slot addressed at three widths - [ebp+8] as an int,
+// [ebp+0xa] as a short and [ebp+0xb] as a signed char - so the three buffers
+// below are function-scoped and let VC6 coalesce them the same way. The two
+// bytes read straight after the switch are read and discarded.
+//
+// The name. Every hut takes an unused entry from gpSeerHutNames: a byte per
+// name, all set, then cleared for each name the map's existing huts already
+// hold, then a random one of what is left. The count subtracted from the
+// name total is the hut list's own size, recomputed from a fresh gpGame -
+// retail loads it twice and this transcribes both. The byte array is a real
+// std::vector<unsigned char>: `_Allocate`'s own `if (_N < 0) _N = 0` clamp
+// and `_Construct`'s per-element null check are both in the bytes, and it
+// carries NO unwind action because nothing between its construction and its
+// destruction can throw - rand() is extern "C" and nothrow under /GX.
+//
+// BLOCK SCOPE ON THE READ BUFFERS IS WORTH +6.07 (76.6567 -> 82.7295).
+// Retail addresses every scalar read through the dead `infile` parameter
+// home at three widths; function-scoped buffers get slots of their own at
+// [ebp-1] and below and the whole frame walks. One declaration per arm is
+// what puts them back.
+//
+// Residual (82.7295%): the EH frame, and one call with it. Retail wraps the
+// Restoration-of-Erathia arm's `new type_artifact_quest(1)` in a real
+// fs:[0] frame with three states - 0 after the allocation, 1 before the
+// member vector's CONSTRUCTOR CALL and 2 before the push_back - because a
+// throw in any of them has to free the raw memory. Our CL expands that
+// member constructor (the ICF-folded allocator-only COMDAT at 0x5157d0),
+// so only the out-of-line type_quest base constructor is left to throw and
+// VC6 emits no frame at all: `sub esp,0x18` where retail pushes -1. The one
+// remaining call divergence rides on the same decision - retail reaches
+// SetDefaultText directly where we dispatch through vtable slot 14. Both
+// are the /Ob2 verdict on that one member constructor, and the levers for
+// it are a statement pin and a caller-shrink split, neither open here.
+VA(0x00574610, 0x480)  // anchor-caller readObject SEER arm; bracket seerhut..singleselectionpopups
+void TSeerHut::read(TAbstractFile* infile)
+{
+    if (gpGame->mapHeader.version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+        int textRow = rand() % 3;
+        signed char char_buffer;
+        infile->Read(&char_buffer, sizeof(char_buffer));
+        if (char_buffer == -1) {
+            quest = 0;
+        } else {
+            type_artifact_quest* artifactQuest = new type_artifact_quest(1);
+            TArtifact artifact =
+                static_cast<TArtifact>(char_buffer); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
+            artifactQuest->artifacts.push_back(artifact);
+            artifactQuest->field_38 = textRow;
+            gpGame->artifactDisabled[artifact] = 1;
+            artifactQuest->SetDefaultText();
+            quest = artifactQuest;
+        }
+    } else {
+        int int_buffer;
+        infile->Read(&int_buffer, 1);
+        type_quest* newQuest =
+            create_quest(int_buffer & 0xff, 1);
+        if (newQuest)
+            newQuest->LoadFromMap(infile);
+        quest = newQuest;
+    }
+
+    field_12 = 0;
+    {
+        int int_buffer;
+        infile->Read(&int_buffer, 1);
+        reward.rewardType = int_buffer & 0xff;
+    }
+
+    switch (reward.rewardType) {
+    case eRewardExperience: {
+        int int_buffer;
+        infile->Read(&int_buffer, sizeof(int_buffer));
+        reward.value.dwords[0] = int_buffer;
+        break;
+    }
+
+    case eRewardMana: {
+        int int_buffer;
+        infile->Read(&int_buffer, sizeof(int_buffer));
+        reward.value.dwords[0] = int_buffer;
+        break;
+    }
+
+    case eRewardMorale: {
+        int int_buffer;
+        infile->Read(&int_buffer, 1);
+        reward.value.signedLow.bonus = int_buffer & 0xff;
+        break;
+    }
+
+    case eRewardLuck: {
+        int int_buffer;
+        infile->Read(&int_buffer, 1);
+        reward.value.signedLow.bonus = int_buffer & 0xff;
+        break;
+    }
+
+    case eRewardResource: {
+        signed char char_buffer;
+        int int_buffer;
+        infile->Read(&char_buffer, sizeof(char_buffer));
+        reward.value.resource.resourceType = char_buffer;
+        infile->Read(&int_buffer, sizeof(int_buffer));
+        reward.value.resource.quantity = int_buffer;
+        break;
+    }
+
+    case eRewardPrimarySkill: {
+        signed char char_buffer;
+        int int_buffer;
+        infile->Read(&char_buffer, sizeof(char_buffer));
+        reward.value.primarySkill.skillType = char_buffer;
+        infile->Read(&int_buffer, 1);
+        reward.value.primarySkill.bonus = int_buffer & 0xff;
+        break;
+    }
+
+    case eRewardSecondarySkill: {
+        signed char char_buffer;
+        infile->Read(&char_buffer, sizeof(char_buffer));
+        reward.value.secondarySkill.skillType = char_buffer;
+        infile->Read(&char_buffer, sizeof(char_buffer));
+        reward.value.secondarySkill.bonus = char_buffer;
+        break;
+    }
+
+    case eRewardArtifact:
+        if (gpGame->mapHeader.version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+            int int_buffer;
+            infile->Read(&int_buffer, 1);
+            reward.value.dwords[0] = int_buffer & 0xff;
+        } else {
+            short short_buffer;
+            infile->Read(&short_buffer, sizeof(short_buffer));
+            reward.value.dwords[0] = short_buffer;
+        }
+        break;
+
+    case eRewardSpell: {
+        int int_buffer;
+        infile->Read(&int_buffer, 1);
+        reward.value.dwords[0] = int_buffer & 0xff;
+        break;
+    }
+
+    case eRewardCreature: {
+        if (gpGame->mapHeader.version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+            int int_buffer;
+            infile->Read(&int_buffer, 1);
+            reward.value.creature.creatureType = int_buffer & 0xff;
+        } else {
+            short short_buffer;
+            infile->Read(&short_buffer, sizeof(short_buffer));
+            reward.value.creature.creatureType = short_buffer;
+        }
+        int count_buffer;
+        infile->Read(&count_buffer, 2);
+        reward.value.creature.count = count_buffer & 0xffff;
+        break;
+    }
+    }
+
+    {
+        short short_buffer;
+        infile->Read(&short_buffer, sizeof(short_buffer));
+    }
+
+    std::vector<unsigned char> nameAvailable(gpSeerHutNames->size());
+    unsigned int name;
+    for (name = 0; name < nameAvailable.size(); ++name)
+        nameAvailable[name] = 1;
+
+    unsigned int hut;
+    for (hut = 0; hut < gpGame->worldMap.SeerHutList.size(); ++hut)
+        nameAvailable[gpGame->worldMap.SeerHutList[hut].NameIndex] = 0;
+
+    int pick = rand()
+        % (nameAvailable.size() - gpGame->worldMap.SeerHutList.size());
+    unsigned int chosen;
+    for (chosen = 0; chosen < nameAvailable.size(); ++chosen) {
+        if (nameAvailable[chosen]) {
+            if (--pick < 0)
+                break;
+        }
+    }
+    NameIndex = chosen;
+}
+
 // COMDAT pairing: Hstd on the char instantiation, mnemonic agreement 1.000.
 VA_COMPGEN(0x00574d10, 0x120, BASIC_STRING_CONCAT, char)

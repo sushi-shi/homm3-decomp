@@ -87,13 +87,13 @@ static const int kAdventureObjectTrait1Ids[] = {
 // The text resource lives in a scope guard whose destructor the state-0
 // unwind funclet calls, so both throws below release it; the raw pointer
 // beside it is what the two row loops read `Text` through.
-// Residual (98.99%): the second throw only. Retail EXPANDS
-// TAllocationFailure's constructor here - the literal, the out-of-line
-// TRuntimeError(const char*) at 0x49a0c0, then the 0x63aba8 vftable -
-// while keeping gzinflatebuf's 0x4d6b80 COMDAT, so its real home is an
-// inline in exceptions.h. Not moved here: gzinflatebuf.cpp owns that
-// definition and another lane is editing it; moving the body is a
-// one-line change for whoever holds that file next.
+// EXACT since 2026-09-05. The last residual was the second throw: retail
+// EXPANDS TAllocationFailure's constructor here - the literal, the
+// out-of-line TRuntimeError(const char*) at 0x49a0c0, then the 0x63aba8
+// vftable - while keeping gzinflatebuf's 0x4d6b80 COMDAT, which only an
+// inline definition can produce. Moving the body from gzinflatebuf.cpp into
+// exceptions.h closed it (98.9899 -> 100.0000) and left gzinflatebuf's own
+// COMDAT row at 100 with its three throw sites unmoved.
 //
 // Three levers got the rest: an explicit row pointer in the zeroing loop
 // (95.53 -> 97.17, because retail keeps the COUNTER compare and walks a
