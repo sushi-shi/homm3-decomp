@@ -430,3 +430,123 @@ VA_COMPGEN(0x0051b150, 0x18, CLASS_CTOR, pair)
 // successor twin is already claimed at 0x517780.
 VA_COMPGEN(0x0051b510, 0xBC, TREE_LBOUND, string)
 VA_COMPGEN(0x0051b5d0, 0xB3, TREE_CONST_ITERATOR_DEC, string)
+
+// --- Dinkumware COMDAT pairings, part 2: the input-stream family ----------
+//
+// The same sweep, over the kinds the label join had no vocabulary for until
+// this change. Ordered by RVA; agreements are the masked-mnemonic difflib
+// ratio against the compiled COMDAT of the same content size.
+
+// COMDAT pairing: basic_streambuf<char>::sgetc, agreement 1.000.
+VA_COMPGEN(0x005157b0, 0x20, STREAMBUF_SGETC, char)
+
+// COMDAT pairing: basic_string<char>::replace(pos, n, const char*, n),
+// agreement 0.994 - the `.msk` suffix rewrite in setImageName.
+VA_COMPGEN(0x00515a80, 0x199, BASIC_STRING_REPLACE, char)
+
+// COMDAT pairing: basic_string<char>::rfind(const char*, pos, n), agreement
+// 0.983 - the `rfind('.')` that finds the extension setImageName replaces.
+VA_COMPGEN(0x00515c20, 0x74, BASIC_STRING_RFIND, char)
+
+// COMDAT pairing: basic_istream<char>::ipfx(bool), agreement 0.969 - the
+// whitespace-skipping prefix every extraction in this compiland runs
+// through, and the reason use_facet<ctype<char>> is instantiated here.
+VA_COMPGEN(0x00515ca0, 0x27A, ISTREAM_IPFX, char)
+
+// COMDAT pairing: basic_ios<char>::setstate, agreement 1.000.
+VA_COMPGEN(0x00515f20, 0x26, BASIC_IOS_SETSTATE, char)
+
+// COMDAT pairing: ctype<char>'s four case-conversion virtuals. The two
+// scalar bodies are byte-identical and so are the two range bodies; the CRT
+// helper each calls is the whole discriminator, and it is unambiguous -
+// 0x516070/0x516090 call __Tolower at 0x60c6dd, 0x5160d0/0x5160f0 call
+// __Toupper at 0x60c8ec. Sizes 28/56 then separate scalar from range.
+VA_COMPGEN(0x00516070, 0x1C, CTYPE_DO_TOLOWER_CHAR, char)
+VA_COMPGEN(0x00516090, 0x38, CTYPE_DO_TOLOWER_RANGE, char)
+VA_COMPGEN(0x005160d0, 0x1C, CTYPE_DO_TOUPPER_CHAR, char)
+VA_COMPGEN(0x005160f0, 0x38, CTYPE_DO_TOUPPER_RANGE, char)
+
+// COMDAT pairing: basic_ios<char>::clear and basic_streambuf<char>::sbumpc,
+// agreements 1.000 and 1.000.
+VA_COMPGEN(0x00517af0, 0x1D, BASIC_IOS_CLEAR, char)
+VA_COMPGEN(0x00517b10, 0x32, STREAMBUF_SBUMPC, char)
+
+// COMDAT pairing: _Tree<string,...>::find, agreement 0.984 - the registry
+// lookup GetImageName runs.
+VA_COMPGEN(0x00517ba0, 0x86, TREE_FIND, string)
+
+// COMDAT pairing: num_get<char, istreambuf_iterator<char>>::do_get, all NINE
+// overloads as one group. The claims zip by RVA against the object's COFF
+// order, and the zip is self-confirming: the compiled sizes run
+// 941/977/973/955/955/1024/1030/1030/906 for
+// (bool, unsigned short, unsigned int, long, unsigned long, float, double,
+// long double, void*) and the retail extents run
+// 943/993/989/969/969/1038/1044/1044/915 in RVA order - monotone in
+// correspondence AND equal-sized at exactly the same two positions on both
+// sides (the long/unsigned-long pair and the double/long-double pair). Six
+// of the nine are the rows the census labelled from the shared
+// "0123456789abcdef" digit table, which is what the integer arms read.
+VA_COMPGEN(0x00517dd0, 0x3AF, NUM_GET_DO_GET, char)
+VA_COMPGEN(0x00518180, 0x3E1, NUM_GET_DO_GET, char)
+VA_COMPGEN(0x00518570, 0x3DD, NUM_GET_DO_GET, char)
+VA_COMPGEN(0x00518950, 0x3C9, NUM_GET_DO_GET, char)
+VA_COMPGEN(0x00518d20, 0x3C9, NUM_GET_DO_GET, char)
+VA_COMPGEN(0x005190f0, 0x40E, NUM_GET_DO_GET, char)
+
+// COMDAT pairing: ctype<char>::is(mask, char), agreement 1.000 - reached
+// from the float arm of do_get immediately above it.
+VA_COMPGEN(0x00519500, 0x22, CTYPE_IS, char)
+
+VA_COMPGEN(0x00519530, 0x414, NUM_GET_DO_GET, char)
+VA_COMPGEN(0x00519950, 0x414, NUM_GET_DO_GET, char)
+VA_COMPGEN(0x00519d70, 0x393, NUM_GET_DO_GET, char)
+
+// COMDAT pairing: num_get<char>::_Getifld, agreement 0.968 - the integer
+// field scanner the five integral do_get arms share.
+VA_COMPGEN(0x0051a1f0, 0x534, NUM_GET_GETIFLD, char)
+
+// COMDAT pairing: istreambuf_iterator<char>'s operator*, _Inc and _Peek,
+// agreements 1.000, 1.000 and 1.000.
+VA_COMPGEN(0x0051a730, 0x4F, ISTREAMBUF_ITERATOR_DEREF, char)
+VA_COMPGEN(0x0051a8e0, 0x53, ISTREAMBUF_ITERATOR_INC, char)
+VA_COMPGEN(0x0051a940, 0x45, ISTREAMBUF_ITERATOR_PEEK, char)
+
+// COMDAT pairing: the two use_facet<> instantiations. Sizes alone separate
+// them (510 vs 507 on both sides), and the bytes agree independently:
+// 0x51a990 calls __Getctype at 0x60c844, which only the ctype arm does.
+VA_COMPGEN(0x0051a990, 0x1FE, USE_FACET_CTYPE, char)
+VA_COMPGEN(0x0051ab90, 0x1FB, USE_FACET_NUMPUNCT, char)
+
+// COMDAT pairing: istreambuf_iterator<char>::equal, agreement 1.000.
+VA_COMPGEN(0x0051ad90, 0xB1, ISTREAMBUF_ITERATOR_EQUAL, char)
+
+// COMDAT pairing: _Tidyfac's two remaining instantiations. Four bodies, two
+// sizes, and the static each pair shares is the discriminator exactly as it
+// was for num_put/numpunct at 0x455c20: 0x51ae50 stores into bss_29cbb0 and
+// 0x51b0b0 clears it, 0x51aed0 stores into bss_29cbb4 and 0x51b170 clears
+// it. Which pair is ctype's is settled from outside - 0x51b0b0's address is
+// taken inside 0x51a990, the use_facet<ctype> arm - and corroborated from
+// the other side, since the num_get pair's _Save is reached only from
+// 0x515270, basic_istream<char>::operator>>(int&).
+VA_COMPGEN(0x0051ae50, 0x7B, TIDYFAC_CTYPE_SAVE, char)
+VA_COMPGEN(0x0051aed0, 0x7B, TIDYFAC_NUM_GET_SAVE, char)
+VA_COMPGEN(0x0051b0b0, 0x92, TIDYFAC_CTYPE_TIDY, char)
+VA_COMPGEN(0x0051b170, 0x92, TIDYFAC_NUM_GET_TIDY, char)
+
+// COMDAT pairing: _Tree<string,...>::_Insert, agreement 0.968 - the
+// rebalancing node inserter behind the already-claimed public insert.
+VA_COMPGEN(0x0051b210, 0x2FF, TREE_NODE_INSERT, string)
+
+// COMDAT pairing: std::_Maklocstr, agreement 1.000 - the locale-name
+// duplicator, reached from use_facet<numpunct>.
+VA_COMPGEN(0x0051b690, 0x39, MAKLOCSTR, char)
+
+// COMDAT pairing: _Construct<pair<const string, int>>, agreement 0.962 -
+// the registry map's node initializer.
+VA_COMPGEN(0x0051b6d0, 0x15B, STD_CONSTRUCT, string_int_pair)
+
+// COMDAT pairing: basic_string<char>'s two compare overloads, agreements
+// 0.976 and 1.000; the sizes (84 vs 106) agree with the mangled parameter
+// lists on both sides.
+VA_COMPGEN(0x0051b8b0, 0x54, BASIC_STRING_COMPARE_STR, char)
+VA_COMPGEN(0x0051b910, 0x6A, BASIC_STRING_COMPARE_SUBSTR, char)
