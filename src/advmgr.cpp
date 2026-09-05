@@ -724,9 +724,9 @@ int advManager::Open(int newPriority)
 
     if (routeArray == 0) {
         routeArray = new unsigned short[(gpGame->worldMap.HasTwoLevels + 1)
-                                        * gMapHeight * gMapWidth];
+                                        * MAP_HEIGHT * MAP_WIDTH];
         memset(routeArray, 0,
-               (gpGame->worldMap.HasTwoLevels + 1) * gMapHeight * gMapWidth
+               (gpGame->worldMap.HasTwoLevels + 1) * MAP_HEIGHT * MAP_WIDTH
                    * sizeof(unsigned short));
         if (routeArray == 0)
             MemError();
@@ -2597,8 +2597,8 @@ int advManager::ProcessDeSelect(const message* msg, unsigned char* exitFlag, typ
 // Two retail quirks are transcribed as found, both harmless because the
 // radar and the world are square: the vertical pointer clamp compares
 // against the radar's height but assigns from its WIDTH, and both world
-// clamps in the drag body bound against gMapWidth - 1, the y one
-// included. VC6 CSEs the second gMapWidth load away, which is what makes
+// clamps in the drag body bound against MAP_WIDTH - 1, the y one
+// included. VC6 CSEs the second MAP_WIDTH load away, which is what makes
 // the single `dec eax` serve both.
 //
 // Three spellings carried this from 92.17 to exact, all of them worth
@@ -2633,7 +2633,7 @@ void advManager::ProcessRadarSelect(const message* msg)
     DemobilizeCurrHero(0, 1);
 
     float radarScale;
-    switch (gMapHeight) {
+    switch (MAP_HEIGHT) {
     case MAP_DIMENSION_SMALL:
         radarScale = 4.0f;
         break;
@@ -2659,10 +2659,10 @@ void advManager::ProcessRadarSelect(const message* msg)
         radarOrigin.x = -9;
     if (radarOrigin.y < -8)
         radarOrigin.y = -8;
-    if (radarOrigin.x > gMapWidth - 10)
-        radarOrigin.x = gMapWidth - 10;
-    if (radarOrigin.y > gMapHeight - 9)
-        radarOrigin.y = gMapHeight - 9;
+    if (radarOrigin.x > MAP_WIDTH - 10)
+        radarOrigin.x = MAP_WIDTH - 10;
+    if (radarOrigin.y > MAP_HEIGHT - 9)
+        radarOrigin.y = MAP_HEIGHT - 9;
 
     UpdateRadar(radarOrigin, 1, 1, 0, 0, 0);
     CompleteDraw(radarOrigin.x, radarOrigin.y, radarOrigin.z, 0, 1);
@@ -2718,8 +2718,8 @@ void advManager::ProcessRadarSelect(const message* msg)
                 (dragMsg.codeY - advWindow->RadarWidget->y) / radarScale);
             int dragX = static_cast<int>(
                 (dragMsg.codeX - advWindow->RadarWidget->x) / radarScale);
-            int newX = _cpp_min(_cpp_max(0, dragX), gMapWidth - 1);
-            int newY = _cpp_min(_cpp_max(0, dragY), gMapWidth - 1);
+            int newX = _cpp_min(_cpp_max(0, dragX), MAP_WIDTH - 1);
+            int newY = _cpp_min(_cpp_max(0, dragY), MAP_WIDTH - 1);
             radarOrigin.x = newX - 9;
             radarOrigin.y = newY - 8;
 
@@ -2760,7 +2760,7 @@ void advManager::ProcessRadarSelect(const message* msg)
 // type_point::is_valid and advManager::GetCell are out-of-line members, so
 // the is_valid/cell pair is spelled longhand here exactly as DoAdvCommand's
 // arms already spell it eight hundred lines up. searchArray::get_cell IS a
-// header inline and does expand, flying = 0 folding `(z*2+0)*gMapHeight`
+// header inline and does expand, flying = 0 folding `(z*2+0)*MAP_HEIGHT`
 // into the single `lea edi,[eax+2*edi]`.
 //
 // The LEFT-click object dispatch below is an IF-CHAIN and not a switch, and
@@ -4845,12 +4845,12 @@ int advManager::GetCloudLookup(int srcX, int srcY, int z)
 
     if (srcX < 1)
         lookup = 0xc8;
-    else if (srcX >= gMapWidth - 1)
+    else if (srcX >= MAP_WIDTH - 1)
         lookup = 0x32;
 
     if (srcY < 1)
         lookup |= 0x91;
-    else if (srcY >= gMapHeight - 1)
+    else if (srcY >= MAP_HEIGHT - 1)
         lookup |= 0x64;
 
     if (!lookup) {
@@ -4914,7 +4914,7 @@ bool advManager::ScanForHeroOrBoat(int srcX, int srcY, int z,
     for (int cy = 0; cy < 2; ++cy) {
         for (int cx = -1; cx < 2; ++cx) {
             if (srcX + cx >= 0 && srcY + cy >= 0
-                && srcX + cx < gMapWidth && srcY + cy < gMapHeight) {
+                && srcX + cx < MAP_WIDTH && srcY + cy < MAP_HEIGHT) {
                 NewmapCell* tempCell =
                     GetCell(type_point(srcX + cx, srcY + cy, z));
                 if (tempCell->type == type && tempCell->is_trigger
@@ -5274,7 +5274,7 @@ void advManager::DrawBoatPartShadow(int part, TDrawParts& boatParts,
 VA(0x00410c00, 0x98E)  // anchor-callee, dc 0x12334
 void advManager::DrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 {
-    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth || srcY >= gMapHeight)
+    if (srcX < 0 || srcY < 0 || srcX >= MAP_WIDTH || srcY >= MAP_HEIGHT)
         return;
 
     NewmapCell* thisCell;
@@ -5588,7 +5588,7 @@ void advManager::DrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 VA(0x00411590, 0x5E4)  // anchor-callee, dc 0x12fcc
 void advManager::DrawAdvObjShadow(int srcX, int srcY, int z, int destX, int destY)
 {
-    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth || srcY >= gMapHeight)
+    if (srcX < 0 || srcY < 0 || srcX >= MAP_WIDTH || srcY >= MAP_HEIGHT)
         return;
 
     type_point point;
@@ -5805,7 +5805,7 @@ void advManager::DrawAdvObjShadow(int srcX, int srcY, int z, int destX, int dest
 VA(0x00411b80, 0x1D7)  // linkorder, dc 0x13890
 void advManager::DrawRiver(int srcX, int srcY, int z, int destX, int destY)
 {
-    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth || srcY >= gMapHeight)
+    if (srcX < 0 || srcY < 0 || srcX >= MAP_WIDTH || srcY >= MAP_HEIGHT)
         return;
 
     type_point point;
@@ -5855,7 +5855,7 @@ void advManager::DrawRiver(int srcX, int srcY, int z, int destX, int destY)
 VA(0x00411d60, 0x1EC)  // linkorder, dc 0x13a64
 void advManager::DrawRoad(int srcX, int srcY, int z, int destX, int destY)
 {
-    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth || srcY >= gMapHeight)
+    if (srcX < 0 || srcY < 0 || srcX >= MAP_WIDTH || srcY >= MAP_HEIGHT)
         return;
 
     type_point point;
@@ -5891,7 +5891,7 @@ void advManager::DrawRoad(int srcX, int srcY, int z, int destX, int destY)
         tilew = 600 - baseX;
     if (baseY + tileh > 544)
         tileh = 544 - baseY;
-    if (srcY == gMapHeight - 1)
+    if (srcY == MAP_HEIGHT - 1)
         tileh -= 16;
     if (tilew <= 0 || tileh <= 0)
         return;
@@ -5908,10 +5908,10 @@ VA(0x00411f50, 0x15F)  // linkorder, dc 0x13c68
 void advManager::DrawArrowShadow(int srcX, int srcY, int z, int destX,
                                  int destY)
 {
-    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth || srcY >= gMapHeight)
+    if (srcX < 0 || srcY < 0 || srcX >= MAP_WIDTH || srcY >= MAP_HEIGHT)
         return;
 
-    int arrow = routeArray[(z * gMapHeight + srcY) * gMapWidth + srcX];
+    int arrow = routeArray[(z * MAP_HEIGHT + srcY) * MAP_WIDTH + srcX];
     if (!arrow)
         return;
 
@@ -5953,10 +5953,10 @@ void advManager::DrawArrowShadow(int srcX, int srcY, int z, int destX,
 VA(0x004120b0, 0x162)  // linkorder, dc 0x13e28
 void advManager::DrawArrow(int srcX, int srcY, int z, int destX, int destY)
 {
-    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth || srcY >= gMapHeight)
+    if (srcX < 0 || srcY < 0 || srcX >= MAP_WIDTH || srcY >= MAP_HEIGHT)
         return;
 
-    int arrow = routeArray[(z * gMapHeight + srcY) * gMapWidth + srcX];
+    int arrow = routeArray[(z * MAP_HEIGHT + srcY) * MAP_WIDTH + srcX];
     if (!arrow)
         return;
 
@@ -6000,9 +6000,9 @@ void advManager::DrawArrow(int srcX, int srcY, int z, int destX, int destY)
 VA(0x00412220, 0x248)  // linkorder, dc 0x13fc8
 void advManager::DrawShroud(int srcX, int srcY, int z, int destX, int destY)
 {
-    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth)
+    if (srcX < 0 || srcY < 0 || srcX >= MAP_WIDTH)
         return;
-    if (srcY >= gMapHeight && !gCompleteDrawAllCells)
+    if (srcY >= MAP_HEIGHT && !gCompleteDrawAllCells)
         return;
 
     {
@@ -6083,7 +6083,7 @@ draw_stars:
 VA(0x00412470, 0x482)  // linkorder, dc 0x142e0
 void advManager::DrawUnderlay(int srcX, int srcY, int z, int destX, int destY)
 {
-    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth || srcY >= gMapHeight)
+    if (srcX < 0 || srcY < 0 || srcX >= MAP_WIDTH || srcY >= MAP_HEIGHT)
         return;
 
     int tilew;
@@ -6239,8 +6239,8 @@ void advManager::DrawGround(int srcX, int srcY, int z, int destX, int destY)
     if (tilew <= 0 || tileh <= 0)
         return;
 
-    if (srcX >= 0 && srcY >= 0 && srcX < gMapWidth
-        && srcY < gMapHeight) {
+    if (srcX >= 0 && srcY >= 0 && srcX < MAP_WIDTH
+        && srcY < MAP_HEIGHT) {
         groundTileset[thisCell->GroundSet]->DrawTile(
             thisCell->GroundIndex, tilex, tiley, tilew, tileh,
             gpWindowManager->screenBitmap, baseX, baseY + 8,
@@ -6253,22 +6253,22 @@ void advManager::DrawGround(int srcX, int srcY, int z, int destX, int destY)
     if (srcX == -1) {
         if (srcY == -1)
             frame = 16;
-        else if (srcY == gMapHeight)
+        else if (srcY == MAP_HEIGHT)
             frame = 19;
-        else if (srcY >= 0 && srcY < gMapHeight)
+        else if (srcY >= 0 && srcY < MAP_HEIGHT)
             frame = 32 + (srcY & 3);
-    } else if (srcX == gMapWidth) {
+    } else if (srcX == MAP_WIDTH) {
         if (srcY == -1)
             frame = 17;
-        else if (srcY == gMapHeight)
+        else if (srcY == MAP_HEIGHT)
             frame = 18;
-        else if (srcY >= 0 && srcY < gMapHeight)
+        else if (srcY >= 0 && srcY < MAP_HEIGHT)
             frame = 24 + (srcY & 3);
     } else if (srcY == -1) {
-        if (srcX >= 0 && srcX < gMapWidth)
+        if (srcX >= 0 && srcX < MAP_WIDTH)
             frame = 20 + (srcX & 3);
-    } else if (srcY == gMapHeight) {
-        if (srcX >= 0 && srcX < gMapHeight)
+    } else if (srcY == MAP_HEIGHT) {
+        if (srcX >= 0 && srcX < MAP_HEIGHT)
             frame = 28 + (srcX & 3);
     }
 
@@ -6320,10 +6320,10 @@ NewmapCell* advManager::GetCell(type_point point)
 // game::GameFn_004CA780 takes the ordinal-placeholder
 // convention.
 //
-// The three switches the decode describes are all `switch (gMapHeight)`
+// The three switches the decode describes are all `switch (MAP_HEIGHT)`
 // with FOUR real labels - 36, 72, 108, 144 - and a default. What made them
 // look like 108-arm monsters is VC6's dense byte-index form: a 109-byte
-// map over gMapHeight-36 in front of a five-entry jump table, which is
+// map over MAP_HEIGHT-36 in front of a five-entry jump table, which is
 // what it emits for a sparse switch over a bounded range. Both index
 // tables were decoded out of the image (0x4135e4 and 0x413714) and agree
 // exactly: 36->arm0, 72->arm1, 108->arm2, 144->arm3, everything else
@@ -6374,7 +6374,7 @@ NewmapCell* advManager::GetCell(type_point point)
 // leaves the branch deficit. Its attested 32-bit `playerBit` nearly ties at
 // 90.63027% and also recovers branch 95, but introduces the same extra
 // polarity mismatch. Finally, removing the unattested last-row/last-column
-// caches in favour of direct `< gMapHeight/gMapWidth` loops scores 88.90550%
+// caches in favour of direct `< MAP_HEIGHT/MAP_WIDTH` loops scores 88.90550%
 // with several new CFG differences. All four were reverted.
 VA(0x00412c40, 0xB41)  // linkorder, dc 0x14bec
 void advManager::UpdateRadar(type_point origin, unsigned char updateFlag, unsigned char bPartialUpdate, unsigned char view_mines, unsigned char view_heros, unsigned char view_towns)
@@ -6392,8 +6392,8 @@ void advManager::UpdateRadar(type_point origin, unsigned char updateFlag, unsign
             return;
     }
 
-    int lastColumn = gMapWidth - 1;
-    int lastRow = gMapHeight - 1;
+    int lastColumn = MAP_WIDTH - 1;
+    int lastRow = MAP_HEIGHT - 1;
     playerData* localPlayer = gpGame->GetLocalPlayer();
 
     if (!gpCurrentPlayer->IsHuman() && bHeroLogoShowing == 0
@@ -6441,11 +6441,11 @@ void advManager::UpdateRadar(type_point origin, unsigned char updateFlag, unsign
     int rowPhase = 0;
     int blockPhase = 0;
     unsigned short* destRow;
-    if (gMapHeight == MAP_DIMENSION_SMALL
-        || gMapHeight == MAP_DIMENSION_MEDIUM) {
+    if (MAP_HEIGHT == MAP_DIMENSION_SMALL
+        || MAP_HEIGHT == MAP_DIMENSION_MEDIUM) {
         destRow = gpWindowManager->screenBitmap->map
                   + gpWindowManager->screenBitmap->Pitch * rectY / 2 + rectX;
-    } else if (gMapHeight == MAP_DIMENSION_LARGE) {
+    } else if (MAP_HEIGHT == MAP_DIMENSION_LARGE) {
         rowPhase = 0;
         blockPhase = 0;
         destRow = gpWindowManager->screenBitmap->map
@@ -6458,7 +6458,7 @@ void advManager::UpdateRadar(type_point origin, unsigned char updateFlag, unsign
     unsigned char visibilityBit = gMapVisibilityBit;
     for (int y = 0; y <= lastRow; y++) {
         unsigned short* dest = destRow;
-        switch (gMapHeight) {
+        switch (MAP_HEIGHT) {
         case MAP_DIMENSION_SMALL:
             destRow += 4 * gpWindowManager->screenBitmap->Pitch;
             break;
@@ -6486,7 +6486,7 @@ void advManager::UpdateRadar(type_point origin, unsigned char updateFlag, unsign
             unsigned char revealed =
                 !gCompleteDrawAllCells
                 && (visibilityBit & GetMapExtra(x, y, origin.z)) && x >= 0
-                && y >= 0 && x < gMapWidth && y < gMapHeight;
+                && y >= 0 && x < MAP_WIDTH && y < MAP_HEIGHT;
             if (view_mines && cell->type == MINE)
                 revealed = 1;
             if (view_heros && cell->type == HERO)
@@ -6589,7 +6589,7 @@ void advManager::UpdateRadar(type_point origin, unsigned char updateFlag, unsign
             // The write side of the 4/3 stretch. The 0x640 stride is
             // retail's own hardcode; the row advance above uses the live
             // Pitch instead.
-            switch (gMapHeight) {
+            switch (MAP_HEIGHT) {
             case MAP_DIMENSION_SMALL:
                 dest[0] = colour;
                 dest[1] = colour;
@@ -6650,7 +6650,7 @@ void advManager::UpdateRadar(type_point origin, unsigned char updateFlag, unsign
     int suppressIcon = 0;
     float scale;
     if (gUnnamed6aac3c) {
-        switch (gMapHeight) {
+        switch (MAP_HEIGHT) {
         case MAP_DIMENSION_SMALL:
             scale = 4.0f;
             if (gUnnamed68c6b8 == VIEW_WORLD_TILE_SCALE_FULL)
@@ -6687,7 +6687,7 @@ void advManager::UpdateRadar(type_point origin, unsigned char updateFlag, unsign
             break;
         }
     } else {
-        switch (gMapHeight) {
+        switch (MAP_HEIGHT) {
         case MAP_DIMENSION_SMALL:
             radarFrame = 4;
             scale = 4.0f;
@@ -8909,7 +8909,7 @@ VA(0x00418c10, 0x1B1)  // anchor-global, dc 0x1be10
 void advManager::InsertSound(int x, int y, int z, int soundPriority,
                              int soundsType)
 {
-    if (x < 0 || y < 0 || z < 0 || x >= gMapWidth || y >= gMapHeight)
+    if (x < 0 || y < 0 || z < 0 || x >= MAP_WIDTH || y >= MAP_HEIGHT)
         return;
 
     e_looping_sound_id id_num = GetSoundId(x, y, z);
@@ -9094,7 +9094,7 @@ void advManager::ShowRoute(int bUpdateScreen, int bReseed, int bChangeButton)
         clear_adventure_route(this, bUpdateScreen, 1);
     } else {
         memset(routeArray, 0,
-               (gpGame->worldMap.HasTwoLevels + 1) * gMapHeight * gMapWidth
+               (gpGame->worldMap.HasTwoLevels + 1) * MAP_HEIGHT * MAP_WIDTH
                    * sizeof(unsigned short));
         bShowRoute = 1;
 
@@ -9112,7 +9112,7 @@ void advManager::ShowRoute(int bUpdateScreen, int bReseed, int bChangeButton)
             step.y = step.y + gStepDeltaY[4 * dir];
 
             unsigned short* arrow =
-                &routeArray[(step.z * gMapHeight + step.y) * gMapWidth
+                &routeArray[(step.z * MAP_HEIGHT + step.y) * MAP_WIDTH
                             + step.x];
             if (i == 0) {
                 *arrow = 1;
@@ -9312,7 +9312,7 @@ DATA(0x00691674) extern unsigned long gUnnamed691674;
 // Residual (97.82%): downstream scratch scheduling only - why-reg v2 finds
 // every first-definition binding agreeing (this=ESI, inc=EBX/EDI slots
 // identical) and the divergence past the B1 slice: retail folds the
-// gMapWidth-10 cap into its load register (add) where ours needs a fresh
+// MAP_WIDTH-10 cap into its load register (add) where ours needs a fresh
 // lea, and retail re-extracts radarOrigin.y after the x compare where our
 // scheduler hoists both extractions. Tried and rejected: bound-first
 // comparison spelling (97.43). vc6 diagnose: register-homing (B13/B2).
@@ -9364,12 +9364,12 @@ void advManager::ScreenScroll(int iDir, int bChangeMouse)
 
     if (x < -9)
         x = -9;
-    if (x > gMapWidth - 10)
-        x = gMapWidth - 10;
+    if (x > MAP_WIDTH - 10)
+        x = MAP_WIDTH - 10;
     if (y < -8)
         y = -8;
-    if (y > gMapHeight - 9)
-        y = gMapHeight - 9;
+    if (y > MAP_HEIGHT - 9)
+        y = MAP_HEIGHT - 9;
 
     if (x != radarOrigin.x || y != radarOrigin.y) {
         DemobilizeCurrHero(0, 0);
@@ -9687,7 +9687,7 @@ void advManager::TrimLoopingSounds(int iMaxSoundsAllowed)
     if (giHighMemBuffer > 0)
         iMaxSoundsAllowed += giHighMemBuffer / 100;
 
-    if (gMapWidth != ADVENTURE_XLARGE_MAP_WIDTH)
+    if (MAP_WIDTH != ADVENTURE_XLARGE_MAP_WIDTH)
         ++iMaxSoundsAllowed;
 
     if (iMaxSoundsAllowed >= LOOPING_SOUND_COUNT)
@@ -9834,8 +9834,8 @@ unsigned char advManager::FindAdjacentMonster(type_point point, type_point* resu
 
     rect.left = _cpp_max<int>(point.x - 1, 0);
     rect.top = _cpp_max<int>(point.y - 1, 0);
-    rect.right = _cpp_min<int>(gMapWidth, point.x + 2);
-    rect.bottom = _cpp_min<int>(gMapHeight, point.y + 2);
+    rect.right = _cpp_min<int>(MAP_WIDTH, point.x + 2);
+    rect.bottom = _cpp_min<int>(MAP_HEIGHT, point.y + 2);
 
     map_cell = find_adjacent_map_cell(
         fullMap, point.x, point.y, point.z);
@@ -9905,9 +9905,9 @@ int MapExtraPosAndAdjacentsSet(int x, int y, int z, unsigned char bit)
         return 1;
 
     for (int test_x = x - 1; test_x <= x + 1; ++test_x) {
-        if (test_x >= 0 && test_x < gMapWidth) {
+        if (test_x >= 0 && test_x < MAP_WIDTH) {
             for (int test_y = y - 1; test_y <= y + 1; ++test_y) {
-                if (test_y >= 0 && test_y < gMapHeight
+                if (test_y >= 0 && test_y < MAP_HEIGHT
                     && (GetMapExtra(test_x, test_y, z) & bit))
                     return 1;
             }
@@ -10129,9 +10129,9 @@ int advManager::MoreTreesNear(type_point point)
     type_point pt;
 
     rect.top = max_ref(point.y - RADIUS, 0);
-    rect.bottom = _cpp_min(point.y + RADIUS + 1, gMapHeight);
+    rect.bottom = _cpp_min(point.y + RADIUS + 1, MAP_HEIGHT);
     rect.left = max_ref(point.x - RADIUS, 0);
-    rect.right = _cpp_min(point.x + RADIUS + 1, gMapWidth);
+    rect.right = _cpp_min(point.x + RADIUS + 1, MAP_WIDTH);
 
     pt.z = point.z;
     for (pt.y = rect.top; pt.y < rect.bottom; pt.y++) {
@@ -10184,7 +10184,7 @@ unsigned short advManager::GetRouteArray(int x, int y, int z)
 VA(0x0041b010, 0x27)  // linkorder, dc 0x1ebb8
 unsigned short* advManager::GetRouteArrayPtr(int x, int y, int z)
 {
-    return &routeArray[(z * gMapHeight + y) * gMapWidth + x];
+    return &routeArray[(z * MAP_HEIGHT + y) * MAP_WIDTH + x];
 }
 
 // E:\gamedcs\advmgr.cpp:11521

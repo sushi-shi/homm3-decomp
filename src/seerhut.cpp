@@ -1289,22 +1289,22 @@ void type_monster_quest::SetDefaultText()
                       : emptyRolloverText;
 
     std::string direction;
-    if (position.x < gMapWidth / 3) {
-        if (position.y < gMapHeight / 3)
+    if (position.x < MAP_WIDTH / 3) {
+        if (position.y < MAP_HEIGHT / 3)
             direction = gQuestMonsterDirections[7];
-        else if (position.y > (2 * gMapHeight) / 3)
+        else if (position.y > (2 * MAP_HEIGHT) / 3)
             direction = gQuestMonsterDirections[5];
         else
             direction = gQuestMonsterDirections[6];
-    } else if (position.x > (2 * gMapWidth) / 3) {
-        if (position.y < gMapHeight / 3)
+    } else if (position.x > (2 * MAP_WIDTH) / 3) {
+        if (position.y < MAP_HEIGHT / 3)
             direction = gQuestMonsterDirections[1];
-        else if (position.y > (2 * gMapHeight) / 3)
+        else if (position.y > (2 * MAP_HEIGHT) / 3)
             direction = gQuestMonsterDirections[3];
         else
             direction = gQuestMonsterDirections[2];
     } else {
-        if (position.y < gMapHeight / 3) {
+        if (position.y < MAP_HEIGHT / 3) {
             // This one site exhausted a different VC6 inline budget in
             // retail: traits::length is open, assign(pointer, length) is not.
             const char* directionText = gQuestMonsterDirections[0];
@@ -1313,7 +1313,7 @@ void type_monster_quest::SetDefaultText()
 #pragma inline_depth(0)
             direction.assign(directionText, directionLength);
 #pragma inline_depth()
-        } else if (position.y > (2 * gMapHeight) / 3)
+        } else if (position.y > (2 * MAP_HEIGHT) / 3)
             direction = gQuestMonsterDirections[4];
         else
             direction = gQuestMonsterDirections[8];

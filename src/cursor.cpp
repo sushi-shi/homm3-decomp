@@ -195,15 +195,15 @@ void advManager::DrawCursorAlpha()
                 clipx = abs((radarOrigin.x + 8) * 32) + scrollX;
                 refX += clipx;
             }
-            if (radarOrigin.x + 11 >= gMapWidth)
-                rightClip = abs((gMapWidth - radarOrigin.x - 11) * 32);
+            if (radarOrigin.x + 11 >= MAP_WIDTH)
+                rightClip = abs((MAP_WIDTH - radarOrigin.x - 11) * 32);
 
             if (radarOrigin.y + 7 < 0) {
                 clipy = abs((radarOrigin.y + 7) * 32) + scrollY;
                 refY += clipy;
             }
-            if (radarOrigin.y + 9 >= gMapHeight)
-                bottomClip = abs((gMapHeight - radarOrigin.y - 9) * 32);
+            if (radarOrigin.y + 9 >= MAP_HEIGHT)
+                bottomClip = abs((MAP_HEIGHT - radarOrigin.y - 9) * 32);
 
             hero* curr = gpGame->GetHero(gpCurrentPlayer->currHeroId);
 

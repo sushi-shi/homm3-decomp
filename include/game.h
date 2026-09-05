@@ -2760,7 +2760,7 @@ extern int gNetworkActive69954c;
 void __cdecl AI_examine_map();
 // hero.cpp owns the DATA claim on 0x698400 (name unattested,
 // address-ordinal placeholder) and game.obj is a second reader, so this
-// is an extern-only declaration - the gMapWidth/gpCurrentPlayer pattern.
+// is an extern-only declaration - the MAP_WIDTH/gpCurrentPlayer pattern.
 // hero.cpp's note already records THIS call site: every reader treats
 // nonzero as "suppress the interactive path", and game::ClaimTown skips
 // its notify call.
@@ -2796,14 +2796,12 @@ inline bool game::IsHumanTeam(int teamNum) const
     return false;
 }
 
-// The world's x- and y-extents, retail .data 0x6783c8 / 0x6783cc.
-// Declared here because game::SetMapSize is what WRITES them, so
-// game.h is the owner's header; findpath.h carries the identical pair
-// for its own TU and the two agree exactly (findpath.cpp includes both
-// headers). Consolidating them into one home is a wider change that
-// belongs to whoever owns findpath.h.
-extern int gMapWidth;
-extern int gMapHeight;
+// The world's x- and y-extents are the DATA-claimed MAP_WIDTH / MAP_HEIGHT
+// pair above (0x6783c8 / 0x6783cc); game::SetMapSize in this TU is what
+// WRITES them. A second, provisionally-named `gMapWidth`/`gMapHeight` pair
+// used to be declared here and in findpath.h, advspells.h and
+// event_record.h for the same two words - one retail global under two C++
+// symbols. Unified 2026-09-06 onto the Dreamcast-proven spelling.
 
 // --- the local-player pair, read by GetLocalPlayer and
 // GetLocalPlayerGamePos (both in this TU). The mode selector they
