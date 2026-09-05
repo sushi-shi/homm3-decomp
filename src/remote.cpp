@@ -112,12 +112,115 @@ CDPlayHeroes::~CDPlayHeroes()
     DestroyMsgQueue();
 }
 
+// E:\gamedcs\remote.cpp:179. The host-migration notification: DirectPlay
+// has told us the host changed, and if THIS station was not already the host
+// the base handler's answer means it is now, so the front end is told through
+// the queue. QueueMsg is expanded here - retail folds the message's own
+// `size` member into a constant `operator new(0x14)` and a five-dword copy -
+// and so is the whole Dinkumware deque push_back behind it.
+VA(0x00552530, 0x20E)  // anchor-callee(CDPlay::SysMsgHost base call) + dc-order-map, dc 0x11bad8
+unsigned char CDPlayHeroes::SysMsgHost(DPMSG_GENERIC* message,
+                                       unsigned long toId)
+{
+    unsigned char wasHost = IsHost();
+    if (!CDPlay::SysMsgHost(message, toId))
+        return 0;
+    if (!wasHost) {
+        CNetMsg msg(RS_SET_AS_HOST, sizeof(CNetMsg));
+        QueueMsg(&msg);
+    }
+    return 1;
+}
+
+// E:\gamedcs\remote.cpp:192. The session is gone: queue the notification
+// and answer handled. Retail does NOT chain to the base slot here, unlike
+// the host handler above.
+VA(0x00552740, 0x1DE)  // dc-order-map (between SysMsgHost and SysMsgDestroyPlayerOrGroup), dc 0x11bb20
+unsigned char CDPlayHeroes::SysMsgSessionLost(DPMSG_GENERIC* message,
+                                              unsigned long toId)
+{
+    CNetMsg msg(RS_SESSION_LOST, sizeof(CNetMsg));
+    QueueMsg(&msg);
+    return 1;
+}
+
+// E:\gamedcs\remote.cpp:204. Only a PLAYER leaving matters - a group being
+// destroyed is ignored - and the station that left is logged through the
+// same format string HandlePlayerDrop uses before the drop notification is
+// queued for the higher-level dispatchers.
+VA(0x00552920, 0x216)  // anchor-string(playerDroppedLog) + dc-order-map, dc 0x11bb40
+unsigned char CDPlayHeroes::SysMsgDestroyPlayerOrGroup(
+    DPMSG_DESTROYPLAYERORGROUP* message, unsigned long toId)
+{
+    if (message->dwPlayerType == DPPLAYERTYPE_PLAYER) {
+        unsigned long dpid = message->dpId;
+        logFile.Log(DATA_COMPGEN(0x00682a78, playerDroppedLog,
+                                "********Player dropped---->[%d]"),
+                    dpid);
+        CPlayerDropMsg msg(dpid);
+        QueueMsg(&msg);
+    }
+    return 1;
+}
+
 // E:\gamedcs\remote.cpp:214 - derived slot 56 forwards to the base handler.
 VA(0x00552b40, 0x14)
 unsigned char CDPlayHeroes::SysMsgCreatePlayerOrGroup(
     DPMSG_CREATEPLAYERORGROUP* message, unsigned long toId)
 {
     return CDPlay::SysMsgCreatePlayerOrGroup(message, toId);
+}
+
+// E:\gamedcs\remote.cpp:222. The receive drain: pull every pending
+// DirectPlay message, throw away our own and the anonymous ones, give
+// HandleLowLevelMsg first refusal, and queue whatever it did not consume.
+// The loop leaves only when Receive fails, and the ONE failure that is not
+// an error is "no messages left"; anything else is described and logged.
+// QueueMsg is expanded here, this time with the message's own runtime size
+// rather than a folded constant.
+//
+// Residual (68.14%): VC6 INVERTS the drain loop - it emits the Receive call
+// twice, once as the guard and once at the bottom - where retail has one
+// call and three plain back edges into it. Same class as DDBlit's three
+// retry loops in wingraph.obj, and the same three spellings are again
+// BYTE-IDENTICAL to the digit: `while (Receive(...)) { ... continue; }`,
+// the Process1WindowsMessage `poll: if (Receive(...)) { ...; goto poll; }`,
+// and the two guards folded into nested ifs over one shared tail.
+//
+// KNOWN COST, recorded rather than pinned: giving this member a body costs
+// the FREE PollRemote wrapper at 0x5546b0 its exactness (100.0000 -> 0.0000
+// cur; its banked MAX is untouched) because VC6 expands this callee there.
+// The wrapper is 259 B, so its /Ob2 budget is the 1000 floor, and retail's
+// compile priced this callee ABOVE that floor while ours prices it below -
+// i.e. the reconstruction is still short of retail's front-end mass, which
+// is what the loop inversion above is a symptom of too. A
+// `#pragma auto_inline(off)` here would hide both symptoms; the honest fix
+// is the missing construct, so neither is applied.
+VA(0x00552b60, 0x24B)  // anchor-string(DPlay Receive error) + anchor-callee(HandleLowLevelMsg) + dc-order-map, dc 0x11bb9c
+bool CDPlayHeroes::PollRemote()
+{
+    unsigned long fromId;
+    unsigned long toId;
+
+    while (Receive(&fromId, &toId, &dpMsg, 1)) {
+        if (fromId == gsThisNetPlayerInfo.dpid || !fromId)
+            continue;
+        CNetMsg* pNetMsg =
+            static_cast<CNetMsg*>(static_cast<void*>(dpMsg.pData));
+        if (HandleLowLevelMsg(pNetMsg))
+            continue;
+        QueueMsg(pNetMsg);
+    }
+
+    if (m_hRes == DPLAY_RECEIVE_ERROR_NO_MESSAGES)
+        return true;
+
+    char description[256];
+    GetErrorDesc(m_hRes, description);
+    logFile.Log(DATA_COMPGEN(0x00682a98, dplayReceiveErrorLog,
+                            "DPlay Receive error [%s]"),
+                description);
+    return false;
 }
 
 // DC names the network singleton pDPlay; retail references at 0x69d808 and
@@ -419,6 +522,71 @@ void CChatManager::PlayerEnterMsg(const char* cChatMsg)
 
 // E:\gamedcs\remote.cpp:1033
 #endif  // @carcass
+
+// E:\gamedcs\remote.cpp:350. The queue reader, and CompressMsg's exact
+// mirror: take the front message, optionally unlink it, and if it carries an
+// original size that differs from its own, expand it into a fresh block with
+// the header copied verbatim and the payload run through zlib. field_10 is
+// what CompressMsg stamps with the ORIGINAL total size, so equal sizes mean
+// "was never compressed" and the message is handed back untouched.
+//
+// The null test on the freshly allocated block sits AFTER the store into it,
+// which is retail's own order, not a scheduling artifact we could move.
+//
+// Residual (80.86%): one target-only call inside the INLINED pop_front -
+// retail keeps a deque helper out of line there and our expansion takes it -
+// plus two surplus epilogues the cross-jumper did not merge. Both sit inside
+// Dinkumware's own template body, which this TU may not pin into.
+VA(0x00553040, 0x1D1)  // anchor-caller(the free GetRemoteData wrapper, CheckHandleNet) + dc-order-map, dc 0x11bd5c
+CNetMsg* CDPlayHeroes::GetRemoteData(unsigned char removeFromQueue,
+                                     unsigned char* wasCompressed)
+{
+    if (wasCompressed)
+        *wasCompressed = 0;
+    if (!bVideoPaused)
+        return 0;
+    if (!msgQueue.size())
+        return 0;
+
+    CNetMsg* pNetMsg = msgQueue.front();
+    if (!pNetMsg)
+        return 0;
+
+    if (removeFromQueue)
+        msgQueue.pop_front();
+
+    if (!pNetMsg->field_10 || pNetMsg->field_10 == pNetMsg->size)
+        return pNetMsg;
+
+    unsigned long uncompressedSize = pNetMsg->field_10 + sizeof(CNetMsg);
+    void* storage = ::operator new(uncompressedSize);
+    CNetMsg* uncompressedMsg = static_cast<CNetMsg*>(storage);
+    memcpy(uncompressedMsg, pNetMsg, sizeof(CNetMsg));
+
+    uncompressedSize -= sizeof(CNetMsg);
+    if (uncompress(
+            static_cast<unsigned char*>(storage) + sizeof(CNetMsg),
+            &uncompressedSize,
+            static_cast<const unsigned char*>(
+                static_cast<const void*>(pNetMsg)) + sizeof(CNetMsg),
+            pNetMsg->size - sizeof(CNetMsg))) {
+        ::operator delete(storage);
+        ::operator delete(pNetMsg);
+        return 0;
+    }
+
+    uncompressedMsg->size = uncompressedSize + sizeof(CNetMsg);
+    if (!uncompressedMsg) {
+        ::operator delete(pNetMsg);
+        return 0;
+    }
+
+    if (removeFromQueue)
+        ::operator delete(pNetMsg);
+    if (wasCompressed)
+        *wasCompressed = 1;
+    return uncompressedMsg;
+}
 
 // E:\gamedcs\remote.cpp:407
 // HD 0x553620 maps instruction/operand-bijectively to this retail row; the

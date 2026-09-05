@@ -103,6 +103,29 @@ struct DPLCONNECTION {
 };
 SIZE(DPLCONNECTION, 0x28);
 
+// DirectPlay's player/group destruction notification. remote.obj's override
+// of the system-message slot reads only the leading discriminator and the
+// id of the station that left, which is what fixes them at +4 and +8; the
+// tail follows dplay.h's published record so the struct is not a fake.
+struct DPMSG_DESTROYPLAYERORGROUP {
+    unsigned long dwType;
+    unsigned long dwPlayerType;
+    unsigned long dpId;
+    void* lpLocalData;
+    unsigned long dwLocalDataSize;
+    void* lpRemoteData;
+    unsigned long dwRemoteDataSize;
+    DPNAME dpnName;
+    unsigned long dpIdParent;
+    unsigned long dwFlags;
+};
+
+// dplay.h's DPPLAYERTYPE_ pair, the domain of the field above.
+enum EDPlayerType {
+    DPPLAYERTYPE_GROUP = 0,
+    DPPLAYERTYPE_PLAYER = 1
+};
+
 enum EDPlayConnectionFlags {
     DPLAY_CONNECTION_CREATE_SESSION = 0x2
 };
@@ -118,6 +141,13 @@ enum EDPlaySessionFlags {
 enum EDPlaySendError {
     DPLAY_SEND_ERROR_INVALID_PARAMETER = 0x80070057,
     DPLAY_SEND_ERROR_INVALID_PLAYER = 0x88770096
+};
+
+// The receive path's own SDK immediate, the one HRESULT its drain loop
+// treats as success: MAKE_DPHRESULT(190). remote.obj's PollRemote compares
+// m_hRes against it before deciding the session is broken.
+enum EDPlayReceiveError {
+    DPLAY_RECEIVE_ERROR_NO_MESSAGES = 0x887700be
 };
 
 // Dreamcast CodeView proves this complete virtual order. Retail's

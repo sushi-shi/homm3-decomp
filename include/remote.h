@@ -157,6 +157,10 @@ public:
     CNetMsg* GetRemoteData(unsigned char removeFromQueue,
                            unsigned char* wasCompressed);
     bool PollRemote();
+    // Retail 0x552db0, DC remote.cpp:304. PollRemote's per-message filter:
+    // it answers whether the message was fully handled at this level and so
+    // must NOT reach the queue.
+    unsigned char HandleLowLevelMsg(CNetMsg* pNetMsg);
     bool TransmitRemoteData(CNetMsg* pMsg, int toWho,
                             bool compressMsg, bool guaranteed);
     bool TransmitRemoteDataDPID(CNetMsg* pMsg, unsigned long dpidTo,
@@ -168,6 +172,16 @@ public:
     void HandlePlayerDrop(unsigned long dpid);
 
 protected:
+    // The three other system-message overrides, all of them CDPlay slots
+    // this class replaces rather than introduces (retail 0x552530 /
+    // 0x552740 / 0x552920, in the DC roster's own order between
+    // ~CDPlayHeroes and SysMsgCreatePlayerOrGroup).
+    virtual unsigned char SysMsgHost(DPMSG_GENERIC* message,
+                                     unsigned long toId);
+    virtual unsigned char SysMsgSessionLost(DPMSG_GENERIC* message,
+                                            unsigned long toId);
+    virtual unsigned char SysMsgDestroyPlayerOrGroup(
+        DPMSG_DESTROYPLAYERORGROUP* message, unsigned long toId);
     virtual unsigned char SysMsgCreatePlayerOrGroup(
         DPMSG_CREATEPLAYERORGROUP* message, unsigned long toId);
     // Retail 0x5532b0, DC remote.cpp:425. Accessed by the two original
