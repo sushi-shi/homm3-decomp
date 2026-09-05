@@ -11613,3 +11613,12 @@ VA_COMPGEN(0x0041b250, 0xE6, BASIC_STRING_APPEND_STR, char)
 // COMDAT pairing: append on the char instantiation, mnemonic agreement 0.955.
 VA_COMPGEN(0x0041b340, 0xC2, BASIC_STRING_APPEND_PTR, char)
 
+// COMDAT pairing: `logic_error::what`, byte-identical to this object's own
+// COMDAT over all five instructions - `mov eax,[ecx+0x10] / test / jne` and
+// the empty-string fall-through, which is `_Str.c_str()` on a string whose
+// pointer sits at +0x10. It sits immediately below the two runtime_error
+// rows the RTTI moved to objecttype.cpp, and the two classes' `what` bodies
+// are identical, so /OPT:ICF left one row for both names; advmgr.obj emits
+// the logic_error spelling, which is the one claimed here.
+VA_COMPGEN(0x0041bc00, 0xD, LOGIC_ERROR_WHAT, char)
+
