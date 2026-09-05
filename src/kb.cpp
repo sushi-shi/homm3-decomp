@@ -3842,7 +3842,7 @@ short game::get_map_score()
 // CampaignHeaderStruct::GetCampaignName by value (the header object is
 // never freed - transcribed, not invented).  Declared file-locally
 // because ShowCongrats is its only located caller; not claimed here.
-std::string GetCurrentCampaignName();
+std::string get_campaign_name();
 
 // E:\gamedcs\kb.cpp:4102
 // The victory screen.  The four numbers the high-score table wants are
@@ -3876,7 +3876,7 @@ void ShowCongrats(int hsType)
         iBase = iScore = gpGame->campaign.get_score();
         iDayz = gpGame->campaign.get_total_time();
         iRating = 100;
-        sLand = GetCurrentCampaignName();
+        sLand = get_campaign_name();
     }
 
     int iMonType = highScoreManager::GetMonType(iScore, hsType);
