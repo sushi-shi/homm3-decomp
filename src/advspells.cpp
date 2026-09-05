@@ -4,6 +4,7 @@
 #include <va.h>
 #include "advmgr.h"
 #include "armygrp.h"
+#include "dimensiondoorwindow.h"
 #include "exec.h"
 #include "game.h"
 #include "kb.h"
@@ -59,35 +60,135 @@ void advManager::CheckCastSpell()
 
 #if 0  // @carcass: remaining untouched bodies
 // E:\gamedcs\advspells.cpp:93
-DC_ONLY(0x21a2c, 0x158)
+// The dispatcher. 1028 B against the DC's 344 because retail expands the
+// four small handlers the DC keeps out of line - hero::Fly, Flight's whole
+// body, is called straight out of it.
+VA(0x0041c490, 0x404)  // linkorder + anchor-callee hero::Fly / get_spell_level, dc 0x21a2c
 void advManager::CastSpell(SpellID whichSpell)
 {
     // @stub
 }
 
 // E:\gamedcs\advspells.cpp:171
-DC_ONLY(0x21b84, 0x4D0)
+VA(0x0041c8a0, 0x54D)  // anchor-callee hero::find_summonable_boat + game::CreateBoat, dc 0x21b84
 void advManager::SummonBoat(TSkillMastery level)
 {
     // @stub
 }
 
 // E:\gamedcs\advspells.cpp:328
-DC_ONLY(0x22054, 0x206)
+// FULLY DECODED, NOT LANDED - it needs two declarations nothing models yet
+// and the next lane should not re-derive them:
+//   * The adventure-map clip rectangle at .data 0x691250 / 0x691254 /
+//     0x691258 / 0x69125c. The cinit at 0x405db0 (advmgr.obj, excluded
+//     class) is their whole writer and sets 8, 8, 0x267, 0x227 - left,
+//     top, right, bottom in screen pixels. The image references each of
+//     the four exactly FOUR times: that cinit plus 0x41cb61 / 0x41cc57
+//     (SummonBoat) and 0x41cf47 (this body). Two consumers only, so they
+//     belong in a NARROW header, not in advmgr.h.
+//   * The type_obscuring_object array behind gpGame+0x4e3bc, indexed by
+//     the cell's own dword with a 40-byte stride.
+// Its shape: TSkuttleBoatWindow -> Random(1,100) against
+// mastery_bonus[level] -> on success the fizzle animation over the
+// obscured cell's rect, clamped against those four bounds
+// (LoadPlaySample / SaveFizzleSourceX / CompleteDraw / FizzleForwardX /
+// Reseed / WaitEndSample); on failure a sprintf of general-text row 338
+// with the hero's name. Both paths join at
+// UseSpell(GetManaCost(1, 0, get_special_terrain())), and the window
+// returning dialogReturn == 0 short-circuits to general-text row 732 -
+// the same GENERAL_TEXT_ADVENTURE_SPELL_NO_TARGET DimensionDoor posts.
+// The two screen coordinates come off advManager::radarOrigin's 10-bit
+// bitfields (`mov cx,[this+0xe4] / shl cx,6 / movsx / sar edx,6`).
+VA(0x0041cdf0, 0x29D)  // anchor-vtable TSkuttleBoatWindow ctor/dtor, dc 0x22054
 void advManager::SkuttleBoat(TSkillMastery level)
 {
     // @stub
 }
 
+#endif  /* @carcass part 1 */
+
 // E:\gamedcs\advspells.cpp:397
-DC_ONLY(0x2225c, 0x2B4)
-void advManager::DimensionDoor(TSkillMastery level)
+// The order-map over advspells.obj's seven retail bodies is settled by
+// three constructor calls, not by size: 0x41cdf0 builds a
+// TSkuttleBoatWindow, THIS body builds a TDimensionDoorWindow and 0x41d360
+// builds a TTownGateWindow, which fixes SkuttleBoat / DimensionDoor /
+// TownGate against the Dreamcast's own advspells.cpp line order. The four
+// small DC handlers between TownGate and TeleportTo (Identify 220 B,
+// WaterWalk 122 B, Disguise 90 B, Flight 236 B) have no retail slot at all
+// and no gap to hide in: their 668 bytes are what makes CastSpell 1028
+// against the DC's 344, and 0x41c490 calls hero::Fly - Flight's own body -
+// with no out-of-line Flight anywhere in the image.
+VA(0x0041d090, 0x2C6)  // anchor-vtable TDimensionDoorWindow ctor/dtor + anchor-callee TeleportTo, dc 0x2225c
+void advManager::DimensionDoor(int level)
 {
-    // @stub
+    const SSpellTraits* traits = &akSpellTraits[SPELL_DIMENSION_DOOR];
+    hero* who = gpCurrentPlayer->currHeroId != -1
+                    ? &gpGame->heroes[gpCurrentPlayer->currHeroId]
+                    : 0;
+    if (who->movePoints <= 0) {
+        if (gpGame->IsLocalHuman(who->owner)) {
+            NormalDialog(
+                gpGeneralText->GetText(GENERAL_TEXT_SPELL_NEEDS_MOVEMENT),
+                1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        }
+        return;
+    }
+
+    TSkillMastery mastery = who->get_spell_level(SPELL_DIMENSION_DOOR,
+                                                 who->get_special_terrain());
+    if (who->dWalkSpellsCast >= traits->mastery_bonus[mastery]) {
+        if (gpGame->IsLocalHuman(who->owner)) {
+            sprintf(gText,
+                    gpGeneralText->GetText(
+                        GENERAL_TEXT_DIMENSION_DOOR_LIMIT_FORMAT),
+                    who->name);
+            NormalDialog(gText, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        }
+        return;
+    }
+
+    {
+        TDimensionDoorWindow window;
+        window.DoModal(0);
+    }
+
+    type_point destination = get_map_center();
+    if (destination.is_valid() && gpWindowManager->dialogReturn == 1) {
+        NewmapCell* cell = GetCell(destination);
+        if (((who->flags & 0x40000) != 0
+             && cell->GroundSet != eTerrainWater)
+            || ((who->flags & 0x40000) == 0
+                && cell->GroundSet == eTerrainWater)) {
+            if (gpGame->IsLocalHuman(who->owner)) {
+                NormalDialog(
+                    gpGeneralText->GetText(
+                        GENERAL_TEXT_DIMENSION_DOOR_BLOCKED),
+                    1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            }
+            UpdateRadar(1, 1, 0, 0, 0);
+        } else {
+            TeleportTo(who, destination, traits->m_sample, 0, 1, 0);
+        }
+        who->movePoints -= level == eMasteryExpert ? 200 : 300;
+        if (who->movePoints < 0)
+            who->movePoints = 0;
+        who->UseSpell(who->GetManaCost(SPELL_DIMENSION_DOOR, 0,
+                                       who->get_special_terrain()));
+        advWindow->UpdateHeroLocator(-1, 1, 1);
+        Reseed(0, 0);
+        ++who->dWalkSpellsCast;
+        return;
+    }
+
+    UpdateRadar(1, 1, 0, 0, 0);
+    NormalDialog(
+        gpGeneralText->GetText(GENERAL_TEXT_ADVENTURE_SPELL_NO_TARGET),
+        1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
 }
 
+#if 0  // @carcass: remaining untouched bodies (continued)
 // E:\gamedcs\advspells.cpp:485
-DC_ONLY(0x22510, 0x3D6)
+VA(0x0041d360, 0x5C8)  // anchor-vtable TTownGateWindow ctor/dtor, dc 0x22510
 void advManager::TownGate(TSkillMastery level)
 {
     // @stub
@@ -122,7 +223,10 @@ void advManager::Flight(TSkillMastery level)
 }
 
 // E:\gamedcs\advspells.cpp:703
-DC_ONLY(0x22b88, 0x45C)
+// advmgr.h already carries the identification: `ret 0x18` against six
+// parameters, 1124/1116 = 1.007, and the third pushed argument is
+// "telptout.wav" at 0x67775c. DimensionDoor above calls it for real.
+VA(0x0041d930, 0x464)  // anchor-import telptout.wav + arity ret 0x18, dc 0x22b88
 void advManager::TeleportTo(hero* who, type_point destination, const char* sample_name, unsigned char bIsRemoteMove, unsigned char draw_changes, unsigned char is_replay)
 {
     // @stub

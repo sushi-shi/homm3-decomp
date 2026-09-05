@@ -14,7 +14,10 @@
 #ifndef HOMM3_GZINFLATEBUF_H
 #define HOMM3_GZINFLATEBUF_H
 
+#include <stdexcept>
 #include <streambuf>
+#include <zlib.h>
+
 #include "abstractfile.h"
 
 // A std::streambuf that inflates a gzip member out of another streambuf.
@@ -35,10 +38,20 @@ public:
     virtual ~TGzInflateBuf();               // 0x4d6820
     virtual int underflow();                // 0x4d6920
 
+    // Thrown out of the constructor and out of underflow whenever the gzip
+    // member is malformed. Retail's throw record names it
+    // `.?AVTDataError@TGzInflateBuf@@` over `.?AVruntime_error@std@@` over
+    // `.?AVexception@@`, which is what makes the 0x63e704 vftable a
+    // three-slot copy of Dinkumware's {deleting dtor, what, _Doraise}.
+    class TDataError;
+
     std::streambuf* source;      // +0x38
-    // zlib 1.1.3 z_stream (56 B). Declared as bytes: zlib.h is deliberately
-    // kept out of the game headers (lodfile.h precedent).
-    char inflate_state[0x38];    // +0x3c
+    // zlib 1.1.3's z_stream, 56 B: next_in/avail_in at +0x3c/+0x40 are what
+    // the get-byte helper refills, next_out/avail_out at +0x48/+0x4c are the
+    // window underflow drains, and the destructor calls inflateEnd on it.
+    // The vendored zlib-1.1.3 IS retail's library (it matches 100%), so its
+    // own header is the record - cc_wrap puts that directory on INCLUDE.
+    z_stream stream;             // +0x3c
     unsigned char* buffer;       // +0x74, new[0x400]
     unsigned char* out_buffer;   // +0x78, buffer + 0x200
     unsigned long crc;           // +0x7c
@@ -46,8 +59,25 @@ public:
     unsigned char source_eof;    // +0x81
     unsigned char inflating;     // +0x82
     char pad_83;
+
+private:
+    // Two private readers the bodies need. 0x4d5fd0 refills next_in from the
+    // source buffer and returns the next byte or -1; 0x4d6ba0 is the same
+    // read with the malformed-member throw attached, which retail keeps out
+    // of line at four of underflow's eight trailer reads.
+    int get_byte();              // 0x4d5fd0
+    int read_byte();             // 0x4d6ba0
 };
 SIZE(TGzInflateBuf, 0x84);
+
+// std::runtime_error's string constructor is an in-class inline, so the
+// message form expands at its three throw sites while the message-less
+// form stays out of line at 0x4d65e0.
+class TGzInflateBuf::TDataError : public std::runtime_error {
+public:
+    TDataError();  // 0x4d65e0
+    TDataError(const std::string& text) : std::runtime_error(text) {}
+};
 
 // The TAbstractFile view of a streambuf: Read is sgetn, Write is sputn.
 // Size 8 is byte-proven by every stack instance (vftable, streambuf*).
