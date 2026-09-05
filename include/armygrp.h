@@ -286,6 +286,14 @@ enum ESpellId {
     // spell power to derive the scouting radius; retail displacement 0x144
     // proves spell id 2 independently of the Dreamcast spelling.
     SPELL_VISIONS = 0x2,
+    // 3 and 5, the two arms of advManager::ViewWorld's spell dispatch
+    // (retail 0x5fbf90): it compares its spell argument against 3 and then
+    // 5 and gives each its own mastery ladder - earth reveals resources,
+    // then mines at advanced, then the terrain layer at expert; air
+    // reveals artifacts, then heroes, then towns. The Dreamcast SpellID
+    // enum names the same two rungs eSpellViewEarth and eSpellViewAir.
+    SPELL_VIEW_EARTH = 0x3,
+    SPELL_VIEW_AIR = 0x5,
     // Dreamcast's first combat spell and CastSpell's first jump-table arm;
     // retail indexes the mastery row at 0x642214 and places QuicksandInfo.
     SPELL_QUICKSAND = 0xa,
