@@ -35,10 +35,21 @@ DATA(0x00696d80) CImmDevice* gImmDevice;
 DATA(0x00696d84) CImmProject* gImmProject;
 DATA(0x00696d88) CImmCompoundEffect* gImmEffect;
 
+// COMDAT pairing: `??_Gt_create_failure`, the scalar deleting destructor
+// slot 0 of the throw vftable at 0x63e634 points at. It sits far ahead of
+// the rest of this compiland, in the advmgr..advspells gap, which is
+// ordinary COMDAT placement; the vftable reference is what owns it.
+VA_COMPGEN(0x0041bed0, 0x21, SCALAR_DELETING_DTOR, t_create_failure)
+
 // The combat-spell rumble. Destroys whatever effect is still loaded,
 // creates the named one against the default device and starts it for
-// `count` iterations. The first guard returns a BYTE (`xor al,al`) where
-// the two later exits clear the whole register.
+// `count` iterations. The first guard returns a BYTE (`xor al,al`) while
+// the two later exits clear the WHOLE register and materialize `1` as a
+// dword - that split is the tell for a trailing `&&`: VC6 gives the
+// short-circuit its own int-width `mov eax,1` / `xor eax,eax` pair and
+// narrows for free at the return, where three separate `return`s put a
+// byte zero at every exit (73.16%) and an if/return-1 pair merges all
+// three (87.50%).
 VA(0x004b69f0, 0x5B)  // anchor-import (CImmProject::CreateEffect), retail-only
 unsigned char PlayImmEffect(const char* effectName, int count)
 {
@@ -47,11 +58,7 @@ unsigned char PlayImmEffect(const char* effectName, int count)
     if (gImmEffect != 0)
         gImmProject->DestroyEffect(gImmEffect);
     gImmEffect = gImmProject->CreateEffect(effectName, 0, 0);
-    if (gImmEffect == 0)
-        return 0;
-    if (!gImmEffect->Start(count, 0))
-        return 0;
-    return 1;
+    return gImmEffect != 0 && gImmEffect->Start(count, 0) != 0;
 }
 
 // One tracked enclosure. `new CImmEnclosure` lands in the auto_ptr member
@@ -71,9 +78,19 @@ force_feedback::t_enclosure::t_enclosure(const RECT* rect, long a,
     if (!m_enclosure->Initialize(gImmDevice, &bounds, a, a, b, b, c, c,
                                  (d ? 0x66 : 0) | (e ? 0x99 : 0), 0, 0, 0, 0))
         throw t_create_failure();
-    gImmEffectEntries.insert(
-        std::map<CImmEnclosure*, RECT>::value_type(m_enclosure.get(), bounds));
+    // `make_pair`, not `value_type(...)`: the deduced pair's copy is what
+    // orders the five stores right/top/left/bottom behind `first`
+    // (99.99% against 97.98% for either explicit pair spelling).
+    gImmEffectEntries.insert(std::make_pair(m_enclosure.get(), bounds));
 }
+
+// COMDAT pairing: the client-side scalar deleting destructor for the
+// dllimported CImmEnclosure - slot 0 of the vftable at 0x63e640 - and the
+// compiler-generated copy constructor the `throw t_create_failure()`
+// above forces out (CatchableType 0x64cde8 names it at exactly this
+// address, with sizeOrOffset 0x1c).
+VA_COMPGEN(0x004b6c30, 0x22, SCALAR_DELETING_DTOR, CImmEnclosure)
+VA_COMPGEN(0x004b6c60, 0x157, IMPLICIT_COPY_CTOR, t_create_failure)
 
 // The holder TAdventureMapWindow owns at +0x9c. `operator new(8)` for the
 // enclosure wrapper, then auto_ptr's own two stores - the EH frame is the
@@ -92,7 +109,8 @@ TImmMouseEffect::TImmMouseEffect(const RECT* rect, long a, unsigned long b,
 VA(0x004b6f30, 0x13)  // anchor-vtable (0x63e640+0x18), retail-only
 unsigned char TImmMouseEffect::Start()
 {
-    return m_impl->m_enclosure->Start(0) != 0;
+    unsigned char started = m_impl->m_enclosure->Start(0) != 0;
+    return started;
 }
 
 VA(0x004b6f50, 0xB)  // anchor-vtable (0x63e640+0x14), retail-only
@@ -100,3 +118,18 @@ void TImmMouseEffect::Stop()
 {
     m_impl->m_enclosure->Stop();
 }
+
+// COMDAT pairings for the enclosure map. The constructor is the one
+// retail's own cinit at 0x4b61b0 calls on 0x696d60; the rest are the
+// Dinkumware red-black-tree members the insert above and game.obj's
+// erase reach, and all three sizes are exactly the ones the
+// map<int, type_map_hero_info> instantiation in game.obj carries
+// (0x115 / 0x2F9 / 0xB3), which is the cross-check that they are the
+// same members of a different instantiation. `_Inc`, `_Erase`,
+// `_Lbound`, `_Ubound` and both `erase` overloads of this same tree are
+// already claimed in game.cpp.
+VA_COMPGEN(0x004b6f60, 0xBE, CLASS_CTOR, map)
+VA_COMPGEN(0x004b7020, 0x13, IMPLICIT_DTOR, auto_ptr)
+VA_COMPGEN(0x004b70e0, 0x115, TREE_INSERT, CImmEnclosure)
+VA_COMPGEN(0x004b7a50, 0x2F9, TREE_NODE_INSERT, CImmEnclosure)
+VA_COMPGEN(0x004b7db0, 0xB3, TREE_CONST_ITERATOR_DEC, CImmEnclosure)
