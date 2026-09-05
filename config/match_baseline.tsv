@@ -770,6 +770,7 @@ campaignbrief	?_Construct@std@@YIXPAUtype_map_hero_identity@@ABU2@@Z	100.0000	10
 campaignbrief	?_Copy@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@IAEPAU_Node@12@PAU312@0@Z	100.0000	100.0000	100.0000	0x5d270	-
 campaignbrief	?_Copy@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@IAEXABV12@@Z	100.0000	100.0000	100.0000	0x5c740	-
 campaignbrief	?_Inc@const_iterator@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x5d370	-
+campaignbrief	?erase@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@QAE?AViterator@12@V312@0@Z	98.9798	98.9798	98.9798	0x5c070	-
 campaignbrief	?get_campaign_name@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x5bc10	80bcbea63411
 campaignbrief	?insert@?$vector@UCampaignScenarioPreview@@V?$allocator@UCampaignScenarioPreview@@@std@@@std@@QAEXPAUCampaignScenarioPreview@@IABU3@@Z	100.0000	100.0000	100.0000	0x5c960	-
 campaignmap	?InitializeCampaignMapTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0x5dee0	4134d1efefe4
@@ -1734,6 +1735,7 @@ game	?copy@std@@YIPAUtype_map_hero_identity@@PAU2@00@Z	100.0000	100.0000	100.000
 game	?copy_backward@std@@YIPAVtown@@PAV2@00@Z	100.0000	100.0000	100.0000	0xd32e0	-
 game	?count@?$bitset@$0BM@@std@@QBEIXZ	100.0000	100.0000	100.0000	0xcf8d0	-
 game	?count@?$bitset@$0JB@@std@@QBEIXZ	100.0000	100.0000	100.0000	0xcf010	-
+game	?erase@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@QAE?AViterator@12@V312@@Z	100.0000	100.0000	100.0000	0x5c200	-
 game	?erase@?$vector@UTBlackMarket@@V?$allocator@UTBlackMarket@@@std@@@std@@QAEPAUTBlackMarket@@PAU3@0@Z	100.0000	100.0000	100.0000	0xd03e0	-
 game	?erase@?$vector@UTRumour@game@@V?$allocator@UTRumour@game@@@std@@@std@@QAEPAUTRumour@game@@PAU34@0@Z	100.0000	100.0000	100.0000	0xd16e0	-
 game	?erase@?$vector@Utype_creature_bank@@V?$allocator@Utype_creature_bank@@@std@@@std@@QAEPAUtype_creature_bank@@PAU3@0@Z	100.0000	100.0000	100.0000	0xd4d20	-
