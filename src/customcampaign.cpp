@@ -2803,6 +2803,91 @@ static short ReadCampaignWord(TAbstractFile* infile)
     return value;
 }
 
+// SCampaign::Load's pre-v28 hero-promotion loops and its scalar header, both
+// lifted into single-call-site statics that /Ob2 folds straight back in.  The
+// lift changes no statement and no emitted call: it exists to move
+// `caller_cb` off the deserializer, because the /Ob2 budget
+// `clamp(2*caller_cb, 1000, 35000)` is what decides which Dinkumware members
+// retail CALLS.  Undivided, our compile expanded the leading
+// `vector::size()` of every `resize` in the >=28 arm where retail calls it,
+// and expanded the whole `field_6c.resize` retail calls out of line: 133
+// blocks against retail's 89.  With both blocks lifted the >=28 arm's five
+// resize sites take retail's exact `size/insert/size/erase` shape and the
+// pre-v28 arm keeps the budget it needs for `??_H` and the by-length
+// `basic_string::assign`.  59.0405 -> 79.2549.
+// Measured split points (all with the fill below in place): pools alone
+// 73.98, pools+scores-loop 75.20, pools+head(2840-) 76.20, pools+head(2836-)
+// 76.20, pools+head(2834-) 76.81, pools+head(2833-) 79.25 <- kept;
+// whole-arm lift 68.89, arm-from-mapScores 64.65, arm-from-resize(2) 66.10,
+// and lifting the >=28 arm instead loses the fold entirely (29.04).
+static void LoadLegacyPools(SCampaign* self, LegacyCampaignSave& saved)
+{
+    for (int pool = 0; pool < 2; ++pool) {
+        int heroCount = saved.carryOverHeroCounts[pool];
+        self->carryOverHeroes[pool].resize(heroCount);
+
+        for (int whichHero = 0; whichHero < heroCount; ++whichHero) {
+            const LegacyCampaignHero& oldHero =
+                saved.carryOverHeroes[pool][whichHero];
+            hero& newHero = self->carryOverHeroes[pool][whichHero];
+
+            newHero.id = oldHero.id;
+            newHero.owner = oldHero.owner;
+            strcpy(newHero.name, oldHero.name);
+            newHero.heroClass = oldHero.heroClass;
+            newHero.portrait = oldHero.portrait;
+            newHero.last_magic_school_level =
+                oldHero.lastMagicSchoolLevel;
+            newHero.experience = oldHero.experience;
+            newHero.level = oldHero.level;
+            newHero.iLevelSeed = oldHero.levelSeed;
+            newHero.lastWisdom = oldHero.lastWisdom;
+            newHero.army = oldHero.army;
+            memcpy(newHero.skillLevel, oldHero.skillLevel,
+                   sizeof(newHero.skillLevel));
+            memcpy(newHero.skillOrder, oldHero.skillOrder,
+                   sizeof(newHero.skillOrder));
+            newHero.skillCount = oldHero.skillCount;
+
+            for (int equippedSlot = 0; equippedSlot < 19;
+                 ++equippedSlot) {
+                type_artifact artifact = oldHero.equipped[equippedSlot];
+                if (artifact.artifactId != ARTIFACT_NONE)
+                    newHero.equip_artifact(&artifact, equippedSlot);
+            }
+            for (int backpackSlot = 0; backpackSlot < 64;
+                 ++backpackSlot) {
+                type_artifact artifact = oldHero.backpack[backpackSlot];
+                if (artifact.artifactId != ARTIFACT_NONE)
+                    newHero.add_to_backpack(&artifact, backpackSlot);
+            }
+            for (int spell = 0; spell < 70; ++spell) {
+                if (oldHero.inSpellbook[spell])
+                    newHero.AddSpell(spell);
+            }
+            for (int stat = 0; stat < 4; ++stat)
+                newHero.stats[stat] = oldHero.stats[stat];
+        }
+    }
+}
+
+static void LoadLegacyHead(SCampaign* self, LegacyCampaignSave& saved)
+{
+    self->currentMap = saved.currentMap;
+    self->isCheater = saved.isCheater;
+    self->briefingChoice = saved.briefingChoice;
+    self->numMapRegions = -1;
+    self->currentCampaign = saved.currentCampaign;
+    self->crossoverArrayIndex = 0;
+    self->secretActive = false;
+    self->campaignFilename.assign(
+        saved.campaignFilename, strlen(saved.campaignFilename));
+
+    memset(self->campaignCompleted, 0, sizeof(self->campaignCompleted));
+    memcpy(self->campaignCompleted, saved.campaignCompleted,
+           sizeof(saved.campaignCompleted));
+}
+
 // The two leading clears are `clear()`, not `erase(begin(), end())`:
 // retail CALLS both range-erase COMDATs (0x48a345, 0x48a355) where the
 // longhand form makes VC6 expand them, because clear()'s own wrapper takes
@@ -2830,19 +2915,7 @@ void SCampaign::Load(TAbstractFile* infile, int saveVersion)
         LegacyCampaignSave saved;
         infile->Read(&saved, sizeof(saved));
 
-        currentMap = saved.currentMap;
-        isCheater = saved.isCheater;
-        briefingChoice = saved.briefingChoice;
-        numMapRegions = -1;
-        currentCampaign = saved.currentCampaign;
-        crossoverArrayIndex = 0;
-        secretActive = false;
-        campaignFilename.assign(
-            saved.campaignFilename, strlen(saved.campaignFilename));
-
-        memset(campaignCompleted, 0, sizeof(campaignCompleted));
-        memcpy(campaignCompleted, saved.campaignCompleted,
-               sizeof(saved.campaignCompleted));
+        LoadLegacyHead(this, saved);
 
         mapScores.resize(saved.numScenarios);
         for (int i = 0; i < saved.numScenarios; ++i) {
@@ -2861,53 +2934,7 @@ void SCampaign::Load(TAbstractFile* infile, int saveVersion)
         carryOverHeroes.resize(2);
         field_4c.resize(2);
 
-        for (int pool = 0; pool < 2; ++pool) {
-            int heroCount = saved.carryOverHeroCounts[pool];
-            carryOverHeroes[pool].resize(heroCount);
-
-            for (int whichHero = 0; whichHero < heroCount; ++whichHero) {
-                const LegacyCampaignHero& oldHero =
-                    saved.carryOverHeroes[pool][whichHero];
-                hero& newHero = carryOverHeroes[pool][whichHero];
-
-                newHero.id = oldHero.id;
-                newHero.owner = oldHero.owner;
-                strcpy(newHero.name, oldHero.name);
-                newHero.heroClass = oldHero.heroClass;
-                newHero.portrait = oldHero.portrait;
-                newHero.last_magic_school_level =
-                    oldHero.lastMagicSchoolLevel;
-                newHero.experience = oldHero.experience;
-                newHero.level = oldHero.level;
-                newHero.iLevelSeed = oldHero.levelSeed;
-                newHero.lastWisdom = oldHero.lastWisdom;
-                newHero.army = oldHero.army;
-                memcpy(newHero.skillLevel, oldHero.skillLevel,
-                       sizeof(newHero.skillLevel));
-                memcpy(newHero.skillOrder, oldHero.skillOrder,
-                       sizeof(newHero.skillOrder));
-                newHero.skillCount = oldHero.skillCount;
-
-                for (int equippedSlot = 0; equippedSlot < 19;
-                     ++equippedSlot) {
-                    type_artifact artifact = oldHero.equipped[equippedSlot];
-                    if (artifact.artifactId != ARTIFACT_NONE)
-                        newHero.equip_artifact(&artifact, equippedSlot);
-                }
-                for (int backpackSlot = 0; backpackSlot < 64;
-                     ++backpackSlot) {
-                    type_artifact artifact = oldHero.backpack[backpackSlot];
-                    if (artifact.artifactId != ARTIFACT_NONE)
-                        newHero.add_to_backpack(&artifact, backpackSlot);
-                }
-                for (int spell = 0; spell < 70; ++spell) {
-                    if (oldHero.inSpellbook[spell])
-                        newHero.AddSpell(spell);
-                }
-                for (int stat = 0; stat < 4; ++stat)
-                    newHero.stats[stat] = oldHero.stats[stat];
-            }
-        }
+        LoadLegacyPools(this, saved);
         return;
     }
 
@@ -2931,8 +2958,16 @@ void SCampaign::Load(TAbstractFile* infile, int saveVersion)
         infile->Read(campaignCompleted, sizeof(campaignCompleted));
     } else {
         infile->Read(campaignCompleted, 14);
-        memset(campaignCompleted + 14, 0,
-               sizeof(campaignCompleted) - 14);
+        // std::fill, not memset: retail zeroes the tail through the two
+        // POINTERS, so the count never folds and VC6's inline expansion
+        // keeps its `cmp edi,ecx / je` guard ahead of the
+        // `sub / shr 2 / rep stosd / and 3 / rep stosb` pair.  The seven
+        // instructions from `lea edi,[ebx+0x32]` are byte-identical to
+        // retail 0x48a9ab..0x48a9c5; the constant-count memset that stood
+        // here emitted individual stores.
+        std::fill(campaignCompleted + 14,
+                  campaignCompleted + sizeof(campaignCompleted),
+                  static_cast<unsigned char>(0));
     }
 
     unsigned char count = ReadCampaignByte(infile);
