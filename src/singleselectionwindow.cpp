@@ -1262,7 +1262,7 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
 
     logFile.Log(
         DATA_COMPGEN(0x00683688, selectionWindowIsHostLog,
-                     "TSingleSelectionWindow::IsHost() = %d"),
+                     "TSingleSelectionWindow::IsHost()=%d"),
         IsHost());
 
     notifyNoSaved = 0;
@@ -7164,7 +7164,7 @@ unsigned char TSingleSelectionWindow::OnGameHeaderInfoMsg(CNetMsg* pNetMsg)
     CGameHeaderInfoMsg msg;
     msg.RemoteFn_00512E00(pNetMsg);
     logFile.Log(DATA_COMPGEN(0x00683940, recvGameHeaderLog,
-                             "rec'd game header %d"),
+                             "Rec'd game header [%d]"),
                 msg.m_number);
     if (msg.m_flag) {
         if (static_cast<unsigned int>(msg.m_number)
