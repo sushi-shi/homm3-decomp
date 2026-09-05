@@ -168,6 +168,16 @@ DEQUE_PRIMITIVE_ELEMENT = {"C": "signed_char", "D": "char",
                            "G": "unsigned_short", "H": "int",
                            "I": "unsigned_int", "J": "long",
                            "K": "unsigned_long"}
+#: Class templates over ONE type argument whose destructor VC6 emits as a
+#: COMDAT, and whose `??1` mangling therefore keys to the shared
+#: `<template>_<template>@dtor` group for every instantiation at once (the
+#: generic dtor arm at the foot of `_demangle_key` keeps only the stable
+#: template name). A TU holding two instantiations of one of these gets an
+#: ambiguous group the positional zip and `_size_pairing` both fail on, so
+#: `_template_element_pairing` splits it by the element the CLAIM names -
+#: spelled `<Element>_<template>`, the same two-part owner `hero_vector`
+#: established for the shared vector-constructor group.
+SINGLE_ARG_TEMPLATE_DTORS = ("auto_ptr",)
 #: The char-instantiated stream and string members VC6 emits as COMDATs.
 #: Every one of these templates exists only as `<char, char_traits<char>,
 #: allocator<char>>` in this image, so the instantiation carries no useful
@@ -1536,6 +1546,73 @@ def _element_pairing(candidates: list[dict], mangled_group: list) -> dict:
     return out
 
 
+def _template_dtor_owner(owner: str):
+    """`(element, template)` for a two-part `<Element>_<template>` compgen
+    owner naming one instantiation of a SINGLE_ARG_TEMPLATE_DTORS class,
+    else None. Both halves come back lowercased, the spelling every join
+    key in this module uses."""
+    lowered = owner.lower()
+    for template in SINGLE_ARG_TEMPLATE_DTORS:
+        tail = f"_{template}"
+        if lowered.endswith(tail) and len(lowered) > len(tail):
+            return lowered[:-len(tail)], template
+    return None
+
+
+def _mangled_template_element(mangled: str, template: str):
+    """The lowercased type argument of a `??1?$<template>@<Arg>@std@@`
+    destructor, or None when the name is not that template's dtor. Class,
+    struct, enum and pointer-to-class arguments all carry a plain
+    identifier; a BUILTIN argument is a single letter with no `@`
+    terminator, decoded through DEQUE_PRIMITIVE_ELEMENT exactly as deque's
+    and vector's primitive elements are."""
+    head = re.escape(f"??1?${template}@")
+    primitive = re.match(f"^{head}([CDEFGHIJK])@std@@", mangled)
+    if primitive:
+        return DEQUE_PRIMITIVE_ELEMENT[primitive.group(1)]
+    named = re.match(
+        f"^{head}(?:P[AB])?(?:V|U|W4)([A-Za-z_]\\w*)@", mangled)
+    return named.group(1).lower() if named else None
+
+
+def _template_element_pairing(candidates: list[dict],
+                              mangled_group: list) -> dict:
+    """{claim rva -> mangled} for the members of a shared single-argument
+    TEMPLATE DESTRUCTOR group that a claim's owner names outright - the
+    `_element_pairing` idea applied to the other group `_demangle_key`
+    shares by construction.
+
+    Every `??1?$auto_ptr@T@std@@` keys to `auto_ptr_auto_ptr@dtor`, so one
+    group holds every instantiation a TU emits, and both weaker oracles
+    fail on it exactly as they do on the vector-constructor group:
+    forcefeedback's `~auto_ptr<CImmEnclosure>` and `~auto_ptr<CImmMouse>`
+    are the SAME 19 bytes (`cmpb $0,(%ecx)` / load / virtual `delete`), so
+    `_size_pairing` finds two perfect matchings and declines, and the
+    positional zip has nothing to appeal to because retail ICF-folded the
+    twins onto one row - there are four base COMDATs against three retail
+    bodies, which is a count mismatch, not an order question.
+
+    The claim carries the element in its own two-part owner, so the
+    pairing is forced whenever that element names exactly one free symbol
+    in the group. Anything less declines and the group stays labeled.
+
+    Pure in (candidates, mangled_group) so the negative control can drive
+    it."""
+    out = {}
+    for row in candidates:
+        if "$implicit_dtor$" not in row["name"]:
+            continue
+        split = _template_dtor_owner(row["name"].rsplit("$", 1)[1])
+        if split is None:
+            continue
+        element, template = split
+        names = [name for name, _content in mangled_group
+                 if _mangled_template_element(name, template) == element]
+        if len(names) == 1:
+            out[row["rva"]] = names[0]
+    return out
+
+
 def _ctor_kind_pairing(candidates: list[dict], mangled_group: list,
                        used: set | None = None) -> dict:
     """{claim rva -> mangled} for the constructor halves a group's CLAIM
@@ -1835,6 +1912,17 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             continue
         if "$implicit_dtor$" in row["name"]:
             owner = row["name"].rsplit("$", 1)[1].lower()
+            # A `<Element>_<template>` owner names ONE instantiation of a
+            # single-argument class template whose `??1` mangling keys to
+            # the shared `<template>_<template>@dtor` group; it keys there
+            # too, and `_template_element_pairing` reads the element back
+            # out of the owner.
+            split = _template_dtor_owner(owner)
+            if split is not None:
+                template = split[1]
+                claim_keys.setdefault(f"{template}_{template}@dtor",
+                                      []).append(row)
+                continue
             claim_keys.setdefault(f"{owner}_{owner}@dtor", []).append(row)
             continue
         key = row["name"].lower()
@@ -1848,9 +1936,12 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
         # The element-named members bind FIRST and leave the group: an
         # owner that names its instantiation cannot be mis-paired, and
         # taking both sides out keeps the weaker oracles below honest
-        # about what is left. Empty for every group but the shared vector
-        # ctor one, where it is the only oracle that works.
-        bound = _element_pairing(candidates, mangled_group)
+        # about what is left. Empty for every group but the two
+        # `_demangle_key` shares by construction - the vector constructors
+        # and the single-argument template destructors - where they are the
+        # only oracles that work.
+        bound = dict(_element_pairing(candidates, mangled_group))
+        bound.update(_template_element_pairing(candidates, mangled_group))
         if bound:
             for row in candidates:
                 mangled = bound.get(row["rva"])

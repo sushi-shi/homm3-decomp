@@ -191,7 +191,14 @@ void TImmMouseEffect::Stop()
 // `_Lbound`, `_Ubound` and both `erase` overloads of this same tree are
 // already claimed in game.cpp.
 VA_COMPGEN(0x004b6f60, 0xBE, CLASS_CTOR, map)
-VA_COMPGEN(0x004b7020, 0x13, IMPLICIT_DTOR, auto_ptr)
+// This TU emits four `~auto_ptr<T>` COMDATs - CImmEnclosure and
+// CImmMouse at 19 bytes each, char at 16 and CImmProject at 33 - and
+// all four key to one `auto_ptr_auto_ptr@dtor` group, so the owner
+// names the INSTANTIATION `<Element>_<template>` the way the shared
+// vector-constructor group's `hero_vector` claims do. Retail ICF
+// folded the two 19-byte twins, which is why the length fallback
+// alone cannot decide this one.
+VA_COMPGEN(0x004b7020, 0x13, IMPLICIT_DTOR, CImmEnclosure_auto_ptr)
 VA_COMPGEN(0x004b70e0, 0x115, TREE_INSERT, CImmEnclosure)
 VA_COMPGEN(0x004b7a50, 0x2F9, TREE_NODE_INSERT, CImmEnclosure)
 VA_COMPGEN(0x004b7db0, 0xB3, TREE_CONST_ITERATOR_DEC, CImmEnclosure)
