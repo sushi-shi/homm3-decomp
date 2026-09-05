@@ -1249,6 +1249,28 @@ static void apply_setup_artifacts(hero* who, const HeroExtra* setup)
 // first defs", i.e. not the B1 minimum slice and no creation-order edit
 // reaches it. The schedule is aligned and flow-distance is 0; what is left
 // is edi->ecx x7 / ecx->edx x5 over 54 register-visible slots.
+// 94.6716 -> 97.5836 (2026-09-06), three source facts read straight off the
+// retail bytes.  All 65 blocks, 37 branches and 13 out-of-line calls now
+// agree.
+//   * the patrol else-arm writes patrolY BEFORE patrolX.  Written the other
+//     way both arms end with the same store and the cross-jumper merges it
+//     into a shared block; retail keeps both stores duplicated per arm, in
+//     opposite orders, which is exactly what stops the merge (+0.33);
+//   * the custom-name assignment is the THREE-argument
+//     `assign(const basic_string&, size_type, size_type)` with npos loaded
+//     from its out-of-line definition, not `operator=` (+1.78 under the
+//     existing pin);
+//   * the troop count is NAMED once per iteration.  Retail widens it, tests
+//     the widened value and stores it (`movsx ecx,word[edx] / test ecx,ecx /
+//     mov [eax+0x1c],ecx`); re-reading the member for the comparison costs
+//     the register and re-reads memory.  `int` is the type - `short` scores
+//     95.5204 (+0.80).
+// Residual (97.5836%): the `lea edi` of the FIRST memset in each zeroing
+// pair.  Retail issues the destination address ahead of `mov ecx,<count> /
+// xor eax,eax`; this compile issues it last, which is the right-to-left
+// argument order.  The SECOND memset of the second pair already agrees, so
+// it is a block-entry schedule and not the spelling: `&arr[0]` is byte-flat
+// and hoisting `skillCount = 0` above the pair costs 0.36.
 VA(0x004d8b30, 0x434)  // retail-only, hero member, ret 4
 void hero::HeroFn_004D8B30(const HeroExtra* setup)
 {
@@ -1265,8 +1287,8 @@ void hero::HeroFn_004D8B30(const HeroExtra* setup)
         patrolX = x;
         patrolY = y;
     } else {
-        patrolX = kPatrolNone;
         patrolY = kPatrolNone;
+        patrolX = kPatrolNone;
     }
 
     if (setup->bCustomName) {
@@ -1291,8 +1313,9 @@ void hero::HeroFn_004D8B30(const HeroExtra* setup)
 
     if (setup->bCustomArmies) {
         for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
-            army.numTroops[i] = setup->numTroops[i];
-            if (setup->numTroops[i] > 0)
+            int count = setup->numTroops[i];
+            army.numTroops[i] = count;
+            if (count > 0)
                 army.armies[i] = setup->armies[i];
             else
                 army.armies[i] = CREATURE_NONE;
@@ -1322,8 +1345,13 @@ void hero::HeroFn_004D8B30(const HeroExtra* setup)
         // CL expanded it and spilled its internals (_Grow x2, _Split x2,
         // _Eos, memmove, operator delete) into this body. inline_depth(0)
         // is STATEMENT-granular in VC6, so it pins this one site.
+        // And the call retail makes is the THREE-argument assign, not
+        // operator=: push npos, push 0, push src, call assign(str,I,I),
+        // with npos LOADED from its out-of-line definition. Spelling the
+        // three-argument form under the same pin is worth 95.0000 ->
+        // 96.7770; unpinned it collapses (3-arg 55.7360, 1-arg 55.5946).
 #pragma inline_depth(0)
-        customName = setup->name;
+        customName.assign(setup->name, 0, std::string::npos);
 #pragma inline_depth()
     }
 
