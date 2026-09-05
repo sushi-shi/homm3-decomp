@@ -71,6 +71,11 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_RESOURCE_DISPLAY_1 = 64,
     GENERAL_TEXT_RESOURCE_DISPLAY_2 = 65,
     GENERAL_TEXT_QUIT = 70,
+    // CDPlayHeroes::HandleLowLevelMsg's RS_PING_REPLY arm (0x552f9b) is the
+    // only consumer of the folded [Text._First + 0x10c]: it sprintf()s the
+    // round trip GameTime::ElapsedSince measured against the echoed ping
+    // stamp into a 256-byte buffer and hands the line to ReceiveChat.
+    GENERAL_TEXT_CHAT_PING_RESULT_FORMAT = 67,
     // SendChat's command/status rows. The indices are the folded retail
     // TTextResource loads; their roles are fixed by the surrounding ping
     // and recipient-control flow.
@@ -129,6 +134,11 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_SEARCH_BACKPACK_FULL = 248,
     GENERAL_TEXT_SPLIT_CREATURE_ROLLOVER = 257,
     GENERAL_TEXT_SPLIT_OTHER_ROLLOVER = 258,
+    // The single-button dialog CDPlayHeroes::HandleLowLevelMsg (0x552e92)
+    // raises when the RS_DESTROY_PLAYER order names this machine's own DPID:
+    // the folded [Text._First + 0x524], shown after RemoteCleanup and
+    // immediately before ShutDown(0).
+    GENERAL_TEXT_REMOTE_SESSION_DESTROYED = 329,
     GENERAL_TEXT_QUICK_INFO_DIGGABLE = 331,
     // The hero screen's "Level %d %s" line (widget 0x8c): a folded
     // [Text._First + 0x55c] in THeroScreenWindow::SetupHeroView, fed the
