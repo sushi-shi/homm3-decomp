@@ -3167,16 +3167,16 @@ void CheckEndGame(int bForceWin)
                 NormalDialog(gpGeneralText->Text[96], NORMAL_DIALOG_DEFAULT,
                              -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             } else {
-                sprintf(gText, gpGeneralText->Text[6],
-                        gpGame->GetPlayerName(i));
+                const char* deadFormat = gpGeneralText->Text[6];
+                sprintf(gText, deadFormat, gpGame->GetPlayerName(i));
                 NormalDialog(gText, NORMAL_DIALOG_DEFAULT, -1, -1, 10, i,
                              -1, -1, -1, 5000, -1, 0);
             }
         } else if (gpGame->players[i].numTowns == 0) {
             if (gpGame->players[i].iDeathCountDown == -1) {
                 if (gpGame->IsLocalHuman(i) && i == gNetLocalGamePos) {
-                    sprintf(gText, gpGeneralText->Text[7],
-                            gpGame->GetPlayerName(i));
+                    const char* warnFormat = gpGeneralText->Text[7];
+                    sprintf(gText, warnFormat, gpGame->GetPlayerName(i));
                     NormalDialog(gText, NORMAL_DIALOG_DEFAULT, -1, -1, 10, i,
                                  -1, 0, -1, 0, -1, 0);
                 }
@@ -3184,12 +3184,12 @@ void CheckEndGame(int bForceWin)
             } else if (gpGame->players[i].iDeathCountDown == 0) {
                 PlayerDead(i);
                 if (gpGame->IsLocalHuman(i) && i == gNetLocalGamePos) {
-                    sprintf(gText, gpGeneralText->Text[8],
-                            gpGame->GetPlayerName(i));
+                    const char* localFormat = gpGeneralText->Text[8];
+                    sprintf(gText, localFormat, gpGame->GetPlayerName(i));
                     gUnnamed691209 = 0;
                 } else {
-                    sprintf(gText, gpGeneralText->Text[9],
-                            gpGame->GetPlayerName(i));
+                    const char* otherFormat = gpGeneralText->Text[9];
+                    sprintf(gText, otherFormat, gpGame->GetPlayerName(i));
                 }
                 NormalDialog(gText, NORMAL_DIALOG_DEFAULT, -1, -1, 10, i,
                              -1, 0, -1, 0, -1, 0);
