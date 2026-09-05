@@ -2877,11 +2877,12 @@ void ImmMouseWindowMoved();                           // 0x4b6950
 // feedback that plays with a combat spell. Retail-only (the Dreamcast
 // build has no Immersion layer), so the NAME is a bootstrap invention
 // and the return value, which PowEffect discards, stays unmodelled.
-void PlayImmEffect(const char* effectName, int count);  // 0x4b69f0
+unsigned char PlayImmEffect(const char* effectName, int count);  // 0x4b69f0
+// E:\gamedcs\game.cpp:208, dc 0xa2af8 - retail 0x4b8410.
+unsigned char InitializeRandomTavernText();
 void ComputeUALoc(int whichPlayer);                   // 0x4baed0
 
 // --- globals ---
-// CODEVIEW(E:\gamedcs\game.cpp:208, dc 0xa2af8) unsigned char InitializeRandomTavernText();
 // CODEVIEW(E:\gamedcs\game.cpp:365, dc 0xa2bb4) int bufwrite(const void* buf, int size);
 // CODEVIEW(E:\gamedcs\game.cpp:396, dc 0xa2d5c) int bufread(void* buf, int size);
 // CODEVIEW(E:\gamedcs\game.cpp:627, dc 0xa341c) long get_day_bonus(EGameResource resource, long week_bonus, long day);
