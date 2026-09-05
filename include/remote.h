@@ -168,6 +168,16 @@ public:
     void HandlePlayerDrop(unsigned long dpid);
 
 protected:
+    // The three other system-message overrides, all of them CDPlay slots
+    // this class replaces rather than introduces (retail 0x552530 /
+    // 0x552740 / 0x552920, in the DC roster's own order between
+    // ~CDPlayHeroes and SysMsgCreatePlayerOrGroup).
+    virtual unsigned char SysMsgHost(DPMSG_GENERIC* message,
+                                     unsigned long toId);
+    virtual unsigned char SysMsgSessionLost(DPMSG_GENERIC* message,
+                                            unsigned long toId);
+    virtual unsigned char SysMsgDestroyPlayerOrGroup(
+        DPMSG_DESTROYPLAYERORGROUP* message, unsigned long toId);
     virtual unsigned char SysMsgCreatePlayerOrGroup(
         DPMSG_CREATEPLAYERORGROUP* message, unsigned long toId);
     // Retail 0x5532b0, DC remote.cpp:425. Accessed by the two original

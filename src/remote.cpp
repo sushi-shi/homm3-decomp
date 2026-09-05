@@ -112,6 +112,57 @@ CDPlayHeroes::~CDPlayHeroes()
     DestroyMsgQueue();
 }
 
+// E:\gamedcs\remote.cpp:179. The host-migration notification: DirectPlay
+// has told us the host changed, and if THIS station was not already the host
+// the base handler's answer means it is now, so the front end is told through
+// the queue. QueueMsg is expanded here - retail folds the message's own
+// `size` member into a constant `operator new(0x14)` and a five-dword copy -
+// and so is the whole Dinkumware deque push_back behind it.
+VA(0x00552530, 0x20E)  // anchor-callee(CDPlay::SysMsgHost base call) + dc-order-map, dc 0x11bad8
+unsigned char CDPlayHeroes::SysMsgHost(DPMSG_GENERIC* message,
+                                       unsigned long toId)
+{
+    unsigned char wasHost = IsHost();
+    if (!CDPlay::SysMsgHost(message, toId))
+        return 0;
+    if (!wasHost) {
+        CNetMsg msg(RS_SET_AS_HOST, sizeof(CNetMsg));
+        QueueMsg(&msg);
+    }
+    return 1;
+}
+
+// E:\gamedcs\remote.cpp:192. The session is gone: queue the notification
+// and answer handled. Retail does NOT chain to the base slot here, unlike
+// the host handler above.
+VA(0x00552740, 0x1DE)  // dc-order-map (between SysMsgHost and SysMsgDestroyPlayerOrGroup), dc 0x11bb20
+unsigned char CDPlayHeroes::SysMsgSessionLost(DPMSG_GENERIC* message,
+                                              unsigned long toId)
+{
+    CNetMsg msg(RS_SESSION_LOST, sizeof(CNetMsg));
+    QueueMsg(&msg);
+    return 1;
+}
+
+// E:\gamedcs\remote.cpp:204. Only a PLAYER leaving matters - a group being
+// destroyed is ignored - and the station that left is logged through the
+// same format string HandlePlayerDrop uses before the drop notification is
+// queued for the higher-level dispatchers.
+VA(0x00552920, 0x216)  // anchor-string(playerDroppedLog) + dc-order-map, dc 0x11bb40
+unsigned char CDPlayHeroes::SysMsgDestroyPlayerOrGroup(
+    DPMSG_DESTROYPLAYERORGROUP* message, unsigned long toId)
+{
+    if (message->dwPlayerType == DPPLAYERTYPE_PLAYER) {
+        unsigned long dpid = message->dpId;
+        logFile.Log(DATA_COMPGEN(0x00682a78, playerDroppedLog,
+                                "********Player dropped---->[%d]"),
+                    dpid);
+        CPlayerDropMsg msg(dpid);
+        QueueMsg(&msg);
+    }
+    return 1;
+}
+
 // E:\gamedcs\remote.cpp:214 - derived slot 56 forwards to the base handler.
 VA(0x00552b40, 0x14)
 unsigned char CDPlayHeroes::SysMsgCreatePlayerOrGroup(
