@@ -249,15 +249,17 @@ void TTownGateWindow::DoModal()
 // the chosen town id (or -1 for Cancel) and rewrites the message into the
 // shared END_DIALOG forward. Every state read goes through the file-local
 // window pointer, not `this` - only GetWidget uses the receiver.
-// Residual (69.90%): every remaining row is one register permutation -
-// retail homes msg in ESI, `this` in EDI and the zero constant in EBX,
-// where our CL coalesces the zero with the inlined UpdateTownLocators
-// loop counter and takes ESI for it (retail keeps them apart with a
-// second `xor esi,esi`) - plus the DIALOG_RETURN_CANCEL arm, which retail
-// sinks past the `ret 4` and reaches with a backward `jmp`. Branches,
-// calls and the switch lowerings all agree. Tried and rejected: swapping
-// the two inner case arms (byte-flat), naming `msg->codeY` in a local
-// (byte-flat).
+// The END_DIALOG forward is written out in BOTH deselect arms. Written
+// once after the inner switch it is a two-predecessor join, and VC6 sinks
+// it past the CANCEL arm while retail lets the OK arm fall straight into
+// it and reaches it from CANCEL with a backward jmp; the duplicate leaves
+// the first copy single-predecessor, and the cross-jumper then merges the
+// shared tail into retail's exact layout. This also dissolved what a
+// standing note here called a pure register permutation (retail homes msg
+// in ESI, `this` in EDI, the zero in EBX): the whole allocation falls into
+// line behind the block order. 69.8969 -> 100.0000, 2026-09-05. A `goto`
+// into the OK arm expresses the same merge and is byte-flat with the
+// unduplicated form - only the duplicate moves it.
 VA(0x005c2840, 0x13B)  // anchor-vtable (slot 9) + CAdvPopup::WindowHandler, dc 0x169ae0
 int TTownGateWindow::WindowHandler(message* msg)
 {
@@ -280,16 +282,16 @@ int TTownGateWindow::WindowHandler(message* msg)
             switch (msg->codeY) {
             case DIALOG_RETURN_CANCEL:
                 gpWindowManager->dialogReturn = -1;
-                break;
+                msg->codeX = msg->codeY = widget::WIDGET_END_DIALOG;
+                return MESSAGE_DISPATCH_FORWARD;
             case DIALOG_RETURN_OK:
                 gpWindowManager->dialogReturn =
                     gpTownGateWindow->Towns[gpTownGateWindow->selectedTown];
-                break;
+                msg->codeX = msg->codeY = widget::WIDGET_END_DIALOG;
+                return MESSAGE_DISPATCH_FORWARD;
             default:
                 return MESSAGE_DISPATCH_CONSUME;
             }
-            msg->codeX = msg->codeY = widget::WIDGET_END_DIALOG;
-            return MESSAGE_DISPATCH_FORWARD;
         }
     }
 
