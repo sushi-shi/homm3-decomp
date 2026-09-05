@@ -533,10 +533,20 @@ void CChatManager::PlayerEnterMsg(const char* cChatMsg)
 // The null test on the freshly allocated block sits AFTER the store into it,
 // which is retail's own order, not a scheduling artifact we could move.
 //
-// Residual (80.86%): one target-only call inside the INLINED pop_front -
-// retail keeps a deque helper out of line there and our expansion takes it -
-// plus two surplus epilogues the cross-jumper did not merge. Both sit inside
-// Dinkumware's own template body, which this TU may not pin into.
+// The three "hand the queued message back" exits are ONE exit: retail's
+// null-front arm, its already-uncompressed arm and its uncompressed-block
+// arm all reach the same `mov eax,edi` epilogue, and the last of them gets
+// there by storing the new block into pNetMsg's own memory home
+// (`mov [ebp-8],ebx` / `mov edi,[ebp-8]`). So the body is one `if (pNetMsg)`
+// block over a single trailing `return pNetMsg;`, not three early returns -
+// spelling it that way took 80.8571 -> 86.2637 with branches, ret count and
+// block skeleton all clean (14/14 branches, 5/5 rets, 0 flow-kind).
+// Residual (86.26%): pNetMsg binds EBX here against retail's EDI and is not
+// memory-homed until later, which why-reg v2 places past the first-def slice
+// (bindings agree at every #0/#1/#2), plus one target-only call inside the
+// INLINED pop_front - retail keeps a deque helper out of line there and our
+// expansion takes it, inside Dinkumware's own template body which this TU
+// may not pin into.
 VA(0x00553040, 0x1D1)  // anchor-caller(the free GetRemoteData wrapper, CheckHandleNet) + dc-order-map, dc 0x11bd5c
 CNetMsg* CDPlayHeroes::GetRemoteData(unsigned char removeFromQueue,
                                      unsigned char* wasCompressed)
@@ -549,43 +559,43 @@ CNetMsg* CDPlayHeroes::GetRemoteData(unsigned char removeFromQueue,
         return 0;
 
     CNetMsg* pNetMsg = msgQueue.front();
-    if (!pNetMsg)
-        return 0;
+    if (pNetMsg) {
+        if (removeFromQueue)
+            msgQueue.pop_front();
 
-    if (removeFromQueue)
-        msgQueue.pop_front();
+        if (pNetMsg->field_10 && pNetMsg->field_10 != pNetMsg->size) {
+            unsigned long uncompressedSize =
+                pNetMsg->field_10 + sizeof(CNetMsg);
+            void* storage = ::operator new(uncompressedSize);
+            CNetMsg* uncompressedMsg = static_cast<CNetMsg*>(storage);
+            memcpy(uncompressedMsg, pNetMsg, sizeof(CNetMsg));
 
-    if (!pNetMsg->field_10 || pNetMsg->field_10 == pNetMsg->size)
-        return pNetMsg;
+            uncompressedSize -= sizeof(CNetMsg);
+            if (uncompress(
+                    static_cast<unsigned char*>(storage) + sizeof(CNetMsg),
+                    &uncompressedSize,
+                    static_cast<const unsigned char*>(
+                        static_cast<const void*>(pNetMsg)) + sizeof(CNetMsg),
+                    pNetMsg->size - sizeof(CNetMsg))) {
+                ::operator delete(storage);
+                ::operator delete(pNetMsg);
+                return 0;
+            }
 
-    unsigned long uncompressedSize = pNetMsg->field_10 + sizeof(CNetMsg);
-    void* storage = ::operator new(uncompressedSize);
-    CNetMsg* uncompressedMsg = static_cast<CNetMsg*>(storage);
-    memcpy(uncompressedMsg, pNetMsg, sizeof(CNetMsg));
+            uncompressedMsg->size = uncompressedSize + sizeof(CNetMsg);
+            if (!uncompressedMsg) {
+                ::operator delete(pNetMsg);
+                return 0;
+            }
 
-    uncompressedSize -= sizeof(CNetMsg);
-    if (uncompress(
-            static_cast<unsigned char*>(storage) + sizeof(CNetMsg),
-            &uncompressedSize,
-            static_cast<const unsigned char*>(
-                static_cast<const void*>(pNetMsg)) + sizeof(CNetMsg),
-            pNetMsg->size - sizeof(CNetMsg))) {
-        ::operator delete(storage);
-        ::operator delete(pNetMsg);
-        return 0;
+            if (removeFromQueue)
+                ::operator delete(pNetMsg);
+            if (wasCompressed)
+                *wasCompressed = 1;
+            pNetMsg = uncompressedMsg;
+        }
     }
-
-    uncompressedMsg->size = uncompressedSize + sizeof(CNetMsg);
-    if (!uncompressedMsg) {
-        ::operator delete(pNetMsg);
-        return 0;
-    }
-
-    if (removeFromQueue)
-        ::operator delete(pNetMsg);
-    if (wasCompressed)
-        *wasCompressed = 1;
-    return uncompressedMsg;
+    return pNetMsg;
 }
 
 // E:\gamedcs\remote.cpp:407

@@ -768,6 +768,159 @@ unsigned char SCampaign::CampaignComplete()
     return 1;
 }
 
+// The campaign and map ordinals retail's end-of-map bookkeeping compares
+// against literally; the same spelling kb.cpp uses for oldmain's own pair.
+const int CAMPAIGN_ORDINAL_02 = 2;
+const int CAMPAIGN_ORDINAL_07 = 7;
+const int CAMPAIGN_ORDINAL_13 = 13;
+const int CAMPAIGN_ORDINAL_18 = 18;
+const int CAMPAIGN_MAP_ORDINAL_06 = 6;
+const int CAMPAIGN_MAP_ORDINAL_07 = 7;
+
+// Retail-only end-of-campaign-map bookkeeping.  oldmain's own end-of-game
+// arm fixes the pair: this runs over the freshly loaded campaign header
+// immediately before SaveGame(1) and PlayScenarioEpilogue below runs
+// immediately after it, both on gpGame->campaign.  No Dreamcast row
+// carries either identity - the customcampaign.obj roster stops at
+// give_custom_items - so the names are ROLE-BASED and provisional, read
+// off the bodies: this one banks the finished map's score, allocates the
+// campaign's crossover slot, prunes the pool and collects the winner's
+// heroes.
+// Residual (0.00%, objdiff declines the pair): the body is 0xa5d against
+// retail's 0x600 and the whole delta is ONE /Ob2 decision run backwards.
+// Retail keeps every crossover insert OUT of line - one 2-arg
+// vector<hero>::insert wrapper (0x48ce50) at the hero loop and six 3-arg
+// insert(_P, 1, _X) calls (0x48d060) at the town and campaign-fixup arms -
+// and spends what is left expanding CampaignComplete plus two
+// vector<CampaignScenarioInfo>::size() at the tail. We inline the 2-arg
+// wrapper (free at cost <= 40) and then EXPAND three of the six 3-arg
+// inserts, which burns the budget and leaves the tail calling
+// CampaignComplete and size() out of line - both directions of the same
+// sequential spend. The call order reads exactly that way: base 63 calls
+// against retail's 19, with three _Ucopy/_Ufill/copy_backward/fill
+// expansion blocks where retail has three calls. The known lever is a
+// statement-scoped inline_depth(0) on the seven insert sites (with
+// end()/GetHero hoisted out of each pinned statement first, since retail
+// keeps both inline); this lane is not permitted to add pins, so the row
+// is left carrying the reconstruction for whoever is.
+VA(0x00489820, 0x600)  // anchor-caller(oldmain end-of-campaign arm), retail-only
+void SCampaign::CompleteCurrentMap(void* campaignHeader)
+{
+    CampaignScenarioInfo& scenario = mapScores[currentMap];
+
+    if (scenario.completed)
+        return;
+
+    scenario.completed = true;
+    scenario.days = gpGame->get_current_turn();
+    scenario.score = gpGame->get_map_score();
+    scenario.complete_order = 0;
+
+    if (scenario.index < 0) {
+        scenario.index = carryOverHeroes.size();
+        carryOverHeroes.insert(carryOverHeroes.end(), std::vector<hero>());
+        field_4c.insert(field_4c.end(), std::vector<type_artifact>());
+    }
+
+    crossoverArrayIndex = scenario.index;
+
+    for (unsigned int i = 0; i < mapScores.size(); ++i) {
+        if (mapScores[i].completed
+            && mapScores[i].complete_order > scenario.complete_order)
+            scenario.complete_order = mapScores[i].complete_order;
+    }
+    ++scenario.complete_order;
+
+    for (unsigned int excluded = 0; excluded < field_6c.size(); ++excluded) {
+        int heroId = field_6c[excluded];
+        for (int pool = carryOverHeroes.size() - 1; pool >= 0; --pool) {
+            int which;
+            for (which = carryOverHeroes[pool].size() - 1; which >= 0;
+                 --which) {
+                if (carryOverHeroes[pool][which].id == heroId)
+                    break;
+            }
+            if (which >= 0) {
+                carryOverHeroes[pool].erase(carryOverHeroes[pool].begin()
+                                            + which);
+                break;
+            }
+        }
+    }
+
+    std::vector<hero>& crossover = carryOverHeroes[crossoverArrayIndex];
+
+    int gamePos;
+    for (gamePos = 0; gamePos < 8; ++gamePos) {
+        if (gpGame->players[gamePos].IsHuman())
+            break;
+    }
+
+    playerData* player = &gpGame->players[gamePos];
+    for (int iHero = 0; iHero < player->numHeroes; ++iHero)
+        crossover.insert(crossover.end(),
+                         *gpGame->GetHero(player->heroes[iHero]));
+
+    for (int iTown = 0; iTown < player->numTowns; ++iTown) {
+        town* thisTown = gpGame->GetTown(player->townIds[iTown]);
+        if (thisTown->garrisonHeroId >= 0)
+            crossover.insert(crossover.end(), 1,
+                             *gpGame->GetHero(thisTown->garrisonHeroId));
+    }
+
+    if (currentCampaign == CAMPAIGN_ORDINAL_07
+        && currentMap == CAMPAIGN_MAP_ORDINAL_06) {
+        if (gpGame->heroes[155].owner != gamePos)
+            crossover.insert(crossover.end(), 1, gpGame->heroes[155]);
+    }
+    if (currentCampaign == CAMPAIGN_ORDINAL_18
+        && currentMap == CAMPAIGN_MAP_ORDINAL_07) {
+        if (gpGame->heroes[27].owner != gamePos)
+            crossover.insert(crossover.end(), 1, gpGame->heroes[27]);
+        if (gpGame->heroes[102].owner != gamePos)
+            crossover.insert(crossover.end(), 1, gpGame->heroes[102]);
+        if (gpGame->heroes[148].owner != gamePos)
+            crossover.insert(crossover.end(), 1, gpGame->heroes[148]);
+        if (gpGame->heroes[96].owner != gamePos)
+            crossover.insert(crossover.end(), 1, gpGame->heroes[96]);
+    }
+
+    field_4c[crossoverArrayIndex].clear();
+
+    if (CampaignComplete()) {
+        campaignCompleted[currentCampaign] = 1;
+        if (currentCampaign >= CAMPAIGN_ORDINAL_07
+            && currentCampaign < CAMPAIGN_ORDINAL_13 && !isCheater) {
+            int total = 0;
+            int scored = 0;
+            for (unsigned int i = 0; i < mapScores.size(); ++i) {
+                if (mapScores[i].completed && mapScores[i].score >= 0) {
+                    total += mapScores[i].score;
+                    ++scored;
+                }
+            }
+            if (scored
+                && ((total + scored / 2) / scored) * 5 >= 350)
+                secretActive = 1;
+        }
+    }
+
+    PruneCrossoverHeroes(campaignHeader);
+}
+
+#if 0  // @carcass - located, not yet reconstructed.
+// CompleteCurrentMap's tail call, and its sole caller.  It zeroes a
+// 156-byte hero table (gpGame->heroes' own extent), walks the campaign
+// header's scenario list and then every crossover pool backwards,
+// dropping the heroes the finished map has already consumed.  Role-based
+// provisional name; no Dreamcast row carries this identity.
+VA(0x00489e20, 0x450)  // anchor-caller(CompleteCurrentMap +0x5e8), retail-only
+void SCampaign::PruneCrossoverHeroes(void* campaignHeader)
+{
+    // @stub
+}
+#endif  // @carcass
+
 VA(0x0048a270, 0x2F)  // CampaignBriefHandler video/launch arms, retail-only
 void SCampaign::PlayScenarioPrologue(void* campaignHeader)
 {
@@ -777,6 +930,29 @@ void SCampaign::PlayScenarioPrologue(void* campaignHeader)
         static_cast<TCampaignBrief::CampaignHeaderStruct*>(campaignHeader);
     if (header->scenarios[map]->prologue)
         header->scenarios[map]->prologue->Play();
+}
+
+// oldmain calls this immediately after SaveGame(1) on the same campaign
+// header PlayScenarioPrologue takes, so it is the prologue player's twin
+// on the scenario's OTHER MapTextStruct (+0x40, epilogue).  The trailing
+// arm is a hard-coded campaign fixup: with the third campaign's first two
+// maps banked and its third still open, retail follows the epilogue with
+// that map's own prologue.  Provisional name, retail-only.
+VA(0x0048a2a0, 0x70)  // anchor-caller(oldmain end-of-campaign arm), retail-only
+void SCampaign::PlayScenarioEpilogue(void* campaignHeader)
+{
+    int map = currentMap;
+    gpSoundManager->StopAllSamples(1);
+    TCampaignBrief::CampaignHeaderStruct* header =
+        static_cast<TCampaignBrief::CampaignHeaderStruct*>(campaignHeader);
+    if (header->scenarios[map]->epilogue)
+        header->scenarios[map]->epilogue->Play();
+    if (currentCampaign == CAMPAIGN_ORDINAL_02 && mapScores[0].completed
+        && mapScores[1].completed && !mapScores[2].completed) {
+        gpSoundManager->StopAllSamples(1);
+        if (header->scenarios[CAMPAIGN_ORDINAL_02]->prologue)
+            header->scenarios[CAMPAIGN_ORDINAL_02]->prologue->Play();
+    }
 }
 
 static unsigned char ReadCampaignByte(TAbstractFile* infile)
