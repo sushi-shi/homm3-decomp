@@ -109,6 +109,24 @@ static inline void GetGameVersion(char* version)
         version[0] = 0;
 }
 
+// COMDAT pairing: singleselectionwindow.obj is the only compiland in the
+// tree that emits ?copy@std@@YIPAV?$vector@Vhero@@... (710 B), and 710 is
+// exactly the retail row's size, with 1.000 mnemonic agreement. The
+// element is itself a template, so the compgen owner token collapses to a
+// bare `std_copy` group; the claim therefore carries the declarator and
+// joins by content size against that group's two members (710 / 435).
+#if 0  // @carcass: Dinkumware instantiation emitted by this compiland
+
+VA(0x0048e220, 0x2C6)  // COMDAT pairing (unique 710 B ?copy@std@@ in this obj)
+std::vector<hero>* std::copy(std::vector<hero>* first,
+                             std::vector<hero>* last,
+                             std::vector<hero>* dest)
+{
+    // @stub
+}
+
+#endif  // @carcass
+
 // Validate a save name from the entry line: refuse on a full disk,
 // strip the extension, confirm an overwrite through NormalDialog's
 // ACCEPT slot (pre-armed so a fresh name passes), then commit the
