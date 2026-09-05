@@ -9471,3 +9471,95 @@ void* CAutoArray<int>::`scalar deleting destructor'(unsigned __flags)
 }
 
 #endif  // @carcass
+
+// ---------------------------------------------------------------------------
+// SortMaps' six std::sort instantiations (0x590070..0x595e10).
+//
+// `std::sort(first, last, Pred)` is a one-line inline wrapper, so the row
+// SortMaps CALLS is Dinkumware's `_Sort_0`; SortMaps' six-entry jump table
+// reaches them in source-switch order and the two isNet-computing arms
+// (0x590070, 0x590e50) are BY_NAME and BY_VERSION exactly as the switch
+// writes them, which fixes the functor of every family:
+//
+//   0x590070 BY_NAME  0x590ad0 BY_PLAYERS  0x590e50 BY_VERSION
+//   0x591310 BY_SIZE  0x591970 BY_VICTORY  0x591cf0 BY_LOSS
+//
+// Inside a family the member is read straight off the call graph, and every
+// one of the six agrees to the byte: the 334 B row is `_Sort` (it is the only
+// SELF-RECURSIVE row, matching <algorithm>'s two `_Sort(_M,_L,...)` /
+// `_Sort(_F,_M,...)` tail calls, and our own COMDAT is 334 B on the nose);
+// the two rows it calls after its three `_Ty(*it)` copy-ctor calls are, in
+// that order, `_Median` then `_Unguarded_partition`, matching the single
+// `_Unguarded_partition(_F, _L, _Median(...), _P)` statement; and the one
+// remaining row each `_Sort_0` calls is `_Unguarded_insert` (its inlined
+// `_Insertion_sort_1` is what reaches it - our compile inlines that member
+// too, and emits no COMDAT for it either).
+//
+// The comparator bodies beside them are the functors' operator()s and the
+// shared 0x591650 is `std::copy_backward<GameSelectionHeadersStruct*>` (it
+// walks `sub esi,0xca4` backwards through the element stride and is reached
+// only from the three families whose _Insertion_sort_1 did not inline it);
+// neither is claimable yet - see the residual note at the foot of this block.
+
+VA_COMPGEN(0x00590070, 0x331, STD_SORT_0,
+           gameselectionheadersstruct_tsortmapsbyname)  // SortMaps arm 0
+VA_COMPGEN(0x00590ad0, 0x324, STD_SORT_0,
+           gameselectionheadersstruct_tsortmapsbyplayers)  // SortMaps arm 1
+VA_COMPGEN(0x00590e50, 0x331, STD_SORT_0,
+           gameselectionheadersstruct_tsortmapsbyversion)  // SortMaps arm 2
+VA_COMPGEN(0x00591310, 0x335, STD_SORT_0,
+           gameselectionheadersstruct_tsortmapsbysize)  // SortMaps arm 3
+VA_COMPGEN(0x00591970, 0x332, STD_SORT_0,
+           gameselectionheadersstruct_tsortmapsbyvictory)  // SortMaps arm 4
+VA_COMPGEN(0x00591cf0, 0x332, STD_SORT_0,
+           gameselectionheadersstruct_tsortmapsbyloss)  // SortMaps arm 5
+
+VA_COMPGEN(0x00592090, 0x14E, STD_SORT,
+           gameselectionheadersstruct_tsortmapsbyname)  // self-recursive, 1.00x
+VA_COMPGEN(0x005921e0, 0x38C, STD_UNGUARDED_INSERT,
+           gameselectionheadersstruct_tsortmapsbyname)
+VA_COMPGEN(0x00592570, 0x14E, STD_SORT,
+           gameselectionheadersstruct_tsortmapsbyplayers)  // self-recursive
+VA_COMPGEN(0x005926c0, 0x2D6, STD_UNGUARDED_INSERT,
+           gameselectionheadersstruct_tsortmapsbyplayers)
+VA_COMPGEN(0x005929a0, 0x14E, STD_SORT,
+           gameselectionheadersstruct_tsortmapsbyversion)  // self-recursive
+VA_COMPGEN(0x00592af0, 0x2C5, STD_UNGUARDED_INSERT,
+           gameselectionheadersstruct_tsortmapsbyversion)
+VA_COMPGEN(0x00592dc0, 0x14E, STD_SORT,
+           gameselectionheadersstruct_tsortmapsbysize)  // self-recursive
+VA_COMPGEN(0x00592f10, 0x2B6, STD_UNGUARDED_INSERT,
+           gameselectionheadersstruct_tsortmapsbysize)
+VA_COMPGEN(0x005931d0, 0x14E, STD_SORT,
+           gameselectionheadersstruct_tsortmapsbyvictory)  // self-recursive
+VA_COMPGEN(0x00593320, 0x2B8, STD_UNGUARDED_INSERT,
+           gameselectionheadersstruct_tsortmapsbyvictory)
+VA_COMPGEN(0x005935e0, 0x14E, STD_SORT,
+           gameselectionheadersstruct_tsortmapsbyloss)  // self-recursive
+VA_COMPGEN(0x00593730, 0x2BB, STD_UNGUARDED_INSERT,
+           gameselectionheadersstruct_tsortmapsbyloss)
+
+VA_COMPGEN(0x005939f0, 0x551, STD_MEDIAN,
+           gameselectionheadersstruct_tsortmapsbyname)  // 1st call in _Sort
+VA_COMPGEN(0x00594320, 0x3B8, STD_UNGUARDED_PARTITION,
+           gameselectionheadersstruct_tsortmapsbyname)  // 2nd call in _Sort
+VA_COMPGEN(0x005946e0, 0x321, STD_MEDIAN,
+           gameselectionheadersstruct_tsortmapsbyplayers)
+VA_COMPGEN(0x00594a10, 0x20E, STD_UNGUARDED_PARTITION,
+           gameselectionheadersstruct_tsortmapsbyplayers)
+VA_COMPGEN(0x00594c20, 0x2FD, STD_MEDIAN,
+           gameselectionheadersstruct_tsortmapsbyversion)
+VA_COMPGEN(0x00594f20, 0x21B, STD_UNGUARDED_PARTITION,
+           gameselectionheadersstruct_tsortmapsbyversion)
+VA_COMPGEN(0x00595140, 0x2E0, STD_MEDIAN,
+           gameselectionheadersstruct_tsortmapsbysize)
+VA_COMPGEN(0x00595420, 0x213, STD_UNGUARDED_PARTITION,
+           gameselectionheadersstruct_tsortmapsbysize)
+VA_COMPGEN(0x00595640, 0x2DC, STD_MEDIAN,
+           gameselectionheadersstruct_tsortmapsbyvictory)
+VA_COMPGEN(0x00595920, 0x201, STD_UNGUARDED_PARTITION,
+           gameselectionheadersstruct_tsortmapsbyvictory)
+VA_COMPGEN(0x00595b30, 0x2DF, STD_MEDIAN,
+           gameselectionheadersstruct_tsortmapsbyloss)
+VA_COMPGEN(0x00595e10, 0x204, STD_UNGUARDED_PARTITION,
+           gameselectionheadersstruct_tsortmapsbyloss)
