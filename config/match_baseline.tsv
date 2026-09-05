@@ -3772,12 +3772,12 @@ winmgr	?DoQuickView@heroWindowManager@@QAEXPAVheroWindow@@@Z	100.0000	100.0000	1
 winmgr	?FadeFromBlack@heroWindowManager@@QAEXH@Z	88.1358	88.1358	88.1358	0x2032e0	a4243310e752
 winmgr	?FadeScreen@heroWindowManager@@QAEXHHE@Z	100.0000	100.0000	100.0000	0x202c50	3d9cefc7099b
 winmgr	?FadeToBlack@heroWindowManager@@QAEXHE@Z	88.5116	88.5116	88.5116	0x2030e0	844f2a377353
+winmgr	?FizzleForwardX@heroWindowManager@@QAEXHHHHH@Z	75.3882	75.3882	75.3882	0x202dc0	7a3cbee73989
 winmgr	?Main@heroWindowManager@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x202320	8f6459671348
 winmgr	?ReleaseFizzleSource@heroWindowManager@@QAEXXZ	100.0000	100.0000	100.0000	0x2030c0	ef7d54f3f76c
 winmgr	?RemoveWindow@heroWindowManager@@QAEXPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x2024a0	69ac376c00bf
+winmgr	?SaveFizzleSourceX@heroWindowManager@@QAEXHHHH@Z	100.0000	100.0000	100.0000	0x202cc0	d4fc7325cf4e
 winmgr	?UpdateScreen@heroWindowManager@@QAEXHHHH@Z	100.0000	100.0000	100.0000	0x202bd0	c785d0cd6be6
-winmgr	heroWindowManager_FizzleForwardX	0.0000	0.0000	0.0000	0x202dc0	a52c262f8ead
-winmgr	heroWindowManager_SaveFizzleSourceX	0.0000	0.0000	0.0000	0x202cc0	5d5570466a5f
 zutil	@zcalloc@12	100.0000	100.0000	100.0000	0x206c70	-
 zutil	@zcfree@8	100.0000	100.0000	100.0000	0x206c90	-
 # DELIBERATE LOWER 2026-08-20, integrating lane/town-vlc across the view
