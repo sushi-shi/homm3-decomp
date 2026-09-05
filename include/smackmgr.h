@@ -167,6 +167,24 @@ SIZE(VideoHeaderStruct, 0x2c);
 DATA(0x0069fe2c) extern VideoHeaderStruct* gVideoHeader3;
 DATA(0x0069fe3c) extern int gVideoHeaderCount;
 
+// ...and the other two thirds of the same trio, plus the three archive
+// handles they index. binkmanager.obj's GetBinkFilePtr (0x44d5a0) is the
+// second reader of all nine: it is OpenSmackerTrack's twin and walks the
+// identical directory priority order with '.bik' in place of '.smk'.
+// Definitions and DATA claims stay in src/smackmgr.cpp.
+extern VideoHeaderStruct* gVideoHeader1;
+extern VideoHeaderStruct* gVideoHeader2;
+extern int gVideoCount1;
+extern int gVideoCount2;
+extern int gVideoCount3;
+// Spelt `void*` and not `HANDLE`: this header pulls in no windows.h of its
+// own and several of its sixteen consumers include it first. HANDLE is a
+// typedef of void* either side of winnt.h's STRICT switch, so the definitions
+// in src/smackmgr.cpp keep their HANDLE spelling and the types agree.
+extern void* gVideoFile1;
+extern void* gVideoFile2;
+extern void* gVideoFile3;
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\smackmgr.cpp:75, dc 0x14ac30) void VideoSoundOnOff();
 // CODEVIEW(E:\gamedcs\smackmgr.cpp:105, dc 0x14ac34) void VideoRealignBuffers();
