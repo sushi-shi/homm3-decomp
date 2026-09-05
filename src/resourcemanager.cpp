@@ -3020,6 +3020,15 @@ ResourceManager::TCacheMap::find_tree(const TCacheMapKey& key)
 }
 #pragma auto_inline(on)
 
+// Two more Dinkumware COMDATs from the string-stream closure the cache's
+// key formatting pulls in. Byte-verified against the emitted templates -
+// 0.956 mnemonic agreement over 279 bytes for the ostringstream constructor
+// and 0.971 over 125 for the stringbuf destructor - not on size, which is
+// what the claim-10 sweep had (it offered `grouping` and `basic_stringbuf`'s
+// scalar deleting dtor for these two rows).
+VA_COMPGEN(0x0055d410, 0x117, CLASS_CTOR, basic_ostringstream)
+VA_COMPGEN(0x0055db40, 0x7D, IMPLICIT_DTOR, basic_stringbuf)
+
 // Complete uses VC6/Dinkumware rather than Dreamcast's STLport, but preserves
 // the iterator-increment boundary: RemapGraphics, SaturateGraphics, Close and
 // tree teardown all call this emitted `_Inc` COMDAT. The stock XTREE body in
