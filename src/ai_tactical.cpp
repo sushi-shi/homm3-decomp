@@ -221,10 +221,25 @@ double AI_value_of_luck(long luck, long change)
 // instruction for instruction.
 // What is LEFT is entirely the +0x420 band: retail walks a deque there with
 // a 0x1000-byte block stride and calls 0x43cb20 per element, then copies
-// +0x450..+0x4c1 as plain dwords. Recovering it means modelling that member,
-// which is its own layout job. One frame artefact rides with it: retail
+// +0x450..+0x4c1 as plain dwords. One frame artefact rides with it: retail
 // recycles the dead `[ebp+8]` parameter home for the array end pointer where
 // this compile takes a fresh slot.
+// THE MEMBER IS ALREADY MODELLED - army.h's `std::deque<int>
+// SpellInfluenceQueue` at +0x420 - so the layout job is done and the two
+// bodies retail calls per element are NOT reachable, 2026-09-06:
+//   0x43cb20 (719 B) is `deque<int>::push_back`: `push 0x1000` for the
+//     block, the map purchase, and a const_iterator construction the delink
+//     names with deque<CNetMsg*>'s spelling because /OPT:ICF folded the two
+//     instantiations' iterator constructors onto 0x5586d0;
+//   0x43cdf0 (109 B) is its `_Growmap`.
+// NO base object in the tree emits either. The whole image has exactly two
+// push_back sites - THIS compiler-generated copy constructor, whose size is
+// fixed by the class layout and therefore not shrinkable, and army.cpp's
+// SetSpellInfluence (0x4448f0), where retail EXPANDS it too (that row's
+// call sequence agrees 31/31 at 98.94%). So the only lever left is a
+// committed `#pragma inline_depth(0)` at the copy site, and a
+// compiler-generated body has no source to carry one. Recorded so the next
+// lane does not re-derive it.
 VA_COMPGEN(0x00437a00, 0x6FA, IMPLICIT_COPY_CTOR, army)
 
 // get_multi_head_bonus and get_breath_bonus (dc 0x3c608 / 0x3c708,
