@@ -182,6 +182,7 @@ advspells	?TeleportTo@advManager@@QAEXPAVhero@@Utype_point@@PBDEEE@Z	100.0000	10
 advspells	?TownGate@advManager@@QAEXH@Z	99.0386	99.0386	99.0386	0x1d360	702cdb9eab97
 ai	??1type_spellvalue@@QAE@XZ	100.0000	100.0000	100.0000	0x20cf0	-
 ai	??Rfunc_moves_before@@QBE_NPBVarmy@@0@Z	100.0000	100.0000	100.0000	0x235c0	-
+ai	?AICheckRetreat@combatManager@@QAEEXZ	95.3935	95.3935	95.3935	0x1e570	4caee54d8e3f
 ai	?ChooseBallistaTarget@combatManager@@QAEHHHH@Z	99.8919	99.8919	99.8919	0x1e190	ad1f6c4871ac
 ai	?DoCompAI@combatManager@@QAEXH@Z	98.4697	98.4697	98.4697	0x221f0	2e3e65e4a47b
 ai	?DoSpellAI@combatManager@@QAEEXZ	100.0000	100.0000	100.0000	0x22da0	e6d0af37140e
@@ -228,7 +229,6 @@ ai	?simulate_combat@combatManager@@QAEXJE@Z	99.9512	99.9512	99.9512	0x22a40	3d88
 ai	?simulate_melee_attack@combatManager@@QAEXPAVarmy@@0J@Z	100.0000	100.0000	100.0000	0x227a0	4c0b58102b37
 ai	?simulate_melee_attack@combatManager@@QAEXPAVarmy@@J0JJ@Z	77.5103	77.5103	77.5103	0x224e0	474479da9abd
 ai	?size@?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x23110	-
-ai	combatManager_AICheckRetreat	0.0000	0.0000	0.0000	0x1e570	209f021aa465
 ai_combat	??0type_AI_combat_data@@QAE@PBVhero@@PBVarmyGroup@@N0PBVtown@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x23ee0	7a3cf1c93721
 ai_combat	??0type_monster_vector@@QAE@ABU0@@Z	100.0000	100.0000	100.0000	0x276c0	aaea26c81479
 ai_combat	?AI_approximate_strength@@YIJPBVhero@@@Z	100.0000	100.0000	100.0000	0x27650	8fb9a1444291
