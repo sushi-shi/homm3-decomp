@@ -23,6 +23,7 @@
 #include "cmbtmgr.h"
 #include "creaturetype.h"
 #include "csprite.h"
+#include "cursor.h"
 #include "customcampaign.h"
 #include "dialogbox.h"
 #include "kbwin.h"
@@ -777,12 +778,7 @@ void type_normal_dialog_frame::type_normal_dialog_frame(long _x, long _y, long _
     // @stub
 }
 
-// E:\gamedcs\kb.cpp:2452
-DC_ONLY(0xe1e58, 0x214)
-unsigned char type_normal_dialog_frame::handle_click(unsigned char down_click, unsigned char right_click)
-{
-    // @stub
-}
+// E:\gamedcs\kb.cpp:2452 - promoted to a live claim (see below).
 
 // E:\gamedcs\kb.cpp:2549 - promoted to a live claim (see below).
 
@@ -793,12 +789,7 @@ int TrueFalseDialogHandler(message* msg)
     // @stub
 }
 
-// E:\gamedcs\kb.cpp:2636
-DC_ONLY(0xe226c, 0x234)
-void PlayerDead(int iWhichPlayer)
-{
-    // @stub
-}
+// E:\gamedcs\kb.cpp:2636 - promoted to a live claim (see below).
 
 // E:\gamedcs\kb.cpp:2720
 DC_ONLY(0xe24a0, 0x366)
@@ -845,12 +836,7 @@ int GetEnemyCount()
 // E:\gamedcs\kb.cpp:3763 - reconstructed above as the source-static
 // retail expands into EarlySetup.
 
-// E:\gamedcs\kb.cpp:3798
-DC_ONLY(0xe3a64, 0x11E)
-void game::ShowMoraleInfo(hero* thisHero, int iMBType)
-{
-    // @stub
-}
+// E:\gamedcs\kb.cpp:3798 - promoted to a live claim (see below).
 
 // E:\gamedcs\kb.cpp:3830
 #endif  // @carcass
@@ -1952,6 +1938,117 @@ int NormalDialogHandler(message& msg)
 // An armed deadline that has run out answers DIALOG_RETURN_TIMEOUT for the
 // window; otherwise a deselect on one of the dialog's reply buttons is
 // turned into the window's answer.  The two picture choices of the
+// E:\gamedcs\kb.cpp:2452. Promoted from DC_ONLY on body evidence: a
+// two-byte-argument `ret 8` virtual whose `this` carries an
+// EGameResource at +0x38 and a long qualifier at +0x3c, dispatched
+// through a 37-entry byte index over exactly the EGameResource domain
+// (WOOD=0 .. RES_SMALL_GOLD=0x24). Retail's jump table settles the arm
+// SET and the arm ORDER - it is a jump-table switch, so layout order is
+// source order - and the Dreamcast statement map (kb.cpp:2452..2538)
+// agrees arm for arm, down to the __divls/__modls pair the secondary
+// skill arm needs.
+VA(0x004f0b20, 0x491)  // anchor-vtable + jump-table domain, dc 0xe1e58
+unsigned char type_normal_dialog_frame::handle_click(unsigned char down_click,
+                                                     unsigned char right_click)
+{
+    if (down_click && right_click) {
+        switch (resource) {
+        case RES_GOOD_LUCK:
+            NormalDialog(gLuckTexts[0], NORMAL_DIALOG_POPUP, -1, -1,
+                         -1, 0, -1, 0, -1, 0, -1, 0);
+            break;
+        case RES_NEUTRAL_LUCK:
+            NormalDialog(gLuckTexts[1], NORMAL_DIALOG_POPUP, -1, -1,
+                         -1, 0, -1, 0, -1, 0, -1, 0);
+            break;
+        case RES_BAD_LUCK:
+            NormalDialog(gLuckTexts[2], NORMAL_DIALOG_POPUP, -1, -1,
+                         -1, 0, -1, 0, -1, 0, -1, 0);
+            break;
+        case RES_GOOD_MORALE:
+            NormalDialog(gMoraleTexts[0], NORMAL_DIALOG_POPUP, -1, -1,
+                         -1, 0, -1, 0, -1, 0, -1, 0);
+            break;
+        case RES_NEUTRAL_MORALE:
+            NormalDialog(gMoraleTexts[1], NORMAL_DIALOG_POPUP, -1, -1,
+                         -1, 0, -1, 0, -1, 0, -1, 0);
+            break;
+        case RES_BAD_MORALE:
+            NormalDialog(gMoraleTexts[2], NORMAL_DIALOG_POPUP, -1, -1,
+                         -1, 0, -1, 0, -1, 0, -1, 0);
+            break;
+        case RES_EXPERIENCE:
+            NormalDialog((*gpGeneralText)[242], NORMAL_DIALOG_POPUP, -1, -1,
+                         -1, 0, -1, 0, -1, 0, -1, 0);
+            break;
+        case RES_MANA:
+            NormalDialog((*gpGeneralText)[150], NORMAL_DIALOG_POPUP, -1, -1,
+                         -1, 0, -1, 0, -1, 0, -1, 0);
+            break;
+        case RES_ARTIFACT: {
+            type_artifact artifact(LOWORD(qualifier), HIWORD(qualifier));
+
+            if (artifact.artifactId == ARTIFACT_SPELL_SCROLL)
+                NormalDialog(artifact.get_description().c_str(),
+                             NORMAL_DIALOG_POPUP, -1, -1,
+                             RES_SPELL, artifact.extra, -1, 0, -1, 0, -1, 0);
+            else
+                NormalDialog(artifact.get_description().c_str(),
+                             NORMAL_DIALOG_POPUP, -1, -1,
+                             -1, 0, -1, 0, -1, 0, -1, 0);
+            break;
+        }
+        case RES_SPELL:
+            NormalDialog(akSpellTraits[qualifier].levelDescriptions[0],
+                         NORMAL_DIALOG_POPUP, -1, -1,
+                         -1, 0, -1, 0, -1, 0, -1, 0);
+            break;
+        case RES_SECONDARY_SKILL: {
+            int skill = qualifier / 3;
+            int mastery = qualifier % 3;
+
+            NormalDialog(akSSkillTraits[skill - 1].levelNames[mastery],
+                         NORMAL_DIALOG_POPUP, -1, -1,
+                         -1, 0, -1, 0, -1, 0, -1, 0);
+            break;
+        }
+        case RES_PRIMARY_SKILL_ATTACK:
+        case RES_PRIMARY_SKILL_DEFENSE:
+        case RES_PRIMARY_SKILL_POWER:
+        case RES_PRIMARY_SKILL_KNOWLEDGE:
+            NormalDialog(gStatDesc[resource - RES_PRIMARY_SKILL_ATTACK],
+                         NORMAL_DIALOG_POPUP, -1, -1,
+                         -1, 0, -1, 0, -1, 0, -1, 0);
+            break;
+        case WOOD:
+        case MERCURY:
+        case ORE:
+        case SULFUR:
+        case CRYSTAL:
+        case GEMS:
+        case GOLD:
+        case RES_SMALL_GOLD:
+            NormalDialog((*gpGeneralText)[243], NORMAL_DIALOG_POPUP, -1, -1,
+                         -1, 0, -1, 0, -1, 0, -1, 0);
+            break;
+        }
+        return 1;
+    }
+    return 0;
+}
+// Residual (99.9457%): ONE instruction pair swapped - retail stores
+// artifactId before extra in the RES_ARTIFACT arm's type_artifact, our
+// compile stores extra first, because hero.h's two-argument constructor
+// initialises `extra` in its member-init list and assigns `artifactId`
+// in its body (VC6 emits init-list members ahead of body statements).
+// Reordering the constructor would reach ten other construction sites in
+// six TUs that are currently exact, so it is left alone.
+// LOWORD/HIWORD is load-bearing and not cosmetic: retail re-reads the
+// qualifier as a WORD (`xor eax,eax / mov ax, word ptr [this+0x3c]`) and
+// shifts the high half UNSIGNED (`shr`), where `qualifier & 0xffff` plus
+// `qualifier >> 16` on the signed long gives one dword read, `and` and
+// `sar` - 98.93 against 99.95.
+
 // iMBType-7/10 dialogs are a radio pair: selecting one clears the other,
 // enables the OK button, remembers the choice, and redraws - and OK then
 // answers with the remembered choice rather than with its own id.  Every
@@ -2027,6 +2124,85 @@ forward_answer:
     msg->codeX = 10;
     gDialogDeadline697784 = 0;
     return MESSAGE_DISPATCH_FORWARD;
+}
+
+// E:\gamedcs\kb.cpp:2636. Promoted from DC_ONLY on body evidence: one
+// fastcall seat number, and CheckEndGame's two `mov ecx,i / call 0x4f11a0`
+// sites are the only callers in kb's band. The Dreamcast statement map
+// (36 rows over kb.cpp:2636..2714) supplies the whole shape - the level/
+// y/x shipyard sweep, the mine, generator and garrison pools in that
+// order, the reverse hero walk, the two tavern recruits, and the
+// remote-exit fork - and retail corroborates every one of them.
+VA(0x004f11a0, 0x2bc)  // anchor-callee (CheckEndGame), dc 0xe226c
+void PlayerDead(int iWhichPlayer)
+{
+    int level;
+    int y;
+    int x;
+    int i;
+
+    gCombatFlag6985a3 = 0;   // DC gbRetreatWin
+    gCombatFlag697744 = 0;   // DC gbSurrenderWin
+
+    playerData* player = &gpGame->players[iWhichPlayer];
+    gpGame->playerDisabled[iWhichPlayer] = 1;
+
+    for (level = 0; level < gpGame->GetNumMapLevels(); level++) {
+        for (y = 0; y < MAP_HEIGHT; y++) {
+            for (x = 0; x < MAP_WIDTH; x++) {
+                NewmapCell* cell = gpGame->worldMap.cell(x, y, level);
+
+                if (cell->is_trigger && cell->type_value == SHIPYARD &&
+                    cell->shipyard_info.owner == iWhichPlayer) {
+                    gpGame->ClaimShipyard(
+                        type_point(static_cast<short>(x),
+                                   static_cast<short>(y),
+                                   static_cast<short>(level)), -1);
+                }
+            }
+        }
+    }
+
+    for (i = 0; i < gpGame->mines.size(); i++) {
+        if (gpGame->mines[i].playerOwner == iWhichPlayer)
+            gpGame->ClaimMine(i, -1, const_normal_action);
+    }
+
+    for (i = 0; i < gpGame->generators.size(); i++) {
+        if (gpGame->generators[i].playerOwner == iWhichPlayer)
+            gpGame->ClaimGenerator(i, -1);
+    }
+
+    for (i = 0; i < gpGame->garrisons.size(); i++) {
+        if (gpGame->garrisons[i].playerOwner == iWhichPlayer)
+            gpGame->ClaimGarrison(i, -1);
+    }
+
+    for (i = player->numHeroes - 1; i >= 0; i--)
+        gpGame->GetHero(player->heroes[i])->Deallocate(1, 0);
+
+    // The recruit id MUST be named: read through `player->recruits[i]` at
+    // both uses, VC6 emits `cmp byte [eax + ecx + 0x4df18]` with the id as
+    // the SIB base where retail has gpGame there (99.9078 -> 100.0000 on
+    // the local alone; a nested-if spelling is byte-flat at 99.9078).
+    for (i = 0; i < 2; i++) {
+        int recruitId = player->recruits[i];
+        if (recruitId != -1 && gpGame->heroAvailability[recruitId] ==
+                hero::HERO_AVAILABILITY_TAVERN_POOL)
+            gpGame->heroAvailability[recruitId] = -1;
+    }
+
+    // kbwin.h spells this flag `bVideoPaused`; the Dreamcast names the same
+    // guard `gbRemoteOn` here, and every consumer in the tree reads it that
+    // way (`bVideoPaused && pDPlay`, `bVideoPaused && !IsLocalHuman()`).
+    if (bVideoPaused) {
+        if (gpGame->IsHuman(iWhichPlayer)) {
+            HandleRemoteDeadPlayerExit(iWhichPlayer, 0);
+        } else {
+            CMCDeadPlayer deadMsg(iWhichPlayer);
+            SendMapChange(&deadMsg);
+        }
+    }
 }
 
 // E:\gamedcs\kb.cpp:2811. The retail body independently fixes the source
@@ -2819,6 +2995,44 @@ void CheckEndGame(int bForceWin)
         gpCurrentPlayer->isHuman = 0;
     }
     bInCheckEndGame = 0;
+}
+
+// E:\gamedcs\kb.cpp:3798. ShowLuckInfo's twin, and the twin is what
+// fixes it: viewarmywindow's rollover already carries this exact arm
+// set - the 14/15/16 icon ids, gMoraleTexts[3] as the carrier format
+// over rows 0/1/2, and row 23 as the "nothing modifies it" fallback -
+// while retail's 0x4f3540 supplies the surrounding call shape. The
+// morale describer differs from the luck one in exactly one respect,
+// visible in the bytes: it builds the line in a std::string
+// (format_string / operator= / operator+= all expanded, plus two
+// scope-exit ~basic_string) where the luck describer sprintf/strcats
+// into gText.
+VA(0x004f32a0, 0x29c)  // dc 0xe3a64, arm-for-arm against 0x4f3540
+void game::ShowMoraleInfo(hero* thisHero, int iMBType)
+{
+    int icon;
+    int morale = thisHero->GetMorale(0, 0, 1);
+    std::string text;
+
+    if (morale > 0) {
+        text = format_string(gMoraleTexts[3], gMoraleTexts[0]);
+        icon = 14;
+    } else if (morale == 0) {
+        text = format_string(gMoraleTexts[3], gMoraleTexts[1]);
+        icon = 15;
+    } else {
+        text = format_string(gMoraleTexts[3], gMoraleTexts[2]);
+        icon = 16;
+    }
+
+    std::string modifiers = thisHero->get_morale_description();
+    if (modifiers.length() == 0)
+        text += gMoraleTexts[23];
+    else
+        text += modifiers;
+
+    NormalDialog(text.c_str(), iMBType, -1, 28, icon, 0,
+                 -1, 0, -1, 0, -1, 0);
 }
 
 VA(0x004f3540, 0x14B)
@@ -3628,7 +3842,7 @@ short game::get_map_score()
 // CampaignHeaderStruct::GetCampaignName by value (the header object is
 // never freed - transcribed, not invented).  Declared file-locally
 // because ShowCongrats is its only located caller; not claimed here.
-std::string GetCurrentCampaignName();
+std::string get_campaign_name();
 
 // E:\gamedcs\kb.cpp:4102
 // The victory screen.  The four numbers the high-score table wants are
@@ -3662,7 +3876,7 @@ void ShowCongrats(int hsType)
         iBase = iScore = gpGame->campaign.get_score();
         iDayz = gpGame->campaign.get_total_time();
         iRating = 100;
-        sLand = GetCurrentCampaignName();
+        sLand = get_campaign_name();
     }
 
     int iMonType = highScoreManager::GetMonType(iScore, hsType);
