@@ -12,6 +12,13 @@
 #include "spells.h"
 // cast_spell jitters the chosen spell's value through Random().
 #include "misc.h"
+// The compiler-generated army copy constructor the retail link parked in
+// this compiland (0x437a00) instantiates TResourceHandle<CSprite> and
+// TResourceHandle<sample>, whose refcounting copy reaches
+// resource::ReferenceCount - so both resource types have to be COMPLETE
+// here. No other TU in the tree copies an `army`.
+#include "csprite.h"
+#include "sample.h"
 
 static int creature_base_hit_points(TCreatureType type)
 {
@@ -202,17 +209,22 @@ double AI_value_of_luck(long luck, long change)
 // in this TU. Retail and the Dreamcast CodeView roster independently name
 // the same body; the direct-symbol compiler-generated claim keeps that
 // provenance distinct from an authored ai_tactical function.
-// Residual (was EXACT under the retired HOMM3_ARMY_COPY_VIEW): retail
-// copies +0x74..+0xe7 and +0x110..+0x163 as one rep-movsd each (the DC
-// `TCreatureTypeTraits sMonInfo` / `SMonFrameInfo sMonFrameInfo`
-// aggregates), copies spellInfluence[81] and spell_level[81] as two plain
-// rows, and bumps a resource refcount for stdIcon / missileIcon /
-// armySample[8]. The canonical army layout names those bands as the
-// slices its 16 consumer TUs read (and the +0x198 named-slot union), so
-// the memberwise copy is emitted slice by slice. Recovering it means
-// adopting the DC aggregates tree-wide, not a per-TU view; the refcount
-// wrapper the view carried was an invention (DC types the three members
-// as plain CSprite* / sample*, type 0x1A63 / 0x1FE5).
+// Residual (66.4292%, peak 95.7822% under the retired HOMM3_ARMY_COPY_VIEW).
+// CORRECTED 2026-09-05: an earlier note here called the view's refcount
+// wrapper "an invention" because DC types the three slots as plain
+// CSprite* / sample* (0x1A63 / 0x1FE5). The DC is right about the DC and
+// wrong about this image - retail's own bytes at fn+0x192 are a refcounting
+// copy with unwind states, which a raw pointer cannot emit. army.h now
+// carries TResourceHandle<T> for stdIcon / missileIcon / armySample[8] and
+// this whole run - fn+0x192..fn+0x202, both scalars, image_height's plain
+// dword between them and the eight-iteration array loop - matches retail
+// instruction for instruction.
+// What is LEFT is entirely the +0x420 band: retail walks a deque there with
+// a 0x1000-byte block stride and calls 0x43cb20 per element, then copies
+// +0x450..+0x4c1 as plain dwords. Recovering it means modelling that member,
+// which is its own layout job. One frame artefact rides with it: retail
+// recycles the dead `[ebp+8]` parameter home for the array end pointer where
+// this compile takes a fresh slot.
 VA_COMPGEN(0x00437a00, 0x6FA, IMPLICIT_COPY_CTOR, army)
 
 // get_multi_head_bonus and get_breath_bonus (dc 0x3c608 / 0x3c708,

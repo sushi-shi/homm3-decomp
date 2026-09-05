@@ -4899,7 +4899,7 @@ void army::get_berserk_targets(std::vector<army*>& armies) const
                 continue;
             long value;
             if (canShoot) {
-                value = get_distance(gridIndex, other->gridIndex);
+                value = combatManager::get_distance(gridIndex, other->gridIndex);
             } else {
                 if (!gpCombatManager->cells[other->gridIndex].field_4a)
                     continue;

@@ -317,44 +317,50 @@ public:
     // the same movzx/inc shape, 2026-08-20).
     int GetNumLevels() { return HasTwoLevels + 1; }
 
-    // Header inlines in the original map class (DC MapCell.h:895/906).
-    // COMPILE-REQUIRED GATE (view audit 2026-08-20): advmgr.cpp carries
-    // cell(int,int,int) OUT OF LINE under `#pragma auto_inline(off)` -
-    // the MapCell.h COMDAT the retail link filed in advmgr's span, VA
-    // 0x408770 - plus the DC_ONLY cell(type_point) stub, so the header
-    // bodies visible there are C2084. Every other TU takes the inlines:
-    // InsertObject and advManager::EraseObj expand the (x,y,z) lookup in
-    // place, and type_obscuring_object::{obscure,restore}_cell expand
-    // the packed-point overload verbatim.
+    // THE TWO MAP-SQUARE ACCESSORS (DC MapCell.h:895/906).
+    //
+    // cell(type_point) has NO retail body - the DC row at dc 0x1f9f4 is the
+    // WinCE build's out-of-line copy of a header inline - so it is a header
+    // inline for EVERY compiland and its expansion leaves behind the call
+    // to the three-scalar form.
+    //
+    // cell(int,int,int) is a header inline too, and MEASURED so: modelling
+    // it as a declaration-only member with one out-of-line definition -
+    // which its real 49-byte retail body at 0x408770 invites - costs the
+    // tree 3091 -> 3058 exact functions and 95.12% -> 94.77% fuzzy, because
+    // sixteen compilands expand the `(z*Size + y)*Size + x` lookup on a
+    // 38-byte stride in place. The retail COMDAT is what an inline's
+    // out-of-line copy looks like when one TU's call sites decline it.
+    //
+    // COMPILE-REQUIRED FORK, and the only surviving one. advmgr.cpp is that
+    // TU: it defines the 0x408770 COMDAT itself under `auto_inline(off)`,
+    // which is a redefinition (C2084) unless the body is hidden there. That
+    // pin is load-bearing, not cosmetic - letting advmgr take the header
+    // inline and pair the COMDAT the compiler then still emits costs
+    // thirteen rows in that unit, DoAdvCommand 94.2359 -> 78.3433,
+    // ProcessHover 91.6263 -> 88.1523, DrawAdvObjShadow 85.2335 -> 82.1711,
+    // DrawUnderlay 92.7034 -> 89.6562, and DrawBoatPart/DrawBoatPartShadow
+    // off 100.0000 (measured 2026-09-05).
+    //
+    // The SECOND arm of this fork is RETIRED: philai.cpp and seerhut.cpp
+    // used to take the same declaration-only spelling for cell(int,int,int)
+    // while keeping the packed-point wrapper. It was buying nothing in
+    // philai - get_value_of_spring 76.6104 -> 100.0000 and get_value_of_well
+    // 75.2436 -> 100.0000 without it - and in seerhut it bought one row,
+    // SetDefaultText 98.3426 -> 93.0020, by imposing an inline decision the
+    // source cannot express. Net +2 exact functions; max/hist keep the peak.
 #ifdef HOMM3_NEWFULLMAP_CELL_OUTOFLINE
     NewmapCell* cell(int x, int y, int z);
-    NewmapCell* cell(type_point point);
-#elif defined(HOMM3_NEWFULLMAP_INT_CELL_OUTOFLINE)
-    // Some compilands saw the three-scalar implementation out of line but
-    // retained the packed-point header wrapper. The wrapper's by-value
-    // parameter then becomes a real local while its tail remains a call.
-    NewmapCell* cell(int x, int y, int z);
-    NewmapCell* cell(type_point point)
-    {
-        return cell(point.x, point.y, point.z);
-    }
 #else
-    // Header inline in the original map class. InsertObject expands this
-    // three-dimensional row-major lookup, and so does advManager::EraseObj
-    // - `(z*Size + y)*Size + x` then a *38 stride, all in line; other
-    // compilation personalities retain the out-of-line declaration until
-    // their own call sites prove that expansion.
-    // victorylossconditions joins for CheckForDefeatedMonsterWin's map
-    // sweep (2026-08-20).
     NewmapCell* cell(int x, int y, int z)
     {
         return &cellData[(z * Size + y) * Size + x];
     }
+#endif
     NewmapCell* cell(type_point point)
     {
         return cell(point.x, point.y, point.z);
     }
-#endif
     int Load(TAbstractFile* infile, int size, unsigned char twoLayers,
              int saveVersion);
     int Save(TAbstractFile* outfile, int size, unsigned char twoLayers);
@@ -742,46 +748,31 @@ struct type_map_hero_identity {
 };
 SIZE(type_map_hero_identity, 0x14);
 
-#ifdef HOMM3_GAME_NEW_MAP_DECLS
-// game.obj needs the protected Dinkumware vector triplet to recreate the
-// player-slot reader's retained copy/destroy/insert/erase boundaries.  This
-// view adds no storage and is exposed only to that TU.
-class TMapPlayerHeroVectorAccess
-    : public std::vector<type_map_hero_identity> {
-public:
-    __forceinline void clear_retail();
-    __forceinline void resize_retail(
-        unsigned int count, const type_map_hero_identity& value);
-};
-
-// One aggregate layer reproduces the two default identities created around
-// the inlined resize operation without changing the identity representation.
-struct TMapPlayerHeroResizeValue {
-    type_map_hero_identity value;
-
-    __forceinline ~TMapPlayerHeroResizeValue();
-};
-
-// game.obj's constructor copies these three members directly. Other TUs keep
-// the equivalent inherited view below so this PC-only declaration does not
-// perturb their already-banked compiler state.
+// The map header's per-player hero customization record: the identity above
+// plus one eight-player availability mask. Complete's new-map normalization
+// compares that mask with bitset<8>(0xff) and copies its single backing
+// dword straight into game::heroPoolMap, which is what types the +0x14 word
+// as a bitset rather than a plain int; the 0x18 size and every offset are
+// the same either way. It was modelled BOTH ways in this tree - this record
+// for the four TUs that read the mask, an inherited `int field_14` twin for
+// everyone else - and the two spellings never met.
+// The members are DIRECT rather than inherited, and retail settles it with
+// three rows: the inherited spelling (which needs the three-argument
+// constructor to assign the base members in its body instead of
+// initialising them) costs ??0type_map_hero_info 100.0000 -> 84.0169,
+// campaignbrief's _Tree::_Copy 100.0000 -> 84.1429 and game's _Tree::erase
+// 100.0000 -> 92.1530. Its one point in favour - it retains newgame's
+// type_map_hero_identity copy ctor through the base copy - is bought back
+// by the plain field_34 vector below.
 struct type_map_hero_info {
-    // The map header stores one eight-player availability mask. The new-map
-    // normalization body compares it with bitset<8>(0xff) and copies the
-    // single backing dword directly into game::heroPoolMap.
-    type_map_hero_info() {}
-    type_map_hero_info(int identity, std::string name,
-                       std::bitset<8> availability);
-
     int field_00;
     std::string field_04;
     std::bitset<8> field_14;
+
+    type_map_hero_info() {}
+    type_map_hero_info(int identity, std::string name,
+                       std::bitset<8> availability);
 };
-#else
-struct type_map_hero_info : public type_map_hero_identity {
-    int field_14;
-};
-#endif
 SIZE(type_map_hero_info, 0x18);
 
 // VC6 retains this map value's implicit destructor in game.obj. Specializing
@@ -1070,11 +1061,20 @@ public:
         int nonRandomHeroCustomPortrait;
         char nonRandomHeroCustomName[12];
         int field_30;
-#ifdef HOMM3_GAME_NEW_MAP_DECLS
-        TMapPlayerHeroVectorAccess field_34;
-#else
+        // A PLAIN vector, settled 2026-09-05 against a TU-local derived
+        // access view that used to stand here for game.obj. The view exists
+        // to expose Dinkumware's protected triplet so clear()/resize() can
+        // be hand-expanded with the copy/_Destroy children pinned out of
+        // line, which is worth readMapPlayerSlot 67.5422 -> 95.6972 and two
+        // retained COMDATs - but it CHANGES THE MEMBER'S TYPE, and retail
+        // refutes that directly: campaignbrief's ~TPlayerSlotAttributes
+        // (0x45c2f0, 155 B) is byte-EXACT over the plain vector and 38.0299
+        // over the derived one, and newgame's retained
+        // type_map_hero_identity copy ctor (0x517c30, 319 B) is only
+        // emitted at all with the plain vector. A 62-point swing on a
+        // 155-byte destructor is a layout fact; the reader's residual is
+        // the /Ob2 boundary class.
         std::vector<type_map_hero_identity> field_34;
-#endif
 
         TPlayerSlotAttributes()
           : CanBeHuman(0), CanBeComputer(0), AIStrategy(-1),
@@ -1252,28 +1252,10 @@ SIZE(SGameSetupOptions, 0x1cc);
 // SCampaign::clear_carryover_pool(TCarryOverPoolNumber) identifies the
 // +0x3c slot as the campaign's carry-over hero pools - while 0x45f7b0's
 // inner elements are trivially destroyed and its element type stays
-// unidentified. SCampaign itself carries the real nested vectors (the
-// retail PC layout agrees with IDA's independently recovered type record);
-// these two four-dword opaque twins, with their operations declared out of
-// line, survive only for campaignwindow.cpp's SCampaignCtorView below,
-// which models the out-of-line COMDAT call boundary retail keeps there.
-class SCampaignHeroPools {
-public:
-    int pad_00[4];
-
-    ~SCampaignHeroPools();
-    SCampaignHeroPools& operator=(const SCampaignHeroPools& that);
-};
-SIZE(SCampaignHeroPools, 0x10);
-
-class SCampaignPools4c {
-public:
-    int pad_00[4];
-
-    ~SCampaignPools4c();
-    SCampaignPools4c& operator=(const SCampaignPools4c& that);
-};
-SIZE(SCampaignPools4c, 0x10);
+// unidentified. SCampaign carries both slots as those nested vectors (the
+// retail PC layout agrees with IDA's independently recovered type record).
+// The two four-dword opaque twins that once shadowed them for
+// campaignwindow.obj alone are RETIRED (2026-09-05).
 
 // Complete's per-scenario campaign progress record. The name and return type
 // survive in the independently located HD GetCurrentScenario signature;
@@ -1316,20 +1298,6 @@ public:
     // as a typedef it still gives VC6 the authoritative global element type.
     typedef CampaignScenarioInfo MapScore;
 
-#ifdef HOMM3_CAMPAIGNWINDOW_IMPLICIT_SCAMPAIGN
-    // TU-local layout views for retail's split nested teardown boundary.
-    // Retail calls the map-score vector destructor but expands the int-vector
-    // destructor while retaining its nested _Destroy call. The first declared
-    // destructor and the second implicit derived destructor reproduce exactly
-    // that call/cleanup ledger in the one TU that expands ~SCampaign.
-    class InlineInts : public std::vector<int> {
-    };
-    class OutOfLineMapScores : public std::vector<MapScore> {
-    public:
-        ~OutOfLineMapScores() {}
-    };
-#endif
-
     unsigned char isCheater;
     unsigned char secretActive;
     signed char currentMap;
@@ -1353,24 +1321,16 @@ public:
     std::string GetCampaignFileName() const;
     unsigned char campaignCompleted[21];
     // +0x3c / +0x4c: the carry-over hero pools and the artifact pools
-    // (see the SCampaignHeroPools note above for the retail proof).
+    // (proved by the two out-of-line operator=/destructor pairs above).
     std::vector<std::vector<hero> > carryOverHeroes;
     std::vector<std::vector<type_artifact> > field_4c;
-#ifdef HOMM3_CAMPAIGNWINDOW_IMPLICIT_SCAMPAIGN
-    OutOfLineMapScores mapScores;
-#else
     std::vector<MapScore> mapScores;
-#endif
     // +0x6c, the fourth assignable sub-object. Its operator= is the
     // four-byte-element vector::operator= at 0x50ac00 and its teardown is
     // INLINE in the same constructor - _Destroy over [_First, _Last),
     // operator delete on _First, then all three words zeroed - so the slot
     // is a std::vector over a 4-byte element whose identity is unproven.
-#ifdef HOMM3_CAMPAIGNWINDOW_IMPLICIT_SCAMPAIGN
-    InlineInts field_6c;
-#else
     std::vector<int> field_6c;
-#endif
 
     // Retail's copy assignment and destructor are COMPILER-GENERATED, and
     // the image proves it from both sides of the /Ob2 split:
@@ -1413,8 +1373,10 @@ public:
     // copy assignment is compiler-generated. Its global implicit state is now
     // authoritative; the older including-TU dips above remain useful history
     // banked by max/hist, not a reason to retain a source-false declaration.
-    // HOMM3_CAMPAIGNWINDOW_IMPLICIT_SCAMPAIGN still carries only that TU's
-    // separately proved concrete nested-vector/destructor layout.
+    // The narrow campaignwindow layout view that once carried that TU's
+    // concrete nested-vector/destructor split is RETIRED (2026-09-05): the
+    // canonical std::vector members below reproduce the same call ledger
+    // and the implicit ~SCampaign COMDAT is emitted here again.
     SCampaign();
     // The destructor is compiler-generated. Retail expands it member by
     // member in ~SavedGameHeader and retains the same COMDAT for callers.
@@ -1463,39 +1425,6 @@ public:
     }
 };
 SIZE(SCampaign, 0x7c);
-
-#ifdef HOMM3_CAMPAIGNWINDOW_IMPLICIT_SCAMPAIGN
-// campaignwindow.obj needs both /Ob2 views of the same 0x7c-byte record.
-// The constructor's large inline assignment retains out-of-line boundaries
-// for the nested pools and map-score teardown; the standalone SCampaign
-// destructor above sees the concrete nested vectors and expands them.  Keep
-// the alternate record in the owning header so this is one deliberate
-// TU-gated layout model rather than a private .cpp shadow type.
-class SCampaignCtorMapScores : public std::vector<SCampaign::MapScore> {
-public:
-    ~SCampaignCtorMapScores();
-};
-
-class SCampaignCtorView {
-public:
-    unsigned char isCheater;
-    unsigned char secretActive;
-    signed char currentMap;
-    int currentCampaign;
-    int numMapRegions;
-    signed char crossoverArrayIndex;
-    int briefingChoice;
-    std::string campaignFilename;
-    unsigned char campaignCompleted[21];
-    SCampaignHeroPools carryOverHeroes;
-    SCampaignPools4c field_4c;
-    SCampaignCtorMapScores mapScores;
-    SCampaign::InlineInts field_6c;
-
-    SCampaignCtorView();
-};
-SIZE(SCampaignCtorView, 0x7c);
-#endif
 
 // The PC campaign-new-map caller passes this object as NewMap's third
 // argument.  Retail invokes two nullary members at 0x487290/0x487900;
