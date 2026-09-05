@@ -8979,6 +8979,23 @@ void game::NextPlayer()
 // ESI. Explicit backward goto, a structured retry loop and recursive-inlining
 // pragma all reproduced the same allocation family. Forcing the week-transition
 // value to a volatile byte worsened the score to 80.1988% and grew the frame.
+// 2026-09-05, the eight missing branches LOCATED and the cause named.
+// Retail emits fourteen instructions at fn+0xd9..+0xf9 that our compile
+// deletes outright - the `iHumans` scan inside the LocalHuman/698770 arm:
+//   d9: xor eax,eax / db: mov cl,[ebx+eax+0x1f636] / e2: test cl,cl
+//   e4: jne <inc> / e6: cmp eax,8 / e9: mov [ebp-0xc],eax / ec: jge <z>
+//   ee: cmp eax,esi / f0: jge <inc> / f2(z): mov [ebp-0xc],esi
+//   f5: inc eax / f6: cmp eax,8 / f9: jl <head>
+// which is the loop this source already carries, statement for statement
+// and test for test, including the `i >= 8 || i < 0` clamp order.  The
+// source is NOT wrong.  `[ebp-0xc]` is written at exactly those two sites
+// and READ NOWHERE in retail's whole 0x947 bytes, so the stores are dead
+// on BOTH sides and retail's C2 simply did not eliminate them where ours
+// does; there is no aliasing, no address-take and no later reader to
+// restore.  Four of the eight branch deficit and the four blocks are this
+// one loop.  Do not "fix" it with a `volatile` (the cleanliness floor is
+// 0) or with a carrier statement; if a reader for iHumans ever turns up
+// in the retail bytes, this loop comes back for free.
 VA(0x004c6fe0, 0x947)  // dc-name/order + retail caller/callee/body, dc 0xb1fd0
 void game::NextPlayer()
 {
