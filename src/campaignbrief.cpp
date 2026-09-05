@@ -1380,3 +1380,7 @@ VA_COMPGEN(0x0045dea0, 0x1D, TREE_BUYNODE, type_map_hero_info)
 // COMDAT pairing: vector<type_map_hero_identity>::_Ucopy (thiscall, three
 // pointer arguments, `ret 0xc`).
 VA_COMPGEN(0x0045d230, 0x38, VECTOR_UCOPY, type_map_hero_identity)
+
+// COMDAT pairing: vector<type_map_hero_identity>::operator=, agreement 0.996
+// at an exactly equal 661-byte extent - this header's own element type.
+VA_COMPGEN(0x0045bcd0, 0x295, VECTOR_COPY_ASSIGN, type_map_hero_identity)

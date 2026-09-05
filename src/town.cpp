@@ -2413,3 +2413,7 @@ unsigned char std::bitset<70,unsigned long>::reference::operator bool()
 }
 
 #endif  // @carcass
+
+// COMDAT pairing: bitset<48>::set(pos, bool), agreement 1.000 at an exactly
+// equal 96-byte extent.
+VA_COMPGEN(0x00506780, 0x60, BITSET_SET, Bitset48)

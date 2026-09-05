@@ -223,7 +223,83 @@ CHAR_STREAM_MEMBERS = (
     ("??4?$ostreambuf_iterator@D", None,
      "ostreambuf_iterator_assign"),
     ("?_Decref@facet@locale@std@@", None, "locale_facet_decref"),
+    ("?_Incref@facet@locale@std@@", None, "locale_facet_incref"),
+    ("??Bid@locale@std@@", None, "locale_id_cast"),
+    ("?seekoff@?$basic_streambuf@D", None, "streambuf_seekoff"),
+    ("?seekpos@?$basic_streambuf@D", None, "streambuf_seekpos"),
+    ("?str@?$basic_ostringstream@D", None, "ostringstream_str"),
+    # `operator<<(int)`. The free `operator<<(const char*)` is already an arm
+    # of its own above; this is the MEMBER overload, so it keys here.
+    ("??6?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEAAV01@H@Z", None,
+     "ostream_insert_int"),
+    # ...and the two extractions that mirror it: the MEMBER `operator>>(int&)`
+    # and the FREE `operator>>(istream&, string&)`. Both key on their whole
+    # mangled prefix, since `??5` carries no class of its own.
+    ("??5?$basic_istream@DU?$char_traits@D@std@@@std@@QAEAAV01@AAH@Z", None,
+     "istream_extract_int"),
+    ("??5std@@YAAAV?$basic_istream@DU?$char_traits@D@std@@@0@AAV10@AAV"
+     "?$basic_string@D", None, "istream_extract_string"),
     ("?getloc@ios_base@std@@", None, "ios_base_getloc"),
+    # --- the INPUT half of the same family -------------------------------
+    # num_get<char, istreambuf_iterator<char>>'s nine do_get overloads,
+    # separated only by the reference parameter's letter (_N bool, G unsigned
+    # short, I unsigned int, J long, K unsigned long, M float, N double,
+    # O long double, PAX void*). One key on purpose: nine claims and nine
+    # COMDATs zip by RVA against COFF order, and the duplicated-size pattern
+    # confirms the zip from inside (positions 4/5 and 7/8 are equal-sized on
+    # BOTH sides).
+    ("?do_get@?$num_get@D", None, "num_get_do_get"),
+    ("?_Getifld@?$num_get@D", None, "num_get_getifld"),
+    ("?ipfx@?$basic_istream@D", None, "istream_ipfx"),
+    ("?sgetc@?$basic_streambuf@D", None, "streambuf_sgetc"),
+    ("?sbumpc@?$basic_streambuf@D", None, "streambuf_sbumpc"),
+    ("?setstate@?$basic_ios@D", None, "basic_ios_setstate"),
+    ("?clear@?$basic_ios@D", None, "basic_ios_clear"),
+    ("?_Peek@?$istreambuf_iterator@D", None, "istreambuf_iterator_peek"),
+    ("?_Inc@?$istreambuf_iterator@D", None, "istreambuf_iterator_inc"),
+    ("?equal@?$istreambuf_iterator@D", None, "istreambuf_iterator_equal"),
+    ("??D?$istreambuf_iterator@D", None, "istreambuf_iterator_deref"),
+    # ctype<char>. `is` is unambiguous; tolower/toupper are each a
+    # (char) / (const char*, const char*) pair whose bodies are identical
+    # apart from the CRT helper they call, so the suffix field separates the
+    # four and the retail callee (__Tolower / __Toupper) settles which pair
+    # is which.
+    ("?is@?$ctype@D", None, "ctype_is"),
+    ("?do_tolower@?$ctype@D", "@MBEDD@Z", "ctype_do_tolower_char"),
+    ("?do_tolower@?$ctype@D", "@MBEPBDPADPBD@Z", "ctype_do_tolower_range"),
+    ("?do_toupper@?$ctype@D", "@MBEDD@Z", "ctype_do_toupper_char"),
+    ("?do_toupper@?$ctype@D", "@MBEPBDPADPBD@Z", "ctype_do_toupper_range"),
+    # basic_string's two `compare` overloads - (const string&) and
+    # (pos, n, const char*, n) - and the two search/edit members the
+    # image-name registry uses.
+    ("?compare@?$basic_string@D", "HABV12@@Z", "basic_string_compare_str"),
+    ("?compare@?$basic_string@D", "HIIPBDI@Z", "basic_string_compare_substr"),
+    ("?replace@?$basic_string@D", None, "basic_string_replace"),
+    ("?rfind@?$basic_string@D", None, "basic_string_rfind"),
+    # Free functions of the locale machinery. Not templates on `char`, but
+    # char-only in this image, so they key with the rest of the family.
+    ("?_Maklocstr@std@@", None, "maklocstr"),
+    ("?use_facet@std@@YAABV?$ctype@D", None, "use_facet_ctype"),
+    ("?use_facet@std@@YAABV?$numpunct@D", None, "use_facet_numpunct"),
+    ("?_Save@?$_Tidyfac@V?$ctype@D", None, "tidyfac_ctype_save"),
+    ("?_Tidy@?$_Tidyfac@V?$ctype@D", None, "tidyfac_ctype_tidy"),
+    ("?_Save@?$_Tidyfac@V?$num_get@D", None, "tidyfac_num_get_save"),
+    ("?_Tidy@?$_Tidyfac@V?$num_get@D", None, "tidyfac_num_get_tidy"),
+    # --- basic_filebuf<char>, the <fstream> half --------------------------
+    # Keyed on the TEMPLATE name for the same reason basic_stringbuf's two
+    # members are: basic_streambuf and basic_stringbuf have members of these
+    # names too, and all three COMDATs can live in one object.
+    ("?overflow@?$basic_filebuf@D", None, "filebuf_overflow"),
+    ("?pbackfail@?$basic_filebuf@D", None, "filebuf_pbackfail"),
+    ("?underflow@?$basic_filebuf@D", None, "filebuf_underflow"),
+    ("?uflow@?$basic_filebuf@D", None, "filebuf_uflow"),
+    ("?seekoff@?$basic_filebuf@D", None, "filebuf_seekoff"),
+    ("?seekpos@?$basic_filebuf@D", None, "filebuf_seekpos"),
+    ("?setbuf@?$basic_filebuf@D", None, "filebuf_setbuf"),
+    ("?sync@?$basic_filebuf@D", None, "filebuf_sync"),
+    ("?_Init@?$basic_filebuf@D", None, "filebuf_init"),
+    ("?_Init@?$basic_streambuf@D", None, "streambuf_init"),
+    ("?do_length@?$codecvt@DDH", None, "codecvt_do_length"),
 )
 
 
@@ -241,7 +317,8 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "BITSET_ITERATOR_DEREF",
                  "BITSET_FLIP",
                  "BITSET_COUNT", "BITSET_ANY", "BITSET_SET",
-                 "BITSET_TEST", "BITSET_XRAN", "TREE_MIN",
+                 "BITSET_TEST", "BITSET_XRAN", "BITSET_XINV",
+                 "ISTREAM_EXTRACT_BITSET", "TREE_MIN",
                  "TREE_INSERT", "TREE_NODE_INSERT",
                  "TREE_CONST_ITERATOR_DEC", "TREE_CONST_ITERATOR_INC",
                  "TREE_COPY", "TREE_COPY_NODE", "TREE_ERASE",
@@ -255,10 +332,12 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "STD_UNGUARDED_PARTITION", "STD_UNGUARDED_INSERT",
                  "STD_COPY_BACKWARD", "STD_FILL",
                  "TREE_ERASE_ITERATOR", "TREE_ERASE_RANGE",
-                 "TREE_LBOUND", "TREE_UBOUND",
+                 "TREE_LBOUND", "TREE_UBOUND", "TREE_FIND",
                  "DEQUE_ERASE", "VECTOR_RESERVE", "VECTOR_CLEAR",
                  "EXCEPTION_DORAISE", "FUNCTOR_CALL",
                  "DEQUE_ITERATOR_ADD_ASSIGN",
+                 "DEQUE_ITERATOR_INC", "DEQUE_ITERATOR_DEC",
+                 "DEQUE_PUSH_BACK", "DEQUE_GROWMAP",
                  "STREAMBUF_XSPUTN",
                  "PAIR_CONST_INT_DTOR",
                  "STD_CONSTRUCT", "STD_COPY",
@@ -747,6 +826,13 @@ def _std_algorithm_element(rest: str):
         depth += 1
     if rest.startswith("V?$basic_string@D"):
         return "string", max(0, depth - 1)
+    # A vector-of-vector algorithm: the element is itself `vector<T>`, whose
+    # mangling starts `?$` and so cannot reach the class-name match below.
+    # The `<T>_vector` spelling is the one VECTOR_INSERT already uses for
+    # these containers (`hero_vector`, `type_artifact_vector`).
+    vector_element = re.match(r"V\?\$vector@[VU]([A-Za-z_]\w*)@", rest)
+    if vector_element:
+        return vector_element.group(1) + "_vector", max(0, depth - 1)
     match = re.match(r"[VU]([A-Za-z_]\w*)@", rest)
     if match:
         return match.group(1), max(0, depth - 1)
@@ -769,6 +855,10 @@ def _std_algorithm_key(mangled: str):
         return None
     element, depth = decoded
     owner = element.lower() + "_ptr" * depth
+    if element.endswith("_vector"):
+        # The element's own `U<Element>@@` would otherwise be read as a
+        # predicate; a vector-of-vector instantiation carries none here.
+        return f"{owner}@{STD_ALGORITHMS[member]}"
     if "U?$greater@" in mangled:
         owner += "_greater"
     else:
@@ -815,8 +905,10 @@ def _demangle_key(mangled: str):
         return f"{tree_value.group(1).lower()}@tree_min"
     if mangled.startswith("?insert@?$_Tree@") and tree_owner:
         return f"{tree_owner.lower()}@tree_insert"
-    if mangled.startswith("?_Insert@?$_Tree@") and tree_value:
-        return f"{tree_value.group(1).lower()}@tree_node_insert"
+    if mangled.startswith("?_Insert@?$_Tree@") and tree_owner:
+        return f"{tree_owner.lower()}@tree_node_insert"
+    if mangled.startswith("?find@?$_Tree@") and tree_owner:
+        return f"{tree_owner.lower()}@tree_find"
     if mangled.startswith("?_Dec@const_iterator@?$_Tree@") and tree_owner:
         return f"{tree_owner.lower()}@tree_const_iterator_dec"
     if mangled.startswith("?_Inc@const_iterator@?$_Tree@") and tree_owner:
@@ -864,6 +956,15 @@ def _demangle_key(mangled: str):
     # cannot reach - VC6 spells builtin types as a single letter with no
     # `@` terminator - so the code is decoded directly. The owner spelling
     # follows the one std::copy's int arms already use.
+    # deque over a POINTER element - `?$deque@PAV<Class>@@`. The primitive
+    # table below cannot reach these, and the two members claimed so far are
+    # the message queue's push_back and its map growth helper.
+    deque_pointer = re.match(
+        r"^\?(push_back|_Growmap)@\?\$deque@P[AB](?:V|U)([A-Za-z_]\w*)@",
+        mangled)
+    if deque_pointer:
+        member = deque_pointer.group(1).lstrip("_").lower()
+        return f"{deque_pointer.group(2).lower()}_ptr@deque_{member}"
     deque_primitive = re.match(
         r"^\?(_Free(?:front|back))@\?\$deque@([CDEFGHIJK])V\?\$allocator@",
         mangled)
@@ -957,10 +1058,25 @@ def _demangle_key(mangled: str):
         if mangled.startswith("??4reference@?$bitset@"):
             return f"bitset{bitset_width}@bitset_reference_assign"
         for member in (
-                "_Tidy", "_Xran", "flip", "count", "any", "set", "test"):
+                "_Tidy", "_Xran", "_Xinv", "flip", "count", "any", "set",
+                "test"):
             if mangled.startswith(f"?{member}@?$bitset@"):
                 return (f"bitset{bitset_width}@bitset_"
                         f"{member.lstrip('_').lower()}")
+    # `operator>>(basic_istream<char>&, bitset<N>&)` - a free function, so it
+    # carries no class to key on; the WIDTH is the only thing separating this
+    # image's two instantiations, exactly as it does for the members above.
+    if bitset_width is not None and mangled.startswith(
+            "??5@YIAAV?$basic_istream@DU?$char_traits@D@std@@@std@@AAV01@"
+            "AAV?$bitset@"):
+        return f"bitset{bitset_width}@istream_extract_bitset"
+    deque_iterator = re.match(
+        r"^\?\?([EF])iterator@\?\$deque@([CDEFGHIJK])V\?\$allocator@",
+        mangled)
+    if deque_iterator:
+        element = DEQUE_PRIMITIVE_ELEMENT[deque_iterator.group(2)]
+        member = "inc" if deque_iterator.group(1) == "E" else "dec"
+        return f"{element}@deque_iterator_{member}"
     iterator_width = _template_width(mangled, "bitset_iterator")
     if iterator_width is not None and mangled.startswith(
             "??D?$bitset_iterator@"):
@@ -978,6 +1094,13 @@ def _demangle_key(mangled: str):
     #: `_Construct<vector<T>>` - the element is itself a template, which
     #: the identifier regex below cannot reach. Keyed `<t>_vector` like
     #: nested_vector_element above, so it reads with its siblings.
+    #: `_Construct<pair<const basic_string<char>, int>>` - the map<string,int>
+    #: value type. The pair arm below keys on an INT first member, which this
+    #: one inverts, so it needs its own spelling.
+    if (mangled.startswith(
+            "?_Construct@std@@YIXPAU?$pair@$$CBV?$basic_string@D")
+            and mangled.endswith("H@1@ABU21@@Z")):
+        return "string_int_pair@std_construct"
     construct_vector = re.match(
         r"^\?_Construct@std@@YIXPAV\?\$vector@(?:V|U)([A-Za-z_]\w*)@",
         mangled)
@@ -1017,6 +1140,10 @@ def _demangle_key(mangled: str):
     # the claim reads with its siblings instead of needing a new kind.
     if mangled.startswith("?_Ucopy@TObstacleVector@combatManager@@"):
         return "tobstaclevector@vector_ucopy"
+    if mangled.startswith("?size@TObstacleVector@combatManager@@"):
+        return "tobstaclevector@vector_size"
+    if mangled.startswith("?_Ufill@TObstacleVector@combatManager@@"):
+        return "tobstaclevector@vector_ufill"
     algorithm_key = _std_algorithm_key(mangled)
     if algorithm_key:
         return algorithm_key
@@ -1312,6 +1439,8 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                                or "$bitset_set$" in r["name"]
                                or "$bitset_test$" in r["name"]
                                or "$bitset_xran$" in r["name"]
+                               or "$bitset_xinv$" in r["name"]
+                               or "$istream_extract_bitset$" in r["name"]
                                or "$tree_min$" in r["name"]
                                or "$tree_insert$" in r["name"]
                                or "$tree_node_insert$" in r["name"]
@@ -1325,12 +1454,17 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                                or "$tree_ubound$" in r["name"]
                                or "$tree_erase_iterator$" in r["name"]
                                or "$tree_erase_range$" in r["name"]
+                               or "$tree_find$" in r["name"]
                                or "$deque_erase$" in r["name"]
                                or "$stringbuf_overflow$" in r["name"]
                                or "$stringbuf_init$" in r["name"]
                                or "$deque_freefront$" in r["name"]
                                or "$deque_freeback$" in r["name"]
                                or "$deque_buyback$" in r["name"]
+                               or "$deque_push_back$" in r["name"]
+                               or "$deque_growmap$" in r["name"]
+                               or "$deque_iterator_inc$" in r["name"]
+                               or "$deque_iterator_dec$" in r["name"]
                                or "$basic_string_assign_ptr_size$" in r["name"]
                                or "$ostream_put$" in r["name"]
                                or "$ostream_insert_cstr$" in r["name"]
@@ -1439,12 +1573,17 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             continue
         bitset_member = next((member for member in (
             "ctor", "subscript", "reference_assign", "flip", "count",
-            "any", "set", "test", "xran")
+            "any", "set", "test", "xran", "xinv")
             if f"$bitset_{member}$" in row["name"]), None)
         if bitset_member is not None:
             owner = row["name"].rsplit("$", 1)[1].lower()
             claim_keys.setdefault(
                 f"{owner}@bitset_{bitset_member}", []).append(row)
+            continue
+        if "$istream_extract_bitset$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(
+                f"{owner}@istream_extract_bitset", []).append(row)
             continue
         if "$bitset_iterator_deref$" in row["name"]:
             owner = row["name"].rsplit("$", 1)[1].lower()
@@ -1486,7 +1625,9 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                                   []).append(row)
             continue
         deque_member = next((member for member in ("freefront", "freeback",
-                                                   "buyback")
+                                                   "buyback", "push_back",
+                                                   "growmap", "iterator_inc",
+                                                   "iterator_dec")
                              if f"$deque_{member}$" in row["name"]), None)
         if deque_member is not None:
             owner = row["name"].rsplit("$", 1)[1].lower()
@@ -1532,7 +1673,7 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             continue
         tree_or_deque = next(
             (kind for kind in ("tree_erase_iterator", "tree_erase_range",
-                               "tree_lbound", "tree_ubound",
+                               "tree_lbound", "tree_ubound", "tree_find",
                                "deque_erase")
              if f"${kind}$" in row["name"]), None)
         if tree_or_deque is not None:

@@ -314,3 +314,310 @@ void __fastcall EmitObjectImageNameIndexIncrement(
 {
     ++*it;
 }
+
+// --- Dinkumware COMDAT pairings -------------------------------------------
+//
+// This compiland is the owner of the whole 0x514030..0x51bd50 span: its own
+// five bodies sit at the head, and everything after them is the istream /
+// locale / map<string,int> instantiation set that `#include <strstream>`
+// plus the image-name registry drag in. The pairings below are the byte
+// sweep of objecttype.obj's own COMDATs against the unclaimed retail rows of
+// that span - llvm-objdump/capstone mnemonic streams with direct branch
+// targets masked, scored by difflib - restricted to candidates whose retail
+// carve size equals the compiled COMDAT's content size exactly. Every one is
+// its RVA's unique best match; where two of our COMDATs shared a shape the
+// discriminator is named on the claim.
+
+// COMDAT pairing: TObjectImageNameTable's implicit destructor, agreement
+// 0.915. The class's implicit constructor is already claimed at 0x514060 and
+// this is its mirror image - the vector at +0x10 freed, then _Tree::_Erase
+// over the head node - reached only through the two function-local statics.
+VA_COMPGEN(0x00514130, 0x7E, IMPLICIT_DTOR, TObjectImageNameTable)
+
+// COMDAT pairing: basic_istream<char>'s streambuf constructor, agreement
+// 0.931 (the `_Bool` tie-parameter arm - the only istream ctor this object
+// emits).
+VA_COMPGEN(0x005151b0, 0xAA, CLASS_CTOR, basic_istream)
+
+// COMDAT pairing: basic_istream<char>'s scalar deleting destructor,
+// agreement 0.944. The `lea esi,[ecx-8]` plus the virtual-base vtable
+// write through `[eax+4]` is the virtually-derived stream shape, which
+// separates it from every other ??_G in the span.
+VA_COMPGEN(0x00515a40, 0x32, SCALAR_DELETING_DTOR, basic_istream)
+
+// COMDAT pairing: ctype<char>'s three-argument constructor, agreement 0.914.
+VA_COMPGEN(0x00515f50, 0x106, CLASS_CTOR, ctype)
+
+// COMDAT pairing: ctype<char>'s destructor and its scalar deleting wrapper.
+// Three 33-byte ??_G bodies live in this span (0x5142c0, 0x5144c0, 0x516130)
+// and they are identical apart from the destructor each calls; only this one
+// calls 0x516160, whose 36-byte extent is exactly the compiled
+// ??1?$ctype@D@std@@ - so the pair is settled from both ends at once. The
+// other two both call the 7-byte 0x514530 and stay unclaimed.
+VA_COMPGEN(0x00516130, 0x21, SCALAR_DELETING_DTOR, ctype)
+VA_COMPGEN(0x00516160, 0x24, IMPLICIT_DTOR, ctype)
+
+// COMDAT pairing: locale::facet's scalar deleting destructor, agreement
+// 1.000 - the body writes vtbl_2402cc into the object before the delete,
+// which is the base-facet vtable, not any derived facet's.
+VA_COMPGEN(0x00516560, 0x23, SCALAR_DELETING_DTOR, facet)
+
+// COMDAT pairing: strstreambuf(const char*, int), agreement 0.957.
+VA_COMPGEN(0x005165f0, 0xE7, CLASS_CTOR, strstreambuf)
+
+// COMDAT pairing: istrstream's scalar deleting destructor, agreement 1.000.
+// It calls the CRT's own ??1istrstream@std@@ at 0x60af24 by name, so no
+// similarity argument is needed.
+VA_COMPGEN(0x00516720, 0x30, SCALAR_DELETING_DTOR, istrstream)
+
+// COMDAT pairing: bitset<48>::flip(), agreement 1.000 - the trigger-mask
+// member TObjectType::setTriggerMask flips, and 48 is the only bitset width
+// whose flip this object emits.
+VA_COMPGEN(0x00516770, 0x28, BITSET_FLIP, bitset48)
+
+// COMDAT pairing: vector<TObjectType>::insert(ptr, count, const&) and
+// ::erase(first, last), agreements 1.000 and 1.000, both reached from the
+// already-claimed TObjectTypeTable::load at 0x514d80. These two are
+// compiland-private by construction - TObjectType is this header's type -
+// which is why the sizes agree to the byte.
+VA_COMPGEN(0x005167a0, 0x2E1, VECTOR_INSERT, TObjectType)
+VA_COMPGEN(0x00516a90, 0x44, VECTOR_ERASE, TObjectType)
+
+// COMDAT pairing: _Tree<string, pair<const string,int>>::erase(first, last),
+// agreement 0.960 - the registry map's range eraser.
+VA_COMPGEN(0x00516ae0, 0x12B, TREE_ERASE_RANGE, string)
+
+// COMDAT pairing: basic_string<char>::operator[](size_t) const, agreement
+// 0.917. The object emits both subscripts; the non-const one is 152 B and
+// already proven elsewhere, this const one is 28 B and matches the carve.
+VA_COMPGEN(0x00516e20, 0x1C, BASIC_STRING_SUBSCRIPT, char)
+
+// COMDAT pairing: invalid_argument's _Doraise and its copy constructor. Not
+// a similarity argument at all - 0x516f10 throws through the _ThrowInfo at
+// 0x650470, whose catchable-type array reads
+// `.?AVinvalid_argument@std@@ / .?AVlogic_error@std@@ / .?AVexception@@`,
+// and its one call is to 0x516f30, which is therefore that class's copy
+// constructor. The three 29-byte _Doraise bodies in this object (runtime_error,
+// logic_error, invalid_argument) are otherwise indistinguishable.
+VA_COMPGEN(0x00516f10, 0x1D, EXCEPTION_DORAISE, invalid_argument)
+VA_COMPGEN(0x00516f30, 0x157, CLASS_CTOR, invalid_argument)
+
+// COMDAT pairing: _Tree<string,...>::erase(iterator) - at 1342 B the largest
+// unclaimed body in the span - agreement 0.971, and ::_Erase(node), the
+// recursive subtree destroyer, agreement 0.952.
+VA_COMPGEN(0x00517090, 0x53E, TREE_ERASE_ITERATOR, string)
+VA_COMPGEN(0x005175d0, 0xAD, TREE_ERASE, string)
+
+// COMDAT pairing: num_get<char, istreambuf_iterator<char>>::num_get(size_t),
+// agreement 0.889 - the facet constructor, the mirror of num_put's already
+// claimed at 0x4546e0.
+VA_COMPGEN(0x00517d70, 0x5C, CLASS_CTOR, num_get)
+
+// COMDAT pairing: basic_string<char>::basic_string(size_t, char, const
+// allocator&), agreement 0.989. The object emits two string constructors -
+// the copy constructor is 293 B and proven elsewhere - and only this one has
+// the carve's 204-byte extent.
+VA_COMPGEN(0x0051a120, 0xCC, CLASS_CTOR, basic_string)
+
+// COMDAT pairing: _Tree<string,...>::insert(const value_type&), agreement
+// 0.969, and the pair<iterator,bool> constructor it returns through,
+// agreement 1.000 - the latter is 0x51af50's only call into this span.
+VA_COMPGEN(0x0051af50, 0x156, TREE_INSERT, string)
+VA_COMPGEN(0x0051b150, 0x18, CLASS_CTOR, pair)
+
+// COMDAT pairing: _Tree<string,...>::_Lbound, agreement 0.941, and
+// const_iterator::_Dec, agreement 0.952 - the predecessor walk whose
+// successor twin is already claimed at 0x517780.
+VA_COMPGEN(0x0051b510, 0xBC, TREE_LBOUND, string)
+VA_COMPGEN(0x0051b5d0, 0xB3, TREE_CONST_ITERATOR_DEC, string)
+
+// --- Dinkumware COMDAT pairings, part 2: the input-stream family ----------
+//
+// The same sweep, over the kinds the label join had no vocabulary for until
+// this change. Ordered by RVA; agreements are the masked-mnemonic difflib
+// ratio against the compiled COMDAT of the same content size.
+
+// COMDAT pairing: basic_streambuf<char>::sgetc, agreement 1.000.
+VA_COMPGEN(0x005157b0, 0x20, STREAMBUF_SGETC, char)
+
+// COMDAT pairing: basic_string<char>::replace(pos, n, const char*, n),
+// agreement 0.994 - the `.msk` suffix rewrite in setImageName.
+VA_COMPGEN(0x00515a80, 0x199, BASIC_STRING_REPLACE, char)
+
+// COMDAT pairing: basic_string<char>::rfind(const char*, pos, n), agreement
+// 0.983 - the `rfind('.')` that finds the extension setImageName replaces.
+VA_COMPGEN(0x00515c20, 0x74, BASIC_STRING_RFIND, char)
+
+// COMDAT pairing: basic_istream<char>::ipfx(bool), agreement 0.969 - the
+// whitespace-skipping prefix every extraction in this compiland runs
+// through, and the reason use_facet<ctype<char>> is instantiated here.
+VA_COMPGEN(0x00515ca0, 0x27A, ISTREAM_IPFX, char)
+
+// COMDAT pairing: basic_ios<char>::setstate, agreement 1.000.
+VA_COMPGEN(0x00515f20, 0x26, BASIC_IOS_SETSTATE, char)
+
+// COMDAT pairing: ctype<char>'s four case-conversion virtuals. The two
+// scalar bodies are byte-identical and so are the two range bodies; the CRT
+// helper each calls is the whole discriminator, and it is unambiguous -
+// 0x516070/0x516090 call __Tolower at 0x60c6dd, 0x5160d0/0x5160f0 call
+// __Toupper at 0x60c8ec. Sizes 28/56 then separate scalar from range.
+VA_COMPGEN(0x00516070, 0x1C, CTYPE_DO_TOLOWER_CHAR, char)
+VA_COMPGEN(0x00516090, 0x38, CTYPE_DO_TOLOWER_RANGE, char)
+VA_COMPGEN(0x005160d0, 0x1C, CTYPE_DO_TOUPPER_CHAR, char)
+VA_COMPGEN(0x005160f0, 0x38, CTYPE_DO_TOUPPER_RANGE, char)
+
+// COMDAT pairing: basic_ios<char>::clear and basic_streambuf<char>::sbumpc,
+// agreements 1.000 and 1.000.
+VA_COMPGEN(0x00517af0, 0x1D, BASIC_IOS_CLEAR, char)
+VA_COMPGEN(0x00517b10, 0x32, STREAMBUF_SBUMPC, char)
+
+// COMDAT pairing: _Tree<string,...>::find, agreement 0.984 - the registry
+// lookup GetImageName runs.
+VA_COMPGEN(0x00517ba0, 0x86, TREE_FIND, string)
+
+// COMDAT pairing: num_get<char, istreambuf_iterator<char>>::do_get, all NINE
+// overloads as one group. The claims zip by RVA against the object's COFF
+// order, and the zip is self-confirming: the compiled sizes run
+// 941/977/973/955/955/1024/1030/1030/906 for
+// (bool, unsigned short, unsigned int, long, unsigned long, float, double,
+// long double, void*) and the retail extents run
+// 943/993/989/969/969/1038/1044/1044/915 in RVA order - monotone in
+// correspondence AND equal-sized at exactly the same two positions on both
+// sides (the long/unsigned-long pair and the double/long-double pair). Six
+// of the nine are the rows the census labelled from the shared
+// "0123456789abcdef" digit table, which is what the integer arms read.
+VA_COMPGEN(0x00517dd0, 0x3AF, NUM_GET_DO_GET, char)
+VA_COMPGEN(0x00518180, 0x3E1, NUM_GET_DO_GET, char)
+VA_COMPGEN(0x00518570, 0x3DD, NUM_GET_DO_GET, char)
+VA_COMPGEN(0x00518950, 0x3C9, NUM_GET_DO_GET, char)
+VA_COMPGEN(0x00518d20, 0x3C9, NUM_GET_DO_GET, char)
+VA_COMPGEN(0x005190f0, 0x40E, NUM_GET_DO_GET, char)
+
+// COMDAT pairing: ctype<char>::is(mask, char), agreement 1.000 - reached
+// from the float arm of do_get immediately above it.
+VA_COMPGEN(0x00519500, 0x22, CTYPE_IS, char)
+
+VA_COMPGEN(0x00519530, 0x414, NUM_GET_DO_GET, char)
+VA_COMPGEN(0x00519950, 0x414, NUM_GET_DO_GET, char)
+VA_COMPGEN(0x00519d70, 0x393, NUM_GET_DO_GET, char)
+
+// COMDAT pairing: num_get<char>::_Getifld, agreement 0.968 - the integer
+// field scanner the five integral do_get arms share.
+VA_COMPGEN(0x0051a1f0, 0x534, NUM_GET_GETIFLD, char)
+
+// COMDAT pairing: istreambuf_iterator<char>'s operator*, _Inc and _Peek,
+// agreements 1.000, 1.000 and 1.000.
+VA_COMPGEN(0x0051a730, 0x4F, ISTREAMBUF_ITERATOR_DEREF, char)
+VA_COMPGEN(0x0051a8e0, 0x53, ISTREAMBUF_ITERATOR_INC, char)
+VA_COMPGEN(0x0051a940, 0x45, ISTREAMBUF_ITERATOR_PEEK, char)
+
+// COMDAT pairing: the two use_facet<> instantiations. Sizes alone separate
+// them (510 vs 507 on both sides), and the bytes agree independently:
+// 0x51a990 calls __Getctype at 0x60c844, which only the ctype arm does.
+VA_COMPGEN(0x0051a990, 0x1FE, USE_FACET_CTYPE, char)
+VA_COMPGEN(0x0051ab90, 0x1FB, USE_FACET_NUMPUNCT, char)
+
+// COMDAT pairing: istreambuf_iterator<char>::equal, agreement 1.000.
+VA_COMPGEN(0x0051ad90, 0xB1, ISTREAMBUF_ITERATOR_EQUAL, char)
+
+// COMDAT pairing: _Tidyfac's two remaining instantiations. Four bodies, two
+// sizes, and the static each pair shares is the discriminator exactly as it
+// was for num_put/numpunct at 0x455c20: 0x51ae50 stores into bss_29cbb0 and
+// 0x51b0b0 clears it, 0x51aed0 stores into bss_29cbb4 and 0x51b170 clears
+// it. Which pair is ctype's is settled from outside - 0x51b0b0's address is
+// taken inside 0x51a990, the use_facet<ctype> arm - and corroborated from
+// the other side, since the num_get pair's _Save is reached only from
+// 0x515270, basic_istream<char>::operator>>(int&).
+VA_COMPGEN(0x0051ae50, 0x7B, TIDYFAC_CTYPE_SAVE, char)
+VA_COMPGEN(0x0051aed0, 0x7B, TIDYFAC_NUM_GET_SAVE, char)
+VA_COMPGEN(0x0051b0b0, 0x92, TIDYFAC_CTYPE_TIDY, char)
+VA_COMPGEN(0x0051b170, 0x92, TIDYFAC_NUM_GET_TIDY, char)
+
+// COMDAT pairing: _Tree<string,...>::_Insert, agreement 0.968 - the
+// rebalancing node inserter behind the already-claimed public insert.
+VA_COMPGEN(0x0051b210, 0x2FF, TREE_NODE_INSERT, string)
+
+// COMDAT pairing: std::_Maklocstr, agreement 1.000 - the locale-name
+// duplicator, reached from use_facet<numpunct>.
+VA_COMPGEN(0x0051b690, 0x39, MAKLOCSTR, char)
+
+// COMDAT pairing: _Construct<pair<const string, int>>, agreement 0.962 -
+// the registry map's node initializer.
+VA_COMPGEN(0x0051b6d0, 0x15B, STD_CONSTRUCT, string_int_pair)
+
+// COMDAT pairing: basic_string<char>'s two compare overloads, agreements
+// 0.976 and 1.000; the sizes (84 vs 106) agree with the mangled parameter
+// lists on both sides.
+VA_COMPGEN(0x0051b8b0, 0x54, BASIC_STRING_COMPARE_STR, char)
+VA_COMPGEN(0x0051b910, 0x6A, BASIC_STRING_COMPARE_SUBSTR, char)
+
+// --- Dinkumware COMDAT pairings, part 3: the two bitset extractions -------
+//
+// `operator>>(basic_istream<char>&, bitset<N>&)` is instantiated twice here,
+// for the 48-bit trigger mask and the 9-bit terrain/landscape flags, and the
+// two retail bodies are the same 353 bytes. The WIDTH separates them from
+// inside: 0x5156ed, the continuation of 0x515560, tests and clamps against
+// 0x30 and 0x5159bc, the continuation of 0x5157f0, against 9 - and the
+// latter calls the already-claimed ?set@?$bitset@$08@ at 0x44c680. Each
+// continuation then throws through exactly one of the two 203-byte
+// "invalid bitset<N> char" bodies, which is what names those as _Xinv rather
+// than _Xran and assigns each to its width.
+//
+// Our two extraction bodies compile to 589 and 583 bytes against retail's
+// 353 apiece - retail keeps the string scan out of line where we expand it -
+// so these two arrive as partial rows. The identification does not depend on
+// the score.
+VA_COMPGEN(0x00515560, 0x161, ISTREAM_EXTRACT_BITSET, Bitset48)
+VA_COMPGEN(0x005157f0, 0x161, ISTREAM_EXTRACT_BITSET, Bitset9)
+VA_COMPGEN(0x00516e40, 0xCB, BITSET_XINV, Bitset48)
+VA_COMPGEN(0x00517680, 0xCB, BITSET_XINV, Bitset9)
+
+// --- three exception members named by retail RTTI --------------------------
+//
+// These three sit far outside this compiland's span; they are here because
+// this is one of the few objects that emits BOTH runtime_error's and
+// logic_error's copy constructors plus runtime_error::_Doraise, and a COMDAT
+// name is image-unique so exactly one claim may hold each.
+//
+// The identification is not a similarity argument. Each exception class's
+// CatchableType records the copyFunction the runtime uses to catch it by
+// value, and the three that matter here read:
+//
+//   0x647f70  .?AVlogic_error@std@@     copyFunction 0x4044e0
+//   0x648648  .?AVruntime_error@std@@   copyFunction 0x41bc30
+//   0x650440  .?AVinvalid_argument@std@@ copyFunction 0x516f30 (claimed above)
+//
+// 0x41bc30 had been claimed in advmgr.cpp as logic_error's on a 0.974
+// mnemonic agreement - the two bodies differ only in the vtable they store,
+// which objdiff resolves by name - and 0x4044e0 was then refused as a
+// duplicate. The RTTI settles both at once, and a second, independent
+// witness agrees: 0x41bc10 constructs through 0x41bc30 and throws with the
+// _ThrowInfo at 0x6487a8, whose catchable list is exactly
+// `runtime_error / exception`. An out_of_range::_Doraise - which is what
+// 0x41bc10 had been claimed as - would list out_of_range and logic_error too.
+VA_COMPGEN(0x004044e0, 0x159, CLASS_CTOR, logic_error)
+VA_COMPGEN(0x0041bc10, 0x1D, EXCEPTION_DORAISE, runtime_error)
+VA_COMPGEN(0x0041bc30, 0x159, CLASS_CTOR, runtime_error)
+
+// COMDAT pairing: vector<TObjectType::TImageInfo>::insert(ptr, count,
+// const&), agreement 1.000 at an exactly equal 740-byte extent. TImageInfo
+// is this header's nested type and no other object instantiates the vector,
+// which is why the sizes agree to the byte.
+VA_COMPGEN(0x0046aeb0, 0x2E4, VECTOR_INSERT, TImageInfo)
+
+// COMDAT pairing: basic_istream<char>'s destructor, agreement 0.750 on a
+// 15-byte body - the virtual-base vtable fixup, and 1:1 in this object.
+VA_COMPGEN(0x00515260, 0xF, IMPLICIT_DTOR, basic_istream)
+
+// COMDAT pairing: the two extraction operators the registry loader runs
+// through. Neither is a similarity argument - the FACET each one builds
+// names it outright. 0x515270 constructs num_get<char> at 0x517d70 and
+// registers it through _Tidyfac<num_get>::_Save at 0x51aed0, so it is
+// basic_istream<char>::operator>>(int&); 0x517830 constructs ctype<char> at
+// 0x515f50, registers it through _Tidyfac<ctype>::_Save at 0x51ae50 and then
+// drives basic_string::_Grow / _Split over sgetc/sbumpc, which is the free
+// whitespace-delimited operator>>(istream&, string&). Both compile larger
+// than retail (519 against 347, 702 against 568) because retail keeps the
+// scan out of line, so both arrive as partial rows.
+VA_COMPGEN(0x00515270, 0x15B, ISTREAM_EXTRACT_INT, char)
+VA_COMPGEN(0x00517830, 0x238, ISTREAM_EXTRACT_STRING, char)
