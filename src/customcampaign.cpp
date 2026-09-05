@@ -47,6 +47,14 @@ DATA(0x0063d8c8) static int legacyCampaignScenarioIndices[7][4];
 // MapTextStruct::Play read the cell, so customcampaign.obj owns it.
 DATA(0x0066c218) extern const TCampaignMusicTraits* akCampaignMusicTraits;
 
+// The campaign file version at which a scenario's crossover-artifact plane
+// widened from 129 bits to 144; ScenarioStruct::Read still reads and widens
+// the narrow plane below it.
+static const int CAMPAIGN_VERSION_WIDE_ARTIFACTS = 6;
+static const int CROSSOVER_CREATURE_BITS = 145;
+static const int CROSSOVER_ARTIFACT_BITS = 144;
+static const int CROSSOVER_LEGACY_ARTIFACT_BITS = 129;
+
 static const int CROSSOVER_PRIMARY_ARTIFACT_SLOTS = 16;
 static const int CROSSOVER_EQUIPPED_ARTIFACT_SLOTS = 19;
 static const int CROSSOVER_PRIMARY_SKILLS = 4;
@@ -130,16 +138,24 @@ int TStreamBufFile::Write(const void* data, int size)
     return buffer->sputn(static_cast<const char*>(data), size);
 }
 
+// The score the ordering below compares. Retail keeps it out of line and
+// calls it from the sort's own expanded comparators, while operator() itself
+// expands it twice - the /Ob2 split between a 155 B caller and the 471 B one.
+VA(0x00483f50, 0x26)  // anchor-callee(0x48fa40's comparator expansion), retail-only
+int GetCrossoverHeroValue(hero* candidate)
+{
+    int primary = candidate->get_primary_skill_total();
+    int skills = 0;
+    for (int iSkill = 0; iSkill < CROSSOVER_SECONDARY_SKILLS; ++iSkill)
+        skills += candidate->skillLevel[iSkill];
+    return skills + primary;
+}
+
 VA(0x00483f80, 0x9B)  // anchor-callee(std::sort<hero*> 0x48f2b0), retail-only
 bool CrossoverHeroStronger::operator()(hero& lhs, hero& rhs) const
 {
-    int leftValue = lhs.get_primary_skill_total();
-    int iSkill;
-    for (iSkill = 0; iSkill < CROSSOVER_SECONDARY_SKILLS; ++iSkill)
-        leftValue += lhs.skillLevel[iSkill];
-    int rightValue = rhs.get_primary_skill_total();
-    for (iSkill = 0; iSkill < CROSSOVER_SECONDARY_SKILLS; ++iSkill)
-        rightValue += rhs.skillLevel[iSkill];
+    int leftValue = GetCrossoverHeroValue(&lhs);
+    int rightValue = GetCrossoverHeroValue(&rhs);
     if (leftValue != rightValue)
         return leftValue > rightValue;
     leftValue += lhs.experience;
@@ -698,9 +714,63 @@ void TCampaignResourceBonus::Read(TAbstractFile* file)
 
 // --- the scenario's starting-options chooser (see customcampaign.h) ---
 
+// The root's destructor, out of line. Nothing calls it - the `??_G` below
+// and both sibling destructors expand the single vptr store - but a plain
+// non-COMDAT body is emitted and kept regardless.
+VA(0x00484f40, 0x7)  // anchor-vtable (restores 0x63d958), retail-only
+TCampaignStartOption::~TCampaignStartOption()
+{
+}
+
 // The root's scalar deleting destructor: the base teardown is one vptr
 // store, so nothing is called.
 VA_COMPGEN(0x00484f50, 0x23, SCALAR_DELETING_DTOR, TCampaignStartOption)
+
+// Slot 5, inherited by the bonus list and the starting-hero option (the
+// crossover option overrides it at 0x4859b0). The answer is the campaign's
+// running crossover slot as soon as the scenario carries anything to carry
+// over - a crossover artifact, a hero placeholder, or a positive status for
+// this option's own player - and -1 otherwise.
+VA(0x00484f80, 0x7F)  // anchor-vtable (0x63d958+0x14, 0x63d98c+0x14, 0x63db0c+0x14), retail-only
+int TCampaignStartOption::_slot5(void* scenarioRecord, int which) const
+{
+    TCampaignBrief::ScenarioStruct* scenario =
+        static_cast<TCampaignBrief::ScenarioStruct*>(scenarioRecord);
+    int player = GetPlayer(which);
+    if (scenario->crossover_artifacts.count() > 0
+        || scenario->hero_placeholders.size() > 0
+        || scenario->heroes_status[player] > 0)
+        return gpGame->campaign.crossoverArrayIndex;
+    return -1;
+}
+
+// Slot 12, inherited by the bonus list and the starting-hero option (the
+// crossover option overrides it at 0x4859e0): every scenario this one lists
+// as a prerequisite must already be completed, and then one of the option's
+// own choices must answer slot 5 with the value asked about. An option with
+// no choices at all is asked with -1.
+VA(0x00485000, 0x8B)  // anchor-vtable (0x63d958+0x30, 0x63d98c+0x30, 0x63db0c+0x30), retail-only
+bool TCampaignStartOption::_slot12(void* scenarioRecord, int value) const
+{
+    TCampaignBrief::ScenarioStruct* scenario =
+        static_cast<TCampaignBrief::ScenarioStruct*>(scenarioRecord);
+    for (unsigned int iPrereq = 0;
+         iPrereq < scenario->prerequisites.size(); ++iPrereq)
+        if (scenario->prerequisites[iPrereq]
+            && !gpGame->campaign.mapScores[iPrereq].completed)
+            return false;
+
+    int count = GetCount();
+    if (count == 0) {
+        if (_slot5(scenario, -1) == value)
+            return true;
+    } else {
+        for (int iChoice = 0; iChoice < count; ++iChoice)
+            if (_slot5(scenario, iChoice) == value)
+                return true;
+    }
+    return false;
+}
 
 // Slot 7, inherited unchanged by all three concrete options.
 VA(0x00485090, 0x6)  // anchor-vtable (0x63d958+0x1c and both children), retail-only
@@ -849,9 +919,218 @@ std::string TCampaignStartBonusOption::GetText(void* scenario,
     return m_bonuses[which]->GetText();
 }
 
+// --- the crossover-hero starting option (vftable 0x63dad8) ---
+
+VA(0x004854a0, 0x12)  // anchor-vtable (0x63dad8+8), retail-only
+int TCampaignStartCrossoverOption::GetCount() const
+{
+    return m_choices.size();
+}
+
+// The icon is the large portrait of the first hero waiting in the carry-over
+// pool the choice names; an empty pool falls back to the blank locator
+// frame. The pool is reached through the campaign's own scenario table -
+// mapScores[choice.scenario].index is the crossover slot.
+VA(0x004854c0, 0x6E)  // anchor-string (hpl000kn.pcx), retail-only
+const char* TCampaignStartCrossoverOption::GetIconDefName(void* campaignRecord,
+                                                          int which) const
+{
+    SCampaign* campaign = static_cast<SCampaign*>(campaignRecord);
+    std::vector<hero>& pool = campaign->carryOverHeroes
+        [campaign->mapScores[m_choices[which].scenario].index];
+    hero* first = pool.size() != 0 ? pool.begin() : 0;
+    if (first == 0)
+        return "hpl000kn.pcx";
+    return akHeroTraits[first->portrait].largePortraitName;
+}
+
+// The help text names the MAP the heroes come from, which is not the choice's
+// own scenario but the last completed scenario sharing its crossover slot;
+// the map name itself is only available after re-opening the campaign file
+// and inflating that scenario's header.
+VA(0x00485530, 0x260)  // anchor-callee(CampaignHeaderStruct::Load 0x488880), retail-only
+std::string TCampaignStartCrossoverOption::GetText(void* campaignRecord,
+                                                   int which) const
+{
+    TCampaignBrief::CampaignHeaderStruct* campaign =
+        static_cast<TCampaignBrief::CampaignHeaderStruct*>(campaignRecord);
+    int slot = gpGame->campaign.mapScores[m_choices[which].scenario].index;
+    int source = -1;
+    for (unsigned int iScore = 0;
+         iScore < gpGame->campaign.mapScores.size(); ++iScore)
+        if (gpGame->campaign.mapScores[iScore].completed
+            && gpGame->campaign.mapScores[iScore].index == slot
+            && (source < 0
+                || gpGame->campaign.mapScores[iScore].complete_order
+                       >= gpGame->campaign.mapScores[source].complete_order))
+            source = iScore;
+
+    NewSMapHeader mapHeader;
+    if (campaign->Load())
+        campaign->scenarios[source]->LoadMapHeader(campaign->stream,
+                                                   &mapHeader, source);
+    return format_string(gpGeneralText->Text[720], mapHeader.mapName.c_str());
+}
+
+// The player position the pool is handed to. Slot 12 asks with -1 when the
+// option carries no choices at all, which reads the first slot instead.
+VA(0x00485790, 0x17)  // anchor-vtable (0x63dad8+0x20), retail-only
+int TCampaignStartCrossoverOption::GetPlayer(int which) const
+{
+    if (which < 0)
+        which = 0;
+    return m_choices[which].player;
+}
+
+VA(0x004857b0, 0x1F4)  // anchor-vtable (0x63dad8+0x24), retail-only
+void TCampaignStartCrossoverOption::Read(TAbstractFile* file)
+{
+    int count;
+    {
+        unsigned char value;
+        file->Read(&value, sizeof(unsigned char));
+        count = value;
+    }
+    for (int i = 0; i != count; ++i) {
+        TCampaignCrossoverChoice choice;
+        {
+            signed char player;
+            file->Read(&player, sizeof(signed char));
+            choice.player = player;
+        }
+        {
+            signed char scenario;
+            file->Read(&scenario, sizeof(signed char));
+            choice.scenario = scenario;
+        }
+        m_choices.push_back(choice);
+    }
+}
+
+VA(0x004859b0, 0x24)  // anchor-vtable (0x63dad8+0x14), retail-only
+int TCampaignStartCrossoverOption::_slot5(void* scenario, int which) const
+{
+    return gpGame->campaign.mapScores[m_choices[which].scenario].index;
+}
+
+VA(0x004859e0, 0x44)  // anchor-vtable (0x63dad8+0x30), retail-only
+bool TCampaignStartCrossoverOption::_slot12(void* scenario, int value) const
+{
+    for (unsigned int iChoice = 0; iChoice < m_choices.size(); ++iChoice)
+        if (_slot5(scenario, iChoice) == value)
+            return true;
+    return false;
+}
+
+// Slot 1 for BOTH crossover options - `mov al,1; ret 4`, and /OPT:ICF folds
+// the two identical bodies onto this one address, so only this copy carries
+// the claim (the starting-hero twin below is defined and left unclaimed).
+VA(0x00485a30, 0x5)  // anchor-vtable (0x63dad8+4 and 0x63db0c+4), retail-only
+bool TCampaignStartCrossoverOption::IsBuildingBonus(int which) const
+{
+    return true;
+}
+
+// --- the starting-hero option (vftable 0x63db0c) ---
+
+bool TCampaignStartHeroOption::IsBuildingBonus(int which) const
+{
+    return true;
+}
+
+VA(0x00485a40, 0x13)  // anchor-vtable (0x63db0c+8), retail-only
+int TCampaignStartHeroOption::GetCount() const
+{
+    return m_choices.size();
+}
+
+VA(0x00485a60, 0x30)  // anchor-string (CBONN1A3.pcx), retail-only
+const char* TCampaignStartHeroOption::GetIconDefName(void* campaign,
+                                                     int which) const
+{
+    if (m_choices[which].hero == -1)
+        return "CBONN1A3.pcx";
+    return akHeroTraits[m_choices[which].hero].largePortraitName;
+}
+
+VA(0x00485a90, 0xBA)  // anchor-vtable (0x63db0c+0x18), retail-only
+std::string TCampaignStartHeroOption::GetText(void* campaign, int which) const
+{
+    if (m_choices[which].hero == -1)
+        return gpGeneralText->Text[721];
+    return format_string(gpGeneralText->Text[716],
+                         akHeroTraits[m_choices[which].hero].defaultName);
+}
+
+VA(0x00485b50, 0x10)  // anchor-vtable (0x63db0c+0x20), retail-only
+int TCampaignStartHeroOption::GetPlayer(int which) const
+{
+    return m_choices[which].player;
+}
+
+VA(0x00485b60, 0x1FB)  // anchor-vtable (0x63db0c+0x24), retail-only
+void TCampaignStartHeroOption::Read(TAbstractFile* file)
+{
+    int count;
+    {
+        signed char value;
+        file->Read(&value, sizeof(signed char));
+        count = value;
+    }
+    m_choices.clear();
+    for (int i = 0; i != count; ++i) {
+        TCampaignHeroChoice choice;
+        {
+            signed char player;
+            file->Read(&player, sizeof(signed char));
+            choice.player = player;
+        }
+        {
+            short heroId;
+            file->Read(&heroId, sizeof(short));
+            choice.hero = heroId;
+        }
+        m_choices.push_back(choice);
+    }
+}
+
+VA(0x00485d60, 0x11)  // anchor-vtable (0x63db0c+0x1c), retail-only
+int TCampaignStartHeroOption::_slot7(int which) const
+{
+    return m_choices[which].hero;
+}
+
 VA(0x00485d80, 0x3)  // anchor-vtable (0x63d938+0x1c), retail-only
 void TCampaignBonus::SetTown(int)
 {
+}
+
+// hero.h's length-prefixed string reader, and customcampaign.obj is where
+// its single body lives (game.cpp and this file are its callers). /Gr makes
+// it fastcall, so the hidden return object arrives in ECX and the stream in
+// EDX. The 512-byte chunk buffer is retail's: the payload is copied into the
+// string's own frozen buffer half a kilobyte at a time.
+VA(0x00485d90, 0x1BB)  // anchor-caller(ScenarioStruct::Read +0x2b), retail-only
+std::string ReadLengthPrefixedString(TAbstractFile* infile)
+{
+    unsigned int length = 0;
+    infile->Read(&length, sizeof(unsigned int));
+
+    unsigned int remaining = length;
+    std::string text;
+    text.resize(length);
+    std::string::iterator dest = text.begin();
+    while (remaining > 0) {
+        char chunk[512];
+        unsigned int count = remaining;
+        if (count >= sizeof(chunk))
+            count = sizeof(chunk);
+        infile->Read(chunk, count);
+        std::copy(chunk, chunk + count, dest);
+        dest += count;
+        remaining -= count;
+    }
+    return text;
 }
 
 // Complete-only. The six string/vector/bitset members take their own
@@ -878,6 +1157,57 @@ TCampaignBrief::ScenarioStruct::~ScenarioStruct()
     delete prologue;
     delete epilogue;
     delete options;
+}
+
+// Complete-only. DoPreLoadCustomization's per-hero half: the map's own
+// setup record for a carry-over hero is copied onto a freshly allocated
+// hero of the same class (the whole HeroExtra assignment is compiler-
+// generated and expanded here), the original slot is retired by driving its
+// placement x to -1, and the availability table follows - the new id takes
+// the record's owner, the old one goes back to the tavern pool. Name
+// provisional.
+VA(0x00486110, 0x32F)  // anchor-caller(DoPreLoadCustomization +0x117), retail-only
+void game::RehomeCampaignHeroSetup(int heroId)
+{
+    HeroExtra& setup = heroSetup[heroId];
+    if (setup.location.x < 0)
+        return;
+
+    int newHeroId = GetNewHeroId(setup.Owner, kNumHeroClasses, 1,
+                                 akHeroTraits[heroId].heroClass);
+    if (newHeroId == -1) {
+        setup.location.x = -1;
+        return;
+    }
+
+    heroSetup[newHeroId] = setup;
+    heroSetup[newHeroId].id = newHeroId;
+    setup.location.x = -1;
+    heroAvailability[newHeroId] = setup.Owner;
+    heroAvailability[heroId] = hero::HERO_AVAILABILITY_TAVERN_POOL;
+    if (heroSetup[newHeroId].PortraitNumber == heroId)
+        heroSetup[newHeroId].PortraitNumber = newHeroId;
+}
+
+// Complete-only, and the Dreamcast roster names it: game::NewMap calls this
+// on gpGame->campaign as soon as the new map carries a campaign context.
+// Both passes walk the carry-over pools in reverse - the first retires every
+// carried hero from the map's roster, the second re-homes its setup record.
+VA(0x00486440, 0x145)  // anchor-caller(game::NewMap +0x7bc), dc 0x7d22c
+void SCampaign::DoPreLoadCustomization()
+{
+    int iPool;
+    for (iPool = carryOverHeroes.size() - 1; iPool >= 0; --iPool)
+        for (int iHero = carryOverHeroes[iPool].size() - 1; iHero >= 0;
+             --iHero)
+            gpGame->heroAvailability[carryOverHeroes[iPool][iHero].id] =
+                hero::HERO_AVAILABILITY_TAVERN_POOL;
+
+    for (iPool = carryOverHeroes.size() - 1; iPool >= 0; --iPool)
+        for (int iHero = carryOverHeroes[iPool].size() - 1; iHero >= 0;
+             --iHero)
+            gpGame->RehomeCampaignHeroSetup(
+                carryOverHeroes[iPool][iHero].id);
 }
 
 // Complete-only campaign carry-over expansion. Dreamcast's campaign path has
@@ -1086,6 +1416,244 @@ void TCampaignBrief::ScenarioStruct::InitializeCrossoverHero(
     gpGame->campaign.field_6c.push_back(currentHero->id);
 }
 
+// Complete-only, and the sibling of InitializeCrossoverHero above: the map
+// hero placeholders that carry no crossover hero. The record's own hero id
+// picks the path - -1 asks the game for a starting hero of the player's
+// alignment, anything else re-homes the carried setup record first - and
+// the rest is the shared tail: the hero lands on the object's trigger cell,
+// steps one west off a town entrance, and is registered with its player,
+// the availability table, the hero pool map and the fog.
+VA(0x00487020, 0x263)  // anchor-caller(0x487290's two placeholder loops), retail-only
+void TCampaignBrief::ScenarioStruct::PlaceStartingHero(
+    HeroPlaceholderData* placeholder)
+{
+    int heroId = placeholder->heroId;
+    int owner = static_cast<signed char>(placeholder->owner);
+    if (heroId == -1) {
+        heroId = gpGame->GetStartingHeroId(gpGame->setup.alignment[owner],
+                                           owner, 0);
+    } else {
+        gpGame->RehomeCampaignHeroSetup(heroId);
+    }
+
+    if (gpGame->setup.startingHero[owner] == -1)
+        gpGame->setup.startingHero[owner] = heroId;
+
+    CObject* object = placeholder->object;
+    hero* currentHero = gpGame->GetHero(heroId);
+    currentHero->initialize(static_cast<short>(heroId));
+    currentHero->field_01e = 0;
+
+    int triggerX;
+    int triggerY;
+    object->FindTrigger(triggerX, triggerY);
+    currentHero->x = static_cast<short>(triggerX);
+    currentHero->y = static_cast<short>(triggerY);
+    currentHero->z = object->z;
+    currentHero->owner = static_cast<signed char>(placeholder->owner);
+    gpGame->SetRandomHeroArmies(currentHero->id, 0, 0);
+    currentHero->maxMovePoints = currentHero->movePoints
+        = currentHero->GetMobility();
+
+    type_point heroLocation(currentHero->x, currentHero->y, currentHero->z);
+    --heroLocation.x;
+    if (heroLocation.x >= 0) {
+        NewmapCell* cell = gpGame->worldMap.cell(heroLocation);
+        if (cell->type == TOWN && cell->is_trigger)
+            --currentHero->x;
+    }
+
+    gpGame->players[currentHero->owner].heroes[
+        gpGame->players[currentHero->owner].numHeroes] = currentHero->id;
+    ++gpGame->players[currentHero->owner].numHeroes;
+    currentHero->obscure_cell();
+    gpGame->heroAvailability[currentHero->id] = currentHero->owner;
+    gpGame->heroPoolMap[currentHero->id].set(currentHero->owner);
+    gpGame->SetVisibility(currentHero->x, currentHero->y, currentHero->z,
+                          currentHero->owner, currentHero->GetVisibility(), 1);
+}
+
+// The map placeholders are handed the campaign's carried heroes strongest
+// first, so retail sorts them by their power rating before the pass below.
+// Retail-only, name provisional (the whole std::sort instantiation this
+// predicate pulls into customcampaign.obj is at 0x48eec0 and its helpers).
+bool HeroPlaceholderStronger::operator()(const HeroPlaceholderData& left,
+                                         const HeroPlaceholderData& right)
+    const
+{
+    return static_cast<signed char>(left.powerRating)
+        > static_cast<signed char>(right.powerRating);
+}
+
+// Complete-only, and game::NewMap's second campaign callee (the first is
+// SCampaign::DoPreLoadCustomization). The scenario's chosen start option
+// names the crossover slot, that slot's hero pool is copied out of the
+// campaign, and the map's placeholders take from it in power-rating order:
+// a placeholder that names a specific hero id takes that hero (and drops it
+// from the local pool so it cannot be handed out twice), and the remaining
+// unnamed placeholders belonging to the option's own player take whatever is
+// left. Anything the loss condition pins to a specific cell, and the
+// player's first hero if it still has none, falls back to the placeholder
+// path in PlaceStartingHero above.
+VA(0x00487290, 0x664)  // anchor-caller(game::NewMap +0x7ce), retail-only
+void TCampaignBrief::ScenarioStruct::PlaceCrossoverHeroes()
+{
+    SCampaign* campaign = &gpGame->campaign;
+    int choice = campaign->briefingChoice;
+    int player = options->GetPlayerPosition(choice);
+    int slot = options->_vslot5(this, choice);
+    campaign->mapScores[campaign->currentMap].index = slot;
+
+    std::vector<hero> heroes;
+    std::vector<HeroPlaceholderData> placeholders =
+        gpGame->worldMap.heroPlaceholders;
+    if (placeholders.size() == 0)
+        return;
+
+    std::sort(placeholders.begin(), placeholders.end(),
+              HeroPlaceholderStronger());
+
+    if (slot >= 0)
+        heroes = campaign->carryOverHeroes[slot];
+
+    HeroPlaceholderData* placeholder;
+    unsigned int iPlaceholder;
+    for (iPlaceholder = 0; iPlaceholder < placeholders.size();
+         ++iPlaceholder) {
+        placeholder = &placeholders[iPlaceholder];
+        if (placeholder->heroId == -1)
+            continue;
+
+        int carried;
+        for (carried = heroes.size() - 1; carried >= 0; --carried) {
+            if (heroes[carried].id == placeholder->heroId)
+                break;
+        }
+        if (carried >= 0)
+            heroes.erase(heroes.begin() + carried);
+
+        for (int iPool = campaign->carryOverHeroes.size() - 1; iPool >= 0;
+             --iPool) {
+            for (int iHero = campaign->carryOverHeroes[iPool].size() - 1;
+                 iHero >= 0; --iHero) {
+                if (campaign->carryOverHeroes[iPool][iHero].id
+                    == placeholder->heroId) {
+                    hero* carriedHero =
+                        &campaign->carryOverHeroes[iPool][iHero];
+                    if (carriedHero)
+                        InitializeCrossoverHero(placeholder, carriedHero);
+                    goto nextPlaceholder;
+                }
+            }
+        }
+    nextPlaceholder:
+        ;
+    }
+
+    if (heroes.size() != 0) {
+        for (iPlaceholder = 0; iPlaceholder < placeholders.size();
+             ++iPlaceholder) {
+            placeholder = &placeholders[iPlaceholder];
+            if (placeholder->heroId == -1
+                && static_cast<signed char>(placeholder->owner) == player) {
+                InitializeCrossoverHero(placeholder, heroes.begin());
+                heroes.erase(heroes.begin());
+                if (heroes.size() == 0)
+                    break;
+            }
+        }
+    }
+
+    if (gpGame->mapHeader.lossCondition.Type == 1) {
+        type_point lossHero(gpGame->mapHeader.lossCondition.HeroX,
+                            gpGame->mapHeader.lossCondition.HeroY,
+                            gpGame->mapHeader.lossCondition.HeroZ);
+        NewmapCell* cell = gpGame->worldMap.cell(lossHero.x, lossHero.y,
+                                                 lossHero.z);
+        if (!cell->is_trigger || cell->type != HERO) {
+            for (iPlaceholder = 0; iPlaceholder < placeholders.size();
+                 ++iPlaceholder) {
+                placeholder = &placeholders[iPlaceholder];
+                CObject* object = placeholder->object;
+                int triggerX;
+                int triggerY;
+                object->FindTrigger(triggerX, triggerY);
+                if (triggerX == lossHero.x && triggerY == lossHero.y
+                    && object->z == lossHero.z) {
+                    PlaceStartingHero(placeholder);
+                    return;
+                }
+            }
+        }
+    }
+
+    if (gpGame->players[player].numHeroes == 0)
+        PlaceStartingHero(placeholder);
+}
+
+// Complete-only, and game::NewMap's third campaign callee. The crossover
+// slot's own artifact pool is copied out of the campaign and every artifact
+// still equipped or carried by a pool hero that has NOT been placed on this
+// map (its availability byte is still the tavern-pool sentinel) is added to
+// it; then every artifact the scenario's crossover plane enables is offered
+// to the option player's heroes in turn until one accepts it. The chosen
+// start option's own Apply runs last, on every path.
+//
+// Residual: retail keeps `crossover_artifacts.test`'s `_Xran` throw path
+// expanded here (the "invalid bitset<N> position" string is this row's own),
+// which is the same bitset boundary ScenarioStruct::Read carries.
+VA(0x00487900, 0x2CD)  // anchor-caller(game::NewMap +0x5cb), retail-only
+void TCampaignBrief::ScenarioStruct::GiveCrossoverArtifacts()
+{
+    SCampaign* campaign = &gpGame->campaign;
+    int choice = campaign->briefingChoice;
+    int player = options->GetPlayerPosition(choice);
+    int slot = options->_vslot5(this, choice);
+    if (slot >= 0) {
+        type_artifact artifact;
+        std::vector<type_artifact> artifacts = campaign->field_4c[slot];
+
+        for (unsigned int iHero = 0;
+             iHero < campaign->carryOverHeroes[slot].size(); ++iHero) {
+            hero& carried = campaign->carryOverHeroes[slot][iHero];
+            if (gpGame->heroAvailability[carried.id]
+                != hero::HERO_AVAILABILITY_TAVERN_POOL)
+                continue;
+            int iSlot;
+            for (iSlot = 0; iSlot < CROSSOVER_EQUIPPED_ARTIFACT_SLOTS;
+                 ++iSlot) {
+                type_artifact equipped = carried.equipped[iSlot];
+                if (equipped.artifactId != ARTIFACT_NONE)
+                    artifacts.push_back(equipped);
+            }
+            for (iSlot = 0; iSlot < HERO_BACKPACK_CAPACITY; ++iSlot) {
+                type_artifact carriedArtifact = carried.backpack[iSlot];
+                if (carriedArtifact.artifactId != ARTIFACT_NONE)
+                    artifacts.push_back(carriedArtifact);
+            }
+        }
+
+        for (unsigned int iArtifact = 0; iArtifact < artifacts.size();
+             ++iArtifact) {
+            artifact = artifacts[iArtifact];
+            if (artifact.artifactId == ARTIFACT_NONE)
+                continue;
+            if (!crossover_artifacts.test(artifact.artifactId))
+                continue;
+            for (int iPlayerHero = 0;
+                 iPlayerHero < gpGame->players[player].numHeroes;
+                 ++iPlayerHero) {
+                hero* target = gpGame->GetHero(
+                    gpGame->players[player].heroes[iPlayerHero]);
+                if (target->GiveArtifact(&artifact, 0, 0))
+                    break;
+            }
+        }
+    }
+
+    options->_vslot10(this);
+}
+
 // Complete-only. Seeks the campaign stream to this scenario's map data
 // and reads the map header out of a gzip-inflating view of it.
 VA(0x00487d30, 0x96)  // LoadScenario's sole callee, retail-only
@@ -1115,53 +1683,169 @@ void TCampaignBrief::ScenarioStruct::MarkCrossoverHeroes(unsigned char* wanted)
         wanted[hero_placeholders[iPlaceholder]] = 1;
 }
 
-#if 0  // @carcass - Complete's scenario-record reader, Load's per-record callee.
-// Reached only from CampaignHeaderStruct::Load's creation loop, which hands
-// it the region's scenario count and the campaign file version alongside the
-// inflating stream. Its first two operations are already read out of the
-// bytes: `name = ReadLengthPrefixedString(infile)` and a four-byte read into
-// inflated_size (+0x14).
+// Complete-only, reached only from CampaignHeaderStruct::Load's creation
+// loop, which hands it the region's scenario count and the campaign file
+// version alongside the inflating stream. Every read goes through the same
+// TAbstractFile vtable slot 1.
 //
-// DECODED 2026-09-05, and the whole blocker is the TAIL. The body's shape:
-//   * name = ReadLengthPrefixedString(infile)  (0x485d90, returns by value,
-//     assigned through basic_string::assign then _Tidy'd);
-//   * infile->Read(&inflated_size, 4) through the TAbstractFile vtable
-//     slot 1 ([edx+4] - every stream read below is that same slot);
-//   * a prerequisite BITMASK of (numScenarios + 7) / 8 bytes, read into one
-//     dword and unpacked with `1 << i` / setne into a vector<bool>-ish
-//     member at +0x18 (0x8bf00 is the push_back);
-//   * three bitset planes assigned through
-//     bitset<0x1b>/<0x1a>/<0x19>::reference::operator= (0x8ea60, 0x8e9f0,
-//     0x8ead0) off bitset<0x1b>::operator[] (0xcef80) - the 0x81-bounded
-//     walk at 0x1e88 is the last of them, copying five dwords out of a
-//     [ebp-0x4c] temp into [ebp-0x60] first;
-//   * then ONE byte read (0x1dde) whose `dec/je` chain is a three-case
-//     switch selecting the scenario's START OPTIONS record.
+// The prerequisite bitmap is (numScenarios + 7) / 8 bytes read into ONE
+// dword and unpacked a bit at a time into the byte vector at +0x18, and the
+// two crossover planes are Dinkumware bitsets built the same way that
+// game::LoadMap builds the map's own artifact plane. Campaign files older
+// than version 6 carry a 129-bit artifact plane, which is copied bit by bit
+// into the 144-bit member.
 //
-// The switch is the blocker, and it needs THREE Complete-only classes over
-// FOUR vtables - a 13-slot base at 0x63d958 (0x34 B) and one concrete
-// vtable each:
-//   case 1 -> operator new(0x18), base vtable, a std::string constructed at
-//             +8 (0x5157d0), then the concrete vtable 0x63d98c;
-//   case 2 -> operator new(0x14), base vtable, a std::string at +4, then the
-//             concrete vtable 0x63dad8;
-//   case 3 -> operator new(0x14) and the out-of-line constructor 0x4883d0,
-//             which stores a byte at +4, zeroes +8/+0xc/+0x10 and installs
-//             the concrete vtable 0x63db0c;
-//   default -> the member stays null.
-// The result lands in this->field_a4 (+0xa4) and the function ends by
-// calling ITS vtable slot 9 ([vtbl+0x24]) with the stream - the record's own
-// Read. So the remaining work is modelling those three classes and slot 9;
-// everything above the switch is ordinary reconstruction against members
-// this file already names.
+// The tail is the whole reason this row waited: a type byte selects one of
+// THREE starting-options records, all of them Complete-only classes that
+// customcampaign.h now models (0x63d98c, 0x63dad8, 0x63db0c behind the
+// abstract 0x63d958), and the function ends by handing the stream to
+// whichever one it built through its own slot 9.
+//
+// The `void*` hop on `options` is not a modelling claim: campaignbrief.h
+// carries a SECOND model of the same retail class (ScenarioStartOptions,
+// same thirteen slots, non-const declarators) which the campaign-brief
+// window's reconstructions already use, and the two must stay compatible
+// until one of them is retired. The cast is compile-time only.
+//
+// Residual: no statement pins are used here, so this CL expands the bitset
+// throw paths retail leaves out of line.
 VA(0x00487e40, 0x586)  // anchor-caller(CampaignHeaderStruct::Load +0x379), retail-only
 void TCampaignBrief::ScenarioStruct::Read(TAbstractFile* infile,
                                           int numScenarios,
                                           int campaignVersion)
 {
-    // @stub
+    name = ReadLengthPrefixedString(infile);
+
+    {
+        int size;
+        infile->Read(&size, sizeof(int));
+        inflated_size = size;
+    }
+
+    int prerequisiteBits = 0;
+    infile->Read(&prerequisiteBits, (numScenarios + 7) / 8);
+    for (int iPrereq = 0; iPrereq < numScenarios; ++iPrereq)
+        prerequisites.push_back((prerequisiteBits & (1 << iPrereq)) != 0);
+
+    {
+        unsigned char value;
+        infile->Read(&value, sizeof(unsigned char));
+        region_color = value;
+        infile->Read(&value, sizeof(unsigned char));
+        difficulty = value;
+    }
+
+    region_desc = ReadLengthPrefixedString(infile);
+
+    {
+        unsigned char present;
+        infile->Read(&present, sizeof(unsigned char));
+        if (present) {
+            prologue = new MapTextStruct;
+            unsigned char value;
+            infile->Read(&value, sizeof(unsigned char));
+            prologue->video = value;
+            infile->Read(&value, sizeof(unsigned char));
+            prologue->audio = value;
+            prologue->subtitles = ReadLengthPrefixedString(infile);
+        } else {
+            prologue = 0;
+        }
+    }
+
+    {
+        unsigned char present;
+        infile->Read(&present, sizeof(unsigned char));
+        if (present) {
+            epilogue = new MapTextStruct;
+            unsigned char value;
+            infile->Read(&value, sizeof(unsigned char));
+            epilogue->video = value;
+            infile->Read(&value, sizeof(unsigned char));
+            epilogue->audio = value;
+            epilogue->subtitles = ReadLengthPrefixedString(infile);
+        } else {
+            epilogue = 0;
+        }
+    }
+
+    {
+        unsigned char flags;
+        infile->Read(&flags, sizeof(unsigned char));
+        retain_xp = flags & 1;
+        retain_pskills = (flags >> 1) & 1;
+        retain_sskills = (flags >> 2) & 1;
+        retain_spellbook = (flags >> 3) & 1;
+        retain_artifacts = (flags >> 4) & 1;
+    }
+
+    {
+        std::bitset<145> serializedCreatures(0);
+        unsigned char creatureBits[19];
+        infile->Read(creatureBits, sizeof(creatureBits));
+        for (unsigned int iCreature = 0;
+             iCreature < CROSSOVER_CREATURE_BITS; ++iCreature) {
+            std::bitset<145>::reference serializedBit =
+                serializedCreatures[iCreature];
+            serializedBit = (creatureBits[iCreature >> 3]
+                             & (1 << (iCreature & 7))) != 0;
+        }
+        crossover_creatures = serializedCreatures;
+    }
+
+    if (campaignVersion >= CAMPAIGN_VERSION_WIDE_ARTIFACTS) {
+        std::bitset<144> serializedArtifacts(0);
+        unsigned char artifactBits[18];
+        infile->Read(artifactBits, sizeof(artifactBits));
+        for (unsigned int iArtifact = 0;
+             iArtifact < CROSSOVER_ARTIFACT_BITS; ++iArtifact) {
+            std::bitset<144>::reference serializedBit =
+                serializedArtifacts[iArtifact];
+            serializedBit = (artifactBits[iArtifact >> 3]
+                             & (1 << (iArtifact & 7))) != 0;
+        }
+        crossover_artifacts = serializedArtifacts;
+    } else {
+        std::bitset<129> serializedArtifacts(0);
+        unsigned char artifactBits[17];
+        infile->Read(artifactBits, sizeof(artifactBits));
+        for (unsigned int iArtifact = 0;
+             iArtifact < CROSSOVER_LEGACY_ARTIFACT_BITS; ++iArtifact) {
+            std::bitset<129>::reference serializedBit =
+                serializedArtifacts[iArtifact];
+            serializedBit = (artifactBits[iArtifact >> 3]
+                             & (1 << (iArtifact & 7))) != 0;
+        }
+        const std::bitset<129> legacyArtifacts = serializedArtifacts;
+        for (unsigned int iLegacy = 0;
+             iLegacy < CROSSOVER_LEGACY_ARTIFACT_BITS; ++iLegacy)
+            crossover_artifacts[iLegacy] = legacyArtifacts[iLegacy];
+    }
+
+    unsigned char optionType;
+    infile->Read(&optionType, sizeof(unsigned char));
+    void* record;
+    switch (optionType) {
+    case CAMPAIGN_START_OPTION_BONUS:
+        record = new TCampaignStartBonusOption;
+        options = static_cast<ScenarioStartOptions*>(record);
+        break;
+    case CAMPAIGN_START_OPTION_CROSSOVER:
+        record = new TCampaignStartCrossoverOption;
+        options = static_cast<ScenarioStartOptions*>(record);
+        break;
+    case CAMPAIGN_START_OPTION_HERO:
+        record = new TCampaignStartHeroOption;
+        options = static_cast<ScenarioStartOptions*>(record);
+        break;
+    default:
+        options = 0;
+        break;
+    }
+    if (options)
+        static_cast<TCampaignStartOption*>(static_cast<void*>(options))
+            ->Read(infile);
 }
-#endif  // @carcass
 
 #if 0  // Dreamcast-only carcass; retained as evidence, not emitted for retail.
 // E:\gamedcs\customcampaign.cpp:29
@@ -1211,6 +1895,23 @@ void SCampaign::DoPreLoadCustomization()
 // its starting hero from the scenario's options record, and starts the
 // map out of a gzip-inflating view of the campaign stream. game::NewMap
 // receives this scenario as its campaign context.
+// The starting-hero option's own constructor. It is the ONE of the three
+// options retail keeps out of line: its vector's default constructor is
+// expanded here (three zero stores plus the allocator byte), which makes the
+// inherited base vptr store dead and lets it fall away - the two sibling
+// options keep theirs because the vector constructor is a call at their
+// (inlined) construction sites.
+VA(0x004883d0, 0x21)  // anchor-caller(ScenarioStruct::Read's type-3 arm), retail-only
+TCampaignStartHeroOption::TCampaignStartHeroOption()
+{
+}
+
+VA_COMPGEN(0x00488400, 0x21, SCALAR_DELETING_DTOR, TCampaignStartCrossoverOption)
+VA_COMPGEN(0x00488430, 0x21, SCALAR_DELETING_DTOR, TCampaignStartHeroOption)
+
+VA_COMPGEN(0x00488460, 0x2C, IMPLICIT_DTOR, TCampaignStartCrossoverOption)
+VA_COMPGEN(0x00488490, 0x2C, IMPLICIT_DTOR, TCampaignStartHeroOption)
+
 VA(0x004884c0, 0x103)  // CampaignHeaderStruct::StartScenario sole caller
 void TCampaignBrief::ScenarioStruct::StartScenario(
     std::streambuf* stream, int option)
@@ -1271,6 +1972,7 @@ TCampaignBrief::CampaignHeaderStruct::~CampaignHeaderStruct()
 {
     for (unsigned int i = 0; i < scenarios.size(); ++i)
         delete scenarios[i];
+    scenarios.clear();
     FreeData();
 }
 
@@ -1711,6 +2413,30 @@ SCampaign::SCampaign()
     crossoverArrayIndex = -1;
     currentCampaign = CAMPAIGN_NONE;
     memset(campaignCompleted, 0, sizeof(campaignCompleted));
+}
+
+// Complete-only. The custom-campaign window's accept arm hands the chosen
+// ordinal and its .h3c name here: the running campaign is reset to the new
+// file's first map, its carry-over pools are emptied, and one blank score row
+// is pushed for every scenario the header file turns out to hold. The header
+// record is a LOCAL - retail expands its constructor, its Load-time scenario
+// teardown and its destructor into this body. Name provisional.
+VA(0x00489590, 0x233)  // anchor-caller(CampaignWindowHandler's deselect arm), retail-only
+void SCampaign::select_campaign(int campaignIndex, const char* filename)
+{
+    mapScores.clear();
+    currentCampaign = campaignIndex;
+    currentMap = 0;
+    crossoverArrayIndex = -1;
+    campaignFilename = filename;
+    carryOverHeroes.clear();
+
+    TCampaignBrief::CampaignHeaderStruct campaign(filename);
+    campaign.Load();
+    int count = campaign.scenarios.size();
+    CampaignScenarioInfo blank;
+    for (int iScenario = 0; iScenario < count; ++iScenario)
+        mapScores.push_back(blank);
 }
 
 // E:\gamedcs\CustomCampaign.h:212 (dc 0xe6ef8, attributed to kb.obj in the
@@ -2427,6 +3153,12 @@ void TArtifactRequirement::set(TArtifact _artifact, char _guard_bit)
 #endif
 
 // COMDAT pairing: std::_Sort<hero, CrossoverHeroStronger>, agreement 0.972.
+// The map hero placeholders' own sort, instantiated by
+// ScenarioStruct::PlaceCrossoverHeroes. Both bodies are byte-identical to
+// this compile's instruction stream.
+VA_COMPGEN(0x0048eec0, 0x3ED, STD_SORT_0, HeroPlaceholderData_HeroPlaceholderStronger)
+VA_COMPGEN(0x0048f630, 0x1AE, STD_SORT, HeroPlaceholderData_HeroPlaceholderStronger)
+
 VA_COMPGEN(0x0048f7e0, 0x159, STD_SORT, hero_crossoverherostronger)
 
 // COMDAT pairing: std::_Sort_0<hero, CrossoverHeroStronger>, agreement 0.985.
@@ -2439,6 +3171,7 @@ VA_COMPGEN(0x0048f2b0, 0x333, STD_SORT_0, hero_crossoverherostronger)
 // CrossoverHeroStronger compare inline at every step and finishes with one
 // `hero::operator=` - which is Dinkumware's _Unguarded_insert verbatim and
 // has nothing to do with dialogbox.obj.
+VA_COMPGEN(0x0048fa40, 0x1D7, STD_MEDIAN, hero_crossoverherostronger)
 VA_COMPGEN(0x0048f940, 0xF4, STD_UNGUARDED_INSERT, hero_crossoverherostronger)
 VA_COMPGEN(0x0048fc20, 0x195, STD_UNGUARDED_PARTITION, hero_crossoverherostronger)
 
@@ -2599,3 +3332,19 @@ VA_COMPGEN(0x0048e690, 0x1B1, STD_COPY_BACKWARD, type_artifact_vector)
 // unclaimed.
 VA_COMPGEN(0x0048eb60, 0x67, CLASS_CTOR, codecvt)
 VA_COMPGEN(0x0048ec10, 0x18, CODECVT_DO_LENGTH, char)
+
+// The two starting-options records' own vector helpers, all four proved by
+// the call sites in their Read bodies. The crossover choice is a two-byte
+// element and the hero choice an eight-byte one, which is why the hero
+// option's _Ucopy folds onto vector<type_artifact>'s (same width) and only
+// its _Ufill survives as its own address.
+VA_COMPGEN(0x0048dba0, 0x31, VECTOR_UCOPY, TCampaignCrossoverChoice)
+VA_COMPGEN(0x0048dbe0, 0x28, VECTOR_UFILL, TCampaignCrossoverChoice)
+VA_COMPGEN(0x0048dc50, 0x2C, VECTOR_UFILL, TCampaignHeroChoice)
+VA_COMPGEN(0x0048e9e0, 0xB, STD_CONSTRUCT, TCampaignCrossoverChoice)
+
+// ScenarioStruct::Read's prerequisite push_back. Retail keeps this insert's
+// own _Ucopy/_Ufill/_Construct out of line (0x48db40 / 0x48db70 / 0x48e9d0)
+// where this CL expands all three into it, so the pairing is identity, not a
+// score.
+VA_COMPGEN(0x0048bf00, 0x1AD, VECTOR_INSERT, unsigned_char)
