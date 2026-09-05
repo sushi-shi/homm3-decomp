@@ -573,6 +573,7 @@ artifact	__h3cg$artifact$static_dtor$artifactStrings	100.0000	100.0000	100.0000	
 basemgr	??0baseManager@@QAE@XZ	100.0000	100.0000	100.0000	0x4d530	687e8eebaf66
 binkmanager	?RestartBink@BinkManager@@SIXXZ	100.0000	100.0000	100.0000	0x4da50	20d03e6309f1
 bitmap16	??0Bitmap16Bit@@QAE@HH@Z	100.0000	100.0000	100.0000	0x4df70	a4eca84aac08
+bitmap16	??0Bitmap16Bit@@QAE@PBDHH@Z	100.0000	100.0000	100.0000	0x4e050	1007f10e515d
 bitmap16	??1Bitmap16Bit@@UAE@XZ	100.0000	100.0000	100.0000	0x4e100	7b1ed76e43e8
 bitmap16	??_GBitmap16Bit@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x4e020	-
 bitmap16	?Darken@Bitmap16Bit@@QAEXHHHH@Z	100.0000	100.0000	100.0000	0x4e5f0	e4fb764cccb1
@@ -679,6 +680,7 @@ campaignbrief	??0TCampaignBrief@@QAE@EE@Z	85.7655	85.7661	85.7661	0x590c0	37242c
 campaignbrief	??1CMapHeaderData@@QAE@XZ	100.0000	100.0000	100.0000	0x5aab0	-
 campaignbrief	??1NewSMapHeader@@QAE@XZ	100.0000	100.0000	100.0000	0x5ad00	-
 campaignbrief	??1TCampaignBrief@@UAE@XZ	100.0000	100.0000	100.0000	0x5afb0	d4c0d4a6ee48
+campaignbrief	??1TPlayerSlotAttributes@CMapHeaderData@@QAE@XZ	38.0299	38.0299	38.0299	0x5ab80	-
 campaignbrief	??4CMapHeaderData@@QAEAAV0@ABV0@@Z	57.2794	57.2794	57.2794	0x57cb0	-
 campaignbrief	??_GTCampaignBrief@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x5ae40	-
 campaignbrief	?AddBonusIcons@TCampaignBrief@@QAEXXZ	98.8391	98.8391	98.8391	0x58120	6d10bdbfa83c
@@ -695,7 +697,6 @@ campaignbrief	?UpdateBonusIcons@TCampaignBrief@@QAEXXZ	95.3700	95.3700	95.3700	0
 campaignbrief	?UpdateDifficultyButtons@TCampaignBrief@@QAEXXZ	100.0000	100.0000	100.0000	0x59010	a54768111cfd
 campaignbrief	?_Inc@const_iterator@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x5d370	-
 campaignbrief	?insert@?$vector@UCampaignScenarioPreview@@V?$allocator@UCampaignScenarioPreview@@@std@@@std@@QAEXPAUCampaignScenarioPreview@@IABU3@@Z	100.0000	100.0000	100.0000	0x5c960	-
-campaignbrief	__h3cg$campaignbrief$implicit_dtor$CMapHeaderData_TPlayerSlotAttributes	0.0000	0.0000	0.0000	0x5ab80	-
 campaignmap	?InitializeCampaignMapTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0x5dee0	4134d1efefe4
 campaignmap	__h3cg$campaignmap$static_dtor$campaignNames	100.0000	100.0000	100.0000	0x5e1f0	-
 campaignwindow	??0TCampaignWindow@@QAE@EH@Z	98.4726	98.4726	98.4726	0x5ea40	8637a9869f6d
@@ -972,6 +973,7 @@ customcampaign	?InitializeCrossoverHero@ScenarioStruct@TCampaignBrief@@QAEXPAUHe
 customcampaign	?Load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	55.7915	55.7915	55.7915	0x8a310	f2ec1fa4aeeb
 customcampaign	?LoadMapHeader@ScenarioStruct@TCampaignBrief@@QAEXPAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@PAVNewSMapHeader@@H@Z	100.0000	100.0000	100.0000	0x87d30	3ede48bd4a11
 customcampaign	?LoadScenario@CampaignHeaderStruct@TCampaignBrief@@QAE_NHPAVNewSMapHeader@@@Z	100.0000	100.0000	100.0000	0x88810	40cf52fbb7ea
+customcampaign	?Play@MapTextStruct@TCampaignBrief@@QAEXXZ	82.8249	82.8249	82.8249	0x88fb0	abf4b7a12602
 customcampaign	?PlayScenarioPrologue@SCampaign@@QAEXPAX@Z	100.0000	100.0000	100.0000	0x8a270	f20101db493f
 customcampaign	?Read@TStreamBufFile@@UAEHPAXH@Z	100.0000	100.0000	100.0000	0x83f10	d4a8f9e13d4a
 customcampaign	?StartMusic@CampaignHeaderStruct@TCampaignBrief@@QAEXXZ	100.0000	100.0000	100.0000	0x88ee0	4daeb5fd6b1f
@@ -993,7 +995,6 @@ customcampaign	?size@?$vector@UCampaignScenarioInfo@@V?$allocator@UCampaignScena
 customcampaign	?size@?$vector@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@V?$allocator@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@@2@@std@@QBEIXZ	100.0000	100.0000	100.0000	0xaf4e0	-
 customcampaign	?size@?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x8b470	-
 customcampaign	TCampaignBrief_CampaignHeaderStruct_Load	0.0000	0.0000	0.0000	0x88880	47fb4b8d9098
-customcampaign	TCampaignBrief_MapTextStruct_Play	0.0000	0.0000	0.0000	0x88fb0	a8a3538fcbb6
 customcampaign	__h3cg$customcampaign$vector_destroy$type_artifact	0.0000	100.0000	100.0000	0x4140	-
 customcampaignwindow	??0TCustomCampaignWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x827b0	893291fd4aaf
 customcampaignwindow	??1TCustomCampaignWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x82f10	4e3abaca1d97
@@ -1971,8 +1972,11 @@ inputmgr	?MouseMessageHandler@@YIHPAXIIJ@Z	100.0000	100.0000	100.0000	0xec290	7c
 inputmgr	?Open@inputManager@@UAEHH@Z	100.0000	100.0000	100.0000	0xec4d0	8332e8526402
 inputmgr	?PeekEvent@inputManager@@QAE?AVmessage@@XZ	100.0000	100.0000	100.0000	0xec640	3e82547dc77d
 kb	??0CNetMsg@@QAE@W4eRS_Messages@@K@Z	100.0000	100.0000	100.0000	0xf2930	c08c11f46c9e
+kb	??0type_dialog_icon@@QAE@ABU0@@Z	100.0000	100.0000	100.0000	0xf6810	-
+kb	??0type_dialog_icon@@QAE@XZ	100.0000	100.0000	100.0000	0xf6490	-
 kb	??1advManager@@QAE@XZ	100.0000	100.0000	100.0000	0xf39f0	-
 kb	??1combatManager@@QAE@XZ	71.8085	71.8085	71.8085	0xf3940	-
+kb	??1type_dialog_icon@@QAE@XZ	100.0000	100.0000	100.0000	0xf64c0	-
 kb	?CleanUpMenus@@YIXXZ	100.0000	100.0000	100.0000	0xf4b50	5ad85acac0be
 kb	?CreditsWait@@YIXXZ	95.2930	95.2930	95.2930	0xedda0	e424e5d34744
 kb	?DisplayVCWinLoss@@YI_NAAVVictoryConditionStruct@@AAH1_N@Z	94.9521	94.9521	94.9521	0xf15e0	0fa75f4e1fc3
@@ -2001,6 +2005,7 @@ kb	?ShowProgressBar@@YIXXZ	100.0000	100.0000	100.0000	0xed350	f5a9fccf0270
 kb	?ShutDown@@YIXPBD@Z	100.0000	100.0000	100.0000	0xf3690	7882bdc1e193
 kb	?UnloadProgressBar@@YIXXZ	100.0000	100.0000	100.0000	0xed450	515a13a44eda
 kb	?WaitHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0xf7620	5f15859cbc9f
+kb	?extended_dialog@@YIXPBDAAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@std@@JJJ@Z	92.7911	92.7911	92.7911	0xf7690	094ca28af910
 kb	?oldmain@@YIHXZ	29.6021	31.9630	31.9630	0xee3e0	ead764a54d4e
 kb	?set@type_dialog_icon@@QAEXW4EGameResource@@J@Z	99.1667	99.1667	99.1667	0xf4eb0	06cb359cd3d3
 kbwin	?AppAbout@@YGHPAUHWND__@@IIJ@Z	100.0000	100.0000	100.0000	0xf8140	b6d6a9ba7939
@@ -3335,6 +3340,7 @@ towngatewindow	??0TTownGateWindow@@QAE@_N@Z	100.0000	100.0000	100.0000	0x1c1ab0	
 towngatewindow	??1TTownGateWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1c2370	2cdf88c2600e
 towngatewindow	??_GTTownGateWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1c2340	-
 towngatewindow	?TownGateSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1c2980	b80f91f9dbde
+towngatewindow	?insert@?$vector@PAVwidget@@V?$allocator@PAVwidget@@@std@@@std@@QAEXPAPAVwidget@@IABQAV3@@Z	32.0621	32.0621	32.0621	0x1c2400	-
 townmgr	??0TBlacksmithWindow@@QAE@HH@Z	100.0000	100.0000	100.0000	0x1d1360	777db8ccc983
 townmgr	??0TBuyBuildWindow@@QAE@HHH@Z	100.0000	100.0000	100.0000	0x1d55c0	97dccb7f8a0f
 townmgr	??0TCastleWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x1d86f0	8d91980e7e44

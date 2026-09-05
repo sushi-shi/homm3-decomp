@@ -243,7 +243,7 @@ void CalculateNormalDialogSize(TNormalDialogInfo* dialog_info);
 int EventWindowHandler(message* msg);
 void extended_dialog(const char* text,
     std::vector<type_dialog_resource>& resources,
-    long x, long y, long timeout);                              // 0x4f6cf0
+    long x, long y, long timeout);                              // 0x4f7690
 // Dreamcast kb.cpp:5441 names this get_quickview_size. Retail independently
 // proves its Complete ABI and entry: the three callers pass text in ECX,
 // width in EDX and height on the stack to 0x4f62a0. The old 0x4f5f30 note
