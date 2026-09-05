@@ -27,6 +27,107 @@
 // and setImageName's are the same object, so both initialize through this.
 VA_COMPGEN(0x00514060, 0xCA, CLASS_CTOR, TObjectImageNameTable)
 
+// Retail 0x514610, TObjectType::setImageName - the .msk cache loader and
+// the registry's growth path. Two function-local statics with SEPARATE
+// guard bytes: the image-name registry at 0x69cb80 (guard 0x69cb64, which
+// GetImageName tests too) and this compiland's own .msk cache at 0x6aba80
+// (guard 0x6aba7d, atexit 0x514930) - a vector of 24-byte records whose
+// layout IS TObjectType::TImageInfo, as the tail's member-by-member copy
+// into imageInfo confirms.
+//
+// The row count is sampled BEFORE the lookup, and the `imageNumber ==
+// oldCount` test at 0x51472e is how retail asks "did the insert append a
+// new row?" - only then is the mask file read. The mask name is the image
+// name with everything from its last '.' replaced by ".msk" (and appended
+// when there is no '.'), and `rfind('.')` is what puts the character in
+// the dead parameter home at [ebp+0xb].
+//
+// The tail RE-READS the cache's _First between every member of the copy,
+// because `this` may alias the vector's storage - that is the plain
+// assignment, not a hoisting failure.
+// Residual (33.86%): three /Ob2 over-inlines and nothing else. Retail
+// CALLS the registry's own constructor, the pair constructor at 0x517c30
+// and basic_string::append at 0x41b340; we expand all three, and append's
+// expanded _Xlen throw path is exactly the 16 frame bytes (0x70 vs 0x60)
+// and the two extra EH states the transcript reports (base [0,-1,1,-1,
+// 2,-1,3] against retail's [0,-1,1,-1]). Caller mass is NOT the lever
+// here: an `if (0)` titration reads 33.47 / 34.47 / 34.47 / 34.47 /
+// 30.52 / 30.52 for N = 0,1,2,3,5,8 - flat then down, a 1.0-point ceiling.
+// The one remaining structural difference is the guard bytes: retail
+// tests 0x69cb64 and 0x6aba7d with mask 1 each, because the registry's
+// static lives in the inline accessor GetImageName shares (see its own
+// note); with both statics in this body VC6 packs them into one byte.
+VA(0x00514610, 0x317)  // anchor-callee 0x514b80 per-row `>>`; anchor-global 0x6aba80 .msk cache; retail-only
+TObjectType& TObjectType::setImageName(
+    const std::basic_string<char, std::char_traits<char>,
+                            std::allocator<char> >& name)
+{
+    static TObjectImageNameTable imageNames;
+
+    unsigned int oldCount = imageNames.rows.size();
+    TObjectImageNameTable::TNameIndex::iterator found =
+        imageNames.nameIndex.find(name);
+    if (found == imageNames.nameIndex.end()) {
+        found = imageNames.nameIndex.insert(
+            TObjectImageNameTable::TNameIndex::value_type(
+                name, imageNames.rows.size())).first;
+        imageNames.rows.push_back(found);
+    }
+    imageNumber = found->second;
+
+    static std::vector<TImageInfo> imageCache;
+
+    if (imageNumber == oldCount) {
+        TImageInfo newRecord;
+        newRecord.objectSize.x = 0;
+        newRecord.objectSize.y = 0;
+        imageCache.push_back(newRecord);
+        TImageInfo* record = &imageCache[oldCount];
+
+        std::basic_string<char, std::char_traits<char>,
+                          std::allocator<char> > maskName(name);
+        std::string::size_type dot = maskName.rfind('.');
+        if (dot != std::string::npos) {
+            maskName.replace(dot, maskName.size() - dot,
+                             DATA_COMPGEN(0x00640280, objectMaskExtension,
+                                          ".msk"));
+        } else {
+            maskName += DATA_COMPGEN(0x00640280, objectMaskExtension,
+                                     ".msk");
+        }
+
+        LODFile* maskFile =
+            ResourceManager::PointToSpriteResource(maskName.c_str());
+        if (maskFile == 0) {
+            maskFile = ResourceManager::PointToSpriteResource("default.msk");
+        }
+        if (maskFile != 0) {
+            char width;
+            char height;
+            unsigned char drawBits[6];
+            unsigned char shadowBits[6];
+
+            ResourceManager::ReadFromBitmapResource(maskFile, &width, 1);
+            ResourceManager::ReadFromBitmapResource(maskFile, &height, 1);
+            ResourceManager::ReadFromBitmapResource(maskFile, drawBits, 6);
+            ResourceManager::ReadFromBitmapResource(maskFile, shadowBits, 6);
+            record->objectSize.x = width;
+            record->objectSize.y = height;
+            for (unsigned int cell = 0; cell < 48; ++cell) {
+                unsigned char bit =
+                    static_cast<unsigned char>(1 << (cell & 7));
+                record->drawMask.set(
+                    cell, (drawBits[cell >> 3] & bit) != 0);
+                record->shadowMask.set(
+                    cell, (shadowBits[cell >> 3] & bit) != 0);
+            }
+        }
+    }
+
+    imageInfo = imageCache[imageNumber];
+    return *this;
+}
+
 // Retail 0x514960. Two function-local statics with independent guard bytes -
 // the empty string at 0x69cb48 (guard 0x69cb70) and the registry at
 // 0x69cb80 (guard 0x69cb64, atexit 0x514050) - then an UNSIGNED bound test
