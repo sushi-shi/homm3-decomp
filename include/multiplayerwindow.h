@@ -12,6 +12,9 @@
 #include "textntry.h"
 #include "netgame.h"
 #include "va.h"
+// CDPlaySession and CAutoArray<T> live with their owning compiland; this
+// header used to carry private copies of both behind a per-TU macro.
+#include "dxplay.h"
 
 struct _DPCOMPORTADDRESS;
 
@@ -176,154 +179,6 @@ public:
 SIZE(CMPInputDlg, 0x64);
 
 class CSprite;
-
-// CDPlaySession - the DirectPlay session record CAutoArray<CDPlaySession>
-// stores. dxplay.h carries the same class for the network TUs, but that header
-// redefines the CAutoArray template THIS header owns, so the two are never
-// co-included; only multiplayerwindow.cpp reads mpw.h, so the definition lives
-// here. TMultiPlayerWindow::Update reads dwFlags, maxPlayers, playerCount and
-// the sessionName string. Layout byte-for-byte matches dxplay.h.
-class CDPlaySession {
-public:
-    unsigned long dwFlags;      // +0x00
-    GUID guidInstance;          // +0x04
-    GUID guidApp;               // +0x14
-    unsigned long maxPlayers;   // +0x24
-    unsigned long playerCount;  // +0x28
-    char sessionName[128];      // +0x2c
-    char password[80];          // +0xac
-    unsigned long dwUser1;      // +0xfc
-    unsigned long dwUser2;      // +0x100
-    unsigned long dwUser3;      // +0x104
-    unsigned long dwUser4;      // +0x108
-
-    inline unsigned char IsJoinDisabled()
-    {
-        if (dwFlags & 0x20)
-            return 1;
-        if (dwFlags & 1)
-            return 1;
-        unsigned char disabled = playerCount == maxPlayers;
-        return disabled;
-    }
-
-    inline bool IsJoinDisabledInline()
-    {
-        return (dwFlags & 0x21) || playerCount == maxPlayers;
-    }
-
-    inline unsigned char IsPasswordProtected()
-    {
-        if (dwFlags & 0x400)
-            return 1;
-        return 0;
-    }
-};
-SIZE(CDPlaySession, 0x10c);
-
-// CAutoArray<T> - E:\gamedcs\array.h's hand-rolled auto-growing pointer
-// array. DC field list 0x2967 (no STLport shift; a plain class): vfptr@0,
-// step@4, pArray@8, allocSize@0xc, size@0x10; total 0x14. The 7-slot vtable
-// (0x6400d8 for <CDPlaySession>) is ~/sdd, Add, Get, Put, Delete, Insert,
-// GetCount. Destroy() (NH3API name) is the inlined "delete every element via
-// the virtual Get, free pArray, reset to empty" that ~TMPW and GoMainMenu
-// both expand; elements are freed with a bare operator delete because T is
-// incomplete here (matches retail's ??3 with no element dtor).
-template<class T>
-class CAutoArray {
-public:
-    unsigned long step;       // +0x4
-    T** pArray;               // +0x8
-    unsigned long allocSize;  // +0xc
-    unsigned long size;       // +0x10
-
-    CAutoArray()
-    {
-        step = 25;
-        size = 0;
-        allocSize = 0;
-        pArray = 0;
-    }
-
-    // The delete-every-element teardown the compiler-generated scalar
-    // deleting destructor inlines (retail 0x512670 for <CDPlaySession>).
-    // Delegating to Destroy() rather than writing the loop here is what keeps
-    // retail's virtual Get(i) dispatch: in a destructor VC6 devirtualizes+
-    // inlines a virtual call on `this`, but inside the inlined Destroy (a
-    // normal member) the exact type is not assumed, so Get stays a vtable
-    // dispatch - the same shape GoMainMenu's inlined Destroy already matches.
-    virtual ~CAutoArray()
-    {
-        Destroy();
-    }
-
-    virtual unsigned char Add(T* element)
-    {
-        if (size >= allocSize) {
-            allocSize += step;
-            T** newArray = new T*[allocSize];
-            for (unsigned long i = 0; i < size; i++)
-                newArray[i] = pArray[i];
-            if (pArray)
-                delete pArray;
-            pArray = newArray;
-        }
-        pArray[size] = element;
-        size++;
-        return 1;
-    }
-
-    virtual T* Get(unsigned long elementNbr)
-    {
-        if (elementNbr < size)
-            return pArray[elementNbr];
-        return 0;
-    }
-
-    virtual unsigned char Put(unsigned long elementNbr, T* element)
-    {
-        pArray[elementNbr] = element;
-        return 1;
-    }
-
-    virtual unsigned char Delete(unsigned long elementNbr)
-    {
-        if (elementNbr >= size)
-            return 0;
-        for (unsigned long i = elementNbr; i < size - 1; i++)
-            pArray[i] = pArray[i + 1];
-        size--;
-        return 1;
-    }
-
-    virtual unsigned char Insert(unsigned long nextElementNbr, T* element)
-    {
-        if (nextElementNbr >= size)
-            return 0;
-        T* lastElement = Get(size - 1);
-        for (unsigned long i = size - 1; i > nextElementNbr; i--)
-            pArray[i] = pArray[i - 1];
-        Put(nextElementNbr, element);
-        Add(lastElement);
-        return 1;
-    }
-
-    virtual unsigned long GetCount() { return size; }
-
-    void Destroy(unsigned char deleteData = 1)
-    {
-        for (unsigned long i = 0; i < size; i++) {
-            T* element = Get(i);
-            if (deleteData)
-                delete element;
-        }
-        if (pArray)
-            delete pArray;
-        pArray = 0;
-        allocSize = 0;
-        size = 0;
-    }
-};
 
 class CHeroSessions : public CAutoArray<CDPlaySession> {
 public:

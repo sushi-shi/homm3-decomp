@@ -19,9 +19,7 @@
 #include "kb.h"
 #include "kbwin.h"
 #include "soundmgr.h"
-#define HOMM3_MULTIPLAYERWINDOW_OWNS_DXPLAY_TYPES
 #include "remote.h"
-#undef HOMM3_MULTIPLAYERWINDOW_OWNS_DXPLAY_TYPES
 #include "dplaycaps.h"
 
 #include <direct.h>

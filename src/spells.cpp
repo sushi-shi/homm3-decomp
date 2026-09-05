@@ -21,9 +21,6 @@
 // mark_area_effect's berserk arm calls mark_berserk_area_effect, whose
 // bare declarator costs command.obj's GetCommand 92.5714 -> 92.5357 when
 // it is unconditional (measured 2026-08-20).
-// The axial get_distance overload hides cmbtmgr.cpp's file-scope
-// get_distance(long,long); only this TU wants it. Compile-required.
-#define HOMM3_CMBTMGR_HEX_DISTANCE_DECL
 #include "cmbtmgr.h"
 #include "combatwindow.h"      // TCombatWindow::combat_message
 #include "csprite.h"           // CSprite::Dispose, LoadSpellEffect's release
@@ -79,7 +76,9 @@ inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
 }
 
 // The third of cmbtmgr.h's axial-coordinate helpers; the other two are
-// class-body inlines there and this one lives here for _cpp_max.
+// class-body inlines there and this one lives here for _cpp_max. A CONST
+// member, not the static the DC record implies: mark_berserk_area_effect,
+// which expands it, is EXACT this way and 99.2085 static.
 inline long combatManager::get_distance(hex_point start, hex_point stop) const
 {
     long dx = start.x - stop.x;

@@ -105,7 +105,7 @@ inline bool army::find_flyer_attack_cell(int start, int target) const
         long adjacent = gpCombatManager->adjacentCells[target][dir];
         long hex = adjacent - start + gridIndex;
         if (adjacent >= 0 && hex >= 0 && hex < COMBAT_GRID_CELLS
-                && get_distance(start, adjacent) <= GetSpeed()
+                && combatManager::get_distance(start, adjacent) <= GetSpeed()
                 && CanFit(hex, 0, 0))
             return 1;
     }
@@ -130,7 +130,7 @@ unsigned char army::ValidFlight(int destIndex, unsigned char bLiteralTest) const
         return 0;
 
     if (bLiteralTest || side == -1 || slot == -1) {
-        if (get_distance(gridIndex, destIndex) > GetSpeed()
+        if (combatManager::get_distance(gridIndex, destIndex) > GetSpeed()
                 && !gpCombatManager->bCreaturePlacement)
             return 0;
         if (!CanFit(destIndex, 0, 0))
