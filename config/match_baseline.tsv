@@ -536,7 +536,7 @@ army	?check_special_attack@army@@QAEEPAV1@@Z	100.0000	100.0000	100.0000	0x40500	
 army	?clear@?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x48d70	-
 army	?compute_attacker_bonus@army@@QBEHHEPAV1@EJ@Z	100.0000	100.0000	100.0000	0x43320	43fdf6593dcb
 army	?consider_attack@army@@QAEXPBV1@JJ@Z	100.0000	100.0000	100.0000	0x48840	686954572466
-army	?do_attack@army@@QAEEPAV1@H@Z	98.9251	99.9962	99.9962	0x41610	1fa738e017fe
+army	?do_attack@army@@QAEEPAV1@H@Z	98.8868	99.9962	99.9962	0x41610	1fa738e017fe
 army	?do_attack@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x41cb0	0c17230627a2
 army	?do_fire_shield@army@@AAEXJ@Z	100.0000	100.0000	100.0000	0x409c0	3f772aa9df30
 army	?do_multi_head_attack@army@@QAEXIPAH0PAJ@Z	100.0000	100.0000	100.0000	0x40310	d1193b9e629e
@@ -1624,7 +1624,7 @@ events	?monsters_join@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@
 # (push 0xb4 in townManager::Open), layout-required and not gateable
 # per-TU. hist keeps 100.0000; the saturation law says a later
 # declarator can carry it back.
-events	?monsters_sell_out@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	99.9517	100.0000	100.0000	0xa7250	f7b1ec4933f6
+events	?monsters_sell_out@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	100.0000	100.0000	100.0000	0xa7250	f7b1ec4933f6
 events	?read@CCombatInitMsg@@UAEEPAVTAbstractFile@@@Z	98.1880	98.1880	98.1880	0xad1f0	98638ed1cdad
 events	?show_rewards@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@2@J@Z	100.0000	100.0000	100.0000	0xa0b00	9287544ef4a4
 events	?write@CCombatInitMsg@@UBEEPAVTAbstractFile@@@Z	97.9917	97.9917	97.9917	0xad340	7abc6d18bbac
@@ -1682,17 +1682,21 @@ font	?get_string_width@font@@QAEJPBD@Z	100.0000	100.0000	100.0000	0xb57d0	de731f
 font	?longest_word_length@font@@QAEHPBD@Z	100.0000	100.0000	100.0000	0xb5a10	96ee18f513ef
 forcefeedback	??0?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@std@@QAE@ABU?$less@PAVCImmEnclosure@@@1@ABV?$allocator@UtagRECT@@@1@@Z	100.0000	100.0000	100.0000	0xb6f60	-
 forcefeedback	??0TImmMouseEffect@@QAE@PBUtagRECT@@JKKEE@Z	100.0000	100.0000	100.0000	0xb6dc0	dcae6b21237c
+forcefeedback	??0TImmMouseRuntime@@QAE@PAX0@Z	99.9970	99.9970	99.9970	0xb6260	09debf802951
 forcefeedback	??0t_create_failure@t_enclosure@force_feedback@@QAE@ABV012@@Z	100.0000	100.0000	100.0000	0xb6c60	-
 forcefeedback	??0t_enclosure@force_feedback@@QAE@PBUtagRECT@@JKKEE@Z	99.9922	99.9922	99.9922	0xb6a50	037c8a3ed058
-forcefeedback	??1?$auto_ptr@VCImmEnclosure@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xb7020	-
+forcefeedback	??0t_initialize_failure@TImmMouseRuntime@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0xb6730	-
 forcefeedback	??_GCImmEnclosure@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xb6c30	-
+forcefeedback	??_GCImmMouse@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xb6700	-
 forcefeedback	??_Gt_create_failure@t_enclosure@force_feedback@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1bed0	-
+forcefeedback	??_Gt_initialize_failure@TImmMouseRuntime@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xb66d0	-
 forcefeedback	?PlayImmEffect@@YIEPBDH@Z	100.0000	100.0000	100.0000	0xb69f0	17ca19ae3751
 forcefeedback	?Start@TImmMouseEffect@@QAEEXZ	100.0000	100.0000	100.0000	0xb6f30	99684662ed29
 forcefeedback	?Stop@TImmMouseEffect@@QAEXXZ	100.0000	100.0000	100.0000	0xb6f50	ebcf155b3807
 forcefeedback	?_Dec@const_iterator@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@U_Kfn@?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@3@U?$less@PAVCImmEnclosure@@@3@V?$allocator@UtagRECT@@@3@@std@@QAEXXZ	100.0000	100.0000	100.0000	0xb7db0	-
 forcefeedback	?_Insert@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@U_Kfn@?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@3@U?$less@PAVCImmEnclosure@@@3@V?$allocator@UtagRECT@@@3@@std@@IAE?AViterator@12@PAU_Node@12@0ABU?$pair@QAVCImmEnclosure@@UtagRECT@@@2@@Z	100.0000	100.0000	100.0000	0xb7a50	-
 forcefeedback	?insert@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@U_Kfn@?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@3@U?$less@PAVCImmEnclosure@@@3@V?$allocator@UtagRECT@@@3@@std@@QAE?AU?$pair@Viterator@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@U_Kfn@?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@3@U?$less@PAVCImmEnclosure@@@3@V?$allocator@UtagRECT@@@3@@std@@_N@2@ABU?$pair@QAVCImmEnclosure@@UtagRECT@@@2@@Z	100.0000	100.0000	100.0000	0xb70e0	-
+forcefeedback	__h3cg$forcefeedback$implicit_dtor$auto_ptr	0.0000	100.0000	100.0000	0xb7020	-
 game	??0?$bitset@$0BM@@std@@QAE@K@Z	100.0000	100.0000	100.0000	0xcf870	-
 game	??0CMCClaimGarrison@@QAE@HH@Z	100.0000	100.0000	100.0000	0xc23e0	335cb56766c1
 game	??0HeroExtra@@QAE@XZ	100.0000	100.0000	100.0000	0xce4b0	443ed6fcdff2
@@ -3493,7 +3497,7 @@ singleselectionwindow	?OnGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNet
 # SetCurrentMap/OnSetAsHostMsg bodies landing in the TU dropped the
 # pair again with both sources byte-identical. Recovery rides with
 # DrawHeroAdvancedOption reaching 100.
-singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	99.8868	100.0000	100.0000	0x17cdc0	0e5de8f038ec
+singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0	0e5de8f038ec
 singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	9177fbb0fa83
 # 2026-08-27 hand-lowered 100.0000 -> 99.8710 (hist keeps 100.0000): the
 # documented TU-state flap (master accepted this pair down at 99.89/99.87

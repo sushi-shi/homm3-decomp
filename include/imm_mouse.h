@@ -9,6 +9,8 @@
 
 #include <map>
 #include <memory>
+#include <stdexcept>
+#include <string>
 #include <windows.h>
 #include <va.h>
 
@@ -29,6 +31,34 @@ inline force_feedback::t_enclosure::~t_enclosure()
 // `auto_ptr<t_enclosure>(new t_enclosure(...))` verbatim. RETAIL-ONLY -
 // the Dreamcast build carries no Immersion layer, so the holder's own
 // name is role-derived and provisional.
+// The Immersion layer's one-shot initializer, held by InitImmMouse as a
+// function-local static (0x696d78, guard 0x696d58). RETAIL RTTI NAMES THE
+// CLASS: the throw record at 0x64cc18 publishes
+// `.?AVt_initialize_failure@t_initializer@?%C:\Dev\Heroes 3 Exp 2\Game\
+// ForceFeedback.cpp210603558@@`, so retail's own spelling is `t_initializer`
+// in ForceFeedback.cpp's UNNAMED namespace with the failure type nested
+// inside it. We cannot spell an unnamed-namespace class here because
+// InitImmMouse's claim lives in game.cpp, so the role name stays and the
+// nested failure type keeps retail's nesting.
+class TImmMouseRuntime {
+public:
+    // `.?AVt_initialize_failure@t_initializer@...@@` (0x6778c0), a 28-byte
+    // runtime_error with no members of its own - the same shape as
+    // t_enclosure::t_create_failure, and thrown the same way, with a
+    // DEFAULT-constructed string handed to the base.
+    class t_initialize_failure : public std::runtime_error {
+    public:
+        t_initialize_failure() : std::runtime_error(std::string()) {}
+    };
+
+    // Retail 0x4b6260, 1122 bytes: the window origin, the iFeel error
+    // policy, the mouse device, the effect project read from H3Shad.ifr
+    // (with a LOD fallback in its catch), and the three globals it
+    // publishes.
+    TImmMouseRuntime(void* hInst, void* hwnd);
+    ~TImmMouseRuntime();
+};
+
 class TImmMouseEffect {
 public:
     TImmMouseEffect(const RECT* rect, long a, unsigned long b,
