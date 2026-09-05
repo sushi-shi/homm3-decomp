@@ -244,6 +244,14 @@ struct TObjectType {
         std::bitset<48> shadowMask;
     };
 
+    // The default constructor load()'s `objectTypes.resize(count)` builds
+    // its `_Ty()` temporary from, published one store at a time at
+    // 0x514e2a-0x514ea1: every member in declaration order, an ALL-SET
+    // passable mask spelled as a flipped `bitset<48>(0)`, and the {8,6}
+    // no-trigger sentinel. imageInfo's TPoint stays uninitialized there,
+    // which is why it has no initializer here either.
+    TObjectType();
+
     int imageNumber;
     std::bitset<48> passableMask;
     std::bitset<48> triggerMask;
@@ -267,8 +275,40 @@ struct TObjectType {
     // NAME follows the role; nothing attests it.
     const std::basic_string<char, std::char_traits<char>,
                             std::allocator<char> >& GetImageName();
+
+    // Retail 0x514610 and 0x514a60, both in the same Complete-only
+    // compiland and both returning *this - the per-row `>>` at 0x514b80
+    // chains them off each other's result. setImageName resolves the
+    // record's name through the image-name registry into `imageNumber`
+    // (and, on a miss, loads the row's .msk to append one); setTriggerMask
+    // stores `mask & ~passableMask`, sets `hasTrigger` from its any(), and
+    // scans the 8x6 grid for the first set cell. NAMES ARE PROVISIONAL.
+    TObjectType& setImageName(
+        const std::basic_string<char, std::char_traits<char>,
+                                std::allocator<char> >& name);
+    TObjectType& setTriggerMask(const std::bitset<48>& mask);
 };
 SIZE(TObjectType, 0x4c);
+
+// The "no trigger cell" sentinel, {8, 6} - the object mask grid's own
+// dimensions - in .rdata at 0x640278. Both of its consumers, the default
+// constructor above and TObjectType::setTriggerMask's else arm, issue both
+// loads before either store. No compiland in the tree defines it yet.
+extern const TObjectType::TPoint gNoTriggerCell;
+
+// Defined here, and INLINE, because retail expands the whole sequence at
+// load()'s resize temporary rather than calling a constructor.
+inline TObjectType::TObjectType()
+    : imageNumber(0),
+      passableMask(~std::bitset<48>(0)),
+      objectType(NOTHING),
+      subtype(0),
+      slotCategory(0),
+      isUnderlay(0),
+      hasTrigger(0),
+      triggerCell(gNoTriggerCell)
+{
+}
 
 class TObjectTypeTable {
 public:
