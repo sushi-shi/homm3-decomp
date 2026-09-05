@@ -521,7 +521,7 @@ unsigned char CTeamAlignmentDlg::CreateWin()
         for (int player = 0; player < 8; ++player) {
             if (teamMasks[team] & (1 << player)) {
                 iconWidget* flag = new iconWidget(
-                    xStart, y + 20, 15, 20, -1, "ITGFLAGS.DEF",
+                    xStart, y + 20, 15, 20, -1, "itgflags.def",
                     0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
                 flag->send_message(widget::WIDGET_SET_ICON_FRAME, player);
                 Add(flag);
