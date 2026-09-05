@@ -772,6 +772,29 @@ int IsCDDrive(int drive)
 
 #endif  // @carcass
 
+// THE 0x10c1c6..0x10c5a0 GAP IS NOT A FUNCTION - DO NOT ADD A CARVE ROW FOR
+// IT (audited 2026-09-05). Its 986 bytes really are the CD-drive scanner the
+// pair above belongs to: it strcpy's "DATA\\H3BITMAP.LOD" into gText and
+// _open()s it, walks GetLogicalDrives()/GetDriveTypeA() from 'A', builds the
+// "open %c: type cdaudio alias CD" / "info CD identity wait" / "info CD UPC
+// wait" / "close CD" mciSendStringA sequence, and writes the drive letter at
+// 0x6839b8. Three facts refuse it a boundary row anyway:
+//   - there is NO `push ebp; mov ebp, esp` (nor `89 e5`, nor `enter`) between
+//     0x10bf00 and 0x10c600, while the body reads ebp-relative locals down to
+//     [ebp-0x23c] and every one of its four exits runs `mov esp, ebp; pop
+//     ebp`. The prologue is simply absent from the image; the three bytes at
+//     0x10c1c6 (`02 00 00`) are not one, and are not VC6 padding either;
+//   - NOTHING reaches it. A full-image sweep of every e8/e9/eb/7x/0f8x
+//     relative transfer and every absolute dword found exactly one reference
+//     into 0x10c1c0..0x10c5a0, and it lands on SetupCDDrive's `mov eax, 7`
+//     at 0x10c1c0 from 0xeda66. Not one targets 0x10c1c6 or later;
+//   - the body is unique - `bf 0c ff 67 00 83 c9 ff` and `ff 15 d4 a0 63 00`
+//     each occur once in the whole file - so it is not an ICF twin whose live
+//     copy carries the head.
+// It ends cleanly at 0x10c598 with `pop edi; pop esi; xor eax, eax; pop ebx;
+// mov esp, ebp; pop ebp; ret` and seven nops. Treat it as an orphaned body,
+// not as an admission candidate.
+
 // E:\gamedcs\misc.cpp:764
 // /Gr free function with the filename in ecx: fopen, fseek(0, SEEK_END),
 // ftell - FileSize and nothing else. Only free row in its bracket.
