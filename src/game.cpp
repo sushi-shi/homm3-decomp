@@ -18707,8 +18707,22 @@ VA_COMPGEN(0x00487bd0, 0x160, CLASS_CTOR, out_of_range)
 // campaignbrief, so retail carries two un-folded copies of one COMDAT and only
 // the first can hold the label; a second claim is refused as a duplicate
 // proven name, which is the delinker working correctly.
+// COMDAT pairing: the enclosure map's nested-iterator surface, the last
+// three out-of-line rows of this tree. Each is byte-identical to the COMDAT
+// this object emits and each is corroborated from the call graph rather
+// than from length alone, which decides nothing at 25/23/14 bytes:
+//   0x4b73e0  iterator::operator==   `mov eax,[ecx] / cmp eax,[edx] / sete`
+//             - the _Node* compare, and the only `??8` this tree emits;
+//   0x4b79b0  lower_bound            - the out-of-line wrapper, whose ONLY
+//             callee is _Lbound at 0x4b7d50 (claimed above, and 0x4b7d50's
+//             only caller in turn), storing the node into the hidden return;
+//   0x4b7da0  const_iterator(_Node*) - the one-argument iterator ctor,
+//             `ret 4` storing its argument at +0.
+VA_COMPGEN(0x004b73e0, 0x19, TREE_ITERATOR_EQUAL, CImmEnclosure)
+VA_COMPGEN(0x004b79b0, 0x17, TREE_LOWER_BOUND, CImmEnclosure)
 VA_COMPGEN(0x004b79d0, 0x7E, TREE_ERASE, CImmEnclosure)
 VA_COMPGEN(0x004b7d50, 0x49, TREE_LBOUND, CImmEnclosure)
+VA_COMPGEN(0x004b7da0, 0xE, TREE_CONST_ITERATOR_CTOR, CImmEnclosure)
 VA_COMPGEN(0x004b7e70, 0x49, TREE_UBOUND, CImmEnclosure)
 
 // COMDAT pairing: the campaign carry-over pools' remaining element rows in
