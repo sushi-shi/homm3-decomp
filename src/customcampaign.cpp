@@ -961,6 +961,16 @@ const char* TCampaignStartCrossoverOption::GetIconDefName(void* campaignRecord,
 // own scenario but the last completed scenario sharing its crossover slot;
 // the map name itself is only available after re-opening the campaign file
 // and inflating that scenario's header.
+// Residual (85.98%): 19/19 blocks with 18 exact and the branch census
+// clean 11/11; the whole gap is ONE /Ob2 decision, and the call stream
+// names it outright. Retail CALLS `ScenarioStruct::LoadMapHeader`
+// (0x487d30) where our CL expands it - the pubseekoff through vtable slot
+// 8, the TGzInflateBuf constructor, `NewSMapHeader::Read` and the
+// inflate-buffer destructor all arrive inline as four base-only calls.
+// The source already WRITES the call, so this is not a missing statement;
+// it is the over-inline family, and both documented levers are closed
+// here (this lane adds no statement pins, and the Dreamcast roster names
+// no helper to split out of a Complete-only body).
 VA(0x00485530, 0x260)  // anchor-callee(CampaignHeaderStruct::Load 0x488880), retail-only
 std::string TCampaignStartCrossoverOption::GetText(void* campaignRecord,
                                                    int which) const
@@ -1720,8 +1730,21 @@ void TCampaignBrief::ScenarioStruct::MarkCrossoverHeroes(unsigned char* wanted)
 // window's reconstructions already use, and the two must stay compatible
 // until one of them is retired. The cast is compile-time only.
 //
-// Residual: no statement pins are used here, so this CL expands the bitset
-// throw paths retail leaves out of line.
+// Residual (39.42%): no statement pins are used here, so this CL expands
+// the bitset throw paths retail leaves out of line. 2026-09-06 the call
+// stream names the boundary EXACTLY: retail CALLS
+// `bitset<N>::operator[](size_t)` and `bitset<N>::reference::operator=(bool)`
+// as retained COMDATs at all three widths (145/144/129) and we expand both,
+// dragging the whole `basic_string(ptr,alloc) + out_of_range(string) +
+// _CxxThrowException` throw path inline at every store - which is the 76
+// against 45 blocks and the 11 base-only calls. Lane 26's suggested probe
+// is now MEASURED AND REJECTED: routing the three serialization loops and
+// the legacy copy through the Dinkumware wrappers retail calls -
+// `set(i, v)` for the stores and `test(i)` for the legacy read instead of
+// the `reference` idiom - costs 39.4200 -> 28.4500, because `set` is one
+// level SHALLOWER and lets VC6 expand more, not less. The `[]`/`reference`
+// spelling below is the closest reachable form; the residual is the
+// over-inline family and needs the statement pin this lane may not add.
 VA(0x00487e40, 0x586)  // anchor-caller(CampaignHeaderStruct::Load +0x379), retail-only
 void TCampaignBrief::ScenarioStruct::Read(TAbstractFile* infile,
                                           int numScenarios,
