@@ -1442,7 +1442,12 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     Widgets.push_back(new button(
         342, 92, 32, 28, 195, "scbutt5.def", 0, 1, 0, 0, 2));
 
-    int sliderHeight = m_flag65 ? 428 : 480;
+    // Retail loads 480 unconditionally and overwrites it under m_flag65
+    // (`mov esi,0x1e0 / test al,al / je / mov esi,0x1ac`); the ternary
+    // spelling folds the pair branchlessly and loses the je.
+    int sliderHeight = 480;
+    if (m_flag65)
+        sliderHeight = 428;
     fileSlider = new slider(
         375, 92, 16, sliderHeight, 337, 10, SliderFileMenu,
         slider::BLUE, gUnnamed69fdc8, 0);
@@ -1473,16 +1478,18 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
                 0, 8));
 
             sprintf(temp_str, "adopb2%c.def", flagColors[i]);
+            widget* handicapButton;
             if (IsMultiPlayer()) {
-                Widgets.push_back(new textButton(
+                handicapButton = new textButton(
                     110, rowY + 18, 50, 24, 207 + i,
                     temp_str, gUnnamed6a7800[0], "tiny.fnt",
-                    0, 1, 0, 0, 2, font::WHITE));
+                    0, 1, 0, 0, 2, font::WHITE);
             } else {
-                Widgets.push_back(new button(
+                handicapButton = new button(
                     110, rowY + 18, 50, 24, 207 + i,
-                    temp_str, 0, 1, 0, 0, 2));
+                    temp_str, 0, 1, 0, 0, 2);
             }
+            Widgets.push_back(handicapButton);
 
             Widgets.push_back(new button(
                 164, rowY, 11, 24, 215 + i,
