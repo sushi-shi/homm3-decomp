@@ -9674,6 +9674,29 @@ VA_COMPGEN(0x0058f480, 0x2C3, STD_CONSTRUCT, GameSelectionHeadersStruct)
 // declares it away.
 VA_COMPGEN(0x005904f0, 0x31B, IMPLICIT_COPY_CTOR, GameSelectionHeadersStruct)
 
+// The element copy ctor's own sub-object chain, placed by a POSITIONAL zip of
+// our COMDAT's reloc stream against retail's call stream - the two agree
+// 11-for-11 inside ??0GameSelectionHeadersStruct, 9-for-9 inside _Construct
+// and 14-for-14 inside _Median<...,TSortMapsByPlayers>, which is what fixes
+// each row:
+//
+//   0x58fa60  ??0NewSMapHeader(const&)        0x58fc10  ??0SCampaign(const&)
+//   0x58fe40  _Ucopy<CampaignScenarioInfo>    0x58fe80  ??0vector<int>(const&)
+//   0x58fef0  ??0vector<hero>(const&)         0x58ff80  ??0_Tree(const&)
+//   0x58ffc0  _Tree::_Init                    0x590810  ??0CMapHeaderData(const&)
+//   0x593f50  ??0SavedGameHeader(const&)      0x5941b0  ??0vector<vector<hero>>
+//   0x594220  ??0vector<vector<type_artifact>>  0x594290  ??0vector<CampaignScenarioInfo>
+//
+// Only three of those can be claimed through the existing channels. The four
+// vector copy ctors and the _Tree pair all key to the same `vector_vector` /
+// `_tree__tree` group, and NewSMapHeader's and CMapHeaderData's groups hold
+// their default ctors too - whose retail copies the linker took from
+// campaignbrief - so a single claim cannot zip them. They are identified
+// above and left for a lane that adds the key.
+VA_COMPGEN(0x0058fc10, 0x222, IMPLICIT_COPY_CTOR, SCampaign)
+VA_COMPGEN(0x0058fe40, 0x3B, VECTOR_UCOPY, CampaignScenarioInfo)
+VA_COMPGEN(0x00593f50, 0x259, IMPLICIT_COPY_CTOR, SavedGameHeader)
+
 // ---------------------------------------------------------------------------
 // SortMaps' six std::sort instantiations (0x590070..0x595e10).
 //
