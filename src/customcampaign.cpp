@@ -1582,6 +1582,69 @@ void TCampaignBrief::ScenarioStruct::PlaceCrossoverHeroes()
         PlaceStartingHero(placeholder);
 }
 
+// Complete-only, and game::NewMap's third campaign callee. The crossover
+// slot's own artifact pool is copied out of the campaign and every artifact
+// still equipped or carried by a pool hero that has NOT been placed on this
+// map (its availability byte is still the tavern-pool sentinel) is added to
+// it; then every artifact the scenario's crossover plane enables is offered
+// to the option player's heroes in turn until one accepts it. The chosen
+// start option's own Apply runs last, on every path.
+//
+// Residual: retail keeps `crossover_artifacts.test`'s `_Xran` throw path
+// expanded here (the "invalid bitset<N> position" string is this row's own),
+// which is the same bitset boundary ScenarioStruct::Read carries.
+VA(0x00487900, 0x2CD)  // anchor-caller(game::NewMap +0x5cb), retail-only
+void TCampaignBrief::ScenarioStruct::GiveCrossoverArtifacts()
+{
+    SCampaign* campaign = &gpGame->campaign;
+    int choice = campaign->briefingChoice;
+    int player = options->GetPlayerPosition(choice);
+    int slot = options->_vslot5(this, choice);
+    if (slot >= 0) {
+        type_artifact artifact;
+        std::vector<type_artifact> artifacts = campaign->field_4c[slot];
+
+        for (unsigned int iHero = 0;
+             iHero < campaign->carryOverHeroes[slot].size(); ++iHero) {
+            hero& carried = campaign->carryOverHeroes[slot][iHero];
+            if (gpGame->heroAvailability[carried.id]
+                != hero::HERO_AVAILABILITY_TAVERN_POOL)
+                continue;
+            int iSlot;
+            for (iSlot = 0; iSlot < CROSSOVER_EQUIPPED_ARTIFACT_SLOTS;
+                 ++iSlot) {
+                type_artifact equipped = carried.equipped[iSlot];
+                if (equipped.artifactId != ARTIFACT_NONE)
+                    artifacts.push_back(equipped);
+            }
+            for (iSlot = 0; iSlot < HERO_BACKPACK_CAPACITY; ++iSlot) {
+                type_artifact carriedArtifact = carried.backpack[iSlot];
+                if (carriedArtifact.artifactId != ARTIFACT_NONE)
+                    artifacts.push_back(carriedArtifact);
+            }
+        }
+
+        for (unsigned int iArtifact = 0; iArtifact < artifacts.size();
+             ++iArtifact) {
+            artifact = artifacts[iArtifact];
+            if (artifact.artifactId == ARTIFACT_NONE)
+                continue;
+            if (!crossover_artifacts.test(artifact.artifactId))
+                continue;
+            for (int iPlayerHero = 0;
+                 iPlayerHero < gpGame->players[player].numHeroes;
+                 ++iPlayerHero) {
+                hero* target = gpGame->GetHero(
+                    gpGame->players[player].heroes[iPlayerHero]);
+                if (target->GiveArtifact(&artifact, 0, 0))
+                    break;
+            }
+        }
+    }
+
+    options->_vslot10(this);
+}
+
 // Complete-only. Seeks the campaign stream to this scenario's map data
 // and reads the map header out of a gzip-inflating view of it.
 VA(0x00487d30, 0x96)  // LoadScenario's sole callee, retail-only
