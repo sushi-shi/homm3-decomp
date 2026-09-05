@@ -696,6 +696,7 @@ campaignbrief	?UpdateAllyEnemyFlags@TCampaignBrief@@QAEXXZ	86.8125	86.8125	86.81
 campaignbrief	?UpdateBonusIcons@TCampaignBrief@@QAEXXZ	95.3700	95.3700	95.3700	0x58d40	288e1c1bcbaf
 campaignbrief	?UpdateDifficultyButtons@TCampaignBrief@@QAEXXZ	100.0000	100.0000	100.0000	0x59010	a54768111cfd
 campaignbrief	?_Inc@const_iterator@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x5d370	-
+campaignbrief	?get_campaign_name@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x5bc10	80bcbea63411
 campaignbrief	?insert@?$vector@UCampaignScenarioPreview@@V?$allocator@UCampaignScenarioPreview@@@std@@@std@@QAEXPAUCampaignScenarioPreview@@IABU3@@Z	100.0000	100.0000	100.0000	0x5c960	-
 campaignmap	?InitializeCampaignMapTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0x5dee0	4134d1efefe4
 campaignmap	__h3cg$campaignmap$static_dtor$campaignNames	100.0000	100.0000	100.0000	0x5e1f0	-
@@ -2012,7 +2013,7 @@ kb	?NormalDialogTimeOut@@YIXPBDHHHHHHHHHHH@Z	100.0000	100.0000	100.0000	0xf6530	
 kb	?PickLoadGame@@YIHXZ	100.0000	100.0000	100.0000	0xf0610	4b51a872ab91
 kb	?PlayerDead@@YIXH@Z	100.0000	100.0000	100.0000	0xf11a0	8940f058d666
 kb	?PollSound@@YIXXZ	100.0000	100.0000	100.0000	0xed490	25e47bb545a2
-kb	?ShowCongrats@@YIXH@Z	87.6938	87.6938	87.6938	0xf3f60	0713ff6e2374
+kb	?ShowCongrats@@YIXH@Z	87.6938	87.6938	87.6938	0xf3f60	0a1eae63b3db
 kb	?ShowLuckInfo@game@@QAEXPAVhero@@H@Z	100.0000	100.0000	100.0000	0xf3540	19d81223c1ea
 kb	?ShowMoraleInfo@game@@QAEXPAVhero@@H@Z	100.0000	100.0000	100.0000	0xf32a0	effb636d6a78
 kb	?ShowProgressBar@@YIXXZ	100.0000	100.0000	100.0000	0xed350	f5a9fccf0270
