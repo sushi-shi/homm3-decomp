@@ -157,6 +157,10 @@ public:
     CNetMsg* GetRemoteData(unsigned char removeFromQueue,
                            unsigned char* wasCompressed);
     bool PollRemote();
+    // Retail 0x552db0, DC remote.cpp:304. PollRemote's per-message filter:
+    // it answers whether the message was fully handled at this level and so
+    // must NOT reach the queue.
+    unsigned char HandleLowLevelMsg(CNetMsg* pNetMsg);
     bool TransmitRemoteData(CNetMsg* pMsg, int toWho,
                             bool compressMsg, bool guaranteed);
     bool TransmitRemoteDataDPID(CNetMsg* pMsg, unsigned long dpidTo,

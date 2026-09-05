@@ -143,6 +143,13 @@ enum EDPlaySendError {
     DPLAY_SEND_ERROR_INVALID_PLAYER = 0x88770096
 };
 
+// The receive path's own SDK immediate, the one HRESULT its drain loop
+// treats as success: MAKE_DPHRESULT(190). remote.obj's PollRemote compares
+// m_hRes against it before deciding the session is broken.
+enum EDPlayReceiveError {
+    DPLAY_RECEIVE_ERROR_NO_MESSAGES = 0x887700be
+};
+
 // Dreamcast CodeView proves this complete virtual order. Retail's
 // CDPlay/CDPlayLobby/CDPlayHeroes vtables preserve it: in particular,
 // IsHost is slot 36 (+0x90), exactly the indirect call emitted by the main
