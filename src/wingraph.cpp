@@ -206,6 +206,112 @@ void SetPlayerPaletteColors(TPalette24* pal, int whichPlayer)
            32 * 3);
 }
 
+// The screen blit: unlock the back buffer, put the damaged rectangle up on
+// the primary, and lock the back buffer again with both Bitmap16Bit views
+// re-referenced to wherever it landed. When the damaged rectangle overlaps
+// the saved mouse rectangle the pointer has to be composited into the back
+// buffer first and lifted out again afterwards, which is the whole middle of
+// the body; the empty spin on the mouse manager's busy word is retail's, and
+// VC6 hoists its load out so the wait is one self-jump.
+// E:\gamedcs\wingraph.cpp:260
+VA(0x005ffe70, 0x35C)  // anchor-caller(AppPaint, winmgr's five UpdateScreen/fade sites) + wingraph statics, dc 0x198d5c
+void RobAppBlit(tagRECT* comb_rect)
+{
+    if (IsIconic(hwndApp))
+        return;
+    if (!gpDirectDraw)
+        return;
+    if (comb_rect->right <= comb_rect->left)
+        return;
+    if (comb_rect->bottom <= comb_rect->top)
+        return;
+
+    HRESULT result = gpDDSBack->Unlock(0);
+    if (result != DD_OK)
+        DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                     "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0xdf);
+
+    POINT origin;
+    origin.x = 0;
+    origin.y = 0;
+    RECT screenRect = *comb_rect;
+    ClientToScreen(hwndApp, &origin);
+    OffsetRect(&screenRect, origin.x, origin.y);
+
+    if (gpMouseManager->savedRect.right > comb_rect->left
+        && comb_rect->right > gpMouseManager->savedRect.left
+        && gpMouseManager->savedRect.bottom > comb_rect->top
+        && comb_rect->bottom > gpMouseManager->savedRect.top) {
+        RECT pointerRect;
+        RECT sourceRect;
+        if (gpMouseManager) {
+            while (gpMouseManager->field_74)
+                ;
+            IntersectRect(&pointerRect, comb_rect,
+                          &gpMouseManager->savedRect);
+            sourceRect = pointerRect;
+            OffsetRect(&sourceRect, -gpMouseManager->savedRect.left,
+                       -gpMouseManager->savedRect.top);
+            DDBlit(gpDDSMouseSaveSurface, &sourceRect, static_cast<IDirectDrawSurface4*>(static_cast<void*>(gpDDSBack)),
+                   &pointerRect, DDBLT_WAIT);
+            if (gpMouseManager->field_68 == 0 && gpMouseManager->field_54
+                && gpMouseManager->field_50 >= 0) {
+                DDSURFACEDESC surfaceDesc;
+                memset(&surfaceDesc, 0, sizeof(surfaceDesc));
+                surfaceDesc.dwSize = sizeof(surfaceDesc);
+                result = gpDDSBack->Lock(0, &surfaceDesc, DDLOCK_WAIT, 0);
+                if (result != DD_OK)
+                    DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                     "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x119);
+                gpMouseManager->field_54->Draw(0, gpMouseManager->field_50,
+                    pointerRect.left - gpMouseManager->field_58,
+                    pointerRect.top - gpMouseManager->field_5c,
+                    pointerRect.right - pointerRect.left,
+                    pointerRect.bottom - pointerRect.top,
+                    static_cast<unsigned short*>(surfaceDesc.lpSurface),
+                    pointerRect.left, pointerRect.top,
+                    surfaceDesc.dwWidth, surfaceDesc.dwHeight,
+                    surfaceDesc.lPitch, 0, 1);
+                result = gpDDSBack->Unlock(0);
+                if (result != DD_OK)
+                    DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                     "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x124);
+            }
+        }
+
+        DDBlit(static_cast<IDirectDrawSurface4*>(static_cast<void*>(gpDDSPrimary)), &screenRect, static_cast<IDirectDrawSurface4*>(static_cast<void*>(gpDDSBack)), comb_rect, DDBLT_WAIT);
+
+        if (gpMouseManager && gpMouseManager->field_68 == 0
+            && gpMouseManager->field_54 && gpMouseManager->field_50 >= 0) {
+            DDBlit(static_cast<IDirectDrawSurface4*>(static_cast<void*>(gpDDSBack)), &pointerRect, gpDDSMouseSaveSurface,
+                   &sourceRect, DDBLT_WAIT);
+        }
+    } else {
+        DDBlit(static_cast<IDirectDrawSurface4*>(static_cast<void*>(gpDDSPrimary)), &screenRect, static_cast<IDirectDrawSurface4*>(static_cast<void*>(gpDDSBack)), comb_rect, DDBLT_WAIT);
+    }
+
+    DDSURFACEDESC surfaceDesc;
+    memset(&surfaceDesc, 0, sizeof(surfaceDesc));
+    surfaceDesc.dwSize = sizeof(surfaceDesc);
+    result = gpDDSBack->Lock(0, &surfaceDesc, DDLOCK_WAIT, 0);
+    if (result != DD_OK)
+        DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                     "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x13e);
+
+    if (gpWindowManager->screenBitmap) {
+        gpWindowManager->screenBitmap->reference(
+            surfaceDesc.dwWidth, surfaceDesc.dwHeight, surfaceDesc.lPitch,
+            static_cast<unsigned short*>(surfaceDesc.lpSurface));
+    }
+    gDDSurfaceBitmap.reference(
+        surfaceDesc.dwWidth, surfaceDesc.dwHeight, surfaceDesc.lPitch,
+        static_cast<unsigned short*>(surfaceDesc.lpSurface));
+
+    if (result != DD_OK)
+        DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                     "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x14a);
+}
+
 // Every surface-to-surface copy in the game goes through here, and the
 // whole body is three copies of one retry loop: blit, and while DirectDraw
 // answers DDERR_SURFACELOST, restore whatever was lost and blit again. The
