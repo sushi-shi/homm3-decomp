@@ -9701,6 +9701,12 @@ VA_COMPGEN(0x00593f50, 0x259, IMPLICIT_COPY_CTOR, SavedGameHeader)
 // (slot 5 of that zip); its group holds this row alone.
 VA_COMPGEN(0x0058ff80, 0x31, IMPLICIT_COPY_CTOR, _Tree)
 
+// playerData::operator=, slot 9 of a 9-for-9 zip against BackupGameHeaders -
+// the row it calls per player after the header and campaign assignments.
+// (Slot 8 differs only by ICF: our vector<int>::operator= folded onto
+// retail's vector<TArtifact>::operator=.)
+VA_COMPGEN(0x0058f750, 0x30A, IMPLICIT_COPY_ASSIGN, playerData)
+
 // std::copy_backward<GameSelectionHeadersStruct*>: the element-only row the
 // three _Sort_0 instantiations whose _Insertion_sort_1 did not inline it
 // (BY_SIZE twice, BY_VICTORY and BY_LOSS once each) reach. It walks

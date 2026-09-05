@@ -3214,6 +3214,7 @@ singleselectionwindow	??1GameSelectionHeadersStruct@@QAE@XZ	100.0000	100.0000	10
 singleselectionwindow	??1TSingleSelectionWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x183b40	94d2ac6b3cc8
 singleselectionwindow	??4GameSelectionHeadersStruct@@QAEAAU0@ABU0@@Z	85.0352	85.0352	85.0352	0x178440	f3c750268564
 singleselectionwindow	??4SavedGameHeader@@QAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0x1792c0	-
+singleselectionwindow	??4playerData@@QAEAAV0@ABV0@@Z	53.0315	53.0315	53.0315	0x18f750	-
 singleselectionwindow	??RTSortMapsByLoss@@QBE_NABUGameSelectionHeadersStruct@@0@Z	100.0000	100.0000	100.0000	0x192030	0cb2189b86c2
 singleselectionwindow	??RTSortMapsByName@@QBE_NABUGameSelectionHeadersStruct@@0@Z	83.8899	83.8899	83.8899	0x1903b0	4769f9bc6c64
 singleselectionwindow	??RTSortMapsByPlayers@@QBE_NABUGameSelectionHeadersStruct@@0@Z	100.0000	100.0000	100.0000	0x190e00	397f977a831f
