@@ -276,7 +276,7 @@ ai_player	??_Gtype_combat_artifact@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x33080
 ai_player	?AI_AttemptMove@@YIXPAVhero@@AAUHeroDestination@@AAJE@Z	84.8316	84.8316	84.8316	0x2fee0	ba5ffaaf9878
 ai_player	?AI_arrange_army@@YIXPAVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x2d8e0	6476d3737a0d
 ai_player	?AI_build_ship@@YIXPBVhero@@JJJ@Z	100.0000	100.0000	100.0000	0x30f80	357d4741dae5
-ai_player	?AI_choose_destination@@YIHPAVhero@@JAAUHeroDestination@@AAJEE@Z	77.0775	77.0775	77.0775	0x2e0b0	e2b2d372757c
+ai_player	?AI_choose_destination@@YIHPAVhero@@JAAUHeroDestination@@AAJEE@Z	81.8865	81.8865	81.8865	0x2e0b0	e2b2d372757c
 ai_player	?AI_consolidate_army@@YIXPAVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x2d870	5423f5fef321
 ai_player	?AI_equip_artifacts@@YIXPAVhero@@@Z	100.0000	100.0000	100.0000	0x33b40	dcb3719bb73f
 ai_player	?AI_get_artifact_player_value@@YIJABUtype_artifact@@J@Z	100.0000	100.0000	100.0000	0x33aa0	5752a68b522e
@@ -1090,7 +1090,7 @@ cursor	?DrawCursor@advManager@@QAEXHH@Z	80.3240	80.3240	80.3240	0x7f860	334fcfad
 cursor	?DrawCursorAlpha@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x7fc80	f88e01d23684
 cursor	?DrawCursorShadow@advManager@@QAEXHH@Z	72.5446	72.5446	72.5446	0x7fb40	39948baa081a
 cursor	?GetMoveShowIt@advManager@@QAEHPAVhero@@H@Z	100.0000	100.0000	100.0000	0x80000	bc03c3596322
-cursor	?MoveHero@advManager@@QAEPAVNewmapCell@@HEPAUtype_point@@PAHE1E@Z	89.5139	89.5139	89.5139	0x805e0	d5e4c46dc99f
+cursor	?MoveHero@advManager@@QAEPAVNewmapCell@@HEPAUtype_point@@PAHE1E@Z	89.5139	89.5139	89.5139	0x805e0	be5ec31a3375
 cursor	?OnHideHero@advManager@@QAEXPAVCMapChange@@@Z	100.0000	100.0000	100.0000	0x81fd0	04ab79a0f668
 cursor	?OnMoveHero@advManager@@QAEXPAVCMapChange@@@Z	100.0000	100.0000	100.0000	0x81ed0	831cc6211424
 cursor	?ProcessMapChangeNew@advManager@@QAEXPAVCMapChange@@@Z	100.0000	100.0000	100.0000	0x82010	1916421b762d
@@ -3651,7 +3651,7 @@ spells	?AbleToSummonElemental@combatManager@@QAEEHJ@Z	100.0000	100.0000	100.0000
 spells	?AddBolt@combatManager@@QAEXPAUSBolt@@HHHHHHHHHHHH@Z	100.0000	100.0000	100.0000	0x1a5a90	298ffa58efa4
 spells	?AreaEffect@combatManager@@QAEXJHJJ@Z	99.8565	99.8565	99.8565	0x1a4970	89c796832376
 spells	?Armageddon@combatManager@@QAEXHH@Z	93.9013	93.9013	93.9013	0x1a4bc0	4c4fd8883f34
-spells	?CastSpell@combatManager@@QAEXHHHHHJ@Z	91.4693	91.4693	91.4693	0x19fe30	beba1d3674a2
+spells	?CastSpell@combatManager@@QAEXHHHHHJ@Z	92.7793	92.7816	92.7816	0x19fe30	3bd1ae90f203
 spells	?ChainLightning@combatManager@@QAEXHHH@Z	96.1913	96.1913	96.1913	0x1a6360	ebf901f1d173
 spells	?ClearEffects@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1a66b0	59ebec44e08d
 spells	?ComputeSpellDamage@combatManager@@QAEJHJJPAVhero@@0PBVarmy@@E@Z	100.0000	100.0000	100.0000	0x1a7890	210d41023a64

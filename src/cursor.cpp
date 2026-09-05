@@ -446,6 +446,14 @@ NewmapCell* advManager::MoveHero(int direction, unsigned char standEnd, type_poi
 
     curMoveCost = GetTerrainCost(curr, curr->get_location(), direction,
                                  curr->movePoints);
+    // MEASURED AND REJECTED 2026-09-05 (89.5139 -> 86.4535):
+    // naming `curr->skillLevel[0]` in an `int` local above this if/else.
+    // Retail DOES read it once - `movsx edx,[esi+0xc9]` at 0x4805cf, right
+    // after GetTerrainCost and before the flags test, homed at [ebp-0x10]
+    // and reloaded in both arms - where we re-read the member inside each
+    // arm; but the named local costs three points here, so the single read
+    // is a scheduling consequence of something else in this frame, not the
+    // local it looks like.
     if (curr->flags & 0x40000) {
         nextMoveMinCost = MinimumTerrainCost(
             destCell, curr->movePoints - curMoveCost, curr->skillLevel[0],
