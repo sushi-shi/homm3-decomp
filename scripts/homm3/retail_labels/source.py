@@ -336,6 +336,13 @@ CHAR_STREAM_MEMBERS = (
     # generic tail's `std_logic_error_what` cannot be spelled by a
     # VA_COMPGEN claim.
     ("?what@logic_error@std@@", None, "logic_error_what"),
+    # `allocator<char>::deallocate` and `basic_string<char>::_Nullstr`.
+    # Both are single-instantiation in this image, so they key `char` with
+    # the rest; without a kind neither is spellable, because the generic
+    # tail reduces them to `std_allocator_deallocate` and
+    # `std_basic_string__nullstr`, which no macro argument can produce.
+    ("?deallocate@?$allocator@D", None, "allocator_deallocate"),
+    ("?_Nullstr@?$basic_string@D", None, "basic_string_nullstr"),
 )
 
 
@@ -375,6 +382,7 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "DEQUE_ITERATOR_INC", "DEQUE_ITERATOR_DEC",
                  "DEQUE_PUSH_BACK", "DEQUE_GROWMAP",
                  "DEQUE_CONST_ITERATOR_CTOR",
+                 "DEQUE_CONST_ITERATOR_CTOR_NODE",
                  "TREE_CONST_ITERATOR_CTOR",
                  "TREE_ITERATOR_EQUAL", "TREE_LOWER_BOUND",
                  "STREAMBUF_XSPUTN",
@@ -1095,8 +1103,15 @@ def _demangle_key(mangled: str):
         r"^\?\?0const_iterator@\?\$deque@P[AB](?:V|U)([A-Za-z_]\w*)@",
         mangled)
     if deque_const_iterator:
-        return (f"{deque_const_iterator.group(1).lower()}_ptr"
-                "@deque_const_iterator_ctor")
+        # Two overloads share this spelling and one object emits both, so
+        # the ARITY separates them the way it separates basic_string's
+        # append/assign pairs: the nullary form ends `QAE@XZ`, the
+        # `(cur, node)` form carries its two pointer arguments. Left as one
+        # group they would have to be told apart by length alone.
+        member = ("deque_const_iterator_ctor"
+                  if mangled.endswith("@XZ")
+                  else "deque_const_iterator_ctor_node")
+        return f"{deque_const_iterator.group(1).lower()}_ptr@{member}"
     deque_primitive = re.match(
         r"^\?(_Free(?:front|back))@\?\$deque@([CDEFGHIJK])V\?\$allocator@",
         mangled)
@@ -2026,6 +2041,7 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                                "tree_init", "tree_copy_assign",
                                "tree_const_iterator_ctor",
                                "tree_iterator_equal", "tree_lower_bound",
+                               "deque_const_iterator_ctor_node",
                                "deque_const_iterator_ctor",
                                "deque_erase")
              if f"${kind}$" in row["name"]), None)
@@ -2754,6 +2770,38 @@ def selftest() -> list[str]:
         if _demangle_key(bad) == "cnetmsg_ptr@deque_const_iterator_ctor":
             failures.append("the deque const_iterator arm stopped rejecting "
                             f"{bad!r}")
+    # ...and the NODE overload of the same constructor must key apart from
+    # the nullary one: remote.obj emits both and a single group would have
+    # to be split by length alone.
+    node_ctor = _demangle_key(
+        "??0const_iterator@?$deque@PAVCNetMsg@@"
+        "V?$allocator@PAVCNetMsg@@@std@@@std@@QAE@PAPAVCNetMsg@@"
+        "PAPAPAV3@@Z")
+    if node_ctor != "cnetmsg_ptr@deque_const_iterator_ctor_node":
+        failures.append("MSVC deque const_iterator(cur, node) key regressed")
+    if node_ctor == deque_iterator_ctor:
+        failures.append("the deque const_iterator overloads share one key")
+    # The two single-instantiation library members that ride
+    # CHAR_STREAM_MEMBERS beside `logic_error::what`. Their negative
+    # controls are the OTHER instantiations of the same templates, which
+    # this image does not carry and a widened prefix would swallow.
+    if _demangle_key("?deallocate@?$allocator@D@std@@QAEXPAXI@Z") \
+            != "char@allocator_deallocate":
+        failures.append("MSVC allocator<char>::deallocate key regressed")
+    if _demangle_key(
+            "?_Nullstr@?$basic_string@DU?$char_traits@D@std@@"
+            "V?$allocator@D@2@@std@@CAPBDXZ") \
+            != "char@basic_string_nullstr":
+        failures.append("MSVC basic_string<char>::_Nullstr key regressed")
+    for bad, arm in (("?deallocate@?$allocator@H@std@@QAEXPAXI@Z",
+                      "char@allocator_deallocate"),
+                     ("?allocate@?$allocator@D@std@@QAEPAXII@Z",
+                      "char@allocator_deallocate"),
+                     ("?_Nullstr@?$basic_string@GU?$char_traits@G@std@@"
+                      "V?$allocator@G@2@@std@@CAPBGXZ",
+                      "char@basic_string_nullstr")):
+        if _demangle_key(bad) == arm:
+            failures.append(f"the {arm} arm stopped rejecting {bad!r}")
     # `logic_error::what` rides CHAR_STREAM_MEMBERS; its sibling
     # `runtime_error` and the ctor of the same class must not follow it.
     if _demangle_key("?what@logic_error@std@@UBEPBDXZ")             != "char@logic_error_what":
