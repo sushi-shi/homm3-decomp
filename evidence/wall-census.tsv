@@ -4,7 +4,6 @@
 # recoverable = size * (1 - max_fuzzy/100).
 class	recoverable	max_fuzzy	current_fuzzy	size	unit	fn	route	knob
 unclaimed (no source binding)	1887	0.0000	0.0000	1887	rmg_terrain	SelectTerrainTransition	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
-unclaimed (no source binding)	1414	0.0000	0.0000	1414	customcampaign	TCampaignBrief_ScenarioStruct_Read	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 unclaimed (no source binding)	767	0.0000	0.0000	767	rmg_terrain	TRmgTerrainPainter_BuildNeighbourKinds	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 unclaimed (no source binding)	625	0.0000	0.0000	625	rmg_terrain	TRmgTerrainPainter_GetTransitionStrength	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 unclaimed (no source binding)	588	0.0000	0.0000	588	rmg_terrain	TRmgTerrainPainter_CheckFirstDiagonal	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
@@ -14,22 +13,25 @@ inliner (predict-inline)	968	12.3264	12.3264	1104	customcampaign	?PruneCrossover
 inliner (predict-inline)	772	26.5235	18.7059	1050	newgame	?InitNewGame@game@@QAEXHHPAVNewSMapHeader@@PAVTAbstractFile@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 29 under-inline, 2 over-inline
 inliner (predict-inline)	251	28.8710	28.8710	353	objecttype	??5@YIAAV?$basic_istream@DU?$char_traits@D@std@@@std@@AAV01@AAV?$bitset@$0DA@@1@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 under-inline (4 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	245	30.4839	30.4839	353	objecttype	??5@YIAAV?$basic_istream@DU?$char_traits@D@std@@@std@@AAV01@AAV?$bitset@$08@1@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 under-inline (4 name-unresolvable pair(s) discounted)
+inliner (predict-inline)	280	34.7407	34.7407	429	customcampaign	?insert@?$vector@EV?$allocator@E@std@@@std@@QAEXPAEIABE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 6 over-inline (1 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	1520	38.2780	38.2780	2463	rmg	?CreateRiver@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 10 under-inline, 7 over-inline (10 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	285	39.1636	39.1636	468	mapcell	??0CObjectType@@QAE@PAUTObjectType@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline, 8 over-inline
+inliner (predict-inline)	857	39.4200	39.4200	1414	customcampaign	?Read@ScenarioStruct@TCampaignBrief@@QAEXPAVTAbstractFile@@HH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 3 under-inline, 6 over-inline (12 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	462	39.5514	38.2056	765	singleselectionwindow	?_Median@std@@YI?AUGameSelectionHeadersStruct@@U2@00UTSortMapsByVersion@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 13 under-inline, 9 over-inline
 register-homing (why-reg)	28	41.8750	41.8750	48	remote	??1CNetMsgHandler@@UAE@XZ	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
-inliner (predict-inline)	166	41.9271	41.9271	286	seerhut	?LoadFromMap@type_quest@@UAEXPAVTAbstractFile@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (3 name-unresolvable pair(s) discounted)
+inliner (predict-inline)	166	41.9271	41.9271	286	seerhut	?LoadFromMap@type_quest@@UAEXPAVTAbstractFile@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline
 inliner (predict-inline)	454	42.1275	42.1275	784	viewwrld	?VWDrawUnderlay@advManager@@QAEXHHHHH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 5 under-inline, 1 over-inline
 inliner (predict-inline)	549	46.3642	44.4753	1024	seerhut	?DoSeerEvent@TSeerHut@@QAEXPAVhero@@_N@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline, 11 over-inline
 inliner (predict-inline)	413	47.7708	47.7708	791	objecttype	?setImageName@TObjectType@@QAEAAU1@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 under-inline, 4 over-inline (3 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	462	48.6988	48.6988	901	smackmgr	?ShowVideo@@YIXHHHHHHHH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 3 under-inline, 10 over-inline
+inliner (predict-inline)	415	49.1225	49.1225	815	customcampaign	?RehomeCampaignHeroSetup@game@@QAEXH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 4 over-inline
 inliner (predict-inline)	176	49.1803	49.1803	347	objecttype	??5?$basic_istream@DU?$char_traits@D@std@@@std@@QAEAAV01@AAH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 3 under-inline (3 name-unresolvable pair(s) discounted)
-inliner (predict-inline)	754	49.5351	49.5351	1494	customcampaign	?Load@CampaignHeaderStruct@TCampaignBrief@@QAE_NXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 30 under-inline, 11 over-inline (13 name-unresolvable pair(s) discounted)
-inliner (predict-inline)	168	49.7043	49.7043	335	seerhut	?Load@type_quest@@UAEXPAVTAbstractFile@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (3 name-unresolvable pair(s) discounted)
+inliner (predict-inline)	754	49.5351	49.5351	1494	customcampaign	?Load@CampaignHeaderStruct@TCampaignBrief@@QAE_NXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 31 under-inline, 12 over-inline (9 name-unresolvable pair(s) discounted)
+inliner (predict-inline)	168	49.7043	49.7043	335	seerhut	?Load@type_quest@@UAEXPAVTAbstractFile@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline
 inliner (predict-inline)	324	50.5525	50.5525	655	remote	?HandleLowLevelMsg@CDPlayHeroes@@QAEEPAVCNetMsg@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 9 under-inline, 3 over-inline (2 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	365	53.0315	53.0315	778	singleselectionwindow	??4playerData@@QAEAAV0@ABV0@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 over-inline (1 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	468	55.6351	55.2155	1055	viewwrld	?VWDrawGround@advManager@@QAEXHHHHH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 7 under-inline
-inliner (predict-inline)	1166	59.0405	59.0405	2846	customcampaign	?Load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 7 under-inline, 15 over-inline (5 name-unresolvable pair(s) discounted)
+inliner (predict-inline)	1166	59.0405	59.0405	2846	customcampaign	?Load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 7 under-inline, 15 over-inline (4 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	215	60.0897	60.0897	539	singleselectionwindow	?_Unguarded_partition@std@@YIPAUGameSelectionHeadersStruct@@PAU2@0U2@UTSortMapsByVersion@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 14 under-inline, 7 over-inline
 inliner (predict-inline)	281	63.0729	63.0729	761	singleselectionwindow	?SetNewPlayerSlot@TSingleSelectionWindow@@QAEXPAVCNetPlayerInfo@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline, 3 over-inline (3 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	327	64.3119	64.3119	915	philai	??0type_spellvalue@@QAE@PBVhero@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline
@@ -37,17 +39,20 @@ inliner (predict-inline)	252	64.4241	64.4241	709	singleselectionwindow	?_Unguard
 unclassified	21	65.9200	65.9200	63	campaignbrief	??0TPlayerSlotAttributes@CMapHeaderData@@QAE@XZ	why-reg	run why-reg / why-branch for the full search
 inliner (predict-inline)	634	67.8599	67.8599	1972	rmg	?BuildRoadCostMap@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 5 under-inline, 7 over-inline
 inliner (predict-inline)	250	67.9099	67.9099	780	singleselectionwindow	?UpdateGameVars@TSingleSelectionWindow@@QAEXXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 4 under-inline, 5 over-inline
+inliner (predict-inline)	525	67.9283	67.9283	1636	customcampaign	?PlaceCrossoverHeroes@ScenarioStruct@TCampaignBrief@@QAEXXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 3 under-inline, 7 over-inline (6 name-unresolvable pair(s) discounted)
+control-flow (why-branch)	101	68.9328	68.9328	325	customcampaign	?DoPreLoadCustomization@SCampaign@@QAEXXZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	193	69.2500	69.2500	627	objecttype	?load@TObjectTypeTable@@QAEXPAD@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline, 3 over-inline (3 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	642	70.6990	70.6990	2190	game	?LoadMap@game@@QAE_NPAVTAbstractFile@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 10 under-inline, 12 over-inline (5 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	150	71.3624	71.3624	524	kb	?NormalDialogHandler@@YIHAAVmessage@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline
-inliner (predict-inline)	454	71.5355	71.5355	1595	singleselectionwindow	?RebuildFilteredPlayerSetup@TSingleSelectionWindow@@QAEXXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 3 under-inline, 5 over-inline (5 name-unresolvable pair(s) discounted)
-inliner (predict-inline)	48	71.8085	71.8085	169	kb	??1combatManager@@QAE@XZ	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline
+inliner (predict-inline)	454	71.5355	71.5355	1595	singleselectionwindow	?RebuildFilteredPlayerSetup@TSingleSelectionWindow@@QAEXXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 5 under-inline, 7 over-inline (3 name-unresolvable pair(s) discounted)
+control-flow (why-branch)	36	71.7308	71.7308	127	customcampaign	?_slot5@TCampaignStartOption@@UBEHPAXH@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 control-flow (why-branch)	155	71.8957	71.8957	552	singleselectionwindow	?Tick@t_map_list_update@@UAEXXZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	88	72.5446	72.5446	320	cursor	?DrawCursorShadow@advManager@@QAEXHH@Z	why-reg	spill to dead-parameter slot (B4)
+inliner (predict-inline)	197	72.5726	72.5726	717	customcampaign	?GiveCrossoverArtifacts@ScenarioStruct@TCampaignBrief@@QAEXXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 4 under-inline, 3 over-inline (1 name-unresolvable pair(s) discounted)
 control-flow (why-branch)	60	72.9438	70.0899	220	dxplay	?FlushReceiveQueue@CDPlay@@UAEEXZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	288	73.6571	72.2248	1095	ai_player	?buy_creatures@type_AI_player@@QAEXPAVhero@@PAVtown@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 under-inline, 2 over-inline (2 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	559	74.7623	74.7623	2215	rmg_terrain	?PaintTransitions@TRmgTerrainPainter@@QAEXXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 5 under-inline, 5 over-inline (10 name-unresolvable pair(s) discounted)
-inliner (predict-inline)	251	74.9022	74.9022	999	singleselectionwindow	?BeginNewGame@TSingleSelectionWindow@@QAEEXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 10 under-inline, 7 over-inline (3 name-unresolvable pair(s) discounted)
+inliner (predict-inline)	251	74.9022	74.9022	999	singleselectionwindow	?BeginNewGame@TSingleSelectionWindow@@QAEEXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 11 under-inline, 8 over-inline (2 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	67	75.0110	75.0110	268	cmbtmgr	?CalculateGainedExperience@combatManager@@QAEXHPAH@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 inliner (predict-inline)	205	75.1012	68.9069	825	hero	?GiveArtifact@hero@@QAEEPBUtype_artifact@@EE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 6 under-inline, 2 over-inline
 control-flow (why-branch)	141	75.1842	75.1842	568	objecttype	??5std@@YAAAV?$basic_istream@DU?$char_traits@D@std@@@0@AAV10@AAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@0@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
@@ -56,11 +61,9 @@ inliner (predict-inline)	237	75.3838	75.3838	962	ai_player	?consider_hiring@@YI_
 register-homing (why-reg)	187	75.3882	75.3882	759	winmgr	?FizzleForwardX@heroWindowManager@@QAEXHHHHH@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 inliner (predict-inline)	1275	75.4051	74.2190	5184	hero	?WindowHandler@THeroScreenWindow@@UAEHPAVmessage@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 5 under-inline, 15 over-inline
 register-homing (why-reg)	143	75.4080	75.4080	581	advmgr	?SetEnvironmentOrigin@advManager@@QAEXUtype_point@@H@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
-inliner (predict-inline)	160	75.4324	75.4324	652	seerhut	?DoProposalDialog@type_skill_quest@@UAEXPAVhero@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 under-inline, 4 over-inline (4 name-unresolvable pair(s) discounted)
-register-homing (why-reg)	59	75.6322	75.6322	244	customcampaign	?_Unguarded_insert@std@@YIXPAVhero@@V2@UCrossoverHeroStronger@@@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
+inliner (predict-inline)	160	75.4324	75.4324	652	seerhut	?DoProposalDialog@type_skill_quest@@UAEXPAVhero@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 6 under-inline, 6 over-inline (2 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	59	75.8427	75.8427	245	seerhut	?DoProgressDialog@type_skill_quest@@UAEXXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline
 control-flow (why-branch)	234	75.8636	75.8636	968	victorylossconditions	?CheckForDefeatedHeroLoss@LossConditionStruct@@QAEEPBVhero@@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
-inliner (predict-inline)	98	75.8913	75.8913	405	customcampaign	?_Unguarded_partition@std@@YIPAVhero@@PAV2@0V2@UCrossoverHeroStronger@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline
 inliner (predict-inline)	1723	75.9721	75.9721	7172	kb	?oldmain@@YIHXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 10 under-inline, 9 over-inline (2 name-unresolvable pair(s) discounted)
 control-flow (why-branch)	147	75.9951	75.9951	611	multiplayerwindow	?OnTCP@TMultiPlayerWindow@@QAEEXZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	118	76.6378	76.6378	503	objecttype	??5@YIAAV?$basic_istream@DU?$char_traits@D@std@@@std@@AAV01@AAUTObjectType@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 5 over-inline (1 name-unresolvable pair(s) discounted)
@@ -68,19 +71,19 @@ control-flow (why-branch)	109	76.9111	76.9111	474	mapcell	?readResourceData@Newf
 inliner (predict-inline)	511	76.9439	76.9439	2218	rmg	?CreateSubterraneanGate@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 3 under-inline, 5 over-inline (8 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	81	77.4872	77.4872	359	adventuremapwindow	?SendChat@CAdventurMapChatEdit@@UAEXPBDH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline, 1 over-inline
 inliner (predict-inline)	156	77.5103	77.5103	692	ai	?simulate_melee_attack@combatManager@@QAEXPAVarmy@@J0JJ@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 under-inline, 1 over-inline
-register-homing (why-reg)	232	77.6134	77.6134	1038	ai_player	?mark_destinations@@YIJPAVhero@@JPAVsearchArray@@PAGW4type_search_type@@@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 inliner (predict-inline)	148	78.1174	50.3902	676	events	?DoEventArtifact@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline
 register-homing (why-reg)	15	78.1250	78.1250	69	remote	??_GCNetMsgHandler@@UAEPAXI@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 control-flow (why-branch)	364	78.1958	78.1958	1668	philai	?get_skill_value@@YIJPBVhero@@W4TSecondarySkill@@E@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	240	78.3889	78.3889	1112	hiscore	?HighScoreWindowHandler@@YIHAAVmessage@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 3 over-inline
 register-homing (why-reg)	190	78.4646	78.4646	880	customcampaign	?Save@SCampaign@@QAEXPAVTAbstractFile@@@Z	why-reg	spill to dead-parameter slot (B4)
-inliner (predict-inline)	66	78.5339	78.5339	306	customcampaign	??1CampaignHeaderStruct@TCampaignBrief@@QAE@XZ	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 2 over-inline
+inliner (predict-inline)	66	78.5339	75.7203	306	customcampaign	??1CampaignHeaderStruct@TCampaignBrief@@QAE@XZ	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (1 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	327	78.6801	78.6801	1536	customcampaign	?CompleteCurrentMap@SCampaign@@QAEXPAX@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (1 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	309	78.7597	78.7597	1455	singleselectionwindow	?OnBeginGame@TSingleSelectionWindow@@QAEEXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 4 under-inline, 4 over-inline
 inliner (predict-inline)	87	78.8633	78.8633	412	hero	?HeroFn_004E2840@hero@@QAEEJJ@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline
+inliner (predict-inline)	148	78.9793	78.9793	706	combatcontrolsubwindow	?Update@TCombatCreatureSubWindow@@QAEXPBVarmy@@PBVhero@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline
 inliner (predict-inline)	187	79.1107	79.1107	894	kb	?DisplayLCWinLoss@@YIEPAVLossConditionStruct@@PAH1E@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline
-inliner (predict-inline)	121	79.1518	79.1518	579	cmbtmgr	?place_obstacle@combatManager@@QAEEH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (1 name-unresolvable pair(s) discounted)
-inliner (predict-inline)	126	79.3242	73.1483	607	singleselectionwindow	??0GameSelectionHeadersStruct@@QAE@XZ	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (2 name-unresolvable pair(s) discounted)
+inliner (predict-inline)	121	79.1518	79.1518	579	cmbtmgr	?place_obstacle@combatManager@@QAEEH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline, 2 over-inline
+inliner (predict-inline)	126	79.3242	73.1483	607	singleselectionwindow	??0GameSelectionHeadersStruct@@QAE@XZ	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (1 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	855	79.6642	79.6642	4203	events	?GiveBlackBoxReward@advManager@@QAE_NPBDPAVhero@@PAVNewmapCell@@Utype_point@@_NPAVBlackBoxData@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 6 under-inline, 11 over-inline (18 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	184	79.7608	79.7608	908	singleselectionwindow	?_Unguarded_insert@std@@YIXPAUGameSelectionHeadersStruct@@U2@UTSortMapsByName@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 under-inline, 4 over-inline
 inliner (predict-inline)	27	79.8214	79.8214	134	customcampaign	?seekoff@?$basic_filebuf@DU?$char_traits@D@std@@@std@@MAE?AV?$fpos@H@2@JW4seekdir@ios_base@2@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline
@@ -100,16 +103,17 @@ register-homing (why-reg)	93	81.0449	81.0449	491	iconwdgt	?NextRandomFrame@iconW
 inliner (predict-inline)	112	81.1204	81.1204	593	gzinflatebuf	?underflow@TGzInflateBuf@@UAEHXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 8 under-inline, 4 over-inline
 inliner (predict-inline)	155	81.3049	81.3049	830	singleselectionwindow	?OnGameHeaderInfoInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 5 under-inline, 4 over-inline (1 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	59	81.3095	81.3095	313	bitmap16	?Draw@Bitmap16Bit@@QBEXHHHHPAGHHHHH_N@Z	why-reg	spill to dead-parameter slot (B4)
-inliner (predict-inline)	274	81.3465	81.0339	1470	ai_player	?can_trade_resources@type_AI_player@@QAE_NPBHPAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 18 under-inline, 12 over-inline (7 name-unresolvable pair(s) discounted)
+inliner (predict-inline)	274	81.3465	81.0339	1470	ai_player	?can_trade_resources@type_AI_player@@QAE_NPBHPAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 20 under-inline, 14 over-inline (5 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	72	81.3500	81.3500	384	singleselectionwindow	??RTSortMapsByVersion@@QBE_NABUGameSelectionHeadersStruct@@0@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 control-flow (why-branch)	73	81.3696	81.3696	392	command	?is_computer_action@combatManager@@QAEEPBVarmy@@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	42	81.4103	81.4103	224	game	?get_underground_gate_exit@game@@QAE?AUtype_point@@PBVNewmapCell@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	97	81.4136	81.4136	522	townmgr	?SetRolloverText@TTavernWindow@@QAEXH@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	31	81.4912	81.4912	169	town	?get_build_cost@town@@QBEFW4type_building_id@@PAH1@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
+register-homing (why-reg)	81	81.6506	81.6506	443	customcampaign	?ReadLengthPrefixedString@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAVTAbstractFile@@@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 control-flow (why-branch)	104	81.7000	81.7000	570	hero	?update_slot@THeroScreenWindow@@QAEXJ@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 control-flow (why-branch)	41	81.7262	81.7262	226	town	?get_legion_bonus@town@@QAEJJ@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 control-flow (why-branch)	185	81.7645	81.7645	1014	hero	?GetMobility@hero@@QAEHE@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
-inliner (predict-inline)	530	81.8865	81.8865	2926	ai_player	?AI_choose_destination@@YIHPAVhero@@JAAUHeroDestination@@AAJEE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 2 over-inline (3 name-unresolvable pair(s) discounted)
+inliner (predict-inline)	530	81.8865	81.8865	2926	ai_player	?AI_choose_destination@@YIHPAVhero@@JAAUHeroDestination@@AAJEE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline, 3 over-inline (2 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	81	82.0787	82.0787	451	kb	?EventWindowHandler@@YIHPAVmessage@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 inliner (predict-inline)	595	82.2198	82.2198	3348	game	?TransmitSaveGame@game@@QAEHHHEE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline, 4 over-inline (12 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	286	82.2872	82.2872	1613	hillfortwindow	?Recalculate@THillFortWindow@@QAEXE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline
@@ -117,7 +121,7 @@ control-flow (why-branch)	182	82.3404	82.3404	1029	spells	?MirrorImage@combatMan
 inliner (predict-inline)	239	82.4044	82.4044	1356	drawing	?show_creature_spell_error@combatManager@@AAE_NPADPBVarmy@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline, 1 over-inline
 control-flow (why-branch)	70	82.4884	82.4884	398	ai	?place_shooter@combatManager@@QAEXPBVarmy@@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	26	82.5645	82.5645	151	ai_player	?get_value@type_necromancy_artifact@@UBEJPBVhero@@EE@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
-inliner (predict-inline)	844	82.7097	82.7097	4881	overview	??0TOverviewWindow@@QAE@XZ	predict-inline	callee expanded on one side only (A8/A9/A12): 22 under-inline, 9 over-inline (50 name-unresolvable pair(s) discounted)
+inliner (predict-inline)	844	82.7097	82.7097	4881	overview	??0TOverviewWindow@@QAE@XZ	predict-inline	callee expanded on one side only (A8/A9/A12): 23 under-inline, 10 over-inline (49 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	199	82.7313	82.7313	1152	seerhut	?read@TSeerHut@@QAEXPAVTAbstractFile@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 over-inline (3 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	178	82.8591	82.8591	1040	hero	?initialize@hero@@QAEXF@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline
 register-homing (why-reg)	38	82.9333	82.9333	224	mousemgr	?SetPointer@mouseManager@@QAEXHW4EPointerSet@1@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
@@ -140,7 +144,7 @@ inliner (predict-inline)	89	84.4720	84.4720	570	remote	?WaitForReadyToPlayMsg@@Y
 control-flow (why-branch)	109	84.5280	84.5280	703	soundmgr	?Open@soundManager@@UAEHH@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	263	84.5868	84.5868	1708	ai_player	?make_gift@type_AI_player@@QAEXJ@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 under-inline, 4 over-inline
 inliner (predict-inline)	93	84.7767	84.7767	608	event_record	?ResetVisibility@game@@QAEXHHHHH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline, 2 over-inline (1 name-unresolvable pair(s) discounted)
-inliner (predict-inline)	261	84.8316	84.8316	1720	ai_player	?AI_AttemptMove@@YIXPAVhero@@AAUHeroDestination@@AAJE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline, 1 over-inline (1 name-unresolvable pair(s) discounted)
+inliner (predict-inline)	261	84.8316	84.8316	1720	ai_player	?AI_AttemptMove@@YIXPAVhero@@AAUHeroDestination@@AAJE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 3 under-inline, 2 over-inline
 inliner (predict-inline)	417	84.8412	84.0502	2748	swapmgr	?Main@swapManager@@UAEHAAVmessage@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline
 control-flow (why-branch)	77	84.8547	84.8547	510	armygrp	?Merge@armyGroup@@QAEEPAV1@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	155	84.9579	84.9579	1032	spells	?Earthquake@combatManager@@QAEXH@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
@@ -150,13 +154,13 @@ inliner (predict-inline)	39	85.2673	85.2673	266	singleselectionwindow	?GetDispla
 register-homing (why-reg)	104	85.3476	85.3476	713	ai_player	?net_value_of_location@@YIHPAVhero@@PAUHeroDestination@@PAJPAUpathCell@@PAVsearchArray@@@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 inliner (predict-inline)	111	85.6339	85.6339	775	advmgr	?ViewPuzzle@advManager@@QAEXXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline
 inliner (predict-inline)	88	85.6452	85.6452	616	event_record	?SetVisibility@game@@QAEXHHHHHE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline, 2 over-inline (1 name-unresolvable pair(s) discounted)
-control-flow (why-branch)	44	85.6629	85.6629	310	ai_tactical	??1army@@QAE@XZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	136	85.7491	85.7491	952	singleselectionwindow	?_Unguarded_partition@std@@YIPAUGameSelectionHeadersStruct@@PAU2@0U2@UTSortMapsByName@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 3 over-inline
-inliner (predict-inline)	696	85.7661	85.7661	4889	campaignbrief	??0TCampaignBrief@@QAE@EE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 under-inline, 4 over-inline (34 name-unresolvable pair(s) discounted)
+inliner (predict-inline)	696	85.7661	85.7661	4889	campaignbrief	??0TCampaignBrief@@QAE@EE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 6 under-inline, 6 over-inline (32 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	63	85.8333	85.8333	447	ai_player	?check_trade_supply@type_AI_player@@QAE_NPBHJPAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline, 2 over-inline
 register-homing (why-reg)	205	85.9449	85.9449	1460	puzzlewindow	?match_puzzle@@YI?AUtype_point@@JPAY0BB@Utype_AI_puzzle_tile@@@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 inliner (predict-inline)	114	85.9771	85.9771	816	town	?create_building@town@@QAE?AW4type_building_id@@W42@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 under-inline
-inliner (predict-inline)	130	86.0884	86.0274	936	game	?read_map_hero_setups@game@@QAEXPAVTAbstractFile@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 3 under-inline, 3 over-inline (1 name-unresolvable pair(s) discounted)
+inliner (predict-inline)	85	85.9839	85.9839	608	customcampaign	?GetText@TCampaignStartCrossoverOption@@UBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAXH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 5 under-inline, 3 over-inline
+inliner (predict-inline)	130	86.0884	86.0274	936	game	?read_map_hero_setups@game@@QAEXPAVTAbstractFile@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 3 under-inline, 3 over-inline
 control-flow (why-branch)	42	86.0900	86.0900	304	hero	?UpdateStats@hero@@QAEXXZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	110	86.1308	86.1308	794	sacrifice_window	?backpack_click@type_sacrifice_window@@QAEXJE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline
 inliner (predict-inline)	64	86.2571	86.2571	465	remote	?GetRemoteData@CDPlayHeroes@@QAEPAVCNetMsg@@EPAE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline (1 name-unresolvable pair(s) discounted)
@@ -175,10 +179,10 @@ inliner (predict-inline)	143	86.9559	86.9559	1096	resourcemanager	@game_sprite_1
 control-flow (why-branch)	56	86.9847	86.9847	427	remote	?SendIt@CDPlayHeroes@@QAE_NPAVCNetMsg@@K_N@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	46	86.9922	86.9922	350	hero	?can_summon_boat@hero@@QBEEXZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 inliner (predict-inline)	237	87.0015	87.0015	1821	game	?Save@NewSMapHeader@@QAEHPAVTAbstractFile@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline, 7 over-inline (2 name-unresolvable pair(s) discounted)
-inliner (predict-inline)	745	87.0102	87.0102	5736	game	?RandomizeEvents@game@@QAEXXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 18 under-inline, 21 over-inline (6 name-unresolvable pair(s) discounted)
+inliner (predict-inline)	745	87.0102	87.0102	5736	game	?RandomizeEvents@game@@QAEXXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 24 under-inline, 27 over-inline
 register-homing (why-reg)	185	87.0391	87.0391	1427	ai_combat	?cast_spell@type_AI_combat_data@@QAEXAAV1@W4type_speed_catagory@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 inliner (predict-inline)	206	87.0572	87.0572	1590	viewwrld	?VWDrawAdvObjShadow@advManager@@QAEXHHHHH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline
-inliner (predict-inline)	108	87.0700	87.0700	837	singleselectionwindow	?GetHeaders@TSingleSelectionWindow@@QAEXPAV?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 5 under-inline, 3 over-inline (4 name-unresolvable pair(s) discounted)
+inliner (predict-inline)	108	87.0700	87.0700	837	singleselectionwindow	?GetHeaders@TSingleSelectionWindow@@QAEXPAV?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 8 under-inline, 6 over-inline (1 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	65	87.1099	87.1099	507	ai	?find_attack_hexes@@YIXPBVarmy@@JJJJPBVsearchArray@@PAV?$vector@JV?$allocator@J@std@@@std@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 5 under-inline, 5 over-inline (3 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	193	87.1338	87.1338	1501	hero	?CheckLevel@hero@@QAEXXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 3 over-inline
 register-homing (why-reg)	86	87.1912	87.1912	669	smackmgr	?VideoPlay@@YIHHHHHH@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
@@ -195,7 +199,7 @@ register-homing (why-reg)	91	87.7343	87.7343	742	ai_tactical	?find_enemy_attacks
 control-flow (why-branch)	91	87.7439	87.7439	744	hero	?GetLuck@hero@@QAEHPBV1@EE@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	172	87.8496	87.8496	1413	game	??0game@@QAE@XZ	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 2 over-inline (1 name-unresolvable pair(s) discounted)
 control-flow (why-branch)	262	87.9325	87.9325	2168	townmgr	?set_bonus_display@TTownScreenWindow@@QAEXPAVtown@@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
-inliner (predict-inline)	204	87.9412	87.9412	1695	hero	?load@hero@@QAEHPAVTAbstractFile@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 6 under-inline, 2 over-inline (1 name-unresolvable pair(s) discounted)
+inliner (predict-inline)	204	87.9412	87.9412	1695	hero	?load@hero@@QAEHPAVTAbstractFile@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 6 under-inline, 2 over-inline
 control-flow (why-branch)	112	87.9484	87.9484	933	font	?FillLinesVector@font@@QAEXPBDHAAV?$vector@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	208	88.1009	88.1009	1744	button	?Main@button@@UAEHPAVmessage@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 5 under-inline, 1 over-inline
 inliner (predict-inline)	58	88.1358	88.1358	485	winmgr	?FadeFromBlack@heroWindowManager@@QAEXH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline, 2 over-inline
@@ -212,17 +216,19 @@ control-flow (why-branch)	80	88.4937	88.4937	692	spells	?ValidSpellTarget@combat
 control-flow (why-branch)	152	88.5071	88.5071	1326	armygrp	?get_spell_work_chance@@YIMHW4TCreatureType@@PBVhero@@1@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	58	88.5116	88.5116	505	winmgr	?FadeToBlack@heroWindowManager@@QAEXHE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline, 2 over-inline
 control-flow (why-branch)	34	88.6140	88.5614	298	events	?monsters_give_reward@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
-inliner (predict-inline)	51	88.6223	88.6223	449	singleselectionwindow	?HeaderRequested@CNewPlayerUpdateMan@@QAEXKEH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 5 under-inline, 4 over-inline (4 name-unresolvable pair(s) discounted)
+inliner (predict-inline)	51	88.6223	88.6223	449	singleselectionwindow	?HeaderRequested@CNewPlayerUpdateMan@@QAEXKEH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 7 under-inline, 6 over-inline (2 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	51	88.7023	88.7023	450	event_record	?record_erase_object@game@@QAEXPAVNewmapCell@@Utype_point@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 6 under-inline, 6 over-inline (3 name-unresolvable pair(s) discounted)
+register-homing (why-reg)	22	88.7183	88.7183	198	palette	??0TPalette16@@QAE@PBVTPalette24@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	225	88.8247	88.6580	2009	tradpost	?Update@TBuyArtifactWindow@@QAEXE@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	207	88.8564	88.8564	1859	resourcemanager	?GetSprite@ResourceManager@@YIPAVCSprite@@PBD@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 inliner (predict-inline)	187	88.8745	88.8745	1681	spellbookwindow	?GotoPage@TSpellbookWindow@@QAEXH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 under-inline, 4 over-inline (2 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	49	88.9253	88.9253	440	event_record	?record_hide_boat@game@@QAEXPAVboat@@EH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 6 under-inline, 5 over-inline (4 name-unresolvable pair(s) discounted)
 unclassified	24	88.9254	88.9254	217	smackmgr	?VideoRealignBuffers@@YIXXZ	why-reg	run why-reg / why-branch for the full search
 inliner (predict-inline)	237	88.9695	88.9695	2152	singleselectionwindow	?ProcessRightSelect@TSingleSelectionWindow@@UAEEH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 7 under-inline, 7 over-inline
+inliner (predict-inline)	56	88.9802	88.9802	507	customcampaign	?Read@TCampaignStartHeroOption@@UAEXPAVTAbstractFile@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 5 under-inline, 4 over-inline (2 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	91	89.0856	89.0856	831	ai_player	?value_of_adding_army@type_AI_creature_swapper@@IAEJW4TCreatureType@@FAAF_N@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 control-flow (why-branch)	70	89.0901	89.0901	644	ai_tactical	?consider_sacrifice@type_AI_spellcaster@@QBEXAAUtype_spell_choice@@PBVarmy@@J@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
-inliner (predict-inline)	86	89.1000	89.1000	787	seerhut	?DoProposalDialog@type_artifact_quest@@UAEXPAVhero@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 7 under-inline, 6 over-inline (2 name-unresolvable pair(s) discounted)
+inliner (predict-inline)	86	89.1000	89.1000	787	seerhut	?DoProposalDialog@type_artifact_quest@@UAEXPAVhero@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 9 under-inline, 8 over-inline
 register-homing (why-reg)	32	89.2796	89.2796	302	hero	??0hero@@QAE@XZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 inliner (predict-inline)	186	89.3406	89.3406	1744	events	?CreatureBankEvent@advManager@@QAEHPAVhero@@PAVNewmapCell@@PBDUtype_point@@E@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline, 5 over-inline
 register-homing (why-reg)	50	89.3496	89.3496	468	swapmgr	?Update@swapManager@@QAEXXZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
@@ -246,7 +252,7 @@ control-flow (why-branch)	63	90.0750	90.0750	636	advmgr	?get_creature_bank_help_
 inliner (predict-inline)	84	90.1364	90.1364	847	spells	?ViewSpells@combatManager@@QAEHXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline
 inliner (predict-inline)	250	90.1601	89.5104	2543	singleselectionwindow	?HandleNetMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@PAE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 6 under-inline, 5 over-inline (6 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	36	90.1966	90.1966	372	hero	?remove_artifact@hero@@QAEXJ@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
-inliner (predict-inline)	102	90.2193	90.2193	1039	singleselectionwindow	?OnMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline, 2 over-inline (3 name-unresolvable pair(s) discounted)
+inliner (predict-inline)	102	90.2193	90.2193	1039	singleselectionwindow	?OnMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline, 2 over-inline (1 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	84	90.2537	90.2537	866	philai	?DoAI@philAI@@QAEXH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 over-inline (2 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	84	90.2555	90.2555	860	findpath	?PushCombatPoint@searchArray@@QAEXHHHHH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline (3 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	643	90.2738	90.2738	6608	townmgr	?Main@townManager@@UAEHAAVmessage@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline, 9 over-inline (7 name-unresolvable pair(s) discounted)
@@ -274,7 +280,7 @@ inliner (predict-inline)	181	90.8074	90.1633	1973	viewarmywindow	??0TViewArmyWin
 register-homing (why-reg)	80	90.8771	90.8771	875	command	?SetCombatDirections@combatManager@@QAEXH@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 inliner (predict-inline)	79	90.8986	90.8986	873	town	?give_event_reward@town@@QAEXPBVTTownEvent@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 3 under-inline, 2 over-inline
 inliner (predict-inline)	18	90.9167	79.7500	201	remote	??1CWaitForReadyPlayersDlg@@UAE@XZ	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline
-inliner (predict-inline)	93	90.9329	90.9329	1021	ai_combat	?choose_melee@type_AI_combat_data@@QBE_NABV1@W4type_speed_catagory@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline, 2 over-inline (1 name-unresolvable pair(s) discounted)
+inliner (predict-inline)	93	90.9329	90.9329	1021	ai_combat	?choose_melee@type_AI_combat_data@@QBE_NABV1@W4type_speed_catagory@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 3 under-inline, 3 over-inline
 control-flow (why-branch)	93	91.0411	91.0411	1037	singleselectionwindow	?SetHumanSlot@TSingleSelectionWindow@@QAEXXZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	47	91.0961	91.0961	525	cmbtmgr	?Unnamed464d40@combatManager@@QAEEPAVarmy@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 inliner (predict-inline)	137	91.1006	91.1006	1542	advmgr	?ProcessMapSelect@advManager@@QAEXPBVmessage@@PAUtype_point@@PAPAVNewmapCell@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline
@@ -287,11 +293,12 @@ inliner (predict-inline)	142	91.3243	89.7658	1638	multiplayerwindow	?OnSearch@TM
 register-homing (why-reg)	113	91.4600	90.8184	1318	army	?attack_wall@army@@AAEXW4TWallTargetId@@J@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 control-flow (why-branch)	116	91.4864	91.1018	1357	advspells	?SummonBoat@advManager@@QAEXH@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	9	91.5385	91.5385	104	search	?enter_hostile_trigger@searchArray@@QAEEPBVhero@@PAUpathCell@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
-inliner (predict-inline)	198	91.5614	91.5614	2350	game	?Read@NewSMapHeader@@QAEHPAVTAbstractFile@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 3 under-inline, 6 over-inline (4 name-unresolvable pair(s) discounted)
+inliner (predict-inline)	198	91.5614	91.5614	2350	game	?Read@NewSMapHeader@@QAEHPAVTAbstractFile@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 under-inline, 7 over-inline (2 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	119	91.5985	91.5985	1418	gzinflatebuf	??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 over-inline (5 name-unresolvable pair(s) discounted)
 control-flow (why-branch)	195	91.6263	91.6263	2328	advmgr	?ProcessHover@advManager@@QAEHHH@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	162	91.6489	91.6489	1939	hero	?get_morale_description@hero@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	predict-inline	callee expanded on one side only (A8/A9/A12): 4 under-inline, 2 over-inline
 register-homing (why-reg)	57	91.6682	91.6682	680	singleselectionwindow	?SortMaps@TSingleSelectionWindow@@QAEXHEE@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
+register-homing (why-reg)	86	91.6997	91.6997	1038	ai_player	?mark_destinations@@YIJPAVhero@@JPAVsearchArray@@PAGW4type_search_type@@@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 register-homing (why-reg)	22	91.7125	91.7125	263	army	?Turn@army@@QAEXE@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 control-flow (why-branch)	801	91.7373	91.7373	9692	overview	?SetupDynamicStuff@game@@QAEXHH@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	58	91.8870	91.8870	721	mapcell	?Save@NewfullMap@@QAEHPAVTAbstractFile@@HE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 over-inline
@@ -309,10 +316,10 @@ register-homing (why-reg)	102	92.1688	92.1688	1308	kb	?CalculateNormalDialogSize
 inliner (predict-inline)	69	92.2018	92.2018	881	mapcell	?Load@NewfullMap@@QAEHPAVTAbstractFile@@HEH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 3 under-inline, 2 over-inline (2 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	40	92.2308	92.2308	514	game	?GetRandomMonster@game@@QAE?AW4TCreatureType@@HH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline, 3 over-inline (2 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	74	92.3623	92.3623	968	armygrp	?get_luck_description@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@H@Z	why-reg	spill to dead-parameter slot (B4)
-inliner (predict-inline)	287	92.4127	60.5547	3778	game	?Load@game@@QAEHPAVTAbstractFile@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 64 under-inline, 1 over-inline (1 name-unresolvable pair(s) discounted)
+inliner (predict-inline)	287	92.4127	60.5547	3778	game	?Load@game@@QAEHPAVTAbstractFile@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 65 under-inline, 2 over-inline
 inliner (predict-inline)	30	92.4667	92.4667	392	customcampaign	?seekpos@?$basic_filebuf@DU?$char_traits@D@std@@@std@@MAE?AV?$fpos@H@2@V32@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline (1 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	20	92.5052	92.5052	264	ai_player	?get_swap_value@type_AI_creature_swapper@@QAEJPBVhero@@PBVarmyGroup@@0E@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
-inliner (predict-inline)	150	92.5118	92.5118	1997	game	?Load@NewSMapHeader@@QAEHPAVTAbstractFile@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 3 under-inline, 1 over-inline (1 name-unresolvable pair(s) discounted)
+inliner (predict-inline)	150	92.5118	92.5118	1997	game	?Load@NewSMapHeader@@QAEHPAVTAbstractFile@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 3 under-inline, 1 over-inline
 register-homing (why-reg)	43	92.5170	92.5170	571	army	?get_berserk_targets@army@@QBEXAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 inliner (predict-inline)	167	92.5668	92.5668	2248	quickherowindow	??0TQuickHeroWindow@@QAE@PAVhero@@W4TViewLevel@0@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 under-inline, 2 over-inline (17 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	98	92.5714	92.5357	1322	command	?GetCommand@combatManager@@QAEHH@Z	why-reg	spill to dead-parameter slot (B4)
@@ -322,7 +329,7 @@ register-homing (why-reg)	18	92.6804	91.7423	242	font	?LineLength@font@@QAEHPBDH
 inliner (predict-inline)	16	92.6829	92.6829	215	advmgr	?BVMessage@advManager@@QAEXPBD@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline
 inliner (predict-inline)	78	92.6970	86.3747	1065	army	?spell_is_valid_on_target@@YIEHPBVarmy@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline, 2 over-inline
 register-homing (why-reg)	84	92.7034	92.7034	1154	advmgr	?DrawUnderlay@advManager@@QAEXHHHHH@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
-inliner (predict-inline)	152	92.7472	82.9570	2101	mapcell	?readHeroData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 under-inline, 3 over-inline (1 name-unresolvable pair(s) discounted)
+inliner (predict-inline)	152	92.7472	82.9570	2101	mapcell	?readHeroData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 under-inline, 3 over-inline
 register-homing (why-reg)	58	92.7585	92.7585	800	ai_player	?AI_get_value_of_artifact@@YIJUtype_artifact@@PBVhero@@EE@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 inliner (predict-inline)	782	92.7816	92.7793	10831	spells	?CastSpell@combatManager@@QAEXHHHHHJ@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 under-inline, 6 over-inline (4 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	57	92.7911	92.7911	786	kb	?extended_dialog@@YIXPBDAAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@std@@JJJ@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
@@ -334,7 +341,7 @@ control-flow (why-branch)	38	92.9245	92.9245	538	binkmanager	?NextBinkFrame@@YIX
 inliner (predict-inline)	142	92.9411	92.9411	2011	advmgr	?TownQuickView@advManager@@QAEXHHHE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 over-inline
 inliner (predict-inline)	93	93.0057	93.0057	1333	mapcell	?readBlackBox@NewfullMap@@QAEHPAVTAbstractFile@@PAVBlackBoxData@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 under-inline, 3 over-inline (2 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	149	93.0566	93.0566	2140	armygrp	?get_morale_description@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@HE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 6 under-inline, 5 over-inline
-inliner (predict-inline)	306	93.0970	93.0970	4429	command	?ProcessCombatMsg@combatManager@@QAEHAAVmessage@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 3 under-inline (21 name-unresolvable pair(s) discounted)
+inliner (predict-inline)	306	93.0970	93.0970	4429	command	?ProcessCombatMsg@combatManager@@QAEHAAVmessage@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 3 under-inline
 inliner (predict-inline)	79	93.1746	93.1746	1156	mainmenu	?MainMenuHandler@@YIHAAVmessage@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline
 register-homing (why-reg)	38	93.1850	93.1850	555	ai_tactical	??0type_AI_spellcaster@@QAE@PAVcombatManager@@JE@Z	why-reg	spill to dead-parameter slot (B4)
 inliner (predict-inline)	31	93.2051	92.4359	455	hero	?equip_artifact@hero@@QAEEPBUtype_artifact@@J@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline
@@ -350,11 +357,14 @@ unclassified	31	93.3721	93.1783	462	strip	?DrawOwner@strip@@IAEXH@Z	why-reg	run 
 register-homing (why-reg)	4	93.3750	93.3750	67	ai_player	?_Ucopy@?$vector@UHeroDestination@@V?$allocator@UHeroDestination@@@std@@@std@@IAEPAUHeroDestination@@PBU3@0PAU3@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 inliner (predict-inline)	345	93.3762	93.3762	5215	townmgr	?SetupThievesGuild@TThievesGuildWindow@@QAEXH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 11 under-inline, 8 over-inline (26 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	67	93.4161	93.4161	1015	swapmgr	?handle_artifact_click@swapManager@@QAEXJJE@Z	why-branch	register-homing knob (B-family)
-inliner (predict-inline)	44	93.4375	65.8702	666	spells	?SummonElemental@combatManager@@QAEXHW4TCreatureType@@HH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 10 under-inline, 1 over-inline
+inliner (predict-inline)	44	93.4375	62.4952	666	spells	?SummonElemental@combatManager@@QAEXHW4TCreatureType@@HH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 12 under-inline, 1 over-inline
+register-homing (why-reg)	11	93.5106	93.5106	169	kb	??1combatManager@@QAE@XZ	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
+register-homing (why-reg)	40	93.5215	93.5215	611	customcampaign	?PlaceStartingHero@ScenarioStruct@TCampaignBrief@@QAEXPAUHeroPlaceholderData@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	43	93.6191	93.6191	667	kb	?NormalDialog@@YIXPBDHHHHHHHHHHH@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 inliner (predict-inline)	50	93.6325	93.6325	781	recruit	?add_creature_widgets@TRecruitWindow@@QAEXJJJW4TCreatureType@@J@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (6 name-unresolvable pair(s) discounted)
 control-flow (why-branch)	120	93.6672	93.6672	1895	castle	?WindowHandler@THallWindow@@UAEHPAVmessage@@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	735	93.6778	93.6778	11619	singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 26 under-inline, 23 over-inline (112 name-unresolvable pair(s) discounted)
+inliner (predict-inline)	32	93.6869	93.6869	500	customcampaign	?Read@TCampaignStartCrossoverOption@@UAEXPAVTAbstractFile@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline (1 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	31	93.6951	93.6951	488	townmgr	?DoUniversity@townManager@@QAEXXZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 inliner (predict-inline)	127	93.7128	93.7128	2016	hero	?get_luck_description@hero@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	predict-inline	callee expanded on one side only (A8/A9/A12): 3 under-inline, 1 over-inline
 register-homing (why-reg)	40	93.8038	93.8038	641	customcampaignwindow	?UpdateList@TCustomCampaignWindow@@QAEXXZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
@@ -393,8 +403,10 @@ register-homing (why-reg)	5	94.7568	94.7568	93	bitmap16	?reference@Bitmap16Bit@@
 inliner (predict-inline)	39	94.7945	94.7945	749	ai_combat	?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline
 control-flow (why-branch)	35	94.7974	94.7974	681	hero	?GetMorale@hero@@QAEHPBV1@EE@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	118	94.8152	94.8152	2284	search	?SeedPosition@searchArray@@QAEXPAVhero@@Utype_point@@1HEW4type_search_type@@HE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline
+register-homing (why-reg)	8	94.8548	94.8548	157	palette	??0TPalette16@@QAE@PBVTPalette24@@HHHHHH@Z	why-reg	spill to dead-parameter slot (B4)
 control-flow (why-branch)	494	94.8708	94.8708	9632	advmgr	?QuickInfo@advManager@@QAEXHHH@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	82	94.9073	89.3165	1612	spells	?DrawBolt@combatManager@@QAEXPAUSBolt@@H@Z	why-branch	cache-vs-reload a member/local (B13) / homing (B2/B3)
+register-homing (why-reg)	8	94.9365	94.9365	159	palette	??0TPalette16@@QAE@PBDPBVTPalette24@@HHHHHH@Z	why-reg	spill to dead-parameter slot (B4)
 control-flow (why-branch)	23	94.9505	94.9505	461	border	?Main@border@@UAEHPAVmessage@@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 control-flow (why-branch)	249	94.9521	94.9521	4936	kb	?DisplayVCWinLoss@@YI_NAAVVictoryConditionStruct@@AAH1_N@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	57	94.9649	94.9649	1130	cmbtmgr	?ShootAnimatedMissile@combatManager@@QAEXHHHHHPBMPBQBD@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
@@ -403,7 +415,7 @@ register-homing (why-reg)	54	95.0344	95.0344	1091	cmbtmgr	?KeepAttack@combatMana
 register-homing (why-reg)	5	95.1191	95.1191	95	kb	?GetNextHumanPlayer@@YIHH@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 inliner (predict-inline)	111	95.1207	91.0830	2266	townmgr	?BuyBuild@townManager@@QAEHHHH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 6 under-inline, 5 over-inline (9 name-unresolvable pair(s) discounted)
 control-flow (why-branch)	97	95.1600	95.1600	1996	mapcell	?readTownData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
-inliner (predict-inline)	25	95.2761	95.2761	531	singleselectionwindow	?_Unguarded_partition@std@@YIPAUGameSelectionHeadersStruct@@PAU2@0U2@UTSortMapsBySize@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 2 over-inline (2 name-unresolvable pair(s) discounted)
+inliner (predict-inline)	25	95.2761	95.2761	531	singleselectionwindow	?_Unguarded_partition@std@@YIPAUGameSelectionHeadersStruct@@PAU2@0U2@UTSortMapsBySize@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 3 under-inline, 4 over-inline
 register-homing (why-reg)	13	95.2778	95.2778	281	ai_tactical	?set_melee_enemies@type_AI_spellcaster@@QAEXXZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 control-flow (why-branch)	21	95.3191	95.3191	449	cursor	?CheckAdjacentMon@advManager@@QAEXPAH@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 control-flow (why-branch)	31	95.3700	95.3700	663	campaignbrief	?UpdateBonusIcons@TCampaignBrief@@QAEXXZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
@@ -416,17 +428,17 @@ control-flow (why-branch)	25	95.5486	95.5486	565	ai_tactical	?consider_teleport@
 register-homing (why-reg)	24	95.6600	95.6600	552	townmgr	?WindowHandler@type_garrison_base_window@@UAEHPAVmessage@@@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 register-homing (why-reg)	34	95.6856	95.6856	795	townmgr	?SetCommandAndText@type_garrison_base_window@@QAEXPAVmessage@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 inliner (predict-inline)	19	95.6897	95.6897	432	customcampaign	?Read@TCampaignStartBonusOption@@UAEXPAVTAbstractFile@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (8 name-unresolvable pair(s) discounted)
-inliner (predict-inline)	38	95.6920	95.6920	887	resourcemanager	?LoadPalette@ResourceManager@@YIPAVTPalette16@@PBD@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline, 1 over-inline (5 name-unresolvable pair(s) discounted)
+inliner (predict-inline)	38	95.6920	95.6920	887	resourcemanager	?LoadPalette@ResourceManager@@YIPAVTPalette16@@PBD@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline, 1 over-inline (3 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	30	95.6955	95.6955	686	mapcell	?readScholarData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline, 2 over-inline
-inliner (predict-inline)	51	95.6972	67.5422	1176	game	?readMapPlayerSlot@TPlayerSlotAttributes@CMapHeaderData@@QAEXPAVTAbstractFile@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 3 under-inline, 5 over-inline (2 name-unresolvable pair(s) discounted)
+inliner (predict-inline)	51	95.6972	67.5422	1176	game	?readMapPlayerSlot@TPlayerSlotAttributes@CMapHeaderData@@QAEXPAVTAbstractFile@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 3 under-inline, 5 over-inline
 inliner (predict-inline)	88	95.7033	94.4694	2041	army	?range_attack@army@@QAEXPAV1@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline
 control-flow (why-branch)	32	95.7040	95.7040	756	iconwdgt	?Main@iconWidget@@UAEHPAVmessage@@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	160	95.7066	95.6987	3728	rmg	?WriteMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline
 register-homing (why-reg)	46	95.7196	95.6827	1084	cmbtmgr	?InitNonVisualVars@combatManager@@QAEXXZ	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 register-homing (why-reg)	30	95.7268	95.7268	694	singleselectionwindow	?_Unguarded_insert@std@@YIXPAUGameSelectionHeadersStruct@@U2@UTSortMapsBySize@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
-inliner (predict-inline)	27	95.7822	32.2426	629	ai	?choose_resurrect_action@combatManager@@QAEEPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 19 under-inline, 4 over-inline
+inliner (predict-inline)	27	95.7822	17.8614	629	ai	?choose_resurrect_action@combatManager@@QAEEPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 22 under-inline, 4 over-inline
 control-flow (why-branch)	57	95.7960	95.7960	1361	singleselectionwindow	?_Median@std@@YI?AUGameSelectionHeadersStruct@@U2@00UTSortMapsByName@@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
-inliner (predict-inline)	26	95.8833	95.8833	625	mapcell	??1NewfullMap@@QAE@XZ	predict-inline	callee expanded on one side only (A8/A9/A12): 6 under-inline, 1 over-inline (3 name-unresolvable pair(s) discounted)
+inliner (predict-inline)	26	95.8833	95.8833	625	mapcell	??1NewfullMap@@QAE@XZ	predict-inline	callee expanded on one side only (A8/A9/A12): 8 under-inline, 3 over-inline (1 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	19	95.8926	95.8926	469	ai	?choose_creature_spell@combatManager@@QAEEPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 control-flow (why-branch)	71	95.9000	95.9000	1724	cspriteframe	?DrawCreatureImpl@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@EGE@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 control-flow (why-branch)	9	95.9231	95.9231	225	smackmgr	?VideoClose@@YIXXZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
@@ -434,6 +446,7 @@ inliner (predict-inline)	66	95.9319	95.9319	1623	misc	?ReadPrefsFromRegistry@@YI
 inliner (predict-inline)	17	95.9811	95.9811	424	army	??0army@@QAE@XZ	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline
 register-homing (why-reg)	32	96.0616	96.0616	811	ai_tactical	?get_fortune_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 register-homing (why-reg)	41	96.0634	96.0634	1031	kb	?CreditsWait@@YIXXZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
+control-flow (why-branch)	4	96.0714	96.0714	110	customcampaign	?GetIconDefName@TCampaignStartCrossoverOption@@UBEPBDPAXH@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	38	96.1467	96.1467	975	advmgr	?ProcessWaitingHover@advManager@@QAEHHH@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 control-flow (why-branch)	32	96.1913	96.1913	842	spells	?ChainLightning@combatManager@@QAEXHHH@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	22	96.2635	96.2635	596	mapcell	?upgrade_cell_extra_info@@YIXPAVNewmapCell@@H@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
@@ -472,7 +485,7 @@ unclassified	3	96.7742	96.7742	92	resourcemanager	?GetBitmapResourceSize@Resourc
 register-homing (why-reg)	12	96.7778	96.7778	372	ai_player	?get_value@type_undead_king_cloak_artifact@@UBEJPBVhero@@EE@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 inliner (predict-inline)	27	96.8000	96.8000	833	spellbookwindow	?get_spell_description@TSpellbookWindow@@AAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@HPBVhero@@E@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline
 inliner (predict-inline)	28	96.8467	96.8467	884	kb	?CongratsWait@@YIXHPADHHH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline
-register-homing (why-reg)	70	96.8587	96.8587	2240	army	?DrawToBuffer@army@@QAEXHHH@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
+inliner (predict-inline)	70	96.8587	96.8587	2240	army	?DrawToBuffer@army@@QAEXHHH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 under-inline, 4 over-inline
 register-homing (why-reg)	20	96.8602	96.8602	651	ai_tactical	?get_muck_and_mire_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 inliner (predict-inline)	23	96.9556	83.8710	747	game	?ViewArmy@game@@QAEXAAVarmyGroup@@HPBVhero@@PBVtown@@HHEE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 under-inline, 4 over-inline (1 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	12	97.0522	90.2612	417	tradpost	?SetRolloverText@TSellCreatureWindow@@QAEXH@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
@@ -554,7 +567,7 @@ inliner (predict-inline)	16	98.3567	98.3567	999	search	?check_town_portal@search
 unclaimed (no source binding)	16	98.3910	98.3910	1006	kb	?DoCampaignWindow@@YIEXZ	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 register-homing (why-reg)	10	98.4651	98.4651	669	advspells	?SkuttleBoat@advManager@@QAEXH@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 unclassified	3	98.4697	98.4697	208	ai	?DoCompAI@combatManager@@QAEXH@Z	why-reg	run why-reg / why-branch for the full search
-inliner (predict-inline)	26	98.4726	97.2737	1682	campaignwindow	??0TCampaignWindow@@QAE@EH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 3 under-inline, 1 over-inline (10 name-unresolvable pair(s) discounted)
+inliner (predict-inline)	26	98.4726	97.2737	1682	campaignwindow	??0TCampaignWindow@@QAE@EH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 under-inline, 2 over-inline (9 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	17	98.4856	98.4856	1122	singleselectionwindow	?UpdatePlayerPositions@TSingleSelectionWindow@@QAEXE@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	6	98.4931	98.4931	429	textwdgt	?Main@textWidget@@UAEHPAVmessage@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	10	98.5000	98.5000	659	spells	?mark_area_highlights@@YIXHW4TSkillMastery@@J@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
@@ -568,18 +581,17 @@ inliner (predict-inline)	8	98.6034	98.6034	543	game	?ClaimShipyard@game@@QAEXUty
 register-homing (why-reg)	8	98.6070	98.6070	609	townmgr	?DoTownGate@townManager@@QAEXXZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	7	98.6076	98.6076	497	game	?CreateTownHeroes@game@@QAEXPAH@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 inliner (predict-inline)	22	98.6504	98.6504	1648	singleselectionpopups	?CreateWin@CTownDlg@@QAEEPAVCSprite@@HW4TTownType@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 3 under-inline, 2 over-inline (16 name-unresolvable pair(s) discounted)
-register-homing (why-reg)	4	98.6813	98.6813	284	hero	?IsInIdentifyRange@hero@@QAEEPBUtype_point@@@Z	why-reg	register-homing knob (B-family)
 inliner (predict-inline)	5	98.7064	98.7064	414	remote	?OnPlayerDropUpdateMsg@@YIXK@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (1 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	28	98.7476	94.0054	2260	bottomviewsubwindow	??0TBottomViewTown@@QAE@PAVheroWindow@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 8 under-inline, 7 over-inline (16 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	9	98.7864	96.8123	776	font	?DrawBoundedString@font@@QAEXPBDPAVBitmap16Bit@@HHHHHIH@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	24	98.7947	98.7522	1978	tradpost	?Update@TSellCreatureWindow@@QAEX_N@Z	why-reg	register-homing knob (B-family)
-unclassified	7	98.7952	98.7952	593	singleselectionwindow	??0CGameHeaderInfoMsg@@QAE@EHPAUGameSelectionHeadersStruct@@@Z	why-reg	run why-reg / why-branch for the full search
+inliner (predict-inline)	7	98.7952	98.7952	593	singleselectionwindow	??0CGameHeaderInfoMsg@@QAE@EHPAUGameSelectionHeadersStruct@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (1 name-unresolvable pair(s) discounted)
 control-flow (why-branch)	8	98.8073	98.8073	643	hero	?get_skill_award@@YI?AW4TSecondarySkill@@PBVhero@@W4TSkillMastery@@1W41@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	11	98.8301	98.8301	952	bitmap16	?Colorize@Bitmap16Bit@@QAEXHHHHMM@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 register-homing (why-reg)	13	98.8365	98.8365	1135	townmgr	?BuildObj@townManager@@QAEXH@Z	why-reg	register-homing knob (B-family)
 inliner (predict-inline)	19	98.8368	98.8368	1661	quicktownwindow	??0TQuickTownWindow@@QAE@PBVtown@@W4TViewLevel@0@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline, 1 over-inline (13 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	36	98.8391	98.8391	3100	campaignbrief	?AddBonusIcons@TCampaignBrief@@QAEXXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 12 under-inline, 8 over-inline (32 name-unresolvable pair(s) discounted)
-unclassified	7	98.8764	98.8764	593	game	??0SavedGameHeader@@QAE@XZ	why-reg	run why-reg / why-branch for the full search
+inliner (predict-inline)	7	98.8764	98.8764	593	game	??0SavedGameHeader@@QAE@XZ	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (1 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	7	98.8939	98.8939	628	viewwrld	?init@TViewWorldWindow@@QAEXUtype_point@@E@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 register-homing (why-reg)	22	98.9130	96.1465	2005	drawing	?DrawFrame@combatManager@@QAEXEEEHEE@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 inliner (predict-inline)	96	98.9497	98.9497	9170	townmgr	??0TTownScreenWindow@@QAE@XZ	predict-inline	callee expanded on one side only (A8/A9/A12): 51 under-inline, 43 over-inline (111 name-unresolvable pair(s) discounted)
@@ -590,7 +602,7 @@ register-homing (why-reg)	7	98.9815	98.9815	642	game	?GetNewHeroId@game@@QAEHHW4
 unclassified	6	98.9849	98.9849	548	ai_tactical	?get_frenzy_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	why-reg	run why-reg / why-branch for the full search
 inliner (predict-inline)	47	99.0102	99.0102	4757	recruit	??0TRecruitWindow@@QAE@HHHPAVrecruitUnit@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 26 under-inline, 21 over-inline (56 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	14	99.0386	99.0386	1480	advspells	?TownGate@advManager@@QAEXH@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
-control-flow (why-branch)	52	99.0481	99.0481	5425	events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
+control-flow (why-branch)	52	99.0481	98.5741	5425	events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 unclassified	6	99.0596	99.0596	623	town	?show_creature_rewards@@YIXPBVtown@@PAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@std@@@Z	why-reg	run why-reg / why-branch for the full search
 control-flow (why-branch)	18	99.0902	99.0902	1946	events	?DoEventCreatureGenerator@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	4	99.0992	99.0992	389	ai	?choose_defense_hex@combatManager@@QAEEPBVarmy@@0PAJ1PAVsearchArray@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
@@ -638,8 +650,7 @@ register-homing (why-reg)	2	99.8359	99.8359	996	game	?loadVictoryCondition@NewSM
 register-homing (why-reg)	3	99.8370	98.8948	1976	game	?PerWeek@game@@QAEXXZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	2	99.8370	99.8370	1026	town	?save@town@@QAEHPAVTAbstractFile@@@Z	why-reg	spill to dead-parameter slot (B4)
 register-homing (why-reg)	1	99.8438	99.8438	419	campaignbrief	??0NewSMapHeader@@QAE@XZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
-unclassified	1	99.8469	99.8469	600	town	?TownFn_005BF900@town@@QAEJJ@Z	why-reg	run why-reg / why-branch for the full search
-inliner (predict-inline)	1	99.8503	76.3653	501	ai_tactical	?get_attack_skill_value@type_AI_spellcaster@@QAEJPBVarmy@@0JJ@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 6 under-inline, 1 over-inline
+inliner (predict-inline)	1	99.8503	68.4970	501	ai_tactical	?get_attack_skill_value@type_AI_spellcaster@@QAEJPBVarmy@@0JJ@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 6 under-inline, 1 over-inline
 register-homing (why-reg)	5	99.8554	99.8554	3212	kb	?DoNormalDialog@@YIXUTNormalDialogInfo@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	1	99.8565	99.8565	585	spells	?AreaEffect@combatManager@@QAEXJHJJ@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 inliner (predict-inline)	8	99.8607	99.8607	5997	combatresultswindow	??0TCombatResultsWindow@@QAE@PBVhero@@0HHEH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 34 under-inline, 27 over-inline (57 name-unresolvable pair(s) discounted)
@@ -673,4 +684,4 @@ unclassified	0	99.9744	99.9744	930	sacrifice_window	?update_creature_offering@ty
 register-homing (why-reg)	0	99.9787	99.9787	1264	swapmgr	?SetRolloverText@swapManager@@QAEXH@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	0	99.9874	99.9874	2185	singleselectionwindow	?SetCurrentMap@TSingleSelectionWindow@@QAEXHE@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 inliner (predict-inline)	1	99.9881	99.3727	9538	events	?DispatchEvent@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline (2 name-unresolvable pair(s) discounted)
-register-homing (why-reg)	0	99.9962	98.9251	1696	army	?do_attack@army@@QAEEPAV1@H@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
+register-homing (why-reg)	0	99.9962	98.8868	1696	army	?do_attack@army@@QAEEPAV1@H@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
