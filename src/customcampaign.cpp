@@ -14,8 +14,19 @@
 #include "customcampaign_legacy.h"
 #include "gzinflatebuf.h"
 #include "hero.h"
+#include "bitmap16.h"
+#include "font.h"
+#include "inputmgr.h"
+#include "kb.h"
+#include "kbwin.h"
+#include "message.h"
+#include "prefs.h"
+#include "resourcemanager.h"
+#include "sample.h"
+#include "smackmgr.h"
 #include "soundmgr.h"
 #include "town.h"
+#include "winmgr.h"
 #include <string.h>
 
 // Scenario ordinals used when the fixed legacy matrices are promoted to the
@@ -43,6 +54,39 @@ static const int CROSSOVER_PATROL_FIRST_SCENARIO = 6;
 static const int CROSSOVER_PATROL_LAST_SCENARIO = 7;
 static const int CROSSOVER_PATROL_HERO = 155;
 static const int CROSSOVER_PATROL_RADIUS = 10;
+
+// MapTextStruct::Play's own domain. Every value is retail's; the names are
+// ROLE inventions - no Dreamcast row survives for this Complete-only body.
+// The two video ordinals that select the lowered origin are the compare set
+// the entry chain tests (`== 0x11`, `>= 0x18 && != 0x45`), and the id the
+// sixth VideoOpen argument is switched on happens to share the lowered
+// origin's value without being the same quantity.
+static const int CAMPAIGN_VIDEO_LOWERED = 0x11;
+static const int CAMPAIGN_VIDEO_FIRST_LOWERED = 0x18;
+static const int CAMPAIGN_VIDEO_RAISED = 0x45;
+static const int CAMPAIGN_VIDEO_LOWERED_Y = 100;
+static const int CAMPAIGN_VIDEO_NO_FADE = 100;
+// The subtitle strip: 608 wide at the screen's (96, 510), 82 tall, scrolled
+// one line at a time. The strip bitmap is one font line taller than the text
+// so the first line can slide in.
+static const int CAMPAIGN_SUBTITLE_WIDTH = 0x260;
+static const int CAMPAIGN_SUBTITLE_HEIGHT = 0x52;
+static const int CAMPAIGN_SUBTITLE_X = 0x60;
+static const int CAMPAIGN_SUBTITLE_Y = 0x1fe;
+static const int CAMPAIGN_SUBTITLE_SCROLL_MARGIN = 0x4d;
+static const int CAMPAIGN_SUBTITLE_COLOR = 0x11f;
+static const int CAMPAIGN_SCROLL_INTERVAL = 0x8e;
+static const int CAMPAIGN_LINGER_MS = 3000;
+static const int CAMPAIGN_VIDEO_LINGER_MS = 5000;
+static const int CAMPAIGN_SPEECH_SAMPLE_STATUS = 4;
+// The one key the player may press without ending the sequence.
+static const int CAMPAIGN_SKIP_KEY = 0x3e;
+
+// The two per-video tables MapTextStruct::Play indexes with `video`. Each is
+// referenced from exactly one site in the whole image - this body - so
+// customcampaign.obj owns both.
+DATA(0x0063d734) extern const int akCampaignVideoIds[];
+DATA(0x00675be8) extern const char* akCampaignVideoSounds[];
 
 // The two TStreamBufFile virtuals, emitted at the head of this object
 // (see gzinflatebuf.h): sgetn / sputn on the wrapped streambuf.
@@ -471,13 +515,211 @@ void TCampaignBrief::CampaignHeaderStruct::GetAvailableScenarios(
     }
 }
 
-#if 0  // @carcass - Complete-only prologue/epilogue player (video + MP3 + subtitles).
+// Complete-only prologue/epilogue player. It opens the campaign video,
+// renders the subtitle text into an off-screen strip that scrolls one pixel
+// row per 142 ms, starts either the per-video speech sample or the scenario
+// MP3, and pumps the message loop until all three have been finished for
+// their linger interval or the user clicks or keys out. The four flag/clock
+// pairs (subtitle, speech, video) are what the tail conjunction tests.
 VA(0x00488fb0, 0x528)  // PlayScenarioPrologue callee + music-cell reader, retail-only
 void TCampaignBrief::MapTextStruct::Play()
 {
-    // @stub
+    if (video < 0)
+        return;
+
+    int videoY = 0;
+    if (video == CAMPAIGN_VIDEO_LOWERED
+        || (video >= CAMPAIGN_VIDEO_FIRST_LOWERED
+            && video != CAMPAIGN_VIDEO_RAISED))
+        videoY = CAMPAIGN_VIDEO_LOWERED_Y;
+
+    VideoOpen(akCampaignVideoIds[video], 0, videoY, 0, 0,
+              video != CAMPAIGN_VIDEO_NO_FADE, 0, 1);
+
+    unsigned char finished = 0;
+    unsigned char speech_started = 0;
+    int mp3_started = 0;
+    int saved_volume = gUnk698760;
+    long next_scroll = GameTime::Get() + CAMPAIGN_SCROLL_INTERVAL;
+    int text_height = gpBigFont->LineLength(subtitles.c_str(),
+                                            CAMPAIGN_SUBTITLE_WIDTH)
+                      * gpBigFont->fs.height;
+
+    Bitmap16Bit* strip = 0;
+    int scroll_y = 0;
+    int scroll_delay = gpBigFont->fs.height;
+    unsigned char video_done = 0;
+    unsigned char redraw = 1;
+    const char* music = 0;
+    const char* speech_name = 0;
+
+    if (gpGame->campaign.currentCampaign
+        != SCampaign::PRE36_CAMPAIGN_REMAP_TARGET) {
+        speech_name = akCampaignVideoSounds[video];
+        if (!*speech_name)
+            speech_name = 0;
+    }
+    if (audio != -1)
+        music = akCampaignMusicTraits[audio].name;
+
+    gpWindowManager->screenBitmap->FillRect(0, 0, 800, 600, 0);
+
+    if (subtitles.length() > 0 && (gbShowSubtitles || !speech_name)) {
+        if (text_height < CAMPAIGN_SUBTITLE_HEIGHT)
+            text_height = CAMPAIGN_SUBTITLE_HEIGHT;
+        strip = new Bitmap16Bit(CAMPAIGN_SUBTITLE_WIDTH,
+                                text_height + gpBigFont->fs.height);
+        if (!strip)
+            MemError();
+        strip->FillRect(0, 0, strip->Width, strip->Height, 0);
+        gpBigFont->DrawBoundedString(subtitles.c_str(), strip, 0, 0,
+                                     strip->Width, strip->Height,
+                                     CAMPAIGN_SUBTITLE_COLOR,
+                                     font::CENTER_JUSTIFIED, -1);
+    }
+
+    sample* speech = speech_name ? ResourceManager::GetSample(speech_name) : 0;
+
+    gpInputManager->Flush();
+    gpWindowManager->UpdateScreen(0, 0, 800, 600);
+
+    unsigned char text_done;
+    long text_end = 0;
+    if (strip) {
+        text_done = 0;
+    } else {
+        text_done = 1;
+        text_end = GameTime::Get();
+    }
+
+    unsigned char speech_done;
+    long speech_end = 0;
+    if (!speech) {
+        speech_done = 1;
+    } else {
+        speech_done = 0;
+        speech_end = GameTime::Get();
+    }
+
+    long video_end = 0;
+    if (!gSmackVideo2) {
+        video_done = 1;
+        video_end = GameTime::Get();
+    }
+
+    for (;;) {
+        PollSound();
+        Process1WindowsMessage();
+        if (VideoNeedsUpdate())
+            VideoDrawRects();
+
+        if (static_cast<long>(GameTime::Get() - next_scroll) >= 0) {
+            if (strip) {
+                if (redraw) {
+                    if (scroll_delay)
+                        --scroll_delay;
+                    else if (scroll_y < text_height
+                                            - CAMPAIGN_SUBTITLE_SCROLL_MARGIN)
+                        ++scroll_y;
+                }
+                strip->FillRect(CAMPAIGN_SUBTITLE_X, CAMPAIGN_SUBTITLE_Y,
+                                CAMPAIGN_SUBTITLE_WIDTH,
+                                CAMPAIGN_SUBTITLE_HEIGHT, 0);
+                if (scroll_delay) {
+                    strip->Draw(0, 0, CAMPAIGN_SUBTITLE_WIDTH,
+                                CAMPAIGN_SUBTITLE_HEIGHT - scroll_delay,
+                                gpWindowManager->screenBitmap->map,
+                                CAMPAIGN_SUBTITLE_X,
+                                CAMPAIGN_SUBTITLE_Y + scroll_delay,
+                                gpWindowManager->screenBitmap->Width,
+                                gpWindowManager->screenBitmap->Height,
+                                gpWindowManager->screenBitmap->Pitch, false);
+                } else {
+                    if (scroll_y >= text_height - CAMPAIGN_SUBTITLE_HEIGHT) {
+                        if (!text_done)
+                            text_end = GameTime::Get();
+                        text_done = 1;
+                    }
+                    strip->Draw(0, scroll_y, CAMPAIGN_SUBTITLE_WIDTH,
+                                CAMPAIGN_SUBTITLE_HEIGHT,
+                                gpWindowManager->screenBitmap->map,
+                                CAMPAIGN_SUBTITLE_X, CAMPAIGN_SUBTITLE_Y,
+                                gpWindowManager->screenBitmap->Width,
+                                gpWindowManager->screenBitmap->Height,
+                                gpWindowManager->screenBitmap->Pitch, false);
+                }
+                if (redraw) {
+                    gpWindowManager->UpdateScreen(CAMPAIGN_SUBTITLE_X,
+                                                  CAMPAIGN_SUBTITLE_Y,
+                                                  CAMPAIGN_SUBTITLE_WIDTH,
+                                                  CAMPAIGN_SUBTITLE_HEIGHT);
+                    redraw = 0;
+                }
+            }
+
+            if (!speech_started && (mp3_started || audio == -1)
+                && speech) {
+                gpSoundManager->MemorySample(speech);
+                speech_started = 1;
+            } else if (mp3_started) {
+                if (speech && !speech_done) {
+                    speech_done = gpSoundManager->GetSampleInfo(
+                                      speech->field_1c,
+                                      CAMPAIGN_SPEECH_SAMPLE_STATUS)
+                                  == 0;
+                    if (speech_done)
+                        speech_end = GameTime::Get();
+                }
+            } else if (music && AIL_stream_status(gMP3Stream)
+                                    != AIL_STREAM_PLAYING) {
+                gUnk698760 /= 2;
+                gpSoundManager->StartMP3(music, 0, 1);
+                mp3_started = 1;
+            }
+
+            if (gbShowSubtitles)
+                redraw = 1;
+            if (!video_done && !gSmackVideo) {
+                video_done = 1;
+                video_end = GameTime::Get();
+            }
+            next_scroll = GameTime::Get() + CAMPAIGN_SCROLL_INTERVAL;
+
+            if (speech_done
+                && static_cast<long>(GameTime::Get() - speech_end)
+                       >= CAMPAIGN_LINGER_MS
+                && text_done
+                && static_cast<long>(GameTime::Get() - text_end)
+                       >= CAMPAIGN_LINGER_MS
+                && video_done
+                && static_cast<long>(GameTime::Get() - video_end)
+                       >= CAMPAIGN_VIDEO_LINGER_MS)
+                finished = 1;
+        }
+
+        message msg = gpInputManager->GetEvent();
+        switch (msg.id) {
+        case MESSAGE_KEY_DOWN:
+            if (msg.codeX != CAMPAIGN_SKIP_KEY)
+                goto stop;
+            break;
+        case MESSAGE_LEFT_BUTTON_DOWN:
+        case MESSAGE_RIGHT_BUTTON_DOWN:
+            goto stop;
+        }
+        if (finished)
+            goto stop;
+    }
+
+stop:
+    if (speech) {
+        gpSoundManager->StopSample(speech->field_1c);
+        speech->Dispose();
+    }
+    delete strip;
+    gUnk698760 = saved_volume;
+    VideoClose();
 }
-#endif  // @carcass
 
 VA(0x004894e0, 0x1D)  // CampaignBriefHandler launch arm, retail-only
 void TCampaignBrief::CampaignHeaderStruct::StartScenario(
