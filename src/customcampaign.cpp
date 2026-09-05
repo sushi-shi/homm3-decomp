@@ -737,11 +737,24 @@ int TCampaignStartOption::_slot5(void* scenarioRecord, int which) const
     TCampaignBrief::ScenarioStruct* scenario =
         static_cast<TCampaignBrief::ScenarioStruct*>(scenarioRecord);
     int player = GetPlayer(which);
+    // The crossover index must land in a NAMED local initialised to -1 and
+    // overwritten under the guard, not in either `return` form: retail sinks
+    // the `-1` epilogue to the end of the body and FALLS THROUGH the last
+    // test into the index load, which is what this spelling produces.
+    // 71.7308 -> 100.0000 (2026-09-05). Measured and rejected: two returns
+    // with the guard as written (71.73, the last test emits `jg` against
+    // retail's `jle` and the wrong epilogue is sunk), the fully inverted
+    // `== 0 && == 0 && <= 0` chain returning -1 (69.52 - `count() == 0`
+    // degrades retail's `ja` to `jne`), `!= 0` for the last operand (71.73),
+    // nested ifs over one shared tail (69.52), splitting the last operand
+    // into its own guard with a duplicated index return (58.27, three
+    // epilogues), and a ternary (71.73).
+    int result = -1;
     if (scenario->crossover_artifacts.count() > 0
         || scenario->hero_placeholders.size() > 0
         || scenario->heroes_status[player] > 0)
-        return gpGame->campaign.crossoverArrayIndex;
-    return -1;
+        result = gpGame->campaign.crossoverArrayIndex;
+    return result;
 }
 
 // Slot 12, inherited by the bonus list and the starting-hero option (the
