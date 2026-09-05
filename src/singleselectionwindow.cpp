@@ -4989,17 +4989,20 @@ unsigned char TSingleSelectionWindow::OnClickMsg(CNetMsg* pNetMsg)
 // and returned CanChooseHero to its exact row. The FILE_ROW double-click
 // reads clickTime into a local before GameTime::Get() (retail holds it in
 // ESI across the call).
-// Residual: (a) retail keeps both OnBeginGame sites out of line with
-// different *bExitFlag store registers (edx/ecx); ours allocate the same
-// register and the cross-jumper merges the BEGIN arm's tail into the
-// FILE_ROW one; (b) retail CALLS the GetRandomMapName() temporary's
-// basic_string::_Tidy and the CNewSetupInfoMsg expansion's CNetMsg base
-// ctor - both depth-2 sites whose nested budget (budget / sites-remaining)
-// is smaller in retail, i.e. retail's source has more /Ob2 candidates
-// after them than ours: OnBeginGame (0x58bce0) and
-// RebuildFilteredPlayerSetup (0x580430) are still carcass stubs here, so
-// they are not candidates in this TU; (c) the block alignment shifts by
-// one at the TOWN_PREV lookup and the remaining flow rows are that shift.
+// MATCHING (2026-09-05): 94.4890 -> 97.3769, and (a) below is CLOSED - the
+// second OnBeginGame call site came back once the file-row bounds guards
+// were written retail's way (see the note at that arm). Residual: retail
+// CALLS the GetRandomMapName() temporary's basic_string::_Tidy and the
+// CNewSetupInfoMsg expansion's CNetMsg base constructor, both depth-2
+// sites whose nested budget (budget / sites-remaining) is smaller in
+// retail; that is the last three branches (144 against 141). The earlier
+// prediction here - that the residual would lift once OnBeginGame and
+// RebuildFilteredPlayerSetup stopped being carcass stubs and became /Ob2
+// candidates in this TU - is REFUTED: both landed on 2026-09-05 and this
+// row did not move by a digit. One more instruction pair is
+// pick_next_alignment's `cmp 8 / jg` against retail's `cmp 9 / jge`;
+// spelling it `>= TOWN_CONFLUX + 1` in newgame.h does produce retail's
+// encoding and costs 0.25 overall, so it stays.
 // E:\gamedcs\singleselectionwindow.cpp:5100
 VA(0x005865b0, 0x13EA)  // anchor-callee WindowHandler's id==0x200/codeX==13 arm calls it (msg, &redraw, 0) - the DC signature exactly; size 0.57x dc 0x22d4, dc 0x13c79c
 int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
