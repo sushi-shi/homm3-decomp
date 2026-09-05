@@ -4308,6 +4308,41 @@ static void show_hero_skills(int code, unsigned char right_mouse)
 // [ebp-0x20] / [ebp-0x24] / [ebp-0x18].  Retail's shared `return 1` epilogue
 // sits at fn+0x7e, immediately after the MOUSE_MOVE arm's `mov eax,1`
 // fall-through; ours is threaded to fn+0x128a at the very end.
+// ARM ORDER IS NOT THE PROBLEM - MEASURED AND REFUTED 2026-09-05.  A
+// standing brief said "the jump-table arm ORDER differs"; it does not.
+// Both jump tables were decoded on both sides and they agree exactly.
+// The two BYTE index tables are byte-identical (00 01 08 08 ... 08 04 05
+// 06 07 and 00 00 00 11 ... 10 10 11 05), so the case-to-arm assignment
+// is already right; and sorting each table's targets by address gives the
+// SAME arm sequence on both sides - DESELECT 8,7,0,1,5,2,3,4,6 and SELECT
+// 3,2,8,9,5,7,6,4,0,1,16,14,15,10,11,12,13,17.  Reordering the `case`
+// labels can only make this worse.  Do not spend a round on it.
+//
+// AND THE 15-vs-6 NormalDialog CENSUS IS NOT AN INDEPENDENT DEFECT: it is
+// the epilogue placement wearing a second face.  Retail's merged `return
+// 1` block sits at fn+0x79, as the FALL-THROUGH successor of the
+// MOUSE_MOVE arm, and all 64 other exits `jmp` back to it; ours sits at
+// fn+0x128a, as the fall-through successor of the SOURCE-LAST arm
+// (show_hero_skills).  Because our epilogue is the last block, the last
+// arm's `call NormalDialog` + fall-through is a two-instruction tail that
+// the six right-click help arms share, so C2's cross-jumper merges all six
+// into it (`mov edx,4 / jmp 0x1285`).  Retail's arms end `call
+// NormalDialog / jmp 0x5fd9` - the SAME two-instruction tail, six times,
+// UNMERGED - purely because their shared successor is far away.  So there
+// is exactly ONE decision left in this function, not two: which member of
+// the epilogue merge-set C2 emits in place.  Retail keeps the FIRST
+// (source-order) `return 1`; we keep the LAST.  Every documented attempt
+// (the exitFlag device, caller shrink at four doses, the shared-tail
+// helper, the status-code select, `right_mouse` as int, RTM-vs-SP3) moved
+// something else and left that decision untouched - the exitFlag device in
+// particular DOES produce the single shared epilogue and still places it
+// after show_hero_skills (75.41 -> 69.34), which is what proves the
+// placement is a separate knob from the merge.
+// Two facts that any candidate explanation has to carry: retail's frame is
+// 0x14c against our 0x144 (two named locals we do not have), and retail
+// homes `right_mouse` in the DEAD `msg` parameter slot [ebp+8] while we
+// spend a numbered local on it - both consistent with the frame being
+// allocated after a different set of blocks survived.
 VA(0x004dd2d0, 0x143E)  // anchor-bracket + absent-callees, dc 0xcf54c
 int THeroScreenWindow::WindowHandler(message* msg)
 {
