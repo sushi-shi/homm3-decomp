@@ -14,6 +14,8 @@
 // this TU needs the COMPLETE Bitmap16Bit.
 #include "bitmap16.h"
 #include "wingraph.h"
+// Open answers a failed screen-bitmap allocation with MemError.
+#include "kb.h"
 
 // E:\gamedcs\winmgr.cpp:66. The four unclaimed rows ahead of
 // ConvertToHover are the DC roster's ctor / Open / Close / Main run in
@@ -92,6 +94,55 @@ int heroWindowManager::Open(int newPriority)
 }
 
 #endif  // @carcass
+
+// The four screen-geometry slots Open hands to Bitmap16Bit::reference.
+// They are read at exactly one site in the whole image - these four
+// instructions - and written at none, so nothing names them; the widths are
+// the ones `reference(int, int, int, unsigned short*)` imposes.
+DATA(0x006aac94) extern int gUnnamed6aac94;
+DATA(0x006aac98) extern int gUnnamed6aac98;
+DATA(0x006aac9c) extern int gUnnamed6aac9c;
+DATA(0x006aaca0) extern unsigned short* gUnnamed6aaca0;
+
+// E:\gamedcs\winmgr.cpp:101 - slot 0, and the DC line program supplies the
+// whole statement list: InitVideo at 104, the screen bitmap and its null
+// check at 108-110, reference at 112, FillRect at 113, the app blit at 115,
+// the two mouse calls at 118/120, the three baseManager fields at 124-126,
+// the name at 127 and the return at 129. Retail differs from Dreamcast in
+// ONE statement and the retail bytes win: DC reads the four `reference`
+// arguments back from another bitmap's Get* accessors, retail reads them
+// from the four .bss slots above.
+VA(0x006021b0, 0x114)  // dc order-map (ctor/Open/Close/Main), dc 0x19a840
+int heroWindowManager::Open(int newPriority)
+{
+    InitVideo();
+
+    screenBitmap = new Bitmap16Bit(0, 0);
+    if (screenBitmap == 0)
+        MemError();
+
+    screenBitmap->reference(gUnnamed6aac94, gUnnamed6aac98, gUnnamed6aac9c,
+                            gUnnamed6aaca0);
+    screenBitmap->FillRect(0, 0, 800, 600, 0);
+
+    RECT tempRect;
+    tempRect.left = 0;
+    tempRect.top = 0;
+    tempRect.right = 800;
+    tempRect.bottom = 600;
+    RobAppBlit(&tempRect);
+
+    gpMouseManager->SetPointer(0, mouseManager::DEFAULT_SET);
+    gpMouseManager->ShowPointer(1);
+
+    priority = newPriority;
+    id = 32;
+    status = STATUS_ACTIVE;
+    strcpy(cMgrName,
+           DATA_COMPGEN(0x0068d260, heroWindowManagerName,
+                        "heroWindowManager"));
+    return 0;
+}
 
 // E:\gamedcs\winmgr.cpp:142 - slot 1. The teardown walks the list from
 // the TAIL through prevWindow (retail reads [w+0xc] before each
