@@ -487,6 +487,27 @@ static long check_match(long player, long first_x, long first_y,
 // The MAP_WIDTH in the Y window's first bound is retail's own: the second
 // operand of that pair reads MAP_HEIGHT, and the two globals are loaded
 // separately, so no CSE could have produced it. Transcribed as found.
+//
+// Residual (79.1843%): ONE structural fact, and everything else is its
+// shift. Retail strength-reduces the bounding-box sweep's inner subscript
+// into a running pointer - `[ebp-8] = puzzle_map + x*0x110 + 0xc`, then
+// `add edi,0x10` per column - so its inner-loop head is a single block that
+// the outer head falls into. Ours keeps `x*17` in a slot and rebuilds
+// `(that + y) << 4` every iteration, which needs a rotated entry (`jmp`
+// past the reload) and puts our whole block list one ahead of retail's from
+// B1 on; 49 of the 70 blocks then pair as flow-kind mismatches purely from
+// that offset. The blocker is that our `_cpp_min`/`_cpp_max` calls bind
+// their const references DIRECTLY to `x`, `y` and the four accumulators -
+// `lea ecx,[ebp-0x24]` on the counter's own home - which takes the
+// induction variable's address and forbids the rewrite, while retail copies
+// every operand into the same two temporaries ([ebp-0x30]/[ebp-0x2c]) and
+// leaves x, y, max_x and min_y in EDX, EAX, ESI and EBX. The frame is four
+// bytes over retail's 0x80 for the same reason: six values memory-homed
+// against retail's two. Tried and rejected, all byte-flat or worse:
+// swapping every min/max argument pair (79.1706), hoisting `x` and `y` to
+// function scope (79.1843 to the digit). What is wanted is an argument form
+// that is an RVALUE on both sides, and no plausible source spelling for it
+// has been found - a cast would be inventing one.
 VA(0x0052cf10, 0x5B4)  // anchor-caller AI_attempt_puzzle_guess +0x39d, dc 0x115be8
 type_point match_puzzle(long player, type_AI_puzzle_tile (*puzzle_map)[17])
 {
