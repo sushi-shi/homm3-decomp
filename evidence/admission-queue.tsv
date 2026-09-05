@@ -61,7 +61,6 @@ bracketed	823	0x13e6a0	bracketed	quicktownwindow..recruit	quicktownwindow,recrui
 bracketed	815	0x86110	bracketed	cursor..customcampaign	cursor,customcampaign	game_86440_sub00_86110	resolve the owner, then add its VA claim and body
 bracketed	810	0x1402a0	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_1402a0	resolve the owner, then add its VA claim and body
 bracketed	804	0x145250	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_144a50_sub00_145250	resolve the owner, then add its VA claim and body
-bracketed	802	0x7b480	bracketed	creaturetype..csequence	creaturetype,csequence	CSprite_AddFrame	resolve the owner, then add its VA claim and body
 bracketed	800	0x1699c0	bracketed	scenarioinfo..search	scenarioinfo,search	game_1699c0	resolve the owner, then add its VA claim and body
 bracketed	799	0x1c2ff0	bracketed	towngatewindow..townmgr	towngatewindow,townmgr	game_1d3240_sub01_1c2ff0	resolve the owner, then add its VA claim and body
 bracketed	798	0x13e9e0	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_13ed00_sub00_13e9e0	resolve the owner, then add its VA claim and body
@@ -76,7 +75,6 @@ carcass	767	0x1b68a0	bracketed	rmg_terrain	rmg_terrain	TRmgTerrainPainter_BuildN
 bracketed	767	0x1b9fb0	bracketed	text..textntry	text,textntry	type_text_scroller	resolve the owner, then add its VA claim and body
 bracketed	766	0x1b8720	bracketed	systemoptionswindow..text	systemoptionswindow,text	game_1b7cd0_sub00_1b8720	resolve the owner, then add its VA claim and body
 bracketed	761	0xb7a50	bracketed	font..game	font,game	game_b70e0_sub00_b7a50	resolve the owner, then add its VA claim and body
-bracketed	761	0x18e700	bracketed	singleselectionwindow..slider	singleselectionwindow,slider	game_17f330_sub03_18e700	resolve the owner, then add its VA claim and body
 bracketed	761	0x1a9570	bracketed	spells..strip	spells,strip	game_1a9450_sub00_1a9570	resolve the owner, then add its VA claim and body
 bracketed	757	0x1443a0	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_1446a0_sub00_1443a0	resolve the owner, then add its VA claim and body
 bracketed	747	0xb6260	bracketed	font..game	font,game	game_data_b6260	resolve the owner, then add its VA claim and body
@@ -156,7 +154,6 @@ bracketed	500	0x857b0	bracketed	cursor..customcampaign	cursor,customcampaign	gam
 bracketed	498	0x13efa0	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_13f470_sub00_13efa0	resolve the owner, then add its VA claim and body
 bracketed	495	0x1ba6e0	bracketed	text..textntry	text,textntry	game_57990_sub04_1ba6e0	resolve the owner, then add its VA claim and body
 bracketed	492	0x13d8e0	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_13dad0_sub00_13d8e0	resolve the owner, then add its VA claim and body
-bracketed	489	0x7b290	bracketed	creaturetype..csequence	creaturetype,csequence	game_crtraits_txt_7b290	resolve the owner, then add its VA claim and body
 bracketed	489	0x8b8b0	bracketed	customcampaign..dialogbox	customcampaign,dc_input,dc_precompiledheaders,dialogbox	exe_filebuf_vslot05	resolve the owner, then add its VA claim and body
 bracketed	489	0x14c1e0	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_13dad0_sub01_14c1e0	resolve the owner, then add its VA claim and body
 bracketed	484	0x133c80	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_133c80	resolve the owner, then add its VA claim and body
@@ -402,7 +399,6 @@ bracketed	110	0x854c0	bracketed	cursor..customcampaign	cursor,customcampaign	gam
 bracketed	110	0x1141b0	bracketed	newgame..overview	newgame,overview	game_1141b0	resolve the owner, then add its VA claim and body
 bracketed	110	0x132360	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_132360	resolve the owner, then add its VA claim and body
 bracketed	110	0x14c090	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_1860e0_sub01_14c090	resolve the owner, then add its VA claim and body
-bracketed	110	0x18ea00	bracketed	singleselectionwindow..slider	singleselectionwindow,slider	game_1887a0_sub26_18ea00	resolve the owner, then add its VA claim and body
 bracketed	110	0x1b4860	bracketed	systemoptionswindow..text	systemoptionswindow,text	game_234980_sub00_1b4860	resolve the owner, then add its VA claim and body
 unmapped	110	0x2037a0	unmapped				locate the owning TU, then add its VA claim and body
 bracketed	109	0x3cdf0	bracketed	ai_tactical..army	ai_tactical,army	game_3cb20_sub00_3cdf0	resolve the owner, then add its VA claim and body
