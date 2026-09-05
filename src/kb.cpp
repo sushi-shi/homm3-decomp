@@ -778,12 +778,7 @@ void type_normal_dialog_frame::type_normal_dialog_frame(long _x, long _y, long _
     // @stub
 }
 
-// E:\gamedcs\kb.cpp:2452
-DC_ONLY(0xe1e58, 0x214)
-unsigned char type_normal_dialog_frame::handle_click(unsigned char down_click, unsigned char right_click)
-{
-    // @stub
-}
+// E:\gamedcs\kb.cpp:2452 - promoted to a live claim (see below).
 
 // E:\gamedcs\kb.cpp:2549 - promoted to a live claim (see below).
 
@@ -1943,6 +1938,117 @@ int NormalDialogHandler(message& msg)
 // An armed deadline that has run out answers DIALOG_RETURN_TIMEOUT for the
 // window; otherwise a deselect on one of the dialog's reply buttons is
 // turned into the window's answer.  The two picture choices of the
+// E:\gamedcs\kb.cpp:2452. Promoted from DC_ONLY on body evidence: a
+// two-byte-argument `ret 8` virtual whose `this` carries an
+// EGameResource at +0x38 and a long qualifier at +0x3c, dispatched
+// through a 37-entry byte index over exactly the EGameResource domain
+// (WOOD=0 .. RES_SMALL_GOLD=0x24). Retail's jump table settles the arm
+// SET and the arm ORDER - it is a jump-table switch, so layout order is
+// source order - and the Dreamcast statement map (kb.cpp:2452..2538)
+// agrees arm for arm, down to the __divls/__modls pair the secondary
+// skill arm needs.
+VA(0x004f0b20, 0x491)  // anchor-vtable + jump-table domain, dc 0xe1e58
+unsigned char type_normal_dialog_frame::handle_click(unsigned char down_click,
+                                                     unsigned char right_click)
+{
+    if (down_click && right_click) {
+        switch (resource) {
+        case RES_GOOD_LUCK:
+            NormalDialog(gLuckTexts[0], NORMAL_DIALOG_POPUP, -1, -1,
+                         -1, 0, -1, 0, -1, 0, -1, 0);
+            break;
+        case RES_NEUTRAL_LUCK:
+            NormalDialog(gLuckTexts[1], NORMAL_DIALOG_POPUP, -1, -1,
+                         -1, 0, -1, 0, -1, 0, -1, 0);
+            break;
+        case RES_BAD_LUCK:
+            NormalDialog(gLuckTexts[2], NORMAL_DIALOG_POPUP, -1, -1,
+                         -1, 0, -1, 0, -1, 0, -1, 0);
+            break;
+        case RES_GOOD_MORALE:
+            NormalDialog(gMoraleTexts[0], NORMAL_DIALOG_POPUP, -1, -1,
+                         -1, 0, -1, 0, -1, 0, -1, 0);
+            break;
+        case RES_NEUTRAL_MORALE:
+            NormalDialog(gMoraleTexts[1], NORMAL_DIALOG_POPUP, -1, -1,
+                         -1, 0, -1, 0, -1, 0, -1, 0);
+            break;
+        case RES_BAD_MORALE:
+            NormalDialog(gMoraleTexts[2], NORMAL_DIALOG_POPUP, -1, -1,
+                         -1, 0, -1, 0, -1, 0, -1, 0);
+            break;
+        case RES_EXPERIENCE:
+            NormalDialog((*gpGeneralText)[242], NORMAL_DIALOG_POPUP, -1, -1,
+                         -1, 0, -1, 0, -1, 0, -1, 0);
+            break;
+        case RES_MANA:
+            NormalDialog((*gpGeneralText)[150], NORMAL_DIALOG_POPUP, -1, -1,
+                         -1, 0, -1, 0, -1, 0, -1, 0);
+            break;
+        case RES_ARTIFACT: {
+            type_artifact artifact(LOWORD(qualifier), HIWORD(qualifier));
+
+            if (artifact.artifactId == ARTIFACT_SPELL_SCROLL)
+                NormalDialog(artifact.get_description().c_str(),
+                             NORMAL_DIALOG_POPUP, -1, -1,
+                             RES_SPELL, artifact.extra, -1, 0, -1, 0, -1, 0);
+            else
+                NormalDialog(artifact.get_description().c_str(),
+                             NORMAL_DIALOG_POPUP, -1, -1,
+                             -1, 0, -1, 0, -1, 0, -1, 0);
+            break;
+        }
+        case RES_SPELL:
+            NormalDialog(akSpellTraits[qualifier].levelDescriptions[0],
+                         NORMAL_DIALOG_POPUP, -1, -1,
+                         -1, 0, -1, 0, -1, 0, -1, 0);
+            break;
+        case RES_SECONDARY_SKILL: {
+            int skill = qualifier / 3;
+            int mastery = qualifier % 3;
+
+            NormalDialog(akSSkillTraits[skill - 1].levelNames[mastery],
+                         NORMAL_DIALOG_POPUP, -1, -1,
+                         -1, 0, -1, 0, -1, 0, -1, 0);
+            break;
+        }
+        case RES_PRIMARY_SKILL_ATTACK:
+        case RES_PRIMARY_SKILL_DEFENSE:
+        case RES_PRIMARY_SKILL_POWER:
+        case RES_PRIMARY_SKILL_KNOWLEDGE:
+            NormalDialog(gStatDesc[resource - RES_PRIMARY_SKILL_ATTACK],
+                         NORMAL_DIALOG_POPUP, -1, -1,
+                         -1, 0, -1, 0, -1, 0, -1, 0);
+            break;
+        case WOOD:
+        case MERCURY:
+        case ORE:
+        case SULFUR:
+        case CRYSTAL:
+        case GEMS:
+        case GOLD:
+        case RES_SMALL_GOLD:
+            NormalDialog((*gpGeneralText)[243], NORMAL_DIALOG_POPUP, -1, -1,
+                         -1, 0, -1, 0, -1, 0, -1, 0);
+            break;
+        }
+        return 1;
+    }
+    return 0;
+}
+// Residual (99.9457%): ONE instruction pair swapped - retail stores
+// artifactId before extra in the RES_ARTIFACT arm's type_artifact, our
+// compile stores extra first, because hero.h's two-argument constructor
+// initialises `extra` in its member-init list and assigns `artifactId`
+// in its body (VC6 emits init-list members ahead of body statements).
+// Reordering the constructor would reach ten other construction sites in
+// six TUs that are currently exact, so it is left alone.
+// LOWORD/HIWORD is load-bearing and not cosmetic: retail re-reads the
+// qualifier as a WORD (`xor eax,eax / mov ax, word ptr [this+0x3c]`) and
+// shifts the high half UNSIGNED (`shr`), where `qualifier & 0xffff` plus
+// `qualifier >> 16` on the signed long gives one dword read, `and` and
+// `sar` - 98.93 against 99.95.
+
 // iMBType-7/10 dialogs are a radio pair: selecting one clears the other,
 // enables the OK button, remembers the choice, and redraws - and OK then
 // answers with the remembered choice rather than with its own id.  Every
