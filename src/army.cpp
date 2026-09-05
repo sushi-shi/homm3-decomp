@@ -7050,6 +7050,11 @@ long army::get_AI_target_time(long speed) const
 // E:\gamedcs\army.cpp:5790
 #endif  // @carcass
 
+// COMDAT pairing: vector<army*>::erase, exact 54 B against the larger of
+// the two erase overloads army.obj emits (the other is 51 B, so the join
+// resolves by content size).
+VA_COMPGEN(0x00448d30, 0x36, VECTOR_ERASE, army)
+
 VA(0x00448cd0, 0x4B)  // anchor-global, dc 0x4c918
 int army::GetSpeed() const
 {
@@ -7547,11 +7552,6 @@ VA_COMPGEN(0x00448d70, 0x3D, VECTOR_CLEAR, army)
 
 // COMDAT pairing: deque<int>::iterator::operator+=, agreement 0.935.
 VA_COMPGEN(0x004491c0, 0x69, DEQUE_ITERATOR_ADD_ASSIGN, int)
-
-// COMDAT pairing: vector<army*>::erase(first, last), agreement 1.000. The
-// object emits two erase arms keyed here (54 B and 51 B); only this one has
-// the carve extent.
-VA_COMPGEN(0x00448d30, 0x36, VECTOR_ERASE, army)
 
 // COMDAT pairing: deque<int>::iterator::operator++ and ::operator--, both
 // 51 bytes and byte-identical apart from the step they add - 0x449230 adds
