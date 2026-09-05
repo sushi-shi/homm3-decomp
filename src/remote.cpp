@@ -287,32 +287,33 @@ DATA(0x0069d818) static unsigned long lastActiveUpdate;
 // `__inside__`; retail's two inlined error paths fix it at 0x69d814.
 DATA(0x0069d814) static unsigned char __inside__;
 
-// E:\gamedcs\remote.cpp:3114..3134. These four source boundaries have no
-// standalone retail bodies: /Ob2 expands the one-byte wrapper into its sole
-// OnPlayerDropUpdateMsg use. Stop deliberately leaves m_thread armed; the
-// explicit Stop and the later destructor therefore both stop the thread,
-// exactly as retail does.
-inline CHourGlass::CHourGlass(unsigned char thread)
-    : m_thread(thread)
-{
-    Start();
-}
-
-inline CHourGlass::~CHourGlass()
-{
-    Stop();
-}
-
+// E:\gamedcs\remote.cpp:3125..3134. Start and Stop have no standalone
+// retail bodies - /Ob2 expands each into the one caller it has, the
+// constructor and the destructor claimed further down - but their SHAPE is
+// readable there: each arm ends in a mouse-thread call when the guard was
+// built with a worker thread, and in a direct pointer store when it was
+// not. Stop deliberately leaves m_thread armed, so an explicit Stop and the
+// later destructor both stop the thread, exactly as retail does.
+//
+// A previous reading had these two as single-armed (`if (m_thread)` with no
+// else) and recorded the constructor and destructor as having no retail
+// bodies at all. Both halves were wrong: 0x557f80 and 0x557fc0 are those
+// bodies, and each carries the else arm - `SetPointer(1, ADVENTURE_SET)`
+// on the way in, `SetPointer(0, ADVENTURE_SET)` on the way out.
 inline void CHourGlass::Stop()
 {
     if (m_thread)
         StopMouseThread();
+    else
+        gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
 }
 
 inline void CHourGlass::Start()
 {
     if (m_thread)
         StartMouseThread();
+    else
+        gpMouseManager->SetPointer(1, mouseManager::ADVENTURE_SET);
 }
 
 static const long PLAYER_ACTIVE_UPDATE_INTERVAL = 600000;
@@ -4224,6 +4225,29 @@ CNetMsgHandlerPause::~CNetMsgHandlerPause()
         pDPlay->SetNetMsgHandler(m_pNetMsgHandlerSave);
 }
 
+// E:\gamedcs\remote.cpp:3114, dc 0x11f4d0. The busy-cursor guard: with a
+// worker thread it hands the animation to the mouse thread, without one it
+// parks the pointer on the adventure set's frame 1 itself. Retail stores
+// the flag BETWEEN the test and the branch (`mov al,[ebp+8] / test al,al /
+// mov [esi],al / je`), which is the plain `m_thread = thread; if (thread)`
+// order, and both arms return `this` through their own epilogue rather
+// than sharing one.
+VA(0x00557f80, 0x31)  // anchor-callee(StartMouseThread/SetPointer), dc 0x11f4d0
+CHourGlass::CHourGlass(unsigned char thread)
+    : m_thread(thread)
+{
+    Start();
+}
+
+// E:\gamedcs\remote.cpp:3120, dc 0x11f4e8. The mirror, and retail TAIL-JUMPS
+// into StopMouseThread (`jmp` rather than `call`) because nothing follows
+// it - the destructor has no epilogue of its own to run.
+VA(0x00557fc0, 0x1A)  // anchor-callee(StopMouseThread/SetPointer), dc 0x11f4e8
+CHourGlass::~CHourGlass()
+{
+    Stop();
+}
+
 // COMDAT pairing: deque<CNetMsg*>'s own destructor, 160 B against
 // remote.obj's single 160-byte COMDAT, and the owner of the DEQUE_BUYBACK
 // row claimed just below. Declarator form: _demangle_key keys a deque
@@ -4238,22 +4262,25 @@ std::deque<CNetMsg*>::~deque()
 
 #endif  // @carcass
 
-// E:\gamedcs\remote.cpp:3114
-#if 0  // @carcass
-DC_ONLY(0x11f4d0, 0x16)
-void CHourGlass::CHourGlass(unsigned char thread)
+// COMDAT pairing: `CAutoArray<T>::Add`, the ONE row the whole link carries
+// for this member - both vftables reach it (0x6400d8 and 0x640f24 agree in
+// slot 1), and remote.obj's CDPlaySession and CDPlayPlayer instantiations
+// are byte-identical to each other AND relocation-identical, so /OPT:ICF
+// folded them exactly as it folded ~TResourceHandle. It is claim-only: the
+// definition lives in array.h, and `_demangle_key` keys the member
+// `cautoarray_add`, which no compgen kind builds.
+#if 0  // @carcass: claim-only - the definition lives in array.h
+
+VA(0x00558410, 0x7C)  // COMDAT pairing (ICF-folded CAutoArray<T>::Add)
+unsigned char CAutoArray<CDPlayPlayer>::Add(CDPlayPlayer* element)
 {
     // @stub
 }
 
-// E:\gamedcs\remote.cpp:3120
-DC_ONLY(0x11f4e8, 0x10)
-void CHourGlass::~CHourGlass()
-{
-    // @stub
-}
+#endif  // @carcass
 
 // E:\gamedcs\remote.cpp:3125
+#if 0  // @carcass
 DC_ONLY(0x11f4f8, 0x2A)
 void CHourGlass::Stop()
 {
@@ -4959,3 +4986,9 @@ VA_COMPGEN(0x00558080, 0x2CF, DEQUE_PUSH_BACK, CNetMsg_ptr)
 // remote.obj is again the only object that instantiates the queue.
 VA_COMPGEN(0x00558650, 0x10, DEQUE_CONST_ITERATOR_CTOR, CNetMsg_ptr)
 VA_COMPGEN(0x00558660, 0x6D, DEQUE_GROWMAP, CNetMsg_ptr)
+// ...and the iterator's OTHER constructor, `const_iterator(cur, node)`,
+// which shares the nullary one's mangled spelling and is separated by
+// arity. The body reads it outright: `_First = *node`, `_Last = *node +
+// 0x1000` (the 1024-pointer block <deque> gives a 4-byte element),
+// `_Next = cur` from [ebp+8] and `_Node = node` from [ebp+0xc].
+VA_COMPGEN(0x005586d0, 0x24, DEQUE_CONST_ITERATOR_CTOR_NODE, CNetMsg_ptr)
