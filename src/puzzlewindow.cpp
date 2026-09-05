@@ -597,3 +597,7 @@ void* TPuzzleWindow::`scalar deleting destructor'(unsigned __flags)
     // @stub
 }
 #endif
+
+// COMDAT pairing: bitset<48>::test, agreement 1.000 at an exactly equal
+// 52-byte extent.
+VA_COMPGEN(0x005067e0, 0x34, BITSET_TEST, Bitset48)

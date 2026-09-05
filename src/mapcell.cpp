@@ -9514,3 +9514,7 @@ VA_COMPGEN(0x00506820, 0x60, BITSET_SET, bitset10)
 // is the pointer element, and CMapObjectData is this header's type, so no
 // other compiland can be the owner.
 VA_COMPGEN(0x0048b4a0, 0x3D, VECTOR_CLEAR, CMapObjectData)
+
+// COMDAT pairing: bitset<48>::_Tidy, agreement 1.000 at an exactly equal
+// 40-byte extent.
+VA_COMPGEN(0x004e66c0, 0x28, BITSET_TIDY, Bitset48)

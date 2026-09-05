@@ -5532,3 +5532,7 @@ VA_COMPGEN(0x0046b1a0, 0x3B, VECTOR_UCOPY, tobstaclevector)
 // header's own `begin == 0 ? 0 : end - begin` and nothing else in the image.
 // The 24-byte element stride of the reciprocal divide is TObstacle's.
 VA_COMPGEN(0x00517750, 0x21, VECTOR_SIZE, TObstacleVector)
+
+// COMDAT pairing: combatManager::TObstacleVector::_Ufill, the sibling of the
+// already-claimed _Ucopy, agreement 1.000 at an exactly equal 49-byte extent.
+VA_COMPGEN(0x0046b1e0, 0x31, VECTOR_UFILL, TObstacleVector)

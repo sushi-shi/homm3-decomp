@@ -598,3 +598,9 @@ VA_COMPGEN(0x00517680, 0xCB, BITSET_XINV, Bitset9)
 VA_COMPGEN(0x004044e0, 0x159, CLASS_CTOR, logic_error)
 VA_COMPGEN(0x0041bc10, 0x1D, EXCEPTION_DORAISE, runtime_error)
 VA_COMPGEN(0x0041bc30, 0x159, CLASS_CTOR, runtime_error)
+
+// COMDAT pairing: vector<TObjectType::TImageInfo>::insert(ptr, count,
+// const&), agreement 1.000 at an exactly equal 740-byte extent. TImageInfo
+// is this header's nested type and no other object instantiates the vector,
+// which is why the sizes agree to the byte.
+VA_COMPGEN(0x0046aeb0, 0x2E4, VECTOR_INSERT, TImageInfo)
