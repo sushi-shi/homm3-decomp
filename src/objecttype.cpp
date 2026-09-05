@@ -571,3 +571,30 @@ VA_COMPGEN(0x00515560, 0x161, ISTREAM_EXTRACT_BITSET, Bitset48)
 VA_COMPGEN(0x005157f0, 0x161, ISTREAM_EXTRACT_BITSET, Bitset9)
 VA_COMPGEN(0x00516e40, 0xCB, BITSET_XINV, Bitset48)
 VA_COMPGEN(0x00517680, 0xCB, BITSET_XINV, Bitset9)
+
+// --- three exception members named by retail RTTI --------------------------
+//
+// These three sit far outside this compiland's span; they are here because
+// this is one of the few objects that emits BOTH runtime_error's and
+// logic_error's copy constructors plus runtime_error::_Doraise, and a COMDAT
+// name is image-unique so exactly one claim may hold each.
+//
+// The identification is not a similarity argument. Each exception class's
+// CatchableType records the copyFunction the runtime uses to catch it by
+// value, and the three that matter here read:
+//
+//   0x647f70  .?AVlogic_error@std@@     copyFunction 0x4044e0
+//   0x648648  .?AVruntime_error@std@@   copyFunction 0x41bc30
+//   0x650440  .?AVinvalid_argument@std@@ copyFunction 0x516f30 (claimed above)
+//
+// 0x41bc30 had been claimed in advmgr.cpp as logic_error's on a 0.974
+// mnemonic agreement - the two bodies differ only in the vtable they store,
+// which objdiff resolves by name - and 0x4044e0 was then refused as a
+// duplicate. The RTTI settles both at once, and a second, independent
+// witness agrees: 0x41bc10 constructs through 0x41bc30 and throws with the
+// _ThrowInfo at 0x6487a8, whose catchable list is exactly
+// `runtime_error / exception`. An out_of_range::_Doraise - which is what
+// 0x41bc10 had been claimed as - would list out_of_range and logic_error too.
+VA_COMPGEN(0x004044e0, 0x159, CLASS_CTOR, logic_error)
+VA_COMPGEN(0x0041bc10, 0x1D, EXCEPTION_DORAISE, runtime_error)
+VA_COMPGEN(0x0041bc30, 0x159, CLASS_CTOR, runtime_error)
