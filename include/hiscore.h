@@ -105,6 +105,15 @@ SIZE(CHSInputDlg, 0x5c);
 // the destructor independently reads those same final two slots.
 class THighScoreWindow : public heroWindow {
 public:
+    // The two family selectors and the reset control the constructor gives
+    // ids 1001/1002/1003, and the three cases HighScoreWindowHandler's
+    // deselect switch dispatches on (0x3e9/0x3ea/0x3eb at 0x4ea241).
+    enum EWidgetIDs {
+        CAMPAIGN_ID = 1001,
+        STANDARD_ID = 1002,
+        RESET_ID = 1003
+    };
+
     iconWidget* Creatures[2][11];
     int CreatureFrames[2][11];
     unsigned char bIsStandard;

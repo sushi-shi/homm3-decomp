@@ -99,6 +99,10 @@ enum eRS_Messages {
     RS_PLAYER_ACTIVE = 1071,
     // SendChat's ping command constructs the next two rungs directly.
     RS_PING = 1072,
+    // The answer CDPlayHeroes::HandleLowLevelMsg (0x552db0) sends straight
+    // back at the DirectPlay layer: retail stores 0x431 into the 0x18-byte
+    // CPingResponseMsg it builds on its own frame, one rung above RS_PING.
+    RS_PING_REPLY = 1073,
     // Both transfer receiver and ready-player dispatcher consume this rung.
     // Dreamcast names it in the shared message ladder; retail ReceiveSaveGame
     // dispatches value 1015 to the host-status chat notification.
@@ -428,6 +432,20 @@ public:
         : CNetMsg(id, sizeof(CPingMsg)), m_pingTime(pingTime) {}
 };
 SIZE(CPingMsg, 0x18);
+
+// netmsg.h:815 in the Dreamcast roster - a distinct class from CPingMsg
+// above with the same one-dword payload and the same two-argument
+// constructor (DC ??0CPingResponseMsg@@QAA@KW4eRS_Messages@@@Z stores only
+// the base and the echoed time). Retail's HandleLowLevelMsg proves the same
+// 0x18-byte extent and store order on its own frame.
+class CPingResponseMsg : public CNetMsg {
+public:
+    unsigned long m_pingTime;
+
+    CPingResponseMsg(unsigned long pingTime, eRS_Messages id)
+        : CNetMsg(id, sizeof(CPingResponseMsg)), m_pingTime(pingTime) {}
+};
+SIZE(CPingResponseMsg, 0x18);
 
 class CPlayerDroppedMsg : public CNetMsg {
 public:

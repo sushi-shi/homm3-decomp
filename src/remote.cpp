@@ -62,6 +62,17 @@ inline CLogFile::CLogFile(char* sLogFileName)
     strcpy(m_logFileName, sLogFileName);
 }
 
+// E:\gamedcs\struct.h:340. The definition belongs in this TU as well as in
+// the selection window's: retail's RemoteCleanup (0x5544b0) and the copy of
+// it inlined into HandleLowLevelMsg (0x552e77) both EXPAND the three stores
+// where a declaration-only view emits `call ??0CNetPlayerInfo@@QAE@XZ`.
+inline CNetPlayerInfo::CNetPlayerInfo()
+{
+    dpid = 0;
+    sName[0] = 0;
+    version = *gpVideoGameState;
+}
+
 DATA(0x0069d648) CLogFile logFile(
     DATA_COMPGEN(0x00682a3c, remoteGameLogName, "game.log"));
 // The global constructor consists solely of the inlined strcpy above;
@@ -522,6 +533,112 @@ void CChatManager::PlayerEnterMsg(const char* cChatMsg)
 
 // E:\gamedcs\remote.cpp:1033
 #endif  // @carcass
+
+// E:\gamedcs\remote.cpp:304. The DirectPlay layer's own three rungs, taken
+// before PollRemote offers anything to the higher-level dispatchers: answer a
+// ping, report a ping's round trip in the chat pane, and act on a host's
+// destroy-player order. Everything else is refused - the default arm returns
+// 0 and PollRemote queues the message.
+//
+// The Dreamcast line table (remote.cpp:304-346) fixes the whole shape: a
+// switch with three braced cases, a `default: return FALSE` and a shared
+// `return TRUE` past the switch, and named calls to RemoteCleanup,
+// ReceiveChat, HandlePlayerDrop and TransmitRemoteDataDPID. Retail expands
+// all four here. TransmitRemoteDataDPID's compressMsg argument folds to
+// false, so CompressMsg and its DestroyMsg partner vanish and only the
+// SendIt tail survives; RemoteCleanup arrives as the ClearChat fill loop
+// over twenty 0x88-byte CChatStr records and the DirectPlay teardown.
+//
+// Residual (50.55%): ONE over-inlined site. Retail CALLS
+// deque<CNetMsg*>::_Buyback at BOTH arms of the inlined push_back (0x552f42
+// and 0x552f73); we expand the second, dragging _Getmap, _Growmap, four
+// const_iterator constructors and a second operator new inline - 280 base
+// bytes against retail's 24.
+//
+// The cause is this tree's own RemoteCleanupInline scaffold, not a spelling.
+// VC6 charges an /Ob2 call site the CALLEE's front-end size, and a
+// __forceinline expansion is charged nothing, so the RemoteCleanup site here
+// consumes budget retail's plain `RemoteCleanup()` consumed - leaving the
+// LAST site in source order, HandlePlayerDrop, with a divisor of 1 and more
+// budget than retail had. Everything measured, all against the 50.5525
+// baseline:
+//   - caller-cb carriers are INERT in both directions: `if (0)` doses of
+//     1/3/6/12/30 statements are byte-flat to the digit, and so are 2..40 on
+//     top of every case order below. The knob is the sequential spend ORDER,
+//     not clamp(2*caller_cb, ...).
+//   - `#pragma inline_depth(1..5)` on the HandlePlayerDrop statement is
+//     byte-flat (only N=0 bites, again); N=0 gives 65.67 but turns
+//     HandlePlayerDrop into a call retail expands, so it is refused.
+//   - switch ARM ORDER is the live lever, because it moves how many sites
+//     remain after HandlePlayerDrop. With PING/PING_REPLY/DESTROY (the
+//     Dreamcast line order, 309/316/324, which is what stands here) the
+//     divisor is 1 and we over-inline: 50.55. Every order that leaves sites
+//     after the drop arm lands on the far side and UNDER-inlines push_back
+//     itself: DESTROY-first 72.36, PING/DESTROY/REPLY 72.81,
+//     REPLY/DESTROY/PING 79.00. No order sits on retail's decision, so the
+//     spread straddles it and none of them is the answer - REFUSED as a
+//     source change, since the DC line table fixes the order and 79.00 would
+//     only bank a compensation for the scaffold.
+//   - giving RemoteCleanup() the real body instead of the forwarder (so the
+//     site is charged) makes VC6 stop expanding it here entirely: 32.76.
+//     Making RemoteCleanupInline a plain `static` costs RemoteCleanup itself
+//     100.0 -> 0.74 and three more rows with it.
+// The honest fix is whatever lets a plain `RemoteCleanup()` both emit and
+// expand; until then this row is capped by the scaffold.
+//
+// The frame is 0x18 short (0x120 against retail's 0x138): retail gives the
+// RS_PING arm's CPingResponseMsg its own slot at [ebp-0x38] where our VC6
+// shares the CPlayerDropMsg's at [ebp-0x18]. A 280-byte function-scope
+// buffer reproduces 0x138 and [ebp-0x138] exactly and is worth +0.02, which
+// is not enough to invent the size on.
+VA(0x00552db0, 0x28F)  // anchor-caller(PollRemote 0x552b60) + anchor-callee(SendIt/AddChat/ShutDown) + dc-order-map, dc 0x11bc88
+unsigned char CDPlayHeroes::HandleLowLevelMsg(CNetMsg* pNetMsg)
+{
+    switch (pNetMsg->subType) {
+    case RS_PING:
+        {
+            CPingResponseMsg sTemp(
+                static_cast<CPingMsg*>(pNetMsg)->m_pingTime, RS_PING_REPLY);
+            TransmitRemoteDataDPID(&sTemp, pNetMsg->field_04, false, false);
+        }
+        break;
+
+    case RS_PING_REPLY:
+        {
+            char sTemp[256];
+            sprintf(sTemp,
+                    gpGeneralText->GetText(
+                        GENERAL_TEXT_CHAT_PING_RESULT_FORMAT),
+                    GameTime::ElapsedSince(
+                        static_cast<CPingMsg*>(pNetMsg)->m_pingTime));
+            ReceiveChat(sTemp, pNetMsg->field_00);
+        }
+        break;
+
+    case RS_DESTROY_PLAYER:
+        {
+            unsigned long dpid =
+                static_cast<CDestroyPlayerMsg*>(pNetMsg)->m_dpid;
+            if (dpid == gsThisNetPlayerInfo.dpid) {
+                RemoteCleanup();
+                NormalDialog(
+                    gpGeneralText->GetText(
+                        GENERAL_TEXT_REMOTE_SESSION_DESTROYED),
+                    1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                ShutDown(0);
+            }
+            else {
+                HandlePlayerDrop(dpid);
+            }
+        }
+        break;
+
+    default:
+        return 0;
+    }
+
+    return 1;
+}
 
 // E:\gamedcs\remote.cpp:350. The queue reader, and CompressMsg's exact
 // mirror: take the front message, optionally unlink it, and if it carries an
