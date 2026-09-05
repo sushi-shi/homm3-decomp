@@ -2661,6 +2661,97 @@ long combatManager::compute_fire_shield_damage(long damage, const army* attacker
                              target_hero, attacker, 0);
 }
 
+// E:\gamedcs\ai.cpp:2397. The static one-exchange scorer. It has NO retail
+// row: all three of its call sites are in the body below and /Ob2 expands
+// every one of them, which is exactly the "inlined single-call statics
+// vanish" rule. Its shape is read off those three expansions - the
+// breath-attack site is the one that skips the fire-shield half, which is
+// what the fifth parameter selects.
+static void simulate_simple_attack(army* current_army, army* target,
+                                   long distance, unsigned char ranged,
+                                   unsigned char breath_attack)
+{
+    long hits = current_army->get_total_hit_points(1);
+    if (hits <= 0)
+        return;
+    long damage = AI_get_attack_damage(current_army, hits, target, ranged,
+                                       distance);
+    if (!breath_attack) {
+        long target_hits = target->get_total_hit_points(1);
+        long burn = gpCombatManager->compute_fire_shield_damage(
+            damage, current_army, target, target_hits);
+        if (burn > 0)
+            current_army->set_AI_expected_damage(
+                current_army->get_AI_expected_damage() + burn);
+    }
+    target->set_AI_expected_damage(target->get_AI_expected_damage() + damage);
+}
+
+// E:\gamedcs\ai.cpp:2433. The five-argument simulate_melee_attack, and the
+// widest of the four simulation bodies: a multi-headed attacker scores every
+// direction its head mask covers (each enemy stack once - the bitIndex mask
+// is what de-duplicates a two-hex stack reached from two directions), and
+// anything else scores the target plus, for a breath attacker, whatever
+// stands in the hex behind it.
+// Residual (77.5%): ONE inline decision, at the first of the three
+// simulate_simple_attack expansions. Retail keeps
+// compute_fire_shield_damage a CALL inside the multi-head loop and expands
+// it at the plain-attack site below; ours expands it at both, which is the
+// whole 5-block/4-call difference (base 41 blocks and 30 calls against
+// retail's 36 and 26 - every other call pairs in order). The /Ob2 divisor
+// prices the first site with the most budget, so the separation needs a
+// per-site pin, which this lane may not add. Tried and rejected: extern
+// rather than static linkage on the helper (byte-flat to the digit).
+VA(0x004224e0, 0x2B4)  // anchor-caller(the 3-argument overload) + anchor-callee(compute_fire_shield_damage), dc 0x2746c
+void combatManager::simulate_melee_attack(army* current_army, long hex,
+                                          army* target, long enemy_hex,
+                                          long our_group)
+{
+    unsigned char multi_head = static_cast<unsigned char>(
+        static_cast<unsigned>(current_army->creatureId) >> 19);
+    if (multi_head & 1) {
+        long directions = current_army->get_multi_head_directions(hex, target,
+                                                                  enemy_hex);
+        long hit = 0;
+        for (long direction = 7; direction >= 0; direction--) {
+            if (!(directions & (1 << direction)))
+                continue;
+            long adjacent = current_army->get_adjacent_hex(hex, direction);
+            if (adjacent < 0 || adjacent >= COMBAT_GRID_CELLS)
+                continue;
+            army* victim = cells[adjacent].get_army();
+            if (!victim)
+                continue;
+            long bit = 1 << victim->bitIndex;
+            if (hit & bit)
+                continue;
+            if (victim->combatSide == our_group)
+                continue;
+            hit |= bit;
+            simulate_simple_attack(current_army, victim, 0, 0, 0);
+        }
+        return;
+    }
+
+    simulate_simple_attack(current_army, target,
+                           gpSearchArray->get_hex(hex)->cost, 0, 0);
+
+    unsigned char breath = static_cast<unsigned char>(
+        static_cast<unsigned>(current_army->creatureId) >> 3);
+    if (breath & 1) {
+        long direction = current_army->get_attack_direction(hex, target,
+                                                            enemy_hex);
+        long behind_hex = current_army->GetAdjacentCellIndex(
+            current_army->get_adjacent_hex(hex, direction), direction);
+        if (behind_hex < 0 || behind_hex >= COMBAT_GRID_CELLS)
+            return;
+        army* behind = cells[behind_hex].get_army();
+        if (!behind || behind == target)
+            return;
+        simulate_simple_attack(current_army, behind, 0, 0, 1);
+    }
+}
+
 // E:\gamedcs\ai.cpp:2490. The three-argument simulate_melee_attack: play
 // one melee exchange forward on paper. Attack, then the retaliation (unless
 // the attacker ignores it, the defender is disabled, it has no retaliations
@@ -2794,20 +2885,6 @@ void combatManager::simulate_combat(long our_group, unsigned char checking_surre
 }
 
 #if 0  // @carcass
-
-// E:\gamedcs\ai.cpp:2397
-DC_ONLY(0x273d8, 0x92)
-void simulate_simple_attack(army* current_army, army* target, long distance, unsigned char ranged, unsigned char breath_attack)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai.cpp:2433
-DC_ONLY(0x2746c, 0x17C)
-void combatManager::simulate_melee_attack(army* current_army, long hex, army* target, long enemy_hex, long our_group)
-{
-    // @stub
-}
 
 // E:\gamedcs\ai.cpp:2608
 DC_ONLY(0x27888, 0x28E)
