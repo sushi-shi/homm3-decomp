@@ -938,9 +938,10 @@ const char* TCampaignStartCrossoverOption::GetIconDefName(void* campaignRecord,
     SCampaign* campaign = static_cast<SCampaign*>(campaignRecord);
     std::vector<hero>& pool = campaign->carryOverHeroes
         [campaign->mapScores[m_choices[which].scenario].index];
-    if (pool.size() == 0)
+    hero* first = pool.size() != 0 ? pool.begin() : 0;
+    if (first == 0)
         return "hpl000kn.pcx";
-    return akHeroTraits[pool[0].portrait].largePortraitName;
+    return akHeroTraits[first->portrait].largePortraitName;
 }
 
 // The help text names the MAP the heroes come from, which is not the choice's
@@ -984,8 +985,12 @@ int TCampaignStartCrossoverOption::GetPlayer(int which) const
 VA(0x004857b0, 0x1F4)  // anchor-vtable (0x63dad8+0x24), retail-only
 void TCampaignStartCrossoverOption::Read(TAbstractFile* file)
 {
-    unsigned char count;
-    file->Read(&count, sizeof(unsigned char));
+    int count;
+    {
+        unsigned char value;
+        file->Read(&value, sizeof(unsigned char));
+        count = value;
+    }
     for (int i = 0; i != count; ++i) {
         TCampaignCrossoverChoice choice;
         {
@@ -1066,8 +1071,12 @@ int TCampaignStartHeroOption::GetPlayer(int which) const
 VA(0x00485b60, 0x1FB)  // anchor-vtable (0x63db0c+0x24), retail-only
 void TCampaignStartHeroOption::Read(TAbstractFile* file)
 {
-    signed char count;
-    file->Read(&count, sizeof(signed char));
+    int count;
+    {
+        signed char value;
+        file->Read(&value, sizeof(signed char));
+        count = value;
+    }
     m_choices.clear();
     for (int i = 0; i != count; ++i) {
         TCampaignHeroChoice choice;
