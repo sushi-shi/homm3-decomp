@@ -2517,7 +2517,11 @@ public:
     // class even though neither body dereferences `this`. Both NAMES are
     // role-derived and PROVISIONAL - no surviving symbol covers either -
     // and the pair is gated to the one compiland that calls them.
-    void ShowMoraleInfo(const hero* who, int dialogType);
+    // Retyped in place 2026-09-05 (no declarator added): the body at
+    // 0x4f32a0 calls hero::GetMorale, which retail decorates QAE - a
+    // NON-const member - so the parameter cannot be `const hero*`, and
+    // every caller in the tree already hands it a plain hero*.
+    void ShowMoraleInfo(hero* who, int dialogType);
     void ShowLuckInfo(hero* who, int dialogType);
     // Dreamcast names the shared source boundary record_hide_hero. Complete
     // extends it from (hero*, char) to the retail-proven three-argument

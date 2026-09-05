@@ -841,12 +841,7 @@ int GetEnemyCount()
 // E:\gamedcs\kb.cpp:3763 - reconstructed above as the source-static
 // retail expands into EarlySetup.
 
-// E:\gamedcs\kb.cpp:3798
-DC_ONLY(0xe3a64, 0x11E)
-void game::ShowMoraleInfo(hero* thisHero, int iMBType)
-{
-    // @stub
-}
+// E:\gamedcs\kb.cpp:3798 - promoted to a live claim (see below).
 
 // E:\gamedcs\kb.cpp:3830
 #endif  // @carcass
@@ -2894,6 +2889,44 @@ void CheckEndGame(int bForceWin)
         gpCurrentPlayer->isHuman = 0;
     }
     bInCheckEndGame = 0;
+}
+
+// E:\gamedcs\kb.cpp:3798. ShowLuckInfo's twin, and the twin is what
+// fixes it: viewarmywindow's rollover already carries this exact arm
+// set - the 14/15/16 icon ids, gMoraleTexts[3] as the carrier format
+// over rows 0/1/2, and row 23 as the "nothing modifies it" fallback -
+// while retail's 0x4f3540 supplies the surrounding call shape. The
+// morale describer differs from the luck one in exactly one respect,
+// visible in the bytes: it builds the line in a std::string
+// (format_string / operator= / operator+= all expanded, plus two
+// scope-exit ~basic_string) where the luck describer sprintf/strcats
+// into gText.
+VA(0x004f32a0, 0x29c)  // dc 0xe3a64, arm-for-arm against 0x4f3540
+void game::ShowMoraleInfo(hero* thisHero, int iMBType)
+{
+    int icon;
+    int morale = thisHero->GetMorale(0, 0, 1);
+    std::string text;
+
+    if (morale > 0) {
+        text = format_string(gMoraleTexts[3], gMoraleTexts[0]);
+        icon = 14;
+    } else if (morale == 0) {
+        text = format_string(gMoraleTexts[3], gMoraleTexts[1]);
+        icon = 15;
+    } else {
+        text = format_string(gMoraleTexts[3], gMoraleTexts[2]);
+        icon = 16;
+    }
+
+    std::string modifiers = thisHero->get_morale_description();
+    if (modifiers.length() == 0)
+        text += gMoraleTexts[23];
+    else
+        text += modifiers;
+
+    NormalDialog(text.c_str(), iMBType, -1, 28, icon, 0,
+                 -1, 0, -1, 0, -1, 0);
 }
 
 VA(0x004f3540, 0x14B)
