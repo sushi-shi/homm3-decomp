@@ -13,7 +13,22 @@
 #include "mousemgr.h"
 #include "soundmgr.h"
 #include "spellbookwindow.h"
+#include "towngatewindow.h"
 #include "winmgr.h"
+
+// VC6's own <xutility> reference-returning max, declared file-locally for
+// the reason ai_combat.cpp's copy records at length: retail materialises
+// BOTH operands into stack temps and selects between their ADDRESSES,
+// which is what a by-value parameter does and what the real `const _Ty&`
+// signature cannot. advManager::TownGate 0x41d564..0x41d57b is this TU's
+// witness - `mov [ebp+8],0` for one operand, a copy of the just-stored
+// movePoints into the dead cost slot for the other, then `lea`/`lea` and
+// a load through the winner.
+template <class _TYPE>
+inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
+{
+    return (_X < _Y ? _Y : _X);
+}
 
 // E:\gamedcs\advspells.cpp:47
 VA(0x0041c2f0, 0x192)  // retail-expanded body, dc 0x2194c
@@ -239,14 +254,133 @@ void advManager::DimensionDoor(int level)
         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
 }
 
-#if 0  // @carcass: remaining untouched bodies (continued)
 // E:\gamedcs\advspells.cpp:485
+// Town Portal. Three refusals up front (no movement, no team town, cast
+// from a boat), then the destination: at advanced/expert mastery a
+// TTownGateWindow lists every eligible town, at novice/basic the caster is
+// sent to the NEAREST one, chosen by squared map distance with no z term.
+//
+// The two loops that pick a town both spell the team test as
+// game::OnSameTeam - retail expands its `||` guard, the two teamInfo byte
+// loads off gpGame+0x1f879 and the `sete` verbatim - and both reach the
+// record through game::GetTown, whose -1 arm survives as the
+// `inc/neg/sbb/and` mask even though the index can never be -1 here.
+//
+// The AddTown call is the row src/towngatewindow.cpp currently claims as
+// VA_COMPGEN(0x005c2400, VECTOR_INSERT, widget): retail reaches it
+// THISCALL on the window with ONE stack argument and its body works on
+// `this + 0x60`, i.e. TTownGateWindow::Towns with push_back expanded into
+// it. That is AddTown, not a free vector COMDAT - see the lane report.
+//
+// Residual (99.0409%): one scheduling hunk inside the FIRST
+// DistanceSquared expansion - retail extracts p2->x fully (load/shl/movsx)
+// before loading this->x, we load both units and then process them. The dy
+// half already agrees. Measured and rejected: the folded
+// `(x-p2->x)*(x-p2->x) + ...` body (95.20), `return dy*dy + dx*dx`
+// (byte-flat), and swapping the receiver to
+// `townLocation.DistanceSquared(&heroLocation)` (98.22). Declaring `dy`
+// BEFORE `dx` is what took it 98.21 -> 99.04. Everything else is
+// reloc-NAME only: gpGeneralText, TeleportTo's own stub and the AddTown
+// mislabel, all of which the ratchet report ignores.
 VA(0x0041d360, 0x5C8)  // anchor-vtable TTownGateWindow ctor/dtor, dc 0x22510
-void advManager::TownGate(TSkillMastery level)
+void advManager::TownGate(int level)
 {
-    // @stub
+    const SSpellTraits* traits = &akSpellTraits[SPELL_TOWN_PORTAL];
+    int movementCost[4] = {300, 300, 300, 200};
+    hero* who = gpCurrentPlayer->currHeroId != -1
+                    ? &gpGame->heroes[gpCurrentPlayer->currHeroId]
+                    : 0;
+
+    int cost = movementCost[level];
+    if (who->movePoints < cost) {
+        if (gpGame->IsLocalHuman(who->owner)) {
+            NormalDialog(
+                gpGeneralText->GetText(GENERAL_TEXT_SPELL_NEEDS_MOVEMENT),
+                1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        }
+        return;
+    }
+
+    int numTowns = 0;
+    for (unsigned i = 0; i < gpGame->towns.size(); i++) {
+        if (gpGame->OnSameTeam(who->owner, gpGame->towns[i].owner))
+            numTowns++;
+    }
+    if (numTowns == 0) {
+        if (gpGame->IsLocalHuman(who->owner)) {
+            NormalDialog(
+                gpGeneralText->GetText(GENERAL_TEXT_TOWN_PORTAL_NO_TOWN),
+                1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        }
+        return;
+    }
+
+    if ((who->flags & 0x40000) != 0) {
+        if (gpGame->IsLocalHuman(who->owner)) {
+            NormalDialog(
+                gpGeneralText->GetText(GENERAL_TEXT_SPELL_NOT_FROM_BOAT),
+                1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        }
+        return;
+    }
+
+    int selectedTown;
+    if (level >= 2) {
+        TTownGateWindow window(1);
+        for (unsigned i = 0; i < gpGame->towns.size(); i++) {
+            if (gpGame->OnSameTeam(who->owner, gpGame->towns[i].owner)
+                && gpGame->GetTown(i)->visitingHeroId == -1) {
+                window.AddTown(i);
+            }
+        }
+        window.DoModal();
+        selectedTown = gpWindowManager->dialogReturn;
+    } else {
+        type_point heroLocation = who->get_location();
+        int nearest = -1;
+        int nearestDistance = 0x7fffffff;
+        for (unsigned i = 0; i < gpGame->towns.size(); i++) {
+            if (gpGame->OnSameTeam(who->owner, gpGame->towns[i].owner)) {
+                type_point townLocation = gpGame->GetTown(i)->get_location();
+                if (heroLocation.DistanceSquared(&townLocation)
+                    < nearestDistance) {
+                    nearest = i;
+                    nearestDistance
+                        = heroLocation.DistanceSquared(&townLocation);
+                }
+            }
+        }
+        selectedTown = nearest;
+    }
+
+    if (selectedTown == -1)
+        return;
+
+    town* destination = &gpGame->towns[selectedTown];
+    if (destination->visitingHeroId != -1) {
+        if (gpGame->IsLocalHuman(who->owner)) {
+            NormalDialog(
+                gpGeneralText->GetText(
+                    GENERAL_TEXT_TOWN_PORTAL_TOWN_OCCUPIED),
+                1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        }
+        return;
+    }
+
+    TeleportTo(who, destination->get_location(), traits->m_sample, 0, 1, 0);
+    destination->GiveSpells(0);
+    who->movePoints -= cost;
+    who->movePoints = _cpp_max(who->movePoints, 0);
+    who->UseSpell(who->GetManaCost(SPELL_TOWN_PORTAL, 0,
+                                   who->get_special_terrain()));
+    advWindow->UpdateHeroLocator(-1, 1, 1);
+    if (gpGame->mapHeader.victoryCondition.CheckForArtifactTransportWin(
+            who, destination->get_location())) {
+        CheckEndGame(0);
+    }
 }
 
+#if 0  // @carcass: remaining untouched bodies (continued)
 // E:\gamedcs\advspells.cpp:605
 DC_ONLY(0x228e8, 0xDC)
 void advManager::Identify(TSkillMastery level)

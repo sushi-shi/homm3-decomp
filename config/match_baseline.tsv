@@ -161,10 +161,10 @@ advmgr	?set_witch_hut_help_text@@YIXPADPAVhero@@PAVNewmapCell@@PBD3@Z	100.0000	1
 advspells	?CheckCastSpell@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c2f0	bbe51132d223
 advspells	?DimensionDoor@advManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x1d090	c97eb065f8d7
 advspells	?SkuttleBoat@advManager@@QAEXH@Z	98.4651	98.4651	98.4651	0x1cdf0	ef7c7049b5d5
+advspells	?TownGate@advManager@@QAEXH@Z	99.0386	99.0386	99.0386	0x1d360	702cdb9eab97
 advspells	advManager_CastSpell	0.0000	0.0000	0.0000	0x1c490	c64aa2b09757
 advspells	advManager_SummonBoat	0.0000	0.0000	0.0000	0x1c8a0	b17834fd0644
 advspells	advManager_TeleportTo	0.0000	0.0000	0.0000	0x1d930	fbb5e7cb98ff
-advspells	advManager_TownGate	0.0000	0.0000	0.0000	0x1d360	384fcb55b844
 ai	??1type_spellvalue@@QAE@XZ	100.0000	100.0000	100.0000	0x20cf0	-
 ai	?DoCompAI@combatManager@@QAEXH@Z	98.4697	98.4697	98.4697	0x221f0	2e3e65e4a47b
 ai	?DoSpellAI@combatManager@@QAEEXZ	100.0000	100.0000	100.0000	0x22da0	2bfe2c39d7b4
@@ -494,7 +494,7 @@ army	?check_obstacle_attacks@army@@QAEEE@Z	100.0000	100.0000	100.0000	0x41f70	26
 army	?check_special_attack@army@@QAEEPAV1@@Z	100.0000	100.0000	100.0000	0x40500	49147539aa98
 army	?compute_attacker_bonus@army@@QBEHHEPAV1@EJ@Z	100.0000	100.0000	100.0000	0x43320	698523953542
 army	?consider_attack@army@@QAEXPBV1@JJ@Z	100.0000	100.0000	100.0000	0x48840	686954572466
-army	?do_attack@army@@QAEEPAV1@H@Z	98.8868	99.9962	99.9962	0x41610	1fa738e017fe
+army	?do_attack@army@@QAEEPAV1@H@Z	98.9251	99.9962	99.9962	0x41610	1fa738e017fe
 army	?do_attack@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x41cb0	0c17230627a2
 army	?do_fire_shield@army@@AAEXJ@Z	100.0000	100.0000	100.0000	0x409c0	3f772aa9df30
 army	?do_multi_head_attack@army@@QAEXIPAH0PAJ@Z	100.0000	100.0000	100.0000	0x40310	d1193b9e629e
@@ -1404,7 +1404,7 @@ events	?monsters_join@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@
 # (push 0xb4 in townManager::Open), layout-required and not gateable
 # per-TU. hist keeps 100.0000; the saturation law says a later
 # declarator can carry it back.
-events	?monsters_sell_out@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	99.9517	100.0000	100.0000	0xa7250	f7b1ec4933f6
+events	?monsters_sell_out@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	100.0000	100.0000	100.0000	0xa7250	f7b1ec4933f6
 events	?show_rewards@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@2@J@Z	100.0000	100.0000	100.0000	0xa0b00	9287544ef4a4
 exec	??0executive@@QAE@XZ	100.0000	100.0000	100.0000	0xb0900	e5caaee573f2
 exec	?AddManager@executive@@QAEHPAVbaseManager@@H@Z	100.0000	100.0000	100.0000	0xb0b20	11f81dc72e6a
@@ -2008,7 +2008,7 @@ initialize	?create_requirement_masks@@YIXPBHPA_J1@Z	100.0000	100.0000	100.0000	0
 # this class: two enumerators moved the row by the same amount one
 # enumerator did on 2026-08-08, which is what a population threshold
 # looks like and not what a per-declarator penalty looks like.
-initialize	?initialize_game_data@@YIXXZ	97.0370	100.0000	100.0000	0xeb730	9bb04f467e4b
+initialize	?initialize_game_data@@YIXXZ	100.0000	100.0000	100.0000	0xeb730	9bb04f467e4b
 inputmgr	??0inputManager@@QAE@XZ	73.3333	100.0000	100.0000	0xec460	ce1b8a0744aa
 inputmgr	?AsciiConvert@inputManager@@QAEXPAVmessage@@@Z	100.0000	100.0000	100.0000	0xec6f0	b21c053d2257
 inputmgr	?Close@inputManager@@UAEXXZ	100.0000	100.0000	100.0000	0xec540	3eaa4090c58c
@@ -2739,7 +2739,7 @@ rmg	?CreateRiver@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	38.2780	38.
 rmg	?CreateSubterraneanGate@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	76.9439	76.9439	76.9439	0x142080	38a429be544f
 rmg	?GetMapItem@type_random_map@@QAEPAUTRmgMapItem@@UTRmgMapPosition@@@Z	100.0000	100.0000	100.0000	0x1378e0	5df55a259e35
 rmg	?InitializeObjectGenerators@type_random_map_generator@@QAEXXZ	97.4646	97.4676	97.4676	0x138b10	55bc899a64f7
-rmg	?WriteMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	95.7066	95.7066	95.7066	0x149cb0	12d6f5f28f76
+rmg	?WriteMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	95.6987	95.7066	95.7066	0x149cb0	12d6f5f28f76
 rmg	?_Inc@const_iterator@?$_Tree@UTPoint@@U1@U_Kfn@?$set@UTPoint@@U?$less@UTPoint@@@std@@V?$allocator@UTPoint@@@3@@std@@U?$less@UTPoint@@@4@V?$allocator@UTPoint@@@4@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x1b8bc0	-
 rmg	?assign_rmg_teams@@YIXHHHPBEPAD@Z	100.0000	100.0000	100.0000	0x14ab40	a44a9dbf9227
 rmg	?insert@?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@std@@QAEXPAUTRmgMapPosition@@IABU3@@Z	100.0000	100.0000	100.0000	0x347a0	-
@@ -3455,7 +3455,7 @@ town	?increase_population@town@@QAEXW4TCreatureType@@0J@Z	100.0000	100.0000	100.
 town	?initialize@town@@QAEXPBVTownExtra@@@Z	100.0000	100.0000	100.0000	0x1c0670	6c604eaecf04
 town	?initialize_buildings@@YIXPAVtown@@PBVTownExtra@@@Z	100.0000	100.0000	100.0000	0x1c08c0	fdcd7aca7bee
 town	?initialize_hordes@town@@SIXXZ	100.0000	100.0000	100.0000	0x1bdf60	2453506fb508
-town	?initialize_spells@town@@QAEXPBVTownExtra@@@Z	97.7386	97.7386	97.7386	0x1be600	7ede4222f099
+town	?initialize_spells@town@@QAEXPBVTownExtra@@@Z	97.6742	97.7386	97.7386	0x1be600	7ede4222f099
 town	?is_legal_building@town@@QBEEW4type_building_id@@@Z	100.0000	100.0000	100.0000	0x1c12a0	e3dcc8598062
 town	?remove_garrison_hero@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1be390	1cd0c5fe4f8a
 # 2026-08-24: both carrier-free peaks are recovered by the real source call
