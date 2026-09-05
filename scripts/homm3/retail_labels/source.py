@@ -186,6 +186,8 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "STD_SORT", "STD_SORT_0", "STD_MEDIAN",
                  "STD_UNGUARDED_PARTITION", "STD_UNGUARDED_INSERT",
                  "STD_COPY_BACKWARD", "STD_FILL",
+                 "TREE_ERASE_ITERATOR", "TREE_ERASE_RANGE",
+                 "DEQUE_ERASE", "VECTOR_RESERVE",
                  "STREAMBUF_XSPUTN",
                  "PAIR_CONST_INT_DTOR",
                  "STD_CONSTRUCT", "STD_COPY",
@@ -754,6 +756,15 @@ def _demangle_key(mangled: str):
         return f"{tree_owner.lower()}@tree_copy"
     if mangled.startswith("?_Erase@?$_Tree@") and tree_owner:
         return f"{tree_owner.lower()}@tree_erase"
+    # ...and the PUBLIC `erase`, which is overloaded on one class: the
+    # range form takes two iterators (`V312@0@Z`), the single form one
+    # (`V312@@Z`). Two kinds rather than a two-member overload group, for
+    # the same reason `_Copy` needed the split - the group's members would
+    # otherwise have to be told apart by size alone.
+    if mangled.startswith("?erase@?$_Tree@") and tree_owner:
+        if mangled.endswith("V312@0@Z"):
+            return f"{tree_owner.lower()}@tree_erase_range"
+        return f"{tree_owner.lower()}@tree_erase_iterator"
     # basic_stringbuf's two out-of-line members. Keyed on the TEMPLATE
     # name, not on `_Init` alone: basic_streambuf has a nullary `_Init` of
     # its own and both COMDATs can live in one object.
@@ -774,6 +785,12 @@ def _demangle_key(mangled: str):
         if element:
             member = deque_primitive.group(1).lstrip("_").lower()
             return f"{element}@deque_{member}"
+    deque_erase = re.match(
+        r"^\?erase@\?\$deque@([CDEFGHIJK])V\?\$allocator@", mangled)
+    if deque_erase:
+        element = DEQUE_PRIMITIVE_ELEMENT.get(deque_erase.group(1))
+        if element:
+            return f"{element}@deque_erase"
     # ...and the block-BUYING half, whose deque element here is an
     # ordinary pointer-to-class, so the usual `P[AB](V|U)<Name>@` shape
     # names it.
@@ -783,6 +800,7 @@ def _demangle_key(mangled: str):
     if deque_class:
         member = deque_class.group(1).lstrip("_").lower()
         return f"{deque_class.group(2).lower()}@deque_{member}"
+    vector_string_element = "?$vector@V?$basic_string@D" in mangled
     vector_element = re.search(
         r"\?\$vector@(?:(?:P[AB][VU])|(?:V|U|W4))?"
         r"([A-Za-z_]\w*)@", mangled)
@@ -791,6 +809,7 @@ def _demangle_key(mangled: str):
     vector_owner = (
         f"{nested_vector_element.group(1).lower()}_vector"
         if nested_vector_element else
+        "string" if vector_string_element else
         vector_element.group(1).lower() if vector_element else None)
     if mangled.startswith("??1?$vector@") and vector_owner:
         return f"{vector_owner}@vector_dtor"
@@ -805,6 +824,8 @@ def _demangle_key(mangled: str):
         return f"{vector_owner}@vector_size"
     if mangled.startswith("?capacity@?$vector@") and vector_owner:
         return f"{vector_owner}@vector_capacity"
+    if mangled.startswith("?reserve@?$vector@") and vector_owner:
+        return f"{vector_owner}@vector_reserve"
     if mangled.startswith("?resize@?$vector@") and vector_owner:
         return f"{vector_owner}@vector_resize"
     if mangled.startswith("?insert@?$vector@") and vector_owner:
@@ -836,6 +857,8 @@ def _demangle_key(mangled: str):
     if iterator_width is not None and mangled.startswith(
             "??D?$bitset_iterator@"):
         return f"bitset{iterator_width}@bitset_iterator_deref"
+    if mangled.startswith("?_Construct@std@@YIXPAV?$basic_string@D"):
+        return "string@std_construct"
     construct_owner = re.match(
         r"^\?_Construct@std@@YIXPA(?:V|U)([A-Za-z_]\w*)@", mangled)
     if construct_owner:
@@ -1127,6 +1150,7 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                                or "$vector_size$" in r["name"]
                                or "$vector_capacity$" in r["name"]
                                or "$vector_constructor_iterator$" in r["name"]
+                               or "$vector_reserve$" in r["name"]
                                or "$vector_resize$" in r["name"]
                                or "$vector_insert$" in r["name"]
                                or "$vector_erase$" in r["name"]
@@ -1153,6 +1177,9 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                                or "$tree_copy$" in r["name"]
                                or "$tree_copy_node$" in r["name"]
                                or "$tree_erase$" in r["name"]
+                               or "$tree_erase_iterator$" in r["name"]
+                               or "$tree_erase_range$" in r["name"]
+                               or "$deque_erase$" in r["name"]
                                or "$stringbuf_overflow$" in r["name"]
                                or "$stringbuf_init$" in r["name"]
                                or "$deque_freefront$" in r["name"]
@@ -1216,6 +1243,10 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             continue
         if "$vector_constructor_iterator$" in row["name"]:
             claim_keys.setdefault("vector_constructor_iterator", []).append(row)
+            continue
+        if "$vector_reserve$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}@vector_reserve", []).append(row)
             continue
         if "$vector_resize$" in row["name"]:
             owner = row["name"].rsplit("$", 1)[1].lower()
@@ -1337,6 +1368,14 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
         if algorithm is not None:
             owner = row["name"].rsplit("$", 1)[1].lower()
             claim_keys.setdefault(f"{owner}@{algorithm}", []).append(row)
+            continue
+        tree_or_deque = next(
+            (kind for kind in ("tree_erase_iterator", "tree_erase_range",
+                               "deque_erase")
+             if f"${kind}$" in row["name"]), None)
+        if tree_or_deque is not None:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}@{tree_or_deque}", []).append(row)
             continue
         if "$streambuf_xsputn$" in row["name"]:
             owner = row["name"].rsplit("$", 1)[1].lower()

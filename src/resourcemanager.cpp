@@ -3067,3 +3067,12 @@ VA_COMPGEN(0x0055e440, 0xFF, CLASS_CTOR, basic_stringbuf)
 
 // COMDAT pairing: basic_ostringstream::1?$basic_ostringstream, mnemonic agreement 0.944.
 VA_COMPGEN(0x0055d530, 0xC2, IMPLICIT_DTOR, basic_ostringstream)
+
+// COMDAT pairing: _Tree<TCacheMapKey, resource*>::erase(iterator), agreement
+// 0.999 (433 base vs 432 retail instructions). The admission queue carried
+// this row as an unowned `resourcemanager..sacrifice_window` bracket entry;
+// it is resourcemanager's own COMDAT.
+VA_COMPGEN(0x0055dcf0, 0x50F, TREE_ERASE_ITERATOR, TCacheMapKey)
+
+// COMDAT pairing: _Tree<TCacheMapKey, resource*>::erase(first, last), 0.960.
+VA_COMPGEN(0x0055e200, 0x121, TREE_ERASE_RANGE, TCacheMapKey)
