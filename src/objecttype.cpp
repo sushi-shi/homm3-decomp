@@ -187,10 +187,16 @@ TObjectType& TObjectType::setTriggerMask(const std::bitset<48>& mask)
             }
         }
     } else {
+        // Retail's tail loads gNoTriggerCell.x then .y and stores
+        // triggerCell.x then .y; VC6 emits this pair in the REVERSE of
+        // source order, so the assignments are written y-then-x. Tried
+        // and rejected: x-then-y assignments 99.9818 (both stores and
+        // both loads transposed), `triggerCell = gNoTriggerCell` 96.26,
+        // the two member-to-member assignments without the temps 96.26.
         int noTriggerX = gNoTriggerCell.x;
         int noTriggerY = gNoTriggerCell.y;
-        triggerCell.x = noTriggerX;
         triggerCell.y = noTriggerY;
+        triggerCell.x = noTriggerX;
     }
     return *this;
 }

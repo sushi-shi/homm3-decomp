@@ -1612,7 +1612,7 @@ static long value_of_building(town* current_town, type_building_id building,
             if ((building == EXTRA_0_ID || building == EXTRA_1_ID)
                 && current_town->threatening_heroes)
                 return static_cast<const town*>(current_town)
-                           ->get_army().get_AI_value() / 10;
+                           ->get_army().get_AI_value() / 20;
             break;
         }
         return 0;
@@ -1625,13 +1625,23 @@ static long value_of_building(town* current_town, type_building_id building,
 // drops what the town already built or the chain already holds, and
 // rescans from zero. Returns the chain, or 0 when a link is not legal
 // here. Single call site - no retail body.
+//
+// `k` STARTS AT `building`, NOT AT 0, and retail proves it twice inside
+// purchase_building: `k = 0` makes `k < MAX_BUILDING_TYPE` provably true,
+// so VC6 drops the while's top test (54 branches against retail's 55) AND
+// strength-reduces `building` away entirely, giving a 0x690 frame against
+// retail's 0x694. With `k = building` the guard is retail's
+// `cmp <&bitNumber[building]>, <end> / jge` and `building` keeps its own
+// slot at [ebp-0x34]. The two spellings are equivalent - `requirements`
+// starts as bitNumber[building] alone, so a scan from 0 can only hit at
+// `building` - and this one is what the bytes say. 96.20 -> 97.32.
 DC_ONLY(0x30048, 0x106)
 static __int64 get_requirements(const town* current_town,
                                 type_building_id building)
 {
     __int64 requirements = bitNumber[building];
     __int64 seen = 0;
-    int k = 0;
+    int k = building;
     while (k < MAX_BUILDING_TYPE) {
         if (requirements & bitNumber[k]) {
             if (!current_town->is_legal_building(building_id_from_int(k)))
@@ -1665,12 +1675,14 @@ static void get_full_cost(const town* current_town, int* result,
 }
 
 // E:\gamedcs\ai_player.cpp:1367
-// Single call site - no retail body.
+// Single call site - no retail body. `k` is a SIGNED int: retail's
+// strength-reduced back edge is `cmp <ptr>, <end> / jl`, and an unsigned
+// counter can only ever emit `jb` (97.32 -> 97.42, branches clean).
 DC_ONLY(0x302e0, 0x54)
 static void mark_values(long* full_value, long total_value,
                         __int64 requirements)
 {
-    for (unsigned int k = 0; k < MAX_BUILDING_TYPE; ++k) {
+    for (int k = 0; k < MAX_BUILDING_TYPE; ++k) {
         if (requirements & bitNumber[k])
             full_value[k] += total_value;
     }
@@ -1684,6 +1696,13 @@ static void mark_values(long* full_value, long total_value,
 // by mark_values. The best buildable-this-turn candidate across all
 // towns is bought after a trade pass, gated by CanBuy for the
 // hall/marketplace band and by reserved funds everywhere else.
+//
+// Residual (97.42%): VC6 hoists a second `gpGame` load above the faction
+// switch, where retail reloads it inside the RAMPART arm and again inside
+// the NECROPOLIS hero scan; that stolen register is also why our scan
+// counter spills to the frame where retail keeps it in EDX, and why the
+// three growth arms' scratch registers are rotated by one against
+// retail's. Branches, rets and the frame are all exact.
 VA(0x0042ae00, 0x718)  // retail callee set + arity, dc 0x30d6c
 unsigned char type_AI_player::purchase_building(
     unsigned char* prohibited_creatures)
