@@ -1254,6 +1254,7 @@ customcampaign	?StartScenario@ScenarioStruct@TCampaignBrief@@QAEXPAV?$basic_stre
 customcampaign	?Write@TStreamBufFile@@UAEHPBXH@Z	100.0000	100.0000	100.0000	0x83f30	651082a5fb27
 customcampaign	?_Construct@std@@YIXPAUTCampaignCrossoverChoice@@ABU2@@Z	100.0000	100.0000	100.0000	0x8e9e0	-
 customcampaign	?_Construct@std@@YIXPAVhero@@ABV2@@Z	100.0000	100.0000	100.0000	0x603a0	-
+customcampaign	?_Destroy@?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@IAEXPAUtype_artifact@@0@Z	100.0000	100.0000	100.0000	0x4140	-
 customcampaign	?_Destroy@?$vector@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@V?$allocator@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@@2@@std@@IAEXPAV?$vector@Vhero@@V?$allocator@Vhero@@@std@@@2@0@Z	100.0000	100.0000	100.0000	0x8c5b0	-
 customcampaign	?_Destroy@?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@IAEXPAVhero@@0@Z	100.0000	100.0000	100.0000	0x8d410	-
 customcampaign	?_Init@?$basic_filebuf@DU?$char_traits@D@std@@@std@@IAEXPAU_iobuf@@W4_Initfl@12@@Z	100.0000	100.0000	100.0000	0x8d4b0	-
@@ -1272,6 +1273,7 @@ customcampaign	?_Ufill@?$vector@UTCampaignCrossoverChoice@@V?$allocator@UTCampai
 customcampaign	?_Ufill@?$vector@UTCampaignHeroChoice@@V?$allocator@UTCampaignHeroChoice@@@std@@@std@@IAEXPAUTCampaignHeroChoice@@IABU3@@Z	100.0000	100.0000	100.0000	0x8dc50	-
 customcampaign	?_Ufill@?$vector@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@V?$allocator@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@@2@@std@@IAEXPAV?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@2@IABV32@@Z	100.0000	100.0000	100.0000	0x8d910	-
 customcampaign	?_Ufill@?$vector@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@V?$allocator@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@@2@@std@@IAEXPAV?$vector@Vhero@@V?$allocator@Vhero@@@std@@@2@IABV32@@Z	100.0000	100.0000	100.0000	0x8d8a0	-
+customcampaign	?_Ufill@?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@IAEXPAVhero@@IABV3@@Z	100.0000	100.0000	100.0000	0x8d970	-
 customcampaign	?_Unguarded_insert@std@@YIXPAVhero@@V2@UCrossoverHeroStronger@@@Z	100.0000	100.0000	100.0000	0x8f940	-
 customcampaign	?_Unguarded_partition@std@@YIPAVhero@@PAV2@0V2@UCrossoverHeroStronger@@@Z	100.0000	100.0000	100.0000	0x8fc20	-
 customcampaign	?_Xran@?$bitset@$07@std@@ABEXXZ	100.0000	100.0000	100.0000	0x8da70	-
@@ -1285,6 +1287,7 @@ customcampaign	?_slot7@TCampaignStartOption@@UBEHH@Z	100.0000	100.0000	100.0000	
 customcampaign	?capacity@?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x8ce20	-
 customcampaign	?copy_backward@std@@YIPAV?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@1@PAV21@00@Z	100.0000	100.0000	100.0000	0x8e690	-
 customcampaign	?copy_backward@std@@YIPAV?$vector@Vhero@@V?$allocator@Vhero@@@std@@@1@PAV21@00@Z	100.0000	100.0000	100.0000	0x8df50	-
+customcampaign	?copy_backward@std@@YIPAVhero@@PAV2@00@Z	100.0000	100.0000	100.0000	0x8e880	-
 customcampaign	?do_length@?$codecvt@DDH@std@@MBEHAAHPBD1I@Z	100.0000	100.0000	100.0000	0x8ec10	-
 customcampaign	?erase@?$vector@UCampaignScenarioInfo@@V?$allocator@UCampaignScenarioInfo@@@std@@@std@@QAEPAUCampaignScenarioInfo@@PAU3@0@Z	100.0000	100.0000	100.0000	0x8cdd0	-
 customcampaign	?erase@?$vector@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@V?$allocator@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@@2@@std@@QAEPAV?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@2@PAV32@0@Z	100.0000	100.0000	100.0000	0x8ca30	-
@@ -1315,9 +1318,7 @@ customcampaign	?sync@?$basic_filebuf@DU?$char_traits@D@std@@@std@@MAEHXZ	100.000
 customcampaign	?uflow@?$basic_filebuf@DU?$char_traits@D@std@@@std@@MAEHXZ	100.0000	100.0000	100.0000	0x8b8b0	-
 customcampaign	?underflow@?$basic_filebuf@DU?$char_traits@D@std@@@std@@MAEHXZ	100.0000	100.0000	100.0000	0x8b880	-
 customcampaign	CrossoverHeroStronger_operator	0.0000	90.2941	90.2941	0x83f80	7244797eb802
-customcampaign	__h3cg$customcampaign$std_copy_backward$hero	0.0000	100.0000	100.0000	0x8e880	-
-customcampaign	__h3cg$customcampaign$vector_destroy$type_artifact	0.0000	100.0000	100.0000	0x4140	-
-customcampaign	__h3cg$customcampaign$vector_ufill$hero	0.0000	100.0000	100.0000	0x8d970	-
+customcampaign	__h3cg$customcampaign$vector_insert$hero_8ce50	0.0000	0.0000	0.0000	0x8ce50	-
 customcampaignwindow	??0TCustomCampaignWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x827b0	893291fd4aaf
 customcampaignwindow	??1TCustomCampaignWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x82f10	4e3abaca1d97
 customcampaignwindow	??RCampaignHeaderPointerLess@@QBE_NPAUCampaignHeaderStruct@TCampaignBrief@@0@Z	100.0000	100.0000	100.0000	0x83240	0625172778ee
