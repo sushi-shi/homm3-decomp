@@ -3435,6 +3435,8 @@ singleselectionpopups	?CreateWin@CTeamAlignmentDlg@@QAEEXZ	99.1096	99.1096	99.10
 singleselectionpopups	?CreateWin@CTownDlg@@QAEEPAVCSprite@@HW4TTownType@@@Z	98.6504	98.6504	98.6504	0x175e60	561910e47a99
 singleselectionpopups	?Draw@CBitmapWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x175a20	42a30f029b9f
 singleselectionpopups	?Draw@CSpriteWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x175750	bf732620ec2c
+singleselectionpopups	?GetStartingResourceDescription@@YIPBDW4TTownType@@@Z	100.0000	100.0000	100.0000	0x176e80	f82dc9cb4381
+singleselectionpopups	?GetStartingResourceName@@YIPBDW4TTownType@@@Z	100.0000	100.0000	100.0000	0x176e00	3323be8a0d88
 singleselectionpopups	?GetTeams@CTeamAlignmentDlg@@QAEXXZ	100.0000	100.0000	100.0000	0x176930	0c538aa1d313
 singleselectionpopups	?LoadProgFn_00577180@TRandomMapProgress@@QAEXXZ	100.0000	100.0000	100.0000	0x177180	2e6769643e47
 singleselectionpopups	?Main@CHotspotWidget@@UAEHPAVmessage@@@Z	94.2771	94.2771	94.2771	0x175290	a0e628cd5441
