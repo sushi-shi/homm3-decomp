@@ -3106,3 +3106,11 @@ VA_COMPGEN(0x0055d840, 0x5A, STRINGBUF_UNDERFLOW, char)
 // ResourceManager::Open, GetBitmap816, LoadBitmap16 and LoadPalette - each
 // appending a literal extension to a path.
 VA_COMPGEN(0x004b7ec0, 0x114, BASIC_STRING_CONCAT, char)
+
+// COMDAT pairing: locale::facet::_Incref, the mirror of the already-claimed
+// _Decref. Agreement 1.000 at an exactly equal 40-byte extent, and the body
+// is unmistakable - a _Lockit scope around an increment of the refcount at
+// +4 that saturates at -1. It lands in customcampaign's filebuf span (it is
+// reached from 0x48d5a0), but this object is one of the two that emit it at
+// retail's size; customcampaign's own copy is 13 bytes.
+VA_COMPGEN(0x0048d7d0, 0x28, LOCALE_FACET_INCREF, char)

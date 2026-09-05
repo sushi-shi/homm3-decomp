@@ -550,3 +550,24 @@ VA_COMPGEN(0x0051b6d0, 0x15B, STD_CONSTRUCT, string_int_pair)
 // lists on both sides.
 VA_COMPGEN(0x0051b8b0, 0x54, BASIC_STRING_COMPARE_STR, char)
 VA_COMPGEN(0x0051b910, 0x6A, BASIC_STRING_COMPARE_SUBSTR, char)
+
+// --- Dinkumware COMDAT pairings, part 3: the two bitset extractions -------
+//
+// `operator>>(basic_istream<char>&, bitset<N>&)` is instantiated twice here,
+// for the 48-bit trigger mask and the 9-bit terrain/landscape flags, and the
+// two retail bodies are the same 353 bytes. The WIDTH separates them from
+// inside: 0x5156ed, the continuation of 0x515560, tests and clamps against
+// 0x30 and 0x5159bc, the continuation of 0x5157f0, against 9 - and the
+// latter calls the already-claimed ?set@?$bitset@$08@ at 0x44c680. Each
+// continuation then throws through exactly one of the two 203-byte
+// "invalid bitset<N> char" bodies, which is what names those as _Xinv rather
+// than _Xran and assigns each to its width.
+//
+// Our two extraction bodies compile to 589 and 583 bytes against retail's
+// 353 apiece - retail keeps the string scan out of line where we expand it -
+// so these two arrive as partial rows. The identification does not depend on
+// the score.
+VA_COMPGEN(0x00515560, 0x161, ISTREAM_EXTRACT_BITSET, Bitset48)
+VA_COMPGEN(0x005157f0, 0x161, ISTREAM_EXTRACT_BITSET, Bitset9)
+VA_COMPGEN(0x00516e40, 0xCB, BITSET_XINV, Bitset48)
+VA_COMPGEN(0x00517680, 0xCB, BITSET_XINV, Bitset9)
