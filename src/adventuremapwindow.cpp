@@ -3,6 +3,7 @@
 // 226 functions in link order; 20 compiler-generated $-thunks omitted.
 #include <va.h>
 #include <stdio.h>
+#include "adventuremapwindow.h"
 #include "advmgr.h"
 #include "border.h"
 #include "bottomviewsubwindow.h"
@@ -12,11 +13,13 @@
 #include "game.h"
 #include "hero.h"
 #include "iconwdgt.h"
+#include "inputmgr.h"
 #include "kb.h"
 #include "town.h"
 #include "townmgr_globals.h"
 #include "message.h"
 #include "mousemgr.h"
+#include "prefs.h"
 #include "quest.h"
 #include "resourcedisplay.h"
 #include "resourcemanager.h"
@@ -422,6 +425,133 @@ TAdventureMapWindow::TAdventureMapWindow()
 
     bottomView = 0;
     ResourceDisplay = new TResourceDisplay(this, 0);
+}
+
+#if 0  // @carcass: active header-inline bodies emit these COMDATs
+
+// widget.h's two accessor slots, emitted here because CAdventurMapChatEdit's
+// vtable is the reference that instantiates them.
+VA(0x004021d0, 0x5)  // vtable slot 5 + exact height read, retail-only
+int widget::GetRealHeight()
+{
+    // @stub - active definition is the widget.h class-body inline
+}
+
+VA(0x004021e0, 0x5)  // vtable slot 6 + exact width read, retail-only
+int widget::GetRealWidth()
+{
+    // @stub - active definition is the widget.h class-body inline
+}
+
+#endif  // @carcass
+
+// The CGameChatEdit half of the chat editor, dc 0x30c8 / 0x3110 / 0x3178 /
+// 0x31ac. All four pair by ARITY and by callee: OnKeyPress is `ret 4` and
+// calls CChatEdit::OnKeyPress, OnEscape is `ret 0x20` - a by-value `message`,
+// exactly the Dreamcast prototype - and tail-calls CChatEdit::OnEscape, and
+// every one of the four reads or writes the +0x70 activation byte that is
+// CGameChatEdit's only data member.
+//
+// Dreamcast has these four in remote.h, i.e. as header inlines; they are
+// defined HERE instead because chatedit.h forward-declares `message` only,
+// so the by-value OnEscape body cannot be parsed there without dragging
+// message.h and inputmgr.h into every one of that header's consumers.
+// CCombatChatEdit::OnKeyPress (0x472600, exact) open-codes the same
+// activation sequence and is the twin that proves the shape.
+VA(0x004021f0, 0x42)  // dc-arity + anchor-callee(CChatEdit::OnKeyPress), dc 0x30c8
+int CGameChatEdit::OnKeyPress(message* msg)
+{
+    if (field_70)
+        return CChatEdit::OnKeyPress(msg);
+
+    if (GetCharPressed(msg) == KEYCODE_TAB) {
+        Activate();
+        return 1;
+    }
+    return 0;
+}
+
+VA(0x00402240, 0x3C)  // dc-arity(ret 0x20) + anchor-callee(CChatEdit::OnEscape), dc 0x3110
+int CGameChatEdit::OnEscape(message msg)
+{
+    field_70 = 0;
+    parentWindow->SetFocus(-1);
+    SetFocus(0);
+    return CChatEdit::OnEscape(msg);
+}
+
+VA(0x00402280, 0x23)  // vtable slot 25 + +0x70 clear/SetFocus pair, dc 0x3178
+void CGameChatEdit::SendChatCleanup()
+{
+    parentWindow->SetFocus(-1);
+    SetFocus(0);
+    field_70 = 0;
+    Draw();
+}
+
+VA(0x004022b0, 0x2B)  // vtable slot 26 + +0x70 set/SetFocus pair, dc 0x31ac
+void CGameChatEdit::Activate()
+{
+    field_70 = 1;
+    SetFocus(1);
+    parentWindow->SetFocus(id);
+    Draw();
+    UpdateScreen();
+}
+
+// Defined at its retail address below; SendChat is its only caller and
+// precedes it in the retail link order.
+void CheckAdvCheatCode(std::string& chatString);
+
+// E:\gamedcs\adventuremapwindow.cpp:261. The adventure editor's chat sink,
+// dc 0x330c. In a single-player game the line first goes through the cheat
+// scanner; the one cheat handled HERE rather than in CheckAdvCheatCode is
+// "gosolo", which turns the whole preferences block over to unattended play -
+// auto creatures, auto spells and all three war machines on, combat speed 2,
+// both walk speeds 4 - and latches the local player position so the adventure
+// manager knows whose turn is being watched. Outside a network game it also
+// lifts the map visibility mask.
+//
+// The preference fields are the misc.obj block at 0x698758 whose registry
+// names prefs.h records; the five combat toggles are its +0x3c..+0x4c run.
+//
+// Residual (77.49%): ONE over-inline, and everything else is downstream of
+// it. Retail CALLS basic_string::assign(const char*, unsigned) to build
+// `chatString`; our compile expands it into _Grow + _Eos + an inline
+// rep movsd, which is 36 bytes of surplus body and the register pressure that
+// then costs the shared `1` constant retail keeps in EBX across the
+// GetLocalPlayerGamePos call (retail stores `bl` and five `ebx`, we
+// re-materialise). The call multiset is otherwise identical, 6 of 7 calls
+// pair and the statement order matches. Measured and byte-flat: the explicit
+// `std::string chatString(sChat)` ctor (77.49); measured and 0.07 higher but
+// less faithful to retail's _Tidy-then-assign shape: default construction
+// followed by `chatString = sChat` or by `assign(sChat, strlen(sChat))`
+// (77.56 both).
+VA(0x004022e0, 0x167)  // anchor-string("gosolo") + anchor-callee(CheckAdvCheatCode), dc 0x330c
+void CAdventurMapChatEdit::SendChat(const char* sChat, int toWho)
+{
+    std::string chatString = sChat;
+
+    if (!gpGame->IsMultiplayer())
+        CheckAdvCheatCode(chatString);
+
+    if (chatString == DATA_COMPGEN(0x0065f3cc, advChatGoSolo, "gosolo")) {
+        if (!gNetworkActive69954c)
+            gMapVisibilityBit = 0xff;
+        gUnnamed691209 = 1;
+        gUnnamed69120c = gpGame->GetLocalPlayerGamePos();
+        gUnnamed698758.combatBallista = 1;
+        gUnnamed698758.combatCatapult = 1;
+        gUnnamed698758.combatAutoCreatures = 1;
+        gUnnamed698758.combatFirstAidTent = 1;
+        gUnnamed698758.combatAutoSpells = 1;
+        gUnnamed698758.combatSpeed = 2;
+        gUnnamed698758.computerWalkSpeed = 4;
+        gUnnamed698758.walkSpeed = 4;
+    }
+
+    ::SendChat(chatString.c_str(), toWho);
+    SendChatCleanup();
 }
 
 // E:\gamedcs\adventuremapwindow.cpp:63. The procedure record types the sole
@@ -1780,34 +1910,6 @@ void CGameChatEdit::CGameChatEdit(int textWidgetX, int textWidgetY, int textWidg
     // @stub
 }
 
-// E:\gamedcs\remote.h:446
-DC_ONLY(0x30c8, 0x48)
-int CGameChatEdit::OnKeyPress(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.h:460
-DC_ONLY(0x3110, 0x68)
-int CGameChatEdit::OnEscape(message msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.h:471
-DC_ONLY(0x3178, 0x34)
-void CGameChatEdit::SendChatCleanup()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.h:479
-DC_ONLY(0x31ac, 0x40)
-void CGameChatEdit::Activate()
-{
-    // @stub
-}
-
 // E:\gamedcs\remote.h:489
 DC_ONLY(0x31ec, 0x34)
 void* CGameChatEdit::`scalar deleting destructor'(unsigned __flags)
@@ -1839,13 +1941,6 @@ unsigned char TSeerHut::QuestActiveforPlayer(const unsigned char playerNum)
 // E:\gamedcs\adventuremapwindow.cpp:257
 DC_ONLY(0x3274, 0x98)
 void CAdventurMapChatEdit::CAdventurMapChatEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, font::EJustify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
-{
-    // @stub
-}
-
-// E:\gamedcs\adventuremapwindow.cpp:261
-DC_ONLY(0x330c, 0x108)
-void CAdventurMapChatEdit::SendChat(const char* sChat, int toWho)
 {
     // @stub
 }
