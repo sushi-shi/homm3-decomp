@@ -535,6 +535,16 @@ const int PUZZLE_PLACEABLE_PIECES = 47;
 const int RETAIL_CREATURE_GENERATOR_2 = 18;
 const int RETAIL_CREATURE_GENERATOR_3 = 19;
 
+// RandomizeEvents residual (87.01%): retail emits a SEPARATE jump-table arm
+// for BLACK_BOX_RANDOM_RELIC (0x4c19d1) where our cross-jumper folds it onto
+// the WARRIOR_TOMB if-chain's identical `push 0x10` block, and it keeps BOTH
+// SetWagon overloads out of line where we expand the two-argument one.
+// Measured and rejected: reordering the black-box arms so RELIC comes second
+// (-0.20); pinning the two-argument SetWagon (-1.51, a knock-on re-price);
+// routing REFUGEE_CAMP's GetRandomMonster through gpGame as retail does at
+// 0x4c1652 (-0.14, so the reload is right and something downstream pays for
+// it); narrowing RandomizeShrine's bitset pin to the subscript alone so the
+// ctor expands onto retail's `_Tidy` call (-0.50).
 // Random-map placeholder domains recovered from RandomizeEvents' retail
 // switch. They are source-local because no cross-TU enum identity survives.
 const int BLACK_BOX_RANDOM_ANY = 1;
@@ -6265,9 +6275,11 @@ void game::RandomizeEvents()
                         id = 8;
                     else
                         id = 16;
+                    // 0x4c1b01 loads gpGame for this call where the
+                    // if-chain feeding `id` just above keeps `this`.
                     tempCell->extraInfo =
                         (tempCell->extraInfo & 0xff80001f) | 1
-                        | ((GetRandomArtifactId(id) & 0x3ff) << 13);
+                        | ((gpGame->GetRandomArtifactId(id) & 0x3ff) << 13);
                     break;
 
                 case WATER_WHEEL:
