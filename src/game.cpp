@@ -18543,3 +18543,7 @@ VA_COMPGEN(0x004d2050, 0x32, TREE_MIN, type_map_hero_info)
 VA_COMPGEN(0x004cff50, 0x115, TREE_INSERT, type_map_hero_info)
 VA_COMPGEN(0x004d1d50, 0x2F9, TREE_NODE_INSERT, type_map_hero_info)
 VA_COMPGEN(0x004d27b0, 0xB3, TREE_CONST_ITERATOR_DEC, type_map_hero_info)
+
+// COMDAT pairing: std::copy<type_map_hero_identity>, agreement 0.987
+// (156 base vs 152 retail instructions).
+VA_COMPGEN(0x004d2e50, 0x18C, STD_COPY, type_map_hero_identity)

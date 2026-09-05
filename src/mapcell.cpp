@@ -9497,3 +9497,11 @@ void* TTownEvent::`scalar deleting destructor'(unsigned __flags)
 }
 
 #endif  // @carcass
+
+// COMDAT pairing: vector<TScenarioTown>::insert, agreement 0.990
+// (349 base vs 342 retail instructions).
+VA_COMPGEN(0x00508cf0, 0x3B9, VECTOR_INSERT, TScenarioTown)
+
+// COMDAT pairing: vector<TQuestGuard>::insert, agreement 0.989
+// (320 base vs 313 retail instructions).
+VA_COMPGEN(0x00507ad0, 0x2F9, VECTOR_INSERT, TQuestGuard)

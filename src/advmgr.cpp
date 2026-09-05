@@ -11576,3 +11576,7 @@ void std::__destroy_aux(pathCell** __pointer, __false_type __formal)
 }
 
 #endif  // @carcass
+
+// COMDAT pairing: bitset<48>::_Xran, agreement 0.978 (71 base vs 68 retail).
+// advmgr instantiates exactly one bitset width, so the pairing is unambiguous.
+VA_COMPGEN(0x0041b410, 0xC8, BITSET_XRAN, bitset48)
