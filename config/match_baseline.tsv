@@ -2345,6 +2345,8 @@ objecttype	?_Inc@const_iterator@?$_Tree@V?$basic_string@DU?$char_traits@D@std@@V
 objecttype	?load@TObjectTypeTable@@QAEXPAD@Z	69.2500	69.2500	69.2500	0x114d80	fcfee94502e4
 objecttype	?setImageName@TObjectType@@QAEAAU1@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	33.8617	33.8617	33.8617	0x114610	84051786f38f
 objecttype	?setTriggerMask@TObjectType@@QAEAAU1@ABV?$bitset@$0DA@@std@@@Z	99.9818	99.9818	99.9818	0x114a60	931c974bd57b
+objnames	??1TTextResourceGuard@@QAE@XZ	100.0000	100.0000	100.0000	0x1bd90	e6a9bcd817a7
+objnames	?InitializeAdventureObjectNames@@YIXXZ	98.9899	98.9899	98.9899	0x1b500	8e77da136c72
 overview	??0TOverviewWindow@@QAE@XZ	78.2776	80.0954	80.0954	0x11fa40	e8df282f3bdd
 overview	??1TOverviewWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x120d90	048fab1d8faa
 overview	??_GTOverviewWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x120d60	-
