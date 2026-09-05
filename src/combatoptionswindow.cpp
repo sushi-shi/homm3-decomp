@@ -337,6 +337,17 @@ __forceinline void UpdateCombatOptions(unsigned char bFirstUpdate)
 // positive audio-enabled spelling (`if (volume || ds) { ... } else goto`) is
 // byte-identical to the retained negative guard. The two polarity flips and
 // the three-way widget-tail merge are therefore not source-addressable here.
+// WHY retail's cross-jumper declined, read off the bytes (2026-09-05): the
+// SHOW_GRID / MOVEMENT_SHADOW / MOUSE_SHADOW arms are NOT identical in
+// retail.  Each reloads gpCombatOptionsWindow after `send_message` into a
+// DIFFERENT register - `mov ecx,[0x694f90]` at 0x46f95f, `mov edx,...` at
+// 0x46f990, `mov eax,...` at 0x46f9c1 - before the shared
+// `mov byte ptr [reg+0x4c], bl`.  Three differing tails cannot be merged, so
+// the merge we perform is downstream of an ALLOCATOR divergence, not of a
+// statement shape: no arm spelling can suppress it while all three arms
+// allocate the same register here.  This is behaviour-catalog D7 and it is
+// the same class as hero::THeroScreenWindow::WindowHandler's six help arms
+// and game::ValidateVictoryLossConditions' shared `je`.
 VA(0x0046f7b0, 0x72A)  // DoModal address-take + complete message CFG, dc 0x67b7c
 int CombatOptionsWindowHandler(message& msg)
 {
