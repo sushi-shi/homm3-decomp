@@ -40,6 +40,44 @@ TObjectType::GetImageName()
     return emptyImageName;
 }
 
+// Retail 0x514a60, chained off setImageName's result by the per-row `>>`
+// at 0x514b80. The mask arrives by reference and is COPIED before the
+// `&=`, which is Dinkumware's `operator&` written out at the call site:
+// retail builds `~passableMask` first (copy, two-word flip, 0xffff trim),
+// then copies the argument over it and ANDs high word down. `any()` walks
+// the same two words downward into the byte at +0x29, and the false arm's
+// {8, 6} sentinel comes straight out of memory. The scan's outer loop has
+// NO bound in retail - any() has already guaranteed a hit - and its
+// `0x2f - y*8 - x` is CObjectType::_getBitPos verbatim, strength-reduced
+// onto a second induction variable in the dead parameter home.
+//
+// The sentinel arm issues BOTH loads before either store, which two plain
+// assignments do not produce (96.26%); naming the two halves first does
+// (99.98%, residual: two unclaimed .rdata reloc names).
+VA(0x00514a60, 0x11D)  // anchor-callee 0x514b80 per-row `>>`; anchor-global {8,6} at 0x640278; retail-only
+TObjectType& TObjectType::setTriggerMask(const std::bitset<48>& mask)
+{
+    triggerMask = mask & ~passableMask;
+    hasTrigger = triggerMask.any();
+    if (hasTrigger) {
+        for (int y = 0;; ++y) {
+            for (unsigned x = 0; x < 8; ++x) {
+                if (triggerMask.test(CObjectType::_getBitPos(x, y))) {
+                    triggerCell.x = x;
+                    triggerCell.y = y;
+                    return *this;
+                }
+            }
+        }
+    } else {
+        int noTriggerX = gNoTriggerCell.x;
+        int noTriggerY = gNoTriggerCell.y;
+        triggerCell.x = noTriggerX;
+        triggerCell.y = noTriggerY;
+    }
+    return *this;
+}
+
 // Retail 0x517780 is the nine-block Dinkumware tree-successor walk, reached
 // from two other bodies in this span (0x516bdb and 0x5170b7). The 0x24-byte
 // node the registry's constructor buys is what settles the specialization:

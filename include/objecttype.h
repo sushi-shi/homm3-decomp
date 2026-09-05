@@ -11,6 +11,8 @@
 #include <string>
 #include <vector>
 
+#include "advmgr_objects.h"
+
 // Retail publishes this class's whole layout at the .bss object 0x69cb80
 // that both accessors address:
 //   +0x00  a 16-byte Dinkumware _Tree - allocator byte, comparator byte,
@@ -34,5 +36,14 @@ public:
     TNameIndex nameIndex;
     std::vector<TNameIndex::iterator> rows;
 };
+
+// The "no trigger cell" sentinel, {8, 6} - the object mask grid's own
+// dimensions - living in .rdata at 0x640278. It is ONE eight-byte datum,
+// not two ints: both of its consumers (setTriggerMask's else arm and the
+// TObjectType default constructor that load() expands) issue both loads
+// before either store, which is a struct copy and not two assignments.
+// No compiland in the tree defines it yet; declared with its only
+// reconstructed consumers.
+extern const TObjectType::TPoint gNoTriggerCell;  /* 0x640278 */
 
 #endif  /* HOMM3_OBJECTTYPE_H */
