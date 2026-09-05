@@ -2926,6 +2926,7 @@ singleselectionwindow	??_GCSingleSelectionNetMsgHandler@@UAEPAXI@Z	100.0000	100.
 singleselectionwindow	??_GTSingleSelectionWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x17d130	-
 singleselectionwindow	?AddNewPlayer@CNetPlayerHandler@@QAEEPAVCNetPlayerInfo@@@Z	100.0000	100.0000	100.0000	0x177be0	7d5eea3d0b0a
 singleselectionwindow	?BackupGameHeaders@@YIXPAVgame@@0@Z	100.0000	100.0000	100.0000	0x177530	24ac5a8cdb96
+singleselectionwindow	?BeginNewGame@TSingleSelectionWindow@@QAEEXZ	74.9022	74.9022	74.9022	0x18c570	77256db6330a
 singleselectionwindow	?BeginSavedGame@TSingleSelectionWindow@@QAEEXZ	100.0000	100.0000	100.0000	0x18c290	352bb54a5c96
 singleselectionwindow	?CanChooseHero@TSingleSelectionWindow@@QAEEH@Z	100.0000	100.0000	100.0000	0x18cfb0	df72bfe2e607
 singleselectionwindow	?CanChooseTown@TSingleSelectionWindow@@QAEEH@Z	100.0000	100.0000	100.0000	0x18ceb0	ad986954a3d1
@@ -3069,7 +3070,6 @@ singleselectionwindow	?read@CGameHeaderInfoMsg@@UAEEPAVTAbstractFile@@@Z	100.000
 singleselectionwindow	?read@CNewMapHeaderInfoMsg@@UAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x177a10	5ae328e46dc0
 singleselectionwindow	?write@CGameHeaderInfoMsg@@UBEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x177950	3c0b56d9b222
 singleselectionwindow	?write@CNewMapHeaderInfoMsg@@UBEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x177a30	ea03c0a6e3df
-singleselectionwindow	TSingleSelectionWindow_BeginNewGame	0.0000	0.0000	0.0000	0x18c570	e5a5f3c8dbef
 singleselectionwindow	TSingleSelectionWindow_GenerateRandomMap	0.0000	0.0000	0.0000	0x1860e0	ffdf5b582de2
 singleselectionwindow	__h3cg$singleselectionwindow$scalar_deleting_dtor$CNewPlayerUpdateTask	0.0000	0.0000	0.0000	0x183ec0	-
 slider	??0slider@@QAE@HHHHHHP6IXHPAVheroWindow@@@ZW4EGraphics@0@HE@Z	100.0000	100.0000	100.0000	0x1960d0	63299852860c

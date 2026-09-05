@@ -7623,15 +7623,76 @@ unsigned char TSingleSelectionWindow::BeginSavedGame()
     return 1;
 }
 
-#if 0  // @carcass - DC-shaped launch bodies remain queued
-
+// The new-scenario launch arm. Size the world, reseat the duration and the
+// player positions, announce the launch, then hand the picked scenario to
+// game::NewMap with the per-seat hero choices resolved through each seat's
+// own availability list. On a network game the fresh map header, the seat
+// map and the whole save image go out to the other machines before the last
+// progress tick.
+//
+// Residual (74.90%): branches and block count agree exactly; the whole gap
+// is the CNewMapHeaderInfoMsg construction. Retail CALLS NewSMapHeader's
+// default constructor and EXPANDS its operator= (base assign call, two
+// string assigns, the bitset copied inline); we do the mirror image -
+// expand the constructor (CMapHeaderData ctor + two string ctors + bitset
+// ctor + the body's zero run) and CALL operator=. That is the same
+// sequential /Ob2 budget split OnBeginGame and RebuildFilteredPlayerSetup
+// show, and it costs a knock-on register binding: retail keeps `this` in
+// EBX and re-materialises the zero three times, while our long-lived CSE'd
+// zero takes EBX and spills `this`. Tried and rejected: `int iReturn` for
+// the TransmitSaveGame result, which the DC local list names (74.65 against
+// 74.90 without it - CodeView locals are a lower bound), and dropping
+// `inline` from the message constructor (byte-flat; one call site, so /Ob2
+// expands it either way). Fixed here: the DC-named `pPlayer` row pointer in
+// the seat loop is worth +4.22 and makes the branch view clean.
+// E:\gamedcs\singleselectionwindow.cpp:7822
 VA(0x0058C570, 0x3E7)  // OnBeginGame new arm, dc 0x1429e8
 unsigned char TSingleSelectionWindow::BeginNewGame()
 {
-    // @stub
-}
+    int gameVersionClass;
+    if (field_1898 == SINGLE_SELECTION_CONTEXT_2
+            || field_1898 == SINGLE_SELECTION_CONTEXT_3)
+        gameVersionClass = GAME_VERSION_SOD;
+    else
+        gameVersionClass = field_1898 == SINGLE_SELECTION_CONTEXT_1;
 
-#endif  // @carcass
+    gpGame->SetMapSize(gpGame->mapHeader.Size, gpGame->mapHeader.Size);
+    UpdateTurnDuration();
+    UpdatePlayerPositions(1);
+    IncProgressBar(1);
+
+    if (bVideoPaused) {
+        CNetMsg msg(RS_LAUNCHING_GAME, sizeof(CNetMsg));
+        TransmitRemoteDataDPID(&msg, 0, false, true);
+    }
+
+    gpGame->SetupOrigData();
+    IncProgressBar(1);
+
+    strcpy(gMapName, gpGame->setup.filename);
+    memset(gUnnamed69fb24, -1, sizeof(gUnnamed69fb24));
+    for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
+        CNetPlayerHandlerPlayer* pPlayer = &m_players.humanPlayers[i];
+        if (pPlayer->playerPos != -1 && pPlayer->heroIndex != -1)
+            gUnnamed69fb24[pPlayer->playerPos] =
+                pPlayer->availableHeroes[pPlayer->heroIndex];
+    }
+    gpGame->NewMap(gpGame->setup.path, gMapName, gUnnamed69fb24,
+                   gameVersionClass);
+    IncProgressBar(1);
+
+    if (bVideoPaused) {
+        CNewMapHeaderInfoMsg mapHeaderMsg(&gpGame->mapHeader);
+        mapHeaderMsg.RemoteFn_00512D40(0, 0, 1);
+        SendPlayerPositions(0);
+        gUnnamed69d810 = gNetLocalGamePos;
+        if (!gpGame->TransmitSaveGame(0x7f, 0, 0, 1) && !gUnnamed69d80d)
+            return 0;
+    }
+
+    IncProgressBar(1);
+    return 1;
+}
 
 // Rebuild the two 4-seat name columns: each human seat's name on its
 // own line ("%s\n" - the pooled literal advmgr owns as
