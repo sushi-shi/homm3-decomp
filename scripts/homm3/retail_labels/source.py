@@ -224,6 +224,51 @@ CHAR_STREAM_MEMBERS = (
      "ostreambuf_iterator_assign"),
     ("?_Decref@facet@locale@std@@", None, "locale_facet_decref"),
     ("?getloc@ios_base@std@@", None, "ios_base_getloc"),
+    # --- the INPUT half of the same family -------------------------------
+    # num_get<char, istreambuf_iterator<char>>'s nine do_get overloads,
+    # separated only by the reference parameter's letter (_N bool, G unsigned
+    # short, I unsigned int, J long, K unsigned long, M float, N double,
+    # O long double, PAX void*). One key on purpose: nine claims and nine
+    # COMDATs zip by RVA against COFF order, and the duplicated-size pattern
+    # confirms the zip from inside (positions 4/5 and 7/8 are equal-sized on
+    # BOTH sides).
+    ("?do_get@?$num_get@D", None, "num_get_do_get"),
+    ("?_Getifld@?$num_get@D", None, "num_get_getifld"),
+    ("?ipfx@?$basic_istream@D", None, "istream_ipfx"),
+    ("?sgetc@?$basic_streambuf@D", None, "streambuf_sgetc"),
+    ("?sbumpc@?$basic_streambuf@D", None, "streambuf_sbumpc"),
+    ("?setstate@?$basic_ios@D", None, "basic_ios_setstate"),
+    ("?clear@?$basic_ios@D", None, "basic_ios_clear"),
+    ("?_Peek@?$istreambuf_iterator@D", None, "istreambuf_iterator_peek"),
+    ("?_Inc@?$istreambuf_iterator@D", None, "istreambuf_iterator_inc"),
+    ("?equal@?$istreambuf_iterator@D", None, "istreambuf_iterator_equal"),
+    ("??D?$istreambuf_iterator@D", None, "istreambuf_iterator_deref"),
+    # ctype<char>. `is` is unambiguous; tolower/toupper are each a
+    # (char) / (const char*, const char*) pair whose bodies are identical
+    # apart from the CRT helper they call, so the suffix field separates the
+    # four and the retail callee (__Tolower / __Toupper) settles which pair
+    # is which.
+    ("?is@?$ctype@D", None, "ctype_is"),
+    ("?do_tolower@?$ctype@D", "@MBEDD@Z", "ctype_do_tolower_char"),
+    ("?do_tolower@?$ctype@D", "@MBEPBDPADPBD@Z", "ctype_do_tolower_range"),
+    ("?do_toupper@?$ctype@D", "@MBEDD@Z", "ctype_do_toupper_char"),
+    ("?do_toupper@?$ctype@D", "@MBEPBDPADPBD@Z", "ctype_do_toupper_range"),
+    # basic_string's two `compare` overloads - (const string&) and
+    # (pos, n, const char*, n) - and the two search/edit members the
+    # image-name registry uses.
+    ("?compare@?$basic_string@D", "HABV12@@Z", "basic_string_compare_str"),
+    ("?compare@?$basic_string@D", "HIIPBDI@Z", "basic_string_compare_substr"),
+    ("?replace@?$basic_string@D", None, "basic_string_replace"),
+    ("?rfind@?$basic_string@D", None, "basic_string_rfind"),
+    # Free functions of the locale machinery. Not templates on `char`, but
+    # char-only in this image, so they key with the rest of the family.
+    ("?_Maklocstr@std@@", None, "maklocstr"),
+    ("?use_facet@std@@YAABV?$ctype@D", None, "use_facet_ctype"),
+    ("?use_facet@std@@YAABV?$numpunct@D", None, "use_facet_numpunct"),
+    ("?_Save@?$_Tidyfac@V?$ctype@D", None, "tidyfac_ctype_save"),
+    ("?_Tidy@?$_Tidyfac@V?$ctype@D", None, "tidyfac_ctype_tidy"),
+    ("?_Save@?$_Tidyfac@V?$num_get@D", None, "tidyfac_num_get_save"),
+    ("?_Tidy@?$_Tidyfac@V?$num_get@D", None, "tidyfac_num_get_tidy"),
 )
 
 
@@ -255,7 +300,7 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "STD_UNGUARDED_PARTITION", "STD_UNGUARDED_INSERT",
                  "STD_COPY_BACKWARD", "STD_FILL",
                  "TREE_ERASE_ITERATOR", "TREE_ERASE_RANGE",
-                 "TREE_LBOUND", "TREE_UBOUND",
+                 "TREE_LBOUND", "TREE_UBOUND", "TREE_FIND",
                  "DEQUE_ERASE", "VECTOR_RESERVE", "VECTOR_CLEAR",
                  "EXCEPTION_DORAISE", "FUNCTOR_CALL",
                  "DEQUE_ITERATOR_ADD_ASSIGN",
@@ -815,8 +860,10 @@ def _demangle_key(mangled: str):
         return f"{tree_value.group(1).lower()}@tree_min"
     if mangled.startswith("?insert@?$_Tree@") and tree_owner:
         return f"{tree_owner.lower()}@tree_insert"
-    if mangled.startswith("?_Insert@?$_Tree@") and tree_value:
-        return f"{tree_value.group(1).lower()}@tree_node_insert"
+    if mangled.startswith("?_Insert@?$_Tree@") and tree_owner:
+        return f"{tree_owner.lower()}@tree_node_insert"
+    if mangled.startswith("?find@?$_Tree@") and tree_owner:
+        return f"{tree_owner.lower()}@tree_find"
     if mangled.startswith("?_Dec@const_iterator@?$_Tree@") and tree_owner:
         return f"{tree_owner.lower()}@tree_const_iterator_dec"
     if mangled.startswith("?_Inc@const_iterator@?$_Tree@") and tree_owner:
@@ -978,6 +1025,13 @@ def _demangle_key(mangled: str):
     #: `_Construct<vector<T>>` - the element is itself a template, which
     #: the identifier regex below cannot reach. Keyed `<t>_vector` like
     #: nested_vector_element above, so it reads with its siblings.
+    #: `_Construct<pair<const basic_string<char>, int>>` - the map<string,int>
+    #: value type. The pair arm below keys on an INT first member, which this
+    #: one inverts, so it needs its own spelling.
+    if (mangled.startswith(
+            "?_Construct@std@@YIXPAU?$pair@$$CBV?$basic_string@D")
+            and mangled.endswith("H@1@ABU21@@Z")):
+        return "string_int_pair@std_construct"
     construct_vector = re.match(
         r"^\?_Construct@std@@YIXPAV\?\$vector@(?:V|U)([A-Za-z_]\w*)@",
         mangled)
@@ -1325,6 +1379,7 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                                or "$tree_ubound$" in r["name"]
                                or "$tree_erase_iterator$" in r["name"]
                                or "$tree_erase_range$" in r["name"]
+                               or "$tree_find$" in r["name"]
                                or "$deque_erase$" in r["name"]
                                or "$stringbuf_overflow$" in r["name"]
                                or "$stringbuf_init$" in r["name"]
@@ -1532,7 +1587,7 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             continue
         tree_or_deque = next(
             (kind for kind in ("tree_erase_iterator", "tree_erase_range",
-                               "tree_lbound", "tree_ubound",
+                               "tree_lbound", "tree_ubound", "tree_find",
                                "deque_erase")
              if f"${kind}$" in row["name"]), None)
         if tree_or_deque is not None:
