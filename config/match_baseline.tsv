@@ -801,7 +801,7 @@ cmbtmgr	?enemy_is_adjacent@combatManager@@QBEEPBVarmy@@H0@Z	100.0000	100.0000	10
 cmbtmgr	?get_distance@@YIJJJ@Z	100.0000	100.0000	100.0000	0x69670	1588cfc46734
 cmbtmgr	?is_adjacent@combatManager@@QBEEHH@Z	100.0000	100.0000	100.0000	0x674c0	8030571d2f9b
 cmbtmgr	?mark_tower_army@combatManager@@QAEXPBVarmy@@@Z	100.0000	100.0000	100.0000	0x6a460	4243f6c14cc9
-cmbtmgr	?place_obstacle@combatManager@@QAEEH@Z	75.5550	75.5550	75.5550	0x66010	07a981f3e10a
+cmbtmgr	?place_obstacle@combatManager@@QAEEH@Z	79.1518	79.1518	79.1518	0x66010	0e08981dc7ac
 cmbtmgr	?should_lower_door@combatManager@@QBEEPAVarmy@@J@Z	100.0000	100.0000	100.0000	0x67130	90bb8d4f3eac
 combatcontrolsubwindow	??0TCombatControlSubWindow@@QAE@PAVheroWindow@@@Z	96.3990	96.3990	96.3990	0x6bc30	f312aa2a2178
 combatcontrolsubwindow	??0TCombatCreatureSubWindow@@QAE@HHHHPAVheroWindow@@H@Z	99.1290	99.1290	99.1290	0x6ceb0	fbd81e8e493c
