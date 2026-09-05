@@ -963,6 +963,14 @@ def _demangle_key(mangled: str):
         mangled)
     if construct_pair:
         return f"{construct_pair.group(1).lower()}_pair@std_construct"
+    #: `_Construct<vector<T>>` - the element is itself a template, which
+    #: the identifier regex below cannot reach. Keyed `<t>_vector` like
+    #: nested_vector_element above, so it reads with its siblings.
+    construct_vector = re.match(
+        r"^\?_Construct@std@@YIXPAV\?\$vector@(?:V|U)([A-Za-z_]\w*)@",
+        mangled)
+    if construct_vector:
+        return f"{construct_vector.group(1).lower()}_vector@std_construct"
     construct_owner = re.match(
         r"^\?_Construct@std@@YIXPA(?:V|U)([A-Za-z_]\w*)@", mangled)
     if construct_owner:
