@@ -56,7 +56,7 @@ type_text_scroller::type_text_scroller(const char* text, int x, int y,
     : widget(x, y, w, h, -1, 1), font_filename(fontName)
 {
     font* textFont = ResourceManager::GetFont(font_filename);
-    int lineY = y;
+    int lineY = this->y;
     background = 0;
     textFont->FillLinesVector(text, width - 24, &text_lines);
 
@@ -64,19 +64,20 @@ type_text_scroller::type_text_scroller(const char* text, int x, int y,
     if (text_lines.size() <= visibleLines) {
         textFont->FillLinesVector(text, width - 3, &text_lines);
         for (int pad = text_lines.size(); pad < visibleLines; pad++)
-            text_lines.insert(text_lines.end(), 1, std::string(""));
+            text_lines.push_back(std::string(""));
     }
 
+    textWidget* lineWidget;
     for (int line = 0; line < visibleLines; line++) {
-        textWidget* lineWidget = new textWidget(
-            x, lineY, width, textFont->fs.height,
+        lineWidget = new textWidget(
+            this->x, lineY, width, textFont->fs.height,
             text_lines[line].c_str(), font_filename, color, -1, 0, 0, 8);
         lineY += textFont->fs.height;
-        line_images.insert(line_images.end(), 1, lineWidget);
+        line_images.push_back(lineWidget);
     }
 
     text_slider = new type_text_slider(
-        x + width - 16, y, 16, height, -1,
+        this->x + width - 16, this->y, 16, height, -1,
         _cpp_max<int>(1, text_lines.size() - line_images.size() + 1),
         0, graphics, line_images.size(), 1, this);
     textFont->Dispose();
@@ -125,7 +126,8 @@ VA(0x005BA4C0, 0x13D)  // anchor-vtable 0x642d0c slot 2 + Grab, retail-only
 int type_text_scroller::Main(message* msg)
 {
     if (msg->id == MESSAGE_WIDGET) {
-        if (msg->codeX == WIDGET_DRAW) {
+        switch (msg->codeX) {
+        case WIDGET_DRAW:
             if (!background) {
                 background = new Bitmap16Bit(width, height);
                 background->Grab(gpWindowManager->screenBitmap->map,
@@ -134,14 +136,16 @@ int type_text_scroller::Main(message* msg)
                                  gpWindowManager->screenBitmap->Height,
                                  gpWindowManager->screenBitmap->Pitch);
             }
-        } else if (msg->codeX > WIDGET_SET_ICON_FRAME
-                   && msg->codeX <= WIDGET_CLEAR_STATUS) {
+            break;
+        case WIDGET_SET_STATUS:
+        case WIDGET_CLEAR_STATUS:
             for (unsigned int i = 0; i < line_images.size(); i++)
                 line_images[i]->send_message(
                     static_cast<widget::ECommands>(msg->codeX), msg->extra);
             if (text_lines.size() > line_images.size())
                 text_slider->send_message(
                     static_cast<widget::ECommands>(msg->codeX), msg->extra);
+            break;
         }
     }
     return widget::Main(msg);
@@ -160,8 +164,9 @@ void type_text_scroller::Refresh(int firstLine)
                      gpWindowManager->screenBitmap->Pitch, false);
 
     for (unsigned int i = 0; i < line_images.size(); i++) {
-        line_images[i]->SetText(text_lines[firstLine + i].c_str());
-        line_images[i]->Draw();
+        textWidget* lineWidget = line_images[i];
+        lineWidget->SetText(text_lines[firstLine + i].c_str());
+        lineWidget->Draw();
     }
 
     gpWindowManager->UpdateScreen(x + parentWindow->x, y + parentWindow->y,
@@ -171,19 +176,26 @@ void type_text_scroller::Refresh(int firstLine)
 // Re-wraps the whole scroller around a new string. The wrap width is
 // re-tried at the narrow measure only when the wide one already fits, and
 // the slider is re-ranged or hidden from the resulting line count.
+// Residual (99.4444%): one instruction - our `push_back` expands the
+// `insert(iterator, const T&)` forwarder and calls the three-argument
+// primary (`push 1`), where retail calls the forwarder itself.  The whole
+// budget ladder was swept: `erase(begin(), end())` in place of `clear()`
+// 73.40, a direct two-argument `insert(end(), X)` 97.03, a direct
+// three-argument `insert(end(), 1, X)` 39.40.  The remaining knob is a
+// statement pin, which this tree does not admit.
 VA(0x005BA6E0, 0x1EF)  // anchor-callee (font::FillLinesVector) + slider slots, retail-only
 void type_text_scroller::SetText(const char* text)
 {
     font* textFont = ResourceManager::GetFont(font_filename);
-    text_lines.erase(text_lines.begin(), text_lines.end());
+    text_lines.clear();
     textFont->FillLinesVector(text, width - 24, &text_lines);
 
     if (text_lines.size() <= line_images.size()) {
-        text_lines.erase(text_lines.begin(), text_lines.end());
+        text_lines.clear();
         textFont->FillLinesVector(text, width - 3, &text_lines);
         for (unsigned int pad = text_lines.size();
              pad < line_images.size(); pad++)
-            text_lines.insert(text_lines.end(), std::string(""));
+            text_lines.push_back(std::string(""));
         text_slider->SetState(0);
         text_slider->SetResolution(1);
         text_slider->hide();

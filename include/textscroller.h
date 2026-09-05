@@ -28,9 +28,9 @@ public:
     type_text_slider(int x, int y, int w, int h, int id, int num,
                      TSliderFunction func, EGraphics graphics, int page,
                      unsigned char hotKey, type_text_scroller* scroller)
-        : slider(x, y, w, h, id, num, func, graphics, page, hotKey),
-          owner(scroller)
+        : slider(x, y, w, h, id, num, func, graphics, page, hotKey)
     {
+        owner = scroller;
     }
 
     virtual void Close();  // slot 16, retail 0x5b9fa0
