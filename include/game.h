@@ -1252,28 +1252,10 @@ SIZE(SGameSetupOptions, 0x1cc);
 // SCampaign::clear_carryover_pool(TCarryOverPoolNumber) identifies the
 // +0x3c slot as the campaign's carry-over hero pools - while 0x45f7b0's
 // inner elements are trivially destroyed and its element type stays
-// unidentified. SCampaign itself carries the real nested vectors (the
-// retail PC layout agrees with IDA's independently recovered type record);
-// these two four-dword opaque twins, with their operations declared out of
-// line, survive only for campaignwindow.cpp's SCampaignCtorView below,
-// which models the out-of-line COMDAT call boundary retail keeps there.
-class SCampaignHeroPools {
-public:
-    int pad_00[4];
-
-    ~SCampaignHeroPools();
-    SCampaignHeroPools& operator=(const SCampaignHeroPools& that);
-};
-SIZE(SCampaignHeroPools, 0x10);
-
-class SCampaignPools4c {
-public:
-    int pad_00[4];
-
-    ~SCampaignPools4c();
-    SCampaignPools4c& operator=(const SCampaignPools4c& that);
-};
-SIZE(SCampaignPools4c, 0x10);
+// unidentified. SCampaign carries both slots as those nested vectors (the
+// retail PC layout agrees with IDA's independently recovered type record).
+// The two four-dword opaque twins that once shadowed them for
+// campaignwindow.obj alone are RETIRED (2026-09-05).
 
 // Complete's per-scenario campaign progress record. The name and return type
 // survive in the independently located HD GetCurrentScenario signature;
@@ -1316,20 +1298,6 @@ public:
     // as a typedef it still gives VC6 the authoritative global element type.
     typedef CampaignScenarioInfo MapScore;
 
-#ifdef HOMM3_CAMPAIGNWINDOW_IMPLICIT_SCAMPAIGN
-    // TU-local layout views for retail's split nested teardown boundary.
-    // Retail calls the map-score vector destructor but expands the int-vector
-    // destructor while retaining its nested _Destroy call. The first declared
-    // destructor and the second implicit derived destructor reproduce exactly
-    // that call/cleanup ledger in the one TU that expands ~SCampaign.
-    class InlineInts : public std::vector<int> {
-    };
-    class OutOfLineMapScores : public std::vector<MapScore> {
-    public:
-        ~OutOfLineMapScores() {}
-    };
-#endif
-
     unsigned char isCheater;
     unsigned char secretActive;
     signed char currentMap;
@@ -1353,24 +1321,16 @@ public:
     std::string GetCampaignFileName() const;
     unsigned char campaignCompleted[21];
     // +0x3c / +0x4c: the carry-over hero pools and the artifact pools
-    // (see the SCampaignHeroPools note above for the retail proof).
+    // (proved by the two out-of-line operator=/destructor pairs above).
     std::vector<std::vector<hero> > carryOverHeroes;
     std::vector<std::vector<type_artifact> > field_4c;
-#ifdef HOMM3_CAMPAIGNWINDOW_IMPLICIT_SCAMPAIGN
-    OutOfLineMapScores mapScores;
-#else
     std::vector<MapScore> mapScores;
-#endif
     // +0x6c, the fourth assignable sub-object. Its operator= is the
     // four-byte-element vector::operator= at 0x50ac00 and its teardown is
     // INLINE in the same constructor - _Destroy over [_First, _Last),
     // operator delete on _First, then all three words zeroed - so the slot
     // is a std::vector over a 4-byte element whose identity is unproven.
-#ifdef HOMM3_CAMPAIGNWINDOW_IMPLICIT_SCAMPAIGN
-    InlineInts field_6c;
-#else
     std::vector<int> field_6c;
-#endif
 
     // Retail's copy assignment and destructor are COMPILER-GENERATED, and
     // the image proves it from both sides of the /Ob2 split:
@@ -1413,8 +1373,10 @@ public:
     // copy assignment is compiler-generated. Its global implicit state is now
     // authoritative; the older including-TU dips above remain useful history
     // banked by max/hist, not a reason to retain a source-false declaration.
-    // HOMM3_CAMPAIGNWINDOW_IMPLICIT_SCAMPAIGN still carries only that TU's
-    // separately proved concrete nested-vector/destructor layout.
+    // The narrow campaignwindow layout view that once carried that TU's
+    // concrete nested-vector/destructor split is RETIRED (2026-09-05): the
+    // canonical std::vector members below reproduce the same call ledger
+    // and the implicit ~SCampaign COMDAT is emitted here again.
     SCampaign();
     // The destructor is compiler-generated. Retail expands it member by
     // member in ~SavedGameHeader and retains the same COMDAT for callers.
@@ -1463,39 +1425,6 @@ public:
     }
 };
 SIZE(SCampaign, 0x7c);
-
-#ifdef HOMM3_CAMPAIGNWINDOW_IMPLICIT_SCAMPAIGN
-// campaignwindow.obj needs both /Ob2 views of the same 0x7c-byte record.
-// The constructor's large inline assignment retains out-of-line boundaries
-// for the nested pools and map-score teardown; the standalone SCampaign
-// destructor above sees the concrete nested vectors and expands them.  Keep
-// the alternate record in the owning header so this is one deliberate
-// TU-gated layout model rather than a private .cpp shadow type.
-class SCampaignCtorMapScores : public std::vector<SCampaign::MapScore> {
-public:
-    ~SCampaignCtorMapScores();
-};
-
-class SCampaignCtorView {
-public:
-    unsigned char isCheater;
-    unsigned char secretActive;
-    signed char currentMap;
-    int currentCampaign;
-    int numMapRegions;
-    signed char crossoverArrayIndex;
-    int briefingChoice;
-    std::string campaignFilename;
-    unsigned char campaignCompleted[21];
-    SCampaignHeroPools carryOverHeroes;
-    SCampaignPools4c field_4c;
-    SCampaignCtorMapScores mapScores;
-    SCampaign::InlineInts field_6c;
-
-    SCampaignCtorView();
-};
-SIZE(SCampaignCtorView, 0x7c);
-#endif
 
 // The PC campaign-new-map caller passes this object as NewMap's third
 // argument.  Retail invokes two nullary members at 0x487290/0x487900;
