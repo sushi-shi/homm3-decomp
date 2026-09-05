@@ -234,6 +234,21 @@ unsigned char combatManager::check_fire_wall(long hex, army* current_army, unsig
 // lifetime, and the retained helper boundaries. Complete adds the initial
 // already-cast guard and the creatureSpell selector; its retail jump table and
 // call graph independently prove those changes.
+// Residual (89.80%, 2026-09-05): retail reaches GetGridIndex through the
+// GLOBAL at both mouse-pick sites (`mov ecx,[0x6993d0]` at 0x59ee4f and
+// 0x59eff6) rather than through `this`, even though `this` IS
+// gpCombatManager here; spelling it that way is worth 89.4253 -> 89.8006.
+// What is left is one frame fact and one layout fact.  Retail homes
+// `mastery` in the DEAD `spellToCast` PARAMETER SLOT [ebp+8] and reuses the
+// same slot for the MouseCoords `x` (with `y` in [ebp+0xc]), so its frame is
+// 0x20; this compile gives mastery its own [ebp-0x10] and lands x/y in the
+// two parameter homes the other way round, so the frame is 0x24 - one dword
+// too many.  Block-scoping the whole switch around `mastery`, and swapping
+// the `int x; int y;` declaration order, are both BYTE-FLAT.  Second, retail
+// places the shared `field_3c = 1; field_40 = spellToCast` tail AT THE
+// QUICKSAND ARM (fn+0x8f) and threads LAND_MINE's and EARTHQUAKE's `je` back
+// into it, while our C2 sinks the same join to the end of the body - the D7
+// join-placement class, not a statement shape.
 VA(0x0059ec50, 0xAA8)  // retail+dc-shape, dc 0x14ecbc
 void combatManager::InitiateSpell(SpellID spellToCast, int creatureSpell)
 {
@@ -330,7 +345,7 @@ void combatManager::InitiateSpell(SpellID spellToCast, int creatureSpell)
             int x;
             int y;
             gpMouseManager->MouseCoords(&x, &y);
-            update_spell_target(GetGridIndex(x, y));
+            update_spell_target(gpCombatManager->GetGridIndex(x, y));
             gpWindowManager->DoDialog(0, HandleCastSpell, 0);
             if (!field_3c)
                 break;
@@ -370,7 +385,7 @@ void combatManager::InitiateSpell(SpellID spellToCast, int creatureSpell)
         int x;
         int y;
         gpMouseManager->MouseCoords(&x, &y);
-        update_spell_target(GetGridIndex(x, y));
+        update_spell_target(gpCombatManager->GetGridIndex(x, y));
         gpWindowManager->DoDialog(0, HandleCastSpell, 0);
         if (shadeLevel && gUnnamed698758.showCombatMouseHex)
             SetCombatGrid(gUnnamed698758.showCombatGrid, 1, 1,
