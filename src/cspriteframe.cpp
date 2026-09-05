@@ -533,7 +533,12 @@ void CSpriteFrame::Draw(int sx, int sy, int sw, int sh,
 // half or one quarter-plus-half, or install the caller's outline color.
 //
 // Residual (95.90%): the dispatch, clipping, decoder, and every forward shade
-// block now agree instruction-for-instruction. Retail deliberately widens one
+// block now agree instruction-for-instruction.
+// MEASURED AND REJECTED 2026-09-05: dropping the `unsigned int color = out[-1]`
+// widening from the two reverse half-shade arms - the one line that took
+// DrawTileShadow 97.90 -> 99.93 and DrawAdvObjShadowImpl 98.58 -> 99.94 - costs
+// 0.57 HERE (95.9000 -> 95.3300, three blocks size-only). The renderers really
+// do spell the same blend two different ways; do not carry the lever across. Retail deliberately widens one
 // ushort blend-mask access to a dword AND whose low half alone is stored; the
 // explicit dword view below recovers that C1 value-range decision and aligns
 // both CFGs at 128 blocks. The cast-free `TBlendMask` view records Complete's
@@ -1163,6 +1168,207 @@ void CSpriteFrame::DrawAdvObjWithFlagAlpha(int sx, int sy, int sw, int sh,
     }
 }
 
+// E:\gamedcs\cspriteframe.cpp:2645
+// The adventure-object shadow pass. DrawAdvObjImpl's packed-cell decoder with
+// the palette gone - nothing here reads `pal`, and the literal run that
+// renderer draws is SKIPPED, because an object's opaque pixels are not what
+// casts its shadow. What is drawn instead are the two control runs, darkening
+// what is already on the destination by a quarter or a half.
+//
+// Its two callers name it: CSprite::DrawAdvObjShadow (0x47be60) and
+// CSprite::DrawHeroShadow (0x47c0d0) both reach this address through
+// `s[..]->f[framenum]->DrawAdvObjShadowImpl`, and nothing else calls it.
+//
+// The dispatch is a COMPARE CHAIN, not the jump table DrawTileShadow gets,
+// because only codes 1 and 4 have arms and they are not adjacent - retail
+// tests `dec eax / je` then `sub eax,3 / je` with both bodies sunk past the
+// default. The arms emerge in reverse of the ascending dispatch order (the
+// half blend first at 0x47db45, the quarter-plus-half second at 0x47db5f),
+// which is what a compare-chain switch does regardless of source order.
+//
+// Residual (99.94%): 86 of 86 blocks EXACT, 42 of 42 branches, both returns,
+// empty call multiset. All that is left is the three-quarter blend's two
+// sites, the same B-family transposition DrawTileShadow carries below. The
+// half blend DID have a source cause: the widening `unsigned int color =
+// out[-1]` spelling cost nine flow-kind blocks and a whole missing block, and
+// dropping it took this row 98.5765 -> 99.9400 on one line.
+VA(0x0047d930, 0x40F)  // anchor-callee (CSprite::DrawAdvObjShadow/DrawHeroShadow) + DC source identity
+void CSpriteFrame::DrawAdvObjShadowImpl(int sx, int sy, int sw, int sh,
+                                        unsigned short* dst, int dx, int dy,
+                                        int dw, int dh, int dpitch,
+                                        TPalette16& pal,
+                                        unsigned char hflip) const
+{
+    unsigned int cellsPerLine;
+    unsigned short* aCellOffset;
+
+    Clip(sx, sy, sw, sh, dx, dy, dw, dh, hflip, 0);
+    if (sw > 0) {
+        if (sh > 0) {
+
+            cellsPerLine = static_cast<unsigned int>(CroppedWidth) >> 5;
+            aCellOffset = static_cast<unsigned short*>(static_cast<void*>(map));
+
+            if (!hflip) {
+                unsigned short* lineDst =
+                    static_cast<unsigned short*>(static_cast<void*>(
+                    static_cast<unsigned char*>(static_cast<void*>(dst)) +
+                    dy * dpitch + dx * 2));
+
+                for (int y = sy; y < sy + sh; ++y) {
+                    unsigned short* out = lineDst;
+                    unsigned int skipped = static_cast<unsigned int>(sx) & ~31U;
+                    const unsigned char* src =
+                        map + aCellOffset[y * cellsPerLine +
+                                          (static_cast<unsigned int>(sx) >> 5)];
+                    unsigned char packet = *src;
+                    unsigned char code = packet >> 5;
+                    unsigned int run = (packet & 31) + 1;
+                    ++src;
+
+                    while (skipped + run <= static_cast<unsigned int>(sx)) {
+                        skipped += run;
+                        if (code == eRleControlOutline7)
+                            src += run;
+                        packet = *src;
+                        code = packet >> 5;
+                        run = (packet & 31) + 1;
+                        ++src;
+                    }
+
+                    run += skipped - sx;
+                    if (code == eRleControlOutline7)
+                        src += sx - skipped;
+
+                    unsigned int remaining = sw;
+                    do {
+                        if (run > remaining)
+                            run = remaining;
+                        if (code == eRleControlOutline7) {
+                            out += run;
+                            src += run;
+                        } else {
+                            switch (code) {
+                            case eRleControlShadow75: {
+                                unsigned int count = run;
+                                do {
+                                    *out = ((*out >> 2) & div4mask)
+                                         + ((*out >> 1) & div2mask.dword);
+                                    ++out;
+                                } while (--count);
+                                break;
+                            }
+                            case eRleControlShadow50: {
+                                unsigned int count = run;
+                                do {
+                                    unsigned int color = *out;
+                                    *out = (color >> 1) & div2mask.dword;
+                                    ++out;
+                                } while (--count);
+                                break;
+                            }
+                            default:
+                                out += run;
+                                break;
+                            }
+                        }
+                        remaining -= run;
+                        if (!remaining)
+                            break;
+                        packet = *src;
+                        code = packet >> 5;
+                        run = (packet & 31) + 1;
+                        ++src;
+                    } while (remaining);
+
+                    lineDst =
+                        static_cast<unsigned short*>(static_cast<void*>(
+                            static_cast<unsigned char*>(
+                                static_cast<void*>(lineDst)) +
+                            dpitch));
+                }
+            } else {
+                unsigned short* lineDst =
+                    static_cast<unsigned short*>(static_cast<void*>(
+                    static_cast<unsigned char*>(static_cast<void*>(dst)) +
+                    dy * dpitch + (dx + sw) * 2));
+
+                for (int y = sy; y < sy + sh; ++y) {
+                    unsigned short* out = lineDst;
+                    unsigned int skipped = static_cast<unsigned int>(sx) & ~31U;
+                    const unsigned char* src =
+                        map + aCellOffset[y * cellsPerLine +
+                                          (static_cast<unsigned int>(sx) >> 5)];
+                    unsigned char packet = *src;
+                    unsigned char code = packet >> 5;
+                    unsigned int run = (packet & 31) + 1;
+                    ++src;
+
+                    while (skipped + run <= static_cast<unsigned int>(sx)) {
+                        skipped += run;
+                        if (code == eRleControlOutline7)
+                            src += run;
+                        packet = *src;
+                        code = packet >> 5;
+                        run = (packet & 31) + 1;
+                        ++src;
+                    }
+
+                    run += skipped - sx;
+                    if (code == eRleControlOutline7)
+                        src += sx - skipped;
+
+                    unsigned int remaining = sw;
+                    do {
+                        if (run > remaining)
+                            run = remaining;
+                        if (code == eRleControlOutline7) {
+                            out -= run;
+                            src += run;
+                        } else {
+                            switch (code) {
+                            case eRleControlShadow75: {
+                                unsigned int count = run;
+                                do {
+                                    --out;
+                                    *out = ((*out >> 2) & div4mask)
+                                         + ((*out >> 1) & div2mask.dword);
+                                } while (--count);
+                                break;
+                            }
+                            case eRleControlShadow50: {
+                                unsigned int count = run;
+                                do {
+                                    --out;
+                                    *out = (*out >> 1) & div2mask.dword;
+                                } while (--count);
+                                break;
+                            }
+                            default:
+                                out -= run;
+                                break;
+                            }
+                        }
+                        remaining -= run;
+                        if (!remaining)
+                            break;
+                        packet = *src;
+                        code = packet >> 5;
+                        run = (packet & 31) + 1;
+                        ++src;
+                    } while (remaining);
+
+                    lineDst =
+                        static_cast<unsigned short*>(static_cast<void*>(
+                            static_cast<unsigned char*>(
+                                static_cast<void*>(lineDst)) +
+                            dpitch));
+                }
+            }
+        }
+    }
+}
+
 // E:\gamedcs\cspriteframe.cpp:2856.  Raw tiles are palette-indexed rows;
 // encoded tiles use a word row-offset table and the same packed packet byte as
 // adventure cells.  Only code seven carries pixels in this renderer.
@@ -1624,18 +1830,18 @@ void CSpriteFrame::DrawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
 // The mask widths are read straight from the bytes - div4mask is ANDed as a
 // word and div2mask as a dword in all four arms.
 //
-// Residual (97.90%): 156 of 156 blocks, all 72 branches and all 4 returns
-// agree; what is left is register roles in two places. In the three-quarter
-// blend retail computes the div4mask term into the COPY (`mov bx,ax / shr
-// bx,2 / and bx,word[div4mask]`) and the div2mask term into the original,
-// while this compile assigns them the other way round and still emits the
-// same `add ebx,eax` and the same store. Source order is NOT the lever:
-// writing the div2mask term first is byte-flat to the digit, and so is
-// naming either term in its own local (the div4-term local measured 97.90
-// exactly, and naming the load `color` - the spelling the half blend needs -
-// LOSES 0.88 here). The remaining hunk is the same class one arm up, where
-// the line pointer is built in EDX rather than EDI before the identical
-// store. Both are B-family homing on values that arrive as parameters.
+// Residual (99.93%): all 156 blocks EXACT, all 72 branches, all 4 returns.
+// What is left is the three-quarter blend's four sites, where retail computes
+// the div4mask term into the COPY register (`mov bx,ax / shr bx,2 / and
+// bx,word[div4mask]`) and this compile computes the div2mask term there,
+// emitting the same `add ebx,eax` and the same store. Source order is NOT the
+// lever - writing the div2mask term first is byte-flat to the digit, and so is
+// naming either term in its own local; VC6 canonicalises `+`. B-family homing.
+// WHAT DID MOVE, and it is the same line in two renderers here: the half blend
+// written `unsigned int color = out[-1]; --out; *out = (color >> 1) & mask;`
+// emits a widening `xor eax,eax / mov ax,` pair retail does not have.
+// `--out; *out = (*out >> 1) & mask;` reads the same location AFTER the
+// decrement, which is what retail spells: 97.8963 -> 99.9300 here.
 VA(0x0047e820, 0x740)  // anchor-callee (CSprite::DrawTileShadow/DrawShroudTile) + DC source identity
 void CSpriteFrame::DrawTileShadow(int sx, int sy, int sw, int sh,
                                   unsigned short* dst, int dx, int dy, int dw,
@@ -1784,9 +1990,8 @@ void CSpriteFrame::DrawTileShadow(int sx, int sy, int sw, int sh,
                                 case eRleControlShadow50: {
                                     unsigned int count = run;
                                     do {
-                                        unsigned int color = out[-1];
                                         --out;
-                                        *out = (color >> 1) & div2mask.dword;
+                                        *out = (*out >> 1) & div2mask.dword;
                                     } while (--count);
                                     break;
                                 }
@@ -1940,9 +2145,8 @@ void CSpriteFrame::DrawTileShadow(int sx, int sy, int sw, int sh,
                                 case eRleControlShadow50: {
                                     unsigned int count = run;
                                     do {
-                                        unsigned int color = out[-1];
                                         --out;
-                                        *out = (color >> 1) & div2mask.dword;
+                                        *out = (*out >> 1) & div2mask.dword;
                                     } while (--count);
                                     break;
                                 }
