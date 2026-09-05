@@ -5,6 +5,7 @@
 #include "terrain.h"
 #include <va.h>
 #include <algorithm>
+#include <stdlib.h>
 #include <string.h>
 #include "advmgr.h"
 #include "cursor.h"
@@ -14,6 +15,8 @@
 #include "kb.h"
 #include "misc.h"
 #include "timedevent.h"
+#include "resourcemanager.h"
+#include "textresource.h"
 #include "town.h"
 #include "townmgr.h"
 
@@ -2377,21 +2380,104 @@ int town::UpgradedDwellingID(int id)
     return id + TOWN_DWELLING_COUNT;
 }
 
-#if 0  // @carcass
+// E:\gamedcs\town.cpp:2476, static and inlined at all three of its call
+// sites by /Ob2 - the Dreamcast keeps it out of line and names its two
+// parameters. `resource` is bound by REFERENCE, which is why retail
+// re-reads the vector's _First between every one of the seven columns
+// instead of holding it in a register.
+static void InitializeBuildingCosts(int* costs,
+                                    const std::vector<char*>& resource)
+{
+    costs[0] = atoi(resource[0]);
+    costs[1] = atoi(resource[1]);
+    costs[2] = atoi(resource[2]);
+    costs[3] = atoi(resource[3]);
+    costs[4] = atoi(resource[4]);
+    costs[5] = atoi(resource[5]);
+    costs[6] = atoi(resource[6]);
+}
 
-// E:\gamedcs\town.cpp:2419
-DC_ONLY(0x168c3c, 0x112)
+// The three build-cost tables town.h declares, defined here because this
+// is the compiland that fills them - which settles the "not yet located in
+// retail" caveat that header carried. Their .bss extents chain exactly
+// (0x6a80f8 + 17*7*4 = 0x6a82dc, + 9*9*7*4 = 0x6a8bb8 = included_buildings,
+// + 9*44*8 = 0x6a9818, + 9*14*7*4 = 0x6aa5e0), and the reader below walks
+// each one to its neighbour's address.
+DATA(0x006a80f8)
+int town::NeutralBuildingCosts[SPECIAL_BUILDING_ID][NUM_RESOURCES];
+DATA(0x006a82dc)
+int town::SpecialBuildingCosts[9][9][NUM_RESOURCES];
+DATA(0x006a9818)
+int town::DwellingCosts[9][14][NUM_RESOURCES];
+
+// E:\gamedcs\town.cpp:2419 - building.txt, one of kb's start-up table
+// readers (that run's own table in src/kb.cpp already attributed this
+// address to town.obj). The sheet is laid out in three sections and one
+// row cursor walks all three in a single pass, which is why the skips
+// between them are `+= 2` / `+= 3` / `+= 2` rather than absolute row
+// numbers: nine special-building blocks of nine rows, then the seventeen
+// neutral buildings in one run, then nine dwelling blocks of fourteen.
+//
+// Residual (91.05%): 11 of 13 blocks byte-exact, all 23 calls and all 6
+// branches present, and what is left is ONE fact - retail's two outer
+// loops end on `cmp esi, <end address> / jl`, a SIGNED compare against an
+// address, and its cost pointer is biased +8 so the seven stores address
+// [esi-8] .. [esi+0x10]. The pointer bound written here gives the right
+// registers and the right block shape but an UNSIGNED `jb` and an
+// unbiased pointer. Three spellings of the outer bound were measured and
+// all are worse, each for its own reason:
+//   `for (int type = 0; type < TOWN_TYPE_COUNT; ++type)` over
+//     &SpecialBuildingCosts[type][0][0]                        86.24
+//   the same with a flat `slot += 9 * NUM_RESOURCES` index       83.87
+//   `while (costs - base < TOWN_TYPE_COUNT * 9 * NUM_RESOURCES)` 84.48
+//     (this one adds two branches - VC6 materialises the
+//      difference instead of folding it into the compare)
+// The first two keep a SECOND loop counter in the frame, which is the
+// tell that VC6 did not strength-reduce them; whatever retail wrote, it
+// left one induction variable with a signed bound.
+VA(0x005c14c0, 0x1F6)  // anchor-global building.txt 0x688fb4; anchor-caller kb's table run
 unsigned char town::InitializeBuildingCostsTables()
 {
-    // @stub
+    TSpreadsheetResource* sheet = ResourceManager::GetSpreadsheet(
+        DATA_COMPGEN(0x00688fb4, townBuildingSpreadsheetName, "building.txt"));
+    if (!sheet)
+        return 0;
+
+    int row = 2;
+    int* costs = &SpecialBuildingCosts[0][0][0];
+    while (costs < &SpecialBuildingCosts[TOWN_TYPE_COUNT][0][0]) {
+        row += 2;
+        for (int special = 0; special < 9; ++special) {
+            InitializeBuildingCosts(costs, sheet->GetRow(row));
+            ++row;
+            costs += NUM_RESOURCES;
+        }
+    }
+
+    row += 3;
+    costs = &NeutralBuildingCosts[0][0];
+    for (int neutral = 0; neutral < SPECIAL_BUILDING_ID; ++neutral) {
+        InitializeBuildingCosts(costs, sheet->GetRow(row));
+        ++row;
+        costs += NUM_RESOURCES;
+    }
+
+    row += 2;
+    costs = &DwellingCosts[0][0][0];
+    while (costs < &DwellingCosts[TOWN_TYPE_COUNT][0][0]) {
+        row += 2;
+        for (int dwelling = 0; dwelling < 14; ++dwelling) {
+            InitializeBuildingCosts(costs, sheet->GetRow(row));
+            ++row;
+            costs += NUM_RESOURCES;
+        }
+    }
+
+    sheet->Dispose();
+    return 1;
 }
 
-// E:\gamedcs\town.cpp:2476
-DC_ONLY(0x168d50, 0xAC)
-void InitializeBuildingCosts(int* costs, const std::vector<char* resource)
-{
-    // @stub
-}
+#if 0  // @carcass
 
 // E:\gamedcs\Town.h:331
 DC_ONLY(0x168dfc, 0x28)
