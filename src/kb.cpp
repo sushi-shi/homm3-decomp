@@ -218,6 +218,38 @@ void PollSound()
     }
 }
 
+// E:\gamedcs\kb.cpp:431
+// The twelve manager singletons, in allocation order. Identified from the
+// body rather than from link order: retail's row here `new`s executive,
+// inputManager, mouseManager, heroWindowManager, soundManager,
+// highScoreManager, game, advManager, combatManager, townManager,
+// searchArray and the AI turn driver into their .bss slots, which is
+// exactly the Dreamcast InitMainClasses. The unwind states 0..0xb are one
+// per `new`, and that EH frame is why /Ob2 leaves the body out of line:
+// its single caller (EarlySetup) has no EH frame of its own, and VC6 will
+// not expand a callee that introduces EH state into a caller that has none.
+//
+// Residual (99.99%): ONE immediate - `push 0x4e7cc` against retail's
+// `push 0x4e7d0` for the `game` allocation. Our `class game` model is four
+// bytes short of retail's object; the note beside its last member records
+// the measurement. Every other allocation size and every block matches.
+VA(0x004edb40, 0x256)  // anchor-callee (EarlySetup) + twelve ctor calls, dc 0xdf4e4
+void InitMainClasses()
+{
+    gpExecutive = new executive;
+    gpInputManager = new inputManager;
+    gpMouseManager = new mouseManager;
+    gpWindowManager = new heroWindowManager;
+    gpSoundManager = new soundManager;
+    gpHighScoreManager = new highScoreManager;
+    gpGame = new game;
+    gpAdvManager = new advManager;
+    gpCombatManager = new combatManager;
+    gpTownManager = new townManager;
+    gpSearchArray = new searchArray;
+    gpUnnamed69928c = new CAITurnDriver69928c;
+}
+
 // E:\gamedcs\kb.cpp:722
 // The credits crawl over the closing video: the 328x580 window at
 // (460,10) is saved, the whole text is rendered once into an off-screen
@@ -320,17 +352,6 @@ stop_credits:
 
 #if 0  // @carcass
 
-
-// E:\gamedcs\kb.cpp:431
-// Located by exhaustive order-mapping of the six carve rows after
-// PollSound onto the six DC kb.cpp functions PollSound..oldmain
-// (492->1256 B: the WinCE build strips the Win32 menu loading that
-// gives the retail body its LoadMenuA call). WinMain's first gate.
-// RETAIL_LOCATED(0x004ed650, 0x4E8)  // linkorder, dc 0xdf4e4
-int InitMainClasses()
-{
-    // @stub
-}
 
 // E:\gamedcs\kb.cpp:553
 DC_ONLY(0xdf840, 0x12)
@@ -2231,30 +2252,9 @@ void EarlyShutDownSystem()
 
 #if 0  // @carcass
 
-// E:\gamedcs\kb.cpp:3954
-DC_ONLY(0xe3dfc, 0x4C)
-void FileError(const char* cBuf)
-{
-    // @stub
-}
-
 // E:\gamedcs\kb.cpp:3970
 DC_ONLY(0xe3e48, 0x450)
 void CongratsWait(int mode, char* rank, int iBase, int iScore, int iDayz)
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:4077
-DC_ONLY(0xe4298, 0x66)
-short game::get_base_map_score()
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:4095
-DC_ONLY(0xe4300, 0x2E)
-short game::get_map_score()
 {
     // @stub
 }
@@ -2337,13 +2337,6 @@ int CheckMem()
 // E:\gamedcs\kb.cpp:5206
 DC_ONLY(0xe5960, 0x574)
 void CalculateNormalDialogSize(TNormalDialogInfo* dialog_info)
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:5441
-DC_ONLY(0xe5ed4, 0x8C)
-void get_quickview_size(const char* text, int* width, int* height)
 {
     // @stub
 }
@@ -2771,6 +2764,54 @@ void std::__destroy_aux()
 }
 
 #endif  // @carcass
+
+// E:\gamedcs\kb.cpp:3954
+// The row straight after ShutDown, which is where the Dreamcast roster puts
+// FileError (76 B against retail's 77), and the body agrees: one 500-byte
+// scratch buffer, the general-text row 11 as the format, and the plain
+// one-button NormalDialog with every slot switched off.
+VA(0x004f3a60, 0x4D)  // dc-order-map (the row after ShutDown) + NormalDialog call shape, dc 0xe3dfc
+void FileError(const char* cBuf)
+{
+    char cTemp[500];
+
+    sprintf(cTemp, (*gpGeneralText)[11], cBuf);
+    NormalDialog(cTemp, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+}
+
+// E:\gamedcs\kb.cpp:4077
+// game.h's own get_current_turn expression appears here verbatim, which is
+// what identifies the row: the same three calendar words at +0x1f63e /
+// +0x1f640 / +0x1f642 in the same short-typed shape, then the two 25-point
+// bonuses and the 200-point base. Both queries go through gpGame, not `this`.
+//
+// The divisor is playerData +0x3e, which this tree models as `numTowns` on
+// town::Deallocate's byte-proven walk. It reads like a difficulty term in a
+// score formula; the offset is what retail loads either way, and nothing here
+// re-opens that identification.
+VA(0x004f3e30, 0x7A)  // dc-order-map + the get_current_turn expression, dc 0xe4298
+short game::get_base_map_score()
+{
+    short turn = get_current_turn();
+    playerData* player = gpGame->GetLocalPlayer();
+    int gamePos = gpGame->GetLocalPlayerGamePos();
+
+    return static_cast<short>((gUnnamed69950c == gamePos ? 25 : 0)
+                              - (turn + 10) / (player->numTowns + 5)
+                              + (gUnnamed69951c ? 25 : 0)
+                              + 200);
+}
+
+// E:\gamedcs\kb.cpp:4095
+// Retail EXPANDS get_base_map_score here (46 B on Dreamcast against 167
+// here), then scales by the .rdata float row the setup difficulty selects.
+// The fild/fstp/fld round trip is the `float` cast under /Op.
+VA(0x004f3eb0, 0xA7)  // dc-order-map + inlined get_base_map_score, dc 0xe4300
+short game::get_map_score()
+{
+    return static_cast<short>(static_cast<float>(get_base_map_score())
+                              * gMapScoreDifficultyFactor[setup.difficulty]);
+}
 
 // This tree still carries the spellbook id in the older combat-side enum,
 // while type_artifact's source interface correctly uses TArtifact. Preserve
@@ -3369,6 +3410,33 @@ void type_dialog_icon::set(EGameResource _resource, long _qualifier)
         }
     }
 }
+
+// E:\gamedcs\kb.cpp:5441
+// The measure-only front door: build a popup-shaped TNormalDialogInfo with
+// no icons at all, size it, and hand back the box. Retail's entry proves the
+// Complete ABI - text in ECX, the width pointer in EDX, the height pointer on
+// the stack - and the frame is one whole 0x2a0 record plus the EH state.
+VA(0x004f62a0, 0x162)  // dc-order-map + CalculateNormalDialogSize call, dc 0xe5ed4
+void get_quickview_size(const char* text, int* width, int* height)
+{
+    TNormalDialogInfo dialog_info;
+    dialog_info.dialog_text = text;
+    dialog_info.iMBType = NORMAL_DIALOG_POPUP;
+    dialog_info.x = -1;
+    dialog_info.y = -1;
+    for (int i = 0; i < 8; i++)
+        dialog_info.icons[i].set(const_no_resource, 0);
+    CalculateNormalDialogSize(&dialog_info);
+    *width = dialog_info.width;
+    *height = dialog_info.height;
+}
+
+// TNormalDialogInfo's implicit destructor, which NormalDialog's by-value
+// local instantiates: the eight-element `icons` array through the vector
+// destructor iterator (0x4c stride, ??1type_dialog_icon as the element
+// hook) and then dialog_text's Dinkumware teardown - members in reverse
+// declaration order, exactly as this header models them.
+VA_COMPGEN(0x004f6410, 0x74, IMPLICIT_DTOR, TNormalDialogInfo)
 
 // type_dialog_icon's two other implicit special members, both already
 // emitted by this object because TNormalDialogInfo holds an array of eight

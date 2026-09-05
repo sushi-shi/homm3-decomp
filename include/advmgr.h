@@ -705,6 +705,9 @@ extern unsigned long gUnnamed699544;
 // no surviving symbol reaches this slot.
 class CAITurnDriver69928c {
 public:
+    // Declared for InitMainClasses' `new`: retail calls a real constructor
+    // (3 B at 0x524360) on the one-byte allocation.
+    CAITurnDriver69928c();
     void StartPlayerTurn(int gamePos);  // 0x525e80
 };
 extern CAITurnDriver69928c* gpUnnamed69928c;
