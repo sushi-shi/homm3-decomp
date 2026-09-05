@@ -1515,6 +1515,47 @@ def _element_pairing(candidates: list[dict], mangled_group: list) -> dict:
     return out
 
 
+def _ctor_kind_pairing(candidates: list[dict], mangled_group: list,
+                       used: set | None = None) -> dict:
+    """{claim rva -> mangled} for the constructor halves a group's CLAIM
+    KIND names uniquely - decided without any appeal to length.
+
+    A count mismatch between a claim group and its base object's mangled
+    names normally means the base emits overloads retail dropped, and
+    `join_unit` settles those by EXACT content size. That oracle cannot
+    reach the commonest shape in this tree: a class whose default ctor and
+    whose compiler-generated copy ctor share one `Class_Class` key, where
+    the linker took retail's default ctor from ANOTHER compiland, so this
+    unit's retail band contains only the copy. The sizes decide nothing
+    there because a claim's retail extent and our COMDAT's length are not
+    equal for an unmatched reconstruction - singleselectionwindow's
+    `NewSMapHeader` copy ctor is 426 B in retail against 462 B here.
+
+    The kinds decide it instead. `IMPLICIT_COPY_CTOR` and `CLASS_CTOR` say
+    which half a CLAIM is; `ABV0<n>` at the end of the mangled name - a
+    back-reference to the class's own name - says which half a SYMBOL is.
+    Where each half holds exactly one of each, the pairing is forced.
+    Anything less declines and the group stays labeled.
+
+    `used` names are already spoken for by the size pass and never offered
+    twice. Pure in (candidates, mangled_group, used) so the negative
+    control can drive it."""
+    used = used or set()
+    free = [name for name, _content in mangled_group
+            if name not in used and name.startswith("??0")]
+    halves = (("$implicit_copy_ctor$",
+               [n for n in free if COPY_CTOR_TAIL_RE.search(n)]),
+              ("$class_ctor$",
+               [n for n in free if not COPY_CTOR_TAIL_RE.search(n)]))
+    out = {}
+    for marker, names in halves:
+        rows = [r for r in candidates
+                if marker in r["name"] and r["channel"] != "src-VA+base"]
+        if len(rows) == 1 and len(names) == 1:
+            out[rows[0]["rva"]] = names[0]
+    return out
+
+
 def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
     """The base-obj name-authority join, in place: a compiled unit's public
     symbols carry the TRUE MSVC spellings; uniquely-joined claims adopt
@@ -1908,6 +1949,18 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                 continue
             row["joined"] = mangled
             row["channel"] = "src-VA+base"
+        # ...and where the LENGTHS decide nothing, the claim kind still
+        # can: a default ctor sitting beside its compiler-generated copy
+        # ctor is one group whose two halves both sides can name.
+        pairing = _ctor_kind_pairing(
+            candidates, mangled_group,
+            {r.get("joined") for r in candidates
+             if r["channel"] == "src-VA+base"})
+        for row in candidates:
+            mangled = pairing.get(row["rva"])
+            if mangled is not None:
+                row["joined"] = mangled
+                row["channel"] = "src-VA+base"
 
 
 def _fragment_rows(rows: list[dict]) -> list[list[str]]:
