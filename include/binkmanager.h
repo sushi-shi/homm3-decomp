@@ -99,7 +99,7 @@ __declspec(dllimport) void __stdcall _BinkGetSummary(Bink* bnk,
 // static data roster); retail supplies the full PC implementations.
 class BinkManager {
 public:
-    static BINK* GetBinkFilePtr(char* filename, int binkOptions);
+    static BINK* GetBinkFilePtr(const char* filename, int binkOptions);
     static void SetPixelFormat(unsigned long redMask,
                                unsigned long greenMask,
                                unsigned long blueMask);
@@ -154,6 +154,10 @@ extern unsigned char gBinkUseDirtyRects;  // 0x694ca8
 // NextBinkFrame both refuse to touch the handles without it, and CloseBink
 // drops it. The mirror of smackmgr's gSmackFrameReady. Provisional.
 extern unsigned char gBinkFrameReady;     // 0x694d5c
+// The bink twin of smackmgr's gVideoSoundReady, raised by OpenBinkVideo
+// out of exactly the same three-way gate (gUnnamed699290 == 0 &&
+// gpSoundManager->ds != 0 && gUnnamed698758.soundVolume != 0). Provisional.
+extern int gBinkSoundReady;               // 0x694d58
 
 // --- BinkManager ---
 // CODEVIEW(E:\gamedcs\binkmanager.cpp:79, dc 0x50a7c) BINK* BinkManager::GetBinkFilePtr(char* filename, int binkOptions);

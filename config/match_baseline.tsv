@@ -642,6 +642,7 @@ basemgr	??0baseManager@@QAE@XZ	100.0000	100.0000	100.0000	0x4d530	687e8eebaf66
 binkmanager	?CloseBinkVideo@@YIXXZ	100.0000	100.0000	100.0000	0x4dcc0	32dc15ed5944
 binkmanager	?DrawCurrentBinkFrame@@YIXXZ	100.0000	100.0000	100.0000	0x4d9e0	92a06eb257a8
 binkmanager	?NextBinkFrame@@YIXXZ	92.9245	92.9245	92.9245	0x4daa0	c4c2a3ae4ebf
+binkmanager	?OpenBinkVideo@@YIXHHHHHHH@Z	100.0000	100.0000	100.0000	0x4d830	c660a4857444
 binkmanager	?RestartBink@BinkManager@@SIXXZ	100.0000	100.0000	100.0000	0x4da50	20d03e6309f1
 bitmap16	??0Bitmap16Bit@@QAE@HH@Z	100.0000	100.0000	100.0000	0x4df70	a4eca84aac08
 bitmap16	??0Bitmap16Bit@@QAE@PBDHH@Z	100.0000	100.0000	100.0000	0x4e050	1007f10e515d

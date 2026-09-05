@@ -3,7 +3,10 @@
 // 8 functions in link order.
 #include <va.h>
 #include "binkmanager.h"
-#include "smackmgr.h"   // gVideoDescriptors, VideoDrawRects
+#include "bitmap16.h"   // screenBitmap map/Pitch/Height
+#include "prefs.h"      // gUnnamed698758.soundVolume
+#include "smackmgr.h"   // gVideoDescriptors, VideoDrawRects, VideoClose
+#include "wingraph.h"   // gpDDSBack
 #include "soundmgr.h"   // gpSoundManager->service_sounds
 #include "winmgr.h"
 
@@ -28,15 +31,62 @@ void BinkManager::SetPixelFormat()
     // @stub
 }
 
-// E:\gamedcs\binkmanager.cpp:132
-DC_ONLY(0x50a84, 0x4)
-void BinkManager::OpenBink()
-{
-    // @stub
-}
-
 // E:\gamedcs\binkmanager.cpp:232
 #endif  // @carcass
+
+// E:\gamedcs\binkmanager.cpp:132 (dc 0x50a84). smackmgr.cpp's ShowVideo is
+// this body's SMACKER TWIN and its head is the same statement for statement -
+// the same three-way sound gate, the same `smkAudioStem != ""` audio-track
+// arm with its failure close, the same `if (w <= 0) w = video->Width` pair.
+VA(0x0044D830, 0x1A3)  // dc-order-map + caller (PlayBink 0x44dd20), dc 0x50a84
+void OpenBinkVideo(int id, int x, int y, int w, int h, int loop,
+                   int useDirtyRects)
+{
+    if (gUnnamed699290 == 0 && gpSoundManager->ds != 0
+        && gUnnamed698758.soundVolume != 0)
+        gBinkSoundReady = 1;
+    else
+        gBinkSoundReady = 0;
+
+    VideoClose();
+    gBinkSurfaceType = _BinkDDSurfaceType(gpDDSBack);
+    gBinkVideoId = id;
+    gBinkPaused = 0;
+
+    if (gVideoDescriptors[id].smkAudioStem != "") {
+        gBinkVideo2 = BinkManager::GetBinkFilePtr(
+            gVideoDescriptors[id].smkAudioStem, 0x400000);
+        if (!gBinkVideo2) {
+            CloseBinkVideo();
+            return;
+        }
+    }
+
+    gBinkVideo = BinkManager::GetBinkFilePtr(
+        gVideoDescriptors[id].smkStem,
+        gVideoDescriptors[id].field_b ? 0x400000 : 0);
+    if (!gBinkVideo) {
+        CloseBinkVideo();
+        return;
+    }
+
+    gBinkUseDirtyRects = static_cast<unsigned char>(useDirtyRects);
+    if (w <= 0)
+        w = gBinkVideo->Width;
+    if (h <= 0)
+        h = gBinkVideo->Height;
+    gBinkChainTrack = loop;
+    gBinkX = x;
+    gBinkY = y;
+    gBinkUpdateWidth = w;
+    gBinkUpdateHeight = h;
+    gBinkBuffer = 2 * x + gpWindowManager->screenBitmap->Pitch * y
+        + static_cast<unsigned char*>(
+              static_cast<void*>(gpWindowManager->screenBitmap->map));
+    gBinkPitch = gpWindowManager->screenBitmap->Pitch;
+    gBinkHeight = gpWindowManager->screenBitmap->Height;
+    gBinkFrameReady = 1;
+}
 
 // E:\gamedcs\binkmanager.cpp:204 (dc 0x50a88). The DC row is a 4-byte stub -
 // the Dreamcast port has no Bink - so the Complete body below is the whole
