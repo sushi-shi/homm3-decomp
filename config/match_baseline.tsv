@@ -801,7 +801,7 @@ cmbtmgr	?enemy_is_adjacent@combatManager@@QBEEPBVarmy@@H0@Z	100.0000	100.0000	10
 cmbtmgr	?get_distance@@YIJJJ@Z	100.0000	100.0000	100.0000	0x69670	1588cfc46734
 cmbtmgr	?is_adjacent@combatManager@@QBEEHH@Z	100.0000	100.0000	100.0000	0x674c0	8030571d2f9b
 cmbtmgr	?mark_tower_army@combatManager@@QAEXPBVarmy@@@Z	100.0000	100.0000	100.0000	0x6a460	4243f6c14cc9
-cmbtmgr	?place_obstacle@combatManager@@QAEEH@Z	75.5550	75.5550	75.5550	0x66010	07a981f3e10a
+cmbtmgr	?place_obstacle@combatManager@@QAEEH@Z	79.1518	79.1518	79.1518	0x66010	0e08981dc7ac
 cmbtmgr	?should_lower_door@combatManager@@QBEEPAVarmy@@J@Z	100.0000	100.0000	100.0000	0x67130	90bb8d4f3eac
 combatcontrolsubwindow	??0TCombatControlSubWindow@@QAE@PAVheroWindow@@@Z	96.3990	96.3990	96.3990	0x6bc30	f312aa2a2178
 combatcontrolsubwindow	??0TCombatCreatureSubWindow@@QAE@HHHHPAVheroWindow@@H@Z	99.1290	99.1290	99.1290	0x6ceb0	fbd81e8e493c
@@ -979,6 +979,7 @@ customcampaign	??0LegacyCampaignHero@@QAE@XZ	100.0000	100.0000	100.0000	0x8ae30	
 customcampaign	??0SCampaign@@QAE@XZ	100.0000	100.0000	100.0000	0x89500	92aa89488ce8
 customcampaign	??1CampaignHeaderStruct@TCampaignBrief@@QAE@XZ	78.5339	78.5339	78.5339	0x886a0	2c81b379a033
 customcampaign	??1ScenarioStruct@TCampaignBrief@@QAE@XZ	100.0000	100.0000	100.0000	0x85fe0	5186890e3d45
+customcampaign	??RCrossoverHeroStronger@@QBE_NAAVhero@@0@Z	90.2941	90.2941	90.2941	0x83f80	24656f6569bf
 customcampaign	??_GTAbstractFile@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x87dd0	-
 customcampaign	??_H@YGXPAXIHP6EX0@Z@Z	100.0000	100.0000	100.0000	0x13d0	-
 customcampaign	?ApplyBriefingChoice@SCampaign@@QAEXH@Z	100.0000	100.0000	100.0000	0x8b2e0	a359310356da
@@ -991,9 +992,11 @@ customcampaign	?InitializeCrossoverHero@ScenarioStruct@TCampaignBrief@@QAEXPAUHe
 customcampaign	?Load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	55.7915	55.7915	55.7915	0x8a310	f2ec1fa4aeeb
 customcampaign	?LoadMapHeader@ScenarioStruct@TCampaignBrief@@QAEXPAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@PAVNewSMapHeader@@H@Z	100.0000	100.0000	100.0000	0x87d30	3ede48bd4a11
 customcampaign	?LoadScenario@CampaignHeaderStruct@TCampaignBrief@@QAE_NHPAVNewSMapHeader@@@Z	100.0000	100.0000	100.0000	0x88810	40cf52fbb7ea
+customcampaign	?MarkCrossoverHeroes@ScenarioStruct@TCampaignBrief@@QAEXPAE@Z	100.0000	100.0000	100.0000	0x87e10	6ceadd79996e
 customcampaign	?Play@MapTextStruct@TCampaignBrief@@QAEXXZ	82.8249	82.8249	82.8249	0x88fb0	abf4b7a12602
 customcampaign	?PlayScenarioEpilogue@SCampaign@@QAEXPAX@Z	100.0000	100.0000	100.0000	0x8a2a0	44199f541435
 customcampaign	?PlayScenarioPrologue@SCampaign@@QAEXPAX@Z	100.0000	100.0000	100.0000	0x8a270	f20101db493f
+customcampaign	?PruneCrossoverHeroes@SCampaign@@QAEXPAX@Z	12.3264	12.3264	12.3264	0x89e20	3be750b33cd0
 customcampaign	?Read@TStreamBufFile@@UAEHPAXH@Z	100.0000	100.0000	100.0000	0x83f10	d4a8f9e13d4a
 customcampaign	?StartMusic@CampaignHeaderStruct@TCampaignBrief@@QAEXXZ	100.0000	100.0000	100.0000	0x88ee0	4daeb5fd6b1f
 customcampaign	?StartScenario@CampaignHeaderStruct@TCampaignBrief@@QAEXHH@Z	100.0000	100.0000	100.0000	0x894e0	00db9222128a
@@ -1014,7 +1017,6 @@ customcampaign	?insert@?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@QAEXPAVhe
 customcampaign	?size@?$vector@UCampaignScenarioInfo@@V?$allocator@UCampaignScenarioInfo@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x8b440	-
 customcampaign	?size@?$vector@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@V?$allocator@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@@2@@std@@QBEIXZ	100.0000	100.0000	100.0000	0xaf4e0	-
 customcampaign	?size@?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x8b470	-
-customcampaign	SCampaign_PruneCrossoverHeroes	0.0000	0.0000	0.0000	0x89e20	8d43114d1ffc
 customcampaign	TCampaignBrief_CampaignHeaderStruct_Load	0.0000	0.0000	0.0000	0x88880	47fb4b8d9098
 customcampaignwindow	??0TCustomCampaignWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x827b0	893291fd4aaf
 customcampaignwindow	??1TCustomCampaignWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x82f10	4e3abaca1d97
@@ -2001,7 +2003,7 @@ kb	??1advManager@@QAE@XZ	100.0000	100.0000	100.0000	0xf39f0	-
 kb	??1combatManager@@QAE@XZ	71.8085	71.8085	71.8085	0xf3940	-
 kb	??1type_dialog_icon@@QAE@XZ	100.0000	100.0000	100.0000	0xf64c0	-
 kb	?CalculateNormalDialogSize@@YIXPAUTNormalDialogInfo@@@Z	92.1688	92.1688	92.1688	0xf5d80	1ee3ea8092d1
-kb	?CheckEndGame@@YIXH@Z	89.4452	89.4452	89.4452	0xf2ce0	f7599ef47a4c
+kb	?CheckEndGame@@YIXH@Z	90.6191	90.6191	90.6191	0xf2ce0	a9ae3c65720d
 kb	?CleanUpMenus@@YIXXZ	100.0000	100.0000	100.0000	0xf4b50	5ad85acac0be
 kb	?CongratsWait@@YIXHPADHHH@Z	96.8467	96.8467	96.8467	0xf3ab0	767bdf8cc153
 kb	?CreditsWait@@YIXXZ	95.2930	95.2930	95.2930	0xedda0	e424e5d34744
@@ -2046,7 +2048,7 @@ kb	?get_base_map_score@game@@QAEFXZ	100.0000	100.0000	100.0000	0xf3e30	08a36f004
 kb	?get_map_score@game@@QAEFXZ	100.0000	100.0000	100.0000	0xf3eb0	cd6028d198ab
 kb	?get_quickview_size@@YIXPBDPAH1@Z	100.0000	100.0000	100.0000	0xf62a0	c57fea7e1252
 kb	?handle_click@type_normal_dialog_frame@@UAEEEE@Z	99.9475	99.9475	99.9475	0xf0b20	7355af0f0d7b
-kb	?oldmain@@YIHXZ	73.3528	73.3528	73.3528	0xee3e0	564d2c991100
+kb	?oldmain@@YIHXZ	75.9721	75.9721	75.9721	0xee3e0	5c1108f3cbf0
 kb	?set@type_dialog_icon@@QAEXW4EGameResource@@J@Z	99.1667	99.1667	99.1667	0xf4eb0	06cb359cd3d3
 kbwin	?AppAbout@@YGHPAUHWND__@@IIJ@Z	100.0000	100.0000	100.0000	0xf8140	b6d6a9ba7939
 kbwin	?AppCommand@@YIJPAUHWND__@@IIJ@Z	100.0000	100.0000	100.0000	0xf8060	ab51fe2b9295
@@ -3746,7 +3748,7 @@ winfile	?SeekEnd@File@@UAEKXZ	100.0000	100.0000	100.0000	0x1ffcb0	e37299de9f30
 winfile	?Write@File@@UAEKPAXK@Z	100.0000	100.0000	100.0000	0x1ffc50	4d327d93ded8
 wingraph	?AppPaint@@YIHPAX0@Z	100.0000	100.0000	100.0000	0x201820	27f27632049b
 wingraph	?CleanUpWinGraphics@@YIXXZ	100.0000	100.0000	100.0000	0x201890	f135c44f8301
-wingraph	?DDBlit@@YIXPAUIDirectDrawSurface4@@PBUtagRECT@@01K@Z	63.7654	63.7654	63.7654	0x2001d0	3409e9908dc3
+wingraph	?DDBlit@@YIXPAUIDirectDrawSurface4@@PBUtagRECT@@01K@Z	100.0000	100.0000	100.0000	0x2001d0	8fa8d3517852
 wingraph	?DDCleanUpWinGraphics@@YIXXZ	100.0000	100.0000	100.0000	0x2018a0	0f8f7ec883c0
 wingraph	?DDCreateSurface@@YIPAUIDirectDrawSurface@@KKH@Z	100.0000	100.0000	100.0000	0x2005f0	8ade851aa924
 wingraph	?DDInitGraphics@@YIXXZ	100.0000	100.0000	100.0000	0x2014f0	c6c58ec076c0
