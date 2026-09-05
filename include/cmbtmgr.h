@@ -2154,21 +2154,38 @@ public:
             return GetHexIndex(col, row);
         return -1;
     }
-    // The axial-hex metric: when the two offsets share a sign the walk
-    // can move diagonally and the cost is the larger of them; when they
-    // differ it has to zig-zag and the cost is their sum. Defined in
-    // src/spells.cpp rather than here because it needs that file's
-    // by-value _cpp_max, whose signature retail's operand-address select
-    // proves.
-    // COMPILE-REQUIRED GATE (restored 2026-08-20 during the view audit,
-    // and it is not an include-set dodge). This member OVERLOAD HIDES the
-    // file-scope `long get_distance(long, long)` declared below, which
-    // cmbtmgr.cpp calls from inside its own combatManager members - with
-    // this visible there, those calls are C2664 'cannot convert int to
-    // hex_point'. Only spells.cpp wants the axial form.
-#ifdef HOMM3_CMBTMGR_HEX_DISTANCE_DECL
+    // THE TWO get_distance OVERLOADS. The DC records both as combatManager
+    // members - cmbtmgr.obj dc 0x62e4c (cmbtmgr.cpp:4519, the integer-hex
+    // metric, retail 0x469670) and spells.obj dc 0x1536d4 (spells.cpp:3138,
+    // the axial one) - each with `global` scope and exactly two parameters,
+    // no `this` slot.
+    //
+    // The integer form is a STATIC MEMBER. Under /Gr a static member keeps
+    // the free-function __fastcall ABI (it decorates `SIJJJ`, the `I`), so
+    // 0x469670's `start` in ECX / `stop` in EDX and its bare `ret` are
+    // exactly what a static member emits; only the decorated name moves,
+    // and the row re-pairs at 100.0000 over its full 210 B.
+    //
+    // The axial form is a CONST MEMBER, against the DC's `global` label:
+    // it has no retail body to check directly, but it is expanded into
+    // mark_berserk_area_effect (0x5a4590, 696 B) and that row is EXACT with
+    // the const-member spelling and 99.2085 with a static one. Retail bytes
+    // outrank a cross-architecture CodeView scope attribute.
+    //
+    // Modelling the integer form at FILE SCOPE was what put the two
+    // overloads in different scopes, so the axial member HID it and
+    // cmbtmgr.cpp's own calls became C2664 'cannot convert int to
+    // hex_point' - the compile clash a per-TU gate then had to hide. With
+    // both in the class there is one overload set, resolution is exact for
+    // each argument pair and nothing needs gating.
+    //
+    // The axial metric: when the two offsets share a sign the walk can move
+    // diagonally and the cost is the larger of them; when they differ it
+    // has to zig-zag and the cost is their sum. Defined in src/spells.cpp
+    // rather than here because it needs that file's by-value _cpp_max,
+    // whose signature retail's operand-address select proves.
     long get_distance(hex_point start, hex_point stop) const;
-#endif
+    static long get_distance(long start, long stop);
     // REFUTED 2026-08-20 - this comment used to open "the last parameter is
     // NOT a char", resting on get_damage_value materialising
     // `creature_spell != 0` with xor/setne into a full dword before pushing
@@ -2743,9 +2760,6 @@ extern const long gCastleWallGateTargetsEnd[]; // 0x63abf4, one past
 // it is a free __fastcall(int), not the DC roster's thiscall method.
 int GetTargetWallIndex(int grid_index);
 
-// Also a free __fastcall in retail (start in ECX, stop in EDX, bare
-// `ret`) though the DC roster scopes it to combatManager.
-long get_distance(long start, long stop);
 void GetMissileStartingPosition(int army_type, int x, int y, int facing,
                                 int dest_x, int dest_y,
                                 const CSprite* missile, int* start_x,

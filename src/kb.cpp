@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define HOMM3_GAME_NEW_MAP_DECLS
 #include "kb.h"
 #include "game.h"
 #include "textresource.h"
@@ -41,9 +40,7 @@
 #include "newgame.h"
 #include "palette.h"
 #include "prefs.h"
-#define HOMM3_MULTIPLAYERWINDOW_OWNS_DXPLAY_TYPES
 #include "remote.h"
-#undef HOMM3_MULTIPLAYERWINDOW_OWNS_DXPLAY_TYPES
 #include "resourcemanager.h"
 #include "savegame.h"
 #include "singleselectionwindow.h"

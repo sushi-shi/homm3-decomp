@@ -186,6 +186,53 @@ extern const type_ballistics_traits (&const_ballistics_traits)[4];
 // gpCombatManager + 0x54cc). ResetHitByCreature (0x465fe0) clears the
 // byte at army+0xf0 (manager+0x55bc); the dc-attested IsWinner walk
 // tests the int at army+0x84 against -1. Field names provisional.
+// TResourceHandle<T> - PROVISIONAL NAME, and a PROVISIONAL TYPE: no roster
+// names it. It is Complete-era, and the Dreamcast build does not have it -
+// DC type 0x1A63 is a plain LF_POINTER to 0x17D3 and 0x1FE5 a plain LF_ARRAY
+// of 32 bytes of those pointers. The retail x86 bytes are the whole
+// evidence, and they are unambiguous: army's compiler-generated copy
+// constructor (0x437a00) copies stdIcon, missileIcon and every element of
+// armySample[8] as
+//     mov ecx,[src+off] / xor edx,edx / cmp ecx,edx / mov [dst+off],ecx
+//     / je +5 / inc dword ptr [ecx+0x18]
+// with an eight-iteration counted loop over the array (`mov [ebp+8],8` ...
+// `dec edi` / `jne`) and unwind-state stores across the run - state 0 right
+// after stdIcon, a byte store of state 2 inside the loop. A raw pointer
+// member cannot produce any of that. +0x18 is resource::ReferenceCount
+// (resource.h: vptr 0, Name[13] 4..0x10, resType 0x14, ReferenceCount 0x18),
+// and image_height at +0x16c is copied as a PLAIN dword in the middle of the
+// run, which proves the refcount belongs to the pointer members themselves
+// rather than to a wrapper spanning the band.
+//
+// The destructor is declared because the unwind states require one; its body
+// is unobservable (retail keeps no ~army row and no army::operator= row), so
+// it is left empty rather than guessed at.
+//
+// T stays INCOMPLETE for every consumer: only the copy constructor's body
+// dereferences it, and that body is instantiated at the army-copy sites.
+template<class T>
+class TResourceHandle {
+public:
+    T* resource;
+
+    TResourceHandle() { resource = 0; }
+    TResourceHandle(const TResourceHandle& that)
+    {
+        resource = that.resource;
+        if (resource)
+            ++resource->ReferenceCount;
+    }
+    ~TResourceHandle() {}
+
+    TResourceHandle& operator=(T* newResource)
+    {
+        resource = newResource;
+        return *this;
+    }
+    operator T*() const { return resource; }
+    T* operator->() const { return resource; }
+};
+
 class army {
 public:
     // Dreamcast Army.h enum; retail Teleport passes the two corresponding
@@ -625,27 +672,13 @@ public:
     // is what fixes the type: the retail expansion is that inline's
     // exact three-part shape (numSequences at +0x28, validSeqMask at
     // +0x2c, s at +0x1c) against the CSprite layout csprite.h proves.
-    // THE COPY CONSTRUCTOR SAYS THESE SLOTS ARE NOT RAW POINTERS
-    // (2026-09-05, and it is the next prize in this class).  With sMonInfo
-    // and sMonFrameInfo adopted, the first divergence left in the
-    // compiler-generated `army::army(const army&)` (0x437a00) is at
-    // fn+0x192: retail copies stdIcon, missileIcon and EVERY element of
-    // armySample[8] through a REFCOUNTING copy - `mov ecx,[src+off] / cmp
-    // ecx,edx / mov [dst+off],ecx / je skip / inc dword ptr [ecx+0x18]`,
-    // with an eight-iteration loop over the array and an EH state store
-    // (`mov [ebp-4],0`) across the run - i.e. these members have a class
-    // type with a copy constructor and a destructor, not `CSprite*` /
-    // `sample*`.  +0x18 is `resource::ReferenceCount`: vptr 0, Name[13]
-    // 4..16, resType +0x14, ReferenceCount +0x18.  image_height at +0x16c
-    // is copied as a plain dword in the middle of that run, which is what
-    // proves the refcount belongs to the POINTER members and not to a
-    // wrapper spanning the whole band.
-    // The Dreamcast build does NOT have it: DC type 0x1A63 is LF_POINTER
-    // to 0x17D3 and 0x1FE5 is LF_ARRAY of 32 bytes of those pointers, both
-    // plain.  So the handle class is Complete-era and no roster names it;
-    // adopting it means naming a type on retail bytes alone, which is a
-    // decision above a polish lane.  Worth roughly 600 B on the copy ctor.
-    CSprite* stdIcon;             // +0x164
+    // NOT A RAW POINTER - see the TResourceHandle note above the class.
+    // ADOPTED 2026-09-05 and byte-confirmed: army's compiler-generated copy
+    // constructor (0x437a00) now reproduces the whole refcount run -
+    // stdIcon, missileIcon, image_height's plain dword in the middle of it,
+    // and the eight-iteration armySample loop - instruction for instruction
+    // against retail, fn+0x192..fn+0x202.
+    TResourceHandle<CSprite> stdIcon;    // +0x164
     // DC army.missileIcon (members.csv army@340, right between stdIcon
     // @336 = +0x164 and image_height @344 = +0x16c). attack_wall
     // (0x445fd0) hands it to ShootBallisticMissile as the CSprite*
@@ -653,14 +686,12 @@ public:
     // image_height is DC army@344: MidY (0x446630) subtracts HALF of it
     // from the hexcell's own y, and LoadResources (0x43dd62) writes it
     // as `0x10b - <stdIcon frame metric>` - the stack's own vertical
-    // span on the combat field. InitClean zeroes it. The resource-owning
-    // copy layout keeps its wrapper type; the ordinary layout uses the
-    // same named source members with the retail pointer representation.
-    CSprite* missileIcon;         // +0x168
+    // span on the combat field. InitClean zeroes it.
+    TResourceHandle<CSprite> missileIcon;  // +0x168
     int image_height;             // +0x16c
     // DC army::armySample is sample*[8] at +0x15c; retail's preceding STL
     // expansion shifts it to +0x170, independently confirmed by play_sample.
-    sample* armySample[8];        // +0x170
+    TResourceHandle<sample> armySample[8];  // +0x170
     // Ordering key the AI compares BETWEEN stacks: should_attack_now
     // (0x436c60) refuses to cast now when any other still-able stack
     // on our side outranks the target's own value here. Name pending a
