@@ -14,6 +14,8 @@
 #include "game.h"
 #include "hero.h"
 #include "misc.h"
+#include "prefs.h"
+#include "soundmgr.h"
 
 // A by-value, reference-RETURNING min - compute_fire_shield_damage
 // (0x422440) homes both operands in dead argument slots and selects
@@ -2661,56 +2663,370 @@ long combatManager::compute_fire_shield_damage(long damage, const army* attacker
                              target_hero, attacker, 0);
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\ai.cpp:2397
-DC_ONLY(0x273d8, 0x92)
-void simulate_simple_attack(army* current_army, army* target, long distance, unsigned char ranged, unsigned char breath_attack)
+// E:\gamedcs\ai.cpp:2397. The static one-exchange scorer. It has NO retail
+// row: all three of its call sites are in the body below and /Ob2 expands
+// every one of them, which is exactly the "inlined single-call statics
+// vanish" rule. Its shape is read off those three expansions - the
+// breath-attack site is the one that skips the fire-shield half, which is
+// what the fifth parameter selects.
+static void simulate_simple_attack(army* current_army, army* target,
+                                   long distance, unsigned char ranged,
+                                   unsigned char breath_attack)
 {
-    // @stub
+    long hits = current_army->get_total_hit_points(1);
+    if (hits <= 0)
+        return;
+    long damage = AI_get_attack_damage(current_army, hits, target, ranged,
+                                       distance);
+    if (!breath_attack) {
+        long target_hits = target->get_total_hit_points(1);
+        long burn = gpCombatManager->compute_fire_shield_damage(
+            damage, current_army, target, target_hits);
+        if (burn > 0)
+            current_army->set_AI_expected_damage(
+                current_army->get_AI_expected_damage() + burn);
+    }
+    target->set_AI_expected_damage(target->get_AI_expected_damage() + damage);
 }
 
-// E:\gamedcs\ai.cpp:2433
-DC_ONLY(0x2746c, 0x17C)
-void combatManager::simulate_melee_attack(army* current_army, long hex, army* target, long enemy_hex, long our_group)
+// E:\gamedcs\ai.cpp:2433. The five-argument simulate_melee_attack, and the
+// widest of the four simulation bodies: a multi-headed attacker scores every
+// direction its head mask covers (each enemy stack once - the bitIndex mask
+// is what de-duplicates a two-hex stack reached from two directions), and
+// anything else scores the target plus, for a breath attacker, whatever
+// stands in the hex behind it.
+// Residual (77.5%): ONE inline decision, at the first of the three
+// simulate_simple_attack expansions. Retail keeps
+// compute_fire_shield_damage a CALL inside the multi-head loop and expands
+// it at the plain-attack site below; ours expands it at both, which is the
+// whole 5-block/4-call difference (base 41 blocks and 30 calls against
+// retail's 36 and 26 - every other call pairs in order). The /Ob2 divisor
+// prices the first site with the most budget, so the separation needs a
+// per-site pin, which this lane may not add. Tried and rejected: extern
+// rather than static linkage on the helper (byte-flat to the digit).
+VA(0x004224e0, 0x2B4)  // anchor-caller(the 3-argument overload) + anchor-callee(compute_fire_shield_damage), dc 0x2746c
+void combatManager::simulate_melee_attack(army* current_army, long hex,
+                                          army* target, long enemy_hex,
+                                          long our_group)
 {
-    // @stub
+    unsigned char multi_head = static_cast<unsigned char>(
+        static_cast<unsigned>(current_army->creatureId) >> 19);
+    if (multi_head & 1) {
+        long directions = current_army->get_multi_head_directions(hex, target,
+                                                                  enemy_hex);
+        long hit = 0;
+        for (long direction = 7; direction >= 0; direction--) {
+            if (!(directions & (1 << direction)))
+                continue;
+            long adjacent = current_army->get_adjacent_hex(hex, direction);
+            if (adjacent < 0 || adjacent >= COMBAT_GRID_CELLS)
+                continue;
+            army* victim = cells[adjacent].get_army();
+            if (!victim)
+                continue;
+            long bit = 1 << victim->bitIndex;
+            if (hit & bit)
+                continue;
+            if (victim->combatSide == our_group)
+                continue;
+            hit |= bit;
+            simulate_simple_attack(current_army, victim, 0, 0, 0);
+        }
+        return;
+    }
+
+    simulate_simple_attack(current_army, target,
+                           gpSearchArray->get_hex(hex)->cost, 0, 0);
+
+    unsigned char breath = static_cast<unsigned char>(
+        static_cast<unsigned>(current_army->creatureId) >> 3);
+    if (breath & 1) {
+        long direction = current_army->get_attack_direction(hex, target,
+                                                            enemy_hex);
+        long behind_hex = current_army->GetAdjacentCellIndex(
+            current_army->get_adjacent_hex(hex, direction), direction);
+        if (behind_hex < 0 || behind_hex >= COMBAT_GRID_CELLS)
+            return;
+        army* behind = cells[behind_hex].get_army();
+        if (!behind || behind == target)
+            return;
+        simulate_simple_attack(current_army, behind, 0, 0, 1);
+    }
 }
 
-// E:\gamedcs\ai.cpp:2490
-DC_ONLY(0x275e8, 0xB0)
-void combatManager::simulate_melee_attack(army* current_army, army* target, long our_group)
+// E:\gamedcs\ai.cpp:2490. The three-argument simulate_melee_attack: play
+// one melee exchange forward on paper. Attack, then the retaliation (unless
+// the attacker ignores it, the defender is disabled, it has no retaliations
+// left, or - on the easiest difficulty - the defending side is not AI), then
+// the second strike if the attacker has the double-attack bit and the
+// defender is still expected to be standing.
+// The hex comes off field_40, the order slot berserk_attack writes, and the
+// grid bound is the same 0xbb every combat walker uses.
+VA(0x004227a0, 0xDB)  // anchor-caller(simulate_actions) + anchor-callee(the 5-argument overload), dc 0x275e8
+void combatManager::simulate_melee_attack(army* current_army, army* target,
+                                          long our_group)
 {
-    // @stub
+    long hex = field_40;
+    if (hex < 0 || hex >= COMBAT_GRID_CELLS)
+        return;
+
+    long hit_points = target->get_total_hit_points(0);
+    simulate_melee_attack(current_army, hex, target, target->gridIndex,
+                          our_group);
+
+    unsigned char no_retaliation = static_cast<unsigned char>(
+        static_cast<unsigned>(current_army->creatureId) >> 16);
+    if (!(no_retaliation & 1) && !target->disabled_2b0
+        && target->retaliationCount > 0
+        && (gpGame->setup.difficulty > 0 || sideIsAI[our_group]))
+        simulate_melee_attack(target, target->gridIndex, current_army, hex,
+                              1 - our_group);
+
+    unsigned char double_attack = static_cast<unsigned char>(
+        static_cast<unsigned>(current_army->creatureId) >> 15);
+    if ((double_attack & 1) && target->AI_expected_damage < hit_points)
+        simulate_melee_attack(current_army, hex, target, target->gridIndex,
+                              our_group);
 }
 
-// E:\gamedcs\ai.cpp:2516
-DC_ONLY(0x27698, 0x15C)
-long combatManager::simulate_actions(std::vector<army* list, long i, long our_group)
+// E:\gamedcs\ai.cpp:2516. Walk the move order from `i` and let every stack
+// on `our_group` take its turn on paper, stopping at - and answering - the
+// index of the first stack the other side controls. A shooter's exchange is
+// scored straight into the target's expected damage; a melee stack goes
+// through the three-argument simulate_melee_attack above.
+// The unused type_AI_combat_parameters local is retail's: it is constructed
+// at entry from (this, our_group) and never read.
+VA(0x00422880, 0x1B5)  // anchor-caller(simulate_combat) + anchor-callee(simulate_melee_attack), dc 0x27698
+long combatManager::simulate_actions(std::vector<army*>& list, long i,
+                                     long our_group)
 {
-    // @stub
+    type_AI_combat_parameters data(this, our_group);
+
+    for (; i < list.size(); i++) {
+        army* current_army = list[i];
+        if (current_army->IsIncapacitated()
+            || (static_cast<unsigned char>(
+                    static_cast<unsigned>(current_army->creatureId) >> 21)
+                & 1)
+            || current_army->creatureType == CREATURE_FIRST_AID_TENT
+            || current_army->creatureType == CREATURE_AMMO_CART
+            || current_army->berserkFlag
+            || current_army->creatureType == CREATURE_CATAPULT
+            || current_army->get_total_hit_points(1) == 0)
+            continue;
+        if (current_army->get_controlling_side() != our_group)
+            return i;
+
+        unsigned char shooting = current_army->can_shoot(0);
+        if (shooting) {
+            choose_shooter_action(current_army, 1, our_group);
+            if (field_3c != AI_ORDER_SHOOT)
+                continue;
+        } else {
+            choose_melee_action(current_army, 0, 1, our_group);
+            if (field_3c != AI_ORDER_MOVE_AND_ATTACK)
+                continue;
+        }
+
+        long hex = field_44;
+        if (hex < 0 || hex >= COMBAT_GRID_CELLS)
+            continue;
+        army* target = cells[hex].get_army();
+        if (!target)
+            continue;
+        if (shooting) {
+            long hits = current_army->get_total_hit_points(1);
+            if (hits <= 0)
+                continue;
+            long damage = AI_get_attack_damage(current_army, hits, target,
+                                               1, 0);
+            target->set_AI_expected_damage(target->AI_expected_damage
+                                           + damage);
+        } else {
+            simulate_melee_attack(current_army, target, our_group);
+        }
+    }
+    return i;
 }
 
-// E:\gamedcs\ai.cpp:2584
-DC_ONLY(0x277f4, 0x92)
+// E:\gamedcs\ai.cpp:2584. Run the whole battle forward on paper: order the
+// stacks, clear their expected damage, let each side act in turn and then
+// put the four order slots back the way they were. The second pass is the
+// surrender check - it re-simulates from the other side's point of view,
+// resuming at the index the first pass stopped on.
+// The `unsigned char` second parameter is proven by the frame, not by the
+// DC signature alone: the empty allocator of the local vector is homed in
+// the parameter's PADDING byte at [ebp+0xf], which only exists when the
+// parameter is narrower than its slot.
+// Residual (99.95%): one frame displacement. Retail homes the four saved
+// slots at -0x10/-0x14/-0x18/-0x1c for field_3c/40/44/48; ours swaps the
+// first pair. All 24 declaration permutations were swept - the best two
+// reach 99.95 and none reaches 100 - and splitting the declarations from
+// the assignments is byte-flat, so the slot order is not source-reachable
+// through the local list.
+VA(0x00422a40, 0xD8)  // anchor-callee(find_move_order) + order-map(DC ai.obj), dc 0x277f4
 void combatManager::simulate_combat(long our_group, unsigned char checking_surrender)
 {
-    // @stub
+    std::vector<army*> order;
+    long saved_3c = field_3c;
+    long saved_40 = field_40;
+    long saved_44 = field_44;
+    long saved_48 = field_48;
+
+    find_move_order(&order);
+    for (unsigned i = 0; i < order.size(); i++)
+        order[i]->set_AI_expected_damage(0);
+    long stopped_at = simulate_actions(order, 0, our_group);
+    if (checking_surrender)
+        simulate_actions(order, stopped_at, 1 - our_group);
+
+    field_40 = saved_40;
+    field_3c = saved_3c;
+    field_44 = saved_44;
+    field_48 = saved_48;
 }
 
-// E:\gamedcs\ai.cpp:2608
-DC_ONLY(0x27888, 0x28E)
-void combatManager::find_AI_targets(long our_group, const army* current_army, unsigned char melee_only, const type_AI_combat_parameters* data, searchArray* search_array)
+// E:\gamedcs\ai.cpp:2608. Score every enemy stack as a target for every
+// stack of `our_group`, leaving the best in each attacker's AI_target
+// quartet. A shooter is seeded at range 1 and never walks; anything else
+// has its reachable set laid down by SeedCombatPosition first and then
+// reads the per-hex arrival cost back out of the search array.
+// Residual (78.8%): addressing, not structure - the block count is exact
+// (46 = 46), the call streams agree 9 = 9, and the frame is one dword over.
+// Retail computes `&armies[our_group][0]` and `&armies[enemy_group][0]`
+// AHEAD of each loop's numArmies guard and walks both with `add reg,0x548`;
+// ours computes them inside. Tried and rejected: the four AI_target stores
+// through the `ours` pointer (63.59 - VC6 then biases the induction
+// variable onto +0x53c and needs a second one for the army base, which is
+// the whole 15-point difference and why they are written as subscripts);
+// full subscripts everywhere with no pointer local (64.26); an explicit
+// `ours++` pointer walk on both loops (78.70) and on the outer alone
+// (70.69); declaring the pointers above their loops (78.81, byte-flat);
+// inlining the get_simple_attack_effect result into the consider_attack
+// argument list (77.79).
+VA(0x00422b20, 0x278)  // anchor-caller(choose_shooter_action/choose_melee_action) + anchor-callee(SeedCombatPosition), dc 0x27888
+void combatManager::find_AI_targets(long our_group, const army* current_army,
+                                    unsigned char melee_only,
+                                    type_AI_combat_parameters* data,
+                                    searchArray* search_array)
 {
-    // @stub
+    long enemy_group = 1 - our_group;
+    if (search_array == 0)
+        search_array = gpSearchArray;
+
+    for (long i = 0; i < numArmies[our_group]; i++) {
+        army* ours = &armies[our_group][i];
+        armies[our_group][i].AI_target = 0;
+        armies[our_group][i].AI_target_value = 0;
+        armies[our_group][i].AI_possible_targets = 0;
+        armies[our_group][i].AI_target_time = 0;
+        if (static_cast<unsigned char>(
+                static_cast<unsigned>(ours->creatureId) >> 21)
+            & 1)
+            continue;
+        if ((static_cast<unsigned char>(
+                 static_cast<unsigned>(ours->creatureId) >> 6)
+             & 1)
+            && ours->creatureType != CREATURE_BALLISTA)
+            continue;
+        if (data->simulated && ours->get_total_hit_points(1) == 0)
+            continue;
+        if (ours->disabled_2b0 > 1)
+            continue;
+        if (ours->disabled_290 > 1)
+            continue;
+        if (ours->hypnotizeFlag)
+            continue;
+        if (ours->berserkFlag)
+            continue;
+        if (ours == current_army)
+            continue;
+
+        unsigned char shooter = ours->can_shoot(0);
+        if (shooter) {
+            if (melee_only)
+                continue;
+        } else if (melee_only) {
+            search_array->SeedCombatPosition(ours, our_group, ours->GetSpeed(),
+                                             bCreaturePlacement, -1);
+        } else {
+            search_array->SeedCombatPosition(ours, our_group, 0x7f,
+                                             bCreaturePlacement, -1);
+        }
+
+        for (long j = 0; j < numArmies[enemy_group]; j++) {
+            army* theirs = &armies[enemy_group][j];
+            if (theirs->creatureType == CREATURE_ARROW_TOWER)
+                continue;
+            if (melee_only && theirs->field_190 >= ours->field_190)
+                continue;
+            if (!shooter && !cells[theirs->gridIndex].field_4a)
+                continue;
+            if (data->simulated && theirs->get_total_hit_points(1) == 0)
+                continue;
+
+            long time;
+            if (shooter) {
+                time = 1;
+            } else {
+                time = search_array->get_hex(theirs->gridIndex)->cost;
+                if (ours->GetSpeed() == 0 && time > 0)
+                    continue;
+            }
+            long effect = data->get_simple_attack_effect(
+                ours, theirs, shooter,
+                time > ours->GetSpeed() ? 0 : time);
+            ours->consider_attack(theirs, effect, time);
+        }
+    }
 }
 
-// E:\gamedcs\ai.cpp:2699
-DC_ONLY(0x27b18, 0x15C)
+// E:\gamedcs\ai.cpp:2699. The combat AI's spell turn: eight refusals and
+// then a type_AI_spellcaster over the current side.  The refusals are, in
+// order, a per-side latch, the placement phase, the acting stack's own
+// "no spells" bit, a human player who has neither handed his turns to the
+// AI with Combat Auto Spells on nor started a quick combat, the field_53c4
+// latch, a side with no hero, a hero without a spell book (artifact 0), and
+// either hero wearing artifact 0x7e.
+VA(0x00422da0, 0x1AD)  // anchor-caller(CheckGetAIMove) + anchor-callee(type_AI_spellcaster::cast_spell), dc 0x27b18
 unsigned char combatManager::DoSpellAI()
 {
-    // @stub
+    field_3c = 0;
+    if (field_54b4[currentSide])
+        return 0;
+    if (bCreaturePlacement)
+        return 0;
+    if (static_cast<unsigned char>(
+            static_cast<unsigned>(armies[actingSide][actingSlot].creatureId)
+            >> 6)
+        & 1)
+        return 0;
+    if (playerIds[currentSide] >= 0
+        && gpGame->IsHuman(playerIds[currentSide])
+        && !((field_132c4 || gbUnk691209)
+             && gUnnamed698758.combatAutoSpells)
+        && !static_cast<const combatManager*>(this)->IsQuickCombat())
+        return 0;
+    long side = currentSide;
+    if (field_53c4)
+        return 0;
+    if (!heroes[side])
+        return 0;
+    if (!heroes[side]->IsWieldingArtifact(0))
+        return 0;
+    if (heroes[0] && heroes[0]->IsWieldingArtifact(0x7e))
+        return 0;
+    if (heroes[1] && heroes[1]->IsWieldingArtifact(0x7e))
+        return 0;
+
+    type_AI_spellcaster caster(this, currentSide, 0);
+    if (caster.cast_spell(AICheckRetreat()))
+        return 1;
+    field_3c = 0;
+    return 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\ai_spellvalue.h:124
 DC_ONLY(0x27c74, 0x4)
