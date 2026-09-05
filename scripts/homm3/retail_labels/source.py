@@ -323,7 +323,7 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "TREE_INSERT", "TREE_NODE_INSERT",
                  "TREE_CONST_ITERATOR_DEC", "TREE_CONST_ITERATOR_INC",
                  "TREE_COPY", "TREE_COPY_NODE", "TREE_ERASE",
-                 "TREE_BUYNODE",
+                 "TREE_BUYNODE", "TREE_INIT", "TREE_COPY_ASSIGN",
                  "STRINGBUF_OVERFLOW", "STRINGBUF_INIT",
                  "DEQUE_FREEFRONT", "DEQUE_FREEBACK", "DEQUE_BUYBACK",
                  "BASIC_STRING_ASSIGN_PTR_SIZE",
@@ -927,6 +927,18 @@ def _demangle_key(mangled: str):
         return f"{tree_owner.lower()}@tree_buynode"
     if mangled.startswith("?_Erase@?$_Tree@") and tree_owner:
         return f"{tree_owner.lower()}@tree_erase"
+    # `_Tree::_Init` and `_Tree::operator=`, keyed on the tree owner like
+    # every member above rather than through the generic template arms at
+    # the foot of this function. Neither generic spelling can be named by a
+    # claim: `_Init` lands on TEMPLATE_MEMBER_RE's `std__tree__init`, which
+    # collides with basic_streambuf's and basic_filebuf's own nullary
+    # `_Init`, and `??4` splits the mangled class on `@@` - a separator a
+    # template ARGUMENT LIST already carries - producing the unusable
+    # `?$_tree_?$_tree_operator`.
+    if mangled.startswith("?_Init@?$_Tree@") and tree_owner:
+        return f"{tree_owner.lower()}@tree_init"
+    if mangled.startswith("??4?$_Tree@") and tree_owner:
+        return f"{tree_owner.lower()}@tree_copy_assign"
     # The two bound searches. Same class, same 73-byte shape, and they
     # differ only in which way round the key compare runs, so they are
     # separate kinds for the same reason `_Copy` and `erase` are: a
@@ -1722,6 +1734,7 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
         tree_or_deque = next(
             (kind for kind in ("tree_erase_iterator", "tree_erase_range",
                                "tree_lbound", "tree_ubound", "tree_find",
+                               "tree_init", "tree_copy_assign",
                                "deque_erase")
              if f"${kind}$" in row["name"]), None)
         if tree_or_deque is not None:
