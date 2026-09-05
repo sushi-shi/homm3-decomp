@@ -9679,20 +9679,31 @@ void* CAutoArray<int>::`scalar deleting destructor'(unsigned __flags)
 // will not take a 317 B body from a plain out-of-class definition, so
 // _Median/_Unguarded_partition/_Unguarded_insert BY_NAME all CALLED what
 // retail expands (32.24 / 14.65 / 46.40). Marking it inline moves those to
-// 95.80 / 85.75 / 79.76 with _Sort_0 and _Sort holding at 100.0000 and the
-// out-of-line COMDAT still emitted for _Sort_0's own call. The identical
-// keyword on BY_VERSION is a LOSS - it expands there at every site, its two
-// COMDATs stop being emitted and both rows fall to 0.0000 - so only this one
+// EXACT with _Sort_0 and _Sort holding at 100.0000 and the out-of-line
+// COMDAT still emitted for _Sort_0's own call. The identical keyword on
+// BY_VERSION is a LOSS - it expands there at every site, its two COMDATs
+// stop being emitted and both rows fall to 0.0000 - so only this one
 // carries it.
 //
-// Residual (83.89%): retail loads the " " seed TWICE (once per buffer) and
-// keeps `this` memory-homed at [ebp-4], re-reading it for isNet and again
-// for direction; we CSE the literal load and hold `this` in esi, which also
-// picks edx over retail's ecx for the setl. Tried and rejected: two `return
-// _strcmpi(...)` arms (75.17 - two calls, two rets where retail cross-jumps
-// one), a named lhs/rhs pair (81.78 - one call but `mov` where retail
-// pushes in each arm), declaring sb ahead of the buffers (82.94). The
-// shared `int order` form below is the best of the four.
+// TWO source facts closed this row and all seven others in the sort block
+// (2026-09-06), and BOTH had been measured and banked the wrong way round
+// by an earlier lane that could only see one of them at a time:
+//   - the two `return _strcmpi(...)` arms are retail's shape, not the
+//     merged `int order` one. Alone the split arms measure 75.17 here
+//     against the merge's 83.89, which is why they were rejected; with
+//     BY_VERSION delegating to this body (see below) they are worth +11.0
+//     on BY_VERSION and +4.9 / +13.5 on its own _Unguarded_partition and
+//     _Unguarded_insert, +206 weighted bytes net. Retail cross-jumps the
+//     two tails HERE and does not cross-jump them inside BY_VERSION - one
+//     source, two emissions.
+//   - sa and sb are declared AHEAD of the two buffers. That is the whole
+//     of the remaining residual an earlier note attributed to a
+//     literal-CSE / this-homing register wall: with the pointers declared
+//     first, retail's double " " load, its [ebp-4] home for `this` and its
+//     recycled [ebp+8] slot for sb all appear together and BOTH
+//     comparators go EXACT. Declaring only sb ahead measures 73.31 here
+//     and 93.88 on BY_VERSION - the pair is the lever, not either half
+//     (the banked 82.94 for that variant predates the delegation).
 // COMDAT pairings against this compiland's own template instantiations,
 // each the only candidate of its exact size in singleselectionwindow.obj:
 // three vector copy constructors (102 / 141 / 135 B). They share one
@@ -9726,10 +9737,10 @@ VA_COMPGEN(0x005903b0, 0x13D, FUNCTOR_CALL, TSortMapsByName)  // anchor-callee _
 inline bool TSortMapsByName::operator()(const GameSelectionHeadersStruct& a,
                                  const GameSelectionHeadersStruct& b) const
 {
-    char nameA[256] = " ";
-    char nameB[256] = " ";
     const char* sa = a.title;
     const char* sb = b.title;
+    char nameA[256] = " ";
+    char nameB[256] = " ";
 
     if (isNet) {
         sa = a.setup.filename;
@@ -9746,12 +9757,9 @@ inline bool TSortMapsByName::operator()(const GameSelectionHeadersStruct& a,
         }
     }
 
-    int order;
     if (direction)
-        order = _strcmpi(sb, sa);
-    else
-        order = _strcmpi(sa, sb);
-    return order < 0;
+        return _strcmpi(sb, sa) < 0;
+    return _strcmpi(sa, sb) < 0;
 }
 
 // numPlayers*10 + maxNumHumanPlayers is the rank: retail forms it with
@@ -9768,45 +9776,26 @@ bool TSortMapsByPlayers::operator()(const GameSelectionHeadersStruct& a,
     return rankA < rankB;
 }
 
-// The format compare is the outer test and the name compare its equal arm -
-// retail's `cmp eax,edi / jne <sunk tail>` puts the version arm last. Unlike
-// BY_NAME this one keeps TWO __strcmpi calls with duplicated tails, so the
-// merged `int order` form is not its shape.
-//
-// Residual (81.35%): calls agree 4/4 and branches agree 6/6; the delta is the
-// same literal-CSE / this-homing register family as BY_NAME's, and its
-// _Median / _Unguarded_partition (38.21 / 60.09) are the under-inline BY_NAME
-// closed with `inline` - measured here and REJECTED, both rows go to 0.0000
-// because the COMDATs stop being emitted at all.
+// The format compare is the outer test and the equal arm DELEGATES to
+// TSortMapsByName::operator() on this same object - which is why the class
+// derives from it (see singleselectionwindow_priv.h). Retail proves the
+// delegation from the other side, in the three BY_VERSION helper
+// instantiations: `_Median` (0x594c20) contains FIVE `call
+// TSortMapsByName::operator()` and not one inline _strnicmp/__strcmpi,
+// `_Unguarded_partition` (0x594f20) two and `_Unguarded_insert` (0x592af0)
+// one - every predicate site expands the version test and then calls the
+// name comparator, with `lea ecx,<the by-value predicate's own stack slot>`
+// as the receiver. A constructed temporary would have its own address; the
+// base subobject does not. Duplicating the text-compare source here instead
+// left those three at 38.21 / 60.09 / 64.42 and could never call anything.
+// The delegation alone takes all three to EXACT (+2013 B), and this row
+// followed once BY_NAME's own two facts landed.
 VA_COMPGEN(0x00591190, 0x180, FUNCTOR_CALL, TSortMapsByVersion)  // anchor-callee _Sort_0 BY_VERSION (0x590e50) calls it; same 'AUTOSAVE.'/" " text shape as BY_NAME behind a leading header.version compare, retail-only
 bool TSortMapsByVersion::operator()(const GameSelectionHeadersStruct& a,
                                     const GameSelectionHeadersStruct& b) const
 {
-    if (a.header.version == b.header.version) {
-        char nameA[256] = " ";
-        char nameB[256] = " ";
-        const char* sa = a.title;
-        const char* sb = b.title;
-
-        if (isNet) {
-            sa = a.setup.filename;
-            sb = b.setup.filename;
-            if (_strnicmp(sa, DATA_COMPGEN(0x00683968, autosavePrefix,
-                                           "AUTOSAVE."), 9) == 0) {
-                strcat(nameA, sa);
-                sa = nameA;
-            }
-            if (_strnicmp(sb, DATA_COMPGEN(0x00683968, autosavePrefix,
-                                           "AUTOSAVE."), 9) == 0) {
-                strcat(nameB, sb);
-                sb = nameB;
-            }
-        }
-
-        if (direction)
-            return _strcmpi(sb, sa) < 0;
-        return _strcmpi(sa, sb) < 0;
-    }
+    if (a.header.version == b.header.version)
+        return TSortMapsByName::operator()(a, b);
 
     if (direction)
         return b.header.version < a.header.version;
