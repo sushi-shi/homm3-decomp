@@ -607,6 +607,26 @@ not its use, is the input.
 - evidence: `src/armygrp.cpp:192-193`
 - status: explained consequence of C1 — probe: none (same reason)
 
+### C2b. SIGNEDNESS SELECTS THE CONSTANT-MULTIPLY LOWERING
+VC6 emits `imul r32, r32, imm32` for a SIGNED multiply by a large constant and
+expands the SAME constant into a lea/shift/add chain when the multiplicand is
+UNSIGNED. Byte-proven on `hero::CheckLevel`'s LCG seed
+(`SRand(level * 214013 + iLevelSeed * 156823 + 154079)`): retail emits
+`lea ecx,[eax+2*eax]` (3x) / `lea edx,[eax+4*ecx]` (13x) / `shl edx,4` (208x) /
+`add edx,eax` (209x) / `shl edx,8` (53504x) / `sub edx,eax` (53503x) /
+`lea eax,[eax+4*edx]` (214013x) - SEVEN steps, far past any cost threshold an
+`imul` would lose to - while the sibling `iLevelSeed * 156823` in the same
+expression stays `imul ecx,ecx,0x26497` because that operand promotes from
+`unsigned char` to `int`. Spelling only the first multiplicand
+`static_cast<unsigned>(level)` reproduces retail exactly: 85.17 -> 87.13.
+- SKILL: when retail expands a constant multiply into leas and shifts and your
+  compile emits `imul` with the identical constant, the operand's SIGNEDNESS is
+  the lever, not the constant's decomposition cost. Reordering the sum's terms
+  and adding an `int` temp for the multiplicand are both BYTE-FLAT.
+- evidence: `src/hero.cpp:2390`, retail 0x4da709..0x4da731
+- status: explained-lever
+- probe: none yet (a two-line A/B in any TU would assert it)
+
 ### C3. Statement-order effects (semantically inert), measured sweeps
 | Site | Sweep | Result |
 |---|---|---|
