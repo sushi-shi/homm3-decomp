@@ -2169,7 +2169,7 @@ hero	?HeroFn_004E5DE0@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe5de0	ec2f952e9a
 hero	?HeroFn_004E6120@hero@@QBEXHPAUTCreatureTypeTraits@@@Z	100.0000	100.0000	100.0000	0xe6120	0ad9c16ec449
 hero	?HeroScreenUpdate@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xd9990	aebceb76e89c
 hero	?HeroView@@YIHHHHE@Z	100.0000	100.0000	100.0000	0xe1800	f02e79d1de49
-hero	?IsInIdentifyRange@hero@@QAEEPBUtype_point@@@Z	98.6813	98.6813	98.6813	0xe5e10	8540e5ea6284
+hero	?IsInIdentifyRange@hero@@QAEEPBUtype_point@@@Z	100.0000	100.0000	100.0000	0xe5e10	1a9bbb7cfeac
 hero	?IsMobile@hero@@QAEEXZ	100.0000	100.0000	100.0000	0xe5f30	c6edcb416792
 hero	?IsWieldingArtifact@hero@@QAEEH@Z	100.0000	100.0000	100.0000	0xd91f0	2534e38ca00c
 hero	?PlaceInMap@hero@@QAEXHUtype_point@@E@Z	100.0000	100.0000	100.0000	0xd7900	0d72e5b04f96
@@ -3955,7 +3955,7 @@ town	?SetSummoningGenerator@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1bd750	22e
 # exact in add_garrison_hero; raw NB11 also fixes CNetMsg/CMapChange/CMCHideHero
 # parameter types and names. Keep max/history and do not flatten the helper.
 town	?SwapHeroes@town@@QAEXXZ	97.7744	100.0000	100.0000	0x1be450	8f680b9e440b
-town	?TownFn_005BF900@town@@QAEJJ@Z	99.8469	99.8469	99.8469	0x1bf900	30fef3caec1f
+town	?TownFn_005BF900@town@@QAEJJ@Z	100.0000	100.0000	100.0000	0x1bf900	e0aefa4a9f1f
 town	?UpgradedDwellingID@town@@SIHH@Z	100.0000	100.0000	100.0000	0x1c14a0	dbf03795acbd
 town	?View@town@@QAEXH@Z	100.0000	100.0000	100.0000	0x1be210	0e664c984f2b
 town	?buy_building@town@@QAEEW4type_building_id@@@Z	100.0000	100.0000	100.0000	0x1bf3c0	a8ed1ededdf1
