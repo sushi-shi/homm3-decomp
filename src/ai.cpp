@@ -41,6 +41,11 @@ inline const _TYPE& min_ref(_TYPE _X, _TYPE _Y)
     return (_X < _Y ? _X : _Y);
 }
 
+// ai_player.obj's artifact valuer (0x433aa0), declared file-locally the
+// way ai_player.cpp itself declares it - no header owns it yet.
+long AI_get_artifact_player_value(const type_artifact& artifact,
+                                  long player_id);
+
 // Dreamcast's source calls SRandom in the cyclops wall selector. Complete's
 // retail relocation names Random, so preserve the boundary through the same
 // fold-away adapter used by the other shared callers.
@@ -231,13 +236,193 @@ unsigned char combatManager::failed_siege()
 }
 
 // E:\gamedcs\ai.cpp:162
-#if 0  // @carcass
+// The whole retreat decision, and the DC local roster names four of its
+// variables verbatim (surrender_cost, combat_value, iSideFV, artifact).
+// Five gates, then a value model:
+//   - a non-AI side is gated on the scenario difficulty, and difficulty 1
+//     only retreats on a coin flip;
+//   - either hero wielding artifact 0x7d (Shackles of War) forbids it, and
+//     so does being the target of a defeat-hero victory condition;
+//   - a retreating hero needs a Tavern to arrive in, so the owner's town
+//     roster is censused for one; if the only such town IS the town under
+//     siege and we are the defender, there is nowhere to go;
+//   - a defender in a siege additionally needs a Stronghold's Escape
+//     Tunnel (town type 6, SPECIAL_BUILDING_ID);
+//   - failed_siege answers yes outright.
+// The value model prices the hero's equipped and backpack artifacts at
+// max(AI value, half the traits cost), refuses to retreat a poor and
+// inexperienced hero, retreats unconditionally when no stack of ours is
+// still standing, refuses when the treasury cannot cover the surrender
+// price plus 2500, and finally compares our side's share of the total
+// fight value against a difficulty- and experience-adjusted threshold.
+//
+// The guards are written as retail wrote them - ONE `return 0` at the
+// bottom of a nested-if pyramid. Written as thirteen early returns the
+// body scores 60.44 with seventeen epilogues against retail's four; the
+// pyramid alone is +24.22 and makes the branch census exact (54/54
+// branches, 4/4 rets).
+//
+// Residual (95.39%): the town census keeps `i` in a memory slot and
+// numTowns in EBX where retail does the reverse - retail's `xor ebx,ebx`
+// serves count, the flag AND the index, so the numTowns guard compares
+// against the zero REGISTER, and with EDI then holding the player record
+// retail must RELOAD gpGame for the players base where our EDI still
+// carries it from the victory-condition test. One allocation cascade,
+// four instructions. Tried and rejected, all byte-flat: initialising the
+// index before the numTowns guard, hoisting the index to the enclosing
+// block, dropping the braces around the loop, and dropping the named
+// numTowns so the bound is the compiler's own CSE of player->numTowns.
+// The two remaining singles are a `lea` scheduled one slot late in the
+// army scan and the fight-value walk's +0x4c bias emitted as a separate
+// `add` rather than folded into the base `lea`.
+//
+// Levers that paid, in order: the nested-if pyramid (60.44 -> 84.66);
+// naming the AI_get_artifact_player_value result so the call is
+// evaluated BEFORE the traits-cost operand of max_ref - VC6 evaluates
+// by-value arguments right to left, and with the call first the
+// half-cost no longer has to survive it, which frees EDI for the loop
+// index and lets combat_value live in EBX (84.66 -> 94.82); naming the
+// attribute word so the flag test is `test ecx, 0x4000000` and not
+// Is()'s shr/test pair, plus naming the final quotient so the division
+// result round-trips through its own float slot (94.82 -> 95.33); and
+// subscripting the fight-value walk instead of walking a named pointer
+// (95.33 -> 95.39).
 VA(0x0041e570, 0x546)  // order-map(DC ai.obj head) + anchor-callee failed_siege, dc 0x2389c
 unsigned char combatManager::AICheckRetreat()
 {
-    // @stub
+    if (heroes[currentSide]
+        && (sideIsAI[currentSide]
+            || (gpGame->setup.difficulty
+                && (gpGame->setup.difficulty != 1 || Random(1, 100) > 50)))
+        && (!heroes[0] || !heroes[0]->IsWieldingArtifact(0x7d))
+        && (!heroes[1] || !heroes[1]->IsWieldingArtifact(0x7d))
+        && (gpGame->mapHeader.victoryCondition.Type != VICTORY_CONDITION_DEFEAT_HERO
+            || gpGame->mapHeader.victoryCondition.HeroID
+               != heroes[currentSide]->id)) {
+        long iSideFV = currentSide;
+        long count = 0;
+        unsigned char besieged_town_only = 0;
+        playerData* player = &gpGame->players[heroes[currentSide]->owner];
+        long numTowns = player->numTowns;
+        if (numTowns > 0) {
+            { for (long i = 0; i < numTowns; i++) {
+                    town* current_town = gpGame->GetTown(player->townIds[i]);
+                    if (current_town->HasBuilding(TAVERN_ID, 1)) {
+                        count++;
+                        if (defendingTown == current_town)
+                            besieged_town_only = 1;
+                    }
+                }
+            }
+            if (count
+                && (count != 1 || iSideFV != 1 || !besieged_town_only)
+                && (!defendingTown || iSideFV != 1
+                    || (defendingTown->type == TOWN_STRONGHOLD
+                        && defendingTown->HasBuilding(SPECIAL_BUILDING_ID, 1)))) {
+                if (failed_siege())
+                    return 1;
+
+                long combat_value = 0;
+                type_artifact artifact;
+                { for (long i = 0; i < 19; i++) {
+                        artifact = heroes[currentSide]->equipped[i];
+                        if (artifact.artifactId == ARTIFACT_NONE)
+                            continue;
+                        long artifact_value = AI_get_artifact_player_value(
+                            artifact, playerIds[currentSide]);
+                        combat_value += max_ref(
+                            artifact_value,
+                            static_cast<long>(
+                                akArtifactTraits[artifact.artifactId].cost / 2));
+                    }
+                }
+                { for (long i = 0; i < 64; i++) {
+                        artifact = heroes[currentSide]->backpack[i];
+                        if (artifact.artifactId == ARTIFACT_NONE)
+                            continue;
+                        long artifact_value = AI_get_artifact_player_value(
+                            artifact, playerIds[currentSide]);
+                        combat_value += max_ref(
+                            artifact_value,
+                            static_cast<long>(
+                                akArtifactTraits[artifact.artifactId].cost / 2));
+                    }
+                }
+                if (combat_value >= 1000
+                    || heroes[currentSide]->experience >= 2000) {
+                    long surrender_cost = get_surrender_cost();
+                    simulate_combat(currentSide, 1);
+
+                    long remaining = numArmies[currentSide];
+                    army* current_army = armies[currentSide];
+                    while (remaining-- > 0) {
+                        if (!(current_army->Is(1u << 21))
+                            && !(current_army->Is(1u << 6))
+                            && current_army->get_total_hit_points(1) > 0)
+                            break;
+                        current_army++;
+                    }
+                    if (remaining < 0)
+                        return 1;
+                    if (player->resources[GOLD] >= surrender_cost + 2500) {
+                        long fight_values[2];
+                        { for (long side = 0; side < 2; side++) {
+                                long fight_value = 0;
+                                { for (long i = 0; i < 20; i++) {
+                                        army* side_army = &armies[side][i];
+                                        if (side_army->creatureType < 0)
+                                            continue;
+                                        if (side_army->numTroops <= 0)
+                                            continue;
+                                        long value =
+                                            side_army->numTroops
+                                            * side_army->sMonInfo.baseFightValue;
+                                        unsigned attributes =
+                                            side_army->sMonInfo.attributes;
+                                        if (!(attributes & (1u << 26)))
+                                            value = static_cast<long>(value * 1.2);
+                                        fight_value += value;
+                                    }
+                                }
+                                fight_values[side] = fight_value;
+                                if (defendingTown && side == 1)
+                                    fight_values[1] =
+                                        static_cast<long>(fight_value * 1.1);
+                            }
+                        }
+                        fight_values[1 - currentSide] = static_cast<long>(
+                            fight_values[1 - currentSide] * 1.1);
+
+                        float threshold = 0.16f;
+                        if (combat_value > 10000)
+                            threshold = 0.22f;
+                        else if (combat_value > 5000)
+                            threshold = 0.21f;
+                        else if (combat_value > 0)
+                            threshold = 0.2f;
+                        threshold -= (4 - gpGame->setup.difficulty) * 0.015;
+                        float experience_bonus =
+                            heroes[currentSide]->experience / 200000;
+                        if (experience_bonus > 0.03)
+                            experience_bonus = 0.03f;
+                        threshold += experience_bonus;
+                        if (!currentSide)
+                            threshold -= 0.06f;
+                        if (threshold > 0.16)
+                            threshold = 0.16f;
+                        float ratio =
+                            static_cast<float>(fight_values[currentSide])
+                            / static_cast<float>(fight_values[0]
+                                                 + fight_values[1]);
+                        if (ratio < threshold)
+                            return 1;
+                    }
+                }
+            }
+        }
+    }
+    return 0;
 }
-#endif  // @carcass
 
 // E:\gamedcs\ai.cpp:339
 // The four ai_tactical callers (0x435fb3..0x435ff8, the combat-
