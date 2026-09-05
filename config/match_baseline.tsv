@@ -887,7 +887,7 @@ command	?automate_first_aid_tent@combatManager@@QAEEXZ	98.0451	98.1203	98.1203	0
 command	?do_animations@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x74040	27696fba95ba
 command	?get_surrender_cost@combatManager@@QAEJXZ	100.0000	100.0000	100.0000	0x77a00	8fa812f0287e
 command	?get_tower_string@combatManager@@ABE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TWallSection@1@JJ@Z	100.0000	100.0000	100.0000	0x7a2d0	8238c96bb1e7
-command	?is_computer_action@combatManager@@QAEEPBVarmy@@@Z	81.3696	81.3696	81.3696	0x74bf0	cd3eeac26b98
+command	?is_computer_action@combatManager@@QAEEPBVarmy@@@Z	81.3696	81.3696	81.3696	0x74bf0	45c846365801
 command	?is_computer_action@combatManager@@QAEEXZ	100.0000	100.0000	100.0000	0x74ba0	a13a7565f528
 command	?is_outside_placement_boundry@combatManager@@QAEEHH@Z	100.0000	100.0000	100.0000	0x763f0	121e7d3afbb8
 command	?process_first_aid@combatManager@@QAEXPAVarmy@@@Z	100.0000	100.0000	100.0000	0x78b90	91444258c0b3
@@ -2475,7 +2475,11 @@ recruit	?RecruitSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000
 # fresh normalization, with recruit.cpp unchanged, measured 96.5558; the merged
 # rebuild returned current to 94.1574 while max/history retain that transient.
 recruit	?Update@recruitUnit@@QAEXEJ@Z	94.1574	96.5558	96.5558	0x1503a0	d97bc68809dd
-recruit	?add_creature_widgets@TRecruitWindow@@QAEXJJJW4TCreatureType@@J@Z	100.0000	100.0000	100.0000	0x14fb90	c56a02f98a4f
+# 2026-09-05 DELIBERATE LOWER: add_creature_widgets reached 100.0000 only through a
+# `creature_background` file-static the Dreamcast roster does not name (recruit.obj has
+# no such helper) - a caller-shrink dose steering the /Ob2 budget, i.e. an inverse
+# numerator carrier. Reverted; max/hist reset to the last genuine value 93.6325.
+recruit	?add_creature_widgets@TRecruitWindow@@QAEXJJJW4TCreatureType@@J@Z	93.6325	93.6325	100.0000	0x14fb90	8b238d4d93cf
 recruit	?get_upgrade_cost@@YIXW4TCreatureType@@0JPAH@Z	100.0000	100.0000	100.0000	0x14e750	6382968d0edb
 recruit	?siege_artifact_to_creature@@YI?AW4TCreatureType@@W4TArtifact@@@Z	100.0000	100.0000	100.0000	0x150360	5ee79bb53ec7
 remote	??0CAnimatedDlg@@QAE@XZ	100.0000	100.0000	100.0000	0x154a50	9e5901052fee

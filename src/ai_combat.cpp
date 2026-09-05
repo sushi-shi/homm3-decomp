@@ -1352,6 +1352,14 @@ void type_AI_combat_data::do_general_melee(type_AI_combat_data& defender)
 // residual is bounded to stack coloring plus constructor/destructor call
 // identity: retail calls the exact type_monster_vector wrapper for both local
 // copies, while this compile expands it to the underlying vector copy call.
+// MEASURED 2026-09-05: `#pragma auto_inline(off)` around the 0x4276c0 wrapper
+// definition DOES restore both retail call edges (census 26 same + 2 real ->
+// 28 same) and is byte-flat at 90.9329 - objdiff scores relocations at
+// function_reloc_diffs=none, so the wrapper and the vector copy ctor it
+// forwards to occupy one call slot either way. Not landed: a pin that buys a
+// name and no bytes is scaffolding. The two teardown rows are the same family
+// (retail calls the shared 0x46a650 vector destructor COMDAT, we expand it to
+// operator delete) and want caller mass, not another pin.
 VA(0x004267c0, 0x3FD)  // anchor-global, dc 0x2bad8
 bool type_AI_combat_data::choose_melee(
     const type_AI_combat_data& enemy,
