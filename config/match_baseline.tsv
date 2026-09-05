@@ -71,7 +71,7 @@ advmgr	?DeactivateCurrHero@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x175a
 advmgr	?DeactivateCurrTown@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x17570	65cf91ab93a3
 advmgr	?DemobilizeCurrHero@advManager@@QAEXEE@Z	100.0000	100.0000	100.0000	0x17680	0e81b70808b2
 advmgr	?DisableButtons@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1a2e0	d6a15e176a45
-advmgr	?DoAdvCommand@advManager@@QAEPAVNewmapCell@@PAUtype_point@@@Z	90.2547	90.2547	90.2547	0x7b80	cbabf5eefc18
+advmgr	?DoAdvCommand@advManager@@QAEPAVNewmapCell@@PAUtype_point@@@Z	94.2359	94.2359	94.2359	0x7b80	69c897dd8221
 advmgr	?DoAdventureOptions@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1ab00	7e482f83bb0c
 advmgr	?DoSystemOptions@advManager@@QAEEXZ	100.0000	100.0000	100.0000	0x1ac00	f0fa0f6b3869
 advmgr	?DrawAdvObj@advManager@@QAEXHHHHH@Z	87.5901	87.5901	87.5901	0x10c00	1156912974aa
@@ -129,7 +129,7 @@ advmgr	?SaveGame@@YIEE@Z	100.0000	100.0000	100.0000	0x18160	82f9544efca0
 advmgr	?ScanForHeroOrBoat@advManager@@QAE_NHHHGAAY05UTDrawParts@@@Z	100.0000	100.0000	100.0000	0xfb30	bf12f53ebccb
 advmgr	?ScreenScroll@advManager@@QAEXHH@Z	97.8177	97.8177	97.8177	0x195c0	101924e85d7a
 advmgr	?SeedTo@advManager@@QAEXUtype_point@@@Z	100.0000	100.0000	100.0000	0x194a0	4e87ce523fb9
-advmgr	?SetEnvironmentOrigin@advManager@@QAEXUtype_point@@H@Z	63.9403	63.9403	63.9403	0x183d0	46a7f4d86752
+advmgr	?SetEnvironmentOrigin@advManager@@QAEXUtype_point@@H@Z	75.4080	75.4080	75.4080	0x183d0	31adb9c926f0
 advmgr	?SetHeroContext@advManager@@QAEXHHEE@Z	99.2746	99.2746	99.2746	0x17b20	67bd9ddfde14
 advmgr	?SetInitialMapOrigin@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19990	d4815376fb68
 advmgr	?SetRolloverText@advManager@@QAEXPAVNewmapCell@@HH@Z	93.9598	93.9598	93.9598	0xb150	eb4d9abd46d1
@@ -1502,7 +1502,7 @@ game	?CheckForTownEvent@game@@QAEXXZ	100.0000	100.0000	100.0000	0xcda10	e2b48df3
 game	?ClaimGarrison@game@@QAEXHH@Z	84.4118	84.4118	84.4118	0xc6960	729f2a534f80
 game	?ClaimGenerator@game@@QAEXHH@Z	100.0000	100.0000	100.0000	0xc67b0	fdb8284891f3
 game	?ClaimMine@game@@QAEXHHW4type_action_type@@@Z	100.0000	100.0000	100.0000	0xc66e0	f3d11f1a5ce0
-game	?ClaimShipyard@game@@QAEXUtype_point@@H@Z	77.4860	77.4860	77.4860	0xc6a30	dda4168ae6fb
+game	?ClaimShipyard@game@@QAEXUtype_point@@H@Z	98.6034	98.6034	98.6034	0xc6a30	1907da06d2ab
 game	?ClaimTown@game@@QAEXHHEE@Z	100.0000	100.0000	100.0000	0xc61e0	312dd538ea8a
 game	?ClearNetInfo@playerData@@QAEXXZ	100.0000	100.0000	100.0000	0xba170	8baf765bdf9a
 game	?ComputeDailyGold@game@@QAEHHE@Z	100.0000	100.0000	100.0000	0xc7930	3578060f8dd0
@@ -1617,7 +1617,7 @@ game	?SetupPuzzlePieces@game@@QAEHHH@Z	98.9637	98.9637	98.9637	0xbaf00	1d0bb1967
 game	?ShowComputerScreen@game@@QAEXXZ	100.0000	100.0000	100.0000	0xca5b0	0074fb32cfd0
 game	?ShowHeroesLogo@game@@QAEXXZ	100.0000	100.0000	100.0000	0xca780	890d5263bad4
 game	?StartAITheme@@YIXXZ	100.0000	100.0000	100.0000	0xc6f40	45c7f5426a57
-game	?TransmitSaveGame@game@@QAEHHHEE@Z	81.8730	81.8730	81.8730	0xcafd0	36ffd6920dd2
+game	?TransmitSaveGame@game@@QAEHHHEE@Z	82.1341	82.1341	82.1341	0xcafd0	41dfa78a1881
 game	?TurnOffAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6fd0	fe47952c0464
 game	?TurnOnAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6f80	0d6fe6e9e2a0
 game	?ValidateVictoryLossConditions@game@@QAEXE@Z	89.6148	89.6148	89.6148	0xbf780	51847b4f5a1d
@@ -3262,7 +3262,7 @@ spells	?AbleToSummonElemental@combatManager@@QAEEHJ@Z	100.0000	100.0000	100.0000
 spells	?AddBolt@combatManager@@QAEXPAUSBolt@@HHHHHHHHHHHH@Z	100.0000	100.0000	100.0000	0x1a5a90	298ffa58efa4
 spells	?AreaEffect@combatManager@@QAEXJHJJ@Z	99.8565	99.8565	99.8565	0x1a4970	89c796832376
 spells	?Armageddon@combatManager@@QAEXHH@Z	93.9013	93.9013	93.9013	0x1a4bc0	4c4fd8883f34
-spells	?CastSpell@combatManager@@QAEXHHHHHJ@Z	90.7105	90.7105	90.7105	0x19fe30	35a5cc191003
+spells	?CastSpell@combatManager@@QAEXHHHHHJ@Z	91.2759	91.2759	91.2759	0x19fe30	3b30e76df401
 spells	?ChainLightning@combatManager@@QAEXHHH@Z	96.1913	96.1913	96.1913	0x1a6360	ebf901f1d173
 spells	?ClearEffects@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1a66b0	59ebec44e08d
 spells	?ComputeSpellDamage@combatManager@@QAEJHJJPAVhero@@0PBVarmy@@E@Z	100.0000	100.0000	100.0000	0x1a7890	210d41023a64
