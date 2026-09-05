@@ -4568,10 +4568,19 @@ long mark_destinations(hero* current_hero, long max_distance,
     long hero_danger;
     type_point point;
     {
-        type_point danger_point;
-        danger_point.x = current_hero->x;
-        danger_point.y = current_hero->y;
-        danger_point.z = current_hero->z;
+        // 77.6116 -> 85.8398 (2026-09-05).  `danger_point` must be built
+        // through type_point's THREE-ARGUMENT constructor, not default-
+        // constructed and then assigned field by field: the constructor's
+        // `short` parameters make retail load all three hero coordinates as
+        // WORDS (`mov dx,[ebx] / mov cx,[ebx+2] / mov ax,[ebx+4]`), while
+        // the field-assignment form lets VC6 narrow the z read to
+        // `mov cl, byte ptr [ebx+4]` because the destination bitfield is
+        // only four bits wide.  The lever is PER SITE and evidenced by that
+        // load width - the same rewrite on `point` measures 76.59 and on
+        // the loop's `target` 82.39, and both are rejected.  Block scope on
+        // danger_point/danger_zones is byte-flat in every arrangement.
+        type_point danger_point(current_hero->x, current_hero->y,
+                                current_hero->z);
         long* danger_zones = search_array->danger_zones;
         if (danger_zones == 0)
             hero_danger = 0;
