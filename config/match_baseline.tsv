@@ -1622,6 +1622,7 @@ game	??1game@@QAE@XZ	100.0000	100.0000	100.0000	0xce5b0	63b88e3526aa
 game	??1out_of_range@std@@UAE@XZ	100.0000	100.0000	100.0000	0xb6be0	-
 game	??1playerData@@QAE@XZ	100.0000	100.0000	100.0000	0xce570	293b0ee86f68
 game	??1type_creature_bank@@QAE@XZ	100.0000	100.0000	100.0000	0xc2420	771f9d5722f4
+game	??4?$vector@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@V?$allocator@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@@2@@std@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	0x5f810	-
 game	??4?$vector@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@V?$allocator@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@@2@@std@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	0x5f5e0	-
 game	??4CObjectType@@QAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0xd40c0	-
 game	??4reference@?$bitset@$04@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0000	0xcf800	-
@@ -1919,6 +1920,7 @@ gzinflatebuf	??0TDataError@TGzInflateBuf@@QAE@ABV01@@Z	0.0000	100.0000	100.0000	
 gzinflatebuf	??0TDataError@TGzInflateBuf@@QAE@XZ	31.7752	100.0000	100.0000	0xd6690	-
 gzinflatebuf	??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z	76.4458	76.4458	76.4458	0xd6050	88b0a132da7c
 gzinflatebuf	??0TRuntimeError@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x1b7b0	-
+gzinflatebuf	??0runtime_error@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z	100.0000	100.0000	100.0000	0x1ba90	-
 gzinflatebuf	??1TGzInflateBuf@@UAE@XZ	100.0000	100.0000	100.0000	0xd6820	cc97722e33a5
 gzinflatebuf	??_GTGzInflateBuf@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xd67f0	-
 gzinflatebuf	?get_byte@TGzInflateBuf@@AAEHXZ	100.0000	100.0000	100.0000	0xd5fd0	186479b817b7
