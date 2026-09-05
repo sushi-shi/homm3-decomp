@@ -4179,13 +4179,28 @@ CNetMsgHandlerPause::CNetMsgHandlerPause()
 // inlining it the way it does CNetMsgHandler's.
 VA_COMPGEN(0x00557eb0, 0x21, SCALAR_DELETING_DTOR, CNetMsgHandlerPause)
 
-// UNCLAIMED IN SPAN: 0x558490 (108 B) is one of the two
-// CAutoArray `scalar deleting destructor' COMDATs - remote.obj emits both
-// the CDPlaySession and the CDPlayPlayer instantiation at exactly 108 B and
-// retail carries only this one row, so a SCALAR_DELETING_DTOR claim on the
-// shared `cautoarray_cautoarray@gdtor` key is ambiguous in both directions
-// and the join refuses it. Its sibling 0x5583b0 (84 B) is the second
-// ~CAutoArray, whose twin is already claimed at 0x558350.
+// CAutoArray<CDPlayPlayer>'s two out-of-line destructors. remote.obj emits
+// BOTH the CDPlaySession and the CDPlayPlayer instantiation of each, and the
+// two share one join key, so the claims name the INSTANTIATION the way
+// `hero_vector` and `CImmEnclosure_auto_ptr` do.
+//
+// The element is settled by the vftable both bodies store, 0x640f24, and by
+// the ONE slot that separates it from 0x6400d8:
+//   0x6400d8  ??_G 0x512670 | Add 0x558410 | Get 0x499fc0 | Put 0x499fe0
+//   0x640f24  ??_G 0x558490 | Add 0x558410 | Get 0x499fc0 | Put 0x499fe0
+// - seven slots each, CAutoArray's virtual count exactly (against four for
+// CNetMsgHandler's table at 0x640f14 just below), identical in six of them.
+// Only the scalar deleting destructor differs, because only it stores the
+// table's own address, and that single self-reference is what stopped
+// /OPT:ICF folding either the bodies or the tables. 0x6400d8 is proven
+// CDPlaySession's in multiplayerwindow.cpp, so 0x640f24 is the other
+// instantiation this object carries; `CAutoArray<CDPlayPlayer> playerArray`
+// at remote.cpp:2568 is the local whose teardown reaches 0x5583b0.
+//
+// The sibling 84-byte row at 0x558350 stores a different vftable again and
+// is already claimed as ~CHeroSessions in multiplayerwindow.cpp.
+VA_COMPGEN(0x005583b0, 0x54, IMPLICIT_DTOR, CDPlayPlayer_CAutoArray)
+VA_COMPGEN(0x00558490, 0x6C, SCALAR_DELETING_DTOR, CDPlayPlayer_CAutoArray)
 
 // deque<CNetMsg*>'s back-block allocator, the half of the pair army.obj's
 // int deque needed the freeing side of. Byte-verified against the emitted

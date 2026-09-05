@@ -75,6 +75,7 @@ build (the `homm3 delink` chain does).
 from __future__ import annotations
 
 import bisect
+import hashlib
 import itertools
 import os
 import re
@@ -177,7 +178,17 @@ DEQUE_PRIMITIVE_ELEMENT = {"C": "signed_char", "D": "char",
 #: `_template_element_pairing` splits it by the element the CLAIM names -
 #: spelled `<Element>_<template>`, the same two-part owner `hero_vector`
 #: established for the shared vector-constructor group.
-SINGLE_ARG_TEMPLATE_DTORS = ("auto_ptr",)
+#: Keys are the LOWERCASED spelling a claim owner carries; values are the
+#: template's real casing, which is what the mangled name spells.
+#: `CAutoArray` needs both halves - `??1` AND the `??_G` scalar deleting
+#: destructor - because its two instantiations are NOT ICF-folded (each
+#: stores its own vftable) yet still share one join key.
+SINGLE_ARG_TEMPLATE_DTORS = {"auto_ptr": "auto_ptr",
+                             "cautoarray": "CAutoArray"}
+#: The claim markers a `<Element>_<template>` owner is honoured on, and the
+#: mangled prefix each one's symbols carry.
+TEMPLATE_DTOR_MARKERS = {"$implicit_dtor$": "??1",
+                         "$scalar_deleting_dtor$": "??_G"}
 #: The char-instantiated stream and string members VC6 emits as COMDATs.
 #: Every one of these templates exists only as `<char, char_traits<char>,
 #: allocator<char>>` in this image, so the instantiation carries no useful
@@ -1356,6 +1367,29 @@ def _demangle_key(mangled: str):
 
 
 def _base_authority_names(unit: str) -> dict:
+    """The `key -> [(mangled, content_size)...]` half of the base-obj scan;
+    see `_base_authority_scan`."""
+    return _base_authority_scan(unit)[0]
+
+
+def _base_authority_digests(unit: str) -> dict:
+    """`mangled -> sha1 of the symbol's section content AND its relocation
+    stream`, the side channel the ICF oracle reads.
+
+    The relocations are load-bearing and were a real defect when they were
+    left out: remote.obj's `??_G?$CAutoArray@VCDPlaySession@@` and
+    `??_G?$CAutoArray@VCDPlayPlayer@@` have IDENTICAL section bytes,
+    because the one thing that separates them - the vftable each stores -
+    is a relocation, and a relocation's field is zero in the object. They
+    are NOT folded in retail: the two vftables 0x6400d8 and 0x640f24 differ
+    in exactly one slot, their own `??_G`, which is what keeps the bodies
+    (and therefore the tables) distinct. Digesting content alone read them
+    as twins and bound the claim to a spelling already proven at another
+    address, which the delinker refused - correctly."""
+    return _base_authority_scan(unit)[1]
+
+
+def _base_authority_scan(unit: str) -> tuple:
     """key -> [(mangled, content_size)...] defined text symbols (external
     or file-static function) of the
     unit's compiled base obj, each key's list in DEFINITION order (COFF
@@ -1367,14 +1401,17 @@ def _base_authority_names(unit: str) -> dict:
     unclaimed members retail dropped."""
     obj = common.HOMM3_DIR / f"build/objdiff/base/{unit}.obj"
     if not obj.is_file():
-        return {}
+        return {}, {}
     data = obj.read_bytes()
     nsec, = struct.unpack_from("<H", data, 2)
     section_sizes = {}
+    section_bytes = {}
+    section_relocs = {}
     for index in range(nsec):
         header = 20 + index * 40
         raw_size, raw_offset = struct.unpack_from("<II", data, header + 16)
         content = raw_size
+        raw = b""
         if raw_offset:
             raw = data[raw_offset:raw_offset + raw_size]
             run = 0
@@ -1382,6 +1419,12 @@ def _base_authority_names(unit: str) -> dict:
                 run += 1
             content = raw_size - run
         section_sizes[index + 1] = content
+        reloc_offset, = struct.unpack_from("<I", data, header + 24)
+        reloc_count, = struct.unpack_from("<H", data, header + 32)
+        section_relocs[index + 1] = [
+            struct.unpack_from("<IIH", data, reloc_offset + entry * 10)
+            for entry in range(reloc_count)] if reloc_offset else []
+        section_bytes[index + 1] = raw[:content]
     symoff, nsyms = struct.unpack_from("<II", data, 8)
     strtab = symoff + nsyms * 18
     def symname(o):
@@ -1415,10 +1458,19 @@ def _base_authority_names(unit: str) -> dict:
         aux = data[o + 17]
         o += 18 * (1 + aux)
         i += 1 + aux
-    groups = {}
-    for _section, key, name, content in sorted(ordered):
+    groups, digests = {}, {}
+    for section, key, name, content in sorted(ordered):
         groups.setdefault(key, []).append((name, content))
-    return groups
+        body = section_bytes.get(section)
+        if body is None:
+            digests[name] = ""
+            continue
+        stream = hashlib.sha1(body)
+        for offset, symbol_index, kind in section_relocs.get(section, ()):
+            target = symname(symoff + symbol_index * 18)
+            stream.update(f"|{offset:x},{kind:x},{target}".encode())
+        digests[name] = stream.hexdigest()
+    return groups, digests
 
 
 def ir_bind(unit: str, rows: list[dict], ir_names: dict,
@@ -1600,14 +1652,16 @@ def _template_dtor_owner(owner: str):
     return None
 
 
-def _mangled_template_element(mangled: str, template: str):
+def _mangled_template_element(mangled: str, template: str,
+                              prefix: str = "??1"):
     """The lowercased type argument of a `??1?$<template>@<Arg>@std@@`
     destructor, or None when the name is not that template's dtor. Class,
     struct, enum and pointer-to-class arguments all carry a plain
     identifier; a BUILTIN argument is a single letter with no `@`
     terminator, decoded through DEQUE_PRIMITIVE_ELEMENT exactly as deque's
     and vector's primitive elements are."""
-    head = re.escape(f"??1?${template}@")
+    spelling = SINGLE_ARG_TEMPLATE_DTORS.get(template, template)
+    head = re.escape(f"{prefix}?${spelling}@")
     primitive = re.match(f"^{head}([CDEFGHIJK])@std@@", mangled)
     if primitive:
         return DEQUE_PRIMITIVE_ELEMENT[primitive.group(1)]
@@ -1641,17 +1695,68 @@ def _template_element_pairing(candidates: list[dict],
     it."""
     out = {}
     for row in candidates:
-        if "$implicit_dtor$" not in row["name"]:
+        prefix = next((mangled_prefix
+                       for marker, mangled_prefix in
+                       TEMPLATE_DTOR_MARKERS.items()
+                       if marker in row["name"]), None)
+        if prefix is None:
             continue
         split = _template_dtor_owner(row["name"].rsplit("$", 1)[1])
         if split is None:
             continue
         element, template = split
         names = [name for name, _content in mangled_group
-                 if _mangled_template_element(name, template) == element]
+                 if _mangled_template_element(name, template, prefix)
+                 == element]
         if len(names) == 1:
             out[row["rva"]] = names[0]
     return out
+
+
+def _icf_group_pairing(candidates: list[dict], mangled_group: list,
+                       digests: dict) -> dict:
+    """{claim rva -> mangled} for a group whose remaining base symbols are
+    BYTE-IDENTICAL to one another - the twins /OPT:ICF folded onto ONE
+    retail row - against exactly one remaining claim.
+
+    This is the shape no other oracle can reach, and it is not rare: a
+    class template whose body does not depend on its argument emits one
+    COMDAT per instantiation, all with the same content, and the retail
+    link keeps one. remote.obj emits `??_G?$CAutoArray@VCDPlaySession@@`
+    and `??_G?$CAutoArray@VCDPlayPlayer@@` at the same 112 bytes with the
+    same instructions; retail carries a single 108-byte row for both.
+    - the positional zip cannot run: two names against one claim is a
+      count mismatch, not an order question;
+    - `_size_pairing` never sees it for the same reason, and could not
+      split it anyway - identical bodies are identical lengths;
+    - the count-mismatch fallback needs an EXACT content match unique in
+      both directions, and both names fit or neither does.
+    So the claim banked 0.0000 with the ratchet clean, and a note in
+    remote.cpp recorded the row as unclaimable.
+
+    When the twins are genuinely identical the question the other oracles
+    are trying to answer does not exist: the row IS both functions, and
+    every candidate name labels the same bytes. One claim therefore binds
+    it, deterministically to the first name in the group's COFF order,
+    with the rest recorded as aliases in `row["icf_aliases"]` so the label
+    join can still say what else the row is called.
+
+    Deliberately narrow. It requires ONE unbound claim and TWO OR MORE
+    names, every one of them sharing a single digest: a group holding two
+    DIFFERENT bodies is a real ambiguity and still declines, which is what
+    keeps this from becoming a blind first-name fallback.
+
+    Pure in (candidates, mangled_group, digests) so the negative control
+    can drive it."""
+    if len(candidates) != 1 or len(mangled_group) < 2:
+        return {}
+    names = [name for name, _content in mangled_group]
+    seen = {digests.get(name) for name in names}
+    if len(seen) != 1 or not next(iter(seen)):
+        return {}
+    row = candidates[0]
+    row["icf_aliases"] = names[1:]
+    return {row["rva"]: names[0]}
 
 
 def _ctor_kind_pairing(candidates: list[dict], mangled_group: list,
@@ -1714,8 +1819,9 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                                   for marker in JOINED_COMPGEN_MARKERS)))]
     if not unit_rows:
         return
+    groups, digests = _base_authority_scan(unit)
     authority = {key: [(n, c) for n, c in group if n not in taken]
-                 for key, group in _base_authority_names(unit).items()}
+                 for key, group in groups.items()}
     authority = {key: group for key, group in authority.items() if group}
     if not authority:
         return
@@ -1725,6 +1831,16 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
         if "$scalar_deleting_dtor$" in row["name"]:
             # ??_G claims join the base publics like source functions do
             owner = row["name"].rsplit("$", 1)[1].lower()
+            # ...and a `<Element>_<template>` owner keys the shared
+            # template group, exactly as the `??1` branch below does:
+            # `_demangle_key`'s ??_G arm keeps only the stable template
+            # name, so every instantiation a TU emits lands in one group.
+            split = _template_dtor_owner(owner)
+            if split is not None:
+                template = split[1]
+                claim_keys.setdefault(f"{template}_{template}@gdtor",
+                                      []).append(row)
+                continue
             claim_keys.setdefault(f"{owner}_{owner}@gdtor",
                                   []).append(row)
             continue
@@ -2037,6 +2153,19 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             {r.get("joined") for r in candidates
              if r["channel"] == "src-VA+base"})
         for row in candidates:
+            mangled = pairing.get(row["rva"])
+            if mangled is not None:
+                row["joined"] = mangled
+                row["channel"] = "src-VA+base"
+        # ...and last, the case where the group is not ambiguous at all
+        # because its members are the SAME BYTES: /OPT:ICF folded them onto
+        # one retail row, so one claim names it however many spellings the
+        # base object emits.
+        unbound = [r for r in candidates if r["channel"] != "src-VA+base"]
+        free = [(n, c) for n, c in mangled_group
+                if n not in {r.get("joined") for r in candidates}]
+        pairing = _icf_group_pairing(unbound, free, digests)
+        for row in unbound:
             mangled = pairing.get(row["rva"])
             if mangled is not None:
                 row["joined"] = mangled
