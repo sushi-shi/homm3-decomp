@@ -837,7 +837,10 @@ void combatManager::CastSpell(SpellID spellId, int targetIndex,
             new_quicksand.shape = &QuicksandInfo[0];
             new_quicksand.hex = static_cast<unsigned char>(hex);
             new_quicksand.owner = static_cast<signed char>(currentSide);
-            new_quicksand.is_visible = field_1329c[other_side];
+            // Retail folds the side flip into the address here rather than
+            // reading the named local: 0x5a19d4 loads currentSide, forms
+            // `this - currentSide` and reads [eax + 0x1329d].
+            new_quicksand.is_visible = field_1329c[1 - currentSide];
             new_quicksand.spell_damage = 0;
             new_quicksand.field_10 = 0;
             new_quicksand.field_14 = 0x3a;
@@ -892,7 +895,7 @@ quicksand_done:
             new_landmine.shape = &LandMineInfo[0];
             new_landmine.hex = static_cast<unsigned char>(hex);
             new_landmine.owner = static_cast<signed char>(currentSide);
-            new_landmine.is_visible = field_1329c[other_side];
+            new_landmine.is_visible = field_1329c[1 - currentSide];
             new_landmine.spell_damage = damage;
             new_landmine.field_10 = 0;
             new_landmine.field_14 = 0x3b;
