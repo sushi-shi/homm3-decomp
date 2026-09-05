@@ -250,7 +250,12 @@ public:
         // One row-wide line follows the ten five-column quest groups.
         // TQuestGuard::DoEvent is its byte-proven reader when a deadline
         // has passed; unlike the grouped lines, it does not call quest_type.
-        QUEST_TEXT_EXPIRED = 50
+        QUEST_TEXT_EXPIRED = 50,
+        // Column 51, the last of the row's 52 strings and the deadline
+        // suffix's format line: get_time_limit_text() is its only reader
+        // and takes it at `[row + 0x334]`, i.e. 51 * sizeof(std::string)
+        // plus the _Ptr member, with no quest_type() in the address.
+        QUEST_TEXT_TIME_LIMIT = 51
     };
     // The five-column group this quest type owns, computed ONCE: slot 14
     // fills three of the columns off one row and retail keeps the group
