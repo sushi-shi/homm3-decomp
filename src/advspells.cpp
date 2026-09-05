@@ -77,18 +77,68 @@ void advManager::CheckCastSpell()
     UpdBottomView(1, 1, 1);
 }
 
-#if 0  // @carcass: remaining untouched bodies
-// E:\gamedcs\advspells.cpp:93
-// The dispatcher. 1028 B against the DC's 344 because retail expands the
-// four small handlers the DC keeps out of line - hero::Fly, Flight's whole
-// body, is called straight out of it.
-VA(0x0041c490, 0x404)  // linkorder + anchor-callee hero::Fly / get_spell_level, dc 0x21a2c
-void advManager::CastSpell(SpellID whichSpell)
-{
-    // @stub
-}
 
-#endif  /* @carcass part 1 */
+// E:\gamedcs\advspells.cpp:93
+// The dispatcher, and the ONE place every adventure spell is charged from.
+// Ten ascending cases through a jump table; four of the arms are Dreamcast
+// handlers retail has no body for, expanded here because each has exactly
+// this one call site - which is what makes 1028 bytes out of the DC's 344.
+// Each arm re-derives its own `who` because each inlined handler opens with
+// its own game::GetHero, and the two ViewWorld arms hand their own case
+// value to both ViewWorld and GetManaCost.
+VA(0x0041c490, 0x404)  // linkorder + anchor-callee hero::Fly / get_spell_level, dc 0x21a2c
+void advManager::CastSpell(int whichSpell)
+{
+    hero* who = gpGame->GetHero(gpCurrentPlayer->currHeroId);
+    if (who == 0)
+        return;
+
+    TSkillMastery level
+        = who->get_spell_level(whichSpell, who->get_special_terrain());
+
+    switch (whichSpell) {
+    case SPELL_SUMMON_BOAT:
+        SummonBoat(level);
+        break;
+    case SPELL_SCUTTLE_BOAT:
+        SkuttleBoat(level);
+        break;
+    case SPELL_VISIONS:
+        Identify(level);
+        break;
+    case SPELL_VIEW_EARTH:
+        launch_sample(DATA_COMPGEN(0x006604C4, castSpellViewSample,
+                                   "view.wav"),
+                      -1, 3);
+        ViewWorld(SPELL_VIEW_EARTH, level);
+        who->UseSpell(who->GetManaCost(SPELL_VIEW_EARTH, 0,
+                                       who->get_special_terrain()));
+        break;
+    case SPELL_DISGUISE:
+        Disguise(level);
+        break;
+    case SPELL_VIEW_AIR:
+        launch_sample(DATA_COMPGEN(0x006604C4, castSpellViewSample,
+                                   "view.wav"),
+                      -1, 3);
+        ViewWorld(SPELL_VIEW_AIR, level);
+        who->UseSpell(who->GetManaCost(SPELL_VIEW_AIR, 0,
+                                       who->get_special_terrain()));
+        break;
+    case SPELL_FLY:
+        Flight(level);
+        break;
+    case SPELL_WATER_WALK:
+        WaterWalk(level);
+        break;
+    case SPELL_DIMENSION_DOOR:
+        DimensionDoor(level);
+        break;
+    case SPELL_TOWN_PORTAL:
+        TownGate(level);
+        break;
+    }
+}
 
 // E:\gamedcs\advspells.cpp:171
 // Summon Boat. The caster must be ashore; the spell then looks for the
@@ -514,35 +564,92 @@ void advManager::TownGate(int level)
     }
 }
 
-#if 0  // @carcass: remaining untouched bodies (continued)
 // E:\gamedcs\advspells.cpp:605
+// Visions. Raises the caster's own visions level, posts the confirmation
+// line and charges the mana; the sample runs across all of it.
 DC_ONLY(0x228e8, 0xDC)
-void advManager::Identify(TSkillMastery level)
+void advManager::Identify(int level)
 {
-    // @stub
+    hero* who = gpCurrentPlayer->currHeroId != -1
+                    ? &gpGame->heroes[gpCurrentPlayer->currHeroId]
+                    : 0;
+    SAMPLE2 sample = LoadPlaySample(akSpellTraits[SPELL_VISIONS].m_sample);
+    who->field_129 = level;
+    if (gpGame->IsLocalHuman(who->owner)) {
+        NormalDialog(gpGeneralText->GetText(GENERAL_TEXT_VISIONS_CAST),
+                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    }
+    who->UseSpell(who->GetManaCost(SPELL_VISIONS, 0,
+                                   who->get_special_terrain()));
+    WaitEndSample(sample, -1);
 }
 
 // E:\gamedcs\advspells.cpp:629
+// Water Walk. hero::CanWalkOnWater is the whole gate - already walking, or
+// wearing the boots (artifact 0x5a), and nothing happens; aboard a boat the
+// helper answers no and the spell runs.
 DC_ONLY(0x229c4, 0x7A)
-void advManager::WaterWalk(TSkillMastery level)
+void advManager::WaterWalk(int level)
 {
-    // @stub
+    const SSpellTraits* traits = &akSpellTraits[SPELL_WATER_WALK];
+    hero* who = gpCurrentPlayer->currHeroId != -1
+                    ? &gpGame->heroes[gpCurrentPlayer->currHeroId]
+                    : 0;
+    if (who->CanWalkOnWater(0))
+        return;
+
+    SAMPLE2 sample = LoadPlaySample(traits->m_sample);
+    who->WalkOnWater(level);
+    Reseed(0, 0);
+    who->UseSpell(who->GetManaCost(SPELL_WATER_WALK, 0,
+                                   who->get_special_terrain()));
+    WaitEndSample(sample, -1);
 }
 
 // E:\gamedcs\advspells.cpp:654
+// Disguise. The shortest of the four: set the level, charge, wait.
 DC_ONLY(0x22a40, 0x5A)
-void advManager::Disguise(TSkillMastery level)
+void advManager::Disguise(int level)
 {
-    // @stub
+    hero* who = gpCurrentPlayer->currHeroId != -1
+                    ? &gpGame->heroes[gpCurrentPlayer->currHeroId]
+                    : 0;
+    SAMPLE2 sample = LoadPlaySample(akSpellTraits[SPELL_DISGUISE].m_sample);
+    who->disguiseLevel = level;
+    who->UseSpell(who->GetManaCost(SPELL_DISGUISE, 0,
+                                   who->get_special_terrain()));
+    WaitEndSample(sample, -1);
 }
 
 // E:\gamedcs\advspells.cpp:674
+// Fly. hero::IsFlying gates it exactly as CanWalkOnWater gates Water Walk,
+// but the boat case is not silent here - it gets its own refusal line, and
+// retail re-reads the boat bit for that second test rather than reusing the
+// one IsFlying already made. hero::Fly charges the mana itself.
 DC_ONLY(0x22a9c, 0xEC)
-void advManager::Flight(TSkillMastery level)
+void advManager::Flight(int level)
 {
-    // @stub
+    const SSpellTraits* traits = &akSpellTraits[SPELL_FLY];
+    hero* who = gpCurrentPlayer->currHeroId != -1
+                    ? &gpGame->heroes[gpCurrentPlayer->currHeroId]
+                    : 0;
+    if (who->IsFlying(0))
+        return;
+
+    if ((who->flags & 0x40000) != 0) {
+        NormalDialog(
+            gpGeneralText->GetText(GENERAL_TEXT_SPELL_NOT_WHILE_ON_BOAT),
+            1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return;
+    }
+
+    SAMPLE2 sample = LoadPlaySample(traits->m_sample);
+    who->Fly(level);
+    Reseed(0, 0);
+    WaitEndSample(sample, -1);
 }
 
+#if 0  // @carcass: remaining untouched bodies (continued)
 // E:\gamedcs\advspells.cpp:703
 // advmgr.h already carries the identification: `ret 0x18` against six
 // parameters, 1124/1116 = 1.007, and the third pushed argument is

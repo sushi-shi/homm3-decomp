@@ -1981,6 +1981,15 @@ public:
     void SkuttleBoat(int level);
     void DimensionDoor(int level);
     void TownGate(int level);
+    // The four handlers RETAIL HAS NO BODY FOR. Dreamcast keeps each one out
+    // of line (advspells.cpp:605 / 629 / 654 / 674, dc 0x228e8 / 0x229c4 /
+    // 0x22a40 / 0x22a9c); every one has exactly one call site - its own arm
+    // of CastSpell's jump table - so /Ob2 expands them all, and their 668 DC
+    // bytes are what makes retail's CastSpell 1028 against the DC's 344.
+    void Identify(int level);
+    void WaterWalk(int level);
+    void Disguise(int level);
+    void Flight(int level);
     void MobilizeCurrHero(int bInMove, unsigned char waitingPlayer,
                           unsigned char drawChanges);
     void SetTownContext(int townId, unsigned char waitingPlayer,

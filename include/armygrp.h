@@ -292,6 +292,15 @@ enum ESpellId {
     // spell power to derive the scouting radius; retail displacement 0x144
     // proves spell id 2 independently of the Dreamcast spelling.
     SPELL_VISIONS = 0x2,
+    // advManager::CastSpell (0x41c490) dispatches the ten adventure spells
+    // through one ascending jump table, which fixes every id in the run: its
+    // arms 3 and 5 both play "view.wav" and hand their OWN case value to
+    // advManager::ViewWorld, and arm 4 writes hero::disguiseLevel. Each arm
+    // then charges `GetManaCost(<that id>, ...)`, so the traits row and the
+    // id agree twice over.
+    SPELL_VIEW_EARTH = 0x3,
+    SPELL_DISGUISE = 0x4,
+    SPELL_VIEW_AIR = 0x5,
     // Dreamcast's first combat spell and CastSpell's first jump-table arm;
     // retail indexes the mastery row at 0x642214 and places QuicksandInfo.
     SPELL_QUICKSAND = 0xa,

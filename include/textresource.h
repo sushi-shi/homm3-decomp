@@ -99,6 +99,13 @@ enum EGeneralTextIndex {
     // describes that consumer, which is this enum's stated convention;
     // the index is retail-byte-proven (a folded [Text._First + 0x204]).
     GENERAL_TEXT_COMBAT_SPELL_ALREADY_CAST = 129,
+    // The Visions arm of advManager::CastSpell posts this line after
+    // raising the caster's own visions level ([Text._First + 0x108]).
+    GENERAL_TEXT_VISIONS_CAST = 66,
+    // The Fly arm refuses here when the caster is aboard a boat
+    // ([Text._First + 0x304]). Both indexes retail-byte-proven; names
+    // describe the consumers.
+    GENERAL_TEXT_SPELL_NOT_WHILE_ON_BOAT = 193,
     // advManager::SummonBoat's four outcome lines, all folded
     // [Text._First + N] loads in one body: 0x538 when the caster is already
     // at sea (sprintf'd with the hero's name), 0x53c when no adjacent water
