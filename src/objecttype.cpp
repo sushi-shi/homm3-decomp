@@ -567,12 +567,15 @@ VA_COMPGEN(0x0051b910, 0x6A, BASIC_STRING_COMPARE_SUBSTR, char)
 // "invalid bitset<N> char" bodies, which is what names those as _Xinv rather
 // than _Xran and assigns each to its width.
 //
-// Our two extraction bodies compile to 589 and 583 bytes against retail's
-// 353 apiece - retail keeps the string scan out of line where we expand it -
-// so these two arrive as partial rows. The identification does not depend on
-// the score.
-VA_COMPGEN(0x00515560, 0x161, ISTREAM_EXTRACT_BITSET, Bitset48)
-VA_COMPGEN(0x005157f0, 0x161, ISTREAM_EXTRACT_BITSET, Bitset9)
+// BOUNDARY CORRECTION 2026-09-06: retail's bodies are 589 and 583 bytes, not
+// the 353 the carve gave them. Each is EH-bearing and the carve split it
+// three ways - main span, typed catch funclet, continuation - and then began
+// the continuation row six bytes late, past the register restores the
+// funclet's `mov eax,<continuation>; ret` returns onto. Our stock
+// specializations were already byte-right; only the extents were wrong, and
+// both are EXACT at the corrected sizes. See config/retail-functions.tsv.
+VA_COMPGEN(0x00515560, 0x24D, ISTREAM_EXTRACT_BITSET, Bitset48)
+VA_COMPGEN(0x005157f0, 0x247, ISTREAM_EXTRACT_BITSET, Bitset9)
 VA_COMPGEN(0x00516e40, 0xCB, BITSET_XINV, Bitset48)
 VA_COMPGEN(0x00517680, 0xCB, BITSET_XINV, Bitset9)
 
@@ -620,8 +623,12 @@ VA_COMPGEN(0x00515260, 0xF, IMPLICIT_DTOR, basic_istream)
 // basic_istream<char>::operator>>(int&); 0x517830 constructs ctype<char> at
 // 0x515f50, registers it through _Tidyfac<ctype>::_Save at 0x51ae50 and then
 // drives basic_string::_Grow / _Split over sgetc/sbumpc, which is the free
-// whitespace-delimited operator>>(istream&, string&). Both compile larger
-// than retail (519 against 347, 702 against 568) because retail keeps the
-// scan out of line, so both arrive as partial rows.
-VA_COMPGEN(0x00515270, 0x15B, ISTREAM_EXTRACT_INT, char)
-VA_COMPGEN(0x00517830, 0x238, ISTREAM_EXTRACT_STRING, char)
+// whitespace-delimited operator>>(istream&, string&). BOUNDARY CORRECTION
+// 2026-09-06: retail's extents are 519 and 702, not 347 and 568 - the same
+// three-way EH split as the bitset pair above, and for the string operator a
+// fourth piece too, the wholly unowned 0x517ad3 `_Xlen` throw block its main
+// body branches into off the parent frame. Both are EXACT at the corrected
+// sizes; what read as "we expand what retail keeps out of line" was the
+// carve, not the codegen.
+VA_COMPGEN(0x00515270, 0x207, ISTREAM_EXTRACT_INT, char)
+VA_COMPGEN(0x00517830, 0x2BE, ISTREAM_EXTRACT_STRING, char)
