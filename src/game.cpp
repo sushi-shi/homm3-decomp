@@ -11187,6 +11187,18 @@ void game::ProcessOnMapHeroes()
 // Residual: register homing - retail keeps bytesLeft in EBX and re-reads
 // pGameTransmitMainMsg per use, and rotates the confirmation loop with its
 // reload block at the head; our frame is 8 B larger.
+// 2026-09-05: 81.8730 -> 82.1341. Retail loads `gpGame` five times in this
+// body and this reconstruction loaded it ZERO times - the three player-scan
+// loops reach the local seat through `gpGame->GetLocalPlayerGamePos()`, not
+// the member call, even though `this` IS gpGame (same tell as ClaimShipyard
+// and InitiateSpell). Both censuses now read 5. Measured and rejected in the
+// same pass: putting `gpGame->` on the loops' own `players[i]` as well costs
+// 1.72 (82.13 -> 80.41), and the blanket rewrite of every `players[...]` in
+// the body costs 1.82 - the global belongs on the accessor call only.
+// Also byte-flat: swapping the isDiff/diffSize declaration order. Moving
+// `unsigned char isDiff = 0;` down to the `if (inGame)` is +0.04 and is not
+// shipped - retail stores only the diffSize zero at that point, so the
+// declaration position is a real question, but 0.04 does not evidence it.
 VA(0x004cafd0, 0xD14)  // retail body + typed catch + continuation/tables
 int game::TransmitSaveGame(int iToWho, int thisPlayerDead,
                            unsigned char inGame, unsigned char makeOrig)
@@ -11383,7 +11395,7 @@ int game::TransmitSaveGame(int iToWho, int thisPlayerDead,
                         } else {
                             for (int i = 0; i < 8; ++i) {
                                 if (players[i].IsHuman() && !playerDone[i]
-                                        && i != GetLocalPlayerGamePos()) {
+                                        && i != gpGame->GetLocalPlayerGamePos()) {
                                     unsigned long killDPID =
                                         players[i].dpid;
                                     pDPlay->DestroyPlayer(killDPID);
@@ -11404,7 +11416,7 @@ int game::TransmitSaveGame(int iToWho, int thisPlayerDead,
                 dataTimeOutStart = GameTime::Get();
                 for (int i = 0; i < 8; ++i) {
                     if (players[i].IsHuman() && !playerDone[i]
-                            && i != GetLocalPlayerGamePos()) {
+                            && i != gpGame->GetLocalPlayerGamePos()) {
                         CGameTransmitEndMsg resendEnd(
                             giMonthType, giMonthTypeExtra,
                             giWeekType, giWeekTypeExtra, diffSize);
@@ -11463,7 +11475,7 @@ int game::TransmitSaveGame(int iToWho, int thisPlayerDead,
                     playerDone[pConfirmMsg->field_00] = 1;
                     for (int i = 0; i < 8; ++i) {
                         if (players[i].IsHuman() && !playerDone[i]
-                                && i != GetLocalPlayerGamePos()) {
+                                && i != gpGame->GetLocalPlayerGamePos()) {
                             done = 0;
                             break;
                         }
