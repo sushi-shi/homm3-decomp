@@ -343,6 +343,31 @@ CHAR_STREAM_MEMBERS = (
     # `std_basic_string__nullstr`, which no macro argument can produce.
     ("?deallocate@?$allocator@D", None, "allocator_deallocate"),
     ("?_Nullstr@?$basic_string@D", None, "basic_string_nullstr"),
+    # --- the <xlocale> facet block basic_filebuf drags in -----------------
+    # `_Initcvt` is what imbues the file buffer with its codecvt facet, and
+    # the six members below are everything that conversion reaches:
+    # basic_streambuf's `getloc` (whose whole body is locale's COPY
+    # constructor expanded - the `_Lockit` scope plus the saturating refcount
+    # increment), the `_Addfac`/`_Tidyfac` pair that installs the facet in a
+    # locale and tears it down at exit, and the facet's own virtuals.
+    # `codecvt<char,char,int>` converts nothing, so FOUR of those virtuals
+    # are constant returns that /OPT:ICF folded in PAIRS - do_encoding with
+    # do_max_length (both `return 1`), do_in with do_out (both `return
+    # noconv` after copying the two range pointers back). Each pair therefore
+    # keys as ONE member, and `_icf_group_pairing` binds the single retail
+    # row to the first COFF spelling with the other recorded as its alias.
+    ("?_Initcvt@?$basic_filebuf@D", None, "filebuf_initcvt"),
+    ("?getloc@?$basic_streambuf@D", None, "streambuf_getloc"),
+    ("?_Save@?$_Tidyfac@V?$codecvt@D", None, "tidyfac_codecvt_save"),
+    ("?_Tidy@?$_Tidyfac@V?$codecvt@D", None, "tidyfac_codecvt_tidy"),
+    ("?_Addfac@std@@YI?AVlocale@1@V21@PAV?$codecvt@D", None,
+     "locale_addfac_codecvt"),
+    ("?do_always_noconv@codecvt_base@std@@", None,
+     "codecvt_base_do_always_noconv"),
+    ("?do_encoding@codecvt_base@std@@", None, "codecvt_base_do_encoding"),
+    ("?do_max_length@codecvt_base@std@@", None, "codecvt_base_do_encoding"),
+    ("?do_in@?$codecvt@D", None, "codecvt_do_in"),
+    ("?do_out@?$codecvt@D", None, "codecvt_do_in"),
 )
 
 
