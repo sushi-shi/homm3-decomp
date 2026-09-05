@@ -7531,3 +7531,12 @@ SpellID** std::__copy_backward(SpellID** __first, SpellID** __last, SpellID** __
 }
 
 #endif  // @carcass
+
+// deque<int>'s two block-freeing helpers, the pair Dinkumware emits behind
+// pop_front / pop_back. Byte-verified against the COMDATs army.obj already
+// emits - 0.923 mnemonic agreement over 115 bytes for _Freefront and 0.983
+// over 142 for _Freeback - not on size, which is what put a
+// `deque<int>::erase` and a `bitset<9>::operator[]` on these two rows in the
+// claim-10 sweep.
+VA_COMPGEN(0x004490b0, 0x73, DEQUE_FREEFRONT, int)
+VA_COMPGEN(0x00449130, 0x8E, DEQUE_FREEBACK, int)
