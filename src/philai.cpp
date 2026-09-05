@@ -2216,7 +2216,7 @@ void philAI::DoAI(int whichPlayer)
     if (!gbGameOver
         && (!gUnnamed6994f0 || whichPlayer == gUnnamed6994f0)) {
         long* danger_zones = new long[
-            gMapWidth * gMapHeight * gpGame->worldMap.GetNumLevels()];
+            MAP_WIDTH * MAP_HEIGHT * gpGame->worldMap.GetNumLevels()];
         type_AI_player* ai_player = &gAIPlayers[whichPlayer];
         ai_player->start_turn();
         GetTurnAIVars(whichPlayer);
@@ -2364,7 +2364,7 @@ void MoveHero(hero* current_hero, long* danger_zones, unsigned char is_last_hero
             gpAdvManager->DemobilizeCurrHero(0, 1);
             gpAdvManager->SetHeroContext(current_hero->id, 1, 0, 1);
             memset(danger_zones, 0,
-                   gpGame->GetNumMapLevels() * gMapWidth * gMapHeight
+                   gpGame->GetNumMapLevels() * MAP_WIDTH * MAP_HEIGHT
                        * sizeof(long));
             if (gpGame->setup.difficulty > 0
                 || gpGame->is_human_ally(
@@ -4869,8 +4869,8 @@ void __cdecl AI_examine_map()
     long extra_movement[3] = {0, 0, 0};
 
     for (; point.z < gpGame->worldMap.HasTwoLevels + 1; point.z++) {
-        for (point.x = 0; point.x < gMapWidth; point.x++) {
-            for (point.y = 0; point.y < gMapHeight; point.y++) {
+        for (point.x = 0; point.x < MAP_WIDTH; point.x++) {
+            for (point.y = 0; point.y < MAP_HEIGHT; point.y++) {
                 NewmapCell* cell = &gpGame->worldMap.cellData[
                     (point.z * gpGame->worldMap.Size + point.y)
                         * gpGame->worldMap.Size + point.x];

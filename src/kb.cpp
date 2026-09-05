@@ -5618,11 +5618,11 @@ void extended_dialog(const char* text,
 VA(0x004f79b0, 0x25)  // decorated identity + map-extents arithmetic
 unsigned short GetMapExtra(int x, int y, int z)
 {
-    return gMapExtra[(z * gMapHeight + y) * gMapWidth + x];
+    return gMapExtra[(z * MAP_HEIGHT + y) * MAP_WIDTH + x];
 }
 
 VA(0x004f79e0, 0x24)  // decorated identity + map-extents arithmetic
 unsigned short* GetMapExtraPtr(int x, int y, int z)
 {
-    return &gMapExtra[(z * gMapHeight + y) * gMapWidth + x];
+    return &gMapExtra[(z * MAP_HEIGHT + y) * MAP_WIDTH + x];
 }

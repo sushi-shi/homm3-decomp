@@ -963,8 +963,8 @@ long find_magus_hut_value(long player_id, unsigned char explore_mode)
     long value = 0;
     type_point point;
     for (point.z = 0; point.z < gpGame->worldMap.HasTwoLevels + 1; point.z++) {
-        for (point.x = 0; point.x < gMapWidth; point.x++) {
-            for (point.y = 0; point.y < gMapHeight; point.y++) {
+        for (point.x = 0; point.x < MAP_WIDTH; point.x++) {
+            for (point.y = 0; point.y < MAP_HEIGHT; point.y++) {
                 NewmapCell* cell = gpGame->get_cell(point);
                 if (cell->type == EYE_OF_MAGI && cell->is_trigger)
                     value += AI_value_of_observatory(point, player_id, 10);
@@ -3872,7 +3872,7 @@ static __forceinline void mark_strategic_map(
     unsigned char was_trigger;
     short top_y;
     type_point pt;
-    long level_size = gMapWidth * gMapHeight;
+    long level_size = MAP_WIDTH * MAP_HEIGHT;
 
     for (short i = 0; i < destinations.size(); ++i) {
         point = destinations[i];
@@ -3881,7 +3881,7 @@ static __forceinline void mark_strategic_map(
         if (!(GetMapExtra(point.point.x, point.point.y, point.point.z)
               & gUnnamed69ccc4)) {
             strategic_map[point.point.z * level_size
-                          + point.point.y * gMapWidth + point.point.x]
+                          + point.point.y * MAP_WIDTH + point.point.x]
                 += point.value;
             continue;
         }
@@ -3892,8 +3892,8 @@ static __forceinline void mark_strategic_map(
 
         rect.left = max(0L, static_cast<long>(point.point.x) - 5);
         rect.top = max(0L, static_cast<long>(point.point.y) - 5);
-        rect.right = min(static_cast<long>(point.point.x) + 6, gMapWidth);
-        rect.bottom = min(static_cast<long>(point.point.y) + 6, gMapHeight);
+        rect.right = min(static_cast<long>(point.point.x) + 6, MAP_WIDTH);
+        rect.bottom = min(static_cast<long>(point.point.y) + 6, MAP_HEIGHT);
         search_array.set_rectangle(rect);
         gpAdvManager->advWindow->animate_bottom_view(0);
         // mark_strategic_map -> type_point::type_point(-1,-1,-1): both the
@@ -3914,9 +3914,9 @@ static __forceinline void mark_strategic_map(
             top_x = max(0L, static_cast<long>(point.point.x) - 1);
             top_y = max(0L, static_cast<long>(point.point.y) - 1);
             short stop_x = min(static_cast<long>(point.point.x) + 2,
-                               gMapWidth);
+                               MAP_WIDTH);
             short stop_y = min(static_cast<long>(point.point.y) + 2,
-                               gMapHeight);
+                               MAP_HEIGHT);
             pt.z = point.point.z;
             nearby_cost = 0;
             for (pt.x = top_x; pt.x < stop_x; ++pt.x) {
@@ -3938,7 +3938,7 @@ static __forceinline void mark_strategic_map(
                     / (visited->cost - nearby_cost + 300);
             }
             strategic_map[visited->point.z * level_size
-                          + visited->point.y * gMapWidth + visited->point.x]
+                          + visited->point.y * MAP_WIDTH + visited->point.x]
                 += value;
         }
     }
@@ -4083,7 +4083,7 @@ int AI_choose_destination(hero* current_hero, long max_distance,
     HeroDestination point;
     long best_distance;
 
-    long map_cells = gpGame->GetNumMapLevels() * gMapWidth * gMapHeight;
+    long map_cells = gpGame->GetNumMapLevels() * MAP_WIDTH * MAP_HEIGHT;
     raw_value = find_all_destinations(current_hero, gpSearchArray,
                                       &destinations, max_distance, 0,
                                       allow_spells, explore_mode);
@@ -4410,9 +4410,9 @@ static void check_holy_grail(
                         destination.point)) {
                     destination.move_cost = guess_cell->cost;
                     unsigned short friendly_cost = friendly_distances[
-                        (destination.point.z * gMapHeight
+                        (destination.point.z * MAP_HEIGHT
                          + destination.point.y)
-                            * gMapWidth
+                            * MAP_WIDTH
                         + destination.point.x];
                     if (destination.move_cost <= friendly_cost) {
                         if (gpGame->mapHeader.victoryCondition.Type
@@ -4452,7 +4452,7 @@ long find_all_destinations(hero* current_hero, searchArray* search_array,
     unsigned char protecting_town;
     long level_size;
 
-    level_size = gMapWidth * gMapHeight;
+    level_size = MAP_WIDTH * MAP_HEIGHT;
     int level_cells = gpGame->worldMap.GetNumLevels() * level_size;
     unsigned short* friendly_distances = new unsigned short[level_cells];
     memset(friendly_distances, -1, level_cells * sizeof(unsigned short));
@@ -4518,7 +4518,7 @@ long find_all_destinations(hero* current_hero, searchArray* search_array,
 
         if (gUnnamed693718[map_cell->type]
             && point.move_cost > friendly_distances[
-                point.point.z * level_size + point.point.y * gMapWidth
+                point.point.z * level_size + point.point.y * MAP_WIDTH
                 + point.point.x])
             continue;
         point.move_cost = cell->adjusted_cost;
@@ -4588,7 +4588,7 @@ long mark_destinations(hero* current_hero, long max_distance,
                        unsigned short* friendly_distances,
                        type_search_type search_type)
 {
-    int map_cells = gMapHeight * gMapWidth;
+    int map_cells = MAP_HEIGHT * MAP_WIDTH;
     searchArray friendly_search;
     long move_points = current_hero->movePoints;
     long hero_danger;
@@ -4649,7 +4649,7 @@ long mark_destinations(hero* current_hero, long max_distance,
             pathCell* visited = friendly_search.visited_points[j];
             if (current_hero->is_in_patrol_radius(visited->point)) {
                 int index = visited->point.z * map_cells
-                    + visited->point.y * gMapWidth + visited->point.x;
+                    + visited->point.y * MAP_WIDTH + visited->point.x;
                 unsigned short cost = visited->cost + extra_cost;
                 if (cost < friendly_distances[index])
                     friendly_distances[index] = cost;
@@ -5665,9 +5665,9 @@ long AI_value_of_observatory(type_point origin, long player_id, long range)
     double distance = static_cast<double>(range) + 0.5;
     RECT rect;
     rect.left = max(static_cast<long>(origin.x) - range, 0);
-    rect.right = min(static_cast<long>(origin.x) + range + 1, gMapWidth);
+    rect.right = min(static_cast<long>(origin.x) + range + 1, MAP_WIDTH);
     rect.top = max(static_cast<long>(origin.y) - range, 0);
-    rect.bottom = min(static_cast<long>(origin.y) + range + 1, gMapHeight);
+    rect.bottom = min(static_cast<long>(origin.y) + range + 1, MAP_HEIGHT);
     point.z = origin.z;
 
     for (point.y = static_cast<short>(rect.top); point.y < rect.bottom;

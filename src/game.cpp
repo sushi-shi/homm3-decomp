@@ -3293,8 +3293,8 @@ void game::setup_shipyards()
     for (location.z = 0;
          location.z < gpGame->worldMap.GetNumLevels();
          ++location.z) {
-        for (location.y = 0; location.y < gMapWidth; ++location.y) {
-            for (location.x = 0; location.x < gMapHeight; ++location.x) {
+        for (location.y = 0; location.y < MAP_WIDTH; ++location.y) {
+            for (location.x = 0; location.x < MAP_HEIGHT; ++location.x) {
                 NewmapCell* mapCell = gpGame->worldMap.cell(location);
 
                 if (mapCell->type == HERO) {
@@ -3450,7 +3450,7 @@ int game::GetSaveGameHeaders(void* infile)
 //   * the four-byte slot game::Save writes as a literal zero is read into
 //     a stack dword and never looked at;
 //   * the gMapExtra plane, `(gpGame->worldMap.HasTwoLevels + 1) *
-//     gMapWidth * gMapHeight * 2`, read through the GLOBAL gpGame.
+//     MAP_WIDTH * MAP_HEIGHT * 2`, read through the GLOBAL gpGame.
 // The twelve scalar reads also needed game::Save's FOUR temps rather than
 // one char and one short, and the event-record payload size has to be
 // recomputed rather than cached in a local.
@@ -3596,8 +3596,8 @@ int game::Load(TAbstractFile* infile)
     unsigned char poolBits[1];
 
     clear_event_records();
-    gMapWidth = mapHeader.Size;
-    gMapHeight = mapHeader.Size;
+    MAP_WIDTH = mapHeader.Size;
+    MAP_HEIGHT = mapHeader.Size;
     gpSearchArray->Close();
 
     if (saved.version >= 41) {
@@ -3849,7 +3849,7 @@ int game::Load(TAbstractFile* infile)
     // read through the GLOBAL gpGame rather than this->worldMap, and the
     // *2 applied LAST (retail's `lea edi,[eax+eax]` follows both imuls).
     unsigned int mapExtraBytes =
-        (gpGame->worldMap.HasTwoLevels + 1) * gMapWidth * gMapHeight *
+        (gpGame->worldMap.HasTwoLevels + 1) * MAP_WIDTH * MAP_HEIGHT *
         sizeof(unsigned short);
     if (infile->Read(gMapExtra, mapExtraBytes) < mapExtraBytes)
         return -1;
@@ -4065,7 +4065,7 @@ int SGameSetupOptions::load(TAbstractFile* infile, int saveVersion)
 // writes (0x1f644 asking 0x20 but accepting 8, 0x1f664 0x1c,
 // globalInfoFlags 0x20, borderTentVisitFlags 8, cartographerMask 6,
 // cartographerFlags 3), a four-byte literal zero, a gMapExtra payload
-// of 2*(worldMap.HasTwoLevels+1)*gMapWidth*gMapHeight bytes, then
+// of 2*(worldMap.HasTwoLevels+1)*MAP_WIDTH*MAP_HEIGHT bytes, then
 // universities via save_vector<type_university> (0x4d2b20),
 // creatureBanks via save_object_vector (0x4d2b80) and
 // game::save_recorded_events (0x49dc60).
@@ -4506,7 +4506,7 @@ int game::Save(TAbstractFile* outfile)
     // `lea edi,[eax+eax]` follows both imuls. The count is computed once
     // into one local because a virtual call sits between its two uses.
     unsigned int mapExtraBytes =
-        (gpGame->worldMap.HasTwoLevels + 1) * gMapWidth * gMapHeight *
+        (gpGame->worldMap.HasTwoLevels + 1) * MAP_WIDTH * MAP_HEIGHT *
         sizeof(unsigned short);
     if (outfile->Write(gMapExtra, mapExtraBytes) < mapExtraBytes)
         return -1;
@@ -5524,8 +5524,8 @@ void game::RandomizeHolyGrail()
     if (ultimateArtifactX == -1) {
         if (field_4e3e8 <= 0)
             return;
-        ultimateArtifactX = gMapWidth / 2;
-        ultimateArtifactY = gMapHeight / 2;
+        ultimateArtifactX = MAP_WIDTH / 2;
+        ultimateArtifactY = MAP_HEIGHT / 2;
         ultimateArtifactZ = Random(1, worldMap.GetNumLevels()) - 1;
         field_1f695 = 0x7f;
     }
@@ -5538,12 +5538,12 @@ void game::RandomizeHolyGrail()
 
     if (ultimateXLow < 10)
         ultimateXLow = 10;
-    if (ultimateXHigh > gMapWidth - 10)
-        ultimateXHigh = gMapWidth - 10;
+    if (ultimateXHigh > MAP_WIDTH - 10)
+        ultimateXHigh = MAP_WIDTH - 10;
     if (ultimateYLow < 9)
         ultimateYLow = 9;
-    if (ultimateYHigh > gMapWidth - 9)
-        ultimateYHigh = gMapWidth - 9;
+    if (ultimateYHigh > MAP_WIDTH - 9)
+        ultimateYHigh = MAP_WIDTH - 9;
 
     for (int z = 0; z < worldMap.GetNumLevels(); ++z) {
         for (int x = ultimateXLow; x <= ultimateXHigh; ++x) {
@@ -5592,8 +5592,8 @@ void game::InitRandomArtifacts()
     int x;
     int y;
     for (z = 0; z < worldMap.GetNumLevels(); ++z) {
-        for (x = 0; x < gMapWidth; ++x) {
-            for (y = 0; y < gMapHeight; ++y) {
+        for (x = 0; x < MAP_WIDTH; ++x) {
+            for (y = 0; y < MAP_HEIGHT; ++y) {
                 NewmapCell* tempCell = worldMap.cell(x, y, z);
                 if (tempCell->type == ARTIFACT && tempCell->is_trigger)
                     artifactUsed[tempCell->objectIndex] = 1;
@@ -5884,8 +5884,8 @@ void game::RandomizeEvents()
     const unsigned long poolIndexBits = 0x03ffe000;
 
     for (z = 0; z < worldMap.GetNumLevels(); ++z) {
-        for (y = 0; y < gMapHeight; ++y) {
-            for (x = 0; x < gMapWidth; ++x) {
+        for (y = 0; y < MAP_HEIGHT; ++y) {
+            for (x = 0; x < MAP_WIDTH; ++x) {
                 tempCell = worldMap.cell(x, y, z);
                 if (!tempCell->is_trigger)
                     continue;
@@ -6488,8 +6488,8 @@ bool game::LoadMap(TAbstractFile* mapFile)
 
     apply_map_header_availability();
     int mapSize = mapHeader.Size;
-    gMapWidth = mapSize;
-    gMapHeight = mapSize;
+    MAP_WIDTH = mapSize;
+    MAP_HEIGHT = mapSize;
     gpSearchArray->Close();
 
     if (f_1f698 < 1)
@@ -8514,11 +8514,11 @@ void game::ClaimTown(int townId, int newPlayerOwner, unsigned char bIsRemoteMove
                                       thisTown->mapZ, newPlayerOwner,
                                       20, 0);
             if (thisTown->HasBuilding(HOLY_GRAIL_ID, 0)) {
-                gpGame->SetVisibility(gMapWidth / 2, gMapHeight / 2, 0,
-                                      newPlayerOwner, gMapWidth, 0);
+                gpGame->SetVisibility(MAP_WIDTH / 2, MAP_HEIGHT / 2, 0,
+                                      newPlayerOwner, MAP_WIDTH, 0);
                 if (gpGame->worldMap.HasTwoLevels + 1 > 1)
-                    gpGame->SetVisibility(gMapWidth / 2, gMapHeight / 2, 1,
-                                          newPlayerOwner, gMapWidth, 0);
+                    gpGame->SetVisibility(MAP_WIDTH / 2, MAP_HEIGHT / 2, 1,
+                                          newPlayerOwner, MAP_WIDTH, 0);
             }
         }
     }
@@ -9401,11 +9401,11 @@ void game::ResetAllPlayerVisibility()
             if (field_1f63e == 1 && field_1f640 == 1 && field_1f642 == 1
                 && towns[i].type == TOWN_TOWER
                 && towns[i].HasBuilding(HOLY_GRAIL_ID, 0)) {
-                SetVisibility(gMapWidth / 2, gMapHeight / 2, 0,
-                              towns[i].owner, gMapWidth, 0);
+                SetVisibility(MAP_WIDTH / 2, MAP_HEIGHT / 2, 0,
+                              towns[i].owner, MAP_WIDTH, 0);
                 if (worldMap.GetNumLevels() > 1) {
-                    SetVisibility(gMapWidth / 2, gMapHeight / 2, 1,
-                                  towns[i].owner, gMapWidth, 0);
+                    SetVisibility(MAP_WIDTH / 2, MAP_HEIGHT / 2, 1,
+                                  towns[i].owner, MAP_WIDTH, 0);
                 }
             }
         }
@@ -9435,8 +9435,8 @@ void game::ResetAllPlayerVisibility()
     }
 
     for (int z = 0; z < gpGame->worldMap.GetNumLevels(); ++z) {
-        for (int y = 0; y < gMapHeight; ++y) {
-            for (int x = 0; x < gMapWidth; ++x) {
+        for (int y = 0; y < MAP_HEIGHT; ++y) {
+            for (int x = 0; x < MAP_WIDTH; ++x) {
                 NewmapCell* tempCell = gpGame->worldMap.cell(x, y, z);
                 ShipyardInfo* shipyardInfo = static_cast<ShipyardInfo*>(
                     static_cast<void*>(&tempCell->extraInfo));
@@ -9793,9 +9793,9 @@ void game::PerWeek()
 
     for (z = 0; z < worldMap.GetNumLevels(); ++z) {
         y = 0;
-        if (gMapHeight > 0) {
+        if (MAP_HEIGHT > 0) {
             do {
-                for (x = 0; x < gMapWidth; ++x) {
+                for (x = 0; x < MAP_WIDTH; ++x) {
                 map_cell = worldMap.cell(x, y, z);
                 if (!map_cell->is_trigger)
                     continue;
@@ -9885,7 +9885,7 @@ void game::PerWeek()
                     obscuring_hero->obscure_cell();
                 }
                 ++y;
-            } while (y < gMapHeight);
+            } while (y < MAP_HEIGHT);
         }
     }
 
@@ -9993,8 +9993,8 @@ void game::PerMonth()
 
     if (giMonthTypeExtra == MONTH_EFFECT_CREATURE) {
         for (z = 0; z < worldMap.GetNumLevels(); ++z) {
-            for (y = 0; y < gMapWidth; ++y) {
-                for (x = 0; x < gMapHeight; ++x) {
+            for (y = 0; y < MAP_WIDTH; ++y) {
+                for (x = 0; x < MAP_HEIGHT; ++x) {
                     tempCell = worldMap.cell(x, y, z);
                     if (!tempCell->is_trigger
                         && tempCell->Passable
@@ -10426,10 +10426,10 @@ void game::ConvertObject(NewmapCell* tempCell)
         ResourceManager::GetSprite(newType->ImageName.c_str()));
 
     for (int iy = 0; iy < newType->height; iy++) {
-        if (object->y - iy < 0 || object->y - iy >= gMapHeight)
+        if (object->y - iy < 0 || object->y - iy >= MAP_HEIGHT)
             continue;
         for (int ix = 0; ix < newType->width; ix++) {
-            if (object->x - ix < 0 || object->x - ix >= gMapWidth)
+            if (object->x - ix < 0 || object->x - ix >= MAP_WIDTH)
                 continue;
             NewmapCell* cell = worldMap.cell(object->x - ix,
                                              object->y - iy, object->z);
@@ -10463,7 +10463,7 @@ void game::ConvertObject(NewmapCell* tempCell)
 //
 // The three loop bounds are all RE-READ every iteration in retail:
 // `worldMap.HasTwoLevels + 1` is recomputed with movzx/inc at the z
-// increment, gMapHeight is reloaded at the y increment and gMapWidth at
+// increment, MAP_HEIGHT is reloaded at the y increment and MAP_WIDTH at
 // the x increment. None of the three may be hoisted into a local, and
 // the level count is spelled inline rather than through
 // NewfullMap::GetNumLevels (no call is emitted).
@@ -10483,8 +10483,8 @@ void game::ProcessRandomObjects()
     NewmapCell* tempCell;
 
     for (z = 0; z < worldMap.HasTwoLevels + 1; ++z) {
-        for (y = 0; y < gMapHeight; ++y) {
-            for (x = 0; x < gMapWidth; ++x) {
+        for (y = 0; y < MAP_HEIGHT; ++y) {
+            for (x = 0; x < MAP_WIDTH; ++x) {
                 tempCell = worldMap.cell(x, y, z);
                 if (!tempCell->is_trigger)
                     continue;
@@ -10647,8 +10647,8 @@ void game::MakeTerrainVisible(int whichPlayer, unsigned short visMask)
 
     unsigned short playerMask = players;
     for (int z = 0; z < worldMap.HasTwoLevels + 1; ++z) {
-        for (int x = 0; x < gMapWidth; ++x) {
-            for (int y = 0; y < gMapHeight; ++y) {
+        for (int x = 0; x < MAP_WIDTH; ++x) {
+            for (int y = 0; y < MAP_HEIGHT; ++y) {
                 unsigned int mask = visMask;
                 NewmapCell* cell = &worldMap.cellData[
                     (z * worldMap.Size + y) * worldMap.Size + x];
@@ -10765,8 +10765,8 @@ void game::SetupAdjacentMons()
     unsigned short mask = ~MAP_EXTRA_MONSTER;
 
     for (z = 0; z < worldMap.GetNumLevels(); ++z) {
-        for (x = 0; x < gMapWidth; ++x) {
-            for (y = 0; y < gMapHeight; ++y) {
+        for (x = 0; x < MAP_WIDTH; ++x) {
+            for (y = 0; y < MAP_HEIGHT; ++y) {
                 if (gpAdvManager->FindAdjacentMonster(
                         type_point(x, y, z), &monster, excluded)) {
                     unsigned short* extraByte = GetMapExtraPtr(x, y, z);
@@ -11122,8 +11122,8 @@ void game::ProcessOnMapTowns()
         numMapLayers = 2;
 
     for (z = 0; z < numMapLayers; ++z) {
-        for (y = 0; y < gMapHeight; ++y) {
-            for (x = 0; x < gMapWidth; ++x) {
+        for (y = 0; y < MAP_HEIGHT; ++y) {
+            for (x = 0; x < MAP_WIDTH; ++x) {
                 tempCell = worldMap.cell(x, y, z);
                 if ((tempCell->type == TOWN
                      || tempCell->type == RANDOM_TOWN)
@@ -12075,8 +12075,8 @@ int game::GetNumThievesGuilds(int iWhichPlayer)
 VA(0x004ccef0, 0x23)  // anchor-callee (searchArray::Close) + arity, dc 0xb9b24
 void game::SetMapSize(int width, int height)
 {
-    gMapWidth = width;
-    gMapHeight = height;
+    MAP_WIDTH = width;
+    MAP_HEIGHT = height;
     gpSearchArray->Close();
 }
 

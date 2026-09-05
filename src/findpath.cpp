@@ -42,7 +42,7 @@ inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
 VA(0x004b1330, 0x3B)  // anchor-callee, dc 0x9ed40
 unsigned char type_point::is_valid()
 {
-    return x >= 0 && x < gMapWidth && y >= 0 && y < gMapHeight;
+    return x >= 0 && x < MAP_WIDTH && y >= 0 && y < MAP_HEIGHT;
 }
 
 // E:\gamedcs\findpath.cpp:45
@@ -89,7 +89,7 @@ searchArray::~searchArray()
 
 // E:\gamedcs\findpath.cpp:71
 // The cell map is sized for BOTH world levels at once and doubled -
-// (HasTwoLevels + 1) * gMapHeight * gMapWidth * 2 records of thirty
+// (HasTwoLevels + 1) * MAP_HEIGHT * MAP_WIDTH * 2 records of thirty
 // bytes - which is what makes the 30-byte stride visible in the
 // allocation itself (`lea x3, lea x5, shl 1`). The moat map is a flat
 // 187-byte combat grid.
@@ -103,11 +103,11 @@ void searchArray::Init()
     cellData = 0;
     bIsMoatSlowed = 0;
     valid_left = 0;
-    valid_right = gMapWidth;
+    valid_right = MAP_WIDTH;
     valid_top = 0;
-    valid_bottom = gMapHeight;
-    cellData = new pathCell[(gpGame->worldMap.HasTwoLevels + 1) * gMapHeight
-            * gMapWidth * 2];
+    valid_bottom = MAP_HEIGHT;
+    cellData = new pathCell[(gpGame->worldMap.HasTwoLevels + 1) * MAP_HEIGHT
+            * MAP_WIDTH * 2];
     bIsMoatSlowed = new unsigned char[187];
 }
 
@@ -199,8 +199,8 @@ void searchArray::Clear(long fly_level, long start_z, long stop_z)
                 pathCell* row = cellData;
                 if (row != 0) {
                     unsigned char plane = fly != 0;
-                    row += ((point.z * 2 + plane) * gMapHeight
-                            + point.y) * gMapWidth + point.x;
+                    row += ((point.z * 2 + plane) * MAP_HEIGHT
+                            + point.y) * MAP_WIDTH + point.x;
                 }
                 memset(row, 0, width * sizeof(pathCell));
             }

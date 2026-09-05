@@ -1645,11 +1645,11 @@ void CObject::FindTrigger(int& result_x, int& result_y) const
 
     CObjectType* ObjType = &gpGame->worldMap.objectTypes[typeIndex];
     for (int Vert = 0; Vert < ObjType->height; ++Vert) {
-        if (y - Vert < 0 || y - Vert >= gMapHeight)
+        if (y - Vert < 0 || y - Vert >= MAP_HEIGHT)
             continue;
 
         for (int Horiz = 0; Horiz < ObjType->width; ++Horiz) {
-            if (x - Horiz < 0 || x - Horiz >= gMapWidth)
+            if (x - Horiz < 0 || x - Horiz >= MAP_WIDTH)
                 continue;
 
             if (ObjType->triggerCells[47 - Vert * 8 - Horiz]) {
@@ -2728,8 +2728,8 @@ void NewfullMap::LoadShipyards()
     type_point newPoint;
 
     for (int z = 0; z < HasTwoLevels + 1; ++z) {
-        for (int y = 0; y < gMapHeight; ++y) {
-            for (int x = 0; x < gMapWidth; ++x) {
+        for (int y = 0; y < MAP_HEIGHT; ++y) {
+            for (int x = 0; x < MAP_WIDTH; ++x) {
                 NewmapCell* cell = &cellData[(z * Size + y) * Size + x];
                 if (!cell->is_trigger || cell->type != SHIPYARD)
                     continue;
@@ -2748,7 +2748,7 @@ void NewfullMap::LoadShipyards()
                         && (!boatCell->is_trigger
                             || boatCell->type == BOAT)) {
                         for (int checkX = x - 1; checkX <= x + 1; ++checkX) {
-                            if (checkX < 0 || checkX >= gMapWidth)
+                            if (checkX < 0 || checkX >= MAP_WIDTH)
                                 continue;
                             NewmapCell* shipyardCell =
                                 &cellData[(z * Size + y) * Size + checkX];
@@ -5134,7 +5134,7 @@ void NewfullMap::GenerateHeightMap(const CObject* object,
 // footprint test: both objects' extents become RECTs anchored at their
 // bottom-right tile (left = x - width + 1, right = x + 1, likewise for y),
 // intersected with IntersectRect and clamped to the world with
-// gMapWidth/gMapHeight.  Every cell of that overlap is then looked up in its
+// MAP_WIDTH/MAP_HEIGHT.  Every cell of that overlap is then looked up in its
 // OWN draw list - by a linear scan bounded by nothing but the match, which is
 // retail's and not a transcription slip - and if the cell already sitting
 // there is above this object's height map at the corresponding grid position,
@@ -5336,10 +5336,10 @@ void NewfullMap::StampObject(NewmapCell* thisCell,
                 overlap.left = 0;
             if (overlap.top < 0)
                 overlap.top = 0;
-            if (overlap.right > gMapWidth)
-                overlap.right = gMapWidth;
-            if (overlap.bottom > gMapHeight)
-                overlap.bottom = gMapHeight;
+            if (overlap.right > MAP_WIDTH)
+                overlap.right = MAP_WIDTH;
+            if (overlap.bottom > MAP_HEIGHT)
+                overlap.bottom = MAP_HEIGHT;
 
             for (int x = overlap.left; x < overlap.right; ++x) {
                 int objectY = newObject->y;
@@ -5565,7 +5565,7 @@ void NewfullMap::CalculateCellExtra(NewmapCell* thisCell, unsigned char bSetExtr
 //
 // The two bounds tests are not the same test twice: the x test guards the
 // whole inner loop (it `continue`s the OUTER one) while the y test guards a
-// single cell.  Both compare against the world extents gMapWidth/gMapHeight
+// single cell.  Both compare against the world extents MAP_WIDTH/MAP_HEIGHT
 // that game::SetMapSize writes.
 //
 // The offsets byte is packed in EIGHT-BIT arithmetic - `mov cl,bl / shl cl,4 /
@@ -5588,11 +5588,11 @@ int NewfullMap::PlaceObject(int objectIndex, unsigned char setExtraInfo)
         gpGame->worldMap.objectTypes[object->typeIndex].objectType;
 
     for (int col = 0; col < objectType->width; ++col) {
-        if (object->x - col < 0 || object->x - col >= gMapWidth)
+        if (object->x - col < 0 || object->x - col >= MAP_WIDTH)
             continue;
 
         for (int row = 0; row < objectType->height; ++row) {
-            if (object->y - row < 0 || object->y - row >= gMapHeight)
+            if (object->y - row < 0 || object->y - row >= MAP_HEIGHT)
                 continue;
 
             // The row-major lookup is expanded here rather than routed
