@@ -773,7 +773,7 @@ void TCampaignBrief::CampaignHeaderStruct::StartScenario(
 
 // E:\gamedcs\CustomCampaign.h:199 (dc 0xbcd90, a Dreamcast header inline
 // attributed to game.obj); retail keeps one out-of-line copy here, which
-// TCampaignWindow's constructor calls through the SCampaignCtorView proxy.
+// TCampaignWindow's constructor calls for its `SCampaign()` temporary.
 // The five containers default-construct; the body sets the scalar state
 // and clears the completion table.
 VA(0x00489500, 0x88)  // TCampaignWindow ctor callee + member stores, dc 0xbcd90
