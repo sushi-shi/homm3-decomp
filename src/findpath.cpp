@@ -2080,3 +2080,10 @@ pathCell* std::__copy_backward(pathCell* __first, pathCell* __last, pathCell* __
 // COMDAT pairing: vector<pathCell>::insert, agreement 0.987
 // (307 base vs 299 retail instructions).
 VA_COMPGEN(0x004b3f70, 0x2F3, VECTOR_INSERT, pathCell)
+
+// COMDAT pairing: std::copy<pathCell*>. Two symbols in this object matched
+// 0xb4270 - this and vector<pathCell>::_Ucopy - and the ARITY separates them:
+// _Ucopy is a thiscall with three stack arguments and must end `ret 0xc`,
+// while the free /Gr copy takes first and last in ecx/edx and only the
+// destination on the stack. Retail ends `ret 4`.
+VA_COMPGEN(0x004b4270, 0x35, STD_COPY, pathCell)

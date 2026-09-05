@@ -987,6 +987,11 @@ def _demangle_key(mangled: str):
     if (mangled.startswith("?_Insertion_sort_1@std@@")
             and "TSpellbookEntry" in mangled):
         return "tspellbookentry@insertion_sort_1"
+    # combatManager::TObstacleVector is a HAND-MODELLED container whose
+    # members VC6 emits like any other; key it onto the vector family so
+    # the claim reads with its siblings instead of needing a new kind.
+    if mangled.startswith("?_Ucopy@TObstacleVector@combatManager@@"):
+        return "tobstaclevector@vector_ucopy"
     algorithm_key = _std_algorithm_key(mangled)
     if algorithm_key:
         return algorithm_key

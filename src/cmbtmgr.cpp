@@ -5520,3 +5520,7 @@ void std::__destroy_aux()
 }
 
 #endif  // @carcass
+
+// COMDAT pairing: combatManager::TObstacleVector::_Ucopy - the hand-modelled
+// obstacle container's uninitialised copy, `ret 0xc` for its three pointers.
+VA_COMPGEN(0x0046b1a0, 0x3B, VECTOR_UCOPY, tobstaclevector)
