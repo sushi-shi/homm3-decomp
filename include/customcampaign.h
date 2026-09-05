@@ -284,6 +284,10 @@ enum ECampaignBonusType {
 // vector at +0x70 and a five-dword bit block at +0x90).
 class TCampaignStartOption {
 public:
+    // 0x484f40, an out-of-line definition every derived construction
+    // inlines: the linker keeps the unreferenced plain body (only COMDATs
+    // are /OPT:REF'd), which is why the image carries a copy nothing calls.
+    TCampaignStartOption();
     // 0x484f50 is the root's `??_G`, and it restores the vptr INLINE with
     // no call - so the base destructor itself is trivial.
     virtual ~TCampaignStartOption() {}
@@ -329,6 +333,81 @@ public:
     std::vector<TCampaignBonus*> m_bonuses;
 };
 SIZE(TCampaignStartBonusOption, 0x18);
+
+// The scenario's OTHER two starting-options records, both 0x14 bytes and
+// both one std::vector at +4 behind the shared 13-slot base. The type byte
+// ScenarioStruct::Read switches on picks between the three: 1 is the bonus
+// list above, 2 the crossover-hero choices and 3 the starting-hero choices.
+// NAMES ARE ROLE INVENTIONS - customcampaign.obj has no Dreamcast twin and
+// no RTTI descriptor names either class - but the ROLES are byte-proven off
+// the icon getters: the crossover option's icon is the large portrait of
+// the first hero in gpGame->campaign.carryOverHeroes[mapScores[s].index]
+// (0x4854c0) and the starting-hero option's is akHeroTraits[hero]'s own
+// (0x485a60). Both answer slot 1 with the shared `mov al,1; ret 4` at
+// 0x485a30, slot 4 with the program-wide `xor eax,eax; ret 4` at 0x4ec560
+// and slots 10/11 with the `ret 4` at 0x485d80 - three /OPT:ICF folds, so
+// only one copy of each is claimed anywhere in the tree.
+
+// One crossover choice: the player position the carry-over pool is handed
+// to, and the scenario whose mapScores row names that pool. Both are one
+// byte in the file and every consumer sign-extends them (`movsx`).
+struct TCampaignCrossoverChoice {
+    signed char player;
+    signed char scenario;
+};
+
+// Vftable 0x63dad8. Its implicit constructor is inlined at ScenarioStruct::
+// Read's `new` site, so no declarator is needed here.
+class TCampaignStartCrossoverOption : public TCampaignStartOption {
+public:
+    virtual ~TCampaignStartCrossoverOption();
+    virtual bool IsBuildingBonus(int which) const;
+    virtual int GetCount() const;
+    virtual const char* GetIconDefName(void* campaign, int which) const;
+    virtual int GetIconIndex(int which) const { return 0; }
+    virtual int _slot5(void* scenario, int which) const;
+    virtual std::string GetText(void* campaign, int which) const;
+    virtual int GetPlayer(int which) const;
+    virtual void Read(TAbstractFile* file);
+    virtual void Apply(void* scenario) {}
+    virtual void SetTown(CMapHeaderData* header) {}
+    virtual bool _slot12(void* scenario, int value) const;
+
+    std::vector<TCampaignCrossoverChoice> m_choices;
+};
+SIZE(TCampaignStartCrossoverOption, 0x14);
+
+// One starting-hero choice: the player position and the hero id, both read
+// as a signed byte and a signed word but held as ints - GetPlayer reads the
+// element at stride 8 and slot 7 the dword behind it.
+struct TCampaignHeroChoice {
+    int player;
+    int hero;
+};
+
+// Vftable 0x63db0c. This one DOES have a user-declared constructor: retail
+// emits it out of line at 0x4883d0 and calls it from ScenarioStruct::Read,
+// where the two sibling options inline their implicit ones. It is the only
+// option that overrides slot 7 (0x485d60), and it inherits the base's slot
+// 5 and slot 12 unchanged.
+class TCampaignStartHeroOption : public TCampaignStartOption {
+public:
+    TCampaignStartHeroOption();
+    virtual ~TCampaignStartHeroOption();
+    virtual bool IsBuildingBonus(int which) const;
+    virtual int GetCount() const;
+    virtual const char* GetIconDefName(void* campaign, int which) const;
+    virtual int GetIconIndex(int which) const { return 0; }
+    virtual std::string GetText(void* campaign, int which) const;
+    virtual int _slot7(int which) const;
+    virtual int GetPlayer(int which) const;
+    virtual void Read(TAbstractFile* file);
+    virtual void Apply(void* scenario) {}
+    virtual void SetTown(CMapHeaderData* header) {}
+
+    std::vector<TCampaignHeroChoice> m_choices;
+};
+SIZE(TCampaignStartHeroOption, 0x14);
 
 // The building bonus's two per-town tables, both indexed with the town
 // as the outer row: 0x6755b8 gives the icon .def name for each of a
