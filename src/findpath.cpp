@@ -2087,3 +2087,8 @@ VA_COMPGEN(0x004b3f70, 0x2F3, VECTOR_INSERT, pathCell)
 // while the free /Gr copy takes first and last in ecx/edx and only the
 // destination on the stack. Retail ends `ret 4`.
 VA_COMPGEN(0x004b4270, 0x35, STD_COPY, pathCell)
+
+// COMDAT pairing: vector<pathCell>::_Ufill, agreement 1.000. The object
+// emits two _Ufill instantiations for this element (51 B and 38 B); only the
+// 51-byte one has the carve extent.
+VA_COMPGEN(0x00434c30, 0x33, VECTOR_UFILL, pathCell)

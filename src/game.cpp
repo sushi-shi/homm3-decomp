@@ -18694,3 +18694,8 @@ VA_COMPGEN(0x0045fec0, 0x3A, SCALAR_DELETING_DTOR, vector)
 // reached from vector<hero>::operator=, PruneCrossoverHeroes and
 // vector<vector<hero>>::erase.
 VA_COMPGEN(0x0045ff00, 0x21, SCALAR_DELETING_DTOR, hero)
+
+// COMDAT pairing: _Tree<int, pair<const int, type_map_hero_info>>::_Erase,
+// agreement 0.952 at an exactly equal 173-byte extent; this object is the
+// only one that instantiates the tree.
+VA_COMPGEN(0x0045c8b0, 0xAD, TREE_ERASE, type_map_hero_info)

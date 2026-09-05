@@ -1666,3 +1666,23 @@ VA_COMPGEN(0x004557a0, 0x5C, OSTREAMBUF_ITERATOR_ASSIGN, char)
 // mov [edx+ecx-4], const_2456e8 / ret` - which only a virtually-derived
 // stream class emits.
 VA_COMPGEN(0x00453a20, 0xF, IMPLICIT_DTOR, basic_ostream)
+
+// COMDAT pairing: basic_ostream<char>::operator<<(int), agreement 0.960 at
+// an exactly equal 568-byte extent - the MEMBER overload, distinct from the
+// free operator<<(const char*) already claimed elsewhere.
+VA_COMPGEN(0x00453a30, 0x238, OSTREAM_INSERT_INT, char)
+
+// COMDAT pairing: locale::id::operator size_t, agreement 0.905, and
+// locale::~locale, agreement 1.000. Both are 1:1 in this object.
+VA_COMPGEN(0x00453cf0, 0x32, LOCALE_ID_CAST, char)
+VA_COMPGEN(0x00453d70, 0x18, IMPLICIT_DTOR, locale)
+
+// COMDAT pairing: basic_streambuf<char>::seekoff and ::seekpos - the BASE
+// class defaults, both 40 bytes, distinct from basic_stringbuf's overrides
+// already claimed in resourcemanager. Agreements 1.000 and 1.000.
+VA_COMPGEN(0x00454200, 0x28, STREAMBUF_SEEKOFF, char)
+VA_COMPGEN(0x00454230, 0x28, STREAMBUF_SEEKPOS, char)
+
+// COMDAT pairing: basic_ostream<char>'s scalar deleting destructor,
+// agreement 0.944 - its 15-byte ??1 twin is already claimed at 0x453a20.
+VA_COMPGEN(0x00454280, 0x32, SCALAR_DELETING_DTOR, basic_ostream)
