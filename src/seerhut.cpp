@@ -449,6 +449,78 @@ void type_quest::Save(TAbstractFile* file)
     }
 }
 
+// The deadline suffix both base dialog getters below append when the quest
+// is dated. It is the only reader of the text row's LAST column: retail
+// takes it at `[row + 0x334]`, which is 51 * sizeof(std::string) plus the
+// _Ptr member, and - unlike every other row read in this file - WITHOUT a
+// quest_type() call, so the ternary on field_04/field_38 is spelled inline
+// with the 832-byte product duplicated into both arms, exactly as
+// quest_text()'s own note describes.
+//
+// The date is computed in SIXTEEN bits (`shl ax,2 / add ax / add dx`) and
+// sign-extended once into an int slot, which is what the short cast around
+// the whole expression produces; a `short` local would reload it with movsx
+// at the subtraction instead.
+// Residual (85.11%): a three-way register permutation (retail keeps the
+// zero AND the strlen result in EBX and the return pointer in ESI; we hoist
+// one `xor edi,edi` to the prologue and pay the whole rename downstream),
+// plus the four bytes that costs at [ebp-0x14] - retail materialises that
+// zero as an immediate. Diagnosed register-homing, reg-distance 90,
+// flow-distance 1. Tried and rejected: the row ternary written inline in
+// the format_string call (byte-flat to the digit) and `std::string text = " "`
+// in place of default-ctor-then-assign (73.94 - it moves the EH state store
+// but loses three blocks).
+// E:\gamedcs\seerhut.cpp
+VA(0x0056d040, 0x1F7)  // anchor-caller(both base dialog getters) + the row-column-51 read, retail-only
+std::string type_quest::get_time_limit_text()
+{
+    int days = static_cast<short>(
+        (gpGame->field_1f642 * 4 + gpGame->field_1f640 - 5) * 7
+        + gpGame->field_1f63e);
+    std::string text;
+    text = DATA_COMPGEN(0x00660330, questTimeLimitSeparator, " ");
+    const std::string* row =
+        field_04 ? gQuestTextA[field_38] : gQuestTextB[field_38];
+    text += format_string(row[QUEST_TEXT_TIME_LIMIT].c_str(),
+                          field_3c - days);
+    return text;
+}
+
+// The two base text getters, byte-for-byte twins apart from which member
+// they take: this one reads +0x18 (progressText) and its sibling below
+// reads +0x08 (proposalText). Both are `if (field_3c < 0) return member;`
+// with the dated arm as the FALL-THROUGH's else - retail's `jge` to the
+// concatenation fixes which arm the source wrote first.
+//
+// THE INVERTED NAME PAIR IS SETTLED (2026-09-05), and it is NOT these two
+// members: slot 12, LoadFromMap, reads the h3m quest record in file order -
+// deadline, then +0x08, +0x18, +0x28 - and the h3m record's own order is
+// firstVisitText, nextVisitText, completedText, so proposalText really is
+// +0x08. What is inverted is the SLOT pair: the slot that takes a hero
+// (slot 4, named DoProposalDialog) calls THIS getter and therefore shows
+// nextVisitText, i.e. it is the return-visit PROGRESS dialog, while the
+// hero-less slot 5 shows firstVisitText and is the PROPOSAL. The getter
+// names below inherit that inversion because they were assigned off the
+// slots. Flipping it renames slots 4/5 across forty leaf bodies and these
+// two declarations for no byte, so it stays recorded rather than done.
+// E:\gamedcs\seerhut.cpp
+VA(0x0056d240, 0xCA)  // anchor-caller(every leaf slot-4 dialog) + the +0x18 read, retail-only
+std::string type_quest::GetProposalDialogText()
+{
+    if (field_3c < 0)
+        return progressText;
+    return progressText + get_time_limit_text();
+}
+
+// E:\gamedcs\seerhut.cpp
+VA(0x0056d310, 0xCA)  // anchor-caller(every leaf slot-5 dialog) + the +0x08 read, retail-only
+std::string type_quest::GetProgressDialogText()
+{
+    if (field_3c < 0)
+        return proposalText;
+    return proposalText + get_time_limit_text();
+}
+
 // E:\gamedcs\seerhut.cpp
 VA(0x0056d3e0, 0x2A)  // anchor-vtable 0x641788 slot 6, retail-only
 std::string type_experience_quest::GetRequirementText()

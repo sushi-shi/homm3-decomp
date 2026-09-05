@@ -8,6 +8,8 @@
 #include "kb.h"
 #include "kbwin.h"
 #include "misc.h"
+#include "palette.h"
+#include "bitmap16.h"
 #include "mousemgr.h"
 #include "resourcemanager.h"
 #include "smackmgr.h"
@@ -34,6 +36,14 @@ DATA(0x006aacc0) IDirectDrawSurface* gpDDSBack;
 DATA(0x006aacd0) static IDirectDrawClipper* gpDDClipper;
 DATA(0x006aacb4) static int gWinGraphBusy;
 DATA(0x006aacd4) static unsigned char gInDirectDrawError;
+
+// wingraph's own Bitmap16Bit VIEW of the locked back surface, referenced
+// (never owned) at every DDCreateSurface and re-referenced after each
+// successful Blt retry. File-static: 0x6aac70 is touched from exactly four
+// places and all four are rows in this compiland (0x1ffdf5 - the dynamic
+// initializer that constructs it 0x0-by-0x0 - 0x1ffe11, 0x2001a9, 0x2006c2).
+// NAME provisional: no roster attests it.
+DATA(0x006aac70) static Bitmap16Bit gDDSurfaceBitmap(0, 0);
 
 // The first 16 bytes of the old DirectDraw pixel-format record. Its three
 // live channel masks are separately owned at 0x68c860..68 by mousemgr.cpp,
@@ -172,6 +182,386 @@ unsigned char DDSetFullScreenStatus(int iNewStatus)
 
 // E:\gamedcs\wingraph.cpp:1857
 #endif  // @carcass
+
+// The two player-colour painters, the first rows of wingraph.obj. Both copy
+// the LAST 32 palette entries - the player-colour range - out of the
+// Players.pal resource oldmain loaded, indexed by player: 32 RGB555 words
+// for the 16-bit target, 32 RGB triples for the 24-bit one. The +0x1c source
+// bias is the resource head both TPalette16 and TPalette24 carry, and the
+// destination offsets (0x1c0 and 0x2bc) are what fix entry 224 as the range's
+// first colour in each layout.
+// E:\gamedcs\wingraph.cpp:72
+VA(0x005ffe20, 0x1E)  // anchor-caller(bitmapBorder/button::SetPlayerPaletteColors) + dc-order-map, dc 0x198af4
+void SetPlayerPaletteColors(palette* pal, int whichPlayer)
+{
+    memcpy(&pal->data[224], &gPlayerPalette->data[whichPlayer * 32],
+           32 * sizeof(unsigned short));
+}
+
+// E:\gamedcs\wingraph.cpp:83
+VA(0x005ffe40, 0x22)  // anchor-caller(bitmapBorder::SetPlayerPaletteColors) + dc-order-map, dc 0x198b1c
+void SetPlayerPaletteColors(TPalette24* pal, int whichPlayer)
+{
+    memcpy(pal->colors.data[224], gPlayerPalette24->colors.data[whichPlayer * 32],
+           32 * 3);
+}
+
+// The screen blit: unlock the back buffer, put the damaged rectangle up on
+// the primary, and lock the back buffer again with both Bitmap16Bit views
+// re-referenced to wherever it landed. When the damaged rectangle overlaps
+// the saved mouse rectangle the pointer has to be composited into the back
+// buffer first and lifted out again afterwards, which is the whole middle of
+// the body; the empty spin on the mouse manager's busy word is retail's, and
+// VC6 hoists its load out so the wait is one self-jump.
+// E:\gamedcs\wingraph.cpp:260
+VA(0x005ffe70, 0x35C)  // anchor-caller(AppPaint, winmgr's five UpdateScreen/fade sites) + wingraph statics, dc 0x198d5c
+void RobAppBlit(tagRECT* comb_rect)
+{
+    if (IsIconic(hwndApp))
+        return;
+    if (!gpDirectDraw)
+        return;
+    if (comb_rect->right <= comb_rect->left)
+        return;
+    if (comb_rect->bottom <= comb_rect->top)
+        return;
+
+    HRESULT result = gpDDSBack->Unlock(0);
+    if (result != DD_OK)
+        DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                     "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0xdf);
+
+    POINT origin;
+    origin.x = 0;
+    origin.y = 0;
+    RECT screenRect = *comb_rect;
+    ClientToScreen(hwndApp, &origin);
+    OffsetRect(&screenRect, origin.x, origin.y);
+
+    if (gpMouseManager->savedRect.right > comb_rect->left
+        && comb_rect->right > gpMouseManager->savedRect.left
+        && gpMouseManager->savedRect.bottom > comb_rect->top
+        && comb_rect->bottom > gpMouseManager->savedRect.top) {
+        RECT pointerRect;
+        RECT sourceRect;
+        if (gpMouseManager) {
+            while (gpMouseManager->field_74)
+                ;
+            IntersectRect(&pointerRect, comb_rect,
+                          &gpMouseManager->savedRect);
+            sourceRect = pointerRect;
+            OffsetRect(&sourceRect, -gpMouseManager->savedRect.left,
+                       -gpMouseManager->savedRect.top);
+            DDBlit(gpDDSMouseSaveSurface, &sourceRect, static_cast<IDirectDrawSurface4*>(static_cast<void*>(gpDDSBack)),
+                   &pointerRect, DDBLT_WAIT);
+            if (gpMouseManager->field_68 == 0 && gpMouseManager->field_54
+                && gpMouseManager->field_50 >= 0) {
+                DDSURFACEDESC surfaceDesc;
+                memset(&surfaceDesc, 0, sizeof(surfaceDesc));
+                surfaceDesc.dwSize = sizeof(surfaceDesc);
+                result = gpDDSBack->Lock(0, &surfaceDesc, DDLOCK_WAIT, 0);
+                if (result != DD_OK)
+                    DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                     "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x119);
+                gpMouseManager->field_54->Draw(0, gpMouseManager->field_50,
+                    pointerRect.left - gpMouseManager->field_58,
+                    pointerRect.top - gpMouseManager->field_5c,
+                    pointerRect.right - pointerRect.left,
+                    pointerRect.bottom - pointerRect.top,
+                    static_cast<unsigned short*>(surfaceDesc.lpSurface),
+                    pointerRect.left, pointerRect.top,
+                    surfaceDesc.dwWidth, surfaceDesc.dwHeight,
+                    surfaceDesc.lPitch, 0, 1);
+                result = gpDDSBack->Unlock(0);
+                if (result != DD_OK)
+                    DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                     "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x124);
+            }
+        }
+
+        DDBlit(static_cast<IDirectDrawSurface4*>(static_cast<void*>(gpDDSPrimary)), &screenRect, static_cast<IDirectDrawSurface4*>(static_cast<void*>(gpDDSBack)), comb_rect, DDBLT_WAIT);
+
+        if (gpMouseManager && gpMouseManager->field_68 == 0
+            && gpMouseManager->field_54 && gpMouseManager->field_50 >= 0) {
+            DDBlit(static_cast<IDirectDrawSurface4*>(static_cast<void*>(gpDDSBack)), &pointerRect, gpDDSMouseSaveSurface,
+                   &sourceRect, DDBLT_WAIT);
+        }
+    } else {
+        DDBlit(static_cast<IDirectDrawSurface4*>(static_cast<void*>(gpDDSPrimary)), &screenRect, static_cast<IDirectDrawSurface4*>(static_cast<void*>(gpDDSBack)), comb_rect, DDBLT_WAIT);
+    }
+
+    DDSURFACEDESC surfaceDesc;
+    memset(&surfaceDesc, 0, sizeof(surfaceDesc));
+    surfaceDesc.dwSize = sizeof(surfaceDesc);
+    result = gpDDSBack->Lock(0, &surfaceDesc, DDLOCK_WAIT, 0);
+    if (result != DD_OK)
+        DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                     "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x13e);
+
+    if (gpWindowManager->screenBitmap) {
+        gpWindowManager->screenBitmap->reference(
+            surfaceDesc.dwWidth, surfaceDesc.dwHeight, surfaceDesc.lPitch,
+            static_cast<unsigned short*>(surfaceDesc.lpSurface));
+    }
+    gDDSurfaceBitmap.reference(
+        surfaceDesc.dwWidth, surfaceDesc.dwHeight, surfaceDesc.lPitch,
+        static_cast<unsigned short*>(surfaceDesc.lpSurface));
+
+    if (result != DD_OK)
+        DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                     "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x14a);
+}
+
+// Every surface-to-surface copy in the game goes through here, and the
+// whole body is three copies of one retry loop: blit, and while DirectDraw
+// answers DDERR_SURFACELOST, restore whatever was lost and blit again. The
+// three arms differ only in which surface is the primary - retail RELOADS
+// gpDDSPrimary at each of its six uses rather than naming it - and the two
+// arms that touch the primary take a LOCAL COPY of the rectangle that
+// belongs to it, because DDResetDisplayMode re-origins that copy in place
+// when the mode changed underneath. The discarded GameTime::Get() before
+// each loop is retail's, not an artifact.
+//
+// The two surface interface generations meet here: the roster types this
+// function's parameters IDirectDrawSurface4 (mousemgr's three globals agree)
+// while the primary is the v1 interface DirectDrawCreate returns, so the
+// primary is bridged through void* at each use exactly as mousemgr already
+// bridges DDSURFACEDESC. The vtable prefix through Restore is identical in
+// both generations, so no byte depends on the choice.
+//
+// Residual (63.77%): VC6 INVERTS all three retry loops - it emits the Blt
+// once as the loop guard and a second time at the bottom - where retail has
+// exactly one Blt per arm and an unconditional `jmp` back edge, and it gives
+// each arm its own epilogue where retail cross-jumps all three onto one
+// `ret 0xc`. The three surplus calls and the two surplus rets are the whole
+// difference; every other call pairs 1:1 in order. This is the merged-return
+// / tail-merge class, not a spelling: four shapes were measured and are
+// BYTE-IDENTICAL to the digit - `while (Blt(...) == LOST) {...}`,
+// `label: if (Blt(...) == LOST) { ...; goto label; }` (the exact
+// Process1WindowsMessage idiom), the same with a forward `goto done` and one
+// shared exit label, and the same again with the Blt result in a named
+// HRESULT declared outside the loop. VC6 canonicalises all four.
+// E:\gamedcs\wingraph.cpp:931
+VA(0x006001d0, 0x1E1)  // anchor-caller(mousemgr, six sites) + header identification, dc 0x199170
+void DDBlit(IDirectDrawSurface4* dstSurface, const tagRECT* dstRect,
+            IDirectDrawSurface4* srcSurface, const tagRECT* srcRect,
+            unsigned long flags)
+{
+    if (IsRectEmpty(srcRect))
+        return;
+
+    if (dstSurface
+        == static_cast<IDirectDrawSurface4*>(
+               static_cast<void*>(gpDDSPrimary))) {
+        RECT region = *dstRect;
+        GameTime::Get();
+    retry_to_primary:
+        if (gpDDSPrimary->Blt(&region,
+                static_cast<IDirectDrawSurface*>(
+                    static_cast<void*>(srcSurface)),
+                const_cast<RECT*>(srcRect), flags, 0)
+            != DDERR_SURFACELOST) {
+            goto done;
+        }
+        if (gpDDSPrimary->IsLost() == DDERR_SURFACELOST) {
+            HRESULT result = gpDDSPrimary->Restore();
+            if (result == DDERR_WRONGMODE)
+                DDResetDisplayMode(&region);
+            else if (result != DD_OK)
+                DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                              "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x1b4);
+        }
+        if (srcSurface->IsLost() == DDERR_SURFACELOST) {
+            HRESULT result = DDRestoreSurfaces();
+            if (result != DD_OK)
+                DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                              "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x1bb);
+        }
+        goto retry_to_primary;
+    }
+
+    if (srcSurface
+        == static_cast<IDirectDrawSurface4*>(
+               static_cast<void*>(gpDDSPrimary))) {
+        RECT region = *srcRect;
+        GameTime::Get();
+    retry_from_primary:
+        if (dstSurface->Blt(const_cast<RECT*>(dstRect),
+                static_cast<IDirectDrawSurface4*>(
+                    static_cast<void*>(gpDDSPrimary)),
+                &region, flags, 0)
+            != DDERR_SURFACELOST) {
+            goto done;
+        }
+        if (gpDDSPrimary->IsLost() == DDERR_SURFACELOST) {
+            HRESULT result = gpDDSPrimary->Restore();
+            if (result == DDERR_WRONGMODE)
+                DDResetDisplayMode(&region);
+            else if (result != DD_OK)
+                DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                              "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x1ef);
+        }
+        if (dstSurface->IsLost() == DDERR_SURFACELOST) {
+            HRESULT result = DDRestoreSurfaces();
+            if (result != DD_OK)
+                DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                              "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x1f6);
+        }
+        goto retry_from_primary;
+    }
+
+    GameTime::Get();
+retry_offscreen:
+    if (dstSurface->Blt(const_cast<RECT*>(dstRect), srcSurface,
+            const_cast<RECT*>(srcRect), flags, 0)
+        != DDERR_SURFACELOST) {
+        goto done;
+    }
+    {
+        HRESULT result = DDRestoreSurfaces();
+        if (result != DD_OK)
+            DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                              "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x233);
+    }
+    goto retry_offscreen;
+
+done:
+    ;
+}
+
+// The DDERR_WRONGMODE recovery DDBlit's two primary-surface loops call when
+// Restore reports the display mode changed underneath the game. If we were
+// already fullscreen the mode is simply re-asserted and the primary
+// restored; otherwise the primary and its clipper are dropped, the desktop
+// caps re-read, and - unless the desktop is itself 16-bit - the window is
+// pushed into fullscreen (popup style, topmost, no menu) with the blit's own
+// rectangle re-origined against the moved client area, which is why the
+// caller hands its working copy in. Either way the primary is rebuilt and,
+// if we ended up fullscreen, the preference is written back.
+//
+// The desktop-caps block is GetDesktopInfo expanded: it is a small extern
+// with an out-of-line body further down this TU, so /Ob2 takes it here and
+// leaves the emitted copy for the other callers.
+// E:\gamedcs\wingraph.cpp
+VA(0x006003c0, 0x22D)  // anchor-caller(DDBlit, both primary retry loops), retail-only
+void DDResetDisplayMode(tagRECT* region)
+{
+    if (bWindowedMode) {
+        HRESULT result = gpDirectDraw->SetCooperativeLevel(
+            hwndApp, DDSCL_EXCLUSIVE | DDSCL_FULLSCREEN | DDSCL_ALLOWREBOOT);
+        if (result != DD_OK)
+            DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                              "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x157);
+        result = gpDirectDraw->SetDisplayMode(800, 600, 16);
+        if (result != DD_OK)
+            DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                              "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x15b);
+        result = gpDDSPrimary->Restore();
+        if (result != DD_OK)
+            DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                              "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x15f);
+        return;
+    }
+
+    unsigned char desktopIsHighColor = GetDesktopInfo();
+
+    HRESULT result = gpDDSPrimary->SetClipper(0);
+    if (result != DD_OK)
+        DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                              "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x168);
+    gpDDSPrimary->Release();
+    gpDDSPrimary = 0;
+
+    if (!desktopIsHighColor) {
+        POINT origin;
+        origin.x = 0;
+        origin.y = 0;
+        ScreenToClient(hwndApp, &origin);
+        OffsetRect(region, origin.x, origin.y);
+        gpDDClipper->Release();
+        gpDDClipper = 0;
+        bWindowedMode = 1;
+        SetWindowLongA(hwndApp, GWL_STYLE, WS_POPUP | WS_VISIBLE);
+        SetWindowLongA(hwndApp, GWL_EXSTYLE, WS_EX_TOPMOST);
+        KBChangeMenu(0);
+        result = gpDirectDraw->SetCooperativeLevel(
+            hwndApp, DDSCL_EXCLUSIVE | DDSCL_FULLSCREEN | DDSCL_ALLOWREBOOT);
+        if (result != DD_OK)
+            DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                              "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x17e);
+        result = gpDirectDraw->SetDisplayMode(800, 600, 16);
+        if (result != DD_OK)
+            DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                              "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x182);
+    }
+
+    gpDDSPrimary = DDCreateSurface(800, 600, 1);
+
+    if (!bWindowedMode) {
+        result = gpDDSPrimary->SetClipper(gpDDClipper);
+        if (result != DD_OK)
+            DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                              "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x18c);
+    } else {
+        WritePrefs();
+    }
+}
+
+// The one surface factory: DDInitGraphics builds the 800x600 primary
+// through it with bPrimary set, and the back buffer with it clear. Only the
+// offscreen arm is locked and published - the lock's own DDSURFACEDESC is
+// what feeds both Bitmap16Bit references, so the surface pointer, pitch and
+// extent all come back through the same descriptor the create filled in.
+// Retail reuses the bPrimary parameter home for the created surface, which
+// is why the flag is cached in a register before the call.
+// E:\gamedcs\wingraph.cpp:1013
+VA(0x006005f0, 0xE4)  // anchor-caller(DDInitGraphics, both surfaces) + header identification, dc 0x1992b0
+IDirectDrawSurface* DDCreateSurface(unsigned long width, unsigned long height,
+                                    int bPrimary)
+{
+    DDSURFACEDESC surfaceDesc;
+    IDirectDrawSurface* surface;
+
+    memset(&surfaceDesc, 0, sizeof(surfaceDesc));
+    surfaceDesc.dwSize = sizeof(surfaceDesc);
+    if (bPrimary) {
+        surfaceDesc.dwFlags = DDSD_CAPS;
+        surfaceDesc.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE;
+    } else {
+        surfaceDesc.dwFlags = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH;
+        surfaceDesc.ddsCaps.dwCaps =
+            DDSCAPS_OFFSCREENPLAIN | DDSCAPS_SYSTEMMEMORY;
+        surfaceDesc.dwHeight = height;
+        surfaceDesc.dwWidth = width;
+    }
+
+    HRESULT result = gpDirectDraw->CreateSurface(&surfaceDesc, &surface, 0);
+    if (result != DD_OK)
+        DDSD(result,
+             DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                          "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"),
+             0x263);
+
+    if (!bPrimary) {
+        result = surface->Lock(0, &surfaceDesc, DDLOCK_WAIT, 0);
+        if (result != DD_OK)
+            DDSD(result,
+                 DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                              "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"),
+                 0x26a);
+
+        if (gpWindowManager->screenBitmap) {
+            gpWindowManager->screenBitmap->reference(
+                surfaceDesc.dwWidth, surfaceDesc.dwHeight, surfaceDesc.lPitch,
+                static_cast<unsigned short*>(surfaceDesc.lpSurface));
+        }
+        gDDSurfaceBitmap.reference(
+            surfaceDesc.dwWidth, surfaceDesc.dwHeight, surfaceDesc.lPitch,
+            static_cast<unsigned short*>(surfaceDesc.lpSurface));
+    }
+
+    return surface;
+}
 
 // The Dreamcast line table groups the re-entry test, RestoreDisplayMode,
 // error-name switch, formatter and shutdown into the same source statements
