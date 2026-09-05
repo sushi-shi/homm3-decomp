@@ -490,6 +490,7 @@ ai_tactical	?should_attack_now@type_AI_spellcaster@@QAEEPBVarmy@@@Z	86.6781	86.6
 ai_tactical	?simulate_attack@type_AI_combat_parameters@@QAEXPBVarmy@@PAJ01EJ@Z	100.0000	100.0000	100.0000	0x359b0	6dc16f5f9644
 ai_tactical	?unimplemented@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x3b680	aee1cb81d6a6
 ai_tactical	?value_of_luck_and_morale@@YINJJNN@Z	100.0000	100.0000	100.0000	0x35850	2a36425d03bb
+army	??0army@@QAE@XZ	95.9811	95.9811	95.9811	0x3d250	ce978c2dcc6d
 army	??Eiterator@?$deque@HV?$allocator@H@std@@@std@@QAEAAV012@XZ	100.0000	100.0000	100.0000	0x49230	-
 army	??Fiterator@?$deque@HV?$allocator@H@std@@@std@@QAEAAV012@XZ	100.0000	100.0000	100.0000	0x49270	-
 army	??Yiterator@?$deque@HV?$allocator@H@std@@@std@@QAEAAV012@H@Z	93.9535	93.9535	93.9535	0x491c0	-

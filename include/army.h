@@ -293,7 +293,11 @@ public:
     // slot are combatSide (+0xf4) and bitIndex (+0xf8).
     int side;                     // +0x10 == DC groupToAttack
     int slot;                     // +0x14 == DC indexToAttack
-    char pad_18[0x4];
+    // Retype in place: army's own constructor (0x43d250) zeroes this slot
+    // as a DWORD (`mov dword ptr [esi+0x18], ebx`) in the same store run
+    // that clears pathTarget, field_100 and field_104. Name is the house
+    // ordinal placeholder - the width is proven, the role is not.
+    int field_18;                 // +0x18
     // ValidPath stores the validated destination here on success.
     int pathTarget;               // +0x1c
     // DC army.bShowPowEffect (members.csv army@32) and
