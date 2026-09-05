@@ -245,12 +245,12 @@ int TGzInflateBuf::underflow()
 }
 
 // 0x4d6b80: `TRuntimeError`'s `const char*` constructor is the out-of-line
-// 0x49a0c0 call; this body is the vftable swap on top of it.
+// 0x49a0c0 call; this body is the vftable swap on top of it. The DEFINITION
+// moved to exceptions.h (objnames.obj's throw expands the same body, which
+// only an inline can produce); this object still emits and calls the COMDAT,
+// so the claim stays here on the re-declaration.
 VA(0x004d6b80, 0x17)  // anchor-callee 0x49a0c0 + anchor-vtable 0x63aba8, retail-only
-TAllocationFailure::TAllocationFailure()
-    : TRuntimeError("Allocation failure.")
-{
-}
+TAllocationFailure::TAllocationFailure();
 
 // 0x4d6ba0: get_byte with the malformed-member throw attached.
 VA(0x004d6ba0, 0x81)  // anchor-bracket, called from 0x4d6920, retail-only

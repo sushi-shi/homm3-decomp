@@ -1027,6 +1027,7 @@ command	?valid_wall_target@combatManager@@QAEEW4TWallTargetId@@@Z	100.0000	100.0
 compress	@compress2@20	100.0000	100.0000	100.0000	0x206b40	-
 crc32	@crc32@12	100.0000	100.0000	100.0000	0x205af0	-
 creature_bank	??0type_creature_bank_traits@@QAE@XZ	100.0000	100.0000	100.0000	0x7aad0	2dbea7ccab6e
+creature_bank	?initialize_creature_bank@@YIXPAUtype_creature_bank@@W4type_creature_bank_type@@@Z	98.1075	98.1075	98.1075	0x7ad90	5d91c0f11b1d
 creaturetype	?IsBaseCreature@@YIHW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x7b120	d197cebfb413
 creaturetype	?IsSiegeWeapon@@YIEW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x7b180	52d82d222f3c
 creaturetype	?UpgradedCreatureType@@YI?AW4TCreatureType@@W41@@Z	100.0000	100.0000	100.0000	0x7b1a0	ca18647b867b
@@ -1089,6 +1090,7 @@ cursor	?handle_stop_on_trigger@advManager@@AAEPAVNewmapCell@@PAVhero@@PAV2@EEPAH
 customcampaign	??0CampaignHeaderStruct@TCampaignBrief@@QAE@PBD@Z	100.0000	100.0000	100.0000	0x885d0	c81b1564e203
 customcampaign	??0LegacyCampaignHero@@QAE@XZ	100.0000	100.0000	100.0000	0x8ae30	d00745bb485b
 customcampaign	??0SCampaign@@QAE@XZ	100.0000	100.0000	100.0000	0x89500	92aa89488ce8
+customcampaign	??0ScenarioStruct@TCampaignBrief@@QAE@XZ	100.0000	100.0000	100.0000	0x85f50	ef39a7db5e25
 customcampaign	??0hero@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x60850	-
 customcampaign	??0out_of_range@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x4700	-
 customcampaign	??1CampaignHeaderStruct@TCampaignBrief@@QAE@XZ	78.5339	78.5339	78.5339	0x886a0	2c81b379a033
@@ -1103,6 +1105,7 @@ customcampaign	?FreeData@CampaignHeaderStruct@TCampaignBrief@@QAEXXZ	100.0000	10
 customcampaign	?GetAvailableScenarios@CampaignHeaderStruct@TCampaignBrief@@QBEXPAE@Z	100.0000	100.0000	100.0000	0x88f00	54417e832b4c
 customcampaign	?GetNumMaps@CampaignHeaderStruct@TCampaignBrief@@QBEHXZ	100.0000	100.0000	100.0000	0x88850	9b6d7dc6272c
 customcampaign	?InitializeCrossoverHero@ScenarioStruct@TCampaignBrief@@QAEXPAUHeroPlaceholderData@@PAVhero@@@Z	89.9737	90.3468	90.3468	0x86590	71fd9dcba9df
+customcampaign	?Load@CampaignHeaderStruct@TCampaignBrief@@QAE_NXZ	49.5351	49.5351	49.5351	0x88880	0604e159da45
 customcampaign	?Load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	55.7915	55.7915	55.7915	0x8a310	f2ec1fa4aeeb
 customcampaign	?LoadMapHeader@ScenarioStruct@TCampaignBrief@@QAEXPAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@PAVNewSMapHeader@@H@Z	100.0000	100.0000	100.0000	0x87d30	3ede48bd4a11
 customcampaign	?LoadScenario@CampaignHeaderStruct@TCampaignBrief@@QAE_NHPAVNewSMapHeader@@@Z	100.0000	100.0000	100.0000	0x88810	40cf52fbb7ea
@@ -1112,6 +1115,7 @@ customcampaign	?PlayScenarioEpilogue@SCampaign@@QAEXPAX@Z	100.0000	100.0000	100.
 customcampaign	?PlayScenarioPrologue@SCampaign@@QAEXPAX@Z	100.0000	100.0000	100.0000	0x8a270	f20101db493f
 customcampaign	?PruneCrossoverHeroes@SCampaign@@QAEXPAX@Z	12.3264	12.3264	12.3264	0x89e20	3be750b33cd0
 customcampaign	?Read@TStreamBufFile@@UAEHPAXH@Z	100.0000	100.0000	100.0000	0x83f10	d4a8f9e13d4a
+customcampaign	?Save@SCampaign@@QAEXPAVTAbstractFile@@@Z	78.4646	78.4646	78.4646	0x8ae90	2cca34ef9629
 customcampaign	?StartMusic@CampaignHeaderStruct@TCampaignBrief@@QAEXXZ	100.0000	100.0000	100.0000	0x88ee0	4daeb5fd6b1f
 customcampaign	?StartScenario@CampaignHeaderStruct@TCampaignBrief@@QAEXHH@Z	100.0000	100.0000	100.0000	0x894e0	00db9222128a
 customcampaign	?StartScenario@ScenarioStruct@TCampaignBrief@@QAEXPAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@H@Z	100.0000	100.0000	100.0000	0x884c0	1e966a01130f
@@ -1141,7 +1145,7 @@ customcampaign	?size@?$vector@UCampaignScenarioInfo@@V?$allocator@UCampaignScena
 customcampaign	?size@?$vector@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@V?$allocator@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@@2@@std@@QBEIXZ	100.0000	100.0000	100.0000	0xaf4e0	-
 customcampaign	?size@?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x8b470	-
 customcampaign	CrossoverHeroStronger_operator	0.0000	90.2941	90.2941	0x83f80	24656f6569bf
-customcampaign	TCampaignBrief_CampaignHeaderStruct_Load	0.0000	0.0000	0.0000	0x88880	47fb4b8d9098
+customcampaign	TCampaignBrief_ScenarioStruct_Read	0.0000	0.0000	0.0000	0x87e40	049cf238755a
 customcampaignwindow	??0TCustomCampaignWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x827b0	893291fd4aaf
 customcampaignwindow	??1TCustomCampaignWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x82f10	4e3abaca1d97
 customcampaignwindow	??RCampaignHeaderPointerLess@@QBE_NPAUCampaignHeaderStruct@TCampaignBrief@@0@Z	100.0000	100.0000	100.0000	0x83240	0625172778ee
@@ -1409,7 +1413,7 @@ events	?DoAIEvent@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@@Z	100.00
 # synth PDB - returned the row to master's own 98.5741 to the digit
 # with events.cpp untouched. Cross-generation noise, the
 # recruit::Update revert-control precedent; hist keeps 99.1139.
-events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	99.0481	99.0481	99.1139	0xad470	907f85ec7c05
+events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	98.5741	99.0481	99.1139	0xad470	907f85ec7c05
 events	?DoCustomArtifact@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	98.2381	99.1492	99.1492	0x9f070	4d12ed56362a
 events	?DoCustomResource@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa4780	51e134850e4b
 events	?DoCustomSpellScroll@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	97.4451	97.4451	97.4451	0xa5a80	2c8331b27654
@@ -2492,13 +2496,13 @@ newgame	?pick_alignment@@YI?AW4TTownType@@HE@Z	100.0000	100.0000	100.0000	0x1132
 newgame	__h3cg$newgame$class_ctor$type_map_hero_identity	0.0000	80.7803	80.7803	0x117c30	-
 objecttype	??0TObjectImageNameTable@@QAE@XZ	100.0000	100.0000	100.0000	0x114060	-
 objecttype	??5@YIAAV?$basic_istream@DU?$char_traits@D@std@@@std@@AAV01@AAUTObjectType@@@Z	76.6378	76.6378	76.6378	0x114b80	5b651aebcf85
-objecttype	?GetImageName@TObjectType@@QAEABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	78.7778	78.7778	78.7778	0x114960	0bcb70f8d158
+objecttype	?GetImageName@TObjectType@@QAEABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x114960	adca89cffd94
 objecttype	?_Inc@const_iterator@?$_Tree@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$pair@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@2@U_Kfn@?$map@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@HU?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@2@U?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x117780	-
 objecttype	?load@TObjectTypeTable@@QAEXPAD@Z	69.2500	69.2500	69.2500	0x114d80	fcfee94502e4
-objecttype	?setImageName@TObjectType@@QAEAAU1@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	33.8617	33.8617	33.8617	0x114610	84051786f38f
+objecttype	?setImageName@TObjectType@@QAEAAU1@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	45.7984	45.7984	45.7984	0x114610	2d359cbd18e9
 objecttype	?setTriggerMask@TObjectType@@QAEAAU1@ABV?$bitset@$0DA@@std@@@Z	99.9818	99.9818	99.9818	0x114a60	931c974bd57b
 objnames	??1TTextResourceGuard@@QAE@XZ	100.0000	100.0000	100.0000	0x1bd90	e6a9bcd817a7
-objnames	?InitializeAdventureObjectNames@@YIXXZ	98.9899	98.9899	98.9899	0x1b500	8e77da136c72
+objnames	?InitializeAdventureObjectNames@@YIXXZ	100.0000	100.0000	100.0000	0x1b500	8e77da136c72
 overview	??0TOverviewWindow@@QAE@XZ	78.2776	80.0954	80.0954	0x11fa40	e8df282f3bdd
 overview	??1TOverviewWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x120d90	048fab1d8faa
 overview	??_GTOverviewWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x120d60	-
@@ -2637,6 +2641,7 @@ puzzlewindow	?AI_attempt_puzzle_guess@@YI?AUtype_point@@J@Z	97.1621	97.1621	97.1
 puzzlewindow	?UpdatePuzzle@TPuzzleWindow@@QAEHH@Z	100.0000	100.0000	100.0000	0x12c6c0	34a059e6b8d9
 puzzlewindow	?WindowHandler@TPuzzleWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x12c640	86e9c14d488e
 puzzlewindow	?mark_puzzle@Bitmap816@@QAEXPAEJJ@Z	100.0000	100.0000	100.0000	0x12c8b0	6e09b505ce58
+puzzlewindow	?match_puzzle@@YI?AUtype_point@@JPAY0BB@Utype_AI_puzzle_tile@@@Z	79.1843	79.1843	79.1843	0x12cf10	1c8d86b14b40
 questlogwindow	??0TQuestLogWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x12d8c0	b23447582f0c
 questlogwindow	??1TQuestLogWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x12e1e0	7ad7c6e06db8
 questlogwindow	??_GTQuestLogWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x12e1b0	-
@@ -3145,6 +3150,7 @@ seerhut	?quest_type@type_belong_to_player_quest@@UAEHXZ	100.0000	100.0000	100.00
 seerhut	?quest_type@type_defeat_hero_quest@@UAEHXZ	100.0000	100.0000	100.0000	0x16e3d0	b378bb94388f
 seerhut	?quest_type@type_monster_quest@@UAEHXZ	100.0000	100.0000	100.0000	0x16ebc0	2132ee49efd9
 seerhut	?read@TQuestGuard@@QAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x1734e0	7601b0255349
+seerhut	?read@TSeerHut@@QAEXPAVTAbstractFile@@@Z	82.7313	82.7313	82.7313	0x174610	d09f4acd9708
 seerhut	?save@TQuestGuard@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x173520	4af04b37a0b0
 seerhut	?save@TSeerHut@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x173fd0	3f53613a2426
 seerhut	?skill_requirement_text@type_skill_quest@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAY03$$CBC@Z	100.0000	100.0000	100.0000	0x16dfa0	2de5fc7e8020
