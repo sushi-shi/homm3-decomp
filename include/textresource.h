@@ -71,6 +71,11 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_RESOURCE_DISPLAY_1 = 64,
     GENERAL_TEXT_RESOURCE_DISPLAY_2 = 65,
     GENERAL_TEXT_QUIT = 70,
+    // advspells.obj's DimensionDoor (0x41d090) posts this when the
+    // targeted square disagrees with the caster's boat bit - a folded
+    // [Text._First + 0x11c]. The INDEX is byte-proven; the NAME is
+    // role-based and PROVISIONAL, like its three neighbours below.
+    GENERAL_TEXT_DIMENSION_DOOR_BLOCKED = 71,
     // SendChat's command/status rows. The indices are the folded retail
     // TTextResource loads; their roles are fixed by the surrounding ping
     // and recipient-control flow.
@@ -89,6 +94,9 @@ enum EGeneralTextIndex {
     // describes that consumer, which is this enum's stated convention;
     // the index is retail-byte-proven (a folded [Text._First + 0x204]).
     GENERAL_TEXT_COMBAT_SPELL_ALREADY_CAST = 129,
+    // DimensionDoor's movement gate refuses here when the caster has no
+    // movement points left ([Text._First + 0x1f8]). Name provisional.
+    GENERAL_TEXT_SPELL_NEEDS_MOVEMENT = 126,
     // ResetRound posts this line after every non-placement, non-quick round;
     // retail folds Text._First + 0x674, i.e. row 413.
     GENERAL_TEXT_COMBAT_ROUND = 413,
@@ -130,6 +138,10 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_SPLIT_CREATURE_ROLLOVER = 257,
     GENERAL_TEXT_SPLIT_OTHER_ROLLOVER = 258,
     GENERAL_TEXT_QUICK_INFO_DIGGABLE = 331,
+    // A one-vararg format DimensionDoor sprintf's the caster's name into
+    // when dWalkSpellsCast has reached this mastery's cap
+    // ([Text._First + 0x54c]). Name provisional.
+    GENERAL_TEXT_DIMENSION_DOOR_LIMIT_FORMAT = 339,
     // The hero screen's "Level %d %s" line (widget 0x8c): a folded
     // [Text._First + 0x55c] in THeroScreenWindow::SetupHeroView, fed the
     // hero's level and the class name HeroFn_004D8F70 picks. The INDEX is
@@ -235,6 +247,11 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_MAIN_MENU_LOW_DISK = 708,
     GENERAL_TEXT_COMBAT_FEAR = 729,
     GENERAL_TEXT_MAIN_MENU_CD_DRIVE_FORMAT = 730,
+    // The refusal both adventure-targeting spells share when their popup
+    // comes back without a usable square: DimensionDoor (0x41d090) and
+    // SkuttleBoat (0x41cdf0) both fold [Text._First + 0xb70]. Name
+    // provisional.
+    GENERAL_TEXT_ADVENTURE_SPELL_NO_TARGET = 732,
     GENERAL_TEXT_CAMPAIGN_HERO_CLASS = 736,
     GENERAL_TEXT_MAIN_MENU_CD_DRIVE_6 = 746,
     GENERAL_TEXT_MAIN_MENU_CD_DEFAULT_ARGUMENT = 747,

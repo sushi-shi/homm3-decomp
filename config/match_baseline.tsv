@@ -159,6 +159,12 @@ advmgr	?get_university@ExtraInfoUnion@@QBEPAUtype_university@@XZ	100.0000	100.00
 advmgr	?hasFlag@@YI_NH@Z	100.0000	100.0000	100.0000	0xfca0	c4ad784207b8
 advmgr	?set_witch_hut_help_text@@YIXPADPAVhero@@PAVNewmapCell@@PBD3@Z	100.0000	100.0000	100.0000	0xdcc0	ea9f6c7f2210
 advspells	?CheckCastSpell@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c2f0	bbe51132d223
+advspells	?DimensionDoor@advManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x1d090	c97eb065f8d7
+advspells	advManager_CastSpell	0.0000	0.0000	0.0000	0x1c490	c64aa2b09757
+advspells	advManager_SkuttleBoat	0.0000	0.0000	0.0000	0x1cdf0	1d3f5786cfb8
+advspells	advManager_SummonBoat	0.0000	0.0000	0.0000	0x1c8a0	b17834fd0644
+advspells	advManager_TeleportTo	0.0000	0.0000	0.0000	0x1d930	fbb5e7cb98ff
+advspells	advManager_TownGate	0.0000	0.0000	0.0000	0x1d360	384fcb55b844
 ai	??1type_spellvalue@@QAE@XZ	100.0000	100.0000	100.0000	0x20cf0	-
 ai	?DoCompAI@combatManager@@QAEXH@Z	98.4697	98.4697	98.4697	0x221f0	2e3e65e4a47b
 ai	?DoSpellAI@combatManager@@QAEEXZ	100.0000	100.0000	100.0000	0x22da0	2bfe2c39d7b4
