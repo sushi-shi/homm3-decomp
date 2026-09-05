@@ -14,9 +14,18 @@ class TSpreadsheetResource;
 
 // One quest type's five text variants. PROVEN by the loader at 0x56c120:
 // its inner statement run writes five consecutive 0x10-byte basic_strings
-// and the outer induction advances the destination by exactly 0x50.
+// and the outer induction advances the destination by exactly 0x50. They are
+// five SEPARATE members and not an array: the compiler-generated constructor
+// at 0x56bed0 and destructor at 0x56bf30 unroll all five in place, where an
+// array member routes through the ??_L / ??_M vector iterators - which is
+// exactly what the enclosing record's own pair does for its ten quests. The
+// ordinal names are placeholders; only the count and the order are proven.
 struct TSeerHutQuestText {
-    std::string text[5];
+    std::string text0;
+    std::string text1;
+    std::string text2;
+    std::string text3;
+    std::string text4;
 };
 SIZE(TSeerHutQuestText, 0x50);
 
