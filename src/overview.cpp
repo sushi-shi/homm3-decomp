@@ -107,6 +107,14 @@ void UpdateBackpack(int iSlot);
 // (currTown/currHero -0x14 vs -0x10, iLookup/luck -0x10 vs -0x14/-0x40)
 // is the same overlay one slot shifted, and retail forwards the hall/
 // castle iLookup arms into ESI where ours keeps them in memory. Measured
+// Residual (90.91%): frame 0xa0 against retail's 0x98 - eight bytes of
+// locals we hold that retail does not; blocks (328) and branches (145) now
+// agree exactly and the whole masked-asm gap is that constant slot shift plus
+// three polarity flips. The flips are one register fact: retail keeps
+// iCurBitmap in a zeroed EDI across the row-loop head, so GetTown's -1 arm
+// reuses that live zero (`je` straight to the join at 0x51bfb6) where we must
+// materialise 0 into the currTown slot. Tried and rejected: declaring `slot`
+// below the break guard, which is where retail computes row*70 (-0.12).
 // byte-inert: the DC CodeView local order, monsterX/monsterY swapped
 // (90.40, stores reorder only), currTown/currHero declared first in their
 // blocks. The DC statement order of the town block matches ours.
@@ -188,7 +196,11 @@ void game::SetupDynamicStuff(int bUpdate, int bForceUpdate)
             int iOffsetToMon;
             TCreatureType creature;
             hero* occupyingHero;
-            town* currTown = GetTown(GetLocalPlayer()->townIds[
+            // Retail reaches GetLocalPlayer through the global (0x51bf82
+            // loads gpGame into ecx) while the GetTown expansion beside it
+            // still uses `this` from [ebp-0x44]; the two are not the same
+            // receiver in the source.
+            town* currTown = GetTown(gpGame->GetLocalPlayer()->townIds[
                 giOverviewTop[giOverviewType] + row]);
 
             iconWidgetDynamic[slot + iCurBitmap] = new iconWidget(
@@ -646,7 +658,12 @@ void game::SetupDynamicStuff(int bUpdate, int bForceUpdate)
                 int lastBackpackIndex =
                     currHero->get_last_backpack_index() + 1;
                 iOffsetToMon = 316;
-                for (item = 0; item < lastBackpackIndex && item < 8;
+                // Retail enters this loop with a bare `jmp` to the
+                // lastBackpackIndex test (no zero-trip pre-guard) and
+                // strength-reduces the constant half onto iOffsetToMon at the
+                // back edge (`cmp eax,0x2bc` at 0x51de62) - the operand order
+                // that puts the constant conjunct second.
+                for (item = 0; item < 8 && item < lastBackpackIndex;
                      item++) {
                     artifact = *currHero->get_backpack(
                         (gOverviewBackpackStart[heroNumber] + item)
