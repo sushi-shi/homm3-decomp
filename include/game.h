@@ -2081,6 +2081,13 @@ public:
     int GetNewHeroId(int playerPos, THeroClass excluded,
                      unsigned char prefer_alignment,
                      THeroClass preferredClass);               // 0x4bb5e0
+    // Retail 0x486110, customcampaign.obj's own game member and
+    // DoPreLoadCustomization's per-hero callee: the map's setup record for
+    // `heroId` is copied wholesale onto a newly allocated hero of the same
+    // class, the original slot is retired by setting its placement x to -1,
+    // and the availability table follows. Complete-only, name provisional -
+    // no Dreamcast row covers it.
+    void RehomeCampaignHeroSetup(int heroId);                  // 0x486110
     TArtifact GetRandomArtifactId(int artifactClass);          // 0x4c94d0
     SpellID GetRandomSpell(std::bitset<5> spellLevels);        // 0x4c95a0
     void SetRandomHeroArmies(int heroId, int cheat,

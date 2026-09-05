@@ -1150,6 +1150,57 @@ TCampaignBrief::ScenarioStruct::~ScenarioStruct()
     delete options;
 }
 
+// Complete-only. DoPreLoadCustomization's per-hero half: the map's own
+// setup record for a carry-over hero is copied onto a freshly allocated
+// hero of the same class (the whole HeroExtra assignment is compiler-
+// generated and expanded here), the original slot is retired by driving its
+// placement x to -1, and the availability table follows - the new id takes
+// the record's owner, the old one goes back to the tavern pool. Name
+// provisional.
+VA(0x00486110, 0x32F)  // anchor-caller(DoPreLoadCustomization +0x117), retail-only
+void game::RehomeCampaignHeroSetup(int heroId)
+{
+    HeroExtra& setup = heroSetup[heroId];
+    if (setup.location.x < 0)
+        return;
+
+    int newHeroId = GetNewHeroId(setup.Owner, kNumHeroClasses, 1,
+                                 akHeroTraits[heroId].heroClass);
+    if (newHeroId == -1) {
+        setup.location.x = -1;
+        return;
+    }
+
+    heroSetup[newHeroId] = setup;
+    heroSetup[newHeroId].id = newHeroId;
+    setup.location.x = -1;
+    heroAvailability[newHeroId] = setup.Owner;
+    heroAvailability[heroId] = hero::HERO_AVAILABILITY_TAVERN_POOL;
+    if (heroSetup[newHeroId].PortraitNumber == heroId)
+        heroSetup[newHeroId].PortraitNumber = newHeroId;
+}
+
+// Complete-only, and the Dreamcast roster names it: game::NewMap calls this
+// on gpGame->campaign as soon as the new map carries a campaign context.
+// Both passes walk the carry-over pools in reverse - the first retires every
+// carried hero from the map's roster, the second re-homes its setup record.
+VA(0x00486440, 0x145)  // anchor-caller(game::NewMap +0x7bc), dc 0x7d22c
+void SCampaign::DoPreLoadCustomization()
+{
+    int iPool;
+    for (iPool = carryOverHeroes.size() - 1; iPool >= 0; --iPool)
+        for (int iHero = carryOverHeroes[iPool].size() - 1; iHero >= 0;
+             --iHero)
+            gpGame->heroAvailability[carryOverHeroes[iPool][iHero].id] =
+                hero::HERO_AVAILABILITY_TAVERN_POOL;
+
+    for (iPool = carryOverHeroes.size() - 1; iPool >= 0; --iPool)
+        for (int iHero = carryOverHeroes[iPool].size() - 1; iHero >= 0;
+             --iHero)
+            gpGame->RehomeCampaignHeroSetup(
+                carryOverHeroes[iPool][iHero].id);
+}
+
 // Complete-only campaign carry-over expansion. Dreamcast's campaign path has
 // no counterpart, but its debug types still corroborate hero, army and
 // artifact source boundaries. Retail independently proves the ScenarioStruct
