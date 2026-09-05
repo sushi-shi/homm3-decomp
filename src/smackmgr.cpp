@@ -13,6 +13,7 @@
 #include <windows.h>
 #include <ddraw.h>
 #include <string.h>
+#include <string>
 #include "smackmgr.h"
 #include "binkmanager.h"
 #include "wingraph.h"
@@ -24,15 +25,14 @@
 #include "bitmap16.h"
 #include "message.h"
 #include "prefs.h"
+#include "textresource.h"
 
-struct SoundHeaderStruct;
-// The video-archive directory record. LoadAnimHeaders (0x598210) sizes its
-// allocation `new VideoHeaderStruct[count + 2]` as (11*count + 22) * 4 and
-// then ReadFiles 44*count bytes into it, so the record is 44 bytes - four
-// short of SoundHeaderStruct, which is the same name/offset pair plus a
-// size. Left incomplete on purpose: only `delete[]` reaches it here, the
-// same way SoundHeaderStruct is reached above.
-struct VideoHeaderStruct;
+// The campaign-relative archive stem both loaders open their third archive
+// from, and the one body in the bracket still unclaimed (0x597d00, 1294 B:
+// a per-character basic_string::append chain over obfuscated literals).
+// Declared, not defined - the reconstruction of its two callers does not
+// depend on it.
+std::string GetCampaignArchiveStem();  // 0x597d00, name provisional
 
 // The Smack/Bink handle views and the smackw32/binkw32 dllimport
 // surface live in smackmgr.h / binkmanager.h; the underscored import
@@ -83,6 +83,11 @@ DATA(0x0069fe0c) int gSmackReqHeight;              // ShowVideo arg 5
 DATA(0x0069fe10) int gSmackVideoId;                // ShowVideo arg 1
 DATA(0x0069fe14) int gSmackLoop;                   // ShowVideo arg 6
 DATA(0x0069fe1c) int gSmackAdvance;                // ShowVideo arg 8 (byte-narrowed on the way in)
+// Entry counts, one per archive directory; each is the dword LoadAnimHeaders
+// reads before sizing its (count + 2) allocation.
+DATA(0x0069fde4) int gVideoCount1;
+DATA(0x0069fe34) int gVideoCount2;
+DATA(0x0069fe3c) int gVideoCount3;
 DATA(0x0069fe18) int gSmackPaused;
 DATA(0x0069fe20) unsigned long gSmackBufferFlags;  // SMACKBUFFER555/565
 DATA(0x0069fddc) int RedShift;
@@ -118,6 +123,9 @@ DATA(0x00682e7c) HANDLE SoundFileCD = INVALID_HANDLE_VALUE;
 DATA(0x0069d850) SoundHeaderStruct* SoundHeaderCD;
 DATA(0x00682e84) HANDLE SoundFileCampaign = INVALID_HANDLE_VALUE;
 DATA(0x0069d84c) SoundHeaderStruct* SoundHeaderCampaign;
+DATA(0x0069e5a8) int SoundCount;
+DATA(0x0069e5a4) int SoundCountCD;
+DATA(0x0069e5ac) int SoundCountCampaign;
 
 // E:\gamedcs\smackmgr.cpp:75
 VA(0x005971b0, 0x3B)  // anchor-global, dc 0x14ac30
@@ -622,6 +630,54 @@ void VideoShutDown()
     gVideoFile3 = 0;
 }
 
+// E:\gamedcs\smackmgr.cpp:535. Complete opens three video archives where the
+// Dreamcast stub opens none: a campaign-relative one built from the
+// 0x597d00 stem, the expansion archive behind the same *gpVideoGameState
+// gate the sound loader uses, and the base archive.
+VA(0x00598210, 0x223)  // anchor-callee(0x597d00 stem) + order-map, dc 0x14ac68
+unsigned char LoadAnimHeaders()
+{
+    DWORD nread;
+
+    gVideoFile3 = CreateFileA(GetCampaignArchiveStem().c_str(), GENERIC_READ,
+        FILE_SHARE_READ, 0, OPEN_EXISTING,
+        FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, 0);
+    if (gVideoFile3 != INVALID_HANDLE_VALUE) {
+        ReadFile(gVideoFile3, &gVideoCount3, 4, &nread, 0);
+        gVideoHeader3 = new VideoHeaderStruct[gVideoCount3 + 2];
+        ReadFile(gVideoFile3, gVideoHeader3, 44 * gVideoCount3, &nread, 0);
+    } else {
+        gVideoFile3 = 0;
+    }
+
+    if (*gpVideoGameState == VIDEO_GAME_STATE_EXPANSION_ARCHIVES
+        || *gpVideoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH) {
+        gVideoFile1 = CreateFileA("data\\h3ab_ahd.vid", GENERIC_READ,
+            FILE_SHARE_READ, 0, OPEN_EXISTING,
+            FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, 0);
+        if (gVideoFile1 == INVALID_HANDLE_VALUE) {
+            MessageBoxA(hwndApp, gpGeneralText->GetText(535),
+                gpGeneralText->GetText(536), 0);
+            return 0;
+        }
+        ReadFile(gVideoFile1, &gVideoCount1, 4, &nread, 0);
+        gVideoHeader1 = new VideoHeaderStruct[gVideoCount1 + 2];
+        ReadFile(gVideoFile1, gVideoHeader1, 44 * gVideoCount1, &nread, 0);
+    }
+
+    gVideoFile2 = CreateFileA("data\\Video.vid", GENERIC_READ, FILE_SHARE_READ,
+        0, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, 0);
+    if (gVideoFile2 == INVALID_HANDLE_VALUE) {
+        MessageBoxA(hwndApp, gpGeneralText->GetText(535),
+            gpGeneralText->GetText(536), 0);
+        return 0;
+    }
+    ReadFile(gVideoFile2, &gVideoCount2, 4, &nread, 0);
+    gVideoHeader2 = new VideoHeaderStruct[gVideoCount2 + 2];
+    ReadFile(gVideoFile2, gVideoHeader2, 44 * gVideoCount2, &nread, 0);
+    return 1;
+}
+
 // E:\gamedcs\smackmgr.cpp:569. The Dreamcast frees an AnimHeader and a
 // VideoHeader here; Complete frees three archive directories and clears
 // each pointer, in the same 3/2/1 order VideoShutDown closes their handles.
@@ -640,6 +696,56 @@ void DeleteAnimHeaders()
         delete[] gVideoHeader1;
         gVideoHeader1 = 0;
     }
+}
+
+// E:\gamedcs\smackmgr.cpp:585. The sound mirror of LoadAnimHeaders, in the
+// same three-archive shape - except that the campaign archive is derived
+// here rather than opened blind: the stem is strtok'd at its first '.' and
+// ".snd" appended, and a missing campaign archive is not an error.
+VA(0x005984a0, 0x240)  // anchor-callee(0x597d00 stem) + order-map, dc 0x14aca0
+unsigned char LoadSoundHeaders()
+{
+    DWORD nread;
+    char path[52];
+
+    SoundFile = CreateFileA("data\\heroes3.snd", GENERIC_READ, FILE_SHARE_READ,
+        0, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, 0);
+    if (SoundFile == INVALID_HANDLE_VALUE) {
+        MessageBoxA(hwndApp, gpGeneralText->GetText(664),
+            gpGeneralText->GetText(665), 0);
+        return 0;
+    }
+    ReadFile(SoundFile, &SoundCount, 4, &nread, 0);
+    SoundHeader = new SoundHeaderStruct[SoundCount + 2];
+    ReadFile(SoundFile, SoundHeader, 48 * SoundCount, &nread, 0);
+
+    if (*gpVideoGameState == VIDEO_GAME_STATE_EXPANSION_ARCHIVES
+        || *gpVideoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH) {
+        SoundFileCD = CreateFileA("data\\h3ab_ahd.snd", GENERIC_READ,
+            FILE_SHARE_READ, 0, OPEN_EXISTING,
+            FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, 0);
+        if (SoundFileCD == INVALID_HANDLE_VALUE) {
+            MessageBoxA(hwndApp, gpGeneralText->GetText(664),
+                gpGeneralText->GetText(665), 0);
+            return 0;
+        }
+        ReadFile(SoundFileCD, &SoundCountCD, 4, &nread, 0);
+        SoundHeaderCD = new SoundHeaderStruct[SoundCountCD + 2];
+        ReadFile(SoundFileCD, SoundHeaderCD, 48 * SoundCountCD, &nread, 0);
+    }
+
+    strcpy(path, GetCampaignArchiveStem().c_str());
+    strtok(path, ".");
+    strcat(path, ".snd");
+    SoundFileCampaign = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, 0,
+        OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, 0);
+    if (SoundFileCampaign != INVALID_HANDLE_VALUE) {
+        ReadFile(SoundFileCampaign, &SoundCountCampaign, 4, &nread, 0);
+        SoundHeaderCampaign = new SoundHeaderStruct[SoundCountCampaign + 2];
+        ReadFile(SoundFileCampaign, SoundHeaderCampaign,
+            48 * SoundCountCampaign, &nread, 0);
+    }
+    return 1;
 }
 
 // E:\gamedcs\smackmgr.cpp:631. Dreamcast proves the alternating
@@ -836,23 +942,9 @@ void GotoSmackerFrame(unsigned long frame)
 
 #if 0  // @carcass
 
-// E:\gamedcs\smackmgr.cpp:535
-DC_ONLY(0x14ac68, 0x4)
-unsigned char LoadAnimHeaders()
-{
-    // @stub
-}
-
 // E:\gamedcs\smackmgr.cpp:569
 DC_ONLY(0x14ac6c, 0x32)
 void DeleteAnimHeaders()
-{
-    // @stub
-}
-
-// E:\gamedcs\smackmgr.cpp:585
-DC_ONLY(0x14aca0, 0x26)
-unsigned char LoadSoundHeaders()
 {
     // @stub
 }

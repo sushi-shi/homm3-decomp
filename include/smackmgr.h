@@ -10,6 +10,24 @@ void SetPixelFormat(unsigned long redMask, unsigned long greenMask,
                     unsigned long blueMask);             // 0x598a40
 }
 
+// The two archive directory records. LoadSoundHeaders (0x5984a0) sizes its
+// allocation `new SoundHeaderStruct[count + 2]` as (3*count + 6) * 16 and
+// then ReadFiles 48*count bytes into it; LoadAnimHeaders (0x598210) does
+// (11*count + 22) * 4 against 44*count. So the stride is 48 and 44. The
+// split inside the record is byte-proven by the 0x598790 lookup, which
+// walks the video directory in 0x2c steps, strcmpi's from offset 0 and
+// seeks to the dword at +0x28: a 40-byte name followed by the file offset,
+// with the sound record carrying a size behind it.
+struct SoundHeaderStruct {
+    char name[40];
+    unsigned long offset;
+    unsigned long size;
+};
+struct VideoHeaderStruct {
+    char name[40];
+    unsigned long offset;
+};
+
 // Partial byte-proven view of the Smacker handle (radlib SmackTag);
 // only the members the smackmgr wrappers touch are modeled. Width/
 // Height are unsigned (VideoPlay centers with shr); the LastRect
@@ -87,7 +105,13 @@ enum EVideoId {
 // The two *gpVideoGameState values that force VIDEO_ID_STATE_GATED
 // onto the bink arm (byte-derived; the pointee's real domain arrives
 // with its owning TU - names provisional).
+// Two disjoint pairs are attested on this global. {2, 3} force
+// VIDEO_ID_STATE_GATED onto the bink arm (VideoPlay / VideoOpen);
+// {1, 3} open the h3ab_ahd expansion archives (LoadAnimHeaders /
+// LoadSoundHeaders). Value 3 is a member of both sets, so it keeps the
+// name the bink gate gave it. Names are role names, provisional.
 enum EVideoGameState {
+    VIDEO_GAME_STATE_EXPANSION_ARCHIVES = 0x1,
     VIDEO_GAME_STATE_FORCED_BINK_LOW = 0x2,
     VIDEO_GAME_STATE_FORCED_BINK_HIGH = 0x3
 };
