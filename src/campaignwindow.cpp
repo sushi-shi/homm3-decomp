@@ -268,6 +268,13 @@ VA_COMPGEN(0x0045f0e0, 0x21, SCALAR_DELETING_DTOR, TCampaignWindow)
 // ~SavedGameHeader.
 VA_COMPGEN(0x0045f110, 0x100, IMPLICIT_DTOR, SCampaign)
 
+// `vector<CampaignScenarioInfo>::operator=`, the whole-vector copy the
+// campaign selection performs. Byte-verified against the COMDAT
+// campaignwindow.obj already emits: 0.984 mnemonic agreement over 613 bytes,
+// with the retail row 11 bytes under our 624-byte template (the tail
+// padding). The sweep had guessed `vector<int>::operator=` on size alone.
+VA_COMPGEN(0x0045f9e0, 0x265, VECTOR_COPY_ASSIGN, CampaignScenarioInfo)
+
 // E:\gamedcs\campaignwindow.cpp:261
 VA(0x0045f210, 0xAE)  // six preview-state closes + global/widget teardown, dc 0x5bd00
 TCampaignWindow::~TCampaignWindow()
