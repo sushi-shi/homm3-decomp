@@ -171,6 +171,48 @@ unsigned char CDPlayHeroes::SysMsgCreatePlayerOrGroup(
     return CDPlay::SysMsgCreatePlayerOrGroup(message, toId);
 }
 
+// E:\gamedcs\remote.cpp:222. The receive drain: pull every pending
+// DirectPlay message, throw away our own and the anonymous ones, give
+// HandleLowLevelMsg first refusal, and queue whatever it did not consume.
+// The loop leaves only when Receive fails, and the ONE failure that is not
+// an error is "no messages left"; anything else is described and logged.
+// QueueMsg is expanded here, this time with the message's own runtime size
+// rather than a folded constant.
+//
+// Residual (68.14%): VC6 INVERTS the drain loop - it emits the Receive call
+// twice, once as the guard and once at the bottom - where retail has one
+// call and three plain back edges into it. Same class as DDBlit's three
+// retry loops in wingraph.obj, and the same three spellings are again
+// BYTE-IDENTICAL to the digit: `while (Receive(...)) { ... continue; }`,
+// the Process1WindowsMessage `poll: if (Receive(...)) { ...; goto poll; }`,
+// and the two guards folded into nested ifs over one shared tail.
+VA(0x00552b60, 0x24B)  // anchor-string(DPlay Receive error) + anchor-callee(HandleLowLevelMsg) + dc-order-map, dc 0x11bb9c
+bool CDPlayHeroes::PollRemote()
+{
+    unsigned long fromId;
+    unsigned long toId;
+
+    while (Receive(&fromId, &toId, &dpMsg, 1)) {
+        if (fromId == gsThisNetPlayerInfo.dpid || !fromId)
+            continue;
+        CNetMsg* pNetMsg =
+            static_cast<CNetMsg*>(static_cast<void*>(dpMsg.pData));
+        if (HandleLowLevelMsg(pNetMsg))
+            continue;
+        QueueMsg(pNetMsg);
+    }
+
+    if (m_hRes == DPLAY_RECEIVE_ERROR_NO_MESSAGES)
+        return true;
+
+    char description[256];
+    GetErrorDesc(m_hRes, description);
+    logFile.Log(DATA_COMPGEN(0x00682a98, dplayReceiveErrorLog,
+                            "DPlay Receive error [%s]"),
+                description);
+    return false;
+}
+
 // DC names the network singleton pDPlay; retail references at 0x69d808 and
 // the adjacent readiness byte are rooted throughout the remote/front-end
 // call graph.
