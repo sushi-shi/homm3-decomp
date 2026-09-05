@@ -188,6 +188,82 @@ const char* gCampaignRegionNames[23];
 
 // 0x006a8014 - datum claimed at src/hero.cpp:2961 (gHeroScreenText0)
 const char* cHeroScreen[33];
+// --- Arraytxt.txt's 24 destination tables (below), Dreamcast-named ---
+
+// 0x006a532c - datum claimed at src/viewarmywindow.cpp:168 (gLuckTexts)
+const char* cLuckInfo[25];
+
+DATA(0x006a558c)
+const char* gLuckText[7];
+
+// 0x006a57bc - datum claimed at src/viewarmywindow.cpp:167 (gMoraleTexts)
+const char* cMoraleInfo[42];
+
+DATA(0x006a5898)
+const char* gOwnedByColor[8];
+
+DATA(0x006a5bb8)
+const char* gArmySizeNames[9][3];
+
+// 0x006a5c48 - datum claimed at src/seerhut.cpp:296 (gQuestMonsterDirections)
+const char* cDirections[9];
+
+DATA(0x006a5c6c)
+const char* gSpeedNames[21];
+
+DATA(0x006a5d24)
+const char* cRumourTerrainDescriptions[10];
+
+DATA(0x006a5d60)
+const char* gBorderGuardColors[9];
+
+DATA(0x006a5e14)
+const char* AGRText[3];
+
+DATA(0x006a5eb0)
+const char* gMoraleText[7];
+
+DATA(0x006a6044)
+TTextResource* ArrayText;
+
+DATA(0x006a6294)
+const char* gTownSizeNames[4];
+
+DATA(0x006a64d8)
+const char* const_wise_tree_price_text[3];
+
+DATA(0x006a74f0)
+const char* gTownTypeNames[10];
+
+// 0x006a7540 - datum claimed at src/hero.cpp:121 (gStatDesc)
+const char* gStatDesc[4];
+
+// 0x006a7710 - datum claimed at src/game.cpp:446
+const char* gWeekNames[15];
+
+// 0x006a7794 - datum claimed at src/townmgr.cpp:483 (gPersonalityNames)
+const char* cPersonality[4];
+
+// 0x006a77a8 - datum claimed at src/game.cpp:447 (gLastDayWarningFormat)
+const char* cNewTurn[8];
+
+DATA(0x006a77ec)
+const char* cDifficulty[5];
+
+DATA(0x006a7800)
+const char* HandiText[3];
+
+// 0x006a79c4 - datum claimed at src/game.cpp:445
+const char* gMonthNames[10];
+
+DATA(0x006a7d94)
+const char* cMapSize[4];
+
+DATA(0x006a7e18)
+const char* HumanCPU[3];
+
+DATA(0x006a8098)
+const char* NewLoadSaveText[3];
 #if 0  // @carcass
 
 // E:\gamedcs\text.cpp:49
@@ -616,18 +692,118 @@ unsigned char InitializeTentColorText()
     return 1;
 }
 
+// Arraytxt.txt is one flat text list read straight through: a running
+// index walks it once, each table takes its own run, and ONE row is
+// skipped between runs (the file's section separator) - which is the
+// `i++` between the loops, and is what fixes every run's start index.
+// The 24 destinations are the Dreamcast's own, in the Dreamcast's own
+// order, and eleven of them are already named at these addresses from
+// the consumer side (gStatDesc, gMonthNames, gWeekNames, gLuckTexts,
+// gMoraleTexts, gQuestMonsterDirections, gGrailTerrainNames,
+// gPersonalityNames, apszArmySizeNames, gWiseTreePriceNames,
+// gObjectOwnerColorNames), which is what corroborates the map.
+
+// E:\gamedcs\text.cpp:1010
+VA(0x005b9cc0, 0x2BC)  // Arraytxt.txt literal + 24 tables, dc 0x162308
+unsigned char InitializeArrayText()
+{
+    int i;
+    int j;
+
+    ArrayText = ResourceManager::GetText(
+        DATA_COMPGEN(0x00688790, arrayTextName, "Arraytxt.txt"));
+    if (!ArrayText)
+        return 0;
+
+    i = 2;
+    for (j = 0; j < 4; j++, i++)
+        gStatDesc[j] = ArrayText->GetText(i);
+    i++;
+    for (j = 0; j < 7; j++, i++)
+        gLuckText[j] = ArrayText->GetText(i);
+    i++;
+    for (j = 0; j < 7; j++, i++)
+        gMoraleText[j] = ArrayText->GetText(i);
+    i++;
+    for (j = 0; j < 8; j++, i++)
+        gOwnedByColor[j] = ArrayText->GetText(i);
+    i++;
+    for (j = 0; j < 10; j++, i++)
+        gMonthNames[j] = ArrayText->GetText(i);
+    i++;
+    for (j = 0; j < 15; j++, i++)
+        gWeekNames[j] = ArrayText->GetText(i);
+    i++;
+    for (j = 0; j < 25; j++, i++)
+        cLuckInfo[j] = ArrayText->GetText(i);
+    i++;
+    for (j = 0; j < 42; j++, i++)
+        cMoraleInfo[j] = ArrayText->GetText(i);
+    i++;
+    for (j = 0; j < 8; j++, i++)
+        cNewTurn[j] = ArrayText->GetText(i);
+    i++;
+    for (j = 0; j < 4; j++, i++)
+        cMapSize[j] = ArrayText->GetText(i);
+    i++;
+    for (j = 0; j < 5; j++, i++)
+        cDifficulty[j] = ArrayText->GetText(i);
+    i++;
+    for (j = 0; j < 9; j++, i++)
+        cDirections[j] = ArrayText->GetText(i);
+    i++;
+    for (j = 0; j < 10; j++, i++)
+        cRumourTerrainDescriptions[j] = ArrayText->GetText(i);
+    i++;
+    for (j = 0; j < 4; j++, i++)
+        cPersonality[j] = ArrayText->GetText(i);
+    i++;
+    // The ONE nested run. Retail's inner body increments the running index
+    // BEFORE the read (`inc ecx / mov edi,[edi + ecx*4 - 4]`), i.e. the
+    // post-increment form the flat runs do not use - but spelling it
+    // `GetText(i++)` here costs 0.50 and three blocks, so the increment
+    // stays in the for-clause with the placement as the residual.
+    for (j = 0; j < 9; j++) {
+        int k;
+
+        for (k = 0; k < 3; k++, i++)
+            gArmySizeNames[j][k] = ArrayText->GetText(i);
+    }
+    i++;
+    for (j = 0; j < 3; j++, i++)
+        const_wise_tree_price_text[j] = ArrayText->GetText(i);
+    i++;
+    for (j = 0; j < 3; j++, i++)
+        HumanCPU[j] = ArrayText->GetText(i);
+    i++;
+    for (j = 0; j < 3; j++, i++)
+        HandiText[j] = ArrayText->GetText(i);
+    i++;
+    for (j = 0; j < 3; j++, i++)
+        AGRText[j] = ArrayText->GetText(i);
+    i++;
+    for (j = 0; j < 10; j++, i++)
+        gTownTypeNames[j] = ArrayText->GetText(i);
+    i++;
+    for (j = 0; j < 3; j++, i++)
+        NewLoadSaveText[j] = ArrayText->GetText(i);
+    i++;
+    for (j = 0; j < 21; j++, i++)
+        gSpeedNames[j] = ArrayText->GetText(i);
+    i++;
+    for (j = 0; j < 4; j++, i++)
+        gTownSizeNames[j] = ArrayText->GetText(i);
+    i++;
+    for (j = 0; j < 9; j++, i++)
+        gBorderGuardColors[j] = ArrayText->GetText(i);
+    return 1;
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\text.cpp:641
 DC_ONLY(0x161ae4, 0x822)
 unsigned char InitializeHelpText()
-{
-    // @stub
-}
-
-// E:\gamedcs\text.cpp:1010
-DC_ONLY(0x162308, 0x608)
-unsigned char InitializeArrayText()
 {
     // @stub
 }
