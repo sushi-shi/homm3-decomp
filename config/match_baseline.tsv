@@ -1506,7 +1506,9 @@ events	?monsters_join@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@
 # per-TU. hist keeps 100.0000; the saturation law says a later
 # declarator can carry it back.
 events	?monsters_sell_out@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	99.9517	100.0000	100.0000	0xa7250	f7b1ec4933f6
+events	?read@CCombatInitMsg@@UAEEPAVTAbstractFile@@@Z	98.1880	98.1880	98.1880	0xad1f0	98638ed1cdad
 events	?show_rewards@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@2@J@Z	100.0000	100.0000	100.0000	0xa0b00	9287544ef4a4
+events	?write@CCombatInitMsg@@UBEEPAVTAbstractFile@@@Z	97.9917	97.9917	97.9917	0xad340	7abc6d18bbac
 exec	??0executive@@QAE@XZ	100.0000	100.0000	100.0000	0xb0900	e5caaee573f2
 exec	?AddManager@executive@@QAEHPAVbaseManager@@H@Z	100.0000	100.0000	100.0000	0xb0b20	11f81dc72e6a
 exec	?CallManager@executive@@QAEXPAVbaseManager@@@Z	100.0000	100.0000	100.0000	0xb0c70	a9eb44cb2746
@@ -2445,7 +2447,15 @@ newgame	?InitNewGame@game@@QAEXHHPAVNewSMapHeader@@PAVTAbstractFile@@@Z	26.5235	
 newgame	?ShowScenInfo@game@@QAEXXZ	100.0000	100.0000	100.0000	0x113740	83f7cc64579c
 newgame	?get_alignment_count@@YIJH@Z	100.0000	100.0000	100.0000	0x1132b0	f1e04004c643
 newgame	?pick_alignment@@YI?AW4TTownType@@HE@Z	100.0000	100.0000	100.0000	0x1132d0	7d86ef3bfcb8
-objecttype	?_Inc@const_iterator@?$_Tree@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V12@U_Kfn@?$set@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@2@U?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x117780	-
+objecttype	??0TObjectImageNameTable@@QAE@XZ	100.0000	100.0000	100.0000	0x114060	-
+objecttype	??5@YIAAV?$basic_istream@DU?$char_traits@D@std@@@std@@AAV01@AAUTObjectType@@@Z	76.6378	76.6378	76.6378	0x114b80	5b651aebcf85
+objecttype	?GetImageName@TObjectType@@QAEABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	78.7778	78.7778	78.7778	0x114960	0bcb70f8d158
+objecttype	?_Inc@const_iterator@?$_Tree@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$pair@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@2@U_Kfn@?$map@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@HU?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@2@U?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x117780	-
+objecttype	?load@TObjectTypeTable@@QAEXPAD@Z	69.2500	69.2500	69.2500	0x114d80	fcfee94502e4
+objecttype	?setImageName@TObjectType@@QAEAAU1@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	33.8617	33.8617	33.8617	0x114610	84051786f38f
+objecttype	?setTriggerMask@TObjectType@@QAEAAU1@ABV?$bitset@$0DA@@std@@@Z	99.9818	99.9818	99.9818	0x114a60	931c974bd57b
+objnames	??1TTextResourceGuard@@QAE@XZ	100.0000	100.0000	100.0000	0x1bd90	e6a9bcd817a7
+objnames	?InitializeAdventureObjectNames@@YIXXZ	98.9899	98.9899	98.9899	0x1b500	8e77da136c72
 overview	??0TOverviewWindow@@QAE@XZ	78.2776	80.0954	80.0954	0x11fa40	e8df282f3bdd
 overview	??1TOverviewWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x120d90	048fab1d8faa
 overview	??_GTOverviewWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x120d60	-
@@ -3596,7 +3606,9 @@ town	?initialize_buildings@@YIXPAVtown@@PBVTownExtra@@@Z	100.0000	100.0000	100.0
 town	?initialize_hordes@town@@SIXXZ	100.0000	100.0000	100.0000	0x1bdf60	2453506fb508
 town	?initialize_spells@town@@QAEXPBVTownExtra@@@Z	97.6742	97.7386	97.7386	0x1be600	7ede4222f099
 town	?is_legal_building@town@@QBEEW4type_building_id@@@Z	100.0000	100.0000	100.0000	0x1c12a0	e3dcc8598062
+town	?load@town@@QAEHPAVTAbstractFile@@H@Z	98.0017	98.0017	98.0017	0x1bcd60	c2a37557aae6
 town	?remove_garrison_hero@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1be390	1cd0c5fe4f8a
+town	?save@town@@QAEHPAVTAbstractFile@@@Z	99.8370	99.8370	99.8370	0x1bd2f0	e520c939a9fd
 # 2026-08-24: both carrier-free peaks are recovered by the real source call
 # Dreamcast records at each tail: vector::clear(), not the former manual
 # erase(begin(), end()). Building is honestly exact; creature's 99.0596 is
