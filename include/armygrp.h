@@ -282,6 +282,12 @@ typedef int SpellID;
 // SPELL_STONE).
 enum ESpellId {
     SPELL_SUMMON_BOAT = 0x0,
+    // advManager::SkuttleBoat (0x41cdf0) is the witness and it proves the
+    // id twice in one body: it takes its traits row at `akSpellTraits +
+    // 0x88` (one 136-byte record past SUMMON_BOAT's) for the per-mastery
+    // success chance, and charges the cast with
+    // `hero::GetManaCost(1, 0, get_special_terrain())`.
+    SPELL_SCUTTLE_BOAT = 0x1,
     // IsInIdentifyRange indexes this row's mastery bonus and multiplies it by
     // spell power to derive the scouting radius; retail displacement 0x144
     // proves spell id 2 independently of the Dreamcast spelling.

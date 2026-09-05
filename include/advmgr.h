@@ -1972,9 +1972,15 @@ public:
                        unsigned char update);
     void CheckCastSpell();
     void CastSpell(int whichSpell);
-    // advspells.obj's, retail 0x41d090 (dc 0x2225c). The mastery is
-    // spelled `int` for the reason ViewWorld's is (see below).
+    // advspells.obj's four adventure-spell handlers, retail 0x41c8a0 /
+    // 0x41cdf0 / 0x41d090 / 0x41d360 (dc 0x21b84 / 0x22054 / 0x2225c /
+    // 0x22510). The mastery is spelled `int` throughout for the reason
+    // ViewWorld's is (see below); the Dreamcast roster types the same
+    // parameter TSkillMastery, which is CONTRADICTED here (note below).
+    void SummonBoat(int level);
+    void SkuttleBoat(int level);
     void DimensionDoor(int level);
+    void TownGate(int level);
     void MobilizeCurrHero(int bInMove, unsigned char waitingPlayer,
                           unsigned char drawChanges);
     void SetTownContext(int townId, unsigned char waitingPlayer,
