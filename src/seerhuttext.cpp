@@ -10,6 +10,18 @@
 #include "seerhuttext.h"
 #include "textresource.h"
 
+// The four compiler-generated special members the two table definitions
+// below instantiate. They are the strongest independent proof of both
+// layouts: 0x56bde0 hands ??_L (the vector constructor iterator) the triple
+// (stride 0x50, count 0xa, element ctor 0x56bed0) before touching the two
+// trailing basic_strings at +0x320 and +0x330, and 0x56bed0 zero-fills five
+// consecutive 0x10-byte strings. The destructors run the same shapes in
+// reverse, starting at +0x334 and +0x44 - the last string's _Ptr in each.
+VA_COMPGEN(0x0056bde0, 0x5A, CLASS_CTOR, TSeerHutTextColumn)
+VA_COMPGEN(0x0056be40, 0x8A, IMPLICIT_DTOR, TSeerHutTextColumn)
+VA_COMPGEN(0x0056bed0, 0x56, CLASS_CTOR, TSeerHutQuestText)
+VA_COMPGEN(0x0056bf30, 0xF4, IMPLICIT_DTOR, TSeerHutQuestText)
+
 // Retail 0x56c120. Copy one seerhut.txt column into one TSeerHutTextColumn.
 //
 // The row map is read straight off the body: row 1 into `name` before the
@@ -37,11 +49,11 @@ void LoadSeerHutTextColumn(TSpreadsheetResource* sheet,
     column->name = sheet->GetRow(1)[col];
 
     for (int q = 1; q < 10; ++q) {
-        column->quest[q].text[0] = sheet->GetRow(5 * q - 3)[col];
-        column->quest[q].text[1] = sheet->GetRow(5 * q - 2)[col];
-        column->quest[q].text[2] = sheet->GetRow(5 * q - 1)[col];
-        column->quest[q].text[3] = sheet->GetRow(5 * q)[col];
-        column->quest[q].text[4] = sheet->GetRow(5 * q + 1)[col];
+        column->quest[q].text0 = sheet->GetRow(5 * q - 3)[col];
+        column->quest[q].text1 = sheet->GetRow(5 * q - 2)[col];
+        column->quest[q].text2 = sheet->GetRow(5 * q - 1)[col];
+        column->quest[q].text3 = sheet->GetRow(5 * q)[col];
+        column->quest[q].text4 = sheet->GetRow(5 * q + 1)[col];
     }
 
     column->completion = sheet->GetRow(47)[col];

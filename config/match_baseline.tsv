@@ -2928,9 +2928,13 @@ seerhut	?read@TQuestGuard@@QAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0
 seerhut	?save@TQuestGuard@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x173520	4af04b37a0b0
 seerhut	?save@TSeerHut@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x173fd0	3f53613a2426
 seerhut	?skill_requirement_text@type_skill_quest@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAY03$$CBC@Z	100.0000	100.0000	100.0000	0x16dfa0	2de5fc7e8020
+seerhuttext	??0TSeerHutQuestText@@QAE@XZ	100.0000	100.0000	100.0000	0x16bed0	-
+seerhuttext	??0TSeerHutTextColumn@@QAE@XZ	100.0000	100.0000	100.0000	0x16bde0	-
+seerhuttext	??1TSeerHutQuestText@@QAE@XZ	100.0000	100.0000	100.0000	0x16bf30	-
+seerhuttext	??1TSeerHutTextColumn@@QAE@XZ	100.0000	100.0000	100.0000	0x16be40	-
 seerhuttext	?InitializeSeerHutText@@YIEXZ	79.8841	79.8841	79.8841	0x16c3e0	0149153d0f95
 seerhuttext	?JoinTextList@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@ABV?$vector@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@2@@Z	100.0000	100.0000	100.0000	0x16c960	3e4f4b4c7871
-seerhuttext	?LoadSeerHutTextColumn@@YIXPAVTSpreadsheetResource@@PAUTSeerHutTextColumn@@H@Z	99.9621	99.9621	99.9621	0x16c120	7596fe801af9
+seerhuttext	?LoadSeerHutTextColumn@@YIXPAVTSpreadsheetResource@@PAUTSeerHutTextColumn@@H@Z	99.9621	99.9621	99.9621	0x16c120	3ece165bd6eb
 singleselectionpopups	??0CBonusDlg@@QAE@E@Z	100.0000	100.0000	100.0000	0x175410	dbf9d97f5101
 singleselectionpopups	??0CHeroDlg@@QAE@E@Z	100.0000	100.0000	100.0000	0x175a70	5e714ddf1053
 singleselectionpopups	??0CHotspotWidget@@QAE@HHHHH@Z	100.0000	100.0000	100.0000	0x175220	d8450891c262
