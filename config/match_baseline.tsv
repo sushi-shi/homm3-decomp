@@ -195,7 +195,7 @@ ai	?choose_cyclops_action@combatManager@@QAEEJJPAUtype_AI_combat_parameters@@@Z	
 ai	?choose_defense_hex@combatManager@@QAEEPBVarmy@@0PAJ1PAVsearchArray@@@Z	99.0992	99.0992	99.0992	0x205d0	6a12ed69ada4
 ai	?choose_melee_action@combatManager@@QAEJPBVarmy@@EEJ@Z	100.0000	100.0000	100.0000	0x21f80	dfa5fb3cc335
 ai	?choose_melee_target@combatManager@@QAEEPBVarmy@@EPAJPAUtype_AI_combat_parameters@@@Z	89.6892	89.6892	89.6892	0x21680	4fd6c83ca64b
-ai	?choose_resurrect_action@combatManager@@QAEEPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	54.0545	95.7822	95.7822	0x21000	2ab8c2cddb45
+ai	?choose_resurrect_action@combatManager@@QAEEPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	32.2426	95.7822	95.7822	0x21000	2ab8c2cddb45
 ai	?choose_shooter_action@combatManager@@QAEXPBVarmy@@EJ@Z	100.0000	100.0000	100.0000	0x1f060	22994db66524
 ai	?choose_shooter_target@combatManager@@QAEJPBVarmy@@PAUtype_AI_combat_parameters@@PAJ@Z	100.0000	100.0000	100.0000	0x1eb80	2b9dba5e9708
 ai	?choose_spell_action@combatManager@@QAEEPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x21280	ff167d617608
@@ -391,7 +391,7 @@ ai_player	?value_of_hall@@YIJPAVtown@@W4type_building_id@@@Z	100.0000	100.0000	1
 ai_player	?value_of_hiring@@YIJPAVtown@@PAVhero@@PAVsearchArray@@@Z	99.9522	99.9522	99.9522	0x31bd0	166320dbc4bb
 ai_player	?value_of_horde@@YIJPAVtown@@W4type_building_id@@PAEPAH@Z	100.0000	100.0000	100.0000	0x2b790	0ffb63118ec0
 ai_player	?value_of_horde_upgrade@@YIJPAVtown@@W4type_building_id@@PAEPAH@Z	100.0000	100.0000	100.0000	0x2b800	5eaa0276a877
-ai_tactical	??0army@@QAE@ABV0@@Z	64.4635	100.0000	100.0000	0x37a00	-
+ai_tactical	??0army@@QAE@ABV0@@Z	66.4292	100.0000	100.0000	0x37a00	-
 ai_tactical	??0type_AI_attack_hex_chooser@@QAE@PBVarmy@@0PBJPAVsearchArray@@PBUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x360c0	118b7a7a50aa
 ai_tactical	??0type_AI_combat_parameters@@QAE@PBVcombatManager@@J@Z	100.0000	100.0000	100.0000	0x35ec0	cfa0f5b47019
 ai_tactical	??0type_AI_spellcaster@@QAE@PAVcombatManager@@JE@Z	93.1850	93.1850	93.1850	0x369c0	73ed279b1210
@@ -418,9 +418,9 @@ ai_tactical	?find_enemy_attacks@type_AI_spellcaster@@QAEXXZ	87.7343	87.7343	87.7
 ai_tactical	?get_age_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x373f0	b97f15c677b5
 ai_tactical	?get_air_protection_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x399a0	7842cc21930b
 ai_tactical	?get_air_shield_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38bc0	aff9955939cc
-ai_tactical	?get_antimagic_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	0.0000	100.0000	100.0000	0x39d40	6973d94df595
+ai_tactical	?get_antimagic_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	7.2979	100.0000	100.0000	0x39d40	6973d94df595
 ai_tactical	?get_area_effect_value@type_AI_spellcaster@@QAEJHJW4TSkillMastery@@J@Z	100.0000	100.0000	100.0000	0x37040	aa44fc7b2bf4
-ai_tactical	?get_attack_skill_value@type_AI_spellcaster@@QAEJPBVarmy@@0JJ@Z	53.4311	99.8503	99.8503	0x37800	852f59e2bc57
+ai_tactical	?get_attack_skill_value@type_AI_spellcaster@@QAEJPBVarmy@@0JJ@Z	76.3653	99.8503	99.8503	0x37800	852f59e2bc57
 ai_tactical	?get_backlash_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	0.0000	100.0000	100.0000	0x39de0	259b2f798110
 ai_tactical	?get_berserk_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x3a400	38218f1b06a2
 ai_tactical	?get_bless_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x37430	3feabf0dd5b7
@@ -437,7 +437,7 @@ ai_tactical	?get_curse_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_dat
 ai_tactical	?get_damage_spell_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x36f60	04385420477a
 ai_tactical	?get_damage_value@type_AI_spellcaster@@QAEJHJPBVhero@@PBVarmy@@@Z	100.0000	100.0000	100.0000	0x36e30	f24b538348b5
 ai_tactical	?get_defense_boost_value@type_AI_spellcaster@@QAEJPBVarmy@@0JN@Z	100.0000	100.0000	100.0000	0x387c0	4e5371ae7a3c
-ai_tactical	?get_defense_skill_value@type_AI_spellcaster@@QAEJPBVarmy@@JJ@Z	0.0000	100.0000	100.0000	0x38910	f37440223117
+ai_tactical	?get_defense_skill_value@type_AI_spellcaster@@QAEJPBVarmy@@JJ@Z	34.5765	100.0000	100.0000	0x38910	f37440223117
 ai_tactical	?get_disease_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38a10	fe85b950bd3f
 ai_tactical	?get_dispel_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	0.0000	100.0000	100.0000	0x39bc0	3d130f7655e2
 ai_tactical	?get_disruptive_ray_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38dc0	b3db6a9813b4
@@ -491,14 +491,14 @@ army	?ComputeBaseDamage@army@@QBEHE@Z	100.0000	100.0000	100.0000	0x43160	4b5cf24
 army	?ComputeDefenderDamageReduction@army@@QBENE@Z	100.0000	100.0000	100.0000	0x43d90	86d41e28dd23
 army	?Cure@army@@QAEXHHPBVhero@@@Z	100.0000	100.0000	100.0000	0x46500	a62e4c5ce839
 army	?Damage@army@@QAEHH@Z	100.0000	100.0000	100.0000	0x44090	8611a63a1cae
-army	?DrawToBuffer@army@@QAEXHHH@Z	96.1366	96.1366	96.1366	0x3e140	17f18cc634ad
+army	?DrawToBuffer@army@@QAEXHHH@Z	96.8587	96.8587	96.8587	0x3e140	17f18cc634ad
 army	?FaerieDragonSpell@army@@QAEXXZ	100.0000	100.0000	100.0000	0x47510	59a6c0169a9e
 army	?GetArmyName@@YIPBDHH@Z	100.0000	100.0000	100.0000	0x40100	6f9a29b482cd
 army	?GetSpeed@army@@QBEHXZ	100.0000	100.0000	100.0000	0x48cd0	05b48d008b8d
 army	?GoBerserk@army@@QAEXXZ	100.0000	100.0000	100.0000	0x456d0	9ab479de3345
 army	?Init@army@@QAEXHHPBVhero@@HHHH@Z	100.0000	100.0000	100.0000	0x3d8b0	28bc09498414
 army	?InitClean@army@@QAEXXZ	92.6261	92.6261	92.6261	0x3d5c0	9d5a2ebce7ef
-army	?LoadResources@army@@QAEXXZ	98.6225	98.6225	98.6225	0x3d9f0	123cc8c6096e
+army	?LoadResources@army@@QAEXXZ	100.0000	100.0000	100.0000	0x3d9f0	123cc8c6096e
 army	?MidX@army@@QBEHXZ	100.0000	100.0000	100.0000	0x46660	bcbd9f15a12d
 army	?MidY@army@@QBEHXZ	100.0000	100.0000	100.0000	0x46630	aa3d1aeda6d1
 army	?OffsetToFront@army@@QBEHH@Z	100.0000	100.0000	100.0000	0x45cd0	85b2dbb7172a
@@ -517,10 +517,10 @@ army	?_Freeback@?$deque@HV?$allocator@H@std@@@std@@IAEXXZ	100.0000	100.0000	100.
 army	?_Freefront@?$deque@HV?$allocator@H@std@@@std@@IAEXXZ	100.0000	100.0000	100.0000	0x490b0	-
 army	?add_aura@army@@QAEXXZ	100.0000	100.0000	100.0000	0x3ea70	e6d056a6b049
 army	?adjust_damage@army@@QBEJPAV1@JEEJPAJ@Z	100.0000	100.0000	100.0000	0x43f40	6eace58e71c0
-army	?animate_missile@army@@AAEXPAV1@@Z	93.1695	93.1695	93.1695	0x3f2c0	8f6acef997bf
+army	?animate_missile@army@@AAEXPAV1@@Z	94.2017	94.2017	94.2017	0x3f2c0	8f6acef997bf
 army	?attack_hex@army@@QAEEHE@Z	100.0000	100.0000	100.0000	0x45a60	e88d6d24596a
 army	?attack_wall@army@@AAEXW4TWallTargetId@@ABUtype_ballistics_traits@@@Z	100.0000	100.0000	100.0000	0x45ec0	eb02d396c5bc
-army	?attack_wall@army@@AAEXW4TWallTargetId@@J@Z	91.4600	91.4600	91.4600	0x45fd0	2bfc27fbf16b
+army	?attack_wall@army@@AAEXW4TWallTargetId@@J@Z	90.8184	91.4600	91.4600	0x45fd0	2bfc27fbf16b
 army	?can_cast_resurrect@army@@QBE_NJ@Z	100.0000	100.0000	100.0000	0x473d0	505942acbee8
 army	?can_cast_spell@army@@QBEEJ@Z	100.0000	100.0000	100.0000	0x476c0	1b67faf4a534
 army	?can_shoot@army@@QBEEPBV1@@Z	100.0000	100.0000	100.0000	0x428f0	24e2d7e88a62
@@ -855,7 +855,7 @@ cmbtmgr	?PlaceAllObstacles@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x66
 cmbtmgr	?PlaceArmyInGrid@combatManager@@QAEXABVarmy@@H@Z	100.0000	100.0000	100.0000	0x687c0	47ab91791c87
 cmbtmgr	?PlaceLargeObstacle@combatManager@@QAEHII@Z	100.0000	100.0000	100.0000	0x668a0	0dcdebb3c2f1
 cmbtmgr	?PlaceObstacle@combatManager@@QAEXPBUTObstacle@1@HHI@Z	100.0000	100.0000	100.0000	0x669b0	d41bb5cd8cc4
-cmbtmgr	?PowEffect@combatManager@@QAEXHH@Z	96.2232	96.2232	96.2232	0x68990	02f5d182240c
+cmbtmgr	?PowEffect@combatManager@@QAEXHH@Z	96.2963	96.2963	96.2963	0x68990	02f5d182240c
 cmbtmgr	?RaiseDoor@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x672e0	69c647dd5678
 cmbtmgr	?RaiseSkeletons@combatManager@@QAEXH@Z	93.2203	93.2203	93.2203	0x69f20	3a65a60c06a8
 cmbtmgr	?RemoveArmyFromGrid@combatManager@@QAEXABVarmy@@@Z	100.0000	100.0000	100.0000	0x68730	62af9d7bc87c
@@ -970,7 +970,7 @@ command	?DoVictory@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x77470	8b0
 # automate_first_aid_tent re-exposes the same include-set/codegen class;
 # GetCommand's 62 branches and 20 returns still agree exactly. hist stays
 # at 92.5714.
-command	?GetCommand@combatManager@@QAEHH@Z	92.5714	92.5714	92.5714	0x76490	2428ad3c2637
+command	?GetCommand@combatManager@@QAEHH@Z	92.5357	92.5714	92.5714	0x76490	2428ad3c2637
 command	?GetControl@combatManager@@QAEXXZ	98.2830	98.2830	98.2830	0x782d0	64563999aa5f
 command	?HandleCombatPlayerDrop@combatManager@@QAEEKPAVmessage@@@Z	100.0000	100.0000	100.0000	0x7a500	93137abf7711
 command	?Main@combatManager@@UAEHAAVmessage@@@Z	97.6611	97.6611	97.6611	0x740d0	f9eda22ca5c0
@@ -3417,7 +3417,7 @@ spells	?ShowSpellMessage@combatManager@@QAEXHHPAVarmy@@@Z	98.7602	100.0000	100.0
 spells	?SpellCastWorkChance@combatManager@@QAEMHJPBVarmy@@EEJ@Z	100.0000	100.0000	100.0000	0x1a8090	d116c169488a
 spells	?SpellCastWorks@combatManager@@QAEEHJPBVarmy@@EJ@Z	100.0000	100.0000	100.0000	0x1a8640	d59134a22e8d
 spells	?SpellTargetMessage@combatManager@@QAEXHHE@Z	100.0000	100.0000	100.0000	0x1a8690	9cf732f301c4
-spells	?SummonElemental@combatManager@@QAEXHW4TCreatureType@@HH@Z	71.8173	93.4375	93.4375	0x1a7080	4d395e56a948
+spells	?SummonElemental@combatManager@@QAEXHW4TCreatureType@@HH@Z	65.8702	93.4375	93.4375	0x1a7080	4d395e56a948
 spells	?Unnamed59FDE0@combatManager@@QAEXHHPAVarmy@@@Z	100.0000	100.0000	100.0000	0x19fde0	a812dc2c7357
 spells	?ValidSpellTarget@combatManager@@QAEEHJJJEJ@Z	88.4937	88.4937	88.4937	0x1a39c0	61a003dfba43
 spells	?ValidSpellTargetArmy@combatManager@@QAEEHHPBVarmy@@EJ@Z	100.0000	100.0000	100.0000	0x1a3c80	110edc19289c
