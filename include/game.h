@@ -993,6 +993,19 @@ class CPlayerLostMsg : public CNetMsg {
 public:
     int loser;
     LossConditionStruct lossCondition;
+
+    // kb.obj's SendPlayerLost builds this at all three DisplayLCWinLoss
+    // arms. The member's own default constructor runs before the body's
+    // assignment - retail stores Type/-1, GameLost/0 and playerLoser/-1
+    // into the frame copy and then overwrites all 36 bytes with the
+    // rep movsd, which is what proves the two-statement body rather than
+    // a member-initialiser.
+    CPlayerLostMsg(int loser, LossConditionStruct& lossConditionStruct)
+      : CNetMsg(RS_PLAYER_LOST, sizeof(CPlayerLostMsg))
+    {
+        this->loser = loser;
+        lossCondition = lossConditionStruct;
+    }
 };
 SIZE(CPlayerLostMsg, 0x3c);
 
@@ -1002,6 +1015,15 @@ SIZE(CPlayerLostMsg, 0x3c);
 class CNormalWinMsg : public CNetMsg {
 public:
     int gamePos;
+
+    // kb.obj's CheckEndGame (0x4f2ce0) builds this message on the
+    // last-team-standing path and proves the whole record: the base
+    // constructor's five stores in their declared order, RS_NORMAL_WIN as
+    // the subtype, a 0x18 extent, and the winning seat landing at +0x14.
+    CNormalWinMsg(int gamePos) : CNetMsg(RS_NORMAL_WIN, sizeof(CNormalWinMsg))
+    {
+        this->gamePos = gamePos;
+    }
 };
 SIZE(CNormalWinMsg, 0x18);
 
@@ -2052,7 +2074,12 @@ public:
     char pad_4e646[2];
     std::vector<TRumour> rumours;             // +0x4e648
     char field_4e658[0x1c];
-    char pad_4e674[8];
+    char pad_4e674[4];
+    // +0x4e678, sliced out of that pad 2026-09-05: kb.obj's InitVars
+    // (expanded into EarlySetup at 0x4eda80) stores a dword zero here
+    // through gpGame, and that is the only located reference. Role
+    // unattested - ordinal placeholder.
+    int field_4e678;
     // +0x4e67c / +0x4e6fc / +0x4e77c - the teleport-destination pools,
     // all std::vector<type_point>. The two arrays are indexed by the
     // monolith colour (`color << 4` in both wrappers) and the gap
