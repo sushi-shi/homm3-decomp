@@ -5114,6 +5114,11 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
         }
         break;
 
+    // Both town arms read the member BACK for UpdateTown: retail stores
+    // townType to pThisPlayer->townIndex and then re-loads +0x24
+    // (`mov esi,[esi+0x24]`) for the call, where passing the local kept it
+    // live in a register and duplicated the legalAlignments `test`.
+    // 97.3769 -> 97.5628.
     case SSW_TOWN_PREV_FIRST:
     case SSW_TOWN_PREV_FIRST + 1:
     case SSW_TOWN_PREV_FIRST + 2:
@@ -5137,7 +5142,9 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
             pThisPlayer->townIndex = townType;
             CTownUpdateMsg netMsg(i, townType);
             TransmitRemoteDataDPID(&netMsg, 0, false, true);
-            UpdateTown(i, townType, 0);
+            UpdateTown(i,
+                       static_cast<TTownType>(pThisPlayer->townIndex) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */,
+                       0);
         }
         break;
     }
@@ -5164,7 +5171,9 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
             pThisPlayer->townIndex = townType;
             CTownUpdateMsg netMsg(i, townType);
             TransmitRemoteDataDPID(&netMsg, 0, false, true);
-            UpdateTown(i, townType, 0);
+            UpdateTown(i,
+                       static_cast<TTownType>(pThisPlayer->townIndex) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */,
+                       0);
         }
         break;
     }
@@ -5255,6 +5264,13 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
         // Measured negative (2026-09-01): statement-scoped inline_depth(1)
         // is byte-flat and does not preserve retail's nested _Tidy call.
         // Do not retain an inert inline-control artifact here.
+        // Confirmed 2026-09-05 as one of the row's two remaining OVER-inlines
+        // (the other is `SendSetupInfo`'s CNetMsg base ctor at 0x5865b0+0x6ab,
+        // which retail CALLS - `push 0x204 / push 0x402 / lea ecx,[ebp-0x25c]
+        // / call ??0CNetMsg` - against our five inline field stores). The
+        // statement order here is already retail's: the temporary is torn
+        // down BEFORE the `test bl,bl`, so only the expansion differs. Both
+        // want a caller-shrink or a site pin and neither is available.
         if (GenerateRandomMap(GetRandomMapName().c_str()))
             NormalDialog(gpGeneralText->GetText(749),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
