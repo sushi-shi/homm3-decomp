@@ -39,13 +39,6 @@ long ftol(double d)
     // @stub
 }
 
-// E:\gamedcs\palette.cpp:67
-DC_ONLY(0x10a338, 0x72)
-void TPalette16::TPalette16(const TPalette24* p24, int rbits, int rshift, int gbits, int gshift, int bbits, int bshift)
-{
-    // @stub
-}
-
 // E:\gamedcs\palette.cpp:73
 DC_ONLY(0x10a3ac, 0x6E)
 void TPalette16::TPalette16(const TRGBA* rgba, int rbits, int rshift, int gbits, int gshift, int bbits, int bshift)
@@ -56,13 +49,6 @@ void TPalette16::TPalette16(const TRGBA* rgba, int rbits, int rshift, int gbits,
 // E:\gamedcs\palette.cpp:79
 DC_ONLY(0x10a41c, 0x7C)
 void TPalette16::TPalette16(const tagRGBQUAD* quad, int rbits, int rshift, int gbits, int gshift, int bbits, int bshift)
-{
-    // @stub
-}
-
-// E:\gamedcs\palette.cpp:86
-DC_ONLY(0x10a498, 0x70)
-void TPalette16::TPalette16(const char* name, const TPalette24* p24, int rbits, int rshift, int gbits, int gshift, int bbits, int bshift)
 {
     // @stub
 }
@@ -128,6 +114,60 @@ TPalette16::TPalette16(const unsigned short* newData)
     : resource(0, RESOURCE_TYPE_NONE)
 {
     memcpy(data, newData, sizeof(data));
+}
+
+// The two six-bit-field constructors, and DC's own Convert24to16 boundary
+// (palette.cpp:210) that both expand. Retail keeps no out-of-line copy of the
+// helper: /Ob2 took it into every caller, which is why the two bodies below
+// are 157 and 159 bytes rather than a call apiece. The pair differs only in
+// the resource base - the second names the palette and passes
+// RESOURCE_TYPE_PALETTE - so it is a free in-compile A/B on one loop.
+void TPalette16::Convert24to16(const unsigned char* p24, int rbits, int rshift,
+                               int gbits, int gshift, int bbits, int bshift)
+{
+    for (int index = 0; index < 256; ++index) {
+        data[index] = static_cast<unsigned short>(
+            ((p24[3 * index] >> (8 - rbits))
+             << rshift)
+            | ((p24[3 * index + 1] >> (8 - gbits))
+               << gshift)
+            | ((p24[3 * index + 2] >> (8 - bbits))
+               << bshift));
+    }
+}
+
+// Residual (94.85% / 94.94%): the loop bodies are byte-identical - same
+// `p24 + 0x1e` induction bias, same [eax-1]/[eax-5]/[eax-3] read order, same
+// `movzx di,bl` pair and same countdown - and the whole delta is the
+// loop-invariant hoist ahead of them: retail loads the three bit-widths as
+// BYTES and subtracts in 8-bit (`mov cl,[ebp+0xc] / mov dl,8 / sub dl,cl`),
+// spilling two byte results into parameter padding, where we compute the
+// three differences in dwords and spill dwords. Tried and REJECTED, both
+// measured on the pair: `static_cast<unsigned char>(8 - Xbits)` around the
+// difference (90.60/90.81), `8 - static_cast<unsigned char>(Xbits)` around
+// the parameter (77.65/79.59), three named `unsigned char` drop locals ahead
+// of the loop (91.34), and all six `|` operand orders (byte-flat within
+// 0.02 - VC6 canonicalises them). The byte cast IS a real lever, but only
+// in combination with the pointer-ADVANCING loop form, which is worse
+// overall: advance+cast measures 93.24/87.46 against subscript+no-cast's
+// 94.85/94.94.
+VA(0x005226d0, 0x9D)  // dc-order-map + six-field conversion loop, dc 0x10a338
+TPalette16::TPalette16(const TPalette24* p24, int rbits, int rshift,
+                       int gbits, int gshift, int bbits, int bshift)
+    : resource(0, RESOURCE_TYPE_NONE)
+{
+    Convert24to16(p24->colors.data[0], rbits, rshift, gbits, gshift,
+                  bbits, bshift);
+}
+
+VA(0x00522770, 0x9F)  // dc-order-map + named resource ctor (0x60 = RESOURCE_TYPE_PALETTE), dc 0x10a498
+TPalette16::TPalette16(const char* name, const TPalette24* p24,
+                       int rbits, int rshift, int gbits, int gshift,
+                       int bbits, int bshift)
+    : resource(name, RESOURCE_TYPE_PALETTE)
+{
+    Convert24to16(p24->colors.data[0], rbits, rshift, gbits, gshift,
+                  bbits, bshift);
 }
 
 // The pointer-taking copy constructor, and the payload-only assignment behind
@@ -217,13 +257,6 @@ void TPalette16::AdjustSaturation(float amount)
 }
 
 #if 0  // @carcass
-
-// E:\gamedcs\palette.cpp:210
-DC_ONLY(0x10a910, 0x88)
-void TPalette16::Convert24to16(const unsigned char* p24, int rbits, int rshift, int gbits, int gshift, int bbits, int bshift)
-{
-    // @stub
-}
 
 // E:\gamedcs\palette.cpp:236
 DC_ONLY(0x10a998, 0x7E)
