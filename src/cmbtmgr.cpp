@@ -71,6 +71,7 @@
 #include "prefs.h"  // the local quick-combat preference
 #include "mapcell.h"
 #include "resourcemanager.h"
+#include "sample.h"   // TResourceHandle<sample>::~TResourceHandle calls resource::Dispose
 #include "soundmgr.h" // SAMPLE2 / LoadPlaySample / WaitEndSample
 #include "mousemgr.h" // gpMouseManager / SetPointer / ShowPointer, for Open
 #include "remote.h"
