@@ -4,6 +4,7 @@
 #include <va.h>
 #include <string.h>
 #include "bitmap16.h"
+#include "bitmap816.h"
 
 // Retail's destructor is frameless under /GX, proving that this TU saw the
 // deallocator as nothrow (the same header contract established by sample.obj).
@@ -295,6 +296,46 @@ void Bitmap16Bit::Darken(int x, int y, int w, int h)
                     (*pixel.pixels >> 1) & shift_mask);
                 ++pixel.pixels;
             }
+            row.bytes += Pitch;
+        }
+    }
+}
+
+// E:\gamedcs\bitmap16.cpp:778. The masked Darken overload: the same halve-
+// and-mask pass as the plain one, applied only where the 8-bit companion
+// bitmap has a non-zero byte. The mask row stride is its WIDTH, not its
+// Pitch - retail adds [mask+0x24] at the foot of every row - while the
+// starting row is still taken through Pitch.
+VA(0x0044e6a0, 0xE0)  // anchor-caller(UpdateGrid, seven pushes) + order-map(DC bitmap16.obj), dc 0x516a8
+void Bitmap16Bit::Darken(int x, int y, int w, int h, Bitmap816* mask,
+                         int sx, int sy)
+{
+    if (w > Width - x)
+        w = Width - x;
+    if (h > Height - y)
+        h = Height - y;
+
+    if (w && h) {
+        unsigned long shift_mask =
+            ((gColorMaskRed >> 1) & gColorMaskRed)
+            | ((gColorMaskGreen >> 1) & gColorMaskGreen)
+            | ((gColorMaskBlue >> 1) & gColorMaskBlue);
+        unsigned char* mask_row = mask->map + mask->Pitch * sy + sx;
+        Bitmap16MapPointer row;
+        row.pixels = GetMap(x, y);
+
+        for (int iy = 0; iy < h; ++iy) {
+            unsigned char* mask_pixel = mask_row;
+            Bitmap16MapPointer pixel = row;
+            for (int ix = 0; ix < w; ++ix) {
+                if (*mask_pixel) {
+                    *pixel.pixels = static_cast<unsigned short>(
+                        (*pixel.pixels >> 1) & shift_mask);
+                }
+                ++mask_pixel;
+                ++pixel.pixels;
+            }
+            mask_row += mask->Width;
             row.bytes += Pitch;
         }
     }
