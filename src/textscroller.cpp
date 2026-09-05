@@ -183,6 +183,12 @@ void type_text_scroller::Refresh(int firstLine)
 // 73.40, a direct two-argument `insert(end(), X)` 97.03, a direct
 // three-argument `insert(end(), 1, X)` 39.40.  The remaining knob is a
 // statement pin, which this tree does not admit.
+// The padding loop's push_back lowers to vector<string>::insert(pos, n, value)
+// here where retail calls insert(pos, value) - the two-argument overload that
+// returns an iterator.  Spelling the site as that overload directly
+// (`text_lines.insert(text_lines.end(), std::string(""))`) is MEASURED AND
+// REJECTED 2026-09-06 at 97.0339 against 99.4361: it produces retail's callee
+// but loses the surrounding block.  push_back stays.
 VA(0x005BA6E0, 0x1EF)  // anchor-callee (font::FillLinesVector) + slider slots, retail-only
 void type_text_scroller::SetText(const char* text)
 {
