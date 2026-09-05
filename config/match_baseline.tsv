@@ -2958,6 +2958,7 @@ singleselectionwindow	?GetHeroName@TSingleSelectionWindow@@QAEPBDH@Z	80.5426	80.
 singleselectionwindow	?GetMapName@TSingleSelectionWindow@@QAEPBDH@Z	100.0000	100.0000	100.0000	0x184010	bbaad4b28fb3
 singleselectionwindow	?GetPlayer@CNetPlayerHandler@@QAEPAVCNetPlayerHandlerPlayer@@K@Z	100.0000	100.0000	100.0000	0x177ce0	f86adc210eaa
 singleselectionwindow	?GetPlayerInPos@CNetPlayerHandler@@QAEPAVCNetPlayerHandlerPlayer@@H@Z	100.0000	100.0000	100.0000	0x177bb0	2a3c60e7653f
+singleselectionwindow	?GetRandomMapName@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	99.4390	99.4390	99.4390	0x1879a0	d097732b47d8
 singleselectionwindow	?Go@CNewPlayerUpdateProc@@UAEXXZ	100.0000	100.0000	100.0000	0x1789f0	18b8bfbd5036
 singleselectionwindow	?Go@t_map_list_update@@UAEXXZ	100.0000	100.0000	100.0000	0x177d70	79c6c24ce1b3
 singleselectionwindow	?HandleNetMsg@CSingleSelectionNetMsgHandler@@UAEPAVCNetMsg@@PAV2@@Z	100.0000	100.0000	100.0000	0x18e340	e5deaf270aea
@@ -3004,7 +3005,7 @@ singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100
 # 2026-08-27 (round 3): the interim full build re-banked the transient
 # peak a third time; re-lowered with the round's bodies landed. Same
 # scheduler flap, same recovery path.
-singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0	66eb0a0e15c8
+singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0	66eb0a0e15c8
 singleselectionwindow	?OnMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2193	90.2193	90.2193	0x189710	3ad2be3935a3
 singleselectionwindow	?OnNameClick@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x18b620	ef174e28edf8
 singleselectionwindow	?OnNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	97.5366	97.5366	97.5366	0x18b510	862e2a9c058b
@@ -3067,7 +3068,6 @@ singleselectionwindow	?read@CGameHeaderInfoMsg@@UAEEPAVTAbstractFile@@@Z	100.000
 singleselectionwindow	?read@CNewMapHeaderInfoMsg@@UAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x177a10	5ae328e46dc0
 singleselectionwindow	?write@CGameHeaderInfoMsg@@UBEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x177950	3c0b56d9b222
 singleselectionwindow	?write@CNewMapHeaderInfoMsg@@UBEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x177a30	ea03c0a6e3df
-singleselectionwindow	GetRandomMapName	0.0000	0.0000	0.0000	0x1879a0	f5a63457cca0
 singleselectionwindow	TSingleSelectionWindow_BeginNewGame	0.0000	0.0000	0.0000	0x18c570	e5a5f3c8dbef
 singleselectionwindow	TSingleSelectionWindow_GenerateRandomMap	0.0000	0.0000	0.0000	0x1860e0	ffdf5b582de2
 singleselectionwindow	TSingleSelectionWindow_OnBeginGame	0.0000	0.0000	0.0000	0x18bce0	5b18a61fa80f

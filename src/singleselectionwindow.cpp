@@ -5444,17 +5444,64 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
     return 0;
 }
 
-#if 0  // @carcass - Complete-only random-map name helper pending full body
-
 // Hidden std::string result in ECX, no explicit stack args. Retail enumerates
-// random_maps/*.h3m and returns the generated filename.
+// random_maps/*.h3m and returns the generated filename: it builds the fifteen
+// canonical slot names, stamps each existing file's write time into the
+// matching slot (absent slots keep their zero), and returns the slot with the
+// smallest stamp - i.e. the free slot if there is one, otherwise the oldest.
+//
+// Residual (99.4390%): three bytes. Retail keeps the sprintf loop counter in
+// EDX behind its own `xor edx,edx`, while our compile CSEs it onto the EAX
+// zero the memset intrinsic already materialised. Tried and rejected:
+// `i = 0;` written above the memset (98.95), the memset moved below the loop
+// (89.16), and hoisting `int i;` to the declaration block (byte-flat - a bare
+// declaration creates no pseudo).
 VA(0x005879A0, 0x219)
 std::string GetRandomMapName()
 {
-    // @stub
-}
+    char names[15][30];
+    int times[15];
+    _finddata_t fileinfo;
+    int i;
 
-#endif  // @carcass
+    _chdir(DATA_COMPGEN(0x006836ac, randomMapsDir, "random_maps"));
+    long hFind = _findfirst(DATA_COMPGEN(0x00683494, mapFileSpec, "*.h3m"),
+                            &fileinfo);
+    if (hFind == -1) {
+        _chdir(DATA_COMPGEN(0x006755a0, parentDirectory, ".."));
+        return DATA_COMPGEN(0x006837f8, firstRandomMapName,
+                            "random_map_1.h3m");
+    }
+
+    memset(times, 0, sizeof(times));
+    for (i = 0; i < 15; ++i)
+        sprintf(names[i],
+                DATA_COMPGEN(0x006837e4, randomMapNameFormat,
+                             "random_map_%i.h3m"),
+                i + 1);
+
+    do {
+        for (int j = 0; j < 15; ++j) {
+            if (_strcmpi(names[j], fileinfo.name) == 0) {
+                times[j] = fileinfo.time_write;
+                break;
+            }
+        }
+    } while (_findnext(hFind, &fileinfo) == 0);
+
+    _chdir(DATA_COMPGEN(0x006755a0, parentDirectory, ".."));
+    _findclose(hFind);
+
+    int oldest = times[0];
+    int which = 0;
+    for (int k = 1; k < 15; ++k) {
+        if (times[k] < oldest) {
+            which = k;
+            oldest = times[k];
+        }
+    }
+    return names[which];
+}
 
 // On the way out of a network lobby: detach the net-message handler,
 // clear the chat pane, and dump the final seat map into the network
