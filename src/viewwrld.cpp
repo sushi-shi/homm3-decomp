@@ -25,18 +25,57 @@
 // offsets form each destination origin, and the buffer/sprite pair are owned
 // by ViewWorld's setup/teardown path.
 DATA(0x0068c6bc) int giViewWorldScale;
+// THE VIEW-WORLD CHECKBOX STATE, hoisted here because VWDrawSymbols gates
+// each of its five arms on one of them. advManager::ViewWorld's Dreamcast
+// body keeps view_mines / view_heroes / view_towns as locals (S_REGREL32
+// rows at dc 0x195b48); Complete's level callbacks below read them from
+// viewwrld.obj's own .bss, which is what made them file statics. The
+// Dreamcast ALSO publishes all five as globals - iVWMines, iVWResources,
+// iVWArtifacts, iVWTowns, iVWHeroes, every one of them `bool` - and their
+// RELATIVE order survives the port intact: iVWResources sits immediately
+// after iVWTerrains in both images (dc 0x38010/0x38014 against retail
+// 0x6aab78/0x6aab79) and mines < artifacts < towns < heroes ascends the
+// same way in both. That correspondence is what fixes the two addresses
+// this file had no reader for until now.
+DATA(0x006aab68)
+static unsigned char view_mines;
 DATA(0x006aab78) bool iVWTerrains;
+DATA(0x006aab79)
+static unsigned char view_resources;
 DATA(0x006aab84) int scaleLine[32];
+DATA(0x006aac08)
+static unsigned char view_artifacts;
+DATA(0x006aac14)
+static unsigned char view_towns;
 DATA(0x006aac18) int iVWCenterOffsetW;
 DATA(0x006aac1c) int iVWCenterOffsetH;
 DATA(0x006aac20) CSprite* csVWIcons;
 DATA(0x006aac28) Bitmap16Bit* memoryBuffer;
+DATA(0x006aac30)
+static unsigned char view_heroes;
 
 // E:\gamedcs\viewwrld.cpp:166
 // Complete expands this source helper into every scaled renderer and emits no
 // retained body. Dreamcast preserves the boundary, the two width locals and
 // the nested clipped loops; retail independently confirms all four screen
 // bounds and the transparent-pixel test in each expansion.
+// MEASURED, 2026-09-05, and it is a per-CALL-SITE inline split we cannot
+// currently spell. Retail emits a REAL out-of-line body for this helper at
+// 0x5f73b0's neighbour 0x5f9d90 (carve row, 316 B; the Dreamcast's own copy
+// is 328 B at dc 0x1968d0) and CALLS it from exactly three of the six view-
+// world layers - VWDrawShroud (call at 0x1f9d7c), VWDrawUnderlay (0x1fa1d2)
+// and VWDrawGround (0x1fa5f1) - while expanding it into VWDrawAdvObj,
+// VWDrawRiver and VWDrawRoad. The three that call it are the three whose
+// pre-inline bodies carry the most candidate call sites, which is the /Ob2
+// `budget / sites-remaining` quotient falling below this callee's cost.
+// Dropping `inline` here flips ALL SIX to a call:
+//   Underlay 38.86 -> 95.67, Ground 55.64 -> 92.47, but
+//   River 95.49 -> 58.09, Road 94.60 -> 59.75, AdvObj 94.84 -> 83.71.
+// Byte-weighted that trade is worth about +200 B and it puts three banked
+// rows under their MAX, so the `inline` stays. Closing it needs a per-site
+// lever (a statement pin inside VWScaleToScreenBuffer is per-CALLEE, not
+// per-site, so it cannot split the six) or a caller-shrink dose on the three
+// heavy layers.
 inline void VWClipScaleToScreenBuffer(int destX, int destY)
 {
     if (destX + giViewWorldScale < 8)
@@ -122,50 +161,164 @@ long ftol(double d)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\viewwrld.cpp:110
-DC_ONLY(0x192f4c, 0x140)
+// The view-world symbol blit, shared by all five VWDrawSymbols arms.
+// Retail owns a body at 0x5f73b0 that the Dreamcast roster order maps onto
+// exactly: VWDrawSprite, the two hero-part rows, the two boat-part rows and
+// VWDrawSymbols occupy six consecutive carve rows between two functions this
+// file already claims, and the SH4:x86 size ratios (320:333, 844:1015 twice,
+// 424:481 twice) hold across the whole run.
+//
+// Two facts here are the retail bytes' and not the Dreamcast's. The 32/2
+// float pool constants and the .data 0x68c6b8 tile scale give the centering
+// offset through __ftol, and the DESTINATION passed to CSprite::Draw is the
+// UNCLIPPED origin: the four clip statements trim the source rectangle and
+// leave a separate copy of the origin untouched, which retail proves by
+// keeping x and y live in ESI/EDI across the whole clip block and pushing
+// those, never the clamped copies.
+VA(0x005f73b0, 0x14D)  // exhaustive dc-order-map inside the VWDrawAdvObj bracket, dc 0x192f4c
 void VWDrawSprite(CSprite* srcIcon, NewmapCell* thisCell, int frame, int x, int y, int z)
 {
-    // @stub
+    int offset = (32.0f - gUnnamed68c6b8) / 2.0f;
+    x -= offset;
+    y -= offset;
+
+    int tilex = 0;
+    int tiley = 0;
+    int tilew = 32;
+    int tileh = 32;
+    int baseX = x;
+    int baseY = y;
+
+    if (baseX < 8) {
+        tilex = 8 - baseX;
+        tilew = baseX + 24;
+        baseX = 8;
+    }
+    if (baseY < 0) {
+        tiley = -baseY;
+        tileh = baseY + 32;
+        baseY = 0;
+    }
+    if (baseX + tilew > 600)
+        tilew = 600 - baseX;
+    if (baseY + tileh > 544)
+        tileh = 544 - baseY;
+    if (tilew <= 0 || tileh <= 0)
+        return;
+
+    int owner = -1;
+    if (thisCell->type == HERO)
+        owner = gpGame->GetHero(thisCell->extraInfo)->owner;
+    else if (hasFlag(thisCell->type))
+        owner = GetFlaggedObjectOwner(thisCell);
+
+    int framenum;
+    if (owner >= 0)
+        framenum = frame + owner * 19;
+    else
+        framenum = frame + 8 * 19;
+
+    srcIcon->Draw(0, framenum, tilex, tiley, tilew, tileh,
+                  gpWindowManager->screenBitmap, x, y, false, true);
 }
 
+#if 0  // @carcass
+
 // E:\gamedcs\viewwrld.cpp:265
-DC_ONLY(0x19308c, 0x34C)
+VA(0x005f7500, 0x3F7)  // exhaustive dc-order-map inside the VWDrawAdvObj bracket, dc 0x19308c
 void advManager::VWDrawHeroPart(int part, TDrawParts& heroParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
 {
     // @stub
 }
 
 // E:\gamedcs\viewwrld.cpp:346
-DC_ONLY(0x1933d8, 0x34C)
+VA(0x005f7900, 0x3F7)  // exhaustive dc-order-map inside the VWDrawAdvObj bracket, dc 0x1933d8
 void advManager::VWDrawHeroPartShadow(int part, TDrawParts& heroParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
 {
     // @stub
 }
 
 // E:\gamedcs\viewwrld.cpp:427
-DC_ONLY(0x193724, 0x1A8)
+VA(0x005f7d00, 0x1E1)  // exhaustive dc-order-map inside the VWDrawAdvObj bracket, dc 0x193724
 void advManager::VWDrawBoatPart(int part, TDrawParts& boatParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
 {
     // @stub
 }
 
 // E:\gamedcs\viewwrld.cpp:464
-DC_ONLY(0x1938cc, 0x1A8)
+VA(0x005f7ef0, 0x1E1)  // exhaustive dc-order-map inside the VWDrawAdvObj bracket, dc 0x1938cc
 void advManager::VWDrawBoatPartShadow(int part, TDrawParts& boatParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
 {
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\viewwrld.cpp:510
+// The overlay pass: one VWsymbol.def icon per trigger cell whose object type
+// is one of the five the view-world window can toggle. The five toggles are
+// the file's own five checkbox flags (the Dreamcast publishes them as
+// iVWTowns / iVWHeroes / iVWArtifacts / iVWMines / iVWResources; see the
+// data block at the head of this file for how the two new addresses are
+// fixed). The frame assignment corroborates the mapping: towns 0, heroes
+// 1, artifacts 2, mines objectIndex+5, resources objectIndex+12 is exactly
+// the 0..18 span the constructor below builds nineteen icon rows for.
+//
+// The dispatch is a jump table, so the emitted arm order IS the source case
+// order.
 VA(0x005f80e0, 0x1F6)  // exhaustive dc-order-map (the row before VWDrawAdvObj) + VWCompleteDraw call order, dc 0x193a74
 void advManager::VWDrawSymbols(int srcX, int srcY, int z, int destX, int destY)
 {
-    // @stub
-}
+    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth || srcY >= gMapHeight)
+        return;
 
-// E:\gamedcs\viewwrld.cpp:578
-#endif  // @carcass
+    NewmapCell* thisCell = GetCell(type_point(srcX, srcY, z));
+
+    if (!thisCell->is_trigger)
+        return;
+
+    unsigned char explored =
+        (GetMapExtra(srcX, srcY, z) & gMapVisibilityBit) != 0;
+
+    int baseX = destX * giViewWorldScale + iVWCenterOffsetW;
+    int baseY = destY * giViewWorldScale + iVWCenterOffsetH;
+
+    switch (thisCell->type) {
+    case ARTIFACT:
+    case RANDOM_ARTIFACT:
+    case RANDOM_ARTIFACT_1:
+    case RANDOM_ARTIFACT_2:
+    case RANDOM_ARTIFACT_3:
+    case RANDOM_ARTIFACT_4:
+        if (view_artifacts || explored)
+            VWDrawSprite(csVWIcons, thisCell, 2, baseX, baseY + 8, z);
+        break;
+    case HERO:
+    case RANDOM_HERO:
+        if (view_heroes || explored)
+            VWDrawSprite(csVWIcons, thisCell, 1, baseX, baseY + 8, z);
+        break;
+    case MINE:
+        if (view_mines || explored)
+            VWDrawSprite(csVWIcons, thisCell, thisCell->objectIndex + 5,
+                         baseX, baseY + 8, z);
+        break;
+    case RANDOM_RESOURCE:
+    case RESOURCE:
+        if (view_resources || explored)
+            VWDrawSprite(csVWIcons, thisCell, thisCell->objectIndex + 12,
+                         baseX, baseY + 8, z);
+        break;
+    case RANDOM_TOWN:
+    case TOWN:
+        if (view_towns || explored)
+            VWDrawSprite(csVWIcons, thisCell, 0, baseX, baseY + 8, z);
+        break;
+    }
+}
 
 // Dreamcast supplies the original helper boundaries, locals, scope nesting
 // and statement order. Complete's retail body independently corroborates the
@@ -376,51 +529,404 @@ void advManager::VWDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
         VWScaleToScreenBuffer(baseX, baseY + 8);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\viewwrld.cpp:822
+// The scaled shadow layer. It is VWDrawAdvObj without the six-row draw-layer
+// split: one flat pass over the cell's objects behind the same two filters,
+// then the cursor shadows, then the hero and boat part shadows. advmgr.cpp's
+// DrawAdvObjShadow supplies the cursor block verbatim with `playerBit` where
+// the full-size renderer tests gbInViewWorld, and retail corroborates the
+// whole shape - the two TDrawParts arrays cleared six entries at a time, the
+// two ScanForHeroOrBoat calls, the drawCells/suppressDraw pair, and the
+// `part <= 5` bound on both part loops.
 VA(0x005f8be0, 0x636)  // exhaustive dc-order-map + VWCompleteDraw call order (5th layer), dc 0x1943ec
 void advManager::VWDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int destY)
 {
-    // @stub
+    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth || srcY >= gMapHeight)
+        return;
+
+    NewmapCell* thisCell = GetCell(type_point(srcX, srcY, z));
+    int playerBit = 1 << gpGame->GetLocalPlayerGamePos();
+    playerBit &= GetMapExtra(srcX, srcY, z);
+
+    int baseX = destX * giViewWorldScale + iVWCenterOffsetW,
+        baseY = destY * giViewWorldScale + iVWCenterOffsetH;
+
+    TDrawParts heroParts[6];
+    TDrawParts boatParts[6];
+    unsigned char foundHero =
+        ScanForHeroOrBoat(srcX, srcY, z, HERO, heroParts);
+    unsigned char foundBoat =
+        ScanForHeroOrBoat(srcX, srcY, z, BOAT, boatParts);
+
+    int drewSomething = 0;
+    memset(memoryBuffer->GetMap(0, 0), 0,
+           memoryBuffer->GetHeight() * memoryBuffer->GetPitch());
+
+    for (int numObj = 0; numObj < thisCell->objects.size(); ++numObj) {
+        NewmapCell::TObjectCell* objCell = &thisCell->objects[numObj];
+
+        CObjectType* objType =
+            &fullMap->objectTypes[
+                fullMap->objects[objCell->ObjectIndex].typeIndex];
+        CSprite* SprPtr = fullMap->sprites[
+            fullMap->objects[objCell->ObjectIndex].typeIndex];
+
+        if (!playerBit
+            && (!iVWTerrains
+                || !gAdventureObjectLandBlocked[objType->objectType][12]))
+            continue;
+
+        if (!objType->drawCells[
+                CObjectType::_getBitPos(objCell->CellX, objCell->CellY)]
+            || objType->suppressDraw)
+            continue;
+
+        drewSomething = 1;
+        SprPtr->DrawAdvObjShadow(
+            (animFrame
+             + fullMap->objects[objCell->ObjectIndex].animationOffset)
+                % SprPtr->GetNumFrames(0),
+            (objType->width - objCell->CellX - 1) * 32,
+            (objType->height - objCell->CellY - 1) * 32,
+            32, 32, memoryBuffer, 0, 0, false);
+    }
+
+    if (destY == CURSOR_DEST_Y0) {
+        if (drawCursor && playerBit) {
+            if (destX == CURSOR_DEST_X0)
+                DrawCursorShadow(0, 0);
+            else if (destX == CURSOR_DEST_X1)
+                DrawCursorShadow(1, 0);
+            else if (destX == CURSOR_DEST_X2)
+                DrawCursorShadow(2, 0);
+        }
+    } else if (destY == CURSOR_DEST_Y1) {
+        if (drawCursor && playerBit) {
+            if (destX == CURSOR_DEST_X0)
+                DrawCursorShadow(0, 1);
+            else if (destX == CURSOR_DEST_X1)
+                DrawCursorShadow(1, 1);
+            else if (destX == CURSOR_DEST_X2)
+                DrawCursorShadow(2, 1);
+        }
+    }
+
+    if (foundHero && playerBit) {
+        for (int part = 0; part <= 5; ++part) {
+            if (heroParts[part].IsValid) {
+                drewSomething = 1;
+                VWDrawHeroPartShadow(part, heroParts[part], baseX, baseY,
+                                     0, 0, 32, 32);
+            }
+        }
+    }
+
+    if (foundBoat && playerBit) {
+        for (int boatPart = 0; boatPart <= 5; ++boatPart) {
+            if (boatParts[boatPart].IsValid) {
+                drewSomething = 1;
+                VWDrawBoatPartShadow(boatPart, boatParts[boatPart],
+                                     baseX, baseY, 0, 0, 32, 32);
+            }
+        }
+    }
+
+    if (drewSomething)
+        VWScaleToScreenBuffer(baseX, baseY + 8);
 }
 
 // E:\gamedcs\viewwrld.cpp:946
+// The scaled river layer. Dreamcast supplies the statement order, the two
+// guards and the single tile blit; Complete's retail body corroborates every
+// element independently - the same four bounds, the GetMapExtra/iVWTerrains
+// disjunction, the RiverSet test through the bitfield unit, the scaled origin
+// pair, the inlined clear of the scratch buffer and the DrawTile through
+// riverTileset. advmgr.cpp's full-size DrawRiver is the unscaled twin.
 VA(0x005f9220, 0x38A)  // exhaustive dc-order-map + VWCompleteDraw call order (2nd layer), dc 0x194850
 void advManager::VWDrawRiver(int srcX, int srcY, int z, int destX, int destY)
 {
-    // @stub
+    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth || srcY >= gMapHeight)
+        return;
+
+    NewmapCell* thisCell = GetCell(type_point(srcX, srcY, z));
+
+    int playerBit = 1 << gpGame->GetLocalPlayerGamePos();
+
+    if (!(playerBit & GetMapExtra(srcX, srcY, z)) && !iVWTerrains)
+        return;
+
+    if (!thisCell->RiverSet)
+        return;
+
+    int baseX = destX * giViewWorldScale + iVWCenterOffsetW;
+    int baseY = destY * giViewWorldScale + iVWCenterOffsetH;
+
+    memset(memoryBuffer->GetMap(0, 0), 0,
+           memoryBuffer->GetHeight() * memoryBuffer->GetPitch());
+
+    riverTileset[thisCell->RiverSet]->DrawTile(
+        thisCell->RiverIndex, 0, 0, 32, 32, memoryBuffer, 0, 0,
+        (thisCell->flags_00_11 >> 2) & 1,
+        (thisCell->flags_00_11 >> 3) & 1);
+
+    VWScaleToScreenBuffer(baseX, baseY + 8);
 }
 
 // E:\gamedcs\viewwrld.cpp:985
+// The scaled road layer - the river layer's twin, differing only in the
+// tested bitfield (RoadSet, byte-aligned at the head of its own allocation
+// unit), the tileset array and the two flip bits (4 and 5 instead of 2 and
+// 3). Retail's identical instruction stream either side of those four
+// differences is what pairs the two.
 VA(0x005f95b0, 0x38B)  // exhaustive dc-order-map + VWCompleteDraw call order (3rd layer), dc 0x1949cc
 void advManager::VWDrawRoad(int srcX, int srcY, int z, int destX, int destY)
 {
-    // @stub
+    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth || srcY >= gMapHeight)
+        return;
+
+    NewmapCell* thisCell = GetCell(type_point(srcX, srcY, z));
+
+    int playerBit = 1 << gpGame->GetLocalPlayerGamePos();
+
+    if (!(playerBit & GetMapExtra(srcX, srcY, z)) && !iVWTerrains)
+        return;
+
+    if (!thisCell->RoadSet)
+        return;
+
+    int baseX = destX * giViewWorldScale + iVWCenterOffsetW;
+    int baseY = destY * giViewWorldScale + iVWCenterOffsetH;
+
+    memset(memoryBuffer->GetMap(0, 0), 0,
+           memoryBuffer->GetHeight() * memoryBuffer->GetPitch());
+
+    roadTileset[thisCell->RoadSet]->DrawTile(
+        thisCell->RoadIndex, 0, 0, 32, 32, memoryBuffer, 0, 0,
+        (thisCell->flags_00_11 >> 4) & 1,
+        (thisCell->flags_00_11 >> 5) & 1);
+
+    VWScaleToScreenBuffer(baseX, baseY + 8);
 }
 
 // E:\gamedcs\viewwrld.cpp:1026
+// The scaled fog layer. advmgr.cpp's exact DrawShroud (0x412220) supplies
+// the whole cloud/star decision - the same gCompleteDrawAllCells bypass, the
+// same GetCloudLookup, the same >=100 flip offset and the two frame fixups -
+// and its `goto draw_stars` idiom is the spelling that reproduces retail's
+// block layout here too. Two things are this body's own: the shroud decision
+// is LATCHED in a flag rather than returned on, so the fog tile is reached
+// through a join the non-visible path jumps straight into, and the leading
+// GetCell result is discarded exactly as the full-size renderer discards its
+// own type_point.
+// Residual (20.5312%): BLOCK LAYOUT ONLY - the skeleton agrees exactly,
+// 54 blocks against 54, 38 branches against 38, 3 returns against 3, and the
+// call streams pair one for one. Retail keeps the STAR block between the
+// cloud-lookup test and the frame fixups; VC6 SINKS ours past the fog draw
+// because the block has two predecessors and both of them are jumps. Tried
+// and rejected: `if (gCompleteDrawAllCells) goto draw_stars;` ahead of the
+// lookup (byte-identical - VC6 canonicalises the two spellings), and writing
+// the star block TWICE, which scores higher at 36.5789 but is NOT the shape
+// (55 blocks against 54, four returns against three - the cross-jumper only
+// half-merges the copies), so it is a layout coincidence rather than a
+// structural recovery and is not shipped.
 VA(0x005f9940, 0x44A)  // exhaustive dc-order-map + VWCompleteDraw call order (the iVWTerrains-gated layer), dc 0x194b48
 void advManager::VWDrawShroud(int srcX, int srcY, int z, int destX, int destY)
 {
-    // @stub
+    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth)
+        return;
+    if (srcY >= gMapHeight && !gCompleteDrawAllCells)
+        return;
+
+    GetCell(type_point(srcX, srcY, z));
+
+    int playerBit = 1 << gpGame->GetLocalPlayerGamePos();
+
+    if (!(playerBit & GetMapExtra(srcX, srcY, z)) && !iVWTerrains)
+        return;
+
+    int baseX = destX * giViewWorldScale + iVWCenterOffsetW;
+    int baseY = destY * giViewWorldScale + iVWCenterOffsetH;
+
+    int lookup = 0;
+    unsigned char hflip = false;
+    unsigned char bDrawShroud;
+
+    if (!gCompleteDrawAllCells
+        && ((GetMapExtra(srcX, srcY, z) & gMapVisibilityBit)
+            || gUnnamed6989f4)) {
+        bDrawShroud = false;
+        goto draw_shroud;
+    }
+
+    bDrawShroud = true;
+    if (!gCompleteDrawAllCells)
+        lookup = GetCloudLookup(srcX, srcY, z);
+    if (lookup)
+        goto adjust_cloud;
+
+    memset(memoryBuffer->GetMap(0, 0), 0,
+           memoryBuffer->GetHeight() * memoryBuffer->GetPitch());
+    starTileset->DrawShroudTile(
+        ((srcX * 85 ^ srcY * 85) / 64) & 3, 0, 0, 32, 32, memoryBuffer,
+        0, 0, false, false);
+    VWScaleToScreenBuffer(baseX, baseY + 8);
+    return;
+
+adjust_cloud:
+    if (lookup >= CLOUD_DRAW_FLIPPED_OFFSET) {
+        hflip = true;
+        lookup -= CLOUD_DRAW_FLIPPED_OFFSET;
+    }
+    if ((lookup == CLOUD_DRAW_FRAME_1 || lookup == CLOUD_DRAW_FRAME_5)
+        && (srcX & 1))
+        ++lookup;
+    if (lookup == CLOUD_DRAW_FRAME_3 && (srcY & 1))
+        lookup = CLOUD_DRAW_FRAME_4;
+
+draw_shroud:
+    if (gUnnamed6989f4)
+        return;
+    if (!bDrawShroud)
+        return;
+
+    memset(memoryBuffer->GetMap(0, 0), 0,
+           memoryBuffer->GetHeight() * memoryBuffer->GetPitch());
+    cloudIcons->DrawShroudTile(
+        lookup - 1, 0, 0, 32, 32, memoryBuffer, 0, 0, hflip, false);
+    VWScaleToScreenBuffer(baseX, baseY + 8);
 }
 
 // E:\gamedcs\viewwrld.cpp:1114
+// The scaled underlay layer. Same head as the river/road layers, then one
+// flat pass over the cell's object list with no draw-layer split and no
+// per-object visibility filter - the only object filter is CObjectType's
+// +0x40 byte, which the Dreamcast field list names IsUnderlay and this
+// header carries as suppressDraw. The draw call is VWDrawAdvObj's unflagged
+// arm verbatim, so the two bodies corroborate each other's argument shape.
 VA(0x005f9ed0, 0x310)  // exhaustive dc-order-map + VWCompleteDraw call order (4th layer), dc 0x194dcc
 void advManager::VWDrawUnderlay(int srcX, int srcY, int z, int destX, int destY)
 {
-    // @stub
+    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth || srcY >= gMapHeight)
+        return;
+
+    NewmapCell* thisCell = GetCell(type_point(srcX, srcY, z));
+
+    int playerBit = 1 << gpGame->GetLocalPlayerGamePos();
+
+    if (!(playerBit & GetMapExtra(srcX, srcY, z)) && !iVWTerrains)
+        return;
+
+    int baseX = destX * giViewWorldScale + iVWCenterOffsetW;
+    int baseY = destY * giViewWorldScale + iVWCenterOffsetH;
+
+    memset(memoryBuffer->GetMap(0, 0), 0,
+           memoryBuffer->GetHeight() * memoryBuffer->GetPitch());
+
+    int drewSomething = 0;
+
+    if (thisCell->objects.size() > 0) {
+        for (int numObj = 0; numObj < thisCell->objects.size(); ++numObj) {
+            NewmapCell::TObjectCell* objCell = &thisCell->objects[numObj];
+
+            CObjectType* objType =
+                &fullMap->objectTypes[
+                    fullMap->objects[objCell->ObjectIndex].typeIndex];
+            CSprite* SprPtr = fullMap->sprites[
+                fullMap->objects[objCell->ObjectIndex].typeIndex];
+
+            if (objType->suppressDraw) {
+                drewSomething = 1;
+
+                SprPtr->DrawAdvObj(
+                    (animFrame
+                     + fullMap->objects[objCell->ObjectIndex]
+                           .animationOffset)
+                        % SprPtr->GetNumFrames(0),
+                    (objType->width - objCell->CellX - 1) * 32,
+                    (objType->height - objCell->CellY - 1) * 32,
+                    32, 32, memoryBuffer, 0, 0, false);
+            }
+        }
+    }
+
+    if (drewSomething)
+        VWScaleToScreenBuffer(baseX, baseY + 8);
 }
 
 // E:\gamedcs\viewwrld.cpp:1174
+// The scaled ground layer, and the whole of its tail is advmgr.cpp's exact
+// DrawGround (0x412900, exact): the same in-bounds ground tile, the same
+// -1/gMapWidth/gMapHeight border-frame chain and the same wrapped fallback
+// frame. Only the head (the view-world visibility gate) and the destination
+// (the scratch buffer plus VWScaleToScreenBuffer instead of the screen
+// bitmap) differ. The four entry bounds are re-tested by the in-bounds
+// guard because the intervening calls cost VC6 its knowledge of the two
+// map-dimension globals - the parameters themselves stay in registers, so
+// only the two `< gMap*` halves survive into the emitted test.
 VA(0x005fa1e0, 0x41F)  // exhaustive dc-order-map (the row before the ctor) + VWCompleteDraw call order (1st layer), dc 0x194fb0
 void advManager::VWDrawGround(int srcX, int srcY, int z, int destX, int destY)
 {
-    // @stub
-}
+    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth || srcY >= gMapHeight)
+        return;
 
-#endif  // @carcass
+    NewmapCell* thisCell = GetCell(type_point(srcX, srcY, z));
+
+    int playerBit = 1 << gpGame->GetLocalPlayerGamePos();
+
+    if (!(playerBit & GetMapExtra(srcX, srcY, z)) && !iVWTerrains)
+        return;
+
+    int baseX = destX * giViewWorldScale + iVWCenterOffsetW;
+    int baseY = destY * giViewWorldScale + iVWCenterOffsetH;
+
+    if (srcX >= 0 && srcY >= 0 && srcX < gMapWidth
+        && srcY < gMapHeight) {
+        memset(memoryBuffer->GetMap(0, 0), 0,
+               memoryBuffer->GetHeight() * memoryBuffer->GetPitch());
+
+        groundTileset[thisCell->GroundSet]->DrawTile(
+            thisCell->GroundIndex, 0, 0, 32, 32, memoryBuffer, 0, 0,
+            thisCell->flags_00_11 & 1,
+            (thisCell->flags_00_11 >> 1) & 1);
+
+        VWScaleToScreenBuffer(baseX, baseY + 8);
+        return;
+    }
+
+    int frame = -1;
+    if (srcX == -1) {
+        if (srcY == -1)
+            frame = 16;
+        else if (srcY == gMapHeight)
+            frame = 19;
+        else if (srcY >= 0 && srcY < gMapHeight)
+            frame = 32 + (srcY & 3);
+    } else if (srcX == gMapWidth) {
+        if (srcY == -1)
+            frame = 17;
+        else if (srcY == gMapHeight)
+            frame = 18;
+        else if (srcY >= 0 && srcY < gMapHeight)
+            frame = 24 + (srcY & 3);
+    } else if (srcY == -1) {
+        if (srcX >= 0 && srcX < gMapWidth)
+            frame = 20 + (srcX & 3);
+    } else if (srcY == gMapHeight) {
+        if (srcX >= 0 && srcX < gMapHeight)
+            frame = 28 + (srcX & 3);
+    }
+
+    if (frame == -1)
+        frame = (srcX + 16) % 4 + 4 * ((srcY + 16) % 4);
+
+    memset(memoryBuffer->GetMap(0, 0), 0,
+           memoryBuffer->GetHeight() * memoryBuffer->GetPitch());
+
+    borderTileset->DrawTile(
+        frame, 0, 0, 32, 32, memoryBuffer, 0, 0, false, false);
+
+    VWScaleToScreenBuffer(baseX, baseY + 8);
+}
 
 // E:\gamedcs\viewwrld.cpp:1307
 // The shared source shape is Dreamcast's 41-line constructor dossier: popup
@@ -618,17 +1124,6 @@ TViewWorldWindow::~TViewWorldWindow()
             delete *it;
     }
 }
-
-// THE VIEW-WORLD CHECKBOX STATE. advManager::ViewWorld's Dreamcast body
-// keeps view_mines / view_heroes / view_towns as locals (S_REGREL32 rows
-// at dc 0x195b48); Complete's level callbacks below read them from
-// viewwrld.obj's own .bss, which is what made them file statics.
-DATA(0x006aab68)
-static unsigned char view_mines;
-DATA(0x006aac14)
-static unsigned char view_towns;
-DATA(0x006aac30)
-static unsigned char view_heroes;
 
 // The type_func_button click code both callbacks answer, the same 13
 // TViewArmyWindow's cast-spell callback tests (viewarmywindow.cpp).
