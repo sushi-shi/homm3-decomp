@@ -39,20 +39,6 @@ long ftol(double d)
     // @stub
 }
 
-// E:\gamedcs\palette.cpp:56
-DC_ONLY(0x10a2a8, 0x48)
-void TPalette16::TPalette16()
-{
-    // @stub
-}
-
-// E:\gamedcs\palette.cpp:61
-DC_ONLY(0x10a2f0, 0x48)
-void TPalette16::TPalette16(const unsigned short* data)
-{
-    // @stub
-}
-
 // E:\gamedcs\palette.cpp:67
 DC_ONLY(0x10a338, 0x72)
 void TPalette16::TPalette16(const TPalette24* p24, int rbits, int rshift, int gbits, int gshift, int bbits, int bshift)
@@ -109,28 +95,58 @@ void TPalette16::TPalette16(const char* name, const TPalette24* p24)
     // @stub
 }
 
-// E:\gamedcs\palette.cpp:189
-DC_ONLY(0x10a854, 0x4A)
-void TPalette16::TPalette16(const TPalette16* copy)
-{
-    // @stub
-}
-
-// E:\gamedcs\palette.cpp:194
-DC_ONLY(0x10a8a0, 0x40)
-TPalette16* TPalette16::operator=(const TPalette16* from)
-{
-    // @stub
-}
-
 // E:\gamedcs\palette.cpp:204
 #endif  // @carcass
+
+// The TPalette16 constructor run, order-mapped one for one onto the DC
+// roster's own. DC defines eleven constructors plus operator= in source-line
+// order 56/61/67/73/79/86/92/116/140/165/189/194; retail keeps seven of them
+// in EXACTLY that relative order - (), (const unsigned short*),
+// (p24, six ints), (name, p24, six ints), (p24), (copy), operator= - with the
+// five unreferenced overloads (the TRGBA and tagRGBQUAD arms and the
+// two-argument name/p24 one) discarded by /OPT:REF. Every body opens with the
+// same `resource(0, RESOURCE_TYPE_NONE)` base call and TPalette16 vptr store
+// the TPalette24 family below already matches byte for byte, except the
+// name-taking one, which passes its name and 0x60 - RESOURCE_TYPE_PALETTE.
+
+VA(0x00522650, 0x16)  // dc-order-map head + null-name resource ctor + TPalette16 vtable 0x640368, dc 0x10a2a8
+TPalette16::TPalette16()
+    : resource(0, RESOURCE_TYPE_NONE)
+{
+}
 
 // Dreamcast names the compiler wrapper and its destructor/delete pair at
 // palette.cpp:57. Retail independently fixes the identity: this 33-byte body
 // calls the already exact TPalette16 destructor at 0x522940 before testing the
 // low deleting flag. The base object already emits the decorated wrapper.
 VA_COMPGEN(0x00522670, 0x21, SCALAR_DELETING_DTOR, TPalette16)
+
+// The raw 16-bit table overload: 0x80 dwords straight into the payload at
+// +0x1c, the same shape TPalette24's raw-data constructor has at 0x522e80.
+VA(0x005226a0, 0x2D)  // dc-order-map + exact 0x200-byte payload copy, dc 0x10a2f0
+TPalette16::TPalette16(const unsigned short* newData)
+    : resource(0, RESOURCE_TYPE_NONE)
+{
+    memcpy(data, newData, sizeof(data));
+}
+
+// The pointer-taking copy constructor, and the payload-only assignment behind
+// it - both the TPalette24 shapes with the 0x200-byte table in place of the
+// 0x300-byte one, and the assignment keeps the resource identity.
+VA(0x005228e0, 0x30)  // dc-order-map + exact payload extent, dc 0x10a854
+TPalette16::TPalette16(const TPalette16* copy)
+    : resource(0, RESOURCE_TYPE_NONE)
+{
+    memcpy(data, copy->data, sizeof(data));
+}
+
+VA(0x00522910, 0x21)  // dc-order-map + payload-only assignment, dc 0x10a8a0
+TPalette16* TPalette16::operator=(const TPalette16* from)
+{
+    if (this != from)
+        memcpy(data, from->data, sizeof(data));
+    return this;
+}
 
 VA(0x00522940, 0xB)  // anchor-global, dc 0x10a8e0
 TPalette16::~TPalette16()
