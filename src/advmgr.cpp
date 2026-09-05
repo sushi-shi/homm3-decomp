@@ -11589,3 +11589,6 @@ VA_COMPGEN(0x0041b250, 0xE6, BASIC_STRING_APPEND_STR, char)
 
 // COMDAT pairing: append on the char instantiation, mnemonic agreement 0.955.
 VA_COMPGEN(0x0041b340, 0xC2, BASIC_STRING_APPEND_PTR, char)
+
+// COMDAT pairing: out_of_range::_Doraise, agreement 1.000.
+VA_COMPGEN(0x0041bc10, 0x1D, EXCEPTION_DORAISE, out_of_range)
