@@ -430,5 +430,11 @@ int game::GetSideDesc(char* rText, int iStartPos, int iEndPos)
 
 #endif  // @carcass
 
-// COMDAT pairing: type_map_hero_identity::0type_map_hero_identity, mnemonic agreement 0.913.
-VA_COMPGEN(0x00517c30, 0x13F, CLASS_CTOR, type_map_hero_identity)
+// 0x517c30 used to be claimed here as type_map_hero_identity's copy
+// constructor on a 0.913 mnemonic agreement. The bytes refute it: the body
+// is `ret 8` over TWO references, copies a basic_string into +0x00 and an
+// int into +0x10, and type_map_hero_identity carries its int at +0x00 and
+// its string at +0x04 behind a ONE-reference copy constructor. It is
+// objecttype's map value_type - `pair<const string, int>` - and is claimed
+// there, inside that unit's own band (0x517ba0 + 0x86 = 0x517c26, then
+// 0x517c30 + 0x13f = 0x517d6f, then 0x517d70).
