@@ -3261,6 +3261,7 @@ spells	?SpellCastWorkChance@combatManager@@QAEMHJPBVarmy@@EEJ@Z	100.0000	100.000
 spells	?SpellCastWorks@combatManager@@QAEEHJPBVarmy@@EJ@Z	100.0000	100.0000	100.0000	0x1a8640	d59134a22e8d
 spells	?SpellTargetMessage@combatManager@@QAEXHHE@Z	100.0000	100.0000	100.0000	0x1a8690	9cf732f301c4
 spells	?SummonElemental@combatManager@@QAEXHW4TCreatureType@@HH@Z	71.8173	93.4375	93.4375	0x1a7080	74fef5ef261c
+spells	?Unnamed59FDE0@combatManager@@QAEXHHPAVarmy@@@Z	100.0000	100.0000	100.0000	0x19fde0	a812dc2c7357
 spells	?ValidSpellTarget@combatManager@@QAEEHJJJEJ@Z	88.4937	88.4937	88.4937	0x1a39c0	61a003dfba43
 spells	?ValidSpellTargetArmy@combatManager@@QAEEHHPBVarmy@@EJ@Z	100.0000	100.0000	100.0000	0x1a3c80	110edc19289c
 spells	?check_fire_wall@combatManager@@QAEEJPAVarmy@@E@Z	100.0000	100.0000	100.0000	0x19fcd0	a30a123e82ea
@@ -3626,6 +3627,7 @@ u2dvers	??1TFileVersionInfo@@QAE@XZ	100.0000	100.0000	100.0000	0x1eedf0	0305b619
 u2dvers	?GetVersionInfo@TFileVersionInfo@@QAEEPBDPAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0x1eee00	984ca2abfa72
 uncompr	@uncompress@16	100.0000	100.0000	100.0000	0x206be0	-
 university_window	??0type_university_window@@QAE@PAVhero@@PBUtype_university@@E@Z	87.8950	87.8950	87.8950	0x1ef500	baa66d520537
+university_window	??_Gtype_university_window@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1f0760	-
 university_window	?DoModal@type_university_window@@UAEHE@Z	100.0000	100.0000	100.0000	0x1f0a20	5c5d65c58c4e
 university_window	?ExitDialog@type_university_window@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1f1180	fd96ecac9df9
 university_window	?cancel_click@type_university_window@@KIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1f0e00	fd43efd4fe86
