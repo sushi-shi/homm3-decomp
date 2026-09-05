@@ -199,6 +199,15 @@ VA_COMPGEN(0x004b6f60, 0xBE, CLASS_CTOR, map)
 // folded the two 19-byte twins, which is why the length fallback
 // alone cannot decide this one.
 VA_COMPGEN(0x004b7020, 0x13, IMPLICIT_DTOR, CImmEnclosure_auto_ptr)
+// ...and the other two of the four, both proven by the callee each one
+// reaches: 0x4b7040 falls straight through to the free `operator delete`
+// (the char instantiation - no element destructor to run), while 0x4b7050
+// calls the dllimported `??1CImmProject` first and only then frees. The
+// element oracle binds each by the instantiation its own owner names;
+// their 16- and 33-byte extents match the two base COMDATs exactly, which
+// is the same answer the length fallback would give.
+VA_COMPGEN(0x004b7040, 0x10, IMPLICIT_DTOR, char_auto_ptr)
+VA_COMPGEN(0x004b7050, 0x21, IMPLICIT_DTOR, CImmProject_auto_ptr)
 VA_COMPGEN(0x004b70e0, 0x115, TREE_INSERT, CImmEnclosure)
 VA_COMPGEN(0x004b7a50, 0x2F9, TREE_NODE_INSERT, CImmEnclosure)
 VA_COMPGEN(0x004b7db0, 0xB3, TREE_CONST_ITERATOR_DEC, CImmEnclosure)

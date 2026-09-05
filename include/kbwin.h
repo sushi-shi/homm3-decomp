@@ -148,6 +148,12 @@ extern SMenuEnableStatus gsMenuEnableStatus[KBWIN_MENU_ENTRY_COUNT];
 // CODEVIEW(E:\gamedcs\kbwin.cpp:721, dc 0xe801c) void KBChangeMenu();
 // CODEVIEW(E:\gamedcs\kbwin.cpp:752, dc 0xe8020) void SetNoDialogMenus(int bEnabled);
 // CODEVIEW(E:\gamedcs\kbwin.cpp:779, dc 0xe8054) void SetMenus();
+// The video bring-up hook. Retail's body is EMPTY - it ICF-folded onto the
+// image's shared one-byte `ret` - but the CALL survives in
+// heroWindowManager::Open, which is what makes the declarator needed here
+// rather than only in the CODEVIEW roster below.
+void InitVideo();                                        // 0x5bc690 (ICF)
+
 // CODEVIEW(E:\gamedcs\kbwin.cpp:851, dc 0xe80b4) void InitVideo();
 
 // --- GameTime ---

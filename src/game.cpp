@@ -3964,6 +3964,19 @@ int game::Load(TAbstractFile* infile)
 // immediately after game::Load. Source has no hand-written body: the direct
 // symbol claim binds the emitted COMDAT while max/history banks the including-
 // TU transitions caused by restoring the coherent implicit header state.
+//
+// MEASURED 2026-09-05, and the claim is PROVEN CORRECT: the only reason
+// game.obj does not emit this COMDAT is that our compile expands
+// `gpGame->campaign = saved.campaign` at game::Load's line above, where
+// retail calls it. Forcing that ONE statement out of line emits the symbol
+// and the row scores 100.0000 over all 777 bytes on the first try, taking
+// game.obj 93.5690 -> 94.2050 against 0.47 off game::Load (60.5547 ->
+// 60.0776, MAX held at 92.41). It is not shipped, because the only lever
+// that reaches it is a committed `#pragma inline_depth(0)` and the pin
+// floor is falling-only. The route that IS open is the one game.h's own
+// note names: game::Load carrying retail's caller mass, after which the
+// expansion should stop being affordable on its own. Re-take it then, and
+// expect the row at 100 immediately.
 VA_COMPGEN(0x004bdc70, 0x309, IMPLICIT_COPY_ASSIGN, SCampaign)
 
 // E:\gamedcs\game.cpp:3257, dc 0xa8b48.
@@ -18701,8 +18714,22 @@ VA_COMPGEN(0x00487bd0, 0x160, CLASS_CTOR, out_of_range)
 // campaignbrief, so retail carries two un-folded copies of one COMDAT and only
 // the first can hold the label; a second claim is refused as a duplicate
 // proven name, which is the delinker working correctly.
+// COMDAT pairing: the enclosure map's nested-iterator surface, the last
+// three out-of-line rows of this tree. Each is byte-identical to the COMDAT
+// this object emits and each is corroborated from the call graph rather
+// than from length alone, which decides nothing at 25/23/14 bytes:
+//   0x4b73e0  iterator::operator==   `mov eax,[ecx] / cmp eax,[edx] / sete`
+//             - the _Node* compare, and the only `??8` this tree emits;
+//   0x4b79b0  lower_bound            - the out-of-line wrapper, whose ONLY
+//             callee is _Lbound at 0x4b7d50 (claimed above, and 0x4b7d50's
+//             only caller in turn), storing the node into the hidden return;
+//   0x4b7da0  const_iterator(_Node*) - the one-argument iterator ctor,
+//             `ret 4` storing its argument at +0.
+VA_COMPGEN(0x004b73e0, 0x19, TREE_ITERATOR_EQUAL, CImmEnclosure)
+VA_COMPGEN(0x004b79b0, 0x17, TREE_LOWER_BOUND, CImmEnclosure)
 VA_COMPGEN(0x004b79d0, 0x7E, TREE_ERASE, CImmEnclosure)
 VA_COMPGEN(0x004b7d50, 0x49, TREE_LBOUND, CImmEnclosure)
+VA_COMPGEN(0x004b7da0, 0xE, TREE_CONST_ITERATOR_CTOR, CImmEnclosure)
 VA_COMPGEN(0x004b7e70, 0x49, TREE_UBOUND, CImmEnclosure)
 
 // COMDAT pairing: the campaign carry-over pools' remaining element rows in
