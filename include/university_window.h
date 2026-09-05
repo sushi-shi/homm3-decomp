@@ -57,7 +57,11 @@ SIZE(type_university_skill, 0x14);
 // translated tail through the two VC6 vectors at +0xd8 and +0xe8.
 class type_university_window : public CAdvPopup {
 public:
-    enum { TUITION = 2000 };
+    // The hero's secondary-skill slot cap, as BOTH university bodies test
+    // it (`cmp dword [hero+0x101], 8`). Scoped to this window because it is
+    // the only consumer that compares for EQUALITY; events.obj's own
+    // readers spell the same cap as `< 8` / `>= 8`.
+    enum { TUITION = 2000, MAX_SECONDARY_SKILLS = 8 };
 
     // Dreamcast names this member sequence at +0x58..+0xdc. Retail shifts it
     // by the byte-proven eight-byte CAdvPopup widening; the constructor and
