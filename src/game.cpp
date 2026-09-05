@@ -18543,3 +18543,24 @@ VA_COMPGEN(0x004d2050, 0x32, TREE_MIN, type_map_hero_info)
 VA_COMPGEN(0x004cff50, 0x115, TREE_INSERT, type_map_hero_info)
 VA_COMPGEN(0x004d1d50, 0x2F9, TREE_NODE_INSERT, type_map_hero_info)
 VA_COMPGEN(0x004d27b0, 0xB3, TREE_CONST_ITERATOR_DEC, type_map_hero_info)
+
+// COMDAT pairing: std::copy<type_map_hero_identity>, agreement 0.987
+// (156 base vs 152 retail instructions).
+VA_COMPGEN(0x004d2e50, 0x18C, STD_COPY, type_map_hero_identity)
+
+// COMDAT pairing: std::copy_backward<town>, agreement 0.984.
+VA_COMPGEN(0x004d32e0, 0x344, STD_COPY_BACKWARD, town)
+
+// COMDAT pairing: std::fill<town>, agreement 0.992.
+VA_COMPGEN(0x004d2fe0, 0x2FC, STD_FILL, town)
+
+// COMDAT pairing: _tree::1?$_Tree, mnemonic agreement 0.959.
+VA_COMPGEN(0x004b61f0, 0x6E, IMPLICIT_DTOR, _tree)
+
+// COMDAT pairing: out_of_range::1out_of_range, mnemonic agreement 0.909.
+VA_COMPGEN(0x004b6be0, 0x4B, IMPLICIT_DTOR, out_of_range)
+
+// COMDAT pairing: _Tree<int, type_map_hero_info>::erase(iterator), 0.998
+// (453 base vs 451 retail instructions). The admission queue carried this as
+// an unowned `campaignbrief..campaignmap` bracket row.
+VA_COMPGEN(0x0045c200, 0x53E, TREE_ERASE_ITERATOR, type_map_hero_info)

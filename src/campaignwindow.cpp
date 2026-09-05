@@ -471,3 +471,7 @@ void* TCampaignWindow::`scalar deleting destructor'(unsigned __flags)
     // @stub
 }
 #endif
+
+// COMDAT pairing: vector<int>::operator=, agreement 0.956. Its element is a
+// BUILTIN, which VC6 spells as one letter with no class name to key on.
+VA_COMPGEN(0x004601f0, 0x1A4, VECTOR_COPY_ASSIGN, int)

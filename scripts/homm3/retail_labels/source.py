@@ -160,6 +160,45 @@ DEQUE_PRIMITIVE_ELEMENT = {"C": "signed_char", "D": "char",
                            "G": "unsigned_short", "H": "int",
                            "I": "unsigned_int", "J": "long",
                            "K": "unsigned_long"}
+#: The char-instantiated stream and string members VC6 emits as COMDATs.
+#: Every one of these templates exists only as `<char, char_traits<char>,
+#: allocator<char>>` in this image, so the instantiation carries no useful
+#: owner and they all key "char" - the spelling `stringbuf_overflow` and
+#: `basic_string_assign_ptr_size` already established. Entries are
+#: (mangled prefix, required mangled suffix or None, key suffix); the
+#: suffix is what separates two overloads of one member.
+CHAR_STREAM_MEMBERS = (
+    ("?_Iput@?$num_put@D", None, "num_put_iput"),
+    ("?_Fput@?$num_put@D", None, "num_put_fput"),
+    ("?_Rep@?$num_put@D", None, "num_put_rep"),
+    # num_put::do_put is SIX overloads separated only by the final
+    # parameter letter (_N bool, J long, K unsigned long, N double,
+    # O long double, PBX const void*). They share one key deliberately:
+    # claimed together they form a six-member overload group, which the
+    # join zips by RVA order against COFF order - and the two arms whose
+    # sizes are unique (bool 658 B, const void* 448 B) sit at the ends of
+    # both orders, which is what confirms the zip.
+    ("?do_put@?$num_put@D", None, "num_put_do_put"),
+    ("?str@?$basic_stringbuf@D", None, "stringbuf_str"),
+    ("?seekoff@?$basic_stringbuf@D", None, "stringbuf_seekoff"),
+    ("?seekpos@?$basic_stringbuf@D", None, "stringbuf_seekpos"),
+    ("?pbackfail@?$basic_stringbuf@D", None, "stringbuf_pbackfail"),
+    ("?underflow@?$basic_stringbuf@D", None, "stringbuf_underflow"),
+    ("?substr@?$basic_string@D", None, "basic_string_substr"),
+    ("?_Grow@?$basic_string@D", None, "basic_string_grow"),
+    ("?append@?$basic_string@D", "@ABV12@II@Z", "basic_string_append_str"),
+    ("?append@?$basic_string@D", "@PBDI@Z", "basic_string_append_ptr"),
+    ("?find@?$basic_string@D", None, "basic_string_find"),
+    ("?_Freeze@?$basic_string@D", None, "basic_string_freeze"),
+    ("?xsgetn@?$basic_streambuf@D", None, "streambuf_xsgetn"),
+    ("?sputc@?$basic_streambuf@D", None, "streambuf_sputc"),
+    ("?opfx@?$basic_ostream@D", None, "ostream_opfx"),
+    ("??Hstd@@YA?AV?$basic_string@D", None, "basic_string_concat"),
+    ("?_Decref@facet@locale@std@@", None, "locale_facet_decref"),
+    ("?getloc@ios_base@std@@", None, "ios_base_getloc"),
+)
+
+
 COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "STATIC_CTOR", "SCALAR_DELETING_DTOR",
                  "VECTOR_DELETING_DTOR", "DEFAULT_CTOR_CLOSURE",
@@ -183,12 +222,20 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "BASIC_STRING_ASSIGN_PTR_SIZE",
                  "OSTREAM_PUT", "OSTREAM_INSERT_CSTR",
                  "INSERTION_SORT_1",
+                 "STD_SORT", "STD_SORT_0", "STD_MEDIAN",
+                 "STD_UNGUARDED_PARTITION", "STD_UNGUARDED_INSERT",
+                 "STD_COPY_BACKWARD", "STD_FILL",
+                 "TREE_ERASE_ITERATOR", "TREE_ERASE_RANGE",
+                 "DEQUE_ERASE", "VECTOR_RESERVE", "VECTOR_CLEAR",
+                 "EXCEPTION_DORAISE", "FUNCTOR_CALL",
+                 "DEQUE_ITERATOR_ADD_ASSIGN",
                  "STREAMBUF_XSPUTN",
                  "PAIR_CONST_INT_DTOR",
                  "STD_CONSTRUCT", "STD_COPY",
                  "CLASS_CTOR",
                  "IMPLICIT_COPY_CTOR", "IMPLICIT_COPY_ASSIGN",
                  "IMPLICIT_DTOR"}
+COMPGEN_KINDS |= {member.upper() for _p, _s, member in CHAR_STREAM_MEMBERS}
 
 
 def mask_lexical_noise(blob: str) -> str:
@@ -633,6 +680,76 @@ def _bitset_width(mangled: str) -> int | None:
     return _template_width(mangled, "bitset")
 
 
+#: The `std::` sequence algorithms VC6 emits as ordinary COMDATs. Each is
+#: keyed on the CONTAINER ELEMENT plus the comparison predicate, because a
+#: single unit routinely emits several instantiations of one of them (in
+#: ai_player: `_Sort` over type_creature_value with `greater`, over
+#: type_creature_value with the default, and over `long`) and the member
+#: name alone cannot tell them apart.
+STD_ALGORITHMS = {"_Sort": "std_sort", "_Sort_0": "std_sort_0",
+                  "_Median": "std_median",
+                  "_Unguarded_partition": "std_unguarded_partition",
+                  "_Unguarded_insert": "std_unguarded_insert",
+                  "_Insertion_sort_1": "insertion_sort_1",
+                  "copy_backward": "std_copy_backward",
+                  "fill": "std_fill"}
+STD_ALGORITHM_RE = re.compile(
+    r"^\?(" + "|".join(sorted(STD_ALGORITHMS, key=len, reverse=True))
+    + r")@std@@YI(.*)$")
+#: A trailing `U<Name>@@` that is not the element is the predicate; a
+#: `greater<T>` arrives as a template and is named for its template.
+STD_PREDICATE_RE = re.compile(r"U([A-Za-z_]\w*)@@")
+
+
+def _std_algorithm_element(rest: str):
+    """(element, pointer_depth) for the first real type in a mangled
+    argument list, or None. `rest` is everything after `YI`: a void return
+    (`X`), a by-value return (`?A<T>`) and any number of `PA`/`PB`
+    pointer prefixes are stripped first, so `_Median`'s by-value element
+    and `_Sort`'s `T*` first parameter decode the same way."""
+    if rest.startswith("X"):
+        rest = rest[1:]
+    elif rest.startswith("?A"):
+        rest = rest[2:]
+    depth = 0
+    while rest[:2] in ("PA", "PB"):
+        rest = rest[2:]
+        depth += 1
+    if rest.startswith("V?$basic_string@D"):
+        return "string", max(0, depth - 1)
+    match = re.match(r"[VU]([A-Za-z_]\w*)@", rest)
+    if match:
+        return match.group(1), max(0, depth - 1)
+    if rest[:1] in DEQUE_PRIMITIVE_ELEMENT:
+        return DEQUE_PRIMITIVE_ELEMENT[rest[0]], max(0, depth - 1)
+    return None
+
+
+def _std_algorithm_key(mangled: str):
+    """`<element>[_ptr][_<predicate>]@<member>` for one of the sequence
+    algorithms above, or None. Returns None rather than a partial key when
+    the element cannot be decoded, so an unmodelled instantiation stays
+    unclaimed instead of colliding with a modelled one."""
+    match = STD_ALGORITHM_RE.match(mangled)
+    if not match:
+        return None
+    member, rest = match.group(1), match.group(2)
+    decoded = _std_algorithm_element(rest)
+    if not decoded:
+        return None
+    element, depth = decoded
+    owner = element.lower() + "_ptr" * depth
+    if "U?$greater@" in mangled:
+        owner += "_greater"
+    else:
+        predicate = next(
+            (name for name in STD_PREDICATE_RE.findall(rest)
+             if name.lower() != element.lower()), None)
+        if predicate:
+            owner += "_" + predicate.lower()
+    return f"{owner}@{STD_ALGORITHMS[member]}"
+
+
 def _demangle_key(mangled: str):
     """Normalized join key for one MSVC public name: ?Method@Class@@... ->
     class_method, matching scan_file's declarator spelling (:: -> _).
@@ -656,14 +773,18 @@ def _demangle_key(mangled: str):
         r"\?\$_Tree@P(?:A|B)?(?:V|U)([A-Za-z_]\w*)@", mangled)
     tree_string_owner = re.search(
         r"\?\$_Tree@V\?\$basic_string@D", mangled)
-    tree_owner = (tree_value.group(1) if tree_value else
+    tree_set_primitive = re.match(
+        r"^\?\w+@\?\$_Tree@([CDEFGHIJK])\1U_Kfn@\?\$set@\1", mangled)
+    tree_owner = ((DEQUE_PRIMITIVE_ELEMENT[tree_set_primitive.group(1)]
+                   + "_set") if tree_set_primitive else
+                  tree_value.group(1) if tree_value else
                   tree_named_owner.group(1) if tree_named_owner else
                   tree_pointer_owner.group(1) if tree_pointer_owner else
                   "string" if tree_string_owner else None)
     if mangled.startswith("?_Min@?$_Tree@") and tree_value:
         return f"{tree_value.group(1).lower()}@tree_min"
-    if mangled.startswith("?insert@?$_Tree@") and tree_value:
-        return f"{tree_value.group(1).lower()}@tree_insert"
+    if mangled.startswith("?insert@?$_Tree@") and tree_owner:
+        return f"{tree_owner.lower()}@tree_insert"
     if mangled.startswith("?_Insert@?$_Tree@") and tree_value:
         return f"{tree_value.group(1).lower()}@tree_node_insert"
     if mangled.startswith("?_Dec@const_iterator@?$_Tree@") and tree_owner:
@@ -681,6 +802,15 @@ def _demangle_key(mangled: str):
         return f"{tree_owner.lower()}@tree_copy"
     if mangled.startswith("?_Erase@?$_Tree@") and tree_owner:
         return f"{tree_owner.lower()}@tree_erase"
+    # ...and the PUBLIC `erase`, which is overloaded on one class: the
+    # range form takes two iterators (`V312@0@Z`), the single form one
+    # (`V312@@Z`). Two kinds rather than a two-member overload group, for
+    # the same reason `_Copy` needed the split - the group's members would
+    # otherwise have to be told apart by size alone.
+    if mangled.startswith("?erase@?$_Tree@") and tree_owner:
+        if mangled.endswith("V312@0@Z"):
+            return f"{tree_owner.lower()}@tree_erase_range"
+        return f"{tree_owner.lower()}@tree_erase_iterator"
     # basic_stringbuf's two out-of-line members. Keyed on the TEMPLATE
     # name, not on `_Init` alone: basic_streambuf has a nullary `_Init` of
     # its own and both COMDATs can live in one object.
@@ -701,6 +831,18 @@ def _demangle_key(mangled: str):
         if element:
             member = deque_primitive.group(1).lstrip("_").lower()
             return f"{element}@deque_{member}"
+    deque_iterator = re.match(
+        r"^\?\?Yiterator@\?\$deque@([CDEFGHIJK])V\?\$allocator@", mangled)
+    if deque_iterator:
+        element = DEQUE_PRIMITIVE_ELEMENT.get(deque_iterator.group(1))
+        if element:
+            return f"{element}@deque_iterator_add_assign"
+    deque_erase = re.match(
+        r"^\?erase@\?\$deque@([CDEFGHIJK])V\?\$allocator@", mangled)
+    if deque_erase:
+        element = DEQUE_PRIMITIVE_ELEMENT.get(deque_erase.group(1))
+        if element:
+            return f"{element}@deque_erase"
     # ...and the block-BUYING half, whose deque element here is an
     # ordinary pointer-to-class, so the usual `P[AB](V|U)<Name>@` shape
     # names it.
@@ -710,6 +852,12 @@ def _demangle_key(mangled: str):
     if deque_class:
         member = deque_class.group(1).lstrip("_").lower()
         return f"{deque_class.group(2).lower()}@deque_{member}"
+    vector_string_element = "?$vector@V?$basic_string@D" in mangled
+    #: A vector over a BUILTIN element carries no class name at all - VC6
+    #: spells the type as a single letter with no `@` terminator - so the
+    #: class regex below cannot reach it. Decoded like deque's, above.
+    vector_primitive = re.match(
+        r"^\?\??\w*@?\?\$vector@([CDEFGHIJK])V\?\$allocator@", mangled)
     vector_element = re.search(
         r"\?\$vector@(?:(?:P[AB][VU])|(?:V|U|W4))?"
         r"([A-Za-z_]\w*)@", mangled)
@@ -718,6 +866,9 @@ def _demangle_key(mangled: str):
     vector_owner = (
         f"{nested_vector_element.group(1).lower()}_vector"
         if nested_vector_element else
+        "string" if vector_string_element else
+        DEQUE_PRIMITIVE_ELEMENT[vector_primitive.group(1)]
+        if vector_primitive else
         vector_element.group(1).lower() if vector_element else None)
     if mangled.startswith("??1?$vector@") and vector_owner:
         return f"{vector_owner}@vector_dtor"
@@ -732,6 +883,10 @@ def _demangle_key(mangled: str):
         return f"{vector_owner}@vector_size"
     if mangled.startswith("?capacity@?$vector@") and vector_owner:
         return f"{vector_owner}@vector_capacity"
+    if mangled.startswith("?clear@?$vector@") and vector_owner:
+        return f"{vector_owner}@vector_clear"
+    if mangled.startswith("?reserve@?$vector@") and vector_owner:
+        return f"{vector_owner}@vector_reserve"
     if mangled.startswith("?resize@?$vector@") and vector_owner:
         return f"{vector_owner}@vector_resize"
     if mangled.startswith("?insert@?$vector@") and vector_owner:
@@ -763,6 +918,16 @@ def _demangle_key(mangled: str):
     if iterator_width is not None and mangled.startswith(
             "??D?$bitset_iterator@"):
         return f"bitset{iterator_width}@bitset_iterator_deref"
+    if mangled.startswith("?_Construct@std@@YIXPAV?$basic_string@D"):
+        return "string@std_construct"
+    # ...and over a map's value_type, whose element is `pair<const int, T>`.
+    # Keyed on T with a `_pair` suffix, the spelling `pair_const_int_dtor`
+    # already uses for the same shape.
+    construct_pair = re.match(
+        r"^\?_Construct@std@@YIXPAU\?\$pair@\$\$CBH(?:V|U)([A-Za-z_]\w*)@",
+        mangled)
+    if construct_pair:
+        return f"{construct_pair.group(1).lower()}_pair@std_construct"
     construct_owner = re.match(
         r"^\?_Construct@std@@YIXPA(?:V|U)([A-Za-z_]\w*)@", mangled)
     if construct_owner:
@@ -792,12 +957,25 @@ def _demangle_key(mangled: str):
     if (mangled.startswith("?_Insertion_sort_1@std@@")
             and "TSpellbookEntry" in mangled):
         return "tspellbookentry@insertion_sort_1"
+    algorithm_key = _std_algorithm_key(mangled)
+    if algorithm_key:
+        return algorithm_key
+    for prefix, suffix, member in CHAR_STREAM_MEMBERS:
+        if mangled.startswith(prefix) and (suffix is None
+                                           or mangled.endswith(suffix)):
+            return f"char@{member}"
     if mangled.startswith(
             "?xsputn@?$basic_streambuf@DU?$char_traits@D@std@@@std@@"):
         return "char@streambuf_xsputn"
     if (mangled.startswith("?assign@?$basic_string@D")
             and mangled.endswith("@PBDI@Z")):
         return "char@basic_string_assign_ptr_size"
+    doraise = re.match(r"^\?_Doraise@([A-Za-z_]\w*)@std@@", mangled)
+    if doraise:
+        return f"{doraise.group(1).lower()}@exception_doraise"
+    functor_call = re.match(r"^\?\?R([A-Za-z_]\w*)@@", mangled)
+    if functor_call:
+        return f"{functor_call.group(1).lower()}@functor_call"
     if mangled.startswith("??_G"):
         # scalar deleting destructor - joined by the VA_COMPGEN
         # SCALAR_DELETING_DTOR claims (owner = the class)
@@ -1051,6 +1229,11 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                                or "$vector_size$" in r["name"]
                                or "$vector_capacity$" in r["name"]
                                or "$vector_constructor_iterator$" in r["name"]
+                               or "$vector_reserve$" in r["name"]
+                               or "$vector_clear$" in r["name"]
+                               or "$exception_doraise$" in r["name"]
+                               or "$functor_call$" in r["name"]
+                               or "$deque_iterator_add_assign$" in r["name"]
                                or "$vector_resize$" in r["name"]
                                or "$vector_insert$" in r["name"]
                                or "$vector_erase$" in r["name"]
@@ -1077,6 +1260,9 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                                or "$tree_copy$" in r["name"]
                                or "$tree_copy_node$" in r["name"]
                                or "$tree_erase$" in r["name"]
+                               or "$tree_erase_iterator$" in r["name"]
+                               or "$tree_erase_range$" in r["name"]
+                               or "$deque_erase$" in r["name"]
                                or "$stringbuf_overflow$" in r["name"]
                                or "$stringbuf_init$" in r["name"]
                                or "$deque_freefront$" in r["name"]
@@ -1086,7 +1272,17 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                                or "$ostream_put$" in r["name"]
                                or "$ostream_insert_cstr$" in r["name"]
                                or "$insertion_sort_1$" in r["name"]
+                               or "$std_sort$" in r["name"]
+                               or "$std_sort_0$" in r["name"]
+                               or "$std_median$" in r["name"]
+                               or "$std_unguarded_partition$" in r["name"]
+                               or "$std_unguarded_insert$" in r["name"]
+                               or "$std_copy_backward$" in r["name"]
+                               or "$std_fill$" in r["name"]
                                or "$streambuf_xsputn$" in r["name"]
+                               or any(f"${member}$" in r["name"]
+                                      for _p, _s, member
+                                      in CHAR_STREAM_MEMBERS)
                                or "$pair_const_int_dtor$" in r["name"]
                                or "$std_construct$" in r["name"]
                                or "$std_copy$" in r["name"]
@@ -1133,6 +1329,18 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             continue
         if "$vector_constructor_iterator$" in row["name"]:
             claim_keys.setdefault("vector_constructor_iterator", []).append(row)
+            continue
+        simple = next(
+            (kind for kind in ("vector_clear", "exception_doraise",
+                               "functor_call", "deque_iterator_add_assign")
+             if f"${kind}$" in row["name"]), None)
+        if simple is not None:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}@{simple}", []).append(row)
+            continue
+        if "$vector_reserve$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}@vector_reserve", []).append(row)
             continue
         if "$vector_resize$" in row["name"]:
             owner = row["name"].rsplit("$", 1)[1].lower()
@@ -1244,6 +1452,31 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             owner = row["name"].rsplit("$", 1)[1].lower()
             claim_keys.setdefault(
                 f"{owner}@insertion_sort_1", []).append(row)
+            continue
+        algorithm = next(
+            (kind for kind in ("std_sort_0", "std_sort", "std_median",
+                               "std_unguarded_partition",
+                               "std_unguarded_insert",
+                               "std_copy_backward", "std_fill")
+             if f"${kind}$" in row["name"]), None)
+        if algorithm is not None:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}@{algorithm}", []).append(row)
+            continue
+        tree_or_deque = next(
+            (kind for kind in ("tree_erase_iterator", "tree_erase_range",
+                               "deque_erase")
+             if f"${kind}$" in row["name"]), None)
+        if tree_or_deque is not None:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}@{tree_or_deque}", []).append(row)
+            continue
+        char_member = next(
+            (member for _p, _s, member in CHAR_STREAM_MEMBERS
+             if f"${member}$" in row["name"]), None)
+        if char_member is not None:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}@{char_member}", []).append(row)
             continue
         if "$streambuf_xsputn$" in row["name"]:
             owner = row["name"].rsplit("$", 1)[1].lower()

@@ -9115,3 +9115,52 @@ CWaitForRemoteBattleDlg::~CWaitForRemoteBattleDlg()
 #pragma inline_depth(0)
 }
 #pragma inline_depth()
+
+// COMDAT pairing: std::_Sort<int, spell_level_order>, agreement 0.985.
+VA_COMPGEN(0x004b00b0, 0x294, STD_SORT, int_spell_level_order)
+
+// COMDAT pairing: std::_Sort_0<int, spell_level_order>, agreement 1.000 over
+// all 330 instructions.
+VA_COMPGEN(0x004afcb0, 0x350, STD_SORT_0, int_spell_level_order)
+
+// COMDAT pairing: std::_Unguarded_partition<int, spell_level_order>, 0.967.
+VA_COMPGEN(0x004b0400, 0x123, STD_UNGUARDED_PARTITION, int_spell_level_order)
+
+// COMDAT pairing: std::_Unguarded_insert<int, spell_level_order>, 0.966.
+VA_COMPGEN(0x004b0350, 0xAB, STD_UNGUARDED_INSERT, int_spell_level_order)
+
+// COMDAT pairing: std::copy_backward<std::string>, agreement 0.972.
+VA_COMPGEN(0x004af9d0, 0x165, STD_COPY_BACKWARD, string)
+
+// COMDAT pairing: std::fill<std::string>, agreement 0.971 against 0.944 for
+// copy_backward, which pairs with 0xaf9d0 instead.
+VA_COMPGEN(0x004af870, 0x154, STD_FILL, string)
+
+// COMDAT pairing: cturndurationpause::1CTurnDurationPause, mnemonic agreement 1.000.
+VA_COMPGEN(0x004ae9b0, 0x50, IMPLICIT_DTOR, cturndurationpause)
+
+// COMDAT pairing: ccombatinitmsg::1CCombatInitMsg, mnemonic agreement 0.938.
+VA_COMPGEN(0x004ad130, 0xB4, IMPLICIT_DTOR, ccombatinitmsg)
+
+// COMDAT pairing: clevelpickwaitdlg::1CLevelPickWaitDlg, mnemonic agreement 0.902.
+VA_COMPGEN(0x004aeb00, 0x4B, IMPLICIT_DTOR, clevelpickwaitdlg)
+
+// COMDAT pairing: vector<std::string>::insert(pos, n, val), agreement 0.985.
+// Its one-element sibling below is the other half of the overload group.
+VA_COMPGEN(0x004af550, 0x2A5, VECTOR_INSERT, string)
+
+// COMDAT pairing: vector<std::string>::insert(pos, val), agreement 0.975.
+VA_COMPGEN(0x004af350, 0x183, VECTOR_INSERT, string)
+
+// COMDAT pairing: std::_Construct<std::string>, agreement 0.972.
+VA_COMPGEN(0x004afb40, 0x167, STD_CONSTRUCT, string)
+
+// COMDAT pairing: spell_level_order::operator(), agreement 0.954. The unit's
+// _Sort/_Unguarded_* rows above all carry this predicate.
+VA_COMPGEN(0x004b0000, 0x8A, FUNCTOR_CALL, spell_level_order)
+
+// COMDAT pairing: vector<std::string>::_Destroy, agreement 0.960.
+VA_COMPGEN(0x004af500, 0x4D, VECTOR_DESTROY, string)
+
+// COMDAT pairing: vector<std::string>::~vector, agreement 0.950.
+VA_COMPGEN(0x004af2c0, 0x6B, VECTOR_DTOR, string)

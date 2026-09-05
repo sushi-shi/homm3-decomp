@@ -1543,3 +1543,79 @@ void TBottomViewEnemyTurn::animate()
     crest->Draw();
     crest->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_UPDATE);
 }
+
+// COMDAT pairing: basic_streambuf::1?$basic_streambuf, mnemonic agreement 1.000.
+VA_COMPGEN(0x00454000, 0x50, IMPLICIT_DTOR, basic_streambuf)
+
+// COMDAT pairing: numpunct::1?$numpunct, mnemonic agreement 0.970.
+VA_COMPGEN(0x00455bf0, 0x2F, IMPLICIT_DTOR, numpunct)
+
+// COMDAT pairing: basic_streambuf::0?$basic_streambuf, mnemonic agreement 0.937.
+VA_COMPGEN(0x00453f50, 0xA9, CLASS_CTOR, basic_streambuf)
+
+// COMDAT pairing: num_put::0?$num_put, mnemonic agreement 0.931.
+VA_COMPGEN(0x004546e0, 0x5C, CLASS_CTOR, num_put)
+
+// COMDAT pairing: sentry::1sentry, mnemonic agreement 0.911.
+VA_COMPGEN(0x00454320, 0x63, IMPLICIT_DTOR, sentry)
+
+// COMDAT pairing: fpos::0?$fpos, mnemonic agreement 0.909.
+VA_COMPGEN(0x00454390, 0x3C, CLASS_CTOR, fpos)
+
+// COMDAT pairing: _Iput on the char instantiation, mnemonic agreement 1.000.
+VA_COMPGEN(0x004552d0, 0x3FE, NUM_PUT_IPUT, char)
+
+// COMDAT pairing: _Fput on the char instantiation, mnemonic agreement 1.000.
+VA_COMPGEN(0x00454f20, 0x3A1, NUM_PUT_FPUT, char)
+
+// COMDAT pairing: xsgetn on the char instantiation, mnemonic agreement 0.946.
+VA_COMPGEN(0x004540b0, 0x98, STREAMBUF_XSGETN, char)
+
+// COMDAT pairing: _Rep on the char instantiation, mnemonic agreement 0.935.
+VA_COMPGEN(0x004556d0, 0x82, NUM_PUT_REP, char)
+
+// COMDAT pairing: opfx on the char instantiation, mnemonic agreement 0.926.
+VA_COMPGEN(0x004543d0, 0x74, OSTREAM_OPFX, char)
+
+// COMDAT pairing: sputc on the char instantiation, mnemonic agreement 0.932.
+VA_COMPGEN(0x00454a30, 0x4B, STREAMBUF_SPUTC, char)
+
+// COMDAT pairing: _Decref on the char instantiation, mnemonic agreement 0.918.
+VA_COMPGEN(0x00453d30, 0x3B, LOCALE_FACET_DECREF, char)
+
+// COMDAT pairing: num_put::do_put(bool), agreement 1.000. Six do_put
+// overloads share one key and zip as an overload group; this arm and the
+// const void* arm below have unique sizes and anchor both ends of the zip.
+VA_COMPGEN(0x00454770, 0x292, NUM_PUT_DO_PUT, char)
+
+// COMDAT pairing: num_put::do_put(long) - second in both COFF and RVA order.
+VA_COMPGEN(0x00454a80, 0x9F, NUM_PUT_DO_PUT, char)
+
+// COMDAT pairing: num_put::do_put(unsigned long).
+VA_COMPGEN(0x00454b20, 0x9F, NUM_PUT_DO_PUT, char)
+
+// COMDAT pairing: num_put::do_put(double).
+VA_COMPGEN(0x00454bc0, 0xCA, NUM_PUT_DO_PUT, char)
+
+// COMDAT pairing: num_put::do_put(long double).
+VA_COMPGEN(0x00454c90, 0xCE, NUM_PUT_DO_PUT, char)
+
+// COMDAT pairing: num_put::do_put(const void*), agreement 0.977.
+VA_COMPGEN(0x00454d60, 0x1B2, NUM_PUT_DO_PUT, char)
+
+// COMDAT pairing: bad_cast::_Doraise, agreement 1.000.
+VA_COMPGEN(0x00453c80, 0x1D, EXCEPTION_DORAISE, bad_cast)
+
+// COMDAT pairing: bad_cast::bad_cast(const&), agreement 0.857 against a 32 B
+// object; resourcemanager's two 19 B candidates score 0.762.
+VA_COMPGEN(0x00453cd0, 0x1C, CLASS_CTOR, bad_cast)
+
+// COMDAT pairing: ios_base::getloc, agreement 0.906 against a 64 B object;
+// quicktownwindow's 28 B candidate scores 0.750.
+VA_COMPGEN(0x00453d90, 0x3B, IOS_BASE_GETLOC, char)
+
+// COMDAT pairing: bad_cast::bad_cast(const char*), the second half of the
+// ctor overload group. COFF order is (const&, const char*) and RVA order is
+// 0x53cd0, 0x54a10; the similarity agrees with that zip in both directions
+// (0.857 each way, 0.786 crossed).
+VA_COMPGEN(0x00454a10, 0x1C, CLASS_CTOR, bad_cast)
