@@ -11,9 +11,14 @@
 #include "csprite.h"
 #include "game.h"
 #include "iconwdgt.h"
+#include "inputmgr.h"
 #include "kb.h"
+#include "kbwin.h"
 #include "message.h"
+#include "mousemgr.h"
 #include "recruit.h"
+#include "resourcemanager.h"
+#include "soundmgr.h"
 #include "textresource.h"
 #include "textwdgt.h"
 #include "widget.h"
@@ -42,6 +47,16 @@ static unsigned char view_mines;
 DATA(0x006aab78) bool iVWTerrains;
 DATA(0x006aab79)
 static unsigned char view_resources;
+// The half-extents init derives from the two viewable dimensions and the
+// three view-world readers below consume. Only viewwrld.obj references
+// either address (four dir32 sites each: init writes both, and
+// update_view_world / update_radar / WindowHandler read them), which is
+// what makes them file statics rather than shared globals. The names are
+// role-based house placeholders; neither CodeView corpus spells them.
+DATA(0x006aab7c)
+static int view_half_height;
+DATA(0x006aab80)
+static int view_half_width;
 DATA(0x006aab84) int scaleLine[32];
 DATA(0x006aac08)
 static unsigned char view_artifacts;
@@ -53,6 +68,25 @@ DATA(0x006aac20) CSprite* csVWIcons;
 DATA(0x006aac28) Bitmap16Bit* memoryBuffer;
 DATA(0x006aac30)
 static unsigned char view_heroes;
+
+// VC6's own <xutility> reference-returning min/max, in the by-value form
+// this tree has byte-proven three times over (ai_combat.cpp, ai_tactical.cpp,
+// diff.cpp). update_radar needs exactly that signature and no other: it
+// clamps `origin.x` and `origin.y`, which are BITFIELDS, so no reference can
+// bind to the argument and retail's own shape - both operands copied into
+// stack temps, then the ADDRESS selected between them - is what a by-value
+// parameter returned by const reference emits.
+template <class _TYPE>
+inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
+{
+    return (_Y < _X ? _Y : _X);
+}
+
+template <class _TYPE>
+inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
+{
+    return (_X < _Y ? _Y : _X);
+}
 
 // E:\gamedcs\viewwrld.cpp:166
 // The inner loop reads its source pixel THROUGH A NAMED POINTER that it
@@ -201,16 +235,35 @@ inline void VWScaleToScreenBuffer(int destX, int destY)
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\viewwrld.cpp:100
+// The magic-number float-to-int conversion. Retail emits NO body for it:
+// the Dreamcast row is `static`, TViewWorldWindow::init's scale-table loop
+// is its only call site, and VC6 expands a single-call-site static without
+// retaining it (the surrounding carve rows leave no ~98 B slot for one).
+// Two facts are retail's rather than the Dreamcast's, both read off init's
+// expansion. The addend is 2^52 + 2^51 written as a FLOAT: retail
+// materialises it with `mov dword ptr [slot], 0x59c00000` followed by
+// `fld dword ptr [slot]`, which is a float local, not the qword pool entry
+// a `double` literal folds to. And the operand ORDER is magic + d - the
+// float is what reaches the x87 stack first, with `fadd qword ptr` taking
+// the double argument as the memory operand.
 DC_ONLY(0x192ee8, 0x62)
-long ftol(double d)
+static long ftol(double d)
 {
-    // @stub
-}
+    union {
+        double whole;
+        long low;
+    } bits;
+    union {
+        float value;
+        long raw;
+    } magic;
 
-#endif  // @carcass
+    magic.raw = 0x59c00000;
+    bits.whole = d;
+    bits.whole = magic.value + bits.whole;
+    return bits.low;
+}
 
 // E:\gamedcs\viewwrld.cpp:110
 // The view-world symbol blit, shared by all five VWDrawSymbols arms.
@@ -1391,6 +1444,170 @@ int ViewWorldUndergroundHandler(message& msg)
     return 1;
 }
 
+// E:\gamedcs\viewwrld.cpp:1409
+// The View Earth / View Air spell entry. Both dispatches are compare
+// chains, so the ARM LAYOUT is the compiler's and only the ascending
+// compare order is source evidence: iWhatToDraw 3 before 5, mastery 2
+// before 3, with mastery 1 reaching the default arm. The two ladders are
+// HoMM3's published ones - earth shows resources at any mastery, adds the
+// mines at advanced and the terrain layer at expert; air shows artifacts,
+// adds heroes at advanced and towns at expert - and retail duplicates the
+// air default's single store rather than merging it, which the earth arm
+// (whose tail falls straight into the join) does not.
+// The window is a BLOCK-scoped local: retail runs its whole inlined
+// destructor - scratch buffer, icon sprite, widget loop, ~CAdvPopup - in
+// front of the closing UpdateRadar, not at the function's brace.
+// Two receivers are the GLOBAL and not `this`, byte-proven: retail reloads
+// gpAdvManager into ECX in front of DemobilizeCurrHero and VWCompleteDraw
+// while keeping `this` live in EDI for the two calls that follow the
+// dialog. And map_center goes through type_point's three-argument
+// constructor, not three field assignments - the ctor's `short`
+// parameters are what make every bitfield extraction SIXTEEN bit
+// (`sar dx,6` / `sar cx,6` / `sar ax,0xc`) where a field-to-field copy
+// stays 32-bit and folds z in place.
+VA(0x005fbf90, 0x2A3)  // anchor-callee init + VWCompleteDraw, "VWsymbol.def", dc 0x195b48
+void advManager::ViewWorld(int iWhatToDraw, int level)
+{
+    gUnnamed6aac3c = 1;
+    view_artifacts = 0;
+    view_towns = 0;
+    view_heroes = 0;
+    view_resources = 0;
+    iVWTerrains = 0;
+    view_mines = 0;
+
+    switch (iWhatToDraw) {
+    case SPELL_VIEW_EARTH:
+        switch (level) {
+        case eMasteryAdvanced:
+            view_mines = 1;
+            view_resources = 1;
+            break;
+        case eMasteryExpert:
+            iVWTerrains = 1;
+            view_mines = 1;
+            view_resources = 1;
+            break;
+        default:
+            view_resources = 1;
+            break;
+        }
+        break;
+    case SPELL_VIEW_AIR:
+        switch (level) {
+        case eMasteryAdvanced:
+            view_heroes = 1;
+            view_artifacts = 1;
+            break;
+        case eMasteryExpert:
+            view_towns = 1;
+            view_heroes = 1;
+            view_artifacts = 1;
+            break;
+        default:
+            view_artifacts = 1;
+            break;
+        }
+        break;
+    }
+
+    gUnnamed68c6b8 = VIEW_WORLD_TILE_SCALE_MID;
+    giViewWorldScale = 11;
+    csVWIcons = ResourceManager::GetSprite("VWsymbol.def");
+    memoryBuffer = new Bitmap16Bit(64, 64);
+    gpAdvManager->DemobilizeCurrHero(0, 1);
+    gpWindowManager->colorCyclingOn = 0;
+    gCombatActive698a18 = 2;
+    {
+        TViewWorldWindow view_world_window;
+        type_point map_center(radarOrigin.x + 9, radarOrigin.y + 8,
+                              radarOrigin.z);
+
+        view_world_window.init(map_center, 0);
+        gpAdvManager->VWCompleteDraw(view_world_window.origin.x,
+                                     view_world_window.origin.y,
+                                     view_world_window.origin.z,
+                                     view_world_window.viewable_width,
+                                     view_world_window.viewable_height);
+        gpWindowManager->colorCyclingOn = 1;
+        view_world_window.DoModal(0);
+    }
+    gUnnamed6aac3c = 0;
+    UpdateRadar(0, 1, view_mines, view_heroes, view_towns);
+    gpWindowManager->colorCyclingOn = 0;
+    RedrawAdvScreen(1, 0);
+    gCombatActive698a18 = 0;
+    gpWindowManager->colorCyclingOn = 1;
+}
+
+// E:\gamedcs\viewwrld.cpp:1496
+// Recentres the view-world map on new_center and repaints the radar.
+// Every division by two here is retail's bare `sar reg,1` - an arithmetic
+// shift, not the cdq/sub pair a signed `/ 2` compiles to - so the source
+// wrote `>> 1`. The scale table is the one call site of the file's `ftol`,
+// and the two clamped extents are compared against MAP_WIDTH/MAP_HEIGHT
+// for EQUALITY: a map that exactly fills the view keeps the origin at
+// (0, 0, new_center.z) with no clamping at all.
+// iSkipLevel's DECLARATION SITE is worth 13.5 points (83.37 -> 96.87):
+// retail issues the `fdiv` after both integer divisions, so the float
+// local is declared BELOW the two extent assignments, not above them.
+// Residual (98.89%): one instruction, the loop counter's `mov [i], eax`,
+// which retail schedules after the table store and we schedule before it.
+// Byte-flat and rejected: a `while` loop with the increment as the last
+// body statement, `++i` in the header, and landing the ftol result in a
+// named `long` before the table store.
+VA(0x005fc240, 0x274)  // anchor-caller ViewWorld, anchor-callee UpdateRadar, dc 0x195d30
+void TViewWorldWindow::init(type_point new_center, unsigned char updateFlag)
+{
+    int i;
+
+    viewable_width = 608 / giViewWorldScale;
+    viewable_height = 544 / giViewWorldScale;
+    float iSkipLevel = 32.0f / gUnnamed68c6b8;
+    for (i = 0; i < giViewWorldScale; i++)
+        scaleLine[i] = ftol(static_cast<float>(i) * iSkipLevel);
+
+    if (viewable_width > MAP_WIDTH)
+        viewable_width = MAP_WIDTH;
+    if (viewable_height > MAP_HEIGHT)
+        viewable_height = MAP_HEIGHT;
+    view_half_width = viewable_width >> 1;
+    view_half_height = viewable_height >> 1;
+
+    origin.y = 0;
+    origin.x = 0;
+    origin.z = new_center.z;
+    if (viewable_width != MAP_WIDTH) {
+        origin.x = new_center.x - (viewable_width >> 1);
+        if (origin.x < 0)
+            origin.x = 0;
+        if (origin.x + viewable_width >= MAP_WIDTH)
+            origin.x = MAP_WIDTH - viewable_width;
+    }
+    if (viewable_height != MAP_HEIGHT) {
+        origin.y = new_center.y - (viewable_height >> 1);
+        if (origin.y < 0)
+            origin.y = 0;
+        if (origin.y + viewable_height >= MAP_HEIGHT)
+            origin.y = MAP_HEIGHT - viewable_height;
+    }
+
+    iVWCenterOffsetW = (608 - viewable_width * giViewWorldScale) >> 1;
+    iVWCenterOffsetH = (544 - viewable_height * giViewWorldScale) >> 1;
+    gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+    gpAdvManager->UpdateRadar(origin, updateFlag, 1, view_mines, view_heroes,
+                              view_towns);
+    if (gpGame->worldMap.GetNumLevels() > 1) {
+        if (origin.z == 1) {
+            UndergroundButton->send_message(widget::WIDGET_CLEAR_STATUS, 6);
+            SurfaceButton->send_message(widget::WIDGET_SET_STATUS, 6);
+        } else {
+            SurfaceButton->send_message(widget::WIDGET_CLEAR_STATUS, 6);
+            UndergroundButton->send_message(widget::WIDGET_SET_STATUS, 6);
+        }
+    }
+}
+
 // E:\gamedcs\viewwrld.cpp:1558. Both level callbacks above call it. The
 // eight per-layer passes are the Dreamcast's statement order exactly
 // (ground, river, road, underlay, object shadows, objects, then the
@@ -1441,46 +1658,223 @@ void advManager::VWCompleteDraw(int startX, int startY, int z, int drawwidth,
     DrawAdventureMapGems();
 }
 
+// E:\gamedcs\viewwrld.cpp:1646
+// The magnification handler: clear the highlight on all three VWMag
+// buttons (widget ids 16, 17, 18, appended in that order by the
+// constructor), set it on the one the incoming message names, then re-init
+// the window around the CENTRE of the current view - origin plus the two
+// half-extents init itself published - and repaint. The message-field
+// order is the constructor's own proven idiom (id, codeY, codeX, extra).
+// The re-centring point goes through type_point's three-argument
+// constructor: three field assignments leave the y and z inserts as two
+// separate read-modify-writes where retail merges them into one masked
+// word store, and switching to the constructor alone is 78.42 -> 100.
+// All six assignment orders were measured (best 79.15) and none reaches
+// the merge.
+VA(0x005fc7a0, 0x147)  // anchor-callee init + VWCompleteDraw, anchor-caller WindowHandler, dc 0x196228
+void TViewWorldWindow::update_view_world(message* msg)
+{
+    message msg2;
+    int i;
+
+    for (i = 0; i < 3; i++) {
+        msg2.id = MESSAGE_WIDGET;
+        msg2.codeY = i + 16;
+        msg2.codeX = 6;
+        msg2.extra = 16;
+        BroadcastMessage(&msg2);
+    }
+    msg2.id = MESSAGE_WIDGET;
+    msg2.codeY = msg->codeY;
+    msg2.codeX = 5;
+    msg2.extra = 16;
+    BroadcastMessage(&msg2);
+
+    type_point center(origin.x + view_half_width,
+                      origin.y + view_half_height, origin.z);
+
+    init(center, 1);
+    gpAdvManager->VWCompleteDraw(origin.x, origin.y, origin.z, viewable_width,
+                                 viewable_height);
+    DrawWindow(1, 0xffff0001, 0xffff);
+    gpWindowManager->UpdateScreen(0, 0, 800, 600);
+}
+
+// E:\gamedcs\viewwrld.cpp:1675
+// The radar drag handler. (mrx, mry) is a screen point inside the
+// adventure window's own RadarWidget, which this window borrows for its
+// mini-map: retail reads the widget's x/y/width/height once through
+// gpAdvManager->advWindow->RadarWidget and clamps the point into it, then
+// divides the offset by the caller's tiles-per-pixel divisor and centres
+// the view on the result. Both clamp pairs are the by-value _cpp_max /
+// _cpp_min above - retail copies BOTH operands to stack slots and selects
+// between their addresses, which is that template and not an `if`. The
+// four widget fields are NAMED: retail loads x, y, width and height into
+// four registers at entry and never re-reads them (78.42 -> 80.75 over
+// caching only the pointer).
+// Residual (80.75%): every one of the four bitfield stores. Retail loads
+// the clamp result as a DWORD and inserts it with 32-bit xor/and; our CL
+// narrows the load to a word and inserts at 16 bits, and the rest of the
+// delta is the scheduling that follows. Measured and rejected on the
+// helper signature - const-ref parameters returning by value 76.34,
+// const-ref both ways 78.76, by-value both ways 76.34, against 80.75 for
+// by-value parameters returning `const _TYPE&` - and on the argument form:
+// an explicit `<int>` template argument, `origin.x + 0`, a
+// `static_cast<int>` around the RESULT and a `long` domain throughout are
+// all byte-flat, and naming the two reads in int locals costs 6.93.
+VA(0x005fc8f0, 0x213)  // anchor-callee UpdateRadar + VWCompleteDraw, anchor-caller WindowHandler, dc 0x1962fc
+void TViewWorldWindow::update_radar(int mrx, int mry, float fRadarDivisor)
+{
+    widget* radar = gpAdvManager->advWindow->RadarWidget;
+    int rx = radar->x;
+    int ry = radar->y;
+    int rw = radar->width;
+    int rh = radar->height;
+
+    if (mrx < rx)
+        mrx = rx;
+    if (mrx >= rx + rw)
+        mrx = rx + MAP_WIDTH * 2 - 1;
+    if (mry < ry)
+        mry = ry;
+    if (mry >= ry + rh)
+        mry = ry + MAP_HEIGHT * 2 - 1;
+
+    origin.x = static_cast<int>((mrx - rx) / fRadarDivisor) - view_half_width;
+    origin.y = static_cast<int>((mry - ry) / fRadarDivisor) - view_half_height;
+    origin.x = _cpp_max(static_cast<int>(origin.x), 0);
+    origin.y = _cpp_max(static_cast<int>(origin.y), 0);
+    origin.x = _cpp_min(static_cast<int>(origin.x),
+                        MAP_WIDTH - viewable_width);
+    origin.y = _cpp_min(static_cast<int>(origin.y),
+                        MAP_HEIGHT - viewable_height);
+
+    gpAdvManager->UpdateRadar(origin, 1, 1, view_mines, view_heroes,
+                              view_towns);
+    gpAdvManager->VWCompleteDraw(origin.x, origin.y, origin.z, viewable_width,
+                                 viewable_height);
+    gpWindowManager->UpdateScreen(8, 8, 592, 544);
+}
+
+// E:\gamedcs\viewwrld.cpp:1710
+// Both dispatch levels are the compiler's own tells. The message-id test
+// is an IF-CHAIN (`cmp`, arms emitted in place); the two codeX tests and
+// the widget-id test are SWITCHES (`sub`/`dec` descent, arms sunk behind
+// the default), and the map-dimension divisor is a switch too - its three
+// arms sit after the 1.0f default in reverse-ascending order, which no
+// if-chain produces. The accept arm and the key arm share their last two
+// statements, which is why retail duplicates only the dialogReturn store.
+// The radar drag is a pump: hold the button, keep the LAST mouse-move
+// seen, and re-centre once per outer pass until the button comes up.
+VA(0x005fcb10, 0x37F)  // vtable slot 9 + anchor-callee update_view_world/update_radar, dc 0x1964dc
+int TViewWorldWindow::WindowHandler(message* msg)
+{
+    message rMsg;
+    message rSaveMsg;
+    type_point center;
+    float fRadarDivisor;
+    int handled;
+
+    handled = CAdvPopup::WindowHandler(msg);
+    if (handled)
+        return handled;
+
+    if (!gpSoundManager->MusicPlaying())
+        gpSoundManager->SwitchAmbientMusic(
+            gTerrainMusicIds[gpAdvManager->field_58]);
+
+    if (msg->id == MESSAGE_KEY_DOWN) {
+        switch (msg->codeX) {
+        case KEYCODE_ESCAPE:
+        case KEYCODE_ENTER:
+            gpWindowManager->dialogReturn = msg->codeY;
+            msg->codeX = msg->codeY = widget::WIDGET_END_DIALOG;
+            return MESSAGE_DISPATCH_FORWARD;
+        }
+    } else if (msg->id == MESSAGE_WIDGET) {
+        switch (msg->codeX) {
+        case widget::WIDGET_SELECT:
+            if (msg->codeY != RADAR_ID)
+                break;
+            if (viewable_width == MAP_WIDTH && viewable_height == MAP_HEIGHT)
+                break;
+            switch (MAP_HEIGHT) {
+            case MAP_DIMENSION_SMALL:
+                fRadarDivisor = 4.0f;
+                break;
+            case MAP_DIMENSION_MEDIUM:
+                fRadarDivisor = 2.0f;
+                break;
+            case MAP_DIMENSION_LARGE:
+                fRadarDivisor = 1.3333f;
+                break;
+            default:
+                fRadarDivisor = 1.0f;
+                break;
+            }
+            update_radar(msg->mouseX, msg->mouseY, fRadarDivisor);
+            do {
+                Process1WindowsMessage();
+                rSaveMsg = rMsg = gpInputManager->GetEvent();
+                while (rMsg.id != MESSAGE_LEFT_BUTTON_UP
+                       && rMsg.id != MESSAGE_NONE) {
+                    if (rMsg.id == MESSAGE_MOUSE_MOVE)
+                        rSaveMsg = rMsg;
+                    Process1WindowsMessage();
+                    rMsg = gpInputManager->GetEvent();
+                }
+                if (rSaveMsg.id == MESSAGE_MOUSE_MOVE)
+                    update_radar(rSaveMsg.codeX, rSaveMsg.codeY,
+                                 fRadarDivisor);
+            } while (rMsg.id != MESSAGE_LEFT_BUTTON_UP);
+            break;
+        case widget::WIDGET_DESELECT:
+            switch (msg->codeY) {
+            case MAGNIFY_FAR_ID:
+                gUnnamed68c6b8 = VIEW_WORLD_TILE_SCALE_FAR;
+                giViewWorldScale = 7;
+                update_view_world(msg);
+                return MESSAGE_DISPATCH_CONSUME;
+            case MAGNIFY_MID_ID:
+                gUnnamed68c6b8 = VIEW_WORLD_TILE_SCALE_MID;
+                giViewWorldScale = 11;
+                update_view_world(msg);
+                return MESSAGE_DISPATCH_CONSUME;
+            case MAGNIFY_FULL_ID:
+                gUnnamed68c6b8 = VIEW_WORLD_TILE_SCALE_FULL;
+                giViewWorldScale = 16;
+                update_view_world(msg);
+                return MESSAGE_DISPATCH_CONSUME;
+            case PUZZLE_ID:
+                gpWindowManager->FadeScreen(1, 4, 0);
+                gpAdvManager->ViewPuzzle();
+                gpWindowManager->FadeScreen(1, 4, 0);
+                gpAdvManager->RedrawAdvScreen(0, 0);
+                DrawWindow(0, 0xffff0001, 0xffff);
+                center = type_point(origin.x + view_half_width,
+                                    origin.y + view_half_height, origin.z);
+                init(center, 0);
+                gpAdvManager->VWCompleteDraw(origin.x, origin.y, origin.z,
+                                             viewable_width,
+                                             viewable_height);
+                gpWindowManager->UpdateScreen(0, 0, 800, 600);
+                return MESSAGE_DISPATCH_CONSUME;
+            case ACCEPT_ID:
+                gpWindowManager->dialogReturn = msg->codeY;
+                msg->codeX = msg->codeY = widget::WIDGET_END_DIALOG;
+                return MESSAGE_DISPATCH_FORWARD;
+            }
+            break;
+        }
+    }
+    return MESSAGE_DISPATCH_CONSUME;
+}
+
 #if 0  // @carcass
-
-// E:\gamedcs\viewwrld.cpp:1409
-DC_ONLY(0x195b48, 0x1E6)
-void advManager::ViewWorld(int iWhatToDraw, TSkillMastery level)
-{
-    // @stub
-}
-
-// E:\gamedcs\viewwrld.cpp:1496
-DC_ONLY(0x195d30, 0x2CA)
-void TViewWorldWindow::init(type_point new_center, unsigned char updateFlag)
-{
-    // @stub
-}
 
 // E:\gamedcs\viewwrld.cpp:1549
 DC_ONLY(0x195ffc, 0x42)
 void TViewWorldWindow::draw_window()
-{
-    // @stub
-}
-
-// E:\gamedcs\viewwrld.cpp:1646
-DC_ONLY(0x196228, 0xD4)
-void TViewWorldWindow::update_view_world(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\viewwrld.cpp:1675
-DC_ONLY(0x1962fc, 0x1E0)
-void TViewWorldWindow::update_radar(int mrx, int mry, float fRadarDivisor)
-{
-    // @stub
-}
-
-// E:\gamedcs\viewwrld.cpp:1710
-DC_ONLY(0x1964dc, 0x3F4)
-int TViewWorldWindow::WindowHandler(message* msg)
 {
     // @stub
 }

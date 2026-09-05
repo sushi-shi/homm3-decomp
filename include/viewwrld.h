@@ -20,7 +20,22 @@ class type_func_button;
 // Dreamcast RolloverWidget at +0x60.
 class TViewWorldWindow : public CAdvPopup {
 public:
-    enum EOtherWidgetIDs { MAP_ID = 0 };
+    // The constructor's own append order fixes every id below: the three
+    // magnification buttons carry VWMag1/VWMag2/VWMag4.def at 16, 17 and
+    // 18, the puzzle button VWPuz.def at 19, and the 144x144 mini-map
+    // border at 20. WindowHandler cases on all five plus the house
+    // 0x7802 accept id. Spellings are role-based - neither corpus names
+    // them - and the scale each magnification arm installs is what fixes
+    // WHICH is which (16 -> 7.68f, 17 -> 11.84f, 18 -> 16.0f).
+    enum EOtherWidgetIDs {
+        MAP_ID = 0,
+        MAGNIFY_FAR_ID = 16,
+        MAGNIFY_MID_ID = 17,
+        MAGNIFY_FULL_ID = 18,
+        PUZZLE_ID = 19,
+        RADAR_ID = 20,
+        ACCEPT_ID = 0x7802
+    };
     // Dreamcast's older revision reserves two slots. Complete's constructor
     // compares the Dinkumware vector capacity against 0x28 and allocates 160
     // bytes, directly proving the revised constant.
@@ -41,6 +56,11 @@ private:
     // and write origin and the extents directly.
     friend int ViewWorldSurfaceHandler(message& msg);
     friend int ViewWorldUndergroundHandler(message& msg);
+    // advManager::ViewWorld reads origin and both extents straight out of
+    // its stack-constructed window to feed VWCompleteDraw's five
+    // arguments, so the owner of that entry sees the same private tail the
+    // two callbacks above do.
+    friend class advManager;
 
 public:
     TViewWorldWindow();
@@ -61,6 +81,20 @@ SIZE(TViewWorldWindow, 0x78);
 // button; their exact retail entries are claimed in viewwrld.cpp.
 int ViewWorldSurfaceHandler(message& msg);
 int ViewWorldUndergroundHandler(message& msg);
+
+// The "adventure repaint suppressed" latch whose DATA claim advmgr.cpp
+// holds (src/advmgr.cpp:6277), recorded there as having no located writer.
+// advManager::ViewWorld IS that writer - it raises the latch on entry and
+// drops it just before the closing UpdateRadar - and 0x6aac3c sits inside
+// viewwrld.obj's own .bss run (0x6aab68 .. 0x6aac3c), so this compiland
+// owns the definition. The claim is left where it stands rather than moved
+// across lanes; this is the declaration its writer compiles against.
+extern int gUnnamed6aac3c;
+// cmbtmgr.h's modal-screen latch (retail .bss 0x698a18). ViewWorld parks
+// it at 2 for the life of the view-world dialog, which is what kb.cpp's
+// fast-cycle guard tests. Declared here rather than by pulling cmbtmgr.h
+// into a TU that has no other use for it.
+extern int gCombatActive698a18;
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\viewwrld.cpp:100, dc 0x192ee8) long ftol(double d);
