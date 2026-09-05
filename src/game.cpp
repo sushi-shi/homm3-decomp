@@ -2083,7 +2083,13 @@ int playerData::save(TAbstractFile* outfile)
     // puts x/flags/bits at -0xc/-0x8/-0x4, retail at -0x8/-0xc/-0x6. The int
     // buffer at -0x10 and both byte buffers are exact. Moving bits to function
     // scope and a const-reference combinations alias are byte-flat; removing
-    // the alias for a direct member call falls to 98.2109%. The flat relocation
+    // the alias for a direct member call falls to 98.2109%.
+    // DECLARATION ORDER IS NOT THE LEVER (measured 2026-09-06, both byte-flat
+    // at 99.9557): hoisting `int x;` above `unsigned long flags;` and sinking
+    // it below `char value;` each leave x at -0xc and flags at -0x8.  The
+    // slots follow the variables, not their declaration order - the same
+    // result the ai.cpp simulate_combat pair gave, where the lever turned out
+    // to be the ORDER OF THE ASSIGNMENT STATEMENTS instead. The flat relocation
     // view also names the same bitset<12>::_Xran callee through a synthetic
     // target label because its retail row is unclaimed.
     unsigned char bits[2];
@@ -7990,6 +7996,14 @@ static __forceinline void set_saved_header_availability(
 // Measured and rejected here: byte-array indexing of the one-byte mask
 // (88.70), branch-local duplicate inserts (74.89), a conditional bitset
 // argument (84.30), and explicit bitset construction in the old arm (83.15).
+// Also rejected 2026-09-06: `availability.set(player, available)` in place of
+// the `availability[player] = available` proxy store, 90.1290 both with and
+// without an explicit `!= 0` on the value.  The house rule that `set(i,v)`
+// gives a CALLED `_Xran` while `[i]=v` gives an expanded one is the right
+// direction here - retail's one target-only call IS `bitset<8>::_Xran` - but
+// the depth this callee expands at moves the four surrounding
+// `_Tidy`/`assign`/`out_of_range`/`__CxxThrowException` sites with it and
+// costs more than the call is worth.
 VA(0x004c5630, 0x7CD)  // DC Load identity + saved-header callers + helper edges
 int NewSMapHeader::Load(TAbstractFile* infile, int saveVersion)
 {
