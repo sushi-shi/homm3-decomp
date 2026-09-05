@@ -9261,3 +9261,14 @@ VA_COMPGEN(0x004af2c0, 0x6B, VECTOR_DTOR, string)
 // COMDAT pairing: vector<std::string>::_Ucopy (thiscall, three pointer
 // arguments, `ret 0xc`).
 VA_COMPGEN(0x004af800, 0x38, VECTOR_UCOPY, string)
+
+// COMDAT pairing: vector<type_dialog_resource>::insert(iterator, const T&).
+// The element is 8 bytes and so is overview_item_record, and both TUs compile
+// this overload to the same 453 bytes, so size alone cannot separate them -
+// the CALLER SET can, and decisively. Of the 32 retail call sites, six are in
+// seerhut's reward windows, fifteen in events' own reward and treasure paths,
+// two in customcampaign and one in overview; but `overview_item_record` is a
+// type only overview.obj instantiates, and it cannot be what seerhut, events
+// or customcampaign are calling. /OPT:ICF then folds overview's own copy onto
+// this one, which is why a single retail body serves both.
+VA_COMPGEN(0x0054cba0, 0x1C5, VECTOR_INSERT, type_dialog_resource)
