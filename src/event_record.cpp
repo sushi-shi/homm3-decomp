@@ -1489,9 +1489,9 @@ void game::SetVisibility(int startX, int startY, int z, int whichPlayer,
     type_record_shroud* record = new type_record_shroud();
 
     int x0 = max_ref(startX - range, 0);
-    int x1 = _cpp_min(startX + range + 1, gMapWidth);
+    int x1 = _cpp_min(startX + range + 1, MAP_WIDTH);
     int y0 = max_ref(startY - range, 0);
-    int y1 = _cpp_min(startY + range + 1, gMapHeight);
+    int y1 = _cpp_min(startY + range + 1, MAP_HEIGHT);
 
     for (int y = y0; y < y1; ++y) {
         int dy = startY - y;
@@ -1548,9 +1548,9 @@ void game::ResetVisibility(int startX, int startY, int z, int whichPlayer,
     type_record_shroud* record = new type_record_shroud();
 
     int x0 = max_ref(startX - range, 0);
-    int x1 = _cpp_min(startX + range + 1, gMapWidth);
+    int x1 = _cpp_min(startX + range + 1, MAP_WIDTH);
     int y0 = max_ref(startY - range, 0);
-    int y1 = _cpp_min(startY + range + 1, gMapHeight);
+    int y1 = _cpp_min(startY + range + 1, MAP_HEIGHT);
 
     for (int y = y0; y < y1; ++y) {
         int dy = startY - y;

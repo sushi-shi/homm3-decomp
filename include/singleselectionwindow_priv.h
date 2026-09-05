@@ -376,13 +376,17 @@ struct TSortMapsByPlayers {
                     const GameSelectionHeadersStruct& b) const;
 };
 
-struct TSortMapsByVersion {
-    unsigned char direction;  // +0
-    unsigned char isNet;      // +1
+// Retail's version comparator DELEGATES its equal-version arm to the name
+// comparator on the SAME object address: every predicate site inside
+// _Median / _Unguarded_partition / _Unguarded_insert BY_VERSION expands the
+// version test and then `lea ecx,<the predicate parameter slot>; call
+// TSortMapsByName::operator()` - the receiver is the by-value TSortMapsByVersion
+// itself, which is what identifies the base as this class rather than a
+// constructed temporary.
+struct TSortMapsByVersion : public TSortMapsByName {
     TSortMapsByVersion(unsigned char dir, unsigned char net)
+        : TSortMapsByName(dir, net)
     {
-        isNet = net;
-        direction = dir;
     }
     bool operator()(const GameSelectionHeadersStruct& a,
                     const GameSelectionHeadersStruct& b) const;

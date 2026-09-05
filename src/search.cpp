@@ -541,7 +541,7 @@ void searchArray::check_town_portal(const hero* current_hero,
         new_cell.point.z = destinations[i].z;
         new_cell.town_portal = 1;
         int distance = abs(new_cell.point.z - start_cell->point.z)
-                * (gMapHeight + gMapWidth) / 2
+                * (MAP_HEIGHT + MAP_WIDTH) / 2
             + abs(start_cell->point.x - new_cell.point.x)
             + abs(new_cell.point.y - start_cell->point.y);
         new_cell.adjusted_cost += (distance + 4) * 50;

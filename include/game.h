@@ -526,13 +526,19 @@ class town;
 // and a 70-bit spell set at +0x320. HeroFn_004D8B30 independently reaches
 // the tail flags and closes the total size. Names beyond those surviving in
 // the Dreamcast roster remain provisional.
-// PACKED. The head below is what forces it: `location` is a type_point
-// (short bitfields, align 2) and retail puts it at +0x301, immediately
-// after a single byte - natural alignment would slide it to +0x302 and
-// shift the whole tail. pack(1) is layout-NEUTRAL against the pads it
-// replaces (every offset and the 0x334 total are unchanged) and matches
-// the precedent in hero.h, mapcell.h, findpath.h and seerhut.h.
-#pragma pack(push, 1)
+// NATURALLY ALIGNED except for one packed band. Retail's compiler-generated
+// HeroExtra copy (game::RehomeCampaignHeroSetup 0x4c6110 and the crossover
+// bodies) skips +0x01..+0x03, +0x1b, +0x23, +0x39..+0x3b, +0x307,
+// +0x31d..+0x31f and +0x331..+0x333 - i.e. every declared pad below is a
+// COMPILER pad in retail, not a member, so a whole-class pack(1) makes our
+// copies walk them byte-by-byte where retail moves dwords. Natural
+// alignment reproduces all 30 member offsets and the 0x334 total on its
+// own EXCEPT `location`, a type_point of short bitfields (align 2) that
+// retail puts at +0x301 right after a single byte and copies as one
+// unaligned dword; a pack(1) band over +0x300..+0x306 is the whole of the
+// packing this record needs. Measured layout-neutral with an offsetof
+// probe over every member (2026-09-06).
+#pragma pack(push, 8)
 class HeroExtra {
 public:
     // +0x00..+0x67 decoded by hero::HeroFn_004D8B30, which reads every
@@ -542,45 +548,40 @@ public:
     // this record. The two fields the Dreamcast build has no counterpart
     // for are the dword at +0x08 and the flag at +0x1a.
     signed char Owner;              // +0x00
-    char pad_001[0x3];
     int id;                         // +0x04
     int field_008;                  // +0x08 - copied to hero::field_01e
     unsigned char bCustomName;      // +0x0c
     char Name[13];                  // +0x0d - Complete strcpy destination
     unsigned char bCustomExperience;// +0x1a
-    char pad_01b;
     int Experience;                 // +0x1c
     unsigned char bCustomPortraitNumber;  // +0x20
     unsigned char PortraitNumber;         // +0x21
     unsigned char bCustomSecondarySkills; // +0x22
-    char pad_023;
     int NumSecondarySkills;         // +0x24 - signed, the loop bound
     char secondarySkill[8];         // +0x28 - movsx, so plain char
     char secondarySkillLevel[8];    // +0x30
     unsigned char bCustomArmies;    // +0x38
-    char pad_039[0x3];
     int armies[7];                  // +0x3c
     short numTroops[7];             // +0x58 - movsx word
     unsigned char GroupFormation;   // +0x66 - no retail body reads it
     unsigned char bCustomArtifacts; // +0x67
     type_artifact artifacts[19];
     type_artifact backpack[64];
+#pragma pack(push, 1)
     unsigned char numInBackpack;    // +0x300 - no retail body reads it
-    type_point location;            // +0x301
+    type_point location;            // +0x301 - unaligned, hence the band
     signed char PatrolRadius;       // +0x305 - sign gates the patrol XY
-    unsigned char customName;
-    char pad_307;
+    unsigned char customName;       // +0x306
+#pragma pack(pop)
     std::basic_string<char, std::char_traits<char>, std::allocator<char> > name;
     // +0x318 is the hero's SEX, not experience: HeroFn_004D8B30 gates it
     // on `!= -1` and stores it into hero::sex at +0x3d5. The real
     // Experience is the dword at +0x1c above. Renamed 2026-08-20.
     int sex;
-    unsigned char customSpells;
-    char pad_31d[0x3];
-    std::bitset<70> spells;
+    unsigned char customSpells;     // +0x31c
+    std::bitset<70> spells;         // +0x320
     unsigned char customPrimarySkills;
-    signed char primarySkills[4];
-    char pad_331[0x3];
+    signed char primarySkills[4];   // +0x32d, class trails to 0x334
 
     HeroExtra();
     // Retail-only reset helper reached by game::SetupOrigData.
@@ -1664,10 +1665,18 @@ SIZE(generator, 0x5c);
 // iDeathCountDown (+0x3d), with numTowns pinned at +0x3e from the other
 // side, while the Dreamcast puts the same member at an even 54. Retail
 // packed this record - as it packed hero.h's type_obscuring_object and
-// netmsg.h's CMCMoveHero, whose points also sit one byte early - so the
-// class is under pack(1) here and type_point keeps struct.h's DC-natural
-// two-byte alignment.
-#pragma pack(push, 1)
+// netmsg.h's CMCMoveHero, whose points also sit one byte early - but ONLY
+// across that one band. Retail's own compiler-generated copy assignment
+// (0x58f750) settles the rest: it copies +0x00, +0x01, +0x04, the eight
+// heroes, the two recruits, +0x30, +0x34, +0x38, then puzzle_guess as ONE
+// UNALIGNED DWORD at +0x39, +0x3d/+0x3e/+0x3f, the 0x48-byte townIds run
+// and +0x88 - and SKIPS +0x02..+0x03 and +0x31..+0x33 outright. Those are
+// compiler pads in retail, not members, so declaring them under a
+// whole-class pack(1) made our copy walk them byte-by-byte. Natural
+// alignment reproduces all 30 member offsets and the 0x168 total on its
+// own; a pack(1) band over +0x38..+0x3f is all the packing this record
+// needs. Measured layout-neutral with an offsetof probe (2026-09-06).
+#pragma pack(push, 8)
 class playerData {
 public:
     // The width of the `heroes` row below, and the cap the game enforces
@@ -1686,7 +1695,6 @@ public:
     // +0x01. Signed: FindHero/NextHero both `movsx` it and gate on
     // `test/jle`.
     signed char numHeroes;
-    char pad_02[2];
     // +0x04. DC spells it `currHero` (a char at DC 2); retail widened
     // it to a dword - NextHero compares the full register against -1.
     // Name kept as-is because advmgr.obj already writes it.
@@ -1702,8 +1710,8 @@ public:
     // eight bytes.
     int recruits[2];
     unsigned char startingNumHeroes;  // +0x30
-    char pad_31[3];
     int personality;               // +0x34
+#pragma pack(push, 1)
     char extraPuzzlePieces;        // +0x38
     // +0x39. A type_point by DC type; see the alignment note above.
     // playerData::Init settles both the offset and the BIT layout:
@@ -1726,6 +1734,7 @@ public:
     // currTownId from the unsigned char this header used to carry.
     char numTowns;        // +0x3e
     char currTownId;      // +0x3f (advManager::DeactivateCurrTown stores -1)
+#pragma pack(pop)
     // 0x48 entries, now PROVEN three ways: "nothing addresses
     // +0x40..+0x88" from the retail side; the DC repack lands
     // `placement_help_enabled` exactly at +0x88 (DC towns 61..133 ==
@@ -1734,7 +1743,6 @@ public:
     // dwords, i.e. exactly 72 bytes.
     char townIds[0x48];   // +0x40
     unsigned char placement_help_enabled;  // +0x88
-    char pad_89[3];
     // +0x8c. DC `std::vector<type_point> shipyards` - twelve bytes of
     // STLport there, sixteen of Dinkumware here, which is exactly the
     // slack that puts resources back on its proven +0x9c. Retail then
@@ -1764,7 +1772,6 @@ public:
     char cName[21];
     unsigned char isLocal;              // +0xe1
     unsigned char isHuman;              // +0xe2
-    char pad_e3[1];
     int quickCombat;                    // +0xe4
     // +0xe8. DC type `AI`, 128 B here (0x168 - 0xe8). Only the first
     // dword is retail-proven by both playerData constructors. Retail
@@ -1794,8 +1801,7 @@ public:
     // +0x128 / +0x160. calculate_demand writes each computed resource
     // value to the AI record as a double, then rounds a running sum of
     // the first six entries and stores one tenth of it at +0x160.
-    char ai_pad_124[4];
-    double resourceValue[7];
+    double resourceValue[7];            // +0x128
     int averageResourceValue;
     float turnValueOfAvgArtifact;
 
@@ -2759,7 +2765,7 @@ extern int gNetworkActive69954c;
 void __cdecl AI_examine_map();
 // hero.cpp owns the DATA claim on 0x698400 (name unattested,
 // address-ordinal placeholder) and game.obj is a second reader, so this
-// is an extern-only declaration - the gMapWidth/gpCurrentPlayer pattern.
+// is an extern-only declaration - the MAP_WIDTH/gpCurrentPlayer pattern.
 // hero.cpp's note already records THIS call site: every reader treats
 // nonzero as "suppress the interactive path", and game::ClaimTown skips
 // its notify call.
@@ -2795,14 +2801,12 @@ inline bool game::IsHumanTeam(int teamNum) const
     return false;
 }
 
-// The world's x- and y-extents, retail .data 0x6783c8 / 0x6783cc.
-// Declared here because game::SetMapSize is what WRITES them, so
-// game.h is the owner's header; findpath.h carries the identical pair
-// for its own TU and the two agree exactly (findpath.cpp includes both
-// headers). Consolidating them into one home is a wider change that
-// belongs to whoever owns findpath.h.
-extern int gMapWidth;
-extern int gMapHeight;
+// The world's x- and y-extents are the DATA-claimed MAP_WIDTH / MAP_HEIGHT
+// pair above (0x6783c8 / 0x6783cc); game::SetMapSize in this TU is what
+// WRITES them. A second, provisionally-named `gMapWidth`/`gMapHeight` pair
+// used to be declared here and in findpath.h, advspells.h and
+// event_record.h for the same two words - one retail global under two C++
+// symbols. Unified 2026-09-06 onto the Dreamcast-proven spelling.
 
 // --- the local-player pair, read by GetLocalPlayer and
 // GetLocalPlayerGamePos (both in this TU). The mode selector they

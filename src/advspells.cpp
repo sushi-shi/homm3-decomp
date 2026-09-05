@@ -197,8 +197,8 @@ void advManager::SummonBoat(int level)
     for (direction = 0; direction < MAP_DIRECTION_COUNT; direction++) {
         destX = who->x + normalDirTable[direction].x;
         destY = who->y + normalDirTable[direction].y;
-        if (destX >= 0 && destX < gMapWidth && destY >= 0
-            && destY < gMapHeight) {
+        if (destX >= 0 && destX < MAP_WIDTH && destY >= 0
+            && destY < MAP_HEIGHT) {
             NewmapCell* cell = GetCell(type_point(destX, destY, who->z));
             if (cell->type_value == 0 && cell->GroundSet == eTerrainWater)
                 goto found;
