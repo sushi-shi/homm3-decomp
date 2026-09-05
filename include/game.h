@@ -2287,6 +2287,12 @@ public:
     {
         return (field_1f642 * 4 + field_1f640 - 5) * 7 + field_1f63e;
     }
+    // kb.obj's pair (DC kb.cpp:4077 / :4095, dc 0xe4298 / 0xe4300; retail
+    // 0x4f3e30 / 0x4f3eb0). Declared here because they are `game` members -
+    // retail passes the record in ECX at both rows - while their bodies stay
+    // with the rest of kb.cpp.
+    short get_base_map_score();
+    short get_map_score();
     void GiveTimeEventReward(const TTimedEvent* thisEvent);   // 0x4cd710
     void CheckForTimeEvent();                                 // 0x4cd910
     void CheckForTownEvent();                                 // 0x4cda10
