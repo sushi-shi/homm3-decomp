@@ -6,6 +6,7 @@
 #define HOMM3_SEERHUTTEXT_H
 
 #include <string>
+#include <vector>
 
 #include <va.h>
 
@@ -31,10 +32,24 @@ struct TSeerHutTextColumn {
 };
 SIZE(TSeerHutTextColumn, 0x340);
 
+// The two three-column tables the loader fills, and the name list the same
+// entry point appends to. Their extents are byte-proven - they sit flush at
+// 0x69e728, 0x69f0e8 and 0x69faa8, exactly 3 * 0x340 apart - and the column
+// mapping is proven by the loader's own call pair, which feeds spreadsheet
+// columns 1..3 to the SECOND table and 4..6 to the first. The A/B spelling
+// is a house ordinal placeholder; the roles are proven, the names are not
+// attested anywhere.
+DATA(0x0069e728) extern TSeerHutTextColumn gSeerHutTextA[3];
+DATA(0x0069f0e8) extern TSeerHutTextColumn gSeerHutTextB[3];
+DATA(0x0069faa8) extern std::vector<std::string> gSeerHutNames;
+
 // Retail 0x56c120. Free fastcall under /Gr: the sheet arrives in ECX, the
 // destination column record in EDX and the spreadsheet column index on the
 // stack (`ret 4`).
 void LoadSeerHutTextColumn(TSpreadsheetResource* sheet,
                            TSeerHutTextColumn* column, int col);
+
+// Retail 0x56c3e0. The compiland's entry point.
+unsigned char InitializeSeerHutText();
 
 #endif /* HOMM3_SEERHUTTEXT_H */
