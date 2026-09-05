@@ -837,6 +837,88 @@ int font::LongestWrappedLineWidth(const char* str, int boxWidth)
     return maxWidth;
 }
 
+// E:\gamedcs\font.cpp - font.obj's tail, and the only member that
+// produces text rather than measuring it: it word-wraps `str` into
+// `result` at `boxWidth` pixels. Retail proves the receiver outright -
+// the space width is `fs.abc[' ']` read as this+0x1bc/0x1c0/0x1c4 - and
+// NH3API corroborates the name and the parameter shape only.
+//
+// Three lengths are live at once: `lineWidth` is what the built line
+// already costs, `spaceWidth`/`spaceCount` are the run of blanks not yet
+// committed to it, and `wordWidth` is the next word measured ahead of
+// its copy. A word that cannot fit even an empty line is broken
+// character by character in the inner loop.
+VA(0x004b5b90, 0x3A5)  // anchor-member (fs.abc[' '] at this+0x1bc), retail-only
+void font::FillLinesVector(const char* str, int boxWidth,
+                           std::vector<std::string>& result)
+{
+    int lineWidth = 0;
+    std::string line = "";
+    const char* p = str;
+    result.clear();
+    while (*p != 0) {
+        int spaceWidth = 0;
+        int spaceCount = 0;
+        int blankWidth = GetCharacterWidth(' ');
+        while (*p == ' ' || *p == '\n') {
+            if (*p == '\n') {
+                result.push_back(line);
+                line = "";
+                lineWidth = 0;
+                spaceCount = 0;
+                spaceWidth = 0;
+            } else {
+                spaceCount++;
+                spaceWidth += blankWidth;
+            }
+            p++;
+        }
+        int wordWidth = 0;
+        const char* wordEnd = p;
+        while (*wordEnd != 0 && *wordEnd != ' ' && *wordEnd != '\n') {
+            wordWidth += GetCharacterWidth(*wordEnd);
+            wordEnd++;
+        }
+        if (spaceWidth + wordWidth + lineWidth > boxWidth) {
+            if (lineWidth > 0) {
+                result.push_back(line);
+                line = "";
+                lineWidth = 0;
+            }
+            spaceCount = 0;
+            spaceWidth = 0;
+            while (wordWidth > boxWidth) {
+                while (*p != 0 && *p != ' ' && *p != '\n') {
+                    int charWidth = GetCharacterWidth(*p);
+                    if (lineWidth + charWidth > boxWidth)
+                        break;
+                    line += *p;
+                    wordWidth -= charWidth;
+                    lineWidth += charWidth;
+                    p++;
+                }
+                result.push_back(line);
+                line = "";
+                lineWidth = 0;
+            }
+        }
+        for (int iSpace = 0; iSpace != spaceCount; iSpace++)
+            line += ' ';
+        lineWidth += spaceWidth;
+        while (p != wordEnd) {
+            line += *p;
+            p++;
+        }
+        lineWidth += wordWidth;
+    }
+    if (lineWidth > 0)
+        result.push_back(line);
+}
+
+// The vector<string> range erase `result.clear()` reaches, retained as a
+// font.obj COMDAT because this is the only TU that clears one.
+VA_COMPGEN(0x004B6010, 0x175, VECTOR_ERASE, string)
+
 #if 0  // @carcass
 
 // E:\gamedcs\font.cpp:35
