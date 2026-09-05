@@ -1002,6 +1002,15 @@ SIZE(CPlayerLostMsg, 0x3c);
 class CNormalWinMsg : public CNetMsg {
 public:
     int gamePos;
+
+    // kb.obj's CheckEndGame (0x4f2ce0) builds this message on the
+    // last-team-standing path and proves the whole record: the base
+    // constructor's five stores in their declared order, RS_NORMAL_WIN as
+    // the subtype, a 0x18 extent, and the winning seat landing at +0x14.
+    CNormalWinMsg(int gamePos) : CNetMsg(RS_NORMAL_WIN, sizeof(CNormalWinMsg))
+    {
+        this->gamePos = gamePos;
+    }
 };
 SIZE(CNormalWinMsg, 0x18);
 

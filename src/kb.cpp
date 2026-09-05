@@ -19,6 +19,7 @@
 #include "campaignbrief.h"
 #include "campaignwindow.h"
 #include "castle.h"
+#include "command.h"
 #include "cmbtmgr.h"
 #include "creaturetype.h"
 #include "csprite.h"
@@ -85,6 +86,9 @@ inline int max(int left, int right)
 // The icon grid CalculateNormalDialogSize lays out: at most two rows of at
 // most four, and retail dispatches each row's centring through a four-entry
 // jump table on the row's icon count.
+// The eight fixed player seats CheckEndGame and its callers walk.
+#define GAME_PLAYER_COUNT 8
+
 #define DIALOG_ICON_MAX_ROWS 2
 #define DIALOG_ICON_ROW_SINGLE 1
 #define DIALOG_ICON_ROW_PAIR 2
@@ -844,12 +848,7 @@ unsigned char DisplayLCWinLoss(LossConditionStruct* LossCondition, int* bGameWon
     // @stub
 }
 
-// E:\gamedcs\kb.cpp:3566
-DC_ONLY(0xe3780, 0x282)
-void CheckEndGame(int bForceWin)
-{
-    // @stub
-}
+// E:\gamedcs\kb.cpp:3566 - promoted to a live claim (see below).
 
 // E:\gamedcs\kb.cpp:3763 - reconstructed above as the source-static
 // retail expands into EarlySetup.
@@ -2466,6 +2465,187 @@ CNetMsg::CNetMsg(eRS_Messages subType, unsigned long size)
     // @stub: the authoritative active body is in netmsg.h
 }
 #endif
+
+// The re-entry latch CheckEndGame holds while it runs; its only five
+// references in the whole image are that row's own read and four writes, so
+// kb.cpp owns it under the same rule as oldmain's private cells.
+DATA(0x0069958c)
+static unsigned char bInCheckEndGame;
+
+// E:\gamedcs\kb.cpp:2636. 0x4f11a0, the row EventWindowHandler's band puts
+// between TrueFalseDialogHandler and GetTeamNames, and the two call sites
+// below fix its ABI: one int in ECX, no return. Not claimed here.
+void PlayerDead(int gamePos);
+
+// E:\gamedcs\kb.cpp:3566
+// The end-of-turn adjudicator, and it runs at most once at a time.
+// Stage one walks the eight seats: a seat with neither heroes nor towns is
+// dead now, a seat with heroes but no towns starts (or runs out) the
+// seven-day countdown, and anything holding a town has its countdown
+// cleared.  Stage two counts the live seats outside the local player's
+// team, then puts the map's own victory and loss conditions through
+// DisplayVCWinLoss / DisplayLCWinLoss.  Standard victory - the last team
+// standing - only counts when the map allows it, and in a network game it
+// is announced with RS_NORMAL_WIN before the dialog.  The bForceWin
+// argument overrides everything.  The `gosolo` latch pair is honoured
+// three times over: the acting seat is temporarily made local so the
+// dialogs address it, and put back on the way out.
+// Residual (89.45%): blocks 85 = 85 and the branch view is clean; two
+// codegen decisions are left. (1) Our CL CROSS-JUMPS the two per-seat
+// NormalDialog calls - the dead-seat notice and the countdown-expiry
+// notice share their last five pushes - into one site where retail
+// keeps both; there is no source difference to break the merge, the
+// argument lists already differ in the middle. (2) Retail CALLS
+// game::GetTeam inside its GetTeamMask expansion where we expand it at
+// depth 2, and the frame is 0x2c against retail's 0x30 - one named
+// local short. Tried and rejected: promoting bStandardVictoryAllowed
+// and teamMask to function scope (byte-flat, and the frame does not
+// move).
+VA(0x004f2ce0, 0x5BA)  // decorated identity (kb.h) + dc-order-map, dc 0xe3780
+void CheckEndGame(int bForceWin)
+{
+    int bGameWon;
+    int bGameLost;
+    int iLiveOpponents;
+    unsigned char bTookLocalControl;
+    int i;
+
+    if (!gbThisNetGotAdventureControl)
+        return;
+    if (gbInSetup698400)
+        return;
+    if (gbGameOver)
+        return;
+    if (bInCheckEndGame)
+        return;
+    bInCheckEndGame = 1;
+    bTookLocalControl = 0;
+    if (gUnnamed691209 && gNetLocalGamePos == gUnnamed69120c
+        && !gpGame->players[gUnnamed69120c].isLocal) {
+        gpGame->players[gUnnamed69120c].isHuman = 1;
+        bTookLocalControl = 1;
+        gpGame->players[gUnnamed69120c].isLocal = 1;
+    }
+
+    for (i = 0; i < GAME_PLAYER_COUNT; i++) {
+        if (gpGame->playerDisabled[i])
+            continue;
+        if (gpGame->players[i].numHeroes == 0) {
+            if (gpGame->players[i].numTowns != 0) {
+                gpGame->players[i].iDeathCountDown = -1;
+                continue;
+            }
+            PlayerDead(i);
+            if (i == gpGame->GetLocalPlayerGamePos()) {
+                gUnnamed691209 = 0;
+                NormalDialog(gpGeneralText->Text[96], NORMAL_DIALOG_DEFAULT,
+                             -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            } else {
+                sprintf(gText, gpGeneralText->Text[6],
+                        gpGame->GetPlayerName(i));
+                NormalDialog(gText, NORMAL_DIALOG_DEFAULT, -1, -1, 10, i,
+                             -1, -1, -1, 5000, -1, 0);
+            }
+        } else if (gpGame->players[i].numTowns == 0) {
+            if (gpGame->players[i].iDeathCountDown == -1) {
+                if (gpGame->IsLocalHuman(i) && i == gNetLocalGamePos) {
+                    sprintf(gText, gpGeneralText->Text[7],
+                            gpGame->GetPlayerName(i));
+                    NormalDialog(gText, NORMAL_DIALOG_DEFAULT, -1, -1, 10, i,
+                                 -1, 0, -1, 0, -1, 0);
+                }
+                gpGame->players[i].iDeathCountDown = 7;
+            } else if (gpGame->players[i].iDeathCountDown == 0) {
+                PlayerDead(i);
+                if (gpGame->IsLocalHuman(i) && i == gNetLocalGamePos) {
+                    sprintf(gText, gpGeneralText->Text[8],
+                            gpGame->GetPlayerName(i));
+                    gUnnamed691209 = 0;
+                } else {
+                    sprintf(gText, gpGeneralText->Text[9],
+                            gpGame->GetPlayerName(i));
+                }
+                NormalDialog(gText, NORMAL_DIALOG_DEFAULT, -1, -1, 10, i,
+                             -1, 0, -1, 0, -1, 0);
+            }
+        } else {
+            gpGame->players[i].iDeathCountDown = -1;
+        }
+    }
+
+    if (gUnnamed691209 && gNetLocalGamePos == gUnnamed69120c
+        && bTookLocalControl) {
+        gpGame->players[gUnnamed69120c].isHuman = 0;
+        gpGame->players[gUnnamed69120c].isLocal = 0;
+    }
+
+    iLiveOpponents = 0;
+    unsigned char teamMask =
+        gpGame->GetTeamMask(gpGame->GetLocalPlayerGamePos());
+    for (i = 0; i < GAME_PLAYER_COUNT; i++)
+        if (!gpGame->playerDisabled[i] && !(teamMask & (1 << i)))
+            iLiveOpponents++;
+
+    bTookLocalControl = 0;
+    if (gUnnamed691209 && gNetLocalGamePos == gUnnamed69120c
+        && !gpCurrentPlayer->isLocal) {
+        gpCurrentPlayer->isLocal = 1;
+        bTookLocalControl = 1;
+        gpCurrentPlayer->isHuman = 1;
+    }
+
+    int bStandardVictoryAllowed = 1;
+    bGameWon = 0;
+    bGameLost = 0;
+    if (!DisplayVCWinLoss(gpGame->mapHeader.victoryCondition, bGameWon,
+                          bGameLost, 0))
+        DisplayLCWinLoss(&gpGame->mapHeader.lossCondition, &bGameWon,
+                         &bGameLost, 0);
+    if (gpGame->mapHeader.victoryCondition.Type != -1
+        && !gpGame->mapHeader.victoryCondition.AllowNormalVictory)
+        bStandardVictoryAllowed = 0;
+    if (bGameLost) {
+        gbGameOver = 1;
+        bDefeatedAllPlayers = 0;
+    }
+    if (bGameWon) {
+        gbGameOver = 1;
+        bDefeatedAllPlayers = 1;
+    }
+    if (bStandardVictoryAllowed && iLiveOpponents == 0) {
+        gUnnamed69951c = 1;
+        gbGameOver = 1;
+        bGameWon = 1;
+        bDefeatedAllPlayers = 1;
+        if (gNetworkActive69954c) {
+            CNormalWinMsg winMsg(gpGame->GetLocalPlayerGamePos());
+            TransmitRemoteData(&winMsg, 127, false, true);
+        }
+        NormalDialog(gpGeneralText->Text[660], NORMAL_DIALOG_DEFAULT, -1, -1,
+                     -1, 0, -1, 0, -1, 0, -1, 0);
+    } else {
+        for (i = 0; i < GAME_PLAYER_COUNT; i++)
+            if (!gpGame->playerDisabled[i] && gpGame->IsLocalHuman(i))
+                break;
+        if (i == GAME_PLAYER_COUNT) {
+            gbGameOver = 1;
+            bDefeatedAllPlayers = 0;
+        }
+    }
+
+    if (bForceWin == END_GAME_FORCE_VICTORY) {
+        gbGameOver = 1;
+        bDefeatedAllPlayers = 1;
+    } else if (bForceWin == END_GAME_FORCE_DEFEAT) {
+        bDefeatedAllPlayers = 0;
+        gbGameOver = 1;
+    } else if (!gbGameOver && gUnnamed691209
+               && gNetLocalGamePos == gUnnamed69120c && bTookLocalControl) {
+        gpCurrentPlayer->isLocal = 0;
+        gpCurrentPlayer->isHuman = 0;
+    }
+    bInCheckEndGame = 0;
+}
 
 VA(0x004f3540, 0x14B)
 void game::ShowLuckInfo(hero* thisHero, int iMBType)

@@ -1979,6 +1979,7 @@ kb	??1advManager@@QAE@XZ	100.0000	100.0000	100.0000	0xf39f0	-
 kb	??1combatManager@@QAE@XZ	71.8085	71.8085	71.8085	0xf3940	-
 kb	??1type_dialog_icon@@QAE@XZ	100.0000	100.0000	100.0000	0xf64c0	-
 kb	?CalculateNormalDialogSize@@YIXPAUTNormalDialogInfo@@@Z	92.1688	92.1688	92.1688	0xf5d80	1ee3ea8092d1
+kb	?CheckEndGame@@YIXH@Z	89.4452	89.4452	89.4452	0xf2ce0	f7599ef47a4c
 kb	?CleanUpMenus@@YIXXZ	100.0000	100.0000	100.0000	0xf4b50	5ad85acac0be
 kb	?CongratsWait@@YIXHPADHHH@Z	96.8467	96.8467	96.8467	0xf3ab0	767bdf8cc153
 kb	?CreditsWait@@YIXXZ	95.2930	95.2930	95.2930	0xedda0	e424e5d34744
@@ -2486,7 +2487,7 @@ recruit	?RecruitSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000
 # first raised the source checkpoint to 94.1574. A later dependent rebuild and
 # fresh normalization, with recruit.cpp unchanged, measured 96.5558; the merged
 # rebuild returned current to 94.1574 while max/history retain that transient.
-recruit	?Update@recruitUnit@@QAEXEJ@Z	96.5558	96.5558	96.5558	0x1503a0	d97bc68809dd
+recruit	?Update@recruitUnit@@QAEXEJ@Z	94.1574	96.5558	96.5558	0x1503a0	d97bc68809dd
 # 2026-09-05 DELIBERATE LOWER: add_creature_widgets reached 100.0000 only through a
 # `creature_background` file-static the Dreamcast roster does not name (recruit.obj has
 # no such helper) - a caller-shrink dose steering the /Ob2 budget, i.e. an inverse
@@ -3005,7 +3006,7 @@ singleselectionwindow	?OnGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNet
 # SetCurrentMap/OnSetAsHostMsg bodies landing in the TU dropped the
 # pair again with both sources byte-identical. Recovery rides with
 # DrawHeroAdvancedOption reaching 100.
-singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	99.8868	100.0000	100.0000	0x17cdc0	0e5de8f038ec
+singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0	0e5de8f038ec
 singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	9177fbb0fa83
 # 2026-08-27 hand-lowered 100.0000 -> 99.8710 (hist keeps 100.0000): the
 # documented TU-state flap (master accepted this pair down at 99.89/99.87
