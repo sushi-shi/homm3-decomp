@@ -4889,3 +4889,18 @@ void std::construct(SpellID* __p, const SpellID* __value)
 }
 
 #endif  // @carcass
+
+// COMDAT pairing: ai_tactical.obj's own out-of-line ~army - the only
+// unpaired COMDAT it emits at this scale (270 B against the retail row's
+// 310, 0.905 mnemonic agreement) and the last unclaimed row of the span
+// but one. The claim carries a declarator because _demangle_key keys a
+// destructor `army_army@dtor`, which no compgen kind builds.
+#if 0  // @carcass: COMDAT emitted by this compiland
+
+VA(0x0043d400, 0x136)  // COMDAT pairing (ai_tactical.obj's ??1army@@QAE@XZ)
+army::~army()
+{
+    // @stub
+}
+
+#endif  // @carcass

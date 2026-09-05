@@ -668,7 +668,11 @@ struct TCreatureTypeTraits {
     int baseFightValue;
     int AI_value;
     int growthRate;
-    int horde_growth_rate;
+    // SIXTEEN BITS, not 32: the crtraits.txt parser (0x47b480) stores this
+    // column's atoi result with `mov word ptr [esi+0x48], ax` where every
+    // neighbouring column takes a dword.
+    short horde_growth_rate;
+    char pad_4a[2];
     int hitPoints;
     int speed;
     int attackSkill;

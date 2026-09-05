@@ -2935,5 +2935,36 @@ char* std::__copy(char* __first, char* __last, char* __result, std::random_acces
 
 #endif  // @carcass
 
+// UNCLAIMED IN SPAN: 0x404690 (75 B) and events' 0x4ad0e0 (74 B) both
+// score high against ??1?$basic_string@D...@QAE@XZ (0.898 / 0.957), but
+// only ONE retail row can carry that name - the linker selects a single
+// copy of the COMDAT - and neither size is close to the 62 bytes our
+// compile emits. Left unclaimed rather than banked on a guess.
+
+// COMDAT pairing: basic_string<char>::_Eos, 20 B against this compiland's
+// single 20-byte COMDAT.
+#if 0  // @carcass: Dinkumware instantiations emitted by this compiland
+
+VA(0x00404a70, 0x14)  // COMDAT pairing (unique 20 B in this obj)
+void std::basic_string<char>::_Eos(unsigned n)
+{
+    // @stub
+}
+
+#endif  // @carcass
+
 // COMDAT pairing: _Grow on the char instantiation, mnemonic agreement 0.971.
 VA_COMPGEN(0x00404a90, 0x122, BASIC_STRING_GROW, char)
+
+// COMDAT pairing: std::_Construct<widget*>, 9 B against this compiland's
+// single 9-byte COMDAT. Declarator form: the authority keys the free
+// template flat (std__construct) with no owner arm.
+#if 0  // @carcass: Dinkumware instantiation emitted by this compiland
+
+VA(0x00404dc0, 0x9)  // COMDAT pairing (unique 9 B in this obj)
+void std::_Construct(widget** slot, widget* const& value)
+{
+    // @stub
+}
+
+#endif  // @carcass
