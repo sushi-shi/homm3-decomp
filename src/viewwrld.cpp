@@ -548,7 +548,7 @@ void advManager::VWDrawBoatPartShadow(int part, TDrawParts& boatParts, int baseX
 VA(0x005f80e0, 0x1F6)  // exhaustive dc-order-map (the row before VWDrawAdvObj) + VWCompleteDraw call order, dc 0x193a74
 void advManager::VWDrawSymbols(int srcX, int srcY, int z, int destX, int destY)
 {
-    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth || srcY >= gMapHeight)
+    if (srcX < 0 || srcY < 0 || srcX >= MAP_WIDTH || srcY >= MAP_HEIGHT)
         return;
 
     NewmapCell* thisCell = GetCell(type_point(srcX, srcY, z));
@@ -603,7 +603,7 @@ void advManager::VWDrawSymbols(int srcX, int srcY, int z, int destX, int destY)
 VA(0x005f82e0, 0x8F1)  // link order + signature/callee/CFG corroboration, dc 0x193c74
 void advManager::VWDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 {
-    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth || srcY >= gMapHeight)
+    if (srcX < 0 || srcY < 0 || srcX >= MAP_WIDTH || srcY >= MAP_HEIGHT)
         return;
 
     NewmapCell* thisCell = GetCell(type_point(srcX, srcY, z));
@@ -831,7 +831,7 @@ void advManager::VWDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 VA(0x005f8be0, 0x636)  // exhaustive dc-order-map + VWCompleteDraw call order (5th layer), dc 0x1943ec
 void advManager::VWDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int destY)
 {
-    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth || srcY >= gMapHeight)
+    if (srcX < 0 || srcY < 0 || srcX >= MAP_WIDTH || srcY >= MAP_HEIGHT)
         return;
 
     NewmapCell* thisCell = GetCell(type_point(srcX, srcY, z));
@@ -935,7 +935,7 @@ void advManager::VWDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int de
 VA(0x005f9220, 0x38A)  // exhaustive dc-order-map + VWCompleteDraw call order (2nd layer), dc 0x194850
 void advManager::VWDrawRiver(int srcX, int srcY, int z, int destX, int destY)
 {
-    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth || srcY >= gMapHeight)
+    if (srcX < 0 || srcY < 0 || srcX >= MAP_WIDTH || srcY >= MAP_HEIGHT)
         return;
 
     NewmapCell* thisCell = GetCell(type_point(srcX, srcY, z));
@@ -971,7 +971,7 @@ void advManager::VWDrawRiver(int srcX, int srcY, int z, int destX, int destY)
 VA(0x005f95b0, 0x38B)  // exhaustive dc-order-map + VWCompleteDraw call order (3rd layer), dc 0x1949cc
 void advManager::VWDrawRoad(int srcX, int srcY, int z, int destX, int destY)
 {
-    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth || srcY >= gMapHeight)
+    if (srcX < 0 || srcY < 0 || srcX >= MAP_WIDTH || srcY >= MAP_HEIGHT)
         return;
 
     NewmapCell* thisCell = GetCell(type_point(srcX, srcY, z));
@@ -1022,9 +1022,9 @@ void advManager::VWDrawRoad(int srcX, int srcY, int z, int destX, int destY)
 VA(0x005f9940, 0x44A)  // exhaustive dc-order-map + VWCompleteDraw call order (the iVWTerrains-gated layer), dc 0x194b48
 void advManager::VWDrawShroud(int srcX, int srcY, int z, int destX, int destY)
 {
-    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth)
+    if (srcX < 0 || srcY < 0 || srcX >= MAP_WIDTH)
         return;
-    if (srcY >= gMapHeight && !gCompleteDrawAllCells)
+    if (srcY >= MAP_HEIGHT && !gCompleteDrawAllCells)
         return;
 
     GetCell(type_point(srcX, srcY, z));
@@ -1103,7 +1103,7 @@ void VWClipScaleToScreenBuffer(int destX, int destY);
 VA(0x005f9ed0, 0x310)  // exhaustive dc-order-map + VWCompleteDraw call order (4th layer), dc 0x194dcc
 void advManager::VWDrawUnderlay(int srcX, int srcY, int z, int destX, int destY)
 {
-    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth || srcY >= gMapHeight)
+    if (srcX < 0 || srcY < 0 || srcX >= MAP_WIDTH || srcY >= MAP_HEIGHT)
         return;
 
     NewmapCell* thisCell = GetCell(type_point(srcX, srcY, z));
@@ -1153,7 +1153,7 @@ void advManager::VWDrawUnderlay(int srcX, int srcY, int z, int destX, int destY)
 // E:\gamedcs\viewwrld.cpp:1174
 // The scaled ground layer, and the whole of its tail is advmgr.cpp's exact
 // DrawGround (0x412900, exact): the same in-bounds ground tile, the same
-// -1/gMapWidth/gMapHeight border-frame chain and the same wrapped fallback
+// -1/MAP_WIDTH/MAP_HEIGHT border-frame chain and the same wrapped fallback
 // frame. Only the head (the view-world visibility gate) and the destination
 // (the scratch buffer plus VWScaleToScreenBuffer instead of the screen
 // bitmap) differ. The four entry bounds are re-tested by the in-bounds
@@ -1163,7 +1163,7 @@ void advManager::VWDrawUnderlay(int srcX, int srcY, int z, int destX, int destY)
 VA(0x005fa1e0, 0x41F)  // exhaustive dc-order-map (the row before the ctor) + VWCompleteDraw call order (1st layer), dc 0x194fb0
 void advManager::VWDrawGround(int srcX, int srcY, int z, int destX, int destY)
 {
-    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth || srcY >= gMapHeight)
+    if (srcX < 0 || srcY < 0 || srcX >= MAP_WIDTH || srcY >= MAP_HEIGHT)
         return;
 
     NewmapCell* thisCell = GetCell(type_point(srcX, srcY, z));
@@ -1176,8 +1176,8 @@ void advManager::VWDrawGround(int srcX, int srcY, int z, int destX, int destY)
     int baseX = destX * giViewWorldScale + iVWCenterOffsetW;
     int baseY = destY * giViewWorldScale + iVWCenterOffsetH;
 
-    if (srcX >= 0 && srcY >= 0 && srcX < gMapWidth
-        && srcY < gMapHeight) {
+    if (srcX >= 0 && srcY >= 0 && srcX < MAP_WIDTH
+        && srcY < MAP_HEIGHT) {
         memset(memoryBuffer->GetMap(0, 0), 0,
                memoryBuffer->GetHeight() * memoryBuffer->GetPitch());
 
@@ -1194,22 +1194,22 @@ void advManager::VWDrawGround(int srcX, int srcY, int z, int destX, int destY)
     if (srcX == -1) {
         if (srcY == -1)
             frame = 16;
-        else if (srcY == gMapHeight)
+        else if (srcY == MAP_HEIGHT)
             frame = 19;
-        else if (srcY >= 0 && srcY < gMapHeight)
+        else if (srcY >= 0 && srcY < MAP_HEIGHT)
             frame = 32 + (srcY & 3);
-    } else if (srcX == gMapWidth) {
+    } else if (srcX == MAP_WIDTH) {
         if (srcY == -1)
             frame = 17;
-        else if (srcY == gMapHeight)
+        else if (srcY == MAP_HEIGHT)
             frame = 18;
-        else if (srcY >= 0 && srcY < gMapHeight)
+        else if (srcY >= 0 && srcY < MAP_HEIGHT)
             frame = 24 + (srcY & 3);
     } else if (srcY == -1) {
-        if (srcX >= 0 && srcX < gMapWidth)
+        if (srcX >= 0 && srcX < MAP_WIDTH)
             frame = 20 + (srcX & 3);
-    } else if (srcY == gMapHeight) {
-        if (srcX >= 0 && srcX < gMapHeight)
+    } else if (srcY == MAP_HEIGHT) {
+        if (srcX >= 0 && srcX < MAP_HEIGHT)
             frame = 28 + (srcX & 3);
     }
 

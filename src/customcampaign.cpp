@@ -1189,6 +1189,17 @@ TCampaignBrief::ScenarioStruct::~ScenarioStruct()
 // placement x to -1, and the availability table follows - the new id takes
 // the record's owner, the old one goes back to the tavern pool. Name
 // provisional.
+// Residual (98.49%): four register-naming rows at the head of the
+// compiler-generated copy - retail hoists the first member's byte load
+// (`mov cl,[esi]`) above the `push edi` and finishes the newHeroId*0x334
+// index chain in EAX where we finish it in EDX - plus one unclaimed data
+// name on akHeroTraits. Tried and rejected: `signed char owner` 94.62,
+// `unsigned char owner` 97.41, `int heroClass` (does not compile - arg 4 is
+// THeroClass), `newSetup.operator=(setup)` 98.46, naming the destination
+// reference BEFORE the copy 98.46. The +49.4 that got here was two facts:
+// game.h's HeroExtra pads had to stop being members (retail's copy skips
+// every one of them) and both `owner` and `heroClass` are named locals -
+// retail evaluates argument 1 FIRST, which no in-call spelling reproduces.
 VA(0x00486110, 0x32F)  // anchor-caller(DoPreLoadCustomization +0x117), retail-only
 void game::RehomeCampaignHeroSetup(int heroId)
 {
@@ -1196,20 +1207,22 @@ void game::RehomeCampaignHeroSetup(int heroId)
     if (setup.location.x < 0)
         return;
 
-    int newHeroId = GetNewHeroId(setup.Owner, kNumHeroClasses, 1,
-                                 akHeroTraits[heroId].heroClass);
+    int owner = setup.Owner;
+    THeroClass heroClass = akHeroTraits[heroId].heroClass;
+    int newHeroId = GetNewHeroId(owner, kNumHeroClasses, 1, heroClass);
     if (newHeroId == -1) {
         setup.location.x = -1;
         return;
     }
 
     heroSetup[newHeroId] = setup;
-    heroSetup[newHeroId].id = newHeroId;
+    HeroExtra& newSetup = heroSetup[newHeroId];
+    newSetup.id = newHeroId;
     setup.location.x = -1;
     heroAvailability[newHeroId] = setup.Owner;
     heroAvailability[heroId] = hero::HERO_AVAILABILITY_TAVERN_POOL;
-    if (heroSetup[newHeroId].PortraitNumber == heroId)
-        heroSetup[newHeroId].PortraitNumber = newHeroId;
+    if (newSetup.PortraitNumber == heroId)
+        newSetup.PortraitNumber = newHeroId;
 }
 
 // Complete-only, and the Dreamcast roster names it: game::NewMap calls this
@@ -2222,6 +2235,16 @@ void TCampaignBrief::CampaignHeaderStruct::GetAvailableScenarios(
 // MP3, and pumps the message loop until all three have been finished for
 // their linger interval or the user clicks or keys out. The four flag/clock
 // pairs (subtitle, speech, video) are what the tail conjunction tests.
+// Residual (83.88%): calls AGREE 38 = 38 and branches agree 55 = 55; the
+// whole gap is TWO ADJACENT BRANCHES SWAPPING PLACES (#24/#25 at fn+0x2c0
+// and fn+0x2e1, base jge/je against retail je/jge). Retail SINKS the
+// `else if (scroll_y < text_height - MARGIN) ++scroll_y;` block below the
+// FillRect argument setup and jumps back to it (`jmp 0x4892fa` at 0x48929f,
+// the block itself at 0x4892a1), where we lay it inline; every one of the
+// 21 target-shifted blocks is that one displacement. Tried and rejected
+// 2026-09-06: inverting the two arms so the !scroll_delay case leads
+// (82.36) and flattening both arms onto `redraw &&` conditions (83.88,
+// byte-flat). It is a C2 block-placement choice, not the condition order.
 VA(0x00488fb0, 0x528)  // PlayScenarioPrologue callee + music-cell reader, retail-only
 void TCampaignBrief::MapTextStruct::Play()
 {

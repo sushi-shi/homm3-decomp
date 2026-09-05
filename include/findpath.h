@@ -96,12 +96,14 @@ struct pathCell {
 SIZE(pathCell, 30);
 
 // Retail .data 0x6783c8 / 0x6783cc - the world's x- and y-extents. Every
-// cell index in the engine is ((z * gMapHeight + y) * gMapWidth + x);
+// cell index in the engine is ((z * MAP_HEIGHT + y) * MAP_WIDTH + x);
 // get_danger_cell below is the smallest reader, game::get_cell the
 // nearest relative (it reads the map record's own square Size instead).
-// The DC roster carries no name for either word, so both are provisional.
-extern int gMapWidth;
-extern int gMapHeight;
+// DECLARATIONS ONLY - game.h owns the DATA claims on the pair, and a second
+// claim on one RVA is a fatal duplicate at delink time. The names are the
+// Dreamcast roster's (`?MAP_WIDTH@@3HA` / `?MAP_HEIGHT@@3HA`).
+extern int MAP_WIDTH;
+extern int MAP_HEIGHT;
 
 // Dreamcast roster with the STLport->VC6 vector shift; the retail ctor
 // 0x4b1370 stores every named field and the dtor 0x4b13e0 frees
@@ -281,8 +283,8 @@ public:
     {
         if (!cellData)
             return cellData;
-        return &cellData[((point.z * 2 + flying) * gMapHeight + point.y)
-                         * gMapWidth + point.x];
+        return &cellData[((point.z * 2 + flying) * MAP_HEIGHT + point.y)
+                         * MAP_WIDTH + point.x];
     }
 
     void clear_path()
@@ -332,7 +334,7 @@ public:
 // folds it into every caller, ai_player.obj's get_danger_value included.
 inline long* get_danger_cell(long* danger_zones, type_point point)
 {
-    return &danger_zones[(point.z * gMapHeight + point.y) * gMapWidth + point.x];
+    return &danger_zones[(point.z * MAP_HEIGHT + point.y) * MAP_WIDTH + point.x];
 }
 
 // Retail .rdata 0x63bd18, nine dwords indexed by town::type:

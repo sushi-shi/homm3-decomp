@@ -7209,8 +7209,8 @@ void advManager::DispatchEvent(hero* current_hero, NewmapCell* cell, type_point 
         type_point savedOrigin = radarOrigin;
         DemobilizeCurrHero(0, 1);
         for (int z = 0; z < gpGame->GetNumMapLevels(); z++) {
-            for (int x = 0; x < gMapWidth; x++) {
-                for (int y = 0; y < gMapHeight; y++) {
+            for (int x = 0; x < MAP_WIDTH; x++) {
+                for (int y = 0; y < MAP_HEIGHT; y++) {
                     NewmapCell* eyeCell =
                         gpGame->worldMap.cell(x, y, z);
                     if (eyeCell->type == EYE_OF_MAGI
@@ -7677,7 +7677,7 @@ void advManager::DoEvent(NewmapCell* eventCell, type_point point)
 // single `mov word ptr` retail emits - three assignments to a local leave
 // two separate xor read-modify-writes on the same word (92.99 -> 100.00,
 // and it was the whole residual).
-VA(0x004aabb0, 0x239)  // anchor-global gMapWidth/gMapHeight + CMCEraseObject, dc 0x99bac
+VA(0x004aabb0, 0x239)  // anchor-global MAP_WIDTH/MAP_HEIGHT + CMCEraseObject, dc 0x99bac
 void advManager::EraseObj(NewmapCell* thisCell, type_point point,
                           unsigned char record)
 {
@@ -7696,10 +7696,10 @@ void advManager::EraseObj(NewmapCell* thisCell, type_point point,
         gpGame->record_erase_object(thisCell, point);
 
     for (int iy = 0; iy < objectType->height; iy++) {
-        if (object->y - iy < 0 || object->y - iy >= gMapHeight)
+        if (object->y - iy < 0 || object->y - iy >= MAP_HEIGHT)
             continue;
         for (int ix = 0; ix < objectType->width; ix++) {
-            if (object->x - ix < 0 || object->x - ix >= gMapWidth)
+            if (object->x - ix < 0 || object->x - ix >= MAP_WIDTH)
                 continue;
             NewmapCell* cell = fullMap->cell(object->x - ix,
                                              object->y - iy, object->z);

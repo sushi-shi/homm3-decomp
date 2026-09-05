@@ -310,6 +310,26 @@ inline bool CanAfford(const long* cost, const long* playerRes)
 // (77.12), and id-driven without the reference (68.18). The retained
 // i/id/reference form is therefore the measured x86 winner. The clear order
 // at entry is byte-proven: szGoldCost, szResourceCost, resourceIndex, szCount.
+// 2026-09-06, polish lane 22 (82.2872 -> 83.9500): the affordability verdict
+// is NOT a ternary. Retail stores UPGRADE_STATE_TOO_EXPENSIVE and
+// UPGRADE_STATE_AFFORDABLE as two separate constant stores ON THE LOOP'S
+// TWO EXITS (`jg -> mov [edi+0x4c],2` and loop-completion ->
+// `mov [edi+0x4c],1`), with no post-loop compare at all; the ternary makes
+// VC6 fold the verdict into arithmetic on the counter (`inc edx / mov
+// [edi+0x4c],edx`). Assigning inside the loop and `goto`-ing past the
+// fall-through assignment reproduces retail's threading and takes the branch
+// census clean at 34/34. Measured: plain `if/else` after the loop 83.24 (one
+// branch too many), `continue` instead of the trailing `else` byte-flat at
+// 83.95, `int` flags 83.23, memset before the flags 83.42, mixed int/uchar
+// flags 83.30 and 83.79, swapping the two flag declarations 83.96 (noise).
+// Residual (83.95%): the merged BroadcastMessage the note above describes is
+// still merged - retail's 25th call at fn+0x405 is the occupied arm's
+// SET_ICON_NAME, ours cross-jumps into the empty arm's SET_STATUS at fn+0x4e4
+// (`push eax / jmp`) - and retail additionally SHARES one inline strcpy tail
+// between two emptyRolloverText copies where we duplicate it, so the two
+// cross-jump decisions run in OPPOSITE directions in one body. Also open:
+// retail's slot induction pointer sits at &slot[i]+0x44, ours at +0x40, which
+// is what shifts every `[ebx +/- N]` displacement by four.
 VA(0x004e7eb0, 0x64D)  // source/call order + DoModal/handler call sites, dc 0xd6bf8
 void THillFortWindow::Recalculate(unsigned char DrawDimmedButtons)
 {
@@ -414,14 +434,16 @@ void THillFortWindow::Recalculate(unsigned char DrawDimmedButtons)
             if (!CanUpgradeCreature(creature_type_from_int(s.type))) {
                 s.state = UPGRADE_STATE_NONE;
             } else {
-                int r;
-                for (r = 0; r < armyGroup::ARMY_GROUP_SLOT_COUNT; r++) {
-                    if (s.cost[r] > gpCurrentPlayer->resources[r])
-                        break;
+                for (int r = 0; r < armyGroup::ARMY_GROUP_SLOT_COUNT;
+                     r++) {
+                    if (s.cost[r] > gpCurrentPlayer->resources[r]) {
+                        s.state = UPGRADE_STATE_TOO_EXPENSIVE;
+                        goto have_state;
+                    }
                 }
-                s.state = r < armyGroup::ARMY_GROUP_SLOT_COUNT
-                                    ? UPGRADE_STATE_TOO_EXPENSIVE
-                                    : UPGRADE_STATE_AFFORDABLE;
+                s.state = UPGRADE_STATE_AFFORDABLE;
+            have_state:
+                ;
             }
 
             msg.id = MESSAGE_WIDGET;
