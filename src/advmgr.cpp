@@ -249,7 +249,7 @@ CNetMsg* CAdvMgrNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
         if (gpGame->ReceiveSaveGame(pMsg->m_fileSize, pMsg->m_fullGameCRC,
                                     pMsg->field_00, 1, pMsg->m_isDiff)) {
             if (pMsg->m_thisPlayerDead)
-                KbFn_004F4C00(pMsg->field_00, 1);
+                HandleRemoteDeadPlayerExit(pMsg->field_00, 1);
             gpAdvManager->LoadRemote(pMsg->m_makeOrig);
         }
         break;
