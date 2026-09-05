@@ -45,6 +45,7 @@
 #include "savegame.h"
 #include "singleselectionwindow.h"
 #include "smackmgr.h"
+#include "sample.h"    // TResourceHandle<sample>::~TResourceHandle calls resource::Dispose
 #include "soundmgr.h"
 #include "sskilltraits.h"
 #include "timer.h"
