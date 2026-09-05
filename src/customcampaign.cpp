@@ -54,6 +54,8 @@ static const int CROSSOVER_PATROL_FIRST_SCENARIO = 6;
 static const int CROSSOVER_PATROL_LAST_SCENARIO = 7;
 static const int CROSSOVER_PATROL_HERO = 155;
 static const int CROSSOVER_PATROL_RADIUS = 10;
+static const int CROSSOVER_SECONDARY_SKILLS = 28;
+static const int CROSSOVER_BACKPACK_SLOTS = 64;
 
 // MapTextStruct::Play's own domain. Every value is retail's; the names are
 // ROLE inventions - no Dreamcast row survives for this Complete-only body.
@@ -100,6 +102,25 @@ VA(0x00483f30, 0x17)  // TStreamBufFile vftable 0x63dacc slot 2, retail-only
 int TStreamBufFile::Write(const void* data, int size)
 {
     return buffer->sputn(static_cast<const char*>(data), size);
+}
+
+VA(0x00483f80, 0x9B)  // anchor-callee(std::sort<hero*> 0x48f2b0), retail-only
+bool CrossoverHeroStronger::operator()(hero& lhs, hero& rhs) const
+{
+    int leftValue = lhs.get_primary_skill_total();
+    int iSkill;
+    for (iSkill = 0; iSkill < CROSSOVER_SECONDARY_SKILLS; ++iSkill)
+        leftValue += lhs.skillLevel[iSkill];
+    int rightValue = rhs.get_primary_skill_total();
+    for (iSkill = 0; iSkill < CROSSOVER_SECONDARY_SKILLS; ++iSkill)
+        rightValue += rhs.skillLevel[iSkill];
+    if (leftValue != rightValue)
+        return leftValue > rightValue;
+    leftValue += lhs.experience;
+    rightValue += rhs.experience;
+    if (leftValue != rightValue)
+        return leftValue > rightValue;
+    return lhs.id > rhs.id;
 }
 
 // Complete-only. Retail destroys the two MapTextStruct records and the
@@ -336,6 +357,18 @@ void TCampaignBrief::ScenarioStruct::LoadMapHeader(
 // (the vftable 0x63dac0 slot 0), being the first in link order to
 // instantiate the class.
 VA_COMPGEN(0x00487dd0, 0x23, SCALAR_DELETING_DTOR, TAbstractFile)
+
+// Complete-only. PruneCrossoverHeroes' first pass calls this on every
+// scenario the player has not finished: each hero placeholder the scenario
+// still wants is flagged in the caller's per-hero-id table. Name provisional
+// - no Dreamcast row carries it.
+VA(0x00487e10, 0x2D)  // anchor-caller(PruneCrossoverHeroes +0x62), retail-only
+void TCampaignBrief::ScenarioStruct::MarkCrossoverHeroes(unsigned char* wanted)
+{
+    for (unsigned int iPlaceholder = 0;
+         iPlaceholder < hero_placeholders.size(); ++iPlaceholder)
+        wanted[hero_placeholders[iPlaceholder]] = 1;
+}
 
 #if 0  // Dreamcast-only carcass; retained as evidence, not emitted for retail.
 // E:\gamedcs\customcampaign.cpp:29
@@ -786,8 +819,15 @@ const int CAMPAIGN_MAP_ORDINAL_07 = 7;
 // off the bodies: this one banks the finished map's score, allocates the
 // campaign's crossover slot, prunes the pool and collects the winner's
 // heroes.
-// Residual (0.00%, objdiff declines the pair): the body is 0xa5d against
-// retail's 0x600 and the whole delta is ONE /Ob2 decision run backwards.
+// Residual (0.00%): objdiff does NOT decline this pair - it scores it, and
+// the score is a true zero. `report.json` omits `fuzzy_match_percent`
+// whenever it is exactly 0.0 (protobuf default-value elision), which reads
+// like a missing measurement; objdiff-cli one-shot on the same pair reports
+// `match_percent 0.0` with 156 of 971 aligned rows identical and 449
+// DIFF_INSERT rows. The insert cost alone exceeds the target's max score, so
+// the percentage FLOORS at zero: any edit that brings the 0xa54 body back
+// toward retail's 0x600 lifts it off 0 immediately. The whole delta is ONE
+// /Ob2 decision run backwards.
 // Retail keeps every crossover insert OUT of line - one 2-arg
 // vector<hero>::insert wrapper (0x48ce50) at the hero loop and six 3-arg
 // insert(_P, 1, _X) calls (0x48d060) at the town and campaign-fixup arms -
@@ -908,18 +948,106 @@ void SCampaign::CompleteCurrentMap(void* campaignHeader)
     PruneCrossoverHeroes(campaignHeader);
 }
 
-#if 0  // @carcass - located, not yet reconstructed.
-// CompleteCurrentMap's tail call, and its sole caller.  It zeroes a
-// 156-byte hero table (gpGame->heroes' own extent), walks the campaign
-// header's scenario list and then every crossover pool backwards,
-// dropping the heroes the finished map has already consumed.  Role-based
-// provisional name; no Dreamcast row carries this identity.
+// CompleteCurrentMap's tail call, and its sole caller. It flags every hero
+// the still-unfinished scenarios ask for, then walks each crossover pool
+// backwards: the flagged heroes move to a keep list, the rest are ranked by
+// CrossoverHeroStronger and the best `keepCount` of them join it, the
+// leftovers surrender their artifacts to the pool's artifact list, and the
+// keep list replaces the pool. Role-based provisional name; no Dreamcast row
+// carries this identity.
+// Residual (12.33%): reconstructed 2026-09-05 from 0.00 (@stub). The body is
+// 0x6a8 against retail's 0x450 and every byte of the surplus is the same
+// /Ob2 over-inline family CompleteCurrentMap carries: retail CALLS
+// vector<ScenarioStruct*>::size() (0x423110) at all four sites,
+// MarkCrossoverHeroes at its one site, std::_Sort (0x48f2b0) at BOTH sort
+// sites and vector<hero>::operator= (0x45ff30) at the tail; we expand
+// size(), MarkCrossoverHeroes, the second _Sort (its <=16 insertion arm) and
+// the whole operator=. The first sort already matches - we call _Sort_0 out
+// of line exactly where retail does - so the shape is right and only the
+// budget is not. The head is near-exact (frame 0xdc against retail's 0xd8,
+// one surplus dword) and the five indirect ScenarioStartOptions slot calls
+// all pair. The known lever is a statement-scoped inline_depth(0) on the
+// size()/MarkCrossoverHeroes/sort/assign sites; this lane may not add pins,
+// so the reconstruction is banked as it stands.
 VA(0x00489e20, 0x450)  // anchor-caller(CompleteCurrentMap +0x5e8), retail-only
 void SCampaign::PruneCrossoverHeroes(void* campaignHeader)
 {
-    // @stub
+    TCampaignBrief::CampaignHeaderStruct* header =
+        static_cast<TCampaignBrief::CampaignHeaderStruct*>(campaignHeader);
+
+    unsigned char wanted[game::HERO_COUNT];
+    memset(wanted, 0, sizeof wanted);
+
+    for (unsigned int iMap = 0; iMap < header->scenarios.size(); ++iMap) {
+        if (!gpGame->campaign.mapScores[iMap].completed)
+            header->scenarios[iMap]->MarkCrossoverHeroes(wanted);
+    }
+
+    for (int pool = carryOverHeroes.size() - 1; pool >= 0; --pool) {
+        std::vector<hero>& pooled = carryOverHeroes[pool];
+        std::vector<hero> kept;
+
+        for (int which = pooled.size() - 1; which >= 0; --which) {
+            if (wanted[pooled[which].id]) {
+                kept.insert(kept.end(), pooled[which]);
+                pooled.erase(pooled.begin() + which);
+            }
+        }
+
+        int keepCount = 0;
+        for (int iScenario = 0;
+             iScenario < static_cast<int>(header->scenarios.size());
+             ++iScenario) {
+            TCampaignBrief::ScenarioStruct* scenario =
+                header->scenarios[iScenario];
+            if (!mapScores[iScenario].completed && scenario->inflated_size > 0
+                && scenario->options->_vslot12(scenario, pool)) {
+                int best = 0;
+                if (scenario->inflated_size > 0) {
+                    if (scenario->options->_vslot2() == 0)
+                        best = scenario->heroes_status[
+                            scenario->options->GetPlayerPosition(-1)];
+                    else
+                        for (int option = scenario->options->_vslot2() - 1;
+                             option >= 0; --option)
+                            best = std::_cpp_max(
+                                best,
+                                scenario->heroes_status[
+                                    scenario->options->GetPlayerPosition(
+                                        option)]);
+                }
+                keepCount = std::_cpp_max(keepCount, best);
+            }
+        }
+
+        std::sort(pooled.begin(), pooled.end(), CrossoverHeroStronger());
+
+        for (int taken = 0; taken < keepCount; ++taken) {
+            if (pooled.size() == 0)
+                break;
+            kept.insert(kept.end(), pooled[0]);
+            pooled.erase(pooled.begin());
+        }
+
+        for (int rest = pooled.size() - 1; rest >= 0; --rest) {
+            std::vector<type_artifact>& pooledArtifacts = field_4c[pool];
+            int slot;
+            for (slot = 0; slot < CROSSOVER_EQUIPPED_ARTIFACT_SLOTS; ++slot) {
+                type_artifact artifact = pooled[rest].equipped[slot];
+                if (artifact.artifactId != ARTIFACT_NONE)
+                    pooledArtifacts.insert(pooledArtifacts.end(), artifact);
+            }
+            for (slot = 0; slot < CROSSOVER_BACKPACK_SLOTS; ++slot) {
+                type_artifact artifact = pooled[rest].backpack[slot];
+                if (artifact.artifactId != ARTIFACT_NONE)
+                    pooledArtifacts.insert(pooledArtifacts.end(), artifact);
+            }
+        }
+
+        std::sort(kept.begin(), kept.end(), CrossoverHeroStronger());
+        pooled = kept;
+    }
 }
-#endif  // @carcass
 
 VA(0x0048a270, 0x2F)  // CampaignBriefHandler video/launch arms, retail-only
 void SCampaign::PlayScenarioPrologue(void* campaignHeader)

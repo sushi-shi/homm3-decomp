@@ -979,6 +979,7 @@ customcampaign	??0LegacyCampaignHero@@QAE@XZ	100.0000	100.0000	100.0000	0x8ae30	
 customcampaign	??0SCampaign@@QAE@XZ	100.0000	100.0000	100.0000	0x89500	92aa89488ce8
 customcampaign	??1CampaignHeaderStruct@TCampaignBrief@@QAE@XZ	78.5339	78.5339	78.5339	0x886a0	2c81b379a033
 customcampaign	??1ScenarioStruct@TCampaignBrief@@QAE@XZ	100.0000	100.0000	100.0000	0x85fe0	5186890e3d45
+customcampaign	??RCrossoverHeroStronger@@QBE_NAAVhero@@0@Z	90.2941	90.2941	90.2941	0x83f80	24656f6569bf
 customcampaign	??_GTAbstractFile@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x87dd0	-
 customcampaign	??_H@YGXPAXIHP6EX0@Z@Z	100.0000	100.0000	100.0000	0x13d0	-
 customcampaign	?ApplyBriefingChoice@SCampaign@@QAEXH@Z	100.0000	100.0000	100.0000	0x8b2e0	a359310356da
@@ -991,9 +992,11 @@ customcampaign	?InitializeCrossoverHero@ScenarioStruct@TCampaignBrief@@QAEXPAUHe
 customcampaign	?Load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	55.7915	55.7915	55.7915	0x8a310	f2ec1fa4aeeb
 customcampaign	?LoadMapHeader@ScenarioStruct@TCampaignBrief@@QAEXPAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@PAVNewSMapHeader@@H@Z	100.0000	100.0000	100.0000	0x87d30	3ede48bd4a11
 customcampaign	?LoadScenario@CampaignHeaderStruct@TCampaignBrief@@QAE_NHPAVNewSMapHeader@@@Z	100.0000	100.0000	100.0000	0x88810	40cf52fbb7ea
+customcampaign	?MarkCrossoverHeroes@ScenarioStruct@TCampaignBrief@@QAEXPAE@Z	100.0000	100.0000	100.0000	0x87e10	6ceadd79996e
 customcampaign	?Play@MapTextStruct@TCampaignBrief@@QAEXXZ	82.8249	82.8249	82.8249	0x88fb0	abf4b7a12602
 customcampaign	?PlayScenarioEpilogue@SCampaign@@QAEXPAX@Z	100.0000	100.0000	100.0000	0x8a2a0	44199f541435
 customcampaign	?PlayScenarioPrologue@SCampaign@@QAEXPAX@Z	100.0000	100.0000	100.0000	0x8a270	f20101db493f
+customcampaign	?PruneCrossoverHeroes@SCampaign@@QAEXPAX@Z	12.3264	12.3264	12.3264	0x89e20	3be750b33cd0
 customcampaign	?Read@TStreamBufFile@@UAEHPAXH@Z	100.0000	100.0000	100.0000	0x83f10	d4a8f9e13d4a
 customcampaign	?StartMusic@CampaignHeaderStruct@TCampaignBrief@@QAEXXZ	100.0000	100.0000	100.0000	0x88ee0	4daeb5fd6b1f
 customcampaign	?StartScenario@CampaignHeaderStruct@TCampaignBrief@@QAEXHH@Z	100.0000	100.0000	100.0000	0x894e0	00db9222128a
@@ -1014,7 +1017,6 @@ customcampaign	?insert@?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@QAEXPAVhe
 customcampaign	?size@?$vector@UCampaignScenarioInfo@@V?$allocator@UCampaignScenarioInfo@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x8b440	-
 customcampaign	?size@?$vector@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@V?$allocator@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@@2@@std@@QBEIXZ	100.0000	100.0000	100.0000	0xaf4e0	-
 customcampaign	?size@?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x8b470	-
-customcampaign	SCampaign_PruneCrossoverHeroes	0.0000	0.0000	0.0000	0x89e20	8d43114d1ffc
 customcampaign	TCampaignBrief_CampaignHeaderStruct_Load	0.0000	0.0000	0.0000	0x88880	47fb4b8d9098
 customcampaignwindow	??0TCustomCampaignWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x827b0	893291fd4aaf
 customcampaignwindow	??1TCustomCampaignWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x82f10	4e3abaca1d97
