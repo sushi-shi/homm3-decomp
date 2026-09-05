@@ -211,6 +211,10 @@ CHAR_STREAM_MEMBERS = (
     ("?sputc@?$basic_streambuf@D", None, "streambuf_sputc"),
     ("?opfx@?$basic_ostream@D", None, "ostream_opfx"),
     ("??Hstd@@YA?AV?$basic_string@D", None, "basic_string_concat"),
+    ("?uflow@?$basic_streambuf@D", None, "streambuf_uflow"),
+    ("?setg@?$basic_streambuf@D", None, "streambuf_setg"),
+    ("??4?$ostreambuf_iterator@D", None,
+     "ostreambuf_iterator_assign"),
     ("?_Decref@facet@locale@std@@", None, "locale_facet_decref"),
     ("?getloc@ios_base@std@@", None, "ios_base_getloc"),
 )
@@ -234,6 +238,7 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "TREE_INSERT", "TREE_NODE_INSERT",
                  "TREE_CONST_ITERATOR_DEC", "TREE_CONST_ITERATOR_INC",
                  "TREE_COPY", "TREE_COPY_NODE", "TREE_ERASE",
+                 "TREE_BUYNODE",
                  "STRINGBUF_OVERFLOW", "STRINGBUF_INIT",
                  "DEQUE_FREEFRONT", "DEQUE_FREEBACK", "DEQUE_BUYBACK",
                  "BASIC_STRING_ASSIGN_PTR_SIZE",
@@ -817,6 +822,8 @@ def _demangle_key(mangled: str):
         if "IAEPAU_Node@" in mangled:
             return f"{tree_owner.lower()}@tree_copy_node"
         return f"{tree_owner.lower()}@tree_copy"
+    if mangled.startswith("?_Buynode@?$_Tree@") and tree_owner:
+        return f"{tree_owner.lower()}@tree_buynode"
     if mangled.startswith("?_Erase@?$_Tree@") and tree_owner:
         return f"{tree_owner.lower()}@tree_erase"
     # ...and the PUBLIC `erase`, which is overloaded on one class: the
@@ -870,6 +877,11 @@ def _demangle_key(mangled: str):
         member = deque_class.group(1).lstrip("_").lower()
         return f"{deque_class.group(2).lower()}@deque_{member}"
     vector_string_element = "?$vector@V?$basic_string@D" in mangled
+    #: `vector<std::string *>` - a POINTER to the string, which the
+    #: class regex below cannot reach either (`PAV?$basic_string` has
+    #: no plain identifier after the pointer prefix).
+    vector_string_ptr_element = ("?$vector@PAV?$basic_string@D"
+                                 in mangled)
     #: A vector over a BUILTIN element carries no class name at all - VC6
     #: spells the type as a single letter with no `@` terminator - so the
     #: class regex below cannot reach it. Decoded like deque's, above.
@@ -883,6 +895,7 @@ def _demangle_key(mangled: str):
     vector_owner = (
         f"{nested_vector_element.group(1).lower()}_vector"
         if nested_vector_element else
+        "string_ptr" if vector_string_ptr_element else
         "string" if vector_string_element else
         DEQUE_PRIMITIVE_ELEMENT[vector_primitive.group(1)]
         if vector_primitive else
@@ -1274,6 +1287,7 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                                or "$tree_node_insert$" in r["name"]
                                or "$tree_const_iterator_dec$" in r["name"]
                                or "$tree_const_iterator_inc$" in r["name"]
+                               or "$tree_buynode$" in r["name"]
                                or "$tree_copy$" in r["name"]
                                or "$tree_copy_node$" in r["name"]
                                or "$tree_erase$" in r["name"]
@@ -1412,6 +1426,10 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
         if "$tree_insert$" in row["name"]:
             owner = row["name"].rsplit("$", 1)[1].lower()
             claim_keys.setdefault(f"{owner}@tree_insert", []).append(row)
+            continue
+        if "$tree_buynode$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}@tree_buynode", []).append(row)
             continue
         if "$tree_node_insert$" in row["name"]:
             owner = row["name"].rsplit("$", 1)[1].lower()

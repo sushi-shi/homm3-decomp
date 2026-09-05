@@ -1650,3 +1650,19 @@ VA_COMPGEN(0x00455c20, 0x7B, TIDYFAC_NUM_PUT_SAVE, char)
 VA_COMPGEN(0x00455ca0, 0x7B, TIDYFAC_NUMPUNCT_SAVE, char)
 VA_COMPGEN(0x00455d20, 0x92, TIDYFAC_NUM_PUT_TIDY, char)
 VA_COMPGEN(0x00455dc0, 0x92, TIDYFAC_NUMPUNCT_TIDY, char)
+
+// COMDAT pairing: basic_streambuf<char>::uflow. Not reached by any rel32 call
+// at all - it is installed as slot 5 of FOUR vtables, one of them the named
+// ??_7TGzInflateBuf@@6B@, which is exactly what a defaulted virtual of the
+// stream base looks like.
+VA_COMPGEN(0x00454080, 0x2B, STREAMBUF_UFLOW, char)
+
+// COMDAT pairing: ostreambuf_iterator<char>::operator=(char), reached from
+// two CRT sites and three of this unit's own - cross-image reach.
+VA_COMPGEN(0x004557a0, 0x5C, OSTREAMBUF_ITERATOR_ASSIGN, char)
+
+// COMDAT pairing: basic_ostream<char>'s destructor. The whole 15 B body is
+// the virtual-base vtable fixup - `mov eax,[ecx-4] / mov edx,[eax+4] /
+// mov [edx+ecx-4], const_2456e8 / ret` - which only a virtually-derived
+// stream class emits.
+VA_COMPGEN(0x00453a20, 0xF, IMPLICIT_DTOR, basic_ostream)
