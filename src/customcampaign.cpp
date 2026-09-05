@@ -430,6 +430,16 @@ TCampaignBrief::CampaignHeaderStruct::CampaignHeaderStruct(
 // expanded, spelling the clear() retail evidently wrote measures LOWER
 // (75.72: erase expands and only its _Destroy child stays a call), so it
 // is withheld. Pins are not used in this lane.
+// BOUNDED, measured 2026-09-05 against the /Ob2 rule (docs/vc6/inliner.md):
+// NO caller-side lever reaches this decision. A free candidate site appended
+// after FreeData() - the site-count instrument that moved VWDrawUnderlay 57
+// points - is byte-inert here (78.5339 either way), and a heavily CHARGED
+// site placed before it is inert too: with `scenarios.erase(begin(), end())`
+// in front, the erase expands and burns its cb, and FreeData is STILL
+// expanded (its vtable-slot-0 delete is still inline at +08d; the row falls
+// to 70.3898). Both outcomes say cb(FreeData) <= 0x28, i.e. it is in the
+// small-free class that /Ob2 inlines regardless of budget and site count, so
+// the divergence is not in this caller's statements at all.
 VA(0x004886a0, 0x132)  // anchor-caller(TCampaignBrief ctor), retail-only
 TCampaignBrief::CampaignHeaderStruct::~CampaignHeaderStruct()
 {
