@@ -82,6 +82,7 @@ static const int BUILDING_BONUS_ALL_TOWNS_SCENARIO = 3;
 static const int BUILDING_BONUS_FIRST_UPGRADE = 0x25;
 static const int BUILDING_BONUS_UPGRADE_STRIDE = 7;
 
+
 // MapTextStruct::Play's own domain. Every value is retail's; the names are
 // ROLE inventions - no Dreamcast row survives for this Complete-only body.
 // The two video ordinals that select the lowered origin are the compare set
@@ -695,9 +696,157 @@ void TCampaignResourceBonus::Read(TAbstractFile* file)
     }
 }
 
+// --- the scenario's starting-options chooser (see customcampaign.h) ---
+
+// The root's scalar deleting destructor: the base teardown is one vptr
+// store, so nothing is called.
+VA_COMPGEN(0x00484f50, 0x23, SCALAR_DELETING_DTOR, TCampaignStartOption)
+
+// Slot 7, inherited unchanged by all three concrete options.
+VA(0x00485090, 0x6)  // anchor-vtable (0x63d958+0x1c and both children), retail-only
+int TCampaignStartOption::_slot7(int which) const
+{
+    return -1;
+}
+
+// The bonus list's own destructor: every element is deleted through
+// TCampaignBonus's virtual destructor, then the vector's own teardown.
+VA(0x004850a0, 0x8E)  // anchor-callee (0x485130's ??_G), retail-only
+TCampaignStartBonusOption::~TCampaignStartBonusOption()
+{
+    for (unsigned int i = 0; i < m_bonuses.size(); ++i)
+        delete m_bonuses[i];
+}
+
+VA_COMPGEN(0x00485130, 0x21, SCALAR_DELETING_DTOR, TCampaignStartBonusOption)
+
+VA(0x00485160, 0x13)  // anchor-vtable (0x63d98c+8), retail-only
+int TCampaignStartBonusOption::GetCount() const
+{
+    return m_bonuses.size();
+}
+
+VA(0x00485180, 0x6)  // anchor-vtable (0x63d98c+0x20), retail-only
+int TCampaignStartBonusOption::GetPlayer(int which) const
+{
+    return m_player;
+}
+
+// The list reader, and the whole proof of the bonus hierarchy: a player
+// byte, a count byte, then that many records, each one a type byte 0..7
+// that selects the concrete class to `new`. The reader deserializes into
+// the DEAD PARAMETER HOME - retail reads the player and the count straight
+// over [ebp+8], which is the same block-scope lever the bonus Reads
+// needed - and the switch has NO default arm: an out-of-range type falls
+// through to the shared tail with the pointer still uninitialised.
+// Residual (95.69%): retail materializes the loop's trip count as
+// `(count-1)+1` behind a `test/je` zero guard where our CL emits the
+// count straight into EBX. Tried and rejected: `i < count` (-0.23),
+// `unsigned int count` (flat), `count` widened outside the block
+// (-0.86 at 94.83), a separate block for the count read (-86.6 - it
+// re-prices the whole body's inlining), the pointer declared before the
+// type read (flat).
+VA(0x00485190, 0x1B0)  // anchor-vtable (0x63d98c+0x24), retail-only
+void TCampaignStartBonusOption::Read(TAbstractFile* file)
+{
+    int count;
+    {
+        unsigned char value;
+        file->Read(&value, sizeof(unsigned char));
+        m_player = value;
+        file->Read(&value, sizeof(unsigned char));
+        count = value;
+    }
+    for (int i = 0; i != count; ++i) {
+        unsigned char type;
+        file->Read(&type, sizeof(unsigned char));
+        TCampaignBonus* bonus;
+        switch (type) {
+        case CAMPAIGN_BONUS_SPELL:
+            bonus = new TCampaignSpellBonus;
+            break;
+        case CAMPAIGN_BONUS_CREATURE:
+            bonus = new TCampaignCreatureBonus;
+            break;
+        case CAMPAIGN_BONUS_BUILDING:
+            bonus = new TCampaignBuildingBonus;
+            break;
+        case CAMPAIGN_BONUS_ARTIFACT:
+            bonus = new TCampaignArtifactBonus;
+            break;
+        case CAMPAIGN_BONUS_SPELL_SCROLL:
+            bonus = new TCampaignSpellScrollBonus;
+            break;
+        case CAMPAIGN_BONUS_PRIMARY_SKILL:
+            bonus = new TCampaignPrimarySkillBonus;
+            break;
+        case CAMPAIGN_BONUS_SECONDARY_SKILL:
+            bonus = new TCampaignSecondarySkillBonus;
+            break;
+        case CAMPAIGN_BONUS_RESOURCE:
+            bonus = new TCampaignResourceBonus;
+            break;
+        }
+        bonus->Read(file);
+        m_bonuses.push_back(bonus);
+    }
+}
+
+// The scalar deleting destructor the SEVEN derived bonus classes share:
+// each one's teardown is the base's, so /OPT:ICF folds all seven onto this
+// address, which every derived vftable's slot 0 points at.
+VA_COMPGEN(0x00485340, 0x21, SCALAR_DELETING_DTOR, TCampaignSpellBonus)
+
 VA(0x00485370, 0x7)  // anchor-vtable (0x63d938+0), retail-only
 TCampaignBonus::~TCampaignBonus()
 {
+}
+
+// Residual (97.79%): retail keeps the briefing choice in EDX and the
+// vector's _First in ECX, our CL the other way round. Tried and
+// rejected: the choice read inline at both uses (-63.8),
+// `m_bonuses.size() > chosen` (-3.42).
+VA(0x00485380, 0x32)  // anchor-vtable (0x63d98c+0x28), retail-only
+void TCampaignStartBonusOption::Apply(void* scenario)
+{
+    unsigned int chosen = gpGame->campaign.briefingChoice;
+    if (chosen < m_bonuses.size())
+        m_bonuses[chosen]->Apply(m_player);
+}
+
+// The town every building bonus is bound to is the map header's own main
+// town type for this option's player.
+VA(0x004853c0, 0x46)  // anchor-vtable (0x63d98c+0x2c), retail-only
+void TCampaignStartBonusOption::SetTown(CMapHeaderData* header)
+{
+    for (unsigned int i = 0; i < m_bonuses.size(); ++i)
+        m_bonuses[i]->SetTown(header->playerSlotAttributes[m_player].mainTownType);
+}
+
+VA(0x00485410, 0x15)  // anchor-vtable (0x63d98c+0x10), retail-only
+int TCampaignStartBonusOption::GetIconIndex(int which) const
+{
+    return m_bonuses[which]->GetIconIndex();
+}
+
+VA(0x00485430, 0x15)  // anchor-vtable (0x63d98c+4), retail-only
+bool TCampaignStartBonusOption::IsBuildingBonus(int which) const
+{
+    return m_bonuses[which]->IsBuildingBonus();
+}
+
+VA(0x00485450, 0x15)  // anchor-vtable (0x63d98c+0xc), retail-only
+const char* TCampaignStartBonusOption::GetIconDefName(void* scenario,
+                                                     int which) const
+{
+    return m_bonuses[which]->GetIconDefName();
+}
+
+VA(0x00485470, 0x27)  // anchor-vtable (0x63d98c+0x18), retail-only
+std::string TCampaignStartBonusOption::GetText(void* scenario,
+                                               int which) const
+{
+    return m_bonuses[which]->GetText();
 }
 
 VA(0x00485d80, 0x3)  // anchor-vtable (0x63d938+0x1c), retail-only
