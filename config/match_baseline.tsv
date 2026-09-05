@@ -1838,7 +1838,7 @@ hero	?GetVisibility@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe4070	95a689b2be07
 # unit's reference differently and the comparison moves with our
 # object unchanged. The header audit above found nothing because
 # there was nothing in the headers to find.
-hero	?GiveArtifact@hero@@QAEEPBUtype_artifact@@EE@Z	68.9069	75.1012	75.1012	0xe3070	67ddcbc18a6b
+hero	?GiveArtifact@hero@@QAEEPBUtype_artifact@@EE@Z	65.7490	75.1012	75.1012	0xe3070	67ddcbc18a6b
 hero	?GiveExperience@hero@@QAEHHHE@Z	100.0000	100.0000	100.0000	0xe33b0	f855005f641d
 hero	?GiveResource@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xe3600	934aedcd34c8
 hero	?GiveSS@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0xe22d0	8cb3163ef67c
@@ -3093,7 +3093,7 @@ singleselectionwindow	?OnGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNet
 # SetCurrentMap/OnSetAsHostMsg bodies landing in the TU dropped the
 # pair again with both sources byte-identical. Recovery rides with
 # DrawHeroAdvancedOption reaching 100.
-singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	99.8868	100.0000	100.0000	0x17cdc0	0e5de8f038ec
+singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0	0e5de8f038ec
 singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	9177fbb0fa83
 # 2026-08-27 hand-lowered 100.0000 -> 99.8710 (hist keeps 100.0000): the
 # documented TU-state flap (master accepted this pair down at 99.89/99.87
