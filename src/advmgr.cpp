@@ -3399,6 +3399,15 @@ static void set_windmill_help_text(
 // already-rejected named-string 93.931694 object; a one-call inline helper
 // around the QuestGuard copy scores 93.894590; and the real size() VERIFY is
 // byte-flat. None is retained.
+// Two more OBELISK probes, 2026-09-06, both rejected against 93.938970:
+// spelling the arm longhand (dropping the shared `visited` carrier and
+// testing `obeliskFlags[...] & playerBit` directly) DOES buy retail's
+// separate test - branches 184 -> 185, the right direction - but costs the
+// arm's own shape, 92.7855; normalising the carrier to
+// `(... & playerBit) != 0` is branch-flat at 184 and scores 93.7986.  So the
+// missing branch is reachable and its price is higher than the branch, which
+// puts the OBELISK quarter of the deficit with the other three (the
+// QUEST_GUARD temporary's inlined _Tidy) in the budget class.
 VA(0x0040b150, 0x229C)  // anchor-global, dc 0xc13c
 void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
 {
@@ -4321,6 +4330,16 @@ static int MouseInScrollZone()
 // child-call shape, unreachable without a pin inside <vector> - plus one
 // branch and register parity in the GetHero expansions (retail loads the
 // id into ecx, ours eax).
+// Residual (91.6263%), LOCALISED 2026-09-06 and it is ONE inline decision.
+// The call streams carry exactly one retail-only entry - the ICF-folded
+// `vector<pathCell>::_Destroy` at fn+0x596 - and it sits inside the third
+// `gpSearchArray->clear_path()` (findpath.h's `result.erase(begin(), end())`).
+// Retail expands the erase there and CALLS the empty `_Destroy(_S, _Last)`
+// before writing `_Last = _S`; we expand the erase AND the (trivial) _Destroy,
+// so the call, its one branch (91 retail against our 90) and the two frame
+// dwords it prices (0x10 against our 0x8) all go together.  That is an
+// OVER-inline of a template leaf with no admissible lever: a statement pin is
+// a falling-only floor and caller-shrink would need an invented static.
 VA(0x0040e360, 0x918)  // anchor-callee, dc 0xf3a8
 int advManager::ProcessHover(int mouseX, int mouseY)
 {

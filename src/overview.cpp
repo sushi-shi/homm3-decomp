@@ -1633,6 +1633,11 @@ void OverviewSliderCallback(int state, heroWindow* parent_window)
 // loops are identical enough to fold into one helper and the Dreamcast
 // overview.obj roster names no such function (its own ctor is a different,
 // 2692 B revision), so that helper would be invented source.
+// Also measured and rejected 2026-09-06: declaring all six `record`
+// temporaries `const` is BYTE-FLAT (82.7097, 268 blocks unchanged), so the
+// argument's constness does not reach push_back's expansion decision either.
+// Both library-level spellings the doctrine offers are therefore bounded,
+// and the site is a /Ob2 quotient with no admissible source lever.
 VA(0x0051fa40, 0x1311)  // exhaustive ctor/callback/dtor identity, dc 0x1084f0
 TOverviewWindow::TOverviewWindow()
     : CAdvPopup(0, 0, 800, 600, 0)
