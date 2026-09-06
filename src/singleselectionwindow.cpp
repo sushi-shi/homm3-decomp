@@ -897,7 +897,7 @@ inline void CNewPlayerUpdateProc::RequestConfirmation()
 VA(0x00577DE0, 0x228)  // anchor-vtable vtbl 0x641d38 slot1 - the slot WindowHandler's inlined Man::Tick dispatches; Complete-only override shaped from the Dreamcast base Tick at 0x148130
 void t_map_list_update::Tick()
 {
-    if (static_cast<int>(GameTime::Get() - m_lastSendTime) < 75)
+    if (GameTime::ElapsedSince(m_lastSendTime) < 75)
         return;
     for (int k = 0; k < 5; ++k) {
         if (m_nextHeader
