@@ -7296,6 +7296,10 @@ static TCreatureType GetUpgradedCreature(TCreatureType type)
 // as `if (!sea_movement) goto land_movement` breaks that canonical family and
 // collapses to 5.6129%. An explicit backward join therefore cannot preserve
 // retail's placement with this front end.
+// The navigation-specialist bonus divides by TWENTY, not ten: retail's
+// `mov eax,0x66666667 / imul ecx / sar edx,3` at 0x4e4a1e is the signed
+// magic pair for /20 (shift 2 would be /10), and the shift is the only byte
+// that moved (81.7645 -> 81.7677).
 VA(0x004e4990, 0x3F6)  // corroborates, dc 0xd4b50
 int hero::GetMobility(unsigned char sea_movement)
 {
@@ -7308,7 +7312,7 @@ int hero::GetMobility(unsigned char sea_movement)
         if (skillLevel[eSecSkillNavigation] > 0 &&
             akHeroSpecificAbilities[id].type == eHeroAbilitySecondarySkill &&
             akHeroSpecificAbilities[id].skill == eSecSkillNavigation)
-            mobility += level * gSeaMovement[0] / 10;
+            mobility += level * gSeaMovement[0] / 20;
 
         if (owner != -1)
             mobility += gpGame->MineTypesOwned(owner, 100) *
@@ -7882,6 +7886,14 @@ long hero::modify_spell_damage(SpellID spell, int damage,
 // ECX as the index; this compile encodes ECX as the base and ESI as the
 // index. Direct indexing, reversed indexing and pointer-arithmetic spellings
 // are byte-identical. The earlier single-index `for` form scored 75.5833%.
+// 2026-09-06, the HEADER side of the same subscript, all three byte-flat at
+// 99.5833: `*(stats + skill)`, a `const signed char* skills = stats;` hoist,
+// and an explicit `this->stats[skill]` in hero.h's GetPrimarySkill. So the
+// SIB base/index choice is unreachable from the accessor as well as from the
+// caller. Four other rows in the tree carry the identical single-swap
+// residual (ai_player::fill_prohibited_array 99.9678, seerhuttext
+// LoadSeerHutTextColumn 99.9621, philai value_of_enemy_town 99.9561,
+// diff CDiffFile::Apply 99.6429 with three swaps).
 VA(0x004e5960, 0x38)  // linkorder, dc 0xd544c
 short hero::get_primary_skill_total()
 {
