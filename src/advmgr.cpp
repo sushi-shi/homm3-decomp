@@ -7061,10 +7061,15 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
     // our layout ABOVE the buffer becomes exactly retail's 132 bytes
     // ([ebp-0x2c4 .. ebp-0x241] here against retail's
     // [ebp-0x2bc .. ebp-0x239]).
-    // Byte-flat on the score - it moves `sub esp` from 0x2e0 to 0x2b8
-    // against retail's 0x2b0, and the 8 bytes still between them are two
-    // small locals VC6 homes on our side and keeps in registers on
-    // retail's, not another array.
+    // Byte-flat on the score - it moved `sub esp` from 0x2e0 to 0x2b8
+    // against retail's 0x2b0.  The last 8 bytes were NOT "two small locals
+    // retail keeps in registers" (2026-09-06): they were the `type_point
+    // point` copy below, which retail packs into the SAME twelve bytes as
+    // the type_cell_adjuster ([ebp-0x3c..-0x30]) because its scope closes
+    // before the adjuster's opens.  Giving that copy its own block closes
+    // the frame exactly - `sub esp,0x2b0`, and every one of the 22 ebp-
+    // relative slots in the body is now retail's slot, `point` at -0x38 and
+    // the get_quickview_size out-params at -0x40/-0x44 included.
     unsigned long testFlag;
     int width;
     int visited;
@@ -7095,13 +7100,15 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
         strcpy(gText, gpGeneralText->GetText(
             GENERAL_TEXT_QUICK_INFO_INVALID_POINT));
     } else {
-        type_point point = mapPoint;
-        if (!point.is_valid()) {
-            cell = fullMap->cell(0, 0, 0);
-        } else {
-            cell = &fullMap->cellData[
-                (point.z * fullMap->Size + point.y) * fullMap->Size
-                + point.x];
+        {
+            type_point point = mapPoint;
+            if (!point.is_valid()) {
+                cell = fullMap->cell(0, 0, 0);
+            } else {
+                cell = &fullMap->cellData[
+                    (point.z * fullMap->Size + point.y) * fullMap->Size
+                    + point.x];
+            }
         }
 
         if (!(GetMapExtra(mapPoint) & playerBit)) {
