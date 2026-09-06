@@ -836,6 +836,14 @@ void townManager::SetupExtraStuff()
 #define HOMM3_TTOWN_SCREEN_RELEASE_DIAGNOSTIC(text, value) \
     (1 ? static_cast<void>(0) : static_cast<void>(printf(text, value)))
 
+// Residual (98.9497%): the frame, 0x14 against retail's 0x18, and every other
+// instruction agrees. The missing dword is a temporary of the inlined
+// `Widgets.reserve(96)` - retail spends three slots there ([ebp-0x18],
+// [ebp-0x1c], [ebp-0x24]) where we spend two plus a permutation. MEASURED AND
+// REJECTED 2026-09-06: hoisting the growth-bonus loop counter to function
+// scope (98.95, byte-flat - VC6 reserves no slot for an enregistered local),
+// and naming `height * width` as a `zBufferSize` local for the zBuffer
+// allocation and its memset (98.85).
 VA(0x005c34d0, 0x23D2)  // anchor-vtable 0x64372c + anchor-string townscrn.pcx + arity, dc 0x16a72c
 TTownScreenWindow::TTownScreenWindow()
     : heroWindow(0, 0, 800, 600, 1)

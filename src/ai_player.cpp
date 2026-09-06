@@ -5797,7 +5797,7 @@ long type_necromancy_artifact::get_value(const hero* owner, unsigned char equipp
             necro = 0;
         necro += bonus;
     } else {
-        necro = std::_cpp_min(necro, static_cast<int>(bonus));
+        necro = std::_cpp_min<long>(necro, static_cast<int>(bonus));
     }
     if (necro <= 0)
         return 0;

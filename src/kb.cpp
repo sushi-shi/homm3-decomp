@@ -4103,6 +4103,19 @@ void FileError(const char* cBuf)
 // the movie ends or any mouse button (or a key other than F4) stops it.
 // The Dreamcast first parameter survives in Complete's ABI but its body
 // no longer reads it; ShowCongrats still passes the high-score type.
+//
+// Residual (96.8467%): ONE surplus branch. Retail's frame-wait loop is
+// UNROTATED - `call VideoPlaying / test al,al / je exit` at the head with a
+// bare `jmp` back to that call - while our CL rotates it and duplicates the
+// condition at the bottom (`call VideoPlaying / test al,al / jne body`).
+// MEASURED AND REJECTED 2026-09-06, all three byte-flat at 96.8467 with the
+// branch count still 9 against retail's 8: the literal goto-loop
+// transcription (`head: if (!VideoPlaying()) goto stop; ... goto head;`),
+// the same shape written as `for (;;) { if (!VideoPlaying()) goto stop; ... }`,
+// and swapping the `int i; int x;` declaration order (which does not move
+// the [ebp-4]/[ebp-8] home swap those two locals carry either). VC6 rotates
+// this loop however the source spells the edges - the same verdict
+// smackmgr.cpp's VideoClose records for its own drain loop.
 VA(0x004f3ab0, 0x374)  // anchor-caller (ShowCongrats) + dc-order-map, dc 0xe3e48
 void CongratsWait(int mode, char* rank, int iBase, int iScore, int iDayz)
 {
