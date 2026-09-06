@@ -3268,6 +3268,9 @@ void PlayerDead(int gamePos);
 // local short. Tried and rejected: promoting bStandardVictoryAllowed
 // and teamMask to function scope (byte-flat, and the frame does not
 // move).
+// Tried and rejected 2026-09-06 for (2): naming GetLocalPlayerGamePos's
+// result in an `int` local before the GetTeamMask call is byte-flat at
+// 90.6247 and does not move the frame.
 VA(0x004f2ce0, 0x5BA)  // decorated identity (kb.h) + dc-order-map, dc 0xe3780
 void CheckEndGame(int bForceWin)
 {
