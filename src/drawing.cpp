@@ -366,7 +366,9 @@ no_error:
 // the range guard, the 116-byte stride and the +0x14/+0x18 name pair expand
 // exactly as retail has them: show_creature_spell_error 82.4044 -> 92.3889
 // on its first pair alone, and this body 90.2999 -> 91.2017 on its seven
-// sites (which also restores the two expansions retail has and we called).
+// sites, and 91.2017 -> 92.7524 once the `GetName(1)` and the
+// armies[][].GetName() site go direct too - the conversion is all-or-nothing
+// per body: two sites alone score 86.42, below the untouched baseline).
 // The sites that already pass a CONSTANT count are the ones this TU always
 // wrote directly. Byte-flat and not landed: the same rewrite at
 // show_creature_spell_error's four later sites, and `GetName(1)`/`GetName(0)`
@@ -456,7 +458,7 @@ void combatManager::CombatMessage(int command)
             army* viewedArmy = cells[field_132d4].get_army();
             if (viewedArmy)
                 sprintf(gText, (*gpGeneralText)[298],
-                        viewedArmy->GetName(1));
+                        GetArmyName(viewedArmy->creatureType, 1));
             else
                 gText[0] = 0;
         }
@@ -482,8 +484,10 @@ void combatManager::CombatMessage(int command)
 
     case COMBAT_COMMAND_FIRST_AID:
         sprintf(gText, (*gpGeneralText)[420],
-                armies[currentArmy->side]
-                      [cells[field_132d4].armySlot].GetName());
+                GetArmyName(armies[currentArmy->side]
+                                  [cells[field_132d4].armySlot].creatureType,
+                            armies[currentArmy->side]
+                                  [cells[field_132d4].armySlot].numTroops));
         break;
 
     default:
