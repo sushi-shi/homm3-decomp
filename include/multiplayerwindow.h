@@ -64,8 +64,16 @@ public:
     void SetPrevEdit(CMPEdit* pPrevEdit) { prevEdit = pPrevEdit; }
     virtual void SetFocus(unsigned char state);  // slot 14, retail 0x510890
     virtual int OnKeyPress(message* msg);        // slot 15, retail 0x5107d0
-    virtual void OnPrevEdit();                   // slot 19, retail 0x510870
-    virtual void OnNextEdit();                   // slot 20, retail 0x510850
+    // DECLARATION ORDER CORRECTED 2026-09-06 (claim lane 31): retail's own
+    // table 0x640184 holds 0x510850 at slot 19 and 0x510870 at slot 20, and
+    // the two bodies are told apart by the member they read - 0x510850 reads
+    // nextEdit at +0x70, 0x510870 reads prevEdit at +0x74. DC lists
+    // OnNextEdit (dc 0x10215c) ahead of OnPrevEdit (dc 0x102184) for the same
+    // reason. The pair had been declared the other way round, which put the
+    // WRONG body in each vtable slot; the call sites below move with it, so
+    // no emitted instruction changes.
+    virtual void OnNextEdit();                   // slot 19, retail 0x510850
+    virtual void OnPrevEdit();                   // slot 20, retail 0x510870
 };
 
 class CMPInputEdit : public CMPEdit {
@@ -105,6 +113,12 @@ public:
     virtual void OnKillFocus();                   // slot 11, retail 0x50dee0
     virtual void SetFocus(unsigned char state);   // slot 14, retail 0x510890
     virtual int OnKeyPress(message* msg);         // slot 15, retail 0x50df60
+    // This class introduces its own ring-walk pair - it does not derive
+    // CMPEdit - and retail's table 0x640210 carries CMPEdit's two addresses
+    // at slots 19/20 because /OPT:ICF folded the byte-identical bodies onto
+    // 0x510850 / 0x510870. Declared in the corrected order above.
+    virtual void OnNextEdit();                    // slot 19, folded 0x510850
+    virtual void OnPrevEdit();                    // slot 20, folded 0x510870
 };
 
 // DC derives CHotSeatDlg from CHeroWindowEx and places its `edit` run at
@@ -133,6 +147,13 @@ public:
     virtual int OnWidgetDeselect(int id, unsigned char* exitFlag);
     virtual textWidget* GetRolloverWidget();
     unsigned char OnOK();
+    // Non-virtual, and the vtable proves it: 0x6401d8 stops after slot 13
+    // (0x240210, CHotSeatEdit's table, starts at +0x38). Retail emits no
+    // body for either - both are expanded into CHotSeatEdit's two overrides
+    // 0x50dee0 / 0x50df60, which is where the DC roster's UpdateOK
+    // (dc 0x102d4c) and GetPlayerCount (dc 0x102cf8) went.
+    int GetPlayerCount();
+    void UpdateOK();
 };
 SIZE(CHotSeatDlg, 0x114);
 
@@ -142,10 +163,14 @@ SIZE(CHotSeatDlg, 0x114);
 // rollover@0x5c (textWidget*). Retail's CHeroWindowEx is four bytes wider,
 // so every member shifts +4: the getter at 0x510970 reads rollover@0x60 and
 // OnWidgetDeselect reads field1@0x50 (status@0x16 & WIDGET_ACTIVE, Text@0x30).
-// The vtable 0x6400f4 is 14 slots (CHeroWindowEx's roster): overrides at slot
-// 0 (sdd/dtor), 12 (OnWidgetDeselect), 13 (GetRolloverWidget) - exactly the
-// CHotSeatDlg shape. UpdateOK/DisableOK/OnOK are non-virtual. field1/field2
-// are DC CMPInputEdit* but reached only as textWidget here.
+// The vtable 0x6400f4 is FIFTEEN slots, not fourteen: it runs 0x2400f4 to
+// 0x24012f and CMPInputEdit's own table starts at 0x240130, so slot 14 is
+// real and holds 0x510980 - UpdateOK. That is the one place this dialog
+// diverges from CHotSeatDlg's roster (whose table stops at slot 13), and
+// CMPInputEdit::OnKeyPress 0x50de50 calls it through `[edx+0x38]` rather
+// than inlining it, which is the other half of the same proof.
+// DisableOK/OnOK stay non-virtual. field1/field2 are DC CMPInputEdit* but
+// reached only as textWidget here.
 class CMPInputDlg : public CHeroWindowEx {
 public:
     enum {
@@ -170,7 +195,7 @@ public:
     virtual int OnWidgetDeselect(int id, unsigned char* bExitFlag);
     virtual textWidget* GetRolloverWidget();
     unsigned char OnOK();
-    void UpdateOK();
+    virtual void UpdateOK();  // slot 14, retail 0x510980
     __forceinline void DisableOK()
     {
         GetWidget(OKAY_ID)->enable(0);

@@ -1606,6 +1606,41 @@ VA_COMPGEN(0x00454d60, 0x1B2, NUM_PUT_DO_PUT, char)
 // COMDAT pairing: bad_cast::_Doraise, agreement 1.000.
 VA_COMPGEN(0x00453c80, 0x1D, EXCEPTION_DORAISE, bad_cast)
 
+// The three destructor pairs this compiland's <iostream> surface leaves in
+// the 0x453c70..0x455bc0 run, each one identified by the VTABLE its body
+// stores rather than by similarity - every scalar deleting destructor in the
+// image is the same fourteen-instruction shape.
+//   0x453c70 stores 0x6457a8 and tail-jumps ??1exception. 0x6457a8 is
+//     bad_cast's table: this unit's two bad_cast constructors (0x453cd0 and
+//     0x454a10, both claimed above) are the only other writers of it.
+//   0x453f40 stores 0x6456e0 and tail-jumps ??1ios_base, i.e. it is
+//     basic_ios<char>'s. 0x6456e0 is the table basic_ostream's constructor
+//     (0x453970) writes at `this+4`, which is where its basic_ios base sits.
+//   0x4542f0 calls ??1basic_streambuf (0x454000) outright.
+//   0x455bc0 calls ??1numpunct<char> (0x455bf0) outright.
+// Each ??_G is the wrapper over the ??1 immediately named, in the
+// flags&1 / operator delete form.
+VA_COMPGEN(0x00453c70, 0xB, IMPLICIT_DTOR, bad_cast)
+VA_COMPGEN(0x00453ca0, 0x21, SCALAR_DELETING_DTOR, bad_cast)
+VA_COMPGEN(0x00453f40, 0xB, IMPLICIT_DTOR, basic_ios)
+VA_COMPGEN(0x004542c0, 0x21, SCALAR_DELETING_DTOR, basic_ios)
+VA_COMPGEN(0x004542f0, 0x21, SCALAR_DELETING_DTOR, basic_streambuf)
+VA_COMPGEN(0x00455bc0, 0x21, SCALAR_DELETING_DTOR, numpunct)
+
+// NOT CLAIMED, and it is a CONFLICT worth someone's attention: 0x454740
+// (35 B) stores 0x645700 as the whole of its destructor and then deletes,
+// and 0x645700 is `locale::facet`'s own table - it is what ~numpunct<char>
+// (0x455bf0+0x29), ~ctype<char> (0x516160+0x1e) and _Locimp's constructor
+// (0x20b80f+0x1c) all write as their base sub-object. That makes 0x454740
+// `??_Gfacet@locale@std@@`. But objecttype.cpp already claims that image-
+// unique name at 0x516560, whose body stores vtbl_2402cc instead - a
+// two-slot table nothing else in the image writes except the destructor at
+// 0x514530. Both bodies are the same 35-byte shape, so objdiff scores the
+// existing claim 100.0000 either way and only the vtable reloc separates
+// them. Resolving it means moving objecttype's claim, which is not this
+// lane's to move.
+
+
 // COMDAT pairing: bad_cast::bad_cast(const&), agreement 0.857 against a 32 B
 // object; resourcemanager's two 19 B candidates score 0.762.
 VA_COMPGEN(0x00453cd0, 0x1C, CLASS_CTOR, bad_cast)

@@ -545,6 +545,55 @@ void bitmapBorder16::Draw2()
     }
 }
 
+// E:\gamedcs\border.cpp:449 - promoted from DC_ONLY, slot 2 of vtable
+// 0x63bacc (the only reference to this row in the whole image, stored by
+// the constructor 0x450690 and re-stored by the destructor 0x450750).
+// bitmapBorder::Main one class up, arm for arm: the same hoisted id test
+// ahead of the codeX chain, the same `sub ecx,0xa` two-case subtract, and
+// the same duplicated `return 0` epilogues.
+//
+// Only two commands survive on the 16-bit variant. SET_PALETTE is an
+// EMPTY accepting arm - retail's `je` lands straight on `mov eax,1` -
+// which is what a hi-colour image with no palette to retint leaves. The
+// SET_IMAGE arm is the whole of bitmapBorder16::SetImage (dc 0x54c6c),
+// expanded: retail has NO row for that method anywhere in border.obj's
+// span because Main is its only caller, so /OPT:REF dropped the orphaned
+// COMDAT after /Ob2 expanded it here. Writing it as the CALL is what gives
+// retail's single `return 1` tail - the method's own `return` becomes a
+// forward jump onto it, where a longhand `return 1` duplicates the
+// epilogue and inverts the strcmp branch.
+// E:\gamedcs\border.cpp:441 - bitmapBorder::SetImage one class up with the
+// hi-colour loader. No VA: retail keeps no row for it (see the note below).
+void bitmapBorder16::SetImage(const char* bitmap_name)
+{
+    if (image != 0) {
+        if (strcmp(image->Name, bitmap_name) == 0)
+            return;
+        image->Dispose();
+    }
+    image = ResourceManager::GetBitmap16(bitmap_name);
+}
+
+VA(0x00450860, 0xC6)  // anchor-vtable (slot 2 of 0x63bacc), dc 0x54c98
+int bitmapBorder16::Main(message* msg)
+{
+    if (field_2C > 0)
+        return 0;
+    if (!(status & WIDGET_ACTIVE)) {
+        if (msg->id != MESSAGE_WIDGET)
+            return 0;
+    } else if (msg->id == MESSAGE_WIDGET && msg->codeY == id) {
+        switch (msg->codeX) {
+        case WIDGET_SET_PALETTE:
+            return 1;
+        case WIDGET_SET_IMAGE:
+            SetImage(msg->extraText);
+            return 1;
+        }
+    }
+    return border::Main(msg);
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\border.cpp:431
@@ -557,20 +606,6 @@ int bitmapBorder16::GetRealWidth()
 // E:\gamedcs\border.cpp:436
 DC_ONLY(0x54c4c, 0x20)
 int bitmapBorder16::GetRealHeight()
-{
-    // @stub
-}
-
-// E:\gamedcs\border.cpp:441
-DC_ONLY(0x54c6c, 0x2C)
-void bitmapBorder16::SetImage(const char* bitmap_name)
-{
-    // @stub
-}
-
-// E:\gamedcs\border.cpp:449
-DC_ONLY(0x54c98, 0x84)
-int bitmapBorder16::Main(message* msg)
 {
     // @stub
 }
