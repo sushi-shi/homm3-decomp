@@ -2557,7 +2557,7 @@ mainmenu	??1TMainMenu@@UAE@XZ	100.0000	100.0000	100.0000	0xfb660	8cb9205dc179
 mainmenu	??_GTMainMenu@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xfb630	-
 mainmenu	?DoModal@TMainMenu@@QAEXXZ	100.0000	100.0000	100.0000	0xfb6e0	2c725647dbbc
 mainmenu	?MainMenuHandler@@YIHAAVmessage@@@Z	93.1746	93.1746	93.1746	0xfb710	dfd062d78034
-mapcell	??0CObjectType@@QAE@PAUTObjectType@@@Z	58.5455	62.3455	62.3455	0x106080	27fd005d8d88
+mapcell	??0CObjectType@@QAE@PAUTObjectType@@@Z	61.0788	62.3455	62.3455	0x106080	e341cffbd1a7
 mapcell	??0NewfullMap@@QAE@XZ	100.0000	100.0000	100.0000	0xfd060	fb0f6ae54745
 mapcell	??0NewmapCell@@QAE@XZ	100.0000	100.0000	100.0000	0xfd650	36b54decc94c
 mapcell	??1?$vector@VBlackBoxData@@V?$allocator@VBlackBoxData@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x106350	-
@@ -3347,7 +3347,7 @@ rmg	??0type_treasure_def@@QAE@HHHH@Z	100.0000	100.0000	100.0000	0x134160	fdf13f3
 rmg	??0type_witch_hut_def@@QAE@XZ	100.0000	100.0000	100.0000	0x134a60	248d29ba8ae4
 rmg	??1TRmgTemplate@@QAE@XZ	100.0000	100.0000	100.0000	0x132fe0	91c7b86448a1
 rmg	?BuildRoadCostMap@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	75.6686	75.6686	75.6686	0x147880	a77d1b634931
-rmg	?ClipRmgBoundaryPoint@@YI?AUTPoint@@ABUTRmgZoneBounds@@U1@1@Z	64.1087	64.1812	64.1812	0x13cac0	b3925063f1b0
+rmg	?ClipRmgBoundaryPoint@@YI?AUTPoint@@ABUTRmgZoneBounds@@U1@1@Z	100.0000	100.0000	100.0000	0x13cac0	98cce6c5a487
 rmg	?ConnectZones@type_random_map_generator@@QAEXXZ	93.3833	93.3833	93.3833	0x143240	8d5f38bf5378
 rmg	?CreateRiver@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	39.5071	39.6178	39.6178	0x148df0	71eb4f296ebf
 rmg	?CreateSubterraneanGate@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	76.9439	76.9439	76.9439	0x142080	38a429be544f
@@ -3357,7 +3357,7 @@ rmg	?FindZone@TRmgTemplate@@QAEPAUTRmgTownSlot@@H@Z	100.0000	100.0000	100.0000	0
 rmg	?GetMapItem@type_random_map@@QAEPAUTRmgMapItem@@UTRmgMapPosition@@@Z	100.0000	100.0000	100.0000	0x1378e0	5df55a259e35
 rmg	?InitializeObjectGenerators@type_random_map_generator@@QAEXXZ	97.4646	97.4676	97.4676	0x138b10	55bc899a64f7
 rmg	?ReadRmgTemplateZones@@YIXPBVTSpreadsheetResource@@PAUTRmgTemplate@@HHHHH@Z	100.0000	100.0000	100.0000	0x138480	309459fe2ecc
-rmg	?TraceZoneBoundary@type_random_map_generator@@QAEXPAUTRmgBoundaryVertex@@E@Z	56.5644	57.8331	57.8331	0x13c390	781b5fa33373
+rmg	?TraceZoneBoundary@type_random_map_generator@@QAEXPAUTRmgBoundaryVertex@@E@Z	86.6846	86.6846	86.6846	0x13c390	f17fdbb0268c
 rmg	?WriteMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	95.6987	95.7066	95.7066	0x149cb0	12d6f5f28f76
 rmg	?_Inc@const_iterator@?$_Tree@UTPoint@@U1@U_Kfn@?$set@UTPoint@@U?$less@UTPoint@@@std@@V?$allocator@UTPoint@@@3@@std@@U?$less@UTPoint@@@4@V?$allocator@UTPoint@@@4@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x1b8bc0	-
 rmg	?assign_rmg_teams@@YIXHHHPBEPAD@Z	100.0000	100.0000	100.0000	0x14ab40	a44a9dbf9227

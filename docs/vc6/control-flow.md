@@ -434,3 +434,22 @@ matching retail's immediate byte stores instead of materializing a boolean
 register for a common store. A positive row-validation scope then raised
 the reader to 96.9468%; its remaining deltas lie in vector insertion and
 cleanup. These are retail/VC6 controls, with no DC RMG source counterpart.
+
+
+## A folded search flag can determine fallback placement
+
+`TraceZoneBoundary` (0x53c390) searches a cyclic edge list before choosing
+between a rectangle fallback and the ordinary boundary walk. A return inside
+the search sinks the rectangle after the ordinary walk. A `bool found = false`
+with a success assignment and break, followed by `if (!found)` after the
+`do/while`, reproduces retail's backward search branch and rectangle
+fall-through. VC6 removes the flag's stores and test entirely. With identical
+point-copy expressions, this changes 60.27% to 86.10%; the remaining mismatch
+is mostly inside later vector allocation paths. A direct goto was byte-flat
+in the earlier control, and nesting the success body falls to 29.83%.
+
+Retail proves the branch topology, while the flag is a reconstruction
+hypothesis that produces it naturally. An absent flag in optimized assembly
+does not rule out a source flag. Test the complete search and post-search
+control relationship before attributing fallback placement to a compiler
+generation or an unavoidable layout decision.
