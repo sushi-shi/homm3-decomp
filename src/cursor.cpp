@@ -598,9 +598,6 @@ NewmapCell* advManager::MoveHero(int direction, unsigned char standEnd, type_poi
     CMCMoveHero msg(curr->id, direction, standEnd, curr->get_location());
     SendMapChange(&msg);
 
-    if (bIsRemoteMove && !gbFollowPlayerMode)
-        curr->restore_cell();
-
     if (!became_boat)
         gpGame->record_move(curr, direction, *trigger_point);
 
@@ -623,6 +620,17 @@ NewmapCell* advManager::MoveHero(int direction, unsigned char standEnd, type_poi
         DemobilizeCurrHero(0, 1);
         return 0;
     }
+
+    // Retail sequences this AFTER the network early-return block, not
+    // before record_move as Dreamcast does (dc 0x7b5a2 precedes
+    // record_move at 0x7b5c2): retail's `mov al,[gbFollowPlayerMode] /
+    // test al,al / jne / call restore_cell` sits between
+    // DemobilizeCurrHero's `ret 0x1c` and the animate_move argument
+    // build. Moving it here pairs the last stray call (base-only
+    // restore_cell at +0xa06 against retail's +0xb81) and raises
+    // 89.5139 -> 89.8315.
+    if (bIsRemoteMove && !gbFollowPlayerMode)
+        curr->restore_cell();
 
     animate_move(curr, direction, xInc, yInc);
 
