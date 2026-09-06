@@ -597,6 +597,16 @@ struct TRmgMapItem {
 class TRmgMapInterface {
 public:
     virtual ~TRmgMapInterface() {}
+    // Retail's abstract table at 0x6409e8 has six pure slots after its
+    // deleting destructor. The concrete table at 0x6409cc fixes their order;
+    // bodies 0x532190..0x5322f0 operate on terrain/overlay data and TPoint.
+    virtual void SetTile(
+        const TPoint& point, const TRmgTerrainTile& tile) = 0;
+    virtual void SetOverlay(const TPoint& point, int value) = 0;
+    virtual TPoint GetSize() = 0;
+    virtual TRmgTerrainTile GetTile(const TPoint& point) = 0;
+    virtual int GetLand(const TPoint& point) = 0;
+    virtual int GetOverlay(const TPoint& point) = 0;
 };
 
 class type_random_map : public TRmgMapInterface {
@@ -624,6 +634,14 @@ public:
         if (ownsMapItems)
             delete[] mapItems;
     }
+
+    virtual void SetTile(
+        const TPoint& point, const TRmgTerrainTile& tile);
+    virtual void SetOverlay(const TPoint& point, int value);
+    virtual TPoint GetSize();
+    virtual TRmgTerrainTile GetTile(const TPoint& point);
+    virtual int GetLand(const TPoint& point);
+    virtual int GetOverlay(const TPoint& point);
 
     TRmgMapItem* GetMapItem(int x, int y);
     inline TRmgMapItem* GetMapItem(int x, int y, int z)
