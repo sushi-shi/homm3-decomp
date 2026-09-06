@@ -286,7 +286,7 @@ ai_player	??8type_point@@QBE_NABU0@@Z	100.0000	100.0000	100.0000	0x2ec20	994e61f
 ai_player	??_F?$vector@PAVtype_artifact_effect@@V?$allocator@PAVtype_artifact_effect@@@std@@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x324b0	-
 ai_player	??_Gtype_artifact_effect@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x324d0	-
 ai_player	??_Gtype_combat_artifact@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x33080	-
-ai_player	?AI_AttemptMove@@YIXPAVhero@@AAUHeroDestination@@AAJE@Z	84.8316	84.8316	84.8316	0x2fee0	ba5ffaaf9878
+ai_player	?AI_AttemptMove@@YIXPAVhero@@AAUHeroDestination@@AAJE@Z	85.9228	85.9228	85.9228	0x2fee0	9c5f8cdba0b3
 ai_player	?AI_arrange_army@@YIXPAVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x2d8e0	6476d3737a0d
 ai_player	?AI_build_ship@@YIXPBVhero@@JJJ@Z	100.0000	100.0000	100.0000	0x30f80	357d4741dae5
 ai_player	?AI_choose_destination@@YIHPAVhero@@JAAUHeroDestination@@AAJEE@Z	81.8865	81.8865	81.8865	0x2e0b0	6f1615bb98c5
@@ -1409,7 +1409,7 @@ dialogbox	??_GCTextDialog@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x90740	-
 dialogbox	??_GTDialogBox@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x8fe30	-
 dialogbox	?CalcDimensions@CTextDialog@@MAEXPBDPAVfont@@AAH222@Z	100.0000	100.0000	100.0000	0x90a90	19fade6384a1
 dialogbox	?ExitDialog@CTextDialog@@QAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x90b20	888c5e71c939
-dialogbox	?Setup@CTextDialog@@UAEEPBDPAVfont@@@Z	100.0000	100.0000	100.0000	0x90820	80b8bcc9717d
+dialogbox	?Setup@CTextDialog@@UAEEPBDPAVfont@@@Z	100.0000	100.0000	100.0000	0x90820	990974e161b6
 dialogbox	?Setup@TDialogBox@@UAEEHHHH@Z	100.0000	100.0000	100.0000	0x8ff00	831c52da87f8
 dialogbox	?UpdateText@CTextDialog@@UAEXPBD@Z	100.0000	100.0000	100.0000	0x90b50	1c471dcd3abb
 diff	??0CDiffMaker@@QAE@PAEH0H@Z	100.0000	100.0000	100.0000	0x91030	a50c82e1f6e5
@@ -1967,7 +1967,7 @@ game	?LoadBoatPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb
 game	?LoadGame@game@@QAEHPBDHH@Z	100.0000	100.0000	100.0000	0xbf330	c7302de7147c
 game	?LoadGarrisonPool@game@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xb96f0	e574c834f8c2
 game	?LoadHeroId@@YIHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xba210	a3d376c1431f
-game	?LoadMap@game@@QAE_NPAVTAbstractFile@@@Z	75.4838	75.4838	75.4838	0xc2450	ad3bb0cce06b
+game	?LoadMap@game@@QAE_NPAVTAbstractFile@@@Z	78.2855	78.2855	78.2855	0xc2450	5b82c03d01cf
 game	?LoadMinePool@game@@QAEHPAVTAbstractFile@@H@Z	98.8718	100.0000	100.0000	0xb9340	2a102f6e81b3
 game	?LoadRumours@game@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbbe40	793f39b40d8e
 game	?LoadSignPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9070	f739107b463c
@@ -2293,7 +2293,7 @@ hero	?IsInIdentifyRange@hero@@QAEEPBUtype_point@@@Z	100.0000	100.0000	100.0000	0
 hero	?IsMobile@hero@@QAEEXZ	100.0000	100.0000	100.0000	0xe5f30	c6edcb416792
 hero	?IsWieldingArtifact@hero@@QAEEH@Z	100.0000	100.0000	100.0000	0xd91f0	2534e38ca00c
 hero	?PlaceInMap@hero@@QAEXHUtype_point@@E@Z	100.0000	100.0000	100.0000	0xd7900	0d72e5b04f96
-hero	?SetSS@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xe2210	71ac7604c4e5
+hero	?SetSS@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xe2210	bb58ff5afe0e
 hero	?SetVisitedArena@hero@@QAEXPBVNewmapCell@@@Z	100.0000	100.0000	100.0000	0xe53e0	b692ce74dd13
 hero	?SetupHeroView@THeroScreenWindow@@QAEXXZ	100.0000	100.0000	100.0000	0xe1a50	ac2d3199670f
 hero	?TakeSS@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0xe2250	ece76542a846
@@ -2342,7 +2342,7 @@ hero	?get_skill_award@@YI?AW4TSecondarySkill@@PBVhero@@W4TSkillMastery@@1W41@@Z	
 hero	?get_special_terrain@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe4fa0	e39190bb7b88
 hero	?get_spell_level@hero@@QAE?AW4TSkillMastery@@HH@Z	100.0000	100.0000	100.0000	0xe5080	9de5d44e9770
 hero	?hire@hero@@QAEXHUtype_point@@@Z	100.0000	100.0000	100.0000	0xd7890	95492f7dbd73
-hero	?initialize@hero@@QAEXF@Z	82.8591	82.8591	82.8591	0xd8720	5ba2ed4f21b5
+hero	?initialize@hero@@QAEXF@Z	82.8591	82.8591	82.8591	0xd8720	fad18de969e4
 hero	?initialize@type_obscuring_object@@QAEXXZ	100.0000	100.0000	100.0000	0xd74d0	b3bc9394b84f
 hero	?initialize_ballistics_table@@YIEXZ	100.0000	100.0000	100.0000	0xd7240	efe8d2769655
 hero	?is_in_patrol_radius@hero@@QAEEUtype_point@@@Z	100.0000	100.0000	100.0000	0xe56e0	aac539b8e247
@@ -2364,7 +2364,7 @@ hero	?set@?$bitset@$0EG@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0xe66f0	
 hero	?set_hotkey@button@@QAEXH@Z	100.0000	100.0000	100.0000	0xe1370	-
 hero	?test@?$bitset@$0JA@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0x4d4d0	-
 hero	?update_all_slots@THeroScreenWindow@@QAEXXZ	100.0000	100.0000	100.0000	0xdb1d0	c6f501393cee
-hero	?update_slot@THeroScreenWindow@@QAEXJ@Z	81.7000	81.7000	81.7000	0xdaf90	06cf4a3977b1
+hero	?update_slot@THeroScreenWindow@@QAEXJ@Z	81.7000	81.7000	81.7000	0xdaf90	539e9a66303c
 hero	?update_spell_list@hero@@QAEXXZ	81.0400	81.0400	81.0400	0xd95d0	86486d074a25
 herodefs	?InitializeHeroClassTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0xe6920	9ee667038ad2
 herodefs	?InitializeHeroTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0xe67a0	99ccc2c936c9
@@ -2525,7 +2525,7 @@ kb	?get_base_map_score@game@@QAEFXZ	100.0000	100.0000	100.0000	0xf3e30	08a36f004
 kb	?get_map_score@game@@QAEFXZ	100.0000	100.0000	100.0000	0xf3eb0	cd6028d198ab
 kb	?get_quickview_size@@YIXPBDPAH1@Z	100.0000	100.0000	100.0000	0xf62a0	c57fea7e1252
 kb	?handle_click@type_normal_dialog_frame@@UAEEEE@Z	99.9761	99.9761	99.9761	0xf0b20	7355af0f0d7b
-kb	?oldmain@@YIHXZ	77.5630	77.5630	77.5630	0xee3e0	5c1108f3cbf0
+kb	?oldmain@@YIHXZ	78.0193	78.0193	78.0193	0xee3e0	e6a189b95b2e
 kb	?set@type_dialog_icon@@QAEXW4EGameResource@@J@Z	99.1667	99.1667	99.1667	0xf4eb0	06cb359cd3d3
 kbwin	?AppAbout@@YGHPAUHWND__@@IIJ@Z	100.0000	100.0000	100.0000	0xf8140	b6d6a9ba7939
 kbwin	?AppCommand@@YIJPAUHWND__@@IIJ@Z	100.0000	100.0000	100.0000	0xf8060	ab51fe2b9295
@@ -2596,7 +2596,7 @@ mapcell	?NewfullMapFn_00505F20@NewfullMap@@QAEXPAVCObject@@HHH@Z	100.0000	100.00
 mapcell	?PlaceObject@NewfullMap@@QAEHHE@Z	100.0000	100.0000	100.0000	0x105b20	5179280e1233
 mapcell	?Read@NewfullMap@@QAEHPAVTAbstractFile@@HEH@Z	100.0000	100.0000	100.0000	0xfd690	2f98327e1373
 mapcell	?Read@TTimedEvent@@QAEHPAVTAbstractFile@@H@Z	99.4737	99.4737	99.4737	0xfc1a0	23dd66e7fc0f
-mapcell	?Save@NewfullMap@@QAEHPAVTAbstractFile@@HE@Z	91.8870	91.8870	91.8870	0xfdf40	4fb9a3686189
+mapcell	?Save@NewfullMap@@QAEHPAVTAbstractFile@@HE@Z	93.7123	93.7123	93.7123	0xfdf40	4fb9a3686189
 mapcell	?Save@TTimedEvent@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xfc440	c22e847fa4f2
 mapcell	?SetCellVisited@ExtraInfoUnion@@QAEXF@Z	100.0000	100.0000	100.0000	0xfbf90	e3b6ed4be52d
 mapcell	?SoD_transformRandomDwellings@NewfullMap@@QAEXXZ	100.0000	100.0000	100.0000	0x102b60	d558253b7da9
@@ -2776,7 +2776,7 @@ multiplayerwindow	?OnModemJoin@TMultiPlayerWindow@@QAEEXZ	100.0000	100.0000	100.
 multiplayerwindow	?OnNextEdit@CMPEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x110850	b569183ed88b
 multiplayerwindow	?OnOK@CHotSeatDlg@@QAEEXZ	100.0000	100.0000	100.0000	0x112470	dae5065a6e04
 multiplayerwindow	?OnPrevEdit@CMPEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x110870	8904249ee9b6
-multiplayerwindow	?OnSearch@TMultiPlayerWindow@@QAEEXZ	89.7658	91.3243	91.3243	0x111660	3ea6dedba20e
+multiplayerwindow	?OnSearch@TMultiPlayerWindow@@QAEEXZ	94.1892	94.1892	94.1892	0x111660	ad73c08ad906
 multiplayerwindow	?OnTCP@TMultiPlayerWindow@@QAEEXZ	75.9951	75.9951	75.9951	0x1113f0	4f693d46a9a5
 multiplayerwindow	?OnWidgetDeselect@CHotSeatDlg@@UAEHHPAE@Z	100.0000	100.0000	100.0000	0x112420	cd9d3ff169de
 multiplayerwindow	?OnWidgetDeselect@CMPInputDlg@@UAEHHPAE@Z	100.0000	100.0000	100.0000	0x1108f0	980857d31a5d
@@ -2965,7 +2965,7 @@ philai	?AI_resource_cost@@YIHJPBH@Z	100.0000	100.0000	100.0000	0x126cc0	8cea72fd
 philai	?AI_resource_cost@@YIHPBVplayerData@@PBH@Z	100.0000	100.0000	100.0000	0x126c70	0c059083c765
 philai	?AI_set_hero_bonuses@@YIXPAVhero@@@Z	100.0000	100.0000	100.0000	0x127760	b01636d968c0
 philai	?AI_value_of_event@@YIJPBVhero@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x12bd10	38434512bbfc
-philai	?AI_value_of_event@@YIJPBVhero@@Utype_point@@AAJ@Z	97.7399	97.7399	97.7399	0x128040	5454c7121644
+philai	?AI_value_of_event@@YIJPBVhero@@Utype_point@@AAJ@Z	97.7399	97.7399	97.7399	0x128040	49ce306ae9f6
 philai	?AI_visit_black_market@@YIXPAVhero@@PAUTBlackMarket@@@Z	100.0000	100.0000	100.0000	0x1243f0	4e37b54da6ec
 philai	?AI_visit_hill_fort@@YIXPAVhero@@@Z	100.0000	100.0000	100.0000	0x127bb0	4cf02eb55bbe
 philai	?AI_visit_university@@YIXPAVhero@@PAUtype_university@@@Z	100.0000	100.0000	100.0000	0x124ed0	bdd1bfaa3829
@@ -3292,7 +3292,7 @@ resourcemanager	?Dispose@CSprite@@UAEXXZ	100.0000	100.0000	100.0000	0x15d1a0	70c
 resourcemanager	?Dispose@resource@@UAEXXZ	100.0000	100.0000	100.0000	0x15d0f0	2036704338ea
 resourcemanager	?GetBackdrop@ResourceManager@@YIXPBDPAVBitmap16Bit@@@Z	100.0000	100.0000	100.0000	0x15cf00	afd51cdec5f9
 resourcemanager	?GetBitmap16@ResourceManager@@YIPAVBitmap16Bit@@PBD@Z	100.0000	100.0000	100.0000	0x15afd0	20832f1d0b37
-resourcemanager	?GetBitmap816@ResourceManager@@YIPAVBitmap816@@PBD@Z	97.6325	97.6325	97.6325	0x15a800	5006288d65a4
+resourcemanager	?GetBitmap816@ResourceManager@@YIPAVBitmap816@@PBD@Z	97.6325	97.6325	97.6325	0x15a800	d6ce0e35cf8d
 resourcemanager	?GetBitmapResourceSize@ResourceManager@@YIHPBD@Z	96.7742	96.7742	96.7742	0x15d070	e3ff951fee5e
 resourcemanager	?GetFont@ResourceManager@@YIPAVfont@@PBD@Z	100.0000	100.0000	100.0000	0x15bb00	6259664a8ab4
 resourcemanager	?GetPalette24@ResourceManager@@YIPAVTPalette24@@PBD@Z	99.9273	99.9273	99.9273	0x15b470	1e4d793f0c92
@@ -3488,7 +3488,7 @@ seerhut	?DoProposalDialog@type_defeat_hero_quest@@UAEXPAVhero@@@Z	100.0000	100.0
 seerhut	?DoProposalDialog@type_experience_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x16d4b0	f15a501e3b80
 seerhut	?DoProposalDialog@type_monster_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x16ec00	75b80eb26ca1
 seerhut	?DoProposalDialog@type_resource_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x171840	7ff03694331f
-seerhut	?DoProposalDialog@type_skill_quest@@UAEXPAVhero@@@Z	75.4324	75.4324	75.4324	0x16dad0	edd70be3a3af
+seerhut	?DoProposalDialog@type_skill_quest@@UAEXPAVhero@@@Z	76.8288	76.8288	76.8288	0x16dad0	932678707be8
 seerhut	?DoSeerEvent@TSeerHut@@QAEXPAVhero@@_N@Z	44.4753	46.3642	46.3642	0x173670	bfd3fcd81424
 seerhut	?GetAIValue@type_artifact_quest@@UAEHH@Z	100.0000	100.0000	100.0000	0x16f5a0	e8c4868db654
 seerhut	?GetAIValue@type_creature_quest@@UAEHH@Z	100.0000	100.0000	100.0000	0x170480	386e7f03466e
@@ -3713,7 +3713,7 @@ singleselectionwindow	?GetRandomMapName@@YI?AV?$basic_string@DU?$char_traits@D@s
 singleselectionwindow	?Go@CNewPlayerUpdateProc@@UAEXXZ	100.0000	100.0000	100.0000	0x1789f0	18b8bfbd5036
 singleselectionwindow	?Go@t_map_list_update@@UAEXXZ	100.0000	100.0000	100.0000	0x177d70	79c6c24ce1b3
 singleselectionwindow	?HandleNetMsg@CSingleSelectionNetMsgHandler@@UAEPAVCNetMsg@@PAV2@@Z	100.0000	100.0000	100.0000	0x18e340	e5deaf270aea
-singleselectionwindow	?HandleNetMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@PAE@Z	89.7408	90.1601	90.2212	0x1887a0	fedd3ae17b28
+singleselectionwindow	?HandleNetMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@PAE@Z	89.7408	90.1601	90.2212	0x1887a0	28b9aad8625d
 singleselectionwindow	?HandleRequests@CNewPlayerUpdateProc@@QAEXXZ	100.0000	100.0000	100.0000	0x178010	1c23d10d6e5f
 singleselectionwindow	?HasMultipleTowns@TSingleSelectionWindow@@QAEEH@Z	100.0000	100.0000	100.0000	0x18ce70	ed8def5d9a36
 singleselectionwindow	?HeaderConfirmed@CNewPlayerUpdateMan@@QAEXK@Z	100.0000	100.0000	100.0000	0x189270	11f9962491f2
@@ -4268,7 +4268,7 @@ townmgr	?GetBuildingInfo@@YIPADPBVtown@@HEE@Z	100.0000	100.0000	100.0000	0x1d2a4
 townmgr	?GetCategoryStats@@YIXHPAJPAC@Z	100.0000	100.0000	100.0000	0x1dee70	7abd5d7a8cb1
 townmgr	?GetText@TTextResource@@QBEPBDH@Z	100.0000	100.0000	100.0000	0x1cc8d0	20ece2b574c7
 townmgr	?HandleGiftMsg@CTownNetMsgHandler@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x1c66b0	a350f10638ae
-townmgr	?Main@townManager@@UAEHAAVmessage@@@Z	90.2738	90.2738	90.2738	0x1d3240	1dba8101f88c
+townmgr	?Main@townManager@@UAEHAAVmessage@@@Z	90.2738	90.2738	90.2738	0x1d3240	8ae87cfba28d
 townmgr	?MoveHeroFromGarrison@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d5220	86f5af5a1637
 townmgr	?NewStrips@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c6e10	ba44f2443cec
 townmgr	?Open@TTavernWindow@@UAEHHE@Z	100.0000	100.0000	100.0000	0x1d7e20	9573d2ea1a7c
