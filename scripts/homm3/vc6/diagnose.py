@@ -39,20 +39,16 @@ def _resolve(target: str):
 
 
 def _inline_divergence(unit: str, fn: str, ordinal: int = 0):
-    """A short 'N under-inline, M over-inline' note if the out-of-line CALL
-    multisets of base vs retail differ, else None. Reads built objs; no
-    compile."""
+    """Ordered call divergence from built objects, without compiling."""
     base, tgt = _asm.BASE / f"{unit}.obj", _asm.TARGET / f"{unit}.c.obj"
     if not base.is_file() or not tgt.is_file():
         return None
     try:
-        bc = inline_model._called(
-            _asm.objdump(base, fn, ordinal))
-        rc = inline_model._called(
-            _asm.objdump(tgt, fn, ordinal))
+        bc = _asm.objdump(base, fn, ordinal)
+        rc = _asm.objdump(tgt, fn, ordinal)
     except (Exception, SystemExit):
         return None
-    return inline_model.divergence_note(bc, rc)
+    return inline_model.ordered_divergence_note(bc, rc)
 
 
 def route(unit: str, fn: str):
@@ -91,8 +87,8 @@ def route(unit: str, fn: str):
                        "spelling (docs/vc6/eh-cleanup.md)"))
     if inline_div:
         routes.append(("predict-inline",
-                       f"inline structure diverges ({inline_div}) - a callee "
-                       "is expanded on one side only (A8/A9/A12)"))
+                       f"call stream differs ({inline_div}) - inspect retained "
+                       "targets and unmatched sites before changing C++"))
     if "control-flow" in cls or (flow and flow >= 3):
         routes.append(("why-branch", "control-flow (CFG shape) first - "
                        "structural before register"))
