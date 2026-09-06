@@ -75,8 +75,6 @@ const int MAP_FORMAT_AB = 21;
 // SGameSetupOptions::playerPos carries a human's seat ordinal, or this
 // sentinel for a slot the computer takes.
 const int SETUP_PLAYER_POS_COMPUTER = 10;
-// The width of TPlayerSlotAttributes::legalAlignments' town-type domain.
-const int SETUP_ALIGNMENT_COUNT = 9;
 
 // Complete widens the Dreamcast map-header-only entry point with the selected
 // difficulty, scenario ordinal, and optional stream. TCampaignBrief pushes
@@ -93,21 +91,16 @@ const int SETUP_ALIGNMENT_COUNT = 9;
 // slots that can go either way, giving out seats while the human count is
 // under the session's own and the computer sentinel afterwards.
 //
-// Residual (26.52%): ONE over-inline, at the memberwise header assignment,
-// and it accounts for all 20 base-only calls and the whole 109-vs-70 block
-// surplus. Retail expands NewSMapHeader::operator= in place but CALLS the
-// members it is built from - vector::operator=, TPlayerSlotAttributes::
-// operator=, the map's _Tree::operator= and the two string assignments -
-// while our /Ob2 budget expands the vector one down to size/copy/_Ucopy/
-// _Destroy and the second string down to _Split/memmove/_Grow/_Eos. The
-// tail is already right: Read, Get, apply_map_header_availability, SetMapSize
-// and Random all pair, in order.
-// The lever is a statement-scoped `#pragma inline_depth(0)` on
-// `this->mapHeader = *mapHeader;`, which this lane may not add; a lane that
-// may should measure it there first. Measured meanwhile: naming the slot
-// record as a reference in the three loops costs 1.91 (24.61 against 26.52
-// for the direct subscripts retail's induction pointers produce), and naming
-// `this->mapHeader` itself as a reference costs 4.30 (22.22).
+// EXACT: Dreamcast newgame.cpp:284 calls pick_alignment rather than
+// flattening its count/random/select loops. Restoring that ordinary helper
+// call raises the current 18.7059% (prior MAX 26.5235%) to 95.0853% and
+// reproduces retail's entire preceding NewSMapHeader assignment expansion.
+// The remaining difference was the shared legalAlignments declaration:
+// retail zero-extends the word at playerSlotAttributes+8, so it is unsigned.
+// Correcting that field closes all 70 blocks at 100%. The flattened helper
+// and the signed field are independent negative controls; no inline pin is
+// needed. Before the helper recovery, naming a slot record or mapHeader as
+// an extra reference had only lowered the score (24.61% / 22.22%).
 VA(0x00513320, 0x41A)  // anchor-caller(TCampaignBrief ctor), dc 0x1034fc
 void game::InitNewGame(int difficulty, int version,
                        NewSMapHeader* mapHeader, TAbstractFile* infile)
@@ -149,26 +142,8 @@ void game::InitNewGame(int difficulty, int version,
         } else {
             setup.handicap[slot] = 0;
 
-            int legal = this->mapHeader.playerSlotAttributes[slot].legalAlignments;
-            int choices = 0;
-            int i;
-            for (i = 0; i < SETUP_ALIGNMENT_COUNT; i++) {
-                if (legal & (1 << i))
-                    choices++;
-            }
-
-            int pick = 1;
-            if (choices > 0)
-                pick = Random(1, choices);
-
-            for (i = 0; i < SETUP_ALIGNMENT_COUNT; i++) {
-                if ((legal & (1 << i)) && --pick == 0)
-                    break;
-            }
-            if (i == SETUP_ALIGNMENT_COUNT)
-                i = 0;
-
-            setup.alignment[slot] = i;
+            setup.alignment[slot] = pick_alignment(
+                this->mapHeader.playerSlotAttributes[slot].legalAlignments, 0);
             setup.playerPos[slot] = -1;
             setup.canFlipFromToComputer[slot] = -1;
         }

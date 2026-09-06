@@ -106,9 +106,9 @@ def _pick_public_symbol(fnspec: str, resolved: str, ordinal: int,
     """Select one symbol both comparison objects can actually disassemble.
 
     The report contains retail/synth names even for carcass rows whose source
-    still emits no public function. Passing those names to ``objdump`` prints
+    still emits no function. Passing those names to ``objdump`` prints
     a scary error for an expected unclaimed row. Resolve against the shared
-    public-text set first, silently; only a unique, compiled identity is a
+    emitted-function set first, silently; only a unique, compiled identity is a
     solver target.
     """
     shared = base_names & target_names
@@ -140,8 +140,8 @@ def _resolve_public_symbol(unit: str, fnspec: str) -> tuple[str, int] | None:
     except Exception:
         name, ordinal = fnspec, 0
     return _pick_public_symbol(
-        fnspec, name, ordinal, _asm._public_text_symbols(base_obj),
-        _asm._public_text_symbols(tgt_obj))
+        fnspec, name, ordinal, _asm._function_text_symbols(base_obj),
+        _asm._function_text_symbols(tgt_obj))
 
 
 def _diagnose_one(unit, fnspec):
@@ -151,7 +151,7 @@ def _diagnose_one(unit, fnspec):
         return None
     resolved = _resolve_public_symbol(unit, fnspec)
     if resolved is None:
-        return {"error": "no shared public text symbol in built objects",
+        return {"error": "no shared emitted function in built objects",
                 "unclaimed": True}
     name, ordinal = resolved
     try:

@@ -421,6 +421,23 @@ void type_quest::Load(TAbstractFile* file, int version)
 // deadline ahead of them - the selector and the table row are savegame-only,
 // which is the split quest.h records between the two loaders.
 // E:\gamedcs\seerhut.cpp
+// Residual (41.9271%), and 2026-09-06 (polish lane 38) LOCATES IT EXACTLY.
+// The three reads are `proposalText = ReadLengthPrefixedString(file);` with
+// no named binding at all: written that way the frame becomes retail's 0x20
+// (against 0x30 here), the three temporaries collapse onto retail's ONE slot
+// at [ebp-0x1c], and the emitted stream is identical to retail's through the
+// first `assign(const string&, 0, npos)` call - the `diagnose` EH census
+// predicts it ([0,-1,1,-1,2] against our [reg,1,2], i.e. a temporary born and
+// destroyed per statement rather than three alive at once).
+// It still measures 10.5000 and is NOT shipped, for one reason: at that
+// source depth VC6 expands `basic_string::_Tidy` at all three destruction
+// sites where retail CALLS it (retail expands `~basic_string` and keeps
+// `_Tidy` out of line), and three inline `_Tidy` bodies cost more than the
+// whole frame/slot correction buys. The lever is a per-site `inline_depth(0)`
+// on each assignment, which this lane may not add; whoever may add one should
+// take the direct-assignment form WITH the pins and not the current spelling.
+// Also measured and rejected: block-scoping each `const std::string&` binding
+// so the temporaries die per statement WITHOUT changing the binding, 6.6354.
 VA(0x0056ce50, 0x11E)  // anchor-vtable 0x64174c slot 12 + the chain from all eight leaf LoadFromMaps, retail-only
 void type_quest::LoadFromMap(TAbstractFile* file)
 {
@@ -2533,9 +2550,23 @@ __forceinline type_monster_quest::type_monster_quest(unsigned char flags)
     position.x = (monster_id = defeated_by = -1);
 }
 
-__forceinline type_artifact_quest::type_artifact_quest(unsigned char flags)
+type_artifact_quest::type_artifact_quest(unsigned char flags)
     : type_quest(flags)
 {
+}
+
+// Both legacy seer-hut readers capture the artifact argument before base/member
+// construction. Retail 0x574610 and 0x574a90 keep the append, text-row
+// override, disabled-artifact store, and direct SetDefaultText call inside the
+// allocation-success arm. These support a shared single-artifact constructor.
+type_artifact_quest::type_artifact_quest(
+    unsigned char flags, TArtifact artifact, int textRow)
+    : type_quest(flags)
+{
+    artifacts.push_back(artifact);
+    field_38 = textRow;
+    gpGame->artifactDisabled[artifact] = 1;
+    SetDefaultText();
 }
 
 __forceinline type_creature_quest::type_creature_quest(unsigned char flags)
@@ -3236,18 +3267,13 @@ std::string TSeerHut::SeerHutFn_005743E0(int player)
 // [ebp-1] and below and the whole frame walks. One declaration per arm is
 // what puts them back.
 //
-// Residual (82.7295%): the EH frame, and one call with it. Retail wraps the
-// Restoration-of-Erathia arm's `new type_artifact_quest(1)` in a real
-// fs:[0] frame with three states - 0 after the allocation, 1 before the
-// member vector's CONSTRUCTOR CALL and 2 before the push_back - because a
-// throw in any of them has to free the raw memory. Our CL expands that
-// member constructor (the ICF-folded allocator-only COMDAT at 0x5157d0),
-// so only the out-of-line type_quest base constructor is left to throw and
-// VC6 emits no frame at all: `sub esp,0x18` where retail pushes -1. The one
-// remaining call divergence rides on the same decision - retail reaches
-// SetDefaultText directly where we dispatch through vtable slot 14. Both
-// are the /Ob2 verdict on that one member constructor, and the levers for
-// it are a statement pin and a caller-shrink split, neither open here.
+// The single-artifact constructor shared with load restores retail's direct
+// SetDefaultText call and allocation-failure guard: 83.20 -> 86.81%.
+// The flattened post-new setup is the negative control: it dereferences a null
+// allocation and dispatches SetDefaultText virtually. Retail has three EH
+// states (allocation, completed base, completed artifact member); the remaining
+// member-constructor/insert expansion mismatch still needs natural compiler
+// state. The old note calling this unreachable without an inline pin was wrong.
 VA(0x00574610, 0x480)  // anchor-caller readObject SEER arm; bracket seerhut..singleselectionpopups
 void TSeerHut::read(TAbstractFile* infile)
 {
@@ -3258,14 +3284,8 @@ void TSeerHut::read(TAbstractFile* infile)
         if (char_buffer == -1) {
             quest = 0;
         } else {
-            type_artifact_quest* artifactQuest = new type_artifact_quest(1);
-            TArtifact artifact =
-                static_cast<TArtifact>(char_buffer); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
-            artifactQuest->artifacts.push_back(artifact);
-            artifactQuest->field_38 = textRow;
-            gpGame->artifactDisabled[artifact] = 1;
-            artifactQuest->SetDefaultText();
-            quest = artifactQuest;
+            quest = new type_artifact_quest(
+                1, static_cast<TArtifact>(char_buffer), textRow); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
         }
     } else {
         int int_buffer;
@@ -3404,20 +3424,22 @@ void TSeerHut::read(TAbstractFile* infile)
     NameIndex = chosen;
 }
 
-// Residual (27.41%): the whole delta is one inline decision inside the
-// artifact-quest construction the <= 27 arm shares with read above. Retail
-// CALLS vector::insert(_Last, value) - the two-argument overload Dinkumware's
-// own push_back expands to - and our /Ob2 compile expands that overload as
-// well, so the three-argument fill insert's whole grow path (operator new,
-// _Ucopy x3, _Ufill, _Destroy, operator delete) lands inline: 28 blocks and
-// 16 branches against retail's 10 and 5, and the budget it consumes is also
-// what pushes vector::size() out of line three times. It is the "inline the
-// parent, call the child" family, unreachable from source while the container
-// is the vendored Dinkumware header this TU may not pin inside.
-// MEASURED AND REJECTED at the same plateau: `insert(end(), artifact)` spelled
-// longhand (24.90, and it is +0.21 on read - the two rank OPPOSITE ways, so
-// the source keeps one spelling); a named `std::vector<TArtifact>&` reference
-// to the member (byte-flat, 27.4147 to the digit).
+// Shared single-artifact construction raises 27.4147 -> 30.4931% and restores
+// the fourth return (null allocation skips every setup side effect). Retail
+// directly calls SetDefaultText during construction. Its artifact argument is
+// captured before the base/member constructors, independently of the input
+// buffer subsequently passed by reference to vector::insert.
+// Residual: the four allocator-only string/vector constructors call the folded
+// 0x5157d0 body in retail; ours expand. push_back's two-argument insert also
+// expands one level too far: 26 blocks/15 branches versus retail's 10/5.
+// Candidate EH states 0,2 miss retail's state 1 before vector construction.
+// Negative controls: flat post-new setup was 27.4147%; removing the old
+// forceinline from the flags-only constructor was byte-flat here; omitting the
+// flags argument from the recovered overload was also byte-flat (30.4931%).
+// Keeping the byte-read temporary separate from the masked text-row value
+// removes an extra constructor-argument copy and raises MAX to 35.3825%.
+// Retail reads through [ebp+8], then keeps the masked row at [ebp-0x1c]; a
+// single address-taken textRow used for both roles was the 30.4931% control.
 //
 // The savegame reader and the exact mirror of save (0x573fd0): NewfullMap
 // ::Load calls it on every element of the SeerHutList it has just resized,
@@ -3450,8 +3472,11 @@ void TSeerHut::load(TAbstractFile* infile, int saveVersion)
         infile->Read(&value, sizeof(value));
 
         int textRow;
-        infile->Read(&textRow, 1);
-        textRow &= 0xff;
+        {
+            int textBuffer;
+            infile->Read(&textBuffer, 1);
+            textRow = textBuffer & 0xff;
+        }
 
         infile->Read(&value, sizeof(value));
         NameIndex = value;
@@ -3459,14 +3484,8 @@ void TSeerHut::load(TAbstractFile* infile, int saveVersion)
         if (noQuest || int_buffer == -1) {
             quest = 0;
         } else {
-            type_artifact_quest* artifactQuest = new type_artifact_quest(1);
-            TArtifact artifact =
-                static_cast<TArtifact>(int_buffer); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
-            artifactQuest->artifacts.push_back(artifact);
-            artifactQuest->field_38 = textRow;
-            gpGame->artifactDisabled[artifact] = 1;
-            artifactQuest->SetDefaultText();
-            quest = artifactQuest;
+            quest = new type_artifact_quest(
+                1, static_cast<TArtifact>(int_buffer), textRow); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
         }
     } else {
         int int_buffer;

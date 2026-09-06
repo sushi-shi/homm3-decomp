@@ -25,7 +25,7 @@
 // (0x5e3d8, whose only caller is Close).
 //
 // Promoted 2026-09-01 after rechecking the address-takes and named VC6
-// publics: 0x62890/0x628b0 are TCombatEagleEyeSide's owner ctor/dtor,
+// publics: 0x62890/0x628b0 are the Eagle Eye set's ctor closure/dtor,
 // 0x62920/0x62930 are TArcher's ctor/dtor, and 0x66260 is
 // TPickANumber's owner dtor.
 // These are class special members, not anonymous STL tails.  The /MT calls
@@ -113,22 +113,17 @@ combatManager::combatManager()
     field_38 = 0;
 }
 
-// Both rows are address-taken by combatManager's two-element Eagle Eye
-// array constructor at 0x4627a0. Retail's /MT tree ctor keeps the 190-byte
-// std::set worker out of line, while the dtor carries the matching _Lockit
-// pair around the shared-sentinel reference count. The class is Complete-
-// only in the available DC roster, so the identities come from the retail
-// owner layout and the named VC6 publics rather than a cross-build address.
-// RESIDUAL 2026-09-01: VC6 expands the implicit set constructor to 187 B in
-// the current include environment, so objdiff declines to score this 21 B
-// target. An explicit empty owner and a caller-scoped inline-depth control
-// both emitted the same 29 B/52.2727% form because they unnecessarily
-// save/return this; the latter also broke the exact manager ctor and both
-// exact destructor callbacks. Declaration-scoped inline-depth/auto-inline
-// controls were inert. The source-true implicit owner is therefore retained
-// without a permanent codegen pin.
-VA_COMPGEN(0x00462890, 0x15, CLASS_CTOR, TCombatEagleEyeSide)
-VA_COMPGEN(0x004628b0, 0x6E, IMPLICIT_DTOR, TCombatEagleEyeSide)
+// Retail's two-element set array at +0x545c takes these callbacks at
+// 0x4627a0. The 21-byte constructor adapter supplies two temporary default
+// arguments to the std::set constructor at 0x46a680: VC6's ??_F default
+// constructor closure, not an implicit constructor for an owner wrapper.
+// A direct std::set<SpellID>[2] emits exactly that instruction sequence.
+// Negative control: wrapping each set in TCombatEagleEyeSide generated a
+// 187-byte implicit constructor which expanded the set initialization.
+// DC cmbtmgr.obj:0x63b14 names the underlying set<SpellID> constructor;
+// the Complete callback's default arguments follow Dinkumware's interface.
+VA_COMPGEN(0x00462890, 0x15, DEFAULT_CTOR_CLOSURE, set)
+VA_COMPGEN(0x004628b0, 0x6E, IMPLICIT_DTOR, set)
 
 // The manager constructor takes this callback at 0x462802 for its three
 // contiguous 0x24-byte TArcher rows. Retail stores zero at +4 and +8 and
@@ -747,7 +742,7 @@ void combatManager::SetupCombat(type_point point, hero* leftHero, armyGroup* lef
 // this function put together". IT IS `clear()`. The three pushes are
 // the hidden return slot, `_Left(_Head)` and `_Head`, which is exactly
 // what VC6's `void clear() { erase(begin(), end()); }` expands to, and
-// TCombatEagleEyeSide::spells was already a std::set<SpellID> in this
+// eagleEyeData was already backed by std::set<SpellID> in this
 // header. The DC roster names the member outright (std::set<SpellID>::
 // clear, dc 0x63b98). No new STL surface at all.
 //
@@ -839,8 +834,8 @@ void combatManager::InitNonVisualVars()
     field_53dc[0] = field_53dc[1] = 0;
     field_53de[0] = field_53de[1] = 0;
 
-    eagleEyeData[0].spells.clear();
-    eagleEyeData[1].spells.clear();
+    eagleEyeData[0].clear();
+    eagleEyeData[1].clear();
 
     field_3c = 0;
     field_132a8[0] = -1;
@@ -1382,16 +1377,15 @@ int combatManager::CheckApplyBadMorale(int group, int index)
 // the selected stack's turn and, outside quick combat, plays the complete
 // message/effect/sample sequence.
 //
-// Residual (91.10%): all 19 branches and five returns agree, as do the
-// semantic instruction sequence and 525-byte span. Retail keeps `selected`
-// in EDI, the Azure total in EDX and the loop count in EAX (with an EBX
-// zero-test copy); this VC6 invocation keeps them in EBX, EDI and EDX and
-// addresses the stack through EAX. Four grounded source shapes were tested:
-// a direct hypnotized-side if/else with signed `<`, the complement-first
-// spelling with `!=`, an initialized actual-side spelling, and the explicit
-// actual-side if/else below. The last is best and reproduces retail's side
-// branch skeleton; the remaining allocation/strength-reduction choice is
-// not source-addressable without semantic distortion.
+// EXACT since 2026-09-06. The last residual was the Azure census loop:
+// retail walks a stack POINTER and counts the opposing army total DOWN
+// (`mov ebx,eax / dec eax / test ebx,ebx / je` at fn+0x2a9, then
+// `add ecx,0x548 / dec eax / jne`), which is `while (count--)` with the
+// pointer bump in the `for` increment.  The old indexed
+// `for (i = 0; i != numArmies[..]; ++i)` forced the EBX/EDI/EDX
+// allocation the earlier note blamed; the countdown frees it and the
+// empty-side exit merges with the `!azureDragons` return, exactly as
+// retail's single `je 0x261a` does.  91.0961 -> 100.
 VA(0x00464d40, 0x20D)  // NextArmy sole caller + Fear.wav/body, retail-only
 unsigned char combatManager::Unnamed464d40(army* selected)
 {
@@ -1408,8 +1402,8 @@ unsigned char combatManager::Unnamed464d40(army* selected)
     int opposingSide = 1 - actualSide;
 
     int azureDragons = 0;
-    for (int i = 0; i != numArmies[opposingSide]; ++i) {
-        army* stack = &armies[opposingSide][i];
+    army* stack = armies[opposingSide];
+    for (int count = numArmies[opposingSide]; count--; stack++) {
         if (stack->creatureType == CREATURE_AZURE_DRAGON)
             azureDragons += stack->numTroops;
     }
@@ -3223,6 +3217,27 @@ unsigned char combatManager::InLineOfSight(int sourceIndex, int destIndex) const
 // rotation guard, so no second compare is emitted.
 // Residual (90.5928%): register/scheduling only - every block boundary and
 // branch now agrees.
+// Residual (90.5938%), fully localised by polish lane 37: there is NO
+// structural difference left. All 37 blocks are exact, the 21 branches and
+// 12 calls agree, and the whole floating-point stream matches retail
+// instruction for instruction - `fild deltaY / fstp t1 / fild remaining /
+// fstp t2 / fld t2 / fmul flatness / fsubr t1 / fild step / fstp t1 /
+// fmul t1 / fdiv nframes_d` on both sides. Only the ebp DISPLACEMENTS
+// differ, and they differ because retail's frame is 0x9c against our 0x8c.
+// Retail's map is: `saved` at -0xa8 (0x38 bytes, as SIZE(Bitmap16Bit)
+// proves), then a TWELVE-BYTE HOLE at -0x70..-0x65 that nothing addresses,
+// then `bottom` at -0x64, the three doubles at -0x60/-0x58/-0x50 and the
+// dwords at -0x48/-0x44/-0x40. Ours packs the same seven slots into
+// -0x60..-0x40 with `bottom` at -0x40 and no hole. So the missing fact is a
+// 12-byte local retail allocates and never addresses through ebp - not a
+// spelling of anything already here. MEASURED AND REJECTED: promoting
+// `travelX`/`remaining` out of the `if (nframes > 0)` costs 1.25 (89.34);
+// promoting `right`/`bottom` to function scope or to the guard's block is
+// byte-flat at both placements; naming `deltaY - remaining * flatness` as a
+// `double drop` scores 91.02 but is SOURCE-FALSE - retail never stores that
+// subtraction (it keeps it on the FPU stack and multiplies the step temp
+// straight into it), so the named local buys its 0.43 with two instructions
+// retail has not got and is not a frame retail homes.
 VA(0x00467a00, 0x3AF)  // anchor-global, dc 0x614f0
 void combatManager::ShootBallisticMissile(int startX, int startY, int destX,
                                           int destY, const CSprite* missile)
@@ -4481,8 +4496,8 @@ void combatManager::RaiseSkeletons(int side)
 VA(0x00469fe0, 0x88)  // anchor-callee, dc 0x63648
 void combatManager::LearnSpellFromEagleEye(int side)
 {
-    for (std::set<SpellID>::iterator it = eagleEyeData[side].spells.begin();
-         it != eagleEyeData[side].spells.end(); it++) {
+    for (std::set<SpellID>::iterator it = eagleEyeData[side].begin();
+         it != eagleEyeData[side].end(); it++) {
         SpellID spell = *it;
         if (heroes[side]->IsWieldingArtifact(ARTIFACT_SPELLBOOK)
             && akSpellTraits[spell].level
@@ -5543,7 +5558,7 @@ VA_COMPGEN(0x00517750, 0x21, VECTOR_SIZE, TObstacleVector)
 // already-claimed _Ucopy, agreement 1.000 at an exactly equal 49-byte extent.
 VA_COMPGEN(0x0046b1e0, 0x31, VECTOR_UFILL, TObstacleVector)
 
-// The `std::set<int>` _Tree COMDAT surface. `TCombatEagleEyeSide::spells` is
+// The `std::set<int>` _Tree COMDAT surface. `eagleEyeData` is
 // this TU's only red-black tree, and its element mangles as a plain `H`, so
 // cmbtmgr.obj emits exactly four out-of-line _Tree members - the two public
 // `erase` overloads, the recursive node eraser `_Erase`, and the iterator's

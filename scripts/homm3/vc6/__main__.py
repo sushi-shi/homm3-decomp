@@ -21,6 +21,12 @@ Subcommands
         back the fact the model predicts.
   atlas --regen                                         (phase 2)
         Headless-Ghidra C2 TU/globals map -> evidence/vc6/.
+  tryblocks
+        Retail's CATCH-SCOPE census, read straight off the image's
+        `_s_FuncInfo` records: every function with nTryBlocks > 0, each try
+        block's [tryLow, tryHigh] state range, the type each arm catches
+        and the catch funclet addresses. A body where retail has a try and
+        we have none is a target, not an inliner wall.
   check [--argv|--il|--inline|--reg|--locator|--all]
         The gates (each ships a negative control).
 
@@ -121,15 +127,23 @@ def _build_parser() -> argparse.ArgumentParser:
     pr.add_argument("--unit")
     pr.add_argument("--limit", type=int)
 
-    pq = ss.add_parser("queue", help="admission-first function queue; use "
-                       "--polish for the deferred MAX-ranked wall census")
+    pq = ss.add_parser("queue", help="polish compiled functions by ascending "
+                       "banked MAX, excluding banked-exact functions")
     pq.add_argument("--unit", help="restrict to a comma-separated unit list")
-    pq.add_argument("--polish", action="store_true",
-                    help="deferred campaign: diagnose admitted non-exact "
-                         "functions and rank by effective MAX")
+    mode = pq.add_mutually_exclusive_group()
+    mode.add_argument("--polish", action="store_true",
+                      help="polish existing compiled functions (the default)")
+    mode.add_argument("--admission", action="store_true",
+                      help="list functions without compiled bodies, largest first")
+    pq.add_argument("--diagnose", action="store_true",
+                    help="also diagnose every polish target (slower)")
     pq.add_argument("--quiet", action="store_true")
     pq.add_argument("--limit", type=int, default=20, metavar="N",
                     help="maximum ranked functions to display (default 20; 0 = all)")
+
+    ss.add_parser("tryblocks", help="retail's catch-scope census: every "
+                  "FuncInfo with nTryBlocks > 0, its try extents, catch "
+                  "types and funclet addresses")
 
     pc = ss.add_parser("check", help="the model gates (with negative controls)")
     for g in ("argv", "il", "inline", "reg", "locator"):
@@ -152,6 +166,7 @@ _TOOLS = {
     "atlas": ("atlas", "run"),
     "report": ("report", "run"),
     "queue": ("queue", "run"),
+    "tryblocks": ("tryblocks", "run"),
     "check": ("census", "run_check"),
 }
 

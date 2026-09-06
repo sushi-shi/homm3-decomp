@@ -65,7 +65,7 @@ def object_symbol(obj: Path, selector: str) -> str:
     unit, name = split(selector)
     if unit or name.lower().startswith("0x"):
         name = retail(selector).name
-    names = _asm._public_text_symbols(obj)
+    names = _asm._function_text_symbols(obj)
     if name in names:
         return name
     wanted = undname.strip_signature(name)
@@ -86,7 +86,7 @@ def object_symbol(obj: Path, selector: str) -> str:
     if matches:
         _common.die(f"selector {selector!r} is ambiguous in {obj.name}: "
                     + ", ".join(sorted(matches)[:12]))
-    _common.die(f"selector {selector!r} matches no public text symbol of "
+    _common.die(f"selector {selector!r} matches no emitted function of "
                 f"{obj.name}; symbols: " + ", ".join(sorted(names)[:12]))
 
 

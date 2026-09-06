@@ -4937,6 +4937,12 @@ void army::DecrementSpellRounds()
 // Removing the artificial twin initially left OffsetToFront's army COMDAT
 // un-emitted. Restoring the real get_attack_direction inline state below
 // recovers that exact row, confirming the twin was never needed.
+// Retail counts the per-side stack loop DOWN: `mov esi,eax / dec eax /
+// test esi,esi / jle` at fn+0x4a tests the PRE-decrement count and then
+// `inc eax` restores the trip count into the reused [ebp+8] slot - the
+// signed `count-- > 0` form, not `while (count--)` (which would emit `je`).
+// The pointer advance stays in the `for` increment because retail's three
+// `continue` edges all land on `add edx,0x548`. 92.5170 -> 94.1648.
 // Tried and rejected 2026-09-06: retail materialises `best` in the entry
 // block (`mov [ebp-0xc], 0` before the can_shoot chain) and homes `this`
 // at [ebp-0x18] where we do the reverse; moving `long best = 0;` above the
@@ -4960,7 +4966,7 @@ void army::get_berserk_targets(std::vector<army*>& armies) const
     for (int side = 0; side < 2; side++) {
         other = gpCombatManager->armies[side];
         long count = gpCombatManager->numArmies[side];
-        for (long i = 0; i < count; i++, other++) {
+        for (; count-- > 0; other++) {
             if (other->Is(1u << 21))
                 continue;
             if (other == this)

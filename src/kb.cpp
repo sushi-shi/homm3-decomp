@@ -62,21 +62,7 @@
 // by-value wrappers from type_dialog_icon::set. Retail expands them and
 // selects an operand address before loading the result, proving the nested
 // reference-returning VC6 helper rather than a plain ternary or Win32 macro.
-#ifdef min
-#undef min
-#endif
-#ifdef max
-#undef max
-#endif
-inline int min(int left, int right)
-{
-    return std::_cpp_min(left, right);
-}
-
-inline int max(int left, int right)
-{
-    return std::_cpp_max(left, right);
-}
+#include "homm3_minmax.h"
 
 // type_dialog_icon::set's two Dreamcast min calls and retail's equality exit
 // use the same text-column clamp.
@@ -3183,6 +3169,11 @@ CNetMsg::CNetMsg(eRS_Messages subType, unsigned long size)
 // 79.1102). The remaining epilogue difference is downstream of the same
 // register story: retail's EBX holds -1 and is dead by the compares, so
 // its three pops sit AHEAD of them and are shared between both arms.
+// 2026-09-06, polish lane 38, the DC LOCAL-SCOPE SWEEP, and it is a NEGATIVE:
+// the Dreamcast block names exactly ONE local here, `bShowedEndMessage`
+// (T_UCHAR, sp+0x33) - this body's `gameOver` - and NO `localPos`, so the DC
+// source calls `GetLocalPlayerGamePos()` at each of its three uses. Spelling
+// it that way costs 79.1102 -> 72.6985; the cached `int localPos` stands.
 VA(0x004f2960, 0x37E)  // decorated identity (kb.h) + anchor-caller (CheckEndGame), dc 0xe3558
 unsigned char DisplayLCWinLoss(LossConditionStruct* lossCondition,
                                int* bGameWon, int* bGameLost,

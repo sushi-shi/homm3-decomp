@@ -1237,6 +1237,29 @@ CUpdatePlayerPosMsg::CUpdatePlayerPosMsg(
 // in the preheader: retail keeps rowY itself in EBX (`mov ebx,0x85`, then
 // `sub edx,y / sub edx,3`) where this compiler reassociates the -3 into
 // the induction (`mov ebx,0x82`).
+// THE FRAME, 2026-09-06.  Same size as retail (`sub esp,0x314`) and the same
+// 25 ebp-relative slots but for TWO facts, both of them array PACKING:
+//   * ours homes an extra array at [ebp-0x2c4].  Retail has exactly three -
+//     the inlined GetModuleFileNameA path buffer at [ebp-0x320] (0x15f B),
+//     `flagName` at [ebp-0x1c0] (256 B) and a 100-byte buffer at [ebp-0xc0] -
+//     and it uses that LAST one for BOTH the `adopb2%c.def` sprintf inside
+//     the flag loop and the `adop%cpnl.pcx` sprintf 200 lines later, i.e.
+//     retail's temp_str and tempName share storage while ours do not, and
+//     retail's module-path buffer does NOT share with flagName while ours
+//     does.  Two probes: `char temp_str[100]` repacks into a different
+//     layout entirely (slots 0xc0/0x124/0x228/0x284) and is byte-flat,
+//     95.7079 -> 95.7071; bracing the tempName loop into a sibling scope
+//     GROWS the frame (0x324) and costs 95.7079 -> 94.9511.  Both rejected.
+//   * `this` spills to [ebp-0x1c] where retail spills it to [ebp-0x20] and
+//     puts the widget* temporary at -0x1c - the pair is swapped, which is
+//     the function's FIRST divergent byte (+0x33) and costs a displacement
+//     on roughly 25 instructions.  Retail therefore homes one more 4-byte
+//     entity above the this-spill than we do; it is not in the slot SET, so
+//     it shares a slot with something already there.
+// One real missing instruction, in the flag-loop button: retail computes the
+// y as `mov edx,ebx / sub edx,[ecx+0x1c] / sub edx,3` where we fold the -3
+// into the induction variable (our ebx is rowY-3, retail's is rowY).
+//
 // Measured byte-flat: `int i` function- vs block-scoped for every loop;
 // a ternary-of-two-news for the 128 textButton (85.98, rejected); the
 // adopb2 arm order (either order 87.27 at that stage; DC order kept).
@@ -4633,6 +4656,7 @@ void TSingleSelectionWindow::UpdateAllyEnemyFlags(unsigned char update)
 VA(0x00585500, 0x889)  // anchor-callee CSaveGameEdit::OnKeyPress calls it (-1, 1) behind the currentMap!=-1 guard; body owns the 'NEWGAME.gm1'+'Arrogance.h3m' defaults (the mode scratch buffers), size 1.09x dc 0x7d2, dc 0x13bc60
 void TSingleSelectionWindow::SetCurrentMap(int map, unsigned char bUpdate)
 {
+    int i;
     if (map >= static_cast<int>(GetMapCount()))
         return;
     message msg;
@@ -4702,7 +4726,7 @@ void TSingleSelectionWindow::SetCurrentMap(int map, unsigned char bUpdate)
                    pCurrentHeader->setup.filename);
         }
         UpdateGameVars();
-        for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
+        for (i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
             m_players.humanPlayers[i].heroIndex = -1;
             m_players.humanPlayers[i].townIndex = -1;
             m_players.computerPlayers[i].heroIndex = -1;
@@ -4772,7 +4796,7 @@ void TSingleSelectionWindow::SetCurrentMap(int map, unsigned char bUpdate)
         deselect.window = 0;
         deselect.codeX = 6;
         deselect.extra = 0x10;
-        for (int i = 107; i <= 111; ++i) {
+        for (i = 107; i <= 111; ++i) {
             deselect.codeY = i;
             GetWidget(i)->Main(&deselect);
         }
@@ -4800,7 +4824,7 @@ void TSingleSelectionWindow::SetCurrentMap(int map, unsigned char bUpdate)
         Update();
     }
     if (m_flag64) {
-        for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
+        for (i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
             CNetPlayerHandlerPlayer* player =
                 m_players.GetPlayerInPos(i);
             if (!player)
@@ -6468,12 +6492,12 @@ int CHostWaitDlg::handle_message(message& msg)
 // CHostWaitDlg vtable 0x241cf8 slot 0. E:\gamedcs\singleselectionwindow.cpp:465
 VA_COMPGEN(0x00589200, 0x21, SCALAR_DELETING_DTOR, CHostWaitDlg)  // dc 0x147828
 
-// ~CHostWaitDlg adds no destructible members, so OPT:ICF folds it to a 5-byte
-// jmp into the CAnimatedDlg base dtor. E:\gamedcs\singleselectionwindow.cpp:465
-VA(0x00589230, 0x5)  // dc 0x147860
-CHostWaitDlg::~CHostWaitDlg()
-{
-}
+// DC places both destructor bodies at singleselectionwindow.cpp:465,
+// after handle_message: the implicit destructor at the class boundary calls
+// only ~CAnimatedDlg (dc 0x147860 -> 0x11d250). Retail is that same call
+// lowered to a five-byte tail jump. An explicit empty destructor instead
+// installs CHostWaitDlg's vfptr before jumping, an extra six bytes.
+VA_COMPGEN(0x00589230, 0x5, IMPLICIT_DTOR, CHostWaitDlg)  // dc 0x147860
 
 // Complete's retail-only map-list specialization. The empty derived body is
 // significant: VC6 expands CNewPlayerUpdateProc's member construction and

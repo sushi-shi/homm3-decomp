@@ -424,7 +424,12 @@ std::istream& operator>>(std::istream& is, TObjectType& objectType)
 // per-row stream's virtual base (guarded by the construction flag at
 // [ebp-0x14]), its strstreambuf and the stream itself.
 //
-// Residual (69.25%): an /Ob2 SWAP inside the resize temporary's inline
+// BOUNDARY CORRECTION 2026-09-06: that 0x514ff3 handler was its own carve
+// row (17 B), so our emitted body carried it while retail's target symbol
+// stopped at 0x273. Absorbed into the parent (627 -> 644 = 0x284, the
+// LoadFontData precedent): 69.2500 -> 73.3263 with no source change.
+//
+// Residual (73.33%): an /Ob2 SWAP inside the resize temporary's inline
 // TObjectType constructor. Retail CALLS `bitset<48>::bitset(unsigned
 // long)` at 0x5154a0 and EXPANDS `operator~` (the copy plus a flip call);
 // we do the exact opposite, so the argument constructor's 32-bit set loop
@@ -433,7 +438,43 @@ std::istream& operator>>(std::istream& is, TObjectType& objectType)
 // empty inline one is byte-flat, measured. The doctrinal lever for the
 // over-inline half is caller-shrink, and this body has nothing to lift:
 // its statements are all accounted for by the EH state transcript.
-VA(0x00514d80, 0x273)  // anchor-callee ResourceManager::GetText + anchor-bracket NewfullMapFn_00505DA0; retail-only
+// 2026-09-06, polish lane 38, and it CONFIRMS the note above against the
+// bytes: the unclaimed retail callee at 0x5154a0 really is
+// `bitset<48>::bitset(unsigned long)` - `_Tidy`'s two-dword clear followed
+// by the `while (_X) { if (_X & 1) set(_P); ... }` loop with its own
+// `_Xran` guard - so the source initialiser IS `~std::bitset<48>(0)` and
+// retail CALLS that constructor. A four-spelling sweep of
+// `TObjectType::passableMask`'s initialiser scores, against 69.2500:
+//   ~std::bitset<48>(0)              69.2500   (shipped; retail's own call)
+//   std::bitset<48>(0).flip()        70.2011
+//   std::bitset<48>(0).set()         68.2120
+//   std::bitset<48>().set()          72.7772
+//   std::bitset<48>().flip()         77.3315
+//   ~std::bitset<48>()               82.2717
+// The last one is NOT shipped even though it is worth +13.02 here: the
+// default constructor has no set-loop, so its 13 points come from DELETING
+// the very construct retail's call proves is there, and instantiating
+// `bitset<48>::bitset()` across the closure also knocks
+// `CEnterNameEdit::OnKillFocus` off 100.0000 (99.8710) - a header edit that
+// costs an exact row. The honest residual is unchanged: one /Ob2 swap.
+//
+// 2026-09-06, polish lane 41: `homm3 vc6 predict-inline 0x00514d80` puts
+// numbers on that swap and rules out the caller-shrink lever for good.
+// It reports the call streams as 22 (base) vs 23 (retail) with three
+// count-paired names, and splits the residual into
+//   UNDER-inline: `bitset<48>::set(unsigned,bool)` base x1 vs retail x0
+//                 (A8/A9 - our budget ran out INSIDE the expanded ctor)
+//   OVER-inline : `bitset<48>::flip()` base x0 vs retail x1, `_Tidy` 2 vs 3
+// i.e. we spend the budget expanding `bitset<48>::bitset(unsigned long)`
+// and then cannot afford its inner `set`, while retail spends it on
+// `operator~` (copy + a flip CALL) and pays for the ctor with a call.
+// Both sides therefore have the SAME budget and differ only in which of
+// the two nested call sites the C2 inliner reaches first - a walk-order
+// fact, not a declaration, visibility or source-order one.  Nothing in
+// this body is liftable (the EH transcript accounts for every statement)
+// and the initialiser spelling sweep above is exhausted, so the shipped
+// `~std::bitset<48>(0)` stands.  Do not re-run the spelling sweep.
+VA(0x00514d80, 0x284)  // anchor-callee ResourceManager::GetText + anchor-bracket NewfullMapFn_00505DA0; retail-only
 void TObjectTypeTable::load(char* filename)
 {
     TTextResource* text = ResourceManager::GetText(filename);

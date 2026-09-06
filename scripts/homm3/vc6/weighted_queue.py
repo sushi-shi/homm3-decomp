@@ -66,7 +66,7 @@ def main():
         stream.write("# Unscored rows rank at zero; MAX/history never hide current residuals.\n")
         writer = csv.DictWriter(stream, fieldnames=[
             "va", "size", "current", "maximum", "historical",
-            "remaining_bytes", "unit", "function", "state"], delimiter="\t")
+            "remaining_bytes", "unit", "function", "state"], delimiter="\t", lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
     print(f"{len(rows)} remaining functions; "
