@@ -109,66 +109,90 @@ enum TRmgTerrainTransitionCase {
 // Provisional role name. Allocation at 0x5b7250 proves the 0x44-byte object;
 // the constructor at 0x5b45f0 proves the field order and the two Dinkumware
 // point sets followed by the packed-cell vector.
-class TRmgTerrainPainter {
+// Prior provisional class role: TRmgTerrainPainter.
+class rmgTerrainPainter {
 public:
-    TRmgMapAdapterInterface* adapter;                // +0x00
-    int paintTerrain;                               // +0x04
-    int transitionStrength;                         // +0x08
-    unsigned int width;                             // +0x0c
-    unsigned int height;                            // +0x10
-    std::set<TRmgGridPoint> primaryPoints;            // +0x14
-    std::set<TRmgGridPoint> secondaryPoints;          // +0x24
-    std::vector<TRmgPackedTerrainCell> packedCells;   // +0x34
+    TRmgMapAdapterInterface* m_adapter;                // +0x00; prior role: adapter
+    int m_paintTerrain;                               // +0x04; prior role: paintTerrain
+    int m_transitionStrength;                         // +0x08; prior role: transitionStrength
+    unsigned int m_width;                             // +0x0c; prior role: width
+    unsigned int m_height;                            // +0x10; prior role: height
+    std::set<TRmgGridPoint> m_primaryPoints;            // +0x14; prior role: primaryPoints
+    std::set<TRmgGridPoint> m_secondaryPoints;          // +0x24; prior role: secondaryPoints
+    std::vector<TRmgPackedTerrainCell> m_packedCells;   // +0x34; prior role: packedCells
 
-    TRmgTerrainPainter(
+    rmgTerrainPainter(
         TRmgMapAdapterInterface* newAdapter,
         int newParameterA,
         int newTransitionStrength);
-    ~TRmgTerrainPainter();
+    ~rmgTerrainPainter();
 
-    void Finish();
-    void ChangeTerrain(int terrain, int strength);
-    void PaintRectangle(
+    // Prior provisional role: Finish
+    void finish();
+    // Prior provisional role: ChangeTerrain
+    void changeTerrain(int terrain, int strength);
+    // Prior provisional role: PaintRectangle
+    void paintRectangle(
         unsigned int x, unsigned int y,
         unsigned int rectangleWidth, unsigned int rectangleHeight);
 
-    void InitializePackedCell(const TRmgGridPoint& point, unsigned int index);
-    TRmgPackedTerrainCell* GetPackedCell(const TRmgGridPoint& point);
+    // Prior provisional role: InitializePackedCell
+    void initializePackedCell(const TRmgGridPoint& point, unsigned int index);
+    // Prior provisional role: GetPackedCell
+    TRmgPackedTerrainCell* getPackedCell(const TRmgGridPoint& point);
     // Retail repeatedly expands this field accessor while retaining the
     // nested GetPackedCell call. Keeping the source helper is therefore
     // required even though it has no separately emitted body.
-    inline int GetTerrain(const TRmgGridPoint& point)
+    // Prior provisional role: GetTerrain
+    inline int getTerrain(const TRmgGridPoint& point)
     {
-        return GetPackedCell(point)->GetTerrain();
+        return getPackedCell(point)->GetTerrain();
     }
-    void PaintTransitions();
-    int SelectBaseFrame(const TRmgGridPoint& point, int terrain, int oldFrame);
-    void SetTile(const TRmgGridPoint& point, const TRmgTerrainTile& tile);
-    void PaintPoint(const TRmgGridPoint& point);
-    void QueueOtherTerrainNeighbours(const TRmgGridPoint& point);
-    void RepairTerrainPoint(const TRmgGridPoint& point);
-    unsigned char IsHorizontalGap(const TRmgGridPoint& point, int terrain);
-    unsigned char IsVerticalGap(const TRmgGridPoint& point, int terrain);
-    unsigned char IsHorizontalGap(const TRmgGridPoint& point);
-    unsigned char IsVerticalGap(const TRmgGridPoint& point);
-    unsigned char NeedsTerrainRepair(const TRmgGridPoint& point);
-    unsigned char HasSeparatedNeighbours(const TRmgGridPoint& point);
-    void BuildMatchingNeighbourMask(
+    // Prior provisional role: PaintTransitions
+    void paintTransitions();
+    // Prior provisional role: SelectBaseFrame
+    int selectBaseFrame(const TRmgGridPoint& point, int terrain, int oldFrame);
+    // Prior provisional role: SetTile
+    void setTile(const TRmgGridPoint& point, const TRmgTerrainTile& tile);
+    // Prior provisional role: PaintPoint
+    void paintPoint(const TRmgGridPoint& point);
+    // Prior provisional role: QueueOtherTerrainNeighbours
+    void queueOtherTerrainNeighbours(const TRmgGridPoint& point);
+    // Prior provisional role: RepairTerrainPoint
+    void repairTerrainPoint(const TRmgGridPoint& point);
+    // Prior provisional role: IsHorizontalGap
+    unsigned char isHorizontalGap(const TRmgGridPoint& point, int terrain);
+    // Prior provisional role: IsVerticalGap
+    unsigned char isVerticalGap(const TRmgGridPoint& point, int terrain);
+    // Prior provisional role: IsHorizontalGap
+    unsigned char isHorizontalGap(const TRmgGridPoint& point);
+    // Prior provisional role: IsVerticalGap
+    unsigned char isVerticalGap(const TRmgGridPoint& point);
+    // Prior provisional role: NeedsTerrainRepair
+    unsigned char needsTerrainRepair(const TRmgGridPoint& point);
+    // Prior provisional role: HasSeparatedNeighbours
+    unsigned char hasSeparatedNeighbours(const TRmgGridPoint& point);
+    // Prior provisional role: BuildMatchingNeighbourMask
+    void buildMatchingNeighbourMask(
         const TRmgGridPoint& point, unsigned char* matches);
 
-    void BuildNeighbourKinds(const TRmgGridPoint& point, int* neighbours);
-    unsigned char CheckFirstDiagonal(
+    // Prior provisional role: BuildNeighbourKinds
+    void buildNeighbourKinds(const TRmgGridPoint& point, int* neighbours);
+    // Prior provisional role: CheckFirstDiagonal
+    unsigned char checkFirstDiagonal(
         const TRmgGridPoint& point, const TRmgTerrainFlip& flip);
-    unsigned char CheckSecondDiagonal(
+    // Prior provisional role: CheckSecondDiagonal
+    unsigned char checkSecondDiagonal(
         const TRmgGridPoint& point, const TRmgTerrainFlip& flip);
-    int GetTransitionStrength(const TRmgGridPoint& point, int terrain);
+    // Prior provisional role: GetTransitionStrength
+    int getTransitionStrength(const TRmgGridPoint& point, int terrain);
 };
 
 // Provisional facade name. The ctor at 0x5b7250 initializes the exact VC6
 // auto_ptr ownership byte/pointer pair; 0x5b72f0 conditionally deletes it.
 class TRmgTerrainBrush {
 public:
-    std::auto_ptr<TRmgTerrainPainter> painter;
+    std::auto_ptr<rmgTerrainPainter> painter;
 
     TRmgTerrainBrush(TRmgMapAdapterInterface* map, int terrain, int strength);
     ~TRmgTerrainBrush();
@@ -182,7 +206,7 @@ SIZE(TRmgTerrainTile, 0x0c);
 SIZE(TRmgTerrainFlip, 0x02);
 SIZE(TRmgPackedTerrainCell, 0x02);
 SIZE(TRmgTerrainRule, 0x08);
-SIZE(TRmgTerrainPainter, 0x44);
+SIZE(rmgTerrainPainter, 0x44);
 SIZE(TRmgTerrainBrush, 0x08);
 
 #endif  // HOMM3_RMG_TERRAIN_H
