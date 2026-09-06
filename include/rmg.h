@@ -273,7 +273,7 @@ struct TRmgMapPosition {
     // temporary before consuming it.  This inline source operation restores
     // retail's 0x98-byte frame and temporary lifetime; the RMG compiland is
     // absent from Dreamcast, so the operator spelling remains provisional.
-    TRmgMapPosition operator+(const TPoint& offset) const;
+    TRmgMapPosition operator+(TPoint offset) const;
 };
 
 // Complete's zone-connection records are walked at a 0x1c-byte stride by
@@ -401,8 +401,10 @@ struct TPoint {
     }
 };
 
-inline TRmgMapPosition TRmgMapPosition::operator+(
-    const TPoint& offset) const
+// CreateRiver's loop entry keeps position.x in EBX and jumps over its
+// backedge reload. A by-value point operand restores that sequence and the
+// subsequent relaxation register flow (84.00%); const-ref leaves 81.24%.
+inline TRmgMapPosition TRmgMapPosition::operator+(TPoint offset) const
 {
     return TRmgMapPosition(x + offset.x, y + offset.y, z);
 }

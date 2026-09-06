@@ -1621,6 +1621,9 @@ void type_random_map_generator::ResetMovementCosts()
 // and scores 40.29%; restoring the signed index reaches 65.44%. Keeping the
 // canonical coordinate addition also preserves the returned temporary;
 // spelling its component sums directly scores 64.38%.
+// Its point operand is by value: this restores the first-iteration jump over
+// the coordinate reloads and the full relaxation register flow (84.00%).
+// With const-ref, those loop edges differ and the checkpoint is 81.24%.
 // Indexed landPage access keeps _Xran out of line and removes the extra
 // 0x24-byte exception frame (68.45%); direct test() leaves it expanded.
 // The three seed predecessors copy one explicit invalid position, retaining
@@ -1653,9 +1656,18 @@ void type_random_map_generator::ResetMovementCosts()
 // zero-cost seed initializer do not restore early cleanup. A separate
 // painting scope changes the frame to 0xac; explicit position copy members
 // change it to 0xb0/0xc8 and lose retail CFG blocks. These are not substitutes
-// for the missing natural boundary. Live C2 tracing measures caller cb=1530:
+// for the missing natural boundary. At 81.24%, C2 measures caller cb=1530:
 // the early empty _Destroy helpers cost 49 but receive 68/65. Later map
 // cleanups already retain/expand correctly at budgets 91/251 for cost 97.
+// With the value operand, an empty position destructor changes the frame to
+// 0xd4 and adds four CFG blocks. Default invalid coordinates retain 0xbc but
+// disturb later cleanup. Coordinate/cost getters retain only one early
+// _Destroy and over-expand final map-item cleanup; their 84.22% is not proof
+// of that interface. Loop-local indices, delta constructor body/visibility,
+// a const delta table, a predecessor setter and volume regrouping are flat.
+// A three-dimensional size query leaves an extra GetSize call; output
+// references spill the map pointer instead of retail's height. Moving the
+// map-view ownership write to the end does not recover the constructor.
 // Direct erase() calls expand even further (61.45% before the seed-copy
 // correction). An explicit predecessor copy and const by-value parameter
 // are byte-flat. A const-ref setter changes the shared road helper's proved by-value boundary and is
