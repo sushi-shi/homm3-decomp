@@ -2693,40 +2693,6 @@ void TSingleSelectionWindow::SetupFilterOptions()
     }
 }
 
-// RebuildFilteredPlayerSetup's two caller-mass devices: single-call-site
-// statics that /Ob2 folds straight back in (neither is emitted as a symbol),
-// so no statement and no call changed - only `caller_cb`, and with it the
-// `clamp(2*caller_cb, 1000, 35000)` budget. What they buy is item (3) of the
-// residual below: our compile expanded BOTH of SendPlayerPositions'
-// eight-element constructor loops where retail calls
-// ??0CNetPlayerHandlerPlayer and ??0CNetPlayerInfo, and with the seat-reset
-// loop lifted the call streams agree at report level with zero one-sided
-// sites on either side. 71.5355 -> 81.7278, and the block skeleton closes
-// from 40-vs-36 to 35-vs-36.
-// Split points measured: seat-reset loop alone 81.22, +host block 81.73
-// (kept); the eight-seat header loop alone 77.15, both loops together 69.43,
-// the player-count block 72.88, and lifting the header init or the
-// gpGame transfer does not compile as a static (they touch protected state).
-static void EnableHostWidget(TSingleSelectionWindow* self)
-{
-    if (self->IsHost()) {
-        self->UpdateAllyEnemyFlags(1);
-        widget* w = self->GetWidget(186);
-        w->enable(1);
-        w->Draw();
-    }
-}
-
-static void ResetSeatChoices(TSingleSelectionWindow* self)
-{
-    for (int j = 0; j < CNetPlayerHandler::MAX_PLAYERS; ++j) {
-        self->m_players.humanPlayers[j].heroIndex = -1;
-        self->m_players.humanPlayers[j].townIndex = -1;
-        self->m_players.computerPlayers[j].heroIndex = -1;
-        self->m_players.computerPlayers[j].townIndex = -1;
-    }
-}
-
 // Synthesize a random-map header from the eight filter slots and install it
 // as the window's own selection row. The map-format version follows the
 // running game context (RoE 14, AB 21, SoD 28), the seat table is filled
@@ -2736,11 +2702,9 @@ static void ResetSeatChoices(TSingleSelectionWindow* self)
 // every seat's hero/town choice, redraws, and mirrors the new positions to
 // the other machines through SendPlayerPositions.
 //
-// Residual (18.3%, 2026-09-06; was 71.54% -> now 81.73%): every statement is
-// present and the call streams now agree with NO one-sided site on either
-// side. What is left is two of the three /Ob2 decisions below - item (3),
-// the SendPlayerPositions constructor loops, is CLOSED by the two
-// caller-mass statics above. All three are budget rather than spelling. (1) Retail CALLS
+// Residual (71.54%): every statement is present and the call streams agree
+// on 20 of 22 real sites; what is left is three /Ob2 decisions in the same
+// body, all of them budget rather than spelling. (1) Retail CALLS
 // basic_string::basic_string(const allocator&) for BOTH of the local
 // header's strings; we expand the first (it becomes an inline _Tidy). (2)
 // Inside AssignData retail expands operator=(const char*) at both sites -
@@ -2824,11 +2788,21 @@ void TSingleSelectionWindow::RebuildFilteredPlayerSetup()
     static_cast<CScrollTextWidget*>(field_196c)
         ->SetText(m_localHeader.description);
 
-    ResetSeatChoices(this);
+    for (int j = 0; j < CNetPlayerHandler::MAX_PLAYERS; ++j) {
+        m_players.humanPlayers[j].heroIndex = -1;
+        m_players.humanPlayers[j].townIndex = -1;
+        m_players.computerPlayers[j].heroIndex = -1;
+        m_players.computerPlayers[j].townIndex = -1;
+    }
     SetHumanSlot();
     MakeHeroFilter();
 
-    EnableHostWidget(this);
+    if (IsHost()) {
+        UpdateAllyEnemyFlags(1);
+        widget* w = GetWidget(186);
+        w->enable(1);
+        w->Draw();
+    }
     DrawWindow(0, 0xffff0001, 0xffff);
     Update();
 
