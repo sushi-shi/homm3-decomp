@@ -1395,7 +1395,8 @@ TViewWorldWindow::TViewWorldWindow()
     // at the surface-button append), the next best is the `ok` append at
     // 96.5179, and #43 PLUS `ok` together fall back to 96.4869 - so the rung
     // is worth exactly one site here.
-    Widgets.insert(Widgets.end(), new bitmapBorder(
+    std::vector<widget*>& widgets = Widgets;
+    widgets.insert(widgets.end(), new bitmapBorder(
         725, 537, 68, 34, -1, "box66x32.pcx", 0x800));
     button* ok = new button(
         726, 538, 66, 32, 0x7802, "iOkay32.def", 0, 1, 0, 1, 2);
