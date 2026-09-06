@@ -112,7 +112,15 @@ iconWidget::~iconWidget()
 // into declaration + assignment so the leading `goto` may legally cross
 // it (that split is itself byte-inert). VC6 normalises the label
 // position away before layout, so the merge point is a C2 choice and not
-// a source one. The /Ob2 two-axis probe (byte-inert statement mass 0..32
+// a source one. TWO MORE LABEL SPELLINGS MEASURED AND REJECTED
+// 2026-09-06, both directions of the same merge: routing the `default:`
+// arm's disabled exit through `goto returnZero` (so one block serves
+// every zero exit) scores 94.3682, and dropping the label entirely for a
+// plain `return 0;` at all seven sites scores 89.5668, against 95.7040
+// for the spelling kept here. Every block is already byte-equal; only the
+// branch DISPLACEMENTS differ, because retail back-jumps its zero exits
+// into the `default:` arm's own `pop/ret` while our CL emits a second
+// identical copy at the tail (50 blocks against retail's 49). The /Ob2 two-axis probe (byte-inert statement mass 0..32
 // crossed with 0..8 tail `xx_nop()` candidate sites) is flat here too.
 VA(0x004ea810, 0x2F4)  // vtable 0x63ec48 slot 2, dc 0xd94a4
 int iconWidget::Main(message* msg)

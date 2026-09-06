@@ -74,12 +74,14 @@ SAMPLE2 LoadPlaySample(const char* cSampleName);
 void ClearMemSample(SAMPLE2 sample2);
 void WaitEndSample(SAMPLE2 sample2, int iMilliWait);
 
-// Retail 0x55c720, reached fastcall with the name in ecx and returning
-// the loaded `sample*` (LoadPlaySample and launch_sample are its only
-// callers here). It lives OUTSIDE the soundmgr span, so this header is
-// only a temporary home until the owning TU is attributed; the name is
-// provisional.
-sample* LoadSampleResource(const char* cSampleName);
+// Retail 0x55c720 is ResourceManager::GetSample, claimed and defined in
+// resourcemanager.cpp; the provisional `LoadSampleResource` spelling this
+// header used to carry was a second name for that same body, so consumers
+// declare the real one in a namespace block instead (advmgr.cpp includes
+// resourcemanager.h outright).
+namespace ResourceManager {
+sample* GetSample(const char* name);
+}
 SAMPLE2 LoadPlaySample(const char* cSampleName);
 void WaitEndSample(SAMPLE2 sample2, int iMilliWait);
 void launch_sample(const char* sample_name, int max_time, int channel);

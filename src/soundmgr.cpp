@@ -646,7 +646,7 @@ SAMPLE2 LoadPlaySample(const char* cSampleName)
 {
     if (!cSampleName)
         return NULL_SAMPLE2;
-    sample* loaded = LoadSampleResource(cSampleName);
+    sample* loaded = ResourceManager::GetSample(cSampleName);
     if (!loaded)
         return NULL_SAMPLE2;
     loaded->field_28 = 2;
@@ -692,7 +692,7 @@ void launch_sample(const char* sample_name, int max_time, int channel)
     if (max_time < 0)
         max_time = 10000;
     LaunchedSample* launched = new LaunchedSample;
-    launched->sample2.resSample = LoadSampleResource(sample_name);
+    launched->sample2.resSample = ResourceManager::GetSample(sample_name);
     launched->max_time = max_time;
     if (!launched->sample2.resSample) {
         delete launched;

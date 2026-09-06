@@ -118,12 +118,16 @@ public:
     void Convert24to16(const unsigned char* p24, int rbits, int rshift,
                        int gbits, int gshift, int bbits, int bshift);
     void Cycle(int begin, int end, int step);
-    // The four army::DrawToBuffer (0x43e140) needs for its tint arms -
-    // the clone's rolling hue (AdjustHSV over PaletteEffect), the
-    // petrify desaturation, the Stone-spell gray and the Bloodlust red.
-    // Prototypes are the DC roster's own (palette.cpp:189/496/412/571);
-    // the bodies stay palette's.
-    TPalette16(const palette* copy);
+    // The three army::DrawToBuffer (0x43e140) needs for its tint arms -
+    // the clone's rolling hue (AdjustHSV over PaletteEffect), the petrify
+    // desaturation, the Stone-spell gray and the Bloodlust red. Prototypes
+    // are the DC roster's own (palette.cpp:496/412/571); the bodies stay
+    // palette's. NO `TPalette16(const palette*)` overload: retail's four
+    // tint constructions at 0x43e140+0x187/+0x243/+0x2bf/+0x337 all call
+    // ??0TPalette16@@QAE@PBG@Z, the raw `const unsigned short*` ctor at
+    // 0x5226a0 declared above, and no separate palette-taking body exists
+    // anywhere in the image - the declaration was a second, bodiless
+    // spelling of that same constructor. army.cpp passes GetPalette()->data.
     void AdjustHSV(float hue, float hue_adjust, float saturation_adjust,
                    float value_adjust);
     void AdjustSaturation(float amount);

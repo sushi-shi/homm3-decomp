@@ -750,19 +750,35 @@ void heroWindowManager::SaveFizzleSourceX(int startX, int startY, int width,
 // 0x80). Its field order differs between the two sites and that is source:
 // left/right/top/bottom inside the loop, left/top/right/bottom after it.
 //
-// Residual (75.39%): register allocation, in two linked places. Retail
-// materialises the literal zero ONCE in EBX and spends it on every guard
-// (`cmp ecx, ebx` where we emit `test ecx, ecx`) and on the two coordinate
-// resets, which costs it the width/height registers - so it RELOADS both
-// from their parameter homes at each clip, where we keep them live. Inside
-// the blend loop the consequence is the induction choice: retail walks the
-// SAVED row and biases the other two off it, we walk the destination row,
-// and our two pixel loads then land in registers already holding pointers
-// (`mov cx, word ptr [ecx]` plus an explicit `and ecx, 0xffff` against
-// retail's `xor esi, esi` / `mov si, word ptr [ecx]`). All 27 blocks, 14
-// branches and 10 calls agree and the frame is exact. All six declaration
-// orders of the three row pointers were swept: 73.40 / 73.51 / 74.10 /
-// 74.22 / 75.38 / 75.39, and reading `to` before `from` costs 2.9.
+// 2026-09-06, polish lane 36 (75.3882 -> 84.1098), the DC LOCAL-SCOPE SWEEP.
+// Fifteen Dreamcast locals, none of them named here before this pass, and
+// two of them carried the whole gap.  (1) THE PIXEL LOOP WALKS THREE
+// POINTERS, NOT ONE INDEX.  winmgr.cpp:1383/1384/1385 copy the three row
+// bases into per-row locals `d` (unsigned short*), `s` and `od` (both
+// `const unsigned short*`), and :1403/:1404/:1405 increment all three at the
+// foot of the pixel body while `x` runs in the for-header - our single `col`
+// subscript off three bases was the induction choice the old note below
+// blamed on registers.  Worth 75.3882 -> 76.8784 on its own.  (2) THE SIX
+// CHANNEL MASKINGS ARE SIX SOURCE STATEMENTS, :1389..:1394, in the order
+// from-red, to-red, from-green, to-green, from-blue, to-blue, feeding three
+// `const int` results at :1396/:1397/:1398 (`or`, `og` in the CodeView list,
+// the blue one register-allocated) that the store at :1402 re-masks and ORs.
+// Naming all nine instead of one nested expression: 76.8784 -> 84.1098.
+// Measured and rejected against 84.1098: the DC's GetMap statement ORDER
+// (destination, screen, field_4C, i.e. :1377/:1378/:1379) instead of ours -
+// 75.1882, so retail keeps our order; `const int alpha` - byte-flat;
+// `if (width > 0) if (height > 0)` for the merged guard - byte-flat.
+//
+// Residual (84.11%): 25 of 27 blocks exact, 14/14 branches, 10/10 calls, one
+// register permutation left and it is the one the old note names - retail
+// materialises the literal zero in EBX (`xor ebx,ebx` at fn+0x25) where we
+// use ECX, and the whole EBX<->ECX/EDI transposition rides on that.  The two
+// size-only blocks are its consequences: retail LOADS `width` into ECX at the
+// `width > 0` guard and re-pushes that register into the Bitmap16Bit ctor
+// where we reload `[ebp+0x10]`, and it reloads `[ebp+0xc]` at the row-advance
+// where we keep `[ebp-0x40]` live.  Older sweep, still valid: all six
+// declaration orders of the three row pointers - 73.40 / 73.51 / 74.10 /
+// 74.22 / 75.38 / 75.39 - and reading `to` before `from` costs 2.9.
 VA(0x00602dc0, 0x2F7)  // anchor-import + exhaustive tail order, dc 0x19b8fc
 void heroWindowManager::FizzleForwardX(int startX, int startY, int width,
                                        int height, int iFadeTime)
@@ -805,19 +821,29 @@ void heroWindowManager::FizzleForwardX(int startX, int startY, int width,
                 screen.pixels = screenBitmap->GetMap(startX, startY);
 
                 for (int row = 0; row < height; row++) {
+                    unsigned short* d = screen.pixels;
+                    const unsigned short* s = target.pixels;
+                    const unsigned short* od = source.pixels;
                     for (int col = 0; col < width; col++) {
-                        unsigned short from = source.pixels[col];
-                        unsigned short to = target.pixels[col];
-                        screen.pixels[col] = static_cast<unsigned short>(
-                            (((((to & gColorMaskRed)
-                                - (from & gColorMaskRed)) * alpha >> 16)
-                              + (from & gColorMaskRed)) & gColorMaskRed)
-                            | (((((to & gColorMaskGreen)
-                                  - (from & gColorMaskGreen)) * alpha >> 16)
-                                + (from & gColorMaskGreen)) & gColorMaskGreen)
-                            | (((((to & gColorMaskBlue)
-                                  - (from & gColorMaskBlue)) * alpha >> 16)
-                                + (from & gColorMaskBlue)) & gColorMaskBlue));
+                        int fromRed = *od & gColorMaskRed;
+                        int toRed = *s & gColorMaskRed;
+                        int fromGreen = *od & gColorMaskGreen;
+                        int toGreen = *s & gColorMaskGreen;
+                        int fromBlue = *od & gColorMaskBlue;
+                        int toBlue = *s & gColorMaskBlue;
+                        const int outRed =
+                            ((toRed - fromRed) * alpha >> 16) + fromRed;
+                        const int outGreen =
+                            ((toGreen - fromGreen) * alpha >> 16) + fromGreen;
+                        const int outBlue =
+                            ((toBlue - fromBlue) * alpha >> 16) + fromBlue;
+                        *d = static_cast<unsigned short>(
+                            (outRed & gColorMaskRed)
+                            | (outGreen & gColorMaskGreen)
+                            | (outBlue & gColorMaskBlue));
+                        d++;
+                        s++;
+                        od++;
                     }
                     screen.bytes += screenBitmap->Pitch;
                     target.bytes += destination.Pitch;
@@ -949,6 +975,20 @@ void heroWindowManager::ReleaseFizzleSource()
 // `volatile int` mass statement moves FadeToBlack to 82.7965 - so the
 // harness reaches the function and the flat grid is a real negative.
 // This wall is on neither /Ob2 axis.
+// 2026-09-06, polish lane 36, the DC LOCAL-SCOPE SWEEP: none of the levers
+// that took FizzleForwardX 75.39 -> 84.11 transfer to this pair, and the
+// numbers are banked here so nobody re-runs them.  The DC block names
+// bmpFadeSource, the three `const unsigned int` masks (blue_mask_2 sp+0x28,
+// green_mask_2 sp+0x2c, red_mask_2 sp+0x3c), `dst` as an `unsigned int*` ROW
+// BASE advanced by GetPitch bytes, time1/next_fade_time, FADE_PERIOD and - in
+// FadeToBlack only - `r`, the FIRST channel result, stored at :1814 and
+// combined first at :1820, i.e. the DC computes RED, GREEN, BLUE in that
+// order.  Measured against 88.5116 / 88.1358 (FadeToBlack / FadeFromBlack):
+// red-first channel order 88.2674 / 87.8765; `*dst = ... ; dst++` instead of
+// `dst[x] = ...` BYTE-FLAT (unlike FizzleForwardX, where the same pointer
+// walk paid +1.49); both together 88.2674 / 87.8765; red-first MASK
+// declaration order 88.2674 / 87.8765; `const unsigned int` masks byte-flat;
+// swapping the deadline/started GameTime::Get() pair 87.2965 / 86.8827.
 VA(0x006030e0, 0x1F9)  // anchor-caller, dc 0x19c1bc
 void heroWindowManager::FadeToBlack(int speed, unsigned char expect_fadein)
 {

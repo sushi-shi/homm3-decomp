@@ -844,6 +844,19 @@ bool CDPlayHeroes::TransmitRemoteDataDPID(CNetMsg* pMsg,
 // `retries = 0` immediately dominates it, then rotates, so no source form
 // reachable from a zero initialiser reproduces the top test. The doctrine that
 // VC6 does not rotate goto flow does not survive a foldable guard.
+// 2026-09-06, polish lane 35. Of the two deltas the SECOND one was not a
+// schedule at all: `Send` returns `unsigned char` (dxplay.h:214) and landing
+// it in a `bool` is a NARROWING CONVERSION, so VC6 normalized AL through
+// `setne cl` and then tested CL at both use sites. Retail tests AL itself
+// twice, which only a byte-typed receiver produces. `unsigned char sent`
+// 86.9847 -> 88.8489. The rotation survives and is measured again here: a
+// `for (;;)` with an explicit `if (retries > 5)` head test is byte-flat at
+// 88.8489 (VC6 recognizes the induction variable and rotates it back into a
+// loop guard exactly as it does the `for`), and routing BOTH failure exits
+// through one `goto failed;` label does merge the ShutDown arm into the
+// shared epilogue but leaves the rotated loop's own fall-through `xor al,al`
+// tail behind - still 3 returns, still 88.8489. The surplus return is a
+// CONSEQUENCE of the rotation, not an independent merge to spell.
 VA(0x005533d0, 0x1AB)  // anchor-strings + virtual-slots + dc-order-map
 bool CDPlayHeroes::SendIt(CNetMsg* pMsg, unsigned long dpidTo,
                           bool guaranteed)
@@ -851,8 +864,8 @@ bool CDPlayHeroes::SendIt(CNetMsg* pMsg, unsigned long dpidTo,
     char errorDescription[256];
     int retries;
     for (retries = 0; retries <= 5; ++retries) {
-        bool sent = Send(pMsg, pMsg->size, gsThisNetPlayerInfo.dpid,
-                         dpidTo, guaranteed);
+        unsigned char sent = Send(pMsg, pMsg->size, gsThisNetPlayerInfo.dpid,
+                                  dpidTo, guaranteed);
         if ((!sent
              && GetLastError() == DPLAY_SEND_ERROR_INVALID_PLAYER)
             || GetLastError() == DPLAY_SEND_ERROR_INVALID_PARAMETER) {

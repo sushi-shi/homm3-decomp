@@ -280,6 +280,13 @@ public:
     virtual void replay(unsigned char draw) OVERRIDE;
     virtual void undo() OVERRIDE;
 
+    // E:\gamedcs\event_record.cpp:978 (dc 0x8ddec) and event_record.h:319
+    // (dc 0x8f258). Neither survives as a retail body - the carve leaves no
+    // row between save (0x49bdf0) and replay (0x49be60) - so Complete
+    // expanded both into game::SetVisibility / game::ResetVisibility.
+    void add_change(int x, int y, int z, short old_value, short new_value);
+    long get_change_count();
+
     std::vector<type_shroud_change> changes;  // +0x08 (allocator at +0x08)
 };
 

@@ -2852,19 +2852,15 @@ public:
     }
 };
 
-// Two game-band routines StartLocalPlayerTurn drives, spelled as /Gr free
-// functions (the game lands in ECX either way) so class game stays
-// untouched. Names are address ordinals until game.cpp's roster maps them.
-//   0x4ca530: force-enables CompleteDraw, redraws the radar and re-enables
-//             the adventure window's turn widgets (8/7/6/0xc...).
-//   0x4cc7d0: the turn-start win/loss-condition sweep (reads gpCurrentPlayer
-//             isHuman/isLocal, walks LossConditionStruct).
+// The two game-band routines StartLocalPlayerTurn drove through /Gr free
+// stand-ins at 0x4ca530/0x4cc7d0 are class game's own CancelComputerScreen
+// and DoNewTurn, declared above and claimed in game.cpp; retail's own calls
+// at 0x419e00+0x157/+0x241 name both members, so the ordinal spellings were
+// a second, contradictory declaration of each and are withdrawn.
 // Dreamcast E:\gamedcs\game.cpp:7577 supplies the name; retail 0x4c6f40
 // (claimed exact in game.cpp) is the body StartLocalPlayerTurn calls
 // between the two soundManager gate flips.
 void StartAITheme();
-void GameFn_004CA530(game* the_game);
-void GameFn_004CC7D0(game* the_game);
 // 0x699554: the same answer for every other protocol, handed back
 // unchecked. Ordinal placeholder.
 extern int gLocalGamePos;                   // .bss 0x699554

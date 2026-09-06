@@ -152,6 +152,15 @@ void UpdateBackpack(int iSlot);
 // retail-decisions class and the fix would be a duplicate helper the
 // Dreamcast roster does not name.
 // E:\gamedcs\overview.cpp:220
+// 2026-09-06, polish lane 36, the DC LOCAL-SCOPE SWEEP: the block names
+// `iOffsetToSS` (sp+0x54, sharing a slot with one of the two `iOffsetToMon`
+// instances), i.e. the secondary-skill icon row is positioned by its own
+// running counter rather than by `item`.  Both spellings measured and
+// rejected against 91.7373: a dense index (`iOffsetToSS * 36 + 433`,
+// incremented in the skill-found arm) 91.5957, and the pixel-offset form
+// (`iOffsetToSS = 433` / `+= 36`) 91.5844.  The DC's other two absent names
+// are renames of locals this body already has - `iHero` is `heroNumber`, and
+// its `msg` is the block-scoped `message msg` in the artifact page.
 VA(0x0051bd50, 0x25DC)  // exhaustive body/caller identity, dc 0x104458
 void game::SetupDynamicStuff(int bUpdate, int bForceUpdate)
 {

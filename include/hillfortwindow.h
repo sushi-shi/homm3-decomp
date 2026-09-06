@@ -125,7 +125,7 @@ public:
         char szCount[10];         // +0x00
         char szGoldCost[10];      // +0x0a
         char szResourceCost[12];  // +0x14
-        int cost[7];              // +0x20
+        long cost[7];             // +0x20
         int resourceIndex;        // +0x3c
         int type;                 // +0x40 (TCreatureType domain)
         int count;                // +0x44
