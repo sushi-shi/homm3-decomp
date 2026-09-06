@@ -1745,7 +1745,7 @@ events	?insert@?$vector@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@
 events	?insert@?$vector@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@QAEXPAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@IABV32@@Z	100.0000	100.0000	100.0000	0xaf550	-
 events	?monsters_fight@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa6c60	78a989ac8619
 events	?monsters_flee@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa6df0	01f0de47937e
-events	?monsters_give_reward@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	88.6140	88.6140	88.6140	0xa6b30	8cad8c72ebc4
+events	?monsters_give_reward@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0xa6b30	da91802164a5
 events	?monsters_join@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	100.0000	100.0000	100.0000	0xa7000	7e70d5875f7d
 # monsters_sell_out ACCEPTED 100.0000 -> 99.9517 (2026-08-20, spells lane).
 # THE TRADE: armygrp.h's ESpellId gained two UNGATED enumerators -
@@ -3470,7 +3470,7 @@ seerhut	?DoProgressDialog@type_defeat_hero_quest@@UAEXXZ	100.0000	100.0000	100.0
 seerhut	?DoProgressDialog@type_experience_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x16d550	922a72ab8c37
 seerhut	?DoProgressDialog@type_monster_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x16eca0	862c5c64cbd3
 seerhut	?DoProgressDialog@type_resource_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x171ae0	c8bfdece7406
-seerhut	?DoProgressDialog@type_skill_quest@@UAEXXZ	75.8427	75.8427	75.8427	0x16dd60	f42056b3b171
+seerhut	?DoProgressDialog@type_skill_quest@@UAEXXZ	76.2135	76.2135	76.2135	0x16dd60	d96409da2f77
 seerhut	?DoProposalDialog@type_artifact_quest@@UAEXPAVhero@@@Z	89.1000	89.1000	89.1000	0x16f8a0	dd745ebaf389
 seerhut	?DoProposalDialog@type_be_hero_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x171f20	ab43f3eb1f8d
 seerhut	?DoProposalDialog@type_belong_to_player_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x172510	eb13ba1a88b0
