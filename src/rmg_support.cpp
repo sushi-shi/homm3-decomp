@@ -34,6 +34,10 @@ TRmgRiverPainter::~TRmgRiverPainter()
 {
 }
 
+// Exact: all 118 raw bytes after seven relocations. The grid copy constructor
+// keeps both GetSize result stores before the adapter store. An implicit copy
+// interleaves the adapter and second component (99.71%); moving the adapter
+// assignment into the base ctor body puts its vptr store too early (99.10%).
 VA(0x0055EE50, 0x76)  // CreateRiver sole caller; retail-only RMG helper
 TRmgRiverPainter::TRmgRiverPainter(
     TRmgMapAdapterInterface* newAdapter,

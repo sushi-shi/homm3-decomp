@@ -239,8 +239,9 @@ int __fastcall SelectTerrainTransition(
     return 0;
 }
 
-// Residual (23.3305%): retail calls both set _Init helpers, whereas the
-// second expands here; the packed-vector insert has the opposite decision.
+// The grid copy constructor restores both retained set _Init calls and the
+// expanded packed-vector insert (23.33% -> 91.22%). Residual: the final
+// shrink path retains vector erase after size; retail expands that boundary.
 // Explicit versus default resize fill values are byte-neutral. The retained
 // brush constructor calls this ordinary body at 0x5b7297.
 VA(0x005B45F0, 0x26D) // anchor-callee 0x5b7297; retail-only
@@ -707,10 +708,11 @@ TRmgTerrainBrush::~TRmgTerrainBrush()
 {
 }
 
-// Residual (81.33093%): erase(key)'s distance helper expands to the iterator
-// increment call; retail instead retains 0x5b8cd0 and its count local.
-// The remaining named repair/painter call sequence agrees, including the
-// final GetPackedCell expansion with a retained InitializePackedCell call.
+// Exact: all 362 raw bytes after 14 relocations; all 13 blocks agree. The
+// grid copy constructor restores erase(key)'s retained distance helper at
+// 0x5b8cd0 and its count local. Implicit grid copies instead expand distance
+// into iterator increments (81.33%). The final GetPackedCell expansion keeps
+// its nested InitializePackedCell call, as retail does.
 VA(0x005B7520, 0x16A) // anchor-callee 0x5401c3; retail-only
 void TRmgTerrainBrush::ChangeTerrain(int terrain, int strength)
 {
