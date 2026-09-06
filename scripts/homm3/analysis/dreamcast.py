@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read-only Dreamcast source-shape navigation (`homm3 dreamcast`).
+"""Dreamcast source-shape navigation and export (`homm3 dreamcast`).
 
 The Dreamcast executable is an older RoE pressing built for WinCE/SH4.  Its
 NB11 CodeView stream preserves names, source lines, lexical blocks and a
@@ -51,6 +51,11 @@ Subcommands
 
   stats [--json]
         Corpus coverage and bridge counts.
+
+  structure [--module MODULE ...] [--output PATH] [--asm]
+        Generate C++ browsing stubs and JSON with signatures, typed locals,
+        lexical scope trees, source rows, inline evidence and SH4 control flow.
+        Defaults to all modules under evidence/dreamcast/structure/.
 
 All results are ANALYSIS OUTPUT about another pressing.  A Dreamcast address,
 line or call is never retail address/byte evidence; retail promotion still
@@ -512,10 +517,12 @@ def _retail_bridges(corpus: Corpus, key: tuple[str, int]) -> list[dict[str, Any]
     return out
 
 
-def build_dossier(corpus: Corpus, row: dict[str, str]) -> DreamcastDossier:
+def build_dossier(corpus: Corpus, row: dict[str, str], *, dump=None, data=None,
+                  asm_view=None, type_table=None) -> DreamcastDossier:
     off, cb = _integer(row["offset"]), _integer(row["cb"])
     key = corpus.key(row)
-    dump = dc_lines.load_symbols()
+    if dump is None:
+        dump = dc_lines.load_symbols()
     proc = dc_lines.find_proc(dump, off)
     if proc is None:
         raise DreamcastError(f"dc {off:#x}: no S_GPROC32/S_LPROC32 record")
@@ -525,14 +532,17 @@ def build_dossier(corpus: Corpus, row: dict[str, str]) -> DreamcastDossier:
             f"dc {off:#x}: CSV/NB11 disagreement ({row['name']} {cb} B vs "
             f"{proc_name} {proc_cb} B)")
 
-    data = inputs.read_dreamcast_exe()
+    if data is None:
+        data = inputs.read_dreamcast_exe()
     symbols = dc_lines.symbol_map(dump)
     statements = dc_lines.line_table(dump, off, cb)
     line_shape = _source_line_shape(
-        row, previous_row=corpus.previous_by_key.get(key))
+        row, module_rows=dump.source_lines.get(row["module"], ()),
+        previous_row=corpus.previous_by_key.get(key))
     bounds = [addr for addr, _line, _file in statements] + [off + cb]
     try:
-        asm_view = dc_asm.build_view(row, dump, data)
+        if asm_view is None:
+            asm_view = dc_asm.build_view(row, dump, data)
     except dc_asm.AsmError as exc:
         raise DreamcastError(str(exc)) from exc
     control = dc_asm.control_events(asm_view, data)
@@ -583,11 +593,21 @@ def build_dossier(corpus: Corpus, row: dict[str, str]) -> DreamcastDossier:
             calls=tuple(rendered_calls),
         ))
 
-    variables = corpus.variables_by_key.get((row["module"], row["name"]), ())
-    def variable(item: dict[str, str]) -> debug_shape.DebugVariable:
+    from homm3.core.nb11_types import Types
+    type_table = type_table if type_table is not None else Types.from_symbols(dump)
+    procedure = dump.procedures[off]
+    variables = procedure.variables
+    def variable(item) -> debug_shape.DebugVariable:
         return debug_shape.DebugVariable(
-            name=item["name"], type_name=item["type"],
-            storage=item.get("sp_offset") or None)
+            name=item.name, type_name=type_table.declaration(item.type_index),
+            storage=item.storage)
+
+    depths = {procedure.record_offset: -1}
+    scopes = []
+    for scope in procedure.lexical_scopes:
+        depth = depths.get(scope.parent, -1) + 1
+        depths[scope.record_offset] = depth
+        scopes.append(debug_shape.DebugScope(scope.address, scope.address + scope.size, depth))
 
     line_map = debug_shape.DebugLineMap(
         procedure_line=line_shape["procedure_line"],
@@ -621,10 +641,10 @@ def build_dossier(corpus: Corpus, row: dict[str, str]) -> DreamcastDossier:
         debug_end=_integer(row["debug_end"]),
         line_map=line_map,
         parameters=tuple(variable(item) for item in variables
-                         if item["kind"] == "param"),
+                         if item.kind == "param"),
         locals=tuple(variable(item) for item in variables
-                     if item["kind"] != "param"),
-        scopes=debug_shape.scope_ranges(blocks),
+                     if item.kind != "param"),
+        scopes=tuple(scopes),
         statements=tuple(statement_rows),
     )
     bridges = tuple(_retail_bridges(corpus, key))
@@ -632,8 +652,7 @@ def build_dossier(corpus: Corpus, row: dict[str, str]) -> DreamcastDossier:
                    for claim in corpus.claims_by_key.get(key, ()))
     return DreamcastDossier(
         shape=shape,
-        signatures=tuple(sorted({bridge["signature"] for bridge in bridges
-                                 if bridge["signature"]})),
+        signatures=(type_table.procedure_signature(procedure),),
         retail_bridges=bridges,
         retail_source_claims=claims,
     )
@@ -1270,6 +1289,13 @@ def _build_parser() -> argparse.ArgumentParser:
 
     stats = sub.add_parser("stats", help="corpus and retail-bridge coverage")
     stats.add_argument("--json", action="store_true", help="machine-readable output")
+    structure = sub.add_parser("structure", help="export annotated C++ stubs and debug records")
+    structure.add_argument("--module", action="append", dest="modules", metavar="MODULE",
+                           help="module[.obj] to export; repeatable (default all)")
+    structure.add_argument("--output", type=Path,
+                           default=common.EVIDENCE_DIR / "dreamcast/structure",
+                           help="generated tree directory (default evidence/dreamcast/structure)")
+    structure.add_argument("--asm", action="store_true", help="include decoded SH4 instructions")
     return ap
 
 
@@ -1294,7 +1320,7 @@ def _match_banner(index: int, rows: list[dict[str, str]]) -> None:
               f"{row['offset']} {row['name']} ====")
 
 
-COMMANDS = ("show", "asm", "find", "gaps", "inline-clues", "stats")
+COMMANDS = ("show", "asm", "find", "gaps", "inline-clues", "stats", "structure")
 
 # Wrong-namespace guesses the usage log recorded under `homm3 dreamcast`,
 # each with its real home.
@@ -1326,7 +1352,19 @@ def _dispatch(argv: list[str]) -> int:
         _redirect(argv)
         args = parser.parse_args(argv)
         corpus = Corpus()
-        if args.command == "show":
+        if args.command == "structure":
+            from homm3.analysis import dc_structure
+            try:
+                index = dc_structure.export(corpus, modules=args.modules,
+                                            output=args.output, assembly=args.asm)
+            except (OSError, dc_asm.AsmError) as exc:
+                raise DreamcastError(str(exc)) from exc
+            summary = index["summary"]
+            print(f"[homm3 dreamcast] structure: {summary['functions']} functions, "
+                  f"{summary['scopes']} scopes, {summary['locals']} locals, "
+                  f"{summary['inline_functions']} functions with inline clues")
+            print(f"[homm3 dreamcast] {args.output.resolve() / 'README.md'}")
+        elif args.command == "show":
             rows = _matches(corpus, args.selector)
             dossiers = [build_dossier(corpus, row) for row in rows]
             if args.json:

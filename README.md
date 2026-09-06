@@ -86,6 +86,21 @@ Clangd works with the existing Neovim/CoC setup; hover and SDK definition lookup
 have been verified. `compile_commands.json` refreshes automatically on shell entry,
 configure, and build.
 
+Generate a browsable Dreamcast source tree from the embedded debug symbols:
+
+```sh
+homm3 dreamcast structure                         # all modules
+homm3 dreamcast structure --module cursor --asm --output /tmp/dc-cursor
+```
+
+The default output is `evidence/dreamcast/structure/README.md`, with annotated
+C++ stubs and JSON for each compiland, plus a type catalogue. It includes decoded
+signatures, scoped locals, recorded scope nesting, source-line spans and gaps,
+inline evidence, and inferred SH4 control flow. These are Dreamcast reference
+facts; the generated files are not build inputs. See
+[the structure exporter documentation](docs/dc-line-tables.md#generated-source-structure)
+for the format and its evidence limits.
+
 ## License
 
 Project-authored reconstruction source and tooling are dedicated to the public
