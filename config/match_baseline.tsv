@@ -4065,7 +4065,8 @@ textscroller	?Main@type_text_scroller@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.
 textscroller	?Open@type_text_scroller@@UAEHHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1ba2e0	7346e5a35d83
 textscroller	?Refresh@type_text_scroller@@QAEXH@Z	100.0000	100.0000	100.0000	0x1ba600	b9151bffa5b2
 textscroller	?SetText@type_text_scroller@@QAEXPBD@Z	99.4444	99.4444	99.4444	0x1ba6e0	8207b89866dc
-textwdgt	??0bitmapBackedTextWidget@@QAE@HHHHPBD00W4TColor@font@@HIH@Z	100.0000	100.0000	100.0000	0x1bc760	4214e08df5a4
+textwdgt	??0bitmapBackedTextWidget@@QAE@HHHHPBD00W4TColor@font@@HIH@Z	0.0000	100.0000	100.0000	0x1bc760	4214e08df5a4
+textwdgt	??0textWidget@@QAE@HHHHPBD0W4TColor@font@@HIHH@Z	99.8609	99.8609	99.8609	0x1bc280	715552ccbd48
 textwdgt	??1bitmapBackedTextWidget@@UAE@XZ	100.0000	100.0000	100.0000	0x1bc6d0	cc83e8635640
 textwdgt	??1textWidget@@UAE@XZ	100.0000	100.0000	100.0000	0x1bc3b0	bc7fc9e93ed7
 textwdgt	??_GbitmapBackedTextWidget@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1bc6a0	-
@@ -4473,6 +4474,7 @@ wingraph	?RobAppBlit@@YIXPAUtagRECT@@@Z	100.0000	100.0000	100.0000	0x1ffe70	a66d
 wingraph	?SetFullScreenStatus@@YIEH@Z	100.0000	100.0000	100.0000	0x2019a0	cdc0a825754f
 wingraph	?SetPlayerPaletteColors@@YIXPAVTPalette24@@H@Z	100.0000	100.0000	100.0000	0x1ffe40	0facd84b819c
 wingraph	?SetPlayerPaletteColors@@YIXPAVpalette@@H@Z	100.0000	100.0000	100.0000	0x1ffe20	6876b08dcc93
+winmgr	??0heroWindowManager@@QAE@XZ	0.0000	0.0000	0.0000	0x202170	4186fb35b4a4
 winmgr	?AddWindow@heroWindowManager@@QAEXPAVheroWindow@@HE@Z	100.0000	100.0000	100.0000	0x2023b0	c6dd0ba0dc0c
 winmgr	?BroadcastMessage@heroWindowManager@@QAEHHHHH@Z	100.0000	100.0000	100.0000	0x202370	ddfa5510b44b
 winmgr	?Close@heroWindowManager@@UAEXXZ	100.0000	100.0000	100.0000	0x2022d0	a3e7ff74e627
