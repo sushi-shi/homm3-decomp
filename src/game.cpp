@@ -1512,8 +1512,16 @@ int game::LoadBoatPool(TAbstractFile* infile)
     if (count < sizeof(uchar_buffer))
         return -1;
 
-    boat defaultBoat;
-    boats.resize(uchar_buffer, defaultBoat);
+    // `resize(n)`, NOT `resize(n, defaultBoat)`: Dinkumware's second parameter
+    // defaults to `_Ty()`, and the temporary is born where a named local is
+    // not.  The seven `boats[x].field =` stores encode the SIB base/index the
+    // other way round with a named `boat defaultBoat;` before the resize
+    // (99.6447 - our base=offset against retail's base=pointer, the only
+    // divergence in 569 B); hoisting that declaration to the top of the frame
+    // instead costs 5.96 (93.6853).  With the default argument every byte
+    // agrees, and the exact twin SaveBoatPool - which has no such local -
+    // already emitted retail's order.
+    boats.resize(uchar_buffer);
     for (x = 0; x < boats.size(); ++x) {
         count = infile->Read(&char_buffer, sizeof(char_buffer));
         if (count < sizeof(char_buffer))
