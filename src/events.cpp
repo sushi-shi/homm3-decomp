@@ -4083,7 +4083,7 @@ static void exchange_spells(hero* first_hero, hero* second_hero)
         3, 7 - static_cast<int>(spells_learned.size()));
 
     if (spells_learned.size()) {
-        msg += (*gpGeneralText)[141];
+        msg.append((*gpGeneralText)[141]);
         for (int i = 0; i < spells_learned.size(); i++) {
             if (i < learned_icon_count) {
                 spell_info.resource = RES_SPELL;
@@ -4092,21 +4092,21 @@ static void exchange_spells(hero* first_hero, hero* second_hero)
             }
             if (i > 0) {
                 if (i == spells_learned.size() - 1)
-                    msg += (*gpGeneralText)[142];
+                    msg.append((*gpGeneralText)[142]);
                 else
-                    msg += DATA_COMPGEN(0x0066032c, listSeparator, ", ");
+                    msg.append(DATA_COMPGEN(0x0066032c, listSeparator, ", "));
             }
-            msg += akSpellTraits[spells_learned[i]].name;
+            msg.append(akSpellTraits[spells_learned[i]].name);
         }
-        msg += format_string((*gpGeneralText)[143], second_hero->name);
+        msg.append(format_string((*gpGeneralText)[143], second_hero->name));
     }
 
     if (spells_taught.size()) {
         if (spells_learned.size()) {
-            msg += DATA_COMPGEN(0x00660db4, commaText, ",");
-            msg += (*gpGeneralText)[142];
+            msg.append(DATA_COMPGEN(0x00660db4, commaText, ","));
+            msg.append((*gpGeneralText)[142]);
         }
-        msg += (*gpGeneralText)[148];
+        msg.append((*gpGeneralText)[148]);
         for (int i = 0; i < spells_taught.size(); i++) {
             if (i < taught_icon_count) {
                 spell_info.resource = RES_SPELL;
@@ -4115,16 +4115,16 @@ static void exchange_spells(hero* first_hero, hero* second_hero)
             }
             if (i > 0) {
                 if (i == spells_taught.size() - 1)
-                    msg += (*gpGeneralText)[142];
+                    msg.append((*gpGeneralText)[142]);
                 else
-                    msg += DATA_COMPGEN(0x0066032c, listSeparator, ", ");
+                    msg.append(DATA_COMPGEN(0x0066032c, listSeparator, ", "));
             }
-            msg += akSpellTraits[spells_taught[i]].name;
+            msg.append(akSpellTraits[spells_taught[i]].name);
         }
-        msg += format_string((*gpGeneralText)[149], second_hero->name);
+        msg.append(format_string((*gpGeneralText)[149], second_hero->name));
     }
 
-    msg += DATA_COMPGEN(0x006603ec, saveExtensionDot, ".");
+    msg.append(DATA_COMPGEN(0x006603ec, saveExtensionDot, "."));
     extended_dialog(msg.c_str(), spells_exchanged, -1, -1, 0);
 }
 

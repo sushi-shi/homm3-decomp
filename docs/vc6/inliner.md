@@ -444,6 +444,30 @@ winners: `armyGroup::get_morale_description` 93.06 -> 89.04,
 per-site fact about which level retail's budget ran out on, and MEASURE both
 spellings; the flat rows are the ones where the leaf was never marginal.
 
+The same ladder runs through the sequence containers and `basic_string`, and
+two more rows moved on it:
+
+| row | change | before -> after |
+| --- | --- | --- |
+| `InitializeSeerHutText` | `push_back(x)` -> `insert(end(), x)` | 79.8841 -> **100.0000** |
+| `exchange_spells` | `s += x` -> `s.append(x)` (13 sites) | 88.6905 -> 92.1640 |
+
+**THE INTERMEDIATE LEVEL MUST CARRY MASS.** This is the bound, and it is what
+separates the levers above from the ones that do nothing. `bitset::test` holds
+a range check, `push_back` holds an `insert` call, `operator+=` holds an
+`append` call - each is a real basic block the budget can run out on. A
+one-line forwarder that only renames its argument is FREE, and adding or
+removing it is byte-flat at every site measured:
+
+* `.length()` -> `.size()` (`length()` is literally `return size();`) - twelve
+  rows swept, **all twelve byte-flat to the digit**.
+* `.resize(n)` -> `.resize(n, T())` (`resize(n)` is literally
+  `resize(n, T())`) - four rows swept, **all four byte-flat**.
+
+So do not sweep a forwarder; sweep an accessor that does work. And measure -
+the sign is per-site, never per-lever (`push_back` -> `insert` LOSES on five
+of the eleven rows it was tried on, up to -9.7).
+
 Two riders:
 
 * `TSingleSelectionWindow::OnBeginGame` shows the ladder has a floor. It is
