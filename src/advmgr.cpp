@@ -3447,6 +3447,37 @@ static void set_windmill_help_text(
 // had inlined.  Its `player`/`iThisPlayer` are this body's `thisPlayer`/
 // `player` with the names swapped, and `this_generator`/`type` are
 // `mapGenerator`/`generatorType`.
+// 2026-09-06, polish lane 40 (94.0915 -> 96.9535).  THE ARM MAP.  Both
+// objects carry this switch's two tables inside the function - retail's
+// dword arm table at +0x20d8 and its 216-entry byte index table at +0x21c4,
+// ours as $L89522/$L89521 - and reading them settles the layout question
+// outright.  Sorting the 59 arm addresses recovers retail's SOURCE order of
+// the cases, and it is OURS, case for case: the four values sharing arm 0,
+// the BORDER_GATE/BORDER_GUARD pair, SEPULCHER and SHIPWRECK between
+// DERELICT_SHIP and DRAGON_CITY, QUEST_GUARD (215) after DRAGON_CITY,
+// HILL_FORT before HERO, the lot.  Retail's arm INDEX assignment is
+// ascending case value and so is ours.  So arm ORDER is not the debt and
+// never was; the debt is per-arm SIZE, and consecutive table entries give
+// each arm's length on both sides for free.  That reading is what this
+// lane's four wins came out of, and what is
+// left of the residual is now itemised rather than guessed: OBELISK -0x30
+// and SIREN -0x11 and STABLES -5 (one cross-jump knot: retail keeps
+// OBELISK's visited sprintf in the arm, we merge it into STABLES's copy),
+// FOUNTAIN_OF_FORTUNE -0x18 (see its own note), WINDMILL -30 with
+// WAGON/WARRIOR_TOMB/WATER_WHEEL +7/+6/+7 (one knot: those three cross-jump
+// into WINDMILL's two blocks and retail's entry points include the
+// gpGeneralText load), PYRAMID +0x11 (the same knot through
+// set_pyramid_help), MAGIC_SPRING and MYSTICAL_GARDEN -6 each (retail
+// stores the raw flag into `visited` and tests the second guard as a
+// one-bit field, `shr ebx,0xa / test bl,1`; VC6 folds our shift spelling
+// straight back to `test bh,4`), NOTHING +6 (retail keeps the
+// special-terrain strcpy inline and shares the empty-string one; we do the
+// reverse, and inverting the condition is already measured at 93.9109),
+// and three small ones.  Twenty-four of the 59 arms differed in length when
+// this lane opened; fifteen do now.  The sibling QuickInfo's table reads the
+// same way (57 arms, 17 differing) and shares five of those rows exactly -
+// PYRAMID, WAGON, WARRIOR_TOMB, WATER_WHEEL and WINDMILL are the same
+// inlined helpers, so a fix there is worth double.
 VA(0x0040b150, 0x229C)  // anchor-global, dc 0xc13c
 void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
 {
