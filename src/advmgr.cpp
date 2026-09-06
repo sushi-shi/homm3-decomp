@@ -2978,6 +2978,10 @@ void advManager::ProcessMapSelect(const message* msg, type_point* trigger_point,
         }
         if (myPos != gpGame->GetHero(clickedIndex)->owner)
             return;
+        // Retail homes this bool at [ebp+0xc] and pushes SetHeroContext's
+        // trailing 1 AFTER the IsLocalHuman call, but naming it is a loss
+        // in both widths: `unsigned char waitingPlayer` 89.99 and
+        // `int waitingPlayer` 90.55 against 91.10 for the folded call.
         SetHeroContext(clickedIndex, 0, !gpCurrentPlayer->IsLocalHuman(), 1);
         return;
     }

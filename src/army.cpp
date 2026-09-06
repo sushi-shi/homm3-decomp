@@ -4927,6 +4927,11 @@ void army::DecrementSpellRounds()
 // Removing the artificial twin initially left OffsetToFront's army COMDAT
 // un-emitted. Restoring the real get_attack_direction inline state below
 // recovers that exact row, confirming the twin was never needed.
+// Tried and rejected 2026-09-06: retail materialises `best` in the entry
+// block (`mov [ebp-0xc], 0` before the can_shoot chain) and homes `this`
+// at [ebp-0x18] where we do the reverse; moving `long best = 0;` above the
+// can_shoot test measures 88.72 at BOTH placements (before and after the
+// canShoot/other declarations) against 92.52 for the natural order.
 VA(0x00445490, 0x23B)  // anchor-global, dc 0x4a348
 void army::get_berserk_targets(std::vector<army*>& armies) const
 {

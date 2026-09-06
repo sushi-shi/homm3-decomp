@@ -5716,6 +5716,13 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
 // digit): scoping the counter into the `for` and deleting the function-scope
 // declaration, declaring `int i;` FIRST of all the locals, and rewriting the
 // loop as `i = 0; while (i < 15) { ...; ++i; }`.
+// The residual is retail's `xor edx,edx` ahead of the times[] clear - it
+// keeps `i` in its own register across the memset where we spend the
+// memset's zero on it. Pairing the counter with the memset the way
+// docs/vc6 records for the prologue-counter lever is WORSE, measured
+// 2026-09-06: `i = 0;` before the memset 98.9548 (with `for (; ...)` and
+// with a `while` alike), and moving the memset BELOW the sprintf loop
+// 89.1584.
 VA(0x005879A0, 0x219)
 std::string GetRandomMapName()
 {
@@ -5933,19 +5940,22 @@ int TSingleSelectionWindow::WindowHandler(message* msg)
             if (id != lastIMHoverID) {
                 if (id >= 0x107 && id <= 0x10e) {
                     if (lastIMHoverID != -1) {
-                        GetWidget(lastIMHoverID)->send_message(
+                        widget* previous = GetWidget(lastIMHoverID);
+                        previous->send_message(
                             widget::WIDGET_CLEAR_STATUS, 0x10);
                         DrawHeroAdvancedOption(
                             lastIMHoverID - 0x107, 1, -1);
                     }
                     if (!bVideoPaused || pDPlay->IsHost()) {
-                        GetWidget(id)->send_message(
+                        widget* hovered = GetWidget(id);
+                        hovered->send_message(
                             widget::WIDGET_SET_STATUS, 0x10);
                         DrawHeroAdvancedOption(id - 0x107, 1, -1);
                     }
                     lastIMHoverID = id;
                 } else if (lastIMHoverID != -1) {
-                    GetWidget(lastIMHoverID)->send_message(
+                    widget* previous = GetWidget(lastIMHoverID);
+                    previous->send_message(
                         widget::WIDGET_CLEAR_STATUS, 0x10);
                     DrawHeroAdvancedOption(lastIMHoverID - 0x107, 1, -1);
                     lastIMHoverID = -1;
@@ -7487,10 +7497,12 @@ void TSingleSelectionWindow::OnNewHostMsg(CNetMsg* pNetMsg)
 {
     receivedMaps = 0;
     receivingMaps = 1;
-    if (chatShowing)
-        GetWidget(179)->send_message(widget::WIDGET_CLEAR_STATUS,
-                                     widget::WIDGET_ACTIVE
-                                         | widget::WIDGET_DRAWN);
+    if (chatShowing) {
+        widget* chatWidget = GetWidget(179);
+        chatWidget->send_message(widget::WIDGET_CLEAR_STATUS,
+                                 widget::WIDGET_ACTIVE
+                                     | widget::WIDGET_DRAWN);
+    }
     currentIndex = 0;
     currentMap = 0;
     sortDirection = 1;

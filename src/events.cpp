@@ -5609,7 +5609,7 @@ void advManager::DoEventTrainingGrounds(hero* current_hero, NewmapCell* cell,
 
 // The AI arm of DoTreasureDialog reaches this philai helper before the
 // declaration accompanying its later tree-of-knowledge callers.
-unsigned char AI_choose_resource_or_experience(hero* current_hero,
+unsigned char AI_choose_resource_or_experience(const hero* current_hero,
                                                EGameResource resource,
                                                int cost, int value);
 
