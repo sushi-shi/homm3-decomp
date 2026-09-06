@@ -7487,10 +7487,12 @@ void TSingleSelectionWindow::OnNewHostMsg(CNetMsg* pNetMsg)
 {
     receivedMaps = 0;
     receivingMaps = 1;
-    if (chatShowing)
-        GetWidget(179)->send_message(widget::WIDGET_CLEAR_STATUS,
-                                     widget::WIDGET_ACTIVE
-                                         | widget::WIDGET_DRAWN);
+    if (chatShowing) {
+        widget* chatWidget = GetWidget(179);
+        chatWidget->send_message(widget::WIDGET_CLEAR_STATUS,
+                                 widget::WIDGET_ACTIVE
+                                     | widget::WIDGET_DRAWN);
+    }
     currentIndex = 0;
     currentMap = 0;
     sortDirection = 1;

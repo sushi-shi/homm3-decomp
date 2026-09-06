@@ -2474,10 +2474,12 @@ int EventWindowHandler(message* msg)
         case DIALOG_RETURN_CHOICE_1:
             if (giNormalDialogMBType == NORMAL_DIALOG_CHOOSE_OPTIONAL
                 || giNormalDialogMBType == NORMAL_DIALOG_CHOOSE) {
-                gpNormalDialogWindow->GetWidget(DIALOG_RETURN_CHOICE_1)
-                    ->send_message(widget::WIDGET_SET_STATUS, 4);
-                gpNormalDialogWindow->GetWidget(DIALOG_RETURN_CHOICE_2)
-                    ->send_message(widget::WIDGET_CLEAR_STATUS, 4);
+                widget* first =
+                    gpNormalDialogWindow->GetWidget(DIALOG_RETURN_CHOICE_1);
+                first->send_message(widget::WIDGET_SET_STATUS, 4);
+                widget* second =
+                    gpNormalDialogWindow->GetWidget(DIALOG_RETURN_CHOICE_2);
+                second->send_message(widget::WIDGET_CLEAR_STATUS, 4);
                 gpNormalDialogWindow->GetWidget(DIALOG_RETURN_OK)->enable(1);
                 giNormalDialogSelection = DIALOG_RETURN_CHOICE_1;
                 gpNormalDialogWindow->DrawWindow(1, -65535, 65535);
@@ -2487,10 +2489,12 @@ int EventWindowHandler(message* msg)
         case DIALOG_RETURN_CHOICE_2:
             if (giNormalDialogMBType == NORMAL_DIALOG_CHOOSE_OPTIONAL
                 || giNormalDialogMBType == NORMAL_DIALOG_CHOOSE) {
-                gpNormalDialogWindow->GetWidget(DIALOG_RETURN_CHOICE_1)
-                    ->send_message(widget::WIDGET_CLEAR_STATUS, 4);
-                gpNormalDialogWindow->GetWidget(DIALOG_RETURN_CHOICE_2)
-                    ->send_message(widget::WIDGET_SET_STATUS, 4);
+                widget* first =
+                    gpNormalDialogWindow->GetWidget(DIALOG_RETURN_CHOICE_1);
+                first->send_message(widget::WIDGET_CLEAR_STATUS, 4);
+                widget* second =
+                    gpNormalDialogWindow->GetWidget(DIALOG_RETURN_CHOICE_2);
+                second->send_message(widget::WIDGET_SET_STATUS, 4);
                 gpNormalDialogWindow->GetWidget(DIALOG_RETURN_OK)->enable(1);
                 giNormalDialogSelection = DIALOG_RETURN_CHOICE_2;
                 gpNormalDialogWindow->DrawWindow(1, -65535, 65535);

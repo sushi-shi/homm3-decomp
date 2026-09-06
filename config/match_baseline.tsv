@@ -12,7 +12,7 @@ adventuremapwindow	??0TAdventureMapWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x1
 adventuremapwindow	??1TAdventureMapWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x2b10	edbb40617def
 adventuremapwindow	??_GTAdventureMapWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x2ae0	-
 adventuremapwindow	?Activate@CGameChatEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x22b0	5582f5bcc3f3
-adventuremapwindow	?CheckAdvCheatCode@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	91.3705	91.3705	91.3705	0x2450	ec4fd0a665ee
+adventuremapwindow	?CheckAdvCheatCode@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	92.2270	92.2270	92.2270	0x2450	d0e132da2b84
 adventuremapwindow	?ClearBottomView@TAdventureMapWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x3ee0	c44f40d9b96c
 adventuremapwindow	?Close@TAdventureMapWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x14d0	463fe91487af
 adventuremapwindow	?DoHeroKnob@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x3220	5b941b78c07c
@@ -2490,7 +2490,7 @@ kb	?Draw@Bitmap16Bit@@QBEXHHHHPAV1@HH_N@Z	100.0000	100.0000	100.0000	0xf0010	5a6
 kb	?Draw@CSprite@@QAEXHHHHHHPAVBitmap16Bit@@HHEE@Z	100.0000	100.0000	100.0000	0xf0050	eec7edf8835a
 kb	?DrawProgressCount@@YIXXZ	100.0000	100.0000	100.0000	0xed230	a745829ef928
 kb	?EarlySetup@@YIHXZ	94.2515	94.2515	94.2515	0xed650	2283a578b78f
-kb	?EventWindowHandler@@YIHPAVmessage@@@Z	82.0787	82.0787	82.0787	0xf0fc0	3d44369f32b5
+kb	?EventWindowHandler@@YIHPAVmessage@@@Z	91.7323	91.7323	91.7323	0xf0fc0	7dcb6fb0354a
 kb	?FileError@@YIXPBD@Z	100.0000	100.0000	100.0000	0xf3a60	1a1fb33324ec
 kb	?GameUnsaved@@YIHXZ	100.0000	100.0000	100.0000	0xf4310	8134b9e04baa
 kb	?GetMap@Bitmap16Bit@@QAEPAGHH@Z	100.0000	100.0000	100.0000	0xefff0	a69c8d90f6da
@@ -3751,7 +3751,7 @@ singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100
 singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0	66eb0a0e15c8
 singleselectionwindow	?OnMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2193	90.2193	90.2193	0x189710	3ad2be3935a3
 singleselectionwindow	?OnNameClick@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x18b620	ef174e28edf8
-singleselectionwindow	?OnNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	97.5366	97.5366	97.5366	0x18b510	862e2a9c058b
+singleselectionwindow	?OnNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18b510	6d33ea4ad8f8
 singleselectionwindow	?OnNewPlayerMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	97.0628	97.0628	97.0628	0x189fa0	e6b5ff348cc8
 singleselectionwindow	?OnNewSetupInfoMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x189c60	65a1e8c13fb3
 singleselectionwindow	?OnPingMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x1894d0	7251d5d2375d
