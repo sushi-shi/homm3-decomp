@@ -1005,30 +1005,40 @@ void army::DrawToBuffer(int x, int y, int bNumBoxOnly)
         if (is_area_effect_target)
             highlight = 0x70;
 
+        // 2026-09-06, polish lane 35: the four tint constructions below take
+        // GetPalette()->data, not GetPalette(). Retail's four calls at
+        // +0x187/+0x243/+0x2bf/+0x337 are all ??0TPalette16@@QAE@PBG@Z, the
+        // raw `const unsigned short*` constructor claimed at 0x5226a0; the
+        // `TPalette16(const palette*)` overload this used to select was a
+        // bodiless second declaration of that same constructor and is
+        // withdrawn from palette.h. Score-neutral here (the report ignores
+        // relocation NAMES) but it takes DrawToBuffer's real call
+        // divergences 6 -> 2 and its real relocation divergences 6 -> 2, and
+        // do_attack gained 0.04 tree-wide with nothing falling.
         TPalette16 saved;
         unsigned char bRestore = 0;
         if (Is(1u << 29)) {
             memcpy(saved.data, stdIcon->GetPalette(), 0x200);
-            TPalette16 tinted(stdIcon->GetPalette());
+            TPalette16 tinted(stdIcon->GetPalette()->data);
             tinted.AdjustHSV(0, PaletteEffect, PaletteEffect + 1.0f,
                              PaletteEffect + 1.0f);
             memcpy(stdIcon->GetPalette(), tinted.data, 0x200);
             bRestore = 1;
         } else if (Is(1u << 30)) {
             memcpy(saved.data, stdIcon->GetPalette(), 0x200);
-            TPalette16 tinted(stdIcon->GetPalette());
+            TPalette16 tinted(stdIcon->GetPalette()->data);
             tinted.AdjustSaturation(PaletteEffect);
             memcpy(stdIcon->GetPalette(), tinted.data, 0x200);
             bRestore = 1;
         } else if (spellInfluence[SPELL_STONE] > 0) {
             memcpy(saved.data, stdIcon->GetPalette(), 0x200);
-            TPalette16 tinted(stdIcon->GetPalette());
+            TPalette16 tinted(stdIcon->GetPalette()->data);
             tinted.Gray();
             memcpy(stdIcon->GetPalette(), tinted.data, 0x200);
             bRestore = 1;
         } else if (Is(1u << 23)) {
             memcpy(saved.data, stdIcon->GetPalette(), 0x200);
-            TPalette16 tinted(stdIcon->GetPalette());
+            TPalette16 tinted(stdIcon->GetPalette()->data);
             tinted.AdjustHSV(0.67f, 1.0f, 2.0f, 2.0f);
             memcpy(stdIcon->GetPalette(), tinted.data, 0x200);
             bRestore = 1;
