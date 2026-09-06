@@ -43,6 +43,122 @@ std::pair<const std::basic_string<char, std::char_traits<char>,
 // and setImageName's are the same object, so both initialize through this.
 VA_COMPGEN(0x00514060, 0xCA, CLASS_CTOR, TObjectImageNameTable)
 
+// --- the object-type filter family -----------------------------------------
+//
+// See objecttype.h for the class shapes and why every name here is a role
+// description. Retail's own emission order is what fixes the source order:
+// the three predicates first, then the fifteen file-scope objects whose
+// dynamic initializers run 0x514280..0x5145e0 with the constructor arguments
+// 0..8, none, and 1..5 - and the pointer table at 0x640288 lists them in
+// exactly that sequence.
+
+// Retail 0x5141b0. The unplaced-object gate first, then the bounds-checked
+// bitset<10> test (retail leaves `bitset<10>::_Xran` a call at 0x404410),
+// then Dinkumware's nibble-table `count()` over the single word.
+//
+// Residual (77.4%): the register-save placement, and only that. Retail
+// returns from the slotCategory gate BEFORE any callee-saved push
+// (`xor al,al / pop ebp / ret 4`) and pushes esi then edi afterwards; our
+// CL pushes edi at entry and therefore merges all three false exits into
+// one tail, which also costs the `test dword ptr [edi+4*esi], eax` folding
+// (we load through ecx because esi is popped early). Tried and rejected,
+// one compile each: `&&`-ing the gate into the other two conditions
+// (77.39, byte-flat), a `const bitset<10>&` local for the two mask uses
+// (77.39, byte-flat), `return false` for the gate's own exit (77.39,
+// byte-flat), and splitting the test and count into separate guards
+// (62.59 - that one really does change the flow, for the worse). The two
+// sibling predicates below are EXACT with the same idioms, so the wall is
+// not the spelling of any expression here.
+VA(0x005141B0, 0x6E)  // anchor-vtable 0x6402c4 slot 1; anchor-global the nine 0..8 initializers at 0x514280..0x514450; retail-only
+int TNativeTerrainObjectFilter::Accepts(const TObjectType* objectType) const
+{
+    if (objectType->slotCategory != 0)
+        return 0;
+    if (objectType->recommendedTerrainMask.test(m_terrain)
+        && objectType->recommendedTerrainMask.count() <= 3)
+        return 1;
+    return 0;
+}
+
+// Retail 0x514220. The same gate and the same `count()`, with the opposite
+// arm and no terrain test - which is what makes the pair a partition of the
+// unplaced objects into terrain-specific and terrain-agnostic.
+VA(0x00514220, 0x3D)  // anchor-vtable 0x6402d4 slot 1; retail-only
+int TAnyTerrainObjectFilter::Accepts(const TObjectType* objectType) const
+{
+    if (objectType->slotCategory == 0
+        && objectType->recommendedTerrainMask.count() > 3)
+        return 1;
+    return 0;
+}
+
+// Retail 0x514260, one compare and a `sete`.
+VA(0x00514260, 0x19)  // anchor-vtable 0x6402dc slot 1; anchor-global the five 1..5 initializers at 0x5144f0..0x5145e0; retail-only
+int TSlotCategoryObjectFilter::Accepts(const TObjectType* objectType) const
+{
+    return objectType->slotCategory == m_slotCategory;
+}
+
+VA(0x005142A0, 0x15)  // anchor-global called by the nine terrain initializers; retail-only
+TNativeTerrainObjectFilter::TNativeTerrainObjectFilter(int terrain)
+    : m_terrain(terrain)
+{
+}
+
+VA_COMPGEN(0x005142C0, 0x21, SCALAR_DELETING_DTOR, TNativeTerrainObjectFilter)
+
+VA(0x005144B0, 0x9)  // anchor-global called by the single initializer at 0x514480; retail-only
+TAnyTerrainObjectFilter::TAnyTerrainObjectFilter()
+{
+}
+
+VA_COMPGEN(0x005144C0, 0x21, SCALAR_DELETING_DTOR, TAnyTerrainObjectFilter)
+
+VA(0x00514510, 0x15)  // anchor-global called by the five category initializers; retail-only
+TSlotCategoryObjectFilter::TSlotCategoryObjectFilter(int slotCategory)
+    : m_slotCategory(slotCategory)
+{
+}
+
+// Retail 0x514530: the base vptr store and nothing else, which is what both
+// derived scalar deleting destructors above call directly.
+VA(0x00514530, 0x7)  // anchor-vtable 0x6402cc slot 0's callee; retail-only
+TObjectTypeFilter::~TObjectTypeFilter()
+{
+}
+
+// The fifteen filter objects, in the order their dynamic initializers run.
+// Terrain ids follow terrain_type.h; rock (9) has no filter.
+DATA(0x0069cb30) TNativeTerrainObjectFilter gDirtObjectFilter(0);
+DATA(0x0069cb38) TNativeTerrainObjectFilter gSandObjectFilter(1);
+DATA(0x0069cb10) TNativeTerrainObjectFilter gGrassObjectFilter(2);
+DATA(0x0069caf8) TNativeTerrainObjectFilter gSnowObjectFilter(3);
+DATA(0x0069cb28) TNativeTerrainObjectFilter gSwampObjectFilter(4);
+DATA(0x0069cac8) TNativeTerrainObjectFilter gRoughObjectFilter(5);
+DATA(0x0069cad8) TNativeTerrainObjectFilter gSubterraneanObjectFilter(6);
+DATA(0x0069cad0) TNativeTerrainObjectFilter gLavaObjectFilter(7);
+DATA(0x0069cb20) TNativeTerrainObjectFilter gWaterObjectFilter(8);
+DATA(0x0069cae0) TAnyTerrainObjectFilter gAnyTerrainObjectFilter;
+DATA(0x0069cb18) TSlotCategoryObjectFilter gSlotCategory1ObjectFilter(1);
+DATA(0x0069caf0) TSlotCategoryObjectFilter gSlotCategory2ObjectFilter(2);
+DATA(0x0069cae8) TSlotCategoryObjectFilter gSlotCategory3ObjectFilter(3);
+DATA(0x0069cb08) TSlotCategoryObjectFilter gSlotCategory4ObjectFilter(4);
+DATA(0x0069cb00) TSlotCategoryObjectFilter gSlotCategory5ObjectFilter(5);
+
+// Retail 0x640288, fifteen relocations in the initializer order above.
+DATA(0x00640288)
+TObjectTypeFilter* const gObjectTypeFilters[OBJECT_TYPE_FILTER_COUNT] = {
+    &gDirtObjectFilter,          &gSandObjectFilter,
+    &gGrassObjectFilter,         &gSnowObjectFilter,
+    &gSwampObjectFilter,         &gRoughObjectFilter,
+    &gSubterraneanObjectFilter,  &gLavaObjectFilter,
+    &gWaterObjectFilter,         &gAnyTerrainObjectFilter,
+    &gSlotCategory1ObjectFilter, &gSlotCategory2ObjectFilter,
+    &gSlotCategory3ObjectFilter, &gSlotCategory4ObjectFilter,
+    &gSlotCategory5ObjectFilter
+};
+
+
 // Retail 0x514610, TObjectType::setImageName - the .msk cache loader and
 // the registry's growth path. Two function-local statics with SEPARATE
 // guard bytes: the image-name registry at 0x69cb80 (guard 0x69cb64, which
