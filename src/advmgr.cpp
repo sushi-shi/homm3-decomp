@@ -5366,6 +5366,16 @@ void advManager::DrawBoatPartShadow(int part, TDrawParts& boatParts,
 // it is not source-reachable. The one candidate the model still compiled
 // (swapping the baseX/baseY declarations) measured +8 distance, no
 // improvement. DrawAdvObjShadow below carries the identical wall.
+// 2026-09-06, polish lane 36 (87.5901 -> 87.9441), the DC LOCAL-SCOPE SWEEP,
+// and it PARTLY REFUTES the paragraph above: a source knob does move this
+// row.  The Dreamcast block names `Obj` (CodeView 0x30b6 = `CObject*`,
+// sp+0x9c) beside ObjCell/ObjType/SprPtr, i.e. the map's object row is
+// addressed ONCE through a named pointer and both `typeIndex` reads go
+// through it, where this body subscripted `mapObjects->objects[...]` twice.
+// The other three names in that group are renames this body already has
+// (ObjCell = objCell, ObjType = objType, SprPtr = sprite).  The `this`
+// ESI/EDI permutation the note above describes is unchanged; this was the
+// last missing named local, not a fix for it.
 VA(0x00410c00, 0x98E)  // anchor-callee, dc 0x12334
 void advManager::DrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 {
