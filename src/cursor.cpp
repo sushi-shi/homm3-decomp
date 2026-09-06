@@ -149,6 +149,14 @@ void advManager::DrawCursor(int CellX, int CellY)
 // neighbours draw: one CSprite::DrawHeroShadow per hero, through the
 // Bitmap16Bit header wrapper that Complete expands into the raw
 // map/Width/Height/Pitch call.
+// Residual (72.5446%): the two ref locals swap homes.  Retail puts refY in
+// the dead parameter home and refX in the frame's one negative slot; our CL
+// does the reverse, and the whole 31-row delta is that one choice rippling
+// through the two DrawHeroShadow argument builds.  The frames are equal
+// (one dword each), so nothing is missing.  MEASURED AND REJECTED
+// 2026-09-06: declaring refX before refY 69.3750; declaring refX after the
+// `hero* curr` load 52.6875.  Retail computes refY first and refX second,
+// which is what this source already says.
 VA(0x0047fb40, 0x140)  // shadow draw call set + ret 8, dc 0x79ea8
 void advManager::DrawCursorShadow(int CellX, int CellY)
 {

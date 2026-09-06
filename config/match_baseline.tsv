@@ -1011,7 +1011,7 @@ combatcontrolsubwindow	?Show@TCombatCreatureSubWindow@@QAEXXZ	100.0000	100.0000	
 combatcontrolsubwindow	?Show@TCombatHeroSubWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x6cdf0	95931175f31b
 combatcontrolsubwindow	?UnShow@TCombatCreatureSubWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x6df80	d77e780c6671
 combatcontrolsubwindow	?UnShow@TCombatHeroSubWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x6ce70	3392c2a4ac72
-combatcontrolsubwindow	?Update@TCombatCreatureSubWindow@@QAEXPBVarmy@@PBVhero@@@Z	78.9793	78.9793	78.9793	0x6dc30	7f85273edd09
+combatcontrolsubwindow	?Update@TCombatCreatureSubWindow@@QAEXPBVarmy@@PBVhero@@@Z	90.3734	90.3734	90.3734	0x6dc30	6d01ec9beeaa
 combatcontrolsubwindow	?Update@TCombatHeroSubWindow@@QAEXABVhero@@PBV2@_N@Z	100.0000	100.0000	100.0000	0x6cc10	d3d77a0d58ab
 combatcontrolsubwindow	?set_rollover@TCombatControlSubWindow@@UAEXPBD@Z	100.0000	100.0000	100.0000	0x6bf50	0feb222511f2
 combatoptionswindow	??0TCombatOptionsWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x6e3b0	0e9100a239e5
@@ -1548,8 +1548,8 @@ event_record	??1type_record_shroud@@UAE@XZ	100.0000	100.0000	100.0000	0x9bc00	-
 event_record	??_Gtype_event_record@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x9a5b0	-
 event_record	??_Gtype_record_move_hero@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x9a620	-
 event_record	??_Gtype_record_shroud@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x9bbd0	-
-event_record	?ResetVisibility@game@@QAEXHHHHH@Z	84.7767	84.7767	84.7767	0x9d3d0	87ba0841d9ed
-event_record	?SetVisibility@game@@QAEXHHHHHE@Z	85.6452	85.6452	85.6452	0x9d160	0032c9bd289c
+event_record	?ResetVisibility@game@@QAEXHHHHH@Z	87.9349	87.9349	87.9349	0x9d3d0	b91492052fa8
+event_record	?SetVisibility@game@@QAEXHHHHHE@Z	88.1751	88.1751	88.1751	0x9d160	34e09c3e1b36
 event_record	?clear_event_records@game@@QAEXD@Z	100.0000	100.0000	100.0000	0x9d6c0	330281a46ec4
 event_record	?clear_event_records@game@@QAEXXZ	100.0000	100.0000	100.0000	0x9d630	30315cd97a10
 event_record	?create@type_record_claim_mine@@SIPAVtype_event_record@@XZ	100.0000	100.0000	100.0000	0x9aa40	cd7ab567d111
@@ -1579,7 +1579,7 @@ event_record	?load@type_record_move_hero@@UAEEPAVTAbstractFile@@H@Z	100.0000	100
 event_record	?load@type_record_player_death@@UAEEPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x9ba40	2a90af6691a7
 event_record	?load@type_record_show_boat@@UAEEPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x9af40	e324e23526c8
 event_record	?load@type_record_show_hero@@UAEEPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x9b6d0	a7cc1f20b5de
-event_record	?load@type_record_shroud@@UAEEPAVTAbstractFile@@H@Z	84.0350	84.0350	84.0350	0x9bc90	d1b4044c6cf4
+event_record	?load@type_record_shroud@@UAEEPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x9bc90	125febb71206
 event_record	?load_recorded_events@game@@QAEEPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x9dac0	7fdb2cdd1c95
 event_record	?play_recorded_events@game@@QAEXXZ	98.1031	98.1031	98.1031	0x9d7a0	6ba1b8b4cc24
 event_record	?record_claim_mine@game@@QAEXJJ@Z	100.0000	100.0000	100.0000	0x9bf90	ddd445fbd823
@@ -2489,7 +2489,7 @@ kb	?DoSinglePlayerWindow@@YIHXZ	99.1549	99.1549	99.1549	0xf0490	e1a6fe4ef5bb
 kb	?Draw@Bitmap16Bit@@QBEXHHHHPAV1@HH_N@Z	100.0000	100.0000	100.0000	0xf0010	5a60c84144f4
 kb	?Draw@CSprite@@QAEXHHHHHHPAVBitmap16Bit@@HHEE@Z	100.0000	100.0000	100.0000	0xf0050	eec7edf8835a
 kb	?DrawProgressCount@@YIXXZ	100.0000	100.0000	100.0000	0xed230	a745829ef928
-kb	?EarlySetup@@YIHXZ	94.2515	94.2515	94.2515	0xed650	2283a578b78f
+kb	?EarlySetup@@YIHXZ	95.3801	95.3801	95.3801	0xed650	3923b1d10e21
 kb	?EventWindowHandler@@YIHPAVmessage@@@Z	91.7323	91.7323	91.7323	0xf0fc0	7dcb6fb0354a
 kb	?FileError@@YIXPBD@Z	100.0000	100.0000	100.0000	0xf3a60	1a1fb33324ec
 kb	?GameUnsaved@@YIHXZ	100.0000	100.0000	100.0000	0xf4310	8134b9e04baa
@@ -3990,7 +3990,7 @@ spells	?SummonElemental@combatManager@@QAEXHW4TCreatureType@@HH@Z	62.4952	93.437
 spells	?Unnamed59FDE0@combatManager@@QAEXHHPAVarmy@@@Z	100.0000	100.0000	100.0000	0x19fde0	a812dc2c7357
 spells	?ValidSpellTarget@combatManager@@QAEEHJJJEJ@Z	88.4937	88.4937	88.4937	0x1a39c0	61a003dfba43
 spells	?ValidSpellTargetArmy@combatManager@@QAEEHHPBVarmy@@EJ@Z	100.0000	100.0000	100.0000	0x1a3c80	110edc19289c
-spells	?ViewSpells@combatManager@@QAEHXZ	90.1364	90.1364	90.1364	0x19e900	e6ddf0648b38
+spells	?ViewSpells@combatManager@@QAEHXZ	91.8147	91.8147	91.8147	0x19e900	60c4be65cb60
 spells	?_Dec@const_iterator@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x1a9870	-
 spells	?_Insert@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@IAE?AViterator@12@PAU_Node@12@0ABH@Z	100.0000	100.0000	100.0000	0x1a9570	-
 spells	?check_fire_wall@combatManager@@QAEEJPAVarmy@@E@Z	100.0000	100.0000	100.0000	0x19fcd0	a30a123e82ea
