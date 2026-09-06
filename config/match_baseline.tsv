@@ -3238,6 +3238,7 @@ remote	?WaitForLevels@CLevelPickWaitDlg@@QAEXH@Z	100.0000	100.0000	100.0000	0x15
 remote	?WaitForReadyToPlayMsg@@YIXXZ	84.4720	84.4720	84.4720	0x154f10	35800d8982ed
 remote	?_Buyback@?$deque@PAVCNetMsg@@V?$allocator@PAVCNetMsg@@@std@@@std@@IAEXXZ	100.0000	100.0000	100.0000	0x158500	-
 remote	?_Growmap@?$deque@PAVCNetMsg@@V?$allocator@PAVCNetMsg@@@std@@@std@@IAEPAPAPAVCNetMsg@@I@Z	100.0000	100.0000	100.0000	0x158660	-
+remote	?calc_crc_long@@YIKPBEI@Z	100.0000	100.0000	100.0000	0x1522d0	0785dab0cba3
 remote	?handle_message@CAnimatedDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x154d90	2b6f4adffdbc
 remote	?handle_message@CLevelPickWaitDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x156c20	b05d22fa68f5
 remote	?handle_message@CWaitForReadyPlayersDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x155190	b27aba841293
