@@ -1360,7 +1360,10 @@ bool type_AI_player::can_trade_resources(const int* cost, int* supply,
     markets = _cpp_min(markets, 10L);
     if (markets == 0)
         return false;
-    double efficiency = fTradingPostEfficency[markets];
+    // BOUND BY `const double&`: retail re-reads the table entry at each
+    // multiply rather than keeping the double live in a register/slot.
+    // 81.3465 -> 84.4350.
+    const double& efficiency = fTradingPostEfficency[markets];
     long market_value = 0;
 
     std::vector<long> base_cost;
