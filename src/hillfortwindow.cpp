@@ -347,7 +347,9 @@ inline bool CanAfford(const long* cost, const long* playerRes)
 // enum name (CREATURE_NUM_1_ID + i, GOLD_COST_1_ID + i, ...) and dropping
 // `id` - 83.9081; keeping `msg.codeY = id - 7;` for the portrait rather than
 // `CREATURE_PORTRAIT_1_ID + i` - 83.9081; moving `msg.codeX` after
-// `msg.extraText` in the SET_ICON_NAME statement - byte-flat.
+// `msg.extraText` in the SET_ICON_NAME statement - byte-flat; and carrying
+// `totalID` the same way in the totals loop below - 83.4988, so the lever is
+// specific to the loop whose derived id feeds six different widget bands.
 VA(0x004e7eb0, 0x64D)  // source/call order + DoModal/handler call sites, dc 0xd6bf8
 void THillFortWindow::Recalculate(unsigned char DrawDimmedButtons)
 {
