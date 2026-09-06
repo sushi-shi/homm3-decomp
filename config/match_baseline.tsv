@@ -2185,7 +2185,7 @@ hero	?GetFirstAidFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe4920	603cfcfd
 hero	?GetHeroSpellBonus@hero@@QBEHHHH@Z	100.0000	100.0000	100.0000	0xe5ff0	bd2daff987ce
 hero	?GetHighestSchool@hero@@QBE?AW4TSpellSchool@@W42@@Z	98.3750	100.0000	100.0000	0xe51c0	d10ccf354dd7
 hero	?GetIntelligenceFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe48b0	9efce4b15c63
-hero	?GetLuck@hero@@QAEHPBV1@EE@Z	88.0650	88.0650	88.0650	0xe36c0	bc92d857f724
+hero	?GetLuck@hero@@QAEHPBV1@EE@Z	88.0650	88.0650	88.0650	0xe36c0	4d9333ef6170
 hero	?GetMagicResistanceFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe46e0	163ade5b9d86
 hero	?GetManaCost@hero@@QAEHHPBVarmyGroup@@H@Z	100.0000	100.0000	100.0000	0xe5240	044d097e8a7e
 hero	?GetManaFrame@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe5380	af9972008a52
