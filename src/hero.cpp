@@ -4363,10 +4363,20 @@ static void show_hero_skills(int code, unsigned char right_mouse)
 // reports the RTM 8168 back end BYTE-IDENTICAL to SP3 (1089+327 on both
 // sides, sp3_vs_rtm 0; evidence/vc6/c2-generation-verdicts.tsv). If the
 // merge-set flip is generational at all, it is the FRONT END: retail's
-// Rich header carries 26 RTM-stamped C++ objects, hero.obj is a
-// candidate, and rtm-generation.md Â§4 already names the C1XX+C2 overlay
-// as the one unexplored generation lever - staged, hash-recorded, NOT
-// admitted; running it is a separate decision, not a lane action.
+// Rich header carries 26 RTM-stamped C++ objects and hero.obj was a
+// candidate.
+//
+// THE FRONT END IS NOW RULED OUT TOO (2026-09-06). `genab run --gen rtm-fe`
+// swaps C1XX 12.00.8168 in beside the RTM back end and sweeps all 146
+// units: this function's bytes are IDENTICAL on both sides (it is absent
+// from evidence/vc6/fe-generation-verdicts.tsv, which lists every function
+// that differs at all), and hero.obj's five functions that DO differ
+// (HeroFn_004E2550, equip_artifact, remove_artifact,
+// THeroScreenWindow::update_slot, update_spell_list) are all back-end-only
+// jb/jl loop-guard twins that move AWAY from retail. The captured IL is
+// byte-identical between the two front ends apart from its own two-byte
+// version word (rtm-generation.md §6), so there is no front-end lever
+// here. The merge-set flip is a model gap, not a vintage.
 //
 // THE FOURTH UpdateArmies CALL IS NOW EXPLAINED (2026-08-20), and this
 // corrects the earlier "nothing missing" diagnosis. In the selected-army

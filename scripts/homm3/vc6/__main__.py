@@ -109,8 +109,10 @@ def _build_parser() -> argparse.ArgumentParser:
     pt = ss.add_parser("atlas", help="headless-Ghidra C2 map -> evidence/vc6")
     pt.add_argument("--regen", action="store_true")
 
-    pab = ss.add_parser("ab", help="RTM-vs-SP3 C2 A/B (Track R): build-rtm | "
-                        "run [--fn ...] | clean")
+    pab = ss.add_parser("ab", help="RTM-vs-SP3 generation A/B (Track R): "
+                        "build-rtm | build-rtm-fe | verify [--gen ...] | "
+                        "run [--gen rtm|rtm-fe] [--fn ...] [--all-units] | "
+                        "clean")
     pab.add_argument("ab_args", nargs=argparse.REMAINDER)
 
     pd = ss.add_parser("diagnose", help="classify a residual + route to the "
