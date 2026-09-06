@@ -4624,9 +4624,7 @@ static int loot_equipped_slot(hero* winner, hero* dead, int slot,
         return 0;
     dead->remove_artifact(slot);
     std::vector<type_artifact>::iterator where = loot->end();
-#pragma inline_depth(0)
     loot->insert(where, 1, artifact);
-#pragma inline_depth()
     return 1;
 }
 

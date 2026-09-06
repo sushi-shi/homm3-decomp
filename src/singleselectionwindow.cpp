@@ -6173,9 +6173,7 @@ unsigned char TSingleSelectionWindow::HandleNetMsg(CNetMsg* pNetMsg, unsigned ch
         OnUpdatePlayerPosMsg(pNetMsg);
         break;
     case RS_NEW_SETUP_INFO:
-#pragma inline_depth(0)
         OnNewSetupInfoMsg(pNetMsg);
-#pragma inline_depth()
         break;
     case RS_NEW_PLAYER:
         OnNewPlayerMsg(pNetMsg);
@@ -6250,9 +6248,7 @@ unsigned char TSingleSelectionWindow::HandleNetMsg(CNetMsg* pNetMsg, unsigned ch
             PlayerDropMsg(&chatMan, gpGeneralText->GetText(527),
                           p->sName);
         UpdateNameLists();
-#pragma inline_depth(0)
         DisplayChat();
-#pragma inline_depth()
         DrawWindow(0, 0xffff0001, 0xffff);
         Update();
         break;
@@ -6390,9 +6386,7 @@ unsigned char TSingleSelectionWindow::HandleNetMsg(CNetMsg* pNetMsg, unsigned ch
                                  "%s: %s"),
                     p->sName,
                     static_cast<CChatMsg*>(pNetMsg)->m_text);
-#pragma inline_depth(0)
             DisplayChat();
-#pragma inline_depth()
         }
         break;
     }

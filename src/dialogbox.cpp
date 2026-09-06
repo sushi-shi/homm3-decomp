@@ -171,9 +171,7 @@ unsigned char CTextDialog::Setup(const char* cText, font* pFont)
     y = winY;
     width = winWidth;
     height = winHeight;
-#pragma inline_depth(0)
     TDialogBox::Setup(winX, winY, winWidth, winHeight);
-#pragma inline_depth()
 
     pTextWidget = new textWidget(
         20, 40, winWidth - 40, winHeight - 40,
