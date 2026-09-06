@@ -969,6 +969,7 @@ cmbtmgr	?UpdateArmyGroup@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x641
 cmbtmgr	?UpdateArmyLuckAndMorale@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x69750	2771d18d280f
 cmbtmgr	?ViewArmy@combatManager@@QAEXPAVarmy@@H@Z	100.0000	100.0000	100.0000	0x68860	2818de794e02
 cmbtmgr	?_Erase@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@IAEXPAU_Node@12@@Z	100.0000	100.0000	100.0000	0x6ad80	-
+cmbtmgr	?_Inc@const_iterator@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x6ae00	-
 cmbtmgr	?_Ucopy@TObstacleVector@combatManager@@QAEPAUTObstacle@2@PBU32@0PAU32@@Z	100.0000	100.0000	100.0000	0x6b1a0	-
 cmbtmgr	?_Ufill@TObstacleVector@combatManager@@QAEXPAUTObstacle@2@IABU32@@Z	100.0000	100.0000	100.0000	0x6b1e0	-
 cmbtmgr	?check_obstacle_attacks@combatManager@@QAEEPAVarmy@@E@Z	100.0000	100.0000	100.0000	0x6a570	7e6708be380f
@@ -2813,6 +2814,7 @@ objecttype	??5@YIAAV?$basic_istream@DU?$char_traits@D@std@@@std@@AAV01@AAV?$bits
 objecttype	??5std@@YAAAV?$basic_istream@DU?$char_traits@D@std@@@0@AAV10@AAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@0@@Z	100.0000	100.0000	100.0000	0x117830	-
 objecttype	??A?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QBEABDI@Z	100.0000	100.0000	100.0000	0x116e20	-
 objecttype	??D?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@QBEABDXZ	100.0000	100.0000	100.0000	0x11a730	-
+objecttype	??_Distrstream@std@@QAEXXZ	100.0000	100.0000	100.0000	0x116750	-
 objecttype	??_G?$basic_istream@DU?$char_traits@D@std@@@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x115a40	-
 objecttype	??_G?$ctype@D@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x116130	-
 objecttype	??_Gfacet@locale@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x116560	-
