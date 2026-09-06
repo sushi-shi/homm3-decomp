@@ -525,8 +525,53 @@ This is a type/lifetime finding from raw stack operands, not proof of an
 original class name. Scalar declaration hoisting, scoping the nearby point
 to one cell, and changing the found flag to native bool were neutral controls.
 No padding local, lifetime-extending dummy operation, or inline directive
-is involved. The remaining instruction/branch differences are documented
+is involved. The remaining instruction differences are documented
 beside the function.
+
+Two `TPoint` members inside one bounds object also shrink this frame to
+0x7c, as do the tested by-value corner setters. A named clamped upper point
+instead grows it to 0x88. The four integer fields and direct stores preserve
+the observed homes; enclosing two constructed points in a record is not
+equivalent for VC6's local allocation.
+
+### 6h. Constructor argument order preserves dimension values
+
+The plane view in `RepairWaterZoneBorders` originally used the candidate
+signature `(type_random_map& source, int level)`. It stored width too early
+and differed from retail in both dimension multiplication and the subsequent
+painting loop's registers. Recovering a buffer-first signature
+`(TRmgMapItem* items, int width, int height)` and calling it with
+`map.GetMapItem(0, 0, position.z), map.mapWidth, map.mapHeight` preserves
+the dimension values before the pointer calculation.
+
+This raises 97.0918% to 98.3965%. After placing the candidate fragment at its
+retail address and resolving five relocations, all 232 bytes from 0x540124
+to 0x54020c agree, including the painting loop's raw branch displacements.
+The function's 0x84 frame and existing search bytes remain unchanged.
+
+Dimensions-first scalar arguments reload dimensions. A map/level pair,
+a separate plane local, and an all-member initializer list do not reproduce
+the same loads, multiplication operand, or vptr/store order. The constructor
+keeps body assignments and the caller keeps its canonical map accessor.
+This is a retail-driven model of an expanded constructor, with no DC RMG
+counterpart; the other view caller, `CreateRiver`, remains partial.
+
+### 6i. An expanded point subtraction affects a later lookup
+
+Computing a lower corner through
+`TPoint(position.x, position.y) - TPoint(radius, radius)` before its two
+clamps restores the second scan's map-index load order in
+`RepairWaterZoneBorders`: load nearby.z into EAX, then multiply by map height.
+The first scan and the 0x84 frame remain intact (97.04883% to 97.0918%
+before the constructor recovery above).
+
+Replacing the subtraction with a directly constructed
+`TPoint(position.x - radius, position.y - radius)` loses that order.
+Passing subtraction's argument by value also changes the outer induction
+from retail's x+2 to x-1; the candidate keeps the const-reference argument.
+An unused addition declaration is byte-neutral. These controls distinguish
+the called arithmetic helper from a bare local or header-population change;
+they do not establish an original class name or lexical spelling.
 
 ## 7. Files
 

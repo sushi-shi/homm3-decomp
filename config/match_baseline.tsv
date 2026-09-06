@@ -3358,7 +3358,7 @@ rmg	?CanPlaceZone@type_random_map_generator@@QAEEPAUTRmgZone@@@Z	98.0374	98.0374
 rmg	?ClipRmgBoundaryPoint@@YI?AUTPoint@@ABUTRmgZoneBounds@@U1@1@Z	64.1087	64.1812	64.1812	0x13cac0	b3925063f1b0
 rmg	?ConnectZones@type_random_map_generator@@QAEXXZ	91.9306	93.3833	93.3833	0x143240	15b3547beb28
 rmg	?CreateGroundConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@PAV?$vector@PAUTRmgMapItem@@V?$allocator@PAUTRmgMapItem@@@std@@@std@@PAV?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@5@@Z	77.3131	77.3131	77.3131	0x141140	5de91233b8bb
-rmg	?CreateRiver@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	33.6744	39.6178	39.6178	0x148df0	fa7163109369
+rmg	?CreateRiver@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	34.5663	39.6178	39.6178	0x148df0	b50fdbe46615
 rmg	?CreateSubterraneanGate@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	79.4295	79.4295	79.4295	0x142080	a11c5ad53ad8
 rmg	?DrawIrregularZoneBoundary@type_random_map_generator@@QAEXUTPoint@@0HHH@Z	100.0000	100.0000	100.0000	0x13bff0	2d2874683a8c
 rmg	?DrawStraightZoneBoundary@type_random_map_generator@@QAEXUTPoint@@0HH@Z	100.0000	100.0000	100.0000	0x13c220	37631f283728
@@ -3370,7 +3370,7 @@ rmg	?GetSize@type_random_map@@UAE?AUTRmgGridPoint@@XZ	100.0000	100.0000	100.0000
 rmg	?InitializeObjectGenerators@type_random_map_generator@@QAEXXZ	97.4646	97.4676	97.4676	0x138b10	55bc899a64f7
 rmg	?ReadObjectPlacementRules@type_random_map_generator@@QAEXXZ	97.5804	97.5804	97.5804	0x136560	f968dc16cee9
 rmg	?ReadRmgTemplateZones@@YIXPBVTSpreadsheetResource@@PAUTRmgTemplate@@HHHHH@Z	100.0000	100.0000	100.0000	0x138480	309459fe2ecc
-rmg	?RepairWaterZoneBorders@type_random_map_generator@@QAEXXZ	97.0488	97.0488	97.0488	0x13fcb0	381d3a496b99
+rmg	?RepairWaterZoneBorders@type_random_map_generator@@QAEXXZ	98.3965	98.3965	98.3965	0x13fcb0	8228ad7e9399
 rmg	?ScoreObjectPlacement@type_random_map_generator@@QAEHPAUTRmgObjectPropertiesRef@@UTRmgMapPosition@@@Z	84.6788	84.6788	84.6788	0x136bc0	71757ed0f533
 rmg	?TraceZoneBoundary@type_random_map_generator@@QAEXPAUTRmgBoundaryVertex@@E@Z	56.5644	57.8331	57.8331	0x13c390	781b5fa33373
 rmg	?WriteMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	94.0939	95.7066	95.7066	0x149cb0	12d6f5f28f76

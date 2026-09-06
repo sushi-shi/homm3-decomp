@@ -659,17 +659,20 @@ public:
     int mapHeight;                        // +0x10
     int numberLevels;                     // +0x14
 
-    // The plane-view construction at 0x54013e writes its vptr before the
-    // data members. Body assignments allow the earlier vptr write; putting
-    // every field in the initializer list places it last. The width store
-    // still moves early in RepairWaterZoneBorders and remains a residual.
-    // Keep the plane offset in the canonical coordinate accessor.
-    inline type_random_map(type_random_map& source, int level)
+    // The buffer-first view signature preserves the dimension values before
+    // GetMapItem computes the plane pointer. In RepairWaterZoneBorders the
+    // constructor/painting range 0x540124..0x54020c matches all 232 bytes after
+    // relocation resolution and segment placement. The role is retail-only.
+    // Controls: dimensions-first scalar arguments reload fields; a map/level
+    // pair stores width early; a separate plane local keeps the wrong multiply
+    // operand. Field assignments stay in the body: an all-member initializer
+    // list moves the vptr store past them. Other view callers remain partial.
+    inline type_random_map(TRmgMapItem* items, int width, int height)
     {
-        mapWidth = source.mapWidth;
-        mapHeight = source.mapHeight;
+        mapWidth = width;
+        mapHeight = height;
+        mapItems = items;
         numberLevels = 1;
-        mapItems = source.GetMapItem(0, 0, level);
         ownsMapItems = 0;
     }
 
