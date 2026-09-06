@@ -781,6 +781,7 @@ bottomviewsubwindow	?_Tidy@?$_Tidyfac@V?$num_put@DV?$ostreambuf_iterator@DU?$cha
 bottomviewsubwindow	?_Tidy@?$_Tidyfac@V?$numpunct@D@std@@@std@@SAXXZ	100.0000	100.0000	100.0000	0x55dc0	-
 bottomviewsubwindow	?animate@TBottomViewEnemyTurn@@UAEXXZ	100.0000	100.0000	100.0000	0x536f0	0e79eeb98cd5
 bottomviewsubwindow	?animate@TBottomViewNewTurn@@UAEXXZ	100.0000	100.0000	100.0000	0x511a0	a5b26fc67c45
+bottomviewsubwindow	?do_decimal_point@?$numpunct@D@std@@MBEDXZ	100.0000	100.0000	100.0000	0x55930	-
 bottomviewsubwindow	?do_falsename@?$numpunct@D@std@@MBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@XZ	100.0000	100.0000	100.0000	0x55a20	-
 bottomviewsubwindow	?do_grouping@?$numpunct@D@std@@MBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@XZ	100.0000	100.0000	100.0000	0x55950	-
 bottomviewsubwindow	?do_put@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DJ@Z	100.0000	100.0000	100.0000	0x54a80	-
@@ -789,6 +790,7 @@ bottomviewsubwindow	?do_put@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@
 bottomviewsubwindow	?do_put@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DO@Z	100.0000	100.0000	100.0000	0x54c90	-
 bottomviewsubwindow	?do_put@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DPBX@Z	100.0000	100.0000	100.0000	0x54d60	-
 bottomviewsubwindow	?do_put@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@D_N@Z	100.0000	100.0000	100.0000	0x54770	-
+bottomviewsubwindow	?do_thousands_sep@?$numpunct@D@std@@MBEDXZ	100.0000	100.0000	100.0000	0x55940	-
 bottomviewsubwindow	?do_truename@?$numpunct@D@std@@MBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@XZ	100.0000	100.0000	100.0000	0x55af0	-
 bottomviewsubwindow	?falsename@?$numpunct@D@std@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@XZ	100.0000	100.0000	100.0000	0x55760	-
 bottomviewsubwindow	?getloc@ios_base@std@@QBE?AVlocale@2@XZ	100.0000	100.0000	100.0000	0x53d90	-
@@ -2153,6 +2155,7 @@ game	?test@?$bitset@$0IA@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xd4e50	-
 game	?test@?$bitset@$0JB@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xcfad0	-
 game	?update_bonus@generator@@QAEXXZ	100.0000	100.0000	100.0000	0xb87a0	a2ff06919677
 game	__h3cg$game$implicit_copy_assign$SCampaign	0.0000	100.0000	100.0000	0xbdc70	-
+game	__h3cg$game$static_dtor$immMouse	100.0000	100.0000	100.0000	0xb6910	-
 game	__h3cg$game$std_copy$type_map_hero_identity	0.0000	100.0000	100.0000	0xd2e50	-
 game	__h3cg$game$vector_destroy$type_map_hero_identity	0.0000	100.0000	100.0000	0xcfec0	-
 gametypewindow	??0TGameTypeWindow@@QAE@E@Z	100.0000	100.0000	100.0000	0xd54c0	cdb56e6656e6
