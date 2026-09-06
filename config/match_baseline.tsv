@@ -42,6 +42,7 @@ adventuremapwindow	?UpdateTownLocators@TAdventureMapWindow@@QAEXHEE@Z	100.0000	1
 adventuremapwindow	?_Construct@std@@YIXPAPAVwidget@@ABQAV2@@Z	100.0000	100.0000	100.0000	0x4dc0	2b1b0a451baa
 adventuremapwindow	?_Eos@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEXI@Z	100.0000	100.0000	100.0000	0x4a70	dd5b64f75b83
 adventuremapwindow	?_Grow@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAE_NI_N@Z	100.0000	100.0000	100.0000	0x4a90	-
+adventuremapwindow	?_vslot8@TAdventureMapWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x40b0	b49336028535
 adventuremapwindow	?animate_bottom_view@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x2b90	cfa48a5aa0dc
 adventuremapwindow	?assign@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@PBDI@Z	100.0000	100.0000	100.0000	0x4150	-
 adventuremapwindow	?convertID2HelpID@TAdventureMapWindow@@QBEHH@Z	100.0000	100.0000	100.0000	0x2c50	0bc1aa59310c
@@ -709,6 +710,7 @@ border	?Draw@bitmapBorder@@UAEXXZ	100.0000	100.0000	100.0000	0x50450	ef7ee06309e
 border	?Draw@coloredBorderFrame@@UAEXXZ	100.0000	100.0000	100.0000	0x501e0	a408a6b78dad
 border	?GetRealHeight@bitmapBorder@@UAEHXZ	100.0000	100.0000	100.0000	0x504b0	1d37e6eb327d
 border	?GetRealWidth@bitmapBorder@@UAEHXZ	100.0000	100.0000	100.0000	0x504a0	d4959313501c
+border	?Main@bitmapBorder16@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x50860	17ad71c55435
 border	?Main@bitmapBorder@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x50550	3bb516ab312c
 border	?Main@border@@UAEHPAVmessage@@@Z	94.9505	94.9505	94.9505	0x4ff60	8355dcbca578
 border	?Main@coloredBorderFrame@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x50240	e918059c889d
@@ -732,6 +734,7 @@ bottomviewsubwindow	??0bad_cast@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x5
 bottomviewsubwindow	??0bad_cast@std@@QAE@PBD@Z	100.0000	100.0000	100.0000	0x54a10	-
 bottomviewsubwindow	??0ios_base@std@@IAE@XZ	100.0000	100.0000	100.0000	0x515c0	-
 bottomviewsubwindow	??0strstreambuf@std@@QAE@H@Z	100.0000	100.0000	100.0000	0x51600	-
+bottomviewsubwindow	??1?$basic_ios@DU?$char_traits@D@std@@@std@@UAE@XZ	100.0000	100.0000	100.0000	0x53f40	-
 bottomviewsubwindow	??1?$basic_ostream@DU?$char_traits@D@std@@@std@@UAE@XZ	100.0000	100.0000	100.0000	0x53a20	-
 bottomviewsubwindow	??1?$basic_streambuf@DU?$char_traits@D@std@@@std@@UAE@XZ	100.0000	100.0000	100.0000	0x54000	-
 bottomviewsubwindow	??1?$numpunct@D@std@@UAE@XZ	100.0000	100.0000	100.0000	0x55bf0	-
@@ -742,6 +745,7 @@ bottomviewsubwindow	??1TBottomViewMessage@@UAE@XZ	100.0000	100.0000	100.0000	0x5
 bottomviewsubwindow	??1TBottomViewNewTurn@@UAE@XZ	100.0000	100.0000	100.0000	0x51120	daa50fab084f
 bottomviewsubwindow	??1TBottomViewResourceMessage@@UAE@XZ	100.0000	100.0000	100.0000	0x517a0	e06a223069f8
 bottomviewsubwindow	??1TBottomViewTown@@UAE@XZ	100.0000	100.0000	100.0000	0x52b00	bd09da0ac1f4
+bottomviewsubwindow	??1bad_cast@std@@UAE@XZ	100.0000	100.0000	100.0000	0x53c70	-
 bottomviewsubwindow	??1locale@std@@QAE@XZ	100.0000	100.0000	100.0000	0x53d70	-
 bottomviewsubwindow	??1sentry@?$basic_ostream@DU?$char_traits@D@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x54320	-
 bottomviewsubwindow	??1type_bottom_view_window@@UAE@XZ	100.0000	100.0000	100.0000	0x50d50	7bf99d8681a0
@@ -750,7 +754,10 @@ bottomviewsubwindow	??6?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEAAV01@H@Z
 bottomviewsubwindow	??6std@@YAAAV?$basic_ostream@DU?$char_traits@D@std@@@0@AAV10@PBD@Z	100.0000	100.0000	100.0000	0x54450	-
 bottomviewsubwindow	??Bid@locale@std@@QAEIXZ	100.0000	100.0000	100.0000	0x53cf0	-
 bottomviewsubwindow	??_Dostrstream@std@@QAEXXZ	100.0000	100.0000	100.0000	0x51750	-
+bottomviewsubwindow	??_G?$basic_ios@DU?$char_traits@D@std@@@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x542c0	-
 bottomviewsubwindow	??_G?$basic_ostream@DU?$char_traits@D@std@@@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x54280	-
+bottomviewsubwindow	??_G?$basic_streambuf@DU?$char_traits@D@std@@@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x542f0	-
+bottomviewsubwindow	??_G?$numpunct@D@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x55bc0	-
 bottomviewsubwindow	??_GTBottomViewEnemyTurn@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x53640	-
 bottomviewsubwindow	??_GTBottomViewHero@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x52140	-
 bottomviewsubwindow	??_GTBottomViewKingdom@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x531a0	-
@@ -758,6 +765,7 @@ bottomviewsubwindow	??_GTBottomViewMessage@@UAEPAXI@Z	100.0000	100.0000	100.0000
 bottomviewsubwindow	??_GTBottomViewNewTurn@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x510f0	-
 bottomviewsubwindow	??_GTBottomViewResourceMessage@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x51770	-
 bottomviewsubwindow	??_GTBottomViewTown@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x52ad0	-
+bottomviewsubwindow	??_Gbad_cast@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x53ca0	-
 bottomviewsubwindow	??_Gios_base@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x515d0	-
 bottomviewsubwindow	??_Gostrstream@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x51720	-
 bottomviewsubwindow	??_Gstrstreambuf@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x516f0	-
@@ -1164,6 +1172,7 @@ customcampaign	??0ScenarioStruct@TCampaignBrief@@QAE@XZ	100.0000	100.0000	100.00
 customcampaign	??0TCampaignStartHeroOption@@QAE@XZ	100.0000	100.0000	100.0000	0x883d0	3f394b6bd515
 customcampaign	??0hero@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x60850	-
 customcampaign	??0locale@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x8d800	-
+customcampaign	??0locale@std@@QAE@XZ	100.0000	100.0000	100.0000	0x88e60	-
 customcampaign	??0out_of_range@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x4700	-
 customcampaign	??1?$basic_filebuf@DU?$char_traits@D@std@@@std@@UAE@XZ	100.0000	100.0000	100.0000	0x8bd50	-
 customcampaign	??1CampaignHeaderStruct@TCampaignBrief@@QAE@XZ	75.7203	78.5339	78.5339	0x886a0	966762622807
@@ -1176,6 +1185,7 @@ customcampaign	??1TCampaignStartOption@@UAE@XZ	100.0000	100.0000	100.0000	0x84f4
 customcampaign	??4?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	0x5ff30	-
 customcampaign	??_G?$basic_filebuf@DU?$char_traits@D@std@@@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x8bd20	-
 customcampaign	??_G?$codecvt@DDH@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x8ec30	-
+customcampaign	??_GScenarioStruct@TCampaignBrief@@QAEPAXI@Z	100.0000	100.0000	100.0000	0x88eb0	-
 customcampaign	??_GTAbstractFile@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x87dd0	-
 customcampaign	??_GTCampaignBonus@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x84020	-
 customcampaign	??_GTCampaignSpellBonus@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x85340	-
@@ -1603,6 +1613,7 @@ events	??1?$vector@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@
 events	??1CCombatInitMsg@@QAE@XZ	100.0000	100.0000	100.0000	0xad130	-
 events	??1CLevelPickWaitDlg@@UAE@XZ	100.0000	100.0000	100.0000	0xaeb00	-
 events	??1CTurnDurationPause@@QAE@XZ	100.0000	100.0000	100.0000	0xae9b0	-
+events	??1CWaitForRemoteBattleDlg@@UAE@XZ	100.0000	100.0000	100.0000	0xaea00	-
 events	??1town@@QAE@XZ	100.0000	100.0000	100.0000	0xad0e0	-
 events	??1type_university_window@@UAE@XZ	100.0000	100.0000	100.0000	0xaaa40	-
 events	??Rspell_level_order@@QAEEHH@Z	100.0000	100.0000	100.0000	0xb0000	-
@@ -1617,7 +1628,7 @@ events	?DoAIEvent@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@@Z	100.00
 # synth PDB - returned the row to master's own 98.5741 to the digit
 # with events.cpp untouched. Cross-generation noise, the
 # recruit::Update revert-control precedent; hist keeps 99.1139.
-events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	99.0481	99.0481	99.1139	0xad470	907f85ec7c05
+events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	98.5379	99.0481	99.1139	0xad470	907f85ec7c05
 events	?DoCustomArtifact@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	98.2381	99.1492	99.1492	0x9f070	4d12ed56362a
 events	?DoCustomResource@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa4780	51e134850e4b
 events	?DoCustomSpellScroll@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	97.4451	97.4451	97.4451	0xa5a80	2c8331b27654
@@ -1817,8 +1828,10 @@ forcefeedback	??_Gt_initialize_failure@TImmMouseRuntime@@UAEPAXI@Z	100.0000	100.
 forcefeedback	?PlayImmEffect@@YIEPBDH@Z	100.0000	100.0000	100.0000	0xb69f0	17ca19ae3751
 forcefeedback	?Start@TImmMouseEffect@@QAEEXZ	100.0000	100.0000	100.0000	0xb6f30	99684662ed29
 forcefeedback	?Stop@TImmMouseEffect@@QAEXXZ	100.0000	100.0000	100.0000	0xb6f50	ebcf155b3807
+forcefeedback	?_Construct@std@@YIXPAU?$pair@QAVCImmEnclosure@@UtagRECT@@@1@ABU21@@Z	100.0000	100.0000	100.0000	0xb7fe0	-
 forcefeedback	?_Dec@const_iterator@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@U_Kfn@?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@3@U?$less@PAVCImmEnclosure@@@3@V?$allocator@UtagRECT@@@3@@std@@QAEXXZ	100.0000	100.0000	100.0000	0xb7db0	-
 forcefeedback	?_Insert@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@U_Kfn@?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@3@U?$less@PAVCImmEnclosure@@@3@V?$allocator@UtagRECT@@@3@@std@@IAE?AViterator@12@PAU_Node@12@0ABU?$pair@QAVCImmEnclosure@@UtagRECT@@@2@@Z	100.0000	100.0000	100.0000	0xb7a50	-
+forcefeedback	?close@?$basic_filebuf@DU?$char_traits@D@std@@@std@@QAEPAV12@XZ	100.0000	100.0000	100.0000	0xb7400	-
 forcefeedback	?insert@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@U_Kfn@?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@3@U?$less@PAVCImmEnclosure@@@3@V?$allocator@UtagRECT@@@3@@std@@QAE?AU?$pair@Viterator@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@U_Kfn@?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@3@U?$less@PAVCImmEnclosure@@@3@V?$allocator@UtagRECT@@@3@@std@@_N@2@ABU?$pair@QAVCImmEnclosure@@UtagRECT@@@2@@Z	100.0000	100.0000	100.0000	0xb70e0	-
 game	??0?$bitset@$0BM@@std@@QAE@K@Z	100.0000	100.0000	100.0000	0xcf870	-
 game	??0CMCClaimGarrison@@QAE@HH@Z	100.0000	100.0000	100.0000	0xc23e0	335cb56766c1
@@ -2117,6 +2130,7 @@ game	?save@SGameSetupOptions@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.000
 game	?save@generator@@QAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb86e0	6c43e518cf50
 game	?save@playerData@@QAEHPAVTAbstractFile@@@Z	99.9557	99.9557	99.9557	0xba670	d2abbc9a4110
 game	?saveVictoryCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xc35a0	066f0b00ef0d
+game	?save_object_vector@@YIEPAVTAbstractFile@@PAV?$vector@Utype_creature_bank@@V?$allocator@Utype_creature_bank@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0xd2b80	40e9667bf454
 game	?save_vector@@YIEPAVTAbstractFile@@PAV?$vector@Utype_point@@V?$allocator@Utype_point@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0xd2ac0	7fc9affa4f3e
 game	?save_vector@@YIEPAVTAbstractFile@@PAV?$vector@Utype_university@@V?$allocator@Utype_university@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0xd2b20	ff34a4a02e55
 game	?set@?$bitset@$07@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0xd4cc0	-
@@ -2737,8 +2751,11 @@ multiplayerwindow	?OnDirectJoin@TMultiPlayerWindow@@QAEEXZ	100.0000	100.0000	100
 multiplayerwindow	?OnHost@TMultiPlayerWindow@@QAEEXZ	100.0000	100.0000	100.0000	0x10fda0	c64a2083689a
 multiplayerwindow	?OnHotSeat@TMultiPlayerWindow@@QAEEXZ	100.0000	100.0000	100.0000	0x111d40	e4b6bf119e26
 multiplayerwindow	?OnJoin@TMultiPlayerWindow@@QAEEXZ	100.0000	100.0000	100.0000	0x110f40	17a15123af76
-multiplayerwindow	?OnKeyPress@CMPEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1107d0	08798805fe29
+multiplayerwindow	?OnKeyPress@CHotSeatEdit@@UAEHPAVmessage@@@Z	93.6364	93.6364	93.6364	0x10df60	44ce612bac3c
+multiplayerwindow	?OnKeyPress@CMPEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1107d0	ae1f2bdf7d0e
+multiplayerwindow	?OnKeyPress@CMPInputEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x10de50	a1331644848c
 multiplayerwindow	?OnKeyPress@CMultiPlayerWindowEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x10ed60	d631a790ede6
+multiplayerwindow	?OnKillFocus@CHotSeatEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x10dee0	424055d00598
 multiplayerwindow	?OnModemJoin@TMultiPlayerWindow@@QAEEXZ	100.0000	100.0000	100.0000	0x110a10	aaea3cbefc02
 multiplayerwindow	?OnNextEdit@CMPEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x110850	b569183ed88b
 multiplayerwindow	?OnOK@CHotSeatDlg@@QAEEXZ	100.0000	100.0000	100.0000	0x112470	dae5065a6e04
@@ -2750,7 +2767,7 @@ multiplayerwindow	?OnWidgetDeselect@CMPInputDlg@@UAEHHPAE@Z	100.0000	100.0000	10
 multiplayerwindow	?OnWidgetDeselect@TMultiPlayerWindow@@UAEHHPAE@Z	97.4932	98.1199	98.1199	0x10f4e0	fc151a47d3e1
 multiplayerwindow	?SetFocus@CMPEdit@@UAEXE@Z	100.0000	100.0000	100.0000	0x110890	33da61fc1578
 multiplayerwindow	?Update@TMultiPlayerWindow@@QAEXXZ	99.2080	99.2080	99.2080	0x10f0f0	516545f38ff1
-multiplayerwindow	?UpdateOK@CMPInputDlg@@QAEXXZ	100.0000	100.0000	100.0000	0x110980	9a40794dbe27
+multiplayerwindow	?UpdateOK@CMPInputDlg@@UAEXXZ	100.0000	100.0000	100.0000	0x110980	9a40794dbe27
 multiplayerwindow	?WindowHandler@TMultiPlayerWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x10f940	8037720e1234
 netmsg	??0t_complex_net_message@@QAE@W4eRS_Messages@@@Z	100.0000	100.0000	100.0000	0x112c50	184b15d84935
 netmsg	??0t_complex_net_message@@QAE@XZ	100.0000	100.0000	100.0000	0x112c20	4d4e95336a91
@@ -2781,6 +2798,7 @@ objecttype	??0strstreambuf@std@@QAE@PBDH@Z	100.0000	100.0000	100.0000	0x1165f0	-
 objecttype	??1?$basic_istream@DU?$char_traits@D@std@@@std@@UAE@XZ	100.0000	100.0000	100.0000	0x115260	-
 objecttype	??1?$ctype@D@std@@UAE@XZ	100.0000	100.0000	100.0000	0x116160	-
 objecttype	??1TObjectImageNameTable@@QAE@XZ	100.0000	100.0000	100.0000	0x114130	-
+objecttype	??1logic_error@std@@UAE@XZ	100.0000	100.0000	100.0000	0x4690	-
 objecttype	??5?$basic_istream@DU?$char_traits@D@std@@@std@@QAEAAV01@AAH@Z	100.0000	100.0000	100.0000	0x115270	-
 objecttype	??5@YIAAV?$basic_istream@DU?$char_traits@D@std@@@std@@AAV01@AAUTObjectType@@@Z	76.6378	76.6378	76.6378	0x114b80	5b651aebcf85
 objecttype	??5@YIAAV?$basic_istream@DU?$char_traits@D@std@@@std@@AAV01@AAV?$bitset@$08@1@@Z	100.0000	100.0000	100.0000	0x1157f0	-
@@ -2792,10 +2810,13 @@ objecttype	??_G?$basic_istream@DU?$char_traits@D@std@@@std@@UAEPAXI@Z	100.0000	1
 objecttype	??_G?$ctype@D@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x116130	-
 objecttype	??_Gfacet@locale@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x116560	-
 objecttype	??_Gistrstream@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x116720	-
+objecttype	??_Glogic_error@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x4660	-
 objecttype	?GetImageName@TObjectType@@QAEABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x114960	adca89cffd94
 objecttype	?_Construct@std@@YIXPAU?$pair@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@1@ABU21@@Z	100.0000	100.0000	100.0000	0x11b6d0	-
 objecttype	?_Dec@const_iterator@?$_Tree@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$pair@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@2@U_Kfn@?$map@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@HU?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@2@U?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x11b5d0	-
 objecttype	?_Doraise@invalid_argument@std@@MBEXXZ	100.0000	100.0000	100.0000	0x116f10	-
+objecttype	?_Doraise@logic_error@std@@MBEXXZ	100.0000	100.0000	100.0000	0x4640	-
+objecttype	?_Doraise@out_of_range@std@@MBEXXZ	100.0000	100.0000	100.0000	0x46e0	-
 objecttype	?_Doraise@runtime_error@std@@MBEXXZ	100.0000	100.0000	100.0000	0x1bc10	-
 objecttype	?_Erase@?$_Tree@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$pair@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@2@U_Kfn@?$map@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@HU?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@2@U?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@std@@IAEXPAU_Node@12@@Z	100.0000	100.0000	100.0000	0x1175d0	-
 objecttype	?_Getifld@?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@CAHPADAAV?$istreambuf_iterator@DU?$char_traits@D@std@@@2@1HABVlocale@2@@Z	100.0000	100.0000	100.0000	0x11a1f0	-
@@ -3679,7 +3700,7 @@ singleselectionwindow	?OnGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNet
 # SetCurrentMap/OnSetAsHostMsg bodies landing in the TU dropped the
 # pair again with both sources byte-identical. Recovery rides with
 # DrawHeroAdvancedOption reaching 100.
-singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	99.8868	100.0000	100.0000	0x17cdc0	0e5de8f038ec
+singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0	0e5de8f038ec
 singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	9177fbb0fa83
 # 2026-08-27 hand-lowered 100.0000 -> 99.8710 (hist keeps 100.0000): the
 # documented TU-state flap (master accepted this pair down at 99.89/99.87

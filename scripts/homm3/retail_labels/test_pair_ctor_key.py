@@ -56,6 +56,24 @@ class PairCtorKeyTest(unittest.TestCase):
                 "ABU21@@Z"),
             "string_int_pair@std_construct")
 
+    def test_a_pointer_keyed_map_s_value_type_keys_the_same_way(self):
+        # THE defect: `map<T*, U>`'s value_type mangles its key as `QAV<T>@@`
+        # rather than `$$CBH`, so before its own arm the whole spelling fell
+        # through to the generic tail as `std__construct` - a key no
+        # VA_COMPGEN owner can produce, which banks the row at 0.0000.
+        key = source._demangle_key(
+            "?_Construct@std@@YIXPAU?$pair@QAVCImmEnclosure@@UtagRECT@@@1@"
+            "ABU21@@Z")
+        self.assertEqual(key, "cimmenclosure_pair@std_construct")
+        self.assertNotEqual(key, "std__construct")
+        # ...and it must not swallow a pair whose key is a plain class
+        # rather than a pointer to one.
+        self.assertNotEqual(
+            key,
+            source._demangle_key(
+                "?_Construct@std@@YIXPAU?$pair@UCImmEnclosure@@UtagRECT@@@1@"
+                "ABU21@@Z"))
+
     def test_the_iterator_bool_constructor_is_left_to_the_generic_arm(self):
         # THE defect: without the bound, one object's two pair constructors
         # share a key and the group can only be split by length

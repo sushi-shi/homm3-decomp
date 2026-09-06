@@ -3450,6 +3450,21 @@ VA_COMPGEN(0x0048d4b0, 0xE2, FILEBUF_INIT, char)
 VA_COMPGEN(0x0048dc10, 0x35, VECTOR_UCOPY, type_artifact)
 
 // COMDAT pairing: locale::locale(const locale&), agreement 1.000.
+// COMDAT pairing: locale's DEFAULT constructor, the other half of the ctor
+// overload group whose second member is claimed below. Its body is
+// locale::_Init() into `_Ptr` followed by the two nested _Lockit scopes that
+// guard the shared _Locimp's saturating reference count - the copy
+// constructor has neither call. COFF order in this object is (default,
+// const&) and RVA order is 0x488e60, 0x48d800, so the group zips the same
+// way in both directions.
+VA_COMPGEN(0x00488e60, 0x4B, CLASS_CTOR, locale)
+
+// COMDAT pairing: TCampaignBrief::ScenarioStruct's scalar deleting
+// destructor. It calls 0x485fe0 - this file's own claimed ~ScenarioStruct -
+// in the flags&1 / operator delete wrapper, and this unit emits the only
+// ??_GScenarioStruct in the image.
+VA_COMPGEN(0x00488eb0, 0x21, SCALAR_DELETING_DTOR, ScenarioStruct)
+
 VA_COMPGEN(0x0048d800, 0x19, CLASS_CTOR, locale)
 
 // COMDAT pairing: the vector-of-vector growth helpers, split between the

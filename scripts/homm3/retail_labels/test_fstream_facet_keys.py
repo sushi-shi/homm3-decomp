@@ -37,6 +37,19 @@ class FstreamFacetKeyTest(unittest.TestCase):
             source._demangle_key(f"?getloc@{STREAMBUF}QAE?AVlocale@2@XZ"),
             "char@streambuf_getloc")
 
+    def test_the_close_key(self):
+        # THE defect: without its own arm, `close` falls through to the
+        # generic template tail as `std_basic_filebuf_close`, a spelling no
+        # VA_COMPGEN owner can produce - the same failure `_Initcvt` had.
+        key = source._demangle_key(f"?close@{FILEBUF}QAEPAV12@XZ")
+        self.assertEqual(key, "char@filebuf_close")
+        self.assertNotEqual(key, "std_basic_filebuf_close")
+        # ...and it must not swallow the stream wrappers' own `close`.
+        self.assertNotEqual(
+            key,
+            source._demangle_key(
+                f"?close@?$basic_ifstream@D{TRAITS}@std@@QAEXXZ"))
+
     def test_the_facet_installation_keys(self):
         self.assertEqual(
             source._demangle_key(
