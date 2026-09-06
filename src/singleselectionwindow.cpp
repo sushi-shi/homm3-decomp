@@ -2374,17 +2374,25 @@ void TSingleSelectionWindow::UpdateFilterWidgets()
         WidgetSetStatus(0x11d, 0x10);
     for (i = 0x11f; i <= 0x127; ++i)
         WidgetClearStatus(i, 0x10);
-    // Residual (95.52%): the `== -1` guard is tested TWICE in retail - after
-    // `cmp eax,-1 / jne` sets lo/hi it emits a SECOND bare `jne` on the still
-    // live flags at 0x57ef70+0xae6 before the 0x127 / +0x11e arms - so the
-    // lo/hi assignment and the widget arm are two separate ifs, not one
-    // if/else. 95.0755 -> 95.5228, branches 32/32. What is left is the
-    // _cpp_min pair: retail COPIES both operands to stack slots
-    // (`mov [ebp-0xc],eax` for field_18A0[3] and a self-store of hi onto
-    // [ebp-0x4]) and then selects between the two addresses, where we bind
-    // the member lvalue with `lea eax,[esi+0x18ac]` and never copy.
-    // MEASURED AND REJECTED, both byte-flat at 95.5228: static_cast<int> on
-    // both _cpp_min operands, and landing the result in a named `int` local.
+    // EXACT 2026-09-06.  Two facts closed the last 4.5 points, both read
+    // straight off the emitted temporaries:
+    //   * each filter field is read ONCE into a local - retail's
+    //     `mov eax,[esi+0x18ac] / cmp eax,-1` reuses that same EAX as the
+    //     _cpp_min operand copy, so the `== -1` guard and the min share one
+    //     load (+0.19 for field 3, +2.00 for field 4, +0.72 for field 5);
+    //   * the min's TWO operand copies (`mov [ebp-0xc],eax` plus a
+    //     self-store of the running limit onto its own slot) are what VC6
+    //     emits when BOTH const-ref arguments need a conversion - an `int`
+    //     lvalue pair binds directly and copies nothing.  The explicit
+    //     `long` template argument is that conversion; it takes this row to
+    //     100.0000.
+    // The `== -1` guard is tested TWICE in retail - after `cmp eax,-1 / jne`
+    // sets lo/hi it emits a SECOND bare `jne` on the still live flags before
+    // the 0x127 / +0x11e arms - so the lo/hi assignment and the widget arm
+    // are two separate ifs, not one if/else (95.0755 -> 95.5228).
+    // MEASURED AND REJECTED, byte-flat at 95.5228: static_cast<int> on both
+    // _cpp_min operands, and landing the result in a named `int` local;
+    // `short lo/hi` does not compile (C2782, ambiguous _Ty).
     int lo = field_18A0[2];
     int hi = field_18A0[2];
     if (field_18A0[2] == -1) {
@@ -2401,10 +2409,11 @@ void TSingleSelectionWindow::UpdateFilterWidgets()
         WidgetClearStatus(i, 0x1000);
     for (; i <= 0x130; ++i)
         WidgetSetStatus(i, 0x1000);
-    if (field_18A0[3] == -1)
+    int lastFilter = field_18A0[3];
+    if (lastFilter == -1)
         WidgetSetStatus(0x131, 0x10);
     else
-        WidgetSetStatus(std::_cpp_min(hi, field_18A0[3]) + 0x129,
+        WidgetSetStatus(std::_cpp_min<long>(hi, lastFilter) + 0x129,
                         0x10);
     for (i = 0x133; i <= 0x13b; ++i)
         WidgetClearStatus(i, 0x10);
@@ -2412,8 +2421,9 @@ void TSingleSelectionWindow::UpdateFilterWidgets()
         WidgetClearStatus(i, 0x1000);
     for (; i <= 0x13a; ++i)
         WidgetSetStatus(i, 0x1000);
-    int n = std::_cpp_min(8 - lo, field_18A0[4]);
-    if (field_18A0[4] == -1) {
+    int aiFilter = field_18A0[4];
+    int n = std::_cpp_min(8 - lo, aiFilter);
+    if (aiFilter == -1) {
         n = 8 - lo;
         WidgetSetStatus(0x13b, 0x10);
     } else {
@@ -2425,10 +2435,11 @@ void TSingleSelectionWindow::UpdateFilterWidgets()
         WidgetClearStatus(i, 0x1000);
     for (; i <= 0x143; ++i)
         WidgetSetStatus(i, 0x1000);
-    if (field_18A0[5] == -1)
+    int humanFilter = field_18A0[5];
+    if (humanFilter == -1)
         WidgetSetStatus(0x144, 0x10);
     else
-        WidgetSetStatus(std::_cpp_min(n, field_18A0[5]) + 0x13d, 0x10);
+        WidgetSetStatus(std::_cpp_min<long>(n, humanFilter) + 0x13d, 0x10);
     for (i = 0x146; i <= 0x149; ++i)
         WidgetClearStatus(i, 0x10);
     if (field_18A0[6] == SCENARIO_FILTER_CATEGORY_ANY)
@@ -4999,7 +5010,8 @@ unsigned char TSingleSelectionWindow::GenerateRandomMap(const char* name)
         path += name;
 
         result = request.Generate(path.c_str(), &progress);
-        progress.done = std::_cpp_min(progress.done + 1, progress.steps);
+        progress.done = std::_cpp_min<long>(progress.done + 1,
+                                            progress.steps);
         progress.LoadProgFn_00577180();
     }
 

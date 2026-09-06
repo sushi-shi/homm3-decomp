@@ -523,11 +523,21 @@ static long check_match(long player, long first_x, long first_y,
 //    max_y is 85.9430 against 85.6551 for the x-then-y pairing, 85.81 for
 //    two per-axis blocks, 85.68 for maxes first and 85.17 for interleaved.
 //
-// Residual (85.94%): 70 = 70 blocks with 58 exact, 40 = 40 branches
-// agreeing, calls agreeing, and 12 size-only blocks left. All of it is slot
-// layout: retail runs every reducer operand through ONE pair of temporaries
-// ([ebp-0x30]/[ebp-0x2c]) and memory-homes `min_x` at [ebp-0x80], re-reading
-// it per iteration, where we spread the copies over four slots and keep
+// 85.9430 -> 92.4118 (2026-09-06), and again the note below named the answer
+// without reaching it. "Retail runs every reducer operand through ONE pair of
+// temporaries" is what VC6 emits when BOTH const-reference arguments need a
+// CONVERSION - an `int` lvalue pair binds directly and copies nothing, however
+// it is spelled. The explicit `long` template argument supplies the conversion
+// on both sides: `std::_cpp_min<long>` / `std::_cpp_max<long>` at the four
+// reducers and the four window bounds takes the skeleton to 70 = 70 blocks
+// with 64 exact, 0 flow-kind, 0 target-shift, branches 40 = 40 and calls
+// agreeing. Swapping the two min reducers' argument order is worth a further
+// 0.02 (92.3936 -> 92.4118) and is kept because it also puts retail's
+// `cmp _Y,_X` operand order back; swapping the maxes as well loses 0.01.
+//
+// Residual (92.41%): 6 size-only blocks, all of it slot layout - retail's
+// frame is 0x80 against our 0x84 and it memory-homes `min_x` at [ebp-0x80],
+// re-reading it per iteration, where we spread the copies over four slots and keep
 // min_x in ESI. Our frame is 0x84 against retail's 0x80 for that reason.
 VA(0x0052cf10, 0x5B4)  // anchor-caller AI_attempt_puzzle_guess +0x39d, dc 0x115be8
 type_point match_puzzle(long player, type_AI_puzzle_tile (*puzzle_map)[17])
@@ -555,10 +565,10 @@ type_point match_puzzle(long player, type_AI_puzzle_tile (*puzzle_map)[17])
                 }
                 int cur_x = x;
                 int cur_y = y;
-                min_x = std::_cpp_min(cur_x, min_x);
-                min_y = std::_cpp_min(cur_y, min_y);
-                max_x = std::_cpp_max(max_x, cur_x + 1);
-                max_y = std::_cpp_max(max_y, cur_y + 1);
+                min_x = std::_cpp_min<long>(min_x, cur_x);
+                min_y = std::_cpp_min<long>(min_y, cur_y);
+                max_x = std::_cpp_max<long>(max_x, cur_x + 1);
+                max_y = std::_cpp_max<long>(max_y, cur_y + 1);
             }
         }
     }
@@ -569,16 +579,16 @@ type_point match_puzzle(long player, type_AI_puzzle_tile (*puzzle_map)[17])
     int ties = 0;
     int best = 0;
 
-    int span_x = std::_cpp_max(first_x - 9, first_x - min_x);
-    int start_x = std::_cpp_max(span_x, 0);
-    int limit_x = std::_cpp_min(MAP_WIDTH - max_x + first_x,
+    int span_x = std::_cpp_max<long>(first_x - 9, first_x - min_x);
+    int start_x = std::_cpp_max<long>(span_x, 0);
+    int limit_x = std::_cpp_min<long>(MAP_WIDTH - max_x + first_x,
                                 MAP_WIDTH + first_x - 9);
-    int end_x = std::_cpp_min(MAP_WIDTH, limit_x);
-    int span_y = std::_cpp_max(first_y - 8, first_y - min_y);
-    int start_y = std::_cpp_max(span_y, 0);
-    int limit_y = std::_cpp_min(MAP_WIDTH - max_y + first_y,
+    int end_x = std::_cpp_min<long>(MAP_WIDTH, limit_x);
+    int span_y = std::_cpp_max<long>(first_y - 8, first_y - min_y);
+    int start_y = std::_cpp_max<long>(span_y, 0);
+    int limit_y = std::_cpp_min<long>(MAP_WIDTH - max_y + first_y,
                                 MAP_HEIGHT + first_y - 8);
-    int end_y = std::_cpp_min(MAP_HEIGHT, limit_y);
+    int end_y = std::_cpp_min<long>(MAP_HEIGHT, limit_y);
 
     type_point scan;
     for (scan.z = 0; scan.z < gpGame->worldMap.GetNumLevels(); ++scan.z) {
