@@ -776,11 +776,20 @@ void type_AI_player::end_turn()
 // The recovered branch/call threshold was governed by source scope, not by
 // this caller-mass family.
 
-static inline void append_formatted_ai_message(
+//
+// IT ASSIGNS, IT DOES NOT APPEND (byte-flat, 2026-09-06, reloc census).
+// Retail's calls at make_gift fn+0x38b and fn+0x4cc are
+// basic_string::assign(const basic_string&, uint, uint) where ours were
+// append(...); the surrounding instruction stream is identical on both sides,
+// so only the relocation target differed and objdiff does not score it. The
+// third message site in the same body already spelled `message = ...`, which
+// lowers to that same assign, so all three agree now and the call view drops
+// to the two vector-insert ICF twins.
+static inline void assign_formatted_ai_message(
     std::string& message, const std::string& formatted)
 {
 #pragma inline_depth(0)
-    message.append(formatted, 0, std::string::npos);
+    message.assign(formatted, 0, std::string::npos);
 #pragma inline_depth()
 }
 
@@ -870,7 +879,7 @@ void type_AI_player::make_gift(long player_id)
 
     std::string message;
     if (gpGame->players[player_id].IsLocalHuman()) {
-        append_formatted_ai_message(
+        assign_formatted_ai_message(
             message,
             format_string(
                 gpGeneralText->GetText(GENERAL_TEXT_AI_GIFT_RECEIVED),
@@ -895,7 +904,7 @@ void type_AI_player::make_gift(long player_id)
 
     if (gpGame->players[player_id].IsLocalHuman() && list.size()) {
         if (list.size() == 1) {
-            append_formatted_ai_message(
+            assign_formatted_ai_message(
                 message,
                 format_string(
                     gpGeneralText->GetText(
