@@ -1059,6 +1059,20 @@ void heroWindowManager::ReleaseFizzleSource()
 // `volatile int` mass statement moves FadeToBlack to 82.7965 - so the
 // harness reaches the function and the flat grid is a real negative.
 // This wall is on neither /Ob2 axis.
+// 2026-09-06, polish lane 36, the DC LOCAL-SCOPE SWEEP: none of the levers
+// that took FizzleForwardX 75.39 -> 84.11 transfer to this pair, and the
+// numbers are banked here so nobody re-runs them.  The DC block names
+// bmpFadeSource, the three `const unsigned int` masks (blue_mask_2 sp+0x28,
+// green_mask_2 sp+0x2c, red_mask_2 sp+0x3c), `dst` as an `unsigned int*` ROW
+// BASE advanced by GetPitch bytes, time1/next_fade_time, FADE_PERIOD and - in
+// FadeToBlack only - `r`, the FIRST channel result, stored at :1814 and
+// combined first at :1820, i.e. the DC computes RED, GREEN, BLUE in that
+// order.  Measured against 88.5116 / 88.1358 (FadeToBlack / FadeFromBlack):
+// red-first channel order 88.2674 / 87.8765; `*dst = ... ; dst++` instead of
+// `dst[x] = ...` BYTE-FLAT (unlike FizzleForwardX, where the same pointer
+// walk paid +1.49); both together 88.2674 / 87.8765; red-first MASK
+// declaration order 88.2674 / 87.8765; `const unsigned int` masks byte-flat;
+// swapping the deadline/started GameTime::Get() pair 87.2965 / 86.8827.
 VA(0x006030e0, 0x1F9)  // anchor-caller, dc 0x19c1bc
 void heroWindowManager::FadeToBlack(int speed, unsigned char expect_fadein)
 {
