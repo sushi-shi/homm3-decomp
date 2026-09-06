@@ -438,6 +438,11 @@ void type_quest::Load(TAbstractFile* file, int version)
 // take the direct-assignment form WITH the pins and not the current spelling.
 // Also measured and rejected: block-scoping each `const std::string&` binding
 // so the temporaries die per statement WITHOUT changing the binding, 6.6354.
+// 2026-09-06: the section-6b `operator=` -> `assign` rung, applied to all
+// three assignments in BOTH this body and type_quest::Load, is byte-flat to
+// the digit (41.9271 / 49.7043 unchanged). VC6's `operator=(const string&)`
+// is the pure forwarder the doc warns about here, so the ladder has no rung
+// to give at these sites; the `_Tidy` decision is untouched by it.
 VA(0x0056ce50, 0x11E)  // anchor-vtable 0x64174c slot 12 + the chain from all eight leaf LoadFromMaps, retail-only
 void type_quest::LoadFromMap(TAbstractFile* file)
 {
@@ -2764,6 +2769,30 @@ int TSeerHut::getValue(hero* currentHero)
 // arm's objects first; retail's frame holds nothing beyond the three
 // helper temporaries ([-0x20] shared by both arms, [-0x30]). No
 // Dreamcast-proven construct supplies the frame from this caller.
+// 2026-09-06, both measured and reverted. (a) The unwind-order inference
+// above ("retail registered the no-quest arm's objects first", suggesting
+// the DC line order 153 DoEmptyDialog / 158+ quest arm as a source-order
+// lever) is REFUTED by retail's own branch polarity: retail opens
+// `mov edi,[esi] / test edi,edi / je`, so the QUEST arm is the fallthrough
+// and the empty arm sits at +0x2fb..+0x3af - exactly the `if (quest) { }`
+// plus trailing tail spelled here. Hoisting the no-quest arm into a leading
+// `if (!quest) { ...; return; }` inverts that test to `jne` and measures
+// 36.4529%. Do not re-try the inversion; the unwind numbering is assigned
+// after layout, not from source order.
+// (b) Dropping `inline` from GetRewardType (to shrink DoCompletionDialog's
+// stored cb below the collector's `cb < 1000` candidacy filter) is byte-flat
+// at 44.4753%: C1XX does not pre-expand it into the saved body, so its cb is
+// not the inliner input here.
+// Positive evidence recovered while measuring the above, so no lane needs to
+// re-derive it: the two retail "calls" to DoSeerEvent+0x3c8/+0x3f0 are the
+// two `jmp dword ptr [4*eax+tbl]` switch TABLES of an expanded GetRewardType,
+// not calls; the completion-text getter is a real out-of-line thiscall to
+// 0x45bad0, which the delinker names GetRegionDescription because the linker
+// COMDAT-folded the two identical `return <member>;` bodies; and the skeleton
+// is exact through B9 with the AI arm (target B38..B48) matching base
+// B11..B21 instruction-for-instruction. The whole residual is the two
+// helper expansions and the EH prologue/epilogue they bring - the body's
+// statement set is already retail's.
 VA(0x00573670, 0x400)  // code plus two retail switch tables in the admitted row
 void TSeerHut::DoSeerEvent(hero* current_hero, bool human_player)
 {
@@ -3440,6 +3469,11 @@ void TSeerHut::read(TAbstractFile* infile)
 // removes an extra constructor-argument copy and raises MAX to 35.3825%.
 // Retail reads through [ebp+8], then keeps the masked row at [ebp-0x1c]; a
 // single address-taken textRow used for both roles was the 30.4931% control.
+// 2026-09-06: the section-6b `push_back(x)` -> `insert(end(), x)` rung on the
+// shared three-argument constructor LOSES at both of its call sites - this
+// row 35.3825 -> 30.7962 and TSeerHut::read (0x574610) 86.8092 -> 86.7912 -
+// so the constructor keeps `push_back`. That rung is now measured here; do
+// not re-sweep it.
 //
 // The savegame reader and the exact mirror of save (0x573fd0): NewfullMap
 // ::Load calls it on every element of the SeerHutList it has just resized,

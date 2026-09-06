@@ -1598,6 +1598,16 @@ bool HeroPlaceholderStronger::operator()(const HeroPlaceholderData& left,
 // overload (`PBV2`) where ours reach the non-const one (`PAV2`). Both are
 // per-site /Ob2 decisions on a Dinkumware member; no statement in this body
 // reaches them without a pin.
+// CORRECTION 2026-09-06: the "0.00 row" half of that is now stale - the
+// 528-byte `vector<hero>::insert(iterator, const T&)` COMDAT is emitted and
+// banked EXACT, as are the 387/645/817-byte insert siblings, so the call
+// census has moved on. What is left at this row is 31 paired calls against 7
+// different, 2 base-only and 5 target-only, and it reads the same way as the
+// rest of this compiland: at +0x311 retail spends `size()` on the outer
+// carry-over vector and then on the pool, out of line, where we expand both
+// into their `0x66666667` magic divides. The `PAV2`/`PBV2` split survives
+// only at the single-element erase, and both bodies are byte-identical, so
+// that pair is an ICF naming artifact and not a second defect.
 VA(0x00487290, 0x664)  // anchor-caller(game::NewMap +0x7ce), retail-only
 void TCampaignBrief::ScenarioStruct::PlaceCrossoverHeroes()
 {
@@ -2156,6 +2166,43 @@ int TCampaignBrief::CampaignHeaderStruct::GetNumMaps() const
 // pair and the memory-homed running offset are pushed apart by the
 // expansions above, where retail keeps the offset in ESI throughout.
 //
+// 2026-09-06, CLOSED IN PART (49.5351 -> 53.9715) by restoring the
+// ScenarioStruct::LoadMapHeader call this body had pasted in longhand. The
+// helper is claimed at 0x487d30 and stays exact; its four statements were
+// spelled out here verbatim (`pubseekoff`, the TGzInflateBuf/TStreamBufFile
+// pair, `mapHeader.Read`), which is precisely the "per-scenario map-header
+// block (13 lines)" the dose study below had to remove by hand to reach its
+// peak. Retail still EXPANDS the helper at this site - both TGzInflateBuf
+// ctor/dtor pairs remain in the caller on both sides - so this is the
+// docs/vc6/inliner.md "a missing helper can alter an earlier expansion"
+// effect exactly: C1 sizes the caller BEFORE expansion, so writing the call
+// lowers caller_cb, lowers the /Ob2 budget, and stops the over-expansion
+// downstream. The call census goes from 11 target-only calls to ZERO: every
+// callee retail has, we now have, and the whole remainder is 20 base-only
+// sites where we still expand what retail calls.
+// 2026-09-06, first-divergence anchor (measured before that fix). The
+// budget hole does not start somewhere in the middle of this body - it
+// starts at SITE 0 and never lets up. Walking the head instruction for
+// instruction, retail CALLS and we EXPAND, in source order and without a
+// single exception: `delete scenarios[i]` is `push 1 / call ??_GScenario-
+// Struct` in retail (that COMDAT is ours, 33 B and already exact) against
+// our inlined `call ??1ScenarioStruct / push / call operator delete`;
+// `scenarios.clear()` is `mov ecx,edi / call ?clear@vector<...>` against our
+// expanded `std::copy` + `_Destroy` pair; `FreeData()` is `mov ecx,ebx /
+// call ?FreeData@...` against our expanded vtable-slot-0 delete; and
+// `new std::filebuf` calls `??0basic_streambuf<char>` where we expand it and
+// go straight to `??0locale`. Retail therefore compiled this body with its
+// /Ob2 budget at or near the 1000 floor, rejecting EVERY candidate from the
+// first one. That is a whole-body property of `caller_cb`, so no per-site
+// respelling can reach it - which the section-6b ladder now confirms by
+// measurement: `scenarios.push_back(scenario)` -> `insert(end(), scenario)`
+// is 49.5351 -> 48.5470, `scenarios.clear()` -> `erase(begin(), end())` is
+// 49.5351 -> 48.0435, and `campaign_name`/`campaign_desc` `operator=` ->
+// `assign` (all three sites) is byte-flat at 49.5351. The dose figures above
+// stand; what is still missing is the source construct that puts caller_cb
+// where retail's was, and this anchor says any candidate construct must move
+// the FIRST site, not a late one.
+//
 // Measured and kept: dispatching the six header reads through a
 // TAbstractFile* rather than the concrete TStreamBufFile local is worth
 // +3.85 (45.6886 -> 49.5379) - see the note at the pointer's declaration.
@@ -2241,11 +2288,7 @@ bool TCampaignBrief::CampaignHeaderStruct::Load()
         scenario->offset = mapOffset;
         if (scenario->inflated_size > 0) {
             mapOffset += scenario->inflated_size;
-            stream->pubseekoff(scenario->offset, std::ios::beg,
-                               std::ios::in);
-            TGzInflateBuf inflateBuf(stream);
-            TStreamBufFile file(&inflateBuf);
-            mapHeader.Read(&file, iScenario2);
+            scenario->LoadMapHeader(stream, &mapHeader, iScenario2);
             scenario->options->_vslot11(&mapHeader);
             scenario->hero_placeholders = mapHeader.placeholders;
             for (int iSlot = 0; iSlot < 8; ++iSlot)
