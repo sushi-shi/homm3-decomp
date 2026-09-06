@@ -832,6 +832,9 @@ public:
     // 0x4d9070 / 0x4d90c0, the two artifact tallies.
     long get_equipped_artifacts(unsigned char countWarMachines);
     long get_number_in_backpack(unsigned char countWarMachines);
+    // Complete campaign carryover collector; customcampaign.cpp owns the
+    // retail-proven expansion and the provisional name.
+    void collectArtifacts(std::vector<type_artifact>& artifacts) const;
     // Hero.h:965/970 (dc 0x27e8c/0x27e9c): both accessors return a
     // const type_artifact reference through const this. Keep this interface
     // shared by const and mutable heroes. Complete scans nineteen ordinals;
