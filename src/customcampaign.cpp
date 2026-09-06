@@ -3548,6 +3548,24 @@ VA_COMPGEN(0x0048e9e0, 0xB, STD_CONSTRUCT, TCampaignCrossoverChoice)
 // the pairing is forced onto the wrong one. Making the two-argument insert
 // emit at all is an inline-shape fix in its caller, ScenarioStruct::Read -
 // a closed wall - so this row cannot move until that reopens.
+// 2026-09-06 CONFIRMED down to the body, and one more probe closed.  The
+// identity is not in doubt: 0x48bf00 ends `ret 8`, returns `_First + (where
+// - _First)` in EAX (`mov eax,ebx / add eax,ecx` over the offset it saved at
+// entry), and its only caller passes `[esi+0x20]` (that vector's _Last) and
+// `&[ebp+0xb]` - `iterator insert(iterator, const unsigned char&)`, VC6's
+// Dinkumware forwarder, with the three-argument fill it forwards to expanded
+// INSIDE it.  The element is a byte on both paths (`mov dl,[ebx] / mov
+// [esi],dl`, stride 1) and the callee set is that fill's own out-of-line
+// helpers - _Ucopy 0x48db40 (`ret 0xc`), _Ufill 0x48db70 and _Construct
+// 0x48e9d0 (nine bytes: `test ecx,ecx / je / mov al,[edx] / mov [ecx],al`).
+// So the ELEMENT and the KIND are right and only the overload is wrong, and
+// the join key cannot separate the two: with one claim and one emitted
+// symbol the zip has no choice.  The obvious source lever does NOT expose
+// the missing COMDAT - spelling the caller's `prerequisites.push_back(x)` as
+// `prerequisites.insert(prerequisites.end(), x)` leaves this object's
+// `?insert@?$vector@E...` symbol set unchanged (still only the
+// three-argument fill) and costs ScenarioStruct::Read 83.2900 -> 81.4819.
+// Rejected; the row stays where lane 37 left it.
 VA_COMPGEN(0x0048bf00, 0x1AD, VECTOR_INSERT, unsigned_char)
 
 // --- the <fstream> facet block, claimed 2026-09-06 -------------------------
