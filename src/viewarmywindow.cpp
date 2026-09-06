@@ -495,7 +495,11 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
     const TCreatureTypeTraits* type_traits = &akCreatureTypeTraits[ArmyType];
     TCreatureTypeTraits traits = *type_traits;
 
-    Widgets.reserve(NWIDGETS);
+    // The widget vector NAMED AS A REFERENCE (three uses): 90.4657 ->
+    // 90.9521.  The sibling army-only constructor below LOSES 0.03 on the
+    // same change, so it is per-body.
+    std::vector<widget*>& widgets = Widgets;
+    widgets.reserve(NWIDGETS);
 
     create_background_widget(this_hero);
 
@@ -555,7 +559,7 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
         create_dismiss_widget();
         ShowingDismissButton = 1;
     } else if (upgrade == -1 && traits.special_ability) {
-        Widgets.push_back(new textWidget(
+        widgets.push_back(new textWidget(
             20, 232, 192, 41, traits.special_ability, "smalfont.fnt",
             font::WHITE, -1, 0, 0, 8));
     }
@@ -566,7 +570,7 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
     Influence[1] = -1;
     Influence[2] = -1;
 
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = widgets.begin(); it != widgets.end(); ++it) {
         if (*it)
             AddWidget(*it, -1);
         else
