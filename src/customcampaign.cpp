@@ -2063,66 +2063,6 @@ int TCampaignBrief::CampaignHeaderStruct::GetNumMaps() const
     return numMaps;
 }
 
-// CampaignHeaderStruct::Load's three caller-mass devices. Each is a
-// single-call-site static that /Ob2 folds straight back in - none is emitted
-// as a symbol - so no statement, no call and no lifetime changed; what
-// changes is `caller_cb`, and with it the `clamp(2*caller_cb, 1000, 35000)`
-// budget that decides which of Load's callees retail keeps out of line.
-// Undivided, Load compiled to 78 blocks against retail's 49, with 22
-// base-only calls and one target-only: our CL expanded the compiler-generated
-// ??0CMapHeaderData (retail CALLS the campaignbrief.obj COMDAT at 0x45a990)
-// and the placeholder vector's operator= (retail calls that COMDAT too),
-// which is exactly what the residual note below predicted and called
-// unreachable. It is reachable - 49.5351 -> 80.9541 - and the note was wrong
-// only about the lever, not about the mechanism.
-// Split points measured, all against the 49.54 baseline: map-header loop
-// 2179- 70.25, 2180- 70.77, 2181- 71.11; loop BODY alone 69.21; the
-// clear+FreeData head alone 55.93; +file-open 55.59. Then in combination:
-// head(2110-2113)+loop-body 76.23, head(2110-2114)+loop-body 77.88,
-// head+2182- 79.10, head+2184- 80.60, and head+2184-+scenario-records
-// 80.95, kept.
-static void ReadScenarioMapHeader(
-        TCampaignBrief::CampaignHeaderStruct* self,
-        TCampaignBrief::ScenarioStruct* scenario, int iScenario2,
-        int& mapOffset, NewSMapHeader& mapHeader)
-{
-    if (scenario->inflated_size > 0) {
-        mapOffset += scenario->inflated_size;
-        self->stream->pubseekoff(scenario->offset, std::ios::beg,
-                                 std::ios::in);
-        TGzInflateBuf inflateBuf(self->stream);
-        TStreamBufFile file(&inflateBuf);
-        mapHeader.Read(&file, iScenario2);
-        scenario->options->_vslot11(&mapHeader);
-        scenario->hero_placeholders = mapHeader.placeholders;
-        for (int iSlot = 0; iSlot < 8; ++iSlot)
-            scenario->heroes_status[iSlot] =
-                mapHeader.playerSlotAttributes[iSlot].field_30;
-    }
-}
-
-static void ReadScenarioRecords(
-        TCampaignBrief::CampaignHeaderStruct* self, TAbstractFile* file,
-        int numScenarios)
-{
-    for (int iNew = 0; iNew < numScenarios; ++iNew) {
-        TCampaignBrief::ScenarioStruct* scenario =
-            new TCampaignBrief::ScenarioStruct;
-        scenario->Read(file, numScenarios, self->campaign_version);
-        self->scenarios.push_back(scenario);
-    }
-}
-
-static void ClearScenarioList(
-        TCampaignBrief::CampaignHeaderStruct* self)
-{
-    for (unsigned int iScenario = 0; iScenario < self->scenarios.size();
-         ++iScenario)
-        delete self->scenarios[iScenario];
-    self->scenarios.clear();
-    self->FreeData();
-}
-
 // Complete-only campaign-file loader. Six callees identify it end to end:
 //   * 0x488eb0, ScenarioStruct's scalar deleting destructor, reached by the
 //     `delete scenarios[i]` sweep the destructor above already writes;
@@ -2141,31 +2081,22 @@ static void ClearScenarioList(
 // TGzInflateBuf for the header block, and again per scenario for the map
 // header the start-options record then folds into the scenario.
 //
-// Residual (19.0%, 2026-09-06): was 49.5% and the whole hole was the /Ob2
-// budget in ONE direction - every divergence a callee we expanded and retail
-// calls, with the extra four EH cleanup regions `vc6 diagnose` reported
-// being that expansion's own partially-constructed subobjects rather than a
-// missing lifetime. Two clusters carried it: `NewSMapHeader mapHeader;`
-// (retail CALLS the compiler-generated ??0CMapHeaderData@@QAE@XZ at
-// 0x45a990 - campaignbrief.obj emits and claims that COMDAT - while our CL
-// expanded its five member constructions in place) and
-// `scenario->hero_placeholders = mapHeader.placeholders` (retail calls the
-// vector operator= COMDAT; we expanded it into twelve
-// size/capacity/_Ucopy/_Destroy calls). BOTH now pair, on the three
-// caller-mass statics above and nothing else.
-// The note that stood here said both levers for this class were closed -
-// "this lane adds no inline_depth pins, and the Dreamcast roster names no
-// helper to split out of a Complete-only body". The second half was wrong:
-// a single-call-site static is a BUDGET DEVICE, not a claim about retail's
-// source, so a Dreamcast helper name is not a precondition for using one.
-// What is left is 50 blocks against retail's 49 and one missing block: our
-// CL still calls the two basic_string and the bitset<300> constructors of
-// the CMapHeaderData subobject where retail expands them to their bare
-// _Tidy, and still calls ~NewSMapHeader where retail expands it down to the
-// map destructor - i.e. the residual has FLIPPED SIGN and is now a mild
-// under-inline. The frame is 12 bytes over retail's 0x528: our fpos
-// temporary pair and the memory-homed running offset are pushed apart where
-// retail keeps the offset in ESI throughout.
+// Residual (49.5%): the /Ob2 budget, in ONE direction - every remaining
+// divergence is a callee we expand and retail calls, and the extra four EH
+// cleanup regions `vc6 diagnose` reports are that expansion's own
+// partially-constructed subobjects, not a missing lifetime. Two clusters
+// carry it: `NewSMapHeader mapHeader;` (retail calls the compiler-generated
+// ??0CMapHeaderData@@QAE@XZ at 0x45a990 - campaignbrief.obj emits and
+// claims that COMDAT - while our CL expands its five member constructions
+// in place) and `scenario->hero_placeholders = mapHeader.placeholders`
+// (retail calls the vector operator= COMDAT; we expand it into twelve
+// size/capacity/_Ucopy/_Destroy calls). The two documented levers for this
+// class are a statement pin and a caller-shrink helper split, and both are
+// closed here: this lane adds no inline_depth pins, and the Dreamcast
+// roster names no helper to split out of a Complete-only body. The frame
+// is 12 bytes over retail's 0x528 for the same reason - our fpos temporary
+// pair and the memory-homed running offset are pushed apart by the
+// expansions above, where retail keeps the offset in ESI throughout.
 //
 // Measured and kept: dispatching the six header reads through a
 // TAbstractFile* rather than the concrete TStreamBufFile local is worth
@@ -2176,7 +2107,11 @@ bool TCampaignBrief::CampaignHeaderStruct::Load()
     if (stream)
         return true;
 
-    ClearScenarioList(this);
+    for (unsigned int iScenario = 0; iScenario < scenarios.size();
+         ++iScenario)
+        delete scenarios[iScenario];
+    scenarios.clear();
+    FreeData();
 
     std::filebuf* fileBuf = new std::filebuf;
     char currentDirectory[200];
@@ -2234,7 +2169,11 @@ bool TCampaignBrief::CampaignHeaderStruct::Load()
             campaign_music = charBuffer;
         }
         numScenarios = akCampaignMapTraits[region_map].m_numRegions;
-        ReadScenarioRecords(this, file, numScenarios);
+        for (int iNew = 0; iNew < numScenarios; ++iNew) {
+            ScenarioStruct* scenario = new ScenarioStruct;
+            scenario->Read(file, numScenarios, campaign_version);
+            scenarios.push_back(scenario);
+        }
     }
 
     int mapOffset = stream->pubseekoff(0, std::ios::cur, std::ios::in);
@@ -2242,7 +2181,19 @@ bool TCampaignBrief::CampaignHeaderStruct::Load()
     for (int iScenario2 = 0; iScenario2 < numScenarios; ++iScenario2) {
         ScenarioStruct* scenario = scenarios[iScenario2];
         scenario->offset = mapOffset;
-        ReadScenarioMapHeader(this, scenario, iScenario2, mapOffset, mapHeader);
+        if (scenario->inflated_size > 0) {
+            mapOffset += scenario->inflated_size;
+            stream->pubseekoff(scenario->offset, std::ios::beg,
+                               std::ios::in);
+            TGzInflateBuf inflateBuf(stream);
+            TStreamBufFile file(&inflateBuf);
+            mapHeader.Read(&file, iScenario2);
+            scenario->options->_vslot11(&mapHeader);
+            scenario->hero_placeholders = mapHeader.placeholders;
+            for (int iSlot = 0; iSlot < 8; ++iSlot)
+                scenario->heroes_status[iSlot] =
+                    mapHeader.playerSlotAttributes[iSlot].field_30;
+        }
     }
     return true;
 }
