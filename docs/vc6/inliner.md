@@ -592,6 +592,21 @@ do not establish that every remaining call boundary is correct. In particular,
 its prerequisite append still expands the single-element insert that retail
 retains, leaving `0x48bf00` paired with the wrong emitted overload.
 
+## Ordinary definitions later in the same TU can inline
+
+Complete retains the 91-byte fastcall guard-value helper at `0x545e00` and
+expands its four threshold/scale table accesses inside several RMG connections.
+The recovered `GetRmgGuardValue(int value, int strength)` definition follows
+`CreateGroundConnection` and `CreateSubterraneanGate` in `rmg.cpp`, in retail
+address order. Both earlier callers inline it under the normal RMG profile,
+without an `inline` keyword or a pragma; its standalone body matches all 91
+raw bytes after resolving four data references.
+
+A declaration followed by a later definition in the same TU therefore does
+not establish an out-of-line boundary. Verify the actual caller expansion
+before moving a body or changing a declaration. Restoring this shared helper
+alone does not settle the callers' remaining STL and map-accessor decisions.
+
 ## 7. Using it
 
 ```sh

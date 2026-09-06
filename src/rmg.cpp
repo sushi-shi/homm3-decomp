@@ -1325,6 +1325,136 @@ void type_random_map_generator::BuildZoneBoundaries(
     JoinExtraZones(originalZones, &diagram);
 }
 
+// Provisional arithmetic boundary for the Complete-only position value.
+// Keep the ordinary body visible to the two direction-addition call sites.
+TRmgMapPosition TRmgMapPosition::operator+(const TPoint& offset) const
+{
+    TRmgMapPosition result = *this;
+    result.x += offset.x;
+    result.y += offset.y;
+    return result;
+}
+
+// Complete-only ground connection pass.  ConnectZones passes the paired
+// boundary item/position vectors.  Retail selects all equally cheap empty
+// crossings, opens their predecessor paths, and records both zone entrances
+// before choosing border objects or a guard.  There is no Dreamcast RMG
+// counterpart; the helper names describe their retained retail bodies.
+// Residual (76.75134%): the first clear expands erase into copy/_Destroy;
+// the two final GetMapItem calls and the final vector destructor also expand.
+// Retail additionally preserves a 12-byte position temporary that this
+// candidate folds away.  These are unresolved source/lifetime boundaries.
+// Controls: direct range-erase expands further (71.29874%); positive eligibility
+// scopes versus early continues, a by-value left operand, copy assignment,
+// an intermediate position local, and inline versus ordinary operator bodies
+// are byte-flat.  A by-value direction scores 74.07692%.  A temporary depth-1
+// limit on clear is also flat and has been removed.  Naming candidateCount
+// before the empty check scores 75.386406%; using the two natural size calls
+// restores retail's reuse of the count through the min wrapper.
+VA(0x00541140, 0x63A) // anchor-callee ConnectZones 0x543550; retail-only
+unsigned char type_random_map_generator::CreateGroundConnection(
+    TRmgZone* source,
+    TRmgZoneConnection* connection,
+    std::vector<TRmgMapItem*>* borderItems,
+    std::vector<TRmgMapPosition>* borderPositions)
+{
+    TRmgZone* destination = zones[connection->destination->zoneIndex];
+    int sourceZone = source->slot->zoneIndex;
+    int destinationZone = destination->slot->zoneIndex;
+    if (source->GetLevelPosition().z != destination->GetLevelPosition().z)
+        return 0;
+    if (source->terrain == eTerrainWater)
+        return 0;
+    if (destination->terrain == eTerrainWater)
+        return 0;
+
+    std::vector<TRmgMapPosition> candidates;
+    int eligibleCount = 0;
+    int bestCost = 100;
+    for (int index = 0; index < borderItems->size(); ++index) {
+        TRmgMapItem* item = (*borderItems)[index];
+        if (item->zoneState.zone == sourceZone
+            && item->zoneState.connectionEligibility == destinationZone
+            && static_cast<int>(item->objects.size()) <= 0) {
+            TRmgMapPosition other = (*borderPositions)[index]
+                + gRmgDirections[item->tileData.connectionDirection];
+            if (static_cast<int>(map.GetMapItem(other)->objects.size()) <= 0) {
+                ++eligibleCount;
+                int cost = item->movement.unknown;
+                if (cost <= bestCost) {
+                    if (cost < bestCost) {
+                        candidates.clear();
+                        bestCost = cost;
+                    }
+                    candidates.push_back((*borderPositions)[index]);
+                }
+            }
+        }
+    }
+
+    if (candidates.size() == 0)
+        return 0;
+
+    int guardValue;
+    if (connection->unguarded) {
+        guardValue = 0;
+    } else {
+        guardValue = GetRmgGuardValue(connection->value, monsterStrength);
+    }
+
+    if (bestCost == 1 && guardValue == 0 && !connection->placeBorderObjects)
+        return 1;
+
+    int count = min(candidates.size(), (eligibleCount + 39) / 40);
+    for (int crossing = 0; crossing < count; ++crossing) {
+        int selected = rand() % candidates.size();
+        TRmgMapPosition position = candidates[selected];
+        TPoint direction = gRmgDirections[
+            map.GetMapItem(position)->tileData.connectionDirection];
+        TRmgMapPosition otherPosition = candidates[selected] + direction;
+
+        OpenConnectionPath(candidates[selected], connection->placeBorderObjects);
+        source->entrances.push_back(TPoint(position.x, position.y));
+        OpenConnectionPath(otherPosition, connection->placeBorderObjects);
+        destination->entrances.push_back(TPoint(otherPosition.x, otherPosition.y));
+        candidates.erase(candidates.begin() + selected);
+
+        if (connection->placeBorderObjects) {
+            int borderDirection = PlaceBorderObject(position, 1, destination);
+            if (borderDirection >= 0) {
+                MarkBorderObjectArea(position, borderDirection);
+                guardValue = 0;
+            }
+            borderDirection = PlaceBorderObject(otherPosition, 1, source);
+            if (borderDirection >= 0) {
+                MarkBorderObjectArea(otherPosition, borderDirection);
+                guardValue = 0;
+            }
+        }
+
+        if (guardValue > 0) {
+            if (!(rand() & 1)) {
+                TRmgMapItem* item = map.GetMapItem(position);
+                TRmgZone* zone = zones[item->zoneState.zone];
+                if (static_cast<int>(item->objects.size()) <= 0) {
+                    type_object* guard = CreateGuard(guardValue, zone);
+                    if (guard)
+                        AddObject(guard, position);
+                }
+            } else {
+                TRmgMapItem* item = map.GetMapItem(otherPosition);
+                TRmgZone* zone = zones[item->zoneState.zone];
+                if (static_cast<int>(item->objects.size()) <= 0) {
+                    type_object* guard = CreateGuard(guardValue, zone);
+                    if (guard)
+                        AddObject(guard, otherPosition);
+                }
+            }
+        }
+    }
+    return 1;
+}
+
 // Complete-only subterranean connection pass.  The caller walks paired
 // 0x1c-byte zone-connection records and invokes this method only when the two
 // zones are on different levels.  Retail proves the source algorithm through
@@ -1423,19 +1553,7 @@ unsigned char type_random_map_generator::CreateSubterraneanGate(
     if (connection->unguarded) {
         guardValue = 0;
     } else {
-        int strength = 0;
-        int level = monsterStrength;
-        if (connection->value > gRmgGuardThresholdLow[level]) {
-            strength =
-                (connection->value - gRmgGuardThresholdLow[level])
-                * gRmgGuardScaleLow[level] / 4;
-        }
-        if (connection->value > gRmgGuardThresholdHigh[level]) {
-            strength +=
-                (connection->value - gRmgGuardThresholdHigh[level])
-                * gRmgGuardScaleHigh[level] / 4;
-        }
-        guardValue = strength < 2000 ? 0 : strength;
+        guardValue = GetRmgGuardValue(connection->value, monsterStrength);
     }
 
     ++position.y;
@@ -1738,6 +1856,27 @@ void type_random_map_generator::ConnectZones()
 
     if (progress)
         progress->Advance(0x1900);
+}
+
+// Retail retains this ordinary fastcall helper and expands the same four
+// table accesses in ground, border, gate and monolith connections.  ECX is
+// the requested value, EDX the strength index, and values below 2000 vanish.
+// The name is provisional; the shared helper boundary is retail-byte proof.
+// Exact: 91/91 raw bytes after resolving the four table references. Both
+// implemented connection callers inline this ordinary definition naturally.
+VA(0x00545E00, 0x5B) // anchor-callee 0x545990 cluster; retail-only
+int GetRmgGuardValue(int value, int strength)
+{
+    int guardValue = 0;
+    if (value > gRmgGuardThresholdLow[strength]) {
+        guardValue = (value - gRmgGuardThresholdLow[strength])
+            * gRmgGuardScaleLow[strength] / 4;
+    }
+    if (value > gRmgGuardThresholdHigh[strength]) {
+        guardValue += (value - gRmgGuardThresholdHigh[strength])
+            * gRmgGuardScaleHigh[strength] / 4;
+    }
+    return guardValue < 2000 ? 0 : guardValue;
 }
 
 // The road/river worklists instantiate all three of these out-of-line STL
